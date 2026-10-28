@@ -16,7 +16,10 @@ for (const f of readdirSync(root + 'content/sections')) content['content/section
 const css = ['base', 'riscv', 'app'].map(n => r(`src/styles/${n}.css`)).join('\n');
 const safe = s => s.replace(/<\/(script|style)/gi, '<\\/$1');
 
+const icon = 'data:image/svg+xml;base64,' + readFileSync(root + 'assets/favicon.svg').toString('base64');
 let html = r('index.html')
+  .replace('href="assets/favicon.svg"', () => `href="${icon}"`)
+  .replace(/<link rel="apple-touch-icon"[^>]*>\n?/, '')
   .replace(/<link rel="stylesheet" href="src\/styles\/[a-z]+\.css">\n?/g, '')
   .replace('</head>', () => `<style>\n${safe(css)}\n</style>\n</head>`)
   .replace('<script type="module" src="src/main.js"></script>', () =>

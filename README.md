@@ -55,6 +55,22 @@ docs/                    architecture and workflow notes
 
 See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for how the pieces fit, and [docs/WORKFLOW.md](docs/WORKFLOW.md) for how changes are proposed and shipped.
 
+## How this was made
+
+Open Silicon Lab is built with AI. The project owner, a learner new to chips, decides what to build and why. Claude, an AI model made by Anthropic, wrote the text, simulations, code and tests, working from public sources that are listed on the site.
+
+What that means for you:
+
+- **Expect some mistakes.** Automated tests check that the simulations compute what they claim, for example that every RISC-V level's reference solution passes and every tiny-chip design routes. Review by chip experts is only beginning.
+- **The simulations are simplified on purpose.** Each one says what it leaves out.
+- **Corrections are the most valuable contribution.** Every topic page has *Report a mistake* and *Suggest an idea* buttons that open a short form here on GitHub.
+
+## Feedback
+
+- [Report a mistake](../../issues/new?template=correction.yml): a fact, explanation or simulation that is wrong or outdated.
+- [Suggest an idea](../../issues/new?template=idea.yml): a simulation, challenge, topic or connection you would like to see.
+- [Something broken?](../../issues/new?template=bug.yml): a page or button that does not work.
+
 ## Accuracy
 
 Every simulation is a teaching model and says what it simplifies. Figures about the 2026 industry live in `src/data/facts.json`, each with its source, date verified and kind (reported, vendor claim, estimate, projection). Corrections are very welcome — open an issue or a pull request with a source.
