@@ -200,3 +200,29 @@
 .frow small{display:block;color:var(--muted);font-size:12px;margin-top:3px}
 .frow .meta{font:12px var(--mono);color:var(--muted);display:grid;gap:5px;justify-items:end;text-align:right}
 @media(max-width:700px){.frow{grid-template-columns:minmax(0,1fr)}.frow .meta{justify-items:start;text-align:left}.bcard{grid-template-columns:minmax(0,1fr);gap:8px}.bcard .bn{font-size:32px}.blink{padding-left:12px}}
+
+/* ---------- Feedback and site footer ---------- */
+.feedback{display:flex;flex-wrap:wrap;gap:14px 24px;align-items:center;justify-content:space-between;padding:18px;border:1px dashed var(--line);border-radius:10px;background:var(--surface)}
+.feedback > div:first-child{display:grid;gap:6px;max-width:60ch}
+.feedback p:not(.code){font-size:14.5px;color:var(--muted)}
+.sitefoot{border-top:1px solid var(--line);background:var(--surface);padding-block:28px calc(36px + env(safe-area-inset-bottom,0px))}
+.sitefoot .wrap{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:20px 48px;align-items:start}
+.sitefoot .wrap > div{display:grid;gap:8px}
+.sitefoot .brand{font:800 16px var(--display);font-stretch:112%;color:var(--ink)}
+.sitefoot .small{color:var(--muted);max-width:68ch}
+.sitefoot .small b{color:var(--ink);font-weight:600}
+.footlinks{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 20px;font-size:14px}
+.footlinks a{color:var(--ink)}
+@media(max-width:760px){.sitefoot .wrap{grid-template-columns:minmax(0,1fr)}}
+
+/* ---------- Small fixes ---------- */
+body{margin:0}
+a.btn{display:inline-block;text-decoration:none}
+.quiz{border-top:1px solid var(--line);padding:0;gap:0;max-width:none}
+.quiz details{display:grid;gap:18px;padding:14px 16px;border:1px solid var(--line);border-top:0;border-radius:0 0 8px 8px;background:var(--surface);max-width:780px}
+.quiz summary{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 12px;cursor:pointer;list-style:none}
+.quiz summary::-webkit-details-marker{display:none}
+.quiz summary::before{content:"▸";color:var(--amber);font-size:13px;transition:transform .15s}
+.quiz details[open] summary::before{transform:rotate(90deg)}
+.quiz details[open] summary{margin-bottom:6px}
+.quiz .q{margin-top:14px}

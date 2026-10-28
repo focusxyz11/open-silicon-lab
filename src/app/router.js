@@ -8,6 +8,7 @@ import { factsHTML } from './facts.js';
 import { markSeen, P } from './learning.js';
 import { initMap, redrawMap, state as mapState } from './map.js';
 import { renderWorkshop, renderChallenges, renderKnowledge } from './views.js';
+import { issueURL } from './config.js';
 
 const $ = s => document.querySelector(s);
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -50,7 +51,16 @@ function renderChrome(id) {
     '<p class="eyebrow">Connected topics</p>' + edges.map(e => { const out = e[0] === id; const o = topicById(out ? e[1] : e[0]); return '<a class="conn" href="#' + o.id + '"><span>' + (out ? '→' : '←') + '</span><b>' + esc(o.t) + '</b><small>' + esc(e[2]) + '</small></a>'; }).join('');
   $('#topicFoot').innerHTML = factsHTML(id) +
     (ch.length && id !== 'riscv' ? '<div class="hblock"><p class="code">Challenges in this topic</p><div class="chgrid">' + ch.map(c => '<a href="' + c.href + '" class="chcard"><span class="pill out">' + c.kind + '</span><b>' + esc(c.t) + '</b><small>' + esc(c.d) + '</small></a>').join('') + '</div></div>' : '') +
-    '<div class="hblock"><p class="code">Where this connects</p><div class="nextgrid">' + edges.map(e => { const out = e[0] === id; const o = topicById(out ? e[1] : e[0]); const ob = bandById(o.band); return '<a href="#' + o.id + '"><span class="code">' + (out ? 'Leads to' : 'Builds on') + ' · ' + esc(ob.t) + '</span><b>' + esc(o.t) + '</b><small>' + esc(e[2]) + '</small></a>'; }).join('') + '</div></div>';
+    '<div class="hblock"><p class="code">Where this connects</p><div class="nextgrid">' + edges.map(e => { const out = e[0] === id; const o = topicById(out ? e[1] : e[0]); const ob = bandById(o.band); return '<a href="#' + o.id + '"><span class="code">' + (out ? 'Leads to' : 'Builds on') + ' · ' + esc(ob.t) + '</span><b>' + esc(o.t) + '</b><small>' + esc(e[2]) + '</small></a>'; }).join('') + '</div></div>' +
+    feedbackHTML(id, t.t);
+}
+
+/* Every topic ends with a way to correct it or improve it. The links open GitHub issue
+   forms with the topic already filled in. */
+function feedbackHTML(id, title) {
+  return '<div class="feedback"><div><p class="code">Help improve this topic</p><p>Spot a mistake, or have an idea for a simulation or challenge? This project is open source and improves through feedback.</p></div><div class="row">' +
+    '<a class="btn" href="' + esc(issueURL('correction', { title: '[Correction] ' + title + ': ', topic: id })) + '" target="_blank" rel="noopener">Report a mistake</a>' +
+    '<a class="btn" href="' + esc(issueURL('idea', { title: '[Idea] ' + title + ': ', topic: id })) + '" target="_blank" rel="noopener">Suggest an idea</a></div></div>';
 }
 
 function showTopic(id, anchor) {

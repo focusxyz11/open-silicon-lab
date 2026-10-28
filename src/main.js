@@ -7,6 +7,7 @@ import { initLearning } from './app/learning.js';
 import { initAsk } from './app/ask.js';
 import { initRouter } from './app/router.js';
 import { renderMapShell } from './app/map.js';
+import { issueURL, REPO_URL } from './app/config.js';
 
 /* Section ids in the order they sit in the library. Reference pages come last. */
 export const SECTION_IDS = TOPICS.map(t => t.id).concat(['glossary', 'sources']);
@@ -19,7 +20,13 @@ async function text(path) {
   return r.text();
 }
 
+function wireFooter() {
+  document.querySelectorAll('#siteFoot [data-issue]').forEach(a => { a.href = issueURL(a.dataset.issue); a.target = '_blank'; a.rel = 'noopener'; });
+  document.querySelectorAll('#siteFoot [data-repo]').forEach(a => { a.href = REPO_URL; a.target = '_blank'; a.rel = 'noopener'; });
+}
+
 async function boot() {
+  wireFooter();
   const lib = document.getElementById('library');
   const [zoom, ...secs] = await Promise.all(['content/zoom.html'].concat(SECTION_IDS.map(id => 'content/sections/' + id + '.html')).map(text));
   /* The map view holds the zoom viewer, so its lab can start with the others. */

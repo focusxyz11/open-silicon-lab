@@ -1,0 +1,42 @@
+name: Report a mistake
+description: A fact, explanation or simulation that is wrong, outdated or misleading.
+title: "[Correction] "
+labels: [correction]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you. Corrections are the most useful feedback this project gets. A source makes a fix fast.
+  - type: input
+    id: topic
+    attributes:
+      label: Topic
+      description: The topic id from the page address, for example litho or riscv.
+  - type: input
+    id: where
+    attributes:
+      label: Where on the page
+      description: The simulation name, fact or sentence.
+  - type: textarea
+    id: wrong
+    attributes:
+      label: What is wrong
+      description: Quote the text or describe what the simulation shows.
+    validations:
+      required: true
+  - type: textarea
+    id: right
+    attributes:
+      label: What it should say
+    validations:
+      required: true
+  - type: input
+    id: source
+    attributes:
+      label: Source
+      description: A link that supports the correction (paper, datasheet, press release, standard).
+  - type: dropdown
+    id: background
+    attributes:
+      label: Your background (optional)
+      options: [Student or learner, Chip or hardware engineer, Researcher, Industry (business, policy, other), Other]

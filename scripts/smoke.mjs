@@ -48,6 +48,13 @@ async function check(viewport) {
     if (await page.evaluate(v => document.getElementById('view-' + v).hidden, v)) problems.push(tag + v + ' view did not open');
   }
 
+  // Feedback: every topic offers prefilled GitHub forms, and the footer links work.
+  await page.evaluate(() => { location.hash = 'litho'; }); await page.waitForTimeout(150);
+  const fb = await page.$$eval('#topicFoot .feedback a', as => as.map(a => a.href));
+  if (fb.length !== 2 || !fb.every(h => /\/issues\/new\?template=(correction|idea)\.yml/.test(h) && h.includes('topic=litho'))) problems.push(tag + 'topic feedback links are missing or wrong');
+  const foot = await page.$$eval('#siteFoot a[data-issue], #siteFoot a[data-repo]', as => as.map(a => a.href));
+  if (foot.length !== 4 || foot.some(h => !h.startsWith('https://github.com/'))) problems.push(tag + 'footer links are not wired');
+
   // A lab anchor opens its topic and scrolls to it.
   await page.evaluate(() => { location.hash = 'lab-fab-2'; }); await page.waitForTimeout(300);
   if (await page.evaluate(() => document.getElementById('fab').hidden)) problems.push(tag + 'lab anchor did not open its topic');

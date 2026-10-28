@@ -39,7 +39,7 @@ export function renderMapShell(zoomHTML) {
   <section class="wrap mapfoot">
     <div class="hblock"><h3>What changed recently</h3><p class="small muted" id="fbStatus"></p><div id="changes"></div></div>
     <div class="hblock"><h3>About this lab</h3>
-      <p class="small">Open Silicon Lab is an open-source project. Every simulation is a teaching model built from public sources; each one says what it simplifies. Facts carry their source and the date they were last verified, and are rechecked every month.</p>
+      <p class="small">Open Silicon Lab is an open-source project, made with AI: Claude wrote the text, simulations and code with the project owner, from public sources. Every simulation is a teaching model; each one says what it simplifies. Facts carry their source and the date they were last verified, and are rechecked every month.</p>
       <p class="small"><a href="#knowledge">Glossary and knowledge cards</a> · <a href="#sources">All sources</a> · <a href="#challenges">All challenges</a></p>
     </div>
   </section>`;

@@ -1,0 +1,31 @@
+name: Suggest an idea
+description: A new simulation, challenge, topic or connection, or a way to make something clearer.
+title: "[Idea] "
+labels: [idea]
+body:
+  - type: input
+    id: topic
+    attributes:
+      label: Topic (if any)
+      description: The topic id from the page address, for example tiny or accelerators.
+  - type: input
+    id: where
+    attributes:
+      label: Where on the page (if any)
+  - type: textarea
+    id: idea
+    attributes:
+      label: Your idea
+      description: What would you add or change? What would someone learn or be able to try?
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Why it matters
+      description: What was confusing or missing for you?
+  - type: dropdown
+    id: background
+    attributes:
+      label: Your background (optional)
+      options: [Student or learner, Chip or hardware engineer, Researcher, Industry (business, policy, other), Other]
