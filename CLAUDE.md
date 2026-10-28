@@ -1,0 +1,25 @@
+# Open Silicon Lab — notes for Claude
+
+An open-source, interactive lab for how chips are designed, made and used for AI. Static site: plain ES modules, HTML fragments and CSS. No framework, no build step for development.
+
+## Who it is for
+Learners new to chips with basic hardware knowledge. Plain words first; explain any term the first time; Beginner/Engineer explanations sit side by side.
+
+## Principles (from the project owner)
+- Not a textbook: simulations, puzzles and builds first, with only the text needed to use them.
+- Nothing is locked. Threads and stars guide; they never gate content.
+- Everything is connected: every topic sits in the knowledge graph (`src/data/topics.js`) with labelled edges.
+- RISC-V and the open-source hardware ecosystem get special weight; so does an AI-native view of how the industry is changing.
+- Every industry figure lives in `src/data/facts.json` with source, date verified and kind. Each simulation says what it simplifies.
+
+## Commands
+- `npm start` or `node scripts/serve.mjs 8000` — serve locally (opening index.html from disk does not work).
+- `npm test` — engine and knowledge-graph tests (node:test). Must pass.
+- `npm run test:browser` — Playwright smoke test of every view and topic on desktop and mobile.
+- `npm run build` — single-file `dist/open-silicon-lab.html` (used for the claude.ai preview).
+
+## Where things are
+See `docs/ARCHITECTURE.md`. Start with `src/data/topics.js`. Topic content: `content/sections/<id>.html`. Simulations: `src/labs/*.js` (each exports `init()`, registered in `src/labs/index.js`). Pure logic: `src/engines/`. Shell, map and views: `src/app/`. Styles: `src/styles/`.
+
+## Workflow
+Work on a branch, open a pull request, let CI pass, then merge; `main` deploys to GitHub Pages. Keep PRs focused. Check changes at phone width (390 px) and in dark mode; no sideways scrolling.
