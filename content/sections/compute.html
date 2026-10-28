@@ -1,0 +1,61 @@
+<section id="compute">
+    <div class="head">
+      <p class="code" data-topic-label>AI at work</p>
+      <h2>What the chip actually does all day</h2>
+    </div>
+    <div class="prose">
+      <p>Neural networks are mostly matrix multiplication. AI chips dedicate most of their area to grids of multiply-accumulate (MAC) units that pass numbers to their neighbours every clock tick. This layout is called a systolic array, after the rhythmic pumping of a heart. Google's TPUs use it directly; NVIDIA's tensor cores use the same multiply-accumulate idea.</p>
+    </div>
+    <div class="lab">
+      <header><b>Systolic array, 4 × 4</b><span id="saCyc">Cycle 0 of 10</span></header>
+      <div class="body">
+        <div class="cols">
+          <canvas class="plot" id="saCv" style="aspect-ratio:1/1;max-width:460px"></canvas>
+          <div class="controls">
+            <div class="row"><button class="btn primary" id="saPlay">Play</button><button class="btn" id="saStep">Step one cycle</button><button class="btn" id="saNew">New matrices</button></div>
+            <div class="mats" id="saMats"></div>
+            <p class="small">Rows of A enter from the left, columns of B from the top, each delayed one cycle per row so the right numbers meet. Each cell multiplies the pair it receives, adds it to its running total, and passes the numbers on. After 3N − 2 cycles every cell holds one entry of C = A × B.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="prose">
+      <h3>Running a language model: compute or memory?</h3>
+      <p>Generating each token of text means reading every weight of the model from memory and doing about two operations per weight. With one user, the chip mostly waits on memory. Serving many users at once (batching) reuses each weight read many times. The roofline chart shows which limit you hit.</p>
+    </div>
+    <div class="lab">
+      <header><b>LLM inference roofline</b><span id="rfBound">–</span></header>
+      <div class="body">
+        <div class="ctl"><span class="lbl">Chip</span><div class="seg" id="rfChip"></div></div>
+        <div class="cols">
+          <canvas class="plot" id="rfCv" style="height:340px"></canvas>
+          <div class="controls">
+            <div class="ctl"><label for="rfP">Model size <output id="rfPO">–</output></label><input type="range" id="rfP" min="0" max="1000" value="560"></div>
+            <div class="ctl"><span class="lbl">Number format</span><div class="seg" id="rfPrec"><button data-b="2" aria-pressed="false">FP16</button><button data-b="1" aria-pressed="false">FP8</button><button data-b="0.5" aria-pressed="true">FP4</button></div></div>
+            <div class="ctl"><label for="rfB">Users served at once (batch) <output id="rfBO">–</output></label><input type="range" id="rfB" min="0" max="1000" value="0"></div>
+          </div>
+        </div>
+        <div class="readout">
+          <div><span>Chips to hold weights</span><b id="rfG">–</b></div>
+          <div><span>Speed per user</span><b id="rfU">–</b></div>
+          <div><span>Total tokens / s</span><b id="rfT">–</b></div>
+          <div><span>Chip utilization</span><b id="rfUt">–</b></div>
+        </div>
+        <p class="note">Simplified decode model: step time = max(weight bytes ÷ bandwidth, 2 × params × batch ÷ peak compute), split evenly across the chips needed to hold the weights. Ignores the KV cache and communication. Rubin: NVIDIA's stated 50 PFLOPS FP4 and 22 TB/s. B200: 9 PFLOPS dense FP4, 8 TB/s. FP8 and FP16 peaks are assumed at ½ and ¼ of FP4. Phone NPU figures are a rough illustration.</p>
+      </div>
+    </div>
+
+    <div class="cols even">
+      <div class="prose">
+        <p class="code">Where it lands · data center</p>
+        <h3>A rack that acts like one computer</h3>
+        <p>NVIDIA's Vera Rubin NVL72 rack, shipping from the second half of 2026, joins 72 Rubin GPUs and 36 Vera CPUs with NVLink 6. NVIDIA quotes 3.6 exaflops of FP4 inference, 20.7 TB of HBM4 and 260 TB/s of scale-up bandwidth per rack. Each Rubin GPU has 336 billion transistors on TSMC 3 nm and 288 GB of HBM4. AMD's competing Helios rack uses MI400 chips with 432 GB of HBM4 each.</p>
+      </div>
+      <div class="prose">
+        <p class="code">Where it lands · your devices</p>
+        <h3>2 nm in phones and laptops</h3>
+        <p>TSMC started volume production of N2, its first gate-all-around process, in the fourth quarter of 2025. Phone chips are the first adopters, and Apple's A20 generation is widely reported to move to N2 with a new wafer-level multi-chip package. AMD has confirmed Zen 6 CPUs on N2. Intel's Panther Lake laptop chips are built on Intel 18A with both gate-all-around transistors and backside power delivery.</p>
+      </div>
+    </div>
+  </section>

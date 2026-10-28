@@ -1,0 +1,46 @@
+<section id="build">
+    <div class="head">
+      <p class="code" data-topic-label>AI chip architect</p>
+      <h2>You are the chip architect</h2>
+    </div>
+    <div class="prose">
+      <p>Pick a mission, then make the decisions a real chip team makes. Every choice moves performance, power, cost, yield and schedule at the same time, using the same physics and economics as the simulations in the chapters. When the design meets its requirements, tape it out and see how it scores.</p>
+    </div>
+    <div class="lab">
+      <header><b>1 · Choose a mission</b><span id="gmMisTag">–</span></header>
+      <div class="body"><div class="missions" id="gmMission"></div></div>
+    </div>
+    <div class="game">
+      <div class="gcfg" id="gmCfg"></div>
+      <aside class="gout" aria-label="Design review">
+        <div class="lab">
+          <header><b>Live design review</b><span id="gmStars" class="stars">–</span></header>
+          <div class="body">
+            <div class="readout" id="gmSpec"></div>
+            <div class="problems" id="gmProb" hidden></div>
+            <div><p class="eyebrow" style="margin-bottom:6px">Mission requirements</p><div class="reqs" id="gmReqs"></div></div>
+            <p class="small" id="gmGoal"></p>
+            <button class="btn primary tapebtn" id="gmTape" type="button">Tape out this design</button>
+            <button class="btn" id="gmReset" type="button">Reset to mission starting point</button>
+          </div>
+        </div>
+      </aside>
+    </div>
+    <div class="lab" id="gmResult" hidden>
+      <header><b>Tape-out report</b><span id="gmResTag">–</span></header>
+      <div class="body">
+        <canvas class="plot" id="gmTime" style="height:150px"></canvas>
+        <div class="cols">
+          <canvas class="plot" id="gmWafer" style="aspect-ratio:1/1;max-width:340px;justify-self:center"></canvas>
+          <div class="prose" id="gmReview"></div>
+        </div>
+      </div>
+    </div>
+    <div class="lab">
+      <header><b>Compare with real 2026 chips</b><span>Vendor figures</span></header>
+      <div class="body">
+        <div class="scroll"><table class="cmp" id="gmCmp"></table></div>
+        <p class="note">How the model works: compute = dies × compute area × math per mm² (by architecture and node) × clock. Power adds compute energy (scaled by voltage squared), memory traffic energy and leakage. Cost uses the wafer-yield model from stage 07 plus memory and packaging. Wafer, memory and packaging prices are rough public estimates; treat results as a teaching model, not a quote. Your last five tape-outs are saved in this browser.</p>
+      </div>
+    </div>
+  </section>

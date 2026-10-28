@@ -1,0 +1,29 @@
+<section id="layout">
+    <div class="head">
+      <p class="code" data-topic-label>Physical layout</p>
+      <h2>Placing a billion cells so the wires stay short</h2>
+    </div>
+    <div class="prose">
+      <p>After synthesis the design is a netlist: a list of cells and the nets (wires) connecting them. Placement decides where each cell sits. Long wires are slow and burn power, so tools minimize total wirelength while avoiding congestion.</p>
+      <p>The simulation runs simulated annealing, a classic placement algorithm. It swaps cells at random, always keeps swaps that shorten wires, and sometimes keeps bad swaps while the "temperature" is high so it can escape local traps. Colors show which logic block each cell belongs to. Watch the blocks find each other.</p>
+    </div>
+    <div class="lab">
+      <header><b>Placement by simulated annealing</b><span>110 cells · 250+ nets</span></header>
+      <div class="body">
+        <div class="cols">
+          <canvas class="plot" id="plCv" style="aspect-ratio:14/10"></canvas>
+          <div class="controls">
+            <div class="row"><button class="btn primary" id="plRun">Run annealing</button><button class="btn" id="plShuf">Scramble</button></div>
+            <div class="readout">
+              <div><span>Total wirelength</span><b id="plW">–</b></div>
+              <div><span>Reduction</span><b id="plR">–</b></div>
+              <div><span>Temperature</span><b id="plT">–</b></div>
+              <div><span>Swaps tried</span><b id="plM">–</b></div>
+            </div>
+            <canvas class="plot" id="plSpark" style="height:90px"></canvas>
+            <p class="note">Wirelength is half-perimeter wirelength (HPWL), the standard estimate in real tools. Production placers handle billions of cells with analytical solvers, and AI tunes their settings: Synopsys DSO.ai has used reinforcement learning for this since 2020.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>

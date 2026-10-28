@@ -1,0 +1,111 @@
+<section id="datacenter">
+    <div class="head">
+      <p class="code" data-topic-label>Memory, networks &amp; data centers</p>
+      <h2>Feeding the beast</h2>
+    </div>
+    <div class="prose">
+      <p>A modern AI chip can do more math than its memory can feed, more than its network can share, and more than many power grids can supply. So in 2026 the race is as much about memory cells, cables and megawatts as about transistors. This stage follows a number from a memory cell, through a memory stack and a network of thousands of chips, to the power plant.</p>
+    </div>
+
+    <div class="lab">
+      <header><b>Memory cell lab</b><span id="mcTag">–</span></header>
+      <div class="body">
+        <div class="seg" id="mcMode"><button data-m="dram">DRAM: working memory</button><button data-m="nand">3D NAND: storage</button></div>
+        <div class="cols">
+          <canvas class="plot" id="mcCv" style="height:320px"></canvas>
+          <div class="controls" id="mcCtl"></div>
+        </div>
+        <div class="readout" id="mcOut"></div>
+        <div class="prose" id="mcText"></div>
+        <p class="note" id="mcNote"></p>
+      </div>
+    </div>
+
+    <div class="prose">
+      <h3>Stacking memory: the HBM builder</h3>
+      <p>HBM stacks DRAM dies on top of a logic base die, joined by thousands of vertical copper wires called through-silicon vias. The stack must still fit a fixed package height, so every extra layer means grinding each die thinner. Build a stack and see where it breaks.</p>
+    </div>
+    <div class="lab">
+      <header><b>HBM stack builder</b><span id="hbTag">–</span></header>
+      <div class="body">
+        <div class="cols">
+          <canvas class="plot" id="hbCv" style="height:330px"></canvas>
+          <div class="controls">
+            <div class="ctl"><span class="lbl">Generation</span><div class="seg" id="hbGen"></div></div>
+            <div class="ctl"><span class="lbl">DRAM dies per stack</span><div class="seg" id="hbHi"></div></div>
+            <div class="ctl"><span class="lbl">Bonding between dies</span><div class="seg" id="hbBond"><button data-b="bump">Micro-bumps</button><button data-b="hyb">Hybrid bonding</button></div></div>
+            <div class="ctl"><label for="hbPin">Speed per pin <output id="hbPinO">–</output></label><input type="range" id="hbPin" min="6" max="14" step="0.1" value="10.7"></div>
+            <div class="ctl"><label for="hbN">Stacks per GPU <output id="hbNO">–</output></label><input type="range" id="hbN" min="2" max="12" step="2" value="8"></div>
+          </div>
+        </div>
+        <div class="readout">
+          <div><span>Memory per GPU</span><b id="hbCap">–</b></div>
+          <div><span>Bandwidth per GPU</span><b id="hbBw">–</b></div>
+          <div><span>Each die must be</span><b id="hbThk">–</b></div>
+          <div><span>Data wires to the GPU</span><b id="hbPins">–</b></div>
+        </div>
+        <p class="small" id="hbTxt"></p>
+        <p class="note">HBM3E and HBM4 interface widths, die densities and the 775 µm HBM4 package height follow JEDEC; HBM4E figures are estimates. NVIDIA's Rubin pairs eight 12-high HBM4 stacks for 288 GB and about 22 TB/s, which needs pins well above JEDEC's 8 Gb/s baseline. Base die and mold cap thickness are rounded assumptions.</p>
+      </div>
+    </div>
+
+    <div class="prose">
+      <h3>Wiring thousands of chips together</h3>
+      <p>Big models are split across many chips, which must swap results constantly. Inside a <b>scale-up</b> domain, such as NVIDIA's 72-GPU rack, chips talk over short copper NVLink cables at 3.6 TB/s each, so the rack acts like one giant GPU. Between racks, <b>scale-out</b> networks of Ethernet or InfiniBand switches carry about 0.2 TB/s per GPU, over optical fibre because copper can't reach. Every optical link needs a transceiver at each end, and at data-center scale those lasers add up to megawatts. Co-packaged optics, which reached production switches in 2026, move the optics right next to the switch chip to cut that power.</p>
+    </div>
+    <div class="lab">
+      <header><b>Cluster network builder</b><span id="nwTag">–</span></header>
+      <div class="body">
+        <canvas class="plot" id="nwCv" style="height:300px"></canvas>
+        <div class="cols even" style="margin-top:4px">
+          <div class="controls">
+            <div class="ctl"><label for="nwN">GPUs in the cluster <output id="nwNO">–</output></label><input type="range" id="nwN" min="3" max="17" step="1" value="13"></div>
+            <div class="ctl"><span class="lbl">Scale-up domain</span><div class="seg" id="nwDom"><button data-d="8">8 GPUs (server)</button><button data-d="72">72 GPUs (rack)</button><button data-d="576">576 GPUs (multi-rack, 2027)</button></div></div>
+          </div>
+          <div class="controls">
+            <div class="ctl"><span class="lbl">Switch optics</span><div class="seg" id="nwOpt"><button data-o="plug">Pluggable transceivers</button><button data-o="cpo">Co-packaged optics</button></div></div>
+            <div class="ctl"><span class="lbl">GPU power</span><div class="seg" id="nwGpu"><button data-w="1000">1.0 kW (Blackwell)</button><button data-w="2300">2.3 kW (Rubin)</button></div></div>
+          </div>
+        </div>
+        <div class="readout">
+          <div><span>Switch layers</span><b id="nwTier">–</b></div>
+          <div><span>Optical transceivers</span><b id="nwXcv">–</b></div>
+          <div><span>Network power</span><b id="nwPow">–</b></div>
+          <div><span>Share of cluster power</span><b id="nwShare">–</b></div>
+        </div>
+        <p class="small" id="nwTxt"></p>
+        <p class="note">Teaching model: a non-blocking fat-tree built from 102.4 Tb/s switches with 64 ports of 1.6 Tb/s, one 1.6 Tb/s network port per GPU, and an optical transceiver at both ends of every switch link. Vendor claims put a pluggable 1.6 Tb/s module near 30 W and a co-packaged port near 9 W; the GPU-side module stays pluggable. Switch systems are counted at 1.5 kW each. Real clusters vary widely.</p>
+      </div>
+    </div>
+
+    <div class="prose">
+      <h3>From chip to power plant</h3>
+      <p>Data centers used about 485 terawatt-hours of electricity in 2025, roughly as much as a large European country, and the International Energy Agency expects that to nearly double to about 950 TWh by 2030, with AI-focused sites tripling. Every token an AI model writes costs a little energy at the chip, more in the server around it, and more again for cooling and power conversion. Change the assumptions and follow one watt.</p>
+    </div>
+    <div class="lab">
+      <header><b>Energy per token</b><span id="enTag">–</span></header>
+      <div class="body">
+        <div class="cols">
+          <div>
+            <div class="stack" id="enStack" aria-hidden="true" style="height:34px"></div>
+            <div class="legend" id="enLeg"></div>
+            <canvas class="plot" id="enCv" style="height:200px;margin-top:12px"></canvas>
+          </div>
+          <div class="controls">
+            <div class="ctl"><label for="enW">Accelerator power <output id="enWO">–</output></label><input type="range" id="enW" min="300" max="2500" step="50" value="2300"></div>
+            <div class="ctl"><label for="enTok">Tokens per second per accelerator <output id="enTokO">–</output></label><input type="range" id="enTok" min="2" max="4.7" step="0.01" value="3.9"></div>
+            <div class="ctl"><label for="enOv">Rest of the server and network <output id="enOvO">–</output></label><input type="range" id="enOv" min="10" max="70" step="1" value="35"></div>
+            <div class="ctl"><label for="enPue">Cooling and power losses (PUE) <output id="enPueO">–</output></label><input type="range" id="enPue" min="1.05" max="1.8" step="0.01" value="1.2"></div>
+          </div>
+        </div>
+        <div class="readout">
+          <div><span>Energy per token</span><b id="enJ">–</b></div>
+          <div><span>Per 1,000-token answer</span><b id="enWh">–</b></div>
+          <div><span>A 1 GW campus makes</span><b id="enDay">–</b></div>
+          <div><span>Its yearly electricity</span><b id="enYr">–</b></div>
+        </div>
+        <p class="small" id="enTxt"></p>
+        <p class="note">Tokens per second depend heavily on the model size, number format and how many users share each chip: a single chat user sees 50–200 tokens per second, while a busy server can produce thousands per chip. PUE (power usage effectiveness) is total facility power divided by IT power; modern liquid-cooled sites reach about 1.1–1.2. The 1 GW campus assumes full load all year. Household comparison uses about 10,500 kWh per US home per year.</p>
+      </div>
+    </div>
+  </section>

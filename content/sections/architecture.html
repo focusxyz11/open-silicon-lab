@@ -1,0 +1,136 @@
+<section id="architecture">
+    <div class="head">
+      <p class="code" data-topic-label>Architecture</p>
+      <h2>Deciding what kind of machine to build</h2>
+    </div>
+    <div class="prose">
+      <p>Before anyone draws a circuit, architects decide how the chip will think. Two layers matter. The <b>instruction set architecture (ISA)</b> is the vocabulary software uses to talk to hardware: instructions such as add, load and branch, and the exact bit pattern of each one. The <b>microarchitecture</b> is how one particular chip carries those instructions out: how many pipelines, how big the caches, how it predicts branches.</p>
+      <p>Many different chips speak the same ISA. AMD and Intel processors both run x86 programs. Apple, Qualcomm, AWS and NVIDIA each design different Arm chips. A program compiled for an ISA runs on every chip that implements it, so ISAs last for decades while microarchitectures change every year or two. Today three ISAs matter most.</p>
+    </div>
+    <div class="isa">
+      <article style="--c:var(--cyan)">
+        <h3>x86-64 <span>since 1978</span></h3>
+        <dl>
+          <dt>Style</dt><dd>CISC (complex instruction set). Instructions are 1 to 15 bytes long and can work on memory directly. Modern x86 chips translate them internally into simpler, RISC-like micro-operations.</dd>
+          <dt>Who can build it</dt><dd>In practice only Intel and AMD, through a long-standing cross-license.</dd>
+          <dt>Where it wins</dt><dd>PCs and most servers by unit count. AMD and Intel shipped nearly 20 million EPYC and Xeon server processors in 2025. Its biggest asset is decades of software compatibility.</dd>
+          <dt>2026</dt><dd>Intel and AMD coordinate through the x86 Ecosystem Advisory Group (formed 2024). NVIDIA invested $5 billion in Intel, and the two are building custom x86 CPUs with NVLink and PC chips with RTX graphics chiplets.</dd>
+        </dl>
+      </article>
+      <article style="--c:var(--amber)">
+        <h3>Arm <span>since 1985</span></h3>
+        <dl>
+          <dt>Style</dt><dd>RISC (reduced instruction set). Every instruction is 4 bytes and only loads and stores touch memory. It was designed for low power from the start.</dd>
+          <dt>Who can build it</dt><dd>Anyone who pays Arm. Companies license ready-made cores (Cortex, Neoverse) or buy an architecture license to design their own cores, as Apple and Qualcomm do. Arm earns a royalty on every chip.</dd>
+          <dt>Where it wins</dt><dd>Nearly every smartphone, Apple Macs, Snapdragon Windows laptops, and cloud CPUs such as AWS Graviton, Google Axion, Microsoft Cobalt and NVIDIA Grace and Vera.</dd>
+          <dt>2026</dt><dd>Arm-based servers passed 45% of server revenue in Q1 2026 (IDC), carried by AI racks. In March 2026 Arm unveiled its first chip of its own, the AGI CPU: 136 Neoverse V3 cores on TSMC N3P, co-designed with Meta.</dd>
+        </dl>
+      </article>
+      <article style="--c:var(--violet)">
+        <h3>RISC-V <span>since 2010</span></h3>
+        <dl>
+          <dt>Style</dt><dd>RISC with a tiny base of about 40 integer instructions, plus optional extensions: multiply (M), atomics (A), floating point (F, D), compressed 2-byte instructions (C) and vectors (V).</dd>
+          <dt>Who can build it</dt><dd>Anyone, royalty-free. The standard is run by RISC-V International. Companies sell cores (SiFive, Andes, Alibaba's XuanTie, Tenstorrent) or design their own.</dd>
+          <dt>Where it wins</dt><dd>Billions of microcontrollers and the small control processors hidden inside other chips, including GPUs and SSDs. It is also growing in AI accelerators and in China.</dd>
+          <dt>2026</dt><dd>The RVA23 profile (ratified 2024) fixes one feature set for full computers. Ubuntu 26.04 LTS uses RVA23 as its baseline, and RVA23 boards are moving from labs into products.</dd>
+        </dl>
+      </article>
+    </div>
+
+    <div class="lab">
+      <header><b>Same program, three instruction sets</b><span>Add up an array of numbers</span></header>
+      <div class="body">
+<pre class="v"><span class="k">long</span> sum(<span class="k">long</span> *a, <span class="k">long</span> n) {
+  <span class="k">long</span> s = 0;
+  <span class="k">for</span> (<span class="k">long</span> i = 0; i &lt; n; i++) s += a[i];
+  <span class="k">return</span> s;
+}</pre>
+        <div class="seg" id="isaSeg"></div>
+        <div class="asm" id="isaAsm"></div>
+        <div class="readout">
+          <div><span>Instructions</span><b id="isaN">–</b></div>
+          <div><span>Run per array element</span><b id="isaL">–</b></div>
+          <div><span>Code size</span><b id="isaB">–</b></div>
+          <div><span>Instruction length</span><b id="isaW">–</b></div>
+        </div>
+        <p id="isaNote"></p>
+        <p class="note">Typical optimized compiler output, lightly simplified. Highlighted lines run once per array element. Real output varies with compiler and settings.</p>
+      </div>
+    </div>
+
+    <div class="prose">
+      <h3>An instruction is just 32 bits</h3>
+      <p>Software is stored as numbers. The processor's decoder reads the lowest 7 bits (the opcode) to learn the instruction's format, sends the register numbers to the register file, and sends the function bits to the arithmetic unit. Build a RISC-V instruction and watch its bits change.</p>
+    </div>
+    <div class="lab">
+      <header><b>RISC-V instruction encoder</b><span id="encFmt">R-type</span></header>
+      <div class="body">
+        <div class="encctl">
+          <div class="ctl"><span class="lbl">Instruction</span><select id="encOp" aria-label="Instruction"></select></div>
+          <div class="ctl"><span class="lbl">Destination rd</span><select id="encRd" aria-label="Destination register"></select></div>
+          <div class="ctl"><span class="lbl">Source rs1</span><select id="encRs1" aria-label="Source register 1"></select></div>
+          <div class="ctl"><span class="lbl" id="encR2L">Source rs2</span><select id="encRs2" aria-label="Source register 2"></select><input type="number" id="encImm" min="-2048" max="2047" value="42" aria-label="Immediate value" hidden></div>
+        </div>
+        <div class="bits" id="encBits"></div>
+        <div class="readout">
+          <div><span>Assembly</span><b id="encAsm">–</b></div>
+          <div><span>Stored in memory (hex)</span><b id="encHex">–</b></div>
+          <div><span>Effect</span><b id="encRes">–</b></div>
+        </div>
+        <p class="note">Register values are examples. Register x0 is wired to zero, so writing to it does nothing. "I-type" instructions carry a 12-bit constant inside the instruction itself.</p>
+      </div>
+    </div>
+
+    <div class="prose">
+      <h3>Pipelining: an assembly line for instructions</h3>
+      <p>Each instruction passes through five steps: fetch it (IF), decode it and read registers (ID), execute (EX), access memory (MEM) and write the result back (WB). A pipelined processor overlaps them, so five instructions are in flight at once and ideally one finishes every clock cycle. Trouble starts when an instruction needs a result that isn't ready yet, and the pipeline must stall. Turn on forwarding (extra wires that pass a result straight to the next instruction) or let the compiler reorder the code, and watch the stalls disappear.</p>
+    </div>
+    <div class="lab">
+      <header><b>5-stage pipeline</b><span id="ppCyc">–</span></header>
+      <div class="body">
+        <div class="row" style="gap:18px"><label class="check"><input type="checkbox" id="ppFwd"> Forwarding</label><label class="check"><input type="checkbox" id="ppRe"> Compiler reorders instructions</label><button class="btn" id="ppPlay">Play cycles</button></div>
+        <div class="scroll"><table class="pipe" id="ppTab"></table></div>
+        <div class="legend"><span><i class="sw s-if"></i>Fetch</span><span><i class="sw s-id"></i>Decode</span><span><i class="sw s-ex"></i>Execute</span><span><i class="sw s-mem"></i>Memory</span><span><i class="sw s-wb"></i>Write back</span><span><i class="sw s-st"></i>Stall (bubble)</span></div>
+        <div class="readout">
+          <div><span>Total cycles</span><b id="ppT">–</b></div>
+          <div><span>Stall cycles</span><b id="ppS">–</b></div>
+          <div><span>Cycles per instruction</span><b id="ppC">–</b></div>
+        </div>
+        <ul class="small" id="ppWhy" style="margin:0;padding-left:18px;display:grid;gap:4px"></ul>
+        <p class="note">Classic textbook model: registers are written in the first half of a cycle and read in the second. Real high-end cores go further, with out-of-order execution, branch prediction and 4 to 10 instructions per cycle.</p>
+      </div>
+    </div>
+
+    <div class="prose">
+      <h3>A few fast cores, or thousands of simple ones?</h3>
+      <p>A CPU has a handful of large, fast cores built to finish one task quickly. A GPU has thousands of small lanes that are slow alone but powerful together. Which wins depends on how much of the work can run in parallel. Amdahl's law gives the answer: speedup = 1 ÷ ((1 − p) + p ÷ N), where p is the parallel share and N the number of cores. The serial part never gets faster, so it eventually dominates.</p>
+    </div>
+    <div class="lab">
+      <header><b>Amdahl's law</b><span id="amTag">–</span></header>
+      <div class="body">
+        <div class="cols">
+          <canvas class="plot" id="amCv" style="height:300px"></canvas>
+          <div class="controls">
+            <div class="ctl"><label for="amP">Parallel share of the work <output id="amPO">–</output></label><input type="range" id="amP" min="0" max="1000" value="333"></div>
+            <div class="ctl"><span class="lbl">Rough examples</span><div class="seg" id="amPre"><button data-v="100">Everyday app · 50%</button><button data-v="434">Video encoding · 95%</button><button data-v="1000">AI matrix math · 99.9%</button></div></div>
+            <div class="readout">
+              <div><span>16 CPU cores</span><b id="am16">–</b></div>
+              <div><span>10,000 GPU lanes</span><b id="amG">–</b></div>
+              <div><span>Upper limit</span><b id="amMax">–</b></div>
+            </div>
+            <p class="small" id="amTxt"></p>
+          </div>
+        </div>
+        <p class="note">Speedup is relative to one core. Each GPU lane is individually slower than a CPU core, so in practice the parallel share must be even higher for a GPU to win. That is why systems pair both: CPUs for control and serial code, accelerators for the math.</p>
+      </div>
+    </div>
+
+    <div class="lab">
+      <header><b>The memory hierarchy</b><span>Typical access times</span></header>
+      <div class="body">
+        <label class="check"><input type="checkbox" id="mhH" checked> Show on a human time scale (1 nanosecond = 1 second)</label>
+        <div class="bars" id="mhBars"></div>
+        <p class="small">Processors hide slow memory behind layers of small, fast caches. A trip all the way to main memory costs hundreds of instructions' worth of time. HBM has roughly the same delay as ordinary DRAM but far more bandwidth, which is what AI chips need: they stream enormous amounts of data instead of fetching single values. Bar lengths use a log scale.</p>
+      </div>
+    </div>
+  </section>

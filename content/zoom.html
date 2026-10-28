@@ -1,0 +1,13 @@
+<div class="viewer">
+    <canvas id="zoomCv" aria-label="Zoom from an AI server rack down to silicon atoms"></canvas>
+    <div class="vhud"><div><span id="zIdx">Level 1 of 9</span><b id="zName">AI rack</b></div><div class="fov">Field of view<b id="zFov">2.4 m</b></div></div>
+    <div class="scalebar"><span id="zBar">50 cm</span><i id="zBarI" style="width:80px"></i></div>
+  </div>
+  <div class="zoombar">
+    <button class="btn primary" id="zPlay">Zoom in</button>
+    <input type="range" id="zRange" min="0" max="800" value="0" step="1" aria-label="Zoom level">
+    <button class="btn" id="zBack">Back to rack</button>
+  </div>
+  <div class="levels" id="zLevels"></div>
+  <p class="zdesc" id="zDesc"></p>
+  <p class="note">Each frame is drawn to scale for its field of view. Drawings are simplified from public descriptions of a 2026 NVIDIA Vera Rubin class system and a 2 nm-class logic process.</p>

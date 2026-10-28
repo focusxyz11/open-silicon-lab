@@ -1,0 +1,44 @@
+<section id="scenarios">
+    <div class="head">
+      <p class="code" data-topic-label>Future scenarios</p>
+      <h2>Many futures, not one roadmap</h2>
+    </div>
+    <div class="prose">
+      <p>A roadmap draws one line, but the future of chips depends on bets that could each go well or badly: whether new lithography arrives on time, whether stacked transistors work, whether there is enough memory and electricity, and how much AI speeds up chip design itself. Flip the switches and watch how AI chips' efficiency, their cost, and the world's total AI computing power could diverge by 2040.</p>
+    </div>
+    <div class="lab">
+      <header><b>Scenario planner, 2026–2040</b><span id="spTag">–</span></header>
+      <div class="body">
+        <div class="ctl"><span class="lbl">Start from a preset</span><div class="seg" id="spPre"></div></div>
+        <div class="cols">
+          <div>
+            <canvas class="plot" id="spCv" style="height:360px"></canvas>
+            <div class="legend" id="spLeg"></div>
+          </div>
+          <div class="controls" id="spCtl"></div>
+        </div>
+        <div class="readout">
+          <div><span>AI chip efficiency, 2030</span><b id="spE30">–</b></div>
+          <div><span>AI chip efficiency, 2040</span><b id="spE40">–</b></div>
+          <div><span>AI compute per dollar, 2040</span><b id="spC40">–</b></div>
+          <div><span>Main limit on growth, 2035</span><b id="spLim">–</b></div>
+        </div>
+        <p class="small" id="spTxt"></p>
+        <p class="note">Teaching model, not a forecast. All values are relative to 2026 (= 1×). Efficiency multiplies yearly gains from process technology, architecture and number formats, packaging and memory, and AI-assisted design, each fading over time. Installed computing is the smaller of what available power allows and what fabs, packaging and HBM can supply, with chips retired after four years. Dashed lines show the "Steady progress" preset for comparison.</p>
+      </div>
+    </div>
+
+    <div class="prose">
+      <h3>Beyond silicon: what is real, and when?</h3>
+      <p>New ideas for computing appear in the news every week. Most are years from products, and some will never get there. This board places each one by how far it has come, from lab experiments to chips shipping in volume. Select a card for what it would change, what stands in the way, and the latest signal.</p>
+    </div>
+    <div class="lab">
+      <header><b>Beyond-silicon maturity board</b><span>Editorial assessment, October 2026</span></header>
+      <div class="body">
+        <div class="seg" id="bsF"></div>
+        <div class="matboard" id="bsBoard"></div>
+        <div class="bsd" id="bsDetail" aria-live="polite"></div>
+        <p class="note">Placement reflects public evidence as of October 2026: peer-reviewed results, announced products and shipments. "When it could matter" is a judgment about broad commercial impact, not a promise.</p>
+      </div>
+    </div>
+  </section>

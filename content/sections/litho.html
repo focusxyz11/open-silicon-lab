@@ -1,0 +1,82 @@
+<section id="litho">
+    <div class="head">
+      <p class="code" data-topic-label>Lithography</p>
+      <h2>Printing patterns smaller than the light that draws them</h2>
+    </div>
+    <div class="prose">
+      <p>Lithography projects a mask pattern onto a wafer coated with light-sensitive resist. The smallest printable feature follows the Rayleigh equation: <span class="mono">half-pitch = k₁ · λ / NA</span>. You can shrink the wavelength λ, raise the lens's numerical aperture NA, or push k₁ down with optical tricks. The industry has done all three.</p>
+      <p>This simulator computes the real diffraction physics. A grating of lines splits light into diffraction orders. The lens only catches orders that land inside its pupil. If only the straight-through order gets in, the pattern is lost. Try shrinking the pitch with conventional light, then switch on off-axis illumination or double patterning.</p>
+    </div>
+    <div class="lab">
+      <header><b>Lithography simulator</b><span id="lsStatusWrap"><span class="status ok" id="lsStatus">Prints</span></span></header>
+      <div class="body">
+        <div class="ctl"><span class="lbl">Light source</span><div class="seg" id="lsSrc"></div></div>
+        <div class="cols">
+          <canvas class="plot" id="lsCv" style="height:340px"></canvas>
+          <div class="controls">
+            <canvas class="plot" id="lsPupil" style="aspect-ratio:1/1;max-width:300px"></canvas>
+            <div class="ctl"><label for="lsHp">Target half-pitch <output id="lsHpO">–</output></label><input type="range" id="lsHp" min="0" max="1000" value="279"></div>
+            <div class="ctl"><label for="lsNa">Numerical aperture <output id="lsNaO">–</output></label><input type="range" id="lsNa" min="0.3" max="1.35" step="0.01" value="0.33"></div>
+            <div class="ctl"><label for="lsDose">Exposure dose <output id="lsDoseO">0.86×</output></label><input type="range" id="lsDose" min="0.6" max="1.6" step="0.01" value="0.86"></div>
+            <div class="ctl"><span class="lbl">Illumination</span><div class="seg" id="lsIllum"><button aria-pressed="false" data-v="conv">Conventional</button><button aria-pressed="true" data-v="dipole">Off-axis dipole</button></div></div>
+            <label class="check"><input type="checkbox" id="lsDP"> Double patterning (split onto two masks)</label>
+          </div>
+        </div>
+        <div class="readout">
+          <div><span>Wavelength λ</span><b id="lsL">–</b></div>
+          <div><span>Pitch</span><b id="lsP">–</b></div>
+          <div><span>k₁ factor</span><b id="lsK">–</b></div>
+          <div><span>Printed width error</span><b id="lsCD">–</b></div>
+          <div><span>Image contrast</span><b id="lsC">–</b></div>
+          <div><span>Masks needed</span><b id="lsM">–</b></div>
+        </div>
+        <p class="note">Physics: Abbe imaging of a 50% line/space grating with point-source illumination and a fixed resist threshold. Real scanners add partial coherence, polarization, mask 3D effects and stochastic photon noise, which matter a lot for EUV.</p>
+      </div>
+    </div>
+    <div class="callout">
+      <p class="code">The machine</p>
+      <p>EUV light at 13.5 nm is made by hitting tiny droplets of molten tin with a laser tens of thousands of times per second. Only ASML builds EUV scanners. Its High-NA EUV system raises NA from 0.33 to 0.55 for 8 nm resolution and costs around $400 million. In July 2026 Intel became the first to ship high-volume logic chips (some Panther Lake processors on Intel 18A) with select layers printed by High-NA. TSMC owns High-NA tools but still considers them too costly for mass production.</p>
+    </div>
+
+    <div class="prose">
+      <h3>Inside the EUV scanner: an energy budget</h3>
+      <p>EUV light is absorbed by almost everything, including air and glass, so the whole light path sits in vacuum and uses mirrors instead of lenses. Each mirror is a stack of roughly 40 pairs of molybdenum and silicon layers, and even so it reflects only about 70% of the light. After a dozen reflections, only a few percent of the source power reaches the wafer. That budget decides how many wafers per hour the machine can print. Change the numbers and watch the throughput.</p>
+    </div>
+    <div class="lab">
+      <header><b>EUV scanner model</b><span id="euTag">–</span></header>
+      <div class="body">
+        <canvas class="plot" id="euCv" style="height:270px"></canvas>
+        <div class="cols even">
+          <div class="controls">
+            <div class="ctl"><label for="euP">Source power at focus <output id="euPO">–</output></label><input type="range" id="euP" min="250" max="1000" step="10" value="600"></div>
+            <div class="ctl"><label for="euR">Reflectivity per mirror <output id="euRO">–</output></label><input type="range" id="euR" min="0.6" max="0.72" step="0.005" value="0.7"></div>
+            <div class="ctl"><label for="euN">Reflections (mirrors plus mask) <output id="euNO">–</output></label><input type="range" id="euN" min="8" max="14" step="1" value="11"></div>
+            <div class="ctl"><label for="euD">Exposure dose <output id="euDO">–</output></label><input type="range" id="euD" min="15" max="80" step="1" value="50"></div>
+          </div>
+          <div class="controls">
+            <div class="readout">
+              <div><span>Power at the wafer</span><b id="euW">–</b></div>
+              <div><span>Wafers per hour</span><b id="euH">–</b></div>
+              <div><span>Photons per 16 nm hole</span><b id="euPh">–</b></div>
+              <div><span>Photon count noise</span><b id="euNz">–</b></div>
+            </div>
+            <p class="small">ASML's NXE:3800E prints about 230 wafers per hour with a source near 600 W. In February 2026 ASML reported a path to 1,000 W by firing at about 100,000 tin droplets per second, aiming for roughly 330 wafers per hour by 2030.</p>
+          </div>
+        </div>
+        <div class="sub"><h3>Why dose matters: counting photons</h3>
+        <p class="small">An EUV photon carries 92 eV, about 14 times more energy than a 193 nm photon, so the same dose delivers 14 times fewer photons. At tiny sizes the random count of photons in each spot makes edges rough and can leave a contact hole missing or merged. Lower the dose to print faster and watch the holes degrade.</p></div>
+        <div class="cols even">
+          <canvas class="plot" id="euSt" style="aspect-ratio:1/1;max-width:380px"></canvas>
+          <div class="controls">
+            <div class="readout">
+              <div><span>Holes out of spec</span><b id="euBad">–</b></div>
+              <div><span>Absorbed photons per nm²</span><b id="euAbs">–</b></div>
+            </div>
+            <button class="btn" id="euRe">Expose again</button>
+            <p class="note">Model: 9 contact holes 16 nm wide on a 32 nm pitch, 1 nm pixels. Photons arrive randomly (Poisson statistics), about 20% are absorbed, chemical blur spreads them over about 3 nm, then a threshold develops the resist. A hole fails if its printed area is below 60% or above 150% of target. Real EUV resists add secondary electrons and chemistry that this skips.</p>
+          </div>
+        </div>
+        <p class="note">Throughput model: exposure time = dose × 700 cm² ÷ power at the wafer, plus 12.6 s per wafer for stage moves, alignment and wafer exchange. Calibrated to about 230 wafers per hour at 600 W and 50 mJ/cm².</p>
+      </div>
+    </div>
+  </section>

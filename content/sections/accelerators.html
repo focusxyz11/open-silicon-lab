@@ -1,0 +1,82 @@
+<section id="accelerators">
+    <div class="head">
+      <p class="code" data-topic-label>AI chip architectures</p>
+      <h2>Five ways to build an AI chip</h2>
+    </div>
+    <div class="prose">
+      <p>Every AI chip solves the same problem: perform trillions of multiply-accumulates per second while moving as little data as possible. Moving a number from memory costs far more energy than multiplying it. So the designs differ mainly in where they keep the model's numbers, and in how much flexibility they keep for software.</p>
+      <p>Pick an architecture to see where its memory sits and how data flows.</p>
+    </div>
+    <div class="lab">
+      <header><b>Architecture explorer</b><span id="axTag">–</span></header>
+      <div class="body">
+        <div class="seg" id="axSeg"></div>
+        <div class="cols">
+          <canvas class="plot" id="axCv" style="height:320px"></canvas>
+          <div class="prose" id="axText"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="lab">
+      <header><b>Real 2026 AI chips compared</b><span>Vendor figures · log scale</span></header>
+      <div class="body">
+        <div class="seg" id="rcSeg"><button data-k="pf">Peak low-precision compute</button><button data-k="cap">Memory capacity</button><button data-k="bw">Memory bandwidth</button></div>
+        <div class="bars" id="rcBars"></div>
+        <p class="note">Compute figures are each vendor's advertised peak in its best low-precision format (FP4, MXFP4 or FP8, and sparse FP16 for Cerebras), so they are not directly comparable. Bars use a log scale because the chips span more than three orders of magnitude. Cerebras is a whole wafer; Groq 3 is one chip of a rack of 256.</p>
+      </div>
+    </div>
+
+    <div class="prose">
+      <h3>Number formats: how few bits can a number use?</h3>
+      <p>AI models tolerate rounding surprisingly well. Halving the bits per number halves the memory each weight needs and roughly doubles the math per second. The catch is outliers: a few unusually large values stretch the scale so that ordinary values all round to the same few steps. Modern 4-bit formats fix this with <b>block scaling</b>: every small block of 16 or 32 numbers gets its own scale factor. Try FP4 with and without it.</p>
+    </div>
+    <div class="lab">
+      <header><b>Quantization lab</b><span id="qzTag">–</span></header>
+      <div class="body">
+        <div class="cols">
+          <canvas class="plot" id="qzCv" style="height:320px"></canvas>
+          <div class="controls">
+            <div class="ctl"><span class="lbl">Number format</span><div class="seg" id="qzFmt"></div></div>
+            <div class="ctl"><span class="lbl">Scaling</span><div class="seg" id="qzScale"><button data-v="tensor">One scale per tensor</button><button data-v="nv16">Per block of 16 (NVFP4-style)</button><button data-v="mx32">Per block of 32, power of two (MXFP4-style)</button></div></div>
+            <div class="ctl"><label for="qzOut">Outliers in the weights <output id="qzOutO">–</output></label><input type="range" id="qzOut" min="0" max="3" step="0.1" value="0.5"></div>
+          </div>
+        </div>
+        <div class="readout">
+          <div><span>Bits per weight</span><b id="qzBits">–</b></div>
+          <div><span>Memory for a 70B model</span><b id="qzMem">–</b></div>
+          <div><span>Rounding error</span><b id="qzErr">–</b></div>
+          <div><span>Signal-to-noise</span><b id="qzSnr">–</b></div>
+          <div><span>Math speed vs 16-bit</span><b id="qzSpd">–</b></div>
+        </div>
+        <p class="small" id="qzTxt"></p>
+        <p class="note">Simulation: 4,096 weights drawn from a bell curve plus a share of outliers 12× larger, rounded to the nearest value each format can represent. Format details follow the OCP and NVIDIA specifications (FP4 E2M1 represents only 0, 0.5, 1, 1.5, 2, 3, 4 and 6). Block-scale storage is counted in bits per weight; scale rounding is ignored. Speed multipliers are typical peak ratios, not guarantees.</p>
+      </div>
+    </div>
+
+    <div class="prose">
+      <h3>Prefill and decode: two very different jobs</h3>
+      <p>When you send a prompt, the chip first reads all of it in one parallel pass (prefill). That is mostly math, so it is compute-bound. Then it writes the answer one token at a time (decode), and each token needs every weight read from memory again, so it is bandwidth-bound. That is why NVIDIA pairs GPUs with the Rubin CPX for prefill and Groq-style LPUs for fast decode. Change the prompt and answer lengths and watch which phase dominates.</p>
+    </div>
+    <div class="lab">
+      <header><b>Request timeline</b><span id="pdTag">–</span></header>
+      <div class="body">
+        <div class="ctl"><span class="lbl">Chip</span><div class="seg" id="pdChip"></div></div>
+        <div class="cols">
+          <canvas class="plot" id="pdCv" style="height:220px"></canvas>
+          <div class="controls">
+            <div class="ctl"><span class="lbl">Model size</span><div class="seg" id="pdModel"><button data-p="8">8B</button><button data-p="70">70B</button><button data-p="405">405B</button></div></div>
+            <div class="ctl"><label for="pdIn">Prompt length <output id="pdInO">–</output></label><input type="range" id="pdIn" min="0" max="1000" value="600"></div>
+            <div class="ctl"><label for="pdOutL">Answer length <output id="pdOutO">–</output></label><input type="range" id="pdOutL" min="0" max="1000" value="550"></div>
+          </div>
+        </div>
+        <div class="readout">
+          <div><span>Chips to hold the model</span><b id="pdG">–</b></div>
+          <div><span>Time to first token</span><b id="pdTT">–</b></div>
+          <div><span>Answer speed</span><b id="pdSp">–</b></div>
+          <div><span>Total time</span><b id="pdTot">–</b></div>
+        </div>
+        <p class="note">One user, FP8 weights, vendor peak figures with 50% of peak compute assumed reachable. Rubin's FP8 is taken as half its published FP4 figure. Ignores KV-cache reads, communication between chips and batching, all of which matter in real serving.</p>
+      </div>
+    </div>
+  </section>

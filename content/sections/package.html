@@ -1,0 +1,30 @@
+<section id="package">
+    <div class="head">
+      <p class="code" data-topic-label>Packaging &amp; memory</p>
+      <h2>The package is now part of the chip</h2>
+    </div>
+    <div class="prose">
+      <p>AI chips spend much of their time waiting for data. The fix is to put memory right beside the processor. High Bandwidth Memory (HBM) stacks DRAM dies on top of each other, joined by thousands of vertical through-silicon vias, and sits millimetres from the compute dies on a shared silicon interposer. TSMC's version of this is called CoWoS, and its capacity has been one of the tightest bottlenecks in the AI boom.</p>
+      <p>Drag the slider to pull the package apart. Select a layer to read what it does.</p>
+    </div>
+    <div class="lab">
+      <header><b>2.5D AI package, exploded</b><span>CoWoS-style</span></header>
+      <div class="body">
+        <div class="cols">
+          <canvas class="plot" id="pkCv" style="height:420px"></canvas>
+          <div class="controls">
+            <div class="ctl"><label for="pkE">Explode <output id="pkEO">60%</output></label><input type="range" id="pkE" min="0" max="1" step="0.01" value="0.6"></div>
+            <div class="layers" id="pkList"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="lab">
+      <header><b>Memory bandwidth per GPU</b><span>TB/s, vendor peak figures</span></header>
+      <div class="body">
+        <div class="bars" id="bwBars"></div>
+        <div class="grid-ticks"><div></div><div><span>0</span><span>5</span><span>10</span><span>15</span><span>20</span><span>25</span></div></div>
+        <p class="note">Rubin is listed at up to 22 TB/s in NVIDIA's 2026 material; some product pages show 19.2 TB/s. HBM4 doubles the interface to 2,048 bits per stack. For contrast, a phone's LPDDR5X memory delivers well under 0.1 TB/s.</p>
+      </div>
+    </div>
+  </section>

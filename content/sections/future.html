@@ -1,0 +1,27 @@
+<section id="future">
+    <div class="head">
+      <p class="code" data-topic-label>Roadmap</p>
+      <h2>Where chips go next</h2>
+    </div>
+    <div class="prose">
+      <p>Drag through the years to see the state of the art in each part of the stack. Items are tagged by how certain they are: shipping today, announced by a company, or a research projection (mostly from imec, the Belgian lab that coordinates much of the industry's long-range research).</p>
+    </div>
+    <div class="lab">
+      <header><b>State of the art in</b><span class="row" style="gap:6px"><span class="pill ship">Shipping</span><span class="pill ann">Announced</span><span class="pill proj">Projection</span><span class="pill out">Outlook</span></span></header>
+      <div class="body">
+        <div class="row" style="gap:20px;align-items:center"><div class="yearbig" id="rmYear">2026</div><input type="range" id="rmR" min="2011" max="2046" value="2026" style="flex:1;min-width:180px" aria-label="Year"></div>
+        <div class="snap" id="rmSnap"></div>
+      </div>
+    </div>
+    <div class="seg" id="rmTracks"></div>
+    <div class="tl" id="rmList"></div>
+
+    <div class="prose"><h3>Five forces shaping the next decade</h3><p class="muted small">This is a synthesis of the roadmaps above, not a forecast from any one company.</p></div>
+    <div class="forces">
+      <div><h3>Energy per operation is the real limit</h3><p>AI racks are now limited by power and cooling more than by transistor count. Backside power, lower-voltage transistors, FP4 math and optical links all attack joules per operation.</p></div>
+      <div><h3>Density moves from shrinking to stacking</h3><p>Gate pitch stops shrinking much after A10 on imec's roadmap. Gains come from stacking: CFET puts transistors on transistors, hybrid bonding stacks dies, and HBM stacks memory.</p></div>
+      <div><h3>Memory bandwidth outranks raw compute</h3><p>Compute has grown faster than memory bandwidth for years. Expect more HBM per chip, custom HBM base dies, and specialized chips for different phases of AI work.</p></div>
+      <div><h3>Wires turn into light</h3><p>Co-packaged optics put optical engines next to the chip so racks and data centers can link thousands of GPUs without copper's power cost. 2026 is the year it reaches commercial products.</p></div>
+      <div><h3>Chips start designing chips</h3><p>In 2026 all three big EDA vendors launched AI agents that run long design and verification loops on their own. Engineers increasingly set goals and review results while agents iterate.</p></div>
+    </div>
+  </section>

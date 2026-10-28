@@ -1,0 +1,54 @@
+<section id="innovation">
+    <div class="head">
+      <p class="code" data-topic-label>Innovation map</p>
+      <h2>What AI speeds up, what needs invention, what waits on people</h2>
+    </div>
+    <div class="prose">
+      <p>Every step in the chain has a different limiting factor. Some steps are mostly data and computation, so AI is already compressing them. Some are limited by physics and materials and need real inventions. Some are limited by money and construction time. Some are limited by people: skills, judgment, accountability and rules. A chain moves only as fast as its slowest link, so the kind of limit on each step tells you where the next gains will come from.</p>
+      <p class="small muted">The scores below are an editorial synthesis of the 2026 sources on this page, made to compare steps with one another. They are judgments, not measurements.</p>
+    </div>
+    <div class="limkey" id="imKey"></div>
+
+    <div class="lab">
+      <header><b>The whole chain, colored by its limit</b><span>Bar = how much AI helps today</span></header>
+      <div class="body"><div class="chain" id="imChain"></div></div>
+    </div>
+
+    <div class="lab">
+      <header><b>AI leverage vs need for invention</b><span class="seg" id="imYear"><button data-y="0">2026</button><button data-y="1">2030 outlook</button></span></header>
+      <div class="body">
+        <div class="seg" id="imFilter"></div>
+        <div class="cols">
+          <canvas class="plot" id="imCv" style="height:460px"></canvas>
+          <div class="imd" id="imDetail"></div>
+        </div>
+        <p class="note">Bubble size shows how long it takes to add capacity, from weeks for software to years for fabs and power plants. Numbers match the tiles above. Select a bubble or a tile for details; switch to the 2030 outlook to see bubbles move as AI matures.</p>
+      </div>
+    </div>
+
+    <div class="prose">
+      <h3>From idea to rack: what AI can and can't shorten</h3>
+      <p>Switch between the scenarios. AI agents compress architecture, design and verification. Wafers still need months in the fab, packages still need assembly, and new fabs still take years to build. As the software-like steps shrink, the physical steps become the critical path.</p>
+    </div>
+    <div class="lab">
+      <header><b>Schedule of a flagship AI chip</b><span class="seg" id="gtSeg"><button data-s="0">2020 practice</button><button data-s="1">2026 with AI agents</button><button data-s="2">2030 outlook</button></span></header>
+      <div class="body">
+        <canvas class="plot" id="gtCv" style="height:430px"></canvas>
+        <div class="readout">
+          <div><span>Spec to first silicon</span><b id="gtFS">–</b></div>
+          <div><span>Spec to volume</span><b id="gtV">–</b></div>
+          <div><span>Share set by physical steps</span><b id="gtPh">–</b></div>
+          <div><span>New fab capacity, in parallel</span><b id="gtFab">–</b></div>
+        </div>
+        <p class="note">Illustrative durations synthesized from public descriptions of chip programs, not data from any one company. Phases overlap as they do in practice. "Physical steps" are wafer fabrication, packaging and the volume ramp.</p>
+      </div>
+    </div>
+
+    <div class="prose"><h3>What this means</h3></div>
+    <div class="forces lim">
+      <div style="--c:var(--cyan)"><span class="tag" style="--c:var(--cyan)">AI accelerates</span><h3>Design gets cheaper and faster</h3><p>Coding, verification, layout, lithography software and inspection are data problems. Expect smaller teams to design competitive chips, and more custom chips for specific AI models. The scarce resource shifts to proprietary data and to people who can judge the results.</p></div>
+      <div style="--c:var(--amber)"><span class="tag" style="--c:var(--amber)">Needs invention</span><h3>Physics sets the pace of progress</h3><p>Brighter EUV sources, better resists, stacked CFET transistors, 2D materials, optical links and denser memory stacks need new science. AI speeds up simulation and materials search, but each idea still has to be proven in a lab and then a fab, over years.</p></div>
+      <div style="--c:var(--violet)"><span class="tag" style="--c:var(--violet)">Needs capital &amp; time</span><h3>Capacity is the real bottleneck</h3><p>Fabs, packaging lines, HBM plants and data-center power all take billions of dollars and two or more years to add. Demand for AI has repeatedly outrun them; CoWoS packaging and HBM were the tightest bottlenecks of 2024–2026.</p></div>
+      <div style="--c:var(--rose)"><span class="tag" style="--c:var(--rose)">Needs people &amp; rules</span><h3>Humans stay on the critical path</h3><p>Someone must sign off a multimillion-dollar tape-out, decide what to build, and run fabs that face a shortfall of up to 157,000 US workers by 2030. Export controls, subsidies and standards decide who can build and buy what.</p></div>
+    </div>
+  </section>

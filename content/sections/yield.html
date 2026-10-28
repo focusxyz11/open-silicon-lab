@@ -1,0 +1,35 @@
+<section id="yield">
+    <div class="head">
+      <p class="code" data-topic-label>Wafer &amp; yield</p>
+      <h2>Why big chips are expensive and chiplets help</h2>
+    </div>
+    <div class="prose">
+      <p>A 300 mm wafer holds many copies of the chip, called dies. Random defects land on the wafer. Any die with a defect is scrap. The bigger the die, the more likely it catches one, so the share of good dies (yield) falls fast as area grows. There is also a hard ceiling: a scanner prints at most 26 × 33 mm in one shot, the reticle limit.</p>
+      <p>Change the die size and defect density, then split the design into chiplets to see the cost of a working chip drop.</p>
+    </div>
+    <div class="lab">
+      <header><b>Wafer map</b><span id="ydWarn">300 mm wafer</span></header>
+      <div class="body">
+        <div class="cols">
+          <canvas class="plot" id="ydCv" style="aspect-ratio:1/1;max-width:520px;justify-self:center"></canvas>
+          <div class="controls">
+            <div class="ctl"><span class="lbl">Presets</span><div class="seg" id="ydPre"><button data-w="10.5" data-h="10.5">Phone chip</button><button data-w="14" data-h="14">Laptop chip</button><button data-w="26" data-h="32">AI GPU die</button></div></div>
+            <div class="ctl"><label for="ydW">Die width <output id="ydWO">–</output></label><input type="range" id="ydW" min="4" max="34" step="0.5" value="26"></div>
+            <div class="ctl"><label for="ydH">Die height <output id="ydHO">–</output></label><input type="range" id="ydH" min="4" max="36" step="0.5" value="32"></div>
+            <div class="ctl"><label for="ydD">Defect density <output id="ydDO">–</output></label><input type="range" id="ydD" min="0.02" max="0.5" step="0.01" value="0.1"></div>
+            <div class="ctl"><label for="ydC">Wafer price (assumption) <output id="ydCO">–</output></label><input type="range" id="ydC" min="5" max="45" step="1" value="30"></div>
+            <div class="ctl"><span class="lbl">Split into chiplets</span><div class="seg" id="ydSplit"><button aria-pressed="true" data-n="1">1 die</button><button aria-pressed="false" data-n="2">2</button><button aria-pressed="false" data-n="4">4</button><button aria-pressed="false" data-n="8">8</button></div></div>
+            <button class="btn" id="ydNew">Run another wafer</button>
+          </div>
+        </div>
+        <div class="readout">
+          <div><span>Dies per wafer</span><b id="ydN">–</b></div>
+          <div><span>Model yield</span><b id="ydY">–</b></div>
+          <div><span>Good on this wafer</span><b id="ydG">–</b></div>
+          <div><span>Working chips</span><b id="ydChips">–</b></div>
+          <div><span>Silicon cost per chip</span><b id="ydCost">–</b></div>
+        </div>
+        <p class="note">Yield model: Poisson, Y = e<sup>−A·D₀</sup>. Chiplets add 10% area for die-to-die links, and only known-good dies are paired. Packaging cost is not included. Leading 2 nm-class wafers are widely reported near $30,000; treat the price slider as an assumption.</p>
+      </div>
+    </div>
+  </section>

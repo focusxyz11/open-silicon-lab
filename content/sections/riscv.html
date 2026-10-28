@@ -1,0 +1,51 @@
+<section id="riscv">
+    <div class="head">
+      <p class="code" data-topic-label>RISC-V CPU lab</p>
+      <h2>Program a RISC-V processor, then make it an AI chip</h2>
+    </div>
+    <div class="prose">
+      <p>RISC-V is the open instruction set anyone can implement, extend and study. This is a real RV32I core running in your browser. Write assembly, step through it and watch each instruction move through the datapath. Every level is open: start anywhere, and come back for more stars.</p>
+    </div>
+    <div class="rv-levels" id="rvLevels" role="tablist" aria-label="RISC-V lab levels"></div>
+    <div class="rv-app"><header class="lvhead">
+   <div><p class="eyebrow" id="rvLvEye">–</p><h2 id="rvLvTitle">–</h2></div>
+   <div class="row"><span class="stars" id="rvLvStars" aria-label="Stars earned"></span><a class="btn" id="rvLvPrev" href="#map">←</a><a class="btn" id="rvLvNext" href="#map">Next level →</a></div>
+  </header>
+  <div class="bench">
+   <div class="col">
+    <div class="rvcard brief"><p id="rvLvStory"></p><p class="goal" id="rvLvGoal"></p></div>
+    <div class="rvcard" id="rvCoreCard"><div class="edhead"><span>Your core</span><span id="rvCoreTag"></span></div><div class="cores" id="rvCores"></div></div>
+    <div class="rvcard">
+     <div class="edhead"><span id="rvFileName">level.s</span><span class="pill ok" id="rvAsmStat">–</span></div>
+     <div class="codewrap"><pre class="gutter" id="rvGut" aria-hidden="true"></pre><textarea id="rvCode" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="RISC-V assembly code"></textarea></div>
+     <div class="errs" id="rvErrs" aria-live="polite"></div>
+     <div class="ctrls">
+      <button class="btn primary" id="rvBRun" type="button">Run the tests</button>
+      <button class="btn" id="rvBStep" type="button">Step one instruction</button>
+      <button class="btn" id="rvBPlay" type="button">Play</button>
+      <button class="btn" id="rvBReset" type="button">Reset machine</button>
+      <label class="spd" for="rvSpd">Speed <input type="range" id="rvSpd" min="1" max="60" value="8"></label>
+     </div>
+    </div>
+    <div class="rvcard assist">
+     <div class="row"><button class="btn" id="rvBHint" type="button">Show a hint</button><button class="btn" id="rvBCopHint" type="button" hidden>Ask the AI copilot</button><button class="btn" id="rvBCopRev" type="button" hidden>AI code review</button><button class="btn" id="rvBResetCode" type="button">Reset code</button></div>
+     <div id="rvHints"></div>
+     <div class="out" id="rvCopOut" hidden aria-live="polite"></div>
+     <p class="note" id="rvCopNote">The AI copilot appears when this page is opened in Claude.</p>
+    </div>
+   </div>
+   <div class="col">
+    <div class="dpwrap"><canvas id="rvDp" aria-label="Datapath of the RISC-V core"></canvas></div>
+    <div class="rvcard enc"><div class="edhead"><span id="rvEncTxt">Instruction encoding</span><span id="rvEncHex"></span></div><div class="encw"><div class="bits" id="rvBits"></div></div></div>
+    <div class="stat"><div><span>Instructions run</span><b id="rvSSteps">0</b></div><div><span>Cycles</span><b id="rvSCyc">0</b></div><div><span>PC</span><b id="rvSPc">0x000</b></div><div><span>Last result</span><b id="rvSLast">–</b></div></div>
+    <div class="rvcard"><div class="edhead"><span>Registers</span><span>written · read</span></div><div class="regs" id="rvRegs"></div></div>
+    <div class="rvcard" id="rvMemCard"><div class="edhead"><span>Data memory</span><span id="rvMemTag"></span></div><div class="mem" id="rvMem"></div></div>
+   </div>
+  </div>
+  <section class="results" id="rvResults" aria-live="polite"></section>
+  <section class="rvcard" style="gap:14px">
+   <div class="ainote" id="rvAiNote"><p class="eyebrow">AI-native lens</p><p id="rvAiTxt"></p></div>
+   <div><p class="eyebrow" style="margin-bottom:8px">Knowledge for this level</p><div class="rvcardgrid" id="rvLvCards"></div></div>
+  </section>
+    </div>
+  </section>

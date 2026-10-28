@@ -1,0 +1,85 @@
+<section id="supply">
+    <div class="head">
+      <p class="code" data-topic-label>Supply chain map</p>
+      <h2>One chip, a dozen countries</h2>
+    </div>
+    <div class="prose">
+      <p>A single AI accelerator is designed in California with British instruction sets and American software, printed in Taiwan on Japanese wafers by Dutch, American and Japanese machines, stacked with Korean memory, packaged in Taiwan, built into servers in Taiwan or Mexico, and switched on in a data center in Texas. Each country owns the steps where it built decades of skill, so no country can make an advanced chip alone.</p>
+      <p>Press play to follow one GPU around the world, or select a place on the map.</p>
+    </div>
+    <div class="lab">
+      <header><b>The journey of one AI GPU</b><span id="scTag">–</span></header>
+      <div class="body">
+        <div class="row">
+          <button type="button" class="btn primary" id="scPlay">Play the journey</button>
+          <div class="seg" id="scSteps" aria-label="Journey step"></div>
+        </div>
+        <div class="mapwrap"><svg id="scMap" viewBox="0 0 1000 336" role="img" aria-label="Schematic world map of the chip supply chain"></svg></div>
+        <div class="cols scinfo">
+          <div class="prose" id="scText" aria-live="polite"></div>
+          <div id="scSite"></div>
+        </div>
+        <p class="note">Schematic map: shapes are simplified and the vertical scale is stretched. The route follows publicly known locations for an NVIDIA Blackwell or Rubin-class GPU; real shipments use several sites for each step. On small screens, the map scrolls sideways.</p>
+      </div>
+    </div>
+
+    <div class="prose">
+      <h3>Who owns each step</h3>
+      <p>Each row is one activity, and its cells show how the world's value added in that activity splits by region. Darker cells mean a larger share. Design and software are led by American companies; equipment by the US, Japan and the Netherlands; manufacturing and assembly happen mostly in East Asia. The percentage after each activity is its share of the whole industry's value.</p>
+    </div>
+    <div class="lab">
+      <header><b>Share of value added by region</b><span>2022 · BCG and SIA</span></header>
+      <div class="body">
+        <div class="hmwrap"><table class="hm" id="vaTable"></table></div>
+        <p class="note">Source: Boston Consulting Group and Semiconductor Industry Association, <i>Emerging Resilience in the Semiconductor Supply Chain</i> (May 2024), figure 1, for the year 2022. Design, equipment and materials shares follow company headquarters; fabrication and assembly shares follow factory location. "Other" includes Singapore, Malaysia, Israel and India. Rows may not add to exactly 100 because of rounding.</p>
+      </div>
+    </div>
+
+    <div class="prose">
+      <h3>What if one link breaks?</h3>
+      <p>Because each step is concentrated, a single earthquake, fire, blockade or export ban can stop products all over the world. Choose a disruption and see how supply of five product types might respond over the next two years. Inventory buys time; second sources take months to qualify; and some links, such as EUV scanners, have no second source at all.</p>
+    </div>
+    <div class="lab">
+      <header><b>Disruption simulator</b><span id="dsTag">–</span></header>
+      <div class="body">
+        <div class="seg" id="dsSc"></div>
+        <div class="cols">
+          <div>
+            <canvas class="plot" id="dsCv" style="height:300px"></canvas>
+            <div class="legend" id="dsLeg"></div>
+          </div>
+          <div class="controls">
+            <div class="ctl"><label for="dsSev">Capacity lost <output id="dsSevO">–</output></label><input type="range" id="dsSev" min="10" max="100" step="5" value="100"></div>
+            <div class="ctl"><label for="dsDur">Outage lasts <output id="dsDurO">–</output></label><input type="range" id="dsDur" min="1" max="24" step="1" value="6"></div>
+            <div class="ctl"><label for="dsBuf">Inventory on hand <output id="dsBufO">–</output></label><input type="range" id="dsBuf" min="0" max="6" step="0.5" value="1.5"></div>
+            <div class="ctl"><span class="lbl">World supply base</span><div class="seg" id="dsYr"><button data-y="2026">2026</button><button data-y="2030">2030, with new fabs abroad</button></div></div>
+          </div>
+        </div>
+        <div class="readout">
+          <div><span>Worst month, <i id="dsWho">AI accelerators</i></span><b id="dsMin">–</b></div>
+          <div><span>Months below 90% of demand</span><b id="dsMon">–</b></div>
+          <div><span>Output lost over two years</span><b id="dsLost">–</b></div>
+          <div><span>Back to 95%</span><b id="dsRec">–</b></div>
+        </div>
+        <div class="callout"><p class="code" id="dsHead">–</p><p id="dsTxt"></p></div>
+        <p class="note">Teaching model, not a forecast. Each product's exposure is an editorial estimate of the share of its critical chips that depend on the disrupted link with no ready substitute. Inventory is drawn down first, then alternative suppliers ramp up after a qualification delay. Select a product in the legend to see its numbers.</p>
+      </div>
+    </div>
+
+    <div class="prose"><h3>When it really happened</h3><p>Every one of these events stopped or threatened chip supply somewhere. Most were short; a few reshaped policy for years.</p></div>
+    <div class="tl" id="dsHist"></div>
+
+    <div class="prose">
+      <h3>Spreading the risk: the new fabs</h3>
+      <p>Governments now pay chipmakers to build closer to home: the US CHIPS Act, the EU Chips Act, and subsidies in Japan, Korea, India and China. The share of the most advanced capacity outside Taiwan is rising, but slowly, because a leading fab takes years to build and even longer to reach full yield.</p>
+    </div>
+    <div class="lab">
+      <header><b>Advanced foundry capacity by region</b><span>16 nm and below</span></header>
+      <div class="body">
+        <div class="bars" id="capBars"></div>
+        <p class="note">TrendForce projection published in May 2024 (16/14 nm and more advanced). Separately, SIA and BCG project the US share of all chip capacity rising from 10% in 2022 to 14% in 2032, and its share of the most advanced logic (below 10 nm) from 0% to 28%.</p>
+      </div>
+    </div>
+    <div class="fabs" id="fabList"></div>
+    <p class="note">Status from company announcements as of October 2026. Dates for new fabs often slip.</p>
+  </section>

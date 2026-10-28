@@ -1,0 +1,54 @@
+name: Test and deploy
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Engine and data tests
+        run: npm test
+      - name: Install Playwright
+        run: |
+          npm install --no-save playwright@1.48.2 esbuild@0.24.0
+          npx playwright install --with-deps chromium
+      - name: Browser smoke test
+        run: npm run test:browser
+      - name: Build the single-file version
+        run: npm run build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: open-silicon-lab-single-file
+          path: dist/open-silicon-lab.html
+
+  deploy:
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Collect the site
+        run: mkdir _site && cp -r index.html content src _site/
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - id: deployment
+        uses: actions/deploy-pages@v4

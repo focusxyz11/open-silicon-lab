@@ -1,0 +1,87 @@
+/* RISC-V CPU lab styles, scoped to the lab. */
+#riscv .lvhead{display:flex;flex-wrap:wrap;gap:12px 20px;align-items:end;justify-content:space-between;padding-top:18px}
+#riscv .lvhead h2{font-size:clamp(28px,3.6vw,40px);font-weight:800;letter-spacing:-.02em}
+#riscv .lvhead .eyebrow{margin-bottom:6px}
+#riscv .bench{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:20px;align-items:start}
+@media(max-width:980px){#riscv .bench{grid-template-columns:minmax(0,1fr)}}
+#riscv .col{display:grid;gap:14px;min-width:0}
+#riscv .rvcard{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:14px 16px;display:grid;gap:10px;min-width:0}
+#riscv .brief p{font-size:15.5px}
+#riscv .goal{border-left:3px solid var(--copper);padding:6px 0 6px 12px;font-weight:700}
+#riscv .cores{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+#riscv .cores button{display:grid;gap:3px;text-align:left;padding:10px;border:1px solid var(--line);border-radius:6px;background:var(--panel);cursor:pointer}
+#riscv .cores button b{font:700 13.5px var(--mono)}
+#riscv .cores button small{font-size:12px;color:var(--muted);line-height:1.35}
+#riscv .cores button span{font:500 11.5px var(--mono);color:var(--oxide)}
+#riscv .cores button[aria-pressed="true"]{border-color:var(--copper);box-shadow:inset 0 0 0 1px var(--copper)}
+#riscv .edhead{display:flex;justify-content:space-between;align-items:center;font:12px var(--mono);color:var(--muted)}
+#riscv .codewrap{display:grid;grid-template-columns:auto minmax(0,1fr);border:1px solid var(--line);border-radius:6px;background:var(--sunk);overflow:hidden}
+#riscv .codewrap:focus-within{border-color:var(--copper)}
+#riscv .gutter{margin:0;padding:12px 6px 12px 10px;font:13.5px/1.62 var(--mono);color:var(--muted);text-align:right;user-select:none;overflow:hidden}
+#riscv .gutter span{display:block}
+#riscv .gutter span.cur{color:#fff;background:var(--copper);border-radius:2px;padding:0 3px;margin:0 -3px}
+#riscv .gutter span.er{color:var(--bad);font-weight:700}
+#riscv #rvCode{font:13.5px/1.62 var(--mono);padding:12px;border:0;background:transparent;color:var(--ink);resize:vertical;min-height:300px;width:100%;outline:none;white-space:pre;overflow:auto;tab-size:4}
+#riscv .errs{display:grid;gap:4px;font-size:13.5px}
+#riscv .errs p{padding:6px 10px;border-radius:4px;background:color-mix(in srgb,var(--bad) 12%,transparent)}
+#riscv .errs p b{font-family:var(--mono);margin-right:6px}
+#riscv .assist{display:grid;gap:10px}
+#riscv .assist .out{white-space:pre-wrap;font-size:14.5px;line-height:1.55;padding:12px 14px;border-radius:6px;background:color-mix(in srgb,var(--oxide) 9%,var(--panel));border:1px solid color-mix(in srgb,var(--oxide) 30%,transparent)}
+#riscv .hint{font-size:14.5px;padding:8px 12px;border-radius:5px;background:color-mix(in srgb,var(--gold) 12%,transparent)}
+#riscv .dpwrap{overflow-x:auto;border-radius:8px;border:1px solid var(--line);background:var(--panel)}
+#riscv #rvDp{display:block;width:100%;min-width:620px;height:auto;aspect-ratio:1000/430}
+#riscv .enc{display:grid;gap:6px}
+#riscv .bits{display:flex;border-radius:4px;overflow:hidden;border:1px solid var(--line);min-width:0}
+#riscv .bits div{display:grid;justify-items:center;padding:5px 2px;min-width:0;border-right:1px solid var(--line)}
+#riscv .bits div:last-child{border-right:0}
+#riscv .bits code{font:500 11px var(--mono);letter-spacing:.02em;overflow-wrap:anywhere;text-align:center}
+#riscv .bits small{font:10px var(--mono);color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+#riscv .encw{overflow-x:auto}
+#riscv .encw .bits{min-width:520px}
+#riscv .regs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:2px;font:12px/1.3 var(--mono)}
+@media(max-width:520px){#riscv .regs{grid-template-columns:repeat(2,minmax(0,1fr))}}
+#riscv .regs div{display:flex;justify-content:space-between;gap:6px;padding:4px 6px;border-radius:3px;background:var(--sunk);min-width:0}
+#riscv .regs div span{color:var(--muted)}
+#riscv .regs div b{font-weight:500;overflow:hidden;text-overflow:ellipsis}
+#riscv .regs div.w{background:color-mix(in srgb,var(--copper) 22%,var(--sunk))}
+#riscv .regs div.r{box-shadow:inset 0 0 0 1px var(--oxide)}
+#riscv .mem{display:grid;gap:8px;font:12px var(--mono)}
+#riscv .mem .mr{display:grid;grid-template-columns:70px minmax(0,1fr);gap:8px;align-items:start}
+#riscv .mem .cells{display:flex;flex-wrap:wrap;gap:2px}
+#riscv .mem .cells span{min-width:38px;text-align:right;padding:3px 5px;border-radius:3px;background:var(--sunk)}
+#riscv .mem .cells span.hit{background:color-mix(in srgb,var(--oxide) 28%,var(--sunk))}
+#riscv .mem .cells span.wr{background:color-mix(in srgb,var(--copper) 28%,var(--sunk))}
+#riscv .ctrls{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+#riscv .ctrls .spd{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
+#riscv .stat{display:flex;flex-wrap:wrap;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:6px;overflow:hidden}
+#riscv .stat div{flex:1 1 120px;background:var(--panel);padding:9px 12px;display:grid;gap:2px;min-width:0}
+#riscv .stat span{font-size:12px;color:var(--muted)}
+#riscv .stat b{font:500 16px var(--mono);font-variant-numeric:tabular-nums}
+#riscv .results{display:grid;gap:12px}
+#riscv .tests{display:grid;gap:6px}
+#riscv .tests div{display:flex;gap:10px;align-items:baseline;font-size:14.5px}
+#riscv .verdict{display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between;padding:14px 16px;border-radius:8px;border:1px solid var(--line);background:var(--panel)}
+#riscv .verdict h3{font-size:22px}
+#riscv .verdict.win{border-color:color-mix(in srgb,var(--gold) 70%,var(--line));background:color-mix(in srgb,var(--gold) 10%,var(--panel))}
+#riscv .verdict.lose{border-color:color-mix(in srgb,var(--bad) 50%,var(--line))}
+#riscv .cardgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px}
+#riscv .kc{display:grid;gap:6px;align-content:start;padding:12px 14px;border-radius:8px;background:var(--panel);border:1px solid var(--line);border-top:3px solid var(--c)}
+#riscv .kc b{font:700 15.5px var(--display)}
+#riscv .kc p{font-size:14px;color:var(--ink)}
+#riscv .kc .links{display:flex;flex-wrap:wrap;gap:6px;font:12px var(--mono)}
+#riscv .kc .links a{text-decoration:none;padding:3px 7px;border-radius:3px;background:var(--sunk);color:var(--ink)}
+#riscv .ainote{display:grid;gap:6px;padding:12px 16px;border-radius:8px;background:color-mix(in srgb,var(--violet) 9%,var(--panel));border:1px solid color-mix(in srgb,var(--violet) 30%,transparent)}
+#riscv .ainote .eyebrow{color:var(--violet)}
+#riscv .pill.ok{color:var(--good);background:color-mix(in srgb,var(--good) 14%,transparent)}
+#riscv .pill.bad{color:var(--bad);background:color-mix(in srgb,var(--bad) 14%,transparent)}
+#riscv .stars{font:700 14px var(--mono);color:var(--amber-fill);letter-spacing:2px;font-style:normal}
+#riscv .stars .off{color:var(--line)}
+#riscv .rv-levels{display:flex;gap:6px;overflow-x:auto;padding-bottom:6px}
+#riscv .rv-levels a{flex:0 0 auto;display:grid;gap:2px;padding:8px 12px;border:1px solid var(--line);border-radius:6px;background:var(--surface);color:var(--ink);text-decoration:none;min-width:118px}
+#riscv .rv-levels a span{font:500 11px var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+#riscv .rv-levels a b{font-size:14px}
+#riscv .rv-levels a .stars{font-size:12px}
+#riscv .rv-levels a[aria-selected="true"]{border-color:var(--amber);box-shadow:inset 0 0 0 1px var(--amber)}
+#riscv .rv-app{display:grid;gap:18px}
+#riscv .rv-app>.lvhead{padding-top:0}
+#riscv .eyebrow{font:500 11px/1.2 var(--mono);letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}

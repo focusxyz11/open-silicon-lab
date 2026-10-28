@@ -1,0 +1,95 @@
+<section id="economics">
+    <div class="head">
+      <p class="code" data-topic-label>Economics</p>
+      <h2>Where the money goes</h2>
+    </div>
+    <div class="prose">
+      <p>An AI GPU sells for $30,000 to $40,000, yet costs only about $6,000 to manufacture. That gap pays for years of design work and software, and it is why the companies at the chokepoints are among the most profitable in the world. Follow the money from a single chip up to the hundreds of billions that cloud companies now spend each year.</p>
+    </div>
+    <div class="lab">
+      <header><b>Inside the price of an AI GPU</b><span id="gcTag">–</span></header>
+      <div class="body">
+        <div class="cols">
+          <div>
+            <div class="stack" id="gcStack" aria-hidden="true"></div>
+            <div class="legend" id="gcLeg"></div>
+            <div class="pricebar" id="gcPrice" aria-hidden="true"></div>
+          </div>
+          <div class="controls">
+            <div class="ctl"><label for="gcWafer">Logic wafer price <output id="gcWaferO">–</output></label><input type="range" id="gcWafer" min="10000" max="30000" step="500" value="18000"></div>
+            <div class="ctl"><label for="gcArea">Area of each compute die <output id="gcAreaO">–</output></label><input type="range" id="gcArea" min="300" max="858" step="2" value="800"></div>
+            <div class="ctl"><label for="gcD0">Defect density <output id="gcD0O">–</output></label><input type="range" id="gcD0" min="0.03" max="0.2" step="0.01" value="0.07"></div>
+            <div class="ctl"><label for="gcHbm">HBM capacity <output id="gcHbmO">–</output></label><input type="range" id="gcHbm" min="96" max="288" step="24" value="192"></div>
+            <div class="ctl"><label for="gcHp">HBM price per GB <output id="gcHpO">–</output></label><input type="range" id="gcHp" min="6" max="30" step="0.5" value="15"></div>
+            <div class="ctl"><label for="gcPy">Packaging yield <output id="gcPyO">–</output></label><input type="range" id="gcPy" min="70" max="99" step="1" value="86"></div>
+            <div class="ctl"><label for="gcSell">Selling price <output id="gcSellO">–</output></label><input type="range" id="gcSell" min="10000" max="50000" step="1000" value="35000"></div>
+          </div>
+        </div>
+        <div class="readout">
+          <div><span>Cost to make one</span><b id="gcCost">–</b></div>
+          <div><span>Memory share of cost</span><b id="gcMem">–</b></div>
+          <div><span>Good dies per wafer</span><b id="gcDies">–</b></div>
+          <div><span>Chip-level gross margin</span><b id="gcGm">–</b></div>
+        </div>
+        <p class="small" id="gcTxt"></p>
+        <p class="note">Model of a two-die Blackwell-class GPU on a CoWoS-L package. The defaults reproduce Epoch AI's 2025 estimate of about $6,400 (range $5,700–$7,300), in which HBM is about half the cost, HBM plus packaging about two-thirds, packaging yield losses about $1,000 and auxiliary parts about $480. Wafer price, die yield (Poisson model) and the $1,100 base packaging cost are teaching assumptions. Costs exclude R&amp;D, software and the server around the chip.</p>
+      </div>
+    </div>
+
+    <div class="prose">
+      <h3>Five ways to make money from chips</h3>
+      <p>The industry splits into business models with very different economics. A <b>fabless</b> company designs chips and pays a foundry to make them. A <b>foundry</b> manufactures for others and must spend a third of its revenue on new factories. An <b>integrated device manufacturer</b> (IDM) does both. <b>Memory</b> makers swing from losses to record profits as prices rise and fall. An <b>IP licensor</b> sells designs and collects royalties without making anything. Each bar splits $100 of revenue into what it costs and what is left.</p>
+    </div>
+    <div class="lab">
+      <header><b>Where $100 of revenue goes</b><span>Rounded from recent results</span></header>
+      <div class="body">
+        <div class="bm" id="bmBars"></div>
+        <div class="legend" id="bmLeg"></div>
+        <div class="cols bmd"><div class="prose" id="bmText"></div><div class="callout"><p class="code">Spends on new factories</p><p id="bmCapex"></p></div></div>
+        <p class="note">NVIDIA: quarter to July 2026. TSMC: quarter to September 2026 (gross margin 66.4%, operating margin 58.7%). SK hynix: quarter to June 2026 (operating margin 76%); its split between production cost and other costs is approximate. Intel and Arm bars are illustrative of recent years. Capital spending is shown separately because it is paid from profit, not counted in it.</p>
+      </div>
+    </div>
+
+    <div class="prose">
+      <h3>The price ladder</h3>
+      <p>Chip economics spans ten orders of magnitude, from cents per transistor to hundreds of billions of dollars per year. Each step up the ladder is roughly ten times the one below. The bars use a log scale so all of them fit.</p>
+    </div>
+    <div class="lab">
+      <header><b>What things cost in 2026</b><span>Log scale</span></header>
+      <div class="body"><div class="ladder" id="ladder"></div>
+      <p class="note">Mask-set, design and fab costs are industry estimates. Tool prices are widely reported list prices. NVIDIA, TSMC and hyperscaler figures are from company results and guidance.</p></div>
+    </div>
+
+    <div class="prose">
+      <h3>Could you start a chip company?</h3>
+      <p>Hundreds of chip startups have been founded since 2016, many aimed at AI. Most of the money goes to engineers for two to three years before the first chip comes back from the fab. Choose a chip, a process node and a team, and see what it takes to reach first silicon. Try sharing a multi-project wafer with other companies, or using AI design agents.</p>
+    </div>
+    <div class="lab">
+      <header><b>Startup budget simulator</b><span id="suTag">–</span></header>
+      <div class="body">
+        <div class="ctl"><span class="lbl">What you build</span><div class="seg" id="suKind"></div></div>
+        <div class="cols">
+          <div>
+            <div class="stack" id="suStack" aria-hidden="true"></div>
+            <div class="legend" id="suLeg"></div>
+            <canvas class="plot" id="suCv" style="height:150px"></canvas>
+          </div>
+          <div class="controls">
+            <div class="ctl"><span class="lbl">Process node</span><div class="seg" id="suNode"></div></div>
+            <div class="ctl"><label for="suTeam">Engineering team <output id="suTeamO">–</output></label><input type="range" id="suTeam" min="10" max="400" step="5" value="150"></div>
+            <div class="ctl"><label for="suAi">Help from AI design agents <output id="suAiO">–</output></label><input type="range" id="suAi" min="0" max="40" step="5" value="15"></div>
+            <label class="check"><input type="checkbox" id="suMpw"> Share a multi-project wafer for the first chip</label>
+            <label class="check"><input type="checkbox" id="suIp" checked> License CPU and interface IP instead of designing it</label>
+          </div>
+        </div>
+        <div class="readout">
+          <div><span>Cost to first silicon</span><b id="suCost">–</b></div>
+          <div><span>Time to first silicon</span><b id="suTime">–</b></div>
+          <div><span>Time in the fab</span><b id="suFab">–</b></div>
+          <div><span>Funding needed</span><b id="suFund">–</b></div>
+        </div>
+        <p class="small" id="suTxt"></p>
+        <p class="note">Teaching model. Engineers cost about $350,000 a year fully loaded in the US. Design-tool licenses are taken as a quarter of engineering cost. Full mask sets cost roughly $1–3 million at 28 nm, $5–10 million at 7 nm and $15–25 million at 3–2 nm; shuttle slots on a multi-project wafer cost a small fraction of that but give only tens of prototype chips. Funding is cost to first silicon plus 50% for a respin and bring-up.</p>
+      </div>
+    </div>
+  </section>

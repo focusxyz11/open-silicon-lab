@@ -1,0 +1,132 @@
+<section id="tiny">
+    <div class="head">
+      <p class="code" data-topic-label>Tiny chip studio</p>
+      <h2>Design a tiny chip</h2>
+    </div>
+    <div class="prose">
+      <p>Take one small circuit through the same eight steps as a billion-transistor GPU: write the logic, prove it works, turn it into gates, lay it out on silicon, make masks, fabricate, test and ship. Every step uses the real method in miniature, and every step feeds the next, so a bug you miss early shows up later. <a href="#build">Level 2 is the AI chip architect game.</a> Next, <a href="https://claude.ai/artifact/LfymAMCDbuNKAofV9ASfFm" target="_blank" rel="noopener">build and program a RISC-V processor in Open Silicon Quest</a>.</p>
+    </div>
+    <div class="lab tiny">
+      <header><b>Tiny chip studio</b><span id="tcTag">–</span></header>
+      <div class="body">
+        <nav class="tsteps" id="tcSteps" aria-label="Chip design steps"></nav>
+
+        <div class="tpanel" data-p="0">
+          <div class="tprojs" id="tcProj"></div>
+          <div class="cols">
+            <div class="prose" id="tcSpec"></div>
+            <div id="tcSpecTT"></div>
+          </div>
+        </div>
+
+        <div class="tpanel" data-p="1" hidden>
+          <div class="cols">
+            <div class="codebox">
+              <div class="codehead"><span id="tcFile">design.tiny</span><span id="tcStat" class="pill">–</span></div>
+              <div class="codewrap"><pre class="gutter" id="tcGut" aria-hidden="true"></pre><textarea id="tcCode" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="Chip logic code"></textarea></div>
+              <div class="tcerr" id="tcErr" aria-live="polite"></div>
+              <div class="row"><button type="button" class="btn" id="tcResetCode">Reset to starting code</button><button type="button" class="btn" id="tcSol">Show a solution</button><button type="button" class="btn" id="tcSvBtn" aria-pressed="false">See it as SystemVerilog</button></div>
+              <pre class="v" id="tcSv" hidden></pre>
+            </div>
+            <div class="cheat">
+              <p class="eyebrow">The tiny hardware language</p>
+              <table class="tt"><tr><td><code>a &amp; b</code></td><td>AND: 1 only if both are 1</td></tr><tr><td><code>a | b</code></td><td>OR: 1 if either is 1</td></tr><tr><td><code>a ^ b</code></td><td>XOR: 1 if they differ</td></tr><tr><td><code>~a</code></td><td>NOT: flips 0 and 1</td></tr><tr><td><code>( )</code></td><td>Group, as in algebra</td></tr><tr><td><code>w = …;</code></td><td>Any new name is an internal wire</td></tr><tr><td><code>// note</code></td><td>A comment</td></tr></table>
+              <p class="small muted">Real chips are written in SystemVerilog or VHDL. This language keeps only the part that describes logic, so every line becomes real gates. Each line describes hardware that always exists, not steps that run one after another.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="tpanel" data-p="2" hidden>
+          <div class="callout" id="tcVerRes"><p class="code">–</p><p></p></div>
+          <canvas class="plot" id="tcWave" style="height:220px"></canvas>
+          <div class="scroll"><table class="tt ttv" id="tcTT"></table></div>
+          <p class="note" id="tcVerNote"></p>
+        </div>
+
+        <div class="tpanel" data-p="3" hidden>
+          <div class="row" style="gap:14px">
+            <div class="ctl"><span class="lbl">Cell library</span><div class="seg" id="tcLib"><button data-l="basic">Standard cells</button><button data-l="nand">NAND gates only</button></div></div>
+            <label class="check"><input type="checkbox" id="tcOpt"> Let the tool rewrite my logic</label>
+          </div>
+          <canvas class="plot" id="tcSch" style="height:300px;cursor:pointer"></canvas>
+          <p class="small muted">Click the input switches on the left to send 0s and 1s through your gates.</p>
+          <div class="readout">
+            <div><span>Logic cells</span><b id="tcCells">–</b></div>
+            <div><span>Transistors</span><b id="tcTr">–</b></div>
+            <div><span>Gates on the longest path</span><b id="tcDepth">–</b></div>
+            <div><span>Fastest clock</span><b id="tcFmax">–</b></div>
+          </div>
+          <p class="small" id="tcSynTxt"></p>
+        </div>
+
+        <div class="tpanel" data-p="4" hidden>
+          <div class="row" style="gap:14px;align-items:end">
+            <div class="ctl" style="flex:1;min-width:220px"><label for="tcUtil">How tightly cells are packed <output id="tcUtilO">–</output></label><input type="range" id="tcUtil" min="0.3" max="0.9" step="0.05" value="0.5"></div>
+            <button type="button" class="btn primary" id="tcPR">Place and route</button>
+          </div>
+          <canvas class="plot" id="tcLay" style="height:360px"></canvas>
+          <div class="legend" id="tcLayLeg"></div>
+          <div class="readout">
+            <div><span>Core size</span><b id="tcCore">–</b></div>
+            <div><span>Wire length</span><b id="tcWl">–</b></div>
+            <div><span>Vias between layers</span><b id="tcVia">–</b></div>
+            <div><span>Unrouted connections</span><b id="tcFail">–</b></div>
+          </div>
+          <p class="small" id="tcPRTxt"></p>
+        </div>
+
+        <div class="tpanel" data-p="5" hidden>
+          <div class="ctl"><span class="lbl">Choose a factory process</span><div class="seg" id="tcNode"></div></div>
+          <div class="cols">
+            <canvas class="plot" id="tcMask" style="height:380px"></canvas>
+            <div><div class="layers" id="tcLayers"></div></div>
+          </div>
+          <div class="readout">
+            <div><span>Masks in the full process</span><b id="tcMasks">–</b></div>
+            <div><span>Full mask set</span><b id="tcMaskCost">–</b></div>
+            <div><span>Your design's area</span><b id="tcArea">–</b></div>
+            <div><span>How you'd tape out</span><b id="tcHow">–</b></div>
+          </div>
+          <p class="small" id="tcMaskTxt"></p>
+        </div>
+
+        <div class="tpanel" data-p="6" hidden>
+          <div class="row"><button type="button" class="btn primary" id="tcFabGo">Run the fab</button><span class="small muted" id="tcFabStep"></span></div>
+          <div class="cols even">
+            <canvas class="plot" id="tcXs" style="height:300px"></canvas>
+            <canvas class="plot" id="tcWaf" style="height:300px"></canvas>
+          </div>
+          <div class="readout">
+            <div><span>Time in the fab</span><b id="tcFabT">–</b></div>
+            <div><span>Wafer</span><b id="tcFabW">–</b></div>
+            <div><span>Exposure fields on the wafer</span><b id="tcFabD">–</b></div>
+            <div><span>Copies of your design</span><b id="tcFabC">–</b></div>
+          </div>
+          <p class="small" id="tcFabTxt"></p>
+        </div>
+
+        <div class="tpanel" data-p="7" hidden>
+          <div class="cols">
+            <div>
+              <div class="ctl"><label for="tcVec">Test patterns per chip <output id="tcVecO">–</output></label><input type="range" id="tcVec" min="1" max="8" step="1" value="8"></div>
+              <canvas class="plot" id="tcProbe" style="height:280px"></canvas>
+            </div>
+            <div>
+              <div class="readout col">
+                <div><span>Fault coverage</span><b id="tcCov">–</b></div>
+                <div><span>Good chips shipped</span><b id="tcGood">–</b></div>
+                <div><span>Bad chips caught</span><b id="tcCaught">–</b></div>
+                <div><span>Bad chips that escaped</span><b id="tcEsc">–</b></div>
+              </div>
+              <p class="small" id="tcTestTxt"></p>
+            </div>
+          </div>
+          <div class="prose"><h3>Packaged and running</h3><p class="small muted">This gadget runs the gates you synthesized. If your logic has a bug, the gadget has it too.</p></div>
+          <div class="gadget" id="tcGadget"></div>
+          <div class="report" id="tcReport"></div>
+        </div>
+
+        <div class="tnav"><button type="button" class="btn" id="tcBack">← Back</button><span class="small muted" id="tcHint"></span><button type="button" class="btn primary" id="tcNext">Next →</button></div>
+      </div>
+    </div>
+  </section>

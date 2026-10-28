@@ -1,0 +1,29 @@
+<section id="transistor">
+    <div class="head">
+      <p class="code" data-topic-label>The transistor</p>
+      <h2>A switch that must turn fully off</h2>
+    </div>
+    <div class="prose">
+      <p>A transistor is a switch. Voltage on the gate lets current flow from source to drain through a channel. As channels shrank, the gate lost control: current leaked even when the switch was off, wasting power. Each new transistor shape wraps the gate around more of the channel to restore control.</p>
+      <p>Pick a transistor generation and sweep the gate voltage. The plot uses a log scale, so each gridline is ten times more current. A steeper curve means a cleaner switch.</p>
+    </div>
+    <div class="lab">
+      <header><b>Transistor architectures</b><span id="trYears">–</span></header>
+      <div class="body">
+        <div class="seg" id="trSeg"></div>
+        <div class="cols even">
+          <canvas class="plot" id="trCv" style="height:300px"></canvas>
+          <canvas class="plot" id="ivCv" style="height:300px"></canvas>
+        </div>
+        <div class="ctl"><label for="trVg">Gate voltage <output id="trVgO">0.00 V</output></label><input type="range" id="trVg" min="0" max="0.8" step="0.01" value="0.75"></div>
+        <div class="readout">
+          <div><span>Gate touches channel on</span><b id="trSides">–</b></div>
+          <div><span>Subthreshold swing</span><b id="trSS">–</b></div>
+          <div><span>On / off current ratio</span><b id="trRatio">–</b></div>
+          <div><span>Drive per footprint</span><b id="trDrive">–</b></div>
+        </div>
+        <div class="prose" id="trText"></div>
+        <p class="note">Model: a simplified exponential-to-linear device curve with representative subthreshold swing values for each architecture. The physics limit at room temperature is 60 mV per decade. Values are illustrative, not from a specific process.</p>
+      </div>
+    </div>
+  </section>

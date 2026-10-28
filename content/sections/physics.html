@@ -1,0 +1,85 @@
+<section id="physics">
+    <div class="head">
+      <p class="code" data-topic-label>From sand to switch</p>
+      <h2>Why silicon can be a switch</h2>
+    </div>
+    <div class="prose">
+      <p>Chips start as sand. Sand is silicon dioxide, and silicon is a <b>semiconductor</b>: it conducts electricity a little, somewhere between a metal and glass. That "a little" is the whole trick. Add a few atoms of another element and silicon conducts much better; put a voltage nearby and it can switch from insulator to conductor in a trillionth of a second.</p>
+      <p>Walk through the four steps below, from a pure crystal to a working switch.</p>
+    </div>
+    <div class="lab">
+      <header><b>Semiconductor playground</b><span id="phTag">–</span></header>
+      <div class="body">
+        <div class="seg" id="phMode"></div>
+        <div class="cols">
+          <canvas class="plot" id="phCv" style="height:330px"></canvas>
+          <div class="controls" id="phCtl"></div>
+        </div>
+        <div class="readout" id="phOut"></div>
+        <div class="prose" id="phText"></div>
+        <p class="note">Physics model: intrinsic carrier density from the silicon band gap (1.12 eV), mobility from the Caughey–Thomas fit, the abrupt-junction depletion approximation and the ideal diode equation. Dots are a cartoon: a real crystal has 50 sextillion (5 × 10²²) atoms per cubic centimetre.</p>
+      </div>
+    </div>
+
+    <div class="prose">
+      <h3>Growing a perfect crystal</h3>
+      <p>A transistor only works in a crystal where every atom sits in its place. So chipmakers melt polysilicon purified to eleven nines (99.999999999% pure) in a quartz crucible at about 1,420 °C, dip in a small seed crystal, and pull it slowly upward while turning it. Atoms freeze onto the seed in the same pattern, and a single crystal up to two metres long grows over a day or two. This is the <b>Czochralski process</b>, invented in 1916.</p>
+      <p>You run the puller. First pull a thin neck to shed defects, then widen the shoulder, then hold the diameter at 300 mm for as long as you can. Pulling faster or running the melt hotter makes the crystal thinner.</p>
+    </div>
+    <div class="lab">
+      <header><b>Crystal puller</b><span id="czTag">–</span></header>
+      <div class="body">
+        <div class="cols">
+          <canvas class="plot" id="czCv" style="height:380px"></canvas>
+          <div class="controls">
+            <div class="row"><button type="button" class="btn primary" id="czGo">Start growing</button><button type="button" class="btn" id="czReset">Reset</button><button type="button" class="btn" id="czAuto">Autopilot</button></div>
+            <div class="ctl"><label for="czPull">Pull speed <output id="czPullO">–</output></label><input type="range" id="czPull" min="0.2" max="4" step="0.05" value="3.8"></div>
+            <div class="ctl"><label for="czTemp">Melt temperature above freezing <output id="czTempO">–</output></label><input type="range" id="czTemp" min="0" max="20" step="0.5" value="18"></div>
+            <div class="ctl"><label for="czRot">Crystal rotation <output id="czRotO">–</output></label><input type="range" id="czRot" min="2" max="25" step="1" value="12"></div>
+            <div class="steps" id="czPhase"></div>
+          </div>
+        </div>
+        <div class="readout">
+          <div><span>Diameter now</span><b id="czD">–</b></div>
+          <div><span>Body length at 300 mm</span><b id="czL">–</b></div>
+          <div><span>Ingot weight</span><b id="czW">–</b></div>
+          <div><span>Usable wafers</span><b id="czWaf">–</b></div>
+        </div>
+        <p class="small" id="czTxt"></p>
+        <p class="note">Teaching model: diameter responds to pull speed and melt temperature with a lag, as in real pullers, which use cameras and closed-loop control. Real 300 mm pulls run at roughly 0.5–1 mm per minute; the clock here is sped up. Wafers are counted at 775 µm thick, the 300 mm standard, plus about 200 µm lost to each wire-saw cut.</p>
+      </div>
+    </div>
+
+    <div class="prose">
+      <h3>From ingot to wafer</h3>
+      <p>The ingot is ground to an exact cylinder, notched to mark its crystal direction, sliced by diamond wire saws, then lapped, etched and polished until its thickness varies by less than a micrometre across 300 mm and its surface is smooth to a fraction of a nanometre. Scaled up to the size of a football field, a finished wafer would have bumps no taller than a grain of sand.</p>
+    </div>
+    <div class="wsteps" id="wfSteps"></div>
+
+    <div class="prose">
+      <h3>Doping by bombardment: ion implantation</h3>
+      <p>To make n-type and p-type regions exactly where the design wants them, fabs fire dopant ions into the wafer like microscopic bullets. An <b>ion implanter</b> accelerates boron, phosphorus or arsenic atoms to thousands or millions of volts. The energy sets how deep they go; the dose sets how many. The impacts knock silicon atoms out of place, so the wafer is then <b>annealed</b>: heated for a moment to repair the crystal and lock the dopants into it. Hot anneals also let dopants spread, which blurs the sharp profile that tiny transistors need.</p>
+    </div>
+    <div class="lab">
+      <header><b>Implant and anneal lab</b><span id="imTag2">–</span></header>
+      <div class="body">
+        <div class="cols">
+          <canvas class="plot" id="ipCv" style="height:320px"></canvas>
+          <div class="controls">
+            <div class="ctl"><span class="lbl">Dopant ion</span><div class="seg" id="ipIon"></div></div>
+            <div class="ctl"><label for="ipE">Ion energy <output id="ipEO">–</output></label><input type="range" id="ipE" min="0" max="1" step="0.01" value="0.45"></div>
+            <div class="ctl"><label for="ipDose">Dose <output id="ipDoseO">–</output></label><input type="range" id="ipDose" min="12" max="16" step="0.1" value="15"></div>
+            <div class="ctl"><span class="lbl">Anneal</span><div class="seg" id="ipAn"></div></div>
+          </div>
+        </div>
+        <div class="readout">
+          <div><span>Average depth</span><b id="ipRp">–</b></div>
+          <div><span>Peak concentration</span><b id="ipPk">–</b></div>
+          <div><span>Junction depth</span><b id="ipXj">–</b></div>
+          <div><span>Dopants activated</span><b id="ipAct">–</b></div>
+        </div>
+        <p class="small" id="ipTxt"></p>
+        <p class="note">Model: a Gaussian profile with projected range and straggle fitted to published range tables for silicon, broadened by diffusion √(2Dt) during the anneal, against a background doping of 10¹⁷ per cm³. Diffusion coefficients are approximate and ignore transient enhanced diffusion, which makes real profiles spread further.</p>
+      </div>
+    </div>
+  </section>

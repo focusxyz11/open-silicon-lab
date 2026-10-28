@@ -1,0 +1,148 @@
+<section id="fab">
+    <div class="head">
+      <p class="code" data-topic-label>Inside the fab</p>
+      <h2>Manufacturing at the edge of physics</h2>
+    </div>
+    <div class="prose">
+      <p>A fab repeats one loop over and over: put down a film, pattern it with lithography, etch, fill, polish, inspect. Transistors are built first at the bottom, then a dozen or more layers of wiring are stacked above them. Leading-edge chips need 70 or more mask layers and well over a thousand individual steps, and every step must work on nearly every one of billions of features. A process that is 99% good per step would leave almost nothing after a thousand steps, which is why fabs chase perfection.</p>
+    </div>
+    <div class="facts six">
+      <div><b>$25–35B</b><span>Rough cost of one 2 nm-class fab module making about 20,000 wafers a month (estimate)</span></div>
+      <div><b>11 nines</b><span>Purity of semiconductor-grade silicon: 99.999999999%</span></div>
+      <div><b>1,000+</b><span>Process steps per wafer, over roughly 3–4 months in the fab</span></div>
+      <div><b>~2 nm</b><span>How closely each layer must line up with the one below, across a 300 mm wafer</span></div>
+      <div><b>~$400M</b><span>Price of one High-NA EUV scanner; a standard EUV tool costs about half</span></div>
+      <div><b>157,000</b><span>Workers the US chip industry may be short by 2030 (SEMI Foundation, 2026)</span></div>
+    </div>
+    <div class="lab">
+      <header><b>One patterning loop</b><span id="fbStepLbl">Step 1 of 10</span></header>
+      <div class="body">
+        <div class="steps" id="fbSteps"></div>
+        <canvas class="plot" id="fbCv" style="height:300px"></canvas>
+        <div class="row"><button class="btn" id="fbPrev">Previous</button><button class="btn primary" id="fbPlay">Play loop</button><button class="btn" id="fbNext">Next step</button></div>
+        <div class="cols even">
+          <div class="prose" id="fbText"></div>
+          <div class="legend">
+            <span><i style="background:#7D8C99"></i>Silicon wafer</span>
+            <span><i style="background:#8FB0D6"></i>Insulating film</span>
+            <span><i style="background:#E3A532"></i>Photoresist</span>
+            <span><i style="background:#9C88FF"></i>Exposed resist</span>
+            <span><i style="background:#C47A44"></i>Copper wire</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sub">
+      <p class="code">Equipment lab 1 · The cleanroom</p>
+      <h3>How clean is clean?</h3>
+      <p>A single dust particle landing on a wafer can short two wires or block a pattern. Fabs filter air so it flows down in smooth sheets, keep people in full-body suits, and carry wafers between tools in sealed pods (FOUPs) on overhead robot tracks. Compare the air, then look at a particle next to the transistors it lands on.</p>
+    </div>
+    <div class="lab">
+      <header><b>Air cleanliness</b><span id="crTag">–</span></header>
+      <div class="body">
+        <div class="seg" id="crSeg"></div>
+        <div class="cols even">
+          <canvas class="plot" id="crAir" style="height:290px"></canvas>
+          <canvas class="plot" id="crScale" style="height:290px"></canvas>
+        </div>
+        <div class="readout">
+          <div><span>Particles ≥ 0.1 µm per m³</span><b id="crN">–</b></div>
+          <div><span>In one litre of air</span><b id="crL">–</b></div>
+        </div>
+        <p class="small" id="crTxt"></p>
+        <p class="note">Counts follow the ISO 14644-1 class limit, Cn = 10^N × (0.1 ÷ D)^2.08 particles per m³ for particles of size D µm and larger. The room-air value extrapolates ISO class 9. Settings are rough examples; fabs combine a cleaner zone around tools with sealed pods.</p>
+      </div>
+    </div>
+
+    <div class="sub">
+      <p class="code">Equipment lab 2 · Deposition</p>
+      <h3>Laying down films one atomic layer at a time</h3>
+      <p>Modern transistors need films only a few atoms thick that coat deep, narrow trenches evenly. Ordinary chemical vapour deposition (CVD) is fast but piles material up at the trench opening, which can seal it and trap a void. Atomic layer deposition (ALD) alternates two chemicals that each react only with the exposed surface and then stop. Each cycle adds about 0.1 nm everywhere, at the top and the bottom alike. It is slow, but nearly perfect.</p>
+    </div>
+    <div class="lab">
+      <header><b>CVD vs ALD in a trench</b><span id="adTag">–</span></header>
+      <div class="body">
+        <div class="cols">
+          <canvas class="plot" id="adCv" style="height:340px"></canvas>
+          <div class="controls">
+            <div class="ctl"><span class="lbl">Method</span><div class="seg" id="adM"><button data-v="cvd">CVD</button><button data-v="ald">ALD</button></div></div>
+            <div class="ctl"><label for="adAR">Trench depth ÷ width <output id="adARO">–</output></label><input type="range" id="adAR" min="1" max="12" step="0.5" value="6"></div>
+            <div class="row"><button class="btn primary" id="adRun">Deposit</button><button class="btn" id="adReset">Reset</button></div>
+            <canvas class="plot" id="adCyc" style="height:120px"></canvas>
+            <div class="readout">
+              <div><span>Film on top</span><b id="adTop">–</b></div>
+              <div><span>Bottom ÷ top coverage</span><b id="adSC">–</b></div>
+              <div><span>Process time</span><b id="adT">–</b></div>
+            </div>
+          </div>
+        </div>
+        <p class="note">The trench is 40 nm wide. CVD model: growth slows exponentially with depth relative to the remaining opening and stops below the point where the opening closes. ALD model: 0.1 nm per cycle at about 2 s per cycle. Tool makers include Applied Materials, Lam Research, Tokyo Electron and ASM International.</p>
+      </div>
+    </div>
+
+    <div class="sub">
+      <p class="code">Equipment lab 3 · Plasma etch</p>
+      <h3>Carving straight down</h3>
+      <p>In a plasma etcher, an electric field accelerates ions straight down onto the wafer, while neutral radicals drift in every direction and react chemically. Ions give straight walls. Chemistry gives speed and selectivity, but eats sideways under the mask. Etching a hole 50 or more times deeper than it is wide, as 3D NAND memory needs, is one of the hardest jobs in the fab.</p>
+    </div>
+    <div class="lab">
+      <header><b>Monte Carlo etch</b><span id="etTag">–</span></header>
+      <div class="body">
+        <div class="cols">
+          <canvas class="plot" id="etCv" style="aspect-ratio:100/90"></canvas>
+          <div class="controls">
+            <div class="ctl"><label for="etI">Ion directionality (bias power) <output id="etIO">–</output></label><input type="range" id="etI" min="0" max="100" value="85"></div>
+            <div class="ctl"><label for="etC">Share of chemical radicals <output id="etCO">–</output></label><input type="range" id="etC" min="0" max="90" value="30"></div>
+            <div class="row"><button class="btn primary" id="etRun">Etch</button><button class="btn" id="etReset">Reset</button></div>
+            <div class="readout">
+              <div><span>Depth</span><b id="etD">–</b></div>
+              <div><span>Depth ÷ width</span><b id="etAR">–</b></div>
+              <div><span>Undercut</span><b id="etU">–</b></div>
+              <div><span>Mask left</span><b id="etM">–</b></div>
+            </div>
+          </div>
+        </div>
+        <p class="note">Each cell is 2 nm. Ions (cyan traces) fly in a narrow cone and remove material efficiently; radicals (amber traces) react rarely and bounce off in random directions. Tool makers include Lam Research, Tokyo Electron and Applied Materials.</p>
+      </div>
+    </div>
+
+    <div class="sub">
+      <p class="code">Equipment lab 4 · Overlay</p>
+      <h3>Lining up layer after layer</h3>
+      <p>Each of the 70+ layers is printed separately, and every via must land on the wire beneath it. The scanner measures alignment marks and corrects for the wafer stretching and heating, yet small random errors remain. With billions of vias per chip, even a one-in-a-million miss rate means a dead chip.</p>
+    </div>
+    <div class="lab">
+      <header><b>Via landing</b><span id="ovTag">–</span></header>
+      <div class="body">
+        <div class="cols">
+          <canvas class="plot" id="ovCv" style="height:300px"></canvas>
+          <div class="controls">
+            <div class="ctl"><label for="ovX">Systematic shift <output id="ovXO">–</output></label><input type="range" id="ovX" min="-6" max="6" step="0.1" value="0.5"></div>
+            <div class="ctl"><label for="ovS">Random error (σ) <output id="ovSO">–</output></label><input type="range" id="ovS" min="0.2" max="3" step="0.05" value="1.2"></div>
+            <div class="readout">
+              <div><span>Chance one via misses</span><b id="ovP">–</b></div>
+              <div><span>Failed vias per chip</span><b id="ovF">–</b></div>
+            </div>
+            <p class="small" id="ovTxt"></p>
+          </div>
+        </div>
+        <p class="note">Wires and vias are 14 nm wide on a 28 nm pitch, and a chip has 10 billion vias. A via fails here if less than 70% of it lands on its wire. Fabs also use self-aligned vias that snap to the wire below, and add design margins, which relax this budget.</p>
+      </div>
+    </div>
+
+    <div class="sub">
+      <p class="code">Equipment lab 5 · Inspection</p>
+      <h3>Finding one defect among billions of features</h3>
+      <p>Inspection tools scan wafers after critical steps. Because every die is identical, the classic trick is die-to-die comparison: image three neighbouring dies and flag any spot where one disagrees with the other two. Machine-learning models then sort real killer defects from harmless noise. Try to spot the defect yourself first.</p>
+    </div>
+    <div class="lab">
+      <header><b>Die-to-die inspection</b><span id="inTag">–</span></header>
+      <div class="body">
+        <canvas class="plot" id="inCv" style="aspect-ratio:3/1.12"></canvas>
+        <div class="row"><button class="btn primary" id="inCmp">Compare dies</button><button class="btn" id="inNew">Next wafer</button></div>
+        <p class="small" id="inTxt"></p>
+        <p class="note">Optical and electron-beam inspection tools come from KLA, Applied Materials and Hitachi High-Tech. In 2026 TSMC began adopting NVIDIA vision-AI tools to find rare defects with less manual labelling.</p>
+      </div>
+    </div>
+  </section>

@@ -1,0 +1,28 @@
+<section id="ecosystem">
+    <div class="head">
+      <p class="code" data-topic-label>The ecosystem</p>
+      <h2>No company builds a chip alone</h2>
+    </div>
+    <div class="prose">
+      <p>Making an advanced chip takes a chain of highly specialized companies, several of which are the only real supplier of what they make. Select a link in the chain to see who does it and why it matters.</p>
+    </div>
+    <div class="eco" id="eco"></div>
+    <div class="lab"><div class="body eco-detail" id="ecoDetail"></div></div>
+
+    <div class="prose">
+      <h3>Company explorer</h3>
+      <p>About sixty companies, arranged in the order a chip flows through them: from instruction sets and design software at the top to the clouds that run AI models at the bottom. Select a company to draw its main supply links. Lines going up show who it buys from; lines going down show who it sells to. Startups and new entrants are marked with a dashed outline.</p>
+    </div>
+    <div class="lab">
+      <header><b>Who supplies whom</b><span id="coTag">–</span></header>
+      <div class="body">
+        <div class="cotools">
+          <input type="search" id="coQ" placeholder="Search, e.g. HBM, Japan, photonics" aria-label="Search companies">
+          <div class="seg" id="coF"></div>
+        </div>
+        <div class="conet" id="coNet"><svg id="coSvg" aria-hidden="true"></svg><div id="coRows"></div></div>
+        <div class="coprof" id="coProf" aria-live="polite"></div>
+        <p class="note">Links show major, publicly reported supply relationships, not every contract. Most equipment and materials suppliers sell to every major fab, so their links are summarized. Limits follow the four colors of the innovation map: what mainly constrains each company's growth. Company facts were checked in October 2026.</p>
+      </div>
+    </div>
+  </section>
