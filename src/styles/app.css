@@ -263,3 +263,33 @@ a.btn{display:inline-block;text-decoration:none}
 .tmcards .pill{justify-self:start}
 @media(max-width:560px){.tmhead .yearbig{font-size:48px}.yearbtn span{display:none}}
 @media(max-width:430px){.topbar .prog{display:none}}
+
+/* ---- My chip ---- */
+.chipbanner{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;margin-top:10px;padding:10px 14px;border:1px solid color-mix(in srgb,var(--cyan) 45%,var(--line));border-left:4px solid var(--cyan);border-radius:6px;background:color-mix(in srgb,var(--cyan) 7%,var(--surface))}
+.chipbanner>div{display:grid;gap:3px;flex:1 1 320px;min-width:0}
+.chipbanner p{margin:0}
+.chipicon{width:26px;height:26px;flex:none;border-radius:4px;background:#20262b;box-shadow:0 0 0 3px #c9a54a inset,0 0 0 6px #20262b inset;position:relative}
+.chipicon::after{content:"";position:absolute;inset:8px;background:#5b5f86;border-radius:1px}
+.mcname{display:grid;gap:4px;max-width:520px}
+.mcname input{font:700 clamp(28px,5vw,44px)/1.1 var(--display);padding:4px 8px;margin-left:-8px;border:1px solid transparent;border-radius:6px;background:transparent;color:var(--ink);min-width:0;width:100%}
+.mcname input:hover,.mcname input:focus{border-color:var(--line);background:var(--surface);outline:none}
+.mcgrid{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:20px;align-items:start}
+@media(max-width:900px){.mcgrid{grid-template-columns:minmax(0,1fr)}}
+.mccard{display:grid;gap:10px;min-width:0}
+.mccard canvas{width:100%;height:auto;aspect-ratio:720/440;border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.18)}
+.mcside{display:grid;gap:14px;align-content:start}
+.mcjourney{list-style:none;margin:0;padding:0;display:grid;gap:0;position:relative}
+.mcjourney li{display:grid;grid-template-columns:40px minmax(0,1fr);gap:12px;padding:10px 0;position:relative}
+.mcjourney li::before{content:"";position:absolute;left:19px;top:42px;bottom:-10px;width:2px;background:var(--line)}
+.mcjourney li:last-child::before{display:none}
+.mcjourney .stamp{width:38px;height:38px;border-radius:50%;border:2px dashed var(--line);display:grid;place-items:center;font:700 16px var(--mono);color:var(--muted);background:var(--surface);position:relative;z-index:1}
+.mcjourney li.done .stamp{border:2px solid var(--good);background:color-mix(in srgb,var(--good) 16%,var(--surface));color:var(--good);transform:rotate(-8deg)}
+.mcjourney li.na{opacity:.55}
+.mcjourney b{font:600 15px var(--body)}
+.mcjourney p{margin:2px 0 4px;font-size:14px}
+.mcjourney a{font-size:13px}
+.mcpick{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,190px),1fr));gap:8px}
+.mcpick button{display:grid;gap:2px;text-align:left;padding:12px;border:1px solid var(--line);border-radius:6px;background:var(--surface);color:var(--ink);font:inherit;cursor:pointer}
+.mcpick button small{font:500 11px var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.mcpick button b{font:600 15px var(--body)}
+@media(max-width:430px){.tabs{gap:0}.tabs a{padding:9px 7px;font-size:12.5px}}

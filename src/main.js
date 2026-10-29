@@ -7,6 +7,7 @@ import { initLearning } from './app/learning.js';
 import { initAsk } from './app/ask.js';
 import { initRouter } from './app/router.js';
 import { initEra } from './app/era.js';
+import { initMyChip } from './app/mychip.js';
 import { renderMapShell } from './app/map.js';
 import { issueURL, REPO_URL } from './app/config.js';
 
@@ -43,6 +44,7 @@ async function boot() {
   /* Give every lab panel a stable anchor: lab-<topic>-<n>. */
   SECTION_IDS.forEach(id => { const s = document.getElementById(id); if (s) s.querySelectorAll(':scope > .lab, :scope .lab').forEach((l, i) => { if (!l.id) l.id = 'lab-' + id + '-' + (i + 1); }); });
   initEra();
+  initMyChip();
   await loadFacts();
   /* Start labs one by one, so one failure never takes down the rest. */
   for (const [name, init] of LABS) { try { init(); } catch (e) { console.error('Lab failed to start:', name, e); } }
