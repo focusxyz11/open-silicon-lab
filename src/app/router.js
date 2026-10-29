@@ -2,6 +2,7 @@
    Links are plain hashes (#litho, #lab-litho-2, #riscv-5), so every place in the lab is shareable. */
 import { TOPICS, THREADS, topicById, bandById, edgesOf } from '../data/topics.js';
 import { renderEraBanner } from './era.js';
+import { renderChipBanner, renderMyChip, chipVisit } from './mychip.js';
 import { CHALLENGES } from '../data/challenges.js';
 import { redraws } from '../core/ui.js';
 import { openLevel } from '../labs/riscv-lab.js';
@@ -13,7 +14,7 @@ import { issueURL } from './config.js';
 
 const $ = s => document.querySelector(s);
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const VIEWS = ['map', 'topic', 'workshop', 'challenges', 'knowledge'];
+const VIEWS = ['map', 'topic', 'workshop', 'challenges', 'knowledge', 'mychip'];
 const REF = { glossary: 'Glossary', sources: 'Sources' };
 let curView = null, curTopic = null;
 
@@ -43,8 +44,8 @@ function renderChrome(id) {
   } else if (thIn.length) {
     thread = '<div class="thbar quiet"><span class="small muted">On ' + (thIn.length > 1 ? 'the threads' : 'the thread') + '</span>' + thIn.map(x => '<button type="button" class="chip" data-thread="' + x.id + '">' + esc(x.t) + '</button>').join('') + '</div>';
   }
-  $('#topicHead').innerHTML = '<nav class="crumbs" aria-label="Breadcrumb"><a href="#map">Map</a><span>›</span><a href="#map" data-band="' + b.id + '">' + esc(b.t) + '</a><span>›</span><b>' + esc(t.t) + '</b></nav>' + thread + '<div id="eraBanner" hidden></div>';
-  renderEraBanner(id);
+  $('#topicHead').innerHTML = '<nav class="crumbs" aria-label="Breadcrumb"><a href="#map">Map</a><span>›</span><a href="#map" data-band="' + b.id + '">' + esc(b.t) + '</a><span>›</span><b>' + esc(t.t) + '</b></nav>' + thread + '<div id="eraBanner" hidden></div><div id="chipBanner" hidden></div>';
+  renderEraBanner(id); renderChipBanner(id); chipVisit(id);
   const labs = labsIn(id); const edges = edgesOf(id);
   const ch = CHALLENGES.filter(c => c.topic === id);
   $('#rail').innerHTML = '<a class="back" href="#map">← Map</a>' +
@@ -86,6 +87,7 @@ function route() {
   if (h === 'whatif') { show('map'); curTopic = null; setWhatif(true); return; }
   if (h === 'workshop') { renderWorkshop(); show('workshop'); scrollTo({ top: 0, behavior: 'instant' }); return; }
   if (h === 'challenges') { renderChallenges(); show('challenges'); scrollTo({ top: 0, behavior: 'instant' }); return; }
+  if (h === 'mychip') { renderMyChip(); show('mychip'); scrollTo({ top: 0, behavior: 'instant' }); return; }
   if (h === 'knowledge') { renderKnowledge(); show('knowledge'); scrollTo({ top: 0, behavior: 'instant' }); return; }
   const rv = /^riscv-(\d+|sandbox)$/.exec(h);
   if (rv) { const wasRv = curTopic === 'riscv' && curView === 'topic'; showTopic('riscv', wasRv ? null : 'rvLevels'); openLevel(rv[1] === 'sandbox' ? 0 : +rv[1]); document.querySelectorAll('#rail a').forEach(a => a.classList.toggle('on', a.getAttribute('href') === '#' + h)); return; }

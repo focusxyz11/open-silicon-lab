@@ -100,6 +100,15 @@ async function check(viewport) {
   if (!/solved/i.test(await page.textContent('#qcTag'))) problems.push(tag + 'quantum lab: Bell state not recognised');
   await page.click('#qcClear');
 
+  // My chip: start a chip from the passport, then see it on a topic page and in the passport.
+  await page.evaluate(() => { location.hash = 'mychip'; }); await page.waitForTimeout(200);
+  const startBtn = await page.$('[data-start="half"]');
+  if (startBtn) { await startBtn.click(); await page.waitForTimeout(250); }
+  await page.evaluate(() => { location.hash = 'litho'; }); await page.waitForTimeout(200);
+  if (!/Your chip/.test(await page.textContent('#chipBanner'))) problems.push(tag + 'my chip: no line on the Lithography page');
+  await page.evaluate(() => { location.hash = 'mychip'; }); await page.waitForTimeout(300);
+  if (!(await page.$('#mcCard'))) problems.push(tag + 'my chip: passport card missing');
+
   // A lab anchor opens its topic and scrolls to it.
   await page.evaluate(() => { location.hash = 'lab-fab-2'; }); await page.waitForTimeout(300);
   if (await page.evaluate(() => document.getElementById('fab').hidden)) problems.push(tag + 'lab anchor did not open its topic');

@@ -4,6 +4,7 @@ import TC from '../engines/tinychip.js';
 import { tableOf, makeALU } from '../engines/alu.js';
 import { publishSlice } from '../app/alu-link.js';
 import * as X from '../engines/export.js';
+import { publishChip, stampChip } from '../app/mychip.js';
 import { FACTS, fmtDate } from '../app/facts.js';
 export function init(){
 (function tinyStudio(){
@@ -12,8 +13,10 @@ const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',
 const STEPS=['Spec','Write logic','Verify','Synthesize','Place & route','Masks','Fabricate','Test & ship','Make it real'];
 const KEY='sjl-tiny-v1';
 const S={top:{},author:'',p:0,step:0,code:{},lib:'basic',opt:false,util:0.5,node:'130',sv:{},vecs:8,fabbed:false,tested:false,svOn:false};
-try{const j=JSON.parse(localStorage.getItem(KEY)||'null');if(j&&typeof j==='object'){if(j.code&&typeof j.code==='object')S.code=j.code;if(Number.isInteger(j.p)&&TC.PROJ[j.p])S.p=j.p;if(j.top&&typeof j.top==='object')S.top=j.top;if(typeof j.author==='string')S.author=j.author;}}catch(e){}
-const save=()=>{try{localStorage.setItem(KEY,JSON.stringify({code:S.code,p:S.p,top:S.top,author:S.author}));}catch(e){}};
+try{const j=JSON.parse(localStorage.getItem(KEY)||'null');if(j&&typeof j==='object'){if(j.code&&typeof j.code==='object')S.code=j.code;if(Number.isInteger(j.p)&&TC.PROJ[j.p])S.p=j.p;if(j.top&&typeof j.top==='object')S.top=j.top;if(typeof j.author==='string')S.author=j.author;if(TC.NODE[j.node])S.node=j.node;if(j.lib==='nand')S.lib='nand';if(+j.util>=0.3&&+j.util<=0.9)S.util=+j.util;}}catch(e){}
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify({code:S.code,p:S.p,top:S.top,author:S.author,node:S.node,lib:S.lib,util:S.util}));}catch(e){}chipPub();};
+/* My chip: publish the design so the rest of the site can follow it. */
+function chipPub(){const p=TC.PROJ[S.p];publishChip({p:p.id,code:S.code[p.id]!==undefined?S.code[p.id]:p.starter,node:S.node,lib:S.lib,util:S.util});}
 const P=()=>TC.PROJ[S.p];
 const code=()=>S.code[P().id]!==undefined?S.code[P().id]:P().starter;
 let D=null,SY=null,PL=null,RT=null,FAB=null,TST=null;
@@ -96,7 +99,7 @@ function drawWave(){if(!D||D.errs.length)return;const p=P(),vs=V();const sig=p.i
 watch(wave,()=>{if(S.step===2)drawWave();});
 
 /* ---- step 3: synthesis + schematic ---- */
-$('#tcLib').querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{S.lib=b.dataset.l;SY=null;PL=null;RT=null;S.fabbed=false;TST=null;rSynth();chrome();}));
+$('#tcLib').querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{S.lib=b.dataset.l;save();SY=null;PL=null;RT=null;S.fabbed=false;TST=null;rSynth();chrome();}));
 $('#tcOpt').addEventListener('change',e=>{S.opt=e.target.checked;SY=null;PL=null;RT=null;S.fabbed=false;TST=null;rSynth();chrome();});
 const sch=$('#tcSch');let hits=[];
 sch.addEventListener('click',e=>{const r=sch.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top;const h=hits.find(q=>x>=q.x0&&x<=q.x1&&y>=q.y0&&y<=q.y1);if(h){S.sv[h.n]=S.sv[h.n]?0:1;drawSch();if(S.step===7)rGadget();}});
@@ -139,12 +142,12 @@ watch(sch,()=>{if(S.step===3)drawSch();});
 
 /* ---- step 4: place & route ---- */
 const lay=$('#tcLay'),utilI=$('#tcUtil');let snapPos=null,animT=0;
-utilI.addEventListener('input',()=>{S.util=+utilI.value;$('#tcUtilO').textContent=Math.round(S.util*100)+'% of the core';PL=null;RT=null;S.fabbed=false;TST=null;rPR();chrome();});
+utilI.addEventListener('input',()=>{S.util=+utilI.value;save();$('#tcUtilO').textContent=Math.round(S.util*100)+'% of the core';PL=null;RT=null;S.fabbed=false;TST=null;rPR();chrome();});
 $('#tcPR').addEventListener('click',runPR);
 const TYC={INV:'#8fa3b3',BUF:'#8fa3b3',NAND2:'#9b8ce0',NOR2:'#c58ab3',AND2:'#7f9fe0',OR2:'#d6a35a',XOR2:'#5fb7a8',XNOR2:'#5fb7a8',TIE0:'#aaa',TIE1:'#aaa'};
 function runPR(){synth();if(!SY)return;clearInterval(animT);PL=TC.place(SY.M,S.util,7+S.p);RT=null;const frames=[];PL.anneal(Math.min(6000,400+SY.M.cells.length*160),(snap,cost)=>frames.push([snap,cost]));const finalPos=PL.snapshot();
- if(RM||!frames.length){snapPos=null;RT=TC.route(PL);rPR();chrome();return;}
- let k=0;$('#tcPRTxt').textContent='Placing: simulated annealing swaps cells to shorten the wires…';animT=setInterval(()=>{if(k>=frames.length){clearInterval(animT);snapPos=null;Object.assign(PL.pos,finalPos);RT=TC.route(PL);rPR();chrome();return;}snapPos=frames[k][0];drawLay(frames[k][1]);k++;},45);}
+ if(RM||!frames.length){snapPos=null;RT=TC.route(PL);rPR();chrome();stamps();return;}
+ let k=0;$('#tcPRTxt').textContent='Placing: simulated annealing swaps cells to shorten the wires…';animT=setInterval(()=>{if(k>=frames.length){clearInterval(animT);snapPos=null;Object.assign(PL.pos,finalPos);RT=TC.route(PL);rPR();chrome();stamps();return;}snapPos=frames[k][0];drawLay(frames[k][1]);k++;},45);}
 function rPR(){$('#tcUtil').value=S.util;$('#tcUtilO').textContent=Math.round(S.util*100)+'% of the core';const nd=TC.NODE[S.node];
  if(!PL){$('#tcCore').textContent='–';$('#tcWl').textContent='–';$('#tcVia').textContent='–';$('#tcFail').textContent='–';$('#tcPRTxt').textContent='Press "Place and route". The placer arranges your '+(SY?SY.M.cells.length:'')+' cells in rows, then the router draws metal wires on two layers: horizontal on metal 2 and vertical on metal 3, joined by vias.';drawLay();return;}
  const wum=(PL.GW*nd.site[0]),hum=(PL.H/3*nd.site[1]);$('#tcCore').textContent=wum.toFixed(1)+' × '+hum.toFixed(1)+' µm';
@@ -170,7 +173,7 @@ watch(lay,()=>{if(S.step===4)drawLay();});
 const LAYERS=[['diff','Active areas','Where transistors will be: the silicon not covered by insulating oxide.','#5fae6e'],['poly','Polysilicon gates','The gates of every transistor. The finest lines on the chip.','#d9584a'],['cont','Contacts','Holes that connect transistors to the first metal layer.','#555555'],['m1','Metal 1','Power rails and the wiring inside each cell.','#4a7fd9'],['v1','Via 1','Vertical links from metal 1 up to metal 2.','#333333'],['m2','Metal 2','Your horizontal routing wires.','#2aa5b5'],['v2','Via 2','Vertical links between metal 2 and metal 3.','#222222'],['m3','Metal 3','Your vertical routing wires.','#8b6fe0']];
 let selL=1;
 $('#tcNode').innerHTML=Object.entries(TC.NODE).map(([k,n])=>'<button type="button" data-n="'+k+'">'+n.t+'</button>').join('');
-$('#tcNode').querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{S.node=b.dataset.n;SY=null;synth();S.fabbed=false;TST=null;rMask();chrome();}));
+$('#tcNode').querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{S.node=b.dataset.n;save();SY=null;synth();S.fabbed=false;TST=null;rMask();chrome();}));
 const lyBox=$('#tcLayers');lyBox.innerHTML=LAYERS.map((l,i)=>'<button type="button" data-i="'+i+'"><i style="background:'+l[3]+'"></i><span><b>Mask '+(i+1)+' · '+l[1]+'</b><small>'+l[2]+'</small></span></button>').join('');
 lyBox.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{selL=+b.dataset.i;rMask();}));
 function geo(){const g={diff:[],poly:[],cont:[],m1:[],v1:[],m2:[],v2:[],m3:[]};const M=SY.M;
@@ -204,7 +207,7 @@ $('#tcFabGo').addEventListener('click',runFab);
 function runFab(){if(!RT||RT.failed.length)return;clearInterval(fabT);const nd=TC.NODE[S.node];fabProg=0;S.fabbed=false;TST=null;
  if(RM){fabProg=1;finishFab();return;}fabT=setInterval(()=>{fabProg=Math.min(1,fabProg+0.006);drawFab();if(fabProg>=1){clearInterval(fabT);finishFab();}},30);chrome();}
 function finishFab(){const nd=TC.NODE[S.node];const die=nd.shuttle?(S.node==='28'?858:400):100;/* mm2 */const R=nd.wafer/2;const side=Math.sqrt(die);let n=0;for(let x=-R;x<R;x+=side)for(let y=-R;y<R;y+=side){const cx=x+side/2,cy=y+side/2;if(Math.hypot(Math.max(Math.abs(x),Math.abs(x+side)),Math.max(Math.abs(y),Math.abs(y+side)))<=R-3)n++;}
- FAB={die,dies:n,side,R};S.fabbed=true;drawFab();rFab();chrome();}
+ FAB={die,dies:n,side,R};S.fabbed=true;drawFab();rFab();chrome();stamps();}
 function rFab(){const nd=TC.NODE[S.node];const days=nd.masks*nd.days;$('#tcFabT').textContent='about '+Math.round(days/7)+' weeks';$('#tcFabW').textContent=nd.wafer+' mm';
  $('#tcFabD').textContent=FAB?FAB.dies.toLocaleString('en-US'):'–';$('#tcFabC').textContent=FAB?FAB.dies.toLocaleString('en-US')+' on this wafer':'–';
  $('#tcFabStep').textContent=S.fabbed?'Wafer finished':fabProg>0?'Processing…':'';
@@ -289,9 +292,13 @@ function rReal(){synth();if(!SY)return;const p=P(),files=realFiles();
  const vr=verify(),w=$('#tcRealWarn');w.hidden=!(vr&&vr.bad);if(vr&&vr.bad)w.querySelector('p:last-child').textContent='Your design gives the wrong answer in '+vr.bad+' of '+vr.rows.length+' cases. A real chip cannot be patched after it is made, and the exported test checks the specification, so it would fail on GitHub too. Go back to step 2 and fix it first.';
  const sh=FACTS.facts.find(f=>f.id==='tt-next-shuttle');$('#tcShuttle').textContent=sh?'Next shuttles: '+sh.value+' ('+sh.source+', checked '+fmtDate(sh.verified)+').':'';}
 
+/* The My chip passport can change the process from outside the studio. */
+document.addEventListener('osl:tiny-set',e=>{const n=e.detail&&e.detail.node;if(!TC.NODE[n]||n===S.node)return;S.node=n;SY=null;PL=null;RT=null;S.fabbed=false;TST=null;save();render();});
+/* Stamp the passport for each step done with a working design. */
+function stamps(){if(!ok()||S.step<1)return;stampChip('logic');const vr=verify();if(S.step>=2&&(!vr||!vr.bad))stampChip('verify');if(S.step===3&&SY)stampChip('gates');if(S.step===4&&RT&&!RT.failed.length)stampChip('layout');if(S.step===5&&RT&&!RT.failed.length)stampChip('masks');if(S.step===6&&S.fabbed)stampChip('fab');if(S.step===7&&TST)stampChip('test');if(S.step===8)stampChip('real');}
 function render(){if(!D)compile();chrome();
- if(S.step===0)rSpec();if(S.step===1)rCode();if(S.step===2&&ok())rVerify();if(S.step===3&&ok())rSynth();if(S.step===4&&ok()){synth();rPR();}if(S.step===5&&ok()){synth();rMask();}if(S.step===6){drawFab();rFab();}if(S.step===7&&S.fabbed){synth();rTest();}if(S.step===8&&ok())rReal();}
+ if(S.step===0)rSpec();if(S.step===1)rCode();if(S.step===2&&ok())rVerify();if(S.step===3&&ok())rSynth();if(S.step===4&&ok()){synth();rPR();}if(S.step===5&&ok()){synth();rMask();}if(S.step===6){drawFab();rFab();}if(S.step===7&&S.fabbed){synth();rTest();}if(S.step===8&&ok())rReal();stamps();}
 redraws.push(()=>{if(S.step===3)drawSch();if(S.step===4)drawLay();if(S.step===5)drawMask();if(S.step===6)drawFab();if(S.step===7&&TST){drawProbe();}});
-compile();render();
+chipPub();compile();render();
 })();
 }

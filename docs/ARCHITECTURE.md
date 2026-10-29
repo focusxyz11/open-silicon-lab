@@ -48,6 +48,10 @@ All content is in the DOM from the start; the router only shows and hides it. Th
 
 `base.css` defines the colour tokens (light and dark), type and every simulation's styles. `app.css` styles the shell, map and views. `riscv.css` is scoped under `#riscv`.
 
+## My chip
+
+`src/engines/passport.js` computes a chip passport from one tiny-chip design and process: cells, transistors, area, speed, masks and light, fab time, yield, cost, history and whether it can be made for real, plus a line for each topic. `src/app/mychip.js` follows the design the studio publishes, keeps the passport's stamps (per browser), shows the line on topic pages (`#chipBanner`) and renders the `#mychip` view and its downloadable card.
+
 ## New ways to compute
 
 `src/engines/paradigms.js` holds small, tested models of each paradigm: the energy of moving data versus computing, an analog crossbar, leaky integrate-and-fire neurons, a Mach-Zehnder interferometer, a two-qubit state-vector simulator, p-bit sampling, reversible logic and the Landauer limit, and a dataflow energy model. `src/data/paradigms.js` holds the editorial fit matrix and the frontier gallery. Each topic in the `next` band has a lab in `src/labs/next-*.js`.

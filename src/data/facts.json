@@ -1086,6 +1086,12 @@
   },
   {
    "date": "2026-10-29",
+   "title": "My chip",
+   "summary": "One chip that is yours, carried through every layer: design it in the tiny chip studio and every topic page shows what that layer means for it. A passport collects a stamp for each stage, with a downloadable chip card.",
+   "url": ""
+  },
+  {
+   "date": "2026-10-29",
    "title": "New ways to compute",
    "summary": "A new layer on the map with eight topics: beyond von Neumann, compute in memory, neuromorphic, photonic, quantum, probabilistic, reversible, and dataflow and wafer-scale. Each has a simulation. Sixteen new facts on the state of each field in 2026.",
    "url": ""
