@@ -5,6 +5,7 @@ import { LEVELS as LV, CORES } from '../data/riscv-levels.js';
 import { CARDS, TH } from '../data/cards.js';
 import { makeALU, pickDefect } from '../engines/alu.js';
 import { currentSlice, openSliceInStudio } from '../app/alu-link.js';
+import { stampChip } from '../app/mychip.js';
 
 const $ = s => document.querySelector(s);
 const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -197,7 +198,8 @@ function runTests() {
   if (asm.errs.length) { $('#rvResults').innerHTML = '<div class="verdict lose"><div><h3>Fix the errors first</h3><p class="small muted">The assembler found ' + asm.errs.length + ' problem' + (asm.errs.length > 1 ? 's' : '') + ' in your code.</p></div></div>'; return; }
   const R = runProg(L, ta.value, coreKey, aluFn());
   if (R.errs) { $('#rvResults').innerHTML = '<div class="verdict lose"><div><h3>The program crashed</h3><p class="small">' + esc((R.errs[0].l ? 'Line ' + R.errs[0].l + ': ' : '') + R.errs[0].m) + '</p>' + aluBlame() + '</div></div>'; return; }
-  lastRun = R; const C = CORES[coreKey]; const allOk = R.res.every(x => x.ok); let stars = 0, why = '', extra = '';
+  lastRun = R; const C = CORES[coreKey]; const allOk = R.res.every(x => x.ok);
+  if (allOk && aluFn() && L.id) stampChip('cpu'); let stars = 0, why = '', extra = '';
   const speed = BASE[L.id] ? BASE[L.id] / R.us : null;
   if (L.id && allOk) {
     if (L.id === 6) { if (speed >= 2 && C.area <= 180) stars = speed >= 3 ? (C.area <= 150 ? 3 : 2) : 1; else why = speed < 2 ? 'Correct, but only ' + speed.toFixed(2) + '× faster than RV32IM. The goal is 2×.' : 'Correct, but the core uses ' + C.area + ' area units; the budget is 180.'; }
