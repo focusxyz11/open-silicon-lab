@@ -15,6 +15,7 @@ export const CHALLENGES = [
   { topic: 'riscv', href: '#riscv-3', kind: 'Experiment', t: 'Break the CPU', d: 'Run a level on your own ALU, then plant a bug or a factory defect and watch what fails.' },
   { topic: 'tiny', href: '#lab-tiny-1', kind: 'Design', t: 'Tape it out for real', d: 'Export a design as a Tiny Tapeout project and run it through Yosys and OpenROAD on GitHub.' },
   { topic: 'tiny', href: '#tiny', kind: 'Design', t: 'Pack it tight', d: 'Find the highest packing density that still routes.' },
+  { topic: 'future', href: '#timeMachine', kind: 'Experiment', t: 'Travel to 1985', d: 'Set the time machine to 1985 and find which of today\'s topics and companies did not exist yet.' },
   { topic: 'everywhere', href: '#lab-everywhere-1', kind: 'Experiment', t: 'How many need the newest fab?', d: 'Open five products and count the chips that need a leading-edge process.' },
   { topic: 'everywhere', href: '#lab-everywhere-2', kind: 'Puzzle', t: 'The right chip for the job', d: 'Match eight real jobs to a CPU, GPU, FPGA, custom chip and more.' },
   { topic: 'build', href: '#build', kind: 'Design', t: 'Phone AI chip', d: 'Run an 8B assistant on a phone: fast, cool and cheap.' },

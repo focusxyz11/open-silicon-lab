@@ -27,6 +27,16 @@ async function check(viewport) {
   await page.fill('#mSearch', 'HBM');
   if (!(await page.$$('#mInfo .hits a')).length) problems.push(tag + 'search found nothing for HBM');
 
+  // Time machine: going back to 1985 dims topics not yet invented and shows a topic banner.
+  await page.evaluate(() => { location.hash = 'map'; }); await page.waitForTimeout(150);
+  await page.click('#tmJump [data-y="1985"]');
+  if (!(await page.textContent('#yearBtn')).includes('1985')) problems.push(tag + 'time machine did not set the year');
+  if (!(await page.$('.tnode.notyet[data-t="riscv"]'))) problems.push(tag + 'time machine did not dim RISC-V in 1985');
+  await page.evaluate(() => { location.hash = 'riscv'; }); await page.waitForTimeout(150);
+  if (!/1985/.test(await page.textContent('#eraBanner'))) problems.push(tag + 'topic page shows no time-machine banner');
+  await page.click('#eraBanner [data-era-now]');
+  if (!(await page.textContent('#yearBtn')).includes('Today')) problems.push(tag + 'time machine did not return to today');
+
   // Every topic and reference page.
   const ids = await page.evaluate(() => [...document.querySelectorAll('#library > section')].map(s => s.id));
   for (const id of ids) {

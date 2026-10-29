@@ -47,6 +47,10 @@ All content is in the DOM from the start; the router only shows and hides it. Th
 
 `base.css` defines the colour tokens (light and dark), type and every simulation's styles. `app.css` styles the shell, map and views. `riscv.css` is scoped under `#riscv`.
 
+## The time machine
+
+`src/data/timeline.js` holds dated series (landmark chips, process nodes, transistor shapes, lithography, wafers, design costs, company founding years and Karl Rupp's microprocessor data) and `snapshot(year)` / `topicLine(id, year)`. `src/app/era.js` keeps the site's year (per tab, today by default), adds the year button to the top bar and the banner to topic pages, and fires `osl:year` when it changes. Labs that know about time listen for that event: the map's time machine, the company explorer and the roadmap.
+
 ## Progress and state
 
 Everything is per-browser `localStorage`: explanation level, topics visited, quiz answers, RISC-V code and stars. Nothing is sent anywhere. Progress is feedback, never a gate.
