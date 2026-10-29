@@ -525,6 +525,18 @@
    "verified": "2026-10-27"
   },
   {
+   "id": "open-flow",
+   "topic": "tiny",
+   "detail": "Runs automatically in GitHub Actions for every Tiny Tapeout project. Roughly six to nine months from shuttle deadline to silicon is normal.",
+   "kind": "reported",
+   "label": "The open-source chip flow",
+   "source": "Chartered Semi",
+   "status": "current",
+   "url": "https://www.charteredsemi.com/tiny-tapeout-program-explained/",
+   "value": "Yosys for synthesis; LibreLane with OpenROAD for place and route, checks and GDS export",
+   "verified": "2026-10-29"
+  },
+  {
    "id": "quantum-chips-act",
    "topic": "scenarios",
    "detail": "Includes $1 billion for an IBM quantum foundry subsidiary.",
@@ -705,6 +717,30 @@
    "verified": "2026-10-27"
   },
   {
+   "id": "tt-next-shuttle",
+   "topic": "tiny",
+   "detail": "Estimated dates from wafer.space. Each shuttle chip holds 160 tiles shared by many designs; more GF shuttles are planned through early 2028.",
+   "kind": "reported",
+   "label": "Next Tiny Tapeout shuttles",
+   "source": "wafer.space",
+   "status": "current",
+   "url": "https://wafer.space/tinytapeouts/index.html",
+   "value": "GF 26c and 26d on GF180MCU close 7 December 2026; chips expected May 2027",
+   "verified": "2026-10-29"
+  },
+  {
+   "id": "tt-tile",
+   "topic": "tiny",
+   "detail": "GF180 is about half as dense as SKY130, so GF tiles are physically larger. Your tiny-chip designs use 2 to 40 cells.",
+   "kind": "claim",
+   "label": "One Tiny Tapeout tile on GF180",
+   "source": "Tiny Tapeout",
+   "status": "current",
+   "url": "https://tinytapeout.com/news/wafer-space-partnership/",
+   "value": "Target of about 1,000 standard cells",
+   "verified": "2026-10-29"
+  },
+  {
    "id": "vr-nvl72",
    "topic": "datacenter",
    "detail": "72 GPUs and 36 CPUs; shipping in 2H 2026.",
@@ -727,6 +763,18 @@
    "url": "https://hashrateindex.com/blog/nvidia-vera-rubin-nvl72-specs-breakdown/",
    "value": "About 190–230 kW, fully liquid-cooled",
    "verified": "2026-10-27"
+  },
+  {
+   "id": "wafer-space-run",
+   "topic": "tiny",
+   "detail": "Tiny Tapeout says that is about ten times as many chips as it received per run from SkyWater and IHP. Tiny Tapeout then splits each chip into small tiles for many designers.",
+   "kind": "claim",
+   "label": "Cost of a wafer.space run",
+   "source": "Tiny Tapeout",
+   "status": "current",
+   "url": "https://tinytapeout.com/news/wafer-space-partnership/",
+   "value": "$7,000 for 1,000 finished chips on GF180MCU",
+   "verified": "2026-10-29"
   },
   {
    "id": "workforce",
@@ -754,6 +802,12 @@
   }
  ],
  "changes": [
+  {
+   "date": "2026-10-29",
+   "title": "From simulation to real silicon",
+   "summary": "Every tiny-chip design now exports as a ready Tiny Tapeout project: Verilog, info.yaml, a cocotb test and the gate netlist. CI checks every export with Icarus Verilog and Yosys. Four facts on shuttles, costs and the open flow.",
+   "url": "https://wafer.space/tinytapeouts/index.html"
+  },
   {
    "date": "2026-10-29",
    "title": "Build the CPU from your own gates",

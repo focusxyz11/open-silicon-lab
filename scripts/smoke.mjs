@@ -55,6 +55,12 @@ async function check(viewport) {
   const foot = await page.$$eval('#siteFoot a[data-issue], #siteFoot a[data-repo]', as => as.map(a => a.href));
   if (foot.length !== 4 || foot.some(h => !h.startsWith('https://github.com/'))) problems.push(tag + 'footer links are not wired');
 
+  // Tiny chip studio: step 9 exports the design as a Tiny Tapeout project.
+  await page.evaluate(() => { location.hash = 'lab-tiny-1'; }); await page.waitForTimeout(250);
+  await page.click('#tcSteps button[data-i="8"]'); await page.waitForTimeout(150);
+  if (!/module tt_um_/.test(await page.textContent('#tcFileView'))) problems.push(tag + 'tiny chip studio did not export Verilog');
+  await page.click('#tcSteps button[data-i="0"]');
+
   // A lab anchor opens its topic and scrolls to it.
   await page.evaluate(() => { location.hash = 'lab-fab-2'; }); await page.waitForTimeout(300);
   if (await page.evaluate(() => document.getElementById('fab').hidden)) problems.push(tag + 'lab anchor did not open its topic');
