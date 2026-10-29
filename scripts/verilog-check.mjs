@@ -11,6 +11,7 @@ import * as X from '../src/engines/export.js';
 
 const has = cmd => { try { execFileSync('sh', ['-c', 'command -v ' + cmd], { stdio: 'ignore' }); return true; } catch (e) { return false; } };
 const require = process.argv.includes('--require');
+if (process.env.GITHUB_ACTIONS) { try { const v = execFileSync('sh', ['-c', 'iverilog -V 2>&1 | head -1; yosys -V 2>&1 | head -1'], { encoding: 'utf8' }); console.log('::notice title=Tools::' + v.replace(/\n/g, ' | ')); } catch (e) { /* ignore */ } }
 if (!has('iverilog') || !has('yosys')) {
   const msg = 'Verilog check skipped: iverilog and yosys are not installed (CI runs it).';
   if (require) { console.error(msg); process.exit(1); }
@@ -59,5 +60,10 @@ try {
   }
 } finally { rmSync(dir, { recursive: true, force: true }); }
 
-if (problems.length) { console.error(problems.join('\n\n')); process.exit(1); }
+if (problems.length) {
+  console.error(problems.join('\n\n'));
+  /* In GitHub Actions, also report each problem as an annotation so it shows on the pull request. */
+  if (process.env.GITHUB_ACTIONS) problems.slice(0, 10).forEach(p => console.log('::error title=Verilog check::' + p.slice(0, 1500).replace(/%/g, '%25').replace(/\r/g, '').replace(/\n/g, '%0A')));
+  process.exit(1);
+}
 console.log(`Verilog check passed: ${runs} Icarus simulations and every project synthesized by Yosys.`);
