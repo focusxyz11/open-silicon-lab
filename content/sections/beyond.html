@@ -1,0 +1,59 @@
+<section id="beyond">
+    <div class="head">
+      <p class="code" data-topic-label>Beyond von Neumann</p>
+      <h2>The bottleneck is not the math</h2>
+    </div>
+    <div class="prose">
+      <p>Almost every computer since 1945 follows John von Neumann's plan: memory in one place, a processor in another, and a busy road of data between them. Shrinking transistors made the math cheap, but the road did not get cheaper at the same pace. Today, fetching a number from memory can cost thousands of times more energy than doing arithmetic with it. Every new way to compute in this layer of the map attacks that road, or one of three other limits: the energy floor of a switch, the end of easy shrinking, and problems that ordinary logic handles badly.</p>
+    </div>
+
+    <div class="lab">
+      <header><b>Where the energy goes</b><span id="bnTag">–</span></header>
+      <div class="body">
+        <div class="cols">
+          <div class="controls">
+            <div class="ctl"><span class="lbl">Where the two numbers come from</span><div class="seg" id="bnWhere"><button type="button" data-w="rf">Registers, beside the math</button><button type="button" data-w="sram">On-chip SRAM</button><button type="button" data-w="dram">DRAM, off chip</button></div></div>
+            <div class="ctl"><label for="bnReuse">Times each fetched number is reused <output id="bnReuseO">1</output></label><input type="range" id="bnReuse" min="0" max="10" step="1" value="0"></div>
+            <p class="small" id="bnTxt"></p>
+          </div>
+          <div>
+            <div class="bnbar" id="bnBar" aria-hidden="true"></div>
+            <div class="readout">
+              <div><span>Energy for the math</span><b id="bnMath">–</b></div>
+              <div><span>Energy to move the data</span><b id="bnMove">–</b></div>
+              <div><span>Share spent moving data</span><b id="bnShare">–</b></div>
+            </div>
+          </div>
+        </div>
+        <p class="note">One 16-bit multiply-add whose two operands are fetched from the chosen place, at 45 nm (Table I of Dally and colleagues, arXiv:1602.04183). Newer processes make all of these smaller, but the ratio between moving and computing stays large. Reuse means keeping a number close and using it again, as caches, systolic arrays and batching do.</p>
+      </div>
+    </div>
+
+    <div class="prose">
+      <h3>Same job, ten machines</h3>
+      <p>No new architecture wins everywhere. Each one trades flexibility, precision or maturity for energy or speed on certain jobs. Pick a job and see which machines suit it, and why.</p>
+    </div>
+    <div class="lab">
+      <header><b>Same job, ten machines</b><span>Editorial assessment, October 2026</span></header>
+      <div class="body">
+        <div class="seg" id="smJobs" role="group" aria-label="Jobs"></div>
+        <p class="small" id="smJobD"></p>
+        <div class="smgrid" id="smGrid"></div>
+        <p class="note">Fit: ●●● best today or in sight, ●● good, ● possible, ○ not built for it. Maturity runs from idea to mainstream. These are judgments drawn from the dated facts on these pages, made to compare machines with one another, not measurements.</p>
+      </div>
+    </div>
+
+    <div class="prose">
+      <h3>Frontier gallery</h3>
+      <p>Beyond the seven topics in this layer, many more ideas are being tried, from superconductors to living neurons. Most will stay in the lab; some will find a niche; one or two may change everything. Filter by what each one tries to save.</p>
+    </div>
+    <div class="lab">
+      <header><b>Frontier gallery</b><span id="fgTag">–</span></header>
+      <div class="body">
+        <div class="seg" id="fgSaves" role="group" aria-label="What it saves"></div>
+        <div class="fgboard" id="fgBoard"></div>
+        <div class="fgdetail" id="fgDetail" aria-live="polite"></div>
+        <p class="note">Columns show how far each idea has come, from idea to mainstream. For transistor, memory and packaging advances, see the beyond-silicon board on <a href="#scenarios">Future scenarios</a>.</p>
+      </div>
+    </div>
+  </section>

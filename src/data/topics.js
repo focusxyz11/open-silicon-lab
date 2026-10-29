@@ -5,6 +5,7 @@
 /* Bands of the chip stack, from the world at the top to atoms at the bottom. */
 export const BANDS = [
   { id: 'future',   t: 'Innovation & future',  d: 'What limits progress, and where it could go' },
+  { id: 'next',     t: 'New ways to compute',  d: 'Memory, light, noise, qubits and neurons that compute' },
   { id: 'industry', t: 'Industry & economics', d: 'Companies, countries and money' },
   { id: 'systems',  t: 'Devices & data centers', d: 'Where chips end up: phones, cars, gadgets and the cloud' },
   { id: 'ai',       t: 'Specialized computing', d: 'Chips built for one kind of work, above all AI' },
@@ -38,6 +39,14 @@ export const TOPICS = [
   { id: 'ecosystem',    band: 'industry', kind: 'explore', t: 'The ecosystem',              s: 'Who supplies whom: about sixty companies from instruction sets to clouds.' },
   { id: 'supply',       band: 'industry', kind: 'explore', t: 'Supply chain map',           s: 'One GPU\'s journey across a dozen countries, and what breaks when one link fails.' },
   { id: 'economics',    band: 'industry', kind: 'explore', t: 'Economics',                  s: 'What an AI GPU costs to make, who earns what, and what a chip startup needs.' },
+  { id: 'beyond',       band: 'next',     kind: 'explore', t: 'Beyond von Neumann',         s: 'Why moving data costs more than computing, the same job on ten kinds of machine, and a gallery of frontier ideas.' },
+  { id: 'cim',          band: 'next',     kind: 'explore', t: 'Compute in memory',          s: 'An analog crossbar multiplies with Ohm\'s law where the weights live. Trade precision for energy.' },
+  { id: 'neuro',        band: 'next',     kind: 'explore', t: 'Neuromorphic chips',         s: 'Spiking neurons that work only when something happens. Tune one to spot a pattern.' },
+  { id: 'photonic',     band: 'next',     kind: 'explore', t: 'Computing with light',       s: 'Interferometers steer light to do matrix math; optics also carry data between chips.' },
+  { id: 'quantum',      band: 'next',     kind: 'explore', t: 'Quantum computers',          s: 'Build two-qubit circuits: superposition, interference and entanglement, and where qubits could help.' },
+  { id: 'pbits',        band: 'next',     kind: 'explore', t: 'Probabilistic computing',    s: 'Noisy p-bits run a logic gate forwards and backwards, and settle into answers.' },
+  { id: 'reversible',   band: 'next',     kind: 'explore', t: 'Reversible computing',       s: 'The physical floor on energy per bit, and logic that can recycle its own energy.' },
+  { id: 'spatial',      band: 'next',     kind: 'explore', t: 'Dataflow & wafer-scale',     s: 'Lay the program out across the chip and keep weights where the work happens.' },
   { id: 'innovation',   band: 'future',   kind: 'explore', t: 'Innovation map',             s: 'Which steps AI speeds up, which need invention, money or people.' },
   { id: 'future',       band: 'future',   kind: 'explore', t: 'Roadmap',                    s: 'The state of the art year by year to the 2040s, tagged by how certain it is.' },
   { id: 'scenarios',    band: 'future',   kind: 'explore', t: 'Future scenarios',           s: 'Steer the bets that shape 2040, and see which beyond-silicon ideas are real.' }
@@ -92,7 +101,25 @@ export const EDGES = [
   ['innovation', 'scenarios', 'the bets that shape 2040'],
   ['future', 'transistor', 'CFET and 2D channels'],
   ['future', 'litho', 'High-NA and beyond'],
-  ['scenarios', 'future', 'many possible roadmaps']
+  ['scenarios', 'future', 'many possible roadmaps'],
+  ['architecture', 'beyond', 'the von Neumann bottleneck'],
+  ['compute', 'beyond', 'the memory wall'],
+  ['beyond', 'cim', 'compute where the data lives'],
+  ['beyond', 'neuro', 'compute only when something happens'],
+  ['beyond', 'photonic', 'compute with light'],
+  ['beyond', 'quantum', 'a different kind of bit'],
+  ['beyond', 'pbits', 'noise as a feature'],
+  ['beyond', 'reversible', 'the energy floor of a switch'],
+  ['beyond', 'spatial', 'map the program onto the chip'],
+  ['beyond', 'scenarios', 'which bets pay off by 2040'],
+  ['datacenter', 'cim', 'memory cells that also compute'],
+  ['package', 'photonic', 'optics move into the package'],
+  ['physics', 'quantum', 'quantum physics, used directly'],
+  ['transistor', 'pbits', 'tiny switches are noisy anyway'],
+  ['transistor', 'reversible', 'the energy lost per switch'],
+  ['accelerators', 'spatial', 'wafer-scale and dataflow AI chips'],
+  ['riscv', 'neuro', 'spiking cores beside a RISC-V CPU'],
+  ['neuro', 'everywhere', 'always-on sensing at microwatts']
 ];
 
 /* Suggested routes through the map. They highlight; they never lock anything. */
@@ -102,6 +129,7 @@ export const THREADS = [
   { id: 'riscv', t: 'RISC-V path', d: 'Understand, build and extend an open processor.', path: ['architecture', 'riscv', 'design', 'tiny', 'layout', 'accelerators', 'ecosystem'] },
   { id: 'ai', t: 'AI-native', d: 'Where AI changes chips, and chips change AI.', path: ['compute', 'accelerators', 'riscv', 'design', 'agent', 'innovation', 'datacenter', 'scenarios'] },
   { id: 'make', t: 'Making chips', d: 'Follow the wafer through the fab.', path: ['physics', 'transistor', 'litho', 'fab', 'yield', 'package'] },
+  { id: 'next', t: 'Beyond today\'s computers', d: 'Ten kinds of machine, from analog memory to qubits and living neurons.', path: ['compute', 'beyond', 'cim', 'neuro', 'photonic', 'quantum', 'pbits', 'reversible', 'spatial'] },
   { id: 'industry', t: 'Industry & open ecosystem', d: 'Companies, countries, money and community.', path: ['architecture', 'riscv', 'ecosystem', 'supply', 'economics', 'innovation', 'future'] }
 ];
 

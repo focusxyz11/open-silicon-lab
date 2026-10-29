@@ -1,0 +1,30 @@
+<section id="neuro">
+    <div class="head">
+      <p class="code" data-topic-label>Neuromorphic chips</p>
+      <h2>Compute only when something happens</h2>
+    </div>
+    <div class="prose">
+      <p>A brain runs on about 20 watts because most neurons are quiet most of the time. Neuromorphic chips copy that: each neuron collects incoming spikes, slowly leaks charge, and fires a spike of its own only when it crosses a threshold. No spikes, almost no energy. That makes them strong for always-on sensing, where nothing happens most of the time, and weak for dense number-crunching like large language models.</p>
+    </div>
+    <div class="lab">
+      <header><b>Tune a spiking neuron</b><span id="snTag">–</span></header>
+      <div class="body">
+        <div class="ctl"><span class="lbl">What the four sensors see</span><div class="seg" id="snPat"><button type="button" data-p="A">Pattern A</button><button type="button" data-p="B">Pattern B</button><button type="button" data-p="noise">Random noise</button><button type="button" data-p="quiet">Almost nothing</button></div></div>
+        <div class="cols">
+          <canvas class="plot" id="snCv" style="height:330px" aria-label="Input spikes and membrane voltage"></canvas>
+          <div class="controls">
+            <div class="ctl"><label for="snT">Firing threshold <output id="snTO">–</output></label><input type="range" id="snT" min="0.3" max="2.5" step="0.05" value="1"></div>
+            <div class="ctl"><label for="snL">Leak per step <output id="snLO">–</output></label><input type="range" id="snL" min="0" max="0.6" step="0.02" value="0.2"></div>
+            <div class="callout" id="snGoal"><p class="code">Goal</p><p></p></div>
+          </div>
+        </div>
+        <div class="readout">
+          <div><span>Detector A spikes</span><b id="snA">–</b></div>
+          <div><span>Detector B spikes</span><b id="snB">–</b></div>
+          <div><span>Events processed (spiking)</span><b id="snEv">–</b></div>
+          <div><span>Operations if dense</span><b id="snDn">–</b></div>
+        </div>
+        <p class="note">Two leaky integrate-and-fire neurons, each connected to four input sensors with fixed weights: detector A listens to sensors 1 and 2, detector B to 3 and 4, and each is inhibited by the other pair. A spiking chip only works when an input spike arrives; a conventional chip multiplies every weight at every time step. Real neuromorphic chips have millions of neurons and learn their weights.</p>
+      </div>
+    </div>
+  </section>

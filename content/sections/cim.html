@@ -1,0 +1,35 @@
+<section id="cim">
+    <div class="head">
+      <p class="code" data-topic-label>Compute in memory</p>
+      <h2>Let the memory do the multiplying</h2>
+    </div>
+    <div class="prose">
+      <p>A neural network spends most of its energy reading weights from memory. So why not compute where the weights are? Store each weight as the conductance of a memory cell in a grid. Apply the inputs as voltages on the rows. By Ohm's law each cell passes a current equal to voltage times conductance, and by Kirchhoff's law the currents on each column add up. One step gives a whole matrix-vector product, with no data moved at all. The catch: the answer is analog, so it is only as good as the devices and the converter that reads it.</p>
+    </div>
+    <div class="lab">
+      <header><b>Analog crossbar</b><span id="cbTag">–</span></header>
+      <div class="body">
+        <div class="cols">
+          <canvas class="plot" id="cbCv" style="height:340px" aria-label="A crossbar of memory cells"></canvas>
+          <div class="controls">
+            <div class="ctl"><label for="cbW">Weight precision <output id="cbWO">–</output></label><input type="range" id="cbW" min="2" max="8" step="1" value="6"></div>
+            <div class="ctl"><label for="cbN">Device variation <output id="cbNO">–</output></label><input type="range" id="cbN" min="0" max="0.2" step="0.01" value="0.03"></div>
+            <div class="ctl"><label for="cbA">Converter (ADC) bits <output id="cbAO">–</output></label><input type="range" id="cbA" min="3" max="10" step="1" value="6"></div>
+            <div class="row"><button type="button" class="btn" id="cbNew">New weights and inputs</button></div>
+          </div>
+        </div>
+        <div class="cbout" id="cbOut"></div>
+        <div class="readout">
+          <div><span>Error vs exact digital</span><b id="cbErr">–</b></div>
+          <div><span>Digital energy (illustrative)</span><b id="cbED">–</b></div>
+          <div><span>Analog energy (illustrative)</span><b id="cbEA">–</b></div>
+          <div><span>Analog saves</span><b id="cbSave">–</b></div>
+        </div>
+        <p class="small" id="cbTxt"></p>
+        <p class="note">An 8 × 4 crossbar; each weight is a pair of cells so it can be negative. Device variation adds random error to every cell; the ADC rounds each column current. Energy is an illustrative model: digital pays an SRAM read and a multiply-add per weight; analog pays almost nothing in the array but a converter per column whose cost roughly doubles with every extra bit. Real chips also fight drift, temperature and wire resistance.</p>
+      </div>
+    </div>
+    <div class="prose">
+      <p><b>Try this:</b> find the fewest ADC bits that keep the error under 5%. Then raise device variation and see how fast that answer changes. This is the daily trade-off for compute-in-memory designers, and why the first products target small edge AI models that tolerate a little error.</p>
+    </div>
+  </section>
