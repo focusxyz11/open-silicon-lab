@@ -17,8 +17,8 @@ export function renderMapShell(zoomHTML) {
   $('#view-map').innerHTML = `
   <section class="wrap maphero">
     <p class="eyebrow">Open-source chip lab · facts checked October 2026</p>
-    <h1>The whole chip, from <em>atoms</em> to AI data centers</h1>
-    <p class="lede">Every layer of the chip stack is a topic with live simulations you can play with. Wires show how the topics depend on each other. Start anywhere: pick a topic, follow a thread, or build a chip in the workshop.</p>
+    <h1>The whole chip, from <em>atoms</em> to everything it powers</h1>
+    <p class="lede">Phones, cars, thermostats and AI data centers all run on chips made through the same stack: physics, transistors, design, factories and packaging. Every layer is a topic with live simulations you can play with, and wires show how the topics depend on each other. Start anywhere: pick a topic, follow a thread, or build a chip in the workshop.</p>
     <div class="mstats" id="mStats"></div>
   </section>
   <section class="wrap mapgrid">
@@ -33,13 +33,13 @@ export function renderMapShell(zoomHTML) {
     <aside class="mapinfo" id="mInfo" aria-live="polite"></aside>
   </section>
   <section class="wrap zoomsec">
-    <div class="head"><p class="code">Zoom</p><h2>From an AI rack down to a single atom</h2></div>
+    <div class="head"><p class="code">Zoom</p><h2>From a server rack down to a single atom</h2></div>
     ${zoomHTML}
   </section>
   <section class="wrap mapfoot">
     <div class="hblock"><h3>What changed recently</h3><p class="small muted" id="fbStatus"></p><div id="changes"></div></div>
     <div class="hblock"><h3>About this lab</h3>
-      <p class="small">Open Silicon Lab is an open-source project, made with AI: Claude wrote the text, simulations and code with the project owner, from public sources. Every simulation is a teaching model; each one says what it simplifies. Facts carry their source and the date they were last verified, and are rechecked every month.</p>
+      <p class="small">Open Silicon Lab is an open-source project about every kind of chip, from the microcontroller in a thermostat to the GPUs in an AI data center. It is made with AI: Claude wrote the text, simulations and code with the project owner, from public sources. Every simulation is a teaching model; each one says what it simplifies. Facts carry their source and the date they were last verified, and are rechecked every month.</p>
       <p class="small"><a href="#knowledge">Glossary and knowledge cards</a> · <a href="#sources">All sources</a> · <a href="#challenges">All challenges</a></p>
     </div>
   </section>`;
@@ -119,7 +119,7 @@ function renderInfo(th, hits) {
       (fs.length ? '<p class="eyebrow">Live facts</p><ul class="ilist">' + fs.slice(0, 4).map(f => '<li>' + esc(f.label) + ': <b>' + esc(f.value) + '</b></li>').join('') + '</ul>' : '') +
       (ths.length ? '<p class="eyebrow">On these threads</p><div class="row">' + ths.map(x => '<button type="button" class="chip" data-thread="' + x.id + '">' + esc(x.t) + '</button>').join('') + '</div>' : '');
   } else {
-    box.innerHTML = '<p class="code">How to use the map</p><h3>Select any topic</h3><p>Each box is a topic with its own simulations. Select one to see what it holds and how it connects. Double-click, or use its Open button, to go in.</p><p class="eyebrow">Or follow a thread</p><div class="tlist">' + THREADS.map(x => '<button type="button" data-thread="' + x.id + '"><b>' + esc(x.t) + '</b><small>' + esc(x.d) + '</small></button>').join('') + '</div><p class="eyebrow">Or build something</p><div class="tlist"><a href="#tiny"><b>Tiny chip studio</b><small>From logic to a working chip, in eight steps</small></a><a href="#riscv"><b>RISC-V CPU lab</b><small>Program a processor, then make it an AI chip</small></a><a href="#build"><b>AI chip architect</b><small>Design an AI chip for a mission</small></a></div>';
+    box.innerHTML = '<p class="code">How to use the map</p><h3>Select any topic</h3><p>Each box is a topic with its own simulations. Select one to see what it holds and how it connects. Double-click, or use its Open button, to go in.</p><p class="eyebrow">Or follow a thread</p><div class="tlist">' + THREADS.map(x => '<button type="button" data-thread="' + x.id + '"><b>' + esc(x.t) + '</b><small>' + esc(x.d) + '</small></button>').join('') + '</div><p class="eyebrow">Or look inside something you own</p><div class="tlist"><a href="#everywhere"><b>Chips everywhere</b><small>Open a phone, a car or a server and see which chips it takes</small></a></div><p class="eyebrow">Or build something</p><div class="tlist"><a href="#tiny"><b>Tiny chip studio</b><small>From logic to a working chip, in eight steps</small></a><a href="#riscv"><b>RISC-V CPU lab</b><small>Program a processor, then make it an AI chip</small></a><a href="#build"><b>AI chip architect</b><small>Design an AI chip for a mission</small></a></div>';
   }
   /* On narrow screens, show details right under the selected topic's layer. */
   const narrow = innerWidth < 980; const grid = document.querySelector('.mapgrid');

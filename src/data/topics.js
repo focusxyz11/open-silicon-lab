@@ -6,8 +6,8 @@
 export const BANDS = [
   { id: 'future',   t: 'Innovation & future',  d: 'What limits progress, and where it could go' },
   { id: 'industry', t: 'Industry & economics', d: 'Companies, countries and money' },
-  { id: 'dc',       t: 'Data centers',          d: 'Memory, networks and power at scale' },
-  { id: 'ai',       t: 'AI computing',          d: 'The math AI runs and the chips built for it' },
+  { id: 'systems',  t: 'Devices & data centers', d: 'Where chips end up: phones, cars, gadgets and the cloud' },
+  { id: 'ai',       t: 'Specialized computing', d: 'Chips built for one kind of work, above all AI' },
   { id: 'pkg',      t: 'Packaging & memory',    d: 'Chiplets, HBM and advanced packages' },
   { id: 'mfg',      t: 'Manufacturing',         d: 'Printing, building and testing on the wafer' },
   { id: 'design',   t: 'Chip design',           d: 'From code to gates to layout' },
@@ -32,7 +32,8 @@ export const TOPICS = [
   { id: 'compute',      band: 'ai',       kind: 'explore', t: 'AI at work',                 s: 'Systolic arrays and the roofline: why AI is limited by memory as often as by math.' },
   { id: 'accelerators', band: 'ai',       kind: 'explore', t: 'AI chip architectures',      s: 'GPUs, TPUs, wafer-scale and SRAM chips; 4-bit numbers; prefill versus decode.' },
   { id: 'build',        band: 'ai',       kind: 'build',   t: 'AI chip architect',          s: 'Design an AI chip for a mission and see how it scores against real 2026 chips.' },
-  { id: 'datacenter',   band: 'dc',       kind: 'explore', t: 'Memory, networks & power',   s: 'DRAM and NAND cells, HBM stacks, cluster networks and the energy of every token.' },
+  { id: 'everywhere',   band: 'systems',  kind: 'explore', t: 'Chips everywhere',           s: 'Open up a phone, a car, a thermostat and a server: dozens of different chips, and most are not cutting-edge.' },
+  { id: 'datacenter',   band: 'systems',  kind: 'explore', t: 'Memory, networks & power',   s: 'DRAM and NAND cells, HBM stacks, cluster networks and the energy of every token.' },
   { id: 'ecosystem',    band: 'industry', kind: 'explore', t: 'The ecosystem',              s: 'Who supplies whom: about sixty companies from instruction sets to clouds.' },
   { id: 'supply',       band: 'industry', kind: 'explore', t: 'Supply chain map',           s: 'One GPU\'s journey across a dozen countries, and what breaks when one link fails.' },
   { id: 'economics',    band: 'industry', kind: 'explore', t: 'Economics',                  s: 'What an AI GPU costs to make, who earns what, and what a chip startup needs.' },
@@ -66,6 +67,12 @@ export const EDGES = [
   ['accelerators', 'build', 'architect your own'],
   ['accelerators', 'datacenter', 'chips become racks'],
   ['datacenter', 'scenarios', 'power may cap AI growth'],
+  ['everywhere', 'architecture', 'every device runs a processor'],
+  ['everywhere', 'accelerators', 'when one job deserves its own chip'],
+  ['everywhere', 'datacenter', 'the cloud behind every phone'],
+  ['physics', 'everywhere', 'sensors and power chips use the physics directly'],
+  ['everywhere', 'supply', 'one missing chip stops a car line'],
+  ['everywhere', 'economics', 'most chips are cheap and mature'],
   ['ecosystem', 'supply', 'where each company works'],
   ['ecosystem', 'economics', 'who earns what'],
   ['ecosystem', 'riscv', 'the open-ISA community'],
@@ -84,7 +91,8 @@ export const EDGES = [
 
 /* Suggested routes through the map. They highlight; they never lock anything. */
 export const THREADS = [
-  { id: 'start', t: 'Start here', d: 'A first hour: from atoms to an AI chip.', path: ['physics', 'transistor', 'architecture', 'tiny', 'litho', 'accelerators'] },
+  { id: 'start', t: 'Start here', d: 'A first hour: from the chips in your pocket down to atoms, then make one yourself.', path: ['everywhere', 'physics', 'transistor', 'architecture', 'tiny', 'litho'] },
+  { id: 'everyday', t: 'Everyday chips', d: 'The billions of ordinary chips in phones, cars and appliances, and why old factories still matter.', path: ['everywhere', 'architecture', 'tiny', 'yield', 'supply', 'economics'] },
   { id: 'riscv', t: 'RISC-V path', d: 'Understand, build and extend an open processor.', path: ['architecture', 'riscv', 'design', 'tiny', 'layout', 'accelerators', 'ecosystem'] },
   { id: 'ai', t: 'AI-native', d: 'Where AI changes chips, and chips change AI.', path: ['compute', 'accelerators', 'riscv', 'design', 'innovation', 'datacenter', 'scenarios'] },
   { id: 'make', t: 'Making chips', d: 'Follow the wafer through the fab.', path: ['physics', 'transistor', 'litho', 'fab', 'yield', 'package'] },

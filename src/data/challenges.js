@@ -12,6 +12,8 @@ export const CHALLENGES = [
   { topic: 'tiny', href: '#tiny', kind: 'Puzzle', t: 'Find the bug: full adder', d: 'The sum line is wrong. Prove it, fix it, ship it.' },
   { topic: 'tiny', href: '#tiny', kind: 'Design', t: 'Display decoder', d: 'Finish segments d to g and route the biggest tiny design.' },
   { topic: 'tiny', href: '#tiny', kind: 'Design', t: 'Pack it tight', d: 'Find the highest packing density that still routes.' },
+  { topic: 'everywhere', href: '#lab-everywhere-1', kind: 'Experiment', t: 'How many need the newest fab?', d: 'Open five products and count the chips that need a leading-edge process.' },
+  { topic: 'everywhere', href: '#lab-everywhere-2', kind: 'Puzzle', t: 'The right chip for the job', d: 'Match eight real jobs to a CPU, GPU, FPGA, custom chip and more.' },
   { topic: 'build', href: '#build', kind: 'Design', t: 'Phone AI chip', d: 'Run an 8B assistant on a phone: fast, cool and cheap.' },
   { topic: 'build', href: '#build', kind: 'Design', t: 'Inference accelerator', d: 'Serve a 70B model to 64 users at the lowest cost per token.' },
   { topic: 'build', href: '#build', kind: 'Design', t: 'Training flagship', d: 'Maximum FP8 compute, memory and bandwidth.' },
@@ -32,6 +34,7 @@ export const PROBLEMS = [
   { id: 'designcost', t: 'The cost of designing a chip', q: 'A leading-edge chip can cost hundreds of millions of dollars to design. Which steps could AI agents shrink, and which still need people?', persp: ['Design', 'AI', 'Economics'], try: ['design', 'tiny', 'innovation', 'economics'] },
   { id: 'open', t: 'Open hardware', q: 'Open software changed the world. Can an open ISA, open tools and open PDKs do the same for chips? What is still missing?', persp: ['Community', 'Design', 'Business'], try: ['riscv', 'ecosystem', 'tiny', 'architecture'] },
   { id: 'supply', t: 'A fragile supply chain', q: 'Most advanced chips pass through a few fabs and packaging lines. How would you make the chain resilient without making chips unaffordable?', persp: ['Policy', 'Economics', 'Manufacturing'], try: ['supply', 'economics', 'fab'] },
+  { id: 'mature', t: 'The forgotten chips', q: 'Most chips by count come from older factories with thin margins, yet one missing part can stop a car line. Who should pay to keep that capacity, and should it sit closer to the factories that use it?', persp: ['Economics', 'Policy', 'Manufacturing'], try: ['everywhere', 'supply', 'economics', 'fab'] },
   { id: 'bigdie', t: 'Big dies, low yield', q: 'Bigger chips catch more defects. When does splitting a design into chiplets win, and what does the package then have to do?', persp: ['Manufacturing', 'Packaging', 'Economics'], try: ['yield', 'package', 'economics'] },
   { id: 'skills', t: 'People in an AI-native industry', q: 'When AI writes code and layouts, what will chip engineers spend their time on? Which skills last?', persp: ['People', 'AI', 'Education'], try: ['innovation', 'riscv', 'design'] }
 ];
