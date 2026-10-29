@@ -37,7 +37,7 @@ export const CHIPS = [
   [2017, 'NVIDIA GV100 (Volta)', 'NVIDIA', 'gpu', 21100000000, '12 nm', 'Adds tensor cores, units built just for AI matrix math.'],
   [2018, 'Apple A12', 'Apple', 'soc', 6900000000, '7 nm', 'One of the first 7 nm chips, in a phone.'],
   [2020, 'Apple M1', 'Apple', 'soc', 16000000000, '5 nm', 'A phone-style system on a chip takes over the laptop.'],
-  [2020, 'NVIDIA A100', 'NVIDIA', 'gpu', 54200000000, '7 nm', 'The workhorse of the first large language models.'],
+  [2020, 'NVIDIA A100', 'NVIDIA', 'gpu', 54200000000, '7 nm', 'The workhorse of the early large-language-model boom.'],
   [2022, 'NVIDIA H100', 'NVIDIA', 'gpu', 80000000000, '4 nm', 'The chip behind the generative AI boom.'],
   [2023, 'Apple A17 Pro', 'Apple', 'soc', 19000000000, '3 nm', 'The first 3 nm chip in a phone.'],
   [2024, 'NVIDIA B200 (Blackwell)', 'NVIDIA', 'gpu', 208000000000, '4 nm', 'Two reticle-size dies joined in one package.'],
