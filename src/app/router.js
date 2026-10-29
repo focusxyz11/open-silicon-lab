@@ -8,7 +8,7 @@ import { redraws } from '../core/ui.js';
 import { openLevel } from '../labs/riscv-lab.js';
 import { factsHTML } from './facts.js';
 import { markSeen, P } from './learning.js';
-import { initMap, redrawMap, state as mapState } from './map.js';
+import { initMap, redrawMap, setWhatif, state as mapState } from './map.js';
 import { renderWorkshop, renderChallenges, renderKnowledge } from './views.js';
 import { issueURL } from './config.js';
 
@@ -84,6 +84,7 @@ function route() {
   const h = decodeURIComponent(location.hash.slice(1));
   document.dispatchEvent(new CustomEvent('osl:route', { detail: h }));
   if (!h || h === 'map') { show('map'); curTopic = null; redrawMap(); return; }
+  if (h === 'whatif') { show('map'); curTopic = null; setWhatif(true); return; }
   if (h === 'workshop') { renderWorkshop(); show('workshop'); scrollTo({ top: 0, behavior: 'instant' }); return; }
   if (h === 'challenges') { renderChallenges(); show('challenges'); scrollTo({ top: 0, behavior: 'instant' }); return; }
   if (h === 'mychip') { renderMyChip(); show('mychip'); scrollTo({ top: 0, behavior: 'instant' }); return; }

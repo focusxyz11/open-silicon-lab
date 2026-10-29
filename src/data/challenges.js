@@ -36,6 +36,8 @@ export const CHALLENGES = [
   { topic: 'litho', href: '#litho', kind: 'Experiment', t: 'Print the finest lines', d: 'Find the smallest pitch each scanner can still print.' },
   { topic: 'supply', href: '#supply', kind: 'Experiment', t: 'What if Taiwan stops?', d: 'Disrupt one link and see which products stall.' },
   { topic: 'economics', href: '#economics', kind: 'Design', t: 'Fund a chip startup', d: 'Reach first silicon with the least money and time.' },
+  { topic: 'economics', href: '#whatif', kind: 'Puzzle', t: 'Follow the ripple', d: 'On the map simulator: raise phone prices with AI demand alone, and find the shortage that stops car lines but not AI.' },
+  { topic: 'datacenter', href: '#whatif', kind: 'Experiment', t: 'What does power really cost AI?', d: 'Double the price of electricity on the map and see how far the cost of an AI answer moves.' },
   { topic: 'scenarios', href: '#scenarios', kind: 'Experiment', t: 'Escape the power wall', d: 'Find settings where electricity stops limiting AI growth.' }
 ];
 

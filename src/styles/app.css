@@ -5,7 +5,10 @@
   --panel:var(--surface); --copper:var(--amber); --copper-soft:var(--amber-fill); --gold:var(--amber);
   --oxide:var(--cyan); --oxide-soft:var(--cyan-fill);
   --band0:var(--amber); --band1:var(--cyan); --band2:var(--violet); --band3:var(--good); --band4:var(--rose);
+  --on-accent:#fff;
 }
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--on-accent:#0C1318}}
+:root[data-theme="dark"]{--on-accent:#0C1318}
 .view[hidden]{display:none!important}
 .loading{padding:40px 0;color:var(--muted)}
 .chip{display:inline-flex;align-items:center;gap:6px;font:500 13px/1.1 var(--body);padding:6px 10px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);text-decoration:none;cursor:pointer}
@@ -58,9 +61,72 @@
 @media(prefers-reduced-motion:no-preference){#mSvg .w.path{animation:wdash 1.4s linear infinite}}
 @keyframes wdash{to{stroke-dashoffset:-24}}
 
+/* ---------- Map: what if? ---------- */
+.wibtn{display:inline-flex;gap:6px;align-items:baseline;font:500 13px/1.1 var(--body);padding:8px 12px;border-radius:999px;border:1.5px solid var(--violet);background:color-mix(in srgb,var(--violet) 8%,var(--surface));color:var(--ink);cursor:pointer}
+.wibtn b{color:var(--violet)}
+.wibtn[aria-pressed="true"]{background:var(--violet);color:var(--on-accent)}
+.wibtn[aria-pressed="true"] b{color:var(--on-accent)}
+.whatif{display:grid;gap:14px;padding:16px;border:1.5px solid var(--violet);border-radius:10px;background:color-mix(in srgb,var(--violet) 5%,var(--surface));scroll-margin-top:80px}
+.wihead{display:flex;justify-content:space-between;align-items:start;gap:12px}
+.wihead h3{font-size:19px;margin-top:2px}
+.wilevers{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.wilever{display:grid;gap:6px;align-content:start;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--surface)}
+.wilever.on{border-color:var(--violet)}
+.wilever span{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+.wilever b{font-size:14px}
+.wilever output{font:600 13px var(--mono);color:var(--muted);white-space:nowrap}
+.wilever.on output{color:var(--violet)}
+.wilever small{font-size:12px;line-height:1.35;color:var(--muted)}
+.wilever input{accent-color:var(--violet)}
+.wipresets{display:flex;flex-wrap:wrap;gap:8px 10px;align-items:center}
+.wipresets .seg button{font-size:12.5px;padding:7px 10px}
+.whatif details summary{cursor:pointer;font:600 13.5px var(--body)}
+.wipuzzles ol{margin:8px 0 0;padding-left:20px;display:grid;gap:6px;font-size:14px}
+.wipuzzles li b{font-weight:500}
+.wipuzzles li.done b{color:var(--good);font-weight:600}
+.wipuzzles li small{display:block;color:var(--ink);font-size:13px;margin-top:2px}
+.wipuzzles li.fresh{animation:wifresh 1.6s ease-out}
+@keyframes wifresh{from{background:color-mix(in srgb,var(--good) 25%,transparent)}to{background:transparent}}
+.wifacts ul{margin-top:8px}
+.wifacts p{margin-top:8px}
+.tnode .rb{position:absolute;top:-11px;right:-8px;display:none;padding:2px 7px;border-radius:999px;font:700 11.5px/1.3 var(--mono);white-space:nowrap;color:var(--on-accent)}
+.rb.up{background:var(--amber)}
+.rb.down{background:var(--cyan)}
+.tnode .rb.up,.tnode .rb.down{display:block}
+.tnode.wi.seen::after{display:none}
+.tnode.calm{border-color:color-mix(in srgb,var(--line) 70%,transparent)}
+.tnode.calm b,.tnode.calm small{opacity:.45}
+.tnode.lever{box-shadow:0 0 0 3px color-mix(in srgb,var(--violet) 45%,transparent)}
+.tnode.lever.sel{box-shadow:0 0 0 3px color-mix(in srgb,var(--violet) 45%,transparent),0 0 0 6px color-mix(in srgb,var(--amber-fill) 35%,transparent)}
+@media(prefers-reduced-motion:no-preference){
+  .tnode.rip .rb{animation:ripin .45s cubic-bezier(.2,.9,.3,1.3) both;animation-delay:var(--d,0s)}
+  .tnode.rip:not(.calm){animation:rippulse .9s ease-out both;animation-delay:var(--d,0s)}
+  #mSvg .w.rip{animation:wdash 1.2s linear infinite}
+}
+@keyframes ripin{from{transform:scale(.3);opacity:0}to{transform:none;opacity:1}}
+@keyframes rippulse{0%{outline:0 solid color-mix(in srgb,var(--violet) 50%,transparent)}30%{outline:6px solid color-mix(in srgb,var(--violet) 30%,transparent)}100%{outline:14px solid transparent}}
+#mSvg .w.rip{stroke-dasharray:6 5;opacity:.9}
+#mSvg .w.rip.up{stroke:var(--amber)}
+#mSvg .w.rip.down{stroke:var(--cyan)}
+#mSvg .w.rip.faint{opacity:.18}
+.wiind{display:grid;gap:6px;padding-top:10px;border-top:1px solid var(--line)}
+.wiv{display:flex;justify-content:space-between;gap:10px;align-items:baseline}
+.wiv b{font-size:15px}
+.wiv .rb,.wilist .rb{padding:2px 7px;border-radius:999px;font:700 12px/1.3 var(--mono);color:var(--on-accent);white-space:nowrap}
+.wichain{list-style:none;margin:0;padding:0;display:grid;gap:2px;font-size:13px}
+.wichain li{display:grid;padding-left:14px;border-left:2px solid var(--violet)}
+.wichain em{font:normal 11.5px var(--mono);color:var(--muted)}
+.wichain em::before{content:"↓ "}
+.wilist{display:grid;gap:4px}
+.wilist button{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 8px;align-items:baseline;text-align:left;padding:8px 10px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);cursor:pointer;font:inherit}
+.wilist button:hover{border-color:var(--muted)}
+.wilist b{font-size:14px;font-weight:600}
+.wilist small{grid-column:1/-1;font-size:12px;color:var(--muted)}
+
 /* ---------- Map: info panel ---------- */
 .mapinfo{position:sticky;top:calc(env(safe-area-inset-top,0px) + 76px);max-height:calc(100vh - 96px);overflow:auto;display:grid;gap:12px;align-content:start;padding:18px;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
-.mapinfo.inline{position:relative;z-index:4;max-height:none;margin:0 12px 14px;grid-column:1/-1}
+.mapinfo.inline{position:relative;top:0;z-index:4;max-height:none;margin:0 12px 14px;grid-column:1/-1}
+.mapinfo.wiinline{margin:0}
 .mapinfo h3{font-size:22px}
 .mapinfo .eyebrow{margin-top:6px}
 .ilist{margin:0;padding-left:18px;display:grid;gap:4px;font-size:14px}
@@ -101,6 +167,13 @@
   .tnode{min-width:0;flex:1 1 140px;max-width:none}
   .maptools input[type=search]{flex:1 1 100%}
   .mapinfo.inline{margin:0 8px 12px}
+  .whatif{padding:12px}
+  .wilevers{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+  .wilever{padding:8px 10px;gap:4px}
+  .wilever span{display:grid;gap:2px}
+  .wilever b{font-size:13.5px}
+  .wilever small{display:none}
+  .wihead h3{font-size:17px}
 }
 
 /* ---------- Topic chrome ---------- */

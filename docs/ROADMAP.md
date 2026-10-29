@@ -9,7 +9,7 @@ The whole chip stack *runs*, and every part is connected. Your gates become a CP
 ## Now
 
 - **My chip.** One chip that is yours, carried through every layer, with a passport of stamps. *Shipped.*
-- **The map as a simulator.** Pull a lever, such as an HBM shortage, the electricity price or a delayed node, and watch the effects ripple across connected topics. *In progress.*
+- **The map as a simulator.** Pull a lever, such as an HBM shortage, the electricity price or a delayed node, and watch the effects ripple across connected topics. *Shipped: What if? on the map (`#whatif`).*
 
 ## Next
 
