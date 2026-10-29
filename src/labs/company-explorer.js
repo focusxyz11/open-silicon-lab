@@ -1,5 +1,7 @@
 /* Lab: COMPANY EXPLORER */
 import {$,clamp,RM,rng,T,redraws,fit,watch,rgba,shade,fmtLen,fmtNum,inView,fr,hexRGB,gauss,big,LIMC} from '../core/ui.js';
+import { FOUNDED, NOW } from '../data/timeline.js';
+import { getYear } from '../app/era.js';
 export function init(){
 (function companies(){
 const rows=$('#coRows');if(!rows)return;
@@ -91,15 +93,16 @@ function lines(){const r0=net.getBoundingClientRect();if(r0.width<2)return;svg.s
   if(Math.abs((ro.top+ro.bottom)/2-(rb.top+rb.bottom)/2)<4){y1=rb.top-r0.top;y2=ro.top-r0.top;const my=Math.min(y1,y2)-18;h+='<path class="'+dir+'" d="M'+sx.toFixed(1)+','+y1.toFixed(1)+' C'+sx.toFixed(1)+','+my+' '+ox.toFixed(1)+','+my+' '+ox.toFixed(1)+','+y2.toFixed(1)+'"/>';return;}
   const m=(y1+y2)/2;h+='<path class="'+dir+'" d="M'+sx.toFixed(1)+','+y1.toFixed(1)+' C'+sx.toFixed(1)+','+m.toFixed(1)+' '+ox.toFixed(1)+','+m.toFixed(1)+' '+ox.toFixed(1)+','+y2.toFixed(1)+'"/>';};
  (FROM[sel]||[]).forEach(id=>link(id,'up'));(TO[sel]||[]).forEach(id=>link(id,'dn'));svg.innerHTML=h;}
-function render(){let n=0;C.forEach(c=>{const b=btn[c[0]];const m=match(c);if(m)n++;b.classList.toggle('dim',!m);b.classList.toggle('up',(FROM[sel]||[]).includes(c[0]));b.classList.toggle('dn',(TO[sel]||[]).includes(c[0]));b.setAttribute('aria-pressed',c[0]===sel?'true':'false');});
+function render(){let n=0;const Y=getYear();let ex=0;C.forEach(c=>{const b=btn[c[0]];const m=match(c);if(m)n++;const no=FOUNDED[c[0]]>Y;if(!no)ex++;b.classList.toggle('notyet',no);b.title=no?'Founded in '+FOUNDED[c[0]]+', after '+Y:'';b.classList.toggle('dim',!m);b.classList.toggle('up',(FROM[sel]||[]).includes(c[0]));b.classList.toggle('dn',(TO[sel]||[]).includes(c[0]));b.setAttribute('aria-pressed',c[0]===sel?'true':'false');});
  $('#coF').querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.f===flt?'true':'false'));
- $('#coTag').textContent=n===C.length?C.length+' companies':n+' of '+C.length+' shown';
+ $('#coTag').textContent=(n===C.length?C.length+' companies':n+' of '+C.length+' shown')+(Y<NOW?' · '+ex+' existed in '+Y:'');
  const c=BY[sel],L=LIM[c[5]],ly=LY.find(l=>l[0]===c[2])[1];
  const ch=ids=>ids.length?'<div class="chips">'+ids.map(id=>'<button type="button" data-go="'+id+'">'+esc(BY[id][1])+'</button>').join('')+'</div>':'<p class="small muted" style="text-transform:none;letter-spacing:0;font-family:var(--body)">None shown</p>';
- $('#coProf').innerHTML='<div><div class="meta"><span>'+esc(ly)+'</span><span>·</span><span>'+esc(c[3])+'</span>'+(c[4]?'<span class="pill ann">Startup or new entrant</span>':'')+'<span class="limtag" style="--c:'+L[1]+'">'+L[0]+'</span></div><h3>'+esc(c[1])+'</h3><dl><div><dt>What it does</dt><dd>'+esc(c[6])+'</dd></div><div><dt>Why it is hard to replace</dt><dd>'+esc(c[7])+'</dd></div><div><dt>2025–26</dt><dd>'+esc(c[8])+'</dd></div></dl></div><div class="links"><p>Buys from ('+(FROM[sel]||[]).length+')</p>'+ch(FROM[sel]||[])+'<p>Sells to ('+(TO[sel]||[]).length+')</p>'+ch(TO[sel]||[])+'</div>';
+ $('#coProf').innerHTML='<div><div class="meta"><span>'+esc(ly)+'</span><span>·</span><span>'+esc(c[3])+'</span>'+(c[4]?'<span class="pill ann">Startup or new entrant</span>':'')+'<span class="limtag" style="--c:'+L[1]+'">'+L[0]+'</span>'+(FOUNDED[c[0]]?'<span>· Founded '+FOUNDED[c[0]]+(FOUNDED[c[0]]>Y?' (not yet in '+Y+')':'')+'</span>':'')+'</div><h3>'+esc(c[1])+'</h3><dl><div><dt>What it does</dt><dd>'+esc(c[6])+'</dd></div><div><dt>Why it is hard to replace</dt><dd>'+esc(c[7])+'</dd></div><div><dt>2025–26</dt><dd>'+esc(c[8])+'</dd></div></dl></div><div class="links"><p>Buys from ('+(FROM[sel]||[]).length+')</p>'+ch(FROM[sel]||[])+'<p>Sells to ('+(TO[sel]||[]).length+')</p>'+ch(TO[sel]||[])+'</div>';
  $('#coProf').querySelectorAll('[data-go]').forEach(b=>b.addEventListener('click',()=>{sel=b.dataset.go;render();const t=btn[sel];if(t)t.focus({preventScroll:true});}));
  requestAnimationFrame(lines);}
 new ResizeObserver(()=>lines()).observe(net);
+document.addEventListener('osl:year',render);
 render();
 })();
 }

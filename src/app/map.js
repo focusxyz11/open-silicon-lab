@@ -7,6 +7,8 @@ import { GL } from '../data/learning.js';
 import { CARDS } from '../data/cards.js';
 import { FACTS, factsFor, changesHTML } from './facts.js';
 import { P } from './learning.js';
+import { getYear } from './era.js';
+import { BORN, NOW } from '../data/timeline.js';
 
 const $ = s => document.querySelector(s);
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -20,6 +22,20 @@ export function renderMapShell(zoomHTML) {
     <h1>The whole chip, from <em>atoms</em> to everything it powers</h1>
     <p class="lede">Phones, cars, thermostats and AI data centers all run on chips made through the same stack: physics, transistors, design, factories and packaging. Every layer is a topic with live simulations you can play with, and wires show how the topics depend on each other. Start anywhere: pick a topic, follow a thread, or build a chip in the workshop.</p>
     <div class="mstats" id="mStats"></div>
+  </section>
+  <section class="wrap tmsec" id="timeMachine" aria-labelledby="tmTitle">
+    <div class="tmhead">
+      <div class="yearbig" id="tmYear">2026</div>
+      <div class="tmera"><p class="code">Time machine · the whole site follows this year</p><h2 id="tmTitle"><span id="tmEra">–</span></h2><p id="tmEraD" class="small"></p></div>
+    </div>
+    <input type="range" id="tmR" value="2026" aria-label="Year, from 1971 to 2040">
+    <div class="row tmctl"><div class="seg" id="tmJump">${[1971, 1978, 1985, 1993, 2000, 2007, 2012, 2018, 2026, 2030, 2040].map(y => '<button type="button" data-y="' + y + '">' + (y === 2026 ? 'Today' : y) + '</button>').join('')}</div><button type="button" class="btn" id="tmPlay">▶ Play history</button></div>
+    <div class="cols tmbody">
+      <div><canvas class="plot" id="tmCv" style="height:280px" aria-label="Transistors per chip from 1971 to 2040"></canvas>
+        <div class="legend"><span><i style="background:var(--cyan-fill)"></i>Microprocessors</span><span><i style="background:var(--amber-fill)"></i>Landmark chips</span><span><i style="background:var(--violet)"></i>Trend line after 2026</span></div></div>
+      <div class="tmcards" id="tmCards"></div>
+    </div>
+    <p class="note">History to 2026: microprocessor data from Karl Rupp (CC BY 4.0), landmark chips and process nodes from Wikipedia, design costs from IBS. After 2026: TSMC's plans and imec's roadmap, and a plain trend line for transistor counts, labelled on every card. Topic pages and some simulations change with the year too.</p>
   </section>
   <section class="wrap mapgrid">
     <div class="mapmain">
@@ -68,6 +84,7 @@ export function initMap() {
   $('#mSearch').addEventListener('input', e => { state.query = e.target.value.trim(); if (state.query) { state.thread = null; state.sel = null; } refresh(); });
   $('#mInfo').addEventListener('click', e => { const b = e.target.closest('[data-pick]'); if (b) { state.sel = b.dataset.pick; state.thread = null; refresh(); } const th = e.target.closest('[data-thread]'); if (th) { state.thread = th.dataset.thread; state.sel = null; refresh(); } });
   new ResizeObserver(() => drawEdges()).observe($('#mStack'));
+  document.addEventListener('osl:year', () => refresh());
   $('#changes').innerHTML = changesHTML();
   $('#fbStatus').textContent = FACTS.facts.length + ' facts tracked · last checked ' + (FACTS.lastCheck || '–') + ' · next check ' + (FACTS.nextCheck || '–');
   refresh();
@@ -97,6 +114,8 @@ function refresh() {
     n.querySelector('.nb').textContent = step >= 0 ? String(step + 1) : '';
     n.classList.toggle('stepn', step >= 0);
     n.classList.toggle('seen', !!P.seen[id]);
+    const notyet = getYear() !== NOW && BORN[id] && BORN[id][0] > getYear();
+    n.classList.toggle('notyet', !!notyet); if (notyet) n.title = 'In ' + getYear() + ': not invented yet. ' + BORN[id][1]; else n.removeAttribute('title');
   });
   renderInfo(th, hits); drawEdges();
 }

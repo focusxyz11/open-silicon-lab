@@ -273,6 +273,30 @@
    "verified": "2026-10-27"
   },
   {
+   "id": "design-cost-older",
+   "topic": "economics",
+   "detail": "IBS estimates from 2018. The time machine uses this series from 2011 onward.",
+   "kind": "estimate",
+   "label": "Cost to design a 28 nm and a 16 nm chip",
+   "source": "SemiEngineering (IBS)",
+   "status": "current",
+   "url": "https://www.semiengineering.com/what-will-that-chip-cost/",
+   "value": "About $51 million at 28 nm and $106 million at 16 nm",
+   "verified": "2026-10-29"
+  },
+  {
+   "id": "design-cost-recent",
+   "topic": "economics",
+   "detail": "IBS total design-cost estimates, 2022–23. Real AI-chip projects often spend less by reusing IP.",
+   "kind": "estimate",
+   "label": "Cost to design a 7, 5 and 3 nm chip",
+   "source": "Silicon Analysts (IBS)",
+   "status": "current",
+   "url": "https://siliconanalysts.com/market-data/nre-design-cost",
+   "value": "About $257 million (7 nm), $479 million (5 nm) and $585 million (3 nm)",
+   "verified": "2026-10-29"
+  },
+  {
    "id": "dv-agent",
    "topic": "design",
    "detail": "Announced July 2026 at DAC.",
@@ -645,6 +669,18 @@
    "verified": "2026-10-27"
   },
   {
+   "id": "transistor-trend",
+   "topic": "future",
+   "detail": "Karl Rupp's microprocessor trend data, CC BY 4.0, used in the time machine.",
+   "kind": "reported",
+   "label": "Fifty years of microprocessors",
+   "source": "Karl Rupp",
+   "status": "current",
+   "url": "https://github.com/karlrupp/microprocessor-trend-data",
+   "value": "From 2,300 transistors (1971) to tens of billions (2021): doubling about every two years",
+   "verified": "2026-10-29"
+  },
+  {
    "id": "tsmc-a14",
    "topic": "future",
    "detail": "A version with backside power is expected in 2029.",
@@ -802,6 +838,12 @@
   }
  ],
  "changes": [
+  {
+   "date": "2026-10-29",
+   "title": "Time machine: 1971 to 2040",
+   "summary": "Drag through the years and the site follows: the map, every topic page, the company explorer and the roadmap. History to 2026, labelled plans and projections after. Three new facts on design costs and the transistor trend.",
+   "url": "https://github.com/karlrupp/microprocessor-trend-data"
+  },
   {
    "date": "2026-10-29",
    "title": "From simulation to real silicon",

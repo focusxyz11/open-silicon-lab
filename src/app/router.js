@@ -1,6 +1,7 @@
 /* Hash router. One page, five views: the map, a topic, the workshop, challenges and knowledge.
    Links are plain hashes (#litho, #lab-litho-2, #riscv-5), so every place in the lab is shareable. */
 import { TOPICS, THREADS, topicById, bandById, edgesOf } from '../data/topics.js';
+import { renderEraBanner } from './era.js';
 import { CHALLENGES } from '../data/challenges.js';
 import { redraws } from '../core/ui.js';
 import { openLevel } from '../labs/riscv-lab.js';
@@ -42,7 +43,8 @@ function renderChrome(id) {
   } else if (thIn.length) {
     thread = '<div class="thbar quiet"><span class="small muted">On ' + (thIn.length > 1 ? 'the threads' : 'the thread') + '</span>' + thIn.map(x => '<button type="button" class="chip" data-thread="' + x.id + '">' + esc(x.t) + '</button>').join('') + '</div>';
   }
-  $('#topicHead').innerHTML = '<nav class="crumbs" aria-label="Breadcrumb"><a href="#map">Map</a><span>›</span><a href="#map" data-band="' + b.id + '">' + esc(b.t) + '</a><span>›</span><b>' + esc(t.t) + '</b></nav>' + thread;
+  $('#topicHead').innerHTML = '<nav class="crumbs" aria-label="Breadcrumb"><a href="#map">Map</a><span>›</span><a href="#map" data-band="' + b.id + '">' + esc(b.t) + '</a><span>›</span><b>' + esc(t.t) + '</b></nav>' + thread + '<div id="eraBanner" hidden></div>';
+  renderEraBanner(id);
   const labs = labsIn(id); const edges = edgesOf(id);
   const ch = CHALLENGES.filter(c => c.topic === id);
   $('#rail').innerHTML = '<a class="back" href="#map">← Map</a>' +
@@ -90,6 +92,8 @@ function route() {
   const el = document.getElementById(h); const sec = el && el.closest('#library > section');
   if (sec) { showTopic(sec.id, h); return; }
   show('map'); redrawMap();
+  /* An anchor on the map page itself, such as the time machine. */
+  if (el && el.closest('#view-map')) requestAnimationFrame(() => el.scrollIntoView({ block: 'start' }));
 }
 
 export function initRouter() {
