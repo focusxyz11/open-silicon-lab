@@ -2,6 +2,8 @@
 
 An open-source, hands-on lab for how chips are designed, made and used for AI — from atoms to AI data centers.
 
+**Try it: <https://focusxyz11.github.io/open-silicon-lab/>**
+
 It is not a textbook. Everything is a simulation you can play with, a puzzle, or a build:
 
 - **Chip stack map** — the home page. Every topic sits in its layer of the chip stack (atoms → transistors → processors → design → manufacturing → packaging → AI computing → data centers → industry → future), with wires showing how the topics depend on each other. Select a topic to see what it holds and what it connects to; follow a *thread* for a suggested route. Nothing is locked.
@@ -57,7 +59,7 @@ See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for how the pieces fit, and [do
 
 ## How this was made
 
-Open Silicon Lab is built with AI. The project owner, a learner new to chips, decides what to build and why. Claude, an AI model made by Anthropic, wrote the text, simulations, code and tests, working from public sources that are listed on the site.
+Open Silicon Lab is built with AI.
 
 What that means for you:
 
