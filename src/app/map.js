@@ -9,6 +9,7 @@ import { FACTS, factsFor, changesHTML } from './facts.js';
 import { P } from './learning.js';
 import { getYear } from './era.js';
 import { BORN, NOW } from '../data/timeline.js';
+import { W, renderPanel, wirePanel, paintNodes, rippleLinks, infoHTML } from './whatif.js';
 
 const $ = s => document.querySelector(s);
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -41,8 +42,10 @@ export function renderMapShell(zoomHTML) {
     <div class="mapmain">
       <div class="maptools">
         <div class="threads" id="mThreads" role="group" aria-label="Suggested paths"></div>
+        <button type="button" class="wibtn" id="mWhat" aria-pressed="false" aria-controls="mWhatif"><b>What if…?</b> Simulate the industry</button>
         <input type="search" id="mSearch" placeholder="Search anything: HBM, EUV, RISC-V, yield…" aria-label="Search the map">
       </div>
+      <div class="whatif" id="mWhatif" hidden></div>
       <div class="mstack" id="mStack"><svg id="mSvg" aria-hidden="true"></svg><div id="mBands"></div><svg id="mSvgL" aria-hidden="true"></svg></div>
       <p class="note">Layers run from the world at the top to atoms at the bottom, like a cross-section of a chip. Thin lines show how topics connect; select a topic to label its connections. Dashed outlines mark hands-on builds.</p>
     </div>
@@ -68,7 +71,7 @@ const challengesOf = id => CHALLENGES.filter(c => c.topic === id);
 function nodeHTML(t) {
   const n = labsOf(t.id).length, c = challengesOf(t.id).length;
   const meta = t.id === 'riscv' ? '7 levels + sandbox' : (n ? n + (n > 1 ? ' simulations' : ' simulation') : '') + (c ? (n ? ' · ' : '') + c + (c > 1 ? ' challenges' : ' challenge') : '');
-  return '<button type="button" class="tnode' + (t.kind === 'build' ? ' build' : '') + (P.seen[t.id] ? ' seen' : '') + '" data-t="' + t.id + '"><span class="nb" aria-hidden="true"></span><b>' + esc(t.t) + '</b><small>' + esc(meta) + '</small></button>';
+  return '<button type="button" class="tnode' + (t.kind === 'build' ? ' build' : '') + (P.seen[t.id] ? ' seen' : '') + '" data-t="' + t.id + '"><span class="nb" aria-hidden="true"></span><b>' + esc(t.t) + '</b><small>' + esc(meta) + '</small><span class="rb"></span></button>';
 }
 
 export function initMap() {
@@ -76,13 +79,15 @@ export function initMap() {
   const labCount = TOPICS.reduce((s, t) => s + labsOf(t.id).length, 0);
   $('#mStats').innerHTML = [[TOPICS.length, 'topics'], [labCount + '+', 'live simulations'], [CHALLENGES.length, 'challenges'], [FACTS.facts.length, 'dated facts']].map(x => '<div><b>' + x[0] + '</b><span>' + x[1] + '</span></div>').join('');
   $('#mThreads').innerHTML = '<button type="button" data-th="">All topics</button>' + THREADS.map(t => '<button type="button" data-th="' + t.id + '">' + esc(t.t) + '</button>').join('');
-  $('#mThreads').querySelectorAll('button').forEach(b => b.addEventListener('click', () => { state.thread = b.dataset.th || null; state.query = ''; $('#mSearch').value = ''; if (state.thread) state.sel = null; refresh(); }));
+  $('#mThreads').querySelectorAll('button').forEach(b => b.addEventListener('click', () => { state.thread = b.dataset.th || null; state.query = ''; $('#mSearch').value = ''; if (state.thread) { state.sel = null; W.on = false; } refresh(); }));
+  $('#mWhat').addEventListener('click', () => setWhatif(!W.on));
+  wirePanel(animate => { if (!W.on) state.sel = null; refresh(animate); });
   $('#mBands').addEventListener('click', e => { const n = e.target.closest('.tnode'); if (!n) return; state.sel = state.sel === n.dataset.t && !matchMedia('(hover:hover)').matches ? state.sel : n.dataset.t; state.query = ''; $('#mSearch').value = ''; refresh(); });
   $('#mBands').addEventListener('dblclick', e => { const n = e.target.closest('.tnode'); if (n) location.hash = n.dataset.t; });
   $('#mBands').addEventListener('mouseover', e => { const n = e.target.closest('.tnode'); hover = n ? n.dataset.t : null; drawEdges(); });
   $('#mBands').addEventListener('mouseleave', () => { hover = null; drawEdges(); });
-  $('#mSearch').addEventListener('input', e => { state.query = e.target.value.trim(); if (state.query) { state.thread = null; state.sel = null; } refresh(); });
-  $('#mInfo').addEventListener('click', e => { const b = e.target.closest('[data-pick]'); if (b) { state.sel = b.dataset.pick; state.thread = null; refresh(); } const th = e.target.closest('[data-thread]'); if (th) { state.thread = th.dataset.thread; state.sel = null; refresh(); } });
+  $('#mSearch').addEventListener('input', e => { state.query = e.target.value.trim(); if (state.query) { state.thread = null; state.sel = null; W.on = false; } refresh(); });
+  $('#mInfo').addEventListener('click', e => { const b = e.target.closest('[data-pick]'); if (b) { state.sel = b.dataset.pick; state.thread = null; refresh(); } const th = e.target.closest('[data-thread]'); if (th) { state.thread = th.dataset.thread; state.sel = null; W.on = false; refresh(); } if (e.target.closest('[data-whatif]')) setWhatif(true); });
   new ResizeObserver(() => drawEdges()).observe($('#mStack'));
   document.addEventListener('osl:year', () => refresh());
   $('#changes').innerHTML = changesHTML();
@@ -101,11 +106,19 @@ function search(q) {
   return hits;
 }
 
+/* What if? mode: levers above the map, ripple badges on the topics. */
+export function setWhatif(on) {
+  W.on = on; state.sel = null;
+  if (on) { state.thread = null; state.query = ''; $('#mSearch').value = ''; }
+  refresh(on);
+  if (on) requestAnimationFrame(() => { const r = $('#mWhatif').getBoundingClientRect(); if (r.top < 60 || r.top > innerHeight * 0.6) $('#mWhatif').scrollIntoView({ block: 'start', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' }); });
+}
+
 let hover = null;
-function refresh() {
+function refresh(animate) {
   const th = state.thread ? THREADS.find(t => t.id === state.thread) : null;
   const hits = state.query.length > 1 ? search(state.query) : null; const hitTopics = hits ? new Set(hits.map(h => h.topic)) : null;
-  $('#mThreads').querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', (b.dataset.th || null) === state.thread ? 'true' : 'false'));
+  $('#mThreads').querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', !W.on && (b.dataset.th || null) === state.thread ? 'true' : 'false'));
   document.querySelectorAll('#mBands .tnode').forEach(n => {
     const id = n.dataset.t; const step = th ? th.path.indexOf(id) : -1;
     n.classList.toggle('sel', id === state.sel);
@@ -117,12 +130,16 @@ function refresh() {
     const notyet = getYear() !== NOW && BORN[id] && BORN[id][0] > getYear();
     n.classList.toggle('notyet', !!notyet); if (notyet) n.title = 'In ' + getYear() + ': not invented yet. ' + BORN[id][1]; else n.removeAttribute('title');
   });
+  $('#mWhat').setAttribute('aria-pressed', W.on ? 'true' : 'false');
+  renderPanel(); paintNodes(!!animate && W.on);
   renderInfo(th, hits); drawEdges();
 }
 
 function renderInfo(th, hits) {
   const box = $('#mInfo');
-  if (hits) {
+  if (W.on) {
+    box.innerHTML = infoHTML(state.sel, innerWidth < 980 ? 5 : 12);
+  } else if (hits) {
     box.innerHTML = '<p class="code">Search</p><h3>' + hits.length + ' result' + (hits.length === 1 ? '' : 's') + ' for “' + esc(state.query) + '”</h3>' + (hits.length ? '<div class="hits">' + hits.slice(0, 40).map(h => '<a href="' + h.href + '"><span class="pill out">' + h.kind + '</span><b>' + esc(h.t) + '</b>' + (h.d ? '<small>' + esc(h.d) + '</small>' : '') + '<em>' + esc((topicById(h.topic) || { t: h.topic }).t) + '</em></a>').join('') + '</div>' : '<p class="muted">Nothing matches. Try a shorter word.</p>');
   } else if (th) {
     box.innerHTML = '<p class="code">Thread</p><h3>' + esc(th.t) + '</h3><p>' + esc(th.d) + ' A suggestion, not a requirement: every topic stays open.</p><ol class="tpath">' + th.path.map((id, i) => { const t = topicById(id); return '<li><a href="#' + id + '"><span>' + (i + 1) + '</span><b>' + esc(t.t) + '</b>' + (P.seen[id] ? '<em>explored</em>' : '') + '</a></li>'; }).join('') + '</ol><div class="row"><a class="btn primary" href="#' + th.path.find(id => !P.seen[id]) + '" data-start-thread="' + th.id + '">' + (th.path.some(id => P.seen[id]) ? 'Continue the thread →' : 'Start the thread →') + '</a></div>';
@@ -138,13 +155,15 @@ function renderInfo(th, hits) {
       (fs.length ? '<p class="eyebrow">Live facts</p><ul class="ilist">' + fs.slice(0, 4).map(f => '<li>' + esc(f.label) + ': <b>' + esc(f.value) + '</b></li>').join('') + '</ul>' : '') +
       (ths.length ? '<p class="eyebrow">On these threads</p><div class="row">' + ths.map(x => '<button type="button" class="chip" data-thread="' + x.id + '">' + esc(x.t) + '</button>').join('') + '</div>' : '');
   } else {
-    box.innerHTML = '<p class="code">How to use the map</p><h3>Select any topic</h3><p>Each box is a topic with its own simulations. Select one to see what it holds and how it connects. Double-click, or use its Open button, to go in.</p><p class="eyebrow">Or follow a thread</p><div class="tlist">' + THREADS.map(x => '<button type="button" data-thread="' + x.id + '"><b>' + esc(x.t) + '</b><small>' + esc(x.d) + '</small></button>').join('') + '</div><p class="eyebrow">Or look inside something you own</p><div class="tlist"><a href="#everywhere"><b>Chips everywhere</b><small>Open a phone, a car or a server and see which chips it takes</small></a></div><p class="eyebrow">Or build something</p><div class="tlist"><a href="#tiny"><b>Tiny chip studio</b><small>From logic to a working chip, in eight steps</small></a><a href="#riscv"><b>RISC-V CPU lab</b><small>Program a processor, then make it an AI chip</small></a><a href="#build"><b>AI chip architect</b><small>Design an AI chip for a mission</small></a></div>';
+    box.innerHTML = '<p class="code">How to use the map</p><h3>Select any topic</h3><p>Each box is a topic with its own simulations. Select one to see what it holds and how it connects. Double-click, or use its Open button, to go in.</p><p class="eyebrow">Or follow a thread</p><div class="tlist">' + THREADS.map(x => '<button type="button" data-thread="' + x.id + '"><b>' + esc(x.t) + '</b><small>' + esc(x.d) + '</small></button>').join('') + '</div><p class="eyebrow">Or ask what if</p><div class="tlist"><button type="button" data-whatif><b>What if…?</b><small>Cut the HBM supply, raise the price of power or delay a new node, and watch the effects ripple across the map</small></button></div><p class="eyebrow">Or look inside something you own</p><div class="tlist"><a href="#everywhere"><b>Chips everywhere</b><small>Open a phone, a car or a server and see which chips it takes</small></a></div><p class="eyebrow">Or build something</p><div class="tlist"><a href="#tiny"><b>Tiny chip studio</b><small>From logic to a working chip, in eight steps</small></a><a href="#riscv"><b>RISC-V CPU lab</b><small>Program a processor, then make it an AI chip</small></a><a href="#build"><b>AI chip architect</b><small>Design an AI chip for a mission</small></a></div>';
   }
   /* On narrow screens, show details right under the selected topic's layer. */
   const narrow = innerWidth < 980; const grid = document.querySelector('.mapgrid');
   if (narrow && state.sel) { const band = document.querySelector('#mBands .tnode[data-t="' + state.sel + '"]').closest('.band'); band.after(box); box.classList.add('inline'); }
+  else if (narrow && W.on) { $('#mWhatif').after(box); box.classList.add('inline', 'wiinline'); }
   else if (box.parentElement !== grid) { grid.appendChild(box); box.classList.remove('inline'); }
   else box.classList.remove('inline');
+  if (!(narrow && W.on && !state.sel)) box.classList.remove('wiinline');
 }
 
 /* ---- the wires ---- */
@@ -160,7 +179,16 @@ function drawEdges() {
   const th = state.thread ? THREADS.find(t => t.id === state.thread) : null; const focus = state.sel || hover;
   const mk = (d, cls) => { const p = document.createElementNS(NS, 'path'); p.setAttribute('d', d); p.setAttribute('class', cls); svg.appendChild(p); return p; };
   const labels = [];
-  EDGES.forEach(e => {
+  if (W.on) {
+    EDGES.forEach(e => { const a = center(e[0], wrap), b = center(e[1], wrap); if (a && b) mk(curve(a, b), 'w faint'); });
+    rippleLinks().forEach(r => {
+      const a = center(r.a, wrap), b = center(r.b, wrap); if (!a || !b) return;
+      const on = !focus || r.a === focus || r.b === focus;
+      const p = mk(curve(a, b), 'w rip ' + (r.amt > 0 ? 'up' : 'down') + (on ? '' : ' faint'));
+      p.style.strokeWidth = (1.6 + Math.min(2.6, Math.abs(r.amt) / 15)).toFixed(1);
+      if (state.sel && (r.a === state.sel || r.b === state.sel)) labels.push([a, b, r.s]);
+    });
+  } else EDGES.forEach(e => {
     const a = center(e[0], wrap), b = center(e[1], wrap); if (!a || !b) return;
     const on = focus && (e[0] === focus || e[1] === focus);
     const cls = th ? 'w faint' : on ? 'w on' : (focus ? 'w faint' : 'w');
@@ -173,7 +201,7 @@ function drawEdges() {
   const L = $('#mSvgL'); L.setAttribute('viewBox', svg.getAttribute('viewBox')); L.innerHTML = '';
   labels.forEach(([a, b, t]) => {
     const sel = center(state.sel, wrap); const o = a.x === sel.x && a.y === sel.y ? b : a;
-    const above = Math.abs(o.y - sel.y) < 4 || o.y > sel.y; const y = above ? o.top - 9 : o.bot + 11;
+    const above = !W.on && (Math.abs(o.y - sel.y) < 4 || o.y > sel.y); const y = above ? o.top - 9 : o.bot + 11;
     const tx = document.createElementNS(NS, 'text'); tx.setAttribute('x', o.x); tx.setAttribute('y', y); tx.setAttribute('class', 'wl'); tx.textContent = t; L.appendChild(tx);
   });
 }

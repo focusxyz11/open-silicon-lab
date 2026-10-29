@@ -37,6 +37,18 @@ async function check(viewport) {
   await page.click('#eraBanner [data-era-now]');
   if (!(await page.textContent('#yearBtn')).includes('Today')) problems.push(tag + 'time machine did not return to today');
 
+  // What if? A lever ripples badges across the map; selecting a topic shows the cause chain.
+  await page.evaluate(() => { location.hash = 'whatif'; }); await page.waitForTimeout(200);
+  if (await page.isHidden('#mWhatif')) problems.push(tag + 'what-if panel did not open from #whatif');
+  await page.locator('#mWhatif [data-l="hbm"] input').fill('-40');
+  const badges = await page.$$eval('#mBands .tnode .rb.up, #mBands .tnode .rb.down', n => n.length);
+  if (badges < 8) problems.push(tag + 'HBM lever reached only ' + badges + ' topics');
+  await page.click('.tnode[data-t="everywhere"]');
+  if (!/Phone and PC prices/.test(await page.textContent('#mInfo'))) problems.push(tag + 'what-if panel shows no cause for phone prices');
+  if (await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1)) problems.push(tag + 'what-if mode scrolls sideways');
+  await page.click('#mWhatif [data-wi-close]');
+  if (await page.$('#mBands .tnode .rb.up')) problems.push(tag + 'closing what-if left badges on the map');
+
   // Every topic and reference page.
   const ids = await page.evaluate(() => [...document.querySelectorAll('#library > section')].map(s => s.id));
   for (const id of ids) {

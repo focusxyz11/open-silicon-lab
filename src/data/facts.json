@@ -33,6 +33,18 @@
    "verified": "2026-10-27"
   },
   {
+   "id": "ai-dc-tco",
+   "topic": "datacenter",
+   "detail": "Annualized cost of a stylized 1 GW AI data center, May 2026: servers about $5 billion of $8.5 billion a year, electricity about $0.6 billion, its largest operating cost.",
+   "kind": "estimate",
+   "label": "What an AI data center costs each year",
+   "source": "Epoch AI",
+   "status": "current",
+   "url": "https://epoch.ai/data-insights/ai-datacenter-cost-breakdown",
+   "value": "Chips and servers about 60%; electricity about 7%",
+   "verified": "2026-10-29"
+  },
+  {
    "id": "ai-in-fabs",
    "topic": "innovation",
    "detail": "NVIDIA claims 20–50% better cost or cycle time for computational lithography.",
@@ -114,6 +126,18 @@
    "status": "current",
    "url": "https://siliconsemiconductor.net/article/120618/Electrification_and_autonomy_a_semiconductor_content_boost_to_1000_per_car_by_2029",
    "value": "About $1,000 per car by 2029",
+   "verified": "2026-10-29"
+  },
+  {
+   "id": "car-shortage-2021",
+   "topic": "everywhere",
+   "detail": "AlixPartners forecast, September 2021, nearly double its May estimate. Most of the missing chips were cheap parts made on mature processes.",
+   "kind": "estimate",
+   "label": "The 2021 car-chip shortage",
+   "source": "CNBC (AlixPartners)",
+   "status": "current",
+   "url": "https://www.cnbc.com/2021/09/23/chip-shortage-expected-to-cost-auto-industry-210-billion-in-2021.html",
+   "value": "About $210 billion of lost revenue and 7.7 million vehicles not built in 2021",
    "verified": "2026-10-29"
   },
   {
@@ -277,7 +301,7 @@
    "topic": "datacenter",
    "detail": "IEA, April 2026; AI-focused demand rose 50% in 2025 and is projected to triple.",
    "kind": "projection",
-   "label": "Data-centre electricity use",
+   "label": "Data-center electricity use",
    "source": "IEA via Enlit",
    "status": "current",
    "url": "https://www.enlit.world/library/ai-and-data-centre-electricity-use-continue-to-surge-iea-finds",
@@ -561,6 +585,18 @@
    "verified": "2026-10-27"
   },
   {
+   "id": "intel-10nm",
+   "topic": "transistor",
+   "detail": "Cannon Lake shipped in tiny volume in 2018; Ice Lake laptop chips brought volume in August 2019. Meanwhile AMD took the lead with chips made on TSMC's 7 nm, and Apple moved Macs to its own Arm chips.",
+   "kind": "reported",
+   "label": "Intel's 10 nm delay",
+   "source": "PCWorld",
+   "status": "current",
+   "url": "https://www.pcworld.com/article/399328/amd-ryzen-5000-arm-macs-intel-10nm-struggles.html",
+   "value": "Planned for 2016; in volume only in August 2019",
+   "verified": "2026-10-29"
+  },
+  {
    "id": "intel-14a",
    "topic": "future",
    "detail": "Intel also plans to use 14A for its own products.",
@@ -619,6 +655,18 @@
    "url": "https://www.datacenterdynamics.com/en/news/microsoft-unveils-maia-200-inferencing-chip",
    "value": "TSMC 3 nm, about 10 PFLOPS FP4, 216 GB HBM3E, 272 MB SRAM, 750 W",
    "verified": "2026-10-27"
+  },
+  {
+   "id": "memory-squeeze",
+   "topic": "datacenter",
+   "detail": "TrendForce forecast of 5 January 2026. Memory makers moved wafers to HBM, which IDC says uses about three times the wafer area of DDR5; mainstream PC memory and storage costs rose 40–70% during 2025 (Omdia).",
+   "kind": "projection",
+   "label": "The 2026 memory squeeze",
+   "source": "Dataconomy (TrendForce, IDC, Omdia)",
+   "status": "current",
+   "url": "https://dataconomy.com/2026/01/12/global-memory-chip-shortage-sends-pc-prices-soaring/",
+   "value": "DRAM contract prices up 45–50% in Q4 2025 and a forecast 55–60% in Q1 2026; IDC expected PC prices to rise 6–8% in 2026",
+   "verified": "2026-10-29"
   },
   {
    "id": "nand-layers",
@@ -1030,6 +1078,12 @@
   }
  ],
  "changes": [
+  {
+   "date": "2026-10-29",
+   "title": "What if? The map as a simulator",
+   "summary": "Move a lever on the map, such as AI demand, HBM supply, the price of electricity, a late process node or a shortage of ordinary chips, and watch the effect ripple across the connected topics, with the cause chain behind every change. Four puzzles, four ready-made scenarios and four new facts on the 2021 car-chip shortage, Intel's 10 nm delay, the 2026 memory squeeze and what an AI data center costs.",
+   "url": ""
+  },
   {
    "date": "2026-10-29",
    "title": "New ways to compute",

@@ -30,6 +30,7 @@ All content is in the DOM from the start; the router only shows and hides it. Th
 | Hash | Shows |
 | --- | --- |
 | `#map` or empty | the chip stack map |
+| `#whatif` | the map in What if? mode, with the levers open |
 | `#workshop`, `#challenges`, `#knowledge` | the three index views |
 | `#<topic>` | one topic, with breadcrumb, thread bar, rail of simulations and connections, facts and next steps |
 | `#lab-<topic>-<n>` or any element id | its topic, scrolled to that element |
@@ -55,13 +56,17 @@ All content is in the DOM from the start; the router only shows and hides it. Th
 
 `src/data/agent-cases.js` holds eight scripted cases, each an agent proposal (a tiny-chip design, RISC-V code, a yield or roofline estimate, a dated claim, a test report) that is either sound or has a realistic flaw, plus pure checks built on the same engines. `tests/agent.test.mjs` proves every flaw is real and every sound proposal works. `src/labs/agent-partner.js` lets the learner check with those tools before trusting or rejecting; inside Claude it adds a live agent that designs tiny chips.
 
+## What if? The map as a simulator
+
+`src/data/ripple.js` is a small causal model: five levers, about thirty indicators (each sits on one map topic) and rules of the form *from → to, strength, wire label, reason*. `src/engines/ripple.js` sorts the indicators so every input comes first (a loop is an error), then computes each one as the sum of strength × change over its inputs, or the smallest input for `MIN` indicators (AI chips shipped follow whichever of demand or HBM is scarcer). It also returns each indicator's contributions and its distance from a lever, which the map uses for the cause chain and the ripple animation. `src/app/whatif.js` draws the lever panel, the badges and the side panel; `src/app/map.js` switches the mode and draws the causal wires. Directions follow the facts each lever cites; strengths are illustrative, and `tests/ripple.test.mjs` checks the directions against what happened in 2021–2026, that the graph has no loops and that every puzzle has a solution. To add a rule, add one line to `RULES` with a reason a learner can read.
+
 ## The time machine
 
 `src/data/timeline.js` holds dated series (landmark chips, process nodes, transistor shapes, lithography, wafers, design costs, company founding years and Karl Rupp's microprocessor data) and `snapshot(year)` / `topicLine(id, year)`. `src/app/era.js` keeps the site's year (per tab, today by default), adds the year button to the top bar and the banner to topic pages, and fires `osl:year` when it changes. Labs that know about time listen for that event: the map's time machine, the company explorer and the roadmap.
 
 ## Progress and state
 
-Everything is per-browser `localStorage`: explanation level, topics visited, quiz answers, RISC-V code and stars. Nothing is sent anywhere. Progress is feedback, never a gate.
+Everything is per-browser `localStorage`: explanation level, topics visited, quiz answers, RISC-V code and stars, solved What if? puzzles. Nothing is sent anywhere. Progress is feedback, never a gate.
 
 ## Facts
 
