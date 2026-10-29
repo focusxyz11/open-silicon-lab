@@ -16,7 +16,7 @@ const stars = n => '<span class="stars"><span>' + '★'.repeat(n) + '</span><spa
 
 /* ---------------- Workshop ---------------- */
 const BUILDS = [
-  { id: 'tiny', n: '01', t: 'Make a tiny chip', d: 'Write a small circuit and take it through every step a GPU goes through, until it runs in a gadget.', steps: ['Logic', 'Verify', 'Gates', 'Layout', 'Masks', 'Fab', 'Test', 'Gadget'], link: 'Your gates are what a CPU is made of' },
+  { id: 'tiny', n: '01', t: 'Make a tiny chip', d: 'Write a small circuit and take it through every step a GPU goes through, until it runs in a gadget, or as the ALU inside the RISC-V CPU.', steps: ['Logic', 'Verify', 'Gates', 'Layout', 'Masks', 'Fab', 'Test', 'Gadget'], link: 'Your ALU slice runs inside the RISC-V CPU' },
   { id: 'riscv', n: '02', t: 'Program and extend a RISC-V CPU', d: 'Write assembly for a real open processor, watch the datapath, then add your own AI instruction.', steps: ['Registers', 'Memory', 'Loops', 'Multiply', 'Neuron', 'Custom op', 'Layer'], link: 'Your custom instruction is how AI chips begin' },
   { id: 'build', n: '03', t: 'Architect an AI chip', d: 'Choose architecture, node, memory and package for a mission, then compare with real 2026 chips.', steps: ['Mission', 'Architecture', 'Node', 'Memory', 'Package', 'Cost', 'Score'], link: null }
 ];

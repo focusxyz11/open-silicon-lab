@@ -84,7 +84,11 @@ function fields(e){switch(e.f){case 'R':return [['funct7',7,e.f7],['rs2',5,e.rs2
  default:return [['system',25,e.word>>>7],['opcode',7,e.opc]];}}
 /* machine ------------------------------------------------------------ */
 const MEMSZ=0x2000;
-function machine(prog,init){const m={pc:0,x:new Int32Array(32),mem:new Uint8Array(MEMSZ),cycles:0,steps:0,halted:false,err:null,last:null,counts:{}};
+/* opt.alu: an optional function (op, a, b) → {y, c, v, n, z}. When given, every add, subtract,
+   AND, OR, XOR, comparison, branch decision and memory address goes through it, as in a real
+   datapath where one ALU does all of these. Shifts, multiply, the PC adder and jump targets
+   keep their own hardware. */
+function machine(prog,init,opt){const m={pc:0,x:new Int32Array(32),mem:new Uint8Array(MEMSZ),cycles:0,steps:0,halted:false,err:null,last:null,counts:{},alu:(opt&&opt.alu)||null,aluOps:0};
  if(init)init(m);m.x[2]=MEMSZ-16;return m;}
 const s8=v=>(v<<24)>>24;
 function ld(m,a,n,sg){if(a<0||a+n>MEMSZ){throw new Error('Load from address '+a+' is outside memory.');}if(n>1&&a%n)throw new Error('Misaligned '+(n===4?'word':'halfword')+' load at address '+a+'.');let v=0;for(let i=n-1;i>=0;i--)v=(v<<8)|m.mem[a+i];if(sg){if(n===1)v=(v<<24)>>24;else if(n===2)v=(v<<16)>>16;}else if(n<4)v=v>>>0;return v|0;}
@@ -92,6 +96,7 @@ function st(m,a,n,v){if(a<0||a+n>MEMSZ)throw new Error('Store to address '+a+' i
 const CYC={div:32,rem:32};
 function step(m,prog){if(m.halted)return null;const idx=m.pc>>2;if(m.pc%4||idx<0||idx>=prog.length){m.halted=true;m.last=null;return null;}
  const e=prog[idx];const x=m.x;const a=x[e.rs1]|0,b=x[e.rs2]|0;let rd=null,val=null,next=m.pc+4,act={kind:e.f,op:e.op},memA=null;
+ if(m.alu)return stepALU(m,prog,e,a,b,act);
  try{switch(e.op){
   case 'add':val=(a+b)|0;break;case 'sub':val=(a-b)|0;break;case 'sll':val=a<<(b&31);break;case 'slt':val=a<b?1:0;break;case 'sltu':val=(a>>>0)<(b>>>0)?1:0;break;case 'xor':val=a^b;break;case 'srl':val=a>>>(b&31);break;case 'sra':val=a>>(b&31);break;case 'or':val=a|b;break;case 'and':val=a&b;break;
   case 'mul':val=Math.imul(a,b);break;case 'mulh':val=Number((BigInt(a)*BigInt(b))>>32n);break;case 'div':val=b===0?-1:(a===-2147483648&&b===-1?a:(a/b)|0);break;case 'rem':val=b===0?a:(a===-2147483648&&b===-1?0:a%b);break;
@@ -105,6 +110,23 @@ function step(m,prog){if(m.halted)return null;const idx=m.pc>>2;if(m.pc%4||idx<0
   case 'jal':val=m.pc+4;next=m.pc+e.imm;act.taken=true;break;case 'jalr':val=m.pc+4;next=(a+e.imm)&~1;act.taken=true;break;
   case 'lui':val=e.imm<<12;break;case 'auipc':val=(m.pc+(e.imm<<12))|0;break;
   case 'ebreak':case 'ecall':m.halted=true;act.halt=true;break;}
+ }catch(err){m.err={l:e.l,m:err.message};m.halted=true;return null;}
+ if(e.f==='B'&&act.taken)next=m.pc+e.imm;
+ if(val!==null&&e.rd!==undefined&&e.f!=='S'&&e.f!=='B'){rd=e.rd;if(rd!==0)x[rd]=val;}
+ const c=CYC[e.op]||1;m.cycles+=c;m.steps++;m.counts[e.op]=(m.counts[e.op]||0)+1;
+ m.last={e,pc:m.pc,a,b,val,rd,memA,act,next,cyc:c};m.pc=next;return m.last;}
+/* The same instruction set, but the arithmetic runs on the supplied ALU. */
+function stepALU(m,prog,e,a,b,act){const x=m.x;let val=null,next=m.pc+4,memA=null,rd=null;const U=(op,p,q)=>{m.aluOps++;act.alu=true;return m.alu(op,p,q);};
+ const lt=r=>r.n^r.v;
+ try{switch(e.op){
+  case 'add':val=U('add',a,b).y;break;case 'sub':val=U('sub',a,b).y;break;case 'and':val=U('and',a,b).y;break;case 'or':val=U('or',a,b).y;break;case 'xor':val=U('xor',a,b).y;break;
+  case 'slt':val=lt(U('sub',a,b));break;case 'sltu':val=U('sub',a,b).c?0:1;break;
+  case 'addi':val=U('add',a,e.imm).y;break;case 'andi':val=U('and',a,e.imm).y;break;case 'ori':val=U('or',a,e.imm).y;break;case 'xori':val=U('xor',a,e.imm).y;break;
+  case 'slti':val=lt(U('sub',a,e.imm));break;case 'sltiu':val=U('sub',a,e.imm|0).c?0:1;break;
+  case 'lb':memA=U('add',a,e.imm).y;val=ld(m,memA,1,true);act.mem='r';break;case 'lbu':memA=U('add',a,e.imm).y;val=ld(m,memA,1,false);act.mem='r';break;case 'lh':memA=U('add',a,e.imm).y;val=ld(m,memA,2,true);act.mem='r';break;case 'lhu':memA=U('add',a,e.imm).y;val=ld(m,memA,2,false);act.mem='r';break;case 'lw':memA=U('add',a,e.imm).y;val=ld(m,memA,4,true);act.mem='r';break;
+  case 'sb':memA=U('add',a,e.imm).y;st(m,memA,1,b);act.mem='w';break;case 'sh':memA=U('add',a,e.imm).y;st(m,memA,2,b);act.mem='w';break;case 'sw':memA=U('add',a,e.imm).y;st(m,memA,4,b);act.mem='w';break;
+  case 'beq':act.taken=!!U('sub',a,b).z;break;case 'bne':act.taken=!U('sub',a,b).z;break;case 'blt':act.taken=!!lt(U('sub',a,b));break;case 'bge':act.taken=!lt(U('sub',a,b));break;case 'bltu':act.taken=!U('sub',a,b).c;break;case 'bgeu':act.taken=!!U('sub',a,b).c;break;
+  default:{/* everything else uses its own hardware: run it the normal way */const keep=m.alu;m.alu=null;const r=step(m,prog);m.alu=keep;return r;}}
  }catch(err){m.err={l:e.l,m:err.message};m.halted=true;return null;}
  if(e.f==='B'&&act.taken)next=m.pc+e.imm;
  if(val!==null&&e.rd!==undefined&&e.f!=='S'&&e.f!=='B'){rd=e.rd;if(rd!==0)x[rd]=val;}

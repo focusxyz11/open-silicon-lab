@@ -1,6 +1,8 @@
 /* Lab: TINY CHIP STUDIO */
 import {$,clamp,RM,rng,T,redraws,fit,watch,rgba,shade,fmtLen,fmtNum,inView,fr,hexRGB,gauss,big,LIMC} from '../core/ui.js';
 import TC from '../engines/tinychip.js';
+import { tableOf, makeALU } from '../engines/alu.js';
+import { publishSlice } from '../app/alu-link.js';
 export function init(){
 (function tinyStudio(){
 const root=$('#tiny');if(!root)return;
@@ -16,6 +18,8 @@ let D=null,SY=null,PL=null,RT=null,FAB=null,TST=null;
 function compile(){D=TC.parse(code(),P().ins,P().outs);SY=null;PL=null;RT=null;FAB=null;TST=null;S.fabbed=false;}
 function synth(){if(!D||D.errs.length){SY=null;return;}if(!SY)SY=TC.synth(D,P().ins,P().outs,S.lib,S.opt,S.node);}
 const V=()=>TC.vectors(P().ins);
+const pub=()=>{if(P().id==='alu')publishSlice(code());};
+publishSlice(S.code.alu!==undefined?S.code.alu:TC.PROJ.find(p=>p.id==='alu').starter);
 const verify=()=>{if(!D||D.errs.length||!P().f)return null;let bad=0;const rows=V().map(v=>{const o=TC.evalDesign(D,v),e=P().f(v);const mis=P().outs.filter(k=>o[k]!==e[k]);if(mis.length)bad++;return {v,o,e,mis};});return {rows,bad};};
 
 /* ---- stepper ---- */
@@ -50,11 +54,14 @@ function rSpec(){projBox.querySelectorAll('button').forEach((b,i)=>b.setAttribut
 
 /* ---- step 1: code ---- */
 const ta=$('#tcCode'),gut=$('#tcGut');
-ta.addEventListener('input',()=>{S.code[P().id]=ta.value;save();compile();rCode(true);chrome();});
+ta.addEventListener('input',()=>{S.code[P().id]=ta.value;save();pub();compile();rCode(true);chrome();});
 ta.addEventListener('scroll',()=>{gut.scrollTop=ta.scrollTop;});
 ta.addEventListener('keydown',e=>{if(e.key==='Tab'){e.preventDefault();const s=ta.selectionStart;ta.setRangeText('  ',s,ta.selectionEnd,'end');ta.dispatchEvent(new Event('input'));}});
-$('#tcResetCode').addEventListener('click',()=>{delete S.code[P().id];save();compile();rCode();chrome();});
-$('#tcSol').addEventListener('click',()=>{if(!P().sol)return;S.code[P().id]=P().sol;save();compile();rCode();chrome();});
+$('#tcResetCode').addEventListener('click',()=>{delete S.code[P().id];save();pub();compile();rCode();chrome();});
+$('#tcSol').addEventListener('click',()=>{if(!P().sol)return;S.code[P().id]=P().sol;save();pub();compile();rCode();chrome();});
+/* Other labs can open the studio on a project, e.g. the RISC-V lab's "design my ALU". */
+document.addEventListener('click',e=>{const t=e.target.closest('[data-tiny-proj]');if(t)document.dispatchEvent(new CustomEvent('osl:tiny-open',{detail:{id:t.dataset.tinyProj,step:0}}));});
+document.addEventListener('osl:tiny-open',e=>{const i=TC.PROJ.findIndex(p=>p.id===(e.detail&&e.detail.id));if(i<0)return;S.p=i;S.sv={};save();compile();S.step=Math.min(e.detail.step||0,1);render();});
 $('#tcSvBtn').addEventListener('click',()=>{S.svOn=!S.svOn;rCode(true);});
 function sv(){const p=P();const nm=p.id==='seg'?'seg_decoder':p.t.toLowerCase().replace(/[^a-z0-9]+/g,'_');const wires=D.order.filter(n=>!p.outs.includes(n));
  const ex=e=>{switch(e.op){case 'const':return "1'b"+e.v;case 'var':return e.n;case 'not':return '~'+ex(e.a);default:return '('+ex(e.a)+' '+{and:'&',or:'|',xor:'^'}[e.op]+' '+ex(e.b)+')';}};
@@ -245,12 +252,15 @@ function rGadget(){const p=P(),box=$('#tcGadget');const v=Object.fromEntries(p.i
   out+='<div class="num">'+(v.x2*4+v.x1*2+v.x0)+'</div>';}
  else{out='<div class="outs">'+p.outs.map(n=>'<div><span class="led'+(o[n]?' on':'')+'"></span>'+n+'</div>').join('')+'</div>';
   if(p.demo==='add'){const a=p.ins.reduce((t,n)=>t+v[n],0);const got=(o.carry!==undefined?o.carry:o.cout)*2+o.sum;out+='<div class="num">'+p.ins.map(n=>v[n]).join('+')+' = '+got+(got!==a?' ✗':'')+'</div>';}
-  if(p.demo==='add2'){const a=v.a1*2+v.a0,b=v.b1*2+v.b0,got=o.s2*4+o.s1*2+o.s0;out+='<div class="num">'+a+'+'+b+' = '+got+(got!==a+b?' ✗':'')+'</div>';}}
+  if(p.demo==='add2'){const a=v.a1*2+v.a0,b=v.b1*2+v.b0,got=o.s2*4+o.s1*2+o.s0;out+='<div class="num">'+a+'+'+b+' = '+got+(got!==a+b?' ✗':'')+'</div>';}
+  if(p.demo==='alu'){const op=v.op1*2+v.op0===3?(v.sub?'sub':'add'):['and','or','xor'][v.op1*2+v.op0];const sym={and:'AND',or:'OR',xor:'XOR',add:'+',sub:'−'}[op];const A=1234,B=567;const r=makeALU(tableOf(SY.M))(op,A,B).y;const want={and:A&B,or:A|B,xor:A^B,add:A+B,sub:A-B}[op];
+   out+='<div class="num" style="font-size:15px">'+sym+' · 32 slices: '+A+' '+sym+' '+B+' = '+r+(r!==want?' ✗':' ✓')+'</div><a class="btn primary" href="#riscv-3" data-use-alu="1">Run it in the RISC-V CPU →</a>';}}
  box.innerHTML='<div style="display:flex;gap:10px">'+sw+'</div><div class="chip">'+esc(p.t).toUpperCase()+'<br>'+TC.NODE[S.node].t+'</div>'+out;
  box.querySelectorAll('.sw button').forEach(b=>b.addEventListener('click',()=>{S.sv[b.dataset.n]=S.sv[b.dataset.n]?0:1;rGadget();}));}
 function rReport(){const p=P(),st=SY.st,nd=TC.NODE[S.node],vr=verify();const wum=PL.GW*nd.site[0],hum=PL.H/3*nd.site[1];const n={good:0};TST.res.forEach(x=>{if(x==='good')n.good++;});
  const ratio=336e9/st.tr;
  $('#tcReport').innerHTML='<div class="wide"><b style="font-family:var(--body)">'+(vr&&vr.bad?'Shipped with a bug: '+vr.bad+' input cases give wrong answers. ':'Your chip works. ')+'</b>It spent about '+Math.round(nd.masks*nd.days/7)+' weeks in the fab. Real shuttle runs take several months because many designs share one schedule, and a flagship GPU takes about three years from specification to volume.</div>'+
+  (p.id==='alu'?'<div class="wide">The RISC-V lab builds its ALU from 32 copies of this slice: '+(st.tr*32).toLocaleString('en-US')+' transistors. <a href="#riscv-3" data-use-alu="1">Run programs on it →</a></div>':'')+
   [['Logic cells',st.cells],['Transistors',st.tr],['Fastest clock',fmtF(st.fmax)],['Core area',(wum*hum).toFixed(0)+' µm²'],['Wire',Math.round(RT.wl*nd.site[0]*1.2)+' µm'],['Process',nd.t],['Fault coverage',Math.round(TST.cov*100)+'%'],['NVIDIA Rubin has',(ratio>=1e9?(ratio/1e9).toFixed(1)+' billion':Math.round(ratio/1e6)+' million')+'× more transistors']].map(x=>'<div><span>'+x[0]+'</span><b>'+x[1]+'</b></div>').join('');}
 
 function render(){if(!D)compile();chrome();
