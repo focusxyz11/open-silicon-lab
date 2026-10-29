@@ -1,5 +1,5 @@
 {
- "lastCheck": "2026-10-27",
+ "lastCheck": "2026-10-29",
  "nextCheck": "2026-11-01",
  "kinds": {
   "reported": "Reported",
@@ -81,6 +81,30 @@
    "verified": "2026-10-27"
   },
   {
+   "id": "asic-vs-cpu",
+   "topic": "everywhere",
+   "detail": "Hameed et al., ISCA 2010. Adding custom instructions to the processor closed the gap to about 3×.",
+   "kind": "reported",
+   "label": "Custom chip vs general processor",
+   "source": "Communications of the ACM",
+   "status": "current",
+   "url": "https://cacm.acm.org/research/understanding-sources-of-ineffciency-in-general-purpose-chips",
+   "value": "A general-purpose chip used about 500× the energy of a custom chip for HD video encoding",
+   "verified": "2026-10-29"
+  },
+  {
+   "id": "car-chip-value",
+   "topic": "everywhere",
+   "detail": "Yole forecast from November 2024, driven by electrification and driver assistance.",
+   "kind": "projection",
+   "label": "Chip value per car",
+   "source": "Silicon Semiconductor (Yole)",
+   "status": "current",
+   "url": "https://siliconsemiconductor.net/article/120618/Electrification_and_autonomy_a_semiconductor_content_boost_to_1000_per_car_by_2029",
+   "value": "About $1,000 per car by 2029",
+   "verified": "2026-10-29"
+  },
+  {
    "id": "celestial-ai",
    "topic": "ecosystem",
    "detail": "Optical interconnect between AI chips and memory.",
@@ -129,6 +153,42 @@
    "verified": "2026-10-27"
   },
   {
+   "id": "chip-market-2025",
+   "topic": "everywhere",
+   "detail": "Logic $299.5B and memory $230.0B were the two biggest groups. WSTS spring 2026 forecast: $1.51 trillion in 2026, driven by memory prices.",
+   "kind": "reported",
+   "label": "World chip sales, 2025",
+   "source": "WSTS",
+   "status": "current",
+   "url": "https://www.wsts.org/esraCMS/extension/media/f/WST/7618/WSTS_FC-Release-2026-May.pdf",
+   "value": "$795.6 billion, up 26.2%",
+   "verified": "2026-10-29"
+  },
+  {
+   "id": "chip-units",
+   "topic": "everywhere",
+   "detail": "About 145 chips for every person on Earth, in one year. Most are small, cheap chips: sensors, power, analog and microcontrollers.",
+   "kind": "reported",
+   "label": "Chips shipped in one year",
+   "source": "SIA",
+   "status": "current",
+   "url": "https://www.semiconductors.org/global-semiconductor-sales-units-shipped-reach-all-time-highs-in-2021-as-industry-ramps-up-production-amid-shortage",
+   "value": "1.15 trillion units (2021 record)",
+   "verified": "2026-10-29"
+  },
+  {
+   "id": "chips-per-car",
+   "topic": "everywhere",
+   "detail": "Yole, Semiconductor Trends in Automotive 2022. Electric and driver-assist cars carry far more than the average.",
+   "kind": "estimate",
+   "label": "Chips in a car",
+   "source": "Compound Semiconductor (Yole)",
+   "status": "current",
+   "url": "https://compoundsemiconductor.net/article/115795/Chips_per_car_to_rise_to_over_a_thousand",
+   "value": "About 820 on average in 2022, about 1,100 by 2027",
+   "verified": "2026-10-29"
+  },
+  {
    "id": "copos",
    "topic": "package",
    "detail": "Moves beyond round-wafer size limits for very large packages.",
@@ -165,18 +225,6 @@
    "verified": "2026-10-27"
   },
   {
-   "id": "cpo-production",
-   "topic": "datacenter",
-   "detail": "TrendForce: about 0.5% of AI optical modules in 2026, about 35% by 2030.",
-   "kind": "reported",
-   "label": "Co-packaged optics in production",
-   "source": "XenoSpectrum (TrendForce)",
-   "status": "current",
-   "url": "https://xenospectrum.com/en/nvidia-broadcom-cpo-volume-ramp/",
-   "value": "NVIDIA Spectrum-X Photonics announced in production, May 2026",
-   "verified": "2026-10-27"
-  },
-  {
    "id": "cpo",
    "topic": "package",
    "detail": "TSMC is folding its COUPE optical engine into CoWoS.",
@@ -186,6 +234,18 @@
    "status": "current",
    "url": "https://www.creating-nanotech.com/en-US/newsc321-techinsights-the-second-half-of-2026-marks-a-critical-turning-point-for-cpo-commercialization",
    "value": "2H 2026 is the turning point for commercial products",
+   "verified": "2026-10-27"
+  },
+  {
+   "id": "cpo-production",
+   "topic": "datacenter",
+   "detail": "TrendForce: about 0.5% of AI optical modules in 2026, about 35% by 2030.",
+   "kind": "reported",
+   "label": "Co-packaged optics in production",
+   "source": "XenoSpectrum (TrendForce)",
+   "status": "current",
+   "url": "https://xenospectrum.com/en/nvidia-broadcom-cpo-volume-ramp/",
+   "value": "NVIDIA Spectrum-X Photonics announced in production, May 2026",
    "verified": "2026-10-27"
   },
   {
@@ -223,6 +283,18 @@
    "url": "https://www.unite.ai/?p=441300",
    "value": "Synopsys claims up to 50× faster time to validated RTL",
    "verified": "2026-10-27"
+  },
+  {
+   "id": "end-markets",
+   "topic": "everywhere",
+   "detail": "SIA 2024 Factbook, as charted by Statista. AI servers have since grown computing's share.",
+   "kind": "reported",
+   "label": "Where chip sales go (2023)",
+   "source": "Statista (SIA)",
+   "status": "current",
+   "url": "https://www.statista.com/chart/32665/share-of-semiconductor-sales-by-end-market-usage/",
+   "value": "Computing and communications 57%, automotive 17%, industrial 14%, consumer 11%",
+   "verified": "2026-10-29"
   },
   {
    "id": "euv-source",
@@ -403,6 +475,18 @@
    "url": "https://tweaktown.com/news/111546/intel-ceo-confirms-ongoing-collaboration-with-nvidia-on-new-products/index.html",
    "value": "$5B NVIDIA investment; custom x86 CPUs with NVLink and x86 PC chips with RTX chiplets",
    "verified": "2026-10-27"
+  },
+  {
+   "id": "legacy-auto",
+   "topic": "everywhere",
+   "detail": "\"Legacy\" chips; CSIS analysis, March 2023. Over two-thirds of chips for electrification and driver assistance to 2030 are expected to stay on these nodes.",
+   "kind": "estimate",
+   "label": "Mature-process chips in cars",
+   "source": "CSIS",
+   "status": "current",
+   "url": "https://www.csis.org/analysis/strategic-importance-legacy-chips",
+   "value": "95% of the chips used in US cars are 28 nm or larger",
+   "verified": "2026-10-29"
   },
   {
    "id": "maia-200",
@@ -670,6 +754,12 @@
   }
  ],
  "changes": [
+  {
+   "date": "2026-10-29",
+   "title": "Every chip, not only AI chips",
+   "summary": "The lab now covers every kind of chip. New topic Chips everywhere: look inside a phone, car, thermostat, laptop and AI server, and match jobs to the right kind of chip. Seven new facts on chip sales, units, end markets and car chips.",
+   "url": "https://www.wsts.org/esraCMS/extension/media/f/WST/7618/WSTS_FC-Release-2026-May.pdf"
+  },
   {
    "date": "2026-10-28",
    "title": "One project: Open Silicon Lab",

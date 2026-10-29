@@ -1,0 +1,50 @@
+<section id="everywhere">
+    <div class="head">
+      <p class="code" data-topic-label>Chips everywhere</p>
+      <h2>Open anything with a battery or a plug</h2>
+    </div>
+    <div class="prose">
+      <p>Over a trillion chips are made every year. Only a small share are the famous processors in phones, laptops and AI servers. The rest are microcontrollers that run washing machines and car seats, chips that convert power, radios, sensors and memory. Each one goes through the same stack on the map: physics, transistors, design, the fab, packaging. What changes is the trade-off each chip makes, and how old a factory process it can use.</p>
+    </div>
+
+    <div class="lab">
+      <header><b>Look inside: what chips does it take?</b><span id="tdTag">–</span></header>
+      <div class="body">
+        <div class="ctl"><span class="lbl">Open up</span><div class="seg" id="tdProd"></div></div>
+        <div class="row" style="justify-content:space-between">
+          <div class="ctl"><span class="lbl">Color the chips by</span><div class="seg" id="tdBy"><button type="button" data-by="job" aria-pressed="true">What they do</button><button type="button" data-by="node" aria-pressed="false">How they are made</button></div></div>
+          <div class="legend" id="tdLeg"></div>
+        </div>
+        <div class="cols">
+          <div class="tdboard" id="tdBoard" role="group" aria-label="Chips inside the product"></div>
+          <div class="tddetail" id="tdDetail" aria-live="polite"></div>
+        </div>
+        <div class="readout">
+          <div><span>Kinds of chips inside</span><b id="tdKinds">–</b></div>
+          <div><span>Need a leading-edge process</span><b id="tdLead">–</b></div>
+          <div><span>Topics on this map they use</span><b id="tdTopics">–</b></div>
+        </div>
+        <p class="small" id="tdSum"></p>
+        <p class="note">A teaching model: each product shows typical kinds of chips, not one exact model, and many products merge or split these chips differently. Process ranges are typical for 2025–26 designs. "Leading edge" here means 5 nm-class and finer. Memory is made on its own processes, which do not map onto logic node names.</p>
+      </div>
+    </div>
+
+    <div class="prose">
+      <h3>Why not use the fastest chip for everything?</h3>
+      <p>A general-purpose processor can run any program, but it pays for that freedom: most of its energy goes into fetching, decoding and scheduling instructions rather than into the work itself. Hard-wiring one job into silicon removes that overhead. In one well-known Stanford study, a custom video-encoding chip used about 500 times less energy than general-purpose processors doing the same job. The catch: a custom chip can do only that job, and designing it costs millions. Every chip sits somewhere on that line between flexible and efficient.</p>
+    </div>
+    <div class="lab">
+      <header><b>The right chip for the job</b><span id="jbScore">–</span></header>
+      <div class="body">
+        <div class="jbspec" id="jbSpec" aria-hidden="true"></div>
+        <div class="jbgrid" id="jbJobs"></div>
+        <div class="row"><button type="button" class="btn" id="jbReset">Start again</button></div>
+        <p class="note">Several jobs have more than one sensible answer, and real products often combine chips: a phone has a CPU, GPU, DSP and custom blocks on one die. The 500× figure comes from Hameed et al., ISCA 2010, for HD video encoding; the gap depends on the task.</p>
+      </div>
+    </div>
+
+    <div class="prose">
+      <h3>The same stack, many trade-offs</h3>
+      <p>A billion-transistor AI chip and a 50-cent microcontroller share the same physics and the same steps on this map. The AI chip chases the newest transistors, the biggest packages and the most memory bandwidth. The microcontroller chases low cost, low standby power, built-in flash memory and fifteen years of supply for a car maker, which an older, fully paid-off factory does best. When a 2021 shortage of such ordinary chips hit, car factories around the world stopped, even though the missing parts cost a few dollars. To follow a chip through every step yourself, <a href="#tiny">make a tiny chip</a>; to see where the money goes, open <a href="#economics">Economics</a>.</p>
+    </div>
+  </section>

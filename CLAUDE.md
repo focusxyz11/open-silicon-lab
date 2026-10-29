@@ -1,6 +1,6 @@
 # Open Silicon Lab — notes for Claude
 
-An open-source, interactive lab for how chips are designed, made and used for AI. Static site: plain ES modules, HTML fragments and CSS. No framework, no build step for development.
+An open-source, interactive lab for how every kind of chip is designed, made and used: microcontrollers, phone processors, power and sensor chips, memory and AI accelerators. Static site: plain ES modules, HTML fragments and CSS. No framework, no build step for development.
 
 ## Who it is for
 Learners new to chips with basic hardware knowledge. Plain words first; explain any term the first time; Beginner/Engineer explanations sit side by side.
@@ -9,6 +9,7 @@ Learners new to chips with basic hardware knowledge. Plain words first; explain 
 - Not a textbook: simulations, puzzles and builds first, with only the text needed to use them.
 - Nothing is locked. Threads and stars guide; they never gate content.
 - Everything is connected: every topic sits in the knowledge graph (`src/data/topics.js`) with labelled edges.
+- Universal, not only AI chips: the stack covers every chip, from a thermostat's microcontroller to a data center GPU. AI is one strong thread through it, not the whole frame.
 - RISC-V and the open-source hardware ecosystem get special weight; so does an AI-native view of how the industry is changing.
 - Every industry figure lives in `src/data/facts.json` with source, date verified and kind. Each simulation says what it simplifies.
 
