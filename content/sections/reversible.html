@@ -1,0 +1,40 @@
+<section id="reversible">
+    <div class="head">
+      <p class="code" data-topic-label>Reversible computing</p>
+      <h2>The energy floor, and how to sneak under it</h2>
+    </div>
+    <div class="prose">
+      <p>Every time an ordinary logic gate switches, the charge on its wires is dumped as heat. Physics also sets a deeper floor: in 1961 Rolf Landauer showed that erasing one bit of information must release at least kT ln 2 of heat, about 3 zeptojoules at room temperature. An AND gate erases information (from a 0 output you cannot tell which inputs made it). Reversible logic keeps every bit, so in principle it can avoid both losses: charge slowly, and recover the energy instead of throwing it away.</p>
+    </div>
+    <div class="lab">
+      <header><b>Energy per switch</b><span id="rvTag">–</span></header>
+      <div class="body">
+        <div class="cols">
+          <canvas class="plot" id="rvCv" style="height:300px" aria-label="Energy per switching event on a log scale"></canvas>
+          <div class="controls">
+            <div class="ctl"><label for="rvT">Ramp time for adiabatic switching <output id="rvTO">–</output></label><input type="range" id="rvT" min="-11" max="-6" step="0.1" value="-9"></div>
+            <div class="ctl"><label for="rvV">Supply voltage <output id="rvVO">–</output></label><input type="range" id="rvV" min="0.3" max="1.2" step="0.05" value="0.7"></div>
+            <div class="readout col">
+              <div><span>Ordinary switching</span><b id="rvE1">–</b></div>
+              <div><span>Slow, adiabatic switching</span><b id="rvE2">–</b></div>
+              <div><span>Landauer limit, 300 K</span><b id="rvE3">–</b></div>
+            </div>
+          </div>
+        </div>
+        <p class="small" id="rvTxt"></p>
+        <p class="note">A wire of 1 fF driven through 1 kΩ. Ordinary switching loses ½CV² each time; ramping the voltage over a time much longer than RC loses about (RC/T)·CV², so slower means cooler. Real adiabatic chips need resonant power supplies to recover the energy, and leakage sets a limit on how slow they can go.</p>
+      </div>
+    </div>
+    <div class="lab">
+      <header><b>Logic that forgets nothing</b><span id="tfTag">–</span></header>
+      <div class="body">
+        <div class="cols even">
+          <div><p class="eyebrow">AND: 4 inputs in, 2 outputs</p><div class="scroll"><table class="tt" id="tfAnd"></table></div></div>
+          <div><p class="eyebrow">Toffoli gate: a, b, c → a, b, c XOR (a AND b)</p><div class="scroll"><table class="tt" id="tfTof"></table></div></div>
+        </div>
+        <div class="ctl"><span class="lbl">Run the Toffoli gate backwards: pick an output</span><div class="seg" id="tfOut"></div></div>
+        <p class="small" id="tfTxt"></p>
+        <p class="note">With c = 0, the Toffoli gate's third output is a AND b, and the inputs are still there: nothing was erased, so the gate can be run backwards. Reversible circuits pay for this with extra "garbage" outputs that must be uncomputed later.</p>
+      </div>
+    </div>
+  </section>

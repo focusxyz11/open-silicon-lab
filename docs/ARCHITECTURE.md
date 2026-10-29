@@ -47,6 +47,10 @@ All content is in the DOM from the start; the router only shows and hides it. Th
 
 `base.css` defines the colour tokens (light and dark), type and every simulation's styles. `app.css` styles the shell, map and views. `riscv.css` is scoped under `#riscv`.
 
+## New ways to compute
+
+`src/engines/paradigms.js` holds small, tested models of each paradigm: the energy of moving data versus computing, an analog crossbar, leaky integrate-and-fire neurons, a Mach-Zehnder interferometer, a two-qubit state-vector simulator, p-bit sampling, reversible logic and the Landauer limit, and a dataflow energy model. `src/data/paradigms.js` holds the editorial fit matrix and the frontier gallery. Each topic in the `next` band has a lab in `src/labs/next-*.js`.
+
 ## Design with an AI agent
 
 `src/data/agent-cases.js` holds eight scripted cases, each an agent proposal (a tiny-chip design, RISC-V code, a yield or roofline estimate, a dated claim, a test report) that is either sound or has a realistic flaw, plus pure checks built on the same engines. `tests/agent.test.mjs` proves every flaw is real and every sound proposal works. `src/labs/agent-partner.js` lets the learner check with those tools before trusting or rejecting; inside Claude it adds a live agent that designs tiny chips.

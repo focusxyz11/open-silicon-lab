@@ -80,6 +80,14 @@ async function check(viewport) {
   if (!/Right call, right reason/.test(await page.textContent('#agCase'))) problems.push(tag + 'agent case 1: right answer not recognised');
   await page.click('#agCase [data-d="again"]');
 
+  // New ways to compute: build a Bell state in the quantum lab.
+  await page.evaluate(() => { location.hash = 'lab-quantum-1'; }); await page.waitForTimeout(200);
+  await page.click('#qcGoals [data-g="bell"]');
+  await page.click('#qcPal [data-g="H"]'); await page.click('#qcGrid [data-c="0"][data-q="0"]');
+  await page.click('#qcPal [data-g="CX"]'); await page.click('#qcGrid [data-c="1"][data-q="0"]');
+  if (!/solved/i.test(await page.textContent('#qcTag'))) problems.push(tag + 'quantum lab: Bell state not recognised');
+  await page.click('#qcClear');
+
   // A lab anchor opens its topic and scrolls to it.
   await page.evaluate(() => { location.hash = 'lab-fab-2'; }); await page.waitForTimeout(300);
   if (await page.evaluate(() => document.getElementById('fab').hidden)) problems.push(tag + 'lab anchor did not open its topic');

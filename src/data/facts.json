@@ -93,6 +93,18 @@
    "verified": "2026-10-29"
   },
   {
+   "id": "biomemory-dna",
+   "topic": "beyond",
+   "detail": "After buying Catalog's assets; targets archives with 50–150 years of retention through an S3-style interface.",
+   "kind": "claim",
+   "label": "DNA storage in data centers",
+   "source": "Blocks & Files",
+   "status": "current",
+   "url": "https://www.blocksandfiles.com/architecture/2026/03/06/french-dna-coming-to-a-datacenter-near-you-soon/4093753",
+   "value": "Biomemory plans its first commercial DNA storage in the second half of 2026",
+   "verified": "2026-10-29"
+  },
+  {
    "id": "car-chip-value",
    "topic": "everywhere",
    "detail": "Yole forecast from November 2024, driven by electrification and driver assistance.",
@@ -199,6 +211,18 @@
    "url": "https://www.trendforce.com/news/?p=59316",
    "value": "TSMC CoPoS pilot production targeted for mid-2027",
    "verified": "2026-10-27"
+  },
+  {
+   "id": "cortical-cl1",
+   "topic": "beyond",
+   "detail": "Human neurons grow on a silicon chip that sends and receives electrical signals; also offered as a cloud service.",
+   "kind": "reported",
+   "label": "A biological computer you can buy",
+   "source": "Live Science",
+   "status": "current",
+   "url": "https://livescience.com/technology/computing/worlds-1st-computer-that-combines-human-brain-with-silicon-now-available",
+   "value": "Cortical Labs CL1, released 2 March 2025, about $35,000",
+   "verified": "2026-10-29"
   },
   {
    "id": "cowos-capacity",
@@ -309,6 +333,18 @@
    "verified": "2026-10-27"
   },
   {
+   "id": "encharge-en100",
+   "topic": "cim",
+   "detail": "Also a PCIe card with four chips near 1 petaop. Vendor claims.",
+   "kind": "claim",
+   "label": "EnCharge EN100 analog in-memory chip",
+   "source": "DCD",
+   "status": "current",
+   "url": "https://www.datacenterdynamics.com/en/news/encharge-ai-launches-its-analog-in-memory-en100-ai-accelerator/",
+   "value": "Over 200 TOPS in an M.2 card; up to about 20× better performance per watt than rivals",
+   "verified": "2026-10-29"
+  },
+  {
    "id": "end-markets",
    "topic": "everywhere",
    "detail": "SIA 2024 Factbook, as charted by Statista. AI servers have since grown computing's share.",
@@ -318,6 +354,18 @@
    "status": "current",
    "url": "https://www.statista.com/chart/32665/share-of-semiconductor-sales-by-end-market-usage/",
    "value": "Computing and communications 57%, automotive 17%, industrial 14%, consumer 11%",
+   "verified": "2026-10-29"
+  },
+  {
+   "id": "energy-moving-data",
+   "topic": "beyond",
+   "detail": "Table I of Dally and colleagues. On-chip SRAM costs 8–11 pJ per 16-bit read.",
+   "kind": "reported",
+   "label": "Moving data vs computing (45 nm)",
+   "source": "arXiv (Dally et al.)",
+   "status": "current",
+   "url": "https://arxiv.org/pdf/1602.04183",
+   "value": "Reading 16 bits from DRAM costs 640 pJ; a 16-bit add costs 0.18 pJ: about 3,500× more",
    "verified": "2026-10-29"
   },
   {
@@ -405,6 +453,18 @@
    "verified": "2026-10-27"
   },
   {
+   "id": "hala-point",
+   "topic": "neuro",
+   "detail": "Delivered to Sandia National Laboratories in 2024; the largest neuromorphic system Intel has built.",
+   "kind": "reported",
+   "label": "Intel Hala Point",
+   "source": "Intel",
+   "status": "current",
+   "url": "https://newsroom.intel.com/artificial-intelligence/intel-builds-worlds-largest-neuromorphic-system-to",
+   "value": "1,152 Loihi 2 chips, 1.15 billion neurons, 2,600 W maximum",
+   "verified": "2026-10-29"
+  },
+  {
    "id": "hbm4",
    "topic": "package",
    "detail": "2,048-bit interface; Nvidia raised per-pin speed requirements above 11 Gbps.",
@@ -451,6 +511,30 @@
    "url": "https://sherwood.news/tech/alphabet-amazon-microsoft-meta-plan-more-than-700-billion-on-capex-this-year/",
    "value": "More than $700 billion",
    "verified": "2026-10-27"
+  },
+  {
+   "id": "ibm-logical-2026",
+   "topic": "quantum",
+   "detail": "With the University of Chicago; logical error rates 10× lower than physical ones; about 15 minutes per run.",
+   "kind": "claim",
+   "label": "IBM logical-qubit advantage",
+   "source": "IBM",
+   "status": "current",
+   "url": "https://newsroom.ibm.com/2026-07-30-ibm-and-the-university-of-chicago-demonstrate-quantum-advantage,-establishing-trusted-quantum-computation-on-logical-circuits",
+   "value": "70 logical qubits, 2,415 logical two-qubit operations, verifiable advantage claimed (July 2026)",
+   "verified": "2026-10-29"
+  },
+  {
+   "id": "ibm-starling",
+   "topic": "quantum",
+   "detail": "At a new quantum data center in Poughkeepsie, New York; its successor Blue Jay targets 2,000 logical qubits.",
+   "kind": "projection",
+   "label": "IBM Starling",
+   "source": "DCD",
+   "status": "current",
+   "url": "https://www.datacenterdynamics.com/en/news/ibm-updates-quantum-computing-roadmap-to-deliver-starling-system-by-2029/",
+   "value": "Planned for 2029: 200 logical qubits running 100 million operations",
+   "verified": "2026-10-29"
   },
   {
    "id": "imec-2d",
@@ -513,6 +597,18 @@
    "verified": "2026-10-29"
   },
   {
+   "id": "lightmatter-passage",
+   "topic": "photonic",
+   "detail": "The M1000 photonic interposer began shipping in 2025. Light carries data between chips; the math stays electronic.",
+   "kind": "claim",
+   "label": "Optical I/O chiplets",
+   "source": "The Register",
+   "status": "current",
+   "url": "https://www.theregister.com/2025/04/01/lightmatter_photonics_passage/",
+   "value": "Lightmatter Passage L200: 32–64 Tb/s of optical bandwidth per chip, shipping 2026",
+   "verified": "2026-10-29"
+  },
+  {
    "id": "maia-200",
    "topic": "accelerators",
    "detail": "Inference chip deployed in Azure from early 2026.",
@@ -537,6 +633,30 @@
    "verified": "2026-10-27"
   },
   {
+   "id": "neuro-2026",
+   "topic": "neuro",
+   "detail": "Edge products: Innatera Pulsar (spiking accelerator plus RISC-V core) in production; BrainChip's AKD1500 card. Few public energy comparisons on production workloads.",
+   "kind": "reported",
+   "label": "Neuromorphic systems in 2026",
+   "source": "Supercomputing News",
+   "status": "current",
+   "url": "https://www.supercomputing.news/emerging/neuromorphic-computing-2026-spinnaker2-intel-edge-robotics",
+   "value": "SpiNNaker2 at Sandia (about 175 million neurons) and UTSA's open THOR hub; Zhejiang's Darwin Monkey with over 2 billion neurons",
+   "verified": "2026-10-29"
+  },
+  {
+   "id": "northpole",
+   "topic": "spatial",
+   "detail": "IBM reported up to 25× better energy efficiency than GPUs on the AI benchmarks it tested (2023).",
+   "kind": "claim",
+   "label": "IBM NorthPole",
+   "source": "Singularity Hub",
+   "status": "current",
+   "url": "https://singularityhub.com/2023/10/24/this-brain-like-ibm-chip-could-drastically-cut-the-cost-of-ai/",
+   "value": "22 billion transistors, 256 cores, each with memory beside its compute",
+   "verified": "2026-10-29"
+  },
+  {
    "id": "nvidia-q2fy27",
    "topic": "economics",
    "detail": "Operating income $63.7B; Q3 outlook $108B.",
@@ -558,6 +678,42 @@
    "status": "current",
    "url": "https://www.charteredsemi.com/tiny-tapeout-program-explained/",
    "value": "Yosys for synthesis; LibreLane with OpenROAD for place and route, checks and GDS export",
+   "verified": "2026-10-29"
+  },
+  {
+   "id": "prob-chips",
+   "topic": "pbits",
+   "detail": "Normal projects up to 1,000× efficiency on targeted workloads from its own simulations; no peer-reviewed benchmark yet.",
+   "kind": "claim",
+   "label": "Probabilistic and thermodynamic chips",
+   "source": "Supercomputing News",
+   "status": "current",
+   "url": "https://www.supercomputing.news/emerging/thermodynamic-computing-first-silicon-power-math",
+   "value": "Normal Computing's CN101 taped out in August 2025; Extropic's XTR-0 platform is with research partners",
+   "verified": "2026-10-29"
+  },
+  {
+   "id": "qant-photonic",
+   "topic": "photonic",
+   "detail": "Pilot line: 1,000 wafer starts a year, 50,000–60,000 chips. LRZ reports about 50× faster matrix-vector multiplication than non-photonic technology.",
+   "kind": "reported",
+   "label": "Photonic processors in supercomputing centers",
+   "source": "EE Times",
+   "status": "current",
+   "url": "https://www.eetimes.com/q-ant-hits-full-production-capacity-for-photonic-ai-processors/",
+   "value": "Q.ANT thin-film lithium niobate processors installed at LRZ and Jülich; about 30 W per chip",
+   "verified": "2026-10-29"
+  },
+  {
+   "id": "quantinuum-2026",
+   "topic": "quantum",
+   "detail": "Five errors per million operations; Quantinuum targets its fault-tolerant Apollo machine by 2029.",
+   "kind": "claim",
+   "label": "Quantinuum logical fidelity record",
+   "source": "Quantinuum",
+   "status": "current",
+   "url": "https://www.quantinuum.com/press-releases/quantinuum-breaks-error-correction-world-record-by-10x-validating-its-leading-path-to-fault-tolerant-quantum-computing-by-2029",
+   "value": "99.9995% logical fidelity on Helios (October 2026)",
    "verified": "2026-10-29"
   },
   {
@@ -619,6 +775,18 @@
    "url": "https://cryptobriefing.com/sk-hynix-record-operating-margin-hbm-ai/",
    "value": "76% in Q2 2026",
    "verified": "2026-10-27"
+  },
+  {
+   "id": "superconducting-ai",
+   "topic": "beyond",
+   "detail": "A Jefferson Lab, imec, NY CREATES and Cornell project (December 2023). A goal, not a measurement.",
+   "kind": "projection",
+   "label": "Superconducting computing for AI",
+   "source": "EurekAlert! (Jefferson Lab)",
+   "status": "current",
+   "url": "https://www.eurekalert.org/news-releases/1011158",
+   "value": "Target: about 100× better energy efficiency, including cooling",
+   "verified": "2026-10-29"
   },
   {
    "id": "tpu-ironwood",
@@ -777,6 +945,18 @@
    "verified": "2026-10-29"
   },
   {
+   "id": "vaire-ice-river",
+   "topic": "reversible",
+   "detail": "Reported September 2025; the first measured energy recovery with reversible logic in a commercial test chip.",
+   "kind": "reported",
+   "label": "Vaire Ice River test chip",
+   "source": "EE Times",
+   "status": "current",
+   "url": "https://www.eetimes.com/vaire-demos-energy-recovery-with-reversible-computing-test-chip/",
+   "value": "22 nm, 500 MHz: energy recovered by a factor of 1.77 in a capacitor array, 1.41 in a shift register",
+   "verified": "2026-10-29"
+  },
+  {
    "id": "vr-nvl72",
    "topic": "datacenter",
    "detail": "72 GPUs and 36 CPUs; shipping in 2H 2026.",
@@ -813,6 +993,18 @@
    "verified": "2026-10-29"
   },
   {
+   "id": "willow",
+   "topic": "quantum",
+   "detail": "Logical error rates are still far above the roughly one-in-a-million needed for large algorithms.",
+   "kind": "reported",
+   "label": "Google Willow",
+   "source": "Wikipedia",
+   "status": "current",
+   "url": "https://en.wikipedia.org/wiki/Willow_processor",
+   "value": "105 qubits; below-threshold error correction (Dec 2024); \"Quantum Echoes\" about 13,000× faster than supercomputers on one task (Oct 2025)",
+   "verified": "2026-10-29"
+  },
+  {
    "id": "workforce",
    "topic": "innovation",
    "detail": "Only about 3% of US engineering graduates join the industry each year.",
@@ -838,6 +1030,12 @@
   }
  ],
  "changes": [
+  {
+   "date": "2026-10-29",
+   "title": "New ways to compute",
+   "summary": "A new layer on the map with eight topics: beyond von Neumann, compute in memory, neuromorphic, photonic, quantum, probabilistic, reversible, and dataflow and wafer-scale. Each has a simulation. Sixteen new facts on the state of each field in 2026.",
+   "url": ""
+  },
   {
    "date": "2026-10-29",
    "title": "Design with an AI agent",

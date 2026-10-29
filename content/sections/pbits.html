@@ -1,0 +1,25 @@
+<section id="pbits">
+    <div class="head">
+      <p class="code" data-topic-label>Probabilistic computing</p>
+      <h2>Make the noise do the work</h2>
+    </div>
+    <div class="prose">
+      <p>As transistors shrink, they get noisier, and chip designers spend energy fighting that noise. Probabilistic computing does the opposite. A p-bit flips randomly between 0 and 1, but its odds are steered by its neighbors. Connect p-bits with the right weights and the whole network spends most of its time in states that satisfy the rules you wired in. Clamp some bits, and the others settle into answers. Because the network has no fixed direction, the same circuit can run forwards and backwards.</p>
+    </div>
+    <div class="lab">
+      <header><b>An AND gate made of p-bits</b><span id="pbTag">–</span></header>
+      <div class="body">
+        <div class="cols">
+          <div class="controls">
+            <div class="ctl"><span class="lbl">Clamp the inputs or the output</span>
+              <div class="pbclamps" id="pbClamp"></div></div>
+            <div class="ctl"><label for="pbBeta">How strongly neighbors steer each bit <output id="pbBetaO">–</output></label><input type="range" id="pbBeta" min="0" max="3" step="0.1" value="1"></div>
+            <div class="row"><button type="button" class="btn primary" id="pbRun">Run 2,000 updates</button></div>
+            <p class="small" id="pbTxt"></p>
+          </div>
+          <div><p class="eyebrow">How often each state A B C appeared</p><div class="qbars" id="pbHist"></div></div>
+        </div>
+        <p class="note">Three p-bits A, B and C with fixed couplings chosen so that the states where C = A AND B have the lowest energy. Each update re-draws one free bit at random, biased by its neighbors. With weak steering the bits wander almost randomly; with strong steering they settle, but can get stuck. Chips built this way target sampling, optimization and some generative AI models.</p>
+      </div>
+    </div>
+  </section>

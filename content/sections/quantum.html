@@ -1,0 +1,24 @@
+<section id="quantum">
+    <div class="head">
+      <p class="code" data-topic-label>Quantum computers</p>
+      <h2>Bits that can be both, until you look</h2>
+    </div>
+    <div class="prose">
+      <p>A qubit can be in a blend of 0 and 1, described by two amplitudes. Gates rotate those amplitudes; amplitudes can cancel or reinforce like waves (interference); and two qubits can be entangled, so measuring one tells you about the other. A quantum algorithm arranges interference so wrong answers cancel out. That helps for a few kinds of problems, such as simulating molecules and breaking some codes, not for everyday computing. The hard part is keeping qubits undisturbed: today's machines need error correction, which spends many physical qubits on each reliable logical one.</p>
+    </div>
+    <div class="lab">
+      <header><b>Two-qubit circuit</b><span id="qcTag">–</span></header>
+      <div class="body">
+        <div class="ctl"><span class="lbl">Click a slot to choose a gate</span></div>
+        <div class="qcwrap"><div class="qc" id="qcGrid" role="grid" aria-label="Quantum circuit"></div></div>
+        <div class="row"><div class="seg" id="qcPal" role="group" aria-label="Gate to place"></div><button type="button" class="btn" id="qcClear">Clear</button></div>
+        <div class="cols even">
+          <div><p class="eyebrow">State: probability of each outcome</p><div class="qbars" id="qcBars"></div></div>
+          <div><p class="eyebrow">Measure it 100 times</p><div class="row"><button type="button" class="btn primary" id="qcShot">Measure</button></div><div class="qbars" id="qcHist"></div></div>
+        </div>
+        <div class="ctl"><span class="lbl">Puzzles</span><div class="seg" id="qcGoals"><button type="button" data-g="one">Make 11 for certain</button><button type="button" data-g="back">Superposition, then undo it</button><button type="button" data-g="bell">Entangle: only 00 or 11</button><button type="button" data-g="odd">Only 01 or 10</button></div></div>
+        <p class="small" id="qcTxt"></p>
+        <p class="note">An exact simulation of two ideal qubits. Gates: H (Hadamard: makes an equal superposition), X (flip), Z and S (phase shifts, invisible until interference), CX (flip the second qubit when the first is 1) and XC (the other way round). Bar color shows phase. Real qubits lose their state in microseconds to milliseconds, and every gate adds a small error.</p>
+      </div>
+    </div>
+  </section>

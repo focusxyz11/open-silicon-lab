@@ -1,0 +1,32 @@
+<section id="photonic">
+    <div class="head">
+      <p class="code" data-topic-label>Computing with light</p>
+      <h2>Steer light, and it does the math</h2>
+    </div>
+    <div class="prose">
+      <p>Light can carry many signals at once, travels without heating wires, and adds up waves by itself. A Mach-Zehnder interferometer splits light into two paths, delays one path by a tunable phase, and recombines them. Depending on the phases, the light leaves by one output, the other, or both: the device multiplies the input by a small matrix. Meshes of these build bigger matrices, the core of AI math. The hard parts are getting numbers into light and back out, and keeping phases precise.</p>
+    </div>
+    <div class="lab">
+      <header><b>Mach-Zehnder interferometer</b><span id="mzTag">–</span></header>
+      <div class="body">
+        <canvas class="plot" id="mzCv" style="height:240px" aria-label="Light through an interferometer"></canvas>
+        <div class="cols even">
+          <div class="controls">
+            <div class="ctl"><label for="mzTh">Inner phase θ <output id="mzThO">–</output></label><input type="range" id="mzTh" min="0" max="6.2832" step="0.0174" value="1.5708"></div>
+            <div class="ctl"><label for="mzPh">Outer phase φ <output id="mzPhO">–</output></label><input type="range" id="mzPh" min="0" max="6.2832" step="0.0174" value="0"></div>
+            <div class="ctl"><label for="mzIn">Light into the top input <output id="mzInO">–</output></label><input type="range" id="mzIn" min="0" max="1" step="0.05" value="1"></div>
+            <div class="ctl"><label for="mzNz">Phase error (heat, fabrication) <output id="mzNzO">–</output></label><input type="range" id="mzNz" min="0" max="0.5" step="0.01" value="0"></div>
+          </div>
+          <div>
+            <div class="ctl"><span class="lbl">Challenges</span><div class="seg" id="mzGoals"><button type="button" data-g="bottom">All light out of the bottom</button><button type="button" data-g="split">Split 50 : 50</button><button type="button" data-g="quarter">Top output gets 25%</button></div></div>
+            <div class="readout col">
+              <div><span>Top output power</span><b id="mzO1">–</b></div>
+              <div><span>Bottom output power</span><b id="mzO2">–</b></div>
+            </div>
+            <p class="small" id="mzTxt"></p>
+          </div>
+        </div>
+        <p class="note">An ideal, lossless interferometer with two 50 : 50 couplers. Total power out always equals power in: it can only redirect light, so a mesh computes unitary matrices and needs extra tricks for general ones. Phase error is random, as from heat or fabrication. Real photonic processors also lose power in waveguides and spend energy in lasers, modulators and converters.</p>
+      </div>
+    </div>
+  </section>

@@ -1,0 +1,30 @@
+<section id="spatial">
+    <div class="head">
+      <p class="code" data-topic-label>Dataflow & wafer-scale</p>
+      <h2>Bring the work to the data</h2>
+    </div>
+    <div class="prose">
+      <p>A classic processor fetches instructions and data one step at a time. A spatial, or dataflow, chip lays the program out across hundreds of thousands of small tiles, each with its own memory. Weights stay put; only the activations flow from tile to tile. Wafer-scale chips push this to the limit with a whole wafer as one chip; SRAM-based inference chips do it across many smaller chips. The limit is capacity: when the model no longer fits on chip, the expensive road to DRAM comes back.</p>
+    </div>
+    <div class="lab">
+      <header><b>Keep the weights on chip</b><span id="dfTag">–</span></header>
+      <div class="body">
+        <canvas class="plot" id="dfCv" style="height:260px" aria-label="Tiles holding model layers"></canvas>
+        <div class="cols even">
+          <div class="controls">
+            <div class="ctl"><label for="dfL">Model layers <output id="dfLO">–</output></label><input type="range" id="dfL" min="4" max="64" step="4" value="16"></div>
+            <div class="ctl"><label for="dfM">Weights per layer <output id="dfMO">–</output></label><input type="range" id="dfM" min="1" max="64" step="1" value="8"></div>
+            <div class="ctl"><label for="dfT">Tiles on the chip <output id="dfTO">–</output></label><input type="range" id="dfT" min="16" max="256" step="16" value="64"></div>
+          </div>
+          <div class="readout col">
+            <div><span>Share of weights on chip</span><b id="dfFit">–</b></div>
+            <div><span>Energy per pass, von Neumann</span><b id="dfE1">–</b></div>
+            <div><span>Energy per pass, spatial</span><b id="dfE2">–</b></div>
+            <div><span>Spatial saves</span><b id="dfSave">–</b></div>
+          </div>
+        </div>
+        <p class="small" id="dfTxt"></p>
+        <p class="note">Each tile holds 2 MB of SRAM. Energy counts only reading the 8-bit weights once per pass, at 45 nm per-bit costs (DRAM about 40 pJ per bit, SRAM under 1 pJ). It ignores activations, the network between tiles and batching, which lets von Neumann machines reuse each fetched weight many times.</p>
+      </div>
+    </div>
+  </section>
