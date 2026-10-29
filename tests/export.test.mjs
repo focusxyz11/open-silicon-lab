@@ -57,6 +57,10 @@ test('the Tiny Tapeout wrapper uses the template interface and assigns every out
   }
 });
 
+test('module names are valid Verilog identifiers and not keywords', () => {
+  for (const p of TC.PROJ) { assert.match(X.coreName(p), /^[a-z_][a-z0-9_]*$/, p.id); assert.ok(!['module', 'wire', 'and', 'or'].includes(X.coreName(p))); }
+});
+
 test('pins put bit-numbered names least significant first', () => {
   const seg = TC.PROJ.find(p => p.id === 'seg');
   assert.deepEqual(X.pinOrder(seg).ins, ['x0', 'x1', 'x2']);

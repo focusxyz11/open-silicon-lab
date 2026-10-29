@@ -14,7 +14,9 @@ export function topName(s) {
   const t = String(s || '').toLowerCase().replace(/[^a-z0-9_]+/g, '_').replace(/^_+|_+$/g, '').slice(0, 40);
   return 'tt_um_' + (t || 'my_design');
 }
-export const coreName = p => (p.id === 'seg' ? 'seg_decoder' : p.id === 'free' ? 'my_design' : p.t.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, ''));
+const NAMES = { seg: 'seg_decoder', free: 'my_design', add2: 'adder_2bit', alu: 'alu_slice' };
+/* The module name for your logic: a valid Verilog identifier (it may not start with a digit). */
+export const coreName = p => { const n = NAMES[p.id] || p.t.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, ''); return /^[a-z_]/.test(n) ? n : 'm_' + n; };
 
 /* Pin order on the chip: by default the order the project declares its inputs and outputs,
    with bit-numbered names put least-significant first so binary numbers read naturally. */
