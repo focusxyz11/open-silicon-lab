@@ -273,6 +273,30 @@
    "verified": "2026-10-27"
   },
   {
+   "id": "design-cost-older",
+   "topic": "economics",
+   "detail": "IBS estimates from 2018. The time machine uses this series from 2011 onward.",
+   "kind": "estimate",
+   "label": "Cost to design a 28 nm and a 16 nm chip",
+   "source": "SemiEngineering (IBS)",
+   "status": "current",
+   "url": "https://www.semiengineering.com/what-will-that-chip-cost/",
+   "value": "About $51 million at 28 nm and $106 million at 16 nm",
+   "verified": "2026-10-29"
+  },
+  {
+   "id": "design-cost-recent",
+   "topic": "economics",
+   "detail": "IBS total design-cost estimates, 2022–23. Real AI-chip projects often spend less by reusing IP.",
+   "kind": "estimate",
+   "label": "Cost to design a 7, 5 and 3 nm chip",
+   "source": "Silicon Analysts (IBS)",
+   "status": "current",
+   "url": "https://siliconanalysts.com/market-data/nre-design-cost",
+   "value": "About $257 million (7 nm), $479 million (5 nm) and $585 million (3 nm)",
+   "verified": "2026-10-29"
+  },
+  {
    "id": "dv-agent",
    "topic": "design",
    "detail": "Announced July 2026 at DAC.",
@@ -525,6 +549,18 @@
    "verified": "2026-10-27"
   },
   {
+   "id": "open-flow",
+   "topic": "tiny",
+   "detail": "Runs automatically in GitHub Actions for every Tiny Tapeout project. Roughly six to nine months from shuttle deadline to silicon is normal.",
+   "kind": "reported",
+   "label": "The open-source chip flow",
+   "source": "Chartered Semi",
+   "status": "current",
+   "url": "https://www.charteredsemi.com/tiny-tapeout-program-explained/",
+   "value": "Yosys for synthesis; LibreLane with OpenROAD for place and route, checks and GDS export",
+   "verified": "2026-10-29"
+  },
+  {
    "id": "quantum-chips-act",
    "topic": "scenarios",
    "detail": "Includes $1 billion for an IBM quantum foundry subsidiary.",
@@ -633,6 +669,18 @@
    "verified": "2026-10-27"
   },
   {
+   "id": "transistor-trend",
+   "topic": "future",
+   "detail": "Karl Rupp's microprocessor trend data, CC BY 4.0, used in the time machine.",
+   "kind": "reported",
+   "label": "Fifty years of microprocessors",
+   "source": "Karl Rupp",
+   "status": "current",
+   "url": "https://github.com/karlrupp/microprocessor-trend-data",
+   "value": "From 2,300 transistors (1971) to tens of billions (2021): doubling about every two years",
+   "verified": "2026-10-29"
+  },
+  {
    "id": "tsmc-a14",
    "topic": "future",
    "detail": "A version with backside power is expected in 2029.",
@@ -705,6 +753,30 @@
    "verified": "2026-10-27"
   },
   {
+   "id": "tt-next-shuttle",
+   "topic": "tiny",
+   "detail": "Estimated dates from wafer.space. Each shuttle chip holds 160 tiles shared by many designs; more GF shuttles are planned through early 2028.",
+   "kind": "reported",
+   "label": "Next Tiny Tapeout shuttles",
+   "source": "wafer.space",
+   "status": "current",
+   "url": "https://wafer.space/tinytapeouts/index.html",
+   "value": "GF 26c and 26d on GF180MCU close 7 December 2026; chips expected May 2027",
+   "verified": "2026-10-29"
+  },
+  {
+   "id": "tt-tile",
+   "topic": "tiny",
+   "detail": "GF180 is about half as dense as SKY130, so GF tiles are physically larger. Your tiny-chip designs use 2 to 40 cells.",
+   "kind": "claim",
+   "label": "One Tiny Tapeout tile on GF180",
+   "source": "Tiny Tapeout",
+   "status": "current",
+   "url": "https://tinytapeout.com/news/wafer-space-partnership/",
+   "value": "Target of about 1,000 standard cells",
+   "verified": "2026-10-29"
+  },
+  {
    "id": "vr-nvl72",
    "topic": "datacenter",
    "detail": "72 GPUs and 36 CPUs; shipping in 2H 2026.",
@@ -727,6 +799,18 @@
    "url": "https://hashrateindex.com/blog/nvidia-vera-rubin-nvl72-specs-breakdown/",
    "value": "About 190–230 kW, fully liquid-cooled",
    "verified": "2026-10-27"
+  },
+  {
+   "id": "wafer-space-run",
+   "topic": "tiny",
+   "detail": "Tiny Tapeout says that is about ten times as many chips as it received per run from SkyWater and IHP. Tiny Tapeout then splits each chip into small tiles for many designers.",
+   "kind": "claim",
+   "label": "Cost of a wafer.space run",
+   "source": "Tiny Tapeout",
+   "status": "current",
+   "url": "https://tinytapeout.com/news/wafer-space-partnership/",
+   "value": "$7,000 for 1,000 finished chips on GF180MCU",
+   "verified": "2026-10-29"
   },
   {
    "id": "workforce",
@@ -754,6 +838,30 @@
   }
  ],
  "changes": [
+  {
+   "date": "2026-10-29",
+   "title": "Design with an AI agent",
+   "summary": "New topic: an agent proposes designs, code, estimates and facts, and you check them with the lab's engines before deciding what to trust. Inside Claude, a live agent designs tiny chips for you to verify.",
+   "url": ""
+  },
+  {
+   "date": "2026-10-29",
+   "title": "Time machine: 1971 to 2040",
+   "summary": "Drag through the years and the site follows: the map, every topic page, the company explorer and the roadmap. History to 2026, labelled plans and projections after. Three new facts on design costs and the transistor trend.",
+   "url": "https://github.com/karlrupp/microprocessor-trend-data"
+  },
+  {
+   "date": "2026-10-29",
+   "title": "From simulation to real silicon",
+   "summary": "Every tiny-chip design now exports as a ready Tiny Tapeout project: Verilog, info.yaml, a cocotb test and the gate netlist. CI checks every export with Icarus Verilog and Yosys. Four facts on shuttles, costs and the open flow.",
+   "url": "https://wafer.space/tinytapeouts/index.html"
+  },
+  {
+   "date": "2026-10-29",
+   "title": "Build the CPU from your own gates",
+   "summary": "New tiny-chip project: one bit of an ALU. The RISC-V lab chains 32 copies and runs every add, compare and branch on your gates. A bug in your slice, or a planted factory defect, breaks the CPU.",
+   "url": ""
+  },
   {
    "date": "2026-10-29",
    "title": "Every chip, not only AI chips",

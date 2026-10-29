@@ -120,6 +120,12 @@ export const SUG={
  scenarios:['Which beyond-silicon idea is most likely to matter first?','Will power limit AI more than chips do?','What would change if CFET arrives late?']
 };
 export const GL=[
+ ['Yosys',['Yosys'],'The leading open-source logic synthesis tool: it turns Verilog into gates from a foundry\'s cell library.','tiny'],
+ ['OpenROAD',['OpenROAD','LibreLane','OpenLane'],'Open-source tools for floorplanning, placement, clock trees and routing. LibreLane runs them as one automated flow from Verilog to a finished layout.','tiny'],
+ ['GDSII',['GDSII','GDS'],'The file format of a finished chip layout: every polygon on every layer. It is what a foundry turns into masks.','tiny'],
+ ['PDK',['PDK','PDKs','process design kit'],'Process design kit: a foundry\'s rules, cell libraries and models for one process. Open PDKs (SKY130, GF180MCU, IHP SG13G2) let anyone design for a real fab.','tiny'],
+ ['Tiny Tapeout',['Tiny Tapeout'],'A community shuttle that puts hundreds of small designs on one real chip, so a student or hobbyist can make a chip for the price of a small tile.','tiny'],
+ ['cocotb',['cocotb'],'A Python framework for testing hardware designs in a simulator: you write the test in Python, the simulator runs the Verilog.','tiny'],
  ['System on a chip (SoC)',['SoC','SoCs','system on a chip'],'One chip that holds a whole computer: CPU cores, graphics, AI engine, memory controllers and more. Phones and modern laptops are built around one.','everywhere'],
  ['Microcontroller (MCU)',['microcontroller','microcontrollers','MCU','MCUs'],'A small, cheap processor with its own memory and inputs and outputs on one chip. Tens of billions a year go into appliances, cars, toys and sensors.','everywhere'],
  ['DSP',['DSP','DSPs','digital signal processor'],'Digital signal processor: a processor tuned for continuous streams of math on audio, radio or sensor signals.','everywhere'],

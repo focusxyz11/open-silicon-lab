@@ -4,7 +4,8 @@
       <h2>Design a tiny chip</h2>
     </div>
     <div class="prose">
-      <p>Take one small circuit through the same eight steps as a billion-transistor GPU: write the logic, prove it works, turn it into gates, lay it out on silicon, make masks, fabricate, test and ship. Every step uses the real method in miniature, and every step feeds the next, so a bug you miss early shows up later. <a href="#build">Level 2 is the AI chip architect game.</a> Next, <a href="https://claude.ai/artifact/LfymAMCDbuNKAofV9ASfFm" target="_blank" rel="noopener">build and program a RISC-V processor in Open Silicon Quest</a>.</p>
+      <p>Take one small circuit through the same eight steps as a billion-transistor GPU: write the logic, prove it works, turn it into gates, lay it out on silicon, make masks, fabricate, test and ship. Every step uses the real method in miniature, and every step feeds the next, so a bug you miss early shows up later. A ninth step, <b>Make it real</b>, exports your design as Verilog for real open-source chip tools and a community shuttle that makes actual chips.</p>
+      <p><b>Build the CPU from your own gates.</b> The project <i>ALU slice for the CPU</i> is one bit of a processor's arithmetic-logic unit. The <a href="#riscv">RISC-V lab</a> copies your slice 32 times and runs its programs on it, so if your gates have a bug, the processor gets sums, comparisons and loops wrong. <button type="button" class="linkish" data-tiny-proj="alu">Start the ALU slice →</button></p>
     </div>
     <div class="lab tiny">
       <header><b>Tiny chip studio</b><span id="tcTag">–</span></header>
@@ -124,6 +125,42 @@
           <div class="prose"><h3>Packaged and running</h3><p class="small muted">This gadget runs the gates you synthesized. If your logic has a bug, the gadget has it too.</p></div>
           <div class="gadget" id="tcGadget"></div>
           <div class="report" id="tcReport"></div>
+        </div>
+
+        <div class="tpanel" data-p="8" hidden>
+          <div class="prose">
+            <h3>From simulation to real silicon</h3>
+            <p>Everything so far ran on simplified tools in your browser. Real chips go through the same steps with real tools, and many of the best ones are open source. Your design exports below as a ready <a href="https://tinytapeout.com/" target="_blank" rel="noopener">Tiny Tapeout</a> project. Tiny Tapeout is a community shuttle: hundreds of small designs share one real chip, so each designer pays for a small tile instead of a whole mask set.</p>
+          </div>
+          <div class="callout" id="tcRealWarn" hidden><p class="code" style="color:var(--bad)">Not ready to tape out</p><p></p></div>
+          <div class="realmap" id="tcRealMap"></div>
+          <div class="cols">
+            <div class="realexp">
+              <div class="row" style="gap:12px;align-items:end">
+                <div class="ctl" style="flex:1 1 200px"><label for="tcTop">Project name <output id="tcTopO"></output></label><input type="text" id="tcTop" maxlength="40" autocomplete="off" spellcheck="false"></div>
+                <div class="ctl" style="flex:1 1 160px"><label for="tcAuthor">Your name (for info.yaml)</label><input type="text" id="tcAuthor" maxlength="60" autocomplete="off"></div>
+              </div>
+              <div class="seg" id="tcFiles" role="group" aria-label="Exported files"></div>
+              <div class="codehead"><span id="tcFileName">–</span><span class="row"><button type="button" class="btn" id="tcCopy">Copy</button><button type="button" class="btn" id="tcDl">Download file</button></span></div>
+              <pre class="v realcode" id="tcFileView"></pre>
+              <div class="row"><button type="button" class="btn primary" id="tcZip">Download the whole project (.zip)</button><span class="small muted" id="tcDlMsg" aria-live="polite"></span></div>
+            </div>
+            <div>
+              <p class="eyebrow">Pins on the real chip</p>
+              <div class="pinmap" id="tcPins"></div>
+              <p class="eyebrow" style="margin-top:14px">How to tape it out</p>
+              <ol class="realsteps">
+                <li>Download the project above.</li>
+                <li>On GitHub, open the <a href="https://github.com/TinyTapeout/ttgf-verilog-template" target="_blank" rel="noopener">Tiny Tapeout GF180 template</a> and choose <i>Use this template</i> to make your own repository.</li>
+                <li>Copy in the files from the zip, replacing the template's versions, and push.</li>
+                <li>GitHub Actions runs the real flow: Yosys synthesis, LibreLane with OpenROAD for place and route, design-rule checks, a gate-level test, and a 3D view of your layout. If a step fails, its log says why.</li>
+                <li>Submit the repository to a shuttle at <a href="https://app.tinytapeout.com/" target="_blank" rel="noopener">app.tinytapeout.com</a> and pay for a tile.</li>
+                <li>Months later, your chip arrives on a board with switches and LEDs. Set ui_in, read uo_out.</li>
+              </ol>
+              <p class="small" id="tcShuttle"></p>
+            </div>
+          </div>
+          <p class="note">The exported Verilog is generated from your design and checked against it. Open Silicon Lab's own tests run every built-in project's export through Icarus Verilog and Yosys, but your edits are not run through the full flow here: the GitHub Actions in your repository do that. Shuttle dates and prices change, so check tinytapeout.com before you pay.</p>
         </div>
 
         <div class="tnav"><button type="button" class="btn" id="tcBack">← Back</button><span class="small muted" id="tcHint"></span><button type="button" class="btn primary" id="tcNext">Next →</button></div>

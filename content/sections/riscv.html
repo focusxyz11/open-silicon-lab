@@ -4,7 +4,7 @@
       <h2>Program a RISC-V processor, then make it an AI chip</h2>
     </div>
     <div class="prose">
-      <p>RISC-V is the open instruction set anyone can implement, extend and study. This is a real RV32I core running in your browser. Write assembly, step through it and watch each instruction move through the datapath. Every level is open: start anywhere, and come back for more stars.</p>
+      <p>RISC-V is the open instruction set anyone can implement, extend and study. This is a real RV32I core running in your browser, and you can build its ALU, the part that adds, subtracts and compares, from your own gates in the <a href="#tiny">tiny chip studio</a>. Write assembly, step through it and watch each instruction move through the datapath. Every level is open: start anywhere, and come back for more stars.</p>
     </div>
     <div class="rv-levels" id="rvLevels" role="tablist" aria-label="RISC-V lab levels"></div>
     <div class="rv-app"><header class="lvhead">
@@ -15,6 +15,11 @@
    <div class="col">
     <div class="rvcard brief"><p id="rvLvStory"></p><p class="goal" id="rvLvGoal"></p></div>
     <div class="rvcard" id="rvCoreCard"><div class="edhead"><span>Your core</span><span id="rvCoreTag"></span></div><div class="cores" id="rvCores"></div></div>
+    <div class="rvcard" id="rvAluCard"><div class="edhead"><span>Your ALU</span><span id="rvAluTag"></span></div>
+     <div class="seg" id="rvAluSeg" role="group" aria-label="Which ALU the core uses"><button type="button" data-a="builtin">Built-in ALU</button><button type="button" data-a="mine">My gates, from the tiny chip studio</button></div>
+     <p class="small" id="rvAluTxt"></p>
+     <div class="row"><button type="button" class="btn" id="rvAluEdit">Design my ALU slice</button><label class="check" id="rvDefWrap"><input type="checkbox" id="rvDef"> Plant a manufacturing defect</label></div>
+    </div>
     <div class="rvcard">
      <div class="edhead"><span id="rvFileName">level.s</span><span class="pill ok" id="rvAsmStat">–</span></div>
      <div class="codewrap"><pre class="gutter" id="rvGut" aria-hidden="true"></pre><textarea id="rvCode" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="RISC-V assembly code"></textarea></div>

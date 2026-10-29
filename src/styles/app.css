@@ -226,3 +226,40 @@ a.btn{display:inline-block;text-decoration:none}
 .quiz details[open] summary::before{transform:rotate(90deg)}
 .quiz details[open] summary{margin-bottom:6px}
 .quiz .q{margin-top:14px}
+
+/* ---- Time machine: the year button, its pop-over, topic banners and the map section ---- */
+.yearbtn{display:inline-flex;align-items:center;gap:6px;font:500 12px/1 var(--mono);padding:7px 10px;border:1px solid var(--line);border-radius:4px;background:var(--surface);color:var(--muted);cursor:pointer;white-space:nowrap}
+.yearbtn b{font-weight:600;color:var(--ink)}
+.yearbtn.away{border-color:var(--amber);background:color-mix(in srgb,var(--amber-fill) 18%,var(--surface))}
+.yearbtn.away b{color:var(--amber)}
+.yearpop{position:fixed;z-index:40;top:56px;right:max(16px,calc((100vw - 1280px)/2 + 16px));width:min(360px,calc(100vw - 32px));display:grid;gap:12px;padding:14px 16px;border:1px solid var(--line);border-radius:8px;background:var(--surface);box-shadow:0 12px 40px rgba(0,0,0,.18)}
+.yearpop .yphead{display:flex;justify-content:space-between;align-items:center}
+.yearpop .yphead .btn{padding:4px 9px}
+.yearpop input[type=range]{width:100%}
+.yearpop .seg button{padding:6px 9px;font-size:12px}
+.ypsnap p{margin:0}
+.erabanner{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:10px 16px;margin-top:12px;padding:12px 14px;border:1px solid var(--amber-fill);border-left:4px solid var(--amber);border-radius:6px;background:color-mix(in srgb,var(--amber-fill) 10%,var(--surface))}
+.erabanner.future{border-color:var(--violet);border-left-color:var(--violet);background:color-mix(in srgb,var(--violet) 8%,var(--surface))}
+.erabanner p{margin:0}
+.erabanner>div:first-child{display:grid;gap:4px;flex:1 1 320px;min-width:0}
+.tnode.notyet{border-style:dashed;background:transparent}
+.tnode.notyet b,.tnode.notyet small{opacity:.4}
+.tnode.notyet small::after{content:" · not yet";}
+.cochips button.notyet{opacity:.3;border-style:dotted;text-decoration:line-through}
+.tmsec{display:grid;gap:14px;padding-top:6px;padding-bottom:28px}
+.tmhead{display:flex;gap:20px;align-items:center;flex-wrap:wrap}
+.tmhead .yearbig{font-size:64px;min-width:3.2ch}
+.tmera{display:grid;gap:4px;flex:1 1 300px;min-width:0}
+.tmera h2{margin:0;font-size:24px}
+.tmera p{margin:0}
+#tmR{width:100%;accent-color:var(--amber)}
+.tmctl{justify-content:space-between}
+.tmctl .seg button{padding:6px 9px;font-size:12px}
+.tmcards{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,200px),1fr));gap:8px;align-content:start}
+.tmcards div{display:grid;gap:4px;align-content:start;padding:10px 12px;border:1px solid var(--line);border-radius:5px;background:var(--surface);min-width:0}
+.tmcards span{font:600 11px var(--mono);letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.tmcards b{font:600 15px/1.3 var(--body);overflow-wrap:anywhere}
+.tmcards small{font-size:12px;line-height:1.4;color:var(--muted)}
+.tmcards .pill{justify-self:start}
+@media(max-width:560px){.tmhead .yearbig{font-size:48px}.yearbtn span{display:none}}
+@media(max-width:430px){.topbar .prog{display:none}}

@@ -16,15 +16,16 @@ const stars = n => '<span class="stars"><span>' + '★'.repeat(n) + '</span><spa
 
 /* ---------------- Workshop ---------------- */
 const BUILDS = [
-  { id: 'tiny', n: '01', t: 'Make a tiny chip', d: 'Write a small circuit and take it through every step a GPU goes through, until it runs in a gadget.', steps: ['Logic', 'Verify', 'Gates', 'Layout', 'Masks', 'Fab', 'Test', 'Gadget'], link: 'Your gates are what a CPU is made of' },
+  { id: 'tiny', n: '01', t: 'Make a tiny chip', d: 'Write a small circuit and take it through every step a GPU goes through, until it runs in a gadget, or as the ALU inside the RISC-V CPU.', steps: ['Logic', 'Verify', 'Gates', 'Layout', 'Masks', 'Fab', 'Test', 'Gadget'], link: 'Your ALU slice runs inside the RISC-V CPU' },
   { id: 'riscv', n: '02', t: 'Program and extend a RISC-V CPU', d: 'Write assembly for a real open processor, watch the datapath, then add your own AI instruction.', steps: ['Registers', 'Memory', 'Loops', 'Multiply', 'Neuron', 'Custom op', 'Layer'], link: 'Your custom instruction is how AI chips begin' },
-  { id: 'build', n: '03', t: 'Architect an AI chip', d: 'Choose architecture, node, memory and package for a mission, then compare with real 2026 chips.', steps: ['Mission', 'Architecture', 'Node', 'Memory', 'Package', 'Cost', 'Score'], link: null }
+  { id: 'build', n: '03', t: 'Architect an AI chip', d: 'Choose architecture, node, memory and package for a mission, then compare with real 2026 chips.', steps: ['Mission', 'Architecture', 'Node', 'Memory', 'Package', 'Cost', 'Score'], link: null },
+  { id: 'agent', n: '04', t: 'Design with an AI agent', d: 'An agent proposes designs, code and claims. Check them with real tools and decide what to trust.', steps: ['Equality', 'Majority', 'Array sum', 'Multiply', 'Yield', 'Roofline', 'Facts', 'Coverage'], link: null }
 ];
 let wsQuery = '';
 export function renderWorkshop() {
   const v = $('#view-workshop');
   const rs = riscvStars();
-  v.innerHTML = '<section class="wrap vhead"><p class="eyebrow">Workshop</p><h1>Build it yourself</h1><p class="lede">Three builds, one idea at three scales: gates make a processor, and a processor plus custom hardware makes a specialized chip, such as an AI chip. Start with any of them. Below are all ' + TOPICS.reduce((s, t) => s + labsIn(t.id).length, 0) + ' simulations to play with.</p></section>' +
+  v.innerHTML = '<section class="wrap vhead"><p class="eyebrow">Workshop</p><h1>Build it yourself</h1><p class="lede">Three builds, one idea at three scales: gates make a processor, and a processor plus custom hardware makes a specialized chip, such as an AI chip. A fourth asks the AI-era question: when an agent does the work, can you tell whether it is right? Start with any of them. Below are all ' + TOPICS.reduce((s, t) => s + labsIn(t.id).length, 0) + ' simulations to play with.</p></section>' +
     '<section class="wrap buildline">' + BUILDS.map((b, i) => '<div class="bstation"><a class="bcard" href="#' + b.id + '"><span class="bn">' + b.n + '</span><div><b>' + esc(b.t) + '</b><p>' + esc(b.d) + '</p><ol class="bsteps">' + b.steps.map((s, k) => '<li' + (b.id === 'riscv' && levelStars(k + 1) ? ' class="done"' : '') + '>' + esc(s) + '</li>').join('') + '</ol>' + (b.id === 'riscv' ? '<small class="muted">' + rs + ' of 21 stars earned</small>' : (P.seen[b.id] ? '<small class="muted">Opened before</small>' : '<small class="muted">Not opened yet</small>')) + '</div><span class="go">Open →</span></a>' + (b.link ? '<p class="blink"><span aria-hidden="true">↓</span>' + esc(b.link) + '</p>' : '') + '</div>').join('') + '</section>' +
     '<section class="wrap"><div class="vbar"><h2>Playground</h2><input type="search" id="wsQ" placeholder="Find a simulation…" aria-label="Find a simulation" value="' + esc(wsQuery) + '"></div><div id="wsGrid"></div></section>';
   const draw = () => {

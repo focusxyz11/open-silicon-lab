@@ -1,5 +1,6 @@
 /* Lab: ROADMAP */
 import {$,clamp,RM,rng,T,redraws,fit,watch,rgba,shade,fmtLen,fmtNum,inView,fr,hexRGB,gauss,big,LIMC} from '../core/ui.js';
+import { getYear } from '../app/era.js';
 export function init(){
 (function road(){
 const TR=['Transistor','Lithography','Memory & packaging','AI chips','Design tools'];
@@ -44,6 +45,9 @@ function upd(){
  $('#rmSnap').innerHTML=TR.map((t,i)=>{const it=D.filter(d=>d[1]===i&&d[0]<=y).pop();return '<div><span class="eyebrow">'+t+'</span>'+(it?'<b>'+it[2]+'</b><p>'+it[0]+' · '+it[3]+'</p>'+pl[it[4]]:'<p>Nothing on this track yet.</p>')+'</div>';}).join('');
  $('#rmList').innerHTML=D.filter(d=>on.has(d[1])).map(d=>'<div class="it'+(d[0]>y?' future':'')+'"><span class="y">'+d[0]+'</span><span class="trk">'+TR[d[1]]+'</span><div><b>'+d[2]+'</b><p>'+d[3]+'</p></div>'+pl[d[4]]+'</div>').join('');
 }
+/* Follow the site's time machine, within this roadmap's range. */
+const follow=()=>{const y=Math.max(+R.min,Math.min(+R.max,getYear()));if(+R.value!==y){R.value=y;upd();}};
+document.addEventListener('osl:year',follow);follow();
 upd();
 })();
 }

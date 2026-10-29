@@ -9,6 +9,7 @@
     "start": "python3 -m http.server 8000",
     "test": "node --test tests/*.test.mjs",
     "test:browser": "node scripts/smoke.mjs",
+    "test:verilog": "node scripts/verilog-check.mjs",
     "build": "node scripts/build-single.mjs"
   },
   "engines": { "node": ">=20" }

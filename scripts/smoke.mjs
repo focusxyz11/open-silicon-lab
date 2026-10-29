@@ -27,6 +27,16 @@ async function check(viewport) {
   await page.fill('#mSearch', 'HBM');
   if (!(await page.$$('#mInfo .hits a')).length) problems.push(tag + 'search found nothing for HBM');
 
+  // Time machine: going back to 1985 dims topics not yet invented and shows a topic banner.
+  await page.evaluate(() => { location.hash = 'map'; }); await page.waitForTimeout(150);
+  await page.click('#tmJump [data-y="1985"]');
+  if (!(await page.textContent('#yearBtn')).includes('1985')) problems.push(tag + 'time machine did not set the year');
+  if (!(await page.$('.tnode.notyet[data-t="riscv"]'))) problems.push(tag + 'time machine did not dim RISC-V in 1985');
+  await page.evaluate(() => { location.hash = 'riscv'; }); await page.waitForTimeout(150);
+  if (!/1985/.test(await page.textContent('#eraBanner'))) problems.push(tag + 'topic page shows no time-machine banner');
+  await page.click('#eraBanner [data-era-now]');
+  if (!(await page.textContent('#yearBtn')).includes('Today')) problems.push(tag + 'time machine did not return to today');
+
   // Every topic and reference page.
   const ids = await page.evaluate(() => [...document.querySelectorAll('#library > section')].map(s => s.id));
   for (const id of ids) {
@@ -55,6 +65,21 @@ async function check(viewport) {
   const foot = await page.$$eval('#siteFoot a[data-issue], #siteFoot a[data-repo]', as => as.map(a => a.href));
   if (foot.length !== 4 || foot.some(h => !h.startsWith('https://github.com/'))) problems.push(tag + 'footer links are not wired');
 
+  // Tiny chip studio: step 9 exports the design as a Tiny Tapeout project.
+  await page.evaluate(() => { location.hash = 'lab-tiny-1'; }); await page.waitForTimeout(250);
+  await page.click('#tcSteps button[data-i="8"]'); await page.waitForTimeout(150);
+  if (!/module tt_um_/.test(await page.textContent('#tcFileView'))) problems.push(tag + 'tiny chip studio did not export Verilog');
+  await page.click('#tcSteps button[data-i="0"]');
+
+  // Design with an AI agent: verify the first case, reject it for the right reason.
+  await page.evaluate(() => { location.hash = 'lab-agent-1'; }); await page.waitForTimeout(250);
+  await page.click('#agNav [data-c="eq"]');
+  await page.click('#agCase [data-tool="run"]');
+  if (!/wrong/.test(await page.textContent('#agCase .agout'))) problems.push(tag + 'agent case 1: verification found no bug');
+  await page.click('#agCase [data-d="reject"]'); await page.check('#agCase input[name="agr"][value="0"]'); await page.click('#agCase [data-d="confirm"]');
+  if (!/Right call, right reason/.test(await page.textContent('#agCase'))) problems.push(tag + 'agent case 1: right answer not recognised');
+  await page.click('#agCase [data-d="again"]');
+
   // A lab anchor opens its topic and scrolls to it.
   await page.evaluate(() => { location.hash = 'lab-fab-2'; }); await page.waitForTimeout(300);
   if (await page.evaluate(() => document.getElementById('fab').hidden)) problems.push(tag + 'lab anchor did not open its topic');
@@ -64,6 +89,11 @@ async function check(viewport) {
   await page.fill('#rvCode', 'addi a0, x0, 42\n');
   await page.click('#rvBRun'); await page.waitForTimeout(300);
   if (!/pass/i.test(await page.textContent('#rvResults'))) problems.push(tag + 'RISC-V level 1 did not pass with the right answer');
+
+  // Your own gates as the CPU's ALU: the starter slice is unfinished, so the core reports a bug.
+  await page.click('#rvAluSeg [data-a="mine"]');
+  if (!/bug|Your gates/.test(await page.textContent('#rvAluTag'))) problems.push(tag + 'RISC-V lab did not switch to your ALU');
+  await page.click('#rvAluSeg [data-a="builtin"]');
   await page.close();
 }
 

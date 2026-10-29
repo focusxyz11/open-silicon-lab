@@ -7,7 +7,9 @@ An open-source, hands-on lab for how chips are designed, made and used — from 
 It is not a textbook. Everything is a simulation you can play with, a puzzle, or a build:
 
 - **Chip stack map** — the home page. Every topic sits in its layer of the chip stack (atoms → transistors → processors → design → manufacturing → packaging → specialized computing → devices and data centers → industry → future), with wires showing how the topics depend on each other. Select a topic to see what it holds and what it connects to; follow a *thread* for a suggested route. Nothing is locked.
-- **Workshop** — three builds that connect: make a tiny chip (logic → gates → layout → masks → fab → test), program and extend a **RISC-V** CPU with your own AI instruction, then architect an AI chip. Plus a playground of 58 simulations, including a teardown of the chips inside a phone, a car, a thermostat, a laptop and an AI server.
+- **Workshop** — three builds that connect: make a tiny chip (logic → gates → layout → masks → fab → test), program and extend a **RISC-V** CPU with your own AI instruction, then architect an AI chip. The two connect for real: the ALU slice you design in the tiny-chip studio becomes the RISC-V core's ALU, so a bug in your gates breaks the CPU. And any tiny-chip design exports as a ready [Tiny Tapeout](https://tinytapeout.com/) project (Verilog, info.yaml, a cocotb test) for real open-source tools and a community shuttle that makes real chips. Plus a playground of 60 simulations, including a teardown of the chips inside a phone, a car, a thermostat, a laptop and an AI server.
+- **Time machine** — drag from 1971 to 2040 and the whole site follows: transistor counts, process nodes, printing light, wafer size, design cost, which of today's companies exist, and which topics were not invented yet. History up to 2026, labelled plans and projections after.
+- **Design with an AI agent** — an agent proposes designs, code, estimates and facts; you check them with the lab's real engines and decide what to trust. Some proposals are right, so blind rejection loses too. Inside Claude, a live agent designs tiny chips and you test your calibration.
 - **Challenges** — puzzles, designs and experiments, and a set of *open problems* the industry is working on right now, each linked to the simulations where you can test an idea.
 - **Knowledge** — idea cards, a glossary, and dated, sourced facts (current as of October 2026, rechecked monthly).
 
@@ -30,10 +32,11 @@ Then open <http://localhost:8000/>. (Opening `index.html` straight from disk doe
 ```sh
 npm test                  # RISC-V and tiny-chip engines, knowledge-graph integrity (node:test)
 npm run test:browser      # every view and topic in Chromium, desktop and mobile (needs Playwright)
+npm run test:verilog      # every tiny-chip export through Icarus Verilog and Yosys (needs both installed)
 npm run build             # dist/open-silicon-lab.html: the whole lab in one file
 ```
 
-GitHub Actions runs all three on every pull request and deploys `main` to GitHub Pages.
+GitHub Actions runs all four on every pull request and deploys `main` to GitHub Pages.
 
 ## Project layout
 
