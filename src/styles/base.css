@@ -685,3 +685,47 @@ pre.realcode{max-height:360px;overflow:auto;font-size:12px;line-height:1.5;white
 .realsteps{margin:0;padding-left:20px;display:grid;gap:6px;font-size:14px}
 .tsteps button[data-i="8"]{border-style:dashed;border-color:var(--amber)}
 #tcShuttle{margin-top:10px}
+
+/* ---- Design with an AI agent ---- */
+.agnav{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,150px),1fr));gap:6px}
+.agnav button{display:grid;gap:2px;text-align:left;padding:8px 10px;border:1px solid var(--line);border-radius:5px;background:var(--surface);color:var(--ink);cursor:pointer;font:inherit;min-width:0}
+.agnav button span{font:500 11px var(--mono);color:var(--muted)}
+.agnav button b{font:600 13px/1.25 var(--body)}
+.agnav button small{font-size:11px;color:var(--muted)}
+.agnav button[aria-pressed="true"]{border-color:var(--amber);box-shadow:inset 0 0 0 1px var(--amber);background:var(--sunk)}
+.agnav button.right{border-left:4px solid var(--good)}
+.agnav button.wrong{border-left:4px solid var(--bad)}
+.agcase{display:grid;gap:14px;min-width:0}
+.agcase h3{margin:0}
+.agcase>.code{margin:0}
+.agchat{display:grid;gap:10px}
+.agchat .msg{display:grid;gap:6px;padding:12px 14px;border-radius:8px;max-width:760px;min-width:0}
+.agchat .msg span{font:600 11px var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.agchat .msg p{margin:0}
+.agchat .msg.you{background:var(--sunk);justify-self:end;border-bottom-right-radius:2px}
+.agchat .msg.bot{background:color-mix(in srgb,var(--violet) 9%,var(--surface));border:1px solid color-mix(in srgb,var(--violet) 30%,var(--line));border-bottom-left-radius:2px}
+pre.agpre{font-size:12.5px;max-height:300px;overflow:auto}
+.agtool{display:grid;gap:10px;padding:12px 14px;border:1px dashed var(--line);border-radius:6px;min-width:0}
+.agtool .eyebrow{margin:0}
+.agtool label{display:inline-flex;align-items:center;gap:6px;font-size:14px;color:var(--muted)}
+.agtool input[type=number],.agtool input[type=search]{font:14px var(--mono);padding:6px 8px;border:1px solid var(--line);border-radius:4px;background:var(--surface);color:var(--ink);width:8ch}
+.agtool input[type=search]{width:min(260px,100%)}
+.agtool textarea.agcode{width:100%;font:13px/1.5 var(--mono);padding:10px;border:1px solid var(--line);border-radius:4px;background:var(--sunk);color:var(--ink);resize:vertical}
+.agout:empty{display:none}
+.agout p{margin:0}
+.agfact{display:grid;gap:2px;padding:8px 0;border-bottom:1px solid var(--line)}
+.agfact span{font:500 14px var(--mono)}
+.agfact small{font-size:12px;color:var(--muted)}
+.agdecide{display:grid;gap:8px}
+.agdecide .eyebrow{margin:0}
+.agreasons{display:grid;gap:8px;border:1px solid var(--line);border-radius:6px;padding:10px 14px;margin:0}
+.agreasons label{display:flex;gap:8px;align-items:flex-start;font-size:14px;line-height:1.4;cursor:pointer}
+.agreasons input{margin-top:3px}
+.agverdict{display:grid;gap:8px;padding:12px 14px;border-radius:6px;border-left:4px solid var(--good);background:color-mix(in srgb,var(--good) 9%,var(--surface))}
+.agverdict.lose{border-left-color:var(--bad);background:color-mix(in srgb,var(--bad) 8%,var(--surface))}
+.agverdict p{margin:0}
+.agskills{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,190px),1fr));gap:8px}
+.agskills div{display:grid;gap:4px;align-content:start;padding:12px;border:1px solid var(--line);border-radius:6px;background:var(--surface)}
+.agskills span{font:600 11px var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--violet)}
+.agskills b{font:500 20px var(--mono)}
+.agskills small{font-size:12.5px;line-height:1.4;color:var(--muted)}

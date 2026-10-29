@@ -71,6 +71,15 @@ async function check(viewport) {
   if (!/module tt_um_/.test(await page.textContent('#tcFileView'))) problems.push(tag + 'tiny chip studio did not export Verilog');
   await page.click('#tcSteps button[data-i="0"]');
 
+  // Design with an AI agent: verify the first case, reject it for the right reason.
+  await page.evaluate(() => { location.hash = 'lab-agent-1'; }); await page.waitForTimeout(250);
+  await page.click('#agNav [data-c="eq"]');
+  await page.click('#agCase [data-tool="run"]');
+  if (!/wrong/.test(await page.textContent('#agCase .agout'))) problems.push(tag + 'agent case 1: verification found no bug');
+  await page.click('#agCase [data-d="reject"]'); await page.check('#agCase input[name="agr"][value="0"]'); await page.click('#agCase [data-d="confirm"]');
+  if (!/Right call, right reason/.test(await page.textContent('#agCase'))) problems.push(tag + 'agent case 1: right answer not recognised');
+  await page.click('#agCase [data-d="again"]');
+
   // A lab anchor opens its topic and scrolls to it.
   await page.evaluate(() => { location.hash = 'lab-fab-2'; }); await page.waitForTimeout(300);
   if (await page.evaluate(() => document.getElementById('fab').hidden)) problems.push(tag + 'lab anchor did not open its topic');

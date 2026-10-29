@@ -24,6 +24,7 @@ export const TOPICS = [
   { id: 'riscv',        band: 'cpu',      kind: 'build',   t: 'RISC-V CPU lab',             s: 'Program a real RISC-V core on a live datapath, then invent a custom AI instruction and measure the speedup.' },
   { id: 'design',       band: 'design',   kind: 'explore', t: 'Logic design',               s: 'The design flow, RTL to gates, timing, power and verification coverage.' },
   { id: 'layout',       band: 'design',   kind: 'explore', t: 'Physical layout',            s: 'Placing thousands of cells by simulated annealing so the wires stay short.' },
+  { id: 'agent',        band: 'design',   kind: 'build',   t: 'Design with an AI agent',    s: 'An agent proposes designs, code and claims. Check them with real tools, find the mistakes, and decide what to trust.' },
   { id: 'tiny',         band: 'design',   kind: 'build',   t: 'Tiny chip studio',           s: 'Take your own circuit through all eight steps: logic, verification, gates, layout, masks, fab, test and a working gadget.' },
   { id: 'litho',        band: 'mfg',      kind: 'explore', t: 'Lithography',                s: 'Printing with light: resolution, EUV scanners, High-NA and the photon budget.' },
   { id: 'fab',          band: 'mfg',      kind: 'explore', t: 'Inside the fab',             s: 'The patterning loop, cleanrooms, deposition, etch, overlay and inspection.' },
@@ -82,6 +83,11 @@ export const EDGES = [
   ['economics', 'fab', 'a fab costs $20 billion+'],
   ['build', 'economics', 'tape-out cost and margin'],
   ['innovation', 'design', 'AI agents speed up design'],
+  ['design', 'agent', 'agents write RTL; people verify'],
+  ['agent', 'tiny', 'check what an agent built'],
+  ['agent', 'riscv', 'test the code it writes'],
+  ['agent', 'compute', 'check its performance claims'],
+  ['innovation', 'agent', 'which human skills still matter'],
   ['innovation', 'fab', 'capital and time limit fabs'],
   ['innovation', 'scenarios', 'the bets that shape 2040'],
   ['future', 'transistor', 'CFET and 2D channels'],
@@ -94,7 +100,7 @@ export const THREADS = [
   { id: 'start', t: 'Start here', d: 'A first hour: from the chips in your pocket down to atoms, then make one yourself.', path: ['everywhere', 'physics', 'transistor', 'architecture', 'tiny', 'litho'] },
   { id: 'everyday', t: 'Everyday chips', d: 'The billions of ordinary chips in phones, cars and appliances, and why old factories still matter.', path: ['everywhere', 'architecture', 'tiny', 'yield', 'supply', 'economics'] },
   { id: 'riscv', t: 'RISC-V path', d: 'Understand, build and extend an open processor.', path: ['architecture', 'riscv', 'design', 'tiny', 'layout', 'accelerators', 'ecosystem'] },
-  { id: 'ai', t: 'AI-native', d: 'Where AI changes chips, and chips change AI.', path: ['compute', 'accelerators', 'riscv', 'design', 'innovation', 'datacenter', 'scenarios'] },
+  { id: 'ai', t: 'AI-native', d: 'Where AI changes chips, and chips change AI.', path: ['compute', 'accelerators', 'riscv', 'design', 'agent', 'innovation', 'datacenter', 'scenarios'] },
   { id: 'make', t: 'Making chips', d: 'Follow the wafer through the fab.', path: ['physics', 'transistor', 'litho', 'fab', 'yield', 'package'] },
   { id: 'industry', t: 'Industry & open ecosystem', d: 'Companies, countries, money and community.', path: ['architecture', 'riscv', 'ecosystem', 'supply', 'economics', 'innovation', 'future'] }
 ];

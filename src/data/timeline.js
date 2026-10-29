@@ -110,7 +110,8 @@ export const BORN = {
   riscv: [2010, 'RISC-V starts as a research project at UC Berkeley in 2010.'],
   compute: [2012, 'Deep learning takes off on GPUs in 2012.'],
   accelerators: [2016, 'Google reveals its first TPU in 2016. GPUs became programmable for general computing with CUDA in 2007.'],
-  build: [2016, 'Purpose-built AI chips appear from 2016.']
+  build: [2016, 'Purpose-built AI chips appear from 2016.'],
+  agent: [2023, 'Large language models start writing chip code around 2023; agentic design tools ship in 2025–26.']
 };
 
 const atOrBefore = (list, y) => { let r = null; for (const it of list) if (it[0] <= y) r = it; return r; };
@@ -171,6 +172,7 @@ export function topicLine(id, year) {
     compute: y < 2017 ? 'Deep learning runs on GPUs; the transformer architecture comes in 2017.' : y < 2022 ? 'Transformers (2017) scale up; models grow from millions to billions of parameters.' : 'Large language models serve hundreds of millions of people.',
     accelerators: y < 2017 ? 'The first AI chips: Google\'s TPU (revealed 2016) and GPUs used for deep learning.' : 'Tensor cores (2017), TPUs and a wave of AI chip startups.',
     build: 'Purpose-built AI chips exist; their designers face the same trade-offs you do here.',
+    agent: y <= NOW ? 'AI agents write and check chip code; people still decide what to trust and sign off.' : 'Outlook: agents run spec-to-layout loops while engineers set goals and sign off.',
     everywhere: y < 1977 ? 'Chips go into calculators, watches and industrial controls.' : y < 1983 ? 'Home computers such as the Apple II (1977) and the IBM PC (1981) appear.' : y < 2007 ? 'Mobile phones (from 1983) and PCs carry more and more chips.' : y < 2012 ? 'Smartphones (from 2007) become the biggest market for advanced chips.' : y <= NOW ? 'Phones, cars, appliances and AI data centers: over a trillion chips a year.' : 'Projection: more chips in cars, robots and data centers; today\'s trends continued.',
     datacenter: y < 1995 ? 'Computing lives in mainframes, minicomputers and PCs.' : y < 2006 ? 'Web companies build large data centers from ordinary PC servers.' : y < 2016 ? 'Cloud computing (from 2006) puts servers in giant shared data centers.' : 'GPU clusters linked by NVLink (from 2016) and fast networks train AI models.',
     ecosystem: s.companies.n + ' of the ' + s.companies.total + ' companies in today\'s ecosystem explorer exist' + (y > NOW ? ' (plus whoever is founded after 2026).' : '.'),
