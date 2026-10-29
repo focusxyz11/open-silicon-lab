@@ -840,6 +840,12 @@
  "changes": [
   {
    "date": "2026-10-29",
+   "title": "Design with an AI agent",
+   "summary": "New topic: an agent proposes designs, code, estimates and facts, and you check them with the lab's engines before deciding what to trust. Inside Claude, a live agent designs tiny chips for you to verify.",
+   "url": ""
+  },
+  {
+   "date": "2026-10-29",
    "title": "Time machine: 1971 to 2040",
    "summary": "Drag through the years and the site follows: the map, every topic page, the company explorer and the roadmap. History to 2026, labelled plans and projections after. Three new facts on design costs and the transistor trend.",
    "url": "https://github.com/karlrupp/microprocessor-trend-data"

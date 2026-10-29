@@ -8,6 +8,8 @@ export const CHALLENGES = [
   { topic: 'riscv', href: '#riscv-5', kind: 'Puzzle', t: 'The neuron', d: 'Compute an int8 dot product, the core of AI.' },
   { topic: 'riscv', href: '#riscv-6', kind: 'Design', t: 'Invent an instruction', d: 'Choose a custom AI unit and beat RV32IM by 2× within an area budget.' },
   { topic: 'riscv', href: '#riscv-7', kind: 'Design', t: 'A neural layer', d: 'Four neurons with ReLU, as fast and small as you can.' },
+  { topic: 'agent', href: '#lab-agent-1', kind: 'Puzzle', t: 'Verify the agent', d: 'Eight proposals from an AI agent: designs, code, estimates and facts. Trust or reject each, with evidence.' },
+  { topic: 'agent', href: '#lab-agent-2', kind: 'Experiment', t: 'Calibrate your trust', d: 'Inside Claude: a live agent designs tiny chips. Decide whether to trust each design before you check it.' },
   { topic: 'tiny', href: '#tiny', kind: 'Puzzle', t: 'Find the bug: majority voter', d: 'Verification shows a missing case. Fix it before tape-out.' },
   { topic: 'tiny', href: '#tiny', kind: 'Puzzle', t: 'Find the bug: full adder', d: 'The sum line is wrong. Prove it, fix it, ship it.' },
   { topic: 'tiny', href: '#tiny', kind: 'Design', t: 'Display decoder', d: 'Finish segments d to g and route the biggest tiny design.' },
@@ -38,6 +40,7 @@ export const PROBLEMS = [
   { id: 'designcost', t: 'The cost of designing a chip', q: 'A leading-edge chip can cost hundreds of millions of dollars to design. Which steps could AI agents shrink, and which still need people?', persp: ['Design', 'AI', 'Economics'], try: ['design', 'tiny', 'innovation', 'economics'] },
   { id: 'open', t: 'Open hardware', q: 'Open software changed the world. Can an open ISA, open tools and open PDKs do the same for chips? What is still missing?', persp: ['Community', 'Design', 'Business'], try: ['riscv', 'ecosystem', 'tiny', 'architecture'] },
   { id: 'supply', t: 'A fragile supply chain', q: 'Most advanced chips pass through a few fabs and packaging lines. How would you make the chain resilient without making chips unaffordable?', persp: ['Policy', 'Economics', 'Manufacturing'], try: ['supply', 'economics', 'fab'] },
+  { id: 'signoff', t: 'Who signs off?', q: 'If AI agents write most of a chip\'s code and tests, who is responsible when the silicon fails? What must a person still check, and how would you prove the agent\'s tests are good enough?', persp: ['Design', 'AI', 'Policy'], try: ['agent', 'design', 'tiny', 'innovation'] },
   { id: 'mature', t: 'The forgotten chips', q: 'Most chips by count come from older factories with thin margins, yet one missing part can stop a car line. Who should pay to keep that capacity, and should it sit closer to the factories that use it?', persp: ['Economics', 'Policy', 'Manufacturing'], try: ['everywhere', 'supply', 'economics', 'fab'] },
   { id: 'bigdie', t: 'Big dies, low yield', q: 'Bigger chips catch more defects. When does splitting a design into chiplets win, and what does the package then have to do?', persp: ['Manufacturing', 'Packaging', 'Economics'], try: ['yield', 'package', 'economics'] },
   { id: 'skills', t: 'People in an AI-native industry', q: 'When AI writes code and layouts, what will chip engineers spend their time on? Which skills last?', persp: ['People', 'AI', 'Education'], try: ['innovation', 'riscv', 'design'] }
