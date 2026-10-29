@@ -51,7 +51,7 @@ export const EDGES = [
   ['architecture', 'riscv', 'build the open ISA yourself'],
   ['architecture', 'design', 'a CPU is described in RTL'],
   ['riscv', 'accelerators', 'custom instructions for AI'],
-  ['riscv', 'tiny', 'the same gates, one level down'],
+  ['tiny', 'riscv', 'your ALU slice runs the CPU'],
   ['design', 'layout', 'the netlist gets placed'],
   ['design', 'tiny', 'try the whole flow yourself'],
   ['layout', 'litho', 'the layout becomes masks'],

@@ -64,6 +64,11 @@ async function check(viewport) {
   await page.fill('#rvCode', 'addi a0, x0, 42\n');
   await page.click('#rvBRun'); await page.waitForTimeout(300);
   if (!/pass/i.test(await page.textContent('#rvResults'))) problems.push(tag + 'RISC-V level 1 did not pass with the right answer');
+
+  // Your own gates as the CPU's ALU: the starter slice is unfinished, so the core reports a bug.
+  await page.click('#rvAluSeg [data-a="mine"]');
+  if (!/bug|Your gates/.test(await page.textContent('#rvAluTag'))) problems.push(tag + 'RISC-V lab did not switch to your ALU');
+  await page.click('#rvAluSeg [data-a="builtin"]');
   await page.close();
 }
 

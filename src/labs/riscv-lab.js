@@ -3,6 +3,8 @@
 import RV from '../engines/riscv.js';
 import { LEVELS as LV, CORES } from '../data/riscv-levels.js';
 import { CARDS, TH } from '../data/cards.js';
+import { makeALU, pickDefect } from '../engines/alu.js';
+import { currentSlice, openSliceInStudio } from '../app/alu-link.js';
 
 const $ = s => document.querySelector(s);
 const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -14,20 +16,44 @@ const EXTRA = { 1: ['copilot'], 4: ['modular'], 5: ['riscvai'], 6: ['skills'], 7
 const SANDBOX = { id: 0, t: 'Sandbox', arc: 'Free play', core: ['i', 'im', 'imac', 'idot', 'idotx'], pickCore: true, story: 'An empty RISC-V core with 8 KB of memory. Try any instruction, step through it and watch the datapath.', goal: 'No goal: experiment. Pick a core, write code and press Play.', syms: {}, start: '# Free play: try anything\nli   a0, 7\nli   a1, 6\nloop:\n  add  a2, a2, a0\n  addi a1, a1, -1\n  bnez a1, loop\n', sol: null, hints: ['Step through to see which datapath blocks each instruction uses.'], tests: [{}], check: () => null, cards: ['register', 'branch', 'extensions', 'custom'], ai: 'Ask the copilot to explain any instruction or to write a small program, then step through it to check whether it really does what it said.' };
 
 const KEY = 'osl-riscv-v1';
-const S = { stars: {}, code: {}, core: {} };
-try { const j = JSON.parse(localStorage.getItem(KEY) || localStorage.getItem('osq-v1') || 'null'); if (j && typeof j === 'object') ['stars', 'code', 'core'].forEach(k => { if (j[k] && typeof j[k] === 'object') S[k] = j[k]; }); } catch (e) { /* storage unavailable */ }
+const S = { stars: {}, code: {}, core: {}, alu: 'builtin', defect: false };
+try { const j = JSON.parse(localStorage.getItem(KEY) || localStorage.getItem('osq-v1') || 'null'); if (j && typeof j === 'object') ['stars', 'code', 'core'].forEach(k => { if (j[k] && typeof j[k] === 'object') S[k] = j[k]; }); if (j.alu === 'mine') S.alu = 'mine'; if (j.defect === true) S.defect = true; } catch (e) { /* storage unavailable */ }
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { /* ignore */ } };
 const starStr = n => '<span>' + '★'.repeat(n) + '</span><span class="off">' + '★'.repeat(3 - n) + '</span>';
 
 export const riscvStars = () => LV.reduce((t, l) => t + (S.stars[l.id] || 0), 0);
 export const levelStars = id => S.stars[id] || 0;
 
-function runProg(L, src, coreKey) {
+function runProg(L, src, coreKey, alu) {
   const C = CORES[coreKey]; const asm = RV.assemble(src, { ext: C.ext, syms: L.syms }); if (asm.errs.length) return { errs: asm.errs };
-  let max = 0; const res = [];
-  for (const t of L.tests) { const d = JSON.parse(JSON.stringify(t)); const m = RV.machine(asm.prog, mm => { if (L.init) L.init(mm, d); }); RV.run(m, asm.prog); if (m.err) return { errs: [m.err], m }; const f = L.check(m, d); res.push({ ok: !f, msg: f, cyc: m.cycles }); max = Math.max(max, m.cycles); }
-  return { res, max, us: max / C.mhz, C };
+  let max = 0, ops = 0; const res = [];
+  for (const t of L.tests) { const d = JSON.parse(JSON.stringify(t)); const m = RV.machine(asm.prog, mm => { if (L.init) L.init(mm, d); }, { alu }); RV.run(m, asm.prog); ops += m.aluOps; if (m.err) return { errs: [m.err], m, ops }; const f = L.check(m, d); res.push({ ok: !f, msg: f, cyc: m.cycles }); max = Math.max(max, m.cycles); }
+  return { res, max, us: max / C.mhz, C, ops };
 }
+
+/* ---- your ALU: 32 copies of the slice from the tiny chip studio ---- */
+const DEFECT_BIT = 5;
+let aluCache = { key: null, fn: null, def: null };
+function aluInfo() { const sl = currentSlice(); return { sl, usable: S.alu === 'mine' && sl.ok }; }
+function aluFn() {
+  const { sl, usable } = aluInfo(); if (!usable) return null;
+  const key = sl.table.join('') + '|' + S.defect;
+  if (aluCache.key !== key) { const def = S.defect ? pickDefect(sl.SY, DEFECT_BIT, 11) : null; aluCache = { key, fn: makeALU(sl.table, def), def }; }
+  return aluCache.fn;
+}
+function renderAlu() {
+  const { sl, usable } = aluInfo(); const mine = S.alu === 'mine';
+  $('#rvAluSeg').querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', b.dataset.a === S.alu));
+  let txt, tag;
+  if (!mine) { tag = 'Built in'; txt = 'The core uses a ready-made ALU. Switch to your gates and every add, subtract, AND, OR, XOR, comparison, branch and memory address runs on 32 copies of the one-bit slice you design in the tiny chip studio.'; }
+  else if (!sl.ok) { tag = 'Not built'; txt = 'Your slice has ' + sl.errs.length + ' error' + (sl.errs.length > 1 ? 's' : '') + ', so the core cannot be built from it yet and uses the built-in ALU. Fix the code in the tiny chip studio.'; }
+  else if (sl.wrong.length) { tag = 'Your gates · has a bug'; txt = 'The core now runs on your slice, which gives the wrong answer in ' + sl.wrong.length + ' of 64 cases. Expect wrong sums, wrong comparisons and loops that never end. Fix it in the studio, or switch back to check whether a failure is in your program or in your gates.'; }
+  else { tag = 'Your gates'; txt = 'The core runs on 32 copies of your slice: ' + sl.cells + ' cells and ' + sl.tr + ' transistors each, ' + (sl.tr * 32).toLocaleString('en-US') + ' transistors for the whole ALU. All 64 cases verified.'; }
+  if (usable && S.defect) { aluFn(); const d = aluCache.def; txt += d ? ' Defect planted: in the slice for bit ' + DEFECT_BIT + ', one wire is stuck at ' + d.fault.v + '. Your design was right; the factory broke one copy of it. Test patterns (step 8 in the studio) exist to catch exactly this.' : ''; tag += ' · defect'; }
+  $('#rvAluTag').textContent = tag; $('#rvAluTxt').textContent = txt;
+  $('#rvDefWrap').hidden = !usable; $('#rvDef').checked = S.defect;
+}
+function aluChanged() { aluCache.key = null; renderAlu(); if (L) { $('#rvResults').innerHTML = ''; lastRun = null; resetMachine(); } }
 
 let T, L = null, asm = null, M = null, data = null, coreKey = 'i', playT = 0, lastRun = null, hintN = 0, readRegs = [], dash = 0, BASE = {};
 let ta, gut, cv;
@@ -83,7 +109,7 @@ function gutter() {
   gut.innerHTML = Array.from({ length: Math.max(n, 14) }, (_, i) => '<span class="' + (i + 1 === cl ? 'cur' : er.has(i + 1) ? 'er' : '') + '">' + (i + 1) + '</span>').join('');
   gut.scrollTop = ta.scrollTop;
 }
-function resetMachine() { stopPlay(); data = JSON.parse(JSON.stringify(L.tests[0] || {})); M = asm.errs.length ? null : RV.machine(asm.prog, m => { if (L.init) L.init(m, data); }); readRegs = []; renderState(); }
+function resetMachine() { stopPlay(); data = JSON.parse(JSON.stringify(L.tests[0] || {})); M = asm.errs.length ? null : RV.machine(asm.prog, m => { if (L.init) L.init(m, data); }, { alu: aluFn() }); readRegs = []; renderState(); }
 function stepOnce() { if (!M || M.halted) return false; const r = RV.step(M, asm.prog); readRegs = r ? [r.e.rs1, r.e.rs2].filter(x => x !== undefined) : []; return !!r; }
 function stopPlay() { clearInterval(playT); playT = 0; const b = $('#rvBPlay'); if (b) b.textContent = 'Play'; }
 
@@ -144,11 +170,11 @@ function drawDP() {
   });
   Object.entries(B).forEach(([n, b]) => {
     if (n === 'mul' && !has.mul) return; if (n === 'ai' && !has.ai) return; const [x, y, bw, bh, lab] = b; const on = A.b.includes(n);
-    c.fillStyle = on ? (n === 'ai' ? T.violet : T.copper) : T.panel; c.strokeStyle = on ? (n === 'ai' ? T.violet : T.copper) : T.muted; c.lineWidth = 1.6;
+    const vi = n === 'ai' || (n === 'alu' && aluFn()); c.fillStyle = on ? (vi ? T.violet : T.copper) : T.panel; c.strokeStyle = on ? (vi ? T.violet : T.copper) : (n === 'alu' && aluFn() ? T.violet : T.muted); c.lineWidth = 1.6;
     c.beginPath(); if (n === 'alu') { c.moveTo(x, y); c.lineTo(x + bw, y + 28); c.lineTo(x + bw, y + bh - 28); c.lineTo(x, y + bh); c.lineTo(x, y + bh * 0.62); c.lineTo(x + 14, y + bh / 2); c.lineTo(x, y + bh * 0.38); c.closePath(); } else if (c.roundRect) c.roundRect(x, y, bw, bh, 6); else c.rect(x, y, bw, bh);
     c.globalAlpha = on ? 0.2 : 1; c.fill(); c.globalAlpha = 1; c.stroke();
     c.fillStyle = T.ink; c.font = '600 13px "IBM Plex Sans",system-ui,sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle';
-    const lines = (n === 'ai' ? (C.ext.DOT4 ? 'AI unit: DOT4' : 'AI unit: MAC') : lab).split('\n'); lines.forEach((t, i) => c.fillText(t, x + bw / 2 + (n === 'alu' ? 6 : 0), y + bh / 2 + (i - (lines.length - 1) / 2) * 16));
+    const lines = (n === 'ai' ? (C.ext.DOT4 ? 'AI unit: DOT4' : 'AI unit: MAC') : n === 'alu' && aluFn() ? 'Your\nALU' : lab).split('\n'); lines.forEach((t, i) => c.fillText(t, x + bw / 2 + (n === 'alu' ? 6 : 0), y + bh / 2 + (i - (lines.length - 1) / 2) * 16));
   });
   c.font = '500 12px "IBM Plex Mono",ui-monospace,monospace'; c.textBaseline = 'alphabetic'; c.textAlign = 'left';
   const lbl = (t, x, y, col) => { c.fillStyle = T.bg; const tw = c.measureText(t).width; c.fillRect(x - 3, y - 12, tw + 6, 16); c.fillStyle = col || T.ink; c.fillText(t, x, y); };
@@ -169,8 +195,8 @@ function drawDP() {
 function runTests() {
   stopPlay(); compile();
   if (asm.errs.length) { $('#rvResults').innerHTML = '<div class="verdict lose"><div><h3>Fix the errors first</h3><p class="small muted">The assembler found ' + asm.errs.length + ' problem' + (asm.errs.length > 1 ? 's' : '') + ' in your code.</p></div></div>'; return; }
-  const R = runProg(L, ta.value, coreKey);
-  if (R.errs) { $('#rvResults').innerHTML = '<div class="verdict lose"><div><h3>The program crashed</h3><p class="small">' + esc((R.errs[0].l ? 'Line ' + R.errs[0].l + ': ' : '') + R.errs[0].m) + '</p></div></div>'; return; }
+  const R = runProg(L, ta.value, coreKey, aluFn());
+  if (R.errs) { $('#rvResults').innerHTML = '<div class="verdict lose"><div><h3>The program crashed</h3><p class="small">' + esc((R.errs[0].l ? 'Line ' + R.errs[0].l + ': ' : '') + R.errs[0].m) + '</p>' + aluBlame() + '</div></div>'; return; }
   lastRun = R; const C = CORES[coreKey]; const allOk = R.res.every(x => x.ok); let stars = 0, why = '', extra = '';
   const speed = BASE[L.id] ? BASE[L.id] / R.us : null;
   if (L.id && allOk) {
@@ -186,12 +212,20 @@ function runTests() {
   const nl = LV.find(x => x.id === L.id + 1);
   const next = stars > 0 && nl ? '<a class="btn primary" href="#riscv-' + nl.id + '">Level ' + nl.id + ': ' + esc(nl.t) + ' →</a>' : '';
   const goalTxt = L.id === 0 || L.perf ? '' : (stars < 3 && allOk ? ' For ' + (stars === 1 ? '2 stars, get to ' + L.stars[0] : '3 stars, get to ' + L.stars[1]) + ' cycles or fewer.' : '');
+  const yours = aluFn() ? '<p class="small">Your gates did ' + R.ops.toLocaleString('en-US') + ' ALU operations in these tests, each one rippling through 32 copies of your slice.</p>' : '';
   const tests = R.res.map((x, i) => '<div>' + (x.ok ? '<span class="pill ok">Pass</span>' : '<span class="pill bad">Fail</span>') + '<span>Test ' + (i + 1) + (L.tests.length > 1 ? (i === 0 ? ' (the one you can step through)' : ' (hidden)') : '') + ': ' + (x.ok ? x.cyc + ' cycles' : esc(x.msg)) + '</span></div>').join('');
   $('#rvResults').innerHTML = '<div class="verdict ' + (stars > 0 ? 'win' : L.id === 0 && allOk ? '' : 'lose') + '"><div style="display:grid;gap:4px"><h3>' + (L.id === 0 ? 'Ran on every test' : stars > 0 ? ['', 'Solved', 'Solved well', 'Solved brilliantly'][stars] : allOk ? 'Correct, but not there yet' : 'Not yet') + '</h3><p class="small">' + (why || (allOk ? 'All ' + R.res.length + ' test' + (R.res.length > 1 ? 's' : '') + ' pass.' + goalTxt : 'Some tests fail. Step through test 1 to watch what happens.')) + '</p></div>' + (stars ? '<span class="stars" style="font-size:22px">' + starStr(stars) + '</span>' : '') + '</div>' +
     '<div class="stat"><div><span>Worst-case cycles</span><b>' + R.max.toLocaleString('en-US') + '</b></div><div><span>Time at ' + C.mhz + ' MHz</span><b>' + (R.us >= 1 ? R.us.toFixed(2) + ' µs' : (R.us * 1000).toFixed(0) + ' ns') + '</b></div><div><span>Core area</span><b>' + C.area + ' units</b></div>' + (speed ? '<div><span>Speed vs RV32IM</span><b>' + speed.toFixed(2) + '×</b></div>' : '<div><span>Instructions in program</span><b>' + asm.prog.length + '</b></div>') + '</div>' +
-    '<div class="rvcard"><div class="tests">' + tests + '</div>' + (extra ? '<p class="small">' + esc(extra) + '</p>' : '') + (next ? '<div class="row">' + next + '</div>' : '') + '</div>';
+    '<div class="rvcard"><div class="tests">' + tests + '</div>' + yours + (allOk ? '' : aluBlame()) + (extra ? '<p class="small">' + esc(extra) + '</p>' : '') + (next ? '<div class="row">' + next + '</div>' : '') + '</div>';
   if (L.id) $('#rvLvStars').innerHTML = starStr(S.stars[L.id] || 0);
   renderLevelBar(); resetMachine();
+}
+
+function aluBlame() {
+  const { sl, usable } = aluInfo(); if (!usable) return '';
+  if (sl.wrong.length) return '<p class="small"><b>Suspect your gates.</b> This core runs on your ALU slice, which is wrong in ' + sl.wrong.length + ' of 64 cases. Switch to the built-in ALU: if the tests pass there, the bug is in the hardware, not the program.</p>';
+  if (S.defect) return '<p class="small"><b>Suspect the factory.</b> A defect is planted in one slice of your ALU. Turn it off and run again.</p>';
+  return '';
 }
 
 /* ---- hints and the AI copilot ---- */
@@ -230,6 +264,11 @@ export function init() {
   $('#rvBResetCode').addEventListener('click', () => { delete S.code[L.id]; save(); ta.value = L.start; compile(); resetMachine(); });
   $('#rvBPlay').addEventListener('click', () => { if (playT) { stopPlay(); return; } if (!M || M.halted) resetMachine(); if (!M) return; $('#rvBPlay').textContent = 'Pause'; const sp = +$('#rvSpd').value; playT = setInterval(() => { const k = Math.max(1, Math.round(sp / 20)); for (let i = 0; i < k; i++) if (!stepOnce()) break; dash = (dash + 3) % 30; renderState(); if (!M || M.halted) stopPlay(); }, Math.max(16, 1000 / Math.min(sp, 20))); });
   $('#rvBRun').addEventListener('click', runTests);
+  $('#rvAluSeg').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; S.alu = b.dataset.a; save(); aluChanged(); });
+  $('#rvAluEdit').addEventListener('click', openSliceInStudio);
+  $('#rvDef').addEventListener('change', e => { S.defect = e.target.checked; save(); aluChanged(); });
+  document.addEventListener('osl:alu', () => { if (S.alu === 'mine') aluChanged(); else renderAlu(); });
+  document.addEventListener('click', e => { if (e.target.closest('[data-use-alu]')) { S.alu = 'mine'; save(); aluChanged(); } });
   $('#rvBHint').addEventListener('click', showHint);
   $('#rvBCopHint').addEventListener('click', () => ask('hint')); $('#rvBCopRev').addEventListener('click', () => ask('review'));
   new ResizeObserver(() => { if (L) drawDP(); }).observe(cv);
@@ -238,5 +277,6 @@ export function init() {
   (async () => { try { if (window.claude && typeof window.claude.use === 'function') sample = await window.claude.use('sample'); } catch (e) { sample = null; }
     if (sample) { $('#rvBCopHint').hidden = false; $('#rvBCopRev').hidden = false; $('#rvCopNote').textContent = 'The copilot is Claude. It sees this level\'s goal, your code and your last test result. Its answers can be wrong, so run the tests to check.'; }
     else $('#rvCopNote').textContent = 'The AI copilot is available when this lab is opened inside Claude.'; })();
+  renderAlu();
   openLevel(1);
 }

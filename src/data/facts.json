@@ -756,6 +756,12 @@
  "changes": [
   {
    "date": "2026-10-29",
+   "title": "Build the CPU from your own gates",
+   "summary": "New tiny-chip project: one bit of an ALU. The RISC-V lab chains 32 copies and runs every add, compare and branch on your gates. A bug in your slice, or a planted factory defect, breaks the CPU.",
+   "url": ""
+  },
+  {
+   "date": "2026-10-29",
    "title": "Every chip, not only AI chips",
    "summary": "The lab now covers every kind of chip. New topic Chips everywhere: look inside a phone, car, thermostat, laptop and AI server, and match jobs to the right kind of chip. Seven new facts on chip sales, units, end markets and car chips.",
    "url": "https://www.wsts.org/esraCMS/extension/media/f/WST/7618/WSTS_FC-Release-2026-May.pdf"
