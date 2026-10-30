@@ -24,6 +24,8 @@ const browser = await chromium.launch();
 
 async function check(viewport) {
   const page = await browser.newPage({ viewport });
+  /* These checks act as a returning visitor; checkGuide() below plays the first visit. */
+  await page.addInitScript(() => { try { localStorage.setItem('osl-guide-v1', 'done'); } catch (e) { /* ignore */ } });
   const tag = viewport.width < 600 ? '[mobile] ' : '';
   page.on('pageerror', e => problems.push(tag + 'page error: ' + e.message));
   page.on('console', m => { if (m.type() === 'error' && !/fonts\.g|ERR_TUNNEL|ERR_NAME|net::/.test(m.text() + (m.location().url || ''))) problems.push(tag + 'console: ' + m.text()); });
@@ -160,9 +162,33 @@ async function check(viewport) {
   await page.close();
 }
 
+/* A first visit: the guide opens on the map, walks four steps, and its last step starts a challenge. */
+async function checkGuide(viewport) {
+  const page = await browser.newPage({ viewport }); const tag = viewport.width < 600 ? '[mobile guide] ' : '[guide] ';
+  page.on('pageerror', e => problems.push(tag + 'page error: ' + e.message));
+  await page.goto(base + 'index.html');
+  try { await page.waitForSelector('.g-card', { timeout: 5000 }); } catch (e) { problems.push(tag + 'did not open on a first visit'); await page.close(); return; }
+  for (let k = 0; k < 3; k++) { await page.click('.g-card [data-g="next"]'); await page.waitForTimeout(120); }
+  const choices = await page.$$('.g-card [data-g="go"]');
+  if (choices.length !== 3) problems.push(tag + 'last step should offer 3 challenges, found ' + choices.length);
+  await page.click('.g-card a[href="#reality"]');
+  try { await page.waitForFunction(() => { const s = document.getElementById('reality'); return s && !s.hidden; }, null, { timeout: 15000 }); } catch (e) { problems.push(tag + 'choosing "Break" did not open the reality topic'); }
+  if (await page.$('.g-card')) problems.push(tag + 'stayed open after a choice');
+  if (await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1)) problems.push(tag + 'page scrolls sideways');
+  /* It does not come back on the next visit, but the tour button replays it. */
+  await page.goto(base + 'index.html'); await page.waitForTimeout(1200);
+  if (await page.$('.g-card')) problems.push(tag + 'opened again on a return visit');
+  await page.click('.maphero [data-guide-start]'); await page.waitForSelector('.g-card');
+  await page.keyboard.press('Escape'); await page.waitForTimeout(100);
+  if (await page.$('.g-card')) problems.push(tag + 'Escape did not close it');
+  await page.close();
+}
+
 try {
   await check({ width: 1360, height: 900 });
   await check({ width: 390, height: 844 });
+  await checkGuide({ width: 1360, height: 900 });
+  await checkGuide({ width: 390, height: 844 });
 } finally { await browser.close(); server.close(); }
 if (problems.length) { console.error(problems.join('\n')); process.exit(1); }
 console.log('Smoke test passed: map, every topic, all views and the RISC-V lab work on desktop and mobile.');

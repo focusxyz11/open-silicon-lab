@@ -24,6 +24,7 @@ export function renderMapShell(zoomHTML) {
     <h1>The whole chip, from <em>atoms</em> to everything it powers</h1>
     <p class="lede">Phones, cars, thermostats and AI data centers all run on chips made through the same stack: physics, transistors, design, factories and packaging. Every layer is a topic with live simulations you can play with, and wires show how the topics depend on each other. Start anywhere: pick a topic, follow a thread, or build a chip in the workshop.</p>
     <div class="mstats" id="mStats"></div>
+    <button type="button" class="btn tourbtn" data-guide-start>Take the 30-second tour</button>
   </section>
   <section class="wrap tmsec" id="timeMachine" aria-labelledby="tmTitle">
     <div class="tmhead">
