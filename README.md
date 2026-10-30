@@ -49,10 +49,12 @@ GitHub Actions runs all four on every pull request and deploys `main` to GitHub 
 index.html               app shell: top bar and five views
 topics/<id>/             one folder per topic: content.html, topic.json, labs/*.js, optional style.css
 topics/README.md         how a topic folder works, and how to start a new one   ← start here to contribute
-src/data/topics.js       the knowledge graph: layers, topics, labelled links, threads
-src/data/challenges.js   every challenge and open problem
+src/data/topics.js       the knowledge graph, read from the topic folders: topics, typed links, big ideas, threads
+src/data/links.js        the six kinds of link, and how to choose one
+src/data/ideas.js        big ideas that echo across layers
+src/data/challenges.js   open problems (each challenge lives in its topic.json)
 src/data/facts.json      dated, sourced facts (updated by pull request)
-src/data/learning.js     plain/engineer explanations, quizzes, glossary
+src/data/learning.js     the glossary (explanations and quizzes live in each topic.json)
 src/engines/             pure logic, no DOM, with tests: RISC-V, tiny chip, reliability, new ways to compute, …
 src/app/                 the shell: loader (topics load on demand), router, map, views, learning layer, tutor
 src/generated/catalog.js what each topic holds, generated from topics/ by `npm run catalog`

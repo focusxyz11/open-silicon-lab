@@ -8,10 +8,11 @@ Open Silicon Lab is a static site: plain ES modules, HTML fragments and CSS, wit
 index.html            app shell: top bar, five views, the import map (osl/ → src/)
 topics/<id>/          one folder per topic: content.html, topic.json, labs/*.js, optional style.css
 topics/README.md      the topic contract, and how to start a new topic
-src/data/             the knowledge graph and shared data (topics, challenges, learning, facts, timeline)
+src/data/             the fixed structure (bands, link kinds, big ideas, threads) and shared data
+                      (glossary, facts, timeline, open problems)
 src/engines/          pure, tested models with no DOM (RISC-V, tiny chip, reliability, paradigms, …)
 src/app/              the shell: loader, router, map, views, learning layer, facts, tutor
-src/generated/        catalog.js, generated from topics/ by `npm run catalog` — never edited by hand
+src/generated/        graph.js and catalog.js, generated from topics/ by `npm run catalog` — never edited by hand
 src/labs/             the two simulations that live on the map page itself (zoom, time machine)
 content/              shell pages: the zoom viewer, glossary, sources
 ```
@@ -22,16 +23,52 @@ Two kinds of code, kept apart on purpose:
 
 ## One graph drives everything
 
-`src/data/topics.js` is the single source of truth for structure:
+Each topic describes itself in `topics/<id>/topic.json`: its place on the map (`band`, `order`), what
+kind it is (`explore` or `build`), its title and summary, its **links** to other topics, the **big
+ideas** it shows, its **challenges** and its **learning** content (plain and engineer explanations,
+quiz, tutor questions). `npm run catalog` checks every folder and writes `src/generated/graph.js`,
+which the site reads at start-up through `src/data/topics.js`:
 
-- `BANDS` — the layers of the chip stack, top (world) to bottom (atoms).
-- `TOPICS` — each topic's id, band, kind (`explore` or `build`), title and summary. The id is also the topic's folder name in `topics/` and the URL hash.
-- `EDGES` — labelled links `[from, to, why]`. The map draws them as wires; topic pages list them as "Builds on" and "Leads to".
-- `THREADS` — suggested routes. They highlight a path on the map and add a step bar to topic pages. They never lock anything.
+- `TOPICS` — every topic in map order: id, band, kind, title (`t`) and summary (`s`). The id is also the folder name and the URL hash.
+- `LINKS` — every link as `{ from, kind, to, why }`, plus `if` and `then` on `causes` links. `EDGES` is the same list as `[from, to, why, kind]` for drawing.
+- `IDEA_USES` — where each big idea shows up, and how (`counter: true` marks where it breaks).
+- `CHALLENGES` — every challenge, with its topic.
 
-Challenges (`src/data/challenges.js`), knowledge cards, glossary terms and facts each name the topic they belong to, so every view can link back. `tests/data.test.mjs` fails if any link points at something that does not exist.
+What spans many topics stays central and changes rarely: `BANDS` (`src/data/bands.js`), the six
+link kinds (`src/data/links.js`), the big ideas (`src/data/ideas.js`) and `THREADS`, suggested
+routes that never lock anything (`src/data/topics.js`). Glossary terms, knowledge cards and facts each
+name the topic they belong to; facts stay in one file so the monthly check can update them together.
 
-**To add a topic:** run `npm run new-topic -- <id> "<Title>" <prefix>` and follow the steps it prints (see `topics/README.md`).
+### Links mean something
+
+A link reads as a sentence: *the transistor **builds on** From sand to switch: doping and fields make
+the switch*. There are six kinds, and each answers one question a learner might ask:
+
+| Kind | Question | Test |
+| --- | --- | --- |
+| part of | What is it inside, and what is inside it? | It sits inside the other. |
+| kind of | What else is like it? | It is one member of a family the other describes. |
+| feeds | Where does the work go next? | What this step produces is what the other starts from. |
+| causes | If this changes, what happens there? | A change here changes the other, in a direction you can name (`if` / `then`). |
+| grew from | Where did it come from? | It historically came out of the other. |
+| builds on | What does it rest on? | It uses the ideas or methods of the other. |
+
+Choose the first kind that is true; the order runs from concrete to general. Chains of `part-of`,
+`kind-of`, `feeds`, `grew-from` and `builds-on` may not loop; `causes` may, because feedback loops
+are real. Topic pages show each kind in its own form: `causes` links become predictions to make before
+the answer opens, the others are grouped under their question (`src/app/connections.js`).
+
+### Big ideas echo across layers
+
+A big idea (*Keep data close*, *Copies catch mistakes*, *Pay once, copy cheaply*, …) must show up in at
+least two bands, otherwise it is a detail of one topic. A topic page shows each of its ideas as a ladder
+through the stack, with the topic marked; the Knowledge view lists them all. Counter-examples are
+first-class: a use marked `counter` shows where the idea stops working.
+
+The catalog script refuses anything that breaks these rules and says what to fix in plain words;
+`tests/graph.test.mjs` checks the vocabulary itself.
+
+**To add a topic:** run `npm run new-topic -- <id> "<Title>" <prefix> <band>` and follow the steps it prints (see `topics/README.md`).
 
 ## Boot sequence (`src/main.js`)
 
@@ -39,15 +76,15 @@ Challenges (`src/data/challenges.js`), knowledge cards, glossary terms and facts
 2. Render the map shell and start its two simulations (zoom, time machine).
 3. Start the learning layer, the tutor (only inside Claude) and the router.
 
-No topic is loaded at start-up. The map, search, Workshop and Challenges read what each topic holds from `src/generated/catalog.js`. The start-up page needs about 33 files; the smoke test fails if it needs more than 60 or loads any topic early.
+No topic is loaded at start-up. The map, search, Workshop and Challenges read the graph from `src/generated/graph.js` and what each topic holds from `src/generated/catalog.js`. The start-up page needs about 38 files; the smoke test fails if it needs more than 60 or loads any topic early.
 
 ## Loading a topic (`src/app/loader.js`)
 
 The first time a topic is opened, `ensureTopic(id)`:
-1. fetches `topics/<id>/content.html` (and `style.css` if the topic has one),
+1. fetches `topics/<id>/content.html` and `topic.json` (and `style.css` if the topic has one),
 2. adds the section to the page and gives each simulation panel its anchor `lab-<topic>-<n>`,
 3. imports the topic's lab modules and calls each `init(section)` in its own `try/catch`, so one broken simulation never stops the rest,
-4. adds the learning layer to it (explanation levels, quiz, glossary pop-ups, the tutor button),
+4. adds the learning layer to it from `topic.json` "learn" (explanation levels, quiz, tutor questions), plus glossary pop-ups and the tutor button,
 5. fires `osl:topic-loaded`.
 
 A topic loads once and stays on the page. Code in one topic that needs another (the RISC-V lab opening the tiny-chip studio) asks the shell to load it first (`src/app/studio.js`), and progress other views display is read from storage (`src/app/progress.js`), never by importing a topic.
@@ -106,25 +143,31 @@ Everything is per-browser `localStorage`: explanation level, topics visited, qui
 ## Where the structure is going
 
 The aim is that the project can keep growing, with new ideas and conflicting ones, while its key
-concepts stay the same. Five concepts are fixed; everything new fits into one of them:
+concepts stay the same. These are fixed; everything new fits into one of them:
 
 1. **Layers**: where something lives, from atoms to big questions (`BANDS`).
-2. **Questions**: every topic opens with a question or challenge, not a definition.
-3. **Typed connections**: builds on, leads to, trades off with, same idea at another scale, affects, disputed.
-4. **Lenses**: how it works, build it, what breaks, who pays, the future with AI.
+2. **Topics**: one folder each, opening with a question or challenge, not a definition.
+3. **Links**: six kinds, each with a meaning, a question and its own way of being shown.
+4. **Shared hubs** that many topics meet at: big ideas (done), and next trade-offs (*what do you give
+   up?*), measures (*how do we count it?*) and debates (*who disagrees, and why?*).
 5. **Time**: history to today, labelled plans and projections to 2040.
+6. **Threads**: suggested routes, never gates.
 
-A conflicting idea becomes a "two views" item with the assumptions that separate the views, not a
-contradiction in the text. A new idea is one of: a topic, a question, a connection, a lens card or a dated fact.
+A conflicting idea becomes a debate with the assumptions that separate the views, or a `counter` use
+of a big idea, not a contradiction in the text. A new idea is one of: a topic, a link, a hub, a dated
+fact or a challenge.
 
 Steps, each a small pull request:
 
 1. **Topic folders, loaded on demand.** *Done.*
-2. **Everything about a topic in its folder.** Move each topic's place on the map, connections, challenges,
-   explanations, quiz, glossary terms, facts and time-machine line into `topics/<id>/topic.json`; generate
-   `TOPICS`, `EDGES` and the rest from the folders. Adding a topic then touches one folder only.
-3. **Typed connections and questions** in the data, so the map can show *why* things connect.
+2. **Everything about a topic in its folder.** *Done* for its place, links, big ideas, challenges and
+   learning content; `graph.js` is generated from the folders. Still central: the time-machine line
+   (`topicLine` in `src/data/timeline.js`), glossary terms and facts.
+3. **Typed connections.** *Done* in the data and on topic pages (six kinds, big ideas). Next: trade-offs,
+   measures and debates as hubs (the open problems become debates), and map modes that show one kind at
+   a time instead of every line.
 4. **Split `base.css`** so each topic carries its own simulation styles.
-5. **Languages.** User-facing text moves out of code: `content.<lang>.html` beside `content.html`,
-   text fields in `topic.json` as `{ "en": …, "zh-TW": … }`, shell text in `src/i18n/<lang>.json`, and
-   the language in the URL. Simulations keep numbers and logic; only words are translated.
+5. **Languages.** User-facing text moves out of code: `content.<lang>.html` beside `content.html`, a
+   `topic.<lang>.json` holding only the translated text fields of `topic.json`, shell text in
+   `src/i18n/<lang>.json`, and the language in the URL. Simulations keep numbers and logic; only words
+   are translated. Text fields in `topic.json` stay plain strings so a translation can replace them.
