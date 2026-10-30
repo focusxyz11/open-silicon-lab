@@ -1,6 +1,64 @@
 {
   "id": "future",
-  "labs": [
-    "roadmap"
-  ]
+  "title": "Roadmap",
+  "band": "future",
+  "order": 20,
+  "kind": "explore",
+  "summary": "The state of the art year by year to the 2040s, tagged by how certain it is.",
+  "labs": ["roadmap"],
+  "links": [
+    {
+      "kind": "builds-on",
+      "to": "transistor",
+      "why": "CFET and 2D channels come next"
+    },
+    {
+      "kind": "builds-on",
+      "to": "litho",
+      "why": "High-NA and beyond"
+    }
+  ],
+  "ideas": [
+    {
+      "idea": "smaller-until",
+      "how": "CFET and 2D materials are the next answers"
+    }
+  ],
+  "challenges": [
+    {
+      "kind": "Experiment",
+      "title": "Travel to 1985",
+      "task": "Set the time machine to 1985 and find which of today's topics and companies did not exist yet.",
+      "href": "#timeMachine"
+    }
+  ],
+  "learn": {
+    "plain": "Chips used to get better mainly by shrinking. Now they improve by stacking, smarter packaging, faster memory and new materials. The roadmap is a best guess that gets revised every year.",
+    "engineer": "Through 2030 most density gains come from shorter standard cells, backside power and CFET rather than gate-pitch scaling, which imec expects to stay near 42 nm from A10 to A5. Beyond that, 2D channels, Hyper-NA EUV and 3D integration are the main levers, while system-level gains come from co-designing packaging, memory and interconnect.",
+    "quiz": [
+      {
+        "q": "Around when does imec expect CFET transistors to arrive?",
+        "options": ["2026", "Around 2033–34, at the A7 node", "2050", "They are shipping now"],
+        "answer": 1,
+        "why": "It is a research projection, so it may move."
+      },
+      {
+        "q": "What did Intel ship first using High-NA EUV in 2026?",
+        "options": ["Memory chips", "Select layers of Panther Lake processors on Intel 18A", "GPUs", "Phone chips"],
+        "answer": 1,
+        "why": "ASML announced the milestone in July 2026."
+      },
+      {
+        "q": "On the roadmap, what does \"Projection\" mean?",
+        "options": ["A product on sale", "A company announcement", "A research forecast that may change", "A rumor"],
+        "answer": 2,
+        "why": "Shipping, announced, projection and outlook tell you how much to trust each item."
+      }
+    ],
+    "ask": [
+      "What could come after silicon?",
+      "Is Moore's law over?",
+      "What are the biggest uncertainties in this roadmap?"
+    ]
+  }
 }

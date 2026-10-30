@@ -1,7 +1,55 @@
 {
   "id": "compute",
-  "labs": [
-    "systolic-array",
-    "roofline"
-  ]
+  "title": "AI at work",
+  "band": "ai",
+  "order": 10,
+  "kind": "explore",
+  "summary": "Systolic arrays and the roofline: why AI is limited by memory as often as by math.",
+  "labs": ["systolic-array", "roofline"],
+  "links": [],
+  "ideas": [
+    {
+      "idea": "keep-data-close",
+      "how": "when data cannot arrive fast enough, the multipliers sit idle (the roofline)"
+    },
+    {
+      "idea": "many-small",
+      "how": "a systolic array is a grid of small multipliers working in step"
+    }
+  ],
+  "challenges": [],
+  "learn": {
+    "plain": "An AI chip is a giant multiplication machine. It runs fastest when its thousands of calculators stay busy, which means feeding them data quickly from memory and serving many people at once.",
+    "engineer": "Decode is memory-bound: arithmetic intensity is about 2 × batch ÷ bytes per weight FLOP per byte, far below ridge points in the thousands. KV-cache reads add to weight traffic at long context. Standard tools include FP8 and FP4 quantization with block scaling, speculative decoding, continuous batching, paged KV caches, and splitting compute-bound prefill from bandwidth-bound decode onto different hardware, which NVIDIA's Rubin CPX targets.",
+    "quiz": [
+      {
+        "q": "Which operation dominates neural-network workloads?",
+        "options": ["Sorting", "Matrix multiplication (multiply-accumulate)", "File compression", "Text search"],
+        "answer": 1,
+        "why": "That is why AI chips devote most of their area to arrays of MAC units."
+      },
+      {
+        "q": "When generating text for a single user, an AI chip is usually limited by…",
+        "options": ["Compute", "Memory bandwidth", "Network speed", "Disk speed"],
+        "answer": 1,
+        "why": "Every token requires reading all the weights, but only two operations per weight."
+      },
+      {
+        "q": "Why does serving many users at once (batching) help?",
+        "options": [
+          "It reuses each weight read from memory for many users",
+          "It makes the model smaller",
+          "It lowers the clock speed",
+          "It skips layers of the model"
+        ],
+        "answer": 0,
+        "why": "Batching raises arithmetic intensity, moving the workload toward the compute ceiling."
+      }
+    ],
+    "ask": [
+      "What is the difference between training and inference chips?",
+      "Why does FP4 work for AI?",
+      "What is a TPU?"
+    ]
+  }
 }

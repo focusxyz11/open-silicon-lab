@@ -1,7 +1,102 @@
 {
   "id": "everywhere",
-  "labs": [
-    "teardown",
-    "chip-for-the-job"
-  ]
+  "title": "Chips everywhere",
+  "band": "systems",
+  "order": 10,
+  "kind": "explore",
+  "summary": "Open up a phone, a car, a thermostat and a server: dozens of different chips, and most are not cutting-edge.",
+  "labs": ["teardown", "chip-for-the-job"],
+  "links": [
+    {
+      "kind": "builds-on",
+      "to": "physics",
+      "why": "sensors and power chips use the physics directly"
+    },
+    {
+      "kind": "causes",
+      "to": "reality",
+      "why": "cars and satellites need parts per million",
+      "if": "the same chip moves from a phone into a car",
+      "then": "it must fail far less often, so it needs more testing and protection"
+    },
+    {
+      "kind": "causes",
+      "to": "datacenter",
+      "why": "the cloud behind every phone",
+      "if": "billions of phones ask AI questions",
+      "then": "data centers need more chips and more power"
+    }
+  ],
+  "ideas": [
+    {
+      "idea": "energy-budget",
+      "how": "battery devices count every microwatt"
+    },
+    {
+      "idea": "specialize",
+      "how": "a phone holds separate chips for radio, power, images and AI"
+    },
+    {
+      "idea": "pay-once",
+      "how": "most chips come from older fabs that are long paid for"
+    }
+  ],
+  "challenges": [
+    {
+      "kind": "Experiment",
+      "title": "How many need the newest fab?",
+      "task": "Open five products and count the chips that need a leading-edge process.",
+      "href": "#lab-everywhere-1"
+    },
+    {
+      "kind": "Puzzle",
+      "title": "The right chip for the job",
+      "task": "Match eight real jobs to a CPU, GPU, FPGA, custom chip and more.",
+      "href": "#lab-everywhere-2"
+    }
+  ],
+  "learn": {
+    "plain": "Almost everything with a battery or a plug has chips inside, and most of them are not the famous processors. A phone or a car holds dozens of different chips: some think, some remember, some handle power, some talk by radio and some sense the world. Most are made in older factories, because they need to be cheap and reliable more than they need to be tiny.",
+    "engineer": "Products partition functions across a fast application SoC on a leading-edge node and a long tail of mature-node parts: PMICs and drivers in BCD processes, RF front ends in GaAs and RF-SOI, MEMS sensors, embedded-flash MCUs at 28–90 nm, and memory on DRAM and NAND processes. Node choice is set by cost per function, analog and high-voltage needs, embedded non-volatile memory, qualification (AEC-Q100 for cars) and supply longevity. The flexibility–efficiency spectrum (CPU → GPU/DSP → FPGA → ASIC) spans two to three orders of magnitude in energy per operation for fixed workloads.",
+    "quiz": [
+      {
+        "q": "Which chips in a smartphone usually need the newest, most expensive factory process?",
+        "options": [
+          "Almost all of them",
+          "Mainly the application processor and modem",
+          "Only the memory",
+          "The power-management chips"
+        ],
+        "answer": 1,
+        "why": "The main processor and modem chase performance per watt. Power, sensor, audio and many radio chips are made on older, cheaper processes."
+      },
+      {
+        "q": "Why does a car microcontroller use a 40 nm process instead of 3 nm?",
+        "options": [
+          "3 nm chips cannot run software",
+          "It needs low cost, built-in flash memory, high-temperature reliability and many years of supply, which mature processes do best",
+          "Cars are not allowed to use new chips",
+          "40 nm chips are faster"
+        ],
+        "answer": 1,
+        "why": "A car chip must work for 15 years from −40 to 150 °C and be available for a decade. Mature processes are proven, cheap and support embedded flash."
+      },
+      {
+        "q": "Why is a custom chip (ASIC) so much more efficient than a CPU at one fixed job?",
+        "options": [
+          "It runs at a higher clock speed",
+          "It skips the energy a CPU spends fetching, decoding and scheduling instructions",
+          "It uses more transistors",
+          "It has a bigger cache"
+        ],
+        "answer": 1,
+        "why": "Most of a CPU's energy goes into the machinery that makes it flexible. Wiring the job into hardware removes that overhead; the price is that the chip can do nothing else."
+      }
+    ],
+    "ask": [
+      "How many chips are in a smartphone?",
+      "Why do car makers still use old chip factories?",
+      "What is the difference between a CPU, an FPGA and an ASIC?"
+    ]
+  }
 }

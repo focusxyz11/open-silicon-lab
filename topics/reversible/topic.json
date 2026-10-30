@@ -1,6 +1,42 @@
 {
   "id": "reversible",
-  "labs": [
-    "next-reversible"
-  ]
+  "title": "Reversible computing",
+  "band": "next",
+  "order": 70,
+  "kind": "explore",
+  "summary": "The physical floor on energy per bit, and logic that can recycle its own energy.",
+  "labs": ["next-reversible"],
+  "links": [
+    {
+      "kind": "kind-of",
+      "to": "beyond",
+      "why": "logic that recycles its own energy"
+    },
+    {
+      "kind": "builds-on",
+      "to": "transistor",
+      "why": "the energy lost per switch"
+    }
+  ],
+  "ideas": [
+    {
+      "idea": "energy-budget",
+      "how": "erasing a bit has a minimum energy cost, set by physics"
+    }
+  ],
+  "challenges": [
+    {
+      "kind": "Experiment",
+      "title": "Approach the Landauer limit",
+      "task": "How slowly must a gate switch to save 100× energy?",
+      "href": "#lab-reversible-1"
+    }
+  ],
+  "learn": {
+    "ask": [
+      "What is the Landauer limit in simple terms?",
+      "Why are ordinary logic gates irreversible?",
+      "Could reversible chips ever be practical?"
+    ]
+  }
 }

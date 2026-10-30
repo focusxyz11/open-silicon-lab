@@ -1,10 +1,92 @@
 {
   "id": "architecture",
-  "labs": [
-    "isa-compare",
-    "risc-v-encoder",
-    "pipeline",
-    "amdahl",
-    "memory-hierarchy"
-  ]
+  "title": "Computer architecture",
+  "band": "cpu",
+  "order": 10,
+  "kind": "explore",
+  "summary": "x86, Arm and RISC-V compared; instruction encoding, pipelines, Amdahl's law and the memory hierarchy.",
+  "labs": ["isa-compare", "risc-v-encoder", "pipeline", "amdahl", "memory-hierarchy"],
+  "links": [
+    {
+      "kind": "feeds",
+      "to": "design",
+      "why": "a CPU's architecture is written as RTL"
+    },
+    {
+      "kind": "causes",
+      "to": "reality",
+      "why": "Spectre turned a speed trick into a leak",
+      "if": "a CPU guesses ahead to run faster",
+      "then": "secrets can leak through timing, as Spectre showed"
+    },
+    {
+      "kind": "part-of",
+      "to": "everywhere",
+      "why": "every device has a processor inside"
+    }
+  ],
+  "ideas": [
+    {
+      "idea": "keep-data-close",
+      "how": "caches keep the most-used data close to the processor"
+    },
+    {
+      "idea": "specialize",
+      "how": "Amdahl's law: a faster unit helps only as much as its share of the job",
+      "counter": true
+    },
+    {
+      "idea": "layers-hide-detail",
+      "how": "an instruction set is a promise: software runs on any chip that keeps it"
+    },
+    {
+      "idea": "pay-once",
+      "how": "a core is designed once and licensed into many chips"
+    }
+  ],
+  "challenges": [],
+  "learn": {
+    "plain": "Think of an instruction set as a language and a chip as someone who speaks it. x86, Arm and RISC-V are three languages. Software written in one runs on any chip that speaks it, whether that chip is fast or slow. Pipelining is an assembly line: while one instruction is being finished, the next ones are already being started.",
+    "engineer": "High-performance cores decode 6 to 10 instructions per cycle into micro-operations, rename registers to remove false dependencies, and execute out of order from windows of several hundred instructions behind branch predictors that are right well over 95% of the time. x86 pays a decode cost for variable-length instructions, usually hidden by a micro-op cache; fixed-length Arm and RISC-V decode in parallel more easily. Today the ISA matters less for raw speed than for ecosystem, licensing and extensions such as Arm SME, RISC-V vector and matrix extensions, and x86 AVX10 and AMX.",
+    "quiz": [
+      {
+        "q": "What does an instruction set architecture (ISA) define?",
+        "options": [
+          "The exact transistor layout of a chip",
+          "The instructions software can use and how each is encoded in bits",
+          "The clock speed of the processor",
+          "Which factory makes the chip"
+        ],
+        "answer": 1,
+        "why": "The ISA is the contract between software and hardware. Many different chips can implement the same ISA."
+      },
+      {
+        "q": "Which statement about RISC-V is true?",
+        "options": [
+          "Only Intel and AMD may build it",
+          "Every chip pays a royalty to use it",
+          "It is an open standard anyone can implement royalty-free",
+          "Its instructions are 1 to 15 bytes long"
+        ],
+        "answer": 2,
+        "why": "RISC-V is run by RISC-V International and is free to implement. Arm charges royalties; x86 is limited to Intel and AMD."
+      },
+      {
+        "q": "Why do GPUs beat CPUs at AI math, according to Amdahl's law?",
+        "options": [
+          "Each GPU core is faster than a CPU core",
+          "AI matrix math is almost entirely parallel, so thousands of simple lanes win",
+          "GPUs have bigger caches",
+          "GPUs run at higher clock speeds"
+        ],
+        "answer": 1,
+        "why": "When 99.9% of the work can run in parallel, the serial part barely matters and massive parallelism wins."
+      }
+    ],
+    "ask": [
+      "Why did Apple switch Macs from x86 to Arm?",
+      "Could RISC-V replace Arm in phones?",
+      "What is out-of-order execution?"
+    ]
+  }
 }

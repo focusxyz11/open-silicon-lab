@@ -1,9 +1,80 @@
 {
   "id": "economics",
-  "labs": [
-    "gpu-cost-breakdown",
-    "business-models",
-    "price-ladder",
-    "startup-budget"
-  ]
+  "title": "Economics",
+  "band": "industry",
+  "order": 30,
+  "kind": "explore",
+  "summary": "What an AI GPU costs to make, who earns what, and what a chip startup needs.",
+  "labs": ["gpu-cost-breakdown", "business-models", "price-ladder", "startup-budget"],
+  "links": [
+    {
+      "kind": "builds-on",
+      "to": "ecosystem",
+      "why": "who earns what"
+    },
+    {
+      "kind": "builds-on",
+      "to": "accelerators",
+      "why": "what an AI GPU costs to make, part by part"
+    }
+  ],
+  "ideas": [
+    {
+      "idea": "pay-once",
+      "how": "huge costs up front, small costs per chip"
+    }
+  ],
+  "challenges": [
+    {
+      "kind": "Design",
+      "title": "Fund a chip startup",
+      "task": "Reach first silicon with the least money and time.",
+      "href": "#economics"
+    },
+    {
+      "kind": "Puzzle",
+      "title": "Follow the ripple",
+      "task": "On the map simulator: raise phone prices with AI demand alone, and find the shortage that stops car lines but not AI.",
+      "href": "#whatif"
+    }
+  ],
+  "learn": {
+    "plain": "A chip is expensive to invent but cheap to copy once the factory is running. So companies spend fortunes up front on design and factories, then try to sell as many chips as possible. Whoever controls a step nobody else can do keeps most of the profit.",
+    "engineer": "Unit economics: die cost ≈ wafer price ÷ (gross dies × yield); package cost is dominated by HBM and CoWoS, with yield loss scrapping known-good components. Business-model margins reflect scarcity rents (NVIDIA ~75% gross, TSMC ~66%, SK hynix 76% operating at the 2026 HBM peak). Fixed costs scale steeply with node: mask sets of $15–25M and design NRE in the hundreds of millions at 3–2 nm, which pushes startups toward older nodes, shuttles, chiplets and licensed IP.",
+    "quiz": [
+      {
+        "q": "In an AI GPU that costs about $6,400 to make, which part costs the most?",
+        "options": ["The compute dies", "The HBM memory", "The box it ships in", "The software"],
+        "answer": 1,
+        "why": "HBM is about half of the manufacturing cost, and HBM plus packaging about two-thirds, by Epoch AI's estimate."
+      },
+      {
+        "q": "What is a fabless company?",
+        "options": [
+          "A company that designs chips and pays a foundry to make them",
+          "A company with no designs",
+          "A company that only makes memory",
+          "A company that only packages chips"
+        ],
+        "answer": 0,
+        "why": "NVIDIA, AMD and Apple are fabless; TSMC is the foundry that makes their chips."
+      },
+      {
+        "q": "Why do chip startups often use a multi-project wafer (shuttle) for their first chip?",
+        "options": [
+          "It is faster to design",
+          "Many companies share one mask set, so prototypes cost a small fraction of a full mask set",
+          "It gives higher performance",
+          "It avoids testing"
+        ],
+        "answer": 1,
+        "why": "Shuttles cut prototype cost from millions to hundreds of thousands of dollars, but yield only a few dozen chips."
+      }
+    ],
+    "ask": [
+      "Why are NVIDIA's margins so high?",
+      "Why is HBM so expensive?",
+      "How much does it cost to start a chip company?"
+    ]
+  }
 }

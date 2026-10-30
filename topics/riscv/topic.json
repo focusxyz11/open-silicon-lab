@@ -1,6 +1,97 @@
 {
   "id": "riscv",
-  "labs": [
-    "riscv-lab"
-  ]
+  "title": "RISC-V CPU lab",
+  "band": "cpu",
+  "order": 20,
+  "kind": "build",
+  "summary": "Program a real RISC-V core on a live datapath, then invent a custom AI instruction and measure the speedup.",
+  "labs": ["riscv-lab"],
+  "links": [
+    {
+      "kind": "builds-on",
+      "to": "architecture",
+      "why": "build the open instruction set yourself"
+    },
+    {
+      "kind": "grew-from",
+      "to": "architecture",
+      "why": "Berkeley's RISC research of the 1980s"
+    },
+    {
+      "kind": "part-of",
+      "to": "ecosystem",
+      "why": "the open instruction set at the centre of a community"
+    },
+    {
+      "kind": "part-of",
+      "to": "accelerators",
+      "why": "some AI chips are built from RISC-V cores with custom AI instructions"
+    },
+    {
+      "kind": "part-of",
+      "to": "neuro",
+      "why": "a small CPU, sometimes RISC-V, runs beside the spiking cores"
+    }
+  ],
+  "ideas": [
+    {
+      "idea": "specialize",
+      "how": "a custom instruction makes one job much faster"
+    },
+    {
+      "idea": "layers-hide-detail",
+      "how": "an open instruction set lets anyone build a chip that keeps the promise"
+    }
+  ],
+  "challenges": [
+    {
+      "kind": "Puzzle",
+      "title": "Power on",
+      "task": "Put a number into a register.",
+      "href": "#riscv-1"
+    },
+    {
+      "kind": "Puzzle",
+      "title": "Load, add, store",
+      "task": "Read two numbers from memory and store their sum.",
+      "href": "#riscv-2"
+    },
+    {
+      "kind": "Puzzle",
+      "title": "Loops",
+      "task": "Add 1 to N with a branch loop.",
+      "href": "#riscv-3"
+    },
+    {
+      "kind": "Puzzle",
+      "title": "No multiplier",
+      "task": "Multiply using only RV32I instructions.",
+      "href": "#riscv-4"
+    },
+    {
+      "kind": "Puzzle",
+      "title": "The neuron",
+      "task": "Compute an int8 dot product, the core of AI.",
+      "href": "#riscv-5"
+    },
+    {
+      "kind": "Design",
+      "title": "Invent an instruction",
+      "task": "Choose a custom AI unit and beat RV32IM by 2× within an area budget.",
+      "href": "#riscv-6"
+    },
+    {
+      "kind": "Design",
+      "title": "A neural layer",
+      "task": "Four neurons with ReLU, as fast and small as you can.",
+      "href": "#riscv-7"
+    },
+    {
+      "kind": "Experiment",
+      "title": "Break the CPU",
+      "task": "Run a level on your own ALU, then plant a bug or a factory defect and watch what fails.",
+      "href": "#riscv-3"
+    }
+  ],
+  "learn": {}
 }

@@ -1,5 +1,6 @@
-/* Topics load on demand. At start-up the site knows only the catalog (what each topic holds);
-   the first time a topic is opened, its page, styles and simulations are fetched and started.
+/* Topics load on demand. At start-up the site knows only the catalog (what each topic holds) and
+   the graph (where it sits and how it connects); the first time a topic is opened, its page,
+   topic.json (explanations, quiz), styles and simulations are fetched and started.
    Each topic loads once and stays on the page, so coming back is instant.
 
    ensureTopic(id) resolves to that topic's lab modules by name, e.g. mods['riscv-lab']. */
@@ -29,10 +30,13 @@ function loadStyle(href) {
 async function load(id) {
   const ref = isReference(id), meta = TOPIC_FILES[id];
   if (!ref && !meta) throw new Error('Unknown topic: ' + id);
-  const [html] = await Promise.all([
+  /* The page, the topic's own data (explanations, quiz, tutor questions) and its styles, together. */
+  const [html, json] = await Promise.all([
     text(ref ? 'content/' + id + '.html' : 'topics/' + id + '/content.html'),
+    ref ? null : text('topics/' + id + '/topic.json').catch(() => null),
     meta && meta.style ? loadStyle('topics/' + id + '/style.css') : null
   ]);
+  let learn = {}; try { learn = (json && JSON.parse(json).learn) || {}; } catch (e) { console.error('topics/' + id + '/topic.json could not be read', e); }
   const holder = document.createElement('div'); holder.innerHTML = html.trim();
   const sec = holder.firstElementChild; sec.hidden = true;
   const lib = document.getElementById('library'), foot = document.getElementById('topicFoot');
@@ -49,7 +53,7 @@ async function load(id) {
       try { if (m && typeof m.init === 'function') m.init(sec); } catch (e) { console.error('Lab failed to start:', id + '/' + name, e); }
     });
   }
-  prepareTopic(id, sec);
+  prepareTopic(id, sec, learn);
   document.dispatchEvent(new CustomEvent('osl:topic-loaded', { detail: { id } }));
   return mods;
 }

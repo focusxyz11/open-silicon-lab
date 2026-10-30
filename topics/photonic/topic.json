@@ -1,6 +1,46 @@
 {
   "id": "photonic",
-  "labs": [
-    "next-photonic"
-  ]
+  "title": "Computing with light",
+  "band": "next",
+  "order": 40,
+  "kind": "explore",
+  "summary": "Interferometers steer light to do matrix math; optics also carry data between chips.",
+  "labs": ["next-photonic"],
+  "links": [
+    {
+      "kind": "kind-of",
+      "to": "beyond",
+      "why": "compute with light"
+    },
+    {
+      "kind": "part-of",
+      "to": "package",
+      "why": "co-packaged optics move into the package"
+    }
+  ],
+  "ideas": [
+    {
+      "idea": "energy-budget",
+      "how": "light can move data with less energy, but lasers and converters eat into the savings"
+    },
+    {
+      "idea": "physics-computes",
+      "how": "interfering light does a matrix multiply"
+    }
+  ],
+  "challenges": [
+    {
+      "kind": "Puzzle",
+      "title": "Steer the light",
+      "task": "Set an interferometer's phases to route light or split it in any ratio.",
+      "href": "#lab-photonic-1"
+    }
+  ],
+  "learn": {
+    "ask": [
+      "Why is computing with light hard?",
+      "What is the difference between optical interconnect and optical computing?",
+      "What is co-packaged optics?"
+    ]
+  }
 }

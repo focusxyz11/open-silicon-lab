@@ -1,10 +1,71 @@
 {
   "id": "design",
-  "labs": [
-    "design-flow",
-    "full-adder",
-    "timing",
-    "power",
-    "coverage"
-  ]
+  "title": "Logic design",
+  "band": "design",
+  "order": 10,
+  "kind": "explore",
+  "summary": "The design flow, RTL to gates, timing, power and verification coverage.",
+  "labs": ["design-flow", "full-adder", "timing", "power", "coverage"],
+  "links": [
+    {
+      "kind": "feeds",
+      "to": "layout",
+      "why": "the netlist gets placed"
+    }
+  ],
+  "ideas": [
+    {
+      "idea": "layers-hide-detail",
+      "how": "RTL describes what a circuit does; tools work out the gates"
+    },
+    {
+      "idea": "checking-is-hard",
+      "how": "verification takes more effort than writing the design"
+    }
+  ],
+  "challenges": [],
+  "learn": {
+    "plain": "Designing a chip is like writing a huge program that turns into a city plan. Engineers write code that describes circuits, software turns it into billions of tiny switches, and checking that everything works takes longer than writing it. Every choice trades speed, power and size against each other.",
+    "engineer": "Static timing analysis checks setup and hold on every path across process, voltage and temperature corners with on-chip variation derates. Power sign-off covers dynamic power (αCV²f), leakage and IR drop, managed with clock gating, multiple voltage domains and dynamic voltage and frequency scaling. Verification combines UVM constrained-random simulation, formal property checking and hardware emulation, tracked by code and functional coverage.",
+    "quiz": [
+      {
+        "q": "What is RTL?",
+        "options": [
+          "A photomask format",
+          "Code describing what registers and logic do each clock cycle",
+          "A type of transistor",
+          "A test chip"
+        ],
+        "answer": 1,
+        "why": "Register-transfer level code, written in languages such as SystemVerilog, is what synthesis turns into gates."
+      },
+      {
+        "q": "What sets a chip's maximum clock speed?",
+        "options": [
+          "The number of pins",
+          "The slowest logic path between flip-flops (the critical path)",
+          "The size of the wafer",
+          "The amount of memory"
+        ],
+        "answer": 1,
+        "why": "Every path must settle within one clock period. Pipeline registers shorten the critical path."
+      },
+      {
+        "q": "Why does raising the clock frequency increase power much faster than speed?",
+        "options": [
+          "Leakage disappears at high speed",
+          "Higher frequency needs higher voltage, and dynamic power grows with voltage squared",
+          "More transistors are added",
+          "It doesn't: power grows exactly in step with speed"
+        ],
+        "answer": 1,
+        "why": "P = α·C·V²·f. Raising f also requires raising V, so power climbs steeply."
+      }
+    ],
+    "ask": [
+      "How many engineers design a big GPU?",
+      "What does a verification engineer do all day?",
+      "Can AI design a whole chip by itself yet?"
+    ]
+  }
 }

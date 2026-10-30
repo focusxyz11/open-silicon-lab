@@ -1,6 +1,46 @@
 {
   "id": "pbits",
-  "labs": [
-    "next-pbits"
-  ]
+  "title": "Probabilistic computing",
+  "band": "next",
+  "order": 60,
+  "kind": "explore",
+  "summary": "Noisy p-bits run a logic gate forwards and backwards, and settle into answers.",
+  "labs": ["next-pbits"],
+  "links": [
+    {
+      "kind": "kind-of",
+      "to": "beyond",
+      "why": "noise as a feature"
+    },
+    {
+      "kind": "builds-on",
+      "to": "transistor",
+      "why": "tiny switches are noisy anyway"
+    }
+  ],
+  "ideas": [
+    {
+      "idea": "smaller-until",
+      "how": "tiny switches turn noisy, and p-bits put that noise to work"
+    },
+    {
+      "idea": "physics-computes",
+      "how": "random noise samples the answers"
+    }
+  ],
+  "challenges": [
+    {
+      "kind": "Experiment",
+      "title": "Run logic backwards",
+      "task": "Clamp the output of a p-bit AND gate and let the inputs find themselves.",
+      "href": "#lab-pbits-1"
+    }
+  ],
+  "learn": {
+    "ask": [
+      "How can noise be useful for computing?",
+      "What is thermodynamic computing?",
+      "What is the difference between a p-bit and a qubit?"
+    ]
+  }
 }

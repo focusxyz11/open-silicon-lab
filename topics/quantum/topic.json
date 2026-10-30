@@ -1,6 +1,46 @@
 {
   "id": "quantum",
-  "labs": [
-    "next-quantum"
-  ]
+  "title": "Quantum computers",
+  "band": "next",
+  "order": 50,
+  "kind": "explore",
+  "summary": "Build two-qubit circuits: superposition, interference and entanglement, and where qubits could help.",
+  "labs": ["next-quantum"],
+  "links": [
+    {
+      "kind": "kind-of",
+      "to": "beyond",
+      "why": "a different kind of bit"
+    },
+    {
+      "kind": "builds-on",
+      "to": "physics",
+      "why": "quantum physics, used directly"
+    }
+  ],
+  "ideas": [
+    {
+      "idea": "copies-catch-mistakes",
+      "how": "error correction spreads one reliable qubit over many noisy ones"
+    },
+    {
+      "idea": "physics-computes",
+      "how": "qubits compute with superposition and interference"
+    }
+  ],
+  "challenges": [
+    {
+      "kind": "Puzzle",
+      "title": "Entangle two qubits",
+      "task": "Build circuits for certainty, interference and entanglement.",
+      "href": "#lab-quantum-1"
+    }
+  ],
+  "learn": {
+    "ask": [
+      "What problems will quantum computers solve first?",
+      "Why do qubits need error correction?",
+      "Will quantum computers break today's encryption?"
+    ]
+  }
 }

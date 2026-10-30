@@ -17,7 +17,7 @@ const js = bin ? execFileSync(bin, args, { encoding: 'utf8', maxBuffer: 64e6, cw
 const topics = readdirSync(root + 'topics', { withFileTypes: true }).filter(d => d.isDirectory() && !d.name.startsWith('_')).map(d => d.name).sort();
 const content = { 'content/zoom.html': r('content/zoom.html'), 'src/data/facts.json': r('src/data/facts.json') };
 for (const f of readdirSync(root + 'content').filter(f => f.endsWith('.html'))) content['content/' + f] = r('content/' + f);
-for (const t of topics) content['topics/' + t + '/content.html'] = r('topics/' + t + '/content.html');
+for (const t of topics) for (const f of ['content.html', 'topic.json']) content['topics/' + t + '/' + f] = r('topics/' + t + '/' + f);
 /* Shared stylesheets first (base, then app), then each topic's own style.css. */
 const core = ['base', 'app'];
 const extra = readdirSync(root + 'src/styles').filter(f => f.endsWith('.css')).map(f => f.slice(0, -4)).filter(n => !core.includes(n)).sort();

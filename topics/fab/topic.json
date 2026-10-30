@@ -1,11 +1,86 @@
 {
   "id": "fab",
-  "labs": [
-    "fab-loop",
-    "cleanroom",
-    "ald-vs-cvd",
-    "etch",
-    "overlay",
-    "inspection"
-  ]
+  "title": "Inside the fab",
+  "band": "mfg",
+  "order": 20,
+  "kind": "explore",
+  "summary": "The patterning loop, cleanrooms, deposition, etch, overlay and inspection.",
+  "labs": ["fab-loop", "cleanroom", "ald-vs-cvd", "etch", "overlay", "inspection"],
+  "links": [
+    {
+      "kind": "builds-on",
+      "to": "physics",
+      "why": "implant and anneal put the physics to work"
+    },
+    {
+      "kind": "causes",
+      "to": "yield",
+      "why": "defects decide yield",
+      "if": "a fab leaves more defects on each wafer",
+      "then": "fewer of the chips on it work"
+    },
+    {
+      "kind": "causes",
+      "to": "economics",
+      "why": "a leading-edge fab is one of the costliest factories on Earth",
+      "if": "each new fab costs more than the last",
+      "then": "fewer companies can afford the leading edge"
+    },
+    {
+      "kind": "part-of",
+      "to": "supply",
+      "why": "fabs are the costliest link in the chain"
+    }
+  ],
+  "ideas": [
+    {
+      "idea": "pay-once",
+      "how": "a leading-edge fab only pays off at enormous volume"
+    }
+  ],
+  "challenges": [],
+  "learn": {
+    "plain": "A fab is a giant kitchen that repeats one recipe hundreds of times: add a layer, print a pattern, carve it, fill it, polish it, check it. It must be far cleaner than a hospital and more precise than almost anything else people manufacture.",
+    "engineer": "Process control relies on statistical process control, run-to-run feedback and fault detection on every chamber. Key loops include per-field lithography corrections for dimensions and overlay using high-order wafer and field models, etch endpoint detection, ALD saturation curves, and CMP removal following Preston's law (rate proportional to pressure times velocity) with dummy fill to limit dishing. Cycle time is roughly 1 to 1.5 days per mask layer.",
+    "quiz": [
+      {
+        "q": "Why are cleanrooms so strict about particles?",
+        "options": [
+          "Particles change the chip's color",
+          "One particle can short wires or block a pattern on a die",
+          "Particles slow the machines",
+          "Only for worker comfort"
+        ],
+        "answer": 1,
+        "why": "A 0.1 µm particle is about twice the spacing between transistor gates."
+      },
+      {
+        "q": "What makes ALD different from CVD?",
+        "options": [
+          "It is much faster",
+          "Each cycle adds one self-limiting atomic layer, coating deep trenches evenly",
+          "It uses no chemicals",
+          "It only works on glass"
+        ],
+        "answer": 1,
+        "why": "ALD is slow but nearly perfectly conformal, which modern transistors need."
+      },
+      {
+        "q": "What is overlay?",
+        "options": [
+          "How well each layer lines up with the one below",
+          "How thick a layer is",
+          "How many layers a chip has",
+          "How shiny the wafer is"
+        ],
+        "answer": 0,
+        "why": "Leading chips need layers aligned within about 2 nm across the whole wafer."
+      }
+    ],
+    "ask": [
+      "Why do fabs cost tens of billions of dollars?",
+      "What does a fab technician do?",
+      "How long does one wafer take to make?"
+    ]
+  }
 }

@@ -1,6 +1,8 @@
 /* Learning layer: Beginner/Engineer explanations, optional quizzes, glossary and term pop-ups.
-   Nothing here gates content; quiz results only feed the progress display. */
-import { LV, QZ, GL } from '../data/learning.js';
+   Nothing here gates content; quiz results only feed the progress display.
+   Each topic's explanations, quiz and tutor questions come from its topic.json ("learn") and
+   arrive when the topic loads; the glossary is shared and lives in src/data/learning.js. */
+import { GL } from '../data/learning.js';
 import { TOPICS, topicById, bandById } from '../data/topics.js';
 
 const $ = s => document.querySelector(s);
@@ -22,7 +24,9 @@ const PKEY = 'sjl-progress-v3';
 export const P = { quiz: {}, seen: {} };
 try { const j = JSON.parse(localStorage.getItem(PKEY) || 'null'); if (j && typeof j === 'object') { P.quiz = j.quiz && typeof j.quiz === 'object' ? j.quiz : {}; P.seen = j.seen && typeof j.seen === 'object' ? j.seen : {}; } } catch (e) { /* ignore */ }
 export const saveP = () => { try { localStorage.setItem(PKEY, JSON.stringify(P)); } catch (e) { /* ignore */ } };
-export const quizDone = s => { const q = QZ[s], a = P.quiz[s] || {}; return !!q && q.every((_, i) => a[i] !== undefined); };
+/* What each loaded topic's topic.json says under "learn": { plain, engineer, quiz, ask }. */
+const LEARN = {};
+export const learnOf = id => LEARN[id] || {};
 export function markSeen(id) { if (topicById(id) && !P.seen[id]) { P.seen[id] = 1; saveP(); updProgress(); } }
 export function updProgress() {
   const n = TOPICS.filter(t => P.seen[t.id]).length; const t = $('#progTop'); if (!t) return;
@@ -34,13 +38,13 @@ export function updProgress() {
 /* ---- quizzes, collapsed by default ---- */
 function renderQuiz(s) {
   const box = document.querySelector('.quiz[data-s="' + s + '"]'); if (!box) return;
-  const q = QZ[s], a = P.quiz[s] || {}; let right = 0, ans = 0;
+  const q = learnOf(s).quiz, a = P.quiz[s] || {}; let right = 0, ans = 0;
   const body = q.map((x, i) => {
-    const ch = a[i]; if (ch !== undefined) { ans++; if (ch === x[2]) right++; }
-    return '<div class="q"><p class="qt">' + (i + 1) + '. ' + esc(x[0]) + '</p><div class="opts">' + x[1].map((o, j) => { let cl = ''; if (ch !== undefined) { if (j === x[2]) cl = 'right'; else if (j === ch) cl = 'wrong'; } return '<button type="button" data-i="' + i + '" data-j="' + j + '"' + (cl ? ' class="' + cl + '"' : '') + (ch !== undefined ? ' aria-disabled="true"' : '') + '>' + esc(o) + '</button>'; }).join('') + '</div>' + (ch !== undefined ? '<p class="exp"><b>' + (ch === x[2] ? 'Correct.' : 'Not quite.') + '</b> ' + esc(x[3]) + '</p>' : '') + '</div>';
+    const ch = a[i]; if (ch !== undefined) { ans++; if (ch === x.answer) right++; }
+    return '<div class="q"><p class="qt">' + (i + 1) + '. ' + esc(x.q) + '</p><div class="opts">' + x.options.map((o, j) => { let cl = ''; if (ch !== undefined) { if (j === x.answer) cl = 'right'; else if (j === ch) cl = 'wrong'; } return '<button type="button" data-i="' + i + '" data-j="' + j + '"' + (cl ? ' class="' + cl + '"' : '') + (ch !== undefined ? ' aria-disabled="true"' : '') + '>' + esc(o) + '</button>'; }).join('') + '</div>' + (ch !== undefined ? '<p class="exp"><b>' + (ch === x.answer ? 'Correct.' : 'Not quite.') + '</b> ' + esc(x.why) + '</p>' : '') + '</div>';
   }).join('');
   const open = box.querySelector('details') ? box.querySelector('details').open : false;
-  box.innerHTML = '<details' + (open ? ' open' : '') + '><summary><span class="code">Check yourself</span><span class="score">' + (ans ? right + ' of ' + q.length + ' correct' + (ans < q.length ? ' so far' : '') : '3 quick questions, optional') + '</span></summary>' + body + (ans === q.length ? '<div class="row"><button type="button" class="btn" data-reset="1">Try again</button></div>' : '') + '</details>';
+  box.innerHTML = '<details' + (open ? ' open' : '') + '><summary><span class="code">Check yourself</span><span class="score">' + (ans ? right + ' of ' + q.length + ' correct' + (ans < q.length ? ' so far' : '') : q.length + ' quick question' + (q.length === 1 ? '' : 's') + ', optional') + '</span></summary>' + body + (ans === q.length ? '<div class="row"><button type="button" class="btn" data-reset="1">Try again</button></div>' : '') + '</details>';
   box.querySelectorAll('.opts button').forEach(b => b.addEventListener('click', () => { const i = +b.dataset.i; if ((P.quiz[s] || {})[i] !== undefined) return; P.quiz[s] = Object.assign({}, P.quiz[s]); P.quiz[s][i] = +b.dataset.j; saveP(); renderQuiz(s); }));
   const r = box.querySelector('[data-reset]'); if (r) r.addEventListener('click', () => { delete P.quiz[s]; saveP(); renderQuiz(s); box.querySelector('details').open = true; });
 }
@@ -99,16 +103,17 @@ function popovers() {
 }
 
 /* Called once for each topic, when it loads: its label, the two explanation levels, the optional
-   quiz, the "Ask Claude" button (shown only inside Claude) and glossary pop-ups. */
-export function prepareTopic(id, sec) {
+   quiz, the "Ask Claude" button (shown only inside Claude) and glossary pop-ups.
+   learn is the "learn" part of the topic's topic.json: { plain, engineer, quiz, ask }. */
+export function prepareTopic(id, sec, learn = {}) {
   if (id === 'glossary') { const q = $('#glQ'); if (q) q.addEventListener('input', e => glList(e.target.value)); glList(''); return; }
   if (id === 'sources') return;
   const head = sec.querySelector('.head');
   const lab = head && head.querySelector('[data-topic-label]'); if (lab) lab.textContent = topicLabel(id);
   if (head) { const ab = document.createElement('button'); ab.type = 'button'; ab.className = 'askbtn'; ab.hidden = !askOn; ab.dataset.s = id; ab.textContent = 'Ask Claude about this topic'; head.appendChild(ab); }
-  const lv = LV[id];
-  if (lv && head) { const b = document.createElement('div'); b.className = 'beg'; b.innerHTML = '<p class="eyebrow">In plain words</p><p>' + esc(lv[0]) + '</p>'; const e = document.createElement('div'); e.className = 'eng'; e.innerHTML = '<p class="eyebrow">Engineer\'s notes</p><p>' + esc(lv[1]) + '</p>'; head.after(b, e); }
-  if (QZ[id]) { const d = document.createElement('div'); d.className = 'quiz'; d.dataset.s = id; sec.appendChild(d); renderQuiz(id); }
+  LEARN[id] = learn;
+  if (learn.plain && head) { const b = document.createElement('div'); b.className = 'beg'; b.innerHTML = '<p class="eyebrow">In plain words</p><p>' + esc(learn.plain) + '</p>'; const e = document.createElement('div'); e.className = 'eng'; e.innerHTML = '<p class="eyebrow">Engineer\'s notes</p><p>' + esc(learn.engineer) + '</p>'; head.after(b, e); }
+  if (learn.quiz && learn.quiz.length) { const d = document.createElement('div'); d.className = 'quiz'; d.dataset.s = id; sec.appendChild(d); renderQuiz(id); }
   wrapTerms(sec);
 }
 /* The tutor turns this on when the site runs inside Claude. */

@@ -1,6 +1,47 @@
 {
   "id": "spatial",
-  "labs": [
-    "next-spatial"
-  ]
+  "title": "Dataflow & wafer-scale",
+  "band": "next",
+  "order": 80,
+  "kind": "explore",
+  "summary": "Lay the program out across the chip and keep weights where the work happens.",
+  "labs": ["next-spatial"],
+  "links": [
+    {
+      "kind": "kind-of",
+      "to": "beyond",
+      "why": "map the program onto the chip"
+    },
+    {
+      "kind": "kind-of",
+      "to": "accelerators",
+      "why": "wafer-scale and dataflow AI chips"
+    }
+  ],
+  "ideas": [
+    {
+      "idea": "keep-data-close",
+      "how": "weights stay where the work happens, spread across the chip"
+    },
+    {
+      "idea": "many-small",
+      "how": "wafer-scale chips go back to one giant piece of silicon, to keep data on the chip",
+      "counter": true
+    }
+  ],
+  "challenges": [
+    {
+      "kind": "Experiment",
+      "title": "Make the model fit",
+      "task": "Find when a model stops fitting on chip, and what that costs.",
+      "href": "#lab-spatial-1"
+    }
+  ],
+  "learn": {
+    "ask": [
+      "Why are wafer-scale chips fast?",
+      "What is a dataflow architecture?",
+      "Why do big models not fit on one chip?"
+    ]
+  }
 }

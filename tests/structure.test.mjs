@@ -1,5 +1,5 @@
-// The topic folders keep their contract: every topic has its folder, the generated catalog is up to
-// date, element ids never clash across topics, and simulations import shared code the agreed way.
+// The topic folders keep their contract: every topic has its folder, the generated catalog and graph
+// are up to date, element ids never clash across topics, and simulations import shared code the agreed way.
 // When one of these fails, the message says what to do; see topics/README.md for the contract.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -14,9 +14,9 @@ test('every topic folder follows the contract (ids unique, labs listed, imports 
   assert.deepEqual(problems, [], '\n' + problems.join('\n'));
 });
 
-test('the generated catalog is up to date (run `npm run catalog` if this fails)', async () => {
-  const { text } = await buildCatalog();
-  assert.equal(readFileSync(new URL('src/generated/catalog.js', root), 'utf8'), text, 'src/generated/catalog.js is out of date. Run: npm run catalog');
+test('the generated catalog and graph are up to date (run `npm run catalog` if this fails)', async () => {
+  const { outputs } = await buildCatalog();
+  for (const [p, text] of Object.entries(outputs)) assert.equal(existsSync(new URL(p, root)) ? readFileSync(new URL(p, root), 'utf8') : '', text, p + ' is out of date. Run: npm run catalog');
 });
 
 test('every topic has a folder with content and topic.json', () => {

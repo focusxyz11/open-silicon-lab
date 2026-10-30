@@ -1,6 +1,52 @@
 {
   "id": "agent",
-  "labs": [
-    "agent-partner"
-  ]
+  "title": "Design with an AI agent",
+  "band": "design",
+  "order": 30,
+  "kind": "build",
+  "summary": "An agent proposes designs, code and claims. Check them with real tools, find the mistakes, and decide what to trust.",
+  "labs": ["agent-partner"],
+  "links": [
+    {
+      "kind": "builds-on",
+      "to": "design",
+      "why": "agents write RTL; people verify it"
+    },
+    {
+      "kind": "builds-on",
+      "to": "tiny",
+      "why": "check its designs with the studio's tools"
+    },
+    {
+      "kind": "builds-on",
+      "to": "riscv",
+      "why": "test the code it writes"
+    },
+    {
+      "kind": "builds-on",
+      "to": "compute",
+      "why": "check its performance claims"
+    }
+  ],
+  "ideas": [
+    {
+      "idea": "checking-is-hard",
+      "how": "an agent writes fast; deciding whether to trust it is your job"
+    }
+  ],
+  "challenges": [
+    {
+      "kind": "Puzzle",
+      "title": "Verify the agent",
+      "task": "Eight proposals from an AI agent: designs, code, estimates and facts. Trust or reject each, with evidence.",
+      "href": "#lab-agent-1"
+    },
+    {
+      "kind": "Experiment",
+      "title": "Calibrate your trust",
+      "task": "Inside Claude: a live agent designs tiny chips. Decide whether to trust each design before you check it.",
+      "href": "#lab-agent-2"
+    }
+  ],
+  "learn": {}
 }

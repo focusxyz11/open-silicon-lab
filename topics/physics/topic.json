@@ -1,9 +1,63 @@
 {
   "id": "physics",
-  "labs": [
-    "semiconductor-playground",
-    "czochralski-puller",
-    "wafer-steps",
-    "implant-anneal"
-  ]
+  "title": "From sand to switch",
+  "band": "atoms",
+  "order": 10,
+  "kind": "explore",
+  "summary": "Why silicon can switch: band gaps, doping, p–n junctions, growing a perfect crystal and implanting dopants.",
+  "labs": ["semiconductor-playground", "czochralski-puller", "wafer-steps", "implant-anneal"],
+  "links": [],
+  "ideas": [],
+  "challenges": [
+    {
+      "kind": "Puzzle",
+      "title": "Grow a perfect crystal",
+      "task": "Pull a dislocation-free 300 mm ingot and taper it off safely.",
+      "href": "#physics"
+    }
+  ],
+  "learn": {
+    "plain": "Silicon is a material that conducts electricity only a little. Adding a pinch of other atoms decides whether it carries negative or positive charges, and a voltage on a nearby gate can switch it between conducting and not. Everything starts with a crystal so perfect that every atom is in its place.",
+    "engineer": "Intrinsic carrier density n_i ≈ 10¹⁰ cm⁻³ at 300 K follows exp(−E_g/2kT); doping from 10¹⁵ to 10²⁰ cm⁻³ sets majority carriers with n·p = n_i². Junction physics: V_bi = (kT/q)·ln(N_A·N_D/n_i²), depletion width ∝ √((V_bi − V)/N). Czochralski growth uses Dash necking to eliminate dislocations, with diameter controlled by pull rate and melt temperature; oxygen from the quartz crucible (~10¹⁸ cm⁻³) aids gettering. Implant profiles follow projected range R_p and straggle ΔR_p; spike, flash and laser anneals trade activation against diffusion.",
+    "quiz": [
+      {
+        "q": "Why does adding a few phosphorus atoms make silicon conduct much better?",
+        "options": [
+          "Phosphorus is a metal",
+          "Each phosphorus atom brings one spare electron that is free to move",
+          "It melts the silicon",
+          "It removes all electrons"
+        ],
+        "answer": 1,
+        "why": "Phosphorus has five outer electrons; silicon bonds need four, so one is free. That makes n-type silicon."
+      },
+      {
+        "q": "What does forward bias do to a p–n junction?",
+        "options": [
+          "Widens the depletion region and blocks current",
+          "Shrinks the depletion region so current flows",
+          "Has no effect",
+          "Turns it into a capacitor only"
+        ],
+        "answer": 1,
+        "why": "Above about 0.6 V forward, current rises steeply. Reverse bias widens the depletion region instead."
+      },
+      {
+        "q": "Why is a thin \"neck\" pulled at the start of crystal growth?",
+        "options": [
+          "To save silicon",
+          "So dislocations from the seed grow out and vanish before the crystal widens",
+          "To make the ingot look nicer",
+          "To cool the melt"
+        ],
+        "answer": 1,
+        "why": "This Dash necking technique is why commercial silicon crystals are dislocation-free."
+      }
+    ],
+    "ask": [
+      "What is a band gap, in simple terms?",
+      "Why is silicon used instead of other semiconductors?",
+      "How pure does silicon need to be for chips?"
+    ]
+  }
 }

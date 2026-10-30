@@ -1,9 +1,91 @@
 {
   "id": "datacenter",
-  "labs": [
-    "memory-cell-lab",
-    "hbm-stack-builder",
-    "cluster-network",
-    "energy-per-token"
-  ]
+  "title": "Memory, networks & power",
+  "band": "systems",
+  "order": 20,
+  "kind": "explore",
+  "summary": "DRAM and NAND cells, HBM stacks, cluster networks and the energy of every token.",
+  "labs": ["memory-cell-lab", "hbm-stack-builder", "cluster-network", "energy-per-token"],
+  "links": [
+    {
+      "kind": "causes",
+      "to": "reality",
+      "why": "rare errors become daily at fleet scale",
+      "if": "a fleet grows to millions of chips",
+      "then": "errors that are one in a million happen every day"
+    },
+    {
+      "kind": "causes",
+      "to": "scenarios",
+      "why": "power may cap AI growth",
+      "if": "AI needs power faster than grids can add it",
+      "then": "AI growth slows in many futures"
+    }
+  ],
+  "ideas": [
+    {
+      "idea": "keep-data-close",
+      "how": "HBM and fast networks exist so data arrives in time"
+    },
+    {
+      "idea": "many-small",
+      "how": "one model is split across thousands of chips joined by fast networks"
+    },
+    {
+      "idea": "energy-budget",
+      "how": "power and cooling limit how many chips a site can run"
+    }
+  ],
+  "challenges": [
+    {
+      "kind": "Experiment",
+      "title": "What does power really cost AI?",
+      "task": "Double the price of electricity on the map and see how far the cost of an AI answer moves.",
+      "href": "#whatif"
+    }
+  ],
+  "learn": {
+    "plain": "An AI chip is like a giant factory that needs constant deliveries. Memory chips are the warehouses next door, the network is the road system between factories, and the power plant keeps the lights on. If any of them can't keep up, the factory sits idle.",
+    "engineer": "DRAM retention scales roughly 2× per 10 °C, so refresh (tREFI 3.9 µs, tRFC hundreds of ns) costs a few percent of bandwidth. 3D NAND scales by layer count (286–400+ layers, multi-deck channel-hole etch, CMOS bonded to array) and bits per cell, trading endurance and read margin. HBM4 doubles the interface to 2,048 bits; stack height within 775 µm forces die thinning and pushes hybrid bonding for 16- to 20-high. Scale-up fabrics (NVLink 6 at 3.6 TB/s per GPU) versus scale-out at 1.6 Tb/s per GPU shape parallelism; optics power and PUE shape joules per token.",
+    "quiz": [
+      {
+        "q": "Why must DRAM be refreshed constantly?",
+        "options": [
+          "To clear old data",
+          "Its tiny capacitors leak charge within milliseconds to seconds",
+          "Because the clock requires it",
+          "To save power"
+        ],
+        "answer": 1,
+        "why": "Every row is rewritten at least every 64 ms (32 ms when hot) before the weakest cells fade."
+      },
+      {
+        "q": "Why do taller HBM stacks push the industry toward hybrid bonding?",
+        "options": [
+          "It is cheaper",
+          "The stack must fit a fixed height, and removing the bump gap leaves room for thicker, stronger dies",
+          "It makes memory faster to manufacture",
+          "It removes the need for TSVs"
+        ],
+        "answer": 1,
+        "why": "At 16 to 20 dies, micro-bump gaps would force dies thinner than is practical."
+      },
+      {
+        "q": "What is PUE?",
+        "options": [
+          "Peak usable energy",
+          "Total facility power divided by the power used by the IT equipment",
+          "The power of one GPU",
+          "A cooling liquid"
+        ],
+        "answer": 1,
+        "why": "A PUE of 1.2 means 20% extra power for cooling and conversion losses."
+      }
+    ],
+    "ask": [
+      "How much electricity does an AI data center use?",
+      "Why is HBM better than ordinary DRAM for AI?",
+      "What is the difference between NVLink and Ethernet?"
+    ]
+  }
 }

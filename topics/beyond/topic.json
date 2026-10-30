@@ -1,6 +1,79 @@
 {
   "id": "beyond",
-  "labs": [
-    "next-beyond"
-  ]
+  "title": "Beyond von Neumann",
+  "band": "next",
+  "order": 10,
+  "kind": "explore",
+  "summary": "Why moving data costs more than computing, the same job on ten kinds of machine, and a gallery of frontier ideas.",
+  "labs": ["next-beyond"],
+  "links": [
+    {
+      "kind": "builds-on",
+      "to": "architecture",
+      "why": "the von Neumann bottleneck"
+    },
+    {
+      "kind": "builds-on",
+      "to": "compute",
+      "why": "the memory wall"
+    }
+  ],
+  "ideas": [
+    {
+      "idea": "keep-data-close",
+      "how": "the trip between memory and processor costs more energy than the math"
+    }
+  ],
+  "challenges": [
+    {
+      "kind": "Experiment",
+      "title": "Same job, ten machines",
+      "task": "Pick a job and see which of ten machines suits it, from GPUs to qubits and living neurons, and why.",
+      "href": "#lab-beyond-2"
+    }
+  ],
+  "learn": {
+    "plain": "Most computers keep their data in one place and do the math in another, and the trip between the two now costs far more energy than the math. New kinds of computers try to shorten that trip, use physics directly, or tackle problems ordinary logic handles badly. None wins everywhere: each trades flexibility or precision for speed or energy on certain jobs.",
+    "engineer": "At 45 nm a 16-bit DRAM access costs about 640 pJ against 0.18 pJ for an add; on-chip SRAM is 8–11 pJ. Paradigms differ in which term they attack: data movement (compute-in-memory, dataflow and 3D), switching energy (adiabatic and reversible, superconducting), or algorithmic class (quantum for structured problems, probabilistic for sampling and optimization). Evaluate each by energy-to-solution on a fixed workload, precision, programmability and maturity, not peak operations per second.",
+    "quiz": [
+      {
+        "q": "Why do many new architectures move computing closer to memory?",
+        "options": [
+          "Memory chips are cheaper than processors",
+          "Fetching data from far-away memory costs far more energy than the arithmetic itself",
+          "Processors cannot do multiplication",
+          "It makes chips smaller"
+        ],
+        "answer": 1,
+        "why": "At 45 nm, reading 16 bits from DRAM costs about 3,500 times the energy of a 16-bit add. Shortening that trip saves the most."
+      },
+      {
+        "q": "Which job suits a quantum computer best?",
+        "options": [
+          "Running a web browser",
+          "Simulating molecules and materials",
+          "Storing photos",
+          "Serving a chatbot to millions of users"
+        ],
+        "answer": 1,
+        "why": "Electrons follow quantum rules, so qubits can represent them naturally. Everyday software gains nothing from qubits."
+      },
+      {
+        "q": "What makes neuromorphic chips efficient for always-on sensing?",
+        "options": [
+          "They run at very high clock speeds",
+          "Neurons use energy only when spikes arrive, and the sensor is quiet most of the time",
+          "They use quantum effects",
+          "They have more memory than GPUs"
+        ],
+        "answer": 1,
+        "why": "Event-driven spikes mean an idle input costs almost nothing."
+      }
+    ],
+    "ask": [
+      "Why does moving data cost more energy than computing?",
+      "Which new architecture is closest to real products?",
+      "Will any of these replace GPUs for AI?"
+    ]
+  }
 }

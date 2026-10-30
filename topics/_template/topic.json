@@ -1,6 +1,18 @@
 {
   "id": "TOPIC_ID",
-  "labs": [
-    "TOPIC_ID-lab"
-  ]
+  "title": "TOPIC_TITLE",
+  "band": "TOPIC_BAND",
+  "order": 999,
+  "kind": "explore",
+  "summary": "One sentence for the map: what the reader can do or find here.",
+  "labs": ["TOPIC_ID-lab"],
+  "links": [],
+  "ideas": [],
+  "challenges": [],
+  "learn": {
+    "plain": "The idea in plain words, with one everyday comparison, for someone new to chips.",
+    "engineer": "The same idea for an engineer: the model, the numbers that matter and what it leaves out.",
+    "quiz": [],
+    "ask": ["A question a curious reader might ask about this topic?"]
+  }
 }
