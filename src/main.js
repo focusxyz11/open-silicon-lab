@@ -12,6 +12,7 @@ import { renderMapShell } from './app/map.js';
 import { initGuide } from './app/guide.js';
 import { text } from './app/loader.js';
 import { issueURL, REPO_URL } from './app/config.js';
+import { loadLang, applyTexts, t } from './core/i18n.js';
 
 function wireFooter() {
   document.querySelectorAll('#siteFoot [data-issue]').forEach(a => { a.href = issueURL(a.dataset.issue); a.target = '_blank'; a.rel = 'noopener'; });
@@ -19,6 +20,10 @@ function wireFooter() {
 }
 
 async function boot() {
+  /* Words first: every view asks src/i18n/<lang>.json for its text. */
+  await loadLang(text);
+  applyTexts();
+  document.getElementById('loading').textContent = t('boot.loading');
   wireFooter();
   const [zoom] = await Promise.all([text('content/zoom.html'), loadFacts()]);
   /* The map view holds the zoom viewer and the time machine, whose labs start here. */
@@ -35,4 +40,4 @@ async function boot() {
   initRouter();
   initGuide();
 }
-boot().catch(e => { const l = document.getElementById('loading'); if (l) { l.hidden = false; l.textContent = 'The lab could not load: ' + e.message + '. If you opened index.html directly from disk, run a local server instead (see README).'; } console.error(e); });
+boot().catch(e => { const l = document.getElementById('loading'); if (l) { l.hidden = false; l.textContent = /* i18n-ok: the texts may be what failed to load */ 'The lab could not load: ' + e.message + '. If you opened index.html directly from disk, run a local server instead (see README).'; } console.error(e); });

@@ -14,11 +14,13 @@ import { markSeen, P } from './learning.js';
 import { initMap, redrawMap, setWhatif, state as mapState } from './map.js';
 import { renderWorkshop, renderChallenges, renderKnowledge } from './views.js';
 import { issueURL } from './config.js';
+import { t } from '../core/i18n.js';
 
 const $ = s => document.querySelector(s);
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const VIEWS = ['map', 'topic', 'workshop', 'challenges', 'knowledge', 'mychip'];
-const REF = { glossary: 'Glossary', sources: 'Sources' };
+const REF = { glossary: 1, sources: 1 };
+const refName = id => t('ref.' + id);
 let curView = null, curTopic = null;
 
 function show(view) {
@@ -31,42 +33,43 @@ function show(view) {
 const labsIn = id => (TOPIC_FILES[id] || { labs: [] }).labs;
 
 function renderChrome(id) {
-  const t = topicById(id);
-  if (!t) { /* glossary or sources */
-    $('#topicHead').innerHTML = '<nav class="crumbs" aria-label="Breadcrumb"><a href="#map">Map</a><span>›</span><a href="#knowledge">Knowledge</a><span>›</span><b>' + REF[id] + '</b></nav>';
-    $('#rail').innerHTML = '<a class="back" href="#knowledge">← Knowledge</a><p class="eyebrow">Reference</p><a href="#glossary"' + (id === 'glossary' ? ' class="on"' : '') + '>Glossary</a><a href="#sources"' + (id === 'sources' ? ' class="on"' : '') + '>Sources</a>';
+  const tp = topicById(id);
+  if (!tp) { /* glossary or sources */
+    $('#topicHead').innerHTML = '<nav class="crumbs" aria-label="' + t('crumb.label') + '"><a href="#map">' + t('crumb.map') + '</a><span>›</span><a href="#knowledge">' + t('crumb.knowledge') + '</a><span>›</span><b>' + refName(id) + '</b></nav>';
+    $('#rail').innerHTML = '<a class="back" href="#knowledge">' + t('rail.backKnowledge') + '</a><p class="eyebrow">' + t('ref.reference') + '</p><a href="#glossary"' + (id === 'glossary' ? ' class="on"' : '') + '>' + refName('glossary') + '</a><a href="#sources"' + (id === 'sources' ? ' class="on"' : '') + '>' + refName('sources') + '</a>';
     $('#topicFoot').innerHTML = ''; return;
   }
-  const b = bandById(t.band);
+  const b = bandById(tp.band);
   const th = mapState.thread ? THREADS.find(x => x.id === mapState.thread && x.path.includes(id)) : null;
   const thIn = THREADS.filter(x => x.path.includes(id));
   let thread = '';
   if (th) {
     const i = th.path.indexOf(id), prev = th.path[i - 1], next = th.path[i + 1];
-    thread = '<div class="thbar"><span class="code">Thread · ' + esc(th.t) + '</span><ol>' + th.path.map((p, k) => '<li' + (k === i ? ' class="on"' : '') + (P.seen[p] ? ' data-seen' : '') + '><a href="#' + p + '" title="' + esc(topicById(p).t) + '">' + (k + 1) + '</a></li>').join('') + '</ol><span class="thnav">' + (prev ? '<a href="#' + prev + '">← ' + esc(topicById(prev).t) + '</a>' : '') + (next ? '<a class="next" href="#' + next + '">' + esc(topicById(next).t) + ' →</a>' : '<a href="#map">Back to the map</a>') + '</span><button type="button" class="x" data-endthread aria-label="Leave this thread">×</button></div>';
+    thread = '<div class="thbar"><span class="code">' + esc(t('thread.code', { name: th.t })) + '</span><ol>' + th.path.map((p, k) => '<li' + (k === i ? ' class="on"' : '') + (P.seen[p] ? ' data-seen' : '') + '><a href="#' + p + '" title="' + esc(topicById(p).t) + '">' + (k + 1) + '</a></li>').join('') + '</ol><span class="thnav">' + (prev ? '<a href="#' + prev + '">← ' + esc(topicById(prev).t) + '</a>' : '') + (next ? '<a class="next" href="#' + next + '">' + esc(topicById(next).t) + ' →</a>' : '<a href="#map">' + t('thread.backMap') + '</a>') + '</span><button type="button" class="x" data-endthread aria-label="' + t('thread.leave') + '">×</button></div>';
   } else if (thIn.length) {
-    thread = '<div class="thbar quiet"><span class="small muted">On ' + (thIn.length > 1 ? 'the threads' : 'the thread') + '</span>' + thIn.map(x => '<button type="button" class="chip" data-thread="' + x.id + '">' + esc(x.t) + '</button>').join('') + '</div>';
+    thread = '<div class="thbar quiet"><span class="small muted">' + t('thread.on', { n: thIn.length }) + '</span>' + thIn.map(x => '<button type="button" class="chip" data-thread="' + x.id + '">' + esc(x.t) + '</button>').join('') + '</div>';
   }
-  $('#topicHead').innerHTML = '<nav class="crumbs" aria-label="Breadcrumb"><a href="#map">Map</a><span>›</span><a href="#map" data-band="' + b.id + '">' + esc(b.t) + '</a><span>›</span><b>' + esc(t.t) + '</b></nav>' + thread + '<div id="eraBanner" hidden></div><div id="chipBanner" hidden></div>';
+  $('#topicHead').innerHTML = '<nav class="crumbs" aria-label="' + t('crumb.label') + '"><a href="#map">' + t('crumb.map') + '</a><span>›</span><a href="#map" data-band="' + b.id + '">' + esc(b.t) + '</a><span>›</span><b>' + esc(tp.t) + '</b></nav>' + thread + '<div id="eraBanner" hidden></div><div id="chipBanner" hidden></div>';
   renderEraBanner(id); renderChipBanner(id); chipVisit(id);
   const labs = labsIn(id);
   const ch = CHALLENGES.filter(c => c.topic === id);
-  $('#rail').innerHTML = '<a class="back" href="#map">← Map</a>' +
-    (labs.length ? '<p class="eyebrow">Simulations here</p>' + labs.map((l, i) => '<a href="#' + l.id + '" data-lab="' + l.id + '"><span>' + (i + 1) + '</span>' + esc(l.t) + '</a>').join('') : '') +
-    (id === 'riscv' ? '<p class="eyebrow">Levels</p>' + [1, 2, 3, 4, 5, 6, 7].map(n => '<a href="#riscv-' + n + '"><span>' + n + '</span>' + esc((CHALLENGES.find(c => c.href === '#riscv-' + n) || {}).t || 'Level ' + n) + '</a>').join('') + '<a href="#riscv-sandbox"><span>∞</span>Free play</a>' : '') +
-    '<p class="eyebrow">Connected topics</p>' + linkListHTML(id);
+  $('#rail').innerHTML = '<a class="back" href="#map">' + t('rail.backMap') + '</a>' +
+    (labs.length ? '<p class="eyebrow">' + t('rail.sims') + '</p>' + labs.map((l, i) => '<a href="#' + l.id + '" data-lab="' + l.id + '"><span>' + (i + 1) + '</span>' + esc(l.t) + '</a>').join('') : '') +
+    (id === 'riscv' ? '<p class="eyebrow">' + t('rail.levels') + '</p>' + [1, 2, 3, 4, 5, 6, 7].map(n => '<a href="#riscv-' + n + '"><span>' + n + '</span>' + esc((CHALLENGES.find(c => c.href === '#riscv-' + n) || {}).t || t('rail.level', { n })) + '</a>').join('') + '<a href="#riscv-sandbox"><span>∞</span>' + t('rail.free') + '</a>' : '') +
+    '<p class="eyebrow">' + t('rail.connected') + '</p>' + linkListHTML(id);
   $('#topicFoot').innerHTML = factsHTML(id) +
-    (ch.length && id !== 'riscv' ? '<div class="hblock"><p class="code">Challenges in this topic</p><div class="chgrid">' + ch.map(c => '<a href="' + c.href + '" class="chcard"><span class="pill out">' + c.kind + '</span><b>' + esc(c.t) + '</b><small>' + esc(c.d) + '</small></a>').join('') + '</div></div>' : '') +
+    (ch.length && id !== 'riscv' ? '<div class="hblock"><p class="code">' + t('topic.challenges') + '</p><div class="chgrid">' + ch.map(c => '<a href="' + c.href + '" class="chcard"><span class="pill out">' + t('ch.kind.' + c.kind) + '</span><b>' + esc(c.t) + '</b><small>' + esc(c.d) + '</small></a>').join('') + '</div></div>' : '') +
     ideasHTML(id) + hubsHTML(id) + connectionsHTML(id) +
-    feedbackHTML(id, t.t);
+    feedbackHTML(id, tp.t);
 }
 
 /* Every topic ends with a way to correct it or improve it. The links open GitHub issue
    forms with the topic already filled in. */
 function feedbackHTML(id, title) {
-  return '<div class="feedback"><div><p class="code">Help improve this topic</p><p>Spot a mistake, or have an idea for a simulation or challenge? This project is open source and improves through feedback.</p></div><div class="row">' +
-    '<a class="btn" href="' + esc(issueURL('correction', { title: '[Correction] ' + title + ': ', topic: id })) + '" target="_blank" rel="noopener">Report a mistake</a>' +
-    '<a class="btn" href="' + esc(issueURL('idea', { title: '[Idea] ' + title + ': ', topic: id })) + '" target="_blank" rel="noopener">Suggest an idea</a></div></div>';
+  /* Issue titles stay in English: they are read by the maintainers on GitHub. */
+  return '<div class="feedback"><div><p class="code">' + t('fb.code') + '</p><p>' + t('fb.text') + '</p></div><div class="row">' +
+    '<a class="btn" href="' + esc(issueURL('correction', { title: '[Correction] ' + title + ': ', topic: id })) + '" target="_blank" rel="noopener">' + t('foot.mistake') + '</a>' +
+    '<a class="btn" href="' + esc(issueURL('idea', { title: '[Idea] ' + title + ': ', topic: id })) + '" target="_blank" rel="noopener">' + t('foot.idea') + '</a></div></div>';
 }
 
 /* Open a topic, loading it first if this is the first visit. Resolves to its lab modules. */
@@ -74,10 +77,10 @@ let navSeq = 0;   /* counts routes, so a slow load never overrides a later click
 async function showTopic(id, anchor) {
   const seq = navSeq;
   let note = 0;
-  if (!isLoaded(id)) note = setTimeout(() => { const l = $('#loading'); l.textContent = 'Loading ' + ((topicById(id) || {}).t || REF[id] || 'the topic') + '…'; l.hidden = false; }, 150);
+  if (!isLoaded(id)) note = setTimeout(() => { const l = $('#loading'); l.textContent = t('topic.loading', { name: (topicById(id) || {}).t || (REF[id] ? refName(id) : t('topic.loadingAny')) }); l.hidden = false; }, 150);
   let mods;
   try { mods = await ensureTopic(id); }
-  catch (e) { clearTimeout(note); const l = $('#loading'); l.hidden = false; l.textContent = 'This topic could not load: ' + e.message + '. Check your connection and try again.'; show('topic'); return null; }
+  catch (e) { clearTimeout(note); const l = $('#loading'); l.hidden = false; l.textContent = t('topic.failed', { error: e.message }); show('topic'); return null; }
   clearTimeout(note); $('#loading').hidden = true;
   if (seq !== navSeq) return mods;   /* the reader went somewhere else meanwhile */
   const changed = curTopic !== id || curView !== 'topic';

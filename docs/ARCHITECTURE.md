@@ -155,6 +155,29 @@ in `base.css` is used by only one topic, and says where to move it.
 
 `src/data/timeline.js` holds dated series (landmark chips, process nodes, transistor shapes, lithography, wafers, design costs, company founding years and Karl Rupp's microprocessor data) and `snapshot(year)`. Each topic's own lines are in its `topic.json` (`"time"`); `topicLine(id, year, then)` fills in values such as `{node}` from the snapshot. `src/app/era.js` keeps the site's year (per tab, today by default), adds the year button to the top bar and the banner to topic pages, and fires `osl:year` when it changes. Labs that know about time listen for that event: the map's time machine, the company explorer and the roadmap.
 
+## Words and languages
+
+Words on screen live in `src/i18n/<lang>.json`, never in code. Code names a text and asks for it with
+`t('name', { values })` from `src/core/i18n.js`; texts can hold `{names}`, plural forms
+(`{ "one": "{n} chip", "other": "{n} chips" }`), lists, and the tags `<b>`, `<em>`, `<i>`, `<br>` and
+`<a href>`. Static page text uses `data-i18n="name"` and `data-i18n-attr="aria-label:name"`. Numbers,
+lists and dates go through `fmtNum`, `fmtWords`, `fmtList` and `fmtDate`, which use the browser's
+`Intl` for the reader's language; English keeps the site's style (30 Oct 2026, "x86, Arm and RISC-V").
+The language comes from `?lang=` or the reader's last choice, and falls back to English text by text.
+
+Only English exists today. To add a language, copy `en.json` to `<lang>.json`, translate the values
+(never the names) and add it to `LANGS` in `src/core/i18n.js`. `?lang=qps` shows a pretend language
+in which every translatable text appears as `[Ŵóŕđş]`, so anything left in plain English is still
+written somewhere a translation cannot reach.
+
+`tests/i18n.test.mjs` fails if the shell's code (`src/app`, `src/labs`, `src/core`, `src/main.js`)
+contains visible English, if code names a text `en.json` lacks, if a text is unused, or if a
+translation's `{names}` differ from English. `node scripts/i18n-check.mjs <files>` lists any hits.
+
+Done in stages: the shell's interface text (done), then the shared data (bands, link kinds, hubs,
+threads) and each topic's `topic.json` text, then the simulations' own text and the content pages.
+Instructions sent to Claude by the tutor stay in English and ask it to answer in the reader's language.
+
 ## Progress and state
 
 Everything is per-browser `localStorage`: explanation level, topics visited, quiz answers, RISC-V code and stars, solved What if? puzzles. Nothing is sent anywhere. Progress is feedback, never a gate.
@@ -190,7 +213,8 @@ Steps, each a small pull request:
    trade-offs, measures, debates).
 4. **Split `base.css`.** *Done*: 239 single-topic rules moved into 18 topics' `style.css`; computed
    styles of every topic page were compared before and after, and match.
-5. **Languages.** User-facing text moves out of code: `content.<lang>.html` beside `content.html`, a
+5. **Languages.** *Started*: the shell's interface text is in `src/i18n/en.json` (see "Words and
+   languages"). Still to come: user-facing text in data and topics moves out of code: `content.<lang>.html` beside `content.html`, a
    `topic.<lang>.json` holding only the translated text fields of `topic.json`, shell text in
    `src/i18n/<lang>.json`, and the language in the URL. Simulations keep numbers and logic; only words
    are translated. Text fields in `topic.json` stay plain strings so a translation can replace them.

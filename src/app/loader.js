@@ -6,6 +6,7 @@
    ensureTopic(id) resolves to that topic's lab modules by name, e.g. mods['riscv-lab']. */
 import { TOPIC_FILES, LOADERS } from '../generated/catalog.js';
 import { prepareTopic } from './learning.js';
+import { t } from '../core/i18n.js';
 
 const REF = ['glossary', 'sources'];
 const loading = new Map();
@@ -21,7 +22,7 @@ export async function text(path) {
   const inline = window.__OSL_CONTENT__;
   if (inline && inline[path] !== undefined) return inline[path];
   const r = await fetch(path);
-  if (!r.ok) throw new Error('Could not load ' + path + ' (' + r.status + ')');
+  if (!r.ok) throw new Error(t('load.file', { path, status: r.status }));
   return r.text();
 }
 
@@ -32,7 +33,7 @@ function loadStyle(href) {
 
 async function load(id) {
   const ref = isReference(id), meta = TOPIC_FILES[id];
-  if (!ref && !meta) throw new Error('Unknown topic: ' + id);
+  if (!ref && !meta) throw new Error(t('load.unknown', { id }));
   /* The page, the topic's own data (explanations, quiz, tutor questions) and its styles, together. */
   const [html, json] = await Promise.all([
     text(ref ? 'content/' + id + '.html' : 'topics/' + id + '/content.html'),
