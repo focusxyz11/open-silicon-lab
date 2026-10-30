@@ -38,7 +38,12 @@ export const CHALLENGES = [
   { topic: 'economics', href: '#economics', kind: 'Design', t: 'Fund a chip startup', d: 'Reach first silicon with the least money and time.' },
   { topic: 'economics', href: '#whatif', kind: 'Puzzle', t: 'Follow the ripple', d: 'On the map simulator: raise phone prices with AI demand alone, and find the shortage that stops car lines but not AI.' },
   { topic: 'datacenter', href: '#whatif', kind: 'Experiment', t: 'What does power really cost AI?', d: 'Double the price of electricity on the map and see how far the cost of an AI answer moves.' },
-  { topic: 'scenarios', href: '#scenarios', kind: 'Experiment', t: 'Escape the power wall', d: 'Find settings where electricity stops limiting AI growth.' }
+  { topic: 'scenarios', href: '#scenarios', kind: 'Experiment', t: 'Escape the power wall', d: 'Find settings where electricity stops limiting AI growth.' },
+  { topic: 'reality', href: '#lab-reality-1', kind: 'Design', t: 'Ship a phone chip', d: 'Make 10 million phones work for 3 years without losing too much speed.' },
+  { topic: 'reality', href: '#lab-reality-1', kind: 'Design', t: 'Fifteen years in a car', d: 'Fewer than 50 failures per million chips, from −40 to 125 °C.' },
+  { topic: 'reality', href: '#lab-reality-1', kind: 'Design', t: 'A fleet you can trust', d: '100,000 AI chips running hot all day, with almost no silent wrong answers.' },
+  { topic: 'reality', href: '#lab-reality-1', kind: 'Design', t: 'Survive orbit', d: 'Radiation 300 times stronger and nobody to repair it.' },
+  { topic: 'reality', href: '#lab-reality-2', kind: 'Puzzle', t: 'Case files', d: 'Seven real chips that failed. Name the gap between design and reality.' }
 ];
 
 /* Open problems the whole industry is working on. No right answer is stored here: each one

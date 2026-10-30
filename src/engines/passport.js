@@ -81,6 +81,7 @@ export function chipLine(topic, p) {
     architecture: 'Your chip has ' + p.cells + ' cells. A CPU is the same kind of logic, a few million to billions of times larger.',
     supply: 'Made at ' + p.where + '. Packaging and testing often happen in another country again.',
     package: 'Community-shuttle chips come back as bare dies or small packages on a demo board; a GPU\'s package holds whole stacks of memory.',
+    reality: (p.wrong ? 'Your chip still fails ' + p.wrong + ' of its ' + p.cases + ' cases: fix that first. ' : 'Your chip is correct in all ' + p.cases + ' cases. ') + 'Each copy will still differ a little, run warm and age; at ' + p.nodeName + ' it was checked at one ideal set of conditions.',
     accelerators: 'NVIDIA Rubin has ' + big(p.vsRubin) + ' times as many transistors as your chip.'
   };
   return L[topic] || '';

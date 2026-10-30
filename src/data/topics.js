@@ -4,6 +4,7 @@
 
 /* Bands of the chip stack, from the world at the top to atoms at the bottom. */
 export const BANDS = [
+  { id: 'questions', t: 'Big questions',       d: 'Challenges beyond the technology itself' },
   { id: 'future',   t: 'Innovation & future',  d: 'What limits progress, and where it could go' },
   { id: 'next',     t: 'New ways to compute',  d: 'Memory, light, noise, qubits and neurons that compute' },
   { id: 'industry', t: 'Industry & economics', d: 'Companies, countries and money' },
@@ -49,11 +50,20 @@ export const TOPICS = [
   { id: 'spatial',      band: 'next',     kind: 'explore', t: 'Dataflow & wafer-scale',     s: 'Lay the program out across the chip and keep weights where the work happens.' },
   { id: 'innovation',   band: 'future',   kind: 'explore', t: 'Innovation map',             s: 'Which steps AI speeds up, which need invention, money or people.' },
   { id: 'future',       band: 'future',   kind: 'explore', t: 'Roadmap',                    s: 'The state of the art year by year to the 2040s, tagged by how certain it is.' },
-  { id: 'scenarios',    band: 'future',   kind: 'explore', t: 'Future scenarios',           s: 'Steer the bets that shape 2040, and see which beyond-silicon ideas are real.' }
+  { id: 'scenarios',    band: 'future',   kind: 'explore', t: 'Future scenarios',           s: 'Steer the bets that shape 2040, and see which beyond-silicon ideas are real.' },
+  { id: 'reality',      band: 'questions', kind: 'explore', t: 'Why perfect designs fail', s: 'A chip can pass every check and still fail: variation, heat, aging, defects the test missed, radiation and uses nobody planned for. Ship one to a phone, a car, a data center or a satellite.' }
 ];
 
 /* Labelled links. Read "from → to" as "from leads to / feeds / explains to". */
 export const EDGES = [
+  ['design', 'reality', 'sign-off checks one ideal chip'],
+  ['transistor', 'reality', 'transistors vary and age'],
+  ['yield', 'reality', 'defects the test missed'],
+  ['tiny', 'reality', 'test coverage and the majority voter'],
+  ['everywhere', 'reality', 'cars and satellites need parts per million'],
+  ['datacenter', 'reality', 'rare errors become daily at fleet scale'],
+  ['architecture', 'reality', 'Spectre turned a speed trick into a leak'],
+  ['reality', 'innovation', 'each failure forced a new way of checking'],
   ['physics', 'transistor', 'doping and fields make the switch'],
   ['physics', 'fab', 'implant and anneal are fab steps'],
   ['transistor', 'architecture', 'switches become logic and CPUs'],

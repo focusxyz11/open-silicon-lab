@@ -9,10 +9,12 @@ The whole chip stack *runs*, and every part is connected. Your gates become a CP
 ## Now
 
 - **My chip.** One chip that is yours, carried through every layer, with a passport of stamps. *Shipped.*
+- **Big questions: why can a perfect design fail in the real world?** A reliability stress test for four missions and seven real case files. *Shipped: `#reality`.*
 - **The map as a simulator.** Pull a lever, such as an HBM shortage, the electricity price or a delayed node, and watch the effects ripple across connected topics. *Shipped: What if? on the map (`#whatif`).*
 
 ## Next
 
+- **More big questions, beyond the technology itself.** Why can't the world just make more chips when it needs them? Who decides which chips get made? Why isn't better technology enough to win? If AI helps design chips, who builds the next ones? Can the planet afford the chips we want? Each with several viewpoints, a 2026–2040 horizon and AI as the force of change.
 - **Predict, then reveal.** Ask for a prediction before a simulation answers, across all labs.
 - **Forecasts that get scored.** Dated bets on the future, resolved by the monthly fact check.
 - **An AI that operates the lab.** The tutor sets up simulations to test your idea and explains results from real numbers.

@@ -113,6 +113,18 @@ async function check(viewport) {
   await page.evaluate(() => { location.hash = 'lab-fab-2'; }); await page.waitForTimeout(300);
   if (await page.evaluate(() => document.getElementById('fab').hidden)) problems.push(tag + 'lab anchor did not open its topic');
 
+  // Why perfect designs fail: the perfect design fails, and margin plus adaptive voltage ships the phone.
+  await page.evaluate(() => { location.hash = 'reality'; }); await page.waitForTimeout(150);
+  await page.click('#rlMission button[data-m="phone"]'); await page.click('#rlReset');
+  if (!/fail/i.test(await page.textContent('#rlTag'))) problems.push(tag + 'reality: the perfect design should fail');
+  await page.evaluate(() => { const m = document.getElementById('rlMargin'); m.value = 15; m.dispatchEvent(new Event('input')); });
+  await page.check('#rlAvs');
+  if (!/ships/i.test(await page.textContent('#rlTag'))) problems.push(tag + 'reality: margin + adaptive voltage should ship the phone');
+  await page.click('#rlReset');
+  await page.click('#rcCase [data-gap]');
+  if (!(await page.$('#rcCase .rc-reveal'))) problems.push(tag + 'reality: case files did not reveal an answer');
+  await page.evaluate(() => { try { localStorage.removeItem('osl-reality-cases-v1'); } catch (e) {} });
+
   // RISC-V: run level 1 with the right answer.
   await page.evaluate(() => { location.hash = 'riscv-1'; }); await page.waitForTimeout(200);
   await page.fill('#rvCode', 'addi a0, x0, 42\n');

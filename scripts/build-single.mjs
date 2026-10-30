@@ -13,7 +13,10 @@ const js = bin ? execFileSync(bin, args, { encoding: 'utf8', maxBuffer: 64e6 }) 
 
 const content = { 'content/zoom.html': r('content/zoom.html'), 'src/data/facts.json': r('src/data/facts.json') };
 for (const f of readdirSync(root + 'content/sections')) content['content/sections/' + f] = r('content/sections/' + f);
-const css = ['base', 'riscv', 'app'].map(n => r(`src/styles/${n}.css`)).join('\n');
+/* The three core stylesheets first, then any topic stylesheets, in name order. */
+const core = ['base', 'riscv', 'app'];
+const extra = readdirSync(root + 'src/styles').filter(f => f.endsWith('.css')).map(f => f.slice(0, -4)).filter(n => !core.includes(n)).sort();
+const css = core.concat(extra).map(n => r(`src/styles/${n}.css`)).join('\n');
 const safe = s => s.replace(/<\/(script|style)/gi, '<\\/$1');
 
 const icon = 'data:image/svg+xml;base64,' + readFileSync(root + 'assets/favicon.svg').toString('base64');
