@@ -1,0 +1,10 @@
+{
+  "id": "architecture",
+  "labs": [
+    "isa-compare",
+    "risc-v-encoder",
+    "pipeline",
+    "amdahl",
+    "memory-hierarchy"
+  ]
+}

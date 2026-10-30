@@ -5,7 +5,8 @@ import { renderEraBanner } from './era.js';
 import { renderChipBanner, renderMyChip, chipVisit } from './mychip.js';
 import { CHALLENGES } from '../data/challenges.js';
 import { redraws } from '../core/ui.js';
-import { openLevel } from '../labs/riscv-lab.js';
+import { ensureTopic, isLoaded } from './loader.js';
+import { TOPIC_FILES, ANCHORS } from '../generated/catalog.js';
 import { factsHTML } from './facts.js';
 import { markSeen, P } from './learning.js';
 import { initMap, redrawMap, setWhatif, state as mapState } from './map.js';
@@ -25,7 +26,7 @@ function show(view) {
   curView = view;
 }
 
-const labsIn = id => [...document.getElementById(id).querySelectorAll('.lab')].map(l => ({ id: l.id, t: ((l.querySelector(':scope > header b') || {}).textContent || '').trim() })).filter(l => l.t);
+const labsIn = id => (TOPIC_FILES[id] || { labs: [] }).labs;
 
 function renderChrome(id) {
   const t = topicById(id);
@@ -66,7 +67,17 @@ function feedbackHTML(id, title) {
     '<a class="btn" href="' + esc(issueURL('idea', { title: '[Idea] ' + title + ': ', topic: id })) + '" target="_blank" rel="noopener">Suggest an idea</a></div></div>';
 }
 
-function showTopic(id, anchor) {
+/* Open a topic, loading it first if this is the first visit. Resolves to its lab modules. */
+let navSeq = 0;   /* counts routes, so a slow load never overrides a later click */
+async function showTopic(id, anchor) {
+  const seq = navSeq;
+  let note = 0;
+  if (!isLoaded(id)) note = setTimeout(() => { const l = $('#loading'); l.textContent = 'Loading ' + ((topicById(id) || {}).t || REF[id] || 'the topic') + '…'; l.hidden = false; }, 150);
+  let mods;
+  try { mods = await ensureTopic(id); }
+  catch (e) { clearTimeout(note); const l = $('#loading'); l.hidden = false; l.textContent = 'This topic could not load: ' + e.message + '. Check your connection and try again.'; show('topic'); return null; }
+  clearTimeout(note); $('#loading').hidden = true;
+  if (seq !== navSeq) return mods;   /* the reader went somewhere else meanwhile */
   const changed = curTopic !== id || curView !== 'topic';
   if (changed) {
     curTopic = id;
@@ -76,11 +87,13 @@ function showTopic(id, anchor) {
     requestAnimationFrame(() => redraws.forEach(f => { try { f(); } catch (e) { /* a lab redraw failed */ } }));
   }
   document.querySelectorAll('#rail a').forEach(a => a.classList.toggle('on', !!anchor && a.getAttribute('href') === '#' + anchor));
-  if (anchor) { const el = document.getElementById(anchor); if (el) { requestAnimationFrame(() => el.scrollIntoView({ block: 'start', behavior: changed ? 'instant' : 'smooth' })); return; } }
+  if (anchor) { const el = document.getElementById(anchor); if (el) { requestAnimationFrame(() => el.scrollIntoView({ block: 'start', behavior: changed ? 'instant' : 'smooth' })); return mods; } }
   if (changed) scrollTo({ top: 0, behavior: 'instant' });
+  return mods;
 }
 
 function route() {
+  navSeq++;
   const h = decodeURIComponent(location.hash.slice(1));
   document.dispatchEvent(new CustomEvent('osl:route', { detail: h }));
   if (!h || h === 'map') { show('map'); curTopic = null; redrawMap(); return; }
@@ -90,10 +103,15 @@ function route() {
   if (h === 'mychip') { renderMyChip(); show('mychip'); scrollTo({ top: 0, behavior: 'instant' }); return; }
   if (h === 'knowledge') { renderKnowledge(); show('knowledge'); scrollTo({ top: 0, behavior: 'instant' }); return; }
   const rv = /^riscv-(\d+|sandbox)$/.exec(h);
-  if (rv) { const wasRv = curTopic === 'riscv' && curView === 'topic'; showTopic('riscv', wasRv ? null : 'rvLevels'); openLevel(rv[1] === 'sandbox' ? 0 : +rv[1]); document.querySelectorAll('#rail a').forEach(a => a.classList.toggle('on', a.getAttribute('href') === '#' + h)); return; }
+  if (rv) {
+    const wasRv = curTopic === 'riscv' && curView === 'topic';
+    showTopic('riscv', wasRv ? null : 'rvLevels').then(mods => { const lab = mods && mods['riscv-lab']; if (lab) lab.openLevel(rv[1] === 'sandbox' ? 0 : +rv[1]); document.querySelectorAll('#rail a').forEach(a => a.classList.toggle('on', a.getAttribute('href') === '#' + h)); });
+    return;
+  }
   if (topicById(h) || REF[h]) { showTopic(h, null); return; }
-  const el = document.getElementById(h); const sec = el && el.closest('#library > section');
-  if (sec) { showTopic(sec.id, h); return; }
+  /* Any element inside a topic, such as a simulation (#lab-litho-2): open that topic, then scroll. */
+  if (ANCHORS[h]) { showTopic(ANCHORS[h], h); return; }
+  const el = document.getElementById(h);
   show('map'); redrawMap();
   /* An anchor on the map page itself, such as the time machine. */
   if (el && el.closest('#view-map')) requestAnimationFrame(() => el.scrollIntoView({ block: 'start' }));

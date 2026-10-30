@@ -1,0 +1,11 @@
+{
+  "id": "fab",
+  "labs": [
+    "fab-loop",
+    "cleanroom",
+    "ald-vs-cvd",
+    "etch",
+    "overlay",
+    "inspection"
+  ]
+}

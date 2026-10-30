@@ -1,0 +1,7 @@
+{
+  "id": "supply",
+  "labs": [
+    "supply-chain-map",
+    "disruption-simulator"
+  ]
+}

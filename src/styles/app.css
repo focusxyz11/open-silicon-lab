@@ -1,7 +1,7 @@
 /* Open Silicon Lab: the app shell, the chip stack map, the topic chrome and the three index views.
-   Lab styles live in base.css; the RISC-V lab in riscv.css. */
+   Lab styles live in base.css; topics with their own styles keep them in topics/<id>/style.css. */
 :root{
-  /* riscv.css was written with its own names; map them onto the shared palette. */
+  /* topics/riscv/style.css was written with its own names; map them onto the shared palette. */
   --panel:var(--surface); --copper:var(--amber); --copper-soft:var(--amber-fill); --gold:var(--amber);
   --oxide:var(--cyan); --oxide-soft:var(--cyan-fill);
   --band0:var(--amber); --band1:var(--cyan); --band2:var(--violet); --band3:var(--good); --band4:var(--rose);

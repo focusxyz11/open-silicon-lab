@@ -1,6 +1,7 @@
 /* The chip stack map: the home view. Every topic sits in its layer of the stack, and the
    knowledge graph draws the wires between them. Select a topic to see what it holds and
    what it connects to; pick a thread to light up a suggested route. Nothing is locked. */
+import { TOPIC_FILES } from '../generated/catalog.js';
 import { BANDS, TOPICS, EDGES, THREADS, topicById, bandById, edgesOf } from '../data/topics.js';
 import { CHALLENGES } from '../data/challenges.js';
 import { GL } from '../data/learning.js';
@@ -65,7 +66,8 @@ export function renderMapShell(zoomHTML) {
 }
 
 /* ---- data the map shows about each topic ---- */
-function labsOf(id) { const s = document.getElementById(id); return s ? [...s.querySelectorAll('.lab')].map(l => ({ id: l.id, t: (l.querySelector(':scope > header b') || {}).textContent || '' })).filter(x => x.t) : []; }
+/* What a topic holds comes from the catalog, so the map works before any topic is loaded. */
+const labsOf = id => (TOPIC_FILES[id] || { labs: [] }).labs;
 const challengesOf = id => CHALLENGES.filter(c => c.topic === id);
 
 function nodeHTML(t) {

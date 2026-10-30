@@ -1,0 +1,10 @@
+{
+  "id": "design",
+  "labs": [
+    "design-flow",
+    "full-adder",
+    "timing",
+    "power",
+    "coverage"
+  ]
+}

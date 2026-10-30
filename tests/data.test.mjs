@@ -15,7 +15,7 @@ test('every topic has a band and a content file', () => {
   const bands = new Set(BANDS.map(b => b.id));
   for (const t of TOPICS) {
     assert.ok(bands.has(t.band), t.id + ' band');
-    const f = new URL('content/sections/' + t.id + '.html', root);
+    const f = new URL('topics/' + t.id + '/content.html', root);
     assert.ok(existsSync(f), t.id + ' content file');
     assert.match(readFileSync(f, 'utf8'), new RegExp('<section id="' + t.id + '"'), t.id + ' section id');
   }

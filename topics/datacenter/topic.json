@@ -1,0 +1,9 @@
+{
+  "id": "datacenter",
+  "labs": [
+    "memory-cell-lab",
+    "hbm-stack-builder",
+    "cluster-network",
+    "energy-per-token"
+  ]
+}

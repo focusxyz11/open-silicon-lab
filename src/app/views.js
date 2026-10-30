@@ -4,14 +4,15 @@ import { BANDS, TOPICS, topicById, bandById } from '../data/topics.js';
 import { CHALLENGES, PROBLEMS } from '../data/challenges.js';
 import { CARDS, TH } from '../data/cards.js';
 import { FACTS, fmtDate, changesHTML } from './facts.js';
-import { levelStars, riscvStars } from '../labs/riscv-lab.js';
+import { levelStars, riscvStars } from './progress.js';
+import { TOPIC_FILES } from '../generated/catalog.js';
 import { P } from './learning.js';
 
 const $ = s => document.querySelector(s);
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const safeUrl = u => /^https:\/\/[^\s"'<>]+$/.test(String(u || '')) ? String(u) : '';
 const tName = id => (topicById(id) || { t: id }).t;
-const labsIn = id => { const s = document.getElementById(id); return s ? [...s.querySelectorAll('.lab')].map(l => ({ id: l.id, t: ((l.querySelector(':scope > header b') || {}).textContent || '').trim() })).filter(l => l.t) : []; };
+const labsIn = id => (TOPIC_FILES[id] || { labs: [] }).labs;
 const stars = n => '<span class="stars"><span>' + '★'.repeat(n) + '</span><span class="off">' + '★'.repeat(3 - n) + '</span></span>';
 
 /* ---------------- Workshop ---------------- */

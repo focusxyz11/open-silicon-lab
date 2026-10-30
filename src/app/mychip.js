@@ -4,6 +4,7 @@
 import TC from '../engines/tinychip.js';
 import { passport, journey, chipLine, NODES } from '../engines/passport.js';
 import { topicById } from '../data/topics.js';
+import { openStudio, setStudioNode } from './studio.js';
 
 const KEY = 'osl-mychip-v1', TKEY = 'sjl-tiny-v1';
 const $ = s => document.querySelector(s);
@@ -113,13 +114,13 @@ export function renderMyChip() {
   const nm = $('#mcName'); nm.addEventListener('input', () => { M.name = nm.value; save(); cache.key = null; const c = $('#mcCard'); if (c) drawCard(c, currentChip(), design()); });
   if (!p.ok) return;
   drawCard($('#mcCard'), p, d);
-  $('#mcNode').addEventListener('click', e => { const b = e.target.closest('[data-n]'); if (b) document.dispatchEvent(new CustomEvent('osl:tiny-set', { detail: { node: b.dataset.n } })); });
+  $('#mcNode').addEventListener('click', e => { const b = e.target.closest('[data-n]'); if (b) setStudioNode(b.dataset.n); });
   $('#mcShow').addEventListener('change', e => { M.show = e.target.checked; save(); });
   $('#mcDl').addEventListener('click', () => { const c = $('#mcCard'); const msg = t => { $('#mcMsg').textContent = t; }; try { c.toBlob(b => { if (!b) { msg('This page cannot download files here.'); return; } const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = (currentChip().name || 'my-chip').toLowerCase().replace(/[^a-z0-9]+/g, '-') + '.png'; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500); msg('Downloaded.'); }); } catch (e) { msg('This page cannot download files here.'); } });
 }
 
 export function initMyChip() {
-  document.addEventListener('click', e => { const b = e.target.closest('[data-start]'); if (b) { document.dispatchEvent(new CustomEvent('osl:tiny-open', { detail: { id: b.dataset.start, step: 1 } })); location.hash = 'lab-tiny-1'; } });
+  document.addEventListener('click', e => { const b = e.target.closest('[data-start]'); if (b) { openStudio(b.dataset.start, 1); location.hash = 'lab-tiny-1'; } });
   const refresh = () => { const bx = document.getElementById('chipBanner'); if (bx && bx.dataset.topic) renderChipBanner(bx.dataset.topic); const v = $('#view-mychip'); if (v && !v.hidden && document.activeElement !== $('#mcName')) renderMyChip(); };
   document.addEventListener('osl:chip', refresh);
   document.addEventListener('osl:chip-stamp', refresh);
