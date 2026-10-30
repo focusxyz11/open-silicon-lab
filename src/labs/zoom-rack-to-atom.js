@@ -1,18 +1,20 @@
 /* Lab: rack to atom */
 import {$,clamp,RM,rng,T,redraws,fit,watch,rgba,shade,fmtLen,fmtNum,inView,fr,hexRGB,gauss,big,LIMC} from '../core/ui.js';
+import { t as tx } from '../core/i18n.js';
 export function init(){
 (function zoom(){
 const cv=$('#zoomCv');
+/* The nine levels; their names and descriptions are zoom.<n>.name / .d in src/i18n. */
 const L=[
- {name:'AI rack',size:2.4,T:[0,0],d:'A rack-scale AI system in the class of NVIDIA\'s Vera Rubin NVL72: 72 GPUs and 36 CPUs on trays, cabled so they behave like one giant computer. Liquid cooling pipes run down each side. Shipping from the second half of 2026.'},
- {name:'Compute tray',size:0.6,T:[0,0],d:'One slide-out tray seen from above. GPU packages, a CPU, its memory, power stages and connectors sit on a circuit board under liquid-cooled cold plates.'},
- {name:'GPU package',size:0.12,T:[0.22,0],d:'Two reticle-size compute dies sit side by side on a silicon interposer, flanked by eight HBM4 memory stacks. The whole package holds 336 billion transistors and 288 GB of memory.'},
- {name:'Compute die',size:0.04,T:[0.07,-0.38],d:'One die is about 26 × 33 mm, the largest area a scanner can print in one exposure. It is tiled with identical processor blocks (streaming multiprocessors) around a shared cache band.'},
- {name:'Streaming multiprocessor',size:0.0028,T:[-0.3,-0.65],d:'One processor block, about 3 mm across. Amber blocks are tensor cores, the matrix engines that do almost all AI math. Cyan banks are register files; the violet band is fast on-chip SRAM.'},
- {name:'Standard-cell rows',size:20e-6,T:[0,0.01],d:'Logic is laid out as rows of standard cells, each a pre-designed gate such as NAND or a flip-flop. The colored lines are copper wires on stacked metal layers that connect them.'},
- {name:'One logic cell',size:1e-6,T:[0,0.085],d:'A cell as a layout engineer sees it. Red vertical lines are gates about 48 nm apart. Green strips are transistor channels (p-type above, n-type below). Grey rails carry power.'},
- {name:'Nanosheet transistor',size:60e-9,T:[0,0],d:'A cut through one gate-all-around transistor: three silicon nanosheets, each about 5 nm thick, fully wrapped by the gate metal (amber) and a thin insulator (violet). Electrons flow from source to drain when the gate is on.'},
- {name:'Silicon atoms',size:3e-9,T:null,d:'The channel is a silicon crystal with atoms 0.235 nm apart. A 5 nm nanosheet is only about 20 atoms thick, which is why further shrinking is so hard and new materials are being studied.'}
+ {n:1,size:2.4,T:[0,0],get name(){return tx('zoom.1.name');},get d(){return tx('zoom.1.d');}},
+ {n:2,size:0.6,T:[0,0],get name(){return tx('zoom.2.name');},get d(){return tx('zoom.2.d');}},
+ {n:3,size:0.12,T:[0.22,0],get name(){return tx('zoom.3.name');},get d(){return tx('zoom.3.d');}},
+ {n:4,size:0.04,T:[0.07,-0.38],get name(){return tx('zoom.4.name');},get d(){return tx('zoom.4.d');}},
+ {n:5,size:0.0028,T:[-0.3,-0.65],get name(){return tx('zoom.5.name');},get d(){return tx('zoom.5.d');}},
+ {n:6,size:20e-6,T:[0,0.01],get name(){return tx('zoom.6.name');},get d(){return tx('zoom.6.d');}},
+ {n:7,size:1e-6,T:[0,0.085],get name(){return tx('zoom.7.name');},get d(){return tx('zoom.7.d');}},
+ {n:8,size:60e-9,T:[0,0],get name(){return tx('zoom.8.name');},get d(){return tx('zoom.8.d');}},
+ {n:9,size:3e-9,T:null,get name(){return tx('zoom.9.name');},get d(){return tx('zoom.9.d');}}
 ];
 const N=L.length;
 // precomputed geometry
@@ -161,7 +163,7 @@ function hud(){
  const fov=L[i].size/s;
  $('#zFov').textContent=fmtLen(fov);
  const near=Math.round(t);
- if(near!==lastIdx){lastIdx=near;$('#zName').textContent=L[near].name;$('#zIdx').textContent='Level '+(near+1)+' of '+N;$('#zDesc').textContent=L[near].d;[...lv.children].forEach((b,k)=>b.setAttribute('aria-current',k===near?'true':'false'));}
+ if(near!==lastIdx){lastIdx=near;$('#zName').textContent=L[near].name;$('#zIdx').textContent=tx('zoom.level',{n:near+1,total:N});$('#zDesc').textContent=L[near].d;[...lv.children].forEach((b,k)=>b.setAttribute('aria-current',k===near?'true':'false'));}
  // scale bar
  const w=cv.getBoundingClientRect().width,h=cv.getBoundingClientRect().height;const U=Math.min(w,h)/2*0.92;const mPerPx=fov/(2*U);
  const target=mPerPx*90;const p=Math.pow(10,Math.floor(Math.log10(target)));let nice=p;for(const m of [1,2,5])if(m*p<=target)nice=m*p;
@@ -188,7 +190,7 @@ function draw(time){
  if(i>0){c.save();c.setTransform(d,0,0,d,0,0);c.strokeStyle='rgba(240,177,60,0.35)';c.lineWidth=1;c.strokeRect(w/2-U*s*1+0.5,h/2-U*s*1+0.5,2*U*s-1,2*U*s-1);c.restore();}
  hud();
 }
-function setPlay(){$('#zPlay').textContent=playing?'Pause':(t>=N-1-1e-3?'Zoom again':'Zoom in');}
+function setPlay(){$('#zPlay').textContent=playing?tx('zoom.pause'):(t>=N-1-1e-3?tx('zoom.again'):tx('zoom.in'));}
 $('#zPlay').addEventListener('click',()=>{if(!playing&&t>=N-1-1e-3)t=0;playing=!playing;goal=null;setPlay();});
 $('#zBack').addEventListener('click',()=>{playing=false;goal=0;setPlay();});
 range.addEventListener('input',()=>{playing=false;goal=null;t=range.value/100;setPlay();});

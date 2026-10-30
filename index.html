@@ -27,16 +27,16 @@
 <header class="topbar">
   <div class="in">
     <a class="brand" href="#map">Open <span>Silicon</span> Lab</a>
-    <nav class="tabs" id="nav" aria-label="Main">
-      <a href="#map" data-v="map">Map</a>
-      <a href="#workshop" data-v="workshop">Workshop</a>
-      <a href="#challenges" data-v="challenges">Challenges</a>
-      <a href="#knowledge" data-v="knowledge">Knowledge</a>
-      <a href="#mychip" data-v="mychip">My chip</a>
+    <nav class="tabs" id="nav" data-i18n-attr="aria-label:nav.label">
+      <a href="#map" data-v="map" data-i18n="nav.map"></a>
+      <a href="#workshop" data-v="workshop" data-i18n="nav.workshop"></a>
+      <a href="#challenges" data-v="challenges" data-i18n="nav.challenges"></a>
+      <a href="#knowledge" data-v="knowledge" data-i18n="nav.knowledge"></a>
+      <a href="#mychip" data-v="mychip" data-i18n="nav.mychip"></a>
     </nav>
     <div class="tools">
-      <div class="modeseg" role="group" aria-label="Explanation level"><button type="button" data-m="beginner">Beginner</button><button type="button" data-m="engineer">Engineer</button></div>
-      <a class="prog" href="#map" id="progTop" aria-label="Topics explored"><i></i><span>0/31 explored</span></a>
+      <div class="modeseg" role="group" data-i18n-attr="aria-label:mode.label"><button type="button" data-m="beginner" data-i18n="mode.beginner"></button><button type="button" data-m="engineer" data-i18n="mode.engineer"></button></div>
+      <a class="prog" href="#map" id="progTop" data-i18n-attr="aria-label:progress.label"><i></i><span></span></a>
     </div>
   </div>
 </header>
@@ -44,10 +44,10 @@
 <div class="view" id="view-map"></div>
 
 <div class="wrap layout view" id="view-topic" hidden>
-  <nav class="rail" id="rail" aria-label="In this topic"></nav>
+  <nav class="rail" id="rail" data-i18n-attr="aria-label:topic.railLabel"></nav>
   <main id="library">
     <div class="tophead" id="topicHead"></div>
-    <p class="loading" id="loading">Loading the lab…</p>
+    <p class="loading" id="loading">Loading the lab…</p><!-- shown before the texts load; replaced by boot.loading -->
   </main>
 </div>
 
@@ -60,15 +60,15 @@
   <div class="wrap">
     <div>
       <p class="brand">Open <span>Silicon</span> Lab</p>
-      <p class="small">An open-source project under the MIT License. <b>Made with AI:</b> the text, simulations and code were written with Claude, an AI model, from public sources, and are checked by tests. Every simulation is a simplified teaching model. Review by chip experts is just beginning, so corrections are especially welcome.</p>
+      <p class="small" data-i18n="foot.about"></p>
     </div>
-    <nav class="footlinks" aria-label="Feedback and project">
-      <a data-issue="correction" href="#">Report a mistake</a>
-      <a data-issue="idea" href="#">Suggest an idea</a>
-      <a data-issue="bug" href="#">Something broken?</a>
-      <a data-repo="" href="#">Source code on GitHub</a>
-      <a href="#map" data-guide-start>30-second tour</a>
-      <a href="#sources">Sources</a>
+    <nav class="footlinks" data-i18n-attr="aria-label:foot.label">
+      <a data-issue="correction" href="#" data-i18n="foot.mistake"></a>
+      <a data-issue="idea" href="#" data-i18n="foot.idea"></a>
+      <a data-issue="bug" href="#" data-i18n="foot.bug"></a>
+      <a data-repo="" href="#" data-i18n="foot.source"></a>
+      <a href="#map" data-guide-start data-i18n="foot.tour"></a>
+      <a href="#sources" data-i18n="foot.sources"></a>
     </nav>
   </div>
 </footer>

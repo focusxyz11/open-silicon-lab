@@ -3,6 +3,7 @@
    for this browser tab only, so a returning visitor always starts in the present. */
 import { NOW, MIN, MAX, snapshot, topicLine, words } from '../data/timeline.js';
 import { topicData } from './loader.js';
+import { t } from '../core/i18n.js';
 
 const KEY = 'osl-year-v1';
 let year = NOW;
@@ -20,7 +21,7 @@ export function setYear(y) {
 
 const $ = s => document.querySelector(s);
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-export const kindPill = k => k === 'proj' ? '<span class="pill proj">Projection</span>' : k === 'plan' ? '<span class="pill ann">Company plan</span>' : k === 'trend' ? '<span class="pill out">Trend line</span>' : '<span class="pill ship">History</span>';
+export const kindPill = k => k === 'proj' ? '<span class="pill proj">' + t('era.proj') + '</span>' : k === 'plan' ? '<span class="pill ann">' + t('era.plan') + '</span>' : k === 'trend' ? '<span class="pill out">' + t('era.trend') + '</span>' : '<span class="pill ship">' + t('era.history') + '</span>';
 
 /* The banner at the top of a topic page when the site is set to another year. */
 export function renderEraBanner(id) {
@@ -30,36 +31,36 @@ export function renderEraBanner(id) {
   const s = snapshot(year);
   box.hidden = false;
   box.className = 'erabanner' + (s.proj ? ' future' : '');
-  box.innerHTML = '<div><p class="code">Time machine · ' + s.y + (s.proj ? ' · projection' : '') + '</p><p><b>' + esc(s.era.t) + '.</b> ' + esc(topicLine(id, s.y, (topicData(id).time || {}).then)) + '</p></div><div class="row"><button type="button" class="btn" data-era-open>Change year</button><button type="button" class="btn primary" data-era-now>Back to ' + NOW + '</button></div>';
+  box.innerHTML = '<div><p class="code">' + t(s.proj ? 'era.codeProj' : 'era.code', { year: s.y }) + '</p><p><b>' + esc(s.era.t) + '.</b> ' + esc(topicLine(id, s.y, (topicData(id).time || {}).then)) + '</p></div><div class="row"><button type="button" class="btn" data-era-open>' + t('era.change') + '</button><button type="button" class="btn primary" data-era-now>' + t('era.back', { year: NOW }) + '</button></div>';
 }
 
 /* The year button in the top bar, with a small pop-over slider. */
 function popHTML() {
-  return '<div class="yphead"><b>Time machine</b><button type="button" class="btn" data-era-close aria-label="Close">×</button></div>' +
-    '<div class="ctl"><label for="ypR">Year <output id="ypO"></output></label><input type="range" id="ypR" min="' + MIN + '" max="' + MAX + '" step="1"></div>' +
-    '<div class="seg" id="ypJump">' + [1971, 1985, 2000, 2012, NOW, 2035].map(y => '<button type="button" data-y="' + y + '">' + (y === NOW ? 'Today' : y) + '</button>').join('') + '</div>' +
-    '<div class="ypsnap" id="ypSnap"></div><a href="#map" data-era-map class="small">Open the full time machine on the map →</a>';
+  return '<div class="yphead"><b>' + t('era.title') + '</b><button type="button" class="btn" data-era-close aria-label="' + t('era.close') + '">×</button></div>' +
+    '<div class="ctl"><label for="ypR">' + t('era.year') + ' <output id="ypO"></output></label><input type="range" id="ypR" min="' + MIN + '" max="' + MAX + '" step="1"></div>' +
+    '<div class="seg" id="ypJump">' + [1971, 1985, 2000, 2012, NOW, 2035].map(y => '<button type="button" data-y="' + y + '">' + (y === NOW ? t('era.today') : y) + '</button>').join('') + '</div>' +
+    '<div class="ypsnap" id="ypSnap"></div><a href="#map" data-era-map class="small">' + t('era.full') + '</a>';
 }
 function renderTop() {
   const b = $('#yearBtn'); if (!b) return;
-  b.querySelector('b').textContent = isNow() ? 'Today' : year;
+  b.querySelector('b').textContent = isNow() ? t('era.today') : year;
   b.classList.toggle('away', !isNow());
-  b.setAttribute('aria-label', 'Time machine: the site shows ' + (isNow() ? 'today, ' + NOW : 'the year ' + year));
+  b.setAttribute('aria-label', isNow() ? t('era.labelNow', { year: NOW }) : t('era.labelYear', { year }));
   document.documentElement.dataset.era = isNow() ? 'now' : year > NOW ? 'future' : 'past';
   const pop = $('#yearPop'); if (!pop || pop.hidden) return;
   const s = snapshot(year);
   $('#ypR').value = year; $('#ypO').textContent = year;
   $('#ypJump').querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', +x.dataset.y === year));
-  $('#ypSnap').innerHTML = '<p><b>' + esc(s.era.t) + '</b></p><p class="small">Biggest chip: ' + esc(s.biggest.name) + ', ' + words(s.flagship) + ' transistors' + (s.proj ? ' (trend line)' : '') + '. Leading-edge process: ' + esc(s.node.t) + '.</p>';
+  $('#ypSnap').innerHTML = '<p><b>' + esc(s.era.t) + '</b></p><p class="small">' + esc(t(s.proj ? 'era.snapProj' : 'era.snap', { chip: s.biggest.name, count: words(s.flagship), node: s.node.t })) + '</p>';
 }
 
 export function initEra() {
   const tools = document.querySelector('.topbar .tools');
   if (tools && !$('#yearBtn')) {
     const b = document.createElement('button'); b.type = 'button'; b.id = 'yearBtn'; b.className = 'yearbtn'; b.setAttribute('aria-expanded', 'false'); b.setAttribute('aria-controls', 'yearPop');
-    b.innerHTML = '<span aria-hidden="true">◷</span><b>Today</b>';
+    b.innerHTML = '<span aria-hidden="true">◷</span><b>' + t('era.today') + '</b>';
     tools.insertBefore(b, tools.firstChild);
-    const pop = document.createElement('div'); pop.id = 'yearPop'; pop.className = 'yearpop'; pop.hidden = true; pop.setAttribute('role', 'dialog'); pop.setAttribute('aria-label', 'Time machine');
+    const pop = document.createElement('div'); pop.id = 'yearPop'; pop.className = 'yearpop'; pop.hidden = true; pop.setAttribute('role', 'dialog'); pop.setAttribute('aria-label', t('era.title'));
     pop.innerHTML = popHTML(); document.body.appendChild(pop);
     const open = on => { pop.hidden = !on; b.setAttribute('aria-expanded', on); if (on) { renderTop(); $('#ypR').focus(); } };
     b.addEventListener('click', () => open(pop.hidden));

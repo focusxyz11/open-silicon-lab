@@ -5,6 +5,7 @@ import { $, RM, T, fit, watch, rgba } from '../core/ui.js';
 import { NOW, MIN, MAX, RUPP, CHIPS, snapshot, words, trendTransistors } from '../data/timeline.js';
 import { getYear, setYear, kindPill } from '../app/era.js';
 import { topicById } from '../data/topics.js';
+import { t, fmtList } from '../core/i18n.js';
 
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
@@ -15,11 +16,11 @@ export function init() {
   let playT = 0;
   R.addEventListener('input', () => { stop(); setYear(R.value); });
   $('#tmJump').addEventListener('click', e => { const b = e.target.closest('[data-y]'); if (b) { stop(); setYear(b.dataset.y); } });
-  const stop = () => { clearInterval(playT); playT = 0; $('#tmPlay').textContent = '▶ Play history'; };
+  const stop = () => { clearInterval(playT); playT = 0; $('#tmPlay').textContent = t('tm.play'); };
   $('#tmPlay').addEventListener('click', () => {
     if (playT) { stop(); return; }
     if (getYear() >= NOW) setYear(MIN);
-    $('#tmPlay').textContent = '❚❚ Pause';
+    $('#tmPlay').textContent = t('tm.pause');
     playT = setInterval(() => { const y = getYear(); if (y >= NOW) { stop(); return; } setYear(y + 1); }, RM ? 400 : 160);
   });
   document.addEventListener('osl:year', draw);
@@ -32,15 +33,15 @@ export function init() {
     $('#tmJump').querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', +b.dataset.y === y));
     const missing = s.missing.map(id => (topicById(id) || { t: id }).t);
     $('#tmCards').innerHTML =
-      card(s.proj ? 'Biggest chip, if the trend holds' : 'Biggest chip so far', words(s.flagship) + ' transistors', s.proj ? 'Today\'s AI-chip trend: twice the transistors every 2.25 years' : esc(s.biggest.name) + ' (' + s.biggest.year + ')', s.proj ? 'trend' : 'ship') +
-      card('Landmark chip', esc(s.chip.name), s.chip.year + ' · ' + words(s.chip.tr) + ' transistors · ' + esc(s.chip.node) + '. ' + esc(s.chip.why), null) +
-      card('Leading-edge process', esc(s.node.t), 'Node names stopped matching any real length in the 2000s.', s.node.kind) +
-      card('Transistor shape', esc(s.shape.t.split(':')[0]), esc(s.shape.t.split(':').slice(1).join(':').trim()), s.shape.kind) +
-      card('Printing light', esc(s.litho.t), '', s.litho.kind) +
-      card('Wafer size, newest fabs', esc(s.wafer), y > NOW ? '450 mm wafers were tried and shelved in the 2010s.' : '', y > NOW ? 'proj' : null) +
-      card('Cost to design a leading-edge chip', s.cost ? '$' + s.cost.m + ' million' : 'Not in the series', s.cost ? s.cost.node + ', IBS estimate' + (y > 2025 ? '; still rising' : '') : 'The IBS series starts with 28 nm in 2011.', s.cost ? 'ship' : null) +
-      card('Today\'s key companies that exist', s.companies.n + ' of ' + s.companies.total, y < NOW ? 'See which in The ecosystem' : 'Plus companies not yet founded', null) +
-      (missing.length ? card('Topics on the map not invented yet', esc(missing.join(', ')), 'They are dimmed on the map below.', null) : '');
+      card(t(s.proj ? 'tm.bigTrend' : 'tm.big'), esc(t('tm.count', { n: words(s.flagship) })), s.proj ? esc(t('tm.trendNote')) : esc(s.biggest.name) + ' (' + s.biggest.year + ')', s.proj ? 'trend' : 'ship') +
+      card(t('tm.landmarkCard'), esc(s.chip.name), esc(t('tm.landmarkSub', { year: s.chip.year, n: words(s.chip.tr), node: s.chip.node, why: s.chip.why })), null) +
+      card(t('tm.process'), esc(s.node.t), esc(t('tm.nodeNote')), s.node.kind) +
+      card(t('tm.shape'), esc(s.shape.t.split(':')[0]), esc(s.shape.t.split(':').slice(1).join(':').trim()), s.shape.kind) +
+      card(t('tm.light'), esc(s.litho.t), '', s.litho.kind) +
+      card(t('tm.wafer'), esc(s.wafer), y > NOW ? esc(t('tm.waferNote')) : '', y > NOW ? 'proj' : null) +
+      card(t('tm.cost'), s.cost ? esc(t('tm.costValue', { n: s.cost.m })) : t('tm.costNone'), s.cost ? esc(t(y > 2025 ? 'tm.costRising' : 'tm.costSub', { node: s.cost.node })) : esc(t('tm.costStart')), s.cost ? 'ship' : null) +
+      card(t('tm.companies'), t('tm.companiesValue', { n: s.companies.n, total: s.companies.total }), t(y < NOW ? 'tm.companiesPast' : 'tm.companiesFuture'), null) +
+      (missing.length ? card(t('tm.missing'), esc(fmtList(missing)), t('tm.missingNote'), null) : '');
     drawChart();
   }
   function drawChart() {
@@ -70,7 +71,7 @@ export function init() {
     c.fillStyle = T.amber; c.beginPath(); c.arc(xx, yy, 5.5, 0, 7); c.fill(); c.strokeStyle = T.surface; c.lineWidth = 2; c.stroke();
     const lab = words(s.flagship); c.font = '600 12px IBM Plex Mono, monospace'; c.fillStyle = T.ink;
     c.textAlign = xx > w * 0.7 ? 'right' : 'left'; c.textBaseline = 'middle'; c.fillText(lab, xx + (xx > w * 0.7 ? -10 : 10), Math.max(Tp + 8, yy - 14));
-    c.font = '11px IBM Plex Sans, sans-serif'; c.fillStyle = T.muted; c.textAlign = 'left'; c.textBaseline = 'top'; c.fillText('Transistors per chip (log scale)', L + 6, Tp + 4);
+    c.font = '11px IBM Plex Sans, sans-serif'; c.fillStyle = T.muted; c.textAlign = 'left'; c.textBaseline = 'top'; c.fillText(t('tm.axis'), L + 6, Tp + 4);
   }
   watch(cv, drawChart);
   draw();

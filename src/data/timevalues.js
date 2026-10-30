@@ -6,6 +6,8 @@
      }
    A line can name a value in braces, such as "Newest fabs process {wafer} wafers on a {node} process.",
    and the time machine fills it in for the chosen year. Only the names below are allowed. */
+import { fmtWords, fmtList } from '../core/i18n.js';
+
 export const TIME_VALUES = {
   year: 'the chosen year',
   wafer: 'the wafer size in the newest fabs',
@@ -22,13 +24,8 @@ export const TIME_VALUES = {
   costNode: 'the node that design cost is for'
 };
 
-/* Words for big numbers: 2,300 · 1.2 million · 336 billion · 25 trillion. */
-export function words(n) {
-  if (n >= 1e12) return (+(n / 1e12).toPrecision(2)) + ' trillion';
-  if (n >= 1e9) return (+(n / 1e9).toPrecision(3)) + ' billion';
-  if (n >= 1e6) return (+(n / 1e6).toPrecision(3)) + ' million';
-  return Math.round(n).toLocaleString('en-US');
-}
+/* Words for big numbers in the reader's language: 2,300 · 1.21 million · 336 billion. */
+export const words = fmtWords;
 
 const ISA = [[1978, 'x86'], [1985, 'Arm'], [2010, 'RISC-V']];
 /* The value of each name for one snapshot of the timeline. */
@@ -39,7 +36,7 @@ export function timeValues(s) {
     shape: s.shape.t + proj(s.shape.kind), shapeName: s.shape.t.split(':')[0],
     litho: s.litho.t + proj(s.litho.kind),
     biggest: s.biggest.name, biggestTr: words(s.biggest.tr),
-    isa: ISA.filter(x => x[0] <= s.y).map(x => x[1]).join(', '),
+    isa: fmtList(ISA.filter(x => x[0] <= s.y).map(x => x[1])),
     companies: String(s.companies.n), companiesTotal: String(s.companies.total),
     designCost: s.cost ? String(s.cost.m) : '', costNode: s.cost ? s.cost.node : ''
   };

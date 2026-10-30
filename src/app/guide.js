@@ -3,6 +3,7 @@
    challenge to start with. It opens once, on a first visit to the map; "Take the 30-second
    tour" replays it. Skippable at every step (Esc), and it never opens over a shared deep link. */
 import { state as mapState, redrawMap } from './map.js';
+import { t } from '../core/i18n.js';
 
 const KEY = 'osl-guide-v1';
 const $ = s => document.querySelector(s);
@@ -10,22 +11,17 @@ const reduce = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 const seen = () => { try { return localStorage.getItem(KEY) === 'done'; } catch (e) { return false; } };
 const remember = () => { try { localStorage.setItem(KEY, 'done'); } catch (e) { /* storage unavailable: it simply may show again */ } };
 
-/* target: what to spotlight (one or more selectors); before: what to do when the step opens. */
+/* target: what to spotlight (one or more selectors); before: what to do when the step opens.
+   Each step's words are "guide.s<n>.eyebrow / .t / .d" in src/i18n. */
 const STEPS = [
-  { target: ['#mStack'], top: true, eyebrow: 'The map', t: 'The whole chip world, as a stack',
-    d: 'Atoms at the bottom, devices and industry higher up, big questions on top. Every box is a topic you can play with.',
+  { target: ['#mStack'], top: true,
     before: () => { mapState.sel = null; mapState.thread = null; mapState.lens = ''; redrawMap(); sweep(); } },
-  { target: ['#mStack .tnode[data-t="transistor"]'], soft: true, eyebrow: 'Connections', t: 'Everything connects',
-    d: 'Select any topic to see how it connects. Use Show to see one kind of connection at a time: what is inside what, cause and effect, or one big idea across the layers. Nothing is locked.',
+  { target: ['#mStack .tnode[data-t="transistor"]'], soft: true,
     before: () => { mapState.sel = 'transistor'; mapState.thread = null; mapState.query = ''; mapState.lens = ''; redrawMap(); } },
-  { target: ['.modeseg', '#yearBtn'], eyebrow: 'Two dials', t: 'Your level, and the year',
-    d: 'Beginner or Engineer changes how much detail every explanation gives. The year button sends the whole site back to 1971 or forward to 2040.' },
-  { target: null, eyebrow: 'Start', t: 'Learn by doing: pick a first challenge', choices: [
-    { href: '#tiny', t: 'Build', d: 'Design a tiny chip, from logic gates to a working chip.' },
-    { href: '#reality', t: 'Break', d: 'Ship a perfect design to a car and watch reality fail it.' },
-    { href: '#whatif', t: 'Imagine', d: 'What if memory runs short? Move one lever and watch the industry ripple.' }
-  ] }
+  { target: ['.modeseg', '#yearBtn'] },
+  { target: null, choices: [{ href: '#tiny', id: 'build' }, { href: '#reality', id: 'break' }, { href: '#whatif', id: 'imagine' }] }
 ];
+const word = (k, f) => t('guide.s' + (k + 1) + '.' + f);
 
 let i = 0, box = null, hole = null, block = null, open = false, raf = 0;
 
@@ -69,11 +65,12 @@ const follow = () => { cancelAnimationFrame(raf); raf = requestAnimationFrame(pl
 function render() {
   if (!open || !box) return;   /* closed before a delayed call arrived */
   const st = STEPS[i], last = i === STEPS.length - 1;
-  box.innerHTML = '<div class="g-top"><p class="eyebrow">' + st.eyebrow + ' · ' + (i + 1) + ' of ' + STEPS.length + '</p><button type="button" class="g-skip" data-g="skip">Skip tour</button></div>' +
-    '<h3 id="gTitle">' + st.t + '</h3>' + (st.d ? '<p>' + st.d + '</p>' : '') +
-    (st.choices ? '<div class="g-choices">' + st.choices.map(c => '<a href="' + c.href + '" data-g="go"><b>' + c.t + '</b><span>' + c.d + '</span></a>').join('') + '</div><button type="button" class="g-link" data-g="done">Or explore the map on your own</button>' : '') +
+  const d = st.choices ? '' : word(i, 'd');
+  box.innerHTML = '<div class="g-top"><p class="eyebrow">' + t('guide.step', { name: word(i, 'eyebrow'), n: i + 1, total: STEPS.length }) + '</p><button type="button" class="g-skip" data-g="skip">' + t('guide.skip') + '</button></div>' +
+    '<h3 id="gTitle">' + word(i, 't') + '</h3>' + (d ? '<p>' + d + '</p>' : '') +
+    (st.choices ? '<div class="g-choices">' + st.choices.map(c => '<a href="' + c.href + '" data-g="go"><b>' + t('guide.' + c.id + '.t') + '</b><span>' + t('guide.' + c.id + '.d') + '</span></a>').join('') + '</div><button type="button" class="g-link" data-g="done">' + t('guide.own') + '</button>' : '') +
     '<div class="g-foot"><span class="g-dots" aria-hidden="true">' + STEPS.map((_, k) => '<i' + (k === i ? ' class="on"' : '') + '></i>').join('') + '</span>' +
-    (i ? '<button type="button" class="btn" data-g="back">Back</button>' : '') + (last ? '' : '<button type="button" class="btn primary" data-g="next">Next</button>') + '</div>';
+    (i ? '<button type="button" class="btn" data-g="back">' + t('guide.back') + '</button>' : '') + (last ? '' : '<button type="button" class="btn primary" data-g="next">' + t('guide.next') + '</button>') + '</div>';
   if (st.before) st.before();
   const first = st.target && document.querySelector(st.target[0]);
   if (first) { const r = first.getBoundingClientRect(); if (r.top < 70 || r.bottom > innerHeight - 60) first.scrollIntoView({ block: st.top ? 'start' : 'center', behavior: reduce() ? 'instant' : 'smooth' }); }

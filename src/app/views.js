@@ -9,6 +9,7 @@ import { levelStars, riscvStars } from './progress.js';
 import { TOPIC_FILES } from '../generated/catalog.js';
 import { P } from './learning.js';
 import { allIdeasHTML } from './connections.js';
+import { t } from '../core/i18n.js';
 
 const $ = s => document.querySelector(s);
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -18,22 +19,19 @@ const labsIn = id => (TOPIC_FILES[id] || { labs: [] }).labs;
 const stars = n => '<span class="stars"><span>' + '★'.repeat(n) + '</span><span class="off">' + '★'.repeat(3 - n) + '</span></span>';
 
 /* ---------------- Workshop ---------------- */
-const BUILDS = [
-  { id: 'tiny', n: '01', t: 'Make a tiny chip', d: 'Write a small circuit and take it through every step a GPU goes through, until it runs in a gadget, or as the ALU inside the RISC-V CPU.', steps: ['Logic', 'Verify', 'Gates', 'Layout', 'Masks', 'Fab', 'Test', 'Gadget'], link: 'Your ALU slice runs inside the RISC-V CPU' },
-  { id: 'riscv', n: '02', t: 'Program and extend a RISC-V CPU', d: 'Write assembly for a real open processor, watch the datapath, then add your own AI instruction.', steps: ['Registers', 'Memory', 'Loops', 'Multiply', 'Neuron', 'Custom op', 'Layer'], link: 'Your custom instruction is how AI chips begin' },
-  { id: 'build', n: '03', t: 'Architect an AI chip', d: 'Choose architecture, node, memory and package for a mission, then compare with real 2026 chips.', steps: ['Mission', 'Architecture', 'Node', 'Memory', 'Package', 'Cost', 'Score'], link: null },
-  { id: 'agent', n: '04', t: 'Design with an AI agent', d: 'An agent proposes designs, code and claims. Check them with real tools and decide what to trust.', steps: ['Equality', 'Majority', 'Array sum', 'Multiply', 'Yield', 'Roofline', 'Facts', 'Coverage'], link: null }
-];
+/* The four builds; their words are "ws.<id>.t / .d / .steps / .link" in src/i18n. */
+const BUILDS = [{ id: 'tiny', n: '01', link: true }, { id: 'riscv', n: '02', link: true }, { id: 'build', n: '03' }, { id: 'agent', n: '04' }];
 let wsQuery = '';
 export function renderWorkshop() {
   const v = $('#view-workshop');
   const rs = riscvStars();
-  v.innerHTML = '<section class="wrap vhead"><p class="eyebrow">Workshop</p><h1>Build it yourself</h1><p class="lede">Three builds, one idea at three scales: gates make a processor, and a processor plus custom hardware makes a specialized chip, such as an AI chip. A fourth asks the AI-era question: when an agent does the work, can you tell whether it is right? Start with any of them. Below are all ' + TOPICS.reduce((s, t) => s + labsIn(t.id).length, 0) + ' simulations to play with.</p></section>' +
-    '<section class="wrap buildline">' + BUILDS.map((b, i) => '<div class="bstation"><a class="bcard" href="#' + b.id + '"><span class="bn">' + b.n + '</span><div><b>' + esc(b.t) + '</b><p>' + esc(b.d) + '</p><ol class="bsteps">' + b.steps.map((s, k) => '<li' + (b.id === 'riscv' && levelStars(k + 1) ? ' class="done"' : '') + '>' + esc(s) + '</li>').join('') + '</ol>' + (b.id === 'riscv' ? '<small class="muted">' + rs + ' of 21 stars earned</small>' : (P.seen[b.id] ? '<small class="muted">Opened before</small>' : '<small class="muted">Not opened yet</small>')) + '</div><span class="go">Open →</span></a>' + (b.link ? '<p class="blink"><span aria-hidden="true">↓</span>' + esc(b.link) + '</p>' : '') + '</div>').join('') + '</section>' +
-    '<section class="wrap"><div class="vbar"><h2>Playground</h2><input type="search" id="wsQ" placeholder="Find a simulation…" aria-label="Find a simulation" value="' + esc(wsQuery) + '"></div><div id="wsGrid"></div></section>';
+  const n = TOPICS.reduce((s, x) => s + labsIn(x.id).length, 0);
+  v.innerHTML = '<section class="wrap vhead"><p class="eyebrow">' + t('ws.eyebrow') + '</p><h1>' + t('ws.title') + '</h1><p class="lede">' + t('ws.lede', { n }) + '</p></section>' +
+    '<section class="wrap buildline">' + BUILDS.map(b => '<div class="bstation"><a class="bcard" href="#' + b.id + '"><span class="bn">' + b.n + '</span><div><b>' + esc(t('ws.' + b.id + '.t')) + '</b><p>' + esc(t('ws.' + b.id + '.d')) + '</p><ol class="bsteps">' + t('ws.' + b.id + '.steps').map((s, k) => '<li' + (b.id === 'riscv' && levelStars(k + 1) ? ' class="done"' : '') + '>' + esc(s) + '</li>').join('') + '</ol>' + (b.id === 'riscv' ? '<small class="muted">' + t('ws.stars', { n: rs }) + '</small>' : '<small class="muted">' + (P.seen[b.id] ? t('ws.opened') : t('ws.notOpened')) + '</small>') + '</div><span class="go">' + t('ws.open') + '</span></a>' + (b.link ? '<p class="blink"><span aria-hidden="true">↓</span>' + esc(t('ws.' + b.id + '.link')) + '</p>' : '') + '</div>').join('') + '</section>' +
+    '<section class="wrap"><div class="vbar"><h2>' + t('ws.playground') + '</h2><input type="search" id="wsQ" placeholder="' + t('ws.find') + '" aria-label="' + t('ws.find') + '" value="' + esc(wsQuery) + '"></div><div id="wsGrid"></div></section>';
   const draw = () => {
     const q = wsQuery.toLowerCase();
-    $('#wsGrid').innerHTML = BANDS.map(b => { const tiles = TOPICS.filter(t => t.band === b.id).flatMap(t => labsIn(t.id).map(l => ({ ...l, topic: t }))).filter(l => !q || (l.t + ' ' + l.topic.t).toLowerCase().includes(q)); return tiles.length ? '<div class="pgband"><p class="eyebrow">' + esc(b.t) + '</p><div class="pgrid">' + tiles.map(l => '<a href="#' + l.id + '"><b>' + esc(l.t) + '</b><small>' + esc(l.topic.t) + '</small></a>').join('') + '</div></div>' : ''; }).join('') || '<p class="muted">No simulation matches that search.</p>';
+    $('#wsGrid').innerHTML = BANDS.map(b => { const tiles = TOPICS.filter(x => x.band === b.id).flatMap(x => labsIn(x.id).map(l => ({ ...l, topic: x }))).filter(l => !q || (l.t + ' ' + l.topic.t).toLowerCase().includes(q)); return tiles.length ? '<div class="pgband"><p class="eyebrow">' + esc(b.t) + '</p><div class="pgrid">' + tiles.map(l => '<a href="#' + l.id + '"><b>' + esc(l.t) + '</b><small>' + esc(l.topic.t) + '</small></a>').join('') + '</div></div>' : ''; }).join('') || '<p class="muted">' + t('ws.none') + '</p>';
   };
   $('#wsQ').addEventListener('input', e => { wsQuery = e.target.value.trim(); draw(); });
   draw();
@@ -43,33 +41,32 @@ export function renderWorkshop() {
 let chKind = '';
 export function renderChallenges() {
   const v = $('#view-challenges');
-  const kinds = ['', 'Puzzle', 'Design', 'Experiment'];
-  const status = c => { const m = /^#riscv-(\d+)$/.exec(c.href); if (m) { const s = levelStars(+m[1]); return stars(s); } return P.seen[c.topic] ? '<span class="vis">Visited</span>' : ''; };
+  const kinds = ['', 'Puzzle', 'Design', 'Experiment'];   // i18n-ok: kind ids from topic.json, shown through ch.kind.*
+  const status = c => { const m = /^#riscv-(\d+)$/.exec(c.href); if (m) { const s = levelStars(+m[1]); return stars(s); } return P.seen[c.topic] ? '<span class="vis">' + t('ch.visited') + '</span>' : ''; };
   const list = CHALLENGES.filter(c => !chKind || c.kind === chKind);
-  v.innerHTML = '<section class="wrap vhead"><p class="eyebrow">Challenges</p><h1>Puzzles, designs and experiments</h1><p class="lede">Puzzles have one right answer. Designs have many, scored on trade-offs. Experiments ask you to find where something breaks. Every one is open: pick any.</p></section>' +
-    '<section class="wrap"><div class="vbar"><div class="seg" role="group" aria-label="Kind of challenge">' + kinds.map(k => '<button type="button" data-k="' + k + '" aria-pressed="' + (k === chKind) + '">' + (k ? k + 's' : 'All') + ' <small>' + CHALLENGES.filter(c => !k || c.kind === k).length + '</small></button>').join('') + '</div></div>' +
-    '<div class="chgrid">' + BANDS.flatMap(b => list.filter(c => (topicById(c.topic) || {}).band === b.id)).map(c => '<a class="chcard k-' + c.kind.toLowerCase() + '" href="' + c.href + '"><span class="pill out">' + c.kind + '</span><b>' + esc(c.t) + '</b><small>' + esc(c.d) + '</small><span class="chmeta"><em>' + esc(bandById(topicById(c.topic).band).t) + ' · ' + esc(tName(c.topic)) + '</em>' + status(c) + '</span></a>').join('') + '</div>' + '</section>' +
-    '<section class="wrap"><div class="vbar"><h2>Open debates</h2></div><p class="lede">These have no answer yet, and informed people disagree. Each side says what it assumes, because that is where the disagreement really lives. Test each side in the linked simulations, then lean one way and see what would change your mind.</p>' + allDebatesHTML() + '</section>';
+  v.innerHTML = '<section class="wrap vhead"><p class="eyebrow">' + t('ch.eyebrow') + '</p><h1>' + t('ch.title') + '</h1><p class="lede">' + t('ch.lede') + '</p></section>' +
+    '<section class="wrap"><div class="vbar"><div class="seg" role="group" aria-label="' + t('ch.filter') + '">' + kinds.map(k => '<button type="button" data-k="' + k + '" aria-pressed="' + (k === chKind) + '">' + (k ? t('ch.plural.' + k) : t('ch.all')) + ' <small>' + CHALLENGES.filter(c => !k || c.kind === k).length + '</small></button>').join('') + '</div></div>' +
+    '<div class="chgrid">' + BANDS.flatMap(b => list.filter(c => (topicById(c.topic) || {}).band === b.id)).map(c => '<a class="chcard k-' + c.kind.toLowerCase() + '" href="' + c.href + '"><span class="pill out">' + t('ch.kind.' + c.kind) + '</span><b>' + esc(c.t) + '</b><small>' + esc(c.d) + '</small><span class="chmeta"><em>' + esc(bandById(topicById(c.topic).band).t) + ' · ' + esc(tName(c.topic)) + '</em>' + status(c) + '</span></a>').join('') + '</div>' + '</section>' +
+    '<section class="wrap"><div class="vbar"><h2>' + t('ch.debates') + '</h2></div><p class="lede">' + t('ch.debatesLede') + '</p>' + allDebatesHTML() + '</section>';
   v.querySelectorAll('[data-k]').forEach(b => b.addEventListener('click', () => { chKind = b.dataset.k; renderChallenges(); }));
 }
 
 /* ---------------- Knowledge ---------------- */
 let fq = '', fk = '';
+const FACT_KINDS = ['reported', 'claim', 'estimate', 'projection'];
 export function renderKnowledge() {
   const v = $('#view-knowledge');
   const groups = Object.keys(TH).map(k => [k, Object.entries(CARDS).filter(([, c]) => c[0] === k)]);
-  const KN = { reported: 'Reported', claim: 'Vendor claim', estimate: 'Estimate', projection: 'Projection' };
-  v.innerHTML = '<section class="wrap vhead"><p class="eyebrow">Knowledge</p><h1>Ideas, terms and dated facts</h1><p class="lede">The big ideas, trade-offs and measures that connect the layers, short cards for the ideas that come up everywhere, every fact with its source and date, and the full glossary. Each one links back to the topic where you can see it in action.</p><div class="row"><a class="btn" href="#glossary">Glossary</a><a class="btn" href="#sources">All sources</a></div></section>' +
-    '<section class="wrap"><div class="vbar"><h2>Big ideas</h2></div><p class="lede">A few ideas turn up again and again, from a single transistor to a data center. Open one to see every layer where it appears, and where it stops working.</p>' + allIdeasHTML() + '</section>' +
-    '<section class="wrap"><div class="vbar"><h2>Trade-offs</h2></div><p class="lede">Most of engineering is choosing a point between two things you cannot both have. Each one links to the simulations where you can push it yourself.</p>' + allTradeoffsHTML() + '</section>' +
-    '<section class="wrap"><div class="vbar"><h2>Measures</h2></div><p class="lede">The numbers people use to compare chips: what each one counts, which way is better, and what it hides.</p>' + allMeasuresHTML() + '</section>' +
+  const sec = (title, lede, html) => '<section class="wrap"><div class="vbar"><h2>' + title + '</h2></div><p class="lede">' + lede + '</p>' + html + '</section>';
+  v.innerHTML = '<section class="wrap vhead"><p class="eyebrow">' + t('kn.eyebrow') + '</p><h1>' + t('kn.title') + '</h1><p class="lede">' + t('kn.lede') + '</p><div class="row"><a class="btn" href="#glossary">' + t('ref.glossary') + '</a><a class="btn" href="#sources">' + t('kn.allSources') + '</a></div></section>' +
+    sec(t('kn.ideas'), t('kn.ideasLede'), allIdeasHTML()) + sec(t('kn.trades'), t('kn.tradesLede'), allTradeoffsHTML()) + sec(t('kn.measures'), t('kn.measuresLede'), allMeasuresHTML()) +
     '<section class="wrap">' + groups.map(([k, cs]) => '<div class="pgband"><p class="eyebrow" style="color:' + TH[k][1] + '">' + esc(TH[k][0]) + '</p><div class="kgrid">' + cs.map(([, c]) => '<a class="kcard" href="#' + c[3] + '" style="--kc:' + TH[k][1] + '"><b>' + esc(c[1]) + '</b><p>' + esc(c[2]) + '</p><small>' + esc(tName(c[3])) + ' →</small></a>').join('') + '</div></div>').join('') + '</section>' +
-    '<section class="wrap"><div class="vbar"><h2>Live facts</h2><div class="seg" role="group" aria-label="Kind of fact">' + [''].concat(Object.keys(KN)).map(k => '<button type="button" data-fk="' + k + '" aria-pressed="' + (k === fk) + '">' + (k ? KN[k] : 'All') + '</button>').join('') + '</div><input type="search" id="kfQ" placeholder="Search facts…" aria-label="Search facts" value="' + esc(fq) + '"></div><p class="small muted">' + FACTS.facts.length + ' facts · last checked ' + esc(fmtDate(FACTS.lastCheck)) + ' · next check ' + esc(fmtDate(FACTS.nextCheck)) + '. Facts are updated by pull request; see the project README.</p><div class="ftable" id="kfList"></div></section>' +
-    '<section class="wrap"><div class="vbar"><h2>What changed recently</h2></div>' + changesHTML() + '</section>';
+    '<section class="wrap"><div class="vbar"><h2>' + t('kn.facts') + '</h2><div class="seg" role="group" aria-label="' + t('kn.factKind') + '">' + [''].concat(FACT_KINDS).map(k => '<button type="button" data-fk="' + k + '" aria-pressed="' + (k === fk) + '">' + (k ? t('fact.' + k) : t('ch.all')) + '</button>').join('') + '</div><input type="search" id="kfQ" placeholder="' + t('kn.searchFacts') + '" aria-label="' + t('kn.searchFacts') + '" value="' + esc(fq) + '"></div><p class="small muted">' + esc(t('kn.factStatus', { n: FACTS.facts.length, last: fmtDate(FACTS.lastCheck), next: fmtDate(FACTS.nextCheck) })) + '</p><div class="ftable" id="kfList"></div></section>' +
+    '<section class="wrap"><div class="vbar"><h2>' + t('kn.changed') + '</h2></div>' + changesHTML() + '</section>';
   const draw = () => {
     const q = fq.toLowerCase();
     const fs = FACTS.facts.filter(f => (!fk || f.kind === fk) && (!q || (f.label + ' ' + f.value + ' ' + (f.detail || '') + ' ' + tName(f.topic)).toLowerCase().includes(q)));
-    $('#kfList').innerHTML = fs.length ? fs.map(f => { const u = safeUrl(f.url); return '<div class="frow"><div><b>' + esc(f.label) + '</b>' + (f.detail ? '<small>' + esc(f.detail) + '</small>' : '') + '</div><div class="v">' + esc(f.value) + '</div><div class="meta"><span class="pill ' + ({ reported: 'ship', claim: 'ann', estimate: 'out', projection: 'proj' }[f.kind] || 'ship') + '">' + esc(KN[f.kind] || 'Reported') + '</span><a href="#' + f.topic + '">' + esc(tName(f.topic)) + '</a>' + (u ? '<a href="' + esc(u) + '" target="_blank" rel="noopener">' + esc(f.source || 'Source') + '</a>' : '') + '<span>' + esc(fmtDate(f.verified)) + '</span></div></div>'; }).join('') : '<p class="muted">No facts match.</p>';
+    $('#kfList').innerHTML = fs.length ? fs.map(f => { const u = safeUrl(f.url), kind = FACT_KINDS.includes(f.kind) ? f.kind : 'reported'; return '<div class="frow"><div><b>' + esc(f.label) + '</b>' + (f.detail ? '<small>' + esc(f.detail) + '</small>' : '') + '</div><div class="v">' + esc(f.value) + '</div><div class="meta"><span class="pill ' + ({ reported: 'ship', claim: 'ann', estimate: 'out', projection: 'proj' }[kind]) + '">' + t('fact.' + kind) + '</span><a href="#' + f.topic + '">' + esc(tName(f.topic)) + '</a>' + (u ? '<a href="' + esc(u) + '" target="_blank" rel="noopener">' + esc(f.source || t('fact.source')) + '</a>' : '') + '<span>' + esc(fmtDate(f.verified)) + '</span></div></div>'; }).join('') : '<p class="muted">' + t('kn.noFacts') + '</p>';
   };
   $('#kfQ').addEventListener('input', e => { fq = e.target.value.trim(); draw(); });
   v.querySelectorAll('[data-fk]').forEach(b => b.addEventListener('click', () => { fk = b.dataset.fk; v.querySelectorAll('[data-fk]').forEach(x => x.setAttribute('aria-pressed', x.dataset.fk === fk)); draw(); }));

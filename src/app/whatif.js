@@ -4,7 +4,8 @@
 import { LEVERS, PRESETS, PUZZLES, INDICATORS } from '../data/ripple.js';
 import { ripple, topicHeads, chain, fmt, IND, NEUTRAL, shows } from '../engines/ripple.js';
 import { topicById } from '../data/topics.js';
-import { FACTS } from './facts.js';
+import { FACTS, fmtDate } from './facts.js';
+import { t, fmtList } from '../core/i18n.js';
 
 const $ = s => document.querySelector(s);
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -26,12 +27,12 @@ export function renderPanel() {
   if (box.dataset.ready) { syncPanel(); return; }
   box.dataset.ready = '1';
   const facts = [...new Set(LEVERS.flatMap(l => l.facts))].map(factById).filter(Boolean);
-  box.innerHTML = '<div class="wihead"><div><p class="code">What if? · the map as a simulator</p><h3>Move a lever and watch the change ripple across the chip world</h3></div><button type="button" class="btn" data-wi-close>Close</button></div>' +
+  box.innerHTML = '<div class="wihead"><div><p class="code">' + t('wi.code') + '</p><h3>' + t('wi.title') + '</h3></div><button type="button" class="btn" data-wi-close>' + t('wi.close') + '</button></div>' +
     '<div class="wilevers">' + LEVERS.map(l => '<label class="wilever" data-l="' + l.id + '"><span><b>' + esc(l.t) + '</b><output></output></span><input type="range" min="' + l.min + '" max="' + l.max + '" step="' + l.step + '" value="0" aria-describedby="wid-' + l.id + '"><small id="wid-' + l.id + '">' + esc(l.d) + '</small></label>').join('') + '</div>' +
-    '<div class="wipresets"><span class="small muted">Try a scenario</span><div class="seg">' + PRESETS.map(p => '<button type="button" data-preset="' + p.id + '" title="' + esc(p.d) + '">' + esc(p.t) + '</button>').join('') + '<button type="button" data-preset="">Reset</button></div></div>' +
+    '<div class="wipresets"><span class="small muted">' + t('wi.try') + '</span><div class="seg">' + PRESETS.map(p => '<button type="button" data-preset="' + p.id + '" title="' + esc(p.d) + '">' + esc(p.t) + '</button>').join('') + '<button type="button" data-preset="">' + t('wi.reset') + '</button></div></div>' +
     '<details class="wipuzzles" open><summary></summary><ol></ol></details>' +
-    '<details class="wifacts"><summary>What this simplifies, and the facts behind it</summary><p class="small">A teaching model, not a forecast. Each rule says which way one thing pushes another, and the directions follow the economics and the events of 2021–2026 below. The strengths are illustrative round numbers. The real industry has delays, feedback loops (higher prices cool demand; shortages pay for new fabs that later end them), stockpiles, contracts and politics, which this model leaves out. Effects are shown as changes from today, all at once.</p><ul class="ilist small">' +
-    facts.map(f => '<li><span class="pill ' + (f.kind === 'reported' ? 'out' : 'ann') + '">' + esc(f.kind) + '</span> ' + esc(f.label) + ': <b>' + esc(f.value) + '</b> <span class="muted">(' + (f.url ? '<a href="' + esc(f.url) + '" target="_blank" rel="noopener">' + esc(f.source) + '</a>' : esc(f.source)) + ', checked ' + esc(f.verified) + ')</span></li>').join('') + '</ul></details>';
+    '<details class="wifacts"><summary>' + t('wi.simplifies') + '</summary><p class="small">' + t('wi.simplifiesText') + '</p><ul class="ilist small">' +
+    facts.map(f => '<li><span class="pill ' + (f.kind === 'reported' ? 'out' : 'ann') + '">' + t('fact.' + (f.kind || 'reported')) + '</span> ' + esc(f.label) + ': <b>' + esc(f.value) + '</b> <span class="muted">(' + (f.url ? '<a href="' + esc(f.url) + '" target="_blank" rel="noopener">' + esc(f.source) + '</a>' : esc(f.source)) + ', ' + esc(t('wi.checked', { date: fmtDate(f.verified) })) + ')</span></li>').join('') + '</ul></details>';
   syncPanel();
 }
 
@@ -40,12 +41,12 @@ function syncPanel() {
   LEVERS.forEach(l => {
     const lab = box.querySelector('[data-l="' + l.id + '"]'); const inp = lab.querySelector('input'); const v = W.L[l.id];
     if (+inp.value !== v) inp.value = v;
-    lab.querySelector('output').textContent = v ? fmt(v, l.unit) : 'today';
+    lab.querySelector('output').textContent = v ? fmt(v, l.unit) : t('wi.today');
     lab.classList.toggle('on', !!v);
   });
   box.querySelectorAll('[data-preset]').forEach(b => { const p = PRESETS.find(x => x.id === b.dataset.preset); b.setAttribute('aria-pressed', p && LEVERS.every(l => (p.set[l.id] || 0) === W.L[l.id]) ? 'true' : 'false'); });
   const n = PUZZLES.filter(p => W.solved[p.id]).length;
-  box.querySelector('.wipuzzles summary').textContent = 'Puzzles · ' + n + ' of ' + PUZZLES.length + ' solved';
+  box.querySelector('.wipuzzles summary').textContent = t('wi.puzzles', { n, total: PUZZLES.length });
   box.querySelector('.wipuzzles ol').innerHTML = PUZZLES.map(p => '<li class="' + (W.solved[p.id] ? 'done' : '') + (W.fresh === p.id ? ' fresh' : '') + '"><b>' + (W.solved[p.id] ? '✓ ' : '') + esc(p.t) + '</b>' + (W.solved[p.id] ? '<small>' + esc(p.done) + '</small>' : '') + '</li>').join('');
 }
 
@@ -96,26 +97,26 @@ export function rippleLinks() {
 /* ---- the side panel ---- */
 export function infoHTML(sel, max = 12) {
   if (sel) {
-    const t = topicById(sel); const inds = INDICATORS.filter(i => i.topic === sel);
+    const tp = topicById(sel); const inds = INDICATORS.filter(i => i.topic === sel);
     const lever = LEVERS.find(l => IND[l.ind].topic === sel);
     const live = inds.filter(i => shows(W.res.v[i.id], i.unit));
     let body = '';
-    if (!inds.length) body = '<p>Nothing in this model links the five levers to ' + esc(t.t) + '. Real life has more links than any model: try to name one the model is missing.</p>';
-    else if (!live.length) body = '<p>' + (moved() ? 'These levers leave it unchanged here:' : 'Move a lever to see what changes here. This topic tracks:') + '</p><ul class="ilist">' + inds.map(i => '<li>' + esc(i.t) + '</li>').join('') + '</ul>';
+    if (!inds.length) body = '<p>' + esc(t('wi.noLink', { topic: tp.t })) + '</p>';
+    else if (!live.length) body = '<p>' + (moved() ? t('wi.unchanged') : t('wi.tracks')) + '</p><ul class="ilist">' + inds.map(i => '<li>' + esc(i.t) + '</li>').join('') + '</ul>';
     else body = live.map(i => {
       const v = W.res.v[i.id], why = W.res.why[i.id];
       const ch = chain(W.res, i.id);
       return '<div class="wiind"><div class="wiv"><b>' + esc(i.t) + '</b><span class="rb ' + (v > 0 ? 'up' : 'down') + '">' + fmt(v, i.unit) + '</span></div>' +
-        (why.length ? '<p class="eyebrow">Because</p><div class="conn">' + why.map(w => { const f = IND[w.from]; return '<button type="button" data-pick="' + f.topic + '"><span>←</span><b>' + esc(f.t) + ' ' + fmt(W.res.v[w.from], f.unit) + '</b><small>' + esc(w.d) + '</small></button>'; }).join('') + '</div>' : '<p class="small muted">You set this lever.</p>') +
-        (ch.length > 2 ? '<p class="eyebrow">Strongest chain</p><ol class="wichain">' + ch.map(c => '<li>' + (c.s ? '<em>' + esc(c.s) + '</em>' : '') + '<b>' + esc(IND[c.id].t) + ' ' + fmt(c.v, IND[c.id].unit) + '</b></li>').join('') + '</ol>' : '') + '</div>';
+        (why.length ? '<p class="eyebrow">' + t('wi.because') + '</p><div class="conn">' + why.map(w => { const f = IND[w.from]; return '<button type="button" data-pick="' + f.topic + '"><span>←</span><b>' + esc(f.t) + ' ' + fmt(W.res.v[w.from], f.unit) + '</b><small>' + esc(w.d) + '</small></button>'; }).join('') + '</div>' : '<p class="small muted">' + t('wi.youSet') + '</p>') +
+        (ch.length > 2 ? '<p class="eyebrow">' + t('wi.chain') + '</p><ol class="wichain">' + ch.map(c => '<li>' + (c.s ? '<em>' + esc(c.s) + '</em>' : '') + '<b>' + esc(IND[c.id].t) + ' ' + fmt(c.v, IND[c.id].unit) + '</b></li>').join('') + '</ol>' : '') + '</div>';
     }).join('');
-    return '<p class="code">What if? · ' + esc(tname(sel)) + '</p><h3>' + esc(t.t) + '</h3>' + (lever ? '<p class="small muted">The <b>' + esc(lever.t) + '</b> lever acts here.</p>' : '') + body + '<div class="row"><a class="btn" href="#' + sel + '">Open ' + esc(t.t) + ' →</a><button type="button" class="btn" data-pick="">All changes</button></div>';
+    return '<p class="code">' + esc(t('wi.topicCode', { topic: tname(sel) })) + '</p><h3>' + esc(tp.t) + '</h3>' + (lever ? '<p class="small muted">' + t('wi.leverHere', { lever: esc(lever.t) }) + '</p>' : '') + body + '<div class="row"><a class="btn" href="#' + sel + '">' + esc(t('wi.open', { topic: tp.t })) + '</a><button type="button" class="btn" data-pick="">' + t('wi.all') + '</button></div>';
   }
-  if (!moved()) return '<p class="code">What if?</p><h3>Everything is at today\'s level</h3><p>Move one of the five levers above the map, or try a scenario. Every topic the change reaches gets a badge, and the wires show which way it travels.</p><p>Then select any topic to see why it changed, step by step back to your lever.</p>';
+  if (!moved()) return '<p class="code">' + t('wi.idleCode') + '</p><h3>' + t('wi.idleTitle') + '</h3><p>' + t('wi.idleText') + '</p><p>' + t('wi.idleText2') + '</p>';
   const isLever = i => LEVERS.some(l => l.ind === i.id);
   const list = INDICATORS.filter(i => !isLever(i)).filter(i => shows(W.res.v[i.id], i.unit)).sort((a, b) => Math.abs(W.res.v[b.id]) - Math.abs(W.res.v[a.id]));
-  const quiet = [...new Set(INDICATORS.filter(i => !isLever(i)).map(i => i.topic))].filter(t => !list.some(i => i.topic === t));
-  return '<p class="code">What if? · ' + list.length + ' changes</p><h3>Biggest effects</h3><div class="wilist">' + list.slice(0, max).map(i => '<button type="button" data-pick="' + i.topic + '"><b>' + esc(i.t) + '</b><span class="rb ' + (W.res.v[i.id] > 0 ? 'up' : 'down') + '">' + fmt(W.res.v[i.id], i.unit) + '</span><small>' + esc(tname(i.topic)) + ' · ' + W.res.depth[i.id] + (W.res.depth[i.id] === 1 ? ' step' : ' steps') + ' from a lever</small></button>').join('') + '</div>' +
-    (list.length > max ? '<p class="small muted">And ' + (list.length - max) + ' smaller ones: select any topic with a badge.</p>' : '') +
-    (quiet.length ? '<p class="small muted">Untouched: ' + quiet.map(id => esc(tname(id))).join(', ') + '.</p>' : '');
+  const quiet = [...new Set(INDICATORS.filter(i => !isLever(i)).map(i => i.topic))].filter(id => !list.some(i => i.topic === id));
+  return '<p class="code">' + t('wi.changes', { n: list.length }) + '</p><h3>' + t('wi.biggest') + '</h3><div class="wilist">' + list.slice(0, max).map(i => '<button type="button" data-pick="' + i.topic + '"><b>' + esc(i.t) + '</b><span class="rb ' + (W.res.v[i.id] > 0 ? 'up' : 'down') + '">' + fmt(W.res.v[i.id], i.unit) + '</span><small>' + esc(t('wi.steps', { topic: tname(i.topic), n: W.res.depth[i.id] })) + '</small></button>').join('') + '</div>' +
+    (list.length > max ? '<p class="small muted">' + t('wi.more', { n: list.length - max }) + '</p>' : '') +
+    (quiet.length ? '<p class="small muted">' + esc(t('wi.untouched', { topics: fmtList(quiet.map(tname)) })) + '</p>' : '');
 }

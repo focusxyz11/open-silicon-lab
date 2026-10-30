@@ -4,6 +4,7 @@
 import { TOPIC_FILES } from '../generated/catalog.js';
 import { BANDS, TOPICS, EDGES, LINKS, THREADS, topicById, bandById } from '../data/topics.js';
 import { linkListHTML } from './connections.js';
+import { t, fmtDate } from '../core/i18n.js';
 import { lensBarHTML, lensInfoHTML, lensTopics, markerDefs, ideaPath, longestChain, LENSES } from './maplens.js';
 import { CHALLENGES } from '../data/challenges.js';
 import { GL } from '../data/learning.js';
@@ -22,51 +23,52 @@ const NS = 'http://www.w3.org/2000/svg';
 export const state = { sel: null, thread: null, query: '', lens: '', idea: null };
 
 export function renderMapShell(zoomHTML) {
+  const jumps = [1971, 1978, 1985, 1993, 2000, 2007, 2012, 2018, 2026, 2030, 2040];
   $('#view-map').innerHTML = `
   <section class="wrap maphero">
-    <p class="eyebrow">Open-source chip lab · facts checked October 2026</p>
-    <h1>The whole chip, from <em>atoms</em> to everything it powers</h1>
-    <p class="lede">Phones, cars, thermostats and AI data centers all run on chips made through the same stack: physics, transistors, design, factories and packaging. Every layer is a topic with live simulations you can play with, and you can choose which connections between them to see. Start anywhere: pick a topic, follow a thread, or build a chip in the workshop.</p>
+    <p class="eyebrow">${esc(t('map.eyebrow', { date: FACTS.lastCheck ? fmtDate(FACTS.lastCheck, { month: 'long', year: 'numeric' }) : '–' }))}</p>
+    <h1>${t('map.h1')}</h1>
+    <p class="lede">${t('map.lede')}</p>
     <div class="mstats" id="mStats"></div>
-    <button type="button" class="btn tourbtn" data-guide-start>Take the 30-second tour</button>
+    <button type="button" class="btn tourbtn" data-guide-start>${t('map.tour')}</button>
   </section>
   <section class="wrap tmsec" id="timeMachine" aria-labelledby="tmTitle">
     <div class="tmhead">
       <div class="yearbig" id="tmYear">2026</div>
-      <div class="tmera"><p class="code">Time machine · the whole site follows this year</p><h2 id="tmTitle"><span id="tmEra">–</span></h2><p id="tmEraD" class="small"></p></div>
+      <div class="tmera"><p class="code">${t('tm.code')}</p><h2 id="tmTitle"><span id="tmEra">–</span></h2><p id="tmEraD" class="small"></p></div>
     </div>
-    <input type="range" id="tmR" value="2026" aria-label="Year, from 1971 to 2040">
-    <div class="row tmctl"><div class="seg" id="tmJump">${[1971, 1978, 1985, 1993, 2000, 2007, 2012, 2018, 2026, 2030, 2040].map(y => '<button type="button" data-y="' + y + '">' + (y === 2026 ? 'Today' : y) + '</button>').join('')}</div><button type="button" class="btn" id="tmPlay">▶ Play history</button></div>
+    <input type="range" id="tmR" value="2026" aria-label="${t('tm.range')}">
+    <div class="row tmctl"><div class="seg" id="tmJump">${jumps.map(y => '<button type="button" data-y="' + y + '">' + (y === 2026 ? t('era.today') : y) + '</button>').join('')}</div><button type="button" class="btn" id="tmPlay">${t('tm.play')}</button></div>
     <div class="cols tmbody">
-      <div><canvas class="plot" id="tmCv" style="height:280px" aria-label="Transistors per chip from 1971 to 2040"></canvas>
-        <div class="legend"><span><i style="background:var(--cyan-fill)"></i>Microprocessors</span><span><i style="background:var(--amber-fill)"></i>Landmark chips</span><span><i style="background:var(--violet)"></i>Trend line after 2026</span></div></div>
+      <div><canvas class="plot" id="tmCv" style="height:280px" aria-label="${t('tm.plot')}"></canvas>
+        <div class="legend"><span><i style="background:var(--cyan-fill)"></i>${t('tm.micro')}</span><span><i style="background:var(--amber-fill)"></i>${t('tm.landmark')}</span><span><i style="background:var(--violet)"></i>${t('tm.trend')}</span></div></div>
       <div class="tmcards" id="tmCards"></div>
     </div>
-    <p class="note">History to 2026: microprocessor data from Karl Rupp (CC BY 4.0), landmark chips and process nodes from Wikipedia, design costs from IBS. After 2026: TSMC's plans and imec's roadmap, and a plain trend line for transistor counts, labelled on every card. Topic pages and some simulations change with the year too.</p>
+    <p class="note">${t('tm.note')}</p>
   </section>
   <section class="wrap mapgrid">
     <div class="mapmain">
       <div class="maptools">
-        <div class="threads" id="mThreads" role="group" aria-label="Suggested paths"></div>
-        <button type="button" class="wibtn" id="mWhat" aria-pressed="false" aria-controls="mWhatif"><b>What if…?</b> Simulate the industry</button>
-        <input type="search" id="mSearch" placeholder="Search anything: HBM, EUV, RISC-V, yield…" aria-label="Search the map">
+        <div class="threads" id="mThreads" role="group" aria-label="${t('map.paths')}"></div>
+        <button type="button" class="wibtn" id="mWhat" aria-pressed="false" aria-controls="mWhatif">${t('map.whatif')}</button>
+        <input type="search" id="mSearch" placeholder="${t('map.search')}" aria-label="${t('map.searchLabel')}">
       </div>
-      <div class="lensbar" id="mLens" role="group" aria-label="Which connections the map shows">${lensBarHTML()}</div>
+      <div class="lensbar" id="mLens" role="group" aria-label="${t('map.lensLabel')}">${lensBarHTML()}</div>
       <div class="whatif" id="mWhatif" hidden></div>
       <div class="mstack" id="mStack"><svg id="mSvg" aria-hidden="true"></svg><div id="mBands"></div><svg id="mSvgL" aria-hidden="true"></svg></div>
-      <p class="note">Layers run from the world at the top to atoms at the bottom, like a cross-section of a chip. Select or hover a topic to see its connections, or choose above which kind to show: what rests on what, what is inside what, cause and effect, or one big idea across the layers. Dashed outlines mark hands-on builds.</p>
+      <p class="note">${t('map.note')}</p>
     </div>
     <aside class="mapinfo" id="mInfo" aria-live="polite"></aside>
   </section>
   <section class="wrap zoomsec">
-    <div class="head"><p class="code">Zoom</p><h2>From a server rack down to a single atom</h2></div>
+    <div class="head"><p class="code">${t('zoom.code')}</p><h2>${t('zoom.title')}</h2></div>
     ${zoomHTML}
   </section>
   <section class="wrap mapfoot">
-    <div class="hblock"><h3>What changed recently</h3><p class="small muted" id="fbStatus"></p><div id="changes"></div></div>
-    <div class="hblock"><h3>About this lab</h3>
-      <p class="small">Open Silicon Lab is an open-source project about every kind of chip, from the microcontroller in a thermostat to the GPUs in an AI data center. It is made with AI: Claude wrote the text, simulations and code with the project owner, from public sources. Every simulation is a teaching model; each one says what it simplifies. Facts carry their source and the date they were last verified, and are rechecked every month.</p>
-      <p class="small"><a href="#knowledge">Glossary and knowledge cards</a> · <a href="#sources">All sources</a> · <a href="#challenges">All challenges</a></p>
+    <div class="hblock"><h3>${t('map.changed')}</h3><p class="small muted" id="fbStatus"></p><div id="changes"></div></div>
+    <div class="hblock"><h3>${t('map.about')}</h3>
+      <p class="small">${t('map.aboutText')}</p>
+      <p class="small">${t('map.links')}</p>
     </div>
   </section>`;
 }
@@ -76,17 +78,17 @@ export function renderMapShell(zoomHTML) {
 const labsOf = id => (TOPIC_FILES[id] || { labs: [] }).labs;
 const challengesOf = id => CHALLENGES.filter(c => c.topic === id);
 
-function nodeHTML(t) {
-  const n = labsOf(t.id).length, c = challengesOf(t.id).length;
-  const meta = t.id === 'riscv' ? '7 levels + sandbox' : (n ? n + (n > 1 ? ' simulations' : ' simulation') : '') + (c ? (n ? ' · ' : '') + c + (c > 1 ? ' challenges' : ' challenge') : '');
-  return '<button type="button" class="tnode' + (t.kind === 'build' ? ' build' : '') + (P.seen[t.id] ? ' seen' : '') + '" data-t="' + t.id + '"><span class="nb" aria-hidden="true"></span><b>' + esc(t.t) + '</b><small>' + esc(meta) + '</small><span class="rb"></span></button>';
+function nodeHTML(tp) {
+  const n = labsOf(tp.id).length, c = challengesOf(tp.id).length;
+  const meta = tp.id === 'riscv' ? t('map.riscvMeta') : [n ? t('map.sims', { n }) : '', c ? t('map.chs', { n: c }) : ''].filter(Boolean).join(' · ');
+  return '<button type="button" class="tnode' + (tp.kind === 'build' ? ' build' : '') + (P.seen[tp.id] ? ' seen' : '') + '" data-t="' + tp.id + '"><span class="nb" aria-hidden="true"></span><b>' + esc(tp.t) + '</b><small>' + esc(meta) + '</small><span class="rb"></span></button>';
 }
 
 export function initMap() {
-  $('#mBands').innerHTML = BANDS.map((b, i) => '<div class="band" data-b="' + b.id + '" style="--bc:var(--band' + (i % 5) + ')"><div class="bl"><b>' + esc(b.t) + '</b><span>' + esc(b.d) + '</span></div><div class="bn">' + TOPICS.filter(t => t.band === b.id).map(nodeHTML).join('') + '</div></div>').join('');
-  const labCount = TOPICS.reduce((s, t) => s + labsOf(t.id).length, 0);
-  $('#mStats').innerHTML = [[TOPICS.length, 'topics'], [labCount + '+', 'live simulations'], [CHALLENGES.length, 'challenges'], [FACTS.facts.length, 'dated facts']].map(x => '<div><b>' + x[0] + '</b><span>' + x[1] + '</span></div>').join('');
-  $('#mThreads').innerHTML = '<button type="button" data-th="">All topics</button>' + THREADS.map(t => '<button type="button" data-th="' + t.id + '">' + esc(t.t) + '</button>').join('');
+  $('#mBands').innerHTML = BANDS.map((b, i) => '<div class="band" data-b="' + b.id + '" style="--bc:var(--band' + (i % 5) + ')"><div class="bl"><b>' + esc(b.t) + '</b><span>' + esc(b.d) + '</span></div><div class="bn">' + TOPICS.filter(x => x.band === b.id).map(nodeHTML).join('') + '</div></div>').join('');
+  const labCount = TOPICS.reduce((s, x) => s + labsOf(x.id).length, 0);
+  $('#mStats').innerHTML = [[TOPICS.length, t('map.stat.topics')], [labCount + '+', t('map.stat.sims')], [CHALLENGES.length, t('map.stat.challenges')], [FACTS.facts.length, t('map.stat.facts')]].map(x => '<div><b>' + x[0] + '</b><span>' + x[1] + '</span></div>').join('');
+  $('#mThreads').innerHTML = '<button type="button" data-th="">' + t('map.allTopics') + '</button>' + THREADS.map(x => '<button type="button" data-th="' + x.id + '">' + esc(x.t) + '</button>').join('');
   $('#mThreads').querySelectorAll('button').forEach(b => b.addEventListener('click', () => { state.thread = b.dataset.th || null; state.query = ''; $('#mSearch').value = ''; if (state.thread) { state.sel = null; W.on = false; state.lens = ''; } refresh(); }));
   $('#mLens').addEventListener('click', e => { const b = e.target.closest('[data-lens]'); if (!b) return; setLens(b.dataset.lens); });
   $('#mWhat').addEventListener('click', () => setWhatif(!W.on));
@@ -100,18 +102,18 @@ export function initMap() {
   new ResizeObserver(() => drawEdges()).observe($('#mStack'));
   document.addEventListener('osl:year', () => refresh());
   $('#changes').innerHTML = changesHTML();
-  $('#fbStatus').textContent = FACTS.facts.length + ' facts tracked · last checked ' + (FACTS.lastCheck || '–') + ' · next check ' + (FACTS.nextCheck || '–');
+  $('#fbStatus').textContent = t('map.factStatus', { n: FACTS.facts.length, last: FACTS.lastCheck ? fmtDate(FACTS.lastCheck) : '–', next: FACTS.nextCheck ? fmtDate(FACTS.nextCheck) : '–' });
   refresh();
 }
 
 /* ---- search across topics, simulations, glossary, cards, facts and challenges ---- */
 function search(q) {
   const s = q.toLowerCase(); const hits = [];
-  TOPICS.forEach(t => { if ((t.t + ' ' + t.s).toLowerCase().includes(s)) hits.push({ topic: t.id, kind: 'Topic', t: t.t, href: '#' + t.id }); labsOf(t.id).forEach(l => { if (l.t.toLowerCase().includes(s)) hits.push({ topic: t.id, kind: 'Simulation', t: l.t, href: '#' + l.id }); }); });
-  GL.forEach(g => { if (g[0].toLowerCase().includes(s) || g[1].some(v => v.toLowerCase().includes(s))) hits.push({ topic: g[3], kind: 'Term', t: g[0], d: g[2], href: '#' + g[3] }); });
-  Object.values(CARDS).forEach(c => { if ((c[1] + ' ' + c[2]).toLowerCase().includes(s)) hits.push({ topic: c[3], kind: 'Card', t: c[1], d: c[2], href: '#' + c[3] }); });
-  FACTS.facts.forEach(f => { if ((f.label + ' ' + f.value).toLowerCase().includes(s)) hits.push({ topic: f.topic, kind: 'Fact', t: f.label, d: f.value, href: '#' + f.topic }); });
-  CHALLENGES.forEach(c => { if ((c.t + ' ' + c.d).toLowerCase().includes(s)) hits.push({ topic: c.topic, kind: 'Challenge', t: c.t, d: c.d, href: c.href }); });
+  TOPICS.forEach(x => { if ((x.t + ' ' + x.s).toLowerCase().includes(s)) hits.push({ topic: x.id, kind: 'topic', t: x.t, href: '#' + x.id }); labsOf(x.id).forEach(l => { if (l.t.toLowerCase().includes(s)) hits.push({ topic: x.id, kind: 'simulation', t: l.t, href: '#' + l.id }); }); });
+  GL.forEach(g => { if (g[0].toLowerCase().includes(s) || g[1].some(v => v.toLowerCase().includes(s))) hits.push({ topic: g[3], kind: 'term', t: g[0], d: g[2], href: '#' + g[3] }); });
+  Object.values(CARDS).forEach(c => { if ((c[1] + ' ' + c[2]).toLowerCase().includes(s)) hits.push({ topic: c[3], kind: 'card', t: c[1], d: c[2], href: '#' + c[3] }); });
+  FACTS.facts.forEach(f => { if ((f.label + ' ' + f.value).toLowerCase().includes(s)) hits.push({ topic: f.topic, kind: 'fact', t: f.label, d: f.value, href: '#' + f.topic }); });
+  CHALLENGES.forEach(c => { if ((c.t + ' ' + c.d).toLowerCase().includes(s)) hits.push({ topic: c.topic, kind: 'challenge', t: c.t, d: c.d, href: c.href }); });
   return hits;
 }
 
@@ -145,7 +147,7 @@ function refresh(animate) {
     n.classList.toggle('stepn', step >= 0);
     n.classList.toggle('seen', !!P.seen[id]);
     const notyet = getYear() !== NOW && BORN[id] && BORN[id][0] > getYear();
-    n.classList.toggle('notyet', !!notyet); if (notyet) n.title = 'In ' + getYear() + ': not invented yet. ' + BORN[id][1]; else n.removeAttribute('title');
+    n.classList.toggle('notyet', !!notyet); if (notyet) n.title = t('map.notYet', { year: getYear(), what: BORN[id][1] }); else n.removeAttribute('title');
   });
   $('#mWhat').setAttribute('aria-pressed', W.on ? 'true' : 'false');
   renderPanel(); paintNodes(!!animate && W.on);
@@ -157,24 +159,25 @@ function renderInfo(th, hits) {
   if (W.on) {
     box.innerHTML = infoHTML(state.sel, innerWidth < 980 ? 5 : 12);
   } else if (hits) {
-    box.innerHTML = '<p class="code">Search</p><h3>' + hits.length + ' result' + (hits.length === 1 ? '' : 's') + ' for “' + esc(state.query) + '”</h3>' + (hits.length ? '<div class="hits">' + hits.slice(0, 40).map(h => '<a href="' + h.href + '"><span class="pill out">' + h.kind + '</span><b>' + esc(h.t) + '</b>' + (h.d ? '<small>' + esc(h.d) + '</small>' : '') + '<em>' + esc((topicById(h.topic) || { t: h.topic }).t) + '</em></a>').join('') + '</div>' : '<p class="muted">Nothing matches. Try a shorter word.</p>');
+    box.innerHTML = '<p class="code">' + t('search.code') + '</p><h3>' + t('search.count', { n: hits.length, q: esc(state.query) }) + '</h3>' + (hits.length ? '<div class="hits">' + hits.slice(0, 40).map(h => '<a href="' + h.href + '"><span class="pill out">' + t('search.kind.' + h.kind) + '</span><b>' + esc(h.t) + '</b>' + (h.d ? '<small>' + esc(h.d) + '</small>' : '') + '<em>' + esc((topicById(h.topic) || { t: h.topic }).t) + '</em></a>').join('') + '</div>' : '<p class="muted">' + t('search.none') + '</p>');
   } else if (th) {
-    box.innerHTML = '<p class="code">Thread</p><h3>' + esc(th.t) + '</h3><p>' + esc(th.d) + ' A suggestion, not a requirement: every topic stays open.</p><ol class="tpath">' + th.path.map((id, i) => { const t = topicById(id); return '<li><a href="#' + id + '"><span>' + (i + 1) + '</span><b>' + esc(t.t) + '</b>' + (P.seen[id] ? '<em>explored</em>' : '') + '</a></li>'; }).join('') + '</ol><div class="row"><a class="btn primary" href="#' + th.path.find(id => !P.seen[id]) + '" data-start-thread="' + th.id + '">' + (th.path.some(id => P.seen[id]) ? 'Continue the thread →' : 'Start the thread →') + '</a></div>';
+    box.innerHTML = '<p class="code">' + t('thread.panelCode') + '</p><h3>' + esc(th.t) + '</h3><p>' + esc(th.d) + ' ' + t('thread.note') + '</p><ol class="tpath">' + th.path.map((id, i) => { const tp = topicById(id); return '<li><a href="#' + id + '"><span>' + (i + 1) + '</span><b>' + esc(tp.t) + '</b>' + (P.seen[id] ? '<em>' + t('thread.explored') + '</em>' : '') + '</a></li>'; }).join('') + '</ol><div class="row"><a class="btn primary" href="#' + th.path.find(id => !P.seen[id]) + '" data-start-thread="' + th.id + '">' + (th.path.some(id => P.seen[id]) ? t('thread.continue') : t('thread.start')) + '</a></div>';
     if (th.path.every(id => P.seen[id])) box.querySelector('[data-start-thread]').setAttribute('href', '#' + th.path[0]);
   } else if (state.sel) {
-    const t = topicById(state.sel), b = bandById(t.band); const labs = labsOf(t.id), ch = challengesOf(t.id), fs = factsFor(t.id);
-    const conn = linkListHTML(t.id, 'button');
-    const ths = THREADS.filter(x => x.path.includes(t.id));
-    box.innerHTML = '<p class="code">' + esc(b.t) + (t.kind === 'build' ? ' · hands-on build' : '') + (P.seen[t.id] ? ' · explored' : '') + '</p><h3>' + esc(t.t) + '</h3><p>' + esc(t.s) + '</p><div class="row"><a class="btn primary" href="#' + t.id + '">Open ' + esc(t.t) + ' →</a></div>' +
-      (labs.length ? '<p class="eyebrow">Inside</p><ul class="ilist">' + labs.map(l => '<li><a href="#' + l.id + '">' + esc(l.t) + '</a></li>').join('') + '</ul>' : '') +
-      (ch.length ? '<p class="eyebrow">Challenges</p><ul class="ilist">' + ch.map(c => '<li><a href="' + c.href + '">' + esc(c.t) + '</a> <span class="muted small">' + c.kind + '</span></li>').join('') + '</ul>' : '') +
-      '<p class="eyebrow">Connects to</p><div class="conn">' + conn + '</div>' +
-      (fs.length ? '<p class="eyebrow">Live facts</p><ul class="ilist">' + fs.slice(0, 4).map(f => '<li>' + esc(f.label) + ': <b>' + esc(f.value) + '</b></li>').join('') + '</ul>' : '') +
-      (ths.length ? '<p class="eyebrow">On these threads</p><div class="row">' + ths.map(x => '<button type="button" class="chip" data-thread="' + x.id + '">' + esc(x.t) + '</button>').join('') + '</div>' : '');
+    const tp = topicById(state.sel), b = bandById(tp.band); const labs = labsOf(tp.id), ch = challengesOf(tp.id), fs = factsFor(tp.id);
+    const conn = linkListHTML(tp.id, 'button');
+    const ths = THREADS.filter(x => x.path.includes(tp.id));
+    box.innerHTML = '<p class="code">' + esc(b.t) + (tp.kind === 'build' ? t('panel.build') : '') + (P.seen[tp.id] ? t('panel.explored') : '') + '</p><h3>' + esc(tp.t) + '</h3><p>' + esc(tp.s) + '</p><div class="row"><a class="btn primary" href="#' + tp.id + '">' + esc(t('panel.open', { topic: tp.t })) + '</a></div>' +
+      (labs.length ? '<p class="eyebrow">' + t('panel.inside') + '</p><ul class="ilist">' + labs.map(l => '<li><a href="#' + l.id + '">' + esc(l.t) + '</a></li>').join('') + '</ul>' : '') +
+      (ch.length ? '<p class="eyebrow">' + t('panel.challenges') + '</p><ul class="ilist">' + ch.map(c => '<li><a href="' + c.href + '">' + esc(c.t) + '</a> <span class="muted small">' + t('ch.kind.' + c.kind) + '</span></li>').join('') + '</ul>' : '') +
+      '<p class="eyebrow">' + t('panel.connects') + '</p><div class="conn">' + conn + '</div>' +
+      (fs.length ? '<p class="eyebrow">' + t('panel.facts') + '</p><ul class="ilist">' + fs.slice(0, 4).map(f => '<li>' + esc(f.label) + ': <b>' + esc(f.value) + '</b></li>').join('') + '</ul>' : '') +
+      (ths.length ? '<p class="eyebrow">' + t('panel.threads') + '</p><div class="row">' + ths.map(x => '<button type="button" class="chip" data-thread="' + x.id + '">' + esc(x.t) + '</button>').join('') + '</div>' : '');
   } else if (state.lens) {
     box.innerHTML = lensInfoHTML(state.lens, state.idea);
   } else {
-    box.innerHTML = '<p class="code">How to use the map</p><h3>Select any topic</h3><p>Each box is a topic with its own simulations. Select one to see what it holds and how it connects. Double-click, or use its Open button, to go in.</p><p class="eyebrow">Or follow a thread</p><div class="tlist">' + THREADS.map(x => '<button type="button" data-thread="' + x.id + '"><b>' + esc(x.t) + '</b><small>' + esc(x.d) + '</small></button>').join('') + '</div><p class="eyebrow">Or ask what if</p><div class="tlist"><button type="button" data-whatif><b>What if…?</b><small>Cut the HBM supply, raise the price of power or delay a new node, and watch the effects ripple across the map</small></button></div><p class="eyebrow">Or look inside something you own</p><div class="tlist"><a href="#everywhere"><b>Chips everywhere</b><small>Open a phone, a car or a server and see which chips it takes</small></a></div><p class="eyebrow">Or build something</p><div class="tlist"><a href="#mychip"><b>My chip</b><small>One chip that is yours, followed through every layer</small></a><a href="#tiny"><b>Tiny chip studio</b><small>From logic to a working chip, in eight steps</small></a><a href="#riscv"><b>RISC-V CPU lab</b><small>Program a processor, then make it an AI chip</small></a><a href="#build"><b>AI chip architect</b><small>Design an AI chip for a mission</small></a></div>';
+    const go = (id, d) => '<a href="#' + id + '"><b>' + esc((topicById(id) || {}).t || t('help.mychipT')) + '</b><small>' + t(d) + '</small></a>';
+    box.innerHTML = '<p class="code">' + t('help.code') + '</p><h3>' + t('help.title') + '</h3><p>' + t('help.text') + '</p><p class="eyebrow">' + t('help.thread') + '</p><div class="tlist">' + THREADS.map(x => '<button type="button" data-thread="' + x.id + '"><b>' + esc(x.t) + '</b><small>' + esc(x.d) + '</small></button>').join('') + '</div><p class="eyebrow">' + t('help.whatif') + '</p><div class="tlist"><button type="button" data-whatif><b>' + t('help.whatifT') + '</b><small>' + t('help.whatifD') + '</small></button></div><p class="eyebrow">' + t('help.own') + '</p><div class="tlist">' + go('everywhere', 'help.everywhereD') + '</div><p class="eyebrow">' + t('help.build') + '</p><div class="tlist">' + go('mychip', 'help.mychipD') + go('tiny', 'help.tinyD') + go('riscv', 'help.riscvD') + go('build', 'help.buildD') + '</div>';
   }
   /* On narrow screens, show details right under the selected topic's layer. */
   const narrow = innerWidth < 980; const grid = document.querySelector('.mapgrid');

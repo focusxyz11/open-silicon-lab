@@ -3,11 +3,12 @@
    Each topic's explanations, quiz and tutor questions come from its topic.json ("learn") and
    arrive when the topic loads; the glossary is shared and lives in src/data/learning.js. */
 import { GL } from '../data/learning.js';
+import { t } from '../core/i18n.js';
 import { TOPICS, topicById, bandById } from '../data/topics.js';
 
 const $ = s => document.querySelector(s);
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-export const topicLabel = id => { const t = topicById(id); if (!t) return id === 'glossary' ? 'Glossary' : id === 'sources' ? 'Sources' : id; const b = bandById(t.band); return (b ? b.t + ' · ' : '') + t.t; };
+export const topicLabel = id => { const tp = topicById(id); if (!tp) return id === 'glossary' || id === 'sources' ? t('ref.' + id) : id; const b = bandById(tp.band); return (b ? b.t + ' · ' : '') + tp.t; };
 
 /* ---- mode ---- */
 export let mode = 'beginner';
@@ -29,10 +30,10 @@ const LEARN = {};
 export const learnOf = id => LEARN[id] || {};
 export function markSeen(id) { if (topicById(id) && !P.seen[id]) { P.seen[id] = 1; saveP(); updProgress(); } }
 export function updProgress() {
-  const n = TOPICS.filter(t => P.seen[t.id]).length; const t = $('#progTop'); if (!t) return;
-  t.querySelector('i').style.setProperty('--p', (n / TOPICS.length * 100) + '%');
-  t.querySelector('span').textContent = n + '/' + TOPICS.length + ' explored';
-  t.setAttribute('aria-label', 'You have explored ' + n + ' of ' + TOPICS.length + ' topics');
+  const n = TOPICS.filter(x => P.seen[x.id]).length; const el = $('#progTop'); if (!el) return;
+  el.querySelector('i').style.setProperty('--p', (n / TOPICS.length * 100) + '%');
+  el.querySelector('span').textContent = t('progress.short', { n, total: TOPICS.length });
+  el.setAttribute('aria-label', t('progress.long', { n, total: TOPICS.length }));
 }
 
 /* ---- quizzes, collapsed by default ---- */
@@ -41,10 +42,10 @@ function renderQuiz(s) {
   const q = learnOf(s).quiz, a = P.quiz[s] || {}; let right = 0, ans = 0;
   const body = q.map((x, i) => {
     const ch = a[i]; if (ch !== undefined) { ans++; if (ch === x.answer) right++; }
-    return '<div class="q"><p class="qt">' + (i + 1) + '. ' + esc(x.q) + '</p><div class="opts">' + x.options.map((o, j) => { let cl = ''; if (ch !== undefined) { if (j === x.answer) cl = 'right'; else if (j === ch) cl = 'wrong'; } return '<button type="button" data-i="' + i + '" data-j="' + j + '"' + (cl ? ' class="' + cl + '"' : '') + (ch !== undefined ? ' aria-disabled="true"' : '') + '>' + esc(o) + '</button>'; }).join('') + '</div>' + (ch !== undefined ? '<p class="exp"><b>' + (ch === x.answer ? 'Correct.' : 'Not quite.') + '</b> ' + esc(x.why) + '</p>' : '') + '</div>';
+    return '<div class="q"><p class="qt">' + (i + 1) + '. ' + esc(x.q) + '</p><div class="opts">' + x.options.map((o, j) => { let cl = ''; if (ch !== undefined) { if (j === x.answer) cl = 'right'; else if (j === ch) cl = 'wrong'; } return '<button type="button" data-i="' + i + '" data-j="' + j + '"' + (cl ? ' class="' + cl + '"' : '') + (ch !== undefined ? ' aria-disabled="true"' : '') + '>' + esc(o) + '</button>'; }).join('') + '</div>' + (ch !== undefined ? '<p class="exp"><b>' + (ch === x.answer ? t('quiz.right') : t('quiz.wrong')) + '</b> ' + esc(x.why) + '</p>' : '') + '</div>';
   }).join('');
   const open = box.querySelector('details') ? box.querySelector('details').open : false;
-  box.innerHTML = '<details' + (open ? ' open' : '') + '><summary><span class="code">Check yourself</span><span class="score">' + (ans ? right + ' of ' + q.length + ' correct' + (ans < q.length ? ' so far' : '') : q.length + ' quick question' + (q.length === 1 ? '' : 's') + ', optional') + '</span></summary>' + body + (ans === q.length ? '<div class="row"><button type="button" class="btn" data-reset="1">Try again</button></div>' : '') + '</details>';
+  box.innerHTML = '<details' + (open ? ' open' : '') + '><summary><span class="code">' + t('quiz.code') + '</span><span class="score">' + (ans ? t(ans < q.length ? 'quiz.soFar' : 'quiz.score', { right, total: q.length }) : t('quiz.count', { n: q.length })) + '</span></summary>' + body + (ans === q.length ? '<div class="row"><button type="button" class="btn" data-reset="1">' + t('quiz.again') + '</button></div>' : '') + '</details>';
   box.querySelectorAll('.opts button').forEach(b => b.addEventListener('click', () => { const i = +b.dataset.i; if ((P.quiz[s] || {})[i] !== undefined) return; P.quiz[s] = Object.assign({}, P.quiz[s]); P.quiz[s][i] = +b.dataset.j; saveP(); renderQuiz(s); }));
   const r = box.querySelector('[data-reset]'); if (r) r.addEventListener('click', () => { delete P.quiz[s]; saveP(); renderQuiz(s); box.querySelector('details').open = true; });
 }
@@ -54,7 +55,7 @@ function glList(q) {
   q = (q || '').trim().toLowerCase();
   const items = GL.filter(g => !q || g[0].toLowerCase().includes(q) || g[2].toLowerCase().includes(q)).sort((a, b) => a[0].localeCompare(b[0]));
   const box = $('#glList'); if (!box) return;
-  box.innerHTML = items.length ? items.map(g => '<div><b>' + esc(g[0]) + '</b><p>' + esc(g[2]) + '</p><a href="#' + g[3] + '">' + esc(topicLabel(g[3])) + '</a></div>').join('') : '<p class="muted">No terms match that search.</p>';
+  box.innerHTML = items.length ? items.map(g => '<div><b>' + esc(g[0]) + '</b><p>' + esc(g[2]) + '</p><a href="#' + g[3] + '">' + esc(topicLabel(g[3])) + '</a></div>').join('') : '<p class="muted">' + t('gl.none') + '</p>';
 }
 /* The term matcher is built once, the first time a topic needs it. */
 let TERMS = null;
@@ -86,7 +87,7 @@ function popovers() {
   let popFor = null, hideT = 0; const hoverable = matchMedia('(hover:hover)');
   function showPop(b) {
     const g = GL[+b.dataset.g]; if (!g) return; clearTimeout(hideT);
-    pop.innerHTML = '<b>' + esc(g[0]) + '</b><p>' + esc(g[2]) + '</p><a href="#' + g[3] + '">More in ' + esc(topicLabel(g[3])) + '</a>'; pop.hidden = false;
+    pop.innerHTML = '<b>' + esc(g[0]) + '</b><p>' + esc(g[2]) + '</p><a href="#' + g[3] + '">' + esc(t('gl.more', { topic: topicLabel(g[3]) })) + '</a>'; pop.hidden = false;
     const r = b.getBoundingClientRect(), pw = Math.min(320, innerWidth - 32); pop.style.maxWidth = pw + 'px'; pop.style.left = Math.min(Math.max(16, r.left), innerWidth - pw - 16) + 'px'; pop.style.top = (r.bottom + 8) + 'px';
     const ph = pop.offsetHeight; if (r.bottom + 8 + ph > innerHeight - 12) pop.style.top = Math.max(12, r.top - ph - 8) + 'px'; popFor = b;
   }
@@ -110,9 +111,9 @@ export function prepareTopic(id, sec, learn = {}) {
   if (id === 'sources') return;
   const head = sec.querySelector('.head');
   const lab = head && head.querySelector('[data-topic-label]'); if (lab) lab.textContent = topicLabel(id);
-  if (head) { const ab = document.createElement('button'); ab.type = 'button'; ab.className = 'askbtn'; ab.hidden = !askOn; ab.dataset.s = id; ab.textContent = 'Ask Claude about this topic'; head.appendChild(ab); }
+  if (head) { const ab = document.createElement('button'); ab.type = 'button'; ab.className = 'askbtn'; ab.hidden = !askOn; ab.dataset.s = id; ab.textContent = t('ask.button'); head.appendChild(ab); }
   LEARN[id] = learn;
-  if (learn.plain && head) { const b = document.createElement('div'); b.className = 'beg'; b.innerHTML = '<p class="eyebrow">In plain words</p><p>' + esc(learn.plain) + '</p>'; const e = document.createElement('div'); e.className = 'eng'; e.innerHTML = '<p class="eyebrow">Engineer\'s notes</p><p>' + esc(learn.engineer) + '</p>'; head.after(b, e); }
+  if (learn.plain && head) { const b = document.createElement('div'); b.className = 'beg'; b.innerHTML = '<p class="eyebrow">' + t('learn.plain') + '</p><p>' + esc(learn.plain) + '</p>'; const e = document.createElement('div'); e.className = 'eng'; e.innerHTML = '<p class="eyebrow">' + t('learn.engineer') + '</p><p>' + esc(learn.engineer) + '</p>'; head.after(b, e); }
   if (learn.quiz && learn.quiz.length) { const d = document.createElement('div'); d.className = 'quiz'; d.dataset.s = id; sec.appendChild(d); renderQuiz(id); }
   wrapTerms(sec);
 }
