@@ -45,6 +45,14 @@ async function check(viewport) {
   if (!(await page.textContent('#mInfo')).includes('Connects to')) problems.push(tag + 'map info panel did not open');
   await page.click('#mThreads button[data-th="make"]');
   if ((await page.$$('.tnode.stepn')).length !== 6) problems.push(tag + 'thread did not highlight its 6 steps');
+  // Lenses: one kind of connection at a time, and one big idea across the layers.
+  if (await page.$('#mSvg path.k-causes')) problems.push(tag + 'quiet map still draws every line');
+  await page.click('#mLens [data-lens="causes"]');
+  if ((await page.$$('#mSvg path.k-causes')).length < 5 || !(await page.textContent('#mInfo')).includes('domino')) problems.push(tag + 'cause-and-effect lens did not draw its arrows and dominoes');
+  await page.click('#mLens [data-lens="ideas"]');
+  await page.click('#mInfo [data-idea="keep-data-close"]');
+  if ((await page.$$('.tnode.hit')).length < 4 || !(await page.$('#mSvg path.idea'))) problems.push(tag + 'big-idea lens did not trace "Keep data close"');
+  await page.click('#mLens [data-lens=""]');
   await page.fill('#mSearch', 'HBM');
   if (!(await page.$$('#mInfo .hits a')).length) problems.push(tag + 'search found nothing for HBM');
 

@@ -11,7 +11,7 @@ const bandVar = id => 'var(--band' + (bandIx(id) % 5) + ')';
 
 /* "If yield falls, what happens in Economics?" Seen from the topic that is changed, the question
    asks what happens here. The answer stays folded until the reader has had a moment to think. */
-function predictCard(id, l) {
+export function predictCard(id, l) {
   const o = topicById(l.other), ob = bandById(o.band);
   const where = l.out ? 'in ' + esc(o.t) : 'here';
   return '<details class="pcard"><summary><span class="code">Predict · ' + esc(l.out ? ob.t : 'from ' + o.t) + '</span>' +
@@ -33,7 +33,7 @@ export function connectionsHTML(id) {
 
 /* One big idea as a ladder down the stack: every topic that shows it, in band order, with this
    topic marked. Counter-examples are labelled, because where an idea breaks is worth seeing. */
-function ladder(ideaId, here) {
+export function ladder(ideaId, here) {
   const uses = usesOf(ideaId).slice().sort((a, b) => bandIx(topicById(a.topic).band) - bandIx(topicById(b.topic).band));
   return '<ol class="ladder">' + uses.map(u => {
     const t = topicById(u.topic), b = bandById(t.band), me = u.topic === here;

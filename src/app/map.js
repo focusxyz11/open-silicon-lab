@@ -2,8 +2,9 @@
    knowledge graph draws the wires between them. Select a topic to see what it holds and
    what it connects to; pick a thread to light up a suggested route. Nothing is locked. */
 import { TOPIC_FILES } from '../generated/catalog.js';
-import { BANDS, TOPICS, EDGES, THREADS, topicById, bandById } from '../data/topics.js';
+import { BANDS, TOPICS, EDGES, LINKS, THREADS, topicById, bandById } from '../data/topics.js';
 import { linkListHTML } from './connections.js';
+import { lensBarHTML, lensInfoHTML, lensTopics, markerDefs, ideaPath, longestChain, LENSES } from './maplens.js';
 import { CHALLENGES } from '../data/challenges.js';
 import { GL } from '../data/learning.js';
 import { CARDS } from '../data/cards.js';
@@ -16,14 +17,16 @@ import { W, renderPanel, wirePanel, paintNodes, rippleLinks, infoHTML } from './
 const $ = s => document.querySelector(s);
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const NS = 'http://www.w3.org/2000/svg';
-export const state = { sel: null, thread: null, query: '' };
+/* lens: which kind of connection the lines show ('' = only the selected or hovered topic's);
+   idea: the big idea followed when lens is 'ideas'. */
+export const state = { sel: null, thread: null, query: '', lens: '', idea: null };
 
 export function renderMapShell(zoomHTML) {
   $('#view-map').innerHTML = `
   <section class="wrap maphero">
     <p class="eyebrow">Open-source chip lab · facts checked October 2026</p>
     <h1>The whole chip, from <em>atoms</em> to everything it powers</h1>
-    <p class="lede">Phones, cars, thermostats and AI data centers all run on chips made through the same stack: physics, transistors, design, factories and packaging. Every layer is a topic with live simulations you can play with, and wires show how the topics depend on each other. Start anywhere: pick a topic, follow a thread, or build a chip in the workshop.</p>
+    <p class="lede">Phones, cars, thermostats and AI data centers all run on chips made through the same stack: physics, transistors, design, factories and packaging. Every layer is a topic with live simulations you can play with, and you can choose which connections between them to see. Start anywhere: pick a topic, follow a thread, or build a chip in the workshop.</p>
     <div class="mstats" id="mStats"></div>
     <button type="button" class="btn tourbtn" data-guide-start>Take the 30-second tour</button>
   </section>
@@ -48,9 +51,10 @@ export function renderMapShell(zoomHTML) {
         <button type="button" class="wibtn" id="mWhat" aria-pressed="false" aria-controls="mWhatif"><b>What if…?</b> Simulate the industry</button>
         <input type="search" id="mSearch" placeholder="Search anything: HBM, EUV, RISC-V, yield…" aria-label="Search the map">
       </div>
+      <div class="lensbar" id="mLens" role="group" aria-label="Which connections the map shows">${lensBarHTML()}</div>
       <div class="whatif" id="mWhatif" hidden></div>
       <div class="mstack" id="mStack"><svg id="mSvg" aria-hidden="true"></svg><div id="mBands"></div><svg id="mSvgL" aria-hidden="true"></svg></div>
-      <p class="note">Layers run from the world at the top to atoms at the bottom, like a cross-section of a chip. Thin lines show how topics connect; select a topic to label its connections. Dashed outlines mark hands-on builds.</p>
+      <p class="note">Layers run from the world at the top to atoms at the bottom, like a cross-section of a chip. Select or hover a topic to see its connections, or choose above which kind to show: what rests on what, what is inside what, cause and effect, or one big idea across the layers. Dashed outlines mark hands-on builds.</p>
     </div>
     <aside class="mapinfo" id="mInfo" aria-live="polite"></aside>
   </section>
@@ -83,15 +87,16 @@ export function initMap() {
   const labCount = TOPICS.reduce((s, t) => s + labsOf(t.id).length, 0);
   $('#mStats').innerHTML = [[TOPICS.length, 'topics'], [labCount + '+', 'live simulations'], [CHALLENGES.length, 'challenges'], [FACTS.facts.length, 'dated facts']].map(x => '<div><b>' + x[0] + '</b><span>' + x[1] + '</span></div>').join('');
   $('#mThreads').innerHTML = '<button type="button" data-th="">All topics</button>' + THREADS.map(t => '<button type="button" data-th="' + t.id + '">' + esc(t.t) + '</button>').join('');
-  $('#mThreads').querySelectorAll('button').forEach(b => b.addEventListener('click', () => { state.thread = b.dataset.th || null; state.query = ''; $('#mSearch').value = ''; if (state.thread) { state.sel = null; W.on = false; } refresh(); }));
+  $('#mThreads').querySelectorAll('button').forEach(b => b.addEventListener('click', () => { state.thread = b.dataset.th || null; state.query = ''; $('#mSearch').value = ''; if (state.thread) { state.sel = null; W.on = false; state.lens = ''; } refresh(); }));
+  $('#mLens').addEventListener('click', e => { const b = e.target.closest('[data-lens]'); if (!b) return; setLens(b.dataset.lens); });
   $('#mWhat').addEventListener('click', () => setWhatif(!W.on));
   wirePanel(animate => { if (!W.on) state.sel = null; refresh(animate); });
   $('#mBands').addEventListener('click', e => { const n = e.target.closest('.tnode'); if (!n) return; state.sel = state.sel === n.dataset.t && !matchMedia('(hover:hover)').matches ? state.sel : n.dataset.t; state.query = ''; $('#mSearch').value = ''; refresh(); });
   $('#mBands').addEventListener('dblclick', e => { const n = e.target.closest('.tnode'); if (n) location.hash = n.dataset.t; });
   $('#mBands').addEventListener('mouseover', e => { const n = e.target.closest('.tnode'); hover = n ? n.dataset.t : null; drawEdges(); });
   $('#mBands').addEventListener('mouseleave', () => { hover = null; drawEdges(); });
-  $('#mSearch').addEventListener('input', e => { state.query = e.target.value.trim(); if (state.query) { state.thread = null; state.sel = null; W.on = false; } refresh(); });
-  $('#mInfo').addEventListener('click', e => { const b = e.target.closest('[data-pick]'); if (b) { state.sel = b.dataset.pick; state.thread = null; refresh(); } const th = e.target.closest('[data-thread]'); if (th) { state.thread = th.dataset.thread; state.sel = null; W.on = false; refresh(); } if (e.target.closest('[data-whatif]')) setWhatif(true); });
+  $('#mSearch').addEventListener('input', e => { state.query = e.target.value.trim(); if (state.query) { state.thread = null; state.sel = null; W.on = false; state.lens = ''; } refresh(); });
+  $('#mInfo').addEventListener('click', e => { const b = e.target.closest('[data-pick]'); if (b) { state.sel = b.dataset.pick; state.thread = null; refresh(); } const th = e.target.closest('[data-thread]'); if (th) { state.thread = th.dataset.thread; state.sel = null; W.on = false; state.lens = ''; refresh(); } const id = e.target.closest('[data-idea]'); if (id) { state.lens = 'ideas'; state.idea = id.dataset.idea || null; state.sel = null; refresh(); } if (e.target.closest('[data-whatif]')) setWhatif(true); });
   new ResizeObserver(() => drawEdges()).observe($('#mStack'));
   document.addEventListener('osl:year', () => refresh());
   $('#changes').innerHTML = changesHTML();
@@ -113,21 +118,29 @@ function search(q) {
 /* What if? mode: levers above the map, ripple badges on the topics. */
 export function setWhatif(on) {
   W.on = on; state.sel = null;
-  if (on) { state.thread = null; state.query = ''; $('#mSearch').value = ''; }
+  if (on) { state.thread = null; state.query = ''; $('#mSearch').value = ''; state.lens = ''; }
   refresh(on);
   if (on) requestAnimationFrame(() => { const r = $('#mWhatif').getBoundingClientRect(); if (r.top < 60 || r.top > innerHeight * 0.6) $('#mWhatif').scrollIntoView({ block: 'start', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' }); });
+}
+
+/* Show one kind of connection on the map ('' for quiet, 'ideas' for big ideas). */
+export function setLens(lens) {
+  state.lens = LENSES.some(l => l.id === lens) ? lens : ''; state.idea = null; state.sel = null; state.thread = null;
+  state.query = ''; $('#mSearch').value = ''; W.on = false; refresh();
 }
 
 let hover = null;
 function refresh(animate) {
   const th = state.thread ? THREADS.find(t => t.id === state.thread) : null;
   const hits = state.query.length > 1 ? search(state.query) : null; const hitTopics = hits ? new Set(hits.map(h => h.topic)) : null;
+  const inLens = !W.on && !th && !hits ? lensTopics(state.lens, state.idea) : null;
+  $('#mLens').querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', !W.on && !th && b.dataset.lens === state.lens ? 'true' : 'false'));
   $('#mThreads').querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', !W.on && (b.dataset.th || null) === state.thread ? 'true' : 'false'));
   document.querySelectorAll('#mBands .tnode').forEach(n => {
     const id = n.dataset.t; const step = th ? th.path.indexOf(id) : -1;
     n.classList.toggle('sel', id === state.sel);
-    n.classList.toggle('dim', (!!th && step < 0) || (!!hitTopics && !hitTopics.has(id)));
-    n.classList.toggle('hit', !!hitTopics && hitTopics.has(id));
+    n.classList.toggle('dim', (!!th && step < 0) || (!!hitTopics && !hitTopics.has(id)) || (!!inLens && !inLens.has(id)));
+    n.classList.toggle('hit', (!!hitTopics && hitTopics.has(id)) || (state.lens === 'ideas' && !!inLens && inLens.has(id)));
     n.querySelector('.nb').textContent = step >= 0 ? String(step + 1) : '';
     n.classList.toggle('stepn', step >= 0);
     n.classList.toggle('seen', !!P.seen[id]);
@@ -158,6 +171,8 @@ function renderInfo(th, hits) {
       '<p class="eyebrow">Connects to</p><div class="conn">' + conn + '</div>' +
       (fs.length ? '<p class="eyebrow">Live facts</p><ul class="ilist">' + fs.slice(0, 4).map(f => '<li>' + esc(f.label) + ': <b>' + esc(f.value) + '</b></li>').join('') + '</ul>' : '') +
       (ths.length ? '<p class="eyebrow">On these threads</p><div class="row">' + ths.map(x => '<button type="button" class="chip" data-thread="' + x.id + '">' + esc(x.t) + '</button>').join('') + '</div>' : '');
+  } else if (state.lens) {
+    box.innerHTML = lensInfoHTML(state.lens, state.idea);
   } else {
     box.innerHTML = '<p class="code">How to use the map</p><h3>Select any topic</h3><p>Each box is a topic with its own simulations. Select one to see what it holds and how it connects. Double-click, or use its Open button, to go in.</p><p class="eyebrow">Or follow a thread</p><div class="tlist">' + THREADS.map(x => '<button type="button" data-thread="' + x.id + '"><b>' + esc(x.t) + '</b><small>' + esc(x.d) + '</small></button>').join('') + '</div><p class="eyebrow">Or ask what if</p><div class="tlist"><button type="button" data-whatif><b>What if…?</b><small>Cut the HBM supply, raise the price of power or delay a new node, and watch the effects ripple across the map</small></button></div><p class="eyebrow">Or look inside something you own</p><div class="tlist"><a href="#everywhere"><b>Chips everywhere</b><small>Open a phone, a car or a server and see which chips it takes</small></a></div><p class="eyebrow">Or build something</p><div class="tlist"><a href="#mychip"><b>My chip</b><small>One chip that is yours, followed through every layer</small></a><a href="#tiny"><b>Tiny chip studio</b><small>From logic to a working chip, in eight steps</small></a><a href="#riscv"><b>RISC-V CPU lab</b><small>Program a processor, then make it an AI chip</small></a><a href="#build"><b>AI chip architect</b><small>Design an AI chip for a mission</small></a></div>';
   }
@@ -165,6 +180,7 @@ function renderInfo(th, hits) {
   const narrow = innerWidth < 980; const grid = document.querySelector('.mapgrid');
   if (narrow && state.sel) { const band = document.querySelector('#mBands .tnode[data-t="' + state.sel + '"]').closest('.band'); band.after(box); box.classList.add('inline'); }
   else if (narrow && W.on) { $('#mWhatif').after(box); box.classList.add('inline', 'wiinline'); }
+  else if (narrow && state.lens && !th && !hits) { $('#mLens').after(box); box.classList.add('inline'); }
   else if (box.parentElement !== grid) { grid.appendChild(box); box.classList.remove('inline'); }
   else box.classList.remove('inline');
   if (!(narrow && W.on && !state.sel)) box.classList.remove('wiinline');
@@ -192,16 +208,25 @@ function drawEdges() {
       p.style.strokeWidth = (1.6 + Math.min(2.6, Math.abs(r.amt) / 15)).toFixed(1);
       if (state.sel && (r.a === state.sel || r.b === state.sel)) labels.push([a, b, r.s]);
     });
-  } else {
-    /* Two kinds of link can join the same pair; draw and label that pair once (the side panel lists both). */
+  } else if (!th && state.lens === 'ideas') {
+    /* One big idea: a dashed path through every topic that shows it, top to bottom. */
+    if (state.idea) { const u = ideaPath(state.idea); for (let i = 1; i < u.length; i++) { const a = center(u[i - 1].topic, wrap), b = center(u[i].topic, wrap); if (a && b) mk(curve(a, b), 'w idea'); } }
+  } else if (!th) {
+    /* Quiet: only the focused topic's links. A lens: every link of that kind, with arrows that
+       read as its sentence. Two kinds can join one pair; each pair is labelled once. */
+    svg.appendChild(markerDefs(NS));
     const pairs = new Set();
-    EDGES.forEach(e => {
-      const key = [e[0], e[1]].sort().join(' '); if (pairs.has(key)) return; pairs.add(key);
-      const a = center(e[0], wrap), b = center(e[1], wrap); if (!a || !b) return;
-      const on = focus && (e[0] === focus || e[1] === focus);
-      const cls = th ? 'w faint' : on ? 'w on' : (focus ? 'w faint' : 'w');
-      mk(curve(a, b), cls);
-      if (on && state.sel) labels.push([a, b, e[2]]);
+    /* With nothing selected, a lens tells one story: its longest chain, bold; the rest faint. */
+    const chain = state.lens && !focus ? new Set(longestChain(state.lens)) : null;
+    LINKS.forEach(l => {
+      if (state.lens && l.kind !== state.lens) return;
+      const on = !!focus && (l.from === focus || l.to === focus);
+      if (!state.lens && !on) return;
+      const a = center(l.from, wrap), b = center(l.to, wrap); if (!a || !b) return;
+      const p = mk(curve(a, b), 'w k-' + l.kind + (on || (chain && chain.has(l)) ? ' on' : (focus || chain) ? ' faint' : ''));
+      p.setAttribute('marker-end', 'url(#mk-' + l.kind + ')');
+      const key = [l.from, l.to].sort().join(' ');
+      if (on && state.sel && !pairs.has(key)) { pairs.add(key); labels.push([a, b, l.why]); }
     });
   }
   if (th) { for (let i = 1; i < th.path.length; i++) { const a = center(th.path[i - 1], wrap), b = center(th.path[i], wrap); if (a && b) mk(curve(a, b), 'w path'); } }

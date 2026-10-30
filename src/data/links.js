@@ -13,6 +13,7 @@
 export const LINK_KINDS = {
   'part-of': {
     t: 'Part of', out: 'Part of', back: 'Made of',
+    means: 'Each arrow points from a part to the thing it sits inside. Follow the arrows to zoom out.',
     ask: 'What is it inside, and what is inside it?',
     test: 'It sits inside the other: you could point at it in the finished thing.',
     example: 'transistor part-of architecture: billions of switches make up a processor',
@@ -20,6 +21,7 @@ export const LINK_KINDS = {
   },
   'kind-of': {
     t: 'Kind of', out: 'One kind of', back: 'Includes',
+    means: 'Each arrow points from one member to its family. Members of one family are worth comparing.',
     ask: 'What else is like it?',
     test: 'It is one member of a family that the other topic describes.',
     example: 'quantum kind-of beyond: one of the new kinds of computer',
@@ -27,6 +29,7 @@ export const LINK_KINDS = {
   },
   'feeds': {
     t: 'Feeds', out: 'Feeds into', back: 'Fed by',
+    means: 'Each arrow is the next step: what one step makes, the next one starts from.',
     ask: 'Where does the work go next?',
     test: 'What this step produces is what the other step starts from.',
     example: 'layout feeds litho: the layout becomes masks',
@@ -34,12 +37,14 @@ export const LINK_KINDS = {
   },
   'causes': {
     t: 'Causes', out: 'Changes', back: 'Changed by',
+    means: 'Each arrow is a domino: a change where it starts changes the topic it points to.',
     ask: 'If this changes, what happens there?',
     test: 'A change here changes the other, and you can say which way. Also give "if" (the change here) and "then" (what happens there).',
     example: 'yield causes economics: if yield falls, then each working chip costs more'
   },
   'grew-from': {
     t: 'Grew from', out: 'Grew from', back: 'Led to',
+    means: 'Each arrow points from something newer to the older idea it came out of.',
     ask: 'Where did it come from?',
     test: 'It historically came out of the other.',
     example: 'riscv grew-from architecture: Berkeley\'s RISC research of the 1980s',
@@ -47,6 +52,7 @@ export const LINK_KINDS = {
   },
   'builds-on': {
     t: 'Builds on', out: 'Builds on', back: 'Foundation for',
+    means: 'Each arrow points from a topic to what it rests on. Follow the arrows down to the foundations.',
     ask: 'What does it rest on?',
     test: 'It uses the ideas or methods of the other as its foundation.',
     example: 'transistor builds-on physics: doping and fields make the switch',

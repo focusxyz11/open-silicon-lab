@@ -58,6 +58,11 @@ Choose the first kind that is true; the order runs from concrete to general. Cha
 are real. Topic pages show each kind in its own form: `causes` links become predictions to make before
 the answer opens, the others are grouped under their question (`src/app/connections.js`).
 
+The map starts quiet: only the hovered or selected topic's links are drawn. The **Show** bar picks one
+lens at a time (`src/app/maplens.js`): one kind of link in its own colour, with arrows that read as its
+sentence and its longest chain in bold (stepping stones for *rests on*, dominoes for *cause and
+effect*), or **Big ideas**, which traces one idea through every layer that shows it.
+
 ### Big ideas echo across layers
 
 A big idea (*Keep data close*, *Copies catch mistakes*, *Pay once, copy cheaply*, …) must show up in at
@@ -163,9 +168,8 @@ Steps, each a small pull request:
 2. **Everything about a topic in its folder.** *Done* for its place, links, big ideas, challenges and
    learning content; `graph.js` is generated from the folders. Still central: the time-machine line
    (`topicLine` in `src/data/timeline.js`), glossary terms and facts.
-3. **Typed connections.** *Done* in the data and on topic pages (six kinds, big ideas). Next: trade-offs,
-   measures and debates as hubs (the open problems become debates), and map modes that show one kind at
-   a time instead of every line.
+3. **Typed connections.** *Done* in the data, on topic pages and on the map (six kinds, big ideas, map
+   lenses). Next: trade-offs, measures and debates as hubs (the open problems become debates).
 4. **Split `base.css`** so each topic carries its own simulation styles.
 5. **Languages.** User-facing text moves out of code: `content.<lang>.html` beside `content.html`, a
    `topic.<lang>.json` holding only the translated text fields of `topic.json`, shell text in
