@@ -41,6 +41,23 @@
       "how": "most chips come from older fabs that are long paid for"
     }
   ],
+  "tradeoffs": [
+    {
+      "tradeoff": "flexible-efficient",
+      "how": "each job in a device gets the cheapest chip that can do it",
+      "try": "#lab-everywhere-2"
+    },
+    {
+      "tradeoff": "safety-cost",
+      "how": "a car part costs more than a phone part that does the same job"
+    }
+  ],
+  "measures": [
+    {
+      "measure": "dppm",
+      "how": "car parts must fail far less often than phone parts"
+    }
+  ],
   "challenges": [
     {
       "kind": "Experiment",

@@ -42,6 +42,23 @@
       "how": "shared wafers split the up-front cost among many small designs"
     }
   ],
+  "tradeoffs": [
+    {
+      "tradeoff": "safety-cost",
+      "how": "more test patterns catch more faults, at more test time",
+      "try": "#lab-tiny-1"
+    },
+    {
+      "tradeoff": "ship-check",
+      "how": "the verify step runs before anything is made"
+    }
+  ],
+  "measures": [
+    {
+      "measure": "yield",
+      "how": "the test step sorts working chips from faulty ones"
+    }
+  ],
   "challenges": [
     {
       "kind": "Puzzle",

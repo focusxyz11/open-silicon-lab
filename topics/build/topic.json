@@ -24,6 +24,13 @@
       "how": "you choose what to specialize for, mission by mission"
     }
   ],
+  "tradeoffs": [],
+  "measures": [
+    {
+      "measure": "cost-chip",
+      "how": "your design's cost per chip against real ones"
+    }
+  ],
   "challenges": [
     {
       "kind": "Design",

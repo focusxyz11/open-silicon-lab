@@ -17,6 +17,19 @@
       "how": "a systolic array is a grid of small multipliers working in step"
     }
   ],
+  "tradeoffs": [
+    {
+      "tradeoff": "precision-energy",
+      "how": "smaller numbers move fewer bytes, so the multipliers stay busy",
+      "try": "#lab-compute-2"
+    }
+  ],
+  "measures": [
+    {
+      "measure": "bandwidth",
+      "how": "the slope of the roofline"
+    }
+  ],
   "challenges": [],
   "learn": {
     "plain": "An AI chip is a giant multiplication machine. It runs fastest when its thousands of calculators stay busy, which means feeding them data quickly from memory and serving many people at once.",

@@ -36,6 +36,23 @@
       "how": "power and cooling limit how many chips a site can run"
     }
   ],
+  "tradeoffs": [
+    {
+      "tradeoff": "speed-power",
+      "how": "serving answers faster costs more energy per token",
+      "try": "#lab-datacenter-4"
+    }
+  ],
+  "measures": [
+    {
+      "measure": "ops-watt",
+      "how": "energy per token is the same idea, for a whole data center"
+    },
+    {
+      "measure": "bandwidth",
+      "how": "memory and networks both have to keep up"
+    }
+  ],
   "challenges": [
     {
       "kind": "Experiment",

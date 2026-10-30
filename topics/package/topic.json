@@ -32,6 +32,24 @@
       "how": "as shrinking slows, joining and stacking dies carries progress"
     }
   ],
+  "tradeoffs": [
+    {
+      "tradeoff": "near-big",
+      "how": "more HBM stacks give more room and more bandwidth, at more cost",
+      "try": "#lab-package-2"
+    },
+    {
+      "tradeoff": "big-yield",
+      "how": "chiplets need an interposer and fast links to act as one chip",
+      "try": "#lab-package-1"
+    }
+  ],
+  "measures": [
+    {
+      "measure": "bandwidth",
+      "how": "HBM stacks set how fast each GPU is fed"
+    }
+  ],
   "challenges": [],
   "learn": {
     "plain": "Packaging used to be just a protective case. Now it is like building a tiny city block: processor buildings next to memory towers, joined by extremely dense roads so data never travels far.",

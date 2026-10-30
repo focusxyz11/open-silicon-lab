@@ -52,7 +52,10 @@ topics/README.md         how a topic folder works, and how to start a new one   
 src/data/topics.js       the knowledge graph, read from the topic folders: topics, typed links, big ideas, threads
 src/data/links.js        the six kinds of link, and how to choose one
 src/data/ideas.js        big ideas that echo across layers
-src/data/challenges.js   open problems (each challenge lives in its topic.json)
+src/data/tradeoffs.js    trade-offs: what you give up
+src/data/measures.js     measures: what a number counts and what it hides
+src/data/debates.js      open debates, each view with its assumption
+src/data/challenges.js   the generated challenge list (each challenge lives in its topic.json)
 src/data/facts.json      dated, sourced facts (updated by pull request)
 src/data/learning.js     the glossary (explanations and quizzes live in each topic.json)
 src/engines/             pure logic, no DOM, with tests: RISC-V, tiny chip, reliability, new ways to compute, …

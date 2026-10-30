@@ -37,6 +37,23 @@
       "how": "spare memory rows and fused-off cores let a flawed die still ship"
     }
   ],
+  "tradeoffs": [
+    {
+      "tradeoff": "big-yield",
+      "how": "split the die and watch the cost per working chip fall",
+      "try": "#lab-yield-1"
+    }
+  ],
+  "measures": [
+    {
+      "measure": "yield",
+      "how": "the wafer map shows it die by die"
+    },
+    {
+      "measure": "cost-chip",
+      "how": "bad dies raise the cost of the good ones"
+    }
+  ],
   "challenges": [],
   "learn": {
     "plain": "Picture raindrops falling on a tiled floor: any tile hit by a drop is ruined. Big tiles get hit more often, so cutting a design into smaller tiles (chiplets) wastes less.",

@@ -36,6 +36,28 @@
       "how": "AI chips drop what AI does not need and add more of what it does"
     }
   ],
+  "tradeoffs": [
+    {
+      "tradeoff": "precision-energy",
+      "how": "each halving of the number size halves the memory traffic",
+      "try": "#lab-accelerators-3"
+    },
+    {
+      "tradeoff": "near-big",
+      "how": "SRAM chips are fast but small; HBM holds whole models",
+      "try": "#lab-accelerators-1"
+    }
+  ],
+  "measures": [
+    {
+      "measure": "ops-watt",
+      "how": "AI chips compete on it as much as on speed"
+    },
+    {
+      "measure": "bandwidth",
+      "how": "the biggest difference between AI chips is often here"
+    }
+  ],
   "challenges": [],
   "learn": {
     "plain": "All AI chips are giant calculators. The big difference is where they keep the numbers they work on: in memory chips next door (GPUs and TPUs), or spread through the chip itself (wafer-scale and SRAM designs). Keeping numbers closer is faster, but holds less.",

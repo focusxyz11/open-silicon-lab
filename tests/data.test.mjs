@@ -3,7 +3,8 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, existsSync } from 'node:fs';
 import { BANDS, TOPICS, EDGES, THREADS } from '../src/data/topics.js';
-import { CHALLENGES, PROBLEMS } from '../src/data/challenges.js';
+import { CHALLENGES } from '../src/data/challenges.js';
+import { DEBATES, debateTopics } from '../src/data/debates.js';
 import { CARDS } from '../src/data/cards.js';
 import { GL } from '../src/data/learning.js';
 
@@ -20,11 +21,11 @@ test('every topic has a band and a content file', () => {
     assert.match(readFileSync(f, 'utf8'), new RegExp('<section id="' + t.id + '"'), t.id + ' section id');
   }
 });
-test('links, threads, challenges, problems, cards and glossary point at real topics', () => {
+test('links, threads, challenges, debates, cards and glossary point at real topics', () => {
   for (const [a, b, l] of EDGES) { assert.ok(ids.has(a) && ids.has(b), a + '→' + b); assert.ok(l.length > 3); }
   for (const th of THREADS) th.path.forEach(id => assert.ok(ids.has(id), th.id + ': ' + id));
   for (const c of CHALLENGES) { assert.ok(ids.has(c.topic), c.t); assert.ok(['Puzzle', 'Design', 'Experiment'].includes(c.kind)); }
-  for (const p of PROBLEMS) p.try.forEach(id => assert.ok(ids.has(id), p.id + ': ' + id));
+  for (const d of DEBATES) debateTopics(d).forEach(id => assert.ok(ids.has(id), d.id + ': ' + id));
   for (const [k, c] of Object.entries(CARDS)) assert.ok(ids.has(c[3]), 'card ' + k);
   for (const g of GL) assert.ok(ids.has(g[3]), 'term ' + g[0]);
 });

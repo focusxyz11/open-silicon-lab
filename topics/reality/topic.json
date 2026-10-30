@@ -44,6 +44,19 @@
       "how": "a chip can pass every check and still fail"
     }
   ],
+  "tradeoffs": [
+    {
+      "tradeoff": "safety-cost",
+      "how": "every protection lowers failures and costs speed, power or money",
+      "try": "#lab-reality-1"
+    }
+  ],
+  "measures": [
+    {
+      "measure": "dppm",
+      "how": "each mission sets its own target"
+    }
+  ],
   "challenges": [
     {
       "kind": "Design",

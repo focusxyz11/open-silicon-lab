@@ -28,6 +28,13 @@
       "how": "neurons spend energy only when a spike arrives"
     }
   ],
+  "tradeoffs": [],
+  "measures": [
+    {
+      "measure": "ops-watt",
+      "how": "spikes do work only when something happens"
+    }
+  ],
   "challenges": [
     {
       "kind": "Puzzle",

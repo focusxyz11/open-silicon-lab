@@ -46,6 +46,23 @@
       "how": "a transistor's current changes smoothly; digital logic uses only on and off"
     }
   ],
+  "tradeoffs": [
+    {
+      "tradeoff": "speed-power",
+      "how": "switches that turn on harder also leak more when off",
+      "try": "#lab-transistor-1"
+    }
+  ],
+  "measures": [
+    {
+      "measure": "transistors",
+      "how": "billions of switches, each one shrinking"
+    },
+    {
+      "measure": "node",
+      "how": "each new node changes the switch's shape"
+    }
+  ],
   "challenges": [],
   "learn": {
     "plain": "A transistor is a tap for electricity, and the gate is the handle. As taps got tiny, they started dripping even when closed. Each new design grips the pipe from more sides so it shuts off tightly.",

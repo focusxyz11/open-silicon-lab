@@ -24,6 +24,17 @@
       "how": "CFET and 2D materials are the next answers"
     }
   ],
+  "tradeoffs": [],
+  "measures": [
+    {
+      "measure": "transistors",
+      "how": "the trend line to 2040"
+    },
+    {
+      "measure": "node",
+      "how": "the roadmap names nodes year by year"
+    }
+  ],
   "challenges": [
     {
       "kind": "Experiment",

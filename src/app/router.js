@@ -2,6 +2,7 @@
    Links are plain hashes (#litho, #lab-litho-2, #riscv-5), so every place in the lab is shareable. */
 import { TOPICS, THREADS, topicById, bandById } from '../data/topics.js';
 import { connectionsHTML, ideasHTML, linkListHTML } from './connections.js';
+import { hubsHTML } from './hubs.js';
 import { renderEraBanner } from './era.js';
 import { renderChipBanner, renderMyChip, chipVisit } from './mychip.js';
 import { CHALLENGES } from '../data/challenges.js';
@@ -56,7 +57,7 @@ function renderChrome(id) {
     '<p class="eyebrow">Connected topics</p>' + linkListHTML(id);
   $('#topicFoot').innerHTML = factsHTML(id) +
     (ch.length && id !== 'riscv' ? '<div class="hblock"><p class="code">Challenges in this topic</p><div class="chgrid">' + ch.map(c => '<a href="' + c.href + '" class="chcard"><span class="pill out">' + c.kind + '</span><b>' + esc(c.t) + '</b><small>' + esc(c.d) + '</small></a>').join('') + '</div></div>' : '') +
-    ideasHTML(id) + connectionsHTML(id) +
+    ideasHTML(id) + hubsHTML(id) + connectionsHTML(id) +
     feedbackHTML(id, t.t);
 }
 

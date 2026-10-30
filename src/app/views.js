@@ -1,7 +1,8 @@
 /* Workshop, Challenges and Knowledge: three ways into the same topics. Each reads the shared
    data (topics, challenges, cards, facts), so nothing is duplicated and nothing is locked. */
 import { BANDS, TOPICS, topicById, bandById } from '../data/topics.js';
-import { CHALLENGES, PROBLEMS } from '../data/challenges.js';
+import { CHALLENGES } from '../data/challenges.js';
+import { allTradeoffsHTML, allMeasuresHTML, allDebatesHTML } from './hubs.js';
 import { CARDS, TH } from '../data/cards.js';
 import { FACTS, fmtDate, changesHTML } from './facts.js';
 import { levelStars, riscvStars } from './progress.js';
@@ -48,8 +49,7 @@ export function renderChallenges() {
   v.innerHTML = '<section class="wrap vhead"><p class="eyebrow">Challenges</p><h1>Puzzles, designs and experiments</h1><p class="lede">Puzzles have one right answer. Designs have many, scored on trade-offs. Experiments ask you to find where something breaks. Every one is open: pick any.</p></section>' +
     '<section class="wrap"><div class="vbar"><div class="seg" role="group" aria-label="Kind of challenge">' + kinds.map(k => '<button type="button" data-k="' + k + '" aria-pressed="' + (k === chKind) + '">' + (k ? k + 's' : 'All') + ' <small>' + CHALLENGES.filter(c => !k || c.kind === k).length + '</small></button>').join('') + '</div></div>' +
     '<div class="chgrid">' + BANDS.flatMap(b => list.filter(c => (topicById(c.topic) || {}).band === b.id)).map(c => '<a class="chcard k-' + c.kind.toLowerCase() + '" href="' + c.href + '"><span class="pill out">' + c.kind + '</span><b>' + esc(c.t) + '</b><small>' + esc(c.d) + '</small><span class="chmeta"><em>' + esc(bandById(topicById(c.topic).band).t) + ' · ' + esc(tName(c.topic)) + '</em>' + status(c) + '</span></a>').join('') + '</div>' + '</section>' +
-    '<section class="wrap"><div class="vbar"><h2>Open problems</h2></div><p class="lede">These have no answer yet. The industry is working on them right now. Look at each from more than one side, test an idea in the linked simulations, and form your own view.</p><div class="probgrid">' +
-    PROBLEMS.map(p => '<article class="prob"><h3>' + esc(p.t) + '</h3><p>' + esc(p.q) + '</p><div class="persp">' + p.persp.map(x => '<span>' + esc(x) + '</span>').join('') + '</div><p class="eyebrow">Test an idea in</p><div class="row">' + p.try.map(id => '<a class="chip" href="#' + id + '">' + esc(tName(id)) + '</a>').join('') + '</div></article>').join('') + '</div></section>';
+    '<section class="wrap"><div class="vbar"><h2>Open debates</h2></div><p class="lede">These have no answer yet, and informed people disagree. Each side says what it assumes, because that is where the disagreement really lives. Test each side in the linked simulations, then lean one way and see what would change your mind.</p>' + allDebatesHTML() + '</section>';
   v.querySelectorAll('[data-k]').forEach(b => b.addEventListener('click', () => { chKind = b.dataset.k; renderChallenges(); }));
 }
 
@@ -59,8 +59,10 @@ export function renderKnowledge() {
   const v = $('#view-knowledge');
   const groups = Object.keys(TH).map(k => [k, Object.entries(CARDS).filter(([, c]) => c[0] === k)]);
   const KN = { reported: 'Reported', claim: 'Vendor claim', estimate: 'Estimate', projection: 'Projection' };
-  v.innerHTML = '<section class="wrap vhead"><p class="eyebrow">Knowledge</p><h1>Ideas, terms and dated facts</h1><p class="lede">The big ideas that connect the layers, short cards for the ideas that come up everywhere, every fact with its source and date, and the full glossary. Each one links back to the topic where you can see it in action.</p><div class="row"><a class="btn" href="#glossary">Glossary</a><a class="btn" href="#sources">All sources</a></div></section>' +
+  v.innerHTML = '<section class="wrap vhead"><p class="eyebrow">Knowledge</p><h1>Ideas, terms and dated facts</h1><p class="lede">The big ideas, trade-offs and measures that connect the layers, short cards for the ideas that come up everywhere, every fact with its source and date, and the full glossary. Each one links back to the topic where you can see it in action.</p><div class="row"><a class="btn" href="#glossary">Glossary</a><a class="btn" href="#sources">All sources</a></div></section>' +
     '<section class="wrap"><div class="vbar"><h2>Big ideas</h2></div><p class="lede">A few ideas turn up again and again, from a single transistor to a data center. Open one to see every layer where it appears, and where it stops working.</p>' + allIdeasHTML() + '</section>' +
+    '<section class="wrap"><div class="vbar"><h2>Trade-offs</h2></div><p class="lede">Most of engineering is choosing a point between two things you cannot both have. Each one links to the simulations where you can push it yourself.</p>' + allTradeoffsHTML() + '</section>' +
+    '<section class="wrap"><div class="vbar"><h2>Measures</h2></div><p class="lede">The numbers people use to compare chips: what each one counts, which way is better, and what it hides.</p>' + allMeasuresHTML() + '</section>' +
     '<section class="wrap">' + groups.map(([k, cs]) => '<div class="pgband"><p class="eyebrow" style="color:' + TH[k][1] + '">' + esc(TH[k][0]) + '</p><div class="kgrid">' + cs.map(([, c]) => '<a class="kcard" href="#' + c[3] + '" style="--kc:' + TH[k][1] + '"><b>' + esc(c[1]) + '</b><p>' + esc(c[2]) + '</p><small>' + esc(tName(c[3])) + ' →</small></a>').join('') + '</div></div>').join('') + '</section>' +
     '<section class="wrap"><div class="vbar"><h2>Live facts</h2><div class="seg" role="group" aria-label="Kind of fact">' + [''].concat(Object.keys(KN)).map(k => '<button type="button" data-fk="' + k + '" aria-pressed="' + (k === fk) + '">' + (k ? KN[k] : 'All') + '</button>').join('') + '</div><input type="search" id="kfQ" placeholder="Search facts…" aria-label="Search facts" value="' + esc(fq) + '"></div><p class="small muted">' + FACTS.facts.length + ' facts · last checked ' + esc(fmtDate(FACTS.lastCheck)) + ' · next check ' + esc(fmtDate(FACTS.nextCheck)) + '. Facts are updated by pull request; see the project README.</p><div class="ftable" id="kfList"></div></section>' +
     '<section class="wrap"><div class="vbar"><h2>What changed recently</h2></div>' + changesHTML() + '</section>';

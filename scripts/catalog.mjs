@@ -71,8 +71,8 @@ async function readTopics(problems) {
     if (!bandIx.has(m.band)) problems.push(`${f} has "band": ${q(m.band)}. Use one of: ${BANDS.map(b => b.id).join(', ')} (see src/data/bands.js).`);
     if (!Number.isFinite(m.order)) problems.push(`${f} needs a number "order": its place from left to right within its band (10, 20, 30…; pick a number between two neighbours).`);
     if (!TOPIC_KINDS.includes(m.kind)) problems.push(`${f} has "kind": ${q(m.kind)}. Use "explore" (simulations and explanations) or "build" (a hands-on project).`);
-    for (const k of ['labs', 'links', 'ideas', 'challenges']) if (m[k] !== undefined && !Array.isArray(m[k])) problems.push(`${f}: "${k}" must be a list [ … ].`);
-    metas.push(Object.assign({ labs: [], links: [], ideas: [], challenges: [], learn: {} }, m, { id }));
+    for (const k of ['labs', 'links', 'ideas', 'tradeoffs', 'measures', 'challenges']) if (m[k] !== undefined && !Array.isArray(m[k])) problems.push(`${f}: "${k}" must be a list [ … ].`);
+    metas.push(Object.assign({ labs: [], links: [], ideas: [], tradeoffs: [], measures: [], challenges: [], learn: {} }, m, { id }));
   }
   metas.sort((a, b) => (bandIx.get(a.band) ?? 99) - (bandIx.get(b.band) ?? 99) || (a.order || 0) - (b.order || 0) || a.id.localeCompare(b.id));
   for (let i = 1; i < metas.length; i++) {
@@ -82,10 +82,15 @@ async function readTopics(problems) {
   return { metas, BANDS };
 }
 
-/* Links, big ideas, challenges and learning content: the meaning of the graph. */
+/* Links, shared hubs (big ideas, trade-offs, measures, debates), challenges and learning content:
+   the meaning of the graph. */
 async function checkGraph(metas, anchors, shellIds, problems) {
   const { LINK_KINDS, LIMITS } = await import(pathToFileURL(root + 'src/data/links.js').href);
   const { IDEAS } = await import(pathToFileURL(root + 'src/data/ideas.js').href);
+  const { TRADEOFFS } = await import(pathToFileURL(root + 'src/data/tradeoffs.js').href);
+  const { MEASURES } = await import(pathToFileURL(root + 'src/data/measures.js').href);
+  const { DEBATES } = await import(pathToFileURL(root + 'src/data/debates.js').href);
+  const factIds = new Set(JSON.parse(readFileSync(root + 'src/data/facts.json', 'utf8')).facts.map(f => f.id));
   const ids = new Set(metas.map(m => m.id)), byId = new Map(metas.map(m => [m.id, m]));
   const kinds = Object.keys(LINK_KINDS);
   const long = (v, lim) => typeof v === 'string' && v.length > lim;
@@ -135,6 +140,43 @@ async function checkGraph(metas, anchors, shellIds, problems) {
     if (bands.size < 2) problems.push(`The big idea "${i.id}" shows up in ${bands.size ? 'only one band (' + [...bands][0] + ')' : 'no topic'}. A big idea must echo across at least two bands: add it to another topic's "ideas", or fold it into an existing idea.`);
   }
 
+  /* Trade-offs and measures: shared hubs, used the same way as ideas. */
+  const hubUses = (field, key, list, file, what) => {
+    const known = new Set(list.map(x => x.id)), out = [];
+    for (const m of metas) {
+      const f = `topics/${m.id}/topic.json`, mine = new Set();
+      m[field].forEach((u, i) => {
+        if (!known.has(u[key])) { problems.push(`${f} ${key} ${i + 1} is ${q(u[key])}, which is not a ${what}. Use one of: ${[...known].join(', ')}, or add a new one to ${file}.`); return; }
+        if (mine.has(u[key])) { problems.push(`${f} lists the ${what} "${u[key]}" twice. Keep one.`); return; }
+        mine.add(u[key]);
+        if (!str(u.how)) problems.push(`${f} ${what} "${u[key]}" needs a "how": where it shows up in this topic.`);
+        else if (long(u.how, LIMITS.how)) problems.push(`${f} ${what} "${u[key]}": keep "how" under ${LIMITS.how} characters.`);
+        if (u.try !== undefined) { const h = /^#([\w-]+)$/.exec(u.try); if (!h || !(anchors[h[1]] || ids.has(h[1]) || /^riscv-(\d+|sandbox)$/.test(h[1]))) problems.push(`${f} ${what} "${u[key]}" has "try": ${q(u.try)}, which does not exist. Point it at the simulation, e.g. "#lab-${m.id}-1".`); }
+        out.push(Object.assign({ [key]: u[key], topic: m.id, how: u.how }, u.try ? { try: u.try } : {}));
+      });
+    }
+    for (const x of list) { const n = out.filter(u => u[key] === x.id).length; if (n < 2) problems.push(`The ${what} "${x.id}" is used by ${n} topic${n === 1 ? '' : 's'}. A shared ${what} must show up in at least two: add it to another topic's "${field}", or remove it from ${file}.`); }
+    return out;
+  };
+  const tradeoffUses = hubUses('tradeoffs', 'tradeoff', TRADEOFFS, 'src/data/tradeoffs.js', 'trade-off');
+  const measureUses = hubUses('measures', 'measure', MEASURES, 'src/data/measures.js', 'measure');
+  for (const t of TRADEOFFS) if (!str(t.a) || !str(t.b) || !str(t.d)) problems.push(`src/data/tradeoffs.js "${t.id}" needs "a" and "b" (what you gain at each end) and "d".`);
+  for (const x of MEASURES) {
+    if (!['higher', 'lower'].includes(x.better)) problems.push(`src/data/measures.js "${x.id}": "better" must be "higher" or "lower".`);
+    if (!str(x.unit) || !str(x.catch)) problems.push(`src/data/measures.js "${x.id}" needs a "unit" and a "catch" (what the number hides).`);
+    (x.facts || []).filter(id => !factIds.has(id)).forEach(id => problems.push(`src/data/measures.js "${x.id}" lists the fact "${id}", which is not in src/data/facts.json.`));
+  }
+  /* Debates live centrally (they span topics); every view needs an assumption and a place to test it. */
+  for (const d of DEBATES) {
+    if (!str(d.t) || !str(d.q)) problems.push(`src/data/debates.js "${d.id}" needs a "t" (title) and a "q" (the open question).`);
+    if (!Array.isArray(d.views) || d.views.length < 2) { problems.push(`src/data/debates.js "${d.id}" needs at least two views; a debate with one side is a claim.`); continue; }
+    d.views.forEach((v, i) => {
+      if (!str(v.t) || !str(v.claim) || !str(v.assumes)) problems.push(`src/data/debates.js "${d.id}" view ${i + 1} needs "t", "claim" and "assumes" (what has to be true for this view to win).`);
+      if (!Array.isArray(v.topics) || !v.topics.length) problems.push(`src/data/debates.js "${d.id}" view ${i + 1} needs "topics": where a reader can test it.`);
+      else v.topics.filter(t => !ids.has(t)).forEach(t => problems.push(`src/data/debates.js "${d.id}" view ${i + 1} names the topic "${t}", which does not exist.`));
+    });
+  }
+
   const challenges = [];
   for (const m of metas) {
     const f = `topics/${m.id}/topic.json`;
@@ -153,7 +195,7 @@ async function checkGraph(metas, anchors, shellIds, problems) {
     });
     if (L.ask !== undefined && (!Array.isArray(L.ask) || !L.ask.every(str))) problems.push(`${f} "learn.ask" must be a list of questions a reader might ask.`);
   }
-  return { links, uses, challenges };
+  return { links, uses, tradeoffUses, measureUses, challenges };
 }
 
 export async function buildCatalog() {
@@ -186,7 +228,7 @@ export async function buildCatalog() {
   /* The app shell's own ids (index.html, the map page, the zoom viewer) must not clash with topics. */
   const shell = [readFileSync(root + 'index.html', 'utf8'), readFileSync(root + 'content/zoom.html', 'utf8')].concat(readdirSync(root + 'src/app').filter(f => f.endsWith('.js')).map(f => readFileSync(root + 'src/app/' + f, 'utf8')));
   const shellIds = new Set(shell.flatMap(idsIn)); shellIds.forEach(id => { if (anchors[id]) problems.push(`The id "${id}" is used by the app shell and by ${anchors[id]}. Rename the one in the topic.`); });
-  const { links, uses, challenges } = await checkGraph(metas, anchors, shellIds, problems);
+  const { links, uses, tradeoffUses, measureUses, challenges } = await checkGraph(metas, anchors, shellIds, problems);
 
   const sortedAnchors = Object.fromEntries(Object.keys(anchors).sort().map(k => [k, anchors[k]]));
   const catalog = `// Generated by scripts/catalog.mjs from the topics/ folders. Do not edit by hand: run \`npm run catalog\`.\n` +
@@ -205,6 +247,9 @@ export async function buildCatalog() {
     `export const LINKS = [\n${links.map(l => '  ' + JSON.stringify(l)).join(',\n')}\n];\n\n` +
     `/* Where each big idea shows up (src/data/ideas.js has the ideas themselves). */\n` +
     `export const IDEA_USES = [\n${uses.map(u => '  ' + JSON.stringify(u)).join(',\n')}\n];\n\n` +
+    `/* Where each trade-off and measure shows up (src/data/tradeoffs.js and measures.js define them). */\n` +
+    `export const TRADEOFF_USES = [\n${tradeoffUses.map(u => '  ' + JSON.stringify(u)).join(',\n')}\n];\n\n` +
+    `export const MEASURE_USES = [\n${measureUses.map(u => '  ' + JSON.stringify(u)).join(',\n')}\n];\n\n` +
     `/* Every challenge, with the topic it belongs to. */\n` +
     `export const CHALLENGES = [\n${challenges.map(c => '  ' + JSON.stringify(c)).join(',\n')}\n];\n`;
   return { outputs: { [OUT_CATALOG]: catalog, [OUT_GRAPH]: graph }, text: catalog, problems };

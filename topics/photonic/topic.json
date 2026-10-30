@@ -28,6 +28,13 @@
       "how": "interfering light does a matrix multiply"
     }
   ],
+  "tradeoffs": [],
+  "measures": [
+    {
+      "measure": "energy-bit",
+      "how": "optical links aim to lower it between chips"
+    }
+  ],
   "challenges": [
     {
       "kind": "Puzzle",

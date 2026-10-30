@@ -34,6 +34,14 @@
       "how": "an agent writes fast; deciding whether to trust it is your job"
     }
   ],
+  "tradeoffs": [
+    {
+      "tradeoff": "ship-check",
+      "how": "trust the agent now, or check its work first",
+      "try": "#lab-agent-1"
+    }
+  ],
+  "measures": [],
   "challenges": [
     {
       "kind": "Puzzle",

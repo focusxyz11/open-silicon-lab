@@ -8,7 +8,7 @@ Learners new to chips with basic hardware knowledge. Plain words first; explain 
 ## Principles (from the project owner)
 - Not a textbook: simulations, puzzles and builds first, with only the text needed to use them.
 - Nothing is locked. Threads and stars guide; they never gate content.
-- Everything is connected: every topic sits in the knowledge graph with typed links (six kinds, `src/data/links.js`) and big ideas that echo across layers (`src/data/ideas.js`). Each link must be true for its kind.
+- Everything is connected: every topic sits in the knowledge graph with typed links (six kinds, `src/data/links.js`) and shared hubs: big ideas, trade-offs, measures and debates (`src/data/ideas.js`, `tradeoffs.js`, `measures.js`, `debates.js`). Each link must be true for its kind; debates give every side its best case and its assumption, and never mark a winner.
 - Universal, not only AI chips: the stack covers every chip, from a thermostat's microcontroller to a data center GPU. AI is one strong thread through it, not the whole frame.
 - RISC-V and the open-source hardware ecosystem get special weight; so does an AI-native view of how the industry is changing.
 - Every industry figure lives in `src/data/facts.json` with source, date verified and kind. Each simulation says what it simplifies.

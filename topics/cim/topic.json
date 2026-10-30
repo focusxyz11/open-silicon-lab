@@ -28,6 +28,19 @@
       "how": "Ohm's law multiplies and the wires add the currents"
     }
   ],
+  "tradeoffs": [
+    {
+      "tradeoff": "precision-energy",
+      "how": "analog math saves energy but adds noise to every answer",
+      "try": "#lab-cim-1"
+    }
+  ],
+  "measures": [
+    {
+      "measure": "ops-watt",
+      "how": "analog arrays promise much more of it"
+    }
+  ],
   "challenges": [
     {
       "kind": "Experiment",
