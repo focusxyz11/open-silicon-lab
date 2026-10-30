@@ -1075,9 +1075,111 @@
    "url": "https://www.tomshardware.com/desktops/servers/arm-servers-capture-over-45-percent-of-data-center-market-revenue-gpu-clusters-and-high-end-ai-infrastructure-fuel-a-tectonic-shift-away-from-x86",
    "value": "Nearly 20 million EPYC and Xeon processors",
    "verified": "2026-10-27"
+  },
+  {
+   "id": "fdiv-charge",
+   "topic": "reality",
+   "detail": "Five missing entries in a lookup table of the divider; Intel replaced the chips.",
+   "kind": "reported",
+   "label": "Cost of the Pentium division bug",
+   "source": "Wikipedia (citing Intel's 1994 annual report)",
+   "status": "new",
+   "url": "https://en.wikipedia.org/wiki/Pentium_FDIV_bug",
+   "value": "$475 million pre-tax charge (January 1995)",
+   "verified": "2026-10-30"
+  },
+  {
+   "id": "p3-recall",
+   "topic": "reality",
+   "detail": "Intel reproduced crashes and said it had found \"marginalities\" in the processor.",
+   "kind": "reported",
+   "label": "Pentium III 1.13 GHz",
+   "source": "The Register",
+   "status": "new",
+   "url": "https://www.theregister.com/2000/08/28/intel_recalls_1_13ghz_pentium",
+   "value": "Recalled in August 2000",
+   "verified": "2026-10-30"
+  },
+  {
+   "id": "schaerbeek-votes",
+   "topic": "reality",
+   "detail": "Officially a spontaneous bit flip in memory; a cosmic ray is suspected, not proven.",
+   "kind": "reported",
+   "label": "Schaerbeek election error, Belgium",
+   "source": "Wikipedia: Electronic voting in Belgium",
+   "status": "new",
+   "url": "https://en.wikipedia.org/wiki/Electronic_voting_in_Belgium",
+   "value": "4,096 extra votes (2¹²) in May 2003",
+   "verified": "2026-10-30"
+  },
+  {
+   "id": "cougar-cost",
+   "topic": "reality",
+   "detail": "SATA ports that may degrade over time; about $300 million less revenue in Q1 2011.",
+   "kind": "reported",
+   "label": "Intel 6 Series (Cougar Point) chipset flaw",
+   "source": "Intel press release",
+   "status": "new",
+   "url": "https://www.intc.com/news-events/press-releases/detail/688/intel-identifies-chipset-design-error-implementing-solution",
+   "value": "About $700 million to repair and replace (2011)",
+   "verified": "2026-10-30"
+  },
+  {
+   "id": "sdc-rate",
+   "topic": "reality",
+   "detail": "Rate cited by Meta's engineers for devices with silent data corruptions.",
+   "kind": "reported",
+   "label": "Silent data corruption in a large server fleet",
+   "source": "Meta (arXiv 2203.08989)",
+   "status": "new",
+   "url": "https://arxiv.org/abs/2203.08989",
+   "value": "About one in a thousand silicon devices",
+   "verified": "2026-10-30"
+  },
+  {
+   "id": "raptor-warranty",
+   "topic": "reality",
+   "detail": "Root cause: a clock circuit that ages faster under elevated voltage and temperature; fixed with microcode updates.",
+   "kind": "reported",
+   "label": "Intel 13th/14th Gen desktop instability",
+   "source": "Tom's Hardware; Intel",
+   "status": "new",
+   "url": "https://www.tomshardware.com/pc-components/cpus/intel-announces-an-extra-two-years-of-warranty-for-its-chips-amid-crashing-and-instability-issues-longer-warranty-applies-to-13th-and-14th-gen-core-processors",
+   "value": "Two extra years of warranty (August 2024)",
+   "verified": "2026-10-30"
+  },
+  {
+   "id": "car-ppm",
+   "topic": "reality",
+   "detail": "About 40 electronic systems with roughly 250 chips each, so about 10,000 chips per car.",
+   "kind": "estimate",
+   "label": "Why car makers count defects in parts per million",
+   "source": "SemiEngineering (Amkor), 2022",
+   "status": "new",
+   "url": "https://semiengineering.com/the-drive-towards-zero-defects",
+   "value": "1 bad chip per million can mean about 1% of cars with a fault",
+   "verified": "2026-10-30"
+  },
+  {
+   "id": "car-life",
+   "topic": "reality",
+   "detail": "An example mission profile: about 12,000 operating hours, junctions from −40 to 125 °C.",
+   "kind": "reported",
+   "label": "Lifetime expected of car electronics",
+   "source": "Monolithic Power Systems",
+   "status": "new",
+   "url": "https://www.monolithicpower.com/jp/learning/resources/automotive-electronics-reliability-testing-starts-and-ends-with-the-mission-profile",
+   "value": "15 years or more",
+   "verified": "2026-10-30"
   }
  ],
  "changes": [
+  {
+   "date": "2026-10-30",
+   "title": "New topic: why perfect designs fail",
+   "summary": "A Big questions layer opens with a reliability stress test for phones, cars, data centers and satellites, and seven real cases from the Pentium division bug to unstable 2024 desktop chips. Eight new facts.",
+   "url": ""
+  },
   {
    "date": "2026-10-29",
    "title": "What if? The map as a simulator",

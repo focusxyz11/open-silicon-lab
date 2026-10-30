@@ -1,0 +1,57 @@
+<section id="reality">
+    <div class="head">
+      <p class="code" data-topic-label>Why perfect designs fail</p>
+      <h2>Why can a perfect design fail in the real world?</h2>
+    </div>
+    <div class="prose">
+      <p>Before a chip is made, engineers check it in simulation: is the logic right, does every signal arrive on time? That check uses one ideal chip: a typical one, at 25 °C, on a steady supply, brand new. No real chip is like that. Each one comes out a little different. They run hot, the supply dips under load, transistors age, the factory test misses a few broken ones, and radiation flips bits.</p>
+      <p>Below, a design that passed every check goes out into the world. Pick where it will live, see what breaks, and choose fixes. Every fix costs speed, power, area or money, which is why a car chip is not built like a phone chip.</p>
+    </div>
+
+    <div class="lab rl">
+      <header><b>Reality stress test</b><span id="rlTag">–</span></header>
+      <div class="body">
+        <div class="seg rl-missions" id="rlMission" role="group" aria-label="Where the chip will live">
+          <button type="button" data-m="phone">Phone</button><button type="button" data-m="car">Car</button><button type="button" data-m="dc">AI data center</button><button type="button" data-m="sat">Satellite</button>
+        </div>
+        <p class="rl-story" id="rlStory"></p>
+        <div class="cols">
+          <div class="rl-left">
+            <div class="seg" id="rlView" role="group" aria-label="Chart">
+              <button type="button" data-v="time">Failures over time</button><button type="button" data-v="spread">Chip-to-chip spread</button>
+            </div>
+            <canvas class="plot" id="rlCv" style="aspect-ratio:16/11" role="img" aria-label="Reliability chart"></canvas>
+            <div class="ctl" id="rlYearCtl" hidden><label for="rlYear">Years in service <output id="rlYearO">–</output></label><input type="range" id="rlYear" min="0" max="1" step="0.01" value="1"></div>
+            <p class="rl-insight" id="rlInsight" aria-live="polite"></p>
+          </div>
+          <div class="controls rl-fixes">
+            <p class="eyebrow">Margins</p>
+            <div class="ctl"><label for="rlMargin">Clock margin (slower clock) <output id="rlMarginO">–</output></label><input type="range" id="rlMargin" min="0" max="30" step="1" value="0"></div>
+            <div class="ctl"><label for="rlBoost">Extra supply voltage <output id="rlBoostO">–</output></label><input type="range" id="rlBoost" min="0" max="10" step="1" value="0"></div>
+            <label class="check"><input type="checkbox" id="rlAvs"> Adaptive voltage: each chip sets its own, and raises it as it ages</label>
+            <label class="check"><input type="checkbox" id="rlGrid"> Stronger power grid: smaller supply dips under load</label>
+            <label class="check"><input type="checkbox" id="rlCool"> Better cooling: 15 °C cooler</label>
+            <p class="eyebrow">Testing</p>
+            <div class="ctl"><span class="lbl">Factory test</span><div class="seg" id="rlTest" role="group" aria-label="Factory test"><button type="button" data-t="basic">Basic</button><button type="button" data-t="thorough">Thorough</button><button type="button" data-t="zero">Zero-defect</button></div><p class="small muted" id="rlTestD"></p></div>
+            <label class="check"><input type="checkbox" id="rlBurn"> Burn-in: run every chip hot for hours before shipping</label>
+            <p class="eyebrow">Errors</p>
+            <label class="check"><input type="checkbox" id="rlEcc"> Error-correcting memory (ECC)</label>
+            <div class="ctl"><span class="lbl">Protect the logic</span><div class="seg" id="rlLogic" role="group" aria-label="Protect the logic"><button type="button" data-l="none">None</button><button type="button" data-l="lockstep">Lockstep: detect</button><button type="button" data-l="tmr">Triple: correct</button></div></div>
+            <div class="row"><button type="button" class="btn" id="rlReset">Back to the perfect design</button></div>
+          </div>
+        </div>
+        <div class="reqs" id="rlReqs"></div>
+        <div class="readout" id="rlOut"></div>
+        <p class="note">How the model works: chip-to-chip spread is a normal distribution (σ = 3% of delay); delay follows the alpha-power law of transistors; heat slows them by 0.08% per °C; the supply dips 5% under load (2% with a stronger grid); aging raises the threshold voltage with the fifth root of time, faster when hot and at higher voltage; wires wear out on a lognormal curve (Black's equation); hidden weak spots follow a Weibull curve; radiation causes about 500 bit upsets per billion hours per megabit of memory at sea level and 300 times more in low orbit, and 30% of them matter. Real chips also crack from heat cycles, absorb total radiation dose and fail in other ways left out here. All numbers are teaching values, not any company's data.</p>
+      </div>
+    </div>
+
+    <div class="lab rc">
+      <header><b>Case files: real chips that failed</b><span id="rcScore">–</span></header>
+      <div class="body">
+        <p class="small muted">Seven real chips that passed their checks and still failed. Read what happened and name the gap between design and reality. Then see what the industry changed because of it.</p>
+        <nav class="rc-dots" id="rcDots" aria-label="Cases"></nav>
+        <article class="rc-case" id="rcCase" aria-live="polite"></article>
+      </div>
+    </div>
+  </section>
