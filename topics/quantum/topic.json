@@ -28,6 +28,19 @@
       "how": "qubits compute with superposition and interference"
     }
   ],
+  "time": {
+    "then": [
+      [1971, "Quantum computing is an idea (Feynman, 1982); Shor's factoring algorithm arrives in 1994."],
+      [1994, "Labs build machines with a handful to dozens of qubits."],
+      [
+        2019,
+        "Google claims quantum supremacy (2019) on a 53-qubit chip; error rates are still too high for useful work."
+      ],
+      [2024, "Error correction starts to work: logical qubits beat physical ones."],
+      [2027, "Plans: error-corrected machines are scaled up for the first useful applications."],
+      [2029, "Plans: fault-tolerant quantum computers from IBM and Quantinuum, targeted for 2029."]
+    ]
+  },
   "challenges": [
     {
       "kind": "Puzzle",

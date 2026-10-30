@@ -67,6 +67,7 @@ function place() {
 const follow = () => { cancelAnimationFrame(raf); raf = requestAnimationFrame(place); };
 
 function render() {
+  if (!open || !box) return;   /* closed before a delayed call arrived */
   const st = STEPS[i], last = i === STEPS.length - 1;
   box.innerHTML = '<div class="g-top"><p class="eyebrow">' + st.eyebrow + ' · ' + (i + 1) + ' of ' + STEPS.length + '</p><button type="button" class="g-skip" data-g="skip">Skip tour</button></div>' +
     '<h3 id="gTitle">' + st.t + '</h3>' + (st.d ? '<p>' + st.d + '</p>' : '') +

@@ -26,6 +26,11 @@
       "how": "tools place billions of them so the wires stay short"
     }
   ],
+  "time": {
+    "then": [
+      [1971, "The biggest chip so far, {biggest}, places {biggestTr} transistors."]
+    ]
+  },
   "challenges": [
     {
       "kind": "Experiment",

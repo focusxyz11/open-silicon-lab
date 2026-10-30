@@ -1,0 +1,15 @@
+/* Styles for this topic's simulations, moved here from src/styles/base.css. They load only when the topic opens. */
+/* ===== v5: supply chain, companies, economics ===== */
+.mapwrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--line);border-radius:6px;background:var(--bg)}
+.mapwrap svg{display:block;width:100%;min-width:720px;height:auto}
+.scinfo{margin-top:4px}
+#scSite{display:grid;gap:8px;align-content:start}
+.scstep{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
+#scSteps button{padding:6px 9px;font-size:12px}
+#scSteps button span{font-family:var(--mono);color:var(--muted);margin-right:4px}
+#scSteps button[aria-pressed="true"] span{color:inherit}
+.hmwrap{overflow-x:auto}
+table.hm{width:100%;border-collapse:separate;border-spacing:2px;font-size:13px;min-width:640px}
+table.hm th{font:500 12px var(--mono);color:var(--muted);text-align:center;padding:6px 4px;font-weight:500}
+table.hm td{text-align:center;padding:8px 4px;border-radius:3px;font-family:var(--mono);font-variant-numeric:tabular-nums;color:var(--ink)}
+.capgrp{display:grid;grid-template-columns:110px minmax(0,1fr);gap:4px 12px;align-items:center;font-size:14px}

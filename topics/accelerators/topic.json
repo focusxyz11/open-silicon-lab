@@ -58,6 +58,16 @@
       "how": "the biggest difference between AI chips is often here"
     }
   ],
+  "time": {
+    "born": [
+      2016,
+      "Google reveals its first TPU in 2016. GPUs became programmable for general computing with CUDA in 2007."
+    ],
+    "then": [
+      [2016, "The first AI chips: Google's TPU (revealed 2016) and GPUs used for deep learning."],
+      [2017, "Tensor cores (2017), TPUs and a wave of AI chip startups."]
+    ]
+  },
   "challenges": [],
   "learn": {
     "plain": "All AI chips are giant calculators. The big difference is where they keep the numbers they work on: in memory chips next door (GPUs and TPUs), or spread through the chip itself (wafer-scale and SRAM designs). Keeping numbers closer is faster, but holds less.",

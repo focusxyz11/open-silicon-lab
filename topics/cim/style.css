@@ -1,0 +1,10 @@
+/* Styles for this topic's simulations, moved here from src/styles/base.css. They load only when the topic opens. */
+.cbout{display:grid;gap:6px}
+.cbout>div{display:grid;grid-template-columns:80px minmax(0,1fr) 60px 90px;gap:10px;align-items:center;font-size:13px}
+.cbout>div span{color:var(--muted)}
+.cbout>div b{font:500 13px var(--mono);text-align:right}
+.cbout>div small{font:12px var(--mono);color:var(--muted)}
+.cbbar{position:relative;height:16px;background:var(--sunk);border-radius:3px;overflow:hidden}
+.cbbar i{position:absolute;left:0;top:0;height:8px;background:var(--amber-fill)}
+.cbbar em{position:absolute;left:0;bottom:0;height:8px;background:var(--cyan-fill)}
+@media(max-width:560px){.cbout>div{grid-template-columns:64px minmax(0,1fr) 52px}.cbout>div small{display:none}}

@@ -1,0 +1,4 @@
+/* Styles for this topic's simulations, moved here from src/styles/base.css. They load only when the topic opens. */
+.pbclamps{display:grid;gap:8px}
+.pbrow{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.pbrow>span{font:600 13px var(--mono);min-width:120px}

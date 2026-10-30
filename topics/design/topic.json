@@ -36,6 +36,20 @@
     }
   ],
   "measures": [],
+  "time": {
+    "then": [
+      [
+        1971,
+        "Chips are drawn largely by hand, gate by gate and polygon by polygon. Verilog arrives in 1984."
+      ],
+      [
+        1984,
+        "Verilog (1984) lets engineers describe hardware as code; automatic logic synthesis is just arriving."
+      ],
+      [1988, "Logic synthesis and automatic place-and-route turn code into layouts."],
+      [2011, "Designing a leading-edge chip costs about ${designCost} million ({costNode}, IBS estimate)."]
+    ]
+  },
   "challenges": [],
   "learn": {
     "plain": "Designing a chip is like writing a huge program that turns into a city plan. Engineers write code that describes circuits, software turns it into billions of tiny switches, and checking that everything works takes longer than writing it. Every choice trades speed, power and size against each other.",

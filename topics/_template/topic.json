@@ -10,6 +10,9 @@
   "ideas": [],
   "tradeoffs": [],
   "measures": [],
+  "time": {
+    "then": [[1971, "One sentence: what this topic looked like from 1971 on. Add a line for each year things changed."]]
+  },
   "challenges": [],
   "learn": {
     "plain": "The idea in plain words, with one everyday comparison, for someone new to chips.",

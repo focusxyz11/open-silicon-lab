@@ -8,6 +8,11 @@
   "labs": ["semiconductor-playground", "czochralski-puller", "wafer-steps", "implant-anneal"],
   "links": [],
   "ideas": [],
+  "time": {
+    "then": [
+      [1971, "Wafers in the newest fabs are {wafer} across."]
+    ]
+  },
   "challenges": [
     {
       "kind": "Puzzle",

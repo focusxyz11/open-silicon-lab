@@ -29,6 +29,12 @@
       "how": "power may cap AI growth more than chips do"
     }
   ],
+  "time": {
+    "then": [
+      [1971, "The scenarios start in 2026 and run to 2040."],
+      [2027, "You are inside the scenario window: {year} is one of many possible futures."]
+    ]
+  },
   "challenges": [
     {
       "kind": "Experiment",

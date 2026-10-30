@@ -28,6 +28,17 @@
       "how": "random noise samples the answers"
     }
   ],
+  "time": {
+    "then": [
+      [1971, "Noise is treated only as a problem to be engineered away."],
+      [2017, "Probabilistic bits (p-bits) are demonstrated in research labs."],
+      [2025, "The first thermodynamic and probabilistic chips are taped out and tested."],
+      [
+        2027,
+        "Projection: probabilistic chips for sampling and optimization, if their gains hold up outside the lab."
+      ]
+    ]
+  },
   "challenges": [
     {
       "kind": "Experiment",

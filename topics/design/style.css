@@ -1,0 +1,5 @@
+/* Styles for this topic's simulations, moved here from src/styles/base.css. They load only when the topic opens. */
+.flowdetail{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:20px}
+@media(max-width:820px){.flowdetail{grid-template-columns:minmax(0,1fr)}}
+.svgwrap{overflow-x:auto;background:var(--sunk);border-radius:4px}
+.svgwrap svg{display:block;min-width:520px;width:100%;height:auto}

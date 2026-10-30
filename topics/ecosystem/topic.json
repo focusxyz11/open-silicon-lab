@@ -13,6 +13,15 @@
       "how": "steep up-front costs leave one or two suppliers at some steps"
     }
   ],
+  "time": {
+    "then": [
+      [1971, "{companies} of the {companiesTotal} companies in today's ecosystem explorer exist."],
+      [
+        2027,
+        "{companies} of the {companiesTotal} companies in today's ecosystem explorer exist (plus whoever is founded after 2026)."
+      ]
+    ]
+  },
   "challenges": [],
   "learn": {
     "plain": "Making a chip is like making a film: one studio gets the credit, but it depends on writers, camera makers, sound studios and cinemas. Some of those suppliers are the only ones in the world who can do their part.",

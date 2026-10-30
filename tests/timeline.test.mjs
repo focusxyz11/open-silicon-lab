@@ -5,6 +5,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import * as TL from '../src/data/timeline.js';
 import { TOPICS } from '../src/data/topics.js';
+const THEN = Object.fromEntries(TOPICS.map(t => [t.id, JSON.parse(readFileSync(new URL('../topics/' + t.id + '/topic.json', import.meta.url), 'utf8')).time.then]));
 
 const sorted = (list, name) => { for (let i = 1; i < list.length; i++) assert.ok(list[i][0] >= list[i - 1][0], name + ' in year order at ' + list[i][0]); };
 
@@ -25,7 +26,8 @@ test('every year has a complete snapshot', () => {
     for (const k of ['era', 'chip', 'node', 'shape', 'litho', 'wafer', 'biggest']) assert.ok(s[k], y + ' ' + k);
     assert.ok(s.flagship > 0);
     assert.ok(s.companies.n >= 1 && s.companies.n <= s.companies.total);
-    for (const t of TOPICS) assert.ok(TL.topicLine(t.id, y).length > 10, 'topic "' + t.id + '" has no time-machine line for ' + y + '. Add one to the L object in topicLine() in src/data/timeline.js (one sentence: what this topic looked like that year).');
+    for (const t of TOPICS) assert.ok(TL.topicLine(t.id, y, THEN[t.id]).length > 10, 'topic "' + t.id + '" has no time-machine line for ' + y + '. Add one to "time.then" in topics/' + t.id + '/topic.json (one sentence: what this topic looked like from that year on).');
+    for (const t of TOPICS) assert.doesNotMatch(TL.topicLine(t.id, y, THEN[t.id]), /\{\w+\}/, t.id + ' ' + y + ' has an unfilled {value}');
   }
 });
 

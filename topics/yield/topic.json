@@ -54,6 +54,14 @@
       "how": "bad dies raise the cost of the good ones"
     }
   ],
+  "time": {
+    "then": [
+      [
+        1971,
+        "The biggest die so far holds {biggestTr} transistors ({biggest}). Bigger dies catch more defects."
+      ]
+    ]
+  },
   "challenges": [],
   "learn": {
     "plain": "Picture raindrops falling on a tiled floor: any tile hit by a drop is ruined. Big tiles get hit more often, so cutting a design into smaller tiles (chiplets) wastes less.",

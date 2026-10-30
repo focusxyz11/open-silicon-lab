@@ -50,6 +50,14 @@
       "how": "HBM stacks set how fast each GPU is fed"
     }
   ],
+  "time": {
+    "then": [
+      [1971, "Chips sit alone in their packages, wired out through bond wires or solder bumps."],
+      [2011, "2.5D packaging begins: TSMC's CoWoS joins dies side by side on a silicon interposer."],
+      [2015, "HBM memory stacks arrive beside the GPU (2015)."],
+      [2017, "Chiplets and HBM stacks make the package a system."]
+    ]
+  },
   "challenges": [],
   "learn": {
     "plain": "Packaging used to be just a protective case. Now it is like building a tiny city block: processor buildings next to memory towers, joined by extremely dense roads so data never travels far.",

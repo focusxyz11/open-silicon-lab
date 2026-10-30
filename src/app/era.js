@@ -2,6 +2,7 @@
    every topic page and the labs that know about time show that year instead. The choice lasts
    for this browser tab only, so a returning visitor always starts in the present. */
 import { NOW, MIN, MAX, snapshot, topicLine, words } from '../data/timeline.js';
+import { topicData } from './loader.js';
 
 const KEY = 'osl-year-v1';
 let year = NOW;
@@ -29,7 +30,7 @@ export function renderEraBanner(id) {
   const s = snapshot(year);
   box.hidden = false;
   box.className = 'erabanner' + (s.proj ? ' future' : '');
-  box.innerHTML = '<div><p class="code">Time machine · ' + s.y + (s.proj ? ' · projection' : '') + '</p><p><b>' + esc(s.era.t) + '.</b> ' + esc(topicLine(id, s.y)) + '</p></div><div class="row"><button type="button" class="btn" data-era-open>Change year</button><button type="button" class="btn primary" data-era-now>Back to ' + NOW + '</button></div>';
+  box.innerHTML = '<div><p class="code">Time machine · ' + s.y + (s.proj ? ' · projection' : '') + '</p><p><b>' + esc(s.era.t) + '.</b> ' + esc(topicLine(id, s.y, (topicData(id).time || {}).then)) + '</p></div><div class="row"><button type="button" class="btn" data-era-open>Change year</button><button type="button" class="btn primary" data-era-now>Back to ' + NOW + '</button></div>';
 }
 
 /* The year button in the top bar, with a small pop-over slider. */

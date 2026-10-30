@@ -35,6 +35,15 @@
       "how": "inside the price of an AI GPU"
     }
   ],
+  "time": {
+    "then": [
+      [
+        1971,
+        "Leading-edge chips cost far less to design than today's: the IBS series starts at about 1 million for 28 nm in 2011."
+      ],
+      [2011, "Designing a leading-edge chip costs about ${designCost} million ({costNode}, IBS estimate)."]
+    ]
+  },
   "challenges": [
     {
       "kind": "Design",

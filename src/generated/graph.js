@@ -230,6 +230,9 @@ export const MEASURE_USES = [
   {"measure":"node","topic":"transistor","how":"each new node changes the switch's shape"}
 ];
 
+/* Topics whose subject did not exist yet in early years: [year, what happened] (from "time.born"). */
+export const BORN = {"compute":[2012,"Deep learning takes off on GPUs in 2012."],"accelerators":[2016,"Google reveals its first TPU in 2016. GPUs became programmable for general computing with CUDA in 2007."],"build":[2016,"Purpose-built AI chips appear from 2016."],"agent":[2023,"Large language models start writing chip code around 2023; agentic design tools ship in 2025–26."],"riscv":[2010,"RISC-V starts as a research project at UC Berkeley in 2010."]};
+
 /* Every challenge, with the topic it belongs to. */
 export const CHALLENGES = [
   {"topic":"reality","kind":"Design","t":"Ship a phone chip","d":"Make 10 million phones work for 3 years without losing too much speed.","href":"#lab-reality-1"},
