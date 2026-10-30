@@ -26,6 +26,11 @@
       "how": "each smaller node needs finer printing"
     }
   ],
+  "time": {
+    "then": [
+      [1971, "Printing method: {litho}."]
+    ]
+  },
   "challenges": [
     {
       "kind": "Experiment",

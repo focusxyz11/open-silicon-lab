@@ -30,6 +30,14 @@
       "how": "the slope of the roofline"
     }
   ],
+  "time": {
+    "born": [2012, "Deep learning takes off on GPUs in 2012."],
+    "then": [
+      [2012, "Deep learning runs on GPUs; the transformer architecture comes in 2017."],
+      [2017, "Transformers (2017) scale up; models grow from millions to billions of parameters."],
+      [2022, "Large language models serve hundreds of millions of people."]
+    ]
+  },
   "challenges": [],
   "learn": {
     "plain": "An AI chip is a giant multiplication machine. It runs fastest when its thousands of calculators stay busy, which means feeding them data quickly from memory and serving many people at once.",

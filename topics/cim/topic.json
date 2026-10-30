@@ -41,6 +41,14 @@
       "how": "analog arrays promise much more of it"
     }
   ],
+  "time": {
+    "then": [
+      [1971, "Memory only stores; all computing happens in the processor."],
+      [2008, "Memristors (2008) and analog memory arrays multiply in the lab."],
+      [2020, "The first analog in-memory AI chips ship for laptops and edge devices."],
+      [2027, "Projection: compute-in-memory spreads in edge AI if precision and drift are tamed."]
+    ]
+  },
   "challenges": [
     {
       "kind": "Experiment",

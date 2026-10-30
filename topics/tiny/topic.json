@@ -59,6 +59,16 @@
       "how": "the test step sorts working chips from faulty ones"
     }
   ],
+  "time": {
+    "then": [
+      [1971, "Only big companies can make chips: shared multi-project wafers start with MOSIS in 1981."],
+      [
+        1981,
+        "Universities share wafers through programs such as MOSIS (since 1981). Community shuttles for hobbyists are still to come."
+      ],
+      [2022, "Community shuttles such as Tiny Tapeout (since 2022) let anyone put a design on a real chip."]
+    ]
+  },
   "challenges": [
     {
       "kind": "Puzzle",

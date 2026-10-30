@@ -35,11 +35,12 @@ Next steps:
       "ideas"    big ideas this topic shows, if any (src/data/ideas.js), e.g.
                  { "idea": "energy-budget", "how": "where it shows up here" }
       "learn"    plain and engineer explanations; optional quiz and tutor questions
- 2. In src/data/timeline.js, add a line for '${id}' to topicLine(): one sentence on what this
-    topic looked like in a given year (the time machine shows it on the topic page).
- 3. Write the question (the <h2>) and the text in topics/${id}/content.html.
- 4. Replace the example model in topics/${id}/labs/${id}-lab.js.
- 5. Run: npm run catalog   (checks the folder, then updates src/generated/)
- 6. Run: npm test          (checks the folder contract and the knowledge graph)
- 7. Open the site (npm start) at #${id} and check it at phone width and in dark mode.
+      "time"     what this topic looked like over the years: "then" lines start in a year
+                 and hold until the next one, e.g. [1971, "…"], [2007, "…"]. Add "born"
+                 if the subject did not exist in 1971.
+ 2. Write the question (the <h2>) and the text in topics/${id}/content.html.
+ 3. Replace the example model in topics/${id}/labs/${id}-lab.js.
+ 4. Run: npm run catalog   (checks the folder, then updates src/generated/)
+ 5. Run: npm test          (checks the folder contract and the knowledge graph)
+ 6. Open the site (npm start) at #${id} and check it at phone width and in dark mode.
 See topics/README.md for the full contract.`);

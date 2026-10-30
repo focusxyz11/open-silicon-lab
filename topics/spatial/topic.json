@@ -41,6 +41,14 @@
     }
   ],
   "measures": [],
+  "time": {
+    "then": [
+      [1971, "Programs run instruction by instruction; data travels to the processor."],
+      [2016, "Dataflow AI chips appear, such as Google's TPU (2016)."],
+      [2019, "Wafer-scale (from 2019) and SRAM dataflow chips serve AI at record speed per user."],
+      [2027, "Projection: on-chip memory grows with 3D stacking, so bigger models fit on chip."]
+    ]
+  },
   "challenges": [
     {
       "kind": "Experiment",

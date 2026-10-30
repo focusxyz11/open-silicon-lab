@@ -42,6 +42,16 @@
     }
   ],
   "measures": [],
+  "time": {
+    "born": [
+      2023,
+      "Large language models start writing chip code around 2023; agentic design tools ship in 2025–26."
+    ],
+    "then": [
+      [2023, "AI agents write and check chip code; people still decide what to trust and sign off."],
+      [2027, "Outlook: agents run spec-to-layout loops while engineers set goals and sign off."]
+    ]
+  },
   "challenges": [
     {
       "kind": "Puzzle",

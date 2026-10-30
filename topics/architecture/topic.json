@@ -57,6 +57,18 @@
     }
   ],
   "measures": [],
+  "time": {
+    "then": [
+      [
+        1971,
+        "None of today's big instruction sets exists yet: x86 arrives in 1978, Arm in 1985, RISC-V in 2010."
+      ],
+      [
+        1978,
+        "Instruction sets of today already alive: {isa}. Biggest chip so far: {biggest}, {biggestTr} transistors."
+      ]
+    ]
+  },
   "challenges": [],
   "learn": {
     "plain": "Think of an instruction set as a language and a chip as someone who speaks it. x86, Arm and RISC-V are three languages. Software written in one runs on any chip that speaks it, whether that chip is fast or slow. Pipelining is an assembly line: while one instruction is being finished, the next ones are already being started.",

@@ -490,15 +490,15 @@ a.btn{display:inline-block;text-decoration:none}
 .balance{position:relative;height:34px;max-width:520px;width:100%;margin:2px auto 0}
 .balance i{position:absolute;left:4%;right:4%;top:8px;height:3px;border-radius:2px;background:var(--violet);transform:rotate(var(--tilt,0deg));transition:transform .5s cubic-bezier(.3,1.4,.5,1)}
 .balance b{position:absolute;left:50%;top:12px;margin-left:-10px;border:10px solid transparent;border-bottom:18px solid var(--muted);border-top:0}
-.views{display:grid;grid-template-columns:repeat(var(--n),minmax(0,1fr));gap:10px}
-.view{display:grid;gap:7px;align-content:start;padding:12px;border:1px solid var(--line);border-radius:8px;background:var(--bg)}
-.view.on{border-color:var(--violet);box-shadow:0 0 0 2px color-mix(in srgb,var(--violet) 30%,transparent)}
-.view > b{font-size:15px}
-.view p{font-size:13.5px}
-.view .assume{color:var(--muted)}
-.view .assume span{display:block;font:600 10.5px var(--mono);letter-spacing:.05em;text-transform:uppercase;color:var(--violet)}
-.view .btn{margin-top:2px}
-.view .btn[aria-pressed="true"]{border-color:var(--violet);color:var(--violet)}
+.dviews{display:grid;grid-template-columns:repeat(var(--n),minmax(0,1fr));gap:10px}
+.dview{display:grid;gap:7px;align-content:start;padding:12px;border:1px solid var(--line);border-radius:8px;background:var(--bg)}
+.dview.on{border-color:var(--violet);box-shadow:0 0 0 2px color-mix(in srgb,var(--violet) 30%,transparent)}
+.dview > b{font-size:15px}
+.dview p{font-size:13.5px}
+.dview .assume{color:var(--muted)}
+.dview .assume span{display:block;font:600 10.5px var(--mono);letter-spacing:.05em;text-transform:uppercase;color:var(--violet)}
+.dview .btn{margin-top:2px}
+.dview .btn[aria-pressed="true"]{border-color:var(--violet);color:var(--violet)}
 .mind{padding:10px 12px;border-radius:8px;background:color-mix(in srgb,var(--violet) 10%,transparent);font-size:14px!important}
 .linkbtn{border:0;background:none;padding:0;color:var(--cyan);text-decoration:underline;cursor:pointer;font:inherit}
-@media(max-width:700px){.views{grid-template-columns:1fr}.balance{display:none}}
+@media(max-width:700px){.dviews{grid-template-columns:1fr}.balance{display:none}}

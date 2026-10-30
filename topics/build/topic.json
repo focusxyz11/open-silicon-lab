@@ -31,6 +31,12 @@
       "how": "your design's cost per chip against real ones"
     }
   ],
+  "time": {
+    "born": [2016, "Purpose-built AI chips appear from 2016."],
+    "then": [
+      [2016, "Purpose-built AI chips exist; their designers face the same trade-offs you do here."]
+    ]
+  },
   "challenges": [
     {
       "kind": "Design",

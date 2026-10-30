@@ -9,6 +9,9 @@ import { prepareTopic } from './learning.js';
 
 const REF = ['glossary', 'sources'];
 const loading = new Map();
+/* Each loaded topic's topic.json, for the parts that load on demand (learning content, time lines). */
+const DATA = {};
+export const topicData = id => DATA[id] || {};
 
 export const isReference = id => REF.includes(id);
 export const isLoaded = id => loading.has(id);
@@ -36,7 +39,8 @@ async function load(id) {
     ref ? null : text('topics/' + id + '/topic.json').catch(() => null),
     meta && meta.style ? loadStyle('topics/' + id + '/style.css') : null
   ]);
-  let learn = {}; try { learn = (json && JSON.parse(json).learn) || {}; } catch (e) { console.error('topics/' + id + '/topic.json could not be read', e); }
+  let data = {}; try { data = (json && JSON.parse(json)) || {}; } catch (e) { console.error('topics/' + id + '/topic.json could not be read', e); }
+  DATA[id] = data; const learn = data.learn || {};
   const holder = document.createElement('div'); holder.innerHTML = html.trim();
   const sec = holder.firstElementChild; sec.hidden = true;
   const lib = document.getElementById('library'), foot = document.getElementById('topicFoot');

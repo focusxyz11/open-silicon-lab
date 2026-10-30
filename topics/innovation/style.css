@@ -1,0 +1,11 @@
+/* Styles for this topic's simulations, moved here from src/styles/base.css. They load only when the topic opens. */
+/* ---- v2: innovation map ---- */
+.limkey{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+@media(max-width:900px){.limkey{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:480px){.limkey{grid-template-columns:minmax(0,1fr)}}
+.limkey div{border-top:3px solid var(--c);padding-top:8px;display:grid;gap:4px}
+.limkey b{font-size:15px}
+.limkey span{font-size:13px;color:var(--muted)}
+.imd{display:grid;gap:12px;align-content:start}
+.imd h4{margin:0;font:600 11px var(--mono);letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+.imd p{font-size:14px}

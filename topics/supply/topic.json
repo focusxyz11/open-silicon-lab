@@ -26,6 +26,15 @@
       "how": "the foundry model splits designing chips from making them"
     }
   ],
+  "time": {
+    "then": [
+      [1971, "Almost every chip company owns its own fab. TSMC, the first pure foundry, opens in 1987."],
+      [
+        1987,
+        "The foundry model (TSMC, 1987) splits design from manufacturing; supply chains spread across countries."
+      ]
+    ]
+  },
   "challenges": [
     {
       "kind": "Experiment",

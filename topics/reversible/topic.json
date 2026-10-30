@@ -24,6 +24,14 @@
       "how": "erasing a bit has a minimum energy cost, set by physics"
     }
   ],
+  "time": {
+    "then": [
+      [1971, "Landauer (1961) shows that erasing a bit must cost energy."],
+      [1973, "Reversible logic is understood in theory (Bennett, 1973), but chips stay irreversible."],
+      [2025, "A 22 nm reversible test chip (2025) recovers part of its switching energy."],
+      [2027, "Projection: reversible chips must show savings at gigahertz speeds to leave the lab."]
+    ]
+  },
   "challenges": [
     {
       "kind": "Experiment",

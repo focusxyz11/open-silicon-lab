@@ -35,6 +35,20 @@
       "how": "optical links aim to lower it between chips"
     }
   ],
+  "time": {
+    "then": [
+      [1971, "Optical fiber carries long-distance data; computing stays electronic."],
+      [1996, "Optics link servers; silicon photonics moves into data centers."],
+      [
+        2017,
+        "Optics move into chip packages, and the first photonic processors reach supercomputing centers."
+      ],
+      [
+        2027,
+        "Projection: optical links between chips become standard; photonic compute must prove itself beyond niches."
+      ]
+    ]
+  },
   "challenges": [
     {
       "kind": "Puzzle",

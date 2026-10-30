@@ -1,0 +1,10 @@
+/* Styles for this topic's simulations, moved here from src/styles/base.css. They load only when the topic opens. */
+.pricebar{margin-top:14px;display:grid;gap:6px}
+.pricebar small{font-size:13px;color:var(--muted)}
+.bm{display:grid;gap:8px}
+.bm button{display:grid;grid-template-columns:150px minmax(0,1fr);gap:12px;align-items:center;background:none;border:1px solid transparent;border-radius:6px;padding:6px 8px;cursor:pointer;color:var(--ink);text-align:left}
+.bm button[aria-pressed="true"]{border-color:var(--amber);background:var(--surface)}
+.bm button b{font-size:14px;font-weight:600}
+.bm button small{display:block;font:12px var(--mono);color:var(--muted)}
+@media(max-width:560px){.bm button{grid-template-columns:minmax(0,1fr)}}
+.bmd{margin-top:8px}

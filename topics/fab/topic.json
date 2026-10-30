@@ -38,6 +38,11 @@
       "how": "a leading-edge fab only pays off at enormous volume"
     }
   ],
+  "time": {
+    "then": [
+      [1971, "Newest fabs process {wafer} wafers on a {node} process."]
+    ]
+  },
   "challenges": [],
   "learn": {
     "plain": "A fab is a giant kitchen that repeats one recipe hundreds of times: add a layer, print a pattern, carve it, fill it, polish it, check it. It must be far cleaner than a hospital and more precise than almost anything else people manufacture.",

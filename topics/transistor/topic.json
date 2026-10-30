@@ -63,6 +63,11 @@
       "how": "each new node changes the switch's shape"
     }
   ],
+  "time": {
+    "then": [
+      [1971, "{shape}. Leading-edge process: {node}."]
+    ]
+  },
   "challenges": [],
   "learn": {
     "plain": "A transistor is a tap for electricity, and the gate is the handle. As taps got tiny, they started dripping even when closed. Each new design grips the pipe from more sides so it shuts off tightly.",

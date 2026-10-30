@@ -51,6 +51,14 @@
     }
   ],
   "measures": [],
+  "time": {
+    "born": [2010, "RISC-V starts as a research project at UC Berkeley in 2010."],
+    "then": [
+      [2010, "RISC-V is a university research project; the RISC-V Foundation forms in 2015."],
+      [2015, "The RISC-V Foundation grows; the first commercial RISC-V cores ship."],
+      [2020, "RISC-V International, based in Switzerland since 2020, runs the open standard."]
+    ]
+  },
   "challenges": [
     {
       "kind": "Puzzle",

@@ -20,7 +20,7 @@ topics/<id>/
   topic.json      everything about the topic as data: its place, links, ideas, challenges, learning
   content.html    <section id="<id>"> … </section>          the page: question, short text, simulation panels
   labs/<lab>.js   one file per simulation, exporting init(section)
-  style.css       optional: styles used only by this topic
+  style.css       optional: styles used only by this topic (loads when it opens; shared styles are in src/styles/base.css)
 ```
 
 ### topic.json
@@ -64,6 +64,7 @@ topics/<id>/
 | `ideas` | Big ideas from `src/data/ideas.js` that this topic shows, and how. Add `"counter": true` when the topic shows where the idea breaks. |
 | `tradeoffs` | Trade-offs from `src/data/tradeoffs.js` this topic shows: `{ "tradeoff": "speed-power", "how": "…", "try": "#lab-design-4" }`. `try` points at the simulation where the reader can push it. |
 | `measures` | Measures from `src/data/measures.js` this topic uses: `{ "measure": "bandwidth", "how": "…" }`. |
+| `time` | What the topic looked like over the years: `"then": [[1971, "…"], [2007, "…"]]`, each line holding until the next. Lines may use values such as `{node}` or `{wafer}` (list in `src/data/timevalues.js`). Add `"born": [year, "what happened"]` if the subject did not exist in 1971. |
 | `challenges` | `Puzzle` (one right answer), `Design` (many answers, scored on trade-offs) or `Experiment` (find where something breaks). |
 | `learn` | Loaded only when the topic opens. Write both `plain` and `engineer`, or neither. |
 
@@ -87,8 +88,8 @@ Readers see `causes` links as predictions: *"If yield falls, what happens in Eco
 `then` folded until they have thought. So write `if` as a change and `then` as its effect. Keep `why`
 under 90 characters; it is shown on the map.
 
-The time-machine line (`topicLine` in `src/data/timeline.js`), glossary terms (`src/data/learning.js`)
-and dated facts (`src/data/facts.json`) are still kept centrally (see `docs/ARCHITECTURE.md`).
+Glossary terms (`src/data/learning.js`) and dated facts (`src/data/facts.json`) are kept centrally on
+purpose: they are shared across topics, and facts are checked together each month.
 
 ## The contract
 

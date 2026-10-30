@@ -31,6 +31,16 @@
       "how": "where the energy goes: mostly moving data"
     }
   ],
+  "time": {
+    "then": [
+      [1971, "Almost every computer follows von Neumann's 1945 plan: memory here, processor there."],
+      [
+        1994,
+        "The memory wall (named in 1994): processors outpace memory, and moving data costs more than computing."
+      ],
+      [2027, "Projection: more and more computing moves into or beside memory."]
+    ]
+  },
   "challenges": [
     {
       "kind": "Experiment",

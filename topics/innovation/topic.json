@@ -30,6 +30,12 @@
       "counter": true
     }
   ],
+  "time": {
+    "then": [
+      [1971, "This is history. The innovation map describes 2026 and the 2030 outlook."],
+      [2027, "You are in a projection: the bottlenecks on the innovation map decide whether it comes true."]
+    ]
+  },
   "challenges": [],
   "learn": {
     "plain": "Some jobs get faster with better software. Some need a scientific breakthrough. Some need money and years to build a factory. Some need trained people and clear rules. AI directly speeds up only the first kind.",

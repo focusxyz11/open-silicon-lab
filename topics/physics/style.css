@@ -1,0 +1,6 @@
+/* Styles for this topic's simulations, moved here from src/styles/base.css. They load only when the topic opens. */
+/* ===== v6: physics, data center, scenarios ===== */
+.wsteps{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px}
+.wsteps div{border:1px solid var(--line);border-radius:6px;background:var(--surface);padding:12px 14px;display:grid;gap:4px;align-content:start}
+.wsteps b{font-size:15px}
+.wsteps p{font-size:13px;color:var(--muted)}

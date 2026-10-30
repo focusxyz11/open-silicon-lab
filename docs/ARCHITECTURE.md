@@ -130,7 +130,10 @@ A topic loads once and stays on the page. Code in one topic that needs another (
 
 ## Styling
 
-`base.css` defines the colour tokens (light and dark), type and the shared simulation styles. `app.css` styles the shell, map and views. A topic's own styles live in `topics/<id>/style.css` and load with the topic (today: RISC-V and Why perfect designs fail).
+`base.css` holds the colour tokens (light and dark), type and the simulation styles shared by more
+than one topic (panels, controls, readouts). `app.css` styles the shell, map and views. Everything a
+single topic needs lives in `topics/<id>/style.css` and loads with that topic; a test fails if a rule
+in `base.css` is used by only one topic, and says where to move it.
 
 ## My chip
 
@@ -150,7 +153,7 @@ A topic loads once and stays on the page. Code in one topic that needs another (
 
 ## The time machine
 
-`src/data/timeline.js` holds dated series (landmark chips, process nodes, transistor shapes, lithography, wafers, design costs, company founding years and Karl Rupp's microprocessor data) and `snapshot(year)` / `topicLine(id, year)`. `src/app/era.js` keeps the site's year (per tab, today by default), adds the year button to the top bar and the banner to topic pages, and fires `osl:year` when it changes. Labs that know about time listen for that event: the map's time machine, the company explorer and the roadmap.
+`src/data/timeline.js` holds dated series (landmark chips, process nodes, transistor shapes, lithography, wafers, design costs, company founding years and Karl Rupp's microprocessor data) and `snapshot(year)`. Each topic's own lines are in its `topic.json` (`"time"`); `topicLine(id, year, then)` fills in values such as `{node}` from the snapshot. `src/app/era.js` keeps the site's year (per tab, today by default), adds the year button to the top bar and the banner to topic pages, and fires `osl:year` when it changes. Labs that know about time listen for that event: the map's time machine, the company explorer and the roadmap.
 
 ## Progress and state
 
@@ -180,12 +183,13 @@ fact or a challenge.
 Steps, each a small pull request:
 
 1. **Topic folders, loaded on demand.** *Done.*
-2. **Everything about a topic in its folder.** *Done* for its place, links, big ideas, challenges and
-   learning content; `graph.js` is generated from the folders. Still central: the time-machine line
-   (`topicLine` in `src/data/timeline.js`), glossary terms and facts.
+2. **Everything about a topic in its folder.** *Done*: its place, links, hubs, challenges, learning
+   content and time-machine lines (`"time"`, filled in by `src/data/timevalues.js`). Glossary terms and
+   facts stay central on purpose: they are shared, and facts are checked together each month.
 3. **Typed connections and hubs.** *Done*: six link kinds, map lenses, and four hubs (big ideas,
    trade-offs, measures, debates).
-4. **Split `base.css`** so each topic carries its own simulation styles.
+4. **Split `base.css`.** *Done*: 239 single-topic rules moved into 18 topics' `style.css`; computed
+   styles of every topic page were compared before and after, and match.
 5. **Languages.** User-facing text moves out of code: `content.<lang>.html` beside `content.html`, a
    `topic.<lang>.json` holding only the translated text fields of `topic.json`, shell text in
    `src/i18n/<lang>.json`, and the language in the URL. Simulations keep numbers and logic; only words

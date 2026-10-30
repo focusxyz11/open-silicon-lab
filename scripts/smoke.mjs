@@ -27,7 +27,7 @@ async function check(viewport) {
   /* These checks act as a returning visitor; checkGuide() below plays the first visit. */
   await page.addInitScript(() => { try { localStorage.setItem('osl-guide-v1', 'done'); } catch (e) { /* ignore */ } });
   const tag = viewport.width < 600 ? '[mobile] ' : '';
-  page.on('pageerror', e => problems.push(tag + 'page error: ' + e.message));
+  page.on('pageerror', e => problems.push(tag + 'page error: ' + e.message + ' (' + String(e.stack || '').split('\n').slice(1, 3).map(l => l.trim()).join(' ← ') + ')'));
   page.on('console', m => { if (m.type() === 'error' && !/fonts\.g|ERR_TUNNEL|ERR_NAME|net::/.test(m.text() + (m.location().url || ''))) problems.push(tag + 'console: ' + m.text()); });
   const requests = []; page.on('request', r => { if (r.url().startsWith(base)) requests.push(r.url().slice(base.length)); });
   await page.goto(base + 'index.html');
@@ -179,7 +179,7 @@ async function check(viewport) {
 /* A first visit: the guide opens on the map, walks four steps, and its last step starts a challenge. */
 async function checkGuide(viewport) {
   const page = await browser.newPage({ viewport }); const tag = viewport.width < 600 ? '[mobile guide] ' : '[guide] ';
-  page.on('pageerror', e => problems.push(tag + 'page error: ' + e.message));
+  page.on('pageerror', e => problems.push(tag + 'page error: ' + e.message + ' (' + String(e.stack || '').split('\n').slice(1, 3).map(l => l.trim()).join(' ← ') + ')'));
   await page.goto(base + 'index.html');
   try { await page.waitForSelector('.g-card', { timeout: 5000 }); } catch (e) { problems.push(tag + 'did not open on a first visit'); await page.close(); return; }
   for (let k = 0; k < 3; k++) { await page.click('.g-card [data-g="next"]'); await page.waitForTimeout(120); }

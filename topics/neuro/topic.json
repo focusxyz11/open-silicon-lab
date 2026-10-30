@@ -35,6 +35,15 @@
       "how": "spikes do work only when something happens"
     }
   ],
+  "time": {
+    "then": [
+      [1971, "Neural networks are mostly theory; neuromorphic engineering begins in the late 1980s."],
+      [1989, "Research chips copy neurons and synapses in silicon."],
+      [2014, "Big spiking chips appear: IBM TrueNorth (2014) and Intel Loihi (2017)."],
+      [2024, "Systems reach a billion neurons, and neuromorphic microcontrollers ship for sensors."],
+      [2027, "Projection: spiking chips in always-on sensors and robots; large-scale use still unproven."]
+    ]
+  },
   "challenges": [
     {
       "kind": "Puzzle",

@@ -10,6 +10,8 @@
    - Design cost by node: IBS, via SemiEngineering (28 and 16 nm) and Silicon Analysts (7, 5, 3 nm); 2 nm from CSIS.
    - Company founding years: each company's published history. */
 
+import { BORN } from '../generated/graph.js';
+import { words, fillLine, lineFor } from './timevalues.js';
 export const NOW = 2026, MIN = 1971, MAX = 2040;
 
 /* [year, transistors] for microprocessors (Karl Rupp, CC BY 4.0). */
@@ -105,14 +107,8 @@ export const ERAS = [
   [2033, 'Projection: stacked transistors', 'imec\'s roadmap: n- and p-type transistors stacked on each other, then built as separate bonded tiers.']
 ];
 
-/* Topics whose subject did not exist yet in early years: [year, what happened]. */
-export const BORN = {
-  riscv: [2010, 'RISC-V starts as a research project at UC Berkeley in 2010.'],
-  compute: [2012, 'Deep learning takes off on GPUs in 2012.'],
-  accelerators: [2016, 'Google reveals its first TPU in 2016. GPUs became programmable for general computing with CUDA in 2007.'],
-  build: [2016, 'Purpose-built AI chips appear from 2016.'],
-  agent: [2023, 'Large language models start writing chip code around 2023; agentic design tools ship in 2025–26.']
-};
+/* When each topic's subject first existed comes from its topic.json ("time.born"). */
+export { BORN };
 
 const atOrBefore = (list, y) => { let r = null; for (const it of list) if (it[0] <= y) r = it; return r; };
 const clampY = y => Math.max(MIN, Math.min(MAX, Math.round(+y || NOW)));
@@ -144,52 +140,13 @@ export function snapshot(year) {
   return s;
 }
 
-/* Words for big numbers: 2,300 · 1.2 million · 336 billion · 25 trillion. */
-export function words(n) {
-  if (n >= 1e12) return (+(n / 1e12).toPrecision(2)) + ' trillion';
-  if (n >= 1e9) return (+(n / 1e9).toPrecision(3)) + ' billion';
-  if (n >= 1e6) return (+(n / 1e6).toPrecision(3)) + ' million';
-  return Math.round(n).toLocaleString('en-US');
-}
+export { words };
 
-/* One sentence per topic: what this topic looked like in that year. */
-export function topicLine(id, year) {
-  const s = snapshot(year), y = s.y;
-  if (BORN[id] && BORN[id][0] > y) return 'Not yet: ' + BORN[id][1];
-  const isa = [[1978, 'x86'], [1985, 'Arm'], [2010, 'RISC-V']].filter(x => x[0] <= y).map(x => x[1]);
-  const L = {
-    physics: 'Wafers in the newest fabs are ' + s.wafer + ' across.',
-    transistor: s.shape.t + (s.shape.kind === 'proj' ? ' (projection)' : '') + '. Leading-edge process: ' + s.node.t + '.',
-    architecture: isa.length ? 'Instruction sets of today already alive: ' + isa.join(', ') + '. Biggest chip so far: ' + s.biggest.name + ', ' + words(s.biggest.tr) + ' transistors.' : 'None of today\'s big instruction sets exists yet: x86 arrives in 1978, Arm in 1985, RISC-V in 2010.',
-    riscv: y < 2015 ? 'RISC-V is a university research project; the RISC-V Foundation forms in 2015.' : y < 2020 ? 'The RISC-V Foundation grows; the first commercial RISC-V cores ship.' : 'RISC-V International, based in Switzerland since 2020, runs the open standard.',
-    design: y < 1984 ? 'Chips are drawn largely by hand, gate by gate and polygon by polygon. Verilog arrives in 1984.' : y < 1988 ? 'Verilog (1984) lets engineers describe hardware as code; automatic logic synthesis is just arriving.' : s.cost ? 'Designing a leading-edge chip costs about $' + s.cost.m + ' million (' + s.cost.node + ', IBS estimate).' : 'Logic synthesis and automatic place-and-route turn code into layouts.',
-    layout: 'The biggest chip so far, ' + s.biggest.name + ', places ' + words(s.biggest.tr) + ' transistors.',
-    tiny: y < 1981 ? 'Only big companies can make chips: shared multi-project wafers start with MOSIS in 1981.' : y < 2022 ? 'Universities share wafers through programs such as MOSIS (since 1981). Community shuttles for hobbyists are still to come.' : 'Community shuttles such as Tiny Tapeout (since 2022) let anyone put a design on a real chip.',
-    litho: 'Printing method: ' + s.litho.t + (s.litho.kind === 'proj' ? ' (projection)' : '') + '.',
-    fab: 'Newest fabs process ' + s.wafer + ' wafers on a ' + s.node.t + ' process.',
-    yield: 'The biggest die so far holds ' + words(s.biggest.tr) + ' transistors (' + s.biggest.name + '). Bigger dies catch more defects.',
-    package: y < 2011 ? 'Chips sit alone in their packages, wired out through bond wires or solder bumps.' : y < 2015 ? '2.5D packaging begins: TSMC\'s CoWoS joins dies side by side on a silicon interposer.' : y < 2017 ? 'HBM memory stacks arrive beside the GPU (2015).' : 'Chiplets and HBM stacks make the package a system.',
-    compute: y < 2017 ? 'Deep learning runs on GPUs; the transformer architecture comes in 2017.' : y < 2022 ? 'Transformers (2017) scale up; models grow from millions to billions of parameters.' : 'Large language models serve hundreds of millions of people.',
-    accelerators: y < 2017 ? 'The first AI chips: Google\'s TPU (revealed 2016) and GPUs used for deep learning.' : 'Tensor cores (2017), TPUs and a wave of AI chip startups.',
-    build: 'Purpose-built AI chips exist; their designers face the same trade-offs you do here.',
-    beyond: y < 1994 ? 'Almost every computer follows von Neumann\'s 1945 plan: memory here, processor there.' : y <= NOW ? 'The memory wall (named in 1994): processors outpace memory, and moving data costs more than computing.' : 'Projection: more and more computing moves into or beside memory.',
-    cim: y < 2008 ? 'Memory only stores; all computing happens in the processor.' : y < 2020 ? 'Memristors (2008) and analog memory arrays multiply in the lab.' : y <= NOW ? 'The first analog in-memory AI chips ship for laptops and edge devices.' : 'Projection: compute-in-memory spreads in edge AI if precision and drift are tamed.',
-    neuro: y < 1989 ? 'Neural networks are mostly theory; neuromorphic engineering begins in the late 1980s.' : y < 2014 ? 'Research chips copy neurons and synapses in silicon.' : y < 2024 ? 'Big spiking chips appear: IBM TrueNorth (2014) and Intel Loihi (2017).' : y <= NOW ? 'Systems reach a billion neurons, and neuromorphic microcontrollers ship for sensors.' : 'Projection: spiking chips in always-on sensors and robots; large-scale use still unproven.',
-    photonic: y < 1996 ? 'Optical fiber carries long-distance data; computing stays electronic.' : y < 2017 ? 'Optics link servers; silicon photonics moves into data centers.' : y <= NOW ? 'Optics move into chip packages, and the first photonic processors reach supercomputing centers.' : 'Projection: optical links between chips become standard; photonic compute must prove itself beyond niches.',
-    quantum: y < 1994 ? 'Quantum computing is an idea (Feynman, 1982); Shor\'s factoring algorithm arrives in 1994.' : y < 2019 ? 'Labs build machines with a handful to dozens of qubits.' : y < 2024 ? 'Google claims quantum supremacy (2019) on a 53-qubit chip; error rates are still too high for useful work.' : y <= NOW ? 'Error correction starts to work: logical qubits beat physical ones.' : y < 2029 ? 'Plans: error-corrected machines are scaled up for the first useful applications.' : 'Plans: fault-tolerant quantum computers from IBM and Quantinuum, targeted for 2029.',
-    pbits: y < 2017 ? 'Noise is treated only as a problem to be engineered away.' : y < 2025 ? 'Probabilistic bits (p-bits) are demonstrated in research labs.' : y <= NOW ? 'The first thermodynamic and probabilistic chips are taped out and tested.' : 'Projection: probabilistic chips for sampling and optimization, if their gains hold up outside the lab.',
-    reversible: y < 1973 ? 'Landauer (1961) shows that erasing a bit must cost energy.' : y < 2025 ? 'Reversible logic is understood in theory (Bennett, 1973), but chips stay irreversible.' : y <= NOW ? 'A 22 nm reversible test chip (2025) recovers part of its switching energy.' : 'Projection: reversible chips must show savings at gigahertz speeds to leave the lab.',
-    reality: y < 1978 ? 'Reliability work is about packages, contacts and wiring; radiation is not yet known to flip bits in memory chips.' : y < 1994 ? 'Since 1978, engineers know that particles from radiation can flip bits in memory chips.' : y < 2003 ? 'The Pentium division bug (1994) cost Intel $475 million and pushed the industry toward formal verification.' : y < 2011 ? 'A flipped bit added 4,096 votes in a 2003 Belgian election; a cosmic ray is the suspected cause.' : y < 2018 ? 'Intel\'s 2011 chipset flaw: disk ports that wear out with use, about $700 million to fix.' : y < 2021 ? 'Spectre and Meltdown (2018) turn a speed trick into a security hole in almost every fast processor.' : y < 2024 ? 'Google and Meta report cores that silently compute wrong answers in their data centers (2021).' : y <= NOW ? 'Unstable 2024 desktop chips are traced to a clock circuit that ages faster under high voltage.' : 'Projection: chips that watch their own aging and errors in service become standard.',
-    spatial: y < 2016 ? 'Programs run instruction by instruction; data travels to the processor.' : y < 2019 ? 'Dataflow AI chips appear, such as Google\'s TPU (2016).' : y <= NOW ? 'Wafer-scale (from 2019) and SRAM dataflow chips serve AI at record speed per user.' : 'Projection: on-chip memory grows with 3D stacking, so bigger models fit on chip.',
-    agent: y <= NOW ? 'AI agents write and check chip code; people still decide what to trust and sign off.' : 'Outlook: agents run spec-to-layout loops while engineers set goals and sign off.',
-    everywhere: y < 1977 ? 'Chips go into calculators, watches and industrial controls.' : y < 1983 ? 'Home computers such as the Apple II (1977) and the IBM PC (1981) appear.' : y < 2007 ? 'Mobile phones (from 1983) and PCs carry more and more chips.' : y < 2012 ? 'Smartphones (from 2007) become the biggest market for advanced chips.' : y <= NOW ? 'Phones, cars, appliances and AI data centers: over a trillion chips a year.' : 'Projection: more chips in cars, robots and data centers; today\'s trends continued.',
-    datacenter: y < 1995 ? 'Computing lives in mainframes, minicomputers and PCs.' : y < 2006 ? 'Web companies build large data centers from ordinary PC servers.' : y < 2016 ? 'Cloud computing (from 2006) puts servers in giant shared data centers.' : 'GPU clusters linked by NVLink (from 2016) and fast networks train AI models.',
-    ecosystem: s.companies.n + ' of the ' + s.companies.total + ' companies in today\'s ecosystem explorer exist' + (y > NOW ? ' (plus whoever is founded after 2026).' : '.'),
-    supply: y < 1987 ? 'Almost every chip company owns its own fab. TSMC, the first pure foundry, opens in 1987.' : 'The foundry model (TSMC, 1987) splits design from manufacturing; supply chains spread across countries.',
-    economics: s.cost ? 'Designing a leading-edge chip costs about $' + s.cost.m + ' million (' + s.cost.node + ', IBS estimate).' : 'Leading-edge chips cost far less to design than today\'s: the IBS series starts at about 1 million for 28 nm in 2011.',
-    innovation: y <= NOW ? 'This is history. The innovation map describes 2026 and the 2030 outlook.' : 'You are in a projection: the bottlenecks on the innovation map decide whether it comes true.',
-    future: y <= NOW ? 'Everything after 2026 on the roadmap is a plan or a projection.' : 'Projection for ' + y + ': ' + s.node.t + ' process, ' + s.shape.t.split(':')[0] + ' transistors.',
-    scenarios: y <= NOW ? 'The scenarios start in 2026 and run to 2040.' : 'You are inside the scenario window: ' + y + ' is one of many possible futures.'
-  };
-  return L[id] || '';
+/* One sentence per topic: what it looked like in that year. The lines are in the topic's own
+   topic.json ("time.then") and arrive when the topic loads; pass them in. */
+export function topicLine(id, year, then) {
+  const s = snapshot(year);
+  if (BORN[id] && BORN[id][0] > s.y) return 'Not yet: ' + BORN[id][1];
+  const l = lineFor(then, s.y);
+  return l ? fillLine(l[1], s) : '';
 }

@@ -1,0 +1,5 @@
+/* Styles for this topic's simulations, moved here from src/styles/base.css. They load only when the topic opens. */
+/* matrix */
+.mats{display:flex;flex-wrap:wrap;gap:18px;align-items:center}
+.mats figcaption{font:12px var(--mono);color:var(--muted);margin-bottom:4px}
+.mats figure{margin:0}

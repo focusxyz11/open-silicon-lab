@@ -1,0 +1,4 @@
+/* Styles for this topic's simulations, moved here from src/styles/base.css. They load only when the topic opens. */
+.grid-ticks{display:grid;grid-template-columns:150px minmax(0,1fr);gap:12px;font:11px var(--mono);color:var(--muted)}
+.grid-ticks div:last-child{display:flex;justify-content:space-between}
+@media(max-width:520px){.grid-ticks{grid-template-columns:minmax(0,1fr)}.grid-ticks div:first-child{display:none}}

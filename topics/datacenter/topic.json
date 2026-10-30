@@ -53,6 +53,14 @@
       "how": "memory and networks both have to keep up"
     }
   ],
+  "time": {
+    "then": [
+      [1971, "Computing lives in mainframes, minicomputers and PCs."],
+      [1995, "Web companies build large data centers from ordinary PC servers."],
+      [2006, "Cloud computing (from 2006) puts servers in giant shared data centers."],
+      [2016, "GPU clusters linked by NVLink (from 2016) and fast networks train AI models."]
+    ]
+  },
   "challenges": [
     {
       "kind": "Experiment",

@@ -58,6 +58,16 @@
       "how": "car parts must fail far less often than phone parts"
     }
   ],
+  "time": {
+    "then": [
+      [1971, "Chips go into calculators, watches and industrial controls."],
+      [1977, "Home computers such as the Apple II (1977) and the IBM PC (1981) appear."],
+      [1983, "Mobile phones (from 1983) and PCs carry more and more chips."],
+      [2007, "Smartphones (from 2007) become the biggest market for advanced chips."],
+      [2012, "Phones, cars, appliances and AI data centers: over a trillion chips a year."],
+      [2027, "Projection: more chips in cars, robots and data centers; today's trends continued."]
+    ]
+  },
   "challenges": [
     {
       "kind": "Experiment",

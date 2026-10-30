@@ -35,6 +35,12 @@
       "how": "the roadmap names nodes year by year"
     }
   ],
+  "time": {
+    "then": [
+      [1971, "Everything after 2026 on the roadmap is a plan or a projection."],
+      [2027, "Projection for {year}: {node} process, {shapeName} transistors."]
+    ]
+  },
   "challenges": [
     {
       "kind": "Experiment",

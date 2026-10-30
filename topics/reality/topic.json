@@ -57,6 +57,37 @@
       "how": "each mission sets its own target"
     }
   ],
+  "time": {
+    "then": [
+      [
+        1971,
+        "Reliability work is about packages, contacts and wiring; radiation is not yet known to flip bits in memory chips."
+      ],
+      [1978, "Since 1978, engineers know that particles from radiation can flip bits in memory chips."],
+      [
+        1994,
+        "The Pentium division bug (1994) cost Intel $475 million and pushed the industry toward formal verification."
+      ],
+      [
+        2003,
+        "A flipped bit added 4,096 votes in a 2003 Belgian election; a cosmic ray is the suspected cause."
+      ],
+      [2011, "Intel's 2011 chipset flaw: disk ports that wear out with use, about $700 million to fix."],
+      [
+        2018,
+        "Spectre and Meltdown (2018) turn a speed trick into a security hole in almost every fast processor."
+      ],
+      [
+        2021,
+        "Google and Meta report cores that silently compute wrong answers in their data centers (2021)."
+      ],
+      [
+        2024,
+        "Unstable 2024 desktop chips are traced to a clock circuit that ages faster under high voltage."
+      ],
+      [2027, "Projection: chips that watch their own aging and errors in service become standard."]
+    ]
+  },
   "challenges": [
     {
       "kind": "Design",
