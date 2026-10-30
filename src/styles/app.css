@@ -59,6 +59,35 @@
 #mSvg .w.path{stroke:var(--violet);stroke-width:2.6;stroke-dasharray:7 5}
 #mSvgL .wl{font:500 11px var(--mono);fill:var(--ink);text-anchor:middle;dominant-baseline:middle;paint-order:stroke;stroke:var(--surface);stroke-width:5px;stroke-linejoin:round}
 @media(prefers-reduced-motion:no-preference){#mSvg .w.path{animation:wdash 1.4s linear infinite}}
+/* Lenses: one kind of connection at a time, each in its own colour, arrows reading as its sentence. */
+.lensbar{display:flex;gap:6px;align-items:center;overflow-x:auto;scrollbar-width:none;padding:2px 0;margin:-2px 0}
+.lensbar::-webkit-scrollbar{display:none}
+.lensbar .code{flex:none;margin-right:2px}
+.lensbar button{flex:none;display:inline-flex;align-items:center;gap:6px;font:500 13px/1.1 var(--body);padding:7px 11px;border-radius:6px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.lensbar button i{width:14px;height:3px;border-radius:2px;background:var(--kc)}
+.lensbar button:hover{border-color:var(--muted)}
+.lensbar button[aria-pressed="true"]{border-color:var(--ink);box-shadow:inset 0 -2px 0 var(--ink)}
+#mSvg .w.k-builds-on{stroke:var(--muted)} #mSvg .mk.k-builds-on{fill:var(--muted)}
+#mSvg .w.k-part-of{stroke:var(--cyan)} #mSvg .mk.k-part-of{fill:var(--cyan)}
+#mSvg .w.k-feeds{stroke:var(--good)} #mSvg .mk.k-feeds{fill:var(--good)}
+#mSvg .w.k-causes{stroke:var(--amber)} #mSvg .mk.k-causes{fill:var(--amber)}
+#mSvg .w.k-kind-of{stroke:var(--violet)} #mSvg .mk.k-kind-of{fill:var(--violet)}
+#mSvg .w.k-grew-from{stroke:var(--rose)} #mSvg .mk.k-grew-from{fill:var(--rose)}
+#mSvg .w[class*="k-"]{stroke-width:1.7}
+#mSvg .w[class*="k-"].on{stroke-width:2.6}
+#mSvg .w.k-causes{stroke-dasharray:2 4;stroke-linecap:round;stroke-width:2.2}
+#mSvg .w.idea{stroke:var(--violet);stroke-width:2.6;stroke-dasharray:7 5}
+.stones,.dominoes{list-style:none;margin:0;padding:0;display:grid;gap:0}
+.stones li button,.dominoes li button{display:grid;gap:2px;width:100%;text-align:left;padding:8px 10px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);cursor:pointer;font:inherit}
+.stones li button:hover,.dominoes li button:hover{border-color:var(--muted)}
+.stones li{position:relative;padding-bottom:10px}
+.stones li:last-child{padding-bottom:0}
+.stones li:not(:last-child)::after{content:"";position:absolute;left:18px;bottom:0;width:2px;height:10px;background:var(--kc)}
+.stones b,.dominoes b{font-size:14px;font-weight:600}
+.stones small,.dominoes small{font-size:12.5px;color:var(--muted);line-height:1.35}
+.dominoes{gap:6px}
+.dominoes li button{border-left:4px solid var(--amber);transform-origin:left bottom}
+.dominoes li:nth-child(even) button{margin-left:10px;width:calc(100% - 10px)}
 @keyframes wdash{to{stroke-dashoffset:-24}}
 
 /* ---------- Map: what if? ---------- */

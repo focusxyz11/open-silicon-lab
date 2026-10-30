@@ -14,10 +14,10 @@ const remember = () => { try { localStorage.setItem(KEY, 'done'); } catch (e) { 
 const STEPS = [
   { target: ['#mStack'], top: true, eyebrow: 'The map', t: 'The whole chip world, as a stack',
     d: 'Atoms at the bottom, devices and industry higher up, big questions on top. Every box is a topic you can play with.',
-    before: () => { mapState.sel = null; mapState.thread = null; redrawMap(); sweep(); } },
+    before: () => { mapState.sel = null; mapState.thread = null; mapState.lens = ''; redrawMap(); sweep(); } },
   { target: ['#mStack .tnode[data-t="transistor"]'], soft: true, eyebrow: 'Connections', t: 'Everything connects',
-    d: 'Select any topic to see what it builds on and what it leads to. Follow the wires anywhere: nothing is locked.',
-    before: () => { mapState.sel = 'transistor'; mapState.thread = null; mapState.query = ''; redrawMap(); } },
+    d: 'Select any topic to see how it connects. Use Show to see one kind of connection at a time: what is inside what, cause and effect, or one big idea across the layers. Nothing is locked.',
+    before: () => { mapState.sel = 'transistor'; mapState.thread = null; mapState.query = ''; mapState.lens = ''; redrawMap(); } },
   { target: ['.modeseg', '#yearBtn'], eyebrow: 'Two dials', t: 'Your level, and the year',
     d: 'Beginner or Engineer changes how much detail every explanation gives. The year button sends the whole site back to 1971 or forward to 2040.' },
   { target: null, eyebrow: 'Start', t: 'Learn by doing: pick a first challenge', choices: [

@@ -11,7 +11,7 @@ test('each kind of link means one thing: labels both ways, a question, a test an
   assert.ok(KIND_ORDER.length >= 5 && KIND_ORDER.length <= 8, 'keep the vocabulary small enough to remember');
   for (const k of KIND_ORDER) {
     const d = LINK_KINDS[k];
-    for (const f of ['t', 'out', 'back', 'ask', 'test', 'example']) assert.ok(d[f], k + ' needs "' + f + '"');
+    for (const f of ['t', 'out', 'back', 'means', 'ask', 'test', 'example']) assert.ok(d[f], k + ' needs "' + f + '"');
     assert.match(d.ask, /\?$/, k + ': "ask" is the question this kind answers');
     assert.ok(d.example.includes(' ' + k + ' '), k + ': the example uses the kind');
   }
