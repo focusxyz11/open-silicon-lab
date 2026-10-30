@@ -9,6 +9,7 @@ import { initEra } from './app/era.js';
 import { initMyChip } from './app/mychip.js';
 import { initStudioLinks } from './app/studio.js';
 import { renderMapShell } from './app/map.js';
+import { initGuide } from './app/guide.js';
 import { text } from './app/loader.js';
 import { issueURL, REPO_URL } from './app/config.js';
 
@@ -32,5 +33,6 @@ async function boot() {
   initLearning();
   initAsk();
   initRouter();
+  initGuide();
 }
 boot().catch(e => { const l = document.getElementById('loading'); if (l) { l.hidden = false; l.textContent = 'The lab could not load: ' + e.message + '. If you opened index.html directly from disk, run a local server instead (see README).'; } console.error(e); });
