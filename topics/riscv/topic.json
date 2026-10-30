@@ -43,6 +43,14 @@
       "how": "an open instruction set lets anyone build a chip that keeps the promise"
     }
   ],
+  "tradeoffs": [
+    {
+      "tradeoff": "flexible-efficient",
+      "how": "a custom instruction speeds up one job and nothing else",
+      "try": "#riscv-6"
+    }
+  ],
+  "measures": [],
   "challenges": [
     {
       "kind": "Puzzle",

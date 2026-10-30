@@ -177,6 +177,59 @@ export const IDEA_USES = [
   {"idea":"physics-computes","topic":"transistor","how":"a transistor's current changes smoothly; digital logic uses only on and off"}
 ];
 
+/* Where each trade-off and measure shows up (src/data/tradeoffs.js and measures.js define them). */
+export const TRADEOFF_USES = [
+  {"tradeoff":"safety-cost","topic":"reality","how":"every protection lowers failures and costs speed, power or money","try":"#lab-reality-1"},
+  {"tradeoff":"precision-energy","topic":"cim","how":"analog math saves energy but adds noise to every answer","try":"#lab-cim-1"},
+  {"tradeoff":"near-big","topic":"spatial","how":"keeping the weights on chip is fastest, if they fit","try":"#lab-spatial-1"},
+  {"tradeoff":"big-yield","topic":"spatial","how":"wafer-scale chips choose the other end: one piece of silicon, with spares"},
+  {"tradeoff":"flexible-efficient","topic":"everywhere","how":"each job in a device gets the cheapest chip that can do it","try":"#lab-everywhere-2"},
+  {"tradeoff":"safety-cost","topic":"everywhere","how":"a car part costs more than a phone part that does the same job"},
+  {"tradeoff":"speed-power","topic":"datacenter","how":"serving answers faster costs more energy per token","try":"#lab-datacenter-4"},
+  {"tradeoff":"precision-energy","topic":"compute","how":"smaller numbers move fewer bytes, so the multipliers stay busy","try":"#lab-compute-2"},
+  {"tradeoff":"precision-energy","topic":"accelerators","how":"each halving of the number size halves the memory traffic","try":"#lab-accelerators-3"},
+  {"tradeoff":"near-big","topic":"accelerators","how":"SRAM chips are fast but small; HBM holds whole models","try":"#lab-accelerators-1"},
+  {"tradeoff":"near-big","topic":"package","how":"more HBM stacks give more room and more bandwidth, at more cost","try":"#lab-package-2"},
+  {"tradeoff":"big-yield","topic":"package","how":"chiplets need an interposer and fast links to act as one chip","try":"#lab-package-1"},
+  {"tradeoff":"big-yield","topic":"yield","how":"split the die and watch the cost per working chip fall","try":"#lab-yield-1"},
+  {"tradeoff":"speed-power","topic":"design","how":"raise the voltage and the clock, and watch the power climb","try":"#lab-design-4"},
+  {"tradeoff":"ship-check","topic":"design","how":"coverage closure: when has verification found enough?","try":"#lab-design-5"},
+  {"tradeoff":"ship-check","topic":"agent","how":"trust the agent now, or check its work first","try":"#lab-agent-1"},
+  {"tradeoff":"safety-cost","topic":"tiny","how":"more test patterns catch more faults, at more test time","try":"#lab-tiny-1"},
+  {"tradeoff":"ship-check","topic":"tiny","how":"the verify step runs before anything is made"},
+  {"tradeoff":"near-big","topic":"architecture","how":"each level of the memory hierarchy is bigger and slower than the one above","try":"#lab-architecture-5"},
+  {"tradeoff":"flexible-efficient","topic":"architecture","how":"Amdahl's law limits what a special unit can win","try":"#lab-architecture-4"},
+  {"tradeoff":"flexible-efficient","topic":"riscv","how":"a custom instruction speeds up one job and nothing else","try":"#riscv-6"},
+  {"tradeoff":"speed-power","topic":"transistor","how":"switches that turn on harder also leak more when off","try":"#lab-transistor-1"}
+];
+
+export const MEASURE_USES = [
+  {"measure":"dppm","topic":"reality","how":"each mission sets its own target"},
+  {"measure":"transistors","topic":"future","how":"the trend line to 2040"},
+  {"measure":"node","topic":"future","how":"the roadmap names nodes year by year"},
+  {"measure":"energy-bit","topic":"beyond","how":"where the energy goes: mostly moving data"},
+  {"measure":"ops-watt","topic":"cim","how":"analog arrays promise much more of it"},
+  {"measure":"ops-watt","topic":"neuro","how":"spikes do work only when something happens"},
+  {"measure":"energy-bit","topic":"photonic","how":"optical links aim to lower it between chips"},
+  {"measure":"yield","topic":"economics","how":"the cost of every chip follows it"},
+  {"measure":"cost-chip","topic":"economics","how":"inside the price of an AI GPU"},
+  {"measure":"dppm","topic":"everywhere","how":"car parts must fail far less often than phone parts"},
+  {"measure":"ops-watt","topic":"datacenter","how":"energy per token is the same idea, for a whole data center"},
+  {"measure":"bandwidth","topic":"datacenter","how":"memory and networks both have to keep up"},
+  {"measure":"bandwidth","topic":"compute","how":"the slope of the roofline"},
+  {"measure":"ops-watt","topic":"accelerators","how":"AI chips compete on it as much as on speed"},
+  {"measure":"bandwidth","topic":"accelerators","how":"the biggest difference between AI chips is often here"},
+  {"measure":"cost-chip","topic":"build","how":"your design's cost per chip against real ones"},
+  {"measure":"bandwidth","topic":"package","how":"HBM stacks set how fast each GPU is fed"},
+  {"measure":"node","topic":"litho","how":"each smaller node needs finer printing"},
+  {"measure":"yield","topic":"yield","how":"the wafer map shows it die by die"},
+  {"measure":"cost-chip","topic":"yield","how":"bad dies raise the cost of the good ones"},
+  {"measure":"transistors","topic":"layout","how":"tools place billions of them so the wires stay short"},
+  {"measure":"yield","topic":"tiny","how":"the test step sorts working chips from faulty ones"},
+  {"measure":"transistors","topic":"transistor","how":"billions of switches, each one shrinking"},
+  {"measure":"node","topic":"transistor","how":"each new node changes the switch's shape"}
+];
+
 /* Every challenge, with the topic it belongs to. */
 export const CHALLENGES = [
   {"topic":"reality","kind":"Design","t":"Ship a phone chip","d":"Make 10 million phones work for 3 years without losing too much speed.","href":"#lab-reality-1"},

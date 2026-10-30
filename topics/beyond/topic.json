@@ -24,6 +24,13 @@
       "how": "the trip between memory and processor costs more energy than the math"
     }
   ],
+  "tradeoffs": [],
+  "measures": [
+    {
+      "measure": "energy-bit",
+      "how": "where the energy goes: mostly moving data"
+    }
+  ],
   "challenges": [
     {
       "kind": "Experiment",

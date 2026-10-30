@@ -49,3 +49,16 @@ test('big ideas echo across layers, and some show where they break', () => {
   const shown = TOPICS.filter(t => ideasOf(t.id).length).length;
   assert.ok(shown / TOPICS.length >= 0.75, 'most topics show at least one big idea (' + shown + ' of ' + TOPICS.length + ')');
 });
+
+test('trade-offs, measures and debates are shared, and each debate has real sides', async () => {
+  const { TRADEOFFS, MEASURES, DEBATES, tradeoffUses, measureUses, debatesOf, debateTopics } = await import('../src/data/topics.js');
+  for (const t of TRADEOFFS) assert.ok(tradeoffUses(t.id).length >= 2, t.id);
+  for (const m of MEASURES) assert.ok(measureUses(m.id).length >= 2 && ['higher', 'lower'].includes(m.better), m.id);
+  for (const d of DEBATES) {
+    assert.ok(d.views.length >= 2, d.id + ' has two sides');
+    for (const v of d.views) assert.ok(v.assumes && v.topics.length, d.id + ': ' + v.t + ' names an assumption and a place to test it');
+    assert.ok(new Set(d.views.map(v => v.t)).size === d.views.length, d.id + ': views have different names');
+    assert.ok(debateTopics(d).every(id => debatesOf(id).includes(d)), d.id);
+  }
+  assert.ok(debatesOf('yield').some(d => d.id === 'bigdie'));
+});

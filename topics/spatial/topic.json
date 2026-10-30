@@ -29,6 +29,18 @@
       "counter": true
     }
   ],
+  "tradeoffs": [
+    {
+      "tradeoff": "near-big",
+      "how": "keeping the weights on chip is fastest, if they fit",
+      "try": "#lab-spatial-1"
+    },
+    {
+      "tradeoff": "big-yield",
+      "how": "wafer-scale chips choose the other end: one piece of silicon, with spares"
+    }
+  ],
+  "measures": [],
   "challenges": [
     {
       "kind": "Experiment",

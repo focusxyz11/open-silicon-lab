@@ -19,6 +19,13 @@
       "how": "lines finer than the light can draw forced the move to EUV"
     }
   ],
+  "tradeoffs": [],
+  "measures": [
+    {
+      "measure": "node",
+      "how": "each smaller node needs finer printing"
+    }
+  ],
   "challenges": [
     {
       "kind": "Experiment",

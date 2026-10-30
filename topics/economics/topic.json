@@ -24,6 +24,17 @@
       "how": "huge costs up front, small costs per chip"
     }
   ],
+  "tradeoffs": [],
+  "measures": [
+    {
+      "measure": "yield",
+      "how": "the cost of every chip follows it"
+    },
+    {
+      "measure": "cost-chip",
+      "how": "inside the price of an AI GPU"
+    }
+  ],
   "challenges": [
     {
       "kind": "Design",

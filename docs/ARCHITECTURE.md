@@ -70,6 +70,21 @@ least two bands, otherwise it is a detail of one topic. A topic page shows each 
 through the stack, with the topic marked; the Knowledge view lists them all. Counter-examples are
 first-class: a use marked `counter` shows where the idea stops working.
 
+### Trade-offs, measures and debates
+
+Three more hubs sit beside big ideas, each answering one question:
+
+| Hub | Question | Defined in | Used from | Shown as |
+| --- | --- | --- | --- | --- |
+| trade-off | What do you give up? | `src/data/tradeoffs.js` | topic.json `"tradeoffs"` (with an optional `"try"` link to the simulation) | a seesaw between the two ends |
+| measure | How do we count it? | `src/data/measures.js` (values only as fact ids) | topic.json `"measures"` | what it counts, which way is better, what it hides, dated values |
+| debate | Who disagrees, and why? | `src/data/debates.js` | its views name the topics | a balance of views, each with its assumption; lean one way and see what would change your mind |
+
+Trade-offs and measures must show up in at least two topics. A debate needs two or more views, each
+with an assumption and a topic where it can be tested; no view is marked right. Debates replace the
+old open problems and appear on the Challenges view and on every topic their views draw on
+(`src/app/hubs.js`). Leanings are stored only in the browser and never scored.
+
 The catalog script refuses anything that breaks these rules and says what to fix in plain words;
 `tests/graph.test.mjs` checks the vocabulary itself.
 
@@ -153,8 +168,8 @@ concepts stay the same. These are fixed; everything new fits into one of them:
 1. **Layers**: where something lives, from atoms to big questions (`BANDS`).
 2. **Topics**: one folder each, opening with a question or challenge, not a definition.
 3. **Links**: six kinds, each with a meaning, a question and its own way of being shown.
-4. **Shared hubs** that many topics meet at: big ideas (done), and next trade-offs (*what do you give
-   up?*), measures (*how do we count it?*) and debates (*who disagrees, and why?*).
+4. **Shared hubs** that many topics meet at: big ideas, trade-offs (*what do you give up?*),
+   measures (*how do we count it?*) and debates (*who disagrees, and why?*).
 5. **Time**: history to today, labelled plans and projections to 2040.
 6. **Threads**: suggested routes, never gates.
 
@@ -168,8 +183,8 @@ Steps, each a small pull request:
 2. **Everything about a topic in its folder.** *Done* for its place, links, big ideas, challenges and
    learning content; `graph.js` is generated from the folders. Still central: the time-machine line
    (`topicLine` in `src/data/timeline.js`), glossary terms and facts.
-3. **Typed connections.** *Done* in the data, on topic pages and on the map (six kinds, big ideas, map
-   lenses). Next: trade-offs, measures and debates as hubs (the open problems become debates).
+3. **Typed connections and hubs.** *Done*: six link kinds, map lenses, and four hubs (big ideas,
+   trade-offs, measures, debates).
 4. **Split `base.css`** so each topic carries its own simulation styles.
 5. **Languages.** User-facing text moves out of code: `content.<lang>.html` beside `content.html`, a
    `topic.<lang>.json` holding only the translated text fields of `topic.json`, shell text in

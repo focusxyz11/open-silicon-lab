@@ -44,6 +44,19 @@
       "how": "a core is designed once and licensed into many chips"
     }
   ],
+  "tradeoffs": [
+    {
+      "tradeoff": "near-big",
+      "how": "each level of the memory hierarchy is bigger and slower than the one above",
+      "try": "#lab-architecture-5"
+    },
+    {
+      "tradeoff": "flexible-efficient",
+      "how": "Amdahl's law limits what a special unit can win",
+      "try": "#lab-architecture-4"
+    }
+  ],
+  "measures": [],
   "challenges": [],
   "learn": {
     "plain": "Think of an instruction set as a language and a chip as someone who speaks it. x86, Arm and RISC-V are three languages. Software written in one runs on any chip that speaks it, whether that chip is fast or slow. Pipelining is an assembly line: while one instruction is being finished, the next ones are already being started.",

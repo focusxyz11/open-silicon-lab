@@ -8,13 +8,20 @@
      bands       the layers of the stack            src/data/bands.js
      topics      one folder each                   topics/<id>/
      links       six kinds, each with a meaning    src/data/links.js
-     big ideas   one idea across several layers    src/data/ideas.js
+     hubs        what many topics meet at:
+                   big ideas   one idea across several layers   src/data/ideas.js
+                   trade-offs  what you give up                  src/data/tradeoffs.js
+                   measures    how we count it                   src/data/measures.js
+                   debates     who disagrees, and why            src/data/debates.js
      threads     suggested routes, never gates     below */
 import { BANDS } from './bands.js';
 import { LINK_KINDS, KIND_ORDER } from './links.js';
 import { IDEAS, ideaById } from './ideas.js';
-import { TOPICS, LINKS, IDEA_USES } from '../generated/graph.js';
-export { BANDS, LINK_KINDS, KIND_ORDER, IDEAS, ideaById, TOPICS, LINKS, IDEA_USES };
+import { TRADEOFFS, tradeoffById } from './tradeoffs.js';
+import { MEASURES, measureById } from './measures.js';
+import { DEBATES, debateById, debateTopics } from './debates.js';
+import { TOPICS, LINKS, IDEA_USES, TRADEOFF_USES, MEASURE_USES } from '../generated/graph.js';
+export { BANDS, LINK_KINDS, KIND_ORDER, IDEAS, ideaById, TRADEOFFS, tradeoffById, MEASURES, measureById, DEBATES, debateById, debateTopics, TOPICS, LINKS, IDEA_USES, TRADEOFF_USES, MEASURE_USES };
 
 /* Every link as [from, to, why, kind], for drawing lines on the map. */
 export const EDGES = LINKS.map(l => [l.from, l.to, l.why, l.kind]);
@@ -47,3 +54,10 @@ export const linkLabel = l => (LINK_KINDS[l.kind] || {})[l.out ? 'out' : 'back']
 /* Big ideas a topic shows, and every place an idea shows up. */
 export const ideasOf = id => IDEA_USES.filter(u => u.topic === id);
 export const usesOf = idea => IDEA_USES.filter(u => u.idea === idea);
+
+/* Trade-offs, measures and debates a topic takes part in, and every place a hub shows up. */
+export const tradeoffsOf = id => TRADEOFF_USES.filter(u => u.topic === id);
+export const tradeoffUses = t => TRADEOFF_USES.filter(u => u.tradeoff === t);
+export const measuresOf = id => MEASURE_USES.filter(u => u.topic === id);
+export const measureUses = m => MEASURE_USES.filter(u => u.measure === m);
+export const debatesOf = id => DEBATES.filter(d => debateTopics(d).includes(id));

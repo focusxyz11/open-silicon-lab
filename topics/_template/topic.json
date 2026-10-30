@@ -8,6 +8,8 @@
   "labs": ["TOPIC_ID-lab"],
   "links": [],
   "ideas": [],
+  "tradeoffs": [],
+  "measures": [],
   "challenges": [],
   "learn": {
     "plain": "The idea in plain words, with one everyday comparison, for someone new to chips.",

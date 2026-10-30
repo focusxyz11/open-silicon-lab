@@ -19,6 +19,13 @@
       "how": "placement moves ready-made cells, not single transistors"
     }
   ],
+  "tradeoffs": [],
+  "measures": [
+    {
+      "measure": "transistors",
+      "how": "tools place billions of them so the wires stay short"
+    }
+  ],
   "challenges": [
     {
       "kind": "Experiment",

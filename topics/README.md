@@ -62,6 +62,8 @@ topics/<id>/
 | `labs` | Its simulations, in the order they start. |
 | `links` | How it connects (below). Every topic needs at least one link, in its own file or another's. |
 | `ideas` | Big ideas from `src/data/ideas.js` that this topic shows, and how. Add `"counter": true` when the topic shows where the idea breaks. |
+| `tradeoffs` | Trade-offs from `src/data/tradeoffs.js` this topic shows: `{ "tradeoff": "speed-power", "how": "…", "try": "#lab-design-4" }`. `try` points at the simulation where the reader can push it. |
+| `measures` | Measures from `src/data/measures.js` this topic uses: `{ "measure": "bandwidth", "how": "…" }`. |
 | `challenges` | `Puzzle` (one right answer), `Design` (many answers, scored on trade-offs) or `Experiment` (find where something breaks). |
 | `learn` | Loaded only when the topic opens. Write both `plain` and `engineer`, or neither. |
 
@@ -115,6 +117,9 @@ The tests check every rule below and say exactly what to fix.
 - **Plain words.** Explain each term the first time; add new terms to the glossary.
 - **Connect it honestly.** Choose the link kind that is true, not the one that sounds closest. If two
   topics only share an idea, that is a big idea (`ideas`), not a link.
+- **Disagreement is welcome.** If informed people disagree about something in your topic, add a view
+  to a debate in `src/data/debates.js` (or a new debate), written the way its best defender would,
+  with the assumption it rests on. Never mark one view right.
 - **Say what the model leaves out** in the panel's `note`.
 - **Every industry figure** goes in `src/data/facts.json` with its source, date verified and kind.
 - **Keep the model pure.** When a simulation's maths grows, move it into `src/engines/` with a test.

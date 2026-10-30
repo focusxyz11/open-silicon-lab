@@ -23,6 +23,19 @@
       "how": "verification takes more effort than writing the design"
     }
   ],
+  "tradeoffs": [
+    {
+      "tradeoff": "speed-power",
+      "how": "raise the voltage and the clock, and watch the power climb",
+      "try": "#lab-design-4"
+    },
+    {
+      "tradeoff": "ship-check",
+      "how": "coverage closure: when has verification found enough?",
+      "try": "#lab-design-5"
+    }
+  ],
+  "measures": [],
   "challenges": [],
   "learn": {
     "plain": "Designing a chip is like writing a huge program that turns into a city plan. Engineers write code that describes circuits, software turns it into billions of tiny switches, and checking that everything works takes longer than writing it. Every choice trades speed, power and size against each other.",

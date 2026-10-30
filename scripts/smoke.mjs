@@ -53,6 +53,12 @@ async function check(viewport) {
   await page.click('#mInfo [data-idea="keep-data-close"]');
   if ((await page.$$('.tnode.hit')).length < 4 || !(await page.$('#mSvg path.idea'))) problems.push(tag + 'big-idea lens did not trace "Keep data close"');
   await page.click('#mLens [data-lens=""]');
+  // Debates: lean one way and the page asks what would change your mind.
+  await go(page, 'challenges');
+  await page.click('[data-debate="bigdie"] [data-lean][data-v="1"]');
+  if (!/What would change your mind/.test(await page.textContent('[data-debate="bigdie"]'))) problems.push(tag + 'leaning in a debate did not ask what would change your mind');
+  await page.click('[data-debate="bigdie"] [data-lean][data-v="1"]');
+  await go(page, 'map');
   await page.fill('#mSearch', 'HBM');
   if (!(await page.$$('#mInfo .hits a')).length) problems.push(tag + 'search found nothing for HBM');
 
