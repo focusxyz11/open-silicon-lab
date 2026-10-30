@@ -52,11 +52,19 @@ function glList(q) {
   const box = $('#glList'); if (!box) return;
   box.innerHTML = items.length ? items.map(g => '<div><b>' + esc(g[0]) + '</b><p>' + esc(g[2]) + '</p><a href="#' + g[3] + '">' + esc(topicLabel(g[3])) + '</a></div>').join('') : '<p class="muted">No terms match that search.</p>';
 }
-function wrapTerms() {
+/* The term matcher is built once, the first time a topic needs it. */
+let TERMS = null;
+function termMatcher() {
+  if (TERMS) return TERMS;
   const vari = []; GL.forEach((g, i) => g[1].forEach(v => { vari.push([v, i]); if (/^[a-z]/.test(v)) vari.push([v[0].toUpperCase() + v.slice(1), i]); }));
   vari.sort((a, b) => b[0].length - a[0].length); const VM = new Map(); vari.forEach(([v, i]) => { if (!VM.has(v)) VM.set(v, i); });
-  let rx; try { rx = new RegExp('(?<![\\w\\-])(' + [...VM.keys()].map(v => v.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|') + ')(?![\\w\\-])', 'g'); } catch (e) { return; }
-  document.querySelectorAll('#library > section').forEach(sec => {
+  let rx = null; try { rx = new RegExp('(?<![\\w\\-])(' + [...VM.keys()].map(v => v.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|') + ')(?![\\w\\-])', 'g'); } catch (e) { /* old browser: no term pop-ups */ }
+  return (TERMS = { VM, rx });
+}
+/* Turn the first mention of each glossary term in a topic into a button with a pop-up. */
+function wrapTerms(sec) {
+  const { VM, rx } = termMatcher(); if (!rx) return;
+  {
     if (sec.id === 'glossary' || sec.id === 'sources') return; const used = new Set();
     sec.querySelectorAll('.prose p, .lede, .isa dd, .callout p, .sub p, .beg p, .eng p, .forces p').forEach(el => {
       const w = document.createTreeWalker(el, NodeFilter.SHOW_TEXT); const nodes = []; while (w.nextNode()) nodes.push(w.currentNode);
@@ -67,7 +75,7 @@ function wrapTerms() {
         if (frag) { frag.append(t.slice(last)); n.replaceWith(frag); }
       });
     });
-  });
+  }
 }
 function popovers() {
   const pop = document.createElement('div'); pop.className = 'pop'; pop.hidden = true; pop.setAttribute('role', 'tooltip'); document.body.appendChild(pop);
@@ -90,18 +98,25 @@ function popovers() {
   document.addEventListener('osl:route', hidePop);
 }
 
+/* Called once for each topic, when it loads: its label, the two explanation levels, the optional
+   quiz, the "Ask Claude" button (shown only inside Claude) and glossary pop-ups. */
+export function prepareTopic(id, sec) {
+  if (id === 'glossary') { const q = $('#glQ'); if (q) q.addEventListener('input', e => glList(e.target.value)); glList(''); return; }
+  if (id === 'sources') return;
+  const head = sec.querySelector('.head');
+  const lab = head && head.querySelector('[data-topic-label]'); if (lab) lab.textContent = topicLabel(id);
+  if (head) { const ab = document.createElement('button'); ab.type = 'button'; ab.className = 'askbtn'; ab.hidden = !askOn; ab.dataset.s = id; ab.textContent = 'Ask Claude about this topic'; head.appendChild(ab); }
+  const lv = LV[id];
+  if (lv && head) { const b = document.createElement('div'); b.className = 'beg'; b.innerHTML = '<p class="eyebrow">In plain words</p><p>' + esc(lv[0]) + '</p>'; const e = document.createElement('div'); e.className = 'eng'; e.innerHTML = '<p class="eyebrow">Engineer\'s notes</p><p>' + esc(lv[1]) + '</p>'; head.after(b, e); }
+  if (QZ[id]) { const d = document.createElement('div'); d.className = 'quiz'; d.dataset.s = id; sec.appendChild(d); renderQuiz(id); }
+  wrapTerms(sec);
+}
+/* The tutor turns this on when the site runs inside Claude. */
+let askOn = false;
+export function showAskButtons(on = true) { askOn = on; document.querySelectorAll('.askbtn').forEach(b => { b.hidden = !on; }); }
+
 export function initLearning() {
   document.querySelectorAll('.modeseg button').forEach(b => b.addEventListener('click', () => setMode(b.dataset.m)));
   setMode(mode);
-  TOPICS.forEach(({ id }) => {
-    const sec = document.getElementById(id); if (!sec) return;
-    const head = sec.querySelector('.head');
-    const lab = head && head.querySelector('[data-topic-label]'); if (lab) lab.textContent = topicLabel(id);
-    if (head) { const ab = document.createElement('button'); ab.type = 'button'; ab.className = 'askbtn'; ab.hidden = true; ab.dataset.s = id; ab.textContent = 'Ask Claude about this topic'; head.appendChild(ab); }
-    const lv = LV[id];
-    if (lv && head) { const b = document.createElement('div'); b.className = 'beg'; b.innerHTML = '<p class="eyebrow">In plain words</p><p>' + esc(lv[0]) + '</p>'; const e = document.createElement('div'); e.className = 'eng'; e.innerHTML = '<p class="eyebrow">Engineer\'s notes</p><p>' + esc(lv[1]) + '</p>'; head.after(b, e); }
-    if (QZ[id]) { const d = document.createElement('div'); d.className = 'quiz'; d.dataset.s = id; sec.appendChild(d); renderQuiz(id); }
-  });
-  const q = $('#glQ'); if (q) q.addEventListener('input', e => glList(e.target.value)); glList('');
-  wrapTerms(); popovers(); updProgress();
+  popovers(); updProgress();
 }

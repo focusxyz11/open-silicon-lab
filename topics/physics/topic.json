@@ -1,0 +1,9 @@
+{
+  "id": "physics",
+  "labs": [
+    "semiconductor-playground",
+    "czochralski-puller",
+    "wafer-steps",
+    "implant-anneal"
+  ]
+}

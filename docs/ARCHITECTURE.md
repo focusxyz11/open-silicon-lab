@@ -2,28 +2,55 @@
 
 Open Silicon Lab is a static site: plain ES modules, HTML fragments and CSS, with no framework and no build step for development. A single-file build exists only for previews and offline use.
 
+## The shape of the project
+
+```
+index.html            app shell: top bar, five views, the import map (osl/ → src/)
+topics/<id>/          one folder per topic: content.html, topic.json, labs/*.js, optional style.css
+topics/README.md      the topic contract, and how to start a new topic
+src/data/             the knowledge graph and shared data (topics, challenges, learning, facts, timeline)
+src/engines/          pure, tested models with no DOM (RISC-V, tiny chip, reliability, paradigms, …)
+src/app/              the shell: loader, router, map, views, learning layer, facts, tutor
+src/generated/        catalog.js, generated from topics/ by `npm run catalog` — never edited by hand
+src/labs/             the two simulations that live on the map page itself (zoom, time machine)
+content/              shell pages: the zoom viewer, glossary, sources
+```
+
+Two kinds of code, kept apart on purpose:
+- **The core** (`src/`) changes rarely and is shared by everything.
+- **Topics** (`topics/`) are where the site grows. A topic can be added or rewritten by someone who has read only `topics/README.md` and that one folder, which keeps each change small for people and for AI assistants alike.
+
 ## One graph drives everything
 
 `src/data/topics.js` is the single source of truth for structure:
 
 - `BANDS` — the layers of the chip stack, top (world) to bottom (atoms).
-- `TOPICS` — each topic's id, band, kind (`explore` or `build`), title and summary. The id is also the file name in `content/sections/` and the URL hash.
+- `TOPICS` — each topic's id, band, kind (`explore` or `build`), title and summary. The id is also the topic's folder name in `topics/` and the URL hash.
 - `EDGES` — labelled links `[from, to, why]`. The map draws them as wires; topic pages list them as "Builds on" and "Leads to".
 - `THREADS` — suggested routes. They highlight a path on the map and add a step bar to topic pages. They never lock anything.
 
 Challenges (`src/data/challenges.js`), knowledge cards, glossary terms and facts each name the topic they belong to, so every view can link back. `tests/data.test.mjs` fails if any link points at something that does not exist.
 
-**To add a topic:** add it to `TOPICS`, connect it in `EDGES`, create `content/sections/<id>.html` with a `<section id="<id>">`, and (if it has simulations) add lab modules and register them in `src/labs/index.js`.
+**To add a topic:** run `npm run new-topic -- <id> "<Title>" <prefix>` and follow the steps it prints (see `topics/README.md`).
 
 ## Boot sequence (`src/main.js`)
 
-1. Fetch `content/zoom.html` and every `content/sections/*.html` (or read them from `window.__OSL_CONTENT__` in the single-file build).
-2. Render the map shell, then append all topic sections, hidden, into `#library`.
-3. Give each simulation panel a stable anchor `lab-<topic>-<n>`.
-4. Load facts, then call every lab's `init()` inside its own `try/catch`, so one broken simulation never takes down the rest.
-5. Start the learning layer, the tutor (only inside Claude) and the router.
+1. Load `content/zoom.html` and the facts (or read them from `window.__OSL_CONTENT__` in the single-file build).
+2. Render the map shell and start its two simulations (zoom, time machine).
+3. Start the learning layer, the tutor (only inside Claude) and the router.
 
-All content is in the DOM from the start; the router only shows and hides it. This keeps the simulations simple — they look up their elements once at `init()` and redraw on resize.
+No topic is loaded at start-up. The map, search, Workshop and Challenges read what each topic holds from `src/generated/catalog.js`. The start-up page needs about 33 files; the smoke test fails if it needs more than 60 or loads any topic early.
+
+## Loading a topic (`src/app/loader.js`)
+
+The first time a topic is opened, `ensureTopic(id)`:
+1. fetches `topics/<id>/content.html` (and `style.css` if the topic has one),
+2. adds the section to the page and gives each simulation panel its anchor `lab-<topic>-<n>`,
+3. imports the topic's lab modules and calls each `init(section)` in its own `try/catch`, so one broken simulation never stops the rest,
+4. adds the learning layer to it (explanation levels, quiz, glossary pop-ups, the tutor button),
+5. fires `osl:topic-loaded`.
+
+A topic loads once and stays on the page. Code in one topic that needs another (the RISC-V lab opening the tiny-chip studio) asks the shell to load it first (`src/app/studio.js`), and progress other views display is read from storage (`src/app/progress.js`), never by importing a topic.
 
 ## Router (`src/app/router.js`)
 
@@ -42,11 +69,11 @@ All content is in the DOM from the start; the router only shows and hides it. Th
 - `src/engines/` hold pure logic with no DOM, so they are unit-tested in Node: the RV32I/M + custom-0 assembler and simulator, and the tiny-chip flow (parser, synthesis, standard-cell mapping, simulated-annealing placement, maze routing, stuck-at fault coverage).
 - `src/engines/alu.js` turns a one-bit ALU slice from the tiny-chip studio into a 32-bit ripple-carry ALU. The RISC-V simulator accepts it through `RV.machine(prog, init, { alu })`, and then every add, subtract, logic operation, comparison, branch decision and memory address goes through those gates. `src/app/alu-link.js` carries the slice from the studio to the RISC-V lab on the same page.
 - `src/engines/export.js` writes a tiny-chip design as Verilog in the Tiny Tapeout top-level interface, plus info.yaml, a cocotb test, the template testbench and a gate-level netlist, and zips them. `scripts/verilog-check.mjs` runs every built-in project's export through Icarus Verilog and Yosys in CI.
-- `src/labs/` hold one module per simulation. Most draw on a `<canvas>` with the helpers in `src/core/ui.js` (`fit`, `watch`, theme tokens `T`).
+- `topics/<id>/labs/` hold one module per simulation. Most draw on a `<canvas>` with the helpers in `src/core/ui.js` (`fit`, `watch`, theme tokens `T`), imported as `osl/core/ui.js`.
 
 ## Styling
 
-`base.css` defines the colour tokens (light and dark), type and every simulation's styles. `app.css` styles the shell, map and views. `riscv.css` is scoped under `#riscv`.
+`base.css` defines the colour tokens (light and dark), type and the shared simulation styles. `app.css` styles the shell, map and views. A topic's own styles live in `topics/<id>/style.css` and load with the topic (today: RISC-V and Why perfect designs fail).
 
 ## My chip
 
@@ -54,11 +81,11 @@ All content is in the DOM from the start; the router only shows and hides it. Th
 
 ## New ways to compute
 
-`src/engines/paradigms.js` holds small, tested models of each paradigm: the energy of moving data versus computing, an analog crossbar, leaky integrate-and-fire neurons, a Mach-Zehnder interferometer, a two-qubit state-vector simulator, p-bit sampling, reversible logic and the Landauer limit, and a dataflow energy model. `src/data/paradigms.js` holds the editorial fit matrix and the frontier gallery. Each topic in the `next` band has a lab in `src/labs/next-*.js`.
+`src/engines/paradigms.js` holds small, tested models of each paradigm: the energy of moving data versus computing, an analog crossbar, leaky integrate-and-fire neurons, a Mach-Zehnder interferometer, a two-qubit state-vector simulator, p-bit sampling, reversible logic and the Landauer limit, and a dataflow energy model. `src/data/paradigms.js` holds the editorial fit matrix and the frontier gallery. Each topic in the `next` band has a lab in `topics/<id>/labs/next-*.js`.
 
 ## Design with an AI agent
 
-`src/data/agent-cases.js` holds eight scripted cases, each an agent proposal (a tiny-chip design, RISC-V code, a yield or roofline estimate, a dated claim, a test report) that is either sound or has a realistic flaw, plus pure checks built on the same engines. `tests/agent.test.mjs` proves every flaw is real and every sound proposal works. `src/labs/agent-partner.js` lets the learner check with those tools before trusting or rejecting; inside Claude it adds a live agent that designs tiny chips.
+`src/data/agent-cases.js` holds eight scripted cases, each an agent proposal (a tiny-chip design, RISC-V code, a yield or roofline estimate, a dated claim, a test report) that is either sound or has a realistic flaw, plus pure checks built on the same engines. `tests/agent.test.mjs` proves every flaw is real and every sound proposal works. `topics/agent/labs/agent-partner.js` lets the learner check with those tools before trusting or rejecting; inside Claude it adds a live agent that designs tiny chips.
 
 ## What if? The map as a simulator
 
@@ -75,3 +102,29 @@ Everything is per-browser `localStorage`: explanation level, topics visited, qui
 ## Facts
 
 `src/data/facts.json` holds `facts` (label, value, kind, topic, source, url, verified date, optional previous value) and `changes` (a dated log). Topic pages show their facts; the Knowledge view lists all of them. A monthly check proposes updates as a pull request.
+
+## Where the structure is going
+
+The aim is that the project can keep growing, with new ideas and conflicting ones, while its key
+concepts stay the same. Five concepts are fixed; everything new fits into one of them:
+
+1. **Layers**: where something lives, from atoms to big questions (`BANDS`).
+2. **Questions**: every topic opens with a question or challenge, not a definition.
+3. **Typed connections**: builds on, leads to, trades off with, same idea at another scale, affects, disputed.
+4. **Lenses**: how it works, build it, what breaks, who pays, the future with AI.
+5. **Time**: history to today, labelled plans and projections to 2040.
+
+A conflicting idea becomes a "two views" item with the assumptions that separate the views, not a
+contradiction in the text. A new idea is one of: a topic, a question, a connection, a lens card or a dated fact.
+
+Steps, each a small pull request:
+
+1. **Topic folders, loaded on demand.** *Done.*
+2. **Everything about a topic in its folder.** Move each topic's place on the map, connections, challenges,
+   explanations, quiz, glossary terms, facts and time-machine line into `topics/<id>/topic.json`; generate
+   `TOPICS`, `EDGES` and the rest from the folders. Adding a topic then touches one folder only.
+3. **Typed connections and questions** in the data, so the map can show *why* things connect.
+4. **Split `base.css`** so each topic carries its own simulation styles.
+5. **Languages.** User-facing text moves out of code: `content.<lang>.html` beside `content.html`,
+   text fields in `topic.json` as `{ "en": …, "zh-TW": … }`, shell text in `src/i18n/<lang>.json`, and
+   the language in the URL. Simulations keep numbers and logic; only words are translated.

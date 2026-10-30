@@ -20,7 +20,7 @@ Learners new to chips with basic hardware knowledge. Plain words first; explain 
 - `npm run build` — single-file `dist/open-silicon-lab.html` (used for the claude.ai preview).
 
 ## Where things are
-See `docs/ARCHITECTURE.md`. Start with `src/data/topics.js`. Topic content: `content/sections/<id>.html`. Simulations: `src/labs/*.js` (each exports `init()`, registered in `src/labs/index.js`). Pure logic: `src/engines/`. Shell, map and views: `src/app/`. Styles: `src/styles/`.
+See `docs/ARCHITECTURE.md`. Each topic is a folder in `topics/<id>/` (content.html, topic.json, labs/*.js, optional style.css) and loads only when opened; read `topics/README.md` before touching one. The knowledge graph is `src/data/topics.js`. Shared code: `src/core/` (UI helpers), `src/engines/` (pure models with tests), `src/app/` (shell, loader, router, map, views), imported from topics as `osl/…`. After changing a topic folder run `npm run catalog`. New topic: `npm run new-topic -- <id> "<Title>" <prefix>`.
 
 ## Workflow
 Work on a branch, open a pull request, let CI pass, then merge; `main` deploys to GitHub Pages. Keep PRs focused. Check changes at phone width (390 px) and in dark mode; no sideways scrolling.

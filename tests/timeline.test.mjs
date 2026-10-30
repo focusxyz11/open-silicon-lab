@@ -25,7 +25,7 @@ test('every year has a complete snapshot', () => {
     for (const k of ['era', 'chip', 'node', 'shape', 'litho', 'wafer', 'biggest']) assert.ok(s[k], y + ' ' + k);
     assert.ok(s.flagship > 0);
     assert.ok(s.companies.n >= 1 && s.companies.n <= s.companies.total);
-    for (const t of TOPICS) assert.ok(TL.topicLine(t.id, y).length > 10, t.id + ' ' + y);
+    for (const t of TOPICS) assert.ok(TL.topicLine(t.id, y).length > 10, 'topic "' + t.id + '" has no time-machine line for ' + y + '. Add one to the L object in topicLine() in src/data/timeline.js (one sentence: what this topic looked like that year).');
   }
 });
 
@@ -42,7 +42,7 @@ test('landmarks match well-known values', () => {
 });
 
 test('every company in the company explorer has a founding year, and no extras', () => {
-  const src = readFileSync(new URL('../src/labs/company-explorer.js', import.meta.url), 'utf8');
+  const src = readFileSync(new URL('../topics/ecosystem/labs/company-explorer.js', import.meta.url), 'utf8');
   const ids = [...src.matchAll(/^ \['([a-z0-9]+)','/gm)].map(m => m[1]);
   assert.ok(ids.length > 50);
   assert.deepEqual(ids.slice().sort(), Object.keys(TL.FOUNDED).sort());

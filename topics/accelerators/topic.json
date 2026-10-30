@@ -1,0 +1,9 @@
+{
+  "id": "accelerators",
+  "labs": [
+    "architecture-explorer",
+    "real-chip-comparison",
+    "quantization-lab",
+    "prefill-vs-decode"
+  ]
+}

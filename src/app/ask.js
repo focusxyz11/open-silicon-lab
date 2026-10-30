@@ -1,7 +1,7 @@
 /* "Ask Claude about this topic": a tutor drawer that appears only when the site runs inside
    Claude (the sample capability). On a plain website it stays hidden. */
 import { SUG } from '../data/learning.js';
-import { topicLabel, mode } from './learning.js';
+import { topicLabel, mode, showAskButtons } from './learning.js';
 
 const $ = s => document.querySelector(s);
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -20,7 +20,9 @@ export async function initAsk() {
     log.querySelectorAll('.sugg button').forEach(b => b.addEventListener('click', () => { if (!busy) go(b.textContent); })); log.scrollTop = log.scrollHeight;
   }
   function open(s) { cur = s; $('#askCtx').textContent = topicLabel(s) + ' · ' + (mode === 'engineer' ? 'Engineer' : 'Beginner') + ' level'; dr.hidden = false; renderLog(); setTimeout(() => $('#askIn').focus(), 0); }
-  document.querySelectorAll('.askbtn').forEach(b => { b.hidden = false; b.addEventListener('click', () => open(b.dataset.s)); });
+  /* Topics load later, so listen on the page instead of on each button. */
+  document.addEventListener('click', e => { const b = e.target.closest('.askbtn'); if (b) open(b.dataset.s); });
+  showAskButtons();
   $('#askClose').addEventListener('click', () => { if (ctl) ctl.abort(); dr.hidden = true; });
   $('#askForm').addEventListener('submit', e => { e.preventDefault(); if (busy) { if (ctl) ctl.abort(); return; } const q = $('#askIn').value.trim(); if (q) go(q); });
   $('#askIn').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); $('#askForm').requestSubmit(); } });
@@ -35,7 +37,7 @@ export async function initAsk() {
       H[s].push({ role: 'assistant', content: r.text + (r.truncated ? '\n\n(The answer was cut short. Ask for less at a time.)' : '') }); renderLog();
     } catch (e) {
       const code = e && e.code; if (e && e.text) H[s].push({ role: 'assistant', content: e.text }); else H[s].pop(); let msg = '';
-      if (['not_granted', 'sampling_disabled', 'not_declared', 'capability_disabled', 'capability_removed'].includes(code)) { msg = 'Asking Claude is not available on this page for your account.'; document.querySelectorAll('.askbtn').forEach(b => b.hidden = true); }
+      if (['not_granted', 'sampling_disabled', 'not_declared', 'capability_disabled', 'capability_removed'].includes(code)) { msg = 'Asking Claude is not available on this page for your account.'; showAskButtons(false); }
       else if (code === 'rate_limited') msg = 'Too many questions right now. Please try again in a little while.';
       else if (code === 'session_expired') msg = 'Please sign in to Claude again, then ask again.';
       else if (code === 'refused') msg = 'Claude could not answer that. Try asking it a different way.';

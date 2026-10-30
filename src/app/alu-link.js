@@ -3,6 +3,7 @@
    in your gates reaches the processor at once. */
 import TC from '../engines/tinychip.js';
 import { buildSlice } from '../engines/alu.js';
+import { openStudio } from './studio.js';
 
 const TKEY = 'sjl-tiny-v1';
 let live = null, cache = { code: null, slice: null };
@@ -32,6 +33,6 @@ export function currentSlice() {
 
 /* Open the tiny-chip studio on the ALU project from anywhere on the site. */
 export function openSliceInStudio() {
-  document.dispatchEvent(new CustomEvent('osl:tiny-open', { detail: { id: 'alu', step: 1 } }));
+  openStudio('alu', 1);
   location.hash = 'lab-tiny-1';
 }

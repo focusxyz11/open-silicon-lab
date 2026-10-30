@@ -1,0 +1,9 @@
+{
+  "id": "economics",
+  "labs": [
+    "gpu-cost-breakdown",
+    "business-models",
+    "price-ladder",
+    "startup-budget"
+  ]
+}

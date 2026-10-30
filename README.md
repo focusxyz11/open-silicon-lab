@@ -34,6 +34,7 @@ Then open <http://localhost:8000/>. (Opening `index.html` straight from disk doe
 ## Test
 
 ```sh
+npm run catalog           # after changing a topic folder: rebuild the catalog
 npm test                  # RISC-V and tiny-chip engines, knowledge-graph integrity (node:test)
 npm run test:browser      # every view and topic in Chromium, desktop and mobile (needs Playwright)
 npm run test:verilog      # every tiny-chip export through Icarus Verilog and Yosys (needs both installed)
@@ -46,19 +47,20 @@ GitHub Actions runs all four on every pull request and deploys `main` to GitHub 
 
 ```
 index.html               app shell: top bar and five views
-content/sections/*.html  one file per topic: text and the markup of its simulations
-content/zoom.html        the rack-to-atom zoom viewer on the map page
-src/main.js              boot: load content, start every simulation, start the router
-src/app/                 map, router, topic chrome, workshop/challenges/knowledge views, learning layer, facts, tutor
-src/data/topics.js       the knowledge graph: bands, topics, labelled links, threads   ← start here
+topics/<id>/             one folder per topic: content.html, topic.json, labs/*.js, optional style.css
+topics/README.md         how a topic folder works, and how to start a new one   ← start here to contribute
+src/data/topics.js       the knowledge graph: layers, topics, labelled links, threads
 src/data/challenges.js   every challenge and open problem
 src/data/facts.json      dated, sourced facts (updated by pull request)
 src/data/learning.js     plain/engineer explanations, quizzes, glossary
-src/engines/             pure logic, no DOM: RISC-V assembler + simulator, tiny-chip synthesis/place/route/test
-src/labs/                one module per simulation, each exporting init()
-src/styles/              base.css (simulations), riscv.css, app.css (shell, map, views)
+src/engines/             pure logic, no DOM, with tests: RISC-V, tiny chip, reliability, new ways to compute, …
+src/app/                 the shell: loader (topics load on demand), router, map, views, learning layer, tutor
+src/generated/catalog.js what each topic holds, generated from topics/ by `npm run catalog`
+src/labs/                the two simulations on the map page (zoom, time machine)
+src/styles/              base.css (shared simulation styles), app.css (shell, map, views)
+content/                 the zoom viewer, glossary and sources pages
 tests/                   node:test suites
-scripts/                 dev server, browser smoke test, single-file build
+scripts/                 dev server, catalog, new-topic, browser smoke test, single-file build
 docs/                    architecture and workflow notes
 ```
 
