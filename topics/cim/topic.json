@@ -1,6 +1,46 @@
 {
   "id": "cim",
-  "labs": [
-    "next-cim"
-  ]
+  "title": "Compute in memory",
+  "band": "next",
+  "order": 20,
+  "kind": "explore",
+  "summary": "An analog crossbar multiplies with Ohm's law where the weights live. Trade precision for energy.",
+  "labs": ["next-cim"],
+  "links": [
+    {
+      "kind": "kind-of",
+      "to": "beyond",
+      "why": "compute where the data lives"
+    },
+    {
+      "kind": "grew-from",
+      "to": "datacenter",
+      "why": "memory cells taught to compute"
+    }
+  ],
+  "ideas": [
+    {
+      "idea": "keep-data-close",
+      "how": "the math happens inside the memory, so the weights never move"
+    },
+    {
+      "idea": "physics-computes",
+      "how": "Ohm's law multiplies and the wires add the currents"
+    }
+  ],
+  "challenges": [
+    {
+      "kind": "Experiment",
+      "title": "Fewest bits that still work",
+      "task": "Find the cheapest converter that keeps an analog crossbar within 5% of exact.",
+      "href": "#lab-cim-1"
+    }
+  ],
+  "learn": {
+    "ask": [
+      "Why are analog chips less precise?",
+      "Which companies sell compute-in-memory chips?",
+      "What is a memristor?"
+    ]
+  }
 }

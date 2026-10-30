@@ -1,7 +1,52 @@
 {
   "id": "ecosystem",
-  "labs": [
-    "ecosystem",
-    "company-explorer"
-  ]
+  "title": "The ecosystem",
+  "band": "industry",
+  "order": 10,
+  "kind": "explore",
+  "summary": "Who supplies whom: about sixty companies from instruction sets to clouds.",
+  "labs": ["ecosystem", "company-explorer"],
+  "links": [],
+  "ideas": [
+    {
+      "idea": "pay-once",
+      "how": "steep up-front costs leave one or two suppliers at some steps"
+    }
+  ],
+  "challenges": [],
+  "learn": {
+    "plain": "Making a chip is like making a film: one studio gets the credit, but it depends on writers, camera makers, sound studios and cinemas. Some of those suppliers are the only ones in the world who can do their part.",
+    "engineer": "Chokepoints form where learning curves and capital needs are steepest: EUV scanners (ASML), leading-edge foundry (TSMC), EDA (three vendors), HBM (three suppliers), photoresists and some specialty gases. Export controls target exactly these points. Concentration also sets pricing power and how quickly new entrants, such as Rapidus, or new business models, such as Arm selling its own chip, can change the structure.",
+    "quiz": [
+      {
+        "q": "Who is the only maker of EUV lithography scanners?",
+        "options": ["TSMC", "Intel", "ASML", "Samsung"],
+        "answer": 2,
+        "why": "ASML, in the Netherlands, is a classic chokepoint in the chain."
+      },
+      {
+        "q": "What is a fabless company?",
+        "options": [
+          "One that designs chips but pays a foundry to make them",
+          "One with no engineers",
+          "One that only makes memory",
+          "One that only does packaging"
+        ],
+        "answer": 0,
+        "why": "NVIDIA, AMD, Apple and Qualcomm are fabless; TSMC is their foundry."
+      },
+      {
+        "q": "Which three companies supply almost all professional chip-design (EDA) software?",
+        "options": [
+          "Synopsys, Cadence and Siemens",
+          "Apple, Google and Meta",
+          "ASML, KLA and Lam Research",
+          "TSMC, Samsung and Intel"
+        ],
+        "answer": 0,
+        "why": "All three launched autonomous AI agents for chip design in 2026."
+      }
+    ],
+    "ask": ["Why is TSMC so dominant?", "How do export controls affect chips?", "What does ASML actually do?"]
+  }
 }

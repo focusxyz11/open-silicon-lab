@@ -1,7 +1,123 @@
 {
   "id": "reality",
-  "labs": [
-    "reality-stress",
-    "reality-cases"
-  ]
+  "title": "Why perfect designs fail",
+  "band": "questions",
+  "order": 10,
+  "kind": "explore",
+  "summary": "A chip can pass every check and still fail: variation, heat, aging, defects the test missed, radiation and uses nobody planned for. Ship one to a phone, a car, a data center or a satellite.",
+  "labs": ["reality-stress", "reality-cases"],
+  "links": [
+    {
+      "kind": "builds-on",
+      "to": "design",
+      "why": "sign-off checks one ideal chip"
+    },
+    {
+      "kind": "builds-on",
+      "to": "yield",
+      "why": "defects, and the tests that miss some"
+    },
+    {
+      "kind": "causes",
+      "to": "innovation",
+      "why": "each failure forced a new way of checking",
+      "if": "a new kind of failure shows up in the field",
+      "then": "engineers invent a new check, which costs time and money"
+    }
+  ],
+  "ideas": [
+    {
+      "idea": "copies-catch-mistakes",
+      "how": "ECC memory and lockstep cores catch errors while the chip runs"
+    },
+    {
+      "idea": "smaller-until",
+      "how": "smaller transistors vary and age more, so they need more margin"
+    },
+    {
+      "idea": "layers-hide-detail",
+      "how": "heat, aging and radiation reach through every layer",
+      "counter": true
+    },
+    {
+      "idea": "checking-is-hard",
+      "how": "a chip can pass every check and still fail"
+    }
+  ],
+  "challenges": [
+    {
+      "kind": "Design",
+      "title": "Ship a phone chip",
+      "task": "Make 10 million phones work for 3 years without losing too much speed.",
+      "href": "#lab-reality-1"
+    },
+    {
+      "kind": "Design",
+      "title": "Fifteen years in a car",
+      "task": "Fewer than 50 failures per million chips, from −40 to 125 °C.",
+      "href": "#lab-reality-1"
+    },
+    {
+      "kind": "Design",
+      "title": "A fleet you can trust",
+      "task": "100,000 AI chips running hot all day, with almost no silent wrong answers.",
+      "href": "#lab-reality-1"
+    },
+    {
+      "kind": "Design",
+      "title": "Survive orbit",
+      "task": "Radiation 300 times stronger and nobody to repair it.",
+      "href": "#lab-reality-1"
+    },
+    {
+      "kind": "Puzzle",
+      "title": "Case files",
+      "task": "Seven real chips that failed. Name the gap between design and reality.",
+      "href": "#lab-reality-2"
+    }
+  ],
+  "learn": {
+    "plain": "A chip is checked on paper as if it were perfect: typical, cool, on a steady supply, and brand new. Real chips are each a little different, run hot, age and sometimes meet a stray particle from space. So engineers add margin, test hard and add protection, and each of those costs speed, power or money.",
+    "engineer": "Sign-off happens at a few process, voltage and temperature corners plus aging and on-chip variation; the population tail is managed with guardbands, adaptive voltage scaling and binning. Field reliability adds test-escape ppm, early failures (Weibull, screened by burn-in and part-average testing), wear-out (BTI, HCI, electromigration, TDDB) and soft errors in FIT/Mbit, handled with ECC, lockstep or TMR and in-field monitoring.",
+    "quiz": [
+      {
+        "q": "Engineers check a design at typical conditions. Why do real chips still fail?",
+        "options": [
+          "Simulation tools are usually wrong",
+          "Real chips vary, run hot, see supply dips, age, and meet defects and radiation",
+          "Chips are always made carelessly",
+          "Only software makes chips fail"
+        ],
+        "answer": 1,
+        "why": "Sign-off checks one ideal chip. The real population is spread out and lives in harsher conditions, so designers add margin, test and protection."
+      },
+      {
+        "q": "Why does burn-in help a car chip?",
+        "options": [
+          "It makes the chip faster",
+          "Weak chips fail in the factory instead of in the car",
+          "It removes the need for testing",
+          "It cools the chip"
+        ],
+        "answer": 1,
+        "why": "Many hidden weak spots break early in life. Running every chip hot for hours brings those failures forward, before the chip ships."
+      },
+      {
+        "q": "What does error-correcting memory (ECC) do?",
+        "options": [
+          "Stops cosmic rays from reaching the chip",
+          "Finds and fixes flipped bits using a few extra stored bits",
+          "Makes memory faster",
+          "Prevents transistors from aging"
+        ],
+        "answer": 1,
+        "why": "Radiation cannot be stopped at ground level, but a few extra bits per word let the memory detect and correct a single flipped bit."
+      }
+    ],
+    "ask": [
+      "Why do car chips cost more than phone chips?",
+      "How do data centers find chips that compute wrong answers?",
+      "Could AI predict which chips will fail?"
+    ]
+  }
 }

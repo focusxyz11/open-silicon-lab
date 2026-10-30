@@ -1,7 +1,76 @@
 {
   "id": "supply",
-  "labs": [
-    "supply-chain-map",
-    "disruption-simulator"
-  ]
+  "title": "Supply chain map",
+  "band": "industry",
+  "order": 20,
+  "kind": "explore",
+  "summary": "One GPU's journey across a dozen countries, and what breaks when one link fails.",
+  "labs": ["supply-chain-map", "disruption-simulator"],
+  "links": [
+    {
+      "kind": "builds-on",
+      "to": "ecosystem",
+      "why": "the same companies, placed on a map"
+    },
+    {
+      "kind": "causes",
+      "to": "everywhere",
+      "why": "one missing chip stops a car line",
+      "if": "one cheap chip runs short",
+      "then": "whole product lines stop, as car factories did in 2021"
+    }
+  ],
+  "ideas": [
+    {
+      "idea": "layers-hide-detail",
+      "how": "the foundry model splits designing chips from making them"
+    }
+  ],
+  "challenges": [
+    {
+      "kind": "Experiment",
+      "title": "What if Taiwan stops?",
+      "task": "Disrupt one link and see which products stall.",
+      "href": "#supply"
+    }
+  ],
+  "learn": {
+    "plain": "Making a chip is like a relay race run across a dozen countries: designers in California, toolmakers in the Netherlands and Japan, factories in Taiwan, memory in Korea. If any runner stops, the whole race stops, and some runners have no substitute.",
+    "engineer": "Concentration follows economies of scale and learning: leading-edge logic in Taiwan, HBM in Korea, EUV in the Netherlands, resists, wafers and ABF film in Japan, gallium and rare-earth refining in China. Resilience levers are inventory (weeks to months), multi-sourcing (requires 6–12 months of requalification per product and node) and geographic diversification (years, and higher cost per wafer). Export controls weaponize the same chokepoints.",
+    "quiz": [
+      {
+        "q": "Why can't a chip shortage be fixed quickly by switching suppliers?",
+        "options": [
+          "Suppliers refuse new customers",
+          "Moving a design to a new fab or supplier takes months of requalification, and many steps have only one or two suppliers",
+          "Chips cannot be shipped by air",
+          "Prices are fixed by law"
+        ],
+        "answer": 1,
+        "why": "Each product is qualified on one process; a new fab means new masks, tests and approvals, typically 6–12 months."
+      },
+      {
+        "q": "Which region makes most of the world's HBM memory?",
+        "options": ["Taiwan", "South Korea", "Germany", "Mexico"],
+        "answer": 1,
+        "why": "SK hynix and Samsung together make about three-quarters of HBM; Micron makes most of the rest."
+      },
+      {
+        "q": "If ASML stopped shipping EUV scanners, what would happen first?",
+        "options": [
+          "All chips would stop at once",
+          "Installed scanners keep running, but new capacity stops and uptime slowly falls without parts and service",
+          "Nothing, because there are other suppliers",
+          "Only memory would be affected"
+        ],
+        "answer": 1,
+        "why": "There is no second EUV supplier, but the damage builds gradually rather than all at once."
+      }
+    ],
+    "ask": [
+      "What would happen to the world if Taiwan's fabs stopped?",
+      "Why is so much chipmaking concentrated in East Asia?",
+      "Will new US fabs make chips cheaper or more expensive?"
+    ]
+  }
 }

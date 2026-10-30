@@ -2,7 +2,8 @@
    knowledge graph draws the wires between them. Select a topic to see what it holds and
    what it connects to; pick a thread to light up a suggested route. Nothing is locked. */
 import { TOPIC_FILES } from '../generated/catalog.js';
-import { BANDS, TOPICS, EDGES, THREADS, topicById, bandById, edgesOf } from '../data/topics.js';
+import { BANDS, TOPICS, EDGES, THREADS, topicById, bandById } from '../data/topics.js';
+import { linkListHTML } from './connections.js';
 import { CHALLENGES } from '../data/challenges.js';
 import { GL } from '../data/learning.js';
 import { CARDS } from '../data/cards.js';
@@ -149,7 +150,7 @@ function renderInfo(th, hits) {
     if (th.path.every(id => P.seen[id])) box.querySelector('[data-start-thread]').setAttribute('href', '#' + th.path[0]);
   } else if (state.sel) {
     const t = topicById(state.sel), b = bandById(t.band); const labs = labsOf(t.id), ch = challengesOf(t.id), fs = factsFor(t.id);
-    const conn = edgesOf(t.id).map(e => { const out = e[0] === t.id; const o = topicById(out ? e[1] : e[0]); return '<button type="button" data-pick="' + o.id + '"><span>' + (out ? '→' : '←') + '</span><b>' + esc(o.t) + '</b><small>' + esc(e[2]) + '</small></button>'; }).join('');
+    const conn = linkListHTML(t.id, 'button');
     const ths = THREADS.filter(x => x.path.includes(t.id));
     box.innerHTML = '<p class="code">' + esc(b.t) + (t.kind === 'build' ? ' · hands-on build' : '') + (P.seen[t.id] ? ' · explored' : '') + '</p><h3>' + esc(t.t) + '</h3><p>' + esc(t.s) + '</p><div class="row"><a class="btn primary" href="#' + t.id + '">Open ' + esc(t.t) + ' →</a></div>' +
       (labs.length ? '<p class="eyebrow">Inside</p><ul class="ilist">' + labs.map(l => '<li><a href="#' + l.id + '">' + esc(l.t) + '</a></li>').join('') + '</ul>' : '') +
@@ -191,13 +192,18 @@ function drawEdges() {
       p.style.strokeWidth = (1.6 + Math.min(2.6, Math.abs(r.amt) / 15)).toFixed(1);
       if (state.sel && (r.a === state.sel || r.b === state.sel)) labels.push([a, b, r.s]);
     });
-  } else EDGES.forEach(e => {
-    const a = center(e[0], wrap), b = center(e[1], wrap); if (!a || !b) return;
-    const on = focus && (e[0] === focus || e[1] === focus);
-    const cls = th ? 'w faint' : on ? 'w on' : (focus ? 'w faint' : 'w');
-    mk(curve(a, b), cls);
-    if (on && state.sel) labels.push([a, b, e[2]]);
-  });
+  } else {
+    /* Two kinds of link can join the same pair; draw and label that pair once (the side panel lists both). */
+    const pairs = new Set();
+    EDGES.forEach(e => {
+      const key = [e[0], e[1]].sort().join(' '); if (pairs.has(key)) return; pairs.add(key);
+      const a = center(e[0], wrap), b = center(e[1], wrap); if (!a || !b) return;
+      const on = focus && (e[0] === focus || e[1] === focus);
+      const cls = th ? 'w faint' : on ? 'w on' : (focus ? 'w faint' : 'w');
+      mk(curve(a, b), cls);
+      if (on && state.sel) labels.push([a, b, e[2]]);
+    });
+  }
   if (th) { for (let i = 1; i < th.path.length; i++) { const a = center(th.path[i - 1], wrap), b = center(th.path[i], wrap); if (a && b) mk(curve(a, b), 'w path'); } }
   /* Each label sits just outside the node at the far end of its wire, so it reads as
      "this topic: why it connects" and never stacks on the selected node. */

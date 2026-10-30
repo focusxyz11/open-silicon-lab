@@ -7,6 +7,7 @@ import { FACTS, fmtDate, changesHTML } from './facts.js';
 import { levelStars, riscvStars } from './progress.js';
 import { TOPIC_FILES } from '../generated/catalog.js';
 import { P } from './learning.js';
+import { allIdeasHTML } from './connections.js';
 
 const $ = s => document.querySelector(s);
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -58,7 +59,8 @@ export function renderKnowledge() {
   const v = $('#view-knowledge');
   const groups = Object.keys(TH).map(k => [k, Object.entries(CARDS).filter(([, c]) => c[0] === k)]);
   const KN = { reported: 'Reported', claim: 'Vendor claim', estimate: 'Estimate', projection: 'Projection' };
-  v.innerHTML = '<section class="wrap vhead"><p class="eyebrow">Knowledge</p><h1>Ideas, terms and dated facts</h1><p class="lede">Short cards for the ideas that come up everywhere, every fact with its source and date, and the full glossary. Each one links back to the topic where you can see it in action.</p><div class="row"><a class="btn" href="#glossary">Glossary</a><a class="btn" href="#sources">All sources</a></div></section>' +
+  v.innerHTML = '<section class="wrap vhead"><p class="eyebrow">Knowledge</p><h1>Ideas, terms and dated facts</h1><p class="lede">The big ideas that connect the layers, short cards for the ideas that come up everywhere, every fact with its source and date, and the full glossary. Each one links back to the topic where you can see it in action.</p><div class="row"><a class="btn" href="#glossary">Glossary</a><a class="btn" href="#sources">All sources</a></div></section>' +
+    '<section class="wrap"><div class="vbar"><h2>Big ideas</h2></div><p class="lede">A few ideas turn up again and again, from a single transistor to a data center. Open one to see every layer where it appears, and where it stops working.</p>' + allIdeasHTML() + '</section>' +
     '<section class="wrap">' + groups.map(([k, cs]) => '<div class="pgband"><p class="eyebrow" style="color:' + TH[k][1] + '">' + esc(TH[k][0]) + '</p><div class="kgrid">' + cs.map(([, c]) => '<a class="kcard" href="#' + c[3] + '" style="--kc:' + TH[k][1] + '"><b>' + esc(c[1]) + '</b><p>' + esc(c[2]) + '</p><small>' + esc(tName(c[3])) + ' →</small></a>').join('') + '</div></div>').join('') + '</section>' +
     '<section class="wrap"><div class="vbar"><h2>Live facts</h2><div class="seg" role="group" aria-label="Kind of fact">' + [''].concat(Object.keys(KN)).map(k => '<button type="button" data-fk="' + k + '" aria-pressed="' + (k === fk) + '">' + (k ? KN[k] : 'All') + '</button>').join('') + '</div><input type="search" id="kfQ" placeholder="Search facts…" aria-label="Search facts" value="' + esc(fq) + '"></div><p class="small muted">' + FACTS.facts.length + ' facts · last checked ' + esc(fmtDate(FACTS.lastCheck)) + ' · next check ' + esc(fmtDate(FACTS.nextCheck)) + '. Facts are updated by pull request; see the project README.</p><div class="ftable" id="kfList"></div></section>' +
     '<section class="wrap"><div class="vbar"><h2>What changed recently</h2></div>' + changesHTML() + '</section>';

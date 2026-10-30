@@ -1,7 +1,6 @@
 /* "Ask Claude about this topic": a tutor drawer that appears only when the site runs inside
    Claude (the sample capability). On a plain website it stays hidden. */
-import { SUG } from '../data/learning.js';
-import { topicLabel, mode, showAskButtons } from './learning.js';
+import { topicLabel, mode, showAskButtons, learnOf } from './learning.js';
 
 const $ = s => document.querySelector(s);
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -16,7 +15,7 @@ export async function initAsk() {
   const md = t => esc(t).split(/\n{2,}/).map(b => { const L = b.split('\n'); if (L.every(l => /^\s*([-*•]|\d+\.)\s+/.test(l))) return '<ul>' + L.map(l => '<li>' + l.replace(/^\s*([-*•]|\d+\.)\s+/, '') + '</li>').join('') + '</ul>'; return '<p>' + b.replace(/\n/g, '<br>') + '</p>'; }).join('').replace(/\*\*(.+?)\*\*/g, '<b>$1</b>');
   function renderLog(extra) {
     const turns = H[cur] || [], log = $('#askLog');
-    log.innerHTML = (turns.length ? '' : '<p class="small muted">Answers draw on this topic\'s content, at your chosen level, using your own Claude account. Try one of these:</p><div class="sugg">' + (SUG[cur] || []).map(q => '<button type="button">' + esc(q) + '</button>').join('') + '</div>') + turns.map(t => t.role === 'user' ? '<div class="msg u">' + esc(t.content) + '</div>' : '<div class="msg a">' + md(t.content) + '</div>').join('') + (extra || '');
+    log.innerHTML = (turns.length ? '' : '<p class="small muted">Answers draw on this topic\'s content, at your chosen level, using your own Claude account. Try one of these:</p><div class="sugg">' + (learnOf(cur).ask || []).map(q => '<button type="button">' + esc(q) + '</button>').join('') + '</div>') + turns.map(t => t.role === 'user' ? '<div class="msg u">' + esc(t.content) + '</div>' : '<div class="msg a">' + md(t.content) + '</div>').join('') + (extra || '');
     log.querySelectorAll('.sugg button').forEach(b => b.addEventListener('click', () => { if (!busy) go(b.textContent); })); log.scrollTop = log.scrollHeight;
   }
   function open(s) { cur = s; $('#askCtx').textContent = topicLabel(s) + ' · ' + (mode === 'engineer' ? 'Engineer' : 'Beginner') + ' level'; dr.hidden = false; renderLog(); setTimeout(() => $('#askIn').focus(), 0); }

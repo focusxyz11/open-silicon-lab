@@ -1,6 +1,80 @@
 {
   "id": "yield",
-  "labs": [
-    "yield"
-  ]
+  "title": "Wafer & yield",
+  "band": "mfg",
+  "order": 30,
+  "kind": "explore",
+  "summary": "Why defects make big dies expensive, and why chiplets help.",
+  "labs": ["yield"],
+  "links": [
+    {
+      "kind": "causes",
+      "to": "package",
+      "why": "chiplets beat giant dies",
+      "if": "a die grows larger",
+      "then": "fewer work, so big designs split into chiplets in one package"
+    },
+    {
+      "kind": "feeds",
+      "to": "package",
+      "why": "only dies that pass test get packaged"
+    },
+    {
+      "kind": "causes",
+      "to": "economics",
+      "why": "yield sets the cost per chip",
+      "if": "yield falls",
+      "then": "each working chip costs more"
+    }
+  ],
+  "ideas": [
+    {
+      "idea": "many-small",
+      "how": "small dies dodge defects, so splitting a big design into chiplets wastes less"
+    },
+    {
+      "idea": "copies-catch-mistakes",
+      "how": "spare memory rows and fused-off cores let a flawed die still ship"
+    }
+  ],
+  "challenges": [],
+  "learn": {
+    "plain": "Picture raindrops falling on a tiled floor: any tile hit by a drop is ruined. Big tiles get hit more often, so cutting a design into smaller tiles (chiplets) wastes less.",
+    "engineer": "Common yield models are Poisson e^(−AD₀), Murphy ((1 − e^(−AD₀)) ÷ AD₀)² and negative binomial (1 + AD₀/α)^(−α), where α captures how defects cluster. Defect density falls along a learning curve as a node ramps. Redundancy (spare memory rows, fused-off cores) and binning recover partly defective dies, which is why many products ship with some units disabled.",
+    "quiz": [
+      {
+        "q": "What happens to yield as die area grows, at the same defect density?",
+        "options": ["It rises", "It stays the same", "It falls, roughly exponentially", "It does not depend on area"],
+        "answer": 2,
+        "why": "Poisson yield is e^(−A·D₀): a bigger area catches more defects."
+      },
+      {
+        "q": "What is the reticle limit?",
+        "options": [
+          "The largest area a scanner prints in one exposure, about 26 × 33 mm",
+          "The number of wafers per hour",
+          "The smallest feature size",
+          "The thickness of a mask"
+        ],
+        "answer": 0,
+        "why": "High-NA EUV halves it to 26 × 16.5 mm, which pushes large designs toward chiplets."
+      },
+      {
+        "q": "Why can chiplets lower the cost of a working chip?",
+        "options": [
+          "Smaller dies yield better, and only known-good dies are combined",
+          "They use cheaper silicon",
+          "They skip testing",
+          "They need no packaging"
+        ],
+        "answer": 0,
+        "why": "The trade-off is extra area and cost for die-to-die links and advanced packaging."
+      }
+    ],
+    "ask": [
+      "What is a good yield for a new node?",
+      "How do companies sell partly working chips?",
+      "Why are AI GPUs so expensive?"
+    ]
+  }
 }

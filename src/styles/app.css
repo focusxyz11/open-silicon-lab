@@ -220,6 +220,45 @@
 .chmeta .stars{font-size:13px;letter-spacing:1px}
 .stars .off{color:var(--line)}
 
+/* How this connects: one group per kind of link, each headed by the question it answers. */
+.conns{gap:22px}
+.cgroup{display:grid;gap:10px}
+.cq{font:600 15px/1.3 var(--display);margin:0}
+.cgroup .nextgrid a{border-left:3px solid var(--bc,var(--line))}
+.predgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px;align-items:start}
+.pcard,.idea{border:1px solid var(--line);border-radius:8px;background:var(--surface)}
+.pcard{border-style:dashed;border-color:var(--muted)}
+.pcard summary,.idea summary{display:grid;gap:5px;padding:14px;cursor:pointer;list-style:none}
+.pcard summary::-webkit-details-marker,.idea summary::-webkit-details-marker{display:none}
+.pcard summary b{font:650 15.5px/1.3 var(--display)}
+.pcard summary small{color:var(--amber);font:12px var(--mono)}
+.pcard[open]{border-style:solid;border-color:var(--amber)}
+.pcard[open] summary small{display:none}
+.pcard p{margin:0;padding:0 14px 8px;font-size:14.5px;line-height:1.45}
+.pcard > a{display:block;padding:0 14px 14px;font-size:13.5px}
+/* Big ideas: one idea as a ladder down the layers of the stack, this topic marked. */
+.igrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:10px;align-items:start}
+.idea summary b{font:650 16px/1.25 var(--display);font-stretch:106%}
+.idea summary b::after{content:' +';color:var(--muted);font-weight:400}
+.idea[open] summary b::after{content:' −'}
+.idea summary small{color:var(--muted);font-size:13.5px;line-height:1.4}
+.idea summary .pill{justify-self:start}
+.idea > p{margin:0;padding:0 14px 10px;color:var(--muted)}
+.ladder{list-style:none;margin:0;padding:0 14px 14px;display:grid}
+.ladder li{display:grid;gap:2px;padding:7px 8px 7px 12px;border-left:3px solid var(--bc)}
+.ladder li + li{box-shadow:inset 0 1px 0 var(--line)}
+.ladder li.here{background:color-mix(in srgb,var(--bc) 12%,transparent)}
+.ladder .rung{font:10.5px var(--mono);letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+.ladder b{font-size:14px;font-weight:600}
+.ladder a{color:var(--ink);text-decoration:none}
+.ladder a:hover b{text-decoration:underline}
+.ladder em{font:normal 11px var(--mono);color:var(--amber);margin-left:4px}
+.ladder small{font-size:13px;color:var(--muted);line-height:1.4}
+.ladder .pill{justify-self:start;font-size:10px;padding:3px 5px}
+.idea .span{display:flex;gap:3px;margin-top:4px}
+.idea .span i{width:14px;height:6px;border-radius:2px;background:var(--line)}
+.idea .span i.on{background:var(--bc)}
+
 @media(max-width:960px){
   .rail{display:flex;position:static;overflow-x:auto;gap:6px;scrollbar-width:none;padding-bottom:2px}
   .rail p.eyebrow,.rail a.conn,.rail a.back{display:none}

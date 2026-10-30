@@ -1,7 +1,79 @@
 {
   "id": "scenarios",
-  "labs": [
-    "scenario-planner",
-    "beyond-silicon-board"
-  ]
+  "title": "Future scenarios",
+  "band": "future",
+  "order": 30,
+  "kind": "explore",
+  "summary": "Steer the bets that shape 2040, and see which beyond-silicon ideas are real.",
+  "labs": ["scenario-planner", "beyond-silicon-board"],
+  "links": [
+    {
+      "kind": "builds-on",
+      "to": "innovation",
+      "why": "the bottlenecks become the bets that shape 2040"
+    },
+    {
+      "kind": "builds-on",
+      "to": "future",
+      "why": "one roadmap, many possible futures"
+    },
+    {
+      "kind": "builds-on",
+      "to": "beyond",
+      "why": "which new machines pay off by 2040"
+    }
+  ],
+  "ideas": [
+    {
+      "idea": "energy-budget",
+      "how": "power may cap AI growth more than chips do"
+    }
+  ],
+  "challenges": [
+    {
+      "kind": "Experiment",
+      "title": "Escape the power wall",
+      "task": "Find settings where electricity stops limiting AI growth.",
+      "href": "#scenarios"
+    }
+  ],
+  "learn": {
+    "plain": "Nobody knows exactly how chips will improve. Some bets, like new transistor shapes or enough electricity, could go well or badly, and each changes the result. Exploring several futures is more honest than drawing one line.",
+    "engineer": "Model efficiency as a sum of log-rate contributions (process, architecture/numerics, packaging, design productivity), each decaying, and installed compute as the minimum of power-limited and supply-limited capacity. Under most assumptions power, not wafer supply, binds by the 2030s, which raises the value of joules per operation over raw FLOPS. Beyond-CMOS candidates are best tracked by evidence: peer-reviewed results, engineering samples and shipments.",
+    "quiz": [
+      {
+        "q": "In the scenario planner, what most often limits total AI computing by the 2030s?",
+        "options": ["Chip design talent", "Electricity for data centers", "Software", "Sand"],
+        "answer": 1,
+        "why": "Under most settings power grows more slowly than the chips that could be built, so efficiency gains turn directly into more computing."
+      },
+      {
+        "q": "Which beyond-silicon technology is already in production in 2026?",
+        "options": [
+          "Superconducting logic",
+          "Co-packaged optics in network switches",
+          "Carbon nanotube processors",
+          "Reversible computing"
+        ],
+        "answer": 1,
+        "why": "NVIDIA Spectrum-X Photonics switches entered production in May 2026; the others are in research or prototypes."
+      },
+      {
+        "q": "What are quantum computers expected to speed up?",
+        "options": [
+          "All AI training",
+          "Specific problems such as chemistry and materials simulation",
+          "Web browsing",
+          "Graphics"
+        ],
+        "answer": 1,
+        "why": "They are not general replacements for AI chips; first fault-tolerant machines are targeted around 2029."
+      }
+    ],
+    "ask": [
+      "Which beyond-silicon idea is most likely to matter first?",
+      "Will power limit AI more than chips do?",
+      "What would change if CFET arrives late?"
+    ]
+  }
 }

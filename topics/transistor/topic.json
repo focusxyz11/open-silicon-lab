@@ -1,6 +1,84 @@
 {
   "id": "transistor",
-  "labs": [
-    "transistor"
-  ]
+  "title": "The transistor",
+  "band": "device",
+  "order": 10,
+  "kind": "explore",
+  "summary": "Planar, FinFET, gate-all-around and CFET: how the switch keeps shrinking without leaking.",
+  "labs": ["transistor"],
+  "links": [
+    {
+      "kind": "builds-on",
+      "to": "physics",
+      "why": "doping and fields make the switch"
+    },
+    {
+      "kind": "part-of",
+      "to": "architecture",
+      "why": "billions of switches make up a processor"
+    },
+    {
+      "kind": "causes",
+      "to": "litho",
+      "why": "smaller transistors need finer printing",
+      "if": "transistors shrink",
+      "then": "lithography must print finer lines"
+    },
+    {
+      "kind": "causes",
+      "to": "reality",
+      "why": "transistors vary and age",
+      "if": "transistors shrink",
+      "then": "each one varies and ages more, so chips need more margin"
+    }
+  ],
+  "ideas": [
+    {
+      "idea": "smaller-until",
+      "how": "leakage forced the switch from planar to FinFET to gate-all-around"
+    },
+    {
+      "idea": "energy-budget",
+      "how": "leaking switches burn power even when they are off"
+    },
+    {
+      "idea": "physics-computes",
+      "how": "a transistor's current changes smoothly; digital logic uses only on and off"
+    }
+  ],
+  "challenges": [],
+  "learn": {
+    "plain": "A transistor is a tap for electricity, and the gate is the handle. As taps got tiny, they started dripping even when closed. Each new design grips the pipe from more sides so it shuts off tightly.",
+    "engineer": "Subthreshold swing is (kT/q)·ln10·(1 + C_dep/C_ox), which has a floor of about 60 mV per decade at room temperature. Short-channel effects appear as drain-induced barrier lowering and threshold roll-off; wrapping the gate around the channel restores electrostatic control so gate length can shrink with acceptable leakage. Nanosheet width can vary by cell to trade drive current for area, and the forksheet adds a dielectric wall between n and p sheets on the way to CFET.",
+    "quiz": [
+      {
+        "q": "Why did the industry move from planar transistors to FinFETs and nanosheets?",
+        "options": [
+          "To make chips heavier",
+          "To give the gate more control over the channel and cut leakage",
+          "To use less silicon",
+          "To make chips easier to see"
+        ],
+        "answer": 1,
+        "why": "Wrapping the gate around more of the channel lets transistors shrink without leaking too much."
+      },
+      {
+        "q": "In a gate-all-around transistor, the gate touches the channel on…",
+        "options": ["one side", "two sides", "three sides", "all four sides"],
+        "answer": 3,
+        "why": "That is the meaning of gate-all-around. FinFETs touch three sides; planar transistors only the top."
+      },
+      {
+        "q": "What does a CFET stack on top of each other?",
+        "options": ["Two wafers", "n-type and p-type transistors", "Memory and logic chips", "Two lenses"],
+        "answer": 1,
+        "why": "Stacking the complementary pair roughly halves the area of a logic cell."
+      }
+    ],
+    "ask": [
+      "Why can't we keep shrinking transistors forever?",
+      "What does a \"2 nm\" node name really measure?",
+      "When might 2D materials be used?"
+    ]
+  }
 }

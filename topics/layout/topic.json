@@ -1,6 +1,74 @@
 {
   "id": "layout",
-  "labs": [
-    "placement-simulated-annealing"
-  ]
+  "title": "Physical layout",
+  "band": "design",
+  "order": 20,
+  "kind": "explore",
+  "summary": "Placing thousands of cells by simulated annealing so the wires stay short.",
+  "labs": ["placement-simulated-annealing"],
+  "links": [
+    {
+      "kind": "feeds",
+      "to": "litho",
+      "why": "the layout becomes masks"
+    }
+  ],
+  "ideas": [
+    {
+      "idea": "layers-hide-detail",
+      "how": "placement moves ready-made cells, not single transistors"
+    }
+  ],
+  "challenges": [
+    {
+      "kind": "Experiment",
+      "title": "Watch annealing work",
+      "task": "Change the cooling schedule and see wire length fall.",
+      "href": "#layout"
+    }
+  ],
+  "learn": {
+    "plain": "Placement is like arranging seats at a huge dinner so people who talk the most sit closest. Shorter wires mean faster signals and less wasted power.",
+    "engineer": "Production placers use analytical global placement (smoothed wirelength models such as log-sum-exp or weighted-average plus a density penalty, as in ePlace and RePlAce), then legalization and detailed placement, with timing- and congestion-driven weights. Buffering and clock-tree synthesis follow. Backside power delivery on TSMC A16 and Intel 18A frees front-side routing tracks and changes how standard cells are designed.",
+    "quiz": [
+      {
+        "q": "What is a netlist?",
+        "options": [
+          "A list of cells and the wires that connect them",
+          "A list of factories",
+          "A price list for chips",
+          "A set of test results"
+        ],
+        "answer": 0,
+        "why": "Synthesis produces the netlist; placement and routing turn it into a physical layout."
+      },
+      {
+        "q": "What does placement try to minimize?",
+        "options": [
+          "The number of transistors",
+          "Total wire length and crowding",
+          "The wafer size",
+          "The number of masks"
+        ],
+        "answer": 1,
+        "why": "Short wires are faster and use less power; avoiding congestion keeps the design routable."
+      },
+      {
+        "q": "Why does simulated annealing sometimes accept a worse swap?",
+        "options": [
+          "By mistake",
+          "To escape local traps while the temperature is high",
+          "To save time",
+          "Because the foundry requires it"
+        ],
+        "answer": 1,
+        "why": "Accepting some bad moves early lets the search find a much better overall layout."
+      }
+    ],
+    "ask": [
+      "How do tools place billions of cells?",
+      "What is routing congestion?",
+      "What is backside power delivery?"
+    ]
+  }
 }

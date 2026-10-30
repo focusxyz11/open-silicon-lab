@@ -1,9 +1,84 @@
 {
   "id": "accelerators",
-  "labs": [
-    "architecture-explorer",
-    "real-chip-comparison",
-    "quantization-lab",
-    "prefill-vs-decode"
-  ]
+  "title": "AI chip architectures",
+  "band": "ai",
+  "order": 20,
+  "kind": "explore",
+  "summary": "GPUs, TPUs, wafer-scale and SRAM chips; 4-bit numbers; prefill versus decode.",
+  "labs": ["architecture-explorer", "real-chip-comparison", "quantization-lab", "prefill-vs-decode"],
+  "links": [
+    {
+      "kind": "builds-on",
+      "to": "compute",
+      "why": "the math AI chips are built for"
+    },
+    {
+      "kind": "part-of",
+      "to": "datacenter",
+      "why": "chips fill racks of servers"
+    }
+  ],
+  "ideas": [
+    {
+      "idea": "keep-data-close",
+      "how": "GPUs keep weights in HBM next door; SRAM chips keep them on the chip itself"
+    },
+    {
+      "idea": "many-small",
+      "how": "a GPU uses thousands of simple cores instead of a few complex ones"
+    },
+    {
+      "idea": "copies-catch-mistakes",
+      "how": "spare cores route around manufacturing defects"
+    },
+    {
+      "idea": "specialize",
+      "how": "AI chips drop what AI does not need and add more of what it does"
+    }
+  ],
+  "challenges": [],
+  "learn": {
+    "plain": "All AI chips are giant calculators. The big difference is where they keep the numbers they work on: in memory chips next door (GPUs and TPUs), or spread through the chip itself (wafer-scale and SRAM designs). Keeping numbers closer is faster, but holds less.",
+    "engineer": "The design space has five main axes: compute density (MACs per mm²), memory hierarchy (HBM capacity versus on-chip SRAM bandwidth), programmability (SIMT cores versus compiler-scheduled systolic or dataflow execution), scale-up fabric (NVLink, ICI, UALink) and number formats (FP8 E4M3/E5M2, block-scaled MXFP4 and NVFP4). Decode rewards bandwidth per byte of model; prefill and training reward dense FLOPS and fabric bandwidth.",
+    "quiz": [
+      {
+        "q": "What do wafer-scale chips and SRAM-dataflow chips (LPUs) have in common?",
+        "options": [
+          "They use only HBM memory",
+          "They keep the model's data in on-chip SRAM, right next to the compute",
+          "They are made of glass",
+          "They have no transistors"
+        ],
+        "answer": 1,
+        "why": "On-chip SRAM gives enormous bandwidth but limited capacity, so these designs trade memory size for speed."
+      },
+      {
+        "q": "Why does block scaling make FP4 work much better?",
+        "options": [
+          "It adds more bits to every number",
+          "Each small block of values gets its own scale, so a few outliers don't ruin the rest",
+          "It deletes the outliers",
+          "It runs the chip at a higher clock"
+        ],
+        "answer": 1,
+        "why": "NVFP4 uses blocks of 16 and MXFP4 blocks of 32, costing only 0.25 to 0.5 extra bits per weight."
+      },
+      {
+        "q": "Why are prefill and decode increasingly run on different hardware?",
+        "options": [
+          "Prefill is compute-bound while decode is memory-bandwidth-bound",
+          "They use different models",
+          "Decode needs no memory",
+          "Prefill only runs on CPUs"
+        ],
+        "answer": 0,
+        "why": "Matching each phase to hardware built for its bottleneck, such as Rubin CPX for prefill and LPUs for decode, lowers cost and latency."
+      }
+    ],
+    "ask": [
+      "Why don't all AI chips use SRAM instead of HBM?",
+      "Is a TPU better than a GPU?",
+      "How can 4-bit numbers be accurate enough?"
+    ]
+  }
 }

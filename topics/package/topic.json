@@ -1,6 +1,76 @@
 {
   "id": "package",
-  "labs": [
-    "package"
-  ]
+  "title": "Packaging & memory",
+  "band": "pkg",
+  "order": 10,
+  "kind": "explore",
+  "summary": "Interposers, HBM stacks and CoWoS: the package is now a system.",
+  "labs": ["package"],
+  "links": [
+    {
+      "kind": "part-of",
+      "to": "accelerators",
+      "why": "HBM stacks and CoWoS sit inside most big AI chips"
+    },
+    {
+      "kind": "part-of",
+      "to": "supply",
+      "why": "advanced packaging is a chokepoint in the chain"
+    }
+  ],
+  "ideas": [
+    {
+      "idea": "keep-data-close",
+      "how": "HBM sits millimetres from the processor on one interposer"
+    },
+    {
+      "idea": "many-small",
+      "how": "an interposer joins several dies into one system"
+    },
+    {
+      "idea": "smaller-until",
+      "how": "as shrinking slows, joining and stacking dies carries progress"
+    }
+  ],
+  "challenges": [],
+  "learn": {
+    "plain": "Packaging used to be just a protective case. Now it is like building a tiny city block: processor buildings next to memory towers, joined by extremely dense roads so data never travels far.",
+    "engineer": "CoWoS-S uses one silicon interposer; CoWoS-L embeds small silicon bridges in an organic redistribution layer to go beyond the reticle size. Micro-bump pitches are tens of micrometres while hybrid bonding goes below 10 µm. HBM4 doubles the interface to 2,048 bits, and with a foundry-made base die, customers can put custom logic under the memory stack. Heat density, warpage and testing stacks before assembly are the main yield challenges.",
+    "quiz": [
+      {
+        "q": "What is HBM?",
+        "options": [
+          "A kind of hard drive",
+          "Stacked DRAM placed beside the processor for very high bandwidth",
+          "A packaging glue",
+          "A CPU instruction"
+        ],
+        "answer": 1,
+        "why": "Rubin carries eight HBM4 stacks for 288 GB of memory."
+      },
+      {
+        "q": "What does a silicon interposer do?",
+        "options": [
+          "Cools the chip",
+          "Connects dies side by side with very fine wiring",
+          "Stores data",
+          "Generates the clock"
+        ],
+        "answer": 1,
+        "why": "It provides far more connections than an ordinary package substrate can."
+      },
+      {
+        "q": "Why do co-packaged optics matter for AI data centers?",
+        "options": [
+          "They make chips smaller",
+          "Light carries data between chips over distance with less power than copper",
+          "They replace memory",
+          "They remove the need for GPUs"
+        ],
+        "answer": 1,
+        "why": "Moving optics into the package cuts the power cost of linking thousands of GPUs."
+      }
+    ],
+    "ask": ["Why is HBM so hard to make?", "What is CoWoS and why was it a bottleneck?", "What is hybrid bonding?"]
+  }
 }

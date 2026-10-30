@@ -1,6 +1,48 @@
 {
   "id": "build",
-  "labs": [
-    "build-your-own-ai-chip"
-  ]
+  "title": "AI chip architect",
+  "band": "ai",
+  "order": 30,
+  "kind": "build",
+  "summary": "Design an AI chip for a mission and see how it scores against real 2026 chips.",
+  "labs": ["build-your-own-ai-chip"],
+  "links": [
+    {
+      "kind": "builds-on",
+      "to": "accelerators",
+      "why": "architect your own"
+    },
+    {
+      "kind": "builds-on",
+      "to": "economics",
+      "why": "tape-out cost and margin"
+    }
+  ],
+  "ideas": [
+    {
+      "idea": "specialize",
+      "how": "you choose what to specialize for, mission by mission"
+    }
+  ],
+  "challenges": [
+    {
+      "kind": "Design",
+      "title": "Phone AI chip",
+      "task": "Run an 8B assistant on a phone: fast, cool and cheap.",
+      "href": "#build"
+    },
+    {
+      "kind": "Design",
+      "title": "Inference accelerator",
+      "task": "Serve a 70B model to 64 users at the lowest cost per token.",
+      "href": "#build"
+    },
+    {
+      "kind": "Design",
+      "title": "Training flagship",
+      "task": "Maximum FP8 compute, memory and bandwidth.",
+      "href": "#build"
+    }
+  ],
+  "learn": {}
 }

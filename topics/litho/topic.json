@@ -1,7 +1,70 @@
 {
   "id": "litho",
-  "labs": [
-    "lithography",
-    "euv-scanner"
-  ]
+  "title": "Lithography",
+  "band": "mfg",
+  "order": 10,
+  "kind": "explore",
+  "summary": "Printing with light: resolution, EUV scanners, High-NA and the photon budget.",
+  "labs": ["lithography", "euv-scanner"],
+  "links": [
+    {
+      "kind": "part-of",
+      "to": "fab",
+      "why": "one step of the patterning loop"
+    }
+  ],
+  "ideas": [
+    {
+      "idea": "smaller-until",
+      "how": "lines finer than the light can draw forced the move to EUV"
+    }
+  ],
+  "challenges": [
+    {
+      "kind": "Experiment",
+      "title": "Print the finest lines",
+      "task": "Find the smallest pitch each scanner can still print.",
+      "href": "#litho"
+    }
+  ],
+  "learn": {
+    "plain": "Lithography is printing with light through a stencil that is shrunk four times. When lines get thinner than the light can draw, engineers switch to shorter light (EUV), bigger lenses, cleverly angled lighting, or split the pattern across two stencils.",
+    "engineer": "Half-pitch resolution is k₁λ/NA, with practical single-exposure k₁ down to about 0.25 using off-axis illumination; depth of focus scales as λ/NA², so High-NA trades focus margin for resolution. High-NA uses anamorphic 4×/8× reduction, which halves the exposure field to 26 × 16.5 mm. EUV stochastics (photon shot noise, secondary electrons, resist chemistry) push dose up and set line-edge roughness and missing-contact rates.",
+    "quiz": [
+      {
+        "q": "In the Rayleigh equation, which change lets you print smaller features?",
+        "options": [
+          "A longer wavelength",
+          "A smaller numerical aperture",
+          "A shorter wavelength or a larger numerical aperture",
+          "A thicker resist"
+        ],
+        "answer": 2,
+        "why": "Half-pitch = k₁ · λ / NA, so shrinking λ or raising NA (or lowering k₁) prints finer lines."
+      },
+      {
+        "q": "Why does an EUV scanner use mirrors instead of lenses?",
+        "options": [
+          "Mirrors are cheaper",
+          "EUV light is absorbed by glass and even air",
+          "Lenses are too heavy",
+          "Mirrors make the light brighter"
+        ],
+        "answer": 1,
+        "why": "So the light path is in vacuum and every optic is a multilayer mirror that reflects about 70%."
+      },
+      {
+        "q": "Why can a low EUV dose cause defects?",
+        "options": [
+          "The mask overheats",
+          "Too few photons hit each spot, so random counts make rough or missing features",
+          "The wafer moves too fast",
+          "The resist gets too thick"
+        ],
+        "answer": 1,
+        "why": "This is the stochastics problem, a key trade-off against throughput."
+      }
+    ],
+    "ask": ["How is EUV light actually made?", "Why is High-NA EUV so expensive?", "What is double patterning?"]
+  }
 }

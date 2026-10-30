@@ -1,6 +1,84 @@
 {
   "id": "tiny",
-  "labs": [
-    "tiny-chip-studio"
-  ]
+  "title": "Tiny chip studio",
+  "band": "design",
+  "order": 40,
+  "kind": "build",
+  "summary": "Take your own circuit through all eight steps: logic, verification, gates, layout, masks, fab, test and a working gadget.",
+  "labs": ["tiny-chip-studio"],
+  "links": [
+    {
+      "kind": "builds-on",
+      "to": "design",
+      "why": "try the whole flow yourself"
+    },
+    {
+      "kind": "builds-on",
+      "to": "litho",
+      "why": "masks and fab, in miniature"
+    },
+    {
+      "kind": "builds-on",
+      "to": "yield",
+      "why": "test catches defective chips"
+    },
+    {
+      "kind": "part-of",
+      "to": "riscv",
+      "why": "your ALU slice runs inside the CPU"
+    }
+  ],
+  "ideas": [
+    {
+      "idea": "copies-catch-mistakes",
+      "how": "the majority voter you build is the heart of triple redundancy"
+    },
+    {
+      "idea": "checking-is-hard",
+      "how": "the verify step catches the bug before tape-out"
+    },
+    {
+      "idea": "pay-once",
+      "how": "shared wafers split the up-front cost among many small designs"
+    }
+  ],
+  "challenges": [
+    {
+      "kind": "Puzzle",
+      "title": "Find the bug: majority voter",
+      "task": "Verification shows a missing case. Fix it before tape-out.",
+      "href": "#tiny"
+    },
+    {
+      "kind": "Puzzle",
+      "title": "Find the bug: full adder",
+      "task": "The sum line is wrong. Prove it, fix it, ship it.",
+      "href": "#tiny"
+    },
+    {
+      "kind": "Design",
+      "title": "Display decoder",
+      "task": "Finish segments d to g and route the biggest tiny design.",
+      "href": "#tiny"
+    },
+    {
+      "kind": "Design",
+      "title": "Build the CPU's ALU",
+      "task": "Design one bit of an ALU. Thirty-two copies of it run the RISC-V programs.",
+      "href": "#lab-tiny-1"
+    },
+    {
+      "kind": "Design",
+      "title": "Tape it out for real",
+      "task": "Export a design as a Tiny Tapeout project and run it through Yosys and OpenROAD on GitHub.",
+      "href": "#lab-tiny-1"
+    },
+    {
+      "kind": "Design",
+      "title": "Pack it tight",
+      "task": "Find the highest packing density that still routes.",
+      "href": "#tiny"
+    }
+  ],
+  "learn": {}
 }

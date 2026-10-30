@@ -1,7 +1,78 @@
 {
   "id": "innovation",
-  "labs": [
-    "innovation-map",
-    "schedule-gantt"
-  ]
+  "title": "Innovation map",
+  "band": "future",
+  "order": 10,
+  "kind": "explore",
+  "summary": "Which steps AI speeds up, which need invention, money or people.",
+  "labs": ["innovation-map", "schedule-gantt"],
+  "links": [
+    {
+      "kind": "builds-on",
+      "to": "design",
+      "why": "AI agents speed up design"
+    },
+    {
+      "kind": "builds-on",
+      "to": "fab",
+      "why": "money and time limit fabs, not software"
+    },
+    {
+      "kind": "builds-on",
+      "to": "agent",
+      "why": "which human skills still matter"
+    }
+  ],
+  "ideas": [
+    {
+      "idea": "checking-is-hard",
+      "how": "verification is a data problem too, so AI may speed up checking as well",
+      "counter": true
+    }
+  ],
+  "challenges": [],
+  "learn": {
+    "plain": "Some jobs get faster with better software. Some need a scientific breakthrough. Some need money and years to build a factory. Some need trained people and clear rules. AI directly speeds up only the first kind.",
+    "engineer": "Treat the chain as a queue of constrained resources: compressing steps that are not the bottleneck (design time) raises pressure on the ones that are (fab and packaging capacity, power). Track CoWoS wafer starts, HBM bit supply, EUV tool shipments, grid connection queues and engineering headcount, not design productivity alone.",
+    "quiz": [
+      {
+        "q": "Which kind of step is AI already compressing most?",
+        "options": [
+          "Building new fabs",
+          "Data-heavy work such as verification and computational lithography",
+          "Mining silicon",
+          "Training technicians"
+        ],
+        "answer": 1,
+        "why": "These steps are mostly computation, so better models and GPUs speed them up directly."
+      },
+      {
+        "q": "Why does fab capacity become the critical path as AI speeds up design?",
+        "options": [
+          "Fabs and packaging lines take years and billions of dollars to add",
+          "Fabs use AI badly",
+          "Design takes longer",
+          "Wafers got bigger"
+        ],
+        "answer": 0,
+        "why": "Shrinking the non-bottleneck steps only puts more pressure on the bottleneck."
+      },
+      {
+        "q": "Which of these needs genuine invention rather than more money?",
+        "options": [
+          "Building another copy of an existing fab",
+          "Brighter EUV sources and new transistor structures such as CFET",
+          "Hiring more designers",
+          "Buying more servers"
+        ],
+        "answer": 1,
+        "why": "Physics-limited steps need new science, which AI can speed up but not replace."
+      }
+    ],
+    "ask": [
+      "Which link in the chain is the biggest bottleneck now?",
+      "Will AI design chips without engineers?",
+      "Where would a chip startup have the best chance?"
+    ]
+  }
 }

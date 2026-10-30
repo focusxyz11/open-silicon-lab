@@ -8,7 +8,7 @@ Thanks for helping. Corrections, new simulations and new challenges are all welc
 
 **Fixing a fact?** Edit `src/data/facts.json`: update `value`, `source`, `url` and `verified`, and move the old value into `previous`. Link the source in the PR.
 
-**Adding a topic or simulation?** Read [topics/README.md](topics/README.md). Each topic is one folder; `npm run new-topic -- <id> "<Title>" <prefix>` starts one with a working example and prints the remaining steps. Every topic needs at least one labelled connection in `src/data/topics.js`. Using an AI assistant is welcome: point it at `topics/README.md` and one topic folder, and let `npm test` check its work.
+**Adding a topic or simulation?** Read [topics/README.md](topics/README.md). Each topic is one folder; `npm run new-topic -- <id> "<Title>" <prefix> <band>` starts one with a working example and prints the remaining steps. Every topic needs at least one labelled connection in `src/data/topics.js`. Using an AI assistant is welcome: point it at `topics/README.md` and one topic folder, and let `npm test` check its work.
 
 **Style.** Plain words over jargon; explain any term the first time; every simulation states what it simplifies. See [docs/WORKFLOW.md](docs/WORKFLOW.md).
 

@@ -1,6 +1,46 @@
 {
   "id": "neuro",
-  "labs": [
-    "next-neuro"
-  ]
+  "title": "Neuromorphic chips",
+  "band": "next",
+  "order": 30,
+  "kind": "explore",
+  "summary": "Spiking neurons that work only when something happens. Tune one to spot a pattern.",
+  "labs": ["next-neuro"],
+  "links": [
+    {
+      "kind": "kind-of",
+      "to": "beyond",
+      "why": "compute only when something happens"
+    },
+    {
+      "kind": "part-of",
+      "to": "everywhere",
+      "why": "event-driven chips for always-on sensing"
+    }
+  ],
+  "ideas": [
+    {
+      "idea": "many-small",
+      "how": "many simple neurons, each with its own memory"
+    },
+    {
+      "idea": "energy-budget",
+      "how": "neurons spend energy only when a spike arrives"
+    }
+  ],
+  "challenges": [
+    {
+      "kind": "Puzzle",
+      "title": "Spot the pattern",
+      "task": "Tune a spiking neuron to fire for pattern A and never for noise.",
+      "href": "#lab-neuro-1"
+    }
+  ],
+  "learn": {
+    "ask": [
+      "How is a spiking neuron different from a neural-network neuron?",
+      "What are neuromorphic chips good at today?",
+      "Can neuromorphic chips run large language models?"
+    ]
+  }
 }

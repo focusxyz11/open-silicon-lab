@@ -1,6 +1,7 @@
 /* Hash router. One page, five views: the map, a topic, the workshop, challenges and knowledge.
    Links are plain hashes (#litho, #lab-litho-2, #riscv-5), so every place in the lab is shareable. */
-import { TOPICS, THREADS, topicById, bandById, edgesOf } from '../data/topics.js';
+import { TOPICS, THREADS, topicById, bandById } from '../data/topics.js';
+import { connectionsHTML, ideasHTML, linkListHTML } from './connections.js';
 import { renderEraBanner } from './era.js';
 import { renderChipBanner, renderMyChip, chipVisit } from './mychip.js';
 import { CHALLENGES } from '../data/challenges.js';
@@ -47,15 +48,15 @@ function renderChrome(id) {
   }
   $('#topicHead').innerHTML = '<nav class="crumbs" aria-label="Breadcrumb"><a href="#map">Map</a><span>›</span><a href="#map" data-band="' + b.id + '">' + esc(b.t) + '</a><span>›</span><b>' + esc(t.t) + '</b></nav>' + thread + '<div id="eraBanner" hidden></div><div id="chipBanner" hidden></div>';
   renderEraBanner(id); renderChipBanner(id); chipVisit(id);
-  const labs = labsIn(id); const edges = edgesOf(id);
+  const labs = labsIn(id);
   const ch = CHALLENGES.filter(c => c.topic === id);
   $('#rail').innerHTML = '<a class="back" href="#map">← Map</a>' +
     (labs.length ? '<p class="eyebrow">Simulations here</p>' + labs.map((l, i) => '<a href="#' + l.id + '" data-lab="' + l.id + '"><span>' + (i + 1) + '</span>' + esc(l.t) + '</a>').join('') : '') +
     (id === 'riscv' ? '<p class="eyebrow">Levels</p>' + [1, 2, 3, 4, 5, 6, 7].map(n => '<a href="#riscv-' + n + '"><span>' + n + '</span>' + esc((CHALLENGES.find(c => c.href === '#riscv-' + n) || {}).t || 'Level ' + n) + '</a>').join('') + '<a href="#riscv-sandbox"><span>∞</span>Free play</a>' : '') +
-    '<p class="eyebrow">Connected topics</p>' + edges.map(e => { const out = e[0] === id; const o = topicById(out ? e[1] : e[0]); return '<a class="conn" href="#' + o.id + '"><span>' + (out ? '→' : '←') + '</span><b>' + esc(o.t) + '</b><small>' + esc(e[2]) + '</small></a>'; }).join('');
+    '<p class="eyebrow">Connected topics</p>' + linkListHTML(id);
   $('#topicFoot').innerHTML = factsHTML(id) +
     (ch.length && id !== 'riscv' ? '<div class="hblock"><p class="code">Challenges in this topic</p><div class="chgrid">' + ch.map(c => '<a href="' + c.href + '" class="chcard"><span class="pill out">' + c.kind + '</span><b>' + esc(c.t) + '</b><small>' + esc(c.d) + '</small></a>').join('') + '</div></div>' : '') +
-    '<div class="hblock"><p class="code">Where this connects</p><div class="nextgrid">' + edges.map(e => { const out = e[0] === id; const o = topicById(out ? e[1] : e[0]); const ob = bandById(o.band); return '<a href="#' + o.id + '"><span class="code">' + (out ? 'Leads to' : 'Builds on') + ' · ' + esc(ob.t) + '</span><b>' + esc(o.t) + '</b><small>' + esc(e[2]) + '</small></a>'; }).join('') + '</div></div>' +
+    ideasHTML(id) + connectionsHTML(id) +
     feedbackHTML(id, t.t);
 }
 
