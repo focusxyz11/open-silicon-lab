@@ -156,6 +156,9 @@ async function check(viewport) {
   await page.uncheck('#bhDefect');
   await page.$$eval('#tyTray [data-test]', bs => bs.forEach(b => b.click())); await page.waitForTimeout(400);
   if ((await page.$$('#tyTray .tychip.fail')).length !== 1) problems.push(tag + 'bench: the tray should hold exactly one faulty chip');
+  await page.click('#bhBoards [data-b="mpbench"]'); await page.click('#bhDesign [data-d="hc00"]'); await page.waitForTimeout(150);
+  if (!(await page.$('#bhConnect .bhwt'))) problems.push(tag + 'bench: no wiring table for a 74HC00 on a MicroPython board');
+  await page.click('#bhBoards [data-b="virtual"]'); await page.waitForTimeout(150);
 
   // A lab anchor opens its topic and scrolls to it.
   await go(page, 'lab-fab-2');

@@ -33,7 +33,8 @@ Step by step, so quality stays high:
 ### Plug in real hardware
 Hardware stays a bonus, never a gate, and the bench stays open to any board. Details and the protocol: [HARDWARE.md](HARDWARE.md).
 0. A virtual bench: twin-test a design against its simulation, diagnose defects, and an open protocol any board can speak. *Shipped: `#bench`. The Tiny Tapeout demo board and any Open Bench board can be tried as experiments.*
-1. A Raspberry Pi Pico 2 (two RISC-V cores, about $5) running the same programs as the RISC-V lab.
+   Then one open program for ESP32, Pico and other MicroPython boards, installable from the page, to test real chips such as a 74HC00 on a breadboard. *Shipped as an experiment; needs testers with boards.*
+1. A $5 RISC-V board (ESP32-C3 or Pico 2) running the same programs as the RISC-V lab.
 2. The Tiny Tapeout demo board confirmed on real boards: set inputs from the lab, read outputs, compare live with your simulated chip.
 3. Run the exported Tiny Tapeout designs on an FPGA board, with the open toolchain in the browser.
 4. Community shuttles: gather learners' designs into one submission and test what comes back on the bench.
