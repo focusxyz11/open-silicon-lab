@@ -502,3 +502,23 @@ a.btn{display:inline-block;text-decoration:none}
 .mind{padding:10px 12px;border-radius:8px;background:color-mix(in srgb,var(--violet) 10%,transparent);font-size:14px!important}
 .linkbtn{border:0;background:none;padding:0;color:var(--cyan);text-decoration:underline;cursor:pointer;font:inherit}
 @media(max-width:700px){.dviews{grid-template-columns:1fr}.balance{display:none}}
+
+/* ---------- Three ways to start, and tips ---------- */
+.doors{display:grid;gap:8px;margin-top:6px}
+.doorrow{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;max-width:880px}
+.door{display:grid;gap:3px;align-content:start;padding:12px 14px;border:1.5px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);text-decoration:none}
+.door:hover,.door:focus-visible{border-color:var(--amber)}
+.door b{font:700 17px var(--display);font-stretch:110%;color:var(--amber)}
+.door span{font-size:14px;line-height:1.4;color:var(--muted)}
+.doors .tourbtn{padding-left:0}
+@media(max-width:640px){.doorrow{grid-template-columns:minmax(0,1fr);gap:8px}.door{padding:10px 12px}}
+.hint{position:fixed;z-index:50;left:max(16px,env(safe-area-inset-left,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));width:min(340px,calc(100vw - 32px));display:grid;gap:8px;padding:12px 14px;border-radius:10px;border:1px solid var(--line);border-left:4px solid var(--amber);background:var(--surface);box-shadow:0 6px 24px rgba(0,0,0,.18)}
+.hint p{margin:0;font-size:14.5px;line-height:1.45;color:var(--ink)}
+.hint .eyebrow{display:block;margin-bottom:2px;color:var(--amber)}
+.hint-row{display:flex;gap:12px;align-items:center}
+.hint .btn{padding:6px 12px}
+.hint-off{border:0;background:none;padding:0;font:500 13px var(--body);color:var(--muted);text-decoration:underline;cursor:pointer}
+.hint-target{outline:2px solid var(--amber-fill);outline-offset:4px;border-radius:8px}
+@media(prefers-reduced-motion:no-preference){.hint{animation:hintin .3s ease-out}.hint-target{animation:hintpulse 1.6s ease-in-out 3}}
+@keyframes hintin{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes hintpulse{50%{outline-offset:8px;outline-color:transparent}}

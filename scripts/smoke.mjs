@@ -25,7 +25,7 @@ const browser = await chromium.launch();
 async function check(viewport) {
   const page = await browser.newPage({ viewport });
   /* These checks act as a returning visitor; checkGuide() below plays the first visit. */
-  await page.addInitScript(() => { try { localStorage.setItem('osl-guide-v1', 'done'); } catch (e) { /* ignore */ } });
+  await page.addInitScript(() => { try { localStorage.setItem('osl-hints-v1', JSON.stringify({ seen: {}, off: true })); } catch (e) { /* ignore */ } });
   const tag = viewport.width < 600 ? '[mobile] ' : '';
   page.on('pageerror', e => problems.push(tag + 'page error: ' + e.message + ' (' + String(e.stack || '').split('\n').slice(1, 3).map(l => l.trim()).join(' ← ') + ')'));
   page.on('console', m => { if (m.type() === 'error' && !/fonts\.g|ERR_TUNNEL|ERR_NAME|net::/.test(m.text() + (m.location().url || ''))) problems.push(tag + 'console: ' + m.text()); });
@@ -164,7 +164,9 @@ async function check(viewport) {
   if (!/2 of 16/.test(await page.textContent('#tyCov'))) problems.push(tag + 'bench: the test budget did not change the coverage line');
   await page.click('#tyBudget [data-n="0"]');
   await page.$$eval('#tyTray [data-test]', bs => bs.forEach(b => b.click())); await page.waitForTimeout(400);
-  if ((await page.$$('#tyTray .tychip.fail')).length !== 1) problems.push(tag + 'bench: the tray should hold exactly one faulty chip');
+  /* A wafer has one chip with a defect, or (a design bug) every chip failing. */
+  const failing = (await page.$$('#tyTray .tychip.fail')).length;
+  if (failing !== 1 && failing !== 4) problems.push(tag + 'bench: the tray should hold one faulty chip, or four with a design bug; found ' + failing);
   await page.click('#bhBoards [data-b="mpbench"]'); await page.click('#bhDesign [data-d="hc00"]'); await page.waitForTimeout(150);
   if (!(await page.$('#bhConnect .bhwt'))) problems.push(tag + 'bench: no wiring table for a 74HC00 on a MicroPython board');
   await page.click('#bhBoards [data-b="virtual"]'); await page.waitForTimeout(150);
@@ -202,25 +204,36 @@ async function check(viewport) {
   await page.close();
 }
 
-/* A first visit: the guide opens on the map, walks four steps, and its last step starts a challenge. */
+/* A first visit: nothing blocks the page. Three ways to start sit at the top of the map, tips appear
+   when a feature becomes useful and go away once it is used, and the tour opens only on request. */
 async function checkGuide(viewport) {
-  const page = await browser.newPage({ viewport }); const tag = viewport.width < 600 ? '[mobile guide] ' : '[guide] ';
+  const page = await browser.newPage({ viewport }); const tag = viewport.width < 600 ? '[mobile first visit] ' : '[first visit] ';
   page.on('pageerror', e => problems.push(tag + 'page error: ' + e.message + ' (' + String(e.stack || '').split('\n').slice(1, 3).map(l => l.trim()).join(' ← ') + ')'));
-  await page.goto(base + 'index.html');
-  try { await page.waitForSelector('.g-card', { timeout: 5000 }); } catch (e) { problems.push(tag + 'did not open on a first visit'); await page.close(); return; }
-  for (let k = 0; k < 3; k++) { await page.click('.g-card [data-g="next"]'); await page.waitForTimeout(120); }
-  const choices = await page.$$('.g-card [data-g="go"]');
-  if (choices.length !== 3) problems.push(tag + 'last step should offer 3 challenges, found ' + choices.length);
-  await page.click('.g-card a[href="#reality"]');
-  try { await page.waitForFunction(() => { const s = document.getElementById('reality'); return s && !s.hidden; }, null, { timeout: 15000 }); } catch (e) { problems.push(tag + 'choosing "Break" did not open the reality topic'); }
-  if (await page.$('.g-card')) problems.push(tag + 'stayed open after a choice');
+  await page.goto(base + 'index.html'); await page.waitForSelector('#mBands .tnode'); await page.waitForTimeout(1200);
+  if (await page.$('.g-card')) problems.push(tag + 'the tour opened by itself');
+  if ((await page.$$('.maphero .door')).length !== 3) problems.push(tag + 'the map should show three ways to start');
+  /* Scrolling to the map brings the "select a box" tip; selecting one dismisses it and brings the lens tip. */
+  await page.evaluate(() => document.getElementById('mStack').scrollIntoView());
+  try { await page.waitForSelector('.hint', { timeout: 4000 }); } catch (e) { problems.push(tag + 'no tip when the map came into view'); }
+  if (await page.$('.g-block')) problems.push(tag + 'a tip should never block the page');
+  await page.click('.tnode[data-t="yield"]');
+  await page.waitForTimeout(1600);
+  const lensTip = await page.$('.hint'); if (!lensTip || !/Show/.test(await lensTip.textContent())) problems.push(tag + 'selecting a topic should bring the lens tip');
+  await page.click('.hint [data-h="off"]');
+  if (await page.$('.hint')) problems.push(tag + 'Turn tips off did not close the tip');
   if (await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1)) problems.push(tag + 'page scrolls sideways');
-  /* It does not come back on the next visit, but the tour button replays it. */
-  await page.goto(base + 'index.html'); await page.waitForTimeout(1200);
-  if (await page.$('.g-card')) problems.push(tag + 'opened again on a return visit');
+  /* A door goes straight to a challenge. */
+  await page.evaluate(() => scrollTo(0, 0));
+  await page.click('.maphero .door[href="#reality"]');
+  try { await page.waitForFunction(() => { const s = document.getElementById('reality'); return s && !s.hidden; }, null, { timeout: 15000 }); } catch (e) { problems.push(tag + 'the Break door did not open the reality topic'); }
+  if (await page.$('.hint')) problems.push(tag + 'tips stay off after Turn tips off');
+  /* The tour still opens on request, walks four steps, and Escape closes it. */
+  await page.goto(base + 'index.html'); await page.waitForSelector('.maphero [data-guide-start]');
   await page.click('.maphero [data-guide-start]'); await page.waitForSelector('.g-card');
+  for (let k = 0; k < 3; k++) { await page.click('.g-card [data-g="next"]'); await page.waitForTimeout(120); }
+  if ((await page.$$('.g-card [data-g="go"]')).length !== 3) problems.push(tag + 'the tour\'s last step should offer 3 challenges');
   await page.keyboard.press('Escape'); await page.waitForTimeout(100);
-  if (await page.$('.g-card')) problems.push(tag + 'Escape did not close it');
+  if (await page.$('.g-card')) problems.push(tag + 'Escape did not close the tour');
   await page.close();
 }
 

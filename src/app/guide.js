@@ -1,14 +1,14 @@
-/* The 30-second first-visit guide. Four steps, each pointing at the real thing on the page:
+/* The 30-second tour, on request only. Four steps, each pointing at the real thing on the page:
    the stack, how topics connect, the two dials (explanation level and year), then a first
-   challenge to start with. It opens once, on a first visit to the map; "Take the 30-second
-   tour" replays it. Skippable at every step (Esc), and it never opens over a shared deep link. */
+   challenge to start with. It never opens by itself: first visitors see three ways to start on the
+   map and small hints when a feature becomes useful (src/app/hints.js). "Take the 30-second tour"
+   opens it; Esc or Skip closes it at any step. */
 import { state as mapState, redrawMap } from './map.js';
 import { t } from '../core/i18n.js';
 
 const KEY = 'osl-guide-v1';
 const $ = s => document.querySelector(s);
 const reduce = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
-const seen = () => { try { return localStorage.getItem(KEY) === 'done'; } catch (e) { return false; } };
 const remember = () => { try { localStorage.setItem(KEY, 'done'); } catch (e) { /* storage unavailable: it simply may show again */ } };
 
 /* target: what to spotlight (one or more selectors); before: what to do when the step opens.
@@ -111,7 +111,4 @@ export function startGuide() {
 
 export function initGuide() {
   document.addEventListener('click', e => { if (e.target.closest('[data-guide-start]')) { e.preventDefault(); startGuide(); } });
-  /* First visit, arriving on the map (not on someone's shared link to a topic). */
-  const home = !location.hash || location.hash === '#map';
-  if (!seen() && home) setTimeout(() => { if (!open && (!location.hash || location.hash === '#map')) startGuide(); }, 700);
 }
