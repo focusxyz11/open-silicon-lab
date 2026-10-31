@@ -30,7 +30,11 @@ export function renderMapShell(zoomHTML) {
     <h1>${t('map.h1')}</h1>
     <p class="lede">${t('map.lede')}</p>
     <div class="mstats" id="mStats"></div>
-    <button type="button" class="btn tourbtn" data-guide-start>${t('map.tour')}</button>
+    <div class="doors" aria-labelledby="doorsT">
+      <p class="eyebrow" id="doorsT">${t('doors.title')}</p>
+      <div class="doorrow">${[['#tiny', 'build'], ['#reality', 'break'], ['#whatif', 'imagine']].map(([h, id]) => '<a class="door" href="' + h + '"><b>' + t('guide.' + id + '.t') + '</b><span>' + t('guide.' + id + '.d') + '</span></a>').join('')}</div>
+      <p class="small muted">${t('doors.or')} <button type="button" class="linkish tourbtn" data-guide-start>${t('doors.tour')}</button></p>
+    </div>
   </section>
   <section class="wrap tmsec" id="timeMachine" aria-labelledby="tmTitle">
     <div class="tmhead">

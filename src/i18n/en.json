@@ -198,7 +198,6 @@
  "map.eyebrow": "Open-source chip lab · facts checked {date}",
  "map.h1": "The whole chip, from <em>atoms</em> to everything it powers",
  "map.lede": "Phones, cars, thermostats and AI data centers all run on chips made through the same stack: physics, transistors, design, factories and packaging. Every layer is a topic with live simulations you can play with, and you can choose which connections between them to see. Start anywhere: pick a topic, follow a thread, or build a chip in the workshop.",
- "map.tour": "Take the 30-second tour",
  "tm.code": "Time machine · the whole site follows this year",
  "tm.range": "Year, from 1971 to 2040",
  "tm.play": "▶ Play history",
@@ -487,5 +486,16 @@
  "zoom.level": "Level {n} of {total}",
  "zoom.pause": "Pause",
  "zoom.again": "Zoom again",
- "zoom.in": "Zoom in"
+ "zoom.in": "Zoom in",
+ "doors.title": "Three ways to start",
+ "doors.or": "Or explore the map below, or",
+ "foot.hints": "Show tips again",
+ "hint.label": "Tip",
+ "hint.tap": "Select any box to see what it holds and how it connects. Its <b>Open</b> button takes you in.",
+ "hint.lens": "Lines too busy? <b>Show</b> one kind of connection at a time: what is inside what, cause and effect, or one big idea.",
+ "hint.level": "Too much detail, or not enough? <b>Beginner</b> and <b>Engineer</b> change every explanation on the site.",
+ "hint.year": "Curious how this looked in 1985, or might look in 2035? The <b>year</b> button sends the whole site through time.",
+ "hint.ok": "Got it",
+ "hint.off": "Turn tips off",
+ "doors.tour": "take the 30-second tour"
 }

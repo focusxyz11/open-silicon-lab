@@ -1,5 +1,5 @@
 /* Words on screen come from src/i18n/<lang>.json, never from code. Code names a text and asks for it:
-     t('map.tour')                       → "Take the 30-second tour"
+     t('doors.title')                    → "Three ways to start"
      t('map.sims', { n: 3 })             → "3 simulations"   (plural forms: { "one": …, "other": … })
      t('era.back', { year: 2026 })       → "Back to 2026"
    A missing text falls back to English, so a half-finished translation still works.

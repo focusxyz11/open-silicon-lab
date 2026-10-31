@@ -122,7 +122,7 @@ const hasPython = spawnSync('python3', ['--version']).status === 0;
 
 /* A transport to a program's stdin and stdout, like a serial port to a board. */
 function processTransport(args) {
-  const child = spawn('python3', args, { stdio: ['pipe', 'pipe', 'inherit'] });
+  const child = spawn('python3', args, { stdio: ['pipe', 'pipe', 'inherit'], env: { ...process.env, PYTHONDONTWRITEBYTECODE: '1' } });
   const tr = loopback(() => '');
   let buf = '', wake = null; let open = true;
   child.stdout.on('data', d => { buf += d.toString(); if (wake) { wake(); wake = null; } });
