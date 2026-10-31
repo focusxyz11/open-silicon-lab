@@ -14,7 +14,7 @@
 .bhconnect{display:grid;gap:8px;margin-top:10px}
 .bhconnect input{font:13px var(--mono);padding:7px 9px;border:1px solid var(--line);border-radius:4px;background:var(--surface);color:var(--ink);min-width:0;flex:1 1 180px}
 .callout.warn{border-color:var(--amber-fill)}
-.bhdef{display:flex;gap:8px;align-items:center;margin-top:6px;font-size:13.5px;color:var(--ink)}
+.bhdef{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:6px;font-size:13.5px;color:var(--ink)}
 #bench .ok{color:var(--good)}
 #bench .bad{color:var(--bad)}
 

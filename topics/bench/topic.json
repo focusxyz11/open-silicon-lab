@@ -79,6 +79,18 @@
       "title": "Find the faulty chip",
       "task": "One chip in the tray has a manufacturing defect. Find it, then name the broken wire.",
       "href": "#lab-bench-2"
+    },
+    {
+      "kind": "Experiment",
+      "title": "Let a defect escape",
+      "task": "Shrink the test budget until a faulty chip passes, then work out how many patterns it takes to catch it again.",
+      "href": "#lab-bench-2"
+    },
+    {
+      "kind": "Puzzle",
+      "title": "Design bug or defect?",
+      "task": "When a wafer comes back wrong, decide whether one chip is broken or the design itself is.",
+      "href": "#lab-bench-2"
     }
   ],
   "learn": {

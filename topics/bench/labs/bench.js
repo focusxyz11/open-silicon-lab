@@ -32,18 +32,20 @@ export function whereText(f, chip) {
   if (w.cell) return 'The output of gate ' + (w.cell.index + 1) + ' (' + w.cell.type + ')' + at + (w.outs.length ? ', which is output ' + w.outs.join(', ') : '');
   return 'Wire n' + f.net + at;
 }
+/* When the same question gets a different answer the second time. */
+export const flakyHTML = n => '<div class="callout"><p><b>The chip changed its mind.</b> Asked the failing patterns again, it gave a different answer on ' + n + ' of them. No stuck wire does that: this is an <b>intermittent fault</b>, such as a loose wire or an input left floating, which reads 0 or 1 at random. Intermittent faults are among the hardest to find, because a test can pass one day and fail the next. Real causes include cracked solder, heat and supply noise: see <a href="#reality">Why perfect designs fail</a>.</p></div>';
 export function diagHTML(chip, res) {
   if (res.ok) return '';
   const pins = wrongPins(res.rows); const names = chip.pins.outs.filter((n, i) => pins >> i & 1);
   const sus = diagnose(chip, res.rows);
   return '<div class="callout"><b>Wrong on ' + res.fail + ' of ' + res.rows.length + ' patterns, on output' + (names.length > 1 ? 's ' : ' ') + names.join(', ') + '.</b> ' +
     (sus.length ? 'A single stuck wire that explains every wrong answer: <ul class="ilist">' + sus.slice(0, 6).map(f => '<li>' + esc(whereText(f, chip)) + '</li>').join('') + '</ul>' + (sus.length > 1 ? '<span class="small muted">More than one wire fits: the test cannot tell them apart. Engineers add test points to split such cases.</span>' : '')
-      : 'No single stuck wire explains these answers. Maybe two defects, a different design on the board, a loose connection, or a timing problem the simulation does not model.') + '</div>';
+      : 'No single stuck wire explains these answers. Maybe two defects, a different design on the board, a loose connection, or a timing problem the simulation does not model.') + ' <a href="#reality">Why perfect designs fail</a> shows what else goes wrong in real chips.</div>';
 }
 
 export function init() {
   if (!$('#bhBoards')) return;
-  const S = { board: 'virtual', design: 'mine', defect: false, client: null, transport: null, chip: null, ui: 0, log: [], busy: false, tt: '', info: null, boardDesigns: null, boardDesign: null, checks: null, profile: 'pico' };
+  const S = { board: 'virtual', design: 'mine', real: 'perfect', client: null, transport: null, chip: null, ui: 0, log: [], busy: false, tt: '', info: null, boardDesigns: null, boardDesign: null, checks: null, profile: 'pico' };
 
   /* ---- the conversation log ---- */
   function traffic(dir, text) {
@@ -60,10 +62,11 @@ export function init() {
     if (S.design === 'mine') { const d = chipDesign(); proj = TC.PROJ.find(p => p.id === d.p) || TC.PROJ[0]; code = d.code; }
     else if (part) { proj = asProject(part); code = part.code; }
     else { proj = TC.PROJ.find(p => p.id === S.design); code = proj.sol || proj.starter; }
-    let fault = null;
+    let fault = null, loose = null;
     const ref = virtualChip(proj, code);
-    if (ref.ok && S.defect && S.board === 'virtual') { const pool = visibleFaults(ref); fault = pool[Math.floor(Math.random() * pool.length)] || null; }
-    S.chip = ref.ok ? ref : null; S.chipOnBoard = ref.ok ? virtualChip(proj, code, { fault }) : null;
+    if (ref.ok && S.board === 'virtual' && S.real === 'defect') { const pool = visibleFaults(ref); fault = pool[Math.floor(Math.random() * pool.length)] || null; }
+    if (ref.ok && S.board === 'virtual' && S.real === 'loose') loose = Math.floor(Math.random() * proj.ins.length);
+    S.chip = ref.ok ? ref : null; S.chipOnBoard = ref.ok ? virtualChip(proj, code, { fault, loose, seed: 1 + Math.floor(Math.random() * 1e6) }) : null;
     S.proj = proj; S.errs = ref.ok ? null : ref.errs;
   }
 
@@ -223,7 +226,7 @@ export function init() {
     if (S.board === 'virtual') { await disconnect(); await connectVirtual(); } else build();
     render();
   });
-  $('#bhDesignNote').addEventListener('change', async e => { if (e.target.id === 'bhDefect') { S.defect = e.target.checked; await disconnect(); await connectVirtual(); render(); } });
+  $('#bhDesignNote').addEventListener('click', async e => { const b = e.target.closest('[data-real]'); if (!b || S.busy) return; S.real = b.dataset.real; await disconnect(); await connectVirtual(); render(); });
   document.addEventListener('osl:chip', async () => { if (S.design === 'mine' && S.board === 'virtual' && !S.busy) { await disconnect(); await connectVirtual(); render(); } });
 
   /* ---- the twin test ---- */
@@ -236,7 +239,10 @@ export function init() {
     try {
       const res = await twinTest(cases, S.client, { mask: S.chip.mask, onRow: (r, k) => { cells[k].className = r.ok ? 'ok' : 'bad'; if (!r.ok) cells[k].title += ': board ' + bits(r.got, S.chip.pins.outs.length) + ', simulation ' + bits(r.want, S.chip.pins.outs.length); } });
       $('#bhRunTag').innerHTML = res.ok ? '<b class="ok">All ' + res.rows.length + ' patterns match.</b>' : '<b class="bad">' + res.fail + ' of ' + res.rows.length + ' patterns differ.</b>';
-      $('#bhDiag').innerHTML = diagHTML(S.chip, res) + (res.ok && S.design === 'mine' ? '<p class="small">Stamped in <a href="#mychip">your chip\'s passport</a>: on the bench.</p>' : '');
+      /* Ask the failing patterns again: a chip that answers differently the second time has an intermittent fault. */
+      let flaky = 0;
+      if (!res.ok) { const again = await twinTest(res.rows.filter(r => !r.ok).map(r => ({ ui: r.ui, uo: r.want })), S.client, { mask: S.chip.mask }); flaky = again.rows.filter((r, k) => r.got !== res.rows.filter(x => !x.ok)[k].got).length; }
+      $('#bhDiag').innerHTML = (flaky ? flakyHTML(flaky) : diagHTML(S.chip, res)) + (res.ok && S.design === 'mine' ? '<p class="small">Stamped in <a href="#mychip">your chip\'s passport</a>: on the bench.</p>' : '');
       if (res.ok && S.design === 'mine') stampChip('bench');
       $('#bhTag').textContent = res.ok ? 'Twin test passed' : 'Twin test: ' + res.fail + ' differ';
       S.ui = 0; await sendInputs();
@@ -251,7 +257,7 @@ export function init() {
       : S.design === 'mine' ? 'The design you are building in the <a href="#tiny">tiny chip studio</a>: ' + esc(S.proj.t) + '.' + (S.chip && S.proj.f && differsFromSpec(S.chip) ? ' <span class="muted">(It still differs from the project\'s specification; the studio\'s verify step shows where. The twin test compares the board with your design as written.)</span>' : '')
       : partById(S.design) ? 'A real chip you can buy for a few cents. ' + esc(S.proj.d) + (S.board === 'mpbench' ? ' The wiring is shown above, under the choice of board.' : ' Test the real one with an ESP32 or Pico: pick that board above.')
       : 'The tiny chip studio\'s <i>' + esc(S.proj.t) + '</i> project, solved. ' + esc(S.proj.d.split(/(?<=\.) /)[0]);
-    $('#bhDesignNote').innerHTML = note + (S.board === 'virtual' && S.chip ? '<label class="bhdef"><input type="checkbox" id="bhDefect"' + (S.defect ? ' checked' : '') + '> Make the virtual chip like a real one: give it a random manufacturing defect</label>' : '');
+    $('#bhDesignNote').innerHTML = note + (S.board === 'virtual' && S.chip ? '<div class="bhdef"><span class="small">Make the virtual chip like a real one:</span><div class="seg" role="group" aria-label="How real the virtual chip is">' + [['perfect', 'Perfect'], ['defect', 'A manufacturing defect'], ['loose', 'A loose wire']].map(([k, l]) => '<button type="button" data-real="' + k + '" aria-pressed="' + (S.real === k ? 'true' : 'false') + '">' + l + '</button>').join('') + '</div></div>' : '');
     $('#bhChipName').textContent = S.proj ? S.proj.t : 'chip';
     $('#bhGrid').innerHTML = ''; $('#bhDiag').innerHTML = ''; $('#bhRunTag').textContent = '';
     $('#bhTag').textContent = boardById(S.board).t + (S.client ? ' · connected' : '');

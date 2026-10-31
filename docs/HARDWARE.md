@@ -127,6 +127,14 @@ The pins avoid what boards need for starting up, flash memory and USB, but board
 
 The bench shows the wiring for each board profile. A part is described in the tiny-chip language with its pinout, so adding a 74HC08 (AND), 74HC86 (XOR) or 74HC283 (adder) is one entry.
 
+## Where the bench meets "Why perfect designs fail"
+
+The bench makes three real-world failures from the reliability topic (`#reality`) hands-on, on the virtual board and on real chips:
+
+- **Defects the test missed.** The faulty-chip puzzle has a test budget: try only some input patterns, see the fault coverage drop (`coverage()` in `src/hw/virtual.js`), and watch a faulty chip pass.
+- **Design bug or defect.** Some wafers come back with every chip made from a wrong design (`DESIGN_BUGS` in `src/hw/parts.js`): all fail the same way, which no test sorts out.
+- **Intermittent faults.** A loose wire leaves an input floating; the virtual chip then answers at random (`loose` in `virtualChip`). The bench asks the failing patterns again and says when the answers change. On a breadboard, pull one wire off a 74HC00 to see the real thing.
+
 ## Test without hardware
 
 - `node --test tests/hw.test.mjs` runs the protocol, the virtual board, twin testing, diagnosis and the demo-board adapter against its imitation.

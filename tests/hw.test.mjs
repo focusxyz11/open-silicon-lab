@@ -214,3 +214,50 @@ test('the installer writes the program through the raw prompt, then the board sp
   await assert.rejects(installProgram(loopback(() => ''), src, { timeout: 50 }), e => e.code === 'protocol');
   await assert.rejects(installProgram(tr, 'naïve', {}), e => e.code === 'input');
 });
+
+/* ---- Where the bench meets "Why perfect designs fail" ---- */
+import { budgetCases, coverage } from '../src/hw/virtual.js';
+import { DESIGN_BUGS } from '../src/hw/parts.js';
+
+test('a test budget: fewer patterns catch fewer defects, and all patterns catch them all', async () => {
+  for (const id of ['add2', 'seg', 'alu']) {
+    const p = P(id), chip = virtualChip(p, p.sol), N = 1 << p.ins.length;
+    assert.equal(coverage(chip, budgetCases(chip, N)), 1, id + ': the full test catches every visible stuck wire');
+    assert.ok(coverage(chip, budgetCases(chip, 1)) < 1, id + ': one pattern misses some');
+    let last = 0; for (let n = 1; n <= N; n *= 2) { const c = coverage(chip, budgetCases(chip, n)); assert.ok(c >= last, id + ' coverage never falls as the budget grows'); last = c; }
+    /* A smaller budget is part of a larger one. */
+    const small = budgetCases(chip, 4).map(c => c.ui), big = budgetCases(chip, 8).map(c => c.ui);
+    small.forEach(u => assert.ok(big.includes(u)));
+  }
+  /* Somewhere a defect escapes a small test: a faulty chip passes. */
+  const p = P('add2'); let escaped = false;
+  for (let s = 1; s < 40 && !escaped; s++) {
+    const T = tray(p, p.sol, { seed: s }); const bad = T.chips.find(c => c.fault);
+    const r = await twinTest(budgetCases(T.base, 2), connect(bad), { mask: T.base.mask }); if (r.ok) escaped = true;
+  }
+  assert.ok(escaped, 'a 2-pattern test lets some defect through');
+});
+
+test('a design bug fails every chip the same way; a defect fails one', async () => {
+  for (const id of Object.keys(DESIGN_BUGS)) {
+    const p = P(id), T = tray(p, p.sol, { bugCode: DESIGN_BUGS[id].code });
+    assert.ok(T.ok && T.design, id);
+    const results = [];
+    for (const c of T.chips) results.push(await twinTest(simCases(T.base), connect(c), { mask: T.base.mask }));
+    assert.ok(results.every(r => !r.ok), id + ': every chip fails');
+    const sig = r => r.rows.map(x => x.got).join(',');
+    assert.ok(results.every(r => sig(r) === sig(results[0])), id + ': and in exactly the same way');
+    assert.ok(DESIGN_BUGS[id].what.length > 20);
+  }
+  const p = P('seg'), T = tray(p, p.sol, { seed: 9 }); let fails = 0;
+  for (const c of T.chips) if (!(await twinTest(simCases(T.base), connect(c), { mask: T.base.mask })).ok) fails++;
+  assert.equal(fails, 1, 'a defect wafer has one failing chip');
+});
+
+test('a loose wire makes the chip change its mind', () => {
+  const p = P('add2'), chip = virtualChip(p, p.sol, { loose: 1, seed: 5 });
+  const answers = new Set(); for (let k = 0; k < 40; k++) answers.add(chip.eval(0));
+  assert.ok(answers.size > 1, 'the same input gives different answers');
+  const fixed = virtualChip(p, p.sol); const once = new Set(); for (let k = 0; k < 10; k++) once.add(fixed.eval(0));
+  assert.equal(once.size, 1, 'a chip without a loose wire always answers the same');
+});

@@ -1248,6 +1248,12 @@
  "changes": [
   {
    "date": "2026-10-31",
+   "title": "The bench meets Why perfect designs fail",
+   "summary": "Three real-world failures, hands-on: give the factory test a small budget and watch a defect escape, sort a wafer with a design bug from one with a broken chip, and pull a wire loose to see a chip change its mind. The reliability topic now points to each experiment.",
+   "url": ""
+  },
+  {
+   "date": "2026-10-31",
    "title": "One bench program for many boards",
    "summary": "An open MicroPython program turns an ESP32, a Raspberry Pi Pico or another MicroPython board into a pin driver for the bench, and the page can install it with no tools. Test a real 74HC00 (four NAND gates) on a breadboard against its simulation, with the wiring shown for each board. Any board can now be checked against the Open Bench Protocol. Two new facts on cheap RISC-V chips.",
    "url": ""

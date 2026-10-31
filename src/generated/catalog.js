@@ -896,6 +896,8 @@ export const ANCHORS = {
   "trVgO": "transistor",
   "trYears": "transistor",
   "transistor": "transistor",
+  "tyBudget": "bench",
+  "tyCov": "bench",
   "tyNew": "bench",
   "tyProj": "bench",
   "tyStep": "bench",

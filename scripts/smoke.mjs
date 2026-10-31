@@ -149,11 +149,20 @@ async function check(viewport) {
   await page.click('#bhDesign [data-d="add2"]'); await page.waitForTimeout(150);
   await page.click('#bhRun'); await page.waitForTimeout(400);
   if (!/All 16 patterns match/.test(await page.textContent('#bhRunTag'))) problems.push(tag + 'bench: the virtual 2-bit adder should pass its twin test');
-  await page.check('#bhDefect'); await page.waitForTimeout(150);
+  await page.click('#bhDesignNote [data-real="defect"]'); await page.waitForTimeout(150);
   await page.click('#bhRun'); await page.waitForTimeout(400);
   if (!/differ/.test(await page.textContent('#bhRunTag'))) problems.push(tag + 'bench: a planted defect should fail the twin test');
   if (!(await page.$('#bhDiag .callout'))) problems.push(tag + 'bench: no diagnosis after a failed twin test');
-  await page.uncheck('#bhDefect');
+  /* A loose wire: the chip changes its mind, and the bench says so. */
+  await page.click('#bhDesignNote [data-real="loose"]'); await page.waitForTimeout(150);
+  let flaky = false;
+  for (let k = 0; k < 4 && !flaky; k++) { await page.click('#bhRun'); await page.waitForTimeout(500); flaky = /changed its mind|differ/.test(await page.textContent('#lab-bench-1')); }
+  if (!flaky) problems.push(tag + 'bench: a loose wire should make the twin test fail');
+  await page.click('#bhDesignNote [data-real="perfect"]'); await page.waitForTimeout(150);
+  /* A small test budget lowers the coverage it reports. */
+  await page.click('#tyBudget [data-n="2"]');
+  if (!/2 of 16/.test(await page.textContent('#tyCov'))) problems.push(tag + 'bench: the test budget did not change the coverage line');
+  await page.click('#tyBudget [data-n="0"]');
   await page.$$eval('#tyTray [data-test]', bs => bs.forEach(b => b.click())); await page.waitForTimeout(400);
   if ((await page.$$('#tyTray .tychip.fail')).length !== 1) problems.push(tag + 'bench: the tray should hold exactly one faulty chip');
   await page.click('#bhBoards [data-b="mpbench"]'); await page.click('#bhDesign [data-d="hc00"]'); await page.waitForTimeout(150);

@@ -40,11 +40,13 @@
     <div class="lab">
       <header><b>Find the faulty chip</b><span id="tyTag">–</span></header>
       <div class="body">
-        <p>Four chips came off the same wafer. One has a manufacturing defect: a wire stuck at 0 or stuck at 1. Twin-test each chip, decide which one is faulty, then use the wrong answers to name the broken wire.</p>
+        <p>Four chips came off the same wafer, and something is wrong. Usually one chip has a manufacturing defect: a wire stuck at 0 or stuck at 1. But not always. Twin-test the chips, decide what went wrong, then use the wrong answers to name the broken wire.</p>
         <div class="row"><div class="seg" id="tyProj" role="group" aria-label="Design on the wafer"></div><button type="button" class="btn" id="tyNew">New wafer</button></div>
+        <div class="row"><span class="small">Test budget</span><div class="seg" id="tyBudget" role="group" aria-label="How many input patterns the test may try"></div></div>
+        <p class="small muted" id="tyCov"></p>
         <div class="tytray" id="tyTray"></div>
         <div id="tyStep"></div>
-        <p class="note">The defect model is the single stuck-at fault: one wire held at 0 or 1, the model test engineers have used since the late 1950s because it catches most real defects. Real defects also include wires that are slow, shorted to a neighbor or only fail when hot, which need other tests.</p>
+        <p class="note">A design bug is in every chip, a defect in one: that difference is the first question a test engineer asks. The defect model is the single stuck-at fault: one wire held at 0 or 1, the model test engineers have used since the late 1950s because it catches most real defects. Real defects also include wires that are slow, shorted to a neighbor or only fail when hot, which need other tests.</p>
       </div>
     </div>
 

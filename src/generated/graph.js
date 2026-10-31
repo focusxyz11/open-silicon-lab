@@ -279,6 +279,8 @@ export const CHALLENGES = [
   {"topic":"tiny","kind":"Design","t":"Pack it tight","d":"Find the highest packing density that still routes.","href":"#tiny"},
   {"topic":"bench","kind":"Experiment","t":"Twin-test your own chip","d":"Run every input pattern on the board and on the simulation, and make them agree.","href":"#lab-bench-1"},
   {"topic":"bench","kind":"Puzzle","t":"Find the faulty chip","d":"One chip in the tray has a manufacturing defect. Find it, then name the broken wire.","href":"#lab-bench-2"},
+  {"topic":"bench","kind":"Experiment","t":"Let a defect escape","d":"Shrink the test budget until a faulty chip passes, then work out how many patterns it takes to catch it again.","href":"#lab-bench-2"},
+  {"topic":"bench","kind":"Puzzle","t":"Design bug or defect?","d":"When a wafer comes back wrong, decide whether one chip is broken or the design itself is.","href":"#lab-bench-2"},
   {"topic":"riscv","kind":"Puzzle","t":"Power on","d":"Put a number into a register.","href":"#riscv-1"},
   {"topic":"riscv","kind":"Puzzle","t":"Load, add, store","d":"Read two numbers from memory and store their sum.","href":"#riscv-2"},
   {"topic":"riscv","kind":"Puzzle","t":"Loops","d":"Add 1 to N with a branch loop.","href":"#riscv-3"},
