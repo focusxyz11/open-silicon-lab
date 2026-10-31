@@ -72,3 +72,10 @@ table.tt.bhproto th,table.tt.bhproto td{text-align:left}
   .bhcard[aria-checked="true"]{grid-column:1/-1}
   .bhcard[aria-checked="true"] small{display:block}
 }
+.bhchecks{display:grid;gap:6px;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--surface)}
+.bhchecks code{font:12px var(--mono)}
+.bhwire{display:grid;gap:8px;padding:12px;border:1px dashed var(--line);border-radius:8px}
+.bhwire .seg button{font-size:12.5px;padding:6px 9px}
+table.tt.bhwt{max-width:460px}
+table.tt.bhwt td{text-align:left}
+table.tt.bhwt small{color:var(--muted)}

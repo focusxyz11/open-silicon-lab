@@ -1219,9 +1219,39 @@
    "url": "https://fossi-foundation.org/blog/2024-01-09-ecl70",
    "value": "A complete open FPGA flow (Yosys, nextpnr) runs inside a web browser",
    "verified": "2026-10-31"
+  },
+  {
+   "id": "esp32-c3",
+   "topic": "bench",
+   "detail": "Espressif's ESP32-C3 is a Wi-Fi and Bluetooth microcontroller built on a RISC-V core; boards with it cost a few dollars and run MicroPython.",
+   "kind": "reported",
+   "label": "ESP32-C3",
+   "source": "Espressif",
+   "status": "current",
+   "url": "https://www.espressif.com/en/products/devkits/esp32-c3-devkitm-1/overview",
+   "value": "Single-core 32-bit RISC-V at 160 MHz",
+   "verified": "2026-10-31"
+  },
+  {
+   "id": "ch32v003",
+   "topic": "bench",
+   "detail": "WCH's CH32V003 has 2 KB of SRAM and 16 KB of flash; a development board was offered for $6.90 at launch in 2022.",
+   "kind": "reported",
+   "label": "A RISC-V chip for under 10 cents",
+   "source": "Hackster.io",
+   "status": "current",
+   "url": "https://www.hackster.io/news/wch-launches-a-sub-10-risc-v-microcontroller-while-a-6-90-dev-board-gets-you-started-90b1ffd7490a",
+   "value": "WCH CH32V003: a 32-bit RISC-V microcontroller for less than 10 cents",
+   "verified": "2026-10-31"
   }
  ],
  "changes": [
+  {
+   "date": "2026-10-31",
+   "title": "One bench program for many boards",
+   "summary": "An open MicroPython program turns an ESP32, a Raspberry Pi Pico or another MicroPython board into a pin driver for the bench, and the page can install it with no tools. Test a real 74HC00 (four NAND gates) on a breadboard against its simulation, with the wiring shown for each board. Any board can now be checked against the Open Bench Protocol. Two new facts on cheap RISC-V chips.",
+   "url": ""
+  },
   {
    "date": "2026-10-31",
    "title": "Your bench: real hardware, step 0",

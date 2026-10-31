@@ -3,9 +3,9 @@
    microcontroller it uses. One command per line, one reply per line, plain ASCII. Over a serial
    port the speed is 115200 baud. The full description, for firmware authors, is docs/HARDWARE.md.
 
-     HELLO          →  OK OBP/0 board=<name> in=8 out=8 [clk=1] [key=value …]
-     IN <hh>        →  OK            set the 8 input pins (ui_in) to the hex value hh
-     OUT?           →  OK <hh>       read the 8 output pins (uo_out)
+     HELLO          →  OK OBP/0 board=<name> in=<n> out=<m> [clk=1] [key=value …]
+     IN <hh>        →  OK            set the input pins (ui_in, up to 8) to the hex value hh
+     OUT?           →  OK <hh>       read the output pins (uo_out, up to 8)
      CLK [n]        →  OK            give the design n clock pulses (default 1)
      RST            →  OK            pulse reset
      LIST?          →  OK <a> <b> …  optional: the designs the board can select
@@ -27,7 +27,7 @@ export function parseHello(line) {
   return info;
 }
 
-/* A reference device. model: { board, eval(ui) → uo, clock?(ui), reset?(), designs?, select?(name) }.
+/* A reference device. model: { board, ins?, outs?, eval(ui) → uo, clock?(ui), reset?(), designs?, select?(name) }.
    Returns handle(line) → reply. Combinational models only need eval. */
 export function obpDevice(model) {
   let ui = 0;
@@ -36,7 +36,7 @@ export function obpDevice(model) {
     const [cmd, arg] = line.split(/\s+/, 2); const C = cmd.toUpperCase();
     try {
       switch (C) {
-        case 'HELLO': return 'OK OBP/' + OBP_VERSION + ' board=' + (model.board || 'unknown') + ' in=8 out=8' + (model.clock ? ' clk=1' : '');
+        case 'HELLO': return 'OK OBP/' + OBP_VERSION + ' board=' + (model.board || 'unknown') + ' in=' + (model.ins || 8) + ' out=' + (model.outs || 8) + (model.clock ? ' clk=1' : '');
         case 'IN': { if (!/^[0-9a-fA-F]{1,2}$/.test(arg || '')) return 'ERR IN needs a hex value 00-FF'; ui = parseInt(arg, 16); return 'OK'; }
         case 'OUT?': return 'OK ' + hex2(model.eval(ui));
         case 'CLK': { const n = arg === undefined ? 1 : +arg; if (!(n >= 1 && n <= 1e6)) return 'ERR CLK needs a count 1-1000000'; if (model.clock) for (let k = 0; k < n; k++) model.clock(ui); return 'OK'; }
@@ -52,16 +52,22 @@ export function obpDevice(model) {
 /* A client: the same small interface every bench board offers.
    transport: { write(text), readUntil(token, ms) → text before token }. */
 export function obpClient(transport, { timeout = 1500 } = {}) {
-  async function ask(cmd) {
+  /* Send one line and return the reply line as it is. */
+  async function raw(cmd) {
     await transport.write(cmd + '\n');
     let reply = '';
     for (let k = 0; k < 5 && !reply; k++) reply = (await transport.readUntil('\n', timeout)).replace(/\r/g, '').trim();
+    return reply;
+  }
+  async function ask(cmd) {
+    const reply = await raw(cmd);
     if (/^ERR\b/.test(reply)) throw Object.assign(new Error(reply.slice(4) || 'device error'), { code: 'device', reply });
     if (!/^OK\b/.test(reply)) throw Object.assign(new Error('unexpected reply: ' + reply), { code: 'protocol', reply });
     return reply;
   }
   return {
     kind: 'obp',
+    raw,
     async hello() { const info = parseHello(await ask('HELLO')); if (!info) throw Object.assign(new Error('not an OBP board'), { code: 'protocol' }); return info; },
     async setIn(v) { await ask('IN ' + hex2(v)); },
     async getOut() { const r = await ask('OUT?'); const m = /^OK ([0-9A-Fa-f]{1,2})$/.exec(r); if (!m) throw Object.assign(new Error('bad OUT? reply'), { code: 'protocol' }); return parseInt(m[1], 16); },

@@ -107,3 +107,110 @@ test('the board list is complete and honest', () => {
   });
   assert.equal(BOARDS.find(b => b.id === 'virtual').status, 'ready');
 });
+
+/* ---- One program for many boards: the MicroPython firmware, the installer, real parts ---- */
+import { spawn, spawnSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
+import { CHECKS, conform } from '../src/hw/conformance.js';
+import { installProgram, fakeMicroPython } from '../src/hw/mpinstall.js';
+import { PARTS, asProject } from '../src/hw/parts.js';
+import { PROFILES, wiring } from '../src/hw/profiles.js';
+
+const FW = new URL('../src/hw/firmware/obp_bench.py', import.meta.url);
+const HOST = new URL('./fixtures/firmware_host.py', import.meta.url);
+const hasPython = spawnSync('python3', ['--version']).status === 0;
+
+/* A transport to a program's stdin and stdout, like a serial port to a board. */
+function processTransport(args) {
+  const child = spawn('python3', args, { stdio: ['pipe', 'pipe', 'inherit'] });
+  const tr = loopback(() => '');
+  let buf = '', wake = null; let open = true;
+  child.stdout.on('data', d => { buf += d.toString(); if (wake) { wake(); wake = null; } });
+  child.on('exit', () => { open = false; if (wake) wake(); });
+  return {
+    write: async t => { child.stdin.write(t); },
+    async readUntil(token, ms = 3000) {
+      const end = Date.now() + ms;
+      for (;;) {
+        const i = buf.indexOf(token); if (i >= 0) { const o = buf.slice(0, i); buf = buf.slice(i + token.length); return o; }
+        if (!open) throw Object.assign(new Error('closed'), { code: 'closed' });
+        if (Date.now() > end) throw Object.assign(new Error('timeout'), { code: 'timeout' });
+        await new Promise(r => { wake = r; setTimeout(r, 50); });
+      }
+    },
+    close() { child.stdin.end(); child.kill(); tr.close(); }
+  };
+}
+
+test('the JavaScript reference device passes every conformance check', async () => {
+  const c = obpClient(loopback(lineResponder(obpDevice({ board: 'ref', eval: ui => ui }))));
+  const r = await conform(c.raw);
+  assert.ok(r.ok, JSON.stringify(r.checks.filter(x => !x.pass)));
+  assert.equal(r.checks.length, CHECKS.length);
+  /* A broken firmware is caught. */
+  const sloppy = obpClient(loopback(lineResponder(line => (/^HELLO/i.test(line) ? 'OK OBP/0 board=x in=8 out=8' : 'OK'))));
+  const s = await conform(sloppy.raw);
+  assert.ok(!s.ok); assert.ok(s.checks.find(x => x.id === 'in-bad' && !x.pass));
+});
+
+test('the MicroPython firmware passes the conformance check and twin-tests a wired 74HC00', { skip: !hasPython && 'python3 not found' }, async () => {
+  const tr = processTransport([HOST.pathname, 'pico']);
+  try {
+    const c = obpClient(tr, { timeout: 3000 });
+    const info = await c.hello();
+    assert.equal(info.board, 'host-pico'); assert.equal(info.in, '8'); assert.equal(info.out, '8');
+    assert.ok((await conform(c.raw)).ok);
+    assert.deepEqual(await c.list(), ['pins', 'demo-74hc00']);
+    const part = PARTS.find(p => p.id === 'hc00'), chip = virtualChip(asProject(part), part.code);
+    const res = await twinTest(simCases(chip), c, { mask: chip.mask });
+    assert.ok(res.ok, 'the pretend 74HC00 matches the design on all 256 patterns');
+    await c.select('demo-74hc00');
+    assert.ok((await twinTest(simCases(chip), c, { mask: chip.mask })).ok, 'the built-in demo matches too');
+  } finally { tr.close(); }
+  /* A damaged chip: gate 3's output stuck at 0. The bench should name that wire. */
+  const bad = processTransport([HOST.pathname, 'pico', '--broken']);
+  try {
+    const c = obpClient(bad, { timeout: 3000 }); await c.hello();
+    const part = PARTS.find(p => p.id === 'hc00'), chip = virtualChip(asProject(part), part.code);
+    const res = await twinTest(simCases(chip), c, { mask: chip.mask });
+    assert.ok(!res.ok);
+    const sus = diagnose(chip, res.rows);
+    assert.ok(sus.some(f => f.v === 0 && f.where.outs.includes('y3')), JSON.stringify(sus.map(f => f.where)));
+  } finally { bad.close(); }
+  /* The ESP32-C3 profile has 4 inputs and 4 outputs, and says so. */
+  const c3 = processTransport([HOST.pathname, 'esp32c3']);
+  try { const info = await obpClient(c3).hello(); assert.equal(info.in, '4'); assert.equal(info.out, '4'); } finally { c3.close(); }
+});
+
+test('the page\'s pin table matches the firmware, and every part wires up', () => {
+  const src = readFileSync(FW, 'utf8');
+  for (const [name, p] of Object.entries(PROFILES)) {
+    const m = new RegExp("'" + name + "':\\s*\\{'ui': \\[([\\d, ]+)\\], 'uo': \\[([\\d, ]+)\\], 'clk': (\\w+), 'rst': (\\w+)\\}").exec(src);
+    assert.ok(m, name + ' is in the firmware');
+    assert.deepEqual(m[1].split(',').map(Number), p.ui, name + ' ui');
+    assert.deepEqual(m[2].split(',').map(Number), p.uo, name + ' uo');
+    assert.equal(m[3] === 'None' ? null : +m[3], p.clk); assert.equal(m[4] === 'None' ? null : +m[4], p.rst);
+  }
+  for (const part of PARTS) {
+    const chip = virtualChip(asProject(part), part.code); assert.ok(chip.ok, part.id);
+    [...part.ins, ...part.outs].forEach(n => assert.ok(part.pins[n] >= 1 && part.pins[n] <= 14, part.id + ' ' + n));
+    assert.equal(new Set(Object.values(part.pins)).size, Object.keys(part.pins).length, part.id + ': no pin used twice');
+    assert.ok(wiring('pico', part));
+  }
+  assert.equal(wiring('esp32c3', PARTS.find(p => p.id === 'hc00')), null, 'four NAND gates need more pins than an ESP32-C3 profile has');
+  assert.ok(wiring('esp32c3', PARTS.find(p => p.id === 'hc00x1')));
+});
+
+test('the installer writes the program through the raw prompt, then the board speaks the protocol', async () => {
+  const src = readFileSync(FW, 'utf8');
+  const fake = fakeMicroPython(() => obpDevice({ board: 'installed', eval: ui => ui }));
+  const steps = [];
+  const tr = loopback(t => fake.respond(t));
+  const r = await installProgram(tr, src, { onStep: s => steps.push(s) });
+  assert.equal(fake.files['main.py'], src, 'the file on the board is the program, byte for byte');
+  assert.equal(r.bytes, src.length);
+  assert.deepEqual([...new Set(steps)], ['stop', 'raw', 'write', 'reset']);
+  const c = obpClient(tr); assert.equal((await c.hello()).board, 'installed');
+  await assert.rejects(installProgram(loopback(() => ''), src, { timeout: 50 }), e => e.code === 'protocol');
+  await assert.rejects(installProgram(tr, 'naïve', {}), e => e.code === 'input');
+});
