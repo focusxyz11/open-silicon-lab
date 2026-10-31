@@ -10,6 +10,7 @@ import { initMyChip } from './app/mychip.js';
 import { initStudioLinks } from './app/studio.js';
 import { renderMapShell } from './app/map.js';
 import { initGuide } from './app/guide.js';
+import { initHints } from './app/hints.js';
 import { text } from './app/loader.js';
 import { issueURL, REPO_URL } from './app/config.js';
 import { loadLang, applyTexts, t } from './core/i18n.js';
@@ -39,5 +40,6 @@ async function boot() {
   initAsk();
   initRouter();
   initGuide();
+  initHints();
 }
 boot().catch(e => { const l = document.getElementById('loading'); if (l) { l.hidden = false; l.textContent = /* i18n-ok: the texts may be what failed to load */ 'The lab could not load: ' + e.message + '. If you opened index.html directly from disk, run a local server instead (see README).'; } console.error(e); });

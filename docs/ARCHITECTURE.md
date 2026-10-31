@@ -183,9 +183,13 @@ Done in stages: the shell's interface text (done), then the shared data (bands, 
 threads) and each topic's `topic.json` text, then the simulations' own text and the content pages.
 Instructions sent to Claude by the tutor stay in English and ask it to answer in the reader's language.
 
+## First visits: doors, tips and an optional tour
+
+Nothing opens over the page by itself. The map's hero offers three ways to start (Build, Break, Imagine), each a link straight into a challenge. `src/app/hints.js` shows small tips at the moment a feature becomes useful: select a box when the map first comes into view, the lens bar after a first selection, the explanation level on a first topic page, the year on a second. A tip never blocks anything, only one shows at a time, and using a feature marks its tip as seen even if it never appeared. "Turn tips off" stops them; the footer's "Show tips again" brings them back. The four-step tour (`src/app/guide.js`) opens only when someone asks for it. To add a tip: an entry in `HINTS` (what to point at, and the click that means the visitor found the feature), a text `hint.<id>` in `src/i18n/en.json`, and a moment to `show()` it.
+
 ## Progress and state
 
-Everything is per-browser `localStorage`: explanation level, topics visited, quiz answers, RISC-V code and stars, solved What if? puzzles. Nothing is sent anywhere. Progress is feedback, never a gate.
+Everything is per-browser `localStorage`: explanation level, topics visited, quiz answers, RISC-V code and stars, which tips have been seen, solved What if? puzzles. Nothing is sent anywhere. Progress is feedback, never a gate.
 
 ## Facts
 
