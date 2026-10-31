@@ -14,7 +14,7 @@ test('every project and process gives a complete passport', () => {
     assert.ok(p.tr > 0 && p.cells > 0 && p.area > 0);
     assert.ok(p.yieldPct > 99 && p.yieldPct <= 100, 'tiny circuits nearly always work');
     const J = journey(p);
-    assert.equal(J.length, 12);
+    assert.equal(J.length, 13);
     for (const s of J) { assert.ok(topics.has(s.topic), s.key); assert.ok(s.d.length > 20, s.key); }
   }
 });

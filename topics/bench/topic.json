@@ -1,0 +1,126 @@
+{
+  "id": "bench",
+  "title": "Your bench: real hardware",
+  "band": "design",
+  "order": 45,
+  "kind": "build",
+  "summary": "Test a chip the way engineers do: drive its pins, compare it with the simulation, and track down defects. On screen today, on real boards as they join.",
+  "labs": [
+    "bench",
+    "tray"
+  ],
+  "links": [
+    {
+      "kind": "feeds",
+      "from": "tiny",
+      "why": "your finished design goes on the bench to be tested"
+    },
+    {
+      "kind": "builds-on",
+      "to": "yield",
+      "why": "testing sorts good chips from defective ones"
+    },
+    {
+      "kind": "causes",
+      "to": "reality",
+      "why": "a real chip can disagree with its simulation",
+      "if": "the board and the simulation disagree on one input pattern",
+      "then": "either the chip has a defect or the simulation left something out, and both are worth finding"
+    }
+  ],
+  "ideas": [
+    {
+      "idea": "checking-is-hard",
+      "how": "a defect shows up only on some input patterns, so the test must try them all"
+    },
+    {
+      "idea": "layers-hide-detail",
+      "how": "the same test runs on a virtual board and a real one: the protocol hides which it is"
+    }
+  ],
+  "tradeoffs": [
+    {
+      "tradeoff": "safety-cost",
+      "how": "trying every input pattern finds every single stuck wire, but test time doubles with each extra input",
+      "try": "#lab-bench-2"
+    }
+  ],
+  "measures": [
+    {
+      "measure": "yield",
+      "how": "each chip that fails the twin test is one that will not ship"
+    }
+  ],
+  "time": {
+    "then": [
+      [
+        1971,
+        "Chips are tested by large automatic test machines in factories. Nobody outside a chip company can test a chip of their own."
+      ],
+      [
+        2022,
+        "Community shuttles such as Tiny Tapeout (since 2022) send small chips home on demo boards, so anyone can test a design they made."
+      ],
+      [
+        2026,
+        "Browsers can talk to boards over USB (Web Serial in Chrome and Edge, and in Firefox from May 2026), so a web page can be a test bench."
+      ]
+    ]
+  },
+  "challenges": [
+    {
+      "kind": "Experiment",
+      "title": "Twin-test your own chip",
+      "task": "Run every input pattern on the board and on the simulation, and make them agree.",
+      "href": "#lab-bench-1"
+    },
+    {
+      "kind": "Puzzle",
+      "title": "Find the faulty chip",
+      "task": "One chip in the tray has a manufacturing defect. Find it, then name the broken wire.",
+      "href": "#lab-bench-2"
+    }
+  ],
+  "learn": {
+    "plain": "A test bench is like a doctor's check-up for a chip: you give it every input it could see, write down what it answers, and compare with what a healthy chip would say. If one answer is wrong, the pattern of wrong answers points to where the chip is broken.",
+    "engineer": "A twin test applies every input vector to the device under test and to the reference model and compares the outputs bit by bit. With a single stuck-at fault model, fault diagnosis searches for the faults whose simulated responses match the observed ones on every vector. Real testers add timing (at-speed tests), scan chains for sequential logic and analog measurements, which this bench leaves out.",
+    "quiz": [
+      {
+        "q": "A 2-bit adder has 4 inputs. How many input patterns does an exhaustive test try?",
+        "options": [
+          "4",
+          "8",
+          "16",
+          "256"
+        ],
+        "answer": 2,
+        "why": "Each input can be 0 or 1, so 4 inputs give 2 × 2 × 2 × 2 = 16 patterns."
+      },
+      {
+        "q": "Two chips fail the same test patterns in the same way. What does that suggest?",
+        "options": [
+          "The test is broken",
+          "They probably share the same defect",
+          "Both chips are fine"
+        ],
+        "answer": 1,
+        "why": "The wrong answers are a fingerprint: the same fingerprint usually means the same broken wire."
+      },
+      {
+        "q": "Why does the lab's virtual board speak the same protocol as a real board?",
+        "options": [
+          "To look realistic",
+          "So the same test code works on both, and new boards can join without changing it",
+          "Because browsers require it"
+        ],
+        "answer": 1,
+        "why": "One small, open protocol lets any board join the bench, and the virtual board keeps that path tested every day."
+      }
+    ],
+    "ask": [
+      "How do factories test chips with millions of transistors if they cannot try every input?",
+      "What is a scan chain?",
+      "How would I make my own board speak the Open Bench Protocol?"
+    ]
+  }
+}

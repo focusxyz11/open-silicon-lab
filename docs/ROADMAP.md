@@ -31,11 +31,12 @@ Step by step, so quality stays high:
 5. Credits on every lab, and a path from learner to maintainer.
 
 ### Plug in real hardware
-Step by step, once the software side is solid:
-1. Run the exported Tiny Tapeout designs on an FPGA board and compare with the simulator (WebSerial or WebUSB, in Chrome).
-2. Talk to a Tiny Tapeout demo board: set its inputs from the lab, read its outputs, and compare them live with your simulated chip.
-3. A small RISC-V board running the same programs as the RISC-V lab.
-4. Community shuttles: gather learners' designs into one submission and publish what comes back.
+Hardware stays a bonus, never a gate, and the bench stays open to any board. Details and the protocol: [HARDWARE.md](HARDWARE.md).
+0. A virtual bench: twin-test a design against its simulation, diagnose defects, and an open protocol any board can speak. *Shipped: `#bench`. The Tiny Tapeout demo board and any Open Bench board can be tried as experiments.*
+1. A Raspberry Pi Pico 2 (two RISC-V cores, about $5) running the same programs as the RISC-V lab.
+2. The Tiny Tapeout demo board confirmed on real boards: set inputs from the lab, read outputs, compare live with your simulated chip.
+3. Run the exported Tiny Tapeout designs on an FPGA board, with the open toolchain in the browser.
+4. Community shuttles: gather learners' designs into one submission and test what comes back on the bench.
 
 ### Also on the list
 - Story campaigns with roles: founder, fab manager, policymaker.

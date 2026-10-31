@@ -11,6 +11,7 @@ topics/README.md      the topic contract, and how to start a new topic
 src/data/             the fixed structure (bands, link kinds, big ideas, threads) and shared data
                       (glossary, facts, timeline, open problems)
 src/engines/          pure, tested models with no DOM (RISC-V, tiny chip, reliability, paradigms, …)
+src/hw/               the bench: Open Bench Protocol, transports, board adapters, twin testing (docs/HARDWARE.md)
 src/app/              the shell: loader, router, map, views, learning layer, facts, tutor
 src/generated/        graph.js and catalog.js, generated from topics/ by `npm run catalog` — never edited by hand
 src/labs/             the two simulations that live on the map page itself (zoom, time machine)
@@ -150,6 +151,10 @@ in `base.css` is used by only one topic, and says where to move it.
 ## What if? The map as a simulator
 
 `src/data/ripple.js` is a small causal model: five levers, about thirty indicators (each sits on one map topic) and rules of the form *from → to, strength, wire label, reason*. `src/engines/ripple.js` sorts the indicators so every input comes first (a loop is an error), then computes each one as the sum of strength × change over its inputs, or the smallest input for `MIN` indicators (AI chips shipped follow whichever of demand or HBM is scarcer). It also returns each indicator's contributions and its distance from a lever, which the map uses for the cause chain and the ripple animation. `src/app/whatif.js` draws the lever panel, the badges and the side panel; `src/app/map.js` switches the mode and draws the causal wires. Directions follow the facts each lever cites; strengths are illustrative, and `tests/ripple.test.mjs` checks the directions against what happened in 2021–2026, that the graph has no loops and that every puzzle has a solution. To add a rule, add one line to `RULES` with a reason a learner can read.
+
+## The bench and real hardware
+
+`src/hw/` is the one place that talks to boards. Boards speak the Open Bench Protocol (`obp.js`), a few text lines over any transport (`transport.js`: Web Serial, or an in-memory loopback); a board with its own commands gets a small adapter (`ttdemo.js`). The virtual board (`virtual.js`) turns a tiny-chip design into a gate-level chip that answers the same protocol through the loopback, so the real code path runs for every visitor. `twin.js` compares a board with the simulation pattern by pattern and diagnoses single stuck-at defects. The core keeps no reader-facing sentences: errors carry codes, and the `bench` topic turns them into words. `boards.js` lists every board with an honest status. How to add a board, the protocol and the steps ahead: [HARDWARE.md](HARDWARE.md).
 
 ## The time machine
 

@@ -58,7 +58,8 @@ export function journey(p) {
     { key: 'test', topic: 'tiny', href: '#lab-tiny-1', t: 'Test', d: 'Every copy is tested with up to ' + p.cases + ' input patterns before it ships.' },
     { key: 'cost', topic: 'economics', href: '#economics', t: 'Cost', d: p.shuttle ? 'On a shared shuttle you pay for a small tile, not the $' + (p.maskCostM >= 1 ? p.maskCostM + ' million' : Math.round(p.maskCostM * 1000) + 'k') + ' mask set. That is what makes student chips possible.' : 'No low-cost shuttles at 3 nm: a full mask set costs about $' + p.maskCostM + ' million, so only large companies tape out here.' },
     { key: 'era', topic: 'future', href: '#timeMachine', t: 'History', d: 'Your process reached volume production in ' + p.year + '. Your ' + n0(p.tr) + ' transistors are ' + (p.vs4004 >= 1 ? p.vs4004.toFixed(1) + ' times' : Math.round(p.vs4004 * 100) + '% of') + ' the 1971 Intel 4004\'s 2,300; NVIDIA Rubin has ' + big(p.vsRubin) + ' times more.' },
-    { key: 'real', topic: 'tiny', href: '#lab-tiny-1', t: 'Real silicon', d: p.openPdk ? 'Exportable as a Tiny Tapeout project: real Verilog for Yosys and OpenROAD, on an open process.' : 'At ' + p.nodeName + ' there is no open design kit or community shuttle; export it at 130 or 180 nm to make it for real.' }
+    { key: 'real', topic: 'tiny', href: '#lab-tiny-1', t: 'Real silicon', d: p.openPdk ? 'Exportable as a Tiny Tapeout project: real Verilog for Yosys and OpenROAD, on an open process.' : 'At ' + p.nodeName + ' there is no open design kit or community shuttle; export it at 130 or 180 nm to make it for real.' },
+    { key: 'bench', topic: 'bench', href: '#lab-bench-1', t: 'On the bench', d: 'Twin-test it on a board: all ' + p.cases + ' input patterns, board against simulation, the way finished chips are checked. The virtual board works today; real boards join step by step.' }
   ];
 }
 
@@ -76,6 +77,7 @@ export function chipLine(topic, p) {
     yield: J.yield,
     economics: J.cost,
     future: J.era,
+    bench: J.bench,
     transistor: 'At ' + p.nodeName + ' your ' + n0(p.tr) + ' transistors are ' + p.shape + '.',
     physics: 'Your chip starts as one spot on a ' + p.wafer + ' mm silicon wafer, among ' + big(p.copiesPerWafer) + ' possible copies.',
     architecture: 'Your chip has ' + p.cells + ' cells. A CPU is the same kind of logic, a few million to billions of times larger.',

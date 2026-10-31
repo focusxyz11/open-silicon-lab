@@ -22,6 +22,8 @@ function design() {
   try { const j = JSON.parse(localStorage.getItem(TKEY) || 'null'); if (j && typeof j === 'object') { const p = TC.PROJ[Number.isInteger(j.p) ? j.p : 0] || TC.PROJ[0]; return { p: p.id, code: j.code && typeof j.code[p.id] === 'string' ? j.code[p.id] : p.starter, node: NODES.includes(j.node) ? j.node : '130', lib: j.lib === 'nand' ? 'nand' : 'basic', util: +j.util || 0.5 }; } } catch (e) { /* ignore */ }
   const p = TC.PROJ[0]; return { p: p.id, code: p.starter, node: '130', lib: 'basic', util: 0.5 };
 }
+/* The design itself: project id, code, process, library. The bench tests it on a board. */
+export const chipDesign = () => ({ ...design() });
 export function publishChip(d) {
   const same = live && live.p === d.p && live.code === d.code && live.node === d.node && live.lib === d.lib && live.util === d.util;
   live = { ...d }; if (same) return;

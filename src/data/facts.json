@@ -1171,9 +1171,63 @@
    "url": "https://www.monolithicpower.com/jp/learning/resources/automotive-electronics-reliability-testing-starts-and-ends-with-the-mission-profile",
    "value": "15 years or more",
    "verified": "2026-10-30"
+  },
+  {
+   "id": "pico2-riscv",
+   "topic": "bench",
+   "detail": "The RP2350 has two Arm Cortex-M33 cores and two Hazard3 RISC-V cores; either pair can run the board.",
+   "kind": "reported",
+   "label": "Raspberry Pi Pico 2",
+   "source": "CNX Software",
+   "status": "current",
+   "url": "https://www.cnx-software.com/2024/08/08/raspberry-pi-pico-2-raspberry-pi-rp2350-dual-core-risc-v-or-arm-cortex-m33-microcontroller/",
+   "value": "About $5, with two RISC-V cores (Hazard3) in its RP2350",
+   "verified": "2026-10-31"
+  },
+  {
+   "id": "tt-demoboard",
+   "topic": "bench",
+   "detail": "The board's RP2040 selects which design on the chip is active and can drive its inputs and clock; the Commander web app talks to it over Web Serial, and a Python prompt offers a ready tt object.",
+   "kind": "reported",
+   "label": "Tiny Tapeout demo board",
+   "source": "Tiny Tapeout",
+   "status": "current",
+   "url": "https://tinytapeout.com/guides/get-started-demoboard/",
+   "value": "An RP2040 running MicroPython drives each design's 8 inputs, 8 outputs, 8 bidirectional pins and clock",
+   "verified": "2026-10-31"
+  },
+  {
+   "id": "web-serial-firefox",
+   "topic": "bench",
+   "detail": "Web Serial lets a web page talk to a USB serial device after the reader picks it in the browser's own dialog. Chrome, Edge and Opera support it on computers; Firefox added it in version 151. Safari does not support it.",
+   "kind": "reported",
+   "label": "Browsers that can talk to USB boards",
+   "source": "Gigazine",
+   "status": "current",
+   "url": "https://gigazine.net/gsc_news/en/20260522-web-serial/",
+   "value": "Firefox 151 (19 May 2026) joined Chrome and Edge in supporting Web Serial",
+   "verified": "2026-10-31"
+  },
+  {
+   "id": "yowasp",
+   "topic": "bench",
+   "detail": "YoWASP packages Yosys and nextpnr as WebAssembly; its author describes synthesis, placement, routing and programming running entirely in the browser, including on a phone.",
+   "kind": "claim",
+   "label": "FPGA tools in the browser",
+   "source": "FOSSi Foundation",
+   "status": "current",
+   "url": "https://fossi-foundation.org/blog/2024-01-09-ecl70",
+   "value": "A complete open FPGA flow (Yosys, nextpnr) runs inside a web browser",
+   "verified": "2026-10-31"
   }
  ],
  "changes": [
+  {
+   "date": "2026-10-31",
+   "title": "Your bench: real hardware, step 0",
+   "summary": "A new build topic: put a design on a board, try it by hand, and twin-test it against the simulation, then find the faulty chip in a tray by the pattern of its wrong answers. The bench talks to boards through the Open Bench Protocol, a few text commands any board can answer. The virtual board works today; the Tiny Tapeout demo board and any Open Bench board can be tried as experiments. Four new facts on Web Serial, the demo board, the Pico 2 and FPGA tools in the browser.",
+   "url": ""
+  },
   {
    "date": "2026-10-30",
    "title": "New topic: why perfect designs fail",

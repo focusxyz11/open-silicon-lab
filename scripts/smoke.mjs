@@ -143,6 +143,20 @@ async function check(viewport) {
   await go(page, 'mychip');
   if (!(await page.$('#mcCard'))) problems.push(tag + 'my chip: passport card missing');
 
+  // The bench: twin-test a design on the virtual board, then catch a planted defect.
+  await go(page, 'bench');
+  await page.waitForSelector('#bhIns .bhswb');
+  await page.click('#bhDesign [data-d="add2"]'); await page.waitForTimeout(150);
+  await page.click('#bhRun'); await page.waitForTimeout(400);
+  if (!/All 16 patterns match/.test(await page.textContent('#bhRunTag'))) problems.push(tag + 'bench: the virtual 2-bit adder should pass its twin test');
+  await page.check('#bhDefect'); await page.waitForTimeout(150);
+  await page.click('#bhRun'); await page.waitForTimeout(400);
+  if (!/differ/.test(await page.textContent('#bhRunTag'))) problems.push(tag + 'bench: a planted defect should fail the twin test');
+  if (!(await page.$('#bhDiag .callout'))) problems.push(tag + 'bench: no diagnosis after a failed twin test');
+  await page.uncheck('#bhDefect');
+  await page.$$eval('#tyTray [data-test]', bs => bs.forEach(b => b.click())); await page.waitForTimeout(400);
+  if ((await page.$$('#tyTray .tychip.fail')).length !== 1) problems.push(tag + 'bench: the tray should hold exactly one faulty chip');
+
   // A lab anchor opens its topic and scrolls to it.
   await go(page, 'lab-fab-2');
   if (await page.evaluate(() => document.getElementById('fab').hidden)) problems.push(tag + 'lab anchor did not open its topic');
