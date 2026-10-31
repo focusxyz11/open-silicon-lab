@@ -104,7 +104,7 @@ The tests check every rule below and say exactly what to fix.
    (`thCv`, `thSlider`, …). Simulation panels (`class="lab"`) get the anchors `lab-<id>-1`, `lab-<id>-2`, …
    automatically, so links like `#lab-thermal-1` work.
 5. **Import shared code through `osl/`**, never with `../`:
-   `import { $, T, fit, watch, rgba } from 'osl/core/ui.js'`, `'osl/engines/…'`, `'osl/data/…'`, `'osl/app/…'`.
+   `import { $, T, fit, watch, rgba } from 'osl/core/ui.js'`, `'osl/engines/…'`, `'osl/data/…'`, `'osl/app/…'`, and `'osl/hw/…'` to talk to boards (docs/HARDWARE.md).
    Files inside your own topic: `'./other.js'`.
 6. **Run `npm run catalog` after changing a folder.** It checks the folder and the links and ideas,
    then regenerates `src/generated/graph.js` and `catalog.js`, the small files the map reads at start-up.

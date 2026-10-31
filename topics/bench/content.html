@@ -1,0 +1,75 @@
+<section id="bench">
+    <div class="head">
+      <p class="code" data-topic-label>Your bench: real hardware</p>
+      <h2>Does your chip really work?</h2>
+    </div>
+    <div class="prose">
+      <p>A simulation says what a chip <i>should</i> do. A test bench asks the chip itself. You set its input pins, read its output pins, and compare every answer with the simulation: a <b>twin test</b>. When they disagree, the pattern of wrong answers points to the broken wire, which is how engineers find defects in real chips.</p>
+      <p>The bench talks to boards through one small, open protocol, so the same test runs on the <b>virtual board</b> here and on a real board on your desk. Real boards are joining step by step; none is needed, and nothing on this page is locked.</p>
+    </div>
+
+    <div class="lab">
+      <header><b>The bench</b><span id="bhTag">–</span></header>
+      <div class="body">
+        <p class="eyebrow">1 · Pick a board</p>
+        <div class="bhboards" id="bhBoards" role="radiogroup" aria-label="Board"></div>
+        <div class="bhconnect" id="bhConnect" hidden></div>
+
+        <p class="eyebrow">2 · What is on it</p>
+        <div class="seg" id="bhDesign" role="group" aria-label="Design on the board"></div>
+        <p class="small muted" id="bhDesignNote"></p>
+
+        <p class="eyebrow">3 · Try it by hand</p>
+        <div class="bhboard" id="bhBoard">
+          <div class="bhpins"><span class="bhlbl">Inputs · ui_in</span><div class="bhsw" id="bhIns"></div></div>
+          <div class="bhchip" aria-hidden="true"><span id="bhChipName">chip</span></div>
+          <div class="bhpins"><span class="bhlbl">Outputs · uo_out</span><div class="bhleds" id="bhOuts"></div><div class="bhseg" id="bhSeg" hidden></div></div>
+        </div>
+        <div class="row"><button type="button" class="btn" id="bhClk">Clock pulse</button><button type="button" class="btn" id="bhRst">Reset</button><span class="small muted" id="bhHand">–</span></div>
+
+        <p class="eyebrow">4 · Twin test: every input pattern, board against simulation</p>
+        <div class="row"><button type="button" class="btn primary" id="bhRun">Run the twin test</button><span class="small" id="bhRunTag"></span></div>
+        <div class="bhgrid" id="bhGrid" aria-live="polite"></div>
+        <div id="bhDiag"></div>
+
+        <details class="bhlog"><summary>Show the conversation with the board</summary><pre id="bhLog" aria-live="off"></pre></details>
+        <p class="note">How it works: the virtual board turns your design into gates (the same netlist the tiny-chip studio makes) and answers the Open Bench Protocol, one text line per command, exactly as a real board would. Input <i>k</i> of your design is pin ui_in[k] and output <i>k</i> is uo_out[k], the same order as the Verilog export, so a chip made from that export plugs straight in. The model is combinational: no clock, no timing and no analog effects, which a real chip has.</p>
+      </div>
+    </div>
+
+    <div class="lab">
+      <header><b>Find the faulty chip</b><span id="tyTag">–</span></header>
+      <div class="body">
+        <p>Four chips came off the same wafer. One has a manufacturing defect: a wire stuck at 0 or stuck at 1. Twin-test each chip, decide which one is faulty, then use the wrong answers to name the broken wire.</p>
+        <div class="row"><div class="seg" id="tyProj" role="group" aria-label="Design on the wafer"></div><button type="button" class="btn" id="tyNew">New wafer</button></div>
+        <div class="tytray" id="tyTray"></div>
+        <div id="tyStep"></div>
+        <p class="note">The defect model is the single stuck-at fault: one wire held at 0 or 1, the model test engineers have used since the late 1950s because it catches most real defects. Real defects also include wires that are slow, shorted to a neighbor or only fail when hot, which need other tests.</p>
+      </div>
+    </div>
+
+    <div class="hblock bhopen">
+      <p class="code">Build the open bench</p>
+      <h3>Any board can join</h3>
+      <p>The bench is open on purpose. A board joins by answering a few text commands, the <b>Open Bench Protocol</b>, over USB serial. That keeps the lab independent of any one company, and lets boards nobody has made yet join later.</p>
+      <div class="cols">
+        <table class="tt bhproto">
+          <thead><tr><th>The lab sends</th><th>The board answers</th></tr></thead>
+          <tbody>
+            <tr><td><code>HELLO</code></td><td><code>OK OBP/0 board=… in=8 out=8</code></td></tr>
+            <tr><td><code>IN 05</code></td><td><code>OK</code> · set the 8 inputs (hex)</td></tr>
+            <tr><td><code>OUT?</code></td><td><code>OK 1A</code> · the 8 outputs (hex)</td></tr>
+            <tr><td><code>CLK 4</code></td><td><code>OK</code> · four clock pulses</td></tr>
+            <tr><td><code>RST</code></td><td><code>OK</code> · pulse reset</td></tr>
+            <tr><td><code>LIST?</code> / <code>SEL name</code></td><td>optional: choose a design</td></tr>
+            <tr><td>anything else</td><td><code>ERR reason</code></td></tr>
+          </tbody>
+        </table>
+        <div>
+          <p class="eyebrow">Where each board stands</p>
+          <ul class="bhstatus" id="bhStatus"></ul>
+        </div>
+      </div>
+      <p class="small">Want to add a board, test one, or take on an idea? The full protocol, the adapter interface and how to test without hardware are in <a href="https://github.com/focusxyz11/open-silicon-lab/blob/main/docs/HARDWARE.md" target="_blank" rel="noopener">docs/HARDWARE.md</a>. Safety and privacy: boards run on USB power at 3.3 volts, the browser asks you before a page can open any port, and nothing you test leaves your computer.</p>
+    </div>
+  </section>
