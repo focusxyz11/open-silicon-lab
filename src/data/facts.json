@@ -1248,6 +1248,12 @@
  "changes": [
   {
    "date": "2026-10-31",
+   "title": "The bench meets Why perfect designs fail",
+   "summary": "Three real-world failures, hands-on: give the factory test a small budget and watch a defect escape, sort a wafer with a design bug from one with a broken chip, and pull a wire loose to see a chip change its mind. The reliability topic now points to each experiment.",
+   "url": ""
+  },
+  {
+   "date": "2026-10-31",
    "title": "A gentler first visit",
    "summary": "The tour no longer opens by itself. The map now offers three ways to start (build a chip, break a perfect design, imagine a what-if), and small tips appear only when a feature becomes useful, never again once you have used it. Tips can be turned off; the 30-second tour is still there for anyone who wants it.",
    "url": ""
