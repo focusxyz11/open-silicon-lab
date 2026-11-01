@@ -993,6 +993,18 @@
    "verified": "2026-10-29"
   },
   {
+   "id": "tt-tile-size",
+   "topic": "tiny",
+   "detail": "Tiny Tapeout notes the sizes are approximate. One digital tile is the same width and about half the height. The My chip zoom draws tiles at this size, scaled for other processes.",
+   "kind": "reported",
+   "label": "Tile size on SKY130",
+   "source": "Tiny Tapeout",
+   "status": "current",
+   "url": "https://www.tinytapeout.com/specs/analog",
+   "value": "A two-tile analog slot is about 160 × 225 µm",
+   "verified": "2026-11-01"
+  },
+  {
    "id": "vaire-ice-river",
    "topic": "reversible",
    "detail": "Reported September 2025; the first measured energy recovery with reversible logic in a commercial test chip.",

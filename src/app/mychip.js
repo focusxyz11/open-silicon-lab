@@ -55,7 +55,14 @@ export function renderChipBanner(topic) {
   const p = currentChip(); const line = hasChip() && M.show && p.ok ? chipLine(topic, p) : '';
   if (!line) { box.hidden = true; box.innerHTML = ''; return; }
   box.hidden = false; box.className = 'chipbanner';
-  box.innerHTML = '<span class="chipicon" aria-hidden="true"></span><div><p class="code">' + esc(t('chip.bannerCode', { name: p.name, node: p.nodeName })) + '</p><p>' + esc(line) + '</p></div><a class="btn" href="#mychip">' + t('chip.passport') + '</a>';
+  box.innerHTML = '<span class="chipicon" aria-hidden="true"></span><div><p class="code">' + esc(t('chip.bannerCode', { name: p.name, node: p.nodeName })) + '</p><p>' + esc(line) + '</p></div><a class="btn" href="#mychip">' + t('chip.passport') + '</a>' + strip(topic, p);
+}
+
+/* The journey as a strip of stops: done ones filled, this page's ringed. Each stop is a link. */
+function strip(topic, p) {
+  const J = journey(p).filter(s => s.key !== 'cpu' || p.alu), here = J.findIndex(s => s.topic === topic);
+  const done = J.filter(s => M.stamps[s.key]).length;
+  return '<ol class="cstrip" aria-label="' + esc(t('chip.strip', { n: done, total: J.length })) + '">' + J.map((s, i) => '<li class="' + (M.stamps[s.key] ? 'done' : '') + (i === here ? ' here' : '') + '"><a href="' + s.href + '" title="' + esc(s.t) + '"' + (i === here ? ' aria-current="step"' : '') + '><span>' + esc(s.t) + '</span></a></li>').join('') + '</ol>' + (here >= 0 ? '<p class="small muted cstripcap">' + esc(t('chip.stripHere', { n: here + 1, total: J.length, name: J[here].t })) + '</p>' : '');
 }
 
 /* ---- the chip card: a drawing of your die in its package ---- */
@@ -112,12 +119,15 @@ export function renderMyChip() {
       '<div class="mcside"><div class="ctl"><span class="lbl">' + t('chip.row.process') + '</span><div class="seg" id="mcNode">' + NODES.map(n => '<button type="button" data-n="' + n + '" aria-pressed="' + (n === d.node) + '">' + TC.NODE[n].t + '</button>').join('') + '</div></div>' +
       '<div class="readout col"><div><span>' + t('chip.stampsGot') + '</span><b>' + t('chip.stampsOf', { n: got, total: applicable.length }) + '</b></div><div><span>' + t('chip.row.tr') + '</span><b>' + fmtNum(p.tr) + '</b></div><div><span>' + esc(t('chip.area', { node: p.nodeName })) + '</span><b>' + t('chip.areaValue', { n: fmtNum(Math.round(p.area)) }) + '</b></div><div><span>' + t('chip.year') + '</span><b>' + p.year + '</b></div></div>' +
       '<label class="check"><input type="checkbox" id="mcShow"' + (M.show ? ' checked' : '') + '> ' + t('chip.show') + '</label></div></section>' +
+      '<div id="czSlot"></div>' +
       '<section class="wrap"><div class="vbar"><h2>' + t('chip.journey') + '</h2></div><ol class="mcjourney">' + J.map(s => { const na = s.key === 'cpu' && !p.alu; const st = M.stamps[s.key]; return '<li class="' + (na ? 'na' : st ? 'done' : '') + '"><span class="stamp" aria-hidden="true">' + (na ? '–' : st ? '✓' : '') + '</span><div><b>' + esc(s.t) + '</b>' + (st ? '<small class="muted">' + esc(t('chip.stamped', { date: fmtDate(st) })) + '</small>' : na ? '<small class="muted">' + t('chip.na') + '</small>' : '') + '<p>' + esc(s.d) + '</p><a href="' + s.href + '">' + esc((topicById(s.topic) || { t: s.topic }).t) + ' →</a></div></li>'; }).join('') + '</ol>' +
       '<p class="note">' + t('chip.note') + '</p></section>'
       : '<section class="wrap"><div class="callout"><p class="code" style="color:var(--bad)">' + t('chip.noCompile') + '</p><p>' + esc(p.errs[0].m) + ' <a href="#lab-tiny-1">' + t('chip.fix') + '</a></p></div></section>');
   const nm = $('#mcName'); nm.addEventListener('input', () => { M.name = nm.value; save(); cache.key = null; const c = $('#mcCard'); if (c) drawCard(c, currentChip(), design()); });
   if (!p.ok) return;
   drawCard($('#mcCard'), p, d);
+  /* the zoom loads only when this view opens, so the start-up page stays small */
+  import('./chipzoom.js').then(Z => { const slot = $('#czSlot'); if (!slot || slot.dataset.on) return; slot.dataset.on = '1'; slot.innerHTML = Z.zoomSection(); Z.mountZoom(d); }).catch(() => { /* the rest of the view still works */ });
   $('#mcNode').addEventListener('click', e => { const b = e.target.closest('[data-n]'); if (b) setStudioNode(b.dataset.n); });
   $('#mcShow').addEventListener('change', e => { M.show = e.target.checked; save(); });
   $('#mcDl').addEventListener('click', () => { const c = $('#mcCard'); const msg = s => { $('#mcMsg').textContent = s; }; try { c.toBlob(b => { if (!b) { msg(t('chip.noDownload')); return; } const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = (currentChip().name || 'my-chip').toLowerCase().replace(/[^a-z0-9]+/g, '-') + '.png'; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500); msg(t('chip.downloaded')); }); } catch (e) { msg(t('chip.noDownload')); } });

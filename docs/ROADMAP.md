@@ -10,6 +10,7 @@ The whole chip stack *runs*, and every part is connected. Your gates become a CP
 
 - **My chip.** One chip that is yours, carried through every layer, with a passport of stamps. *Shipped.*
 - **Big questions: why can a perfect design fail in the real world?** A reliability stress test for four missions and seven real case files. *Shipped: `#reality`.*
+- **Build your own chip: the road.** One design of yours from gates to files a factory accepts, with **Zoom into your chip** showing it at seven scales, from the demo board to one transistor. *First part shipped; the stages and next steps are in [JOURNEY.md](JOURNEY.md).*
 - **The map as a simulator.** Pull a lever, such as an HBM shortage, the electricity price or a delayed node, and watch the effects ripple across connected topics. *Shipped: What if? on the map (`#whatif`).*
 
 ## Next
