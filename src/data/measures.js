@@ -12,6 +12,7 @@ export const MEASURES = [
   { id: 'energy-bit', t: 'Energy per bit moved', unit: 'pJ/bit', better: 'lower', d: 'What it costs to move one bit. Moving data often costs far more than computing with it.', catch: 'It depends hugely on distance: on chip, across a board or across a data center.', facts: ['energy-moving-data'] },
   { id: 'transistors', t: 'Transistors per chip', unit: 'count', better: 'higher', d: 'The classic measure of progress, doubling about every two years for decades.', catch: 'More transistors is not more speed; what they are used for matters more.', facts: ['transistor-trend', 'rubin-gpu', 'cerebras-cs4'] },
   { id: 'node', t: 'Process node', unit: 'a name such as "2 nm"', better: 'lower', d: 'Which generation of manufacturing a chip uses.', catch: 'Since the late 1990s it is a name, not the size of anything on the chip.', facts: ['tsmc-n2', 'tsmc-a16', 'tsmc-a14'] },
+  { id: 'enob', t: 'Effective bits', unit: 'bits (ENOB)', better: 'higher', d: 'How many of a converter\'s bits are real once noise and distortion are counted.', catch: 'The label counts the steps, not the accuracy: a 16-bit converter may deliver only 12 or 13 useful bits.', facts: [] },
   { id: 'cost-chip', t: 'Cost per working chip', unit: 'dollars', better: 'lower', d: 'Wafer, test, packaging and design cost, divided by the chips that work.', catch: 'Design cost per chip depends on how many you sell.', facts: ['gpu-cost', 'design-cost-2nm'] }
 ];
 export const measureById = id => MEASURES.find(m => m.id === id) || null;
