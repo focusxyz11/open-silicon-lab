@@ -522,3 +522,27 @@ a.btn{display:inline-block;text-decoration:none}
 @media(prefers-reduced-motion:no-preference){.hint{animation:hintin .3s ease-out}.hint-target{animation:hintpulse 1.6s ease-in-out 3}}
 @keyframes hintin{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 @keyframes hintpulse{50%{outline-offset:8px;outline-color:transparent}}
+
+/* My chip: zoom into your chip (src/app/chipzoom.js) */
+.czsec .lede{margin-bottom:12px}
+.czgrid{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:20px;align-items:start}
+@media(max-width:900px){.czgrid{grid-template-columns:minmax(0,1fr)}}
+.czview canvas{height:auto;aspect-ratio:1;max-height:640px;cursor:pointer;touch-action:manipulation}
+.czside{display:grid;gap:10px;min-width:0}
+.czside input[type=range]{width:100%}
+.czins button{font-family:var(--mono)}
+.czouts{display:flex;flex-wrap:wrap;gap:6px 14px;font:500 13px/1.4 var(--mono)}
+.czouts i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;background:#4a1f1a;vertical-align:0}
+.czouts .lit i{background:#ff5a3c;box-shadow:0 0 8px #ff5a3c}
+.czdesc{min-height:4.5em;margin:0}
+
+/* the journey strip under the chip banner on topic pages */
+.cstrip{flex-basis:100%;list-style:none;margin:2px 0 0;padding:0;display:flex;gap:4px;align-items:center}
+.cstrip li{flex:1 1 0;min-width:0}
+.cstrip a{display:block;padding:9px 0;position:relative}
+.cstrip a::before{content:"";display:block;height:8px;border-radius:4px;background:var(--line)}
+.cstrip li.done a::before{background:var(--cyan)}
+.cstrip li.here a::before{outline:2px solid var(--amber);outline-offset:2px}
+.cstrip a span{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.cstrip a:hover::before,.cstrip a:focus-visible::before{background:var(--amber)}
+.cstripcap{flex-basis:100%;margin:-4px 0 0}
