@@ -39,6 +39,10 @@
     {
       "measure": "ops-watt",
       "how": "analog arrays promise much more of it"
+    },
+    {
+      "measure": "enob",
+      "how": "analog arrays deliver only a few effective bits per multiply"
     }
   ],
   "time": {
