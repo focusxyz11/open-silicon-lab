@@ -1,0 +1,68 @@
+<section id="community">
+    <div class="head">
+      <p class="code" data-topic-label>The community chip</p>
+      <h2>Can learners make one real chip together?</h2>
+    </div>
+    <div class="prose">
+      <p>A single Tiny Tapeout tile holds about a thousand standard cells. The designs on this site use a few dozen at most, so dozens of them fit in one tile. This chip gathers learners' designs side by side: every design gets the chip's inputs, and a <b>selector</b> on five spare pins picks which one drives the outputs. It is how Tiny Tapeout itself shares a chip, on a smaller scale.</p>
+      <p>Every design here passed the same checks as the studio, and the whole chip runs through real chip tools on every change.</p>
+    </div>
+
+    <div class="lab">
+      <header><b>The shared tile</b><span id="cmTag">–</span></header>
+      <div class="body">
+        <div class="cols">
+          <canvas class="plot" id="cmCv" style="aspect-ratio:1" role="img" aria-label="The shared tile, with one slot for each design sized by how many cells it uses. Select a slot to see the design."></canvas>
+          <div class="controls">
+            <div id="cmInfo" aria-live="polite"></div>
+          </div>
+        </div>
+        <div class="readout">
+          <div><span>Designs</span><b id="cmN">–</b></div>
+          <div><span>Cells used</span><b id="cmCells">–</b></div>
+          <div><span>Room left</span><b id="cmRoom">–</b></div>
+          <div><span>Contributors</span><b id="cmWho">–</b></div>
+        </div>
+        <p class="note">Slots are drawn in proportion to each design's cells; the placement inside a real tile is done by the open-source flow. The budget keeps 900 of the tile's roughly 1,000 cells for designs (fact tt-tile) and leaves the rest for the selector.</p>
+      </div>
+    </div>
+
+    <div class="lab">
+      <header><b>Add your design</b><span id="cmYTag">–</span></header>
+      <div class="body">
+        <div id="cmYours" aria-live="polite"></div>
+        <div class="cmform" id="cmForm" hidden>
+          <div class="ctl"><label for="cmTitle">Title</label><input type="text" id="cmTitle" maxlength="48"></div>
+          <div class="ctl"><label for="cmAuthor">Your name or GitHub handle</label><input type="text" id="cmAuthor" maxlength="40"></div>
+          <div class="ctl"><label for="cmDesc">One sentence: what it does</label><input type="text" id="cmDesc" maxlength="200"></div>
+          <div class="ctl"><label for="cmSlug">Folder name <output id="cmSlugO"></output></label><input type="text" id="cmSlug" maxlength="40"></div>
+          <p class="small" id="cmCheck" aria-live="polite"></p>
+          <div class="row"><a class="btn primary" id="cmPropose" target="_blank" rel="noopener">Prepare my submission on GitHub</a><button type="button" class="btn" id="cmCopy">Copy the file</button><span class="small muted" id="cmMsg" aria-live="polite"></span></div>
+          <pre class="cmfile" id="cmFile"></pre>
+        </div>
+        <p class="note">The button opens GitHub with community/&lt;folder&gt;/design.json already written; you need a free GitHub account to propose it. A maintainer reviews it, the checks run, and once merged your design appears on the tile. Your name stays in the chip's documentation.</p>
+      </div>
+    </div>
+
+    <div class="prose">
+      <h3>The last mile: from files to a real chip</h3>
+      <ol class="cmsteps">
+        <li><b>Files.</b> Your design, or the whole community chip, becomes a Tiny Tapeout project: Verilog, a pin list (info.yaml), a test and a datasheet. Download them below, or from the studio's last step.</li>
+        <li><b>A repository.</b> Tiny Tapeout gives a template repository on GitHub; the files go into a copy of it. Its automatic checks run the real open-source flow (synthesis, placement and routing, design-rule checks) and show the finished layout.</li>
+        <li><b>A run.</b> Tiny Tapeout collects designs into shuttle runs on open processes (SkyWater 130 nm, IHP 130 nm, GF 180 nm). Each run has a deadline; a tile is paid for when submitting. <span id="cmShuttle"></span></li>
+        <li><b>The wait.</b> Roughly six to nine months from deadline to silicon is normal, because many designs share one schedule through the fab, packaging and testing.</li>
+        <li><b>What comes back.</b> A small board with the shared chip on it. Select your design, set the switches, and test it on the bench, against its simulation, the way real chips are checked.</li>
+      </ol>
+      <p class="small muted">Whether and when the community chip is submitted is decided by the project's maintainers once it holds enough designs; nothing is promised yet. Run dates change, so <a href="https://tinytapeout.com/runs" target="_blank" rel="noopener">Tiny Tapeout's runs page</a> is the place to check.</p>
+    </div>
+
+    <div class="lab">
+      <header><b>The whole chip, ready for Tiny Tapeout</b><span id="cmFTag">–</span></header>
+      <div class="body">
+        <div class="seg" id="cmFiles" role="group" aria-label="File"></div>
+        <pre class="cmfile" id="cmView"></pre>
+        <div class="row"><button type="button" class="btn primary" id="cmZip">Download the community chip (.zip)</button><span class="small muted" id="cmZMsg" aria-live="polite"></span></div>
+        <p class="note">Generated from community/ by the same code that CI runs through Icarus Verilog and Yosys on every change. The test steps through every design with the selector.</p>
+      </div>
+    </div>
+  </section>

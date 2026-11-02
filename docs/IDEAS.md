@@ -17,7 +17,7 @@ anywhere else, and does it help them think better about where chips are going?
 | Idea | Status |
 | --- | --- |
 | The physics floor | Built: `#floor` and your chip's distance from physics in the passport (November 2026). Next: the same yardstick on other topics. |
-| The community chip | Next. See the roadmap. |
+| The community chip | Groundwork built (`#community`, November 2026). Next: a maintainer decision on submitting it. |
 | From need to chip | Later, on top of open engines (idea 8). |
 
 ## The ideas
