@@ -12,6 +12,10 @@ How we work on Open Silicon Lab.
 
 Small, focused PRs are easier to review than big ones: one topic, one simulation or one fix at a time.
 
+## Community designs
+
+Learners propose designs for the community chip as pull requests that add `community/<name>/design.json`. CI checks each design (it parses, meets its specification, synthesizes, routes and fits the tile) and runs the whole chip through Icarus Verilog and Yosys. A maintainer reviews and merges; whether and when the chip goes to a Tiny Tapeout run is a maintainer decision.
+
 ## Monthly fact check
 
 Once a month, a scheduled task checks every entry in `src/data/facts.json` against current sources, then opens a pull request with any updated values, sources and dates, plus a summary of what changed and why. A person reviews and merges it.
@@ -22,5 +26,7 @@ Once a month, a scheduled task checks every entry in `src/data/facts.json` again
 - **Simulate before explaining.** New material should be something to play with, a puzzle or a build, with only the text needed to use it.
 - **Every number has a source and a date.** Industry figures go in `facts.json`, not hard-coded in prose.
 - **Say what a model simplifies.** Each simulation ends with a short note on its assumptions.
-- **Keep it connected.** A new topic needs at least one labelled edge in `topics.js`; tests fail otherwise.
+- **Keep it connected.** A new topic needs at least one typed link in its `topic.json`, true for its kind; `npm run catalog` and the tests fail otherwise.
+- **Ask for a prediction first,** where a simulation can, and make it a puzzle or a real challenge.
+- **Ideas wait in the idea bank.** New directions go into `docs/IDEAS.md`, starting from a first principle; when one is picked it moves to the roadmap. The bank stays curated: built, merged and ordinary ideas leave it, with a note of where they went.
 - **Accessible and responsive.** Works with keyboard, in light and dark mode, and at phone width without sideways scrolling.
