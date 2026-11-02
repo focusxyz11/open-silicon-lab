@@ -16,7 +16,7 @@ Shipped and growing:
 ## Next
 
 - **The community chip.** Learners' verified designs gathered into one real Tiny Tapeout chip, followed to the factory and back to the bench, with credit for every contributor.
-- **The physics floor, part two.** A "distance from physics" figure on other topics and in the chip passport, so the whole site shares one yardstick.
+- **The physics floor, part two.** The chip passport now shows your chip's distance from physics; next, the same yardstick on other topics (accelerators, data centers, sensors).
 - **The rest of the road:** switch to gate, the last mile, push your own clock ([JOURNEY.md](JOURNEY.md)).
 - **The next big question:** can the planet afford the chips we want? (idea bank, idea 6).
 - **A quality pass and real learners.** A separate review of every topic (facts, simplification notes, phone layout, dark mode), then three to five beginners trying the site while someone watches where they get stuck.

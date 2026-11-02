@@ -430,6 +430,8 @@
  "chip.area": "Area at {node}",
  "chip.areaValue": "{n} µm²",
  "chip.year": "Could have been made from",
+ "chip.physics": "Distance from physics",
+ "chip.physicsValue": "{spend} fJ against a floor of {floor} zJ: about {n} million ×",
  "chip.show": "Show my chip on topic pages",
  "chip.journey": "The journey",
  "chip.stamped": " · stamped {date}",

@@ -39,6 +39,20 @@ export function passport({ proj, code, node = '130', lib = 'basic', util = 0.5, 
   };
 }
 
+/* Distance from physics, per evaluation of the chip's logic (the same yardstick as the physics floor topic):
+   - the floor: a two-input gate turns four input patterns into two outputs, erasing up to one bit, so
+     about one bit per logic cell, at kT ln 2 each (300 K);
+   - the spend: the measured 45 nm cost of a 16-bit add (0.18 pJ, fact energy-moving-data) spread over
+     its 16 full adders of 5 gates each, about 2.25 fJ per gate switching. A 45 nm estimate for every
+     process: newer ones are a few times lower. */
+export const KT_LN2 = 1.380649e-23 * 300 * Math.LN2;
+export const E_GATE_45 = 0.18e-12 / (16 * 5);
+export function physics(p) {
+  const gates = p.cells - (p.regs || 0);
+  const floor = Math.max(1, gates) * KT_LN2, spend = Math.max(1, gates) * E_GATE_45;
+  return { gates, floor, spend, times: spend / floor };
+}
+
 const n0 = v => Math.round(v).toLocaleString('en-US');
 const big = v => v >= 1e9 ? (+(v / 1e9).toPrecision(3)) + ' billion' : v >= 1e6 ? (+(v / 1e6).toPrecision(3)) + ' million' : n0(v);
 const mhz = m => m >= 1000 ? (m / 1000).toFixed(2) + ' GHz' : Math.round(m) + ' MHz';
@@ -87,6 +101,7 @@ export function chipLine(topic, p) {
     supply: 'Made at ' + p.where + '. Packaging and testing often happen in another country again.',
     package: 'Community-shuttle chips come back as bare dies or small packages on a demo board; a GPU\'s package holds whole stacks of memory.',
     reality: (p.wrong ? 'Your chip still fails ' + p.wrong + ' of its ' + p.cases + ' cases: fix that first. ' : 'Your chip is correct in all ' + p.cases + ' cases. ') + 'Each copy will still differ a little, run warm and age; at ' + p.nodeName + ' it was checked at one ideal set of conditions.',
+    floor: (() => { const x = physics(p); return 'Each time your ' + x.gates + ' logic gates settle, they spend about ' + Math.round(x.spend * 1e16) / 10 + ' fJ, against a physics floor of ' + Math.round(x.floor * 1e22) / 10 + ' zJ: about ' + Math.round(x.times / 1e5) / 10 + ' million times more (estimated from the 45 nm cost of an add).'; })(),
     accelerators: 'NVIDIA Rubin has ' + big(p.vsRubin) + ' times as many transistors as your chip.'
   };
   return L[topic] || '';

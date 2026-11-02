@@ -41,3 +41,14 @@ test('topic lines exist where the chip travels', () => {
   for (const t of ['tiny', 'design', 'layout', 'riscv', 'litho', 'fab', 'yield', 'economics', 'future', 'transistor', 'physics', 'supply']) assert.ok(chipLine(t, p).length > 20, t);
   assert.equal(chipLine('quantum', p), '');
 });
+
+test('distance from physics: the same floor as the physics floor topic, and about a million times above it', async () => {
+  const { landauer } = await import('../src/engines/floor.js');
+  const { physics, KT_LN2, E_GATE_45 } = await import('../src/engines/passport.js');
+  assert.ok(Math.abs(KT_LN2 - landauer(300)) < 1e-30);
+  assert.ok(Math.abs(E_GATE_45 * 16 * 5 - 0.18e-12) < 1e-20, 'from the measured 16-bit add');
+  for (const proj of TC.PROJ) {
+    const x = physics(passport({ proj, code: proj.sol || proj.starter, node: '130' }));
+    assert.ok(x.gates > 0 && x.times > 5e5 && x.times < 1e6, proj.id + ': ' + x.times);
+  }
+});
