@@ -8,28 +8,27 @@ The whole chip stack *runs*, and every part is connected. Your gates become a CP
 
 ## Now
 
-- **My chip.** One chip that is yours, carried through every layer, with a passport of stamps. *Shipped.*
-- **Big questions: why can a perfect design fail in the real world?** A reliability stress test for four missions and seven real case files. *Shipped: `#reality`.*
-- **Build your own chip: the road.** One design of yours from gates to files a factory accepts, with **Zoom into your chip** showing it at seven scales, from the demo board to one transistor. *First part shipped; the stages and next steps are in [JOURNEY.md](JOURNEY.md).*
-- **The map as a simulator.** Pull a lever, such as an HBM shortage, the electricity price or a delayed node, and watch the effects ripple across connected topics. *Shipped: What if? on the map (`#whatif`).*
+Shipped and growing:
+- **My chip** and **Build your own chip: the road.** One design of yours from gates to files a factory accepts: logic, memory and the clock, your ALU in a RISC-V core, layout, test, clocked Verilog for Tiny Tapeout, and **Zoom into your chip** at seven scales. Stages and next steps: [JOURNEY.md](JOURNEY.md).
+- **Big questions:** why can a perfect design fail in the real world (`#reality`), and how far are chips from the limits of physics (`#floor`).
+- **The map as a simulator:** What if? (`#whatif`), map lenses and the time machine.
 
 ## Next
 
-- **The physics floor.** How far each task is from the limits of physics, layer by layer, with a shared yardstick across topics. *Picked; see [IDEAS.md](IDEAS.md).*
-- **The community chip.** Learners' verified designs gathered into one real Tiny Tapeout chip, followed to the factory and back to the bench. *Picked.*
-- **From need to chip.** Start from a mission and design backwards; possibly offered later as a public MCP server so any AI assistant can use the site's engines. *Picked, for later.*
-- **More big questions, beyond the technology itself.** Why can't the world just make more chips when it needs them? Who decides which chips get made? Why isn't better technology enough to win? If AI helps design chips, who builds the next ones? Can the planet afford the chips we want? Each with several viewpoints, a 2026–2040 horizon and AI as the force of change.
-- **Predict, then reveal.** Ask for a prediction before a simulation answers, across all labs.
-- **Forecasts that get scored.** Dated bets on the future, resolved by the monthly fact check.
-- **An AI that operates the lab.** The tutor sets up simulations to test your idea and explains results from real numbers.
-- **Zoom as the main way to get around.** From the globe to atoms, each level opening its labs.
+- **The community chip.** Learners' verified designs gathered into one real Tiny Tapeout chip, followed to the factory and back to the bench, with credit for every contributor.
+- **The physics floor, part two.** A "distance from physics" figure on other topics and in the chip passport, so the whole site shares one yardstick.
+- **The rest of the road:** switch to gate, the last mile, push your own clock ([JOURNEY.md](JOURNEY.md)).
+- **The next big question:** can the planet afford the chips we want? (idea bank, idea 6).
+- **A quality pass and real learners.** A separate review of every topic (facts, simplification notes, phone layout, dark mode), then three to five beginners trying the site while someone watches where they get stuck.
+
+Later: **open engines**, a public MCP server whose first use is *from need to chip*. More candidates are in the [idea bank](IDEAS.md).
 
 ## Long term
 
 ### Learners become contributors
 Step by step, so quality stays high:
 1. Write down how a simulation is built: an engine with tests, a lab module, content and facts (partly in `ARCHITECTURE.md` today).
-2. A simulation template and a checklist that CI enforces: tests, phone width, dark mode, a "what it simplifies" note, sourced facts.
+2. A simulation template and a checklist that CI enforces: tests, phone width, dark mode, a "what it simplifies" note, sourced facts, and two rules for every lab: ask for a prediction before the simulation answers, and make it a puzzle or a real challenge, never a page to read.
 3. Good-first-simulation issues: small, well-scoped labs a newcomer can finish.
 4. Review guidelines with chip experts, so contributed science is checked.
 5. Credits on every lab, and a path from learner to maintainer.
@@ -41,9 +40,9 @@ Hardware stays a bonus, never a gate, and the bench stays open to any board. Det
 1. A $5 RISC-V board (ESP32-C3 or Pico 2) running the same programs as the RISC-V lab.
 2. The Tiny Tapeout demo board confirmed on real boards: set inputs from the lab, read outputs, compare live with your simulated chip.
 3. Run the exported Tiny Tapeout designs on an FPGA board, with the open toolchain in the browser.
-4. Community shuttles: gather learners' designs into one submission and test what comes back on the bench.
+4. Community shuttles: the community chip (see Next).
 
-### Also on the list
-- Story campaigns with roles: founder, fab manager, policymaker.
-- A skills portfolio built from evidence instead of stars.
-- Classroom mode and translations, with offline use.
+### Structure that keeps growing
+- **Language-ready, stages 2 and 3.** Stage 1 (the interface) is done. Next: shared data and every topic.json text with stable ids; then the simulations' own text and the content pages. No translation is needed soon; the structure should be ready.
+- **A review routine for links and debates,** so every typed link stays true for its kind and every debate keeps its balance as topics are added.
+- **A map that scales** well past 40 topics (see idea 9 in the idea bank).

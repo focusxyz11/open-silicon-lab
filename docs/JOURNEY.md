@@ -22,18 +22,18 @@ from the demo board to one transistor, with live values from the board's switche
 
 ## Next steps
 
-1. **Your chip can count (done).** `reg` in the tiny language makes a flip-flop: the Counter project
-   verifies cycle by cycle, synthesizes DFF cells, exports clocked Verilog for Tiny Tapeout, and ticks
-   in the gadget and the zoom. Still to do: open a flip-flop in the zoom, and let the bench step a
-   clock so it can twin-test clocked chips.
-2. **Switch to gate.** A small lab before the studio: wire transistors as switches into NOT and NAND,
+1. **Switch to gate.** A small lab before the studio: wire transistors as switches into NOT and NAND,
    the same CMOS networks the zoom opens up (`src/engines/chipzoom.js`).
-3. **The last mile.** A plain walkthrough from the exported files to a submitted Tiny Tapeout
+2. **The last mile.** A plain walkthrough from the exported files to a submitted Tiny Tapeout
    project: the template repository, which run, roughly what it costs, how long it takes, the demo
    board that comes back. Run dates change, so link to Tiny Tapeout's runs page and keep only
-   general facts in `facts.json`.
-4. **Later: invent one.** An architecture sandbox at the end of the road: put together a machine
-   that does not exist yet (where it computes, how it represents numbers, where data lives, what it
-   is built from), run real kinds of work through it, and see where it breaks. Every future-device
-   number is an assumption you can change, labelled proven, shown in a lab or a guess; software and
-   ecosystem count beside energy and speed. It reuses the models in `src/engines/paradigms.js`.
+   general facts in `facts.json`. It leads into the community chip (roadmap).
+3. **Push your own clock.** Send a studio design through the gate-level simulator
+   (`src/engines/seq.js`): raise its clock until it breaks and watch a glitch move through your own
+   gates. The studio's cells map onto the simulator's gates, with the same library delays.
+4. **Clocked chips everywhere.** Open a flip-flop in the zoom (its two latches), and let the bench
+   step a clock so it can twin-test clocked chips such as the Counter.
+5. **At the end of the road: invent the next machine** (idea 3 in the [idea bank](IDEAS.md)).
+
+Done so far: your chip can count (`reg` makes flip-flops; the Counter verifies cycle by cycle,
+synthesizes DFF cells, exports clocked Verilog and ticks in the gadget and the zoom).
