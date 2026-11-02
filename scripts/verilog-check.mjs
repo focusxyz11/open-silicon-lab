@@ -8,6 +8,8 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import TC from '../src/engines/tinychip.js';
 import * as X from '../src/engines/export.js';
+import { checkAll, chipVerilog, chipCases } from '../src/engines/community.js';
+import { loadDesigns } from './community.mjs';
 
 const has = cmd => { try { execFileSync('sh', ['-c', 'command -v ' + cmd], { stdio: 'ignore' }); return true; } catch (e) { return false; } };
 const require = process.argv.includes('--require');
@@ -69,6 +71,28 @@ try {
       } catch (e) { problems.push(`${p.id} ${kind}: yosys failed\n${e.stderr || e.stdout || e.message}`); }
     }
   }
+  /* The community chip: every design behind the selector, in one Tiny Tapeout top level. */
+  const { designs } = checkAll(loadDesigns().list);
+  if (designs.length) {
+    const top = 'tt_um_open_silicon_lab_community', f = join(dir, 'community.v'), tb = join(dir, 'community_tb.v'), out = join(dir, 'community.vvp');
+    writeFileSync(f, chipVerilog(designs, top));
+    const C = chipCases(designs);
+    writeFileSync(tb, '`timescale 1ns / 1ps\nmodule check;\n  reg [7:0] ui_in = 0, uio_in = 0;\n  reg clk = 0, rst_n = 0, ena = 1;\n  wire [7:0] uo_out, uio_out, uio_oe;\n  integer errors = 0;\n' +
+      '  ' + top + ' dut (.ui_in(ui_in), .uo_out(uo_out), .uio_in(uio_in), .uio_out(uio_out), .uio_oe(uio_oe), .ena(ena), .clk(clk), .rst_n(rst_n));\n' +
+      '  task tick; begin #1 clk = 1; #1 clk = 0; #1; end endtask\n' +
+      '  task start(input [7:0] sel); begin uio_in = sel; ui_in = 0; rst_n = 0; tick; tick; rst_n = 1; #1; end endtask\n' +
+      '  task chk(input [7:0] sel, input [7:0] ui, input [7:0] uo, input [7:0] mask, input clocked); begin ui_in = ui; #1; if ((uo_out & mask) !== uo) begin errors = errors + 1; $display("FAIL design %0d ui_in=%b uo_out=%b expected %b", sel, ui, uo_out, uo); end if (clocked) tick; end endtask\n' +
+      '  initial begin\n' + C.map(c => '    start(' + c.sel + ');\n' + c.cases.map(x => '    chk(' + c.sel + ', ' + x.ui + ', ' + x.uo + ', ' + X.outMask(designs[c.sel].r.spec) + ', ' + (c.seq ? 1 : 0) + ');').join('\n')).join('\n') + '\n' +
+      '    if (errors == 0) $display("PASS"); else $display("ERRORS %0d", errors);\n    $finish;\n  end\nendmodule\n');
+    try {
+      execFileSync('iverilog', ['-g2005', '-Wall', '-o', out, tb, f], { stdio: 'pipe' });
+      const r = execFileSync('vvp', ['-n', out], { encoding: 'utf8' });
+      if (!/\bPASS\b/.test(r)) problems.push('community chip: simulation\n' + r);
+    } catch (e) { problems.push('community chip: iverilog failed\n' + (e.stderr || e.message)); }
+    runs++;
+    try { execFileSync('yosys', ['-q', '-p', `read_verilog ${f}; synth -top ${top}; check -assert`], { encoding: 'utf8', stdio: 'pipe' }); }
+    catch (e) { problems.push('community chip: yosys failed\n' + (e.stderr || e.stdout || e.message)); }
+  }
 } finally { rmSync(dir, { recursive: true, force: true }); }
 
 if (problems.length) {
@@ -77,4 +101,4 @@ if (problems.length) {
   if (process.env.GITHUB_ACTIONS) problems.slice(0, 10).forEach(p => console.log('::error title=Verilog check::' + p.slice(0, 1500).replace(/%/g, '%25').replace(/\r/g, '').replace(/\n/g, '%0A')));
   process.exit(1);
 }
-console.log(`Verilog check passed: ${runs} Icarus simulations and every project synthesized by Yosys.`);
+console.log(`Verilog check passed: ${runs} Icarus simulations and every project (and the community chip) synthesized by Yosys.`);

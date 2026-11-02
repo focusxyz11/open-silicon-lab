@@ -7,7 +7,7 @@ import TC from './tinychip.js';
 
 /* Verilog keywords a tiny-chip wire name could collide with. */
 const KW = new Set('always and assign automatic begin buf bufif0 bufif1 case casex casez cell cmos config deassign default defparam design disable edge else end endcase endconfig endfunction endgenerate endmodule endprimitive endspecify endtable endtask event for force forever fork function generate genvar highz0 highz1 if ifnone incdir include initial inout input instance integer join large liblist library localparam macromodule medium module nand negedge nmos nor noshowcancelled not notif0 notif1 or output parameter pmos posedge primitive pull0 pull1 pulldown pullup pulsestyle_onevent pulsestyle_ondetect rcmos real realtime reg release repeat rnmos rpmos rtran rtranif0 rtranif1 scalared showcancelled signed small specify specparam strong0 strong1 supply0 supply1 table task time tran tranif0 tranif1 tri tri0 tri1 triand trior trireg unsigned use uwire vectored wait wand weak0 weak1 while wire wor xnor xor logic bit byte int'.split(' '));
-const safe = n => (KW.has(n) || /^(ui_in|uo_out|uio_in|uio_out|uio_oe|ena|clk|rst_n|_unused)$/.test(n) ? 'w_' + n : n);
+export const safe = n => (KW.has(n) || /^(ui_in|uo_out|uio_in|uio_out|uio_oe|ena|clk|rst_n|_unused)$/.test(n) ? 'w_' + n : n);
 
 /* A unique, valid Tiny Tapeout top-module name: tt_um_ + letters, digits and underscores. */
 export function topName(s) {

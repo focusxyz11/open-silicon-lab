@@ -138,6 +138,10 @@ than one topic (panels, controls, readouts). `app.css` styles the shell, map and
 single topic needs lives in `topics/<id>/style.css` and loads with that topic; a test fails if a rule
 in `base.css` is used by only one topic, and says where to move it.
 
+## The community chip
+
+Learners' designs live in `community/<name>/design.json` (see `community/README.md`). `scripts/community.mjs`, run by `npm run catalog`, checks each one with `src/engines/community.js` (it parses, meets its studio project's specification if it names one, synthesizes, routes, stays under 150 cells, and all together under 900) and writes `src/generated/community.js` for the `community` topic. `chipVerilog` puts every design behind a 5-bit selector on `uio_in[4:0]` in one Tiny Tapeout top level; the CI Verilog check simulates it with every design selected in turn and synthesizes it with Yosys.
+
 ## My chip
 
 `src/engines/passport.js` computes a chip passport from one tiny-chip design and process: cells, transistors, area, speed, masks and light, fab time, yield, cost, history and whether it can be made for real, plus a line for each topic. `src/app/mychip.js` follows the design the studio publishes, keeps the passport's stamps (per browser), shows the line on topic pages (`#chipBanner`) and renders the `#mychip` view and its downloadable card.

@@ -15,7 +15,7 @@ stops only shows where you are.
 | 5. Run a program | The RISC-V core runs real code on your ALU | `riscv` | done |
 | 6. Lay it out | Placement, wires, the chip seen from above | `tiny`, `layout`, `xray` | done |
 | 7. Test it | Board against simulation, find the faulty chip | `bench` | done |
-| 8. Make it | Export for Tiny Tapeout, what happens next, what comes back | `tiny` export | export done; walkthrough planned |
+| 8. Make it | Export for Tiny Tapeout, the last mile, the community chip | `tiny` export, `community` | done |
 
 Across all of them: **Zoom into your chip** (My chip view) shows the same design at seven scales,
 from the demo board to one transistor, with live values from the board's switches.
@@ -24,10 +24,8 @@ from the demo board to one transistor, with live values from the board's switche
 
 1. **Switch to gate.** A small lab before the studio: wire transistors as switches into NOT and NAND,
    the same CMOS networks the zoom opens up (`src/engines/chipzoom.js`).
-2. **The last mile.** A plain walkthrough from the exported files to a submitted Tiny Tapeout
-   project: the template repository, which run, roughly what it costs, how long it takes, the demo
-   board that comes back. Run dates change, so link to Tiny Tapeout's runs page and keep only
-   general facts in `facts.json`. It leads into the community chip (roadmap).
+2. **The last mile (done).** The community chip page walks from the exported files to a real chip:
+   the template repository, a run, the wait, and the board that comes back.
 3. **Push your own clock.** Send a studio design through the gate-level simulator
    (`src/engines/seq.js`): raise its clock until it breaks and watch a glitch move through your own
    gates. The studio's cells map onto the simulator's gates, with the same library delays.

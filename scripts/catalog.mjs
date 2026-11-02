@@ -12,6 +12,7 @@
 // problem in plain words, so a contributor (or their AI assistant) knows exactly what to fix.
 import { readFileSync, writeFileSync, existsSync, readdirSync, mkdirSync } from 'node:fs';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { buildCommunity } from './community.mjs';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 const OUT_CATALOG = 'src/generated/catalog.js';
@@ -273,7 +274,9 @@ export async function buildCatalog() {
     `export const BORN = ${JSON.stringify(born)};\n\n` +
     `/* Every challenge, with the topic it belongs to. */\n` +
     `export const CHALLENGES = [\n${challenges.map(c => '  ' + JSON.stringify(c)).join(',\n')}\n];\n`;
-  return { outputs: { [OUT_CATALOG]: catalog, [OUT_GRAPH]: graph }, text: catalog, problems };
+  /* the community chip's designs are checked and listed the same way (community/README.md) */
+  const C = buildCommunity();
+  return { outputs: { [OUT_CATALOG]: catalog, [OUT_GRAPH]: graph, ...C.outputs }, text: catalog, problems: problems.concat(C.problems) };
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {

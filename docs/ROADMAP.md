@@ -15,7 +15,7 @@ Shipped and growing:
 
 ## Next
 
-- **The community chip.** Learners' verified designs gathered into one real Tiny Tapeout chip, followed to the factory and back to the bench, with credit for every contributor.
+- **The community chip.** Groundwork built (`#community`): learners' designs in `community/`, checked automatically and shown on one shared tile behind a selector, a one-click submission from the studio, and the whole chip downloadable for Tiny Tapeout. Still to decide: when to submit it, and who pays for the tile.
 - **The physics floor, part two.** The chip passport now shows your chip's distance from physics; next, the same yardstick on other topics (accelerators, data centers, sensors).
 - **The rest of the road:** switch to gate, the last mile, push your own clock ([JOURNEY.md](JOURNEY.md)).
 - **The next big question:** can the planet afford the chips we want? (idea bank, idea 6).
