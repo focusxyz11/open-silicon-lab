@@ -451,6 +451,13 @@
  "cz.leds": "LEDs: your chip's outputs",
  "cz.tipCell": "Select a cell to open it at the next level.",
  "cz.tipFet": "Select a transistor to zoom into it.",
+ "cz.tipFlop": "That is a flip-flop: it holds one bit between clock ticks. Memory and the clock shows what is inside one.",
+ "cz.tick": "Tick the clock",
+ "cz.reset": "Reset",
+ "cz.ticks": {
+  "one": "{n} tick since reset",
+  "other": "{n} ticks since reset"
+ },
  "cz.vdd": "VDD (1)",
  "cz.gnd": "Ground (0)",
  "cz.source": "Source",

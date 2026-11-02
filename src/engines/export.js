@@ -14,7 +14,7 @@ export function topName(s) {
   const t = String(s || '').toLowerCase().replace(/[^a-z0-9_]+/g, '_').replace(/^_+|_+$/g, '').slice(0, 40);
   return 'tt_um_' + (t || 'my_design');
 }
-const NAMES = { seg: 'seg_decoder', free: 'my_design', add2: 'adder_2bit', alu: 'alu_slice' };
+const NAMES = { seg: 'seg_decoder', free: 'my_design', add2: 'adder_2bit', alu: 'alu_slice', count: 'counter_3bit' };
 /* The module name for your logic: a valid Verilog identifier (it may not start with a digit). */
 export const coreName = p => { const n = NAMES[p.id] || p.t.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, ''); return /^[a-z_]/.test(n) ? n : 'm_' + n; };
 
@@ -36,36 +36,45 @@ function expr(e) {
 const strip = s => (s[0] === '(' && s[s.length - 1] === ')' && balanced(s.slice(1, -1)) ? s.slice(1, -1) : s);
 function balanced(s) { let d = 0; for (const c of s) { if (c === '(') d++; if (c === ')') { d--; if (d < 0) return false; } } return d === 0; }
 
-/* Your logic as a Verilog module: one continuous assignment per line you wrote. */
+/* Your logic as a Verilog module: one continuous assignment per line you wrote. Each reg becomes a
+   flip-flop in one always block: on each rising clock edge it takes its new value, and while rst_n is
+   low (the Tiny Tapeout reset) it is cleared to 0. */
 export function coreVerilog(D, p) {
-  const name = coreName(p);
-  const wires = D.order.filter(n => !p.outs.includes(n));
-  return 'module ' + name + ' (\n' + p.ins.map(n => '    input  wire ' + safe(n)).concat(p.outs.map(n => '    output wire ' + safe(n))).join(',\n') + '\n);\n' +
-    (wires.length ? '  wire ' + wires.map(safe).join(', ') + ';\n' : '') +
-    D.order.map(n => '  assign ' + safe(n) + ' = ' + strip(expr(D.asg[n].e)) + ';').join('\n') + '\nendmodule\n';
+  const name = coreName(p), regs = TC.regsOf(D);
+  const wires = D.order.filter(n => !p.outs.includes(n) && !regs.includes(n));
+  const ports = (regs.length ? ['    input  wire clk', '    input  wire rst_n'] : [])
+    .concat(p.ins.map(n => '    input  wire ' + safe(n)), p.outs.map(n => '    output ' + (regs.includes(n) ? 'reg ' : 'wire') + ' ' + safe(n)));
+  const inner = regs.filter(n => !p.outs.includes(n));
+  return 'module ' + name + ' (\n' + ports.join(',\n') + '\n);\n' +
+    (wires.length ? '  wire ' + wires.map(safe).join(', ') + ';\n' : '') + (inner.length ? '  reg  ' + inner.map(safe).join(', ') + ';\n' : '') +
+    D.order.filter(n => !regs.includes(n)).map(n => '  assign ' + safe(n) + ' = ' + strip(expr(D.asg[n].e)) + ';').join('\n') + (regs.length && wires.length ? '\n' : '') +
+    (regs.length ? '\n  always @(posedge clk) begin\n    if (!rst_n) begin\n' + regs.map(n => '      ' + safe(n) + " <= 1'b0;").join('\n') + '\n    end else begin\n' +
+      regs.map(n => '      ' + safe(n) + ' <= ' + strip(expr(D.asg[n].e)) + ';').join('\n') + '\n    end\n  end' : '') + '\nendmodule\n';
 }
 
 /* The cells synthesis chose, as a structural netlist of Verilog gate primitives. */
 const PRIM = { INV: 'not', BUF: 'buf', NAND2: 'nand', NOR2: 'nor', AND2: 'and', OR2: 'or', XOR2: 'xor', XNOR2: 'xnor' };
 export function gatesVerilog(M, p) {
-  const name = coreName(p) + '_gates';
+  const name = coreName(p) + '_gates', regs = M.regs || [], qs = new Set(regs.map(r => r.q));
   const lines = [];
   M.inputs.forEach(i => lines.push('  assign n' + i.net + ' = ' + safe(i.name) + ';'));
   M.cells.forEach((c, k) => {
     if (c.type === 'TIE0' || c.type === 'TIE1') lines.push('  assign n' + c.out + " = 1'b" + (c.type === 'TIE1' ? 1 : 0) + ';  // ' + c.type);
+    else if (c.type === 'DFF') lines.push('  always @(posedge clk) if (!rst_n) n' + c.out + " <= 1'b0; else n" + c.out + ' <= n' + c.ins[0] + ';  // DFF');
     else lines.push('  ' + PRIM[c.type] + ' g' + k + ' (n' + c.out + ', ' + c.ins.map(n => 'n' + n).join(', ') + ');  // ' + c.type);
   });
   M.outs.forEach(o => lines.push('  assign ' + safe(o.name) + ' = n' + o.net + ';'));
-  const nets = Array.from({ length: M.nets }, (_, i) => 'n' + i);
-  return 'module ' + name + ' (\n' + p.ins.map(n => '    input  wire ' + safe(n)).concat(p.outs.map(n => '    output wire ' + safe(n))).join(',\n') + '\n);\n' +
-    '  wire ' + nets.join(', ') + ';\n' + lines.join('\n') + '\nendmodule\n';
+  const nets = Array.from({ length: M.nets }, (_, i) => i);
+  const ports = (regs.length ? ['    input  wire clk', '    input  wire rst_n'] : []).concat(p.ins.map(n => '    input  wire ' + safe(n)), p.outs.map(n => '    output wire ' + safe(n)));
+  return 'module ' + name + ' (\n' + ports.join(',\n') + '\n);\n' +
+    '  wire ' + nets.filter(i => !qs.has(i)).map(i => 'n' + i).join(', ') + ';\n' + (qs.size ? '  reg  ' + [...qs].map(i => 'n' + i).join(', ') + ';\n' : '') + lines.join('\n') + '\nendmodule\n';
 }
 
 /* The Tiny Tapeout top level: every pin assigned, unused inputs listed to avoid warnings. */
 export function wrapper(p, top, inner) {
   const { ins, outs } = pinOrder(p);
   const nI = ins.length, nO = outs.length;
-  const conn = ins.map((n, i) => '      .' + safe(n) + '(ui_in[' + i + '])').concat(outs.map((n, i) => '      .' + safe(n) + '(uo_out[' + i + '])'));
+  const conn = (p.seq ? ['      .clk(clk)', '      .rst_n(rst_n)'] : []).concat(ins.map((n, i) => '      .' + safe(n) + '(ui_in[' + i + '])'), outs.map((n, i) => '      .' + safe(n) + '(uo_out[' + i + '])'));
   const unusedIn = nI < 8 ? 'ui_in[7:' + nI + '], ' : '';
   return 'module ' + top + ' (\n' +
     '    input  wire [7:0] ui_in,    // Dedicated inputs\n' +
@@ -77,13 +86,13 @@ export function wrapper(p, top, inner) {
     '    input  wire       clk,      // clock\n' +
     '    input  wire       rst_n     // reset_n - low to reset\n' +
     ');\n\n' +
-    '  // Your circuit. Inputs come in on ui_in, outputs go out on uo_out.\n' +
+    '  // Your circuit. Inputs come in on ui_in, outputs go out on uo_out.' + (p.seq ? ' Its flip-flops use clk and rst_n.' : '') + '\n' +
     '  ' + inner + ' core (\n' + conn.join(',\n') + '\n  );\n\n' +
     '  // All output pins must be assigned. Unused ones are tied to 0.\n' +
     (nO < 8 ? '  assign uo_out[7:' + nO + '] = ' + (8 - nO) + "'b0;\n" : '') +
     "  assign uio_out = 8'b0;\n  assign uio_oe  = 8'b0;\n\n" +
     '  // List all unused inputs to prevent warnings\n' +
-    '  wire _unused = &{ena, clk, rst_n, ' + unusedIn + "uio_in, 1'b0};\n\nendmodule\n";
+    '  wire _unused = &{ena, ' + (p.seq ? '' : 'clk, rst_n, ') + unusedIn + "uio_in, 1'b0};\n\nendmodule\n";
 }
 
 /* src/project.v: your logic plus the top level. useGates puts the synthesized netlist inside instead. */
@@ -93,28 +102,34 @@ export function projectV(D, p, top, opts = {}) {
   return head + wrapper(p, top, coreName(p) + (opts.gates ? '_gates' : '')) + '\n' + inner;
 }
 
-/* What the outputs must be for every input pattern, as numbers on ui_in and uo_out. */
+/* What the outputs must be for every input pattern, as numbers on ui_in and uo_out. For a clocked
+   project: one row per clock cycle of its test, in order, starting just after reset. */
 export function cases(D, p) {
   const { ins, outs } = pinOrder(p);
-  return TC.vectors(p.ins).map(v => {
-    const want = p.f ? p.f(v) : TC.evalDesign(D, v);
-    let ui = 0, uo = 0; ins.forEach((n, i) => { ui |= v[n] << i; }); outs.forEach((n, i) => { uo |= (want[n] & 1) << i; });
-    return { ui, uo };
-  });
+  const pack = (v, want) => { let ui = 0, uo = 0; ins.forEach((n, i) => { ui |= v[n] << i; }); outs.forEach((n, i) => { uo |= (want[n] & 1) << i; }); return { ui, uo }; };
+  if (p.seq) return TC.verify(D, p).rows.map(r => pack(r.v, p.f ? r.e : r.o));
+  return TC.vectors(p.ins).map(v => pack(v, p.f ? p.f(v) : TC.evalDesign(D, v)));
 }
 export const outMask = p => (1 << p.outs.length) - 1;
 
-/* test/test.py: a cocotb test that tries every input pattern. */
+/* test/test.py: a cocotb test that tries every input pattern (or, for a clocked project, steps
+   through its test one clock cycle at a time). */
 export function cocotbTest(D, p) {
   const C = cases(D, p), mask = outMask(p);
-  return '# SPDX-License-Identifier: Apache-2.0\n# Exhaustive test for "' + p.t + '", exported from Open Silicon Lab.\n\n' +
-    'import cocotb\nfrom cocotb.clock import Clock\nfrom cocotb.triggers import ClockCycles, Timer\n\n' +
-    '# Every input pattern on ui_in and the value ' + (p.f ? 'the specification requires' : 'your design gives') + ' on uo_out.\n' +
+  const head = '# SPDX-License-Identifier: Apache-2.0\n# ' + (p.seq ? 'Clocked test' : 'Exhaustive test') + ' for "' + p.t + '", exported from Open Silicon Lab.\n\n' +
+    'import cocotb\nfrom cocotb.clock import Clock\nfrom cocotb.triggers import ClockCycles, FallingEdge, Timer\n\n' +
+    (p.seq ? '# One row per clock cycle after reset: the inputs on ui_in during the cycle and the outputs\n# ' + (p.f ? 'the specification requires' : 'your design gives') + ' on uo_out before the next rising edge.\n'
+      : '# Every input pattern on ui_in and the value ' + (p.f ? 'the specification requires' : 'your design gives') + ' on uo_out.\n') +
     'CASES = [\n' + C.map(c => '    (0b' + c.ui.toString(2).padStart(8, '0') + ', 0b' + c.uo.toString(2).padStart(8, '0') + '),').join('\n') + '\n]\n' +
     'MASK = 0b' + mask.toString(2).padStart(8, '0') + '  # the output pins your design uses\n\n\n' +
     '@cocotb.test()\nasync def test_project(dut):\n' +
     '    clock = Clock(dut.clk, 10, unit="us")\n    cocotb.start_soon(clock.start())\n\n' +
-    '    dut.ena.value = 1\n    dut.ui_in.value = 0\n    dut.uio_in.value = 0\n    dut.rst_n.value = 0\n    await ClockCycles(dut.clk, 2)\n    dut.rst_n.value = 1\n\n' +
+    '    dut.ena.value = 1\n    dut.ui_in.value = 0\n    dut.uio_in.value = 0\n    dut.rst_n.value = 0\n    await ClockCycles(dut.clk, 2)\n';
+  if (p.seq) return head + '    await FallingEdge(dut.clk)\n    dut.rst_n.value = 1\n\n' +
+    '    for cycle, (ui, expected) in enumerate(CASES):\n        dut.ui_in.value = ui\n        await Timer(1, unit="us")\n        got = int(dut.uo_out.value) & MASK\n' +
+    '        assert got == expected, f"cycle {cycle}, ui_in={ui:08b}: uo_out={got:08b}, expected {expected:08b}"\n        await FallingEdge(dut.clk)  # the rising edge in between is the tick\n\n' +
+    '    dut._log.info(f"All {len(CASES)} clock cycles pass")\n';
+  return head + '    dut.rst_n.value = 1\n\n' +
     '    for ui, expected in CASES:\n        dut.ui_in.value = ui\n        await Timer(1, unit="us")\n        got = int(dut.uo_out.value) & MASK\n' +
     '        assert got == expected, f"ui_in={ui:08b}: uo_out={got:08b}, expected {expected:08b}"\n\n' +
     '    dut._log.info(f"All {len(CASES)} input patterns pass")\n';
@@ -137,7 +152,7 @@ export function infoYaml(p, top, author) {
   return '# Tiny Tapeout project information, exported from Open Silicon Lab\nproject:\n' +
     '  title:        ' + yq(p.t) + '\n  author:       ' + yq(author || '') + '\n  discord:      ""\n' +
     '  description:  ' + yq(p.d.split('. ')[0].replace(/\.$/, '') + '.') + '\n' +
-    '  language:     "Verilog"\n  clock_hz:     0       # pure logic: no clock\n\n' +
+    '  language:     "Verilog"\n' + (p.seq ? '  clock_hz:     10      # slow enough to watch it on the LEDs; it works far faster\n\n' : '  clock_hz:     0       # pure logic: no clock\n\n') +
     '  # How many tiles your design occupies?\n  tiles: "1x1"\n\n' +
     '  # Your top module name must start with "tt_um_" and be unique.\n  top_module:  ' + yq(top) + '\n\n' +
     '  source_files:\n    - "project.v"\n\n' +
@@ -152,9 +167,9 @@ export function infoMd(D, p) {
   const { ins, outs } = pinOrder(p);
   return '## How it works\n\n' + p.d + '\n\nThe logic, one line per wire:\n\n```\n' + D.order.map(n => n + ' = ' + strip(expr(D.asg[n].e)).replace(/1'b/g, '') + ';').join('\n') + '\n```\n\n' +
     'Designed, verified and laid out in [Open Silicon Lab](https://focusxyz11.github.io/open-silicon-lab/#tiny).\n\n' +
-    '## How to test\n\nSet the input switches and read the outputs:\n\n' +
+    '## How to test\n\n' + (p.seq ? 'Hold reset, then let the clock run (or step it from the demo board). Set the input switches and watch the outputs change at each clock tick:\n\n' : 'Set the input switches and read the outputs:\n\n') +
     ins.map((n, i) => '- `ui[' + i + ']` → ' + n).join('\n') + '\n' + outs.map((n, i) => '- `uo[' + i + ']` → ' + n).join('\n') + '\n\n' +
-    'The cocotb test in `test/test.py` tries all ' + (1 << p.ins.length) + ' input patterns.\n\n## External hardware\n\nNone: the demo board\'s switches and LEDs are enough.\n';
+    (p.seq ? 'The cocotb test in `test/test.py` steps through ' + TC.seqVectors(p).length + ' clock cycles and checks the outputs in each.' : 'The cocotb test in `test/test.py` tries all ' + (1 << p.ins.length) + ' input patterns.') + '\n\n## External hardware\n\nNone: the demo board\'s switches and LEDs are enough.\n';
 }
 
 /* A minimal ZIP writer (stored, no compression) so the whole project downloads as one file. */

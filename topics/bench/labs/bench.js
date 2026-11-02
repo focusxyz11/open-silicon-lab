@@ -55,7 +55,7 @@ export function init() {
   }
 
   /* ---- designs: yours from the studio, or the studio's projects (solved) ---- */
-  const designs = () => [{ id: 'mine', t: 'Your chip' }].concat(PARTS.map(p => ({ id: p.id, t: p.t, part: true })), TC.PROJ.map(p => ({ id: p.id, t: p.t })));
+  const designs = () => [{ id: 'mine', t: 'Your chip' }].concat(PARTS.map(p => ({ id: p.id, t: p.t, part: true })), TC.PROJ.filter(p => !p.seq).map(p => ({ id: p.id, t: p.t })));
   function build() {
     let proj, code;
     const part = partById(S.design);
@@ -253,7 +253,8 @@ export function init() {
   function render() {
     $('#bhBoards').querySelectorAll('[data-b]').forEach(c => c.setAttribute('aria-checked', c.dataset.b === S.board ? 'true' : 'false'));
     $('#bhDesign').innerHTML = designs().map(d => '<button type="button" data-d="' + d.id + '" aria-pressed="' + (d.id === S.design ? 'true' : 'false') + '">' + esc(d.t) + '</button>').join('');
-    const note = S.errs ? '<b class="bad">Your design has an error, so it cannot be built:</b> ' + esc(S.errs[0].m || S.errs[0]) + ' <a href="#tiny">Fix it in the studio →</a>'
+    const note = S.errs && S.errs[0].code === 'clocked' ? '<b>Your chip has flip-flops.</b> Its outputs depend on what happened at earlier clock ticks, and the bench\'s twin test checks logic-only chips so far: it cannot step the clock yet. Pick one of the other designs, or test your counter in the studio\'s test step.'
+      : S.errs ? '<b class="bad">Your design has an error, so it cannot be built:</b> ' + esc(S.errs[0].m || S.errs[0]) + ' <a href="#tiny">Fix it in the studio →</a>'
       : S.design === 'mine' ? 'The design you are building in the <a href="#tiny">tiny chip studio</a>: ' + esc(S.proj.t) + '.' + (S.chip && S.proj.f && differsFromSpec(S.chip) ? ' <span class="muted">(It still differs from the project\'s specification; the studio\'s verify step shows where. The twin test compares the board with your design as written.)</span>' : '')
       : partById(S.design) ? 'A real chip you can buy for a few cents. ' + esc(S.proj.d) + (S.board === 'mpbench' ? ' The wiring is shown above, under the choice of board.' : ' Test the real one with an ESP32 or Pico: pick that board above.')
       : 'The tiny chip studio\'s <i>' + esc(S.proj.t) + '</i> project, solved. ' + esc(S.proj.d.split(/(?<=\.) /)[0]);

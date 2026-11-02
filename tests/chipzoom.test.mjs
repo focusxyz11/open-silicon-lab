@@ -10,7 +10,8 @@ const LOGIC = {
 };
 
 test('every library cell is opened into transistors, and the count matches the library', () => {
-  for (const type of Object.keys(TC.LIB)) {
+  /* a flip-flop is not one static CMOS network; the zoom shows it as a block (see the clock topic) */
+  for (const type of Object.keys(TC.LIB).filter(t => t !== 'DFF')) {
     assert.ok(CELLS[type], type + ' has a transistor circuit');
     assert.equal(circuit(type).fets.length, TC.LIB[type][0], type + ' transistor count');
   }
@@ -64,12 +65,15 @@ test('every built-in project zooms from board to transistor, each level inside t
 test('signals on the wires agree with the design for every input', () => {
   for (const proj of TC.PROJ) {
     const Z = build({ p: proj.id, code: proj.sol || proj.starter, node: '130' });
-    const D = TC.parse(proj.sol || proj.starter, proj.ins, proj.outs);
-    for (const vec of TC.vectors(proj.ins).slice(0, 64)) {
-      const ins = proj.ins.map(k => vec[k]), S = signals(Z, ins), want = TC.evalDesign(D, vec);
-      for (const k of proj.outs) assert.equal(S.out[k], want[k], proj.id + ' ' + k);
+    const D = TC.parse(proj.sol || proj.starter, proj.ins, proj.outs, { regs: !!proj.seq });
+    let st = {}, ds = {};
+    for (const vec of TC.testVectors(proj).slice(0, 64)) {
+      const ins = proj.ins.map(k => vec[k]), S = signals(Z, ins, st), want = TC.stepDesign(D, vec, ds);
+      for (const k of proj.outs) assert.equal(S.out[k], want.out[k], proj.id + ' ' + k);
       /* and each cell's transistors give the value its output wire carries */
-      Z.cells.forEach((c, i) => assert.equal(evalCell(c.type, S.cellIns[i]).out, S.net[c.out], proj.id + ' cell ' + i));
+      Z.cells.forEach((c, i) => { if (c.type !== 'DFF') assert.equal(evalCell(c.type, S.cellIns[i]).out, S.net[c.out], proj.id + ' cell ' + i); });
+      st = S.next; ds = want.next;
     }
+    assert.notEqual(Z.cell.type, 'DFF', 'the zoom opens a logic cell');
   }
 });

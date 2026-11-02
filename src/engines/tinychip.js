@@ -37,21 +37,30 @@ E.PROJ=[
   sol:'bb = b ^ sub;\np = a ^ bb;\ns = p ^ cin;\ncout = (a & bb) | (cin & p);\ny = (~op1 & ~op0 & (a & b)) | (~op1 & op0 & (a | b)) | (op1 & ~op0 & (a ^ b)) | (op1 & op0 & s);'},
  {id:'free',t:'Your own design',lvl:'Free play',ins:['a','b','c','d'],outs:['y','z'],demo:'lamp',spec:false,
   d:'No specification: four inputs, two outputs, any logic you like. Verification shows what your circuit does instead of checking it.',
-  f:null,starter:'// Write any logic using a, b, c and d.\ny = (a | b) & ~(c ^ d);\nz = a ^ b ^ c ^ d;   // 1 when an odd number of inputs are 1',sol:null}
+  f:null,starter:'// Write any logic using a, b, c and d.\ny = (a | b) & ~(c ^ d);\nz = a ^ b ^ c ^ d;   // 1 when an odd number of inputs are 1',sol:null},
+ {id:'count',t:'Counter',lvl:'Remember',ins:['en'],outs:['q2','q1','q0'],demo:'count',seq:true,
+  d:'Counts from 0 to 7 and round again, one step per clock tick, while en is 1. A counter must remember where it is, so it needs flip-flops: write reg in front of a line and that wire becomes a flip-flop, which keeps its value and takes the new one on the right at each tick. The carry into the top bit has a bug.',
+  tests:{en:[1,1,1,1,0,1,1,1,1,1,0,1,1]},
+  f:(v,s)=>{const n=s.n|0;return {out:{q2:n>>2&1,q1:n>>1&1,q0:n&1},next:{n:(n+v.en)&7}};},
+  starter:'// A 3-bit counter: q2 q1 q0 go up by one on each clock tick while en is 1.\n// reg makes a flip-flop: it holds its value between ticks,\n// and on each tick it takes the value on the right.\nreg q0 = q0 ^ en;\nreg q1 = q1 ^ (q0 & en);\nreg q2 = q2 ^ (q1 & en);   // the carry into q2: is it right?',
+  sol:'c1 = q0 & en;       // carry into bit 1\nc2 = q1 & c1;       // carry into bit 2: only when both lower bits are 1\nreg q0 = q0 ^ en;\nreg q1 = q1 ^ c1;\nreg q2 = q2 ^ c2;'}
 ];
 /* cell library: transistors, width in sites, delay ps at 130 nm */
-E.LIB={INV:[2,2,60],BUF:[4,3,110],NAND2:[4,3,80],NOR2:[4,3,110],AND2:[6,4,140],OR2:[6,4,160],XOR2:[12,6,200],XNOR2:[12,6,200],TIE0:[2,2,0],TIE1:[2,2,0]};
+/* DFF: a flip-flop. Its delay is clock-to-output; it also needs its input steady SETUP ps before the tick. */
+E.LIB={DFF:[24,16,310],INV:[2,2,60],BUF:[4,3,110],NAND2:[4,3,80],NOR2:[4,3,110],AND2:[6,4,140],OR2:[6,4,160],XOR2:[12,6,200],XNOR2:[12,6,200],TIE0:[2,2,0],TIE1:[2,2,0]};
 
 /* ---- parser ---- */
-E.parse=function(src,ins,outs){
+E.parse=function(src,ins,outs,opt){opt=opt||{};
  const errs=[],asg={},order=[],lines=src.split('\n');
  const isName=s=>/^[A-Za-z_][A-Za-z0-9_]*$/.test(s);
  lines.forEach((raw,li)=>{let line=raw.replace(/\/\/.*$/,'').trim();if(!line)return;
   line.split(';').map(x=>x.trim()).filter(Boolean).forEach(st=>{
+   let isReg=false;if(/^reg\s+/.test(st)){isReg=true;st=st.replace(/^reg\s+/,'');}
    st=st.replace(/^(assign|wire|logic)\s+/,'');
    const m=/^([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.+)$/.exec(st);
    if(!m){errs.push({l:li+1,m:'Expected "name = expression".'});return;}
    const nm=m[1];if(ins.includes(nm)){errs.push({l:li+1,m:'"'+nm+'" is an input; inputs come from outside the chip and cannot be assigned.'});return;}
+   if(isReg&&!opt.regs){errs.push({l:li+1,m:'This project has no clock, so it cannot use reg. Flip-flops need a clocked project such as the Counter.'});return;}
    if(asg[nm]){errs.push({l:li+1,m:'"'+nm+'" is assigned twice. In hardware each wire has exactly one driver.'});return;}
    let toks=[],s=m[2],i=0;
    while(i<s.length){const ch=s[i];if(/\s/.test(ch)){i++;continue;}
@@ -70,7 +79,7 @@ E.parse=function(src,ins,outs){
    function andx(){let a=prim();while(peek()==='&'){p++;a={op:'and',a,b:prim()};}return a;}
    function xorx(){let a=andx();while(peek()==='^'){p++;a={op:'xor',a,b:andx()};}return a;}
    function orx(){let a=xorx();while(peek()==='|'){p++;a={op:'or',a,b:xorx()};}return a;}
-   try{const e=orx();if(p<toks.length)bad('Unexpected "'+toks[p]+'". Is an operator missing?');asg[nm]={e,l:li+1};order.push(nm);}
+   try{const e=orx();if(p<toks.length)bad('Unexpected "'+toks[p]+'". Is an operator missing?');asg[nm]={e,l:li+1,reg:isReg};order.push(nm);}
    catch(x){errs.push({l:li+1,m:x.message});}
   });});
  const used=new Set();const walk=e=>{if(!e)return;if(e.op==='var')used.add(e.n);walk(e.a);walk(e.b);};
@@ -78,13 +87,29 @@ E.parse=function(src,ins,outs){
  used.forEach(n=>{if(!ins.includes(n)&&!asg[n])errs.push({l:Object.values(asg).find(a=>{let f=false;const w=e=>{if(!e)return;if(e.op==='var'&&e.n===n)f=true;w(e.a);w(e.b);};w(a.e);return f;}).l,m:'"'+n+'" is used but never defined. Inputs are '+ins.join(', ')+'.'});});
  outs.forEach(o=>{if(!asg[o])errs.push({l:0,m:'Output "'+o+'" is never assigned.'});});
  /* loops */
- const state={};let loop=null;const dfs=n=>{if(loop)return;if(state[n]===1){loop=n;return;}if(state[n]===2||!asg[n])return;state[n]=1;const deps=new Set();const w=e=>{if(!e)return;if(e.op==='var')deps.add(e.n);w(e.a);w(e.b);};w(asg[n].e);deps.forEach(dfs);state[n]=2;};
- Object.keys(asg).forEach(dfs);if(loop)errs.push({l:asg[loop].l,m:'"'+loop+'" depends on itself, making a loop. Logic without a clock must flow in one direction.'});
+ const state={};let loop=null;const dfs=n=>{if(loop)return;if(state[n]===1){loop=n;return;}if(state[n]===2||!asg[n])return;state[n]=1;const deps=new Set();const w=e=>{if(!e)return;if(e.op==='var')deps.add(e.n);w(e.a);w(e.b);};w(asg[n].e);deps.forEach(x=>{if(!(asg[x]&&asg[x].reg))dfs(x);});state[n]=2;};
+ Object.keys(asg).forEach(dfs);if(loop)errs.push({l:asg[loop].l,m:'"'+loop+'" depends on itself, making a loop. Logic without a clock must flow in one direction; to feed a value back, store it in a flip-flop with reg.'});
  const warns=[];Object.keys(asg).forEach(n=>{if(!outs.includes(n)&&!used.has(n))warns.push('"'+n+'" is computed but never used, so synthesis will remove it.');});
- return {errs,warns,asg,order};
+ return {errs,warns,asg,order,regs:order.filter(n=>asg[n].reg)};
 };
-E.evalDesign=function(d,v){const memo=Object.assign({},v);const ev=e=>{switch(e.op){case 'const':return e.v;case 'var':if(!(e.n in memo))memo[e.n]=ev(d.asg[e.n].e);return memo[e.n];case 'not':return 1-ev(e.a);case 'and':return ev(e.a)&ev(e.b);case 'or':return ev(e.a)|ev(e.b);case 'xor':return ev(e.a)^ev(e.b);}};
- const o={};Object.keys(d.asg).forEach(n=>{o[n]=ev({op:'var',n});});return o;};
+/* A design's outputs (and every wire) for one input pattern. s: the flip-flops' current values (0 if not given). */
+function evalAll(d,v,s){const memo=Object.assign({},v);Object.keys(d.asg).forEach(n=>{if(d.asg[n].reg&&!(n in memo))memo[n]=s&&s[n]!==undefined?s[n]:0;});
+ const ev=e=>{switch(e.op){case 'const':return e.v;case 'var':if(!(e.n in memo))memo[e.n]=ev(d.asg[e.n].e);return memo[e.n];case 'not':return 1-ev(e.a);case 'and':return ev(e.a)&ev(e.b);case 'or':return ev(e.a)|ev(e.b);case 'xor':return ev(e.a)^ev(e.b);}};
+ const o={};Object.keys(d.asg).forEach(n=>{o[n]=ev({op:'var',n});});const next={};Object.keys(d.asg).forEach(n=>{if(d.asg[n].reg)next[n]=ev(d.asg[n].e);});return {o,next};}
+E.evalDesign=function(d,v,s){return evalAll(d,v,s).o;};
+/* One clock cycle: the outputs during the cycle, and what each flip-flop takes at the tick. */
+E.stepDesign=function(d,v,s){const r=evalAll(d,v,s);return {out:r.o,next:r.next};};
+E.regsOf=d=>Object.keys(d.asg).filter(n=>d.asg[n].reg);
+/* A clocked project's test: one input pattern per clock cycle. */
+E.seqVectors=p=>{const ks=Object.keys(p.tests),L=p.tests[ks[0]].length;return Array.from({length:L},(_,k)=>Object.fromEntries(p.ins.map(n=>[n,p.tests[n][k]|0])));};
+/* Check a design against its project's specification: every input pattern, or every cycle of a
+   clocked project's test (starting from all flip-flops at 0, as after a reset). */
+E.verify=function(d,p){
+ if(p.seq){let s={},es={};const rows=E.seqVectors(p).map((v,k)=>{const r=E.stepDesign(d,v,s),e=p.f?p.f(v,es):null;const mis=e?p.outs.filter(n=>r.out[n]!==e.out[n]):[];const row={k,v,o:r.out,e:e&&e.out,mis,s};s=r.next;if(e)es=e.next;return row;});return {rows,bad:rows.filter(r=>r.mis.length).length,seq:true};}
+ const rows=E.vectors(p.ins).map(v=>{const o=E.evalDesign(d,v),e=p.f?p.f(v):null;return {v,o,e,mis:e?p.outs.filter(n=>o[n]!==e[n]):[]};});
+ return {rows,bad:rows.filter(r=>r.mis.length).length,seq:false};};
+/* The test patterns for a project, in order. */
+E.testVectors=p=>p.seq?E.seqVectors(p):E.vectors(p.ins);
 E.vectors=ins=>{const n=ins.length,V=[];for(let k=0;k<(1<<n);k++){const v={};ins.forEach((x,i)=>v[x]=(k>>(n-1-i))&1);V.push(v);}return V;};
 
 /* ---- synthesis ---- */
@@ -144,19 +169,31 @@ function mapCells(G,lib){const N=G.B.nodes;const live=new Set();const mark=id=>{
  return {cells,inputs,outs,nets:netN};}
 function stats(M,node){const f=E.NODE[node].dly;let tr=0;M.cells.forEach(c=>tr+=E.LIB[c.type][0]);
  const arr={};M.inputs.forEach(i=>arr[i.net]=0);const lvl={};M.inputs.forEach(i=>lvl[i.net]=0);
- const byOut={};M.cells.forEach(c=>byOut[c.out]=c);
+ /* a flip-flop's output starts each cycle: it is ready clock-to-output after the tick */
+ (M.regs||[]).forEach(r=>{arr[r.q]=E.LIB.DFF[2]*f;lvl[r.q]=0;});
+ const byOut={};M.cells.forEach(c=>{if(c.type!=='DFF')byOut[c.out]=c;});
  const at=n=>{if(arr[n]!==undefined)return arr[n];const c=byOut[n];const a=Math.max(0,...c.ins.map(at));lvl[n]=Math.max(0,...c.ins.map(i=>lvl[i]))+1;arr[n]=a+E.LIB[c.type][2]*f+10*f;return arr[n];};
  let crit=0,depth=0;M.outs.forEach(o=>{crit=Math.max(crit,at(o.net));depth=Math.max(depth,lvl[o.net]);});
+ /* and a flip-flop's input must settle SETUP before the next tick */
+ (M.regs||[]).forEach(r=>{crit=Math.max(crit,at(r.d)+E.SETUP*f);depth=Math.max(depth,lvl[r.d]);});
  const ovh=450*f;return {cells:M.cells.length,tr,crit,depth,fmax:1e6/(crit+ovh)};}
+E.SETUP=120;
 E.NODE={'180':{t:'180 nm',dly:1.45,site:[0.56,5.04],masks:22,mask$:0.2,shuttle:true,wafer:200,d0:0.08,days:1.1},'130':{t:'130 nm',dly:1,site:[0.46,2.72],masks:26,mask$:0.4,shuttle:true,wafer:200,d0:0.1,days:1.1},'28':{t:'28 nm',dly:0.3,site:[0.136,1.2],masks:45,mask$:2,shuttle:true,wafer:300,d0:0.07,days:1.2},'3':{t:'3 nm',dly:0.1,site:[0.048,0.169],masks:80,mask$:18,shuttle:false,wafer:300,d0:0.1,days:1.4}};
-E.synth=function(d,ins,outs,lib,opt,node){const A=mapCells(fromDesign(d,ins,outs),lib);let M=A,used='yours',alt=null;
- if(opt){const B=mapCells(fromSOP(d,ins,outs),lib);const ta=stats(A,node).tr,tb=stats(B,node).tr;alt={yours:ta,sop:tb};if(tb<ta){M=B;used='sop';}}
+/* Flip-flops: synthesis treats each one's output as an extra input of the logic and its next value
+   as an extra output, then adds a DFF cell joining the two. */
+E.synth=function(d,ins,outs,lib,opt,node){const R=E.regsOf(d);let d2=d,ins2=ins,outs2=outs;
+ if(R.length){d2={asg:Object.assign({},d.asg)};R.forEach(r=>{d2.asg[r+'$d']={e:d.asg[r].e};});ins2=ins.concat(R);outs2=outs.concat(R.map(r=>r+'$d'));}
+ const fin=M=>{if(!R.length){M.regs=[];return M;}const regs=R.map(r=>({name:r,q:M.inputs.find(i=>i.name===r).net,d:M.outs.find(o=>o.name===r+'$d').net}));
+  M.inputs=M.inputs.filter(i=>!R.includes(i.name));M.outs=M.outs.filter(o=>!/\$d$/.test(o.name));regs.forEach(r=>M.cells.push({type:'DFF',ins:[r.d],out:r.q}));M.regs=regs;return M;};
+ const A=fin(mapCells(fromDesign(d2,ins2,outs2),lib));let M=A,used='yours',alt=null;
+ if(opt){const B=fin(mapCells(fromSOP(d2,ins2,outs2),lib));const ta=stats(A,node).tr,tb=stats(B,node).tr;alt={yours:ta,sop:tb};if(tb<ta){M=B;used='sop';}}
  return {M,used,alt,st:stats(M,node)};};
 E.stats=stats;
-E.simCells=function(M,v,fault){const val={};M.inputs.forEach(i=>val[i.net]=v[i.name]);if(fault&&val[fault.net]!==undefined)val[fault.net]=fault.v;
- M.cells.forEach(c=>{const x=c.ins.map(n=>val[n]);let o;switch(c.type){case 'INV':o=1-x[0];break;case 'BUF':o=x[0];break;case 'NAND2':o=1-(x[0]&x[1]);break;case 'NOR2':o=1-(x[0]|x[1]);break;case 'AND2':o=x[0]&x[1];break;case 'OR2':o=x[0]|x[1];break;case 'XOR2':o=x[0]^x[1];break;case 'XNOR2':o=1-(x[0]^x[1]);break;case 'TIE0':o=0;break;case 'TIE1':o=1;break;}
+/* state: each flip-flop's current value by name (0 if not given); next: what each takes at the tick. */
+E.simCells=function(M,v,fault,state){const val={};M.inputs.forEach(i=>val[i.net]=v[i.name]);(M.regs||[]).forEach(r=>{val[r.q]=state&&state[r.name]!==undefined?state[r.name]:0;});if(fault&&val[fault.net]!==undefined)val[fault.net]=fault.v;
+ M.cells.forEach(c=>{if(c.type==='DFF')return;const x=c.ins.map(n=>val[n]);let o;switch(c.type){case 'INV':o=1-x[0];break;case 'BUF':o=x[0];break;case 'NAND2':o=1-(x[0]&x[1]);break;case 'NOR2':o=1-(x[0]|x[1]);break;case 'AND2':o=x[0]&x[1];break;case 'OR2':o=x[0]|x[1];break;case 'XOR2':o=x[0]^x[1];break;case 'XNOR2':o=1-(x[0]^x[1]);break;case 'TIE0':o=0;break;case 'TIE1':o=1;break;}
   if(fault&&fault.net===c.out)o=fault.v;val[c.out]=o;});
- const out={};M.outs.forEach(o=>out[o.name]=val[o.net]);return {out,val};};
+ const out={};M.outs.forEach(o=>out[o.name]=val[o.net]);const next={};(M.regs||[]).forEach(r=>next[r.name]=val[r.d]);return {out,val,next};};
 
 /* ---- placement ---- */
 E.place=function(M,util,seed){const R=(function(s){return function(){s|=0;s=s+0x6D2B79F5|0;let t=Math.imul(s^s>>>15,1|s);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};})(seed||1);
@@ -206,8 +243,11 @@ E.route=function(PL){const {GW,H}=PL;const P=PL.netPins();const occ=new Int32Arr
  return {paths,failed,wl,vias,GW,H,P};};
 
 /* ---- fault coverage: stuck-at on every net ---- */
-E.faults=function(M,vecs){const golden=vecs.map(v=>E.simCells(M,v).out);const F=[];for(let n=0;n<M.nets;n++)for(const sv of [0,1])F.push({net:n,v:sv});
- let det=0;const detected=F.map(f=>{for(let k=0;k<vecs.length;k++){const o=E.simCells(M,vecs[k],f).out;for(const key in o)if(o[key]!==golden[k][key])return k;}return -1;});detected.forEach(x=>{if(x>=0)det++;});
+E.faults=function(M,vecs){
+ /* vecs run in order; flip-flops carry their values from one pattern to the next (from 0, as after a reset) */
+ const golden=[];let s={};vecs.forEach(v=>{const r=E.simCells(M,v,null,s);golden.push(r.out);s=r.next;});
+ const F=[];for(let n=0;n<M.nets;n++)for(const sv of [0,1])F.push({net:n,v:sv});
+ let det=0;const detected=F.map(f=>{let st={};for(let k=0;k<vecs.length;k++){const r=E.simCells(M,vecs[k],f,st);for(const key in r.out)if(r.out[key]!==golden[k][key])return k;st=r.next;}return -1;});detected.forEach(x=>{if(x>=0)det++;});
  return {F,detected,cov:F.length?det/F.length:1};};
 })(TC);
 export default TC;

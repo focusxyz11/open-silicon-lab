@@ -67,7 +67,7 @@ function strip(topic, p) {
 
 /* ---- the chip card: a drawing of your die in its package ---- */
 const up = s => s.toLocaleUpperCase(locale());
-const CELLC = { INV: '#8fa3b3', BUF: '#8fa3b3', NAND2: '#9b8ce0', NOR2: '#c58ab3', AND2: '#7f9fe0', OR2: '#d6a35a', XOR2: '#5fb7a8', XNOR2: '#5fb7a8', TIE0: '#888', TIE1: '#888' };
+const CELLC = { INV: '#8fa3b3', BUF: '#8fa3b3', NAND2: '#9b8ce0', NOR2: '#c58ab3', AND2: '#7f9fe0', OR2: '#d6a35a', XOR2: '#5fb7a8', XNOR2: '#5fb7a8', TIE0: '#888', TIE1: '#888', DFF: '#e07a5f' };
 export function drawCard(cv, p, d) {
   const ctx = cv.getContext('2d'), W = 720, H = 440, dpr = Math.min(window.devicePixelRatio || 1, 2);
   cv.width = W * dpr; cv.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -80,7 +80,7 @@ export function drawCard(cv, p, d) {
     if (s === 0) ctx.fillRect(px + t * ps - w / 2, py - L, w, L); if (s === 1) ctx.fillRect(px + ps, py + t * ps - w / 2, L, w); if (s === 2) ctx.fillRect(px + t * ps - w / 2, py + ps, w, L); if (s === 3) ctx.fillRect(px - L, py + t * ps - w / 2, L, w); }
   ctx.fillStyle = '#20262b'; ctx.fillRect(px, py, ps, ps); ctx.strokeStyle = '#3a444c'; ctx.lineWidth = 2; ctx.strokeRect(px, py, ps, ps);
   /* the die, with your placed cells */
-  const proj = TC.PROJ.find(x => x.id === p.proj), D = TC.parse(d.code, proj.ins, proj.outs);
+  const proj = TC.PROJ.find(x => x.id === p.proj), D = TC.parse(d.code, proj.ins, proj.outs, { regs: !!proj.seq });
   const SY = TC.synth(D, proj.ins, proj.outs, p.lib, false, p.node), PL = TC.place(SY.M, p.util, 7); PL.anneal(Math.min(3000, 300 + SY.M.cells.length * 80), null);
   const dm = 190, dx = px + (ps - dm) / 2, dy = py + (ps - dm) / 2;
   ctx.fillStyle = '#5b5f86'; ctx.fillRect(dx, dy, dm, dm);

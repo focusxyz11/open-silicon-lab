@@ -135,7 +135,7 @@ async function initLive() {
   try { if (window.claude && typeof window.claude.use === 'function') sample = await window.claude.use('sample'); } catch (e) { sample = null; }
   if (!sample) return;
   $('#agLiveTag').textContent = 'Live · Claude';
-  const projs = TC.PROJ.filter(p => p.f);
+  const projs = TC.PROJ.filter(p => p.f && !p.seq);
   const L = { p: projs[2].id, busy: false, code: null, text: '', guess: null, verdict: null, tally: { n: 0, right: 0 } };
   const P = () => projs.find(p => p.id === L.p);
   function draw() {

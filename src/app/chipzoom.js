@@ -8,7 +8,7 @@ import { build, signals, evalCell, dual, GATE, SHARED } from '../engines/chipzoo
 
 const IDS = ['board', 'pkg', 'die', 'tile', 'design', 'cell', 'fet'];
 /* Kept between renders of the view, so changing the design keeps where you are. */
-const K = { t: 0, cell: null, fet: null, ins: {}, key: '' };
+const K = { t: 0, cell: null, fet: null, ins: {}, key: '', state: {}, ticks: 0 };
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
 /* Photo-like colours: the drawing looks the same in light and dark mode, like a microscope image. */
@@ -18,7 +18,7 @@ const C = {
   one: '#f0b13c', zero: '#3f6b85', ink: '#e8eef2', mute: '#8c9da8', on: '#f0b13c', off: '#5f6f7b',
   sub: '#3a2f4f', nwell: '#2f3f5a', ndiff: '#3b6e8f', pdiff: '#8f5a3b', oxide: '#c9d2d8', poly: '#a33f3f', metal: '#8a8f99'
 };
-const CELLC = { INV: '#8fa3b3', BUF: '#8fa3b3', NAND2: '#9b8ce0', NOR2: '#c58ab3', AND2: '#7f9fe0', OR2: '#d6a35a', XOR2: '#5fb7a8', XNOR2: '#5fb7a8', TIE0: '#888888', TIE1: '#888888' };
+const CELLC = { INV: '#8fa3b3', BUF: '#8fa3b3', NAND2: '#9b8ce0', NOR2: '#c58ab3', AND2: '#7f9fe0', OR2: '#d6a35a', XOR2: '#5fb7a8', XNOR2: '#5fb7a8', TIE0: '#888888', TIE1: '#888888', DFF: '#e07a5f' };
 const val = v => v === 1 ? C.one : C.zero;
 const FONT = '"IBM Plex Sans", sans-serif'; /* i18n-ok: a font name */
 
@@ -33,6 +33,7 @@ export function zoomSection() {
     '<div class="row"><button type="button" class="btn primary" id="yczPlay"></button><button type="button" class="btn" id="yczBack">' + t('cz.back') + '</button></div>' +
     '<p class="eyebrow">' + t('cz.switches') + '</p><div class="seg czins" id="yczIns" role="group" aria-label="' + esc(t('cz.switches')) + '"></div>' +
     '<p class="eyebrow">' + t('cz.leds') + '</p><div class="czouts" id="yczOuts"></div>' +
+    '<div class="row" id="yczClock" hidden><button type="button" class="btn primary" id="yczTick">' + t('cz.tick') + '</button><button type="button" class="btn" id="yczRst">' + t('cz.reset') + '</button><span class="small muted" id="yczTicks"></span></div>' +
     '<p class="czdesc" id="yczDesc" aria-live="polite"></p><p class="small muted" id="yczTip"></p></div></div>' +
     '<p class="note">' + t('cz.note') + '</p></section>';
 }
@@ -43,18 +44,21 @@ export function mountZoom(d) {
   const cv = document.getElementById('yczCv'); if (!cv) return;
   const me = ++run, $ = id => document.getElementById(id);
   const key = d.p + '|' + d.node;
-  if (K.key !== key) { K.key = key; K.cell = null; K.fet = null; K.ins = {}; }
+  if (K.key !== key) { K.key = key; K.cell = null; K.fet = null; K.ins = {}; K.state = {}; K.ticks = 0; }
   let Z = build(d, { cell: K.cell, fet: K.fet });
   if (!Z.ok) return;
   const N = IDS.length;
   let S = null;
   const ins = () => Z.proj.ins.map(k => K.ins[k] | 0);
   function resim() {
-    S = signals(Z, ins());
+    S = signals(Z, ins(), K.state);
+    const clocked = (Z.SY.M.regs || []).length > 0; $('yczClock').hidden = !clocked; if (clocked) $('yczTicks').textContent = t('cz.ticks', { n: K.ticks });
     $('yczIns').innerHTML = Z.proj.ins.map(k => '<button type="button" data-in="' + esc(k) + '" aria-pressed="' + (K.ins[k] ? 'true' : 'false') + '">' + esc(k) + ' = ' + (K.ins[k] | 0) + '</button>').join('');
     $('yczOuts').innerHTML = Z.proj.outs.map(k => '<span class="' + (S.out[k] ? 'lit' : '') + '"><i aria-hidden="true"></i>' + esc(k) + ' = ' + S.out[k] + '</span>').join('');
     lastIdx = -1; draw(performance.now());
   }
+  $('yczTick').addEventListener('click', () => { K.state = S.next; K.ticks++; resim(); });
+  $('yczRst').addEventListener('click', () => { K.state = {}; K.ticks = 0; resim(); });
   $('yczIns').addEventListener('click', e => { const b = e.target.closest('[data-in]'); if (!b) return; K.ins[b.dataset.in] = K.ins[b.dataset.in] ? 0 : 1; resim(); });
 
   /* ---- the scenes, each drawn in [-1, 1]; u = pixels per unit, sec = time ---- */
@@ -131,7 +135,7 @@ export function mountZoom(d) {
     c.fillStyle = 'rgba(255,255,255,.05)'; for (let r = 0; r < PL.rows; r++) c.fillRect(dX(2), dY(r * PL.TR + 1), (PL.GW - 4) * ux, 3 * uy);
     Z.cells.forEach((cl, i) => {
       c.fillStyle = CELLC[cl.type]; c.globalAlpha = 0.85; c.fillRect(dX(cl.x) + ux * 0.08, dY(cl.y) + uy * 0.1, cl.w * ux - ux * 0.16, 3 * uy - uy * 0.2); c.globalAlpha = 1;
-      if (cl.w * ux * u > 34) text(c, cl.type, dX(cl.x + cl.w / 2), dY(cl.y + 0.55), Math.min(11, cl.w * ux * u / 5), u, '#10161a');
+      if (cl.w * ux * u > 34) text(c, cl.type === 'DFF' ? 'DFF ' + S.net[cl.out] : cl.type, dX(cl.x + cl.w / 2), dY(cl.y + 0.55), Math.min(11, cl.w * ux * u / 5), u, '#10161a');
       if (i === Z.pick) { c.strokeStyle = C.mine; c.lineWidth = 2.5 / u; c.strokeRect(dX(cl.x), dY(cl.y), cl.w * ux, 3 * uy); }
     });
     /* the routed wires, coloured by the value they carry */
@@ -273,6 +277,7 @@ export function mountZoom(d) {
     if (IDS[near] === 'design') {
       const gx = (x * half('design') + Z.um.dW / 2) / Z.um.ux, gy = (y * half('design') + Z.um.dH / 2) / Z.um.uy;
       const k = Z.cells.findIndex(cl => gx >= cl.x && gx <= cl.x + cl.w && gy >= cl.y && gy <= cl.y + 3);
+      if (k >= 0 && Z.cells[k].type === 'DFF') { $('yczTip').textContent = t('cz.tipFlop'); return; }
       if (k >= 0 && k !== Z.pick) { K.cell = k; K.fet = null; Z = build(d, { cell: k }); lastIdx = -1; }
     } else {
       const fx = (x * half('cell')) / Z.um.cW + 0.5, fy = (y * half('cell')) / Z.um.cH + 0.5;

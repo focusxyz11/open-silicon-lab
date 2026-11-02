@@ -105,6 +105,12 @@
       "title": "Pack it tight",
       "task": "Find the highest packing density that still routes.",
       "href": "#tiny"
+    },
+    {
+      "kind": "Puzzle",
+      "title": "Fix the counter",
+      "task": "The Counter project skips numbers. Find the wrong carry, fix it, and watch it count from 0 to 7 on the gadget.",
+      "href": "#lab-tiny-1"
     }
   ],
   "learn": {}
