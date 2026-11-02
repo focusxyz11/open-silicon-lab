@@ -85,7 +85,31 @@ These three were chosen on 2 November 2026.
 
 ## Earlier ideas still open
 
-From conversations in October and November 2026.
+Gathered from every session so far (October and November 2026): the project's notes, the roadmap and
+past pull requests. Ideas already built are left out. Where an idea is also on the roadmap, the
+roadmap has the detail.
+
+### Learning and experience
+- **A clearer map.** The home map's crossing lines felt too complicated, and the Knowledge and Challenges cards felt flat with no visible connections. Lenses (one kind of link at a time) helped; a better picture is still to be chosen together, and the map must keep working as topics grow well past today's 40.
+- **Zoom as the main way to get around.** From the globe to atoms, each level opening its labs (roadmap). The map's rack-to-atom zoom and Zoom into your chip are first steps.
+- **Predict, then reveal** in every lab, not only in cause-and-effect links (roadmap).
+- **More big questions beyond the technology itself,** each with several viewpoints, a 2026–2040 horizon and AI as the force of change (roadmap): why can't the world just make more chips when it needs them? Who decides which chips get made? Why isn't better technology enough to win? If AI helps design chips, who builds the next ones? Can the planet afford the chips we want? (The first big question, why perfect designs fail, is built.)
+- **Forecasts that get scored:** dated bets on the future, resolved by the monthly fact check (roadmap).
+- **An AI that operates the lab:** the tutor sets up simulations to test your idea (roadmap; close to idea 10).
+- **Game feel.** An early version was a game-first site ("Open Silicon Quest") beside a reference "Atlas"; both merged into this one. The wish to feel like solving puzzles and facing real challenges, not reading a textbook, still guides every lab.
+- **Story campaigns with roles:** founder, fab manager, policymaker (roadmap).
+- **A skills portfolio** built from evidence instead of stars (roadmap).
+- **Classroom mode,** with offline use (roadmap).
+
+### Community and hardware
+- **Learners become contributors,** step by step: how a simulation is built, a template and checklist CI enforces, good-first-simulation issues, review with chip experts, credits and a path to maintainer (roadmap).
+- **Plug in real hardware,** next steps: a $5 RISC-V board running the RISC-V lab's programs; the Tiny Tapeout demo board confirmed on real boards; exported designs on an FPGA with the open toolchain in the browser; community shuttles (roadmap; idea 8).
+
+### Structure
+- **Language-ready, stages 2 and 3.** Stage 1 (the interface) is done. Next: shared data and every topic.json text with stable ids; then the simulations' own text and the content pages. No translation is needed soon; the structure should be ready.
+- **A review routine for links and debates,** so every typed link stays true for its kind and every debate keeps its balance as topics are added.
+
+### From this round (November 2026)
 
 - **A better front door.** The zoom running for every visitor with a sample chip; a 60-second first puzzle on the home page that drops you into the studio with that design as your chip; the road visible on the map.
 - **Push your own clock.** Send a studio design through the gate-level simulator (`src/engines/seq.js`) so you can raise its clock until it breaks and watch a glitch move through your own gates.
