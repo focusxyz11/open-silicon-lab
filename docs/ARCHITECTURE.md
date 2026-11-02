@@ -138,6 +138,10 @@ than one topic (panels, controls, readouts). `app.css` styles the shell, map and
 single topic needs lives in `topics/<id>/style.css` and loads with that topic; a test fails if a rule
 in `base.css` is used by only one topic, and says where to move it.
 
+## Evolve a circuit
+
+`src/engines/evolve.js` evolves feed-forward netlists with Cartesian Genetic Programming: a row of gates, (1+4) selection that accepts equal fitness, and fitness as correct output bits over the whole truth table (bit-parallel, one 32-bit word per signal, so up to five inputs), then fewer gates. `toCode` writes the best circuit in the tiny-chip language, so `measure` compares it with the human solution through the studio's own synthesis, and `openStudio(project, step, code)` loads it into the studio. `tests/evolve.test.mjs` checks the bit-parallel evaluation against the tiny-chip simulator and that a half adder, majority voter and full adder evolve and verify.
+
 ## The community chip
 
 Learners' designs live in `community/<name>/design.json` (see `community/README.md`). `scripts/community.mjs`, run by `npm run catalog`, checks each one with `src/engines/community.js` (it parses, meets its studio project's specification if it names one, synthesizes, routes, stays under 150 cells, and all together under 900) and writes `src/generated/community.js` for the `community` topic. `chipVerilog` puts every design behind a 5-bit selector on `uio_in[4:0]` in one Tiny Tapeout top level; the CI Verilog check simulates it with every design selected in turn and synthesizes it with Yosys.

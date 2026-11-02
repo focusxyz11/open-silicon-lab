@@ -74,7 +74,7 @@ ta.addEventListener('keydown',e=>{if(e.key==='Tab'){e.preventDefault();const s=t
 $('#tcResetCode').addEventListener('click',()=>{delete S.code[P().id];save();pub();compile();rCode();chrome();});
 $('#tcSol').addEventListener('click',()=>{if(!P().sol)return;S.code[P().id]=P().sol;save();pub();compile();rCode();chrome();});
 /* Other labs can open the studio on a project, e.g. the RISC-V lab's "design my ALU". */
-document.addEventListener('osl:tiny-open',e=>{const i=TC.PROJ.findIndex(p=>p.id===(e.detail&&e.detail.id));if(i<0)return;S.p=i;S.sv={};save();compile();S.step=Math.min(e.detail.step||0,1);render();});
+document.addEventListener('osl:tiny-open',e=>{const i=TC.PROJ.findIndex(p=>p.id===(e.detail&&e.detail.id));if(i<0)return;S.p=i;S.sv={};if(typeof e.detail.code==='string'){S.code[TC.PROJ[i].id]=e.detail.code;pub();}save();compile();S.step=Math.min(e.detail.step||0,1);render();});
 $('#tcSvBtn').addEventListener('click',()=>{S.svOn=!S.svOn;rCode(true);});
 function sv(){const p=P();const nm=p.id==='seg'?'seg_decoder':p.t.toLowerCase().replace(/[^a-z0-9]+/g,'_');const regs=D.regs||[];const wires=D.order.filter(n=>!p.outs.includes(n));
  const ex=e=>{switch(e.op){case 'const':return "1'b"+e.v;case 'var':return e.n;case 'not':return '~'+ex(e.a);default:return '('+ex(e.a)+' '+{and:'&',or:'|',xor:'^'}[e.op]+' '+ex(e.b)+')';}};
