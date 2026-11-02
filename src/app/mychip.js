@@ -2,7 +2,7 @@
    the site. The studio publishes the design; this module turns it into a passport, stamps the
    stages you have done, shows a line about your chip on topic pages, and renders the My chip view. */
 import TC from '../engines/tinychip.js';
-import { passport, journey, chipLine, NODES } from '../engines/passport.js';
+import { passport, journey, chipLine, NODES, physics } from '../engines/passport.js';
 import { topicById } from '../data/topics.js';
 import { t, fmtNum, fmtDate, locale } from '../core/i18n.js';
 import { openStudio, setStudioNode } from './studio.js';
@@ -117,7 +117,7 @@ export function renderMyChip() {
     '<p class="lede">' + t('chip.lede2') + '</p></section>' +
     (p.ok ? '<section class="wrap mcgrid"><div class="mccard"><canvas id="mcCard" width="720" height="440" aria-label="' + t('chip.cardLabel') + '"></canvas><div class="row"><button type="button" class="btn primary" id="mcDl">' + t('chip.download') + '</button><a class="btn" href="#lab-tiny-1">' + t('chip.change') + '</a><span class="small muted" id="mcMsg" aria-live="polite"></span></div></div>' +
       '<div class="mcside"><div class="ctl"><span class="lbl">' + t('chip.row.process') + '</span><div class="seg" id="mcNode">' + NODES.map(n => '<button type="button" data-n="' + n + '" aria-pressed="' + (n === d.node) + '">' + TC.NODE[n].t + '</button>').join('') + '</div></div>' +
-      '<div class="readout col"><div><span>' + t('chip.stampsGot') + '</span><b>' + t('chip.stampsOf', { n: got, total: applicable.length }) + '</b></div><div><span>' + t('chip.row.tr') + '</span><b>' + fmtNum(p.tr) + '</b></div><div><span>' + esc(t('chip.area', { node: p.nodeName })) + '</span><b>' + t('chip.areaValue', { n: fmtNum(Math.round(p.area)) }) + '</b></div><div><span>' + t('chip.year') + '</span><b>' + p.year + '</b></div></div>' +
+      '<div class="readout col"><div><span>' + t('chip.stampsGot') + '</span><b>' + t('chip.stampsOf', { n: got, total: applicable.length }) + '</b></div><div><span>' + t('chip.row.tr') + '</span><b>' + fmtNum(p.tr) + '</b></div><div><span>' + esc(t('chip.area', { node: p.nodeName })) + '</span><b>' + t('chip.areaValue', { n: fmtNum(Math.round(p.area)) }) + '</b></div><div><span>' + t('chip.year') + '</span><b>' + p.year + '</b></div><div><span><a href="#floor">' + t('chip.physics') + '</a></span><b>' + t('chip.physicsValue', { spend: fmtNum(Math.round(physics(p).spend * 1e16) / 10), floor: fmtNum(Math.round(physics(p).floor * 1e22) / 10), n: fmtNum(Math.round(physics(p).times / 1e5) / 10) }) + '</b></div></div>' +
       '<label class="check"><input type="checkbox" id="mcShow"' + (M.show ? ' checked' : '') + '> ' + t('chip.show') + '</label></div></section>' +
       '<div id="czSlot"></div>' +
       '<section class="wrap"><div class="vbar"><h2>' + t('chip.journey') + '</h2></div><ol class="mcjourney">' + J.map(s => { const na = s.key === 'cpu' && !p.alu; const st = M.stamps[s.key]; return '<li class="' + (na ? 'na' : st ? 'done' : '') + '"><span class="stamp" aria-hidden="true">' + (na ? '–' : st ? '✓' : '') + '</span><div><b>' + esc(s.t) + '</b>' + (st ? '<small class="muted">' + esc(t('chip.stamped', { date: fmtDate(st) })) + '</small>' : na ? '<small class="muted">' + t('chip.na') + '</small>' : '') + '<p>' + esc(s.d) + '</p><a href="' + s.href + '">' + esc((topicById(s.topic) || { t: s.topic }).t) + ' →</a></div></li>'; }).join('') + '</ol>' +
