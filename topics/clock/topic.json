@@ -1,0 +1,105 @@
+{
+  "id": "clock",
+  "title": "Memory and the clock",
+  "band": "design",
+  "order": 42,
+  "kind": "explore",
+  "summary": "Make two gates remember a bit, catch a value on the clock's tick, then build a counter and push its clock until it breaks.",
+  "labs": ["clock-lab"],
+  "links": [
+    {
+      "kind": "builds-on",
+      "to": "tiny",
+      "why": "the same gates, now wired back into themselves"
+    },
+    {
+      "kind": "part-of",
+      "to": "architecture",
+      "why": "a processor's registers and pipeline stages are flip-flops on one clock"
+    },
+    {
+      "kind": "causes",
+      "to": "riscv",
+      "why": "the slowest path between flip-flops sets the clock speed",
+      "if": "a path between two registers gets longer",
+      "then": "the whole processor must run at a slower clock, or the path is split into pipeline stages"
+    }
+  ],
+  "ideas": [
+    {
+      "idea": "smaller-until",
+      "how": "smaller gates made clocks faster until about 2005; since then power, not gate delay, sets the limit",
+      "counter": true
+    },
+    {
+      "idea": "keep-data-close",
+      "how": "flip-flops in registers are the closest, fastest memory a processor has"
+    }
+  ],
+  "tradeoffs": [
+    {
+      "tradeoff": "speed-power",
+      "how": "a faster clock needs shorter paths between flip-flops, and every tick costs energy",
+      "try": "#lab-clock-3"
+    }
+  ],
+  "measures": [],
+  "time": {
+    "then": [
+      [1971, "The first microprocessor, the Intel 4004, ticks 740 thousand times a second."],
+      [1990, "Desktop processors pass tens of millions of ticks a second as transistors shrink."],
+      [2000, "Processors reach one billion ticks a second (1 GHz)."],
+      [2005, "Clock speeds stop climbing near 4 GHz: faster ticks would make too much heat, so chips add cores instead."],
+      [2026, "The fastest processors briefly reach about 6 GHz; most chips run far slower to save energy."]
+    ]
+  },
+  "challenges": [
+    {
+      "kind": "Experiment",
+      "title": "One bit of memory",
+      "task": "Store a 1 in two NOR gates, let go, and watch it stay. Then set and reset at once.",
+      "href": "#lab-clock-1"
+    },
+    {
+      "kind": "Puzzle",
+      "title": "One slot is enough",
+      "task": "Make a flip-flop store a 1 with its input at 1 for only one time slot.",
+      "href": "#lab-clock-2"
+    },
+    {
+      "kind": "Puzzle",
+      "title": "Find the speed limit",
+      "task": "Run the counter as fast as it can go without a wrong count, at two different processes.",
+      "href": "#lab-clock-3"
+    }
+  ],
+  "learn": {
+    "plain": "A gate on its own forgets: change its inputs and the old answer is gone. Wire two gates in a loop and each keeps the other's answer alive, like two people who keep reminding each other of a phone number. That loop is one bit of memory. A clock is a steady tick that tells every memory bit in the chip when to take its next value, so all the parts move in step, like rowers following a drum. The clock can only tick as fast as the slowest calculation between two ticks.",
+    "engineer": "A cross-coupled NOR pair is an SR latch; gating S and R with an enable gives a D latch, transparent while enabled; two latches on opposite clock phases make an edge-triggered master-slave D flip-flop. Synchronous design: every register samples on the same edge, and the minimum period is t_clk-to-Q + t_logic(max) + t_setup (plus clock skew and margin); hold time constrains the shortest path. The simulator here is event-driven with fixed gate delays from the studio's cell library, transport delays, and X for unknown; it leaves out wire delay, slew and load dependence, clock skew, PVT corners and metastability resolution. Real designs use static timing analysis rather than simulation to prove every path fits.",
+    "quiz": [
+      {
+        "q": "What makes two NOR gates remember a bit?",
+        "options": ["A capacitor between them", "Each gate's output feeds the other's input, so they hold each other's value", "The clock", "A very long wire"],
+        "answer": 1,
+        "why": "The loop is the memory: with S and R both 0, each gate keeps the other in place."
+      },
+      {
+        "q": "A latch and a flip-flop share the same clock. D changes while the clock is 1. What happens?",
+        "options": ["Both outputs change at once", "Neither changes", "The latch's output follows D; the flip-flop waits for the next rising edge", "The flip-flop changes; the latch waits"],
+        "answer": 2,
+        "why": "A latch is transparent while its clock is 1; a flip-flop samples D only at the rising edge."
+      },
+      {
+        "q": "What sets a chip's top clock speed?",
+        "options": ["The number of pins", "The slowest path between two flip-flops, plus their own delays", "The size of the package", "How many flip-flops there are"],
+        "answer": 1,
+        "why": "Each tick must leave time for a value to leave one flip-flop, pass the slowest logic and settle before the next flip-flop samples it."
+      }
+    ],
+    "ask": [
+      "Why did processor clock speeds stop rising around 2005?",
+      "What is the difference between a latch and a flip-flop?",
+      "What happens if a flip-flop's input changes exactly at the clock edge?"
+    ]
+  }
+}

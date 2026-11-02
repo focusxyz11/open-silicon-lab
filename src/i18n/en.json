@@ -434,7 +434,7 @@
  "chip.journey": "The journey",
  "chip.stamped": " · stamped {date}",
  "chip.na": " · not for this project",
- "chip.note": "Stamps come from doing each step in the tiny chip studio, running your ALU in the RISC-V lab, and opening Wafer & yield, Economics and the Roadmap with your chip. Figures use the same simplified models as the labs.",
+ "chip.note": "Stamps come from doing each step in the tiny chip studio, running your ALU in the RISC-V lab, running the counter at its top speed in Memory and the clock, and opening Wafer & yield, Economics and the Roadmap with your chip. Figures use the same simplified models as the labs.",
  "chip.strip": "Your chip's journey: {n} of {total} stops done",
  "chip.stripHere": "This page is stop {n} of {total} on your chip's journey: {name}.",
  "cz.h2": "Zoom into your chip",

@@ -2,6 +2,7 @@
    stack. Pure logic, no DOM: everything here is computed from the design and the chosen process
    with the same engines the labs use. */
 import TC from './tinychip.js';
+import { timing } from './seq.js';
 
 /* What each process in the studio means further along the stack. */
 export const NODE_X = {
@@ -50,6 +51,7 @@ export function journey(p) {
     { key: 'logic', topic: 'tiny', href: '#lab-tiny-1', t: 'Logic', d: p.lines + ' lines of logic, ' + p.inputs + ' inputs and ' + p.outputs + ' outputs.' },
     { key: 'verify', topic: 'design', href: '#lab-tiny-1', t: 'Verification', d: !p.spec ? 'Free design: all ' + p.cases + ' input cases shown, no specification to check against.' : p.wrong ? 'Wrong in ' + p.wrong + ' of ' + p.cases + ' cases. A real chip with this bug cannot be patched.' : 'Correct in all ' + p.cases + ' cases: exhaustive verification.' },
     { key: 'gates', topic: 'design', href: '#lab-tiny-1', t: 'Synthesis', d: p.cells + ' standard cells, ' + n0(p.tr) + ' transistors, ' + p.depth + ' gates on the longest path, up to ' + mhz(p.fmaxMHz) + ' at ' + p.nodeName + '.' },
+    { key: 'clock', topic: 'clock', href: '#lab-clock-3', t: 'Memory and clock', d: 'Wired into loops, the same cells remember: a 4-bit counter of flip-flops at ' + p.nodeName + ' can tick up to about ' + mhz(timing(4, p.node).fmaxHz / 1e6) + '.' },
     { key: 'cpu', topic: 'riscv', href: '#riscv-3', t: 'Inside a CPU', d: p.alu ? 'Your slice, copied 32 times, is the RISC-V core\'s ALU: ' + n0(p.tr * 32) + ' transistors.' : 'Only the ALU slice project runs inside the RISC-V core. Your design is a stand-alone chip.' },
     { key: 'layout', topic: 'layout', href: '#lab-tiny-1', t: 'Layout', d: p.wUm.toFixed(1) + ' × ' + p.hUm.toFixed(1) + ' µm at ' + p.nodeName + ': ' + n0(p.area) + ' µm².' },
     { key: 'masks', topic: 'litho', href: '#litho', t: 'Masks and light', d: 'About ' + p.masks + ' masks, printed with ' + p.light + '. A full mask set alone would cost about $' + (p.maskCostM >= 1 ? p.maskCostM + ' million' : Math.round(p.maskCostM * 1000) + ',000') + '.' },
@@ -72,6 +74,7 @@ export function chipLine(topic, p) {
     design: J.gates,
     layout: J.layout,
     riscv: J.cpu,
+    clock: J.clock,
     litho: J.masks,
     fab: J.fab,
     yield: J.yield,

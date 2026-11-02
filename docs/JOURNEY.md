@@ -11,7 +11,7 @@ stops only shows where you are.
 | 1. Switch | A transistor as a switch; a NOT and a NAND gate made from switches | new lab | planned |
 | 2. Gates to adder | Half adder, full adder | `tiny` studio | done |
 | 3. Your ALU | One ALU bit; 32 copies become the CPU's arithmetic | `tiny`, `riscv` | done |
-| 4. Memory and clock | Flip-flop, register, counter; values step with each clock tick | new engine and lab | planned (next) |
+| 4. Memory and clock | Latch, flip-flop, counter; push the clock until it breaks | `clock` | done |
 | 5. Run a program | The RISC-V core runs real code on your ALU | `riscv` | done |
 | 6. Lay it out | Placement, wires, the chip seen from above | `tiny`, `layout`, `xray` | done |
 | 7. Test it | Board against simulation, find the faulty chip | `bench` | done |
@@ -22,10 +22,8 @@ from the demo board to one transistor, with live values from the board's switche
 
 ## Next steps
 
-1. **Memory and clock.** The studio builds only circuits whose outputs follow their inputs. A
-   processor is mostly stored values changing with a clock, so the next stage adds flip-flops,
-   registers and a counter: a tested sequential engine, a clock you can step or run, values moving
-   into registers. The zoom gains a flip-flop cell.
+1. **Flip-flops in the zoom and the studio.** The zoom can open a flip-flop cell, and the studio can
+   hold a register, so your own design can count. Export to Verilog then needs a clocked top level.
 2. **Switch to gate.** A small lab before the studio: wire transistors as switches into NOT and NAND,
    the same CMOS networks the zoom opens up (`src/engines/chipzoom.js`).
 3. **The last mile.** A plain walkthrough from the exported files to a submitted Tiny Tapeout

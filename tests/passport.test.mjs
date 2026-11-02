@@ -14,7 +14,7 @@ test('every project and process gives a complete passport', () => {
     assert.ok(p.tr > 0 && p.cells > 0 && p.area > 0);
     assert.ok(p.yieldPct > 99 && p.yieldPct <= 100, 'tiny circuits nearly always work');
     const J = journey(p);
-    assert.equal(J.length, 13);
+    assert.equal(J.length, 14);
     for (const s of J) { assert.ok(topics.has(s.topic), s.key); assert.ok(s.d.length > 20, s.key); }
   }
 });
@@ -31,8 +31,8 @@ test('verification state and project-specific stages are honest', () => {
   assert.ok(passport({ proj: vote, code: vote.starter }).wrong > 0);
   assert.equal(passport({ proj: vote, code: vote.sol }).wrong, 0);
   const alu = TC.PROJ.find(p => p.id === 'alu');
-  assert.match(journey(passport({ proj: alu, code: alu.sol }))[3].d, /ALU/);
-  assert.match(journey(passport({ proj: vote, code: vote.sol, node: '3' }))[11].d, /no open design kit/);
+  assert.match(journey(passport({ proj: alu, code: alu.sol })).find(s => s.key === 'cpu').d, /ALU/);
+  assert.match(journey(passport({ proj: vote, code: vote.sol, node: '3' })).find(s => s.key === 'real').d, /no open design kit/);
   assert.equal(passport({ proj: vote, code: 'y = a &' }).ok, false);
 });
 
