@@ -22,8 +22,10 @@ from the demo board to one transistor, with live values from the board's switche
 
 ## Next steps
 
-1. **Flip-flops in the zoom and the studio.** The zoom can open a flip-flop cell, and the studio can
-   hold a register, so your own design can count. Export to Verilog then needs a clocked top level.
+1. **Your chip can count (done).** `reg` in the tiny language makes a flip-flop: the Counter project
+   verifies cycle by cycle, synthesizes DFF cells, exports clocked Verilog for Tiny Tapeout, and ticks
+   in the gadget and the zoom. Still to do: open a flip-flop in the zoom, and let the bench step a
+   clock so it can twin-test clocked chips.
 2. **Switch to gate.** A small lab before the studio: wire transistors as switches into NOT and NAND,
    the same CMOS networks the zoom opens up (`src/engines/chipzoom.js`).
 3. **The last mile.** A plain walkthrough from the exported files to a submitted Tiny Tapeout

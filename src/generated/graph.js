@@ -311,6 +311,7 @@ export const CHALLENGES = [
   {"topic":"tiny","kind":"Design","t":"Build the CPU's ALU","d":"Design one bit of an ALU. Thirty-two copies of it run the RISC-V programs.","href":"#lab-tiny-1"},
   {"topic":"tiny","kind":"Design","t":"Tape it out for real","d":"Export a design as a Tiny Tapeout project and run it through Yosys and OpenROAD on GitHub.","href":"#lab-tiny-1"},
   {"topic":"tiny","kind":"Design","t":"Pack it tight","d":"Find the highest packing density that still routes.","href":"#tiny"},
+  {"topic":"tiny","kind":"Puzzle","t":"Fix the counter","d":"The Counter project skips numbers. Find the wrong carry, fix it, and watch it count from 0 to 7 on the gadget.","href":"#lab-tiny-1"},
   {"topic":"clock","kind":"Experiment","t":"One bit of memory","d":"Store a 1 in two NOR gates, let go, and watch it stay. Then set and reset at once.","href":"#lab-clock-1"},
   {"topic":"clock","kind":"Puzzle","t":"One slot is enough","d":"Make a flip-flop store a 1 with its input at 1 for only one time slot.","href":"#lab-clock-2"},
   {"topic":"clock","kind":"Puzzle","t":"Find the speed limit","d":"Run the counter as fast as it can go without a wrong count, at two different processes.","href":"#lab-clock-3"},

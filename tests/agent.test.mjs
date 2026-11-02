@@ -86,7 +86,7 @@ test('scoring rewards the right call and the right reason', () => {
 test('live agent prompt and reply parsing', () => {
   const p = TC.PROJ.find(x => x.id === 'full');
   assert.ok(livePrompt(p).includes('a=1 b=1 cin=1 → sum=1 cout=1'));
-  for (const q of TC.PROJ.filter(x => x.f)) assert.doesNotMatch(livePrompt(q), /bug|starting code/i, q.id);
+  for (const q of TC.PROJ.filter(x => x.f && !x.seq)) assert.doesNotMatch(livePrompt(q), /bug|starting code/i, q.id);
   assert.equal(extractCode('Sure!\n```\nsum = a ^ b ^ cin;\ncout = (a & b) | (cin & (a ^ b));\n```\nIt works.'), 'sum = a ^ b ^ cin;\ncout = (a & b) | (cin & (a ^ b));');
   assert.equal(extractCode('sum = a ^ b;\nThis is why.'), 'sum = a ^ b;');
 });

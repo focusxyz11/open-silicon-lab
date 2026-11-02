@@ -40,7 +40,7 @@ test('the client talks to a device over a loopback, and reports device errors', 
 });
 
 test('the virtual board matches the simulation for every project', async () => {
-  for (const p of TC.PROJ) {
+  for (const p of TC.PROJ.filter(x => !x.seq)) {
     const chip = virtualChip(p, p.sol || p.starter); assert.ok(chip.ok, p.id);
     const res = await twinTest(simCases(chip), connect(chip), { mask: chip.mask });
     assert.ok(res.ok, p.id + ' twin test'); assert.equal(res.rows.length, 1 << p.ins.length);
@@ -48,6 +48,7 @@ test('the virtual board matches the simulation for every project', async () => {
     if (p.f) { const spec = new Map(chip.cases.map(c => [c.ui, c.uo])); simCases(chip).forEach(c => assert.equal(c.uo, spec.get(c.ui), p.id + ' spec')); }
   }
   assert.equal(virtualChip(P('add2'), 'y = a &').ok, false);
+  assert.equal(virtualChip(P('count'), P('count').sol).seq, true, 'clocked designs are refused with a code, not run wrongly');
 });
 
 test('a defect shows in the twin test, and diagnosis finds the wire', async () => {

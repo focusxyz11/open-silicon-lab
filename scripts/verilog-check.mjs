@@ -28,21 +28,32 @@ function bench(top, C, mask) {
     '    if (errors == 0) $display("PASS"); else $display("ERRORS %0d", errors);\n    $finish;\n  end\nendmodule\n';
 }
 
+/* A clocked testbench: reset, then for each cycle set ui_in, check uo_out, and tick the clock. */
+function benchSeq(top, C, mask) {
+  return '`timescale 1ns / 1ps\nmodule check;\n  reg [7:0] ui_in = 0, uio_in = 0;\n  reg clk = 0, rst_n = 0, ena = 1;\n  wire [7:0] uo_out, uio_out, uio_oe;\n  integer errors = 0, cycle = 0;\n' +
+    '  ' + top + ' dut (.ui_in(ui_in), .uo_out(uo_out), .uio_in(uio_in), .uio_out(uio_out), .uio_oe(uio_oe), .ena(ena), .clk(clk), .rst_n(rst_n));\n' +
+    '  task tick; begin #1 clk = 1; #1 clk = 0; #1; end endtask\n' +
+    '  task check_cycle(input [7:0] ui, input [7:0] uo); begin ui_in = ui; #1; if ((uo_out & 8\'d' + mask + ') !== uo) begin errors = errors + 1; $display("FAIL cycle %0d ui_in=%b uo_out=%b expected %b", cycle, ui, uo_out, uo); end tick; cycle = cycle + 1; end endtask\n' +
+    '  initial begin\n    tick; tick; rst_n = 1; #1;\n' + C.map(c => '    check_cycle(8\'d' + c.ui + ', 8\'d' + c.uo + ');').join('\n') + '\n' +
+    '    if (uio_oe !== 8\'b0) begin errors = errors + 1; $display("FAIL uio_oe not zero"); end\n' +
+    '    if (errors == 0) $display("PASS"); else $display("ERRORS %0d", errors);\n    $finish;\n  end\nendmodule\n';
+}
+
 const dir = mkdtempSync(join(tmpdir(), 'osl-verilog-'));
 const problems = []; let runs = 0;
 try {
   for (const p of TC.PROJ) {
     for (const [code, kind] of [[p.sol, 'solution'], [p.starter, 'starter']]) {
       if (!code) continue;
-      const D = TC.parse(code, p.ins, p.outs); if (D.errs.length) { problems.push(p.id + ' ' + kind + ': does not parse'); continue; }
+      const D = TC.parse(code, p.ins, p.outs, { regs: !!p.seq }); if (D.errs.length) { problems.push(p.id + ' ' + kind + ': does not parse'); continue; }
       /* The testbench checks what the design does: for a buggy starter that is its (wrong) behaviour. */
-      const C = TC.vectors(p.ins).map(v => { const o = TC.evalDesign(D, v); const { ins, outs } = X.pinOrder(p); let ui = 0, uo = 0; ins.forEach((n, i) => { ui |= v[n] << i; }); outs.forEach((n, i) => { uo |= (o[n] & 1) << i; }); return { ui, uo }; });
+      const C = X.cases(D, Object.assign({}, p, { f: null }));
       for (const lib of ['rtl', 'basic', 'nand']) {
         const top = X.topName('check_' + p.id + '_' + kind + '_' + lib);
         const M = lib === 'rtl' ? null : TC.synth(D, p.ins, p.outs, lib, false, '130').M;
         const src = X.projectV(D, p, top, lib === 'rtl' ? {} : { gates: true, M });
         const f = join(dir, top + '.v'), tb = join(dir, top + '_tb.v'), out = join(dir, top + '.vvp');
-        writeFileSync(f, src); writeFileSync(tb, bench(top, C, X.outMask(p)));
+        writeFileSync(f, src); writeFileSync(tb, (p.seq ? benchSeq : bench)(top, C, X.outMask(p)));
         try {
           execFileSync('iverilog', ['-g2005', '-Wall', '-o', out, tb, f], { stdio: 'pipe' });
           const r = execFileSync('vvp', ['-n', out], { encoding: 'utf8' });

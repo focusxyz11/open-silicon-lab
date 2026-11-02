@@ -90,7 +90,7 @@ export const GATE = { '180': 180e-9, '130': 130e-9, '28': 30e-9, '3': 14e-9 };
 /* Everything the zoom needs for one design. d: { p, code, node, lib, util } as the studio keeps it. */
 export function build(d, opt = {}) {
   const proj = TC.PROJ.find(x => x.id === d.p) || TC.PROJ[0];
-  const D = TC.parse(d.code, proj.ins, proj.outs);
+  const D = TC.parse(d.code, proj.ins, proj.outs, { regs: !!proj.seq });
   if (D.errs && D.errs.length) return { ok: false, proj, errs: D.errs };
   const node = TC.NODE[d.node] ? d.node : '130', nd = TC.NODE[node];
   const SY = TC.synth(D, proj.ins, proj.outs, d.lib === 'nand' ? 'nand' : 'basic', false, node);
@@ -101,7 +101,7 @@ export function build(d, opt = {}) {
   const [tw, th] = tileSize(node).map(v => v * 1e-6);
   const gap = 0.12 * tw, dieW = SHARED.cols * tw + 2 * gap, dieH = SHARED.rows * th + 2 * gap + 0.05 * tw;
   const cells = SY.M.cells.map((c, i) => { const q = PL.pos[i]; return { i, type: c.type, ins: c.ins, out: c.out, x: 2 + q.x, y: q.r * PL.TR + 1, w: q.w, h: 3 }; });
-  const pick = Math.max(0, Math.min(cells.length - 1, opt.cell == null ? defaultCell(cells) : opt.cell));
+  const pick = opt.cell != null && cells[opt.cell] && cells[opt.cell].type !== 'DFF' ? opt.cell : defaultCell(cells);
   const cell = cells[pick], C = circuit(cell.type);
   const fetI = Math.max(0, Math.min(C.fets.length - 1, opt.fet == null ? C.fets.findIndex(f => f.kind === 'n') : opt.fet));
   const cW = cell.w * ux, cH = 3 * uy;
@@ -132,11 +132,12 @@ export function build(d, opt = {}) {
   };
 }
 /* The first cell to open: the one driving the first output, which shows the most. */
-function defaultCell(cells) { const k = cells.findIndex(c => c.type !== 'BUF' && c.type !== 'TIE0' && c.type !== 'TIE1'); return k < 0 ? 0 : k; }
+function defaultCell(cells) { const k = cells.findIndex(c => !['BUF', 'TIE0', 'TIE1', 'DFF'].includes(c.type)); return k >= 0 ? k : Math.max(0, cells.findIndex(c => c.type !== 'DFF')); }
 
-/* The value on every net for one set of inputs, and each cell's input values in pin order. */
-export function signals(Z, inputs) {
+/* The value on every net for one set of inputs (and the flip-flops' current values), each cell's input
+   values in pin order, and what each flip-flop takes at the next tick. */
+export function signals(Z, inputs, state) {
   const v = {}; Z.proj.ins.forEach((k, j) => { v[k] = inputs[j] | 0; });
-  const S = TC.simCells(Z.SY.M, v);
-  return { net: S.val, out: S.out, cellIns: Z.cells.map(c => c.ins.map(n => S.val[n])) };
+  const S = TC.simCells(Z.SY.M, v, null, state);
+  return { net: S.val, out: S.out, next: S.next, cellIns: Z.cells.map(c => c.ins.map(n => S.val[n])) };
 }

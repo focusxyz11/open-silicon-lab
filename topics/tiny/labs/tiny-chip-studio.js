@@ -12,7 +12,7 @@ const root=$('#tiny');if(!root)return;
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const STEPS=['Spec','Write logic','Verify','Synthesize','Place & route','Masks','Fabricate','Test & ship','Make it real'];
 const KEY='sjl-tiny-v1';
-const S={top:{},author:'',p:0,step:0,code:{},lib:'basic',opt:false,util:0.5,node:'130',sv:{},vecs:8,fabbed:false,tested:false,svOn:false};
+const S={top:{},author:'',p:0,step:0,code:{},lib:'basic',opt:false,util:0.5,node:'130',sv:{},st:{},ticks:0,vecs:8,fabbed:false,tested:false,svOn:false};
 try{const j=JSON.parse(localStorage.getItem(KEY)||'null');if(j&&typeof j==='object'){if(j.code&&typeof j.code==='object')S.code=j.code;if(Number.isInteger(j.p)&&TC.PROJ[j.p])S.p=j.p;if(j.top&&typeof j.top==='object')S.top=j.top;if(typeof j.author==='string')S.author=j.author;if(TC.NODE[j.node])S.node=j.node;if(j.lib==='nand')S.lib='nand';if(+j.util>=0.3&&+j.util<=0.9)S.util=+j.util;}}catch(e){}
 const save=()=>{try{localStorage.setItem(KEY,JSON.stringify({code:S.code,p:S.p,top:S.top,author:S.author,node:S.node,lib:S.lib,util:S.util}));}catch(e){}chipPub();};
 /* My chip: publish the design so the rest of the site can follow it. */
@@ -20,12 +20,19 @@ function chipPub(){const p=TC.PROJ[S.p];publishChip({p:p.id,code:S.code[p.id]!==
 const P=()=>TC.PROJ[S.p];
 const code=()=>S.code[P().id]!==undefined?S.code[P().id]:P().starter;
 let D=null,SY=null,PL=null,RT=null,FAB=null,TST=null;
-function compile(){D=TC.parse(code(),P().ins,P().outs);SY=null;PL=null;RT=null;FAB=null;TST=null;S.fabbed=false;}
+function compile(){D=TC.parse(code(),P().ins,P().outs,{regs:!!P().seq});SY=null;PL=null;RT=null;FAB=null;TST=null;S.fabbed=false;S.st={};S.ticks=0;}
 function synth(){if(!D||D.errs.length){SY=null;return;}if(!SY)SY=TC.synth(D,P().ins,P().outs,S.lib,S.opt,S.node);}
-const V=()=>TC.vectors(P().ins);
+const V=()=>TC.testVectors(P());
+/* Flip-flops: the studio keeps their current values (S.st) for the schematic and the gadget. */
+const clocked=()=>!!P().seq;
+const sim=v=>TC.simCells(SY.M,v,null,S.st);
+/* The expected outputs, cycle by cycle, of a clocked project's test. */
+const specRows=p=>{let es={};return TC.seqVectors(p).map(v=>{const r=p.f(v,es);es=r.next;return {v,e:r.out};});};
 const pub=()=>{if(P().id==='alu')publishSlice(code());};
 publishSlice(S.code.alu!==undefined?S.code.alu:TC.PROJ.find(p=>p.id==='alu').starter);
-const verify=()=>{if(!D||D.errs.length||!P().f)return null;let bad=0;const rows=V().map(v=>{const o=TC.evalDesign(D,v),e=P().f(v);const mis=P().outs.filter(k=>o[k]!==e[k]);if(mis.length)bad++;return {v,o,e,mis};});return {rows,bad};};
+const verify=()=>{if(!D||D.errs.length||!P().f)return null;return TC.verify(D,P());};
+/* Rows to show: every input pattern, or every cycle of a clocked test (with the spec where there is one). */
+const rowsFor=()=>P().f?TC.verify(D,P()).rows:(clocked()?TC.verify(D,Object.assign({},P(),{f:null})).rows:V().map(v=>({v,o:TC.evalDesign(D,v),e:null,mis:[]})));
 
 /* ---- stepper ---- */
 const stepBox=$('#tcSteps');stepBox.innerHTML=STEPS.map((t,i)=>'<button type="button" data-i="'+i+'"><span>'+(i+1)+'</span>'+t+'</button>').join('');
@@ -54,8 +61,9 @@ function chrome(){const vr=verify();stepBox.querySelectorAll('button').forEach((
 const projBox=$('#tcProj');projBox.innerHTML=TC.PROJ.map((p,i)=>'<button type="button" data-i="'+i+'"><small>'+esc(p.lvl)+'</small><b>'+esc(p.t)+'</b></button>').join('');
 projBox.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{S.p=+b.dataset.i;S.sv={};save();compile();render();}));
 function rSpec(){projBox.querySelectorAll('button').forEach((b,i)=>b.setAttribute('aria-pressed',i===S.p?'true':'false'));const p=P();
- $('#tcSpec').innerHTML='<h3>'+esc(p.t)+'</h3><p>'+esc(p.d)+'</p><div class="pins"><div class="side">'+p.ins.map(n=>'<span>'+n+' →</span>').join('')+'</div><div class="chipbox">'+esc(p.t)+'</div><div class="side">'+p.outs.map(n=>'<span>→ '+n+'</span>').join('')+'</div></div><p class="small muted">Every real chip starts like this: a specification of inputs, outputs and exactly what the outputs must be. Here the specification is a truth table.</p>';
- if(p.f){const vs=V();$('#tcSpecTT').innerHTML='<p class="eyebrow" style="margin-bottom:6px">Specification: what the chip must do</p><div class="scroll"><table class="tt"><tr>'+p.ins.map(n=>'<th>'+n+'</th>').join('')+p.outs.map((n,k)=>'<th'+(k===0?' class="sep"':'')+'>'+n+'</th>').join('')+'</tr>'+vs.map(v=>{const e=p.f(v);return '<tr>'+p.ins.map(n=>'<td>'+v[n]+'</td>').join('')+p.outs.map((n,k)=>'<td'+(k===0?' class="sep"':'')+'>'+e[n]+'</td>').join('')+'</tr>';}).join('')+'</table></div>';}
+ $('#tcSpec').innerHTML='<h3>'+esc(p.t)+'</h3><p>'+esc(p.d)+'</p><div class="pins"><div class="side">'+p.ins.map(n=>'<span>'+n+' →</span>').join('')+'</div><div class="chipbox">'+esc(p.t)+(p.seq?'<br><small>clk ⏵</small>':'')+'</div><div class="side">'+p.outs.map(n=>'<span>→ '+n+'</span>').join('')+'</div></div><p class="small muted">Every real chip starts like this: a specification of inputs, outputs and exactly what the outputs must be. Here the specification is a truth table.</p>';
+ if(p.f&&p.seq){const R=specRows(p);$('#tcSpecTT').innerHTML='<p class="eyebrow" style="margin-bottom:6px">Specification: the outputs in each clock cycle, starting after a reset</p><div class="scroll"><table class="tt"><tr><th>Cycle</th>'+p.ins.map(n=>'<th>'+n+'</th>').join('')+p.outs.map((n,k)=>'<th'+(k===0?' class="sep"':'')+'>'+n+'</th>').join('')+'</tr>'+R.map((r,k)=>'<tr><td class="muted">'+k+'</td>'+p.ins.map(n=>'<td>'+r.v[n]+'</td>').join('')+p.outs.map((n,j)=>'<td'+(j===0?' class="sep"':'')+'>'+r.e[n]+'</td>').join('')+'</tr>').join('')+'</table></div><p class="small muted">A counter cannot be described by a truth table alone: the same input gives different outputs depending on what happened before. So its test is a sequence of clock cycles.</p>';}
+ else if(p.f){const vs=V();$('#tcSpecTT').innerHTML='<p class="eyebrow" style="margin-bottom:6px">Specification: what the chip must do</p><div class="scroll"><table class="tt"><tr>'+p.ins.map(n=>'<th>'+n+'</th>').join('')+p.outs.map((n,k)=>'<th'+(k===0?' class="sep"':'')+'>'+n+'</th>').join('')+'</tr>'+vs.map(v=>{const e=p.f(v);return '<tr>'+p.ins.map(n=>'<td>'+v[n]+'</td>').join('')+p.outs.map((n,k)=>'<td'+(k===0?' class="sep"':'')+'>'+e[n]+'</td>').join('')+'</tr>';}).join('')+'</table></div>';}
  else $('#tcSpecTT').innerHTML='<div class="empty">No specification: you decide what the chip does.</div>';}
 
 /* ---- step 1: code ---- */
@@ -68,32 +76,41 @@ $('#tcSol').addEventListener('click',()=>{if(!P().sol)return;S.code[P().id]=P().
 /* Other labs can open the studio on a project, e.g. the RISC-V lab's "design my ALU". */
 document.addEventListener('osl:tiny-open',e=>{const i=TC.PROJ.findIndex(p=>p.id===(e.detail&&e.detail.id));if(i<0)return;S.p=i;S.sv={};save();compile();S.step=Math.min(e.detail.step||0,1);render();});
 $('#tcSvBtn').addEventListener('click',()=>{S.svOn=!S.svOn;rCode(true);});
-function sv(){const p=P();const nm=p.id==='seg'?'seg_decoder':p.t.toLowerCase().replace(/[^a-z0-9]+/g,'_');const wires=D.order.filter(n=>!p.outs.includes(n));
+function sv(){const p=P();const nm=p.id==='seg'?'seg_decoder':p.t.toLowerCase().replace(/[^a-z0-9]+/g,'_');const regs=D.regs||[];const wires=D.order.filter(n=>!p.outs.includes(n));
  const ex=e=>{switch(e.op){case 'const':return "1'b"+e.v;case 'var':return e.n;case 'not':return '~'+ex(e.a);default:return '('+ex(e.a)+' '+{and:'&',or:'|',xor:'^'}[e.op]+' '+ex(e.b)+')';}};
  const strip=s=>s.replace(/^\((.*)\)$/,'$1');
  return '<span class="k">module</span> '+nm+' (\n  <span class="k">input  logic</span> '+p.ins.join(', ')+',\n  <span class="k">output logic</span> '+p.outs.join(', ')+'\n);\n'+(wires.length?'  <span class="k">logic</span> '+wires.join(', ')+';\n':'')+D.order.map(n=>'  <span class="k">assign</span> '+n+' = '+esc(strip(ex(D.asg[n].e)))+';').join('\n')+'\n<span class="k">endmodule</span>';}
+/* SystemVerilog with flip-flops: an always_ff block for every reg. */
+function svSeq(){const p=P(),regs=D.regs;const nm=p.t.toLowerCase().replace(/[^a-z0-9]+/g,'_');const wires=D.order.filter(n=>!p.outs.includes(n));
+ const ex=e=>{switch(e.op){case 'const':return "1'b"+e.v;case 'var':return e.n;case 'not':return '~'+ex(e.a);default:return '('+ex(e.a)+' '+{and:'&',or:'|',xor:'^'}[e.op]+' '+ex(e.b)+')';}};
+ const strip=s=>s.replace(/^\((.*)\)$/,'$1');
+ return '<span class="k">module</span> '+nm+' (\n  <span class="k">input  logic</span> clk, rst_n, '+p.ins.join(', ')+',\n  <span class="k">output logic</span> '+p.outs.join(', ')+'\n);\n'+(wires.length?'  <span class="k">logic</span> '+wires.join(', ')+';\n':'')+
+  D.order.filter(n=>!regs.includes(n)).map(n=>'  <span class="k">assign</span> '+n+' = '+esc(strip(ex(D.asg[n].e)))+';').join('\n')+
+  '\n  <span class="k">always_ff</span> @(<span class="k">posedge</span> clk)\n    <span class="k">if</span> (!rst_n) <span class="k">begin</span> '+regs.map(n=>n+" <= 1'b0;").join(' ')+' <span class="k">end</span>\n    <span class="k">else begin</span>\n'+regs.map(n=>'      '+n+' <= '+esc(strip(ex(D.asg[n].e)))+';').join('\n')+'\n    <span class="k">end</span>\n<span class="k">endmodule</span>';}
 function rCode(keep){const p=P();if(!keep||ta.value!==code())ta.value=code();const n=ta.value.split('\n').length;gut.textContent=Array.from({length:Math.max(n,8)},(_,i)=>i+1).join('\n');
  $('#tcFile').textContent=(p.id==='seg'?'seg_decoder':p.id)+'.tiny';$('#tcSol').hidden=!p.sol;
  const st=$('#tcStat');if(D.errs.length){st.className='pill ann';st.textContent=D.errs.length+(D.errs.length>1?' errors':' error');}else{st.className='pill ship';st.textContent='Compiles';}
  $('#tcErr').innerHTML=D.errs.map(e=>'<p><b>'+(e.l?'Line '+e.l:'Design')+'</b>'+esc(e.m)+'</p>').join('')+D.warns.map(w=>'<p class="w"><b>Note</b>'+esc(w)+'</p>').join('');
- const b=$('#tcSvBtn');b.setAttribute('aria-pressed',S.svOn?'true':'false');const pre=$('#tcSv');pre.hidden=!S.svOn||!!D.errs.length;if(!pre.hidden)pre.innerHTML=sv();}
+ const b=$('#tcSvBtn');b.setAttribute('aria-pressed',S.svOn?'true':'false');const pre=$('#tcSv');pre.hidden=!S.svOn||!!D.errs.length;if(!pre.hidden)pre.innerHTML=(D.regs&&D.regs.length?svSeq:sv)();}
 
 /* ---- step 2: verify ---- */
 const wave=$('#tcWave');
-function rVerify(){const p=P(),vr=verify(),vs=V();const box=$('#tcVerRes');
+function rVerify(){const p=P(),vr=verify(),rows=rowsFor(),n=rows.length,sq=clocked(),unit=sq?' clock cycles':' cases';const box=$('#tcVerRes');
  if(!p.f){box.innerHTML='<p class="code">No specification</p><p>Here is what your circuit does for every combination of inputs. With no specification, the only check is whether this is what you meant.</p>';}
- else if(!vr.bad)box.innerHTML='<p class="code">All '+vs.length+' cases pass</p><p>Your logic matches the specification for every possible input. That is <b>exhaustive verification</b>, possible here because there are only '+vs.length+' cases.</p>';
- else{const r=vr.rows.find(x=>x.mis.length);box.innerHTML='<p class="code" style="color:var(--bad)">Bug found: '+vr.bad+' of '+vs.length+' cases wrong</p><p>When '+p.ins.map(n=>n+' = '+r.v[n]).join(', ')+', output '+r.mis.map(k=>'<b>'+k+'</b> should be '+r.e[k]+' but is '+r.o[k]).join(', ')+'. Go back to step 2 and fix it'+(p.sol?', or use "Show a solution"':'')+'. Catching it now costs minutes; after fabrication it would cost a new set of masks.</p>';}
- const t=$('#tcTT');t.innerHTML='<tr>'+p.ins.map(n=>'<th>'+n+'</th>').join('')+p.outs.map((n,k)=>'<th'+(k===0?' class="sep"':'')+'>'+n+(p.f?' <small class="muted">expected / got</small>':'')+'</th>').join('')+'</tr>'+vs.map(v=>{const o=TC.evalDesign(D,v),e=p.f?p.f(v):null;return '<tr>'+p.ins.map(n=>'<td>'+v[n]+'</td>').join('')+p.outs.map((n,k)=>{const sep=k===0?' sep':'';if(!e)return '<td class="'+sep+'">'+o[n]+'</td>';const bad=o[n]!==e[n];return '<td class="'+(bad?'bad':'ok')+sep+'">'+e[n]+' / '+o[n]+'</td>';}).join('')+'</tr>';}).join('');
- $('#tcVerNote').textContent=(p.f?'Dashed lines show the expected outputs; shaded columns are cases where your design is wrong. ':'')+'In industry, exhaustive testing is impossible: a 64-bit adder has 2¹²⁹ input combinations. Verification teams, often larger than design teams, use random tests, coverage targets and mathematical proofs instead, and AI agents now write many of those tests.';
+ else if(!vr.bad)box.innerHTML=sq?'<p class="code">All '+n+' clock cycles pass</p><p>Your design gives the right outputs in every cycle of the test. With memory, the outputs depend on everything that came before, so no test can try every possible history: verification picks sequences that matter. For a counter, that means counting past its top back to 0, and holding still when en is 0.</p>'
+  :'<p class="code">All '+n+' cases pass</p><p>Your logic matches the specification for every possible input. That is <b>exhaustive verification</b>, possible here because there are only '+n+' cases.</p>';
+ else{const r=rows.find(x=>x.mis.length);box.innerHTML='<p class="code" style="color:var(--bad)">Bug found: '+vr.bad+' of '+n+unit+' wrong</p><p>'+(sq?'In cycle '+r.k+', with ':'When ')+p.ins.map(n=>n+' = '+r.v[n]).join(', ')+', output '+r.mis.map(k=>'<b>'+k+'</b> should be '+r.e[k]+' but is '+r.o[k]).join(', ')+'. Go back to step 2 and fix it'+(p.sol?', or use "Show a solution"':'')+'. Catching it now costs minutes; after fabrication it would cost a new set of masks.</p>';}
+ const t=$('#tcTT');t.innerHTML='<tr>'+(sq?'<th>Cycle</th>':'')+p.ins.map(n=>'<th>'+n+'</th>').join('')+p.outs.map((n,k)=>'<th'+(k===0?' class="sep"':'')+'>'+n+(p.f?' <small class="muted">expected / got</small>':'')+'</th>').join('')+'</tr>'+rows.map(r=>{const o=r.o,e=r.e;return '<tr>'+(sq?'<td class="muted">'+r.k+'</td>':'')+p.ins.map(n=>'<td>'+r.v[n]+'</td>').join('')+p.outs.map((n,k)=>{const sep=k===0?' sep':'';if(!e)return '<td class="'+sep+'">'+o[n]+'</td>';const bad=o[n]!==e[n];return '<td class="'+(bad?'bad':'ok')+sep+'">'+e[n]+' / '+o[n]+'</td>';}).join('')+'</tr>';}).join('');
+ $('#tcVerNote').textContent=(p.f?'Dashed lines show the expected outputs; shaded columns are '+(sq?'cycles':'cases')+' where your design is wrong. ':'')+(sq?'Each column is one clock cycle; the flip-flops take their new values at the tick between columns. ':'')+'In industry, exhaustive testing is impossible: a 64-bit adder has 2¹²⁹ input combinations. Verification teams, often larger than design teams, use random tests, coverage targets and mathematical proofs instead, and AI agents now write many of those tests.';
  drawWave();}
-function drawWave(){if(!D||D.errs.length)return;const p=P(),vs=V();const sig=p.ins.concat(p.outs);const {ctx:c,w,h}=fit(wave);c.clearRect(0,0,w,h);const L=56,R=8,rowH=(h-24)/sig.length,X=k=>L+k/vs.length*(w-L-R);
+function drawWave(){if(!D||D.errs.length)return;const p=P(),rows=rowsFor(),sq=clocked();const sig=(sq?['clk']:[]).concat(p.ins,p.outs);const {ctx:c,w,h}=fit(wave);c.clearRect(0,0,w,h);const N=rows.length,L=56,R=8,rowH=(h-24)/sig.length,X=k=>L+k/N*(w-L-R);
  c.font='11px IBM Plex Mono, monospace';c.textBaseline='middle';
- vs.forEach((v,k)=>{if(!p.f)return;const o=TC.evalDesign(D,v),e=p.f(v);if(p.outs.some(n=>o[n]!==e[n])){c.fillStyle=rgba(T.bad,.14);c.fillRect(X(k),0,X(k+1)-X(k),h-20);}});
+ rows.forEach((r,k)=>{if(r.mis.length){c.fillStyle=rgba(T.bad,.14);c.fillRect(X(k),0,X(k+1)-X(k),h-20);}});
  sig.forEach((n,i)=>{const y0=6+i*rowH,hi=y0+rowH*0.15,lo=y0+rowH*0.75;const isOut=p.outs.includes(n);c.fillStyle=isOut?T.ink:T.muted;c.textAlign='left';c.fillText(n,6,(hi+lo)/2);
-  if(isOut&&p.f){c.strokeStyle=rgba(T.muted,.7);c.setLineDash([3,3]);c.lineWidth=1.2;c.beginPath();vs.forEach((v,k)=>{const y=p.f(v)[n]?hi:lo;if(k===0)c.moveTo(X(0),y);else c.lineTo(X(k),y);c.lineTo(X(k+1),y);});c.stroke();c.setLineDash([]);}
-  c.strokeStyle=isOut?T['amber-fill']:T.cyan;c.lineWidth=2;c.beginPath();vs.forEach((v,k)=>{const val=isOut?TC.evalDesign(D,v)[n]:v[n];const y=val?hi:lo;if(k===0)c.moveTo(X(0),y);else c.lineTo(X(k),y);c.lineTo(X(k+1),y);});c.stroke();});
- c.fillStyle=T.muted;c.textAlign='center';vs.forEach((v,k)=>{if(vs.length<=16||k%2===0)c.fillText(k,(X(k)+X(k+1))/2,h-8);});
+  if(n==='clk'){c.strokeStyle=T.muted;c.lineWidth=1.5;c.beginPath();for(let k=0;k<N;k++){c.moveTo(X(k),lo);c.lineTo(X(k),hi);c.lineTo(X(k+0.5),hi);c.lineTo(X(k+0.5),lo);c.lineTo(X(k+1),lo);}c.stroke();return;}
+  if(isOut&&p.f){c.strokeStyle=rgba(T.muted,.7);c.setLineDash([3,3]);c.lineWidth=1.2;c.beginPath();rows.forEach((r,k)=>{const y=r.e[n]?hi:lo;if(k===0)c.moveTo(X(0),y);else c.lineTo(X(k),y);c.lineTo(X(k+1),y);});c.stroke();c.setLineDash([]);}
+  c.strokeStyle=isOut?T['amber-fill']:T.cyan;c.lineWidth=2;c.beginPath();rows.forEach((r,k)=>{const val=isOut?r.o[n]:r.v[n];const y=val?hi:lo;if(k===0)c.moveTo(X(0),y);else c.lineTo(X(k),y);c.lineTo(X(k+1),y);});c.stroke();});
+ c.fillStyle=T.muted;c.textAlign='center';rows.forEach((r,k)=>{if(N<=16||k%2===0)c.fillText(k,(X(k)+X(k+1))/2,h-8);});
  }
 watch(wave,()=>{if(S.step===2)drawWave();});
 
@@ -107,6 +124,7 @@ function rSynth(){synth();if(!SY)return;$('#tcLib').querySelectorAll('button').f
  const st=SY.st;$('#tcCells').textContent=st.cells;$('#tcTr').textContent=st.tr;$('#tcDepth').textContent=st.depth;$('#tcFmax').textContent=fmtF(st.fmax)+' at '+TC.NODE[S.node].t;
  const types={};SY.M.cells.forEach(c=>types[c.type]=(types[c.type]||0)+1);
  let t='Synthesis turned your '+D.order.length+' line'+(D.order.length>1?'s':'')+' into '+st.cells+' cells from the library: '+Object.entries(types).map(([k,n])=>n+' '+k).join(', ')+'. ';
+  if(types.DFF)t+='Each reg became a DFF cell, a flip-flop of about '+TC.LIB.DFF[0]+' transistors: more than all the logic of a small adder. The fastest clock now depends on the slowest path from one flip-flop, through the logic, to the next. ';
  if(S.lib==='nand')t+='Every logic function can be built from NAND gates alone, but it takes more of them: compare the transistor count with standard cells. ';
  else if(types.NAND2||types.NOR2||types.XNOR2)t+='Where a NOT followed an AND, OR or XOR, the tool merged them into one inverting cell (NAND, NOR or XNOR), which uses fewer transistors. ';
  if(S.opt&&SY.alt)t+=SY.used==='sop'?'The optimizer found a smaller circuit ('+SY.alt.sop+' instead of '+SY.alt.yours+' transistors) by rewriting your logic as a minimized sum of products, so it used that. ':'The optimizer tried rewriting your logic as a minimized sum of products ('+SY.alt.sop+' transistors) but your structure ('+SY.alt.yours+') was already better, so it kept yours. Sharing wires like p = a ^ b is something tools are good at too. ';
@@ -120,21 +138,28 @@ function gate(c,type,x,y,w,h,col){const bub=['INV','NAND2','NOR2','XNOR2'].inclu
  if(type.startsWith('X')){c.beginPath();c.moveTo(x-5,y);c.quadraticCurveTo(x+bw*0.3-5,y+h/2,x-5,y+h);c.stroke();}
  if(bub){c.beginPath();c.arc(x+w-3.5,y+h/2,3.5,0,7);c.fillStyle=T.surface;c.fill();c.stroke();}
  if(type.startsWith('TIE')){c.fillStyle=T.ink;c.font='600 11px IBM Plex Mono, monospace';c.textAlign='center';c.fillText(type==='TIE1'?'1':'0',x+bw/2,y+h/2+1);}}
-function drawSch(){if(!SY)return;const M=SY.M,p=P();const lvl={},drvCell={};M.inputs.forEach(i=>lvl[i.net]=0);M.cells.forEach((c,ci)=>drvCell[c.out]=ci);
- const L=n=>{if(lvl[n]!==undefined)return lvl[n];const c=M.cells[drvCell[n]];lvl[n]=1+Math.max(0,...c.ins.map(L));return lvl[n];};M.cells.forEach(c=>L(c.out));
- const maxL=Math.max(1,...M.cells.map(c=>lvl[c.out]));const cols=[];for(let k=0;k<=maxL;k++)cols.push([]);M.cells.forEach((c,ci)=>cols[lvl[c.out]].push(ci));
- const maxCol=Math.max(p.ins.length,p.outs.length,...cols.map(x=>x.length));const hh=Math.max(220,Math.min(640,maxCol*52+40));sch.style.height=hh+'px';
- const {ctx:c,w,h}=fit(sch);c.clearRect(0,0,w,h);const left=70,right=80,gw=Math.min(48,Math.max(30,(w-left-right)/(maxL+1)*0.45)),gh=Math.min(30,(h-30)/maxCol*0.6);
+function drawSch(){if(!SY)return;const M=SY.M,p=P(),RG=M.regs||[];const lvl={},drvCell={};M.inputs.forEach(i=>lvl[i.net]=0);RG.forEach(r=>lvl[r.q]=0);M.cells.forEach((c,ci)=>{if(c.type!=='DFF')drvCell[c.out]=ci;});
+ /* flip-flop outputs start the logic like inputs; their inputs are drawn as wires looping back */
+ const logic=M.cells.map((c,ci)=>ci).filter(ci=>M.cells[ci].type!=='DFF');
+ const L=n=>{if(lvl[n]!==undefined)return lvl[n];const c=M.cells[drvCell[n]];lvl[n]=1+Math.max(0,...c.ins.map(L));return lvl[n];};logic.forEach(ci=>L(M.cells[ci].out));
+ const maxL=Math.max(1,...logic.map(ci=>lvl[M.cells[ci].out]));const cols=[];for(let k=0;k<=maxL;k++)cols.push([]);logic.forEach(ci=>cols[lvl[M.cells[ci].out]].push(ci));
+ const nSrc=M.inputs.length+RG.length;const maxCol=Math.max(nSrc,p.outs.length,...cols.map(x=>x.length));const hh=Math.max(220,Math.min(640,maxCol*52+40+RG.length*8));sch.style.height=hh+'px';
+ const {ctx:c,w,h}=fit(sch);c.clearRect(0,0,w,h);const left=RG.length?120:70,right=80,gw=Math.min(48,Math.max(30,(w-left-right)/(maxL+1)*0.45)),gh=Math.min(30,(h-30)/maxCol*0.6);
  const colX=k=>left+(k-0.5)*((w-left-right)/maxL)-gw/2;const pos={};
- M.inputs.forEach((i,k)=>pos[i.net]={x:left-18,y:(k+1)*h/(M.inputs.length+1)});
+ M.inputs.forEach((i,k)=>pos[i.net]={x:RG.length?40:left-18,y:(k+1)*h/(nSrc+1)});
+ RG.forEach((r,k)=>pos[r.q]={x:left-16,y:(M.inputs.length+k+1)*h/(nSrc+1)});
  /* order each column by barycenter of inputs */
  for(let k=1;k<=maxL;k++){const col=cols[k];col.forEach((ci,j)=>{const cc=M.cells[ci];const ys=cc.ins.map(n=>pos[n]?pos[n].y:h/2);cc._b=ys.length?ys.reduce((a,b)=>a+b,0)/ys.length:h/2+j;});col.sort((a,b)=>M.cells[a]._b-M.cells[b]._b);
   col.forEach((ci,j)=>{const cc=M.cells[ci];const y=(j+1)*h/(col.length+1);pos[cc.out]={x:colX(k)+gw,y,cx:colX(k),ci};});}
- const val=TC.simCells(M,Object.fromEntries(p.ins.map(n=>[n,S.sv[n]?1:0]))).val;
+ const val=sim(Object.fromEntries(p.ins.map(n=>[n,S.sv[n]?1:0]))).val;
  const wire=(x1,y1,x2,y2,v)=>{c.strokeStyle=v?T['amber-fill']:rgba(T.muted,.6);c.lineWidth=v?2.4:1.4;c.beginPath();c.moveTo(x1,y1);const mx=(x1+x2)/2;c.bezierCurveTo(mx,y1,mx,y2,x2,y2);c.stroke();};
- M.cells.forEach(cc=>{const q=pos[cc.out];const n=cc.ins.length;cc.ins.forEach((src,k)=>{const sp=pos[src];const py=n===1?q.y:q.y-gh*0.25+k*gh*0.5;wire(sp.x,sp.y,q.cx-(cc.type.startsWith('X')?5:0),py,val[src]);});});
+ M.cells.forEach(cc=>{if(cc.type==='DFF')return;const q=pos[cc.out];const n=cc.ins.length;cc.ins.forEach((src,k)=>{const sp=pos[src];const py=n===1?q.y:q.y-gh*0.25+k*gh*0.5;wire(sp.x,sp.y,q.cx-(cc.type.startsWith('X')?5:0),py,val[src]);});});
  const ox=w-right+18;M.outs.forEach((o,k)=>{const y=(k+1)*h/(M.outs.length+1);const sp=pos[o.net];wire(sp.x,sp.y,ox-10,y,val[o.net]);pos['out'+k]={y};});
- M.cells.forEach(cc=>{const q=pos[cc.out];gate(c,cc.type,q.cx,q.y-gh/2,gw,gh,val[cc.out]?T.amber:T.ink);c.fillStyle=T.muted;c.font='9px IBM Plex Mono, monospace';c.textAlign='center';c.fillText(cc.type,q.cx+gw/2,q.y+gh/2+10);});
+ /* flip-flops: a box on the left, fed by a wire that loops back from its next value */
+ RG.forEach((r,k)=>{const q=pos[r.q],sp=pos[r.d],x0=q.x-44,y0=q.y,lane=h-6-k*6,xa=sp.x+8+k*5,xb=x0-8-k*5;c.strokeStyle=val[r.d]?T['amber-fill']:rgba(T.muted,.7);c.lineWidth=val[r.d]?2.2:1.3;c.setLineDash([5,3]);c.beginPath();c.moveTo(sp.x,sp.y);c.lineTo(xa,sp.y);c.lineTo(xa,lane);c.lineTo(xb,lane);c.lineTo(xb,y0+8);c.lineTo(x0,y0+8);c.stroke();c.setLineDash([]);
+  c.fillStyle=val[r.q]?rgba(T.amber,.25):T.surface;c.strokeStyle=T.ink;c.lineWidth=1.8;c.fillRect(x0,y0-15,44,30);c.strokeRect(x0,y0-15,44,30);c.beginPath();c.moveTo(x0,y0+9);c.lineTo(x0+6,y0+13);c.lineTo(x0,y0+15);c.stroke();
+  c.fillStyle=T.ink;c.font='600 11px IBM Plex Mono, monospace';c.textAlign='center';c.textBaseline='middle';c.fillText(r.name+'='+val[r.q],x0+22,y0-3);c.fillStyle=T.muted;c.font='9px IBM Plex Mono, monospace';c.fillText('DFF',x0+22,y0+8);});
+ M.cells.forEach(cc=>{if(cc.type==='DFF')return;const q=pos[cc.out];gate(c,cc.type,q.cx,q.y-gh/2,gw,gh,val[cc.out]?T.amber:T.ink);c.fillStyle=T.muted;c.font='9px IBM Plex Mono, monospace';c.textAlign='center';c.fillText(cc.type,q.cx+gw/2,q.y+gh/2+10);});
  hits=[];c.font='600 12px IBM Plex Mono, monospace';M.inputs.forEach(i=>{const q=pos[i.net],v=val[i.net];c.fillStyle=v?T['amber-fill']:T.surface;c.strokeStyle=T.ink;c.lineWidth=1.5;c.beginPath();c.roundRect?c.roundRect(6,q.y-11,40,22,11):c.rect(6,q.y-11,40,22);c.fill();c.stroke();c.fillStyle=T.ink;c.textAlign='center';c.textBaseline='middle';c.fillText(i.name+'='+v,26,q.y+1);hits.push({n:i.name,x0:4,x1:50,y0:q.y-14,y1:q.y+14});});
  M.outs.forEach((o,k)=>{const y=pos['out'+k].y,v=val[o.net];c.fillStyle=v?T['amber-fill']:T.sunk;c.beginPath();c.arc(ox,y,9,0,7);c.fill();c.strokeStyle=T.ink;c.stroke();c.fillStyle=T.ink;c.textAlign='left';c.fillText(o.name+'='+v,ox+14,y+1);});c.textBaseline='alphabetic';}
 watch(sch,()=>{if(S.step===3)drawSch();});
@@ -143,7 +168,7 @@ watch(sch,()=>{if(S.step===3)drawSch();});
 const lay=$('#tcLay'),utilI=$('#tcUtil');let snapPos=null,animT=0;
 utilI.addEventListener('input',()=>{S.util=+utilI.value;save();$('#tcUtilO').textContent=Math.round(S.util*100)+'% of the core';PL=null;RT=null;S.fabbed=false;TST=null;rPR();chrome();});
 $('#tcPR').addEventListener('click',runPR);
-const TYC={INV:'#8fa3b3',BUF:'#8fa3b3',NAND2:'#9b8ce0',NOR2:'#c58ab3',AND2:'#7f9fe0',OR2:'#d6a35a',XOR2:'#5fb7a8',XNOR2:'#5fb7a8',TIE0:'#aaa',TIE1:'#aaa'};
+const TYC={INV:'#8fa3b3',BUF:'#8fa3b3',NAND2:'#9b8ce0',NOR2:'#c58ab3',AND2:'#7f9fe0',OR2:'#d6a35a',XOR2:'#5fb7a8',XNOR2:'#5fb7a8',TIE0:'#aaa',TIE1:'#aaa',DFF:'#e07a5f'};
 function runPR(){synth();if(!SY)return;clearInterval(animT);PL=TC.place(SY.M,S.util,7+S.p);RT=null;const frames=[];PL.anneal(Math.min(6000,400+SY.M.cells.length*160),(snap,cost)=>frames.push([snap,cost]));const finalPos=PL.snapshot();
  if(RM||!frames.length){snapPos=null;RT=TC.route(PL);rPR();chrome();stamps();return;}
  let k=0;$('#tcPRTxt').textContent='Placing: simulated annealing swaps cells to shorten the wires…';animT=setInterval(()=>{if(k>=frames.length){clearInterval(animT);snapPos=null;Object.assign(PL.pos,finalPos);RT=TC.route(PL);rPR();chrome();stamps();return;}snapPos=frames[k][0];drawLay(frames[k][1]);k++;},45);}
@@ -234,8 +259,8 @@ watch(xs,()=>{if(S.step===6)drawFab();});watch(wf,()=>{if(S.step===6)drawFab();}
 
 /* ---- step 7: test, package, run ---- */
 const pcv=$('#tcProbe'),vecI=$('#tcVec');vecI.addEventListener('input',()=>{S.vecs=+vecI.value;TST=null;rTest();});
-function rTest(){const vs=V();vecI.max=vs.length;if(S.vecs>vs.length||S.vecs<1)S.vecs=vs.length;vecI.value=S.vecs;$('#tcVecO').textContent=S.vecs+' of '+vs.length;
- if(!TST){/* fixed shuffled order of vectors */const r=rng(13+S.p);const order=vs.map((v,i)=>[r(),v]).sort((a,b)=>a[0]-b[0]).map(x=>x[1]);const F=TC.faults(SY.M,order);
+function rTest(){const vs=V();vecI.max=vs.length;if(S.vecs>vs.length||S.vecs<1)S.vecs=vs.length;vecI.value=S.vecs;$('#tcVecO').textContent=S.vecs+' of '+vs.length+(clocked()?' cycles':'');
+ if(!TST){/* fixed shuffled order of vectors; a clocked test keeps its order, because each cycle builds on the last */const r=rng(13+S.p);const order=clocked()?vs:vs.map((v,i)=>[r(),v]).sort((a,b)=>a[0]-b[0]).map(x=>x[1]);const F=TC.faults(SY.M,order);
   const r2=rng(99+S.p);const dies=Math.min(FAB.dies,260);const res=[];for(let i=0;i<dies;i++){if(r2()<0.25){const f=Math.floor(r2()*F.F.length);const det=F.detected[f];res.push(det>=0&&det<S.vecs?'caught':'escape');}else res.push('good');}
   const cov=F.detected.filter(x=>x>=0&&x<S.vecs).length/F.F.length;const covFull=F.detected.filter(x=>x>=0).length/F.F.length;TST={res,cov,covFull,dies};}
  const n={good:0,caught:0,escape:0};TST.res.forEach(x=>n[x]++);const scale=1;
@@ -251,7 +276,7 @@ function drawProbe(){const {ctx:c,w,h}=fit(pcv);c.clearRect(0,0,w,h);const r=Mat
  for(let i=0;i<cols&&k<N;i++)for(let j=0;j<cols&&k<N;j++){const x=cx-r+j*sz,y=cy-r+i*sz;if(Math.hypot(x+sz/2-cx,y+sz/2-cy)>r-sz*0.7)continue;c.fillStyle=COL[TST.res[k]];c.globalAlpha=TST.res[k]==='good'?0.55:1;c.fillRect(x+0.5,y+0.5,sz-1,sz-1);c.globalAlpha=1;k++;}
  c.font='11px IBM Plex Mono, monospace';c.textAlign='left';[['good','passed'],['caught','failed test'],['escape','bad but passed']].forEach(([k2,l],i)=>{c.fillStyle=COL[k2];c.fillRect(6,h-14-i*14,9,9);c.fillStyle=T.muted;c.fillText(l,19,h-6-i*14);});}
 watch(pcv,()=>{if(S.step===7&&TST)drawProbe();});
-function rGadget(){const p=P(),box=$('#tcGadget');const v=Object.fromEntries(p.ins.map(n=>[n,S.sv[n]?1:0]));const o=TC.simCells(SY.M,v).out;
+function rGadget(){const p=P(),box=$('#tcGadget');const v=Object.fromEntries(p.ins.map(n=>[n,S.sv[n]?1:0]));const R=sim(v),o=R.out;
  const sw=p.ins.map(n=>'<div class="sw"><button type="button" data-n="'+n+'" aria-pressed="'+(v[n]?'true':'false')+'" aria-label="Input '+n+'"></button>'+n+'</div>').join('');
  let out='';if(p.demo==='seg'){const on=s=>o[s]?'#ff5640':'#3b1414';out='<svg viewBox="0 0 60 100" aria-label="Display"><polygon points="12,6 48,6 42,12 18,12" fill="'+on('a')+'"/><polygon points="50,8 50,46 44,42 44,14" fill="'+on('b')+'"/><polygon points="50,54 50,92 44,86 44,58" fill="'+on('c')+'"/><polygon points="12,94 48,94 42,88 18,88" fill="'+on('d')+'"/><polygon points="10,54 10,92 16,86 16,58" fill="'+on('e')+'"/><polygon points="10,8 10,46 16,42 16,14" fill="'+on('f')+'"/><polygon points="14,50 20,46 40,46 46,50 40,54 20,54" fill="'+on('g')+'"/></svg>';
   out+='<div class="num">'+(v.x2*4+v.x1*2+v.x0)+'</div>';}
@@ -259,9 +284,12 @@ function rGadget(){const p=P(),box=$('#tcGadget');const v=Object.fromEntries(p.i
   if(p.demo==='add'){const a=p.ins.reduce((t,n)=>t+v[n],0);const got=(o.carry!==undefined?o.carry:o.cout)*2+o.sum;out+='<div class="num">'+p.ins.map(n=>v[n]).join('+')+' = '+got+(got!==a?' ✗':'')+'</div>';}
   if(p.demo==='add2'){const a=v.a1*2+v.a0,b=v.b1*2+v.b0,got=o.s2*4+o.s1*2+o.s0;out+='<div class="num">'+a+'+'+b+' = '+got+(got!==a+b?' ✗':'')+'</div>';}
   if(p.demo==='alu'){const op=v.op1*2+v.op0===3?(v.sub?'sub':'add'):['and','or','xor'][v.op1*2+v.op0];const sym={and:'AND',or:'OR',xor:'XOR',add:'+',sub:'−'}[op];const A=1234,B=567;const r=makeALU(tableOf(SY.M))(op,A,B).y;const want={and:A&B,or:A|B,xor:A^B,add:A+B,sub:A-B}[op];
-   out+='<div class="num" style="font-size:15px">'+sym+' · 32 slices: '+A+' '+sym+' '+B+' = '+r+(r!==want?' ✗':' ✓')+'</div><a class="btn primary" href="#riscv-3" data-use-alu="1">Run it in the RISC-V CPU →</a>';}}
+   out+='<div class="num" style="font-size:15px">'+sym+' · 32 slices: '+A+' '+sym+' '+B+' = '+r+(r!==want?' ✗':' ✓')+'</div><a class="btn primary" href="#riscv-3" data-use-alu="1">Run it in the RISC-V CPU →</a>';}
+  if(p.demo==='count'){out+='<div class="num">'+(o.q2*4+o.q1*2+o.q0)+'</div>';}}
+ if(clocked())out+='<div class="row"><button type="button" class="btn primary" id="tcTick">Tick the clock</button><button type="button" class="btn" id="tcRst">Reset</button><span class="small ticks">'+S.ticks+(S.ticks===1?' tick':' ticks')+' since reset</span></div>';
  box.innerHTML='<div style="display:flex;gap:10px">'+sw+'</div><div class="chip">'+esc(p.t).toUpperCase()+'<br>'+TC.NODE[S.node].t+'</div>'+out;
- box.querySelectorAll('.sw button').forEach(b=>b.addEventListener('click',()=>{S.sv[b.dataset.n]=S.sv[b.dataset.n]?0:1;rGadget();}));}
+ box.querySelectorAll('.sw button').forEach(b=>b.addEventListener('click',()=>{S.sv[b.dataset.n]=S.sv[b.dataset.n]?0:1;rGadget();}));
+ const tk=$('#tcTick');if(tk){tk.addEventListener('click',()=>{S.st=R.next;S.ticks++;rGadget();});$('#tcRst').addEventListener('click',()=>{S.st={};S.ticks=0;rGadget();});}}
 function rReport(){const p=P(),st=SY.st,nd=TC.NODE[S.node],vr=verify();const wum=PL.GW*nd.site[0],hum=PL.H/3*nd.site[1];const n={good:0};TST.res.forEach(x=>{if(x==='good')n.good++;});
  const ratio=336e9/st.tr;
  $('#tcReport').innerHTML='<div class="wide"><b style="font-family:var(--body)">'+(vr&&vr.bad?'Shipped with a bug: '+vr.bad+' input cases give wrong answers. ':'Your chip works. ')+'</b>It spent about '+Math.round(nd.masks*nd.days/7)+' weeks in the fab. Real shuttle runs take several months because many designs share one schedule, and a flagship GPU takes about three years from specification to volume.</div>'+
@@ -287,14 +315,14 @@ function rReal(){synth();if(!SY)return;const p=P(),files=realFiles();
  $('#tcTopO').textContent=realTop();if(realFile>=files.length)realFile=0;
  $('#tcFiles').innerHTML=files.map((f,i)=>'<button type="button" data-i="'+i+'" aria-pressed="'+(i===realFile)+'">'+esc(f[0])+'</button>').join('');
  $('#tcFileName').textContent=files[realFile][0];$('#tcFileView').textContent=files[realFile][1];
- const pins=X.pinOrder(p);$('#tcPins').innerHTML=pins.ins.map((n,i)=>'<span>ui['+i+']</span><b>'+esc(n)+'</b>').join('')+pins.outs.map((n,i)=>'<span>uo['+i+']</span><b>'+esc(n)+'</b>').join('')+'<span>uio</span><b>unused</b>';
+ const pins=X.pinOrder(p);$('#tcPins').innerHTML=pins.ins.map((n,i)=>'<span>ui['+i+']</span><b>'+esc(n)+'</b>').join('')+pins.outs.map((n,i)=>'<span>uo['+i+']</span><b>'+esc(n)+'</b>').join('')+(p.seq?'<span>clk</span><b>clock</b><span>rst_n</span><b>reset (low)</b>':'')+'<span>uio</span><b>unused</b>';
  const vr=verify(),w=$('#tcRealWarn');w.hidden=!(vr&&vr.bad);if(vr&&vr.bad)w.querySelector('p:last-child').textContent='Your design gives the wrong answer in '+vr.bad+' of '+vr.rows.length+' cases. A real chip cannot be patched after it is made, and the exported test checks the specification, so it would fail on GitHub too. Go back to step 2 and fix it first.';
  const sh=FACTS.facts.find(f=>f.id==='tt-next-shuttle');$('#tcShuttle').textContent=sh?'Next shuttles: '+sh.value+' ('+sh.source+', checked '+fmtDate(sh.verified)+').':'';}
 
 /* The My chip passport can change the process from outside the studio. */
 document.addEventListener('osl:tiny-set',e=>{const n=e.detail&&e.detail.node;if(!TC.NODE[n]||n===S.node)return;S.node=n;SY=null;PL=null;RT=null;S.fabbed=false;TST=null;save();render();});
 /* Stamp the passport for each step done with a working design. */
-function stamps(){if(!ok()||S.step<1)return;stampChip('logic');const vr=verify();if(S.step>=2&&(!vr||!vr.bad))stampChip('verify');if(S.step===3&&SY)stampChip('gates');if(S.step===4&&RT&&!RT.failed.length)stampChip('layout');if(S.step===5&&RT&&!RT.failed.length)stampChip('masks');if(S.step===6&&S.fabbed)stampChip('fab');if(S.step===7&&TST)stampChip('test');if(S.step===8)stampChip('real');}
+function stamps(){if(!ok()||S.step<1)return;stampChip('logic');const vr=verify();if(S.step>=2&&(!vr||!vr.bad)){stampChip('verify');if(clocked()&&D.regs.length)stampChip('clock');}if(S.step===3&&SY)stampChip('gates');if(S.step===4&&RT&&!RT.failed.length)stampChip('layout');if(S.step===5&&RT&&!RT.failed.length)stampChip('masks');if(S.step===6&&S.fabbed)stampChip('fab');if(S.step===7&&TST)stampChip('test');if(S.step===8)stampChip('real');}
 function render(){if(!D)compile();chrome();
  if(S.step===0)rSpec();if(S.step===1)rCode();if(S.step===2&&ok())rVerify();if(S.step===3&&ok())rSynth();if(S.step===4&&ok()){synth();rPR();}if(S.step===5&&ok()){synth();rMask();}if(S.step===6){drawFab();rFab();}if(S.step===7&&S.fabbed){synth();rTest();}if(S.step===8&&ok())rReal();stamps();}
 redraws.push(()=>{if(S.step===3)drawSch();if(S.step===4)drawLay();if(S.step===5)drawMask();if(S.step===6)drawFab();if(S.step===7&&TST){drawProbe();}});

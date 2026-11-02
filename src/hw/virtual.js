@@ -13,6 +13,8 @@ const xorshift = seed => { let s = (seed >>> 0) || 1; return () => { s ^= s << 1
    loose: the index of an input whose wire is off: a CMOS input left floating reads 0 or 1 at random,
    and may change from one moment to the next, so the chip gives different answers to the same question. */
 export function virtualChip(proj, code, { lib = 'basic', node = '130', fault = null, loose = null, seed = 7 } = {}) {
+  /* A chip with flip-flops answers differently depending on what came before; the twin test does not step a clock yet. */
+  if (proj.seq) return { ok: false, seq: true, errs: [{ code: 'clocked' }] };
   const D = TC.parse(code, proj.ins, proj.outs);
   if (D.errs.length) return { ok: false, errs: D.errs };
   const { M } = TC.synth(D, proj.ins, proj.outs, lib, false, node);

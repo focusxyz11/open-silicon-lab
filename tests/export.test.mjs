@@ -28,15 +28,33 @@ function evalModule(src, inputs) {
   return val;
 }
 
+/* Clocked modules: every "x <= expr;" is a flip-flop (the last one per name is the non-reset branch).
+   Run the test cycle by cycle from all flip-flops at 0, as after reset. */
+function runClocked(src, vecs) {
+  const regs = {}; for (const m of src.matchAll(/(\w+)\s*<=\s*([^;]+);/g)) regs[m[1]] = m[2];
+  let state = Object.fromEntries(Object.keys(regs).map(n => [n, 0]));
+  return vecs.map(v => {
+    const val = evalModule(src, { ...v, ...state });
+    const next = {}; for (const [n, e] of Object.entries(regs)) next[n] = evalModule('assign __x = ' + e + ';', val).__x;
+    state = next; return val;
+  });
+}
+
 const projects = TC.PROJ.flatMap(p => [[p, p.sol, 'solution'], [p, p.starter, 'starter']].filter(x => x[1]));
 
 for (const [p, code, kind] of projects) {
   test(`${p.t} (${kind}): exported Verilog and gate netlist match the design`, () => {
-    const D = TC.parse(code, p.ins, p.outs); assert.deepEqual(D.errs, []);
+    const D = TC.parse(code, p.ins, p.outs, { regs: !!p.seq }); assert.deepEqual(D.errs, []);
     const core = X.coreVerilog(D, p);
     const M = TC.synth(D, p.ins, p.outs, 'basic', false, '130').M;
     const gates = X.gatesVerilog(M, p);
     const nand = X.gatesVerilog(TC.synth(D, p.ins, p.outs, 'nand', false, '130').M, p);
+    if (p.seq) {
+      const rows = TC.verify(D, Object.assign({}, p, { f: null })).rows, vecs = TC.seqVectors(p);
+      for (const src of [core, gates, nand]) runClocked(src, vecs).forEach((got, k) => { for (const o of p.outs) assert.equal(got[o], rows[k].o[o], `cycle ${k}: ${o}`); });
+      assert.match(core, /always @\(posedge clk\)/); assert.match(core, /if \(!rst_n\)/);
+      return;
+    }
     for (const v of TC.vectors(p.ins)) {
       const want = TC.evalDesign(D, v);
       for (const src of [core, gates, nand]) { const got = evalModule(src, v); for (const o of p.outs) assert.equal(got[o], want[o], `${o} for ${JSON.stringify(v)}`); }
@@ -46,7 +64,7 @@ for (const [p, code, kind] of projects) {
 
 test('the Tiny Tapeout wrapper uses the template interface and assigns every output', () => {
   for (const p of TC.PROJ) {
-    const D = TC.parse(p.sol || p.starter, p.ins, p.outs);
+    const D = TC.parse(p.sol || p.starter, p.ins, p.outs, { regs: !!p.seq });
     const top = X.topName('Ada ' + p.id);
     assert.match(top, /^tt_um_[a-z0-9_]+$/);
     const v = X.projectV(D, p, top);
