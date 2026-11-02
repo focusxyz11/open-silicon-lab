@@ -393,6 +393,18 @@
    "verified": "2026-10-29"
   },
   {
+   "id": "landauer-measured",
+   "topic": "floor",
+   "detail": "A single colloidal particle in a laser trap served as a one-bit memory; the heat released on erasure approached kT ln 2 when the erasure was done slowly.",
+   "kind": "reported",
+   "label": "Landauer's limit, measured",
+   "source": "Nature (Bérut et al.)",
+   "status": "current",
+   "url": "https://www.nature.com/articles/nature10872",
+   "value": "Erasing one bit released heat close to kT ln 2, about 3 zJ at room temperature (2012)",
+   "verified": "2026-11-02"
+  },
+  {
    "id": "euv-source",
    "topic": "litho",
    "detail": "ASML targets about 330 wafers per hour by 2030.",

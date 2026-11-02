@@ -4,6 +4,7 @@
 /* Every topic in map order (band, then "order"): id, band, kind, title (t) and summary (s). */
 export const TOPICS = [
   {"id":"reality","band":"questions","kind":"explore","t":"Why perfect designs fail","s":"A chip can pass every check and still fail: variation, heat, aging, defects the test missed, radiation and uses nobody planned for. Ship one to a phone, a car, a data center or a satellite."},
+  {"id":"floor","band":"questions","kind":"explore","t":"The physics floor","s":"How far a multiply-add, an AI word or a photo is from the energy floor physics sets, why cooling cannot beat it, and how far a signal can go in one tick."},
   {"id":"innovation","band":"future","kind":"explore","t":"Innovation map","s":"Which steps AI speeds up, which need invention, money or people."},
   {"id":"future","band":"future","kind":"explore","t":"Roadmap","s":"The state of the art year by year to the 2040s, tagged by how certain it is."},
   {"id":"scenarios","band":"future","kind":"explore","t":"Future scenarios","s":"Steer the bets that shape 2040, and see which beyond-silicon ideas are real."},
@@ -46,6 +47,9 @@ export const LINKS = [
   {"from":"reality","to":"design","kind":"builds-on","why":"sign-off checks one ideal chip","in":"reality"},
   {"from":"reality","to":"yield","kind":"builds-on","why":"defects, and the tests that miss some","in":"reality"},
   {"from":"reality","to":"innovation","kind":"causes","why":"each failure forced a new way of checking","if":"a new kind of failure shows up in the field","then":"engineers invent a new check, which costs time and money","in":"reality"},
+  {"from":"floor","to":"reversible","kind":"builds-on","why":"Landauer's limit is the price of erasing a bit","in":"floor"},
+  {"from":"floor","to":"beyond","kind":"builds-on","why":"moving data costs far more than computing with it","in":"floor"},
+  {"from":"floor","to":"datacenter","kind":"causes","why":"the gap above the floor is the energy a data center pays","if":"chips waste less energy per operation","then":"the same AI work needs less electricity, though cheaper computing tends to raise demand","in":"floor"},
   {"from":"innovation","to":"design","kind":"builds-on","why":"AI agents speed up design","in":"innovation"},
   {"from":"innovation","to":"fab","kind":"builds-on","why":"money and time limit fabs, not software","in":"innovation"},
   {"from":"innovation","to":"agent","kind":"builds-on","why":"which human skills still matter","in":"innovation"},
@@ -135,6 +139,8 @@ export const IDEA_USES = [
   {"idea":"smaller-until","topic":"reality","how":"smaller transistors vary and age more, so they need more margin"},
   {"idea":"layers-hide-detail","topic":"reality","how":"heat, aging and radiation reach through every layer","counter":true},
   {"idea":"checking-is-hard","topic":"reality","how":"a chip can pass every check and still fail"},
+  {"idea":"energy-budget","topic":"floor","how":"every operation pays energy, and physics sets the minimum"},
+  {"idea":"keep-data-close","topic":"floor","how":"fetching numbers from DRAM costs thousands of times the arithmetic"},
   {"idea":"checking-is-hard","topic":"innovation","how":"verification is a data problem too, so AI may speed up checking as well","counter":true},
   {"idea":"smaller-until","topic":"future","how":"CFET and 2D materials are the next answers"},
   {"idea":"energy-budget","topic":"scenarios","how":"power may cap AI growth more than chips do"},
@@ -206,6 +212,7 @@ export const IDEA_USES = [
 /* Where each trade-off and measure shows up (src/data/tradeoffs.js and measures.js define them). */
 export const TRADEOFF_USES = [
   {"tradeoff":"safety-cost","topic":"reality","how":"every protection lowers failures and costs speed, power or money","try":"#lab-reality-1"},
+  {"tradeoff":"precision-energy","topic":"floor","how":"fewer bits cost less energy, but the floor falls with them","try":"#lab-floor-1"},
   {"tradeoff":"precision-energy","topic":"cim","how":"analog math saves energy but adds noise to every answer","try":"#lab-cim-1"},
   {"tradeoff":"near-big","topic":"spatial","how":"keeping the weights on chip is fastest, if they fit","try":"#lab-spatial-1"},
   {"tradeoff":"big-yield","topic":"spatial","how":"wafer-scale chips choose the other end: one piece of silicon, with spares"},
@@ -236,6 +243,8 @@ export const TRADEOFF_USES = [
 
 export const MEASURE_USES = [
   {"measure":"dppm","topic":"reality","how":"each mission sets its own target"},
+  {"measure":"energy-bit","topic":"floor","how":"here measured against the physical minimum, kT ln 2"},
+  {"measure":"ops-watt","topic":"floor","how":"the inverse of energy per operation, which the floor caps"},
   {"measure":"transistors","topic":"future","how":"the trend line to 2040"},
   {"measure":"node","topic":"future","how":"the roadmap names nodes year by year"},
   {"measure":"energy-bit","topic":"beyond","how":"where the energy goes: mostly moving data"},
@@ -267,7 +276,7 @@ export const MEASURE_USES = [
 ];
 
 /* Topics whose subject did not exist yet in early years: [year, what happened] (from "time.born"). */
-export const BORN = {"compute":[2012,"Deep learning takes off on GPUs in 2012."],"accelerators":[2016,"Google reveals its first TPU in 2016. GPUs became programmable for general computing with CUDA in 2007."],"build":[2016,"Purpose-built AI chips appear from 2016."],"agent":[2023,"Large language models start writing chip code around 2023; agentic design tools ship in 2025–26."],"riscv":[2010,"RISC-V starts as a research project at UC Berkeley in 2010."]};
+export const BORN = {"floor":[1961,"Rolf Landauer shows that erasing one bit of information must turn at least kT ln 2 of energy into heat."],"compute":[2012,"Deep learning takes off on GPUs in 2012."],"accelerators":[2016,"Google reveals its first TPU in 2016. GPUs became programmable for general computing with CUDA in 2007."],"build":[2016,"Purpose-built AI chips appear from 2016."],"agent":[2023,"Large language models start writing chip code around 2023; agentic design tools ship in 2025–26."],"riscv":[2010,"RISC-V starts as a research project at UC Berkeley in 2010."]};
 
 /* Every challenge, with the topic it belongs to. */
 export const CHALLENGES = [
@@ -276,6 +285,9 @@ export const CHALLENGES = [
   {"topic":"reality","kind":"Design","t":"A fleet you can trust","d":"100,000 AI chips running hot all day, with almost no silent wrong answers.","href":"#lab-reality-1"},
   {"topic":"reality","kind":"Design","t":"Survive orbit","d":"Radiation 300 times stronger and nobody to repair it.","href":"#lab-reality-1"},
   {"topic":"reality","kind":"Puzzle","t":"Case files","d":"Seven real chips that failed. Name the gap between design and reality.","href":"#lab-reality-2"},
+  {"topic":"floor","kind":"Experiment","t":"Find the waste","d":"For one AI word, find which part of the energy is largest, then cut it by ten or more.","href":"#lab-floor-1"},
+  {"topic":"floor","kind":"Puzzle","t":"Within two million","d":"Set up one multiply-add so it spends less than two million times the physics floor.","href":"#lab-floor-1"},
+  {"topic":"floor","kind":"Puzzle","t":"Beat the floor by cooling","d":"Try to get the total energy per bit below the room-temperature floor by cooling the chip. Can you? Why not?","href":"#lab-floor-2"},
   {"topic":"future","kind":"Experiment","t":"Travel to 1985","d":"Set the time machine to 1985 and find which of today's topics and companies did not exist yet.","href":"#timeMachine"},
   {"topic":"scenarios","kind":"Experiment","t":"Escape the power wall","d":"Find settings where electricity stops limiting AI growth.","href":"#scenarios"},
   {"topic":"beyond","kind":"Experiment","t":"Same job, ten machines","d":"Pick a job and see which of ten machines suits it, from GPUs to qubits and living neurons, and why.","href":"#lab-beyond-2"},
