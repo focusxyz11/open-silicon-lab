@@ -33,7 +33,7 @@ export const THREADS = [
   { id: 'mychip', t: 'Build your own chip', d: 'One design of yours, start to finish: gates, a CPU that runs on them, layout, masks, the fab, test, and the files to make it for real.', path: ['tiny', 'design', 'clock', 'riscv', 'layout', 'xray', 'litho', 'fab', 'yield', 'bench', 'community'] },
   { id: 'everyday', t: 'Everyday chips', d: 'The billions of ordinary chips in phones, cars and appliances, and why old factories still matter.', path: ['everywhere', 'architecture', 'tiny', 'yield', 'supply', 'economics'] },
   { id: 'riscv', t: 'RISC-V path', d: 'Understand, build and extend an open processor.', path: ['architecture', 'riscv', 'design', 'tiny', 'layout', 'accelerators', 'ecosystem'] },
-  { id: 'ai', t: 'AI-native', d: 'Where AI changes chips, and chips change AI.', path: ['compute', 'accelerators', 'riscv', 'design', 'agent', 'innovation', 'datacenter', 'scenarios'] },
+  { id: 'ai', t: 'AI-native', d: 'Where AI changes chips, and chips change AI.', path: ['compute', 'accelerators', 'riscv', 'design', 'agent', 'evolve', 'innovation', 'datacenter', 'scenarios'] },
   { id: 'make', t: 'Making chips', d: 'Follow the wafer through the fab.', path: ['physics', 'transistor', 'litho', 'fab', 'yield', 'package'] },
   { id: 'next', t: 'Beyond today\'s computers', d: 'Ten kinds of machine, from analog memory to qubits and living neurons.', path: ['compute', 'beyond', 'cim', 'neuro', 'photonic', 'quantum', 'pbits', 'reversible', 'spatial'] },
   { id: 'industry', t: 'Industry & open ecosystem', d: 'Companies, countries, money and community.', path: ['architecture', 'riscv', 'ecosystem', 'supply', 'economics', 'innovation', 'future'] }

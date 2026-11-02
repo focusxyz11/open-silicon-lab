@@ -33,6 +33,7 @@ export const TOPICS = [
   {"id":"layout","band":"design","kind":"explore","t":"Physical layout","s":"Placing thousands of cells by simulated annealing so the wires stay short."},
   {"id":"xray","band":"design","kind":"explore","t":"Chip X-ray","s":"Read a die like an engineer: name the blocks by their texture, then tell what a chip is for from where its area goes."},
   {"id":"agent","band":"design","kind":"build","t":"Design with an AI agent","s":"An agent proposes designs, code and claims. Check them with real tools, find the mistakes, and decide what to trust."},
+  {"id":"evolve","band":"design","kind":"explore","t":"Evolve a circuit","s":"Let blind evolution design a circuit from random wiring, then compare it with a person's design: smaller sometimes, stranger always."},
   {"id":"tiny","band":"design","kind":"build","t":"Tiny chip studio","s":"Take your own circuit through all eight steps: logic, verification, gates, layout, masks, fab, test and a working gadget."},
   {"id":"clock","band":"design","kind":"explore","t":"Memory and the clock","s":"Make two gates remember a bit, catch a value on the clock's tick, then build a counter and push its clock until it breaks."},
   {"id":"bench","band":"design","kind":"build","t":"Your bench: real hardware","s":"Test a chip the way engineers do: drive its pins, compare it with the simulation, and track down defects. On screen today, on real boards as they join."},
@@ -110,6 +111,8 @@ export const LINKS = [
   {"from":"agent","to":"tiny","kind":"builds-on","why":"check its designs with the studio's tools","in":"agent"},
   {"from":"agent","to":"riscv","kind":"builds-on","why":"test the code it writes","in":"agent"},
   {"from":"agent","to":"compute","kind":"builds-on","why":"check its performance claims","in":"agent"},
+  {"from":"evolve","to":"design","kind":"builds-on","why":"design is a search through possible circuits, and evolution is one way to search","in":"evolve"},
+  {"from":"evolve","to":"tiny","kind":"feeds","why":"an evolved circuit opens in the studio, to be verified, laid out and exported","in":"evolve"},
   {"from":"tiny","to":"design","kind":"builds-on","why":"try the whole flow yourself","in":"tiny"},
   {"from":"tiny","to":"litho","kind":"builds-on","why":"masks and fab, in miniature","in":"tiny"},
   {"from":"tiny","to":"yield","kind":"builds-on","why":"test catches defective chips","in":"tiny"},
@@ -195,6 +198,7 @@ export const IDEA_USES = [
   {"idea":"many-small","topic":"xray","how":"a GPU is one small core copied dozens of times"},
   {"idea":"specialize","topic":"xray","how":"a phone chip has a separate block for each job: camera, video, AI, graphics"},
   {"idea":"checking-is-hard","topic":"agent","how":"an agent writes fast; deciding whether to trust it is your job"},
+  {"idea":"checking-is-hard","topic":"evolve","how":"a circuit nobody understands can only be trusted after it is verified"},
   {"idea":"copies-catch-mistakes","topic":"tiny","how":"the majority voter you build is the heart of triple redundancy"},
   {"idea":"checking-is-hard","topic":"tiny","how":"the verify step catches the bug before tape-out"},
   {"idea":"pay-once","topic":"tiny","how":"shared wafers split the up-front cost among many small designs"},
@@ -274,6 +278,7 @@ export const MEASURE_USES = [
   {"measure":"cost-chip","topic":"yield","how":"bad dies raise the cost of the good ones"},
   {"measure":"transistors","topic":"layout","how":"tools place billions of them so the wires stay short"},
   {"measure":"transistors","topic":"xray","how":"the blocks you see each hold millions to billions of them"},
+  {"measure":"transistors","topic":"evolve","how":"evolution counts gates; the transistor count shows that gates differ in size"},
   {"measure":"yield","topic":"tiny","how":"the test step sorts working chips from faulty ones"},
   {"measure":"yield","topic":"bench","how":"each chip that fails the twin test is one that will not ship"},
   {"measure":"transistors","topic":"transistor","how":"billions of switches, each one shrinking"},
@@ -281,7 +286,7 @@ export const MEASURE_USES = [
 ];
 
 /* Topics whose subject did not exist yet in early years: [year, what happened] (from "time.born"). */
-export const BORN = {"floor":[1961,"Rolf Landauer shows that erasing one bit of information must turn at least kT ln 2 of energy into heat."],"compute":[2012,"Deep learning takes off on GPUs in 2012."],"accelerators":[2016,"Google reveals its first TPU in 2016. GPUs became programmable for general computing with CUDA in 2007."],"build":[2016,"Purpose-built AI chips appear from 2016."],"agent":[2023,"Large language models start writing chip code around 2023; agentic design tools ship in 2025–26."],"riscv":[2010,"RISC-V starts as a research project at UC Berkeley in 2010."]};
+export const BORN = {"floor":[1961,"Rolf Landauer shows that erasing one bit of information must turn at least kT ln 2 of energy into heat."],"compute":[2012,"Deep learning takes off on GPUs in 2012."],"accelerators":[2016,"Google reveals its first TPU in 2016. GPUs became programmable for general computing with CUDA in 2007."],"build":[2016,"Purpose-built AI chips appear from 2016."],"agent":[2023,"Large language models start writing chip code around 2023; agentic design tools ship in 2025–26."],"evolve":[1990,"Researchers start evolving circuits on computers, using the ideas of natural selection."],"riscv":[2010,"RISC-V starts as a research project at UC Berkeley in 2010."]};
 
 /* Every challenge, with the topic it belongs to. */
 export const CHALLENGES = [
@@ -322,6 +327,9 @@ export const CHALLENGES = [
   {"topic":"xray","kind":"Experiment","t":"Where did the area go?","d":"Compare a microcontroller and an AI GPU: what share of each is memory, and how big is the CPU?","href":"#lab-xray-1"},
   {"topic":"agent","kind":"Puzzle","t":"Verify the agent","d":"Eight proposals from an AI agent: designs, code, estimates and facts. Trust or reject each, with evidence.","href":"#lab-agent-1"},
   {"topic":"agent","kind":"Experiment","t":"Calibrate your trust","d":"Inside Claude: a live agent designs tiny chips. Decide whether to trust each design before you check it.","href":"#lab-agent-2"},
+  {"topic":"evolve","kind":"Experiment","t":"Beat the person","d":"Evolve a majority voter that uses fewer cells than the human solution.","href":"#lab-evolve-1"},
+  {"topic":"evolve","kind":"Experiment","t":"NAND only","d":"Evolve a half adder from NAND gates alone. How many does it need?","href":"#lab-evolve-1"},
+  {"topic":"evolve","kind":"Puzzle","t":"Explain the machine","d":"Open an evolved circuit in the studio and explain, line by line, why it works.","href":"#lab-evolve-2"},
   {"topic":"tiny","kind":"Puzzle","t":"Find the bug: majority voter","d":"Verification shows a missing case. Fix it before tape-out.","href":"#tiny"},
   {"topic":"tiny","kind":"Puzzle","t":"Find the bug: full adder","d":"The sum line is wrong. Prove it, fix it, ship it.","href":"#tiny"},
   {"topic":"tiny","kind":"Design","t":"Display decoder","d":"Finish segments d to g and route the biggest tiny design.","href":"#tiny"},

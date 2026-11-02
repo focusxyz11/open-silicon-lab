@@ -18,6 +18,7 @@ anywhere else, and does it help them think better about where chips are going?
 | --- | --- |
 | The physics floor | Built: `#floor` and your chip's distance from physics in the passport (November 2026). Next: the same yardstick on other topics. |
 | The community chip | Groundwork built (`#community`, November 2026). Next: a maintainer decision on submitting it. |
+| Evolve a circuit | Built (`#evolve`, November 2026): blind evolution against the human design, opened in the studio. Next: evolve under a transistor or timing budget, and against an AI agent's design. |
 | From need to chip | Later, on top of open engines (idea 8). |
 
 ## The ideas

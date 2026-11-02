@@ -1,0 +1,54 @@
+<section id="evolve">
+    <div class="head">
+      <p class="code" data-topic-label>Evolve a circuit</p>
+      <h2>What if nobody designed the circuit?</h2>
+    </div>
+    <div class="prose">
+      <p>Designing is searching: out of all the ways to wire a few gates together, find one that does the job. Engineers search with understanding. Evolution searches blindly: start from random wiring, copy the best, change a little at random, keep the copy if it is no worse, and repeat thousands of times. Nobody tells it how an adder works.</p>
+      <p>Pick a job, let evolution run, and compare what it finds with the human solution from the tiny chip studio.</p>
+    </div>
+
+    <div class="lab">
+      <header><b>Let evolution design it</b><span id="evTag">–</span></header>
+      <div class="body">
+        <div class="ctl"><span class="lbl">The job</span><div class="seg" id="evJob" role="group" aria-label="The job"></div></div>
+        <div class="cols">
+          <div>
+            <canvas class="plot" id="evCv" style="aspect-ratio:16/9" role="img" aria-label="The best circuit found so far, from the inputs on the left to the outputs on the right"></canvas>
+            <canvas class="plot" id="evChart" style="height:120px;margin-top:8px" role="img" aria-label="Correct answers and gates used, over the generations"></canvas>
+          </div>
+          <div class="controls">
+            <div class="ctl"><span class="lbl">Gates it may use</span><div class="seg" id="evKit" role="group" aria-label="Gates it may use"></div></div>
+            <div class="ctl"><label for="evNodes">Room for gates <output id="evNodesO">–</output></label><input type="range" id="evNodes" min="8" max="40" step="1" value="30"></div>
+            <div class="row"><button type="button" class="btn primary" id="evRun">Evolve</button><button type="button" class="btn" id="evNew">Start again</button></div>
+            <p class="small" id="evHint" aria-live="polite"></p>
+          </div>
+        </div>
+        <div class="readout">
+          <div><span>Generation</span><b id="evGen">–</b></div>
+          <div><span>Correct answers</span><b id="evOk">–</b></div>
+          <div><span>Gates used</span><b id="evSize">–</b></div>
+          <div><span>Human design</span><b id="evHuman">–</b></div>
+        </div>
+        <p class="note">The method is Cartesian Genetic Programming (Miller and Thomson, 2000): a row of gates, each wired to the inputs or to earlier gates, four mutated copies per generation, and the best copy kept if it is at least as good. It scores correct output bits first, then fewer gates. Every pattern is checked at once, one bit per pattern, which is why thousands of generations take a moment. Each new start uses a new random seed, so runs differ.</p>
+      </div>
+    </div>
+
+    <div class="prose">
+      <h3>Works, but can you explain it?</h3>
+      <p>In 1996 Adrian Thompson evolved a circuit on a real programmable chip that told two tones apart. It worked, and it used cells that were not even connected to the rest of the circuit: evolution had found some physical effect inside that one chip, and the design failed on another chip of the same type. Machine-found designs can be brilliant and strange at once. Today AI places chip blocks and writes chip code, and the question is the same: how do you trust a design nobody fully understands? Verification is the answer, and it is why every evolved circuit here goes through the same checks as yours.</p>
+    </div>
+
+    <div class="lab">
+      <header><b>Machine or human?</b><span id="evCTag">–</span></header>
+      <div class="body">
+        <div class="cols evcmp">
+          <div><p class="eyebrow">Found by evolution</p><pre class="evcode" id="evCode"></pre><div class="readout col" id="evMeas"></div></div>
+          <div><p class="eyebrow">Written by a person (the studio's solution)</p><pre class="evcode" id="evHumanCode"></pre><div class="readout col" id="evHMeas"></div></div>
+        </div>
+        <p class="small" id="evVerdict" aria-live="polite"></p>
+        <div class="row"><button type="button" class="btn primary" id="evOpen" disabled>Open the evolved design in the studio</button><span class="small muted">Verify it, synthesize it, zoom into it, or put it on the community chip.</span></div>
+        <p class="note">Both designs are measured the same way: the studio's synthesis with standard cells at 130 nm. Evolution only counts gates, so it may still lose on transistors (XOR cells are large).</p>
+      </div>
+    </div>
+  </section>

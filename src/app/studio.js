@@ -2,8 +2,9 @@
    demand, so load it first, then ask it to open a project or change the process. */
 import { ensureTopic } from './loader.js';
 
-export function openStudio(id, step = 0) {
-  return ensureTopic('tiny').then(() => document.dispatchEvent(new CustomEvent('osl:tiny-open', { detail: { id, step } })));
+/* code: optional design to load into that project (for example one evolved elsewhere on the site) */
+export function openStudio(id, step = 0, code) {
+  return ensureTopic('tiny').then(() => document.dispatchEvent(new CustomEvent('osl:tiny-open', { detail: { id, step, code } })));
 }
 export function setStudioNode(node) {
   return ensureTopic('tiny').then(() => document.dispatchEvent(new CustomEvent('osl:tiny-set', { detail: { node } })));
