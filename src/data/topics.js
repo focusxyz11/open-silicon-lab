@@ -30,7 +30,7 @@ export const EDGES = LINKS.map(l => [l.from, l.to, l.why, l.kind]);
    top-down (from what you know to what is inside) or bottom-up; it does not have to follow links. */
 export const THREADS = [
   { id: 'start', t: 'Start here', d: 'A first hour: from the chips in your pocket down to atoms, then make one yourself.', path: ['everywhere', 'physics', 'transistor', 'architecture', 'tiny', 'litho'] },
-  { id: 'mychip', t: 'Build your own chip', d: 'One design of yours, start to finish: gates, a CPU that runs on them, layout, masks, the fab, test, and the files to make it for real.', path: ['tiny', 'design', 'riscv', 'layout', 'xray', 'litho', 'fab', 'yield', 'bench'] },
+  { id: 'mychip', t: 'Build your own chip', d: 'One design of yours, start to finish: gates, a CPU that runs on them, layout, masks, the fab, test, and the files to make it for real.', path: ['tiny', 'design', 'clock', 'riscv', 'layout', 'xray', 'litho', 'fab', 'yield', 'bench'] },
   { id: 'everyday', t: 'Everyday chips', d: 'The billions of ordinary chips in phones, cars and appliances, and why old factories still matter.', path: ['everywhere', 'architecture', 'tiny', 'yield', 'supply', 'economics'] },
   { id: 'riscv', t: 'RISC-V path', d: 'Understand, build and extend an open processor.', path: ['architecture', 'riscv', 'design', 'tiny', 'layout', 'accelerators', 'ecosystem'] },
   { id: 'ai', t: 'AI-native', d: 'Where AI changes chips, and chips change AI.', path: ['compute', 'accelerators', 'riscv', 'design', 'agent', 'innovation', 'datacenter', 'scenarios'] },
