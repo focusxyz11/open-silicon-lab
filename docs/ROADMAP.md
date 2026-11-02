@@ -1,6 +1,6 @@
 # Roadmap
 
-Where Open Silicon Lab is heading. Near-term work ships as pull requests. The long-term goals below are kept on purpose and built step by step. Nothing here is a promise or a date.
+Where Open Silicon Lab is heading. Near-term work ships as pull requests. The long-term goals below are kept on purpose and built step by step. Nothing here is a promise or a date. Ideas not yet picked are kept in the [idea bank](IDEAS.md).
 
 ## What makes the lab unique
 
@@ -15,6 +15,9 @@ The whole chip stack *runs*, and every part is connected. Your gates become a CP
 
 ## Next
 
+- **The physics floor.** How far each task is from the limits of physics, layer by layer, with a shared yardstick across topics. *Picked; see [IDEAS.md](IDEAS.md).*
+- **The community chip.** Learners' verified designs gathered into one real Tiny Tapeout chip, followed to the factory and back to the bench. *Picked.*
+- **From need to chip.** Start from a mission and design backwards; possibly offered later as a public MCP server so any AI assistant can use the site's engines. *Picked, for later.*
 - **More big questions, beyond the technology itself.** Why can't the world just make more chips when it needs them? Who decides which chips get made? Why isn't better technology enough to win? If AI helps design chips, who builds the next ones? Can the planet afford the chips we want? Each with several viewpoints, a 2026–2040 horizon and AI as the force of change.
 - **Predict, then reveal.** Ask for a prediction before a simulation answers, across all labs.
 - **Forecasts that get scored.** Dated bets on the future, resolved by the monthly fact check.
