@@ -70,12 +70,16 @@ document.addEventListener('click', e => {
 
 /* ---- where they appear ---- */
 /* On a topic page: the trade-offs, measures and debates this topic takes part in. */
-export function hubsHTML(id) {
-  const ts = tradeoffsOf(id), ms = measuresOf(id), ds = debatesOf(id);
-  if (!ts.length && !ms.length && !ds.length) return '';
-  return '<div class="hblock hubs"><p class="code">' + t('hub.title') + '</p>' +
-    (ts.length || ms.length ? '<div class="hubgrid">' + ts.map(u => tradeoffCard(u.tradeoff, id, u)).join('') + ms.map(u => measureCard(u.measure, id, u)).join('') + '</div>' : '') +
-    (ds.length ? '<div class="hubgrid wide">' + ds.map(debateCard).join('') + '</div>' : '') + '</div>';
+/* The same, split for the challenge-first topic page: the open problems stay in view, the
+   trade-offs and measures fold into "Go deeper" (bare: no title, the fold has one). */
+export function wallsHTML(id) {
+  const ds = debatesOf(id);
+  return ds.length ? '<div class="hblock hubs walls"><p class="code">' + t('wall.title', { n: ds.length }) + '</p><div class="hubgrid wide">' + ds.map(debateCard).join('') + '</div></div>' : '';
+}
+export const thinkCount = id => tradeoffsOf(id).length + measuresOf(id).length;
+export function thinkHTML(id) {
+  const ts = tradeoffsOf(id), ms = measuresOf(id);
+  return ts.length || ms.length ? '<div class="hubgrid">' + ts.map(u => tradeoffCard(u.tradeoff, id, u)).join('') + ms.map(u => measureCard(u.measure, id, u)).join('') + '</div>' : '';
 }
 export const allTradeoffsHTML = () => '<div class="hubgrid">' + TRADEOFFS.map(t => tradeoffCard(t.id, null, null)).join('') + '</div>';
 export const allMeasuresHTML = () => '<div class="hubgrid">' + MEASURES.map(m => measureCard(m.id, null, null)).join('') + '</div>';

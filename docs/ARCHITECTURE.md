@@ -119,7 +119,7 @@ A topic loads once and stays on the page. Code in one topic that needs another (
 | `#workshop`, `#break`, `#imagine` | the Build, Break and Imagine doors (`#map` is Explore) |
 | `#challenges` | the whole frontier map |
 | `#knowledge`, `#mychip` | reference views, linked from the footer and the Build door |
-| `#<topic>` | one topic, with breadcrumb, thread bar, rail of simulations and connections, facts and next steps |
+| `#<topic>` | one topic, challenge first: breadcrumb, thread bar, mission card, simulations, the open problems, connections, then facts and big ideas folded into Go deeper |
 | `#lab-<topic>-<n>` or any element id | its topic, scrolled to that element |
 | `#riscv-<n>`, `#riscv-sandbox` | the RISC-V lab at that level |
 | `#glossary`, `#sources` | reference pages |
@@ -201,6 +201,10 @@ Instructions sent to Claude by the tutor stay in English and ask it to answer in
 
 The top of the map is the zoom from an AI rack down to silicon atoms (`src/labs/zoom-rack-to-atom.js`), with a panel beside it. At every one of the nine levels the panel shows a one-line hook and four lenses: **Explore** (what you are looking at, and its topics), **Build** (something to make at this scale), **Break** (what goes wrong here) and **Imagine** (where it could go). Each lens points at a real challenge, simulation or topic, listed in `src/data/hero.js` with only its reason to exist written in `src/i18n` (`hero.why.<level>.<lens>`). At the compute die the die doubles as **the map of the lab**: one block per band of the chip stack, laid out like a floorplan; a block lists its topics, and blocks with a physical level (`zoom` in `DIE`) zoom straight down to it. At the transistor a gate switch stops the electrons. The zoom and the hero talk through three DOM events: `osl:zoomlevel` (the level on screen), `osl:zoomto` (go to a level) and `osl:gate`. `tests/hero.test.mjs` fails if a challenge or topic the hero names is renamed or removed, or if two blocks of the die overlap. On light pages the zoom and the die are shown inverted, as a bright blueprint, with their hues kept; new drawings need nothing extra for this.
 
+## Challenge-first topic pages (`src/app/mission.js`)
+
+When a topic loads, `challengeFirst(id, section)` turns its page around so a reader meets a goal before the reading. A mission card goes under the question: the topic's first challenge (its lens, kind, task and a start link), the others as pills, and the walls (debates) the topic helps with, each scrolling to its debate further down. A challenge that points at the whole topic starts in its first simulation. On a topic with several simulations, each one a challenge points at carries that challenge above its controls. Each `.prose` block outside a simulation keeps its headings and first paragraph and folds the rest behind "Read more". A topic with no challenge yet shows free play and a prefilled "Propose a challenge" form. At the foot (`renderChrome` in the router), the open problems (`wallsHTML`) and the connections stay in view, and facts, big ideas and trade-offs fold into **Go deeper**, each with a count. Nothing is removed and nothing is locked.
+
 ## The four doors (`src/app/doors.js`)
 
 The top bar has four doors: **Explore** (the home page: rack to atom and the map), **Build** (`#workshop`), **Break** (`#break`) and **Imagine** (`#imagine`), then the whole frontier map. Each of the last three opens with a head (`doorHead`), its projects as cards (`project`: a topic or a page, with its challenge count), and its own column of the frontier map beside the walls (`doorMap`, which calls `renderFrontier(el, { lens })`). The Build door keeps the three connected builds, the community chip, My chip and the playground of every simulation. Knowledge is a reference, so it moved to the footer. Each door keeps its own map state, so picking a wall in one does not change another.
@@ -223,7 +227,7 @@ Everything is per-browser `localStorage`: explanation level, topics visited, qui
 
 ## Facts
 
-`src/data/facts.json` holds `facts` (label, value, kind, topic, source, url, verified date, optional previous value) and `changes` (a dated log). Topic pages show their facts; the Knowledge view lists all of them. A monthly check proposes updates as a pull request.
+`src/data/facts.json` holds `facts` (label, value, kind, topic, source, url, verified date, optional previous value) and `changes` (a dated log). Topic pages fold their facts into Go deeper; the Knowledge view lists all of them. A monthly check proposes updates as a pull request.
 
 ## Where the structure is going
 

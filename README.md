@@ -4,7 +4,7 @@ An open-source, hands-on lab for how chips are designed, made and used — from 
 
 **Try it: <https://focusxyz11.github.io/open-silicon-lab/>**
 
-It is not a textbook. Everything is a simulation you can play with, a puzzle, or a build. The top bar has four doors: **Explore** the chip from rack to atom, **Build** something that works, **Break** it to find where it fails, and **Imagine** what could come next. Each door opens with its projects and its own column of the frontier map. What you will find:
+It is not a textbook. Everything is a simulation you can play with, a puzzle, or a build. The top bar has four doors: **Explore** the chip from rack to atom, **Build** something that works, **Break** it to find where it fails, and **Imagine** what could come next. Each door opens with its projects and its own column of the frontier map. Every topic page opens with a challenge, then the simulation; the reading, facts and big ideas are one click away. What you will find:
 
 - **Rack to atom** — the top of the home page. Zoom from an AI rack down to silicon atoms, and at every level choose a lens: explore what you see, build something at that scale, break it, or imagine what comes next. At the compute die, the die becomes the map of the whole lab. A light/dark switch sits in the top bar.
 - **Chip stack map** — the rest of the home page. Every topic sits in its layer of the chip stack (atoms → transistors → processors → design → manufacturing → packaging → specialized computing → devices and data centers → industry → future), with wires showing how the topics depend on each other. Select a topic to see what it holds and what it connects to; follow a *thread* for a suggested route. Nothing is locked.
