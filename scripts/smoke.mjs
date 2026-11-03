@@ -204,14 +204,14 @@ async function check(viewport) {
   await page.close();
 }
 
-/* A first visit: nothing blocks the page. Three ways to start sit at the top of the map, tips appear
+/* A first visit: nothing blocks the page. The rack-to-atom hero sits at the top of the map, tips appear
    when a feature becomes useful and go away once it is used, and the tour opens only on request. */
 async function checkGuide(viewport) {
   const page = await browser.newPage({ viewport }); const tag = viewport.width < 600 ? '[mobile first visit] ' : '[first visit] ';
   page.on('pageerror', e => problems.push(tag + 'page error: ' + e.message + ' (' + String(e.stack || '').split('\n').slice(1, 3).map(l => l.trim()).join(' ← ') + ')'));
   await page.goto(base + 'index.html'); await page.waitForSelector('#mBands .tnode'); await page.waitForTimeout(1200);
   if (await page.$('.g-card')) problems.push(tag + 'the tour opened by itself');
-  if ((await page.$$('.maphero .door')).length !== 3) problems.push(tag + 'the map should show three ways to start');
+  if ((await page.$$('.hero .hlens')).length !== 4) problems.push(tag + 'the hero should offer four lenses: explore, build, break, imagine');
   /* Scrolling to the map brings the "select a box" tip; selecting one dismisses it and brings the lens tip. */
   await page.evaluate(() => document.getElementById('mStack').scrollIntoView());
   try { await page.waitForSelector('.hint', { timeout: 4000 }); } catch (e) { problems.push(tag + 'no tip when the map came into view'); }
@@ -222,14 +222,24 @@ async function checkGuide(viewport) {
   await page.click('.hint [data-h="off"]');
   if (await page.$('.hint')) problems.push(tag + 'Turn tips off did not close the tip');
   if (await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1)) problems.push(tag + 'page scrolls sideways');
-  /* A door goes straight to a challenge. */
+  /* The hero: zoom to the die, where each block of the map is a layer; a block zooms further down;
+     at the transistor the gate switch works; a lens card goes straight to a challenge. */
   await page.evaluate(() => scrollTo(0, 0));
-  await page.click('.maphero .door[href="#reality"]');
-  try { await page.waitForFunction(() => { const s = document.getElementById('reality'); return s && !s.hidden; }, null, { timeout: 15000 }); } catch (e) { problems.push(tag + 'the Break door did not open the reality topic'); }
+  await page.click('#zLevels button:nth-child(4)');
+  try { await page.waitForSelector('#hDie:not([hidden])', { timeout: 8000 }); } catch (e) { problems.push(tag + 'the die did not become the map of the lab at level 4'); }
+  await page.click('.hdblk[data-band="device"]');
+  if (!/Transistor/.test(await page.textContent('#hCard'))) problems.push(tag + 'picking the Transistors block did not show its topics');
+  await page.click('#hCard [data-zoomto]');
+  try { await page.waitForSelector('#hGateSeg:not([hidden])', { timeout: 10000 }); } catch (e) { problems.push(tag + 'zooming down from the die did not reach the transistor'); }
+  await page.click('#hGateSeg [data-gate="0"]');
+  if (await page.$eval('#hGateNote', el => el.hidden)) problems.push(tag + 'switching the gate off did not explain what happens');
+  await page.click('.hlens[data-lens="break"]');
+  await page.click('#hCard a.btn');
+  try { await page.waitForFunction(() => { const s = document.getElementById('reality'); return s && !s.hidden; }, null, { timeout: 15000 }); } catch (e) { problems.push(tag + 'the Break card did not open the reality topic'); }
   if (await page.$('.hint')) problems.push(tag + 'tips stay off after Turn tips off');
   /* The tour still opens on request, walks four steps, and Escape closes it. */
-  await page.goto(base + 'index.html'); await page.waitForSelector('.maphero [data-guide-start]');
-  await page.click('.maphero [data-guide-start]'); await page.waitForSelector('.g-card');
+  await page.goto(base + 'index.html'); await page.waitForSelector('.hero [data-guide-start]');
+  await page.click('.hero [data-guide-start]'); await page.waitForSelector('.g-card');
   for (let k = 0; k < 3; k++) { await page.click('.g-card [data-g="next"]'); await page.waitForTimeout(120); }
   if ((await page.$$('.g-card [data-g="go"]')).length !== 3) problems.push(tag + 'the tour\'s last step should offer 3 challenges');
   await page.keyboard.press('Escape'); await page.waitForTimeout(100);

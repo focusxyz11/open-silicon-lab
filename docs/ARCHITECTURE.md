@@ -94,7 +94,7 @@ The catalog script refuses anything that breaks these rules and says what to fix
 ## Boot sequence (`src/main.js`)
 
 1. Load `content/zoom.html` and the facts (or read them from `window.__OSL_CONTENT__` in the single-file build).
-2. Render the map shell and start its two simulations (zoom, time machine).
+2. Render the map shell, start the hero (it listens to the zoom, so it starts first), then the map's two simulations (zoom, time machine).
 3. Start the learning layer, the tutor (only inside Claude) and the router.
 
 No topic is loaded at start-up. The map, search, Workshop and Challenges read the graph from `src/generated/graph.js` and what each topic holds from `src/generated/catalog.js`. The start-up page needs about 38 files; the smoke test fails if it needs more than 60 or loads any topic early.
@@ -195,9 +195,17 @@ Done in stages: the shell's interface text (done), then the shared data (bands, 
 threads) and each topic's `topic.json` text, then the simulations' own text and the content pages.
 Instructions sent to Claude by the tutor stay in English and ask it to answer in the reader's language.
 
+## The home hero: rack to atom (`src/app/hero.js`)
+
+The top of the map is the zoom from an AI rack down to silicon atoms (`src/labs/zoom-rack-to-atom.js`), with a panel beside it. At every one of the nine levels the panel shows a one-line hook and four lenses: **Explore** (what you are looking at, and its topics), **Build** (something to make at this scale), **Break** (what goes wrong here) and **Imagine** (where it could go). Each lens points at a real challenge, simulation or topic, listed in `src/data/hero.js` with only its reason to exist written in `src/i18n` (`hero.why.<level>.<lens>`). At the compute die the die doubles as **the map of the lab**: one block per band of the chip stack, laid out like a floorplan; a block lists its topics, and blocks with a physical level (`zoom` in `DIE`) zoom straight down to it. At the transistor a gate switch stops the electrons. The zoom and the hero talk through three DOM events: `osl:zoomlevel` (the level on screen), `osl:zoomto` (go to a level) and `osl:gate`. `tests/hero.test.mjs` fails if a challenge or topic the hero names is renamed or removed, or if two blocks of the die overlap. On light pages the zoom and the die are shown inverted, as a bright blueprint, with their hues kept; new drawings need nothing extra for this.
+
+## Light and dark (`src/app/theme.js`)
+
+The theme button in the top bar cycles Auto (follow the device), Light and Dark. It sets `data-theme` on `<html>`, which the color tokens in `base.css` and every canvas (through `redraws` in `src/core/ui.js`) already follow, and remembers the choice in this browser only.
+
 ## First visits: doors, tips and an optional tour
 
-Nothing opens over the page by itself. The map's hero offers three ways to start (Build, Break, Imagine), each a link straight into a challenge. `src/app/hints.js` shows small tips at the moment a feature becomes useful: select a box when the map first comes into view, the lens bar after a first selection, the explanation level on a first topic page, the year on a second. A tip never blocks anything, only one shows at a time, and using a feature marks its tip as seen even if it never appeared. "Turn tips off" stops them; the footer's "Show tips again" brings them back. The four-step tour (`src/app/guide.js`) opens only when someone asks for it. To add a tip: an entry in `HINTS` (what to point at, and the click that means the visitor found the feature), a text `hint.<id>` in `src/i18n/en.json`, and a moment to `show()` it.
+Nothing opens over the page by itself. The map's hero offers four lenses at every zoom level, each a link straight into a challenge. `src/app/hints.js` shows small tips at the moment a feature becomes useful: select a box when the map first comes into view, the lens bar after a first selection, the explanation level on a first topic page, the year on a second. A tip never blocks anything, only one shows at a time, and using a feature marks its tip as seen even if it never appeared. "Turn tips off" stops them; the footer's "Show tips again" brings them back. The four-step tour (`src/app/guide.js`) opens only when someone asks for it. To add a tip: an entry in `HINTS` (what to point at, and the click that means the visitor found the feature), a text `hint.<id>` in `src/i18n/en.json`, and a moment to `show()` it.
 
 ## Progress and state
 
