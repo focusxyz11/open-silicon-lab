@@ -16,6 +16,7 @@
   "challenges": [
     {
       "kind": "Puzzle",
+      "lens": "build",
       "title": "Grow a perfect crystal",
       "task": "Pull a dislocation-free 300 mm ingot and taper it off safely.",
       "href": "#physics"

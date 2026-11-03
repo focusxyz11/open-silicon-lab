@@ -38,6 +38,7 @@
   "challenges": [
     {
       "kind": "Experiment",
+      "lens": "imagine",
       "title": "Escape the power wall",
       "task": "Find settings where electricity stops limiting AI growth.",
       "href": "#scenarios"

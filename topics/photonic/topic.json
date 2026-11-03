@@ -52,6 +52,7 @@
   "challenges": [
     {
       "kind": "Puzzle",
+      "lens": "imagine",
       "title": "Steer the light",
       "task": "Set an interferometer's phases to route light or split it in any ratio.",
       "href": "#lab-photonic-1"

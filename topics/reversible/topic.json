@@ -35,6 +35,7 @@
   "challenges": [
     {
       "kind": "Experiment",
+      "lens": "imagine",
       "title": "Approach the Landauer limit",
       "task": "How slowly must a gate switch to save 100× energy?",
       "href": "#lab-reversible-1"

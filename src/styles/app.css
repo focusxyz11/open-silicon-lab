@@ -602,3 +602,71 @@ a.btn{display:inline-block;text-decoration:none}
 @media(max-width:900px){.hero{grid-template-columns:minmax(0,1fr);grid-template-areas:"head" "stage" "panel";padding-block:20px 8px}}
 @media(max-width:900px){.hctl{position:static;transform:none;justify-items:start;max-width:none;width:auto;margin-top:10px}}
 @media(max-width:600px){.hdie{top:62px;height:calc(clamp(340px,52vw,560px) - 90px)}.hdblk span{left:4px;top:3px;font-size:10px}.hdblk small,.hdblk em{display:none}.hdie{outline-width:4px;outline-offset:-9px}.hlens{font-size:12.5px;gap:5px}}
+
+/* ---- The frontier map: the challenges page (src/app/frontier.js) ---- */
+.fc-build{--lc:var(--good)}.fc-break{--lc:var(--bad)}.fc-imagine{--lc:var(--violet)}.fc-walls{--lc:var(--amber)}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--lc);margin-right:6px;vertical-align:1px}
+.fmbar{gap:10px 14px}
+.fmnarrow{display:none}
+.fmidea{display:flex;gap:8px;align-items:center;font-size:13px;color:var(--muted)}
+.fmidea select{font:500 13px var(--body);padding:7px 8px;border:1px solid var(--line);border-radius:4px;background:var(--surface);color:var(--ink)}
+.fmwrap{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:20px;align-items:start;padding-block:8px 40px}
+.fm{--cols:11% 34% 20% 18% 17%;border:1px solid var(--line);border-radius:12px;background:var(--surface);overflow:hidden}
+.fmh{display:grid;grid-template-columns:var(--cols)}
+.fmhc{padding:12px 10px 10px;display:grid;gap:1px}
+.fmhc .code{color:var(--lc,var(--muted))}
+.fmhc b{font:800 19px/1.1 var(--display);font-stretch:112%}
+.fmhc small{font-size:12px;color:var(--muted)}
+.fmbody{position:relative}
+.fmr{display:grid;grid-template-columns:var(--cols);border-top:1px solid var(--line)}
+.fml{padding:10px 10px 10px 14px;display:grid;align-content:start;gap:2px}
+.fml b{font:600 13.5px/1.25 var(--body)}
+.fml small{font-size:12px;line-height:1.35;color:var(--muted)}
+.fmc{padding:10px 6px 4px 8px;display:flex;flex-wrap:wrap;align-content:flex-start;gap:6px;min-height:64px;min-width:0}
+.fmp{display:inline-flex;align-items:center;gap:7px;min-height:26px;padding:4px 10px 4px 9px;border-radius:13px;text-align:left;border:1px solid color-mix(in srgb,var(--lc) 55%,transparent);background:color-mix(in srgb,var(--lc) 13%,var(--surface));color:var(--ink);font:500 12.5px/1.25 var(--body);cursor:pointer;max-width:100%;transition:opacity .2s}
+.fmp::before{content:"";flex:none;width:8px;height:8px;background:var(--lc)}
+.fmp.k-puzzle::before{border-radius:50%}
+.fmp.k-experiment::before{width:7px;height:7px;transform:rotate(45deg)}
+.fmp.done::after{content:"✓";font-size:11px;color:var(--lc);margin-left:-2px}
+.fmp.dim,.fmw.dim{opacity:.2}
+.fmp.on{box-shadow:0 0 0 2px var(--lc)}
+.fmghost{display:inline-flex;align-items:center;height:26px;padding:0 12px;border-radius:13px;border:1.5px dashed var(--line);color:var(--muted);font:italic 500 12.5px var(--body);text-decoration:none}
+.fmghost:hover{border-color:var(--muted);color:var(--ink)}
+.fmwalls{position:absolute;top:0;bottom:0;right:0;width:17%;background:repeating-linear-gradient(135deg,color-mix(in srgb,var(--amber) 6%,transparent) 0 8px,transparent 8px 16px);border-left:1px solid var(--line)}
+.fmw{position:absolute;left:10px;right:10px;padding:7px 10px;border-radius:8px;border:1.5px solid var(--amber);background:color-mix(in srgb,var(--amber) 12%,var(--surface));color:var(--ink);font:600 13px/1.25 var(--body);text-align:left;cursor:pointer;transition:opacity .2s}
+.fmw small{display:block;font:500 10.5px var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--amber)}
+.fmw.on{box-shadow:0 0 0 3px color-mix(in srgb,var(--amber) 40%,transparent)}
+.fmw.propose{border-style:dashed;border-color:var(--muted);background:transparent;color:var(--muted);font-style:italic;font-weight:500;text-decoration:none}
+.fmlines{position:absolute;left:0;top:0;pointer-events:none;overflow:visible}
+.fmlines path{fill:none;stroke-width:1.6;opacity:.85}
+.fmpanel{position:sticky;top:72px;display:grid;gap:12px;max-height:calc(100vh - 88px);overflow:auto}
+.fmpanel .hubcard{margin:0}
+.fmpanel .dviews{grid-template-columns:minmax(0,1fr)}
+.fmcard,.fmtests{border:1px solid var(--line);border-radius:12px;background:var(--surface);padding:16px;display:grid;gap:10px}
+.fmcard .btn{justify-self:start;text-decoration:none}
+.fcw{color:var(--amber)}
+.fmtest{display:grid;gap:6px}
+.fmtest b{display:flex;gap:8px;align-items:center;font-size:14px}
+.fmtest b i{width:10px;height:10px;border-radius:50%;background:var(--vc);flex:none}
+.fmtries{display:flex;flex-wrap:wrap;gap:6px}
+.fmtry{font:500 12.5px var(--body);padding:5px 10px;border-radius:13px;border:1px solid color-mix(in srgb,var(--lc) 55%,transparent);background:color-mix(in srgb,var(--lc) 10%,var(--surface));color:var(--ink);cursor:pointer}
+.fmkinds{display:flex;gap:14px;flex-wrap:wrap;color:var(--muted)}
+.fmkinds span{display:flex;gap:6px;align-items:center}
+.fmkinds i{width:9px;height:9px;background:var(--muted)}
+.fmkinds .k-puzzle i{border-radius:50%}.fmkinds .k-experiment i{transform:rotate(45deg);width:8px;height:8px}
+@media(max-width:1100px){.fmwrap{grid-template-columns:minmax(0,1fr)}.fmpanel{position:static;max-height:none}}
+@media(max-width:760px){
+.fmwide{display:none}.fmnarrow{display:flex}
+.fm{--cols:minmax(0,1fr)}
+.fmhc{display:none}
+.fm[data-col="build"] .fmh .fc-build,.fm[data-col="break"] .fmh .fc-break,.fm[data-col="imagine"] .fmh .fc-imagine,.fm[data-col="walls"] .fmh .fc-walls{display:grid}
+.fmr .fmc{display:none;min-height:0;padding-top:4px}
+.fml{padding-bottom:2px}
+.fm[data-col="build"] .fmr .fc-build,.fm[data-col="break"] .fmr .fc-break,.fm[data-col="imagine"] .fmr .fc-imagine{display:flex}
+.fm[data-col="build"] .fmr:not(:has(.fc-build > *)),.fm[data-col="break"] .fmr:not(:has(.fc-break > *)),.fm[data-col="imagine"] .fmr:not(:has(.fc-imagine > *)){display:none}
+.fmwalls{position:static;width:auto;display:none;padding:10px;border-left:0;gap:8px}
+.fm[data-col="walls"] .fmwalls{display:grid}
+.fm[data-col="walls"] .fmrows{display:none}
+.fmw{position:static}
+.fmp{min-height:30px}
+}

@@ -34,6 +34,7 @@
   "challenges": [
     {
       "kind": "Experiment",
+      "lens": "break",
       "title": "Print the finest lines",
       "task": "Find the smallest pitch each scanner can still print.",
       "href": "#litho"

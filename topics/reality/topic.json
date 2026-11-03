@@ -91,30 +91,35 @@
   "challenges": [
     {
       "kind": "Design",
+      "lens": "break",
       "title": "Ship a phone chip",
       "task": "Make 10 million phones work for 3 years without losing too much speed.",
       "href": "#lab-reality-1"
     },
     {
       "kind": "Design",
+      "lens": "break",
       "title": "Fifteen years in a car",
       "task": "Fewer than 50 failures per million chips, from −40 to 125 °C.",
       "href": "#lab-reality-1"
     },
     {
       "kind": "Design",
+      "lens": "break",
       "title": "A fleet you can trust",
       "task": "100,000 AI chips running hot all day, with almost no silent wrong answers.",
       "href": "#lab-reality-1"
     },
     {
       "kind": "Design",
+      "lens": "break",
       "title": "Survive orbit",
       "task": "Radiation 300 times stronger and nobody to repair it.",
       "href": "#lab-reality-1"
     },
     {
       "kind": "Puzzle",
+      "lens": "break",
       "title": "Case files",
       "task": "Seven real chips that failed. Name the gap between design and reality.",
       "href": "#lab-reality-2"

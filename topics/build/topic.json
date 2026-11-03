@@ -40,18 +40,21 @@
   "challenges": [
     {
       "kind": "Design",
+      "lens": "build",
       "title": "Phone AI chip",
       "task": "Run an 8B assistant on a phone: fast, cool and cheap.",
       "href": "#build"
     },
     {
       "kind": "Design",
+      "lens": "build",
       "title": "Inference accelerator",
       "task": "Serve a 70B model to 64 users at the lowest cost per token.",
       "href": "#build"
     },
     {
       "kind": "Design",
+      "lens": "build",
       "title": "Training flagship",
       "task": "Maximum FP8 compute, memory and bandwidth.",
       "href": "#build"

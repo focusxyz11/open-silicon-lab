@@ -42,12 +42,14 @@
   "challenges": [
     {
       "kind": "Design",
+      "lens": "build",
       "title": "Get on the chip",
       "task": "Design something in the studio that passes every check here, and prepare its submission.",
       "href": "#lab-community-2"
     },
     {
       "kind": "Puzzle",
+      "lens": "build",
       "title": "Who answers?",
       "task": "Find the selector number that makes the shared chip act as a majority voter.",
       "href": "#lab-community-1"

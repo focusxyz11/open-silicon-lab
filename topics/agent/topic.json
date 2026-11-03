@@ -55,12 +55,14 @@
   "challenges": [
     {
       "kind": "Puzzle",
+      "lens": "break",
       "title": "Verify the agent",
       "task": "Eight proposals from an AI agent: designs, code, estimates and facts. Trust or reject each, with evidence.",
       "href": "#lab-agent-1"
     },
     {
       "kind": "Experiment",
+      "lens": "break",
       "title": "Calibrate your trust",
       "task": "Inside Claude: a live agent designs tiny chips. Decide whether to trust each design before you check it.",
       "href": "#lab-agent-2"

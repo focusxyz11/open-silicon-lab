@@ -38,6 +38,7 @@
   "challenges": [
     {
       "kind": "Experiment",
+      "lens": "break",
       "title": "What if Taiwan stops?",
       "task": "Disrupt one link and see which products stall.",
       "href": "#supply"

@@ -72,42 +72,49 @@
   "challenges": [
     {
       "kind": "Puzzle",
+      "lens": "break",
       "title": "Find the bug: majority voter",
       "task": "Verification shows a missing case. Fix it before tape-out.",
       "href": "#tiny"
     },
     {
       "kind": "Puzzle",
+      "lens": "break",
       "title": "Find the bug: full adder",
       "task": "The sum line is wrong. Prove it, fix it, ship it.",
       "href": "#tiny"
     },
     {
       "kind": "Design",
+      "lens": "build",
       "title": "Display decoder",
       "task": "Finish segments d to g and route the biggest tiny design.",
       "href": "#tiny"
     },
     {
       "kind": "Design",
+      "lens": "build",
       "title": "Build the CPU's ALU",
       "task": "Design one bit of an ALU. Thirty-two copies of it run the RISC-V programs.",
       "href": "#lab-tiny-1"
     },
     {
       "kind": "Design",
+      "lens": "build",
       "title": "Tape it out for real",
       "task": "Export a design as a Tiny Tapeout project and run it through Yosys and OpenROAD on GitHub.",
       "href": "#lab-tiny-1"
     },
     {
       "kind": "Design",
+      "lens": "build",
       "title": "Pack it tight",
       "task": "Find the highest packing density that still routes.",
       "href": "#tiny"
     },
     {
       "kind": "Puzzle",
+      "lens": "break",
       "title": "Fix the counter",
       "task": "The Counter project skips numbers. Find the wrong carry, fix it, and watch it count from 0 to 7 on the gadget.",
       "href": "#lab-tiny-1"

@@ -34,6 +34,7 @@
   "challenges": [
     {
       "kind": "Experiment",
+      "lens": "build",
       "title": "Watch annealing work",
       "task": "Change the cooling schedule and see wire length fall.",
       "href": "#layout"
