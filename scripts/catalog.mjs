@@ -21,7 +21,7 @@ const REF = ['glossary', 'sources'];          // reference pages in content/, lo
 const TOPIC_KINDS = ['explore', 'build'];
 const CHALLENGE_KINDS = ['Puzzle', 'Design', 'Experiment'];
 const CHALLENGE_LENSES = ['build', 'break', 'imagine'];   // where a challenge sits on the frontier map (src/app/frontier.js)
-const ROUTES = ['map', 'whatif', 'workshop', 'challenges', 'knowledge', 'mychip', 'glossary', 'sources'];   // pages the router opens by name
+const ROUTES = ['map', 'whatif', 'workshop', 'break', 'imagine', 'challenges', 'knowledge', 'mychip', 'glossary', 'sources'];   // pages the router opens by name
 
 const decode = s => s.replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&nbsp;/g, ' ').replace(/&#(\d+);/g, (_, n) => String.fromCodePoint(+n));
 const q = s => JSON.stringify(s);
