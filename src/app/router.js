@@ -1,4 +1,5 @@
-/* Hash router. One page, five views: the map, a topic, the workshop, challenges and knowledge.
+/* Hash router. One page, a few views: the map (Explore), a topic, the Build, Break and Imagine doors,
+   the frontier map (challenges), knowledge and my chip.
    Links are plain hashes (#litho, #lab-litho-2, #riscv-5), so every place in the lab is shareable. */
 import { TOPICS, THREADS, topicById, bandById } from '../data/topics.js';
 import { connectionsHTML, ideasHTML, linkListHTML } from './connections.js';
@@ -13,12 +14,13 @@ import { factsHTML } from './facts.js';
 import { markSeen, P } from './learning.js';
 import { initMap, redrawMap, setWhatif, state as mapState } from './map.js';
 import { renderWorkshop, renderChallenges, renderKnowledge } from './views.js';
+import { renderDoor } from './doors.js';
 import { issueURL } from './config.js';
 import { t } from '../core/i18n.js';
 
 const $ = s => document.querySelector(s);
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const VIEWS = ['map', 'topic', 'workshop', 'challenges', 'knowledge', 'mychip'];
+const VIEWS = ['map', 'topic', 'workshop', 'break', 'imagine', 'challenges', 'knowledge', 'mychip'];
 const REF = { glossary: 1, sources: 1 };
 const refName = id => t('ref.' + id);
 let curView = null, curTopic = null;
@@ -104,6 +106,7 @@ function route() {
   if (!h || h === 'map') { show('map'); curTopic = null; redrawMap(); return; }
   if (h === 'whatif') { show('map'); curTopic = null; setWhatif(true); return; }
   if (h === 'workshop') { renderWorkshop(); show('workshop'); scrollTo({ top: 0, behavior: 'instant' }); return; }
+  if (h === 'break' || h === 'imagine') { renderDoor(h); show(h); scrollTo({ top: 0, behavior: 'instant' }); return; }
   if (h === 'challenges') { renderChallenges(); show('challenges'); scrollTo({ top: 0, behavior: 'instant' }); return; }
   if (h === 'mychip') { renderMyChip(); show('mychip'); scrollTo({ top: 0, behavior: 'instant' }); return; }
   if (h === 'knowledge') { renderKnowledge(); show('knowledge'); scrollTo({ top: 0, behavior: 'instant' }); return; }
@@ -132,6 +135,6 @@ export function initRouter() {
     const bd = e.target.closest('#topicHead [data-band]'); if (bd) { mapState.sel = curTopic; mapState.thread = null; }
   });
   addEventListener('hashchange', route);
-  document.addEventListener('osl:progress', () => { if (curView === 'challenges') renderChallenges(); });
+  document.addEventListener('osl:progress', () => { if (curView === 'challenges') renderChallenges(); else if (curView === 'break' || curView === 'imagine') renderDoor(curView); });
   route();
 }

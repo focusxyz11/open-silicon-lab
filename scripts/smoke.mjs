@@ -56,10 +56,10 @@ async function check(viewport) {
   // The frontier map: a wall (an open problem) lights up the challenges that test each view, and
   // leaning one way in its debate asks what would change your mind.
   await go(page, 'challenges');
-  if ((await page.$$('#fm .fmp')).length < 60) problems.push(tag + 'the frontier map should place every challenge');
-  if (await page.evaluate(() => getComputedStyle(document.querySelector('.fmnarrow')).display !== 'none')) await page.click('.fmnarrow [data-col="walls"]');   // a phone shows one column at a time
-  await page.click('#fm .fmw[data-w="bigdie"]');
-  if (!(await page.$('#fmPanel [data-debate="bigdie"]')) || !(await page.$$('#fmPanel .fmtry')).length) problems.push(tag + 'picking a wall did not show its debate and the challenges that test it');
+  if ((await page.$$('#view-challenges .fm .fmp')).length < 60) problems.push(tag + 'the frontier map should place every challenge');
+  if (await page.evaluate(() => getComputedStyle(document.querySelector('#view-challenges .fmnarrow')).display !== 'none')) await page.click('#view-challenges .fmnarrow [data-col="walls"]');   // a phone shows one column at a time
+  await page.click('#view-challenges .fm .fmw[data-w="bigdie"]');
+  if (!(await page.$('#view-challenges .fmpanel [data-debate="bigdie"]')) || !(await page.$$('#view-challenges .fmpanel .fmtry')).length) problems.push(tag + 'picking a wall did not show its debate and the challenges that test it');
   await page.click('[data-debate="bigdie"] [data-lean][data-v="1"]');
   if (!/What would change your mind/.test(await page.textContent('[data-debate="bigdie"]'))) problems.push(tag + 'leaning in a debate did not ask what would change your mind');
   await page.click('[data-debate="bigdie"] [data-lean][data-v="1"]');
@@ -103,7 +103,14 @@ async function check(viewport) {
     if (r.blank) problems.push(tag + `#${id}: ${r.blank} canvas(es) did not size`);
     if (r.wide) problems.push(tag + `#${id}: page scrolls sideways`);
   }
-  for (const v of ['workshop', 'challenges', 'knowledge']) {
+  /* The doors: Break and Imagine open with their projects and their own column of the frontier map. */
+  for (const [v, lens] of [['workshop', 'build'], ['break', 'break'], ['imagine', 'imagine']]) {
+    await page.evaluate(h => { location.hash = h; }, v);
+    await page.waitForTimeout(150);
+    const r = await page.evaluate(([v, lens]) => { const el = document.getElementById('view-' + v); const ps = [...el.querySelectorAll('.fm .fmp')]; return { n: ps.length, other: ps.filter(p => !p.classList.contains('fc-' + lens)).length, walls: el.querySelectorAll('.fm .fmw[data-w]').length }; }, [v, lens]);
+    if (!r.n || r.other || !r.walls) problems.push(tag + v + ' door should show only its ' + lens + ' challenges and the walls (got ' + JSON.stringify(r) + ')');
+  }
+  for (const v of ['workshop', 'break', 'imagine', 'challenges', 'knowledge']) {
     await page.evaluate(h => { location.hash = h; }, v);
     await page.waitForTimeout(120);
     if (await page.evaluate(v => document.getElementById('view-' + v).hidden, v)) problems.push(tag + v + ' view did not open');

@@ -18,33 +18,39 @@ const COLS = LENSES.concat('walls');
 const VIEW_COLORS = ['var(--cyan)', 'var(--rose)', 'var(--amber)'];
 /* sel: { c: index into CHALLENGES } or { w: debate id }; f: lens shown on wide screens ('' = all);
    col: the one column a phone shows; idea: a big idea whose topics light up. */
-const st = { sel: null, f: '', col: 'build', idea: '' };
+const STATES = {};
+let st = null, mode = null;   // mode: { lens } on a door page (one column and the walls), or {} for the whole map
 CHALLENGES.forEach((c, i) => { c.i = i; });
 const inBand = (b, lens) => CHALLENGES.filter(c => c.lens === lens && (topicById(c.topic) || {}).band === b);
 const done = c => { const m = /^#riscv-(\d+)$/.exec(c.href); return m ? levelStars(+m[1]) > 0 : !!P.seen[c.topic]; };
 
 let root = null;
 
-export function renderFrontier(v) {
-  root = v;
+/* v: the element to draw into. opts.lens: draw only that column and the walls (a door page);
+   opts.head: also draw the page heading (the whole map, on the challenges page). */
+export function renderFrontier(v, opts = {}) {
+  root = v; mode = opts;
+  const key = opts.lens || 'all';
+  st = STATES[key] || (STATES[key] = { sel: null, f: opts.lens || '', col: opts.lens || 'build', idea: '' });
+  const lensesHere = opts.lens ? [opts.lens] : LENSES, colsHere = lensesHere.concat('walls');
   const n = Object.fromEntries(LENSES.map(k => [k, CHALLENGES.filter(c => c.lens === k).length]));
-  const head = '<div class="fmh"><div class="fmhc fml0"><span class="code">' + t('fm.world') + '</span><b aria-hidden="true">↓</b><small>' + t('fm.atoms') + '</small></div>' + COLS.map(k => '<div class="fmhc fc-' + k + '"><span class="code">' + t('fm.col.' + k + '.code') + '</span><b>' + t('fm.col.' + k + '.t') + '</b><small>' + t('fm.col.' + k + '.d') + '</small></div>').join('') + '</div>';
+  const head = '<div class="fmh"><div class="fmhc fml0"><span class="code">' + t('fm.world') + '</span><b aria-hidden="true">↓</b><small>' + t('fm.atoms') + '</small></div>' + colsHere.map(k => '<div class="fmhc fc-' + k + '"><span class="code">' + t('fm.col.' + k + '.code') + '</span><b>' + t('fm.col.' + k + '.t') + '</b><small>' + t('fm.col.' + k + '.d') + '</small></div>').join('') + '</div>';
   const rows = BANDS.map(b => {
     const empty = !CHALLENGES.some(c => (topicById(c.topic) || {}).band === b.id);
-    const cells = LENSES.map((k, j) => '<div class="fmc fc-' + k + '">' + inBand(b.id, k).map(pill).join('') +
+    const cells = lensesHere.map((k, j) => '<div class="fmc fc-' + k + '">' + inBand(b.id, k).map(pill).join('') +
       (empty && j === 0 ? '<a class="fmghost" href="' + esc(issueURL('idea', { title: t('fm.proposeCh', { band: b.t }) })) + '" target="_blank" rel="noopener">' + t('fm.empty') + '</a>' : '') + '</div>').join('');
     return '<div class="fmr" data-band="' + b.id + '"><div class="fml"><b>' + esc(b.t) + '</b><small>' + esc(b.d) + '</small></div>' + cells + '</div>';
   }).join('');
   const walls = DEBATES.map(d => '<button type="button" class="fmw" data-w="' + d.id + '"><small>' + t('fm.views', { n: d.views.length }) + '</small>' + esc(d.t) + '</button>').join('') +
     '<a class="fmw propose" href="' + esc(issueURL('idea', { title: t('fm.proposeWall') })) + '" target="_blank" rel="noopener">' + t('fm.wallMissed') + '</a>';
-  v.innerHTML = '<section class="wrap vhead"><p class="eyebrow">' + t('ch.eyebrow') + '</p><h1>' + t('fm.title') + '</h1><p class="lede">' + t('fm.lede') + '</p></section>' +
+  v.innerHTML = (opts.head ? '<section class="wrap vhead"><p class="eyebrow">' + t('ch.eyebrow') + '</p><h1>' + t('fm.title') + '</h1><p class="lede">' + t('fm.lede') + '</p></section>' : '') +
     '<section class="wrap"><div class="vbar fmbar">' +
-      '<div class="seg fmwide" role="group" aria-label="' + t('fm.show') + '">' + [''].concat(LENSES).map(k => '<button type="button" data-f="' + k + '" aria-pressed="' + (st.f === k) + '">' + (k ? '<i class="dot fc-' + k + '"></i>' + t('fm.col.' + k + '.t') + ' <small>' + n[k] + '</small>' : t('ch.all') + ' <small>' + CHALLENGES.length + '</small>') + '</button>').join('') + '</div>' +
-      '<div class="seg fmnarrow" role="group" aria-label="' + t('fm.show') + '">' + COLS.map(k => '<button type="button" data-col="' + k + '" aria-pressed="' + (st.col === k) + '"><i class="dot fc-' + k + '"></i>' + t('fm.col.' + k + '.t') + '</button>').join('') + '</div>' +
-      '<label class="fmidea">' + t('fm.idea') + ' <select id="fmIdea"><option value="">' + t('fm.ideaNone') + '</option>' + IDEAS.map(i => '<option value="' + i.id + '"' + (st.idea === i.id ? ' selected' : '') + '>' + esc(i.t) + '</option>').join('') + '</select></label>' +
+      (opts.lens ? '' : '<div class="seg fmwide" role="group" aria-label="' + t('fm.show') + '">' + [''].concat(LENSES).map(k => '<button type="button" data-f="' + k + '" aria-pressed="' + (st.f === k) + '">' + (k ? '<i class="dot fc-' + k + '"></i>' + t('fm.col.' + k + '.t') + ' <small>' + n[k] + '</small>' : t('ch.all') + ' <small>' + CHALLENGES.length + '</small>') + '</button>').join('') + '</div>') +
+      '<div class="seg fmnarrow" role="group" aria-label="' + t('fm.show') + '">' + colsHere.map(k => '<button type="button" data-col="' + k + '" aria-pressed="' + (st.col === k) + '"><i class="dot fc-' + k + '"></i>' + t('fm.col.' + k + '.t') + '</button>').join('') + '</div>' +
+      '<label class="fmidea">' + t('fm.idea') + ' <select class="fmideasel"><option value="">' + t('fm.ideaNone') + '</option>' + IDEAS.map(i => '<option value="' + i.id + '"' + (st.idea === i.id ? ' selected' : '') + '>' + esc(i.t) + '</option>').join('') + '</select></label>' +
     '</div>' +
-    '<div class="fmwrap"><div class="fm" id="fm" data-col="' + st.col + '">' + head + '<div class="fmbody"><div class="fmrows">' + rows + '</div><div class="fmwalls" id="fmWalls">' + walls + '</div><svg class="fmlines" id="fmLines" aria-hidden="true"></svg></div></div>' +
-    '<aside class="fmpanel" id="fmPanel" aria-live="polite"></aside></div></section>';
+    '<div class="fmwrap"><div class="fm' + (opts.lens ? ' door' : '') + '" data-col="' + st.col + '">' + head + '<div class="fmbody"><div class="fmrows">' + rows + '</div><div class="fmwalls">' + walls + '</div><svg class="fmlines" aria-hidden="true"></svg></div></div>' +
+    '<aside class="fmpanel" aria-live="polite"></aside></div></section>';
   wire();
   paint();
   requestAnimationFrame(place);
@@ -57,8 +63,8 @@ function pill(c) {
 /* The walls sit beside the layers their views touch; lines need real positions, so both are
    worked out after the page has laid itself out, and again when it resizes. */
 function place() {
-  const fm = root && root.querySelector('#fm'); if (!fm) return;
-  const body = fm.querySelector('.fmbody'), W = fm.querySelector('#fmWalls');
+  const fm = root && root.querySelector('.fm'); if (!fm) return;
+  const body = fm.querySelector('.fmbody'), W = fm.querySelector('.fmwalls');
   const narrow = getComputedStyle(W).position !== 'absolute';
   const top = body.getBoundingClientRect().top;
   if (!narrow) {
@@ -73,23 +79,23 @@ function place() {
 }
 
 function lines() {
-  const fm = root.querySelector('#fm'), svg = root.querySelector('#fmLines');
+  const fm = root.querySelector('.fm'), svg = root.querySelector('.fmlines');
   const body = fm.querySelector('.fmbody'), R = body.getBoundingClientRect();
   svg.setAttribute('width', R.width); svg.setAttribute('height', R.height); svg.setAttribute('viewBox', '0 0 ' + R.width + ' ' + R.height);
-  if (getComputedStyle(root.querySelector('#fmWalls')).position !== 'absolute' || !st.sel) { svg.innerHTML = ''; return; }
+  if (getComputedStyle(root.querySelector('.fmwalls')).position !== 'absolute' || !st.sel) { svg.innerHTML = ''; return; }
   const at = el => { const b = el.getBoundingClientRect(); return b; };
   const curve = (p, w, col) => { const a = at(p), b = at(w); if (!a.width) return '';
     const x1 = a.right - R.left, y1 = (a.top + a.bottom) / 2 - R.top, x2 = b.left - R.left, y2 = (b.top + b.bottom) / 2 - R.top;
     return '<path d="M' + x1 + ' ' + y1 + ' C' + (x1 + (x2 - x1) * 0.55) + ' ' + y1 + ' ' + (x2 - (x2 - x1) * 0.3) + ' ' + y2 + ' ' + x2 + ' ' + y2 + '" stroke="' + col + '"/>'; };
   let h = '';
   const P_ = i => fm.querySelector('.fmp[data-c="' + i + '"]'), W_ = id => fm.querySelector('.fmw[data-w="' + id + '"]');
-  if (st.sel.w) { const d = DEBATES.find(x => x.id === st.sel.w); d.views.forEach((v, k) => CHALLENGES.filter(c => v.topics.includes(c.topic)).forEach(c => { if (st.f === '' || st.f === c.lens) h += curve(P_(c.i), W_(d.id), VIEW_COLORS[k % 3]); })); }
-  else { const c = CHALLENGES[st.sel.c]; debatesOf(c.topic).forEach(d => { h += curve(P_(c.i), W_(d.id), 'var(--amber)'); }); }
+  if (st.sel.w) { const d = DEBATES.find(x => x.id === st.sel.w); d.views.forEach((v, k) => CHALLENGES.filter(c => v.topics.includes(c.topic)).forEach(c => { if ((st.f === '' || st.f === c.lens) && P_(c.i)) h += curve(P_(c.i), W_(d.id), VIEW_COLORS[k % 3]); })); }
+  else { const c = CHALLENGES[st.sel.c]; if (P_(c.i)) debatesOf(c.topic).forEach(d => { h += curve(P_(c.i), W_(d.id), 'var(--amber)'); }); }
   svg.innerHTML = h;
 }
 
 function paint() {
-  const fm = root.querySelector('#fm'); fm.dataset.col = st.col;
+  const fm = root.querySelector('.fm'); fm.dataset.col = st.col;
   const hotC = new Set(), hotW = new Set();
   const ideaT = st.idea ? new Set(usesOf(st.idea).map(u => u.topic)) : null;
   if (st.sel && st.sel.w) { const d = DEBATES.find(x => x.id === st.sel.w); hotW.add(d.id); d.views.forEach(v => CHALLENGES.filter(c => v.topics.includes(c.topic)).forEach(c => hotC.add(c.i))); }
@@ -112,7 +118,7 @@ function paint() {
 const chBtn = c => '<button type="button" class="fmtry fc-' + c.lens + '" data-c="' + c.i + '">' + esc(c.t) + '</button>';
 
 function panel() {
-  const el = root.querySelector('#fmPanel');
+  const el = root.querySelector('.fmpanel');
   if (st.sel && st.sel.w) {
     const d = DEBATES.find(x => x.id === st.sel.w);
     el.innerHTML = '<p class="code fcw">' + t('fm.wallCode') + '</p>' + debateCard(d) +
@@ -148,17 +154,18 @@ function wire() {
     const f = e.target.closest('[data-f]'); if (f) { st.f = f.dataset.f; paint(); return; }
     const k = e.target.closest('[data-col]'); if (k) { st.col = k.dataset.col; paint(); }
   });
-  root.querySelector('#fmIdea').addEventListener('change', e => { st.idea = e.target.value; paint(); });
+  root.querySelector('.fmideasel').addEventListener('change', e => { st.idea = e.target.value; paint(); });
 }
 /* On a phone the panel sits under the map: bring it into view after a choice. */
 function reveal() {
-  const el = root.querySelector('#fmPanel'); if (!st.sel || getComputedStyle(root.querySelector('#fmWalls')).position === 'absolute') return;
+  const el = root.querySelector('.fmpanel'); if (!st.sel || getComputedStyle(root.querySelector('.fmwalls')).position === 'absolute') return;
   el.scrollIntoView({ block: 'start', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
 }
 
+/* Walls and lines follow the layout when the window changes size. */
 let ro = null;
 export function watchFrontier() {
   if (ro || typeof ResizeObserver === 'undefined') return;
-  let tm; ro = new ResizeObserver(() => { clearTimeout(tm); tm = setTimeout(() => { if (root && root.querySelector('#fm') && !root.hidden) place(); }, 80); });
-  ro.observe(document.getElementById('view-challenges'));
+  let tm; ro = new ResizeObserver(() => { clearTimeout(tm); tm = setTimeout(() => { const v = root && root.closest('.view'); if (root && root.querySelector('.fm') && v && !v.hidden) place(); }, 80); });
+  ro.observe(document.body);
 }

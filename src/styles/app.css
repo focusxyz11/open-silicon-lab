@@ -670,3 +670,20 @@ a.btn{display:inline-block;text-decoration:none}
 .fmw{position:static}
 .fmp{min-height:30px}
 }
+
+/* ---- The doors: Build, Break and Imagine (src/app/doors.js) ---- */
+.dhead{display:grid;gap:10px;padding-block:40px 18px}
+.dhead .code{color:var(--lc)}
+.dhead .dot{margin-right:8px}
+.dhead h1{max-width:18ch}
+.dprojs{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(260px,100%),1fr));gap:12px;padding-block:8px 28px}
+.dproj{display:grid;gap:6px;align-content:start;padding:18px;border:1px solid var(--line);border-radius:12px;background:var(--surface);color:var(--ink);text-decoration:none;transition:border-color .2s}
+.dproj:hover{border-color:var(--muted)}
+.dproj b{font:750 20px/1.15 var(--display);font-stretch:110%}
+.dproj span{color:var(--muted);font-size:15px}
+.dproj small{display:flex;gap:10px;font:500 12px var(--mono);color:var(--muted);letter-spacing:.04em;margin-top:4px}
+.dproj small em{font-style:normal;color:var(--good)}
+.dmaphead{display:grid;gap:6px;padding-block:16px 6px}
+.fm.door{--cols:16% 59% 25%}
+.fm.door .fmwalls{width:25%}
+@media(max-width:760px){.fm.door{--cols:minmax(0,1fr)}.fm.door .fmwalls{width:auto}}

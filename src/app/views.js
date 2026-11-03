@@ -4,6 +4,7 @@ import { BANDS, TOPICS, topicById, bandById } from '../data/topics.js';
 import { CHALLENGES } from '../data/challenges.js';
 import { allTradeoffsHTML, allMeasuresHTML } from './hubs.js';
 import { renderFrontier, watchFrontier } from './frontier.js';
+import { doorHead, doorMap, project } from './doors.js';
 import { CARDS, TH } from '../data/cards.js';
 import { FACTS, fmtDate, changesHTML } from './facts.js';
 import { levelStars, riscvStars } from './progress.js';
@@ -27,20 +28,23 @@ export function renderWorkshop() {
   const v = $('#view-workshop');
   const rs = riscvStars();
   const n = TOPICS.reduce((s, x) => s + labsIn(x.id).length, 0);
-  v.innerHTML = '<section class="wrap vhead"><p class="eyebrow">' + t('ws.eyebrow') + '</p><h1>' + t('ws.title') + '</h1><p class="lede">' + t('ws.lede', { n }) + '</p></section>' +
+  /* The Build door: the four builds, its column of the frontier map, then every simulation. */
+  v.innerHTML = doorHead('build') +
     '<section class="wrap buildline">' + BUILDS.map(b => '<div class="bstation"><a class="bcard" href="#' + b.id + '"><span class="bn">' + b.n + '</span><div><b>' + esc(t('ws.' + b.id + '.t')) + '</b><p>' + esc(t('ws.' + b.id + '.d')) + '</p><ol class="bsteps">' + t('ws.' + b.id + '.steps').map((s, k) => '<li' + (b.id === 'riscv' && levelStars(k + 1) ? ' class="done"' : '') + '>' + esc(s) + '</li>').join('') + '</ol>' + (b.id === 'riscv' ? '<small class="muted">' + t('ws.stars', { n: rs }) + '</small>' : '<small class="muted">' + (P.seen[b.id] ? t('ws.opened') : t('ws.notOpened')) + '</small>') + '</div><span class="go">' + t('ws.open') + '</span></a>' + (b.link ? '<p class="blink"><span aria-hidden="true">↓</span>' + esc(t('ws.' + b.id + '.link')) + '</p>' : '') + '</div>').join('') + '</section>' +
-    '<section class="wrap"><div class="vbar"><h2>' + t('ws.playground') + '</h2><input type="search" id="wsQ" placeholder="' + t('ws.find') + '" aria-label="' + t('ws.find') + '" value="' + esc(wsQuery) + '"></div><div id="wsGrid"></div></section>';
+    '<section class="wrap dprojs">' + project('community') + project('mychip') + '</section><div class="dmapsec"></div>' +
+    '<section class="wrap"><div class="vbar"><div><h2>' + t('ws.playground') + '</h2><p class="small muted">' + esc(t('ws.lede', { n })) + '</p></div><input type="search" id="wsQ" placeholder="' + t('ws.find') + '" aria-label="' + t('ws.find') + '" value="' + esc(wsQuery) + '"></div><div id="wsGrid"></div></section>';
   const draw = () => {
     const q = wsQuery.toLowerCase();
     $('#wsGrid').innerHTML = BANDS.map(b => { const tiles = TOPICS.filter(x => x.band === b.id).flatMap(x => labsIn(x.id).map(l => ({ ...l, topic: x }))).filter(l => !q || (l.t + ' ' + l.topic.t).toLowerCase().includes(q)); return tiles.length ? '<div class="pgband"><p class="eyebrow">' + esc(b.t) + '</p><div class="pgrid">' + tiles.map(l => '<a href="#' + l.id + '"><b>' + esc(l.t) + '</b><small>' + esc(l.topic.t) + '</small></a>').join('') + '</div></div>' : ''; }).join('') || '<p class="muted">' + t('ws.none') + '</p>';
   };
   $('#wsQ').addEventListener('input', e => { wsQuery = e.target.value.trim(); draw(); });
   draw();
+  doorMap(v.querySelector('.dmapsec'), 'build');
 }
 
 /* ---------------- Challenges ---------------- */
 /* The challenges page is the frontier map (src/app/frontier.js). */
-export function renderChallenges() { renderFrontier($('#view-challenges')); watchFrontier(); }
+export function renderChallenges() { renderFrontier($('#view-challenges'), { head: true }); watchFrontier(); }
 
 /* ---------------- Knowledge ---------------- */
 let fq = '', fk = '';
