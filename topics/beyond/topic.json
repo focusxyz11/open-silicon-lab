@@ -44,6 +44,7 @@
   "challenges": [
     {
       "kind": "Experiment",
+      "lens": "imagine",
       "title": "Same job, ten machines",
       "task": "Pick a job and see which of ten machines suits it, from GPUs to qubits and living neurons, and why.",
       "href": "#lab-beyond-2"

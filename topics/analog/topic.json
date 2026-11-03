@@ -86,18 +86,21 @@
   "challenges": [
     {
       "kind": "Design",
+      "lens": "build",
       "title": "A heartbeat on a coin cell",
       "task": "Catch a clean heartbeat for under 20 µW. Which part of the chain eats the budget?",
       "href": "#lab-analog-1"
     },
     {
       "kind": "Experiment",
+      "lens": "break",
       "title": "Hear the failing bearing",
       "task": "Sample a motor's vibration too slowly and watch the warning tone vanish; find the slowest rate that keeps it.",
       "href": "#lab-analog-1"
     },
     {
       "kind": "Puzzle",
+      "lens": "build",
       "title": "Four jobs, four regulators",
       "task": "Find the best power supply for a fitness band, a phone processor, a precise sensor and a radio.",
       "href": "#lab-analog-2"

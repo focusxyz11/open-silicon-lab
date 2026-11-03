@@ -71,12 +71,14 @@
   "challenges": [
     {
       "kind": "Experiment",
+      "lens": "build",
       "title": "How many need the newest fab?",
       "task": "Open five products and count the chips that need a leading-edge process.",
       "href": "#lab-everywhere-1"
     },
     {
       "kind": "Puzzle",
+      "lens": "build",
       "title": "The right chip for the job",
       "task": "Match eight real jobs to a CPU, GPU, FPGA, custom chip and more.",
       "href": "#lab-everywhere-2"

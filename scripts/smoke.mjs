@@ -53,8 +53,13 @@ async function check(viewport) {
   await page.click('#mInfo [data-idea="keep-data-close"]');
   if ((await page.$$('.tnode.hit')).length < 4 || !(await page.$('#mSvg path.idea'))) problems.push(tag + 'big-idea lens did not trace "Keep data close"');
   await page.click('#mLens [data-lens=""]');
-  // Debates: lean one way and the page asks what would change your mind.
+  // The frontier map: a wall (an open problem) lights up the challenges that test each view, and
+  // leaning one way in its debate asks what would change your mind.
   await go(page, 'challenges');
+  if ((await page.$$('#fm .fmp')).length < 60) problems.push(tag + 'the frontier map should place every challenge');
+  if (await page.evaluate(() => getComputedStyle(document.querySelector('.fmnarrow')).display !== 'none')) await page.click('.fmnarrow [data-col="walls"]');   // a phone shows one column at a time
+  await page.click('#fm .fmw[data-w="bigdie"]');
+  if (!(await page.$('#fmPanel [data-debate="bigdie"]')) || !(await page.$$('#fmPanel .fmtry')).length) problems.push(tag + 'picking a wall did not show its debate and the challenges that test it');
   await page.click('[data-debate="bigdie"] [data-lean][data-v="1"]');
   if (!/What would change your mind/.test(await page.textContent('[data-debate="bigdie"]'))) problems.push(tag + 'leaning in a debate did not ask what would change your mind');
   await page.click('[data-debate="bigdie"] [data-lean][data-v="1"]');

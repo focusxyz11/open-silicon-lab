@@ -62,48 +62,56 @@
   "challenges": [
     {
       "kind": "Puzzle",
+      "lens": "build",
       "title": "Power on",
       "task": "Put a number into a register.",
       "href": "#riscv-1"
     },
     {
       "kind": "Puzzle",
+      "lens": "build",
       "title": "Load, add, store",
       "task": "Read two numbers from memory and store their sum.",
       "href": "#riscv-2"
     },
     {
       "kind": "Puzzle",
+      "lens": "build",
       "title": "Loops",
       "task": "Add 1 to N with a branch loop.",
       "href": "#riscv-3"
     },
     {
       "kind": "Puzzle",
+      "lens": "build",
       "title": "No multiplier",
       "task": "Multiply using only RV32I instructions.",
       "href": "#riscv-4"
     },
     {
       "kind": "Puzzle",
+      "lens": "build",
       "title": "The neuron",
       "task": "Compute an int8 dot product, the core of AI.",
       "href": "#riscv-5"
     },
     {
       "kind": "Design",
+      "lens": "build",
       "title": "Invent an instruction",
       "task": "Choose a custom AI unit and beat RV32IM by 2× within an area budget.",
       "href": "#riscv-6"
     },
     {
       "kind": "Design",
+      "lens": "build",
       "title": "A neural layer",
       "task": "Four neurons with ReLU, as fast and small as you can.",
       "href": "#riscv-7"
     },
     {
       "kind": "Experiment",
+      "lens": "break",
       "title": "Break the CPU",
       "task": "Run a level on your own ALU, then plant a bug or a factory defect and watch what fails.",
       "href": "#riscv-3"

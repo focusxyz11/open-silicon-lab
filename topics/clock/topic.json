@@ -56,18 +56,21 @@
   "challenges": [
     {
       "kind": "Experiment",
+      "lens": "build",
       "title": "One bit of memory",
       "task": "Store a 1 in two NOR gates, let go, and watch it stay. Then set and reset at once.",
       "href": "#lab-clock-1"
     },
     {
       "kind": "Puzzle",
+      "lens": "build",
       "title": "One slot is enough",
       "task": "Make a flip-flop store a 1 with its input at 1 for only one time slot.",
       "href": "#lab-clock-2"
     },
     {
       "kind": "Puzzle",
+      "lens": "break",
       "title": "Find the speed limit",
       "task": "Run the counter as fast as it can go without a wrong count, at two different processes.",
       "href": "#lab-clock-3"

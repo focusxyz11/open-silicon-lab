@@ -44,6 +44,7 @@
   "challenges": [
     {
       "kind": "Puzzle",
+      "lens": "imagine",
       "title": "Entangle two qubits",
       "task": "Build circuits for certainty, interference and entanglement.",
       "href": "#lab-quantum-1"

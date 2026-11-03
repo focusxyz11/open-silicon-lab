@@ -57,7 +57,7 @@ function debateBody(d) {
       '<button type="button" class="btn" data-lean="' + d.id + '" data-v="' + i + '" aria-pressed="' + (lean === i) + '">' + (lean === i ? t('hub.leanOn') : t('hub.lean')) + '</button></div>').join('') + '</div>' +
     (chosen ? '<p class="mind">' + t('hub.mind', { assumes: esc(chosen.assumes.replace(/\.$/, '')), topics: esc(orList(chosen.topics.map(id => topicById(id).t))), others: d.views.filter((_, i) => i !== lean).map(v => esc(v.assumes.replace(/\.$/, '').toLowerCase())).join('; ') }) + ' <button type="button" class="linkbtn" data-lean="' + d.id + '" data-v="">' + t('hub.undecided') + '</button></p>' : '<p class="small muted">' + t('hub.weigh') + '</p>');
 }
-function debateCard(d) {
+export function debateCard(d) {
   return '<article class="hubcard debate" data-debate="' + d.id + '"><p class="code">' + t('hub.debateCode') + '</p><h4>' + esc(d.t) + '</h4><p class="q">' + esc(d.q) + '</p><div class="dbody">' + debateBody(d) + '</div></article>';
 }
 document.addEventListener('click', e => {

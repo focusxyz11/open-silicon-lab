@@ -64,6 +64,7 @@
   "challenges": [
     {
       "kind": "Experiment",
+      "lens": "imagine",
       "title": "What does power really cost AI?",
       "task": "Double the price of electricity on the map and see how far the cost of an AI answer moves.",
       "href": "#whatif"

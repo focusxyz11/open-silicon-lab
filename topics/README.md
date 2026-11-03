@@ -43,7 +43,7 @@ topics/<id>/
     { "idea": "many-small", "how": "small dies dodge defects, so splitting a big design into chiplets wastes less" }
   ],
   "challenges": [
-    { "kind": "Puzzle", "title": "…", "task": "One sentence: what to do.", "href": "#lab-yield-1" }
+    { "kind": "Puzzle", "lens": "build", "title": "…", "task": "One sentence: what to do.", "href": "#lab-yield-1" }
   ],
   "learn": {
     "plain": "For someone new to chips, with one everyday comparison.",
@@ -65,7 +65,7 @@ topics/<id>/
 | `tradeoffs` | Trade-offs from `src/data/tradeoffs.js` this topic shows: `{ "tradeoff": "speed-power", "how": "…", "try": "#lab-design-4" }`. `try` points at the simulation where the reader can push it. |
 | `measures` | Measures from `src/data/measures.js` this topic uses: `{ "measure": "bandwidth", "how": "…" }`. |
 | `time` | What the topic looked like over the years: `"then": [[1971, "…"], [2007, "…"]]`, each line holding until the next. Lines may use values such as `{node}` or `{wafer}` (list in `src/data/timevalues.js`). Add `"born": [year, "what happened"]` if the subject did not exist in 1971. |
-| `challenges` | `Puzzle` (one right answer), `Design` (many answers, scored on trade-offs) or `Experiment` (find where something breaks). |
+| `challenges` | `kind`: `Puzzle` (one right answer), `Design` (many answers, scored on trade-offs) or `Experiment` (find where something breaks). `lens`: where it sits on the frontier map: `build` (make something work), `break` (find where it fails) or `imagine` (try what could come next). |
 | `learn` | Loaded only when the topic opens. Write both `plain` and `engineer`, or neither. |
 
 ### Links: say what kind of connection it is

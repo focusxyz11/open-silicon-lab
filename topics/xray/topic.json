@@ -57,18 +57,21 @@
   "challenges": [
     {
       "kind": "Puzzle",
+      "lens": "build",
       "title": "Find the cores",
       "task": "On a phone chip, find a big CPU core, the GPU and the AI engine using only their textures.",
       "href": "#lab-xray-1"
     },
     {
       "kind": "Puzzle",
+      "lens": "build",
       "title": "What chip is this?",
       "task": "Get five unlabelled dies right in a row.",
       "href": "#lab-xray-2"
     },
     {
       "kind": "Experiment",
+      "lens": "build",
       "title": "Where did the area go?",
       "task": "Compare a microcontroller and an AI GPU: what share of each is memory, and how big is the CPU?",
       "href": "#lab-xray-1"

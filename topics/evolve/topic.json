@@ -44,18 +44,21 @@
   "challenges": [
     {
       "kind": "Experiment",
+      "lens": "imagine",
       "title": "Beat the person",
       "task": "Evolve a majority voter that uses fewer cells than the human solution.",
       "href": "#lab-evolve-1"
     },
     {
       "kind": "Experiment",
+      "lens": "imagine",
       "title": "NAND only",
       "task": "Evolve a half adder from NAND gates alone. How many does it need?",
       "href": "#lab-evolve-1"
     },
     {
       "kind": "Puzzle",
+      "lens": "imagine",
       "title": "Explain the machine",
       "task": "Open an evolved circuit in the studio and explain, line by line, why it works.",
       "href": "#lab-evolve-2"

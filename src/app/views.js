@@ -2,7 +2,8 @@
    data (topics, challenges, cards, facts), so nothing is duplicated and nothing is locked. */
 import { BANDS, TOPICS, topicById, bandById } from '../data/topics.js';
 import { CHALLENGES } from '../data/challenges.js';
-import { allTradeoffsHTML, allMeasuresHTML, allDebatesHTML } from './hubs.js';
+import { allTradeoffsHTML, allMeasuresHTML } from './hubs.js';
+import { renderFrontier, watchFrontier } from './frontier.js';
 import { CARDS, TH } from '../data/cards.js';
 import { FACTS, fmtDate, changesHTML } from './facts.js';
 import { levelStars, riscvStars } from './progress.js';
@@ -38,18 +39,8 @@ export function renderWorkshop() {
 }
 
 /* ---------------- Challenges ---------------- */
-let chKind = '';
-export function renderChallenges() {
-  const v = $('#view-challenges');
-  const kinds = ['', 'Puzzle', 'Design', 'Experiment'];   // i18n-ok: kind ids from topic.json, shown through ch.kind.*
-  const status = c => { const m = /^#riscv-(\d+)$/.exec(c.href); if (m) { const s = levelStars(+m[1]); return stars(s); } return P.seen[c.topic] ? '<span class="vis">' + t('ch.visited') + '</span>' : ''; };
-  const list = CHALLENGES.filter(c => !chKind || c.kind === chKind);
-  v.innerHTML = '<section class="wrap vhead"><p class="eyebrow">' + t('ch.eyebrow') + '</p><h1>' + t('ch.title') + '</h1><p class="lede">' + t('ch.lede') + '</p></section>' +
-    '<section class="wrap"><div class="vbar"><div class="seg" role="group" aria-label="' + t('ch.filter') + '">' + kinds.map(k => '<button type="button" data-k="' + k + '" aria-pressed="' + (k === chKind) + '">' + (k ? t('ch.plural.' + k) : t('ch.all')) + ' <small>' + CHALLENGES.filter(c => !k || c.kind === k).length + '</small></button>').join('') + '</div></div>' +
-    '<div class="chgrid">' + BANDS.flatMap(b => list.filter(c => (topicById(c.topic) || {}).band === b.id)).map(c => '<a class="chcard k-' + c.kind.toLowerCase() + '" href="' + c.href + '"><span class="pill out">' + t('ch.kind.' + c.kind) + '</span><b>' + esc(c.t) + '</b><small>' + esc(c.d) + '</small><span class="chmeta"><em>' + esc(bandById(topicById(c.topic).band).t) + ' · ' + esc(tName(c.topic)) + '</em>' + status(c) + '</span></a>').join('') + '</div>' + '</section>' +
-    '<section class="wrap"><div class="vbar"><h2>' + t('ch.debates') + '</h2></div><p class="lede">' + t('ch.debatesLede') + '</p>' + allDebatesHTML() + '</section>';
-  v.querySelectorAll('[data-k]').forEach(b => b.addEventListener('click', () => { chKind = b.dataset.k; renderChallenges(); }));
-}
+/* The challenges page is the frontier map (src/app/frontier.js). */
+export function renderChallenges() { renderFrontier($('#view-challenges')); watchFrontier(); }
 
 /* ---------------- Knowledge ---------------- */
 let fq = '', fk = '';

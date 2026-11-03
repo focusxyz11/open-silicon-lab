@@ -52,6 +52,7 @@
   "challenges": [
     {
       "kind": "Experiment",
+      "lens": "imagine",
       "title": "Make the model fit",
       "task": "Find when a model stops fitting on chip, and what that costs.",
       "href": "#lab-spatial-1"

@@ -42,6 +42,7 @@
   "challenges": [
     {
       "kind": "Experiment",
+      "lens": "imagine",
       "title": "Run logic backwards",
       "task": "Clamp the output of a p-bit AND gate and let the inputs find themselves.",
       "href": "#lab-pbits-1"
