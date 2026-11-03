@@ -14,6 +14,7 @@ import { P } from './learning.js';
 import { getYear } from './era.js';
 import { BORN, NOW } from '../data/timeline.js';
 import { W, renderPanel, wirePanel, paintNodes, rippleLinks, infoHTML } from './whatif.js';
+import { heroHTML } from './hero.js';
 
 const $ = s => document.querySelector(s);
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -25,17 +26,7 @@ export const state = { sel: null, thread: null, query: '', lens: '', idea: null 
 export function renderMapShell(zoomHTML) {
   const jumps = [1971, 1978, 1985, 1993, 2000, 2007, 2012, 2018, 2026, 2030, 2040];
   $('#view-map').innerHTML = `
-  <section class="wrap maphero">
-    <p class="eyebrow">${esc(t('map.eyebrow', { date: FACTS.lastCheck ? fmtDate(FACTS.lastCheck, { month: 'long', year: 'numeric' }) : '–' }))}</p>
-    <h1>${t('map.h1')}</h1>
-    <p class="lede">${t('map.lede')}</p>
-    <div class="mstats" id="mStats"></div>
-    <div class="doors" aria-labelledby="doorsT">
-      <p class="eyebrow" id="doorsT">${t('doors.title')}</p>
-      <div class="doorrow">${[['#tiny', 'build'], ['#reality', 'break'], ['#whatif', 'imagine']].map(([h, id]) => '<a class="door" href="' + h + '"><b>' + t('guide.' + id + '.t') + '</b><span>' + t('guide.' + id + '.d') + '</span></a>').join('')}</div>
-      <p class="small muted">${t('doors.or')} <button type="button" class="linkish tourbtn" data-guide-start>${t('doors.tour')}</button></p>
-    </div>
-  </section>
+  ${heroHTML(zoomHTML, t('map.eyebrow', { date: FACTS.lastCheck ? fmtDate(FACTS.lastCheck, { month: 'long', year: 'numeric' }) : '–' }))}
   <section class="wrap tmsec" id="timeMachine" aria-labelledby="tmTitle">
     <div class="tmhead">
       <div class="yearbig" id="tmYear">2026</div>
@@ -63,10 +54,6 @@ export function renderMapShell(zoomHTML) {
       <p class="note">${t('map.note')}</p>
     </div>
     <aside class="mapinfo" id="mInfo" aria-live="polite"></aside>
-  </section>
-  <section class="wrap zoomsec">
-    <div class="head"><p class="code">${t('zoom.code')}</p><h2>${t('zoom.title')}</h2></div>
-    ${zoomHTML}
   </section>
   <section class="wrap mapfoot">
     <div class="hblock"><h3>${t('map.changed')}</h3><p class="small muted" id="fbStatus"></p><div id="changes"></div></div>

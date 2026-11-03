@@ -9,6 +9,8 @@ import { initEra } from './app/era.js';
 import { initMyChip } from './app/mychip.js';
 import { initStudioLinks } from './app/studio.js';
 import { renderMapShell } from './app/map.js';
+import { initHero } from './app/hero.js';
+import { initTheme } from './app/theme.js';
 import { initGuide } from './app/guide.js';
 import { initHints } from './app/hints.js';
 import { text } from './app/loader.js';
@@ -24,11 +26,14 @@ async function boot() {
   /* Words first: every view asks src/i18n/<lang>.json for its text. */
   await loadLang(text);
   applyTexts();
+  initTheme();
   document.getElementById('loading').textContent = t('boot.loading');
   wireFooter();
   const [zoom] = await Promise.all([text('content/zoom.html'), loadFacts()]);
-  /* The map view holds the zoom viewer and the time machine, whose labs start here. */
+  /* The map view holds the hero (with the zoom viewer) and the time machine, whose labs start here. */
   renderMapShell(zoom);
+  /* The hero listens to the zoom lab, so it starts before the labs do. */
+  initHero();
   const foot = document.createElement('div'); foot.className = 'topfoot'; foot.id = 'topicFoot';
   document.getElementById('library').appendChild(foot);
   document.getElementById('loading').hidden = true;
