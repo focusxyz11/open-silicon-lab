@@ -9,7 +9,7 @@ test('wafers go round: every layer visits every group, so output falls with laye
   const c45 = capacity(L, 45), c90 = capacity(L, 90);
   assert.ok(Math.abs(c45 / c90 - 2) < 1e-9, 'twice the layers, half the lots a day');
   const s = summary(L, N, 0.5 * capacity(L, N));
-  assert.ok(Math.abs(s.raw - N * GROUPS.reduce((t, g) => t + g.hours, 0) / 24) < 1e-9);
+  assert.ok(Math.abs(s.raw - GROUPS.reduce((t, g) => t + Math.round(g.share * N) * g.hours, 0) / 24) < 1e-9);
 });
 
 test('one group sets the pace: more tools elsewhere change nothing, at the bottleneck they help', () => {
@@ -42,6 +42,13 @@ test('calibrated to the industry: about 1 to 1.5 days per layer near 85-90% load
 test("Little's law: lots in the fab = starts × cycle time", () => {
   const s = summary(L, N, 0.8 * capacity(L, N));
   assert.ok(Math.abs(s.wip - s.starts * s.days) < 1e-9);
+});
+
+test('front-end groups (implant, anneal) only serve the first layers', () => {
+  const s = summary(L, N, 0.5 * capacity(L, N));
+  const imp = s.groups.find(g => g.id === 'implant');
+  assert.equal(imp.n, Math.round(0.25 * N));
+  assert.equal(s.groups.find(g => g.id === 'litho').n, N);
 });
 
 test('individual lots finish every layer and leave the line', () => {

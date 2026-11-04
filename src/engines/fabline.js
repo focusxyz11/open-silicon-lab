@@ -1,8 +1,9 @@
 /* A fab you run: a wafer fab as a re-entrant line. Pure logic, no DOM; tests in tests/fabline.test.mjs.
 
    Three things a fab does that a straight assembly line does not, and that this model keeps true:
-   1. Wafers go round. Every layer sends a lot back through the same tool groups (print, etch,
-      deposit, polish and clean, measure), so a chip with 80 layers visits the scanners 80 times.
+   1. Wafers go round. Every layer sends a lot back through the same tool groups (deposit, print,
+      etch, clean, polish, measure, and for the first layers implant and anneal), so a chip with 80
+      layers visits the scanners 80 times.
    2. One group sets the pace. Output can never exceed what the busiest group can do; adding tools
       anywhere else changes nothing.
    3. Full is slow. Lots wait in queues, and the wait grows without bound as a group nears 100% busy.
@@ -21,14 +22,21 @@
 export const LOT = 25;   /* wafers per lot (one FOUP) */
 
 /* Tool groups, in the order a lot meets them on each layer. hours: raw time per lot per visit;
-   tools: how many in the starting line; avail: share of time a tool is up (the rest is maintenance). */
+   tools: how many in the starting line; avail: share of time a tool is up (the rest is maintenance);
+   share: the share of layers that visit the group. Implant and anneal shape the transistors, so only
+   the first quarter of the layers (front end) needs them; the rest are wiring (back end). */
 export const GROUPS = [
-  { id: 'litho', hours: 2.0, tools: 3, avail: 0.88 },
-  { id: 'etch', hours: 2.0, tools: 4, avail: 0.9 },
-  { id: 'depo', hours: 2.5, tools: 4, avail: 0.9 },
-  { id: 'cmp', hours: 1.5, tools: 3, avail: 0.92 },
-  { id: 'metro', hours: 1.0, tools: 2, avail: 0.95 }
+  { id: 'depo', hours: 2.4, tools: 4, avail: 0.9, share: 1 },      /* deposit a film */
+  { id: 'litho', hours: 2.0, tools: 3, avail: 0.88, share: 1 },    /* coat, expose in the scanner, develop */
+  { id: 'etch', hours: 2.0, tools: 4, avail: 0.9, share: 1 },      /* cut the pattern into the film */
+  { id: 'clean', hours: 1.2, tools: 2, avail: 0.95, share: 1 },    /* strip the resist, wash */
+  { id: 'implant', hours: 1.5, tools: 1, avail: 0.9, share: 0.25 },/* fire dopant ions (front end only) */
+  { id: 'anneal', hours: 1.5, tools: 1, avail: 0.95, share: 0.25 },/* heat to switch the dopants on */
+  { id: 'cmp', hours: 1.5, tools: 3, avail: 0.92, share: 1 },      /* polish flat */
+  { id: 'metro', hours: 1.0, tools: 2, avail: 0.95, share: 1 }     /* measure and inspect */
 ];
+/* Does layer i (0-based) of n visit group g? Front-end groups take the first layers. */
+export const visits = (g, i, n) => g.share >= 1 || i < Math.round(g.share * n);
 
 /* Products: layers sets how many times a lot goes round. Layer counts follow ECIA's figures by node. */
 export const PRODUCTS = {
@@ -39,17 +47,17 @@ export const PRODUCTS = {
 
 /* Squared coefficients of variation of arrivals and of process times. Real lines are bumpy: lots
    arrive in clumps, tools break, recipes differ, so both are above the 1 of a purely random process. */
-const VAR = { ca2: 2, cs2: 2 };
+const VAR = { ca2: 1.5, cs2: 1.5 };
 /* Hours per layer that are neither waiting at a tool nor processing: moving between bays, holds,
    waiting for a measurement result. */
-export const MOVE = 1.5;
+export const MOVE = 1.0;
 
 export function line(tools = {}) {
   return GROUPS.map(g => Object.assign({}, g, { tools: Math.max(1, tools[g.id] ?? g.tools) }));
 }
 
 /* Lots one group could finish per day, counting every visit a lot makes to it. */
-const groupCapacity = (g, layers) => g.tools * g.avail * 24 / (g.hours * layers);
+const groupCapacity = (g, layers) => g.tools * g.avail * 24 / (g.hours * Math.max(1, Math.round(g.share * layers)));
 
 /* The most lots per day the line can start and finish: the bottleneck's capacity. */
 export function capacity(L, layers) {
@@ -72,13 +80,13 @@ export function summary(L, layers, starts) {
   const cap = capacity(L, layers);
   const groups = L.map(g => {
     const te = g.hours / g.avail;                       /* availability stretches each visit */
-    const u = starts * layers * g.hours / (g.tools * g.avail * 24);
+    const n = Math.round(g.share * layers);
+    const u = starts * n * g.hours / (g.tools * g.avail * 24);
     const wq = wait(u, g.tools, te);
-    return { id: g.id, u, wq, te, perLayer: wq + te };
+    return { id: g.id, u, wq, te, n, total: n * (wq + te) };
   });
-  const raw = layers * L.reduce((s, g) => s + g.hours, 0) / 24;                     /* days, never waiting */
-  const hoursPerLayer = groups.reduce((s, g) => s + g.perLayer, 0) + MOVE;
-  const days = layers * hoursPerLayer / 24;
+  const raw = L.reduce((s, g) => s + Math.round(g.share * layers) * g.hours, 0) / 24;   /* days, never waiting */
+  const days = (groups.reduce((s, g) => s + g.total, 0) + layers * MOVE) / 24;
   const stable = starts < cap;
   return {
     starts, capacity: cap, load: starts / cap, bottleneck: bottleneck(L, layers),
@@ -116,8 +124,7 @@ export function step(S, L, layers, starts, dt) {
       const job = T[k];
       if (job && S.t >= job.until) {
         T[k] = null; const lot = job.lot;
-        lot.g++;
-        if (lot.g >= L.length) { lot.g = 0; lot.layer++; }
+        do { lot.g++; if (lot.g >= L.length) { lot.g = 0; lot.layer++; } } while (lot.layer < layers && !visits(L[lot.g], lot.layer, layers));
         if (lot.layer >= layers) { lot.out = S.t; S.done.push(lot); S.lots.splice(S.lots.indexOf(lot), 1); if (S.done.length > 400) S.done.shift(); }
         else S.queues[lot.g].push(lot);
       }
