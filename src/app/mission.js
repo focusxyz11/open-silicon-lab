@@ -28,7 +28,8 @@ function wallsLine(id) {
     ds.map(d => '<button type="button" class="chip" data-wall="' + d.id + '">' + esc(d.t) + '</button>').join('') + '</p>';
 }
 
-export function missionHTML(id, title) {
+/* compact: a depth lab holds its own mission, so the card stays short and the picture stays near the top. */
+export function missionHTML(id, title, compact = false) {
   const ch = CHALLENGES.filter(c => c.topic === id);
   if (!ch.length) {
     const labs = (TOPIC_FILES[id] || { labs: [] }).labs;
@@ -41,18 +42,19 @@ export function missionHTML(id, title) {
   }
   const c = ch.find(x => !isSolved(x)) || ch[0], rest = ch.filter(x => x !== c), n = solvedIn(ch), done = isSolved(c);
   const auto = selfChecks(c);
-  return '<div class="mission fc-' + c.lens + (done ? ' solved' : '') + '"><p class="code"><span class="dot"></span>' + t('mission.code', { lens: t('fm.col.' + c.lens + '.t') }) + '<span class="pill out">' + t('ch.kind.' + c.kind) + '</span>' +
+  const hint = !done && c.hint ? '<details class="mhint"><summary>' + t('mission.hint') + '</summary><p>' + esc(c.hint) + '</p></details>' : '';
+  const more = (rest.length ? '<div class="mmore"><span class="code">' + t('mission.more', { n: rest.length }) + '</span>' +
+      rest.map(r => '<a class="fmp fc-' + r.lens + ' k-' + r.kind.toLowerCase() + (isSolved(r) ? ' done' : '') + '" href="' + esc(target(r, id)) + '" title="' + esc(r.d) + '">' + esc(r.t) + '</a>').join('') + '</div>' : '') + wallsLine(id);
+  return '<div class="mission fc-' + c.lens + (done ? ' solved' : '') + (compact ? ' compact' : '') + '"><p class="code"><span class="dot"></span>' + t('mission.code', { lens: t('fm.col.' + c.lens + '.t') }) + '<span class="pill out">' + t('ch.kind.' + c.kind) + '</span>' +
     '<span class="mcount">' + esc(t('mission.solved', { n, total: ch.length })) + '</span></p>' +
     '<h3>' + (done ? '<span class="tick" aria-hidden="true">✓</span> ' : '') + esc(c.t) + '</h3><p class="mtask">' + esc(c.d) + '</p>' +
     (done ? whyHTML(c) : '') +
     '<div class="row"><a class="btn primary" href="' + esc(target(c, id)) + '">' + t(done ? 'mission.again' : 'mission.start') + '</a>' +
     (!done && !auto ? '<button type="button" class="btn" data-tried="' + esc(keyOf(c)) + '">' + t('mission.tried') + '</button>' : '') +
     (!done && auto ? '<span class="small muted">' + t('mission.auto') + '</span>' : '') + '</div>' +
-    (!done && c.hint ? '<details class="mhint"><summary>' + t('mission.hint') + '</summary><p>' + esc(c.hint) + '</p></details>' : '') +
-    (rest.length ? '<div class="mmore"><span class="code">' + t('mission.more', { n: rest.length }) + '</span>' +
-      rest.map(r => '<a class="fmp fc-' + r.lens + ' k-' + r.kind.toLowerCase() + (isSolved(r) ? ' done' : '') + '" href="' + esc(target(r, id)) + '" title="' + esc(r.d) + '">' + esc(r.t) + '</a>').join('') + '</div>' : '') +
-    wallsLine(id) + '</div>';
+    (compact ? '<details class="mrest"><summary>' + t('mission.rest') + '</summary>' + hint + more + '</details>' : hint + more) + '</div>';
 }
+const card = (id, title) => { const s = document.getElementById(id); return missionHTML(id, title, !!(s && s.querySelector('.depthlab'))); };
 const whyHTML = c => c.why ? '<div class="mwhy"><p class="code">' + t('mission.why') + '</p><p>' + esc(c.why) + '</p></div>' : '';
 
 /* When a topic has several simulations, each one a challenge points at carries that challenge above its controls. */
@@ -102,7 +104,7 @@ function foldProse(sec) {
 export function challengeFirst(id, sec) {
   const head = sec.querySelector('.head'), tp = topicById(id);
   if (!head || !tp) return;
-  const m = document.createElement('div'); m.innerHTML = missionHTML(id, tp.t);
+  const m = document.createElement('div'); m.innerHTML = card(id, tp.t);
   head.after(m.firstElementChild);
   labStrips(id, sec);
   foldProse(sec);
@@ -121,7 +123,7 @@ document.addEventListener('osl:solved', e => {
   const c = e.detail.c, sec = document.getElementById(c.topic); if (!sec) return;
   const ch = CHALLENGES.filter(x => x.topic === c.topic), next = ch.find(x => !isSolved(x));
   const old = sec.querySelector(':scope > .mission');
-  if (old) { const m = document.createElement('div'); m.innerHTML = missionHTML(c.topic, (topicById(c.topic) || {}).t || ''); old.replaceWith(m.firstElementChild); }
+  if (old) { const m = document.createElement('div'); m.innerHTML = card(c.topic, (topicById(c.topic) || {}).t || ''); old.replaceWith(m.firstElementChild); }
   sec.querySelectorAll('[data-ck="' + CSS.escape(keyOf(c)) + '"]').forEach(el => el.classList.add('done'));
   sec.querySelectorAll('.chwin').forEach(w => w.remove());
   const h = target(c, c.topic), lab = /^#[\w-]+$/.test(h) ? sec.querySelector(h) : null;
@@ -144,7 +146,7 @@ document.addEventListener('click', e => {
 /* RISC-V levels award their own stars (osl:progress): keep the card in step with them. */
 document.addEventListener('osl:progress', () => {
   document.querySelectorAll('#library > section > .mission').forEach(old => {
-    const id = old.parentElement.id, m = document.createElement('div'); m.innerHTML = missionHTML(id, (topicById(id) || {}).t || '');
+    const id = old.parentElement.id, m = document.createElement('div'); m.innerHTML = card(id, (topicById(id) || {}).t || '');
     if (m.firstElementChild && m.firstElementChild.outerHTML !== old.outerHTML) old.replaceWith(m.firstElementChild);
   });
 });

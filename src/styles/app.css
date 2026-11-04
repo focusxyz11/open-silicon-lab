@@ -720,6 +720,17 @@ span.fmp{cursor:default}
 .deep>:not(summary){margin-bottom:18px}
 .hubcard.flash{animation:oslflash 1.6s ease-out}
 @keyframes oslflash{0%,30%{box-shadow:0 0 0 3px var(--amber)}100%{box-shadow:0 0 0 0 transparent}}
+.mission.compact{grid-template-columns:minmax(0,1fr) auto;gap:2px 16px;max-width:none;padding:10px 14px;align-items:center}
+.mission.compact>.code,.mission.compact>.mrest,.mission.compact>.mwhy{grid-column:1/-1}
+.mission.compact>.code{font-size:11px}
+.mission.compact h3{font-size:18px;font-stretch:100%;grid-column:1}
+.mission.compact .mtask{font-size:14.5px;line-height:1.4;grid-column:1;max-width:none}
+.mission.compact>.row{grid-column:2;grid-row:2/span 2}
+.mission.compact>.row .small{display:none}
+.mrest{display:grid;gap:8px}
+.mrest>summary{cursor:pointer;color:var(--cyan);font-size:13.5px;width:max-content;max-width:100%;margin-top:4px}
+.mrest[open]{gap:10px}
+@media(max-width:560px){.mission.compact{grid-template-columns:minmax(0,1fr)}.mission.compact>.row{grid-column:1;grid-row:auto;margin-top:6px}}
 @media(max-width:560px){.mission{padding:16px}}
 .hubcard.debate{scroll-margin-top:84px}
 

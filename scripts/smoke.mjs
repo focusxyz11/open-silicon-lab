@@ -166,6 +166,12 @@ async function check(viewport) {
   await page.click('#agCase [data-d="again"]');
 
   // New ways to compute: build a Bell state in the quantum lab.
+  // A depth lab keeps its picture near the top, with the challenge card short above it.
+  for (const id of ['yield', 'quantum']) {
+    await go(page, id);
+    const gap = await page.evaluate(id => document.querySelector('#' + id + ' .depthview').getBoundingClientRect().top - document.querySelector('#' + id + ' > .mission').getBoundingClientRect().top, id);
+    if (gap > (tag ? 420 : 320)) problems.push(tag + '#' + id + ': the picture starts ' + Math.round(gap) + ' px below the top of the challenge card');
+  }
   await go(page, 'lab-quantum-1');
   await page.click('#qcGoals [data-g="bell"]');
   await page.click('#qcPal [data-g="H"]'); await page.click('#qcGrid [data-c="0"][data-q="0"]');
