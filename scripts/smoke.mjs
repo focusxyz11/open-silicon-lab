@@ -3,7 +3,7 @@
 // Needs Playwright with Chromium (npx playwright install chromium).
 import { createRequire } from 'node:module';
 import { serve } from './serve.mjs';
-import { TOPICS } from '../src/data/topics.js';
+import { TOPICS, DEBATES } from '../src/data/topics.js';
 import { ANCHORS } from '../src/generated/catalog.js';
 
 const require = createRequire(import.meta.url);
@@ -63,6 +63,15 @@ async function check(viewport) {
   await page.click('[data-debate="bigdie"] [data-lean][data-v="1"]');
   if (!/What would change your mind/.test(await page.textContent('[data-debate="bigdie"]'))) problems.push(tag + 'leaning in a debate did not ask what would change your mind');
   await page.click('[data-debate="bigdie"] [data-lean][data-v="1"]');
+  /* The Frontier tab around the map: a card for every wall, the gaps, and "See it on the map" picks that wall. */
+  await go(page, 'frontier');
+  const fr = await page.evaluate(() => ({ walls: document.querySelectorAll('#view-challenges .fwall[data-wall]').length, wanted: document.querySelectorAll('#view-challenges .fwant, #view-challenges .fwcells .fmp').length, forms: [...document.querySelectorAll('#view-challenges .fways a[target]')].map(a => a.href) }));
+  if (fr.walls !== DEBATES.length) problems.push(tag + 'Frontier: ' + fr.walls + ' wall cards for ' + DEBATES.length + ' walls');
+  if (!fr.wanted) problems.push(tag + 'Frontier: no gaps listed');
+  if (fr.forms.length !== 2 || !fr.forms.every(h => /\/issues\/new\?template=(challenge|view)\.yml/.test(h))) problems.push(tag + 'Frontier: the proposal forms are not wired (' + fr.forms.join(', ') + ')');
+  await page.click('#view-challenges .fwall[data-wall="power"] [data-pick]');
+  await page.waitForTimeout(150);
+  if (!(await page.$('#view-challenges .fmpanel [data-debate="power"]'))) problems.push(tag + 'Frontier: "See it on the map" did not pick the wall');
   await go(page, 'map');
   await page.fill('#mSearch', 'HBM');
   if (!(await page.$$('#mInfo .hits a')).length) problems.push(tag + 'search found nothing for HBM');

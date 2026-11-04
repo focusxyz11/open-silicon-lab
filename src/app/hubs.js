@@ -44,6 +44,7 @@ function measureCard(id, here, use) {
 /* ---- debates ---- */
 const LKEY = 'osl-lean-v1';
 let LEAN = {}; try { LEAN = JSON.parse(localStorage.getItem(LKEY) || '{}') || {}; } catch (e) { LEAN = {}; }
+export const leanOf = id => LEAN[id];
 const saveLean = () => { try { localStorage.setItem(LKEY, JSON.stringify(LEAN)); } catch (e) { /* storage unavailable */ } };
 
 function debateBody(d) {

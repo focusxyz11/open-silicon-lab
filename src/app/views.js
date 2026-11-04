@@ -3,7 +3,6 @@
 import { BANDS, TOPICS, topicById, bandById } from '../data/topics.js';
 import { CHALLENGES } from '../data/challenges.js';
 import { allTradeoffsHTML, allMeasuresHTML } from './hubs.js';
-import { renderFrontier, watchFrontier } from './frontier.js';
 import { doorHead, doorMap, project } from './doors.js';
 import { CARDS, TH } from '../data/cards.js';
 import { FACTS, fmtDate, changesHTML } from './facts.js';
@@ -44,7 +43,8 @@ export function renderWorkshop() {
 
 /* ---------------- Challenges ---------------- */
 /* The challenges page is the frontier map (src/app/frontier.js). */
-export function renderChallenges() { renderFrontier($('#view-challenges'), { head: true }); watchFrontier(); }
+/* The Frontier tab: src/app/frontier-page.js. */
+export { renderFrontierPage as renderChallenges } from './frontier-page.js';
 
 /* ---------------- Knowledge ---------------- */
 let fq = '', fk = '';
