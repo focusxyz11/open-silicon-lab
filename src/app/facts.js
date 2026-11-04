@@ -17,10 +17,10 @@ export async function loadFacts() {
 }
 export const factsFor = topic => FACTS.facts.filter(f => f.topic === topic);
 
-export function factsHTML(topic) {
+export function factsHTML(topic, { bare = false } = {}) {
   const fs = factsFor(topic);
   if (!fs.length) return '';
-  return '<div class="factbox"><div class="fh"><p class="code">' + t('fact.code', { n: fs.length }) + '</p><span class="small muted">' + esc(t('fact.checked', { date: fmtDate(FACTS.lastCheck) })) + '</span></div><div class="ftrack">' + fs.map(f => {
+  return '<div class="factbox">' + (bare ? '' : '<div class="fh"><p class="code">' + t('fact.code', { n: fs.length }) + '</p><span class="small muted">' + esc(t('fact.checked', { date: fmtDate(FACTS.lastCheck) })) + '</span></div>') + '<div class="ftrack">' + fs.map(f => {
     const kind = KIND[f.kind] ? f.kind : 'reported', u = safeUrl(f.url);
     return '<div class="f"><div><b>' + esc(f.label) + '</b>' + (f.detail ? '<small>' + esc(f.detail) + '</small>' : '') + '</div><div class="v">' + esc(f.value) + (f.previous ? '<small>' + esc(t('fact.previous', { value: f.previous })) + '</small>' : '') + '</div><div class="meta"><span class="pill ' + KIND[kind] + '">' + t('fact.' + kind) + '</span><span>' + esc(t('fact.verified', { date: fmtDate(f.verified) })) + '</span>' + (u ? '<a href="' + esc(u) + '" target="_blank" rel="noopener">' + esc(f.source || t('fact.source')) + '</a>' : '') + '</div></div>';
   }).join('') + '</div></div>';

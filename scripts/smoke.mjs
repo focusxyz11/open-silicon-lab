@@ -93,12 +93,18 @@ async function check(viewport) {
   const ids = TOPICS.map(t => t.id).concat(REF);
   for (const id of ids) {
     try { await go(page, id); } catch (e) { problems.push(tag + `#${id}: did not open (${e.message.split('\n')[0]})`); continue; }
-    const r = await page.evaluate(id => {
+    const r = await page.evaluate(([id, REF_IDS]) => {
       const s = document.getElementById(id);
       const shown = [...document.querySelectorAll('#library > section')].filter(x => !x.hidden).map(x => x.id);
       const blank = [...s.querySelectorAll('canvas')].filter(c => c.offsetParent && (c.width < 2 || c.height < 2)).length;
-      return { shown, blank, wide: document.documentElement.scrollWidth > innerWidth + 1 };
-    }, id);
+      /* Challenge first: a topic opens with its mission card, right under its question, and every
+         start link goes somewhere that exists. */
+      const m = s.querySelector(':scope > .mission'), start = m && m.querySelector('.row a.btn.primary');
+      const missionOk = REF_IDS.includes(id) || (!!m && m.previousElementSibling === s.querySelector(':scope > .head'));
+      return { shown, blank, wide: document.documentElement.scrollWidth > innerWidth + 1, missionOk, start: start ? start.getAttribute('href') : null };
+    }, [id, REF]);
+    if (!r.missionOk) problems.push(tag + `#${id}: no mission card under the question`);
+    if (r.start && !pageOf(r.start.slice(1)) && !['whatif', 'timeMachine', 'workshop'].includes(r.start.slice(1))) problems.push(tag + `#${id}: mission starts at ${r.start}, which leads nowhere`);
     if (r.shown.length !== 1 || r.shown[0] !== id) problems.push(tag + `#${id}: shows ${r.shown.join(',')}`);
     if (r.blank) problems.push(tag + `#${id}: ${r.blank} canvas(es) did not size`);
     if (r.wide) problems.push(tag + `#${id}: page scrolls sideways`);
@@ -116,8 +122,13 @@ async function check(viewport) {
     if (await page.evaluate(v => document.getElementById('view-' + v).hidden, v)) problems.push(tag + v + ' view did not open');
   }
 
-  // Feedback: every topic offers prefilled GitHub forms, and the footer links work.
+  // The litho page: its long passage folds, its wall chip finds the debate, and its facts fold into Go deeper.
   await go(page, 'litho');
+  const fold = await page.evaluate(() => { const b = document.querySelector('#litho .pmorebtn'); if (!b) return 'no fold'; b.click(); const open = !document.querySelector('#litho .pmore').hidden; b.click(); return open ? 'ok' : 'did not open'; });
+  if (fold !== 'ok') problems.push(tag + 'litho: Read more ' + fold);
+  if (!await page.$('#topicFoot [data-debate="' + await page.$eval('#litho .mission [data-wall]', b => b.dataset.wall) + '"]')) problems.push(tag + 'litho: the wall in the mission card is not on the page');
+  if (!await page.$('#topicFoot details.deep.dfacts .factbox')) problems.push(tag + 'litho: facts are not folded into Go deeper');
+  // Feedback: every topic offers prefilled GitHub forms, and the footer links work.
   const fb = await page.$$eval('#topicFoot .feedback a', as => as.map(a => a.href));
   if (fb.length !== 2 || !fb.every(h => /\/issues\/new\?template=(correction|idea)\.yml/.test(h) && h.includes('topic=litho'))) problems.push(tag + 'topic feedback links are missing or wrong');
   const foot = await page.$$eval('#siteFoot a[data-issue], #siteFoot a[data-repo]', as => as.map(a => a.href));

@@ -114,7 +114,11 @@ The tests check every rule below and say exactly what to fix.
 ## Writing a good topic
 
 - **Lead with a question or challenge**, not a definition. The `<h2>` is the question.
-- **Simulation first.** Two or three short paragraphs at most before the first panel.
+- **Challenge first.** The page opens with a mission card made from the topic's **first** challenge in
+  `topic.json`, so put the best way in first. The others follow as pills, with the open problems the topic
+  helps with. A topic with no challenge says so and asks readers to propose one: write at least one.
+- **Simulation first.** Two or three short paragraphs at most before the first panel. Each `.prose` block
+  shows its headings and first paragraph; the rest folds behind "Read more", so say the point first.
 - **Plain words.** Explain each term the first time; add new terms to the glossary.
 - **Connect it honestly.** Choose the link kind that is true, not the one that sounds closest. If two
   topics only share an idea, that is a big idea (`ideas`), not a link.

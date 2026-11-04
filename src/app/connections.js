@@ -44,9 +44,9 @@ export function ladder(ideaId, here) {
 }
 
 /* "Big ideas here": the ideas this topic shows, each with its echoes in other layers. */
-export function ideasHTML(id) {
+export function ideasHTML(id, { bare = false } = {}) {
   const mine = ideasOf(id); if (!mine.length) return '';
-  return '<div class="hblock ideas"><p class="code">' + t('idea.title') + '</p><p class="small muted">' + t('idea.lede') + '</p><div class="igrid">' +
+  return '<div class="hblock ideas">' + (bare ? '' : '<p class="code">' + t('idea.title') + '</p>') + '<p class="small muted">' + t('idea.lede') + '</p><div class="igrid">' +
     mine.map((u, k) => { const i = ideaById(u.idea); return '<details class="idea"' + (k === 0 ? ' open' : '') + '><summary><b>' + esc(i.t) + '</b>' + (u.counter ? '<span class="pill out">' + t('idea.breaks') + '</span>' : '') + '<small>' + esc(cap(u.how)) + '</small></summary><p class="small">' + esc(i.d) + '</p>' + ladder(i.id, id) + '</details>'; }).join('') +
     '</div></div>';
 }
