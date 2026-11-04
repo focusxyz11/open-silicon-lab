@@ -174,6 +174,10 @@ Learners' designs live in `community/<name>/design.json` (see `community/README.
 
 `src/data/timeline.js` holds dated series (landmark chips, process nodes, transistor shapes, lithography, wafers, design costs, company founding years and Karl Rupp's microprocessor data) and `snapshot(year)`. Each topic's own lines are in its `topic.json` (`"time"`); `topicLine(id, year, then)` fills in values such as `{node}` from the snapshot. `src/app/era.js` keeps the site's year (per tab, today by default), adds the year button to the top bar and the banner to topic pages, and fires `osl:year` when it changes. Labs that know about time listen for that event: the map's time machine, the company explorer and the roadmap.
 
+## Depth labs
+
+A depth lab is one simulation explored at four depths on one picture, in place of separate reader levels. `src/core/depth.js` runs the rail and the panels; each topic keeps its own picture and a tested engine in `src/engines/`. `docs/DEPTH.md` is the guide for converting a simulation and lists what is done.
+
 ## Words and languages
 
 Words on screen live in `src/i18n/<lang>.json`, never in code. Code names a text and asks for it with

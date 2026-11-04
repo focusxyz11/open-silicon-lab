@@ -147,3 +147,7 @@ The tests check every rule below and say exactly what to fix.
 
 CSS classes for panels and controls (`lab`, `cols`, `controls`, `ctl`, `seg`, `btn`, `readout`,
 `note`, `callout`, `pill`, `status`) are in `src/styles/base.css`; the template uses them.
+
+## Depth labs
+
+New simulations should open at growing depth on one picture: See it, Measure it, Model it, Open question. Read `docs/DEPTH.md`. A depth lab replaces the `plain` and `engineer` note on its page; keep both in `topic.json` until the whole site is converted.

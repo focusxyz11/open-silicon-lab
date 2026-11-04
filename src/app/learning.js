@@ -113,7 +113,8 @@ export function prepareTopic(id, sec, learn = {}) {
   const lab = head && head.querySelector('[data-topic-label]'); if (lab) lab.textContent = topicLabel(id);
   if (head) { const ab = document.createElement('button'); ab.type = 'button'; ab.className = 'askbtn'; ab.hidden = !askOn; ab.dataset.s = id; ab.textContent = t('ask.button'); head.appendChild(ab); }
   LEARN[id] = learn;
-  if (learn.plain && head) { const b = document.createElement('div'); b.className = 'beg'; b.innerHTML = '<p class="eyebrow">' + t('learn.plain') + '</p><p>' + esc(learn.plain) + '</p>'; const e = document.createElement('div'); e.className = 'eng'; e.innerHTML = '<p class="eyebrow">' + t('learn.engineer') + '</p><p>' + esc(learn.engineer) + '</p>'; head.after(b, e); }
+  /* A depth lab carries its own explanation at every depth, so the two-level note stays out of its page. */
+  if (learn.plain && head && !sec.querySelector('.depthlab')) { const b = document.createElement('div'); b.className = 'beg'; b.innerHTML = '<p class="eyebrow">' + t('learn.plain') + '</p><p>' + esc(learn.plain) + '</p>'; const e = document.createElement('div'); e.className = 'eng'; e.innerHTML = '<p class="eyebrow">' + t('learn.engineer') + '</p><p>' + esc(learn.engineer) + '</p>'; head.after(b, e); }
   if (learn.quiz && learn.quiz.length) { const d = document.createElement('div'); d.className = 'quiz'; d.dataset.s = id; sec.appendChild(d); renderQuiz(id); }
   wrapTerms(sec);
 }

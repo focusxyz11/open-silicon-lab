@@ -5,7 +5,9 @@
   "order": 30,
   "kind": "explore",
   "summary": "Why defects make big dies expensive, and why chiplets help.",
-  "labs": ["yield"],
+  "labs": [
+    "yield"
+  ],
   "links": [
     {
       "kind": "causes",
@@ -41,7 +43,7 @@
     {
       "tradeoff": "big-yield",
       "how": "split the die and watch the cost per working chip fall",
-      "try": "#lab-yield-1"
+      "try": "#yd-measure"
     }
   ],
   "measures": [
@@ -66,10 +68,58 @@
     {
       "kind": "Puzzle",
       "lens": "build",
+      "title": "Fill the shelf",
+      "task": "Rain ruins every chip it hits. Make twice as many working chips from the same wafer.",
+      "href": "#lab-yield-1",
+      "check": [
+        [
+          {
+            "id": "ydShelf",
+            "has": "full"
+          }
+        ]
+      ],
+      "hint": "Cut the chips smaller, one step at a time, and watch the shelf. The rain stays where it is.",
+      "why": "A small chip dodges rain that a big one would catch, so the same drops ruin far less. Each cut still costs a little: the pieces need extra silicon to link them, and a working chip needs all its pieces."
+    },
+    {
+      "kind": "Puzzle",
+      "lens": "build",
       "title": "Half price by chiplets",
       "task": "Split the AI GPU die until a working chip costs less than half as much silicon as one big die. What is the smallest split that does it?",
-      "href": "#lab-yield-1",
-      "check": [[{"id": "ydW", "eq": 26}, {"id": "ydH", "eq": 32}, {"id": "ydD", "eq": 0.1}, {"id": "ydC", "eq": 30}, {"id": "ydSplit", "on": "8"}, {"id": "ydCost", "lt": 539}]],
+      "href": "#yd-measure",
+      "check": [
+        [
+          {
+            "id": "ydDepth",
+            "gte": 1
+          },
+          {
+            "id": "ydW",
+            "eq": 26
+          },
+          {
+            "id": "ydH",
+            "eq": 32
+          },
+          {
+            "id": "ydD",
+            "eq": 0.1
+          },
+          {
+            "id": "ydC",
+            "eq": 30
+          },
+          {
+            "id": "ydSplit",
+            "on": "8"
+          },
+          {
+            "id": "ydCost",
+            "lt": 539
+          }
+        ]
+      ],
       "hint": "Start from the AI GPU die preset and try each split in turn, watching the silicon cost per chip. Half of $1,077 is about $538.",
       "why": "Yield falls exponentially with area, so a small die dodges defects far more often. But each split adds area for the links between chiplets, so the saving shrinks: 4 chiplets get you to $580, and it takes 8 to go below half."
     },
@@ -78,8 +128,31 @@
       "lens": "break",
       "title": "The yield cliff",
       "task": "Raise the defect density on one AI GPU die until fewer than 1 in 10 dies work. How dirty is that, and what does each working chip cost then?",
-      "href": "#lab-yield-1",
-      "check": [[{"id": "ydW", "eq": 26}, {"id": "ydH", "eq": 32}, {"id": "ydSplit", "on": "1"}, {"id": "ydY", "lt": 10}, {"id": "ydY", "gte": 9}]],
+      "href": "#yd-measure",
+      "check": [
+        [
+          {
+            "id": "ydW",
+            "eq": 26
+          },
+          {
+            "id": "ydH",
+            "eq": 32
+          },
+          {
+            "id": "ydSplit",
+            "on": "1"
+          },
+          {
+            "id": "ydY",
+            "lt": 10
+          },
+          {
+            "id": "ydY",
+            "gte": 9
+          }
+        ]
+      ],
       "hint": "Keep one big AI GPU die and raise the defect density slowly. Watch the model yield fall below 10%.",
       "why": "At about 0.28 defects per cm², fewer than 1 in 10 dies of this size work, and each working chip costs about $4,800 of silicon. A die this big turns a slightly dirty fab into a very expensive one, which is why new nodes start with small chips."
     },
@@ -88,10 +161,78 @@
       "lens": "imagine",
       "title": "A $45,000 wafer",
       "task": "Suppose wafers at a future node cost $45,000. Keep the silicon for a working AI GPU under $1,000: how clean must the fab be for one big die, and how much dirt can 8 chiplets tolerate?",
-      "href": "#lab-yield-1",
-      "check": [[{"id": "ydW", "eq": 26}, {"id": "ydH", "eq": 32}, {"id": "ydC", "eq": 45}, {"id": "ydSplit", "on": "1"}, {"id": "ydCost", "lt": 1000}]],
+      "href": "#yd-measure",
+      "check": [
+        [
+          {
+            "id": "ydW",
+            "eq": 26
+          },
+          {
+            "id": "ydH",
+            "eq": 32
+          },
+          {
+            "id": "ydC",
+            "eq": 45
+          },
+          {
+            "id": "ydSplit",
+            "on": "1"
+          },
+          {
+            "id": "ydCost",
+            "lt": 1000
+          }
+        ]
+      ],
       "hint": "Set the wafer price to $45k and keep one die. Lower the defect density until a working chip costs less than $1,000. Then try 8 chiplets.",
       "why": "One big die stays under $1,000 only while the fab is very clean, about 0.04 defects per cm² or less. Split into 8 chiplets, it stays under $1,000 even at 0.2. Dearer wafers make chiplets more attractive, not less."
+    },
+    {
+      "kind": "Experiment",
+      "lens": "break",
+      "title": "Half price in clumps",
+      "task": "Real defects clump together. With clumps on, find how loose they must be before 8 chiplets reach half price again.",
+      "href": "#yd-model",
+      "check": [
+        [
+          {
+            "id": "ydW",
+            "eq": 26
+          },
+          {
+            "id": "ydH",
+            "eq": 32
+          },
+          {
+            "id": "ydD",
+            "eq": 0.1
+          },
+          {
+            "id": "ydC",
+            "eq": 30
+          },
+          {
+            "id": "ydRain",
+            "on": "Clumps"
+          },
+          {
+            "id": "ydSplit",
+            "on": "8"
+          },
+          {
+            "id": "ydAl",
+            "lte": 5
+          },
+          {
+            "id": "ydRatio",
+            "lt": 0.5
+          }
+        ]
+      ],
+      "hint": "Start at α = 1, where the cost ratio is about 0.59, and raise α one step at a time.",
+      "why": "Clumps leave gaps, so a big die survives more often than even rain suggests, and cutting saves less. At the default density, half price returns at about α = 5. The tighter the clumps, the weaker the case for chiplets on cost alone."
     }
   ],
   "learn": {
@@ -100,7 +241,12 @@
     "quiz": [
       {
         "q": "What happens to yield as die area grows, at the same defect density?",
-        "options": ["It rises", "It stays the same", "It falls, roughly exponentially", "It does not depend on area"],
+        "options": [
+          "It rises",
+          "It stays the same",
+          "It falls, roughly exponentially",
+          "It does not depend on area"
+        ],
         "answer": 2,
         "why": "Poisson yield is e^(−A·D₀): a bigger area catches more defects."
       },
