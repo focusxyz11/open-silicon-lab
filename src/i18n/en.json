@@ -114,6 +114,7 @@
  "mission.start": "Start the challenge →",
  "mission.solved": "{n} of {total} solved here",
  "mission.again": "Play it again →",
+ "mission.rest": "Hint, more challenges and open problems",
  "mission.tried": "I tried it",
  "mission.auto": "The simulation notices when you get there.",
  "mission.hint": "Hint",
