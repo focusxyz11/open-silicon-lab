@@ -12,12 +12,14 @@ Shipped and growing:
 - **My chip** and **Build your own chip: the road.** One design of yours from gates to files a factory accepts: logic, memory and the clock, your ALU in a RISC-V core, layout, test, clocked Verilog for Tiny Tapeout, and **Zoom into your chip** at seven scales. Stages and next steps: [JOURNEY.md](JOURNEY.md).
 - **Big questions:** why can a perfect design fail in the real world (`#reality`), and how far are chips from the limits of physics (`#floor`).
 - **The map as a simulator:** What if? (`#whatif`), map lenses and the time machine.
+- **The community chip** (`#community`): learners' designs checked automatically and shown on one shared Tiny Tapeout tile behind a selector, a one-click submission from the studio, and the whole chip downloadable.
+- **Evolve a circuit** (`#evolve`): blind evolution against the human design, opened in the studio.
 
 ## Next
 
-- **The community chip.** Groundwork built (`#community`): learners' designs in `community/`, checked automatically and shown on one shared tile behind a selector, a one-click submission from the studio, and the whole chip downloadable for Tiny Tapeout. Still to decide: when to submit it, and who pays for the tile.
+- **Submit the community chip.** A maintainer decision: when to send it to a Tiny Tapeout run, and who pays for the tile.
 - **The physics floor, part two.** The chip passport now shows your chip's distance from physics; next, the same yardstick on other topics (accelerators, data centers, sensors).
-- **The rest of the road:** switch to gate, the last mile, push your own clock ([JOURNEY.md](JOURNEY.md)).
+- **The rest of the road:** switch to gate, push your own clock, clocked chips in the zoom and on the bench ([JOURNEY.md](JOURNEY.md)).
 - **The next big question:** can the planet afford the chips we want? (idea bank, idea 6).
 - **A quality pass and real learners.** A separate review of every topic (facts, simplification notes, phone layout, dark mode), then three to five beginners trying the site while someone watches where they get stuck.
 
