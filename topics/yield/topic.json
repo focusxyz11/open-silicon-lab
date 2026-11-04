@@ -76,6 +76,13 @@
       "title": "The yield cliff",
       "task": "Raise the defect density on one AI GPU die until fewer than 1 in 10 dies work. How dirty is that, and what does each working chip cost then?",
       "href": "#lab-yield-1"
+    },
+    {
+      "kind": "Experiment",
+      "lens": "imagine",
+      "title": "A $45,000 wafer",
+      "task": "Suppose wafers at a future node cost $45,000. Keep the silicon for a working AI GPU under $1,000: how clean must the fab be for one big die, and how much dirt can 8 chiplets tolerate?",
+      "href": "#lab-yield-1"
     }
   ],
   "learn": {

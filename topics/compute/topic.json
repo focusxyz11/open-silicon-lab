@@ -52,6 +52,13 @@
       "title": "Sixteen answers",
       "task": "Predict how many cycles a 4 × 4 systolic array needs to finish all 16 results, then step through it one cycle at a time to check.",
       "href": "#lab-compute-1"
+    },
+    {
+      "kind": "Puzzle",
+      "lens": "imagine",
+      "title": "An assistant in your pocket",
+      "task": "On the phone NPU, find the biggest model that fits on one chip and still answers at 20 tokens a second, faster than you can read.",
+      "href": "#lab-compute-2"
     }
   ],
   "learn": {
