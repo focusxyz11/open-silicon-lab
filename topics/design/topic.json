@@ -50,7 +50,29 @@
       [2011, "Designing a leading-edge chip costs about ${designCost} million ({costNode}, IBS estimate)."]
     ]
   },
-  "challenges": [],
+  "challenges": [
+    {
+      "kind": "Puzzle",
+      "lens": "break",
+      "title": "Pass the slow corner",
+      "task": "At a 4 GHz clock, add the fewest pipeline registers that still pass sign-off on a hot, low-voltage chip. What does it cost in latency?",
+      "href": "#lab-design-3"
+    },
+    {
+      "kind": "Design",
+      "lens": "build",
+      "title": "Half the power",
+      "task": "Start at 3 GHz and 0.75 V, about 51 W. Find the fastest clock that runs safely on less than half that power.",
+      "href": "#lab-design-4"
+    },
+    {
+      "kind": "Experiment",
+      "lens": "imagine",
+      "title": "Close coverage with an agent",
+      "task": "Run 100,000 random tests and count the bugs still hiding, then let AI-guided tests try. How many tests does each need to find all 7?",
+      "href": "#lab-design-5"
+    }
+  ],
   "learn": {
     "plain": "Designing a chip is like writing a huge program that turns into a city plan. Engineers write code that describes circuits, software turns it into billions of tiny switches, and checking that everything works takes longer than writing it. Every choice trades speed, power and size against each other.",
     "engineer": "Static timing analysis checks setup and hold on every path across process, voltage and temperature corners with on-chip variation derates. Power sign-off covers dynamic power (αCV²f), leakage and IR drop, managed with clock gating, multiple voltage domains and dynamic voltage and frequency scaling. Verification combines UVM constrained-random simulation, formal property checking and hardware emulation, tracked by code and functional coverage.",

@@ -2,7 +2,7 @@
    transistor, a package and a data center is how a learner starts to think like an engineer.
 
    Each topic says which ideas it shows, and how, in its topic.json:
-     "ideas": [{ "idea": "keep-data-close", "how": "HBM sits millimetres from the processor" }]
+     "ideas": [{ "idea": "keep-data-close", "how": "HBM sits millimeters from the processor" }]
    Add "counter": true when the topic shows where the idea stops working. Counter-examples and
    disagreements are welcome: they are often the most useful part.
 

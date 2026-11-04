@@ -62,7 +62,7 @@ export function mountZoom(d) {
   $('yczIns').addEventListener('click', e => { const b = e.target.closest('[data-in]'); if (!b) return; K.ins[b.dataset.in] = K.ins[b.dataset.in] ? 0 : 1; resim(); });
 
   /* ---- the scenes, each drawn in [-1, 1]; u = pixels per unit, sec = time ---- */
-  const half = id => Z.levels[IDS.indexOf(id)].size / 2;          /* metres per unit at that level */
+  const half = id => Z.levels[IDS.indexOf(id)].size / 2;          /* meters per unit at that level */
   /* Text is drawn in screen pixels: browsers round very small font sizes, which squashes letters. */
   const text = (c, s, x, y, px, u, col, align) => {
     const m = c.getTransform(), q = m.transformPoint(new DOMPoint(x, y)), d = m.a / u;

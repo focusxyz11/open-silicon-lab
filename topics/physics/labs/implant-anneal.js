@@ -31,7 +31,7 @@ function run(){const I=IONS[ion],e=E(),dose=Math.pow(10,+$('#ipDose').value);con
  if(an==='none')t+='Without an anneal, most dopants sit between lattice sites and do nothing, and the damage scatters electrons. ';
  else if(an==='furnace')t+='A long furnace anneal repairs the crystal fully but lets dopants diffuse, deepening the junction. Fine for old nodes, too blurry for 2 nm transistors. ';
  else if(an==='spike')t+='A spike anneal heats the wafer for about a second, enough to activate dopants while limiting diffusion. ';
- else t+='Laser or flash annealing heats only the top micrometre for a millisecond, so dopants barely move and can exceed their normal solubility. ';
+ else t+='Laser or flash annealing heats only the top micrometer for a millisecond, so dopants barely move and can exceed their normal solubility. ';
  if(pk>sol&&an!=='none')t+='The peak is above what silicon can dissolve at this temperature, so some dopants stay inactive. ';
  if(xj&&xj<20)t+='A junction this shallow suits the source and drain extensions of a modern transistor.';else if(xj&&xj>300)t+='A deep profile like this suits wells, the large doped regions that transistors sit in.';
  $('#ipTxt').textContent=t;draw();}

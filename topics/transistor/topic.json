@@ -68,7 +68,22 @@
       [1971, "{shape}. Leading-edge process: {node}."]
     ]
   },
-  "challenges": [],
+  "challenges": [
+    {
+      "kind": "Puzzle",
+      "lens": "break",
+      "title": "Why planar was retired",
+      "task": "Compare planar with a gate-all-around nanosheet: how many powers of ten does wrapping the gate add to the on/off ratio?",
+      "href": "#lab-transistor-1"
+    },
+    {
+      "kind": "Puzzle",
+      "lens": "imagine",
+      "title": "Toward 60 millivolts",
+      "task": "Step through the research transistors: which comes closest to the 60 mV per decade limit, and which one drives the most current for its footprint?",
+      "href": "#lab-transistor-1"
+    }
+  ],
   "learn": {
     "plain": "A transistor is a tap for electricity, and the gate is the handle. As taps got tiny, they started dripping even when closed. Each new design grips the pipe from more sides so it shuts off tightly.",
     "engineer": "Subthreshold swing is (kT/q)·ln10·(1 + C_dep/C_ox), which has a floor of about 60 mV per decade at room temperature. Short-channel effects appear as drain-induced barrier lowering and threshold roll-off; wrapping the gate around the channel restores electrostatic control so gate length can shrink with acceptable leakage. Nanosheet width can vary by cell to trade drive current for area, and the forksheet adds a dielectric wall between n and p sheets on the way to CFET.",

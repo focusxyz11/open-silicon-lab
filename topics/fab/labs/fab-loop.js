@@ -5,14 +5,14 @@ export function init(){
 const ST=[
  ['Clean','Wet chemistry and scrubbing remove particles and residue. One stray particle can kill a die, so the air in a fab is thousands of times cleaner than a hospital operating room.','Wet benches and scrubbers (SCREEN, Lam Research)'],
  ['Deposit film','Grow or deposit an insulating film. Atomic layer deposition (ALD) can build it one atomic layer at a time.','CVD and ALD tools (Applied Materials, Lam Research, Tokyo Electron, ASM)'],
- ['Coat resist','Spin a light-sensitive photoresist onto the wafer, a film only tens of nanometres thick.','Coater/developer tracks (Tokyo Electron)'],
+ ['Coat resist','Spin a light-sensitive photoresist onto the wafer, a film only tens of nanometers thick.','Coater/developer tracks (Tokyo Electron)'],
  ['Expose','The scanner shines EUV light through the mask and shrinks the image 4× onto the resist, stepping across the wafer exposure by exposure.','EUV scanners (ASML, sole supplier)'],
  ['Develop','A developer liquid dissolves the resist that was hit by light, uncovering the film underneath.','Coater/developer tracks'],
  ['Etch','A plasma of reactive ions carves straight down into the film wherever the resist is open.','Plasma etch (Lam Research, Tokyo Electron, Applied Materials)'],
  ['Strip resist','Remove the leftover resist. The pattern now lives in the film itself.','Ashers and wet strip'],
  ['Fill metal','Coat the trenches with a thin barrier and fill them with copper. Newer nodes are testing ruthenium for the narrowest wires.','Deposition and electroplating (Applied Materials, Lam Research)'],
  ['Polish (CMP)','Chemical-mechanical polishing grinds the top perfectly flat, leaving metal only inside the trenches, so the next layer starts on a level surface.','CMP tools (Applied Materials, Ebara)'],
- ['Inspect','Optical and electron-beam tools scan for defects and measure dimensions to fractions of a nanometre. Data flows back to tune earlier steps.','Inspection and metrology (KLA, Applied Materials, Hitachi High-Tech)']
+ ['Inspect','Optical and electron-beam tools scan for defects and measure dimensions to fractions of a nanometer. Data flows back to tune earlier steps.','Inspection and metrology (KLA, Applied Materials, Hitachi High-Tech)']
 ];
 let step=5,prog=1,playing=false,lastT=0;const box=$('#fbSteps');
 ST.forEach((s,i)=>{const b=document.createElement('button');b.innerHTML='<span>'+String(i+1).padStart(2,'0')+'</span>'+s[0];b.addEventListener('click',()=>{playing=false;go(i);});box.appendChild(b);});

@@ -43,7 +43,29 @@
       [1971, "Newest fabs process {wafer} wafers on a {node} process."]
     ]
   },
-  "challenges": [],
+  "challenges": [
+    {
+      "kind": "Puzzle",
+      "lens": "break",
+      "title": "The bare bottom",
+      "task": "Deepen the trench until CVD leaves its bottom with less than 5% of the film on top, then coat it evenly with ALD. What does an even coat cost in time?",
+      "href": "#lab-fab-3"
+    },
+    {
+      "kind": "Design",
+      "lens": "build",
+      "title": "Etch straight down",
+      "task": "Etch a hole with less than 5 nm of undercut while keeping at least 70% of the mask.",
+      "href": "#lab-fab-4"
+    },
+    {
+      "kind": "Experiment",
+      "lens": "break",
+      "title": "Ten billion vias",
+      "task": "With no shift, find the largest random error that leaves at most one failed via per chip. Then see what a 2 nm shift does.",
+      "href": "#lab-fab-5"
+    }
+  ],
   "learn": {
     "plain": "A fab is a giant kitchen that repeats one recipe hundreds of times: add a layer, print a pattern, carve it, fill it, polish it, check it. It must be far cleaner than a hospital and more precise than almost anything else people manufacture.",
     "engineer": "Process control relies on statistical process control, run-to-run feedback and fault detection on every chamber. Key loops include per-field lithography corrections for dimensions and overlay using high-order wafer and field models, etch endpoint detection, ALD saturation curves, and CMP removal following Preston's law (rate proportional to pressure times velocity) with dummy fill to limit dishing. Cycle time is roughly 1 to 1.5 days per mask layer.",

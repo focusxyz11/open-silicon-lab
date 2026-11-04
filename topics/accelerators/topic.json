@@ -68,7 +68,22 @@
       [2017, "Tensor cores (2017), TPUs and a wave of AI chip startups."]
     ]
   },
-  "challenges": [],
+  "challenges": [
+    {
+      "kind": "Puzzle",
+      "lens": "break",
+      "title": "Four bits, despite outliers",
+      "task": "With 1% outliers in the weights, fit a 70B model in under 40 GB and keep the signal-to-noise above 20 dB.",
+      "href": "#lab-accelerators-3"
+    },
+    {
+      "kind": "Puzzle",
+      "lens": "build",
+      "title": "Read fast, write slow",
+      "task": "On Rubin with a 70B model, find how long a prompt must be before reading it takes as long as writing a 270-token answer.",
+      "href": "#lab-accelerators-4"
+    }
+  ],
   "learn": {
     "plain": "All AI chips are giant calculators. The big difference is where they keep the numbers they work on: in memory chips next door (GPUs and TPUs), or spread through the chip itself (wafer-scale and SRAM designs). Keeping numbers closer is faster, but holds less.",
     "engineer": "The design space has five main axes: compute density (MACs per mm²), memory hierarchy (HBM capacity versus on-chip SRAM bandwidth), programmability (SIMT cores versus compiler-scheduled systolic or dataflow execution), scale-up fabric (NVLink, ICI, UALink) and number formats (FP8 E4M3/E5M2, block-scaled MXFP4 and NVFP4). Decode rewards bandwidth per byte of model; prefill and training reward dense FLOPS and fabric bandwidth.",

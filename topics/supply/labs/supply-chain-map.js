@@ -28,7 +28,7 @@ const S={
  tky:['Tokyo',139.7,35.7,'Japan','Japan\'s equipment and materials makers: wafers, photoresists, coaters, testers and the film inside every high-end package substrate.','Tokyo Electron, Advantest, Shin-Etsu, SUMCO, JSR, Tokyo Ohka, Ajinomoto','l'],
  kum:['Kumamoto',130.7,32.8,'Japan','TSMC\'s Japanese joint venture, JASM, has made 12–28 nm chips here since late 2024, and a second fab is being built.','TSMC (JASM), Sony, Denso','b'],
  hok:['Hokkaido',141.6,42.8,'Japan','Rapidus, a new government-backed company, runs a 2 nm pilot line and aims for mass production in 2027.','Rapidus','l'],
- hsc:['Hsinchu',121,24.8,'Taiwan','TSMC\'s headquarters and its first 2 nm fabs. Together with Tainan, the most important square kilometres in computing.','TSMC, MediaTek, UMC','r'],
+ hsc:['Hsinchu',121,24.8,'Taiwan','TSMC\'s headquarters and its first 2 nm fabs. Together with Tainan, the most important square kilometers in computing.','TSMC, MediaTek, UMC','r'],
  tnn:['Tainan',120.2,23,'Taiwan','TSMC\'s 3 nm and 5 nm megafabs in the Southern Taiwan Science Park, plus CoWoS packaging lines in nearby Chiayi.','TSMC, ASE (Kaohsiung)','l'],
  tpe:['Taipei',121.5,25.1,'Taiwan','Headquarters of the contract manufacturers that turn GPUs into servers and racks.','Foxconn, Quanta, Wistron, Inventec','r'],
  pen:['Penang',100.3,5.4,'Malaysia','A hub for chip assembly and test since the 1970s; Malaysia handles roughly an eighth of global assembly, packaging and test.','Intel, Micron, Infineon, ASE','l'],

@@ -1,7 +1,7 @@
 /* Lab: rack to atom */
 import {$,clamp,RM,rng,T,redraws,fit,watch,rgba,shade,fmtLen,fmtNum,inView,fr,hexRGB,gauss,big,LIMC} from '../core/ui.js';
 import { t as tx } from '../core/i18n.js';
-/* Field of view of each level, in metres. The home hero (src/app/hero.js) reads them too. */
+/* Field of view of each level, in meters. The home hero (src/app/hero.js) reads them too. */
 export const ZOOM_SIZES=[2.4,0.6,0.12,0.04,0.0028,20e-6,1e-6,60e-9,3e-9];
 export function init(){
 (function zoom(){

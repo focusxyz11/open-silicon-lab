@@ -6,7 +6,7 @@ const Lz=[
  {id:'sub',name:'Package substrate',col:'#4C6A40',desc:'Organic laminate with copper layers that fans signals and power out to the board. Glass substrates are coming for flatter, finer wiring; Intel and others are moving them toward production.'},
  {id:'c4',name:'C4 solder bumps',col:'#B9C3CA',desc:'Thousands of solder balls join the interposer to the substrate.'},
  {id:'int',name:'Silicon interposer',col:'#7F8C97',desc:'A slab of silicon with very fine wiring that links the dies side by side, with through-silicon vias to the bumps below. CoWoS-L uses small silicon bridges in place of one giant interposer.'},
- {id:'ub',name:'Micro-bumps / hybrid bonds',col:'#D7B46A',desc:'Tiny connections only tens of micrometres apart. Hybrid bonding fuses copper pads directly with no solder for even denser links.'},
+ {id:'ub',name:'Micro-bumps / hybrid bonds',col:'#D7B46A',desc:'Tiny connections only tens of micrometers apart. Hybrid bonding fuses copper pads directly with no solder for even denser links.'},
  {id:'die',name:'Compute dies (×2)',col:'#2A3944',desc:'Two reticle-size logic dies made on a leading-edge node, joined by a die-to-die link so software sees one GPU.'},
  {id:'hbm',name:'HBM4 stacks (×8)',col:'#5D6B78',desc:'Each stack is a logic base die plus up to 16 DRAM dies linked by through-silicon vias. HBM4 doubles the interface to 2,048 bits, and its base die is now made on a foundry logic process.'}
 ];
