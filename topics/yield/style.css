@@ -1,0 +1,9 @@
+.depthsealed b{color:transparent;background:var(--sunk);border-radius:3px}
+.yd-cut button{display:inline-flex;align-items:center;gap:6px}
+.yd-cut svg{width:18px;height:18px;display:block;fill:none;stroke:currentColor;stroke-width:1.5}
+.yd-bars{display:grid;gap:8px}
+.yd-bars div{display:grid;gap:3px}
+.yd-bars span{font-size:13px;display:flex;justify-content:space-between;gap:8px}
+.yd-bars b{font:500 13px var(--mono);font-variant-numeric:tabular-nums}
+.yd-bars i{display:block;height:12px;background:var(--cyan-fill);border-radius:2px;transition:width .2s}
+@media (prefers-reduced-motion:reduce){.yd-bars i{transition:none}}

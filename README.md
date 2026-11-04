@@ -25,7 +25,7 @@ It is not a textbook. Everything is a simulation you can play with, a puzzle, or
 - **Frontier** — where the lab works on what nobody has solved. The open problems (walls), the answers people give and how well each is tested; the gaps nobody has filled yet; the community chip; and the whole frontier map, every challenge by layer and by how far it reaches. Propose a challenge or a view on an open problem from a prefilled form: every proposal is a GitHub issue anyone can read and improve.
 - **Knowledge** (in the footer) — big ideas, trade-offs and measures that echo across layers, a glossary, and dated, sourced facts, rechecked monthly.
 
-There is a Beginner / Engineer switch for explanations. When the lab is opened inside Claude, an "Ask Claude" tutor and a RISC-V copilot appear.
+Some simulations open at four depths on the same picture: **See it**, **Measure it**, **Model it** and **Open question** (so far wafer yield and quantum search; see [docs/DEPTH.md](docs/DEPTH.md)). Topics not yet converted keep a Beginner / Engineer switch for explanations. When the lab is opened inside Claude, an "Ask Claude" tutor and a RISC-V copilot appear.
 
 ## Run it
 

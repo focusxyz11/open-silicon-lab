@@ -3,7 +3,7 @@
 An open-source, interactive lab for how every kind of chip is designed, made and used: microcontrollers, phone processors, power and sensor chips, memory and AI accelerators. Static site: plain ES modules, HTML fragments and CSS. No framework, no build step for development.
 
 ## Who it is for
-Learners new to chips with basic hardware knowledge. Plain words first; explain any term the first time; Beginner/Engineer explanations sit side by side.
+Learners new to chips with basic hardware knowledge. Plain words first; explain any term the first time. The site is moving from Beginner/Engineer explanations to one picture explored at growing depth (See it, Measure it, Model it, Open question): see `docs/DEPTH.md`. Hard ideas appear from the start, in a form anyone can see, and nothing is locked.
 
 ## Principles (from the project owner)
 - Not a textbook: simulations, puzzles and builds first, with only the text needed to use them.

@@ -10,9 +10,14 @@ const { chromium } = require('playwright');
 
 /* How a person would solve each one: set(id, value), seg(id, text), check(id, on), click(css), wait(ms), until(id, text). */
 const R = {
-  'yield/Half price by chiplets': [['seg', 'ydPre', 'AI GPU'], ['set', 'ydD', 0.1], ['set', 'ydC', 30], ['seg', 'ydSplit', '8']],
+  'yield/Fill the shelf': [['seg', 'ydSplit', '8']],
+  'yield/Half price by chiplets': [['click', '#yd-measure'], ['seg', 'ydPre', 'AI GPU'], ['set', 'ydD', 0.1], ['set', 'ydC', 30], ['seg', 'ydSplit', '8']],
   'yield/The yield cliff': [['seg', 'ydPre', 'AI GPU'], ['seg', 'ydSplit', '1'], ['set', 'ydD', 0.28]],
   'yield/A $45,000 wafer': [['seg', 'ydPre', 'AI GPU'], ['seg', 'ydSplit', '1'], ['set', 'ydC', 45], ['set', 'ydD', 0.04]],
+  'yield/Half price in clumps': [['seg', 'ydPre', 'AI GPU'], ['set', 'ydD', 0.1], ['set', 'ydC', 30], ['seg', 'ydRain', 'Clumps'], ['seg', 'ydSplit', '8'], ['set', 'ydAl', 5]],
+  'quantum/One look, no luck': [['click', '#qsFlip'], ['wait', 700], ['click', '#qsMirror'], ['wait', 700], ['click', '#qsLook']],
+  'quantum/One step too many': [['seg', 'qsBoxes', '8'], ['click', '#qsFlip'], ['click', '#qsMirror'], ['click', '#qsFlip'], ['click', '#qsMirror'], ['wait', 400], ['click', '#qsFlip'], ['click', '#qsMirror']],
+  'quantum/Clean enough for a million': [['set', 'qsE', 35]],
   'transistor/Why planar was retired': [['seg', 'trSeg', 'Planar'], ['seg', 'trSeg', 'GAA']],
   'transistor/Toward 60 millivolts': [['seg', 'trSeg', 'CFET'], ['seg', 'trSeg', '2D']],
   'package/Bandwidth per stack': [['set', 'pkE', 1], ['seg', 'pkList', 'HBM4']],

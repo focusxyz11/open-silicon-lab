@@ -1,12 +1,102 @@
 <section id="quantum">
     <div class="head">
       <p class="code" data-topic-label>Quantum computers</p>
-      <h2>Bits that can be both, until you look</h2>
+      <h2>Can you find the prize in one look?</h2>
+    </div>
+    <div class="lab depthlab" id="lab-quantum-search">
+      <header><b>Quantum search</b><span>Up to 5 qubits</span></header>
+      <div class="body">
+        <div class="depthrail">
+          <button id="qs-see" data-depth="see"></button>
+          <button id="qs-measure" data-depth="measure"></button>
+          <button id="qs-model" data-depth="model"></button>
+          <button id="qs-open" data-depth="open"></button>
+        </div>
+        <div class="depthstage">
+          <div class="depthview">
+            <canvas id="qsCv" role="img" aria-label="A row of boxes, each with a square showing the chance of finding the prize there"></canvas>
+            <p class="depthkey" data-on="123">
+              <span><i style="background:var(--cyan-fill)"></i>Amplitude above zero</span>
+              <span><i style="background:var(--amber-fill)"></i>Amplitude below zero</span>
+            </p>
+          </div>
+          <div class="depthpanel">
+            <p class="depthmission" data-on="0">A prize hides in one box. Flip, then mirror, until one look can't miss.</p>
+            <p class="depthmission" data-on="1">Sealed now, like a real machine. How many steps find the prize most often?</p>
+            <p class="depthmission" data-on="2">A million boxes take about 800 steps. How clean must each step be?</p>
+            <p class="depthmission" data-on="3">When will quantum computers be useful? Nobody knows yet.</p>
+            <p class="depthstatus" id="qsStatus" aria-live="polite"></p>
+            <span id="qsProb" hidden></span><span id="qsFound" hidden></span>
+
+            <p class="deptheq" data-on="2" id="qsEq"></p>
+            <p class="note" data-on="2">Lower the noise until a search of about a million boxes finds the prize half the time.</p>
+            <div class="readout" data-on="1">
+              <div><span>Boxes</span><b id="qsRN">–</b></div>
+              <div><span>One blind guess</span><b id="qsRG">–</b></div>
+              <div><span>Prize found</span><b id="qsRF">–</b></div>
+              <div><span>Best so far</span><b id="qsRB">–</b></div>
+            </div>
+            <div class="readout" data-on="3">
+              <div><span>Physical qubits per reliable qubit</span><b id="qsOQ">–</b></div>
+              <div><span>Error per reliable operation</span><b id="qsOL">–</b></div>
+              <div><span>Prize found, this search</span><b id="qsOF">–</b></div>
+              <div><span>Threshold in this estimate</span><b>0.57%</b></div>
+            </div>
+
+            <div class="ctl" data-on="0"><span class="lbl" id="qsBoxL">Boxes</span><div class="seg" id="qsBoxes" role="group" aria-labelledby="qsBoxL"></div></div>
+            <div class="row" data-on="0">
+              <button type="button" class="btn primary" id="qsFlip">Flip</button>
+              <button type="button" class="btn primary" id="qsMirror">Mirror</button>
+              <button type="button" class="btn" id="qsLook">Look</button>
+              <button type="button" class="btn" id="qsReset">Start over</button>
+            </div>
+            <div class="ctl" data-on="12"><span class="lbl" id="qsQL">Qubits</span><div class="seg" id="qsQubits" role="group" aria-labelledby="qsQL"></div></div>
+            <div class="ctl" data-on="12"><label for="qsK">Steps <output id="qsKO">–</output></label><input type="range" id="qsK" min="0" max="8" step="1" value="1"></div>
+            <div class="ctl" data-on="2"><label for="qsE">Noise per step <output id="qsEO">–</output></label><input type="range" id="qsE" min="0" max="100" step="1" value="60"></div>
+            <div class="ctl" data-on="3"><label for="qsP">Error per physical operation <output id="qsPO">–</output></label><input type="range" id="qsP" min="0" max="100" step="1" value="50"></div>
+            <div class="ctl" data-on="3"><label for="qsDist">Copies, as code distance <output id="qsDO">–</output></label><input type="range" id="qsDist" min="3" max="31" step="2" value="11"></div>
+            <div class="row" data-on="1">
+              <button type="button" class="btn primary" id="qsShots">Run 100 times</button>
+              <button type="button" class="btn" id="qsLid">Open the lid</button>
+            </div>
+
+            <table class="depthtable" data-on="2"><thead><tr><th></th><th>Quantum</th><th>Plain checks</th></tr></thead><tbody id="qsTb"></tbody></table>
+            <p class="note" data-on="2">Best chance for about a million boxes: <b id="qsBig">–</b></p>
+
+            <div class="depthpanel" data-on="0">
+              <p class="note">Bigger square, better chance of finding the prize there.</p>
+              <p class="note">The machine can recognise the prize, but it doesn't know where it is. A real one hides these squares and gives you only the look.</p>
+            </div>
+            <p class="note" data-on="1">Each qubit doubles the boxes. The squares are now called <b>amplitudes</b>, and the chance is the amplitude squared. A step is one flip and one mirror. Each run ends in a single look, so the machine has to repeat the whole run.</p>
+            <div class="depthpanel" data-on="2">
+              <p class="note">Plain checks means opening that many boxes, then guessing among the rest. The dashed line shows noise, modelled as a chance each step wipes the state back to guessing. With noise on, the squares show chance only.</p>
+              <p class="note">This search is the clearest demonstration, not the likely first job. Its gain is a square root, and error-corrected steps are slow: <a href="https://arxiv.org/abs/2011.04149" target="_blank" rel="noopener">Babbush and colleagues</a> judged such gains unlikely to pay off on early machines.</p>
+              <ul class="depthlist">
+                <li>Left out: the real gates inside a flip and a mirror</li>
+                <li>Left out: building the circuit that recognises the prize</li>
+                <li>Left out: entanglement and arrows, since up and down are enough here</li>
+              </ul>
+            </div>
+            <div class="depthviews" data-on="3">
+              <article><h3>Error correction will carry it</h3><p>Reliable qubits have started to beat raw ones, and companies plan fault-tolerant machines within a few years. <b>Assumes</b> errors and overhead keep falling as machines grow.</p></article>
+              <article><h3>Classical methods keep moving</h3><p>Better classical methods have challenged several advantage claims, and approximate methods already work well for many molecules. <b>Assumes</b> useful problems keep enough structure for classical shortcuts.</p></article>
+            </div>
+            <div class="depthpanel" data-on="3">
+              <p class="note">Each slider feeds a rough surface-code estimate from <a href="https://arxiv.org/abs/1208.0928" target="_blank" rel="noopener">Fowler and colleagues, 2012</a>. The picture assumes 100 reliable operations per step, which is a teaching guess. Above the threshold, more copies make things worse. Dated company plans are in the facts on this page.</p>
+              <ul class="depthlist">
+                <li><a href="https://arxiv.org/abs/2603.18825" target="_blank" rel="noopener">Tensor-network review of advantage claims, 2026</a></li>
+                <li><a href="https://physics.aps.org/articles/v17/13" target="_blank" rel="noopener">Physics Magazine on classical methods catching up</a></li>
+              </ul>
+            </div>
+            <div class="row"><button type="button" class="btn depthnext"></button></div>
+          </div>
+        </div>
+      </div>
     </div>
     <div class="prose">
       <p>A qubit can be in a blend of 0 and 1, described by two amplitudes. Gates rotate those amplitudes; amplitudes can cancel or reinforce like waves (interference); and two qubits can be entangled, so measuring one tells you about the other. A quantum algorithm arranges interference so wrong answers cancel out. That helps for a few kinds of problems, such as simulating molecules and breaking some codes, not for everyday computing. The hard part is keeping qubits undisturbed: today's machines need error correction, which spends many physical qubits on each reliable logical one.</p>
     </div>
-    <div class="lab">
+    <div class="lab" id="lab-quantum-1">
       <header><b>Two-qubit circuit</b><span id="qcTag">–</span></header>
       <div class="body">
         <div class="ctl"><span class="lbl">Click a slot to choose a gate</span></div>
