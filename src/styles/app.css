@@ -769,3 +769,18 @@ span.fmp{cursor:default}
 .fcd.add{border-style:dashed;background:transparent}
 .frmap{scroll-margin-top:70px}
 @media(max-width:760px){.fwcols{grid-template-columns:minmax(0,1fr)}}
+
+/* ---- Challenges that check themselves (src/app/checks.js, mission.js) ---- */
+.mission .mcount{margin-left:auto;color:var(--muted);text-transform:none;letter-spacing:0;font-size:12px}
+.tick{color:var(--good);font-weight:700}
+.mission.solved{border-left-color:var(--good)}
+.mhint>summary{cursor:pointer;color:var(--cyan);font-size:14px;width:max-content}
+.mhint p{margin-top:6px;font-size:14.5px;line-height:1.5;color:var(--ink);padding-left:12px;border-left:2px solid var(--cyan)}
+.mwhy,.chwin{display:grid;gap:6px;padding:12px 14px;border-radius:8px;background:color-mix(in srgb,var(--good) 9%,var(--surface));border:1px solid color-mix(in srgb,var(--good) 40%,var(--line))}
+.mwhy .code,.chwin .code{color:var(--good)}
+.mwhy p:not(.code),.chwin p:not(.code){font-size:14.5px;line-height:1.5}
+.chwin{margin:12px 14px 0;animation:oslwin .5s ease-out}
+.chwin .row{margin-top:4px}
+@keyframes oslwin{from{transform:translateY(-6px);opacity:0}to{transform:none;opacity:1}}
+@media(prefers-reduced-motion:reduce){.chwin{animation:none}}
+.labch p.done b::after{content:" ✓";color:var(--good)}

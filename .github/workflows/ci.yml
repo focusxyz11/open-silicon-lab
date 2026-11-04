@@ -30,6 +30,8 @@ jobs:
           npx playwright install --with-deps chromium
       - name: Browser smoke test
         run: npm run test:browser
+      - name: Every self-checking challenge can be solved
+        run: npm run test:challenges
       - name: Build the single-file version
         run: npm run build
       - uses: actions/upload-artifact@v4

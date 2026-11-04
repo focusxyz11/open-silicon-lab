@@ -7,6 +7,7 @@ import { topicById } from '../data/topics.js';
 import { CHALLENGES } from '../data/challenges.js';
 import { renderFrontier, watchFrontier } from './frontier.js';
 import { P } from './learning.js';
+import { solvedIn } from './checks.js';
 import { t } from '../core/i18n.js';
 
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -27,9 +28,9 @@ export function project(id) {
 
 /* The heading every door shares; lens is build, break or imagine. */
 export function doorHead(lens) {
-  const n = CHALLENGES.filter(c => c.lens === lens).length;
+  const mine = CHALLENGES.filter(c => c.lens === lens), n = mine.length, k = solvedIn(mine);
   return '<section class="wrap dhead fc-' + lens + '"><p class="code"><i class="dot"></i>' + t('door.' + lens + '.code') + '</p><h1>' + t('door.' + lens + '.title') + '</h1>' +
-    '<p class="lede">' + t('door.' + lens + '.lede') + '</p><p class="small muted">' + esc(t('door.count', { n })) + ' · <a href="#challenges">' + t('door.whole') + '</a></p></section>';
+    '<p class="lede">' + t('door.' + lens + '.lede') + '</p><p class="small muted">' + esc(t('door.count', { n })) + (k ? ' · ' + esc(t('door.solved', { n: k })) : '') + ' · <a href="#challenges">' + t('door.whole') + '</a></p></section>';
 }
 
 /* The door's column of the frontier map, drawn into the element given. */

@@ -18,6 +18,7 @@ Learners new to chips with basic hardware knowledge. Plain words first; explain 
 - `npm start` or `node scripts/serve.mjs 8000` — serve locally (opening index.html from disk does not work).
 - `npm test` — engine and knowledge-graph tests (node:test). Must pass.
 - `npm run test:browser` — Playwright smoke test of every view and topic on desktop and mobile.
+- `npm run test:challenges` — plays every self-checking challenge to its goal in a browser.
 - `npm run build` — single-file `dist/open-silicon-lab.html` (used for the claude.ai preview).
 - `npm run catalog` — after changing a topic folder or a community design; it checks both and regenerates `src/generated/`.
 

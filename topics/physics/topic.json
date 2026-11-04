@@ -26,21 +26,30 @@
       "lens": "break",
       "title": "Too hot for silicon",
       "task": "Heat pure silicon until its own free electrons reach 10¹⁵ per cm³, as many as lightly doped silicon has. At what temperature does the doping stop deciding how a chip behaves?",
-      "href": "#lab-physics-1"
+      "href": "#lab-physics-1",
+      "check": [[{"id": "phT", "gte": 590}, {"id": "phT", "lte": 615}]],
+      "hint": "In Pure silicon, raise the temperature and watch the free electrons per cm³.",
+      "why": "At about 600 K (327 °C), heat alone frees about 10¹⁵ electrons per cm³, as many as light doping adds. Above that, the chip's doped regions stop behaving as designed, which is one reason chips are kept well below about 125 °C."
     },
     {
       "kind": "Experiment",
       "lens": "break",
       "title": "The furnace spreads it",
       "task": "Implant boron at 2 keV, then compare a furnace anneal with a laser anneal. How much deeper does the furnace drive the junction?",
-      "href": "#lab-physics-3"
+      "href": "#lab-physics-3",
+      "check": [[{"id": "ipIon", "on": "Boron"}, {"id": "ipEO", "has": "2.0 keV"}, {"id": "ipAn", "on": "Furnace"}], [{"id": "ipIon", "on": "Boron"}, {"id": "ipEO", "has": "2.0 keV"}, {"id": "ipAn", "on": "Laser"}]],
+      "hint": "Set boron and 2 keV, then switch the anneal between Furnace and Laser and compare the junction depth.",
+      "why": "The furnace drives the junction to about 101 nm, the laser leaves it at 36 nm: about 3 times deeper. Thirty minutes at 900 °C gives atoms time to wander; a millisecond at 1,300 °C switches them on before they move."
     },
     {
       "kind": "Puzzle",
       "lens": "imagine",
       "title": "Shallow and switched on",
       "task": "The next transistors need junctions only a few nanometers deep. Make an n-type junction shallower than 15 nm with more than 95% of its dopants switched on.",
-      "href": "#lab-physics-3"
+      "href": "#lab-physics-3",
+      "check": [[{"any": [{"id": "ipIon", "on": "Arsenic"}, {"id": "ipIon", "on": "Phosphorus"}]}, {"id": "ipXj", "lt": 15}, {"id": "ipAct", "gt": 95}]],
+      "hint": "Use a heavy n-type ion at low energy, then look for an anneal that is both hot and very short.",
+      "why": "Only the laser anneal works: arsenic gives about 9 nm with 99% of dopants switched on. A spike anneal gets to 13 nm but switches on only 92%, and a furnace spreads the junction far too deep. The hotter and shorter the anneal, the less the atoms move."
     }
   ],
   "learn": {

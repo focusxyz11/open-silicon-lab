@@ -42,14 +42,19 @@
       "lens": "imagine",
       "title": "What AI cannot shorten",
       "task": "Switch the flagship chip from 2020 practice to the 2030 outlook: how many months do AI agents save, and does the share set by physical steps rise or fall?",
-      "href": "#lab-innovation-3"
+      "href": "#lab-innovation-3",
+      "check": [[{"id": "gtSeg", "on": "2020"}], [{"id": "gtSeg", "on": "2030"}]],
+      "hint": "Compare spec to volume, and the share set by physical steps, in the two years.",
+      "why": "AI agents cut spec to volume from 46 to 26 months, but the share set by physical steps rises from 25% to 37%. Design gets faster; wafers, packaging and the volume ramp do not. Physical steps become the bottleneck."
     },
     {
       "kind": "Experiment",
       "lens": "imagine",
       "title": "Where invention is needed",
       "task": "In the 2030 outlook, find the steps where AI helps least and new inventions are needed most.",
-      "href": "#lab-innovation-2"
+      "href": "#lab-innovation-2",
+      "hint": "In the 2030 outlook, look for bubbles low on AI help and high on need for invention.",
+      "why": "The answers sit in physical steps: new materials, packaging, power and cooling, and capacity that takes years to build. AI helps most where work is code or search, and least where something new has to be made in the physical world."
     }
   ],
   "learn": {

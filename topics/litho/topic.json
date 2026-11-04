@@ -44,7 +44,10 @@
       "lens": "imagine",
       "title": "The 1,000-watt source",
       "task": "Turn the light source up to 1,000 W and try every other setting. Can this scanner reach the 330 wafers per hour ASML aims for by 2030? If not, what is left that would have to change?",
-      "href": "#lab-litho-2"
+      "href": "#lab-litho-2",
+      "check": [[{"id": "euP", "gte": 1000}, {"id": "euH", "gte": 275}]],
+      "hint": "After the source, try the mirror reflectivity, the number of mirrors and the dose. Then look at what the model holds fixed per wafer.",
+      "why": "In this model it cannot: even the best settings reach about 280 wafers per hour, because each wafer also spends 12.6 s on stage moves, alignment and exchange. Reaching 330 needs faster stages too, not only more light."
     }
   ],
   "learn": {

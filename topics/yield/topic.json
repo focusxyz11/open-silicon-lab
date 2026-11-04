@@ -68,21 +68,30 @@
       "lens": "build",
       "title": "Half price by chiplets",
       "task": "Split the AI GPU die until a working chip costs less than half as much silicon as one big die. What is the smallest split that does it?",
-      "href": "#lab-yield-1"
+      "href": "#lab-yield-1",
+      "check": [[{"id": "ydW", "eq": 26}, {"id": "ydH", "eq": 32}, {"id": "ydD", "eq": 0.1}, {"id": "ydC", "eq": 30}, {"id": "ydSplit", "on": "8"}, {"id": "ydCost", "lt": 539}]],
+      "hint": "Start from the AI GPU die preset and try each split in turn, watching the silicon cost per chip. Half of $1,077 is about $538.",
+      "why": "Yield falls exponentially with area, so a small die dodges defects far more often. But each split adds area for the links between chiplets, so the saving shrinks: 4 chiplets get you to $580, and it takes 8 to go below half."
     },
     {
       "kind": "Experiment",
       "lens": "break",
       "title": "The yield cliff",
       "task": "Raise the defect density on one AI GPU die until fewer than 1 in 10 dies work. How dirty is that, and what does each working chip cost then?",
-      "href": "#lab-yield-1"
+      "href": "#lab-yield-1",
+      "check": [[{"id": "ydW", "eq": 26}, {"id": "ydH", "eq": 32}, {"id": "ydSplit", "on": "1"}, {"id": "ydY", "lt": 10}, {"id": "ydY", "gte": 9}]],
+      "hint": "Keep one big AI GPU die and raise the defect density slowly. Watch the model yield fall below 10%.",
+      "why": "At about 0.28 defects per cm², fewer than 1 in 10 dies of this size work, and each working chip costs about $4,800 of silicon. A die this big turns a slightly dirty fab into a very expensive one, which is why new nodes start with small chips."
     },
     {
       "kind": "Experiment",
       "lens": "imagine",
       "title": "A $45,000 wafer",
       "task": "Suppose wafers at a future node cost $45,000. Keep the silicon for a working AI GPU under $1,000: how clean must the fab be for one big die, and how much dirt can 8 chiplets tolerate?",
-      "href": "#lab-yield-1"
+      "href": "#lab-yield-1",
+      "check": [[{"id": "ydW", "eq": 26}, {"id": "ydH", "eq": 32}, {"id": "ydC", "eq": 45}, {"id": "ydSplit", "on": "1"}, {"id": "ydCost", "lt": 1000}]],
+      "hint": "Set the wafer price to $45k and keep one die. Lower the defect density until a working chip costs less than $1,000. Then try 8 chiplets.",
+      "why": "One big die stays under $1,000 only while the fab is very clean, about 0.04 defects per cm² or less. Split into 8 chiplets, it stays under $1,000 even at 0.2. Dearer wafers make chiplets more attractive, not less."
     }
   ],
   "learn": {

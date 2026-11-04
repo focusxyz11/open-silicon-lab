@@ -131,6 +131,13 @@ async function check(viewport) {
     if (await page.evaluate(v => document.getElementById('view-' + v).hidden, v)) problems.push(tag + v + ' view did not open');
   }
 
+  // "I tried it" on a challenge the simulation cannot check: it counts as solved and the card moves on.
+  await go(page, 'tiny');
+  const before = await page.textContent('#tiny > .mission h3');
+  await page.click('#tiny > .mission [data-tried]');
+  await page.waitForTimeout(150);
+  if ((await page.textContent('#tiny > .mission h3')) === before || !(await page.$('#tiny > .chwin'))) problems.push(tag + '"I tried it" did not move the mission card on');
+  await page.evaluate(() => localStorage.removeItem('osl-solved-v1'));
   // The litho page: its long passage folds, its wall chip finds the debate, and its facts fold into Go deeper.
   await go(page, 'litho');
   const fold = await page.evaluate(() => { const b = document.querySelector('#litho .pmorebtn'); if (!b) return 'no fold'; b.click(); const open = !document.querySelector('#litho .pmore').hidden; b.click(); return open ? 'ok' : 'did not open'; });

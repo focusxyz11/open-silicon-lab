@@ -74,14 +74,20 @@
       "lens": "break",
       "title": "Four bits, despite outliers",
       "task": "With 1% outliers in the weights, fit a 70B model in under 40 GB and keep the signal-to-noise above 20 dB.",
-      "href": "#lab-accelerators-3"
+      "href": "#lab-accelerators-3",
+      "check": [[{"id": "qzOut", "gte": 1}, {"id": "qzMem", "lt": 40}, {"id": "qzSnr", "gt": 20}]],
+      "hint": "Only 4-bit formats fit under 40 GB. Then try each way of scaling.",
+      "why": "Only FP4 with one scale per block of 16 weights works: 39.4 GB and about 20.5 dB. With one scale for the whole tensor, a few large outliers stretch the scale and crush every small weight to zero. Small blocks keep each scale local, at the cost of half a bit per weight."
     },
     {
       "kind": "Puzzle",
       "lens": "build",
       "title": "Read fast, write slow",
       "task": "On Rubin with a 70B model, find how long a prompt must be before reading it takes as long as writing a 270-token answer.",
-      "href": "#lab-accelerators-4"
+      "href": "#lab-accelerators-4",
+      "check": [[{"id": "pdChip", "on": "Rubin"}, {"id": "pdModel", "on": "70B"}, {"id": "pdOutO", "eq": 270}, {"id": "pdInO", "gte": 65000}, {"id": "pdInO", "lte": 90000}]],
+      "hint": "Keep the answer at 270 tokens and lengthen the prompt until the time to first token is close to the time spent writing.",
+      "why": "It takes a prompt of about 77,000 tokens. Reading the prompt works on all its tokens at once, so the chip computes at full speed; writing produces one token at a time and waits for memory each time. Per token, reading is about 280 times faster."
     }
   ],
   "learn": {

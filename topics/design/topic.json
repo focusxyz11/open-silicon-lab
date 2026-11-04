@@ -56,21 +56,30 @@
       "lens": "break",
       "title": "Pass the slow corner",
       "task": "At a 4 GHz clock, add the fewest pipeline registers that still pass sign-off on a hot, low-voltage chip. What does it cost in latency?",
-      "href": "#lab-design-3"
+      "href": "#lab-design-3",
+      "check": [[{"id": "tmP", "eq": 250}, {"id": "tmCorner", "on": "Slow"}, {"id": "tmCuts", "on": "2"}, {"id": "tmS", "gt": 0}]],
+      "hint": "Choose the slow corner first. One register is enough at the typical corner, but not at the slow one.",
+      "why": "Two registers pass at the slow corner, at the cost of 3 cycles of latency instead of 2. Sign-off must pass at the slow corner, because some chips will run hot at low voltage, and a design that only passes on a typical chip fails in the field."
     },
     {
       "kind": "Design",
       "lens": "build",
       "title": "Half the power",
       "task": "Start at 3 GHz and 0.75 V, about 51 W. Find the fastest clock that runs safely on less than half that power.",
-      "href": "#lab-design-4"
+      "href": "#lab-design-4",
+      "check": [[{"id": "pwA", "eq": 0.15}, {"id": "pwStatus", "has": "Runs"}, {"id": "pwF", "gte": 2.2}, {"id": "pwT", "lt": 25.5}]],
+      "hint": "Lower the clock, then press \"Use the lowest safe voltage\" each time.",
+      "why": "About 2.25 GHz runs on 25 W: half the power for a quarter less speed. Power grows with voltage squared, and a slower clock lets the chip run at a lower voltage, so power falls much faster than speed. Phones and data centers both live on this trade."
     },
     {
       "kind": "Experiment",
       "lens": "imagine",
       "title": "Close coverage with an agent",
       "task": "Run 100,000 random tests and count the bugs still hiding, then let AI-guided tests try. How many tests does each need to find all 7?",
-      "href": "#lab-design-5"
+      "href": "#lab-design-5",
+      "check": [[{"id": "cvTag", "has": "Finished random"}], [{"id": "cvTag", "has": "Finished AI-guided"}, {"id": "cvB", "has": "7 of 7"}]],
+      "hint": "Run each kind of test to the end and compare the number of tests and the bugs found.",
+      "why": "Random tests keep hitting the common cases, so after 100,000 runs one or two bugs in the rarest corners are usually still hiding. Guided tests aim at the bins nobody has hit and find all 7 in about 30,000. Engineers still decide what the coverage bins should be."
     }
   ],
   "learn": {
