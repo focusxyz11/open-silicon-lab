@@ -6,6 +6,8 @@ Thanks for helping. Corrections, new simulations and new challenges are all welc
 2. Run the lab locally with `npm start`, and the tests with `npm test` (and `npm run test:browser` if you have Playwright).
 3. Keep changes focused, and explain them in the pull request.
 
+**Not ready to write code?** The site's **Frontier** tab opens prefilled forms: **Propose a challenge** (a goal someone can reach in a simulation) or **Add a view** (an answer people give to an open problem, with what it assumes). Rough ideas are welcome; others can sharpen them in the issue.
+
 **Fixing a fact?** Edit `src/data/facts.json`: update `value`, `source`, `url` and `verified`, and move the old value into `previous`. Link the source in the PR.
 
 **Changing words in the interface?** They live in `src/i18n/en.json`. Code asks for them by name with `t('name')`; never write visible English in `src/app`, `src/labs` or `src/core`. Open the site with `?lang=qps` to see which words still bypass the text file.

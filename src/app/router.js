@@ -116,7 +116,7 @@ function route() {
   if (h === 'whatif') { show('map'); curTopic = null; setWhatif(true); return; }
   if (h === 'workshop') { renderWorkshop(); show('workshop'); scrollTo({ top: 0, behavior: 'instant' }); return; }
   if (h === 'break' || h === 'imagine') { renderDoor(h); show(h); scrollTo({ top: 0, behavior: 'instant' }); return; }
-  if (h === 'challenges') { renderChallenges(); show('challenges'); scrollTo({ top: 0, behavior: 'instant' }); return; }
+  if (h === 'challenges' || h === 'frontier') { renderChallenges(); show('challenges'); scrollTo({ top: 0, behavior: 'instant' }); return; }
   if (h === 'mychip') { renderMyChip(); show('mychip'); scrollTo({ top: 0, behavior: 'instant' }); return; }
   if (h === 'knowledge') { renderKnowledge(); show('knowledge'); scrollTo({ top: 0, behavior: 'instant' }); return; }
   const rv = /^riscv-(\d+|sandbox)$/.exec(h);

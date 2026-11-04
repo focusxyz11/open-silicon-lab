@@ -722,3 +722,50 @@ span.fmp{cursor:default}
 @keyframes oslflash{0%,30%{box-shadow:0 0 0 3px var(--amber)}100%{box-shadow:0 0 0 0 transparent}}
 @media(max-width:560px){.mission{padding:16px}}
 .hubcard.debate{scroll-margin-top:84px}
+
+/* ---- The Frontier tab (src/app/frontier-page.js) ---- */
+#view-challenges>section{margin-bottom:44px}
+#view-challenges .dhead{padding-bottom:8px}
+#view-challenges .dhead h1{max-width:22ch}
+.fsh{display:grid;gap:6px;margin-bottom:16px;max-width:70ch}
+.fsh .code{color:var(--amber)}
+.fsh h2{font:680 clamp(24px,3vw,32px)/1.15 var(--display);font-stretch:106%;letter-spacing:-.01em}
+.fways{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.fway{display:grid;gap:8px;align-content:start;padding:18px;border:1px solid var(--line);border-top:4px solid var(--lc);border-radius:10px;background:var(--surface)}
+.fway .code{color:var(--lc)}
+.fway h3{font:650 19px/1.2 var(--display);font-stretch:106%}
+.fway p:not(.code){color:var(--muted);font-size:14.5px;line-height:1.45}
+.fway .btn{justify-self:start;margin-top:4px}
+.fwgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
+.fwall{display:flex;flex-direction:column;gap:10px;padding:18px;border:1px solid var(--line);border-left:4px solid var(--amber);border-radius:10px;background:var(--surface);scroll-margin-top:84px}
+.fwall>.code{display:flex;flex-wrap:wrap;align-items:center;gap:8px;color:var(--amber)}
+.fwall>.code .pill{color:var(--violet);border-color:var(--violet)}
+.fwall h3{font:650 19px/1.2 var(--display);font-stretch:106%}
+.fwall>.row{margin-top:auto}
+.fwall .q{font-size:14.5px;line-height:1.45}
+.fwall.add{border-style:dashed;border-left-width:1px;background:transparent;color:var(--ink);text-decoration:none}
+.fwall.add:hover{border-color:var(--muted)}
+.fwall.add p{color:var(--muted);font-size:14.5px}
+.fviews{list-style:none;display:grid;gap:4px;margin:0;padding:0}
+.fviews li{display:flex;justify-content:space-between;gap:10px;padding:6px 10px;border-radius:6px;background:color-mix(in srgb,var(--ink) 4%,transparent);font-size:13.5px}
+.fviews li span{color:var(--muted);font-family:var(--mono);font-size:12px;white-space:nowrap}
+.fviews li.thin span{color:var(--bad)}
+.fviews li.on{box-shadow:inset 3px 0 0 var(--violet)}
+.fwcols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:24px}
+.fwcols h3{font:620 16px/1.3 var(--display);margin-bottom:10px}
+.fwlist{display:grid;gap:8px}
+.fwant{display:grid;gap:3px;padding:12px 14px;border:1px dashed color-mix(in srgb,var(--amber) 60%,var(--line));border-radius:8px;color:var(--ink);text-decoration:none;background:color-mix(in srgb,var(--amber) 5%,transparent)}
+.fwant:hover{border-style:solid}
+.fwant small{color:var(--muted);font-size:12.5px}
+.fwant b{font-weight:620}
+.fwant span{color:var(--cyan);font-size:13.5px}
+.fwcells{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.fwcells .fmp{border-style:dashed;background:transparent}
+.fcgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;margin-bottom:12px}
+.fcd{display:grid;gap:5px;align-content:start;padding:14px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);text-decoration:none}
+.fcd:hover{border-color:var(--muted)}
+.fcd small{color:var(--muted);font-size:13.5px;line-height:1.4}
+.fcd .code{color:var(--good)}
+.fcd.add{border-style:dashed;background:transparent}
+.frmap{scroll-margin-top:70px}
+@media(max-width:760px){.fwcols{grid-template-columns:minmax(0,1fr)}}

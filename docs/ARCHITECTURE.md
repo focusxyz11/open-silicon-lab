@@ -117,7 +117,7 @@ A topic loads once and stays on the page. Code in one topic that needs another (
 | `#map` or empty | the chip stack map |
 | `#whatif` | the map in What if? mode, with the levers open |
 | `#workshop`, `#break`, `#imagine` | the Build, Break and Imagine doors (`#map` is Explore) |
-| `#challenges` | the whole frontier map |
+| `#frontier` (or `#challenges`) | the Frontier tab: walls, gaps, the community chip and the whole frontier map |
 | `#knowledge`, `#mychip` | reference views, linked from the footer and the Build door |
 | `#<topic>` | one topic, challenge first: breadcrumb, thread bar, mission card, simulations, the open problems, connections, then facts and big ideas folded into Go deeper |
 | `#lab-<topic>-<n>` or any element id | its topic, scrolled to that element |
@@ -209,7 +209,11 @@ When a topic loads, `challengeFirst(id, section)` turns its page around so a rea
 
 The top bar has four doors: **Explore** (the home page: rack to atom and the map), **Build** (`#workshop`), **Break** (`#break`) and **Imagine** (`#imagine`), then the whole frontier map. Each of the last three opens with a head (`doorHead`), its projects as cards (`project`: a topic or a page, with its challenge count), and its own column of the frontier map beside the walls (`doorMap`, which calls `renderFrontier(el, { lens })`). The Build door keeps the three connected builds, the community chip, My chip and the playground of every simulation. Knowledge is a reference, so it moved to the footer. Each door keeps its own map state, so picking a wall in one does not change another.
 
-## The frontier map: the challenges page (`src/app/frontier.js`)
+## The Frontier tab (`src/app/frontier-page.js`)
+
+The fifth tab is where the lab works on what nobody has solved. From the top: four ways to take part (lean and test, propose a challenge, add a view, design for the shared chip); a card for each wall with its answers and how many challenges test each (fewer than three is marked thin), the reader's lean, **See it on the map** (`pickWall` in `frontier.js`) and **Add a view**; the gaps (`gaps()`: answers tested by fewer than three challenges, and places on the map with no challenge), each opening a prefilled proposal; the community chip's designs; and the whole frontier map. Proposals are GitHub issues from `.github/ISSUE_TEMPLATE/challenge.yml` and `view.yml`; `issueURL(template, fields)` fills any of a form's fields by id. Nothing is fetched from GitHub: an accepted proposal becomes a challenge, a view in `src/data/debates.js` or a design in `community/`, and shows up here through the catalog.
+
+## The frontier map (`src/app/frontier.js`)
 
 Every challenge in the lab on one picture. Rows are the bands, from the world down to atoms. Columns run from known to unknown: **Build** (make it work), **Break** (find where it fails), **Imagine** (try what could come next), and the **walls**: the open problems in `src/data/debates.js`, which nobody has solved. A challenge's column is its `lens` in its topic.json (`npm run catalog` rejects a missing one). Each wall sits beside the bands its views touch. Pick a wall and the panel shows its debate (lean towards a view, as anywhere else), with the challenges that test each view and a line from each of them to the wall; pick a challenge to see the walls it helps with. A big idea lights up every challenge whose topic shows it. Empty bands and views no challenge tests invite a proposal (a prefilled GitHub issue), so the map also shows where the lab is thin. Walls and lines are placed after layout and again on resize; on a phone the map shows one column at a time. `tests/frontier.test.mjs` checks every challenge has a lens and every debate names real topics.
 

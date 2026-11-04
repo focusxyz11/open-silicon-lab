@@ -32,7 +32,7 @@ export function missionHTML(id, title) {
     return '<div class="mission free"><p class="code">' + t('mission.free.code') + '</p>' +
       '<h3>' + t('mission.free.t', { n: labs.length }) + '</h3><p class="mtask">' + t('mission.free.d') + '</p>' +
       '<div class="row">' + (first ? '<a class="btn primary" href="#' + first.id + '">' + esc(t('mission.free.start', { lab: first.t })) + '</a>' : '') +
-      '<a class="btn" href="' + esc(issueURL('idea', { title: '[Challenge] ' + title + ': ', topic: id })) + '" target="_blank" rel="noopener">' + t('mission.propose') + '</a></div>' +
+      '<a class="btn" href="' + esc(issueURL('challenge', { title: '[Challenge] ' + title + ': ', topic: id })) + '" target="_blank" rel="noopener">' + t('mission.propose') + '</a></div>' +
       wallsLine(id) + '</div>';
   }
   const [c, ...rest] = ch;

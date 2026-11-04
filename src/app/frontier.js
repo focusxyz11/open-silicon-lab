@@ -27,7 +27,7 @@ const done = c => { const m = /^#riscv-(\d+)$/.exec(c.href); return m ? levelSta
 let root = null;
 
 /* v: the element to draw into. opts.lens: draw only that column and the walls (a door page);
-   opts.head: also draw the page heading (the whole map, on the challenges page). */
+   without it, the whole map (on the Frontier page, src/app/frontier-page.js, which draws the heading). */
 export function renderFrontier(v, opts = {}) {
   root = v; mode = opts;
   const key = opts.lens || 'all';
@@ -38,12 +38,12 @@ export function renderFrontier(v, opts = {}) {
   const rows = BANDS.map(b => {
     const empty = !CHALLENGES.some(c => (topicById(c.topic) || {}).band === b.id);
     const cells = lensesHere.map((k, j) => '<div class="fmc fc-' + k + '">' + inBand(b.id, k).map(pill).join('') +
-      (empty && j === 0 ? '<a class="fmghost" href="' + esc(issueURL('idea', { title: t('fm.proposeCh', { band: b.t }) })) + '" target="_blank" rel="noopener">' + t('fm.empty') + '</a>' : '') + '</div>').join('');
+      (empty && j === 0 ? '<a class="fmghost" href="' + esc(issueURL('challenge', { title: '[Challenge] ' + t('fm.proposeCh', { band: b.t }) })) + '" target="_blank" rel="noopener">' + t('fm.empty') + '</a>' : '') + '</div>').join('');
     return '<div class="fmr" data-band="' + b.id + '"><div class="fml"><b>' + esc(b.t) + '</b><small>' + esc(b.d) + '</small></div>' + cells + '</div>';
   }).join('');
   const walls = DEBATES.map(d => '<button type="button" class="fmw" data-w="' + d.id + '"><small>' + t('fm.views', { n: d.views.length }) + '</small>' + esc(d.t) + '</button>').join('') +
-    '<a class="fmw propose" href="' + esc(issueURL('idea', { title: t('fm.proposeWall') })) + '" target="_blank" rel="noopener">' + t('fm.wallMissed') + '</a>';
-  v.innerHTML = (opts.head ? '<section class="wrap vhead"><p class="eyebrow">' + t('ch.eyebrow') + '</p><h1>' + t('fm.title') + '</h1><p class="lede">' + t('fm.lede') + '</p></section>' : '') +
+    '<a class="fmw propose" href="' + esc(issueURL('view', { title: '[View] ' + t('fm.proposeWall') })) + '" target="_blank" rel="noopener">' + t('fm.wallMissed') + '</a>';
+  v.innerHTML =
     '<section class="wrap"><div class="vbar fmbar">' +
       (opts.lens ? '' : '<div class="seg fmwide" role="group" aria-label="' + t('fm.show') + '">' + [''].concat(LENSES).map(k => '<button type="button" data-f="' + k + '" aria-pressed="' + (st.f === k) + '">' + (k ? '<i class="dot fc-' + k + '"></i>' + t('fm.col.' + k + '.t') + ' <small>' + n[k] + '</small>' : t('ch.all') + ' <small>' + CHALLENGES.length + '</small>') + '</button>').join('') + '</div>') +
       '<div class="seg fmnarrow" role="group" aria-label="' + t('fm.show') + '">' + colsHere.map(k => '<button type="button" data-col="' + k + '" aria-pressed="' + (st.col === k) + '"><i class="dot fc-' + k + '"></i>' + t('fm.col.' + k + '.t') + '</button>').join('') + '</div>' +
@@ -160,6 +160,13 @@ function wire() {
 function reveal() {
   const el = root.querySelector('.fmpanel'); if (!st.sel || getComputedStyle(root.querySelector('.fmwalls')).position === 'absolute') return;
   el.scrollIntoView({ block: 'start', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+}
+
+/* The Frontier page's wall cards pick a wall on the whole map. */
+export function pickWall(id) {
+  const s = STATES.all; if (!s) return;
+  s.sel = { w: id }; s.col = 'walls';   /* a phone shows the walls column */
+  if (st === s && root && root.querySelector('.fm')) { paint(); }
 }
 
 /* Walls and lines follow the layout when the window changes size. */
