@@ -169,8 +169,8 @@ async function check(viewport) {
   // A depth lab keeps its picture near the top, with the challenge card short above it.
   for (const id of ['yield', 'quantum']) {
     await go(page, id);
-    const top = await page.evaluate(id => document.querySelector('#' + id + ' .depthview').getBoundingClientRect().top, id);
-    if (top > viewport.height * (tag ? 0.95 : 0.7)) problems.push(tag + '#' + id + ': the picture starts too far down (' + Math.round(top) + ' px)');
+    const gap = await page.evaluate(id => document.querySelector('#' + id + ' .depthview').getBoundingClientRect().top - document.querySelector('#' + id + ' > .mission').getBoundingClientRect().top, id);
+    if (gap > (tag ? 420 : 320)) problems.push(tag + '#' + id + ': the picture starts ' + Math.round(gap) + ' px below the top of the challenge card');
   }
   await go(page, 'lab-quantum-1');
   await page.click('#qcGoals [data-g="bell"]');
