@@ -56,6 +56,7 @@
   "challenges": [
     {
       "kind": "Experiment",
+      "lens": "imagine",
       "title": "Fewest bits that still work",
       "task": "Find the cheapest converter that keeps an analog crossbar within 5% of exact.",
       "href": "#lab-cim-1"

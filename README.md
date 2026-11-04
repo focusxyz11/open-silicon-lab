@@ -4,10 +4,12 @@ An open-source, hands-on lab for how chips are designed, made and used — from 
 
 **Try it: <https://focusxyz11.github.io/open-silicon-lab/>**
 
-It is not a textbook. Everything is a simulation you can play with, a puzzle, or a build: about 90 simulations across 40 topics.
+It is not a textbook. Everything is a simulation you can play with, a puzzle, or a build: about 90 simulations across 39 topics. The top bar has four doors: **Explore** the chip from rack to atom, **Build** something that works, **Break** it to find where it fails, and **Imagine** what could come next, plus the **Frontier**, where the lab works on what nobody has solved. Every topic page opens with a challenge, then the simulation; the reading, facts and big ideas are one click away. What you will find:
 
-- **Chip stack map** — the home page. Every topic sits in its layer of the chip stack (atoms → transistors → processors → design → manufacturing → packaging → specialized computing → devices and data centers → industry → future → big questions). Links say what kind of connection they are (part of, feeds, causes, builds on…), and lenses show one kind at a time. Follow a *thread* for a suggested route. Nothing is locked.
+- **Rack to atom** — the top of the home page. Zoom from an AI rack down to silicon atoms, and at every level choose a lens: explore what you see, build something at that scale, break it, or imagine what comes next. At the compute die, the die becomes the map of the whole lab. A light/dark switch sits in the top bar.
+- **Chip stack map** — the rest of the home page. Every topic sits in its layer of the chip stack (atoms → transistors → processors → design → manufacturing → packaging → specialized computing → devices and data centers → industry → future → big questions). Links say what kind of connection they are (part of, feeds, causes, builds on…), and lenses show one kind at a time. Follow a *thread* for a suggested route. Nothing is locked.
 - **Build your own chip** — one design of yours, from gates to files a real factory accepts. Write logic in the tiny-chip studio and take it through verification, synthesis, layout, masks, fab and test; add memory with flip-flops (`reg`) and watch a counter tick; let your ALU slice run inside a **RISC-V** CPU, so a bug in your gates breaks the processor; then export a ready [Tiny Tapeout](https://tinytapeout.com/) project (clocked Verilog, info.yaml, a cocotb test) that real open-source chip tools check in CI.
+- **More builds** — program and extend a **RISC-V** CPU with your own AI instruction, then architect an AI chip for a mission and compare it with real 2026 chips. The Build door gathers them, with a playground of every simulation, including a teardown of the chips inside a phone, a car, a thermostat, a laptop and an AI server.
 - **Zoom into your chip** — your own design at seven scales, from the demo board on your desk to one transistor switching: package, shared chip, your tile, your placed and routed cells, one cell's transistors. Flip a switch and follow the value all the way down.
 - **My chip** — your design carried through every layer: every topic page shows what that layer means for it (masks, weeks in the fab, yield, cost, distance from the limits of physics), and a passport collects a stamp for each stage.
 - **The community chip** — learners' designs side by side in one real Tiny Tapeout tile, behind a selector. Add yours from the studio with one click (it opens GitHub with the file written), see the shared tile fill up, and download the whole chip ready for a shuttle.
@@ -20,7 +22,8 @@ It is not a textbook. Everything is a simulation you can play with, a puzzle, or
 - **Your bench** — test a chip the way engineers do: twin-test every input pattern against the simulation and track a defect to the broken wire, on a virtual board or, as boards join, real hardware through the open Open Bench Protocol. See [docs/HARDWARE.md](docs/HARDWARE.md).
 - **Time machine** — drag from 1971 to 2040 and the whole site follows: transistor counts, process nodes, printing light, design cost, which companies exist. History to 2026, labelled projections after.
 - **Design with an AI agent** — an agent proposes designs, code and facts; you check them with the lab's engines and decide what to trust.
-- **Challenges and Knowledge** — puzzles, designs and experiments; debates where every side gets its best case and its assumption; big ideas, trade-offs and measures that echo across layers; a glossary; and dated, sourced facts, rechecked monthly.
+- **Frontier** — where the lab works on what nobody has solved. The open problems (walls), the answers people give and how well each is tested; the gaps nobody has filled yet; the community chip; and the whole frontier map, every challenge by layer and by how far it reaches. Propose a challenge or a view on an open problem from a prefilled form: every proposal is a GitHub issue anyone can read and improve.
+- **Knowledge** (in the footer) — big ideas, trade-offs and measures that echo across layers, a glossary, and dated, sourced facts, rechecked monthly.
 
 There is a Beginner / Engineer switch for explanations. When the lab is opened inside Claude, an "Ask Claude" tutor and a RISC-V copilot appear.
 
@@ -51,7 +54,7 @@ GitHub Actions runs all four on every pull request and deploys `main` to GitHub 
 ## Project layout
 
 ```
-index.html               app shell: top bar and the views (map, topic, workshop, challenges, knowledge, my chip)
+index.html               app shell: top bar and the views (map, topic, the Build, Break and Imagine doors, Frontier, knowledge, my chip)
 topics/<id>/             one folder per topic: content.html, topic.json, labs/*.js, optional style.css
 topics/README.md         how a topic folder works, and how to start a new one   ← start here to contribute
 community/<name>/        designs for the community chip, one design.json each (see community/README.md)

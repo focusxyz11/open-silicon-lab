@@ -6,6 +6,7 @@
    ensureTopic(id) resolves to that topic's lab modules by name, e.g. mods['riscv-lab']. */
 import { TOPIC_FILES, LOADERS } from '../generated/catalog.js';
 import { prepareTopic } from './learning.js';
+import { challengeFirst } from './mission.js';
 import { t } from '../core/i18n.js';
 
 const REF = ['glossary', 'sources'];
@@ -59,6 +60,7 @@ async function load(id) {
     });
   }
   prepareTopic(id, sec, learn);
+  if (!ref) challengeFirst(id, sec);
   document.dispatchEvent(new CustomEvent('osl:topic-loaded', { detail: { id } }));
   return mods;
 }

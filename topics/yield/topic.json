@@ -62,7 +62,29 @@
       ]
     ]
   },
-  "challenges": [],
+  "challenges": [
+    {
+      "kind": "Puzzle",
+      "lens": "build",
+      "title": "Half price by chiplets",
+      "task": "Split the AI GPU die until a working chip costs less than half as much silicon as one big die. What is the smallest split that does it?",
+      "href": "#lab-yield-1"
+    },
+    {
+      "kind": "Experiment",
+      "lens": "break",
+      "title": "The yield cliff",
+      "task": "Raise the defect density on one AI GPU die until fewer than 1 in 10 dies work. How dirty is that, and what does each working chip cost then?",
+      "href": "#lab-yield-1"
+    },
+    {
+      "kind": "Experiment",
+      "lens": "imagine",
+      "title": "A $45,000 wafer",
+      "task": "Suppose wafers at a future node cost $45,000. Keep the silicon for a working AI GPU under $1,000: how clean must the fab be for one big die, and how much dirt can 8 chiplets tolerate?",
+      "href": "#lab-yield-1"
+    }
+  ],
   "learn": {
     "plain": "Picture raindrops falling on a tiled floor: any tile hit by a drop is ruined. Big tiles get hit more often, so cutting a design into smaller tiles (chiplets) wastes less.",
     "engineer": "Common yield models are Poisson e^(−AD₀), Murphy ((1 − e^(−AD₀)) ÷ AD₀)² and negative binomial (1 + AD₀/α)^(−α), where α captures how defects cluster. Defect density falls along a learning curve as a node ramps. Redundancy (spare memory rows, fused-off cores) and binning recover partly defective dies, which is why many products ship with some units disabled.",

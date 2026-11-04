@@ -44,6 +44,7 @@ function measureCard(id, here, use) {
 /* ---- debates ---- */
 const LKEY = 'osl-lean-v1';
 let LEAN = {}; try { LEAN = JSON.parse(localStorage.getItem(LKEY) || '{}') || {}; } catch (e) { LEAN = {}; }
+export const leanOf = id => LEAN[id];
 const saveLean = () => { try { localStorage.setItem(LKEY, JSON.stringify(LEAN)); } catch (e) { /* storage unavailable */ } };
 
 function debateBody(d) {
@@ -57,7 +58,7 @@ function debateBody(d) {
       '<button type="button" class="btn" data-lean="' + d.id + '" data-v="' + i + '" aria-pressed="' + (lean === i) + '">' + (lean === i ? t('hub.leanOn') : t('hub.lean')) + '</button></div>').join('') + '</div>' +
     (chosen ? '<p class="mind">' + t('hub.mind', { assumes: esc(chosen.assumes.replace(/\.$/, '')), topics: esc(orList(chosen.topics.map(id => topicById(id).t))), others: d.views.filter((_, i) => i !== lean).map(v => esc(v.assumes.replace(/\.$/, '').toLowerCase())).join('; ') }) + ' <button type="button" class="linkbtn" data-lean="' + d.id + '" data-v="">' + t('hub.undecided') + '</button></p>' : '<p class="small muted">' + t('hub.weigh') + '</p>');
 }
-function debateCard(d) {
+export function debateCard(d) {
   return '<article class="hubcard debate" data-debate="' + d.id + '"><p class="code">' + t('hub.debateCode') + '</p><h4>' + esc(d.t) + '</h4><p class="q">' + esc(d.q) + '</p><div class="dbody">' + debateBody(d) + '</div></article>';
 }
 document.addEventListener('click', e => {
@@ -70,12 +71,16 @@ document.addEventListener('click', e => {
 
 /* ---- where they appear ---- */
 /* On a topic page: the trade-offs, measures and debates this topic takes part in. */
-export function hubsHTML(id) {
-  const ts = tradeoffsOf(id), ms = measuresOf(id), ds = debatesOf(id);
-  if (!ts.length && !ms.length && !ds.length) return '';
-  return '<div class="hblock hubs"><p class="code">' + t('hub.title') + '</p>' +
-    (ts.length || ms.length ? '<div class="hubgrid">' + ts.map(u => tradeoffCard(u.tradeoff, id, u)).join('') + ms.map(u => measureCard(u.measure, id, u)).join('') + '</div>' : '') +
-    (ds.length ? '<div class="hubgrid wide">' + ds.map(debateCard).join('') + '</div>' : '') + '</div>';
+/* The same, split for the challenge-first topic page: the open problems stay in view, the
+   trade-offs and measures fold into "Go deeper" (bare: no title, the fold has one). */
+export function wallsHTML(id) {
+  const ds = debatesOf(id);
+  return ds.length ? '<div class="hblock hubs walls"><p class="code">' + t('wall.title', { n: ds.length }) + '</p><div class="hubgrid wide">' + ds.map(debateCard).join('') + '</div></div>' : '';
+}
+export const thinkCount = id => tradeoffsOf(id).length + measuresOf(id).length;
+export function thinkHTML(id) {
+  const ts = tradeoffsOf(id), ms = measuresOf(id);
+  return ts.length || ms.length ? '<div class="hubgrid">' + ts.map(u => tradeoffCard(u.tradeoff, id, u)).join('') + ms.map(u => measureCard(u.measure, id, u)).join('') + '</div>' : '';
 }
 export const allTradeoffsHTML = () => '<div class="hubgrid">' + TRADEOFFS.map(t => tradeoffCard(t.id, null, null)).join('') + '</div>';
 export const allMeasuresHTML = () => '<div class="hubgrid">' + MEASURES.map(m => measureCard(m.id, null, null)).join('') + '</div>';

@@ -3,7 +3,7 @@
 // Needs Playwright with Chromium (npx playwright install chromium).
 import { createRequire } from 'node:module';
 import { serve } from './serve.mjs';
-import { TOPICS } from '../src/data/topics.js';
+import { TOPICS, DEBATES } from '../src/data/topics.js';
 import { ANCHORS } from '../src/generated/catalog.js';
 
 const require = createRequire(import.meta.url);
@@ -53,11 +53,25 @@ async function check(viewport) {
   await page.click('#mInfo [data-idea="keep-data-close"]');
   if ((await page.$$('.tnode.hit')).length < 4 || !(await page.$('#mSvg path.idea'))) problems.push(tag + 'big-idea lens did not trace "Keep data close"');
   await page.click('#mLens [data-lens=""]');
-  // Debates: lean one way and the page asks what would change your mind.
+  // The frontier map: a wall (an open problem) lights up the challenges that test each view, and
+  // leaning one way in its debate asks what would change your mind.
   await go(page, 'challenges');
+  if ((await page.$$('#view-challenges .fm .fmp')).length < 60) problems.push(tag + 'the frontier map should place every challenge');
+  if (await page.evaluate(() => getComputedStyle(document.querySelector('#view-challenges .fmnarrow')).display !== 'none')) await page.click('#view-challenges .fmnarrow [data-col="walls"]');   // a phone shows one column at a time
+  await page.click('#view-challenges .fm .fmw[data-w="bigdie"]');
+  if (!(await page.$('#view-challenges .fmpanel [data-debate="bigdie"]')) || !(await page.$$('#view-challenges .fmpanel .fmtry')).length) problems.push(tag + 'picking a wall did not show its debate and the challenges that test it');
   await page.click('[data-debate="bigdie"] [data-lean][data-v="1"]');
   if (!/What would change your mind/.test(await page.textContent('[data-debate="bigdie"]'))) problems.push(tag + 'leaning in a debate did not ask what would change your mind');
   await page.click('[data-debate="bigdie"] [data-lean][data-v="1"]');
+  /* The Frontier tab around the map: a card for every wall, the gaps, and "See it on the map" picks that wall. */
+  await go(page, 'frontier');
+  const fr = await page.evaluate(() => ({ walls: document.querySelectorAll('#view-challenges .fwall[data-wall]').length, wanted: document.querySelectorAll('#view-challenges .fwant, #view-challenges .fwcells .fmp').length, forms: [...document.querySelectorAll('#view-challenges .fways a[target]')].map(a => a.href) }));
+  if (fr.walls !== DEBATES.length) problems.push(tag + 'Frontier: ' + fr.walls + ' wall cards for ' + DEBATES.length + ' walls');
+  if (!fr.wanted) problems.push(tag + 'Frontier: no gaps listed');
+  if (fr.forms.length !== 2 || !fr.forms.every(h => /\/issues\/new\?template=(challenge|view)\.yml/.test(h))) problems.push(tag + 'Frontier: the proposal forms are not wired (' + fr.forms.join(', ') + ')');
+  await page.click('#view-challenges .fwall[data-wall="power"] [data-pick]');
+  await page.waitForTimeout(150);
+  if (!(await page.$('#view-challenges .fmpanel [data-debate="power"]'))) problems.push(tag + 'Frontier: "See it on the map" did not pick the wall');
   await go(page, 'map');
   await page.fill('#mSearch', 'HBM');
   if (!(await page.$$('#mInfo .hits a')).length) problems.push(tag + 'search found nothing for HBM');
@@ -88,24 +102,42 @@ async function check(viewport) {
   const ids = TOPICS.map(t => t.id).concat(REF);
   for (const id of ids) {
     try { await go(page, id); } catch (e) { problems.push(tag + `#${id}: did not open (${e.message.split('\n')[0]})`); continue; }
-    const r = await page.evaluate(id => {
+    const r = await page.evaluate(([id, REF_IDS]) => {
       const s = document.getElementById(id);
       const shown = [...document.querySelectorAll('#library > section')].filter(x => !x.hidden).map(x => x.id);
       const blank = [...s.querySelectorAll('canvas')].filter(c => c.offsetParent && (c.width < 2 || c.height < 2)).length;
-      return { shown, blank, wide: document.documentElement.scrollWidth > innerWidth + 1 };
-    }, id);
+      /* Challenge first: a topic opens with its mission card, right under its question, and every
+         start link goes somewhere that exists. */
+      const m = s.querySelector(':scope > .mission'), start = m && m.querySelector('.row a.btn.primary');
+      const missionOk = REF_IDS.includes(id) || (!!m && m.previousElementSibling === s.querySelector(':scope > .head'));
+      return { shown, blank, wide: document.documentElement.scrollWidth > innerWidth + 1, missionOk, start: start ? start.getAttribute('href') : null };
+    }, [id, REF]);
+    if (!r.missionOk) problems.push(tag + `#${id}: no mission card under the question`);
+    if (r.start && !pageOf(r.start.slice(1)) && !['whatif', 'timeMachine', 'workshop'].includes(r.start.slice(1))) problems.push(tag + `#${id}: mission starts at ${r.start}, which leads nowhere`);
     if (r.shown.length !== 1 || r.shown[0] !== id) problems.push(tag + `#${id}: shows ${r.shown.join(',')}`);
     if (r.blank) problems.push(tag + `#${id}: ${r.blank} canvas(es) did not size`);
     if (r.wide) problems.push(tag + `#${id}: page scrolls sideways`);
   }
-  for (const v of ['workshop', 'challenges', 'knowledge']) {
+  /* The doors: Break and Imagine open with their projects and their own column of the frontier map. */
+  for (const [v, lens] of [['workshop', 'build'], ['break', 'break'], ['imagine', 'imagine']]) {
+    await page.evaluate(h => { location.hash = h; }, v);
+    await page.waitForTimeout(150);
+    const r = await page.evaluate(([v, lens]) => { const el = document.getElementById('view-' + v); const ps = [...el.querySelectorAll('.fm .fmp')]; return { n: ps.length, other: ps.filter(p => !p.classList.contains('fc-' + lens)).length, walls: el.querySelectorAll('.fm .fmw[data-w]').length }; }, [v, lens]);
+    if (!r.n || r.other || !r.walls) problems.push(tag + v + ' door should show only its ' + lens + ' challenges and the walls (got ' + JSON.stringify(r) + ')');
+  }
+  for (const v of ['workshop', 'break', 'imagine', 'challenges', 'knowledge']) {
     await page.evaluate(h => { location.hash = h; }, v);
     await page.waitForTimeout(120);
     if (await page.evaluate(v => document.getElementById('view-' + v).hidden, v)) problems.push(tag + v + ' view did not open');
   }
 
-  // Feedback: every topic offers prefilled GitHub forms, and the footer links work.
+  // The litho page: its long passage folds, its wall chip finds the debate, and its facts fold into Go deeper.
   await go(page, 'litho');
+  const fold = await page.evaluate(() => { const b = document.querySelector('#litho .pmorebtn'); if (!b) return 'no fold'; b.click(); const open = !document.querySelector('#litho .pmore').hidden; b.click(); return open ? 'ok' : 'did not open'; });
+  if (fold !== 'ok') problems.push(tag + 'litho: Read more ' + fold);
+  if (!await page.$('#topicFoot [data-debate="' + await page.$eval('#litho .mission [data-wall]', b => b.dataset.wall) + '"]')) problems.push(tag + 'litho: the wall in the mission card is not on the page');
+  if (!await page.$('#topicFoot details.deep.dfacts .factbox')) problems.push(tag + 'litho: facts are not folded into Go deeper');
+  // Feedback: every topic offers prefilled GitHub forms, and the footer links work.
   const fb = await page.$$eval('#topicFoot .feedback a', as => as.map(a => a.href));
   if (fb.length !== 2 || !fb.every(h => /\/issues\/new\?template=(correction|idea)\.yml/.test(h) && h.includes('topic=litho'))) problems.push(tag + 'topic feedback links are missing or wrong');
   const foot = await page.$$eval('#siteFoot a[data-issue], #siteFoot a[data-repo]', as => as.map(a => a.href));
@@ -204,14 +236,14 @@ async function check(viewport) {
   await page.close();
 }
 
-/* A first visit: nothing blocks the page. Three ways to start sit at the top of the map, tips appear
+/* A first visit: nothing blocks the page. The rack-to-atom hero sits at the top of the map, tips appear
    when a feature becomes useful and go away once it is used, and the tour opens only on request. */
 async function checkGuide(viewport) {
   const page = await browser.newPage({ viewport }); const tag = viewport.width < 600 ? '[mobile first visit] ' : '[first visit] ';
   page.on('pageerror', e => problems.push(tag + 'page error: ' + e.message + ' (' + String(e.stack || '').split('\n').slice(1, 3).map(l => l.trim()).join(' ← ') + ')'));
   await page.goto(base + 'index.html'); await page.waitForSelector('#mBands .tnode'); await page.waitForTimeout(1200);
   if (await page.$('.g-card')) problems.push(tag + 'the tour opened by itself');
-  if ((await page.$$('.maphero .door')).length !== 3) problems.push(tag + 'the map should show three ways to start');
+  if ((await page.$$('.hero .hlens')).length !== 4) problems.push(tag + 'the hero should offer four lenses: explore, build, break, imagine');
   /* Scrolling to the map brings the "select a box" tip; selecting one dismisses it and brings the lens tip. */
   await page.evaluate(() => document.getElementById('mStack').scrollIntoView());
   try { await page.waitForSelector('.hint', { timeout: 4000 }); } catch (e) { problems.push(tag + 'no tip when the map came into view'); }
@@ -222,14 +254,24 @@ async function checkGuide(viewport) {
   await page.click('.hint [data-h="off"]');
   if (await page.$('.hint')) problems.push(tag + 'Turn tips off did not close the tip');
   if (await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1)) problems.push(tag + 'page scrolls sideways');
-  /* A door goes straight to a challenge. */
+  /* The hero: zoom to the die, where each block of the map is a layer; a block zooms further down;
+     at the transistor the gate switch works; a lens card goes straight to a challenge. */
   await page.evaluate(() => scrollTo(0, 0));
-  await page.click('.maphero .door[href="#reality"]');
-  try { await page.waitForFunction(() => { const s = document.getElementById('reality'); return s && !s.hidden; }, null, { timeout: 15000 }); } catch (e) { problems.push(tag + 'the Break door did not open the reality topic'); }
+  await page.click('#zLevels button:nth-child(4)');
+  try { await page.waitForSelector('#hDie:not([hidden])', { timeout: 8000 }); } catch (e) { problems.push(tag + 'the die did not become the map of the lab at level 4'); }
+  await page.click('.hdblk[data-band="device"]');
+  if (!/Transistor/.test(await page.textContent('#hCard'))) problems.push(tag + 'picking the Transistors block did not show its topics');
+  await page.click('#hCard [data-zoomto]');
+  try { await page.waitForSelector('#hGateSeg:not([hidden])', { timeout: 10000 }); } catch (e) { problems.push(tag + 'zooming down from the die did not reach the transistor'); }
+  await page.click('#hGateSeg [data-gate="0"]');
+  if (await page.$eval('#hGateNote', el => el.hidden)) problems.push(tag + 'switching the gate off did not explain what happens');
+  await page.click('.hlens[data-lens="break"]');
+  await page.click('#hCard a.btn');
+  try { await page.waitForFunction(() => { const s = document.getElementById('reality'); return s && !s.hidden; }, null, { timeout: 15000 }); } catch (e) { problems.push(tag + 'the Break card did not open the reality topic'); }
   if (await page.$('.hint')) problems.push(tag + 'tips stay off after Turn tips off');
   /* The tour still opens on request, walks four steps, and Escape closes it. */
-  await page.goto(base + 'index.html'); await page.waitForSelector('.maphero [data-guide-start]');
-  await page.click('.maphero [data-guide-start]'); await page.waitForSelector('.g-card');
+  await page.goto(base + 'index.html'); await page.waitForSelector('.hero [data-guide-start]');
+  await page.click('.hero [data-guide-start]'); await page.waitForSelector('.g-card');
   for (let k = 0; k < 3; k++) { await page.click('.g-card [data-g="next"]'); await page.waitForTimeout(120); }
   if ((await page.$$('.g-card [data-g="go"]')).length !== 3) problems.push(tag + 'the tour\'s last step should offer 3 challenges');
   await page.keyboard.press('Escape'); await page.waitForTimeout(100);

@@ -34,9 +34,17 @@
   "challenges": [
     {
       "kind": "Experiment",
+      "lens": "break",
       "title": "Print the finest lines",
       "task": "Find the smallest pitch each scanner can still print.",
       "href": "#litho"
+    },
+    {
+      "kind": "Experiment",
+      "lens": "imagine",
+      "title": "The 1,000-watt source",
+      "task": "Turn the light source up to 1,000 W and try every other setting. Can this scanner reach the 330 wafers per hour ASML aims for by 2030? If not, what is left that would have to change?",
+      "href": "#lab-litho-2"
     }
   ],
   "learn": {

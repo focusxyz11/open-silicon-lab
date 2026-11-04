@@ -1,20 +1,22 @@
 /* Lab: rack to atom */
 import {$,clamp,RM,rng,T,redraws,fit,watch,rgba,shade,fmtLen,fmtNum,inView,fr,hexRGB,gauss,big,LIMC} from '../core/ui.js';
 import { t as tx } from '../core/i18n.js';
+/* Field of view of each level, in meters. The home hero (src/app/hero.js) reads them too. */
+export const ZOOM_SIZES=[2.4,0.6,0.12,0.04,0.0028,20e-6,1e-6,60e-9,3e-9];
 export function init(){
 (function zoom(){
 const cv=$('#zoomCv');
 /* The nine levels; their names and descriptions are zoom.<n>.name / .d in src/i18n. */
 const L=[
- {n:1,size:2.4,T:[0,0],get name(){return tx('zoom.1.name');},get d(){return tx('zoom.1.d');}},
- {n:2,size:0.6,T:[0,0],get name(){return tx('zoom.2.name');},get d(){return tx('zoom.2.d');}},
- {n:3,size:0.12,T:[0.22,0],get name(){return tx('zoom.3.name');},get d(){return tx('zoom.3.d');}},
- {n:4,size:0.04,T:[0.07,-0.38],get name(){return tx('zoom.4.name');},get d(){return tx('zoom.4.d');}},
- {n:5,size:0.0028,T:[-0.3,-0.65],get name(){return tx('zoom.5.name');},get d(){return tx('zoom.5.d');}},
- {n:6,size:20e-6,T:[0,0.01],get name(){return tx('zoom.6.name');},get d(){return tx('zoom.6.d');}},
- {n:7,size:1e-6,T:[0,0.085],get name(){return tx('zoom.7.name');},get d(){return tx('zoom.7.d');}},
- {n:8,size:60e-9,T:[0,0],get name(){return tx('zoom.8.name');},get d(){return tx('zoom.8.d');}},
- {n:9,size:3e-9,T:null,get name(){return tx('zoom.9.name');},get d(){return tx('zoom.9.d');}}
+ {n:1,size:ZOOM_SIZES[0],T:[0,0],get name(){return tx('zoom.1.name');},get d(){return tx('zoom.1.d');}},
+ {n:2,size:ZOOM_SIZES[1],T:[0,0],get name(){return tx('zoom.2.name');},get d(){return tx('zoom.2.d');}},
+ {n:3,size:ZOOM_SIZES[2],T:[0.22,0],get name(){return tx('zoom.3.name');},get d(){return tx('zoom.3.d');}},
+ {n:4,size:ZOOM_SIZES[3],T:[0.07,-0.38],get name(){return tx('zoom.4.name');},get d(){return tx('zoom.4.d');}},
+ {n:5,size:ZOOM_SIZES[4],T:[-0.3,-0.65],get name(){return tx('zoom.5.name');},get d(){return tx('zoom.5.d');}},
+ {n:6,size:ZOOM_SIZES[5],T:[0,0.01],get name(){return tx('zoom.6.name');},get d(){return tx('zoom.6.d');}},
+ {n:7,size:ZOOM_SIZES[6],T:[0,0.085],get name(){return tx('zoom.7.name');},get d(){return tx('zoom.7.d');}},
+ {n:8,size:ZOOM_SIZES[7],T:[0,0],get name(){return tx('zoom.8.name');},get d(){return tx('zoom.8.d');}},
+ {n:9,size:ZOOM_SIZES[8],T:null,get name(){return tx('zoom.9.name');},get d(){return tx('zoom.9.d');}}
 ];
 const N=L.length;
 // precomputed geometry
@@ -124,6 +126,7 @@ function sCell(c,px){
  c.fillStyle='#DDE3E7';for(const [x,y] of contacts)c.fillRect(x-0.016,y-0.016,0.032,0.032);
  c.fillStyle='rgba(79,163,217,0.8)';for(const [x,y,l] of m0)c.fillRect(x,y-0.009,l,0.018);
 }
+let gateOn=true;
 function sFET(c,px,t){
  c.fillStyle='#2B3A44';c.fillRect(-5,-5,10,10);
  c.fillStyle='#4E5D69';c.fillRect(-5,0.62,10,5);
@@ -136,7 +139,7 @@ function sFET(c,px,t){
   c.fillStyle='#A9B6C0';c.fillRect(-0.4,yc-0.083,0.8,0.166);
  }
  c.fillStyle='#4CC6D2';
- for(let i=0;i<18;i++){const yc=[-0.3,0,0.3][i%3];const x=((i*0.37+t*0.35)%2.4)-1.2;const yy=yc+((i*7)%5-2)*0.022;c.globalAlpha=Math.abs(x)<0.42?1:0.5;c.beginPath();c.arc(x,yy,0.02,0,6.283);c.fill();}
+ if(gateOn)for(let i=0;i<18;i++){const yc=[-0.3,0,0.3][i%3];const x=((i*0.37+t*0.35)%2.4)-1.2;const yy=yc+((i*7)%5-2)*0.022;c.globalAlpha=Math.abs(x)<0.42?1:0.5;c.beginPath();c.arc(x,yy,0.02,0,6.283);c.fill();}
  c.globalAlpha=1;
 }
 function sAtoms(c,px,t){
@@ -153,6 +156,9 @@ function sAtoms(c,px,t){
  for(let i=0;i<9;i++){const x=((i*0.53+t*0.12)%2.4)-1.2;const y=-0.9+i*0.22+Math.sin(t*1.3+i)*0.03;c.beginPath();c.arc(x,y,0.028,0,6.283);c.fill();}
 }
 const S=[sRack,sTray,sPkg,sDie,sSM,sRows,sCell,sFET,sAtoms];
+/* The hero can switch the transistor's gate off (no electrons flow) and ask for a level. */
+document.addEventListener('osl:gate',e=>{gateOn=!!e.detail;});
+document.addEventListener('osl:zoomto',e=>{playing=false;goal=clamp(+e.detail||0,0,N-1);setPlay();});
 let t=0,playing=false,goal=null,last=performance.now(),visible=true;
 const range=$('#zRange'),lv=$('#zLevels');
 L.forEach((l,i)=>{const b=document.createElement('button');b.textContent=(i+1)+' '+l.name;b.addEventListener('click',()=>{playing=false;goal=i;setPlay();});lv.appendChild(b);});
@@ -163,7 +169,7 @@ function hud(){
  const fov=L[i].size/s;
  $('#zFov').textContent=fmtLen(fov);
  const near=Math.round(t);
- if(near!==lastIdx){lastIdx=near;$('#zName').textContent=L[near].name;$('#zIdx').textContent=tx('zoom.level',{n:near+1,total:N});$('#zDesc').textContent=L[near].d;[...lv.children].forEach((b,k)=>b.setAttribute('aria-current',k===near?'true':'false'));}
+ if(near!==lastIdx){lastIdx=near;$('#zName').textContent=L[near].name;$('#zIdx').textContent=tx('zoom.level',{n:near+1,total:N});$('#zDesc').textContent=L[near].d;document.dispatchEvent(new CustomEvent('osl:zoomlevel',{detail:near}));[...lv.children].forEach((b,k)=>b.setAttribute('aria-current',k===near?'true':'false'));}
  // scale bar
  const w=cv.getBoundingClientRect().width,h=cv.getBoundingClientRect().height;const U=Math.min(w,h)/2*0.92;const mPerPx=fov/(2*U);
  const target=mPerPx*90;const p=Math.pow(10,Math.floor(Math.log10(target)));let nice=p;for(const m of [1,2,5])if(m*p<=target)nice=m*p;
@@ -199,7 +205,7 @@ function loop(now){
  if(playing){t+=dt*0.42;if(t>=N-1){t=N-1;playing=false;setPlay();}}
  else if(goal!==null){const diff=goal-t;if(Math.abs(diff)<0.004){t=goal;goal=null;setPlay();}else t+=diff*Math.min(1,dt*3.2)+Math.sign(diff)*dt*0.25*(Math.abs(diff)>0.3?1:0);}
  range.value=Math.round(t*100);
- if(visible)draw(now);
+ if(visible)draw(now);else hud();
  requestAnimationFrame(loop);
 }
 inView(cv,v=>visible=v);

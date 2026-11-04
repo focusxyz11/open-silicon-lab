@@ -64,18 +64,21 @@
   "challenges": [
     {
       "kind": "Experiment",
+      "lens": "imagine",
       "title": "Find the waste",
       "task": "For one AI word, find which part of the energy is largest, then cut it by ten or more.",
       "href": "#lab-floor-1"
     },
     {
       "kind": "Puzzle",
+      "lens": "imagine",
       "title": "Within two million",
       "task": "Set up one multiply-add so it spends less than two million times the physics floor.",
       "href": "#lab-floor-1"
     },
     {
       "kind": "Puzzle",
+      "lens": "break",
       "title": "Beat the floor by cooling",
       "task": "Try to get the total energy per bit below the room-temperature floor by cooling the chip. Can you? Why not?",
       "href": "#lab-floor-2"

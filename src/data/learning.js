@@ -101,7 +101,7 @@ export const GL=[
  ['Wafer',['wafers','wafer'],'A thin, polished disc of crystalline silicon, 300 mm across, on which many chips are built at once.','yield'],
  ['Die',['dies','die'],'One copy of the chip on a wafer; after cutting, a single piece of silicon.','yield'],
  ['Yield',['yield'],'The share of dies on a wafer that work.','yield'],
- ['Defect density',['defect density'],'The average number of killer defects per square centimetre, written D₀.','yield'],
+ ['Defect density',['defect density'],'The average number of killer defects per square centimeter, written D₀.','yield'],
  ['Reticle limit',['reticle limit'],'The largest area a scanner prints in one exposure, about 26 × 33 mm (half that for High-NA).','yield'],
  ['Chiplet',['chiplets','chiplet'],'A smaller die designed to be combined with others in one package so they work as one chip.','yield'],
  ['Interposer',['interposer'],'A slab of silicon, or organic material with silicon bridges, carrying fine wiring that connects dies side by side.','package'],

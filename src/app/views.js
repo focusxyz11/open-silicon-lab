@@ -2,7 +2,8 @@
    data (topics, challenges, cards, facts), so nothing is duplicated and nothing is locked. */
 import { BANDS, TOPICS, topicById, bandById } from '../data/topics.js';
 import { CHALLENGES } from '../data/challenges.js';
-import { allTradeoffsHTML, allMeasuresHTML, allDebatesHTML } from './hubs.js';
+import { allTradeoffsHTML, allMeasuresHTML } from './hubs.js';
+import { doorHead, doorMap, project } from './doors.js';
 import { CARDS, TH } from '../data/cards.js';
 import { FACTS, fmtDate, changesHTML } from './facts.js';
 import { levelStars, riscvStars } from './progress.js';
@@ -26,30 +27,24 @@ export function renderWorkshop() {
   const v = $('#view-workshop');
   const rs = riscvStars();
   const n = TOPICS.reduce((s, x) => s + labsIn(x.id).length, 0);
-  v.innerHTML = '<section class="wrap vhead"><p class="eyebrow">' + t('ws.eyebrow') + '</p><h1>' + t('ws.title') + '</h1><p class="lede">' + t('ws.lede', { n }) + '</p></section>' +
+  /* The Build door: the four builds, its column of the frontier map, then every simulation. */
+  v.innerHTML = doorHead('build') +
     '<section class="wrap buildline">' + BUILDS.map(b => '<div class="bstation"><a class="bcard" href="#' + b.id + '"><span class="bn">' + b.n + '</span><div><b>' + esc(t('ws.' + b.id + '.t')) + '</b><p>' + esc(t('ws.' + b.id + '.d')) + '</p><ol class="bsteps">' + t('ws.' + b.id + '.steps').map((s, k) => '<li' + (b.id === 'riscv' && levelStars(k + 1) ? ' class="done"' : '') + '>' + esc(s) + '</li>').join('') + '</ol>' + (b.id === 'riscv' ? '<small class="muted">' + t('ws.stars', { n: rs }) + '</small>' : '<small class="muted">' + (P.seen[b.id] ? t('ws.opened') : t('ws.notOpened')) + '</small>') + '</div><span class="go">' + t('ws.open') + '</span></a>' + (b.link ? '<p class="blink"><span aria-hidden="true">↓</span>' + esc(t('ws.' + b.id + '.link')) + '</p>' : '') + '</div>').join('') + '</section>' +
-    '<section class="wrap"><div class="vbar"><h2>' + t('ws.playground') + '</h2><input type="search" id="wsQ" placeholder="' + t('ws.find') + '" aria-label="' + t('ws.find') + '" value="' + esc(wsQuery) + '"></div><div id="wsGrid"></div></section>';
+    '<section class="wrap dprojs">' + project('community') + project('mychip') + '</section><div class="dmapsec"></div>' +
+    '<section class="wrap"><div class="vbar"><div><h2>' + t('ws.playground') + '</h2><p class="small muted">' + esc(t('ws.lede', { n })) + '</p></div><input type="search" id="wsQ" placeholder="' + t('ws.find') + '" aria-label="' + t('ws.find') + '" value="' + esc(wsQuery) + '"></div><div id="wsGrid"></div></section>';
   const draw = () => {
     const q = wsQuery.toLowerCase();
     $('#wsGrid').innerHTML = BANDS.map(b => { const tiles = TOPICS.filter(x => x.band === b.id).flatMap(x => labsIn(x.id).map(l => ({ ...l, topic: x }))).filter(l => !q || (l.t + ' ' + l.topic.t).toLowerCase().includes(q)); return tiles.length ? '<div class="pgband"><p class="eyebrow">' + esc(b.t) + '</p><div class="pgrid">' + tiles.map(l => '<a href="#' + l.id + '"><b>' + esc(l.t) + '</b><small>' + esc(l.topic.t) + '</small></a>').join('') + '</div></div>' : ''; }).join('') || '<p class="muted">' + t('ws.none') + '</p>';
   };
   $('#wsQ').addEventListener('input', e => { wsQuery = e.target.value.trim(); draw(); });
   draw();
+  doorMap(v.querySelector('.dmapsec'), 'build');
 }
 
 /* ---------------- Challenges ---------------- */
-let chKind = '';
-export function renderChallenges() {
-  const v = $('#view-challenges');
-  const kinds = ['', 'Puzzle', 'Design', 'Experiment'];   // i18n-ok: kind ids from topic.json, shown through ch.kind.*
-  const status = c => { const m = /^#riscv-(\d+)$/.exec(c.href); if (m) { const s = levelStars(+m[1]); return stars(s); } return P.seen[c.topic] ? '<span class="vis">' + t('ch.visited') + '</span>' : ''; };
-  const list = CHALLENGES.filter(c => !chKind || c.kind === chKind);
-  v.innerHTML = '<section class="wrap vhead"><p class="eyebrow">' + t('ch.eyebrow') + '</p><h1>' + t('ch.title') + '</h1><p class="lede">' + t('ch.lede') + '</p></section>' +
-    '<section class="wrap"><div class="vbar"><div class="seg" role="group" aria-label="' + t('ch.filter') + '">' + kinds.map(k => '<button type="button" data-k="' + k + '" aria-pressed="' + (k === chKind) + '">' + (k ? t('ch.plural.' + k) : t('ch.all')) + ' <small>' + CHALLENGES.filter(c => !k || c.kind === k).length + '</small></button>').join('') + '</div></div>' +
-    '<div class="chgrid">' + BANDS.flatMap(b => list.filter(c => (topicById(c.topic) || {}).band === b.id)).map(c => '<a class="chcard k-' + c.kind.toLowerCase() + '" href="' + c.href + '"><span class="pill out">' + t('ch.kind.' + c.kind) + '</span><b>' + esc(c.t) + '</b><small>' + esc(c.d) + '</small><span class="chmeta"><em>' + esc(bandById(topicById(c.topic).band).t) + ' · ' + esc(tName(c.topic)) + '</em>' + status(c) + '</span></a>').join('') + '</div>' + '</section>' +
-    '<section class="wrap"><div class="vbar"><h2>' + t('ch.debates') + '</h2></div><p class="lede">' + t('ch.debatesLede') + '</p>' + allDebatesHTML() + '</section>';
-  v.querySelectorAll('[data-k]').forEach(b => b.addEventListener('click', () => { chKind = b.dataset.k; renderChallenges(); }));
-}
+/* The challenges page is the frontier map (src/app/frontier.js). */
+/* The Frontier tab: src/app/frontier-page.js. */
+export { renderFrontierPage as renderChallenges } from './frontier-page.js';
 
 /* ---------------- Knowledge ---------------- */
 let fq = '', fk = '';

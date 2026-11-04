@@ -9,6 +9,11 @@ not need to be a chip expert: plain words and a source go a long way.
 
 ## Ways to help
 
+**Propose a challenge or a view, no code needed.** The site's **Frontier** tab opens prefilled
+forms: *Propose a challenge* (a goal someone can reach in a simulation) or *Add a view* (an answer
+people give to an open problem, with what it assumes). Rough ideas are welcome; others can sharpen
+them in the issue.
+
 **Add your design to the community chip.** The easiest first contribution. Design something in the
 tiny-chip studio, open *The community chip* on the site and press *Prepare my submission*: GitHub
 opens with `community/<name>/design.json` already written. By hand, see [community/README.md](community/README.md).

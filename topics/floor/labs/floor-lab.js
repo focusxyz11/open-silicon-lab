@@ -46,7 +46,7 @@ function ladderLab() {
     R = F.ladder(S.task, { bits: S.bits, weight: S.weight, input: S.input, reuse: S.reuse });
     $('#pfE').textContent = J(R.total); $('#pfF').textContent = J(R.floor); $('#pfX').textContent = times(R.times) + '×'; $('#pfMove').textContent = Math.round(R.moveShare * 100) + '%';
     $('#pfTag').textContent = 'About 10' + sup(Math.round(Math.log10(R.times))) + '× the floor';
-    const lift = R.total / (0.1 * 9.81);                                 /* metres you could lift a 100 g apple with the same energy */
+    const lift = R.total / (0.1 * 9.81);                                 /* meters you could lift a 100 g apple with the same energy */
     let h = R.moveShare > 0.8 ? 'Most of the energy goes into moving numbers, not into the math. ' + (S.weight === 'dram' ? 'Each DRAM read costs about 5,000 times a register read: keep the weights closer, or reuse each one more.' : S.reuse < 10 && S.weight !== 'rf' ? 'Reuse each weight more, so its trip from memory is shared.' : 'Fetch the other numbers from registers.')
       : 'Now the arithmetic itself is most of the bill. It is still about ' + times(R.mathTimes) + ' times the floor: transistors switch whole wires full of charge to move one bit of meaning.';
     if (S.task === 'token') h += ' One word this way takes ' + J(R.total) + ', enough to lift an apple ' + (lift >= 1 ? lift.toFixed(1) + ' m' : Math.round(lift * 100) + ' cm') + '.';

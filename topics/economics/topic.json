@@ -47,12 +47,14 @@
   "challenges": [
     {
       "kind": "Design",
+      "lens": "imagine",
       "title": "Fund a chip startup",
       "task": "Reach first silicon with the least money and time.",
       "href": "#economics"
     },
     {
       "kind": "Puzzle",
+      "lens": "break",
       "title": "Follow the ripple",
       "task": "On the map simulator: raise phone prices with AI demand alone, and find the shortage that stops car lines but not AI.",
       "href": "#whatif"

@@ -1,24 +1,26 @@
-/* Hash router. One page, five views: the map, a topic, the workshop, challenges and knowledge.
+/* Hash router. One page, a few views: the map (Explore), a topic, the Build, Break and Imagine doors,
+   the frontier map (challenges), knowledge and my chip.
    Links are plain hashes (#litho, #lab-litho-2, #riscv-5), so every place in the lab is shareable. */
-import { TOPICS, THREADS, topicById, bandById } from '../data/topics.js';
+import { TOPICS, THREADS, topicById, bandById, ideasOf } from '../data/topics.js';
 import { connectionsHTML, ideasHTML, linkListHTML } from './connections.js';
-import { hubsHTML } from './hubs.js';
+import { wallsHTML, thinkHTML, thinkCount } from './hubs.js';
 import { renderEraBanner } from './era.js';
 import { renderChipBanner, renderMyChip, chipVisit } from './mychip.js';
 import { CHALLENGES } from '../data/challenges.js';
 import { redraws } from '../core/ui.js';
 import { ensureTopic, isLoaded } from './loader.js';
 import { TOPIC_FILES, ANCHORS } from '../generated/catalog.js';
-import { factsHTML } from './facts.js';
+import { factsHTML, factsFor, FACTS, fmtDate } from './facts.js';
 import { markSeen, P } from './learning.js';
 import { initMap, redrawMap, setWhatif, state as mapState } from './map.js';
 import { renderWorkshop, renderChallenges, renderKnowledge } from './views.js';
+import { renderDoor } from './doors.js';
 import { issueURL } from './config.js';
 import { t } from '../core/i18n.js';
 
 const $ = s => document.querySelector(s);
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const VIEWS = ['map', 'topic', 'workshop', 'challenges', 'knowledge', 'mychip'];
+const VIEWS = ['map', 'topic', 'workshop', 'break', 'imagine', 'challenges', 'knowledge', 'mychip'];
 const REF = { glossary: 1, sources: 1 };
 const refName = id => t('ref.' + id);
 let curView = null, curTopic = null;
@@ -52,15 +54,24 @@ function renderChrome(id) {
   $('#topicHead').innerHTML = '<nav class="crumbs" aria-label="' + t('crumb.label') + '"><a href="#map">' + t('crumb.map') + '</a><span>›</span><a href="#map" data-band="' + b.id + '">' + esc(b.t) + '</a><span>›</span><b>' + esc(tp.t) + '</b></nav>' + thread + '<div id="eraBanner" hidden></div><div id="chipBanner" hidden></div>';
   renderEraBanner(id); renderChipBanner(id); chipVisit(id);
   const labs = labsIn(id);
-  const ch = CHALLENGES.filter(c => c.topic === id);
   $('#rail').innerHTML = '<a class="back" href="#map">' + t('rail.backMap') + '</a>' +
     (labs.length ? '<p class="eyebrow">' + t('rail.sims') + '</p>' + labs.map((l, i) => '<a href="#' + l.id + '" data-lab="' + l.id + '"><span>' + (i + 1) + '</span>' + esc(l.t) + '</a>').join('') : '') +
     (id === 'riscv' ? '<p class="eyebrow">' + t('rail.levels') + '</p>' + [1, 2, 3, 4, 5, 6, 7].map(n => '<a href="#riscv-' + n + '"><span>' + n + '</span>' + esc((CHALLENGES.find(c => c.href === '#riscv-' + n) || {}).t || t('rail.level', { n })) + '</a>').join('') + '<a href="#riscv-sandbox"><span>∞</span>' + t('rail.free') + '</a>' : '') +
     '<p class="eyebrow">' + t('rail.connected') + '</p>' + linkListHTML(id);
-  $('#topicFoot').innerHTML = factsHTML(id) +
-    (ch.length && id !== 'riscv' ? '<div class="hblock"><p class="code">' + t('topic.challenges') + '</p><div class="chgrid">' + ch.map(c => '<a href="' + c.href + '" class="chcard"><span class="pill out">' + t('ch.kind.' + c.kind) + '</span><b>' + esc(c.t) + '</b><small>' + esc(c.d) + '</small></a>').join('') + '</div></div>' : '') +
-    ideasHTML(id) + hubsHTML(id) + connectionsHTML(id) +
+  /* Challenge first: the challenges sit at the top of the page (src/app/mission.js). Down here the
+     open problems and the connections stay in view; facts, big ideas and trade-offs fold away. */
+  $('#topicFoot').innerHTML = wallsHTML(id) + connectionsHTML(id) + deeperHTML(id) +
     feedbackHTML(id, tp.t);
+}
+
+/* "Go deeper": what a reader can open after playing, each fold with a count. */
+function deeperHTML(id) {
+  const nf = factsFor(id).length, ni = ideasOf(id).length, nt = thinkCount(id);
+  const fold = (cls, sum, body) => '<details class="deep ' + cls + '"><summary>' + sum + '</summary>' + body + '</details>';
+  const parts = (nf ? fold('dfacts', t('deeper.facts', { n: nf }) + '<small>' + esc(t('fact.checked', { date: fmtDate(FACTS.lastCheck) })) + '</small>', factsHTML(id, { bare: true })) : '') +
+    (ni ? fold('dideas', t('deeper.ideas', { n: ni }) + '<small>' + t('deeper.ideasD') + '</small>', ideasHTML(id, { bare: true })) : '') +
+    (nt ? fold('dthink', t('deeper.think', { n: nt }) + '<small>' + t('deeper.thinkD') + '</small>', thinkHTML(id)) : '');
+  return parts ? '<div class="hblock deeper"><p class="code">' + t('deeper.title') + '</p>' + parts + '</div>' : '';
 }
 
 /* Every topic ends with a way to correct it or improve it. The links open GitHub issue
@@ -104,7 +115,8 @@ function route() {
   if (!h || h === 'map') { show('map'); curTopic = null; redrawMap(); return; }
   if (h === 'whatif') { show('map'); curTopic = null; setWhatif(true); return; }
   if (h === 'workshop') { renderWorkshop(); show('workshop'); scrollTo({ top: 0, behavior: 'instant' }); return; }
-  if (h === 'challenges') { renderChallenges(); show('challenges'); scrollTo({ top: 0, behavior: 'instant' }); return; }
+  if (h === 'break' || h === 'imagine') { renderDoor(h); show(h); scrollTo({ top: 0, behavior: 'instant' }); return; }
+  if (h === 'challenges' || h === 'frontier') { renderChallenges(); show('challenges'); scrollTo({ top: 0, behavior: 'instant' }); return; }
   if (h === 'mychip') { renderMyChip(); show('mychip'); scrollTo({ top: 0, behavior: 'instant' }); return; }
   if (h === 'knowledge') { renderKnowledge(); show('knowledge'); scrollTo({ top: 0, behavior: 'instant' }); return; }
   const rv = /^riscv-(\d+|sandbox)$/.exec(h);
@@ -132,6 +144,6 @@ export function initRouter() {
     const bd = e.target.closest('#topicHead [data-band]'); if (bd) { mapState.sel = curTopic; mapState.thread = null; }
   });
   addEventListener('hashchange', route);
-  document.addEventListener('osl:progress', () => { if (curView === 'challenges') renderChallenges(); });
+  document.addEventListener('osl:progress', () => { if (curView === 'challenges') renderChallenges(); else if (curView === 'break' || curView === 'imagine') renderDoor(curView); });
   route();
 }

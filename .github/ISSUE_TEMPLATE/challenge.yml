@@ -1,0 +1,48 @@
+name: Propose a challenge
+description: A goal someone can reach in one of the lab's simulations, or one we should build a simulation for.
+title: "[Challenge] "
+labels: [idea]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        A good challenge has one clear goal, can be reached with the controls on the page, and teaches something on the way. Rough ideas are welcome too: others can sharpen them here.
+  - type: input
+    id: topic
+    attributes:
+      label: Topic
+      description: The topic id from the page address, for example yield or accelerators. Leave empty if it needs a new topic.
+  - type: dropdown
+    id: lens
+    attributes:
+      label: Which door
+      options: [Build (make it work), Break (find where it fails), Imagine (try what could come next), Not sure]
+    validations:
+      required: true
+  - type: dropdown
+    id: kind
+    attributes:
+      label: Kind
+      options: [Puzzle (one right answer), Design (many answers, scored on trade-offs), Experiment (find where something breaks), Not sure]
+  - type: textarea
+    id: task
+    attributes:
+      label: The challenge
+      description: One or two sentences, written to the person who will try it.
+    validations:
+      required: true
+  - type: textarea
+    id: check
+    attributes:
+      label: How to check it
+      description: Which simulation and settings, and what the answer is (or how to tell a good answer).
+  - type: input
+    id: wall
+    attributes:
+      label: Open problem it tests (optional)
+      description: One of the walls on the Frontier page, for example The memory wall.
+  - type: dropdown
+    id: background
+    attributes:
+      label: Your background (optional)
+      options: [Student or learner, Chip or hardware engineer, Researcher, Industry (business, policy, other), Other]

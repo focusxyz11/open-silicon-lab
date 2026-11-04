@@ -16,9 +16,31 @@
   "challenges": [
     {
       "kind": "Puzzle",
+      "lens": "build",
       "title": "Grow a perfect crystal",
       "task": "Pull a dislocation-free 300 mm ingot and taper it off safely.",
       "href": "#physics"
+    },
+    {
+      "kind": "Experiment",
+      "lens": "break",
+      "title": "Too hot for silicon",
+      "task": "Heat pure silicon until its own free electrons reach 10¹⁵ per cm³, as many as lightly doped silicon has. At what temperature does the doping stop deciding how a chip behaves?",
+      "href": "#lab-physics-1"
+    },
+    {
+      "kind": "Experiment",
+      "lens": "break",
+      "title": "The furnace spreads it",
+      "task": "Implant boron at 2 keV, then compare a furnace anneal with a laser anneal. How much deeper does the furnace drive the junction?",
+      "href": "#lab-physics-3"
+    },
+    {
+      "kind": "Puzzle",
+      "lens": "imagine",
+      "title": "Shallow and switched on",
+      "task": "The next transistors need junctions only a few nanometers deep. Make an n-type junction shallower than 15 nm with more than 95% of its dopants switched on.",
+      "href": "#lab-physics-3"
     }
   ],
   "learn": {

@@ -21,7 +21,7 @@
   "ideas": [
     {
       "idea": "keep-data-close",
-      "how": "HBM sits millimetres from the processor on one interposer"
+      "how": "HBM sits millimeters from the processor on one interposer"
     },
     {
       "idea": "many-small",
@@ -58,10 +58,25 @@
       [2017, "Chiplets and HBM stacks make the package a system."]
     ]
   },
-  "challenges": [],
+  "challenges": [
+    {
+      "kind": "Puzzle",
+      "lens": "build",
+      "title": "Bandwidth per stack",
+      "task": "Count the memory stacks around Rubin and work out how much of its 22 TB/s each one carries. How many phones of memory bandwidth is one stack?",
+      "href": "#lab-package-1"
+    },
+    {
+      "kind": "Design",
+      "lens": "imagine",
+      "title": "The next memory jump",
+      "task": "Bandwidth per GPU grew about 6.6 times from H100 to Rubin. Decide where the next doubling should come from: more stacks, wider stacks or hybrid bonds, and say what your choice assumes.",
+      "href": "#lab-package-2"
+    }
+  ],
   "learn": {
     "plain": "Packaging used to be just a protective case. Now it is like building a tiny city block: processor buildings next to memory towers, joined by extremely dense roads so data never travels far.",
-    "engineer": "CoWoS-S uses one silicon interposer; CoWoS-L embeds small silicon bridges in an organic redistribution layer to go beyond the reticle size. Micro-bump pitches are tens of micrometres while hybrid bonding goes below 10 µm. HBM4 doubles the interface to 2,048 bits, and with a foundry-made base die, customers can put custom logic under the memory stack. Heat density, warpage and testing stacks before assembly are the main yield challenges.",
+    "engineer": "CoWoS-S uses one silicon interposer; CoWoS-L embeds small silicon bridges in an organic redistribution layer to go beyond the reticle size. Micro-bump pitches are tens of micrometers while hybrid bonding goes below 10 µm. HBM4 doubles the interface to 2,048 bits, and with a foundry-made base die, customers can put custom logic under the memory stack. Heat density, warpage and testing stacks before assembly are the main yield challenges.",
     "quiz": [
       {
         "q": "What is HBM?",

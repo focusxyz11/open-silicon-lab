@@ -20,7 +20,8 @@ const OUT_GRAPH = 'src/generated/graph.js';
 const REF = ['glossary', 'sources'];          // reference pages in content/, loaded on demand too
 const TOPIC_KINDS = ['explore', 'build'];
 const CHALLENGE_KINDS = ['Puzzle', 'Design', 'Experiment'];
-const ROUTES = ['map', 'whatif', 'workshop', 'challenges', 'knowledge', 'mychip', 'glossary', 'sources'];   // pages the router opens by name
+const CHALLENGE_LENSES = ['build', 'break', 'imagine'];   // where a challenge sits on the frontier map (src/app/frontier.js)
+const ROUTES = ['map', 'whatif', 'workshop', 'break', 'imagine', 'challenges', 'frontier', 'knowledge', 'mychip', 'glossary', 'sources'];   // pages the router opens by name
 
 const decode = s => s.replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&nbsp;/g, ' ').replace(/&#(\d+);/g, (_, n) => String.fromCodePoint(+n));
 const q = s => JSON.stringify(s);
@@ -203,10 +204,11 @@ async function checkGraph(metas, anchors, shellIds, problems) {
     m.challenges.forEach((c, i) => {
       const at = `${f} challenge ${i + 1}`;
       if (!CHALLENGE_KINDS.includes(c.kind)) problems.push(`${at} has "kind": ${q(c.kind)}. Use Puzzle (one right answer), Design (many answers, scored on trade-offs) or Experiment (find where something breaks).`);
+      if (!CHALLENGE_LENSES.includes(c.lens)) problems.push(`${at} has "lens": ${q(c.lens)}. Use build (make something work), break (find where it fails) or imagine (try what could come next).`);
       if (!str(c.title) || !str(c.task)) problems.push(`${at} needs a "title" and a "task" (one sentence: what to do).`);
       const h = /^#([\w-]+)$/.exec(c.href || '');
       if (!h || !(anchors[h[1]] || ids.has(h[1]) || shellIds.has(h[1]) || ROUTES.includes(h[1]) || /^riscv-(\d+|sandbox)$/.test(h[1]))) problems.push(`${at} links to ${q(c.href)}, which does not exist. Use "#<topic>" or "#<id of an element in the topic>", such as "#lab-${m.id}-1".`);
-      challenges.push({ topic: m.id, kind: c.kind, t: c.title, d: c.task, href: c.href });
+      challenges.push({ topic: m.id, kind: c.kind, lens: c.lens, t: c.title, d: c.task, href: c.href });
     });
     const L = m.learn || {};
     if (!!L.plain !== !!L.engineer) problems.push(`${f} "learn" needs both "plain" (for beginners) and "engineer" (for engineers), or neither.`);

@@ -94,7 +94,7 @@ The catalog script refuses anything that breaks these rules and says what to fix
 ## Boot sequence (`src/main.js`)
 
 1. Load `content/zoom.html` and the facts (or read them from `window.__OSL_CONTENT__` in the single-file build).
-2. Render the map shell and start its two simulations (zoom, time machine).
+2. Render the map shell, start the hero (it listens to the zoom, so it starts first), then the map's two simulations (zoom, time machine).
 3. Start the learning layer, the tutor (only inside Claude) and the router.
 
 No topic is loaded at start-up. The map, search, Workshop and Challenges read the graph from `src/generated/graph.js` and what each topic holds from `src/generated/catalog.js`. The start-up page needs about 38 files; the smoke test fails if it needs more than 60 or loads any topic early.
@@ -116,8 +116,10 @@ A topic loads once and stays on the page. Code in one topic that needs another (
 | --- | --- |
 | `#map` or empty | the chip stack map |
 | `#whatif` | the map in What if? mode, with the levers open |
-| `#workshop`, `#challenges`, `#knowledge` | the three index views |
-| `#<topic>` | one topic, with breadcrumb, thread bar, rail of simulations and connections, facts and next steps |
+| `#workshop`, `#break`, `#imagine` | the Build, Break and Imagine doors (`#map` is Explore) |
+| `#frontier` (or `#challenges`) | the Frontier tab: walls, gaps, the community chip and the whole frontier map |
+| `#knowledge`, `#mychip` | reference views, linked from the footer and the Build door |
+| `#<topic>` | one topic, challenge first: breadcrumb, thread bar, mission card, simulations, the open problems, connections, then facts and big ideas folded into Go deeper |
 | `#lab-<topic>-<n>` or any element id | its topic, scrolled to that element |
 | `#riscv-<n>`, `#riscv-sandbox` | the RISC-V lab at that level |
 | `#glossary`, `#sources` | reference pages |
@@ -195,9 +197,33 @@ Done in stages: the shell's interface text (done), then the shared data (bands, 
 threads) and each topic's `topic.json` text, then the simulations' own text and the content pages.
 Instructions sent to Claude by the tutor stay in English and ask it to answer in the reader's language.
 
+## The home hero: rack to atom (`src/app/hero.js`)
+
+The top of the map is the zoom from an AI rack down to silicon atoms (`src/labs/zoom-rack-to-atom.js`), with a panel beside it. At every one of the nine levels the panel shows a one-line hook and four lenses: **Explore** (what you are looking at, and its topics), **Build** (something to make at this scale), **Break** (what goes wrong here) and **Imagine** (where it could go). Each lens points at a real challenge, simulation or topic, listed in `src/data/hero.js` with only its reason to exist written in `src/i18n` (`hero.why.<level>.<lens>`). At the compute die the die doubles as **the map of the lab**: one block per band of the chip stack, laid out like a floorplan; a block lists its topics, and blocks with a physical level (`zoom` in `DIE`) zoom straight down to it. At the transistor a gate switch stops the electrons. The zoom and the hero talk through three DOM events: `osl:zoomlevel` (the level on screen), `osl:zoomto` (go to a level) and `osl:gate`. `tests/hero.test.mjs` fails if a challenge or topic the hero names is renamed or removed, or if two blocks of the die overlap. On light pages the zoom and the die are shown inverted, as a bright blueprint, with their hues kept; new drawings need nothing extra for this.
+
+## Challenge-first topic pages (`src/app/mission.js`)
+
+When a topic loads, `challengeFirst(id, section)` turns its page around so a reader meets a goal before the reading. A mission card goes under the question: the topic's first challenge (its lens, kind, task and a start link), the others as pills, and the walls (debates) the topic helps with, each scrolling to its debate further down. A challenge that points at the whole topic starts in its first simulation. On a topic with several simulations, each one a challenge points at carries that challenge above its controls. Each `.prose` block outside a simulation keeps its headings and first paragraph and folds the rest behind "Read more". A topic with no challenge yet would show free play and a prefilled "Propose a challenge" form; `tests/frontier.test.mjs` keeps every topic with at least one, every view of every wall tested by one, and every challenge pointed at a real simulation. At the foot (`renderChrome` in the router), the open problems (`wallsHTML`) and the connections stay in view, and facts, big ideas and trade-offs fold into **Go deeper**, each with a count. Nothing is removed and nothing is locked.
+
+## The four doors (`src/app/doors.js`)
+
+The top bar has four doors: **Explore** (the home page: rack to atom and the map), **Build** (`#workshop`), **Break** (`#break`) and **Imagine** (`#imagine`), then the whole frontier map. Each of the last three opens with a head (`doorHead`), its projects as cards (`project`: a topic or a page, with its challenge count), and its own column of the frontier map beside the walls (`doorMap`, which calls `renderFrontier(el, { lens })`). The Build door keeps the three connected builds, the community chip, My chip and the playground of every simulation. Knowledge is a reference, so it moved to the footer. Each door keeps its own map state, so picking a wall in one does not change another.
+
+## The Frontier tab (`src/app/frontier-page.js`)
+
+The fifth tab is where the lab works on what nobody has solved. From the top: four ways to take part (lean and test, propose a challenge, add a view, design for the shared chip); a card for each wall with its answers and how many challenges test each (fewer than three is marked thin), the reader's lean, **See it on the map** (`pickWall` in `frontier.js`) and **Add a view**; the gaps (`gaps()`: answers tested by fewer than three challenges, and places on the map with no challenge), each opening a prefilled proposal; the community chip's designs; and the whole frontier map. Proposals are GitHub issues from `.github/ISSUE_TEMPLATE/challenge.yml` and `view.yml`; `issueURL(template, fields)` fills any of a form's fields by id. Nothing is fetched from GitHub: an accepted proposal becomes a challenge, a view in `src/data/debates.js` or a design in `community/`, and shows up here through the catalog.
+
+## The frontier map (`src/app/frontier.js`)
+
+Every challenge in the lab on one picture. Rows are the bands, from the world down to atoms. Columns run from known to unknown: **Build** (make it work), **Break** (find where it fails), **Imagine** (try what could come next), and the **walls**: the open problems in `src/data/debates.js`, which nobody has solved. A challenge's column is its `lens` in its topic.json (`npm run catalog` rejects a missing one). Each wall sits beside the bands its views touch. Pick a wall and the panel shows its debate (lean towards a view, as anywhere else), with the challenges that test each view and a line from each of them to the wall; pick a challenge to see the walls it helps with. A big idea lights up every challenge whose topic shows it. Empty bands and views no challenge tests invite a proposal (a prefilled GitHub issue), so the map also shows where the lab is thin. Walls and lines are placed after layout and again on resize; on a phone the map shows one column at a time. `tests/frontier.test.mjs` checks every challenge has a lens and every debate names real topics.
+
+## Light and dark (`src/app/theme.js`)
+
+The theme button in the top bar cycles Auto (follow the device), Light and Dark. It sets `data-theme` on `<html>`, which the color tokens in `base.css` and every canvas (through `redraws` in `src/core/ui.js`) already follow, and remembers the choice in this browser only.
+
 ## First visits: doors, tips and an optional tour
 
-Nothing opens over the page by itself. The map's hero offers three ways to start (Build, Break, Imagine), each a link straight into a challenge. `src/app/hints.js` shows small tips at the moment a feature becomes useful: select a box when the map first comes into view, the lens bar after a first selection, the explanation level on a first topic page, the year on a second. A tip never blocks anything, only one shows at a time, and using a feature marks its tip as seen even if it never appeared. "Turn tips off" stops them; the footer's "Show tips again" brings them back. The four-step tour (`src/app/guide.js`) opens only when someone asks for it. To add a tip: an entry in `HINTS` (what to point at, and the click that means the visitor found the feature), a text `hint.<id>` in `src/i18n/en.json`, and a moment to `show()` it.
+Nothing opens over the page by itself. The map's hero offers four lenses at every zoom level, each a link straight into a challenge. `src/app/hints.js` shows small tips at the moment a feature becomes useful: select a box when the map first comes into view, the lens bar after a first selection, the explanation level on a first topic page, the year on a second. A tip never blocks anything, only one shows at a time, and using a feature marks its tip as seen even if it never appeared. "Turn tips off" stops them; the footer's "Show tips again" brings them back. The four-step tour (`src/app/guide.js`) opens only when someone asks for it. To add a tip: an entry in `HINTS` (what to point at, and the click that means the visitor found the feature), a text `hint.<id>` in `src/i18n/en.json`, and a moment to `show()` it.
 
 ## Progress and state
 
@@ -205,7 +231,7 @@ Everything is per-browser `localStorage`: explanation level, topics visited, qui
 
 ## Facts
 
-`src/data/facts.json` holds `facts` (label, value, kind, topic, source, url, verified date, optional previous value) and `changes` (a dated log). Topic pages show their facts; the Knowledge view lists all of them. A monthly check proposes updates as a pull request.
+`src/data/facts.json` holds `facts` (label, value, kind, topic, source, url, verified date, optional previous value) and `changes` (a dated log). Topic pages fold their facts into Go deeper; the Knowledge view lists all of them. A monthly check proposes updates as a pull request.
 
 ## Where the structure is going
 

@@ -36,7 +36,22 @@
       [2027, "You are in a projection: the bottlenecks on the innovation map decide whether it comes true."]
     ]
   },
-  "challenges": [],
+  "challenges": [
+    {
+      "kind": "Puzzle",
+      "lens": "imagine",
+      "title": "What AI cannot shorten",
+      "task": "Switch the flagship chip from 2020 practice to the 2030 outlook: how many months do AI agents save, and does the share set by physical steps rise or fall?",
+      "href": "#lab-innovation-3"
+    },
+    {
+      "kind": "Experiment",
+      "lens": "imagine",
+      "title": "Where invention is needed",
+      "task": "In the 2030 outlook, find the steps where AI helps least and new inventions are needed most.",
+      "href": "#lab-innovation-2"
+    }
+  ],
   "learn": {
     "plain": "Some jobs get faster with better software. Some need a scientific breakthrough. Some need money and years to build a factory. Some need trained people and clear rules. AI directly speeds up only the first kind.",
     "engineer": "Treat the chain as a queue of constrained resources: compressing steps that are not the bottleneck (design time) raises pressure on the ones that are (fab and packaging capacity, power). Track CoWoS wafer starts, HBM bit supply, EUV tool shipments, grid connection queues and engineering headcount, not design productivity alone.",

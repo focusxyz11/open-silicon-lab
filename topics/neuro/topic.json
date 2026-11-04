@@ -47,6 +47,7 @@
   "challenges": [
     {
       "kind": "Puzzle",
+      "lens": "imagine",
       "title": "Spot the pattern",
       "task": "Tune a spiking neuron to fire for pattern A and never for noise.",
       "href": "#lab-neuro-1"
