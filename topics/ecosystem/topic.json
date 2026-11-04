@@ -28,7 +28,10 @@
       "lens": "break",
       "title": "Choke points",
       "task": "Follow the supply links behind an AI GPU and find three companies that are the only maker of what they supply.",
-      "href": "#lab-ecosystem-2"
+      "href": "#lab-ecosystem-2",
+      "check": [[{"id": "coProf", "sel": "h3", "has": "ASML"}], [{"id": "coProf", "sel": "h3", "has": "Zeiss"}], [{"id": "coProf", "sel": "h3", "has": "Trumpf"}]],
+      "hint": "Start at ASML and read what it buys and from whom.",
+      "why": "ASML is the only maker of EUV scanners; Zeiss makes all of their mirrors and optics; Trumpf makes the lasers that create the light. Every leading-edge chip passes through all three, and each would take years to replace."
     }
   ],
   "learn": {

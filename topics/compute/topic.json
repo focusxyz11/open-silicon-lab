@@ -44,21 +44,30 @@
       "lens": "break",
       "title": "Feed the beast",
       "task": "Serve a 70B model in FP8 on Rubin and raise the batch until the chip stops waiting for memory. Where does each user start to slow down?",
-      "href": "#lab-compute-2"
+      "href": "#lab-compute-2",
+      "check": [[{"id": "rfChip", "on": "NVIDIA Rubin"}, {"id": "rfPrec", "on": "FP8"}, {"id": "rfPO", "gte": 69}, {"id": "rfPO", "lte": 71}, {"id": "rfUt", "gte": 100}, {"id": "rfBO", "lte": 724}]],
+      "hint": "Raise the batch a step at a time and watch chip utilization. Below 100%, the chip is waiting for memory.",
+      "why": "With one user, every token reads all 70 GB of weights for very little math, so the chip waits for memory. Serving many users at once reuses each read, and somewhere between 512 and 724 users the math becomes the limit. Past that point, each user gets slower."
     },
     {
       "kind": "Puzzle",
       "lens": "build",
       "title": "Sixteen answers",
       "task": "Predict how many cycles a 4 × 4 systolic array needs to finish all 16 results, then step through it one cycle at a time to check.",
-      "href": "#lab-compute-1"
+      "href": "#lab-compute-1",
+      "check": [[{"id": "saCyc", "has": "Cycle 10 of 10"}]],
+      "hint": "Data enters the array one diagonal at a time. The last cell starts late and still needs all 4 steps.",
+      "why": "A 4 × 4 systolic array needs 10 cycles, 3 × 4 − 2. The last numbers reach the far corner only after the first ones have crossed the array. Bigger arrays have the same fill-up delay, which is why they are fed long streams of work."
     },
     {
       "kind": "Puzzle",
       "lens": "imagine",
       "title": "An assistant in your pocket",
       "task": "On the phone NPU, find the biggest model that fits on one chip and still answers at 20 tokens a second, faster than you can read.",
-      "href": "#lab-compute-2"
+      "href": "#lab-compute-2",
+      "check": [[{"id": "rfChip", "on": "Phone NPU"}, {"id": "rfG", "eq": 1}, {"id": "rfU", "gte": 20}, {"id": "rfPO", "gte": 7}]],
+      "hint": "On a phone, memory bandwidth sets the speed. Try smaller numbers for each weight.",
+      "why": "With 4-bit weights, a model of about 8 billion parameters fits on one phone chip at 20 tokens a second; with 8-bit weights, only about 4 billion. Phone AI depends on smaller numbers as much as on faster chips."
     }
   ],
   "learn": {

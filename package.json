@@ -12,7 +12,10 @@
     "test": "node --test tests/*.test.mjs",
     "test:browser": "node scripts/smoke.mjs",
     "test:verilog": "node scripts/verilog-check.mjs",
-    "build": "node scripts/build-single.mjs"
+    "build": "node scripts/build-single.mjs",
+    "test:challenges": "node scripts/solve.mjs"
   },
-  "engines": { "node": ">=20" }
+  "engines": {
+    "node": ">=20"
+  }
 }

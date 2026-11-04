@@ -66,6 +66,9 @@ topics/<id>/
 | `measures` | Measures from `src/data/measures.js` this topic uses: `{ "measure": "bandwidth", "how": "…" }`. |
 | `time` | What the topic looked like over the years: `"then": [[1971, "…"], [2007, "…"]]`, each line holding until the next. Lines may use values such as `{node}` or `{wafer}` (list in `src/data/timevalues.js`). Add `"born": [year, "what happened"]` if the subject did not exist in 1971. |
 | `challenges` | `kind`: `Puzzle` (one right answer), `Design` (many answers, scored on trade-offs) or `Experiment` (find where something breaks). `lens`: where it sits on the frontier map: `build` (make something work), `break` (find where it fails) or `imagine` (try what could come next). |
+| `challenges[].check` | Optional: how the simulation knows the challenge is solved. A list of steps; each step is a list of conditions that must all hold at once, and every step must be seen (in any order). A condition names an element by id: `{ "id": "ydCost", "lt": 539 }` (the first number in its text, or an input's value: `lt`, `lte`, `gt`, `gte`, `eq`), `{ "id": "ydSplit", "on": "8" }` (the pressed button of a group starts with this), `{ "id": "ppFwd", "checked": true }`, `{ "id": "cvTag", "has": "Finished" }` (add `"sel": "h3"` to look inside), `{ "id": "encOp", "is": "sub" }`, or `{ "any": [ … ] }`. Without a check, the page offers "I tried it". Add a way to solve it to `scripts/solve.mjs`: `npm run test:challenges` plays every check to its goal. |
+| `challenges[].hint` | Optional: one nudge, shown behind a click. Point at what to look at, not the answer. |
+| `challenges[].why` | Optional: shown once it is solved. Why the answer is what it is, in two or three plain sentences. |
 | `learn` | Loaded only when the topic opens. Write both `plain` and `engineer`, or neither. |
 
 ### Links: say what kind of connection it is

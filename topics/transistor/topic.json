@@ -74,14 +74,20 @@
       "lens": "break",
       "title": "Why planar was retired",
       "task": "Compare planar with a gate-all-around nanosheet: how many powers of ten does wrapping the gate add to the on/off ratio?",
-      "href": "#lab-transistor-1"
+      "href": "#lab-transistor-1",
+      "check": [[{"id": "trSeg", "on": "Planar"}], [{"id": "trSeg", "on": "GAA"}]],
+      "hint": "Look at the on/off current ratio for Planar, then for GAA nanosheet.",
+      "why": "Planar reaches an on/off ratio of about 10^4.2; a gate-all-around nanosheet about 10^5.7, roughly 30 times better. A gate that wraps the channel turns it off more firmly, so the switch leaks less when it should be off."
     },
     {
       "kind": "Puzzle",
       "lens": "imagine",
       "title": "Toward 60 millivolts",
       "task": "Step through the research transistors: which comes closest to the 60 mV per decade limit, and which one drives the most current for its footprint?",
-      "href": "#lab-transistor-1"
+      "href": "#lab-transistor-1",
+      "check": [[{"id": "trSeg", "on": "CFET"}], [{"id": "trSeg", "on": "2D"}]],
+      "hint": "Compare the subthreshold swing and the drive per footprint of CFET and the 2D channel.",
+      "why": "The atom-thin 2D channel comes closest to the 60 mV per decade limit (62), because the gate controls such a thin channel well. CFET drives the most current for its footprint (3.6 times planar), because it stacks two transistors in the space of one."
     }
   ],
   "learn": {

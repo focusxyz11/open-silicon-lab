@@ -64,14 +64,19 @@
       "lens": "build",
       "title": "Bandwidth per stack",
       "task": "Count the memory stacks around Rubin and work out how much of its 22 TB/s each one carries. How many phones of memory bandwidth is one stack?",
-      "href": "#lab-package-1"
+      "href": "#lab-package-1",
+      "check": [[{"id": "pkList", "on": "HBM4"}, {"id": "pkE", "gte": 0.95}]],
+      "hint": "Pull the package all the way apart and select the HBM4 stacks to count them. Then divide 22 TB/s by that number.",
+      "why": "Rubin has 8 HBM4 stacks, so each carries about 2.75 TB/s. A phone's whole memory delivers well under 0.1 TB/s, so one stack moves more than 25 phones' worth of data."
     },
     {
       "kind": "Design",
       "lens": "imagine",
       "title": "The next memory jump",
       "task": "Bandwidth per GPU grew about 6.6 times from H100 to Rubin. Decide where the next doubling should come from: more stacks, wider stacks or hybrid bonds, and say what your choice assumes.",
-      "href": "#lab-package-2"
+      "href": "#lab-package-2",
+      "hint": "Look at what each layer of the package does, then at how bandwidth grew from H100 to Rubin. Which change came from more stacks, and which from wider ones?",
+      "why": "There is no single answer. More stacks need a bigger package and more heat removal; wider stacks need finer connections; hybrid bonding needs new factories and good yield on stacked dies. Each bet assumes something different about heat, yield and cost, which is why this is an open problem."
     }
   ],
   "learn": {

@@ -12,6 +12,7 @@
 // problem in plain words, so a contributor (or their AI assistant) knows exactly what to fix.
 import { readFileSync, writeFileSync, existsSync, readdirSync, mkdirSync } from 'node:fs';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { join } from 'node:path';
 import { buildCommunity } from './community.mjs';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
@@ -199,6 +200,27 @@ async function checkGraph(metas, anchors, shellIds, problems) {
   }
 
   const challenges = [];
+  /* A challenge's "check" (src/app/checks.js) may only name elements its topic really has. */
+  const srcOf = {};
+  const topicSource = id => srcOf[id] || (srcOf[id] = [join(root, 'topics', id, 'content.html')].concat(existsSync(join(root, 'topics', id, 'labs')) ? readdirSync(join(root, 'topics', id, 'labs')).filter(f => f.endsWith('.js')).map(f => join(root, 'topics', id, 'labs', f)) : []).map(f => existsSync(f) ? readFileSync(f, 'utf8') : '').join('\n'));
+  const OPS = ['lt', 'lte', 'gt', 'gte', 'eq', 'on', 'checked', 'has', 'is'];
+  function condProblems(id, at, c) {
+    if (c && Array.isArray(c.any)) return c.any.flatMap(x => condProblems(id, at, x));
+    if (!c || !str(c.id)) return [`${at} "check" has a condition without an "id": ${q(c)}.`];
+    const out = [];
+    if (!OPS.some(k => k in c)) out.push(`${at} "check" condition on ${q(c.id)} needs one of ${OPS.join(', ')}.`);
+    if (!new RegExp('[\'"#]' + c.id.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '[\'"]').test(topicSource(id))) out.push(`${at} "check" names ${q(c.id)}, which topics/${id} never creates. Use an id from its content.html or its labs.`);
+    return out;
+  }
+  function checkProblems(id, at, c) {
+    const out = [];
+    if (c.hint !== undefined && !str(c.hint)) out.push(`${at} "hint" must be a sentence.`);
+    if (c.why !== undefined && !str(c.why)) out.push(`${at} "why" must be a sentence or two.`);
+    if (c.check === undefined) return out;
+    if (!Array.isArray(c.check) || !c.check.length || !c.check.every(s => Array.isArray(s) && s.length)) return out.concat(`${at} "check" must be a list of steps, each a list of conditions: [[{ "id": "ydCost", "lt": 539 }]].`);
+    c.check.forEach(s => s.forEach(x => out.push(...condProblems(id, at, x))));
+    return out;
+  }
   for (const m of metas) {
     const f = `topics/${m.id}/topic.json`;
     m.challenges.forEach((c, i) => {
@@ -208,7 +230,10 @@ async function checkGraph(metas, anchors, shellIds, problems) {
       if (!str(c.title) || !str(c.task)) problems.push(`${at} needs a "title" and a "task" (one sentence: what to do).`);
       const h = /^#([\w-]+)$/.exec(c.href || '');
       if (!h || !(anchors[h[1]] || ids.has(h[1]) || shellIds.has(h[1]) || ROUTES.includes(h[1]) || /^riscv-(\d+|sandbox)$/.test(h[1]))) problems.push(`${at} links to ${q(c.href)}, which does not exist. Use "#<topic>" or "#<id of an element in the topic>", such as "#lab-${m.id}-1".`);
-      challenges.push({ topic: m.id, kind: c.kind, lens: c.lens, t: c.title, d: c.task, href: c.href });
+      checkProblems(m.id, at, c).forEach(x => problems.push(x));
+      const out = { topic: m.id, kind: c.kind, lens: c.lens, t: c.title, d: c.task, href: c.href };
+      for (const k of ['check', 'hint', 'why']) if (c[k] !== undefined) out[k] = c[k];
+      challenges.push(out);
     });
     const L = m.learn || {};
     if (!!L.plain !== !!L.engineer) problems.push(`${f} "learn" needs both "plain" (for beginners) and "engineer" (for engineers), or neither.`);

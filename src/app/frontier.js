@@ -7,8 +7,7 @@
 import { BANDS, TOPICS, IDEAS, DEBATES, topicById, bandById, usesOf, debateTopics, debatesOf } from '../data/topics.js';
 import { CHALLENGES } from '../data/challenges.js';
 import { debateCard } from './hubs.js';
-import { levelStars } from './progress.js';
-import { P } from './learning.js';
+import { isSolved } from './checks.js';
 import { issueURL } from './config.js';
 import { t } from '../core/i18n.js';
 
@@ -22,7 +21,8 @@ const STATES = {};
 let st = null, mode = null;   // mode: { lens } on a door page (one column and the walls), or {} for the whole map
 CHALLENGES.forEach((c, i) => { c.i = i; });
 const inBand = (b, lens) => CHALLENGES.filter(c => c.lens === lens && (topicById(c.topic) || {}).band === b);
-const done = c => { const m = /^#riscv-(\d+)$/.exec(c.href); return m ? levelStars(+m[1]) > 0 : !!P.seen[c.topic]; };
+/* Solved, as src/app/checks.js knows it (a check passed, "I tried it", or a RISC-V star). */
+const done = isSolved;
 
 let root = null;
 
