@@ -77,7 +77,7 @@ export const PRODUCTS = [
     ['hbm', 'HBM memory stacks', 'mem', 'mem', '8–16 DRAM dies stacked with through-silicon vias', 'Sits next to each GPU in the same package to deliver terabytes per second.', ['package', 'datacenter']],
     ['hcpu', 'Host CPUs', 'proc', 'lead', '3 nm-class', 'Run the operating system and feed work to the accelerators.', ['architecture']],
     ['nic', 'Network chips', 'radio', 'lead', '3–5 nm', 'Network cards, data processing units and switches move data between thousands of GPUs.', ['datacenter']],
-    ['opt', 'Optical transceivers', 'radio', 'spec', 'Indium phosphide lasers plus 3–5 nm signal processors', 'Turn electrical signals into light for links longer than a few metres.', ['datacenter', 'package']],
+    ['opt', 'Optical transceivers', 'radio', 'spec', 'Indium phosphide lasers plus 3–5 nm signal processors', 'Turn electrical signals into light for links longer than a few meters.', ['datacenter', 'package']],
     ['spow', 'Power stages', 'power', 'spec', 'Silicon power processes plus gallium nitride (GaN)', 'Convert 48–54 volt rack power down to under one volt at over a thousand amps per accelerator.', ['physics', 'datacenter']],
     ['bmc', 'Management controller (BMC)', 'proc', 'mat', '28–40 nm', 'A small computer that watches fans, power and temperatures and lets operators restart the server remotely.', ['architecture']],
     ['ret', 'Signal retimers', 'radio', 'adv', '6–16 nm', 'Clean up high-speed PCIe and CXL signals so they survive the trip across the board.', ['design']],

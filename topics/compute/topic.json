@@ -38,7 +38,22 @@
       [2022, "Large language models serve hundreds of millions of people."]
     ]
   },
-  "challenges": [],
+  "challenges": [
+    {
+      "kind": "Experiment",
+      "lens": "break",
+      "title": "Feed the beast",
+      "task": "Serve a 70B model in FP8 on Rubin and raise the batch until the chip stops waiting for memory. Where does each user start to slow down?",
+      "href": "#lab-compute-2"
+    },
+    {
+      "kind": "Puzzle",
+      "lens": "build",
+      "title": "Sixteen answers",
+      "task": "Predict how many cycles a 4 × 4 systolic array needs to finish all 16 results, then step through it one cycle at a time to check.",
+      "href": "#lab-compute-1"
+    }
+  ],
   "learn": {
     "plain": "An AI chip is a giant multiplication machine. It runs fastest when its thousands of calculators stay busy, which means feeding them data quickly from memory and serving many people at once.",
     "engineer": "Decode is memory-bound: arithmetic intensity is about 2 × batch ÷ bytes per weight FLOP per byte, far below ridge points in the thousands. KV-cache reads add to weight traffic at long context. Standard tools include FP8 and FP4 quantization with block scaling, speculative decoding, continuous batching, paged KV caches, and splitting compute-bound prefill from bandwidth-bound decode onto different hardware, which NVIDIA's Rubin CPX targets.",

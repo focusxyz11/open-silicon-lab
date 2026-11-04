@@ -22,7 +22,15 @@
       ]
     ]
   },
-  "challenges": [],
+  "challenges": [
+    {
+      "kind": "Experiment",
+      "lens": "break",
+      "title": "Choke points",
+      "task": "Follow the supply links behind an AI GPU and find three companies that are the only maker of what they supply.",
+      "href": "#lab-ecosystem-2"
+    }
+  ],
   "learn": {
     "plain": "Making a chip is like making a film: one studio gets the credit, but it depends on writers, camera makers, sound studios and cinemas. Some of those suppliers are the only ones in the world who can do their part.",
     "engineer": "Chokepoints form where learning curves and capital needs are steepest: EUV scanners (ASML), leading-edge foundry (TSMC), EDA (three vendors), HBM (three suppliers), photoresists and some specialty gases. Export controls target exactly these points. Concentration also sets pricing power and how quickly new entrants, such as Rapidus, or new business models, such as Arm selling its own chip, can change the structure.",

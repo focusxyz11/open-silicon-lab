@@ -96,7 +96,7 @@ export function build(d, opt = {}) {
   const SY = TC.synth(D, proj.ins, proj.outs, d.lib === 'nand' ? 'nand' : 'basic', false, node);
   const PL = TC.place(SY.M, d.util || 0.5, 7); PL.anneal(Math.min(3000, 300 + SY.M.cells.length * 80), null);
   const RT = TC.route(PL);
-  const ux = nd.site[0] * 1e-6, uy = nd.site[1] / 3 * 1e-6;              /* one grid step, in metres */
+  const ux = nd.site[0] * 1e-6, uy = nd.site[1] / 3 * 1e-6;              /* one grid step, in meters */
   const dW = PL.GW * ux, dH = PL.H * uy;
   const [tw, th] = tileSize(node).map(v => v * 1e-6);
   const gap = 0.12 * tw, dieW = SHARED.cols * tw + 2 * gap, dieH = SHARED.rows * th + 2 * gap + 0.05 * tw;

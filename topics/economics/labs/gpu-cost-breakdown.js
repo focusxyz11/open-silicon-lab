@@ -21,7 +21,7 @@ function run(){const W=+I.w.value,A=+I.a.value,D0=+I.d.value,H=+I.h.value,HP=+I.
  $('#gcCost').textContent=money(cost);$('#gcMem').textContent=Math.round(memShare*100)+'%';$('#gcDies').textContent=Math.floor(good)+' of '+gross;$('#gcGm').textContent=Math.round(gm*100)+'%';
  $('#gcTag').textContent='Cost '+money(cost)+' · price '+money(S);
  let t;if(hbm>dies+pk+aux)t='Memory is the biggest cost: the HBM stacks cost more than the compute dies, packaging and test together. This is why HBM makers have become so profitable.';
- else if(dies>hbm)t='The compute dies now cost more than the memory. Large dies lose yield fast: each extra square millimetre raises the chance that a defect lands on the die.';
+ else if(dies>hbm)t='The compute dies now cost more than the memory. Large dies lose yield fast: each extra square millimeter raises the chance that a defect lands on the die.';
  else t='HBM and packaging together make up most of the cost, while the famous compute dies are a modest share.';
  if(PY<.8)t+=' At this packaging yield, every failed package also throws away its working HBM and dies, so losses climb quickly.';
  $('#gcTxt').textContent=t;}

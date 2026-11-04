@@ -9,7 +9,7 @@ const pf=(mu,s)=>{const k=Math.SQRT2*s;return 0.5*erfc((4.2-mu)/k)+0.5*erfc((4.2
 function upd(){const mu=+X.value,s=+S.value,p=pf(mu,s),f=p*1e10;
  $('#ovXO').textContent=(mu>=0?'+':'')+mu.toFixed(1)+' nm';$('#ovSO').textContent=s.toFixed(2)+' nm';
  $('#ovP').textContent=p<1e-15?'< 1 in 10¹⁵':'1 in '+big(1/p);$('#ovF').textContent=f>=1?big(f):f<1e-4?'< 0.0001':f.toPrecision(2);
- $('#ovTxt').textContent=f>=1?'Nearly every chip would have broken connections, so yield would be close to zero. Total overlay error must stay within a couple of nanometres.':f>=0.05?'Several percent of chips would fail from overlay alone. Still too risky.':'Fewer than 1 chip in 20 affected. This is the level of control a leading fab needs.';
+ $('#ovTxt').textContent=f>=1?'Nearly every chip would have broken connections, so yield would be close to zero. Total overlay error must stay within a couple of nanometers.':f>=0.05?'Several percent of chips would fail from overlay alone. Still too risky.':'Fewer than 1 chip in 20 affected. This is the level of control a leading fab needs.';
  $('#ovTag').innerHTML=f>=1?'<span class="status bad">Chips fail</span>':f>=0.05?'<span class="status warn">Marginal</span>':'<span class="status ok">Within budget</span>';draw();}
 function draw(){const {ctx:c,w,h}=fit($('#ovCv'));c.clearRect(0,0,w,h);const mu=+X.value,s=+S.value;const view=178,sc=w/view,ox=5*sc;const rows=Math.max(3,Math.floor((h/sc-20)/40));
  for(let k=0;k<6;k++){const cx=14+k*28;c.fillStyle='rgba(196,122,68,0.75)';c.fillRect(ox+(cx-7)*sc,0,14*sc,h);}

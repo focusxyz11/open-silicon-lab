@@ -33,7 +33,7 @@ function upd(){const p=+I.p.value,T=+I.t.value,r=+I.r.value;$('#czPullO').textCo
  else if(st.done)t=st.shock?'You lifted the crystal off the melt at full width. The thermal shock sends dislocations back up about one diameter, so the last 30 cm was scrapped. Taper the tail first next time.':'Done: a dislocation-free ingot. It will be ground to exactly 300 mm, sliced into about '+waf+' wafers, and each wafer may carry hundreds of chips.';
  else if(ph==='dip'||ph==='neck')t='Pull fast and keep the melt hot so the neck narrows to about 3–5 mm. Any dislocations from the seed grow out of the thin neck and vanish (the Dash necking technique).';
  else if(ph==='shoulder')t='Neck done'+(st.neckOk?' and dislocation-free':'')+'. Now slow the pull and cool the melt slightly so the crystal spreads out toward 300 mm.';
- else if(ph==='body')t=st.D<300?'Too thin: below 300 mm the crystal can\'t be ground to a full wafer. Slow down or cool the melt.':st.D>312?'Too wide: usable, but extra silicon is ground away and wasted. Speed up a little.':'In tolerance. Every millimetre grown now becomes wafers.';
+ else if(ph==='body')t=st.D<300?'Too thin: below 300 mm the crystal can\'t be ground to a full wafer. Slow down or cool the melt.':st.D>312?'Too wide: usable, but extra silicon is ground away and wasted. Speed up a little.':'In tolerance. Every millimeter grown now becomes wafers.';
  else t='The melt is running out. Speed up and heat the melt to taper the crystal to a point before lifting it off.';
  if(r<5)t+=' Rotation is very slow, so heat and dopants spread unevenly (striations).';if(r>22)t+=' Rotation this fast stirs up turbulence in the melt.';
  $('#czTxt').textContent=t;}
