@@ -537,6 +537,30 @@
    "verified": "2026-10-27"
   },
   {
+   "id": "fab-steps",
+   "topic": "fab",
+   "detail": "A wafer moves from one piece of equipment to another, step after step, over months in the fab.",
+   "kind": "reported",
+   "label": "Process steps for an advanced logic chip",
+   "source": "Semiconductor Engineering",
+   "status": "current",
+   "url": "https://semiengineering.com/why-fabs-worry-about-tool-parts",
+   "value": "1,000 or more",
+   "verified": "2026-11-04"
+  },
+  {
+   "id": "fab-cycle-time",
+   "topic": "fab",
+   "detail": "About 1 to 1.5 days per layer on average. Final assembly and test add another 4 to 8 weeks.",
+   "kind": "estimate",
+   "label": "Mask layers and time in the fab, by node",
+   "source": "ECIA, Understanding Lead Times",
+   "status": "current",
+   "url": "https://ecianow.org/assets/docs/Stats/LeadTimes/Understanding%20Lead%20Times.pdf",
+   "value": "28 nm: 40–50 layers, about 40 days; 7 nm: 80–85 layers, 80–85 days; 5 nm: about 100 layers",
+   "verified": "2026-11-04"
+  },
+  {
    "id": "hyperscaler-capex",
    "topic": "economics",
    "detail": "Alphabet, Amazon, Meta and Microsoft combined plans.",
