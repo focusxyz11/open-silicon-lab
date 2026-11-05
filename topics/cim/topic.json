@@ -1,7 +1,7 @@
 {
   "id": "cim",
   "title": "Compute in memory",
-  "band": "next",
+  "band": "frontier",
   "order": 20,
   "kind": "explore",
   "summary": "An analog crossbar multiplies with Ohm's law where the weights live. Trade precision for energy.",

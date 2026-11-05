@@ -2,7 +2,7 @@
   "id": "datacenter",
   "title": "Memory, networks & power",
   "band": "systems",
-  "order": 20,
+  "order": 60,
   "kind": "explore",
   "summary": "DRAM and NAND cells, HBM stacks, cluster networks and the energy of every token.",
   "labs": ["memory-cell-lab", "hbm-stack-builder", "cluster-network", "energy-per-token"],

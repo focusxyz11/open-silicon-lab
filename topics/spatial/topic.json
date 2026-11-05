@@ -1,8 +1,8 @@
 {
   "id": "spatial",
   "title": "Dataflow & wafer-scale",
-  "band": "next",
-  "order": 80,
+  "band": "frontier",
+  "order": 70,
   "kind": "explore",
   "summary": "Lay the program out across the chip and keep weights where the work happens.",
   "labs": ["next-spatial"],

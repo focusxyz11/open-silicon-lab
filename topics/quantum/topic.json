@@ -1,8 +1,8 @@
 {
   "id": "quantum",
   "title": "Quantum computers",
-  "band": "next",
-  "order": 50,
+  "band": "frontier",
+  "order": 80,
   "kind": "explore",
   "summary": "Build two-qubit circuits: superposition, interference and entanglement, and where qubits could help.",
   "labs": [

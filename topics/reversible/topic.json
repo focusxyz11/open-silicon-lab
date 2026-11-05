@@ -1,8 +1,8 @@
 {
   "id": "reversible",
   "title": "Reversible computing",
-  "band": "next",
-  "order": 70,
+  "band": "frontier",
+  "order": 60,
   "kind": "explore",
   "summary": "The physical floor on energy per bit, and logic that can recycle its own energy.",
   "labs": ["next-reversible"],

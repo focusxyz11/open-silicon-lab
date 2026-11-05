@@ -2,7 +2,7 @@
   "id": "evolve",
   "title": "Evolve a circuit",
   "band": "design",
-  "order": 32,
+  "order": 60,
   "kind": "explore",
   "summary": "Let blind evolution design a circuit from random wiring, then compare it with a person's design: smaller sometimes, stranger always.",
   "labs": ["evolve-lab"],

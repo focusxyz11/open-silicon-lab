@@ -1,8 +1,8 @@
 {
   "id": "factory",
   "title": "Run a chip factory",
-  "band": "mfg",
-  "order": 25,
+  "band": "making",
+  "order": 30,
   "kind": "explore",
   "summary": "A 3D fab you run: why chips take months, why one machine group sets the pace, and who feeds it.",
   "labs": ["fab3d"],

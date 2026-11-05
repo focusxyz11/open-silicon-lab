@@ -1,8 +1,8 @@
 {
   "id": "scenarios",
   "title": "Future scenarios",
-  "band": "future",
-  "order": 30,
+  "band": "frontier",
+  "order": 100,
   "kind": "explore",
   "summary": "Steer the bets that shape 2040, and see which beyond-silicon ideas are real.",
   "labs": ["scenario-planner", "beyond-silicon-board"],

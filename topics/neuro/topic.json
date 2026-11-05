@@ -1,7 +1,7 @@
 {
   "id": "neuro",
   "title": "Neuromorphic chips",
-  "band": "next",
+  "band": "frontier",
   "order": 30,
   "kind": "explore",
   "summary": "Spiking neurons that work only when something happens. Tune one to spot a pattern.",

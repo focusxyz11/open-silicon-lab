@@ -2,16 +2,11 @@
    Every topic sits in exactly one band: its topic.json says which ("band": "<id>").
    Bands are part of the fixed structure; add one only when a whole new layer is missing. */
 export const BANDS = [
-  { id: 'questions', t: 'Big questions',       d: 'Challenges beyond the technology itself' },
-  { id: 'future',   t: 'Innovation & future',  d: 'What limits progress, and where it could go' },
-  { id: 'next',     t: 'New ways to compute',  d: 'Memory, light, noise, qubits and neurons that compute' },
-  { id: 'industry', t: 'Industry & economics', d: 'Companies, countries and money' },
-  { id: 'systems',  t: 'Devices & data centers', d: 'Where chips end up: phones, cars, gadgets and the cloud' },
-  { id: 'ai',       t: 'Specialized computing', d: 'Chips built for one kind of work, above all AI' },
-  { id: 'pkg',      t: 'Packaging & memory',    d: 'Chiplets, HBM and advanced packages' },
-  { id: 'mfg',      t: 'Manufacturing',         d: 'Printing, building and testing on the wafer' },
-  { id: 'design',   t: 'Chip design',           d: 'From code to gates to layout' },
-  { id: 'cpu',      t: 'Processors & ISA',      d: 'Instruction sets and how a CPU works' },
-  { id: 'device',   t: 'Transistors',           d: 'The switch, and how its shape evolved' },
-  { id: 'atoms',    t: 'Atoms & materials',     d: 'Semiconductor physics and pure silicon' }
+  { id: 'frontier',   t: 'Frontier',              d: 'New ways to compute, big questions and what comes next' },
+  { id: 'industry',   t: 'Industry',              d: 'Companies, countries, money and how the field changes' },
+  { id: 'systems',    t: 'Systems',               d: 'Where chips end up, from gadgets and sensors to AI and data centers' },
+  { id: 'making',     t: 'Making',                d: 'Printing, building, measuring and packaging chips' },
+  { id: 'design',     t: 'Design',                d: 'From code to gates to layout, and testing the result' },
+  { id: 'processors', t: 'Processors and memory', d: 'How a chip runs programs, keeps time and remembers' },
+  { id: 'atoms',      t: 'Atoms and switches',    d: 'Semiconductor physics and the transistor' }
 ];

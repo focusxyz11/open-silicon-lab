@@ -1,8 +1,8 @@
 {
   "id": "package",
   "title": "Packaging & memory",
-  "band": "pkg",
-  "order": 10,
+  "band": "making",
+  "order": 50,
   "kind": "explore",
   "summary": "Interposers, HBM stacks and CoWoS: the package is now a system.",
   "labs": ["package"],

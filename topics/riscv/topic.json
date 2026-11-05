@@ -1,7 +1,7 @@
 {
   "id": "riscv",
   "title": "RISC-V CPU lab",
-  "band": "cpu",
+  "band": "processors",
   "order": 20,
   "kind": "build",
   "summary": "Program a real RISC-V core on a live datapath, then invent a custom AI instruction and measure the speedup.",

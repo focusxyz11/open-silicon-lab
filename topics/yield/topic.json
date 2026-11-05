@@ -1,8 +1,8 @@
 {
   "id": "yield",
   "title": "Wafer & yield",
-  "band": "mfg",
-  "order": 30,
+  "band": "making",
+  "order": 40,
   "kind": "explore",
   "summary": "Why defects make big dies expensive, and why chiplets help.",
   "labs": [

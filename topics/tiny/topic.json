@@ -2,7 +2,7 @@
   "id": "tiny",
   "title": "Tiny chip studio",
   "band": "design",
-  "order": 40,
+  "order": 30,
   "kind": "build",
   "summary": "Take your own circuit through all eight steps: logic, verification, gates, layout, masks, fab, test and a working gadget.",
   "labs": ["tiny-chip-studio"],

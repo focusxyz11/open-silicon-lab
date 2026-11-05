@@ -2,7 +2,7 @@
   "id": "bench",
   "title": "Your bench: real hardware",
   "band": "design",
-  "order": 45,
+  "order": 70,
   "kind": "build",
   "summary": "Test a chip the way engineers do: drive its pins, compare it with the simulation, and track down defects. On screen today, on real boards as they join.",
   "labs": [

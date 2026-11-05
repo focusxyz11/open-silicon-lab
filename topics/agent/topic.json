@@ -2,7 +2,7 @@
   "id": "agent",
   "title": "Design with an AI agent",
   "band": "design",
-  "order": 30,
+  "order": 50,
   "kind": "build",
   "summary": "An agent proposes designs, code and claims. Check them with real tools, find the mistakes, and decide what to trust.",
   "labs": ["agent-partner"],

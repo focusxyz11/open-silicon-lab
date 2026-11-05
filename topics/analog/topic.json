@@ -2,7 +2,7 @@
   "id": "analog",
   "title": "Chips that touch the real world",
   "band": "systems",
-  "order": 15,
+  "order": 20,
   "kind": "explore",
   "summary": "Sensors, amplifiers, converters and power chips: catch a heartbeat or a voice on a battery budget, and feed a chip without wasting power.",
   "labs": ["analog-lab"],

@@ -1,8 +1,8 @@
 {
   "id": "accelerators",
   "title": "AI chip architectures",
-  "band": "ai",
-  "order": 20,
+  "band": "systems",
+  "order": 40,
   "kind": "explore",
   "summary": "GPUs, TPUs, wafer-scale and SRAM chips; 4-bit numbers; prefill versus decode.",
   "labs": ["architecture-explorer", "real-chip-comparison", "quantization-lab", "prefill-vs-decode"],
