@@ -10,7 +10,8 @@ const topics = readdirSync(new URL('topics/', root), { withFileTypes: true }).fi
 const pages = topics.map(id => [id, existsSync(new URL('topics/' + id + '/content.html', root)) ? readFileSync(new URL('topics/' + id + '/content.html', root), 'utf8') : '']).filter(([, h]) => /class="lab depthlab"/.test(h));
 
 test('at least the two first depth labs exist', () => {
-  assert.deepEqual(pages.map(p => p[0]).sort(), ['quantum', 'yield']);
+  const ids = pages.map(p => p[0]);
+  for (const id of ['quantum', 'yield']) assert.ok(ids.includes(id), id + ' should be a depth lab');
 });
 
 test('every depth lab has a rail with four linkable stops and a mission at each', () => {

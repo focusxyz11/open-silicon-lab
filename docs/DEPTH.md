@@ -28,7 +28,7 @@ There are no levels of reader. Everyone starts at See it, nothing is locked, and
 6. Make the first challenge in `topic.json` one a newcomer can do at See it.
 7. Run `npm run catalog`, `npm test`, `npm run test:browser` and `npm run test:challenges`.
 
-`topics/yield` is the example for a physical process, and `topics/quantum` for an abstract one.
+`topics/yield` is the example for a physical process, and `topics/quantum` for an abstract one. `topics/factory` shows a whole system in 3D: See it watches the line, Measure it runs it, Model it changes how it prints and is run, and Open question opens the ecosystem around it.
 
 ## Progress
 

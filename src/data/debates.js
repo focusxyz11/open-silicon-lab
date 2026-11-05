@@ -30,7 +30,7 @@ export const DEBATES = [
     { t: 'Hardware is different', claim: 'Every attempt costs masks, fab time and testing; open designs do not remove the biggest costs or the need for trusted verification.', assumes: 'Manufacturing stays expensive and concentrated.', topics: ['economics', 'ecosystem'] }
   ] },
   { id: 'supply', t: 'A fragile supply chain', q: 'Most advanced chips pass through a few fabs and packaging lines. How should the chain be made resilient?', views: [
-    { t: 'Spread the fabs', claim: 'Build leading-edge fabs and packaging in more regions, so one shock cannot stop the world.', assumes: 'Governments and customers will keep paying the higher cost.', topics: ['supply', 'fab'] },
+    { t: 'Spread the fabs', claim: 'Build leading-edge fabs and packaging in more regions, so one shock cannot stop the world.', assumes: 'Governments and customers will keep paying the higher cost.', topics: ['supply', 'fab', 'factory'] },
     { t: 'Concentrate, with buffers', claim: 'Keep the efficient hubs and add stockpiles, second sources and long contracts.', assumes: 'Shocks are short enough to ride out on buffers.', topics: ['economics', 'ecosystem'] }
   ] },
   { id: 'signoff', t: 'Who signs off?', q: 'If AI agents write most of a chip\'s code and tests, who is responsible when the silicon fails?', views: [
