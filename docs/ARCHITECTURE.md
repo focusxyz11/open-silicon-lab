@@ -117,8 +117,8 @@ A topic loads once and stays on the page. Code in one topic that needs another (
 | --- | --- |
 | `#map` or empty | the chip stack map |
 | `#whatif` | the map in What if? mode, with the levers open |
-| `#workshop`, `#break`, `#imagine` | the Build, Break and Imagine doors (`#map` is Explore) |
-| `#frontier` (or `#challenges`) | the Frontier tab: walls, gaps, the community chip and the whole frontier map |
+| `#workshop`, `#break`, `#imagine` | the Build, Break and Imagine tabs of the Challenges page (`#map` is Explore) |
+| `#frontier` (or `#challenges`) | the Open problems tab: walls, gaps, the community chip and the whole frontier map |
 | `#knowledge`, `#mychip` | reference views, linked from the footer and the Build door |
 | `#<topic>` | one topic, challenge first: breadcrumb, thread bar, mission card, simulations, the open problems, connections, then facts and big ideas folded into Go deeper |
 | `#lab-<topic>-<n>` or any element id | its topic, scrolled to that element |
@@ -219,11 +219,11 @@ When a topic loads, `challengeFirst(id, section)` turns its page around so a rea
 
 A challenge's `check` in its topic.json lists conditions on the simulation's own controls and readouts (see `topics/README.md`). `watchChecks(id, section)` re-tests them after every input and every change the simulation writes, at most a few times a second; when every step has been seen, `markSolved` saves it in this browser (`osl-solved-v1`) and fires `osl:solved` and `osl:progress`. The mission card then features the next challenge not yet solved, a note with the challenge's `why` opens on the simulation it was solved in, and the frontier map and the doors count it. A challenge without a check offers "I tried it"; RISC-V levels count as solved once they have a star. `npm run catalog` rejects a check that names an element its topic never creates, and `npm run test:challenges` (`scripts/solve.mjs`, in CI) plays every check to its goal in a real browser and fails if one is solved before the reader does anything.
 
-## The four doors (`src/app/doors.js`)
+## The Challenges page (`src/app/doors.js`)
 
-The top bar has four doors: **Explore** (the home page: rack to atom and the map), **Build** (`#workshop`), **Break** (`#break`) and **Imagine** (`#imagine`), then the whole frontier map. Each of the last three opens with a head (`doorHead`), its projects as cards (`project`: a topic or a page, with its challenge count), and its own column of the frontier map beside the walls (`doorMap`, which calls `renderFrontier(el, { lens })`). The Build door keeps the three connected builds, the community chip, My chip and the playground of every simulation. Knowledge is a reference, so it moved to the footer. Each door keeps its own map state, so picking a wall in one does not change another.
+The top bar has three items: **Explore** (the home page: rack to atom and the map), **Challenges** and **My chip**. Challenges has four tabs (`chTabs`), each with its own address: **Build** (`#workshop`), **Break** (`#break`), **Imagine** (`#imagine`) and **Open problems** (`#frontier`, also `#challenges`). Each of the first three opens with a head (`doorHead`), its projects as cards (`project`: a topic or a page, with its challenge count), and its own column of the frontier map beside the walls (`doorMap`, which calls `renderFrontier(el, { lens })`). The Build door keeps the three connected builds, the community chip, My chip and the playground of every simulation. Knowledge is a reference, so it moved to the footer. Each door keeps its own map state, so picking a wall in one does not change another.
 
-## The Frontier tab (`src/app/frontier-page.js`)
+## The Open problems tab (`src/app/frontier-page.js`)
 
 The fifth tab is where the lab works on what nobody has solved. From the top: four ways to take part (lean and test, propose a challenge, add a view, design for the shared chip); a card for each wall with its answers and how many challenges test each (fewer than three is marked thin), the reader's lean, **See it on the map** (`pickWall` in `frontier.js`) and **Add a view**; the gaps (`gaps()`: answers tested by fewer than three challenges, and places on the map with no challenge), each opening a prefilled proposal; the community chip's designs; and the whole frontier map. Proposals are GitHub issues from `.github/ISSUE_TEMPLATE/challenge.yml` and `view.yml`; `issueURL(template, fields)` fills any of a form's fields by id. Nothing is fetched from GitHub: an accepted proposal becomes a challenge, a view in `src/data/debates.js` or a design in `community/`, and shows up here through the catalog.
 

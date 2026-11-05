@@ -40,7 +40,7 @@ body:
     id: wall
     attributes:
       label: Open problem it tests (optional)
-      description: One of the walls on the Frontier page, for example The memory wall.
+      description: One of the walls on the Open problems page, for example The memory wall.
   - type: dropdown
     id: background
     attributes:
