@@ -21,7 +21,7 @@ export const HERO = [
     build: { ch: ['tiny', 'Tape it out for real'] },
     break: { ch: ['bench', 'Let a defect escape'] },
     imagine: { ch: ['beyond', 'Same job, ten machines'] } },
-  { topics: ['compute', 'architecture'],
+  { topics: ['accelerators', 'architecture'],
     build: { ch: ['riscv', 'Invent an instruction'] },
     break: { ch: ['agent', 'Verify the agent'] },
     imagine: { ch: ['cim', 'Fewest bits that still work'] } },

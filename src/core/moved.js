@@ -8,6 +8,9 @@
 export const MOVED = {
   ecosystem: 'supply',
   scenarios: 'future',
+  compute: 'accelerators',
+  'lab-compute-1': 'lab-accelerators-5',
+  'lab-compute-2': 'lab-accelerators-6',
   'lab-scenarios-1': 'lab-future-2',
   'lab-scenarios-2': 'lab-future-3',
   'lab-ecosystem-1': 'lab-supply-5',
@@ -15,7 +18,7 @@ export const MOVED = {
 };
 
 /* Where each merged topic's quiz now starts: the number of questions already in the receiving topic. */
-export const QUIZ_AT = { ecosystem: 3, scenarios: 3 };
+export const QUIZ_AT = { ecosystem: 3, scenarios: 3, compute: 3 };
 
 /* Where an address lives now, or null if it has not moved. */
 export const movedTo = (id, moved = MOVED) => (Object.hasOwn(moved, id) ? moved[id] : null);

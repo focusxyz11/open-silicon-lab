@@ -9,11 +9,11 @@ export const DEBATES = [
   { id: 'memory', t: 'The memory wall', q: 'AI chips do math faster than memory can feed them. Where will the next big jump in bandwidth come from?', views: [
     { t: 'Stack it closer', claim: 'Put memory on top of, or right beside, the compute: more HBM stacks, hybrid bonding, 3D chips.', assumes: 'Heat can still escape from taller stacks, and stacked parts keep yielding well.', topics: ['package', 'datacenter'] },
     { t: 'Keep it on the chip', claim: 'Spread SRAM across a wafer-sized chip so the weights never leave the silicon.', assumes: 'Models fit in on-chip memory, or split across many such chips cheaply.', topics: ['spatial', 'accelerators'] },
-    { t: 'Move less data', claim: 'Smaller numbers, sparsity and computing inside memory cut the bytes that must move at all.', assumes: 'Answers stay accurate enough at low precision.', topics: ['compute', 'cim'] }
+    { t: 'Move less data', claim: 'Smaller numbers, sparsity and computing inside memory cut the bytes that must move at all.', assumes: 'Answers stay accurate enough at low precision.', topics: ['accelerators', 'cim'] }
   ] },
   { id: 'power', t: 'The power wall', q: 'AI data centers ask for ever more electricity. What cuts the energy of an answer most?', views: [
     { t: 'Better chips', claim: 'Each chip generation does much more work per watt; keep improving the hardware.', assumes: 'Process and architecture gains keep coming at the old pace.', topics: ['accelerators', 'transistor'] },
-    { t: 'Better numbers and models', claim: 'Smaller number formats and smaller models do the same job with a fraction of the work.', assumes: 'Quality holds as models and numbers shrink.', topics: ['compute', 'accelerators'] },
+    { t: 'Better numbers and models', claim: 'Smaller number formats and smaller models do the same job with a fraction of the work.', assumes: 'Quality holds as models and numbers shrink.', topics: ['accelerators'] },
     { t: 'Better grids', claim: 'Efficiency gains get used up by more demand; the real limit is how fast power plants and grids can grow.', assumes: 'Demand keeps rising whatever the chips do.', topics: ['datacenter', 'future'] }
   ] },
   { id: 'shrink', t: 'Beyond 2 nm', q: 'Transistors are now stacked sheets. Where does progress come from next?', views: [
