@@ -795,3 +795,9 @@ span.fmp{cursor:default}
 @keyframes oslwin{from{transform:translateY(-6px);opacity:0}to{transform:none;opacity:1}}
 @media(prefers-reduced-motion:reduce){.chwin{animation:none}}
 .labch p.done b::after{content:" ✓";color:var(--good)}
+
+/* The Challenges page's tabs */
+.chtabs{display:flex;flex-wrap:wrap;gap:6px;padding-top:18px}
+.chtabs a{font:500 14px/1 var(--body);padding:10px 14px;border:1px solid var(--line);border-radius:4px;color:var(--ink);background:var(--surface);text-decoration:none}
+.chtabs a:hover{border-color:var(--muted)}
+.chtabs a[aria-current="page"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}

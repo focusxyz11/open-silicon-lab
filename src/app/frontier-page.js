@@ -5,6 +5,7 @@
    (.github/ISSUE_TEMPLATE/challenge.yml and view.yml), so anyone can read, improve and argue with them;
    when one is accepted it becomes a challenge, a view or a design in the repository, and shows here. */
 import { BANDS, DEBATES, topicById, bandById } from '../data/topics.js';
+import { chTabs } from './doors.js';
 import { CHALLENGES } from '../data/challenges.js';
 import { COMMUNITY } from '../generated/community.js';
 import { renderFrontier, watchFrontier, pickWall } from './frontier.js';
@@ -74,7 +75,7 @@ function communityHTML() {
 export function renderFrontierPage() {
   const v = document.getElementById('view-challenges');
   const views = DEBATES.reduce((s, d) => s + d.views.length, 0), g = gaps();
-  v.innerHTML = '<section class="wrap dhead fc-walls"><p class="code"><span class="dot"></span>' + t('fr.code') + '</p><h1>' + t('fr.title') + '</h1><p class="lede">' + t('fr.lede') + '</p>' +
+  v.innerHTML = chTabs('open') + '<section class="wrap dhead fc-walls"><p class="code"><span class="dot"></span>' + t('fr.code') + '</p><h1>' + t('fr.title') + '</h1><p class="lede">' + t('fr.lede') + '</p>' +
     '<p class="small muted">' + t('fr.counts', { walls: DEBATES.length, views, ch: CHALLENGES.length, gaps: g.cells.length + g.views.length }) + '</p></section>' +
     ways() +
     '<section class="wrap fwalls" id="frwalls"><div class="fsh"><p class="code">' + t('fr.walls.code') + '</p><h2>' + t('fr.walls.t') + '</h2><p class="muted">' + t('fr.walls.d') + '</p></div><div class="fwgrid">' + DEBATES.map(wallCard).join('') +

@@ -125,6 +125,14 @@ async function check(viewport) {
     const r = await page.evaluate(([v, lens]) => { const el = document.getElementById('view-' + v); const ps = [...el.querySelectorAll('.fm .fmp')]; return { n: ps.length, other: ps.filter(p => !p.classList.contains('fc-' + lens)).length, walls: el.querySelectorAll('.fm .fmw[data-w]').length }; }, [v, lens]);
     if (!r.n || r.other || !r.walls) problems.push(tag + v + ' door should show only its ' + lens + ' challenges and the walls (got ' + JSON.stringify(r) + ')');
   }
+  /* One Challenges page: three top-bar items, with every old address still opening its tab. */
+  if ((await page.$$('#nav a')).length !== 3) problems.push(tag + 'the top bar should have three items');
+  for (const h of ['workshop', 'break', 'imagine', 'frontier', 'challenges']) {
+    await page.evaluate(h => { location.hash = h; }, h);
+    await page.waitForTimeout(120);
+    const r = await page.evaluate(() => { const v = [...document.querySelectorAll('.view')].find(e => !e.hidden); return { tabs: v.querySelectorAll('.chtabs a').length, on: v.querySelectorAll('.chtabs [aria-current]').length, nav: (document.querySelector('#nav [aria-current]') || {}).textContent }; });
+    if (r.tabs !== 4 || r.on !== 1 || r.nav !== 'Challenges') problems.push(tag + '#' + h + ' should open a tab of the Challenges page (got ' + JSON.stringify(r) + ')');
+  }
   for (const v of ['workshop', 'break', 'imagine', 'challenges', 'knowledge']) {
     await page.evaluate(h => { location.hash = h; }, v);
     await page.waitForTimeout(120);

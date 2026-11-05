@@ -9,7 +9,7 @@ not need to be a chip expert: plain words and a source go a long way.
 
 ## Ways to help
 
-**Propose a challenge or a view, no code needed.** The site's **Frontier** tab opens prefilled
+**Propose a challenge or a view, no code needed.** The site's **Open problems** tab opens prefilled
 forms: *Propose a challenge* (a goal someone can reach in a simulation) or *Add a view* (an answer
 people give to an open problem, with what it assumes). Rough ideas are welcome; others can sharpen
 them in the issue.

@@ -23,12 +23,14 @@ const $ = s => document.querySelector(s);
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const VIEWS = ['map', 'topic', 'workshop', 'break', 'imagine', 'challenges', 'knowledge', 'mychip'];
 const REF = { glossary: 1, sources: 1 };
+/* One Challenges page in the top bar: these views are its tabs (src/app/doors.js). */
+const CH_VIEWS = ['workshop', 'break', 'imagine', 'challenges'];
 const refName = id => t('ref.' + id);
 let curView = null, curTopic = null;
 
 function show(view) {
   VIEWS.forEach(v => { const el = $('#view-' + v); if (el) el.hidden = v !== view; });
-  const navFor = view === 'topic' ? ((topicById(curTopic) || {}).kind === 'build' ? 'workshop' : 'map') : view;
+  const navFor = view === 'topic' ? ((topicById(curTopic) || {}).kind === 'build' ? 'workshop' : 'map') : CH_VIEWS.includes(view) ? 'workshop' : view;
   document.querySelectorAll('#nav a').forEach(a => { if (a.dataset.v === navFor) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); });
   curView = view;
 }

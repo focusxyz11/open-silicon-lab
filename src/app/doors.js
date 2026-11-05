@@ -1,4 +1,4 @@
-/* The four doors into the lab: Explore (the home map), Build, Break and Imagine. Build, Break and
+/* The tabs of the Challenges page: Build, Break, Imagine and Open problems. Build, Break and
    Imagine each open with their big projects, then their own column of the frontier map: every
    challenge of that kind, by layer, beside the open problems they help with. Their words are
    door.<id>.* in src/i18n; a project is a topic (its title and summary come from the graph) or one
@@ -26,10 +26,16 @@ export function project(id) {
     (n ? esc(t('door.challenges', { n })) : '') + (tp && P.seen[id] ? '<em>' + t('door.opened') + '</em>' : '') + '</small></a>';
 }
 
+/* The Challenges page: one place in the top bar, with these tabs. Each keeps its own address. */
+export function chTabs(here) {
+  const tabs = [['workshop', 'nav.build', 'build'], ['break', 'nav.break', 'break'], ['imagine', 'nav.imagine', 'imagine'], ['frontier', 'nav.challenges', 'open']];
+  return '<nav class="wrap chtabs" aria-label="' + t('nav.tabs') + '">' + tabs.map(([href, label, id]) => '<a href="#' + href + '"' + (id === here ? ' aria-current="page"' : '') + '>' + t(label) + '</a>').join('') + '</nav>';
+}
+
 /* The heading every door shares; lens is build, break or imagine. */
 export function doorHead(lens) {
   const mine = CHALLENGES.filter(c => c.lens === lens), n = mine.length, k = solvedIn(mine);
-  return '<section class="wrap dhead fc-' + lens + '"><p class="code"><i class="dot"></i>' + t('door.' + lens + '.code') + '</p><h1>' + t('door.' + lens + '.title') + '</h1>' +
+  return chTabs(lens) + '<section class="wrap dhead fc-' + lens + '"><p class="code"><i class="dot"></i>' + t('door.' + lens + '.code') + '</p><h1>' + t('door.' + lens + '.title') + '</h1>' +
     '<p class="lede">' + t('door.' + lens + '.lede') + '</p><p class="small muted">' + esc(t('door.count', { n })) + (k ? ' · ' + esc(t('door.solved', { n: k })) : '') + ' · <a href="#challenges">' + t('door.whole') + '</a></p></section>';
 }
 

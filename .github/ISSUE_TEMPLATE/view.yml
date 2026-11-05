@@ -11,7 +11,7 @@ body:
     id: wall
     attributes:
       label: Open problem
-      description: One of the walls on the Frontier page, for example The memory wall, or a new one.
+      description: One of the walls on the Open problems page, for example The memory wall, or a new one.
     validations:
       required: true
   - type: input
