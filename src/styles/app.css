@@ -801,3 +801,8 @@ span.fmp{cursor:default}
 .chtabs a{font:500 14px/1 var(--body);padding:10px 14px;border:1px solid var(--line);border-radius:4px;color:var(--ink);background:var(--surface);text-decoration:none}
 .chtabs a:hover{border-color:var(--muted)}
 .chtabs a[aria-current="page"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+
+/* One map stop that opens */
+.tgroupbtn{position:relative;z-index:2;font:500 13px/1.2 var(--body);padding:9px 12px;border:1px dashed var(--muted);border-radius:7px;background:var(--surface);color:var(--ink);cursor:pointer}
+.tgroupbtn:hover{border-color:var(--ink)}
+.tgroup:not([hidden]){display:contents}

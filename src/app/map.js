@@ -3,6 +3,7 @@
    what it connects to; pick a thread to light up a suggested route. Nothing is locked. */
 import { TOPIC_FILES } from '../generated/catalog.js';
 import { BANDS, TOPICS, EDGES, LINKS, THREADS, topicById, bandById } from '../data/topics.js';
+import { MAP_GROUP } from '../data/bands.js';
 import { linkListHTML } from './connections.js';
 import { t, fmtDate } from '../core/i18n.js';
 import { lensBarHTML, lensInfoHTML, lensTopics, markerDefs, ideaPath, longestChain, LENSES } from './maplens.js';
@@ -75,8 +76,16 @@ function nodeHTML(tp) {
   return '<button type="button" class="tnode' + (tp.kind === 'build' ? ' build' : '') + (P.seen[tp.id] ? ' seen' : '') + '" data-t="' + tp.id + '"><span class="nb" aria-hidden="true"></span><b>' + esc(tp.t) + '</b><small>' + esc(meta) + '</small><span class="rb"></span></button>';
 }
 
+/* A layer's stops. The group's members sit in a closed box right after their owner. */
+const inGroup = id => MAP_GROUP.members.includes(id);
+function bandNodes(b) {
+  return TOPICS.filter(x => x.band === b.id && !inGroup(x.id)).map(tp => nodeHTML(tp) + (tp.id === MAP_GROUP.owner
+    ? '<button type="button" class="tgroupbtn" id="mGroupBtn" aria-expanded="false" aria-controls="mGroup"></button><div class="tgroup" id="mGroup" hidden>' + MAP_GROUP.members.map(id => nodeHTML(topicById(id))).join('') + '</div>' : '')).join('');
+}
+
 export function initMap() {
-  $('#mBands').innerHTML = BANDS.map((b, i) => '<div class="band" data-b="' + b.id + '" style="--bc:var(--band' + (i % 5) + ')"><div class="bl"><b>' + esc(b.t) + '</b><span>' + esc(b.d) + '</span></div><div class="bn">' + TOPICS.filter(x => x.band === b.id).map(nodeHTML).join('') + '</div></div>').join('');
+  $('#mBands').innerHTML = BANDS.map((b, i) => '<div class="band" data-b="' + b.id + '" style="--bc:var(--band' + (i % 5) + ')"><div class="bl"><b>' + esc(b.t) + '</b><span>' + esc(b.d) + '</span></div><div class="bn">' + bandNodes(b) + '</div></div>').join('');
+  $('#mGroupBtn').addEventListener('click', () => { groupOpen = !groupOpen; refresh(); });
   const labCount = TOPICS.reduce((s, x) => s + labsOf(x.id).length, 0);
   $('#mStats').innerHTML = [[TOPICS.length, t('map.stat.topics')], [labCount + '+', t('map.stat.sims')], [CHALLENGES.length, t('map.stat.challenges')], [FACTS.facts.length, t('map.stat.facts')]].map(x => '<div><b>' + x[0] + '</b><span>' + x[1] + '</span></div>').join('');
   $('#mThreads').innerHTML = '<button type="button" data-th="">' + t('map.allTopics') + '</button>' + THREADS.map(x => '<button type="button" data-th="' + x.id + '">' + esc(x.t) + '</button>').join('');
@@ -122,7 +131,7 @@ export function setLens(lens) {
   state.query = ''; $('#mSearch').value = ''; W.on = false; refresh();
 }
 
-let hover = null;
+let hover = null, groupOpen = false;
 function refresh(animate) {
   const th = state.thread ? THREADS.find(t => t.id === state.thread) : null;
   const hits = state.query.length > 1 ? search(state.query) : null; const hitTopics = hits ? new Set(hits.map(h => h.topic)) : null;
@@ -140,6 +149,11 @@ function refresh(animate) {
     const notyet = getYear() !== NOW && BORN[id] && BORN[id][0] > getYear();
     n.classList.toggle('notyet', !!notyet); if (notyet) n.title = t('map.notYet', { year: getYear(), what: BORN[id][1] }); else n.removeAttribute('title');
   });
+  /* The group opens by itself whenever something inside it is what the visitor is looking at. */
+  const needed = MAP_GROUP.members.some(id => id === state.sel || (th && th.path.includes(id)) || (hitTopics && hitTopics.has(id)) || (state.lens === 'ideas' && inLens && inLens.has(id)));
+  const open = groupOpen || needed, gb = $('#mGroupBtn');
+  $('#mGroup').hidden = !open; gb.setAttribute('aria-expanded', String(open));
+  gb.textContent = open ? t('map.group.close') : t('map.group.open', { n: MAP_GROUP.members.length });
   $('#mWhat').setAttribute('aria-pressed', W.on ? 'true' : 'false');
   renderPanel(); paintNodes(!!animate && W.on);
   renderInfo(th, hits); drawEdges();
@@ -181,8 +195,9 @@ function renderInfo(th, hits) {
 }
 
 /* ---- the wires ---- */
-function center(id, wrap) { const n = document.querySelector('#mBands .tnode[data-t="' + id + '"]'); if (!n) return null; const r = n.getBoundingClientRect(); return { x: r.left - wrap.left + r.width / 2, y: r.top - wrap.top + r.height / 2, top: r.top - wrap.top, bot: r.bottom - wrap.top, h: r.height }; }
+function center(id, wrap) { const shown = inGroup(id) && $('#mGroup').hidden ? MAP_GROUP.owner : id; const n = document.querySelector('#mBands .tnode[data-t="' + shown + '"]'); if (!n) return null; const r = n.getBoundingClientRect(); return { x: r.left - wrap.left + r.width / 2, y: r.top - wrap.top + r.height / 2, top: r.top - wrap.top, bot: r.bottom - wrap.top, h: r.height }; }
 function curve(a, b) {
+  if (a.x === b.x && a.y === b.y) return '';   /* both ends inside the closed group */
   if (Math.abs(a.y - b.y) < 4) { const my = a.top - 18; return 'M' + a.x + ',' + a.top + ' C' + a.x + ',' + my + ' ' + b.x + ',' + my + ' ' + b.x + ',' + b.top; }
   const down = b.y > a.y; const y1 = down ? a.bot : a.top, y2 = down ? b.top : b.bot; const m = (y1 + y2) / 2;
   return 'M' + a.x + ',' + y1 + ' C' + a.x + ',' + m + ' ' + b.x + ',' + m + ' ' + b.x + ',' + y2;
@@ -196,7 +211,7 @@ function drawEdges() {
   if (W.on) {
     EDGES.forEach(e => { const a = center(e[0], wrap), b = center(e[1], wrap); if (a && b) mk(curve(a, b), 'w faint'); });
     rippleLinks().forEach(r => {
-      const a = center(r.a, wrap), b = center(r.b, wrap); if (!a || !b) return;
+      const a = center(r.a, wrap), b = center(r.b, wrap); if (!a || !b || (a.x === b.x && a.y === b.y)) return;
       const on = !focus || r.a === focus || r.b === focus;
       const p = mk(curve(a, b), 'w rip ' + (r.amt > 0 ? 'up' : 'down') + (on ? '' : ' faint'));
       p.style.strokeWidth = (1.6 + Math.min(2.6, Math.abs(r.amt) / 15)).toFixed(1);
@@ -216,7 +231,7 @@ function drawEdges() {
       if (state.lens && l.kind !== state.lens) return;
       const on = !!focus && (l.from === focus || l.to === focus);
       if (!state.lens && !on) return;
-      const a = center(l.from, wrap), b = center(l.to, wrap); if (!a || !b) return;
+      const a = center(l.from, wrap), b = center(l.to, wrap); if (!a || !b || (a.x === b.x && a.y === b.y)) return;
       const p = mk(curve(a, b), 'w k-' + l.kind + (on || (chain && chain.has(l)) ? ' on' : (focus || chain) ? ' faint' : ''));
       p.setAttribute('marker-end', 'url(#mk-' + l.kind + ')');
       const key = [l.from, l.to].sort().join(' ');

@@ -40,6 +40,23 @@ async function check(viewport) {
   if (!tag) console.log('Start-up: ' + requests.length + ' files, no topics loaded.');
   if (await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1)) problems.push(tag + 'map scrolls sideways');
 
+  // One map stop that opens: 32 stops at rest, and the group opens by itself when it is needed.
+  const stops = () => page.$$eval('#mBands .tnode', n => n.filter(e => e.offsetParent).length);
+  if ((await stops()) !== 32) problems.push(tag + 'the map should show 32 stops at rest, not ' + (await stops()));
+  await page.click('.tnode[data-t="beyond"]');
+  const labels = await page.$$eval('#mSvgL text', n => n.map(e => e.getAttribute('x') + ',' + e.getAttribute('y')));
+  if (new Set(labels).size !== labels.length) problems.push(tag + 'link labels pile up on the closed group');
+  await page.click('.tnode[data-t="beyond"]');
+  await page.click('#mGroupBtn');
+  if ((await stops()) !== 38) problems.push(tag + 'opening the group should show all 38 topics');
+  await page.click('#mGroupBtn');
+  await page.click('#mThreads button[data-th="next"]');
+  if ((await stops()) !== 38) problems.push(tag + 'a thread through the group should open it');
+  await page.click('#mThreads button[data-th=""]');
+  if ((await stops()) !== 32) problems.push(tag + 'the group should close again when it is no longer needed');
+  await page.fill('#mSearch', 'photonic');
+  if ((await stops()) !== 38) problems.push(tag + 'a search hit inside the group should open it');
+  await page.fill('#mSearch', '');
   // Map: select a topic, follow a thread, search.
   await page.click('.tnode[data-t="riscv"]');
   if (!(await page.textContent('#mInfo')).includes('Connects to')) problems.push(tag + 'map info panel did not open');

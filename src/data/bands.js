@@ -10,3 +10,6 @@ export const BANDS = [
   { id: 'processors', t: 'Processors and memory', d: 'How a chip runs programs, keeps time and remembers' },
   { id: 'atoms',      t: 'Atoms and switches',    d: 'Semiconductor physics and the transistor' }
 ];
+
+/* One map stop that opens: these topics keep their pages and sit under their owner until needed. */
+export const MAP_GROUP = { owner: 'beyond', members: ['cim', 'neuro', 'photonic', 'pbits', 'reversible', 'spatial'] };

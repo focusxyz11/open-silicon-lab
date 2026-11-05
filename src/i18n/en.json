@@ -353,6 +353,8 @@
  "map.stat.challenges": "challenges",
  "map.stat.facts": "dated facts",
  "map.allTopics": "All topics",
+ "map.group.open": "{n} more ways to compute",
+ "map.group.close": "Show fewer",
  "map.factStatus": "{n} facts tracked · last checked {last} · next check {next}",
  "map.sims": {
   "one": "{n} simulation",
