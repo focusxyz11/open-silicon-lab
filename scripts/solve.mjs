@@ -8,7 +8,9 @@ import { CHALLENGES } from '../src/generated/graph.js';
 const require = createRequire(import.meta.url);
 const { chromium } = require('playwright');
 
-/* How a person would solve each one: set(id, value), seg(id, text), check(id, on), click(css), wait(ms), until(id, text). */
+/* How a person would solve each one: set(id, value), seg(id, text), check(id, on), click(css), wait(ms), until(id, text),
+   tap(css): a click sent from script, for a button that a sticky bar may cover while the page scrolls, or one marked
+   aria-disabled, which a person can still press to see why it does nothing. */
 const R = {
   'yield/Fill the shelf': [['seg', 'ydSplit', '8']],
   'yield/Half price by chiplets': [['click', '#yd-measure'], ['seg', 'ydPre', 'AI GPU'], ['set', 'ydD', 0.1], ['set', 'ydC', 30], ['seg', 'ydSplit', '8']],
@@ -41,6 +43,13 @@ const R = {
   'physics/The furnace spreads it': [['seg', 'ipIon', 'Boron'], ['set', 'ipE', 0.2], ['seg', 'ipAn', 'Furnace'], ['seg', 'ipAn', 'Laser']],
   'physics/Shallow and switched on': [['seg', 'ipIon', 'Arsenic'], ['set', 'ipE', 0.2], ['seg', 'ipAn', 'Laser']],
   'litho/The 1,000-watt source': [['set', 'euP', 1000], ['set', 'euR', 0.72], ['set', 'euN', 8], ['set', 'euD', 15]],
+  'factory/Wafers go round': [['seg', 'fyProd', 'AI'], ['seg', 'fyQ1', '100']],
+  'factory/Full is slow': [['seg', 'fyProd', 'Phone'], ['set', 'fyLoad', 70], ['set', 'fyLoad', 95]],
+  'factory/Buy one machine': [['click', '#fy-measure'], ['click', '#fyReset'], ['tap', '#fyTools button[data-g="litho"][data-d="1"]']],
+  'factory/Double the output': [['click', '#fy-measure'], ['click', '#fyReset'], ...Array(3).fill(['tap', '#fyTools button[data-g="litho"][data-d="1"]']), ...Array(4).fill(['tap', '#fyTools button[data-g="depo"][data-d="1"]']), ...Array(2).fill(['tap', '#fyTools button[data-g="etch"][data-d="1"]']), ...Array(2).fill(['tap', '#fyTools button[data-g="clean"][data-d="1"]']), ...Array(1).fill(['tap', '#fyTools button[data-g="implant"][data-d="1"]']), ...Array(1).fill(['tap', '#fyTools button[data-g="anneal"][data-d="1"]']), ...Array(2).fill(['tap', '#fyTools button[data-g="cmp"][data-d="1"]']), ...Array(1).fill(['tap', '#fyTools button[data-g="metro"][data-d="1"]'])],
+  'factory/What EUV really saves': [['click', '#fyReset'], ['set', 'fyLoad', 85], ['seg', 'fyPrint', '193']],
+  'factory/One company, every chip': [['click', '#fy-open'], ['click', '#fyEco [data-shock="asml"]'], ['tap', '#fyTools button[data-g="litho"][data-d="1"]']],
+  'factory/Smarter, not bigger': [['click', '#fyReset'], ['seg', 'fyPrint', 'EUV'], ['set', 'fyLoad', 90], ['seg', 'fyAi', 'AI']],
 };
 
 const checked = CHALLENGES.filter(c => c.check);
@@ -67,6 +76,7 @@ for (const c of checked) {
       else if (op === 'check') await page.evaluate(([id, v]) => { const e = document.getElementById(id); e.checked = v; e.dispatchEvent(new Event('change', { bubbles: true })); e.dispatchEvent(new Event('input', { bubbles: true })); }, [a, b]);
       else if (op === 'seg') await page.evaluate(([id, txt]) => { const bt = [...document.getElementById(id).querySelectorAll('button')].find(x => x.textContent.trim().startsWith(txt)); if (!bt) throw new Error('no button "' + txt + '" in #' + id); bt.click(); }, [a, b]);
       else if (op === 'click') await page.click(a);
+      else if (op === 'tap') await page.evaluate(sel => document.querySelector(sel).click(), a);
       else if (op === 'wait') await page.waitForTimeout(a);
       else if (op === 'until') await page.waitForFunction(([id, txt]) => document.getElementById(id).textContent.includes(txt), [a, b], { timeout: 90000 });
       await page.waitForTimeout(160);

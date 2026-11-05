@@ -1,0 +1,135 @@
+<section id="factory">
+    <div class="head">
+      <p class="code" data-topic-label>Run a chip factory</p>
+      <h2>Why does a chip take three months to make?</h2>
+    </div>
+    <div class="prose">
+      <p>Eight bays of machines in a cleanroom, with the pumps and chemical lines of the sub-fab below. Robot cars on ceiling rails carry sealed boxes of 25 wafers from machine to machine, and every layer of a chip sends its box round the same bays again. Run the fab, switch on the inventions that changed it, then zoom out to the companies around the world that feed it.</p>
+    </div>
+
+    <div class="lab depthlab">
+      <header><b>A fab you run</b><span id="fyTag">–</span></header>
+      <div class="body">
+        <div class="depthrail">
+          <button id="fy-see" data-depth="see"></button>
+          <button id="fy-measure" data-depth="measure"></button>
+          <button id="fy-model" data-depth="model"></button>
+          <button id="fy-open" data-depth="open"></button>
+        </div>
+        <div class="depthstage">
+          <div class="depthview">
+            <div class="fy-stage" id="fyStage">
+              <div class="fy-views" role="group" aria-label="Camera">
+                <button type="button" class="btn" data-v="all" aria-pressed="true">Whole fab</button>
+                <button type="button" class="btn" data-v="litho" aria-pressed="false">Lithography bay</button>
+                <button type="button" class="btn" data-v="follow" aria-pressed="false">Follow a box</button>
+                <button type="button" class="btn" data-v="subfab" aria-pressed="false">Sub-fab</button>
+                <button type="button" class="btn" data-v="eco" aria-pressed="false">Ecosystem</button>
+                <button type="button" class="btn" id="fyCeil" aria-pressed="false">Ceiling</button>
+              </div>
+              <div class="fy-cvwrap">
+                <canvas id="fyGl" role="img" aria-label="A 3D chip factory: bays of machines, ceiling rails and moving boxes of wafers"></canvas>
+                <div class="fy-tags" id="fyTags"></div>
+                <div class="fy-info" id="fyInfo" hidden><button type="button" class="fy-x" id="fyInfoX" aria-label="Close">×</button><p class="code" id="fyICode"></p><h3 id="fyIT"></h3><p id="fyID"></p><p class="fy-facts" id="fyIF"></p></div>
+                <p class="fy-hint" id="fyHint">drag to turn · scroll to zoom · click a machine</p>
+                <p class="fy-no3d" id="fyNo3d" hidden>This browser cannot draw the 3D fab, so it runs as numbers only. Every control and challenge still works.</p>
+              </div>
+            </div>
+            <div class="fy-follow">
+              <p class="code">The box you follow · its chip so far</p>
+              <canvas id="fyXs" role="img" aria-label="Cross-section of the chip being built in the box you follow"></canvas>
+              <p class="fy-now" id="fyNow" aria-live="off">–</p>
+            </div>
+          </div>
+
+          <div class="depthpanel">
+            <p class="depthmission" data-on="0">Pick a chip and follow one box. How many times will it pass the scanners?</p>
+            <p class="depthmission" data-on="1">Fill the fab, then buy machines. What decides how many chips come out?</p>
+            <p class="depthmission" data-on="2">Change how the fab prints and how it is run, not how big it is.</p>
+            <p class="depthmission" data-on="3">No fab works alone. Stop one link and see what is left.</p>
+
+            <div class="ctl" data-on="0123"><span class="lbl" id="fyProdL">Chip</span>
+              <div class="seg fy-seg" id="fyProd" role="group" aria-labelledby="fyProdL">
+                <button type="button" data-p="mature" aria-pressed="false">Car chip<small>45 layers</small></button>
+                <button type="button" data-p="phone" aria-pressed="true">Phone chip<small>80 layers</small></button>
+                <button type="button" data-p="ai" aria-pressed="false">AI chip<small>100 layers</small></button>
+              </div>
+            </div>
+
+            <div class="ctl" data-on="0"><span class="lbl" id="fyQ1L">Times past the scanners, for an AI chip</span>
+              <div class="seg" id="fyQ1" role="group" aria-labelledby="fyQ1L">
+                <button type="button" data-a="1">Once</button>
+                <button type="button" data-a="10">About 10</button>
+                <button type="button" data-a="100">100 times</button>
+              </div>
+            </div>
+            <p class="depthstatus" id="fyQ1S" data-on="0" aria-live="polite"></p>
+            <p class="note" data-on="0">Amber boxes carry 25 wafers each; the cyan one is yours. Green lamps mean working. Click any machine.</p>
+
+            <article class="fy-card fy-l-eu" data-on="2"><p class="code">Printing</p><h3>How the finest layers are printed</h3>
+              <div class="fy-tnn"><div><b>Then</b>193 nm light: two patterns for each fine layer</div><div class="fy-nowc"><b>Now</b>EUV: one pattern. ASML is the only maker; about 230 wafers an hour (vendor claim)</div><div><b>Next</b>High-NA EUV: in volume on select Intel 18A layers since July 2026; about $400 million each (estimate)</div></div>
+              <div class="seg" id="fyPrint" role="group" aria-label="How the finest layers are printed"><button type="button" data-x="duv" aria-pressed="false">193 nm, two patterns</button><button type="button" data-x="euv" aria-pressed="true">EUV</button><button type="button" data-x="highna" aria-pressed="false">High-NA EUV</button></div>
+              <p class="fy-delta" id="fyDPrint"></p></article>
+            <article class="fy-card fy-l-ai" data-on="2"><p class="code">Running the fab</p><h3>AI in scheduling, inspection and maintenance</h3>
+              <p>TSMC is adopting NVIDIA AI for lithography, inspection and fab digital twins (vendor claim). Here AI makes the flow smoother: fewer surprises, so shorter queues, with no new machines. The size of the effect is illustrative.</p>
+              <div class="seg" id="fyAi" role="group" aria-label="AI in the fab"><button type="button" data-x="0" aria-pressed="true">Off</button><button type="button" data-x="1" aria-pressed="false">AI on</button></div>
+              <p class="fy-delta" id="fyDAi"></p></article>
+            <p class="deptheq" data-on="2" id="fyEq"></p>
+            <article class="fy-card fy-l-tr" data-on="2"><p class="code">Transistors · the front-end layers</p><h3>The switch keeps changing shape</h3>
+              <div class="fy-tnn"><div><b>Then</b>FinFET, 2011–2025: the gate on three sides</div><div class="fy-nowc"><b>Now</b>Gate-all-around nanosheets: TSMC N2 in volume since Q4 2025</div><div><b>Next</b>CFET, n over p (about 2033 or later, imec projection), then atom-thin 2D channels</div></div>
+              <p class="note">Each new shape adds deposition and etch steps, one reason the deposition bay keeps growing. Try the shapes in <a href="#transistor">The transistor</a>.</p></article>
+            <article class="fy-card fy-l-pw" data-on="2"><p class="code">Wiring · the back-end layers</p><h3>Power from underneath</h3>
+              <div class="fy-tnn"><div><b>Then</b>Power and signals share the wiring on top</div><div class="fy-nowc"><b>Now</b>The same, with ever finer wires</div><div><b>Next</b>Backside power: TSMC A16, volume production planned for 2H 2026</div></div></article>
+            <div class="depthpanel" data-on="2">
+              <p class="note">The numbers come from the formula above, applied to every group of machines and added over every visit, plus an hour per layer for moves and holds. Little's law turns time into boxes: boxes in the fab = boxes started per day × days in the fab. The moving boxes are a separate simulation of the same line, drawn to show the flow.</p>
+              <ul class="depthlist">
+                <li>Left out: machines that break and wait for a part</li>
+                <li>Left out: rush lots that jump the queue</li>
+                <li>Left out: many products sharing one fab</li>
+                <li>Left out: yield, and the wafers that are scrapped</li>
+              </ul>
+            </div>
+
+            <div class="fy-eco" id="fyEco" data-on="3"></div>
+            <div class="readout" data-on="3">
+              <div><span>Wafers out per day</span><b id="fyEOut">–</b></div>
+              <div><span>Wafers that can ship</span><b id="fyShip">–</b></div>
+            </div>
+            <p class="note" id="fyENote" data-on="3"></p>
+            <article class="fy-card fy-l-bd" data-on="3"><p class="code">Building fabs</p><h3>Capacity is slow and dear</h3>
+              <p>TSMC aims for about two years per Arizona fab (a target), and a 2 nm-class fab module costs about $25–35 billion for about 20,000 wafers a month (estimate). Your fab makes about <b id="fyMWaf">–</b> wafers a month: a real module is about <b id="fyMX">–</b> times bigger.</p></article>
+            <div class="depthviews" data-on="3">
+              <article><h3>Spread the fabs</h3><p>Build leading-edge fabs and packaging in more regions, so one shock cannot stop the world. <b>Assumes</b> governments and customers keep paying the higher cost.</p></article>
+              <article><h3>Concentrate, with buffers</h3><p>Keep the efficient hubs and add stockpiles, second sources and long contracts. <b>Assumes</b> shocks are short enough to ride out, which a missing scanner is not: one takes many months to build.</p></article>
+            </div>
+
+            <div class="ctl" data-on="123"><label for="fyLoad">Wafers started per day <output id="fyLoadO">–</output></label><input type="range" id="fyLoad" min="10" max="99" value="85"></div>
+            <div class="readout" data-on="123">
+              <div><span>Wafers out per day</span><b id="fyOut">–</b></div>
+              <div><span>Time in the fab</span><b id="fyDays">–</b></div>
+              <div><span>Days per layer</span><b id="fyDpl">–</b></div>
+              <div><span>Boxes in the fab</span><b id="fyWip">–</b></div>
+            </div>
+            <canvas class="fy-curve" id="fyCv" data-on="12" role="img" aria-label="Time in the fab against how full the line is"></canvas>
+
+            <div class="fy-box" data-on="123">
+              <h3>Machines <span>how busy each group is · + puts one more on the floor</span></h3>
+              <div class="fy-tools" id="fyTools"></div>
+              <div class="readout">
+                <div><span>Most wafers a day it can make</span><b id="fyCap">–</b></div>
+                <div><span>Machines changed from the start</span><b id="fyAdded">0</b></div>
+              </div>
+              <p class="depthstatus" id="fyStatus" aria-live="polite"></p>
+              <div class="row"><button type="button" class="btn" id="fyReset">Reset the fab</button></div>
+            </div>
+
+            <div class="ctl" data-on="123"><span class="lbl" id="fySpeedL">Speed</span>
+              <div class="seg" id="fySpeed" role="group" aria-labelledby="fySpeedL"><button type="button" data-s="0.25" aria-pressed="false">1 s = 15 min</button><button type="button" data-s="1" aria-pressed="true">1 s = 1 h</button><button type="button" data-s="4" aria-pressed="false">1 s = 4 h</button></div>
+            </div>
+            <p class="note" data-on="123">What this simplifies: one small fab of eight groups of machines; a real leading-edge fab has hundreds and makes tens of thousands of wafers a month. Machine shapes suggest real ones without copying any product. Times per visit are set so a fab about 85% full takes about 1 to 1.5 days per layer, as the industry reports, and waiting follows a standard queueing formula. The cross-section sketches how layers build up; it is not a real chip. The second pattern, the effect of AI and the share of AI chips packaging can take are illustrative settings.</p>
+            <div class="row"><button type="button" class="btn depthnext"></button></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>

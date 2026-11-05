@@ -15,6 +15,7 @@ src/hw/               the bench: Open Bench Protocol, transports, board adapters
 src/app/              the shell: loader, router, map, views, learning layer, facts, tutor
 src/generated/        graph.js and catalog.js, generated from topics/ by `npm run catalog` — never edited by hand
 src/labs/             the two simulations that live on the map page itself (zoom, time machine)
+src/vendor/           third-party code kept as files, with its licence (three.js for the 3D fab; see its README)
 content/              shell pages: the zoom viewer, glossary, sources
 ```
 
@@ -127,6 +128,7 @@ A topic loads once and stays on the page. Code in one topic that needs another (
 ## Simulations
 
 - `src/engines/` hold pure logic with no DOM, so they are unit-tested in Node: the RV32I/M + custom-0 assembler and simulator, and the tiny-chip flow (parser, synthesis, standard-cell mapping, simulated-annealing placement, maze routing, stuck-at fault coverage).
+- `src/engines/fabline.js` models a wafer fab as a re-entrant line of eight tool groups: utilization, the bottleneck, queue time from the Kingman–Sakasegawa approximation, Little's law, how the finest layers are printed (DUV with two patterns, EUV, High-NA) and AI as smoother flow; `step()` moves single lots for drawing. `tests/fabline.test.mjs` checks the surprises it teaches (wafers go round, one group sets the pace, full is slow) and that it matches the industry's days per layer. `topics/factory/labs/fab3d.js` draws it in 3D with three.js from `src/vendor/three/`, loaded only with that topic; if WebGL is missing, the same controls and readouts work without the picture.
 - `src/engines/seq.js` is an event-driven gate simulator with feedback and unknown values: an SR latch from two NOR gates, D latches, master-slave flip-flops and a counter, with gate delays from the tiny-chip library. `timing()` adds up clock-to-output, the carry chain and setup time; `tests/seq.test.mjs` checks the latch remembers, the flip-flop changes only after a rising edge, and the counter counts below the predicted limit and fails well above it. The `clock` topic runs it.
 - **Flip-flops in the tiny language.** `reg q = …;` makes a flip-flop (allowed in projects marked `seq`, such as the Counter). `TC.stepDesign` gives one clock cycle's outputs and next values, `TC.verify` checks a design cycle by cycle against a clocked project's `f(v, state)`, and synthesis treats each flip-flop's output as an extra input and its next value as an extra output, then adds a `DFF` cell between them (`M.regs`). `simCells` and `faults` carry flip-flop values from one pattern to the next. The export writes an `always @(posedge clk)` block with the Tiny Tapeout reset, and the Verilog check clocks it.
 - `src/engines/alu.js` turns a one-bit ALU slice from the tiny-chip studio into a 32-bit ripple-carry ALU. The RISC-V simulator accepts it through `RV.machine(prog, init, { alu })`, and then every add, subtract, logic operation, comparison, branch decision and memory address goes through those gates. `src/app/alu-link.js` carries the slice from the studio to the RISC-V lab on the same page.
