@@ -20,6 +20,7 @@ anywhere else, and does it help them think better about where chips are going?
 | The community chip | Groundwork built (`#community`, November 2026). Next: a maintainer decision on submitting it. |
 | Evolve a circuit | Built (`#evolve`, November 2026): blind evolution against the human design, opened in the studio. Next: evolve under a transistor or timing budget, and against an AI agent's design. |
 | From need to chip | Later, on top of open engines (idea 8). |
+| A fab you run (idea 20) | Started (November 2026): a tested model of a fab line first, then the line drawn, then the ecosystem around it. |
 
 ## The ideas
 
@@ -84,6 +85,83 @@ anywhere else, and does it help them think better about where chips are going?
 - **Why it matters:** the home map's crossing lines felt too complicated and the cards flat; a zoom shows connections by place, and it is the best front door the site could have.
 - **Builds on:** the map's rack-to-atom zoom, Zoom into your chip, map lenses, the three doors.
 - **Open questions:** how the 40-plus topics (and growing) find their place on a zoom path; keep the map lenses for typed links. *(Merged from "a clearer map", "zoom as the main way to get around" and "a better front door", Oct–Nov 2026.)*
+
+### 10. Read between the lines
+- **First principle:** every number is measured under conditions chosen by whoever publishes it.
+- **What a learner does:** puts real vendor claims ("50 PFLOPS", "2 nm", "up to 25× more efficient") through a decoder: dense or sparse, which number format, what utilization, what was left out; then ranks the chips again after decoding.
+- **Why it matters:** the most useful skill in a field full of headline numbers, and the lab already labels every fact as reported, claim, estimate or projection.
+- **Builds on:** `facts.json` kinds, `accelerators` (real chips compared), the roofline in `compute`.
+- **Open questions:** a fair way to normalize claims without inventing numbers the vendor did not give. *(4 Nov 2026.)*
+
+### 11. Attack your own chip
+- **First principle:** hardware leaks information through time, power and errors, and does things nobody intended.
+- **What a learner does:** recovers a key from the simulated power traces of their own tiny chip, flips bits in memory by hammering neighboring rows, hunts a hidden Trojan in a design, then adds a defense for each and measures what it costs.
+- **Why it matters:** security is a layer the lab does not cover yet, and every chip, from a car key to a data center, depends on it.
+- **Builds on:** the tiny-chip engine and simulator, `xray`, `reality`, the bench.
+- **Open questions:** keep every attack on simulated toys; which defenses are simple enough to show honestly. *(4 Nov 2026.)*
+
+### 12. Read a real open chip
+- **First principle:** a craft is learned by reading masters' work, and open hardware makes real chip source readable for the first time.
+- **What a learner does:** follows guided tours through a real open RISC-V core and real Tiny Tapeout projects ("find the adder", "why is this register here?"), then changes one line and sees what breaks.
+- **Why it matters:** gives RISC-V and the open ecosystem the weight they deserve, with real designs instead of teaching toys.
+- **Builds on:** `riscv`, `ecosystem`, `community`, the Verilog check in CI.
+- **Open questions:** which designs are small and well licensed enough; how much Verilog the browser can simulate. *(4 Nov 2026.)*
+
+### 13. Design tournaments
+- **First principle:** many independent attempts beat one expert on open search problems.
+- **What a learner does:** enters a monthly tournament on one fixed spec (the smallest 4-bit multiplier, the fastest counter); every entry is checked in CI, a public leaderboard lives in the repository, winners join the community chip, and afterwards human, evolved and AI-agent designs are compared.
+- **Why it matters:** collective intelligence in practice, and a reason to come back every month.
+- **Builds on:** `community` (checked designs), Evolve a circuit, the agent topic, CI.
+- **Open questions:** scoring that rewards clever designs, not gaming; who sets each month's spec. *(4 Nov 2026.)*
+
+### 14. Root cause across the stack
+- **First principle:** layers hide detail, but failures cross layers.
+- **What a learner does:** starts from one symptom ("this phone gets hot and slow") and drills down layer by layer, throttling to voltage to leakage to the transistor, each step backed by evidence from a simulation.
+- **Why it matters:** a detective game only a connected lab can offer, and the way real engineers debug.
+- **Builds on:** the typed links between topics, `reality`, `design` (power), `transistor`.
+- **Open questions:** a handful of cases with one honest root cause each. *(4 Nov 2026.)*
+
+### 15. Number sense
+- **First principle:** experts reason in orders of magnitude, not exact numbers.
+- **What a learner does:** answers quick estimation puzzles ("how many transistors switch when you send a message?", "how many chips are in a car?"), scored by how many powers of ten they are off, with the lab's sourced facts as anchors.
+- **Why it matters:** short, replayable, and it builds the intuition that makes every other topic make sense.
+- **Builds on:** `facts.json`, the physics floor, the time machine.
+- **Open questions:** every answer needs a sourced or derived value; which estimates are teachable in a minute. *(4 Nov 2026.)*
+
+### 16. Explain it back
+- **First principle:** you understand something when you can explain it.
+- **What a learner does:** writes a short explanation; the AI turns it into predictions and runs the lab's own simulations against them, and every mismatch shows a gap.
+- **Why it matters:** an AI-native way to learn, the reverse of Ask the lab (idea 7).
+- **Builds on:** the tutor, the engines, idea 7's foundation.
+- **Open questions:** turning free text into testable predictions without putting words in the learner's mouth. *(4 Nov 2026.)*
+
+### 17. This month, playable
+- **First principle:** the industry changes every month, and every news story is a question you can test.
+- **What a learner does:** each month, one real change from the fact log becomes a five-minute challenge ("packaging capacity rose: what happens to GPU supply?") played in What if? or a lab.
+- **Why it matters:** turns a change log people skim into something they play, and keeps the lab current.
+- **Builds on:** the monthly fact check, `changes` in `facts.json`, What if?, challenges that check themselves.
+- **Open questions:** who writes each month's challenge; how long one stays featured. *(4 Nov 2026.)*
+
+### 18. The price of a late bug
+- **First principle:** a bug costs more for every stage it survives.
+- **What a learner does:** splits a verification budget across design stages, watches random bugs slip through, and pays when one is found in silicon (the Pentium division bug cost $475 million).
+- **Why it matters:** makes "checking is the hard part" something people feel, and feeds the debate on who signs off.
+- **Builds on:** `design` (coverage closure), `agent`, `reality` (case files), the debates hub.
+- **Open questions:** sourced costs per stage, or a clearly labelled model. *(4 Nov 2026.)*
+
+### 19. Your chip footprint
+- **First principle:** people care most about what touches their own life.
+- **What a learner does:** lists the devices around them (phone, car, fridge, earbuds) and gets their own chip inventory: roughly how many chips, what kinds, made in old or new factories, each linking to its layer.
+- **Why it matters:** universal, not only AI, and a personal way in for complete newcomers.
+- **Builds on:** `everywhere` (teardowns), the forgotten chips debate, `supply`.
+- **Open questions:** sourced chip counts per device class, shown as ranges. *(4 Nov 2026.)*
+
+### 20. A fab you run
+- **First principle:** a fab is a re-entrant line: each wafer returns to the same tools once per layer, the scarcest tool sets the output, and as the line fills, waiting time grows much faster than output.
+- **What a learner does:** takes orders (phone chips, an AI GPU), buys tools and sends wafers round the line; watches queues build, the bottleneck move and yield change; every tool opens the lab that explains it. Then zooms out to the ecosystem: the suppliers that feed the fab and the packaging lines and customers it feeds, driven by What if?.
+- **Why it matters:** the honest answer to "why can't they just make more chips?", and the place where the manufacturing topics, the supply chain and the economics finally meet.
+- **Builds on:** `fab`, `litho`, `yield`, `supply`, `economics`, What if? (`src/engines/ripple.js`).
+- **Open questions:** a model small enough for the browser that keeps the three surprises true; drawn in 2.5D first, full 3D only if it helps understanding. *(4 Nov 2026.)*
 
 ## Removed, and where each went
 
