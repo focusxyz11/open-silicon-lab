@@ -16,7 +16,7 @@
     },
     {
       "kind": "causes",
-      "to": "scenarios",
+      "to": "future",
       "why": "power may cap AI growth",
       "if": "AI needs power faster than grids can add it",
       "then": "AI growth slows in many futures"

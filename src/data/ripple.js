@@ -31,7 +31,7 @@ export const INDICATORS = [
   { id: 'costtoken', topic: 'compute', t: 'Cost of each AI answer', unit: '%' },
   { id: 'aicompute', topic: 'accelerators', t: 'AI computing power added', unit: '%' },
   { id: 'dcpower', topic: 'datacenter', t: 'Data-center electricity use', unit: '%' },
-  { id: 'grid', topic: 'scenarios', t: 'Strain on power grids', unit: '%' },
+  { id: 'grid', topic: 'future', t: 'Strain on power grids', unit: '%' },
   { id: 'devprice', topic: 'everywhere', t: 'Phone and PC prices', unit: '%' },
   { id: 'cars', topic: 'everywhere', t: 'Cars built', unit: '%' },
   { id: 'archgain', topic: 'architecture', t: 'Gains that must come from design, not the node', unit: '%' },

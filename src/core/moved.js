@@ -7,12 +7,15 @@
    main.js imports this file first, so saved progress is carried across before any module reads it. */
 export const MOVED = {
   ecosystem: 'supply',
+  scenarios: 'future',
+  'lab-scenarios-1': 'lab-future-2',
+  'lab-scenarios-2': 'lab-future-3',
   'lab-ecosystem-1': 'lab-supply-5',
   'lab-ecosystem-2': 'lab-supply-6'
 };
 
 /* Where each merged topic's quiz now starts: the number of questions already in the receiving topic. */
-export const QUIZ_AT = { ecosystem: 3 };
+export const QUIZ_AT = { ecosystem: 3, scenarios: 3 };
 
 /* Where an address lives now, or null if it has not moved. */
 export const movedTo = (id, moved = MOVED) => (Object.hasOwn(moved, id) ? moved[id] : null);

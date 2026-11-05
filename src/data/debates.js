@@ -14,12 +14,12 @@ export const DEBATES = [
   { id: 'power', t: 'The power wall', q: 'AI data centers ask for ever more electricity. What cuts the energy of an answer most?', views: [
     { t: 'Better chips', claim: 'Each chip generation does much more work per watt; keep improving the hardware.', assumes: 'Process and architecture gains keep coming at the old pace.', topics: ['accelerators', 'transistor'] },
     { t: 'Better numbers and models', claim: 'Smaller number formats and smaller models do the same job with a fraction of the work.', assumes: 'Quality holds as models and numbers shrink.', topics: ['compute', 'accelerators'] },
-    { t: 'Better grids', claim: 'Efficiency gains get used up by more demand; the real limit is how fast power plants and grids can grow.', assumes: 'Demand keeps rising whatever the chips do.', topics: ['datacenter', 'scenarios'] }
+    { t: 'Better grids', claim: 'Efficiency gains get used up by more demand; the real limit is how fast power plants and grids can grow.', assumes: 'Demand keeps rising whatever the chips do.', topics: ['datacenter', 'future'] }
   ] },
   { id: 'shrink', t: 'Beyond 2 nm', q: 'Transistors are now stacked sheets. Where does progress come from next?', views: [
     { t: 'Keep shrinking', claim: 'Stacked CFET transistors and 2D-material channels keep density rising for another decade.', assumes: 'New materials and steps can be made at scale, at an affordable cost.', topics: ['transistor', 'future', 'litho'] },
     { t: 'Stack the chips instead', claim: 'Progress moves to packaging: chiplets, hybrid bonding and 3D stacks.', assumes: 'Links between dies become dense and cheap enough to behave like one chip.', topics: ['package', 'yield'] },
-    { t: 'Change the machine', claim: 'The big gains come from new kinds of computing, not from smaller switches.', assumes: 'New machines get the software and tools that today\'s chips have.', topics: ['beyond', 'scenarios'] }
+    { t: 'Change the machine', claim: 'The big gains come from new kinds of computing, not from smaller switches.', assumes: 'New machines get the software and tools that today\'s chips have.', topics: ['beyond', 'future'] }
   ] },
   { id: 'designcost', t: 'The cost of designing a chip', q: 'A leading-edge chip can cost hundreds of millions of dollars to design. How much of that can AI agents remove?', views: [
     { t: 'Most of it', claim: 'Agents already write RTL, tests and scripts; design teams will shrink and costs fall sharply.', assumes: 'Checking an agent\'s work can be automated and trusted too.', topics: ['agent', 'innovation'] },

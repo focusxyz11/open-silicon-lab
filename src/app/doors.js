@@ -14,7 +14,7 @@ const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&a
 
 export const DOORS = {
   break: { view: 'break', projects: ['reality', 'bench', 'agent', 'supply'] },
-  imagine: { view: 'imagine', projects: ['beyond', 'whatif', 'scenarios', 'evolve', 'future', 'floor'] }
+  imagine: { view: 'imagine', projects: ['beyond', 'whatif', 'evolve', 'future', 'floor'] }
 };
 
 /* A project card: a topic, or a page of the shell (#whatif, #mychip), named door.page.<id>.t / .d. */
