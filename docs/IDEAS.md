@@ -20,7 +20,7 @@ anywhere else, and does it help them think better about where chips are going?
 | The community chip | Groundwork built (`#community`, November 2026). Next: a maintainer decision on submitting it. |
 | Evolve a circuit | Built (`#evolve`, November 2026): blind evolution against the human design, opened in the studio. Next: evolve under a transistor or timing budget, and against an AI agent's design. |
 | From need to chip | Later, on top of open engines (idea 8). |
-| A fab you run (idea 20) | Built (November 2026): the `factory` topic, a 3D fab on the tested model `src/engines/fabline.js`, with the inventions that changed it and the ecosystem around it, at four depths. Next: yield and What if? shocks feeding the same line. |
+| A fab you run | Built (November 2026): the `factory` topic, a 3D fab on the tested model `src/engines/fabline.js`, with the inventions that changed it and the ecosystem around it, at four depths. Next: yield and What if? shocks feeding the same line. |
 
 ## The ideas
 
@@ -156,16 +156,9 @@ anywhere else, and does it help them think better about where chips are going?
 - **Builds on:** `everywhere` (teardowns), the forgotten chips debate, `supply`.
 - **Open questions:** sourced chip counts per device class, shown as ranges. *(4 Nov 2026.)*
 
-### 20. A fab you run
-- **First principle:** a fab is a re-entrant line: each wafer returns to the same tools once per layer, the scarcest tool sets the output, and as the line fills, waiting time grows much faster than output.
-- **What a learner does:** takes orders (phone chips, an AI GPU), buys tools and sends wafers round the line; watches queues build, the bottleneck move and yield change; every tool opens the lab that explains it. Then zooms out to the ecosystem: the suppliers that feed the fab and the packaging lines and customers it feeds, driven by What if?.
-- **Why it matters:** the honest answer to "why can't they just make more chips?", and the place where the manufacturing topics, the supply chain and the economics finally meet.
-- **Builds on:** `fab`, `litho`, `yield`, `supply`, `economics`, What if? (`src/engines/ripple.js`).
-- **Open questions:** a model small enough for the browser that keeps the three surprises true; drawn in 2.5D first, full 3D only if it helps understanding. *(4 Nov 2026.)* Learners asked to see the machines and the lines, so it became full 3D (three.js), with a numbers-only fallback where WebGL is missing. *(5 Nov 2026.)*
-
 ## Removed, and where each went
 
-- **Built:** the physics floor (first part), the first big question, a gentler first visit, flip-flops in the studio, the Counter.
+- **Built:** a fab you run (idea 20), the physics floor (first part), the first big question, a gentler first visit, flip-flops in the studio, the Counter.
 - **Moved to the road ([JOURNEY.md](JOURNEY.md)):** switch to gate; the last mile to Tiny Tapeout; push your own clock; open a flip-flop in the zoom; the bench stepping a clock.
 - **Moved to the roadmap ([ROADMAP.md](ROADMAP.md)):** learners become contributors; the hardware steps; the community chip (also called community shuttles); language-ready stages 2 and 3; a review routine for links and debates; a quality pass with real learners.
 - **Now a rule for every lab, not an idea:** predict, then reveal; game feel (puzzles and real challenges, never a textbook). Both are in the contributors' checklist on the roadmap.

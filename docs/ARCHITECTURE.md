@@ -5,7 +5,7 @@ Open Silicon Lab is a static site: plain ES modules, HTML fragments and CSS, wit
 ## The shape of the project
 
 ```
-index.html            app shell: top bar, five views, the import map (osl/ → src/)
+index.html            app shell: top bar, eight views, the import map (osl/ → src/)
 topics/<id>/          one folder per topic: content.html, topic.json, labs/*.js, optional style.css
 topics/README.md      the topic contract, and how to start a new topic
 src/data/             the fixed structure (bands, link kinds, big ideas, threads) and shared data

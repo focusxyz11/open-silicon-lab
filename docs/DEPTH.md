@@ -32,6 +32,6 @@ There are no levels of reader. Everyone starts at See it, nothing is locked, and
 
 ## Progress
 
-Done: Wafer & yield, Quantum search. `tests/depth.test.mjs` checks that every depth lab has all four stops. Next: the other flagships, the transistor, the tiny chip studio and the RISC-V lab, after testing the first two with real people.
+Done: Wafer & yield, Quantum search, A fab you run. `tests/depth.test.mjs` checks that every depth lab has all four stops. Next: the other flagships, the transistor, the tiny chip studio and the RISC-V lab, after testing these three with real people.
 
 The top-bar Beginner / Engineer switch hides itself on pages with a depth lab, and goes away when the last topic is converted.
