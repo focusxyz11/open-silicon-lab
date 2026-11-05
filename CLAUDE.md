@@ -25,7 +25,7 @@ Learners new to chips with basic hardware knowledge. Plain words first; explain 
 ## Where things are
 See `docs/ARCHITECTURE.md`. Each topic is a folder in `topics/<id>/` (content.html, topic.json, labs/*.js, optional style.css) and loads only when opened; read `topics/README.md` before touching one. Each topic's place, links, big ideas, challenges and learning content are in its `topic.json`; `npm run catalog` generates `src/generated/graph.js`, read through `src/data/topics.js`. Shared code: `src/core/` (UI helpers), `src/engines/` (pure models with tests), `src/app/` (shell, loader, router, map, views), imported from topics as `osl/…`. After changing a topic folder run `npm run catalog`. New topic: `npm run new-topic -- <id> "<Title>" <prefix> <band>`. Community chip designs: `community/<name>/design.json` (see `community/README.md`).
 
-Where the project is going: `docs/ROADMAP.md` (committed), `docs/JOURNEY.md` (the Build your own chip road), `docs/IDEAS.md` (the curated idea bank; new ideas start from a first principle).
+Where the project is going: `docs/README.md` lists every document. `docs/ROADMAP.md` (the one place for plans), `docs/JOURNEY.md` (the Build your own chip road), `docs/IDEAS.md` (the curated idea bank; new ideas start from a first principle).
 
 ## Workflow
 Work on a branch, open a pull request, let CI pass, then merge; `main` deploys to GitHub Pages. Keep PRs focused. Check changes at phone width (390 px) and in dark mode; no sideways scrolling.

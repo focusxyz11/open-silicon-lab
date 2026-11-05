@@ -1,29 +1,36 @@
 # Roadmap
 
-Where Open Silicon Lab is heading. Near-term work ships as pull requests. The long-term goals below are kept on purpose and built step by step. Nothing here is a promise or a date. Ideas not yet picked are kept in the [idea bank](IDEAS.md).
+Where Open Silicon Lab is heading. This is the one place for what happens next. Near-term work ships as pull requests. The long-term goals below are kept on purpose and built step by step. Nothing here is a promise or a date. Ideas not yet picked are kept in the [idea bank](IDEAS.md).
 
 ## What makes the lab unique
 
 The whole chip stack *runs*, and every part is connected. Your gates become a CPU's ALU, the same design exports to real Verilog, the time machine changes every page, and your own chip travels through every layer. Visual and challenge-first is the surface; a connected, tested engine is the core.
 
-## Now
+## Now: strengthen what exists
 
-Shipped and growing:
-- **My chip** and **Build your own chip: the road.** One design of yours from gates to files a factory accepts: logic, memory and the clock, your ALU in a RISC-V core, layout, test, clocked Verilog for Tiny Tapeout, and **Zoom into your chip** at seven scales. Stages and next steps: [JOURNEY.md](JOURNEY.md).
-- **Big questions:** why can a perfect design fail in the real world (`#reality`), and how far are chips from the limits of physics (`#floor`).
-- **The map as a simulator:** What if? (`#whatif`), map lenses and the time machine.
-- **The community chip** (`#community`): learners' designs checked automatically and shown on one shared Tiny Tapeout tile behind a selector, a one-click submission from the studio, and the whole chip downloadable.
-- **Evolve a circuit** (`#evolve`): blind evolution against the human design, opened in the studio.
+New features pause while the structure catches up with the content.
+
+1. **Review and reorganize.** The site has 40 topics, 93 simulation panels and several overlapping ways to organize them. The review proposes one main path: the chip stack in fewer layers, one Challenges page, and one page pattern. Decisions are still open, so nothing below is settled until a pull request lands.
+2. **Test with real people.** Three to five learners, from a child to an engineer, try the depth labs while someone watches where they get stuck. Their findings shape the reorganization and the next conversions.
+3. **Convert to depth labs.** One picture at growing depth replaces the Beginner / Engineer switch, topic by topic. Next candidates: the transistor, the tiny chip studio and the RISC-V lab. Guide and progress: [DEPTH.md](DEPTH.md).
 
 ## Next
 
+- **A quality pass.** A separate review of every topic: facts, simplification notes, phone layout and dark mode.
 - **Submit the community chip.** A maintainer decision: when to send it to a Tiny Tapeout run, and who pays for the tile.
-- **The physics floor, part two.** The chip passport now shows your chip's distance from physics; next, the same yardstick on other topics (accelerators, data centers, sensors).
 - **The rest of the road:** switch to gate, push your own clock, clocked chips in the zoom and on the bench ([JOURNEY.md](JOURNEY.md)).
+- **The physics floor, part two.** The same yardstick on other topics (accelerators, data centers, sensors).
 - **The next big question:** can the planet afford the chips we want? (idea bank, idea 6).
-- **A quality pass and real learners.** A separate review of every topic (facts, simplification notes, phone layout, dark mode), then three to five beginners trying the site while someone watches where they get stuck.
 
 Later: **open engines**, a public MCP server whose first use is *from need to chip*. More candidates are in the [idea bank](IDEAS.md).
+
+## Shipped
+
+- **Depth labs:** wafer yield, quantum search and a 3D fab you run, each at See it, Measure it, Model it and Open question.
+- **My chip** and **Build your own chip: the road:** one design of yours from gates to files a factory accepts, including **Zoom into your chip** at seven scales.
+- **Big questions:** why can a perfect design fail in the real world (`#reality`), and how far are chips from the limits of physics (`#floor`).
+- **The map as a simulator:** What if? (`#whatif`), map lenses and the time machine.
+- **The community chip** (`#community`) and **Evolve a circuit** (`#evolve`).
 
 ## Long term
 
