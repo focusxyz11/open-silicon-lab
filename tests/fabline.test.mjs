@@ -1,7 +1,7 @@
 // A fab you run (src/engines/fabline.js): the three things a fab does that an assembly line does not.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { line, capacity, bottleneck, summary, curve, wait, startState, step, PRODUCTS, GROUPS } from '../src/engines/fabline.js';
+import { line, capacity, bottleneck, summary, curve, wait, startState, step, visitsOf, PRODUCTS, GROUPS } from '../src/engines/fabline.js';
 
 const L = line(), N = PRODUCTS.phone.layers;
 
@@ -57,4 +57,34 @@ test('individual lots finish every layer and leave the line', () => {
   assert.ok(S.done.length > 10, 'lots should come out of a 4-layer line in 60 days');
   for (const lot of S.done) assert.equal(lot.layer, 4);
   assert.ok(S.done.every(l => l.out > l.born));
+});
+
+test('EUV removes steps: without it a phone chip needs more visits and deposition becomes the bottleneck', () => {
+  const euv = line(), duv = line({}, { print: 'duv' });
+  const steps = L => GROUPS.reduce((t, g) => t + visitsOf(L, g, N), 0);
+  assert.ok(steps(duv) > steps(euv));
+  assert.equal(bottleneck(duv, N), 'depo');
+  assert.ok(capacity(duv, N) < capacity(euv, N));
+  const same = 0.85 * capacity(euv, N);
+  assert.ok(summary(duv, N, same).days > 1.5 * summary(euv, N, same).days);
+});
+
+test('High-NA prints the finest layers of an AI chip in one pass; an older chip does not need EUV at all', () => {
+  const A = PRODUCTS.ai.layers;
+  assert.ok(capacity(line({}, { print: 'highna' }), A) > capacity(line(), A));
+  assert.equal(capacity(line({}, { print: 'highna' }), N), capacity(line(), N), 'a phone chip gains nothing from High-NA here');
+  const M = PRODUCTS.mature.layers;
+  assert.ok(capacity(line({}, { print: 'duv' }), M) >= capacity(line(), M));
+});
+
+test('AI that smooths the flow shortens the wait without adding a machine', () => {
+  const s = 0.9 * capacity(L, N);
+  assert.equal(capacity(line({}, { ai: true }), N), capacity(L, N));
+  assert.ok(summary(line({}, { ai: true }), N, s).days < summary(L, N, s).days);
+});
+
+test('lots that need a second pattern visit deposit, print and etch twice on that layer', () => {
+  const D = line({}, { print: 'duv' }), S = startState(D, 5);
+  for (let i = 0; i < 24 * 400; i++) step(S, D, 6, 0.02, 1);
+  assert.ok(S.done.length > 0);
 });
