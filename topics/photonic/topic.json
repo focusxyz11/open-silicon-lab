@@ -1,7 +1,7 @@
 {
   "id": "photonic",
   "title": "Computing with light",
-  "band": "next",
+  "band": "frontier",
   "order": 40,
   "kind": "explore",
   "summary": "Interferometers steer light to do matrix math; optics also carry data between chips.",

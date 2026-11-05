@@ -2,7 +2,7 @@
   "id": "xray",
   "title": "Chip X-ray",
   "band": "design",
-  "order": 25,
+  "order": 40,
   "kind": "explore",
   "summary": "Read a die like an engineer: name the blocks by their texture, then tell what a chip is for from where its area goes.",
   "labs": ["xray-lab"],

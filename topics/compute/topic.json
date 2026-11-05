@@ -1,8 +1,8 @@
 {
   "id": "compute",
   "title": "AI at work",
-  "band": "ai",
-  "order": 10,
+  "band": "systems",
+  "order": 30,
   "kind": "explore",
   "summary": "Systolic arrays and the roofline: why AI is limited by memory as often as by math.",
   "labs": ["systolic-array", "roofline"],

@@ -272,8 +272,8 @@ async function checkGuide(viewport) {
   await page.evaluate(() => scrollTo(0, 0));
   await page.click('#zLevels button:nth-child(4)');
   try { await page.waitForSelector('#hDie:not([hidden])', { timeout: 8000 }); } catch (e) { problems.push(tag + 'the die did not become the map of the lab at level 4'); }
-  await page.click('.hdblk[data-band="device"]');
-  if (!/Transistor/.test(await page.textContent('#hCard'))) problems.push(tag + 'picking the Transistors block did not show its topics');
+  await page.click('.hdblk[data-band="atoms"]');
+  if (!/transistor/i.test(await page.textContent('#hCard'))) problems.push(tag + 'picking the Atoms and switches block did not show its topics');
   await page.click('#hCard [data-zoomto]');
   try { await page.waitForSelector('#hGateSeg:not([hidden])', { timeout: 10000 }); } catch (e) { problems.push(tag + 'zooming down from the die did not reach the transistor'); }
   await page.click('#hGateSeg [data-gate="0"]');

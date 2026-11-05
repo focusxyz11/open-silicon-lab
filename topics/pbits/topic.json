@@ -1,8 +1,8 @@
 {
   "id": "pbits",
   "title": "Probabilistic computing",
-  "band": "next",
-  "order": 60,
+  "band": "frontier",
+  "order": 50,
   "kind": "explore",
   "summary": "Noisy p-bits run a logic gate forwards and backwards, and settle into answers.",
   "labs": ["next-pbits"],

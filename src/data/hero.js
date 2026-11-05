@@ -49,16 +49,11 @@ export const LENS_IDS = ['explore', 'build', 'break', 'imagine'];
    placed like a floorplan (percent of the die), with a texture that hints at what such a block
    looks like on real silicon. zoom = the zoom level (0-based) that block opens, if it has one. */
 export const DIE = [
-  { band: 'questions', x: 4, y: 5.3, w: 29, h: 15.8, tex: 'hstripes', c: '#4A2440', t: '#C46CA2' },
-  { band: 'future', x: 34.5, y: 5.3, w: 30, h: 15.8, tex: 'rings', c: '#4D3E14', t: '#D9B24E' },
-  { band: 'industry', x: 66, y: 5.3, w: 30, h: 15.8, tex: 'pads', c: '#33244F', t: '#9A7AE0' },
-  { band: 'next', x: 4, y: 23, w: 56, h: 22.4, tex: 'grid', c: '#16344A', t: '#62C0EA' },
-  { band: 'systems', x: 61.5, y: 23, w: 34.5, h: 22.4, tex: 'sram', c: '#1C3E30', t: '#6FD3A2', zoom: 0 },
-  { band: 'design', x: 4, y: 47.4, w: 56, h: 26.3, tex: 'logic', c: '#22264A', t: '#8C94EA', zoom: 5 },
-  { band: 'ai', x: 61.5, y: 47.4, w: 34.5, h: 26.3, tex: 'tensor', c: '#3F2C10', t: '#F0AE44', zoom: 4 },
-  { band: 'mfg', x: 4, y: 75.7, w: 25, h: 19, tex: 'vstripes', c: '#401E1E', t: '#E07E66' },
-  { band: 'pkg', x: 30.5, y: 75.7, w: 16, h: 19, tex: 'dots', c: '#30303A', t: '#B4B4C8', zoom: 2 },
-  { band: 'cpu', x: 48, y: 75.7, w: 18.5, h: 19, tex: 'sram', c: '#173B3D', t: '#5FD0CD', zoom: 4 },
-  { band: 'device', x: 68, y: 75.7, w: 13, h: 19, tex: 'vstripes', c: '#3F3A10', t: '#E6D45A', zoom: 7 },
-  { band: 'atoms', x: 82.5, y: 75.7, w: 13.5, h: 19, tex: 'dots', c: '#272727', t: '#D9D9D9', zoom: 8 }
+  { band: 'frontier', x: 4, y: 5.3, w: 45, h: 18, tex: 'rings', c: '#4D3E14', t: '#D9B24E' },
+  { band: 'industry', x: 50.5, y: 5.3, w: 45.5, h: 18, tex: 'pads', c: '#33244F', t: '#9A7AE0' },
+  { band: 'systems', x: 4, y: 25.3, w: 56, h: 24, tex: 'tensor', c: '#3F2C10', t: '#F0AE44', zoom: 0 },
+  { band: 'making', x: 61.5, y: 25.3, w: 34.5, h: 24, tex: 'vstripes', c: '#401E1E', t: '#E07E66', zoom: 2 },
+  { band: 'design', x: 4, y: 51.3, w: 56, h: 26, tex: 'logic', c: '#22264A', t: '#8C94EA', zoom: 5 },
+  { band: 'processors', x: 61.5, y: 51.3, w: 34.5, h: 26, tex: 'sram', c: '#173B3D', t: '#5FD0CD', zoom: 4 },
+  { band: 'atoms', x: 4, y: 79.3, w: 92, h: 15.4, tex: 'dots', c: '#272727', t: '#D9D9D9', zoom: 7 }
 ];

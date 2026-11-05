@@ -1,8 +1,8 @@
 {
   "id": "transistor",
   "title": "The transistor",
-  "band": "device",
-  "order": 10,
+  "band": "atoms",
+  "order": 20,
   "kind": "explore",
   "summary": "Planar, FinFET, gate-all-around and CFET: how the switch keeps shrinking without leaking.",
   "labs": ["transistor"],

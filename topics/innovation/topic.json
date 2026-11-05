@@ -1,8 +1,8 @@
 {
   "id": "innovation",
   "title": "Innovation map",
-  "band": "future",
-  "order": 10,
+  "band": "industry",
+  "order": 40,
   "kind": "explore",
   "summary": "Which steps AI speeds up, which need invention, money or people.",
   "labs": ["innovation-map", "schedule-gantt"],

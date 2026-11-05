@@ -1,8 +1,8 @@
 {
   "id": "clock",
   "title": "Memory and the clock",
-  "band": "design",
-  "order": 42,
+  "band": "processors",
+  "order": 30,
   "kind": "explore",
   "summary": "Make two gates remember a bit, catch a value on the clock's tick, then build a counter and push its clock until it breaks.",
   "labs": ["clock-lab"],

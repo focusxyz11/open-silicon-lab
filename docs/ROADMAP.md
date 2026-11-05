@@ -10,7 +10,7 @@ The whole chip stack *runs*, and every part is connected. Your gates become a CP
 
 New features pause while the structure catches up with the content.
 
-1. **Review and reorganize.** The site has 40 topics, 93 simulation panels and several overlapping ways to organize them. The review proposes one main path: the chip stack in fewer layers, one Challenges page, and one page pattern. Decisions are still open, so nothing below is settled until a pull request lands.
+1. **Review and reorganize.** The site has 40 topics, 93 simulation panels and several overlapping ways to organize them. Decided in November 2026: one main path through the chip stack in 7 layers, one Challenges page in place of the four doors, one page pattern, a new memory topic, and the six smaller ways to compute grouped under one map stop. The work ships in small steps, and no simulation is removed.
 2. **Test with real people.** Three to five learners, from a child to an engineer, try the depth labs while someone watches where they get stuck. Their findings shape the reorganization and the next conversions.
 3. **Convert to depth labs.** One picture at growing depth replaces the Beginner / Engineer switch, topic by topic. Next candidates: the transistor, the tiny chip studio and the RISC-V lab. Guide and progress: [DEPTH.md](DEPTH.md).
 

@@ -1,8 +1,8 @@
 {
   "id": "floor",
   "title": "The physics floor",
-  "band": "questions",
-  "order": 20,
+  "band": "frontier",
+  "order": 120,
   "kind": "explore",
   "summary": "How far a multiply-add, an AI word or a photo is from the energy floor physics sets, why cooling cannot beat it, and how far a signal can go in one tick.",
   "labs": ["floor-lab"],

@@ -1,8 +1,8 @@
 {
   "id": "reality",
   "title": "Why perfect designs fail",
-  "band": "questions",
-  "order": 10,
+  "band": "frontier",
+  "order": 110,
   "kind": "explore",
   "summary": "A chip can pass every check and still fail: variation, heat, aging, defects the test missed, radiation and uses nobody planned for. Ship one to a phone, a car, a data center or a satellite.",
   "labs": ["reality-stress", "reality-cases"],

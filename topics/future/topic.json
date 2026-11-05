@@ -1,8 +1,8 @@
 {
   "id": "future",
   "title": "Roadmap",
-  "band": "future",
-  "order": 20,
+  "band": "frontier",
+  "order": 90,
   "kind": "explore",
   "summary": "The state of the art year by year to the 2040s, tagged by how certain it is.",
   "labs": ["roadmap"],

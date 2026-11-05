@@ -2,7 +2,7 @@
   "id": "community",
   "title": "The community chip",
   "band": "design",
-  "order": 50,
+  "order": 80,
   "kind": "build",
   "summary": "Learners' designs side by side in one real Tiny Tapeout tile: see the shared chip, add your own design, and download the whole chip ready for a shuttle.",
   "labs": ["community-lab"],

@@ -1,7 +1,7 @@
 {
   "id": "architecture",
   "title": "Computer architecture",
-  "band": "cpu",
+  "band": "processors",
   "order": 10,
   "kind": "explore",
   "summary": "x86, Arm and RISC-V compared; instruction encoding, pipelines, Amdahl's law and the memory hierarchy.",

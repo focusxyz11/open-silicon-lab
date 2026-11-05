@@ -1,8 +1,8 @@
 {
   "id": "build",
   "title": "AI chip architect",
-  "band": "ai",
-  "order": 30,
+  "band": "systems",
+  "order": 50,
   "kind": "build",
   "summary": "Design an AI chip for a mission and see how it scores against real 2026 chips.",
   "labs": ["build-your-own-ai-chip"],

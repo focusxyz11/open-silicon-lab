@@ -29,7 +29,7 @@ topics/<id>/
 {
   "id": "yield",
   "title": "Wafer & yield",
-  "band": "mfg",
+  "band": "making",
   "order": 30,
   "kind": "explore",
   "summary": "Why defects make big dies expensive, and why chiplets help.",
