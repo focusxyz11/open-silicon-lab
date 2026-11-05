@@ -19,7 +19,7 @@
     },
     {
       "kind": "builds-on",
-      "to": "ecosystem",
+      "to": "supply",
       "why": "shared masks and open tools are what make a community chip possible"
     }
   ],

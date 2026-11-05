@@ -44,7 +44,7 @@ test('landmarks match well-known values', () => {
 });
 
 test('every company in the company explorer has a founding year, and no extras', () => {
-  const src = readFileSync(new URL('../topics/ecosystem/labs/company-explorer.js', import.meta.url), 'utf8');
+  const src = readFileSync(new URL('../topics/supply/labs/company-explorer.js', import.meta.url), 'utf8');
   const ids = [...src.matchAll(/^ \['([a-z0-9]+)','/gm)].map(m => m[1]);
   assert.ok(ids.length > 50);
   assert.deepEqual(ids.slice().sort(), Object.keys(TL.FOUNDED).sort());

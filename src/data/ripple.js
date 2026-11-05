@@ -36,7 +36,7 @@ export const INDICATORS = [
   { id: 'cars', topic: 'everywhere', t: 'Cars built', unit: '%' },
   { id: 'archgain', topic: 'architecture', t: 'Gains that must come from design, not the node', unit: '%' },
   { id: 'designcost', topic: 'design', t: 'Cost to design a leading chip', unit: '%' },
-  { id: 'rivals', topic: 'ecosystem', t: 'Opening for rival chipmakers', unit: '%' },
+  { id: 'rivals', topic: 'supply', t: 'Opening for rival chipmakers', unit: '%' },
   { id: 'custom', topic: 'build', t: 'Pull toward custom AI chips', unit: '%' },
   { id: 'fabinvest', topic: 'fab', t: 'New fab building', unit: '%' },
   { id: 'tools', topic: 'litho', t: 'Orders for lithography tools', unit: '%' },

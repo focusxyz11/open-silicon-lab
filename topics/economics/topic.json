@@ -2,14 +2,14 @@
   "id": "economics",
   "title": "Economics",
   "band": "industry",
-  "order": 30,
+  "order": 20,
   "kind": "explore",
   "summary": "What an AI GPU costs to make, who earns what, and what a chip startup needs.",
   "labs": ["gpu-cost-breakdown", "business-models", "price-ladder", "startup-budget"],
   "links": [
     {
       "kind": "builds-on",
-      "to": "ecosystem",
+      "to": "supply",
       "why": "who earns what"
     },
     {

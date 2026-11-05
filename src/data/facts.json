@@ -142,7 +142,7 @@
   },
   {
    "id": "celestial-ai",
-   "topic": "ecosystem",
+   "topic": "supply",
    "detail": "Optical interconnect between AI chips and memory.",
    "kind": "reported",
    "label": "Photonics consolidation",
@@ -646,7 +646,7 @@
   },
   {
    "id": "intel-nvidia",
-   "topic": "ecosystem",
+   "topic": "supply",
    "detail": "Product timelines not confirmed.",
    "kind": "reported",
    "label": "NVIDIA and Intel partnership",

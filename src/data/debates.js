@@ -27,11 +27,11 @@ export const DEBATES = [
   ] },
   { id: 'open', t: 'Open hardware', q: 'Open software changed the world. Can an open instruction set, open tools and open PDKs do the same for chips?', views: [
     { t: 'Yes, as in software', claim: 'RISC-V, open tools and shared wafers lower the cost of starting, so many more people can build chips.', assumes: 'A shared base of verified designs and tools keeps growing.', topics: ['riscv', 'tiny'] },
-    { t: 'Hardware is different', claim: 'Every attempt costs masks, fab time and testing; open designs do not remove the biggest costs or the need for trusted verification.', assumes: 'Manufacturing stays expensive and concentrated.', topics: ['economics', 'ecosystem'] }
+    { t: 'Hardware is different', claim: 'Every attempt costs masks, fab time and testing; open designs do not remove the biggest costs or the need for trusted verification.', assumes: 'Manufacturing stays expensive and concentrated.', topics: ['economics', 'supply'] }
   ] },
   { id: 'supply', t: 'A fragile supply chain', q: 'Most advanced chips pass through a few fabs and packaging lines. How should the chain be made resilient?', views: [
     { t: 'Spread the fabs', claim: 'Build leading-edge fabs and packaging in more regions, so one shock cannot stop the world.', assumes: 'Governments and customers will keep paying the higher cost.', topics: ['supply', 'fab', 'factory'] },
-    { t: 'Concentrate, with buffers', claim: 'Keep the efficient hubs and add stockpiles, second sources and long contracts.', assumes: 'Shocks are short enough to ride out on buffers.', topics: ['economics', 'ecosystem'] }
+    { t: 'Concentrate, with buffers', claim: 'Keep the efficient hubs and add stockpiles, second sources and long contracts.', assumes: 'Shocks are short enough to ride out on buffers.', topics: ['economics', 'supply'] }
   ] },
   { id: 'signoff', t: 'Who signs off?', q: 'If AI agents write most of a chip\'s code and tests, who is responsible when the silicon fails?', views: [
     { t: 'A person, always', claim: 'An engineer must review and sign off; responsibility cannot be handed to a tool.', assumes: 'People can still understand and check what the agent built.', topics: ['agent', 'reality'] },

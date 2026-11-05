@@ -37,7 +37,7 @@ const R = {
   'fab/The bare bottom': [['seg', 'adM', 'CVD'], ['set', 'adAR', 2], ['click', '#adReset'], ['click', '#adRun'], ['wait', 3000], ['seg', 'adM', 'ALD'], ['click', '#adReset'], ['click', '#adRun'], ['wait', 5000]],
   'fab/Etch straight down': [['set', 'etI', 100], ['set', 'etC', 0], ['click', '#etReset'], ['click', '#etRun'], ['wait', 6000]],
   'fab/Ten billion vias': [['set', 'ovX', 0], ['set', 'ovS', 0.65], ['set', 'ovX', 2]],
-  'ecosystem/Choke points': [['click', 'button[data-id="asml"]'], ['click', 'button[data-id="zeiss"]'], ['click', 'button[data-id="trumpf"]']],
+  'supply/Choke points': [['click', 'button[data-id="asml"]'], ['click', 'button[data-id="zeiss"]'], ['click', 'button[data-id="trumpf"]']],
   'innovation/What AI cannot shorten': [['seg', 'gtSeg', '2020'], ['seg', 'gtSeg', '2030']],
   'physics/Too hot for silicon': [['seg', 'phMode', '1'], ['set', 'phT', 600]],
   'physics/The furnace spreads it': [['seg', 'ipIon', 'Boron'], ['set', 'ipE', 0.2], ['seg', 'ipAn', 'Furnace'], ['seg', 'ipAn', 'Laser']],

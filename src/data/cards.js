@@ -22,7 +22,7 @@ export const CARDS={
  opcode:['build','Opcodes','The lowest 7 bits of every instruction say what kind it is. custom-0 (0001011) is free for vendors, so custom instructions never clash with standard ones.','architecture'],
  relu:['ai','ReLU','The simplest activation function: negative values become zero, positive ones pass through. It is cheap in hardware, one compare per output.','compute'],
  layer:['ai','Layers','A layer is many neurons sharing the same inputs: a matrix times a vector. Stack layers and you have a neural network.','compute'],
- openisa:['eco','An open instruction set','RISC-V is a free, open standard run by RISC-V International, with over 4,200 member organizations. Anyone can build a core without a license fee, and many complete cores are open source.','ecosystem'],
+ openisa:['eco','An open instruction set','RISC-V is a free, open standard run by RISC-V International, with over 4,200 member organizations. Anyone can build a core without a license fee, and many complete cores are open source.','supply'],
  opentools:['eco','Open-source chip tools','A full open flow now exists: Yosys turns code into gates, OpenROAD places and routes them, and LibreLane (the successor to OpenLane, maintained at the FOSSi Foundation) ties the steps together.','design'],
  openpdk:['eco','Open PDKs and shuttles','SkyWater 130 nm, GlobalFoundries 180 nm and IHP 130 nm have open process design kits. Programs such as Tiny Tapeout let students put designs on real chips by sharing a wafer.','economics'],
  riscvai:['eco','RISC-V in AI chips','AI chip makers use RISC-V cores to control and feed their accelerators. Tenstorrent licensed SiFive\'s vector cores, and Meta bought the RISC-V chip startup Rivos in 2025.','accelerators'],

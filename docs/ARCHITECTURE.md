@@ -178,7 +178,7 @@ Learners' designs live in `community/<name>/design.json` (see `community/README.
 
 ## Moved topics
 
-When a topic merges into another, add it to `MOVED` in `src/core/moved.js` in the same pull request. Old addresses then redirect, and the same file carries each visitor's solved challenges and seen topics across when the site starts. Keep challenge titles unchanged, because saved challenges are stored by topic and title. Give each moved simulation its old anchor as an explicit id. Never remove a line from the list.
+When a topic merges into another, add it to `MOVED` in `src/core/moved.js` in the same pull request. Old addresses then redirect, and the same file carries each visitor's solved challenges and seen topics across when the site starts. Keep challenge titles unchanged, because saved challenges are stored by topic and title. Add a line for each moved simulation's old anchor too. Never remove a line from the list.
 
 ## Depth labs
 
