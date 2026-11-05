@@ -88,7 +88,7 @@ export const CASES = [
     why: 'A unit slip: 800 mm² is 8 cm², so yield = e^(−0.8) ≈ 45%. Physical sense would have caught it: real GPUs of about 800 mm² ship by the million. The conclusion (chiplets help) can still be right, but not for this reason.'
   },
   {
-    id: 'roof', area: 'AI computing', t: 'Twice the compute, twice the speed?', truth: 'flawed', skill: 'physics', topic: 'compute',
+    id: 'roof', area: 'AI computing', t: 'Twice the compute, twice the speed?', truth: 'flawed', skill: 'physics', topic: 'accelerators',
     ask: 'Our chatbot answers one user at a time and feels slow. A new chip has twice the compute (FLOPS) and the same memory bandwidth. Will answers come twice as fast?',
     says: 'Yes. Tokens per second scale with FLOPS, so doubling compute doubles the speed.',
     art: { kind: 'roof', params: 70, bytes: 1, bw: 8, pf: 4.5 },

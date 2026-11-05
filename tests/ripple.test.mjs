@@ -42,7 +42,7 @@ test('directions match what happened', () => {
 test('heads, chains and formatting', () => {
   const res = ripple({ demand: 60 });
   const heads = topicHeads(res);
-  assert.equal(heads.compute.lever, true);
+  assert.equal(heads.accelerators.lever, true);
   assert.ok(heads.everywhere && heads.everywhere.id === 'devprice');
   const ch = chain(res, 'devprice');
   assert.deepEqual(ch.map(c => c.id), ['aidemand', 'memtight', 'memprice', 'devprice']);

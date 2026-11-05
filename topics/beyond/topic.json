@@ -14,7 +14,7 @@
     },
     {
       "kind": "builds-on",
-      "to": "compute",
+      "to": "accelerators",
       "why": "the memory wall"
     }
   ],

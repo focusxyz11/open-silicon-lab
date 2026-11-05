@@ -15,7 +15,7 @@ export const LEVERS = [
 
 /* Indicators: id, topic it lives on, what it measures, unit. Lever indicators come first. */
 export const INDICATORS = [
-  { id: 'aidemand', topic: 'compute', t: 'AI computing wanted', unit: '%' },
+  { id: 'aidemand', topic: 'accelerators', t: 'AI computing wanted', unit: '%' },
   { id: 'hbm', topic: 'package', t: 'HBM made', unit: '%' },
   { id: 'elec', topic: 'datacenter', t: 'Electricity price', unit: '%' },
   { id: 'delay', topic: 'future', t: 'Next node, years late', unit: 'yr' },
@@ -27,8 +27,8 @@ export const INDICATORS = [
   { id: 'gpuprice', topic: 'economics', t: 'AI chip prices', unit: '%' },
   { id: 'memprofit', topic: 'economics', t: 'Memory makers\' profits', unit: '%' },
   { id: 'perfw', topic: 'transistor', t: 'Performance per watt of the newest chips', unit: '%' },
-  { id: 'energytoken', topic: 'compute', t: 'Energy for each AI answer', unit: '%' },
-  { id: 'costtoken', topic: 'compute', t: 'Cost of each AI answer', unit: '%' },
+  { id: 'energytoken', topic: 'accelerators', t: 'Energy for each AI answer', unit: '%' },
+  { id: 'costtoken', topic: 'accelerators', t: 'Cost of each AI answer', unit: '%' },
   { id: 'aicompute', topic: 'accelerators', t: 'AI computing power added', unit: '%' },
   { id: 'dcpower', topic: 'datacenter', t: 'Data-center electricity use', unit: '%' },
   { id: 'grid', topic: 'future', t: 'Strain on power grids', unit: '%' },

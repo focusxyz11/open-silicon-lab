@@ -19,8 +19,7 @@ export const TOPICS = [
   {"id":"innovation","band":"industry","kind":"explore","t":"Innovation map","s":"Which steps AI speeds up, which need invention, money or people."},
   {"id":"everywhere","band":"systems","kind":"explore","t":"Chips everywhere","s":"Open up a phone, a car, a thermostat and a server: dozens of different chips, and most are not cutting-edge."},
   {"id":"analog","band":"systems","kind":"explore","t":"Chips that touch the real world","s":"Sensors, amplifiers, converters and power chips: catch a heartbeat or a voice on a battery budget, and feed a chip without wasting power."},
-  {"id":"compute","band":"systems","kind":"explore","t":"AI at work","s":"Systolic arrays and the roofline: why AI is limited by memory as often as by math."},
-  {"id":"accelerators","band":"systems","kind":"explore","t":"AI chip architectures","s":"GPUs, TPUs, wafer-scale and SRAM chips; 4-bit numbers; prefill versus decode."},
+  {"id":"accelerators","band":"systems","kind":"explore","t":"AI chips","s":"What an AI chip does all day, why memory limits it as often as math, and five ways to build one."},
   {"id":"build","band":"systems","kind":"build","t":"AI chip architect","s":"Design an AI chip for a mission and see how it scores against real 2026 chips."},
   {"id":"datacenter","band":"systems","kind":"explore","t":"Memory, networks & power","s":"DRAM and NAND cells, HBM stacks, cluster networks and the energy of every token."},
   {"id":"litho","band":"making","kind":"explore","t":"Lithography","s":"Printing with light: resolution, EUV scanners, High-NA and the photon budget."},
@@ -46,7 +45,7 @@ export const TOPICS = [
 /* Every link: "from <kind> to: why". "in" is the topic.json it is written in. */
 export const LINKS = [
   {"from":"beyond","to":"architecture","kind":"builds-on","why":"the von Neumann bottleneck","in":"beyond"},
-  {"from":"beyond","to":"compute","kind":"builds-on","why":"the memory wall","in":"beyond"},
+  {"from":"beyond","to":"accelerators","kind":"builds-on","why":"the memory wall","in":"beyond"},
   {"from":"cim","to":"beyond","kind":"kind-of","why":"compute where the data lives","in":"cim"},
   {"from":"cim","to":"datacenter","kind":"grew-from","why":"memory cells taught to compute","in":"cim"},
   {"from":"neuro","to":"beyond","kind":"kind-of","why":"compute only when something happens","in":"neuro"},
@@ -84,7 +83,6 @@ export const LINKS = [
   {"from":"analog","to":"transistor","kind":"builds-on","why":"a transistor can amplify, not only switch","in":"analog"},
   {"from":"analog","to":"physics","kind":"builds-on","why":"light, heat and pressure change how silicon conducts","in":"analog"},
   {"from":"analog","to":"supply","kind":"causes","why":"analog parts stay on older processes","if":"a chip is mostly analog or power circuitry","then":"a newer process gains it little, so it stays in older fabs that few new investments target","in":"analog"},
-  {"from":"accelerators","to":"compute","kind":"builds-on","why":"the math AI chips are built for","in":"accelerators"},
   {"from":"accelerators","to":"datacenter","kind":"part-of","why":"chips fill racks of servers","in":"accelerators"},
   {"from":"build","to":"accelerators","kind":"builds-on","why":"architect your own","in":"build"},
   {"from":"build","to":"economics","kind":"builds-on","why":"tape-out cost and margin","in":"build"},
@@ -115,7 +113,7 @@ export const LINKS = [
   {"from":"agent","to":"design","kind":"builds-on","why":"agents write RTL; people verify it","in":"agent"},
   {"from":"agent","to":"tiny","kind":"builds-on","why":"check its designs with the studio's tools","in":"agent"},
   {"from":"agent","to":"riscv","kind":"builds-on","why":"test the code it writes","in":"agent"},
-  {"from":"agent","to":"compute","kind":"builds-on","why":"check its performance claims","in":"agent"},
+  {"from":"agent","to":"accelerators","kind":"builds-on","why":"check its performance claims","in":"agent"},
   {"from":"evolve","to":"design","kind":"builds-on","why":"design is a search through possible circuits, and evolution is one way to search","in":"evolve"},
   {"from":"evolve","to":"tiny","kind":"feeds","why":"an evolved circuit opens in the studio, to be verified, laid out and exported","in":"evolve"},
   {"from":"tiny","to":"bench","kind":"feeds","why":"your finished design goes on the bench to be tested","in":"bench"},
@@ -175,8 +173,6 @@ export const IDEA_USES = [
   {"idea":"energy-budget","topic":"analog","how":"an always-on sensor lives on microwatts; bits, samples and radio set the bill"},
   {"idea":"smaller-until","topic":"analog","how":"precise analog needs large, matched transistors, so it barely shrinks","counter":true},
   {"idea":"pay-once","topic":"analog","how":"sensors and power chips come from older fabs that are long paid for"},
-  {"idea":"keep-data-close","topic":"compute","how":"when data cannot arrive fast enough, the multipliers sit idle (the roofline)"},
-  {"idea":"many-small","topic":"compute","how":"a systolic array is a grid of small multipliers working in step"},
   {"idea":"keep-data-close","topic":"accelerators","how":"GPUs keep weights in HBM next door; SRAM chips keep them on the chip itself"},
   {"idea":"many-small","topic":"accelerators","how":"a GPU uses thousands of simple cores instead of a few complex ones"},
   {"idea":"copies-catch-mistakes","topic":"accelerators","how":"spare cores route around manufacturing defects"},
@@ -231,7 +227,6 @@ export const TRADEOFF_USES = [
   {"tradeoff":"safety-cost","topic":"everywhere","how":"a car part costs more than a phone part that does the same job"},
   {"tradeoff":"precision-energy","topic":"analog","how":"every extra bit doubles the converter's steps, and every bit has to be sent","try":"#lab-analog-1"},
   {"tradeoff":"speed-power","topic":"analog","how":"sampling faster follows quick changes, and costs power in every part of the chain","try":"#lab-analog-1"},
-  {"tradeoff":"precision-energy","topic":"compute","how":"smaller numbers move fewer bytes, so the multipliers stay busy","try":"#lab-compute-2"},
   {"tradeoff":"precision-energy","topic":"accelerators","how":"each halving of the number size halves the memory traffic","try":"#lab-accelerators-3"},
   {"tradeoff":"near-big","topic":"accelerators","how":"SRAM chips are fast but small; HBM holds whole models","try":"#lab-accelerators-1"},
   {"tradeoff":"speed-power","topic":"datacenter","how":"serving answers faster costs more energy per token","try":"#lab-datacenter-4"},
@@ -268,7 +263,6 @@ export const MEASURE_USES = [
   {"measure":"dppm","topic":"everywhere","how":"car parts must fail far less often than phone parts"},
   {"measure":"enob","topic":"analog","how":"a converter's useful bits, after noise"},
   {"measure":"ops-watt","topic":"analog","how":"for sensors the count is samples per joule, not operations"},
-  {"measure":"bandwidth","topic":"compute","how":"the slope of the roofline"},
   {"measure":"ops-watt","topic":"accelerators","how":"AI chips compete on it as much as on speed"},
   {"measure":"bandwidth","topic":"accelerators","how":"the biggest difference between AI chips is often here"},
   {"measure":"cost-chip","topic":"build","how":"your design's cost per chip against real ones"},
@@ -288,7 +282,7 @@ export const MEASURE_USES = [
 ];
 
 /* Topics whose subject did not exist yet in early years: [year, what happened] (from "time.born"). */
-export const BORN = {"floor":[1961,"Rolf Landauer shows that erasing one bit of information must turn at least kT ln 2 of energy into heat."],"compute":[2012,"Deep learning takes off on GPUs in 2012."],"accelerators":[2016,"Google reveals its first TPU in 2016. GPUs became programmable for general computing with CUDA in 2007."],"build":[2016,"Purpose-built AI chips appear from 2016."],"agent":[2023,"Large language models start writing chip code around 2023; agentic design tools ship in 2025–26."],"evolve":[1990,"Researchers start evolving circuits on computers, using the ideas of natural selection."],"riscv":[2010,"RISC-V starts as a research project at UC Berkeley in 2010."]};
+export const BORN = {"floor":[1961,"Rolf Landauer shows that erasing one bit of information must turn at least kT ln 2 of energy into heat."],"accelerators":[2012,"Deep learning takes off on GPUs in 2012."],"build":[2016,"Purpose-built AI chips appear from 2016."],"agent":[2023,"Large language models start writing chip code around 2023; agentic design tools ship in 2025–26."],"evolve":[1990,"Researchers start evolving circuits on computers, using the ideas of natural selection."],"riscv":[2010,"RISC-V starts as a research project at UC Berkeley in 2010."]};
 
 /* Every challenge, with the topic it belongs to. */
 export const CHALLENGES = [
@@ -324,9 +318,9 @@ export const CHALLENGES = [
   {"topic":"analog","kind":"Design","lens":"build","t":"A heartbeat on a coin cell","d":"Catch a clean heartbeat for under 20 µW. Which part of the chain eats the budget?","href":"#lab-analog-1"},
   {"topic":"analog","kind":"Experiment","lens":"break","t":"Hear the failing bearing","d":"Sample a motor's vibration too slowly and watch the warning tone vanish; find the slowest rate that keeps it.","href":"#lab-analog-1"},
   {"topic":"analog","kind":"Puzzle","lens":"build","t":"Four jobs, four regulators","d":"Find the best power supply for a fitness band, a phone processor, a precise sensor and a radio.","href":"#lab-analog-2"},
-  {"topic":"compute","kind":"Experiment","lens":"break","t":"Feed the beast","d":"Serve a 70B model in FP8 on Rubin and raise the batch until the chip stops waiting for memory. Where does each user start to slow down?","href":"#lab-compute-2","check":[[{"id":"rfChip","on":"NVIDIA Rubin"},{"id":"rfPrec","on":"FP8"},{"id":"rfPO","gte":69},{"id":"rfPO","lte":71},{"id":"rfUt","gte":100},{"id":"rfBO","lte":724}]],"hint":"Raise the batch a step at a time and watch chip utilization. Below 100%, the chip is waiting for memory.","why":"With one user, every token reads all 70 GB of weights for very little math, so the chip waits for memory. Serving many users at once reuses each read, and somewhere between 512 and 724 users the math becomes the limit. Past that point, each user gets slower."},
-  {"topic":"compute","kind":"Puzzle","lens":"build","t":"Sixteen answers","d":"Predict how many cycles a 4 × 4 systolic array needs to finish all 16 results, then step through it one cycle at a time to check.","href":"#lab-compute-1","check":[[{"id":"saCyc","has":"Cycle 10 of 10"}]],"hint":"Data enters the array one diagonal at a time. The last cell starts late and still needs all 4 steps.","why":"A 4 × 4 systolic array needs 10 cycles, 3 × 4 − 2. The last numbers reach the far corner only after the first ones have crossed the array. Bigger arrays have the same fill-up delay, which is why they are fed long streams of work."},
-  {"topic":"compute","kind":"Puzzle","lens":"imagine","t":"An assistant in your pocket","d":"On the phone NPU, find the biggest model that fits on one chip and still answers at 20 tokens a second, faster than you can read.","href":"#lab-compute-2","check":[[{"id":"rfChip","on":"Phone NPU"},{"id":"rfG","eq":1},{"id":"rfU","gte":20},{"id":"rfPO","gte":7}]],"hint":"On a phone, memory bandwidth sets the speed. Try smaller numbers for each weight.","why":"With 4-bit weights, a model of about 8 billion parameters fits on one phone chip at 20 tokens a second; with 8-bit weights, only about 4 billion. Phone AI depends on smaller numbers as much as on faster chips."},
+  {"topic":"accelerators","kind":"Experiment","lens":"break","t":"Feed the beast","d":"Serve a 70B model in FP8 on Rubin and raise the batch until the chip stops waiting for memory. Where does each user start to slow down?","href":"#lab-accelerators-6","check":[[{"id":"rfChip","on":"NVIDIA Rubin"},{"id":"rfPrec","on":"FP8"},{"id":"rfPO","gte":69},{"id":"rfPO","lte":71},{"id":"rfUt","gte":100},{"id":"rfBO","lte":724}]],"hint":"Raise the batch a step at a time and watch chip utilization. Below 100%, the chip is waiting for memory.","why":"With one user, every token reads all 70 GB of weights for very little math, so the chip waits for memory. Serving many users at once reuses each read, and somewhere between 512 and 724 users the math becomes the limit. Past that point, each user gets slower."},
+  {"topic":"accelerators","kind":"Puzzle","lens":"build","t":"Sixteen answers","d":"Predict how many cycles a 4 × 4 systolic array needs to finish all 16 results, then step through it one cycle at a time to check.","href":"#lab-accelerators-5","check":[[{"id":"saCyc","has":"Cycle 10 of 10"}]],"hint":"Data enters the array one diagonal at a time. The last cell starts late and still needs all 4 steps.","why":"A 4 × 4 systolic array needs 10 cycles, 3 × 4 − 2. The last numbers reach the far corner only after the first ones have crossed the array. Bigger arrays have the same fill-up delay, which is why they are fed long streams of work."},
+  {"topic":"accelerators","kind":"Puzzle","lens":"imagine","t":"An assistant in your pocket","d":"On the phone NPU, find the biggest model that fits on one chip and still answers at 20 tokens a second, faster than you can read.","href":"#lab-accelerators-6","check":[[{"id":"rfChip","on":"Phone NPU"},{"id":"rfG","eq":1},{"id":"rfU","gte":20},{"id":"rfPO","gte":7}]],"hint":"On a phone, memory bandwidth sets the speed. Try smaller numbers for each weight.","why":"With 4-bit weights, a model of about 8 billion parameters fits on one phone chip at 20 tokens a second; with 8-bit weights, only about 4 billion. Phone AI depends on smaller numbers as much as on faster chips."},
   {"topic":"accelerators","kind":"Puzzle","lens":"break","t":"Four bits, despite outliers","d":"With 1% outliers in the weights, fit a 70B model in under 40 GB and keep the signal-to-noise above 20 dB.","href":"#lab-accelerators-3","check":[[{"id":"qzOut","gte":1},{"id":"qzMem","lt":40},{"id":"qzSnr","gt":20}]],"hint":"Only 4-bit formats fit under 40 GB. Then try each way of scaling.","why":"Only FP4 with one scale per block of 16 weights works: 39.4 GB and about 20.5 dB. With one scale for the whole tensor, a few large outliers stretch the scale and crush every small weight to zero. Small blocks keep each scale local, at the cost of half a bit per weight."},
   {"topic":"accelerators","kind":"Puzzle","lens":"build","t":"Read fast, write slow","d":"On Rubin with a 70B model, find how long a prompt must be before reading it takes as long as writing a 270-token answer.","href":"#lab-accelerators-4","check":[[{"id":"pdChip","on":"Rubin"},{"id":"pdModel","on":"70B"},{"id":"pdOutO","eq":270},{"id":"pdInO","gte":65000},{"id":"pdInO","lte":90000}]],"hint":"Keep the answer at 270 tokens and lengthen the prompt until the time to first token is close to the time spent writing.","why":"It takes a prompt of about 77,000 tokens. Reading the prompt works on all its tokens at once, so the chip computes at full speed; writing produces one token at a time and waits for memory each time. Per token, reading is about 280 times faster."},
   {"topic":"build","kind":"Design","lens":"build","t":"Phone AI chip","d":"Run an 8B assistant on a phone: fast, cool and cheap.","href":"#build"},

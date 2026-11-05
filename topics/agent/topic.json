@@ -24,7 +24,7 @@
     },
     {
       "kind": "builds-on",
-      "to": "compute",
+      "to": "accelerators",
       "why": "check its performance claims"
     }
   ],
