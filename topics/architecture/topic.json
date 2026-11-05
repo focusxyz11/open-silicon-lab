@@ -5,7 +5,12 @@
   "order": 10,
   "kind": "explore",
   "summary": "x86, Arm and RISC-V compared; instruction encoding, pipelines, Amdahl's law and the memory hierarchy.",
-  "labs": ["isa-compare", "risc-v-encoder", "pipeline", "amdahl", "memory-hierarchy"],
+  "labs": [
+    "isa-compare",
+    "risc-v-encoder",
+    "pipeline",
+    "amdahl"
+  ],
   "links": [
     {
       "kind": "feeds",
@@ -46,11 +51,6 @@
   ],
   "tradeoffs": [
     {
-      "tradeoff": "near-big",
-      "how": "each level of the memory hierarchy is bigger and slower than the one above",
-      "try": "#lab-architecture-5"
-    },
-    {
       "tradeoff": "flexible-efficient",
       "how": "Amdahl's law limits what a special unit can win",
       "try": "#lab-architecture-4"
@@ -76,7 +76,22 @@
       "title": "Zero stalls",
       "task": "Get the program through the 5-stage pipeline with no stall cycles at all. Which two fixes does it take?",
       "href": "#lab-architecture-3",
-      "check": [[{"id": "ppFwd", "checked": true}, {"id": "ppRe", "checked": true}, {"id": "ppS", "eq": 0}]],
+      "check": [
+        [
+          {
+            "id": "ppFwd",
+            "checked": true
+          },
+          {
+            "id": "ppRe",
+            "checked": true
+          },
+          {
+            "id": "ppS",
+            "eq": 0
+          }
+        ]
+      ],
       "hint": "One fix passes a result straight to the next instruction. The other changes the order of the program.",
       "why": "It takes both forwarding and reordering. Forwarding hands a result to the next instruction before it is written back; reordering moves an independent instruction into the gap a load leaves. Then the pipeline finishes one instruction per cycle."
     },
@@ -86,7 +101,18 @@
       "title": "The serial share",
       "task": "Find the parallel share that lets 10,000 GPU lanes run 100 times faster than one core, and see what 16 CPU cores reach at the same share.",
       "href": "#lab-architecture-4",
-      "check": [[{"id": "amG", "gte": 95}, {"id": "amG", "lte": 110}]],
+      "check": [
+        [
+          {
+            "id": "amG",
+            "gte": 95
+          },
+          {
+            "id": "amG",
+            "lte": 110
+          }
+        ]
+      ],
       "hint": "Move the parallel share up and watch the GPU column. It crosses 100× only above 99%.",
       "why": "At 99% parallel, 10,000 GPU lanes run about 100 times faster than one core, and 16 CPU cores about 14 times. The 1% that cannot be split caps the speedup at 100, however many lanes you add."
     },
@@ -96,18 +122,22 @@
       "title": "Room to grow",
       "task": "Encode add, then sub, with the same registers: which bit tells them apart? Then count how many operations the funct3 and funct7 fields leave room for in this one opcode.",
       "href": "#lab-architecture-2",
-      "check": [[{"id": "encOp", "is": "add"}], [{"id": "encOp", "is": "sub"}]],
+      "check": [
+        [
+          {
+            "id": "encOp",
+            "is": "add"
+          }
+        ],
+        [
+          {
+            "id": "encOp",
+            "is": "sub"
+          }
+        ]
+      ],
       "hint": "Compare the hex of the two instructions, then find the field that changed.",
       "why": "add and sub differ in a single bit of funct7, bit 30. funct3 and funct7 together are 10 bits, room for 1,024 operations in one opcode, and the base set uses 10 of them. RISC-V also leaves whole opcodes free for custom instructions, which is how AI chips add their own."
-    },
-    {
-      "kind": "Puzzle",
-      "lens": "break",
-      "title": "A day for one byte",
-      "task": "Turn on the human time scale. If reading a register took a third of a second, how long would a core wait for main memory, and for an SSD?",
-      "href": "#lab-architecture-5",
-      "hint": "Read the bars with the human time scale on: every nanosecond becomes a second.",
-      "why": "If a register read took a third of a second, main memory would take about a minute and a half and an SSD almost a day. That gap is why processors have caches, and why AI chips put memory as close to the math as they can."
     }
   ],
   "learn": {

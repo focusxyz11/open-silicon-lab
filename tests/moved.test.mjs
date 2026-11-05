@@ -2,7 +2,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { MOVED, QUIZ_AT, movedTo, moveSolved, moveProgress, migrateSaved } from '../src/core/moved.js';
+import { MOVED, QUIZ_AT, QUIZ_MOVED, CHALLENGE_MOVED, remapQuiz, movedTo, moveSolved, moveProgress, migrateSaved } from '../src/core/moved.js';
 import { TOPICS } from '../src/data/topics.js';
 import { ANCHORS } from '../src/generated/catalog.js';
 
@@ -35,18 +35,36 @@ test('every merged quiz starts where the receiving topic\'s own questions end', 
 
 test('migrating twice changes nothing more, and damaged saves do not stop the site', () => {
   const s = store({ 'osl-solved-v1': JSON.stringify({ 'compute/A': '2026-11-01' }), 'sjl-progress-v3': '{broken' });
-  migrateSaved(s, moved, {}); const once = s.m.get('osl-solved-v1');
+  migrateSaved(s, moved, {}, {}, {}); const once = s.m.get('osl-solved-v1');
   assert.deepEqual(JSON.parse(once), { 'accelerators/A': '2026-11-01' });
-  migrateSaved(s, moved, {}); assert.equal(s.m.get('osl-solved-v1'), once);
+  migrateSaved(s, moved, {}, {}, {}); assert.equal(s.m.get('osl-solved-v1'), once);
   assert.equal(s.m.get('sjl-progress-v3'), '{broken');
 });
 
 test('with nothing moved, the store is not touched', () => {
   const s = store({}); s.setItem = () => assert.fail('wrote to the store');
-  migrateSaved(s, {});
+  migrateSaved(s, {}, {}, {}, {});
 });
 
 test('every moved topic points at a live topic, and is not one itself', () => {
   const live = new Set(TOPICS.map(t => t.id)), anchors = new Set(Object.keys(ANCHORS));
   for (const [from, to] of Object.entries(MOVED)) { assert.ok(!live.has(from) && !anchors.has(from), from + ' still exists'); assert.ok(live.has(to) || anchors.has(to), to + ' does not exist'); }
+});
+
+test('a challenge that moved between live topics keeps its solved date', () => {
+  assert.deepEqual(moveSolved({ 'package/The next memory jump': '2026-11-01' }, {}, CHALLENGE_MOVED), { 'memory/The next memory jump': '2026-11-01' });
+});
+
+test('quiz answers follow questions that moved, and the move runs only once', () => {
+  const map = { d: { 0: ['m', 0], 1: ['d', 0] } };
+  assert.deepEqual(remapQuiz({ quiz: { d: { 0: 2, 1: 3 }, y: { 0: 1 } } }, map).quiz, { m: { 0: 2 }, d: { 0: 3 }, y: { 0: 1 } });
+  const s = store({ 'sjl-progress-v3': JSON.stringify({ seen: {}, quiz: { datacenter: { 2: 1 } } }) });
+  migrateSaved(s, {}, {}, {}, QUIZ_MOVED); const once = s.m.get('sjl-progress-v3');
+  assert.deepEqual(JSON.parse(once).quiz, { datacenter: { 0: 1 } });
+  migrateSaved(s, {}, {}, {}, QUIZ_MOVED); assert.equal(s.m.get('sjl-progress-v3'), once);
+});
+
+test('moved quiz questions are where the map says', () => {
+  const q = id => JSON.parse(readFileSync(new URL('../topics/' + id + '/topic.json', import.meta.url), 'utf8')).learn.quiz.map(x => x.q);
+  assert.match(q('memory')[0], /refreshed/); assert.match(q('memory')[2], /HBM/); assert.match(q('datacenter')[0], /PUE/); assert.match(q('package')[0], /interposer/);
 });

@@ -124,13 +124,4 @@
         <p class="note">Speedup is relative to one core. Each GPU lane is individually slower than a CPU core, so in practice the parallel share must be even higher for a GPU to win. That is why systems pair both: CPUs for control and serial code, accelerators for the math.</p>
       </div>
     </div>
-
-    <div class="lab">
-      <header><b>The memory hierarchy</b><span>Typical access times</span></header>
-      <div class="body">
-        <label class="check"><input type="checkbox" id="mhH" checked> Show on a human time scale (1 nanosecond = 1 second)</label>
-        <div class="bars" id="mhBars"></div>
-        <p class="small">Processors hide slow memory behind layers of small, fast caches. A trip all the way to main memory costs hundreds of instructions' worth of time. HBM has roughly the same delay as ordinary DRAM but far more bandwidth, which is what AI chips need: they stream enormous amounts of data instead of fetching single values. Bar lengths use a log scale.</p>
-      </div>
-    </div>
   </section>

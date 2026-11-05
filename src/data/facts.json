@@ -502,7 +502,7 @@
   },
   {
    "id": "hbm4",
-   "topic": "package",
+   "topic": "memory",
    "detail": "2,048-bit interface; Nvidia raised per-pin speed requirements above 11 Gbps.",
    "kind": "reported",
    "label": "HBM4 mass production",
@@ -694,7 +694,7 @@
   },
   {
    "id": "memory-squeeze",
-   "topic": "datacenter",
+   "topic": "memory",
    "detail": "TrendForce forecast of 5 January 2026. Memory makers moved wafers to HBM, which IDC says uses about three times the wafer area of DDR5; mainstream PC memory and storage costs rose 40–70% during 2025 (Omdia).",
    "kind": "projection",
    "label": "The 2026 memory squeeze",
@@ -706,7 +706,7 @@
   },
   {
    "id": "nand-layers",
-   "topic": "datacenter",
+   "topic": "memory",
    "detail": "Kioxia's 332-layer BiCS10 sampling from mid-2026.",
    "kind": "reported",
    "label": "3D NAND layer race",
