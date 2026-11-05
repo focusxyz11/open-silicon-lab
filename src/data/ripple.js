@@ -16,13 +16,13 @@ export const LEVERS = [
 /* Indicators: id, topic it lives on, what it measures, unit. Lever indicators come first. */
 export const INDICATORS = [
   { id: 'aidemand', topic: 'accelerators', t: 'AI computing wanted', unit: '%' },
-  { id: 'hbm', topic: 'package', t: 'HBM made', unit: '%' },
+  { id: 'hbm', topic: 'memory', t: 'HBM made', unit: '%' },
   { id: 'elec', topic: 'datacenter', t: 'Electricity price', unit: '%' },
   { id: 'delay', topic: 'future', t: 'Next node, years late', unit: 'yr' },
   { id: 'mature', topic: 'supply', t: 'Mature chips made', unit: '%' },
 
   { id: 'memtight', topic: 'package', t: 'HBM and packaging shortage', unit: '%' },
-  { id: 'memprice', topic: 'datacenter', t: 'Memory prices (DRAM and HBM)', unit: '%' },
+  { id: 'memprice', topic: 'memory', t: 'Memory prices (DRAM and HBM)', unit: '%' },
   { id: 'aiship', topic: 'accelerators', t: 'AI chips shipped', unit: '%' },
   { id: 'gpuprice', topic: 'economics', t: 'AI chip prices', unit: '%' },
   { id: 'memprofit', topic: 'economics', t: 'Memory makers\' profits', unit: '%' },

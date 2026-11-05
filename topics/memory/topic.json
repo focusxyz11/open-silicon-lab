@@ -1,0 +1,126 @@
+{
+  "id": "memory",
+  "title": "Memory",
+  "band": "processors",
+  "order": 40,
+  "kind": "explore",
+  "summary": "From caches to DRAM cells to HBM stacks: why chips wait for data.",
+  "labs": [
+    "memory-hierarchy",
+    "memory-cell-lab",
+    "hbm-stack-builder",
+    "memory-bandwidth"
+  ],
+  "links": [
+    {
+      "kind": "part-of",
+      "to": "architecture",
+      "why": "every processor is built around a memory hierarchy"
+    },
+    {
+      "kind": "part-of",
+      "to": "accelerators",
+      "why": "HBM stacks sit beside most big AI chips"
+    },
+    {
+      "kind": "builds-on",
+      "to": "transistor",
+      "why": "a DRAM cell is one transistor and one capacitor"
+    }
+  ],
+  "ideas": [
+    {
+      "idea": "keep-data-close",
+      "how": "caches and HBM both keep numbers near the math"
+    }
+  ],
+  "tradeoffs": [
+    {
+      "tradeoff": "near-big",
+      "how": "each level of the memory hierarchy is bigger and slower than the one above",
+      "try": "#lab-memory-1"
+    }
+  ],
+  "measures": [
+    {
+      "measure": "bandwidth",
+      "how": "HBM stacks set how fast each GPU is fed"
+    }
+  ],
+  "time": {
+    "then": [
+      [
+        1971,
+        "DRAM is new: Intel's 1103 arrived in 1970."
+      ],
+      [
+        2013,
+        "JEDEC standardizes High Bandwidth Memory: DRAM stacked beside the processor."
+      ]
+    ]
+  },
+  "challenges": [
+    {
+      "kind": "Puzzle",
+      "lens": "break",
+      "title": "A day for one byte",
+      "task": "Turn on the human time scale. If reading a register took a third of a second, how long would a core wait for main memory, and for an SSD?",
+      "href": "#lab-memory-1",
+      "hint": "Read the bars with the human time scale on: every nanosecond becomes a second.",
+      "why": "If a register read took a third of a second, main memory would take about a minute and a half and an SSD almost a day. That gap is why processors have caches, and why AI chips put memory as close to the math as they can."
+    },
+    {
+      "kind": "Design",
+      "lens": "imagine",
+      "title": "The next memory jump",
+      "task": "Bandwidth per GPU grew about 6.6 times from H100 to Rubin. Decide where the next doubling should come from: more stacks, wider stacks or hybrid bonds, and say what your choice assumes.",
+      "href": "#lab-memory-4",
+      "hint": "Look at what each layer of the package does, then at how bandwidth grew from H100 to Rubin. Which change came from more stacks, and which from wider ones?",
+      "why": "There is no single answer. More stacks need a bigger package and more heat removal; wider stacks need finer connections; hybrid bonding needs new factories and good yield on stacked dies. Each bet assumes something different about heat, yield and cost, which is why this is an open problem."
+    }
+  ],
+  "learn": {
+    "plain": "Memory is like a kitchen: a small counter within reach, a fridge across the room, and a shop down the road. Chips keep what they use most on the counter, because every trip further away costs time.",
+    "engineer": "DRAM retention scales roughly 2× per 10 °C, so refresh (tREFI 3.9 µs, tRFC hundreds of ns) costs a few percent of bandwidth. 3D NAND scales by layer count (286–400+ layers, multi-deck channel-hole etch, CMOS bonded to array) and bits per cell, trading endurance and read margin. HBM4 doubles the interface to 2,048 bits; stack height within 775 µm forces die thinning and pushes hybrid bonding for 16- to 20-high.",
+    "quiz": [
+      {
+        "q": "Why must DRAM be refreshed constantly?",
+        "options": [
+          "To clear old data",
+          "Its tiny capacitors leak charge within milliseconds to seconds",
+          "Because the clock requires it",
+          "To save power"
+        ],
+        "answer": 1,
+        "why": "Every row is rewritten at least every 64 ms (32 ms when hot) before the weakest cells fade."
+      },
+      {
+        "q": "Why do taller HBM stacks push the industry toward hybrid bonding?",
+        "options": [
+          "It is cheaper",
+          "The stack must fit a fixed height, and removing the bump gap leaves room for thicker, stronger dies",
+          "It makes memory faster to manufacture",
+          "It removes the need for TSVs"
+        ],
+        "answer": 1,
+        "why": "At 16 to 20 dies, micro-bump gaps would force dies thinner than is practical."
+      },
+      {
+        "q": "What is HBM?",
+        "options": [
+          "A kind of hard drive",
+          "Stacked DRAM placed beside the processor for very high bandwidth",
+          "A packaging glue",
+          "A CPU instruction"
+        ],
+        "answer": 1,
+        "why": "Rubin carries eight HBM4 stacks for 288 GB of memory."
+      }
+    ],
+    "ask": [
+      "Why is HBM so expensive?",
+      "What is the difference between DRAM and SRAM?",
+      "Why does DRAM need refreshing?"
+    ]
+  }
+}
