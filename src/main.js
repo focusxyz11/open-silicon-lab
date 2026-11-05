@@ -1,5 +1,6 @@
 /* Boot: draw the app shell and the map, start the map's own simulations, then hand over to the
    router. Topics are not loaded here: each one loads the first time it is opened (src/app/loader.js). */
+import './core/moved.js';   /* first: later modules read saved progress as they load */
 import { LABS } from './labs/index.js';
 import { loadFacts } from './app/facts.js';
 import { initLearning } from './app/learning.js';

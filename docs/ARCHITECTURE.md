@@ -176,6 +176,10 @@ Learners' designs live in `community/<name>/design.json` (see `community/README.
 
 `src/data/timeline.js` holds dated series (landmark chips, process nodes, transistor shapes, lithography, wafers, design costs, company founding years and Karl Rupp's microprocessor data) and `snapshot(year)`. Each topic's own lines are in its `topic.json` (`"time"`); `topicLine(id, year, then)` fills in values such as `{node}` from the snapshot. `src/app/era.js` keeps the site's year (per tab, today by default), adds the year button to the top bar and the banner to topic pages, and fires `osl:year` when it changes. Labs that know about time listen for that event: the map's time machine, the company explorer and the roadmap.
 
+## Moved topics
+
+When a topic merges into another, add it to `MOVED` in `src/core/moved.js` in the same pull request. Old addresses then redirect, and the same file carries each visitor's solved challenges and seen topics across when the site starts. Keep challenge titles unchanged, because saved challenges are stored by topic and title. Give each moved simulation its old anchor as an explicit id. Never remove a line from the list.
+
 ## Depth labs
 
 A depth lab is one simulation explored at four depths on one picture, in place of separate reader levels. `src/core/depth.js` runs the rail and the panels; each topic keeps its own picture and a tested engine in `src/engines/`. `docs/DEPTH.md` is the guide for converting a simulation and lists what is done.
