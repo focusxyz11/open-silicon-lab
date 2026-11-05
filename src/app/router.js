@@ -14,6 +14,7 @@ import { factsHTML, factsFor, FACTS, fmtDate } from './facts.js';
 import { markSeen, P } from './learning.js';
 import { initMap, redrawMap, setWhatif, state as mapState } from './map.js';
 import { renderWorkshop, renderChallenges, renderKnowledge } from './views.js';
+import { movedTo } from '../core/moved.js';
 import { renderDoor } from './doors.js';
 import { issueURL } from './config.js';
 import { t } from '../core/i18n.js';
@@ -111,6 +112,8 @@ async function showTopic(id, anchor) {
 function route() {
   navSeq++;
   const h = decodeURIComponent(location.hash.slice(1));
+  /* An old address: replace it, so Back does not bounce through it. */
+  const moved = movedTo(h); if (moved) { location.replace('#' + moved); return; }
   document.dispatchEvent(new CustomEvent('osl:route', { detail: h }));
   if (!h || h === 'map') { show('map'); curTopic = null; redrawMap(); return; }
   if (h === 'whatif') { show('map'); curTopic = null; setWhatif(true); return; }
