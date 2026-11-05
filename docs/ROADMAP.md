@@ -26,6 +26,7 @@ Later: **open engines**, a public MCP server whose first use is *from need to ch
 
 ## Shipped
 
+- **A simpler structure:** 7 layers, one Challenges page, 38 topics, a memory topic, and 32 map stops. Old links and saved progress carry across.
 - **Depth labs:** wafer yield, quantum search and a 3D fab you run, each at See it, Measure it, Model it and Open question.
 - **My chip** and **Build your own chip: the road:** one design of yours from gates to files a factory accepts, including **Zoom into your chip** at seven scales.
 - **Big questions:** why can a perfect design fail in the real world (`#reality`), and how far are chips from the limits of physics (`#floor`).

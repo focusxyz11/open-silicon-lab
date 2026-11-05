@@ -41,6 +41,8 @@ link kinds (`src/data/links.js`), the big ideas (`src/data/ideas.js`) and `THREA
 routes that never lock anything (`src/data/topics.js`). Glossary terms, knowledge cards and facts each
 name the topic they belong to; facts stay in one file so the monthly check can update them together.
 
+One stop can open: `MAP_GROUP` in `src/data/bands.js` lists topics that sit under an owner on the map. They keep their own pages and links, and the group opens by itself for a thread, search, selection or big idea that needs it.
+
 ### Links mean something
 
 A link reads as a sentence: *the transistor **builds on** From sand to switch: doping and fields make

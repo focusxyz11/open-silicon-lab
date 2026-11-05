@@ -3,6 +3,7 @@
 // layers. scripts/catalog.mjs enforces the rules on every topic.json (see structure.test.mjs); these
 // tests check the vocabulary itself and the helpers the site reads it with.
 import { test } from 'node:test';
+import { MAP_GROUP } from '../src/data/bands.js';
 import assert from 'node:assert/strict';
 import { findLoop } from '../scripts/catalog.mjs';
 import { BANDS, TOPICS, LINKS, IDEAS, IDEA_USES, LINK_KINDS, KIND_ORDER, EDGES, linksOf, linkLabel, ideasOf, usesOf, topicById } from '../src/data/topics.js';
@@ -61,4 +62,10 @@ test('trade-offs, measures and debates are shared, and each debate has real side
     assert.ok(debateTopics(d).every(id => debatesOf(id).includes(d)), d.id);
   }
   assert.ok(debatesOf('yield').some(d => d.id === 'bigdie'));
+});
+
+test('the map group sits in one layer, with an owner and real members', () => {
+  const band = id => topicById(id).band;
+  assert.ok(MAP_GROUP.members.every(id => topicById(id) && band(id) === band(MAP_GROUP.owner)));
+  assert.equal(new Set(MAP_GROUP.members).size, 6); assert.ok(!MAP_GROUP.members.includes(MAP_GROUP.owner));
 });
