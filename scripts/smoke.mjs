@@ -3,7 +3,7 @@
 // Needs Playwright with Chromium (npx playwright install chromium).
 import { createRequire } from 'node:module';
 import { serve } from './serve.mjs';
-import { TOPICS, DEBATES } from '../src/data/topics.js';
+import { TOPICS, DEBATES, THREADS } from '../src/data/topics.js';
 import { ANCHORS } from '../src/generated/catalog.js';
 
 const require = createRequire(import.meta.url);
@@ -61,7 +61,8 @@ async function check(viewport) {
   await page.click('.tnode[data-t="riscv"]');
   if (!(await page.textContent('#mInfo')).includes('Connects to')) problems.push(tag + 'map info panel did not open');
   await page.click('#mThreads button[data-th="make"]');
-  if ((await page.$$('.tnode.stepn')).length !== 6) problems.push(tag + 'thread did not highlight its 6 steps');
+  const makeSteps = THREADS.find(t => t.id === 'make').path.length;
+  if ((await page.$$('.tnode.stepn')).length !== makeSteps) problems.push(tag + `thread did not highlight its ${makeSteps} steps`);
   // Lenses: one kind of connection at a time, and one big idea across the layers.
   if (await page.$('#mSvg path.k-causes')) problems.push(tag + 'quiet map still draws every line');
   await page.click('#mLens [data-lens="causes"]');

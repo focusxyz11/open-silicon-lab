@@ -21,6 +21,12 @@ test('every topic has a band and a content file', () => {
     assert.match(readFileSync(f, 'utf8'), new RegExp('<section id="' + t.id + '"'), t.id + ' section id');
   }
 });
+test('every topic is on at least one thread', async () => {
+  const { TOPICS, THREADS } = await import('../src/data/topics.js');
+  const on = new Set(THREADS.flatMap(t => t.path));
+  assert.deepEqual(TOPICS.filter(t => !on.has(t.id)).map(t => t.id), []);
+});
+
 test('links, threads, challenges, debates, cards and glossary point at real topics', () => {
   for (const [a, b, l] of EDGES) { assert.ok(ids.has(a) && ids.has(b), a + '→' + b); assert.ok(l.length > 3); }
   for (const th of THREADS) th.path.forEach(id => assert.ok(ids.has(id), th.id + ': ' + id));
