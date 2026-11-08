@@ -1,8 +1,9 @@
 /* Lab: PREFILL vs DECODE */
 import {$,clamp,RM,rng,T,redraws,fit,watch,rgba,shade,fmtLen,fmtNum,inView,fr,hexRGB,gauss,big,LIMC} from 'osl/core/ui.js';
+import {chips} from 'osl/data/chips.js';
 export function init(){
 (function pd(){
-const CHP=[['Rubin',25,288,22],['MI455X',20.1,432,23.3],['Maia 200',5,216,7],['TPU Ironwood',4.6,192,7.4],['Trainium3',2.52,144,4.9]];let ci=0,P=70;
+const CHP=chips(['rubin','mi455x','maia200','ironwood','trainium3']).map(c=>[c.short,c.pf8,c.gb,c.bw]);let ci=0,P=70;
 const seg=$('#pdChip');CHP.forEach((c0,i)=>{const b=document.createElement('button');b.textContent=c0[0];b.addEventListener('click',()=>{ci=i;run();});seg.appendChild(b);});
 $('#pdModel').querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{P=+b.dataset.p;run();}));['#pdIn','#pdOutL'].forEach(s=>$(s).addEventListener('input',run));
 const Lin=v=>Math.round(100*Math.pow(1280,v/1000)),Lout=v=>Math.round(10*Math.pow(400,v/1000));

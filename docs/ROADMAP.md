@@ -10,7 +10,7 @@ The whole chip stack *runs*, and every part is connected. Your gates become a CP
 
 New features pause while the structure catches up with the content.
 
-1. **Finish the reorganization.** The new structure has shipped (see Shipped). Left: every topic on a thread (done), one source for shared data such as real-chip figures and debate text, and one page pattern. No simulation is removed.
+1. **Finish the reorganization.** The new structure has shipped (see Shipped). Done: every topic on a thread, and one source each for real-chip figures and debate text. Left: one page pattern. No simulation is removed.
 2. **Test with real people.** Three to five learners, from a child to an engineer, try the depth labs while someone watches where they get stuck. Their findings shape the reorganization and the next conversions.
 3. **Convert to depth labs.** One picture at growing depth replaces the Beginner / Engineer switch, topic by topic. Next candidates: the transistor, the tiny chip studio and the RISC-V lab. Guide and progress: [DEPTH.md](DEPTH.md).
 

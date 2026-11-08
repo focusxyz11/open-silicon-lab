@@ -47,3 +47,14 @@ test('facts are dated, sourced and filed under a topic', () => {
     assert.match(f.url, /^https:\/\//, f.label + ' source url');
   }
 });
+
+test('depth labs show real debates at Open question', async () => {
+  const { readdirSync } = await import('node:fs');
+  const { DEBATES } = await import('../src/data/debates.js');
+  for (const id of readdirSync(new URL('../topics/', import.meta.url))) {
+    const f = new URL('../topics/' + id + '/content.html', import.meta.url);
+    if (!existsSync(f)) continue;
+    for (const [, v] of readFileSync(f, 'utf8').matchAll(/data-views="([^"]+)"/g))
+      assert.ok(DEBATES.some(d => d.id === v), id + ' shows a missing debate: ' + v);
+  }
+});
