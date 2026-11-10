@@ -6,9 +6,18 @@ Where Open Silicon Lab is heading. This is the one place for what happens next. 
 
 The whole chip stack *runs*, and every part is connected. Your gates become a CPU's ALU, the same design exports to real Verilog, the time machine changes every page, and your own chip travels through every layer. Visual and challenge-first is the surface; a connected, tested engine is the core.
 
-## Now: strengthen what exists
+## Now: the frame
 
-New features pause while the structure catches up with the content.
+The lab's structure becomes eleven open questions followed through ten depths, from the planet to the atom ([FRAME.md](FRAME.md)). Every existing topic docks at one place in it; nothing is removed.
+
+1. **Done:** the frame as data, tested, with the `#questions` view.
+2. **The question at each place.** For each question and depth that holds a topic, the question it asks there (one sentence, never an answer) and what to notice.
+3. **The dive.** Turn `#questions` into the continuous zoom, reusing `src/engines/chipzoom.js` for board to switch and adding planet, region, building and rack above it. The planet is a still map of one chip's journey.
+4. **Home.** The die of eleven questions becomes the first screen.
+5. **Fill the thin questions** (Strange, Scale, Open) and the empty depths, starting with the rack.
+6. **The companion and community pins** at every place.
+
+## Then: strengthen what exists
 
 1. **Finish the reorganization.** The new structure has shipped (see Shipped). Left: every topic on a thread (done), one source for shared data such as real-chip figures and debate text, and one page pattern. No simulation is removed.
 2. **Test with real people.** Three to five learners, from a child to an engineer, try the depth labs while someone watches where they get stuck. Their findings shape the reorganization and the next conversions.

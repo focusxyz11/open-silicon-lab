@@ -5,6 +5,7 @@ Each document has one job. Plans live only in the roadmap; the others link to it
 | Read this | When you want |
 | --- | --- |
 | [ROADMAP.md](ROADMAP.md) | What is happening now and next |
+| [FRAME.md](FRAME.md) | The structure: eleven questions, ten depths, and where each topic docks |
 | [JOURNEY.md](JOURNEY.md) | The stages of Build your own chip |
 | [IDEAS.md](IDEAS.md) | Ideas not yet picked |
 | [DEPTH.md](DEPTH.md) | How to build a depth lab, and which are done |
