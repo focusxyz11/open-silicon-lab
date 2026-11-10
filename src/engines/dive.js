@@ -13,7 +13,7 @@
    models (180, 130, 28 and 3 nm), not the exact node of that year. */
 import { build, GATE } from './chipzoom.js';
 import TC from './tinychip.js';
-import { DEPTHS } from '../data/frame.js';
+import { DEPTHS, QUESTIONS } from '../data/frame.js';
 import { STOPS, EDGES, LENS } from '../data/dive.js';
 
 export const NOW = 2026;
@@ -110,3 +110,14 @@ export function reach(id) {
 }
 /* Which way a question behind lies from where you are: 1 deeper, -1 higher, 0 the same depth. */
 export const direction = (from, to) => Math.sign(IDS.indexOf(edgeOf(to).depth) - IDS.indexOf(edgeOf(from).depth));
+
+/* A core question surfaces on its own when its moment comes: once the visitor has opened two or more
+   places that carry it, at different depths. It is never listed with the others. Returns, for each
+   core question that has surfaced, the depths where the visitor met it. */
+export function surfaced(path) {
+  const by = {};
+  for (const id of new Set(path)) { const e = edgeOf(id); if (e) (by[e.q] = by[e.q] || new Set()).add(e.depth); }
+  const out = {};
+  for (const q in by) if (by[q].size >= 2 && QUESTIONS.some(x => x.id === q)) out[q] = IDS.filter(d => by[q].has(d));
+  return out;
+}

@@ -15,7 +15,7 @@
 import { clamp, RM, fit, fmtLen, rng, inView } from '../core/ui.js';
 import { t, fmtWords } from '../core/i18n.js';
 import { EDGES, BENCH, LENS } from '../data/dive.js';
-import { IDS, NOW, clampYear, stateAt, lineAt, nodeFor, shapeFor, materialFor, adderAt, sizes, inner, levels, along, behind, direction, edgeOf, MAC } from '../engines/dive.js';
+import { IDS, NOW, clampYear, stateAt, lineAt, nodeFor, shapeFor, materialFor, adderAt, sizes, inner, levels, along, behind, direction, edgeOf, surfaced, MAC } from '../engines/dive.js';
 import { evalCell, signals } from '../engines/chipzoom.js';
 import { snapshot, trendTransistors } from '../data/timeline.js';
 import { topicById } from '../data/topics.js';
@@ -537,6 +537,7 @@ function mount() {
     const next = behind(id).map(b => { const d = direction(id, b.id); return '<button type="button" class="dvnext" data-follow="' + b.id + '"><span class="code">' + (d > 0 ? '↓ ' : '↑ ') + esc(t(d > 0 ? 'dv.edge.deeper' : 'dv.edge.higher', { depth: t('dv.depth.' + b.depth) })) + '</span><span>' + esc(t('dv.e.' + b.id + '.q')) + '</span></button>'; }).join('');
     card.innerHTML = '<div class="dvcardhead"><span class="code">' + t('dv.edge.code') + ' · ' + esc(t('dv.depth.' + e.depth)) + '</span><button type="button" class="x" data-close aria-label="' + esc(t('dv.edge.close')) + '">×</button></div>' +
       '<h3>' + esc(t('dv.e.' + id + '.place')) + '</h3><p class="dvq">' + esc(t('dv.e.' + id + '.q')) + '</p>' +
+      under(e) +
       '<p class="small"><b>' + t('dv.edge.trying') + ':</b> ' + esc(t('dv.e.' + id + '.try')) + '</p>' +
       (f ? '<p class="dvfact small"><b>' + esc(f.label) + ':</b> ' + esc(f.value) + ' <span class="muted">(' + esc(fmtDate(f.verified)) + (u ? ', <a href="' + esc(u) + '" target="_blank" rel="noopener">' + t('dv.edge.source') + '</a>' : '') + ')</span></p>' : '') +
       '<div class="row">' + (e.bench ? '<button type="button" class="btn primary" data-bench="' + e.bench + '">' + t('dv.edge.push') + '</button>' : '') +
@@ -544,6 +545,12 @@ function mount() {
       '<div class="dvbehind"><p class="code">' + t('dv.edge.behind') + '</p>' + next + '</div>';
     card.hidden = false;
     edgeButtons(IDS[Math.round(K.t)]);
+  }
+  /* The core question underneath this place, once its moment has come (src/engines/dive.js, surfaced). */
+  function under(e) {
+    const met = surfaced(K.path)[e.q]; if (!met) return '';
+    return '<div class="dvunder"><p class="code">' + t('dv.under') + '</p><p class="dvcore">' + esc(t('dv.q.' + e.q)) + '</p>' +
+      '<p class="small muted">' + esc(t('dv.underMet', { depths: met.map(d => t('dv.depth.' + d)).join(' · ') })) + '</p></div>';
   }
   /* Follow the question behind: the dive carries the question to its place, then opens it there. */
   function follow(id) {

@@ -922,5 +922,18 @@
  "dv.e.no-atoms-left.try": "New materials, new kinds of switch, and finding the physics floor for every operation.",
  "dv.e.atom-by-atom.place": "A layer still being laid",
  "dv.e.atom-by-atom.q": "Films are laid one atomic layer at a time, in a thousand steps or more. Could a chip be built atom by atom?",
- "dv.e.atom-by-atom.try": "Depositing and etching one atomic layer at a time, and research tools that place single atoms."
+ "dv.e.atom-by-atom.try": "Depositing and etching one atomic layer at a time, and research tools that place single atoms.",
+ "dv.under": "Underneath, again",
+ "dv.underMet": "You met it at: {depths}",
+ "dv.q.think": "How does a chip think?",
+ "dv.q.strange": "What is the strangest thing that could compute?",
+ "dv.q.limit": "What could a chip never do, and could it learn to?",
+ "dv.q.fail": "Why can a perfect design fail in the real world?",
+ "dv.q.idea": "How could your idea become a chip?",
+ "dv.q.make": "What would chipmaking look like if we invented it from scratch today?",
+ "dv.q.know": "What part of making chips can't be written down?",
+ "dv.q.open": "What happens when anyone can make a chip?",
+ "dv.q.divide": "How should a chip divide its work?",
+ "dv.q.life": "What new kinds of computers could brains, swarms and living cells inspire?",
+ "dv.q.scale": "What will be the next Moore's law?"
 }

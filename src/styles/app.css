@@ -858,3 +858,6 @@ span.fmp{cursor:default}
 .dvnext:hover,.dvnext:focus-visible{border-color:#f0b13c;outline:none}
 .dvnext .code{font-size:11px}
 @media(max-width:640px){.dvcarry{bottom:40px;width:calc(100% - 56px)}}
+.dvunder{display:grid;gap:4px;padding:10px 12px;border-radius:5px;border:1px solid rgba(255,224,160,.45);background:rgba(240,177,60,.08)}
+.dvunder .code{color:#ffd88a}
+.dvcore{font-family:var(--display);font-stretch:108%;font-size:19px;line-height:1.25;color:#fff;margin:0}

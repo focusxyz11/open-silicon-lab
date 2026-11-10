@@ -7,7 +7,7 @@ import { readFileSync } from 'node:fs';
 import { DEPTHS, QUESTIONS } from '../src/data/frame.js';
 import { STOPS, EDGES, BENCH, LENS } from '../src/data/dive.js';
 import { CHALLENGES } from '../src/generated/graph.js';
-import { IDS, stateAt, lineAt, nodeFor, shapeFor, adderAt, sizes, levels, along, behind, reach, direction, NOW } from '../src/engines/dive.js';
+import { IDS, stateAt, lineAt, nodeFor, shapeFor, adderAt, sizes, levels, along, behind, reach, direction, surfaced, NOW } from '../src/engines/dive.js';
 import { signals } from '../src/engines/chipzoom.js';
 
 const EN = JSON.parse(readFileSync(new URL('../src/i18n/en.json', import.meta.url), 'utf8'));
@@ -102,4 +102,15 @@ test('along() walks a path by its length', () => {
   assert.deepEqual(along([[0, 0], [1, 0], [1, 1]], 0.5), [1, 0]);
   assert.deepEqual(along([[0, 0], [2, 0]], 0.25), [0.5, 0]);
   assert.deepEqual(along([[0, 0], [2, 0]], 2), [2, 0]);
+});
+
+test('a core question surfaces alone, only once two places at different depths carry it', () => {
+  assert.deepEqual(surfaced([]), {});
+  assert.deepEqual(surfaced(['erasing-costs']), {});
+  assert.deepEqual(surfaced(['erasing-costs', 'erasing-costs']), {});
+  assert.deepEqual(surfaced(['erasing-costs', 'memory-wall', 'no-atoms-left']), { limit: ['gate', 'atom'] });
+  /* it names only the questions whose moment came, never the whole set */
+  const all = surfaced(EDGES.map(e => e.id));
+  assert.ok(Object.keys(all).length < QUESTIONS.length);
+  for (const q of QUESTIONS) assert.equal(EN['dv.q.' + q.id], q.question, 'dv.q.' + q.id + ' differs from src/data/frame.js');
 });
