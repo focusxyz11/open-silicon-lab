@@ -18,10 +18,11 @@ import { movedTo } from '../core/moved.js';
 import { renderDoor } from './doors.js';
 import { issueURL } from './config.js';
 import { t } from '../core/i18n.js';
+import { renderFrame } from './frame.js';
 
 const $ = s => document.querySelector(s);
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const VIEWS = ['map', 'topic', 'workshop', 'break', 'imagine', 'challenges', 'knowledge', 'mychip'];
+const VIEWS = ['map', 'topic', 'workshop', 'break', 'imagine', 'challenges', 'knowledge', 'mychip', 'questions'];
 const REF = { glossary: 1, sources: 1 };
 /* One Challenges page in the top bar: these views are its tabs (src/app/doors.js). */
 const CH_VIEWS = ['workshop', 'break', 'imagine', 'challenges'];
@@ -122,6 +123,8 @@ function route() {
   if (h === 'workshop') { renderWorkshop(); show('workshop'); scrollTo({ top: 0, behavior: 'instant' }); return; }
   if (h === 'break' || h === 'imagine') { renderDoor(h); show(h); scrollTo({ top: 0, behavior: 'instant' }); return; }
   if (h === 'challenges' || h === 'frontier') { renderChallenges(); show('challenges'); scrollTo({ top: 0, behavior: 'instant' }); return; }
+  const fq = /^q-([a-z]+)$/.exec(h);
+  if (h === 'questions' || fq) { renderFrame(fq ? fq[1] : null); show('questions'); scrollTo({ top: 0, behavior: 'instant' }); return; }
   if (h === 'mychip') { renderMyChip(); show('mychip'); scrollTo({ top: 0, behavior: 'instant' }); return; }
   if (h === 'knowledge') { renderKnowledge(); show('knowledge'); scrollTo({ top: 0, behavior: 'instant' }); return; }
   const rv = /^riscv-(\d+|sandbox)$/.exec(h);
