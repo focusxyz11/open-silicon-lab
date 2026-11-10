@@ -17,21 +17,14 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Engine and data tests
+      - name: Logic and words tests
         run: npm test
-      - name: Real chip tools check (Icarus Verilog and Yosys)
-        run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq iverilog yosys
-          npm run test:verilog -- --require
       - name: Install Playwright
         run: |
           npm install --no-save playwright@1.48.2 esbuild@0.24.0
           npx playwright install --with-deps chromium
       - name: Browser smoke test
         run: npm run test:browser
-      - name: Every self-checking challenge can be solved
-        run: npm run test:challenges
       - name: Build the single-file version
         run: npm run build
       - uses: actions/upload-artifact@v4
@@ -52,7 +45,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Collect the site
-        run: mkdir _site && cp -r index.html content src assets topics _site/
+        run: mkdir _site && cp -r index.html src assets _site/
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

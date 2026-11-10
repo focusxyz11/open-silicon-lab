@@ -6,7 +6,7 @@ so the idea stays sound while the technology changes.
 
 The bank is curated: ideas that were built, merged into a bigger one, or too ordinary to set the lab
 apart are removed (the last section says where each went). When an idea is picked, it moves to
-[ROADMAP.md](ROADMAP.md), or to [JOURNEY.md](JOURNEY.md) if it belongs on the Build your own chip road.
+[ROADMAP.md](ROADMAP.md). Many ideas below were written for the earlier site, kept on the branch `claude/before-dive-2026-11`.
 
 **To add one:** a short title, the first principle, what a learner would do, what it builds on, open
 questions, and the date. Ask of every idea: does it let people *do* something they could not do
@@ -159,7 +159,7 @@ anywhere else, and does it help them think better about where chips are going?
 ## Removed, and where each went
 
 - **Built:** a fab you run (idea 20), the physics floor (first part), the first big question, a gentler first visit, flip-flops in the studio, the Counter.
-- **Moved to the road ([JOURNEY.md](JOURNEY.md)):** switch to gate; the last mile to Tiny Tapeout; push your own clock; open a flip-flop in the zoom; the bench stepping a clock.
+- **Moved to the road (JOURNEY.md, on the branch `claude/before-dive-2026-11`):** switch to gate; the last mile to Tiny Tapeout; push your own clock; open a flip-flop in the zoom; the bench stepping a clock.
 - **Moved to the roadmap ([ROADMAP.md](ROADMAP.md)):** learners become contributors; the hardware steps; the community chip (also called community shuttles); language-ready stages 2 and 3; a review routine for links and debates; a quality pass with real learners.
 - **Now a rule for every lab, not an idea:** predict, then reveal; game feel (puzzles and real challenges, never a textbook). Both are in the contributors' checklist on the roadmap.
 - **Merged into a bigger idea:** the hardware lottery (3), chiplets (4), rewrite history and scored forecasts (5), the planet ledger and role-play campaigns (6), an AI that operates the lab (7), from need to chip (8), the clearer map, zoom navigation and the front door (9).

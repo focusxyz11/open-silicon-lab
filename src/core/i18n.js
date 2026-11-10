@@ -1,7 +1,7 @@
 /* Words on screen come from src/i18n/<lang>.json, never from code. Code names a text and asks for it:
-     t('doors.tour')                     → "take the 30-second tour"
-     t('map.sims', { n: 3 })             → "3 simulations"   (plural forms: { "one": …, "other": … })
-     t('era.back', { year: 2026 })       → "Back to 2026"
+     t('ui.lab')                         → "Open Silicon Lab"
+     t('ui.across', { n: 2, unit: 'm' }) → "2 m across"
+     plural forms are written { "one": …, "other": … } and chosen by vars.n
    A missing text falls back to English, so a half-finished translation still works.
 
    Texts may hold {names} filled from the second argument, and the simple tags <b>, <em>, <i>,
@@ -76,7 +76,7 @@ export function fmtWords(n) {
   return new Intl.NumberFormat(locale(), { notation: 'compact', compactDisplay: 'long', maximumSignificantDigits: n >= 1e12 ? 2 : 3 }).format(n);
 }
 
-/* Static page text: <a data-i18n="nav.map"></a>, and attributes with data-i18n-attr="aria-label:nav.label". */
+/* Static page text: <b data-i18n="ui.lab"></b>, and attributes with data-i18n-attr="aria-label:ui.depths". */
 export function applyTexts(root = document) {
   root.querySelectorAll('[data-i18n]').forEach(el => { el.innerHTML = t(el.dataset.i18n); });
   root.querySelectorAll('[data-i18n-attr]').forEach(el => el.dataset.i18nAttr.split(';').forEach(p => { const [a, k] = p.split(':'); if (a && k) el.setAttribute(a.trim(), t(k.trim())); }));

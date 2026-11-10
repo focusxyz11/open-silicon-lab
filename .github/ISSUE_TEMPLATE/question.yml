@@ -1,0 +1,31 @@
+name: Propose a question
+description: An open question for a place in the dive, at any depth from the building to the atom.
+title: "[Question] "
+labels: [idea]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        A good question has no simple answer and makes you look at something in the scene. Rough ideas are welcome: others can sharpen them here.
+  - type: dropdown
+    id: depth
+    attributes:
+      label: Depth
+      options: [Building, Rack, Board, Chip, Block, Gate, Switch, Atom]
+    validations:
+      required: true
+  - type: input
+    id: part
+    attributes:
+      label: The part of the scene it is about
+      placeholder: for example, the memory beside the chip
+  - type: textarea
+    id: question
+    attributes:
+      label: The question
+    validations:
+      required: true
+  - type: textarea
+    id: note
+    attributes:
+      label: Something true to notice (not the answer), with a source if it has a number

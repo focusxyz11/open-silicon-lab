@@ -1,0 +1,66 @@
+/* Open Silicon Lab: one screen, the dive. The world fills the window; the top bar, the depth rail and
+   the card sit over it. Colours follow Fable's world build: dark navy by default, a light paper theme. */
+:root{--bg:#05070d;--panel:rgba(11,16,32,.9);--line:#27324f;--ink:#e8edf6;--muted:#93a1c0;--accent:#63b6ff;--warm:#ffb057;
+  --serif:"Besley",Georgia,serif;--sans:"Atkinson Hyperlegible Next",system-ui,sans-serif;--mono:"Martian Mono",ui-monospace,Menlo,monospace;color-scheme:dark}
+:root[data-theme=light]{--bg:#e6eaf0;--panel:rgba(247,249,251,.94);--line:#c3ccd9;--ink:#131c26;--muted:#4e5b70;--accent:#1c64c8;--warm:#b86a00;color-scheme:light}
+@media (prefers-color-scheme:light){:root:not([data-theme]){--bg:#e6eaf0;--panel:rgba(247,249,251,.94);--line:#c3ccd9;--ink:#131c26;--muted:#4e5b70;--accent:#1c64c8;--warm:#b86a00;color-scheme:light}}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 var(--sans)}
+button{font:inherit;color:inherit}
+.app{position:fixed;inset:0;overflow:hidden}
+#world{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;outline:none}
+#world:focus-visible{box-shadow:inset 0 0 0 2px var(--accent)}
+.top{position:absolute;top:0;left:0;right:0;height:52px;display:flex;align-items:center;gap:12px;padding:0 16px;pointer-events:none}
+.top>*{pointer-events:auto}
+.brand{font:600 17px/1 var(--serif);letter-spacing:.01em}
+.tbtn{margin-left:auto;width:36px;height:36px;border-radius:8px;border:1px solid var(--line);background:var(--panel);cursor:pointer;font-size:18px}
+.tbtn:focus-visible,.rail button:focus-visible,.card button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* the rail: the depths, top to bottom */
+.rail{position:absolute;left:12px;top:64px;bottom:16px;width:122px}
+.rail ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;justify-content:space-between;height:100%;max-height:560px}
+.rail button{display:grid;grid-template-columns:14px 1fr;column-gap:8px;align-items:center;width:100%;text-align:left;background:none;border:0;padding:4px 2px;cursor:pointer;border-radius:6px}
+.rail button i{grid-row:span 2;width:10px;height:10px;border:1.5px solid var(--muted);border-radius:2px;background:transparent;position:relative;z-index:1}
+.rail button.stop i{border-color:transparent;border-radius:50%;width:12px;height:12px}
+.rail button.seen i{box-shadow:0 0 0 3px var(--bg),0 0 0 4.5px currentColor}
+.rail button b{font:500 13px/1.2 var(--sans)}
+.rail button small{font:400 10.5px/1.2 var(--mono);color:var(--muted)}
+.rail button[aria-current=true] b{color:var(--accent)}
+.rail button:hover b{text-decoration:underline}
+.railnow{position:absolute;left:-10px;width:0;height:0;border:5px solid transparent;border-left:7px solid var(--accent);margin-top:-5px;transition:top .05s linear}
+.railthread{position:absolute;width:2px;display:none;opacity:.7}
+
+/* the card */
+.card{position:absolute;right:16px;top:64px;bottom:16px;width:min(380px,36vw);overflow:auto;padding:16px 18px;border:1px solid var(--line);border-radius:10px;background:var(--panel);backdrop-filter:blur(6px);display:grid;align-content:start;gap:10px}
+.card p{margin:0}
+.where{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font:500 12px/1.3 var(--mono);text-transform:uppercase;letter-spacing:.06em}
+.where span{color:var(--muted)}
+.see{font:500 19px/1.4 var(--serif)}
+.code{font:500 11px/1.3 var(--mono);text-transform:uppercase;letter-spacing:.07em;color:var(--muted)}
+.small{font-size:14px}.muted{color:var(--muted)}
+.crossing{display:grid;gap:8px;margin-top:4px}
+.qpick{display:grid;grid-template-columns:12px 1fr;gap:10px;align-items:start;text-align:left;padding:10px 12px;border:1px solid var(--line);border-left:3px solid var(--th);border-radius:6px;background:transparent;cursor:pointer;font-size:15px;line-height:1.4}
+.qpick i{width:10px;height:10px;border-radius:50%;background:var(--th);margin-top:6px}
+.qpick:hover{border-color:var(--th)}
+.follow{display:grid;gap:10px;border-left:3px solid var(--th);padding-left:12px}
+.follow h2{margin:0;font:600 22px/1.3 var(--serif)}
+.root{display:grid;gap:4px;padding:10px 12px;border-radius:6px;border:1px solid var(--th);background:color-mix(in srgb,var(--th) 9%,transparent)}
+.rootq{font:600 18px/1.3 var(--serif)}
+.tried{margin:0;padding-left:18px;font-size:15px}
+.moves{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
+.btn{padding:8px 14px;border-radius:7px;border:1px solid var(--line);background:transparent;cursor:pointer;font-size:14px}
+.btn.primary{background:var(--th,var(--accent));border-color:var(--th,var(--accent));color:var(--bg);font-weight:700}
+.link{justify-self:start;background:none;border:0;padding:0;color:var(--muted);text-decoration:underline;cursor:pointer;font-size:14px}
+.how{margin-top:6px}
+
+/* phones and narrow windows: the world on top, the rail beside it, the card below; the page scrolls */
+@media (max-width:760px){
+  .app{position:static;overflow:visible;display:grid;grid-template-columns:76px 1fr}
+  .top{position:static;grid-column:1/-1;height:48px}
+  #world{position:relative;grid-column:2;grid-row:2;height:min(62vh,480px)}
+  .rail{position:relative;left:auto;top:auto;bottom:auto;grid-column:1;grid-row:2;width:auto;height:min(62vh,480px);padding:6px 0 6px 10px}
+  .rail button{grid-template-columns:12px 1fr;column-gap:6px}
+  .rail button small{display:none}
+  .rail button b{font-size:11px}
+  .card{position:static;grid-column:1/-1;width:auto;margin:12px;backdrop-filter:none}
+}

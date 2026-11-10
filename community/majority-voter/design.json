@@ -1,8 +1,0 @@
-{
-  "title": "Majority voter",
-  "author": "Open Silicon Lab (example)",
-  "description": "Trusts whichever answer at least two of three computers agree on, as spacecraft do.",
-  "added": "2026-11-02",
-  "project": "vote",
-  "code": "y = (a & b) | (b & c) | (a & c);"
-}
