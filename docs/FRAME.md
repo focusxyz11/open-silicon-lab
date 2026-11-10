@@ -1,16 +1,30 @@
 # The frame
 
 The fixed structure of the lab from November 2026 on. New content fills it; it does not change it.
-Data: `src/data/frame.js`. Words: `frame.*` in `src/i18n/en.json`. Tests: `tests/frame.test.mjs`. View: `#questions`.
+Data: `src/data/frame.js`. Tests: `tests/frame.test.mjs`. No view shows it directly.
 
 ## Why
 
 The site grew topic by topic until the structure got heavy and the learning idea blurred. Two prototypes in November 2026 tested a new shape:
 
-- **Eleven questions on a chip die.** Open questions instead of topics. Each leads to a bigger question beyond chips.
+- **Eleven open questions.** Each leads to a bigger question beyond chips.
 - **Powers of ten.** One continuous dive from the planet to the atom (the idea behind `#zoom`).
 
-The site already holds the substance (38 topics, 106 challenges, 18 tested engines, sourced facts). The prototypes held the shape. The frame joins them: **the questions and the depths become the structure, and every existing topic docks at one place in it.** Nothing is removed.
+The site already holds the substance (38 topics, 106 challenges, 18 tested engines, sourced facts). The prototypes held the shape. The frame joins them: **the questions and the depths become the backbone, and every existing topic docks at one place in it.** Nothing is removed.
+
+**The eleven questions are never listed.** A list of questions reads as a quiz with answers to find, and suggests the lab holds only eleven. They stay underneath, as the backbone that organises everything a visitor meets.
+
+## What visitors see
+
+One world they travel through, along journeys. The questions surface where knowledge runs out.
+
+- **One world, space and time.** *The dive*: one continuous zoom from the planet to the atom. *The time lens*: the same place in any year from 1947 to 2040; every depth changes with the year, and the future is drawn unfinished. *The workbench*: the existing challenges open inside the scene, where they belong.
+- **Journeys, the main threads.** Concrete stories that cross every depth and connect the questions without naming them: *One answer* (a reply travels from a phone to the data centre down to electrons and back), *One chip's life* (from sand to the factory to use and to waste), *Sixty years* (the same places across time), *Your chip* (from an idea of yours to a chip you share).
+- **Open edges.** Places drawn unfinished, where what anyone knows runs out. Each holds one deeper question, what people are trying, and challenges to push on. Something to explore, never an answer to find.
+- **The constellation.** Each edge a visitor finds becomes a star. As stars collect, lines between them appear: those lines are the eleven questions, seen only as patterns in what the visitor discovered. Other visitors' stars can show faintly.
+- **An AI companion** travels along. It does not answer; it asks the question behind the question.
+
+Every edge, challenge and companion conversation is tagged to one of the eleven questions in the data.
 
 ## The structure
 
@@ -46,8 +60,8 @@ Each topic docks where its question meets its depth (`PLACES`). A topic keeps it
 ## Kept, changed, dropped
 
 - **Kept from the site:** every topic, engine, challenge, fact, the time machine, My chip, the community chip, RISC-V.
-- **Kept from the prototypes:** the die of eleven questions as home; the continuous zoom as the main view; one question changing form at each depth; an AI companion that does not answer but asks the question behind the question; visible gaps.
-- **Dropped:** the spinning globe (it moved without adding meaning). The planet depth should be a still map of one chip's journey, whose stages are doors into the depths.
+- **Kept from the prototypes:** the continuous zoom as the main view (strengthened); one question changing form at each depth, shown as open edges; an AI companion that does not answer but asks the question behind the question; visible gaps.
+- **Dropped:** any list or menu of the eleven questions (including a die of question blocks as home), and the spinning globe, which moved without adding meaning.
 - **To retire later:** the seven bands as navigation and the Beginner/Engineer switch (already being replaced by depth labs, see `DEPTH.md`).
 
 ## Next
