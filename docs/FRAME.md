@@ -64,17 +64,19 @@ Each topic docks where its question meets its depth (`PLACES`). A topic keeps it
 - **Dropped:** any list or menu of the eleven questions (including a die of question blocks as home), and the spinning globe, which moved without adding meaning.
 - **To retire later:** the seven bands as navigation and the Beginner/Engineer switch (already being replaced by depth labs, see `DEPTH.md`).
 
-## The first slice: One answer (prototype)
+## The first slice: the dive with its questions (prototype)
 
-`#one-answer` (not in the top bar yet; linked from the footer). Code: `src/app/journey.js` (the view), `src/engines/journey.js` (time lens, dive sizes, constellation; tested in `tests/journey.test.mjs`), `src/data/journeys.js` (stops, edges, challenges in place). Words: `oa.*` in `src/i18n/en.json`.
+`#dive` (not in the top bar yet; linked from the footer). Code: `src/app/dive.js` (the view), `src/engines/dive.js` (time lens, zoom sizes, the web of questions; tested in `tests/dive.test.mjs`), `src/data/dive.js` (depths, unfinished places, challenges in place). Words: `dv.*` in `src/i18n/en.json`.
 
-- **The dive.** All ten depths in one continuous zoom, the same scheme as Zoom into your chip. Each power of ten takes the same time when you follow the question. Block, gate and switch are computed: a full adder from the tiny-chip studio, synthesised, placed and routed by `src/engines/chipzoom.js`, inside a grid of multiply-add units; its wires and transistors show the values of the bits passing through. Planet to chip are drawn in general terms.
-- **And back.** At the atom the answer turns round and travels up again (cyan instead of amber), ending as a reply on the phone at the region depth. Every depth has words for both directions.
-- **The time lens.** 1947 to 2040. Before a place existed in the story it is a grey ghost; after today it sits on blueprint paper with dashed, unfinished parts. Each depth has its own time line; the chip line reads the time machine's data, and the process for the adder is the nearest of the four this lab models.
-- **Open edges.** 17 broken rings inside the scenes, at least one at every depth and one for every question. Each holds the place, the question behind it, what people are trying, and usually a sourced fact. They are buttons over the canvas, so keyboard and touch reach them; there is no list of them anywhere.
+A first try framed this as a journey called *One answer* (a reply travelling from a phone to the atoms and back), starting at the planet. It was dropped: the site leads into an open world rather than to answers, a story is a linear path, the planet adds nothing yet, and listing or naming the questions (a constellation of them) separates them from the world.
+
+- **The dive.** Eight depths, building to atom, in one continuous zoom, on the scheme of Zoom into your chip and with the palette of the rack-to-atom zoom, simplified. Block, gate and switch are computed: a full adder from the tiny-chip studio, synthesised, placed and routed by `src/engines/chipzoom.js`, inside a grid of multiply-add units, with the values of its bits on every wire and transistor.
+- **Questions inside the dive.** Wherever something is unfinished, a broken ring holds a question (15 so far, at every depth). Each card shows the question, what people are trying and a sourced fact, and *the question behind it*: one or two other questions, somewhere else in the dive, deeper or higher. Choosing one carries the question through the zoom to its place and opens it there. The questions form one web with no end: from any question every other can be reached, and they lead both down and up (tests check this). There is no route and no list.
+- **The eleven core questions stay underneath.** Each question carries one (`q` in the data); they are never shown, named or listed.
+- **The rail.** A thin line at the left edge of the scene marks the depths, where you are, and the path your questions have taken up and down the dive.
+- **The time lens.** 1947 to 2040. Before a place existed it is a grey ghost; after today it sits on blueprint paper with dashed, unfinished parts. Each depth has its own time line; the chip line reads the time machine's data, and the adder is drawn at the nearest of the four processes this lab models.
 - **The workbench.** Three existing, self-checking challenges open in place (Bandwidth per stack at the board, Sixteen answers at the block, Why planar was retired at the switch). The simulation panel is borrowed from its topic page and put back when closed.
-- **The constellation.** Each edge opened becomes a star, kept in this browser. Stars of one question join with bright lines; when two stars share a question, that question appears beside its shape. Faint lines join shapes whose questions are linked in `LINKS`, with the link's reason.
-- **Not in this slice:** the AI companion and other visitors' stars (step 6).
+- **Open for later:** what sits above the building; other main visual designs that connect with the dive; how new questions from the community join the web.
 
 ## Next
 

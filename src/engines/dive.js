@@ -1,4 +1,4 @@
-/* One answer: the logic of the journey, with no DOM, so it is tested (tests/journey.test.mjs).
+/* The dive with its questions: the logic, with no DOM, so it is tested (tests/dive.test.mjs).
 
    - The time lens: what state each depth is in for a year (a ghost before it existed, real, or
      unfinished after today) and which time line to show.
@@ -6,23 +6,22 @@
      three depths (block, gate, switch) come from src/engines/chipzoom.js: a real full adder,
      synthesised, placed and routed by the same engines the tiny-chip studio uses, at the process
      nearest the chosen year.
-   - The constellation: the visitor's stars and the lines between them. Stars of one question join
-     into a shape; links between questions (frame LINKS) join shapes faintly. The lines are the eleven
-     questions, seen only as patterns in what the visitor found.
+   - The web of questions: each question leads to the questions behind it, elsewhere in the dive.
 
-   What is simplified: the upper scenes (planet to chip) are drawn in general terms; only the adder
+   What is simplified: the upper scenes (building to chip) are drawn in general terms; only the adder
    and its transistors are computed. The process for a year is the nearest of the four this lab
    models (180, 130, 28 and 3 nm), not the exact node of that year. */
 import { build, GATE } from './chipzoom.js';
 import TC from './tinychip.js';
-import { DEPTHS, LINKS, QUESTIONS } from '../data/frame.js';
-import { STOPS, EDGES, SKY, LENS } from '../data/journeys.js';
+import { DEPTHS } from '../data/frame.js';
+import { STOPS, EDGES, LENS } from '../data/dive.js';
 
 export const NOW = 2026;
 export const clampYear = y => Math.max(LENS.min, Math.min(LENS.max, Math.round(+y || NOW)));
 
 /* ---------- the time lens ---------- */
 export const stopOf = depth => STOPS.find(s => s.depth === depth);
+export const IDS = STOPS.map(s => s.depth);
 /* 'ghost' before the place existed in the story, 'future' after today, otherwise 'real'. */
 export function stateAt(depth, year) {
   const s = stopOf(depth), y = clampYear(year);
@@ -61,7 +60,7 @@ export function sizes(Z) {
   const m = id => DEPTHS.find(d => d.id === id).m, U = Z.um;
   const pitch = Math.max(U.dW, U.dH) * 1.35;
   return {
-    planet: m('planet'), region: m('region'), building: m('building'), rack: 2.6, board: m('board'), chip: 0.045,
+    building: m('building'), rack: 2.6, board: m('board'), chip: 0.045,
     block: Math.max(m('block'), pitch * (MAC.G + 1)), gate: Math.max(U.cW, U.cH) * 1.3, switch: GATE[Z.node] * 7, atom: m('atom'),
     pitch
   };
@@ -80,8 +79,8 @@ export function levels(Z, up, year) {
   const S = sizes(Z), I = inner(Z), sh = shapeFor(year);
   const T = (c, size) => [c[0] / (size / 2), c[1] / (size / 2)];
   const sw = sh === 'gaa' || sh === 'cfet' ? [0, -0.145] : sh === 'fin' ? [0, -0.06] : [0, 0.075];
-  return DEPTHS.map(d => {
-    const id = d.id, size = S[id];
+  return IDS.map(id => {
+    const size = S[id];
     let t = up[id] || null;
     if (id === 'block') t = T(I.cellC, size);
     if (id === 'gate') t = T(I.fetC, size);
@@ -99,31 +98,15 @@ export function along(pts, p) {
   return pts[pts.length - 1];
 }
 
-/* ---------- the constellation ---------- */
-/* A small fixed scatter, so each question's stars form a shape around its place in the sky. */
-function hash(s) { let h = 2166136261; for (const c of s) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619); } return (h >>> 0) / 4294967296; }
-export const DEPTH_ORDER = DEPTHS.map(d => d.id);
-export function starAt(edge) {
-  const [x, y] = SKY[edge.q], a = hash(edge.id) * Math.PI * 2, r = 0.05 + 0.06 * hash(edge.id + '*');
-  return [x + Math.cos(a) * r, y + Math.sin(a) * r * 0.9];
+/* ---------- the web of questions ---------- */
+export const edgeOf = id => EDGES.find(e => e.id === id);
+/* The questions behind one question, in the order written. */
+export const behind = id => (edgeOf(id) || { behind: [] }).behind.map(edgeOf).filter(Boolean);
+/* Every question reachable from one by following the questions behind it. */
+export function reach(id) {
+  const seen = new Set([id]), todo = [id];
+  while (todo.length) for (const e of behind(todo.pop())) if (!seen.has(e.id)) { seen.add(e.id); todo.push(e.id); }
+  return seen;
 }
-/* found: the ids of the edges the visitor has opened. Returns the stars, the lines and the questions
-   whose shape has formed (two or more stars). */
-export function constellation(found) {
-  const stars = EDGES.filter(e => found.includes(e.id)).map(e => ({ id: e.id, q: e.q, depth: e.depth, at: starAt(e) }));
-  const lines = [], byQ = {};
-  stars.forEach(s => { (byQ[s.q] = byQ[s.q] || []).push(s); });
-  for (const q in byQ) {
-    const list = byQ[q].sort((a, b) => DEPTH_ORDER.indexOf(a.depth) - DEPTH_ORDER.indexOf(b.depth));
-    for (let i = 1; i < list.length; i++) lines.push({ a: list[i - 1].id, b: list[i].id, kind: 'same', q });
-  }
-  for (const [qa, qb, why] of LINKS) {
-    if (!byQ[qa] || !byQ[qb]) continue;
-    /* the closest pair of stars between the two shapes */
-    let best = null;
-    for (const a of byQ[qa]) for (const b of byQ[qb]) { const d = Math.hypot(a.at[0] - b.at[0], a.at[1] - b.at[1]); if (!best || d < best.d) best = { a: a.id, b: b.id, d }; }
-    lines.push({ a: best.a, b: best.b, kind: 'portal', why, qs: [qa, qb] });
-  }
-  const formed = Object.keys(byQ).filter(q => byQ[q].length >= 2);
-  return { stars, lines, formed, questions: QUESTIONS.length };
-}
+/* Which way a question behind lies from where you are: 1 deeper, -1 higher, 0 the same depth. */
+export const direction = (from, to) => Math.sign(IDS.indexOf(edgeOf(to).depth) - IDS.indexOf(edgeOf(from).depth));
