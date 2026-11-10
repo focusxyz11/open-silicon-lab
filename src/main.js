@@ -1,4 +1,4 @@
-/* Boot: load the words, put them on the page, then start the dive (src/app/ui.js). */
+/* Boot: load the words and the figures, put the words on the page, then start the dive (src/app/ui.js). */
 import { loadLang, applyTexts, t } from './core/i18n.js';
 import { start } from './app/ui.js';
 
@@ -9,5 +9,8 @@ const text = async path => {
   const r = await fetch(path); if (!r.ok) throw new Error(path + ' ' + r.status); return r.text();
 };
 
-loadLang(text).then(() => { applyTexts(); document.title = t('ui.title'); start(); })
+/* The figures and their sources (src/data/facts.json); the dive starts without them if they fail to load. */
+const facts = () => text('src/data/facts.json').then(s => JSON.parse(s).facts || [], () => []);
+
+loadLang(text).then(facts).then(f => { applyTexts(); document.title = t('ui.title'); start(f); })
   .catch(e => { console.error(e); document.body.insertAdjacentHTML('beforeend', '<p style="padding:24px">The lab could not start. Reload the page to try again.</p>'); }); // i18n-ok: the words themselves failed to load

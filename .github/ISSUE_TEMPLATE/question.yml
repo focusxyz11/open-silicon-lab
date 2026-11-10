@@ -1,17 +1,17 @@
 name: Propose a question
-description: An open question for a place in the dive, at any depth from the building to the atom.
+description: An open question for a place in the dive, in a data centre, a phone or a car, at any depth down to the atom.
 title: "[Question] "
 labels: [idea]
 body:
   - type: markdown
     attributes:
       value: |
-        A good question has no simple answer and makes you look at something in the scene. Rough ideas are welcome: others can sharpen them here.
-  - type: dropdown
-    id: depth
+        A good question has no simple answer and makes you look at something in the scene. Rough ideas are welcome: others can sharpen them here. The site fills in the place for you when you come from it.
+  - type: input
+    id: where
     attributes:
-      label: Depth
-      options: [Building, Rack, Board, Chip, Block, Gate, Switch, Atom]
+      label: Where in the dive
+      placeholder: "for example, Phone: Chip"
     validations:
       required: true
   - type: input
@@ -19,6 +19,11 @@ body:
     attributes:
       label: The part of the scene it is about
       placeholder: for example, the memory beside the chip
+  - type: input
+    id: continues
+    attributes:
+      label: The question it follows on from (optional)
+      description: If you came here following a question, it is filled in for you.
   - type: textarea
     id: question
     attributes:

@@ -10,7 +10,7 @@ src/app/world.js        the zoom: draws the current, previous and next depths, h
 src/app/scenes.js       one scene per depth, drawn in a 1000 x 1000 space, with its named parts
 src/engines/weave.js    pure logic: the current world, the camera, sizes, threads, when a core question appears (tested)
 src/data/weave.js       the data: worlds, depths and portals, threads, stops
-src/data/facts.json     sourced industry figures, for when a text needs one
+src/data/facts.json     sourced figures, loaded at start (src/main.js); FIGURES and CASES in weave.js point to them
 src/core/i18n.js        words: t('name'), plurals, numbers, dates
 src/i18n/en.json        every word on screen
 src/styles/site.css     the styles, dark and light
@@ -26,7 +26,7 @@ A scene is `{ parts, draw(G) }`. `G` is a small drawing helper (rectangles, line
 
 ## Questions
 
-A stop `'thread.depth'` lists the parts it lights up; its words are `stop.<thread>.<depth>.q`, `.note` and optionally `.tried` (a list). The card shows the questions crossing a depth; the world draws them as dots on their parts. Following a thread, `below()` and `above()` give its next forms. `rootShown()` decides when its core question may appear.
+A stop `'thread.depth'` lists the parts it lights up; its words are `stop.<thread>.<depth>.q`, `.note` and optionally `.tried` (a list). At a stop the card can also show its `FIGURES` (from `src/data/facts.json`), its `CASES`, and the companion's prompt (`ui.prompt`). Where a followed thread has no stop, the card links to the question form on GitHub (`REPO`, `.github/ISSUE_TEMPLATE/question.yml`), filling in its `where` and `continues` fields. The card shows the questions crossing a depth; the world draws them as dots on their parts. Following a thread, `below()` and `above()` give its next forms. `rootShown()` decides when its core question may appear.
 
 ## Words and languages
 
@@ -34,6 +34,6 @@ Every word on screen lives in `src/i18n/en.json` and is read with `t('name')`. `
 
 ## Checks
 
-- `npm test`: the weave (continuity of the zoom, parts, threads, the core-question rule) and the words.
-- `npm run test:browser`: Playwright opens the site on desktop and phone, in dark and light, dives, follows a question and lets it go.
+- `npm test`: the weave (continuity of the zoom, parts, threads, the core-question rule, figures and cases with sources) and the words.
+- `npm run test:browser`: Playwright opens the site on desktop and phone, in dark and light, dives, follows a question and lets it go, opens a real case and the companion, finds the invitation in a gap, and changes world.
 - `npm run build`: `dist/open-silicon-lab.html`, one self-contained file.

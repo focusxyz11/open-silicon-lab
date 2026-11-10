@@ -1,5 +1,5 @@
-// Builds dist/open-silicon-lab.html: the whole lab in one self-contained file (script, styles and words
-// inlined), for the claude.ai preview and offline use. Needs esbuild: ./node_modules/.bin/esbuild,
+// Builds dist/open-silicon-lab.html: the whole lab in one self-contained file (script, styles, words and
+// figures inlined), for the claude.ai preview and offline use. Needs esbuild: ./node_modules/.bin/esbuild,
 // $ESBUILD, or `npx esbuild`.
 import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
@@ -12,6 +12,7 @@ const args = [root + 'src/main.js', '--bundle', '--format=iife', '--minify', '--
 const js = bin ? execFileSync(bin, args, { encoding: 'utf8', maxBuffer: 64e6, cwd: root }) : execFileSync('npx', ['--yes', 'esbuild@0.24.0', ...args], { encoding: 'utf8', maxBuffer: 64e6, cwd: root });
 const content = {};
 for (const f of readdirSync(root + 'src/i18n').filter(f => f.endsWith('.json'))) content['src/i18n/' + f] = r('src/i18n/' + f);
+content['src/data/facts.json'] = r('src/data/facts.json');
 const safe = s => s.replace(/<\/(script|style)/gi, '<\\/$1');
 const icon = 'data:image/svg+xml;base64,' + readFileSync(root + 'assets/favicon.svg').toString('base64');
 const html = r('index.html')

@@ -11,7 +11,14 @@
      about. A thread's first form (thread.<id>.root) is one of the core questions: it is never listed with
      the others, and appears only once a visitor has followed that thread through two depths.
 
+   - cases: real events that show a stop's question is not only a thought experiment (text: case.<id>.*).
+   - figures: the numbers that back a stop, by id in src/data/facts.json, where each has its source, the date
+     it was checked and its kind. A number in a stop's words must have one here (a test checks it).
+
    Adding a question means adding a stop: a thread, a depth, the parts it is about, and its words. */
+
+/* Where visitors propose questions: the repository's issue form (.github/ISSUE_TEMPLATE/question.yml). */
+export const REPO = 'https://github.com/focusxyz11/open-silicon-lab';
 
 export const DEPTHS = {
   /* a data centre */
@@ -72,3 +79,22 @@ export const STOPS = {
 export const TRIED = ['strange.chip', 'strange.gate', 'strange.switch', 'strange.atom', 'limit.chip', 'limit.gate', 'limit.atom', 'fail.building', 'fail.board', 'fail.gate',
   'idea.block', 'idea.gate', 'make.chip', 'make.switch', 'make.atom', 'know.switch', 'open.chip', 'open.block', 'divide.chip', 'divide.block', 'life.block', 'life.switch', 'scale.switch',
   'life.phone', 'divide.phone', 'idea.soc', 'life.car', 'fail.ecu'];
+
+/* Real chips that passed their checks and still failed, from the earlier site. stop: where it shows. */
+export const CASES = [
+  { id: 'sdc', year: 2021, stop: 'fail.building', facts: ['sdc-rate'], url: 'https://arxiv.org/abs/2203.08989' },
+  { id: 'raptor', year: 2024, stop: 'fail.board', facts: ['raptor-warranty'], url: 'https://community.intel.com/t5/Blogs/Tech-Innovation/Client/Intel-Core-13th-and-14th-Gen-Desktop-Instability-Root-Cause/post/1705129' },
+  { id: 'p3', year: 2000, stop: 'fail.chip', facts: ['p3-recall'], url: 'https://www.theregister.com/2000/08/28/intel_recalls_1_13ghz_pentium' },
+  { id: 'spectre', year: 2018, stop: 'fail.chip', facts: [], url: 'https://meltdownattack.com/' },
+  { id: 'fdiv', year: 1994, stop: 'idea.gate', facts: ['fdiv-charge'], url: 'https://en.wikipedia.org/wiki/Pentium_FDIV_bug' },
+  { id: 'cougar', year: 2011, stop: 'fail.switch', facts: ['cougar-cost'], url: 'https://www.intc.com/news-events/press-releases/detail/688/intel-identifies-chipset-design-error-implementing-solution' },
+  { id: 'vote', year: 2003, stop: 'think.block', facts: ['schaerbeek-votes'], url: 'https://en.wikipedia.org/wiki/Electronic_voting_in_Belgium' }
+];
+
+/* The figures behind a stop: ids in src/data/facts.json. */
+export const FIGURES = {
+  'life.building': ['dc-electricity', 'brain-power'], 'limit.rack': ['turing-1936'], 'make.chip': ['euv-wavelength'],
+  'fail.building': ['sdc-rate'], 'divide.block': ['energy-moving-data'], 'make.switch': ['fab-steps'],
+  'idea.soc': ['riscv-rva23'], 'fail.car': ['car-life'], 'divide.car': ['chips-per-car'], 'know.car': ['car-shortage-2021'],
+  'fail.ecu': ['car-ppm'], 'scale.mcu': ['legacy-auto'], 'make.mcu': ['chip-units']
+};
