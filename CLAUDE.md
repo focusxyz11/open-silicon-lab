@@ -1,6 +1,6 @@
 # Open Silicon Lab — notes for Claude
 
-An open-source lab for chips. The site is one thing: a continuous dive from a data-centre building down to silicon atoms (eight depths), with open questions running through it as threads. Static site: plain ES modules, one stylesheet, one file of words. No framework, no build step for development.
+An open-source lab for chips. The site is one thing: a continuous dive from a data centre, a phone or a car (three worlds) down to silicon atoms, meeting in four shared depths, with open questions running through it as threads. Static site: plain ES modules, one stylesheet, one file of words. No framework, no build step for development.
 
 ## Who it is for
 Learners new to chips with basic hardware knowledge, up to engineers. Plain words first; explain any term the first time.
@@ -23,7 +23,7 @@ Learners new to chips with basic hardware knowledge, up to engineers. Plain word
 - `npm run build` — single-file `dist/open-silicon-lab.html`.
 
 ## Where things are
-See `docs/ARCHITECTURE.md`. Data: `src/data/weave.js` (depths, threads, stops). Logic: `src/engines/weave.js`. Scenes: `src/app/scenes.js`. Zoom: `src/app/world.js`. Shell: `src/app/ui.js`. Plans: `docs/ROADMAP.md`. Ideas: `docs/IDEAS.md`.
+See `docs/ARCHITECTURE.md`. Data: `src/data/weave.js` (worlds, depths, threads, stops). Logic: `src/engines/weave.js`. Scenes: `src/app/scenes.js`. Zoom: `src/app/world.js`. Shell: `src/app/ui.js`. Plans: `docs/ROADMAP.md`. Ideas: `docs/IDEAS.md`.
 
 ## Workflow
 Work on a branch, open a pull request, let CI pass, then merge; `main` deploys to GitHub Pages. Keep PRs focused. Check changes at phone width (390 px) and in dark and light; no sideways scrolling.

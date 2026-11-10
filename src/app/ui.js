@@ -1,10 +1,11 @@
 /* The shell around the world: the top bar, the depth rail at the left, and the card at the right.
    There is one thing on screen, the dive. A question is met on the part of a scene it is about; once
    picked, it stays with you as you go deeper or higher, and changes form at every depth it reaches.
-   The rail shows the depths and where the question you follow has a form, joined by its colour. */
+   The rail shows the depths and where the question you follow has a form, joined by its colour.
+   The worlds in the top bar choose where the dive starts: a data centre, a phone or a car. They meet below. */
 import { t } from '../core/i18n.js';
-import { THREADS } from '../data/weave.js';
-import { N, IDS, clampZ, sizeAt, sizeParts, stop, stopKey, crossing, below, above, nearest, threadOf, rootShown, threadDepths } from '../engines/weave.js';
+import { THREADS, WORLDS, STOPS } from '../data/weave.js';
+import { N, IDS, WORLD, setWorld, worldOf, zIn, clampZ, sizeAt, sizeParts, stop, stopKey, crossing, below, above, nearest, threadOf, rootShown, threadDepths } from '../engines/weave.js';
 import { createWorld, threadColor, theme, reduced } from './world.js';
 
 const KEY = 'osl-weave-v1';
@@ -14,12 +15,13 @@ const load = () => { try { return JSON.parse(localStorage.getItem(KEY) || '{}') 
 export function start() {
   const $ = id => document.getElementById(id);
   const saved = load();
+  setWorld(worldOf(saved.world) ? saved.world : WORLDS[0].id);
   const S = {
     z: typeof saved.z === 'number' ? clampZ(saved.z) : 0,
     thread: threadOf(saved.thread) ? saved.thread : null,
     seen: saved.seen && typeof saved.seen === 'object' ? saved.seen : {}
   };
-  const save = () => { try { localStorage.setItem(KEY, JSON.stringify({ z: Math.round(world.z * 100) / 100, thread: S.thread, seen: S.seen })); } catch (e) { /* storage unavailable */ } };
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify({ world: WORLD, z: Math.round(world.z * 100) / 100, thread: S.thread, seen: S.seen })); } catch (e) { /* storage unavailable */ } };
 
   const depthName = d => t('depth.' + IDS[d] + '.name');
   const across = z => { const [n, unit] = sizeParts(sizeAt(z)); return t('ui.across', { n, unit }); };
@@ -37,7 +39,7 @@ export function start() {
   /* A question you follow remembers the depths where you met it. */
   function see(d) {
     if (!S.thread || !stop(S.thread, d)) return;
-    const s = new Set(S.seen[S.thread] || []); s.add(d); S.seen[S.thread] = [...s];
+    const s = new Set((S.seen[S.thread] || []).filter(x => typeof x === 'string')); s.add(IDS[d]); S.seen[S.thread] = [...s];
   }
   function follow(th) {
     S.thread = th; world.setThread(th);
@@ -49,7 +51,8 @@ export function start() {
 
   /* ---- the rail ---- */
   const railEl = $('rail');
-  railEl.innerHTML = '<ol>' + IDS.map((id, d) => '<li><button type="button" data-d="' + d + '"><i></i><b>' + esc(t('depth.' + id + '.name')) + '</b><small>' + esc(across(d)) + '</small></button></li>').join('') + '</ol><span class="railnow" id="railNow"></span><span class="railthread" id="railThread"></span>';
+  const buildRail = () => railEl.innerHTML = '<ol>' + IDS.map((id, d) => '<li><button type="button" data-d="' + d + '"><i></i><b>' + esc(t('depth.' + id + '.name')) + '</b><small>' + esc(across(d)) + '</small></button></li>').join('') + '</ol><span class="railnow" id="railNow"></span><span class="railthread" id="railThread"></span>';
+  buildRail();
   railEl.addEventListener('click', e => { const b = e.target.closest('[data-d]'); if (b) world.flyTo(+b.dataset.d); });
   function rail() {
     const d = Math.round(world.z), stops = S.thread ? threadDepths(S.thread) : [], color = S.thread ? threadColor(S.thread) : '';
@@ -57,7 +60,7 @@ export function start() {
       const k = +b.dataset.d, on = stops.includes(k);
       b.setAttribute('aria-current', k === d ? 'true' : 'false');
       b.classList.toggle('stop', on); b.querySelector('i').style.background = on ? color : '';
-      b.classList.toggle('seen', on && (S.seen[S.thread] || []).includes(k));
+      b.classList.toggle('seen', on && (S.seen[S.thread] || []).includes(IDS[k]));
     });
     /* the question's colour joins its forms down the rail */
     const line = $('railThread');
@@ -73,6 +76,20 @@ export function start() {
     const a = items[i].getBoundingClientRect(), b = items[Math.min(N - 1, i + 1)].getBoundingClientRect();
     $('railNow').style.top = (a.top + (b.top - a.top) * f + a.height / 2 - r.top) + 'px';
   }
+
+  /* ---- the worlds: where the dive starts. A depth they share keeps its place. ---- */
+  const worldsEl = $('worlds');
+  worldsEl.setAttribute('aria-label', t('ui.worlds'));
+  worldsEl.innerHTML = WORLDS.map(w => '<button type="button" data-world="' + w.id + '">' + esc(t('world.' + w.id + '.name')) + '</button>').join('');
+  const markWorld = () => worldsEl.querySelectorAll('[data-world]').forEach(b => b.setAttribute('aria-pressed', b.dataset.world === WORLD ? 'true' : 'false'));
+  function enter(id) {
+    if (id === WORLD) return;
+    const z = zIn(id, world.z);
+    setWorld(id); buildRail(); markWorld();
+    world.setZ(z); see(Math.round(z)); card(); rail(); save();
+  }
+  worldsEl.addEventListener('click', e => { const b = e.target.closest('[data-world]'); if (b) enter(b.dataset.world); });
+  markWorld();
 
   /* ---- the card ---- */
   const cardEl = $('card');
@@ -92,8 +109,9 @@ export function start() {
         h += '<div class="moves">' + (dn != null ? '<button type="button" class="btn primary" data-go="' + dn + '">' + esc(t('ui.deeper', { depth: depthName(dn) })) + '</button>' : '<p class="small">' + t('ui.bottom') + '</p>') +
           (up != null ? '<button type="button" class="btn" data-go="' + up + '">' + esc(t('ui.higher', { depth: depthName(up) })) + '</button>' : '') + '</div>';
       } else {
-        const n = nearest(th, d);
-        h += '<p>' + t('ui.noStop') + '</p>' + (n != null ? '<button type="button" class="btn primary" data-go="' + n + '">' + esc(t('ui.nearest', { depth: depthName(n) })) + '</button>' : '');
+        const n = nearest(th, d), w = n == null ? WORLDS.find(x => x.depths.some(id => STOPS[th + '.' + id])) : null;
+        h += '<p>' + t(n != null ? 'ui.noStop' : 'ui.noStopWorld') + '</p>' + (n != null ? '<button type="button" class="btn primary" data-go="' + n + '">' + esc(t('ui.nearest', { depth: depthName(n) })) + '</button>' : '') +
+          (w ? '<button type="button" class="btn primary" data-world="' + w.id + '">' + esc(t('ui.meetIn', { world: t('world.' + w.id + '.name') })) + '</button>' : '');
       }
       h += '<button type="button" class="link" data-leave>' + t('ui.leave') + '</button></section>';
       const others = crossing(d).filter(x => x !== th);
@@ -110,6 +128,7 @@ export function start() {
   cardEl.addEventListener('click', e => {
     const p = e.target.closest('[data-th]'); if (p) { follow(p.dataset.th); return; }
     const g = e.target.closest('[data-go]'); if (g) { world.flyTo(+g.dataset.go); return; }
+    const w = e.target.closest('[data-world]'); if (w) { enter(w.dataset.world); const n = nearest(S.thread, Math.round(world.z)); if (n != null) world.flyTo(n); return; }
     if (e.target.closest('[data-leave]')) letGo();
   });
   /* the tether starts at the question in the card (only when the card sits beside the world) */
