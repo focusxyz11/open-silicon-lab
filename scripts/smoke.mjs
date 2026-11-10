@@ -157,6 +157,22 @@ async function check(viewport) {
     if (await page.evaluate(v => document.getElementById('view-' + v).hidden, v)) problems.push(tag + v + ' view did not open');
   }
 
+  // One answer (prototype journey): every depth draws, an open edge becomes a star, and a challenge
+  // borrowed onto the workbench goes back to its own page afterwards.
+  await page.evaluate(() => { location.hash = 'one-answer'; });
+  await page.waitForSelector('#oaCv'); await page.$eval('#oaCv', el => el.scrollIntoView({ block: 'center' }));
+  for (const z of [0, 5, 9]) { await page.click('#oaLevels [data-z="' + z + '"]'); await page.waitForFunction(z => document.getElementById('oaIdx').textContent.startsWith('Depth ' + (z + 1) + ' '), z, { timeout: 8000 }).catch(() => problems.push(tag + 'one-answer: depth ' + (z + 1) + ' was not reached')); }
+  await page.click('#oaLevels [data-z="4"]');
+  await page.waitForFunction(() => !document.getElementById('oaEdges').hidden && document.querySelector('[data-edge="memory-wall"]'), null, { timeout: 8000 });
+  await page.click('[data-edge="memory-wall"]');
+  if (!/1/.test(await page.textContent('#oaSkyN'))) problems.push(tag + 'one-answer: opening an edge did not add a star');
+  await page.click('[data-bench="stacks"]');
+  await page.waitForSelector('#oaBenchBody #lab-package-1', { timeout: 15000 }).catch(() => problems.push(tag + 'one-answer: the challenge did not open in place'));
+  await page.click('[data-unbench]');
+  if (!await page.$('#package #lab-package-1')) problems.push(tag + 'one-answer: the borrowed simulation did not go back to its page');
+  if (await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1)) problems.push(tag + 'one-answer scrolls sideways');
+  await page.evaluate(() => localStorage.removeItem('osl-stars-v1'));
+
   // "I tried it" on a challenge the simulation cannot check: it counts as solved and the card moves on.
   await go(page, 'tiny');
   const before = await page.textContent('#tiny > .mission h3');

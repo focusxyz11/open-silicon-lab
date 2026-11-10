@@ -64,6 +64,18 @@ Each topic docks where its question meets its depth (`PLACES`). A topic keeps it
 - **Dropped:** any list or menu of the eleven questions (including a die of question blocks as home), and the spinning globe, which moved without adding meaning.
 - **To retire later:** the seven bands as navigation and the Beginner/Engineer switch (already being replaced by depth labs, see `DEPTH.md`).
 
+## The first slice: One answer (prototype)
+
+`#one-answer` (not in the top bar yet; linked from the footer). Code: `src/app/journey.js` (the view), `src/engines/journey.js` (time lens, dive sizes, constellation; tested in `tests/journey.test.mjs`), `src/data/journeys.js` (stops, edges, challenges in place). Words: `oa.*` in `src/i18n/en.json`.
+
+- **The dive.** All ten depths in one continuous zoom, the same scheme as Zoom into your chip. Each power of ten takes the same time when you follow the question. Block, gate and switch are computed: a full adder from the tiny-chip studio, synthesised, placed and routed by `src/engines/chipzoom.js`, inside a grid of multiply-add units; its wires and transistors show the values of the bits passing through. Planet to chip are drawn in general terms.
+- **And back.** At the atom the answer turns round and travels up again (cyan instead of amber), ending as a reply on the phone at the region depth. Every depth has words for both directions.
+- **The time lens.** 1947 to 2040. Before a place existed in the story it is a grey ghost; after today it sits on blueprint paper with dashed, unfinished parts. Each depth has its own time line; the chip line reads the time machine's data, and the process for the adder is the nearest of the four this lab models.
+- **Open edges.** 17 broken rings inside the scenes, at least one at every depth and one for every question. Each holds the place, the question behind it, what people are trying, and usually a sourced fact. They are buttons over the canvas, so keyboard and touch reach them; there is no list of them anywhere.
+- **The workbench.** Three existing, self-checking challenges open in place (Bandwidth per stack at the board, Sixteen answers at the block, Why planar was retired at the switch). The simulation panel is borrowed from its topic page and put back when closed.
+- **The constellation.** Each edge opened becomes a star, kept in this browser. Stars of one question join with bright lines; when two stars share a question, that question appears beside its shape. Faint lines join shapes whose questions are linked in `LINKS`, with the link's reason.
+- **Not in this slice:** the AI companion and other visitors' stars (step 6).
+
 ## Next
 
 The build steps are in the [roadmap](ROADMAP.md), under "Now".
