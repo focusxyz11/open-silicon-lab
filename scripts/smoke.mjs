@@ -1,5 +1,6 @@
 // Browser smoke test: the dive opens on desktop and phone, in dark and light, with no errors; every depth
-// can be reached; a question can be picked, followed deeper and let go; nothing scrolls sideways.
+// can be reached; a question can be picked, followed deeper and let go; the dive can start in a phone or a car,
+// keeping a depth they share; nothing scrolls sideways.
 // Needs Playwright:  npm install --no-save playwright && npx playwright install chromium
 import { serve } from './serve.mjs';
 import { createRequire } from 'node:module';
@@ -28,10 +29,21 @@ for (const [tag, viewport, scheme] of [['desktop', { width: 1360, height: 860 },
   if (!/board/i.test(await where())) problems.push(tag + ': the card does not follow the depth');
   await page.$eval('#card [data-leave]', el => el.click());
   if (await page.$('#cardQ')) problems.push(tag + ': letting go of the question did not work');
+  /* another world: from the board, a phone keeps the step down (its board); a car keeps a depth they share (the block) */
+  await page.click('#worlds [data-world="phone"]');
+  if ((await page.$$('#rail [data-d]')).length !== 7) problems.push(tag + ': the phone dive does not have its own depths');
+  if (!/board/i.test(await where())) problems.push(tag + ': changing world did not keep the step down');
+  await go(3);
+  if (!/block/i.test(await where())) problems.push(tag + ': the phone dive does not reach the shared depths');
+  await page.click('#worlds [data-world="car"]');
+  if (!/block/i.test(await where())) problems.push(tag + ': changing world did not keep a shared depth');
+  await go(0);
+  if (!/car/i.test(await where())) problems.push(tag + ': the car dive does not start at the car');
+  await page.click('#worlds [data-world="datacentre"]');
   await page.$eval('#themeBtn', el => el.click());
   if (await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1)) problems.push(tag + ': the page scrolls sideways');
   await page.close();
 }
 await browser.close(); server.close();
 if (problems.length) { console.error('Smoke test found problems:\n' + problems.join('\n')); process.exit(1); }
-console.log('Smoke test passed: the dive works on desktop and phone, in dark and light.');
+console.log('Smoke test passed: the dive works in every world, on desktop and phone, in dark and light.');

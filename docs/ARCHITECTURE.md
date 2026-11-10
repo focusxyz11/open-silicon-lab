@@ -5,11 +5,11 @@ A static site: plain ES modules, one stylesheet and one file of words. No framew
 ```
 index.html              the page: the world canvas, the top bar, the depth rail and the card
 src/main.js             boot: load the words, then start the dive
-src/app/ui.js           the shell: rail, card, theme, saved state (localStorage), layout around the world
+src/app/ui.js           the shell: world switch, rail, card, theme, saved state (localStorage), layout around the world
 src/app/world.js        the zoom: draws the current, previous and next depths, highlights, dots, tether, input
 src/app/scenes.js       one scene per depth, drawn in a 1000 x 1000 space, with its named parts
-src/engines/weave.js    pure logic: the camera, sizes, threads, when a core question appears (tested)
-src/data/weave.js       the data: depths and portals, threads, stops
+src/engines/weave.js    pure logic: the current world, the camera, sizes, threads, when a core question appears (tested)
+src/data/weave.js       the data: worlds, depths and portals, threads, stops
 src/data/facts.json     sourced industry figures, for when a text needs one
 src/core/i18n.js        words: t('name'), plurals, numbers, dates
 src/i18n/en.json        every word on screen
@@ -20,7 +20,7 @@ scripts/                serve.mjs, smoke.mjs (browser test), build-single.mjs, i
 
 ## The zoom
 
-Each depth `i` has a portal `[x, y, side]`: where depth `i + 1` sits inside its 1000 x 1000 scene. The camera position is one number `z`: `z = i + f` means depth `i` with the view shrunk a fraction `f` of the way to its portal, geometrically (`cam()` in `src/engines/weave.js`). At `f = 1` the portal fills the view, exactly as depth `i + 1` does at `f = 0`, so there is no cut (a test checks it). `frames()` turns `z` and the screen box into three transforms: the current depth, the next one inside its portal (fading in), and the previous one around it (faint).
+Each depth `i` has a portal `[x, y, side]`: where depth `i + 1` sits inside its 1000 x 1000 scene. The camera position is one number `z`: `z = i + f` means depth `i` with the view shrunk a fraction `f` of the way to its portal, geometrically (`cam()` in `src/engines/weave.js`). At `f = 1` the portal fills the view, exactly as depth `i + 1` does at `f = 0`, so there is no cut (a test checks it, in every world). The depth list is the current world's way down: `setWorld(id)` changes it, and `zIn(id, z)` says where the same view is in another world. `frames()` turns `z` and the screen box into three transforms: the current depth, the next one inside its portal (fading in), and the previous one around it (faint).
 
 A scene is `{ parts, draw(G) }`. `G` is a small drawing helper (rectangles, lines, circles, labels by text name); a scene never contains words. `parts` are named shapes a question can light up.
 

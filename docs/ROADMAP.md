@@ -4,12 +4,12 @@ Where Open Silicon Lab is heading. This is the one place for what happens next. 
 
 ## Now: the dive
 
-The site is one thing: a continuous dive from a data centre down to silicon atoms, with open questions running through it as threads ([FRAME.md](FRAME.md)). The earlier site is kept on the branch `claude/before-dive-2026-11`.
+The site is one thing: a continuous dive from a data centre, a phone or a car down to silicon atoms, with open questions running through it as threads ([FRAME.md](FRAME.md)). The earlier site is kept on the branch `claude/before-dive-2026-11`.
 
 1. **Done:** the dive with threads, in Fable's style, as the whole site.
-2. **Try it with people.** Three to five learners, from a child to an engineer, while someone watches where they get stuck and which questions they follow.
-3. **Different types of chips.** Dive into a phone, a car, a microcontroller, not only a data centre.
-4. **More questions,** first where few threads stop, then from the community.
+2. **Done:** different types of chips: dive into a data centre, a phone or a car; all three meet in the lower depths.
+3. **Try it with people.** Three to five learners, from a child to an engineer, while someone watches where they get stuck and which questions they follow.
+4. **More questions,** first where few threads stop, then from the community. More ways down when they bring new questions.
 
 ## Next
 

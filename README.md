@@ -1,10 +1,10 @@
 # Open Silicon Lab
 
-An open-source lab for chips: one continuous dive from a data centre down to silicon atoms, with open questions running through every depth.
+An open-source lab for chips: one continuous dive from a data centre, a phone or a car down to silicon atoms, with open questions running through every depth.
 
 **Try it: <https://focusxyz11.github.io/open-silicon-lab/>**
 
-Scroll, drag or use the arrow keys to dive through eight depths: building, rack, board, chip, block, gate, switch and atom. At every depth, questions sit on the parts they are about. Pick one and it stays with you as you go deeper or higher, taking a new form at each depth. It is not a textbook and it holds no answers: each question comes with something true to notice and what people are trying.
+Choose where to start (a data centre, a phone or a car), then scroll, drag or use the arrow keys to dive: through the building, rack, board and chip of a data centre, the board and chip of a phone, or the control units and microcontroller of a car, down to the block, gate, switch and atom that every chip shares. At every depth, questions sit on the parts they are about. Pick one and it stays with you as you go deeper or higher, taking a new form at each depth. It is not a textbook and it holds no answers: each question comes with something true to notice and what people are trying.
 
 The earlier version of the site (a map of 38 topics with over 90 simulations, a RISC-V lab and a tiny-chip studio) is kept on the branch [`claude/before-dive-2026-11`](https://github.com/focusxyz11/open-silicon-lab/tree/claude/before-dive-2026-11).
 
