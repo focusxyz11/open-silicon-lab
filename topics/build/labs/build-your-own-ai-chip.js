@@ -1,5 +1,6 @@
 /* Lab: BUILD YOUR OWN AI CHIP */
 import {$,clamp,RM,rng,T,redraws,fit,watch,rgba,shade,fmtLen,fmtNum,inView,fr,hexRGB,gauss,big,LIMC} from 'osl/core/ui.js';
+import {chips} from 'osl/data/chips.js';
 export function init(){
 (function game(){
 const MIS={
@@ -106,7 +107,7 @@ function finish(R,J,seed){const m=MIS[S.mission];el('gmResTag').innerHTML=J.all?
  el('gmReview').innerHTML='<h3>'+(J.all?'Launch review: ready to ship':'Launch review: back to the drawing board')+'</h3><div class="rv"><ul>'+J.rows.map(r=>'<li>'+(r.ok?'✓ ':'✕ ')+r.t+': '+r.txt+'</li>').join('')+'</ul></div><p class="eyebrow">Reviewer notes</p><div class="rv"><ul>'+N.map(x=>'<li>'+x+'</li>').join('')+'</ul></div>';
  let D=[];try{D=JSON.parse(localStorage.getItem('sjl-designs')||'[]');if(!Array.isArray(D))D=[];}catch(e){}
  D.unshift({m:S.mission,stars:J.all?J.stars:0,ok:J.all,pf:S.fp4?R.pf4:R.pf8,fmt:S.fp4?'FP4':'FP8',cap:R.cap,bw:R.bw,power:R.power,cost:R.cost,node:NODE[S.node].t,arch:ARCH[S.arch].t});D=D.slice(0,5);try{localStorage.setItem('sjl-designs',JSON.stringify(D));}catch(e){}cmp();}
-const REF=[['NVIDIA Rubin','2H 2026, TSMC 3 nm','50 FP4','288 GB HBM4','22 TB/s','–'],['AMD MI455X','2026, TSMC N2 + N3','40.3 MXFP4','432 GB HBM4','23.3 TB/s','–'],['Microsoft Maia 200','2026, TSMC 3 nm','~10 FP4','216 GB HBM3E','7 TB/s','750 W'],['Google TPU v7 Ironwood','2025','4.6 FP8','192 GB HBM','7.4 TB/s','~600 W'],['AWS Trainium3','2025, TSMC 3 nm','2.52 FP8','144 GB HBM3E','4.9 TB/s','–']];
+const REF=chips(['rubin','mi455x','maia200','ironwood','trainium3']).map(c=>[c.n,c.when+(c.proc?', '+c.proc:''),(c.top[2]||'')+c.top[0]+' '+c.top[1],c.gb+' GB '+c.mem,c.bw+' TB/s',c.w?(c.wApprox?'~':'')+c.w+' W':'–']);
 function cmp(){let D=[];try{D=JSON.parse(localStorage.getItem('sjl-designs')||'[]');if(!Array.isArray(D))D=[];}catch(e){}const R=last&&last.R;
  const you=R?'<tr class="you"><td><b>Your current design</b><br><span class="muted small">'+MIS[S.mission].t+' · '+ARCH[S.arch].t+' · '+NODE[S.node].t+'</span></td><td class="n">'+(S.fp4?R.pf4.toFixed(R.pf4<1?3:1)+' FP4':R.pf8.toFixed(R.pf8<1?3:1)+' FP8')+'</td><td class="n">'+(R.cap<10?R.cap.toFixed(1):Math.round(R.cap))+' GB '+MEM[S.mem].t+'</td><td class="n">'+R.bw.toFixed(R.bw<1?2:1)+' TB/s</td><td class="n">'+Math.round(R.power)+' W</td></tr>':'';
  const saved=D.map((d,i)=>'<tr><td>Tape-out '+(D.length-i)+' · '+esc2(MIS[d.m]?MIS[d.m].t:'')+'<br><span class="muted small">'+(d.ok?'★'.repeat(d.stars):'missed')+' · '+esc2(d.arch)+' · '+esc2(d.node)+'</span></td><td class="n">'+(+d.pf).toFixed(d.pf<1?3:1)+' '+esc2(d.fmt)+'</td><td class="n">'+((+d.cap)<10?(+d.cap).toFixed(1):Math.round(d.cap))+' GB</td><td class="n">'+(+d.bw).toFixed(1)+' TB/s</td><td class="n">'+Math.round(d.power)+' W</td></tr>').join('');

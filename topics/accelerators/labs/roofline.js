@@ -1,8 +1,9 @@
 /* Lab: ROOFLINE */
 import {$,clamp,RM,rng,T,redraws,fit,watch,rgba,shade,fmtLen,fmtNum,inView,fr,hexRGB,gauss,big,LIMC} from 'osl/core/ui.js';
+import {chips} from 'osl/data/chips.js';
 export function init(){
 (function roof(){
-const CH=[{n:'NVIDIA Rubin (2026)',F:50,BW:22,M:288},{n:'NVIDIA B200 (2025)',F:9,BW:8,M:192},{n:'Phone NPU (illustrative)',F:0.04,BW:0.08,M:12}];
+const CH=[...chips(['rubin','b200']).map(c=>({n:c.n+' ('+c.when.slice(-4)+')',F:c.pf4,BW:c.bw,M:c.gb})),{n:'Phone NPU (illustrative)',F:0.04,BW:0.08,M:12}];
 let ci=0,b=0.5;const seg=$('#rfChip');
 CH.forEach((ch,i)=>{const bt=document.createElement('button');bt.textContent=ch.n;bt.addEventListener('click',()=>{ci=i;run();});seg.appendChild(bt);});
 $('#rfPrec').querySelectorAll('button').forEach(bt=>bt.addEventListener('click',()=>{b=+bt.dataset.b;run();}));

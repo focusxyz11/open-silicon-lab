@@ -249,6 +249,8 @@ Everything is per-browser `localStorage`: explanation level, topics visited, qui
 
 `src/data/facts.json` holds `facts` (label, value, kind, topic, source, url, verified date, optional previous value) and `changes` (a dated log). Topic pages fold their facts into Go deeper; the Knowledge view lists all of them. A monthly check proposes updates as a pull request.
 
+`src/data/chips.js` is the one list of real chips (peak math, memory, bandwidth, power) that labs compare against; topics import it as `osl/data/chips.js`. A chip with a sourced entry in facts.json names it, and `tests/chips.test.mjs` checks the two agree.
+
 ## Where the structure is going
 
 The aim is that the project can keep growing, with new ideas and conflicting ones, while its key

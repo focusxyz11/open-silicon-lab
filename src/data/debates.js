@@ -45,6 +45,10 @@ export const DEBATES = [
     { t: 'Let the market price it', claim: 'After a shortage, buyers sign longer contracts and pay more for secure supply; prices do the work.', assumes: 'Buyers remember shortages long enough to pay for safety.', topics: ['economics', 'everywhere'] },
     { t: 'Treat it as infrastructure', claim: 'A shortage costs far more than keeping spare capacity, so public support or shared reserves make sense.', assumes: 'Support can be targeted without propping up the wrong factories.', topics: ['supply', 'everywhere'] }
   ] },
+  { id: 'quantum', t: 'Useful quantum computers', q: 'When will quantum computers do useful work that ordinary computers cannot?', views: [
+    { t: 'Error correction will carry it', claim: 'Reliable qubits have started to beat raw ones, and companies plan fault-tolerant machines within a few years.', assumes: 'Errors and overhead keep falling as machines grow.', topics: ['quantum'] },
+    { t: 'Classical methods keep moving', claim: 'Better classical methods have challenged several advantage claims, and approximate methods already work well for many molecules.', assumes: 'Useful problems keep enough structure for classical shortcuts.', topics: ['quantum', 'accelerators'] }
+  ] },
   { id: 'bigdie', t: 'Big dies, low yield', q: 'Bigger chips catch more defects. When does splitting a design into chiplets win?', views: [
     { t: 'Split into chiplets', claim: 'Small dies yield better, can mix processes and can be reused across products.', assumes: 'Die-to-die links are fast, cheap and low-power enough.', topics: ['yield', 'package'] },
     { t: 'Go big anyway', claim: 'Keeping everything on one huge piece of silicon avoids slow links; spare cores route around defects.', assumes: 'Redundancy and cooling can handle a wafer-sized chip.', topics: ['spatial', 'accelerators'] }
