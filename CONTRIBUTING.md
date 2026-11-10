@@ -10,6 +10,10 @@ Thanks for helping. You do not need to be a chip expert: a good question and a s
 
 **Add a question.** A question is a stop in `src/data/weave.js`: a thread, a depth, and the parts of that depth's scene it is about. Its words go in `src/i18n/en.json`: `stop.<thread>.<depth>.q` (the question), `.note` (something true to notice, never the answer) and optionally `.tried` (real directions people are exploring). `npm test` checks the parts exist and the words are there.
 
+**Propose a question without code.** On the site, *Propose a question* (or *Write the question that belongs here*, in a gap) opens the question form on GitHub with the place filled in.
+
+**Back a stop with a figure or a case.** A figure is an entry in `src/data/facts.json` (value, label, source, link, kind, date checked), named for a stop in `FIGURES` in `src/data/weave.js`. Any number in a stop's words needs one. A case is a real event in `CASES`, with its words `case.<id>.*` in `src/i18n/en.json`.
+
 **Fix a fact.** Edit `src/data/facts.json`: update `value`, `source`, `url` and `verified`, and move the old value into `previous`.
 
 **Translate.** Copy `src/i18n/en.json` to `src/i18n/<lang>.json` and translate the values, never the names.

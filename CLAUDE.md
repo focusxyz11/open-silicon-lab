@@ -13,7 +13,7 @@ Learners new to chips with basic hardware knowledge, up to engineers. Plain word
 - Visual first, in one drawing style (Fable's world build), dark and light.
 - Universal, not only AI chips; RISC-V, open hardware and an AI-native view get special weight.
 - Words on screen live in `src/i18n/en.json` and are read with `t('name')`; never write visible English in code. `npm test` checks it.
-- Industry figures live in `src/data/facts.json` with source, date verified and kind.
+- Industry figures live in `src/data/facts.json` with source, date verified and kind; a number in a stop's words needs one in `FIGURES` (`npm test` checks it).
 - When a version is replaced, keep it on a named branch first (the earlier site: `claude/before-dive-2026-11`).
 
 ## Commands

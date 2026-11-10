@@ -1291,6 +1291,42 @@
    "url": "https://www.hackster.io/news/wch-launches-a-sub-10-risc-v-microcontroller-while-a-6-90-dev-board-gets-you-started-90b1ffd7490a",
    "value": "WCH CH32V003: a 32-bit RISC-V microcontroller for less than 10 cents",
    "verified": "2026-10-31"
+  },
+  {
+   "id": "brain-power",
+   "topic": "neuro",
+   "detail": "About a fifth of the roughly 100 W a resting adult uses; textbook estimates collected by The Physics Factbook.",
+   "kind": "estimate",
+   "label": "Power used by a human brain",
+   "source": "The Physics Factbook (hypertextbook.com)",
+   "status": "new",
+   "url": "https://hypertextbook.com/facts/2001/JacquelineLing.shtml",
+   "value": "About 20 W",
+   "verified": "2026-11-10"
+  },
+  {
+   "id": "euv-wavelength",
+   "topic": "litho",
+   "detail": "Extreme ultraviolet (EUV) light, close to X-rays; the deep-ultraviolet light used before it has a wavelength of 193 nm.",
+   "kind": "reported",
+   "label": "Wavelength of the light in the newest chip-printing machines",
+   "source": "ASML",
+   "status": "new",
+   "url": "https://www.asml.com/products/euv-lithography-systems",
+   "value": "13.5 nm",
+   "verified": "2026-11-10"
+  },
+  {
+   "id": "turing-1936",
+   "topic": "limits",
+   "detail": "“On Computable Numbers, with an Application to the Entscheidungsproblem”, submitted in 1936: no general method can decide every such yes-or-no question.",
+   "kind": "reported",
+   "label": "Questions no machine can settle",
+   "source": "Wikipedia: Turing's proof",
+   "status": "new",
+   "url": "https://en.wikipedia.org/wiki/Turing%27s_proof",
+   "value": "Proved by Alan Turing in 1936",
+   "verified": "2026-11-10"
   }
  ],
  "changes": [

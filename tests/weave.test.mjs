@@ -3,10 +3,12 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { DEPTHS, WORLDS, SHARED, THREADS, STOPS, TRIED } from '../src/data/weave.js';
+import { DEPTHS, WORLDS, SHARED, THREADS, STOPS, TRIED, CASES, FIGURES, REPO } from '../src/data/weave.js';
 import * as E from '../src/engines/weave.js';
 
 const EN = JSON.parse(readFileSync(new URL('../src/i18n/en.json', import.meta.url), 'utf8'));
+const FACTS = JSON.parse(readFileSync(new URL('../src/data/facts.json', import.meta.url), 'utf8'));
+const FACT = Object.fromEntries(FACTS.facts.map(f => [f.id, f]));
 /* The scenes need a browser to draw, but their parts are plain data: read them without one. */
 globalThis.window = globalThis.window || {};
 const { SCENES, partsOf } = await import('../src/app/scenes.js');
@@ -118,4 +120,31 @@ test('no list of the core questions: the words never gather them in one place', 
     const s = typeof v === 'string' ? v : JSON.stringify(v);
     assert.ok(roots.filter(r => s.includes(r)).length <= 1, k + ' gathers several core questions');
   }
+});
+
+test('every figure has a source, a date it was checked and a kind; a number in a question or note comes with one', () => {
+  for (const [key, ids] of Object.entries(FIGURES)) {
+    assert.ok(STOPS[key], key + ': figures for a stop that does not exist');
+    for (const id of ids) {
+      const f = FACT[id];
+      assert.ok(f, key + ': no figure "' + id + '" in src/data/facts.json');
+      assert.ok(f.value && f.label && f.source && /^https:\/\//.test(f.url) && /^\d{4}-\d{2}-\d{2}$/.test(f.verified), id + ': needs a value, a label, a source, a link and the date it was checked');
+      assert.ok(f.kind in FACTS.kinds && EN['fact.' + f.kind], id + ': unknown kind ' + f.kind);
+    }
+  }
+  for (const key of Object.keys(STOPS)) {
+    const words = EN['stop.' + key + '.q'] + ' ' + EN['stop.' + key + '.note'];
+    if (/\d/.test(words)) assert.ok(FIGURES[key] && FIGURES[key].length, key + ' has a number but no figure with a source behind it');
+  }
+});
+
+test('every real case shows at a stop, with its words, its source and the figures it names', () => {
+  for (const c of CASES) {
+    assert.ok(STOPS[c.stop], c.id + ': no stop ' + c.stop);
+    for (const k of ['t', 'what', 'why', 'after', 'src']) assert.ok(EN['case.' + c.id + '.' + k], c.id + ' has no ' + k);
+    assert.match(c.url, /^https:\/\//);
+    assert.ok(c.year > 1900 && c.year < 2100);
+    for (const id of c.facts) assert.ok(FACT[id], c.id + ': no figure ' + id);
+  }
+  assert.match(REPO, /^https:\/\/github\.com\//);
 });

@@ -14,7 +14,7 @@ The site is one thing: a continuous dive from a data centre, a phone or a car do
 ## Next
 
 - **Bring back what fits.** Simulations and challenges from the earlier site, opened inside the dive where they belong, one at a time.
-- **A companion** that does not answer, but asks the question behind the question.
+- **The companion, live.** It now hands the visitor a prompt for any AI assistant; next, a conversation inside the lab where the page can reach an AI.
 - **Other strong visual views** that connect with the dive.
 
 ## Long term

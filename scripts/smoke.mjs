@@ -1,6 +1,7 @@
 // Browser smoke test: the dive opens on desktop and phone, in dark and light, with no errors; every depth
 // can be reached; a question can be picked, followed deeper and let go; the dive can start in a phone or a car,
-// keeping a depth they share; nothing scrolls sideways.
+// keeping a depth they share; a stop can show a real case, its figures and the companion; a gap invites a
+// question; nothing scrolls sideways.
 // Needs Playwright:  npm install --no-save playwright && npx playwright install chromium
 import { serve } from './serve.mjs';
 import { createRequire } from 'node:module';
@@ -27,7 +28,22 @@ for (const [tag, viewport, scheme] of [['desktop', { width: 1360, height: 860 },
   await page.waitForTimeout(300);
   if (!await page.$('#card .root')) problems.push(tag + ': after two depths the question underneath did not appear');
   if (!/board/i.test(await where())) problems.push(tag + ': the card does not follow the depth');
+  /* at a stop: a real case, the figures behind it, and the companion's prompt; elsewhere, a way to propose a question */
+  await go(3);
+  await page.$eval('#card [data-th="fail"]', el => el.click());
+  if (!await page.$('#card details.case')) problems.push(tag + ': the real case does not show at its stop');
+  if (await page.$eval('#card .companion', el => getComputedStyle(el).display !== 'none')) problems.push(tag + ': the companion shows before it is asked for');
+  await page.$eval('#card [data-companion]', el => el.click());
+  if (!/question behind it/i.test(await page.$eval('#card .companion textarea', el => el.value))) problems.push(tag + ': the companion has no prompt');
+  if (await page.$eval('#card .companion', el => getComputedStyle(el).display === 'none')) problems.push(tag + ': the companion did not open');
+  await go(1);
+  if (!/\/issues\/new\?template=question\.yml/.test(await page.$eval('#card a.btn', el => el.href).catch(() => ''))) problems.push(tag + ': a gap does not invite a question');
+  await go(0);
+  await page.waitForTimeout(200);
+  if (!await page.$('#card .figs li')) problems.push(tag + ': the figures behind a stop do not show');
   await page.$eval('#card [data-leave]', el => el.click());
+  if (!await page.$('#card a[href*="issues/new"]')) problems.push(tag + ': there is no way to propose a question');
+  await go(2);
   if (await page.$('#cardQ')) problems.push(tag + ': letting go of the question did not work');
   /* another world: from the board, a phone keeps the step down (its board); a car keeps a depth they share (the block) */
   await page.click('#worlds [data-world="phone"]');
