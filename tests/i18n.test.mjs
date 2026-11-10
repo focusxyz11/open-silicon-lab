@@ -11,8 +11,8 @@ import { t, useTexts, fmtWords, fmtList, fmtDate } from '../src/core/i18n.js';
 const root = new URL('..', import.meta.url);
 const read = p => readFileSync(new URL(p, root), 'utf8');
 const EN = JSON.parse(read('src/i18n/en.json'));
-/* The shell: everything outside the topic folders that draws something for a reader. */
-const SHELL = ['src/main.js'].concat(...['src/app/', 'src/labs/', 'src/core/'].map(d => readdirSync(new URL(d, root)).filter(f => f.endsWith('.js')).map(f => d + f)));
+/* The code that draws something for a reader. */
+const SHELL = ['src/main.js'].concat(...['src/app/', 'src/core/'].map(d => readdirSync(new URL(d, root)).filter(f => f.endsWith('.js')).map(f => d + f)));
 const LANGS = readdirSync(new URL('src/i18n/', root)).filter(f => f.endsWith('.json')).map(f => f.slice(0, -5));
 
 test('the shell has no visible English in its code (put it in src/i18n/en.json)', () => {

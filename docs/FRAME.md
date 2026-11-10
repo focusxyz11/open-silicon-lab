@@ -1,83 +1,53 @@
 # The frame
 
-The fixed structure of the lab from November 2026 on. New content fills it; it does not change it.
-Data: `src/data/frame.js`. Tests: `tests/frame.test.mjs`. No view shows it directly.
+The structure of the lab from November 2026 on. New content fills it; it does not change it.
+Data: `src/data/weave.js`. Logic: `src/engines/weave.js`. Tests: `tests/weave.test.mjs`.
 
-## Why
+## The idea
 
-The site grew topic by topic until the structure got heavy and the learning idea blurred. Two prototypes in November 2026 tested a new shape:
-
-- **Eleven open questions.** Each leads to a bigger question beyond chips.
-- **Powers of ten.** One continuous dive from the planet to the atom (the idea behind `#zoom`).
-
-The site already holds the substance (38 topics, 106 challenges, 18 tested engines, sourced facts). The prototypes held the shape. The frame joins them: **the questions and the depths become the backbone, and every existing topic docks at one place in it.** Nothing is removed.
-
-**The eleven questions are never listed.** A list of questions reads as a quiz with answers to find, and suggests the lab holds only eleven. They stay underneath, as the backbone that organises everything a visitor meets.
+The lab is one world, entered by diving. There is one thing on screen: a continuous zoom from a data-centre building down to silicon atoms. Open questions run through it as threads. A visitor meets a question on the part of a scene it is about; once picked, the question stays with them as they go deeper or higher, and takes a new form at every depth it reaches. The question behind the question matters more than any answer.
 
 ## What visitors see
 
-One world they travel through, along journeys. The questions surface where knowledge runs out.
-
-- **One world, space and time.** *The dive*: one continuous zoom from the planet to the atom. *The time lens*: the same place in any year from 1947 to 2040; every depth changes with the year, and the future is drawn unfinished. *The workbench*: the existing challenges open inside the scene, where they belong.
-- **Journeys, the main threads.** Concrete stories that cross every depth and connect the questions without naming them: *One answer* (a reply travels from a phone to the data centre down to electrons and back), *One chip's life* (from sand to the factory to use and to waste), *Sixty years* (the same places across time), *Your chip* (from an idea of yours to a chip you share).
-- **Open edges.** Places drawn unfinished, where what anyone knows runs out. Each holds one deeper question, what people are trying, and challenges to push on. Something to explore, never an answer to find.
-- **The constellation.** Each edge a visitor finds becomes a star. As stars collect, lines between them appear: those lines are the eleven questions, seen only as patterns in what the visitor discovered. Other visitors' stars can show faintly.
-- **An AI companion** travels along. It does not answer; it asks the question behind the question.
-
-Every edge, challenge and companion conversation is tagged to one of the eleven questions in the data.
+- **The dive.** Eight depths: building, rack, board, chip, block, gate, switch, atom. Each depth is a scene in a 1000 x 1000 space; the next depth lives inside a small square of it (its portal), and the camera slides between the whole scene and that square, so the dive never cuts. The depth you came from stays faintly around the edges. Scroll, drag, the arrow keys or the rail move it.
+- **Questions on the parts.** At every depth, the questions crossing it sit as coloured dots on the parts they are about, and are listed in the card. Picking one lights up its parts and draws a line from the card to them.
+- **Threads through the depths.** A question you follow shows its form at this depth, something true to notice, and what people are trying; then *Go deeper* or *Go back up* flies to its next form. The rail shows the depths where it has a form, joined by its colour.
+- **The core questions, one at a time.** Each thread begins as one of eleven core questions. A core question is never listed with the others: it appears on its own, in the card, once the visitor has followed its thread through two depths, with the question it leads toward.
+- **One drawing style.** Simple glowing outlines, the same at every depth (Fable's world build), in dark and light.
 
 ## The structure
 
-Every place in the lab has an address: **question + depth (+ year)**.
+- **Depths (8).** `DEPTHS`: id, metres across the view, and the portal square of the next depth.
+- **Threads (11).** `THREADS`: one per core question, recognised by colour and words, never by a name. Words: `thread.<id>.root` (the core question) and `thread.<id>.behind` (the question it leads toward).
+- **Stops (45).** `STOPS['thread.depth']`: the parts of that depth's scene the question lights up. Words: `stop.<thread>.<depth>.q`, `.note` and, for some, `.tried`.
 
-- **Questions (11).** The framework. Ten run down through the world as threads; the eleventh, *What will be the next Moore's law?*, also lives on the time dial.
-- **Depths (10).** Planet, region, building, rack, board, chip, block, gate, switch, atom. One continuous zoom.
-- **Time.** The existing time machine, 1947 to 2040.
-- **Portals (19).** Links between questions, each with a reason.
+Adding a question means adding a stop: a thread, a depth, the parts it is about, and its words. Tests check every stop lights up real parts, every thread spans at least two depths, every depth is crossed by at least two questions, and no text gathers the core questions together.
 
-Each topic docks where its question meets its depth (`PLACES`). A topic keeps its own links, so it still connects elsewhere.
+| Core question | Depths where it has a form |
+|---|---|
+| How does a chip think? | rack, board, chip, block, gate, switch, atom |
+| What is the strangest thing that could compute? | chip, gate, switch, atom |
+| What could a chip never do, and could it learn to? | rack, chip, gate, atom |
+| Why can a perfect design fail in the real world? | building, board, chip, gate, switch, atom |
+| How could your idea become a chip? | chip, block, gate |
+| What would chipmaking look like if we invented it from scratch today? | chip, switch, atom |
+| What part of making chips can't be written down? | chip, switch |
+| What happens when anyone can make a chip? | chip, block, gate |
+| How should a chip divide its work? | building, rack, board, chip, block |
+| What new kinds of computers could brains, swarms and living cells inspire? | building, block, switch, atom |
+| What will be the next Moore's law? | building, chip, switch, atom |
 
-| Question | Topics, by depth | Challenges |
-|---|---|---|
-| Think: How does a chip think? | riscv (chip), clock (block) | 11 |
-| Strange: What is the strangest thing that could compute? | pbits (gate), photonic (switch) | 2 |
-| Limit: What could a chip never do, and could it learn to? | reversible (gate), quantum, floor (atom) | 8 |
-| Fail: Why can a perfect design fail in the real world? | bench (board), reality (chip) | 9 |
-| Idea: How could your idea become a chip? | design, layout, agent (block), tiny (gate) | 13 |
-| Make: What would chipmaking look like if we invented it from scratch today? | factory (building), yield (chip), litho (gate), fab (switch), physics (atom) | 21 |
-| Know: What part of making chips can't be written down? | supply, innovation (planet), xray (chip) | 7 |
-| Open: What happens when anyone can make a chip? | everywhere, economics (region), community (chip) | 6 |
-| Divide: How should a chip divide its work? | memory, package, analog (board), architecture, accelerators, build, spatial (chip) | 18 |
-| Life: What new kinds of computers could brains, swarms and living cells inspire? | datacenter (building), neuro, beyond (chip), cim (block), evolve (gate) | 7 |
-| Scale: What will be the next Moore's law? | future (planet), transistor (switch) | 4 |
+This table is for people building the lab. Visitors never see the questions together.
 
-## What the review found
+## History
 
-- **Make (21) and Divide (18) are heavy; Strange (2), Scale (4) and Open (6) are thin.** New work goes to the thin questions first.
-- **The rack depth is empty for every question**, and the planet and region depths hold only industry topics. The upper depths need content about people and ecosystems, not only factories.
-- **Each question shows open places**: depths where it has nothing yet. They stay visible on purpose; they are where new challenges and community questions go.
+- **Before November 2026** the site was a map of 38 topics with over 90 simulations, a RISC-V lab, a tiny-chip studio and much more. It is kept, unchanged, on the branch `claude/before-dive-2026-11`, to learn from and to bring pieces back when they fit.
+- **First prototype:** a journey called *One answer* (a reply travelling from a phone down to the atoms and back), starting at the planet, with a time lens and a sky of found questions. Dropped: the site leads into an open world rather than to answers, a story is a linear path, and the planet added nothing. Kept on `claude/one-answer-prototype-2026-11`.
+- **Second prototype:** the dive with separate questions at places, each pointing to the question behind it, plus the time lens. Replaced by this: questions now run through the depths as threads, the dive follows Fable's continuous zoom, and the time lens is gone (time and the dive did not belong together).
+- **Fable's world build** (an artifact, November 2026) is the reference for the zoom, the scenes, the threads and their words.
 
-## Kept, changed, dropped
+## Open
 
-- **Kept from the site:** every topic, engine, challenge, fact, the time machine, My chip, the community chip, RISC-V.
-- **Kept from the prototypes:** the continuous zoom as the main view (strengthened); one question changing form at each depth, shown as open edges; an AI companion that does not answer but asks the question behind the question; visible gaps.
-- **Dropped:** any list or menu of the eleven questions (including a die of question blocks as home), and the spinning globe, which moved without adding meaning.
-- **To retire later:** the seven bands as navigation and the Beginner/Engineer switch (already being replaced by depth labs, see `DEPTH.md`).
-
-## The first slice: the dive with its questions (prototype)
-
-`#dive` (not in the top bar yet; linked from the footer). Code: `src/app/dive.js` (the view), `src/engines/dive.js` (time lens, zoom sizes, the web of questions; tested in `tests/dive.test.mjs`), `src/data/dive.js` (depths, unfinished places, challenges in place). Words: `dv.*` in `src/i18n/en.json`.
-
-A first try framed this as a journey called *One answer* (a reply travelling from a phone to the atoms and back), starting at the planet. It was dropped: the site leads into an open world rather than to answers, a story is a linear path, the planet adds nothing yet, and listing or naming the questions (a constellation of them) separates them from the world. That version is kept on the branch `claude/one-answer-prototype-2026-11`, and the site as it was just before the dive arrived on `claude/before-dive-2026-11`, to learn from later (check out the branch, then `npm start`).
-
-- **The dive.** Eight depths, building to atom, in one continuous zoom, on the scheme of Zoom into your chip and with the palette of the rack-to-atom zoom, simplified. Block, gate and switch are computed: a full adder from the tiny-chip studio, synthesised, placed and routed by `src/engines/chipzoom.js`, inside a grid of multiply-add units, with the values of its bits on every wire and transistor.
-- **Questions inside the dive.** Wherever something is unfinished, a broken ring holds a question (15 so far, at every depth). Each card shows the question, what people are trying and a sourced fact, and *the question behind it*: one or two other questions, somewhere else in the dive, deeper or higher. Choosing one carries the question through the zoom to its place and opens it there. The questions form one web with no end: from any question every other can be reached, and they lead both down and up (tests check this). There is no route and no list.
-- **The eleven core questions stay underneath, and surface one at a time.** Each question carries one (`q` in the data). A core question appears only when its moment comes: once the visitor has opened places at two different depths that carry it, it shows in their cards ("Underneath, again"), with the depths where they met it. They are never shown together or listed, so no one takes them as the only things that matter.
-- **The rail.** A thin line at the left edge of the scene marks the depths, where you are, and the path your questions have taken up and down the dive.
-- **The time lens.** 1947 to 2040. Before a place existed it is a grey ghost; after today it sits on blueprint paper with dashed, unfinished parts. Each depth has its own time line; the chip line reads the time machine's data, and the adder is drawn at the nearest of the four processes this lab models.
-- **The workbench.** Three existing, self-checking challenges open in place (Bandwidth per stack at the board, Sixteen answers at the block, Why planar was retired at the switch). The simulation panel is borrowed from its topic page and put back when closed.
-- **Open for later:** what sits above the building; other main visual designs that connect with the dive; how new questions from the community join the web.
-
-## Next
-
-The build steps are in the [roadmap](ROADMAP.md), under "Now".
+- **Different types of chips.** Diving into a phone, a car or a microcontroller as well as a data centre, instead of a timeline.
+- **More questions,** above all where few threads stop (know, make, idea), and questions from the community.
+- **The question behind the core question:** what a visitor can do once they reach it.
