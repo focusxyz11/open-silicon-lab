@@ -157,6 +157,22 @@ async function check(viewport) {
     if (await page.evaluate(v => document.getElementById('view-' + v).hidden, v)) problems.push(tag + v + ' view did not open');
   }
 
+  // The dive (prototype): every depth draws, a question leads to the question behind it somewhere
+  // else in the dive, and a challenge borrowed onto the workbench goes back to its page afterwards.
+  await page.evaluate(() => { location.hash = 'dive'; });
+  await page.waitForSelector('#dvCv'); await page.$eval('#dvCv', el => el.scrollIntoView({ block: 'center' }));
+  for (const z of [0, 3, 7]) { await page.click('#dvLevels [data-z="' + z + '"]'); await page.waitForFunction(z => document.getElementById('dvIdx').textContent.startsWith('Depth ' + (z + 1) + ' '), z, { timeout: 8000 }).catch(() => problems.push(tag + 'dive: depth ' + (z + 1) + ' was not reached')); }
+  await page.click('#dvLevels [data-z="2"]');
+  await page.waitForFunction(() => !document.getElementById('dvEdges').hidden && document.querySelector('[data-edge="memory-wall"]'), null, { timeout: 8000 });
+  await page.click('[data-edge="memory-wall"]');
+  await page.click('[data-follow="where-it-thinks"]');
+  await page.waitForFunction(() => !document.getElementById('dvCard').hidden && document.querySelector('#dvCard [data-follow="not-electric"]'), null, { timeout: 10000 }).catch(() => problems.push(tag + 'dive: following a question did not arrive at the question behind it'));
+  await page.click('[data-bench="systolic"]');
+  await page.waitForSelector('#dvBenchBody #lab-accelerators-5', { timeout: 15000 }).catch(() => problems.push(tag + 'dive: the challenge did not open in place'));
+  await page.click('[data-unbench]');
+  if (!await page.$('#accelerators #lab-accelerators-5')) problems.push(tag + 'dive: the borrowed simulation did not go back to its page');
+  if (await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1)) problems.push(tag + 'dive scrolls sideways');
+
   // "I tried it" on a challenge the simulation cannot check: it counts as solved and the card moves on.
   await go(page, 'tiny');
   const before = await page.textContent('#tiny > .mission h3');

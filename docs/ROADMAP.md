@@ -11,7 +11,7 @@ The whole chip stack *runs*, and every part is connected. Your gates become a CP
 The lab becomes one world that visitors travel through along journeys, with eleven open questions as a hidden backbone that is never listed ([FRAME.md](FRAME.md)). Every existing topic docks at one place; nothing is removed.
 
 1. **Done:** the frame as tested data.
-2. **One complete slice as a prototype:** the *One answer* journey through all ten depths, with the time lens, real open edges, a few existing challenges in place, and the constellation.
+2. **One complete slice as a prototype:** the *One answer* journey through all ten depths, with the time lens, real open edges, a few existing challenges in place, and the constellation. *In progress as a prototype at `#dive`: the dive with its questions, without the journey framing ([FRAME.md](FRAME.md), "The first slice").*
 3. **Review the slice with learners,** then build it into the site, reusing `src/engines/chipzoom.js` for board to switch.
 4. **The other journeys:** One chip's life, Sixty years, Your chip.
 5. **Fill the thin questions** (Strange, Scale, Open) and the empty depths, starting with the rack.
