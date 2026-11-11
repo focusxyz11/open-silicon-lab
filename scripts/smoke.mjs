@@ -1,7 +1,7 @@
 // Browser smoke test: the dive opens on desktop and phone, in dark and light, with no errors; every depth
-// can be reached; a question can be picked, followed deeper and let go; the dive can start in a phone or a car,
+// can be reached; tapping a part says what it does; a question can be picked, followed deeper and let go; the dive can start in a phone or a car,
 // keeping a depth they share; a stop can show a real case, its figures and the companion;
-// a "Try it" changes your chip and another depth shows it; the factory makes your chip; a gap invites a
+// a "Try it" changes your chip and another depth shows it; the journey runs from crystal to a shipped chip; a gap invites a
 // question; nothing scrolls sideways.
 // Needs Playwright:  npm install --no-save playwright && npx playwright install chromium
 import { serve } from './serve.mjs';
@@ -20,6 +20,14 @@ for (const [tag, viewport, scheme] of [['desktop', { width: 1360, height: 860 },
   const where = () => page.textContent('#card .where b');
   const go = async d => { await page.$eval('#rail [data-d="' + d + '"]', el => el.click()); await page.waitForFunction(d => document.querySelector('#rail [data-d="' + d + '"]').getAttribute('aria-current') === 'true', d, { timeout: 10000 }).catch(() => problems.push(tag + ': depth ' + d + ' was not reached')); };
   for (const d of [7, 3, 0]) await go(d);
+  /* a part of the picture says what it does (on a phone the scene fills the canvas, so its centre is known) */
+  if (tag === 'phone') {
+    const r = await page.$eval('#world', el => { const b = el.getBoundingClientRect(); return { x: b.left, y: b.top, w: b.width, h: b.height }; });
+    const B = Math.min(r.w - 16, r.h - 16);
+    await page.mouse.click(r.x + r.w / 2, r.y + r.h / 2 + 0.04 * B);
+    if (!/racks/i.test(await page.textContent('#card .part h3').catch(() => ''))) problems.push(tag + ': tapping a part does not say what it is');
+    await page.$eval('#card [data-closepart]', el => el.click()).catch(() => {});
+  }
   if (!(await page.$$('#card .qpick')).length) problems.push(tag + ': no question crosses the first depth');
   await go(1);
   await page.$eval('#card [data-th="think"]', el => el.click());
@@ -40,6 +48,9 @@ for (const [tag, viewport, scheme] of [['desktop', { width: 1360, height: 860 },
   /* your chip: speed up the clock here, and the gate below shows it; then back to the starting chip */
   await page.$eval('#tryRange', el => { el.value = el.max; el.dispatchEvent(new Event('input', { bubbles: true })); el.dispatchEvent(new Event('change', { bubbles: true })); });
   if (!/[1-9]\d*% of signals late/.test(await page.textContent('#tryOut'))) problems.push(tag + ': a faster clock did not make signals late');
+  if (!await page.$('#card .chal')) problems.push(tag + ': no challenge at the clock');
+  const hop = await page.$('#card [data-trystop]');
+  if (hop) { await hop.click(); if (!/switch/i.test(await where())) problems.push(tag + ': a challenge hint does not lead to where its other setting changes'); await go(3); await page.$eval('#card [data-th="fail"]', el => el.click()); }
   await go(5);
   if (!/slowest signal/.test(await page.textContent('#card .mine').catch(() => ''))) problems.push(tag + ': the gate does not show your chip');
   await page.$eval('#card [data-reset]', el => el.click());
@@ -63,23 +74,28 @@ for (const [tag, viewport, scheme] of [['desktop', { width: 1360, height: 860 },
   if (!/block/i.test(await where())) problems.push(tag + ': changing world did not keep a shared depth');
   await go(0);
   if (!/car/i.test(await where())) problems.push(tag + ': the car dive does not start at the car');
-  /* the factory makes your chip: a bigger chip, fewer good ones; and the switch can be built step by step */
-  await page.click('#worlds [data-world="factory"]');
-  if ((await page.$$('#rail [data-d]')).length !== 9) problems.push(tag + ': the factory does not have its own depths');
-  await go(3);
+  /* the journey: a line of stations; a bigger chip changes the wafer; dive down from the loop and come back; ship into a world */
+  await page.click('#worlds [data-world="journey"]');
+  if ((await page.$$('#rail [data-d]')).length !== 7) problems.push(tag + ': the journey does not have its stations');
+  await go(4);
   await page.$eval('#card [data-th="fail"]', el => el.click());
   const before = await page.textContent('#card #chipHere');
   await page.$eval('#tryRange', el => { el.value = el.max; el.dispatchEvent(new Event('input', { bubbles: true })); el.dispatchEvent(new Event('change', { bubbles: true })); });
   if (before === await page.textContent('#card #chipHere')) problems.push(tag + ': a bigger chip does not change the wafer');
   await page.$eval('#card [data-reset]', el => el.click());
-  await go(1);
+  await page.$eval('#card [data-leave]', el => el.click());
+  await go(3);
   await page.$eval('#card [data-th="make"]', el => el.click());
   await page.$eval('#tryRange', el => { el.value = 4; el.dispatchEvent(new Event('input', { bubbles: true })); });
   if (!/develop/i.test(await page.textContent('#tryOut'))) problems.push(tag + ': "Run the loop" does not stop at a step');
-  await go(7);
-  await page.$eval('#tryRange', el => { el.value = 2; el.dispatchEvent(new Event('input', { bubbles: true })); });
-  if (!/narrow stack/i.test(await page.textContent('#tryOut'))) problems.push(tag + ': "Build it" does not step through how a switch is made');
   await page.$eval('#card [data-leave]', el => el.click());
+  await page.$eval('#card [data-dive^="made:scanner"]', el => el.click()).catch(() => problems.push(tag + ': no way to dive down from the loop'));
+  if (!/machine/i.test(await where())) problems.push(tag + ': diving down from the loop did not reach the machine');
+  await page.$eval('#card [data-dive^="journey:"]', el => el.click()).catch(() => problems.push(tag + ': no way back to the line'));
+  if (!/one layer/i.test(await where())) problems.push(tag + ': coming back did not return to the station');
+  await go(6);
+  await page.$eval('#card [data-dive^="phone:soc"]', el => el.click()).catch(() => problems.push(tag + ': the chip cannot be shipped into a phone'));
+  if (!/chip/i.test(await where()) || (await page.$$('#rail [data-d]')).length !== 7) problems.push(tag + ': shipping into a phone did not arrive at its chip');
   await page.click('#worlds [data-world="datacentre"]');
   await page.$eval('#themeBtn', el => el.click());
   if (await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1)) problems.push(tag + ': the page scrolls sideways');

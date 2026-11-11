@@ -4,7 +4,8 @@
    for an outline such as a box drawn in 2.5D). Labels are text
    names: part.<depth>.<key> in src/i18n/en.json. No words in this file.
    A data centre: building, rack, board, chip. A phone: phone, phoneboard, soc. A car: car, ecu, mcu.
-   A factory: fab, bay, scanner, wafer, die.
+   The journey (a line of stations): crystal, slice, fab, bay, wafer, pkg, ship; inside the factory, a dive
+   from the machine that prints with light: scanner, wafer, die.
    Every chip: block, gate, switch, atom.
    One picture all the way down: every scene draws the next depth's scene, small, inside its portal square
    (inside(G, id)), so the depth that fades in during the dive is the picture that was already there. */
@@ -23,7 +24,9 @@ export const setBuild = n => { BUILD = n == null || n >= BUILD_STEPS - 1 ? null 
 const heat = G => Math.max(0, Math.min(1, (M.power - 0.6) / 3));   /* 0 cool .. 1 very hot */
 
 /* ---- the next depth, inside this one ---- */
-const NEXT = {}; WORLDS.forEach(w => w.depths.forEach((d, i) => { if (i + 1 < w.depths.length) NEXT[d] = w.depths[i + 1]; }));
+/* a dive's next depth; on the journey's line there is no depth below, except the picture a station holds (inner) */
+const NEXT = {}; WORLDS.filter(w => !w.line).forEach(w => w.depths.forEach((d, i) => { if (i + 1 < w.depths.length) NEXT[d] = w.depths[i + 1]; }));
+Object.entries(DEPTHS).forEach(([d, v]) => { if (v.inner) NEXT[d] = v.inner; });
 /* the wafer's portal follows your chip's size, as in src/app/ui.js */
 const portalOf = id => (id === 'wafer' ? dieSquare(M.size) : DEPTHS[id].portal);
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
@@ -977,7 +980,138 @@ const die = {
   }
 };
 
-export const SCENES = { building, rack, board, chip, phone, phoneboard, soc, car, ecu, mcu, fab, bay, scanner, wafer, die, block, gate, switch: swtch, atom };
+/* ======== the journey: stations of the line, from crystal to a chip shipped into the world ======== */
+
+/* ---- crystal: sand purified, melted, and pulled up as one perfect crystal ---- */
+const CO = [520, 760, 1];
+const crystal = {
+  parts: {
+    sand: [{ c: [190, 690, 90] }],
+    furnace: [closed([isoP(CO, -150, -150, 0), isoP(CO, 150, -150, 0), isoP(CO, 150, 150, 0), isoP(CO, 150, 150, 560), isoP(CO, -150, -150, 560), isoP(CO, -150, 150, 0)])],
+    melt: [{ c: [isoP(CO, 0, 0, 60)[0], isoP(CO, 0, 0, 60)[1], 70] }],
+    ingot: [{ r: [isoP(CO, 0, 0, 0)[0] - 46, isoP(CO, 0, 0, 380)[1], 92, 260] }]
+  },
+  draw(G) {
+    const c = G.col, o = CO;
+    G.bg(c.lo);
+    isoFlat(G, o, -260, -260, 0, 560, 520, c.mid, c.dim, 0.8);
+    /* the sand: quartz, the start of every chip */
+    blob(G, [[100, 700], [150, 640], [230, 630], [290, 690], [250, 740], [140, 745]], c.mid, c.warm, 1);
+    for (let i = 0; i < 26; i++) G.c(120 + rnd(i, 41) * 160, 650 + rnd(i, 42) * 80, 3 + rnd(i, 43) * 3, c.warm);
+    for (let i = 0; i < 4; i++) isoBox(G, [180, 860, 1], -60 + i * 30, 10, 0, 22, 22, 16 + i * 6, c.hi);
+    /* the furnace: cut open */
+    isoBox(G, o, -150, -150, 0, 300, 300, 30, c.line);
+    const ctx = G.ctx, t0 = isoP(o, 0, 0, 560), b0 = isoP(o, 0, 0, 30), rx = 1.2247 * 150, ry = 0.7071 * 150;
+    G.a(0.35); ctx.beginPath(); ctx.moveTo(b0[0] - rx, b0[1]); ctx.lineTo(t0[0] - rx, t0[1]); ctx.moveTo(b0[0] + rx, b0[1]); ctx.lineTo(t0[0] + rx, t0[1]); paint(G, null, c.line, 1.2);
+    ctx.beginPath(); ctx.ellipse(t0[0], t0[1], rx, ry, 0, 0, 6.2832); paint(G, null, c.line, 1.2); G.a(1);
+    /* the melt, glowing in its crucible */
+    isoTank(G, o, 0, 0, 80, 50, c.warm, 30);
+    const m = isoP(o, 0, 0, 80); G.a(0.5 + 0.2 * Math.sin(G.t * 2)); ctx.beginPath(); ctx.ellipse(m[0], m[1], 1.2247 * 70, 0.7071 * 70, 0, 0, 6.2832); paint(G, c.warm); G.a(1);
+    /* the crystal, turning slowly as it is pulled up */
+    isoTank(G, o, 0, 0, 38, 260, c.hi, 120);
+    for (let k = 0; k < 6; k++) { const z = 130 + ((G.t * 18 + k * 43) % 250), p = isoP(o, 0, 0, z); G.l([[p[0] - 40, p[1]], [p[0] + 40, p[1]]], c.dim, 0.8); }
+    const top = isoP(o, 0, 0, 380), hook = isoP(o, 0, 0, 600);
+    G.l([top, hook], c.hi, 1.2); G.r(hook[0] - 30, hook[1] - 16, 60, 16, c.up, c.line, 1);
+    G.label('sand', 110, 610); G.label('furnace', t0[0] + rx + 10, t0[1]); G.label('melt', m[0] + 100, m[1] + 30); G.label('ingot', top[0] + 50, top[1] + 60);
+  }
+};
+
+/* ---- slice: the crystal sawn into wafers, then polished ---- */
+const SO = [500, 640, 1];
+const slice = {
+  parts: {
+    ingot: [{ r: [isoP(SO, -180, 0, 0)[0] - 50, isoP(SO, -180, 0, 300)[1], 100, 300] }],
+    saw: [{ r: [isoP(SO, -180, 0, 0)[0] - 150, isoP(SO, -180, 0, 260)[1], 300, 210] }],
+    wafers: [{ c: [isoP(SO, 170, -90, 60)[0], isoP(SO, 170, -90, 60)[1], 90] }],
+    polish: [{ c: [isoP(SO, 200, 200, 20)[0], isoP(SO, 200, 200, 20)[1], 120] }]
+  },
+  draw(G) {
+    const c = G.col, o = SO, ctx = G.ctx;
+    G.bg(c.lo);
+    isoFlat(G, o, -360, -300, 0, 700, 640, c.mid, c.dim, 0.8);
+    /* the crystal standing in the saw; fine wires cut it into discs */
+    isoBox(G, o, -280, -100, 0, 200, 200, 20, c.line);
+    isoTank(G, o, -180, 0, 40, 280, c.hi, 20);
+    [[-300, -100], [-60, 100]].forEach(k => isoTank(G, o, k[0], k[1], 22, 260, c.line, 20));
+    const run = (G.t * 0.3) % 1;
+    for (let k = 0; k < 8; k++) { const z = 50 + k * 30, a = isoP(o, -300, -100, z), b = isoP(o, -60, 100, z); G.a(0.8); G.l([a, b], k / 8 < run ? c.warm : c.cool, 1); G.a(1); }
+    /* dust: much of the crystal is lost in the cuts */
+    for (let i = 0; i < 14; i++) { const p = isoP(o, -180 + (rnd(i, 51) - 0.5) * 120, (rnd(i, 52) - 0.5) * 120, 10); G.c(p[0], p[1], 2, c.dim); }
+    /* the wafers, stacked */
+    for (let k = 0; k < 9; k++) isoRing(G, o, 170, -90, 20 + k * 9, 70, faces(c)[0], c.line, 0.8);
+    const sh = isoP(o, 170, -90, 101); G.a(0.25 + 0.15 * Math.sin(G.t * 3)); ctx.beginPath(); ctx.ellipse(sh[0] - 20, sh[1] - 6, 30, 8, 0, 0, 6.2832); paint(G, c.hi); G.a(1);
+    /* polishing: a turning pad until the surface is flatter than anything else people make */
+    isoRing(G, o, 200, 200, 20, 100, c.up, c.line, 1.2);
+    const a = G.t * 0.8, hp = isoP(o, 200 + Math.cos(a) * 45, 200 + Math.sin(a) * 45, 26); ctx.beginPath(); ctx.ellipse(hp[0], hp[1], 1.2247 * 34, 0.7071 * 34, 0, 0, 6.2832); paint(G, c.mid, c.hi, 1);
+    G.label('ingot', isoP(o, -180, 0, 300)[0] + 50, isoP(o, -180, 0, 300)[1]); G.label('saw', isoP(o, -300, -100, 300)[0] - 60, isoP(o, -300, -100, 300)[1]);
+    G.label('wafers', sh[0] + 80, sh[1] - 20); G.label('polish', isoP(o, 300, 200, 20)[0] + 20, isoP(o, 300, 200, 20)[1] + 40);
+  }
+};
+
+/* ---- pkg: the wafer cut into chips; a chip flipped onto its package, memory beside it, a lid on top ---- */
+const PO = [560, 520, 1];
+const pkg = {
+  parts: {
+    saw: [{ c: [210, 250, 120] }],
+    substrate: [closed([isoP(PO, -160, -120, 0), isoP(PO, 160, -120, 0), isoP(PO, 160, 120, 0), isoP(PO, -160, 120, 0)])],
+    bumps: [closed([isoP(PO, -50, -50, 18), isoP(PO, 50, -50, 18), isoP(PO, 50, 50, 18), isoP(PO, -50, 50, 18)])],
+    die: [closed([isoP(PO, -55, -55, 40), isoP(PO, 55, -55, 40), isoP(PO, 55, 55, 40), isoP(PO, -55, 55, 40)])],
+    memory: [closed([isoP(PO, 80, -90, 0), isoP(PO, 140, -90, 0), isoP(PO, 140, 90, 80), isoP(PO, 80, 90, 80)])],
+    lid: [closed([isoP(PO, -170, -130, 210), isoP(PO, 170, -130, 210), isoP(PO, 170, 130, 210), isoP(PO, -170, 130, 210)])]
+  },
+  draw(G) {
+    const c = G.col, o = PO, ctx = G.ctx;
+    G.bg(c.lo);
+    /* dicing: a thin turning blade cuts the wafer along the lines between chips */
+    ctx.beginPath(); ctx.ellipse(210, 250, 130, 75, 0, 0, 6.2832); paint(G, c.mid, c.hi, 1.2);
+    for (let i = -4; i <= 4; i++) { G.l([[210 + i * 26 - 60, 250 - 60 + i * 0], [210 + i * 26 + 60, 250 + 60]], c.dim, 0.6); }
+    const bx = 210 + Math.sin(G.t * 0.7) * 90; G.c(bx, 200, 30, null, c.warm, 1.6); G.c(bx, 200, 4, c.warm);
+    /* the package's base, with wiring inside */
+    isoBox(G, o, -160, -120, 0, 320, 240, 14, c.grn);
+    for (let k = 0; k < 6; k++) G.l([isoP(o, -150, -100 + k * 40, 14), isoP(o, 150, -100 + k * 40, 14)], c.dim, 0.6);
+    /* the bumps the chip sits on, face down */
+    for (let i = 0; i < 7; i++) for (let j = 0; j < 7; j++) { const p = isoP(o, -45 + i * 15, -45 + j * 15, 20); G.c(p[0], p[1], 3, c.warm); }
+    isoBox(G, o, -55, -55, 28, 110, 110, 12, c.hi, [c.cool, 0.25], 1.4);
+    /* memory stacked in towers beside it */
+    for (let t = 0; t < 2; t++) for (let k = 0; k < 8; k++) isoBox(G, o, 80, -90 + t * 100, k * 10, 60, 80, 8, c.line);
+    /* the lid, lifted to show what is under it */
+    G.a(0.5); isoBox(G, o, -170, -130, 200, 340, 260, 12, c.hi); G.a(1);
+    G.l([isoP(o, -170, -130, 200), isoP(o, -170, -130, 14)], c.dim, 0.6); G.l([isoP(o, 170, 130, 200), isoP(o, 170, 130, 14)], c.dim, 0.6);
+    G.label('saw', 120, 150); G.label('lid', isoP(o, 170, -130, 212)[0] + 10, isoP(o, 170, -130, 212)[1]); G.label('die', isoP(o, 55, -55, 40)[0] + 10, isoP(o, 55, -55, 40)[1] - 10);
+    G.label('memory', isoP(o, 140, 90, 80)[0] + 10, isoP(o, 140, 90, 80)[1]); G.label('bumps', isoP(o, -55, 55, 20)[0] - 10, isoP(o, -55, 55, 20)[1] + 24, 'right');
+    G.label('substrate', isoP(o, -160, 120, 0)[0] - 10, isoP(o, -160, 120, 0)[1] + 24, 'right');
+  }
+};
+
+/* ---- ship: a last test, then out into the world: a data centre, a phone, a car ---- */
+const HO = [300, 300, 1];
+const DEST = { datacentre: [700, 220], phone: [780, 520], car: [690, 800] };
+const ship = {
+  parts: {
+    trays: [{ r: [70, 420, 260, 200] }], boxes: [{ r: [380, 460, 120, 120] }],
+    datacentre: [{ r: [640, 110, 130, 190] }], phone: [{ r: [745, 440, 80, 150] }], car: [{ r: [580, 760, 230, 100] }]
+  },
+  draw(G) {
+    const c = G.col;
+    G.bg(c.lo);
+    /* trays of finished chips, each tested once more */
+    for (let t = 0; t < 2; t++) { const y = 430 + t * 100; G.r(70, y, 260, 80, c.mid, c.line, 1.1); for (let i = 0; i < 8; i++) for (let j = 0; j < 2; j++) { const x = 84 + i * 30, yy = y + 12 + j * 32; G.r(x, yy, 22, 22, c.up, c.line, 0.8); if (rnd(i + t * 9, j) < 0.08) G.r(x, yy, 22, 22, c.red); } }
+    /* packed and sent */
+    G.r(380, 460, 120, 120, c.mid, c.hi, 1.4); G.l([[380, 500], [500, 500]], c.warm, 1.2); G.l([[440, 460], [440, 580]], c.warm, 1.2);
+    /* the three ways out: each chip becomes the chip in a data centre, a phone or a car */
+    Object.entries(DEST).forEach(([k, d], i) => {
+      const path = [[500, 520], [560, 520], [560, d[1] + 40], [d[0] - 60, d[1] + 40]];
+      G.a(0.8); G.l(path, c.warm, 1.4); G.a(1);
+      const u = (G.t * 0.25 + i / 3) % 1, p = along2(path, u); G.r(p[0] - 6, p[1] - 6, 12, 12, c.hi);
+    });
+    G.r(640, 110, 130, 190, c.mid, c.line, 1.2); for (let i = 0; i < 7; i++) G.r(652, 122 + i * 24, 106, 18, c.up, c.dim, 0.8);
+    rr(G, 745, 440, 80, 150, 14, c.mid, c.line, 1.2); G.r(758, 456, 54, 100, c.lo, c.dim, 0.8);
+    rr(G, 580, 790, 230, 60, 24, c.mid, c.line, 1.2); G.c(625, 852, 18, c.up, c.line, 1); G.c(765, 852, 18, c.up, c.line, 1); G.r(640, 765, 110, 30, c.lo, c.line, 1);
+    G.label('trays', 70, 410); G.label('boxes', 380, 450); G.label('datacentre', 640, 100); G.label('phone', 745, 430); G.label('car', 580, 750);
+  }
+};
+
+export const SCENES = { building, rack, board, chip, phone, phoneboard, soc, car, ecu, mcu, crystal, slice, fab, bay, pkg, ship, scanner, wafer, die, block, gate, switch: swtch, atom };
 /* a scene drawn by the dive itself tells how large the dive's box is */
 Object.values(SCENES).forEach(sc => { const draw = sc.draw; sc.draw = function (G) { if (!NEST) measure(G); draw.call(sc, G); }; });
 export const partsOf = id => SCENES[id].parts;

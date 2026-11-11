@@ -73,3 +73,18 @@ test('on the wafer, a bigger chip fits fewer times, comes out good less often an
   assert.ok(model({ clock: 1, gen: 4, size: 2 }).steps > model(START).steps, 'finer switches take more steps');
   assert.ok(Math.abs(model(START).cost - 1) < 1e-9);
 });
+
+test('every challenge can be met, none by one setting alone, and each is shown at stops with a try', async () => {
+  const { CHALLENGES, CLOCKS, GENS, SIDES, START, model } = await import('../src/engines/chip.js');
+  const all = []; for (const clock of CLOCKS) for (let gen = 0; gen < GENS; gen++) for (let size = 0; size < SIDES.length; size++) all.push({ clock, gen, size });
+  for (const c of CHALLENGES) {
+    assert.ok(EN['chal.' + c.id + '.goal'] && EN['chal.' + c.id + '.hint'], c.id + ' has no words');
+    assert.ok(all.some(s => c.met(model(s))), c.id + ' can never be met');
+    assert.equal(c.met(model(START)), false, c.id + ' is met by the starting chip');
+    for (const k of ['clock', 'gen', 'size']) {
+      const one = all.filter(s => ['clock', 'gen', 'size'].every(o => o === k || s[o] === START[o]));
+      if (c.needs.length > 1 && c.needs.includes(k)) assert.ok(!one.some(s => c.met(model(s))), c.id + ' can be met by ' + k + ' alone');
+    }
+    for (const key of c.at) assert.ok(TRIES[key], c.id + ': ' + key + ' has no try');
+  }
+});

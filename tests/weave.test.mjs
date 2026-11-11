@@ -3,7 +3,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { DEPTHS, WORLDS, SHARED, THREADS, STOPS, TRIED, CASES, FIGURES, REPO } from '../src/data/weave.js';
+import { DEPTHS, WORLDS, SHARED, THREADS, STOPS, TRIED, CASES, FIGURES, REPO, DIVES, EXITS } from '../src/data/weave.js';
 import * as E from '../src/engines/weave.js';
 
 const EN = JSON.parse(readFileSync(new URL('../src/i18n/en.json', import.meta.url), 'utf8'));
@@ -13,21 +13,43 @@ const FACT = Object.fromEntries(FACTS.facts.map(f => [f.id, f]));
 globalThis.window = globalThis.window || {};
 const { SCENES, partsOf } = await import('../src/app/scenes.js');
 const each = fn => WORLDS.forEach(w => { E.setWorld(w.id); fn(w); });
+const DIVE_WORLDS = WORLDS.filter(w => !w.line), LINE = WORLDS.find(w => w.line);
+const eachDive = fn => DIVE_WORLDS.forEach(w => { E.setWorld(w.id); fn(w); });
 
-test('four worlds, each its own way down, all meeting in the same lower depths', () => {
-  assert.deepEqual(WORLDS.map(w => w.id), ['datacentre', 'phone', 'car', 'factory']);
+test('the dives each have their own way down and meet in the same lower depths; the journey is a line', () => {
+  assert.deepEqual(WORLDS.map(w => w.id), ['datacentre', 'phone', 'car', 'journey', 'made']);
   assert.deepEqual(WORLDS[0].depths, ['building', 'rack', 'board', 'chip', 'block', 'gate', 'switch', 'atom']);
-  for (const w of WORLDS) {
+  assert.deepEqual(LINE.depths, ['crystal', 'slice', 'fab', 'bay', 'wafer', 'pkg', 'ship']);
+  for (const w of DIVE_WORLDS) {
     assert.ok(EN['world.' + w.id + '.name'], w.id + ' has no name');
     assert.deepEqual(w.depths.slice(-SHARED.length), SHARED, w.id + ' does not end in the shared depths');
   }
   /* a depth above the shared ones belongs to one world only, so its portal leads to one place */
-  const upper = WORLDS.flatMap(w => w.depths.filter(d => !SHARED.includes(d)));
+  const upper = DIVE_WORLDS.flatMap(w => w.depths.filter(d => !SHARED.includes(d)));
   assert.equal(new Set(upper).size, upper.length);
-  assert.deepEqual(Object.keys(DEPTHS).sort(), [...upper, ...SHARED].sort());
+  assert.deepEqual(Object.keys(DEPTHS).sort(), [...new Set([...upper, ...SHARED, ...LINE.depths])].sort());
+  assert.ok(EN['world.journey.name'] && EN['world.made.name']);
 });
 
-test('every depth is smaller than the last, with a scene, words and a portal inside its scene', () => each(w => {
+test('the journey: stations side by side, moved along smoothly, with ways down and ways out that exist', () => {
+  E.setWorld('journey');
+  assert.ok(E.isLine() && !E.isLine('datacentre'));
+  for (const id of LINE.depths) {
+    assert.ok(SCENES[id], id + ' has no scene');
+    assert.ok(EN['depth.' + id + '.name'] && EN['depth.' + id + '.see'] && EN['station.' + id + '.when'], id + ' has no words');
+  }
+  const B = 600, a = E.lineFrames(2, B, 400, 300), b = E.lineFrames(2.5, B, 400, 300), c = E.lineFrames(3, B, 400, 300);
+  assert.ok(Math.abs(a.next.tx - c.cur.tx - B * (1 + E.GAP)) < 1e-6, 'stations are evenly spaced');
+  assert.ok(Math.abs((a.cur.tx + c.prev.tx) / 2 - b.cur.tx) < 1e-6, 'the camera slides evenly');
+  assert.ok(Math.abs(E.lineFrames(2.999999, B, 400, 300).next.tx - c.cur.tx) < 1e-3, 'no jump between stations');
+  for (const [st, list] of Object.entries({ ...DIVES, ...EXITS })) {
+    assert.ok(LINE.depths.includes(st), st + ' is not a station');
+    for (const [w, at] of list) { const W = WORLDS.find(x => x.id === w); assert.ok(W && !W.line && W.depths.includes(at), st + ': no ' + w + ':' + at); }
+  }
+  assert.equal(E.zIn('datacentre', 3), 0, 'leaving the line starts a dive at its top');
+});
+
+test('every depth is smaller than the last, with a scene, words and a portal inside its scene', () => eachDive(w => {
   w.depths.forEach((id, i) => {
     const d = DEPTHS[id];
     assert.ok(SCENES[id], id + ' has no scene');
@@ -38,7 +60,7 @@ test('every depth is smaller than the last, with a scene, words and a portal ins
   });
 }));
 
-test('the zoom is continuous in every world: the end of one depth is exactly the start of the next', () => each(w => {
+test('the zoom is continuous in every world: the end of one depth is exactly the start of the next', () => eachDive(w => {
   const B = 600, cx = 400, cy = 300, N = E.N;
   assert.equal(N, w.depths.length);
   for (let i = 0; i < N - 1; i++) {
@@ -56,7 +78,7 @@ test('the zoom is continuous in every world: the end of one depth is exactly the
 
 test('the zoom stays continuous for every chip size: the wafer follows the chip in its middle', async () => {
   const { SIDES, dieSquare } = await import('../src/engines/chip.js');
-  E.setWorld('factory');
+  E.setWorld('made');
   const w = E.IDS.indexOf('wafer');
   for (let size = 0; size < SIDES.length; size++) {
     E.reshape('wafer', { portal: dieSquare(size) }); E.reshape('die', { m: SIDES[size] / 1000 });
@@ -85,7 +107,15 @@ test('changing world keeps a shared depth, and matches the steps above it', () =
 
 test('one picture all the way down: every scene with a depth below draws it, small, in its portal', () => {
   const src = readFileSync(new URL('../src/app/scenes.js', import.meta.url), 'utf8');
-  for (const w of WORLDS) w.depths.slice(0, -1).forEach(id => assert.ok(src.includes("inside(G, '" + id + "')"), id + ' does not draw the next depth in its portal'));
+  for (const w of DIVE_WORLDS) w.depths.slice(0, -1).forEach(id => assert.ok(src.includes("inside(G, '" + id + "')"), id + ' does not draw the next depth in its portal'));
+  for (const [id, d] of Object.entries(DEPTHS)) if (d.inner) assert.ok(src.includes("inside(G, '" + id + "')"), id + ' does not draw the depth it holds');
+});
+
+test('every part of every scene has a name and says what it does', () => {
+  for (const [id, sc] of Object.entries(SCENES)) for (const key of Object.keys(sc.parts)) {
+    assert.ok(EN['part.' + id + '.' + key], id + ': the part "' + key + '" has no name');
+    assert.ok(EN['what.' + id + '.' + key], id + ': the part "' + key + '" does not say what it does');
+  }
 });
 
 test('every question lights up parts that exist in its scene, and has its words', () => {

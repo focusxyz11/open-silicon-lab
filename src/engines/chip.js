@@ -103,3 +103,12 @@ const START_WAFER = () => startWafer || (startWafer = { good: hits(START.size, S
 
 /* A number for reading: two significant figures, as text. */
 export const x2 = v => String(Number(v.toPrecision(2)));
+
+/* Challenges: goals for your chip that no single setting can reach. Each names the settings it takes, and
+   the stops where it is shown (at). Words: chal.<id>.goal and chal.<id>.hint. */
+export const CHALLENGES = [
+  { id: 'fast', needs: ['clock', 'gen'], at: ['fail.chip', 'scale.switch', 'scale.soc'], met: m => m.clock >= 2 && m.late === 0 },
+  { id: 'battery', needs: ['gen', 'size'], at: ['life.phone', 'scale.soc', 'divide.wafer'], met: m => m.battery >= 1.5 && m.clock >= 1 && m.cores >= 12 },
+  { id: 'cores', needs: ['gen', 'size'], at: ['fail.wafer', 'divide.wafer', 'scale.switch', 'scale.mcu'], met: m => m.cores >= 20 && m.cost <= 0.7 },
+  { id: 'quick', needs: ['gen', 'size'], at: ['make.bay', 'divide.wafer', 'scale.soc'], met: m => m.layers <= 50 && m.cores >= 12 }
+];

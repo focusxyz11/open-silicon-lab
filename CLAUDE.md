@@ -1,12 +1,13 @@
 # Open Silicon Lab — notes for Claude
 
-An open-source lab for chips. The site is one thing: a continuous dive from a data centre, a phone, a car or a chip factory (four worlds) down to silicon atoms, meeting in four shared depths, with open questions running through it as threads. Static site: plain ES modules, one stylesheet, one file of words. No framework, no build step for development.
+An open-source lab for chips. The site is one thing: a continuous dive from a data centre, a phone or a car down to silicon atoms (scale), meeting in four shared depths, and a journey along the line a chip is made on, from crystal to the world (process), with open questions running through both as threads. Static site: plain ES modules, one stylesheet, one file of words. No framework, no build step for development.
 
 ## Who it is for
 Learners new to chips with basic hardware knowledge, up to engineers. Plain words first; explain any term the first time.
 
 ## Principles (from the project owner)
-- One world, seen by diving. Keep the zoom continuous: each depth lives inside the previous one's portal (`docs/FRAME.md`).
+- One world, seen by diving (scale) and along the journey (process). Keep the zoom continuous: each depth lives inside the previous one's portal (`docs/FRAME.md`).
+- Every part explains itself: a new part needs `part.*` and `what.*` words.
 - Questions, not answers. The question behind the question matters more. A stop gives a question, something true to notice, and what people are trying.
 - The eleven core questions are the hidden framework. Never list or show them together; one may appear on its own when its condition is met (`rootShown` in `src/engines/weave.js`).
 - No linear path: a visitor can pick any question and go deeper or higher.

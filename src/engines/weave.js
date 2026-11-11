@@ -3,14 +3,18 @@
    (the whole first scene) to N - 1 (the last); z = i + f means depth i with the camera a fraction f of the
    way into its portal, shrinking the view geometrically, so the dive never cuts.
    A dive happens in one world at a time (a data centre, a phone, a car): N and IDS are that world's way down,
-   and change when setWorld is called. Everything that takes a depth index means an index in that way down. */
-import { DEPTHS, WORLDS, THREADS, STOPS } from '../data/weave.js';
+   and change when setWorld is called. Everything that takes a depth index means an index in that way down.
+   The journey is a world of another kind: a line. Its depths are stations side by side, and z = i + f means
+   the camera a fraction f of the way along from station i to station i + 1 (lineFrames). */
+import { DEPTHS, WORLDS, SHARED, THREADS, STOPS } from '../data/weave.js';
 
 export let WORLD = WORLDS[0].id;
 export let IDS = WORLDS[0].depths;
 export let N = IDS.length;
 export const worldOf = id => WORLDS.find(w => w.id === id) || null;
 export function setWorld(id) { const w = worldOf(id) || WORLDS[0]; WORLD = w.id; IDS = w.depths; N = IDS.length; return WORLD; }
+/* is this world (by default, the current one) a line rather than a dive? */
+export const isLine = id => !!(worldOf(id || WORLD) || {}).line;
 /* A few depths change with your chip: on the wafer, the chip the dive follows is as large as your chip.
    reshape(id, { portal, m }) overrides a depth's data until it is called again. */
 const SHAPE = {};
@@ -20,11 +24,11 @@ export const clampZ = z => Math.max(0, Math.min(N - 1, z));
 /* Where the same view would be in another world. A depth both share keeps its place. Above that, the
    steps are matched counting up from the shared depths (a chip is a chip, a board is a board), and the
    top of one world is the top of another. */
-const own = w => w.depths.filter(d => !WORLDS.every(x => x.depths.includes(d))).length;
+const own = w => w.depths.filter(d => !SHARED.includes(d)).length;
 export function zIn(id, z) {
   const to = worldOf(id) || WORLDS[0], i = Math.round(clampZ(z)), j = to.depths.indexOf(IDS[i]);
   if (j >= 0) return j;
-  if (i === 0) return 0;
+  if (i === 0 || to.line || isLine()) return 0;
   return Math.max(0, own(to) - (own(worldOf(WORLD)) - i));
 }
 /* The camera inside depth i at fraction f: the square of the 1000-space in view. f = 0 is the whole scene,
@@ -34,6 +38,18 @@ export function cam(i, f) {
   if (!p) return { ox: 0, oy: 0, size: 1000 };
   const r = p[2] / 1000, k = Math.pow(r, f);
   return { ox: (p[0] / (1 - r)) * (1 - k), oy: (p[1] / (1 - r)) * (1 - k), size: 1000 * k };
+}
+/* On the line: the stations side by side, a small gap between them, the camera sliding along. Returns the
+   station in view and its neighbours, each a transform as in frames(). */
+export const GAP = 0.06;
+export function lineFrames(z, B, cx, cy) {
+  const zz = clampZ(z), i = Math.min(N - 1, Math.floor(zz)), f = zz - i, s = B / 1000, step = B * (1 + GAP);
+  const at = k => ({ s, tx: cx - B / 2 + (k - zz) * step, ty: cy - B / 2 });
+  const out = { i, f, cur: at(i), line: true };
+  if (i + 1 < N) out.next = at(i + 1);
+  if (i > 0) out.prev = at(i - 1);
+  if (i + 2 < N) out.after = at(i + 2);
+  return out;
 }
 /* Where to draw the current, next and previous depths for zoom z in a box of side B centred at (cx, cy).
    Each is a transform: screen = t + s * scene. */

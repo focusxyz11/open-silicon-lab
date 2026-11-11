@@ -3,6 +3,11 @@
    - worlds: where a dive starts. Each kind of chip has its own way down (a data centre, a phone, a car), and
      every way down meets the others in the lower depths, because every chip is built from the same kinds of
      cells, switches and atoms. Words: world.<id>.name.
+   - the journey: one world is not a dive but a line (line: true). Its depths are stations, moved through
+     sideways, in the order a chip is made: from crystal to a chip shipped into a data centre, a phone or a
+     car. From some stations you can dive down (DIVES), into a world the top bar does not show (hidden), and
+     the last station sends the chip into the dives (EXITS). A station may hold a small picture of a depth
+     you can dive into (inner).
    - depths: each is a scene drawn in a 1000 x 1000 space; the next depth lives inside a small square of it,
      its portal [x, y, side]. m = metres across the view. A depth's portal leads to the next depth in every
      world that passes through it.
@@ -34,9 +39,14 @@ export const DEPTHS = {
   car: { m: 5, portal: [760, 500, 36] },
   ecu: { m: 0.18, portal: [455, 425, 40] },
   mcu: { m: 0.007, portal: [176, 236, 52] },
-  /* a chip factory: the way every chip is made (the wafer's portal follows your chip's size) */
-  fab: { m: 200, portal: [518, 359, 134] },
-  bay: { m: 25, portal: [645, 373, 240] },
+  /* the journey: stations of the line (no portals: you move along, not down) */
+  crystal: { station: true },
+  slice: { station: true },
+  fab: { station: true, portal: [518, 359, 134], inner: 'bay' },
+  bay: { station: true, portal: [645, 373, 240], inner: 'scanner' },
+  pkg: { station: true },
+  ship: { station: true },
+  /* inside the factory: a dive from the machine that prints with light (the wafer's portal follows your chip's size) */
   scanner: { m: 4, portal: [642, 672, 176] },
   wafer: { m: 0.32, portal: [478, 478, 44] },
   die: { m: 0.015, portal: [190, 190, 70] },
@@ -47,11 +57,15 @@ export const DEPTHS = {
   atom: { m: 2e-9 }
 };
 export const SHARED = ['block', 'gate', 'switch', 'atom'];
+/* the journey's ways down, and its ways out: station -> [world, depth] */
+export const DIVES = { bay: [['made', 'scanner'], ['made', 'switch']], wafer: [['made', 'die']] };
+export const EXITS = { ship: [['datacentre', 'chip'], ['phone', 'soc'], ['car', 'mcu']] };
 export const WORLDS = [
   { id: 'datacentre', depths: ['building', 'rack', 'board', 'chip', ...SHARED] },
   { id: 'phone', depths: ['phone', 'phoneboard', 'soc', ...SHARED] },
   { id: 'car', depths: ['car', 'ecu', 'mcu', ...SHARED] },
-  { id: 'factory', depths: ['fab', 'bay', 'scanner', 'wafer', 'die', ...SHARED] }
+  { id: 'journey', line: true, depths: ['crystal', 'slice', 'fab', 'bay', 'wafer', 'pkg', 'ship'] },
+  { id: 'made', hidden: true, depths: ['scanner', 'wafer', 'die', ...SHARED] }
 ];
 
 /* hue: the thread's colour. A thread is recognised by colour and by its words, never by a name. */
@@ -87,12 +101,17 @@ export const STOPS = {
   'know.bay': ['people'], 'fail.bay': ['inspect'], 'divide.bay': ['etch', 'deposit', 'inspect', 'track'],
   'make.scanner': ['source'], 'scale.scanner': ['mirrors', 'mask'], 'open.scanner': ['source', 'mirrors', 'mask', 'stage'],
   'fail.wafer': ['defects'], 'make.wafer': ['dies'], 'divide.wafer': ['dies'],
-  'fail.die': ['probes'], 'idea.die': ['cores'], 'make.die': ['pads']
+  'fail.die': ['probes'], 'idea.die': ['cores'], 'make.die': ['pads'],
+  /* the journey's own stations */
+  'make.crystal': ['ingot'], 'know.crystal': ['furnace'], 'strange.crystal': ['melt'],
+  'make.slice': ['saw'], 'scale.slice': ['wafers'],
+  'make.pkg': ['bumps'], 'divide.pkg': ['memory', 'die'], 'fail.pkg': ['lid', 'substrate'],
+  'fail.ship': ['trays'], 'open.ship': ['boxes'], 'divide.ship': ['datacentre', 'phone', 'car']
 };
 /* Stops whose words list real directions people are exploring (stop.<key>.tried, a list). */
 export const TRIED = ['strange.chip', 'strange.gate', 'strange.switch', 'strange.atom', 'limit.chip', 'limit.gate', 'limit.atom', 'fail.building', 'fail.board', 'fail.gate',
   'idea.block', 'idea.gate', 'make.chip', 'make.switch', 'make.atom', 'know.switch', 'open.chip', 'open.block', 'divide.chip', 'divide.block', 'life.block', 'life.switch', 'scale.switch',
-  'life.phone', 'divide.phone', 'idea.soc', 'life.car', 'fail.ecu', 'make.fab', 'scale.scanner', 'divide.wafer', 'make.die'];
+  'life.phone', 'divide.phone', 'idea.soc', 'life.car', 'fail.ecu', 'make.fab', 'scale.scanner', 'divide.wafer', 'make.die', 'divide.pkg'];
 
 /* Real chips that passed their checks and still failed, from the earlier site. stop: where it shows. */
 export const CASES = [
@@ -124,6 +143,6 @@ export const TRIES = { 'fail.chip': 'clock', 'life.phone': 'clock', 'scale.switc
 const ALL = ['clock', 'gen', 'size'];
 export const SHOWS = {
   building: ALL, rack: ALL, board: ALL, chip: ALL, phone: ALL, phoneboard: ALL, soc: ['clock', 'gen'], mcu: ['clock', 'gen'],
-  fab: ['gen'], bay: ['gen'], scanner: ['gen'], wafer: ['gen', 'size'], die: ['gen', 'size'],
+  fab: ['gen'], bay: ['gen'], scanner: ['gen'], wafer: ['gen', 'size'], die: ['gen', 'size'], pkg: ['size'], ship: ALL,
   block: ['gen'], gate: ['clock', 'gen'], switch: ['gen'], atom: ['gen']
 };
