@@ -9,7 +9,7 @@
    Your chip: at some stops a "Try it" changes one of its settings (src/engines/chip.js); every depth that
    shows your chip then says what changed there, and its scene changes too. */
 import { t, fmtDate } from '../core/i18n.js';
-import { THREADS, WORLDS, STOPS, CASES, FIGURES, REPO, TRIES, SHOWS, DIVES, EXITS, PLANTS, LOOP } from '../data/weave.js';
+import { THREADS, WORLDS, STOPS, CASES, FIGURES, REPO, TRIES, SHOWS, DIVES, EXITS, PLANTS, LOOP, partWord } from '../data/weave.js';
 import { CLOCKS, GENS, SIDES, START, CHALLENGES, normal, changed, model, x2, dieSquare } from '../engines/chip.js';
 import { N, IDS, WORLD, setWorld, worldOf, zIn, reshape, isLine, clampZ, sizeAt, sizeParts, stop, stopKey, crossing, below, above, nearest, threadOf, rootShown, threadDepths } from '../engines/weave.js';
 import { createWorld, threadColor, theme, reduced } from './world.js';
@@ -192,7 +192,7 @@ export function start(facts) {
   const partCard = d => {
     const id = IDS[d], key = S.part && S.part.id === id ? S.part.key : null; if (!key) return '';
     const ths = THREADS.map(x => x.id).filter(th => (STOPS[th + '.' + id] || []).includes(key)), keys = ths.map(th => th + '.' + id);
-    let h = '<section class="part"><p class="code">' + t('ui.partWhat') + '</p><h3>' + esc(t('part.' + id + '.' + key)) + '</h3><p>' + esc(t('what.' + id + '.' + key)) + '</p>';
+    let h = '<section class="part"><p class="code">' + t('ui.partWhat') + '</p><h3>' + esc(t('part.' + partWord(id, key))) + '</h3><p>' + esc(t('what.' + partWord(id, key))) + '</p>';
     if (ths.length) h += '<p class="small muted">' + t('ui.partAsks') + '</p>' + ths.map(th => qButton(th, d)).join('');
     else h += '<p class="small muted">' + t('ui.partNone') + ' ' + ext(propose(d), t('ui.propose')) + '</p>';
     const tries = keys.filter(k => TRIES[k]).map(k => t('chip.' + TRIES[k] + '.label'));
