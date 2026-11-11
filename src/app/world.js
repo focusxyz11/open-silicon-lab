@@ -5,7 +5,7 @@
    parts as coloured dots you can pick. The maths is in src/engines/weave.js. */
 import { t } from '../core/i18n.js';
 import { DEPTHS, THREADS } from '../data/weave.js';
-import { N, IDS, clampZ, frames, stop } from '../engines/weave.js';
+import { N, IDS, clampZ, frames, lineFrames, isLine, stop } from '../engines/weave.js';
 import { SCENES, partsOf } from './scenes.js';
 
 export const reduced = () => !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
@@ -38,6 +38,25 @@ export function centre(sh) {
   if (sh.r) return [sh.r[0] + sh.r[2] / 2, sh.r[1] + sh.r[3] / 2];
   if (sh.c) return [sh.c[0], sh.c[1]];
   const p = sh.p[Math.floor(sh.p.length / 2)]; return [p[0], p[1]];
+}
+/* is (x, y) on this shape? Returns its area (smaller wins), or null */
+function shapeHit(sh, x, y, tol) {
+  if (sh.r) { const r = sh.r; return x >= r[0] && x <= r[0] + r[2] && y >= r[1] && y <= r[1] + r[3] ? r[2] * r[3] : null; }
+  if (sh.c) { const c = sh.c; return Math.hypot(x - c[0], y - c[1]) <= c[2] ? Math.PI * c[2] * c[2] : null; }
+  const p = sh.p || [];
+  if (sh.closed) {
+    let inside = false, area = 0;
+    for (let i = 0, j = p.length - 1; i < p.length; j = i++) {
+      if ((p[i][1] > y) !== (p[j][1] > y) && x < ((p[j][0] - p[i][0]) * (y - p[i][1])) / (p[j][1] - p[i][1]) + p[i][0]) inside = !inside;
+      area += p[j][0] * p[i][1] - p[i][0] * p[j][1];
+    }
+    return inside ? Math.abs(area) / 2 : null;
+  }
+  for (let i = 1; i < p.length; i++) {
+    const a = p[i - 1], b = p[i], dx = b[0] - a[0], dy = b[1] - a[1], L = dx * dx + dy * dy || 1, u = Math.max(0, Math.min(1, ((x - a[0]) * dx + (y - a[1]) * dy) / L));
+    if (Math.hypot(x - a[0] - u * dx, y - a[1] - u * dy) <= tol) return tol * Math.sqrt(L);
+  }
+  return null;
 }
 function along(pts, f) {
   let L = 0;
@@ -124,8 +143,31 @@ export function createWorld(cv, on) {
     return { B: Math.min(aw, ah), cx: inset.l + aw / 2, cy: inset.t + ah / 2 };
   }
 
+  /* the journey: stations side by side, the camera sliding along the line */
+  function renderLine(tm, b) {
+    const F = lineFrames(Z, b.B, b.cx, b.cy), pi = F.f < 0.5 ? F.i : F.i + 1;
+    ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1; ctx.fillStyle = col.bg; ctx.fillRect(0, 0, W * dpr, H * dpr);
+    const all = [[F.i - 1, F.prev], [F.i, F.cur], [F.i + 1, F.next], [F.i + 2, F.after]].filter(k => k[1]);
+    all.forEach(([k, tr]) => drawLevel(k, tr, 1, k === pi, b.B, tm));
+    /* the line itself: from each station to the next, a wafer pod travelling along it */
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const y = b.cy + b.B / 2 - 12, x0 = all[0][1].tx, x1 = all[all.length - 1][1].tx + b.B;
+    ctx.globalAlpha = 0.7; ctx.strokeStyle = col.warm; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(x0, y); ctx.lineTo(x1, y); ctx.stroke();
+    all.forEach(([k, tr]) => { ctx.globalAlpha = k === pi ? 1 : 0.6; ctx.fillStyle = k === pi ? col.warm : col.line; ctx.beginPath(); ctx.arc(tr.tx + b.B / 2, y, k === pi ? 6 : 4, 0, 6.2832); ctx.fill(); });
+    const u = (tm * 0.08) % 1; ctx.globalAlpha = 1; ctx.fillStyle = col.hi; ctx.fillRect(x0 + (x1 - x0) * u - 7, y - 5, 14, 10);
+    /* everything outside the box fades back */
+    ctx.globalAlpha = 0.6; ctx.fillStyle = col.bg;
+    const L = b.cx - b.B / 2, Rr = b.cx + b.B / 2;
+    ctx.fillRect(0, 0, L, H); ctx.fillRect(Rr, 0, W - Rr, H);
+    ctx.globalAlpha = 0.5; ctx.strokeStyle = col.line; ctx.lineWidth = 1; const ptr = pi === F.i ? F.cur : F.next; ctx.strokeRect(ptr.tx, ptr.ty, b.B, b.B);
+    ctx.globalAlpha = 1;
+    return { F, pi, ptr };
+  }
+
   function render(now) {
-    const tm = reduced() ? 3 : Math.max(0, (now - t0) / 1000), b = box(), F = frames(Z, b.B, b.cx, b.cy), pi = F.f < 0.5 ? F.i : F.i + 1;
+    const tm = reduced() ? 3 : Math.max(0, (now - t0) / 1000), b = box();
+    if (isLine()) { const L = renderLine(tm, b); overlays(tm, L.pi, L.ptr); return; }
+    const F = frames(Z, b.B, b.cx, b.cy), pi = F.f < 0.5 ? F.i : F.i + 1;
     ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1; ctx.fillStyle = col.bg; ctx.fillRect(0, 0, W * dpr, H * dpr);
     if (F.prev) {
       /* the depth you came from stays as faint surroundings */
@@ -136,9 +178,35 @@ export function createWorld(cv, on) {
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.globalAlpha = 0.5; ctx.strokeStyle = col.line; ctx.lineWidth = 1;
     ctx.strokeRect(F.cur.tx, F.cur.ty, F.cur.s * 1000, F.cur.s * 1000); ctx.globalAlpha = 1;
     if (F.next) drawLevel(F.i + 1, F.next, smooth(0.16, 0.7, F.f), pi === F.i + 1, b.B, tm);
+    overlays(tm, pi, pi === F.i ? F.cur : F.next);
+  }
 
+  /* the part under the pointer, in the scene in view: tap it to see what it does */
+  let view = null, hotPart = null;
+  function partAt(e) {
+    if (!view || fly) return null;
+    const r = cv.getBoundingClientRect(), sx = (e.clientX - r.left - view.ptr.tx) / view.ptr.s, sy = (e.clientY - r.top - view.ptr.ty) / view.ptr.s;
+    if (sx < 0 || sy < 0 || sx > 1000 || sy > 1000) return null;
+    const P = partsOf(IDS[view.pi]), tol = 12 / view.ptr.s; let best = null;
+    for (const key of Object.keys(P)) for (const sh of P[key]) {
+      const a = shapeHit(sh, sx, sy, tol); if (a != null && (!best || a < best.a)) best = { key, a };
+    }
+    return best;
+  }
+  function drawHotPart(pi, ptr) {
+    if (!hotPart || fly) return;
+    const shapes = partsOf(IDS[pi])[hotPart] || [];
+    ctx.save(); ctx.setTransform(dpr * ptr.s, 0, 0, dpr * ptr.s, dpr * ptr.tx, dpr * ptr.ty);
+    ctx.strokeStyle = col.hi; ctx.lineWidth = 2 / ptr.s; ctx.setLineDash([6 / ptr.s, 4 / ptr.s]); ctx.globalAlpha = 0.85;
+    shapes.forEach(sh => { const o = outline(sh); ctx.beginPath(); o.forEach((p, k) => (k ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1]))); ctx.stroke(); });
+    ctx.restore();
+  }
+
+  /* drawn over the scene in view, in a dive or on the line */
+  function overlays(tm, pi, ptr) {
+    view = { pi, ptr };
+    drawHotPart(pi, ptr);
     /* the tether: from the question in the card to what it is about */
-    const ptr = pi === F.i ? F.cur : F.next;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     if (anchor && thread && ptr && !fly) {
       const shapes = focusShapes(pi);
@@ -200,21 +268,29 @@ export function createWorld(cv, on) {
 
   /* ---- input: wheel, drag and keys move the dive; a tap on a coloured dot picks that question ---- */
   const setZ = z => { fly = null; Z = clampZ(z); };
-  cv.addEventListener('wheel', e => { e.preventDefault(); setZ(Z + e.deltaY * (e.deltaMode ? 0.03 : 0.0016)); }, { passive: false });
+  /* on the line, moving sideways (drag, swipe, horizontal scroll) moves along it, and letting go settles on a station */
+  let settleT = null;
+  const settleLine = () => { clearTimeout(settleT); settleT = setTimeout(() => { if (isLine() && !drag && !fly && Math.abs(Z - Math.round(Z)) > 0.001) api.flyTo(Math.round(Z)); }, 260); };
+  cv.addEventListener('wheel', e => { e.preventDefault(); const d = isLine() && Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY; setZ(Z + d * (e.deltaMode ? 0.03 : 0.0016)); if (isLine()) settleLine(); }, { passive: false });
   let drag = null;
   cv.addEventListener('pointerdown', e => { drag = { y: e.clientY, x: e.clientX, z: Z, moved: false }; try { cv.setPointerCapture(e.pointerId); } catch (x) { /* no capture */ } });
   cv.addEventListener('pointermove', e => {
-    if (drag) { if (Math.abs(e.clientY - drag.y) + Math.abs(e.clientX - drag.x) > 6) drag.moved = true; if (drag.moved) setZ(drag.z + (drag.y - e.clientY) * 0.0062); return; }
-    const h = hitAt(e), id = h ? h.id : null;
-    if (id !== hot) { hot = id; cv.style.cursor = id ? 'pointer' : ''; }
+    if (drag) {
+      if (Math.abs(e.clientY - drag.y) + Math.abs(e.clientX - drag.x) > 6) drag.moved = true;
+      if (drag.moved) setZ(isLine() ? drag.z + (drag.x - e.clientX) / (box().B * 1.06) : drag.z + (drag.y - e.clientY) * 0.0062);
+      return;
+    }
+    const h = hitAt(e), id = h ? h.id : null, pt = id ? null : partAt(e);
+    hot = id; hotPart = pt ? pt.key : null;
+    cv.style.cursor = id || pt ? 'pointer' : '';
   });
-  cv.addEventListener('pointerleave', () => { hot = null; cv.style.cursor = ''; });
-  const end = e => { if (!drag) return; const tap = !drag.moved; drag = null; if (tap && e.type === 'pointerup') { const h = hitAt(e); if (h) on.pick && on.pick(h.id); } };
+  cv.addEventListener('pointerleave', () => { hot = null; hotPart = null; cv.style.cursor = ''; });
+  const end = e => { if (!drag) return; const tap = !drag.moved; drag = null; if (tap && e.type === 'pointerup') { const h = hitAt(e); if (h) on.pick && on.pick(h.id); else { const pt = partAt(e); if (pt && view) { hotPart = pt.key; on.part && on.part(view.pi, pt.key); } } } if (!tap && isLine()) settleLine(); };
   cv.addEventListener('pointerup', end); cv.addEventListener('pointercancel', end);
   cv.addEventListener('keydown', e => {
     const d = Math.round(Z);
-    if (e.key === 'ArrowDown' || e.key === 'PageDown' || e.key === '+') { e.preventDefault(); api.flyTo(d + 1); }
-    else if (e.key === 'ArrowUp' || e.key === 'PageUp' || e.key === '-') { e.preventDefault(); api.flyTo(d - 1); }
+    if (e.key === 'ArrowDown' || e.key === 'PageDown' || e.key === '+' || e.key === 'ArrowRight') { e.preventDefault(); api.flyTo(d + 1); }
+    else if (e.key === 'ArrowUp' || e.key === 'PageUp' || e.key === '-' || e.key === 'ArrowLeft') { e.preventDefault(); api.flyTo(d - 1); }
     else if (e.key === 'Home') { e.preventDefault(); api.flyTo(0); }
     else if (e.key === 'End') { e.preventDefault(); api.flyTo(N - 1); }
   });

@@ -102,3 +102,11 @@ button{font:inherit;color:inherit}
 .shows{display:flex;flex-wrap:wrap;gap:6px}
 .chipgo{padding:4px 10px;border-radius:999px;border:1px solid var(--line);background:transparent;cursor:pointer;font-size:13px}
 .chipgo:hover{border-color:var(--warm)}
+
+/* a part of the picture: what it does, and what is connected to it */
+.part{display:grid;gap:8px;padding:10px 12px;border:1px solid var(--accent);border-radius:6px;background:color-mix(in srgb,var(--accent) 7%,transparent)}
+.part h3{margin:0;font:600 18px/1.3 var(--serif)}
+.ways{display:grid;gap:6px}
+.chal{display:grid;gap:6px;padding:8px 10px;border:1px dashed var(--warm);border-radius:6px}
+.chal p{font-size:14px}
+.chal.done{border-style:solid;border-color:var(--th,var(--accent))}
