@@ -12,8 +12,9 @@
 
 import { DEPTHS, WORLDS } from '../data/weave.js';
 import { START, model, dies, defects, hits, WAFER, dieSquare } from '../engines/chip.js';
-import { rnd, clamp, poly, rr, blob, along2 } from './draw.js';
+import { rnd, clamp, poly, rr, blob, along2, closed } from './draw.js';
 import { STATIONS, setJourneyChip } from './journey.js';
+import { proj, kit, tones, mix } from './solid.js';
 
 /* Your chip (src/engines/chip.js): the scenes that show it read its settings from here. */
 let M = model(START);
@@ -61,32 +62,86 @@ function inside(G, id) {
 
 
 /* ---- building: one hall of an AI data centre ---- */
-const bRows = [0, 1, 2, 3, 4, 5].map(r => ({ r: [146, 196 + r * 105, 708, 64] }));
-const bCool = []; for (let i = 0; i < 6; i++) { bCool.push({ r: [140 + i * 125, 122, 95, 40] }); bCool.push({ r: [140 + i * 125, 838, 95, 40] }); }
+/* ---- building: a data hall, cut open. Rows of racks face each other across cold aisles; the hot air
+   behind them is closed in and carried off; cooling units line the left wall, the power room is through
+   the wall on the right, and the plant that throws the heat away sits on the roof. You face the front row:
+   the rack the dive follows is the one in the middle, and its front is the next depth. ---- */
+const PB = proj({ s: 1.39, ox: -55.6, cx: 0, oy: 860 }), KB = kit(PB);
+const ROWS = [[120, 1], [210, -1], [300, 1], [390, -1], [480, 1], [570, -1]];   /* [front y, which way it faces] */
+const RACKX = [100, 460], RACKW = 20, RACKD = 30, RACKH = 48;
+const hullB = pts3 => { const q = pts3.map(p => PB(p[0], p[1], p[2])).sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+  const cr = (o, a, b) => (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]), lo = [], up = [];
+  for (const p of q) { while (lo.length >= 2 && cr(lo[lo.length - 2], lo[lo.length - 1], p) <= 0) lo.pop(); lo.push(p); }
+  for (const p of q.slice().reverse()) { while (up.length >= 2 && cr(up[up.length - 2], up[up.length - 1], p) <= 0) up.pop(); up.push(p); }
+  return closed(lo.slice(0, -1).concat(up.slice(0, -1))); };
+const boxHull = (x, y, z, w, d, h) => hullB([[x, y, z], [x + w, y, z], [x + w, y + d, z], [x, y + d, z], [x, y, z + h], [x + w, y, z + h], [x + w, y + d, z + h], [x, y + d, z + h]]);
+const CRAH = [130, 200, 270, 340, 410, 480].map(y => [16, y, 44, 58, 56]);
 const building = {
-  parts: { racks: bRows, cooling: bCool, power: [{ r: [868, 200, 52, 580] }] },
+  parts: { racks: ROWS.map(([y]) => boxHull(RACKX[0], y, 0, RACKX[1] - RACKX[0], RACKD, RACKH)), cooling: CRAH.map(u => boxHull(...u)).concat([boxHull(150, 572, 150, 316, 62, 52)]), power: [boxHull(550, 120, 0, 340, 460, 120)] },
   draw(G) {
-    const c = G.col;
-    G.bg(c.lo);
-    G.r(60, 100, 880, 800, c.lo, c.hi, 1.6);
-    for (let r = 0; r < 5; r++) { G.a(0.16); G.r(146, 256 + r * 105, 708, 49, r % 2 ? c.cool : c.warm); G.a(1); }
-    for (let r = 0; r < 6; r++) {
-      G.l([[140, 190 + r * 105], [860, 190 + r * 105]], c.dim, 1);
-      for (let i = 0; i < 20; i++) {
-        const x = 150 + i * 35, y = 200 + r * 105;
-        G.r(x, y, 30, 56, c.up, c.line, 1);
-        if (G.s > 1.6) { G.r(x + 4, y + 6, 22, 3, rnd(i, r + Math.floor(G.t * 2)) > 0.5 ? c.cool : c.dim); G.r(x + 4, y + 14, 22, 3, c.dim); }
+    const c = G.col, T = tones(c), K = KB, hot = heat(G);
+    G.bg(c.dark ? c.bg : mix(c.up, c.line, 0.12));
+    /* the roof, cut back to show the hall; on it, the plant that throws the heat away */
+    K.box(G, -200, 640, 0, 1500, 40, 150, { tone: 'base' });
+    K.box(G, -200, 560, 150, 1500, 120, 6, { tone: 'base' });
+    for (let i = 0; i < 3; i++) { const x = 150 + i * 108; K.box(G, x, 572, 156, 92, 62, 46, {}); for (let j = 0; j < 2; j++) { K.disc(G, x + 24 + j * 44, 603, 202, 16, T.base.top, T.edge); KB.line(G, [[x + 24 + j * 44 - 14, 603, 203], [x + 24 + j * 44 + 14, 603, 203]].map(q => q), T.seam, 0.6); }
+      const sp = (G.t * (1 + hot * 3) + i) * 2; for (let j = 0; j < 2; j++) G.l([PB(x + 24 + j * 44 + Math.cos(sp) * 12, 603 + Math.sin(sp) * 12, 203), PB(x + 24 + j * 44 - Math.cos(sp) * 12, 603 - Math.sin(sp) * 12, 203)], T.edge, 0.9); }
+    /* the floor: tiles over a space the cold air is pushed through */
+    K.fill(G, [PB(-200, 0, 0), PB(1300, 0, 0), PB(1300, 640, 0), PB(-200, 640, 0)], c.dark ? mix(c.lo, c.mid, 0.35) : mix(c.mid, c.lo, 0.3));
+    for (let x = -200; x <= 1300; x += 25) G.l([PB(x, 0, 0), PB(x, 640, 0)], T.seam, 0.4);
+    for (let y = 0; y <= 640; y += 25) G.l([PB(-200, y, 0), PB(1300, y, 0)], T.seam, 0.4);
+    K.fill(G, [PB(-200, 0, -16), PB(1300, 0, -16), PB(1300, 0, 0), PB(-200, 0, 0)], T.base.front, T.edge);
+    for (let x = -190; x < 1300; x += 25) G.l([PB(x, 0, -16), PB(x, 0, -2)], T.seam, 0.8);
+    /* the cooling units along the left wall, and the cold water pipes that feed them */
+    CRAH.slice().reverse().forEach(([x, y, w, d, h], i) => {
+      K.shadow(G, K.rectPlan(x, y, w, d), 0, 10);
+      K.box(G, x, y, 0, w, d, h, {});
+      for (let k = 0; k < 6; k++) G.l([PB(x + w, y + 6 + k * 8, 8), PB(x + w, y + 6 + k * 8, 30)], T.seam, 0.7);
+      K.onSide(G, x + w, y + 8, 38, 20, 10, c.dark ? c.bg : c.lo, T.edge, 0.6);
+      K.disc(G, x + w / 2, y + d / 2, h + 0.5, 12, T.base.top, T.edge);
+      const a = G.t * 6 + i; G.l([PB(x + w / 2 + Math.cos(a) * 10, y + d / 2 + Math.sin(a) * 10, h + 1), PB(x + w / 2 - Math.cos(a) * 10, y + d / 2 - Math.sin(a) * 10, h + 1)], T.edge, 0.8);
+    });
+    /* the power room, through the wall on the right */
+    K.box(G, 540, 110, 0, 10, 530, 120, { tone: 'base' });
+    [[440, 'bat'], [330, 'ups'], [200, 'gear']].forEach(([y, kind]) => {
+      K.shadow(G, K.rectPlan(580, y, 300, 34), 0, 8);
+      K.box(G, 580, y, 0, 300, 34, kind === 'gear' ? 62 : 52, {});
+      for (let k = 1; k < 10; k++) K.seamV(G, 580 + k * 30, y, 0, kind === 'gear' ? 62 : 52);
+      for (let k = 0; k < 10; k++) K.onFront(G, 586 + k * 30, y, kind === 'gear' ? 44 : 36, 8, 4, kind === 'ups' && k < Math.round(M.power * 3) ? c.warm : kind === 'gear' ? c.grn : T.seam);
+      if (kind === 'bat') for (let k = 0; k < 10; k++) for (let j = 0; j < 3; j++) K.onFront(G, 584 + k * 30, y, 6 + j * 14, 22, 10, null, T.seam, 0.6);
+    });
+    /* the rows, back to front: racks, the closed hot aisle between each pair, cable trays above */
+    for (let r = ROWS.length - 1; r >= 0; r--) {
+      const [y, face] = ROWS[r];
+      if (face < 0) {
+        /* a hot aisle: closed in with a roof and doors, the heat drawn off above */
+        const y0 = ROWS[r - 1][0] + RACKD, y1 = y;
+        K.box(G, RACKX[0] - 4, y0, 0, 4, y1 - y0, RACKH + 2, { tone: 'base' });
+        K.fill(G, [PB(RACKX[0], y0, RACKH + 2), PB(RACKX[1], y0, RACKH + 2), PB(RACKX[1], y1, RACKH + 2), PB(RACKX[0], y1, RACKH + 2)], mix(T.body.top, c.warm, 0.08 + 0.4 * hot), T.edge, 0.7);
+        for (let x = RACKX[0] + 40; x < RACKX[1]; x += 40) G.l([PB(x, y0, RACKH + 2), PB(x, y1, RACKH + 2)], T.seam, 0.6);
+        G.a(0.1 + 0.5 * hot); for (let k = 0; k < 8; k++) { const u = (G.t * 0.4 + k / 8) % 1, q = PB(RACKX[0] + 30 + k * 60, (y0 + y1) / 2, RACKH + 4 + u * 50); G.l([q, [q[0] + 3, q[1] - 10]], c.warm, 1.2); } G.a(1);
       }
+      K.shadow(G, K.rectPlan(RACKX[0], y, RACKX[1] - RACKX[0], RACKD), 0, 8);
+      for (let x = RACKX[1] - RACKW; x >= RACKX[0]; x -= RACKW) {
+        const front = face > 0;
+        K.box(G, x, y, 0, RACKW, RACKD, RACKH, {});
+        if (front) {
+          K.onFront(G, x + 2, y, 3, RACKW - 4, RACKH - 6, mix(T.body.front, c.bg, c.dark ? 0.35 : 0.1), T.seam, 0.6);
+          if (G.s * 4 > 1.5) for (let k = 0; k < 6; k++) K.onFront(G, x + 3, y, 6 + k * 7, RACKW - 6, 4, null, T.seam, 0.5);
+          K.onFront(G, x + RACKW - 5, y, RACKH - 8, 2, 2, rnd(x, r + Math.floor(G.t * 2)) > 0.25 ? c.grn : c.warm);
+        }
+      }
+      K.box(G, RACKX[1], y, 0, 26, RACKD, RACKH, { tone: 'base' });
+      K.onFront(G, RACKX[1] + 4, y, RACKH - 14, 8, 6, c.warm);
+      /* the cable tray and the power busway above the row */
+      K.box(G, RACKX[0], y + 8, RACKH + 14, RACKX[1] - RACKX[0], 12, 3, { tone: { top: mix(T.body.top, c.warm, 0.25), front: mix(T.body.front, c.warm, 0.25), side: mix(T.body.side, c.warm, 0.2) } });
+      K.box(G, RACKX[0], y + 22, RACKH + 20, RACKX[1] - RACKX[0], 5, 5, { tone: 'base' });
     }
+    /* cold air rising out of the floor in front of each row */
+    G.a(0.35); [60, 240, 420].forEach(y => { for (let k = 0; k < 8; k++) { const u = (G.t * 0.35 + k / 8) % 1, q = PB(RACKX[0] + 20 + k * 44, y + 30, u * 40); G.l([q, [q[0], q[1] - 6]], c.cool, 1.2); } }); G.a(1);
+    /* the rack the dive follows: the next depth is its front */
     inside(G, 'building');
-    bCool.forEach(u => { G.r(u.r[0], u.r[1], u.r[2], u.r[3], c.mid, c.line, 1.1); G.c(u.r[0] + 24, u.r[1] + 20, 12, null, c.line, 1); G.c(u.r[0] + 70, u.r[1] + 20, 12, null, c.line, 1); });
-    G.r(868, 200, 52, 580, c.mid, c.line, 1.1);
-    for (let i = 0; i < 9; i++) G.r(876, 212 + i * 62, 36, 46, c.up, c.warm, 0.9);
-    /* your chip: the power drawn and the heat to carry away */
-    const p = Math.min(9, Math.round(M.power * 4.5));
-    G.a(0.55); for (let i = 0; i < p; i++) G.r(880, 216 + i * 62, 28, 38, c.warm); G.a(1);
-    G.a(0.08 + 0.25 * heat(G)); for (let r = 0; r < 5; r++) G.r(146, 256 + r * 105, 708, 49, c.warm); G.a(1);
-    G.label('racks', 150, 186); G.label('cooling', 140, 112); G.label('power', 860, 190, 'right');
+    KB.person(G, 170, 70, 0.3);
   }
 };
 
@@ -95,8 +150,16 @@ const sleds = [0, 1, 2, 3, 4, 5, 6, 7, 8].map(i => ({ r: [330, 130 + i * 80, 340
 const rack = {
   parts: { servers: sleds, switch: [{ r: [330, 66, 340, 50] }], power: [{ r: [330, 862, 340, 66] }], cooling: [{ r: [272, 60, 16, 880] }, { r: [712, 60, 16, 880] }] },
   draw(G) {
-    const c = G.col;
-    G.bg(c.lo);
+    const c = G.col, T = tones(c);
+    /* as it stands in the hall: the tops of the row above it, the floor below, its neighbours either side */
+    G.bg(T.body.top);
+    G.r(0, 960, 1000, 40, c.dark ? mix(c.lo, c.mid, 0.35) : mix(c.mid, c.lo, 0.3));
+    [-100, 700].forEach(x0 => {
+      G.r(x0, 40, 400, 920, T.body.front, T.edge, 1.2);
+      G.r(x0 + 40, 100, 320, 800, mix(T.body.front, c.bg, c.dark ? 0.35 : 0.1), T.seam, 1);
+      for (let k = 0; k < 6; k++) G.r(x0 + 60, 160 + k * 140, 280, 80, null, T.seam, 1);
+      G.r(x0 + 300, 120, 40, 40, c.grn);
+    });
     G.r(300, 40, 400, 920, c.mid, c.hi, 1.8);
     G.r(320, 56, 360, 888, c.lo, c.line, 1);
     G.r(272, 60, 16, 880, c.cool); G.r(712, 60, 16, 880, c.warm);
@@ -351,29 +414,66 @@ function cells(G, x, y, w, h, nx, ny, seed, live) {
   for (let i = 0; i < nx; i++) for (let j = 0; j < ny; j++) G.r(x + i * sx, y + j * sy, sx * 0.74, sy * 0.74, live != null && rnd(i * 37 + j + seed, live) > 0.84 ? c.cool : rnd(i * 37 + j, seed) > 0.35 ? c.up : c.lo, null);
 }
 
+/* ======== things lying flat, seen from above: a phone with its back off, a car with its roof off ========
+   The plane they lie in faces you, true to shape (so a dive can zoom straight into it); what stands up from
+   it rises towards you, so its sides show below and to the left, in the same 2.5D view as the rest of the
+   site. lift(h) shifts a drawing to the height h; walls(...) joins an outline on the floor to the same
+   outline at height h; layer offsets show what lies behind (further away: up and to the right). */
+const LX = 0.42, LY = 0.5;
+const lifted = (G, h, fn) => { const c = G.ctx; c.save(); c.translate(-LX * h, LY * h); try { fn(); } finally { c.restore(); } };
+function walls(G, pts, h, T) {
+  const n = pts.length, q = pts.map(p => [p[0] - LX * h, p[1] + LY * h]);
+  for (let i = 0; i < n; i++) {
+    const a = pts[i], b = pts[(i + 1) % n], ex = b[0] - a[0], ey = b[1] - a[1];
+    if (ey * LX + ex * LY > 0) continue;          /* only the sides that show: those up and to the right */
+    const sh = Math.max(0, Math.min(1, 0.5 + 0.5 * (ex + ey) / (Math.hypot(ex, ey) || 1)));
+    poly(G, [a, b, q[(i + 1) % n], q[i]], mix(T.body.side, T.body.front, sh), T.edge, 0.6);
+  }
+}
+const rrPts = (x, y, w, h, r, n) => { const out = [], k = n || 6, C = [[x + w - r, y + r, -Math.PI / 2], [x + w - r, y + h - r, 0], [x + r, y + h - r, Math.PI / 2], [x + r, y + r, Math.PI]];
+  C.forEach(([cx, cy, a0]) => { for (let i = 0; i <= k; i++) { const a = a0 + (i / k) * (Math.PI / 2); out.push([cx + Math.cos(a) * r, cy + Math.sin(a) * r]); } }); return out; };
+const shift = (pts, d) => pts.map(p => [p[0] + LX * d, p[1] - LY * d]);
+
 /* ======== a phone ======== */
 
 /* ---- phone: the back opened, about fifteen centimetres tall: the main board, the battery, the camera ---- */
+const PS = 0.7, POX = -70, POY = 282;   /* the phone is drawn smaller, at the lower left, so what lies behind it shows */
+const pr = r => [POX + r[0] * PS, POY + r[1] * PS, r[2] * PS, r[3] * PS];
 const phone = {
-  parts: { board: [{ r: [380, 70, 300, 300] }], battery: [{ r: [310, 400, 380, 430] }], camera: [{ r: [300, 74, 68, 160] }], antenna: [{ r: [316, 30, 368, 14] }, { r: [316, 956, 368, 14] }] },
+  parts: { board: [{ r: pr([380, 70, 300, 300]) }], battery: [{ r: pr([310, 400, 380, 430]) }], camera: [{ r: pr([300, 74, 68, 160]) }], antenna: [{ r: pr([316, 30, 368, 14]) }, { r: pr([316, 956, 368, 14]) }] },
   draw(G) {
-    const c = G.col;
+    const c = G.col, T = tones(c), body = rrPts(270, 30, 460, 940, 50);
     G.bg(c.lo);
+    G.ctx.save(); G.ctx.translate(POX, POY); G.ctx.scale(PS, PS); const s0 = G.s; G.s = s0 * PS;
+    /* taken apart, behind it: the screen at the back, then the frame that holds everything */
+    const scr = shift(body, 800), frm = shift(body, 400);
+    walls(G, scr, 16, T); poly(G, scr, c.dark ? c.bg : mix(c.line, c.hi, 0.55), T.edge, 1.2);
+    G.a(0.1); poly(G, shift([[300, 60], [560, 60], [300, 520]], 800), c.hi); G.a(1);
+    poly(G, shift(rrPts(300, 50, 400, 890, 36), 800), null, T.seam, 1);
+    walls(G, frm, 12, T); poly(G, frm, T.body.top, T.edge, 1.2);
+    poly(G, shift(rrPts(310, 400, 380, 430, 14), 400), T.inner.top, T.edge, 0.8);
+    poly(G, shift(rrPts(300, 74, 68, 160, 14), 400), T.inner.top, T.edge, 0.8);
+    poly(G, shift(rrPts(380, 70, 300, 300, 10), 400), null, T.seam, 0.8);
     rr(G, 270, 30, 460, 940, 50, c.mid, c.hi, 1.8);
     rr(G, 290, 50, 420, 900, 32, c.lo, c.line, 1);
     /* the frame is the antenna, cut into bands; each band is fed from the board */
     [30, 956].forEach(y => { G.r(316, y, 368, 14, c.up, c.warm, 1); [400, 594].forEach(x => G.r(x, y - 1, 6, 16, c.lo)); });
     [[270, 210], [710, 210], [270, 784], [710, 784]].forEach(k => G.r(k[0], k[1], 20, 6, c.lo));
     G.l([[440, 44], [440, 70]], c.warm, 1.2); G.l([[620, 44], [620, 70]], c.warm, 1.2); G.l([[500, 956], [500, 940]], c.warm, 1.2);
-    /* the camera: two lenses and a flash, on a ribbon to the board */
-    rr(G, 300, 74, 68, 160, 14, c.mid, c.line, 1.1);
-    [112, 196].forEach(y => { G.c(334, y, 25, c.up, c.hi, 1.2); G.c(334, y, 17, c.lo, c.line, 0.8); G.c(334, y, 9, c.mid, c.cool, 1); G.c(328, y - 6, 2.6, c.hi); });
-    G.c(334, 154, 6, c.lo, c.warm, 1);
+    /* the camera: two lenses and a flash, standing up from the frame, on a ribbon to the board */
+    walls(G, rrPts(300, 74, 68, 160, 14), 26, T);
+    lifted(G, 26, () => {
+      rr(G, 300, 74, 68, 160, 14, c.mid, c.line, 1.1);
+      [112, 196].forEach(y => { G.c(334, y, 25, c.up, c.hi, 1.2); G.c(334, y, 17, c.lo, c.line, 0.8); G.c(334, y, 9, c.mid, c.cool, 1); G.c(328, y - 6, 2.6, c.hi); });
+      G.c(334, 154, 6, c.lo, c.warm, 1);
+    });
     G.r(368, 140, 12, 28, c.up, c.warm, 0.8);
     /* the card tray under it */
     rr(G, 300, 272, 68, 98, 8, c.mid, c.line, 1);
     G.r(312, 290, 44, 62, c.up, c.warm, 0.8); G.l([[334, 290], [334, 352]], c.warm, 0.7); G.l([[312, 321], [356, 321]], c.warm, 0.7);
     /* the battery, with its charge, and the charging coil lying on it */
+    walls(G, rrPts(310, 400, 380, 430, 10), 18, T);
+    G.ctx.save(); G.ctx.translate(-LX * 18, LY * 18);
     rr(G, 310, 400, 380, 430, 10, c.up, c.line, 1.2);
     G.r(330, 420, 340, 390, c.mid, c.dim, 0.8);
     const lvl = Math.max(0.06, Math.min(0.95, 0.55 * Math.sqrt(M.battery))) + 0.03 * Math.sin(G.t * 0.4);
@@ -381,6 +481,7 @@ const phone = {
     G.l([[330, 420 + 390 * (1 - lvl)], [670, 420 + 390 * (1 - lvl)]], c.grn, 1.2);
     [150, 136, 122, 108, 94].forEach(r => G.c(500, 615, r, null, c.dim, 1));
     G.l([[500, 521], [500, 400]], c.dim, 1);
+    G.ctx.restore();
     G.r(470, 386, 60, 14, c.mid, c.line, 0.9); G.r(488, 370, 24, 16, c.up, c.warm, 0.8);
     /* speaker, port, and the motor that taps */
     rr(G, 306, 852, 130, 84, 8, c.mid, c.line, 1);
@@ -390,8 +491,13 @@ const phone = {
     G.r(452, 896, 96, 44, c.mid, c.line, 1); for (let i = 0; i < 8; i++) G.l([[462 + i * 11, 904], [462 + i * 11, 932]], c.warm, 1);
     [[302, 386], [698, 386], [302, 842], [698, 842]].forEach(k => G.c(k[0], k[1], 5, c.lo, c.line, 0.9));
     /* the main board: the next depth, as it is */
+    /* the rim of the open case, rising towards you */
+    const rim = body.map(p => [p[0] - LX * 30, p[1] + LY * 30]), inn = rrPts(286, 46, 428, 908, 36).map(p => [p[0] - LX * 30, p[1] + LY * 30]);
+    walls(G, body, 30, T);
+    G.ctx.beginPath(); rim.forEach((q, i) => (i ? G.ctx.lineTo(q[0], q[1]) : G.ctx.moveTo(q[0], q[1]))); G.ctx.closePath(); inn.forEach((q, i) => (i ? G.ctx.lineTo(q[0], q[1]) : G.ctx.moveTo(q[0], q[1]))); G.ctx.closePath();
+    G.ctx.fillStyle = T.body.top; G.ctx.fill('evenodd'); G.ctx.strokeStyle = T.edge; G.ctx.lineWidth = G.lw(1); G.ctx.stroke();
+    G.s = s0; G.ctx.restore();
     inside(G, 'phone');
-    G.label('board', 384, 62); G.label('battery', 316, 846); G.label('camera', 300, 258); G.label('antenna', 690, 24, 'right');
   }
 };
 
@@ -498,54 +604,85 @@ const soc = {
 /* ======== a car ======== */
 
 /* ---- car: seen from above: dozens of small computers, joined by wires ---- */
-const ctrl = [[760, 500, 36, 36], [860, 470, 30, 26], [560, 480, 44, 40], [430, 360, 36, 30], [430, 610, 36, 30], [300, 482, 44, 36], [170, 482, 34, 34], [650, 380, 32, 28], [650, 592, 32, 28], [700, 430, 30, 26]];
-const hub = [582, 500];
-const carWires = ctrl.slice(1).filter((_, i) => i !== 1).map(k => ({ p: [hub, [k[0] + k[2] / 2, hub[1]], [k[0] + k[2] / 2, k[1] + k[3] / 2]] }));
-carWires.push({ p: [hub, [778, 500]] });
-const sensors = [{ c: [893, 500, 13] }, { c: [108, 500, 11] }, { c: [598, 318, 9] }, { c: [598, 682, 9] }, { c: [668, 500, 10] }];
-const carBody = [[112, 420], [130, 345], [230, 322], [700, 322], [810, 334], [876, 372], [904, 440], [908, 500], [904, 560], [876, 628], [810, 666], [700, 678], [230, 678], [130, 655], [112, 580], [104, 500]];
-const carWheels = [[200, 288], [200, 668], [680, 288], [680, 668]];
+/* ---- car: seen from the side, the near side and the roof cut away. Driving to the right on its road:
+   the battery under the floor, the motor at the back wheels, seats and dashboard, the radar and cameras that
+   watch the road, and dozens of control units joined by the wiring. The one the dive follows stands with
+   its lid off, its board facing you. Measured in centimetres. ---- */
+const PCAR = proj({ s: 1.75, ox: 31, cx: 0, oy: 712 }), KC = kit(PCAR);
+const CAR = [[8, 34], [0, 52], [3, 82], [22, 98], [72, 108], [118, 140], [250, 146], [298, 141], [362, 102], [432, 90], [458, 76], [462, 52], [455, 33], [415, 31], [338, 31], [122, 31], [48, 33]];
+const WHEELS = [85, 378], ECUS = [[290, 20, 68, 18, 22, 18], [408, 60, 62, 30, 26, 16], [168, 70, 36, 24, 20, 12], [228, 120, 40, 20, 18, 14], [64, 80, 60, 26, 20, 14], [320, 130, 80, 18, 16, 12]];
+const carParts = (() => {
+  const hull3 = pts3 => { const q = pts3.map(p => PCAR(p[0], p[1], p[2])).sort((a, b) => a[0] - b[0] || a[1] - b[1]); const cr = (o, a, b) => (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]), lo = [], up = [];
+    for (const p of q) { while (lo.length >= 2 && cr(lo[lo.length - 2], lo[lo.length - 1], p) <= 0) lo.pop(); lo.push(p); }
+    for (const p of q.slice().reverse()) { while (up.length >= 2 && cr(up[up.length - 2], up[up.length - 1], p) <= 0) up.pop(); up.push(p); }
+    return closed(lo.slice(0, -1).concat(up.slice(0, -1))); };
+  const boxH = (x, y, z, w, d, h) => hull3([[x, y, z], [x + w, y, z], [x + w, y + d, z], [x, y + d, z], [x, y, z + h], [x + w, y, z + h], [x + w, y + d, z + h], [x, y + d, z + h]]);
+  return {
+    controllers: ECUS.map(e => boxH(...e)),
+    wiring: [{ p: [[408, 74, 62], [340, 74, 36], [200, 74, 36], [70, 74, 50]].map(p => PCAR(...p)) }, { p: [[300, 74, 36], [300, 29, 77]].map(p => PCAR(...p)) }],
+    sensors: [[462, 90, 52], [330, 90, 136], [4, 90, 80]].map(([x, y, z]) => { const q = PCAR(x, y, z); return { c: [q[0], q[1], 16] }; }),
+    wheels: WHEELS.map(x => { const q = PCAR(x, 0, 34); return { c: [q[0], q[1], 56] }; })
+  };
+})();
 const car = {
-  parts: { controllers: ctrl.map(r => ({ r })), wiring: carWires, sensors, wheels: carWheels.map(w => ({ r: [w[0], w[1], 130, 44] })) },
+  parts: carParts,
   draw(G) {
-    const c = G.col;
-    G.bg(c.lo);
+    const c = G.col, T = tones(c), K = KC, P = PCAR;
+    G.bg(c.dark ? c.bg : mix(c.up, c.line, 0.12));
     /* the road, moving past */
-    [140, 860].forEach(y => G.l([[0, y], [1000, y]], c.dim, 1.4));
-    const run = (G.t * 70) % 120;
-    [215, 785].forEach(y => { for (let i = 0; i < 10; i++) G.l([[i * 120 - run, y], [i * 120 - run + 56, y]], c.dim, 2.2); });
-    /* what the sensors watch */
-    G.a(0.1);
-    [[[893, 500], [1000, 420], [1000, 580]], [[108, 500], [0, 440], [0, 560]], [[598, 318], [510, 150], [686, 150]], [[598, 682], [510, 850], [686, 850]]].forEach(v => poly(G, v, c.cool));
-    G.a(1);
-    const sweep = (G.t * 0.7) % 1;
-    G.a(0.5 * (1 - sweep)); G.c(893, 500, 20 + sweep * 90, null, c.cool, 1); G.c(108, 500, 16 + sweep * 70, null, c.cool, 1); G.a(1);
-    /* wheels, body, glass */
-    carWheels.forEach(w => { rr(G, w[0], w[1], 130, 44, 10, c.up, c.line, 1.2); for (let k = 0; k < 9; k++) G.l([[w[0] + 10 + k * 13.8, w[1] + 5], [w[0] + 10 + k * 13.8, w[1] + 39]], c.dim, 0.7); });
-    blob(G, carBody, c.mid, c.hi, 1.8);
-    G.l([[708, 352], [724, 500], [708, 648]], c.dim, 1); G.l([[724, 392], [872, 428]], c.dim, 0.8); G.l([[724, 608], [872, 572]], c.dim, 0.8);
-    G.l([[210, 350], [196, 500], [210, 650]], c.dim, 1);
-    rr(G, 264, 372, 346, 256, 20, null, c.dim, 1);
-    const glass = [[[610, 356], [694, 378], [694, 622], [610, 644]], [[226, 374], [264, 382], [264, 618], [226, 626]]], side = [[282, 350], [596, 344], [606, 360], [272, 366]];
-    glass.forEach(g => poly(G, g, c.lo, c.line, 1)); poly(G, side, c.lo, c.dim, 0.8); poly(G, flipY(side), c.lo, c.dim, 0.8);
-    /* seats, steering wheel, mirrors, lights */
-    [[478, 392], [478, 532], [330, 392], [330, 532]].forEach(k => { rr(G, k[0], k[1], 76, 76, 14, c.up, c.dim, 1); rr(G, k[0] + 4, k[1] + 12, 14, 52, 6, null, c.dim, 0.8); });
-    G.c(578, 432, 17, null, c.line, 1.2); G.l([[595, 432], [612, 432]], c.line, 1);
-    const mirror = [[628, 326], [652, 326], [662, 306], [640, 302]], lamp = [[862, 380], [890, 430], [878, 436], [852, 390]];
-    [mirror, flipY(mirror)].forEach(m => poly(G, m, c.mid, c.line, 1));
-    [lamp, flipY(lamp)].forEach(m => poly(G, m, c.up, c.warm, 1.1));
-    G.a(0.8); G.r(111, 410, 6, 44, c.red); G.r(111, 546, 6, 44, c.red); G.a(1);
-    /* the wires, with messages travelling along them */
-    carWires.forEach((w, i) => { G.l(w.p, c.cool, 1.2); const p = along2(w.p, (G.t * 0.5 + i * 0.13) % 1); G.a(0.9); G.r(p[0] - 4, p[1] - 4, 8, 8, c.cool); G.a(1); });
-    G.c(hub[0], hub[1], 5, c.cool);
-    ctrl.forEach((k, i) => { if (!i) return; G.r(k[0], k[1], k[2], k[3], c.up, c.line, 1); G.r(k[0] + k[2] * 0.3, k[1] + k[3] * 0.3, k[2] * 0.4, k[3] * 0.4, c.lo, c.dim, 0.7); G.l([[k[0] + 3, k[1] + 3], [k[0] + 3, k[1] + k[3] - 3]], c.warm, 0.8); });
-    sensors.forEach(sn => { G.c(sn.c[0], sn.c[1], sn.c[2], c.lo, c.warm, 1.4); G.c(sn.c[0], sn.c[1], sn.c[2] * 0.4, c.warm); });
-    /* the control unit the dive follows */
-    G.r(ctrl[0][0] - 3, ctrl[0][1] - 3, 42, 42, c.up, c.hi, 1.4);
+    K.fill(G, [P(-200, -60, 0), P(800, -60, 0), P(800, 260, 0), P(-200, 260, 0)], c.dark ? mix(c.lo, c.mid, 0.3) : mix(c.mid, c.lo, 0.3));
+    const run = (G.t * 260) % 140;
+    [-30, 220].forEach(y => { for (let i = -2; i < 8; i++) { const x = i * 140 - run; K.fill(G, [P(x, y, 0.2), P(x + 70, y, 0.2), P(x + 70, y + 5, 0.2), P(x, y + 5, 0.2)], T.seam); } });
+    /* what the radar watches, ahead */
+    G.a(0.12); K.fill(G, [P(462, 90, 52), P(700, 20, 20), P(700, 160, 80)], c.cool); G.a(1);
+    const sw = (G.t * 0.8) % 1; G.a(0.5 * (1 - sw)); G.l([P(470 + sw * 200, 90 - sw * 60, 52 - sw * 25), P(470 + sw * 200, 90 + sw * 60, 52 + sw * 20)], c.cool, 1.2); G.a(1);
+    K.shadow(G, [[0, 0], [462, 0], [462, 180], [0, 180]], 0, 24);
+    /* the far wheels, the far side of the body seen from inside */
+    WHEELS.forEach(x => wheel(G, x, 158, 180));
+    K.fill(G, CAR.map(([x, z]) => P(x, 180, z)), T.inner.front, T.edge, 0.8);
+    /* the floor, with the battery under it */
+    K.box(G, 112, 18, 16, 240, 144, 14, { tone: 'base' });
+    for (let k = 1; k < 8; k++) KC.line(G, [[112 + k * 30, 18, 30], [112 + k * 30, 162, 30]], T.seam, 0.6);
+    K.fill(G, [P(40, 4, 31), P(430, 4, 31), P(430, 176, 31), P(40, 176, 31)], T.body.top, T.edge, 0.7);
+    /* the motor at the back wheels, with its inverter */
+    K.box(G, 60, 40, 32, 50, 100, 34, {}); K.box(G, 64, 80, 66, 26, 20, 14, {});
+    /* the bonnet's insides: the computer that drives, the 12-volt battery */
+    K.box(G, 386, 30, 46, 40, 40, 28, { tone: 'base' });
+    /* seats and dashboard, the steering wheel */
+    [[120, 26], [120, 96]].forEach(([x, y]) => { K.box(G, x, y, 34, 52, 58, 18, {}); K.box(G, x, y, 52, 14, 58, 44, {}); });
+    [[230, 26], [230, 104]].forEach(([x, y]) => { K.box(G, x, y, 34, 50, 50, 20, {}); K.box(G, x, y, 54, 12, 50, 52, {}); K.box(G, x + 2, y + 10, 106, 8, 30, 12, {}); });
+    K.box(G, 318, 12, 70, 34, 156, 26, {}); K.onFront(G, 326, 12, 78, 20, 12, c.dark ? c.bg : c.lo, T.edge, 0.6);
+    const sp = P(310, 52, 98); G.ctx.save(); G.ctx.beginPath(); G.ctx.ellipse(sp[0], sp[1], 15, 18, 0, 0, 6.2832); G.ctx.strokeStyle = T.edge; G.ctx.lineWidth = G.lw(3); G.ctx.stroke(); G.ctx.restore();
+    /* the wiring, with messages travelling along it */
+    const harness = [[[408, 74, 62], [340, 74, 36], [200, 74, 36], [70, 74, 50]], [[300, 74, 36], [300, 29, 77]], [[200, 74, 36], [178, 80, 42]], [[250, 74, 36], [238, 128, 46]], [[340, 74, 36], [328, 136, 86]], [[408, 74, 62], [460, 90, 52]], [[70, 74, 50], [8, 90, 80]]];
+    harness.forEach((h, i) => { const q = h.map(p => P(...p)); G.l(q, c.cool, 1.6); const pt = along2(q, (G.t * 0.5 + i * 0.17) % 1); G.a(0.9); G.r(pt[0] - 3, pt[1] - 3, 6, 6, c.cool); G.a(1); });
+    /* the control units; the one the dive follows faces you with its lid off */
+    ECUS.slice(1).forEach(([x, y, z, w, d, h]) => { K.box(G, x, y, z, w, d, h, {}); K.onFront(G, x + 3, y, z + 3, 4, 4, c.warm); });
+    const [ex, ey, ez, ew, ed, eh] = ECUS[0];
+    K.box(G, ex - 4, ey + 4, 31, ew + 8, ed - 4, ez - 31, {});
+    K.box(G, ex - 1, ey, ez - 1, ew + 2, ed, eh + 2, { tone: 'base' });
     inside(G, 'car');
-    G.label('controllers', 760, 556); G.label('wiring', 300, 540); G.label('sensors', 905, 462, 'right'); G.label('wheels', 680, 278);
+    /* sensors: the radar in front, a camera at the top of the windscreen, one at the back */
+    [[462, 90, 52], [330, 90, 136], [4, 90, 80]].forEach(([x, y, z]) => { const q = P(x, y, z); G.c(q[0], q[1], 7, c.lo, c.warm, 1.4); G.c(q[0], q[1], 3, c.warm); });
+    /* the glass that is left: the windscreen and the back window, edge on */
+    [[[298, 141], [362, 102]], [[72, 108], [118, 140]]].forEach(([a, b]) => { G.a(0.35); K.fill(G, [P(a[0], 8, a[1]), P(b[0], 8, b[1]), P(b[0], 172, b[1]), P(a[0], 172, a[1])], mix(c.cool, c.bg, 0.5), T.edge, 0.8); G.a(1); });
+    /* the near side, cut away above the sills: what is left of it, and the near wheels */
+    K.fill(G, [[0, 52], [3, 66], [462, 66], [462, 52], [455, 33], [415, 31], [338, 31], [122, 31], [48, 33], [8, 34]].map(([x, z]) => P(x, 0, z)), T.body.front, T.edge, 1);
+    G.l(CAR.concat([CAR[0]]).map(([x, z]) => P(x, 0, z)), T.edge, 1.1);
+    WHEELS.forEach(x => wheel(G, x, 0, 22));
   }
 };
+/* a wheel standing in the side plane, from depth y0 to y1: the tyre's tread between its two faces */
+function wheel(G, x, y0, y1) {
+  const c = G.col, T = tones(c), a = PCAR(x, y0, 34), b = PCAR(x, y1, 34), r = 34 * 1.75, ctx = G.ctx;
+  const dx = b[0] - a[0], dy = b[1] - a[1], L = Math.hypot(dx, dy) || 1, nx = -dy / L * r, ny = dx / L * r;
+  poly(G, [[a[0] + nx, a[1] + ny], [b[0] + nx, b[1] + ny], [b[0] - nx, b[1] - ny], [a[0] - nx, a[1] - ny]], T.base.side, null);
+  ctx.beginPath(); ctx.arc(b[0], b[1], r, 0, 6.2832); ctx.fillStyle = T.base.side; ctx.fill();
+  ctx.beginPath(); ctx.arc(a[0], a[1], r, 0, 6.2832); ctx.fillStyle = c.dark ? c.bg : T.base.front; ctx.fill(); ctx.strokeStyle = T.edge; ctx.lineWidth = G.lw(1); ctx.stroke();
+  ctx.beginPath(); ctx.arc(a[0], a[1], r * 0.62, 0, 6.2832); ctx.fillStyle = T.body.top; ctx.fill(); ctx.stroke();
+  const spin = G.t * 6; for (let k = 0; k < 5; k++) { const an = spin + (k / 5) * 6.2832; G.l([[a[0] + Math.cos(an) * r * 0.18, a[1] + Math.sin(an) * r * 0.18], [a[0] + Math.cos(an) * r * 0.58, a[1] + Math.sin(an) * r * 0.58]], T.edge, 1.4); }
+  ctx.beginPath(); ctx.arc(a[0], a[1], r * 0.16, 0, 6.2832); ctx.fillStyle = T.base.top; ctx.fill(); ctx.stroke();
+}
 
 /* ---- ecu: one control unit, its lid off: a small chip that decides, big parts that push ---- */
 const drivers = [0, 1, 2, 3].map(i => ({ r: [660, 210 + i * 110, 110, 80] }));

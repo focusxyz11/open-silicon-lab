@@ -745,10 +745,6 @@
  "station.test.when": "test every chip",
  "part.clean.tool": "cleaning machine",
  "what.clean.tool": "Washes wafers one at a time with ultrapure water and chemicals, in spinning chambers behind robots.",
- "part.clean.filters": "ceiling filters",
- "what.clean.filters": "Filters across the whole ceiling push clean air down, carrying dust away from the wafers.",
- "part.clean.track": "overhead track",
- "what.clean.track": "Carries sealed boxes of wafers from machine to machine, all through the factory.",
  "part.deposit.tool": "deposition chamber",
  "what.deposit.tool": "A sealed chamber where gases react on the hot wafer and leave a thin film.",
  "part.deposit.gas": "gas lines",
@@ -872,5 +868,9 @@
  "slice.bumps": "solder",
  "slice.package": "package",
  "slice.lid": "lid",
- "slice.specks": "specks"
+ "slice.specks": "specks",
+ "part.handle.track": "overhead track",
+ "what.handle.track": "Carries sealed boxes of wafers from machine to machine, all through the factory.",
+ "part.handle.filters": "ceiling filters",
+ "what.handle.filters": "Filters across the whole ceiling push clean air down, carrying dust away from the wafers."
 }

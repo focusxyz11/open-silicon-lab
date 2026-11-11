@@ -27,16 +27,16 @@ export const REPO = 'https://github.com/focusxyz11/open-silicon-lab';
 
 export const DEPTHS = {
   /* a data centre */
-  building: { m: 120, portal: [465, 423, 30] },
+  building: { m: 29, portal: [355.01, 626.49, 69.5] },
   rack: { m: 2, portal: [468, 452, 64] },
   board: { m: 0.3, portal: [425, 425, 150] },
   chip: { m: 0.02, portal: [190, 190, 70] },
   /* a phone */
-  phone: { m: 0.18, portal: [380, 70, 300] },
+  phone: { m: 0.26, portal: [196, 331, 210] },
   phoneboard: { m: 0.05, portal: [410, 360, 240] },
   soc: { m: 0.012, portal: [200, 490, 56] },
   /* a car */
-  car: { m: 5, portal: [760, 500, 36] },
+  car: { m: 5.7, portal: [553.2, 544, 31.5] },
   ecu: { m: 0.18, portal: [455, 425, 40] },
   mcu: { m: 0.007, portal: [176, 236, 52] },
   /* the journey: stations of the line (no portals: you move along, not down) */
@@ -60,9 +60,9 @@ export const DIVES = { print: [['made', 'scanner']], etch: [['made', 'switch']],
    packaging plant. Words: plant.<id>. */
 export const PLANTS = { crystal: 'wafers', slice: 'wafers', clean: 'fab', deposit: 'fab', print: 'fab', etch: 'fab', implant: 'fab', wires: 'fab', test: 'fab', pkg: 'pack', ship: 'pack' };
 export const LOOP = ['clean', 'deposit', 'print', 'etch', 'implant', 'wires'];
-/* Parts that carry the wafer from machine to machine look the same at every station, so their words are
-   shared: part.handle.<key> and what.handle.<key>, not part.<station>.<key>. */
-export const HANDLING = ['pod', 'efem', 'lock', 'xfer', 'shelf', 'dock', 'tray'];
+/* Parts that carry the wafer from machine to machine, and the factory's own track and air filters, look the
+   same at every station, so their words are shared: part.handle.<key> and what.handle.<key>. */
+export const HANDLING = ['pod', 'efem', 'lock', 'xfer', 'shelf', 'dock', 'tray', 'track', 'filters'];
 export const partWord = (id, key) => (HANDLING.includes(key) ? 'handle' : id) + '.' + key;
 export const EXITS = { ship: [['datacentre', 'chip'], ['phone', 'soc'], ['car', 'mcu']] };
 export const WORLDS = [

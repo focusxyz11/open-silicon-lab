@@ -220,3 +220,26 @@ test('the journey: every step goes somewhere real and says what happens; a robot
     if (cfg.in != null) { if (was != null) assert.equal(cfg.in, was, id + ': the wafer arrives looking different from how it left the last station'); was = cfg.out; }
   }
 });
+
+test('the journey in 3D: every station is built, its parts have words, and the wafer has a place and a robot for every step', async () => {
+  const { stationForTest } = await import('../src/app/journey3d.js');
+  const { JOURNEY } = await import('../src/app/journey.js');
+  const line = WORLDS.find(w => w.line).depths;
+  for (const id of line) {
+    const st = stationForTest(id, line), cfg = JOURNEY[id];
+    assert.ok(st.built, id + ': no 3D machine');
+    st.parts.forEach(k => assert.ok(EN['part.' + partWord(id, k)] && EN['what.' + partWord(id, k)], id + ': the 3D part "' + k + '" has no words'));
+    (STOPS ? Object.entries(STOPS) : []).filter(([key]) => key.split('.')[1] === id).forEach(([key, parts]) => assert.ok(parts.some(p => st.parts.includes(p)), id + ': ' + key + ' points at nothing in 3D'));
+    if (cfg.nowafer) continue;
+    const at = Object.keys(st.at);
+    cfg.steps.forEach((s, i) => {
+      [s.to, ...s.via].forEach(p => assert.ok(at.includes(p), id + ': in 3D, step ' + s.k + ' goes to "' + p + '", which is nowhere'));
+      const from = i === 0 || s.appear ? s.to : cfg.steps[i - 1].to, path = [from, ...s.via, s.to];
+      for (let k = 1; k < path.length; k++) {
+        const a = path[k - 1], b = path[k];
+        if (a === b || (cfg.free || []).some(f => f.includes(a) && f.includes(b))) continue;
+        assert.ok(st.robots.some(R => R.zone.includes(a) && R.zone.includes(b)), id + ': in 3D, nothing carries the wafer from ' + a + ' to ' + b);
+      }
+    });
+  }
+});
