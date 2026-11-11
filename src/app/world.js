@@ -7,7 +7,7 @@ import { t } from '../core/i18n.js';
 import { DEPTHS, THREADS, partWord } from '../data/weave.js';
 import { N, IDS, clampZ, frames, lineFrames, isLine, stop } from '../engines/weave.js';
 import { SCENES, partsOf } from './scenes.js';
-import { drawJourney } from './journey.js';
+import { drawJourney, stepStart } from './journey.js';
 
 export const reduced = () => !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
 export const theme = () => {
@@ -148,10 +148,11 @@ export function createWorld(cv, on) {
 
   /* the journey: stations side by side, the camera sliding along the line. The station you stand at is
      yours (G.mine): your wafer is in it, and from the moment you stop, its steps play (G.run, seconds). */
-  let stay = { i: -1, t: 0 };
+  let stay = { i: -1, t: 0 }, paused = false, lastTm = 0, jhits = null, jbox = null;
   function renderLine(tm, b) {
     const F = lineFrames(Z, b.B, b.cx, b.cy), pi = F.f < 0.5 ? F.i : F.i + 1, near = Math.round(Z), dist = Math.abs(Z - near);
-    if (!fly && !drag && dist < 0.02) { if (stay.i !== near) stay = { i: near, t: tm }; } else if (dist > 0.05 || fly) stay.i = -1;
+    if (!fly && !drag && dist < 0.02) { if (stay.i !== near) { stay = { i: near, t: tm }; paused = false; } else if (paused) stay.t += tm - lastTm; } else if (dist > 0.05 || fly) stay.i = -1;
+    lastTm = tm;
     const run = stay.i === near ? (reduced() ? -1 : tm - stay.t) : null;
     ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1; ctx.fillStyle = col.bg; ctx.fillRect(0, 0, W * dpr, H * dpr);
     const all = [[F.i - 1, F.prev], [F.i, F.cur], [F.i + 1, F.next], [F.i + 2, F.after]].filter(k => k[1]);
@@ -162,7 +163,7 @@ export function createWorld(cv, on) {
     const below = (H - inset.b - (top + b.B)) / k;
     ctx.save(); ctx.setTransform(dpr * k, 0, 0, dpr * k, dpr * left, dpr * top); ctx.beginPath(); ctx.rect(0, 0, 1000, 1000 + (b.below ? below : 0)); ctx.clip();
     Object.assign(G, { s: k, k: 1, primary: true, t: tm, col, id: IDS[near], base: 1, box: b.B });
-    drawJourney(G, { ids: IDS, Z, near, dist, run, below: b.below ? below : 0 });
+    jhits = drawJourney(G, { ids: IDS, Z, near, dist, run, paused, below: b.below ? below : 0 }); jbox = { k, left, top, near };
     ctx.restore();
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     /* where you are on the line: a mark per station */
@@ -213,6 +214,15 @@ export function createWorld(cv, on) {
     ctx.strokeStyle = col.hi; ctx.lineWidth = 2 / ptr.s; ctx.setLineDash([6 / ptr.s, 4 / ptr.s]); ctx.globalAlpha = 0.85;
     shapes.forEach(sh => { const o = outline(sh); ctx.beginPath(); o.forEach((p, k) => (k ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1]))); ctx.stroke(); });
     ctx.restore();
+    /* its name, above it: the picture keeps no labels of its own where names would crowd it */
+    if (shapes.length && isLine()) {
+      const o = outline(shapes[0]), top = o.reduce((a, p) => (p[1] < a[1] ? p : a), o[0]), name = t('part.' + partWord(IDS[pi], hotPart));
+      const x = ptr.tx + top[0] * ptr.s, y = ptr.ty + top[1] * ptr.s - 10;
+      ctx.save(); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.font = '500 12px ' + MONO; ctx.textAlign = 'center';
+      const w = ctx.measureText(name).width + 12; ctx.globalAlpha = 0.92; ctx.fillStyle = col.bg; ctx.fillRect(x - w / 2, y - 14, w, 19);
+      ctx.strokeStyle = col.line; ctx.lineWidth = 1; ctx.strokeRect(x - w / 2, y - 14, w, 19); ctx.globalAlpha = 1; ctx.fillStyle = col.hi; ctx.fillText(name, x, y);
+      ctx.restore();
+    }
   }
 
   /* drawn over the scene in view, in a dive or on the line */
@@ -298,7 +308,15 @@ export function createWorld(cv, on) {
     cv.style.cursor = id || pt ? 'pointer' : '';
   });
   cv.addEventListener('pointerleave', () => { hot = null; hotPart = null; cv.style.cursor = ''; });
-  const end = e => { if (!drag) return; const tap = !drag.moved; drag = null; if (tap && e.type === 'pointerup') { const h = hitAt(e); if (h) on.pick && on.pick(h.id); else { const pt = partAt(e); if (pt && view) { hotPart = pt.key; on.part && on.part(view.pi, pt.key); } } } if (!tap && isLine()) settleLine(); };
+  /* on the line, the steps under the picture: tap one to watch it again, or pause */
+  const stepTap = e => {
+    if (!isLine() || !jhits || !jbox) return false;
+    const r = cv.getBoundingClientRect(), x = (e.clientX - r.left - jbox.left) / jbox.k, y = (e.clientY - r.top - jbox.top) / jbox.k, inn = h => h && x >= h.x - 4 && x <= h.x + h.w + 4 && y >= h.y - 6 && y <= h.y + h.h + 6;
+    if (inn(jhits.pause)) { paused = !paused; return true; }
+    const ch = jhits.chips.find(inn); if (!ch) return false;
+    stay = { i: jbox.near, t: lastTm - stepStart(IDS[jbox.near], ch.i) }; paused = false; return true;
+  };
+  const end = e => { if (!drag) return; const tap = !drag.moved; drag = null; if (tap && e.type === 'pointerup' && stepTap(e)) return; if (tap && e.type === 'pointerup') { const h = hitAt(e); if (h) on.pick && on.pick(h.id); else { const pt = partAt(e); if (pt && view) { hotPart = pt.key; on.part && on.part(view.pi, pt.key); } } } if (!tap && isLine()) settleLine(); };
   cv.addEventListener('pointerup', end); cv.addEventListener('pointercancel', end);
   cv.addEventListener('keydown', e => {
     const d = Math.round(Z);

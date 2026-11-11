@@ -17,6 +17,7 @@
 import { t } from '../core/i18n.js';
 import { PLANTS, partWord } from '../data/weave.js';
 import { rnd, clamp, poly, faces, closed } from './draw.js';
+import { kit, tones, mix } from './solid.js';
 
 /* your chip (src/engines/chip.js), set by scenes.js */
 let M = { layers: 62 }, HITS = [], DIES = [];
@@ -27,8 +28,8 @@ const SANS = '"Atkinson Hyperlegible Next", system-ui, sans-serif'; /* i18n-ok: 
 
 /* ---- the view: x along the line, y into the hall, z up ---- */
 /* seen from the front, a little from the right and above; brought a little closer around the machines */
-const ZOOM = 1.18, CX = 575, BACK = 480;
-const obP = (x, y, z) => [CX + ZOOM * (x + 0.42 * y - CX), 800 - ZOOM * ((z || 0) + 0.28 * y)];
+const ZOOM = 1.2, CX = 520, BACK = 480, DY = 0.5;
+const obP = (x, y, z) => [CX + ZOOM * (x + 0.42 * y - CX), 800 - ZOOM * ((z || 0) + DY * y)];
 const obPoly = pts => pts.map(p => obP(p[0], p[1], p[2]));
 const sm = u => { u = clamp(u, 0, 1); return u * u * (3 - 2 * u); };
 const waferTint = c => (c.dark ? '#c9d7ff' : '#7d93c7');
@@ -66,6 +67,16 @@ function spin(G, x, y, z, r, a, color) { G.l([obP(x + Math.cos(a) * r, y + Math.
 const roomy = G => 1000 * G.s >= 480;
 const name = (G, key, x, y, align) => { if (roomy(G)) G.label(key, x, y, align); };
 const label = (G, key, p, dx, dy, align) => { const q = obP(p[0], p[1], p[2]); name(G, key, q[0] + (dx || 0), q[1] + (dy || 0), align); };
+
+/* the outline of a solid, as a part: the hull of its corners on screen */
+function hull(pts3) {
+  const q = pts3.map(p => obP(p[0], p[1], p[2])).sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+  const cr = (o, a, b) => (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]), lo = [], up = [];
+  for (const p of q) { while (lo.length >= 2 && cr(lo[lo.length - 2], lo[lo.length - 1], p) <= 0) lo.pop(); lo.push(p); }
+  for (const p of q.slice().reverse()) { while (up.length >= 2 && cr(up[up.length - 2], up[up.length - 1], p) <= 0) up.pop(); up.push(p); }
+  return closed(lo.slice(0, -1).concat(up.slice(0, -1)));
+}
+const cylHull = (x, y, z, r, h) => { const pts = []; for (let i = 0; i < 24; i++) { const a = (i / 24) * 6.2832; pts.push([x + Math.cos(a) * r, y + Math.sin(a) * r, z], [x + Math.cos(a) * r, y + Math.sin(a) * r, z + h]); } return hull(pts); };
 
 /* ======== the things every station shares ======== */
 
@@ -124,6 +135,26 @@ function arm(G, R, hand) {
   const ux = dx / d, uy = dy / d;
   for (const sg of [-1, 1]) G.l(obPoly([[w[0] - ux * 30 + sg * uy * 12, w[1] - uy * 30 - sg * ux * 12, w[2]], [w[0] + ux * 8 + sg * uy * 12, w[1] + uy * 8 - sg * ux * 12, w[2]]]), c.hi, 1.6);
 }
+/* a robot drawn solid: a hub, two flat links, a fork; the hand follows the wafer, eased */
+function arm2(G, R, f) {
+  const K2 = kit(obP), T = tones(G.col), [bx, by, bz] = R.b, h = R.h, hand = f.p && f.hold === R.id ? f.p : R.rest;
+  const dx = hand[0] - bx, dy = hand[1] - by, d = Math.hypot(dx, dy) || 1, m = Math.min(d / 2, R.L * 0.97), off = Math.sqrt(Math.max(0, R.L * R.L - m * m));
+  const e = [bx + dx / 2 - (dy / d) * off, by + dy / 2 + (dx / d) * off], z = h, ux = dx / d, uy = dy / d;
+  K2.cyl(G, bx, by, bz, 16, h - bz, { tone: 'base' });
+  const bar = (a, b, w, zz, tone) => { const L = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1, nx = -(b[1] - a[1]) / L * w, ny = (b[0] - a[0]) / L * w;
+    K2.fill(G, [K2.P(a[0] + nx, a[1] + ny, zz), K2.P(b[0] + nx, b[1] + ny, zz), K2.P(b[0] - nx, b[1] - ny, zz), K2.P(a[0] - nx, a[1] - ny, zz)], tone, T.edge, 0.8); };
+  bar([bx, by], e, 9, z, T.hi.top); K2.disc(G, e[0], e[1], z + 1, 9, T.hi.top, T.edge);
+  bar(e, [hand[0] - ux * 12, hand[1] - uy * 12], 7, z + 3, T.hi.top);
+  for (const sg of [-1, 1]) bar([hand[0] - ux * 14 + sg * uy * 10, hand[1] - uy * 14 - sg * ux * 10], [hand[0] + ux * 18 + sg * uy * 10, hand[1] + uy * 18 - sg * ux * 10], 2.6, hand[2] - 3, T.hi.top);
+  K2.disc(G, bx, by, h + 1, 12, T.base.top, T.edge);
+}
+/* the front robot rides a rail: its base slides under the hand */
+function armA(G, R, f) {
+  const hand = f.p && f.hold === R.id ? f.p : R.rest, bx = clamp(hand[0], R.rail[0], R.rail[1]);
+  const K2 = kit(obP), T = tones(G.col);
+  K2.box(G, bx - 18, R.b[1] - 14, R.b[2], 36, 28, 10, { tone: 'base' });
+  arm2(G, Object.assign({}, R, { b: [bx, R.b[1], R.b[2] + 10] }), f);
+}
 /* a pick-up head on a beam overhead, for chips */
 function head(G, R, hand) {
   const c = G.col, z = R.h;
@@ -134,16 +165,19 @@ function head(G, R, hand) {
 
 /* the hall: floor, back wall; in the factory its ceiling of filters; the track, and other pods on it */
 function hall(G, plant, from, seed) {
-  const c = G.col;
-  G.bg(c.lo);
-  poly(G, obPoly([[-400, 0, 0], [1400, 0, 0], [1400, BACK, 0], [-400, BACK, 0]]), c.mid, null);
-  for (let x = -400; x <= 1400; x += 100) G.l(obPoly([[x, 0, 0], [x, BACK, 0]]), c.dim, 0.5);
-  poly(G, obPoly([[-400, BACK, 0], [1400, BACK, 0], [1400, BACK, 900], [-400, BACK, 900]]), faces(c)[2], null);
+  const c = G.col, T = tones(c);
+  G.bg(c.dark ? c.bg : mix(c.up, c.line, 0.12));
+  /* the back wall, then the floor of square tiles (in the factory, a raised floor that lets air through) */
+  poly(G, obPoly([[-400, BACK, 0], [1400, BACK, 0], [1400, BACK, 900], [-400, BACK, 900]]), c.dark ? mix(c.bg, c.lo, 0.6) : mix(c.up, c.line, 0.08), null);
+  poly(G, obPoly([[-400, 0, 0], [1400, 0, 0], [1400, BACK, 0], [-400, BACK, 0]]), c.dark ? mix(c.lo, c.mid, 0.35) : mix(c.mid, c.lo, 0.3), null);
+  for (let x = -400; x <= 1400; x += 60) G.l(obPoly([[x, 0, 0], [x, BACK, 0]]), T.seam, 0.5);
+  for (let y = 0; y <= BACK; y += 60) G.l(obPoly([[-400, y, 0], [1400, y, 0]]), T.seam, 0.5);
+  G.l(obPoly([[-400, BACK, 0], [1400, BACK, 0]]), T.edge, 0.8);
   if (plant === 'fab') {
-    for (let x = -400; x < 1400; x += 80) poly(G, obPoly([[x + 6, BACK, 460], [x + 74, BACK, 460], [x + 74, BACK, 500], [x + 6, BACK, 500]]), c.up, c.dim, 0.6);
-    for (let x = -360; x < 1400; x += 160) G.l(obPoly([[x, BACK, 0], [x, BACK, 440]]), c.dim, 0.5);
+    for (let x = -400; x < 1400; x += 80) poly(G, obPoly([[x + 6, BACK, 360], [x + 74, BACK, 360], [x + 74, BACK, 400], [x + 6, BACK, 400]]), T.body.side, T.seam, 0.6);
+    for (let x = -360; x < 1400; x += 160) G.l(obPoly([[x, BACK, 0], [x, BACK, 340]]), T.seam, 0.5);
   } else {
-    for (let x = -360; x < 1400; x += 240) poly(G, obPoly([[x, BACK, 280], [x + 140, BACK, 280], [x + 140, BACK, 420], [x, BACK, 420]]), c.lo, c.dim, 0.7);
+    for (let x = -360; x < 1400; x += 240) poly(G, obPoly([[x, BACK, 240], [x + 140, BACK, 240], [x + 140, BACK, 360], [x, BACK, 360]]), c.dark ? c.bg : c.lo, T.seam, 0.7);
   }
   /* where one building ends and the next begins: a wall the track passes through */
   if (from) { poly(G, obPoly([[-10, 0, 0], [10, 0, 0], [10, 0, 900], [-10, 0, 900]]), c.up, c.line, 1); poly(G, obPoly([[10, 0, 0], [10, BACK, 0], [10, BACK, 900], [10, 0, 900]]), faces(c)[2], c.line, 1); }
@@ -198,7 +232,10 @@ const CFG = {
     part: { pod: 'pod', efem: 'efem', coat: 'coat', dev: 'develop', scan: 'scanner' }, in: 2, seed: 0.7, free: [['iface', 'scan']],
     robots: [Object.assign({}, ROBOT_A, { L: 116, zone: ['pod', 'efem', 'coat', 'dev'] }), { id: 'B', b: [500, 205, 0], h: 132, L: 62, rest: [520, 175, 132], zone: ['coat', 'dev', 'iface'] }], hold: { efem: 'A', iface: 'B' },
     steps: [S('handle.arrive', 'pod', 3.2), S('handle.take', 'efem', 3.2), S('proc.print.coat', 'coat', 5.5, { sl: 3 }), S('proc.print.expose', 'scan', 6.5, { via: ['iface'], sl: 4 }), S('proc.print.develop', 'dev', 5.5, { via: ['iface'], sl: 5 }), S('handle.back', 'pod', 3.6, { via: ['efem'] }), S('handle.done', 'pod', 3.6)] },
-  etch: Object.assign(vacuum([S('proc.etch', 'ch', 7, { sl: 6 })]), { in: 5, seed: 0.9 }),
+  etch: Object.assign(vacuum([S('proc.etch', 'ch', 8, { sl: 6 })]), { in: 5, seed: 0.9,
+    at: { pod: [PODX, PODY, PORT_Z + 32], efem: [300, 150, 140], lock: [370, 208, 104], xfer: [480, 230, 114], ch: [619, 230, 106] },
+    robots: [{ id: 'A', rail: [150, 312], b: [300, 150, 14], h: 112, L: 58, rest: [306, 168, 122], zone: ['pod', 'efem', 'lock'] },
+      { id: 'B', b: [480, 230, 62], h: 108, L: 74, rest: [470, 205, 108], zone: ['lock', 'xfer', 'ch'] }] }),
   implant: Object.assign(vacuum([S('proc.implant.beam', 'ch', 6.5, { sl: 7 }), S('proc.implant.heat', 'ch2', 5)]), { in: 6, seed: 0.2, part: Object.assign({}, PART, { ch2: 'heater' }) }),
   wires: { lift: { pod: 80, efem: 170, plate: 150, pol: 170 }, at: { pod: AT.pod, efem: AT.efem, plate: [470, 120, 112], hand: [440, 220, 136], pol: [690, 170, 132] },
     part: { pod: 'pod', efem: 'efem', plate: 'plating', pol: 'polish' }, in: 7, seed: 0.4,
@@ -224,6 +261,8 @@ Object.values(CFG).forEach(cfg => {
 });
 /* for the tests: every station's steps */
 export const JOURNEY = CFG;
+/* where a step starts, in seconds from arriving: tapping a step replays it from there */
+export const stepStart = (id, i) => CFG[id] ? CFG[id].steps.slice(0, i).reduce((a, s) => a + s.d, 0) + 0.01 : 0;
 
 /* where the wafer is at time r (seconds into the station), who holds it, and what the slice shows */
 function flow(cfg, run) {
@@ -260,7 +299,8 @@ function docked(G, cfg, f) { if (G.mine) return; if (cfg.home === 'tray') tray(G
 
 /* the numbered route: where the wafer goes, in order; the step under way is lit */
 function route(G, id, cfg, f) {
-  if (!G.primary) return;
+  /* the steps are listed under the picture now (drawJourney), and the current one is lit there */
+  if (!G.primary || true) return;
   const c = G.col, ctx = G.ctx, R = 10.5 / G.s, live = G.mine && G.run != null, pts = [];
   cfg.steps.forEach((s, i) => { if (cfg.num[i]) pts.push(cfg.at[s.to]); });
   G.a(0.5); ctx.setLineDash([4 / G.s, 5 / G.s]); G.l(obPoly(pts), c.warm, 1.2); ctx.setLineDash([]); G.a(1);
@@ -392,7 +432,7 @@ const stSlice = {
 /* ---- clean: entering the factory; every layer starts with a wash ---- */
 const stClean = cluster('clean', {
   from: true,
-  parts: { chamber: [chShape], tool: toolShapes, filters: [closed(obPoly([[-400, BACK, 460], [1400, BACK, 460], [1400, BACK, 500], [-400, BACK, 500]]))], track: [{ p: [[0, TRACK[1]], [1000, TRACK[1]]] }], dock: dockShape },
+  parts: { chamber: [chShape], tool: toolShapes, filters: [closed(obPoly([[-400, BACK, 360], [1400, BACK, 360], [1400, BACK, 400], [-400, BACK, 400]]))], track: [{ p: [[0, TRACK[1]], [1000, TRACK[1]]] }], dock: dockShape },
   stroke: c => c.cool,
   inner(G, f) {
     const c = G.col, on = f.proc || !G.mine;
@@ -402,7 +442,7 @@ const stClean = cluster('clean', {
     if (on) spin(G, 689, 170, 106, 40, G.t * 5, c.dim);
     if (on) for (let k = 0; k < 8; k++) { const u = (G.t * 2.2 + k / 8) % 1, q = obP(nx + (rnd(k, 2) - 0.5) * 16, ny, 200 - u * 70); G.c(q[0], q[1], 2.4, c.cool); }
   },
-  labels(G) { name(G, 'filters', 40, obP(0, BACK, 500)[1] - 8); name(G, 'track', 40, TRACK[1] - 10); label(G, 'dock', [10, 280, 250], 6, 0); }
+  labels(G) { name(G, 'filters', 40, obP(0, BACK, 400)[1] - 8); name(G, 'track', 40, TRACK[1] - 10); label(G, 'dock', [10, 280, 250], 6, 0); }
 });
 
 /* ---- deposit: a thin new film laid over the whole wafer, from gases ---- */
@@ -458,26 +498,128 @@ const stPrint = {
   }
 };
 
-/* ---- etch: plasma cuts the film wherever the pattern left it bare; people keep the machines in tune ---- */
-const personAt = [870, 24];
-const stEtch = cluster('etch', {
-  vacuum: true,
-  parts: { plasma: [obShape(615, 100, 120, 150, 150, 120)], people: [{ c: [obP(personAt[0], personAt[1], 90)[0], obP(personAt[0], personAt[1], 90)[1], 60] }] },
-  stroke: c => c.red,
-  back(G) { obBox(G, 450, 330, 0, 130, 130, 230, G.col.line); },
-  inner(G, f) {
-    const c = G.col, on = f.proc || !G.mine;
-    for (let k = 0; k < 4; k++) disc(G, 689, 170, 290 - k * 6, 70 - k * 8, null, c.warm, 1);
-    G.a(on ? 0.22 + 0.12 * Math.sin(G.t * 5) : 0.04); poly(G, obPoly([[615, 100, 125], [765, 100, 125], [765, 250, 240], [615, 250, 240]]), c.red); G.a(1);
-    if (on) for (let k = 0; k < 18; k++) { const u = (G.t * 1.6 + rnd(k, 7)) % 1, q = obP(635 + rnd(k, 8) * 110, 170, 240 - u * 110); G.l([q, [q[0], q[1] + 8]], c.red, 1.4); }
-  },
-  front(G) {
-    const c = G.col, [x, y] = personAt;
-    obBox(G, x - 60, y + 20, 0, 50, 40, 120, c.line); poly(G, obPoly([[x - 10, y + 24, 70], [x - 10, y + 56, 70], [x - 10, y + 56, 116], [x - 10, y + 24, 116]]), c.lo, c.cool, 1);
-    const p0 = obP(x, y, 0), p1 = obP(x, y, 140); G.l([p0, p1], c.hi, 6); G.c(p1[0], p1[1] - 10, 12, c.up, c.hi, 1.2);
-  },
-  labels(G) { label(G, 'people', [personAt[0], personAt[1], 170], 0, -8, 'center'); label(G, 'plasma', [765, 100, 200], 8, 0); }
-});
+/* ---- etch: plasma cuts the film wherever the pattern left it bare; people keep the machines in tune ----
+   Drawn as a real cluster tool, solid, in the site's crafted style (src/app/solid.js): three load ports, a
+   front module with a robot on a rail behind its window, two airlocks, a six-sided vacuum chamber with its
+   lid off and a robot inside, and four process chambers round it. The one that etches your wafer is cut
+   open at the front; the others work on other wafers. Pumps under the chambers, gas lines from the gas
+   cabinet, an RF generator, a stack light, a screen, a technician. */
+const K = kit(obP);
+const HX = [480, 230], HR = 80, HROT = Math.PI / 6;
+const ECH = [[619, 230], [549, 350], [410, 350]];   /* yours (cut open), then the others */
+const EFEM = [110, 105, 0, 220, 85, 190], LOCKS = [[340, 190], [340, 232]];
+/* the short passage from the middle chamber to a process chamber, with its gate (a slit valve) */
+function neck(G, a, b) {
+  const dx = b[0] - a[0], dy = b[1] - a[1], L = Math.hypot(dx, dy), ux = dx / L, uy = dy / L, p0 = [a[0] + ux * 60, a[1] + uy * 60], p1 = [a[0] + ux * (L - 50), a[1] + uy * (L - 50)];
+  const nx = -uy * 16, ny = ux * 16, T = tones(G.col);
+  K.prism(G, [[p0[0] - nx, p0[1] - ny], [p1[0] - nx, p1[1] - ny], [p1[0] + nx, p1[1] + ny], [p0[0] + nx, p0[1] + ny]].sort(() => 0), 76, 34, {});
+  const m = [a[0] + ux * (L * 0.5), a[1] + uy * (L * 0.5)];
+  K.box(G, m[0] - 10, m[1] - 10, 72, 20, 20, 48, { tone: 'base' });
+}
+const etchShapes = {
+  pod: [portShape],
+  efem: [hull([[110, 105, 0], [330, 105, 0], [330, 190, 0], [330, 190, 206], [110, 190, 206], [110, 105, 206]])],
+  lock: LOCKS.map(([x, y]) => hull([[x, y, 0], [x + 60, y, 0], [x + 60, y + 36, 0], [x + 60, y + 36, 140], [x, y + 36, 140], [x, y, 140]])),
+  xfer: [hull(K.hexPlan(HX[0], HX[1], HR, HROT).flatMap(([x, y]) => [[x, y, 0], [x, y, 118]]))],
+  tool: [cylHull(ECH[0][0], ECH[0][1], 0, 58, 176)],
+  plasma: [cylHull(ECH[0][0], ECH[0][1], 104, 40, 50)],
+  people: [hull([[788, 22, 0], [812, 22, 0], [812, 38, 0], [812, 38, 150], [788, 38, 150], [788, 22, 150]])]
+};
+function etchChamber(G, cx, cy, mine, f, wafer) {
+  const c = G.col, T = tones(c), on = f.proc || !G.mine;
+  /* legs and the pump under it */
+  K.shadow(G, Array.from({ length: 16 }, (_, i) => [cx + Math.cos(i / 16 * 6.2832) * 62, cy + Math.sin(i / 16 * 6.2832) * 62]), 0, 18);
+  K.cyl(G, cx + 8, cy + 16, 0, 17, 58, { tone: 'base' }); K.disc(G, cx + 8, cy + 16, 58, 8, T.base.side);
+  for (const [dx, dy] of [[-40, -28], [40, -28], [0, 42]]) K.box(G, cx + dx - 4, cy + dy - 4, 0, 8, 8, 60, { tone: 'base' });
+  if (mine) {
+    K.cutCyl(G, cx, cy, 60, 58, 116, 96, () => {
+      K.cyl(G, cx, cy, 62, 40, 40, { tone: 'base' });                       /* the chuck that holds the wafer */
+      K.disc(G, cx, cy, 102, 36, T.base.top, T.edge);
+      if (wafer) wafer();
+      /* the plasma: a glowing gas between the window above and the wafer */
+      const pl = G.ctx, gl = on ? 0.28 + 0.12 * Math.sin(G.t * 5) : 0.04, top = K.P(cx, cy, 160), bot = K.P(cx, cy, 106);
+      const gr = pl.createLinearGradient(0, top[1], 0, bot[1]); gr.addColorStop(0, mix(c.red, c.hi, 0.2)); gr.addColorStop(1, c.red);
+      pl.save(); pl.globalAlpha = gl * G.base; K.fill(G, K.arc(cx, cy, 160, 38, K.A1, K.A2 + 6.2832, 30).concat(K.arc(cx, cy, 106, 38, K.A2 + 6.2832, K.A1, 30)), gr); pl.restore();
+      if (on) for (let k = 0; k < 14; k++) { const u = (G.t * 1.6 + rnd(k, 7)) % 1, a = rnd(k, 8) * 6.2832, rr2 = rnd(k, 9) * 30, q = K.P(cx + Math.cos(a) * rr2, cy + Math.sin(a) * rr2, 156 - u * 50); G.l([q, [q[0], q[1] + 7]], c.red, 1.3); }
+      K.disc(G, cx, cy, 166, 50, null, mix(c.warm, c.bg, 0.3), 1);         /* the ceramic window, seen edge-on behind */
+    });
+    /* the coil that makes the plasma, above the window */
+    for (let k = 0; k < 3; k++) G.l(K.arc(cx, cy, 182 + k * 5, 38 - k * 9, K.A1, K.A2, 20), c.warm, 2);
+  } else {
+    K.cyl(G, cx, cy, 60, 58, 110, {});
+    G.l(K.arc(cx, cy, 120, 58, K.A2, K.A1 + 6.2832, 28), T.seam, 0.7);
+    K.cyl(G, cx, cy, 170, 50, 8, { tone: 'base' });
+    for (let k = 0; k < 2; k++) G.l(K.arc(cx, cy, 182 + k * 5, 36 - k * 10, K.A2, K.A1 + 6.2832, 20), mix(c.warm, c.bg, 0.25), 1.6);
+    K.box(G, cx - 22, cy - 18, 178, 44, 36, 34, {});                         /* the RF match box */
+    K.onFront(G, cx - 14, cy - 18, 188, 10, 6, on && (G.t * 2 + cx) % 2 < 1.4 ? c.grn : mix(c.grn, c.bg, 0.6));
+  }
+}
+const stEtch = {
+  parts: etchShapes,
+  draw(G) {
+    const c = G.col, T = tones(c), cfg = CFG.etch, f = flow(cfg, clockOf(G, cfg)), p = f.p;
+    const at = (x0, x1, y0, y1) => p && !f.home && p[0] >= x0 && p[0] <= x1 && p[1] >= y0 && p[1] <= y1;
+    const w = () => piece(G, p, G.mine, f.chip);
+    hall(G, 'fab', false, cfg.seed);
+    /* the gas cabinet at the back, and its lines to every chamber */
+    K.shadow(G, K.rectPlan(150, 330, 90, 100), 0, 18);
+    K.box(G, 150, 330, 0, 90, 100, 270, {});
+    for (let k = 1; k < 4; k++) K.seamH(G, 150, 330, 90, k * 66);
+    K.onFront(G, 162, 330, 206, 30, 18, c.dark ? mix(c.cool, c.bg, 0.55) : mix(c.cool, '#ffffff', 0.6), T.edge, 0.6); /* i18n-ok: a colour */
+    ECH.forEach(([cx, cy], i) => K.pipe(G, [[240, 380 - i * 8, 250 - i * 10], [cx - 20, 380 - i * 8, 250 - i * 10], [cx - 20, cy + 26, 250 - i * 10], [cx - 20, cy + 26, 196]], 2));
+    /* the chambers at the back, each joined to the middle by a slit valve */
+    neck(G, HX, ECH[2]); neck(G, HX, ECH[1]);
+    etchChamber(G, ECH[2][0], ECH[2][1], false, f); etchChamber(G, ECH[1][0], ECH[1][1], false, f);
+    /* the vacuum chamber in the middle, lid off, with its robot */
+    K.shadow(G, K.hexPlan(HX[0], HX[1], HR + 6, HROT), 0, 16);
+    K.prism(G, K.hexPlan(HX[0], HX[1], HR - 10, HROT), 0, 60, { tone: 'base' });
+    K.prism(G, K.hexPlan(HX[0], HX[1], HR, HROT), 60, 58, { open: () => { arm2(G, cfg.robots[1], f); if (at(400, 556, 150, 310)) w(); } });
+    /* your chamber, to the right, cut open, joined to the middle by its slit valve */
+    neck(G, HX, ECH[0]);
+    etchChamber(G, ECH[0][0], ECH[0][1], true, f, at(560, 680, 170, 290) ? w : null);
+    /* the two airlocks, between the front module and the vacuum: small boxes with a window on top */
+    LOCKS.slice().reverse().forEach(([x, y], j) => {
+      const i = 1 - j, pumping = i === 0 && G.mine && f.s.k === 'handle.lock' && f.r > 0.9;
+      K.box(G, x, y, 0, 60, 36, 64, { tone: 'base' });
+      K.box(G, x, y, 64, 60, 36, 72, { top: false });
+      K.onTop(G, x + 4, y + 4, 136, 52, 28, pumping ? mix(c.cool, c.bg, c.dark ? 0.4 : 0.1) : T.inner.top, T.edge, 0.8);
+      if (i === 0 && at(334, 404, 186, 230)) w();
+      K.onTop(G, x, y, 136, 60, 36, null, T.edge, 0.8);
+      K.onFront(G, x + 8, y, 100, 26, 7, pumping && (G.t * 4) % 1 < 0.5 ? c.cool : T.seam);
+    });
+    /* the front module: a clean little room with a robot on a rail, seen through its window */
+    const [ex, ey, , ew, ed, eh] = EFEM, cx2 = G.ctx;
+    K.shadow(G, K.rectPlan(ex, ey, ew, ed), 0, 16);
+    K.onFront(G, ex, ey + ed, 0, ew, eh, T.inner.front, T.edge);
+    K.onTop(G, ex, ey, 2, ew, ed, T.inner.top);
+    K.box(G, 130, 142, 6, 190, 14, 8, { tone: 'base' });
+    armA(G, cfg.robots[0], f);
+    if (at(ex, ex + ew + 6, ey - 4, ey + ed + 2)) w();
+    const win = [ex + 36, 54, ew - 52, 118];
+    const fr = [K.P(ex, ey, 0), K.P(ex + ew, ey, 0), K.P(ex + ew, ey, eh), K.P(ex, ey, eh)], wp = [K.P(win[0], ey, win[1]), K.P(win[0] + win[2], ey, win[1]), K.P(win[0] + win[2], ey, win[1] + win[3]), K.P(win[0], ey, win[1] + win[3])];
+    cx2.beginPath(); fr.forEach((q, i) => (i ? cx2.lineTo(q[0], q[1]) : cx2.moveTo(q[0], q[1]))); cx2.closePath(); wp.forEach((q, i) => (i ? cx2.lineTo(q[0], q[1]) : cx2.moveTo(q[0], q[1]))); cx2.closePath();
+    cx2.fillStyle = T.body.front; cx2.fill('evenodd'); cx2.strokeStyle = T.edge; cx2.lineWidth = G.lw(0.8); cx2.stroke();
+    cx2.save(); cx2.globalAlpha = 0.06 * G.base; K.fill(G, wp, c.hi); cx2.restore();
+    K.fill(G, [K.P(ex + ew, ey, 0), K.P(ex + ew, ey + ed, 0), K.P(ex + ew, ey + ed, eh), K.P(ex + ew, ey, eh)], T.body.side, T.edge);
+    K.box(G, ex, ey, eh, ew, ed, 16, {});
+    for (let i = 0; i < 11; i++) G.l([K.P(ex + 14 + i * 18, ey, eh + 4), K.P(ex + 14 + i * 18, ey, eh + 12)], T.seam, 0.7);
+    K.tower(G, ex + 14, ey + ed - 14, eh + 16, G.mine ? (f.proc ? 2 : 1) : 2);
+    /* the load ports, and the pods on them */
+    K.box(G, 115, 22, 0, 80, 76, PORT_Z, { tone: 'base' }); pod(G, 155, PODY, PORT_Z, false, false);
+    K.box(G, 205, 22, 0, 80, 76, PORT_Z, { tone: 'base' }); docked(G, cfg, f);
+    if (p && !f.home && p[1] < ey - 4) w();
+    /* a screen on a stand showing the plasma's light as the etch goes on; the RF generator; the technician */
+    K.shadow(G, K.rectPlan(690, 70, 70, 60), 0, 14);
+    K.box(G, 690, 70, 0, 70, 60, 160, {});
+    for (let k = 0; k < 4; k++) { K.seamH(G, 690, 70, 70, 28 + k * 34); K.onFront(G, 696, 70, 36 + k * 34, 8, 5, k === 1 && f.proc ? c.warm : T.seam); }
+    K.box(G, 742, 14, 0, 8, 8, 120, { tone: 'base' });
+    K.box(G, 716, 8, 120, 60, 10, 42, {});
+    K.onFront(G, 720, 8, 124, 52, 34, c.dark ? c.bg : mix(c.lo, c.line, 0.05));
+    const tr = []; for (let i = 0; i <= 20; i++) { const u = i / 20, v = 0.2 + 0.6 * Math.exp(-((u - 0.55) ** 2) * 30) * (G.mine && !f.proc ? 0.15 : 1); tr.push(K.P(722 + u * 48, 8, 127 + v * 28)); }
+    G.l(tr, c.grn, 1);
+    K.person(G, 800, 30);
+  }
+};
 
 /* ---- implant: atoms of another element shot into the silicon, then a flash of heat heals the crystal ---- */
 const stImplant = cluster('implant', {
@@ -706,6 +848,14 @@ export function drawJourney(G, o) {
     if (trays) tray(G, x, PODY, z, true, !f || f.home); else pod(G, x, PODY, z, true, f ? f.open : false);
     if (cross && o.dist > 0.06) crate(G, x, PODY, z);
   }
+  /* the part the current step happens in, lit in the picture */
+  if (f && o.dist < 0.02 && cfg.part && cfg.part[f.s.to]) {
+    const shapes = (STATIONS[id].parts[cfg.part[f.s.to]] || []), ctx2 = G.ctx;
+    ctx2.save(); ctx2.strokeStyle = c.warm; ctx2.lineWidth = G.lw(1.6); ctx2.lineJoin = 'round'; ctx2.globalAlpha = 0.55 + 0.25 * Math.sin(G.t * 3);
+    if (c.dark) { ctx2.shadowColor = c.warm; ctx2.shadowBlur = 10; }
+    shapes.forEach(sh => { ctx2.beginPath(); if (sh.r) ctx2.rect(sh.r[0], sh.r[1], sh.r[2], sh.r[3]); else if (sh.c) ctx2.arc(sh.c[0], sh.c[1], sh.c[2], 0, 6.2832); else sh.p.forEach((q, i) => (i ? ctx2.lineTo(q[0], q[1]) : ctx2.moveTo(q[0], q[1]))); ctx2.stroke(); });
+    ctx2.restore();
+  }
   /* the band: what is happening, and the slice through your wafer. Inside the bottom of the picture, or,
      on a phone, under it. */
   const under = o.below > 120, top = under ? 1000 : 818, bottom = under ? 1000 + o.below : 1000, small = !roomy(G);
@@ -722,7 +872,7 @@ export function drawJourney(G, o) {
     if (!small) { ctx.save(); ctx.font = '500 ' + 10 * u + 'px ' + MONO; ctx.fillStyle = c.line; ctx.fillText(t('slice.title'), sx + 4 * u, sy + 13 * u); ctx.restore(); }
     const pad = small ? 4 * u : 19 * u, lw = small ? sw - 8 * u : sw * 0.55, labs = section(G, sx + 4 * u, sy + pad, lw, sh - pad - 4 * u, L, a, dust);
     if (!small) {
-      ctx.save(); ctx.font = '500 ' + 10 / G.s + 'px ' + MONO; ctx.textBaseline = 'middle';
+      ctx.save(); ctx.font = '500 ' + 10 * u + 'px ' + MONO; ctx.textBaseline = 'middle';
       let last = -1e9; labs.sort((p, q) => q[0] - p[0]).forEach(([ly, k, isNew]) => {
         let yy = Math.min(ly, last - 12 / G.s); if (last < -1e8) yy = ly; last = yy;
         const lx = sx + 4 * u + lw;
@@ -733,5 +883,35 @@ export function drawJourney(G, o) {
     }
     tx = sx + sw + 18;
   }
-  caption(G, t(key, { layers: M.layers }), tx, top + 12, 1000 - tx - 16, bottom - 8, n);
+  /* the steps of this station, in a row: the one under way is lit; tap one to watch it again, or pause */
+  const hits = { chips: [], pause: null };
+  let ctop = top + 12;
+  if (cfg && o.dist < 0.3) {
+    const R = 9.5 * u, fs = 11.5 * u, gap = 8 * u, y = top + 12 + R, steps = cfg.steps.map((s, i) => ({ s, i, n: cfg.num[i] })).filter(q => q.n);
+    const titleOf = k => { const m = /^<b>(.*?)<\/b>/.exec(t(k)); return m ? m[1] : ''; };
+    ctx.save(); ctx.font = '600 ' + fs + 'px ' + SANS; ctx.textBaseline = 'middle';
+    const room = 1000 - tx - 16 - 3 * R, full = steps.reduce((w, q) => w + 2 * R + 5 * u + ctx.measureText(titleOf(q.s.k)).width + gap, 0) <= room;
+    let x = tx;
+    steps.forEach(q => {
+      const now = f && f.i === q.i, past = f && f.i > q.i, title = titleOf(q.s.k), tw = full || now ? ctx.measureText(title).width + 5 * u : 0;
+      G.c(x + R, y, R, now ? c.warm : past ? c.up : c.bg, now ? c.warm : c.line, 1.1);
+      ctx.font = '700 ' + 10.5 * u + 'px ' + MONO; ctx.textAlign = 'center'; ctx.fillStyle = now ? c.bg : c.hi; ctx.fillText(q.n, x + R, y + 0.5 * u);
+      ctx.font = '600 ' + fs + 'px ' + SANS; ctx.textAlign = 'left';
+      if (tw) { ctx.fillStyle = now ? c.warm : past ? c.hi : c.line; ctx.fillText(title, x + 2 * R + 5 * u, y); }
+      hits.chips.push({ x, y: y - R, w: 2 * R + tw, h: 2 * R, i: q.i });
+      x += 2 * R + tw + gap;
+    });
+    /* pause or play */
+    const px = 1000 - 16 - 2 * R;
+    G.c(px + R, y, R, c.bg, c.line, 1.1);
+    ctx.fillStyle = c.hi;
+    if (o.paused) { ctx.beginPath(); ctx.moveTo(px + R - 3 * u, y - 4.5 * u); ctx.lineTo(px + R + 4.5 * u, y); ctx.lineTo(px + R - 3 * u, y + 4.5 * u); ctx.closePath(); ctx.fill(); }
+    else { ctx.fillRect(px + R - 3.5 * u, y - 4 * u, 2.4 * u, 8 * u); ctx.fillRect(px + R + 1.1 * u, y - 4 * u, 2.4 * u, 8 * u); }
+    hits.pause = { x: px, y: y - R, w: 2 * R, h: 2 * R };
+    ctx.restore();
+    ctop = y + R + 4 * u;
+    n = 0;
+  }
+  caption(G, t(key, { layers: M.layers }), tx, ctop, 1000 - tx - 16, bottom - 8, n);
+  return hits;
 }

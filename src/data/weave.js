@@ -27,12 +27,12 @@ export const REPO = 'https://github.com/focusxyz11/open-silicon-lab';
 
 export const DEPTHS = {
   /* a data centre */
-  building: { m: 120, portal: [465, 423, 30] },
+  building: { m: 29, portal: [355.01, 626.49, 69.5] },
   rack: { m: 2, portal: [468, 452, 64] },
   board: { m: 0.3, portal: [425, 425, 150] },
   chip: { m: 0.02, portal: [190, 190, 70] },
   /* a phone */
-  phone: { m: 0.18, portal: [380, 70, 300] },
+  phone: { m: 0.26, portal: [196, 331, 210] },
   phoneboard: { m: 0.05, portal: [410, 360, 240] },
   soc: { m: 0.012, portal: [200, 490, 56] },
   /* a car */
