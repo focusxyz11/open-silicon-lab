@@ -8,6 +8,7 @@ src/main.js             boot: load the words, then start the dive
 src/app/ui.js           the shell: world switch, rail, card, theme, saved state (localStorage), layout around the world
 src/app/world.js        the zoom: draws the current, previous and next depths, highlights, dots, tether, input
 src/app/scenes.js       one scene per depth, drawn in a 1000 x 1000 space, with its named parts
+src/engines/chip.js     your chip: its settings and what follows from them, relative to a starting chip (tested)
 src/engines/weave.js    pure logic: the current world, the camera, sizes, threads, when a core question appears (tested)
 src/data/weave.js       the data: worlds, depths and portals, threads, stops
 src/data/facts.json     sourced figures, loaded at start (src/main.js); FIGURES and CASES in weave.js point to them
@@ -34,6 +35,6 @@ Every word on screen lives in `src/i18n/en.json` and is read with `t('name')`. `
 
 ## Checks
 
-- `npm test`: the weave (continuity of the zoom, parts, threads, the core-question rule, figures and cases with sources) and the words.
+- `npm test`: your chip's model (`tests/chip.test.mjs`), the weave (continuity of the zoom, parts, threads, the core-question rule, figures and cases with sources) and the words.
 - `npm run test:browser`: Playwright opens the site on desktop and phone, in dark and light, dives, follows a question and lets it go, opens a real case and the companion, finds the invitation in a gap, and changes world.
 - `npm run build`: `dist/open-silicon-lab.html`, one self-contained file.

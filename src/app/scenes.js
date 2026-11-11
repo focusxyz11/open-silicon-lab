@@ -5,6 +5,13 @@
    A data centre: building, rack, board, chip. A phone: phone, phoneboard, soc. A car: car, ecu, mcu.
    Every chip: block, gate, switch, atom. */
 
+import { START, model } from '../engines/chip.js';
+
+/* Your chip (src/engines/chip.js): the scenes that show it read its settings from here. */
+let M = model(START);
+export const setChip = c => { M = model(c); };
+const heat = G => Math.max(0, Math.min(1, (M.power - 0.6) / 3));   /* 0 cool .. 1 very hot */
+
 const rnd = (i, j) => { const v = Math.sin(i * 127.1 + (j || 0) * 311.7) * 43758.5453; return v - Math.floor(v); };
 
 /* ---- building: one hall of an AI data centre ---- */
@@ -28,6 +35,10 @@ const building = {
     bCool.forEach(u => { G.r(u.r[0], u.r[1], u.r[2], u.r[3], c.mid, c.line, 1.1); G.c(u.r[0] + 24, u.r[1] + 20, 12, null, c.line, 1); G.c(u.r[0] + 70, u.r[1] + 20, 12, null, c.line, 1); });
     G.r(868, 200, 52, 580, c.mid, c.line, 1.1);
     for (let i = 0; i < 9; i++) G.r(876, 212 + i * 62, 36, 46, c.up, c.warm, 0.9);
+    /* your chip: the power drawn and the heat to carry away */
+    const p = Math.min(9, Math.round(M.power * 4.5));
+    G.a(0.55); for (let i = 0; i < p; i++) G.r(880, 216 + i * 62, 28, 38, c.warm); G.a(1);
+    G.a(0.08 + 0.25 * heat(G)); for (let r = 0; r < 5; r++) G.r(146, 256 + r * 105, 708, 49, c.warm); G.a(1);
     G.label('racks', 150, 186); G.label('cooling', 140, 112); G.label('power', 860, 190, 'right');
   }
 };
@@ -55,6 +66,7 @@ const rack = {
     });
     G.r(330, 862, 340, 66, c.up, c.line, 1.2);
     for (let i = 0; i < 4; i++) G.r(340 + i * 83, 872, 72, 46, c.mid, c.warm, 1);
+    G.a(0.15 + 0.6 * heat(G)); for (let i = 0; i < 4; i++) G.r(346 + i * 83, 878, 60, 34, c.warm); G.a(1);
     G.label('switch', 742, 96); G.label('servers', 742, 300); G.label('power', 742, 900); G.label('cooling', 258, 150, 'right');
   }
 };
@@ -77,6 +89,9 @@ const board = {
     traces.forEach(tr => G.l(tr.p, c.cool, 1.1));
     mem.forEach(m => { G.r(m.r[0], m.r[1], m.r[2], m.r[3], c.up, c.line, 1.2); G.r(m.r[0] + 8, m.r[1] + 10, m.r[2] - 16, m.r[3] - 20, c.lo, c.dim, 0.8); });
     for (let i = 0; i < 6; i++) for (let j = 0; j < 9; j++) G.r(720 + i * 28, 250 + j * 56, 14, 26, c.up, c.dim, 0.8);
+    /* your chip's heat, spreading from the big chip */
+    for (let k = 3; k >= 1; k--) { G.a((0.05 + 0.18 * heat(G)) / k); const e = 18 * k * (0.6 + heat(G)); G.r(350 - e, 350 - e, 300 + 2 * e, 300 + 2 * e, c.warm); }
+    G.a(1);
     G.r(350, 350, 300, 300, c.up, c.hi, 1.6);
     for (let i = 0; i < 14; i++) { G.r(360 + i * 20, 358, 8, 8, c.line); G.r(360 + i * 20, 634, 8, 8, c.line); G.r(358, 380 + i * 18, 8, 8, c.line); G.r(634, 380 + i * 18, 8, 8, c.line); }
     G.r(425, 425, 150, 150, c.lo, c.line, 1.2);
@@ -87,26 +102,34 @@ const board = {
 };
 
 /* ---- chip: compute blocks, memory, input and output, and the clock wires ---- */
-const CORES = (() => { const cols = 4, rows = 3, w = 740 / cols, h = 470 / rows, out = []; for (let j = 0; j < rows; j++) for (let i = 0; i < cols; i++) out.push({ r: [130 + i * w + 7, 130 + j * h + 7, w - 14, h - 14] }); return out; })();
+/* the cores that fit depend on your chip's switch size */
+const coreGrid = (cols, rows) => { const w = 740 / cols, h = 470 / rows, g = Math.min(14, w * 0.08), out = []; for (let j = 0; j < rows; j++) for (let i = 0; i < cols; i++) out.push({ r: [130 + i * w + g / 2, 130 + j * h + g / 2, w - g, h - g] }); return out; };
+const GRID_CACHE = {};
+const cores = () => { const k = M.grid.join('x'); return GRID_CACHE[k] || (GRID_CACHE[k] = coreGrid(M.grid[0], M.grid[1])); };
 const clock = [{ p: [[500, 136], [500, 594]] }, { p: [[315, 365], [685, 365]] }, { p: [[315, 208], [315, 522]] }, { p: [[685, 208], [685, 522]] }];
 const chip = {
-  parts: { cores: CORES, cache: [{ r: [130, 620, 740, 100] }], io: [{ r: [130, 740, 740, 90] }], clock },
+  get parts() { return { cores: cores(), cache: [{ r: [130, 620, 740, 100] }], io: [{ r: [130, 740, 740, 90] }], clock }; },
   draw(G) {
     const c = G.col;
     G.bg(c.lo);
     G.r(40, 40, 920, 920, c.mid, c.hi, 1.8);
     for (let i = 0; i < 22; i++) { const t = 78 + i * 39; G.r(t, 56, 24, 24, c.lo, c.line, 0.9); G.r(t, 920, 24, 24, c.lo, c.line, 0.9); G.r(56, t, 24, 24, c.lo, c.line, 0.9); G.r(920, t, 24, 24, c.lo, c.line, 0.9); }
     G.r(112, 112, 776, 776, c.lo, c.line, 1);
-    CORES.forEach((k, n) => {
+    const tick = Math.floor(G.t * 1.5 * M.clock);
+    cores().forEach((k, n) => {
       const r = k.r, m = Math.min(r[2], r[3]) * 0.07;
       G.r(r[0], r[1], r[2], r[3], c.up, c.line, 1.2);
       G.r(r[0] + m, r[1] + m, r[2] * 0.52, r[3] * 0.5, c.mid, c.dim, 0.9);
       G.r(r[0] + r[2] * 0.6, r[1] + m, r[2] * 0.4 - m, r[3] * 0.3, c.mid, c.dim, 0.9);
       G.r(r[0] + r[2] * 0.6, r[1] + r[3] * 0.4, r[2] * 0.4 - m, r[3] * 0.6 - m, c.lo, c.dim, 0.9);
       G.r(r[0] + m, r[1] + r[3] * 0.62, r[2] * 0.52, r[3] * 0.38 - m, c.lo, c.dim, 0.9);
-      if (rnd(n, Math.floor(G.t * 1.5)) > 0.55) { G.a(0.5); G.r(r[0] + m, r[1] + m, r[2] * 0.52, r[3] * 0.5, c.cool); G.a(1); }
+      if (rnd(n, tick) > 0.55) { G.a(0.5); G.r(r[0] + m, r[1] + m, r[2] * 0.52, r[3] * 0.5, c.cool); G.a(1); }
+      /* your chip: signals that arrive after the tick */
+      if (rnd(n + 50, tick) < M.late) { G.a(0.55); G.r(r[0], r[1], r[2], r[3], c.red); G.a(1); }
     });
     clock.forEach(k => G.l(k.p, c.warm, 1.3));
+    /* the clock's tick travelling along its wires, faster with your clock */
+    clock.forEach((k, i) => { const u = (G.t * 0.6 * M.clock + i * 0.25) % 1, a = k.p[0], b = k.p[1]; G.r(a[0] + (b[0] - a[0]) * u - 5, a[1] + (b[1] - a[1]) * u - 5, 10, 10, c.warm); });
     for (let i = 0; i < 6; i++) { const x = 136 + i * 123; G.r(x, 626, 113, 88, c.up, c.line, 1); for (let k = 1; k < 8; k++) G.l([[x + k * 14, 630], [x + k * 14, 710]], c.dim, 0.7); }
     for (let i = 0; i < 8; i++) G.r(136 + i * 92, 746, 82, 78, c.mid, c.line, 1);
     G.label('cores', 136, 126); G.label('cache', 136, 612); G.label('io', 136, 846); G.label('clock', 508, 380);
@@ -127,7 +150,7 @@ const block = {
       G.l([[40, y], [624, y]], c.warm, 1.4); G.l([[40, y + 60], [624, y + 60]], c.cool, 1.4);
       let x = 44, n = 0;
       while (x < 600) {
-        let w = 22 + Math.floor(rnd(i, n) * 44);
+        let w = Math.max(10, Math.round((22 + Math.floor(rnd(i, n) * 44)) * Math.min(1.8, M.s)));
         if (i === 5 && x < 300 && x + w > 296) w = 296 - x;
         if (i === 5 && Math.abs(x - 300) < 5) { x = 300; w = 44; }
         if (x + w > 620) w = 620 - x;
@@ -165,7 +188,13 @@ const gate = {
     [[250, 240], [486, 240], [702, 262], [250, 680], [702, 680], [702, 330], [250, 310]].forEach(k => G.r(k[0], k[1], 26, 26, c.hi));
     const u = (G.t * 0.35) % 1;
     G.r(708, 250 + u * 440, 14, 14, c.warm);
+    /* your chip's timing: the slowest signal racing the tick */
+    const X = v => 140 + v * 340, late = M.path > M.tick, sig = Math.min(1, ((G.t * 0.4) % 1.25)) * M.path;
+    G.l([[140, 960], [880, 960]], c.line, 1);
+    G.r(X(M.tick) - 2, 930, 4, 60, c.warm);
+    G.r(140, 954, X(sig) - 140, 12, late && sig > M.tick ? c.red : c.grn);
     G.label('gates', 452, 500); G.label('diff', 208, 400); G.label('metal', 128, 80);
+    G.label('tick', X(M.tick) + 8, 940); G.label('signal', 140, 990);
   }
 };
 
@@ -184,7 +213,10 @@ const swtch = {
     G.r(180, 150, 90, 190, null, c.cool, 1.2); G.r(730, 150, 90, 190, null, c.cool, 1.2); G.r(465, 120, 70, 180, null, c.cool, 1.2);
     G.r(345, 300, 45, 500, c.mid, c.line, 1); G.r(610, 300, 45, 500, c.mid, c.line, 1);
     G.a(0.5); G.r(390, 300, 220, 500, c.red); G.a(1); G.r(390, 300, 220, 500, null, c.red, 1.5);
-    skins.forEach(k => G.r(k.r[0], k.r[1], k.r[2], k.r[3], c.lo, c.warm, 1.6));
+    skins.forEach(k => G.r(k.r[0], k.r[1], k.r[2], k.r[3], c.lo, c.warm, 1.6 * Math.min(1.6, M.s)));
+    /* your chip: current slipping through the thinner walls */
+    const leaks = Math.round(2 * M.wall);
+    for (let n = 0; n < leaks; n++) { const k = skins[n % 3].r, x = 400 + rnd(n, 7) * 200, u = (G.t * 0.7 + rnd(n, 9)) % 1; G.c(x, k[1] + 4 - u * 40, 5, c.red); }
     sheets.forEach((sh, i) => {
       G.a(0.6); G.r(sh.r[0], sh.r[1], sh.r[2], sh.r[3], c.grn); G.a(1); G.r(sh.r[0], sh.r[1], sh.r[2], sh.r[3], null, c.grn, 1.3);
       for (let k = 0; k < 3; k++) { const x = 340 + (((G.t * 0.28 + k / 3 + i * 0.17) % 1) * 320); G.r(x - 5, sh.r[1] + 20, 10, 10, c.hi); }
@@ -215,6 +247,9 @@ const atom = {
       G.c(p[0], p[1], dop ? 27 : 23, dop ? c.mid : c.up, dop ? c.warm : c.hi, dop ? 2 : 1.2);
       G.c(p[0] - 7, p[1] - 7, 5, c.lo);
     }
+    /* your chip: electrons slipping through the wall, more as it gets thinner */
+    const through = Math.round(1.5 * M.wall);
+    for (let n = 0; n < through; n++) { const x = 60 + rnd(n, 21) * 880, u = (G.t * 0.5 + rnd(n, 22)) % 1; G.c(x, 200 - u * 170, 6, c.red); }
     for (let i = 0; i < 11; i++) {
       const x = ((G.t * 70 + i * 97) % 1000), y = 258 + (i % 7) * 95 + Math.sin(G.t * 2 + i) * 16;
       G.c(x, y, 6.5, c.cool); G.c(x, y, 2.4, c.dark ? '#fff' : c.lo);
@@ -256,7 +291,7 @@ const phone = {
     /* the battery, with its charge */
     G.r(310, 400, 380, 430, c.up, c.line, 1.2);
     G.r(330, 420, 340, 390, c.mid, c.dim, 0.8);
-    const lvl = 0.55 + 0.1 * Math.sin(G.t * 0.4);
+    const lvl = Math.max(0.06, Math.min(0.95, 0.55 * Math.sqrt(M.battery))) + 0.03 * Math.sin(G.t * 0.4);
     G.a(0.35); G.r(330, 420 + 390 * (1 - lvl), 340, 390 * lvl, c.grn); G.a(1);
     G.r(470, 386, 60, 14, c.mid, c.line, 0.9);
     /* speaker and port */
@@ -290,7 +325,7 @@ const phoneboard = {
     for (let i = 0; i < 11; i++) { G.r(418 + i * 21, 366, 8, 6, c.line); G.r(418 + i * 21, 588, 8, 6, c.line); }
     G.r(430, 380, 200, 200, c.lo, c.line, 1.1);
     G.a(0.6); G.r(445, 395, 170, 170, c.mid); G.a(1);
-    const pulse = 0.25 + 0.2 * (0.5 + 0.5 * Math.sin(G.t * 1.3));
+    const pulse = 0.15 + 0.5 * heat(G) + 0.15 * (0.5 + 0.5 * Math.sin(G.t * 1.3 * M.clock));
     G.a(pulse); G.r(430, 380, 200, 200, c.warm); G.a(1);
     G.r(700, 720, 140, 50, c.up, c.line, 1); for (let i = 0; i < 12; i++) G.l([[708 + i * 11, 726], [708 + i * 11, 764]], c.warm, 1);
     G.label('soc', 410, 350); G.label('pmic', 150, 610); G.label('modem', 680, 170); G.label('storage', 150, 160);
@@ -321,7 +356,8 @@ const soc = {
     socCpu.forEach((k, n) => {
       const r = k.r; G.r(r[0], r[1], r[2], r[3], c.up, c.line, 1.2);
       G.r(r[0] + 8, r[1] + 8, r[2] * 0.55, r[3] * 0.5, c.mid, c.dim, 0.8); G.r(r[0] + r[2] * 0.62, r[1] + 8, r[2] * 0.38 - 8, r[3] - 16, c.lo, c.dim, 0.8);
-      if (rnd(n, Math.floor(G.t * 1.5)) > 0.5) { G.a(0.45); G.r(r[0] + 8, r[1] + 8, r[2] * 0.55, r[3] * 0.5, c.warm); G.a(1); }
+      if (rnd(n, Math.floor(G.t * 1.5 * M.clock)) > 0.5) { G.a(0.45); G.r(r[0] + 8, r[1] + 8, r[2] * 0.55, r[3] * 0.5, c.warm); G.a(1); }
+      if (rnd(n + 50, Math.floor(G.t * 1.5 * M.clock)) < M.late) { G.a(0.55); G.r(r[0], r[1], r[2], r[3], c.red); G.a(1); }
     });
     /* shared memory along the bottom */
     G.r(130, 740, 740, 130, c.mid, c.line, 1.2);
@@ -402,7 +438,8 @@ const mcu = {
     mcuCores.forEach((k, n) => {
       const r = k.r; G.r(r[0], r[1], r[2], r[3], c.up, c.line, 1.2);
       G.r(r[0] + 10, r[1] + 10, r[2] - 20, r[3] * 0.45, c.mid, c.dim, 0.8); G.r(r[0] + 10, r[1] + r[3] * 0.55, r[2] - 20, r[3] * 0.4, c.lo, c.dim, 0.8);
-      if (Math.floor(G.t * 1.5) % 2) { G.a(0.45); G.r(r[0] + 10, r[1] + 10, r[2] - 20, r[3] * 0.45, c.warm); G.a(1); }
+      if (Math.floor(G.t * 1.5 * M.clock) % 2) { G.a(0.45); G.r(r[0] + 10, r[1] + 10, r[2] - 20, r[3] * 0.45, c.warm); G.a(1); }
+      if (rnd(n + 50, Math.floor(G.t * 1.5 * M.clock)) < M.late) { G.a(0.55); G.r(r[0], r[1], r[2], r[3], c.red); G.a(1); }
     });
     G.r(282, 240, 16, 40, c.mid, c.grn, 1.2);
     /* flash memory: the program, kept with the power off */

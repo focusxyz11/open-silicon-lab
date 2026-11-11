@@ -5,11 +5,15 @@
    The worlds in the top bar choose where the dive starts: a data centre, a phone or a car. They meet below.
    At a stop, the card can also show the figures behind it (with their sources), real cases, and the
    companion: a prompt for any AI assistant that looks for the question behind the question. Where a question
-   has no form yet, the card invites the visitor to write one (on GitHub, through the question form). */
+   has no form yet, the card invites the visitor to write one (on GitHub, through the question form).
+   Your chip: at some stops a "Try it" changes one of its settings (src/engines/chip.js); every depth that
+   shows your chip then says what changed there, and its scene changes too. */
 import { t, fmtDate } from '../core/i18n.js';
-import { THREADS, WORLDS, STOPS, CASES, FIGURES, REPO } from '../data/weave.js';
+import { THREADS, WORLDS, STOPS, CASES, FIGURES, REPO, TRIES, SHOWS } from '../data/weave.js';
+import { CLOCKS, GENS, START, normal, changed, model, x2 } from '../engines/chip.js';
 import { N, IDS, WORLD, setWorld, worldOf, zIn, clampZ, sizeAt, sizeParts, stop, stopKey, crossing, below, above, nearest, threadOf, rootShown, threadDepths } from '../engines/weave.js';
 import { createWorld, threadColor, theme, reduced } from './world.js';
+import { setChip } from './scenes.js';
 
 const KEY = 'osl-weave-v1';
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -23,9 +27,11 @@ export function start(facts) {
   const S = {
     z: typeof saved.z === 'number' ? clampZ(saved.z) : 0,
     thread: threadOf(saved.thread) ? saved.thread : null,
-    seen: saved.seen && typeof saved.seen === 'object' ? saved.seen : {}
+    seen: saved.seen && typeof saved.seen === 'object' ? saved.seen : {},
+    chip: normal(saved.chip || START)
   };
-  const save = () => { try { localStorage.setItem(KEY, JSON.stringify({ world: WORLD, z: Math.round(world.z * 100) / 100, thread: S.thread, seen: S.seen })); } catch (e) { /* storage unavailable */ } };
+  setChip(S.chip);
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify({ world: WORLD, z: Math.round(world.z * 100) / 100, thread: S.thread, seen: S.seen, chip: S.chip })); } catch (e) { /* storage unavailable */ } };
 
   const depthName = d => t('depth.' + IDS[d] + '.name');
   const across = z => { const [n, unit] = sizeParts(sizeAt(z)); return t('ui.across', { n, unit }); };
@@ -116,6 +122,38 @@ export function start(facts) {
     return t('ui.prompt', { world: t('world.' + WORLD + '.name'), depth: depthName(d), size: n + ' ' + unit, see: t('depth.' + IDS[d] + '.see'), q: q(th, d), note: t('stop.' + key + '.note'),
       root: rootShown(S.seen[th]) ? t('ui.promptRoot', { root: t('thread.' + th + '.root'), behind: t('thread.' + th + '.behind') }) : '' });
   };
+  /* ---- your chip: what this depth shows of it, and the "Try it" at a stop ---- */
+  const chipWords = d => {
+    const id = IDS[d], m = model(S.chip); if (!SHOWS[id]) return '';
+    const timing = m.late > 0 ? t('chip.late', { late: Math.round(m.late * 100) }) : t('chip.inTime');
+    return t('chip.show.' + id, { power: x2(m.power), clock: x2(m.clock), cores: m.grid[0] * m.grid[1], timing, battery: x2(m.battery), area: x2(m.area), density: x2(m.density),
+      tick: x2(m.tick), path: x2(m.path), length: x2(m.s), wall: x2(m.wall) });
+  };
+  const readout = () => { const m = model(S.chip); return t('chip.readout', { clock: x2(m.clock), power: x2(m.power), late: Math.round(m.late * 100) }); };
+  const valueText = k => k === 'clock' ? t('chip.clock.value', { v: x2(S.chip.clock) }) : t('chip.gen.names')[S.chip.gen];
+  /* the depths of this world where a setting shows */
+  const showsOf = k => IDS.map((id, i) => i).filter(i => (SHOWS[IDS[i]] || []).includes(k));
+  const tryIt = (key, d) => {
+    const k = TRIES[key]; if (!k) return '';
+    const max = k === 'clock' ? CLOCKS.length - 1 : GENS - 1, val = k === 'clock' ? CLOCKS.indexOf(S.chip.clock) : S.chip.gen;
+    return '<section class="try"><p class="code">' + t('chip.try') + '</p><label class="trylabel" for="tryRange"><b>' + t('chip.' + k + '.label') + '</b> <output id="tryValue">' + esc(valueText(k)) + '</output></label>' +
+      '<input type="range" id="tryRange" data-setting="' + k + '" min="0" max="' + max + '" step="1" value="' + val + '">' +
+      '<p class="readout" id="tryOut" aria-live="polite">' + esc(readout()) + '</p>' + (SHOWS[IDS[d]] ? '<p class="small" id="chipHere">' + esc(chipWords(d)) + '</p>' : '') +
+      '<p class="small muted">' + t('chip.' + k + '.notice') + '</p>' +
+      '<p class="small muted">' + t('chip.shows') + '</p><div class="shows">' + showsOf(k).filter(i => i !== d).map(i => '<button type="button" class="chipgo" data-go="' + i + '">' + esc(depthName(i)) + '</button>').join('') + '</div>' +
+      (changed(S.chip) ? '<button type="button" class="link" data-reset>' + t('chip.reset') + '</button>' : '') + '</section>';
+  };
+  const mine = (d, skip) => (skip || !changed(S.chip) || !SHOWS[IDS[d]]) ? '' :
+    '<section class="mine"><p class="code">' + t('chip.yours') + '</p><p id="chipHere">' + esc(chipWords(d)) + '</p><button type="button" class="link" data-reset>' + t('chip.reset') + '</button></section>';
+  function setSetting(k, i) {
+    const c = Object.assign({}, S.chip); c[k] = k === 'clock' ? CLOCKS[i] : i;
+    S.chip = normal(c); setChip(S.chip); save();
+    const d = Math.round(world.z), v = $('tryValue'), o = $('tryOut'), here = $('chipHere');
+    if (v) v.textContent = valueText(k);
+    if (o) o.textContent = readout();
+    if (here) here.textContent = chipWords(d);
+  }
+
   const companion = (th, d) => '<button type="button" class="link" data-companion aria-expanded="false">' + t('ui.companion') + '</button><div class="companion" hidden><p class="small muted">' + t('ui.companionNote') +
     '</p><textarea readonly rows="7" aria-label="' + esc(t('ui.companion')) + '">' + esc(prompt(th, d)) + '</textarea><div class="moves"><button type="button" class="btn" data-copy>' + t('ui.copy') + '</button><span class="small muted" role="status"></span></div></div>';
   const qButton = (th, d) => '<button type="button" class="qpick" data-th="' + th + '" style="--th:' + threadColor(th) + '"><i></i><span>' + esc(q(th, d)) + '</span></button>';
@@ -128,6 +166,7 @@ export function start(facts) {
       if (rootShown(S.seen[th])) h += '<div class="root"><p class="small">' + t('ui.rootOf') + '</p><p class="rootq">' + esc(t('thread.' + th + '.root')) + '</p><p class="small">' + t('ui.behind') + ' <em>' + esc(t('thread.' + th + '.behind')) + '</em></p></div>';
       if (here) {
         h += '<p class="small muted">' + t('ui.becomes') + '</p><h2 id="cardQ">' + esc(q(th, d)) + '</h2><p>' + esc(t('stop.' + key + '.note')) + '</p>';
+        h += tryIt(key, d);
         const tried = t('stop.' + key + '.tried');
         h += figures(key);
         if (Array.isArray(tried)) h += '<p class="small muted">' + t('ui.tried') + '</p><ul class="tried">' + tried.map(x => '<li>' + esc(x) + '</li>').join('') + '</ul>';
@@ -142,10 +181,11 @@ export function start(facts) {
           (w ? '<button type="button" class="btn primary" data-world="' + w.id + '">' + esc(t('ui.meetIn', { world: t('world.' + w.id + '.name') })) + '</button>' : '');
       }
       h += '<button type="button" class="link" data-leave>' + t('ui.leave') + '</button></section>';
+      h += mine(d, here && TRIES[key]);
       const others = crossing(d).filter(x => x !== th);
       if (others.length) h += '<section class="crossing"><p class="code">' + t('ui.alsoCrossing') + '</p>' + others.map(x => qButton(x, d)).join('') + '</section>';
     } else {
-      h += '<p class="see">' + esc(t('depth.' + IDS[d] + '.see')) + '</p>';
+      h += '<p class="see">' + esc(t('depth.' + IDS[d] + '.see')) + '</p>' + mine(d);
       const all = crossing(d);
       h += '<section class="crossing"><p class="code">' + t('ui.crossingHere') + '</p>' + (all.length ? all.map(x => qButton(x, d)).join('') : '<p class="small muted">' + t('ui.noneCrossing') + '</p>') + '</section>';
       h += '<p class="small muted how">' + t('ui.howMove') + '</p>';
@@ -159,6 +199,7 @@ export function start(facts) {
     const g = e.target.closest('[data-go]'); if (g) { world.flyTo(+g.dataset.go); return; }
     const w = e.target.closest('[data-world]'); if (w) { enter(w.dataset.world); const n = nearest(S.thread, Math.round(world.z)); if (n != null) world.flyTo(n); return; }
     if (e.target.closest('[data-leave]')) { letGo(); return; }
+    if (e.target.closest('[data-reset]')) { S.chip = normal(START); setChip(S.chip); save(); card(); return; }
     const c = e.target.closest('[data-companion]');
     if (c) { const box = c.nextElementSibling, open = box.hidden; box.hidden = !open; c.setAttribute('aria-expanded', open ? 'true' : 'false'); if (open) box.querySelector('textarea').scrollTop = 0; return; }
     const cp = e.target.closest('[data-copy]');
@@ -178,6 +219,8 @@ export function start(facts) {
   }
 
   cardEl.addEventListener('scroll', anchor, { passive: true });
+  cardEl.addEventListener('input', e => { const r = e.target.closest('#tryRange'); if (r) setSetting(r.dataset.setting, +r.value); });
+  cardEl.addEventListener('change', e => { if (e.target.closest('#tryRange')) { const keep = e.target.value; card(); const r = $('tryRange'); if (r) { r.value = keep; r.focus(); } } });
 
   /* ---- layout: keep the scene clear of the rail and the card ---- */
   function layout() {

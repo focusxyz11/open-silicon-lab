@@ -98,3 +98,13 @@ export const FIGURES = {
   'idea.soc': ['riscv-rva23'], 'fail.car': ['car-life'], 'divide.car': ['chips-per-car'], 'know.car': ['car-shortage-2021'],
   'fail.ecu': ['car-ppm'], 'scale.mcu': ['legacy-auto'], 'make.mcu': ['chip-units']
 };
+
+/* Your chip (src/engines/chip.js): a few settings that every "Try it" changes and every depth shows.
+   TRIES: the stops where a setting can be changed, inside that stop's question.
+   SHOWS: what each depth shows of your chip, and which settings it depends on (words: chip.show.<depth>). */
+export const TRIES = { 'fail.chip': 'clock', 'life.phone': 'clock', 'scale.switch': 'gen', 'scale.soc': 'gen', 'scale.mcu': 'gen' };
+export const SHOWS = {
+  building: ['clock', 'gen'], rack: ['clock', 'gen'], board: ['clock', 'gen'], chip: ['clock', 'gen'],
+  phone: ['clock', 'gen'], phoneboard: ['clock', 'gen'], soc: ['clock', 'gen'], mcu: ['clock', 'gen'],
+  block: ['gen'], gate: ['clock', 'gen'], switch: ['gen'], atom: ['gen']
+};

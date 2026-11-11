@@ -1,6 +1,7 @@
 // Browser smoke test: the dive opens on desktop and phone, in dark and light, with no errors; every depth
 // can be reached; a question can be picked, followed deeper and let go; the dive can start in a phone or a car,
-// keeping a depth they share; a stop can show a real case, its figures and the companion; a gap invites a
+// keeping a depth they share; a stop can show a real case, its figures and the companion;
+// a "Try it" changes your chip and another depth shows it; a gap invites a
 // question; nothing scrolls sideways.
 // Needs Playwright:  npm install --no-save playwright && npx playwright install chromium
 import { serve } from './serve.mjs';
@@ -36,6 +37,13 @@ for (const [tag, viewport, scheme] of [['desktop', { width: 1360, height: 860 },
   await page.$eval('#card [data-companion]', el => el.click());
   if (!/question behind it/i.test(await page.$eval('#card .companion textarea', el => el.value))) problems.push(tag + ': the companion has no prompt');
   if (await page.$eval('#card .companion', el => getComputedStyle(el).display === 'none')) problems.push(tag + ': the companion did not open');
+  /* your chip: speed up the clock here, and the gate below shows it; then back to the starting chip */
+  await page.$eval('#tryRange', el => { el.value = el.max; el.dispatchEvent(new Event('input', { bubbles: true })); el.dispatchEvent(new Event('change', { bubbles: true })); });
+  if (!/[1-9]\d*% of signals late/.test(await page.textContent('#tryOut'))) problems.push(tag + ': a faster clock did not make signals late');
+  await go(5);
+  if (!/slowest signal/.test(await page.textContent('#card .mine').catch(() => ''))) problems.push(tag + ': the gate does not show your chip');
+  await page.$eval('#card [data-reset]', el => el.click());
+  if (await page.$('#card .mine')) problems.push(tag + ': going back to the starting chip did not work');
   await go(1);
   if (!/\/issues\/new\?template=question\.yml/.test(await page.$eval('#card a.btn', el => el.href).catch(() => ''))) problems.push(tag + ': a gap does not invite a question');
   await go(0);

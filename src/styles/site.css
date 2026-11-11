@@ -92,3 +92,13 @@ button{font:inherit;color:inherit}
 .link[data-companion]{color:var(--th,var(--accent));font-weight:600;text-decoration:none}
 .link[data-companion]::before{content:"? ";font-family:var(--mono)}
 .companion[hidden]{display:none}
+
+/* your chip: the "Try it" at a stop, and what each depth shows of it */
+.try,.mine{display:grid;gap:8px;padding:10px 12px;border:1px solid var(--warm);border-radius:6px;background:color-mix(in srgb,var(--warm) 7%,transparent)}
+.trylabel{display:flex;flex-wrap:wrap;justify-content:space-between;gap:6px;font-size:14px}
+.trylabel output{font:500 12.5px/1.4 var(--mono);color:var(--warm)}
+.try input[type=range]{width:100%;accent-color:var(--warm)}
+.readout{font:500 13px/1.4 var(--mono)}
+.shows{display:flex;flex-wrap:wrap;gap:6px}
+.chipgo{padding:4px 10px;border-radius:999px;border:1px solid var(--line);background:transparent;cursor:pointer;font-size:13px}
+.chipgo:hover{border-color:var(--warm)}
