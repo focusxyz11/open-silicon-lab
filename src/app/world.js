@@ -4,9 +4,10 @@
    The active question lights up the parts it is about; the other questions crossing this depth sit on their
    parts as coloured dots you can pick. The maths is in src/engines/weave.js. */
 import { t } from '../core/i18n.js';
-import { DEPTHS, THREADS } from '../data/weave.js';
+import { DEPTHS, THREADS, partWord } from '../data/weave.js';
 import { N, IDS, clampZ, frames, lineFrames, isLine, stop } from '../engines/weave.js';
-import { SCENES, partsOf, drawCarrier, TRACK, STAGE } from './scenes.js';
+import { SCENES, partsOf } from './scenes.js';
+import { drawJourney } from './journey.js';
 
 export const reduced = () => !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
 export const theme = () => {
@@ -78,7 +79,7 @@ export function createWorld(cv, on) {
 
   /* The drawing helper handed to every scene. */
   const G = {
-    ctx, s: 1, k: 1, primary: false, t: 0, col, id: '', base: 1,
+    ctx, s: 1, k: 1, primary: false, t: 0, col, id: '', base: 1, mine: false, run: null,
     lw(px) { return (px * this.k) / this.s; },
     bg(c) { this.ctx.fillStyle = c || this.col.lo; this.ctx.fillRect(0, 0, 1000, 1000); },
     r(x, y, w, h, fill, stroke, lw) { const c = this.ctx; if (fill) { c.fillStyle = fill; c.fillRect(x, y, w, h); } if (stroke) { c.strokeStyle = stroke; c.lineWidth = this.lw(lw || 1); c.strokeRect(x, y, w, h); } },
@@ -88,7 +89,7 @@ export function createWorld(cv, on) {
     /* a small name beside a part, only on the depth you are standing in */
     label(key, x, y, align) {
       if (!this.primary) return;
-      const s = t('part.' + this.id + '.' + key), c = this.ctx, size = 11.5 / this.s;
+      const s = t('part.' + partWord(this.id, key)), c = this.ctx, size = 11.5 / this.s;
       c.save(); c.font = '500 ' + size + 'px ' + MONO; c.textAlign = align || 'left';
       const m = c.measureText(s).width, bx = align === 'center' ? x - m / 2 : align === 'right' ? x - m : x;
       c.globalAlpha = this.base * 0.8; c.fillStyle = this.col.lo; c.fillRect(bx - 4 / this.s, y - size, m + 8 / this.s, size * 1.4);
@@ -140,21 +141,32 @@ export function createWorld(cv, on) {
 
   function box() {
     const aw = Math.max(50, W - inset.l - inset.r), ah = Math.max(50, H - inset.t - inset.b);
-    return { B: Math.min(aw, ah), cx: inset.l + aw / 2, cy: inset.t + ah / 2 };
+    /* on the line, in a tall narrow space (a phone), the box moves up and the words go under it */
+    if (isLine() && ah - aw > 90) { const below = Math.min(ah - aw, 200); return { B: aw, cx: inset.l + aw / 2, cy: inset.t + (ah - below) / 2, below }; }
+    return { B: Math.min(aw, ah), cx: inset.l + aw / 2, cy: inset.t + ah / 2, below: 0 };
   }
 
-  /* the journey: stations side by side, the camera sliding along the line */
+  /* the journey: stations side by side, the camera sliding along the line. The station you stand at is
+     yours (G.mine): your wafer is in it, and from the moment you stop, its steps play (G.run, seconds). */
+  let stay = { i: -1, t: 0 };
   function renderLine(tm, b) {
-    const F = lineFrames(Z, b.B, b.cx, b.cy), pi = F.f < 0.5 ? F.i : F.i + 1;
+    const F = lineFrames(Z, b.B, b.cx, b.cy), pi = F.f < 0.5 ? F.i : F.i + 1, near = Math.round(Z), dist = Math.abs(Z - near);
+    if (!fly && !drag && dist < 0.02) { if (stay.i !== near) stay = { i: near, t: tm }; } else if (dist > 0.05 || fly) stay.i = -1;
+    const run = stay.i === near ? (reduced() ? -1 : tm - stay.t) : null;
     ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1; ctx.fillStyle = col.bg; ctx.fillRect(0, 0, W * dpr, H * dpr);
     const all = [[F.i - 1, F.prev], [F.i, F.cur], [F.i + 1, F.next], [F.i + 2, F.after]].filter(k => k[1]);
-    all.forEach(([k, tr]) => drawLevel(k, tr, 1, k === pi, b.B, tm));
-    /* the wafer you travel with: it stays put on screen while the line moves past it */
+    all.forEach(([k, tr]) => { G.mine = k === near && dist < 0.5; G.run = G.mine ? run : null; drawLevel(k, tr, 1, k === pi, b.B, tm); });
+    G.mine = false; G.run = null;
+    /* over the stations, fixed in the box: your pod, and the band that says what is happening */
+    const k = b.B / 1000, left = b.cx - b.B / 2, top = b.cy - b.B / 2;
+    const below = (H - inset.b - (top + b.B)) / k;
+    ctx.save(); ctx.setTransform(dpr * k, 0, 0, dpr * k, dpr * left, dpr * top); ctx.beginPath(); ctx.rect(0, 0, 1000, 1000 + (b.below ? below : 0)); ctx.clip();
+    Object.assign(G, { s: k, k: 1, primary: true, t: tm, col, id: IDS[near], base: 1, box: b.B });
+    drawJourney(G, { ids: IDS, Z, near, dist, run, below: b.below ? below : 0 });
+    ctx.restore();
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    const k = b.B / 1000, left = b.cx - b.B / 2, top = b.cy - b.B / 2, near = Math.round(Z);
-    drawCarrier(ctx, col, k, left + TRACK[0] * k, top + TRACK[1] * k, top + STAGE[1] * k, IDS[near], Math.abs(Z - near), tm);
     /* where you are on the line: a mark per station */
-    const y = top + b.B - 10, gap = Math.min(18, (b.B - 40) / N);
+    const y = top + 12, gap = Math.min(18, (b.B - 40) / N);
     for (let i = 0; i < N; i++) { const x = b.cx + (i - (N - 1) / 2) * gap; ctx.globalAlpha = i === near ? 1 : 0.5; ctx.fillStyle = i === near ? col.warm : col.line; ctx.beginPath(); ctx.arc(x, y, i === near ? 4 : 2.5, 0, 6.2832); ctx.fill(); }
     /* everything outside the box fades back */
     ctx.globalAlpha = 0.45; ctx.fillStyle = col.bg;
@@ -305,7 +317,8 @@ export function createWorld(cv, on) {
     flyTo(d) {
       d = clampZ(d);
       if (reduced()) { fly = null; Z = d; on.arrive && on.arrive(Math.round(Z)); return; }
-      fly = { from: Z, to: d, t0: performance.now(), ms: Math.min(5200, 500 + Math.abs(d - Z) * 1150) };
+      /* on the line, a hop to the next station is slow enough to watch the pod travel */
+      fly = { from: Z, to: d, t0: performance.now(), ms: Math.min(5200, isLine() ? 1000 + Math.abs(d - Z) * 1300 : 500 + Math.abs(d - Z) * 1150) };
     },
     setThread(th) { thread = th; },
     setAnchor(p) { anchor = p; },

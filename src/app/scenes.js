@@ -4,19 +4,22 @@
    for an outline such as a box drawn in 2.5D). Labels are text
    names: part.<depth>.<key> in src/i18n/en.json. No words in this file.
    A data centre: building, rack, board, chip. A phone: phone, phoneboard, soc. A car: car, ecu, mcu.
-   The journey (one panorama of stations): crystal, slice, clean, deposit, print, etch, implant, wires, test,
-   pkg, ship; inside the factory, a dive from the machine that prints with light: scanner, wafer, die.
+   The journey's stations (crystal .. ship) are drawn in src/app/journey.js; inside the factory, a dive from
+   the machine that prints with light: scanner, wafer, die.
    Every chip: block, gate, switch, atom.
    One picture all the way down: every scene draws the next depth's scene, small, inside its portal square
    (inside(G, id)), so the depth that fades in during the dive is the picture that was already there. */
 
 import { DEPTHS, WORLDS } from '../data/weave.js';
 import { START, model, dies, defects, hits, WAFER, dieSquare } from '../engines/chip.js';
+import { rnd, clamp, poly, rr, blob, along2 } from './draw.js';
+import { STATIONS, setJourneyChip } from './journey.js';
 
 /* Your chip (src/engines/chip.js): the scenes that show it read its settings from here. */
 let M = model(START);
 let HITS = hits(START.size, START.gen), DIES = dies(START.size), SPECKS = defects(START.gen);
-export const setChip = c => { M = model(c); HITS = hits(M.size, M.gen); DIES = dies(M.size); SPECKS = defects(M.gen); };
+export const setChip = c => { M = model(c); HITS = hits(M.size, M.gen); DIES = dies(M.size); SPECKS = defects(M.gen); setJourneyChip(M, HITS, DIES); };
+setJourneyChip(M, HITS, DIES);
 /* "Build it": how far the switch has been made (null: finished) */
 let BUILD = null;
 export const BUILD_STEPS = 8;
@@ -29,7 +32,6 @@ const NEXT = {}; WORLDS.filter(w => !w.line).forEach(w => w.depths.forEach((d, i
 Object.entries(DEPTHS).forEach(([d, v]) => { if (v.inner) NEXT[d] = v.inner; });
 /* the wafer's portal follows your chip's size, as in src/app/ui.js */
 const portalOf = id => (id === 'wafer' ? dieSquare(M.size) : DEPTHS[id].portal);
-const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 /* The side of the box the dive is drawn in, in screen pixels: line weights depend on it (world.js: k).
    world.js passes it as G.box; without it, it is read back from a scene drawn at a size where k is not
    clamped, and until then from the canvas. */
@@ -57,7 +59,6 @@ function inside(G, id) {
   ctx.save(); ctx.globalAlpha = 0.5 * G.base; ctx.strokeStyle = c.line; ctx.lineWidth = 1 / G.s; ctx.strokeRect(p[0], p[1], p[2], p[2]); ctx.restore();
 }
 
-const rnd = (i, j) => { const v = Math.sin(i * 127.1 + (j || 0) * 311.7) * 43758.5453; return v - Math.floor(v); };
 
 /* ---- building: one hall of an AI data centre ---- */
 const bRows = [0, 1, 2, 3, 4, 5].map(r => ({ r: [146, 196 + r * 105, 708, 64] }));
@@ -333,18 +334,6 @@ const atom = {
 };
 
 
-/* Shapes that are not boxes: a filled outline, a box with round corners, a smooth closed curve. */
-const paint = (G, fill, stroke, lw) => { const c = G.ctx; if (fill) { c.fillStyle = fill; c.fill(); } if (stroke) { c.strokeStyle = stroke; c.lineWidth = G.lw(lw || 1); c.stroke(); } };
-const poly = (G, pts, fill, stroke, lw) => {
-  const c = G.ctx; c.beginPath(); pts.forEach((p, i) => (i ? c.lineTo(p[0], p[1]) : c.moveTo(p[0], p[1]))); c.closePath(); paint(G, fill, stroke, lw);
-};
-const rr = (G, x, y, w, h, q, fill, stroke, lw) => {
-  const c = G.ctx; c.beginPath(); c.moveTo(x + q, y); c.arcTo(x + w, y, x + w, y + h, q); c.arcTo(x + w, y + h, x, y + h, q); c.arcTo(x, y + h, x, y, q); c.arcTo(x, y, x + w, y, q); c.closePath(); paint(G, fill, stroke, lw);
-};
-const blob = (G, pts, fill, stroke, lw) => {
-  const c = G.ctx, n = pts.length, mid = i => [(pts[i % n][0] + pts[(i + 1) % n][0]) / 2, (pts[i % n][1] + pts[(i + 1) % n][1]) / 2], m0 = mid(n - 1);
-  c.beginPath(); c.moveTo(m0[0], m0[1]); for (let i = 0; i < n; i++) { const m = mid(i); c.quadraticCurveTo(pts[i][0], pts[i][1], m[0], m[1]); } c.closePath(); paint(G, fill, stroke, lw);
-};
 const flipY = pts => pts.map(p => [p[0], 1000 - p[1]]);
 /* the pads around the edge of a die */
 const pads = (G, n) => { const c = G.col, step = 836 / n; for (let i = 0; i < n; i++) { const t = 82 + i * step + step * 0.2, w = step * 0.6; G.r(t, 56, w, 24, c.lo, c.line, 0.9); G.r(t, 920, w, 24, c.lo, c.line, 0.9); G.r(56, t, 24, w, c.lo, c.line, 0.9); G.r(920, t, 24, w, c.lo, c.line, 0.9); } };
@@ -361,8 +350,6 @@ function cells(G, x, y, w, h, nx, ny, seed, live) {
   const c = G.col, sx = w / nx, sy = h / ny;
   for (let i = 0; i < nx; i++) for (let j = 0; j < ny; j++) G.r(x + i * sx, y + j * sy, sx * 0.74, sy * 0.74, live != null && rnd(i * 37 + j + seed, live) > 0.84 ? c.cool : rnd(i * 37 + j, seed) > 0.35 ? c.up : c.lo, null);
 }
-/* a signal moving along a line of points */
-const along2 = (pts, u) => { const n = pts.length - 1, k = Math.min(n - 1, Math.floor(u * n)), f = u * n - k; return [pts[k][0] + (pts[k + 1][0] - pts[k][0]) * f, pts[k][1] + (pts[k + 1][1] - pts[k][1]) * f]; };
 
 /* ======== a phone ======== */
 
@@ -671,33 +658,6 @@ const mcu = {
 
 /* ======== a chip factory ======== */
 
-/* ---- 2.5D: the factory is drawn in isometric view, so its line and its process can be seen.
-   o = [x, y, scale]: where world point (0, 0, 0) lands, and how large a unit is. ---- */
-const isoP = (o, x, y, z) => [o[0] + (x - y) * 0.866 * o[2], o[1] + (x + y) * 0.5 * o[2] - (z || 0) * o[2]];
-const isoInv = (o, sx, sy) => { const a = (sx - o[0]) / (0.866 * o[2]), b = (sy - o[1]) / (0.5 * o[2]); return [(a + b) / 2, (b - a) / 2]; };
-const faces = c => c.dark ? [c.up, c.mid, c.lo] : [c.lo, c.mid, c.up];
-/* a box standing on (x, y, z), w along x, d along y, h high; returns its outline, for parts */
-function isoBox(G, o, x, y, z, w, d, h, stroke, tint, lw) {
-  const P = (a, b, cc) => isoP(o, a, b, cc), [ft, fl, fr] = faces(G.col), sk = stroke || G.col.line;
-  const top = [P(x, y, z + h), P(x + w, y, z + h), P(x + w, y + d, z + h), P(x, y + d, z + h)];
-  const left = [P(x, y + d, z + h), P(x + w, y + d, z + h), P(x + w, y + d, z), P(x, y + d, z)];
-  const right = [P(x + w, y, z + h), P(x + w, y + d, z + h), P(x + w, y + d, z), P(x + w, y, z)];
-  poly(G, left, fl, sk, lw || 0.9); poly(G, right, fr, sk, lw || 0.9); poly(G, top, ft, sk, lw || 0.9);
-  if (tint) { G.a(tint[1]); poly(G, top, tint[0]); G.a(1); }
-  return [P(x, y, z + h), P(x + w, y, z + h), P(x + w, y, z), P(x + w, y + d, z), P(x, y + d, z), P(x, y + d, z + h)];
-}
-/* a flat shape lying on a level: a rectangle, a circle */
-const isoFlat = (G, o, x, y, z, w, d, fill, stroke, lw) => poly(G, [isoP(o, x, y, z), isoP(o, x + w, y, z), isoP(o, x + w, y + d, z), isoP(o, x, y + d, z)], fill, stroke, lw);
-function isoRing(G, o, x, y, z, r, fill, stroke, lw) { const p = isoP(o, x, y, z), ctx = G.ctx; ctx.beginPath(); ctx.ellipse(p[0], p[1], 1.2247 * r * o[2], 0.7071 * r * o[2], 0, 0, 6.2832); paint(G, fill, stroke, lw); }
-/* a round tank standing on level z */
-function isoTank(G, o, x, y, r, h, stroke, z) {
-  const c = G.col, b = isoP(o, x, y, z || 0), t = isoP(o, x, y, (z || 0) + h), rx = 1.2247 * r * o[2], ry = 0.7071 * r * o[2], ctx = G.ctx;
-  ctx.beginPath(); ctx.moveTo(b[0] - rx, b[1]); ctx.lineTo(t[0] - rx, t[1]); ctx.lineTo(t[0] + rx, t[1]); ctx.lineTo(b[0] + rx, b[1]); ctx.ellipse(b[0], b[1], rx, ry, 0, 0, Math.PI);
-  ctx.fillStyle = c.mid; ctx.fill(); ctx.strokeStyle = stroke || c.line; ctx.lineWidth = G.lw(0.9); ctx.stroke();
-  ctx.beginPath(); ctx.ellipse(t[0], t[1], rx, ry, 0, 0, 6.2832); ctx.fillStyle = faces(c)[0]; ctx.fill(); ctx.stroke();
-  return { c: [t[0], (t[1] + b[1]) / 2, Math.max(rx, (b[1] - t[1]) / 2 + ry)] };
-}
-const closed = pts => ({ p: pts.concat([pts[0]]), closed: true });
 
 /* ---- scanner: the machine that prints with light, cut open ---- */
 const beam = [[230, 640], [300, 330], [470, 210], [530, 110], [620, 210], [760, 330], [730, 760]];
@@ -813,332 +773,7 @@ const die = {
   }
 };
 
-/* ======== the journey: one panorama, travelled with one wafer ========
-   Every station is drawn in the same oblique 2.5D view, on the same floor, under the same overhead track,
-   so the stations join into one long hall and the wafer can be followed from machine to machine. The track
-   runs through every station at the same height; each machine stands at the same place in its station
-   (x 300..700) with the wafer's place inside it (STAGE). The wafer itself is drawn by the zoom (world.js
-   calls drawCarrier), so it stays put on screen while the line moves past it. */
-const obP = (x, y, z) => [x + 0.42 * y, 800 - (z || 0) - 0.28 * y];
-export const TRACK = obP(500, 300, 520), STAGE = obP(500, 300, 140);
-const obPoly = pts => pts.map(p => obP(p[0], p[1], p[2]));
-/* a solid box: front, top and right side show */
-function obBox(G, x, y, z, w, d, h, stroke, tint, lw) {
-  const [ft, fl, fr] = faces(G.col), sk = stroke || G.col.line;
-  poly(G, obPoly([[x, y, z], [x + w, y, z], [x + w, y, z + h], [x, y, z + h]]), fl, sk, lw || 0.9);
-  poly(G, obPoly([[x + w, y, z], [x + w, y + d, z], [x + w, y + d, z + h], [x + w, y, z + h]]), fr, sk, lw || 0.9);
-  poly(G, obPoly([[x, y, z + h], [x + w, y, z + h], [x + w, y + d, z + h], [x, y + d, z + h]]), ft, sk, lw || 0.9);
-  if (tint) { G.a(tint[1]); poly(G, obPoly([[x, y, z + h], [x + w, y, z + h], [x + w, y + d, z + h], [x, y + d, z + h]]), tint[0]); G.a(1); }
-}
-/* a machine cut open at the front: its back, left side and floor, then (the caller draws inside) its frame */
-function obCut(G, x, y, z, w, d, h, stroke) {
-  const c = G.col, [ft, fl, fr] = faces(c), sk = stroke || c.line;
-  poly(G, obPoly([[x, y + d, z], [x + w, y + d, z], [x + w, y + d, z + h], [x, y + d, z + h]]), fr, sk, 1);
-  poly(G, obPoly([[x, y, z], [x, y + d, z], [x, y + d, z + h], [x, y, z + h]]), fl, sk, 1);
-  poly(G, obPoly([[x, y, z], [x + w, y, z], [x + w, y + d, z], [x, y + d, z]]), c.lo, sk, 1);
-  return () => {
-    G.l(obPoly([[x, y, z + h], [x + w, y, z + h], [x + w, y + d, z + h], [x, y + d, z + h], [x, y, z + h]]), sk, 1.4);
-    G.l(obPoly([[x + w, y, z], [x + w, y, z + h]]), sk, 1.4); G.l(obPoly([[x, y, z], [x + w, y, z]]), sk, 1.4);
-    G.l(obPoly([[x + w, y, z], [x + w, y + d, z], [x + w, y + d, z + h]]), sk, 1);
-    G.a(0.06); poly(G, obPoly([[x, y, z], [x + w, y, z], [x + w, y, z + h], [x, y, z + h]]), c.hi); G.a(1);
-  };
-}
-/* a box's outline, as a part */
-const obShape = (x, y, z, w, d, h) => closed(obPoly([[x, y, z], [x + w, y, z], [x + w, y + d, z], [x + w, y + d, z + h], [x, y + d, z + h], [x, y, z + h]]));
-/* the hall around every station: floor, back wall, and in the factory its ceiling filters and the track */
-function hall(G, plant, from) {
-  const c = G.col;
-  G.bg(c.lo);
-  poly(G, obPoly([[-400, 0, 0], [1400, 0, 0], [1400, 600, 0], [-400, 600, 0]]), c.mid, null);
-  for (let x = -400; x <= 1400; x += 100) G.l(obPoly([[x, 0, 0], [x, 600, 0]]), c.dim, 0.5);
-  poly(G, obPoly([[-400, 600, 0], [1400, 600, 0], [1400, 600, 600], [-400, 600, 600]]), faces(c)[2], null);
-  if (plant === 'fab') {
-    for (let x = -400; x < 1400; x += 80) poly(G, obPoly([[x + 6, 600, 540], [x + 74, 600, 540], [x + 74, 600, 590], [x + 6, 600, 590]]), c.up, c.dim, 0.6);
-    for (let x = -360; x < 1400; x += 160) G.l(obPoly([[x, 600, 0], [x, 600, 520]]), c.dim, 0.5);
-  } else {
-    for (let x = -360; x < 1400; x += 240) poly(G, obPoly([[x, 600, 300], [x + 140, 600, 300], [x + 140, 600, 460], [x, 600, 460]]), c.lo, c.dim, 0.7);
-  }
-  /* where one building ends and the next begins: a wall the track passes through */
-  if (from) { poly(G, obPoly([[-10, 0, 0], [10, 0, 0], [10, 0, 600], [-10, 0, 600]]), c.up, c.line, 1); poly(G, obPoly([[10, 0, 0], [10, 600, 0], [10, 600, 600], [10, 0, 600]]), faces(c)[2], c.line, 1); }
-  /* the overhead track, at the same height in every station */
-  G.l([[-400, TRACK[1]], [1400, TRACK[1]]], c.line, 3);
-  for (let x = -300; x < 1400; x += 200) G.l([[x + 126, TRACK[1]], obP(x, 300, 600)], c.dim, 0.8);
-  /* other wafers on their way */
-  for (let k = 0; k < 3; k++) { const u = ((G.t * 0.05 + k / 3) % 1) * 1400 - 200; if (Math.abs(u - 626) > 120) G.r(u - 14, TRACK[1] + 2, 28, 24, c.up, c.line, 0.8); }
-}
-/* the hoist that lowers the wafer from the track into a machine */
-const hoist = (G, top) => G.l([[TRACK[0], TRACK[1]], [TRACK[0], top]], G.col.dim, 1);
-
-/* ---- crystal: sand purified, melted, and pulled up as one perfect crystal (a wafer plant) ---- */
-const stCrystal = {
-  parts: { sand: [{ c: [150, 760, 70] }], furnace: [obShape(360, 140, 0, 280, 280, 480)], melt: [obShape(420, 220, 60, 160, 120, 50)], ingot: [obShape(470, 250, 120, 60, 60, 260)] },
-  draw(G) {
-    const c = G.col;
-    hall(G, 'wafers');
-    blob(G, [[80, 770], [120, 720], [190, 715], [235, 765], [200, 800], [110, 805]], c.up, c.warm, 1);
-    for (let i = 0; i < 24; i++) G.c(105 + rnd(i, 41) * 120, 730 + rnd(i, 42) * 60, 2.5 + rnd(i, 43) * 2.5, c.warm);
-    const done = obCut(G, 360, 140, 0, 280, 280, 480, c.line);
-    obBox(G, 420, 220, 20, 160, 120, 40, c.warm);
-    const m = obPoly([[425, 225, 62], [575, 225, 62], [575, 335, 62], [425, 335, 62]]); G.a(0.55 + 0.25 * Math.sin(G.t * 2)); poly(G, m, c.warm); G.a(1);
-    const lift = 120 + 40 * ((G.t * 0.05) % 1);
-    obBox(G, 470, 250, lift, 60, 60, 260, c.hi);
-    for (let k = 0; k < 5; k++) { const z = lift + 20 + ((G.t * 30 + k * 52) % 240); G.l(obPoly([[470, 250, z], [530, 250, z]]), c.dim, 0.8); }
-    G.l([obP(500, 280, lift + 260), obP(500, 280, 470)], c.hi, 1.2);
-    done();
-    G.label('sand', 80, 700); G.label('furnace', obP(640, 140, 480)[0] + 8, obP(640, 140, 480)[1]); G.label('melt', obP(580, 220, 60)[0] + 10, obP(580, 220, 60)[1]); G.label('ingot', obP(530, 250, 330)[0] + 10, obP(530, 250, 330)[1]);
-  }
-};
-
-/* ---- slice: sawn into wafers, then polished; the wafer's journey starts here ---- */
-const stSlice = {
-  parts: { ingot: [obShape(130, 230, 40, 60, 60, 260)], saw: [obShape(80, 180, 0, 170, 170, 340)], wafers: [obShape(760, 220, 0, 120, 120, 90)], polish: [obShape(360, 160, 0, 280, 280, 150)] },
-  draw(G) {
-    const c = G.col;
-    hall(G, 'wafers');
-    const sd = obCut(G, 80, 180, 0, 170, 170, 340, c.line);
-    obBox(G, 130, 230, 40, 60, 60, 260, c.hi);
-    const run = (G.t * 0.4) % 1;
-    for (let k = 0; k < 9; k++) G.l(obPoly([[80, 200, 60 + k * 28], [250, 330, 60 + k * 28]]), k / 9 < run ? c.warm : c.cool, 0.9);
-    sd();
-    hoist(G, STAGE[1] - 60);
-    const pd = obCut(G, 360, 160, 0, 280, 280, 150, c.line);
-    const r = 95, ctx = G.ctx, pc = obP(500, 300, 140); ctx.beginPath(); ctx.ellipse(pc[0], pc[1], r * 1.1, r * 0.42, 0, 0, 6.2832); paint(G, c.up, c.hi, 1);
-    const a = G.t * 1.4; G.l([[pc[0] + Math.cos(a) * 80, pc[1] + Math.sin(a) * 30], [pc[0] - Math.cos(a) * 80, pc[1] - Math.sin(a) * 30]], c.dim, 1);
-    pd();
-    for (let k = 0; k < 7; k++) { const q = obP(820, 280, 10 + k * 11); ctx.beginPath(); ctx.ellipse(q[0], q[1], 58, 18, 0, 0, 6.2832); paint(G, faces(c)[0], c.line, 0.8); }
-    G.label('saw', obP(80, 180, 340)[0], obP(80, 180, 340)[1] - 8); G.label('ingot', obP(190, 230, 200)[0] + 8, obP(190, 230, 200)[1]); G.label('polish', obP(640, 160, 150)[0] + 8, obP(640, 160, 150)[1]); G.label('wafers', obP(880, 220, 90)[0], obP(880, 220, 90)[1] - 10);
-  }
-};
-
-/* the machines of the factory's loop: every one stands at x 300..700, y 140..460 */
-const TOOL = [300, 140, 0, 400, 320, 360];
-const toolShape = obShape(...TOOL);
-function machine(G, h, stroke) { const t = TOOL; return obCut(G, t[0], t[1], t[2], t[3], t[4], h || t[5], stroke); }
-function stage(G, glow) { const pc = STAGE, ctx = G.ctx; ctx.beginPath(); ctx.ellipse(pc[0], pc[1] + 6, 120, 34, 0, 0, 6.2832); paint(G, G.col.up, glow || G.col.line, 1.2); }
-
-/* ---- clean: entering the factory; every layer starts here, washed ---- */
-const stClean = {
-  parts: { tool: [toolShape], spray: [obShape(420, 260, 250, 160, 80, 30)], filters: [closed(obPoly([[-400, 600, 540], [1400, 600, 540], [1400, 600, 590], [-400, 600, 590]]))], track: [{ p: [[0, TRACK[1]], [1000, TRACK[1]]] }] },
-  draw(G) {
-    const c = G.col;
-    hall(G, 'fab', true);
-    hoist(G, STAGE[1] - 40);
-    const done = machine(G, 360, c.cool);
-    for (let k = 0; k < 3; k++) obBox(G, 320 + k * 125, 360, 0, 110, 80, 90, c.cool, [c.cool, 0.25]);
-    stage(G, c.cool);
-    obBox(G, 420, 260, 250, 160, 80, 30, c.line);
-    for (let k = 0; k < 10; k++) { const u = (G.t * 1.2 + k * 0.1) % 1, x = 440 + (k % 5) * 30; const a = obP(x, 300, 250 - u * 100); G.c(a[0], a[1], 3, c.cool); }
-    done();
-    G.label('filters', 40, obP(0, 600, 590)[1] - 8); G.label('track', 40, TRACK[1] - 10); G.label('tool', obP(700, 140, 360)[0] + 8, obP(700, 140, 360)[1]); G.label('spray', obP(580, 260, 280)[0] + 8, obP(580, 260, 280)[1]);
-  }
-};
-
-/* ---- deposit: a thin new film laid over the whole wafer, from gases ---- */
-const stDeposit = {
-  parts: { tool: [toolShape], gas: [obShape(380, 440, 200, 240, 20, 120)], heater: [obShape(380, 220, 40, 240, 160, 40)] },
-  draw(G) {
-    const c = G.col;
-    hall(G, 'fab');
-    hoist(G, STAGE[1] - 40);
-    const done = machine(G, 360, c.line);
-    obBox(G, 380, 220, 40, 240, 160, 40, c.warm, [c.warm, 0.2 + 0.15 * Math.sin(G.t * 2)]);
-    stage(G);
-    for (let k = 0; k < 4; k++) { const x = 400 + k * 60; G.l(obPoly([[x, 460, 330], [x, 440, 330], [x, 440, 260]]), c.cool, 1.4); }
-    for (let k = 0; k < 26; k++) { const u = (G.t * 0.35 + rnd(k, 3)) % 1, x = 380 + rnd(k, 4) * 240; const a = obP(x, 300 + (rnd(k, 5) - 0.5) * 120, 330 - u * 170); G.a(1 - u * 0.6); G.c(a[0], a[1], 3, c.cool); G.a(1); }
-    done();
-    G.label('tool', obP(700, 140, 360)[0] + 8, obP(700, 140, 360)[1]); G.label('gas', obP(620, 460, 330)[0] + 8, obP(620, 460, 330)[1]); G.label('heater', obP(620, 220, 60)[0] + 10, obP(620, 220, 60)[1] + 10);
-  }
-};
-
-/* ---- print: coat, print with light through a mask, develop: three machines joined as one ---- */
-const stPrint = {
-  parts: { coat: [obShape(40, 180, 0, 200, 240, 220)], scanner: [toolShape], develop: [obShape(760, 180, 0, 200, 240, 220)], light: [{ p: [obP(500, 300, 470), obP(500, 300, 150)] }], mask: [obShape(410, 240, 400, 180, 120, 14)] },
-  draw(G) {
-    const c = G.col;
-    hall(G, 'fab');
-    const cd = obCut(G, 40, 180, 0, 200, 240, 220, c.line);
-    const sc = obP(140, 300, 90), ctx = G.ctx; ctx.beginPath(); ctx.ellipse(sc[0], sc[1], 70, 22, 0, 0, 6.2832); paint(G, c.up, c.warm, 1);
-    const a = G.t * 4; G.l([[sc[0] + Math.cos(a) * 60, sc[1] + Math.sin(a) * 18], [sc[0] - Math.cos(a) * 60, sc[1] - Math.sin(a) * 18]], c.warm, 1.2);
-    cd();
-    hoist(G, STAGE[1] - 40);
-    const done = machine(G, 480, c.warm);
-    stage(G, c.warm);
-    obBox(G, 410, 240, 400, 180, 120, 14, c.hi);
-    for (let k = 0; k < 6; k++) obBox(G, 420 + k * 28, 250, 414, 14, 100, 2, c.lo);
-    const on = (G.t * 0.8) % 1 < 0.6;
-    G.a(on ? 0.75 : 0.25); G.l([obP(330, 300, 460), obP(500, 300, 470), obP(500, 300, 150)], c.warm, 3); G.a(1);
-    done();
-    const dd = obCut(G, 760, 180, 0, 200, 240, 220, c.line);
-    for (let k = 0; k < 12; k++) { const u = (G.t * 0.9 + k / 12) % 1, q = obP(820 + (k % 4) * 25, 300, 170 - u * 80); G.c(q[0], q[1], 2.5, c.cool); }
-    dd();
-    G.label('coat', obP(40, 180, 220)[0], obP(40, 180, 220)[1] - 8); G.label('scanner', obP(700, 140, 480)[0] + 8, obP(700, 140, 480)[1]); G.label('develop', obP(760, 180, 220)[0] + 40, obP(760, 180, 220)[1] - 8);
-    G.label('mask', obP(590, 240, 414)[0] + 10, obP(590, 240, 414)[1]); G.label('light', obP(500, 300, 300)[0] + 14, obP(500, 300, 300)[1]);
-  }
-};
-
-/* ---- etch: plasma cuts the film wherever it is uncovered; people keep the machines in tune ---- */
-const stEtch = {
-  parts: { tool: [toolShape], plasma: [obShape(390, 220, 180, 220, 160, 140)], people: [{ c: [obP(160, 60, 80)[0], obP(160, 60, 80)[1] - 40, 60] }] },
-  draw(G) {
-    const c = G.col;
-    hall(G, 'fab');
-    /* a technician at a screen */
-    obBox(G, 90, 120, 0, 140, 50, 150, c.line); poly(G, obPoly([[100, 120, 70], [220, 120, 70], [220, 120, 140], [100, 120, 140]]), c.lo, c.cool, 1);
-    const p0 = obP(160, 60, 0), p1 = obP(160, 60, 150); G.l([p0, p1], c.hi, 6); G.c(p1[0], p1[1] - 10, 12, c.up, c.hi, 1.2);
-    hoist(G, STAGE[1] - 40);
-    const done = machine(G, 360, c.line);
-    stage(G);
-    const g = obPoly([[390, 220, 180], [610, 220, 180], [610, 380, 180], [390, 380, 180]]);
-    G.a(0.18 + 0.12 * Math.sin(G.t * 5)); poly(G, obPoly([[390, 220, 160], [610, 220, 160], [610, 380, 320], [390, 380, 320]]), c.red); G.a(1);
-    for (let k = 0; k < 18; k++) { const u = (G.t * 1.6 + rnd(k, 7)) % 1, x = 400 + rnd(k, 8) * 200; const a = obP(x, 300, 320 - u * 160); G.l([a, [a[0], a[1] + 10]], c.red, 1.4); }
-    done();
-    G.label('people', p1[0] - 20, p1[1] - 34, 'right'); G.label('tool', obP(700, 140, 360)[0] + 8, obP(700, 140, 360)[1]); G.label('plasma', obP(610, 220, 300)[0] + 10, obP(610, 220, 300)[1]);
-  }
-};
-
-/* ---- implant: atoms of another element shot into the silicon, then a flash of heat to heal the crystal ---- */
-const stImplant = {
-  parts: { tool: [toolShape], beam: [{ p: [obP(120, 300, 300), obP(300, 300, 300), obP(500, 300, 160)] }], magnet: [obShape(200, 240, 240, 100, 120, 120)], heater: [obShape(760, 180, 0, 200, 240, 220)] },
-  draw(G) {
-    const c = G.col;
-    hall(G, 'fab');
-    obBox(G, 40, 220, 0, 120, 160, 340, c.line);
-    obBox(G, 200, 240, 240, 100, 120, 120, c.cool, [c.cool, 0.25]);
-    hoist(G, STAGE[1] - 40);
-    const done = machine(G, 360, c.line);
-    stage(G, c.grn);
-    const path = [obP(120, 300, 300), obP(300, 300, 300), obP(500, 300, 160)];
-    G.a(0.7); G.l(path, c.grn, 2.2); G.a(1);
-    for (let k = 0; k < 6; k++) { const q = along2(path, (G.t * 0.6 + k / 6) % 1); G.c(q[0], q[1], 4, c.grn); }
-    done();
-    const hd = obCut(G, 760, 180, 0, 200, 240, 220, c.warm);
-    for (let k = 0; k < 4; k++) { const a = obP(780 + k * 45, 300, 200); G.a(0.4 + 0.3 * Math.sin(G.t * 3 + k)); G.r(a[0] - 10, a[1], 20, 8, c.warm); G.a(1); }
-    hd();
-    G.label('beam', obP(300, 300, 300)[0], obP(300, 300, 300)[1] - 14); G.label('magnet', obP(200, 240, 360)[0] - 8, obP(200, 240, 360)[1] - 8, 'right');
-    G.label('tool', obP(700, 140, 360)[0] + 8, obP(700, 140, 360)[1]); G.label('heater', obP(760, 180, 220)[0] + 40, obP(760, 180, 220)[1] - 8);
-  }
-};
-
-/* ---- wires: copper fills the trenches, polishing makes it flat; then back round the loop ---- */
-const stWires = {
-  parts: { plating: [obShape(40, 180, 0, 220, 240, 180)], polish: [toolShape], loop: [{ p: [obP(900, 600, 380), obP(900, 600, 470), obP(100, 600, 470), obP(100, 600, 380)] }] },
-  draw(G) {
-    const c = G.col;
-    hall(G, 'fab');
-    /* back to the start of the loop, for the next layer */
-    G.a(0.8); G.l([obP(900, 600, 380), obP(900, 600, 470), obP(100, 600, 470), obP(100, 600, 380)], c.warm, 2.4); G.a(1);
-    const ah = obP(100, 600, 380); G.l([[ah[0] - 12, ah[1] - 16], ah, [ah[0] + 12, ah[1] - 16]], c.warm, 2.4);
-    const pd = obCut(G, 40, 180, 0, 220, 240, 180, c.warm);
-    obBox(G, 60, 220, 0, 180, 160, 90, c.warm, [c.warm, 0.35]);
-    pd();
-    hoist(G, STAGE[1] - 40);
-    const done = machine(G, 300, c.line);
-    const pc = STAGE, ctx = G.ctx; ctx.beginPath(); ctx.ellipse(pc[0], pc[1] + 6, 140, 40, 0, 0, 6.2832); paint(G, c.up, c.hi, 1.2);
-    const a = G.t * 2; G.l([[pc[0] + Math.cos(a) * 120, pc[1] + 6 + Math.sin(a) * 34], [pc[0] - Math.cos(a) * 120, pc[1] + 6 - Math.sin(a) * 34]], c.dim, 1);
-    obBox(G, 560, 260, 160, 60, 60, 30, c.line); G.l([obP(590, 290, 190), obP(590, 290, 280)], c.line, 2);
-    done();
-    G.label('loop', obP(500, 600, 470)[0], obP(500, 600, 470)[1] - 12, 'center'); G.label('plating', obP(40, 180, 180)[0], obP(40, 180, 180)[1] - 8); G.label('polish', obP(700, 140, 300)[0] + 8, obP(700, 140, 300)[1]);
-  }
-};
-
-/* ---- test: needles touch every chip on the wafer; a map shows which are good ---- */
-const stTest = {
-  get parts() { return { prober: [toolShape], needles: [obShape(440, 260, 170, 120, 80, 60)], map: [{ r: [770, 360, 190, 190] }] }; },
-  draw(G) {
-    const c = G.col;
-    hall(G, 'fab');
-    hoist(G, STAGE[1] - 40);
-    const done = machine(G, 360, c.line);
-    stage(G, c.grn);
-    obBox(G, 410, 240, 240, 180, 120, 20, c.hi);
-    for (let k = 0; k < 9; k++) G.l([obP(450 + k * 12, 300, 240), obP(470 + k * 8, 300, 170)], c.hi, 0.8);
-    done();
-    /* the map: every chip on your wafer, good or not */
-    G.r(770, 360, 190, 190, c.lo, c.line, 1.2);
-    DIES.forEach((d, i) => { const x = 770 + (d[0] / 1000) * 190, y = 360 + (d[1] / 1000) * 190, w = Math.max(1.5, (d[2] / 1000) * 190 - 1); G.r(x, y, w, w, HITS[i] ? c.red : c.grn); });
-    G.l([[865, 550], [865, 620]], c.line, 2);
-    G.label('prober', obP(700, 140, 360)[0] + 8, obP(700, 140, 360)[1]); G.label('needles', obP(560, 260, 230)[0] + 10, obP(560, 260, 230)[1]); G.label('map', 770, 350);
-  }
-};
-
-/* ---- pkg: in another plant, the wafer is cut into chips; each good one is placed on its package ---- */
-const stPkg = {
-  parts: { saw: [{ c: [150, 560, 90] }], substrate: [obShape(400, 220, 120, 200, 160, 14)], bumps: [obShape(450, 260, 134, 100, 80, 8)], die: [obShape(450, 260, 150, 100, 80, 14)], memory: [obShape(640, 230, 120, 60, 140, 80)], lid: [obShape(820, 200, 0, 140, 200, 30)] },
-  draw(G) {
-    const c = G.col;
-    hall(G, 'pack', true);
-    const ctx = G.ctx, w = obP(150, 300, 60); ctx.beginPath(); ctx.ellipse(w[0], w[1], 100, 34, 0, 0, 6.2832); paint(G, c.up, c.line, 1);
-    for (let k = -3; k <= 3; k++) G.l([[w[0] + k * 22 - 20, w[1] - 26], [w[0] + k * 22 + 20, w[1] + 26]], c.dim, 0.6);
-    const bx = w[0] + Math.sin(G.t * 0.7) * 70; G.c(bx, w[1] - 70, 26, null, c.warm, 1.6); G.l([[bx, w[1] - 44], [bx, w[1] - 10]], c.warm, 1);
-    hoist(G, STAGE[1] - 40);
-    const done = machine(G, 360, c.line);
-    obBox(G, 400, 220, 106, 200, 160, 14, c.grn);
-    for (let i = 0; i < 6; i++) for (let j = 0; j < 4; j++) { const q = obP(460 + i * 16, 270 + j * 18, 136); G.c(q[0], q[1], 2.5, c.warm); }
-    const drop = 40 * (0.5 + 0.5 * Math.sin(G.t * 1.2));
-    obBox(G, 450, 260, 150 + drop, 100, 80, 14, c.hi, [c.cool, 0.25]);
-    for (let k = 0; k < 6; k++) obBox(G, 640, 230, 120 + k * 12, 60, 140, 10, c.line);
-    done();
-    obBox(G, 820, 200, 0, 140, 200, 30, c.hi);
-    G.label('saw', 60, 470); G.label('substrate', obP(400, 220, 120)[0] - 8, obP(400, 220, 120)[1] + 18, 'right'); G.label('die', obP(550, 260, 190)[0] + 10, obP(550, 260, 190)[1] - 6);
-    G.label('memory', obP(700, 230, 200)[0] + 8, obP(700, 230, 200)[1]); G.label('lid', obP(960, 200, 30)[0] - 40, obP(960, 200, 30)[1] - 14);
-  }
-};
-
-/* ---- ship: a last test, then out: into a data centre, a phone, a car ---- */
-const stShip = {
-  parts: { trays: [obShape(60, 160, 0, 240, 200, 70)], boxes: [toolShape], datacentre: [{ r: [700, 120, 110, 150] }], phone: [{ r: [830, 140, 60, 110] }], car: [{ r: [700, 300, 200, 80] }] },
-  draw(G) {
-    const c = G.col;
-    hall(G, 'pack');
-    obBox(G, 60, 160, 0, 240, 200, 70, c.line);
-    for (let i = 0; i < 6; i++) for (let j = 0; j < 3; j++) { const q = obP(80 + i * 34, 180 + j * 55, 72); G.r(q[0], q[1] - 8, 20, 12, rnd(i, j) < 0.1 ? c.red : c.up, c.line, 0.7); }
-    hoist(G, STAGE[1] - 40);
-    const done = machine(G, 300, c.line);
-    obBox(G, 430, 240, 100, 140, 120, 90, c.hi, [c.warm, 0.12]);
-    done();
-    /* the doors out, and what is waiting beyond them */
-    G.r(700, 120, 110, 150, c.mid, c.line, 1.2); for (let i = 0; i < 5; i++) G.r(712, 132 + i * 26, 86, 18, c.up, c.dim, 0.7);
-    rr(G, 830, 140, 60, 110, 10, c.mid, c.line, 1.2); G.r(840, 152, 40, 76, c.lo, c.dim, 0.6);
-    rr(G, 700, 310, 200, 50, 20, c.mid, c.line, 1.2); G.c(740, 362, 14, c.up, c.line, 1); G.c(860, 362, 14, c.up, c.line, 1);
-    G.label('trays', obP(60, 160, 70)[0], obP(60, 160, 70)[1] - 30); G.label('boxes', obP(700, 140, 300)[0] + 8, obP(700, 140, 300)[1] + 40);
-    G.label('datacentre', 700, 110); G.label('phone', 830, 130); G.label('car', 700, 300);
-  }
-};
-
-/* ---- the wafer you travel with: on the track between stations, lowered into each machine, with a slice
-   through its surface showing what this station has done to it. Drawn in screen space by world.js. ---- */
-const STEPS_SHOWN = { slice: 0, clean: 1, deposit: 2, print: 3, etch: 4, implant: 5, wires: 6, test: 7, pkg: 8, ship: 9 };
-export function drawCarrier(ctx, col, k, x, ty, sy, id, dist, t) {
-  const n = STEPS_SHOWN[id]; if (n == null) return;
-  const down = Math.max(0, Math.min(1, (0.32 - dist) / 0.17)), y = ty + (sy - ty) * down, chip = n >= 8;
-  ctx.save(); ctx.lineWidth = 1.2;
-  /* the pod on the track, and the wafer (or, after the cut, the chip) lowered from it */
-  ctx.fillStyle = col.up; ctx.strokeStyle = col.hi; ctx.fillRect(x - 22 * k, ty + 2 * k, 44 * k, 30 * k); ctx.strokeRect(x - 22 * k, ty + 2 * k, 44 * k, 30 * k);
-  if (down > 0) { ctx.strokeStyle = col.dim; ctx.beginPath(); ctx.moveTo(x, ty + 30 * k); ctx.lineTo(x, y); ctx.stroke(); }
-  ctx.fillStyle = col.dark ? '#c9d7ff' : '#7d93c7'; ctx.strokeStyle = col.hi;
-  if (down > 0.05) { ctx.beginPath(); if (chip) ctx.rect(x - 14 * k, y - 6 * k, 28 * k, 12 * k); else ctx.ellipse(x, y, 62 * k, 18 * k, 0, 0, 6.2832); ctx.fill(); ctx.stroke(); }
-  if (down < 0.95) { ctx.restore(); return; }
-  /* the slice: what this station has done */
-  const bx = x - 260 * k, by = y - 250 * k, W = 200 * k, H = 120 * k;
-  ctx.globalAlpha = 0.95; ctx.fillStyle = col.bg; ctx.strokeStyle = col.hi; ctx.beginPath(); ctx.rect(bx, by, W, H); ctx.fill(); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(bx + W, by + H); ctx.lineTo(x - 50 * k, y - 10 * k); ctx.stroke();
-  const L = (yy, hh, color, a, from, to) => { ctx.globalAlpha = a == null ? 1 : a; ctx.fillStyle = color; ctx.fillRect(bx + 6 * k + (from || 0) * (W - 12 * k), by + yy * k, ((to == null ? 1 : to) - (from || 0)) * (W - 12 * k), hh * k); ctx.globalAlpha = 1; };
-  const seg = (fn) => { for (let i = 0; i < 6; i++) fn(i / 6, (i + 1) / 6, i % 2 === 1); };
-  L(92, 22, col.mid);                                                      /* silicon */
-  if (n >= 5) seg((a, b, open) => { if (open) { ctx.fillStyle = col.grn; for (let j = 0; j < 4; j++) ctx.fillRect(bx + 6 * k + (a + (j + 0.5) / 4 * (b - a)) * (W - 12 * k), by + (94 + (j % 2) * 6) * k, 2.5 * k, 2.5 * k); } });
-  if (n >= 1 && n < 8) { L(86, 6, col.cool, 0.5); L(80, 6, col.warm, 0.4); }  /* layers made on earlier laps */
-  if (n >= 2 && n < 8) seg((a, b, open) => { if (!(open && n >= 4)) L(66, 14, col.cool, 0.9, a, b); });                 /* the new film */
-  if (n >= 3 && n <= 4) seg((a, b, open) => { L(54, 12, col.warm, open && n === 3 ? 0.3 : open ? 0 : 0.85, a, b); });  /* the light-sensitive layer */
-  if (n === 3) seg((a, b, open) => { if (open) { ctx.globalAlpha = 0.25 + 0.2 * Math.sin(t * 6); ctx.fillStyle = col.warm; ctx.fillRect(bx + 6 * k + a * (W - 12 * k), by + 8 * k, (b - a) * (W - 12 * k), 46 * k); ctx.globalAlpha = 1; } });
-  if (n === 4) for (let j = 0; j < 8; j++) { const u = (t * 1.5 + j / 8) % 1; ctx.fillStyle = col.red; ctx.fillRect(bx + (20 + j * 22) * k, by + (10 + u * 50) * k, 2 * k, 6 * k); }
-  if (n >= 6 && n < 8) seg((a, b, open) => { if (open) L(66, 14, '#d58a3a', 1, a, b); });   /* copper in the trenches, polished flat */
-  if (n === 7) { L(40, 26, col.cool, 0.25); ctx.strokeStyle = col.hi; ctx.beginPath(); ctx.moveTo(bx + W / 2, by + 8 * k); ctx.lineTo(bx + W / 2, by + 64 * k); ctx.stroke(); }
-  if (n >= 8) { for (let j = 0; j < 7; j++) { ctx.fillStyle = col.warm; ctx.beginPath(); ctx.arc(bx + (26 + j * 24) * k, by + 50 * k, 5 * k, 0, 6.2832); ctx.fill(); } L(56, 20, col.grn, 0.7); if (n === 9) { ctx.strokeStyle = col.hi; ctx.strokeRect(bx + 10 * k, by + 12 * k, W - 20 * k, 66 * k); } }
-  ctx.restore();
-}
-
-export const SCENES = { building, rack, board, chip, phone, phoneboard, soc, car, ecu, mcu, scanner, wafer, die, block, gate, switch: swtch, atom,
-  crystal: stCrystal, slice: stSlice, clean: stClean, deposit: stDeposit, print: stPrint, etch: stEtch, implant: stImplant, wires: stWires, test: stTest, pkg: stPkg, ship: stShip };
+export const SCENES = { building, rack, board, chip, phone, phoneboard, soc, car, ecu, mcu, scanner, wafer, die, block, gate, switch: swtch, atom, ...STATIONS };
 /* a scene drawn by the dive itself tells how large the dive's box is */
 Object.values(SCENES).forEach(sc => { const draw = sc.draw; sc.draw = function (G) { if (!NEST) measure(G); draw.call(sc, G); }; });
 export const partsOf = id => SCENES[id].parts;

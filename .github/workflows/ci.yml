@@ -22,7 +22,9 @@ jobs:
       - name: Install Playwright
         run: |
           npm install --no-save playwright@1.48.2 esbuild@0.24.0
-          npx playwright install --with-deps chromium
+          # The runner image already has most system libraries; if Ubuntu's package servers cannot be
+          # reached, install only the browser (from Playwright's own servers) and go on.
+          npx playwright install --with-deps chromium || npx playwright install chromium
       - name: Browser smoke test
         run: npm run test:browser
       - name: Build the single-file version

@@ -60,6 +60,10 @@ export const DIVES = { print: [['made', 'scanner']], etch: [['made', 'switch']],
    packaging plant. Words: plant.<id>. */
 export const PLANTS = { crystal: 'wafers', slice: 'wafers', clean: 'fab', deposit: 'fab', print: 'fab', etch: 'fab', implant: 'fab', wires: 'fab', test: 'fab', pkg: 'pack', ship: 'pack' };
 export const LOOP = ['clean', 'deposit', 'print', 'etch', 'implant', 'wires'];
+/* Parts that carry the wafer from machine to machine look the same at every station, so their words are
+   shared: part.handle.<key> and what.handle.<key>, not part.<station>.<key>. */
+export const HANDLING = ['pod', 'efem', 'lock', 'xfer', 'shelf', 'dock', 'tray'];
+export const partWord = (id, key) => (HANDLING.includes(key) ? 'handle' : id) + '.' + key;
 export const EXITS = { ship: [['datacentre', 'chip'], ['phone', 'soc'], ['car', 'mcu']] };
 export const WORLDS = [
   { id: 'datacentre', depths: ['building', 'rack', 'board', 'chip', ...SHARED] },
@@ -103,10 +107,10 @@ export const STOPS = {
   /* the journey's own stations */
   'make.crystal': ['ingot'], 'know.crystal': ['furnace'], 'strange.crystal': ['melt'],
   'make.slice': ['saw'], 'scale.slice': ['wafers'],
-  'make.clean': ['filters', 'tool'], 'scale.clean': ['tool'], 'open.clean': ['track'],
+  'make.clean': ['filters', 'pod'], 'scale.clean': ['tool'], 'open.clean': ['track'],
   'idea.deposit': ['gas'], 'strange.deposit': ['tool', 'gas'],
   'fail.print': ['scanner'], 'scale.print': ['scanner', 'light'],
-  'know.etch': ['people'], 'fail.etch': ['tool'], 'make.etch': ['plasma'],
+  'know.etch': ['people', 'efem', 'xfer'], 'fail.etch': ['tool'], 'make.etch': ['plasma'],
   'make.implant': ['beam'], 'fail.implant': ['heater'],
   'make.wires': ['loop', 'polish'], 'divide.wires': ['loop'],
   'fail.test': ['needles'], 'divide.test': ['map'],

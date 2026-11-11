@@ -3,7 +3,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { DEPTHS, WORLDS, SHARED, THREADS, STOPS, TRIED, CASES, FIGURES, REPO, DIVES, EXITS } from '../src/data/weave.js';
+import { DEPTHS, WORLDS, SHARED, THREADS, STOPS, TRIED, CASES, FIGURES, REPO, DIVES, EXITS, partWord } from '../src/data/weave.js';
 import * as E from '../src/engines/weave.js';
 
 const EN = JSON.parse(readFileSync(new URL('../src/i18n/en.json', import.meta.url), 'utf8'));
@@ -113,8 +113,8 @@ test('one picture all the way down: every scene with a depth below draws it, sma
 
 test('every part of every scene has a name and says what it does', () => {
   for (const [id, sc] of Object.entries(SCENES)) for (const key of Object.keys(sc.parts)) {
-    assert.ok(EN['part.' + id + '.' + key], id + ': the part "' + key + '" has no name');
-    assert.ok(EN['what.' + id + '.' + key], id + ': the part "' + key + '" does not say what it does');
+    assert.ok(EN['part.' + partWord(id, key)], id + ': the part "' + key + '" has no name');
+    assert.ok(EN['what.' + partWord(id, key)], id + ': the part "' + key + '" does not say what it does');
   }
 });
 
@@ -195,4 +195,28 @@ test('every real case shows at a stop, with its words, its source and the figure
     for (const id of c.facts) assert.ok(FACT[id], c.id + ': no figure ' + id);
   }
   assert.match(REPO, /^https:\/\/github\.com\//);
+});
+
+test('the journey: every step goes somewhere real and says what happens; a robot makes every move; the slice carries on', async () => {
+  const { JOURNEY } = await import('../src/app/journey.js');
+  const line = WORLDS.find(w => w.line).depths;
+  assert.deepEqual(Object.keys(JOURNEY).sort(), [...line].sort(), 'every station of the line has its steps');
+  let was = null;
+  for (const id of line) {
+    const cfg = JOURNEY[id], at = Object.keys(cfg.at);
+    cfg.robots.forEach(R => R.zone.forEach(p => assert.ok(at.includes(p), id + ': a robot reaches "' + p + '", which is nowhere')));
+    cfg.steps.forEach((s, i) => {
+      [s.to, ...s.via].forEach(p => assert.ok(at.includes(p), id + ': step ' + s.k + ' goes to "' + p + '", which is nowhere'));
+      assert.ok(EN[s.k], id + ': no words for ' + s.k);
+      if (cfg.num[i]) assert.ok(cfg.part[s.to] && EN['part.' + partWord(id, cfg.part[s.to])], id + ': the numbered place "' + s.to + '" is not a part with a name');
+      const from = i === 0 || s.appear ? s.to : cfg.steps[i - 1].to, path = [from, ...s.via, s.to];
+      if (cfg.nowafer) return;
+      for (let k = 1; k < path.length; k++) {
+        const a = path[k - 1], b = path[k];
+        if (a === b || (cfg.free || []).some(f => f.includes(a) && f.includes(b))) continue;
+        assert.ok(cfg.robots.some(R => R.zone.includes(a) && R.zone.includes(b)), id + ': nothing carries the wafer from ' + a + ' to ' + b);
+      }
+    });
+    if (cfg.in != null) { if (was != null) assert.equal(cfg.in, was, id + ': the wafer arrives looking different from how it left the last station'); was = cfg.out; }
+  }
 });
