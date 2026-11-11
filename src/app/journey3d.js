@@ -307,178 +307,248 @@ clusterStation('implant', 'implant', true, b => {
   return { ch: [175, 330, 104], update(f, mine, t) { beam.visible = proc(f, mine, 'proc.implant.beam'); beam.material.opacity = 0.5 + 0.3 * Math.sin(t * 9); } };
 });
 
-/* ---- crystal: sand purified, melted in a crucible, and a single crystal pulled up out of it ---- */
+/* ---- shared pieces for the machines that are not cluster tools ---- */
+/* a machine: a solid base, and over it a glass hood on a frame (front, top and right side glass), so what
+   it does inside shows */
+function cabinet(b, x, d, w, dd, baseH, hoodH) {
+  const M = b.M;
+  b.box(x, d, 0, w, dd, baseH, M.base);
+  if (!hoodH) return;
+  const z = baseH;
+  [[x, d], [x + w - 5, d], [x, d + dd - 5], [x + w - 5, d + dd - 5]].forEach(([px, pd]) => b.box(px, pd, z, 5, 5, hoodH, M.body));
+  b.box(x, d, z + hoodH - 5, w, 5, 5, M.body); b.box(x, d + dd - 5, z + hoodH - 5, w, 5, 5, M.body);
+  b.box(x, d + 5, z + hoodH - 5, 5, dd - 10, 5, M.body); b.box(x + w - 5, d + 5, z + hoodH - 5, 5, dd - 10, 5, M.body);
+  b.box(x + 5, d + dd - 4, z, w - 10, 4, hoodH - 5, M.panel); b.box(x, d + 5, z, 4, dd - 10, hoodH - 5, M.panel);
+  b.box(x + 5, d, z, w - 10, 1, hoodH - 5, M.glass, false); b.box(x + 5, d + 5, z + hoodH - 2, w - 10, dd - 10, 1, M.glass, false);
+  b.box(x + w - 1, d + 5, z, 1, dd - 10, hoodH - 5, M.glass, false);
+}
+/* circles drawn on a flat surface: the grooves of a polishing pad, the marks on a turntable */
+function rings(b, x, d, h, r0, r1, step) { for (let r = r0; r <= r1; r += step) for (let i = 0; i < 36; i++) { const a0 = (i / 36) * 6.2832, a1 = ((i + 1) / 36) * 6.2832; b.line([x + Math.cos(a0) * r, d + Math.sin(a0) * r, h], [x + Math.cos(a1) * r, d + Math.sin(a1) * r, h], true); } }
+/* a cylinder open on the side facing you (centred on the front, a little to the right), to show inside */
+function openCyl(b, x, d, h, r, hh, mat, edges) { const g = new THREE.CylinderGeometry(r / 100, r / 100, hh / 100, 56, 1, true, 0.42 * Math.PI, 1.42 * Math.PI); g.translate(x / 100, (h + hh / 2) / 100, -d / 100); return b.put(g, mat, edges); }
+/* a flat ring (a lid with its middle open) */
+function annulus(b, x, d, h, r0, r1, mat) { const g = new THREE.RingGeometry(r0 / 100, r1 / 100, 48); g.rotateX(-Math.PI / 2); g.translate(x / 100, h / 100, -d / 100); return b.put(g, mat); }
+/* a load port with its plate (the pod sits on it) */
+const port3 = (b, x) => { b.box(x - 30, 0, 0, 60, 60, 90, b.M.base); b.box(x - 26, 4, 90, 52, 52, 4, b.M.metal); };
+/* a robot's stand */
+const stand = (b, x, d) => b.cyl(x, d, 0, 22, 20, b.M.base);
+/* a wafer held flat in a ring of tape, as it is for cutting */
+function tapeFrame(b, x, d, h) { const t = new THREE.TorusGeometry(0.24, 0.012, 6, 40); t.rotateX(Math.PI / 2); t.translate(x / 100, h / 100, -d / 100); b.put(t, b.M.metal, false); b.cyl(x, d, h - 1, 23, 1, b.M.glass, 40, false); }
+
+/* ---- crystal: sand purified, melted in a crucible, and a single crystal pulled slowly up out of it ---- */
 BUILD.crystal = (b, plant, first) => {
   const M = b.M; bay(b, plant, first);
-  /* sand, and pure silicon in chunks */
-  const cone = new THREE.ConeGeometry(0.62, 0.42, 24); cone.translate(-2.8, 0.21, -0.9); b.put(cone, M.crate);
-  b.box(-200, 40, 0, 80, 60, 30, M.base); for (let i = 0; i < 9; i++) b.box(-196 + (i % 3) * 25, 44 + Math.floor(i / 3) * 18, 30, 18, 14, 8 + (i % 2) * 4, M.metal, false);
-  b.part('sand', -340, 20, 0, 230, 140, 50);
-  /* the puller: a base, a chamber cut open at the front, the crucible glowing inside, a tall pull chamber above */
-  b.box(-110, 160, 0, 220, 200, 80, M.base);
-  const wall = new THREE.CylinderGeometry(0.8, 0.8, 1.5, 48, 1, true, Math.PI * 0.85, Math.PI * 1.5); wall.translate(0, 1.55, -2.6); b.put(wall, M.body);
-  const inn = new THREE.CylinderGeometry(0.76, 0.76, 1.5, 48, 1, true, Math.PI * 0.85, Math.PI * 1.5); inn.translate(0, 1.55, -2.6); b.put(inn, M.inner, false);
-  b.cyl(0, 260, 80, 80, 2, M.dark);
-  b.cyl(0, 260, 230, 80, 8, M.body); b.cyl(0, 260, 238, 30, 260, M.body); b.cyl(0, 260, 498, 36, 14, M.metal);
-  b.box(-6, 228, 330, 12, 2, 60, M.glass, false);
-  b.cyl(0, 260, 82, 46, 36, M.metal);
-  b.part('furnace', -80, 180, 0, 160, 160, 512); b.partCyl('melt', 0, 260, 82, 46, 40);
-  /* finished crystals on a rack */
-  b.box(180, 120, 0, 200, 80, 40, M.base); for (let k = 0; k < 3; k++) b.rod(280, 140 + k * 22, 52, 10, 170, 'x', M.metal, 20);
-  let melt, ingot, wire;
-  melt = b.mesh(new THREE.CylinderGeometry(0.42, 0.42, 0.02, 40).translate(0, 1.19, -2.6), M.heat, false);
-  ingot = b.mesh(new THREE.CylinderGeometry(0.1, 0.1, 1, 28).translate(0, 0.5, 0), M.metal); ingot.position.copy(V(0, 260, 120));
-  wire = b.mesh(new THREE.BoxGeometry(0.006, 1, 0.006).translate(0, 0.5, 0), M.metal, false);
-  b.partCyl('ingot', 0, 260, 120, 12, 120);
-  return { noPorts: true, close: 2.3, at: { sand: [-280, 90, 40], melt: [0, 260, 120], ingot: [0, 260, 170] }, robots: [],
+  /* quartz sand, and the purified silicon in chunks, ready to melt */
+  const cone = new THREE.ConeGeometry(0.55, 0.38, 28); cone.translate(-3.35, 0.19, -0.95); b.put(cone, M.crate);
+  b.box(-260, 60, 0, 90, 80, 70, M.body); b.box(-256, 64, 70, 82, 72, 4, M.metal);
+  for (let i = 0; i < 12; i++) b.box(-250 + (i % 4) * 19, 70 + Math.floor(i / 4) * 21, 74, 15, 13, 6 + (i % 3) * 4, M.metal, false);
+  b.part('sand', -400, 40, 0, 240, 120, 90);
+  /* the puller: a heavy base, the hot chamber cut open at the front, its lid, the tall pull chamber above */
+  b.box(-130, 150, 0, 260, 220, 70, M.base);
+  openCyl(b, 0, 260, 70, 85, 160, M.body); openCyl(b, 0, 260, 70, 81, 160, M.inner, false);
+  b.cyl(0, 260, 70, 85, 2, M.dark);
+  annulus(b, 0, 260, 230, 30, 86, M.body);
+  b.cyl(0, 260, 230, 30, 260, M.body, 32); b.box(-8, 230, 330, 16, 2, 90, M.glass, false);
+  b.box(-45, 222, 490, 90, 76, 46, M.panel); b.cyl(0, 260, 536, 16, 10, M.metal, 24);
+  /* inside: a graphite cup holding the quartz crucible, a ring heater round it */
+  b.cyl(0, 260, 72, 56, 52, M.metal, 40); b.cyl(0, 260, 120, 50, 4, M.dark, 40, false);
+  const ht = new THREE.TorusGeometry(0.66, 0.025, 8, 48); ht.rotateX(Math.PI / 2); ht.translate(0, 0.98, -2.6); b.put(ht, M.warm, false);
+  b.part('furnace', -90, 170, 0, 180, 180, 546); b.partCyl('melt', 0, 260, 72, 56, 60);
+  /* a desk with its screens, and the person watching the pull */
+  b.box(170, 50, 0, 100, 55, 78, M.body); b.box(176, 48, 78, 88, 4, 44, M.panel); b.box(180, 46, 82, 80, 2, 36, M.screen, false);
+  person(b, 220, 0);
+  /* finished crystals, resting on a rack */
+  b.box(250, 330, 0, 170, 110, 30, M.base); for (let k = 0; k < 3; k++) b.rod(335, 352 + k * 30, 46, 13, 150, 'x', M.metal, 24);
+  const melt = b.mesh(new THREE.CylinderGeometry(0.47, 0.47, 0.01, 40).translate(0, 1.245, -2.6), M.heat, false);
+  const ingot = new THREE.Group(), body = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.14, 1, 32).translate(0, 0.5, 0), M.metal), crown = new THREE.Mesh(new THREE.ConeGeometry(0.14, 0.12, 32).translate(0, 0.06, 0), M.metal);
+  body.add(new THREE.LineSegments(new THREE.EdgesGeometry(body.geometry, 28), M.edge)); ingot.add(body, crown); b.dyn.add(ingot);
+  const wire = b.mesh(new THREE.BoxGeometry(0.006, 1, 0.006).translate(0, 0.5, 0), M.metal, false);
+  b.partCyl('ingot', 0, 260, 130, 16, 100);
+  return { noPorts: true, close: 2.0, at: { sand: [-300, 90, 70], melt: [0, 260, 125], ingot: [0, 260, 200] }, robots: [],
     update(f, mine, t) {
-      const g = mine ? (f.i < 2 ? 0 : f.pu) : (t * 0.05) % 1, len = 0.15 + 0.85 * g;
-      melt.visible = !mine || f.i >= 1; melt.material.opacity = 0.25 + 0.1 * Math.sin(t * 2);
-      ingot.visible = !mine || f.i >= 2; ingot.scale.y = len; ingot.position.y = 1.2 + 0.02; ingot.rotation.y = t * 0.6;
-      wire.position.copy(V(0, 260, 120 + len * 100)); wire.scale.y = Math.max(0.05, (498 - 120 - len * 100) / 100);
+      const g = mine ? (f.i < 2 ? 0 : f.pu) : (t * 0.05) % 1, len = 0.05 + 0.95 * g;
+      melt.visible = !mine || f.i >= 1; melt.material.opacity = 0.3 + 0.1 * Math.sin(t * 2);
+      ingot.visible = !mine || f.i >= 2; body.scale.y = len; body.position.y = 0; crown.position.y = len;
+      ingot.position.copy(V(0, 260, 126)); ingot.rotation.y = t * 0.6;
+      wire.position.copy(V(0, 260, 126 + len * 100 + 12)); wire.scale.y = Math.max(0.05, (490 - 138 - len * 100) / 100);
     } };
 };
 
 /* ---- slice: a wire saw cuts the crystal into slices, a polisher makes each flat, a robot puts yours in a pod ---- */
 BUILD.slice = (b, plant, first) => {
   const M = b.M; bay(b, plant, first);
-  [0].forEach(x => { b.box(x - 30, 0, 0, 60, 60, 90, M.base); b.box(x - 26, 4, 90, 52, 52, 4, M.metal); });
-  b.part('pod', -30, 0, 0, 60, 60, 128);
-  /* the wire saw */
-  b.box(-340, 150, 0, 220, 180, 50, M.base);
-  [[-340, 150], [-130, 150], [-340, 320], [-130, 320]].forEach(([x, d]) => b.box(x, d, 50, 10, 10, 150, M.body));
-  b.box(-340, 150, 200, 220, 180, 14, M.body);
-  [-310, -150].forEach(x => b.rod(x, 240, 90, 18, 160, 'z', M.metal, 24));
-  b.rod(-230, 240, 160, 14, 150, 'x', M.metal, 24);
-  for (let k = 0; k < 14; k++) b.line([-310, 160 + k * 11, 90], [-150, 160 + k * 11, 90]);
-  b.part('saw', -340, 150, 0, 220, 180, 214); b.part('ingot', -305, 225, 146, 150, 30, 30);
-  /* the polisher: a big turning pad and a head */
-  b.box(130, 180, 0, 200, 180, 80, M.base); b.cyl(230, 270, 80, 82, 8, M.metal, 48);
-  b.box(300, 250, 88, 20, 20, 90, M.body); b.box(220, 250, 160, 100, 20, 14, M.body);
-  b.part('polish', 130, 180, 0, 200, 180, 180);
-  /* finished wafers, stacked in a cassette */
-  b.box(330, 60, 0, 70, 70, 70, M.base); for (let k = 0; k < 6; k++) b.cyl(365, 95, 70 + k * 5, 28, 2, M.waferOther, 32, false);
-  b.part('wafers', 330, 60, 0, 70, 70, 100);
-  b.box(80, 140, 0, 60, 60, 20, M.base);
-  const pad = b.mesh(new THREE.BoxGeometry(1.5, 0.004, 0.02), M.dark, false); pad.position.copy(V(230, 270, 89));
-  const web = b.mesh(new THREE.BoxGeometry(1.6, 0.02, 1.6), M.copper, false); web.position.copy(V(-230, 240, 90));
-  b.part('efem', 80, 140, 0, 60, 60, 110);
-  return { close: 1.6, at: { saw: [-230, 240, 160], pol: [230, 270, 92], efem: [110, 120, 110], pod: [0, 30, 110] },
-    robots: [{ id: 'A', b: [110, 170, 20], h: 108, L: 92, rest: [110, 120], zone: ['pod', 'efem', 'pol'] }],
-    update(f, mine, t) { pad.rotation.y = t * 2; web.scale.set(1, 1, 1); web.position.y = (mine && f.i === 0 ? 1.6 - f.pu * 0.6 : 1.0); web.visible = !mine || f.i === 0; } };
+  port3(b, 0); b.part('pod', -30, 0, 0, 60, 60, 128);
+  /* the wire saw: two rollers, one long wire wound between them hundreds of times, the crystal pressed down through it */
+  cabinet(b, -370, 150, 250, 190, 60, 160);
+  [-320, -170].forEach(x => b.rod(x, 245, 125, 24, 160, 'z', M.metal, 28));
+  for (let k = 0; k < 20; k++) { b.line([-320, 172 + k * 8, 149], [-170, 172 + k * 8, 149]); b.line([-320, 172 + k * 8, 101], [-170, 172 + k * 8, 101], true); }
+  b.pipe([[-245, 330, 210], [-245, 245, 210], [-245, 245, 196]], 3, M.metal);
+  b.part('saw', -370, 150, 0, 250, 190, 220); b.part('ingot', -320, 225, 150, 150, 40, 40);
+  const crystalBar = b.mesh(new THREE.CylinderGeometry(0.17, 0.17, 1.4, 32).rotateZ(Math.PI / 2), M.metal);
+  /* the polisher: a big turning pad with grooves, a head pressing the wafer face down, slurry dripping on */
+  b.box(110, 170, 0, 230, 210, 80, M.base); b.cyl(225, 275, 80, 88, 8, M.metal, 48); rings(b, 225, 275, 88.5, 18, 84, 11);
+  b.box(320, 260, 80, 20, 30, 80, M.body); b.box(250, 262, 150, 90, 26, 14, M.body);
+  b.pipe([[150, 380, 80], [150, 380, 130], [190, 300, 130], [200, 290, 110]], 2, M.metal);
+  b.part('polish', 110, 170, 0, 230, 210, 170);
+  const head = b.mesh(new THREE.CylinderGeometry(0.24, 0.24, 0.14, 32), M.body);
+  /* finished wafers in a cassette; the robot that loads yours */
+  b.box(340, 50, 0, 80, 80, 70, M.base); for (let k = 0; k < 7; k++) b.cyl(380, 90, 70 + k * 5, 30, 2, M.waferOther, 32, false);
+  b.part('wafers', 340, 50, 0, 80, 80, 110);
+  stand(b, 110, 160); b.part('efem', 85, 135, 0, 50, 50, 110);
+  return { close: 1.5, at: { saw: [-245, 245, 175], pol: [225, 275, 92], efem: [110, 120, 110], pod: [0, 30, 110] },
+    robots: [{ id: 'A', b: [110, 160, 20], h: 108, L: 92, rest: [110, 115], zone: ['pod', 'efem', 'pol'] }],
+    update(f, mine, t) {
+      const cut = mine ? (f.i === 0 ? f.pu : 1) : (t * 0.1) % 1;
+      crystalBar.position.copy(V(-245, 245, 196 - cut * 50)); crystalBar.visible = !mine || f.i === 0;
+      const a = t * 0.7; head.position.copy(V(225 + Math.cos(a) * 30, 275 + Math.sin(a) * 30, 96)); head.rotation.y = t * 3;
+    } };
 };
 
-/* ---- print: a coating track (coat, then develop) joined to the scanner that prints with light ---- */
+/* ---- print: a coating track (coat, bake, develop) joined to the scanner that prints with light ---- */
 BUILD.print = (b, plant, first) => {
   const M = b.M; bay(b, plant, first);
   front3(b);
-  /* the track: two bowls behind the front module, an interface robot */
-  b.box(-200, 150, 0, 340, 200, 90, M.base);
-  b.box(-200, 150, 90, 340, 200, 2, M.glass, false);
-  [[-20, 'coat'], [80, 'develop']].forEach(([x, k]) => { b.cyl(x, 210, 90, 40, 18, M.body, 32); b.cyl(x, 210, 107, 34, 1, M.dark, 32, false); b.partCyl(k, x, 210, 0, 40, 110); });
-  /* the scanner: a big machine, its side cut away to show the wafer stage, the lenses, the mask, the light source behind */
-  b.box(180, 120, 0, 280, 320, 40, M.base);
-  b.box(180, 120, 40, 8, 320, 200, M.body); b.box(180, 432, 40, 280, 8, 200, M.body); b.box(452, 120, 40, 8, 320, 200, M.body);
-  b.box(180, 120, 232, 280, 320, 10, M.glass, false);
-  b.box(260, 190, 40, 140, 140, 50, M.metal);
-  b.cyl(320, 260, 120, 32, 90, M.body); b.cyl(320, 260, 210, 40, 6, M.metal);
-  b.box(260, 220, 216, 120, 80, 8, M.panel); for (let k = 0; k < 5; k++) b.box(270 + k * 22, 230, 224, 10, 60, 1, M.dark, false);
-  b.box(380, 330, 40, 70, 90, 180, M.body);
-  b.part('scanner', 180, 120, 0, 280, 320, 242); b.part('mask', 260, 220, 216, 120, 80, 10); b.part('light', 300, 240, 130, 100, 100, 110);
-  const light = b.mesh(new THREE.CylinderGeometry(0.05, 0.12, 1.2, 16, 1, true).translate(3.2, 1.62, -2.6), M.light, false);
-  const spin = b.mesh(new THREE.BoxGeometry(0.6, 0.01, 0.04), M.metal, false); spin.position.copy(V(-20, 210, 108));
-  return { close: 1.3, at: { pod: [0, 30, 110], efem: [0, 110, 110], coat: [-20, 210, 108], dev: [80, 210, 108], iface: [190, 240, 110], scan: [320, 260, 92] },
-    robots: [{ id: 'A', rail: [-80, 80], b: [0, 105, 14], h: 108, L: 60, rest: [10, 115], zone: ['pod', 'efem', 'coat', 'dev'] },
-      { id: 'B', b: [140, 290, 0], h: 112, L: 92, rest: [140, 250], zone: ['coat', 'dev', 'iface'] }],
-    update(f, mine, t) { light.visible = mine ? f.s.k === 'proc.print.expose' && f.proc : (t * 0.8) % 1 < 0.6; light.material.opacity = 0.35 + 0.2 * Math.sin(t * 12); spin.rotation.y = t * (mine && f.s.k !== 'proc.print.coat' ? 0.5 : 9); } };
+  /* the track: two cups that spin the wafer, hot plates that bake it, under glass */
+  cabinet(b, -230, 150, 380, 190, 90, 50);
+  [[-40, 'coat'], [60, 'develop']].forEach(([x, k]) => { b.cyl(x, 245, 90, 40, 16, M.body, 32); b.cyl(x, 245, 105, 33, 1, M.dark, 32, false); b.box(x - 50, 300, 90, 10, 10, 34, M.metal); b.box(x - 50, 254, 120, 10, 56, 4, M.metal); b.partCyl(k, x, 245, 0, 42, 140); });
+  [-190, -130].forEach(x => { b.box(x - 22, 210, 90, 44, 44, 6, M.metal); b.box(x - 18, 214, 96.5, 36, 36, 0.5, M.warm, false); });
+  /* the scanner: cut open at the front. The light comes from the source at the back, through the mask on
+     top, down through the stack of lenses, which shrinks the pattern onto your wafer on its moving stage */
+  b.box(160, 110, 0, 280, 330, 40, M.base);
+  b.box(160, 436, 40, 280, 4, 210, M.panel); b.box(160, 110, 40, 4, 330, 210, M.panel); b.box(436, 110, 40, 4, 330, 210, M.panel);
+  b.box(160, 110, 246, 280, 330, 4, M.glass, false); b.box(164, 110, 40, 272, 1, 206, M.glass, false);
+  [[160, 110], [436, 110]].forEach(([x, d]) => b.box(x, d, 40, 4, 4, 210, M.body));
+  b.box(200, 180, 40, 200, 200, 40, M.base);
+  [[300, 280, 110, 46, 30], [300, 280, 140, 40, 40], [300, 280, 180, 33, 30]].forEach(([x, d, h, r, hh]) => b.cyl(x, d, h, r, hh, M.body, 40));
+  b.box(240, 240, 214, 120, 80, 8, M.panel); for (let k = 0; k < 6; k++) b.box(252 + k * 17, 252, 222, 8, 56, 1, M.dark, false);
+  b.box(340, 360, 170, 90, 70, 70, M.body);
+  b.box(250, 470, 0, 180, 170, 220, M.body); b.cyl(340, 555, 220, 34, 30, M.metal, 32);
+  b.pipe([[340, 470, 200], [380, 400, 200]], 9, M.metal);
+  b.part('scanner', 160, 110, 0, 280, 330, 250); b.part('mask', 240, 240, 214, 120, 80, 10); b.part('light', 270, 250, 90, 60, 60, 140);
+  const stage = b.mesh(new THREE.BoxGeometry(0.9, 0.06, 0.9), M.metal);
+  const light = b.mesh(new THREE.CylinderGeometry(0.04, 0.14, 1.32, 20, 1, true).translate(3.0, 1.56, -2.8), M.light, false);
+  const spin = b.mesh(new THREE.BoxGeometry(0.62, 0.01, 0.04), M.metal, false); spin.position.copy(V(-40, 245, 107));
+  return { close: 1.25, at: { pod: [0, 30, 110], efem: [0, 110, 110], coat: [-40, 245, 108], dev: [60, 245, 108], iface: [130, 270, 110], scan: [300, 280, 90] },
+    robots: [{ id: 'A', rail: [-70, 70], b: [0, 105, 14], h: 108, L: 72, rest: [10, 115], zone: ['pod', 'efem', 'coat', 'dev'] },
+      { id: 'B', b: [90, 320, 0], h: 112, L: 88, rest: [90, 280], zone: ['coat', 'dev', 'iface'] }],
+    update(f, mine, t) {
+      const on = mine ? f.s.k === 'proc.print.expose' && f.proc : (t * 0.8) % 1 < 0.6, step = Math.floor(t * 3) % 9;
+      light.visible = on; light.material.opacity = 0.35 + 0.2 * Math.sin(t * 12);
+      stage.position.copy(V(300 + (on ? ((step % 3) - 1) * 14 : 0), 280 + (on ? (Math.floor(step / 3) - 1) * 14 : 0), 83));
+      spin.rotation.y = t * (mine && f.s.k !== 'proc.print.coat' ? 0.5 : 9);
+    } };
 };
 
-/* ---- wires: a copper bath, then a polisher that leaves copper only in the cuts; then round again ---- */
+/* ---- wires: copper grown in a bath, then polished away until it is left only in the cuts; then round again ---- */
 BUILD.wires = (b, plant, first) => {
   const M = b.M; bay(b, plant, first);
   front3(b);
-  b.box(-200, 170, 0, 160, 160, 80, M.base); b.box(-196, 174, 80, 152, 152, 2, M.copper, false); b.box(-200, 170, 80, 160, 4, 30, M.glass, false);
-  b.part('plating', -200, 170, 0, 160, 160, 110);
-  b.box(100, 200, 0, 200, 190, 80, M.base); b.cyl(190, 290, 80, 92, 8, M.metal, 48);
-  b.box(270, 270, 88, 20, 20, 100, M.body); b.box(180, 270, 170, 110, 20, 14, M.body);
-  b.part('polish', 100, 200, 0, 200, 190, 190);
-  b.cyl(60, 260, 0, 18, 100, M.base);
-  b.part('xfer', 40, 240, 0, 40, 40, 112);
+  /* the plating cells: baths of copper solution, a head lowers the wafer face down into each */
+  cabinet(b, -270, 160, 220, 190, 70, 90);
+  [-205, -120].forEach(x => { b.cyl(x, 255, 70, 40, 30, M.metal, 32); b.cyl(x, 255, 99.5, 36, 0.5, M.copper, 32, false); b.box(x - 4, 300, 100, 8, 8, 50, M.body); b.box(x - 4, 255, 146, 8, 52, 6, M.body); });
+  b.part('plating', -270, 160, 0, 220, 190, 160);
+  /* the polisher: a turning pad with grooves, the head that presses the wafer, the arm that keeps the pad rough, the slurry */
+  b.box(90, 190, 0, 230, 210, 80, M.base); b.cyl(200, 295, 80, 92, 8, M.metal, 48); rings(b, 200, 295, 88.5, 16, 86, 12);
+  b.box(300, 270, 80, 20, 30, 90, M.body); b.box(220, 272, 160, 100, 26, 14, M.body);
+  b.box(110, 360, 80, 16, 16, 30, M.body); b.box(110, 330, 106, 16, 46, 6, M.body);
+  b.pipe([[300, 380, 80], [300, 380, 130], [240, 320, 130], [225, 300, 104]], 2, M.metal);
+  b.part('polish', 90, 190, 0, 230, 210, 180);
+  stand(b, 60, 260); b.part('xfer', 40, 240, 0, 40, 40, 112);
   /* the loop: an arrow on the back wall, back to cleaning for the next layer */
   b.pipe([[300, 686, 250], [300, 686, 300], [-320, 686, 300], [-320, 686, 250]], 4, M.warm);
   b.part('loop', -330, 680, 240, 640, 10, 70);
-  const pad = b.mesh(new THREE.BoxGeometry(1.7, 0.004, 0.02), M.dark, false); pad.position.copy(V(190, 290, 89));
-  return { close: 1.3, at: { pod: [0, 30, 110], efem: [0, 105, 120], plate: [-120, 250, 100], hand: [0, 210, 110], pol: [190, 290, 100] },
-    robots: [{ id: 'A', rail: [-90, 90], b: [0, 105, 14], h: 112, L: 76, rest: [10, 115], zone: ['pod', 'efem', 'plate', 'hand'] },
-      { id: 'B', b: [60, 260, 0], h: 112, L: 92, rest: [60, 220], zone: ['plate', 'hand', 'pol'] }],
-    update(f, mine, t) { pad.rotation.y = t * (mine && f.s.k !== 'proc.wires.polish' ? 0.4 : 3); } };
+  const head = b.mesh(new THREE.CylinderGeometry(0.25, 0.25, 0.14, 32), M.body);
+  const drop = b.mesh(new THREE.SphereGeometry(0.03, 10, 8), M.spray, false);
+  return { close: 1.3, at: { pod: [0, 30, 110], efem: [0, 105, 120], plate: [-120, 255, 104], hand: [0, 210, 110], pol: [180, 285, 100] },
+    robots: [{ id: 'A', rail: [-90, 90], b: [0, 105, 14], h: 112, L: 78, rest: [10, 115], zone: ['pod', 'efem', 'plate', 'hand'] },
+      { id: 'B', b: [60, 260, 20], h: 112, L: 92, rest: [60, 220], zone: ['plate', 'hand', 'pol'] }],
+    update(f, mine, t) {
+      const on = !mine || f.s.k === 'proc.wires.polish', a = t * 0.6;
+      head.position.copy(V(180 + (on ? Math.cos(a) * 18 : 0), 285 + (on ? Math.sin(a) * 18 : 0), 104)); head.rotation.y = t * 3;
+      drop.visible = on; drop.position.copy(V(225, 300, 104 - ((t * 2) % 1) * 14));
+    } };
 };
 
-/* ---- test: a prober touches every chip with needles; the map shows which work ---- */
+/* ---- test: a prober moves the wafer under a card of needles; the test head above runs every chip; the map fills in ---- */
 BUILD.test = (b, plant, first) => {
   const M = b.M; bay(b, plant, first);
   front3(b);
   b.box(10, 150, 0, 60, 70, 60, M.base); b.box(10, 150, 60, 60, 70, 44, M.panel); b.part('shelf', 10, 150, 0, 60, 70, 104);
-  b.box(120, 150, 0, 230, 230, 90, M.body); b.box(120, 150, 90, 230, 230, 2, M.glass, false);
-  b.box(150, 160, 90, 170, 8, 70, M.body); b.box(150, 360, 90, 170, 8, 70, M.body); b.box(150, 160, 160, 170, 208, 8, M.panel, false);
-  b.cyl(230, 270, 90, 50, 8, M.metal, 40);
-  b.part('prober', 120, 150, 0, 230, 230, 170); b.part('needles', 200, 240, 140, 60, 60, 24);
-  const card = b.mesh(new THREE.CylinderGeometry(0.22, 0.22, 0.02, 32), M.body); card.position.copy(V(230, 270, 140));
+  /* the prober: a cabinet whose top plate has a round opening where the probe card sits */
+  b.box(110, 150, 0, 240, 230, 100, M.base);
+  b.box(110, 150, 100, 240, 55, 8, M.body); b.box(110, 325, 100, 240, 55, 8, M.body); b.box(110, 205, 100, 60, 120, 8, M.body); b.box(290, 205, 100, 60, 120, 8, M.body);
+  b.box(170, 205, 60, 120, 120, 2, M.dark, false);
+  b.part('prober', 110, 150, 0, 240, 230, 108);
+  /* the test head above, on its arm, with its cables */
+  b.box(150, 190, 150, 160, 150, 70, M.body); for (let h = 165; h < 220; h += 14) b.line([150, 190, h], [310, 190, h], true);
+  b.box(350, 240, 0, 30, 30, 230, M.base); b.box(310, 250, 196, 40, 20, 14, M.body);
+  b.pipe([[310, 300, 200], [380, 330, 200], [400, 330, 60], [400, 330, 0]], 5, M.dark);
+  b.part('needles', 200, 235, 104, 60, 60, 46);
+  const card = b.mesh(new THREE.CylinderGeometry(0.26, 0.26, 0.02, 40), M.panel); card.position.copy(V(230, 265, 118));
+  const chuck = b.mesh(new THREE.CylinderGeometry(0.2, 0.2, 0.08, 40), M.metal);
   /* the wafer map, on a screen beside it */
   b.box(380, 80, 0, 10, 10, 120, M.base); b.box(345, 72, 120, 80, 6, 80, M.body); b.box(349, 70, 124, 72, 2, 72, M.screen, false);
   b.part('map', 345, 66, 120, 80, 10, 80);
   const { DIES: dies, HITS: hits } = chip3();
   const n = dies.length, mapM = new THREE.InstancedMesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ color: 0xffffff }), Math.max(1, n)), mm = new THREE.Matrix4(), c = new THREE.Color();
-  dies.forEach((d, i) => { const s = Math.max(0.004, (d[2] / 1000) * 0.68); mm.makeScale(s, s, 1).setPosition(3.53 + (d[0] / 1000) * 0.68 + s / 2 - 0.0, 1.96 - (d[1] / 1000) * 0.68 - s / 2, -0.689); mapM.setMatrixAt(i, mm); mapM.setColorAt(i, c.set(b.M.dark.color)); });
+  dies.forEach((d, i) => { const s = Math.max(0.004, (d[2] / 1000) * 0.68); mm.makeScale(s, s, 1).setPosition(3.53 + (d[0] / 1000) * 0.68 + s / 2, 1.96 - (d[1] / 1000) * 0.68 - s / 2, -0.689); mapM.setMatrixAt(i, mm); mapM.setColorAt(i, c.set(M.dark.color)); });
   b.dyn.add(mapM);
-  return { at: { pod: [0, 30, 110], efem: [0, 105, 120], lock: [40, 185, 104], probe: [230, 270, 100] },
+  return { close: 1.2, at: { pod: [0, 30, 110], efem: [0, 105, 120], lock: [40, 185, 104], probe: [230, 265, 104] },
     robots: [CLUSTER_ROBOTS[0], { id: 'B', b: [120, 230, 0], h: 108, L: 72, rest: [130, 210], zone: ['lock', 'probe'] }],
     update(f, mine, t) {
-      const upto = mine ? (f.s.k === 'proc.test' ? f.pu : f.i > 3 ? 1 : 0) : 1, k = Math.floor(n * upto), col = b.M;
-      card.position.y = 1.4 + ((mine && f.s.k === 'proc.test') || !mine ? ((t * 3) % 1 < 0.5 ? -0.02 : 0) : 0.06);
-      if (mapM.userData.k !== k) { for (let i = 0; i < n; i++) mapM.setColorAt(i, c.set(i < k ? (hits[i] ? col.red.color : col.grn.color) : col.dark.color)); mapM.instanceColor.needsUpdate = true; mapM.userData.k = k; }
+      const testing = (mine && f.s.k === 'proc.test') || !mine, upto = mine ? (f.s.k === 'proc.test' ? f.pu : f.i > 3 ? 1 : 0) : 1, k = Math.floor(n * upto);
+      const st = Math.floor(t * 4), ox = testing ? ((st % 5) - 2) * 4 : 0, od = testing ? ((Math.floor(st / 5) % 5) - 2) * 4 : 0;
+      chuck.position.copy(V(230 + ox, 265 + od, 96 + (testing && (t * 4) % 1 < 0.5 ? 2 : 0)));
+      card.visible = true;
+      if (mapM.userData.k !== k) { for (let i = 0; i < n; i++) mapM.setColorAt(i, c.set(i < k ? (hits[i] ? M.red.color : M.grn.color) : M.dark.color)); mapM.instanceColor.needsUpdate = true; mapM.userData.k = k; }
     } };
 };
 
-/* ---- pkg: in the packaging plant, the wafer is cut into chips; a good one is joined to its package ---- */
+/* ---- pkg: in the packaging plant: the wafer is cut into chips; a good one is picked, flipped and joined to its package ---- */
 BUILD.pkg = (b, plant, first) => {
   const M = b.M; bay(b, plant, first);
-  [-70, 0].forEach(x => { b.box(x - 30, 0, 0, 60, 60, 90, M.base); b.box(x - 26, 4, 90, 52, 52, 4, M.metal); });
-  b.part('pod', -30, 0, 0, 60, 60, 128);
-  b.box(-90, 130, 0, 60, 60, 20, M.base); b.part('efem', -90, 130, 0, 60, 60, 110);
-  /* the dicing saw */
-  b.box(-300, 160, 0, 180, 160, 80, M.base); b.box(-300, 160, 80, 180, 160, 2, M.glass, false); b.cyl(-200, 240, 80, 40, 10, M.metal);
-  b.part('saw', -300, 160, 0, 180, 160, 130);
-  const blade = b.mesh(new THREE.CylinderGeometry(0.16, 0.16, 0.01, 32).rotateX(Math.PI / 2), M.metal); blade.position.copy(V(-200, 240, 128));
-  /* the bonder: the package base, memory beside it, lids waiting */
-  b.box(90, 170, 0, 210, 160, 80, M.base);
-  b.box(170, 220, 80, 60, 50, 6, M.grn); b.part('substrate', 170, 220, 80, 60, 50, 6);
-  for (let m = 0; m < 5; m++) b.box(240, 225, 80 + m * 6, 18, 40, 5, M.body); b.part('memory', 240, 225, 80, 18, 40, 30);
-  for (let m = 0; m < 4; m++) b.box(120, 300, 80 + m * 5, 30, 24, 4, M.metal); b.part('lid', 120, 300, 80, 30, 24, 20);
-  b.part('bumps', 180, 225, 86, 40, 40, 4); b.part('die', 110, 220, 130, 40, 40, 40);
+  [-70, 0].forEach(x => port3(b, x)); b.part('pod', -30, 0, 0, 60, 60, 128);
+  stand(b, -60, 160); b.part('efem', -85, 135, 0, 50, 50, 110);
+  /* the dicing saw: a turning blade cuts along every line between the chips, under a glass hood */
+  cabinet(b, -340, 150, 210, 180, 80, 80);
+  b.cyl(-235, 240, 80, 34, 10, M.metal, 40); tapeFrame(b, -235, 240, 91);
+  b.box(-260, 200, 130, 50, 30, 26, M.body);
+  b.part('saw', -340, 150, 0, 210, 180, 160);
+  const blade = b.mesh(new THREE.CylinderGeometry(0.16, 0.16, 0.008, 40).rotateX(Math.PI / 2), M.metal);
+  /* the bonder: a strip of package bases, memory stacked beside each, lids waiting; the picked chip comes down face down */
+  cabinet(b, 80, 150, 260, 200, 80, 100);
+  b.box(110, 225, 80, 220, 50, 4, M.grn); for (let k = 0; k < 4; k++) { b.box(125 + k * 52, 232, 84, 30, 36, 2, M.base, false); for (let m = 0; m < 4; m++) b.box(158 + k * 52, 235, 84 + m * 5, 10, 30, 4, M.body); }
+  b.part('substrate', 110, 225, 80, 220, 50, 6); b.part('memory', 155, 230, 84, 14, 36, 22); b.part('bumps', 125, 232, 84, 30, 36, 4);
+  for (let m = 0; m < 4; m++) b.box(110, 300, 80 + m * 5, 30, 26, 4, M.metal); b.part('lid', 110, 300, 80, 30, 26, 22);
+  b.part('die', 110, 220, 140, 40, 40, 40);
   /* the trays for finished chips */
   b.box(290, 50, 0, 80, 70, 60, M.base);
   const tray = makeTray(M, false); tray.position.copy(V(330, 85, 60)); b.dyn.add(tray); b.part('tray', 290, 50, 0, 80, 70, 70);
-  return { close: 1.3, at: { pod: [0, 30, 110], efem: [-60, 160, 110], saw: [-200, 240, 92], head: [130, 240, 150], sub: [200, 245, 92], tray: [330, 85, 70] },
-    robots: [{ id: 'A', b: [-60, 160, 20], h: 108, L: 90, rest: [-60, 120], zone: ['pod', 'efem', 'saw'] }, { id: 'P', gantry: true, x0: -240, x1: 380, d: 240, top: 230, rest: [60, 240, 160], zone: ['saw', 'head', 'sub', 'tray'] }],
-    update(f, mine, t) { blade.rotation.z = t * 20; blade.visible = true; blade.position.x = (-230 + ((t * 0.3) % 1) * 60) / 100 + (mine && f.s.k !== 'proc.pkg.saw' ? 0 : 0); } };
+  return { close: 1.3, at: { pod: [0, 30, 110], efem: [-60, 160, 110], saw: [-235, 240, 92], head: [130, 240, 160], sub: [140, 250, 88], tray: [330, 85, 70] },
+    robots: [{ id: 'A', b: [-60, 160, 20], h: 108, L: 90, rest: [-60, 120], zone: ['pod', 'efem', 'saw'] }, { id: 'P', gantry: true, x0: -240, x1: 360, d: 245, top: 240, rest: [60, 245, 170], zone: ['saw', 'head', 'sub', 'tray'] }],
+    update(f, mine, t) { const on = !mine || f.s.k === 'proc.pkg.saw'; blade.rotation.z = t * 20; blade.position.copy(V(-235 + (on ? Math.sin(t * 0.9) * 22 : 30), 240, 112)); } };
 };
 
-/* ---- ship: a last test in a socket, packed, and out: to a data centre, a phone, a car ---- */
+/* ---- ship: a last test in a socket, packed on reels and in boxes, and out: to a data centre, a phone, a car ---- */
 BUILD.ship = (b, plant, first) => {
   const M = b.M; bay(b, plant, first);
   b.box(-30, 0, 0, 60, 60, 90, M.base); b.part('tray', -30, 0, 0, 60, 60, 100);
-  b.box(120, 140, 0, 130, 120, 90, M.body); b.box(170, 185, 90, 30, 30, 8, M.metal); b.part('trays', 120, 140, 0, 130, 120, 100);
-  for (let k = 0; k < 3; k++) b.box(290, 110 + k * 45, 0, 90, 40, 60 - k * 8, M.crate); b.part('boxes', 290, 110, 0, 90, 130, 60);
+  /* the handler: sockets that heat or cool each chip while it is tested, under glass */
+  cabinet(b, 100, 140, 170, 140, 80, 70);
+  for (let k = 0; k < 4; k++) b.box(130 + k * 30, 190, 80, 20, 20, 10, M.body); b.box(170, 240, 80, 60, 40, 4, M.metal);
+  b.part('trays', 100, 140, 0, 170, 140, 150);
+  /* packing: a reel of tape the chips are sealed into, boxes */
+  b.box(300, 120, 0, 60, 60, 60, M.base); const reel = new THREE.CylinderGeometry(0.42, 0.42, 0.06, 40); reel.rotateZ(Math.PI / 2); reel.translate(3.3, 1.02, -1.5); b.put(reel, M.panel);
+  for (let k = 0; k < 3; k++) b.box(380, 200 + k * 45, 0, 70, 40, 60 - k * 8, M.crate); b.part('boxes', 300, 120, 0, 150, 220, 105);
   /* three doors out, and what waits beyond each */
   [[-300, 'datacentre'], [-60, 'phone'], [180, 'car']].forEach(([x, k]) => {
     b.box(x, 684, 0, 160, 8, 220, M.dark, false); b.box(x - 6, 684, 220, 172, 8, 10, M.metal);
-    if (k === 'datacentre') for (let i = 0; i < 3; i++) b.box(x + 20 + i * 42, 600, 0, 34, 50, 150, M.body);
+    if (k === 'datacentre') for (let i = 0; i < 3; i++) { b.box(x + 20 + i * 42, 600, 0, 34, 50, 150, M.body); for (let j = 0; j < 6; j++) b.line([x + 22 + i * 42, 600, 20 + j * 20], [x + 52 + i * 42, 600, 20 + j * 20], true); }
     if (k === 'phone') { b.box(x + 60, 610, 0, 40, 10, 84, M.body); b.box(x + 64, 608, 6, 32, 2, 72, M.screen, false); }
     if (k === 'car') { b.box(x + 10, 560, 20, 150, 90, 50, M.body); b.box(x + 40, 570, 70, 80, 70, 30, M.glass); [[x + 35, 555], [x + 135, 555], [x + 35, 655], [x + 135, 655]].forEach(([wx, wd]) => b.rod(wx, wd, 20, 20, 12, 'z', M.dark, 20)); }
     b.part(k, x, 560, 0, 160, 132, 230);
   });
-  return { close: 1.5, at: { tray: [0, 30, 100], sock: [185, 200, 105], box: [335, 150, 70], out: [330, 400, 60] },
+  return { close: 1.4, at: { tray: [0, 30, 100], sock: [175, 200, 92], box: [330, 150, 70], out: [330, 420, 60] },
     robots: [{ id: 'P', gantry: true, x0: -60, x1: 380, d: 180, top: 230, rest: [100, 180, 160], zone: ['tray', 'sock', 'box', 'out'] }],
     update() {} };
 };
@@ -493,6 +563,14 @@ function person(b, x, d) {
 
 /* stations not drawn yet in 3D get the bay and a simple stand-in, so the line stays whole */
 function standIn(b, plant, first) { bay(b, plant, first); b.box(-120, 60, 0, 240, 200, 160, b.M.body); return {}; }
+
+/* for the tests: build one station without drawing it, and say what it holds */
+export function stationForTest(id, ids) {
+  const col = { dark: true, warm: '#ffb057', cool: '#63b6ff', grn: '#35c994', red: '#ff6f5c' }, M = materials(col), b = new Builder(M);
+  const i = ids.indexOf(id), plant = PLANTS[id], first = i > 0 && PLANTS[ids[i - 1]] !== plant;
+  const extra = (BUILD[id] || standIn)(b, plant, first) || {}, cluster = !!extra.ch && !extra.at;
+  return { built: !!BUILD[id], parts: Object.keys(b.parts), at: extra.at || (cluster ? CLUSTER_AT : {}), robots: extra.robots || (cluster ? CLUSTER_ROBOTS : []) };
+}
 
 /* ======== the view ======== */
 export function createJourney3D(host, before) {
