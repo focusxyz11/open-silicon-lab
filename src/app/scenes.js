@@ -604,59 +604,85 @@ const soc = {
 /* ======== a car ======== */
 
 /* ---- car: seen from above: dozens of small computers, joined by wires ---- */
-const ctrl = [[760, 500, 36, 36], [860, 470, 30, 26], [560, 480, 44, 40], [430, 360, 36, 30], [430, 610, 36, 30], [300, 482, 44, 36], [170, 482, 34, 34], [650, 380, 32, 28], [650, 592, 32, 28], [700, 430, 30, 26]];
-const hub = [582, 500];
-const carWires = ctrl.slice(1).filter((_, i) => i !== 1).map(k => ({ p: [hub, [k[0] + k[2] / 2, hub[1]], [k[0] + k[2] / 2, k[1] + k[3] / 2]] }));
-carWires.push({ p: [hub, [778, 500]] });
-const sensors = [{ c: [893, 500, 13] }, { c: [108, 500, 11] }, { c: [598, 318, 9] }, { c: [598, 682, 9] }, { c: [668, 500, 10] }];
-const carBody = [[112, 420], [130, 345], [230, 322], [700, 322], [810, 334], [876, 372], [904, 440], [908, 500], [904, 560], [876, 628], [810, 666], [700, 678], [230, 678], [130, 655], [112, 580], [104, 500]];
-const carWheels = [[200, 288], [200, 668], [680, 288], [680, 668]];
+/* ---- car: seen from the side, the near side and the roof cut away. Driving to the right on its road:
+   the battery under the floor, the motor at the back wheels, seats and dashboard, the radar and cameras that
+   watch the road, and dozens of control units joined by the wiring. The one the dive follows stands with
+   its lid off, its board facing you. Measured in centimetres. ---- */
+const PCAR = proj({ s: 1.75, ox: 31, cx: 0, oy: 712 }), KC = kit(PCAR);
+const CAR = [[8, 34], [0, 52], [3, 82], [22, 98], [72, 108], [118, 140], [250, 146], [298, 141], [362, 102], [432, 90], [458, 76], [462, 52], [455, 33], [415, 31], [338, 31], [122, 31], [48, 33]];
+const WHEELS = [85, 378], ECUS = [[290, 20, 68, 18, 22, 18], [408, 60, 62, 30, 26, 16], [168, 70, 36, 24, 20, 12], [228, 120, 40, 20, 18, 14], [64, 80, 60, 26, 20, 14], [320, 130, 80, 18, 16, 12]];
+const carParts = (() => {
+  const hull3 = pts3 => { const q = pts3.map(p => PCAR(p[0], p[1], p[2])).sort((a, b) => a[0] - b[0] || a[1] - b[1]); const cr = (o, a, b) => (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]), lo = [], up = [];
+    for (const p of q) { while (lo.length >= 2 && cr(lo[lo.length - 2], lo[lo.length - 1], p) <= 0) lo.pop(); lo.push(p); }
+    for (const p of q.slice().reverse()) { while (up.length >= 2 && cr(up[up.length - 2], up[up.length - 1], p) <= 0) up.pop(); up.push(p); }
+    return closed(lo.slice(0, -1).concat(up.slice(0, -1))); };
+  const boxH = (x, y, z, w, d, h) => hull3([[x, y, z], [x + w, y, z], [x + w, y + d, z], [x, y + d, z], [x, y, z + h], [x + w, y, z + h], [x + w, y + d, z + h], [x, y + d, z + h]]);
+  return {
+    controllers: ECUS.map(e => boxH(...e)),
+    wiring: [{ p: [[408, 74, 62], [340, 74, 36], [200, 74, 36], [70, 74, 50]].map(p => PCAR(...p)) }, { p: [[300, 74, 36], [300, 29, 77]].map(p => PCAR(...p)) }],
+    sensors: [[462, 90, 52], [330, 90, 136], [4, 90, 80]].map(([x, y, z]) => { const q = PCAR(x, y, z); return { c: [q[0], q[1], 16] }; }),
+    wheels: WHEELS.map(x => { const q = PCAR(x, 0, 34); return { c: [q[0], q[1], 56] }; })
+  };
+})();
 const car = {
-  parts: { controllers: ctrl.map(r => ({ r })), wiring: carWires, sensors, wheels: carWheels.map(w => ({ r: [w[0], w[1], 130, 44] })) },
+  parts: carParts,
   draw(G) {
-    const c = G.col;
-    G.bg(c.lo);
+    const c = G.col, T = tones(c), K = KC, P = PCAR;
+    G.bg(c.dark ? c.bg : mix(c.up, c.line, 0.12));
     /* the road, moving past */
-    [140, 860].forEach(y => G.l([[0, y], [1000, y]], c.dim, 1.4));
-    const run = (G.t * 70) % 120;
-    [215, 785].forEach(y => { for (let i = 0; i < 10; i++) G.l([[i * 120 - run, y], [i * 120 - run + 56, y]], c.dim, 2.2); });
-    /* what the sensors watch */
-    G.a(0.1);
-    [[[893, 500], [1000, 420], [1000, 580]], [[108, 500], [0, 440], [0, 560]], [[598, 318], [510, 150], [686, 150]], [[598, 682], [510, 850], [686, 850]]].forEach(v => poly(G, v, c.cool));
-    G.a(1);
-    const sweep = (G.t * 0.7) % 1;
-    G.a(0.5 * (1 - sweep)); G.c(893, 500, 20 + sweep * 90, null, c.cool, 1); G.c(108, 500, 16 + sweep * 70, null, c.cool, 1); G.a(1);
-    /* wheels, body (its roof taken off, its sides rising towards you), glass */
-    const T = tones(c);
-    carWheels.forEach(w => { walls(G, rrPts(w[0], w[1], 130, 44, 10), 30, T); lifted(G, 30, () => { rr(G, w[0], w[1], 130, 44, 10, c.up, c.line, 1.2); for (let k = 0; k < 9; k++) G.l([[w[0] + 10 + k * 13.8, w[1] + 5], [w[0] + 10 + k * 13.8, w[1] + 39]], c.dim, 0.7); }); });
-    walls(G, carBody, 64, T);
-    blob(G, carBody, c.mid, c.hi, 1.8);
-    G.l([[708, 352], [724, 500], [708, 648]], c.dim, 1); G.l([[724, 392], [872, 428]], c.dim, 0.8); G.l([[724, 608], [872, 572]], c.dim, 0.8);
-    G.l([[210, 350], [196, 500], [210, 650]], c.dim, 1);
-    rr(G, 264, 372, 346, 256, 20, null, c.dim, 1);
-    const glass = [[[610, 356], [694, 378], [694, 622], [610, 644]], [[226, 374], [264, 382], [264, 618], [226, 626]]], side = [[282, 350], [596, 344], [606, 360], [272, 366]];
-    glass.forEach(g => poly(G, g, c.lo, c.line, 1)); poly(G, side, c.lo, c.dim, 0.8); poly(G, flipY(side), c.lo, c.dim, 0.8);
-    /* seats, steering wheel, mirrors, lights */
-    [[478, 392], [478, 532], [330, 392], [330, 532]].forEach(k => { walls(G, rrPts(k[0], k[1], 76, 76, 14), 28, T); lifted(G, 28, () => { rr(G, k[0], k[1], 76, 76, 14, c.up, c.dim, 1); rr(G, k[0] + 4, k[1] + 12, 14, 52, 6, T.body.top, c.dim, 0.8); }); });
-    lifted(G, 40, () => { G.c(578, 432, 17, null, c.line, 1.6); G.l([[595, 432], [612, 432]], c.line, 1.2); });
-    const mirror = [[628, 326], [652, 326], [662, 306], [640, 302]], lamp = [[862, 380], [890, 430], [878, 436], [852, 390]];
-    [mirror, flipY(mirror)].forEach(m => poly(G, m, c.mid, c.line, 1));
-    [lamp, flipY(lamp)].forEach(m => poly(G, m, c.up, c.warm, 1.1));
-    G.a(0.8); G.r(111, 410, 6, 44, c.red); G.r(111, 546, 6, 44, c.red); G.a(1);
-    /* the wires, with messages travelling along them */
-    carWires.forEach((w, i) => { G.l(w.p, c.cool, 1.2); const p = along2(w.p, (G.t * 0.5 + i * 0.13) % 1); G.a(0.9); G.r(p[0] - 4, p[1] - 4, 8, 8, c.cool); G.a(1); });
-    G.c(hub[0], hub[1], 5, c.cool);
-    ctrl.forEach((k, i) => { if (!i) return; walls(G, [[k[0], k[1]], [k[0] + k[2], k[1]], [k[0] + k[2], k[1] + k[3]], [k[0], k[1] + k[3]]], 12, T); lifted(G, 12, () => { G.r(k[0], k[1], k[2], k[3], c.up, c.line, 1); G.r(k[0] + k[2] * 0.3, k[1] + k[3] * 0.3, k[2] * 0.4, k[3] * 0.4, c.lo, c.dim, 0.7); G.l([[k[0] + 3, k[1] + 3], [k[0] + 3, k[1] + k[3] - 3]], c.warm, 0.8); }); });
-    sensors.forEach(sn => { G.c(sn.c[0], sn.c[1], sn.c[2], c.lo, c.warm, 1.4); G.c(sn.c[0], sn.c[1], sn.c[2] * 0.4, c.warm); });
-    /* the control unit the dive follows */
-    G.r(ctrl[0][0] - 3, ctrl[0][1] - 3, 42, 42, c.up, c.hi, 1.4);
+    K.fill(G, [P(-200, -60, 0), P(800, -60, 0), P(800, 260, 0), P(-200, 260, 0)], c.dark ? mix(c.lo, c.mid, 0.3) : mix(c.mid, c.lo, 0.3));
+    const run = (G.t * 260) % 140;
+    [-30, 220].forEach(y => { for (let i = -2; i < 8; i++) { const x = i * 140 - run; K.fill(G, [P(x, y, 0.2), P(x + 70, y, 0.2), P(x + 70, y + 5, 0.2), P(x, y + 5, 0.2)], T.seam); } });
+    /* what the radar watches, ahead */
+    G.a(0.12); K.fill(G, [P(462, 90, 52), P(700, 20, 20), P(700, 160, 80)], c.cool); G.a(1);
+    const sw = (G.t * 0.8) % 1; G.a(0.5 * (1 - sw)); G.l([P(470 + sw * 200, 90 - sw * 60, 52 - sw * 25), P(470 + sw * 200, 90 + sw * 60, 52 + sw * 20)], c.cool, 1.2); G.a(1);
+    K.shadow(G, [[0, 0], [462, 0], [462, 180], [0, 180]], 0, 24);
+    /* the far wheels, the far side of the body seen from inside */
+    WHEELS.forEach(x => wheel(G, x, 158, 180));
+    K.fill(G, CAR.map(([x, z]) => P(x, 180, z)), T.inner.front, T.edge, 0.8);
+    /* the floor, with the battery under it */
+    K.box(G, 112, 18, 16, 240, 144, 14, { tone: 'base' });
+    for (let k = 1; k < 8; k++) KC.line(G, [[112 + k * 30, 18, 30], [112 + k * 30, 162, 30]], T.seam, 0.6);
+    K.fill(G, [P(40, 4, 31), P(430, 4, 31), P(430, 176, 31), P(40, 176, 31)], T.body.top, T.edge, 0.7);
+    /* the motor at the back wheels, with its inverter */
+    K.box(G, 60, 40, 32, 50, 100, 34, {}); K.box(G, 64, 80, 66, 26, 20, 14, {});
+    /* the bonnet's insides: the computer that drives, the 12-volt battery */
+    K.box(G, 386, 30, 46, 40, 40, 28, { tone: 'base' });
+    /* seats and dashboard, the steering wheel */
+    [[120, 26], [120, 96]].forEach(([x, y]) => { K.box(G, x, y, 34, 52, 58, 18, {}); K.box(G, x, y, 52, 14, 58, 44, {}); });
+    [[230, 26], [230, 104]].forEach(([x, y]) => { K.box(G, x, y, 34, 50, 50, 20, {}); K.box(G, x, y, 54, 12, 50, 52, {}); K.box(G, x + 2, y + 10, 106, 8, 30, 12, {}); });
+    K.box(G, 318, 12, 70, 34, 156, 26, {}); K.onFront(G, 326, 12, 78, 20, 12, c.dark ? c.bg : c.lo, T.edge, 0.6);
+    const sp = P(310, 52, 98); G.ctx.save(); G.ctx.beginPath(); G.ctx.ellipse(sp[0], sp[1], 15, 18, 0, 0, 6.2832); G.ctx.strokeStyle = T.edge; G.ctx.lineWidth = G.lw(3); G.ctx.stroke(); G.ctx.restore();
+    /* the wiring, with messages travelling along it */
+    const harness = [[[408, 74, 62], [340, 74, 36], [200, 74, 36], [70, 74, 50]], [[300, 74, 36], [300, 29, 77]], [[200, 74, 36], [178, 80, 42]], [[250, 74, 36], [238, 128, 46]], [[340, 74, 36], [328, 136, 86]], [[408, 74, 62], [460, 90, 52]], [[70, 74, 50], [8, 90, 80]]];
+    harness.forEach((h, i) => { const q = h.map(p => P(...p)); G.l(q, c.cool, 1.6); const pt = along2(q, (G.t * 0.5 + i * 0.17) % 1); G.a(0.9); G.r(pt[0] - 3, pt[1] - 3, 6, 6, c.cool); G.a(1); });
+    /* the control units; the one the dive follows faces you with its lid off */
+    ECUS.slice(1).forEach(([x, y, z, w, d, h]) => { K.box(G, x, y, z, w, d, h, {}); K.onFront(G, x + 3, y, z + 3, 4, 4, c.warm); });
+    const [ex, ey, ez, ew, ed, eh] = ECUS[0];
+    K.box(G, ex - 4, ey + 4, 31, ew + 8, ed - 4, ez - 31, {});
+    K.box(G, ex - 1, ey, ez - 1, ew + 2, ed, eh + 2, { tone: 'base' });
     inside(G, 'car');
-    /* the top edge of the body, cut where the roof was */
-    const rim = carBody.map(p => [p[0] - LX * 64, p[1] + LY * 64]), inn = carBody.map(p => [500 + (p[0] - 500) * 0.955 - LX * 64, 500 + (p[1] - 500) * 0.93 + LY * 64]);
-    G.ctx.beginPath(); rim.forEach((q, i) => (i ? G.ctx.lineTo(q[0], q[1]) : G.ctx.moveTo(q[0], q[1]))); G.ctx.closePath(); inn.forEach((q, i) => (i ? G.ctx.lineTo(q[0], q[1]) : G.ctx.moveTo(q[0], q[1]))); G.ctx.closePath();
-    G.ctx.fillStyle = T.body.top; G.ctx.fill('evenodd'); G.ctx.strokeStyle = T.edge; G.ctx.lineWidth = G.lw(1); G.ctx.stroke();
+    /* sensors: the radar in front, a camera at the top of the windscreen, one at the back */
+    [[462, 90, 52], [330, 90, 136], [4, 90, 80]].forEach(([x, y, z]) => { const q = P(x, y, z); G.c(q[0], q[1], 7, c.lo, c.warm, 1.4); G.c(q[0], q[1], 3, c.warm); });
+    /* the glass that is left: the windscreen and the back window, edge on */
+    [[[298, 141], [362, 102]], [[72, 108], [118, 140]]].forEach(([a, b]) => { G.a(0.35); K.fill(G, [P(a[0], 8, a[1]), P(b[0], 8, b[1]), P(b[0], 172, b[1]), P(a[0], 172, a[1])], mix(c.cool, c.bg, 0.5), T.edge, 0.8); G.a(1); });
+    /* the near side, cut away above the sills: what is left of it, and the near wheels */
+    K.fill(G, [[0, 52], [3, 66], [462, 66], [462, 52], [455, 33], [415, 31], [338, 31], [122, 31], [48, 33], [8, 34]].map(([x, z]) => P(x, 0, z)), T.body.front, T.edge, 1);
+    G.l(CAR.concat([CAR[0]]).map(([x, z]) => P(x, 0, z)), T.edge, 1.1);
+    WHEELS.forEach(x => wheel(G, x, 0, 22));
   }
 };
+/* a wheel standing in the side plane, from depth y0 to y1: the tyre's tread between its two faces */
+function wheel(G, x, y0, y1) {
+  const c = G.col, T = tones(c), a = PCAR(x, y0, 34), b = PCAR(x, y1, 34), r = 34 * 1.75, ctx = G.ctx;
+  const dx = b[0] - a[0], dy = b[1] - a[1], L = Math.hypot(dx, dy) || 1, nx = -dy / L * r, ny = dx / L * r;
+  poly(G, [[a[0] + nx, a[1] + ny], [b[0] + nx, b[1] + ny], [b[0] - nx, b[1] - ny], [a[0] - nx, a[1] - ny]], T.base.side, null);
+  ctx.beginPath(); ctx.arc(b[0], b[1], r, 0, 6.2832); ctx.fillStyle = T.base.side; ctx.fill();
+  ctx.beginPath(); ctx.arc(a[0], a[1], r, 0, 6.2832); ctx.fillStyle = c.dark ? c.bg : T.base.front; ctx.fill(); ctx.strokeStyle = T.edge; ctx.lineWidth = G.lw(1); ctx.stroke();
+  ctx.beginPath(); ctx.arc(a[0], a[1], r * 0.62, 0, 6.2832); ctx.fillStyle = T.body.top; ctx.fill(); ctx.stroke();
+  const spin = G.t * 6; for (let k = 0; k < 5; k++) { const an = spin + (k / 5) * 6.2832; G.l([[a[0] + Math.cos(an) * r * 0.18, a[1] + Math.sin(an) * r * 0.18], [a[0] + Math.cos(an) * r * 0.58, a[1] + Math.sin(an) * r * 0.58]], T.edge, 1.4); }
+  ctx.beginPath(); ctx.arc(a[0], a[1], r * 0.16, 0, 6.2832); ctx.fillStyle = T.base.top; ctx.fill(); ctx.stroke();
+}
 
 /* ---- ecu: one control unit, its lid off: a small chip that decides, big parts that push ---- */
 const drivers = [0, 1, 2, 3].map(i => ({ r: [660, 210 + i * 110, 110, 80] }));

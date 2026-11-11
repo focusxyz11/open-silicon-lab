@@ -134,7 +134,8 @@ function makeTray(M, mine) {
 }
 /* the wafer (or, after the cut, a chip) */
 function makeWafer(b, mine) { const g = new THREE.CylinderGeometry(0.15, 0.15, 0.012, 40); const m = b.mesh(g, mine ? b.M.wafer : b.M.waferOther, false); m.visible = false; return m; }
-function makeChip(b) { const g = new THREE.BoxGeometry(0.06, 0.012, 0.06); const m = b.mesh(g, b.M.chip, false); m.visible = false; return m; }
+/* drawn a little larger than life, so it can be followed */
+function makeChip(b) { const g = new THREE.BoxGeometry(0.11, 0.022, 0.11); const m = b.mesh(g, b.M.chip, false); m.visible = false; return m; }
 
 /* a robot arm: a column, two links, a fork. Its hand goes where the wafer is while it carries it. */
 function gantry(b, R) {
@@ -524,7 +525,7 @@ BUILD.pkg = (b, plant, first) => {
   /* the trays for finished chips */
   b.box(290, 50, 0, 80, 70, 60, M.base);
   const tray = makeTray(M, false); tray.position.copy(V(330, 85, 60)); b.dyn.add(tray); b.part('tray', 290, 50, 0, 80, 70, 70);
-  return { close: 1.3, at: { pod: [0, 30, 110], efem: [-60, 160, 110], saw: [-235, 240, 92], head: [130, 240, 160], sub: [140, 250, 88], tray: [330, 85, 70] },
+  return { close: 0.8, at: { pod: [0, 30, 110], efem: [-60, 160, 110], saw: [-235, 240, 92], head: [140, 245, 150], sub: [140, 250, 89], tray: [330, 85, 72] },
     robots: [{ id: 'A', b: [-60, 160, 20], h: 108, L: 90, rest: [-60, 120], zone: ['pod', 'efem', 'saw'] }, { id: 'P', gantry: true, x0: -240, x1: 360, d: 245, top: 240, rest: [60, 245, 170], zone: ['saw', 'head', 'sub', 'tray'] }],
     update(f, mine, t) { const on = !mine || f.s.k === 'proc.pkg.saw'; blade.rotation.z = t * 20; blade.position.copy(V(-235 + (on ? Math.sin(t * 0.9) * 22 : 30), 240, 112)); } };
 };
@@ -548,7 +549,7 @@ BUILD.ship = (b, plant, first) => {
     if (k === 'car') { b.box(x + 10, 560, 20, 150, 90, 50, M.body); b.box(x + 40, 570, 70, 80, 70, 30, M.glass); [[x + 35, 555], [x + 135, 555], [x + 35, 655], [x + 135, 655]].forEach(([wx, wd]) => b.rod(wx, wd, 20, 20, 12, 'z', M.dark, 20)); }
     b.part(k, x, 560, 0, 160, 132, 230);
   });
-  return { close: 1.4, at: { tray: [0, 30, 100], sock: [175, 200, 92], box: [330, 150, 70], out: [330, 420, 60] },
+  return { close: 0.8, at: { tray: [0, 30, 100], sock: [170, 200, 91], box: [330, 150, 136], out: [330, 420, 60] },
     robots: [{ id: 'P', gantry: true, x0: -60, x1: 380, d: 180, top: 230, rest: [100, 180, 160], zone: ['tray', 'sock', 'box', 'out'] }],
     update() {} };
 };
