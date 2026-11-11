@@ -7,7 +7,7 @@ import { t } from '../core/i18n.js';
 import { DEPTHS, THREADS, partWord } from '../data/weave.js';
 import { N, IDS, clampZ, frames, lineFrames, isLine, stop } from '../engines/weave.js';
 import { SCENES, partsOf } from './scenes.js';
-import { drawJourney, stepStart } from './journey.js';
+import { drawJourney, stepStart, setParts3 } from './journey.js';
 
 export const reduced = () => !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
 export const theme = () => {
@@ -149,7 +149,38 @@ export function createWorld(cv, on) {
   /* the journey: stations side by side, the camera sliding along the line. The station you stand at is
      yours (G.mine): your wafer is in it, and from the moment you stop, its steps play (G.run, seconds). */
   let stay = { i: -1, t: 0 }, paused = false, lastTm = 0, jhits = null, jbox = null;
+  /* the journey in 3D (src/app/journey3d.js), loaded the first time the line is shown; until then, or
+     without WebGL, the 2D stations */
+  let J3 = null, j3state = 'none';
+  const want3d = () => {
+    if (j3state !== 'none') return;
+    j3state = 'loading';
+    import('./journey3d.js').then(m => { J3 = m.createJourney3D(cv.parentNode, cv); j3state = J3 ? 'ready' : 'off'; if (J3) cv.classList.add('over3d'); }).catch(() => { j3state = 'off'; });
+  };
+  function renderLine3(tm, b) {
+    const near = Math.round(Z), dist = Math.abs(Z - near);
+    if (!fly && !drag && dist < 0.02) { if (stay.i !== near) { stay = { i: near, t: tm }; paused = false; } else if (paused) stay.t += tm - lastTm; } else if (dist > 0.05 || fly) stay.i = -1;
+    lastTm = tm;
+    const run = stay.i === near ? (reduced() ? -1 : tm - stay.t) : null;
+    J3.canvas.style.display = '';
+    J3.render({ ids: IDS, Z, near, dist, run, tm, W, H, dpr, box: b, col });
+    setParts3(id => (id === IDS[near] ? J3.parts(id, b, W, H) : null));
+    ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, W * dpr, H * dpr);
+    const k = b.B / 1000, left = b.cx - b.B / 2, top = b.cy - b.B / 2, below = (H - inset.b - (top + b.B)) / k;
+    ctx.save(); ctx.setTransform(dpr * k, 0, 0, dpr * k, dpr * left, dpr * top); ctx.beginPath(); ctx.rect(-left / k, 0, W / k, 1000 + (b.below ? below : 0)); ctx.clip();
+    Object.assign(G, { s: k, k: 1, primary: true, t: tm, col, id: IDS[near], base: 1, box: b.B });
+    jhits = drawJourney(G, { ids: IDS, Z, near, dist, run, paused, below: b.below ? below : 0, three: true }); jbox = { k, left, top, near };
+    ctx.restore();
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const y = top + 12, gap = Math.min(18, (b.B - 40) / N);
+    for (let i = 0; i < N; i++) { const x = b.cx + (i - (N - 1) / 2) * gap; ctx.globalAlpha = i === near ? 1 : 0.5; ctx.fillStyle = i === near ? col.warm : col.line; ctx.beginPath(); ctx.arc(x, y, i === near ? 4 : 2.5, 0, 6.2832); ctx.fill(); }
+    ctx.globalAlpha = 0.3; ctx.fillStyle = col.bg; const L = b.cx - b.B / 2, Rr = b.cx + b.B / 2;
+    ctx.fillRect(0, 0, L, H); ctx.fillRect(Rr, 0, W - Rr, H); ctx.globalAlpha = 1;
+    return { pi: near, ptr: { tx: left, ty: top, s: k } };
+  }
   function renderLine(tm, b) {
+    want3d();
+    if (J3) return renderLine3(tm, b);
     const F = lineFrames(Z, b.B, b.cx, b.cy), pi = F.f < 0.5 ? F.i : F.i + 1, near = Math.round(Z), dist = Math.abs(Z - near);
     if (!fly && !drag && dist < 0.02) { if (stay.i !== near) { stay = { i: near, t: tm }; paused = false; } else if (paused) stay.t += tm - lastTm; } else if (dist > 0.05 || fly) stay.i = -1;
     lastTm = tm;
@@ -180,6 +211,7 @@ export function createWorld(cv, on) {
 
   function render(now) {
     const tm = reduced() ? 3 : Math.max(0, (now - t0) / 1000), b = box();
+    if (J3 && !isLine()) { J3.canvas.style.display = 'none'; setParts3(null); }
     if (isLine()) { const L = renderLine(tm, b); overlays(tm, L.pi, L.ptr); return; }
     const F = frames(Z, b.B, b.cx, b.cy), pi = F.f < 0.5 ? F.i : F.i + 1;
     ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1; ctx.fillStyle = col.bg; ctx.fillRect(0, 0, W * dpr, H * dpr);

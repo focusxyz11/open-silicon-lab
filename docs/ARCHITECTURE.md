@@ -11,6 +11,8 @@ src/app/scenes.js       one scene per depth, drawn in a 1000 x 1000 space, with 
 src/app/journey.js      the journey's stations as machines, the steps each plays with your wafer, your pod, the caption and slice
 src/app/draw.js         small drawing helpers both use
 src/app/solid.js        solids in 2.5D (boxes, cylinders, prisms, cutaways, shadows, four tones), the one way volume is drawn
+src/app/journey3d.js    the journey in 3D (three.js): the plants and the factory's bay, every station's machines, the camera
+src/vendor/three.min.js three.js, loaded only when the journey is first opened
 src/engines/chip.js     your chip: its settings and what follows from them, relative to a starting chip (tested)
 src/engines/weave.js    pure logic: the current world, the camera, sizes, threads, when a core question appears (tested)
 src/data/weave.js       the data: worlds, depths and portals, threads, stops

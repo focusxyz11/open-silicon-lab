@@ -60,9 +60,9 @@ export const DIVES = { print: [['made', 'scanner']], etch: [['made', 'switch']],
    packaging plant. Words: plant.<id>. */
 export const PLANTS = { crystal: 'wafers', slice: 'wafers', clean: 'fab', deposit: 'fab', print: 'fab', etch: 'fab', implant: 'fab', wires: 'fab', test: 'fab', pkg: 'pack', ship: 'pack' };
 export const LOOP = ['clean', 'deposit', 'print', 'etch', 'implant', 'wires'];
-/* Parts that carry the wafer from machine to machine look the same at every station, so their words are
-   shared: part.handle.<key> and what.handle.<key>, not part.<station>.<key>. */
-export const HANDLING = ['pod', 'efem', 'lock', 'xfer', 'shelf', 'dock', 'tray'];
+/* Parts that carry the wafer from machine to machine, and the factory's own track and air filters, look the
+   same at every station, so their words are shared: part.handle.<key> and what.handle.<key>. */
+export const HANDLING = ['pod', 'efem', 'lock', 'xfer', 'shelf', 'dock', 'tray', 'track', 'filters'];
 export const partWord = (id, key) => (HANDLING.includes(key) ? 'handle' : id) + '.' + key;
 export const EXITS = { ship: [['datacentre', 'chip'], ['phone', 'soc'], ['car', 'mcu']] };
 export const WORLDS = [

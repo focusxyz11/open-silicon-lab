@@ -22,6 +22,7 @@ import { kit, tones, mix } from './solid.js';
 /* your chip (src/engines/chip.js), set by scenes.js */
 let M = { layers: 62 }, HITS = [], DIES = [];
 export const setJourneyChip = (m, h, d) => { M = m; HITS = h; DIES = d; };
+export const chipNow = () => ({ M, HITS, DIES });
 
 const MONO = '"Martian Mono", ui-monospace, Menlo, monospace'; /* i18n-ok: a font name */
 const SANS = '"Atkinson Hyperlegible Next", system-ui, sans-serif'; /* i18n-ok: a font name */
@@ -265,7 +266,7 @@ export const JOURNEY = CFG;
 export const stepStart = (id, i) => CFG[id] ? CFG[id].steps.slice(0, i).reduce((a, s) => a + s.d, 0) + 0.01 : 0;
 
 /* where the wafer is at time r (seconds into the station), who holds it, and what the slice shows */
-function flow(cfg, run) {
+export function flow(cfg, run) {
   const st = cfg.steps; let i = 0, r;
   if (run < 0) { i = st.findIndex(s => s.k.startsWith('proc')); r = st[i].d * 0.75; }
   else { r = ((run % cfg.tot) + cfg.tot) % cfg.tot; while (i < st.length - 1 && r >= st[i].d) { r -= st[i].d; i++; } }
@@ -762,7 +763,11 @@ const stShip = {
   }
 };
 
+/* when the 3D view draws the journey, a station's parts are where its 3D parts are on screen */
+let PARTS3 = null;
+export const setParts3 = fn => { PARTS3 = fn; };
 export const STATIONS = { crystal: stCrystal, slice: stSlice, clean: stClean, deposit: stDeposit, print: stPrint, etch: stEtch, implant: stImplant, wires: stWires, test: stTest, pkg: stPkg, ship: stShip };
+Object.entries(STATIONS).forEach(([id, st]) => { const d = Object.getOwnPropertyDescriptor(st, 'parts'); Object.defineProperty(st, 'parts', { get() { const p = PARTS3 && PARTS3(id); return p || (d.get ? d.get.call(st) : d.value); } }); });
 
 /* ======== over the stations: your pod, and the band that says what is happening ======== */
 
@@ -842,16 +847,18 @@ export function drawJourney(G, o) {
   const lo = Math.max(0, Math.floor(o.Z + 1e-6)), hi = Math.min(o.ids.length - 1, Math.ceil(o.Z - 1e-6)), cross = PLANTS[o.ids[lo]] !== PLANTS[o.ids[hi]];
   const f = o.run != null && cfg ? flow(cfg, o.run) : null;
   /* your pod: on the track while you travel, lowered onto the machine's door when you stop */
-  if (o.Z >= si - 1e-6) {
+  if (o.Z >= si - 1e-6 && !o.three) {
     const down = sm((0.3 - o.dist) / 0.2), x = PODX + (o.near - o.Z) * 1000 * down, z = HANG_Z + (PORT_Z - HANG_Z) * down, trays = o.Z > pk + 0.5;
     if (z + 66 < 518) G.l([obP(x, PODY, 520), obP(x, PODY, z + 67)], c.hi, 1.2);
     if (trays) tray(G, x, PODY, z, true, !f || f.home); else pod(G, x, PODY, z, true, f ? f.open : false);
     if (cross && o.dist > 0.06) crate(G, x, PODY, z);
   }
   /* the part the current step happens in, lit in the picture */
-  if (f && o.dist < 0.02 && cfg.part && cfg.part[f.s.to]) {
-    const shapes = (STATIONS[id].parts[cfg.part[f.s.to]] || []), ctx2 = G.ctx;
-    ctx2.save(); ctx2.strokeStyle = c.warm; ctx2.lineWidth = G.lw(1.6); ctx2.lineJoin = 'round'; ctx2.globalAlpha = 0.55 + 0.25 * Math.sin(G.t * 3);
+  if (f && o.dist < 0.02 && cfg.part && cfg.part[f.s.to] && STATIONS[id].parts[cfg.part[f.s.to]]) {
+    const shapes = (STATIONS[id].parts[cfg.part[f.s.to]] || []).slice(), ctx2 = G.ctx;
+    if (o.three && f.proc) shapes.length = 0;   /* in 3D the camera moves in to the work itself */
+    ctx2.save(); ctx2.strokeStyle = c.warm; ctx2.lineWidth = G.lw(o.three ? 1.1 : 1.6); ctx2.lineJoin = 'round'; ctx2.globalAlpha = (o.three ? 0.4 : 0.55) + 0.2 * Math.sin(G.t * 3);
+    if (o.three) ctx2.setLineDash([6 / G.s, 5 / G.s]);
     if (c.dark) { ctx2.shadowColor = c.warm; ctx2.shadowBlur = 10; }
     shapes.forEach(sh => { ctx2.beginPath(); if (sh.r) ctx2.rect(sh.r[0], sh.r[1], sh.r[2], sh.r[3]); else if (sh.c) ctx2.arc(sh.c[0], sh.c[1], sh.c[2], 0, 6.2832); else sh.p.forEach((q, i) => (i ? ctx2.lineTo(q[0], q[1]) : ctx2.moveTo(q[0], q[1]))); ctx2.stroke(); });
     ctx2.restore();
@@ -859,7 +866,7 @@ export function drawJourney(G, o) {
   /* the band: what is happening, and the slice through your wafer. Inside the bottom of the picture, or,
      on a phone, under it. */
   const under = o.below > 120, top = under ? 1000 : 818, bottom = under ? 1000 + o.below : 1000, small = !roomy(G);
-  if (!under) { G.a(0.94); G.r(0, top, 1000, 1000 - top, c.bg); G.a(1); }
+  if (!under || o.three) { G.a(0.94); G.r(-2000, top, 5000, bottom - top + 2000, c.bg); G.a(1); }
   G.l([[0, top], [1000, top]], c.line, 1);
   let key, n = 0, L = null, a = 1, dust = false;
   if (f) { key = f.s.k; n = cfg.num[f.i]; if (cfg.in != null) { L = f.sl; a = f.a; dust = !!cfg.dust; } if (cfg.appear && f.i < cfg.appear) L = null; }
