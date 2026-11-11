@@ -27,6 +27,7 @@ function palette() {
 function shapePath(c, sh) {
   if (sh.r) c.rect(sh.r[0], sh.r[1], sh.r[2], sh.r[3]);
   else if (sh.c) { c.moveTo(sh.c[0] + sh.c[2], sh.c[1]); c.arc(sh.c[0], sh.c[1], sh.c[2], 0, 6.2832); }
+  else if (sh.closed) { sh.p.forEach((p, i) => (i ? c.lineTo(p[0], p[1]) : c.moveTo(p[0], p[1]))); c.closePath(); }
 }
 function outline(sh) {
   if (sh.r) { const r = sh.r; return [[r[0], r[1]], [r[0] + r[2], r[1]], [r[0] + r[2], r[1] + r[3]], [r[0], r[1] + r[3]], [r[0], r[1]]]; }
@@ -89,8 +90,8 @@ export function createWorld(cv, on) {
     if (col.dark && !many) { ctx.shadowColor = color; ctx.shadowBlur = 14 * dpr; }
     shapes.forEach(sh => {
       const o = outline(sh); ctx.beginPath(); o.forEach((p, k) => (k ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1])));
-      ctx.lineWidth = (sh.p ? 3 : 2) * px; ctx.stroke();
-      if (!sh.p) { ctx.globalAlpha = alpha * 0.1; ctx.fill(); ctx.globalAlpha = alpha; }
+      ctx.lineWidth = (sh.p && !sh.closed ? 3 : 2) * px; ctx.stroke();
+      if (!sh.p || sh.closed) { ctx.globalAlpha = alpha * 0.1; ctx.fill(); ctx.globalAlpha = alpha; }
     });
     ctx.shadowBlur = 0;
     shapes.forEach((sh, k) => {

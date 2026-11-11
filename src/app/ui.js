@@ -13,7 +13,7 @@ import { THREADS, WORLDS, STOPS, CASES, FIGURES, REPO, TRIES, SHOWS } from '../d
 import { CLOCKS, GENS, SIDES, START, normal, changed, model, x2, dieSquare } from '../engines/chip.js';
 import { N, IDS, WORLD, setWorld, worldOf, zIn, reshape, clampZ, sizeAt, sizeParts, stop, stopKey, crossing, below, above, nearest, threadOf, rootShown, threadDepths } from '../engines/weave.js';
 import { createWorld, threadColor, theme, reduced } from './world.js';
-import { setChip as drawChip, setBuild, BUILD_STEPS } from './scenes.js';
+import { setChip as drawChip, setBuild, BUILD_STEPS, setLoop, LOOP_STEPS } from './scenes.js';
 
 const KEY = 'osl-weave-v1';
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -32,7 +32,8 @@ export function start(facts) {
     thread: threadOf(saved.thread) ? saved.thread : null,
     seen: saved.seen && typeof saved.seen === 'object' ? saved.seen : {},
     chip: normal(saved.chip || START),
-    build: BUILD_STEPS - 1
+    build: BUILD_STEPS - 1,
+    loop: null
   };
   setChip(S.chip);
   const save = () => { try { localStorage.setItem(KEY, JSON.stringify({ world: WORLD, z: Math.round(world.z * 100) / 100, thread: S.thread, seen: S.seen, chip: S.chip })); } catch (e) { /* storage unavailable */ } };
@@ -131,35 +132,40 @@ export function start(facts) {
     const id = IDS[d], m = model(S.chip); if (!SHOWS[id]) return '';
     const timing = m.late > 0 ? t('chip.late', { late: Math.round(m.late * 100) }) : t('chip.inTime');
     return t('chip.show.' + id, { power: x2(m.power), clock: x2(m.clock), cores: m.cores, timing, battery: x2(m.battery), area: x2(m.area), density: x2(m.density),
-      tick: x2(m.tick), path: x2(m.path), length: x2(m.s), wall: x2(m.wall), steps: x2(m.steps), dies: m.dies, good: m.good, yield: Math.round(m.yield * 100), cost: x2(m.cost), mm: m.side });
+      tick: x2(m.tick), path: x2(m.path), length: x2(m.s), wall: x2(m.wall), steps: x2(m.steps), layers: m.layers, dies: m.dies, good: m.good, yield: Math.round(m.yield * 100), cost: x2(m.cost), mm: m.side });
   };
   const readout = k => {
     const m = model(S.chip);
     if (k === 'build') return t('chip.build.names')[S.build];
+    if (k === 'loop') return S.loop == null ? '' : t('chip.loop.names')[S.loop];
     if (k === 'size') return t('chip.wafer', { cores: m.cores, power: x2(m.power), yield: Math.round(m.yield * 100), cost: x2(m.cost) });
     return t('chip.readout', { clock: x2(m.clock), power: x2(m.power), late: Math.round(m.late * 100) });
   };
   const valueText = k => k === 'clock' ? t('chip.clock.value', { v: x2(S.chip.clock) }) : k === 'size' ? t('chip.size.value', { mm: SIDES[S.chip.size] }) :
-    k === 'build' ? t('chip.build.value', { n: S.build + 1, total: BUILD_STEPS }) : t('chip.gen.names')[S.chip.gen];
+    k === 'build' ? t('chip.build.value', { n: S.build + 1, total: BUILD_STEPS }) : k === 'loop' ? (S.loop == null ? t('chip.loop.auto') : t('chip.loop.value', { n: S.loop + 1, total: LOOP_STEPS })) :
+    t('chip.gen.names')[S.chip.gen];
   /* the depths of this world where a setting shows */
   const showsOf = k => IDS.map((id, i) => i).filter(i => (SHOWS[IDS[i]] || []).includes(k));
   const tryIt = (key, d) => {
     const k = TRIES[key]; if (!k) return '';
-    const max = { clock: CLOCKS.length - 1, gen: GENS - 1, size: SIDES.length - 1, build: BUILD_STEPS - 1 }[k];
-    const val = k === 'clock' ? CLOCKS.indexOf(S.chip.clock) : k === 'build' ? S.build : S.chip[k];
+    const max = { clock: CLOCKS.length - 1, gen: GENS - 1, size: SIDES.length - 1, build: BUILD_STEPS - 1, loop: LOOP_STEPS - 1 }[k];
+    const val = k === 'clock' ? CLOCKS.indexOf(S.chip.clock) : k === 'build' ? S.build : k === 'loop' ? (S.loop || 0) : S.chip[k];
     if (k === 'build') setBuild(S.build);
+    if (k === 'loop') setLoop(S.loop);
+    const local = k === 'build' || k === 'loop';
     return '<section class="try"><p class="code">' + t('chip.try') + '</p><label class="trylabel" for="tryRange"><b>' + t('chip.' + k + '.label') + '</b> <output id="tryValue">' + esc(valueText(k)) + '</output></label>' +
       '<input type="range" id="tryRange" data-setting="' + k + '" min="0" max="' + max + '" step="1" value="' + val + '">' +
       '<p class="readout" id="tryOut" aria-live="polite">' + esc(readout(k)) + '</p>' +
-      (k === 'build' ? '<p class="small">' + esc(t('chip.build.steps', { steps: x2(model(S.chip).steps) })) + '</p>' : SHOWS[IDS[d]] ? '<p class="small" id="chipHere">' + esc(chipWords(d)) + '</p>' : '') +
-      '<p class="small muted">' + t('chip.' + k + '.notice') + '</p>' + (k === 'build' ? '' :
+      (k === 'build' ? '<p class="small">' + esc(t('chip.build.steps', { steps: x2(model(S.chip).steps) })) + '</p>' :
+        k === 'loop' ? '<p class="small">' + esc(t('chip.loop.layers', { layers: model(S.chip).layers })) + '</p>' : SHOWS[IDS[d]] ? '<p class="small" id="chipHere">' + esc(chipWords(d)) + '</p>' : '') +
+      '<p class="small muted">' + t('chip.' + k + '.notice') + '</p>' + (local ? '' :
       '<p class="small muted">' + t('chip.shows') + '</p><div class="shows">' + showsOf(k).filter(i => i !== d).map(i => '<button type="button" class="chipgo" data-go="' + i + '">' + esc(depthName(i)) + '</button>').join('') + '</div>' +
       (changed(S.chip) ? '<button type="button" class="link" data-reset>' + t('chip.reset') + '</button>' : '')) + '</section>';
   };
   const mine = (d, skip) => (skip || !changed(S.chip) || !SHOWS[IDS[d]]) ? '' :
     '<section class="mine"><p class="code">' + t('chip.yours') + '</p><p id="chipHere">' + esc(chipWords(d)) + '</p><button type="button" class="link" data-reset>' + t('chip.reset') + '</button></section>';
   function setSetting(k, i) {
-    if (k === 'build') { S.build = i; setBuild(i); } else { const c = Object.assign({}, S.chip); c[k] = k === 'clock' ? CLOCKS[i] : i; S.chip = normal(c); setChip(S.chip); save(); }
+    if (k === 'build') { S.build = i; setBuild(i); } else if (k === 'loop') { S.loop = i; setLoop(i); } else { const c = Object.assign({}, S.chip); c[k] = k === 'clock' ? CLOCKS[i] : i; S.chip = normal(c); setChip(S.chip); save(); }
     const d = Math.round(world.z), v = $('tryValue'), o = $('tryOut'), here = $('chipHere');
     if (v) v.textContent = valueText(k);
     if (o) o.textContent = readout(k);
@@ -171,7 +177,7 @@ export function start(facts) {
   const qButton = (th, d) => '<button type="button" class="qpick" data-th="' + th + '" style="--th:' + threadColor(th) + '"><i></i><span>' + esc(q(th, d)) + '</span></button>';
   function card() {
     const d = Math.round(world.z), th = S.thread;
-    setBuild(null);   /* a switch is shown finished, unless "Build it" is open */
+    setBuild(null); setLoop(null);   /* a switch is shown finished and the loop runs, unless a try is open */
     let h = '<p class="where"><b>' + esc(depthName(d)) + '</b> <span id="acrossNow">' + esc(across(world.z)) + '</span></p>';
     if (th) {
       const here = stop(th, d), color = threadColor(th), key = stopKey(th, d);

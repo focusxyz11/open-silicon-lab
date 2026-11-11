@@ -44,9 +44,9 @@ test('smaller switches are faster and more fit, but leak more', () => {
 test('every "Try it" sits at a real stop and changes a real setting; every depth that shows your chip has its words', () => {
   for (const [key, k] of Object.entries(TRIES)) {
     assert.ok(STOPS[key], key + ' is not a stop');
-    assert.ok(SETTINGS.includes(k) || k === 'build', key + ': unknown setting ' + k);
+    assert.ok(SETTINGS.includes(k) || k === 'build' || k === 'loop', key + ': unknown setting ' + k);
     assert.ok(EN['chip.' + k + '.label'] && EN['chip.' + k + '.notice'], k + ' has no words');
-    if (k !== 'build') assert.ok(Object.values(SHOWS).some(ks => ks.includes(k)), k + ' shows nowhere');
+    if (k !== 'build' && k !== 'loop') assert.ok(Object.values(SHOWS).some(ks => ks.includes(k)), k + ' shows nowhere');
   }
   assert.equal(EN['chip.gen.names'].length, GENS);
   for (const [id, ks] of Object.entries(SHOWS)) {

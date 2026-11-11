@@ -35,8 +35,8 @@ export const DEPTHS = {
   ecu: { m: 0.18, portal: [455, 425, 40] },
   mcu: { m: 0.007, portal: [176, 236, 52] },
   /* a chip factory: the way every chip is made (the wafer's portal follows your chip's size) */
-  fab: { m: 200, portal: [430, 420, 90] },
-  bay: { m: 20, portal: [120, 565, 250] },
+  fab: { m: 200, portal: [518, 359, 134] },
+  bay: { m: 25, portal: [645, 373, 240] },
   scanner: { m: 4, portal: [642, 672, 176] },
   wafer: { m: 0.32, portal: [478, 478, 44] },
   die: { m: 0.015, portal: [190, 190, 70] },
@@ -82,7 +82,8 @@ export const STOPS = {
   'fail.ecu': ['mcu'], 'open.ecu': ['mcu', 'connector'], 'divide.ecu': ['drivers', 'mcu'],
   'think.mcu': ['cores'], 'scale.mcu': ['flash', 'cores'], 'make.mcu': ['periph'],
   /* a chip factory */
-  'make.fab': ['cleanroom'], 'scale.fab': ['cleanroom', 'power'], 'open.fab': ['cleanroom'],
+  'make.fab': ['cleanroom', 'subfab'], 'scale.fab': ['cleanroom', 'power'], 'open.fab': ['line'],
+  'make.bay': ['section', 'scanner'],
   'know.bay': ['people'], 'fail.bay': ['inspect'], 'divide.bay': ['etch', 'deposit', 'inspect', 'track'],
   'make.scanner': ['source'], 'scale.scanner': ['mirrors', 'mask'], 'open.scanner': ['source', 'mirrors', 'mask', 'stage'],
   'fail.wafer': ['defects'], 'make.wafer': ['dies'], 'divide.wafer': ['dies'],
@@ -111,14 +112,15 @@ export const FIGURES = {
   'idea.soc': ['riscv-rva23'], 'fail.car': ['car-life'], 'divide.car': ['chips-per-car'], 'know.car': ['car-shortage-2021'],
   'fail.ecu': ['car-ppm'], 'scale.mcu': ['legacy-auto'], 'make.mcu': ['chip-units'],
   'make.fab': ['fab-build-time'], 'scale.fab': ['fab-module-cost'], 'open.fab': ['wafer-space-run'], 'know.bay': ['workforce'], 'divide.bay': ['fab-cycle-time'],
-  'make.scanner': ['euv-wavelength', 'euv-source'], 'scale.scanner': ['high-na-hvm', 'high-na-price'], 'idea.die': ['design-cost-2nm']
+  'make.bay': ['fab-cycle-time'], 'make.scanner': ['euv-wavelength', 'euv-source'], 'scale.scanner': ['high-na-hvm', 'high-na-price'], 'idea.die': ['design-cost-2nm']
 };
 
 /* Your chip (src/engines/chip.js): a few settings that every "Try it" changes and every depth shows.
    TRIES: the stops where a setting can be changed, inside that stop's question.
    SHOWS: what each depth shows of your chip, and which settings it depends on (words: chip.show.<depth>).
-   "build" is a try of its own: it scrubs through how the switch is made, and changes no setting. */
-export const TRIES = { 'fail.chip': 'clock', 'life.phone': 'clock', 'scale.switch': 'gen', 'scale.soc': 'gen', 'scale.mcu': 'gen', 'fail.wafer': 'size', 'divide.wafer': 'size', 'make.switch': 'build' };
+   "build" and "loop" are tries of their own: they scrub through how a switch is made and how one layer
+   is printed, and change no setting. */
+export const TRIES = { 'fail.chip': 'clock', 'life.phone': 'clock', 'scale.switch': 'gen', 'scale.soc': 'gen', 'scale.mcu': 'gen', 'fail.wafer': 'size', 'divide.wafer': 'size', 'make.switch': 'build', 'make.bay': 'loop' };
 const ALL = ['clock', 'gen', 'size'];
 export const SHOWS = {
   building: ALL, rack: ALL, board: ALL, chip: ALL, phone: ALL, phoneboard: ALL, soc: ['clock', 'gen'], mcu: ['clock', 'gen'],

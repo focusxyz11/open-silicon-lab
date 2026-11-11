@@ -1,6 +1,7 @@
 /* The scenes of the dive, from Fable's world build (OSL-02), one per depth. Each is drawn in a 1000 x 1000
    space by draw(G), where G is the drawing helper from src/app/world.js. parts: the named shapes a
-   question can light up ({ r: [x, y, w, h] } | { c: [x, y, r] } | { p: [[x, y], ...] }). Labels are text
+   question can light up ({ r: [x, y, w, h] } | { c: [x, y, r] } | { p: [[x, y], ...] }, with closed: true
+   for an outline such as a box drawn in 2.5D). Labels are text
    names: part.<depth>.<key> in src/i18n/en.json. No words in this file.
    A data centre: building, rack, board, chip. A phone: phone, phoneboard, soc. A car: car, ecu, mcu.
    A factory: fab, bay, scanner, wafer, die.
@@ -487,66 +488,144 @@ const mcu = {
 
 /* ======== a chip factory ======== */
 
-/* ---- fab: a chip factory from above: the cleanroom, and the water, gases and power that feed it ---- */
+/* ---- 2.5D: the factory is drawn in isometric view, so its line and its process can be seen.
+   o = [x, y, scale]: where world point (0, 0, 0) lands, and how large a unit is. ---- */
+const isoP = (o, x, y, z) => [o[0] + (x - y) * 0.866 * o[2], o[1] + (x + y) * 0.5 * o[2] - (z || 0) * o[2]];
+const faces = c => c.dark ? [c.up, c.mid, c.lo] : [c.lo, c.mid, c.up];
+/* a box standing on (x, y, z), w along x, d along y, h high; returns its outline, for parts */
+function isoBox(G, o, x, y, z, w, d, h, stroke, tint, lw) {
+  const P = (a, b, cc) => isoP(o, a, b, cc), [ft, fl, fr] = faces(G.col), sk = stroke || G.col.line;
+  const top = [P(x, y, z + h), P(x + w, y, z + h), P(x + w, y + d, z + h), P(x, y + d, z + h)];
+  const left = [P(x, y + d, z + h), P(x + w, y + d, z + h), P(x + w, y + d, z), P(x, y + d, z)];
+  const right = [P(x + w, y, z + h), P(x + w, y + d, z + h), P(x + w, y + d, z), P(x + w, y, z)];
+  poly(G, left, fl, sk, lw || 0.9); poly(G, right, fr, sk, lw || 0.9); poly(G, top, ft, sk, lw || 0.9);
+  if (tint) { G.a(tint[1]); poly(G, top, tint[0]); G.a(1); }
+  return [P(x, y, z + h), P(x + w, y, z + h), P(x + w, y, z), P(x + w, y + d, z), P(x, y + d, z), P(x, y + d, z + h)];
+}
+/* a round tank */
+function isoTank(G, o, x, y, r, h, stroke) {
+  const c = G.col, b = isoP(o, x, y, 0), t = isoP(o, x, y, h), rx = 1.2247 * r * o[2], ry = 0.7071 * r * o[2], ctx = G.ctx;
+  ctx.beginPath(); ctx.moveTo(b[0] - rx, b[1]); ctx.lineTo(t[0] - rx, t[1]); ctx.lineTo(t[0] + rx, t[1]); ctx.lineTo(b[0] + rx, b[1]); ctx.ellipse(b[0], b[1], rx, ry, 0, 0, Math.PI);
+  ctx.fillStyle = c.mid; ctx.fill(); ctx.strokeStyle = stroke || c.line; ctx.lineWidth = G.lw(0.9); ctx.stroke();
+  ctx.beginPath(); ctx.ellipse(t[0], t[1], rx, ry, 0, 0, 6.2832); ctx.fillStyle = faces(c)[0]; ctx.fill(); ctx.stroke();
+  return { c: [t[0], (t[1] + b[1]) / 2, Math.max(rx, (b[1] - t[1]) / 2 + ry)] };
+}
+const closed = pts => ({ p: pts.concat([pts[0]]), closed: true });
+const along2 = (pts, u) => { const n = pts.length - 1, k = Math.min(n - 1, Math.floor(u * n)), f = u * n - k; return [pts[k][0] + (pts[k + 1][0] - pts[k][0]) * f, pts[k][1] + (pts[k + 1][1] - pts[k][1]) * f]; };
+
+/* ---- fab: a chip factory, cut open: bays of machines by kind, the sub-fab beneath, and the route one
+   wafer takes through them, layer after layer ---- */
+const FO = [500, 228, 0.85];
+const FAB_ROWS = ['clean', 'deposit', 'print', 'etch', 'inspect'].map((k, i) => ({ k, y: 20 + i * 75, d: 50 }));
+const fabRowShape = r => closed([isoP(FO, 20, r.y, 0), isoP(FO, 580, r.y, 0), isoP(FO, 580, r.y + r.d, 0), isoP(FO, 20, r.y + r.d, 0)]);
+const fabLane = r => [[592, r.y + r.d + 12], [40, r.y + r.d + 12]];
+/* the route: down the spine to each kind of bay in turn, along it and back */
+const FAB_ROUTE = (() => { const pts = []; FAB_ROWS.forEach(r => { const l = fabLane(r); pts.push(l[0], l[1], l[0]); }); pts.push([592, FAB_ROWS[0].y + FAB_ROWS[0].d + 12]); return pts.map(p => isoP(FO, p[0], p[1], 62)); })();
 const fab = {
-  parts: { cleanroom: [{ r: [220, 260, 560, 420] }], water: [{ r: [50, 260, 140, 200] }], gases: [{ r: [50, 490, 140, 190] }], power: [{ r: [810, 260, 140, 180] }] },
+  parts: {
+    cleanroom: [closed([isoP(FO, 0, 0, 0), isoP(FO, 600, 0, 0), isoP(FO, 600, 400, 0), isoP(FO, 0, 400, 0)])],
+    subfab: [closed([isoP(FO, 0, 400, -10), isoP(FO, 600, 400, -10), isoP(FO, 600, 400, -60), isoP(FO, 0, 400, -60)])],
+    line: [{ p: FAB_ROUTE }],
+    print: [fabRowShape(FAB_ROWS[2])],
+    water: [{ c: [345, 218, 70] }], gases: [{ c: [225, 290, 70] }],
+    power: [closed([isoP(FO, 140, -170, 50), isoP(FO, 280, -170, 50), isoP(FO, 280, -60, 0), isoP(FO, 140, -60, 0)])]
+  },
   draw(G) {
-    const c = G.col;
+    const c = G.col, o = FO;
     G.bg(c.lo);
-    for (let i = 0; i < 12; i++) G.l([[40 + i * 80, 790], [90 + i * 80, 790]], c.dim, 2);
-    G.l([[30, 760], [970, 760]], c.line, 1); G.l([[30, 820], [970, 820]], c.line, 1);
-    const u = (G.t * 0.05) % 1; G.r(30 + u * 900, 770, 44, 26, c.up, c.line, 1);
-    /* the cleanroom, with its rows of bays */
-    G.r(220, 260, 560, 420, c.mid, c.hi, 1.8);
-    for (let k = 0; k < 6; k++) { G.r(240, 290 + k * 64, 520, 44, c.up, c.line, 0.9); for (let i = 0; i < 12; i++) G.r(248 + i * 43, 296 + k * 64, 34, 14, c.lo, c.dim, 0.6); }
-    G.l([[240, 340], [760, 340]], c.cool, 1);
-    /* water: tanks that make water purer than anything you drink */
-    G.r(50, 260, 140, 200, c.mid, c.line, 1.1);
-    [[90, 320], [150, 320], [90, 400], [150, 400]].forEach(k => { G.c(k[0], k[1], 26, c.up, c.cool, 1.2); G.c(k[0], k[1], 10, null, c.dim, 0.8); });
-    /* gases and chemicals */
-    G.r(50, 490, 140, 190, c.mid, c.line, 1.1);
-    for (let i = 0; i < 5; i++) for (let j = 0; j < 3; j++) G.c(78 + i * 21, 530 + j * 50, 8, c.up, c.warm, 1);
-    /* power */
-    G.r(810, 260, 140, 180, c.mid, c.line, 1.1);
-    for (let i = 0; i < 3; i++) G.r(828 + i * 40, 290, 28, 60, c.up, c.warm, 1);
-    G.l([[880, 380], [880, 420], [780, 420]], c.warm, 1.6);
-    /* offices */
-    G.r(810, 470, 140, 210, c.mid, c.line, 1);
-    for (let i = 0; i < 3; i++) for (let j = 0; j < 5; j++) G.r(826 + i * 40, 490 + j * 36, 28, 20, c.lo, c.dim, 0.6);
-    /* your chip: finer switches keep each wafer here longer */
-    G.a(0.12 + 0.12 * (M.steps - 0.6)); G.r(240, 290, 520, 364, c.warm); G.a(1);
-    G.label('cleanroom', 226, 250); G.label('water', 50, 250); G.label('gases', 50, 700); G.label('power', 950, 250, 'right');
+    /* outside: water made purer than any you drink, gases and chemicals, power */
+    [[-150, 70], [-90, 70], [-150, 140], [-90, 140]].forEach(k => isoTank(G, o, k[0], k[1], 24, 60, c.cool));
+    for (let i = 0; i < 3; i++) for (let j = 0; j < 4; j++) isoTank(G, o, -170 + i * 40, 220 + j * 30, 10, 50, c.warm);
+    isoBox(G, o, 140, -170, 0, 140, 110, 50, c.warm);
+    for (let i = 0; i < 3; i++) isoBox(G, o, 155 + i * 42, -150, 50, 26, 26, 30, c.warm);
+    /* the sub-fab: pumps and pipes under the cleanroom floor */
+    isoBox(G, o, 0, 0, -60, 600, 400, 50, c.line, null, 1.2);
+    for (let i = 0; i < 14; i++) { const a = isoP(o, 20 + i * 42, 400, -52), b = isoP(o, 20 + i * 42, 400, -18); G.l([a, b], i % 3 ? c.dim : c.cool, 1.2); }
+    for (let i = 0; i < 9; i++) { const a = isoP(o, 600, 20 + i * 42, -52), b = isoP(o, 600, 20 + i * 42, -18); G.l([a, b], c.dim, 1.2); }
+    /* the cleanroom floor, its back walls cut away */
+    isoBox(G, o, 0, 0, -10, 600, 400, 10, c.hi, null, 1.4);
+    G.a(0.35); poly(G, [isoP(o, 0, 0, 0), isoP(o, 600, 0, 0), isoP(o, 600, 0, 90), isoP(o, 0, 0, 90)], c.mid, c.line, 0.8);
+    poly(G, [isoP(o, 0, 0, 0), isoP(o, 0, 400, 0), isoP(o, 0, 400, 90), isoP(o, 0, 0, 90)], c.mid, c.line, 0.8); G.a(1);
+    /* bays: machines of one kind together; the route takes each wafer through them in turn */
+    const lap = (G.t * 0.07 * (1.6 / (0.6 + M.steps))) % 1, visiting = Math.min(FAB_ROWS.length - 1, Math.floor(lap * FAB_ROWS.length));
+    FAB_ROWS.forEach((r, i) => {
+      const sh = fabRowShape(r); poly(G, sh.p, c.mid, c.dim, 0.7);
+      if (i === visiting) { G.a(0.28); poly(G, sh.p, c.warm); G.a(1); }
+      const big = r.k === 'print', n = big ? 9 : 12, w = big ? 44 : 34, step = 540 / n;
+      for (let k = 0; k < n; k++) isoBox(G, o, 30 + k * step, r.y + 4, 0, w, r.d - 8, big ? 36 : 22 + (k % 3) * 4, big ? c.warm : c.line);
+    });
+    /* the overhead track: a spine, and a lane along each bay */
+    G.a(0.7); G.l([isoP(o, 592, 10, 62), isoP(o, 592, 390, 62)], c.line, 1.6); FAB_ROWS.forEach(r => G.l(fabLane(r).map(p => isoP(o, p[0], p[1], 62)), c.line, 1)); G.a(1);
+    G.a(0.85); G.l(FAB_ROUTE, c.warm, 1.4); G.a(1);
+    for (let k = 0; k < 5; k++) { const p = along2(FAB_ROUTE, (lap + k * 0.2) % 1); G.r(p[0] - 6, p[1] - 9, 12, 10, k ? c.up : c.warm, c.hi, 1); }
+    G.label('cleanroom', isoP(o, 0, 0, 90)[0] - 10, isoP(o, 0, 0, 90)[1] - 8, 'right');
+    G.label('subfab', isoP(o, 0, 400, -60)[0], isoP(o, 0, 400, -60)[1] + 22);
+    const pr = isoP(o, 580, FAB_ROWS[2].y + FAB_ROWS[2].d, 0);
+    G.label('line', 930, 372, 'right');
+    G.label('print', pr[0] + 10, pr[1] + 4);
+    G.label('water', 255, 150); G.label('gases', 40, 388); G.label('power', isoP(o, 280, -170, 50)[0] + 8, isoP(o, 280, -170, 50)[1]);
   }
 };
 
-/* ---- bay: inside the cleanroom: machines in rows, wafers riding a track overhead ---- */
-const bayTop = [0, 1, 2, 3, 4, 5].map(i => [90 + i * 140, 140, 110, 200]);
+/* ---- bay: one layer's trip, its machines drawn side by side: clean, deposit, coat, print, develop,
+   etch, strip, inspect; and a slice through the wafer showing what each step does ---- */
+const BO = [396, 250, 1.2];
+const BAY_TOOLS = [
+  { k: 'clean', x: 20, y: 20, w: 80, d: 70, h: 45 }, { k: 'deposit', x: 130, y: 20, w: 80, d: 70, h: 55 }, { k: 'coat', x: 240, y: 20, w: 80, d: 70, h: 40 },
+  { k: 'scanner', x: 350, y: 10, w: 130, d: 100, h: 70 }, { k: 'develop', x: 380, y: 210, w: 80, d: 70, h: 40 }, { k: 'etch', x: 260, y: 210, w: 80, d: 70, h: 55 },
+  { k: 'strip', x: 140, y: 210, w: 80, d: 70, h: 45 }, { k: 'inspect', x: 20, y: 210, w: 80, d: 70, h: 50 }
+];
+const bayPort = t => [t.x + t.w / 2, t.y < 100 ? t.y + t.d + 6 : t.y - 6];
+const BAY_ROUTE = BAY_TOOLS.map(bayPort).concat([bayPort(BAY_TOOLS[0])]);
+const bayOutline = t => { const P = (a, b, cc) => isoP(BO, a, b, cc), { x, y, w, d, h } = t; return closed([P(x, y, h), P(x + w, y, h), P(x + w, y, 0), P(x + w, y + d, 0), P(x, y + d, 0), P(x, y + d, h)]); };
+/* "Run the loop": which step is shown (null: the loop runs by itself) */
+let LOOP = null;
+export const LOOP_STEPS = 8;
+export const setLoop = n => { LOOP = n == null ? null : Math.max(0, Math.min(LOOP_STEPS - 1, n)); };
+function waferSlice(G, step, u) {
+  const c = G.col, X0 = 60, X1 = 400, top = 852;
+  G.r(40, 760, 380, 210, c.lo, c.line, 1);
+  G.r(X0, 900, X1 - X0, 50, c.mid, c.line, 0.8);
+  for (let k = 0; k < 2; k++) for (let i = 0; i < 8; i++) if (i % 2) G.r(X0 + i * 42.5, 872 + k * 14, 42.5, 12, c.cool, null);
+  const gap = i => i % 2 === 1, seg = 42.5;
+  for (let i = 0; i < 8; i++) {
+    const x = X0 + i * seg;
+    if (step >= 1 && !(step >= 5 && gap(i))) G.r(x, top - 4, seg, 16, c.cool, null);
+    if (step >= 2 && step <= 5 && !(step >= 4 && gap(i))) { G.a(step === 3 && gap(i) ? 0.35 : 0.85); G.r(x, top - 26, seg, 22, c.warm, null); G.a(1); }
+  }
+  if (step === 3) { G.a(0.5); for (let i = 1; i < 8; i += 2) G.r(X0 + i * seg + 6, 780, seg - 12, top - 806, c.warm); G.a(1); }
+  if (step === 7) { const x = X0 + u * (X1 - X0); G.l([[x, 790], [x, 950]], c.grn, 2); }
+  G.label('section', 52, 784);
+}
 const bay = {
-  parts: { scanner: [{ r: [100, 560, 300, 260] }], etch: bayTop.slice(0, 2).map(r => ({ r })), deposit: bayTop.slice(2, 4).map(r => ({ r })), inspect: bayTop.slice(4).map(r => ({ r })),
-    track: [{ r: [60, 470, 880, 16] }], people: [{ c: [470, 430, 14] }, { c: [720, 520, 14] }] },
+  parts: Object.assign({ track: [{ p: BAY_ROUTE.map(p => isoP(BO, p[0], p[1], 96)) }], people: [{ c: [isoP(BO, 300, 150, 12)[0], isoP(BO, 300, 150, 12)[1], 14] }, { c: [isoP(BO, 140, 150, 12)[0], isoP(BO, 140, 150, 12)[1], 14] }], section: [{ r: [40, 760, 380, 210] }] },
+    Object.fromEntries(BAY_TOOLS.map(t => [t.k, [bayOutline(t)]]))),
   draw(G) {
-    const c = G.col;
+    const c = G.col, o = BO;
     G.bg(c.lo);
-    for (let i = 0; i < 26; i++) G.l([[i * 40, 380], [i * 40 + 20, 380]], c.dim, 0.8);
-    /* machines along the top: etching, depositing, inspecting */
-    bayTop.forEach((r, i) => {
-      G.r(r[0], r[1], r[2], r[3], c.mid, c.line, 1.2);
-      if (i < 4) [[r[0] + 30, r[1] + 60], [r[0] + 80, r[1] + 60], [r[0] + 55, r[1] + 130]].forEach(k => G.c(k[0], k[1], 22, c.up, i < 2 ? c.cool : c.grn, 1.1));
-      else { G.r(r[0] + 15, r[1] + 20, r[2] - 30, 90, c.lo, c.cool, 1); G.c(r[0] + r[2] / 2, r[1] + 65, 26, null, c.hi, 1); G.r(r[0] + 15, r[1] + 130, r[2] - 30, 50, c.up, c.dim, 0.8); }
-      G.r(r[0] + 35, 340, 40, 30, c.up, c.line, 0.9);
+    isoBox(G, o, 0, 0, -8, 500, 300, 8, c.dim, null, 0.8);
+    for (let i = 1; i < 10; i++) G.l([isoP(o, i * 50, 0, 0), isoP(o, i * 50, 300, 0)], c.dim, 0.4);
+    /* where the wafer is: the loop runs by itself, or stops at the step being shown */
+    const ph = (G.t * 0.1) % 1, step = LOOP == null ? Math.floor(ph * LOOP_STEPS) : LOOP, u = LOOP == null ? ph * LOOP_STEPS - step : 0.6;
+    BAY_TOOLS.slice().sort((a, b) => (a.x + a.y + a.w + a.d) - (b.x + b.y + b.w + b.d)).forEach(t => {
+      const i = BAY_TOOLS.indexOf(t), on = i === step;
+      isoBox(G, o, t.x, t.y, 0, t.w, t.d, t.h, t.k === 'scanner' ? c.warm : c.line, on ? [c.warm, 0.45] : null, on ? 1.6 : 0.9);
+      const tp = isoP(o, t.x + t.w * 0.5, t.y + t.d * 0.5, t.h);
+      if (t.k === 'scanner') { const s = isoP(o, t.x + 25, t.y + 30, t.h); G.c(s[0], s[1], 10, c.lo, c.warm, 1.2); }
+      else G.c(tp[0], tp[1], 9, c.lo, t.k === 'inspect' ? c.grn : t.k === 'etch' || t.k === 'deposit' ? c.cool : c.dim, 1);
     });
-    /* the overhead track, carrying sealed boxes of wafers */
-    G.r(60, 470, 880, 16, c.up, c.line, 1);
-    for (let k = 0; k < 4; k++) { const x = 60 + ((G.t * 0.06 * M.steps + k * 0.25) % 1) * 840; G.r(x, 456, 40, 44, c.mid, c.hi, 1.1); }
-    /* the printing machine, the largest of them */
-    G.r(100, 560, 300, 260, c.mid, c.hi, 1.6);
-    G.r(120, 565, 250, 250, c.lo, c.line, 1);
-    G.r(410, 640, 120, 180, c.mid, c.line, 1.1); G.c(470, 700, 30, c.up, c.warm, 1.2);
-    /* other machines along the bottom */
-    for (let i = 0; i < 3; i++) { const x = 570 + i * 130; G.r(x, 600, 100, 220, c.mid, c.line, 1.1); G.c(x + 50, 680, 26, c.up, c.cool, 1.1); G.r(x + 20, 740, 60, 50, c.up, c.dim, 0.8); }
-    /* people in cleanroom suits */
-    [[470, 430], [720, 520]].forEach(k => { G.c(k[0], k[1], 14, c.up, c.hi, 1.3); G.c(k[0], k[1] - 4, 6, c.lo); });
-    G.label('etch', 90, 130); G.label('deposit', 370, 130); G.label('inspect', 650, 130); G.label('track', 60, 512); G.label('scanner', 100, 550); G.label('people', 490, 430);
+    /* people in the aisle */
+    [[300, 150], [140, 150]].forEach(k => { const b = isoP(o, k[0], k[1], 0), t = isoP(o, k[0], k[1], 24); G.l([b, t], c.hi, 3); G.c(t[0], t[1] - 4, 6, c.up, c.hi, 1); });
+    /* the overhead track, and the pod carrying the wafers */
+    const R = BAY_ROUTE.map(p => isoP(o, p[0], p[1], 96));
+    G.a(0.8); G.l(R, c.line, 1.6); G.a(1);
+    const from = BAY_ROUTE[(step + BAY_TOOLS.length - 1) % BAY_TOOLS.length], to = BAY_ROUTE[step], f = Math.min(1, u / 0.3);
+    const px = from[0] + (to[0] - from[0]) * f, py = from[1] + (to[1] - from[1]) * f, dip = u > 0.3 ? Math.sin(Math.min(1, (u - 0.3) / 0.6) * Math.PI) * 30 : 0;
+    const pz = 96 - dip, pp = isoP(o, px, py, pz), pt = isoP(o, px, py, 96);
+    G.l([pt, pp], c.hi, 1); isoBox(G, o, px - 10, py - 10, pz - 16, 20, 20, 16, c.hi, [c.warm, 0.6], 1.2);
+    waferSlice(G, step, u);
+    BAY_TOOLS.forEach(t => { const a = isoP(o, t.x, t.y < 100 ? t.y : t.y + t.d, t.h + 8); G.label(t.k, a[0], a[1] - 4); });
+    G.label('track', R[1][0] + 8, R[1][1] - 10); G.label('people', isoP(o, 300, 150, 30)[0] + 10, isoP(o, 300, 150, 30)[1] - 4);
   }
 };
 
