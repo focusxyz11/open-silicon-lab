@@ -6,7 +6,7 @@
 import { t } from '../core/i18n.js';
 import { DEPTHS, THREADS } from '../data/weave.js';
 import { N, IDS, clampZ, frames, lineFrames, isLine, stop } from '../engines/weave.js';
-import { SCENES, partsOf } from './scenes.js';
+import { SCENES, partsOf, drawCarrier, TRACK, STAGE } from './scenes.js';
 
 export const reduced = () => !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
 export const theme = () => {
@@ -149,14 +149,15 @@ export function createWorld(cv, on) {
     ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1; ctx.fillStyle = col.bg; ctx.fillRect(0, 0, W * dpr, H * dpr);
     const all = [[F.i - 1, F.prev], [F.i, F.cur], [F.i + 1, F.next], [F.i + 2, F.after]].filter(k => k[1]);
     all.forEach(([k, tr]) => drawLevel(k, tr, 1, k === pi, b.B, tm));
-    /* the line itself: from each station to the next, a wafer pod travelling along it */
+    /* the wafer you travel with: it stays put on screen while the line moves past it */
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    const y = b.cy + b.B / 2 - 12, x0 = all[0][1].tx, x1 = all[all.length - 1][1].tx + b.B;
-    ctx.globalAlpha = 0.7; ctx.strokeStyle = col.warm; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(x0, y); ctx.lineTo(x1, y); ctx.stroke();
-    all.forEach(([k, tr]) => { ctx.globalAlpha = k === pi ? 1 : 0.6; ctx.fillStyle = k === pi ? col.warm : col.line; ctx.beginPath(); ctx.arc(tr.tx + b.B / 2, y, k === pi ? 6 : 4, 0, 6.2832); ctx.fill(); });
-    const u = (tm * 0.08) % 1; ctx.globalAlpha = 1; ctx.fillStyle = col.hi; ctx.fillRect(x0 + (x1 - x0) * u - 7, y - 5, 14, 10);
+    const k = b.B / 1000, left = b.cx - b.B / 2, top = b.cy - b.B / 2, near = Math.round(Z);
+    drawCarrier(ctx, col, k, left + TRACK[0] * k, top + TRACK[1] * k, top + STAGE[1] * k, IDS[near], Math.abs(Z - near), tm);
+    /* where you are on the line: a mark per station */
+    const y = top + b.B - 10, gap = Math.min(18, (b.B - 40) / N);
+    for (let i = 0; i < N; i++) { const x = b.cx + (i - (N - 1) / 2) * gap; ctx.globalAlpha = i === near ? 1 : 0.5; ctx.fillStyle = i === near ? col.warm : col.line; ctx.beginPath(); ctx.arc(x, y, i === near ? 4 : 2.5, 0, 6.2832); ctx.fill(); }
     /* everything outside the box fades back */
-    ctx.globalAlpha = 0.6; ctx.fillStyle = col.bg;
+    ctx.globalAlpha = 0.45; ctx.fillStyle = col.bg;
     const L = b.cx - b.B / 2, Rr = b.cx + b.B / 2;
     ctx.fillRect(0, 0, L, H); ctx.fillRect(Rr, 0, W - Rr, H);
     ctx.globalAlpha = 0.5; ctx.strokeStyle = col.line; ctx.lineWidth = 1; const ptr = pi === F.i ? F.cur : F.next; ctx.strokeRect(ptr.tx, ptr.ty, b.B, b.B);

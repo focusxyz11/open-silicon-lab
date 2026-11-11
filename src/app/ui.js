@@ -9,11 +9,11 @@
    Your chip: at some stops a "Try it" changes one of its settings (src/engines/chip.js); every depth that
    shows your chip then says what changed there, and its scene changes too. */
 import { t, fmtDate } from '../core/i18n.js';
-import { THREADS, WORLDS, STOPS, CASES, FIGURES, REPO, TRIES, SHOWS, DIVES, EXITS } from '../data/weave.js';
+import { THREADS, WORLDS, STOPS, CASES, FIGURES, REPO, TRIES, SHOWS, DIVES, EXITS, PLANTS, LOOP } from '../data/weave.js';
 import { CLOCKS, GENS, SIDES, START, CHALLENGES, normal, changed, model, x2, dieSquare } from '../engines/chip.js';
 import { N, IDS, WORLD, setWorld, worldOf, zIn, reshape, isLine, clampZ, sizeAt, sizeParts, stop, stopKey, crossing, below, above, nearest, threadOf, rootShown, threadDepths } from '../engines/weave.js';
 import { createWorld, threadColor, theme, reduced } from './world.js';
-import { setChip as drawChip, setBuild, BUILD_STEPS, setLoop, LOOP_STEPS } from './scenes.js';
+import { setChip as drawChip, setBuild, BUILD_STEPS } from './scenes.js';
 
 const KEY = 'osl-weave-v1';
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -33,8 +33,7 @@ export function start(facts) {
     seen: saved.seen && typeof saved.seen === 'object' ? saved.seen : {},
     from: typeof saved.from === 'string' ? saved.from : null,
     chip: normal(saved.chip || START),
-    build: BUILD_STEPS - 1,
-    loop: null
+    build: BUILD_STEPS - 1
   };
   setChip(S.chip);
   const save = () => { try { localStorage.setItem(KEY, JSON.stringify({ world: WORLD, z: Math.round(world.z * 100) / 100, thread: S.thread, seen: S.seen, chip: S.chip, from: S.from })); } catch (e) { /* storage unavailable */ } };
@@ -145,27 +144,25 @@ export function start(facts) {
   const readout = k => {
     const m = model(S.chip);
     if (k === 'build') return t('chip.build.names')[S.build];
-    if (k === 'loop') return S.loop == null ? '' : t('chip.loop.names')[S.loop];
     if (k === 'size') return t('chip.wafer', { cores: m.cores, power: x2(m.power), yield: Math.round(m.yield * 100), cost: x2(m.cost) });
     return t('chip.readout', { clock: x2(m.clock), power: x2(m.power), late: Math.round(m.late * 100) });
   };
   const valueText = k => k === 'clock' ? t('chip.clock.value', { v: x2(S.chip.clock) }) : k === 'size' ? t('chip.size.value', { mm: SIDES[S.chip.size] }) :
-    k === 'build' ? t('chip.build.value', { n: S.build + 1, total: BUILD_STEPS }) : k === 'loop' ? (S.loop == null ? t('chip.loop.auto') : t('chip.loop.value', { n: S.loop + 1, total: LOOP_STEPS })) :
+    k === 'build' ? t('chip.build.value', { n: S.build + 1, total: BUILD_STEPS }) :
     t('chip.gen.names')[S.chip.gen];
   /* the depths of this world where a setting shows */
   const showsOf = k => IDS.map((id, i) => i).filter(i => (SHOWS[IDS[i]] || []).includes(k));
   const tryIt = (key, d) => {
     const k = TRIES[key]; if (!k) return '';
-    const max = { clock: CLOCKS.length - 1, gen: GENS - 1, size: SIDES.length - 1, build: BUILD_STEPS - 1, loop: LOOP_STEPS - 1 }[k];
-    const val = k === 'clock' ? CLOCKS.indexOf(S.chip.clock) : k === 'build' ? S.build : k === 'loop' ? (S.loop || 0) : S.chip[k];
+    const max = { clock: CLOCKS.length - 1, gen: GENS - 1, size: SIDES.length - 1, build: BUILD_STEPS - 1 }[k];
+    const val = k === 'clock' ? CLOCKS.indexOf(S.chip.clock) : k === 'build' ? S.build : S.chip[k];
     if (k === 'build') setBuild(S.build);
-    if (k === 'loop') setLoop(S.loop);
-    const local = k === 'build' || k === 'loop';
+    const local = k === 'build';
     return '<section class="try"><p class="code">' + t('chip.try') + '</p><label class="trylabel" for="tryRange"><b>' + t('chip.' + k + '.label') + '</b> <output id="tryValue">' + esc(valueText(k)) + '</output></label>' +
       '<input type="range" id="tryRange" data-setting="' + k + '" min="0" max="' + max + '" step="1" value="' + val + '">' +
       '<p class="readout" id="tryOut" aria-live="polite">' + esc(readout(k)) + '</p>' +
       (k === 'build' ? '<p class="small">' + esc(t('chip.build.steps', { steps: x2(model(S.chip).steps) })) + '</p>' :
-        k === 'loop' ? '<p class="small">' + esc(t('chip.loop.layers', { layers: model(S.chip).layers })) + '</p>' : SHOWS[IDS[d]] ? '<p class="small" id="chipHere">' + esc(chipWords(d)) + '</p>' : '') +
+        SHOWS[IDS[d]] ? '<p class="small" id="chipHere">' + esc(chipWords(d)) + '</p>' : '') +
       '<p class="small muted">' + t('chip.' + k + '.notice') + '</p>' + '<div id="chals">' + chals(key) + '</div>' + (local ? '' :
       '<p class="small muted">' + t('chip.shows') + '</p><div class="shows">' + showsOf(k).filter(i => i !== d).map(i => '<button type="button" class="chipgo" data-go="' + i + '">' + esc(depthName(i)) + '</button>').join('') + '</div>' +
       (changed(S.chip) ? '<button type="button" class="link" data-reset>' + t('chip.reset') + '</button>' : '')) + '</section>';
@@ -183,7 +180,7 @@ export function start(facts) {
   const mine = (d, skip) => (skip || !changed(S.chip) || !SHOWS[IDS[d]]) ? '' :
     '<section class="mine"><p class="code">' + t('chip.yours') + '</p><p id="chipHere">' + esc(chipWords(d)) + '</p><button type="button" class="link" data-reset>' + t('chip.reset') + '</button></section>';
   function setSetting(k, i) {
-    if (k === 'build') { S.build = i; setBuild(i); } else if (k === 'loop') { S.loop = i; setLoop(i); } else { const c = Object.assign({}, S.chip); c[k] = k === 'clock' ? CLOCKS[i] : i; S.chip = normal(c); setChip(S.chip); save(); }
+    if (k === 'build') { S.build = i; setBuild(i); } else { const c = Object.assign({}, S.chip); c[k] = k === 'clock' ? CLOCKS[i] : i; S.chip = normal(c); setChip(S.chip); save(); }
     const d = Math.round(world.z), v = $('tryValue'), o = $('tryOut'), here = $('chipHere');
     if (v) v.textContent = valueText(k);
     if (o) o.textContent = readout(k);
@@ -213,7 +210,7 @@ export function start(facts) {
     if (isLine()) {
       (DIVES[id] || []).forEach(([w, at]) => out.push(['dive', w, at, t('ui.diveDown', { depth: t('depth.' + at + '.name') })]));
       (EXITS[id] || []).forEach(([w, at]) => out.push(['exit', w, at, t('ui.shipTo', { world: t('world.' + w + '.name') })]));
-    } else if (worldOf(WORLD).hidden) out.push(['back', 'journey', S.from || 'bay', t('ui.backToLine', { station: t('depth.' + (S.from || 'bay') + '.name') })]);
+    } else if (worldOf(WORLD).hidden) out.push(['back', 'journey', S.from || 'print', t('ui.backToLine', { station: t('depth.' + (S.from || 'print') + '.name') })]);
     if (!out.length) return '';
     return '<section class="ways"><p class="code">' + t(isLine() && EXITS[id] ? 'ui.waysOut' : isLine() ? 'ui.waysDown' : 'ui.waysBack') + '</p><div class="moves">' +
       out.map(o => '<button type="button" class="btn' + (o[0] === 'exit' ? ' primary' : '') + '" data-dive="' + o[1] + ':' + o[2] + (o[0] === 'back' ? '' : ':' + id) + '">' + esc(o[3]) + '</button>').join('') + '</div></section>';
@@ -224,9 +221,12 @@ export function start(facts) {
   const qButton = (th, d) => '<button type="button" class="qpick" data-th="' + th + '" style="--th:' + threadColor(th) + '"><i></i><span>' + esc(q(th, d)) + '</span></button>';
   function card() {
     const d = Math.round(world.z), th = S.thread;
-    setBuild(null); setLoop(null);   /* a switch is shown finished and the loop runs, unless a try is open */
+    setBuild(null);   /* a switch is shown finished, unless "Build it" is open */
     if (S.part && S.part.id !== IDS[d]) S.part = null;
-    let h = '<p class="where"><b>' + esc(depthName(d)) + '</b> <span id="acrossNow">' + esc(across(world.z)) + '</span></p>' + partCard(d);
+    let h = '<p class="where"><b>' + esc(depthName(d)) + '</b> <span id="acrossNow">' + esc(across(world.z)) + '</span></p>';
+    /* on the line: which building you are in, and whether this machine is part of the loop every layer goes round */
+    if (isLine() && PLANTS[IDS[d]]) h += '<p class="small plant">' + esc(t('plant.' + PLANTS[IDS[d]])) + (LOOP.includes(IDS[d]) ? ' · ' + esc(t('ui.inLoop', { layers: model(S.chip).layers })) : '') + '</p>';
+    h += partCard(d);
     if (th) {
       const here = stop(th, d), color = threadColor(th), key = stopKey(th, d);
       h += '<section class="follow" style="--th:' + color + '"><p class="code">' + t('ui.following') + '</p>';
