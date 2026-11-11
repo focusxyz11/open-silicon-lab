@@ -14,6 +14,7 @@
 import * as THREE from '../vendor/three.min.js';
 import { PLANTS } from '../data/weave.js';
 import { JOURNEY, flow, chipNow } from './journey.js';
+import { createLens, LENS } from './lens3d.js';
 const chip3 = () => chipNow();
 
 const S = 900;                                   /* centimetres between stations */
@@ -586,14 +587,17 @@ export function createJourney3D(host, before) {
   const hemi = new THREE.HemisphereLight(0xffffff, 0x8090a8, 1.6), sun = new THREE.DirectionalLight(0xffffff, 1.7);
   sun.castShadow = true; sun.shadow.mapSize.set(1024, 1024); Object.assign(sun.shadow.camera, { left: -7, right: 7, top: 7, bottom: -7, near: 1, far: 40 }); sun.shadow.bias = -0.0005; sun.shadow.normalBias = 0.025;
   scene.add(hemi, sun, sun.target);
-  let M = null, theme = '', ids = [], built = new Map(), pod = null, podCrate = null, hoist = null, lastT = 0;
+  let M = null, theme = '', ids = [], built = new Map(), pod = null, lastT = 0, lens = null;
+  /* the camera is kept relative to where you are on the line, so travelling never leaves it behind */
   const cam = { p: new THREE.Vector3(), t: new THREE.Vector3(), init: false };
   const ambientPods = [];
 
   function reset(col) {
     built.forEach(s => { scene.remove(s.group); s.group.traverse(o => { if (o.geometry) o.geometry.dispose(); }); }); built.clear();
     if (pod) scene.remove(pod.group);
+    if (lens) lens.dispose();
     M = materials(col);
+    lens = createLens(M, col);
     scene.background = new THREE.Color(col.dark ? '#05070d' : '#e6eaf0');
     scene.fog = new THREE.Fog(scene.background, 14, 34);
     hemi.color.set(col.dark ? '#aab8e6' : '#ffffff'); hemi.groundColor.set(col.dark ? '#141c34' : '#9aa6b8'); hemi.intensity = col.dark ? 1.25 : 1.7;
@@ -618,7 +622,7 @@ export function createJourney3D(host, before) {
     const others = [70, -70].map(x => { const q = makePod(M, false); q.position.copy(V(x, 30, 94)); b.dyn.add(q); return q; });
     const dock = J.home === 'tray' ? makeTray(M, false) : makePod(M, false); dock.position.copy(V(0, 30, 94)); b.dyn.add(dock); others.forEach(q => { q.visible = !extra.noPorts; });
     if (J.nowafer || extra.noPorts) dock.visible = false;
-    const group = b.finish(i * S); scene.add(group);
+    const group = b.finish(i * S); group.visible = false; scene.add(group);
     const st = { id, i, group, parts: b.parts, cfg, extra, arms, wafer, mineW, chip, dock, others };
     built.set(i, st); return st;
   }
@@ -631,12 +635,15 @@ export function createJourney3D(host, before) {
     const dt = Math.min(0.1, Math.max(0, o.tm - lastT)); lastT = o.tm;
     if (dt > 0) { perf.ema = lerp(perf.ema, dt * 1000, 0.05); perf.seen++; }
     if (!perf.low && perf.seen > 90 && perf.ema > 30) { perf.low = true; renderer.shadowMap.enabled = false; scene.traverse(q => { if (q.material) q.material.needsUpdate = true; }); }
-    /* the stations near you; the rest are let go */
-    const want = new Set([o.near - 1, o.near, o.near + 1, Math.floor(o.Z), Math.ceil(o.Z)].filter(i => i >= 0 && i < ids.length));
-    built.forEach((s, i) => { if (!want.has(i)) { scene.remove(s.group); s.group.traverse(q => { if (q.geometry) q.geometry.dispose(); }); built.delete(i); } });
-    want.forEach(i => station(i));
+    /* every station is built once and kept: the ones in view at once, then one more each frame, nearest
+       first, so travelling never waits for a machine to be built. Only those near you are drawn. */
+    const N = ids.length, inView = i => i >= 0 && i < N && Math.abs(i - o.Z) < 1.55;
+    for (let i = Math.floor(o.Z) - 1; i <= Math.ceil(o.Z) + 1; i++) if (inView(i)) station(i);
+    if (built.size < N) { let best = -1; for (let i = 0; i < N; i++) if (!built.has(i) && (best < 0 || Math.abs(i - o.Z) < Math.abs(best - o.Z))) best = i; if (best >= 0) station(best); }
     let focus = null, closeK = 0;
     built.forEach(s => {
+      s.group.visible = inView(s.i);
+      if (!s.group.visible) return;
       const mine = s.i === o.near && o.dist < 0.5, run = mine ? (o.run == null ? 0 : o.run) : o.tm * 0.8 + (s.cfg.seed || 0) * s.cfg.tot;
       const f = flow(s.cfg, run);
       s.arms.forEach(({ R, move }) => move(f.p && f.hold === R.id ? f.p : R.rest.length > 2 ? R.rest : R.rest.concat([R.h]), dt));
@@ -658,7 +665,7 @@ export function createJourney3D(host, before) {
       pod.veh.position.y = 3.1; pod.belt.geometry.attributes.position.array.set([-0.12, 2.89, 0, -0.12, h / 100 + 0.36, 0, 0.12, 2.89, 0, 0.12, h / 100 + 0.36, 0]); pod.belt.geometry.attributes.position.needsUpdate = true;
     }
     /* the camera: along the line; when you stop, it follows your wafer, and moves in while a machine works on it */
-    const x0 = o.Z * S / 100;
+    const x0 = o.Z * S / 100, base = new THREE.Vector3(x0, 0, 0);
     const P = new THREE.Vector3(x0 + 1.0, 11.8, 6.4), T = new THREE.Vector3(x0 + 0.2, 0.2, -2.7);
     if (focus) {
       const { s, f } = focus, here = s.cfg.at[f.s.to], chW = here ? V(here[0], here[1], here[2]).add(s.group.position) : null;
@@ -667,11 +674,11 @@ export function createJourney3D(host, before) {
     }
     /* the overhead track fades while the camera is in close, so it never stands in the way */
     cam.k = lerp(cam.k || 0, closeK, 1 - Math.exp(-dt * 3)); M.rail.opacity = 1 - 0.85 * cam.k; M.rail.depthWrite = cam.k < 0.2;
+    P.sub(base); T.sub(base);
     if (!cam.init) { cam.p.copy(P); cam.t.copy(T); cam.init = true; }
-    const k = 1 - Math.exp(-dt * 3.2); cam.p.lerp(P, k); cam.t.lerp(T, k);
-    if (Math.abs(cam.p.x - P.x) > 4) { cam.p.copy(P); cam.t.copy(T); }
-    camera.position.copy(cam.p); camera.lookAt(cam.t);
-    sun.position.set(cam.t.x - 4, 12, cam.t.z + 6); sun.target.position.copy(cam.t);
+    const k = 1 - Math.exp(-dt * 2.6); cam.p.lerp(P, k); cam.t.lerp(T, k);
+    camera.position.copy(cam.p).add(base); const look = cam.t.clone().add(base); camera.lookAt(look);
+    sun.position.set(look.x - 4, 12, look.z + 6); sun.target.position.copy(look);
     /* fit: the station fills the dive's box; the rest of the canvas shows its surroundings */
     const { W, H, dpr, box } = o;
     const pr = Math.min(dpr, perf.low ? 1 : 1.5); if (renderer.getPixelRatio() !== pr) renderer.setPixelRatio(pr);
@@ -681,7 +688,17 @@ export function createJourney3D(host, before) {
     const cy = box.below ? box.cy : box.cy - box.B * 0.07;
     camera.setViewOffset(W, H, W / 2 - box.cx, H / 2 - cy, W, H); camera.updateProjectionMatrix();
     renderer.render(scene, camera);
-    return focus;
+    /* the lens: your wafer's surface, magnified, beside the machine while it works */
+    let seen = null;
+    const mode = focus && focus.f.proc ? LENS[focus.f.s.k] : null;
+    if (focus || lens.on) {
+      const f = focus ? focus.f : null, s = focus ? focus.s : null, here = f ? s.cfg.at[f.s.to] : null;
+      if (here && mode) lens.anchor = V(here[0], here[1], here[2]).add(s.group.position);
+      if (f && (mode || !lens.mode)) { lens.mode = mode; lens.L = f.sl; lens.a = mode === 'crystal' || mode === 'heat' ? f.pu : f.a; }
+      seen = lens.render({ camera, renderer, mode: lens.mode, L: lens.L, a: lens.a, t: o.tm, dt, anchor: lens.anchor || look, k: mode ? closeK : 0, box, W, H });
+      lens.on = !!seen;
+    }
+    return { lens: seen, mode: lens.mode };
   }
   /* where a station's parts are on screen, in the dive box's 1000 x 1000 space */
   function parts(id, box, W, H) {

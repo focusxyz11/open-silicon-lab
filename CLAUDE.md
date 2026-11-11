@@ -24,7 +24,7 @@ Learners new to chips with basic hardware knowledge, up to engineers. Plain word
 - `npm run build` — single-file `dist/open-silicon-lab.html`.
 
 ## Where things are
-See `docs/ARCHITECTURE.md`. Data: `src/data/weave.js` (worlds, depths, threads, stops). Logic: `src/engines/weave.js`. Scenes: `src/app/scenes.js` (solids in 2.5D: `src/app/solid.js`). The journey: `src/app/journey.js` (steps, captions, slice) and `src/app/journey3d.js` (the 3D view, three.js in `src/vendor/`). Zoom: `src/app/world.js`. Shell: `src/app/ui.js`. Plans: `docs/ROADMAP.md`. Ideas: `docs/IDEAS.md`.
+See `docs/ARCHITECTURE.md`. Data: `src/data/weave.js` (worlds, depths, threads, stops). Logic: `src/engines/weave.js`. Scenes: `src/app/scenes.js` (solids in 2.5D: `src/app/solid.js`). The journey: `src/app/journey.js` (steps, captions, slice) and `src/app/journey3d.js` (the 3D view, three.js in `src/vendor/`; the lens over a machine at work: `src/app/lens3d.js`). Zoom: `src/app/world.js`. Shell: `src/app/ui.js`. Plans: `docs/ROADMAP.md`. Ideas: `docs/IDEAS.md`.
 
 ## Workflow
 Work on a branch, open a pull request, let CI pass, then merge; `main` deploys to GitHub Pages. Keep PRs focused. Check changes at phone width (390 px) and in dark and light; no sideways scrolling.

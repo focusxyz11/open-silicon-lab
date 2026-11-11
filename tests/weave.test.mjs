@@ -3,7 +3,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { DEPTHS, WORLDS, SHARED, THREADS, STOPS, TRIED, CASES, FIGURES, REPO, DIVES, EXITS, partWord } from '../src/data/weave.js';
+import { DEPTHS, WORLDS, SHARED, THREADS, STOPS, TRIED, CASES, FIGURES, REPO, DIVES, EXITS, MADE, partWord } from '../src/data/weave.js';
 import * as E from '../src/engines/weave.js';
 
 const EN = JSON.parse(readFileSync(new URL('../src/i18n/en.json', import.meta.url), 'utf8'));
@@ -46,6 +46,7 @@ test('the journey: stations side by side, moved along smoothly, with ways down a
     assert.ok(LINE.depths.includes(st), st + ' is not a station');
     for (const [w, at] of list) { const W = WORLDS.find(x => x.id === w); assert.ok(W && !W.line && W.depths.includes(at), st + ': no ' + w + ':' + at); }
   }
+  for (const [at, st] of Object.entries(MADE)) { assert.ok(LINE.depths.includes(st), st + ' is not a station'); assert.ok(WORLDS.some(w => !w.line && w.depths.includes(at)), at + ' is in no dive'); }
   assert.equal(E.zIn('datacentre', 3), 0, 'leaving the line starts a dive at its top');
 });
 
@@ -242,4 +243,17 @@ test('the journey in 3D: every station is built, its parts have words, and the w
       }
     });
   }
+});
+
+test('the lens: it shows only steps that work on the wafer, each picture says what it shows, and every layer it names has a name', async () => {
+  const { LENS } = await import('../src/app/lens3d.js');
+  const { JOURNEY } = await import('../src/app/journey.js');
+  const steps = new Set(Object.values(JOURNEY).flatMap(cfg => cfg.steps.map(s => s.k)));
+  for (const [k, mode] of Object.entries(LENS)) {
+    assert.ok(steps.has(k) && k.startsWith('proc.'), k + ' is not a step a machine does');
+    assert.ok(EN['lens.' + mode], 'the lens has no words for ' + mode);
+  }
+  const src = readFileSync(new URL('../src/app/lens3d.js', import.meta.url), 'utf8');
+  for (const [, k] of src.matchAll(/lab\('(\w+)'/g)) assert.ok(EN['slice.' + k], 'the lens names a layer with no word: ' + k);
+  for (const id of Object.keys(DIVES)) for (const [, at] of DIVES[id]) assert.ok(EN['depth.' + at + '.name'], at);
 });

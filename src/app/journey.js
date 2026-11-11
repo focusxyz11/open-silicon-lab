@@ -15,7 +15,7 @@
    wafer. world.js also calls drawJourney() over the stations: your pod (or, after packaging, your tray)
    and the band. No words in this file: they are in src/i18n/en.json (handle.*, proc.*, slice.*). */
 import { t } from '../core/i18n.js';
-import { PLANTS, partWord } from '../data/weave.js';
+import { PLANTS, DIVES, partWord } from '../data/weave.js';
 import { rnd, clamp, poly, faces, closed } from './draw.js';
 import { kit, tones, mix } from './solid.js';
 
@@ -841,6 +841,79 @@ function caption(G, raw, x, y0, w, maxY, n) {
   ctx.restore();
 }
 
+/* ---- names in the picture ---- */
+/* the top middle of a part's outline */
+function topOf(sh) {
+  if (sh.r) return [sh.r[0] + sh.r[2] / 2, sh.r[1]];
+  if (sh.c) return [sh.c[0], sh.c[1] - sh.c[2]];
+  const p = sh.p, ymin = Math.min(...p.map(q => q[1])), near = p.filter(q => q[1] < ymin + 14);
+  return [near.reduce((a, q) => a + q[0], 0) / near.length, ymin];
+}
+/* a name in a small box, its line down to (x, y); placed clear of names already placed (used), or not at all */
+function tag(G, text, x, y, hot, used, maxY) {
+  const ctx = G.ctx, c = G.col, u = 1 / G.s, fs = 10.5 * u, ph = 16 * u;
+  ctx.save(); ctx.font = '500 ' + fs + 'px ' + MONO;
+  const w = ctx.measureText(text).width + 10 * u;
+  let ty = y - 22 * u - ph, tx = Math.max(4 * u - (G.three ? 400 : 0), x - w / 2);
+  const hit = (a, b) => a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
+  let n = 0; while (n < 6 && used.some(q => hit(q, { x: tx, y: ty, w, h: ph }))) { ty -= ph + 3 * u; n++; }
+  if (n >= 6 || ty < 22 * u || ty + ph > maxY) { ctx.restore(); return; }
+  used.push({ x: tx, y: ty, w, h: ph });
+  G.l([[x, y], [x, ty + ph]], hot ? c.warm : c.line, 0.8);
+  G.c(x, y, 2.2 * u, hot ? c.warm : c.line);
+  ctx.globalAlpha = 0.9; ctx.fillStyle = c.bg; ctx.fillRect(tx, ty, w, ph); ctx.globalAlpha = 1;
+  ctx.strokeStyle = hot ? c.warm : c.line; ctx.lineWidth = G.lw(hot ? 1.1 : 0.8); ctx.strokeRect(tx, ty, w, ph);
+  ctx.fillStyle = hot ? c.warm : c.hi; ctx.textBaseline = 'middle'; ctx.fillText(text, tx + 5 * u, ty + ph / 2 + 0.5 * u);
+  ctx.restore();
+}
+/* words wrapped to a width, from (x, y); returns where they end */
+function para(G, text, x, y, w, font, color, maxLines) {
+  const ctx = G.ctx, fs = parseFloat(font.split(' ')[1]), lh = fs * 1.35;
+  ctx.save(); ctx.font = font; ctx.fillStyle = color; ctx.textBaseline = 'top';
+  let line = '', n = 0;
+  for (const wd of text.split(/\s+/)) {
+    const tryL = line ? line + ' ' + wd : wd;
+    if (ctx.measureText(tryL).width > w && line) { ctx.fillText(line, x, y); y += lh; line = wd; if (++n >= (maxLines || 9)) { line = ''; break; } } else line = tryL;
+  }
+  if (line) { ctx.fillText(line, x, y); y += lh; }
+  ctx.restore();
+  return y;
+}
+/* the lens (lens3d.js): the names of its layers beside it, what it shows under it, and where it dives */
+function lensWords(G, id, mode, L, band) {
+  const c = G.col, ctx = G.ctx, u = 1 / G.s, r = L.rect, k = L.alpha;
+  ctx.save(); ctx.globalAlpha = k;
+  /* a frame round it, as a magnifier's */
+  ctx.strokeStyle = c.warm; ctx.lineWidth = G.lw(1); ctx.setLineDash([3 * u, 4 * u]);
+  const pad = 8 * u; ctx.strokeRect(r.x - pad, r.y - pad, r.w + 2 * pad, r.h + 2 * pad); ctx.setLineDash([]);
+  ctx.font = '600 ' + 10 * u + 'px ' + MONO; ctx.fillStyle = c.warm; ctx.textBaseline = 'bottom';
+  const title = t(mode === 'crystal' ? 'lens.titleCrystal' : ['dice', 'bond', 'final'].includes(mode) ? 'lens.titleChip' : 'lens.title');
+  ctx.fillText(title, Math.min(r.x - pad, 1000 - 4 * u - ctx.measureText(title).width), r.y - pad - 3 * u);
+  /* the layers' names, to the right (or, without room, to the left), kept apart */
+  ctx.font = '500 ' + 10 * u + 'px ' + MONO; ctx.textBaseline = 'middle';
+  const widest = Math.max(0, ...L.labels.map(l => ctx.measureText(t('slice.' + l.k)).width)), right = r.x + r.w + pad + 12 * u + widest < 1000 - 4 * u;
+  const lx = right ? r.x + r.w + pad + 8 * u : r.x - pad - 8 * u; let last = -1e9;
+  ctx.textAlign = right ? 'left' : 'right';
+  L.labels.slice().sort((a, b) => a.y - b.y).forEach(l => {
+    const yy = Math.max(l.y, last + 13 * u); last = yy;
+    G.l([[right ? l.x + 2 * u : r.x + 4 * u, l.y], [right ? lx - 3 * u : lx + 3 * u, yy]], l.now ? c.warm : c.dim, 0.8);
+    ctx.lineWidth = 3 * u; ctx.strokeStyle = c.bg; ctx.strokeText(t('slice.' + l.k), lx, yy);
+    ctx.fillStyle = l.now ? c.warm : c.hi; ctx.fillText(t('slice.' + l.k), lx, yy);
+  });
+  ctx.textAlign = 'left';
+  /* what it shows, under it */
+  const w = Math.max(r.w + 2 * pad + 70 * u, 230 * u), x0 = Math.min(r.x - pad, 1000 - 8 * u - w);
+  /* on a small screen the band says it already: only the way down */
+  const roomyL = roomy(G);
+  if (roomyL) { ctx.globalAlpha = k * 0.82; ctx.fillStyle = c.bg; ctx.fillRect(x0 - 4 * u, r.y + r.h + pad + 4 * u, w + 8 * u, 70 * u); ctx.globalAlpha = k; }
+  let y = roomyL ? para(G, t('lens.' + mode), x0, r.y + r.h + pad + 8 * u, w, '400 ' + 11.5 * u + 'px ' + SANS, c.hi, 3) : r.y + r.h + pad + 6 * u;
+  const dv = DIVES[id] && DIVES[id][0];
+  if (dv && y < band - 14 * u) { const tx2 = t('ui.lensDive', { depth: t('depth.' + dv[1] + '.name') }); ctx.font = '600 ' + 11 * u + 'px ' + SANS; ctx.lineWidth = 3 * u; ctx.strokeStyle = c.bg; ctx.textBaseline = 'top'; if (!roomyL) ctx.strokeText(tx2, x0, y + 2 * u); para(G, tx2, x0, y + 2 * u, w, '600 ' + 11 * u + 'px ' + SANS, c.warm, 2); }
+  ctx.restore();
+  return dv ? { x: r.x - pad, y: r.y - pad - 14 * u, w: r.w + 2 * pad, h: r.h + 2 * pad + 14 * u } : null;
+}
+let capKey = '', capT = 0;
+
 /* o: { ids, Z, near, dist, run }: called by world.js, in the box's own 1000 x 1000 space */
 export function drawJourney(G, o) {
   const c = G.col, ctx = G.ctx, id = o.ids[o.near], cfg = CFG[id], si = o.ids.indexOf('slice'), pk = o.ids.indexOf('pkg');
@@ -863,11 +936,22 @@ export function drawJourney(G, o) {
     shapes.forEach(sh => { ctx2.beginPath(); if (sh.r) ctx2.rect(sh.r[0], sh.r[1], sh.r[2], sh.r[3]); else if (sh.c) ctx2.arc(sh.c[0], sh.c[1], sh.c[2], 0, 6.2832); else sh.p.forEach((q, i) => (i ? ctx2.lineTo(q[0], q[1]) : ctx2.moveTo(q[0], q[1]))); ctx2.stroke(); });
     ctx2.restore();
   }
+  /* names: the part the step happens in, always; every part, when names are on. Not while the lens is up. */
+  const bandTop = o.below > 120 ? 1000 : 818, used = o.lens ? [{ x: o.lens.rect.x - 20, y: o.lens.rect.y - 30, w: o.lens.rect.w + 200, h: o.lens.rect.h + 110 }] : [];
+  G.three = !!o.three;
+  if (cfg && o.dist < 0.02 && STATIONS[id]) {
+    const P = STATIONS[id].parts, now = f && cfg.part ? cfg.part[f.s.to] : null, keys = o.names ? Object.keys(P) : [];
+    if (now && P[now] && P[now][0] && !(o.lens && o.lens.alpha > 0.3)) keys.unshift(now);
+    [...new Set(keys)].forEach(key => { const sh = P[key] && P[key][0]; if (!sh) return; const q = topOf(sh); if (q[1] > bandTop - 10 || q[1] < 0) return; tag(G, t('part.' + partWord(id, key)), q[0], q[1], key === now, used, bandTop - 6); });
+  }
   /* the band: what is happening, and the slice through your wafer. Inside the bottom of the picture, or,
      on a phone, under it. */
   const under = o.below > 120, top = under ? 1000 : 818, bottom = under ? 1000 + o.below : 1000, small = !roomy(G);
   if (!under || o.three) { G.a(0.94); G.r(-2000, top, 5000, bottom - top + 2000, c.bg); G.a(1); }
   G.l([[0, top], [1000, top]], c.line, 1);
+  /* the lens, over the picture */
+  const hits = { chips: [], pause: null, names: null, lens: null };
+  if (o.lens && o.lensMode) hits.lens = lensWords(G, id, o.lensMode, o.lens, top);
   let key, n = 0, L = null, a = 1, dust = false;
   if (f) { key = f.s.k; n = cfg.num[f.i]; if (cfg.in != null) { L = f.sl; a = f.a; dust = !!cfg.dust; } if (cfg.appear && f.i < cfg.appear) L = null; }
   else { key = o.Z < si ? 'handle.ingot' : cross && o.dist > 0.06 ? 'handle.ship' : 'handle.travel'; const was = CFG[o.ids[lo]]; if (was && was.in != null && o.Z >= si) L = was.out; }
@@ -891,16 +975,16 @@ export function drawJourney(G, o) {
     tx = sx + sw + 18;
   }
   /* the steps of this station, in a row: the one under way is lit; tap one to watch it again, or pause */
-  const hits = { chips: [], pause: null };
   let ctop = top + 12;
   if (cfg && o.dist < 0.3) {
     const R = 9.5 * u, fs = 11.5 * u, gap = 8 * u, y = top + 12 + R, steps = cfg.steps.map((s, i) => ({ s, i, n: cfg.num[i] })).filter(q => q.n);
     const titleOf = k => { const m = /^<b>(.*?)<\/b>/.exec(t(k)); return m ? m[1] : ''; };
     ctx.save(); ctx.font = '600 ' + fs + 'px ' + SANS; ctx.textBaseline = 'middle';
-    const room = 1000 - tx - 16 - 3 * R, full = steps.reduce((w, q) => w + 2 * R + 5 * u + ctx.measureText(titleOf(q.s.k)).width + gap, 0) <= room;
+    const room = 1000 - tx - 16 - 6 * R, full = steps.reduce((w, q) => w + 2 * R + 5 * u + ctx.measureText(titleOf(q.s.k)).width + gap, 0) <= room;
+    const cur = f ? steps.find(q => q.i === f.i) : null, fitsNow = full || (cur && steps.length * (2 * R + gap) + ctx.measureText(titleOf(cur.s.k)).width + 5 * u <= room);
     let x = tx;
     steps.forEach(q => {
-      const now = f && f.i === q.i, past = f && f.i > q.i, title = titleOf(q.s.k), tw = full || now ? ctx.measureText(title).width + 5 * u : 0;
+      const now = f && f.i === q.i, past = f && f.i > q.i, title = titleOf(q.s.k), tw = full || (now && fitsNow) ? ctx.measureText(title).width + 5 * u : 0;
       G.c(x + R, y, R, now ? c.warm : past ? c.up : c.bg, now ? c.warm : c.line, 1.1);
       ctx.font = '700 ' + 10.5 * u + 'px ' + MONO; ctx.textAlign = 'center'; ctx.fillStyle = now ? c.bg : c.hi; ctx.fillText(q.n, x + R, y + 0.5 * u);
       ctx.font = '600 ' + fs + 'px ' + SANS; ctx.textAlign = 'left';
@@ -915,10 +999,22 @@ export function drawJourney(G, o) {
     if (o.paused) { ctx.beginPath(); ctx.moveTo(px + R - 3 * u, y - 4.5 * u); ctx.lineTo(px + R + 4.5 * u, y); ctx.lineTo(px + R - 3 * u, y + 4.5 * u); ctx.closePath(); ctx.fill(); }
     else { ctx.fillRect(px + R - 3.5 * u, y - 4 * u, 2.4 * u, 8 * u); ctx.fillRect(px + R + 1.1 * u, y - 4 * u, 2.4 * u, 8 * u); }
     hits.pause = { x: px, y: y - R, w: 2 * R, h: 2 * R };
+    /* names on or off: a small label drawn as a tag */
+    const nx = px - 2 * R - 6 * u;
+    G.c(nx + R, y, R, o.names ? c.warm : c.bg, o.names ? c.warm : c.line, 1.1);
+    ctx.strokeStyle = o.names ? c.bg : c.hi; ctx.lineWidth = 1.3 * u; ctx.beginPath();
+    ctx.moveTo(nx + R - 5 * u, y - 3.5 * u); ctx.lineTo(nx + R + 2 * u, y - 3.5 * u); ctx.lineTo(nx + R + 5.5 * u, y); ctx.lineTo(nx + R + 2 * u, y + 3.5 * u); ctx.lineTo(nx + R - 5 * u, y + 3.5 * u); ctx.closePath(); ctx.stroke();
+    G.c(nx + R - 2.2 * u, y, 1.1 * u, o.names ? c.bg : c.hi);
+    hits.names = { x: nx, y: y - R, w: 2 * R, h: 2 * R };
     ctx.restore();
     ctop = y + R + 4 * u;
     n = 0;
   }
-  caption(G, t(key, { layers: M.layers }), tx, ctop, 1000 - tx - 16, bottom - 8, n);
+  /* a new caption fades in, rising a little */
+  if (key !== capKey) { capKey = key; capT = G.t; }
+  const ca = sm((G.t - capT) / 0.45);
+  ctx.save(); ctx.globalAlpha = ca;
+  caption(G, t(key, { layers: M.layers }), tx, ctop + (1 - ca) * 6 * u, 1000 - tx - 16, bottom - 8, n);
+  ctx.restore();
   return hits;
 }
