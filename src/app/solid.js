@@ -47,10 +47,10 @@ export function kit(P) {
 
   /* a soft shadow under a footprint (plan rectangle or plan points), cast back and to the right */
   function shadow(G, pts2, z, spread) {
-    const T = tones(G.col), sp = spread || 14, c = G.ctx;
-    const q = pts2.map(([x, y]) => P(x + sp * 0.6, y + sp, z || 0));
-    c.save(); c.globalAlpha = G.base; c.filter = 'blur(' + Math.max(1, sp * 0.5 * G.s) + 'px)'; /* i18n-ok: a canvas filter */
-    fill(G, q, T.shadow); c.restore();
+    /* two soft layers instead of a blur, which is slow on phones */
+    const T = tones(G.col), sp = spread || 14, c = G.ctx, cx = pts2.reduce((a, p) => a + p[0], 0) / pts2.length, cy = pts2.reduce((a, p) => a + p[1], 0) / pts2.length;
+    const at = k => pts2.map(([x, y]) => P(cx + (x - cx) * k + sp * 0.6, cy + (y - cy) * k + sp, z || 0));
+    c.save(); c.globalAlpha = 0.45 * G.base; fill(G, at(1.08), T.shadow); fill(G, at(0.96), T.shadow); c.restore();
   }
   const rectPlan = (x, y, w, d) => [[x, y], [x + w, y], [x + w, y + d], [x, y + d]];
 
