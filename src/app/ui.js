@@ -10,14 +10,17 @@
    shows your chip then says what changed there, and its scene changes too. */
 import { t, fmtDate } from '../core/i18n.js';
 import { THREADS, WORLDS, STOPS, CASES, FIGURES, REPO, TRIES, SHOWS } from '../data/weave.js';
-import { CLOCKS, GENS, START, normal, changed, model, x2 } from '../engines/chip.js';
-import { N, IDS, WORLD, setWorld, worldOf, zIn, clampZ, sizeAt, sizeParts, stop, stopKey, crossing, below, above, nearest, threadOf, rootShown, threadDepths } from '../engines/weave.js';
+import { CLOCKS, GENS, SIDES, START, normal, changed, model, x2, dieSquare } from '../engines/chip.js';
+import { N, IDS, WORLD, setWorld, worldOf, zIn, reshape, clampZ, sizeAt, sizeParts, stop, stopKey, crossing, below, above, nearest, threadOf, rootShown, threadDepths } from '../engines/weave.js';
 import { createWorld, threadColor, theme, reduced } from './world.js';
-import { setChip } from './scenes.js';
+import { setChip as drawChip, setBuild, BUILD_STEPS } from './scenes.js';
 
 const KEY = 'osl-weave-v1';
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const load = () => { try { return JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch (e) { return {}; } };
+
+/* your chip reaches the scenes and the zoom: on the wafer, the chip the dive follows is as large as yours */
+const setChip = c => { drawChip(c); reshape('wafer', { portal: dieSquare(c.size) }); reshape('die', { m: SIDES[c.size] / 1000 }); };
 
 export function start(facts) {
   const FACT = Object.fromEntries((facts || []).map(f => [f.id, f]));
@@ -28,7 +31,8 @@ export function start(facts) {
     z: typeof saved.z === 'number' ? clampZ(saved.z) : 0,
     thread: threadOf(saved.thread) ? saved.thread : null,
     seen: saved.seen && typeof saved.seen === 'object' ? saved.seen : {},
-    chip: normal(saved.chip || START)
+    chip: normal(saved.chip || START),
+    build: BUILD_STEPS - 1
   };
   setChip(S.chip);
   const save = () => { try { localStorage.setItem(KEY, JSON.stringify({ world: WORLD, z: Math.round(world.z * 100) / 100, thread: S.thread, seen: S.seen, chip: S.chip })); } catch (e) { /* storage unavailable */ } };
@@ -126,31 +130,39 @@ export function start(facts) {
   const chipWords = d => {
     const id = IDS[d], m = model(S.chip); if (!SHOWS[id]) return '';
     const timing = m.late > 0 ? t('chip.late', { late: Math.round(m.late * 100) }) : t('chip.inTime');
-    return t('chip.show.' + id, { power: x2(m.power), clock: x2(m.clock), cores: m.grid[0] * m.grid[1], timing, battery: x2(m.battery), area: x2(m.area), density: x2(m.density),
-      tick: x2(m.tick), path: x2(m.path), length: x2(m.s), wall: x2(m.wall) });
+    return t('chip.show.' + id, { power: x2(m.power), clock: x2(m.clock), cores: m.cores, timing, battery: x2(m.battery), area: x2(m.area), density: x2(m.density),
+      tick: x2(m.tick), path: x2(m.path), length: x2(m.s), wall: x2(m.wall), steps: x2(m.steps), dies: m.dies, good: m.good, yield: Math.round(m.yield * 100), cost: x2(m.cost), mm: m.side });
   };
-  const readout = () => { const m = model(S.chip); return t('chip.readout', { clock: x2(m.clock), power: x2(m.power), late: Math.round(m.late * 100) }); };
-  const valueText = k => k === 'clock' ? t('chip.clock.value', { v: x2(S.chip.clock) }) : t('chip.gen.names')[S.chip.gen];
+  const readout = k => {
+    const m = model(S.chip);
+    if (k === 'build') return t('chip.build.names')[S.build];
+    if (k === 'size') return t('chip.wafer', { cores: m.cores, power: x2(m.power), yield: Math.round(m.yield * 100), cost: x2(m.cost) });
+    return t('chip.readout', { clock: x2(m.clock), power: x2(m.power), late: Math.round(m.late * 100) });
+  };
+  const valueText = k => k === 'clock' ? t('chip.clock.value', { v: x2(S.chip.clock) }) : k === 'size' ? t('chip.size.value', { mm: SIDES[S.chip.size] }) :
+    k === 'build' ? t('chip.build.value', { n: S.build + 1, total: BUILD_STEPS }) : t('chip.gen.names')[S.chip.gen];
   /* the depths of this world where a setting shows */
   const showsOf = k => IDS.map((id, i) => i).filter(i => (SHOWS[IDS[i]] || []).includes(k));
   const tryIt = (key, d) => {
     const k = TRIES[key]; if (!k) return '';
-    const max = k === 'clock' ? CLOCKS.length - 1 : GENS - 1, val = k === 'clock' ? CLOCKS.indexOf(S.chip.clock) : S.chip.gen;
+    const max = { clock: CLOCKS.length - 1, gen: GENS - 1, size: SIDES.length - 1, build: BUILD_STEPS - 1 }[k];
+    const val = k === 'clock' ? CLOCKS.indexOf(S.chip.clock) : k === 'build' ? S.build : S.chip[k];
+    if (k === 'build') setBuild(S.build);
     return '<section class="try"><p class="code">' + t('chip.try') + '</p><label class="trylabel" for="tryRange"><b>' + t('chip.' + k + '.label') + '</b> <output id="tryValue">' + esc(valueText(k)) + '</output></label>' +
       '<input type="range" id="tryRange" data-setting="' + k + '" min="0" max="' + max + '" step="1" value="' + val + '">' +
-      '<p class="readout" id="tryOut" aria-live="polite">' + esc(readout()) + '</p>' + (SHOWS[IDS[d]] ? '<p class="small" id="chipHere">' + esc(chipWords(d)) + '</p>' : '') +
-      '<p class="small muted">' + t('chip.' + k + '.notice') + '</p>' +
+      '<p class="readout" id="tryOut" aria-live="polite">' + esc(readout(k)) + '</p>' +
+      (k === 'build' ? '<p class="small">' + esc(t('chip.build.steps', { steps: x2(model(S.chip).steps) })) + '</p>' : SHOWS[IDS[d]] ? '<p class="small" id="chipHere">' + esc(chipWords(d)) + '</p>' : '') +
+      '<p class="small muted">' + t('chip.' + k + '.notice') + '</p>' + (k === 'build' ? '' :
       '<p class="small muted">' + t('chip.shows') + '</p><div class="shows">' + showsOf(k).filter(i => i !== d).map(i => '<button type="button" class="chipgo" data-go="' + i + '">' + esc(depthName(i)) + '</button>').join('') + '</div>' +
-      (changed(S.chip) ? '<button type="button" class="link" data-reset>' + t('chip.reset') + '</button>' : '') + '</section>';
+      (changed(S.chip) ? '<button type="button" class="link" data-reset>' + t('chip.reset') + '</button>' : '')) + '</section>';
   };
   const mine = (d, skip) => (skip || !changed(S.chip) || !SHOWS[IDS[d]]) ? '' :
     '<section class="mine"><p class="code">' + t('chip.yours') + '</p><p id="chipHere">' + esc(chipWords(d)) + '</p><button type="button" class="link" data-reset>' + t('chip.reset') + '</button></section>';
   function setSetting(k, i) {
-    const c = Object.assign({}, S.chip); c[k] = k === 'clock' ? CLOCKS[i] : i;
-    S.chip = normal(c); setChip(S.chip); save();
+    if (k === 'build') { S.build = i; setBuild(i); } else { const c = Object.assign({}, S.chip); c[k] = k === 'clock' ? CLOCKS[i] : i; S.chip = normal(c); setChip(S.chip); save(); }
     const d = Math.round(world.z), v = $('tryValue'), o = $('tryOut'), here = $('chipHere');
     if (v) v.textContent = valueText(k);
-    if (o) o.textContent = readout();
+    if (o) o.textContent = readout(k);
     if (here) here.textContent = chipWords(d);
   }
 
@@ -159,6 +171,7 @@ export function start(facts) {
   const qButton = (th, d) => '<button type="button" class="qpick" data-th="' + th + '" style="--th:' + threadColor(th) + '"><i></i><span>' + esc(q(th, d)) + '</span></button>';
   function card() {
     const d = Math.round(world.z), th = S.thread;
+    setBuild(null);   /* a switch is shown finished, unless "Build it" is open */
     let h = '<p class="where"><b>' + esc(depthName(d)) + '</b> <span id="acrossNow">' + esc(across(world.z)) + '</span></p>';
     if (th) {
       const here = stop(th, d), color = threadColor(th), key = stopKey(th, d);

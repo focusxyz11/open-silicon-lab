@@ -14,8 +14,8 @@ globalThis.window = globalThis.window || {};
 const { SCENES, partsOf } = await import('../src/app/scenes.js');
 const each = fn => WORLDS.forEach(w => { E.setWorld(w.id); fn(w); });
 
-test('three worlds, each its own way down, all meeting in the same lower depths', () => {
-  assert.deepEqual(WORLDS.map(w => w.id), ['datacentre', 'phone', 'car']);
+test('four worlds, each its own way down, all meeting in the same lower depths', () => {
+  assert.deepEqual(WORLDS.map(w => w.id), ['datacentre', 'phone', 'car', 'factory']);
   assert.deepEqual(WORLDS[0].depths, ['building', 'rack', 'board', 'chip', 'block', 'gate', 'switch', 'atom']);
   for (const w of WORLDS) {
     assert.ok(EN['world.' + w.id + '.name'], w.id + ' has no name');
@@ -53,6 +53,19 @@ test('the zoom is continuous in every world: the end of one depth is exactly the
   assert.deepEqual(E.sizeParts(120), [120, 'm']);
   assert.deepEqual(E.sizeParts(2e-9), [2, 'nm']);
 }));
+
+test('the zoom stays continuous for every chip size: the wafer follows the chip in its middle', async () => {
+  const { SIDES, dieSquare } = await import('../src/engines/chip.js');
+  E.setWorld('factory');
+  const w = E.IDS.indexOf('wafer');
+  for (let size = 0; size < SIDES.length; size++) {
+    E.reshape('wafer', { portal: dieSquare(size) }); E.reshape('die', { m: SIDES[size] / 1000 });
+    const end = E.frames(w + 0.999999, 600, 400, 300).next, start = E.frames(w + 1, 600, 400, 300).cur;
+    assert.ok(Math.abs(end.s - start.s) < 1e-3 && Math.abs(end.tx - start.tx) < 0.5 && Math.abs(end.ty - start.ty) < 0.5, 'a jump at size ' + size);
+    let last = Infinity; for (let z = 0; z <= E.N - 1; z += 0.05) { const m = E.sizeAt(z); assert.ok(m < last + 1e-12); last = m; }
+  }
+  E.reshape('wafer'); E.reshape('die');
+});
 
 test('changing world keeps a shared depth, and matches the steps above it', () => {
   E.setWorld('datacentre');

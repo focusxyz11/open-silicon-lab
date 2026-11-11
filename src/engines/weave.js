@@ -11,7 +11,11 @@ export let IDS = WORLDS[0].depths;
 export let N = IDS.length;
 export const worldOf = id => WORLDS.find(w => w.id === id) || null;
 export function setWorld(id) { const w = worldOf(id) || WORLDS[0]; WORLD = w.id; IDS = w.depths; N = IDS.length; return WORLD; }
-const D = i => DEPTHS[IDS[i]];
+/* A few depths change with your chip: on the wafer, the chip the dive follows is as large as your chip.
+   reshape(id, { portal, m }) overrides a depth's data until it is called again. */
+const SHAPE = {};
+export function reshape(id, o) { SHAPE[id] = o ? Object.assign({}, DEPTHS[id], o) : undefined; }
+const D = i => SHAPE[IDS[i]] || DEPTHS[IDS[i]];
 export const clampZ = z => Math.max(0, Math.min(N - 1, z));
 /* Where the same view would be in another world. A depth both share keeps its place. Above that, the
    steps are matched counting up from the shared depths (a chip is a chip, a board is a board), and the

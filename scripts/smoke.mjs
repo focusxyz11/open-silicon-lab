@@ -1,7 +1,7 @@
 // Browser smoke test: the dive opens on desktop and phone, in dark and light, with no errors; every depth
 // can be reached; a question can be picked, followed deeper and let go; the dive can start in a phone or a car,
 // keeping a depth they share; a stop can show a real case, its figures and the companion;
-// a "Try it" changes your chip and another depth shows it; a gap invites a
+// a "Try it" changes your chip and another depth shows it; the factory makes your chip; a gap invites a
 // question; nothing scrolls sideways.
 // Needs Playwright:  npm install --no-save playwright && npx playwright install chromium
 import { serve } from './serve.mjs';
@@ -63,6 +63,20 @@ for (const [tag, viewport, scheme] of [['desktop', { width: 1360, height: 860 },
   if (!/block/i.test(await where())) problems.push(tag + ': changing world did not keep a shared depth');
   await go(0);
   if (!/car/i.test(await where())) problems.push(tag + ': the car dive does not start at the car');
+  /* the factory makes your chip: a bigger chip, fewer good ones; and the switch can be built step by step */
+  await page.click('#worlds [data-world="factory"]');
+  if ((await page.$$('#rail [data-d]')).length !== 9) problems.push(tag + ': the factory does not have its own depths');
+  await go(3);
+  await page.$eval('#card [data-th="fail"]', el => el.click());
+  const before = await page.textContent('#card #chipHere');
+  await page.$eval('#tryRange', el => { el.value = el.max; el.dispatchEvent(new Event('input', { bubbles: true })); el.dispatchEvent(new Event('change', { bubbles: true })); });
+  if (before === await page.textContent('#card #chipHere')) problems.push(tag + ': a bigger chip does not change the wafer');
+  await page.$eval('#card [data-reset]', el => el.click());
+  await go(7);
+  await page.$eval('#card [data-th="make"]', el => el.click());
+  await page.$eval('#tryRange', el => { el.value = 2; el.dispatchEvent(new Event('input', { bubbles: true })); });
+  if (!/narrow stack/i.test(await page.textContent('#tryOut'))) problems.push(tag + ': "Build it" does not step through how a switch is made');
+  await page.$eval('#card [data-leave]', el => el.click());
   await page.click('#worlds [data-world="datacentre"]');
   await page.$eval('#themeBtn', el => el.click());
   if (await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1)) problems.push(tag + ': the page scrolls sideways');
