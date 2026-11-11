@@ -28,7 +28,8 @@ const NEXT = {}; WORLDS.forEach(w => w.depths.forEach((d, i) => { if (i + 1 < w.
 const portalOf = id => (id === 'wafer' ? dieSquare(M.size) : DEPTHS[id].portal);
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 /* The side of the box the dive is drawn in, in screen pixels: line weights depend on it (world.js: k).
-   It is read back from a scene drawn at a size where k is not clamped; until then, from the canvas. */
+   world.js passes it as G.box; without it, it is read back from a scene drawn at a size where k is not
+   clamped, and until then from the canvas. */
 let BOX = 0, ROUGH = 800, NEST = 0;
 function measure(G) {
   const cv = G.ctx.canvas, dpr = G.ctx.getTransform().a / G.s || 1;
@@ -42,9 +43,12 @@ function inside(G, id) {
   const p = portalOf(id), next = SCENES[NEXT[id]], px = G.s * p[2], ctx = G.ctx, c = G.col;
   G.a(1);
   if (px < 9) { G.r(p[0], p[1], p[2], p[2], c.lo, c.line, 0.6); return; }
+  /* As large as the dive's box, the next depth is the one being drawn there anyway (world.js draws it in
+     full, on top): drawing it twice only costs time. */
+  if (px > (G.box || BOX || ROUGH) * 0.9) return;
   const keep = { s: G.s, k: G.k, primary: G.primary, id: G.id };
   ctx.save(); ctx.translate(p[0], p[1]); ctx.scale(p[2] / 1000, p[2] / 1000); ctx.beginPath(); ctx.rect(0, 0, 1000, 1000); ctx.clip();
-  Object.assign(G, { s: px / 1000, k: clamp(px / (BOX || ROUGH), 0.3, 1.5), primary: false, id: NEXT[id] });
+  Object.assign(G, { s: px / 1000, k: clamp(px / (G.box || BOX || ROUGH), 0.3, 1.5), primary: false, id: NEXT[id] });
   NEST++; try { next.draw(G); } finally { NEST--; ctx.restore(); Object.assign(G, keep); }
   /* the same thin frame the dive draws around the depth you are in */
   ctx.save(); ctx.globalAlpha = 0.5 * G.base; ctx.strokeStyle = c.line; ctx.lineWidth = 1 / G.s; ctx.strokeRect(p[0], p[1], p[2], p[2]); ctx.restore();

@@ -83,6 +83,11 @@ test('changing world keeps a shared depth, and matches the steps above it', () =
   assert.equal(E.WORLD, 'datacentre');
 });
 
+test('one picture all the way down: every scene with a depth below draws it, small, in its portal', () => {
+  const src = readFileSync(new URL('../src/app/scenes.js', import.meta.url), 'utf8');
+  for (const w of WORLDS) w.depths.slice(0, -1).forEach(id => assert.ok(src.includes("inside(G, '" + id + "')"), id + ' does not draw the next depth in its portal'));
+});
+
 test('every question lights up parts that exist in its scene, and has its words', () => {
   for (const [key, parts] of Object.entries(STOPS)) {
     const [th, depth] = key.split('.');

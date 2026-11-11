@@ -110,8 +110,10 @@ export function createWorld(cv, on) {
     ctx.setTransform(dpr * tr.s, 0, 0, dpr * tr.s, dpr * tr.tx, dpr * tr.ty);
     ctx.beginPath(); ctx.rect(0, 0, 1000, 1000); ctx.clip();
     ctx.globalAlpha = alpha;
-    Object.assign(G, { s: tr.s, k: Math.max(0.3, Math.min(1.5, size / B)), primary, t: tm, col, id, base: alpha });
-    if (size < 46) G.bg(col.lo); else sc.draw(G);
+    Object.assign(G, { s: tr.s, k: Math.max(0.3, Math.min(1.5, size / B)), primary, t: tm, col, id, base: alpha, box: B });
+    /* while it is small, the depth fading in is already drawn, small, by the scene around it (scenes.js) */
+    if (size < 46 && !primary) { ctx.restore(); return; }
+    sc.draw(G);
     ctx.globalAlpha = alpha;
     if (primary && !fly) highlight(i, tr, tm, alpha);
     ctx.restore();
