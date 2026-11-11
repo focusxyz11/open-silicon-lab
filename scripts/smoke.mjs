@@ -72,8 +72,11 @@ for (const [tag, viewport, scheme] of [['desktop', { width: 1360, height: 860 },
   await page.$eval('#tryRange', el => { el.value = el.max; el.dispatchEvent(new Event('input', { bubbles: true })); el.dispatchEvent(new Event('change', { bubbles: true })); });
   if (before === await page.textContent('#card #chipHere')) problems.push(tag + ': a bigger chip does not change the wafer');
   await page.$eval('#card [data-reset]', el => el.click());
-  await go(7);
+  await go(1);
   await page.$eval('#card [data-th="make"]', el => el.click());
+  await page.$eval('#tryRange', el => { el.value = 4; el.dispatchEvent(new Event('input', { bubbles: true })); });
+  if (!/develop/i.test(await page.textContent('#tryOut'))) problems.push(tag + ': "Run the loop" does not stop at a step');
+  await go(7);
   await page.$eval('#tryRange', el => { el.value = 2; el.dispatchEvent(new Event('input', { bubbles: true })); });
   if (!/narrow stack/i.test(await page.textContent('#tryOut'))) problems.push(tag + ': "Build it" does not step through how a switch is made');
   await page.$eval('#card [data-leave]', el => el.click());

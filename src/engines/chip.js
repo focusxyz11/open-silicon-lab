@@ -94,7 +94,8 @@ export function model(c) {
     clock, gen, size, side, areaChip, s, area, density, path, tick, late, volt, power,
     leakShare: leak / (switching + leak), wall: Math.pow(1.8, gen - START.gen), battery: 1 / power,
     cores: gridOf(12 * density * areaChip).reduce((a, b) => a * b), grid: gridOf(12 * density * areaChip),
-    dies: total, good, yield: total ? good / total : 0, steps, cost
+    dies: total, good, yield: total ? good / total : 0, steps, cost,
+    layers: Math.round(62 * steps)   /* about a day in the factory for each, as in facts.json fab-cycle-time */
   };
 }
 let startWafer = null;
