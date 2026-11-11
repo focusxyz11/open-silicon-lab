@@ -108,7 +108,7 @@ export const x2 = v => String(Number(v.toPrecision(2)));
    the stops where it is shown (at). Words: chal.<id>.goal and chal.<id>.hint. */
 export const CHALLENGES = [
   { id: 'fast', needs: ['clock', 'gen'], at: ['fail.chip', 'scale.switch', 'scale.soc'], met: m => m.clock >= 2 && m.late === 0 },
-  { id: 'battery', needs: ['gen', 'size'], at: ['life.phone', 'scale.soc', 'divide.wafer'], met: m => m.battery >= 1.5 && m.clock >= 1 && m.cores >= 12 },
-  { id: 'cores', needs: ['gen', 'size'], at: ['fail.wafer', 'divide.wafer', 'scale.switch', 'scale.mcu'], met: m => m.cores >= 20 && m.cost <= 0.7 },
-  { id: 'quick', needs: ['gen', 'size'], at: ['make.bay', 'divide.wafer', 'scale.soc'], met: m => m.layers <= 50 && m.cores >= 12 }
+  { id: 'battery', needs: ['gen', 'size'], at: ['life.phone', 'scale.soc', 'divide.test'], met: m => m.battery >= 1.5 && m.clock >= 1 && m.cores >= 12 },
+  { id: 'cores', needs: ['gen', 'size'], at: ['fail.wafer', 'divide.test', 'scale.switch', 'scale.mcu'], met: m => m.cores >= 20 && m.cost <= 0.7 },
+  { id: 'quick', needs: ['gen', 'size'], at: ['divide.test', 'scale.soc', 'scale.switch'], met: m => m.layers <= 50 && m.cores >= 12 }
 ];

@@ -39,9 +39,9 @@ export function cam(i, f) {
   const r = p[2] / 1000, k = Math.pow(r, f);
   return { ox: (p[0] / (1 - r)) * (1 - k), oy: (p[1] / (1 - r)) * (1 - k), size: 1000 * k };
 }
-/* On the line: the stations side by side, a small gap between them, the camera sliding along. Returns the
+/* On the line: the stations side by side, joined into one panorama, the camera sliding along. Returns the
    station in view and its neighbours, each a transform as in frames(). */
-export const GAP = 0.06;
+export const GAP = 0;
 export function lineFrames(z, B, cx, cy) {
   const zz = clampZ(z), i = Math.min(N - 1, Math.floor(zz)), f = zz - i, s = B / 1000, step = B * (1 + GAP);
   const at = k => ({ s, tx: cx - B / 2 + (k - zz) * step, ty: cy - B / 2 });

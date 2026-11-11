@@ -40,12 +40,9 @@ export const DEPTHS = {
   ecu: { m: 0.18, portal: [455, 425, 40] },
   mcu: { m: 0.007, portal: [176, 236, 52] },
   /* the journey: stations of the line (no portals: you move along, not down) */
-  crystal: { station: true },
-  slice: { station: true },
-  fab: { station: true, portal: [518, 359, 134], inner: 'bay' },
-  bay: { station: true, portal: [645, 373, 240], inner: 'scanner' },
-  pkg: { station: true },
-  ship: { station: true },
+  crystal: { station: true }, slice: { station: true },
+  clean: { station: true }, deposit: { station: true }, print: { station: true }, etch: { station: true }, implant: { station: true }, wires: { station: true },
+  test: { station: true }, pkg: { station: true }, ship: { station: true },
   /* inside the factory: a dive from the machine that prints with light (the wafer's portal follows your chip's size) */
   scanner: { m: 4, portal: [642, 672, 176] },
   wafer: { m: 0.32, portal: [478, 478, 44] },
@@ -58,13 +55,17 @@ export const DEPTHS = {
 };
 export const SHARED = ['block', 'gate', 'switch', 'atom'];
 /* the journey's ways down, and its ways out: station -> [world, depth] */
-export const DIVES = { bay: [['made', 'scanner'], ['made', 'switch']], wafer: [['made', 'die']] };
+export const DIVES = { print: [['made', 'scanner']], etch: [['made', 'switch']], implant: [['made', 'atom']], test: [['made', 'wafer'], ['made', 'die']] };
+/* where the journey happens: a wafer plant, the chip factory itself (every layer goes round its loop), a
+   packaging plant. Words: plant.<id>. */
+export const PLANTS = { crystal: 'wafers', slice: 'wafers', clean: 'fab', deposit: 'fab', print: 'fab', etch: 'fab', implant: 'fab', wires: 'fab', test: 'fab', pkg: 'pack', ship: 'pack' };
+export const LOOP = ['clean', 'deposit', 'print', 'etch', 'implant', 'wires'];
 export const EXITS = { ship: [['datacentre', 'chip'], ['phone', 'soc'], ['car', 'mcu']] };
 export const WORLDS = [
   { id: 'datacentre', depths: ['building', 'rack', 'board', 'chip', ...SHARED] },
   { id: 'phone', depths: ['phone', 'phoneboard', 'soc', ...SHARED] },
   { id: 'car', depths: ['car', 'ecu', 'mcu', ...SHARED] },
-  { id: 'journey', line: true, depths: ['crystal', 'slice', 'fab', 'bay', 'wafer', 'pkg', 'ship'] },
+  { id: 'journey', line: true, depths: ['crystal', 'slice', 'clean', 'deposit', 'print', 'etch', 'implant', 'wires', 'test', 'pkg', 'ship'] },
   { id: 'made', hidden: true, depths: ['scanner', 'wafer', 'die', ...SHARED] }
 ];
 
@@ -96,22 +97,26 @@ export const STOPS = {
   'fail.ecu': ['mcu'], 'open.ecu': ['mcu', 'connector'], 'divide.ecu': ['drivers', 'mcu'],
   'think.mcu': ['cores'], 'scale.mcu': ['flash', 'cores'], 'make.mcu': ['periph'],
   /* a chip factory */
-  'make.fab': ['cleanroom', 'subfab'], 'scale.fab': ['cleanroom', 'power'], 'open.fab': ['line'],
-  'make.bay': ['section', 'scanner'],
-  'know.bay': ['people'], 'fail.bay': ['inspect'], 'divide.bay': ['etch', 'deposit', 'inspect', 'track'],
   'make.scanner': ['source'], 'scale.scanner': ['mirrors', 'mask'], 'open.scanner': ['source', 'mirrors', 'mask', 'stage'],
-  'fail.wafer': ['defects'], 'make.wafer': ['dies'], 'divide.wafer': ['dies'],
-  'fail.die': ['probes'], 'idea.die': ['cores'], 'make.die': ['pads'],
+  'fail.wafer': ['defects'], 'make.wafer': ['dies'],
+  'idea.die': ['cores'], 'make.die': ['pads'],
   /* the journey's own stations */
   'make.crystal': ['ingot'], 'know.crystal': ['furnace'], 'strange.crystal': ['melt'],
   'make.slice': ['saw'], 'scale.slice': ['wafers'],
+  'make.clean': ['filters', 'tool'], 'scale.clean': ['tool'], 'open.clean': ['track'],
+  'idea.deposit': ['gas'], 'strange.deposit': ['tool', 'gas'],
+  'fail.print': ['scanner'], 'scale.print': ['scanner', 'light'],
+  'know.etch': ['people'], 'fail.etch': ['tool'], 'make.etch': ['plasma'],
+  'make.implant': ['beam'], 'fail.implant': ['heater'],
+  'make.wires': ['loop', 'polish'], 'divide.wires': ['loop'],
+  'fail.test': ['needles'], 'divide.test': ['map'],
   'make.pkg': ['bumps'], 'divide.pkg': ['memory', 'die'], 'fail.pkg': ['lid', 'substrate'],
   'fail.ship': ['trays'], 'open.ship': ['boxes'], 'divide.ship': ['datacentre', 'phone', 'car']
 };
 /* Stops whose words list real directions people are exploring (stop.<key>.tried, a list). */
 export const TRIED = ['strange.chip', 'strange.gate', 'strange.switch', 'strange.atom', 'limit.chip', 'limit.gate', 'limit.atom', 'fail.building', 'fail.board', 'fail.gate',
   'idea.block', 'idea.gate', 'make.chip', 'make.switch', 'make.atom', 'know.switch', 'open.chip', 'open.block', 'divide.chip', 'divide.block', 'life.block', 'life.switch', 'scale.switch',
-  'life.phone', 'divide.phone', 'idea.soc', 'life.car', 'fail.ecu', 'make.fab', 'scale.scanner', 'divide.wafer', 'make.die', 'divide.pkg'];
+  'life.phone', 'divide.phone', 'idea.soc', 'life.car', 'fail.ecu', 'make.clean', 'scale.scanner', 'divide.test', 'make.die', 'divide.pkg'];
 
 /* Real chips that passed their checks and still failed, from the earlier site. stop: where it shows. */
 export const CASES = [
@@ -130,19 +135,18 @@ export const FIGURES = {
   'fail.building': ['sdc-rate'], 'divide.block': ['energy-moving-data'], 'make.switch': ['fab-steps'],
   'idea.soc': ['riscv-rva23'], 'fail.car': ['car-life'], 'divide.car': ['chips-per-car'], 'know.car': ['car-shortage-2021'],
   'fail.ecu': ['car-ppm'], 'scale.mcu': ['legacy-auto'], 'make.mcu': ['chip-units'],
-  'make.fab': ['fab-build-time'], 'scale.fab': ['fab-module-cost'], 'open.fab': ['wafer-space-run'], 'know.bay': ['workforce'], 'divide.bay': ['fab-cycle-time'],
-  'make.bay': ['fab-cycle-time'], 'make.scanner': ['euv-wavelength', 'euv-source'], 'scale.scanner': ['high-na-hvm', 'high-na-price'], 'idea.die': ['design-cost-2nm']
+  'make.clean': ['fab-build-time'], 'scale.clean': ['fab-module-cost'], 'open.clean': ['wafer-space-run'], 'know.etch': ['workforce'], 'divide.wires': ['fab-cycle-time'],
+  'make.wires': ['fab-cycle-time'], 'make.scanner': ['euv-wavelength', 'euv-source'], 'scale.scanner': ['high-na-hvm', 'high-na-price'], 'idea.die': ['design-cost-2nm']
 };
 
 /* Your chip (src/engines/chip.js): a few settings that every "Try it" changes and every depth shows.
    TRIES: the stops where a setting can be changed, inside that stop's question.
    SHOWS: what each depth shows of your chip, and which settings it depends on (words: chip.show.<depth>).
-   "build" and "loop" are tries of their own: they scrub through how a switch is made and how one layer
-   is printed, and change no setting. */
-export const TRIES = { 'fail.chip': 'clock', 'life.phone': 'clock', 'scale.switch': 'gen', 'scale.soc': 'gen', 'scale.mcu': 'gen', 'fail.wafer': 'size', 'divide.wafer': 'size', 'make.switch': 'build', 'make.bay': 'loop' };
+   "build" is a try of its own: it scrubs through how a switch is made, and changes no setting. */
+export const TRIES = { 'fail.chip': 'clock', 'life.phone': 'clock', 'scale.switch': 'gen', 'scale.soc': 'gen', 'scale.mcu': 'gen', 'fail.wafer': 'size', 'divide.test': 'size', 'make.switch': 'build' };
 const ALL = ['clock', 'gen', 'size'];
 export const SHOWS = {
   building: ALL, rack: ALL, board: ALL, chip: ALL, phone: ALL, phoneboard: ALL, soc: ['clock', 'gen'], mcu: ['clock', 'gen'],
-  fab: ['gen'], bay: ['gen'], scanner: ['gen'], wafer: ['gen', 'size'], die: ['gen', 'size'], pkg: ['size'], ship: ALL,
+  print: ['gen'], wires: ['gen'], test: ['gen', 'size'], scanner: ['gen'], wafer: ['gen', 'size'], die: ['gen', 'size'], pkg: ['size'], ship: ALL,
   block: ['gen'], gate: ['clock', 'gen'], switch: ['gen'], atom: ['gen']
 };

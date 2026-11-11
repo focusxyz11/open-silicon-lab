@@ -74,26 +74,23 @@ for (const [tag, viewport, scheme] of [['desktop', { width: 1360, height: 860 },
   if (!/block/i.test(await where())) problems.push(tag + ': changing world did not keep a shared depth');
   await go(0);
   if (!/car/i.test(await where())) problems.push(tag + ': the car dive does not start at the car');
-  /* the journey: a line of stations; a bigger chip changes the wafer; dive down from the loop and come back; ship into a world */
+  /* the journey: one panorama of stations; a bigger chip changes the test map; dive down from printing and come back; ship into a world */
   await page.click('#worlds [data-world="journey"]');
-  if ((await page.$$('#rail [data-d]')).length !== 7) problems.push(tag + ': the journey does not have its stations');
-  await go(4);
-  await page.$eval('#card [data-th="fail"]', el => el.click());
+  if ((await page.$$('#rail [data-d]')).length !== 11) problems.push(tag + ': the journey does not have its stations');
+  await go(8);
+  await page.$eval('#card [data-th="divide"]', el => el.click());
   const before = await page.textContent('#card #chipHere');
   await page.$eval('#tryRange', el => { el.value = el.max; el.dispatchEvent(new Event('input', { bubbles: true })); el.dispatchEvent(new Event('change', { bubbles: true })); });
-  if (before === await page.textContent('#card #chipHere')) problems.push(tag + ': a bigger chip does not change the wafer');
+  if (before === await page.textContent('#card #chipHere')) problems.push(tag + ': a bigger chip does not change the test');
   await page.$eval('#card [data-reset]', el => el.click());
   await page.$eval('#card [data-leave]', el => el.click());
-  await go(3);
-  await page.$eval('#card [data-th="make"]', el => el.click());
-  await page.$eval('#tryRange', el => { el.value = 4; el.dispatchEvent(new Event('input', { bubbles: true })); });
-  if (!/develop/i.test(await page.textContent('#tryOut'))) problems.push(tag + ': "Run the loop" does not stop at a step');
-  await page.$eval('#card [data-leave]', el => el.click());
-  await page.$eval('#card [data-dive^="made:scanner"]', el => el.click()).catch(() => problems.push(tag + ': no way to dive down from the loop'));
-  if (!/machine/i.test(await where())) problems.push(tag + ': diving down from the loop did not reach the machine');
+  await go(4);
+  if (!/loop/i.test(await page.textContent('#card .plant').catch(() => ''))) problems.push(tag + ': printing does not say it is part of the loop');
+  await page.$eval('#card [data-dive^="made:scanner"]', el => el.click()).catch(() => problems.push(tag + ': no way to dive down from printing'));
+  if (!/machine/i.test(await where())) problems.push(tag + ': diving down from printing did not reach the machine');
   await page.$eval('#card [data-dive^="journey:"]', el => el.click()).catch(() => problems.push(tag + ': no way back to the line'));
-  if (!/one layer/i.test(await where())) problems.push(tag + ': coming back did not return to the station');
-  await go(6);
+  if (!/print/i.test(await where())) problems.push(tag + ': coming back did not return to the station');
+  await go(10);
   await page.$eval('#card [data-dive^="phone:soc"]', el => el.click()).catch(() => problems.push(tag + ': the chip cannot be shipped into a phone'));
   if (!/chip/i.test(await where()) || (await page.$$('#rail [data-d]')).length !== 7) problems.push(tag + ': shipping into a phone did not arrive at its chip');
   await page.click('#worlds [data-world="datacentre"]');

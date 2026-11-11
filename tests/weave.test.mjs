@@ -19,7 +19,7 @@ const eachDive = fn => DIVE_WORLDS.forEach(w => { E.setWorld(w.id); fn(w); });
 test('the dives each have their own way down and meet in the same lower depths; the journey is a line', () => {
   assert.deepEqual(WORLDS.map(w => w.id), ['datacentre', 'phone', 'car', 'journey', 'made']);
   assert.deepEqual(WORLDS[0].depths, ['building', 'rack', 'board', 'chip', 'block', 'gate', 'switch', 'atom']);
-  assert.deepEqual(LINE.depths, ['crystal', 'slice', 'fab', 'bay', 'wafer', 'pkg', 'ship']);
+  assert.deepEqual(LINE.depths, ['crystal', 'slice', 'clean', 'deposit', 'print', 'etch', 'implant', 'wires', 'test', 'pkg', 'ship']);
   for (const w of DIVE_WORLDS) {
     assert.ok(EN['world.' + w.id + '.name'], w.id + ' has no name');
     assert.deepEqual(w.depths.slice(-SHARED.length), SHARED, w.id + ' does not end in the shared depths');
@@ -39,7 +39,7 @@ test('the journey: stations side by side, moved along smoothly, with ways down a
     assert.ok(EN['depth.' + id + '.name'] && EN['depth.' + id + '.see'] && EN['station.' + id + '.when'], id + ' has no words');
   }
   const B = 600, a = E.lineFrames(2, B, 400, 300), b = E.lineFrames(2.5, B, 400, 300), c = E.lineFrames(3, B, 400, 300);
-  assert.ok(Math.abs(a.next.tx - c.cur.tx - B * (1 + E.GAP)) < 1e-6, 'stations are evenly spaced');
+  assert.ok(Math.abs(a.next.tx - a.cur.tx - B * (1 + E.GAP)) < 1e-6, 'stations are evenly spaced, joined into one panorama');
   assert.ok(Math.abs((a.cur.tx + c.prev.tx) / 2 - b.cur.tx) < 1e-6, 'the camera slides evenly');
   assert.ok(Math.abs(E.lineFrames(2.999999, B, 400, 300).next.tx - c.cur.tx) < 1e-3, 'no jump between stations');
   for (const [st, list] of Object.entries({ ...DIVES, ...EXITS })) {
