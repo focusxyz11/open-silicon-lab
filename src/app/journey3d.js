@@ -36,7 +36,7 @@ function materials(col) {
     chip: L('#c9d7ff', { emissive: d ? '#5a7de0' : '#3d63c8', emissiveIntensity: d ? 0.7 : 0.35 }),
     warm: L(col.warm, { emissive: col.warm, emissiveIntensity: d ? 0.5 : 0.15 }), cool: L(col.cool, { emissive: col.cool, emissiveIntensity: d ? 0.4 : 0.1 }),
     grn: L(col.grn, { emissive: col.grn, emissiveIntensity: d ? 0.6 : 0.2 }), red: L(col.red, { emissive: col.red, emissiveIntensity: d ? 0.6 : 0.2 }),
-    off: L(d ? '#2a3350' : '#c9d1dc'), copper: L('#d58a3a', { emissive: '#7a4310', emissiveIntensity: d ? 0.4 : 0.05 }),
+    off: L(d ? '#2a3350' : '#c9d1dc'), silicon: L(d ? '#8fa6dc' : '#6f84ad', { emissive: d ? '#1c2c5a' : '#000000' }), copper: L('#d58a3a', { emissive: '#7a4310', emissiveIntensity: d ? 0.4 : 0.05 }),
     crate: L(d ? '#5a4628' : '#e8d4b0'), screen: new THREE.MeshBasicMaterial({ color: d ? '#06090f' : '#f9fbfd' }),
     plasma: glow(col.red, d ? 0.42 : 0.3), beam: glow(col.grn, d ? 0.7 : 0.55), light: glow(col.warm, d ? 0.55 : 0.4), heat: glow(col.warm, d ? 0.35 : 0.25), spray: glow(col.cool, 0.6),
     edge: new THREE.LineBasicMaterial({ color: d ? '#7083b6' : '#5c6a82', transparent: true, opacity: d ? 0.75 : 0.55 }),
@@ -327,7 +327,7 @@ function rings(b, x, d, h, r0, r1, step) { for (let r = r0; r <= r1; r += step) 
 /* a cylinder open on the side facing you (centred on the front, a little to the right), to show inside */
 function openCyl(b, x, d, h, r, hh, mat, edges) { const g = new THREE.CylinderGeometry(r / 100, r / 100, hh / 100, 56, 1, true, 0.42 * Math.PI, 1.42 * Math.PI); g.translate(x / 100, (h + hh / 2) / 100, -d / 100); return b.put(g, mat, edges); }
 /* a flat ring (a lid with its middle open) */
-function annulus(b, x, d, h, r0, r1, mat) { const g = new THREE.RingGeometry(r0 / 100, r1 / 100, 48); g.rotateX(-Math.PI / 2); g.translate(x / 100, h / 100, -d / 100); return b.put(g, mat); }
+function annulus(b, x, d, h, r0, r1, mat, a0, al) { const g = new THREE.RingGeometry(r0 / 100, r1 / 100, 48, 1, a0 || 0, al == null ? Math.PI * 2 : al); g.rotateX(-Math.PI / 2); g.translate(x / 100, h / 100, -d / 100); return b.put(g, mat); }
 /* a load port with its plate (the pod sits on it) */
 const port3 = (b, x) => { b.box(x - 30, 0, 0, 60, 60, 90, b.M.base); b.box(x - 26, 4, 90, 52, 52, 4, b.M.metal); };
 /* a robot's stand */
@@ -347,11 +347,11 @@ BUILD.crystal = (b, plant, first) => {
   b.box(-130, 150, 0, 260, 220, 70, M.base);
   openCyl(b, 0, 260, 70, 85, 160, M.body); openCyl(b, 0, 260, 70, 81, 160, M.inner, false);
   b.cyl(0, 260, 70, 85, 2, M.dark);
-  annulus(b, 0, 260, 230, 30, 86, M.body);
+  annulus(b, 0, 260, 230, 30, 86, M.body, 0.15 * Math.PI, 0.95 * Math.PI);
   b.cyl(0, 260, 230, 30, 260, M.body, 32); b.box(-8, 230, 330, 16, 2, 90, M.glass, false);
   b.box(-45, 222, 490, 90, 76, 46, M.panel); b.cyl(0, 260, 536, 16, 10, M.metal, 24);
   /* inside: a graphite cup holding the quartz crucible, a ring heater round it */
-  b.cyl(0, 260, 72, 56, 52, M.metal, 40); b.cyl(0, 260, 120, 50, 4, M.dark, 40, false);
+  b.cyl(0, 260, 72, 56, 52, M.metal, 40); annulus(b, 0, 260, 124.3, 0, 50, M.dark);
   const ht = new THREE.TorusGeometry(0.66, 0.025, 8, 48); ht.rotateX(Math.PI / 2); ht.translate(0, 0.98, -2.6); b.put(ht, M.warm, false);
   b.part('furnace', -90, 170, 0, 180, 180, 546); b.partCyl('melt', 0, 260, 72, 56, 60);
   /* a desk with its screens, and the person watching the pull */
@@ -359,8 +359,8 @@ BUILD.crystal = (b, plant, first) => {
   person(b, 220, 0);
   /* finished crystals, resting on a rack */
   b.box(250, 330, 0, 170, 110, 30, M.base); for (let k = 0; k < 3; k++) b.rod(335, 352 + k * 30, 46, 13, 150, 'x', M.metal, 24);
-  const melt = b.mesh(new THREE.CylinderGeometry(0.47, 0.47, 0.01, 40).translate(0, 1.245, -2.6), M.heat, false);
-  const ingot = new THREE.Group(), body = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.14, 1, 32).translate(0, 0.5, 0), M.metal), crown = new THREE.Mesh(new THREE.ConeGeometry(0.14, 0.12, 32).translate(0, 0.06, 0), M.metal);
+  const melt = b.mesh(new THREE.CylinderGeometry(0.47, 0.47, 0.01, 40).translate(0, 1.262, -2.6), M.heat, false);
+  const ingot = new THREE.Group(), body = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.14, 1, 32).translate(0, 0.5, 0), M.silicon), crown = new THREE.Mesh(new THREE.ConeGeometry(0.14, 0.12, 32).translate(0, 0.06, 0), M.silicon);
   body.add(new THREE.LineSegments(new THREE.EdgesGeometry(body.geometry, 28), M.edge)); ingot.add(body, crown); b.dyn.add(ingot);
   const wire = b.mesh(new THREE.BoxGeometry(0.006, 1, 0.006).translate(0, 0.5, 0), M.metal, false);
   b.partCyl('ingot', 0, 260, 130, 16, 100);
@@ -583,7 +583,7 @@ export function createJourney3D(host, before) {
   const perf = { ema: 16, low: false, seen: 0 };
   const scene = new THREE.Scene(), camera = new THREE.PerspectiveCamera(30, 1, 0.1, 120);
   const hemi = new THREE.HemisphereLight(0xffffff, 0x8090a8, 1.6), sun = new THREE.DirectionalLight(0xffffff, 1.7);
-  sun.castShadow = true; sun.shadow.mapSize.set(1024, 1024); Object.assign(sun.shadow.camera, { left: -7, right: 7, top: 7, bottom: -7, near: 1, far: 40 }); sun.shadow.bias = -0.0008;
+  sun.castShadow = true; sun.shadow.mapSize.set(1024, 1024); Object.assign(sun.shadow.camera, { left: -7, right: 7, top: 7, bottom: -7, near: 1, far: 40 }); sun.shadow.bias = -0.0005; sun.shadow.normalBias = 0.025;
   scene.add(hemi, sun, sun.target);
   let M = null, theme = '', ids = [], built = new Map(), pod = null, podCrate = null, hoist = null, lastT = 0;
   const cam = { p: new THREE.Vector3(), t: new THREE.Vector3(), init: false };
