@@ -3,13 +3,19 @@
    question can light up ({ r: [x, y, w, h] } | { c: [x, y, r] } | { p: [[x, y], ...] }). Labels are text
    names: part.<depth>.<key> in src/i18n/en.json. No words in this file.
    A data centre: building, rack, board, chip. A phone: phone, phoneboard, soc. A car: car, ecu, mcu.
+   A factory: fab, bay, scanner, wafer, die.
    Every chip: block, gate, switch, atom. */
 
-import { START, model } from '../engines/chip.js';
+import { START, model, dies, defects, hits, WAFER } from '../engines/chip.js';
 
 /* Your chip (src/engines/chip.js): the scenes that show it read its settings from here. */
 let M = model(START);
-export const setChip = c => { M = model(c); };
+let HITS = hits(START.size, START.gen), DIES = dies(START.size), SPECKS = defects(START.gen);
+export const setChip = c => { M = model(c); HITS = hits(M.size, M.gen); DIES = dies(M.size); SPECKS = defects(M.gen); };
+/* "Build it": how far the switch has been made (null: finished) */
+let BUILD = null;
+export const BUILD_STEPS = 8;
+export const setBuild = n => { BUILD = n == null || n >= BUILD_STEPS - 1 ? null : n; };
 const heat = G => Math.max(0, Math.min(1, (M.power - 0.6) / 3));   /* 0 cool .. 1 very hot */
 
 const rnd = (i, j) => { const v = Math.sin(i * 127.1 + (j || 0) * 311.7) * 43758.5453; return v - Math.floor(v); };
@@ -106,6 +112,19 @@ const board = {
 const coreGrid = (cols, rows) => { const w = 740 / cols, h = 470 / rows, g = Math.min(14, w * 0.08), out = []; for (let j = 0; j < rows; j++) for (let i = 0; i < cols; i++) out.push({ r: [130 + i * w + g / 2, 130 + j * h + g / 2, w - g, h - g] }); return out; };
 const GRID_CACHE = {};
 const cores = () => { const k = M.grid.join('x'); return GRID_CACHE[k] || (GRID_CACHE[k] = coreGrid(M.grid[0], M.grid[1])); };
+function drawCores(G) {
+  const c = G.col, tick = Math.floor(G.t * 1.5 * M.clock);
+  cores().forEach((k, n) => {
+    const r = k.r, m = Math.min(r[2], r[3]) * 0.07;
+    G.r(r[0], r[1], r[2], r[3], c.up, c.line, 1.2);
+    G.r(r[0] + m, r[1] + m, r[2] * 0.52, r[3] * 0.5, c.mid, c.dim, 0.9);
+    G.r(r[0] + r[2] * 0.6, r[1] + m, r[2] * 0.4 - m, r[3] * 0.3, c.mid, c.dim, 0.9);
+    G.r(r[0] + r[2] * 0.6, r[1] + r[3] * 0.4, r[2] * 0.4 - m, r[3] * 0.6 - m, c.lo, c.dim, 0.9);
+    G.r(r[0] + m, r[1] + r[3] * 0.62, r[2] * 0.52, r[3] * 0.38 - m, c.lo, c.dim, 0.9);
+    if (rnd(n, tick) > 0.55) { G.a(0.5); G.r(r[0] + m, r[1] + m, r[2] * 0.52, r[3] * 0.5, c.cool); G.a(1); }
+    if (rnd(n + 50, tick) < M.late) { G.a(0.55); G.r(r[0], r[1], r[2], r[3], c.red); G.a(1); }
+  });
+}
 const clock = [{ p: [[500, 136], [500, 594]] }, { p: [[315, 365], [685, 365]] }, { p: [[315, 208], [315, 522]] }, { p: [[685, 208], [685, 522]] }];
 const chip = {
   get parts() { return { cores: cores(), cache: [{ r: [130, 620, 740, 100] }], io: [{ r: [130, 740, 740, 90] }], clock }; },
@@ -115,18 +134,7 @@ const chip = {
     G.r(40, 40, 920, 920, c.mid, c.hi, 1.8);
     for (let i = 0; i < 22; i++) { const t = 78 + i * 39; G.r(t, 56, 24, 24, c.lo, c.line, 0.9); G.r(t, 920, 24, 24, c.lo, c.line, 0.9); G.r(56, t, 24, 24, c.lo, c.line, 0.9); G.r(920, t, 24, 24, c.lo, c.line, 0.9); }
     G.r(112, 112, 776, 776, c.lo, c.line, 1);
-    const tick = Math.floor(G.t * 1.5 * M.clock);
-    cores().forEach((k, n) => {
-      const r = k.r, m = Math.min(r[2], r[3]) * 0.07;
-      G.r(r[0], r[1], r[2], r[3], c.up, c.line, 1.2);
-      G.r(r[0] + m, r[1] + m, r[2] * 0.52, r[3] * 0.5, c.mid, c.dim, 0.9);
-      G.r(r[0] + r[2] * 0.6, r[1] + m, r[2] * 0.4 - m, r[3] * 0.3, c.mid, c.dim, 0.9);
-      G.r(r[0] + r[2] * 0.6, r[1] + r[3] * 0.4, r[2] * 0.4 - m, r[3] * 0.6 - m, c.lo, c.dim, 0.9);
-      G.r(r[0] + m, r[1] + r[3] * 0.62, r[2] * 0.52, r[3] * 0.38 - m, c.lo, c.dim, 0.9);
-      if (rnd(n, tick) > 0.55) { G.a(0.5); G.r(r[0] + m, r[1] + m, r[2] * 0.52, r[3] * 0.5, c.cool); G.a(1); }
-      /* your chip: signals that arrive after the tick */
-      if (rnd(n + 50, tick) < M.late) { G.a(0.55); G.r(r[0], r[1], r[2], r[3], c.red); G.a(1); }
-    });
+    drawCores(G);   /* your chip's cores; signals that arrive after the tick turn red */
     clock.forEach(k => G.l(k.p, c.warm, 1.3));
     /* the clock's tick travelling along its wires, faster with your clock */
     clock.forEach((k, i) => { const u = (G.t * 0.6 * M.clock + i * 0.25) % 1, a = k.p[0], b = k.p[1]; G.r(a[0] + (b[0] - a[0]) * u - 5, a[1] + (b[1] - a[1]) * u - 5, 10, 10, c.warm); });
@@ -204,24 +212,42 @@ const skins = [400, 520, 640].map(y => ({ r: [390, y - 8, 220, 66] }));
 const swtch = {
   parts: { gate: [{ r: [390, 300, 220, 500] }], channel: sheets, oxide: skins, source: [{ r: [110, 340, 235, 460] }], drain: [{ r: [655, 340, 235, 460] }] },
   draw(G) {
-    const c = G.col;
+    const c = G.col, b = BUILD == null ? BUILD_STEPS - 1 : BUILD;
     G.bg(c.lo);
+    /* 0: the silicon underneath */
     G.r(0, 800, 1000, 200, c.mid, null);
     G.l([[0, 800], [1000, 800]], c.line, 1.2);
-    G.r(110, 340, 235, 460, c.up, c.hi, 1.4); G.r(655, 340, 235, 460, c.up, c.hi, 1.4);
-    G.a(0.45); G.r(180, 150, 90, 190, c.cool); G.r(730, 150, 90, 190, c.cool); G.r(465, 120, 70, 180, c.cool); G.a(1);
-    G.r(180, 150, 90, 190, null, c.cool, 1.2); G.r(730, 150, 90, 190, null, c.cool, 1.2); G.r(465, 120, 70, 180, null, c.cool, 1.2);
-    G.r(345, 300, 45, 500, c.mid, c.line, 1); G.r(610, 300, 45, 500, c.mid, c.line, 1);
-    G.a(0.5); G.r(390, 300, 220, 500, c.red); G.a(1); G.r(390, 300, 220, 500, null, c.red, 1.5);
-    skins.forEach(k => G.r(k.r[0], k.r[1], k.r[2], k.r[3], c.lo, c.warm, 1.6 * Math.min(1.6, M.s)));
-    /* your chip: current slipping through the thinner walls */
-    const leaks = Math.round(2 * M.wall);
-    for (let n = 0; n < leaks; n++) { const k = skins[n % 3].r, x = 400 + rnd(n, 7) * 200, u = (G.t * 0.7 + rnd(n, 9)) % 1; G.c(x, k[1] + 4 - u * 40, 5, c.red); }
-    sheets.forEach((sh, i) => {
-      G.a(0.6); G.r(sh.r[0], sh.r[1], sh.r[2], sh.r[3], c.grn); G.a(1); G.r(sh.r[0], sh.r[1], sh.r[2], sh.r[3], null, c.grn, 1.3);
-      for (let k = 0; k < 3; k++) { const x = 340 + (((G.t * 0.28 + k / 3 + i * 0.17) % 1) * 320); G.r(x - 5, sh.r[1] + 20, 10, 10, c.hi); }
-    });
-    G.label('gate', 470, 290); G.label('channel', 668, 560); G.label('source', 120, 330); G.label('drain', 880, 330, 'right'); G.label('oxide', 400, 386);
+    /* 1-2: a stack of thin layers grown on top, then cut down to a narrow stack */
+    if (b >= 1 && b <= 4) {
+      const x0 = b === 1 ? 110 : 340, x1 = b === 1 ? 890 : 660;
+      [400, 520, 640].forEach(y => { G.a(0.6); G.r(x0, y, x1 - x0, 50, c.grn); G.a(1); G.r(x0, y, x1 - x0, 50, null, c.grn, 1.1); });
+      [450, 570, 690].forEach(y => G.r(x0, y, x1 - x0, 70, c.up, c.dim, 0.9));
+      G.r(x0, 760, x1 - x0, 40, c.up, c.dim, 0.9);
+    }
+    /* 3-4: a placeholder gate holds the shape while the source and drain grow on either side */
+    if (b >= 3) { G.r(345, 300, 45, 500, c.mid, c.line, 1); G.r(610, 300, 45, 500, c.mid, c.line, 1); }
+    if (b === 3 || b === 4) { G.a(0.7); G.r(390, 300, 220, 500, c.dim); G.a(1); G.r(390, 300, 220, 500, null, c.line, 1.2); }
+    if (b >= 4) { G.r(110, 340, 235, 460, c.up, c.hi, 1.4); G.r(655, 340, 235, 460, c.up, c.hi, 1.4); }
+    /* 5: the placeholder and the layers between the sheets are dissolved away, leaving sheets in the air */
+    if (b === 5) sheets.forEach(sh => { G.a(0.6); G.r(sh.r[0], sh.r[1], sh.r[2], sh.r[3], c.grn); G.a(1); G.r(sh.r[0], sh.r[1], sh.r[2], sh.r[3], null, c.grn, 1.3); });
+    /* 6: a thin insulating skin and the real gate wrap every sheet */
+    if (b >= 6) {
+      G.a(0.5); G.r(390, 300, 220, 500, c.red); G.a(1); G.r(390, 300, 220, 500, null, c.red, 1.5);
+      skins.forEach(k => G.r(k.r[0], k.r[1], k.r[2], k.r[3], c.lo, c.warm, 1.6 * Math.min(1.6, M.s)));
+      sheets.forEach((sh, i) => {
+        G.a(0.6); G.r(sh.r[0], sh.r[1], sh.r[2], sh.r[3], c.grn); G.a(1); G.r(sh.r[0], sh.r[1], sh.r[2], sh.r[3], null, c.grn, 1.3);
+        if (b === BUILD_STEPS - 1) for (let k = 0; k < 3; k++) { const x = 340 + (((G.t * 0.28 + k / 3 + i * 0.17) % 1) * 320); G.r(x - 5, sh.r[1] + 20, 10, 10, c.hi); }
+      });
+    }
+    /* 7: metal contacts reach down to connect it */
+    if (b >= 7) {
+      G.a(0.45); G.r(180, 150, 90, 190, c.cool); G.r(730, 150, 90, 190, c.cool); G.r(465, 120, 70, 180, c.cool); G.a(1);
+      G.r(180, 150, 90, 190, null, c.cool, 1.2); G.r(730, 150, 90, 190, null, c.cool, 1.2); G.r(465, 120, 70, 180, null, c.cool, 1.2);
+      /* your chip: current slipping through the thinner walls */
+      const leaks = Math.round(2 * M.wall);
+      for (let n = 0; n < leaks; n++) { const k = skins[n % 3].r, x = 400 + rnd(n, 7) * 200, u = (G.t * 0.7 + rnd(n, 9)) % 1; G.c(x, k[1] + 4 - u * 40, 5, c.red); }
+      G.label('gate', 470, 290); G.label('channel', 668, 560); G.label('source', 120, 330); G.label('drain', 880, 330, 'right'); G.label('oxide', 400, 386);
+    }
   }
 };
 
@@ -459,5 +485,140 @@ const mcu = {
   }
 };
 
-export const SCENES = { building, rack, board, chip, phone, phoneboard, soc, car, ecu, mcu, block, gate, switch: swtch, atom };
+/* ======== a chip factory ======== */
+
+/* ---- fab: a chip factory from above: the cleanroom, and the water, gases and power that feed it ---- */
+const fab = {
+  parts: { cleanroom: [{ r: [220, 260, 560, 420] }], water: [{ r: [50, 260, 140, 200] }], gases: [{ r: [50, 490, 140, 190] }], power: [{ r: [810, 260, 140, 180] }] },
+  draw(G) {
+    const c = G.col;
+    G.bg(c.lo);
+    for (let i = 0; i < 12; i++) G.l([[40 + i * 80, 790], [90 + i * 80, 790]], c.dim, 2);
+    G.l([[30, 760], [970, 760]], c.line, 1); G.l([[30, 820], [970, 820]], c.line, 1);
+    const u = (G.t * 0.05) % 1; G.r(30 + u * 900, 770, 44, 26, c.up, c.line, 1);
+    /* the cleanroom, with its rows of bays */
+    G.r(220, 260, 560, 420, c.mid, c.hi, 1.8);
+    for (let k = 0; k < 6; k++) { G.r(240, 290 + k * 64, 520, 44, c.up, c.line, 0.9); for (let i = 0; i < 12; i++) G.r(248 + i * 43, 296 + k * 64, 34, 14, c.lo, c.dim, 0.6); }
+    G.l([[240, 340], [760, 340]], c.cool, 1);
+    /* water: tanks that make water purer than anything you drink */
+    G.r(50, 260, 140, 200, c.mid, c.line, 1.1);
+    [[90, 320], [150, 320], [90, 400], [150, 400]].forEach(k => { G.c(k[0], k[1], 26, c.up, c.cool, 1.2); G.c(k[0], k[1], 10, null, c.dim, 0.8); });
+    /* gases and chemicals */
+    G.r(50, 490, 140, 190, c.mid, c.line, 1.1);
+    for (let i = 0; i < 5; i++) for (let j = 0; j < 3; j++) G.c(78 + i * 21, 530 + j * 50, 8, c.up, c.warm, 1);
+    /* power */
+    G.r(810, 260, 140, 180, c.mid, c.line, 1.1);
+    for (let i = 0; i < 3; i++) G.r(828 + i * 40, 290, 28, 60, c.up, c.warm, 1);
+    G.l([[880, 380], [880, 420], [780, 420]], c.warm, 1.6);
+    /* offices */
+    G.r(810, 470, 140, 210, c.mid, c.line, 1);
+    for (let i = 0; i < 3; i++) for (let j = 0; j < 5; j++) G.r(826 + i * 40, 490 + j * 36, 28, 20, c.lo, c.dim, 0.6);
+    /* your chip: finer switches keep each wafer here longer */
+    G.a(0.12 + 0.12 * (M.steps - 0.6)); G.r(240, 290, 520, 364, c.warm); G.a(1);
+    G.label('cleanroom', 226, 250); G.label('water', 50, 250); G.label('gases', 50, 700); G.label('power', 950, 250, 'right');
+  }
+};
+
+/* ---- bay: inside the cleanroom: machines in rows, wafers riding a track overhead ---- */
+const bayTop = [0, 1, 2, 3, 4, 5].map(i => [90 + i * 140, 140, 110, 200]);
+const bay = {
+  parts: { scanner: [{ r: [100, 560, 300, 260] }], etch: bayTop.slice(0, 2).map(r => ({ r })), deposit: bayTop.slice(2, 4).map(r => ({ r })), inspect: bayTop.slice(4).map(r => ({ r })),
+    track: [{ r: [60, 470, 880, 16] }], people: [{ c: [470, 430, 14] }, { c: [720, 520, 14] }] },
+  draw(G) {
+    const c = G.col;
+    G.bg(c.lo);
+    for (let i = 0; i < 26; i++) G.l([[i * 40, 380], [i * 40 + 20, 380]], c.dim, 0.8);
+    /* machines along the top: etching, depositing, inspecting */
+    bayTop.forEach((r, i) => {
+      G.r(r[0], r[1], r[2], r[3], c.mid, c.line, 1.2);
+      if (i < 4) [[r[0] + 30, r[1] + 60], [r[0] + 80, r[1] + 60], [r[0] + 55, r[1] + 130]].forEach(k => G.c(k[0], k[1], 22, c.up, i < 2 ? c.cool : c.grn, 1.1));
+      else { G.r(r[0] + 15, r[1] + 20, r[2] - 30, 90, c.lo, c.cool, 1); G.c(r[0] + r[2] / 2, r[1] + 65, 26, null, c.hi, 1); G.r(r[0] + 15, r[1] + 130, r[2] - 30, 50, c.up, c.dim, 0.8); }
+      G.r(r[0] + 35, 340, 40, 30, c.up, c.line, 0.9);
+    });
+    /* the overhead track, carrying sealed boxes of wafers */
+    G.r(60, 470, 880, 16, c.up, c.line, 1);
+    for (let k = 0; k < 4; k++) { const x = 60 + ((G.t * 0.06 * M.steps + k * 0.25) % 1) * 840; G.r(x, 456, 40, 44, c.mid, c.hi, 1.1); }
+    /* the printing machine, the largest of them */
+    G.r(100, 560, 300, 260, c.mid, c.hi, 1.6);
+    G.r(120, 565, 250, 250, c.lo, c.line, 1);
+    G.r(410, 640, 120, 180, c.mid, c.line, 1.1); G.c(470, 700, 30, c.up, c.warm, 1.2);
+    /* other machines along the bottom */
+    for (let i = 0; i < 3; i++) { const x = 570 + i * 130; G.r(x, 600, 100, 220, c.mid, c.line, 1.1); G.c(x + 50, 680, 26, c.up, c.cool, 1.1); G.r(x + 20, 740, 60, 50, c.up, c.dim, 0.8); }
+    /* people in cleanroom suits */
+    [[470, 430], [720, 520]].forEach(k => { G.c(k[0], k[1], 14, c.up, c.hi, 1.3); G.c(k[0], k[1] - 4, 6, c.lo); });
+    G.label('etch', 90, 130); G.label('deposit', 370, 130); G.label('inspect', 650, 130); G.label('track', 60, 512); G.label('scanner', 100, 550); G.label('people', 490, 430);
+  }
+};
+
+/* ---- scanner: the machine that prints with light, cut open ---- */
+const beam = [[230, 640], [300, 330], [470, 210], [530, 110], [620, 210], [760, 330], [730, 760]];
+const scanner = {
+  parts: { source: [{ r: [60, 580, 240, 300] }], mirrors: [{ c: [300, 330, 26] }, { c: [470, 210, 26] }, { c: [620, 210, 26] }, { c: [760, 330, 26] }], mask: [{ r: [430, 70, 200, 40] }], stage: [{ r: [600, 640, 260, 240] }] },
+  draw(G) {
+    const c = G.col;
+    G.bg(c.lo);
+    G.r(40, 40, 920, 900, c.mid, c.hi, 1.8);
+    G.r(70, 60, 860, 860, c.lo, c.line, 1);
+    /* the light: a laser hits drops of tin, which glow with very short light */
+    G.r(60, 580, 240, 300, c.mid, c.line, 1.2);
+    G.l([[80, 820], [200, 700]], c.red, 2);
+    for (let i = 0; i < 6; i++) { const y = 600 + ((G.t * 0.9 + i / 6) % 1) * 260; G.c(220, y, 6, c.warm); }
+    G.c(225, 690, 34, null, c.warm, 1.4);
+    /* the path: bounced off mirrors, off the mask, down to the wafer */
+    G.a(0.75); G.l(beam, c.warm, 2.4); G.a(1);
+    const u = (G.t * 0.5) % 1, n = beam.length - 1, k = Math.floor(u * n), f = u * n - k, a = beam[k], b = beam[k + 1];
+    G.c(a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f, 9, c.warm);
+    [[300, 330], [470, 210], [620, 210], [760, 330]].forEach(m => { G.c(m[0], m[1], 26, c.up, c.hi, 1.4); G.c(m[0], m[1], 14, null, c.cool, 1); });
+    G.r(430, 70, 200, 40, c.up, c.hi, 1.4); for (let i = 0; i < 9; i++) G.r(440 + i * 21, 78, 12, 24, i % 3 ? c.lo : c.cool);
+    /* the stage: the wafer, moving under the light */
+    G.r(600, 640, 260, 240, c.mid, c.line, 1.2);
+    G.c(730, 760, 80, c.up, c.hi, 1.4);
+    for (let i = -3; i <= 3; i++) G.l([[730 + i * 20, 700], [730 + i * 20, 820]], c.dim, 0.6);
+    G.label('source', 66, 570); G.label('mirrors', 330, 380); G.label('mask', 640, 96); G.label('stage', 860, 630, 'right');
+  }
+};
+
+/* ---- wafer: one wafer of your chips; specks land at random ---- */
+const wafer = {
+  get parts() { return { dies: DIES.map(r => ({ r })), defects: SPECKS.map(p => ({ c: [p[0], p[1], 7] })) }; },
+  draw(G) {
+    const c = G.col, R = WAFER.R;
+    G.bg(c.lo);
+    G.c(500, 500, R + 12, c.mid, c.hi, 1.8);
+    G.c(500, 500 + R + 4, 14, c.lo);
+    DIES.forEach((d, i) => {
+      G.r(d[0], d[1], d[2], d[3], HITS[i] ? c.mid : c.up, c.line, 0.6);
+      if (HITS[i]) { G.a(0.55); G.r(d[0], d[1], d[2], d[3], c.red); G.a(1); }
+      else if (d[2] > 30) { G.r(d[0] + d[2] * 0.15, d[1] + d[3] * 0.15, d[2] * 0.4, d[3] * 0.35, c.mid, null); }
+    });
+    /* the specks, each pulsing where it landed */
+    SPECKS.forEach((p, i) => { const k = 0.6 + 0.4 * Math.sin(G.t * 2 + i); G.c(p[0], p[1], 3 + 2 * k, c.warm); });
+    const f = DIES.find(d => Math.abs(d[0] + d[2] / 2 - 500) < 1 && Math.abs(d[1] + d[3] / 2 - 500) < 1);
+    if (f) G.r(f[0], f[1], f[2], f[3], null, c.hi, 1.6);
+    G.label('dies', 70, 60); G.label('defects', 930, 60, 'right');
+  }
+};
+
+/* ---- die: one of your chips, still on the wafer, with test needles on its pads ---- */
+const dieProbes = [[0, 300], [0, 500], [0, 700], [1000, 300], [1000, 500], [1000, 700]].map(p => ({ p: [[p[0] === 0 ? -20 : 1020, p[1] - 140], [p[0] === 0 ? 68 : 932, p[1]]] }));
+const die = {
+  get parts() { return { cores: cores(), pads: [{ r: [56, 56, 888, 24] }, { r: [56, 920, 888, 24] }, { r: [56, 56, 24, 888] }, { r: [920, 56, 24, 888] }], probes: dieProbes, scribe: [{ r: [0, 0, 1000, 30] }] }; },
+  draw(G) {
+    const c = G.col;
+    G.bg(c.mid);
+    /* the cutting lines, and the edges of the chips next to it */
+    G.r(0, 0, 1000, 1000, c.lo, null);
+    G.r(30, 30, 940, 940, c.mid, c.hi, 1.8);
+    pads(G, 22);
+    G.r(112, 112, 776, 776, c.lo, c.line, 1);
+    drawCores(G);
+    for (let i = 0; i < 6; i++) { const x = 136 + i * 123; G.r(x, 626, 113, 88, c.up, c.line, 1); }
+    for (let i = 0; i < 8; i++) G.r(136 + i * 92, 746, 82, 78, c.mid, c.line, 1);
+    /* the needles, touching down */
+    dieProbes.forEach((pr, i) => { G.l(pr.p, c.hi, 1.6); const e = pr.p[1]; G.c(e[0], e[1], 5, c.warm); });
+    G.label('cores', 136, 126); G.label('probes', 40, 150); G.label('pads', 500, 18, 'center'); G.label('scribe', 990, 18, 'right');
+  }
+};
+
+export const SCENES = { building, rack, board, chip, phone, phoneboard, soc, car, ecu, mcu, fab, bay, scanner, wafer, die, block, gate, switch: swtch, atom };
 export const partsOf = id => SCENES[id].parts;

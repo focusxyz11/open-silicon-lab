@@ -34,6 +34,12 @@ export const DEPTHS = {
   car: { m: 5, portal: [760, 500, 36] },
   ecu: { m: 0.18, portal: [455, 425, 40] },
   mcu: { m: 0.007, portal: [176, 236, 52] },
+  /* a chip factory: the way every chip is made (the wafer's portal follows your chip's size) */
+  fab: { m: 200, portal: [430, 420, 90] },
+  bay: { m: 20, portal: [120, 565, 250] },
+  scanner: { m: 4, portal: [642, 672, 176] },
+  wafer: { m: 0.32, portal: [478, 478, 44] },
+  die: { m: 0.015, portal: [190, 190, 70] },
   /* shared by every chip */
   block: { m: 1e-5, portal: [300, 438, 44] },
   gate: { m: 3e-7, portal: [365, 660, 90] },
@@ -44,7 +50,8 @@ export const SHARED = ['block', 'gate', 'switch', 'atom'];
 export const WORLDS = [
   { id: 'datacentre', depths: ['building', 'rack', 'board', 'chip', ...SHARED] },
   { id: 'phone', depths: ['phone', 'phoneboard', 'soc', ...SHARED] },
-  { id: 'car', depths: ['car', 'ecu', 'mcu', ...SHARED] }
+  { id: 'car', depths: ['car', 'ecu', 'mcu', ...SHARED] },
+  { id: 'factory', depths: ['fab', 'bay', 'scanner', 'wafer', 'die', ...SHARED] }
 ];
 
 /* hue: the thread's colour. A thread is recognised by colour and by its words, never by a name. */
@@ -73,12 +80,18 @@ export const STOPS = {
   /* a car */
   'fail.car': ['controllers'], 'divide.car': ['controllers', 'wiring'], 'know.car': ['controllers'], 'life.car': ['sensors'],
   'fail.ecu': ['mcu'], 'open.ecu': ['mcu', 'connector'], 'divide.ecu': ['drivers', 'mcu'],
-  'think.mcu': ['cores'], 'scale.mcu': ['flash', 'cores'], 'make.mcu': ['periph']
+  'think.mcu': ['cores'], 'scale.mcu': ['flash', 'cores'], 'make.mcu': ['periph'],
+  /* a chip factory */
+  'make.fab': ['cleanroom'], 'scale.fab': ['cleanroom', 'power'], 'open.fab': ['cleanroom'],
+  'know.bay': ['people'], 'fail.bay': ['inspect'], 'divide.bay': ['etch', 'deposit', 'inspect', 'track'],
+  'make.scanner': ['source'], 'scale.scanner': ['mirrors', 'mask'], 'open.scanner': ['source', 'mirrors', 'mask', 'stage'],
+  'fail.wafer': ['defects'], 'make.wafer': ['dies'], 'divide.wafer': ['dies'],
+  'fail.die': ['probes'], 'idea.die': ['cores'], 'make.die': ['pads']
 };
 /* Stops whose words list real directions people are exploring (stop.<key>.tried, a list). */
 export const TRIED = ['strange.chip', 'strange.gate', 'strange.switch', 'strange.atom', 'limit.chip', 'limit.gate', 'limit.atom', 'fail.building', 'fail.board', 'fail.gate',
   'idea.block', 'idea.gate', 'make.chip', 'make.switch', 'make.atom', 'know.switch', 'open.chip', 'open.block', 'divide.chip', 'divide.block', 'life.block', 'life.switch', 'scale.switch',
-  'life.phone', 'divide.phone', 'idea.soc', 'life.car', 'fail.ecu'];
+  'life.phone', 'divide.phone', 'idea.soc', 'life.car', 'fail.ecu', 'make.fab', 'scale.scanner', 'divide.wafer', 'make.die'];
 
 /* Real chips that passed their checks and still failed, from the earlier site. stop: where it shows. */
 export const CASES = [
@@ -96,15 +109,19 @@ export const FIGURES = {
   'life.building': ['dc-electricity', 'brain-power'], 'limit.rack': ['turing-1936'], 'make.chip': ['euv-wavelength'],
   'fail.building': ['sdc-rate'], 'divide.block': ['energy-moving-data'], 'make.switch': ['fab-steps'],
   'idea.soc': ['riscv-rva23'], 'fail.car': ['car-life'], 'divide.car': ['chips-per-car'], 'know.car': ['car-shortage-2021'],
-  'fail.ecu': ['car-ppm'], 'scale.mcu': ['legacy-auto'], 'make.mcu': ['chip-units']
+  'fail.ecu': ['car-ppm'], 'scale.mcu': ['legacy-auto'], 'make.mcu': ['chip-units'],
+  'make.fab': ['fab-build-time'], 'scale.fab': ['fab-module-cost'], 'open.fab': ['wafer-space-run'], 'know.bay': ['workforce'], 'divide.bay': ['fab-cycle-time'],
+  'make.scanner': ['euv-wavelength', 'euv-source'], 'scale.scanner': ['high-na-hvm', 'high-na-price'], 'idea.die': ['design-cost-2nm']
 };
 
 /* Your chip (src/engines/chip.js): a few settings that every "Try it" changes and every depth shows.
    TRIES: the stops where a setting can be changed, inside that stop's question.
-   SHOWS: what each depth shows of your chip, and which settings it depends on (words: chip.show.<depth>). */
-export const TRIES = { 'fail.chip': 'clock', 'life.phone': 'clock', 'scale.switch': 'gen', 'scale.soc': 'gen', 'scale.mcu': 'gen' };
+   SHOWS: what each depth shows of your chip, and which settings it depends on (words: chip.show.<depth>).
+   "build" is a try of its own: it scrubs through how the switch is made, and changes no setting. */
+export const TRIES = { 'fail.chip': 'clock', 'life.phone': 'clock', 'scale.switch': 'gen', 'scale.soc': 'gen', 'scale.mcu': 'gen', 'fail.wafer': 'size', 'divide.wafer': 'size', 'make.switch': 'build' };
+const ALL = ['clock', 'gen', 'size'];
 export const SHOWS = {
-  building: ['clock', 'gen'], rack: ['clock', 'gen'], board: ['clock', 'gen'], chip: ['clock', 'gen'],
-  phone: ['clock', 'gen'], phoneboard: ['clock', 'gen'], soc: ['clock', 'gen'], mcu: ['clock', 'gen'],
+  building: ALL, rack: ALL, board: ALL, chip: ALL, phone: ALL, phoneboard: ALL, soc: ['clock', 'gen'], mcu: ['clock', 'gen'],
+  fab: ['gen'], bay: ['gen'], scanner: ['gen'], wafer: ['gen', 'size'], die: ['gen', 'size'],
   block: ['gen'], gate: ['clock', 'gen'], switch: ['gen'], atom: ['gen']
 };

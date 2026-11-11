@@ -1,6 +1,6 @@
 # Open Silicon Lab — notes for Claude
 
-An open-source lab for chips. The site is one thing: a continuous dive from a data centre, a phone or a car (three worlds) down to silicon atoms, meeting in four shared depths, with open questions running through it as threads. Static site: plain ES modules, one stylesheet, one file of words. No framework, no build step for development.
+An open-source lab for chips. The site is one thing: a continuous dive from a data centre, a phone, a car or a chip factory (four worlds) down to silicon atoms, meeting in four shared depths, with open questions running through it as threads. Static site: plain ES modules, one stylesheet, one file of words. No framework, no build step for development.
 
 ## Who it is for
 Learners new to chips with basic hardware knowledge, up to engineers. Plain words first; explain any term the first time.
