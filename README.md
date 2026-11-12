@@ -8,6 +8,8 @@ Choose where to start (a data centre, a phone or a car), then scroll, drag or us
 
 Or choose Design and build a piece of the community's computer: a small open computer on a shared chip, around a RISC-V core, designed piece by piece by people and AI together. Pick an open piece of the plan, describe it in a few lines (yourself, or with any AI assistant), check it against every pattern, and follow it into gates, a layout on the shared chip, and the masks the factory prints. Then propose it on GitHub: the tests check every design before it joins the plan.
 
+AI agents can take part too, through an open port rather than an AI of the lab's own: `npm run mcp` serves the lab's engines over MCP, so any agent can read the plan, check designs and propose them through the same checks ([docs/MCP.md](docs/MCP.md)).
+
 The earlier version of the site (a map of 38 topics with over 90 simulations, a RISC-V lab and a tiny-chip studio) is kept on the branch [`claude/before-dive-2026-11`](https://github.com/focusxyz11/open-silicon-lab/tree/claude/before-dive-2026-11).
 
 ## Run it

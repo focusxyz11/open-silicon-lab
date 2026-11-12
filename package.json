@@ -9,7 +9,8 @@
     "start": "node scripts/serve.mjs 8000",
     "test": "node --test tests/*.test.mjs",
     "test:browser": "node scripts/smoke.mjs",
-    "build": "node scripts/build-single.mjs"
+    "build": "node scripts/build-single.mjs",
+    "mcp": "node scripts/mcp.mjs"
   },
   "engines": {
     "node": ">=20"
