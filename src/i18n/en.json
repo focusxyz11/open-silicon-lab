@@ -271,7 +271,7 @@
  "depth.soc.name": "Chip",
  "depth.soc.see": "The phone's chip: processor cores, graphics, an AI unit and a camera unit, each in its own district.",
  "depth.car.name": "Car",
- "depth.car.see": "A car seen from above: dozens of small computers, joined by wires, with sensors looking out.",
+ "depth.car.see": "An electric car, roof and near side cut away: control units everywhere, joined by wires, with sensors looking out. The one in the footwell has its lid off.",
  "depth.ecu.name": "Control unit",
  "depth.ecu.see": "One control unit, the lid off: a small chip that decides, and big parts that switch real power.",
  "depth.mcu.name": "Chip",
@@ -1729,5 +1729,9 @@
  "tab.plan": "The shared plan",
  "tab.partner": "Work with an AI",
  "tab.factory": "At the factory",
- "tab.shared": "The shared chip"
+ "tab.shared": "The shared chip",
+ "part.car.battery": "battery",
+ "part.car.motor": "motor",
+ "what.car.battery": "The floor of the car is its battery: thousands of cells in modules, watched cell by cell by a control unit of its own.",
+ "what.car.motor": "The electric motor that turns the back wheels, and the inverter beside it, whose power chips switch hundreds of amps many thousands of times a second."
 }
