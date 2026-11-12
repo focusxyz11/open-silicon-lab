@@ -12,11 +12,14 @@ src/app/journey.js      the journey's stations as machines, the steps each plays
 src/app/draw.js         small drawing helpers both use
 src/app/solid.js        solids in 2.5D (boxes, cylinders, prisms, cutaways, shadows, four tones), the one way volume is drawn
 src/app/journey3d.js    the journey in 3D (three.js): the plants and the factory's bay, every station's machines, the camera
+src/app/map.js          the world around the line: a chip's whole trip on a map, from design to where it is used
 src/app/lens3d.js       the lens: while a machine works, your wafer's surface magnified beside it, showing what the machine does
 src/vendor/three.min.js three.js, loaded only when the journey is first opened
 src/engines/chip.js     your chip: its settings and what follows from them, relative to a starting chip (tested)
+src/engines/supply.js   what stops in a chip's trip when places stop (tested)
 src/engines/weave.js    pure logic: the current world, the camera, sizes, threads, when a core question appears (tested)
 src/data/weave.js       the data: worlds, depths and portals, threads, stops
+src/data/world.js       the map: places, and each kind of chip's trip through them, joined to the line's stations
 src/data/facts.json     sourced figures, loaded at start (src/main.js); FIGURES and CASES in weave.js point to them
 src/core/i18n.js        words: t('name'), plurals, numbers, dates
 src/i18n/en.json        every word on screen
@@ -51,4 +54,8 @@ Every word on screen lives in `src/i18n/en.json` and is read with `t('name')`. `
 - **The lens** (lens3d.js): while a step works on your wafer (`LENS` maps step to picture), a block of its surface, magnified, floats beside the machine, drawn in its own pass and tied to the place in the machine by two lines. It is the band's slice in 3D (the same levels, `flow().sl` and `.a`) plus what moves: drops, gas, light through the mask, ions, atoms fired in, copper, the needle, solder and the package; at the start, atoms joining the crystal in rows. lens3d.js has no words: it says where its layers are on screen; journey.js writes their names (`slice.*`), what the lens shows (`lens.*`), and the way down. Tapping it dives into what it shows (`DIVES`).
 - **Names**: the part the step happens in is named in the picture; the tag button beside pause names every part.
 - **Ways down and back**: `DIVES` (station to a depth of the factory's dive) and `MADE` (a depth of any dive back to the station where that part is made) join the journey and the dives both ways.
+
+## The world around the line
+
+The globe in the journey's band (and "Where in the world?" in the card at any station, or "Where was it made?" at the top of each dive) opens the map: it zooms out from your station to the whole trip of a chip, for the three kinds of chip the dives start from. Each step of the trip (design, wafers, tools, fab, memory, package, assembly, use) is drawn where it happens (`ROUTES` in `src/data/world.js`), with crates moving between places like the pods on the line; your wafer's step is marked. Tapping a place shows what happens there and who does it, joins it to its station on the line, and lets you stop it: `src/engines/supply.js` says which step stops (nothing else can do it), which is strained (others take some of the work), and which waits. The card then asks the question behind it and shows the figures that bear on it. From the earlier site's supply-chain map, made universal.
 

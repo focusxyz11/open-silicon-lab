@@ -7,6 +7,7 @@ import { t } from '../core/i18n.js';
 import { DEPTHS, THREADS, partWord } from '../data/weave.js';
 import { N, IDS, clampZ, frames, lineFrames, isLine, stop } from '../engines/weave.js';
 import { SCENES, partsOf } from './scenes.js';
+import { drawMap } from './map.js';
 import { drawJourney, stepStart, setParts3 } from './journey.js';
 
 export const reduced = () => !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
@@ -210,10 +211,36 @@ export function createWorld(cv, on) {
     return { F, pi, ptr };
   }
 
+  /* the world around the line (map.js): it opens over the line, zooming out from where your station is;
+     once open, the line is not drawn under it */
+  let mapO = null, mapLast = null, mapK = 0, mapT = 0, mapHits = null, mapBox = null;
+  function renderMap(tm, b, dt, full) {
+    if (full) { if (J3) J3.canvas.style.display = 'none'; ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.fillStyle = col.bg; ctx.fillRect(0, 0, W * dpr, H * dpr); }
+    const k = b.B / 1000, left = b.cx - b.B / 2, top = b.cy - b.B / 2, below = (H - inset.b - (top + b.B)) / k;
+    ctx.save(); ctx.setTransform(dpr * k, 0, 0, dpr * k, dpr * left, dpr * top); ctx.beginPath(); ctx.rect(-left / k, -top / k, W / k, H / k); ctx.clip();
+    Object.assign(G, { s: k, k: 1, primary: true, t: tm, col, base: 1, box: b.B });
+    mapHits = drawMap(G, Object.assign({}, mapLast, { k: mapK, dt, below: b.below ? below : 0 })); mapBox = { k, left, top };
+    ctx.restore();
+  }
+  const mapTap = e => {
+    if (!mapHits || !mapBox) return;
+    const r = cv.getBoundingClientRect(), x = (e.clientX - r.left - mapBox.left) / mapBox.k, y = (e.clientY - r.top - mapBox.top) / mapBox.k, near = (p, R) => Math.hypot(p.x - x, p.y - y) <= R;
+    const st = mapHits.steps.find(p => near(p, 22)); if (st) { on.mapStep && on.mapStep(st.i); return; }
+    let best = null; mapHits.sites.forEach(p => { const d = Math.hypot(p.x - x, p.y - y); if (d < 26 && (!best || d < best.d)) best = { id: p.id, d }; });
+    if (best) on.site && on.site(best.id);
+  };
   function render(now) {
     const tm = reduced() ? 3 : Math.max(0, (now - t0) / 1000), b = box();
     if (J3 && !isLine()) { J3.canvas.style.display = 'none'; setParts3(null); lensBox = null; }
-    if (isLine()) { const L = renderLine(tm, b); overlays(tm, L.pi, L.ptr); return; }
+    if (isLine()) {
+      const dt = Math.min(0.1, Math.max(0, tm - mapT)); mapT = tm;
+      mapK = mapO ? (reduced() ? 1 : Math.min(1, mapK + dt / 0.8)) : (reduced() ? 0 : Math.max(0, mapK - dt / 0.5));
+      if (mapK >= 1) { renderMap(tm, b, dt, true); return; }
+      const L = renderLine(tm, b); overlays(tm, L.pi, L.ptr);
+      if (mapK > 0 && mapLast) renderMap(tm, b, dt, false);
+      return;
+    }
+    mapK = 0;
     const F = frames(Z, b.B, b.cx, b.cy), pi = F.f < 0.5 ? F.i : F.i + 1;
     ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1; ctx.fillStyle = col.bg; ctx.fillRect(0, 0, W * dpr, H * dpr);
     if (F.prev) {
@@ -329,13 +356,13 @@ export function createWorld(cv, on) {
   /* on the line, moving sideways (drag, swipe, horizontal scroll) moves along it, and letting go settles on a station */
   let settleT = null;
   const settleLine = () => { clearTimeout(settleT); settleT = setTimeout(() => { if (isLine() && !drag && !fly && Math.abs(Z - Math.round(Z)) > 0.001) api.flyTo(Math.round(Z)); }, 260); };
-  cv.addEventListener('wheel', e => { e.preventDefault(); const d = isLine() && Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY; setZ(Z + d * (e.deltaMode ? 0.03 : 0.0016)); if (isLine()) settleLine(); }, { passive: false });
+  cv.addEventListener('wheel', e => { e.preventDefault(); if (isLine() && mapO) return; const d = isLine() && Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY; setZ(Z + d * (e.deltaMode ? 0.03 : 0.0016)); if (isLine()) settleLine(); }, { passive: false });
   let drag = null;
-  cv.addEventListener('pointerdown', e => { drag = { y: e.clientY, x: e.clientX, z: Z, moved: false }; try { cv.setPointerCapture(e.pointerId); } catch (x) { /* no capture */ } });
+  cv.addEventListener('pointerdown', e => { drag = { y: e.clientY, x: e.clientX, z: Z, moved: false, map: isLine() && !!mapO }; try { cv.setPointerCapture(e.pointerId); } catch (x) { /* no capture */ } });
   cv.addEventListener('pointermove', e => {
     if (drag) {
       if (Math.abs(e.clientY - drag.y) + Math.abs(e.clientX - drag.x) > 6) drag.moved = true;
-      if (drag.moved) setZ(isLine() ? drag.z + (drag.x - e.clientX) / (box().B * 1.06) : drag.z + (drag.y - e.clientY) * 0.0062);
+      if (drag.moved && !drag.map) setZ(isLine() ? drag.z + (drag.x - e.clientX) / (box().B * 1.06) : drag.z + (drag.y - e.clientY) * 0.0062);
       return;
     }
     const h = hitAt(e), id = h ? h.id : null, pt = id ? null : partAt(e);
@@ -349,12 +376,13 @@ export function createWorld(cv, on) {
     const r = cv.getBoundingClientRect(), x = (e.clientX - r.left - jbox.left) / jbox.k, y = (e.clientY - r.top - jbox.top) / jbox.k, inn = h => h && x >= h.x - 4 && x <= h.x + h.w + 4 && y >= h.y - 6 && y <= h.y + h.h + 6;
     if (inn(jhits.pause)) { paused = !paused; return true; }
     if (inn(jhits.names)) { names = !names; return true; }
+    if (inn(jhits.map)) { on.map && on.map(); return true; }
     /* the lens: tap it to dive down into what it shows */
     if (inn(jhits.lens)) { on.lens && on.lens(jbox.near); return true; }
     const ch = jhits.chips.find(inn); if (!ch) return false;
     stay = { i: jbox.near, t: lastTm - stepStart(IDS[jbox.near], ch.i) }; paused = false; return true;
   };
-  const end = e => { if (!drag) return; const tap = !drag.moved; drag = null; if (tap && e.type === 'pointerup' && stepTap(e)) return; if (tap && e.type === 'pointerup') { const h = hitAt(e); if (h) on.pick && on.pick(h.id); else { const pt = partAt(e); if (pt && view) { hotPart = pt.key; on.part && on.part(view.pi, pt.key); } } } if (!tap && isLine()) settleLine(); };
+  const end = e => { if (!drag) return; const tap = !drag.moved, onMap = drag.map; drag = null; if (onMap) { if (tap && e.type === 'pointerup') mapTap(e); return; } if (tap && e.type === 'pointerup' && stepTap(e)) return; if (tap && e.type === 'pointerup') { const h = hitAt(e); if (h) on.pick && on.pick(h.id); else { const pt = partAt(e); if (pt && view) { hotPart = pt.key; on.part && on.part(view.pi, pt.key); } } } if (!tap && isLine()) settleLine(); };
   cv.addEventListener('pointerup', end); cv.addEventListener('pointercancel', end);
   cv.addEventListener('keydown', e => {
     const d = Math.round(Z);
@@ -377,6 +405,9 @@ export function createWorld(cv, on) {
       fly = { from: Z, to: d, t0: performance.now(), ms: Math.min(5200, isLine() ? 1000 + Math.abs(d - Z) * 1300 : 500 + Math.abs(d - Z) * 1150) };
     },
     setThread(th) { thread = th; },
+    /* the map: o (see map.js) to open or update it, null to close it */
+    setMap(o) { mapO = o; if (o) mapLast = o; },
+    get mapOpen() { return !!mapO; },
     setAnchor(p) { anchor = p; },
     setInset(i) { inset = i; },
     retheme() { col = palette(); },
