@@ -52,6 +52,7 @@ export function start(facts) {
   /* your design as built now: for the core, with your ALU slice inside */
   const cur = () => buildDesign(Object.assign({}, S.design, { slice: S.codes.alu || starterOf('alu'), defect: S.defect }));
   setDesign(cur()); setMine(S.done, S.by);
+  if (!worldOf(WORLD).line && !worldOf(WORLD).hidden) S.lastDive = WORLD;
   const save = () => { try { localStorage.setItem(KEY, JSON.stringify({ world: WORLD, z: Math.round(world.z * 100) / 100, thread: S.thread, seen: S.seen, chip: S.chip, from: S.from, design: S.design, by: S.by, done: S.done, codes: S.codes })); } catch (e) { /* storage unavailable */ } };
 
   const depthName = d => t('depth.' + IDS[d] + '.name');
@@ -147,6 +148,7 @@ export function start(facts) {
     if (id === WORLD && at == null) return;
     const target = worldOf(id), j = at != null && target ? target.depths.indexOf(at) : -1, z = j >= 0 ? j : zIn(id, world.z);
     setWorld(id); buildRail(); markWorld();
+    if (!isLine() && !worldOf(WORLD).hidden) S.lastDive = id;
     if (S.map && !isLine()) { S.map = null; world.setMap(null); }
     world.setZ(z); see(Math.round(z)); card(); rail(); save();
   }
@@ -249,6 +251,9 @@ export function start(facts) {
   };
 
   /* the top of each dive, and its chip, lead to that chip's trip around the world */
+  /* where a depth of a dive is built in the studio, and where a studio station is seen inside a real chip */
+  const BUILT = { chip: 'need', soc: 'need', mcu: 'need', block: 'layout', gate: 'gates', switch: 'gates' };
+  const SEEN_IN = { need: 'chip', gates: 'gate', layout: 'block' };
   const TRIP = { building: 'datacentre', rack: 'datacentre', chip: 'datacentre', phone: 'phone', soc: 'phone', car: 'car', mcu: 'car' };
   /* the ways on from here: down from a station, out from the last one, back to the line from the factory's dive */
   const ways = d => {
@@ -263,6 +268,9 @@ export function start(facts) {
     if (isStudio()) { if (id === 'masks') out.push(['back', 'journey', 'print', t('design.toFab', { station: t('depth.print.name') })]); }
     else if (isLine()) { if (id === 'print') out.push(['back', 'design', 'masks', t('design.fromDesign', { station: t('depth.masks.name') })]); out.push(['map', '', '', t('map.open')]); }
     else if (trip) out.push(['map', trip, '', t('map.fromDive')]);
+    /* one world: the dive's chip, block and gate are what the studio builds; the studio's gates and layout are inside every chip */
+    if (!isLine() && !worldOf(WORLD).hidden && BUILT[id]) out.push(['back', 'design', BUILT[id], t('here.go', { station: t('depth.' + BUILT[id] + '.name') })]);
+    if (isStudio() && SEEN_IN[id]) out.push(['back', S.lastDive || 'datacentre', SEEN_IN[id], t('here.see', { depth: t('depth.' + SEEN_IN[id] + '.name'), world: t('world.' + (S.lastDive || 'datacentre') + '.name') })]);
     if (!out.length) return '';
     return '<section class="ways"><p class="code">' + t(isStudio() ? 'ui.waysOn' : isLine() && EXITS[id] ? 'ui.waysOut' : isLine() ? 'ui.waysDown' : worldOf(WORLD).hidden ? 'ui.waysBack' : 'ui.waysMade') + '</p><div class="moves">' +
       out.map(o => o[0] === 'map' ? '<button type="button" class="btn" data-map="' + o[1] + '">' + esc(o[3]) + '</button>' :
@@ -323,6 +331,15 @@ export function start(facts) {
     h += '<p class="small muted">' + t('build.who') + '</p><div class="shows">' + ['you', 'ai', 'both'].map(k => '<button type="button" class="chipgo" data-by="' + k + '" aria-pressed="' + (S.by === k) + '">' + esc(t('build.by.' + k)) + '</button>').join('') + '</div>';
     return h + '</section>';
   };
+  /* at a depth of a dive: what the community and you have built of a thing like this */
+  function buildHere(id) {
+    const B = cur(), P = plan(S.done), pr = progress(P), job = t('design.proj.' + B.p + '.t');
+    const types = {}; (B.M ? B.M.cells : []).forEach(c => { types[c.type] = (types[c.type] || 0) + 1; });
+    const list = Object.entries(types).map(([k, n]) => k.replace(/2$/, '') + ' × ' + n).join(', ');
+    const n = { built: pr.built, total: pr.total, job, cells: B.M ? B.M.cells.length * (B.p === 'core' ? 32 : 1) : 0, list: list || '—', transistors: (B.transistors || 0).toLocaleString() };
+    const key = id === 'block' ? 'here.block' : id === 'gate' ? 'here.gate' : id === 'switch' ? 'here.switch' : 'here.chip';
+    return '<section class="fab"><p class="code">' + t('here.title') + '</p><p class="small">' + esc(t(key, n)) + '</p></section>';
+  }
   /* what the factory will do to it: at every station, the design meets the line it will be made on */
   function fabLens(id, B) {
     if (!B.M && B.p !== 'core') return '';
@@ -411,6 +428,7 @@ export function start(facts) {
     /* on the line: which building you are in, and whether this machine is part of the loop every layer goes round */
     if (isLine() && PLANTS[IDS[d]]) h += '<p class="small plant">' + esc(t('plant.' + PLANTS[IDS[d]])) + (LOOP.includes(IDS[d]) ? ' · ' + esc(t('ui.inLoop', { layers: model(S.chip).layers })) : '') + '</p>';
     if (isStudio()) h += designCard(d);
+    else if (!isLine() && !worldOf(WORLD).hidden && BUILT[IDS[d]]) h += buildHere(IDS[d]);
     /* at the factory's Test station: how well its test patterns would catch faults in your own design */
     if (isLine() && IDS[d] === 'test') { const B = cur(); if (B.M) h += '<p class="small plant">' + esc(t('design.testYours', { vectors: B.vectors, caught: Math.round(B.coverage * 100) })) + '</p>'; }
     h += partCard(d);
