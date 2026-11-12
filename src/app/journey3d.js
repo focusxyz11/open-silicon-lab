@@ -14,6 +14,7 @@
 import * as THREE from '../vendor/three.min.js';
 import { PLANTS } from '../data/weave.js';
 import { JOURNEY, flow, chipNow } from './journey.js';
+import { GROUPS_AT } from '../engines/chip.js';
 import { createLens, LENS } from './lens3d.js';
 const chip3 = () => chipNow();
 
@@ -622,8 +623,21 @@ export function createJourney3D(host, before) {
     const others = [70, -70].map(x => { const q = makePod(M, false); q.position.copy(V(x, 30, 94)); b.dyn.add(q); return q; });
     const dock = J.home === 'tray' ? makeTray(M, false) : makePod(M, false); dock.position.copy(V(0, 30, 94)); b.dyn.add(dock); others.forEach(q => { q.visible = !extra.noPorts; });
     if (J.nowafer || extra.noPorts) dock.visible = false;
+    /* in the loop: shelves under the overhead track, on both sides of the machine's ports, where pods wait
+       their turn (as in real fabs); how many wait comes from the fab you run (src/engines/fab.js, through
+       your chip's model) */
+    let queue = null;
+    if (GROUPS_AT[id]) {
+      const D = 46, H = 238;
+      [[-440, -150], [150, 440]].forEach(([x0, x1]) => {
+        b.box(x0, D, H, x1 - x0, 64, 4, M.metal);
+        [x0, x1 - 4].forEach(x => b.box(x, D + 30, H, 4, 4, 336 - H, M.rail, false));
+      });
+      b.part('queue', -440, D, H - 40, 290, 64, 44); b.part('queue', 150, D, H - 40, 290, 64, 44);
+      queue = []; for (let k = 0; k < 12; k++) { const left = k % 2 === 0, j = Math.floor(k / 2), q = makePod(M, false); q.scale.setScalar(0.92); q.position.copy(V(left ? -175 - j * 48 : 175 + j * 48, D + 32, H + 4)); q.visible = false; b.dyn.add(q); queue.push(q); }
+    }
     const group = b.finish(i * S); group.visible = false; scene.add(group);
-    const st = { id, i, group, parts: b.parts, cfg, extra, arms, wafer, mineW, chip, dock, others };
+    const st = { id, i, group, parts: b.parts, cfg, extra, arms, wafer, mineW, chip, dock, others, queue };
     built.set(i, st); return st;
   }
 
@@ -652,6 +666,8 @@ export function createJourney3D(host, before) {
       if (f.p && !f.home) { const m = f.chip ? ch : w; m.visible = true; m.material = f.chip ? M.chip : mine ? M.wafer : M.waferOther; m.position.copy(V(f.p[0], f.p[1], f.p[2])); }
       s.dock.visible = !mine && !s.cfg.nowafer && !s.extra.noPorts;
       if (s.extra.update) s.extra.update(f, mine, o.tm);
+      /* the queue: more pods wait where the fab is busier; the line flickers one in and one out */
+      if (s.queue) { const Fm = chipNow().M, q = Fm && Fm.fab && Fm.fab[s.id]; const n = q ? Math.max(0, Math.min(12, Math.round((q.wait / q.work) * 2 + 0.4 * Math.sin(o.tm * 0.7 + s.i)))) : 0; s.queue.forEach((p, k) => { p.visible = k < n; }); }
       if (mine && o.run != null && o.dist < 0.02) focus = { s, f };
     });
     /* your pod: on the track while you travel, lowered onto the machine's door when you stop */

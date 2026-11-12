@@ -14,7 +14,7 @@ test('the starting chip is the baseline: power 1, every signal on time', () => {
   assert.ok(Math.abs(m.power - 1) < 1e-9);
   assert.equal(m.late, 0);
   assert.equal(changed(START), false);
-  assert.deepEqual(normal({ clock: 7, gen: 99, size: -3 }), { clock: START.clock, gen: GENS - 1, size: 0 });
+  assert.deepEqual(normal({ clock: 7, gen: 99, size: -3, load: 9 }), { clock: START.clock, gen: GENS - 1, size: 0, load: START.load + 2 });
   assert.deepEqual(normal(undefined), START);
 });
 
@@ -75,16 +75,32 @@ test('on the wafer, a bigger chip fits fewer times, comes out good less often an
 });
 
 test('every challenge can be met, none by one setting alone, and each is shown at stops with a try', async () => {
-  const { CHALLENGES, CLOCKS, GENS, SIDES, START, model } = await import('../src/engines/chip.js');
-  const all = []; for (const clock of CLOCKS) for (let gen = 0; gen < GENS; gen++) for (let size = 0; size < SIDES.length; size++) all.push({ clock, gen, size });
+  const { CHALLENGES, CLOCKS, GENS, SIDES, LOADS, START, model } = await import('../src/engines/chip.js');
+  const all = []; for (const clock of CLOCKS) for (let gen = 0; gen < GENS; gen++) for (let size = 0; size < SIDES.length; size++) for (let load = 0; load < LOADS.length; load++) all.push({ clock, gen, size, load });
   for (const c of CHALLENGES) {
     assert.ok(EN['chal.' + c.id + '.goal'] && EN['chal.' + c.id + '.hint'], c.id + ' has no words');
     assert.ok(all.some(s => c.met(model(s))), c.id + ' can never be met');
     assert.equal(c.met(model(START)), false, c.id + ' is met by the starting chip');
-    for (const k of ['clock', 'gen', 'size']) {
-      const one = all.filter(s => ['clock', 'gen', 'size'].every(o => o === k || s[o] === START[o]));
+    for (const k of ['clock', 'gen', 'size', 'load']) {
+      const one = all.filter(s => ['clock', 'gen', 'size', 'load'].every(o => o === k || s[o] === START[o]));
       if (c.needs.length > 1 && c.needs.includes(k)) assert.ok(!one.some(s => c.met(model(s))), c.id + ' can be met by ' + k + ' alone');
     }
     for (const key of c.at) assert.ok(TRIES[key], c.id + ': ' + key + ' has no try');
   }
 });
+
+test('the fab you run: fuller is cheaper but slower, the scanners set the pace, and the time matches the industry', async () => {
+  const { LOADS, model, START } = await import('../src/engines/chip.js');
+  let lastDays = 0, lastCost = Infinity;
+  for (let load = 0; load < LOADS.length; load++) {
+    const m = model(Object.assign({}, START, { load }));
+    assert.ok(m.days > lastDays, 'a fuller fab should be slower');
+    assert.ok(m.cost < lastCost, 'and each wafer cheaper');
+    assert.equal(m.slow, 'print', 'the scanners are the busiest');
+    if (load >= START.load) assert.ok(m.fab.print.wait >= Math.max(...Object.values(m.fab).map(f => f.wait)) - 1e-9, 'and, once the fab is busy, the longest wait');
+    lastDays = m.days; lastCost = m.cost;
+  }
+  const s = model(START);
+  assert.ok(s.perLayer >= 1 && s.perLayer <= 1.5, 'about 1 to 1.5 days a layer at 85% (fact fab-cycle-time): ' + s.perLayer);
+});
+

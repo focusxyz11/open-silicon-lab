@@ -7,6 +7,8 @@
      switch's length to about 0.7x, so its area halves and twice as many fit in the same space.
    - size: how large the chip is, as millimetres along each side (SIDES); bigger holds more cores and
      uses more power, and on the wafer fewer fit and more of them are hit by a defect.
+   - load: how full the fab that makes it runs (LOADS), from the earlier site's "a fab you run"
+     (src/engines/fab.js): fuller makes each wafer cheaper, but every wafer waits longer at every machine.
 
    What follows from them:
    - timing: the slowest path through the logic must finish within one tick. Smaller switches are faster;
@@ -14,16 +16,19 @@
    - wall: how much more current leaks through the thinner walls of the same area of switches.
    - power: switching costs energy every tick (more ticks, more switches, a little more voltage to go
      faster), and thinner walls let current leak even when nothing switches. */
+import { line, capacity, summary } from './fab.js';
 
 export const CLOCKS = [0.5, 1, 1.5, 2, 3];
 export const GENS = 5;
 export const SIDES = [6, 10, 15, 20, 26];
-export const START = { clock: 1, gen: 2, size: 2 };
-export const SETTINGS = ['clock', 'gen', 'size'];
+export const LOADS = [0.6, 0.75, 0.85, 0.92, 0.97];
+export const START = { clock: 1, gen: 2, size: 2, load: 2 };
+export const SETTINGS = ['clock', 'gen', 'size', 'load'];
 
 const step = (v, n, d) => { const x = Math.round(+v); return Number.isFinite(x) ? Math.max(0, Math.min(n - 1, x)) : d; };
 const clampClock = c => (CLOCKS.includes(+c) ? +c : START.clock);
-export const normal = c => ({ clock: clampClock(c && c.clock), gen: step(c && c.gen != null ? c.gen : START.gen, GENS, START.gen), size: step(c && c.size != null ? c.size : START.size, SIDES.length, START.size) });
+export const normal = c => ({ clock: clampClock(c && c.clock), gen: step(c && c.gen != null ? c.gen : START.gen, GENS, START.gen), size: step(c && c.size != null ? c.size : START.size, SIDES.length, START.size),
+  load: step(c && c.load != null ? c.load : START.load, LOADS.length, START.load) });
 export const changed = c => { const n = normal(c); return SETTINGS.some(k => n[k] !== START[k]); };
 
 /* The cores that fit: 12 on the starting chip, more with smaller switches and a bigger chip, as a grid
@@ -72,8 +77,15 @@ export const dieSquare = size => { const side = SIDES[step(size, SIDES.length, S
 /* build steps, relative to the starting chip: finer switches need more layers and more passes */
 const STEPS = [0.6, 0.8, 1, 1.3, 1.6];
 
+/* the fab: its line of tool groups, and how each station of the journey maps onto them */
+const LINE = line();
+export const GROUPS_AT = { clean: ['clean'], deposit: ['depo'], print: ['litho'], etch: ['etch'], implant: ['implant', 'anneal'], wires: ['cmp', 'metro'] };
+const GROUP_STATION = { depo: 'deposit', litho: 'print', etch: 'etch', clean: 'clean', implant: 'implant', anneal: 'implant', cmp: 'wires', metro: 'wires' };
+/* a fab's costs are mostly fixed: a wafer made in a fuller fab carries less of them (illustrative: 60% fixed) */
+const FIXED = 0.6;
+
 export function model(c) {
-  const { clock, gen, size } = normal(c);
+  const { clock, gen, size, load: li } = normal(c);
   const side = SIDES[size], areaChip = (side / SIDES[START.size]) * (side / SIDES[START.size]);
   const s = Math.pow(0.7, gen - START.gen);           /* length of a switch, relative */
   const area = s * s;                                 /* area of a switch, relative */
@@ -89,13 +101,19 @@ export function model(c) {
   /* on the wafer */
   const hit = hits(size, gen), total = hit.length, good = hit.filter(h => !h).length;
   const steps = STEPS[gen], start = START_WAFER();
-  const cost = (steps / good) / (STEPS[START.gen] / start.good);   /* each wafer costs more with more steps */
+  const load = LOADS[li], layers = Math.round(62 * steps);   /* about a day in the factory for each, as in facts.json fab-cycle-time */
+  const F = summary(LINE, layers, load * capacity(LINE, layers));
+  const full = 1 - FIXED + FIXED * LOADS[START.load] / load;
+  const cost = full * (steps / good) / (STEPS[START.gen] / start.good);   /* each wafer costs more with more steps */
+  /* each station of the line: how busy it is, and how long a wafer waits there per visit (hours) */
+  const fab = {};
+  Object.entries(GROUPS_AT).forEach(([st, ids]) => { const gs = F.groups.filter(g => ids.includes(g.id)); fab[st] = { busy: Math.max(...gs.map(g => g.u)), wait: gs.reduce((a, g) => a + g.wq, 0), work: gs.reduce((a, g) => a + g.te, 0) }; });
   return {
     clock, gen, size, side, areaChip, s, area, density, path, tick, late, volt, power,
     leakShare: leak / (switching + leak), wall: Math.pow(1.8, gen - START.gen), battery: 1 / power,
     cores: gridOf(12 * density * areaChip).reduce((a, b) => a * b), grid: gridOf(12 * density * areaChip),
-    dies: total, good, yield: total ? good / total : 0, steps, cost,
-    layers: Math.round(62 * steps)   /* about a day in the factory for each, as in facts.json fab-cycle-time */
+    dies: total, good, yield: total ? good / total : 0, steps, cost, layers,
+    load, days: F.days, perLayer: F.daysPerLayer, slow: GROUP_STATION[F.bottleneck], fab, waiting: 1 - F.raw / F.days
   };
 }
 let startWafer = null;
@@ -110,5 +128,6 @@ export const CHALLENGES = [
   { id: 'fast', needs: ['clock', 'gen'], at: ['fail.chip', 'scale.switch', 'scale.soc'], met: m => m.clock >= 2 && m.late === 0 },
   { id: 'battery', needs: ['gen', 'size'], at: ['life.phone', 'scale.soc', 'divide.test'], met: m => m.battery >= 1.5 && m.clock >= 1 && m.cores >= 12 },
   { id: 'cores', needs: ['gen', 'size'], at: ['fail.wafer', 'divide.test', 'scale.switch', 'scale.mcu'], met: m => m.cores >= 20 && m.cost <= 0.7 },
-  { id: 'quick', needs: ['gen', 'size'], at: ['divide.test', 'scale.soc', 'scale.switch'], met: m => m.layers <= 50 && m.cores >= 12 }
+  { id: 'quick', needs: ['gen', 'size'], at: ['divide.test', 'scale.soc', 'scale.switch'], met: m => m.layers <= 50 && m.cores >= 12 },
+  { id: 'months', needs: ['gen', 'load'], at: ['divide.wires', 'scale.switch'], met: m => m.days <= 60 && m.load >= 0.92 }
 ];
