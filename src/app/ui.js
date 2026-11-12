@@ -9,7 +9,7 @@
    Your chip: at some stops a "Try it" changes one of its settings (src/engines/chip.js); every depth that
    shows your chip then says what changed there, and its scene changes too. */
 import { t, fmtDate } from '../core/i18n.js';
-import { THREADS, WORLDS, STOPS, CASES, FIGURES, REPO, TRIES, SHOWS, DIVES, EXITS, PLANTS, LOOP, partWord } from '../data/weave.js';
+import { THREADS, WORLDS, STOPS, CASES, FIGURES, REPO, TRIES, SHOWS, DIVES, EXITS, MADE, PLANTS, LOOP, partWord } from '../data/weave.js';
 import { CLOCKS, GENS, SIDES, START, CHALLENGES, normal, changed, model, x2, dieSquare } from '../engines/chip.js';
 import { N, IDS, WORLD, setWorld, worldOf, zIn, reshape, isLine, clampZ, sizeAt, sizeParts, stop, stopKey, crossing, below, above, nearest, threadOf, rootShown, threadDepths } from '../engines/weave.js';
 import { createWorld, threadColor, theme, reduced } from './world.js';
@@ -51,7 +51,9 @@ export function start(facts) {
 
     arrive(d) { see(d); card(); rail(); save(); },
     pick(th) { follow(th); },
-    part(d, key) { S.part = { id: IDS[d], key }; card(); }
+    part(d, key) { S.part = { id: IDS[d], key }; card(); },
+    /* the lens over a machine at work: down into what it shows */
+    lens(d) { const id = IDS[d], dv = DIVES[id] && DIVES[id][0]; if (dv) { enter(dv[0], dv[1]); S.from = id; save(); card(); } }
   });
   world.setZ(S.z);
 
@@ -211,8 +213,9 @@ export function start(facts) {
       (DIVES[id] || []).forEach(([w, at]) => out.push(['dive', w, at, t('ui.diveDown', { depth: t('depth.' + at + '.name') })]));
       (EXITS[id] || []).forEach(([w, at]) => out.push(['exit', w, at, t('ui.shipTo', { world: t('world.' + w + '.name') })]));
     } else if (worldOf(WORLD).hidden) out.push(['back', 'journey', S.from || 'print', t('ui.backToLine', { station: t('depth.' + (S.from || 'print') + '.name') })]);
+    else if (MADE[id]) out.push(['back', 'journey', MADE[id], t('ui.seeMade', { station: t('depth.' + MADE[id] + '.name') })]);
     if (!out.length) return '';
-    return '<section class="ways"><p class="code">' + t(isLine() && EXITS[id] ? 'ui.waysOut' : isLine() ? 'ui.waysDown' : 'ui.waysBack') + '</p><div class="moves">' +
+    return '<section class="ways"><p class="code">' + t(isLine() && EXITS[id] ? 'ui.waysOut' : isLine() ? 'ui.waysDown' : worldOf(WORLD).hidden ? 'ui.waysBack' : 'ui.waysMade') + '</p><div class="moves">' +
       out.map(o => '<button type="button" class="btn' + (o[0] === 'exit' ? ' primary' : '') + '" data-dive="' + o[1] + ':' + o[2] + (o[0] === 'back' ? '' : ':' + id) + '">' + esc(o[3]) + '</button>').join('') + '</div></section>';
   };
 

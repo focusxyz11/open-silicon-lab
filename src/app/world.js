@@ -148,7 +148,7 @@ export function createWorld(cv, on) {
 
   /* the journey: stations side by side, the camera sliding along the line. The station you stand at is
      yours (G.mine): your wafer is in it, and from the moment you stop, its steps play (G.run, seconds). */
-  let stay = { i: -1, t: 0 }, paused = false, lastTm = 0, jhits = null, jbox = null;
+  let stay = { i: -1, t: 0 }, paused = false, names = false, lastTm = 0, jhits = null, jbox = null, lensBox = null;
   /* the journey in 3D (src/app/journey3d.js), loaded the first time the line is shown; until then, or
      without WebGL, the 2D stations */
   let J3 = null, j3state = 'none';
@@ -163,13 +163,14 @@ export function createWorld(cv, on) {
     lastTm = tm;
     const run = stay.i === near ? (reduced() ? -1 : tm - stay.t) : null;
     J3.canvas.style.display = '';
-    J3.render({ ids: IDS, Z, near, dist, run, tm, W, H, dpr, box: b, col });
+    const r3 = J3.render({ ids: IDS, Z, near, dist, run, tm, W, H, dpr, box: b, col });
     setParts3(id => (id === IDS[near] ? J3.parts(id, b, W, H) : null));
     ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, W * dpr, H * dpr);
     const k = b.B / 1000, left = b.cx - b.B / 2, top = b.cy - b.B / 2, below = (H - inset.b - (top + b.B)) / k;
     ctx.save(); ctx.setTransform(dpr * k, 0, 0, dpr * k, dpr * left, dpr * top); ctx.beginPath(); ctx.rect(-left / k, 0, W / k, 1000 + (b.below ? below : 0)); ctx.clip();
     Object.assign(G, { s: k, k: 1, primary: true, t: tm, col, id: IDS[near], base: 1, box: b.B });
-    jhits = drawJourney(G, { ids: IDS, Z, near, dist, run, paused, below: b.below ? below : 0, three: true }); jbox = { k, left, top, near };
+    jhits = drawJourney(G, { ids: IDS, Z, near, dist, run, paused, names, below: b.below ? below : 0, three: true, lens: r3 && r3.lens, lensMode: r3 && r3.mode }); jbox = { k, left, top, near };
+    lensBox = r3 && r3.lens && r3.lens.alpha > 0.2 ? r3.lens.rect : null;
     ctx.restore();
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     const y = top + 12, gap = Math.min(18, (b.B - 40) / N);
@@ -194,7 +195,7 @@ export function createWorld(cv, on) {
     const below = (H - inset.b - (top + b.B)) / k;
     ctx.save(); ctx.setTransform(dpr * k, 0, 0, dpr * k, dpr * left, dpr * top); ctx.beginPath(); ctx.rect(0, 0, 1000, 1000 + (b.below ? below : 0)); ctx.clip();
     Object.assign(G, { s: k, k: 1, primary: true, t: tm, col, id: IDS[near], base: 1, box: b.B });
-    jhits = drawJourney(G, { ids: IDS, Z, near, dist, run, paused, below: b.below ? below : 0 }); jbox = { k, left, top, near };
+    jhits = drawJourney(G, { ids: IDS, Z, near, dist, run, paused, names, below: b.below ? below : 0 }); jbox = { k, left, top, near };
     ctx.restore();
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     /* where you are on the line: a mark per station */
@@ -211,7 +212,7 @@ export function createWorld(cv, on) {
 
   function render(now) {
     const tm = reduced() ? 3 : Math.max(0, (now - t0) / 1000), b = box();
-    if (J3 && !isLine()) { J3.canvas.style.display = 'none'; setParts3(null); }
+    if (J3 && !isLine()) { J3.canvas.style.display = 'none'; setParts3(null); lensBox = null; }
     if (isLine()) { const L = renderLine(tm, b); overlays(tm, L.pi, L.ptr); return; }
     const F = frames(Z, b.B, b.cx, b.cy), pi = F.f < 0.5 ? F.i : F.i + 1;
     ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1; ctx.fillStyle = col.bg; ctx.fillRect(0, 0, W * dpr, H * dpr);
@@ -284,6 +285,8 @@ export function createWorld(cv, on) {
         let sh = null; for (const n of names) if (!sh && P[n] && P[n].length) sh = P[n][0];
         if (!sh) return;
         const c0 = centre(sh); let x = ptr.tx + c0[0] * ptr.s, y = ptr.ty + c0[1] * ptr.s, n = 0;
+        /* not on the lens: beside it */
+        if (lensBox && isLine() && c0[0] > lensBox.x - 16 && c0[0] < lensBox.x + lensBox.w + 16 && c0[1] > lensBox.y - 16 && c0[1] < lensBox.y + lensBox.h + 16) x = ptr.tx + (lensBox.x - 22) * ptr.s;
         while (n < 9 && used.some(u => Math.hypot(u[0] - x, u[1] - y) < 26)) { x += 28; n++; }
         used.push([x, y]);
         hits.push({ id: th.id, x, y, r: 16 });
@@ -345,6 +348,9 @@ export function createWorld(cv, on) {
     if (!isLine() || !jhits || !jbox) return false;
     const r = cv.getBoundingClientRect(), x = (e.clientX - r.left - jbox.left) / jbox.k, y = (e.clientY - r.top - jbox.top) / jbox.k, inn = h => h && x >= h.x - 4 && x <= h.x + h.w + 4 && y >= h.y - 6 && y <= h.y + h.h + 6;
     if (inn(jhits.pause)) { paused = !paused; return true; }
+    if (inn(jhits.names)) { names = !names; return true; }
+    /* the lens: tap it to dive down into what it shows */
+    if (inn(jhits.lens)) { on.lens && on.lens(jbox.near); return true; }
     const ch = jhits.chips.find(inn); if (!ch) return false;
     stay = { i: jbox.near, t: lastTm - stepStart(IDS[jbox.near], ch.i) }; paused = false; return true;
   };
