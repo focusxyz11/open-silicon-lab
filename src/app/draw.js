@@ -20,3 +20,25 @@ export const faces = c => c.dark ? [c.up, c.mid, c.lo] : [c.lo, c.mid, c.up];
 export const closed = pts => ({ p: pts.concat([pts[0]]), closed: true });
 /* a point moving along a line of points */
 export const along2 = (pts, u) => { const n = pts.length - 1, k = Math.min(n - 1, Math.floor(u * n)), f = u * n - k; return [pts[k][0] + (pts[k + 1][0] - pts[k][0]) * f, pts[k][1] + (pts[k + 1][1] - pts[k][1]) * f]; };
+
+/* Words on the picture are read with t() and measured, never assumed: any language, any length. Lines break
+   at word boundaries as the language defines them (Intl.Segmenter, so text without spaces wraps too), and a
+   word longer than a line breaks between characters. */
+const SEG = typeof Intl !== 'undefined' && Intl.Segmenter ? new Intl.Segmenter(undefined, { granularity: 'word' }) : null;
+const pieces = s => SEG ? [...SEG.segment(s)].map(x => x.segment) : s.split(/(\s+)/);
+/* c: anything with measureText (a canvas context) */
+export function wrap(c, text, maxW) {
+  const lines = []; let line = '';
+  for (const p of pieces(String(text))) {
+    const next = line + p;
+    if (c.measureText(next).width <= maxW || !line.trim()) {
+      if (c.measureText(next).width <= maxW) { line = next; continue; }
+      /* a single piece wider than the line: break it between characters */
+      for (const ch of [...next]) { if (c.measureText(line + ch).width > maxW && line) { lines.push(line); line = ''; } line += ch; }
+      continue;
+    }
+    lines.push(line.trimEnd()); line = p.trimStart();
+  }
+  if (line.trim()) lines.push(line.trimEnd());
+  return lines;
+}
