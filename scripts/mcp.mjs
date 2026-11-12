@@ -19,7 +19,7 @@ const str = d => ({ type: 'string', description: d });
 const TOOLS = [
   { name: 'list_plan', fn: () => API.listPlan(), description: EN['api.tool.plan'], inputSchema: { type: 'object', properties: {} } },
   { name: 'get_job', fn: a => API.getJob(a.job), description: EN['api.tool.job'], inputSchema: { type: 'object', properties: { job: str(EN['api.arg.job']) }, required: ['job'] } },
-  { name: 'check_design', fn: a => API.checkDesign(a), description: EN['api.tool.check'], inputSchema: { type: 'object', properties: { job: str(EN['api.arg.job']), code: str(EN['api.arg.code']), slice: str(EN['api.arg.slice']) }, required: ['job', 'code'] } },
+  { name: 'check_design', fn: a => API.checkDesign(a), description: EN['api.tool.check'], inputSchema: { type: 'object', properties: { job: str(EN['api.arg.job']), code: str(EN['api.arg.code']), slice: str(EN['api.arg.slice']), regbit: str(EN['api.arg.regbit']), select: str(EN['api.arg.select']) }, required: ['job', 'code'] } },
   { name: 'at_factory', fn: a => API.atFactory(a), description: EN['api.tool.factory'], inputSchema: { type: 'object', properties: { job: str(EN['api.arg.job']), code: str(EN['api.arg.code']), slice: str(EN['api.arg.slice']), seed: { type: 'integer', description: EN['api.arg.seed'] } }, required: ['job', 'code'] } },
   { name: 'propose_design', fn: a => API.proposeDesign(a), description: EN['api.tool.propose'], inputSchema: { type: 'object', properties: { need: str(EN['api.arg.need']), code: str(EN['api.arg.code']), slice: str(EN['api.arg.slice']), title: str(EN['api.arg.title']), author: str(EN['api.arg.author']), kind: { type: 'string', enum: ['person', 'ai', 'both'], description: EN['api.arg.kind'] }, ai: str(EN['api.arg.ai']) }, required: ['need', 'code', 'kind'] } }
 ];

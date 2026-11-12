@@ -50,7 +50,7 @@ export function start(facts) {
   };
   setChip(S.chip);
   /* your design as built now: for the core, with your ALU slice inside */
-  const cur = () => buildDesign(Object.assign({}, S.design, { slice: S.codes.alu || starterOf('alu'), defect: S.defect }));
+  const cur = () => buildDesign(Object.assign({}, S.design, { slice: S.codes.alu || starterOf('alu'), regs: { bit: S.codes.regbit || null, select: S.codes.select || null }, defect: S.defect }));
   setDesign(cur()); setMine(S.done, S.by);
   if (!worldOf(WORLD).line && !worldOf(WORLD).hidden) S.lastDive = WORLD;
   const save = () => { try { localStorage.setItem(KEY, JSON.stringify({ world: WORLD, z: Math.round(world.z * 100) / 100, thread: S.thread, seen: S.seen, chip: S.chip, from: S.from, design: S.design, by: S.by, done: S.done, codes: S.codes })); } catch (e) { /* storage unavailable */ } };
@@ -286,6 +286,10 @@ export function start(facts) {
     if (B.p === 'core') {
       const C = B.core;
       let h = C.sliceOk ? '<p class="small good">' + esc(t('core.sliceIn', { cells: B.M ? B.M.cells.length : 0 })) + '</p>' : '<p class="small bad">' + esc(t('core.needSlice')) + '</p><button type="button" class="btn" data-proj="alu">' + t('core.buildSlice') + '</button>';
+      /* the registers: your register bit and select if you have written them, or the lab's model */
+      const R = C.regs, mine = R.yours.bit || R.yours.select;
+      h += '<p class="small ' + (!mine ? 'muted' : R.right ? 'good' : 'bad') + '">' + esc(t(!mine ? 'core.regsModel' : R.right ? 'core.regsYours' : 'core.regsWrong', { which: [R.yours.bit && t('design.proj.regbit.t'), R.yours.select && t('design.proj.select.t')].filter(Boolean).join(', ') })) + '</p>';
+      if (!mine) h += '<div class="moves"><button type="button" class="btn" data-proj="regbit">' + t('design.proj.regbit.t') + '</button><button type="button" class="btn" data-proj="select">' + t('design.proj.select.t') + '</button></div>';
       h += C.runErr ? '<p class="small bad">' + esc(t('core.run.' + C.runErr.k, { l: C.runErr.l })) + '</p>' : C.trace ? '<p class="small">' + esc(t('core.ran', { result: C.result, cycles: C.cycles })) + '</p>' : '';
       if (id === 'check') h += '<ul class="tests">' + C.tests.map(T => { const f = T.cases.find(x => !x.ok); return '<li class="' + (T.ok ? 'good' : 'bad') + '">' + (T.ok ? '✓ ' : '✗ ') + esc(t('core.test.' + T.id + '.t')) + (f ? ' · ' + esc(t(f.stuck ? 'core.caseStuck' : 'core.case', { want: f.want, got: f.got })) : '') + '</li>'; }).join('') + '</ul>';
       return h;

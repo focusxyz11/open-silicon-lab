@@ -1305,7 +1305,7 @@
  "build.short.engine": "needs an engine",
  "build.short.partly": "{built} of {of} built",
  "design.proj.core.t": "RISC-V core",
- "design.proj.core.d": "A processor that runs real RISC-V programs. Its registers, decoder and memory are the lab's model for now; its arithmetic unit is yours: your ALU slice, copied 32 times, each carry feeding the next. Every add, subtract, comparison and branch goes through your gates. Its description here is a program to run on it.",
+ "design.proj.core.d": "A processor that runs real RISC-V programs. Its arithmetic unit is your ALU slice, copied 32 times, each carry feeding the next; its registers are made of your register bit and register select once you have written them. Its decoder and memory are the lab's model for now. Its description here is a program to run on it.",
  "core.block.program": "program",
  "core.block.pc": "program counter",
  "core.block.decode": "decoder",
@@ -1415,5 +1415,11 @@
  "build.need.select.t": "Register select",
  "build.need.select.d": "Turns a register's number into the one wire that lets it be written.",
  "build.agent.regbit": "Done: q keeps its value unless we is 1, then it takes d.",
- "build.agent.select": "Done: a decoder with an enable; exactly one output is on when en is 1, none when it is 0."
+ "build.agent.select": "Done: a decoder with an enable; exactly one output is on when en is 1, none when it is 0.",
+ "core.regsModel": "Its registers are the lab's model for now. Build a register bit and a register select, and the core's registers will be made of yours.",
+ "core.regsYours": "Its registers are made of yours: {which}. Every number the core keeps passes through them.",
+ "core.regsWrong": "Its registers are made of yours ({which}), and they do not hold numbers right: watch the registers change when they should not.",
+ "core.block.regsYours": "registers: yours",
+ "api.arg.regbit": "For the core: the description of the register bit (job regbit) its 1,024 register bits are made of. Leave it out for the lab's model.",
+ "api.arg.select": "For the core: the description of the register select (job select) that picks which register is written. Leave it out for the lab's model."
 }
