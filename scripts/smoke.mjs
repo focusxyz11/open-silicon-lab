@@ -20,6 +20,12 @@ for (const [tag, viewport, scheme] of [['desktop', { width: 1360, height: 860 },
   const where = () => page.textContent('#card .where b');
   const go = async d => { await page.$eval('#rail [data-d="' + d + '"]', el => el.click()); await page.waitForFunction(d => document.querySelector('#rail [data-d="' + d + '"]').getAttribute('aria-current') === 'true', d, { timeout: 10000 }).catch(() => problems.push(tag + ': depth ' + d + ' was not reached')); };
   for (const d of [7, 3, 0]) await go(d);
+  /* the chip as a die photo: where the area goes, and a block to find; then back to the picture */
+  await go(3);
+  await page.$eval('#card [data-xray]', el => el.click()).catch(() => problems.push(tag + ': no X-ray at the chip'));
+  if (!await page.$('#card .area') || !/\d/.test(await page.textContent('#card .xray .legend').catch(() => ''))) problems.push(tag + ': the X-ray does not say where the area goes');
+  await page.$eval('#card [data-xray]', el => el.click());
+  await go(0);
   /* a part of the picture says what it does (on a phone the scene fills the canvas, so its centre is known) */
   if (tag === 'phone') {
     const r = await page.$eval('#world', el => { const b = el.getBoundingClientRect(); return { x: b.left, y: b.top, w: b.width, h: b.height }; });
