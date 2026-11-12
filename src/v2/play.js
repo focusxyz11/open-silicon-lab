@@ -9,7 +9,8 @@ import { t } from '../core/i18n.js';
 import { CLOCKS, SIDES, LOADS, REUSES, MEMS, GENS, x2 } from '../engines/chip.js';
 import { MISSIONS, MARGINS, PROTECT, normalLife } from '../engines/life.js';
 import { REPO } from '../data/weave.js';
-import { checkDesign, checkChip, checkLife, chipGoal, starter, ownStarter, aiProposal, spotCase, spotAnswer, SPOT, STEPS, next } from './game.js';
+import { checkDesign, checkChip, checkLife, chipGoal, starter, ownStarter, aiProposal, spotCase, spotAnswer, SPOT, STEPS, next, INSIDE, challengeOf } from './game.js';
+import { build } from '../engines/design.js';
 
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 const MAX = { clock: CLOCKS.length - 1, gen: GENS - 1, size: SIDES.length - 1, load: LOADS.length - 1, reuse: REUSES.length - 1, mem: MEMS.length - 1 };
@@ -42,10 +43,13 @@ export function play(el, ch, ctx) {
   const S = ctx.state;
   let view = { msg: null, B: null, ai: false, hint: false, tests: [], guess: null, wrong: null };
   const head = () => '<button type="button" class="back" data-back>' + esc(t('game.back')) + '</button>' +
-    '<p class="kicker">' + esc(ch.step ? t('game.stepN', { n: STEPS.indexOf(ch.step) + 1, step: t('game.step.' + ch.step) }) : t('game.jobKicker')) + '</p>' +
-    '<h3 class="ch-t">' + esc(titleOf(ch)) + '</h3><p class="goal">' + esc(goalOf(ch)) + '</p>' +
+    '<p class="kicker">' + esc(ch.step ? t('game.stepN', { n: STEPS.indexOf(ch.step) + 1, step: t('game.step.' + ch.step) }) + ' · ' + t('map.' + ch.place + '.t') : t('game.jobKicker')) + '</p>' +
+    where() + '<h3 class="ch-t">' + esc(titleOf(ch)) + '</h3><p class="goal">' + esc(goalOf(ch)) + '</p>' +
     (ch.kind !== 'design' || !ch.need ? '<p class="small muted why">' + esc(t('game.ch.' + ch.id + '.why')) + '</p>' : '');
-  const reward = () => ch.grows ? '<p class="grows small">' + esc(t('game.grows', { what: t('grow.' + ch.grows) })) + '</p>' : '';
+  /* where it happens: the place, and its levels with this one lit */
+  const where = () => { const place = ch.need ? 'studio' : ch.place, at = ch.need ? 'logic' : ch.at, L = INSIDE[place] || [];
+    return L.length > 1 ? '<ol class="levels" aria-label="' + esc(t('map.' + place + '.t')) + '">' + L.map(l => '<li' + (l.depth === at ? ' class="on" aria-current="step"' : '') + '>' + esc(t('depth.' + l.depth + '.name')) + '</li>').join('') + '</ol>' : ''; };
+  const reward = () => ch.grows && !S.done[ch.id] ? '<p class="grows small">' + esc(t('game.grows', { what: t('grow.' + ch.grows) })) + '</p>' : '';
   const doneNote = () => { if (!S.done[ch.id]) return ''; const n = next(S);
     return '<div class="won"><b>' + esc(t('game.won')) + '</b>' + (ch.grows ? ' ' + esc(t('game.grew', { what: t('grow.' + ch.grows) })) : '') +
       (n && ctx.open ? '<button type="button" class="btn primary" data-next>' + esc(t('game.goNext', { what: titleOf(n) })) + '</button>' : '') + '</div>'; };
@@ -70,8 +74,16 @@ export function play(el, ch, ctx) {
         if (B.ok && B.st) h += '<p class="small muted">' + esc(t('game.built', { cells: B.M.cells.length, transistors: B.transistors, mhz: Math.round(B.st.fmax) })) + '</p>';
       }
     }
+    if (B && B.ok) h += tapeOut(B);
     if (B && B.ok && ch.need) h += '<a class="btn primary" target="_blank" rel="noopener" href="' + esc(REPO + '/issues/new?' + new URLSearchParams({ template: 'design.yml', title: t('design.addYours') + ': ' + t('design.proj.' + ch.p + '.t'), need: ch.need, code: S.codes[ch.p] || '', ai: t(view.ai ? 'game.aiUsed' : 'game.aiNone') })) + '">' + esc(t('game.addToPlan')) + '</a><p class="small muted">' + esc(t('game.addNote')) + '</p>';
     return h + doneNote() + reward();
+  }
+  /* the rest of the design line, then what the factory does to it: the design and the factory are one story */
+  function tapeOut(B) {
+    const D = build({ p: ch.p, code: B.code, defect: 7 }).defect, steps = [['gates', t('game.tape.gates', { n: B.M.cells.length, transistors: B.transistors })], ['layout', t('game.tape.layout', { wire: Math.round(B.RT ? B.RT.wl : 0) })], ['masks', t('game.tape.masks', { n: B.masks })]];
+    let h = '<div class="tape"><p class="kicker">' + esc(t('game.tape.k')) + '</p><ol class="line2">' + steps.map(([d, s]) => '<li><b>' + esc(t('depth.' + d + '.name')) + '</b><span class="small">' + esc(s) + '</span></li>').join('') + '<li class="fab"><b>' + esc(t('map.fab.t')) + '</b><span class="small">' + esc(t('game.tape.fab', { n: B.masks })) + '</span></li></ol>';
+    if (D) h += '<p class="small">' + esc(t('game.tape.dust', { v: D.v, wrong: D.wrong, n: D.rows.length })) + '</p>' + (challengeOf('spot') ? '<button type="button" class="link" data-goto="spot">' + esc(t('game.tape.spot')) + '</button>' : '');
+    return h + '</div>';
   }
   /* ---- chip: settings toward a goal ---- */
   const valueText = k => { const c = S.chip; return k === 'clock' ? t('chip.clock.value', { v: x2(c.clock) }) : k === 'size' ? t('chip.size.value', { mm: SIDES[c.size] }) : k === 'load' ? t('chip.load.value', { v: Math.round(LOADS[c.load] * 100) }) : k === 'reuse' ? t('chip.reuse.value', { v: REUSES[c.reuse] }) : k === 'mem' ? t('chip.mem.names')[c.mem] : t('chip.gen.names')[c.gen]; };
@@ -133,6 +145,7 @@ export function play(el, ch, ctx) {
     const q = s => e.target.closest(s);
     if (q('[data-back]')) return ctx.back();
     if (q('[data-next]')) { const n = next(S); return n && ctx.open(n); }
+    const gt = q('[data-goto]'); if (gt) return ctx.open(challengeOf(gt.dataset.goto));
     if (q('[data-check]')) { const code = el.querySelector('#chCode').value; S.codes[ch.p] = code; ctx.save(); view.B = checkDesign(ch.p, code); if (view.B.ok) win(); draw(); return show('.won, .verdict, .errs'); }
     if (q('[data-ai]')) { S.codes[ch.p] = aiProposal(ch.p); view.ai = true; view.B = null; ctx.save(); return draw(); }
     if (q('[data-restart]')) { delete S.codes[ch.p]; view = Object.assign(view, { B: null, ai: false }); ctx.save(); return draw(); }

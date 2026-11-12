@@ -10,6 +10,7 @@ import { CLOCKS, SIDES, LOADS, REUSES, MEMS, GENS } from '../src/engines/chip.js
 import { MARGINS, PROTECT } from '../src/engines/life.js';
 import { NEEDS } from '../src/data/build.js';
 import { DEBATES } from '../src/data/debates.js';
+import { WORLDS, STOPS } from '../src/data/weave.js';
 
 const EN = JSON.parse(readFileSync(new URL('../src/i18n/en.json', import.meta.url), 'utf8'));
 const MAP = readFileSync(new URL('../src/v2/map3d.js', import.meta.url), 'utf8');
@@ -79,6 +80,25 @@ test('the broken copy is caught by some patterns and missed by others, so choosi
   assert.ok(G.SPOT.tests < S.rows.length, 'fewer tests than patterns');
   const i = catches.indexOf(true);
   assert.notDeepEqual(G.spotAnswer(S, S.broken, i), G.spotAnswer(S, (S.broken + 1) % G.SPOT.chips, i));
+});
+
+test('every page of the earlier site has an address: a place and a level, and every question a place', () => {
+  for (const w of WORLDS) for (const depth of w.depths) {
+    const p = G.placeOf(w.id, depth);
+    assert.ok(p && G.PLACES.includes(p), w.id + '/' + depth + ' has no place');
+  }
+  for (const w of WORLDS.filter(x => !x.hidden)) for (const depth of w.depths) assert.ok(Object.values(G.INSIDE).some(L => L.some(l => l.world === w.id && l.depth === depth)), w.id + '/' + depth + ' is no level of any place');
+  for (const k of Object.keys(STOPS)) assert.ok(Object.values(G.ASK).some(L => L.includes(k)), k + ' is asked nowhere');
+  for (const [place, L] of Object.entries(G.INSIDE)) for (const l of L) assert.ok(EN['depth.' + l.depth + '.name'] && EN['depth.' + l.depth + '.see'], place + ': ' + l.depth);
+  for (const [place, F] of Object.entries(G.FLOWN)) for (const d of Object.keys(F)) assert.ok(G.INSIDE[place].some(l => l.depth === d), place + ' flies through ' + d);
+  for (const [place, key] of Object.entries(G.BEACON)) assert.ok(G.ASK[place].includes(key), place + ': its beacon ' + key + ' is not asked there');
+});
+
+test('every challenge happens at a place, at one of its levels', () => {
+  for (const c of G.CHALLENGES) {
+    assert.ok(G.PLACES.includes(c.place), c.id);
+    assert.ok((G.INSIDE[c.place] || []).some(l => l.depth === c.at), c.id + ': ' + c.at + ' is not a level of ' + c.place);
+  }
 });
 
 test('everything that grows is drawn on the island, named, and stands at a real place', () => {

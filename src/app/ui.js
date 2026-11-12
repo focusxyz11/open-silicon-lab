@@ -15,6 +15,7 @@ import { THREADS, WORLDS, STOPS, CASES, FIGURES, REPO, TRIES, SHOWS, NOTE_AT, DI
 import { CLOCKS, GENS, SIDES, LOADS, REUSES, MEMS, START, CHALLENGES, normal, changed, model, x2, dieSquare } from '../engines/chip.js';
 import { N, IDS, WORLD, setWorld, worldOf, zIn, reshape, isLine, clampZ, sizeAt, sizeParts, stop, stopKey, crossing, below, above, nearest, threadOf, rootShown, threadDepths } from '../engines/weave.js';
 import { createWorld, threadColor, theme, reduced } from './world.js';
+import { placeOf } from '../data/places.js';
 import { setChip as drawChip, setBuild, BUILD_STEPS, setXray, xrayOf, XRAY_AT } from './scenes.js';
 import { TYPES as XTYPES, shares, askFor } from '../engines/xray.js';
 import { build as buildDesign, normalDesign, starterOf, PROJECTS, START_DESIGN } from '../engines/design.js';
@@ -728,6 +729,9 @@ export function start(facts) {
   new ResizeObserver(layout).observe(document.body);
 
   /* ---- theme ---- */
+  /* the chip world (explore.html) holds every page of this site at a place and a level: go to this one's place */
+  const toWorld = $('toWorld');
+  if (toWorld) toWorld.addEventListener('click', () => { const p = placeOf(WORLD, IDS[Math.round(world.z)]); toWorld.href = 'explore.html#/place/' + (p || '') + (p ? '/inside' : ''); }); /* i18n-ok: an address */
   const tb = $('themeBtn');
   const themeLabel = () => { const k = theme() === 'dark' ? 'ui.toLight' : 'ui.toDark'; tb.setAttribute('aria-label', t(k)); tb.title = t(k); };
   tb.addEventListener('click', () => { const n = theme() === 'dark' ? 'light' : 'dark'; document.documentElement.setAttribute('data-theme', n); try { localStorage.setItem('osl-theme', n); } catch (e) { /* storage unavailable */ } themeLabel(); card(); rail(); });
