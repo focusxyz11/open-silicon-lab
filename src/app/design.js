@@ -7,6 +7,7 @@
    else is drawn. drawDesignBand draws the band under the picture. */
 import { t } from '../core/i18n.js';
 import { build, simulate, patterns, START_DESIGN } from '../engines/design.js';
+import { ripple, aluOp } from '../engines/core.js';
 import { DESIGNS } from '../data/build.js';
 import { plan, levels, needForProject } from '../engines/build.js';
 import { NEEDS } from '../data/build.js';
@@ -60,6 +61,67 @@ function chipBox(G, x, y, w, h, v, o, lit) {
   B.outs.forEach((n, i) => pin(i, no, false, n, o ? o[n] : null));
 }
 
+/* ---- the core (src/engines/core.js): your slice, copied 32 times, inside a RISC-V core running a program ---- */
+const REGN = ['zero', 'ra', 'sp', 'gp', 'tp', 't0', 't1', 't2', 's0', 's1', 'a0', 'a1', 'a2', 'a3', 'a4', 'a5', 'a6', 'a7', 's2', 's3', 's4', 's5', 's6', 's7', 's8', 's9', 's10', 's11', 't3', 't4', 't5', 't6']; /* i18n-ok: register names */
+function coreStep(G) { const tr = B.core && B.core.trace; if (!tr || !tr.length) return null; const k = Math.floor(G.t * 2.2) % (tr.length + 4); return tr[Math.min(k, tr.length - 1)]; }
+function coreDatapath(G, withTests) {
+  const c = G.col, C = B.core, step = coreStep(G);
+  /* the program */
+  panel(G, 40, 100, 250, 660, c.lo);
+  text(G, t('core.block.program'), 52, 122, 13, c.line, 'left', 600);
+  (B.code.split('\n')).slice(0, 26).forEach((ln, i) => { const y = 150 + i * 23, on = step && step.l === i + 1; if (on) { G.a(0.2); G.r(44, y - 11, 242, 22, c.warm); G.a(1); } text(G, ln.replace(/\t/g, '  '), 56, y, 13, on ? c.warm : c.hi); });
+  /* program counter and decoder */
+  panel(G, 320, 100, 170, 50, c.mid); text(G, t('core.block.pc'), 332, 125, 13, c.line, 'left', 600); text(G, step ? String((step.l - 1) * 4) : '0', 478, 125, 14, c.hi, 'right');
+  panel(G, 320, 170, 170, 56, c.mid); text(G, t('core.block.decode'), 332, 186, 12, c.line, 'left', 600); text(G, step ? step.op : '·', 405, 210, 18, c.warm, 'center', 600);
+  /* the registers */
+  panel(G, 320, 250, 170, 510, c.lo); text(G, t('core.block.regs'), 332, 268, 12, c.line, 'left', 600);
+  const x = step ? step.x : new Array(32).fill(0);
+  for (let r = 0; r < 32; r++) { const y = 288 + r * 14.6, hot = step && step.rd === r && r; if (hot) { G.a(0.25); G.r(322, y - 7, 166, 14, c.warm); G.a(1); } text(G, REGN[r], 332, y, 10.5, r === 10 ? c.warm : c.line); text(G, String(x[r]), 478, y, 10.5, x[r] ? c.hi : c.dim, 'right'); }
+  /* the ALU: 32 slices, bit 31 at the top; a lit slice gives 1, a dot between two is a carry passing up */
+  panel(G, 520, 250, 160, 510, c.lo); text(G, t('core.block.alu'), 532, 268, 12, c.warm, 'left', 600);
+  const rp = step && step.alu && C.slice.table ? ripple(C.slice.table, aluOp(step.op), step.a | 0, step.b | 0) : null, bad = C.defect ? C.defect.bit : -1;
+  for (let i = 31; i >= 0; i--) {
+    const y = 288 + (31 - i) * 14.6, on = rp && rp[i].y;
+    G.r(560, y - 6, 100, 12, i === bad ? c.red : on ? c.warm : c.mid, i === bad ? c.red : c.line, 0.7);
+    if (rp && rp[i].c && i < 31) G.c(610, y - 7.3, 2.6, c.cool);
+    if (i % 8 === 0) text(G, String(i), 552, y, 10, c.line, 'right');
+  }
+  if (rp) text(G, t('design.op.' + aluOp(step.op)), 600, 742, 13, c.warm, 'center', 600);
+  /* wires: program to decoder, decoder to registers, registers to ALU and back */
+  G.l([[290, 200], [320, 200]], c.line, 1.2); G.l([[405, 226], [405, 250]], c.line, 1.2);
+  G.l([[490, 400], [520, 400]], step && step.alu ? c.warm : c.line, 1.6); G.l([[520, 600], [490, 600]], step && step.alu ? c.warm : c.line, 1.6);
+  /* the answer, and the test programs */
+  panel(G, 710, 250, 250, 110, c.mid); text(G, t('core.block.result'), 722, 272, 12, c.line, 'left', 600); text(G, 'a0 = ' + (step ? step.x[10] : 0), 835, 318, 26, c.warm, 'center', 600); /* i18n-ok: a register name */
+  if (withTests) {
+    panel(G, 710, 380, 250, 380, c.lo); text(G, t('core.block.tests'), 722, 400, 12, c.line, 'left', 600);
+    C.tests.forEach((T, i) => { const y = 432 + i * 52; mark(G, 738, y, T.ok, 7); text(G, t('core.test.' + T.id + '.t'), 756, y, 13, T.ok ? c.hi : c.red); });
+  } else { panel(G, 710, 380, 250, 120, c.lo); text(G, t('core.block.mem'), 722, 400, 12, c.line, 'left', 600); }
+}
+function coreGates(G) {
+  const c = G.col, b = B.core.budget, max = Math.max(b.alu, b.regs, b.rest);
+  [['alu', b.alu, c.warm], ['regs', b.regs, c.cool], ['rest', b.rest, c.line]].forEach(([k, v, col], i) => {
+    const y = 160 + i * 120; text(G, t('core.budget.' + k), 60, y, 16, c.hi, 'left', 600);
+    G.r(60, y + 20, (760 * v) / max, 40, col); text(G, '≈ ' + v.toLocaleString(), 70 + (760 * v) / max, y + 40, 14, c.hi); /* i18n-ok: a number */
+  });
+  /* the 32 copies of your slice, each one the same small circuit */
+  const n = B.M ? B.M.cells.length : 0;
+  for (let i = 0; i < 32; i++) { const x = 60 + (i % 16) * 55, y = 560 + Math.floor(i / 16) * 90; G.r(x, y, 48, 70, c.mid, c.warm, 0.8); for (let j = 0; j < Math.min(n, 24); j++) G.r(x + 5 + (j % 4) * 10, y + 6 + Math.floor(j / 4) * 10, 7, 7, c.dark ? c.up : c.dim); }
+}
+function coreLayout(G) {
+  const c = G.col; panel(G, 40, 120, 600, 560, c.lo);
+  /* the register file: a grid of flip-flops */
+  G.r(60, 140, 240, 520, c.mid, c.line, 1); text(G, t('core.block.regs'), 72, 156, 12, c.line, 'left', 600);
+  for (let r = 0; r < 32; r++) for (let q = 0; q < 32; q++) G.r(66 + q * 7.2, 172 + r * 15.2, 5, 11, c.dark ? c.up : c.dim);
+  /* the ALU: your slice's own layout, 32 times */
+  G.r(320, 140, 140, 520, c.mid, c.warm, 1.2); text(G, t('core.block.alu'), 330, 156, 12, c.warm, 'left', 600);
+  if (B.PL) for (let i = 0; i < 32; i++) drawTile(G, 326, 168 + i * 15.6, 128, 14, ['cells', 'm1', 'm2']);
+  [['decode', 160], ['pc', 320], ['control', 420]].forEach(([k, y]) => { G.r(480, y - 20, 140, k === 'control' ? 240 : 120, c.mid, c.line, 1); text(G, t('core.block.' + k), 490, y - 4, 12, c.line, 'left', 600); });
+  /* on the shared chip, a core takes several tiles */
+  const sx = 700, sy = 170, tw = 60, gap = 4;
+  panel(G, sx - 16, sy - 16, 4 * (tw + gap) + 28, 6 * (tw + gap) + 28, c.mid);
+  for (let j = 0; j < 6; j++) for (let i = 0; i < 4; i++) { const x = sx + i * (tw + gap), y = sy + j * (tw + gap), mine = j >= 3 && i < 3; if (mine) G.r(x, y, tw, tw, c.warm, c.warm, 1); else if (j * 4 + i < DESIGNS.length) { G.r(x, y, tw, tw, c.dark ? c.up : c.dim, c.line, 0.8); who(G, DESIGNS[j * 4 + i].kind, x + tw / 2, y + tw / 2, 9); } else { G.ctx.setLineDash([3, 4]); G.r(x, y, tw, tw, null, c.line, 0.8); G.ctx.setLineDash([]); } }
+}
+
 /* ---- 1. the job: one piece of a bigger goal, the community's computer (src/data/build.js) ---- */
 /* who wrote a design: a person, an AI, both, or the lab's own example */
 function who(G, kind, x, y, s) {
@@ -89,10 +151,10 @@ const need = {
   draw(G) {
     const c = G.col; room(G);
     planView(G, 20, 60, 960, 400);
-    const vs = patterns(B), k = nowK(G, vs.length, 0.7), v = vs[k];
+    const core = B.p === 'core', vs = core ? [{}] : patterns(B), k = nowK(G, vs.length, 0.7), v = vs[k];
     /* what it must answer, from the job itself (not from your design) */
     let o = null, st = {};
-    if (B.proj.f) { if (B.seq) { for (let j = 0; j <= k; j++) { const r = B.proj.f(vs[j], st); if (j === k) o = r.out; st = r.next; } } else o = B.proj.f(v); }
+    if (!core && B.proj.f) { if (B.seq) { for (let j = 0; j <= k; j++) { const r = B.proj.f(vs[j], st); if (j === k) o = r.out; st = r.next; } } else o = B.proj.f(v); }
     chipBox(G, 400, 520, 200, 230, v, o, true);
     text(G, '?', 500, 635, 64, c.line, 'center', 300);
     useView(G, 780, 550, 180, 140, v, o);
@@ -101,8 +163,9 @@ const need = {
 /* what the outputs mean where the circuit is used: a sum, a lamp, a display digit, a count, an ALU result */
 function useView(G, x, y, w, h, v, o) {
   const c = G.col, d = B.proj.demo; panel(G, x, y, w, h, c.lo);
-  if (!o || !v) return;
+  if (d !== 'core' && (!o || !v)) return;
   const num = (bits) => bits.reduce((a, b) => a * 2 + (b | 0), 0);
+  if (d === 'core') { text(G, 'a0 = ' + (B.core && B.core.result != null ? B.core.result : '·'), x + w / 2, y + h / 2, 26, c.warm, 'center', 600); return; } /* i18n-ok: a register name */
   if (d === 'seg') {
     const n = { a: [[0, 0], [1, 0]], b: [[1, 0], [1, 1]], c: [[1, 1], [1, 2]], d: [[0, 2], [1, 2]], e: [[0, 1], [0, 2]], f: [[0, 0], [0, 1]], g: [[0, 1], [1, 1]] };
     const ox = x + w / 2 - 25, oy = y + 25, s = 50;
@@ -130,6 +193,7 @@ const logic = {
   parts: { code: [R(60, 100, 520, 640)], table: [R(620, 100, 320, 640)] },
   draw(G) {
     const c = G.col; room(G);
+    if (B.p === 'core') { if (B.core) coreDatapath(G, false); return; }
     panel(G, 60, 100, 520, 640, c.lo);
     const lines = B.code.split('\n'), errAt = new Set(B.errs.map(e => e.l)), fs = Math.max(11, Math.min(22, 600 / Math.max(14, lines.length * 1.7)));
     const lh = fs * 1.7;
@@ -167,9 +231,11 @@ const check = {
   parts: { waves: [R(60, 120, 880, 520)], verdict: [R(60, 670, 880, 110)] },
   draw(G) {
     const c = G.col; room(G);
+    if (B.p === 'core') { if (B.core) coreDatapath(G, true); return; }
     panel(G, 60, 120, 880, 520, c.lo);
     if (bad() || !B.rows) { text(G, '—', 500, 380, 60, c.red, 'center'); return; }
-    const rows = B.rows, n = Math.min(rows.length, 32), sig = B.ins.concat(B.outs), sh = Math.min(56, 470 / sig.length), x0 = 170, w = 750, cw = w / n;
+    /* a copy the factory spoiled shows its own answers; red marks where they differ from the design */
+    const D = B.defect, rows = D ? B.rows.map((r, k) => ({ v: r.v, o: D.rows[k].o, e: r.o, mis: D.rows[k].mis })) : B.rows, n = Math.min(rows.length, 32), sig = B.ins.concat(B.outs), sh = Math.min(56, 470 / sig.length), x0 = 170, w = 750, cw = w / n;
     const live = G.mine && G.run != null ? Math.min(n, Math.floor(G.run * 4) + 1) : n;
     sig.forEach((nm, i) => {
       const y = 150 + i * sh + sh / 2, out = i >= B.ins.length;
@@ -215,6 +281,7 @@ const gates = {
   parts: { cells: [R(160, 110, 700, 600)], pins: [R(50, 110, 110, 600)], outs: [R(860, 110, 110, 600)] },
   draw(G) {
     const c = G.col; room(G);
+    if (B.p === 'core') { if (B.core) coreGates(G); return; }
     if (bad() || !B.M) { text(G, '—', 500, 380, 60, c.red, 'center'); return; }
     const M = B.M, { pos, gw, gh } = gatesLayout(), vs = patterns(B), k = nowK(G, vs.length, 0.6);
     let st = {}; if (B.seq) for (let j = 0; j < k; j++) st = simulate(B, vs[j], st).next;
@@ -223,12 +290,15 @@ const gates = {
     const src = {};
     M.inputs.forEach((p, i) => { src[p.net] = [90, 130 + (560 * (i + 0.5)) / M.inputs.length]; });
     M.cells.forEach((cell, i) => { src[cell.out] = [pos[i][0] + gw + 10, pos[i][1] + gh / 2]; });
-    const wire = (net, to, j) => { const a = src[net]; if (!a) return; const mid = a[0] + Math.max(14, (to[0] - a[0]) * (0.35 + 0.1 * (j % 3))); const on = val(net) === 1; G.l([a, [mid, a[1]], [mid, to[1]], to], on ? c.warm : c.line, on ? 2 : 1); };
+    const stuck = B.defect ? B.defect.net : -1;
+    const wire = (net, to, j) => { const a = src[net]; if (!a) return; const mid = a[0] + Math.max(14, (to[0] - a[0]) * (0.35 + 0.1 * (j % 3))); const on = val(net) === 1; if (net === stuck) G.ctx.setLineDash([5, 4]); G.l([a, [mid, a[1]], [mid, to[1]], to], net === stuck ? c.red : on ? c.warm : c.line, on || net === stuck ? 2 : 1); G.ctx.setLineDash([]); };
     M.cells.forEach((cell, i) => { const [x, y] = pos[i]; cell.ins.forEach((net, j) => wire(net, [x, y + (gh * (j + 1)) / (cell.ins.length + 1)], i + j)); });
     M.outs.forEach((o, i) => wire(o.net, [910, 130 + (560 * (i + 0.5)) / M.outs.length], i));
     M.cells.forEach((cell, i) => { const [x, y] = pos[i], on = val(cell.out) === 1; gateShape(G, cell.type, x, y, gw, gh, c.mid, on ? c.warm : c.hi); if (gw > 40) text(G, cell.type.replace('2', ''), x + gw * 0.4, y + gh / 2, Math.min(11, gw * 0.2), c.line, 'center'); });
     M.inputs.forEach(p => { const [x, y] = src[p.net], on = val(p.net) === 1; G.c(x, y, 8, on ? c.warm : c.bg, on ? c.warm : c.line, 1.2); text(G, p.name, x - 16, y, 14, c.hi, 'right'); });
     M.outs.forEach((o, i) => { const y = 130 + (560 * (i + 0.5)) / M.outs.length, on = val(o.net) === 1; G.c(918, y, 8, on ? c.warm : c.bg, on ? c.warm : c.line, 1.2); text(G, o.name, 934, y, 14, c.hi); });
+    /* where the factory left a wire stuck */
+    if (stuck >= 0 && src[stuck]) { const [x, y] = src[stuck]; G.c(x, y, 12, null, c.red, 2); text(G, t('fab.stuckAt', { v: B.defect.v }), x + 16, y - 16, 13, c.red, 'left', 600); }
   }
 };
 
@@ -253,6 +323,7 @@ const layout = {
   parts: { tile: [R(40, 120, 600, 560)], shared: [R(690, 160, 270, 400)] },
   draw(G) {
     const c = G.col; room(G);
+    if (B.p === 'core') { if (B.core) coreLayout(G); return; }
     if (bad() || !B.PL) { text(G, '—', 500, 380, 60, c.red, 'center'); return; }
     panel(G, 40, 120, 600, 560, c.lo);
     drawTile(G, 60, 140, 560, 520);
@@ -310,16 +381,17 @@ export function drawDesignBand(G, o) {
   const ok = B.ok, state = B.errs.length ? 'errs' : B.spec ? (B.bad ? 'wrong' : 'right') : 'free';
   mark(G, x + 8 * u, top + 22 * u, state === 'right' || state === 'free', 6 * u);
   ctx.textBaseline = 'middle'; ctx.textAlign = 'left'; ctx.font = '600 ' + 11.5 * u + 'px ' + MONO; ctx.fillStyle = ok ? c.grn : c.red;
-  const said = t('design.state.' + state, { bad: B.bad || 0, total: B.total || 0, errs: B.errs.length }) + ' · ' + t('build.by.' + BY), job = t('design.proj.' + B.p + '.t');
-  ctx.fillText(said, x + 22 * u, top + 22 * u);
+  const vars = { bad: B.bad || 0, total: B.total || 0, errs: B.errs.length }, said = (B.p === 'core' ? t('core.state.' + state, vars) : t('design.state.' + state, vars)) + ' · ' + t('build.by.' + BY), job = t('design.proj.' + B.p + '.t');
+  const short = ctx.measureText(said).width > w - 30 * u ? said.split(' · ')[0] : said;
+  ctx.fillText(short, x + 22 * u, top + 22 * u);
   /* the job's name on the right, when there is room for both (the card names it too) */
-  if (ctx.measureText(said).width + ctx.measureText(job).width + 50 * u < w) { ctx.textAlign = 'right'; ctx.fillStyle = c.warm; ctx.fillText(job, 1000 - pad, top + 22 * u); ctx.textAlign = 'left'; }
+  if (ctx.measureText(short).width + ctx.measureText(job).width + 50 * u < w) { ctx.textAlign = 'right'; ctx.fillStyle = c.warm; ctx.fillText(job, 1000 - pad, top + 22 * u); ctx.textAlign = 'left'; }
   /* the caption: what happens at this station */
   ctx.font = '600 ' + 14 * u + 'px ' + MONO; ctx.fillStyle = c.hi; ctx.fillText(t('design.cap.' + id + '.t'), x, top + 46 * u);
   ctx.font = '400 ' + 13 * u + 'px system-ui, sans-serif'; ctx.textBaseline = 'top'; /* i18n-ok: a font name */
-  let line = '', y = top + 58 * u; const words = t('design.cap.' + id + '.d', numbers()).split(/\s+/);
+  let line = '', y = top + 58 * u; const words = (B.p === 'core' ? t('core.cap.' + id + '.d', numbers()) : t('design.cap.' + id + '.d', numbers())).split(/\s+/);
   for (const wd of words) { const tr = line ? line + ' ' + wd : wd; if (ctx.measureText(tr).width > w && line) { ctx.fillText(line, x, y); y += 17 * u; line = wd; if (y > bottom - 14 * u) { line = ''; break; } } else line = tr; }
   if (line) ctx.fillText(line, x, y);
 }
 /* the numbers the captions can use */
-export const numbers = () => ({ cells: B.M ? B.M.cells.length : 0, transistors: B.transistors || 0, vectors: B.vectors || 0, caught: Math.round((B.coverage || 0) * 100), wire: B.RT ? B.RT.wl : 0, vias: B.RT ? B.RT.vias : 0, masks: B.masks || 0, depth: B.st ? B.st.depth : 0, total: B.total || 0, bad: B.bad || 0 });
+export const numbers = () => ({ passed: B.core ? B.core.passed : 0, tests: B.core ? B.core.total : 0, cycles: B.core && B.core.cycles ? B.core.cycles : 0, cells: B.M ? B.M.cells.length : 0, transistors: B.transistors || 0, vectors: B.vectors || 0, caught: Math.round((B.coverage || 0) * 100), wire: B.RT ? B.RT.wl : 0, vias: B.RT ? B.RT.vias : 0, masks: B.masks || 0, depth: B.st ? B.st.depth : 0, total: B.total || 0, bad: B.bad || 0 });
