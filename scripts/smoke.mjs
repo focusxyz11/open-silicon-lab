@@ -10,7 +10,8 @@ const require = createRequire(import.meta.url);
 const { chromium } = require('playwright');
 
 const server = await serve(0), base = 'http://localhost:' + server.address().port + '/';
-const browser = await chromium.launch(), problems = [];
+/* software WebGL, so the redesign's 3D island can draw on a machine without a GPU */
+const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] }), problems = [];
 for (const [tag, viewport, scheme] of [['desktop', { width: 1360, height: 860 }, 'dark'], ['phone', { width: 390, height: 844 }, 'light']]) {
   const page = await browser.newPage({ viewport, colorScheme: scheme });
   page.on('pageerror', e => problems.push(tag + ': ' + e.message));
@@ -125,6 +126,35 @@ for (const [tag, viewport, scheme] of [['desktop', { width: 1360, height: 860 },
   if (await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1)) problems.push(tag + ': the page scrolls sideways');
   await page.close();
 }
+/* the redesign (explore.html): your chip's life on the island. The first challenge is played and won, the island
+   grows and says so, the HUD moves on; a place opens its three doors; the pages list every challenge and the plan. */
+for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height: 800 }, 'light'], ['explore phone', { width: 390, height: 844 }, 'dark']]) {
+  const page = await browser.newPage({ viewport, colorScheme: scheme, reducedMotion: 'reduce' });
+  page.on('pageerror', e => problems.push(tag + ': ' + e.message));
+  page.on('console', m => { if (m.type() === 'error' && !/fonts\.g|net::ERR|WebGL|GPU/.test(m.text())) problems.push(tag + ': console: ' + m.text()); });
+  await page.goto(base + 'explore.html');
+  await page.waitForSelector('#hud .steps button', { timeout: 15000 }).catch(() => problems.push(tag + ': no HUD with the five steps'));
+  if ((await page.$$('#hud .steps button')).length !== 5) problems.push(tag + ': the HUD does not show five steps');
+  await page.click('#hero [data-start]');
+  await page.waitForSelector('#sheet .player #chCode', { timeout: 10000 }).catch(() => problems.push(tag + ': the first challenge did not open'));
+  await page.fill('#chCode', 'sum = a ^ b;\ncarry = a & b;');
+  await page.click('#sheet [data-check]');
+  await page.waitForSelector('#sheet .won', { timeout: 10000 }).catch(() => problems.push(tag + ': a right design did not win the challenge'));
+  if (!/grew/i.test(await page.textContent('#toast').catch(() => ''))) problems.push(tag + ': winning did not say what grew');
+  if (!/1\/3/.test(await page.textContent('#hud [data-step="design"]').catch(() => ''))) problems.push(tag + ': the HUD did not count the win');
+  await page.click('#sheet [data-next]').catch(() => problems.push(tag + ': no way on to the next challenge'));
+  if (!/voter/i.test(await page.textContent('#sheet .player h3').catch(() => ''))) problems.push(tag + ': the next challenge is not the majority voter');
+  await page.click('#sheet [data-back]');
+  for (const door of ['look', 'ask', 'do']) { await page.click('#sheet [data-door="' + door + '"]').catch(() => problems.push(tag + ': no door ' + door)); }
+  if (!(await page.$$('#sheet .chcard')).length) problems.push(tag + ': the studio has nothing to do');
+  await page.evaluate(() => { location.hash = '#/challenges'; });
+  await page.waitForSelector('#page .stepsec', { timeout: 10000 }).catch(() => {});
+  if ((await page.$$('#page .stepsec')).length !== 6) problems.push(tag + ': the challenges page does not show five steps and the open jobs');
+  await page.evaluate(() => { location.hash = '#/build'; });
+  await page.waitForSelector('#page .tree', { timeout: 10000 }).catch(() => problems.push(tag + ': the build page has no plan'));
+  if (await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1)) problems.push(tag + ': the page scrolls sideways');
+  await page.close();
+}
 await browser.close(); server.close();
 if (problems.length) { console.error('Smoke test found problems:\n' + problems.join('\n')); process.exit(1); }
-console.log('Smoke test passed: the dive works in every world, on desktop and phone, in dark and light.');
+console.log('Smoke test passed: the dive works in every world, and the redesign\'s island plays, on desktop and phone, in dark and light.');

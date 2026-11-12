@@ -55,7 +55,7 @@ A stop `'thread.depth'` lists the parts it lights up; its words are `stop.<threa
 
 ## The redesign (src/v2, explore.html)
 
-`explore.html` boots `src/main2.js` and `src/v2/app.js`: the menu (Explore, Questions, Build, Ecosystem), routes in the address (`#/`, `#/place/datacentre`, `#/questions`, `#/build`, `#/ecosystem`), a sheet for a picked place or question, and the pages. `src/v2/kit3d.js` holds the renderer, light, the two palettes, rounded shapes and HTML labels at 3D points. `src/v2/map3d.js` is the chip world; `src/v2/dc3d.js` the data centre at true scale in metres, the followed chip near the origin, its camera moving along one path with depth z in 0..5 and everything that opens (roof, door, tray, lid, heat sink, chip lid) opening as a function of z. Places not yet redrawn link into the current site with `index.html?world=…&depth=…&thread=…` (and `map=1` for the supply map).
+`explore.html` boots `src/main2.js` and `src/v2/app.js`: the menu (Explore, Challenges, Questions, Build, Ecosystem), routes in the address (`#/`, `#/place/datacentre`, `#/challenges`, `#/questions`, `#/build`, `#/ecosystem`), the HUD with your chip's life, a sheet for a picked place (its three doors), challenge or question, and the pages. How it holds together is in [WORLD.md](WORLD.md). `src/v2/game.js` is the game as pure data and logic (no DOM; `tests/game.test.mjs`): the loop's steps and stations, the challenges and what each grows, each place's doors (`ASK`, `LOOK`, `DEBATES_AT`), your state in `localStorage`, the checks (each asks an engine), and the community's jobs from the plan. `src/v2/play.js` plays one challenge inside the sheet, redrawing by patching the DOM so a slider keeps its drag. `src/v2/kit3d.js` holds the renderer, light, the two palettes, rounded shapes and HTML labels at 3D points. `src/v2/map3d.js` is the chip world: the island with its loop road and numbered stops, your chip, the growers, the Lab's floors and the village's plots, and the islands across the sea; `setState()` redraws what grew. `src/v2/dc3d.js` is the data centre at true scale in metres, the followed chip near the origin, its camera moving along one path with depth z in 0..5 and everything that opens (roof, door, tray, lid, heat sink, chip lid) opening as a function of z. Places not yet redrawn link into the current site with `index.html?world=…&depth=…&thread=…` (and `map=1` for the supply map).
 
 ## The card and the picture
 
@@ -67,7 +67,7 @@ Every word on screen lives in `src/i18n/en.json` and is read with `t('name')`, i
 
 ## Checks
 
-- `npm test`: your chip's model (`tests/chip.test.mjs`), the weave (continuity of the zoom, parts, threads, the core-question rule, figures and cases with sources) and the words.
+- `npm test`: your chip's model (`tests/chip.test.mjs`), the chip world's game (`tests/game.test.mjs`), the weave (continuity of the zoom, parts, threads, the core-question rule, figures and cases with sources) and the words.
 - `npm run test:browser`: Playwright opens the site on desktop and phone, in dark and light, dives, follows a question and lets it go, opens a real case and the companion, finds the invitation in a gap, and changes world.
 - `npm run build`: `dist/open-silicon-lab.html`, one self-contained file.
 
