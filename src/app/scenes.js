@@ -14,6 +14,7 @@ import { DEPTHS, WORLDS } from '../data/weave.js';
 import { START, model, dies, defects, hits, WAFER, dieSquare } from '../engines/chip.js';
 import { rnd, clamp, poly, rr, blob, along2, closed } from './draw.js';
 import { STATIONS, setJourneyChip } from './journey.js';
+import { DESIGN_SCENES } from './design.js';
 import { proj, kit, tones, mix } from './solid.js';
 
 /* Your chip (src/engines/chip.js): the scenes that show it read its settings from here. */
@@ -910,7 +911,7 @@ const die = {
   }
 };
 
-export const SCENES = { building, rack, board, chip, phone, phoneboard, soc, car, ecu, mcu, scanner, wafer, die, block, gate, switch: swtch, atom, ...STATIONS };
+export const SCENES = { building, rack, board, chip, phone, phoneboard, soc, car, ecu, mcu, scanner, wafer, die, block, gate, switch: swtch, atom, ...STATIONS, ...DESIGN_SCENES };
 /* a scene drawn by the dive itself tells how large the dive's box is */
 Object.values(SCENES).forEach(sc => { const draw = sc.draw; sc.draw = function (G) { if (!NEST) measure(G); draw.call(sc, G); }; });
 export const partsOf = id => SCENES[id].parts;

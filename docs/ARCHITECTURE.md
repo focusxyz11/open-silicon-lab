@@ -12,14 +12,18 @@ src/app/journey.js      the journey's stations as machines, the steps each plays
 src/app/draw.js         small drawing helpers both use
 src/app/solid.js        solids in 2.5D (boxes, cylinders, prisms, cutaways, shadows, four tones), the one way volume is drawn
 src/app/journey3d.js    the journey in 3D (three.js): the plants and the factory's bay, every station's machines, the camera
+src/app/design.js       the design studio: six stations showing your design from the job to the masks, and their band
 src/app/map.js          the world around the line: a chip's whole trip on a map, from design to where it is used
 src/app/lens3d.js       the lens: while a machine works, your wafer's surface magnified beside it, showing what the machine does
 src/vendor/three.min.js three.js, loaded only when the journey is first opened
 src/engines/chip.js     your chip: its settings and what follows from them, relative to a starting chip (tested)
+src/engines/design.js   your design: one circuit run through the tiny-chip engine, from description to masks (tested)
+src/engines/tinychip.js the earlier site's tiny-chip engine: parse, check, synthesize, place, route, fault-test
 src/engines/fab.js      a fab you run: a re-entrant line of tool groups, how busy each is and how long wafers wait (tested)
 src/engines/supply.js   what stops in a chip's trip when places stop (tested)
 src/engines/weave.js    pure logic: the current world, the camera, sizes, threads, when a core question appears (tested)
 src/data/weave.js       the data: worlds, depths and portals, threads, stops
+src/data/community.js   the shared chip: learners' designs, each checked by the tests
 src/data/world.js       the map: places, and each kind of chip's trip through them, joined to the line's stations
 src/data/facts.json     sourced figures, loaded at start (src/main.js); FIGURES and CASES in weave.js point to them
 src/core/i18n.js        words: t('name'), plurals, numbers, dates
@@ -63,4 +67,8 @@ The globe in the journey's band (and "Where in the world?" in the card at any st
 ## A fab you run
 
 Your chip has a fourth setting, `load`: how full the fab that makes it runs (`LOADS` in `src/engines/chip.js`). `src/engines/fab.js`, from the earlier site, models the fab as a re-entrant line: every layer of your chip visits the same tool groups, the busiest group (the scanners) sets the pace, and waiting grows without limit as a group nears full. The model gives each loop station of the journey how busy it is and how long a wafer waits there per visit (`GROUPS_AT` joins stations to tool groups). You change it with the "Try it" at Wires (the question of who decides the order); the card at every loop station says what it means there, and in the 3D factory the shelves under the overhead track fill with pods waiting their turn, most at the scanners. Fuller is cheaper (a fab's costs are mostly fixed) but slower: a challenge asks for both.
+
+## The design studio
+
+The top bar's Design is a second line (`flat: true`: drawn in 2D, without the factory's 3D), before the factory: the job a chip must do, its description, the check, the gates, the layout and the masks. One design runs through all six (`S.design`, saved): pick a job at the first station (from a half adder to one slice of a RISC-V core's ALU), edit its description in the card at Describe or Check, and every station's picture follows at once, through the earlier site's tiny-chip engine (`src/engines/tinychip.js`, wrapped by `src/engines/design.js`). Some jobs start with a bug the check finds. At Layout the design sits on one tile of a shared chip, beside the community's designs (`src/data/community.js`), with a way to propose yours; at Masks it is sent to the factory's Print station, and Print points back to where its masks come from. The factory's Test station says how many faults your design's own test patterns would catch.
 

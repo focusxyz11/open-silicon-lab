@@ -16,6 +16,9 @@ import { CLOCKS, GENS, SIDES, LOADS, START, CHALLENGES, normal, changed, model, 
 import { N, IDS, WORLD, setWorld, worldOf, zIn, reshape, isLine, clampZ, sizeAt, sizeParts, stop, stopKey, crossing, below, above, nearest, threadOf, rootShown, threadDepths } from '../engines/weave.js';
 import { createWorld, threadColor, theme, reduced } from './world.js';
 import { setChip as drawChip, setBuild, BUILD_STEPS } from './scenes.js';
+import { build as buildDesign, normalDesign, starterOf, PROJECTS, START_DESIGN } from '../engines/design.js';
+import { setDesign } from './design.js';
+import { COMMUNITY } from '../data/community.js';
 
 const KEY = 'osl-weave-v1';
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -35,10 +38,12 @@ export function start(facts) {
     seen: saved.seen && typeof saved.seen === 'object' ? saved.seen : {},
     from: typeof saved.from === 'string' ? saved.from : null,
     chip: normal(saved.chip || START),
+    design: normalDesign(saved.design || START_DESIGN),
     build: BUILD_STEPS - 1
   };
   setChip(S.chip);
-  const save = () => { try { localStorage.setItem(KEY, JSON.stringify({ world: WORLD, z: Math.round(world.z * 100) / 100, thread: S.thread, seen: S.seen, chip: S.chip, from: S.from })); } catch (e) { /* storage unavailable */ } };
+  setDesign(buildDesign(S.design));
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify({ world: WORLD, z: Math.round(world.z * 100) / 100, thread: S.thread, seen: S.seen, chip: S.chip, from: S.from, design: S.design })); } catch (e) { /* storage unavailable */ } };
 
   const depthName = d => t('depth.' + IDS[d] + '.name');
   /* how far down (in a dive), or which station (on the line) */
@@ -246,12 +251,50 @@ export function start(facts) {
     else if (MADE[id]) out.push(['back', 'journey', MADE[id], t('ui.seeMade', { station: t('depth.' + MADE[id] + '.name') })]);
     /* the whole trip, around the world: from any station, and from the top of each dive */
     const trip = isLine() ? '' : TRIP[id];
-    if (isLine()) out.push(['map', '', '', t('map.open')]); else if (trip) out.push(['map', trip, '', t('map.fromDive')]);
+    if (isStudio()) { if (id === 'masks') out.push(['back', 'journey', 'print', t('design.toFab', { station: t('depth.print.name') })]); }
+    else if (isLine()) { if (id === 'print') out.push(['back', 'design', 'masks', t('design.fromDesign', { station: t('depth.masks.name') })]); out.push(['map', '', '', t('map.open')]); }
+    else if (trip) out.push(['map', trip, '', t('map.fromDive')]);
     if (!out.length) return '';
-    return '<section class="ways"><p class="code">' + t(isLine() && EXITS[id] ? 'ui.waysOut' : isLine() ? 'ui.waysDown' : worldOf(WORLD).hidden ? 'ui.waysBack' : 'ui.waysMade') + '</p><div class="moves">' +
+    return '<section class="ways"><p class="code">' + t(isStudio() ? 'ui.waysOn' : isLine() && EXITS[id] ? 'ui.waysOut' : isLine() ? 'ui.waysDown' : worldOf(WORLD).hidden ? 'ui.waysBack' : 'ui.waysMade') + '</p><div class="moves">' +
       out.map(o => o[0] === 'map' ? '<button type="button" class="btn" data-map="' + o[1] + '">' + esc(o[3]) + '</button>' :
         '<button type="button" class="btn' + (o[0] === 'exit' ? ' primary' : '') + '" data-dive="' + o[1] + ':' + o[2] + (o[0] === 'back' ? '' : ':' + id) + '">' + esc(o[3]) + '</button>').join('') + '</div></section>';
   };
+
+  /* ---- your design (src/engines/design.js), in the design studio, and where the journey meets it ---- */
+  const isStudio = () => !!worldOf(WORLD).flat;
+  const FENCE = '```json\n'; /* i18n-ok: a code block's opening, in Markdown */
+  const errWords = B => B.errs.map(e => '<li>' + esc(t('design.err.' + e.k, { l: e.l, n: e.n || '' })) + '</li>').join('');
+  const pattern = v => Object.entries(v).map(([k, x]) => k + ' ' + x).join(' · ');
+  function designMsg(id, B) {
+    if (B.errs.length) return '<ul class="errs">' + errWords(B) + '</ul>';
+    if (id === 'check' || id === 'logic') {
+      if (!B.spec) return '<p class="small">' + esc(t('design.state.free')) + '</p>';
+      const r = B.rows.find(x => x.mis.length);
+      return r ? '<p class="small bad">' + esc(t('design.wrongAt', { v: pattern(r.v), e: pattern(Object.fromEntries(r.mis.map(k => [k, r.e[k]]))), o: pattern(Object.fromEntries(r.mis.map(k => [k, r.o[k]]))) })) + '</p>' : '<p class="small good">' + esc(t('design.allRight')) + '</p>';
+    }
+    return '';
+  }
+  function designCard(d) {
+    const id = IDS[d], B = buildDesign(S.design);
+    let h = '<section class="try design"><p class="code">' + t('design.yours') + ' · ' + esc(t('design.proj.' + B.p + '.t')) + '</p>';
+    if (id === 'need') h += '<p class="small muted">' + t('design.pick') + '</p><div class="shows">' + PROJECTS.map(p => '<button type="button" class="chipgo" data-proj="' + p + '" aria-pressed="' + (p === B.p) + '">' + esc(t('design.proj.' + p + '.t')) + '</button>').join('') + '</div>';
+    h += '<p>' + esc(t('design.proj.' + B.p + '.d')) + '</p>';
+    if (id === 'logic' || id === 'check') {
+      h += '<label class="trylabel" for="designCode"><b>' + t('design.edit') + '</b></label><textarea id="designCode" class="code-edit" spellcheck="false" autocapitalize="off" autocomplete="off" rows="' + Math.min(14, B.code.split('\n').length + 2) + '">' + esc(B.code) + '</textarea>';
+      h += '<div id="designMsg" aria-live="polite">' + designMsg(id, B) + '</div><button type="button" class="link" data-dreset>' + t('design.reset') + '</button>';
+    } else if (B.errs.length) h += '<ul class="errs">' + errWords(B) + '</ul>';
+    if (id === 'gates' && B.p === 'alu' && B.M) h += '<p class="small">' + esc(t('design.alu32', { cells: B.M.cells.length })) + '</p>';
+    if ((id === 'check' || id === 'gates') && B.M) h += '<p class="small muted">' + esc(t('design.cov', { vectors: B.vectors, caught: Math.round(B.coverage * 100) })) + '</p>';
+    if (id === 'layout') {
+      h += '<p class="small muted">' + t('design.community') + '</p><ol class="small community">' + COMMUNITY.map(c => '<li><b>' + esc(c.title) + '</b> · ' + esc(c.author) + '</li>').join('') + '</ol>';
+      if (B.ok) {
+        const entry = { slug: 'your-design', title: t('design.proj.' + B.p + '.t'), author: '', description: '', ...(B.p === 'free' ? { ins: B.ins, outs: B.outs } : { project: B.p }), code: B.code };
+        const url = REPO + '/issues/new?' + new URLSearchParams({ title: t('design.addYours') + ': ' + entry.title, body: FENCE + JSON.stringify(entry, null, 2) + '\n```' });
+        h += ext(url, t('design.addYours'), 'btn') + '<p class="small muted">' + t('design.addNote') + '</p>';
+      }
+    }
+    return h + '</section>';
+  }
 
   /* the card while the map is open: whose trip, the step picked, the place picked, and what stops */
   const siteBtn = id => '<button type="button" class="chipgo' + (S.map.closed.includes(id) ? ' shut' : '') + '" data-site="' + id + '">' + esc(t('site.' + id + '.name')) + '</button>';
@@ -300,6 +343,9 @@ export function start(facts) {
     let h = '<p class="where"><b>' + esc(depthName(d)) + '</b> <span id="acrossNow">' + esc(across(world.z)) + '</span></p>';
     /* on the line: which building you are in, and whether this machine is part of the loop every layer goes round */
     if (isLine() && PLANTS[IDS[d]]) h += '<p class="small plant">' + esc(t('plant.' + PLANTS[IDS[d]])) + (LOOP.includes(IDS[d]) ? ' · ' + esc(t('ui.inLoop', { layers: model(S.chip).layers })) : '') + '</p>';
+    if (isStudio()) h += designCard(d);
+    /* at the factory's Test station: how well its test patterns would catch faults in your own design */
+    if (isLine() && IDS[d] === 'test') { const B = buildDesign(S.design); if (B.M) h += '<p class="small plant">' + esc(t('design.testYours', { vectors: B.vectors, caught: Math.round(B.coverage * 100) })) + '</p>'; }
     h += partCard(d);
     if (th) {
       const here = stop(th, d), color = threadColor(th), key = stopKey(th, d);
@@ -337,6 +383,8 @@ export function start(facts) {
     anchor();
   }
   cardEl.addEventListener('click', e => {
+    const pj = e.target.closest('[data-proj]'); if (pj) { S.design = normalDesign({ p: pj.dataset.proj }); setDesign(buildDesign(S.design)); save(); card(); return; }
+    if (e.target.closest('[data-dreset]')) { S.design = normalDesign({ p: S.design.p }); setDesign(buildDesign(S.design)); save(); card(); return; }
     const mp = e.target.closest('[data-map]'); if (mp) { const w = mp.dataset.map; if (w) enter('journey', 'ship'); openMap(w || undefined); return; }
     if (S.map) {
       const mw = e.target.closest('[data-mapworld]'); if (mw) { S.map.world = S.mapWorld = mw.dataset.mapworld; S.map.closed = []; S.map.site = null; const i = stepAt(S.map.world, IDS[Math.round(world.z)]); S.map.step = i != null ? i : 0; showMap(); return; }
@@ -375,7 +423,13 @@ export function start(facts) {
   }
 
   cardEl.addEventListener('scroll', anchor, { passive: true });
-  cardEl.addEventListener('input', e => { const r = e.target.closest('#tryRange'); if (r) setSetting(r.dataset.setting, +r.value); });
+  cardEl.addEventListener('input', e => { const r = e.target.closest('#tryRange'); if (r) setSetting(r.dataset.setting, +r.value); if (e.target.id === 'designCode') editDesign(e.target.value); });
+  /* the description, edited in the card: the whole design follows at once, in every station's picture */
+  let editT = null;
+  function editDesign(code) {
+    clearTimeout(editT);
+    editT = setTimeout(() => { S.design = normalDesign({ p: S.design.p, code }); const B = buildDesign(S.design); setDesign(B); save(); const m = $('designMsg'); if (m) m.innerHTML = designMsg(IDS[Math.round(world.z)], B); }, 220);
+  }
   cardEl.addEventListener('change', e => { if (e.target.closest('#tryRange')) { const keep = e.target.value; card(); const r = $('tryRange'); if (r) { r.value = keep; r.focus(); } } });
 
   /* ---- layout: keep the scene clear of the rail and the card ---- */

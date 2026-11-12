@@ -13,11 +13,13 @@ const FACT = Object.fromEntries(FACTS.facts.map(f => [f.id, f]));
 globalThis.window = globalThis.window || {};
 const { SCENES, partsOf } = await import('../src/app/scenes.js');
 const each = fn => WORLDS.forEach(w => { E.setWorld(w.id); fn(w); });
-const DIVE_WORLDS = WORLDS.filter(w => !w.line), LINE = WORLDS.find(w => w.line);
+const DIVE_WORLDS = WORLDS.filter(w => !w.line), LINE = WORLDS.find(w => w.line && !w.flat);
 const eachDive = fn => DIVE_WORLDS.forEach(w => { E.setWorld(w.id); fn(w); });
 
-test('the dives each have their own way down and meet in the same lower depths; the journey is a line', () => {
-  assert.deepEqual(WORLDS.map(w => w.id), ['datacentre', 'phone', 'car', 'journey', 'made']);
+test('the dives each have their own way down and meet in the same lower depths; the design studio and the journey are lines', () => {
+  assert.deepEqual(WORLDS.map(w => w.id), ['datacentre', 'phone', 'car', 'design', 'journey', 'made']);
+  const STUDIO = WORLDS.find(w => w.flat);
+  assert.deepEqual(STUDIO.depths, ['need', 'logic', 'check', 'gates', 'layout', 'masks']);
   assert.deepEqual(WORLDS[0].depths, ['building', 'rack', 'board', 'chip', 'block', 'gate', 'switch', 'atom']);
   assert.deepEqual(LINE.depths, ['crystal', 'slice', 'clean', 'deposit', 'print', 'etch', 'implant', 'wires', 'test', 'pkg', 'ship']);
   for (const w of DIVE_WORLDS) {
@@ -27,8 +29,8 @@ test('the dives each have their own way down and meet in the same lower depths; 
   /* a depth above the shared ones belongs to one world only, so its portal leads to one place */
   const upper = DIVE_WORLDS.flatMap(w => w.depths.filter(d => !SHARED.includes(d)));
   assert.equal(new Set(upper).size, upper.length);
-  assert.deepEqual(Object.keys(DEPTHS).sort(), [...new Set([...upper, ...SHARED, ...LINE.depths])].sort());
-  assert.ok(EN['world.journey.name'] && EN['world.made.name']);
+  assert.deepEqual(Object.keys(DEPTHS).sort(), [...new Set([...upper, ...SHARED, ...LINE.depths, ...STUDIO.depths])].sort());
+  assert.ok(EN['world.journey.name'] && EN['world.made.name'] && EN['world.design.name']);
 });
 
 test('the journey: stations side by side, moved along smoothly, with ways down and ways out that exist', () => {
@@ -200,7 +202,7 @@ test('every real case shows at a stop, with its words, its source and the figure
 
 test('the journey: every step goes somewhere real and says what happens; a robot makes every move; the slice carries on', async () => {
   const { JOURNEY } = await import('../src/app/journey.js');
-  const line = WORLDS.find(w => w.line).depths;
+  const line = WORLDS.find(w => w.line && !w.flat).depths;
   assert.deepEqual(Object.keys(JOURNEY).sort(), [...line].sort(), 'every station of the line has its steps');
   let was = null;
   for (const id of line) {
@@ -225,7 +227,7 @@ test('the journey: every step goes somewhere real and says what happens; a robot
 test('the journey in 3D: every station is built, its parts have words, and the wafer has a place and a robot for every step', async () => {
   const { stationForTest } = await import('../src/app/journey3d.js');
   const { JOURNEY } = await import('../src/app/journey.js');
-  const line = WORLDS.find(w => w.line).depths;
+  const line = WORLDS.find(w => w.line && !w.flat).depths;
   for (const id of line) {
     const st = stationForTest(id, line), cfg = JOURNEY[id];
     assert.ok(st.built, id + ': no 3D machine');
