@@ -131,7 +131,16 @@ function who(G, kind, x, y, s) {
 }
 function planView(G, x0, y0, w, h) {
   const c = G.col, L = levels(), P = plan(MINE), here = needForProject(B.p), rh = Math.min(70, h / L.length), pos = {};
-  L.forEach((row, i) => row.forEach((id, j) => { const bw = Math.min(150, w / row.length - 12); pos[id] = [x0 + (w * (j + 0.5)) / row.length - bw / 2, y0 + i * rh, bw, rh * 0.62]; }));
+  /* a tidy tree: every piece without pieces of its own gets a slot; each piece sits over the middle of its own */
+  const kids = id => NEEDS.filter(n => n.parent === id).map(n => n.id), cx = {}; let slot = 0;
+  const leaves = []; const walk = id => { const k = kids(id); if (!k.length) { leaves.push(id); cx[id] = slot++; } else { k.forEach(walk); cx[id] = (cx[k[0]] + cx[k[k.length - 1]]) / 2; } };
+  walk(L[0][0]);
+  const sw = w / Math.max(1, slot);
+  L.forEach((row, i) => {
+    const xs = row.map(id => x0 + sw * (cx[id] + 0.5)).sort((a, b) => a - b), gap = xs.length > 1 ? Math.min(...xs.slice(1).map((x, j) => x - xs[j])) : w;
+    const bw = Math.min(170, gap - 8);
+    row.forEach(id => { const b = Math.min(bw, sw * 1.8); pos[id] = [Math.max(x0, Math.min(x0 + w - b, x0 + sw * (cx[id] + 0.5) - b / 2)), y0 + i * rh, b, rh * 0.62]; });
+  });
   /* lines from each piece up to what needs it */
   L.forEach(row => row.forEach(id => { const n = pos[id], par = (P[id] && NEEDS_PARENT[id]) || null; if (!par || !pos[par]) return; const q = pos[par]; G.l([[n[0] + n[2] / 2, n[1]], [n[0] + n[2] / 2, n[1] - rh * 0.19], [q[0] + q[2] / 2, n[1] - rh * 0.19], [q[0] + q[2] / 2, q[1] + q[3]]], c.line, 1); }));
   Object.entries(pos).forEach(([id, [x, y, bw, bh]]) => {
@@ -139,8 +148,8 @@ function planView(G, x0, y0, w, h) {
     if (s.yours) { G.a(0.22); G.r(x, y, bw, bh, c.warm); G.a(1); }
     const col = st === 'built' ? c.grn : st === 'open' ? c.warm : st === 'partly' ? c.hi : c.line;
     G.ctx.setLineDash(st === 'open' ? [5, 4] : st === 'engine' ? [2, 4] : []); G.r(x, y, bw, bh, s.yours ? null : c.lo, col, mineHere ? 2.6 : 1.2); G.ctx.setLineDash([]);
-    text(G, t('build.need.' + id + '.t'), x + 8, y + bh * 0.36, Math.min(14, bw / 9), c.hi, 'left', 600);
-    text(G, t('build.short.' + st, { built: s.built || 0, of: s.of || 0 }), x + 8, y + bh * 0.74, Math.min(11, bw / 12), col, 'left');
+    const nm = t('build.need.' + id + '.t'); text(G, nm, x + 7, y + bh * 0.36, Math.min(13, (bw - 22) / (nm.length * 0.62)), c.hi, 'left', 600);
+    text(G, t('build.short.' + st, { built: s.built || 0, of: s.of || 0 }), x + 7, y + bh * 0.74, Math.min(10.5, bw / 11), col, 'left');
     (s.kinds || []).slice(0, 2).forEach((k, q) => who(G, k, x + bw - 14 - q * 26, y + bh * 0.4, 6));
     if (s.yours) who(G, BY === 'ai' ? 'ai' : BY === 'both' ? 'both' : 'person', x + bw - 14, y + bh * 0.4 + (s.kinds && s.kinds.length ? 0 : 0), 6);
   });

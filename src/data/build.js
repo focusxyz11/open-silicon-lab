@@ -22,6 +22,9 @@ export const NEEDS = [
   { id: 'full', parent: 'slice', engine: 'logic', project: 'full' },
   { id: 'half', parent: 'full', engine: 'logic', project: 'half' },
   { id: 'regs', parent: 'core', engine: null },
+  { id: 'bits', parent: 'regs', engine: 'repeat', of: 'regbit', n: 1024 },
+  { id: 'regbit', parent: 'bits', engine: 'logic', project: 'regbit' },
+  { id: 'select', parent: 'regs', engine: 'logic', project: 'select' },
   { id: 'decode', parent: 'core', engine: null },
   { id: 'timer', parent: 'computer', engine: 'logic', project: 'count' },
   { id: 'display', parent: 'computer', engine: 'logic', project: 'seg' },
@@ -45,5 +48,7 @@ export const AGENT = {
   alu: 'bb = b ^ sub;\ns = a ^ bb ^ cin;\ncout = (a & b) | (cin & (a ^ b));\ny = (~op1 & ~op0 & (a & b)) | (~op1 & op0 & (a | b)) | (op1 & ~op0 & (a ^ b)) | (op1 & op0 & s);',
   count: 'reg q0 = q0 ^ en;\nreg q1 = q1 ^ (q0 & en);\nreg q2 = q2 ^ (q1 & q0);',
   parity: 'odd = a ^ b ^ c ^ d;',
+  regbit: 'reg q = (we & d) | q;',
+  select: 'y0 = ~s1 & ~s0 & en;\ny1 = ~s1 & s0 & en;\ny2 = s1 & ~s0 & en;\ny3 = s1 & s0 & en;',
   free: 'y = a & b;\nz = c | d;'
 };
