@@ -48,6 +48,21 @@ each mask, and one speck of dust that leaves a wire stuck, in a copy that looks 
 hunt at the test house, where the four copies are of your own design once you have won it (`spotCode`). On the island, the studio is a campus at the start of the loop, and its mask
 house sends the first masks you make down the road to the factory, on a truck.
 
+## Scene, ornaments, story: no side panel (prototype: the board, `#/board`)
+
+Where content meets the picture, three layers, each with one job, wired both ways:
+
+- **The scene** fills the screen. Every piece of content has a type and a home on a part: its name sits on the
+  part, a figure is a reading on it, a question is a mark you can tap. Tap a part and the story goes to its step.
+- **Ornaments** at the edges say where you are, never paragraphs: the depth rail, the way back up, a live goal.
+- **The story** is docked below, one step at a time (steps, not scrolling), and it drives the scene: each step
+  moves the camera and lights a part. Its words are touchable: `[[part|words]]` lights that part, `[[#name]]` is a
+  live number you drag, and the scene answers (the cores light up as much as they are busy, the numbers stream
+  from memory as light). A step can ask for a prediction before the number moves.
+
+A story is data (`src/v2/stories.js`, played by `src/v2/story.js`); its numbers come from the engines, never from
+the words. Long reading belongs in a reading view opened on purpose, never beside the picture.
+
 ## Inside a chip: the dive and the line as one picture
 
 The dive and the factory line meet in one view, `#/chip` (`src/v2/chip3d.js`): a cut through a chip, its layers

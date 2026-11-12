@@ -4,7 +4,7 @@
    Look is Inside: a place's levels, one inside the next, which hold the earlier site's pages (src/data/places.js).
    The menu: Explore (the island), Challenges (every challenge and every open job), Questions (by place),
    Build (the shared computer the community is building) and Ecosystem (the islands across the sea, and the
-   world chips depend on). Routes live in the address: #/, #/place/<id>, #/place/datacentre/<level>, #/chip/<row>[/build] (inside a chip, layer by layer), #/challenges, #/questions, #/build,
+   world chips depend on). Routes live in the address: #/, #/place/<id>, #/place/datacentre/<level>, #/chip/<row>[/build] (inside a chip, layer by layer), #/board (one board, with a story that drives it), #/challenges, #/questions, #/build,
    #/ecosystem. Words are read with t(); places not yet redrawn open the current site. */
 import { t } from '../core/i18n.js';
 import { REPO, THREADS } from '../data/weave.js';
@@ -28,7 +28,7 @@ const qColor = key => 'hsl(' + hue(key.split('.')[0]) + ' 70% 55%)';
 const follow = key => { const [th, depth] = key.split('.'); return oldUrl(Game.worldOfDepth(depth), { thread: th, depth }); };
 
 export function start() {
-  let map = null, dc = null, chip = null, mapReady = null;
+  let map = null, dc = null, chip = null, board = null, mapReady = null;
   const S = Game.load(localStorage);
   const save = () => Game.save(localStorage, S);
 
@@ -95,7 +95,7 @@ export function start() {
      dive, or the factory step that makes it), or else the current site */
   const rowOf = d => { const i = ROWS.findIndex(r => r.dive === d || r.made.includes(d)); return i < 0 ? null : { row: i, build: !ROWS.some(r => r.dive === d) }; };
   const DIVE_CHIP = { soc: 0, mcu: 0 };
-  const levelHref = (place, l) => { const f = (Game.FLOWN[place] || {})[l.depth]; if (f != null) return '#/place/' + place + '/' + f;
+  const levelHref = (place, l) => { if (place === 'datacentre' && l.depth === 'board') return '#/board'; const f = (Game.FLOWN[place] || {})[l.depth]; if (f != null) return '#/place/' + place + '/' + f;
     const c = DIVE_CHIP[l.depth] != null ? { row: 0, build: false } : rowOf(l.depth); return c ? '#/chip/' + c.row + (c.build ? '/build' : '') : oldUrl(l.world, { depth: l.depth }); };
   function insideHtml(id) {
     const L = Game.INSIDE[id] || [], extra = Game.LOOK[id] || [];
@@ -172,10 +172,11 @@ export function start() {
     pui.querySelectorAll('[data-lv]').forEach(b => b.setAttribute('aria-current', +b.dataset.lv === lv ? 'step' : 'false'));
     pui.querySelector('.caption').innerHTML = '<p class="kicker">' + esc(t('place.level', { n: lv + 1, total: LEVELS.length })) + '</p><h2>' + esc(t('place.dc.' + id + '.t')) + '</h2><p>' + esc(t('place.dc.' + id + '.d')) + '</p>' +
       (key ? '<div class="ask" style="--qc:' + qColor(key) + '"><p class="q">' + esc(t('stop.' + key + '.q')) + '</p><a class="link" href="' + esc(follow(key)) + '">' + esc(t('sheet.follow')) + '</a></div>' : '') +
-      (lv === LEVELS.length - 1 ? '<a class="btn primary" href="#/chip/0">' + esc(t('place.next')) + '</a>' : '');
+      (lv === LEVELS.length - 1 ? '<a class="btn primary" href="#/chip/0">' + esc(t('place.next')) + '</a>' : id === 'board' ? '<a class="btn primary" href="#/board">' + esc(t('board.enter')) + '</a>' : '');
   }
   const depthBar = z => { const f = pui.querySelector('.fill'); if (f) f.style.height = (z / (LEVELS.length - 1) * 100).toFixed(1) + '%'; };
   function showPlace(id, lv) {
+    hideBoard();
     $('chipCanvas').hidden = $('chipLabels').hidden = true; cui.hidden = true; chip && chip.pause();
     $('hero').hidden = true; hudEl.hidden = true; closeSheet();
     $('mapCanvas').hidden = $('mapLabels').hidden = true; $('placeCanvas').hidden = $('placeLabels').hidden = false; pui.hidden = false;
@@ -209,7 +210,30 @@ export function start() {
       '<a class="btn" href="' + esc(build ? '#/place/fab/inside' : oldUrl('datacentre', { depth: R.dive })) + '">' + esc(t(build ? 'chipx.atFab' : 'chipx.current')) + '</a></div>';
     cui.querySelector('.now').innerHTML = h;
   }
+  /* ---- one board, no side panel: words on the parts, a story docked below that drives the camera ---- */
+  const bui = $('boardui');
+  const hideBoard = () => { $('boardCanvas').hidden = $('boardLabels').hidden = true; bui.hidden = true; board && board.pause(); document.body.classList.remove('immersive'); };
+  function showBoard() {
+    hideAll(); document.body.classList.add('immersive');
+    $('boardCanvas').hidden = $('boardLabels').hidden = false; bui.hidden = false;
+    bui.innerHTML = '<a class="homebtn" href="#/place/datacentre/4" aria-label="' + esc(t('board.up')) + '">↑</a><nav class="crumbs2"><a href="#/">' + esc(t('place.back')) + '</a><span aria-hidden="true">›</span><a href="#/place/datacentre/4">' + esc(t('map.datacentre.t')) + '</a><span aria-hidden="true">›</span><b>' + esc(t('place.dc.board.t')) + '</b></nav>' +
+      '<ol class="rail2" aria-label="' + esc(t('place.levels')) + '">' + LEVELS.map((k, i) => '<li><a href="' + (k === 'board' ? '#/board' : k === 'chip' ? '#/chip/0' : '#/place/datacentre/' + i) + '"' + (k === 'board' ? ' aria-current="step"' : '') + '><span class="dot"></span><span class="nm">' + esc(t('place.dc.' + k + '.t')) + '</span></a></li>').join('') + '</ol>' +
+      '<aside class="goal2" hidden></aside><section class="dock" aria-live="polite"></section>';
+    loading(true);
+    Promise.all([board ? board : import('./board3d.js').then(m => (board = m.createBoard($('boardCanvas'), $('boardLabels'), { part: id => story && story.part(id), dive: () => { location.hash = '#/chip/0'; } }))), import('./story.js'), import('./stories.js')]).then(([b, St, Sd]) => {
+      loading(false); b.resume(); const data = Sd.boardStory();
+      story = St.createStory(bui.querySelector('.dock'), b, data, { follow, step: st => { const g = bui.querySelector('.goal2'); g.hidden = !st.live; if (st.live) g.innerHTML = '<p class="kicker">' + esc(t('board.goal')) + '</p>' + data.gauges(data.state).map(x => '<div class="gauge' + (x.warm ? ' warmg' : ' ok') + '"><span class="gl">' + esc(t('board.gauge.' + x.id)) + '</span><span class="gv">' + esc(x.text) + '</span><span class="gbar"><span style="width:' + Math.round(x.v * 100) + '%"></span></span></div>').join(''); } });
+      $('boardCanvas').focus({ preventScroll: true });
+    });
+  }
+  let story = null;
+  /* every view hides the others first */
+  function hideAll() {
+    hideBoard(); $('hero').hidden = true; hudEl.hidden = true; closeSheet(); pui.hidden = true; cui.hidden = true; dc && dc.pause(); map && map.pause(); chip && chip.pause();
+    ['mapCanvas', 'mapLabels', 'placeCanvas', 'placeLabels', 'chipCanvas', 'chipLabels'].forEach(k => { $(k).hidden = true; });
+  }
   function showChip(row, mode) {
+    hideBoard();
     $('hero').hidden = true; hudEl.hidden = true; closeSheet(); pui.hidden = true; dc && dc.pause(); map && map.pause();
     ['mapCanvas', 'mapLabels', 'placeCanvas', 'placeLabels'].forEach(k => { $(k).hidden = true; });
     $('chipCanvas').hidden = $('chipLabels').hidden = false; cui.hidden = false;
@@ -221,6 +245,7 @@ export function start() {
     ensureChip().then(c => { loading(false); c.mode(chipMode); c.set(chipRow); c.resume(); $('chipCanvas').focus({ preventScroll: true }); });
   }
   function showMap() {
+    hideBoard();
     $('chipCanvas').hidden = $('chipLabels').hidden = true; cui.hidden = true; chip && chip.pause();
     $('placeCanvas').hidden = $('placeLabels').hidden = true; pui.hidden = true; dc && dc.pause();
     $('mapCanvas').hidden = $('mapLabels').hidden = false; $('hero').hidden = false; hudEl.hidden = false;
@@ -269,9 +294,10 @@ export function start() {
   /* ---- routes ---- */
   function route() {
     const parts = (location.hash.replace(/^#\/?/, '') || '').split('/').filter(Boolean), k = parts[0] || 'explore';
-    const nav = k === 'place' || k === 'chip' ? 'explore' : MENU.includes(k) ? k : 'explore';
+    const nav = k === 'place' || k === 'chip' || k === 'board' ? 'explore' : MENU.includes(k) ? k : 'explore';
     menu.querySelectorAll('[data-nav]').forEach(a => a.setAttribute('aria-current', a.dataset.nav === nav ? 'page' : 'false'));
     page.hidden = true;
+    if (k === 'board') return showBoard();
     if (k === 'chip') return showChip(parts[1] != null ? +parts[1] : null, parts[2]);
     if (k === 'place' && parts[1] === 'datacentre' && parts[2] !== 'inside') return showPlace('datacentre', parts[2] != null ? +parts[2] : null);
     if (k === 'place' && Game.PLACES.includes(parts[1])) { showMap().then(() => openPlace(parts[1], parts[2] === 'inside' ? 'look' : null)); return; }
