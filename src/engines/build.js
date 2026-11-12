@@ -18,7 +18,7 @@ export const ENGINES = {
   logic: { check: (need, d) => { const B = buildDesign({ p: need.project, code: d.code }); return B.errs.length === 0 && B.bad === 0; } },
   repeat: { check: () => true },
   /* a core design is a slice for its ALU: it passes when every test program gives the right answer */
-  riscv: { check: (need, d) => buildCore(d.slice || d.code, START_PROGRAM, null).ok }
+  riscv: { check: (need, d) => buildCore(d.slice || d.code, START_PROGRAM, null, d.regs || null).ok }
 };
 export const needOf = id => NEEDS.find(n => n.id === id) || null;
 export const childrenOf = id => NEEDS.filter(n => n.parent === id);

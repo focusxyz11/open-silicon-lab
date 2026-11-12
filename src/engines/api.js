@@ -37,13 +37,13 @@ export function getJob(id) {
 }
 
 /* check a design: does it read, is it right, and what it becomes (gates, layout, test coverage, masks) */
-export function checkDesign({ job, code, slice }) {
+export function checkDesign({ job, code, slice, regbit, select }) {
   const p = jobOf(job); if (!p) return { error: t('api.noJob', { id: job, jobs: PROJECTS.join(', ') }) };
-  const B = build({ p, code: typeof code === 'string' ? code : undefined, slice });
+  const B = build({ p, code: typeof code === 'string' ? code : undefined, slice, regs: { bit: regbit || null, select: select || null } });
   const out = { job: p, reads: !B.errs.length, errors: B.errs.map(e => ({ line: e.l, message: t('design.err.' + e.k, { l: e.l, n: e.n || '' }) })) };
   if (p === 'core') {
     const C = B.core;
-    return Object.assign(out, { right: B.ok, sliceRight: C.sliceOk, tests: C.tests.map(T => ({ name: t('core.test.' + T.id + '.t'), right: T.ok, cases: T.cases })), result: C.result, cycles: C.cycles, transistors: C.budget });
+    return Object.assign(out, { right: B.ok, sliceRight: C.sliceOk, registers: { yours: C.regs.yours, right: C.regs.right }, tests: C.tests.map(T => ({ name: t('core.test.' + T.id + '.t'), right: T.ok, cases: T.cases })), result: C.result, cycles: C.cycles, transistors: C.budget });
   }
   if (!out.reads) return out;
   const r = B.rows.find(x => x.mis.length);

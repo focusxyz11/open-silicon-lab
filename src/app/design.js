@@ -22,11 +22,11 @@ export const designNow = () => B;
 const R = (x, y, w, h) => ({ r: [x, y, w, h] });
 const sm = u => { u = Math.max(0, Math.min(1, u)); return u * u * (3 - 2 * u); };
 /* a panel standing in the studio: its face, and a little depth below and to the right */
-function panel(G, x, y, w, h, fill) {
+function panel(G, x, y, w, h, fill, edge) {
   const c = G.col, d = 12;
   G.ctx.beginPath(); G.ctx.moveTo(x + w, y); G.ctx.lineTo(x + w + d, y + d); G.ctx.lineTo(x + w + d, y + h + d); G.ctx.lineTo(x + d, y + h + d); G.ctx.lineTo(x, y + h); G.ctx.lineTo(x + w, y + h); G.ctx.closePath();
   G.ctx.fillStyle = c.dark ? c.up : c.dim; G.ctx.fill();
-  G.r(x, y, w, h, fill || c.lo, c.line, 1);
+  G.r(x, y, w, h, fill || c.lo, edge || c.line, edge ? 1.6 : 1);
 }
 function text(G, s, x, y, size, color, align, weight) {
   const ctx = G.ctx; ctx.font = (weight || 500) + ' ' + size + 'px ' + MONO; ctx.fillStyle = color; ctx.textAlign = align || 'left'; ctx.textBaseline = 'middle'; ctx.fillText(s, x, y);
@@ -74,7 +74,8 @@ function coreDatapath(G, withTests) {
   panel(G, 320, 100, 170, 50, c.mid); text(G, t('core.block.pc'), 332, 125, 13, c.line, 'left', 600); text(G, step ? String((step.l - 1) * 4) : '0', 478, 125, 14, c.hi, 'right');
   panel(G, 320, 170, 170, 56, c.mid); text(G, t('core.block.decode'), 332, 186, 12, c.line, 'left', 600); text(G, step ? step.op : '·', 405, 210, 18, c.warm, 'center', 600);
   /* the registers */
-  panel(G, 320, 250, 170, 510, c.lo); text(G, t('core.block.regs'), 332, 268, 12, c.line, 'left', 600);
+  const R = C.regs, mine = R && (R.yours.bit || R.yours.select);
+  panel(G, 320, 250, 170, 510, c.lo, mine ? (R.right ? c.grn : c.red) : null); text(G, t(mine ? 'core.block.regsYours' : 'core.block.regs'), 332, 268, 12, mine ? (R.right ? c.grn : c.red) : c.line, 'left', 600);
   const x = step ? step.x : new Array(32).fill(0);
   for (let r = 0; r < 32; r++) { const y = 288 + r * 14.6, hot = step && step.rd === r && r; if (hot) { G.a(0.25); G.r(322, y - 7, 166, 14, c.warm); G.a(1); } text(G, REGN[r], 332, y, 10.5, r === 10 ? c.warm : c.line); text(G, String(x[r]), 478, y, 10.5, x[r] ? c.hi : c.dim, 'right'); }
   /* the ALU: 32 slices, bit 31 at the top; a lit slice gives 1, a dot between two is a carry passing up */

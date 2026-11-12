@@ -98,5 +98,10 @@ test('the core: your slice inside it decides whether real programs give the righ
   assert.ok(buildCore(solutionOf('alu'), START_PROGRAM, 3).passed < TESTS.length, 'a copy the factory spoiled fails, though its design was perfect');
   assert.equal(build({ p: 'core', slice: solutionOf('alu') }).ok, true);
   assert.equal(plan(['core']).core.yours, true);
+  /* its registers, made of designs: a right register bit and select change nothing; a wrong one breaks real programs */
+  const P = id => TC.PROJ.find(x => x.id === id);
+  assert.equal(buildCore(solutionOf('alu'), START_PROGRAM, null, { bit: P('regbit').sol, select: P('select').sol }).passed, TESTS.length);
+  assert.ok(buildCore(solutionOf('alu'), START_PROGRAM, null, { bit: P('regbit').starter }).passed < TESTS.length, 'a register bit that ignores write enable spoils the registers');
+  assert.ok(buildCore(solutionOf('alu'), START_PROGRAM, null, { select: P('select').starter }).passed < TESTS.length, 'a select that ignores en writes registers on stores and branches');
 });
 

@@ -29,9 +29,10 @@ export const normalDesign = d => { const p = projectOf(d && d.p).id; return { p,
 /* the whole flow for one design. Returns what each station shows. */
 export function build(d) {
   const { p, code } = normalDesign(d), defect = d && Number.isInteger(d.defect) ? d.defect : null, slice = p === 'core' ? (d && typeof d.slice === 'string' ? d.slice : starterOf('alu')) : '';
-  const key = p + '\n' + code + '\n' + slice + '\n' + defect;
+  const regs = p === 'core' && d && d.regs ? { bit: typeof d.regs.bit === 'string' ? d.regs.bit : null, select: typeof d.regs.select === 'string' ? d.regs.select : null } : null;
+  const key = p + '\n' + code + '\n' + slice + '\n' + defect + '\n' + JSON.stringify(regs);
   if (cache.has(key)) return cache.get(key);
-  if (p === 'core') return remember(key, coreDesign(code, slice, defect));
+  if (p === 'core') return remember(key, coreDesign(code, slice, defect, regs));
   const proj = projectOf(p), seq = !!proj.seq;
   const D = TC.parse(code, proj.ins, proj.outs, { regs: seq });
   const out = { p, code, proj, ins: proj.ins, outs: proj.outs, seq, spec: proj.f != null, errs: D.errs || [] };
@@ -68,9 +69,10 @@ function spoil(B, vecs, seed) {
   return { net: pick.f.net, v: pick.f.v, rows, wrong: rows.filter(r => r.mis.length).length, caught: true };
 }
 
-/* the core as a design: your slice inside, checked by the test programs, running your program */
-function coreDesign(code, slice, defect) {
-  const C = buildCore(slice, code, defect), S = build({ p: 'alu', code: slice });
+/* the core as a design: your slice inside, and your register bit and select if you have written them;
+   checked by the test programs, running your program */
+function coreDesign(code, slice, defect, regs) {
+  const C = buildCore(slice, code, defect, regs), S = build({ p: 'alu', code: slice });
   const out = { p: 'core', code, proj: CORE, ins: CORE.ins, outs: CORE.outs, seq: false, spec: true, core: C, slice: S,
     errs: C.errs.map(e => ({ l: e.l, k: 'core.' + e.k, n: e.n })), bad: C.total - C.passed, total: C.total };
   if (S.M) Object.assign(out, { M: S.M, st: S.st, PL: S.PL, RT: S.RT, levels: S.levels, masks: S.masks, vectors: S.vectors, coverage: S.coverage, area: S.area * 32 });
