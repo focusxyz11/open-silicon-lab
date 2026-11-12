@@ -31,3 +31,17 @@ test('the menu has its five parts, each with its words', () => {
   for (const k of menu) assert.ok(EN['nav.' + k], k);
   for (const k of ['challenges', 'questions', 'build', 'ecosystem']) assert.ok(EN['page.' + k + '.lead'], k);
 });
+
+test('inside a chip: each row is a depth of the dive and the factory steps that make it, as the weave says', async () => {
+  const { MADE, STOPS } = await import('../src/data/weave.js');
+  const rows = [...src('chip3d.js').matchAll(/\{ dive: '([a-z]+)', made: \[([^\]]+)\] \}/g)].map(m => ({ dive: m[1], made: m[2].match(/'([a-z]+)'/g).map(x => x.slice(1, -1)) }));
+  assert.deepEqual(rows.map(r => r.dive), ['chip', 'block', 'gate', 'switch', 'atom']);
+  for (const r of rows) {
+    assert.equal(r.made[r.made.length - 1], MADE[r.dive], r.dive + ' is made at ' + MADE[r.dive]);
+    for (const d of [r.dive, ...r.made]) assert.ok(EN['depth.' + d + '.name'] && EN['depth.' + d + '.see'], d);
+  }
+  const asks = src('chip3d.js').match(/export const ASK = \{([^}]+)\}/)[1].match(/'([a-z]+\.[a-z]+)'/g).map(x => x.slice(1, -1));
+  assert.equal(asks.length, 10);
+  for (const k of asks) assert.ok(STOPS[k] && EN['stop.' + k + '.q'], k);
+  for (const id of [...src('chip3d.js').matchAll(/\], '([a-z]+)'\]/g)].map(m => m[1])) assert.ok(EN['chipx.part.' + id], 'chipx.part.' + id);
+});

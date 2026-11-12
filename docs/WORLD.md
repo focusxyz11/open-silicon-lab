@@ -48,6 +48,17 @@ each mask, and one speck of dust that leaves a wire stuck, in a copy that looks 
 the copy you hunt at the test house. On the island, the studio is a campus at the start of the loop, and its mask
 house sends the first masks you make down the road to the factory, on a truck.
 
+## Inside a chip: the dive and the line as one picture
+
+The dive and the factory line meet in one view, `#/chip` (`src/v2/chip3d.js`): a cut through a chip, its layers
+stacked as they are. Read from the top down it is the dive: the package, the wires of a block, the gates, the
+switches, the silicon. Read from the bottom up it is the line: crystal and implant make the silicon, etch makes
+the switches, print makes the gates, wires join them, packaging closes it (`MADE` in `src/data/weave.js`). One
+position and two modes: diving, the layers above you lift away; building, they are not made yet, and come down
+into place step by step. The panel is an instrument, not a column of text: the two modes, the stack of rows (each
+a depth and the steps that make it), and what this row is or how it is made, with its question. The data
+centre's flight ends by going into it; the levels block to atom, and the factory steps that make them, open it.
+
 ## Every place has three doors
 
 Whatever you tap opens the same sheet, with three doors:

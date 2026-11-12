@@ -153,6 +153,13 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
   if ((await page.$$('#page .stepsec')).length !== 6) problems.push(tag + ': the challenges page does not show five steps and the open jobs');
   await page.evaluate(() => { location.hash = '#/build'; });
   await page.waitForSelector('#page .tree', { timeout: 10000 }).catch(() => problems.push(tag + ': the build page has no plan'));
+  /* inside a chip: dive down the layers, then switch to building them and step up */
+  await page.evaluate(() => { location.hash = '#/chip/0'; });
+  await page.waitForSelector('#chipui .stack button.on', { timeout: 15000 }).catch(() => problems.push(tag + ': the chip view did not open'));
+  await page.click('#chipui .now [data-row="1"]').catch(() => problems.push(tag + ': no way deeper in the chip'));
+  await page.waitForFunction(() => /2/.test(document.querySelector('#chipui .stack button.on .n').textContent), null, { timeout: 15000 }).catch(() => problems.push(tag + ': going deeper did not reach the wires'));
+  await page.click('#chipui .seg [data-mode="build"]');
+  if (!/Wires/.test(await page.textContent('#chipui .now h2').catch(() => ''))) problems.push(tag + ': building does not name the step that made this layer');
   if (await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1)) problems.push(tag + ': the page scrolls sideways');
   await page.close();
 }
