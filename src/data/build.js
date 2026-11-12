@@ -6,6 +6,7 @@
    NEEDS: the pieces it takes, as a tree (parent). Each need says how it can be checked (engine):
      - 'logic': a small circuit the tiny-chip engine can describe, check, build and test (project: its job);
      - 'repeat': many copies of another need, chained (of, n);
+     - 'riscv': a RISC-V core that must run the test programs, its ALU made of a slice design (src/engines/core.js);
      - null: no engine can check it yet. It stays open until someone brings one: that is part of the build.
    DESIGNS: what people (and AI) have proposed for a need. kind says who wrote it: 'person', 'ai', 'both',
      or 'example' (written by the lab to show the way); ai says how AI was used, in the author's words.
@@ -14,7 +15,7 @@
 export const GOAL = 'computer';
 export const NEEDS = [
   { id: 'computer', parent: null, engine: null },
-  { id: 'core', parent: 'computer', engine: null, next: 'riscv' },
+  { id: 'core', parent: 'computer', engine: 'riscv', project: 'core' },
   { id: 'alu', parent: 'core', engine: 'repeat', of: 'slice', n: 32 },
   { id: 'slice', parent: 'alu', engine: 'logic', project: 'alu' },
   { id: 'adder2', parent: 'alu', engine: 'logic', project: 'add2' },

@@ -2,8 +2,9 @@
    tests/design.test.mjs.
 
    Engines check needs. Each is a small open interface: given a need and a design, say whether the design
-   does the job. Today there are two: 'logic' (the tiny-chip engine, through src/engines/design.js) and
-   'repeat' (a need met when the need it copies is met). A need with no engine stays open: bringing an
+   does the job. Today there are three: 'logic' (the tiny-chip engine, through src/engines/design.js),
+   'repeat' (a need met when the need it copies is met) and 'riscv' (a RISC-V core whose ALU is a slice
+   design, run on test programs, src/engines/core.js). A need with no engine stays open: bringing an
    engine for it (a processor simulator, a memory model, an analog model) is itself a contribution, and
    adding one here is all it takes for the plan, the studio and the tests to use it.
 
@@ -11,14 +12,17 @@
    nobody has built it yet), 'engine' (nothing can check it yet) or, for a need made of others, 'partly'. */
 import { NEEDS, DESIGNS, GOAL } from '../data/build.js';
 import { build as buildDesign } from './design.js';
+import { buildCore, START_PROGRAM } from './core.js';
 
 export const ENGINES = {
   logic: { check: (need, d) => { const B = buildDesign({ p: need.project, code: d.code }); return B.errs.length === 0 && B.bad === 0; } },
-  repeat: { check: () => true }
+  repeat: { check: () => true },
+  /* a core design is a slice for its ALU: it passes when every test program gives the right answer */
+  riscv: { check: (need, d) => buildCore(d.slice || d.code, START_PROGRAM, null).ok }
 };
 export const needOf = id => NEEDS.find(n => n.id === id) || null;
 export const childrenOf = id => NEEDS.filter(n => n.parent === id);
-export const needForProject = p => NEEDS.find(n => n.engine === 'logic' && n.project === p) || null;
+export const needForProject = p => NEEDS.find(n => n.project === p) || null;
 export const designsFor = id => DESIGNS.filter(d => d.need === id);
 
 /* the state of every need; mine: projects whose design you have finished here (they count as yours, not the plan's) */
@@ -28,8 +32,8 @@ export function plan(mine) {
     if (out[id]) return out[id];
     const n = needOf(id), kids = childrenOf(id);
     let s;
-    if (n.engine === 'logic') {
-      const ds = designsFor(id).filter(d => ENGINES.logic.check(n, d));
+    if (n.engine === 'logic' || n.engine === 'riscv') {
+      const ds = designsFor(id).filter(d => ENGINES[n.engine].check(n, d));
       s = { state: ds.length ? 'built' : 'open', designs: ds, kinds: [...new Set(ds.map(d => d.kind))], yours: own.has(n.project) };
     } else if (n.engine === 'repeat') {
       const of = state(n.of);

@@ -20,6 +20,9 @@ src/engines/chip.js     your chip: its settings and what follows from them, rela
 src/engines/build.js    where the goal stands: each need's state, and the engines that check needs (tested)
 src/engines/design.js   your design: one circuit run through the tiny-chip engine, from description to masks (tested)
 src/engines/tinychip.js the earlier site's tiny-chip engine: parse, check, synthesize, place, route, fault-test
+src/engines/core.js     the RISC-V core engine: the earlier site's simulator, its ALU made of your slice, checked by test programs
+src/engines/riscv.js    the earlier site's RISC-V assembler and simulator (RV32I)
+src/engines/alu.js      a slice copied 32 times into a 32-bit ALU; a factory defect in one slice
 src/engines/fab.js      a fab you run: a re-entrant line of tool groups, how busy each is and how long wafers wait (tested)
 src/engines/supply.js   what stops in a chip's trip when places stop (tested)
 src/engines/weave.js    pure logic: the current world, the camera, sizes, threads, when a core question appears (tested)
@@ -76,4 +79,10 @@ The top bar's Design is a second line (`flat: true`: drawn in 2D, without the fa
 ## The build
 
 `src/data/build.js` holds the community's goal as a tree of needs, each with an engine (`logic`, `repeat`, or none yet), and the designs proposed for them, each saying who wrote it (`kind`) and how AI was used. `src/engines/build.js` gives each need its state (built, open, partly, or waiting for an engine) and holds the engines: to add one, give it a `check(need, design)` and name it in a need. The studio's first station draws the plan with your job in it and your own finished pieces lit (`S.done`); at Describe and Check, `AGENT` holds proposals of the kind AI assistants make (some subtly wrong, with a confident claim) and the card offers a prompt for any assistant. Who wrote the description (`S.by`: you, an AI, both) shows in the band, on your tile of the shared chip, and in the GitHub design form (`.github/ISSUE_TEMPLATE/design.yml`, beside `need.yml`).
+
+## The core, and the factory at every station
+
+The core is a job of the studio and a need of the plan, checked by the `riscv` engine (`src/engines/core.js`): the earlier site's simulator, with every add, subtract, logic operation, comparison and branch going through 32 copies of your ALU slice (`S.codes.alu`, the last description you wrote for it). Its description is a program; six test programs (`TESTS`) decide whether the core is right, so a wrong slice, or an AI agent's subtly wrong one, shows up as real programs giving wrong answers. The studio draws it as a datapath running your program (registers, decoder, the 32 slices with carries rippling), a transistor budget, and a floor plan with your slice's layout 32 times.
+
+Design and factory are one story: every station's card has *At the factory*, saying what the line will do to this design (transistors to print, speed from the switches, area against specks, masks to make). At Check, *Make one at the factory* spoils a copy: one wire stuck (`spoil` in `src/engines/design.js`, `pickDefect` for the core). The waveforms, the gates (the stuck wire in red) and the core's slices show it; the card says whether the Test station's patterns would catch it. A perfect design can still fail as a chip.
 

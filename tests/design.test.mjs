@@ -14,17 +14,18 @@ const EN = JSON.parse(readFileSync(new URL('../src/i18n/en.json', import.meta.ur
 test('every job can be done, and goes all the way from description to masks', () => {
   for (const p of PROJECTS) {
     for (const k of ['t', 'd']) assert.ok(EN['design.proj.' + p + '.' + k], 'design.proj.' + p + '.' + k);
-    const B = build({ p, code: solutionOf(p) || starterOf(p) });
+    const B = build({ p, code: solutionOf(p) || starterOf(p), slice: solutionOf('alu') });
     assert.equal(B.errs.length, 0, p + ' does not read');
     assert.equal(B.bad, 0, p + ': the working description is wrong');
     assert.ok(B.M.cells.length > 0 && B.RT.failed.length === 0, p + ': not every wire could be routed');
     assert.ok(B.coverage > 0.9, p + ': its test patterns catch too few faults');
     assert.equal(B.levels.length, B.M.cells.length);
+    if (p !== 'core') assert.ok(build({ p, code: solutionOf(p) || starterOf(p), defect: 5 }).defect.wrong > 0, p + ': a stuck wire from the factory changes no answer');
   }
 });
 
 test('the starting descriptions: right where the job says so, wrong where it says there is a bug', () => {
-  const wrong = ['vote', 'full', 'seg', 'alu', 'count', 'parity'];
+  const wrong = ['vote', 'full', 'seg', 'alu', 'count', 'parity', 'core'];
   for (const p of PROJECTS) {
     const B = build({ p });
     assert.equal(B.errs.length, 0, p + ': the starting description should read');
@@ -84,3 +85,18 @@ test("an AI agent's proposals: some right, some subtly wrong, each with a claim;
   }
   assert.ok(right >= 2 && wrong >= 4, 'a mix of right and wrong proposals: ' + right + ' right, ' + wrong + ' wrong');
 });
+
+test('the core: your slice inside it decides whether real programs give the right answers; the factory can spoil a perfect one', async () => {
+  const { buildCore, TESTS, START_PROGRAM } = await import('../src/engines/core.js');
+  const good = buildCore(solutionOf('alu'), START_PROGRAM, null);
+  assert.equal(good.passed, TESTS.length, 'a right slice runs every test program');
+  assert.equal(good.result, 55, 'and the example program adds 1 to 10');
+  for (const T of TESTS) assert.ok(EN['core.test.' + T.id + '.t'], T.id + ' has no name');
+  assert.ok(buildCore(starterOf('alu'), START_PROGRAM, null).passed < TESTS.length, 'an unfinished slice cannot run them');
+  const ai = buildCore(AGENT.alu, START_PROGRAM, null);
+  assert.ok(ai.passed > 0 && ai.passed < TESTS.length, "the AI agent's slice passes some programs and fails those that subtract");
+  assert.ok(buildCore(solutionOf('alu'), START_PROGRAM, 3).passed < TESTS.length, 'a copy the factory spoiled fails, though its design was perfect');
+  assert.equal(build({ p: 'core', slice: solutionOf('alu') }).ok, true);
+  assert.equal(plan(['core']).core.yours, true);
+});
+

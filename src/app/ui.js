@@ -43,11 +43,16 @@ export function start(facts) {
     /* who wrote the description now (you, an AI, both), and the jobs you have finished here */
     by: ['you', 'ai', 'both'].includes(saved.by) ? saved.by : 'you',
     done: Array.isArray(saved.done) ? saved.done.filter(p => PROJECTS.includes(p)) : [],
+    /* your description for every job you have tried, so switching jobs keeps your work; and a copy the factory spoiled (a number), or none */
+    codes: saved.codes && typeof saved.codes === 'object' ? Object.fromEntries(Object.entries(saved.codes).filter(([k, v]) => PROJECTS.includes(k) && typeof v === 'string').map(([k, v]) => [k, v.slice(0, 4000)])) : {},
+    defect: null,
     build: BUILD_STEPS - 1
   };
   setChip(S.chip);
-  setDesign(buildDesign(S.design)); setMine(S.done, S.by);
-  const save = () => { try { localStorage.setItem(KEY, JSON.stringify({ world: WORLD, z: Math.round(world.z * 100) / 100, thread: S.thread, seen: S.seen, chip: S.chip, from: S.from, design: S.design, by: S.by, done: S.done })); } catch (e) { /* storage unavailable */ } };
+  /* your design as built now: for the core, with your ALU slice inside */
+  const cur = () => buildDesign(Object.assign({}, S.design, { slice: S.codes.alu || starterOf('alu'), defect: S.defect }));
+  setDesign(cur()); setMine(S.done, S.by);
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify({ world: WORLD, z: Math.round(world.z * 100) / 100, thread: S.thread, seen: S.seen, chip: S.chip, from: S.from, design: S.design, by: S.by, done: S.done, codes: S.codes })); } catch (e) { /* storage unavailable */ } };
 
   const depthName = d => t('depth.' + IDS[d] + '.name');
   /* how far down (in a dive), or which station (on the line) */
@@ -270,6 +275,13 @@ export function start(facts) {
   const pattern = v => Object.entries(v).map(([k, x]) => k + ' ' + x).join(' · ');
   function designMsg(id, B) {
     if (B.errs.length) return '<ul class="errs">' + errWords(B) + '</ul>';
+    if (B.p === 'core') {
+      const C = B.core;
+      let h = C.sliceOk ? '<p class="small good">' + esc(t('core.sliceIn', { cells: B.M ? B.M.cells.length : 0 })) + '</p>' : '<p class="small bad">' + esc(t('core.needSlice')) + '</p><button type="button" class="btn" data-proj="alu">' + t('core.buildSlice') + '</button>';
+      h += C.runErr ? '<p class="small bad">' + esc(t('core.run.' + C.runErr.k, { l: C.runErr.l })) + '</p>' : C.trace ? '<p class="small">' + esc(t('core.ran', { result: C.result, cycles: C.cycles })) + '</p>' : '';
+      if (id === 'check') h += '<ul class="tests">' + C.tests.map(T => { const f = T.cases.find(x => !x.ok); return '<li class="' + (T.ok ? 'good' : 'bad') + '">' + (T.ok ? '✓ ' : '✗ ') + esc(t('core.test.' + T.id + '.t')) + (f ? ' · ' + esc(t(f.stuck ? 'core.caseStuck' : 'core.case', { want: f.want, got: f.got })) : '') + '</li>'; }).join('') + '</ul>';
+      return h;
+    }
     if (id === 'check' || id === 'logic') {
       if (!B.spec) return '<p class="small">' + esc(t('design.state.free')) + '</p>';
       const r = B.rows.find(x => x.mis.length);
@@ -279,8 +291,9 @@ export function start(facts) {
   }
   /* a design you finish here joins the plan as yours */
   function designChanged() {
-    const B = buildDesign(S.design); setDesign(B);
-    if (B.ok && B.spec && !S.done.includes(B.p)) S.done = S.done.concat(B.p);
+    S.codes[S.design.p] = S.design.code;
+    const B = cur(); setDesign(B);
+    if (B.ok && B.spec && !S.defect && !S.done.includes(B.p)) S.done = S.done.concat(B.p);
     setMine(S.done, S.by); save(); return B;
   }
   /* the prompt for any AI assistant: the job, the inputs and outputs, and the rules of the description */
@@ -290,7 +303,7 @@ export function start(facts) {
     let h = '<p class="small">' + esc(t('build.progress', pr)) + '</p><ul class="plan">';
     const walk = (id, depth) => {
       const n = NEEDS.find(x => x.id === id), st = P[id];
-      const pick = n.engine === 'logic' ? '<button type="button" class="chipgo" data-proj="' + n.project + '" aria-pressed="' + (here && here.id === id) + '">' + esc(t('build.need.' + id + '.t')) + '</button>' : '<b>' + esc(t('build.need.' + id + '.t')) + '</b>';
+      const pick = n.project ? '<button type="button" class="chipgo" data-proj="' + n.project + '" aria-pressed="' + (here && here.id === id) + '">' + esc(t('build.need.' + id + '.t')) + '</button>' : '<b>' + esc(t('build.need.' + id + '.t')) + '</b>';
       h += '<li style="--d:' + depth + '" class="st-' + st.state + '">' + pick + ' <span class="small muted">' + esc(t('build.state.' + st.state, { built: st.built || 0, of: st.of || 0, n: st.n || 0 })) + (st.yours ? ' · ' + esc(t('build.yoursDone')) : '') + '</span>' +
         (n.engine === null && !childrenOf(id).length ? ' ' + ext(REPO + '/issues/new?' + new URLSearchParams({ template: 'idea.yml', title: t('build.engineFor', { need: t('build.need.' + id + '.t') }) }), t('build.proposeEngine'), 'small') : '') + '</li>';
       childrenOf(id).forEach(c => walk(c.id, depth + 1));
@@ -309,8 +322,24 @@ export function start(facts) {
     h += '<p class="small muted">' + t('build.who') + '</p><div class="shows">' + ['you', 'ai', 'both'].map(k => '<button type="button" class="chipgo" data-by="' + k + '" aria-pressed="' + (S.by === k) + '">' + esc(t('build.by.' + k)) + '</button>').join('') + '</div>';
     return h + '</section>';
   };
+  /* what the factory will do to it: at every station, the design meets the line it will be made on */
+  function fabLens(id, B) {
+    if (!B.M && B.p !== 'core') return '';
+    const core = B.p === 'core', n = { transistors: (B.transistors || 0).toLocaleString(), ps: B.st ? Math.round(B.st.crit) : 0, mhz: B.st ? Math.round(B.st.fmax) : 0, area: Math.round(B.area || 0), masks: B.masks || 0 };
+    let h = '<section class="fab"><p class="code">' + t('fab.title') + '</p><p class="small">' + esc(core && id === 'gates' ? t('fab.gatesCore') : core && id === 'check' ? t('fab.checkCore') : t('fab.' + id, n)) + '</p>';
+    if (id === 'check' && B.ok !== undefined && (B.ok || S.defect != null)) {
+      if (S.defect != null) {
+        if (core && B.core.defect) h += '<p class="small bad">' + esc(t('fab.defectCore', { bit: B.core.defect.bit, passed: B.core.passed, total: B.core.total })) + '</p>';
+        else if (B.defect) h += '<p class="small bad">' + esc(t('fab.defect', { v: B.defect.v, wrong: B.defect.wrong, total: B.total })) + '</p><p class="small">' + esc(t('fab.caught', { vectors: B.vectors })) + '</p>';
+      }
+      h += '<button type="button" class="btn' + (S.defect == null ? ' primary' : '') + '" data-defect>' + t(S.defect == null ? 'fab.make' : 'fab.perfect') + '</button>';
+    }
+    const go = { check: 'test', layout: 'test', masks: 'print', gates: null, need: 'crystal', logic: null }[id];
+    if (go) h += '<button type="button" class="link" data-dive="journey:' + go + '">' + esc(t('fab.see', { station: t('depth.' + go + '.name') })) + '</button>';
+    return h + '</section>';
+  }
   function designCard(d) {
-    const id = IDS[d], B = buildDesign(S.design), need = needForProject(B.p);
+    const id = IDS[d], B = cur(), need = needForProject(B.p);
     let h = '<section class="try design"><p class="code">' + t('design.yours') + ' · ' + esc(t('design.proj.' + B.p + '.t')) + '</p>';
     if (id === 'need') h += '<p class="small muted">' + t('build.goal') + '</p>' + planCard();
     if (need) h += '<p class="small"><b>' + esc(t('build.need.' + need.id + '.t')) + '</b> · ' + esc(t('build.need.' + need.id + '.d')) + '</p>';
@@ -320,6 +349,7 @@ export function start(facts) {
       h += '<div id="designMsg" aria-live="polite">' + designMsg(id, B) + '</div><button type="button" class="link" data-dreset>' + t('design.reset') + '</button>';
       h += partner(B);
     } else if (B.errs.length) h += '<ul class="errs">' + errWords(B) + '</ul>';
+    h += fabLens(id, B);
     if (id === 'gates' && B.p === 'alu' && B.M) h += '<p class="small">' + esc(t('design.alu32', { cells: B.M.cells.length })) + '</p>';
     if ((id === 'check' || id === 'gates') && B.M) h += '<p class="small muted">' + esc(t('design.cov', { vectors: B.vectors, caught: Math.round(B.coverage * 100) })) + '</p>';
     if (id === 'layout') {
@@ -381,7 +411,7 @@ export function start(facts) {
     if (isLine() && PLANTS[IDS[d]]) h += '<p class="small plant">' + esc(t('plant.' + PLANTS[IDS[d]])) + (LOOP.includes(IDS[d]) ? ' · ' + esc(t('ui.inLoop', { layers: model(S.chip).layers })) : '') + '</p>';
     if (isStudio()) h += designCard(d);
     /* at the factory's Test station: how well its test patterns would catch faults in your own design */
-    if (isLine() && IDS[d] === 'test') { const B = buildDesign(S.design); if (B.M) h += '<p class="small plant">' + esc(t('design.testYours', { vectors: B.vectors, caught: Math.round(B.coverage * 100) })) + '</p>'; }
+    if (isLine() && IDS[d] === 'test') { const B = cur(); if (B.M) h += '<p class="small plant">' + esc(t('design.testYours', { vectors: B.vectors, caught: Math.round(B.coverage * 100) })) + '</p>'; }
     h += partCard(d);
     if (th) {
       const here = stop(th, d), color = threadColor(th), key = stopKey(th, d);
@@ -419,8 +449,9 @@ export function start(facts) {
     anchor();
   }
   cardEl.addEventListener('click', e => {
-    const pj = e.target.closest('[data-proj]'); if (pj) { S.design = normalDesign({ p: pj.dataset.proj }); S.by = 'you'; S.claim = false; designChanged(); card(); return; }
-    if (e.target.closest('[data-dreset]')) { S.design = normalDesign({ p: S.design.p }); S.by = 'you'; S.claim = false; designChanged(); card(); return; }
+    const pj = e.target.closest('[data-proj]'); if (pj) { const p = pj.dataset.proj; S.design = normalDesign({ p, code: S.codes[p] }); S.by = 'you'; S.claim = false; S.defect = null; designChanged(); card(); return; }
+    if (e.target.closest('[data-dreset]')) { S.design = normalDesign({ p: S.design.p }); S.by = 'you'; S.claim = false; S.defect = null; designChanged(); card(); return; }
+    if (e.target.closest('[data-defect]')) { S.defect = S.defect == null ? 1 + Math.floor(Math.random() * 997) : null; designChanged(); card(); return; }
     if (e.target.closest('[data-agent]')) { S.design = normalDesign({ p: S.design.p, code: AGENT[S.design.p] }); S.by = 'ai'; S.claim = true; designChanged(); card(); return; }
     const by = e.target.closest('[data-by]'); if (by) { S.by = by.dataset.by; designChanged(); card(); return; }
     const mp = e.target.closest('[data-map]'); if (mp) { const w = mp.dataset.map; if (w) enter('journey', 'ship'); openMap(w || undefined); return; }
