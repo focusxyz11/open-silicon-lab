@@ -19,6 +19,7 @@ import { setChip as drawChip, setBuild, BUILD_STEPS } from './scenes.js';
 import { build as buildDesign, normalDesign, starterOf, PROJECTS, START_DESIGN } from '../engines/design.js';
 import { setDesign, setMine } from './design.js';
 import { DESIGNS, NEEDS, AGENT } from '../data/build.js';
+import { DEBATES, debateAt } from '../data/debates.js';
 import { plan, progress, needForProject, childrenOf } from '../engines/build.js';
 
 const KEY = 'osl-weave-v1';
@@ -344,6 +345,13 @@ export function start(facts) {
     const key = id === 'block' ? 'here.block' : id === 'gate' ? 'here.gate' : id === 'switch' ? 'here.switch' : 'here.chip';
     return '<section class="fab"><p class="code">' + t('here.title') + '</p><p class="small">' + esc(t(key, n)) + '</p></section>';
   }
+  /* where informed people disagree about what is here: each view's claim and what it assumes; none marked right */
+  function debate(D) {
+    if (!D) return '';
+    let h = '<details class="debate"><summary><span class="code">' + t('debate.title') + '</span> <b>' + esc(t('debate.' + D.id + '.t')) + '</b></summary><p>' + esc(t('debate.' + D.id + '.q')) + '</p><p class="small muted">' + t('debate.note') + '</p><ul class="views">';
+    for (let i = 0; i < D.views; i++) h += '<li><b>' + esc(t('debate.' + D.id + '.v' + i + '.t')) + '</b> ' + esc(t('debate.' + D.id + '.v' + i + '.claim')) + '<br><span class="small muted">' + t('debate.assumes') + ' ' + esc(t('debate.' + D.id + '.v' + i + '.assumes')) + '</span></li>';
+    return h + '</ul><p class="small"><b>' + t('debate.mind') + '</b> ' + ext(REPO + '/issues/new?' + new URLSearchParams({ template: 'idea.yml', title: t('debate.' + D.id + '.t') }), t('debate.add')) + '</p></details>';
+  }
   /* what the factory will do to it: at every station, the design meets the line it will be made on */
   function fabLens(id, B) {
     if (!B.M && B.p !== 'core') return '';
@@ -416,6 +424,7 @@ export function start(facts) {
         '<div class="moves"><button type="button" class="btn' + (shut ? '' : ' primary') + '" data-shut="' + id + '">' + t(shut ? 'map.reopen' : 'map.shut') + '</button>' +
         (stn ? '<button type="button" class="btn" data-mapgo="' + stn + '">' + esc(t('map.toStation', { station: t('depth.' + stn + '.name') })) + '</button>' : '') + '</div></section>';
     }
+    h += debate(DEBATES.find(x => x.id === 'supply'));
     h += '<p class="small muted how">' + t('map.how') + '</p><button type="button" class="btn" data-closemap>' + t('map.close') + '</button>';
     return h;
   }
@@ -436,6 +445,7 @@ export function start(facts) {
     /* at the factory's Test station: how well its test patterns would catch faults in your own design */
     if (isLine() && IDS[d] === 'test') { const B = cur(); if (B.M) h += '<p class="small plant">' + esc(t('design.testYours', { vectors: B.vectors, caught: Math.round(B.coverage * 100) })) + '</p>'; }
     h += partCard(d);
+    h += debate(debateAt(IDS[d]));
     if (th) {
       const here = stop(th, d), color = threadColor(th), key = stopKey(th, d);
       h += '<section class="follow" style="--th:' + color + '"><p class="code">' + t('ui.following') + '</p>';

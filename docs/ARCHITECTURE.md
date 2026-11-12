@@ -28,6 +28,7 @@ src/engines/fab.js      a fab you run: a re-entrant line of tool groups, how bus
 src/engines/supply.js   what stops in a chip's trip when places stop (tested)
 src/engines/weave.js    pure logic: the current world, the camera, sizes, threads, when a core question appears (tested)
 src/data/weave.js       the data: worlds, depths and portals, threads, stops
+src/data/debates.js     where informed people disagree: the earlier site's debates, each placed at the depths and stations it is about
 src/data/build.js       the build: the community's goal as a plan of needs, the designs people and AI proposed, AI agents' proposals
 src/data/world.js       the map: places, and each kind of chip's trip through them, joined to the line's stations
 src/data/facts.json     sourced figures, loaded at start (src/main.js); FIGURES and CASES in weave.js point to them

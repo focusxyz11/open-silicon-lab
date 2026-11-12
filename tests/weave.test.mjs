@@ -291,3 +291,16 @@ test('a trip stops after the only place that can do a step, and only strains whe
   assert.equal(status(dc, ['odz'])[at(dc, 'fab')].state, 'strained', 'neon comes from elsewhere too, dearer');
   assert.equal(status(dc, ['hsc', 'tnn'])[at(dc, 'fab')].state, 'strained', 'other fabs exist, not drawn');
 });
+
+test('debates sit where they arise: at least two views each, every view with a claim and an assumption, one debate per place', async () => {
+  const { DEBATES } = await import('../src/data/debates.js');
+  const seen = new Set();
+  for (const D of DEBATES) {
+    assert.ok(EN['debate.' + D.id + '.t'] && EN['debate.' + D.id + '.q'], D.id + ' has no title or question');
+    assert.ok(D.views >= 2, D.id + ' needs two views');
+    for (let i = 0; i < D.views; i++) for (const k of ['t', 'claim', 'assumes']) assert.ok(EN['debate.' + D.id + '.v' + i + '.' + k], 'debate.' + D.id + '.v' + i + '.' + k);
+    assert.ok(!EN['debate.' + D.id + '.v' + D.views + '.t'], D.id + ' has more views in the words than in the data');
+    for (const at of D.at) { assert.ok(DEPTHS[at], D.id + ': ' + at + ' is not a place'); assert.ok(!seen.has(at), at + ' has two debates'); seen.add(at); }
+  }
+});
+
