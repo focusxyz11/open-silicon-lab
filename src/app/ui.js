@@ -15,7 +15,8 @@ import { THREADS, WORLDS, STOPS, CASES, FIGURES, REPO, TRIES, SHOWS, DIVES, EXIT
 import { CLOCKS, GENS, SIDES, LOADS, START, CHALLENGES, normal, changed, model, x2, dieSquare } from '../engines/chip.js';
 import { N, IDS, WORLD, setWorld, worldOf, zIn, reshape, isLine, clampZ, sizeAt, sizeParts, stop, stopKey, crossing, below, above, nearest, threadOf, rootShown, threadDepths } from '../engines/weave.js';
 import { createWorld, threadColor, theme, reduced } from './world.js';
-import { setChip as drawChip, setBuild, BUILD_STEPS } from './scenes.js';
+import { setChip as drawChip, setBuild, BUILD_STEPS, setXray, xrayOf, XRAY_AT } from './scenes.js';
+import { TYPES as XTYPES, shares, askFor } from '../engines/xray.js';
 import { build as buildDesign, normalDesign, starterOf, PROJECTS, START_DESIGN } from '../engines/design.js';
 import { setDesign, setMine } from './design.js';
 import { DESIGNS, NEEDS, AGENT } from '../data/build.js';
@@ -49,15 +50,18 @@ export function start(facts) {
     codes: saved.codes && typeof saved.codes === 'object' ? Object.fromEntries(Object.entries(saved.codes).filter(([k, v]) => PROJECTS.includes(k) && typeof v === 'string').map(([k, v]) => [k, v.slice(0, 4000)])) : {},
     defect: null,
     /* your chip's life: where it lives, and what the design and the factory do about it (src/engines/life.js) */
+    /* the chips seen as die photos, and which kinds of block you have found on each */
+    xray: { on: !!(saved.xray && saved.xray.on), found: Object.fromEntries(XRAY_AT.map(id => [id, (saved.xray && saved.xray.found && Array.isArray(saved.xray.found[id]) ? saved.xray.found[id] : []).filter(k => XTYPES.includes(k))])) },
+    xpick: null,
     life: { m: MISSION_IDS.includes(saved.life && saved.life.m) ? saved.life.m : MISSION_IDS[0], c: normalLife(saved.life && saved.life.c) },
     build: BUILD_STEPS - 1
   };
-  setChip(S.chip);
+  setChip(S.chip); setXray(S.xray.on);
   /* your design as built now: for the core, with your ALU slice inside */
   const cur = () => buildDesign(Object.assign({}, S.design, { slice: S.codes.alu || starterOf('alu'), regs: { bit: S.codes.regbit || null, select: S.codes.select || null }, defect: S.defect }));
   setDesign(cur()); setMine(S.done, S.by);
   if (!worldOf(WORLD).line && !worldOf(WORLD).hidden) S.lastDive = WORLD;
-  const save = () => { try { localStorage.setItem(KEY, JSON.stringify({ world: WORLD, z: Math.round(world.z * 100) / 100, thread: S.thread, seen: S.seen, chip: S.chip, from: S.from, design: S.design, by: S.by, done: S.done, codes: S.codes, life: S.life })); } catch (e) { /* storage unavailable */ } };
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify({ world: WORLD, z: Math.round(world.z * 100) / 100, thread: S.thread, seen: S.seen, chip: S.chip, from: S.from, design: S.design, by: S.by, done: S.done, codes: S.codes, life: S.life, xray: { on: S.xray.on, found: S.xray.found } })); } catch (e) { /* storage unavailable */ } };
 
   const depthName = d => t('depth.' + IDS[d] + '.name');
   /* how far down (in a dive), or which station (on the line) */
@@ -72,7 +76,12 @@ export function start(facts) {
 
     arrive(d) { see(d); if (S.map) world.setMap(mapState()); card(); rail(); save(); },
     pick(th) { follow(th); },
-    part(d, key) { S.part = { id: IDS[d], key }; card(); },
+    part(d, key) {
+      const id = IDS[d];
+      /* in X-ray, a tap names the kind of block, and may be the one you were asked to find */
+      if (xrayHere(id)) { const want = nextFind(id); S.xpick = { id, type: key, want }; if (key === want) S.xray.found[id] = S.xray.found[id].concat(key); save(); card(); return; }
+      S.part = { id, key }; card();
+    },
     /* the lens over a machine at work: down into what it shows */
     lens(d) { const id = IDS[d], dv = DIVES[id] && DIVES[id][0]; if (dv) { enter(dv[0], dv[1]); S.from = id; save(); card(); } },
     /* the world around the line */
@@ -240,6 +249,7 @@ export function start(facts) {
 
   /* a part of the picture: what it does, and the questions, tries, cases and ideas about it */
   const partCard = d => {
+    if (xrayHere(IDS[d])) return '';
     const id = IDS[d], key = S.part && S.part.id === id ? S.part.key : null; if (!key) return '';
     const ths = THREADS.map(x => x.id).filter(th => (STOPS[th + '.' + id] || []).includes(key)), keys = ths.map(th => th + '.' + id);
     let h = '<section class="part"><p class="code">' + t('ui.partWhat') + '</p><h3>' + esc(t('part.' + partWord(id, key))) + '</h3><p>' + esc(t('what.' + partWord(id, key))) + '</p>';
@@ -354,6 +364,26 @@ export function start(facts) {
     let h = '<details class="debate"><summary><span class="code">' + t('debate.title') + '</span> <b>' + esc(t('debate.' + D.id + '.t')) + '</b></summary><p>' + esc(t('debate.' + D.id + '.q')) + '</p><p class="small muted">' + t('debate.note') + '</p><ul class="views">';
     for (let i = 0; i < D.views; i++) h += '<li><b>' + esc(t('debate.' + D.id + '.v' + i + '.t')) + '</b> ' + esc(t('debate.' + D.id + '.v' + i + '.claim')) + '<br><span class="small muted">' + t('debate.assumes') + ' ' + esc(t('debate.' + D.id + '.v' + i + '.assumes')) + '</span></li>';
     return h + '</ul><p class="small"><b>' + t('debate.mind') + '</b> ' + ext(REPO + '/issues/new?' + new URLSearchParams({ template: 'idea.yml', title: t('debate.' + D.id + '.t') }), t('debate.add')) + '</p></details>';
+  }
+  /* ---- chip X-ray: the chip at the bottom of a dive, read as a die photo (src/engines/xray.js) ---- */
+  const xrayAt = id => XRAY_AT.includes(id) && !isLine() && !worldOf(WORLD).hidden;
+  const xrayHere = id => S.xray.on && xrayAt(id);
+  const nextFind = id => askFor(xrayOf(id)).find(k => !S.xray.found[id].includes(k)) || null;
+  const pct = v => t('life.share.pct', { v: Math.round(v * 100) });
+  function xrayCard(id) {
+    let h = '<section class="try xray"><p class="code">' + t('xray.title') + '</p><p>' + esc(t('xray.q')) + '</p><button type="button" class="btn' + (S.xray.on ? '' : ' primary') + '" data-xray aria-pressed="' + S.xray.on + '">' + t(S.xray.on ? 'xray.off' : 'xray.on') + '</button>';
+    if (!S.xray.on) return h + '</section>';
+    const B = xrayOf(id), sh = shares(B), order = Object.keys(sh).filter(k => k !== 'other').sort((a, b) => sh[b] - sh[a]).concat('other');
+    h += '<p class="small muted">' + t('xray.area') + '</p><div class="area" role="img" aria-label="' + esc(order.map(k => t(k === 'other' ? 'xray.other' : 'xray.type.' + k + '.t') + ' ' + pct(sh[k])).join(', ')) + '">' + order.map(k => '<span class="x-' + k + '" style="width:' + (sh[k] * 100).toFixed(1) + '%"></span>').join('') + '</div>';
+    h += '<ul class="legend small">' + order.map(k => '<li class="x-' + k + '">' + esc(t(k === 'other' ? 'xray.other' : 'xray.type.' + k + '.t')) + ' ' + pct(sh[k]) + '</li>').join('') + '</ul>';
+    h += '<p class="small">' + esc(t('xray.read.' + id)) + '</p>';
+    /* read it: find each kind of block, biggest first */
+    const P = S.xpick && S.xpick.id === id ? S.xpick : null, want = nextFind(id), tn = k => t('xray.type.' + k + '.t');
+    if (P) h += '<p class="small ' + (P.type === P.want ? 'good' : '') + '"><b>' + esc(tn(P.type)) + '.</b> ' + esc(t('xray.type.' + P.type + '.clue')) + (P.want && P.type !== P.want ? ' ' + esc(t('xray.wrong', { got: tn(P.type), type: tn(P.want) })) : '') + '</p>';
+    if (want) h += '<p><b>' + esc(t('xray.find', { type: tn(want) })) + '</b></p>' + (P && P.want === want && P.type !== want ? '<p class="small muted">' + esc(t('xray.hint', { clue: t('xray.type.' + want + '.clue') })) + '</p>' : '');
+    else h += '<p class="small good">' + esc(t('xray.done')) + '</p>';
+    h += '<p class="small muted">' + esc(t('xray.found', { n: S.xray.found[id].length, total: askFor(B).length })) + '</p>';
+    return h + '<p class="small muted">' + t('xray.note') + '</p></section>';
   }
   /* ---- your chip's life: why a perfect design still fails, where it lives (src/engines/life.js) ---- */
   /* where each place's chip is met in its dive */
@@ -498,7 +528,8 @@ export function start(facts) {
     if (isLine() && IDS[d] === 'test') { const B = cur(); if (B.M) h += '<p class="small plant">' + esc(t('design.testYours', { vectors: B.vectors, caught: Math.round(B.coverage * 100) })) + '</p>'; }
     /* and after the factory: its life, in the place the last station sends it, or met in that place's dive */
     if (isLine() && !isStudio() && IDS[d] === 'ship') h += lifeCard(null);
-    else if (!isLine() && !worldOf(WORLD).hidden && LIVES_AT[IDS[d]] && LIVES_AT[IDS[d]] === WORLD) h += lifeCard(WORLD);
+    if (xrayAt(IDS[d])) h += xrayCard(IDS[d]);
+    if (!isLine() && !worldOf(WORLD).hidden && LIVES_AT[IDS[d]] && LIVES_AT[IDS[d]] === WORLD) h += lifeCard(WORLD);
     h += partCard(d);
     h += debate(debateAt(IDS[d]));
     if (th) {
@@ -541,6 +572,7 @@ export function start(facts) {
     if (e.target.closest('[data-dreset]')) { S.design = normalDesign({ p: S.design.p }); S.by = 'you'; S.claim = false; S.defect = null; designChanged(); card(); return; }
     if (e.target.closest('[data-defect]')) { S.defect = S.defect == null ? 1 + Math.floor(Math.random() * 997) : null; designChanged(); card(); return; }
     if (e.target.closest('[data-agent]')) { S.design = normalDesign({ p: S.design.p, code: AGENT[S.design.p] }); S.by = 'ai'; S.claim = true; designChanged(); card(); return; }
+    if (e.target.closest('[data-xray]')) { S.xray.on = !S.xray.on; S.xpick = null; S.part = null; setXray(S.xray.on); save(); card(); return; }
     const lm = e.target.closest('[data-lifem]'); if (lm) { S.life.m = lm.dataset.lifem; save(); card(); return; }
     const ls = e.target.closest('[data-lifeset]'); if (ls) { const k = ls.dataset.lifeset; S.life.c = normalLife(Object.assign({}, S.life.c, { [k]: !S.life.c[k] })); save(); card(); return; }
     const lp = e.target.closest('[data-lifeprot]'); if (lp) { S.life.c = normalLife(Object.assign({}, S.life.c, { protect: lp.dataset.lifeprot })); save(); card(); return; }

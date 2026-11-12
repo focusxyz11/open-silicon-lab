@@ -25,6 +25,7 @@ src/engines/core.js     the RISC-V core engine: the earlier site's simulator, it
 src/engines/riscv.js    the earlier site's RISC-V assembler and simulator (RV32I)
 src/engines/alu.js      a slice copied 32 times into a 32-bit ALU; a factory defect in one slice
 src/engines/life.js     your chip's life: why a perfect design still fails (variation, heat, supply dips, ageing, missed defects, weak spots, wear, radiation) in a phone, a car or a data centre (tested)
+src/engines/xray.js     chip X-ray: each dive's chip read as a die photo, where its area goes, and its kinds of block to find (blocks drawn in scenes.js; tested)
 src/engines/fab.js      a fab you run: a re-entrant line of tool groups, how busy each is and how long wafers wait (tested)
 src/engines/supply.js   what stops in a chip's trip when places stop (tested)
 src/engines/weave.js    pure logic: the current world, the camera, sizes, threads, when a core question appears (tested)

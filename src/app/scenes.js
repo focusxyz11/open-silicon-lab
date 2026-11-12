@@ -16,6 +16,7 @@ import { rnd, clamp, poly, rr, blob, along2, closed } from './draw.js';
 import { STATIONS, setJourneyChip } from './journey.js';
 import { DESIGN_SCENES, designNow } from './design.js';
 import { proj, kit, tones, mix } from './solid.js';
+import { DIE, partsFor } from '../engines/xray.js';
 
 /* Your chip (src/engines/chip.js): the scenes that show it read its settings from here. */
 let M = model(START);
@@ -61,6 +62,73 @@ function inside(G, id) {
   ctx.save(); ctx.globalAlpha = 0.5 * G.base; ctx.strokeStyle = c.line; ctx.lineWidth = 1 / G.s; ctx.strokeRect(p[0], p[1], p[2], p[2]); ctx.restore();
 }
 
+
+/* ---- chip X-ray (src/engines/xray.js): the chip at the bottom of each dive, seen as a photo of its die.
+   Every district keeps its place; what changes is its look under a microscope: memory a perfectly regular
+   grid, logic fine noise, repeated cores copies of one tile, hand-drawn circuits a few large shapes. ---- */
+let XRAY = false;
+export const setXray = on => { XRAY = !!on; };
+export const xrayOn = () => XRAY;
+const PADS = [[56, 56, 888, 24], [56, 920, 888, 24], [56, 80, 24, 840], [920, 80, 24, 840]].map(r => ({ type: 'io', r }));
+const X = (type, list) => list.map(k => ({ type, r: k.r || k }));
+/* the blocks of each chip, in the same places as its districts in the scene above */
+export function xrayOf(id) {
+  if (id === 'chip') return [...PADS, ...X('core', cores()), { type: 'cache', r: [130, 620, 740, 100] }, { type: 'phy', r: [130, 740, 740, 90] }];
+  if (id === 'soc') return [...PADS, { type: 'logic', r: [130, 130, 330, 260] }, { type: 'gpu', r: [500, 130, 370, 280] }, { type: 'npu', r: [500, 440, 300, 270] }, { type: 'cache', r: [806, 440, 64, 270] },
+    ...X('core', socCpu), { type: 'cache', r: [130, 740, 740, 130] }];
+  if (id === 'mcu') return [...PADS, ...X('core', mcuCores), { type: 'flash', r: [490, 130, 380, 420] }, { type: 'cache', r: [130, 420, 320, 130] },
+    { type: 'analog', r: periph[0].r }, { type: 'logic', r: periph[1].r }, { type: 'logic', r: periph[2].r }, { type: 'logic', r: periph[3].r }, { type: 'analog', r: [130, 750, 740, 120] }];
+  return null;
+}
+export const XRAY_AT = ['chip', 'soc', 'mcu'];
+/* fine noise: where a few hundred gates' worth of metal catches the light; the same seed gives the same pattern */
+const SPECK = new Map();
+function specks(w, h, seed) {
+  const key = Math.round(w) + 'x' + Math.round(h) + ':' + seed; if (SPECK.has(key)) return SPECK.get(key);
+  const n = Math.max(40, Math.min(1100, Math.round(w * h / 90))), out = [];
+  for (let i = 0; i < n; i++) out.push([rnd(i, seed) * (w - 6), rnd(i, seed + 1) * (h - 4), 1.5 + rnd(i, seed + 2) * 6, 1.2 + rnd(i, seed + 3) * 2.5, rnd(i, seed + 4)]);
+  SPECK.set(key, out); return out;
+}
+function noise(G, x, y, w, h, seed, tone) { const c = G.col; G.a(0.45); G.r(x, y, w, h, c.up, null); specks(w, h, seed).forEach(p => { G.a(0.3 + p[4] * 0.55); G.r(x + p[0], y + p[1], p[2], p[3], p[4] > 0.8 ? c.hi : tone); }); G.a(1); }
+function lattice(G, x, y, w, h, sx, sy, tone) {
+  G.a(0.6);
+  for (let u = x + sx / 2; u < x + w; u += sx) G.l([[u, y], [u, y + h]], tone, 0.5);
+  for (let v = y + sy / 2; v < y + h; v += sy) G.l([[x, v], [x + w, v]], tone, 0.5);
+  G.a(1);
+}
+const TEX = {
+  logic(G, r, i) { G.r(r[0], r[1], r[2], r[3], G.col.mid, G.col.dim, 0.8); noise(G, r[0] + 3, r[1] + 3, r[2] - 6, r[3] - 6, 7 + i, G.col.warm); },
+  core(G, r) {   /* every core the same tile: logic, and its own small cache beside it */
+    const c = G.col, m = r[2] * 0.64; G.r(r[0], r[1], r[2], r[3], c.mid, c.line, 1);
+    noise(G, r[0] + 3, r[1] + 3, m - 6, r[3] - 6, 3, c.warm);
+    G.r(r[0] + m, r[1] + 4, r[2] - m - 4, r[3] - 8, c.up, null); lattice(G, r[0] + m, r[1] + 4, r[2] - m - 4, r[3] - 8, 4, 4, c.cool);
+  },
+  cache(G, r) { const c = G.col; G.r(r[0], r[1], r[2], r[3], c.up, c.line, 1); lattice(G, r[0], r[1], r[2], r[3], 5, 5, c.cool); if (r[2] > 120) G.r(r[0] + r[2] / 2 - 3, r[1], 6, r[3], c.mid, null); },
+  flash(G, r) { const c = G.col; G.r(r[0], r[1], r[2], r[3], c.up, c.line, 1); for (let v = r[1] + 4; v < r[1] + r[3] - 8; v += 12) for (let u = r[0] + 4; u < r[0] + r[2] - 8; u += 12) G.r(u, v, 8, 8, c.mid, c.grn, 0.5); },
+  gpu(G, r) {   /* many identical units: one tile, copied */
+    const c = G.col, cols = 6, rows = 4, w = r[2] / cols, h = r[3] / rows; G.r(r[0], r[1], r[2], r[3], c.mid, c.line, 1);
+    for (let j = 0; j < rows; j++) for (let i = 0; i < cols; i++) { const x = r[0] + i * w + 3, y = r[1] + j * h + 3; G.r(x, y, w - 6, h - 6, c.lo, c.dim, 0.6); noise(G, x + 2, y + 2, w - 10, (h - 10) * 0.62, 11, c.warm); lattice(G, x + 2, y + (h - 6) * 0.68, w - 10, (h - 6) * 0.28, 4, 4, c.cool); }
+  },
+  npu(G, r) { const c = G.col; G.r(r[0], r[1], r[2], r[3], c.mid, c.line, 1); G.a(0.85); for (let v = r[1] + 6; v < r[1] + r[3] - 8; v += 11) for (let u = r[0] + 6; u < r[0] + r[2] - 8; u += 11) G.r(u, v, 8, 8, c.warm, null); G.a(1); },
+  phy(G, r) { const c = G.col; G.r(r[0], r[1], r[2], r[3], c.mid, c.line, 1); for (let u = r[0] + 4; u < r[0] + r[2] - 4; u += 9) G.r(u, r[1] + 6, 4, r[3] - 12, (Math.floor((u - r[0]) / 9) % 6) < 4 ? c.cool : c.up, null); },
+  analog(G, r, i) {   /* few large shapes drawn by hand; coils for clocks and power */
+    const c = G.col; G.r(r[0], r[1], r[2], r[3], c.mid, c.line, 1);
+    const n = 2 + (i % 2), w = r[2] / (n + 1);
+    for (let k = 0; k < n; k++) G.r(r[0] + 10 + k * w, r[1] + 10 + (k % 2) * r[3] * 0.25, w * 0.7, r[3] * 0.5, c.up, c.grn, 0.8);
+    const cx = r[0] + r[2] - Math.min(r[3], r[2]) * 0.38, cy = r[1] + r[3] / 2, R = Math.min(r[3], w) * 0.36;
+    for (let k = 0; k < 4; k++) G.c(cx, cy, R - k * R * 0.22, null, c.grn, 1);
+  },
+  io(G, r) { const c = G.col, long = r[2] > r[3], n = Math.round((long ? r[2] : r[3]) / 38); for (let k = 0; k < n; k++) { const t = 6 + k * ((long ? r[2] : r[3]) - 12) / n; if (long) G.r(r[0] + t, r[1], 24, 24, c.up, c.hi, 0.9); else G.r(r[0], r[1] + t, 24, 24, c.up, c.hi, 0.9); } }
+};
+function xrayScene(G, id) {
+  const c = G.col;
+  G.bg(c.lo);
+  G.r(DIE[0], DIE[1], DIE[2], DIE[3], c.mid, c.hi, 1.8);
+  /* what no block covers: wiring and spacing, a faint even texture */
+  G.a(0.35); lattice(G, 100, 100, 800, 800, 25, 25, c.dim); G.a(1);
+  xrayOf(id).forEach((b, i) => TEX[b.type](G, b.r, i));
+  inside(G, id);
+}
 
 /* ---- building: one hall of an AI data centre ---- */
 /* ---- building: a data hall, cut open. Rows of racks face each other across cold aisles; the hot air
@@ -237,6 +305,7 @@ const clock = [{ p: [[500, 136], [500, 594]] }, { p: [[315, 365], [685, 365]] },
 const chip = {
   get parts() { return { cores: cores(), cache: [{ r: [130, 620, 740, 100] }], io: [{ r: [130, 740, 740, 90] }], clock }; },
   draw(G) {
+    if (XRAY) return xrayScene(G, 'chip');
     const c = G.col;
     G.bg(c.lo);
     G.r(40, 40, 920, 920, c.mid, c.hi, 1.8);
@@ -560,6 +629,7 @@ const socBus = [[[130, 408], [480, 408]], [[480, 130], [480, 728]], [[480, 425],
 const soc = {
   parts: { cpu: socCpu, gpu: [{ r: [500, 130, 370, 280] }], npu: [{ r: [500, 440, 370, 270] }], isp: [{ r: [130, 130, 330, 260] }], cache: [{ r: [130, 740, 740, 130] }] },
   draw(G) {
+    if (XRAY) return xrayScene(G, 'soc');
     const c = G.col, tick = Math.floor(G.t * 1.5 * M.clock);
     G.bg(c.lo);
     G.r(40, 40, 920, 920, c.mid, c.hi, 1.8); pads(G, 24);
@@ -746,6 +816,7 @@ const mcuBus = [[130, 570], [870, 570]];
 const mcu = {
   parts: { cores: mcuCores, flash: [{ r: [490, 130, 380, 420] }], sram: [{ r: [130, 420, 320, 130] }], periph },
   draw(G) {
+    if (XRAY) return xrayScene(G, 'mcu');
     const c = G.col, tick = Math.floor(G.t * 1.5 * M.clock);
     G.bg(c.lo);
     G.r(40, 40, 920, 920, c.mid, c.hi, 1.8); pads(G, 14);
@@ -917,4 +988,5 @@ const die = {
 export const SCENES = { building, rack, board, chip, phone, phoneboard, soc, car, ecu, mcu, scanner, wafer, die, block, gate, switch: swtch, atom, ...STATIONS, ...DESIGN_SCENES };
 /* a scene drawn by the dive itself tells how large the dive's box is */
 Object.values(SCENES).forEach(sc => { const draw = sc.draw; sc.draw = function (G) { if (!NEST) measure(G); draw.call(sc, G); }; });
-export const partsOf = id => SCENES[id].parts;
+/* in X-ray, the chips' parts are their blocks, one part per type (keys are types: xray.type.<type>) */
+export const partsOf = id => (XRAY && XRAY_AT.includes(id) ? partsFor(xrayOf(id)) : SCENES[id].parts);
