@@ -39,6 +39,8 @@ export const DEPTHS = {
   car: { m: 5.7, portal: [553.2, 544, 31.5] },
   ecu: { m: 0.18, portal: [455, 425, 40] },
   mcu: { m: 0.007, portal: [176, 236, 52] },
+  /* the design studio: a line too, before the factory: from the job a chip must do to the masks */
+  need: { station: true }, logic: { station: true }, check: { station: true }, gates: { station: true }, layout: { station: true }, masks: { station: true },
   /* the journey: stations of the line (no portals: you move along, not down) */
   crystal: { station: true }, slice: { station: true },
   clean: { station: true }, deposit: { station: true }, print: { station: true }, etch: { station: true }, implant: { station: true }, wires: { station: true },
@@ -72,6 +74,7 @@ export const WORLDS = [
   { id: 'datacentre', depths: ['building', 'rack', 'board', 'chip', ...SHARED] },
   { id: 'phone', depths: ['phone', 'phoneboard', 'soc', ...SHARED] },
   { id: 'car', depths: ['car', 'ecu', 'mcu', ...SHARED] },
+  { id: 'design', line: true, flat: true, depths: ['need', 'logic', 'check', 'gates', 'layout', 'masks'] },
   { id: 'journey', line: true, depths: ['crystal', 'slice', 'clean', 'deposit', 'print', 'etch', 'implant', 'wires', 'test', 'pkg', 'ship'] },
   { id: 'made', hidden: true, depths: ['scanner', 'wafer', 'die', ...SHARED] }
 ];
@@ -107,6 +110,13 @@ export const STOPS = {
   'make.scanner': ['source'], 'scale.scanner': ['mirrors', 'mask'], 'open.scanner': ['source', 'mirrors', 'mask', 'stage'],
   'fail.wafer': ['defects'], 'make.wafer': ['dies'],
   'idea.die': ['cores'], 'make.die': ['pads'],
+  /* the design studio */
+  'idea.need': ['use'], 'open.need': ['box'], 'divide.need': ['ins', 'outs'],
+  'think.logic': ['code'], 'know.logic': ['code', 'table'],
+  'fail.check': ['waves'], 'idea.check': ['verdict'],
+  'make.gates': ['cells'], 'scale.gates': ['cells', 'pins'],
+  'divide.layout': ['tile'], 'open.layout': ['shared'],
+  'scale.masks': ['masks', 'reticle'], 'make.masks': ['reticle'],
   /* the journey's own stations */
   'make.crystal': ['ingot'], 'know.crystal': ['furnace'], 'strange.crystal': ['melt'],
   'make.slice': ['saw'], 'scale.slice': ['wafers'],
@@ -123,7 +133,7 @@ export const STOPS = {
 /* Stops whose words list real directions people are exploring (stop.<key>.tried, a list). */
 export const TRIED = ['strange.chip', 'strange.gate', 'strange.switch', 'strange.atom', 'limit.chip', 'limit.gate', 'limit.atom', 'fail.building', 'fail.board', 'fail.gate',
   'idea.block', 'idea.gate', 'make.chip', 'make.switch', 'make.atom', 'know.switch', 'open.chip', 'open.block', 'divide.chip', 'divide.block', 'life.block', 'life.switch', 'scale.switch',
-  'life.phone', 'divide.phone', 'idea.soc', 'life.car', 'fail.ecu', 'make.clean', 'scale.scanner', 'divide.test', 'make.die', 'divide.pkg'];
+  'life.phone', 'divide.phone', 'idea.soc', 'life.car', 'fail.ecu', 'make.clean', 'scale.scanner', 'divide.test', 'make.die', 'divide.pkg', 'idea.check', 'open.layout'];
 
 /* Real chips that passed their checks and still failed, from the earlier site. stop: where it shows. */
 export const CASES = [

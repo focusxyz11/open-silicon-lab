@@ -5,10 +5,13 @@
    parts as coloured dots you can pick. The maths is in src/engines/weave.js. */
 import { t } from '../core/i18n.js';
 import { DEPTHS, THREADS, partWord } from '../data/weave.js';
-import { N, IDS, clampZ, frames, lineFrames, isLine, stop } from '../engines/weave.js';
+import { N, IDS, WORLD, worldOf, clampZ, frames, lineFrames, isLine, stop } from '../engines/weave.js';
 import { SCENES, partsOf } from './scenes.js';
 import { drawMap } from './map.js';
 import { drawJourney, stepStart, setParts3 } from './journey.js';
+import { drawDesignBand } from './design.js';
+/* a line drawn flat, without the factory's 3D: the design studio */
+const flat = () => !!(worldOf(WORLD) || {}).flat;
 
 export const reduced = () => !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
 export const theme = () => {
@@ -181,8 +184,7 @@ export function createWorld(cv, on) {
     return { pi: near, ptr: { tx: left, ty: top, s: k } };
   }
   function renderLine(tm, b) {
-    want3d();
-    if (J3) return renderLine3(tm, b);
+    if (!flat()) { want3d(); if (J3) return renderLine3(tm, b); } else if (J3) { J3.canvas.style.display = 'none'; setParts3(null); lensBox = null; }
     const F = lineFrames(Z, b.B, b.cx, b.cy), pi = F.f < 0.5 ? F.i : F.i + 1, near = Math.round(Z), dist = Math.abs(Z - near);
     if (!fly && !drag && dist < 0.02) { if (stay.i !== near) { stay = { i: near, t: tm }; paused = false; } else if (paused) stay.t += tm - lastTm; } else if (dist > 0.05 || fly) stay.i = -1;
     lastTm = tm;
@@ -196,7 +198,7 @@ export function createWorld(cv, on) {
     const below = (H - inset.b - (top + b.B)) / k;
     ctx.save(); ctx.setTransform(dpr * k, 0, 0, dpr * k, dpr * left, dpr * top); ctx.beginPath(); ctx.rect(0, 0, 1000, 1000 + (b.below ? below : 0)); ctx.clip();
     Object.assign(G, { s: k, k: 1, primary: true, t: tm, col, id: IDS[near], base: 1, box: b.B });
-    jhits = drawJourney(G, { ids: IDS, Z, near, dist, run, paused, names, below: b.below ? below : 0 }); jbox = { k, left, top, near };
+    if (flat()) { drawDesignBand(G, { id: IDS[near], below: b.below ? below : 0 }); jhits = null; } else jhits = drawJourney(G, { ids: IDS, Z, near, dist, run, paused, names, below: b.below ? below : 0 }); jbox = { k, left, top, near };
     ctx.restore();
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     /* where you are on the line: a mark per station */

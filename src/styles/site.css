@@ -1,9 +1,9 @@
 /* Open Silicon Lab: one screen, the dive. The world fills the window; the top bar, the depth rail and
    the card sit over it. Colours follow Fable's world build: dark navy by default, a light paper theme. */
-:root{--bg:#05070d;--panel:rgba(11,16,32,.9);--line:#27324f;--ink:#e8edf6;--muted:#93a1c0;--accent:#63b6ff;--warm:#ffb057;
+:root{--bg:#05070d;--panel:rgba(11,16,32,.9);--line:#27324f;--ink:#e8edf6;--muted:#93a1c0;--accent:#63b6ff;--warm:#ffb057;--bad:#ff6f5c;--good:#35c994;
   --serif:"Besley",Georgia,serif;--sans:"Atkinson Hyperlegible Next",system-ui,sans-serif;--mono:"Martian Mono",ui-monospace,Menlo,monospace;color-scheme:dark}
-:root[data-theme=light]{--bg:#e6eaf0;--panel:rgba(247,249,251,.94);--line:#c3ccd9;--ink:#131c26;--muted:#4e5b70;--accent:#1c64c8;--warm:#b86a00;color-scheme:light}
-@media (prefers-color-scheme:light){:root:not([data-theme]){--bg:#e6eaf0;--panel:rgba(247,249,251,.94);--line:#c3ccd9;--ink:#131c26;--muted:#4e5b70;--accent:#1c64c8;--warm:#b86a00;color-scheme:light}}
+:root[data-theme=light]{--bg:#e6eaf0;--panel:rgba(247,249,251,.94);--line:#c3ccd9;--ink:#131c26;--muted:#4e5b70;--accent:#1c64c8;--warm:#b86a00;--bad:#cc3f2b;--good:#0b8a5c;color-scheme:light}
+@media (prefers-color-scheme:light){:root:not([data-theme]){--bg:#e6eaf0;--panel:rgba(247,249,251,.94);--line:#c3ccd9;--ink:#131c26;--muted:#4e5b70;--accent:#1c64c8;--warm:#b86a00;--bad:#cc3f2b;--good:#0b8a5c;color-scheme:light}}
 *{box-sizing:border-box}
 html,body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 var(--sans)}
 button{font:inherit;color:inherit}
@@ -64,7 +64,7 @@ button{font:inherit;color:inherit}
   .app{position:static;overflow:visible;display:grid;grid-template-columns:76px 1fr}
   .top{position:static;grid-column:1/-1;height:auto;min-height:48px;flex-wrap:wrap;row-gap:8px;padding:8px 12px}
   .worlds{order:3;flex:1 0 100%;margin-left:0}
-  .worlds button{flex:1;padding:8px 6px}
+  .worlds button{flex:1;padding:8px 4px;font-size:12.5px}
   #world{position:relative;grid-column:2;grid-row:2;height:min(62vh,480px)}
   #world3d{position:relative;grid-column:2;grid-row:2;height:min(62vh,480px)}
   .rail{position:relative;left:auto;top:auto;bottom:auto;grid-column:1;grid-row:2;width:auto;height:min(62vh,480px);padding:6px 0 6px 10px}
@@ -101,6 +101,12 @@ button{font:inherit;color:inherit}
 .trylabel output{font:500 12.5px/1.4 var(--mono);color:var(--warm)}
 .try input[type=range]{width:100%;accent-color:var(--warm)}
 .readout{font:500 13px/1.4 var(--mono)}
+/* your design: the description, edited in the card */
+.code-edit{width:100%;box-sizing:border-box;font:500 13px/1.6 var(--mono);color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:8px 10px;resize:vertical;tab-size:2}
+.code-edit:focus-visible{outline:2px solid var(--warm);outline-offset:1px}
+.errs{margin:0;padding-left:18px;color:var(--bad,#cc3f2b);font-size:13px}
+.design .bad{color:var(--bad,#cc3f2b)}.design .good{color:var(--good,#0b8a5c)}
+.community{margin:0;padding-left:20px}
 .shows{display:flex;flex-wrap:wrap;gap:6px}
 .chipgo{padding:4px 10px;border-radius:999px;border:1px solid var(--line);background:transparent;cursor:pointer;font-size:13px}
 .chipgo:hover{border-color:var(--warm)}
