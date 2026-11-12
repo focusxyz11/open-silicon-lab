@@ -257,3 +257,35 @@ test('the lens: it shows only steps that work on the wafer, each picture says wh
   for (const [, k] of src.matchAll(/lab\('(\w+)'/g)) assert.ok(EN['slice.' + k], 'the lens names a layer with no word: ' + k);
   for (const id of Object.keys(DIVES)) for (const [, at] of DIVES[id]) assert.ok(EN['depth.' + at + '.name'], at);
 });
+
+test('the world around the line: every place a trip uses is on the map with its words, joined to real stations and worlds', async () => {
+  const { SITES, ROUTES } = await import('../src/data/world.js');
+  const { sitesOf } = await import('../src/engines/supply.js');
+  for (const [w, route] of Object.entries(ROUTES)) {
+    assert.ok(WORLDS.some(x => x.id === w && !x.line), w + ' is not a dive');
+    for (const id of sitesOf(route)) { assert.ok(SITES[id], id + ' is not on the map'); for (const k of ['name', 'where', 'what', 'who']) assert.ok(EN['site.' + id + '.' + k], 'site.' + id + '.' + k); }
+    for (const step of route) {
+      assert.ok(EN['route.step.' + step.id], 'route.step.' + step.id);
+      assert.ok(EN['route.' + w + '.' + step.id] || EN['route.any.' + step.id], 'no words for ' + w + ' ' + step.id);
+      if (step.st) assert.ok(LINE.depths.includes(step.st), step.st);
+      if (step.dive) assert.ok(WORLDS.some(x => x.id === step.dive), step.dive);
+    }
+  }
+  for (const [id, s] of Object.entries(SITES)) if (s[3]) assert.ok(LINE.depths.includes(s[3]), id + ' joins a station that does not exist');
+});
+
+test('a trip stops after the only place that can do a step, and only strains where others can take over', async () => {
+  const { ROUTES } = await import('../src/data/world.js');
+  const { status, worst } = await import('../src/engines/supply.js');
+  const dc = ROUTES.datacentre, car = ROUTES.car, at = (r, id) => r.findIndex(s => s.id === id);
+  assert.ok(status(dc, []).every(s => s.state === 'ok'), 'nothing closed, nothing stops');
+  const euv = status(dc, ['vel']);
+  assert.equal(euv[at(dc, 'fab')].state, 'stopped', 'no EUV scanners, no advanced fab');
+  assert.equal(euv[at(dc, 'use')].state, 'waits', 'and everything after it waits');
+  assert.equal(euv[at(dc, 'design')].state, 'ok', 'what comes before goes on');
+  assert.deepEqual(worst(euv), { i: at(dc, 'fab'), state: 'stopped' }, 'the trip stops at the fab');
+  assert.equal(euv[at(dc, 'tools')].state, 'strained', 'other tools are still made');
+  assert.notEqual(status(car, ['vel'])[at(car, 'fab')].state, 'stopped', 'car chips need no EUV');
+  assert.equal(status(dc, ['odz'])[at(dc, 'fab')].state, 'strained', 'neon comes from elsewhere too, dearer');
+  assert.equal(status(dc, ['hsc', 'tnn'])[at(dc, 'fab')].state, 'strained', 'other fabs exist, not drawn');
+});

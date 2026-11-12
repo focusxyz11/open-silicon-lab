@@ -8,7 +8,9 @@
    has no form yet, the card invites the visitor to write one (on GitHub, through the question form).
    Your chip: at some stops a "Try it" changes one of its settings (src/engines/chip.js); every depth that
    shows your chip then says what changed there, and its scene changes too. */
-import { t, fmtDate } from '../core/i18n.js';
+import { t, fmtDate, has } from '../core/i18n.js';
+import { SITES, ROUTES } from '../data/world.js';
+import { status, worst } from '../engines/supply.js';
 import { THREADS, WORLDS, STOPS, CASES, FIGURES, REPO, TRIES, SHOWS, DIVES, EXITS, MADE, PLANTS, LOOP, partWord } from '../data/weave.js';
 import { CLOCKS, GENS, SIDES, START, CHALLENGES, normal, changed, model, x2, dieSquare } from '../engines/chip.js';
 import { N, IDS, WORLD, setWorld, worldOf, zIn, reshape, isLine, clampZ, sizeAt, sizeParts, stop, stopKey, crossing, below, above, nearest, threadOf, rootShown, threadDepths } from '../engines/weave.js';
@@ -47,15 +49,36 @@ export function start(facts) {
   /* ---- the world ---- */
   const world = createWorld($('world'), {
     zoom(z) { const a = $('acrossNow'); if (a) a.textContent = across(z); railNow(z); },
-    depth(d) { see(d); card(); rail(); save(); },
+    depth(d) { see(d); if (S.map) world.setMap(mapState()); card(); rail(); save(); },
 
-    arrive(d) { see(d); card(); rail(); save(); },
+    arrive(d) { see(d); if (S.map) world.setMap(mapState()); card(); rail(); save(); },
     pick(th) { follow(th); },
     part(d, key) { S.part = { id: IDS[d], key }; card(); },
     /* the lens over a machine at work: down into what it shows */
-    lens(d) { const id = IDS[d], dv = DIVES[id] && DIVES[id][0]; if (dv) { enter(dv[0], dv[1]); S.from = id; save(); card(); } }
+    lens(d) { const id = IDS[d], dv = DIVES[id] && DIVES[id][0]; if (dv) { enter(dv[0], dv[1]); S.from = id; save(); card(); } },
+    /* the world around the line */
+    map() { if (S.map) closeMap(); else openMap(); },
+    site(id) { if (!S.map) return; S.map.site = S.map.site === id ? null : id; if (S.map.site) { const r = ROUTES[S.map.world], i = r.findIndex(st => st.at.includes(id)); if (i >= 0) S.map.step = i; } showMap(); },
+    mapStep(i) { if (!S.map) return; S.map.step = i; S.map.site = null; showMap(); }
   });
   world.setZ(S.z);
+
+  /* ---- the world around the line (src/app/map.js): a chip's whole trip, from design to where it is used ---- */
+  /* which step of a trip the station you are at belongs to */
+  const STEP_OF = { crystal: 'wafers', slice: 'wafers', clean: 'fab', deposit: 'fab', print: 'fab', etch: 'fab', implant: 'fab', wires: 'fab', test: 'fab', pkg: 'package' };
+  const stepAt = (w, station) => { const r = ROUTES[w]; let i = r.findIndex(st => st.id === STEP_OF[station]); if (i < 0) i = r.findIndex(st => st.st === station); return i < 0 ? null : i; };
+  function mapState() {
+    const m = S.map, r = ROUTES[m.world], here = isLine() ? stepAt(m.world, IDS[Math.round(world.z)]) : null, focus = r[m.step] || r[here] || r[0];
+    const first = m.site || focus.at[0] || (focus.flow[0] || [])[1] || 'hsc';
+    return { route: r, world: m.world, step: m.step, here, site: m.site, closed: new Set(m.closed), st: status(r, m.closed), from: SITES[first] };
+  }
+  function showMap() { if (!S.map) return; world.setMap(mapState()); card(); }
+  function openMap(w) {
+    const route = w || S.mapWorld || 'datacentre', here = isLine() ? stepAt(route, IDS[Math.round(world.z)]) : null;
+    S.map = { world: route, step: here != null ? here : 0, site: null, closed: [] }; S.mapWorld = route; S.part = null;
+    showMap();
+  }
+  function closeMap() { S.map = null; world.setMap(null); card(); }
 
   /* A question you follow remembers the depths where you met it. */
   function see(d) {
@@ -110,6 +133,7 @@ export function start(facts) {
     if (id === WORLD && at == null) return;
     const target = worldOf(id), j = at != null && target ? target.depths.indexOf(at) : -1, z = j >= 0 ? j : zIn(id, world.z);
     setWorld(id); buildRail(); markWorld();
+    if (S.map && !isLine()) { S.map = null; world.setMap(null); }
     world.setZ(z); see(Math.round(z)); card(); rail(); save();
   }
   worldsEl.addEventListener('click', e => { const b = e.target.closest('[data-world]'); if (b) enter(b.dataset.world); });
@@ -124,8 +148,9 @@ export function start(facts) {
     const n = th ? nearest(th, d) : null; if (n != null) p.continues = q(th, n);
     return REPO + '/issues/new?' + new URLSearchParams(p);
   };
-  const figures = key => {
-    const fs = (FIGURES[key] || []).map(id => FACT[id]).filter(Boolean); if (!fs.length) return '';
+  const figures = key => figList(FIGURES[key] || []);
+  const figList = ids => {
+    const fs = ids.map(id => FACT[id]).filter(Boolean); if (!fs.length) return '';
     return '<section class="figs"><p class="code">' + t('ui.figures') + '</p><ul>' + fs.map(f => '<li><b>' + esc(f.value) + '</b> <span>' + esc(f.label) + '</span><small>' +
       ext(f.url, esc(f.source)) + ' · ' + esc(t('fact.' + f.kind)) + ' · ' + esc(t('ui.checked', { date: fmtDate(f.verified) })) + '</small></li>').join('') + '</ul></section>';
   };
@@ -206,6 +231,8 @@ export function start(facts) {
     return h + '<button type="button" class="link" data-closepart>' + t('ui.partClose') + '</button></section>';
   };
 
+  /* the top of each dive, and its chip, lead to that chip's trip around the world */
+  const TRIP = { building: 'datacentre', rack: 'datacentre', chip: 'datacentre', phone: 'phone', soc: 'phone', car: 'car', mcu: 'car' };
   /* the ways on from here: down from a station, out from the last one, back to the line from the factory's dive */
   const ways = d => {
     const id = IDS[d], out = [];
@@ -214,15 +241,56 @@ export function start(facts) {
       (EXITS[id] || []).forEach(([w, at]) => out.push(['exit', w, at, t('ui.shipTo', { world: t('world.' + w + '.name') })]));
     } else if (worldOf(WORLD).hidden) out.push(['back', 'journey', S.from || 'print', t('ui.backToLine', { station: t('depth.' + (S.from || 'print') + '.name') })]);
     else if (MADE[id]) out.push(['back', 'journey', MADE[id], t('ui.seeMade', { station: t('depth.' + MADE[id] + '.name') })]);
+    /* the whole trip, around the world: from any station, and from the top of each dive */
+    const trip = isLine() ? '' : TRIP[id];
+    if (isLine()) out.push(['map', '', '', t('map.open')]); else if (trip) out.push(['map', trip, '', t('map.fromDive')]);
     if (!out.length) return '';
     return '<section class="ways"><p class="code">' + t(isLine() && EXITS[id] ? 'ui.waysOut' : isLine() ? 'ui.waysDown' : worldOf(WORLD).hidden ? 'ui.waysBack' : 'ui.waysMade') + '</p><div class="moves">' +
-      out.map(o => '<button type="button" class="btn' + (o[0] === 'exit' ? ' primary' : '') + '" data-dive="' + o[1] + ':' + o[2] + (o[0] === 'back' ? '' : ':' + id) + '">' + esc(o[3]) + '</button>').join('') + '</div></section>';
+      out.map(o => o[0] === 'map' ? '<button type="button" class="btn" data-map="' + o[1] + '">' + esc(o[3]) + '</button>' :
+        '<button type="button" class="btn' + (o[0] === 'exit' ? ' primary' : '') + '" data-dive="' + o[1] + ':' + o[2] + (o[0] === 'back' ? '' : ':' + id) + '">' + esc(o[3]) + '</button>').join('') + '</div></section>';
   };
+
+  /* the card while the map is open: whose trip, the step picked, the place picked, and what stops */
+  const siteBtn = id => '<button type="button" class="chipgo' + (S.map.closed.includes(id) ? ' shut' : '') + '" data-site="' + id + '">' + esc(t('site.' + id + '.name')) + '</button>';
+  function mapCard() {
+    const m = S.map, r = ROUTES[m.world], st = status(r, m.closed), step = r[m.step] || r[0];
+    let h = '<p class="where"><b>' + t('map.title') + '</b> <span>' + esc(t('map.route.' + m.world)) + '</span></p>';
+    h += '<section class="maptabs"><p class="code">' + t('map.routes') + '</p><div class="shows">' + Object.keys(ROUTES).map(w => '<button type="button" class="chipgo" data-mapworld="' + w + '" aria-pressed="' + (w === m.world) + '">' + esc(t('world.' + w + '.name')) + '</button>').join('') + '</div></section>';
+    /* what stops, if anything does */
+    const bad = worst(st);
+    if (m.closed.length) {
+      h += '<section class="mapstop ' + (bad ? bad.state : '') + '">';
+      if (bad) {
+        const places = st[bad.i].why.map(id => t('site.' + id + '.name')).join(', ') || m.closed.map(id => t('site.' + id + '.name')).join(', ');
+        h += '<p><b>' + esc(t(bad.state === 'stopped' ? 'map.stops' : 'map.strained', { step: t('route.step.' + r[bad.i].id), places })) + '</b></p>';
+        h += '<p class="rootq">' + esc(t(bad.state === 'stopped' ? 'map.qStop' : 'map.qStrain')) + '</p>';
+        h += figList([...(r[bad.i].id === 'fab' ? ['fab-build-time'] : []), ...(m.world === 'car' ? ['car-shortage-2021'] : [])]);
+      }
+      h += '<p class="small muted">' + t('map.note') + '</p><button type="button" class="link" data-openall>' + t('map.openAll') + '</button></section>';
+    }
+    /* the step */
+    h += '<section class="mapstep"><p class="code">' + t('map.step') + '</p><h2>' + esc(t('route.step.' + step.id)) + '</h2><p>' + esc(t('route.' + (has('route.' + m.world + '.' + step.id) ? m.world : 'any') + '.' + step.id)) + '</p>';
+    if (step.at.length) h += '<p class="small muted">' + t('map.places') + '</p><div class="shows">' + step.at.map(siteBtn).join('') + '</div>';
+    const needs = (step.needs || []).flatMap(n => n.at);
+    if (needs.length) h += '<p class="small muted">' + t('map.needs') + '</p><div class="shows">' + needs.map(siteBtn).join('') + '</div>';
+    h += '<div class="moves">' + (step.st ? '<button type="button" class="btn" data-mapgo="' + step.st + '">' + esc(t('map.toStation', { station: t('depth.' + step.st + '.name') })) + '</button>' : '') +
+      (step.dive ? '<button type="button" class="btn" data-world="' + step.dive + '">' + esc(t('map.diveTo', { world: t('world.' + step.dive + '.name') })) + '</button>' : '') + '</div></section>';
+    /* the place */
+    if (m.site) {
+      const id = m.site, shut = m.closed.includes(id), stn = SITES[id][3];
+      h += '<section class="mapsite"><p class="code">' + t('map.site') + '</p><h3>' + esc(t('site.' + id + '.name')) + ' <span class="small muted">' + esc(t('site.' + id + '.where')) + '</span></h3><p>' + esc(t('site.' + id + '.what')) + '</p><p class="small muted">' + esc(t('site.' + id + '.who')) + '</p>' +
+        '<div class="moves"><button type="button" class="btn' + (shut ? '' : ' primary') + '" data-shut="' + id + '">' + t(shut ? 'map.reopen' : 'map.shut') + '</button>' +
+        (stn ? '<button type="button" class="btn" data-mapgo="' + stn + '">' + esc(t('map.toStation', { station: t('depth.' + stn + '.name') })) + '</button>' : '') + '</div></section>';
+    }
+    h += '<p class="small muted how">' + t('map.how') + '</p><button type="button" class="btn" data-closemap>' + t('map.close') + '</button>';
+    return h;
+  }
 
   const companion = (th, d) => '<button type="button" class="link" data-companion aria-expanded="false">' + t('ui.companion') + '</button><div class="companion" hidden><p class="small muted">' + t('ui.companionNote') +
     '</p><textarea readonly rows="7" aria-label="' + esc(t('ui.companion')) + '">' + esc(prompt(th, d)) + '</textarea><div class="moves"><button type="button" class="btn" data-copy>' + t('ui.copy') + '</button><span class="small muted" role="status"></span></div></div>';
   const qButton = (th, d) => '<button type="button" class="qpick" data-th="' + th + '" style="--th:' + threadColor(th) + '"><i></i><span>' + esc(q(th, d)) + '</span></button>';
   function card() {
+    if (S.map && isLine()) { cardEl.innerHTML = mapCard(); anchor(); return; }
     const d = Math.round(world.z), th = S.thread;
     setBuild(null);   /* a switch is shown finished, unless "Build it" is open */
     if (S.part && S.part.id !== IDS[d]) S.part = null;
@@ -266,6 +334,16 @@ export function start(facts) {
     anchor();
   }
   cardEl.addEventListener('click', e => {
+    const mp = e.target.closest('[data-map]'); if (mp) { const w = mp.dataset.map; if (w) enter('journey', 'ship'); openMap(w || undefined); return; }
+    if (S.map) {
+      const mw = e.target.closest('[data-mapworld]'); if (mw) { S.map.world = S.mapWorld = mw.dataset.mapworld; S.map.closed = []; S.map.site = null; const i = stepAt(S.map.world, IDS[Math.round(world.z)]); S.map.step = i != null ? i : 0; showMap(); return; }
+      const si = e.target.closest('[data-site]'); if (si) { S.map.site = si.dataset.site; showMap(); return; }
+      const sh = e.target.closest('[data-shut]'); if (sh) { const id = sh.dataset.shut, c = new Set(S.map.closed); if (c.has(id)) c.delete(id); else c.add(id); S.map.closed = [...c]; showMap(); return; }
+      if (e.target.closest('[data-openall]')) { S.map.closed = []; showMap(); return; }
+      const go = e.target.closest('[data-mapgo]'); if (go) { const d = IDS.indexOf(go.dataset.mapgo); closeMap(); if (d >= 0) world.flyTo(d); return; }
+      if (e.target.closest('[data-closemap]')) { closeMap(); return; }
+      if (e.target.closest('[data-world]')) { closeMap(); }
+    }
     const p = e.target.closest('[data-th]'); if (p) { follow(p.dataset.th); return; }
     const g = e.target.closest('[data-go]'); if (g) { world.flyTo(+g.dataset.go); return; }
     const w = e.target.closest('[data-world]'); if (w) { enter(w.dataset.world); const n = nearest(S.thread, Math.round(world.z)); if (n != null) world.flyTo(n); return; }

@@ -950,7 +950,7 @@ export function drawJourney(G, o) {
   if (!under || o.three) { G.a(0.94); G.r(-2000, top, 5000, bottom - top + 2000, c.bg); G.a(1); }
   G.l([[0, top], [1000, top]], c.line, 1);
   /* the lens, over the picture */
-  const hits = { chips: [], pause: null, names: null, lens: null };
+  const hits = { chips: [], pause: null, names: null, lens: null, map: null };
   if (o.lens && o.lensMode) hits.lens = lensWords(G, id, o.lensMode, o.lens, top);
   let key, n = 0, L = null, a = 1, dust = false;
   if (f) { key = f.s.k; n = cfg.num[f.i]; if (cfg.in != null) { L = f.sl; a = f.a; dust = !!cfg.dust; } if (cfg.appear && f.i < cfg.appear) L = null; }
@@ -980,7 +980,7 @@ export function drawJourney(G, o) {
     const R = 9.5 * u, fs = 11.5 * u, gap = 8 * u, y = top + 12 + R, steps = cfg.steps.map((s, i) => ({ s, i, n: cfg.num[i] })).filter(q => q.n);
     const titleOf = k => { const m = /^<b>(.*?)<\/b>/.exec(t(k)); return m ? m[1] : ''; };
     ctx.save(); ctx.font = '600 ' + fs + 'px ' + SANS; ctx.textBaseline = 'middle';
-    const room = 1000 - tx - 16 - 6 * R, full = steps.reduce((w, q) => w + 2 * R + 5 * u + ctx.measureText(titleOf(q.s.k)).width + gap, 0) <= room;
+    const room = 1000 - tx - 16 - 9 * R, full = steps.reduce((w, q) => w + 2 * R + 5 * u + ctx.measureText(titleOf(q.s.k)).width + gap, 0) <= room;
     const cur = f ? steps.find(q => q.i === f.i) : null, fitsNow = full || (cur && steps.length * (2 * R + gap) + ctx.measureText(titleOf(cur.s.k)).width + 5 * u <= room);
     let x = tx;
     steps.forEach(q => {
@@ -1006,6 +1006,12 @@ export function drawJourney(G, o) {
     ctx.moveTo(nx + R - 5 * u, y - 3.5 * u); ctx.lineTo(nx + R + 2 * u, y - 3.5 * u); ctx.lineTo(nx + R + 5.5 * u, y); ctx.lineTo(nx + R + 2 * u, y + 3.5 * u); ctx.lineTo(nx + R - 5 * u, y + 3.5 * u); ctx.closePath(); ctx.stroke();
     G.c(nx + R - 2.2 * u, y, 1.1 * u, o.names ? c.bg : c.hi);
     hits.names = { x: nx, y: y - R, w: 2 * R, h: 2 * R };
+    /* the world around the line (map.js): a globe */
+    const gx = nx - 2 * R - 6 * u + R;
+    G.c(gx, y, R, c.bg, c.line, 1.1);
+    ctx.strokeStyle = c.hi; ctx.lineWidth = 1.2 * u; ctx.beginPath(); ctx.arc(gx, y, 5.5 * u, 0, 6.2832); ctx.moveTo(gx - 5.5 * u, y); ctx.lineTo(gx + 5.5 * u, y); ctx.stroke();
+    ctx.beginPath(); ctx.ellipse(gx, y, 2.4 * u, 5.5 * u, 0, 0, 6.2832); ctx.stroke();
+    hits.map = { x: gx - R, y: y - R, w: 2 * R, h: 2 * R };
     ctx.restore();
     ctop = y + R + 4 * u;
     n = 0;
