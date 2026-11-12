@@ -1,0 +1,71 @@
+# The chip world
+
+How the redesign (`explore.html`, `src/v2/`) holds everything together. The island is the first page; this
+note is about what connects it: one main thread, the same three doors everywhere, and an island that grows.
+
+## The main thread: your chip's life
+
+A chip is the brain of almost anything, so the lab does not draw everything a chip goes into. It follows one
+chip, yours, round the loop every chip goes round:
+
+**Design → Make → Test → Ship → Use**, and what fails in use goes back to design.
+
+The loop is a ring road on the island, with a numbered stop for each step and your chip standing at the step
+you are on. The HUD (top left) always shows the five steps, how many challenges each has left, and the next
+challenge. Each step has a station: Design at the studio, Make at the factory (the crystal is the first part of
+making), Test at the test house, Ship at the port, Use at the data centre. Where a chip goes after the port
+(a phone, a car, a data centre) is a challenge at Ship, because what it must survive depends on where it
+lives.
+
+## Every place has three doors
+
+Whatever you tap opens the same sheet, with three doors:
+
+- **Do**: challenges, each checked for real by one of the lab's engines. A circuit by the tiny-chip engine
+  (`src/engines/design.js`), your chip's settings by `src/engines/chip.js`, a chip's years in a phone, a car or
+  a data centre by `src/engines/life.js`, a broken copy by the design engine's factory faults. AI can propose;
+  the check decides.
+- **Look**: ways inside. A place flown through continuously (the data centre, `src/v2/dc3d.js`), or the current
+  site's line, studio and supply map until they are redrawn.
+- **Ask**: the questions that stop at this place (stops of the threads), its debates, and at the Lab the ways
+  people are trying.
+
+The menu gives the same content another way: **Explore** (the island), **Challenges** (every challenge by step,
+and the open jobs), **Questions** (by place), **Build** (the shared computer) and **Ecosystem** (the islands
+across the sea, and the world chips depend on).
+
+## The island grows
+
+Nothing on the island is decoration that never changes. Two things make it grow:
+
+- **What you finish.** Every challenge names what it grows (`grows` in `CHALLENGES`, drawn by `GROWERS` in
+  `src/v2/map3d.js`): a screen at the studio, trucks on the loop, a probe tower, a ship to phone island, solar
+  panels at the data centre. It grows in, with sparkles, and a note says what appeared. Your progress stays in
+  your browser (`osl-world-v1`).
+- **What the community builds.** The shared computer at the Lab (`src/data/build.js`) rises one floor for every
+  piece of the plan: built pieces are solid, a piece you have designed glows, open pieces are wireframes,
+  pieces that need an engine first are red outlines. In the makers' village every community design is a house
+  (coloured by who wrote it: person, AI, both, or an example), every open job an empty plot with a sign anyone
+  can take, and every missing engine a sign of its own. AI agents arrive as boats at the Lab's dock, through the
+  open port (`scripts/mcp.mjs`). When a design is merged into the plan, its house appears for everyone.
+
+Phones and cars are islands of their own across the sea, reached from the Ecosystem or by shipping your chip
+there. A sandbank waits for what the world does not have yet: propose a place, a challenge or a question.
+
+## How to add something
+
+All of it is data in `src/v2/game.js`, drawn by the island and the pages; words in `src/i18n/en.json`.
+
+- **A challenge:** add it to `CHALLENGES` with its step, its kind (`design`, `chip`, `life`, `spot`), what it
+  checks (`p`, `goal` or `mission`) and what it grows. Give the growth a grower in `GROWERS` and a spot in
+  `GROW_SPOT` (`src/v2/map3d.js`), and words: `game.ch.<id>.t` (not for designs), `.goal`, `.why`, and
+  `grow.<growth>`. `tests/game.test.mjs` checks that it starts unmet, can be won, and is drawn and named.
+  A new kind of check is a new engine, never a separate tool.
+- **A question at a place:** add its stop key to `ASK[place]`; the first one glows above the place.
+- **A way inside:** add it to `LOOK[place]` (`to` a place, `page` a page, or `world` and `depth` in the current
+  site) with words `look.<id>.t` and `.d`.
+- **A piece of the shared computer:** add a need to `src/data/build.js`. If a design engine can check it, it
+  becomes an open job (a plot in the village, a card at the Lab and on the Challenges page); if not, writing the
+  engine is the job.
+- **A new place or island:** add it to `PLACES` in `game.js` and `map3d.js` with words `map.<id>.t`, `.d` and
+  `.kind`. Draw it only if it can be drawn well.

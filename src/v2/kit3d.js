@@ -97,10 +97,10 @@ export function labels(host) {
   return {
     add(obj, offset, text, o = {}) {
       const el = document.createElement(o.button ? 'button' : 'span');
-      el.className = 'lbl3 ' + (o.cls || ''); el.textContent = text; if (o.button) el.type = 'button';
+      el.className = 'lbl3 ' + (o.cls || ''); if (o.html != null) el.innerHTML = o.html; else el.textContent = text; if (o.button) el.type = 'button';
       if (o.data) Object.entries(o.data).forEach(([k, val]) => { el.dataset[k] = val; });
       host.appendChild(el);
-      const L = { obj, offset: offset || new THREE.Vector3(), el, min: o.min || 0, max: o.max || Infinity, show: true };
+      const L = { obj, offset: offset || new THREE.Vector3(), el, min: o.min || 0, max: o.max || Infinity, show: true, need: o.need || null };
       list.push(L); return L;
     },
     update(camera, w, h) {
@@ -109,7 +109,7 @@ export function labels(host) {
         v.copy(L.offset).applyMatrix4(L.obj.matrixWorld);
         const dist = v.distanceTo(camera.position);
         v.project(camera);
-        const on = L.show && v.z < 1 && v.z > -1 && Math.abs(v.x) < 1.1 && Math.abs(v.y) < 1.1 && dist >= L.min && dist <= L.max;
+        const on = L.show && (!L.need || L.need.visible) && v.z < 1 && v.z > -1 && Math.abs(v.x) < 1.1 && Math.abs(v.y) < 1.1 && dist >= L.min && dist <= L.max;
         L.el.style.opacity = on ? '' : '0'; L.el.style.pointerEvents = on ? '' : 'none';
         if (on) L.el.style.transform = 'translate(' + ((v.x + 1) / 2 * w).toFixed(1) + 'px,' + ((1 - v.y) / 2 * h).toFixed(1) + 'px) translate(-50%,-100%)';
       }
