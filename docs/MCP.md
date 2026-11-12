@@ -42,6 +42,7 @@ Then ask the agent something like: *"Look at the Open Silicon Lab plan, pick an 
 | `get_job` | One job: what it must do, its inputs and outputs, the rules of its description, the code to start from; for the core, its test programs. |
 | `check_design` | Whether a design reads and is right (with the first wrong answer), and what it becomes: gates, transistors, speed, layout, test coverage, masks. For the core, the test programs run with your ALU slice inside. |
 | `at_factory` | A copy made at the factory with one wire stuck: how many answers go wrong, and whether the Test station would catch it. |
+| `life_of` | Its life: made, shipped to a phone, a car or a data centre, and lived year by year. Which causes fail it (too slow out there, defects the test missed, weak spots, wires wearing out), radiation's silent wrong answers, and whether that place's needs are met, for the choices made in the design (margin, power grid, protection) and at the factory's Test (hot test, burn-in). |
 | `propose_design` | Checks a design for a piece of the plan and, if it is right, returns the GitHub design form, filled in, for a person to submit. Nothing is posted automatically. |
 
 The tools are plain functions in `src/engines/api.js`; the server (`scripts/mcp.mjs`) only carries messages. Its words come from `src/i18n/en.json`, so an agent reads the same jobs and verdicts a visitor does. `tests/mcp.test.mjs` talks to the server the way an agent does.

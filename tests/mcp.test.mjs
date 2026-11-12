@@ -21,7 +21,7 @@ test('an agent connects, lists the tools, reads the plan and takes a job', async
     assert.equal(init.result.serverInfo.name, 'open-silicon-lab');
     assert.ok(init.result.capabilities.tools && init.result.instructions);
     const tools = (await S.call('tools/list', {})).result.tools.map(t => t.name);
-    assert.deepEqual(tools, ['list_plan', 'get_job', 'check_design', 'at_factory', 'propose_design']);
+    assert.deepEqual(tools, ['list_plan', 'get_job', 'check_design', 'at_factory', 'life_of', 'propose_design']);
     const plan = (await S.tool('list_plan', {})).structuredContent;
     assert.ok(plan.pieces.some(p => p.id === 'core' && p.engine === 'riscv'));
     const job = (await S.tool('get_job', { job: 'vote' })).structuredContent;
@@ -40,6 +40,11 @@ test('an agent checks a design, finds its bug, sees the factory spoil a copy, an
     assert.equal(right.right, true); assert.ok(right.gates.transistors > 0 && right.layout.unrouted === 0);
     const fab = (await S.tool('at_factory', { job: 'vote', code: 'y = (a & b) | (b & c) | (a & c);', seed: 3 })).structuredContent;
     assert.ok(fab.wrongAnswers > 0 && fab.caughtAtTest === true);
+    const perfect = (await S.tool('life_of', { job: 'vote', code: 'y = (a & b) | (b & c) | (a & c);', where: 'car' })).structuredContent;
+    assert.equal(perfect.right, true); assert.equal(perfect.ships, false); assert.ok(perfect.failedByEnd.timing > 0.5);
+    const careful = (await S.tool('life_of', { job: 'vote', code: 'y = (a & b) | (b & c) | (a & c);', where: 'car', choices: { margin: 6, grid: true, protect: 'logic', hot: true, burn: true } })).structuredContent;
+    assert.equal(careful.ships, true); assert.ok(careful.soldMHz > 0);
+    assert.ok((await S.tool('life_of', { job: 'vote', code: 'y = a;', where: 'moon' })).isError);
     const no = await S.tool('propose_design', { need: 'safety', code: 'y = (a & b) | (a & c);', kind: 'ai', ai: 'an agent wrote it' });
     assert.equal(no.isError, true);
     const noSay = (await S.tool('propose_design', { need: 'display', code: 'a = 1;', kind: 'ai' })).structuredContent;

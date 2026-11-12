@@ -125,3 +125,17 @@ button{font:inherit;color:inherit}
 .chal{display:grid;gap:6px;padding:8px 10px;border:1px dashed var(--warm);border-radius:6px}
 .chal p{font-size:14px}
 .chal.done{border-style:solid;border-color:var(--th,var(--accent))}
+/* your chip's life: failures year by year, by cause */
+.life h3{margin:0;font:600 17px/1.3 var(--serif)}
+.lifechart{width:100%;height:auto;display:block;margin:4px 0}
+.lifechart text{font:10px var(--mono);fill:var(--muted)}
+.lifechart .grid{stroke:var(--line);stroke-width:1}
+.lifechart path{fill:none;stroke-width:1.6;stroke-linejoin:round}
+.lifechart .need{stroke:var(--ink);stroke-width:1;stroke-dasharray:4 3;opacity:.7}
+.lifechart .total{stroke-width:3}.lifechart .total.ok{stroke:var(--good)}.lifechart .total.no{stroke:var(--bad)}
+.c-timing{--c:var(--accent)}.c-escape{--c:#c77dff}.c-weak{--c:var(--warm)}.c-wear{--c:var(--muted)}
+.lifechart path[class^=c-]{stroke:var(--c);opacity:.85}
+.legend{display:flex;flex-wrap:wrap;gap:4px 12px;list-style:none;margin:0;padding:0}
+.legend li::before{content:'';display:inline-block;width:12px;height:3px;margin-right:5px;vertical-align:middle;background:var(--c,var(--ink))}
+.legend li.total::before{height:4px;background:var(--bad)}
+.needs{list-style:none;margin:6px 0 0;padding:0;display:grid;gap:3px}.needs li.good{color:var(--good)}.needs li.bad{color:var(--bad)}.legend li.need::before{background:none;border-top:1px dashed var(--ink)}

@@ -20,6 +20,7 @@ import { build as buildDesign, normalDesign, starterOf, PROJECTS, START_DESIGN }
 import { setDesign, setMine } from './design.js';
 import { DESIGNS, NEEDS, AGENT } from '../data/build.js';
 import { DEBATES, debateAt } from '../data/debates.js';
+import { live, MISSIONS, MISSION_IDS, LIVES_AT, MARGINS, PROTECT, PERFECT, CAUSES, normalLife } from '../engines/life.js';
 import { plan, progress, needForProject, childrenOf } from '../engines/build.js';
 
 const KEY = 'osl-weave-v1';
@@ -47,6 +48,8 @@ export function start(facts) {
     /* your description for every job you have tried, so switching jobs keeps your work; and a copy the factory spoiled (a number), or none */
     codes: saved.codes && typeof saved.codes === 'object' ? Object.fromEntries(Object.entries(saved.codes).filter(([k, v]) => PROJECTS.includes(k) && typeof v === 'string').map(([k, v]) => [k, v.slice(0, 4000)])) : {},
     defect: null,
+    /* your chip's life: where it lives, and what the design and the factory do about it (src/engines/life.js) */
+    life: { m: MISSION_IDS.includes(saved.life && saved.life.m) ? saved.life.m : MISSION_IDS[0], c: normalLife(saved.life && saved.life.c) },
     build: BUILD_STEPS - 1
   };
   setChip(S.chip);
@@ -54,7 +57,7 @@ export function start(facts) {
   const cur = () => buildDesign(Object.assign({}, S.design, { slice: S.codes.alu || starterOf('alu'), regs: { bit: S.codes.regbit || null, select: S.codes.select || null }, defect: S.defect }));
   setDesign(cur()); setMine(S.done, S.by);
   if (!worldOf(WORLD).line && !worldOf(WORLD).hidden) S.lastDive = WORLD;
-  const save = () => { try { localStorage.setItem(KEY, JSON.stringify({ world: WORLD, z: Math.round(world.z * 100) / 100, thread: S.thread, seen: S.seen, chip: S.chip, from: S.from, design: S.design, by: S.by, done: S.done, codes: S.codes })); } catch (e) { /* storage unavailable */ } };
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify({ world: WORLD, z: Math.round(world.z * 100) / 100, thread: S.thread, seen: S.seen, chip: S.chip, from: S.from, design: S.design, by: S.by, done: S.done, codes: S.codes, life: S.life })); } catch (e) { /* storage unavailable */ } };
 
   const depthName = d => t('depth.' + IDS[d] + '.name');
   /* how far down (in a dive), or which station (on the line) */
@@ -352,6 +355,53 @@ export function start(facts) {
     for (let i = 0; i < D.views; i++) h += '<li><b>' + esc(t('debate.' + D.id + '.v' + i + '.t')) + '</b> ' + esc(t('debate.' + D.id + '.v' + i + '.claim')) + '<br><span class="small muted">' + t('debate.assumes') + ' ' + esc(t('debate.' + D.id + '.v' + i + '.assumes')) + '</span></li>';
     return h + '</ul><p class="small"><b>' + t('debate.mind') + '</b> ' + ext(REPO + '/issues/new?' + new URLSearchParams({ template: 'idea.yml', title: t('debate.' + D.id + '.t') }), t('debate.add')) + '</p></details>';
   }
+  /* ---- your chip's life: why a perfect design still fails, where it lives (src/engines/life.js) ---- */
+  /* where each place's chip is met in its dive */
+  const LIFE_DEPTH = Object.fromEntries(Object.entries(LIVES_AT).map(([d, m]) => [m, d]));
+  const share = v => v >= 0.01 ? t('life.share.pct', { v: (v * 100).toFixed(v >= 0.1 ? 0 : 1) }) : t('life.share.ppm', { v: v * 1e6 >= 10 ? Math.round(v * 1e6).toLocaleString() : (v * 1e6).toPrecision(2) });
+  const reqValue = (id, v) => id === 'fail' ? share(v) : id === 'silent' ? (v >= 10 ? Math.round(v).toLocaleString() : v.toFixed(1)) : id === 'perf' ? t('life.share.pct', { v: Math.round(v * 100) }) : t('life.times', { v: v.toFixed(2) });
+  const lifeOf = m => { const B = cur(); return live(m, S.life.c, { coverage: B.M ? B.coverage : undefined, mhz: B.st ? B.st.fmax : undefined }); };
+  /* failures year by year, on a log scale from one in a million to all of them, with the line the customer accepts */
+  function lifeChart(L) {
+    const W = 320, H = 150, l = 52, r = 8, top = 8, b = 22, yr = L.life, lg = v => Math.max(-6, Math.log10(Math.max(v, 1e-9)));
+    const X = y => l + (W - l - r) * y / yr, Y = v => top + (H - top - b) * (-lg(v)) / 6;
+    const path = f => { let d = ''; for (let i = 0; i <= 48; i++) { const y = yr * i / 48; d += (i ? 'L' : 'M') + X(y).toFixed(1) + ' ' + Y(f(y)).toFixed(1); } return d; };
+    let g = '<svg class="lifechart" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="' + esc(t('life.chart')) + '">';
+    [0, -2, -4, -6].forEach(e => { const y = Y(Math.pow(10, e)); g += '<line x1="' + l + '" x2="' + (W - r) + '" y1="' + y + '" y2="' + y + '" class="grid"/><text x="' + (l - 4) + '" y="' + (y + 3) + '" text-anchor="end">' + esc(t('life.share.pct', { v: [100, 1, 0.01, 0.0001][-e / 2] })) + '</text>'; });
+    g += '<text x="' + X(0) + '" y="' + (H - 6) + '">0</text><text x="' + X(yr) + '" y="' + (H - 6) + '" text-anchor="end">' + esc(t('life.axis.years', { n: yr })) + '</text>';
+    const need = L.req[0].need; g += '<line x1="' + l + '" x2="' + (W - r) + '" y1="' + Y(need) + '" y2="' + Y(need) + '" class="need"/>';
+    g += '<path d="' + path(L.total) + '" class="total ' + (L.req[0].ok ? 'ok' : 'no') + '"/>';
+    CAUSES.forEach(c => { g += '<path d="' + path(L.curve[c]) + '" class="c-' + c + '"/>'; });
+    return g + '</svg>';
+  }
+  /* what changes when a choice changes: the chart, the needs, and what to notice */
+  function lifeOut(m) {
+    const L = lifeOf(m), y = Math.round(L.yTiming * L.yDefect * 100);
+    let h = lifeChart(L) + '<ul class="legend small">' + CAUSES.map(c => '<li class="c-' + c + '" title="' + esc(t('life.cause.' + c + '.d')) + '">' + esc(t('life.cause.' + c + '.t')) + '</li>').join('') + '<li class="total">' + esc(t('life.total')) + '</li><li class="need">' + esc(t('life.need')) + '</li></ul>';
+    h += '<ul class="needs small">' + L.req.map(q => '<li class="' + (q.ok ? 'good' : 'bad') + '">' + (q.ok ? '✓ ' : '✗ ') + esc(t('life.req.' + q.id, { life: L.life })) + ' · ' + esc(t('life.have', { have: reqValue(q.id, q.have), need: reqValue(q.id, q.need) })) + '</li>').join('') + '</ul>';
+    h += '<p class="small">' + esc(t('life.yield', { v: y })) + (L.mhz ? ' ' + esc(t('life.speed', { mhz: Math.round(L.mhz), sold: Math.round(L.sold) })) : '') + '</p>';
+    return h + '<p class="small ' + (L.pass ? 'good' : '') + '"><b>' + t('life.notice') + '</b> ' + esc(t('life.hint.' + L.hint, { cov: Math.round(L.cover * 100) })) + '</p>';
+  }
+  /* the life of your chip in one place (fixed: met in that place's dive), or in a place you pick (at the Ship station) */
+  function lifeCard(fixed) {
+    const m = fixed || S.life.m, M = MISSIONS[m], c = S.life.c, B = cur();
+    const pressed = (k, on) => '<button type="button" class="chipgo" data-lifeset="' + k + '" aria-pressed="' + on + '">' + esc(t('life.' + k)) + '</button>';
+    let h = '<section class="try life" id="life"><p class="code">' + t('life.title') + '</p><h3>' + esc(t('life.q', { life: M.life })) + '</h3><p class="small muted">' + t('life.signed') + '</p>';
+    if (!fixed) h += '<div class="shows" role="group" aria-label="' + esc(t('life.where')) + '">' + MISSION_IDS.map(k => '<button type="button" class="chipgo" data-lifem="' + k + '" aria-pressed="' + (k === m) + '">' + esc(t('world.' + k + '.name')) + '</button>').join('') + '</div>';
+    h += '<p class="small">' + esc(t('life.' + m + '.story', { fleet: M.fleet.toLocaleString(), life: M.life, tMax: M.tMax })) + '</p>';
+    if (!B.ok) h += '<p class="small muted">' + t('life.notYet') + '</p>';
+    h += '<div id="lifeOut" aria-live="polite">' + lifeOut(m) + '</div>';
+    h += '<p class="code">' + t('life.inDesign') + '</p><label class="trylabel" for="lifeMargin"><b>' + t('life.margin') + '</b> <output id="lifeMarginV">' + esc(t('life.marginValue', { v: Math.round(MARGINS[c.margin] * 100) })) + '</output></label>' +
+      '<input type="range" id="lifeMargin" min="0" max="' + (MARGINS.length - 1) + '" step="1" value="' + c.margin + '">' +
+      '<div class="shows">' + pressed('grid', c.grid) + '</div><p class="small muted">' + t('life.protect') + '</p><div class="shows" role="group" aria-label="' + esc(t('life.protect')) + '">' + PROTECT.map(p => '<button type="button" class="chipgo" data-lifeprot="' + p + '" aria-pressed="' + (c.protect === p) + '">' + esc(t('life.protect.' + p)) + '</button>').join('') + '</div>';
+    h += '<p class="code">' + t('life.atFactory') + '</p><div class="shows">' + pressed('hot', c.hot) + pressed('burn', c.burn) + '</div>';
+    if (Object.keys(PERFECT).some(k => c[k] !== PERFECT[k])) h += '<button type="button" class="link" data-lifereset>' + t('life.reset') + '</button>';
+    h += '<p class="small muted">' + t('life.model') + '</p><div class="moves">';
+    if (fixed) h += '<button type="button" class="btn" data-dive="journey:ship">' + esc(t('life.otherPlaces')) + '</button>';
+    else h += '<button type="button" class="btn" data-dive="' + m + ':' + LIFE_DEPTH[m] + '">' + esc(t('life.go', { place: t('depth.' + LIFE_DEPTH[m] + '.name') })) + '</button>';
+    h += '<button type="button" class="btn" data-dive="design:check">' + esc(t('life.toDesign')) + '</button>';
+    return h + '</div></section>';
+  }
   /* what the factory will do to it: at every station, the design meets the line it will be made on */
   function fabLens(id, B) {
     if (!B.M && B.p !== 'core') return '';
@@ -380,6 +430,8 @@ export function start(facts) {
       h += partner(B);
     } else if (B.errs.length) h += '<ul class="errs">' + errWords(B) + '</ul>';
     h += fabLens(id, B);
+    /* signed off: and then it has a life to live */
+    if (id === 'check' && B.ok && S.defect == null) h += '<section class="fab"><p class="code">' + t('life.title') + '</p><p class="small">' + esc(t('life.teaser')) + '</p><button type="button" class="link" data-dive="journey:ship">' + esc(t('life.follow')) + '</button></section>';
     if (id === 'gates' && B.p === 'alu' && B.M) h += '<p class="small">' + esc(t('design.alu32', { cells: B.M.cells.length })) + '</p>';
     if ((id === 'check' || id === 'gates') && B.M) h += '<p class="small muted">' + esc(t('design.cov', { vectors: B.vectors, caught: Math.round(B.coverage * 100) })) + '</p>';
     if (id === 'layout') {
@@ -444,6 +496,9 @@ export function start(facts) {
     else if (!isLine() && !worldOf(WORLD).hidden && BUILT[IDS[d]]) h += buildHere(IDS[d]);
     /* at the factory's Test station: how well its test patterns would catch faults in your own design */
     if (isLine() && IDS[d] === 'test') { const B = cur(); if (B.M) h += '<p class="small plant">' + esc(t('design.testYours', { vectors: B.vectors, caught: Math.round(B.coverage * 100) })) + '</p>'; }
+    /* and after the factory: its life, in the place the last station sends it, or met in that place's dive */
+    if (isLine() && !isStudio() && IDS[d] === 'ship') h += lifeCard(null);
+    else if (!isLine() && !worldOf(WORLD).hidden && LIVES_AT[IDS[d]] && LIVES_AT[IDS[d]] === WORLD) h += lifeCard(WORLD);
     h += partCard(d);
     h += debate(debateAt(IDS[d]));
     if (th) {
@@ -486,6 +541,10 @@ export function start(facts) {
     if (e.target.closest('[data-dreset]')) { S.design = normalDesign({ p: S.design.p }); S.by = 'you'; S.claim = false; S.defect = null; designChanged(); card(); return; }
     if (e.target.closest('[data-defect]')) { S.defect = S.defect == null ? 1 + Math.floor(Math.random() * 997) : null; designChanged(); card(); return; }
     if (e.target.closest('[data-agent]')) { S.design = normalDesign({ p: S.design.p, code: AGENT[S.design.p] }); S.by = 'ai'; S.claim = true; designChanged(); card(); return; }
+    const lm = e.target.closest('[data-lifem]'); if (lm) { S.life.m = lm.dataset.lifem; save(); card(); return; }
+    const ls = e.target.closest('[data-lifeset]'); if (ls) { const k = ls.dataset.lifeset; S.life.c = normalLife(Object.assign({}, S.life.c, { [k]: !S.life.c[k] })); save(); card(); return; }
+    const lp = e.target.closest('[data-lifeprot]'); if (lp) { S.life.c = normalLife(Object.assign({}, S.life.c, { protect: lp.dataset.lifeprot })); save(); card(); return; }
+    if (e.target.closest('[data-lifereset]')) { S.life.c = normalLife(PERFECT); save(); card(); return; }
     const by = e.target.closest('[data-by]'); if (by) { S.by = by.dataset.by; designChanged(); card(); return; }
     const mp = e.target.closest('[data-map]'); if (mp) { const w = mp.dataset.map; if (w) enter('journey', 'ship'); openMap(w || undefined); return; }
     if (S.map) {
@@ -525,14 +584,15 @@ export function start(facts) {
   }
 
   cardEl.addEventListener('scroll', anchor, { passive: true });
-  cardEl.addEventListener('input', e => { const r = e.target.closest('#tryRange'); if (r) setSetting(r.dataset.setting, +r.value); if (e.target.id === 'designCode') editDesign(e.target.value); });
+  cardEl.addEventListener('input', e => { const r = e.target.closest('#tryRange'); if (r) setSetting(r.dataset.setting, +r.value); if (e.target.id === 'designCode') editDesign(e.target.value);
+    if (e.target.id === 'lifeMargin') { S.life.c = normalLife(Object.assign({}, S.life.c, { margin: +e.target.value })); save(); const v = $('lifeMarginV'), o = $('lifeOut'); if (v) v.textContent = t('life.marginValue', { v: Math.round(MARGINS[S.life.c.margin] * 100) }); if (o) o.innerHTML = lifeOut(LIVES_AT[IDS[Math.round(world.z)]] === WORLD ? WORLD : S.life.m); } });
   /* the description, edited in the card: the whole design follows at once, in every station's picture */
   let editT = null;
   function editDesign(code) {
     clearTimeout(editT);
     editT = setTimeout(() => { S.design = normalDesign({ p: S.design.p, code }); if (S.by === 'ai') S.by = 'both'; const B = designChanged(); const m = $('designMsg'); if (m) m.innerHTML = designMsg(IDS[Math.round(world.z)], B); }, 220);
   }
-  cardEl.addEventListener('change', e => { if (e.target.closest('#tryRange')) { const keep = e.target.value; card(); const r = $('tryRange'); if (r) { r.value = keep; r.focus(); } } });
+  cardEl.addEventListener('change', e => { if (e.target.id === 'lifeMargin') { card(); const r = $('lifeMargin'); if (r) r.focus(); return; } if (e.target.closest('#tryRange')) { const keep = e.target.value; card(); const r = $('tryRange'); if (r) { r.value = keep; r.focus(); } } });
 
   /* ---- layout: keep the scene clear of the rail and the card ---- */
   function layout() {

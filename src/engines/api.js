@@ -11,6 +11,7 @@ import { NEEDS, GOAL, DESIGNS } from '../data/build.js';
 import { plan, progress, needOf, needForProject, childrenOf } from './build.js';
 import { build, projectOf, PROJECTS, starterOf, patterns } from './design.js';
 import { TESTS, START_PROGRAM } from './core.js';
+import { live, MISSION_IDS, PERFECT } from './life.js';
 
 const KINDS = ['person', 'ai', 'both'];
 const jobOf = id => { const n = needOf(id); if (n && n.project) return n.project; return PROJECTS.includes(id) ? id : null; };
@@ -65,6 +66,22 @@ export function atFactory({ job, code, slice, seed }) {
   if (p === 'core') { const C = B.core; return { job: p, stuckInSlice: C.defect ? C.defect.bit : null, testsStillRight: C.passed, tests: C.total }; }
   if (!B.defect) return { job: p, note: t('api.noFault') };
   return { job: p, stuckAt: B.defect.v, wrongAnswers: B.defect.wrong, patterns: B.total, caughtAtTest: B.defect.caught };
+}
+
+/* its life: a right design, made and shipped to a phone, a car or a data centre, with what the design and the
+   factory decide (margin, grid, protect; hot, burn). Year by year, which causes fail it, and whether the place's
+   needs are met. */
+export function lifeOf({ job, code, slice, where, choices }) {
+  const p = jobOf(job); if (!p) return { error: t('api.noJob', { id: job, jobs: PROJECTS.join(', ') }) };
+  if (!MISSION_IDS.includes(where)) return { error: t('api.noPlace', { where, places: MISSION_IDS.join(', ') }) };
+  const B = build({ p, code: typeof code === 'string' ? code : undefined, slice });
+  const L = live(where, Object.assign({}, PERFECT, choices || {}), { coverage: B.M ? B.coverage : undefined, mhz: B.st ? B.st.fmax : undefined });
+  return {
+    job: p, right: !!B.ok, where, years: L.life, choices: L.s, ships: L.pass, notice: t('life.hint.' + L.hint, { cov: Math.round(L.cover * 100) }),
+    failedByEnd: Object.fromEntries(Object.entries(L.at).map(([k, v]) => [k, +v.toPrecision(3)])),
+    needs: L.req.map(r => ({ need: t('life.req.' + r.id, { life: L.life }), have: +r.have.toPrecision(3), accepted: r.need, met: r.ok })),
+    passTest: +(L.yTiming * L.yDefect).toFixed(3), soldMHz: L.sold ? Math.round(L.sold) : null, model: t('life.model')
+  };
 }
 
 /* propose a design for a piece of the plan: checked first; returns the GitHub form, filled in, for a person to submit */
