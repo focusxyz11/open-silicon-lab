@@ -10,6 +10,7 @@ import { SCENES, partsOf } from './scenes.js';
 import { drawMap } from './map.js';
 import { drawJourney, stepStart, setParts3 } from './journey.js';
 import { drawDesignBand } from './design.js';
+import { wrap } from './draw.js';
 /* a line drawn flat, without the factory's 3D: the design studio */
 const flat = () => !!(worldOf(WORLD) || {}).flat;
 
@@ -21,6 +22,8 @@ export const theme = () => {
 };
 export const threadColor = id => { const th = THREADS.find(x => x.id === id); if (!th) return theme() === 'dark' ? '#e8edf6' : '#131c26'; return theme() === 'dark' ? 'hsl(' + th.hue + ' 88% 68%)' : 'hsl(' + th.hue + ' 72% 36%)'; };
 const MONO = '"Martian Mono", ui-monospace, Menlo, monospace'; /* i18n-ok: a font name */
+const SANS = '"Atkinson Hyperlegible Next", system-ui, sans-serif'; /* i18n-ok: a font name */
+
 
 function palette() {
   return theme() === 'dark'
@@ -80,6 +83,8 @@ export function createWorld(cv, on) {
   const ctx = cv.getContext('2d'), t0 = performance.now();
   let W = 0, H = 0, dpr = 1, col = palette(), Z = 0, fly = null, lastD = -1, lastZ = -1;
   let inset = { l: 0, r: 0, t: 0, b: 0 }, anchor = null, thread = null, hits = [], hot = null, running = true;
+  /* words on the picture: notes pinned to parts (set by the shell), and the way down into the next depth */
+  let notes = [], dive = null;
 
   /* The drawing helper handed to every scene. */
   const G = {
@@ -239,6 +244,9 @@ export function createWorld(cv, on) {
       mapK = mapO ? (reduced() ? 1 : Math.min(1, mapK + dt / 0.8)) : (reduced() ? 0 : Math.max(0, mapK - dt / 0.5));
       if (mapK >= 1) { renderMap(tm, b, dt, true); return; }
       const L = renderLine(tm, b); overlays(tm, L.pi, L.ptr);
+      /* in the studio, the notes pinned to the station's picture */
+      dive = null;
+      if (worldOf(WORLD).flat && !fly && !drag && Math.abs(Z - Math.round(Z)) < 0.04 && L.pi === Math.round(Z) && L.ptr) drawNotes(L.ptr, b);
       if (mapK > 0 && mapLast) renderMap(tm, b, dt, false);
       return;
     }
@@ -255,6 +263,59 @@ export function createWorld(cv, on) {
     ctx.strokeRect(F.cur.tx, F.cur.ty, F.cur.s * 1000, F.cur.s * 1000); ctx.globalAlpha = 1;
     if (F.next) drawLevel(F.i + 1, F.next, smooth(0.16, 0.7, F.f), pi === F.i + 1, b.B, tm);
     overlays(tm, pi, pi === F.i ? F.cur : F.next);
+    /* standing at a depth: the way down, marked where it is, and the notes pinned to parts */
+    dive = null;
+    const settled = !fly && !drag && Math.abs(Z - Math.round(Z)) < 0.04 && pi === F.i;
+    if (settled && F.next && !worldOf(WORLD).flat) diveMark(tm, F, b);
+    if (settled) drawNotes(F.cur, b);
+  }
+  /* "Dive into" the next depth: its square, outlined where it sits in this scene, with its name */
+  function diveMark(tm, F, b) {
+    const x = F.next.tx, y = F.next.ty, w = F.next.s * 1000, name = t('ui.diveInto', { depth: t('depth.' + IDS[F.i + 1] + '.name') });
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const pulse = reduced() ? 0 : (Math.sin(tm * 2.4) + 1) / 2;
+    ctx.save(); ctx.strokeStyle = col.cool; ctx.lineWidth = 1.6; ctx.setLineDash([5, 4]); ctx.lineDashOffset = -tm * 12;
+    const g = 4 + pulse * 3; ctx.globalAlpha = 0.9; ctx.strokeRect(x - g, y - g, w + 2 * g, w + 2 * g); ctx.restore();
+    ctx.font = '600 12px ' + SANS;
+    const tw = Math.min(ctx.measureText(name).width, 240), pw = tw + 30, ph = 24;
+    const top = b.cy - b.B / 2, below = y + w + g + 8 + ph < top + b.B - 4;
+    let px = Math.max(b.cx - b.B / 2 + 4, Math.min(b.cx + b.B / 2 - pw - 4, x + w / 2 - pw / 2)), py = below ? y + w + g + 8 : y - g - 8 - ph;
+    ctx.globalAlpha = 0.95; ctx.fillStyle = col.cool; rrect(px, py, pw, ph, 12); ctx.fill();
+    ctx.globalAlpha = 1; ctx.fillStyle = col.bg; ctx.textBaseline = 'middle';
+    ctx.fillText('▾', px + 10, py + ph / 2 + 1); ctx.save(); ctx.beginPath(); ctx.rect(px + 22, py, tw, ph); ctx.clip(); ctx.fillText(name, px + 22, py + ph / 2 + 1); ctx.restore();
+    ctx.textBaseline = 'alphabetic';
+    dive = { rects: [[x - g, y - g, w + 2 * g, w + 2 * g], [px, py, pw, ph]], to: F.i + 1 };
+  }
+  const rrect = (x, y, w, h, r) => { ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); };
+  /* Notes pinned to parts: a short box of words in the corner of the picture farthest from the part, joined
+     to it by a line. A note: { part, title, text, tone } (tone: a colour name of the palette). */
+  function drawNotes(ptr, b) {
+    if (!notes.length) return;
+    const P = partsOf(IDS[Math.round(Z)]), L = Math.max(b.cx - b.B / 2, 0), T = Math.max(b.cy - b.B / 2, 0), R = Math.min(b.cx + b.B / 2, W), B2 = Math.min(b.cy + b.B / 2, H);
+    const used = [];
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    notes.forEach(n => {
+      const sh = n.part && P[n.part] && P[n.part][0]; if (!sh) return;
+      const o = outline(sh), cx0 = o.reduce((a, p) => a + p[0], 0) / o.length, cy0 = o.reduce((a, p) => a + p[1], 0) / o.length;
+      const px = ptr.tx + cx0 * ptr.s, py = ptr.ty + cy0 * ptr.s;
+      const maxW = Math.max(150, Math.min(270, (R - L) * 0.46)), pad = 10;
+      ctx.font = '600 11px ' + MONO; const tl = n.title ? wrap(ctx, n.title, maxW - 2 * pad) : [];
+      ctx.font = '13px ' + SANS; let bl = wrap(ctx, n.text, maxW - 2 * pad); if (bl.length > 9) { bl = bl.slice(0, 9); bl[8] = bl[8].replace(/\s*\S*$/, '') + ' …'; }
+      const w = maxW, h = pad * 2 + tl.length * 15 + bl.length * 17 + (tl.length && bl.length ? 4 : 0);
+      /* the free corner farthest from the part */
+      const corners = [[L + 10, T + 10], [R - w - 10, T + 10], [L + 10, B2 - h - 10], [R - w - 10, B2 - h - 10]].filter(c => !used.some(u => Math.abs(u[0] - c[0]) < w && Math.abs(u[1] - c[1]) < h));
+      if (!corners.length) return;
+      const c = corners.sort((a, z) => Math.hypot(z[0] + w / 2 - px, z[1] + h / 2 - py) - Math.hypot(a[0] + w / 2 - px, a[1] + h / 2 - py))[0];
+      used.push(c);
+      const tone = col[n.tone] || col.warm, ex = Math.max(c[0], Math.min(c[0] + w, px)), ey = Math.max(c[1], Math.min(c[1] + h, py));
+      ctx.globalAlpha = 0.85; ctx.strokeStyle = tone; ctx.lineWidth = 1.3; ctx.beginPath(); ctx.moveTo(ex, ey); ctx.lineTo(px, py); ctx.stroke();
+      ctx.globalAlpha = 1; ctx.fillStyle = tone; ctx.beginPath(); ctx.arc(px, py, 3.5, 0, 6.2832); ctx.fill();
+      ctx.globalAlpha = 0.94; ctx.fillStyle = col.bg; rrect(c[0], c[1], w, h, 8); ctx.fill(); ctx.globalAlpha = 1; ctx.strokeStyle = tone; ctx.lineWidth = 1; ctx.stroke();
+      let y = c[1] + pad + 11; ctx.fillStyle = tone; ctx.font = '600 11px ' + MONO;
+      tl.forEach(line => { ctx.fillText(line, c[0] + pad, y); y += 15; }); if (tl.length) y += 4;
+      ctx.fillStyle = col.hi; ctx.font = '13px ' + SANS; bl.forEach(line => { ctx.fillText(line, c[0] + pad, y + 2); y += 17; });
+    });
+    ctx.globalAlpha = 1;
   }
 
   /* the part under the pointer, in the scene in view: tap it to see what it does */
@@ -367,9 +428,9 @@ export function createWorld(cv, on) {
       if (drag.moved && !drag.map) setZ(isLine() ? drag.z + (drag.x - e.clientX) / (box().B * 1.06) : drag.z + (drag.y - e.clientY) * 0.0062);
       return;
     }
-    const h = hitAt(e), id = h ? h.id : null, pt = id ? null : partAt(e);
+    const h = hitAt(e), id = h ? h.id : null, dv = !id && onDive(e), pt = id || dv ? null : partAt(e);
     hot = id; hotPart = pt ? pt.key : null;
-    cv.style.cursor = id || pt ? 'pointer' : '';
+    cv.style.cursor = id || dv || pt ? 'pointer' : '';
   });
   cv.addEventListener('pointerleave', () => { hot = null; hotPart = null; cv.style.cursor = ''; });
   /* on the line, the steps under the picture: tap one to watch it again, or pause */
@@ -384,7 +445,9 @@ export function createWorld(cv, on) {
     const ch = jhits.chips.find(inn); if (!ch) return false;
     stay = { i: jbox.near, t: lastTm - stepStart(IDS[jbox.near], ch.i) }; paused = false; return true;
   };
-  const end = e => { if (!drag) return; const tap = !drag.moved, onMap = drag.map; drag = null; if (onMap) { if (tap && e.type === 'pointerup') mapTap(e); return; } if (tap && e.type === 'pointerup' && stepTap(e)) return; if (tap && e.type === 'pointerup') { const h = hitAt(e); if (h) on.pick && on.pick(h.id); else { const pt = partAt(e); if (pt && view) { hotPart = pt.key; on.part && on.part(view.pi, pt.key); } } } if (!tap && isLine()) settleLine(); };
+  const onDive = e => { if (!dive) return false; const r = cv.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top; return dive.rects.some(q => x >= q[0] && x <= q[0] + q[2] && y >= q[1] && y <= q[1] + q[3]); };
+  const diveTap = e => { if (!onDive(e)) return false; api.flyTo(dive.to); return true; };
+  const end = e => { if (!drag) return; const tap = !drag.moved, onMap = drag.map; drag = null; if (onMap) { if (tap && e.type === 'pointerup') mapTap(e); return; } if (tap && e.type === 'pointerup' && stepTap(e)) return; if (tap && e.type === 'pointerup' && diveTap(e)) return; if (tap && e.type === 'pointerup') { const h = hitAt(e); if (h) on.pick && on.pick(h.id); else { const pt = partAt(e); if (pt && view) { hotPart = pt.key; on.part && on.part(view.pi, pt.key); } } } if (!tap && isLine()) settleLine(); };
   cv.addEventListener('pointerup', end); cv.addEventListener('pointercancel', end);
   cv.addEventListener('keydown', e => {
     const d = Math.round(Z);
@@ -411,6 +474,8 @@ export function createWorld(cv, on) {
     setMap(o) { mapO = o; if (o) mapLast = o; },
     get mapOpen() { return !!mapO; },
     setAnchor(p) { anchor = p; },
+    /* words pinned to parts of the depth you stand in: [{ part, title, text, tone }] */
+    setNotes(list) { notes = Array.isArray(list) ? list : []; },
     setInset(i) { inset = i; },
     retheme() { col = palette(); },
     stop() { running = false; }

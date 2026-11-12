@@ -167,3 +167,6 @@ export const SHOWS = {
   clean: ['load'], deposit: ['load'], etch: ['load'], implant: ['load'], print: ['gen', 'load'], wires: ['gen', 'load'], test: ['gen', 'size'], scanner: ['gen'], wafer: ['gen', 'size'], die: ['gen', 'size'], pkg: ['size', 'mem'], ship: ALL,
   block: ['gen', ...WALL], gate: ['clock', 'gen'], switch: ['gen'], atom: ['gen']
 };
+/* where a depth's note about your chip is pinned on the picture: one of its parts */
+export const NOTE_AT = { building: 'racks', rack: 'servers', board: 'bigchip', chip: 'cores', phone: 'battery', phoneboard: 'soc', soc: 'cpu', mcu: 'cores',
+  block: 'sram', gate: 'gates', switch: 'channel', atom: 'lattice', wafer: 'dies', die: 'cores', scanner: 'source' };

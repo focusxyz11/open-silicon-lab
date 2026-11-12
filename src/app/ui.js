@@ -11,7 +11,7 @@
 import { t, fmtDate, has } from '../core/i18n.js';
 import { SITES, ROUTES } from '../data/world.js';
 import { status, worst } from '../engines/supply.js';
-import { THREADS, WORLDS, STOPS, CASES, FIGURES, REPO, TRIES, SHOWS, DIVES, EXITS, MADE, PLANTS, LOOP, partWord } from '../data/weave.js';
+import { THREADS, WORLDS, STOPS, CASES, FIGURES, REPO, TRIES, SHOWS, NOTE_AT, DIVES, EXITS, MADE, PLANTS, LOOP, partWord } from '../data/weave.js';
 import { CLOCKS, GENS, SIDES, LOADS, REUSES, MEMS, START, CHALLENGES, normal, changed, model, x2, dieSquare } from '../engines/chip.js';
 import { N, IDS, WORLD, setWorld, worldOf, zIn, reshape, isLine, clampZ, sizeAt, sizeParts, stop, stopKey, crossing, below, above, nearest, threadOf, rootShown, threadDepths } from '../engines/weave.js';
 import { createWorld, threadColor, theme, reduced } from './world.js';
@@ -259,7 +259,8 @@ export function start(facts) {
     if (xrayHere(IDS[d])) return '';
     const id = IDS[d], key = S.part && S.part.id === id ? S.part.key : null; if (!key) return '';
     const ths = THREADS.map(x => x.id).filter(th => (STOPS[th + '.' + id] || []).includes(key)), keys = ths.map(th => th + '.' + id);
-    let h = '<section class="part"><p class="code">' + t('ui.partWhat') + '</p><h3>' + esc(t('part.' + partWord(id, key))) + '</h3><p>' + esc(t('what.' + partWord(id, key))) + '</p>';
+    /* its name and what it does are in its note (on the picture, or above this on a narrow screen) */
+    let h = '<section class="part"><p class="code">' + t('ui.partWhat') + ' · ' + esc(t('part.' + partWord(id, key))) + '</p>';
     if (ths.length) h += '<p class="small muted">' + t('ui.partAsks') + '</p>' + ths.map(th => qButton(th, d)).join('');
     else h += '<p class="small muted">' + t('ui.partNone') + ' ' + ext(propose(d), t('ui.propose')) + '</p>';
     const tries = keys.filter(k => TRIES[k]).map(k => t('chip.' + TRIES[k] + '.label'));
@@ -366,9 +367,9 @@ export function start(facts) {
     return '<section class="fab"><p class="code">' + t('here.title') + '</p><p class="small">' + esc(t(key, n)) + '</p></section>';
   }
   /* where informed people disagree about what is here: each view's claim and what it assumes; none marked right */
-  function debate(D) {
+  function debate(D, open) {
     if (!D) return '';
-    let h = '<details class="debate"><summary><span class="code">' + t('debate.title') + '</span> <b>' + esc(t('debate.' + D.id + '.t')) + '</b></summary><p>' + esc(t('debate.' + D.id + '.q')) + '</p><p class="small muted">' + t('debate.note') + '</p><ul class="views">';
+    let h = '<details class="debate"' + (open ? ' open' : '') + '><summary><span class="code">' + t('debate.title') + '</span> <b>' + esc(t('debate.' + D.id + '.t')) + '</b></summary><p>' + esc(t('debate.' + D.id + '.q')) + '</p><p class="small muted">' + t('debate.note') + '</p><ul class="views">';
     for (let i = 0; i < D.views; i++) h += '<li><b>' + esc(t('debate.' + D.id + '.v' + i + '.t')) + '</b> ' + esc(t('debate.' + D.id + '.v' + i + '.claim')) + '<br><span class="small muted">' + t('debate.assumes') + ' ' + esc(t('debate.' + D.id + '.v' + i + '.assumes')) + '</span></li>';
     return h + '</ul><p class="small"><b>' + t('debate.mind') + '</b> ' + ext(REPO + '/issues/new?' + new URLSearchParams({ template: 'idea.yml', title: t('debate.' + D.id + '.t') }), t('debate.add')) + '</p></details>';
   }
@@ -394,10 +395,10 @@ export function start(facts) {
   }
   /* ---- another way to compute, where the problem it attacks is met (src/data/ways.js) ---- */
   const DOTS = 5;
-  function wayCard(W) {
+  function wayCard(W, open) {
     if (!W) return '';
     const stages = t('way.stages');
-    let h = '<details class="debate way"><summary><span class="code">' + t('way.title') + '</span> <b>' + esc(t('way.' + W.id + '.t')) + '</b></summary>';
+    let h = '<details class="debate way"' + (open ? ' open' : '') + '><summary><span class="code">' + t('way.title') + '</span> <b>' + esc(t('way.' + W.id + '.t')) + '</b></summary>';
     h += '<p>' + esc(t('way.' + W.id + '.how')) + '</p><p class="small"><b>' + t('way.attacks') + '</b> ' + esc(t('way.saves.' + W.saves)) + '</p>';
     h += '<p class="small"><b>' + t('way.catch') + '</b> ' + esc(t('way.' + W.id + '.catch')) + '</p>';
     h += '<p class="small"><b>' + t('way.where') + '</b> <span class="stage" aria-hidden="true">' + Array.from({ length: DOTS }, (_, i) => '<i class="' + (i <= W.stage ? 'on' : '') + '"></i>').join('') + '</span> ' + esc(stages[W.stage]) + '. ' + esc(t('way.' + W.id + '.now')) + '</p>';
@@ -473,10 +474,16 @@ export function start(facts) {
     return h + '</div></section>';
   }
   /* what the factory will do to it: at every station, the design meets the line it will be made on */
-  function fabLens(id, B) {
+  /* what the factory will do to it: at every station, the design meets the line it will be made on. The sentence
+     sits on the picture (fabNote); here, the copy the factory spoils and the way to that station. */
+  const fabWords = (id, B) => {
     if (!B.M && B.p !== 'core') return '';
     const core = B.p === 'core', n = { transistors: (B.transistors || 0).toLocaleString(), ps: B.st ? Math.round(B.st.crit) : 0, mhz: B.st ? Math.round(B.st.fmax) : 0, area: Math.round(B.area || 0), masks: B.masks || 0 };
-    let h = '<section class="fab"><p class="code">' + t('fab.title') + '</p><p class="small">' + esc(core && id === 'gates' ? t('fab.gatesCore') : core && id === 'check' ? t('fab.checkCore') : t('fab.' + id, n)) + '</p>';
+    return core && id === 'gates' ? t('fab.gatesCore') : core && id === 'check' ? t('fab.checkCore') : t('fab.' + id, n);
+  };
+  function fabLens(id, B) {
+    const core = B.p === 'core';
+    let h = '<section class="fab"><p class="small">' + esc(fabWords(id, B)) + '</p>';
     if (id === 'check' && B.ok !== undefined && (B.ok || S.defect != null)) {
       if (S.defect != null) {
         if (core && B.core.defect) h += '<p class="small bad">' + esc(t('fab.defectCore', { bit: B.core.defect.bit, passed: B.core.passed, total: B.core.total })) + '</p>';
@@ -484,34 +491,38 @@ export function start(facts) {
       }
       h += '<button type="button" class="btn' + (S.defect == null ? ' primary' : '') + '" data-defect>' + t(S.defect == null ? 'fab.make' : 'fab.perfect') + '</button>';
     }
+    if ((id === 'check' || id === 'gates') && B.M) h += '<p class="small muted">' + esc(t('design.cov', { vectors: B.vectors, caught: Math.round(B.coverage * 100) })) + '</p>';
     const go = { check: 'test', layout: 'test', masks: 'print', gates: null, need: 'crystal', logic: null }[id];
     if (go) h += '<button type="button" class="link" data-dive="journey:' + go + '">' + esc(t('fab.see', { station: t('depth.' + go + '.name') })) + '</button>';
     return h + '</section>';
   }
+  /* the part of each station's picture the factory's note is pinned to */
+  const FAB_AT = { logic: 'table', check: 'verdict', gates: 'cells', layout: 'tile', masks: 'reticle' };
+  /* your design at a station of the studio: the job and, where you write it, the description; the rest in tabs */
   function designCard(d) {
-    const id = IDS[d], B = cur(), need = needForProject(B.p);
-    let h = '<section class="try design"><p class="code">' + t('design.yours') + ' · ' + esc(t('design.proj.' + B.p + '.t')) + '</p>';
-    if (id === 'need') h += '<p class="small muted">' + t('build.goal') + '</p>' + planCard();
-    if (need) h += '<p class="small"><b>' + esc(t('build.need.' + need.id + '.t')) + '</b> · ' + esc(t('build.need.' + need.id + '.d')) + '</p>';
-    h += '<p>' + esc(t('design.proj.' + B.p + '.d')) + '</p>';
+    const id = IDS[d], B = cur(), need = needForProject(B.p), tabs = [];
+    let h = '<section class="design-main"><p class="see"><b>' + esc(t('design.proj.' + B.p + '.t')) + '</b> · ' + esc(t('design.proj.' + B.p + '.d')) + '</p>';
     if (id === 'logic' || id === 'check') {
       h += '<label class="trylabel" for="designCode"><b>' + t('design.edit') + '</b></label><textarea id="designCode" class="code-edit" spellcheck="false" autocapitalize="off" autocomplete="off" rows="' + Math.min(14, B.code.split('\n').length + 2) + '">' + esc(B.code) + '</textarea>';
       h += '<div id="designMsg" aria-live="polite">' + designMsg(id, B) + '</div><button type="button" class="link" data-dreset>' + t('design.reset') + '</button>';
-      h += partner(B);
     } else if (B.errs.length) h += '<ul class="errs">' + errWords(B) + '</ul>';
-    h += fabLens(id, B);
-    /* signed off: and then it has a life to live */
-    if (id === 'check' && B.ok && S.defect == null) h += '<section class="fab"><p class="code">' + t('life.title') + '</p><p class="small">' + esc(t('life.teaser')) + '</p><button type="button" class="link" data-dive="journey:ship">' + esc(t('life.follow')) + '</button></section>';
     if (id === 'gates' && B.p === 'alu' && B.M) h += '<p class="small">' + esc(t('design.alu32', { cells: B.M.cells.length })) + '</p>';
-    if ((id === 'check' || id === 'gates') && B.M) h += '<p class="small muted">' + esc(t('design.cov', { vectors: B.vectors, caught: Math.round(B.coverage * 100) })) + '</p>';
-    if (id === 'layout') {
-      h += '<p class="small muted">' + t('design.community') + '</p><ol class="small community">' + DESIGNS.map(c => '<li><b>' + esc(c.title) + '</b> · ' + esc(c.author) + ' · ' + esc(t('build.kind.' + c.kind)) + '</li>').join('') + '</ol>';
+    /* signed off: and then it has a life to live */
+    if (id === 'check' && B.ok && S.defect == null) h += '<p class="small">' + esc(t('life.teaser')) + ' <button type="button" class="link" data-dive="journey:ship">' + esc(t('life.follow')) + '</button></p>';
+    h += '</section>';
+    tabs.push({ id: 'plan', label: t('tab.plan'), html: () => '<p class="small muted">' + t('build.goal') + '</p>' + (need ? '<p class="small"><b>' + esc(t('build.need.' + need.id + '.t')) + '</b> · ' + esc(t('build.need.' + need.id + '.d')) + '</p>' : '') + planCard() });
+    if (id === 'logic' || id === 'check') tabs.push({ id: 'partner', label: t('tab.partner'), html: () => partner(B) });
+    if (B.M || B.p === 'core') tabs.push({ id: 'factory', label: t('tab.factory'), html: () => fabLens(id, B) });
+    if (id === 'layout') tabs.push({ id: 'shared', label: t('tab.shared'), n: DESIGNS.length, html: () => {
+      let x = '<p class="small muted">' + t('design.community') + '</p><ol class="small community">' + DESIGNS.map(c => '<li><b>' + esc(c.title) + '</b> · ' + esc(c.author) + ' · ' + esc(t('build.kind.' + c.kind)) + '</li>').join('') + '</ol>';
       if (B.ok) {
         const url = REPO + '/issues/new?' + new URLSearchParams({ template: 'design.yml', title: t('design.addYours') + ': ' + t('design.proj.' + B.p + '.t'), need: need ? need.id : 'free', code: B.code, ai: t('build.aiUse.' + S.by) });
-        h += ext(url, t('design.addYours'), 'btn') + '<p class="small muted">' + t('design.addNote') + '</p>';
+        x += ext(url, t('design.addYours'), 'btn') + '<p class="small muted">' + t('design.addNote') + '</p>';
       }
-    }
-    return h + '</section>';
+      return x;
+    } });
+    const def = id === 'need' ? 'plan' : id === 'layout' ? 'shared' : S.defect != null ? 'factory' : null;
+    return { html: h, tabs, def, note: (B.M || B.p === 'core') && FAB_AT[id] ? { part: FAB_AT[id], title: t('fab.title'), text: fabWords(id, B), tone: 'warm' } : null };
   }
 
   /* the card while the map is open: whose trip, the step picked, the place picked, and what stops */
@@ -551,62 +562,90 @@ export function start(facts) {
     return h;
   }
 
-  const companion = (th, d) => '<button type="button" class="link" data-companion aria-expanded="false">' + t('ui.companion') + '</button><div class="companion" hidden><p class="small muted">' + t('ui.companionNote') +
+  /* the companion: a prompt for any AI assistant; in a tab it shows at once */
+  const companion = (th, d) => '<div class="companion"><p class="small muted">' + t('ui.companionNote') +
     '</p><textarea readonly rows="7" aria-label="' + esc(t('ui.companion')) + '">' + esc(prompt(th, d)) + '</textarea><div class="moves"><button type="button" class="btn" data-copy>' + t('ui.copy') + '</button><span class="small muted" role="status"></span></div></div>';
   const qButton = (th, d) => '<button type="button" class="qpick" data-th="' + th + '" style="--th:' + threadColor(th) + '"><i></i><span>' + esc(q(th, d)) + '</span></button>';
+  /* ---- the card: where you are, the question you follow, and the rest in tabs, one open at a time.
+     Words that belong to a part sit on the picture (world.setNotes); the card keeps only what is not. ---- */
+  /* the part a depth's note about your chip is pinned to */
+  const notePart = id => NOTE_AT[id];
+  function notesFor(d) {
+    const id = IDS[d], out = [];
+    if (isStudio()) { const n = designCard(d).note; return n ? [n] : out; }
+    if (isLine()) return out;
+    if (S.xpick && S.xpick.id === id && xrayHere(id)) out.push({ part: S.xpick.type, title: t('xray.type.' + S.xpick.type + '.t'), text: t('xray.type.' + S.xpick.type + '.clue'), tone: S.xpick.type === S.xpick.want ? 'grn' : 'cool' });
+    else if (S.part && S.part.id === id) out.push({ part: S.part.key, title: t('part.' + partWord(id, S.part.key)), text: t('what.' + partWord(id, S.part.key)), tone: 'cool' });
+    if (SHOWS[id] && changed(S.chip) && notePart(id)) out.push({ part: notePart(id), title: t('chip.yours'), text: chipWords(d), tone: 'warm' });
+    return out;
+  }
+  const roomy = () => (S.sceneW != null ? S.sceneW : $('world').clientWidth) >= 520;
+  function tabbed(d, list, def) {
+    const at = WORLD + ':' + IDS[d] + ':' + (S.thread || '');
+    if (!S.tab || S.tab.at !== at) S.tab = { at, open: def };
+    const open = list.find(x => x.id === S.tab.open) ? S.tab.open : null;
+    if (!list.length) return '';
+    return '<div class="tabs" role="tablist">' + list.map(x => '<button type="button" role="tab" class="tab" data-tab="' + x.id + '" aria-selected="' + (x.id === open) + '">' + esc(x.label) + (x.n ? ' <span class="n">' + x.n + '</span>' : '') + '</button>').join('') + '</div>' +
+      (open ? '<div class="tabpanel" role="tabpanel">' + list.find(x => x.id === open).html() + '</div>' : '');
+  }
   function card() {
-    if (S.map && isLine()) { cardEl.innerHTML = mapCard(); anchor(); return; }
-    const d = Math.round(world.z), th = S.thread;
+    if (S.map && isLine()) { cardEl.innerHTML = mapCard(); world.setNotes([]); anchor(); return; }
+    const d = Math.round(world.z), th = S.thread, id = IDS[d], dive = !isLine() && !worldOf(WORLD).hidden;
     setBuild(null);   /* a switch is shown finished, unless "Build it" is open */
-    if (S.part && S.part.id !== IDS[d]) S.part = null;
-    let h = '<p class="where"><b>' + esc(depthName(d)) + '</b> <span id="acrossNow">' + esc(across(world.z)) + '</span></p>';
+    if (S.part && S.part.id !== id) S.part = null;
+    let h = '<header class="here"><p class="where"><b>' + esc(depthName(d)) + '</b> <span id="acrossNow">' + esc(across(world.z)) + '</span></p>';
     /* on the line: which building you are in, and whether this machine is part of the loop every layer goes round */
-    if (isLine() && PLANTS[IDS[d]]) h += '<p class="small plant">' + esc(t('plant.' + PLANTS[IDS[d]])) + (LOOP.includes(IDS[d]) ? ' · ' + esc(t('ui.inLoop', { layers: model(S.chip).layers })) : '') + '</p>';
-    if (isStudio()) h += designCard(d);
-    else if (!isLine() && !worldOf(WORLD).hidden && BUILT[IDS[d]]) h += buildHere(IDS[d]);
-    /* at the factory's Test station: how well its test patterns would catch faults in your own design */
-    if (isLine() && IDS[d] === 'test') { const B = cur(); if (B.M) h += '<p class="small plant">' + esc(t('design.testYours', { vectors: B.vectors, caught: Math.round(B.coverage * 100) })) + '</p>'; }
-    /* and after the factory: its life, in the place the last station sends it, or met in that place's dive */
-    if (isLine() && !isStudio() && IDS[d] === 'ship') h += lifeCard(null);
-    if (xrayAt(IDS[d])) h += xrayCard(IDS[d]);
-    if (!isLine() && !worldOf(WORLD).hidden && LIVES_AT[IDS[d]] && LIVES_AT[IDS[d]] === WORLD) h += lifeCard(WORLD);
-    h += partCard(d);
-    if (IDS[d] === 'atom') h += floorCard();
-    h += debate(debateAt(IDS[d]));
-    if (!isLine()) h += wayCard(wayAt(IDS[d]));
+    if (isLine() && PLANTS[id]) h += '<p class="small plant">' + esc(t('plant.' + PLANTS[id])) + (LOOP.includes(id) ? ' · ' + esc(t('ui.inLoop', { layers: model(S.chip).layers })) : '') + '</p>';
+    if (isLine() && id === 'test') { const B = cur(); if (B.M) h += '<p class="small plant">' + esc(t('design.testYours', { vectors: B.vectors, caught: Math.round(B.coverage * 100) })) + '</p>'; }
+    if (!isStudio()) h += '<p class="see">' + esc(t('depth.' + id + '.see')) + '</p>';
+    h += '</header>';
+    const studio = isStudio() ? designCard(d) : null;
+    if (studio) h += studio.html;
+    /* a part you tapped: its words are on the picture; here, what asks about it */
+    h += partCard(d) + '<!--notes-->';
+    const tabs = studio ? studio.tabs.slice() : [], here = th && stop(th, d), key = th ? stopKey(th, d) : null;
     if (th) {
-      const here = stop(th, d), color = threadColor(th), key = stopKey(th, d);
+      const color = threadColor(th);
       h += '<section class="follow" style="--th:' + color + '"><p class="code">' + t('ui.following') + '</p>';
       if (rootShown(S.seen[th])) h += '<div class="root"><p class="small">' + t('ui.rootOf') + '</p><p class="rootq">' + esc(t('thread.' + th + '.root')) + '</p><p class="small">' + t('ui.behind') + ' <em>' + esc(t('thread.' + th + '.behind')) + '</em></p></div>';
       if (here) {
-        h += '<p class="small muted">' + t('ui.becomes') + '</p><h2 id="cardQ">' + esc(q(th, d)) + '</h2><p>' + esc(t('stop.' + key + '.note')) + '</p>';
-        h += tryIt(key, d);
-        const tried = t('stop.' + key + '.tried');
-        h += figures(key);
-        if (Array.isArray(tried)) h += '<p class="small muted">' + t('ui.tried') + '</p><ul class="tried">' + tried.map(x => '<li>' + esc(x) + '</li>').join('') + '</ul>';
-        h += cases(key);
-        const dn = below(th, d), up = above(th, d);
-        const L = isLine();
+        h += '<h2 id="cardQ">' + esc(q(th, d)) + '</h2><p>' + esc(t('stop.' + key + '.note')) + '</p>';
+        const dn = below(th, d), up = above(th, d), L = isLine();
         h += '<div class="moves">' + (dn != null ? '<button type="button" class="btn primary" data-go="' + dn + '">' + esc(t(L ? 'ui.onward' : 'ui.deeper', { depth: depthName(dn) })) + '</button>' : '<p class="small">' + t('ui.bottom') + '</p>') +
           (up != null ? '<button type="button" class="btn" data-go="' + up + '">' + esc(t(L ? 'ui.backward' : 'ui.higher', { depth: depthName(up) })) + '</button>' : '') + '</div>';
-        h += companion(th, d);
+        if (TRIES[key]) tabs.push({ id: 'try', label: t('tab.try'), html: () => tryIt(key, d) });
+        const ev = figures(key) + cases(key); if (ev) tabs.push({ id: 'evidence', label: t('tab.evidence'), html: () => ev });
+        const tried = t('stop.' + key + '.tried');
+        if (Array.isArray(tried)) tabs.push({ id: 'tried', label: t('tab.tried'), n: tried.length, html: () => '<ul class="tried">' + tried.map(x => '<li>' + esc(x) + '</li>').join('') + '</ul>' });
+        tabs.push({ id: 'ask', label: t('tab.ask'), html: () => companion(th, d) });
       } else {
-        const n = nearest(th, d), w = n == null ? WORLDS.find(x => x.depths.some(id => STOPS[th + '.' + id])) : null;
-        h += '<p>' + t(n != null ? 'ui.noStop' : 'ui.noStopWorld') + '</p><p class="small muted">' + t('ui.openPlace') + '</p>' + ext(propose(d, th), t('ui.writeIt'), 'btn') + (n != null ? '<button type="button" class="btn primary" data-go="' + n + '">' + esc(t('ui.nearest', { depth: depthName(n) })) + '</button>' : '') +
-          (w ? '<button type="button" class="btn primary" data-world="' + w.id + '">' + esc(t('ui.meetIn', { world: t('world.' + w.id + '.name') })) + '</button>' : '');
+        const n = nearest(th, d), w = n == null ? WORLDS.find(x => x.depths.some(id2 => STOPS[th + '.' + id2])) : null;
+        h += '<p>' + t(n != null ? 'ui.noStop' : 'ui.noStopWorld') + '</p><p class="small muted">' + t('ui.openPlace') + '</p><div class="moves">' + ext(propose(d, th), t('ui.writeIt'), 'btn') + (n != null ? '<button type="button" class="btn primary" data-go="' + n + '">' + esc(t('ui.nearest', { depth: depthName(n) })) + '</button>' : '') +
+          (w ? '<button type="button" class="btn primary" data-world="' + w.id + '">' + esc(t('ui.meetIn', { world: t('world.' + w.id + '.name') })) + '</button>' : '') + '</div>';
       }
       h += '<button type="button" class="link" data-leave>' + t('ui.leave') + '</button></section>';
-      h += mine(d, here && TRIES[key]) + ways(d);
-      const others = crossing(d).filter(x => x !== th);
-      if (others.length) h += '<section class="crossing"><p class="code">' + t('ui.alsoCrossing') + '</p>' + others.map(x => qButton(x, d)).join('') + '</section>';
-    } else {
-      h += '<p class="see">' + esc(t('depth.' + IDS[d] + '.see')) + '</p>' + mine(d) + ways(d);
-      const all = crossing(d);
-      h += '<section class="crossing"><p class="code">' + t('ui.crossingHere') + '</p>' + (all.length ? all.map(x => qButton(x, d)).join('') : '<p class="small muted">' + t('ui.noneCrossing') + '</p>') + '</section>';
-      h += '<p class="small muted how">' + t(isLine() ? 'ui.howLine' : 'ui.howMove') + ' ' + t('ui.tapPart') + '</p>';
-      h += '<p class="small muted">' + t('ui.ownQ') + ' ' + ext(propose(d), t('ui.propose')) + '</p>';
     }
+    /* the questions crossing here: on the picture as dots, and listed */
+    const qs = crossing(d).filter(x => x !== th);
+    tabs.push({ id: 'qs', label: t(th ? 'tab.otherQs' : 'tab.qs'), n: qs.length, html: () => (qs.length ? qs.map(x => qButton(x, d)).join('') : '<p class="small muted">' + t('ui.noneCrossing') + '</p>') + '<p class="small muted">' + t('ui.ownQ') + ' ' + ext(propose(d), t('ui.propose')) + '</p>' });
+    if (!(here && TRIES[key]) && SHOWS[id] && changed(S.chip)) tabs.push({ id: 'chip', label: t('tab.chip'), html: () => mine(d) });
+    if (xrayAt(id)) tabs.push({ id: 'xray', label: t('tab.xray'), html: () => xrayCard(id) });
+    if (isLine() && !isStudio() && id === 'ship') tabs.push({ id: 'life', label: t('tab.life'), html: () => lifeCard(null) });
+    if (dive && LIVES_AT[id] === WORLD) tabs.push({ id: 'life', label: t('tab.life'), html: () => lifeCard(WORLD) });
+    if (id === 'atom') tabs.push({ id: 'floor', label: t('tab.floor'), html: () => floorCard() });
+    const D = debateAt(id); if (D) tabs.push({ id: 'debate', label: t('tab.debate'), html: () => debate(D, true) });
+    const Wy = !isLine() && wayAt(id); if (Wy) tabs.push({ id: 'way', label: t('tab.way'), html: () => wayCard(Wy, true) });
+    if (dive && BUILT[id]) tabs.push({ id: 'built', label: t('tab.built'), html: () => buildHere(id) });
+    /* what opens first: the question's try if you follow one, else the questions crossing here; the X-ray while it is on */
+    const def = studio ? studio.def : here && TRIES[key] ? 'try' : th ? null : xrayHere(id) ? 'xray' : isLine() && id === 'ship' ? 'life' : 'qs';
+    h += tabbed(d, tabs, def);
+    h += ways(d);
+    if (!th && !studio) h += '<p class="small muted how">' + t(isLine() ? 'ui.howLine' : 'ui.howMove') + ' ' + t(dive ? 'ui.tapPartDive' : 'ui.tapPart') + '</p>';
+    /* notes go on the picture where it has room for them; on a narrow screen, into the card */
+    const notes = notesFor(d), wide = roomy();
+    h = h.replace('<!--notes-->', wide ? '' : notes.map(n => '<section class="note tone-' + n.tone + '"><p class="code">' + esc(n.title) + '</p><p class="small">' + esc(n.text) + '</p></section>').join(''));
     cardEl.innerHTML = h;
+    world.setNotes(wide ? notes : []);
     anchor();
   }
   cardEl.addEventListener('click', e => {
@@ -614,6 +653,7 @@ export function start(facts) {
     if (e.target.closest('[data-dreset]')) { S.design = normalDesign({ p: S.design.p }); S.by = 'you'; S.claim = false; S.defect = null; designChanged(); card(); return; }
     if (e.target.closest('[data-defect]')) { S.defect = S.defect == null ? 1 + Math.floor(Math.random() * 997) : null; designChanged(); card(); return; }
     if (e.target.closest('[data-agent]')) { S.design = normalDesign({ p: S.design.p, code: AGENT[S.design.p] }); S.by = 'ai'; S.claim = true; designChanged(); card(); return; }
+    const tb = e.target.closest('[data-tab]'); if (tb) { S.tab.open = S.tab.open === tb.dataset.tab ? null : tb.dataset.tab; card(); return; }
     const cd = e.target.closest('[data-cold]'); if (cd) { S.cold = +cd.dataset.cold; card(); return; }
     if (e.target.closest('[data-xray]')) { S.xray.on = !S.xray.on; S.xpick = null; S.part = null; setXray(S.xray.on); save(); card(); return; }
     const lm = e.target.closest('[data-lifem]'); if (lm) { S.life.m = lm.dataset.lifem; save(); card(); return; }
@@ -673,8 +713,11 @@ export function start(facts) {
   function layout() {
     const side = getComputedStyle(cardEl).position === 'absolute';
     const top = $('top').getBoundingClientRect().height, rr = railEl.getBoundingClientRect(), cr = cardEl.getBoundingClientRect();
-    world.setInset(side ? { l: rr.right + 12, r: window.innerWidth - cr.left + 12, t: top + 8, b: 16 } : { l: 8, r: 8, t: 8, b: 8 });
+    const ins = side ? { l: rr.right + 12, r: window.innerWidth - cr.left + 12, t: top + 8, b: 16 } : { l: 8, r: 8, t: 8, b: 8 };
+    world.setInset(ins);
     rail(); anchor();
+    /* the width the picture has: notes go on it only where they fit */
+    const was = roomy(); S.sceneW = $('world').clientWidth - ins.l - ins.r; if (roomy() !== was) card();
   }
   new ResizeObserver(layout).observe(document.body);
 

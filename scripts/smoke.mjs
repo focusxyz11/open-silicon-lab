@@ -19,13 +19,17 @@ for (const [tag, viewport, scheme] of [['desktop', { width: 1360, height: 860 },
   await page.waitForSelector('#card .where', { timeout: 15000 });
   const where = () => page.textContent('#card .where b');
   const go = async d => { await page.$eval('#rail [data-d="' + d + '"]', el => el.click()); await page.waitForFunction(d => document.querySelector('#rail [data-d="' + d + '"]').getAttribute('aria-current') === 'true', d, { timeout: 10000 }).catch(() => problems.push(tag + ': depth ' + d + ' was not reached')); };
+  /* the card's tabs: open one, unless it is open already */
+  const tab = async id => { const b = await page.$('#card [data-tab="' + id + '"]'); if (!b) { problems.push(tag + ': no tab "' + id + '" at ' + await where()); return; } if ((await b.getAttribute('aria-selected')) !== 'true') await b.click(); };
   for (const d of [7, 3, 0]) await go(d);
   /* at the atom, the physics floor: cooling the chip lowers its floor, and the refrigerator pays it back */
   await go(7);
+  await tab('floor');
   await page.$eval('#card [data-cold="0"]', el => el.click()).catch(() => problems.push(tag + ': no physics floor at the atom'));
   if (!/refrigerator/.test(await page.textContent('#card .floor').catch(() => ''))) problems.push(tag + ': cooling does not say what the refrigerator costs');
   /* the chip as a die photo: where the area goes, and a block to find; then back to the picture */
   await go(3);
+  await tab('xray');
   await page.$eval('#card [data-xray]', el => el.click()).catch(() => problems.push(tag + ': no X-ray at the chip'));
   if (!await page.$('#card .area') || !/\d/.test(await page.textContent('#card .xray .legend').catch(() => ''))) problems.push(tag + ': the X-ray does not say where the area goes');
   await page.$eval('#card [data-xray]', el => el.click());
@@ -35,7 +39,7 @@ for (const [tag, viewport, scheme] of [['desktop', { width: 1360, height: 860 },
     const r = await page.$eval('#world', el => { const b = el.getBoundingClientRect(); return { x: b.left, y: b.top, w: b.width, h: b.height }; });
     const B = Math.min(r.w - 16, r.h - 16);
     await page.mouse.click(r.x + r.w / 2, r.y + r.h / 2 + 0.04 * B);
-    if (!/racks/i.test(await page.textContent('#card .part h3').catch(() => ''))) problems.push(tag + ': tapping a part does not say what it is');
+    if (!/rack/i.test(await page.textContent('#card .note').catch(() => ''))) problems.push(tag + ': tapping a part does not say what it is');
     await page.$eval('#card [data-closepart]', el => el.click()).catch(() => {});
   }
   if (!(await page.$$('#card .qpick')).length) problems.push(tag + ': no question crosses the first depth');
@@ -49,19 +53,23 @@ for (const [tag, viewport, scheme] of [['desktop', { width: 1360, height: 860 },
   if (!/board/i.test(await where())) problems.push(tag + ': the card does not follow the depth');
   /* at a stop: a real case, the figures behind it, and the companion's prompt; elsewhere, a way to propose a question */
   await go(3);
+  await tab('qs');
   await page.$eval('#card [data-th="fail"]', el => el.click());
+  if (!await page.$('#cardQ')) problems.push(tag + ': the question is not the first thing in the card');
+  await tab('evidence');
   if (!await page.$('#card details.case')) problems.push(tag + ': the real case does not show at its stop');
-  if (await page.$eval('#card .companion', el => getComputedStyle(el).display !== 'none')) problems.push(tag + ': the companion shows before it is asked for');
-  await page.$eval('#card [data-companion]', el => el.click());
-  if (!/question behind it/i.test(await page.$eval('#card .companion textarea', el => el.value))) problems.push(tag + ': the companion has no prompt');
-  if (await page.$eval('#card .companion', el => getComputedStyle(el).display === 'none')) problems.push(tag + ': the companion did not open');
+  if (await page.$('#card .companion')) problems.push(tag + ': the companion shows before it is asked for');
+  await tab('ask');
+  if (!/question behind it/i.test(await page.$eval('#card .companion textarea', el => el.value).catch(() => ''))) problems.push(tag + ': the companion has no prompt');
+  await tab('try');
   /* your chip: speed up the clock here, and the gate below shows it; then back to the starting chip */
   await page.$eval('#tryRange', el => { el.value = el.max; el.dispatchEvent(new Event('input', { bubbles: true })); el.dispatchEvent(new Event('change', { bubbles: true })); });
   if (!/[1-9]\d*% of signals late/.test(await page.textContent('#tryOut'))) problems.push(tag + ': a faster clock did not make signals late');
   if (!await page.$('#card .chal')) problems.push(tag + ': no challenge at the clock');
   const hop = await page.$('#card [data-trystop]');
-  if (hop) { await hop.click(); if (!/switch/i.test(await where())) problems.push(tag + ': a challenge hint does not lead to where its other setting changes'); await go(3); await page.$eval('#card [data-th="fail"]', el => el.click()); }
+  if (hop) { await hop.click(); if (!/switch/i.test(await where())) problems.push(tag + ': a challenge hint does not lead to where its other setting changes'); await go(3); await tab('qs'); await page.$eval('#card [data-th="fail"]', el => el.click()); }
   await go(5);
+  await tab('chip');
   if (!/slowest signal/.test(await page.textContent('#card .mine').catch(() => ''))) problems.push(tag + ': the gate does not show your chip');
   await page.$eval('#card [data-reset]', el => el.click());
   if (await page.$('#card .mine')) problems.push(tag + ': going back to the starting chip did not work');
@@ -69,6 +77,7 @@ for (const [tag, viewport, scheme] of [['desktop', { width: 1360, height: 860 },
   if (!/\/issues\/new\?template=question\.yml/.test(await page.$eval('#card a.btn', el => el.href).catch(() => ''))) problems.push(tag + ': a gap does not invite a question');
   await go(0);
   await page.waitForTimeout(200);
+  await tab('evidence');
   if (!await page.$('#card .figs li')) problems.push(tag + ': the figures behind a stop do not show');
   await page.$eval('#card [data-leave]', el => el.click());
   if (!await page.$('#card a[href*="issues/new"]')) problems.push(tag + ': there is no way to propose a question');

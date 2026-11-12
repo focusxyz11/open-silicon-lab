@@ -53,9 +53,13 @@ A scene is `{ parts, draw(G) }`. `G` is a small drawing helper (rectangles, line
 
 A stop `'thread.depth'` lists the parts it lights up; its words are `stop.<thread>.<depth>.q`, `.note` and optionally `.tried` (a list). At a stop the card can also show its `FIGURES` (from `src/data/facts.json`), its `CASES`, and the companion's prompt (`ui.prompt`). Where a followed thread has no stop, the card links to the question form on GitHub (`REPO`, `.github/ISSUE_TEMPLATE/question.yml`), filling in its `where` and `continues` fields. The card shows the questions crossing a depth; the world draws them as dots on their parts. Following a thread, `below()` and `above()` give its next forms. `rootShown()` decides when its core question may appear.
 
+## The card and the picture
+
+Words that belong to a part sit on the picture; the card keeps only what does not. At a depth, the picture marks the square you dive into ("Dive into: …", tap it to go), and notes pinned to parts (`world.setNotes`): what a tapped part does, what your chip does there (`NOTE_AT` in `src/data/weave.js`), the clue of an X-ray block, and in the studio what the factory will do to your design. Where the picture is too narrow for them (a phone), the notes move into the card. The card itself is short: where you are, one line on what you see, the question you follow (its question, its note and the way deeper or higher), and the rest in tabs, one open at a time (Try it, Evidence, What people try, Ask an AI, Questions here, Your chip, X-ray, Its life, The floor, Debate, Another way, Built here; in the studio, The shared plan, Work with an AI, At the factory, The shared chip).
+
 ## Words and languages
 
-Every word on screen lives in `src/i18n/en.json` and is read with `t('name')`. `npm test` fails if code holds visible English, if a text is missing or unused, or if a translation's `{names}` differ. To add a language, copy `en.json` to `<lang>.json`, translate the values, and add it to `LANGS` in `src/core/i18n.js`.
+Every word on screen lives in `src/i18n/en.json` and is read with `t('name')`, including the words drawn on the picture. Those are measured, never assumed to be English-sized: `wrap()` in `src/app/draw.js` breaks lines where the language allows (`Intl.Segmenter`, so text without spaces wraps too) and breaks an overlong word between characters (tested). `npm test` fails if code holds visible English, if a text is missing or unused, or if a translation's `{names}` differ. To add a language, copy `en.json` to `<lang>.json`, translate the values, and add it to `LANGS` in `src/core/i18n.js`.
 
 ## Checks
 
