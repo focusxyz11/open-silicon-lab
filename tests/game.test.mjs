@@ -79,6 +79,13 @@ test('the broken copy is caught by some patterns and missed by others, so choosi
   assert.ok(catches.some(x => !x), 'every pattern catches it: no choice to make');
   assert.ok(G.SPOT.tests < S.rows.length, 'fewer tests than patterns');
   const i = catches.indexOf(true);
+  /* your own full adder: its copies are yours, and the same rules hold */
+  const mine = 'sum = (a ^ b) ^ cin;\ncout = (a & b) | (cin & (a ^ b));';
+  assert.equal(G.checkDesign('full', mine).ok, true);
+  const s = G.fresh(); s.done.full = true; s.codes.full = mine;
+  assert.equal(G.spotCode(s), mine);
+  const Y = G.spotCase(G.spotCode(s)); assert.equal(Y.yours, true); assert.ok(Y.bad.some(r => r.mis.length) && Y.net != null);
+  assert.equal(G.spotCode(G.fresh()), null);
   assert.notDeepEqual(G.spotAnswer(S, S.broken, i), G.spotAnswer(S, (S.broken + 1) % G.SPOT.chips, i));
 });
 

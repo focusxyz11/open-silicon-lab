@@ -44,8 +44,8 @@ of the current site has a "Chip world" link back to its place.
 
 The design line ends in masks; the factory's Print uses them. When a design passes its check, the challenge goes
 on down the line: its gates, its layout, its masks, then what the factory does to it (a lap round the line for
-each mask, and one speck of dust that leaves a wire stuck, in a copy that looks exactly like the others). That is
-the copy you hunt at the test house. On the island, the studio is a campus at the start of the loop, and its mask
+each mask, and one speck of dust that leaves a wire stuck, in a copy that looks exactly like the others). For your full adder it is the very fault you
+hunt at the test house, where the four copies are of your own design once you have won it (`spotCode`). On the island, the studio is a campus at the start of the loop, and its mask
 house sends the first masks you make down the road to the factory, on a truck.
 
 ## Inside a chip: the dive and the line as one picture

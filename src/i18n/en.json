@@ -2026,5 +2026,10 @@
  "chipx.yours.etch": "Its {transistors} transistors are etched here, as fins.",
  "chipx.yours.wires": "Its gates are joined here by {wire} steps of wire.",
  "chipx.yours.gate": "Your {name} is down here: {gates} gates, {transistors} transistors.",
- "chipx.yoursNone": "Design something at the studio, and you will find it in these layers"
+ "chipx.yoursNone": "Design something at the studio, and you will find it in these layers",
+ "game.spot.yours": "Your design",
+ "game.spot.yoursD": "These are copies of the full adder you designed at the studio, made by the factory with your masks.",
+ "game.spot.lab": "The lab's design",
+ "game.spot.labD": "These are copies of the lab's full adder. Win the full adder at the studio, and the copies here become yours.",
+ "game.spot.why": "The factory left one wire inside it stuck at {v}: every gate that wire feeds sees {v}, whatever the inputs say. The patterns that caught it are the ones that needed that wire to be the other value."
 }
