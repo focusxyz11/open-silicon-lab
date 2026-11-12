@@ -14,7 +14,7 @@ test('the starting chip is the baseline: power 1, every signal on time', () => {
   assert.ok(Math.abs(m.power - 1) < 1e-9);
   assert.equal(m.late, 0);
   assert.equal(changed(START), false);
-  assert.deepEqual(normal({ clock: 7, gen: 99, size: -3, load: 9 }), { clock: START.clock, gen: GENS - 1, size: 0, load: START.load + 2 });
+  assert.deepEqual(normal({ clock: 7, gen: 99, size: -3, load: 9, reuse: 99, mem: -1 }), { clock: START.clock, gen: GENS - 1, size: 0, load: START.load + 2, reuse: 5, mem: 0 });
   assert.deepEqual(normal(undefined), START);
 });
 
@@ -75,15 +75,17 @@ test('on the wafer, a bigger chip fits fewer times, comes out good less often an
 });
 
 test('every challenge can be met, none by one setting alone, and each is shown at stops with a try', async () => {
-  const { CHALLENGES, CLOCKS, GENS, SIDES, LOADS, START, model } = await import('../src/engines/chip.js');
-  const all = []; for (const clock of CLOCKS) for (let gen = 0; gen < GENS; gen++) for (let size = 0; size < SIDES.length; size++) for (let load = 0; load < LOADS.length; load++) all.push({ clock, gen, size, load });
+  const { CHALLENGES, START, SETTINGS, VALUES, model } = await import('../src/engines/chip.js');
+  /* every chip there can be: each setting's every value, for the settings a challenge could need */
+  let all = [{}]; for (const k of SETTINGS) all = all.flatMap(s => VALUES[k].map(v => Object.assign({}, s, { [k]: v })));
+  const M = new Map(), mm = s => { const key = JSON.stringify(s); if (!M.has(key)) M.set(key, model(s)); return M.get(key); };
   for (const c of CHALLENGES) {
     assert.ok(EN['chal.' + c.id + '.goal'] && EN['chal.' + c.id + '.hint'], c.id + ' has no words');
-    assert.ok(all.some(s => c.met(model(s))), c.id + ' can never be met');
+    assert.ok(all.some(s => c.met(mm(s))), c.id + ' can never be met');
     assert.equal(c.met(model(START)), false, c.id + ' is met by the starting chip');
-    for (const k of ['clock', 'gen', 'size', 'load']) {
-      const one = all.filter(s => ['clock', 'gen', 'size', 'load'].every(o => o === k || s[o] === START[o]));
-      if (c.needs.length > 1 && c.needs.includes(k)) assert.ok(!one.some(s => c.met(model(s))), c.id + ' can be met by ' + k + ' alone');
+    for (const k of SETTINGS) {
+      const one = VALUES[k].map(v => Object.assign({}, START, { [k]: v }));
+      if (c.needs.length > 1 && c.needs.includes(k)) assert.ok(!one.some(s => c.met(mm(s))), c.id + ' can be met by ' + k + ' alone');
     }
     for (const key of c.at) assert.ok(TRIES[key], c.id + ': ' + key + ' has no try');
   }
@@ -104,3 +106,16 @@ test('the fab you run: fuller is cheaper but slower, the scanners set the pace, 
   assert.ok(s.perLayer >= 1 && s.perLayer <= 1.5, 'about 1 to 1.5 days a layer at 85% (fact fab-cycle-time): ' + s.perLayer);
 });
 
+
+test('the memory wall: faster cores only wait faster, unless memory keeps up; moving data costs more energy than computing', async () => {
+  const { model, START, REUSES, MEMS } = await import('../src/engines/chip.js');
+  const s = model(START);
+  assert.equal(s.busy, 1); assert.ok(Math.abs(s.work - 1) < 1e-9, 'the starting chip is exactly fed');
+  const fast = model(Object.assign({}, START, { clock: 3 }));
+  assert.ok(fast.peak > 2.9 && fast.work < 1.01 && fast.busy < 0.34, 'three times the clock, the same work: the cores wait');
+  assert.ok(model(Object.assign({}, START, { clock: 3, reuse: START.reuse + 1 })).work > 2.9, 'reuse feeds them');
+  assert.ok(model(Object.assign({}, START, { clock: 3, mem: 1 })).work > 2.9, 'and so does memory beside the chip');
+  assert.ok(s.moving > 0.9, 'fetching from memory chips takes most of the energy');
+  let last = 1; for (let r = 0; r < REUSES.length; r++) { const m = model(Object.assign({}, START, { reuse: r })); assert.ok(m.moving < last); last = m.moving; }
+  assert.ok(model(Object.assign({}, START, { reuse: REUSES.length - 1, mem: MEMS.length - 1 })).moving < 0.5, 'only reuse and close memory together bring it below half');
+});

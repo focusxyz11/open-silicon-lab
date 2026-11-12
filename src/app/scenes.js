@@ -268,14 +268,25 @@ const board = {
       G.r(142, y, 78, 62, c.up, c.line, 1.1); G.r(236, y + 6, 52, 50, c.lo, c.warm, 1.1);
       G.l([[288, y + 31], [320, y + 31], [320, 380 + i * 48], [350, 380 + i * 48]], c.warm, 1.6);
     }
+    /* memory chips on the board, and the numbers moving between them and the big chip; with memory
+       stacked in the package instead, they stand idle */
+    const onBoard = M.mem === 0;
+    G.a(onBoard ? 1 : 0.35);
     traces.forEach(tr => G.l(tr.p, c.cool, 1.1));
     mem.forEach(m => { G.r(m.r[0], m.r[1], m.r[2], m.r[3], c.up, c.line, 1.2); G.r(m.r[0] + 8, m.r[1] + 10, m.r[2] - 16, m.r[3] - 20, c.lo, c.dim, 0.8); });
+    G.a(1);
+    if (onBoard) traces.forEach((tr, k) => { const u = (G.t * 0.7 * Math.min(1, M.need) + k * 0.29) % 1, a = tr.p[0], b = tr.p[1], back = k % 2; const y = back ? b[1] + (a[1] - b[1]) * u : a[1] + (b[1] - a[1]) * u; G.r(a[0] - 3, y - 3, 6, 6, c.cool); });
     for (let i = 0; i < 6; i++) for (let j = 0; j < 9; j++) G.r(720 + i * 28, 250 + j * 56, 14, 26, c.up, c.dim, 0.8);
     /* your chip's heat, spreading from the big chip */
     for (let k = 3; k >= 1; k--) { G.a((0.05 + 0.18 * heat(G)) / k); const e = 18 * k * (0.6 + heat(G)); G.r(350 - e, 350 - e, 300 + 2 * e, 300 + 2 * e, c.warm); }
     G.a(1);
     G.r(350, 350, 300, 300, c.up, c.hi, 1.6);
     for (let i = 0; i < 14; i++) { G.r(360 + i * 20, 358, 8, 8, c.line); G.r(360 + i * 20, 634, 8, 8, c.line); G.r(358, 380 + i * 18, 8, 8, c.line); G.r(634, 380 + i * 18, 8, 8, c.line); }
+    /* memory stacked beside the chip, in its package: short, wide paths */
+    if (!onBoard) [[372, 400], [372, 520], [588, 400], [588, 520]].forEach((p, k) => {
+      for (let j = 0; j < 5; j++) G.r(p[0] + j * 1.5, p[1] + 70 - j * 12, 40, 12, j % 2 ? c.mid : c.up, c.line, 0.8);
+      const u = (G.t * 1.6 + k * 0.25) % 1, x = k < 2 ? p[0] + 40 + u * 13 : p[0] - u * 13; G.r(x - 2, p[1] + 40, 4, 4, c.cool);
+    });
     inside(G, 'board');
     G.r(220, 858, 560, 32, c.up, c.line, 1.1);
     for (let i = 0; i < 40; i++) G.l([[228 + i * 14, 862], [228 + i * 14, 886]], c.warm, 1.4);
@@ -297,7 +308,10 @@ function drawCores(G) {
     G.r(r[0] + r[2] * 0.6, r[1] + m, r[2] * 0.4 - m, r[3] * 0.3, c.mid, c.dim, 0.9);
     G.r(r[0] + r[2] * 0.6, r[1] + r[3] * 0.4, r[2] * 0.4 - m, r[3] * 0.6 - m, c.lo, c.dim, 0.9);
     G.r(r[0] + m, r[1] + r[3] * 0.62, r[2] * 0.52, r[3] * 0.38 - m, c.lo, c.dim, 0.9);
-    if (rnd(n, tick) > 0.55) { G.a(0.5); G.r(r[0] + m, r[1] + m, r[2] * 0.52, r[3] * 0.5, c.cool); G.a(1); }
+    /* the memory wall: a core waiting for numbers from memory stands dark */
+    const idle = rnd(n + 90, tick) > M.busy;
+    if (idle) { G.a(0.62); G.r(r[0], r[1], r[2], r[3], c.lo); G.a(1); }
+    else if (rnd(n, tick) > 0.55) { G.a(0.5); G.r(r[0] + m, r[1] + m, r[2] * 0.52, r[3] * 0.5, c.cool); G.a(1); }
     if (rnd(n + 50, tick) < M.late) { G.a(0.55); G.r(r[0], r[1], r[2], r[3], c.red); G.a(1); }
   });
 }
@@ -317,6 +331,9 @@ const chip = {
     clock.forEach((k, i) => { const u = (G.t * 0.6 * M.clock + i * 0.25) % 1, a = k.p[0], b = k.p[1]; G.r(a[0] + (b[0] - a[0]) * u - 5, a[1] + (b[1] - a[1]) * u - 5, 10, 10, c.warm); });
     for (let i = 0; i < 6; i++) { const x = 136 + i * 123; G.r(x, 626, 113, 88, c.up, c.line, 1); for (let k = 1; k < 8; k++) G.l([[x + k * 14, 630], [x + k * 14, 710]], c.dim, 0.7); }
     for (let i = 0; i < 8; i++) G.r(136 + i * 92, 746, 82, 78, c.mid, c.line, 1);
+    /* numbers arriving from memory: never faster than memory sends them */
+    const flow = M.work;
+    for (let i = 0; i < 8; i++) { const u = (G.t * 0.5 * flow + i * 0.37) % 1; G.a(0.8); G.r(146 + i * 92, 820 - u * 190, 12, 10, c.cool); G.a(1); }
     inside(G, 'chip');
     G.label('cores', 136, 126); G.label('cache', 136, 612); G.label('io', 136, 846); G.label('clock', 508, 380);
   }
@@ -664,6 +681,7 @@ const soc = {
     socCpu.forEach((k, n) => {
       const r = k.r; G.r(r[0], r[1], r[2], r[3], c.up, c.line, 1.2);
       coreInside(G, r, 8);
+      if (rnd(n + 90, tick) > M.busy) { G.a(0.62); G.r(r[0], r[1], r[2], r[3], c.lo); G.a(1); } else
       if (rnd(n, tick) > 0.5) { G.a(0.45); G.r(r[0] + 8, r[1] + 8, r[2] * 0.52, r[3] * 0.5, c.warm); G.a(1); }
       if (rnd(n + 50, tick) < M.late) { G.a(0.55); G.r(r[0], r[1], r[2], r[3], c.red); G.a(1); }
     });
