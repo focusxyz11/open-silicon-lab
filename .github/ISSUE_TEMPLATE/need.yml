@@ -1,0 +1,36 @@
+name: Propose a piece the computer needs
+description: A new need for the community's computer, or for a new goal, with how it could be checked.
+title: "[Need] "
+labels: [need]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        The plan grows by needs. A good need says what the piece must do, what needs it, and how anyone could check a design for it. If nothing in the lab can check it yet, say what kind of engine could: that is a need too.
+  - type: input
+    id: parent
+    attributes:
+      label: What needs it
+      description: A piece already in the plan (for example core or computer), or a new goal.
+    validations:
+      required: true
+  - type: textarea
+    id: job
+    attributes:
+      label: What it must do
+      description: Its inputs, its outputs, and the right answer for each case, or for each clock tick.
+    validations:
+      required: true
+  - type: textarea
+    id: check
+    attributes:
+      label: How a design for it could be checked
+      description: Every input pattern, a test program, a measurement; or the engine the lab would need.
+  - type: dropdown
+    id: ai
+    attributes:
+      label: Did you use AI to write this need?
+      options:
+        - "No"
+        - Yes, as a first draft
+        - Yes, together throughout

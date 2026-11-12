@@ -1,0 +1,49 @@
+name: Add a design to the shared chip
+description: A design for one piece of the community's computer, written in the lab's design studio, by you, an AI, or both.
+title: "[Design] "
+labels: [design]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you. The site fills this in when you come from the design studio (Design > Layout > Add your design). A maintainer, or you, adds it to `src/data/build.js`; the tests check that it reads, does its job and can be built into gates and wires. If it fails, we talk it through here. Nothing is promised about a real chip yet; every design keeps its author's name.
+  - type: input
+    id: need
+    attributes:
+      label: Which piece it is for
+      description: The piece of the plan, for example slice, timer or display (or free for your own idea).
+    validations:
+      required: true
+  - type: input
+    id: author
+    attributes:
+      label: Your name or GitHub handle, as it should appear
+    validations:
+      required: true
+  - type: textarea
+    id: code
+    attributes:
+      label: The description
+      render: text
+    validations:
+      required: true
+  - type: dropdown
+    id: kind
+    attributes:
+      label: Who wrote it
+      options:
+        - A person, without AI
+        - An AI, checked by a person
+        - A person and an AI together
+    validations:
+      required: true
+  - type: textarea
+    id: ai
+    attributes:
+      label: How AI was used, in your words
+      description: Which assistant or agent, what it did, what you changed, and how you checked it. Saying so is part of how people and AI learn to build together.
+  - type: textarea
+    id: why
+    attributes:
+      label: Anything others should know (optional)
+      description: A trick you found, a trade-off you chose, a bug the AI made.

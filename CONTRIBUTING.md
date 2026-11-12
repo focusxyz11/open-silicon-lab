@@ -14,7 +14,9 @@ Thanks for helping. You do not need to be a chip expert: a good question and a s
 
 **Back a stop with a figure or a case.** A figure is an entry in `src/data/facts.json` (value, label, source, link, kind, date checked), named for a stop in `FIGURES` in `src/data/weave.js`. Any number in a stop's words needs one. A case is a real event in `CASES`, with its words `case.<id>.*` in `src/i18n/en.json`.
 
-**Put your design on the shared chip.** Write a small circuit in the design studio (Design, in the top bar), then at Layout choose *Add your design to the shared chip*: it opens an issue with your design written out. Or add it yourself to `src/data/community.js` (title, author, a one-sentence description, and a studio job it does or your own inputs and outputs); `npm test` checks that it reads, does its job and can be built into gates and wires.
+**Build a piece of the community's computer.** Pick an open piece of the plan in the design studio (Design, in the top bar), write it yourself or with any AI assistant, and check it. At Layout, *Add your design to the shared chip* opens a form with your design and how AI was used. Or add it yourself to `DESIGNS` in `src/data/build.js`; `npm test` checks that it reads, does its job and can be built into gates and wires. Designs written with AI are welcome: say how it was used.
+
+**Propose a need, or bring an engine.** A piece the computer needs goes through the *Propose a piece* form (`need.yml`). A piece no engine can check yet (registers, the decoder, the serial port, the core) waits for one: an engine is a `check(need, design)` in `ENGINES` in `src/engines/build.js`.
 
 **Fix a fact.** Edit `src/data/facts.json`: update `value`, `source`, `url` and `verified`, and move the old value into `previous`.
 

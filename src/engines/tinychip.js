@@ -38,6 +38,10 @@ E.PROJ=[
   f:v=>{const bb=v.b^v.sub,op=v.op1*2+v.op0;return {y:op===0?v.a&v.b:op===1?v.a|v.b:op===2?v.a^v.b:v.a^bb^v.cin,cout:(v.a&bb)|(v.cin&(v.a^bb))};},
   starter:'bb = b ^ sub;\ns = a ^ bb ^ cin;\ncout = (a & bb) | (cin & (a ^ bb));\ny = ~op1 & ~op0 & (a & b);',
   sol:'bb = b ^ sub;\np = a ^ bb;\ns = p ^ cin;\ncout = (a & bb) | (cin & p);\ny = (~op1 & ~op0 & (a & b)) | (~op1 & op0 & (a | b)) | (op1 & ~op0 & (a ^ b)) | (op1 & op0 & s);'},
+ {id:'parity',ins:['a','b','c','d'],outs:['odd'],demo:'lamp',
+  f:v=>({odd:v.a^v.b^v.c^v.d}),
+  starter:'odd = a ^ b ^ c;',
+  sol:'odd = a ^ b ^ c ^ d;'},
  {id:'free',ins:['a','b','c','d'],outs:['y','z'],demo:'lamp',spec:false,
  
   f:null,starter:'y = (a | b) & ~(c ^ d);\nz = a ^ b ^ c ^ d;',sol:null},

@@ -7,11 +7,15 @@
    else is drawn. drawDesignBand draws the band under the picture. */
 import { t } from '../core/i18n.js';
 import { build, simulate, patterns, START_DESIGN } from '../engines/design.js';
-import { COMMUNITY } from '../data/community.js';
+import { DESIGNS } from '../data/build.js';
+import { plan, levels, needForProject } from '../engines/build.js';
+import { NEEDS } from '../data/build.js';
 
 const MONO = '"Martian Mono", ui-monospace, Menlo, monospace'; /* i18n-ok: a font name */
-let B = build(START_DESIGN);
+let B = build(START_DESIGN), MINE = [], BY = 'you';
 export const setDesign = b => { B = b; };
+/* the jobs you have finished here (they show in the plan as yours), and who wrote the description now */
+export const setMine = (list, by) => { MINE = list || []; BY = by || 'you'; };
 export const designNow = () => B;
 
 const R = (x, y, w, h) => ({ r: [x, y, w, h] });
@@ -56,18 +60,42 @@ function chipBox(G, x, y, w, h, v, o, lit) {
   B.outs.forEach((n, i) => pin(i, no, false, n, o ? o[n] : null));
 }
 
-/* ---- 1. the job: what must it do? ---- */
+/* ---- 1. the job: one piece of a bigger goal, the community's computer (src/data/build.js) ---- */
+/* who wrote a design: a person, an AI, both, or the lab's own example */
+function who(G, kind, x, y, s) {
+  const c = G.col;
+  if (kind === 'person' || kind === 'both' || kind === 'example') { const cx = kind === 'both' ? x - s : x; G.c(cx, y - s * 0.45, s * 0.42, null, kind === 'example' ? c.line : c.hi, 1.1); G.ctx.beginPath(); G.ctx.arc(cx, y + s * 0.75, s * 0.75, Math.PI * 1.15, Math.PI * 1.85); G.ctx.strokeStyle = kind === 'example' ? c.line : c.hi; G.ctx.lineWidth = G.lw(1.1); G.ctx.stroke(); }
+  if (kind === 'ai' || kind === 'both') { const cx = kind === 'both' ? x + s : x; G.r(cx - s * 0.6, y - s * 0.6, s * 1.2, s * 1.2, null, c.cool, 1.1); G.c(cx - s * 0.22, y - s * 0.05, s * 0.12, c.cool); G.c(cx + s * 0.22, y - s * 0.05, s * 0.12, c.cool); for (const d of [-0.3, 0.3]) { G.l([[cx + d * s, y - s * 0.6], [cx + d * s, y - s * 0.85]], c.cool, 1); G.l([[cx + d * s, y + s * 0.6], [cx + d * s, y + s * 0.85]], c.cool, 1); } }
+}
+function planView(G, x0, y0, w, h) {
+  const c = G.col, L = levels(), P = plan(MINE), here = needForProject(B.p), rh = Math.min(70, h / L.length), pos = {};
+  L.forEach((row, i) => row.forEach((id, j) => { const bw = Math.min(150, w / row.length - 12); pos[id] = [x0 + (w * (j + 0.5)) / row.length - bw / 2, y0 + i * rh, bw, rh * 0.62]; }));
+  /* lines from each piece up to what needs it */
+  L.forEach(row => row.forEach(id => { const n = pos[id], par = (P[id] && NEEDS_PARENT[id]) || null; if (!par || !pos[par]) return; const q = pos[par]; G.l([[n[0] + n[2] / 2, n[1]], [n[0] + n[2] / 2, n[1] - rh * 0.19], [q[0] + q[2] / 2, n[1] - rh * 0.19], [q[0] + q[2] / 2, q[1] + q[3]]], c.line, 1); }));
+  Object.entries(pos).forEach(([id, [x, y, bw, bh]]) => {
+    const s = P[id], st = s.state, mineHere = here && here.id === id;
+    if (s.yours) { G.a(0.22); G.r(x, y, bw, bh, c.warm); G.a(1); }
+    const col = st === 'built' ? c.grn : st === 'open' ? c.warm : st === 'partly' ? c.hi : c.line;
+    G.ctx.setLineDash(st === 'open' ? [5, 4] : st === 'engine' ? [2, 4] : []); G.r(x, y, bw, bh, s.yours ? null : c.lo, col, mineHere ? 2.6 : 1.2); G.ctx.setLineDash([]);
+    text(G, t('build.need.' + id + '.t'), x + 8, y + bh * 0.36, Math.min(14, bw / 9), c.hi, 'left', 600);
+    text(G, t('build.short.' + st, { built: s.built || 0, of: s.of || 0 }), x + 8, y + bh * 0.74, Math.min(11, bw / 12), col, 'left');
+    (s.kinds || []).slice(0, 2).forEach((k, q) => who(G, k, x + bw - 14 - q * 26, y + bh * 0.4, 6));
+    if (s.yours) who(G, BY === 'ai' ? 'ai' : BY === 'both' ? 'both' : 'person', x + bw - 14, y + bh * 0.4 + (s.kinds && s.kinds.length ? 0 : 0), 6);
+  });
+}
+const NEEDS_PARENT = Object.fromEntries(NEEDS.map(n => [n.id, n.parent]));
 const need = {
-  parts: { box: [R(350, 280, 300, 340)], ins: [R(180, 270, 170, 360)], outs: [R(650, 270, 170, 360)], use: [R(740, 90, 220, 170)] },
+  parts: { plan: [R(20, 50, 960, 400)], box: [R(400, 520, 200, 230)], ins: [R(260, 510, 140, 250)], outs: [R(600, 510, 140, 250)], use: [R(770, 540, 200, 160)] },
   draw(G) {
     const c = G.col; room(G);
+    planView(G, 20, 60, 960, 400);
     const vs = patterns(B), k = nowK(G, vs.length, 0.7), v = vs[k];
     /* what it must answer, from the job itself (not from your design) */
     let o = null, st = {};
     if (B.proj.f) { if (B.seq) { for (let j = 0; j <= k; j++) { const r = B.proj.f(vs[j], st); if (j === k) o = r.out; st = r.next; } } else o = B.proj.f(v); }
-    chipBox(G, 350, 280, 300, 340, v, o, true);
-    text(G, '?', 500, 450, 90, c.line, 'center', 300);
-    useView(G, 760, 100, 190, 150, v, o);
+    chipBox(G, 400, 520, 200, 230, v, o, true);
+    text(G, '?', 500, 635, 64, c.line, 'center', 300);
+    useView(G, 780, 550, 180, 140, v, o);
   }
 };
 /* what the outputs mean where the circuit is used: a sum, a lamp, a display digit, a count, an ALU result */
@@ -231,11 +259,11 @@ const layout = {
     /* the shared chip: many small designs side by side, each on its own tile, picked by a selector (as Tiny Tapeout does) */
     const sx = 700, sy = 170, cols = 4, rows = 6, tw = 60, th = 60, gap = 4;
     panel(G, sx - 16, sy - 16, cols * (tw + gap) + 28, rows * (th + gap) + 28, c.mid);
-    const mineAt = COMMUNITY.length;
+    const mineAt = DESIGNS.length;
     for (let j = 0; j < rows; j++) for (let i = 0; i < cols; i++) {
       const n = j * cols + i, x = sx + i * (tw + gap), y = sy + j * (th + gap);
-      if (n < COMMUNITY.length) { G.r(x, y, tw, th, c.dark ? c.up : c.dim, c.line, 0.8); text(G, String(n + 1), x + tw / 2, y + th / 2, 14, c.hi, 'center'); }
-      else if (n === mineAt) { G.r(x, y, tw, th, c.warm, c.warm, 1.5); }
+      if (n < DESIGNS.length) { G.r(x, y, tw, th, c.dark ? c.up : c.dim, c.line, 0.8); who(G, DESIGNS[n].kind, x + tw / 2, y + th / 2, 9); }
+      else if (n === mineAt) { G.r(x, y, tw, th, c.warm, c.warm, 1.5); who(G, BY === 'ai' ? 'ai' : BY === 'both' ? 'both' : 'person', x + tw / 2, y + th / 2, 9); }
       else { G.ctx.setLineDash([3, 4]); G.r(x, y, tw, th, null, c.line, 0.8); G.ctx.setLineDash([]); }
     }
     /* your tile, opened up into the big picture */
@@ -282,8 +310,10 @@ export function drawDesignBand(G, o) {
   const ok = B.ok, state = B.errs.length ? 'errs' : B.spec ? (B.bad ? 'wrong' : 'right') : 'free';
   mark(G, x + 8 * u, top + 22 * u, state === 'right' || state === 'free', 6 * u);
   ctx.textBaseline = 'middle'; ctx.textAlign = 'left'; ctx.font = '600 ' + 11.5 * u + 'px ' + MONO; ctx.fillStyle = ok ? c.grn : c.red;
-  ctx.fillText(t('design.state.' + state, { bad: B.bad || 0, total: B.total || 0, errs: B.errs.length }), x + 22 * u, top + 22 * u);
-  ctx.textAlign = 'right'; ctx.fillStyle = c.warm; ctx.fillText(t('design.proj.' + B.p + '.t'), 1000 - pad, top + 22 * u); ctx.textAlign = 'left';
+  const said = t('design.state.' + state, { bad: B.bad || 0, total: B.total || 0, errs: B.errs.length }) + ' · ' + t('build.by.' + BY), job = t('design.proj.' + B.p + '.t');
+  ctx.fillText(said, x + 22 * u, top + 22 * u);
+  /* the job's name on the right, when there is room for both (the card names it too) */
+  if (ctx.measureText(said).width + ctx.measureText(job).width + 50 * u < w) { ctx.textAlign = 'right'; ctx.fillStyle = c.warm; ctx.fillText(job, 1000 - pad, top + 22 * u); ctx.textAlign = 'left'; }
   /* the caption: what happens at this station */
   ctx.font = '600 ' + 14 * u + 'px ' + MONO; ctx.fillStyle = c.hi; ctx.fillText(t('design.cap.' + id + '.t'), x, top + 46 * u);
   ctx.font = '400 ' + 13 * u + 'px system-ui, sans-serif'; ctx.textBaseline = 'top'; /* i18n-ok: a font name */

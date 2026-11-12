@@ -10,8 +10,9 @@ The site is one thing: a continuous dive from a data centre, a phone or a car do
 2. **Done:** different types of chips: dive into a data centre, a phone or a car; all three meet in the lower depths.
 3. **Done:** the journey, a line from crystal to shipped chip; every part explains itself; challenges on your chip.
 4. **Your chip** (in progress): one chip whose settings every *Try it* changes and every depth shows. Done: clock speed, switch size, chip size, and the factory as a way down, in 2.5D (its line, one layer's loop with a slice through the wafer, yield from your chip's size, laps from its switches, Build it at the switch). Next: the challenges grow with each new try; then the open chip as a way down (your square of a shared chip, with a RISC-V core that runs a real program), then the other settings, with the earlier site's simulations as their models.
-5. **Try it with people.** Three to five learners, from a child to an engineer, while someone watches where they get stuck and which questions they follow.
-6. **More questions,** first where few threads stop, then from the community. More ways down when they bring new questions.
+5. **The build** (in progress): the community's computer as one open plan of needs, built in the design studio by people and AI together ([FRAME.md](FRAME.md), "The build"). Done: the plan, the studio's six stations, the shared chip, AI proposals to check and prompts for any assistant, who wrote what, forms for needs and designs. Next: the RISC-V core as an engine (the earlier site's simulator), so the core's pieces can be checked and your ALU slice runs real programs; then engines for registers and the serial port; then the core as a way down from the dives' block depth.
+6. **Try it with people.** Three to five learners, from a child to an engineer, while someone watches where they get stuck and which questions they follow.
+7. **More questions,** first where few threads stop, then from the community. More ways down when they bring new questions.
 
 ## Next
 
@@ -21,5 +22,7 @@ The site is one thing: a continuous dive from a data centre, a phone or a car do
 
 ## Long term
 
-- **Learners become contributors:** questions, challenges and designs from the community, reviewed by people who know chips.
+- **Learners become contributors:** questions, challenges and designs from the community, reviewed by people who know chips. Started with the build: needs and designs through GitHub forms, checked by the tests.
+- **A self-organizing build:** AI agents as contributors that propose designs and engines through the same forms and checks, with people reviewing; the lab's engines open to them (from need to chip, as an MCP server).
+- **A real shared chip:** when the plan is far enough, submit it to an open shuttle run.
 - **Plug in real hardware,** as a bonus, never a gate.
