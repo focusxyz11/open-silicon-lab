@@ -107,9 +107,14 @@ button{font:inherit;color:inherit}
 .errs{margin:0;padding-left:18px;color:var(--bad,#cc3f2b);font-size:13px}
 .design .bad{color:var(--bad,#cc3f2b)}.design .good{color:var(--good,#0b8a5c)}
 .community{margin:0;padding-left:20px}
+.plan{list-style:none;margin:0;padding:0;display:grid;gap:4px}.plan li{padding-left:calc(var(--d,0) * 14px);font-size:14px}
+.plan .st-built>b,.plan .st-built>button{border-color:var(--good)}.plan .st-open>button{border-style:dashed;border-color:var(--warm)}
+.partner{display:grid;gap:8px;padding-top:8px;border-top:1px dashed var(--line)}
 .shows{display:flex;flex-wrap:wrap;gap:6px}
 .chipgo{padding:4px 10px;border-radius:999px;border:1px solid var(--line);background:transparent;cursor:pointer;font-size:13px}
 .chipgo:hover{border-color:var(--warm)}
+.chipgo[aria-pressed=true]{background:var(--warm);border-color:var(--warm);color:var(--bg);font-weight:600}
+.chipgo.shut{border-color:var(--bad);color:var(--bad)}
 
 /* a part of the picture: what it does, and what is connected to it */
 .part{display:grid;gap:8px;padding:10px 12px;border:1px solid var(--accent);border-radius:6px;background:color-mix(in srgb,var(--accent) 7%,transparent)}

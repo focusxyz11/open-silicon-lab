@@ -17,13 +17,14 @@ src/app/map.js          the world around the line: a chip's whole trip on a map,
 src/app/lens3d.js       the lens: while a machine works, your wafer's surface magnified beside it, showing what the machine does
 src/vendor/three.min.js three.js, loaded only when the journey is first opened
 src/engines/chip.js     your chip: its settings and what follows from them, relative to a starting chip (tested)
+src/engines/build.js    where the goal stands: each need's state, and the engines that check needs (tested)
 src/engines/design.js   your design: one circuit run through the tiny-chip engine, from description to masks (tested)
 src/engines/tinychip.js the earlier site's tiny-chip engine: parse, check, synthesize, place, route, fault-test
 src/engines/fab.js      a fab you run: a re-entrant line of tool groups, how busy each is and how long wafers wait (tested)
 src/engines/supply.js   what stops in a chip's trip when places stop (tested)
 src/engines/weave.js    pure logic: the current world, the camera, sizes, threads, when a core question appears (tested)
 src/data/weave.js       the data: worlds, depths and portals, threads, stops
-src/data/community.js   the shared chip: learners' designs, each checked by the tests
+src/data/build.js       the build: the community's goal as a plan of needs, the designs people and AI proposed, AI agents' proposals
 src/data/world.js       the map: places, and each kind of chip's trip through them, joined to the line's stations
 src/data/facts.json     sourced figures, loaded at start (src/main.js); FIGURES and CASES in weave.js point to them
 src/core/i18n.js        words: t('name'), plurals, numbers, dates
@@ -70,5 +71,9 @@ Your chip has a fourth setting, `load`: how full the fab that makes it runs (`LO
 
 ## The design studio
 
-The top bar's Design is a second line (`flat: true`: drawn in 2D, without the factory's 3D), before the factory: the job a chip must do, its description, the check, the gates, the layout and the masks. One design runs through all six (`S.design`, saved): pick a job at the first station (from a half adder to one slice of a RISC-V core's ALU), edit its description in the card at Describe or Check, and every station's picture follows at once, through the earlier site's tiny-chip engine (`src/engines/tinychip.js`, wrapped by `src/engines/design.js`). Some jobs start with a bug the check finds. At Layout the design sits on one tile of a shared chip, beside the community's designs (`src/data/community.js`), with a way to propose yours; at Masks it is sent to the factory's Print station, and Print points back to where its masks come from. The factory's Test station says how many faults your design's own test patterns would catch.
+The top bar's Design is a second line (`flat: true`: drawn in 2D, without the factory's 3D), before the factory: the job a chip must do, its description, the check, the gates, the layout and the masks. One design runs through all six (`S.design`, saved): pick a job at the first station (from a half adder to one slice of a RISC-V core's ALU), edit its description in the card at Describe or Check, and every station's picture follows at once, through the earlier site's tiny-chip engine (`src/engines/tinychip.js`, wrapped by `src/engines/design.js`). Some jobs start with a bug the check finds. At Layout the design sits on one tile of a shared chip, beside the designs already in the community's plan (`src/data/build.js`), with a form to propose yours; at Masks it is sent to the factory's Print station, and Print points back to where its masks come from. The factory's Test station says how many faults your design's own test patterns would catch.
+
+## The build
+
+`src/data/build.js` holds the community's goal as a tree of needs, each with an engine (`logic`, `repeat`, or none yet), and the designs proposed for them, each saying who wrote it (`kind`) and how AI was used. `src/engines/build.js` gives each need its state (built, open, partly, or waiting for an engine) and holds the engines: to add one, give it a `check(need, design)` and name it in a need. The studio's first station draws the plan with your job in it and your own finished pieces lit (`S.done`); at Describe and Check, `AGENT` holds proposals of the kind AI assistants make (some subtly wrong, with a confident claim) and the card offers a prompt for any assistant. Who wrote the description (`S.by`: you, an AI, both) shows in the band, on your tile of the shared chip, and in the GitHub design form (`.github/ISSUE_TEMPLATE/design.yml`, beside `need.yml`).
 

@@ -7,6 +7,15 @@ Data: `src/data/weave.js`. Logic: `src/engines/weave.js`. Tests: `tests/weave.te
 
 The lab is one world, seen two ways. Diving is about scale: a continuous zoom from a data centre, a phone or a car down to silicon atoms. The journey is about process: a line along which a chip is made, from crystal to a chip shipped into the world. Open questions run through it as threads. A visitor meets a question on the part of a scene it is about; once picked, the question stays with them as they go deeper or higher, and takes a new form at every depth it reaches. The question behind the question matters more than any answer.
 
+## The build: a community that builds, people and AI together
+
+The third way of seeing the world is who builds it. The lab is not only for learning about chips: it is a community building one, and the lab and its repository are the same self-organizing system.
+
+- **One open goal, many pieces.** What the community builds is one plan (`src/data/build.js`): a small open computer on a shared chip, around a RISC-V core, broken into needs. A need is a piece that something else needs; anyone can add one. The design studio is where pieces are built, so it can never become a separate tool: every job in it is a piece of the plan, and the plan shows what is built, what is open, and what is waiting.
+- **Engines are slots, not walls.** A need says how a design for it is checked (its engine). Today the tiny-chip engine checks small circuits; bigger pieces (registers, a decoder, a serial port, the core itself) stay open until someone brings an engine that can check them. Bringing an engine is a contribution like any design, and the plan, the studio and the tests use it at once (`src/engines/build.js`).
+- **People and AI build together, openly.** Every design says who wrote it (a person, an AI, or both) and how AI was used; every design is judged by the same checks, whoever wrote it. In the studio, an AI agent's proposal is something to check, not to trust, and any AI assistant can be asked for a design and its answer pasted back to be checked. As AI starts to design chips, the questions that matter are how the work is shared, who checks whom, and what people still bring; the studio is where visitors try that, not only read about it.
+- **The repository is part of it.** Needs, designs and questions arrive through the same forms (`.github/ISSUE_TEMPLATE/`), the tests check every contribution automatically, and what passes appears in the plan on the site. Nobody has to coordinate it all: the plan shows where help is needed.
+
 ## What visitors see
 
 - **Three ways down.** The dive starts in a data centre (building, rack, board, chip), a phone (phone, board, chip) or a car (car, control unit, chip), chosen in the top bar. Every way down meets the others in the same four lower depths (block, gate, switch, atom), because every chip is built from the same kinds of cells, switches and atoms. Changing the start keeps a shared depth where it is, and matches the steps above it (a chip is a chip, a board is a board).
