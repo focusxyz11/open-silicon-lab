@@ -4,7 +4,7 @@
    Look is Inside: a place's levels, one inside the next, which hold the earlier site's pages (src/data/places.js).
    The menu: Explore (the island), Challenges (every challenge and every open job), Questions (by place),
    Build (the shared computer the community is building) and Ecosystem (the islands across the sea, and the
-   world chips depend on). Routes live in the address: #/, #/place/<id>, #/place/datacentre/<level>, #/challenges, #/questions, #/build,
+   world chips depend on). Routes live in the address: #/, #/place/<id>, #/place/datacentre/<level>, #/chip/<row>[/build] (inside a chip, layer by layer), #/challenges, #/questions, #/build,
    #/ecosystem. Words are read with t(); places not yet redrawn open the current site. */
 import { t } from '../core/i18n.js';
 import { REPO, THREADS } from '../data/weave.js';
@@ -16,6 +16,7 @@ import { play, titleOf, goalOf } from './play.js';
 import { PLACES } from './map3d.js';
 import { LEVELS, ASKS } from './dc3d.js';
 import { stopsAt } from '../data/places.js';
+import { ROWS, ASK as CHIP_ASK } from './chip3d.js';
 
 const $ = id => document.getElementById(id);
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
@@ -27,7 +28,7 @@ const qColor = key => 'hsl(' + hue(key.split('.')[0]) + ' 70% 55%)';
 const follow = key => { const [th, depth] = key.split('.'); return oldUrl(Game.worldOfDepth(depth), { thread: th, depth }); };
 
 export function start() {
-  let map = null, dc = null, mapReady = null;
+  let map = null, dc = null, chip = null, mapReady = null;
   const S = Game.load(localStorage);
   const save = () => Game.save(localStorage, S);
 
@@ -59,7 +60,7 @@ export function start() {
   const hudEl = $('hud');
   function hud() {
     const at = Game.chipAt(S), nx = Game.next(S);
-    hudEl.innerHTML = '<p class="kicker">' + esc(t('game.yourChip')) + '</p><ol class="steps">' + Game.STEPS.map((s, i) => {
+    hudEl.innerHTML = '<p class="kicker">' + esc(t('game.yourChip')) + '<a class="inlink" href="#/chip/0">' + esc(t('chipx.open')) + '</a></p><ol class="steps">' + Game.STEPS.map((s, i) => {
       const st = Game.stepState(S, s), full = st.done === st.total;
       return '<li><button type="button" data-step="' + s + '" class="' + (full ? 'full' : '') + (s === at ? ' here' : '') + '" aria-label="' + esc(t('game.stepAria', { n: i + 1, step: t('game.step.' + s), done: st.done, total: st.total })) + '"><span class="n">' + (full ? '✓' : i + 1) + '</span><span class="w">' + esc(t('game.step.' + s)) + '</span><span class="p">' + st.done + '/' + st.total + '</span></button></li>';
     }).join('') + '</ol>' + (nx ? '<button type="button" class="next" data-ch="' + nx.id + '"><span class="kicker">' + esc(t('game.next')) + '</span>' + esc(titleOf(nx)) + '</button>' : '<p class="small good">' + esc(t('game.allDone')) + '</p>');
@@ -90,12 +91,17 @@ export function start() {
   const jobCard = j => '<button type="button" class="chcard job" data-job="' + j.need + '"><span class="st">?</span><span><b>' + esc(t('design.proj.' + j.p + '.t')) + '</b><span class="small">' + esc(t('build.need.' + j.need + '.d')) + '</span></span></button>';
   const askLink = k => '<a class="askq" href="' + esc(follow(k)) + '" style="--qc:' + qColor(k) + '"><span class="q">' + esc(t('stop.' + k + '.q')) + '</span><span class="small muted">' + esc(t('sheet.follow')) + '</span></a>';
   /* Inside: the place's levels, one inside the next, with what waits at each; then any other way in */
-  const levelHref = (place, l) => { const f = (Game.FLOWN[place] || {})[l.depth]; return f != null ? '#/place/' + place + '/' + f : oldUrl(l.world, { depth: l.depth }); };
+  /* a level opens where it is drawn best: the flight through the data centre, the chip's layers (a depth of the
+     dive, or the factory step that makes it), or else the current site */
+  const rowOf = d => { const i = ROWS.findIndex(r => r.dive === d || r.made.includes(d)); return i < 0 ? null : { row: i, build: !ROWS.some(r => r.dive === d) }; };
+  const DIVE_CHIP = { soc: 0, mcu: 0 };
+  const levelHref = (place, l) => { const f = (Game.FLOWN[place] || {})[l.depth]; if (f != null) return '#/place/' + place + '/' + f;
+    const c = DIVE_CHIP[l.depth] != null ? { row: 0, build: false } : rowOf(l.depth); return c ? '#/chip/' + c.row + (c.build ? '/build' : '') : oldUrl(l.world, { depth: l.depth }); };
   function insideHtml(id) {
     const L = Game.INSIDE[id] || [], extra = Game.LOOK[id] || [];
     let h = L.length ? '<p class="small muted">' + esc(t('game.inside.d')) + '</p><ol class="ladder2">' + L.map((l, i) => {
       const nq = stopsAt(l.depth).length, chs = Game.placeChallenges(id).filter(c => c.at === l.depth), flown = (Game.FLOWN[id] || {})[l.depth] != null;
-      const meta = [nq ? t('game.inside.qs', { n: nq }) : '', chs.length ? t('game.inside.ch', { n: chs.length }) : '', Game.SHARED.includes(l.depth) ? t('game.inside.shared') : '', flown ? t('game.inside.fly') : t('game.inside.current')].filter(Boolean).join(' · ');
+      const drawn = flown || /^#\/chip/.test(levelHref(id, l)), meta = [nq ? t('game.inside.qs', { n: nq }) : '', chs.length ? t('game.inside.ch', { n: chs.length }) : '', Game.SHARED.includes(l.depth) ? t('game.inside.shared') : '', drawn ? t('game.inside.fly') : t('game.inside.current')].filter(Boolean).join(' · ');
       return '<li><a href="' + esc(levelHref(id, l)) + '"><span class="i">' + (i + 1) + '</span><span><b>' + esc(t('depth.' + l.depth + '.name')) + '</b><span class="see">' + esc(t('depth.' + l.depth + '.see')) + '</span><span class="small muted">' + esc(meta) + '</span></span></a></li>';
     }).join('') + '</ol>' : '';
     h += extra.map(l => { const href = l.to ? '#/place/' + l.to : l.page ? '#/' + l.page : oldUrl(l.world, Object.assign({ depth: l.depth }, l.map ? { map: 1 } : {}));
@@ -166,10 +172,11 @@ export function start() {
     pui.querySelectorAll('[data-lv]').forEach(b => b.setAttribute('aria-current', +b.dataset.lv === lv ? 'step' : 'false'));
     pui.querySelector('.caption').innerHTML = '<p class="kicker">' + esc(t('place.level', { n: lv + 1, total: LEVELS.length })) + '</p><h2>' + esc(t('place.dc.' + id + '.t')) + '</h2><p>' + esc(t('place.dc.' + id + '.d')) + '</p>' +
       (key ? '<div class="ask" style="--qc:' + qColor(key) + '"><p class="q">' + esc(t('stop.' + key + '.q')) + '</p><a class="link" href="' + esc(follow(key)) + '">' + esc(t('sheet.follow')) + '</a></div>' : '') +
-      (lv === LEVELS.length - 1 ? '<a class="btn primary" href="' + esc(oldUrl('datacentre', { depth: 'chip' })) + '">' + esc(t('place.next')) + '</a>' : '');
+      (lv === LEVELS.length - 1 ? '<a class="btn primary" href="#/chip/0">' + esc(t('place.next')) + '</a>' : '');
   }
   const depthBar = z => { const f = pui.querySelector('.fill'); if (f) f.style.height = (z / (LEVELS.length - 1) * 100).toFixed(1) + '%'; };
   function showPlace(id, lv) {
+    $('chipCanvas').hidden = $('chipLabels').hidden = true; cui.hidden = true; chip && chip.pause();
     $('hero').hidden = true; hudEl.hidden = true; closeSheet();
     $('mapCanvas').hidden = $('mapLabels').hidden = true; $('placeCanvas').hidden = $('placeLabels').hidden = false; pui.hidden = false;
     pui.innerHTML = '<nav class="crumbs"><a href="#/">' + esc(t('place.back')) + '</a><span aria-hidden="true">›</span><b>' + esc(t('map.' + id + '.t')) + '</b></nav>' +
@@ -180,7 +187,37 @@ export function start() {
     loading(true);
     ensureDc().then(d => { loading(false); d.resume(); if (lv != null && lv >= 0 && lv < LEVELS.length) d.go(lv); placeUI(Math.round(d.z)); $('placeCanvas').focus({ preventScroll: true }); });
   }
+  /* ---- inside a chip, layer by layer: the dive (top down) and the line (bottom up) as one picture ---- */
+  const cui = $('chipui');
+  let chipMode = 'dive', chipRow = 0;
+  const ensureChip = () => chip ? Promise.resolve(chip) : import('./chip3d.js').then(m => { chip = m.createChip($('chipCanvas'), $('chipLabels'), { row: r => { chipRow = r; chipPanel(); }, depth: z => { const f = cui.querySelector('.stack .fill'); if (!f) return; const k = z / (ROWS.length - 1), b = chipMode === 'build'; /* diving fills from the top, building from the bottom */ f.style.top = b ? 'auto' : '0'; f.style.bottom = b ? '0' : 'auto'; f.style.height = ((b ? 1 - k : k) * 100).toFixed(1) + '%'; } }); return chip; });
+  const stepNames = r => ROWS[r].made.map(d => t('depth.' + d + '.name')).join(' → ');
+  function chipPanel() {
+    const r = chipRow, R = ROWS[r], build = chipMode === 'build', n = build ? ROWS.length - r : r + 1, key = CHIP_ASK[chipMode][r];
+    cui.querySelector('.seg').innerHTML = ['dive', 'build'].map(m => '<button type="button" role="tab" data-mode="' + m + '" aria-selected="' + (m === chipMode) + '"><b>' + esc(t('chipx.' + m)) + '</b><span class="small">' + esc(t('chipx.' + m + 'D')) + '</span></button>').join('');
+    cui.querySelector('.stack ol').innerHTML = ROWS.map((x, i) => '<li><button type="button" data-row="' + i + '" class="' + (i === r ? 'on' : '') + (build && i > r ? ' made' : '') + (!build && i < r ? ' passed' : '') + '"' + (i === r ? ' aria-current="step"' : '') + '><span class="n">' + (build ? ROWS.length - i : i + 1) + '</span><span class="lv">' + esc(t('depth.' + x.dive + '.name')) + '</span><span class="mk">' + esc(stepNames(i)) + '</span></button></li>').join('');
+    let h = '<p class="kicker">' + esc(t(build ? 'chipx.stepN' : 'chipx.levelN', { n, total: ROWS.length })) + '</p>';
+    if (build) h += '<h2>' + esc(stepNames(r)) + '</h2>' + R.made.map(d => '<p>' + esc(t('depth.' + d + '.see')) + '</p>').join('') + '<button type="button" class="swap" data-mode="dive">' + esc(t('chipx.becomes', { level: t('depth.' + R.dive + '.name') })) + '</button>';
+    else h += '<h2>' + esc(t('depth.' + R.dive + '.name')) + '</h2><p>' + esc(t('depth.' + R.dive + '.see')) + '</p><button type="button" class="swap" data-mode="build">' + esc(t('chipx.madeAt', { step: stepNames(r) })) + '</button>';
+    if (key) h += '<a class="askq" href="' + esc(follow(key)) + '" style="--qc:' + qColor(key) + '"><span class="q">' + esc(t('stop.' + key + '.q')) + '</span><span class="small muted">' + esc(t('sheet.follow')) + '</span></a>';
+    const nextR = build ? r - 1 : r + 1, done = build ? r === 0 : r === ROWS.length - 1;
+    h += '<div class="row">' + (done ? '<a class="btn primary" href="' + (build ? '#/place/port' : '#/') + '">' + esc(t(build ? 'chipx.ship' : 'chipx.back')) + '</a>' : '<button type="button" class="btn primary" data-row="' + nextR + '">' + esc(t(build ? 'chipx.next' : 'chipx.deeper')) + '</button>') +
+      '<a class="btn" href="' + esc(build ? '#/place/fab/inside' : oldUrl('datacentre', { depth: R.dive })) + '">' + esc(t(build ? 'chipx.atFab' : 'chipx.current')) + '</a></div>';
+    cui.querySelector('.now').innerHTML = h;
+  }
+  function showChip(row, mode) {
+    $('hero').hidden = true; hudEl.hidden = true; closeSheet(); pui.hidden = true; dc && dc.pause(); map && map.pause();
+    ['mapCanvas', 'mapLabels', 'placeCanvas', 'placeLabels'].forEach(k => { $(k).hidden = true; });
+    $('chipCanvas').hidden = $('chipLabels').hidden = false; cui.hidden = false;
+    chipMode = mode === 'build' ? 'build' : 'dive'; chipRow = row != null && row >= 0 && row < ROWS.length ? row : chipMode === 'build' ? ROWS.length - 1 : 0;
+    cui.innerHTML = '<nav class="crumbs"><a href="#/">' + esc(t('place.back')) + '</a><span aria-hidden="true">›</span><b>' + esc(t('chipx.title')) + '</b></nav>' +
+      '<aside class="stackpanel"><div class="seg" role="tablist"></div><div class="stack"><span class="track"><span class="fill"></span></span><ol></ol></div><div class="now"></div></aside><p class="hint">' + esc(t('chipx.hint')) + '</p>';
+    cui.onclick = e => { const m = e.target.closest('[data-mode]'); if (m) { chipMode = m.dataset.mode; chip && chip.mode(chipMode); chipPanel(); return; } const b = e.target.closest('[data-row]'); if (b && chip) chip.go(+b.dataset.row); };
+    chipPanel(); loading(true);
+    ensureChip().then(c => { loading(false); c.mode(chipMode); c.set(chipRow); c.resume(); $('chipCanvas').focus({ preventScroll: true }); });
+  }
   function showMap() {
+    $('chipCanvas').hidden = $('chipLabels').hidden = true; cui.hidden = true; chip && chip.pause();
     $('placeCanvas').hidden = $('placeLabels').hidden = true; pui.hidden = true; dc && dc.pause();
     $('mapCanvas').hidden = $('mapLabels').hidden = false; $('hero').hidden = false; hudEl.hidden = false;
     loading(!map); return ensureMap().then(m => { m.resume(); return m; });
@@ -228,9 +265,10 @@ export function start() {
   /* ---- routes ---- */
   function route() {
     const parts = (location.hash.replace(/^#\/?/, '') || '').split('/').filter(Boolean), k = parts[0] || 'explore';
-    const nav = k === 'place' ? 'explore' : MENU.includes(k) ? k : 'explore';
+    const nav = k === 'place' || k === 'chip' ? 'explore' : MENU.includes(k) ? k : 'explore';
     menu.querySelectorAll('[data-nav]').forEach(a => a.setAttribute('aria-current', a.dataset.nav === nav ? 'page' : 'false'));
     page.hidden = true;
+    if (k === 'chip') return showChip(parts[1] != null ? +parts[1] : null, parts[2]);
     if (k === 'place' && parts[1] === 'datacentre' && parts[2] !== 'inside') return showPlace('datacentre', parts[2] != null ? +parts[2] : null);
     if (k === 'place' && Game.PLACES.includes(parts[1])) { showMap().then(() => openPlace(parts[1], parts[2] === 'inside' ? 'look' : null)); return; }
     showMap().then(() => { if (k === 'ecosystem') showEcosystem(); });
