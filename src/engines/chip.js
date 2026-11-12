@@ -131,7 +131,7 @@ export function model(c) {
   const math = (0.62 + 0.18) * s, move = 2 * 640 * memory.e / reuse;
   return {
     clock, gen, size, side, areaChip, s, area, density, path, tick, late, volt, power,
-    reuse, mem: mi, peak, need, busy, work: peak * busy, moving: move / (math + move),
+    reuse, mem: mi, peak, need, busy, work: peak * busy, moving: move / (math + move), mathPJ: math, movePJ: move,
     leakShare: leak / (switching + leak), wall: Math.pow(1.8, gen - START.gen), battery: 1 / power,
     cores, grid,
     dies: total, good, yield: total ? good / total : 0, steps, cost, layers,

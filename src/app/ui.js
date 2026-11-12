@@ -21,6 +21,8 @@ import { build as buildDesign, normalDesign, starterOf, PROJECTS, START_DESIGN }
 import { setDesign, setMine } from './design.js';
 import { DESIGNS, NEEDS, AGENT } from '../data/build.js';
 import { DEBATES, debateAt } from '../data/debates.js';
+import { WAYS, wayAt, wayOf } from '../data/ways.js';
+import { perOp, cold, reach, landauer, TEMPS } from '../engines/floor.js';
 import { live, MISSIONS, MISSION_IDS, LIVES_AT, MARGINS, PROTECT, PERFECT, CAUSES, normalLife } from '../engines/life.js';
 import { plan, progress, needForProject, childrenOf } from '../engines/build.js';
 
@@ -53,6 +55,8 @@ export function start(facts) {
     /* the chips seen as die photos, and which kinds of block you have found on each */
     xray: { on: !!(saved.xray && saved.xray.on), found: Object.fromEntries(XRAY_AT.map(id => [id, (saved.xray && saved.xray.found && Array.isArray(saved.xray.found[id]) ? saved.xray.found[id] : []).filter(k => XTYPES.includes(k))])) },
     xpick: null,
+    /* the temperature tried at the physics floor */
+    cold: 3,
     life: { m: MISSION_IDS.includes(saved.life && saved.life.m) ? saved.life.m : MISSION_IDS[0], c: normalLife(saved.life && saved.life.c) },
     build: BUILD_STEPS - 1
   };
@@ -388,6 +392,39 @@ export function start(facts) {
     h += '<p class="small muted">' + esc(t('xray.found', { n: S.xray.found[id].length, total: askFor(B).length })) + '</p>';
     return h + '<p class="small muted">' + t('xray.note') + '</p></section>';
   }
+  /* ---- another way to compute, where the problem it attacks is met (src/data/ways.js) ---- */
+  const DOTS = 5;
+  function wayCard(W) {
+    if (!W) return '';
+    const stages = t('way.stages');
+    let h = '<details class="debate way"><summary><span class="code">' + t('way.title') + '</span> <b>' + esc(t('way.' + W.id + '.t')) + '</b></summary>';
+    h += '<p>' + esc(t('way.' + W.id + '.how')) + '</p><p class="small"><b>' + t('way.attacks') + '</b> ' + esc(t('way.saves.' + W.saves)) + '</p>';
+    h += '<p class="small"><b>' + t('way.catch') + '</b> ' + esc(t('way.' + W.id + '.catch')) + '</p>';
+    h += '<p class="small"><b>' + t('way.where') + '</b> <span class="stage" aria-hidden="true">' + Array.from({ length: DOTS }, (_, i) => '<i class="' + (i <= W.stage ? 'on' : '') + '"></i>').join('') + '</span> ' + esc(stages[W.stage]) + '. ' + esc(t('way.' + W.id + '.now')) + '</p>';
+    return h + '<p class="small muted">' + t('way.note') + ' ' + ext(REPO + '/issues/new?' + new URLSearchParams({ template: 'idea.yml', title: t('way.' + W.id + '.t') }), t('way.add')) + '</p></details>';
+  }
+  /* ---- the physics floor: how far your chip is from the limits physics sets (src/engines/floor.js) ---- */
+  const SUP = '⁰¹²³⁴⁵⁶⁷⁸⁹';
+  const pow10 = v => { const e = Math.round(Math.log10(v)); return e <= 0 ? '1' : '10' + String(e).split('').map(d => SUP[+d]).join(''); };
+  function floorLadder(E) {
+    const W = 320, H = 124, l = 8, r = 8, X = v => l + (W - l - r) * Math.min(1, Math.log10(Math.max(1, v)) / 9);
+    const rungs = [['floor', 1, 'grn'], ['math', E.mathTimes, 'warm'], ['total', E.times, 'bad']];
+    let g = '<svg class="ladder" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="' + esc(rungs.map(q => t('floor.rung.' + q[0]) + ' ' + pow10(q[1])).join(', ')) + '">';
+    for (let e = 0; e <= 9; e += 3) g += '<line x1="' + X(Math.pow(10, e)) + '" x2="' + X(Math.pow(10, e)) + '" y1="4" y2="' + (H - 16) + '" class="grid"/><text x="' + X(Math.pow(10, e)) + '" y="' + (H - 4) + '" text-anchor="middle">' + pow10(Math.pow(10, e)) + '</text>';
+    rungs.forEach((q, i) => { const y = 4 + i * 34; g += '<text x="' + (l + 2) + '" y="' + (y + 10) + '" class="lbl">' + esc(t('floor.rung.' + q[0])) + ' · ' + pow10(q[1]) + '</text><rect x="' + l + '" y="' + (y + 15) + '" width="' + Math.max(3, X(q[1]) - l).toFixed(1) + '" height="12" class="r-' + q[2] + '"/>'; });
+    return g + '</svg>';
+  }
+  function floorCard() {
+    const m = model(S.chip), E = perOp(m), R = reach(m), T = TEMPS[S.cold], Cd = cold(T, 1);
+    let h = '<section class="try floor"><p class="code">' + t('floor.title') + '</p><h3>' + esc(t('floor.q')) + '</h3>';
+    h += '<p class="small">' + esc(t('floor.energy', { zj: (landauer() * 1e21).toFixed(1) })) + '</p>';
+    h += floorLadder(E) + '<p class="small">' + esc(t('floor.yours', { times: pow10(E.times), math: pow10(E.mathTimes), moving: Math.round(m.moving * 100) })) + '</p>';
+    h += '<p class="code">' + t('floor.coldTitle') + '</p><div class="shows" role="group" aria-label="' + esc(t('floor.coldTitle')) + '">' + TEMPS.map((k, i) => '<button type="button" class="chipgo" data-cold="' + i + '" aria-pressed="' + (i === S.cold) + '">' + esc(t('floor.kelvin', { k })) + '</button>').join('') + '</div>';
+    h += '<p class="small">' + esc(T >= 300 ? t('floor.room') : t('floor.cold', { k: T, pct: (Cd.chip / Cd.room * 100).toPrecision(2), pump: Math.round(Cd.pump / Cd.total * 100) })) + '</p>';
+    h += '<p class="code">' + t('floor.speedTitle') + '</p><p class="small">' + esc(t('floor.speed', { ghz: x2(R.ghz), cm: x2(R.glass * 100), mm: Math.round(R.across * 1000), ticks: x2(R.ticks) })) + '</p>';
+    h += '<p class="small muted">' + t('floor.aim') + '</p><div class="moves">' + ['reversible', 'super'].map(id => { const W = wayOf(id), at = W.at[0], w = WORLDS.find(x => x.id === WORLD && x.depths.includes(at)) ? WORLD : 'datacentre'; return '<button type="button" class="btn" data-dive="' + w + ':' + at + '">' + esc(t('way.' + id + '.t')) + '</button>'; }).join('') + '</div>';
+    return h + '<p class="small muted">' + t('floor.model') + '</p></section>';
+  }
   /* ---- your chip's life: why a perfect design still fails, where it lives (src/engines/life.js) ---- */
   /* where each place's chip is met in its dive */
   const LIFE_DEPTH = Object.fromEntries(Object.entries(LIVES_AT).map(([d, m]) => [m, d]));
@@ -534,7 +571,9 @@ export function start(facts) {
     if (xrayAt(IDS[d])) h += xrayCard(IDS[d]);
     if (!isLine() && !worldOf(WORLD).hidden && LIVES_AT[IDS[d]] && LIVES_AT[IDS[d]] === WORLD) h += lifeCard(WORLD);
     h += partCard(d);
+    if (IDS[d] === 'atom') h += floorCard();
     h += debate(debateAt(IDS[d]));
+    if (!isLine()) h += wayCard(wayAt(IDS[d]));
     if (th) {
       const here = stop(th, d), color = threadColor(th), key = stopKey(th, d);
       h += '<section class="follow" style="--th:' + color + '"><p class="code">' + t('ui.following') + '</p>';
@@ -575,6 +614,7 @@ export function start(facts) {
     if (e.target.closest('[data-dreset]')) { S.design = normalDesign({ p: S.design.p }); S.by = 'you'; S.claim = false; S.defect = null; designChanged(); card(); return; }
     if (e.target.closest('[data-defect]')) { S.defect = S.defect == null ? 1 + Math.floor(Math.random() * 997) : null; designChanged(); card(); return; }
     if (e.target.closest('[data-agent]')) { S.design = normalDesign({ p: S.design.p, code: AGENT[S.design.p] }); S.by = 'ai'; S.claim = true; designChanged(); card(); return; }
+    const cd = e.target.closest('[data-cold]'); if (cd) { S.cold = +cd.dataset.cold; card(); return; }
     if (e.target.closest('[data-xray]')) { S.xray.on = !S.xray.on; S.xpick = null; S.part = null; setXray(S.xray.on); save(); card(); return; }
     const lm = e.target.closest('[data-lifem]'); if (lm) { S.life.m = lm.dataset.lifem; save(); card(); return; }
     const ls = e.target.closest('[data-lifeset]'); if (ls) { const k = ls.dataset.lifeset; S.life.c = normalLife(Object.assign({}, S.life.c, { [k]: !S.life.c[k] })); save(); card(); return; }
