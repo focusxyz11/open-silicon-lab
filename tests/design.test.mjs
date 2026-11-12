@@ -25,7 +25,7 @@ test('every job can be done, and goes all the way from description to masks', ()
 });
 
 test('the starting descriptions: right where the job says so, wrong where it says there is a bug', () => {
-  const wrong = ['vote', 'full', 'seg', 'alu', 'count', 'parity', 'core'];
+  const wrong = ['vote', 'full', 'seg', 'alu', 'count', 'parity', 'core', 'regbit', 'select'];
   for (const p of PROJECTS) {
     const B = build({ p });
     assert.equal(B.errs.length, 0, p + ': the starting description should read');
