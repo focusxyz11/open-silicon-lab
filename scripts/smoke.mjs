@@ -160,6 +160,16 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
   await page.waitForFunction(() => /2/.test(document.querySelector('#chipui .stack button.on .n').textContent), null, { timeout: 15000 }).catch(() => problems.push(tag + ': going deeper did not reach the wires'));
   await page.click('#chipui .seg [data-mode="build"]');
   if (!/Wires/.test(await page.textContent('#chipui .now h2').catch(() => ''))) problems.push(tag + ': building does not name the step that made this layer');
+  /* the board: a story drives the scene; a prediction comes before the live number moves */
+  await page.evaluate(() => { location.hash = '#/board'; });
+  await page.waitForSelector('#boardui .dock .line', { timeout: 15000 }).catch(() => problems.push(tag + ': the board did not open'));
+  for (const i of [1, 2, 3]) await page.click('#boardui .dock [data-go="' + i + '"]').catch(() => problems.push(tag + ': no step ' + i + ' on the board'));
+  if (!(await page.$('#boardui .dock [data-guess]'))) problems.push(tag + ': the board asks for no prediction');
+  await page.click('#boardui .dock [data-guess="b"]').catch(() => {});
+  const before = await page.textContent('#boardui .dock [data-live]').catch(() => '');
+  await page.click('#boardui .dock [data-live]').catch(() => {});
+  if (before === await page.textContent('#boardui .dock [data-live]').catch(() => '')) problems.push(tag + ': the live number does not move');
+  if (await page.$eval('#boardui .goal2', el => el.hidden).catch(() => true)) problems.push(tag + ': the goal does not show while the number moves');
   if (await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1)) problems.push(tag + ': the page scrolls sideways');
   await page.close();
 }
