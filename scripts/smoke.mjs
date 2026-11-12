@@ -10,8 +10,7 @@ const require = createRequire(import.meta.url);
 const { chromium } = require('playwright');
 
 const server = await serve(0), base = 'http://localhost:' + server.address().port + '/';
-/* software WebGL, so the redesign's 3D island can draw on a machine without a GPU */
-const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] }), problems = [];
+const browser = await chromium.launch(), problems = [];
 for (const [tag, viewport, scheme] of [['desktop', { width: 1360, height: 860 }, 'dark'], ['phone', { width: 390, height: 844 }, 'light']]) {
   const page = await browser.newPage({ viewport, colorScheme: scheme });
   page.on('pageerror', e => problems.push(tag + ': ' + e.message));
@@ -128,8 +127,10 @@ for (const [tag, viewport, scheme] of [['desktop', { width: 1360, height: 860 },
 }
 /* the redesign (explore.html): your chip's life on the island. The first challenge is played and won, the island
    grows and says so, the HUD moves on; a place opens its three doors; the pages list every challenge and the plan. */
+/* its own browser, with software WebGL, so the island can draw on a machine without a GPU */
+const browser3d = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
 for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height: 800 }, 'light'], ['explore phone', { width: 390, height: 844 }, 'dark']]) {
-  const page = await browser.newPage({ viewport, colorScheme: scheme, reducedMotion: 'reduce' });
+  const page = await browser3d.newPage({ viewport, colorScheme: scheme, reducedMotion: 'reduce' });
   page.on('pageerror', e => problems.push(tag + ': ' + e.message));
   page.on('console', m => { if (m.type() === 'error' && !/fonts\.g|net::ERR|WebGL|GPU/.test(m.text())) problems.push(tag + ': console: ' + m.text()); });
   await page.goto(base + 'explore.html');
@@ -155,6 +156,6 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
   if (await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1)) problems.push(tag + ': the page scrolls sideways');
   await page.close();
 }
-await browser.close(); server.close();
+await browser.close(); await browser3d.close(); server.close();
 if (problems.length) { console.error('Smoke test found problems:\n' + problems.join('\n')); process.exit(1); }
 console.log('Smoke test passed: the dive works in every world, and the redesign\'s island plays, on desktop and phone, in dark and light.');
