@@ -90,3 +90,8 @@ Design and factory are one story: every station's card has *At the factory*, say
 ## The open port
 
 `src/engines/api.js` gives the engines to anyone as plain functions; `scripts/mcp.mjs` serves them to AI agents over MCP (`npm run mcp`, see [MCP.md](MCP.md)). An agent reads the same plan and words a visitor does, is checked by the same engines, and proposes designs through the same GitHub form, which a person submits. A new engine becomes a new capability of the port at once.
+
+## One world: the dive, the journey and the build meet
+
+Every depth of a dive that a design can be (chip, block, gate, switch) says what the community and you have built of a thing like it, and links to the studio station that builds it (`BUILT` in `src/app/ui.js`); the studio's need, gates and layout link back to the chip, gate and block of the last dive you were in (`SEEN_IN`). The block depth outlines your design's cells among the others (`designNow()` in `src/app/scenes.js`). With `MADE` (a depth to the station where it is made), each of these depths is where scale, process and the build meet.
+

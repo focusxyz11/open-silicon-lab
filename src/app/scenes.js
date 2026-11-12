@@ -14,7 +14,7 @@ import { DEPTHS, WORLDS } from '../data/weave.js';
 import { START, model, dies, defects, hits, WAFER, dieSquare } from '../engines/chip.js';
 import { rnd, clamp, poly, rr, blob, along2, closed } from './draw.js';
 import { STATIONS, setJourneyChip } from './journey.js';
-import { DESIGN_SCENES } from './design.js';
+import { DESIGN_SCENES, designNow } from './design.js';
 import { proj, kit, tones, mix } from './solid.js';
 
 /* Your chip (src/engines/chip.js): the scenes that show it read its settings from here. */
@@ -258,7 +258,7 @@ const cellRows = []; for (let i = 0; i < 12; i++) cellRows.push({ r: [40, 66 + i
 const wires = [];
 for (let i = 0; i < 9; i++) { const y0 = 90 + Math.floor(rnd(i, 1) * 11) * 74, y1 = 90 + Math.floor(rnd(i, 2) * 11) * 74, x0 = 60 + rnd(i, 3) * 380, xm = 470 + rnd(i, 4) * 150; wires.push({ p: [[x0, y0], [xm, y0], [xm, y1], [i % 2 ? 660 : x0 + 80, y1]] }); }
 const block = {
-  parts: { cells: cellRows, sram: [{ r: [660, 60, 300, 560] }], wires },
+  parts: { cells: cellRows, sram: [{ r: [660, 60, 300, 560] }], wires, yours: [{ r: [40, 190, 584, 136] }] },
   draw(G) {
     const c = G.col;
     G.bg(c.lo);
@@ -281,8 +281,11 @@ const block = {
     G.r(660, 650, 300, 290, c.mid, c.line, 1.2);
     G.r(680, 672, 120, 110, c.up, c.dim, 1); G.r(820, 672, 120, 250, c.up, c.dim, 1); G.r(680, 800, 120, 122, c.lo, c.dim, 1);
     G.a(0.75); wires.forEach(w => G.l(w.p, c.cool, 1.3)); G.a(1);
+    /* your design (the design studio): cells like these, as many as it became, outlined in two rows */
+    const D = designNow(), n = D && D.M ? Math.min(40, D.M.cells.length * (D.p === 'core' ? 32 : 1)) : 0;
+    if (n) { const w = Math.min(584, 40 + n * 26); G.ctx.setLineDash([6 / G.s, 5 / G.s]); G.r(40, 196, w, 128, null, c.warm, 1.8); G.ctx.setLineDash([]); G.a(0.12); G.r(40, 196, w, 128, c.warm); G.a(1); }
     inside(G, 'block');
-    G.label('cells', 44, 52); G.label('sram', 660, 50); G.label('wires', 480, 968);
+    G.label('cells', 44, 52); G.label('sram', 660, 50); G.label('wires', 480, 968); if (n) G.label('yours', 44, 190);
   }
 };
 

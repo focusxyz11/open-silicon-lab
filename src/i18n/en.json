@@ -900,7 +900,7 @@
  "slice.crystal": "atoms in rows",
  "ui.lensDive": "Tap the lens to dive down: {depth}",
  "ui.seeMade": "See where it is made: {station}",
- "ui.waysMade": "On the journey",
+ "ui.waysMade": "Where it is made, and built",
  "lens.titleCrystal": "under the lens: the crystal growing",
  "lens.titleChip": "under the lens: your chip",
  "site.sv.name": "Silicon Valley",
@@ -1394,5 +1394,14 @@
  "api.langCore": "RISC-V assembly (RV32I): registers x0 to x31 (or zero, ra, sp, t0 to t6, s0 to s11, a0 to a7), instructions such as li, add, addi, sub, and, or, xor, slli, srli, lw, sw, beq, bne, blt, bge, ble, and labels. The answer is left in a0.",
  "api.coreNeeds": "The core's arithmetic unit is 32 copies of an ALU slice: pass your slice as slice. A wrong slice makes the test programs fail.",
  "build.port": "Bring your own AI agent: the lab's engines are an open port (an MCP server), so agents can take a job, check designs and propose them, through the same checks.",
- "build.portLink": "How to connect an agent"
+ "build.portLink": "How to connect an agent",
+ "part.block.yours": "your design",
+ "what.block.yours": "As many cells as your design in the studio became, if it sat in this block: rows of standard cells exactly like these, placed and wired by the same kind of program.",
+ "here.title": "Built by the community",
+ "here.chip": "The community is building a small open computer on a shared chip, piece by piece, people and AI together: {built} of its {total} pieces are built. A chip like this one is built the same way, by far more people.",
+ "here.block": "Your design, {job}, became {cells} cells like these. A block like this holds hundreds of thousands, placed and wired by programs, as yours were.",
+ "here.gate": "Your design, {job}, uses these cells: {list}. Each is a few switches, drawn in layers like this gate.",
+ "here.switch": "Your design, {job}, needs about {transistors} switches like this one.",
+ "here.go": "Build one in the studio: {station}",
+ "here.see": "See it inside a real chip: {depth} ({world})"
 }
