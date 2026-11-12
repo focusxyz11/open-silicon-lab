@@ -20,6 +20,10 @@ for (const [tag, viewport, scheme] of [['desktop', { width: 1360, height: 860 },
   const where = () => page.textContent('#card .where b');
   const go = async d => { await page.$eval('#rail [data-d="' + d + '"]', el => el.click()); await page.waitForFunction(d => document.querySelector('#rail [data-d="' + d + '"]').getAttribute('aria-current') === 'true', d, { timeout: 10000 }).catch(() => problems.push(tag + ': depth ' + d + ' was not reached')); };
   for (const d of [7, 3, 0]) await go(d);
+  /* at the atom, the physics floor: cooling the chip lowers its floor, and the refrigerator pays it back */
+  await go(7);
+  await page.$eval('#card [data-cold="0"]', el => el.click()).catch(() => problems.push(tag + ': no physics floor at the atom'));
+  if (!/refrigerator/.test(await page.textContent('#card .floor').catch(() => ''))) problems.push(tag + ': cooling does not say what the refrigerator costs');
   /* the chip as a die photo: where the area goes, and a block to find; then back to the picture */
   await go(3);
   await page.$eval('#card [data-xray]', el => el.click()).catch(() => problems.push(tag + ': no X-ray at the chip'));

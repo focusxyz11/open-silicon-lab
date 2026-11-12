@@ -146,3 +146,11 @@ button{font:inherit;color:inherit}
 .x-core{--c:var(--warm)}.x-gpu{--c:color-mix(in srgb,var(--warm) 60%,var(--bad))}.x-npu{--c:var(--bad)}.x-logic{--c:color-mix(in srgb,var(--warm) 45%,var(--muted))}
 .x-cache{--c:var(--accent)}.x-flash{--c:var(--good)}.x-phy{--c:color-mix(in srgb,var(--accent) 50%,var(--ink))}.x-analog{--c:color-mix(in srgb,var(--good) 55%,var(--ink))}
 .x-io{--c:var(--muted)}.x-other{--c:var(--line)}
+/* the physics floor, and other ways to compute */
+.ladder{width:100%;height:auto;display:block;margin:4px 0}
+.ladder text{font:10px var(--mono);fill:var(--muted)}.ladder .lbl{fill:var(--ink)}
+.ladder .grid{stroke:var(--line);stroke-width:1}
+.ladder .r-grn{fill:var(--good)}.ladder .r-warm{fill:var(--warm)}.ladder .r-bad{fill:var(--bad)}
+.floor h3{margin:0;font:600 17px/1.3 var(--serif)}
+.stage{display:inline-flex;gap:3px;vertical-align:middle}.stage i{width:8px;height:8px;border-radius:50%;border:1px solid var(--warm)}.stage i.on{background:var(--warm)}
+.way p{margin:6px 0}
