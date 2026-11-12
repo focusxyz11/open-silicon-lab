@@ -126,19 +126,24 @@ export function checkLife(mission, choices) { return live(mission, normalLife(ch
 /* Find the broken chip: four copies of a full adder, one spoiled at the factory with a wire stuck at 0 or 1.
    You may run a few test patterns; a pattern catches the fault only if it makes the broken copy answer wrong. */
 export const SPOT = { chips: 4, tests: 3 };
-let spotCache = null;
-export function spotCase() {
-  if (spotCache) return spotCache;
-  const code = solutionOf('full');
-  for (let seed = 0; seed < 40; seed++) {
-    const B = build({ p: 'full', code, defect: seed });
+/* The copies are of your own full adder once you have designed one that passes, else of the lab's.
+   The factory's fault is the first that only some patterns catch, so choosing the patterns matters. */
+const spotCache = new Map();
+export const spotCode = s => (s && isDone(s, 'full') && s.codes.full && checkDesign('full', s.codes.full).ok ? s.codes.full : null);
+export function spotCase(code) {
+  const key = code || solutionOf('full');
+  if (spotCache.has(key)) return spotCache.get(key);
+  let found = null;
+  for (let seed = 0; seed < 60 && !found; seed++) {
+    const B = build({ p: 'full', code: key, defect: seed });
     if (!B.defect) continue;
     const wrong = B.defect.rows.filter(r => r.mis.length).length;
-    /* a fault that only some patterns catch: choosing the patterns matters */
-    if (wrong >= 2 && wrong <= 3) { spotCache = { seed, broken: 2, rows: B.rows, bad: B.defect.rows, ins: B.ins, outs: B.outs }; return spotCache; }
+    if (wrong >= 2 && wrong <= 3) found = { seed, B };
   }
-  const B = build({ p: 'full', code, defect: 1 });
-  return (spotCache = { seed: 1, broken: 2, rows: B.rows, bad: B.defect.rows, ins: B.ins, outs: B.outs });
+  if (!found) { for (let seed = 0; seed < 60 && !found; seed++) { const B = build({ p: 'full', code: key, defect: seed }); if (B.defect && B.defect.wrong < B.rows.length) found = { seed, B }; } }
+  const { seed, B } = found;
+  const C = { seed, yours: !!code, broken: 2, rows: B.rows, bad: B.defect.rows, ins: B.ins, outs: B.outs, net: B.defect.net, v: B.defect.v };
+  spotCache.set(key, C); return C;
 }
 /* what a copy answers to a pattern: the broken one answers as spoiled, the others as designed */
 export const spotAnswer = (S, chip, i) => (chip === S.broken ? S.bad[i].o : S.rows[i].e);
