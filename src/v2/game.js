@@ -52,6 +52,26 @@ export const CHALLENGES = [
   { id: 'fed', step: 'use', place: 'datacentre', at: 'board', kind: 'chip', goal: 'fed', grows: 'dc-solar' },
   { id: 'fast', step: 'use', place: 'datacentre', at: 'chip', kind: 'chip', goal: 'fast', grows: 'clock-tower' }
 ];
+/* the goal of a chip challenge as gauges: each a value of your chip's model and the bound it must reach
+   (ge: at least, le: at most). Together they say the same as the goal's met() in src/engines/chip.js. */
+export const GAUGES = {
+  months: [{ k: 'days', le: 60 }, { k: 'load', ge: 0.92 }],
+  quick: [{ k: 'layers', le: 50 }, { k: 'cores', ge: 12 }],
+  cores: [{ k: 'cores', ge: 20 }, { k: 'cost', le: 0.7 }],
+  fed: [{ k: 'work', ge: 2.9 }, { k: 'late', le: 0 }],
+  fast: [{ k: 'clock', ge: 2 }, { k: 'late', le: 0 }]
+};
+/* how far a gauge is toward its bound, 0..1, and whether it is there */
+export function gauge(g, m) {
+  const v = m[g.k], ok = g.ge != null ? v >= g.ge : v <= g.le;
+  const f = ok ? 1 : g.ge != null ? Math.max(0, v / g.ge) : g.le === 0 ? 1 / (1 + v) : Math.max(0, g.le / v);
+  return { v, ok, f: Math.min(1, f) };
+}
+/* your design, as the chip carries it: the last design challenge you finished, built by the design engine */
+export function yourDesign(s) {
+  const c = ['full', 'vote', 'half'].map(challengeOf).find(x => x && isDone(s, x.id)); if (!c) return null;
+  const B = checkDesign(c.p, s.codes[c.p] || starter(c.p)); return B.ok ? { p: c.p, B } : null;
+}
 export const challengeOf = id => CHALLENGES.find(c => c.id === id) || null;
 export const chipGoal = id => CHIP.find(c => c.id === id);
 export const placeChallenges = place => CHALLENGES.filter(c => c.place === place);

@@ -191,6 +191,22 @@ button.chcard:hover, a.chcard:hover { transform: translateY(-2px); border-color:
 .line2 li::before { content: ''; position: absolute; left: -20px; top: 5px; width: 10px; height: 10px; border-radius: 50%; background: var(--warm); }
 .line2 li.fab::before { background: var(--accent); }
 
+/* the goal, live, kept in view at the top of a challenge */
+.goalbox { position: sticky; top: -18px; z-index: 2; margin: 0 -4px 12px; padding: 10px 12px; border-radius: 14px; background: var(--panel-solid); border: 1px solid var(--line); box-shadow: 0 6px 18px rgba(0, 0, 0, .18); display: grid; gap: 8px; }
+.goalbox.ok { border-color: color-mix(in srgb, var(--good) 60%, transparent); }
+.goalbox.ok > .kicker { color: var(--good); }
+.goalbox > .kicker { margin: 0; }
+.gauge { display: grid; grid-template-columns: 1fr auto; gap: 3px 10px; font-size: 13px; }
+.gauge .gl { font-weight: 600; }
+.gauge .gv { font: 600 12px var(--mono); text-align: right; }
+.gauge .gbar { grid-column: 1 / -1; height: 6px; border-radius: 3px; background: color-mix(in srgb, var(--ink) 10%, transparent); overflow: hidden; }
+.gauge .gbar span { display: block; height: 100%; border-radius: 3px; background: var(--warm); transition: width .3s; }
+.gauge.ok .gbar span { background: var(--good); }
+.goalbox .reqs { margin: 0; }
+.yours { display: grid; gap: 2px; margin: 0 0 12px; padding: 10px 12px; border-radius: 12px; border: 1px dashed var(--warm); background: color-mix(in srgb, var(--warm) 8%, transparent); font-size: 14px; text-decoration: none; }
+.yours .kicker { color: var(--warm); margin: 0; }
+.yours.none { color: var(--muted); }
+
 /* the challenge player */
 .player h3 { margin: 4px 0 6px; font: 700 24px/1.2 var(--serif); }
 .player .goal { font-weight: 700; }

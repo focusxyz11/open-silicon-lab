@@ -199,6 +199,10 @@ export function start() {
     let h = '<p class="kicker">' + esc(t(build ? 'chipx.stepN' : 'chipx.levelN', { n, total: ROWS.length })) + '</p>';
     if (build) h += '<h2>' + esc(stepNames(r)) + '</h2>' + R.made.map(d => '<p>' + esc(t('depth.' + d + '.see')) + '</p>').join('') + '<button type="button" class="swap" data-mode="dive">' + esc(t('chipx.becomes', { level: t('depth.' + R.dive + '.name') })) + '</button>';
     else h += '<h2>' + esc(t('depth.' + R.dive + '.name')) + '</h2><p>' + esc(t('depth.' + R.dive + '.see')) + '</p><button type="button" class="swap" data-mode="build">' + esc(t('chipx.madeAt', { step: stepNames(r) })) + '</button>';
+    /* your own design, where the chip carries it: the gates you wrote are printed, etched and wired here */
+    const Y = Game.yourDesign(S), yk = Y && (build ? ({ 1: 'wires', 2: 'print', 3: 'etch' })[r] : r === 2 ? 'gate' : null);
+    if (yk) h += '<div class="yours"><span class="kicker">' + esc(t('chipx.yours')) + '</span>' + esc(t('chipx.yours.' + yk, { name: t('design.proj.' + Y.p + '.t'), gates: Y.B.M.cells.length, transistors: Y.B.transistors, masks: Y.B.masks, wire: Math.round(Y.B.RT ? Y.B.RT.wl : 0) })) + '</div>';
+    else if (!Y && (build ? r === 2 : r === 2)) h += '<a class="yours none" href="#/place/studio">' + esc(t('chipx.yoursNone')) + '</a>';
     if (key) h += '<a class="askq" href="' + esc(follow(key)) + '" style="--qc:' + qColor(key) + '"><span class="q">' + esc(t('stop.' + key + '.q')) + '</span><span class="small muted">' + esc(t('sheet.follow')) + '</span></a>';
     const nextR = build ? r - 1 : r + 1, done = build ? r === 0 : r === ROWS.length - 1;
     h += '<div class="row">' + (done ? '<a class="btn primary" href="' + (build ? '#/place/port' : '#/') + '">' + esc(t(build ? 'chipx.ship' : 'chipx.back')) + '</a>' : '<button type="button" class="btn primary" data-row="' + nextR + '">' + esc(t(build ? 'chipx.next' : 'chipx.deeper')) + '</button>') +

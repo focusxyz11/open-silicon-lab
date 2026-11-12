@@ -166,3 +166,20 @@ test('your state survives a reload and junk is cleaned', () => {
   assert.equal(j.done.nonsense, undefined); assert.equal(j.codes.a, undefined); assert.ok(j.chip.gen < GENS);
   mem.v = '{bad json'; assert.deepEqual(G.load(mem).done, {});
 });
+
+test('a chip goal\'s gauges say the same as the goal itself, on every combination of its settings', () => {
+  for (const c of G.CHALLENGES.filter(x => x.kind === 'chip')) {
+    const gs = G.GAUGES[c.goal]; assert.ok(gs && gs.length, c.goal + ' has no gauges');
+    for (const g of gs) assert.ok(EN['gauge.' + g.k], 'gauge.' + g.k);
+    for (const set of combos(G.chipGoal(c.goal).needs)) {
+      const R = G.checkChip(c.goal, Object.assign({}, G.START, set));
+      assert.equal(gs.every(g => G.gauge(g, R.m).ok), R.ok, c.goal + ' ' + JSON.stringify(set));
+    }
+  }
+});
+
+test('your design travels with your chip once a design challenge is won', () => {
+  const s = G.fresh(); assert.equal(G.yourDesign(s), null);
+  s.done.half = true; s.codes.half = solutionOf('half');
+  const Y = G.yourDesign(s); assert.equal(Y.p, 'half'); assert.ok(Y.B.M.cells.length > 0 && Y.B.transistors > 0 && Y.B.masks > 0);
+});

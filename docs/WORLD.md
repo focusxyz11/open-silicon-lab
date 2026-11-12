@@ -56,7 +56,8 @@ switches, the silicon. Read from the bottom up it is the line: crystal and impla
 the switches, print makes the gates, wires join them, packaging closes it (`MADE` in `src/data/weave.js`). One
 position and two modes: diving, the layers above you lift away; building, they are not made yet, and come down
 into place step by step. The panel is an instrument, not a column of text: the two modes, the stack of rows (each
-a depth and the steps that make it), and what this row is or how it is made, with its question. The data
+a depth and the steps that make it), and what this row is or how it is made, with its question. Once you have won a design at the studio, your design is in these layers
+too: its gates printed at Print, its transistors etched at Etch, its wires laid at Wires (`yourDesign`). The data
 centre's flight ends by going into it; the levels block to atom, and the factory steps that make them, open it.
 
 ## Every place has three doors
@@ -93,6 +94,13 @@ Nothing on the island is decoration that never changes. Two things make it grow:
 
 Phones and cars are islands of their own across the sea, reached from the Ecosystem or by shipping your chip
 there. A sandbank waits for what the world does not have yet: propose a place, a challenge or a question.
+
+## Challenges as instruments
+
+A challenge keeps its goal in view: a goal box at the top of the player stays put while you work. For a chip
+challenge it shows gauges, each a value of your chip's model against the bound it must reach (`GAUGES` in
+`game.js`, tested to agree with the goal itself); for a life challenge, what the place asks of the chip and what
+it has now.
 
 ## How to add something
 
