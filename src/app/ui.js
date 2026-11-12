@@ -319,6 +319,7 @@ export function start(facts) {
     if (AGENT[B.p]) h += '<button type="button" class="btn" data-agent>' + t('build.agentLoad') + '</button>';
     h += '<button type="button" class="link" data-companion aria-expanded="false">' + t('build.ask') + '</button>' +
       '<div class="companion" hidden><p class="small muted">' + t('build.askNote') + '</p><textarea readonly rows="7" aria-label="' + esc(t('build.ask')) + '">' + esc(askPrompt(B)) + '</textarea><div class="moves"><button type="button" class="btn" data-copy>' + t('ui.copy') + '</button><span class="small muted" role="status"></span></div></div>';
+    h += '<p class="small muted">' + t('build.port') + ' ' + ext(REPO + '/blob/main/docs/MCP.md', t('build.portLink')) + '</p>';
     h += '<p class="small muted">' + t('build.who') + '</p><div class="shows">' + ['you', 'ai', 'both'].map(k => '<button type="button" class="chipgo" data-by="' + k + '" aria-pressed="' + (S.by === k) + '">' + esc(t('build.by.' + k)) + '</button>').join('') + '</div>';
     return h + '</section>';
   };

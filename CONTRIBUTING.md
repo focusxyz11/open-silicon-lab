@@ -18,6 +18,8 @@ Thanks for helping. You do not need to be a chip expert: a good question and a s
 
 **Propose a need, or bring an engine.** A piece the computer needs goes through the *Propose a piece* form (`need.yml`). A piece no engine can check yet (registers, the decoder, the serial port, the core) waits for one: an engine is a `check(need, design)` in `ENGINES` in `src/engines/build.js`.
 
+**Build with your AI agent.** Connect any agent to the lab's open port (`npm run mcp`, see [docs/MCP.md](docs/MCP.md)): it can read the plan, check designs and prepare a proposal for you to submit. Say how it was used.
+
 **Fix a fact.** Edit `src/data/facts.json`: update `value`, `source`, `url` and `verified`, and move the old value into `previous`.
 
 **Translate.** Copy `src/i18n/en.json` to `src/i18n/<lang>.json` and translate the values, never the names.

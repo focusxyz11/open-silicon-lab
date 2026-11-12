@@ -17,6 +17,7 @@ src/app/map.js          the world around the line: a chip's whole trip on a map,
 src/app/lens3d.js       the lens: while a machine works, your wafer's surface magnified beside it, showing what the machine does
 src/vendor/three.min.js three.js, loaded only when the journey is first opened
 src/engines/chip.js     your chip: its settings and what follows from them, relative to a starting chip (tested)
+src/engines/api.js      the open port: the engines as tools for AI agents (list the plan, take a job, check, at the factory, propose)
 src/engines/build.js    where the goal stands: each need's state, and the engines that check needs (tested)
 src/engines/design.js   your design: one circuit run through the tiny-chip engine, from description to masks (tested)
 src/engines/tinychip.js the earlier site's tiny-chip engine: parse, check, synthesize, place, route, fault-test
@@ -86,3 +87,6 @@ The core is a job of the studio and a need of the plan, checked by the `riscv` e
 
 Design and factory are one story: every station's card has *At the factory*, saying what the line will do to this design (transistors to print, speed from the switches, area against specks, masks to make). At Check, *Make one at the factory* spoils a copy: one wire stuck (`spoil` in `src/engines/design.js`, `pickDefect` for the core). The waveforms, the gates (the stuck wire in red) and the core's slices show it; the card says whether the Test station's patterns would catch it. A perfect design can still fail as a chip.
 
+## The open port
+
+`src/engines/api.js` gives the engines to anyone as plain functions; `scripts/mcp.mjs` serves them to AI agents over MCP (`npm run mcp`, see [MCP.md](MCP.md)). An agent reads the same plan and words a visitor does, is checked by the same engines, and proposes designs through the same GitHub form, which a person submits. A new engine becomes a new capability of the port at once.
