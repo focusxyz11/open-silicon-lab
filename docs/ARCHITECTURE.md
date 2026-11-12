@@ -16,6 +16,7 @@ src/app/map.js          the world around the line: a chip's whole trip on a map,
 src/app/lens3d.js       the lens: while a machine works, your wafer's surface magnified beside it, showing what the machine does
 src/vendor/three.min.js three.js, loaded only when the journey is first opened
 src/engines/chip.js     your chip: its settings and what follows from them, relative to a starting chip (tested)
+src/engines/fab.js      a fab you run: a re-entrant line of tool groups, how busy each is and how long wafers wait (tested)
 src/engines/supply.js   what stops in a chip's trip when places stop (tested)
 src/engines/weave.js    pure logic: the current world, the camera, sizes, threads, when a core question appears (tested)
 src/data/weave.js       the data: worlds, depths and portals, threads, stops
@@ -58,4 +59,8 @@ Every word on screen lives in `src/i18n/en.json` and is read with `t('name')`. `
 ## The world around the line
 
 The globe in the journey's band (and "Where in the world?" in the card at any station, or "Where was it made?" at the top of each dive) opens the map: it zooms out from your station to the whole trip of a chip, for the three kinds of chip the dives start from. Each step of the trip (design, wafers, tools, fab, memory, package, assembly, use) is drawn where it happens (`ROUTES` in `src/data/world.js`), with crates moving between places like the pods on the line; your wafer's step is marked. Tapping a place shows what happens there and who does it, joins it to its station on the line, and lets you stop it: `src/engines/supply.js` says which step stops (nothing else can do it), which is strained (others take some of the work), and which waits. The card then asks the question behind it and shows the figures that bear on it. From the earlier site's supply-chain map, made universal.
+
+## A fab you run
+
+Your chip has a fourth setting, `load`: how full the fab that makes it runs (`LOADS` in `src/engines/chip.js`). `src/engines/fab.js`, from the earlier site, models the fab as a re-entrant line: every layer of your chip visits the same tool groups, the busiest group (the scanners) sets the pace, and waiting grows without limit as a group nears full. The model gives each loop station of the journey how busy it is and how long a wafer waits there per visit (`GROUPS_AT` joins stations to tool groups). You change it with the "Try it" at Wires (the question of who decides the order); the card at every loop station says what it means there, and in the 3D factory the shelves under the overhead track fill with pods waiting their turn, most at the scanners. Fuller is cheaper (a fab's costs are mostly fixed) but slower: a challenge asks for both.
 

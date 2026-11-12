@@ -65,7 +65,7 @@ export const PLANTS = { crystal: 'wafers', slice: 'wafers', clean: 'fab', deposi
 export const LOOP = ['clean', 'deposit', 'print', 'etch', 'implant', 'wires'];
 /* Parts that carry the wafer from machine to machine, and the factory's own track and air filters, look the
    same at every station, so their words are shared: part.handle.<key> and what.handle.<key>. */
-export const HANDLING = ['pod', 'efem', 'lock', 'xfer', 'shelf', 'dock', 'tray', 'track', 'filters'];
+export const HANDLING = ['pod', 'efem', 'lock', 'xfer', 'shelf', 'dock', 'tray', 'track', 'filters', 'queue'];
 export const partWord = (id, key) => (HANDLING.includes(key) ? 'handle' : id) + '.' + key;
 export const EXITS = { ship: [['datacentre', 'chip'], ['phone', 'soc'], ['car', 'mcu']] };
 export const WORLDS = [
@@ -150,10 +150,10 @@ export const FIGURES = {
    TRIES: the stops where a setting can be changed, inside that stop's question.
    SHOWS: what each depth shows of your chip, and which settings it depends on (words: chip.show.<depth>).
    "build" is a try of its own: it scrubs through how a switch is made, and changes no setting. */
-export const TRIES = { 'fail.chip': 'clock', 'life.phone': 'clock', 'scale.switch': 'gen', 'scale.soc': 'gen', 'scale.mcu': 'gen', 'fail.wafer': 'size', 'divide.test': 'size', 'make.switch': 'build' };
+export const TRIES = { 'divide.wires': 'load', 'fail.chip': 'clock', 'life.phone': 'clock', 'scale.switch': 'gen', 'scale.soc': 'gen', 'scale.mcu': 'gen', 'fail.wafer': 'size', 'divide.test': 'size', 'make.switch': 'build' };
 const ALL = ['clock', 'gen', 'size'];
 export const SHOWS = {
   building: ALL, rack: ALL, board: ALL, chip: ALL, phone: ALL, phoneboard: ALL, soc: ['clock', 'gen'], mcu: ['clock', 'gen'],
-  print: ['gen'], wires: ['gen'], test: ['gen', 'size'], scanner: ['gen'], wafer: ['gen', 'size'], die: ['gen', 'size'], pkg: ['size'], ship: ALL,
+  clean: ['load'], deposit: ['load'], etch: ['load'], implant: ['load'], print: ['gen', 'load'], wires: ['gen', 'load'], test: ['gen', 'size'], scanner: ['gen'], wafer: ['gen', 'size'], die: ['gen', 'size'], pkg: ['size'], ship: ALL,
   block: ['gen'], gate: ['clock', 'gen'], switch: ['gen'], atom: ['gen']
 };
