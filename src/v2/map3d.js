@@ -9,11 +9,11 @@
 import { THREE, PALETTES, theme, stage, light, mat, metal, glow, glass, box, cyl, group, flat, blob, ribbon, labels, clamp, ease, reduced, rnd } from './kit3d.js';
 import { t } from '../core/i18n.js';
 import { THREADS } from '../data/weave.js';
-import { ASK, STEPS, STATION, STEP_OF, GROWTH } from './game.js';
+import { BEACON, STEPS, STATION, GROWTH } from './game.js';
 
 /* where every place stands, and how close the camera comes */
 export const PLACES = [
-  { id: 'studio', at: [-38, -30], d: 60 }, { id: 'quarry', at: [-62, -4], d: 56 }, { id: 'fab', at: [-8, -16], d: 72 },
+  { id: 'studio', at: [-48, -30], d: 76, r: 26 }, { id: 'quarry', at: [-62, -4], d: 56 }, { id: 'fab', at: [-8, -16], d: 72 },
   { id: 'test', at: [22, -2], d: 54 }, { id: 'port', at: [62, 6], d: 66 }, { id: 'datacentre', at: [36, -36], d: 64 },
   { id: 'lab', at: [6, 26], d: 62 }, { id: 'village', at: [-34, 24], d: 60 },
   { id: 'phones', at: [-178, 132], d: 110, far: true }, { id: 'cars', at: [158, 150], d: 110, far: true }, { id: 'idea', at: [214, -78], d: 90, far: true }
@@ -59,7 +59,7 @@ export function createMap(canvas, host, on = {}) {
   /* ---- trees where nothing stands ---- */
   const loopPts = loop.curve.getSpacedPoints(120).map(p => [p.x, p.z]);
   const inPoly = (pts, x, z) => { let c = false; for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) { const [xi, zi] = pts[i], [xj, zj] = pts[j]; if ((zi > z) !== (zj > z) && x < (xj - xi) * (z - zi) / (zj - zi) + xi) c = !c; } return c; };
-  const free = (x, z) => inPoly(coast, x, z) && !PLACES.some(p => Math.hypot(p.at[0] - x, p.at[1] - z) < 16) && !loopPts.some(([a, b]) => Math.hypot(a - x, b - z) < 5) && !SPOKES.flat().some(([a, b]) => Math.hypot(a - x, b - z) < 4);
+  const free = (x, z) => inPoly(coast, x, z) && !PLACES.some(p => Math.hypot(p.at[0] - x, p.at[1] - z) < (p.r || 16)) && !loopPts.some(([a, b]) => Math.hypot(a - x, b - z) < 5) && !SPOKES.flat().some(([a, b]) => Math.hypot(a - x, b - z) < 4);
   const trees = []; for (let i = 0; i < 1200 && trees.length < 170; i++) { const x = -80 + rnd(i, 3) * 160, z = -54 + rnd(i, 7) * 100; if (free(x, z)) trees.push([x, z, 0.7 + rnd(i, 9) * 0.6]); }
   ['phones', 'cars'].forEach((k, j) => { const c = placeAt(k).at; for (let i = 0; i < 70; i++) { const a = rnd(i, 11 + j) * 6.28, r = 16 + rnd(i, 13 + j) * 14; trees.push([c[0] + Math.cos(a) * r, c[1] + Math.sin(a) * r * 0.75, 0.6 + rnd(i, 5) * 0.5]); } });
   const crown = new THREE.InstancedMesh(new THREE.IcosahedronGeometry(1.2, 1), mat(night ? 0x2e4a3a : 0x6f9a62, { flatShading: true }), trees.length);
@@ -83,11 +83,22 @@ export function createMap(canvas, host, on = {}) {
   const route = pts => new THREE.CatmullRomCurve3(pts.map(([x, z]) => new THREE.Vector3(x, 0, z)));
 
   /* ---- the stations of the loop ---- */
-  /* 1 design: the studio */
+  /* 1 design: the studio, a campus at the start of the loop. The design halls, a plaza, and on the road
+     the mask house, where a finished design leaves as masks for the factory (the mask truck grows from it) */
   { const g = place('studio');
-    box(g, 11, 3, 7, glass(P.glass, { opacity: night ? 0.6 : 0.5, emissive: night ? P.glass : 0, emissiveIntensity: night ? 0.35 : 0 }), 0, 0, 0, 0.2);
-    box(g, 13, 3.2, 6.5, mat(P.white), 1.2, 3, -0.6, 0.3);
-    for (let i = 0; i < 6; i++) box(g, 1.4, 1.1, 0.12, winCool, -3.6 + i * 2.1, 4.1, 2.7, 0.04, { cast: false }); }
+    flat(g, [[-20, 5], [12, 5], [14, 13], [-18, 13]], mat(P.wall, { roughness: 0.9 }), 0.03);
+    box(g, 22, 3.6, 11, glass(P.glass, { opacity: night ? 0.6 : 0.5, emissive: night ? P.glass : 0, emissiveIntensity: night ? 0.35 : 0 }), -4, 0, -1, 0.2);
+    box(g, 24, 3.4, 11.6, mat(P.white), -4, 3.6, -1.2, 0.3);
+    box(g, 24.2, 0.5, 11.8, mat(P.accent, { roughness: 0.5 }), -4, 7, -1.2, 0.12);
+    for (let i = 0; i < 9; i++) box(g, 1.6, 1.2, 0.12, winCool, -14.2 + i * 2.55, 4.7, 4.66, 0.04, { cast: false });
+    for (let i = 0; i < 6; i++) box(g, 2.4, 2.6, 0.06, mat(P.white, { roughness: 0.6 }), -13 + i * 3.6, 0.2, 4.52, 0.03, { cast: false });
+    box(g, 9, 6.2, 7, mat(P.white), -20, 0, -6, 0.3); box(g, 9.2, 0.5, 7.2, mat(P.slate), -20, 6.2, -6, 0.1);
+    for (let i = 0; i < 3; i++) box(g, 1.8, 3.6, 0.1, winCool, -22.6 + i * 2.6, 1.4, -2.45, 0.03, { cast: false });
+    /* the mask house: a loading bay facing the road to the factory */
+    box(g, 8, 4, 7, mat(P.white), 13, 0, 3, 0.3); box(g, 8.1, 0.6, 7.1, mat(P.warm, { roughness: 0.5 }), 13, 3.4, 3, 0.1);
+    box(g, 0.12, 2.6, 3.6, mat(P.dark), 17.06, 0, 3, 0.02, { cast: false });
+    for (let i = 0; i < 4; i++) pulses.push(box(g, 0.9, 0.9, 0.06, glow([P.accent, P.good, P.warm, P.accent][i], 1.1), 10.4 + i * 1.7, 2, 6.56, 0.02, { cast: false }));
+    [[-15, 10], [-6, 11], [4, 10.5], [10, 11.5]].forEach(([x, z]) => tree(g, x, z, 0.9)); }
   /* 2 make: sand to crystal, and the factory */
   { const g = place('quarry');
     [[-6, 2, 3.2], [-2, -4, 2.6], [-9, -5, 2.2]].forEach(([x, z, r]) => { const m = new THREE.Mesh(new THREE.ConeGeometry(r, r * 0.9, 20), mat(P.sand, { roughness: 1 })); m.position.set(x, r * 0.45, z); m.castShadow = m.receiveShadow = true; g.add(m); });
@@ -153,7 +164,8 @@ export function createMap(canvas, host, on = {}) {
   /* ---- what grows: one builder per growth (src/v2/game.js GROWTH); each starts hidden and grows in ---- */
   const GROWERS = {
     'studio-screen': g => { const s = box(g, 5, 2.8, 0.25, glow(P.accent, night ? 1.3 : 0.7), 0, 0.5, 0, 0.1); s.rotation.y = 0.5; box(g, 0.25, 0.6, 0.25, metal(P.slate), 0, 0, 0, 0.05); pulses.push(s); },
-    'studio-garden': g => { box(g, 12, 0.3, 5.5, mat(P.grass), 0, 0, 0, 0.1); [[-3.5, -1.5], [0, 1], [3.5, -1]].forEach(([x, z]) => tree(g, x, z, 0.8, 0.3)); },
+    /* your first masks leave the studio: a truck goes back and forth on the road between the mask house and the factory */
+    'masks': () => { const tr = truck(P.warm); box(tr, 2.6, 0.12, 1.2, glow(P.accent, 1.2), -0.9, 2.15, 0, 0.03, { cast: false }); scene.add(tr); moving.push({ obj: tr, path: route([[-31, -27], [-29, -20], [-27.5, -13], [-22, -6], [-14, -2], [-8, -6]]), speed: 0.05, ship: true, bounce: true }); },
     'studio-wing': g => { box(g, 8, 4.5, 6, glass(P.glass, { opacity: 0.55, emissive: night ? P.glass : 0, emissiveIntensity: night ? 0.4 : 0 }), 0, 0, 0, 0.3); box(g, 8.2, 0.4, 6.2, mat(P.white), 0, 4.5, 0, 0.1); },
     'fab-trucks': () => { for (let i = 0; i < 4; i++) onLoop(truck([P.warm, P.good, P.white, P.slate][i]), 0.12 + i * 0.25, 0.012, -0.7); },
     'fab-line': g => { box(g, 22, 6, 7, mat(P.white), 0, 0, 0, 0.4); box(g, 22.2, 0.7, 7.2, mat(P.accent, { roughness: 0.5 }), 0, 4.8, 0, 0.15); for (let i = 0; i < 4; i++) { box(g, 3, 1, 3, mat(P.wall), -7.5 + i * 5, 6, 0, 0.12); spinning.push(cyl(g, 1, 1, 0.18, metal(P.dark), -7.5 + i * 5, 7, 0, 18)); } },
@@ -170,7 +182,7 @@ export function createMap(canvas, host, on = {}) {
     'clock-tower': g => { box(g, 2.4, 9, 2.4, mat(P.white), 0, 0, 0, 0.2); const face = cyl(g, 1, 1, 0.2, mat(P.wall), 0, 7, 1.25, 24); face.rotation.x = Math.PI / 2; const hand = box(g, 0.12, 0.9, 0.08, mat(P.dark), 0, 6.95, 1.42, 0.02, { cast: false }); hand.geometry = hand.geometry.clone().translate(0, 0.4, 0); spinning.push({ hand }); }
   };
   /* where each growth stands, relative to its place: [x, z, y] */
-  const GROW_SPOT = { 'studio-screen': [-8.4, 2.4], 'studio-garden': [1.2, -0.6, 6.2], 'studio-wing': [-12, -1], 'fab-trucks': [0, 0], 'fab-line': [2, -14], 'test-probe': [3, 0, 4], 'test-hall': [11, 0],
+  const GROW_SPOT = { 'studio-screen': [-4, 9], masks: [0, 0], 'studio-wing': [-4, -12], 'fab-trucks': [0, 0], 'fab-line': [2, -14], 'test-probe': [3, 0, 4], 'test-hall': [11, 0],
     'island-phones': [0, 0], 'island-cars': [0, 0], 'dc-hall': [0, 10], 'dc-solar': [21, 4], 'clock-tower': [-8, -2] };
   GROWTH.forEach(gw => { const [x, z, y] = GROW_SPOT[gw.id] || [0, 0], g = group(G[gw.at], x, y || 0, z); g.visible = false; g.scale.setScalar(0.001); growing.push({ id: gw.id, g, built: false, t0: 0 }); });
 
@@ -178,7 +190,7 @@ export function createMap(canvas, host, on = {}) {
   const hue = id => (THREADS.find(x => x.id === id) || { hue: 200 }).hue;
   const beaconOrbs = [];
   PLACES.filter(p => !p.far && p.id !== 'village').forEach(p => {
-    const key = (ASK[p.id] || [])[0]; if (!key) return;
+    const key = BEACON[p.id]; if (!key) return;
     const th = key.split('.')[0], color = new THREE.Color().setHSL(hue(th) / 360, 0.85, night ? 0.62 : 0.48), b = group(G[p.id], -7, 0, -7);
     cyl(b, 0.16, 0.16, 12, new THREE.MeshBasicMaterial({ color, transparent: true, opacity: night ? 0.45 : 0.6, depthWrite: false }), 0, 0, 0, 8, { cast: false });
     const orb = new THREE.Mesh(new THREE.SphereGeometry(0.85, 24, 16), new THREE.MeshStandardMaterial({ color, emissive: color, emissiveIntensity: night ? 0.9 : 0.45, roughness: 0.3 }));
@@ -190,7 +202,7 @@ export function createMap(canvas, host, on = {}) {
   const pickable = () => { pick.length = 0; Object.values(G).forEach(g => g.traverse(o => { if (o.isMesh) { o.userData.place = g.userData.place; pick.push(o); } })); beaconOrbs.forEach(o => pick.push(o)); };
   pickable();
   /* ---- names, with the state of each station's challenges ---- */
-  const HGT = { studio: 8, quarry: 7, fab: 10, test: 7, port: 11, datacentre: 7, lab: 22, village: 6, phones: 16, cars: 9, idea: 8 };
+  const HGT = { studio: 9, quarry: 7, fab: 10, test: 7, port: 11, datacentre: 7, lab: 22, village: 6, phones: 16, cars: 9, idea: 8 };
   const names = {};
   PLACES.forEach(p => { names[p.id] = L.add(G[p.id], new THREE.Vector3(0, HGT[p.id], 0), '', { cls: 'place3' + (p.far ? ' far' : ''), button: true, data: { place: p.id }, html: '', max: p.far ? Infinity : 520 }); });
   /* seen from far out, the island's places fold into one name */
@@ -245,8 +257,8 @@ export function createMap(canvas, host, on = {}) {
     let grew = false;
     growing.forEach(gr => { if (st.grown.has(gr.id) && !gr.built) { GROWERS[gr.id](gr.g); gr.built = true; gr.g.visible = true; grew = true; gr.t0 = animate && !reduced() ? performance.now() : -1; if (gr.t0 < 0) gr.g.scale.setScalar(1); if (animate) sparkle(gr.g); } });
     /* names, with a flag for what is left to do */
-    PLACES.forEach(p => { const step = STEP_OF[p.id], s = step && st.steps[step];
-      const flag = s ? (s.done === s.total ? '<span class="flag done">✓</span>' : '<span class="flag">' + (s.total - s.done) + '</span>') : p.id === 'village' && st.jobList.length ? '<span class="flag job">' + st.jobList.length + '</span>' : '';
+    PLACES.forEach(p => { const s = st.places[p.id];
+      const flag = s && s.total ? (s.done === s.total ? '<span class="flag done">✓</span>' : '<span class="flag">' + (s.total - s.done) + '</span>') : p.id === 'village' && st.jobList.length ? '<span class="flag job">' + st.jobList.length + '</span>' : '';
       names[p.id].el.innerHTML = esc(t('map.' + p.id + '.t')) + flag; });
     /* your chip, at the pin of its step */
     const [x, z] = PINS[st.chipAt]; tokenGoal = new THREE.Vector3(x + 3, 1.2, z + 2.4);

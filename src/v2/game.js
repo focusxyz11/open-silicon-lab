@@ -18,6 +18,8 @@ import { plan, progress, needOf, childrenOf, designsFor } from '../engines/build
 import { NEEDS, DESIGNS, AGENT } from '../data/build.js';
 import { DEBATES } from '../data/debates.js';
 import { WAYS } from '../data/ways.js';
+import { STOPS } from '../data/weave.js';
+import { INSIDE, placeOf, SHARED, askAt as levelStops } from '../data/places.js';
 
 /* the loop, in order, and the station of each step on the island */
 export const STEPS = ['design', 'make', 'test', 'ship', 'use'];
@@ -34,56 +36,53 @@ export const ownStarter = p => p in STARTERS;   /* its words: game.own.<p> */
 
 /* Do: the challenges. kind: 'design' (write a circuit; p: its job), 'chip' (reach a goal of chip.js with
    your chip's settings; goal: its id), 'life' (ship a chip that lives through a place's life; mission),
-   'spot' (find the broken chip with a few test patterns). grows: what appears on the island. */
+   'spot' (find the broken chip with a few test patterns). Each happens at a place and a level inside it
+   (place, at: a depth of src/data/places.js), on the step of the loop it belongs to. grows: what appears. */
 export const CHALLENGES = [
-  { id: 'half', step: 'design', kind: 'design', p: 'half', grows: 'studio-screen' },
-  { id: 'vote', step: 'design', kind: 'design', p: 'vote', grows: 'studio-garden' },
-  { id: 'full', step: 'design', kind: 'design', p: 'full', grows: 'studio-wing' },
-  { id: 'months', step: 'make', kind: 'chip', goal: 'months', grows: 'fab-trucks' },
-  { id: 'quick', step: 'make', kind: 'chip', goal: 'quick', grows: 'fab-line' },
-  { id: 'spot', step: 'test', kind: 'spot', p: 'full', grows: 'test-probe' },
-  { id: 'cores', step: 'test', kind: 'chip', goal: 'cores', grows: 'test-hall' },
-  { id: 'phone', step: 'ship', kind: 'life', mission: 'phone', grows: 'island-phones' },
-  { id: 'car', step: 'ship', kind: 'life', mission: 'car', grows: 'island-cars' },
-  { id: 'dclife', step: 'ship', kind: 'life', mission: 'datacentre', grows: 'dc-hall' },
-  { id: 'fed', step: 'use', kind: 'chip', goal: 'fed', grows: 'dc-solar' },
-  { id: 'fast', step: 'use', kind: 'chip', goal: 'fast', grows: 'clock-tower' }
+  { id: 'half', step: 'design', place: 'studio', at: 'logic', kind: 'design', p: 'half', grows: 'masks' },
+  { id: 'vote', step: 'design', place: 'studio', at: 'check', kind: 'design', p: 'vote', grows: 'studio-screen' },
+  { id: 'full', step: 'design', place: 'studio', at: 'check', kind: 'design', p: 'full', grows: 'studio-wing' },
+  { id: 'months', step: 'make', place: 'fab', at: 'clean', kind: 'chip', goal: 'months', grows: 'fab-trucks' },
+  { id: 'quick', step: 'make', place: 'fab', at: 'deposit', kind: 'chip', goal: 'quick', grows: 'fab-line' },
+  { id: 'spot', step: 'test', place: 'test', at: 'test', kind: 'spot', p: 'full', grows: 'test-probe' },
+  { id: 'cores', step: 'test', place: 'test', at: 'test', kind: 'chip', goal: 'cores', grows: 'test-hall' },
+  { id: 'phone', step: 'ship', place: 'phones', at: 'soc', kind: 'life', mission: 'phone', grows: 'island-phones' },
+  { id: 'car', step: 'ship', place: 'cars', at: 'mcu', kind: 'life', mission: 'car', grows: 'island-cars' },
+  { id: 'dclife', step: 'ship', place: 'port', at: 'ship', kind: 'life', mission: 'datacentre', grows: 'dc-hall' },
+  { id: 'fed', step: 'use', place: 'datacentre', at: 'board', kind: 'chip', goal: 'fed', grows: 'dc-solar' },
+  { id: 'fast', step: 'use', place: 'datacentre', at: 'chip', kind: 'chip', goal: 'fast', grows: 'clock-tower' }
 ];
 export const challengeOf = id => CHALLENGES.find(c => c.id === id) || null;
 export const chipGoal = id => CHIP.find(c => c.id === id);
+export const placeChallenges = place => CHALLENGES.filter(c => c.place === place);
 /* what grows, and where (the island draws each one: src/v2/map3d.js GROWERS) */
-const GROW_AT = { phone: 'phones', car: 'cars', dclife: 'datacentre', fast: 'lab' };
-export const GROWTH = CHALLENGES.map(c => ({ id: c.grows, by: c.id, at: GROW_AT[c.id] || STATION[c.step] }));
+const GROW_AT = { half: 'studio', phone: 'phones', car: 'cars', dclife: 'datacentre', fast: 'lab' };
+export const GROWTH = CHALLENGES.map(c => ({ id: c.grows, by: c.id, at: GROW_AT[c.id] || c.place }));
 
-/* Ask: the stops whose questions belong at each place (stop.<key>.q), and the debates there */
-export const ASK = {
-  studio: ['idea.need', 'divide.need', 'divide.layout'], quarry: ['make.crystal', 'strange.crystal', 'know.crystal'],
-  fab: ['make.clean', 'scale.clean', 'scale.print', 'fail.print', 'make.etch', 'know.etch'], test: ['fail.test', 'divide.test', 'fail.etch'],
-  port: ['divide.ship', 'open.ship', 'fail.ship', 'make.pkg', 'divide.pkg', 'fail.pkg'],
-  datacentre: ['life.building', 'divide.building', 'fail.building', 'scale.building', 'think.rack', 'think.board', 'think.chip'],
-  lab: ['open.need', 'open.layout', 'open.clean'], village: ['open.need'],
-  phones: ['divide.phone', 'life.phone', 'know.phone'], cars: ['fail.car', 'divide.car', 'know.car', 'life.car', 'fail.ecu'], idea: []
-};
+/* Inside: every place's levels, one inside the next (src/data/places.js). These hold the earlier site's
+   pages: each level opens there until it is redrawn here. The data centre's first levels are flown through
+   (src/v2/dc3d.js; FLOWN: a depth and its level in the flight). */
+export { INSIDE, placeOf, SHARED };
+export const FLOWN = { datacentre: { building: 0, rack: 2, board: 4, chip: 5 } };
+/* Ask: the questions at each level of a place; the Lab holds the open thread's questions, where the
+   community asks them. BEACON: the one question glowing above a place. */
+export function askAt(place) { return place === 'lab' ? [{ level: null, stops: Object.keys(STOPS).filter(k => k.startsWith('open.')) }] : levelStops(place); }
+export const ASK = Object.fromEntries(PLACES.map(p => [p, askAt(p).flatMap(x => x.stops)]));
+export const BEACON = { studio: 'idea.need', quarry: 'make.crystal', fab: 'make.clean', test: 'fail.test', port: 'divide.ship', datacentre: 'life.building', lab: 'open.need' };
 export const DEBATES_AT = {
   studio: ['designcost', 'signoff', 'skills'], fab: ['shrink'], test: ['bigdie'], port: ['supply'], datacentre: ['memory', 'power', 'paradigm', 'quantum'],
   lab: ['open'], cars: ['mature'], phones: [], quarry: [], village: [], idea: []
 };
 /* the other ways to compute belong where people imagine what comes next: the Lab */
 export const WAYS_AT = { lab: WAYS.map(w => w.id) };
-/* Look: the ways inside each place. to: a place of the redesign (#/place/<id>), or the current site
-   (world, depth, map). Words: look.<id>.t / .d */
+/* more ways inside, besides the levels. to: a place of the redesign (#/place/<id>), page: a page, or the
+   current site (world, depth, map). Words: look.<id>.t / .d */
 export const LOOK = {
-  studio: [{ id: 'studio', world: 'design', depth: 'need' }],
-  quarry: [{ id: 'crystal', world: 'journey', depth: 'crystal' }],
-  fab: [{ id: 'line', world: 'journey', depth: 'clean' }, { id: 'print', world: 'journey', depth: 'print' }],
-  test: [{ id: 'probe', world: 'journey', depth: 'test' }],
-  port: [{ id: 'supply', world: 'journey', depth: 'ship', map: true }, { id: 'package', world: 'journey', depth: 'pkg' }],
-  datacentre: [{ id: 'fly', to: 'datacentre' }, { id: 'inside', world: 'datacentre', depth: 'chip' }, { id: 'floor', world: 'datacentre', depth: 'atom' }],
-  lab: [{ id: 'plan', page: 'build' }], village: [{ id: 'plan', page: 'build' }],
-  phones: [{ id: 'phone', world: 'phone', depth: 'phone' }], cars: [{ id: 'car', world: 'car', depth: 'car' }], idea: []
+  port: [{ id: 'supply', world: 'journey', depth: 'ship', map: true }],
+  lab: [{ id: 'plan', page: 'build' }], village: [{ id: 'plan', page: 'build' }]
 };
-/* the world of the current site a stop's depth belongs to */
-export const worldOfDepth = depth => ({ building: 'datacentre', rack: 'datacentre', board: 'datacentre', chip: 'datacentre', phone: 'phone', car: 'car', ecu: 'car', need: 'design', layout: 'design' }[depth] || 'journey');
+/* the world of the current site where a depth is drawn (the first place that holds it) */
+export const worldOfDepth = depth => { for (const L of Object.values(INSIDE)) { const l = L.find(x => x.depth === depth); if (l) return l.world; } return 'journey'; };
 
 /* ---- your state: what you have done, and what you were working on ---- */
 export const KEY = 'osl-world-v1';
