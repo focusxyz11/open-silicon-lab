@@ -11,7 +11,8 @@ Learners new to chips with basic hardware knowledge, up to engineers. Plain word
 - Questions, not answers. The question behind the question matters more. A stop gives a question, something true to notice, and what people are trying.
 - The eleven core questions are the hidden framework. Never list or show them together; one may appear on its own when its condition is met (`rootShown` in `src/engines/weave.js`).
 - No linear path: a visitor can pick any question and go deeper or higher.
-- Visual first, in one drawing style (Fable's world build), dark and light.
+- Visual first and modern: lit 3D where you move through places (the chip world map, the places), 2.5D where a flat view reads better; one palette, dark (night) and light (day). Every element drawn must be well designed, or left out. Words are never drawn into a 3D scene: labels are HTML over projected points (`src/v2/kit3d.js`).
+- The redesign (in progress, `explore.html`, `src/v2/`): a chip world map as the first page; the menu is Explore · Questions · Build · Ecosystem; places are flown through continuously, nothing pops in.
 - Universal, not only AI chips; RISC-V, open hardware and an AI-native view get special weight.
 - The build: the lab is a community building one open goal (`src/data/build.js`), people and AI together, and the repository is part of that self-organizing system. Anything that builds is a piece of the plan, checked by an engine; a new kind of check is a new engine (`src/engines/build.js`), never a separate tool. Every design says who wrote it and how AI was used. AI joins through an open port (`src/engines/api.js`, the MCP server `scripts/mcp.mjs`), not an AI service of the lab's own. Design and the factory are one story: at every step, show what the line does to the design.
 - Words on screen live in `src/i18n/en.json` and are read with `t('name')`; never write visible English in code. `npm test` checks it.

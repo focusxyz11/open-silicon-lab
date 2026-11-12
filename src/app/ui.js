@@ -37,6 +37,12 @@ export function start(facts) {
   const FACT = Object.fromEntries((facts || []).map(f => [f.id, f]));
   const $ = id => document.getElementById(id);
   const saved = load();
+  /* a link from the redesign's chip world can name the world, a depth in it and a question to follow */
+  const ask = new URLSearchParams(location.search), askWorld = ask.get('world');
+  if (worldOf(askWorld)) {
+    saved.world = askWorld; const w = worldOf(askWorld), di = w.depths.indexOf(ask.get('depth'));
+    saved.z = di >= 0 ? di : 0; if (threadOf(ask.get('thread'))) saved.thread = ask.get('thread');
+  }
   setWorld(worldOf(saved.world) ? saved.world : WORLDS[0].id);
   const S = {
     z: typeof saved.z === 'number' ? clampZ(saved.z) : 0,
@@ -729,6 +735,7 @@ export function start(facts) {
 
   world.setThread(S.thread);
   card(); layout();
+  if (ask.get('map') && isLine()) openMap();
   if (reduced()) document.documentElement.classList.add('rm');
   window.addEventListener('beforeunload', save);
 }
