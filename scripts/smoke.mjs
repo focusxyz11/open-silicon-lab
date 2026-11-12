@@ -91,6 +91,14 @@ for (const [tag, viewport, scheme] of [['desktop', { width: 1360, height: 860 },
   await page.$eval('#card [data-dive^="journey:"]', el => el.click()).catch(() => problems.push(tag + ': no way back to the line'));
   if (!/print/i.test(await where())) problems.push(tag + ': coming back did not return to the station');
   await go(10);
+  /* its life: a perfect design fails in a car; with everything the design and the factory can do, it ships */
+  const click = sel => page.$eval('#card ' + sel, el => el.click()).catch(() => problems.push(tag + ': no ' + sel + ' in its life'));
+  await click('[data-lifem="car"]');
+  if (await page.$('#lifeOut p.good')) problems.push(tag + ': a perfect design ships to a car');
+  await page.$eval('#lifeMargin', el => { el.value = el.max; el.dispatchEvent(new Event('input', { bubbles: true })); el.dispatchEvent(new Event('change', { bubbles: true })); });
+  for (const sel of ['[data-lifeset="grid"]', '[data-lifeprot="logic"]', '[data-lifeset="hot"]', '[data-lifeset="burn"]']) await click(sel);
+  if (!await page.$('#lifeOut p.good')) problems.push(tag + ': a careful design still does not ship to a car');
+  await click('[data-lifereset]');
   await page.$eval('#card [data-dive^="phone:soc"]', el => el.click()).catch(() => problems.push(tag + ': the chip cannot be shipped into a phone'));
   if (!/chip/i.test(await where()) || (await page.$$('#rail [data-d]')).length !== 7) problems.push(tag + ': shipping into a phone did not arrive at its chip');
   await page.click('#worlds [data-world="datacentre"]');

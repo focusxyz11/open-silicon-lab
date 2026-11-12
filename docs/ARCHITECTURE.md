@@ -17,13 +17,14 @@ src/app/map.js          the world around the line: a chip's whole trip on a map,
 src/app/lens3d.js       the lens: while a machine works, your wafer's surface magnified beside it, showing what the machine does
 src/vendor/three.min.js three.js, loaded only when the journey is first opened
 src/engines/chip.js     your chip: its settings and what follows from them, relative to a starting chip (tested)
-src/engines/api.js      the open port: the engines as tools for AI agents (list the plan, take a job, check, at the factory, propose)
+src/engines/api.js      the open port: the engines as tools for AI agents (list the plan, take a job, check, at the factory, its life, propose)
 src/engines/build.js    where the goal stands: each need's state, and the engines that check needs (tested)
 src/engines/design.js   your design: one circuit run through the tiny-chip engine, from description to masks (tested)
 src/engines/tinychip.js the earlier site's tiny-chip engine: parse, check, synthesize, place, route, fault-test
 src/engines/core.js     the RISC-V core engine: the earlier site's simulator, its ALU made of your slice, checked by test programs
 src/engines/riscv.js    the earlier site's RISC-V assembler and simulator (RV32I)
 src/engines/alu.js      a slice copied 32 times into a 32-bit ALU; a factory defect in one slice
+src/engines/life.js     your chip's life: why a perfect design still fails (variation, heat, supply dips, ageing, missed defects, weak spots, wear, radiation) in a phone, a car or a data centre (tested)
 src/engines/fab.js      a fab you run: a re-entrant line of tool groups, how busy each is and how long wafers wait (tested)
 src/engines/supply.js   what stops in a chip's trip when places stop (tested)
 src/engines/weave.js    pure logic: the current world, the camera, sizes, threads, when a core question appears (tested)
