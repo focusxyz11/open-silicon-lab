@@ -10,10 +10,20 @@
    - load: how full the fab that makes it runs (LOADS), from the earlier site's "a fab you run"
      (src/engines/fab.js): fuller makes each wafer cheaper, but every wafer waits longer at every machine.
 
+   - reuse: how many times each number is used once it has been fetched from memory (REUSES): a way of
+     organizing the work (keeping numbers close, in the chip's own memory, batching many requests).
+   - mem: where the memory sits (MEMS): memory chips on the board, or stacks of memory beside the chip in
+     its package (as AI chips have): many times the bandwidth, and less energy for every byte.
+
    What follows from them:
    - timing: the slowest path through the logic must finish within one tick. Smaller switches are faster;
      a faster clock leaves less time. late = the share of paths that arrive after the tick.
    - wall: how much more current leaks through the thinner walls of the same area of switches.
+   - the memory wall: the cores can only work as fast as numbers arrive. Faster cores and more of them
+     ask more of memory; reuse and closer memory ask less. busy = the share of the time the cores work
+     rather than wait. And moving a number from memory costs far more energy than computing with it
+     (src/data/facts.json, energy-moving-data: at 45 nm, 640 pJ to read 16 bits from DRAM, 0.62 + 0.18 pJ
+     to multiply and add): moving = the share of the energy spent fetching rather than computing.
    - power: switching costs energy every tick (more ticks, more switches, a little more voltage to go
      faster), and thinner walls let current leak even when nothing switches. */
 import { line, capacity, summary } from './fab.js';
@@ -22,13 +32,18 @@ export const CLOCKS = [0.5, 1, 1.5, 2, 3];
 export const GENS = 5;
 export const SIDES = [6, 10, 15, 20, 26];
 export const LOADS = [0.6, 0.75, 0.85, 0.92, 0.97];
-export const START = { clock: 1, gen: 2, size: 2, load: 2 };
-export const SETTINGS = ['clock', 'gen', 'size', 'load'];
+export const REUSES = [1, 4, 16, 64, 256, 1024];
+export const MEMS = [{ bw: 1, e: 1 }, { bw: 8, e: 0.25 }];   /* relative bandwidth, and energy per byte */
+export const START = { clock: 1, gen: 2, size: 2, load: 2, reuse: 2, mem: 0 };
+export const SETTINGS = ['clock', 'gen', 'size', 'load', 'reuse', 'mem'];
+/* every value each setting can take, for searching them all (tests, challenges) */
+export const VALUES = { clock: CLOCKS, gen: [0, 1, 2, 3, 4], size: SIDES.map((_, i) => i), load: LOADS.map((_, i) => i), reuse: REUSES.map((_, i) => i), mem: MEMS.map((_, i) => i) };
 
 const step = (v, n, d) => { const x = Math.round(+v); return Number.isFinite(x) ? Math.max(0, Math.min(n - 1, x)) : d; };
 const clampClock = c => (CLOCKS.includes(+c) ? +c : START.clock);
 export const normal = c => ({ clock: clampClock(c && c.clock), gen: step(c && c.gen != null ? c.gen : START.gen, GENS, START.gen), size: step(c && c.size != null ? c.size : START.size, SIDES.length, START.size),
-  load: step(c && c.load != null ? c.load : START.load, LOADS.length, START.load) });
+  load: step(c && c.load != null ? c.load : START.load, LOADS.length, START.load),
+  reuse: step(c && c.reuse != null ? c.reuse : START.reuse, REUSES.length, START.reuse), mem: step(c && c.mem != null ? c.mem : START.mem, MEMS.length, START.mem) });
 export const changed = c => { const n = normal(c); return SETTINGS.some(k => n[k] !== START[k]); };
 
 /* The cores that fit: 12 on the starting chip, more with smaller switches and a bigger chip, as a grid
@@ -85,7 +100,7 @@ const GROUP_STATION = { depo: 'deposit', litho: 'print', etch: 'etch', clean: 'c
 const FIXED = 0.6;
 
 export function model(c) {
-  const { clock, gen, size, load: li } = normal(c);
+  const { clock, gen, size, load: li, reuse: ri, mem: mi } = normal(c);
   const side = SIDES[size], areaChip = (side / SIDES[START.size]) * (side / SIDES[START.size]);
   const s = Math.pow(0.7, gen - START.gen);           /* length of a switch, relative */
   const area = s * s;                                 /* area of a switch, relative */
@@ -108,10 +123,17 @@ export function model(c) {
   /* each station of the line: how busy it is, and how long a wafer waits there per visit (hours) */
   const fab = {};
   Object.entries(GROUPS_AT).forEach(([st, ids]) => { const gs = F.groups.filter(g => ids.includes(g.id)); fab[st] = { busy: Math.max(...gs.map(g => g.u)), wait: gs.reduce((a, g) => a + g.wq, 0), work: gs.reduce((a, g) => a + g.te, 0) }; });
+  /* the memory wall: the starting chip, with each number used 16 times and memory chips on the board, is
+     exactly fed. need > 1: the cores ask for numbers faster than memory sends them */
+  const grid = gridOf(12 * density * areaChip), cores = grid[0] * grid[1];
+  const peak = cores * clock / 12, reuse = REUSES[ri], memory = MEMS[mi];
+  const need = peak * REUSES[START.reuse] / (reuse * memory.bw), busy = Math.min(1, 1 / need);
+  const math = (0.62 + 0.18) * s, move = 2 * 640 * memory.e / reuse;
   return {
     clock, gen, size, side, areaChip, s, area, density, path, tick, late, volt, power,
+    reuse, mem: mi, peak, need, busy, work: peak * busy, moving: move / (math + move),
     leakShare: leak / (switching + leak), wall: Math.pow(1.8, gen - START.gen), battery: 1 / power,
-    cores: gridOf(12 * density * areaChip).reduce((a, b) => a * b), grid: gridOf(12 * density * areaChip),
+    cores, grid,
     dies: total, good, yield: total ? good / total : 0, steps, cost, layers,
     load, days: F.days, perLayer: F.daysPerLayer, slow: GROUP_STATION[F.bottleneck], fab, waiting: 1 - F.raw / F.days
   };
@@ -129,5 +151,6 @@ export const CHALLENGES = [
   { id: 'battery', needs: ['gen', 'size'], at: ['life.phone', 'scale.soc', 'divide.test'], met: m => m.battery >= 1.5 && m.clock >= 1 && m.cores >= 12 },
   { id: 'cores', needs: ['gen', 'size'], at: ['fail.wafer', 'divide.test', 'scale.switch', 'scale.mcu'], met: m => m.cores >= 20 && m.cost <= 0.7 },
   { id: 'quick', needs: ['gen', 'size'], at: ['divide.test', 'scale.soc', 'scale.switch'], met: m => m.layers <= 50 && m.cores >= 12 },
+  { id: 'fed', needs: ['gen', 'reuse'], at: ['scale.switch', 'think.board', 'divide.block', 'divide.pkg'], met: m => m.work >= 2.9 && m.late === 0 },
   { id: 'months', needs: ['gen', 'load'], at: ['divide.wires', 'scale.switch'], met: m => m.days <= 60 && m.load >= 0.92 }
 ];

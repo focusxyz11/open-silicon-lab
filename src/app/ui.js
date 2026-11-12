@@ -12,7 +12,7 @@ import { t, fmtDate, has } from '../core/i18n.js';
 import { SITES, ROUTES } from '../data/world.js';
 import { status, worst } from '../engines/supply.js';
 import { THREADS, WORLDS, STOPS, CASES, FIGURES, REPO, TRIES, SHOWS, DIVES, EXITS, MADE, PLANTS, LOOP, partWord } from '../data/weave.js';
-import { CLOCKS, GENS, SIDES, LOADS, START, CHALLENGES, normal, changed, model, x2, dieSquare } from '../engines/chip.js';
+import { CLOCKS, GENS, SIDES, LOADS, REUSES, MEMS, START, CHALLENGES, normal, changed, model, x2, dieSquare } from '../engines/chip.js';
 import { N, IDS, WORLD, setWorld, worldOf, zIn, reshape, isLine, clampZ, sizeAt, sizeParts, stop, stopKey, crossing, below, above, nearest, threadOf, rootShown, threadDepths } from '../engines/weave.js';
 import { createWorld, threadColor, theme, reduced } from './world.js';
 import { setChip as drawChip, setBuild, BUILD_STEPS, setXray, xrayOf, XRAY_AT } from './scenes.js';
@@ -195,25 +195,28 @@ export function start(facts) {
     const id = IDS[d], m = model(S.chip); if (!SHOWS[id]) return '';
     const timing = m.late > 0 ? t('chip.late', { late: Math.round(m.late * 100) }) : t('chip.inTime');
     const f = m.fab[id] || { busy: 0, wait: 0 };
-    return t('chip.show.' + id, { busy: Math.round(f.busy * 100), wait: x2(f.wait), days: Math.round(m.days), per: x2(m.perLayer), waiting: Math.round(m.waiting * 100), slow: t('depth.' + m.slow + '.name'), power: x2(m.power), clock: x2(m.clock), cores: m.cores, timing, battery: x2(m.battery), area: x2(m.area), density: x2(m.density),
+    const fed = m.busy >= 0.999 ? t('chip.fed', { work: x2(m.work) }) : t('chip.starved', { peak: x2(m.peak), idle: Math.round((1 - m.busy) * 100), work: x2(m.work) });
+    return t('chip.show.' + id, { fed, moving: Math.round(m.moving * 100), where: t('chip.memWhere', { mem: t('chip.mem.names')[m.mem] }), busy: Math.round(f.busy * 100), wait: x2(f.wait), days: Math.round(m.days), per: x2(m.perLayer), waiting: Math.round(m.waiting * 100), slow: t('depth.' + m.slow + '.name'), power: x2(m.power), clock: x2(m.clock), cores: m.cores, timing, battery: x2(m.battery), area: x2(m.area), density: x2(m.density),
       tick: x2(m.tick), path: x2(m.path), length: x2(m.s), wall: x2(m.wall), steps: x2(m.steps), layers: m.layers, dies: m.dies, good: m.good, yield: Math.round(m.yield * 100), cost: x2(m.cost), mm: m.side });
   };
   const readout = k => {
     const m = model(S.chip);
     if (k === 'build') return t('chip.build.names')[S.build];
     if (k === 'load') return t('chip.fab', { days: Math.round(m.days), per: x2(m.perLayer), waiting: Math.round(m.waiting * 100), slow: t('depth.' + m.slow + '.name'), cost: x2(m.cost) });
+    if (k === 'reuse' || k === 'mem') return t('chip.memory', { work: x2(m.work), busy: Math.round(m.busy * 100), moving: Math.round(m.moving * 100) });
     if (k === 'size') return t('chip.wafer', { cores: m.cores, power: x2(m.power), yield: Math.round(m.yield * 100), cost: x2(m.cost) });
     return t('chip.readout', { clock: x2(m.clock), power: x2(m.power), late: Math.round(m.late * 100) });
   };
   const valueText = k => k === 'clock' ? t('chip.clock.value', { v: x2(S.chip.clock) }) : k === 'size' ? t('chip.size.value', { mm: SIDES[S.chip.size] }) :
     k === 'load' ? t('chip.load.value', { v: Math.round(LOADS[S.chip.load] * 100) }) :
     k === 'build' ? t('chip.build.value', { n: S.build + 1, total: BUILD_STEPS }) :
+    k === 'reuse' ? t('chip.reuse.value', { v: REUSES[S.chip.reuse] }) : k === 'mem' ? t('chip.mem.names')[S.chip.mem] :
     t('chip.gen.names')[S.chip.gen];
   /* the depths of this world where a setting shows */
   const showsOf = k => IDS.map((id, i) => i).filter(i => (SHOWS[IDS[i]] || []).includes(k));
   const tryIt = (key, d) => {
     const k = TRIES[key]; if (!k) return '';
-    const max = { clock: CLOCKS.length - 1, gen: GENS - 1, size: SIDES.length - 1, load: LOADS.length - 1, build: BUILD_STEPS - 1 }[k];
+    const max = { clock: CLOCKS.length - 1, gen: GENS - 1, size: SIDES.length - 1, load: LOADS.length - 1, reuse: REUSES.length - 1, mem: MEMS.length - 1, build: BUILD_STEPS - 1 }[k];
     const val = k === 'clock' ? CLOCKS.indexOf(S.chip.clock) : k === 'build' ? S.build : S.chip[k];
     if (k === 'build') setBuild(S.build);
     const local = k === 'build';

@@ -16,7 +16,7 @@ src/app/design.js       the design studio: six stations showing your design from
 src/app/map.js          the world around the line: a chip's whole trip on a map, from design to where it is used
 src/app/lens3d.js       the lens: while a machine works, your wafer's surface magnified beside it, showing what the machine does
 src/vendor/three.min.js three.js, loaded only when the journey is first opened
-src/engines/chip.js     your chip: its settings and what follows from them, relative to a starting chip (tested)
+src/engines/chip.js     your chip: its settings (clock, switch size, chip size, how full the fab runs, reuse, where its memory sits) and what follows from them, the memory wall included, relative to a starting chip (tested)
 src/engines/api.js      the open port: the engines as tools for AI agents (list the plan, take a job, check, at the factory, its life, propose)
 src/engines/build.js    where the goal stands: each need's state, and the engines that check needs (tested)
 src/engines/design.js   your design: one circuit run through the tiny-chip engine, from description to masks (tested)

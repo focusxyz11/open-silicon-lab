@@ -160,10 +160,10 @@ export const FIGURES = {
    TRIES: the stops where a setting can be changed, inside that stop's question.
    SHOWS: what each depth shows of your chip, and which settings it depends on (words: chip.show.<depth>).
    "build" is a try of its own: it scrubs through how a switch is made, and changes no setting. */
-export const TRIES = { 'divide.wires': 'load', 'fail.chip': 'clock', 'life.phone': 'clock', 'scale.switch': 'gen', 'scale.soc': 'gen', 'scale.mcu': 'gen', 'fail.wafer': 'size', 'divide.test': 'size', 'make.switch': 'build' };
-const ALL = ['clock', 'gen', 'size'];
+export const TRIES = { 'think.board': 'reuse', 'divide.block': 'reuse', 'divide.pkg': 'mem', 'divide.wires': 'load', 'fail.chip': 'clock', 'life.phone': 'clock', 'scale.switch': 'gen', 'scale.soc': 'gen', 'scale.mcu': 'gen', 'fail.wafer': 'size', 'divide.test': 'size', 'make.switch': 'build' };
+const ALL = ['clock', 'gen', 'size'], WALL = ['reuse', 'mem'];
 export const SHOWS = {
-  building: ALL, rack: ALL, board: ALL, chip: ALL, phone: ALL, phoneboard: ALL, soc: ['clock', 'gen'], mcu: ['clock', 'gen'],
-  clean: ['load'], deposit: ['load'], etch: ['load'], implant: ['load'], print: ['gen', 'load'], wires: ['gen', 'load'], test: ['gen', 'size'], scanner: ['gen'], wafer: ['gen', 'size'], die: ['gen', 'size'], pkg: ['size'], ship: ALL,
-  block: ['gen'], gate: ['clock', 'gen'], switch: ['gen'], atom: ['gen']
+  building: ALL, rack: ALL, board: [...ALL, ...WALL], chip: [...ALL, ...WALL], phone: ALL, phoneboard: ALL, soc: ['clock', 'gen', ...WALL], mcu: ['clock', 'gen'],
+  clean: ['load'], deposit: ['load'], etch: ['load'], implant: ['load'], print: ['gen', 'load'], wires: ['gen', 'load'], test: ['gen', 'size'], scanner: ['gen'], wafer: ['gen', 'size'], die: ['gen', 'size'], pkg: ['size', 'mem'], ship: ALL,
+  block: ['gen', ...WALL], gate: ['clock', 'gen'], switch: ['gen'], atom: ['gen']
 };
