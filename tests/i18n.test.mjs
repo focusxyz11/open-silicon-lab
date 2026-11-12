@@ -12,7 +12,7 @@ const root = new URL('..', import.meta.url);
 const read = p => readFileSync(new URL(p, root), 'utf8');
 const EN = JSON.parse(read('src/i18n/en.json'));
 /* The code that draws something for a reader. */
-const SHELL = ['src/main.js'].concat(...['src/app/', 'src/core/'].map(d => readdirSync(new URL(d, root)).filter(f => f.endsWith('.js')).map(f => d + f)));
+const SHELL = ['src/main.js', 'src/main2.js'].concat(...['src/app/', 'src/core/', 'src/v2/'].map(d => readdirSync(new URL(d, root)).filter(f => f.endsWith('.js')).map(f => d + f)));
 const LANGS = readdirSync(new URL('src/i18n/', root)).filter(f => f.endsWith('.json')).map(f => f.slice(0, -5));
 
 test('the shell has no visible English in its code (put it in src/i18n/en.json)', () => {
@@ -22,7 +22,7 @@ test('the shell has no visible English in its code (put it in src/i18n/en.json)'
 
 test('every text the code names exists, and every text is used', () => {
   /* the open port (src/engines/api.js and its MCP server) gives agents the same words */
-  const code = SHELL.map(read).join('\n') + read('index.html') + read('src/engines/api.js') + read('scripts/mcp.mjs');
+  const code = SHELL.map(read).join('\n') + read('index.html') + read('explore.html') + read('src/engines/api.js') + read('scripts/mcp.mjs');
   const literals = new Set([...code.matchAll(/'([\w.-]+)'|"([\w.-]+)"/g)].map(m => m[1] || m[2]));
   const prefixes = [...code.matchAll(/\bt[x]?\(\s*'([\w.-]+[.\w-]*)'\s*\+/g)].map(m => m[1]);
   const named = [...code.matchAll(/\bt[x]?\(\s*'([\w.-]+)'\s*[,)]/g)].map(m => m[1]).concat([...code.matchAll(/data-i18n="([\w.-]+)"/g)].map(m => m[1]), [...code.matchAll(/data-i18n-attr="([^"]+)"/g)].flatMap(m => m[1].split(';').map(p => p.split(':')[1])));
