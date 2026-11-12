@@ -36,7 +36,7 @@ export const DEPTHS = {
   phoneboard: { m: 0.05, portal: [410, 360, 240] },
   soc: { m: 0.012, portal: [200, 490, 56] },
   /* a car */
-  car: { m: 5.7, portal: [553.2, 544, 31.5] },
+  car: { m: 5.88, portal: [537.768, 662.84, 30.6] },
   ecu: { m: 0.18, portal: [455, 425, 40] },
   mcu: { m: 0.007, portal: [176, 236, 52] },
   /* the design studio: a line too, before the factory: from the job a chip must do to the masks */
