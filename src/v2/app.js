@@ -4,7 +4,7 @@
    Look is Inside: a place's levels, one inside the next, which hold the earlier site's pages (src/data/places.js).
    The menu: Explore (the island), Challenges (every challenge and every open job), Questions (by place),
    Build (the shared computer the community is building) and Ecosystem (the islands across the sea, and the
-   world chips depend on). Routes live in the address: #/, #/place/<id>, #/place/datacentre/<level>, #/chip/<row>[/build] (inside a chip, layer by layer), #/board (one board, with a story that drives it), #/challenges, #/questions, #/build,
+   world chips depend on). Routes live in the address: #/, #/place/<id>, #/place/datacentre/<level>, #/chip/<row>[/build] (inside a chip, layer by layer), #/board (one board, with a story that drives it), #/dive/<depth> (the flat dive, chip to atom), #/challenges, #/questions, #/build,
    #/ecosystem. Words are read with t(); places not yet redrawn open the current site. */
 import { t } from '../core/i18n.js';
 import { REPO, THREADS } from '../data/weave.js';
@@ -28,7 +28,7 @@ const qColor = key => 'hsl(' + hue(key.split('.')[0]) + ' 70% 55%)';
 const follow = key => { const [th, depth] = key.split('.'); return oldUrl(Game.worldOfDepth(depth), { thread: th, depth }); };
 
 export function start() {
-  let map = null, dc = null, chip = null, board = null, mapReady = null;
+  let map = null, dc = null, chip = null, board = null, dive = null, mapReady = null;
   const S = Game.load(localStorage);
   const save = () => Game.save(localStorage, S);
 
@@ -95,7 +95,10 @@ export function start() {
      dive, or the factory step that makes it), or else the current site */
   const rowOf = d => { const i = ROWS.findIndex(r => r.dive === d || r.made.includes(d)); return i < 0 ? null : { row: i, build: !ROWS.some(r => r.dive === d) }; };
   const DIVE_CHIP = { soc: 0, mcu: 0 };
+  /* the flat dive's levels (the earlier site's zoom, in the frame): from the chip down to the atom */
+  const DIVE_LEVELS = ['chip', 'block', 'gate', 'switch', 'atom'];
   const levelHref = (place, l) => { if (place === 'datacentre' && l.depth === 'board') return '#/board'; const f = (Game.FLOWN[place] || {})[l.depth]; if (f != null) return '#/place/' + place + '/' + f;
+    if (DIVE_LEVELS.includes(l.depth) && l.depth !== 'chip') return '#/dive/' + l.depth;
     const c = DIVE_CHIP[l.depth] != null ? { row: 0, build: false } : rowOf(l.depth); return c ? '#/chip/' + c.row + (c.build ? '/build' : '') : oldUrl(l.world, { depth: l.depth }); };
   function insideHtml(id) {
     const L = Game.INSIDE[id] || [], extra = Game.LOOK[id] || [];
@@ -172,7 +175,7 @@ export function start() {
   const withFrame = () => FrameM ? Promise.resolve(FrameM) : import('./frame.js').then(m => (FrameM = m));
   /* the Turn, from any level: designed opens the studio's level, made and used open the chip's layers */
   const turnTo = (face, tw) => { if (!tw) return; const row = TWINS_ORDER.indexOf(tw.used);
-    if (face === 'designed' && tw.designed) location.href = oldUrl('design', { depth: tw.designed }); else if (face === 'made') location.hash = '#/chip/' + row + '/build'; else if (face === 'used') location.hash = '#/chip/' + row; };
+    if (face === 'designed' && tw.designed) location.href = oldUrl('design', { depth: tw.designed }); else if (face === 'made') location.hash = '#/chip/' + row + '/build'; else if (face === 'used') location.hash = '#/dive/' + tw.used; };
   const TWINS_ORDER = ROWS.map(r => r.dive);
   const lineHtml = (kicker, line, key, nav) => '<p class="kicker">' + esc(kicker) + '</p><p class="line">' + esc(line) + '</p>' +
     (key ? '<a class="askline" href="' + esc(follow(key)) + '"><span class="q">' + esc(t('stop.' + key + '.q')) + '</span></a>' : '') + '<div class="nav">' + nav + '</div>';
@@ -192,7 +195,7 @@ export function start() {
     dcFrame.dock.innerHTML = lineHtml(t('place.level', { n: dcLv + 1, total: LEVELS.length }) + ' · ' + t('place.dc.' + id + '.t'), t('place.dc.' + id + '.d'), ASKS[id],
       (dcLv ? '<button type="button" class="btn ghost" data-lvgo="' + (dcLv - 1) + '">' + esc(t('story.back')) + '</button>' : '<span></span>') +
       (id === 'board' ? '<a class="btn" href="#/board">' + esc(t('board.enter')) + '</a>' : '') +
-      (last ? '<a class="btn primary" href="#/chip/0">' + esc(t('place.next')) + '</a>' : '<button type="button" class="btn primary" data-lvgo="' + (dcLv + 1) + '">' + esc(t('chipx.deeper')) + '</button>'));
+      (last ? '<a class="btn primary" href="#/dive/chip">' + esc(t('place.next')) + '</a>' : '<button type="button" class="btn primary" data-lvgo="' + (dcLv + 1) + '">' + esc(t('chipx.deeper')) + '</button>'));
   }
   function showPlace(id, lv) {
     hideAll();
@@ -230,7 +233,7 @@ export function start() {
       : !Y && r === 2 ? '<a class="yours none" href="#/place/studio">' + esc(t('chipx.yoursNone')) + '</a>' : '';
     chipFrame.dock.innerHTML = lineHtml(kicker, line, key,
       (done ? '<a class="btn primary" href="' + (build ? '#/place/port' : '#/') + '">' + esc(t(build ? 'chipx.ship' : 'chipx.back')) + '</a>' : '<button type="button" class="btn primary" data-rowgo="' + nextR + '">' + esc(t(build ? 'chipx.next' : 'chipx.deeper')) + '</button>') +
-      '<a class="btn" href="' + esc(build ? '#/place/fab/inside' : oldUrl('datacentre', { depth: R.dive })) + '">' + esc(t(build ? 'chipx.atFab' : 'chipx.current')) + '</a>').replace('<div class="nav">', yours + '<div class="nav">');
+      '<a class="btn" href="' + esc(build ? '#/place/fab/inside' : '#/dive/' + R.dive) + '">' + esc(t(build ? 'chipx.atFab' : 'dive.flat')) + '</a>').replace('<div class="nav">', yours + '<div class="nav">');
   }
   function showChip(row, mode) {
     hideAll();
@@ -249,6 +252,55 @@ export function start() {
       loading(false); chipRow = want; c.mode(chipMode); c.set(want); c.resume(); chipPanel(); $('chipCanvas').focus({ preventScroll: true });
     });
   }
+
+  /* ---- the dive: the earlier site's flat, continuous zoom (src/app/world.js), from the chip down to the atom, in the
+     frame. Tap a part and its note sits on the picture; the questions crossing a level are dots on their parts. ---- */
+  const vui = $('diveui');
+  let diveFrame = null, diveD = 0, divePart = null, diveThread = null, WE = null;
+  const diveId = () => WE.IDS[diveD];
+  const ensureDive = () => dive ? Promise.resolve(dive) : Promise.all([import('../engines/weave.js'), import('../app/world.js'), import('../data/weave.js')]).then(([E, Wm, Wd]) => {
+    WE = E; E.setWorld('datacentre'); DiveData = Wd;
+    dive = Wm.createWorld($('diveCanvas'), { depth: d => diveAt(d), arrive: d => diveAt(d), part: (d, key) => { divePart = key; diveNotes(); }, pick: th => { diveThread = th; dive.setThread(th); drawDive(); } });
+    return dive;
+  });
+  let DiveData = null;
+  function diveAt(d) {
+    const id = WE.IDS[d];
+    if (!DIVE_LEVELS.includes(id)) { location.hash = '#/place/datacentre/' + (id === 'board' ? 4 : 2); return; }   /* above the chip, the flight takes over */
+    if (d !== diveD) { divePart = null; diveThread = null; dive.setThread(null); }
+    diveD = d; if (!diveFrame) return;
+    diveFrame.rail(id, DIVE_LEVELS.indexOf(id) / (DIVE_LEVELS.length - 1)); diveFrame.level(id); diveNotes();
+    if (diveFrame.mode() === 'look') drawDive();
+  }
+  /* words on the picture: the part you tapped, else the part this level is about, from its one home in the atlas */
+  function diveNotes() {
+    const id = diveId(), key = divePart || DiveData.NOTE_AT[id]; if (!key) return dive.setNotes([]);
+    const w = DiveData.partWord(id, key); dive.setNotes([{ part: key, title: t('part.' + w), text: t('what.' + w), tone: 'cool' }]);
+  }
+  function drawDive() {
+    const id = diveId(), i = DIVE_LEVELS.indexOf(id), last = i === DIVE_LEVELS.length - 1;
+    const key = diveThread && DiveData.STOPS[diveThread + '.' + id] ? diveThread + '.' + id : stopsAt(id)[0];
+    diveFrame.dock.innerHTML = lineHtml(t('place.level', { n: i + 1, total: DIVE_LEVELS.length }) + ' · ' + t('depth.' + id + '.name'), t('depth.' + id + '.see'), key,
+      '<button type="button" class="btn ghost" data-divego="' + (diveD - 1) + '">' + esc(t(i ? 'story.back' : 'dive.up')) + '</button>' +
+      (last ? '<a class="btn primary" href="#/">' + esc(t('chipx.back')) + '</a>' : '<button type="button" class="btn primary" data-divego="' + (diveD + 1) + '">' + esc(t('chipx.deeper')) + '</button>')).replace('<div class="nav">', '<p class="small muted hintline">' + esc(t('dive.hint')) + '</p><div class="nav">');
+    requestAnimationFrame(diveInset);
+  }
+  /* keep the picture clear of the frame: the rail on the left, the corner, the dock below */
+  const diveInset = () => { if (!dive || !diveFrame) return; const wide = innerWidth > 720, b = diveFrame.dock.offsetHeight + (wide ? 34 : 18); dive.setInset({ l: wide ? 90 : 8, r: wide ? 20 : 8, t: wide ? 70 : 120, b }); };
+  function showDive(depth) {
+    hideAll(); document.body.classList.add('immersive');
+    $('diveCanvas').hidden = false; vui.hidden = false;
+    loading(true);
+    Promise.all([withFrame(), ensureDive()]).then(([, w]) => {
+      diveFrame = frameOf(vui, { up: { href: '#/place/datacentre/5', label: t('board.up') }, path: [{ href: '#/', label: t('place.back') }, { href: '#/place/datacentre/5', label: t('map.datacentre.t') }, { label: t('dive.title') }],
+        rail: { label: t('place.levels'), items: DIVE_LEVELS.map(k => ({ id: k, label: t('depth.' + k + '.name') })) }, turn: true,
+        onRail: k => w.flyTo(WE.IDS.indexOf(k)), onTurn: (face, tw) => { if (face !== 'used') turnTo(face, tw); }, onLook: drawDive });
+      vui.onclick = e => { const b = e.target.closest('[data-divego]'); if (b) w.flyTo(+b.dataset.divego); };
+      const d = WE.IDS.indexOf(DIVE_LEVELS.includes(depth) ? depth : 'chip');
+      loading(false); w.start(); w.setZ(d); diveD = -1; diveAt(d); $('diveCanvas').focus({ preventScroll: true });
+    });
+  }
+  addEventListener('resize', () => { if (!vui.hidden) diveInset(); });
 
   /* ---- one board, no side panel: words on the parts, a story docked below that drives the camera ---- */
   const bui = $('boardui');
@@ -270,11 +322,13 @@ export function start() {
   let story = null;
   /* every view hides the others first */
   function hideAll() {
+    $('diveCanvas').hidden = true; vui.hidden = true; dive && dive.stop();
     hideBoard(); $('hero').hidden = true; hudEl.hidden = true; closeSheet(); pui.hidden = true; cui.hidden = true; dc && dc.pause(); map && map.pause(); chip && chip.pause();
     ['mapCanvas', 'mapLabels', 'placeCanvas', 'placeLabels', 'chipCanvas', 'chipLabels'].forEach(k => { $(k).hidden = true; });
     document.body.classList.remove('immersive'); page.hidden = true;
   }
   function showMap() {
+    $('diveCanvas').hidden = true; vui.hidden = true; dive && dive.stop();
     hideBoard(); document.body.classList.remove('immersive');
     $('chipCanvas').hidden = $('chipLabels').hidden = true; cui.hidden = true; chip && chip.pause();
     $('placeCanvas').hidden = $('placeLabels').hidden = true; pui.hidden = true; dc && dc.pause();
@@ -324,10 +378,11 @@ export function start() {
   /* ---- routes ---- */
   function route() {
     const parts = (location.hash.replace(/^#\/?/, '') || '').split('/').filter(Boolean), k = parts[0] || 'explore';
-    const nav = k === 'place' || k === 'chip' || k === 'board' ? 'explore' : MENU.includes(k) ? k : 'explore';
+    const nav = k === 'place' || k === 'chip' || k === 'board' || k === 'dive' ? 'explore' : MENU.includes(k) ? k : 'explore';
     menu.querySelectorAll('[data-nav]').forEach(a => a.setAttribute('aria-current', a.dataset.nav === nav ? 'page' : 'false'));
     page.hidden = true;
     if (k === 'board') return showBoard();
+    if (k === 'dive') return showDive(parts[1]);
     if (k === 'do' && parts[1]) { showMap().then(() => openChallenge(Game.challengeOf(parts[1]))); return; }
     if (k === 'chip') return showChip(parts[1] != null ? +parts[1] : null, parts[2]);
     if (k === 'place' && parts[1] === 'datacentre' && parts[2] !== 'inside') return showPlace('datacentre', parts[2] != null ? +parts[2] : null);

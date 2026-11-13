@@ -164,6 +164,13 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
   await page.click('#chipui .modes3 [data-mode="ask"]').catch(() => {});
   if (!(await page.$('#chipui .dock .askline'))) problems.push(tag + ': Ask shows no questions at this level');
   await page.click('#chipui .dock [data-mode="look"]').catch(() => {});
+  /* the flat dive in the frame: the rail follows it down, and the Turn leads to the same level as made */
+  await page.evaluate(() => { location.hash = '#/dive/gate'; });
+  await page.waitForFunction(() => { const c = document.querySelector('#diveui .rail2 [aria-current]'); return c && c.dataset.rail === 'gate'; }, null, { timeout: 15000 }).catch(() => problems.push(tag + ': the dive did not open at the gate'));
+  await page.click('#diveui [data-divego]:not(.ghost)').catch(() => problems.push(tag + ': no way deeper in the dive'));
+  await page.waitForFunction(() => { const c = document.querySelector('#diveui .rail2 [aria-current]'); return c && c.dataset.rail === 'switch'; }, null, { timeout: 15000 }).catch(() => problems.push(tag + ': going deeper in the dive did not reach the switch'));
+  await page.click('#diveui [data-face="made"]').catch(() => problems.push(tag + ': no Turn in the dive'));
+  await page.waitForFunction(() => location.hash === '#/chip/3/build', null, { timeout: 8000 }).catch(() => problems.push(tag + ': turning the switch to made did not open its factory step'));
   /* the board: a story drives the scene; a prediction comes before the live number moves */
   await page.evaluate(() => { location.hash = '#/board'; });
   await page.waitForSelector('#boardui .dock .line', { timeout: 15000 }).catch(() => problems.push(tag + ': the board did not open'));
