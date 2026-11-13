@@ -2056,5 +2056,13 @@
  "dive.title": "The dive, chip to atom",
  "dive.flat": "The flat dive",
  "dive.up": "Up to the chip in its rack",
- "dive.hint": "Scroll to go deeper. Tap a part to name it; a coloured dot is a question that crosses here."
+ "dive.hint": "Scroll to go deeper. Tap a part to name it; a coloured dot is a question that crosses here.",
+ "line.title": "The line: one wafer through the factory",
+ "line.stepN": "Step {n} of {total}",
+ "line.next": "Next step",
+ "line.end": "Packaged: on to the port",
+ "line.hint": "The wafer travels between the machines. Tap a machine or a part to name it.",
+ "bench.title": "The bench: your design, step by step",
+ "bench.toFab": "Send the masks to the factory",
+ "bench.hint": "The drawings show your design. Open Do to write one, and watch them change."
 }

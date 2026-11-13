@@ -6,7 +6,7 @@
 
    createFrame(host, o): o.up { href, label }, o.path [{ href, label }], o.rail { label, items: [{ id, label }] },
    o.turn (true to offer it), o.follow(key) → address of a question, o.askAt(depth) → stop keys,
-   o.doAt(depth) → [{ id, title, where }], o.onRail(id), o.onTurn(face, twin), o.onLook().
+   o.doAt(depth) → [{ id, title, where, href }], o.onRail(id), o.onTurn(face, twin), o.onLook().
    Returns { dock, level(depth), rail(at, fill), goal(html), mode(), look() }. */
 import { t } from '../core/i18n.js';
 import { twinOf, TWINS } from '../data/atlas.js';
@@ -44,7 +44,7 @@ export function createFrame(host, o) {
     if (mode === 'look') return o.onLook && o.onLook();
     let h = '<p class="kicker">' + esc(t('frame.' + mode + 'At', { level: depth ? t('depth.' + depth + '.name') : '' })) + '</p>';
     if (mode === 'ask') { const ks = depth ? o.askAt(depth) : []; h += ks.length ? '<div class="asklist">' + ks.map(k => '<a class="askline" href="' + esc(o.follow(k)) + '"><span class="q">' + esc(t('stop.' + k + '.q')) + '</span></a>').join('') + '</div>' : '<p class="small muted">' + esc(t('frame.noAsk')) + '</p>'; }
-    else { const cs = depth ? o.doAt(depth) : []; h += cs.length ? '<div class="dolist">' + cs.map(c => '<a class="dochip" href="#/do/' + esc(c.id) + '"><b>' + esc(c.title) + '</b><span class="small muted">' + esc(c.where) + '</span></a>').join('') + '</div>' : '<p class="small muted">' + esc(t('frame.noDo')) + '</p>'; }
+    else { const cs = depth ? o.doAt(depth) : []; h += cs.length ? '<div class="dolist">' + cs.map(c => '<a class="dochip" href="' + esc(c.href || '#/do/' + c.id) + '"><b>' + esc(c.title) + '</b><span class="small muted">' + esc(c.where) + '</span></a>').join('') + '</div>' : '<p class="small muted">' + esc(t('frame.noDo')) + '</p>'; }
     h += '<div class="nav"><button type="button" class="btn ghost" data-mode="look">' + esc(t('frame.backToLook')) + '</button></div>';
     dock.innerHTML = h; dock.classList.remove('locked');
   };
