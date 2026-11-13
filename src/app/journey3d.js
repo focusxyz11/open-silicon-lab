@@ -576,12 +576,17 @@ export function stationForTest(id, ids) {
 }
 
 /* ======== the view ======== */
-export function createJourney3D(host, before) {
-  let renderer;
-  try { renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false, powerPreference: 'high-performance' }); } catch (e) { return null; }
-  const cv = renderer.domElement; cv.id = 'world3d'; cv.setAttribute('aria-hidden', 'true');
-  host.insertBefore(cv, before);
-  renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFShadowMap;
+/* shared: a renderer lent by the page (the chip world's one stage, src/v2/kit3d.js). Then the machines draw on
+   its canvas, which the page shows and hides; the page's tone mapping and pixel ratio are left as they were. */
+export function createJourney3D(host, before, shared) {
+  let renderer, cv;
+  if (shared) { renderer = shared.renderer; cv = { style: {} }; }
+  else {
+    try { renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false, powerPreference: 'high-performance' }); } catch (e) { return null; }
+    cv = renderer.domElement; cv.id = 'world3d'; cv.setAttribute('aria-hidden', 'true');
+    host.insertBefore(cv, before);
+    renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFShadowMap;
+  }
   /* if frames come too slowly (an older phone), drop shadows and sharpness, once */
   const perf = { ema: 16, low: false, seen: 0 };
   const scene = new THREE.Scene(), camera = new THREE.PerspectiveCamera(30, 1, 0.1, 120);
@@ -648,7 +653,7 @@ export function createJourney3D(host, before) {
     if (key !== theme) { theme = key; reset(col); }
     const dt = Math.min(0.1, Math.max(0, o.tm - lastT)); lastT = o.tm;
     if (dt > 0) { perf.ema = lerp(perf.ema, dt * 1000, 0.05); perf.seen++; }
-    if (!perf.low && perf.seen > 90 && perf.ema > 30) { perf.low = true; renderer.shadowMap.enabled = false; scene.traverse(q => { if (q.material) q.material.needsUpdate = true; }); }
+    if (!perf.low && perf.seen > 90 && perf.ema > 30) { perf.low = true; if (shared) sun.castShadow = false; else renderer.shadowMap.enabled = false; scene.traverse(q => { if (q.material) q.material.needsUpdate = true; }); }
     /* every station is built once and kept: the ones in view at once, then one more each frame, nearest
        first, so travelling never waits for a machine to be built. Only those near you are drawn. */
     const N = ids.length, inView = i => i >= 0 && i < N && Math.abs(i - o.Z) < 1.55;
@@ -697,12 +702,14 @@ export function createJourney3D(host, before) {
     sun.position.set(look.x - 4, 12, look.z + 6); sun.target.position.copy(look);
     /* fit: the station fills the dive's box; the rest of the canvas shows its surroundings */
     const { W, H, dpr, box } = o;
-    const pr = Math.min(dpr, perf.low ? 1 : 1.5); if (renderer.getPixelRatio() !== pr) renderer.setPixelRatio(pr);
+    const pr = Math.min(dpr, perf.low ? 1 : 1.5); if (!shared && renderer.getPixelRatio() !== pr) renderer.setPixelRatio(pr);
     const sz = renderer.getSize(new THREE.Vector2()); if (sz.x !== W || sz.y !== H) renderer.setSize(W, H, false);
     camera.fov = (2 * Math.atan(Math.tan((30 * Math.PI) / 360) * (H / box.B)) * 180) / Math.PI; camera.aspect = W / H;
     /* the band covers the bottom of the box on a wide screen: aim a little above the middle */
     const cy = box.below ? box.cy : box.cy - box.B * 0.07;
     camera.setViewOffset(W, H, W / 2 - box.cx, H / 2 - cy, W, H); camera.updateProjectionMatrix();
+    /* drawn as on its own renderer: no tone mapping (a lent renderer gets its own back after the frame) */
+    const tone = renderer.toneMapping; renderer.toneMapping = THREE.NoToneMapping;
     renderer.render(scene, camera);
     /* the lens: your wafer's surface, magnified, beside the machine while it works */
     let seen = null;
@@ -714,6 +721,7 @@ export function createJourney3D(host, before) {
       seen = lens.render({ camera, renderer, mode: lens.mode, L: lens.L, a: lens.a, t: o.tm, dt, anchor: lens.anchor || look, k: mode ? closeK : 0, box, W, H });
       lens.on = !!seen;
     }
+    renderer.toneMapping = tone; if (shared && shared.shown) shared.shown();
     return { lens: seen, mode: lens.mode };
   }
   /* where a station's parts are on screen, in the dive box's 1000 x 1000 space */
@@ -724,7 +732,7 @@ export function createJourney3D(host, before) {
     for (const k in st.parts) out[k] = st.parts[k].map(list => hull(list.map(p => { v.copy(p).project(camera); return [((v.x + 1) / 2 * W - left) / box.B * 1000, ((1 - v.y) / 2 * H - top) / box.B * 1000]; })));
     return out;
   }
-  return { render, parts, canvas: cv, dispose() { renderer.dispose(); cv.remove(); } };
+  return { render, parts, canvas: cv, dispose() { if (!shared) { renderer.dispose(); cv.remove(); } } };
 }
 function hull(q) {
   q = q.slice().sort((a, b) => a[0] - b[0] || a[1] - b[1]);

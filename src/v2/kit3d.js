@@ -42,6 +42,9 @@ export function stage(canvas) {
     renderer: o.renderer, env: o.env,
     size(W, H) { if (W > 0 && H > 0) { w = W; h = H; } },
     draw(scene, camera) { if (!w) return; o.renderer.getSize(SZ); if (SZ.x !== w || SZ.y !== h) o.renderer.setSize(w, h, false); o.renderer.render(scene, camera); },
+    /* a view drawing on its own schedule (the line's machines) shows the canvas once its first picture is on it,
+       so the last view's picture never shows through */
+    shown() { o.cv.hidden = false; },
     warm(scene, camera) { const c = o.renderer.compileAsync; return c ? c.call(o.renderer, scene, camera).catch(() => { /* compiled on first draw instead */ }) : Promise.resolve(); }
   };
 }

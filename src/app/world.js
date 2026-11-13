@@ -81,7 +81,7 @@ const smooth = (a, b, x) => { const u = Math.max(0, Math.min(1, (x - a) / (b - a
 
 /* the earlier site's own chrome over the picture: the marks along the top and the dive label. The chip world's
    frame says the same things, so it switches them off (setChrome). */
-const CHROME = { dots: true, dive: true };
+const CHROME = { dots: true, dive: true, stage: null };
 export const setChrome = o => Object.assign(CHROME, o);
 export function createWorld(cv, on) {
   const ctx = cv.getContext('2d'), t0 = performance.now();
@@ -168,7 +168,7 @@ export function createWorld(cv, on) {
   const want3d = () => {
     if (j3state !== 'none') return;
     j3state = 'loading';
-    import('./journey3d.js').then(m => { J3 = m.createJourney3D(cv.parentNode, cv); j3state = J3 ? 'ready' : 'off'; if (J3) cv.classList.add('over3d'); }).catch(() => { j3state = 'off'; });
+    import('./journey3d.js').then(m => { J3 = m.createJourney3D(cv.parentNode, cv, CHROME.stage ? CHROME.stage() : null); j3state = J3 ? 'ready' : 'off'; if (J3) cv.classList.add('over3d'); }).catch(() => { j3state = 'off'; });
   };
   function renderLine3(tm, b) {
     const near = Math.round(Z), dist = Math.abs(Z - near);

@@ -2069,6 +2069,9 @@
  "game.op.and.d": "AND: 1 only when both inputs are 1",
  "game.op.or.d": "OR: 1 when either input is 1",
  "game.op.xor.d": "XOR: 1 when exactly one input is 1",
- "game.tap.hint": "It adds two bits, but one gate is wrong. Tap a gate to change it: the table checks all four sums after every tap.",
- "game.tap.write": "Write it yourself"
+ "game.tap.write": "Write it yourself",
+ "game.tap.half": "It adds two bits, but one gate is wrong. Tap a gate to change it: the table checks all four sums after every tap.",
+ "game.tap.vote": "The output should be 1 when at least two inputs are 1, but one pair is missing. Add the piece that covers it: the table checks all eight patterns after every tap.",
+ "game.tap.full": "The sum should be 1 when an odd number of the three inputs are 1, but the sum line forgets one input. Add the piece that brings it in.",
+ "game.tap.pieces": "Pieces to add to the first line (tap again to take one off)"
 }

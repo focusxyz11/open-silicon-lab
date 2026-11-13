@@ -190,3 +190,15 @@ test('your design travels with your chip once a design challenge is won', () => 
   s.done.half = true; s.codes.half = solutionOf('half');
   const Y = G.yourDesign(s); assert.equal(Y.p, 'half'); assert.ok(Y.B.M.cells.length > 0 && Y.B.transistors > 0 && Y.B.masks > 0);
 });
+
+test('every tap challenge starts wrong and has exactly one tap that makes it right', () => {
+  for (const [id, cfg] of Object.entries(G.TAPS)) {
+    const ch = G.challengeOf(id), start = G.starter(ch.p);
+    assert.equal(G.checkDesign(ch.p, start).ok, false, id + ' starts right: nothing to fix');
+    const gates = (start.match(/[&|^]/g) || []).length, wins = [];
+    for (let k = 0; k < gates; k++) for (let n = 1; n <= 2; n++) { let c = start; for (let j = 0; j < n; j++) c = G.turnGate(c, k); if (G.checkDesign(ch.p, c).ok) wins.push('gate ' + k + ' x' + n); }
+    (cfg.pieces || []).forEach(pc => { const c = G.togglePiece(start, cfg.line, pc); if (G.checkDesign(ch.p, c).ok) wins.push(pc); });
+    assert.equal(wins.length, 1, id + ' should have one winning tap, has: ' + wins.join(', '));
+    (cfg.pieces || []).forEach(pc => { const on = G.togglePiece(start, cfg.line, pc); assert.ok(G.hasPiece(on, cfg.line, pc)); assert.equal(G.togglePiece(on, cfg.line, pc), start, id + ': a piece taken off leaves the line as it was'); });
+  }
+});

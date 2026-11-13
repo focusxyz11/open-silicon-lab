@@ -213,15 +213,15 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
   await page.waitForFunction(() => location.hash.startsWith('#/line/'), null, { timeout: 15000 }).catch(() => problems.push(tag + ': going inside did not reach the line'));
   await page.waitForTimeout(3000);
   await page.keyboard.press('Escape');
-  await page.waitForFunction(() => location.hash === '#/place/fab', null, { timeout: 15000 }).catch(() => problems.push(tag + ': Escape did not rise to the factory'));
+  /* software rendering on a CI machine can take seconds per frame of the line: give the key time to be handled */
+  await page.waitForFunction(() => location.hash === '#/place/fab', null, { timeout: 45000 }).catch(() => problems.push(tag + ': Escape did not rise to the factory'));
   await page.waitForTimeout(3000);
   const moves = await page.evaluate(() => window.MOVES);
   if (moves.join() !== 'in,out') problems.push(tag + ': the views did not zoom in and out (' + moves.join() + ')');
-  /* one stage: the island, the data centre, the chip and the board all draw with one renderer (the line's machines,
-     from the earlier site, keep their own) */
-  for (const h of ['#/place/datacentre/1', '#/chip/0', '#/board', '#/']) { await page.evaluate(x => { location.hash = x; }, h); await page.waitForTimeout(2500); }
+  /* one stage: the island, the data centre, the chip, the board and the line's machines all draw with one renderer */
+  for (const h of ['#/place/datacentre/1', '#/chip/0', '#/board', '#/line/print', '#/']) { await page.evaluate(x => { location.hash = x; }, h); await page.waitForTimeout(2500); }
   const gl = await page.evaluate(() => window.GL);
-  if (gl > 2) problems.push(tag + ': ' + gl + ' WebGL contexts; the 3D views should share one stage');
+  if (gl > 1) problems.push(tag + ': ' + gl + ' WebGL contexts; every 3D view should share the one stage');
   await page.close();
 }
 await browser.close(); await browser3d.close(); server.close();

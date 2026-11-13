@@ -80,14 +80,17 @@ simply changes.
 canvas (`stage()` and `showStage()` in `src/v2/kit3d.js`). Each view keeps its own canvas as the surface you touch
 and focus, and the one that is running draws its scene on the shared canvas beneath. While the island is shown,
 the other three are made one by one in idle time, paused, and their shaders compiled (`warm()`), so going inside
-finds them ready. One context instead of four: less memory on a phone and no rebuilding. The line's machines,
-from the earlier site (`src/app/journey3d.js`), keep their own renderer for now.
+finds them ready. The line's machines (`src/app/journey3d.js`, from the earlier site) draw on it too: the flat world
+lends them the stage (`setChrome({ stage })` in `src/app/world.js`), they draw without tone mapping as they always
+did and show the canvas once their first picture is on it. One context instead of five: less memory on a phone and
+no rebuilding. The earlier site, which lends nothing, keeps its own renderer for the line.
 
 **The first minute and feedback.** A first visit opens on a wide shot of the sea and comes down to the island
 (`map.intro`), and the hero rises after it with one sentence and one glowing button. The first challenge is won by
 tapping, not typing: the half adder's description shows its gates as buttons (OR, AND, XOR), the table checks all
 four sums after every tap, and one tap fixes it (the design engine still decides; "Write it yourself" opens the
-text). Everything you do answers: a wrong check shakes, a row that turns right flashes, a gauge that reaches its
+text). The voter and the full adder play the same way, with a tray of pieces where a gate is not enough (`TAPS` in
+`src/v2/game.js`; a test checks each has exactly one winning tap). Everything you do answers: a wrong check shakes, a row that turns right flashes, a gauge that reaches its
 target pops, a win bursts in the dock while the island grows where it happened and the camera leans in
 (`map.punch`), the step in the bar bumps and counts one up, and the next challenge glows. Your chip's pin pulses so
 you always see where you are. With reduced motion none of it moves.
@@ -145,6 +148,6 @@ shows what it becomes. Your own design rides through all three: its masks drive 
 | Bench | the studio in the frame (`#/bench/<level>[/<challenge>]`): its drawings show your design; a design challenge is played in the dock and the drawings follow it; masks lead to the line |
 | Turn | in the atlas and in the frame: each face opens its view, used the dive, made the line, designed the bench |
 | First minute | the intro shot, one sentence, a glowing start; the first win in one tap; feedback for wrong, right, reached and won |
-| One stage | one renderer and one GL canvas for the island, the data centre, the chip and the board; the views made and compiled ahead while the island is shown; the line's machines still have their own |
+| One stage | one renderer and one GL canvas for the island, the data centre, the chip, the board and the line's machines; the views made and compiled ahead while the island is shown |
 | No cuts | the camera dives into a place and rises out of it; views zoom in, out, turn or slide into each other; the bar, the dock and the ornaments stay; code preloaded, spinner only when slow |
 | One HUD | the bar never hides and carries the tracker; the island's place opens in a dock (Look first, Go inside); the earlier site's chrome is off inside the frame; ← → and Escape everywhere |
