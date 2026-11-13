@@ -11,8 +11,12 @@ const { chromium } = require('playwright');
 
 const server = await serve(0), base = 'http://localhost:' + server.address().port + '/';
 const browser = await chromium.launch(), problems = [];
+/* a watchdog: a page that stops answering (a stuck software renderer on a CI machine) fails the test with where it was,
+   instead of hanging the run */
+let at = 'start';
+setTimeout(() => { console.error('Smoke test stuck at: ' + at + (problems.length ? '\nProblems so far:\n' + problems.join('\n') : '')); process.exit(1); }, 20 * 60 * 1000).unref();
 for (const [tag, viewport, scheme] of [['desktop', { width: 1360, height: 860 }, 'dark'], ['phone', { width: 390, height: 844 }, 'light']]) {
-  const page = await browser.newPage({ viewport, colorScheme: scheme });
+  at = tag; const page = await browser.newPage({ viewport, colorScheme: scheme });
   page.on('pageerror', e => problems.push(tag + ': ' + e.message));
   page.on('console', m => { if (m.type() === 'error' && !/fonts\.g|net::ERR/.test(m.text())) problems.push(tag + ': console: ' + m.text()); });
   await page.goto(base + 'classic.html');
@@ -130,7 +134,7 @@ for (const [tag, viewport, scheme] of [['desktop', { width: 1360, height: 860 },
 /* its own browser, with software WebGL, so the island can draw on a machine without a GPU */
 const browser3d = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
 for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height: 800 }, 'light'], ['explore phone', { width: 390, height: 844 }, 'dark']]) {
-  const page = await browser3d.newPage({ viewport, colorScheme: scheme, reducedMotion: 'reduce' });
+  at = tag; const page = await browser3d.newPage({ viewport, colorScheme: scheme, reducedMotion: 'reduce' });
   page.on('pageerror', e => problems.push(tag + ': ' + e.message));
   page.on('console', m => { if (m.type() === 'error' && !/fonts\.g|net::ERR|WebGL|GPU/.test(m.text())) problems.push(tag + ': console: ' + m.text()); });
   await page.goto(base + 'index.html');
@@ -152,21 +156,21 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
   await page.click('#sheet [data-door="look"]');
   if (!(await page.$('#sheet .lvchips a')) || !(await page.$('#sheet .nav .btn.primary'))) problems.push(tag + ': Look shows no way inside the studio');
   /* questions stay in the chip world: the questions page and a followed question never send you to the earlier site */
-  await page.evaluate(() => { location.hash = '#/questions'; });
+  at = tag + ' ' + '#/questions'; await page.evaluate(() => { location.hash = '#/questions'; });
   await page.waitForSelector('#page .qcard', { timeout: 10000 }).catch(() => problems.push(tag + ': the questions page shows no questions'));
   if (await page.$('#page .qcard[href*="classic"]')) problems.push(tag + ': a question still leads to the earlier site');
-  await page.evaluate(() => { location.hash = '#/ask/think/gate'; });
+  at = tag + ' ' + '#/ask/think/gate'; await page.evaluate(() => { location.hash = '#/ask/think/gate'; });
   await page.waitForSelector('#diveui .dock .trailq', { timeout: 20000 }).catch(() => problems.push(tag + ': following a question did not show its stop in the dive'));
   await page.click('#diveui .dock [data-key="next"]').catch(() => problems.push(tag + ': a stop has no next stop'));
   await page.waitForFunction(() => location.hash === '#/ask/think/switch', null, { timeout: 15000 }).catch(() => problems.push(tag + ': the next stop is not the switch'));
   await page.waitForSelector('#diveui .dock .root2', { timeout: 15000 }).catch(() => problems.push(tag + ': after two stops the question underneath did not show'));
-  await page.evaluate(() => { location.hash = '#/challenges'; });
+  at = tag + ' ' + '#/challenges'; await page.evaluate(() => { location.hash = '#/challenges'; });
   await page.waitForSelector('#page .stepsec', { timeout: 10000 }).catch(() => {});
   if ((await page.$$('#page .stepsec')).length !== 6) problems.push(tag + ': the challenges page does not show five steps and the open jobs');
-  await page.evaluate(() => { location.hash = '#/build'; });
+  at = tag + ' ' + '#/build'; await page.evaluate(() => { location.hash = '#/build'; });
   await page.waitForSelector('#page .tree', { timeout: 10000 }).catch(() => problems.push(tag + ': the build page has no plan'));
   /* inside a chip: dive down the layers, then switch to building them and step up */
-  await page.evaluate(() => { location.hash = '#/chip/0'; });
+  at = tag + ' ' + '#/chip/0'; await page.evaluate(() => { location.hash = '#/chip/0'; });
   /* the frame: the rail, Look · Do · Ask from the atlas, and the Turn between used and made */
   await page.waitForSelector('#chipui .dock .line', { timeout: 15000 }).catch(() => problems.push(tag + ': the chip view did not open in its frame'));
   await page.click('#chipui [data-rowgo="1"]').catch(() => problems.push(tag + ': no way deeper in the chip'));
@@ -177,7 +181,7 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
   if (!(await page.$('#chipui .dock .askline'))) problems.push(tag + ': Ask shows no questions at this level');
   await page.click('#chipui .dock [data-mode="look"]').catch(() => {});
   /* the flat dive in the frame: the rail follows it down, and the Turn leads to the same level as made */
-  await page.evaluate(() => { location.hash = '#/dive/gate'; });
+  at = tag + ' ' + '#/dive/gate'; await page.evaluate(() => { location.hash = '#/dive/gate'; });
   await page.waitForFunction(() => { const c = document.querySelector('#diveui .rail2 [aria-current]'); return c && c.dataset.rail === 'gate'; }, null, { timeout: 15000 }).catch(() => problems.push(tag + ': the dive did not open at the gate'));
   await page.click('#diveui [data-divego]:not(.ghost)').catch(() => problems.push(tag + ': no way deeper in the dive'));
   await page.waitForFunction(() => { const c = document.querySelector('#diveui .rail2 [aria-current]'); return c && c.dataset.rail === 'switch'; }, null, { timeout: 15000 }).catch(() => problems.push(tag + ': going deeper in the dive did not reach the switch'));
@@ -188,14 +192,14 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
   await page.click('#diveui [data-divego]:not(.ghost)').catch(() => problems.push(tag + ': no next step on the line'));
   await page.waitForFunction(() => { const c = document.querySelector('#diveui .rail2 [aria-current]'); return c && c.dataset.rail === 'implant'; }, null, { timeout: 20000 }).catch(() => problems.push(tag + ': the next step on the line is not implanting'));
   /* the bench: a design written in the dock, checked, won */
-  await page.evaluate(() => { location.hash = '#/bench/logic/half'; });
+  at = tag + ' ' + '#/bench/logic/half'; await page.evaluate(() => { location.hash = '#/bench/logic/half'; });
   await page.waitForSelector('#diveui .dock .player [data-write], #diveui .dock #chCode', { timeout: 15000 }).catch(() => problems.push(tag + ': the bench did not open the design'));
   await page.click('#diveui .dock [data-write]', { timeout: 3000 }).catch(() => {});   /* the half adder opens for tapping; write it instead */
   await page.fill('#diveui .dock #chCode', 'sum = a ^ b;\ncarry = a & b;').catch(() => {});
   await page.click('#diveui .dock [data-check]').catch(() => {});
   await page.waitForSelector('#diveui .dock .won', { timeout: 10000 }).catch(() => problems.push(tag + ': a right design on the bench did not win'));
   /* the board: a story drives the scene; a prediction comes before the live number moves */
-  await page.evaluate(() => { location.hash = '#/board'; });
+  at = tag + ' ' + '#/board'; await page.evaluate(() => { location.hash = '#/board'; });
   await page.waitForSelector('#boardui .dock .line', { timeout: 15000 }).catch(() => problems.push(tag + ': the board did not open'));
   for (const i of [1, 2, 3]) await page.click('#boardui .dock [data-go="' + i + '"]').catch(() => problems.push(tag + ': no step ' + i + ' on the board'));
   if (!(await page.$('#boardui .dock [data-guess]'))) problems.push(tag + ': the board asks for no prediction');
@@ -210,7 +214,7 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
 /* one stage and no cuts: with motion on, going inside from the island dives the camera in, then the view zooms in from it
    (a view transition); rising goes back out. A duplicate name or a stuck view would show as an error here. */
 {
-  const tag = 'motion', page = await browser3d.newPage({ viewport: { width: 1280, height: 800 } });
+  at = 'motion'; const tag = 'motion', page = await browser3d.newPage({ viewport: { width: 1280, height: 800 } });
   page.on('pageerror', e => problems.push(tag + ': ' + (e.stack || e.message).split('\n').slice(0, 3).join(' | ')));
   page.on('console', m => { if (m.type() === 'error' && !/fonts\.g|net::ERR|WebGL|GPU/.test(m.text())) problems.push(tag + ': console: ' + m.text()); });
   await page.addInitScript(() => { window.GL = 0; const g = HTMLCanvasElement.prototype.getContext; HTMLCanvasElement.prototype.getContext = function (k, ...a) { if (/webgl/.test(k) && !this.__gl) { this.__gl = 1; window.GL++; } return g.call(this, k, ...a); };
