@@ -53,9 +53,10 @@ Every view wears the same frame. There is no column of text beside the picture.
   part. Its words are touchable (`[[part|words]]` lights the part) and live (`[[#name]]` is a number you drag). A step
   can ask for a prediction before the number moves. Stories are data (`src/v2/stories.js`), played by
   `src/v2/story.js`, and their numbers come from the engines.
-- **Look · Do · Ask** switch what the frame holds: Look is the story; Do opens the bench in the dock, with the goal
+- **Look · Do · Ask** (`src/v2/frame.js`) switch what the frame holds: Look is the story; Do opens the bench in the dock, with the goal
   as an ornament and the result shown in the scene; Ask shows the questions as marks on their parts and lets you
-  follow one as a thread across places.
+  follow one as a thread across places. Do and Ask are filled by the frame itself from the atlas, for the level in
+  view, so a view gets them by saying which level it shows (`frame.level(depth)`).
 
 Text has a budget: about one sentence per story step, one line per card. Longer reading (notes, sources, the full
 explanation) goes into a reading view, opened on purpose, at a reading width.
@@ -101,11 +102,11 @@ shows what it becomes. Your own design rides through all three: its masks drive 
 | Piece | State |
 | --- | --- |
 | Atlas (parts, questions, challenges, stories, the Turn) | in place, tested |
-| Frame: scene, ornaments, docked story | prototype on the board (`#/board`) |
+| Frame: scene, ornaments, docked story, Look · Do · Ask | `src/v2/frame.js`, worn by the flight, the stack and the board |
 | Map | the island |
 | Flight | the data centre |
 | Stack | inside a chip (`#/chip`) |
 | Dive | the earlier site; moves into the frame next |
 | Line | the earlier site's 3D factory; moves into the frame |
 | Bench | the challenge player in a sheet; becomes the dock's Do |
-| Turn | in the atlas; the button comes with the dive in the frame |
+| Turn | in the atlas and in the frame: from the flight's chip and every layer of the stack |

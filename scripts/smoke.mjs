@@ -155,11 +155,15 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
   await page.waitForSelector('#page .tree', { timeout: 10000 }).catch(() => problems.push(tag + ': the build page has no plan'));
   /* inside a chip: dive down the layers, then switch to building them and step up */
   await page.evaluate(() => { location.hash = '#/chip/0'; });
-  await page.waitForSelector('#chipui .stack button.on', { timeout: 15000 }).catch(() => problems.push(tag + ': the chip view did not open'));
-  await page.click('#chipui .now [data-row="1"]').catch(() => problems.push(tag + ': no way deeper in the chip'));
-  await page.waitForFunction(() => /2/.test(document.querySelector('#chipui .stack button.on .n').textContent), null, { timeout: 15000 }).catch(() => problems.push(tag + ': going deeper did not reach the wires'));
-  await page.click('#chipui .seg [data-mode="build"]');
-  if (!/Wires/.test(await page.textContent('#chipui .now h2').catch(() => ''))) problems.push(tag + ': building does not name the step that made this layer');
+  /* the frame: the rail, Look · Do · Ask from the atlas, and the Turn between used and made */
+  await page.waitForSelector('#chipui .dock .line', { timeout: 15000 }).catch(() => problems.push(tag + ': the chip view did not open in its frame'));
+  await page.click('#chipui [data-rowgo="1"]').catch(() => problems.push(tag + ': no way deeper in the chip'));
+  await page.waitForFunction(() => { const c = document.querySelector('#chipui .rail2 [aria-current]'); return c && c.dataset.rail === 'block'; }, null, { timeout: 15000 }).catch(() => problems.push(tag + ': going deeper did not reach the blocks'));
+  await page.click('#chipui [data-face="made"]').catch(() => problems.push(tag + ': no Turn'));
+  if (!/Wires/.test(await page.textContent('#chipui .dock .kicker').catch(() => ''))) problems.push(tag + ': turning to made does not name the step that made this layer');
+  await page.click('#chipui .modes3 [data-mode="ask"]').catch(() => {});
+  if (!(await page.$('#chipui .dock .askline'))) problems.push(tag + ': Ask shows no questions at this level');
+  await page.click('#chipui .dock [data-mode="look"]').catch(() => {});
   /* the board: a story drives the scene; a prediction comes before the live number moves */
   await page.evaluate(() => { location.hash = '#/board'; });
   await page.waitForSelector('#boardui .dock .line', { timeout: 15000 }).catch(() => problems.push(tag + ': the board did not open'));
