@@ -213,7 +213,8 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
   await page.waitForFunction(() => location.hash.startsWith('#/line/'), null, { timeout: 15000 }).catch(() => problems.push(tag + ': going inside did not reach the line'));
   await page.waitForTimeout(3000);
   await page.keyboard.press('Escape');
-  await page.waitForFunction(() => location.hash === '#/place/fab', null, { timeout: 15000 }).catch(() => problems.push(tag + ': Escape did not rise to the factory'));
+  /* software rendering on a CI machine can take seconds per frame of the line: give the key time to be handled */
+  await page.waitForFunction(() => location.hash === '#/place/fab', null, { timeout: 45000 }).catch(() => problems.push(tag + ': Escape did not rise to the factory'));
   await page.waitForTimeout(3000);
   const moves = await page.evaluate(() => window.MOVES);
   if (moves.join() !== 'in,out') problems.push(tag + ': the views did not zoom in and out (' + moves.join() + ')');
