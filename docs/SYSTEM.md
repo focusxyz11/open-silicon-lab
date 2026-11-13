@@ -67,6 +67,15 @@ factory's band) are switched off (`setChrome` in `src/app/world.js`, `setBand` i
 says where you are, once. Every dock keeps one order: back and the other views on the left, the next step on the
 right (marked `data-key="back"` and `data-key="next"`).
 
+**No cuts.** Going between views is never a jump. Going inside from the island, the camera dives into the place
+first (`map.dive`), then the view zooms in from it; rising, the view zooms out and the island starts close to the
+place you left and pulls back (`map.from`). Between views the picture moves the way you did: deeper zooms in,
+higher zooms out, the Turn turns it, along slides it (a view transition in `route()`, the move on
+`<html data-move>`, the styles in `v2.css`). The bar, the dock, the way up, the corner and the rail keep their
+place, or glide to their new one. The views' code is fetched while the island is shown, and the spinner appears
+only if a view takes longer than a moment. With reduced motion, or where view transitions are missing, the view
+simply changes.
+
 Text has a budget: about one sentence per story step, one line per card. Longer reading (notes, sources, the full
 explanation) goes into a reading view, opened on purpose, at a reading width.
 
@@ -119,4 +128,5 @@ shows what it becomes. Your own design rides through all three: its masks drive 
 | Line | the earlier site's factory in the frame (`#/line/<step>`): a wafer travelling between the machines, step by step; your design at printing, etching and wiring |
 | Bench | the studio in the frame (`#/bench/<level>[/<challenge>]`): its drawings show your design; a design challenge is played in the dock and the drawings follow it; masks lead to the line |
 | Turn | in the atlas and in the frame: each face opens its view, used the dive, made the line, designed the bench |
+| No cuts | the camera dives into a place and rises out of it; views zoom in, out, turn or slide into each other; the bar, the dock and the ornaments stay; code preloaded, spinner only when slow |
 | One HUD | the bar never hides and carries the tracker; the island's place opens in a dock (Look first, Go inside); the earlier site's chrome is off inside the frame; ← → and Escape everywhere |

@@ -334,6 +334,10 @@ export function createMap(canvas, host, on = {}) {
       flyTo(p.at[0] + Math.sin(cam.yaw) * upv, p.at[1] + Math.cos(cam.yaw) * upv, d);
     },
     overview() { const h = home(); flyTo(h.x, h.z, h.d); },
+    /* the hand-offs with the views below: dive close into a place before going inside, and start close to the
+       place you come back from, then rise (no cut: the camera carries you in and out) */
+    dive(id) { const p = placeAt(id); if (!p) return Promise.resolve(); const ms = reduced() ? 1 : 650; flyTo(p.at[0], p.at[1], Math.max(38, p.d * 0.55), ms); return new Promise(r => setTimeout(r, ms)); },
+    from(id) { const p = placeAt(id); if (!p) return; fly = null; Object.assign(cam, { x: p.at[0], z: p.at[1], d: Math.max(38, p.d * 0.55), pitch: 0.8 }); place2(); },
     /* the archipelago: the islands where chips live, and the sea between */
     ecosystem() { if (innerWidth > 720) flyTo(106, 80, 800, 1500); else flyTo(-22, 166, 1250, 1500); },
     setState,

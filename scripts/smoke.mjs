@@ -196,6 +196,26 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
   if (await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1)) problems.push(tag + ': the page scrolls sideways');
   await page.close();
 }
+/* no cuts: with motion on, going inside from the island dives the camera in, then the view zooms in from it
+   (a view transition); rising goes back out. A duplicate name or a stuck view would show as an error here. */
+{
+  const tag = 'motion', page = await browser3d.newPage({ viewport: { width: 1280, height: 800 } });
+  page.on('pageerror', e => problems.push(tag + ': ' + e.message));
+  page.on('console', m => { if (m.type() === 'error' && !/fonts\.g|net::ERR|WebGL|GPU/.test(m.text())) problems.push(tag + ': console: ' + m.text()); });
+  await page.addInitScript(() => { window.MOVES = []; const o = document.startViewTransition && document.startViewTransition.bind(document); if (!o) return;
+    document.startViewTransition = f => { const tr = o(f); window.MOVES.push(document.documentElement.dataset.move); tr.ready.catch(e => window.MOVES.push('failed: ' + e.message)); return tr; }; });
+  await page.goto(base + 'index.html#/place/fab');
+  await page.waitForSelector('#sheet .nav .btn.primary', { timeout: 15000 }).catch(() => problems.push(tag + ': the factory has no way inside'));
+  await page.click('#sheet .nav .btn.primary');
+  await page.waitForFunction(() => location.hash.startsWith('#/line/'), null, { timeout: 15000 }).catch(() => problems.push(tag + ': going inside did not reach the line'));
+  await page.waitForTimeout(3000);
+  await page.keyboard.press('Escape');
+  await page.waitForFunction(() => location.hash === '#/place/fab', null, { timeout: 15000 }).catch(() => problems.push(tag + ': Escape did not rise to the factory'));
+  await page.waitForTimeout(3000);
+  const moves = await page.evaluate(() => window.MOVES);
+  if (moves.join() !== 'in,out') problems.push(tag + ': the views did not zoom in and out (' + moves.join() + ')');
+  await page.close();
+}
 await browser.close(); await browser3d.close(); server.close();
 if (problems.length) { console.error('Smoke test found problems:\n' + problems.join('\n')); process.exit(1); }
 console.log('Smoke test passed: the dive works in every world, and the redesign\'s island plays, on desktop and phone, in dark and light.');
