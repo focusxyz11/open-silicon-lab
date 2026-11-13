@@ -21,7 +21,7 @@ import { ROWS, ASK as CHIP_ASK } from './chip3d.js';
 const $ = id => document.getElementById(id);
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 const MENU = ['explore', 'challenges', 'questions', 'build', 'ecosystem'];
-const OLD = 'index.html?'; /* i18n-ok: a file name */
+const OLD = 'classic.html?'; /* i18n-ok: a file name: the earlier site, for the pages not yet in the frame */
 const oldUrl = (world, extra) => OLD + new URLSearchParams(Object.assign({ world }, extra || {}));
 const hue = th => (THREADS.find(x => x.id === th) || { hue: 200 }).hue;
 const qColor = key => 'hsl(' + hue(key.split('.')[0]) + ' 70% 55%)';
@@ -295,7 +295,9 @@ export function start() {
     const key = diveThread && DiveData.STOPS[diveThread + '.' + id] ? diveThread + '.' + id : stopsAt(id)[0];
     /* your design, where the line carries it */
     const Y = flatKind === 'line' && Game.yourDesign(S), yk = Y && ({ print: 'print', etch: 'etch', wires: 'wires' })[id];
-    const yours = yk ? '<div class="yours"><span class="kicker">' + esc(t('chipx.yours')) + '</span>' + esc(t('chipx.yours.' + yk, { name: t('design.proj.' + Y.p + '.t'), gates: Y.B.M.cells.length, transistors: Y.B.transistors, masks: Y.B.masks, wire: Math.round(Y.B.RT ? Y.B.RT.wl : 0) })) + '</div>' : '';
+    /* on the bench, what this station did with your design (the studio's caption, moved off the picture) */
+    const benchYours = flatKind === 'bench' ? '<div class="yours"><span class="kicker">' + esc(t('chipx.yours')) + '</span>' + esc(t('design.cap.' + id + '.d', DS.numbers())) + '</div>' : '';
+    const yours = benchYours + (yk ? '<div class="yours"><span class="kicker">' + esc(t('chipx.yours')) + '</span>' + esc(t('chipx.yours.' + yk, { name: t('design.proj.' + Y.p + '.t'), gates: Y.B.M.cells.length, transistors: Y.B.transistors, masks: Y.B.masks, wire: Math.round(Y.B.RT ? Y.B.RT.wl : 0) })) + '</div>' : '');
     const end = { dive: '<a class="btn primary" href="#/">' + esc(t('chipx.back')) + '</a>', line: '<a class="btn primary" href="#/place/port">' + esc(t('line.end')) + '</a>', bench: '<a class="btn primary" href="#/line/print">' + esc(t('bench.toFab')) + '</a>' }[flatKind];
     diveFrame.dock.innerHTML = lineHtml(t(F.kicker, { n: i + 1, total: L.length }) + ' · ' + t('depth.' + id + '.name'), t('depth.' + id + '.see'), key,
       (i || flatKind === 'dive' ? '<button type="button" class="btn ghost" data-divego="' + (diveD - 1) + '">' + esc(t(i ? 'story.back' : 'dive.up')) + '</button>' : '<span></span>') +
@@ -321,7 +323,7 @@ export function start() {
     $('diveCanvas').hidden = false; vui.hidden = false;
     loading(true);
     Promise.all([withFrame(), ensureDive()]).then(([, w]) => {
-      const F = FLAT[kind]; WE.setWorld(F.world); if (kind !== 'line') hide3d();
+      const F = FLAT[kind]; WE.setWorld(F.world); if (kind !== 'line') hide3d(); DS.setBandCaption(false);
       /* the bench draws your design: the last you won, else the first job's */
       if (kind === 'bench') { const Y = Game.yourDesign(S); DS.setDesign(Y ? Y.B : Game.checkDesign('half', S.codes.half || Game.starter('half'))); }
       const L = levelsOf(kind);

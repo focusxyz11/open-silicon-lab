@@ -1,6 +1,6 @@
 # The chip world
 
-How the redesign (`explore.html`, `src/v2/`) holds everything together. The island is the first page; this
+How the chip world (`index.html`, `src/v2/`) holds everything together. The island is the first page; this
 note is about what connects it: one main thread, the same three doors everywhere, and an island that grows.
 
 ## The main thread: your chip's life
@@ -20,7 +20,7 @@ lives.
 ## Every place has an inside: where the earlier site lives
 
 The island is the journey: moving along the loop, a chip's life. Going into a place is the dive: down its
-levels, one inside the next. So every page of the earlier site (index.html, a world and a depth) has an address
+levels, one inside the next. So every page of the earlier site (`classic.html`, a world and a depth) has an address
 on the island, a place and a level (`src/data/places.js`):
 
 | Place | Levels |

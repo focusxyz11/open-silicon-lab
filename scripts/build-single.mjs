@@ -15,7 +15,7 @@ for (const f of readdirSync(root + 'src/i18n').filter(f => f.endsWith('.json')))
 content['src/data/facts.json'] = r('src/data/facts.json');
 const safe = s => s.replace(/<\/(script|style)/gi, '<\\/$1');
 const icon = 'data:image/svg+xml;base64,' + readFileSync(root + 'assets/favicon.svg').toString('base64');
-const html = r('index.html')
+const html = r('classic.html')   /* the earlier site, in one file; the chip world loads its 3D views on demand */
   .replace('href="assets/favicon.svg"', () => `href="${icon}"`)
   .replace(/<link rel="apple-touch-icon"[^>]*>\n?/, '')
   .replace('<link rel="stylesheet" href="src/styles/site.css">', () => `<style>\n${safe(r('src/styles/site.css'))}\n</style>`)
