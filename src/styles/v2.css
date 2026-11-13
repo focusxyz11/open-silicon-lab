@@ -388,6 +388,15 @@ body.immersive .bar { transform: translateY(-140%); opacity: 0; pointer-events: 
   .goal2 { width: auto; }
 }
 
+/* the factory's 3D machines, under the flat world on the line */
+#world3d { position: absolute; inset: 0; width: 100%; height: 100%; display: block; pointer-events: none; }
+/* the bench: a challenge played in the dock, taller, scrolling inside */
+.dock.benchdock { width: min(860px, calc(100% - 32px)); max-height: 58vh; overflow: auto; }
+.dock.benchdock .player h3 { font-size: 20px; }
+.dock .hintline { margin: 0 0 10px; }
+
+body.immersive .toast { top: 70px; bottom: auto; left: 50%; }
+
 /* loading */
 .loading { position: absolute; inset: 0; display: none; place-items: center; z-index: 30; pointer-events: none; }
 .loading.on { display: grid; }

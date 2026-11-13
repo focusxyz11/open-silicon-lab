@@ -4,7 +4,7 @@
    Look is Inside: a place's levels, one inside the next, which hold the earlier site's pages (src/data/places.js).
    The menu: Explore (the island), Challenges (every challenge and every open job), Questions (by place),
    Build (the shared computer the community is building) and Ecosystem (the islands across the sea, and the
-   world chips depend on). Routes live in the address: #/, #/place/<id>, #/place/datacentre/<level>, #/chip/<row>[/build] (inside a chip, layer by layer), #/board (one board, with a story that drives it), #/dive/<depth> (the flat dive, chip to atom), #/challenges, #/questions, #/build,
+   world chips depend on). Routes live in the address: #/, #/place/<id>, #/place/datacentre/<level>, #/chip/<row>[/build] (inside a chip, layer by layer), #/board (one board, with a story that drives it), #/dive/<depth> (the flat dive, chip to atom), #/line/<step> (the factory), #/bench/<level>[/<challenge>] (the studio), #/challenges, #/questions, #/build,
    #/ecosystem. Words are read with t(); places not yet redrawn open the current site. */
 import { t } from '../core/i18n.js';
 import { REPO, THREADS } from '../data/weave.js';
@@ -99,6 +99,8 @@ export function start() {
   const DIVE_LEVELS = ['chip', 'block', 'gate', 'switch', 'atom'];
   const levelHref = (place, l) => { if (place === 'datacentre' && l.depth === 'board') return '#/board'; const f = (Game.FLOWN[place] || {})[l.depth]; if (f != null) return '#/place/' + place + '/' + f;
     if (DIVE_LEVELS.includes(l.depth) && l.depth !== 'chip') return '#/dive/' + l.depth;
+    if (l.world === 'design') return '#/bench/' + l.depth;
+    if (l.world === 'journey') return '#/line/' + l.depth;
     const c = DIVE_CHIP[l.depth] != null ? { row: 0, build: false } : rowOf(l.depth); return c ? '#/chip/' + c.row + (c.build ? '/build' : '') : oldUrl(l.world, { depth: l.depth }); };
   function insideHtml(id) {
     const L = Game.INSIDE[id] || [], extra = Game.LOOK[id] || [];
@@ -170,12 +172,12 @@ export function start() {
 
   /* ---- the frame: every view below the island wears it (src/v2/frame.js, docs/SYSTEM.md) ---- */
   const frameOf = (host, o) => FrameM.createFrame(host, Object.assign({ follow, askAt: d => stopsAt(d),
-    doAt: d => Game.CHALLENGES.filter(c => c.at === d).map(c => ({ id: c.id, title: titleOf(c), where: whereOf(c) })) }, o));
+    doAt: d => Game.CHALLENGES.filter(c => c.at === d).map(c => ({ id: c.id, title: titleOf(c), where: whereOf(c), href: c.kind === 'design' ? '#/bench/' + c.at + '/' + c.id : '#/do/' + c.id })) }, o));
   let FrameM = null;
   const withFrame = () => FrameM ? Promise.resolve(FrameM) : import('./frame.js').then(m => (FrameM = m));
   /* the Turn, from any level: designed opens the studio's level, made and used open the chip's layers */
-  const turnTo = (face, tw) => { if (!tw) return; const row = TWINS_ORDER.indexOf(tw.used);
-    if (face === 'designed' && tw.designed) location.href = oldUrl('design', { depth: tw.designed }); else if (face === 'made') location.hash = '#/chip/' + row + '/build'; else if (face === 'used') location.hash = '#/dive/' + tw.used; };
+  const turnTo = (face, tw) => { if (!tw) return;
+    if (face === 'designed' && tw.designed) location.hash = '#/bench/' + tw.designed; else if (face === 'made') location.hash = '#/line/' + tw.made[tw.made.length - 1]; else if (face === 'used') location.hash = '#/dive/' + tw.used; };
   const TWINS_ORDER = ROWS.map(r => r.dive);
   const lineHtml = (kicker, line, key, nav) => '<p class="kicker">' + esc(kicker) + '</p><p class="line">' + esc(line) + '</p>' +
     (key ? '<a class="askline" href="' + esc(follow(key)) + '"><span class="q">' + esc(t('stop.' + key + '.q')) + '</span></a>' : '') + '<div class="nav">' + nav + '</div>';
@@ -253,53 +255,86 @@ export function start() {
     });
   }
 
-  /* ---- the dive: the earlier site's flat, continuous zoom (src/app/world.js), from the chip down to the atom, in the
-     frame. Tap a part and its note sits on the picture; the questions crossing a level are dots on their parts. ---- */
+  /* ---- the flat views: the earlier site's continuous 2D world (src/app/world.js) in the frame. One canvas, three
+     uses: the dive (a level as used: chip to atom), the line (as made: the factory step by step, a wafer travelling
+     between the machines) and the bench (as designed: the studio, where your design is code and the drawings are
+     of it). Tap a part and its note sits on the picture; the questions crossing a level are dots on their parts. ---- */
   const vui = $('diveui');
-  let diveFrame = null, diveD = 0, divePart = null, diveThread = null, WE = null;
+  const FLAT = {
+    dive: { world: 'datacentre', levels: DIVE_LEVELS, title: 'dive.title', up: '#/place/datacentre/5', upWord: 'map.datacentre.t', face: 'used', kicker: 'place.level', next: 'chipx.deeper', hint: 'dive.hint' },
+    line: { world: 'journey', title: 'line.title', up: '#/place/fab', upWord: 'map.fab.t', face: 'made', kicker: 'line.stepN', next: 'line.next', hint: 'line.hint' },
+    bench: { world: 'design', title: 'bench.title', up: '#/place/studio', upWord: 'map.studio.t', face: 'designed', kicker: 'line.stepN', next: 'line.next', hint: 'bench.hint' }
+  };
+  let flatKind = 'dive', diveFrame = null, diveD = -1, divePart = null, diveThread = null, benchCh = null, WE = null, DiveData = null, DS = null;
+  const levelsOf = k => FLAT[k].levels || DiveData.WORLDS.find(w => w.id === FLAT[k].world).depths;
   const diveId = () => WE.IDS[diveD];
-  const ensureDive = () => dive ? Promise.resolve(dive) : Promise.all([import('../engines/weave.js'), import('../app/world.js'), import('../data/weave.js')]).then(([E, Wm, Wd]) => {
-    WE = E; E.setWorld('datacentre'); DiveData = Wd;
-    dive = Wm.createWorld($('diveCanvas'), { depth: d => diveAt(d), arrive: d => diveAt(d), part: (d, key) => { divePart = key; diveNotes(); }, pick: th => { diveThread = th; dive.setThread(th); drawDive(); } });
+  const ensureDive = () => dive ? Promise.resolve(dive) : Promise.all([import('../engines/weave.js'), import('../app/world.js'), import('../data/weave.js'), import('../app/design.js')]).then(([E, Wm, Wd, Ds]) => {
+    WE = E; DiveData = Wd; DS = Ds;
+    dive = Wm.createWorld($('diveCanvas'), { depth: d => diveAt(d), arrive: d => diveAt(d), part: (d, key) => { divePart = key; diveNotes(); }, pick: th => { diveThread = th; dive.setThread(th); if (!benchCh) drawDive(); } });
     return dive;
   });
-  let DiveData = null;
+  /* the factory's 3D machines draw under the flat world on the line; nowhere else */
+  const hide3d = () => { const w3 = document.getElementById('world3d'); if (w3) w3.style.display = 'none'; };
   function diveAt(d) {
     const id = WE.IDS[d];
-    if (!DIVE_LEVELS.includes(id)) { location.hash = '#/place/datacentre/' + (id === 'board' ? 4 : 2); return; }   /* above the chip, the flight takes over */
+    if (!levelsOf(flatKind).includes(id)) { if (flatKind === 'dive') location.hash = '#/place/datacentre/' + (id === 'board' ? 4 : 2); return; }   /* above the chip, the flight takes over */
     if (d !== diveD) { divePart = null; diveThread = null; dive.setThread(null); }
     diveD = d; if (!diveFrame) return;
-    diveFrame.rail(id, DIVE_LEVELS.indexOf(id) / (DIVE_LEVELS.length - 1)); diveFrame.level(id); diveNotes();
-    if (diveFrame.mode() === 'look') drawDive();
+    const L = levelsOf(flatKind); diveFrame.rail(id, L.indexOf(id) / (L.length - 1)); diveFrame.level(id); diveFrame.face(FLAT[flatKind].face); diveNotes();
+    if (diveFrame.mode() === 'look' && !benchCh) drawDive();
   }
   /* words on the picture: the part you tapped, else the part this level is about, from its one home in the atlas */
   function diveNotes() {
     const id = diveId(), key = divePart || DiveData.NOTE_AT[id]; if (!key) return dive.setNotes([]);
-    const w = DiveData.partWord(id, key); dive.setNotes([{ part: key, title: t('part.' + w), text: t('what.' + w), tone: 'cool' }]);
+    const w = DiveData.partWord(id, key); if (!EN_HAS(w)) return dive.setNotes([]);
+    dive.setNotes([{ part: key, title: t('part.' + w), text: t('what.' + w), tone: 'cool' }]);
   }
+  const EN_HAS = w => t('part.' + w) !== 'part.' + w;
   function drawDive() {
-    const id = diveId(), i = DIVE_LEVELS.indexOf(id), last = i === DIVE_LEVELS.length - 1;
+    const F = FLAT[flatKind], L = levelsOf(flatKind), id = diveId(), i = L.indexOf(id), last = i === L.length - 1;
     const key = diveThread && DiveData.STOPS[diveThread + '.' + id] ? diveThread + '.' + id : stopsAt(id)[0];
-    diveFrame.dock.innerHTML = lineHtml(t('place.level', { n: i + 1, total: DIVE_LEVELS.length }) + ' · ' + t('depth.' + id + '.name'), t('depth.' + id + '.see'), key,
-      '<button type="button" class="btn ghost" data-divego="' + (diveD - 1) + '">' + esc(t(i ? 'story.back' : 'dive.up')) + '</button>' +
-      (last ? '<a class="btn primary" href="#/">' + esc(t('chipx.back')) + '</a>' : '<button type="button" class="btn primary" data-divego="' + (diveD + 1) + '">' + esc(t('chipx.deeper')) + '</button>')).replace('<div class="nav">', '<p class="small muted hintline">' + esc(t('dive.hint')) + '</p><div class="nav">');
+    /* your design, where the line carries it */
+    const Y = flatKind === 'line' && Game.yourDesign(S), yk = Y && ({ print: 'print', etch: 'etch', wires: 'wires' })[id];
+    const yours = yk ? '<div class="yours"><span class="kicker">' + esc(t('chipx.yours')) + '</span>' + esc(t('chipx.yours.' + yk, { name: t('design.proj.' + Y.p + '.t'), gates: Y.B.M.cells.length, transistors: Y.B.transistors, masks: Y.B.masks, wire: Math.round(Y.B.RT ? Y.B.RT.wl : 0) })) + '</div>' : '';
+    const end = { dive: '<a class="btn primary" href="#/">' + esc(t('chipx.back')) + '</a>', line: '<a class="btn primary" href="#/place/port">' + esc(t('line.end')) + '</a>', bench: '<a class="btn primary" href="#/line/print">' + esc(t('bench.toFab')) + '</a>' }[flatKind];
+    diveFrame.dock.innerHTML = lineHtml(t(F.kicker, { n: i + 1, total: L.length }) + ' · ' + t('depth.' + id + '.name'), t('depth.' + id + '.see'), key,
+      (i || flatKind === 'dive' ? '<button type="button" class="btn ghost" data-divego="' + (diveD - 1) + '">' + esc(t(i ? 'story.back' : 'dive.up')) + '</button>' : '<span></span>') +
+      (last ? end : '<button type="button" class="btn primary" data-divego="' + (diveD + 1) + '">' + esc(t(F.next)) + '</button>')).replace('<div class="nav">', yours + '<p class="small muted hintline">' + esc(t(F.hint)) + '</p><div class="nav">');
     requestAnimationFrame(diveInset);
   }
   /* keep the picture clear of the frame: the rail on the left, the corner, the dock below */
   const diveInset = () => { if (!dive || !diveFrame) return; const wide = innerWidth > 720, b = diveFrame.dock.offsetHeight + (wide ? 34 : 18); dive.setInset({ l: wide ? 90 : 8, r: wide ? 20 : 8, t: wide ? 70 : 120, b }); };
-  function showDive(depth) {
-    hideAll(); document.body.classList.add('immersive');
+  /* the bench: a design challenge played in the dock; the drawings above follow your description */
+  const syncDesign = ch => { if (DS && ch && ch.kind === 'design') DS.setDesign(Game.checkDesign(ch.p, S.codes[ch.p] || Game.starter(ch.p))); };
+  function openBench(ch) {
+    benchCh = ch; const dock = diveFrame.dock; dock.classList.add('benchdock'); syncDesign(ch);
+    play(dock, ch, { state: S, startChip: () => Object.assign({}, Game.START),
+      save: () => { save(); syncDesign(ch); },
+      open: c => { location.hash = c.kind === 'design' ? '#/bench/' + c.at + '/' + c.id : '#/do/' + c.id; },
+      back: () => { benchCh = null; dock.classList.remove('benchdock'); dock.onclick = null; dock.oninput = null; drawDive(); },
+      /* won: the island grows, and the drawings fly to your gates */
+      done: c => { won(c); dive.flyTo(WE.IDS.indexOf('gates')); } });
+    requestAnimationFrame(diveInset);
+  }
+  function showFlat(kind, depth, chId) {
+    hideAll(); document.body.classList.add('immersive'); flatKind = kind; benchCh = null;
     $('diveCanvas').hidden = false; vui.hidden = false;
     loading(true);
     Promise.all([withFrame(), ensureDive()]).then(([, w]) => {
-      diveFrame = frameOf(vui, { up: { href: '#/place/datacentre/5', label: t('board.up') }, path: [{ href: '#/', label: t('place.back') }, { href: '#/place/datacentre/5', label: t('map.datacentre.t') }, { label: t('dive.title') }],
-        rail: { label: t('place.levels'), items: DIVE_LEVELS.map(k => ({ id: k, label: t('depth.' + k + '.name') })) }, turn: true,
-        onRail: k => w.flyTo(WE.IDS.indexOf(k)), onTurn: (face, tw) => { if (face !== 'used') turnTo(face, tw); }, onLook: drawDive });
+      const F = FLAT[kind]; WE.setWorld(F.world); if (kind !== 'line') hide3d();
+      /* the bench draws your design: the last you won, else the first job's */
+      if (kind === 'bench') { const Y = Game.yourDesign(S); DS.setDesign(Y ? Y.B : Game.checkDesign('half', S.codes.half || Game.starter('half'))); }
+      const L = levelsOf(kind);
+      diveFrame = frameOf(vui, { up: { href: F.up, label: t(F.upWord) }, path: [{ href: '#/', label: t('place.back') }, { href: F.up, label: t(F.upWord) }, { label: t(F.title) }],
+        rail: { label: t('place.levels'), items: L.map(k => ({ id: k, label: t('depth.' + k + '.name') })) }, turn: true, face: F.face,
+        onRail: k => w.flyTo(WE.IDS.indexOf(k)), onTurn: (face, tw) => { if (face !== F.face) turnTo(face, tw); }, onLook: () => { if (benchCh) openBench(benchCh); else drawDive(); } });
       vui.onclick = e => { const b = e.target.closest('[data-divego]'); if (b) w.flyTo(+b.dataset.divego); };
-      const d = WE.IDS.indexOf(DIVE_LEVELS.includes(depth) ? depth : 'chip');
+      const d = WE.IDS.indexOf(L.includes(depth) ? depth : L[0]);
       loading(false); w.start(); w.setZ(d); diveD = -1; diveAt(d); $('diveCanvas').focus({ preventScroll: true });
+      const ch = chId && Game.challengeOf(chId); if (ch) openBench(ch);
     });
   }
+  const showDive = depth => showFlat('dive', depth);
   addEventListener('resize', () => { if (!vui.hidden) diveInset(); });
 
   /* ---- one board, no side panel: words on the parts, a story docked below that drives the camera ---- */
@@ -322,13 +357,13 @@ export function start() {
   let story = null;
   /* every view hides the others first */
   function hideAll() {
-    $('diveCanvas').hidden = true; vui.hidden = true; dive && dive.stop();
+    $('diveCanvas').hidden = true; vui.hidden = true; dive && dive.stop(); hide3d();
     hideBoard(); $('hero').hidden = true; hudEl.hidden = true; closeSheet(); pui.hidden = true; cui.hidden = true; dc && dc.pause(); map && map.pause(); chip && chip.pause();
     ['mapCanvas', 'mapLabels', 'placeCanvas', 'placeLabels', 'chipCanvas', 'chipLabels'].forEach(k => { $(k).hidden = true; });
     document.body.classList.remove('immersive'); page.hidden = true;
   }
   function showMap() {
-    $('diveCanvas').hidden = true; vui.hidden = true; dive && dive.stop();
+    $('diveCanvas').hidden = true; vui.hidden = true; dive && dive.stop(); hide3d();
     hideBoard(); document.body.classList.remove('immersive');
     $('chipCanvas').hidden = $('chipLabels').hidden = true; cui.hidden = true; chip && chip.pause();
     $('placeCanvas').hidden = $('placeLabels').hidden = true; pui.hidden = true; dc && dc.pause();
@@ -378,11 +413,13 @@ export function start() {
   /* ---- routes ---- */
   function route() {
     const parts = (location.hash.replace(/^#\/?/, '') || '').split('/').filter(Boolean), k = parts[0] || 'explore';
-    const nav = k === 'place' || k === 'chip' || k === 'board' || k === 'dive' ? 'explore' : MENU.includes(k) ? k : 'explore';
+    const nav = k === 'place' || k === 'chip' || k === 'board' || k === 'dive' || k === 'line' || k === 'bench' ? 'explore' : MENU.includes(k) ? k : 'explore';
     menu.querySelectorAll('[data-nav]').forEach(a => a.setAttribute('aria-current', a.dataset.nav === nav ? 'page' : 'false'));
     page.hidden = true;
     if (k === 'board') return showBoard();
     if (k === 'dive') return showDive(parts[1]);
+    if (k === 'line') return showFlat('line', parts[1]);
+    if (k === 'bench') return showFlat('bench', parts[1], parts[2]);
     if (k === 'do' && parts[1]) { showMap().then(() => openChallenge(Game.challengeOf(parts[1]))); return; }
     if (k === 'chip') return showChip(parts[1] != null ? +parts[1] : null, parts[2]);
     if (k === 'place' && parts[1] === 'datacentre' && parts[2] !== 'inside') return showPlace('datacentre', parts[2] != null ? +parts[2] : null);

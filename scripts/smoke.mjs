@@ -170,7 +170,17 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
   await page.click('#diveui [data-divego]:not(.ghost)').catch(() => problems.push(tag + ': no way deeper in the dive'));
   await page.waitForFunction(() => { const c = document.querySelector('#diveui .rail2 [aria-current]'); return c && c.dataset.rail === 'switch'; }, null, { timeout: 15000 }).catch(() => problems.push(tag + ': going deeper in the dive did not reach the switch'));
   await page.click('#diveui [data-face="made"]').catch(() => problems.push(tag + ': no Turn in the dive'));
-  await page.waitForFunction(() => location.hash === '#/chip/3/build', null, { timeout: 8000 }).catch(() => problems.push(tag + ': turning the switch to made did not open its factory step'));
+  await page.waitForFunction(() => location.hash === '#/line/etch', null, { timeout: 8000 }).catch(() => problems.push(tag + ': turning the switch to made did not open its factory step'));
+  /* the line: the factory step by step, in the frame */
+  await page.waitForFunction(() => { const c = document.querySelector('#diveui .rail2 [aria-current]'); return c && c.dataset.rail === 'etch'; }, null, { timeout: 15000 }).catch(() => problems.push(tag + ': the line did not open at etching'));
+  await page.click('#diveui [data-divego]:not(.ghost)').catch(() => problems.push(tag + ': no next step on the line'));
+  await page.waitForFunction(() => { const c = document.querySelector('#diveui .rail2 [aria-current]'); return c && c.dataset.rail === 'implant'; }, null, { timeout: 20000 }).catch(() => problems.push(tag + ': the next step on the line is not implanting'));
+  /* the bench: a design written in the dock, checked, won */
+  await page.evaluate(() => { location.hash = '#/bench/logic/half'; });
+  await page.waitForSelector('#diveui .dock #chCode', { timeout: 15000 }).catch(() => problems.push(tag + ': the bench did not open the design'));
+  await page.fill('#diveui .dock #chCode', 'sum = a ^ b;\ncarry = a & b;').catch(() => {});
+  await page.click('#diveui .dock [data-check]').catch(() => {});
+  await page.waitForSelector('#diveui .dock .won', { timeout: 10000 }).catch(() => problems.push(tag + ': a right design on the bench did not win'));
   /* the board: a story drives the scene; a prediction comes before the live number moves */
   await page.evaluate(() => { location.hash = '#/board'; });
   await page.waitForSelector('#boardui .dock .line', { timeout: 15000 }).catch(() => problems.push(tag + ': the board did not open'));
