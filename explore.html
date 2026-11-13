@@ -2,47 +2,10 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Open Silicon Lab</title>
-<meta name="description" content="Explore where chips are born, made and used, and the open questions behind them.">
-<meta name="theme-color" content="#0b1120">
-<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Besley:wght@500;600;700&family=Atkinson+Hyperlegible+Next:wght@400;500;700&family=Martian+Mono:wdth,wght@75..112.5,400..600&display=swap">
-<link rel="stylesheet" href="src/styles/v2.css">
-<script>try { var th = localStorage.getItem('osl-theme'); if (th === 'dark' || th === 'light') document.documentElement.setAttribute('data-theme', th); } catch (e) {}</script>
+<meta http-equiv="refresh" content="0; url=index.html">
+<link rel="canonical" href="index.html">
+<script>location.replace('index.html' + location.hash);</script>
 </head>
-<body>
-<div class="v2" id="v2">
-  <header class="bar">
-    <a class="brand" href="#/"><span class="mark" aria-hidden="true"></span><b data-i18n="ui.lab"></b></a>
-    <nav class="menu" id="menu" data-i18n-attr="aria-label:nav.aria"></nav>
-    <button type="button" class="round" id="theme"><span aria-hidden="true">◐</span></button>
-  </header>
-  <main class="stage" id="stage">
-    <canvas class="c3" id="mapCanvas" tabindex="0" data-i18n-attr="aria-label:map.aria"></canvas>
-    <canvas class="c3" id="placeCanvas" tabindex="0" hidden data-i18n-attr="aria-label:place.aria"></canvas>
-    <canvas class="c3 dive2" id="diveCanvas" tabindex="0" hidden data-i18n-attr="aria-label:dive.aria"></canvas>
-    <canvas class="c3" id="boardCanvas" tabindex="0" hidden data-i18n-attr="aria-label:board.aria"></canvas>
-    <canvas class="c3" id="chipCanvas" tabindex="0" hidden data-i18n-attr="aria-label:chipx.aria"></canvas>
-    <div class="labels" id="mapLabels"></div>
-    <div class="labels" id="placeLabels" hidden></div>
-    <div class="labels" id="chipLabels" hidden></div>
-    <div class="labels" id="boardLabels" hidden></div>
-    <section class="hero" id="hero"></section>
-    <section class="hud" id="hud" data-i18n-attr="aria-label:game.hudAria"></section>
-    <section class="placeui" id="placeui" hidden></section>
-    <section class="chipui" id="chipui" hidden></section>
-    <section class="boardui" id="boardui" hidden></section>
-    <section class="boardui" id="diveui" hidden></section>
-    <section class="page" id="page" hidden></section>
-    <aside class="sheet" id="sheet" hidden aria-live="polite"></aside>
-    <div class="loading" id="loading"><span></span></div>
-    <div class="toast" id="toast" hidden role="status"></div>
-  </main>
-</div>
-<noscript><p style="padding:24px">Open Silicon Lab is interactive and needs JavaScript to run.</p></noscript>
-<script type="module" src="src/main2.js"></script>
-</body>
+<body></body>
 </html>

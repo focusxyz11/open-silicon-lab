@@ -18,6 +18,9 @@ export const setDesign = b => { B = b; };
 /* the jobs you have finished here (they show in the plan as yours), and who wrote the description now */
 export const setMine = (list, by) => { MINE = list || []; BY = by || 'you'; };
 export const designNow = () => B;
+/* the band's caption under the drawings; the redesign's bench shows it in its dock instead */
+let CAPTION = true;
+export const setBandCaption = v => { CAPTION = v; };
 
 const R = (x, y, w, h) => ({ r: [x, y, w, h] });
 const sm = u => { u = Math.max(0, Math.min(1, u)); return u * u * (3 - 2 * u); };
@@ -397,6 +400,7 @@ export function drawDesignBand(G, o) {
   /* the job's name on the right, when there is room for both (the card names it too) */
   if (ctx.measureText(short).width + ctx.measureText(job).width + 50 * u < w) { ctx.textAlign = 'right'; ctx.fillStyle = c.warm; ctx.fillText(job, 1000 - pad, top + 22 * u); ctx.textAlign = 'left'; }
   /* the caption: what happens at this station */
+  if (!CAPTION) return;
   ctx.font = '600 ' + 14 * u + 'px ' + MONO; ctx.fillStyle = c.hi; ctx.fillText(t('design.cap.' + id + '.t'), x, top + 46 * u);
   ctx.font = '400 ' + 13 * u + 'px system-ui, sans-serif'; ctx.textBaseline = 'top'; /* i18n-ok: a font name */
   let line = '', y = top + 58 * u; const words = (B.p === 'core' ? t('core.cap.' + id + '.d', numbers()) : t('design.cap.' + id + '.d', numbers())).split(/\s+/);
