@@ -44,7 +44,7 @@ function rackTexture() {
 
 export function createDataCentre(canvas, host, on = {}) {
   const P = PALETTES[theme()], night = P.emissive > 0;
-  const { renderer, env } = stage(canvas);
+  const st = stage(canvas), { env } = st;
   const scene = new THREE.Scene(); scene.background = new THREE.Color(P.sky); scene.fog = new THREE.Fog(P.fog, 260, 700); scene.environment = env; scene.environmentIntensity = night ? 0.35 : 0.5;
   const { sun } = light(scene, P, 60);
   const camera = new THREE.PerspectiveCamera(38, 1, 0.01, 2000);
@@ -222,7 +222,7 @@ export function createDataCentre(canvas, host, on = {}) {
   canvas.addEventListener('keydown', e => { if (e.key === 'ArrowDown' || e.key === 'PageDown') { go(Math.floor(goal + 1)); e.preventDefault(); } if (e.key === 'ArrowUp' || e.key === 'PageUp') { go(Math.ceil(goal - 1)); e.preventDefault(); } });
   let settle = 0, lastLevel = -1;
 
-  const resize = () => { const r = canvas.getBoundingClientRect(); W = r.width; H = r.height; renderer.setSize(W, H, false); camera.aspect = W / Math.max(1, H); camera.updateProjectionMatrix(); };
+  const resize = () => { const r = canvas.getBoundingClientRect(); if (!r.width || !r.height) return; W = r.width; H = r.height; st.size(W, H); camera.aspect = W / Math.max(1, H); camera.updateProjectionMatrix(); };
   new ResizeObserver(resize).observe(canvas); resize();
   const frame = now => {
     if (!running) return; raf = requestAnimationFrame(frame);
@@ -237,7 +237,7 @@ export function createDataCentre(canvas, host, on = {}) {
     }
     const lv = Math.round(z); if (lv !== lastLevel) { lastLevel = lv; on.level && on.level(lv); }
     on.depth && on.depth(z);
-    renderer.render(scene, camera);
+    st.draw(scene, camera);
     L.update(camera, W, H);
   };
   raf = requestAnimationFrame(frame);
@@ -245,7 +245,8 @@ export function createDataCentre(canvas, host, on = {}) {
     go(v) { go(v); },
     get z() { return z; },
     pause() { running = false; cancelAnimationFrame(raf); },
+    warm: () => st.warm(scene, camera),
     resume() { if (!running) { running = true; last = performance.now(); raf = requestAnimationFrame(frame); } },
-    dispose() { running = false; cancelAnimationFrame(raf); L.clear(); renderer.dispose(); }
+    dispose() { running = false; cancelAnimationFrame(raf); L.clear(); }
   };
 }

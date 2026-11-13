@@ -196,13 +196,14 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
   if (await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1)) problems.push(tag + ': the page scrolls sideways');
   await page.close();
 }
-/* no cuts: with motion on, going inside from the island dives the camera in, then the view zooms in from it
+/* one stage and no cuts: with motion on, going inside from the island dives the camera in, then the view zooms in from it
    (a view transition); rising goes back out. A duplicate name or a stuck view would show as an error here. */
 {
   const tag = 'motion', page = await browser3d.newPage({ viewport: { width: 1280, height: 800 } });
   page.on('pageerror', e => problems.push(tag + ': ' + e.message));
   page.on('console', m => { if (m.type() === 'error' && !/fonts\.g|net::ERR|WebGL|GPU/.test(m.text())) problems.push(tag + ': console: ' + m.text()); });
-  await page.addInitScript(() => { window.MOVES = []; const o = document.startViewTransition && document.startViewTransition.bind(document); if (!o) return;
+  await page.addInitScript(() => { window.GL = 0; const g = HTMLCanvasElement.prototype.getContext; HTMLCanvasElement.prototype.getContext = function (k, ...a) { if (/webgl/.test(k) && !this.__gl) { this.__gl = 1; window.GL++; } return g.call(this, k, ...a); };
+    window.MOVES = []; const o = document.startViewTransition && document.startViewTransition.bind(document); if (!o) return;
     document.startViewTransition = f => { const tr = o(f); window.MOVES.push(document.documentElement.dataset.move); tr.ready.catch(e => window.MOVES.push('failed: ' + e.message)); return tr; }; });
   await page.goto(base + 'index.html#/place/fab');
   await page.waitForSelector('#sheet .nav .btn.primary', { timeout: 15000 }).catch(() => problems.push(tag + ': the factory has no way inside'));
@@ -214,6 +215,11 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
   await page.waitForTimeout(3000);
   const moves = await page.evaluate(() => window.MOVES);
   if (moves.join() !== 'in,out') problems.push(tag + ': the views did not zoom in and out (' + moves.join() + ')');
+  /* one stage: the island, the data centre, the chip and the board all draw with one renderer (the line's machines,
+     from the earlier site, keep their own) */
+  for (const h of ['#/place/datacentre/1', '#/chip/0', '#/board', '#/']) { await page.evaluate(x => { location.hash = x; }, h); await page.waitForTimeout(2500); }
+  const gl = await page.evaluate(() => window.GL);
+  if (gl > 2) problems.push(tag + ': ' + gl + ' WebGL contexts; the 3D views should share one stage');
   await page.close();
 }
 await browser.close(); await browser3d.close(); server.close();

@@ -16,6 +16,7 @@ import { play, titleOf, goalOf } from './play.js';
 import { PLACES } from './map3d.js';
 import { LEVELS, ASKS } from './dc3d.js';
 import { stopsAt } from '../data/places.js';
+import { showStage } from './kit3d.js';
 import { ROWS, ASK as CHIP_ASK } from './chip3d.js';
 
 const $ = id => document.getElementById(id);
@@ -54,12 +55,19 @@ export function start() {
   const loading = on => { clearTimeout(loadT); if (on) loadT = setTimeout(() => $('loading').classList.add('on'), 400); else $('loading').classList.remove('on'); };
   const still = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
   /* the views' code, fetched while the visitor looks at the island, so going inside does not wait for the network */
-  const preload = () => ['./frame.js', './board3d.js', './story.js', './stories.js', '../engines/weave.js', '../app/world.js', '../data/weave.js', '../app/design.js', '../app/journey.js'].forEach(u => import(u).catch(() => { /* fetched again when needed */ }));
+  const idle = f => (window.requestIdleCallback ? requestIdleCallback(f, { timeout: 2000 }) : setTimeout(f, 1200));
+  /* one stage: while the island is shown, the data centre, the chip and the board are made one by one, paused, and
+     their shaders compiled on the shared renderer, so going inside finds them ready */
+  const ready = (make, view) => () => { if (viewNow !== 'map') return; make().then(v => { if (viewNow !== view) v.pause(); return v.warm(); }); };
+  const prewarm = () => [ready(ensureDc, 'dc'), ready(ensureChip, 'chip'), ready(ensureBoard, 'board')].reduce((p, f) => p.then(() => new Promise(r => idle(() => { f(); r(); }))), Promise.resolve());
+  const preload = () => { prewarm(); ['./frame.js', './board3d.js', './story.js', './stories.js', '../engines/weave.js', '../app/world.js', '../data/weave.js', '../app/design.js', '../app/journey.js'].forEach(u => import(u).catch(() => { /* fetched again when needed */ })); };
   const ensureMap = () => mapReady || (mapReady = import('./map3d.js').then(m => {
     map = m.createMap($('mapCanvas'), $('mapLabels'), { place: id => (cur && cur.place === id && !sheet.hidden && enterOf(id) ? enter(enterOf(id)) : openPlace(id)), question: key => openQuestion(key), job: need => openJob(need), interact: () => $('hero').classList.add('away') });
-    loading(false); map.setState(islandState(), false); (window.requestIdleCallback || (f => setTimeout(f, 1200)))(preload); return map;
+    loading(false); map.setState(islandState(), false); idle(preload); return map;
   }));
-  const ensureDc = () => dc ? Promise.resolve(dc) : import('./dc3d.js').then(m => { dc = m.createDataCentre($('placeCanvas'), $('placeLabels'), { level: lv => placeUI(lv), depth: z => depthBar(z) }); return dc; });
+  /* each view is made once, even when the prewarm and a visit ask for it at the same moment */
+  let dcP = null, chipP = null, boardP = null;
+  const ensureDc = () => dcP || (dcP = import('./dc3d.js').then(m => { dc = m.createDataCentre($('placeCanvas'), $('placeLabels'), { level: lv => placeUI(lv), depth: z => depthBar(z) }); return dc; }));
 
   /* ---- the HUD: your chip's life, always in view ---- */
   /* the tracker: your chip's life, in the bar on every view, so the goal never leaves the screen */
@@ -212,7 +220,7 @@ export function start() {
   }
   function showPlace(id, lv) {
     hideAll();
-    $('placeCanvas').hidden = $('placeLabels').hidden = false; pui.hidden = false; document.body.classList.add('immersive');
+    $('placeCanvas').hidden = $('placeLabels').hidden = false; pui.hidden = false; showStage(true); document.body.classList.add('immersive');
     loading(true); lastPlace = id;
     return Promise.all([withFrame(), ensureDc()]).then(([, d]) => {
       dcFrame = frameOf(pui, { up: { href: '#/', label: t('place.back') }, path: [{ href: '#/', label: t('place.back') }, { label: t('map.' + id + '.t') }],
@@ -227,8 +235,8 @@ export function start() {
   /* ---- inside a chip, layer by layer: the dive (used) and the line (made) as one picture, turned by the Turn ---- */
   const cui = $('chipui');
   let chipMode = 'dive', chipRow = 0, chipFrame = null;
-  const ensureChip = () => chip ? Promise.resolve(chip) : import('./chip3d.js').then(m => { chip = m.createChip($('chipCanvas'), $('chipLabels'), { row: r => { chipRow = r; chipPanel(); },
-    depth: z => { if (chipFrame) chipFrame.rail(ROWS[Math.round(z)].dive, chipMode === 'build' ? 1 - z / (ROWS.length - 1) : z / (ROWS.length - 1)); } }); return chip; });
+  const ensureChip = () => chipP || (chipP = import('./chip3d.js').then(m => { chip = m.createChip($('chipCanvas'), $('chipLabels'), { row: r => { chipRow = r; chipPanel(); },
+    depth: z => { if (chipFrame) chipFrame.rail(ROWS[Math.round(z)].dive, chipMode === 'build' ? 1 - z / (ROWS.length - 1) : z / (ROWS.length - 1)); } }); return chip; }));
   const stepNames = r => ROWS[r].made.map(d => t('depth.' + d + '.name')).join(' → ');
   function chipPanel() {
     if (!chipFrame) return;
@@ -252,7 +260,7 @@ export function start() {
   }
   function showChip(row, mode) {
     hideAll();
-    $('chipCanvas').hidden = $('chipLabels').hidden = false; cui.hidden = false; document.body.classList.add('immersive');
+    $('chipCanvas').hidden = $('chipLabels').hidden = false; cui.hidden = false; showStage(true); document.body.classList.add('immersive');
     chipMode = mode === 'build' ? 'build' : 'dive'; chipRow = row != null && row >= 0 && row < ROWS.length ? row : chipMode === 'build' ? ROWS.length - 1 : 0;
     loading(true);
     const want = chipRow;   /* the chip may report its first row before the frame is ready */
@@ -358,11 +366,12 @@ export function start() {
   /* ---- one board, no side panel: words on the parts, a story docked below that drives the camera ---- */
   const bui = $('boardui');
   const hideBoard = () => { $('boardCanvas').hidden = $('boardLabels').hidden = true; bui.hidden = true; board && board.pause(); };
+  const ensureBoard = () => boardP || (boardP = import('./board3d.js').then(m => (board = m.createBoard($('boardCanvas'), $('boardLabels'), { part: id => story && story.part(id), dive: () => { location.hash = '#/chip/0'; } }))));
   function showBoard() {
     hideAll(); document.body.classList.add('immersive');
-    $('boardCanvas').hidden = $('boardLabels').hidden = false; bui.hidden = false;
+    $('boardCanvas').hidden = $('boardLabels').hidden = false; bui.hidden = false; showStage(true);
     loading(true); lastPlace = 'datacentre';
-    return Promise.all([withFrame(), board ? board : import('./board3d.js').then(m => (board = m.createBoard($('boardCanvas'), $('boardLabels'), { part: id => story && story.part(id), dive: () => { location.hash = '#/chip/0'; } }))), import('./story.js'), import('./stories.js')]).then(([, b, St, Sd]) => {
+    return Promise.all([withFrame(), ensureBoard(), import('./story.js'), import('./stories.js')]).then(([, b, St, Sd]) => {
       loading(false); b.resume(); const data = Sd.boardStory();
       const fr = frameOf(bui, { up: { href: '#/place/datacentre/4', label: t('board.up') }, path: [{ href: '#/', label: t('place.back') }, { href: '#/place/datacentre/4', label: t('map.datacentre.t') }, { label: t('place.dc.board.t') }],
         rail: { label: t('place.levels'), items: LEVELS.map(k => ({ id: k, label: t('place.dc.' + k + '.t') })) }, turn: true,
@@ -378,14 +387,14 @@ export function start() {
     $('diveCanvas').hidden = true; vui.hidden = true; dive && dive.stop(); hide3d();
     hideBoard(); $('hero').hidden = true; closeSheet(); pui.hidden = true; cui.hidden = true; dc && dc.pause(); map && map.pause(); chip && chip.pause();
     ['mapCanvas', 'mapLabels', 'placeCanvas', 'placeLabels', 'chipCanvas', 'chipLabels'].forEach(k => { $(k).hidden = true; });
-    document.body.classList.remove('immersive'); page.hidden = true;
+    document.body.classList.remove('immersive'); page.hidden = true; showStage(false);
   }
   function showMap(from) {
     $('diveCanvas').hidden = true; vui.hidden = true; dive && dive.stop(); hide3d();
     hideBoard(); document.body.classList.remove('immersive');
     $('chipCanvas').hidden = $('chipLabels').hidden = true; cui.hidden = true; chip && chip.pause();
     $('placeCanvas').hidden = $('placeLabels').hidden = true; pui.hidden = true; dc && dc.pause();
-    $('mapCanvas').hidden = $('mapLabels').hidden = false; $('hero').hidden = false;
+    $('mapCanvas').hidden = $('mapLabels').hidden = false; $('hero').hidden = false; showStage(true);
     loading(!map); return ensureMap().then(m => { if (from && lastPlace) { m.from(lastPlace); m.focus(lastPlace); } m.resume(); return m; });
   }
   const goExplore = then => { page.hidden = true; if ((location.hash || '#/') !== '#/' && location.hash !== '') { location.hash = '#/'; setTimeout(then, 80); } else then(); };

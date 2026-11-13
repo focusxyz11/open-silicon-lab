@@ -17,7 +17,7 @@ export const VIEWS = {
 
 export function createBoard(canvas, host, on = {}) {
   const P = PALETTES[theme()], night = P.emissive > 0;
-  const { renderer, env } = stage(canvas);
+  const st = stage(canvas), { env } = st;
   const scene = new THREE.Scene(); scene.environment = env; scene.environmentIntensity = night ? 0.4 : 0.75;
   scene.background = new THREE.Color(night ? 0x090f1c : 0xe2eaf3);
   const camera = new THREE.PerspectiveCamera(32, 1, 0.1, 600);
@@ -96,7 +96,7 @@ export function createBoard(canvas, host, on = {}) {
   canvas.addEventListener('dblclick', e => { if (pick(e) === 'die' || pick(e) === 'chip') on.dive && on.dive(); });
   host.addEventListener('click', e => { const b = e.target.closest('[data-part]'); if (b) on.part && on.part(b.dataset.part); });
 
-  const resize = () => { const r = canvas.getBoundingClientRect(); W = r.width; H = r.height; renderer.setSize(W, H, false); camera.aspect = W / Math.max(1, H);
+  const resize = () => { const r = canvas.getBoundingClientRect(); if (!r.width || !r.height) return; W = r.width; H = r.height; st.size(W, H); camera.aspect = W / Math.max(1, H);
     /* the story docks below: lift the picture so its middle sits in the open part of the screen */
     camera.setViewOffset(W, H, 0, H * 0.13, W, H); camera.updateProjectionMatrix(); };
   let W = 1, H = 1, running = true, raf = 0, last = performance.now();
@@ -116,7 +116,7 @@ export function createBoard(canvas, host, on = {}) {
     dots.forEach((o, i) => { const show = i < flow * dots.length && open > 0.4; o.d.visible = show; if (!show) return; o.u = (o.u + dt * (reduced() ? 0 : 0.7)) % 1; const [x, z] = o.s, t2 = o.u;
       o.d.position.set(x + (0 - x) * t2 * 0.62, 0.9 + Math.sin(t2 * Math.PI) * 0.45, z * (1 - t2 * 0.6) + o.j * 1.2); });
     sun.position.set(-30, 50, 26); sun.target.position.set(0, 0, 0);
-    renderer.render(scene, camera); L.update(camera, W, H);
+    st.draw(scene, camera); L.update(camera, W, H);
   };
   raf = requestAnimationFrame(frame);
   return {
@@ -131,6 +131,7 @@ export function createBoard(canvas, host, on = {}) {
       if (o.figs) Object.entries(figs).forEach(([id, f]) => { const s = o.figs[id]; f.show = !!s; if (s) f.el.textContent = s; });
     },
     pause() { running = false; cancelAnimationFrame(raf); },
+    warm: () => st.warm(scene, camera),
     resume() { if (!running) { running = true; last = performance.now(); raf = requestAnimationFrame(frame); } }
   };
 }

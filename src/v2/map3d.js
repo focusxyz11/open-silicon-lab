@@ -27,7 +27,7 @@ const ISLE = (cx, cz, r, k = 9) => Array.from({ length: k }, (_, i) => { const a
 
 export function createMap(canvas, host, on = {}) {
   const P = PALETTES[theme()], night = P.emissive > 0;
-  const { renderer, env } = stage(canvas);
+  const st = stage(canvas), { env } = st;
   const scene = new THREE.Scene(); scene.background = new THREE.Color(P.sky); scene.fog = new THREE.Fog(P.fog, 240, 560); scene.environment = env; scene.environmentIntensity = night ? 0.35 : 0.5;
   const sunL = light(scene, P, 200);
   const camera = new THREE.PerspectiveCamera(32, 1, 0.5, 2400);
@@ -294,7 +294,7 @@ export function createMap(canvas, host, on = {}) {
 
   /* ---- the loop ---- */
   let raf = 0, last = performance.now(), W = 1, H = 1, running = true;
-  const resize = () => { const r = canvas.getBoundingClientRect(); W = r.width; H = r.height; renderer.setSize(W, H, false); camera.aspect = W / Math.max(1, H); camera.updateProjectionMatrix(); };
+  const resize = () => { const r = canvas.getBoundingClientRect(); if (!r.width || !r.height) return; W = r.width; H = r.height; st.size(W, H); camera.aspect = W / Math.max(1, H); camera.updateProjectionMatrix(); };
   new ResizeObserver(resize).observe(canvas); resize();
   const easeBack = k => { const c1 = 1.70158, c3 = c1 + 1; return 1 + c3 * Math.pow(k - 1, 3) + c1 * Math.pow(k - 1, 2); };
   const frame = now => {
@@ -320,7 +320,7 @@ export function createMap(canvas, host, on = {}) {
         m.obj.position.set(p.x + n.x * m.lane, 0.05, p.z + n.z * m.lane); m.obj.rotation.y = Math.atan2(-tg.z, tg.x) + (m.speed < 0 ? Math.PI : 0);
       });
     }
-    renderer.render(scene, camera);
+    st.draw(scene, camera);
     L.update(camera, W, H);
   };
   raf = requestAnimationFrame(frame);
@@ -342,6 +342,7 @@ export function createMap(canvas, host, on = {}) {
     ecosystem() { if (innerWidth > 720) flyTo(106, 80, 800, 1500); else flyTo(-22, 166, 1250, 1500); },
     setState,
     pause() { running = false; cancelAnimationFrame(raf); },
+    warm: () => st.warm(scene, camera),
     resume() { if (!running) { running = true; last = performance.now(); raf = requestAnimationFrame(frame); } },
     camera
   };

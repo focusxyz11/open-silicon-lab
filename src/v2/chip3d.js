@@ -22,7 +22,7 @@ const CENTER = [8.4, 5.4, 3.0, 2.6, 1.1];   /* the height of each row's middle *
 
 export function createChip(canvas, host, on = {}) {
   const P = PALETTES[theme()], night = P.emissive > 0;
-  const { renderer, env } = stage(canvas);
+  const st = stage(canvas), { env } = st;
   const scene = new THREE.Scene(); scene.environment = env; scene.environmentIntensity = night ? 0.35 : 0.7;
   scene.background = new THREE.Color(night ? 0x0b1120 : 0xdfe8f2);
   const camera = new THREE.PerspectiveCamera(30, 1, 0.1, 400);
@@ -98,7 +98,7 @@ export function createChip(canvas, host, on = {}) {
   const end = () => { drag = null; }; canvas.addEventListener('pointerup', end); canvas.addEventListener('pointercancel', end);
   canvas.addEventListener('keydown', e => { if (e.key === 'ArrowDown' || e.key === 'PageDown') { go(Math.floor(goal + 1)); e.preventDefault(); } if (e.key === 'ArrowUp' || e.key === 'PageUp') { go(Math.ceil(goal - 1)); e.preventDefault(); } });
 
-  const resize = () => { const r = canvas.getBoundingClientRect(); W = r.width; Hh = r.height; renderer.setSize(W, Hh, false); camera.aspect = W / Math.max(1, Hh);
+  const resize = () => { const r = canvas.getBoundingClientRect(); if (!r.width || !r.height) return; W = r.width; Hh = r.height; st.size(W, Hh); camera.aspect = W / Math.max(1, Hh);
     /* the frame's dock sits below: lift the picture into the open part of the screen */
     if (W > 720) camera.setViewOffset(W, Hh, 0, Hh * 0.14, W, Hh); else camera.clearViewOffset(); camera.updateProjectionMatrix(); };
   new ResizeObserver(resize).observe(canvas); resize();
@@ -113,7 +113,7 @@ export function createChip(canvas, host, on = {}) {
     sun.position.set(-14, 30, 18); sun.target.position.set(0, 3, 0);
     const row = Math.round(z); if (row !== lastRow) { lastRow = row; if (mode === 'build') work = 1; on.row && on.row(row); }
     on.depth && on.depth(z);
-    renderer.render(scene, camera);
+    st.draw(scene, camera);
     L.update(camera, W, Hh);
   };
   raf = requestAnimationFrame(frame);
@@ -123,6 +123,7 @@ export function createChip(canvas, host, on = {}) {
     mode(m) { if (m) { mode = m; if (m === 'build') work = 1; } return mode; },
     get z() { return z; },
     pause() { running = false; cancelAnimationFrame(raf); },
+    warm: () => st.warm(scene, camera),
     resume() { if (!running) { running = true; last = performance.now(); raf = requestAnimationFrame(frame); } }
   };
 }
