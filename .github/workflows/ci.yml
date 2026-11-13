@@ -26,6 +26,7 @@ jobs:
           # reached, install only the browser (from Playwright's own servers) and go on.
           npx playwright install --with-deps chromium || npx playwright install chromium
       - name: Browser smoke test
+        timeout-minutes: 25
         run: npm run test:browser
       - name: Build the single-file version
         run: npm run build
