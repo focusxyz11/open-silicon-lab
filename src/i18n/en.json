@@ -1740,7 +1740,7 @@
  "nav.ecosystem": "Ecosystem",
  "hero.kicker": "An open lab for chips",
  "hero.title": "Take a chip through its life",
- "hero.lead": "Every chip goes round the same loop: designed, made, tested, shipped and used, and what fails goes back to design. Play each step's challenges and watch the island grow. Every place also has ways to look inside, and questions still open.",
+ "hero.lead": "Every chip goes round one loop: designed, made, tested, shipped and used. Play a step and watch the island grow.",
  "hero.hint.drag": "Drag to look around",
  "hero.hint.zoom": "Scroll or pinch to come closer",
  "hero.hint.tap": "Tap a place, a numbered stop or a glowing question",
@@ -2062,5 +2062,13 @@
  "bench.title": "The bench: your design, step by step",
  "bench.toFab": "Send the masks to the factory",
  "bench.hint": "The drawings show your design. Open Do to write one, and watch them change.",
- "door.enter": "Go inside"
+ "door.enter": "Go inside",
+ "game.op.and": "AND",
+ "game.op.or": "OR",
+ "game.op.xor": "XOR",
+ "game.op.and.d": "AND: 1 only when both inputs are 1",
+ "game.op.or.d": "OR: 1 when either input is 1",
+ "game.op.xor.d": "XOR: 1 when exactly one input is 1",
+ "game.tap.hint": "It adds two bits, but one gate is wrong. Tap a gate to change it: the table checks all four sums after every tap.",
+ "game.tap.write": "Write it yourself"
 }

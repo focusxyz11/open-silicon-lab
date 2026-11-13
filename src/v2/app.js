@@ -47,7 +47,9 @@ export function start() {
     const places = Object.fromEntries(Game.PLACES.map(id => { const L = doList(id); return [id, { done: L.filter(c => S.done[c.id]).length, total: L.length }]; }));
     return { grown: Game.grown(S), steps: Object.fromEntries(Game.STEPS.map(s => [s, Game.stepState(S, s)])), places, chipAt: Game.chipAt(S), floors, designs: C.designs, jobList: C.jobs, engineList: C.engines };
   }
-  const refresh = animate => { if (map) map.setState(islandState(), animate); hud(); };
+  const refresh = animate => { if (map) map.setState(islandState(), animate); hud(); firstGo(); };
+  /* until the first win, the way to start glows */
+  const firstGo = () => { const b = $('hero').querySelector('[data-start]'); if (b) b.classList.toggle('pulse', !Object.keys(S.done).length); };
 
   /* ---- the 3D views, made when first needed ---- */
   /* the spinner shows only when a view takes long to make: a quick view comes in without one */
@@ -63,7 +65,11 @@ export function start() {
   const preload = () => { prewarm(); ['./frame.js', './board3d.js', './story.js', './stories.js', '../engines/weave.js', '../app/world.js', '../data/weave.js', '../app/design.js', '../app/journey.js'].forEach(u => import(u).catch(() => { /* fetched again when needed */ })); };
   const ensureMap = () => mapReady || (mapReady = import('./map3d.js').then(m => {
     map = m.createMap($('mapCanvas'), $('mapLabels'), { place: id => (cur && cur.place === id && !sheet.hidden && enterOf(id) ? enter(enterOf(id)) : openPlace(id)), question: key => openQuestion(key), job: need => openJob(need), interact: () => $('hero').classList.add('away') });
-    loading(false); map.setState(islandState(), false); idle(preload); return map;
+    loading(false); map.setState(islandState(), false); idle(preload);
+    /* the first minute: a first visit to the island opens on a wide shot and comes down to it, and the hero rises after */
+    if (!S.seen && (!location.hash || location.hash === '#/') && !still()) { map.intro(); $('hero').classList.add('intro'); }
+    if (!S.seen) { S.seen = true; save(); }
+    return map;
   }));
   /* each view is made once, even when the prewarm and a visit ask for it at the same moment */
   let dcP = null, chipP = null, boardP = null;
@@ -167,7 +173,15 @@ export function start() {
   }
   const openJob = need => { const j = Game.jobOf(need); if (j) openChallenge(j); };
   /* something was won: the island grows, the HUD moves on, a note says what appeared */
-  function won(ch) { refresh(true); toast(ch.grows ? t('game.toast', { what: t('grow.' + ch.grows) }) : t('game.toastJob')); }
+  /* a win is felt: the island grows where it happened and the camera leans in, the step in the bar bumps and counts
+     one up, the next challenge glows, and a toast says what grew */
+  function won(ch) {
+    refresh(true); toast(ch.grows ? t('game.toast', { what: t('grow.' + ch.grows) }) : t('game.toastJob'));
+    if (map && !$('mapCanvas').hidden) map.punch();
+    const b = ch.step && hudEl.querySelector('[data-step="' + ch.step + '"]');
+    if (b && !still()) { b.classList.add('bump'); const plus = document.createElement('span'); plus.className = 'plus'; plus.setAttribute('aria-hidden', 'true'); plus.textContent = '+1'; b.parentNode.appendChild(plus); setTimeout(() => plus.remove(), 1500); }
+    const n = hudEl.querySelector('.tnext'); if (n && !still()) n.classList.add('glow');
+  }
   const toastEl = $('toast'); let toastT = 0;
   function toast(msg) { toastEl.textContent = msg; toastEl.hidden = false; toastEl.classList.remove('go'); void toastEl.offsetWidth; toastEl.classList.add('go'); clearTimeout(toastT); toastT = setTimeout(() => { toastEl.hidden = true; }, 4200); }
   function openQuestion(key) {
@@ -490,6 +504,6 @@ export function start() {
     if (b) { b.click(); e.preventDefault(); }
   });
   window.addEventListener('hashchange', route);
-  hud();
+  hud(); firstGo();
   route();
 }

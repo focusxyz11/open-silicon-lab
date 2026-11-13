@@ -83,6 +83,15 @@ the other three are made one by one in idle time, paused, and their shaders comp
 finds them ready. One context instead of four: less memory on a phone and no rebuilding. The line's machines,
 from the earlier site (`src/app/journey3d.js`), keep their own renderer for now.
 
+**The first minute and feedback.** A first visit opens on a wide shot of the sea and comes down to the island
+(`map.intro`), and the hero rises after it with one sentence and one glowing button. The first challenge is won by
+tapping, not typing: the half adder's description shows its gates as buttons (OR, AND, XOR), the table checks all
+four sums after every tap, and one tap fixes it (the design engine still decides; "Write it yourself" opens the
+text). Everything you do answers: a wrong check shakes, a row that turns right flashes, a gauge that reaches its
+target pops, a win bursts in the dock while the island grows where it happened and the camera leans in
+(`map.punch`), the step in the bar bumps and counts one up, and the next challenge glows. Your chip's pin pulses so
+you always see where you are. With reduced motion none of it moves.
+
 Text has a budget: about one sentence per story step, one line per card. Longer reading (notes, sources, the full
 explanation) goes into a reading view, opened on purpose, at a reading width.
 
@@ -135,6 +144,7 @@ shows what it becomes. Your own design rides through all three: its masks drive 
 | Line | the earlier site's factory in the frame (`#/line/<step>`): a wafer travelling between the machines, step by step; your design at printing, etching and wiring |
 | Bench | the studio in the frame (`#/bench/<level>[/<challenge>]`): its drawings show your design; a design challenge is played in the dock and the drawings follow it; masks lead to the line |
 | Turn | in the atlas and in the frame: each face opens its view, used the dive, made the line, designed the bench |
+| First minute | the intro shot, one sentence, a glowing start; the first win in one tap; feedback for wrong, right, reached and won |
 | One stage | one renderer and one GL canvas for the island, the data centre, the chip and the board; the views made and compiled ahead while the island is shown; the line's machines still have their own |
 | No cuts | the camera dives into a place and rises out of it; views zoom in, out, turn or slide into each other; the bar, the dock and the ornaments stay; code preloaded, spinner only when slow |
 | One HUD | the bar never hides and carries the tracker; the island's place opens in a dock (Look first, Go inside); the earlier site's chrome is off inside the frame; ← → and Escape everywhere |
