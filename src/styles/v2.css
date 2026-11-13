@@ -403,6 +403,35 @@ button.link { padding: 0; margin: 2px 14px 8px 0; border: 0; background: none; c
 
 body.immersive .toast { top: 136px; bottom: auto; left: 50%; }
 
+/* no cuts: going between views is a view transition. The bar, the dock and the frame's ornaments stay where they
+   are (or move to their new place); the picture zooms in when you go deeper, out when you rise, turns with the
+   Turn, slides along. Without motion (reduced motion, or no view transitions) the view simply changes. */
+.bar { view-transition-name: bar; }
+.sheet, .dock { view-transition-name: dock; }
+.homebtn { view-transition-name: up; }
+.corner { view-transition-name: corner; }
+.rail2 { view-transition-name: rail; }
+::view-transition-group(*) { animation-duration: .55s; animation-timing-function: cubic-bezier(.2, .7, .2, 1); }
+::view-transition-old(root), ::view-transition-new(root) { animation-duration: .55s; animation-fill-mode: both; transform-origin: 50% 46%; }
+::view-transition-old(root) { animation-timing-function: cubic-bezier(.5, 0, .7, .4); }
+::view-transition-new(root) { animation-timing-function: cubic-bezier(.2, .7, .2, 1); }
+html[data-move=in]::view-transition-old(root) { animation-name: vt-past; }
+html[data-move=in]::view-transition-new(root) { animation-name: vt-from-far; }
+html[data-move=out]::view-transition-old(root) { animation-name: vt-away; }
+html[data-move=out]::view-transition-new(root) { animation-name: vt-from-near; }
+html[data-move=along]::view-transition-old(root) { animation-name: vt-left; }
+html[data-move=along]::view-transition-new(root) { animation-name: vt-from-right; }
+html[data-move=turn]::view-transition-old(root) { animation-name: vt-turn-out; }
+html[data-move=turn]::view-transition-new(root) { animation-name: vt-turn-in; }
+@keyframes vt-past { to { opacity: 0; transform: scale(1.6); } }
+@keyframes vt-from-far { from { opacity: 0; transform: scale(.82); } }
+@keyframes vt-away { to { opacity: 0; transform: scale(.7); } }
+@keyframes vt-from-near { from { opacity: 0; transform: scale(1.3); } }
+@keyframes vt-left { to { opacity: 0; transform: translateX(-10%); } }
+@keyframes vt-from-right { from { opacity: 0; transform: translateX(10%); } }
+@keyframes vt-turn-out { to { opacity: 0; transform: perspective(1600px) rotateY(32deg) scale(.92); } }
+@keyframes vt-turn-in { from { opacity: 0; transform: perspective(1600px) rotateY(-32deg) scale(.92); } }
+
 /* loading */
 .loading { position: absolute; inset: 0; display: none; place-items: center; z-index: 30; pointer-events: none; }
 .loading.on { display: grid; }

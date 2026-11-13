@@ -49,10 +49,15 @@ export function start() {
   const refresh = animate => { if (map) map.setState(islandState(), animate); hud(); };
 
   /* ---- the 3D views, made when first needed ---- */
-  const loading = on => $('loading').classList.toggle('on', on);
+  /* the spinner shows only when a view takes long to make: a quick view comes in without one */
+  let loadT = 0;
+  const loading = on => { clearTimeout(loadT); if (on) loadT = setTimeout(() => $('loading').classList.add('on'), 400); else $('loading').classList.remove('on'); };
+  const still = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+  /* the views' code, fetched while the visitor looks at the island, so going inside does not wait for the network */
+  const preload = () => ['./frame.js', './board3d.js', './story.js', './stories.js', '../engines/weave.js', '../app/world.js', '../data/weave.js', '../app/design.js', '../app/journey.js'].forEach(u => import(u).catch(() => { /* fetched again when needed */ }));
   const ensureMap = () => mapReady || (mapReady = import('./map3d.js').then(m => {
-    map = m.createMap($('mapCanvas'), $('mapLabels'), { place: id => (cur && cur.place === id && !sheet.hidden && enterOf(id) ? (location.hash = enterOf(id)) : openPlace(id)), question: key => openQuestion(key), job: need => openJob(need), interact: () => $('hero').classList.add('away') });
-    loading(false); map.setState(islandState(), false); return map;
+    map = m.createMap($('mapCanvas'), $('mapLabels'), { place: id => (cur && cur.place === id && !sheet.hidden && enterOf(id) ? enter(enterOf(id)) : openPlace(id)), question: key => openQuestion(key), job: need => openJob(need), interact: () => $('hero').classList.add('away') });
+    loading(false); map.setState(islandState(), false); (window.requestIdleCallback || (f => setTimeout(f, 1200)))(preload); return map;
   }));
   const ensureDc = () => dc ? Promise.resolve(dc) : import('./dc3d.js').then(m => { dc = m.createDataCentre($('placeCanvas'), $('placeLabels'), { level: lv => placeUI(lv), depth: z => depthBar(z) }); return dc; });
 
@@ -181,7 +186,8 @@ export function start() {
   let FrameM = null;
   const withFrame = () => FrameM ? Promise.resolve(FrameM) : import('./frame.js').then(m => (FrameM = m));
   /* the Turn, from any level: designed opens the studio's level, made and used open the chip's layers */
-  const turnTo = (face, tw) => { if (!tw) return;
+  let turnT = 0;   /* the Turn's move is spent by the next route, or forgotten when the Turn changed nothing */
+  const turnTo = (face, tw) => { if (!tw) return; nextMove = 'turn'; clearTimeout(turnT); turnT = setTimeout(() => { nextMove = null; }, 400);
     if (face === 'designed' && tw.designed) location.hash = '#/bench/' + tw.designed; else if (face === 'made') location.hash = '#/line/' + tw.made[tw.made.length - 1]; else if (face === 'used') location.hash = '#/dive/' + tw.used; };
   const TWINS_ORDER = ROWS.map(r => r.dive);
   const lineHtml = (kicker, line, key, nav) => '<p class="kicker">' + esc(kicker) + '</p><p class="line">' + esc(line) + '</p>' +
@@ -207,8 +213,8 @@ export function start() {
   function showPlace(id, lv) {
     hideAll();
     $('placeCanvas').hidden = $('placeLabels').hidden = false; pui.hidden = false; document.body.classList.add('immersive');
-    loading(true);
-    Promise.all([withFrame(), ensureDc()]).then(([, d]) => {
+    loading(true); lastPlace = id;
+    return Promise.all([withFrame(), ensureDc()]).then(([, d]) => {
       dcFrame = frameOf(pui, { up: { href: '#/', label: t('place.back') }, path: [{ href: '#/', label: t('place.back') }, { label: t('map.' + id + '.t') }],
         rail: { label: t('place.levels'), items: LEVELS.map(k => ({ id: k, label: t('place.dc.' + k + '.t') })) }, turn: true,
         onRail: k => d.go(LEVELS.indexOf(k)), onTurn: turnTo, onLook: drawDc });
@@ -250,7 +256,8 @@ export function start() {
     chipMode = mode === 'build' ? 'build' : 'dive'; chipRow = row != null && row >= 0 && row < ROWS.length ? row : chipMode === 'build' ? ROWS.length - 1 : 0;
     loading(true);
     const want = chipRow;   /* the chip may report its first row before the frame is ready */
-    Promise.all([withFrame(), ensureChip()]).then(([, c]) => {
+    lastPlace = 'datacentre';
+    return Promise.all([withFrame(), ensureChip()]).then(([, c]) => {
       chipFrame = frameOf(cui, { up: { href: '#/place/datacentre/5', label: t('board.up') }, path: [{ href: '#/', label: t('place.back') }, { href: '#/place/datacentre/5', label: t('map.datacentre.t') }, { label: t('chipx.title') }],
         rail: { label: t('place.levels'), items: ROWS.map(x => ({ id: x.dive, label: t('depth.' + x.dive + '.name') })) }, turn: true, face: chipMode === 'build' ? 'made' : 'used',
         onRail: d => c.go(ROWS.findIndex(x => x.dive === d)),
@@ -330,8 +337,8 @@ export function start() {
   function showFlat(kind, depth, chId) {
     hideAll(); document.body.classList.add('immersive'); flatKind = kind; benchCh = null;
     $('diveCanvas').hidden = false; vui.hidden = false;
-    loading(true);
-    Promise.all([withFrame(), ensureDive()]).then(([, w]) => {
+    loading(true); lastPlace = { dive: 'datacentre', line: 'fab', bench: 'studio' }[kind];
+    return Promise.all([withFrame(), ensureDive()]).then(([, w]) => {
       const F = FLAT[kind]; WE.setWorld(F.world); if (kind !== 'line') hide3d(); DS.setBandCaption(false);
       /* the bench draws your design: the last you won, else the first job's */
       if (kind === 'bench') { const Y = Game.yourDesign(S); DS.setDesign(Y ? Y.B : Game.checkDesign('half', S.codes.half || Game.starter('half'))); }
@@ -354,8 +361,8 @@ export function start() {
   function showBoard() {
     hideAll(); document.body.classList.add('immersive');
     $('boardCanvas').hidden = $('boardLabels').hidden = false; bui.hidden = false;
-    loading(true);
-    Promise.all([withFrame(), board ? board : import('./board3d.js').then(m => (board = m.createBoard($('boardCanvas'), $('boardLabels'), { part: id => story && story.part(id), dive: () => { location.hash = '#/chip/0'; } }))), import('./story.js'), import('./stories.js')]).then(([, b, St, Sd]) => {
+    loading(true); lastPlace = 'datacentre';
+    return Promise.all([withFrame(), board ? board : import('./board3d.js').then(m => (board = m.createBoard($('boardCanvas'), $('boardLabels'), { part: id => story && story.part(id), dive: () => { location.hash = '#/chip/0'; } }))), import('./story.js'), import('./stories.js')]).then(([, b, St, Sd]) => {
       loading(false); b.resume(); const data = Sd.boardStory();
       const fr = frameOf(bui, { up: { href: '#/place/datacentre/4', label: t('board.up') }, path: [{ href: '#/', label: t('place.back') }, { href: '#/place/datacentre/4', label: t('map.datacentre.t') }, { label: t('place.dc.board.t') }],
         rail: { label: t('place.levels'), items: LEVELS.map(k => ({ id: k, label: t('place.dc.' + k + '.t') })) }, turn: true,
@@ -373,13 +380,13 @@ export function start() {
     ['mapCanvas', 'mapLabels', 'placeCanvas', 'placeLabels', 'chipCanvas', 'chipLabels'].forEach(k => { $(k).hidden = true; });
     document.body.classList.remove('immersive'); page.hidden = true;
   }
-  function showMap() {
+  function showMap(from) {
     $('diveCanvas').hidden = true; vui.hidden = true; dive && dive.stop(); hide3d();
     hideBoard(); document.body.classList.remove('immersive');
     $('chipCanvas').hidden = $('chipLabels').hidden = true; cui.hidden = true; chip && chip.pause();
     $('placeCanvas').hidden = $('placeLabels').hidden = true; pui.hidden = true; dc && dc.pause();
     $('mapCanvas').hidden = $('mapLabels').hidden = false; $('hero').hidden = false;
-    loading(!map); return ensureMap().then(m => { m.resume(); return m; });
+    loading(!map); return ensureMap().then(m => { if (from && lastPlace) { m.from(lastPlace); m.focus(lastPlace); } m.resume(); return m; });
   }
   const goExplore = then => { page.hidden = true; if ((location.hash || '#/') !== '#/' && location.hash !== '') { location.hash = '#/'; setTimeout(then, 80); } else then(); };
 
@@ -422,25 +429,51 @@ export function start() {
   }
 
   /* ---- routes ---- */
-  function route() {
-    const parts = (location.hash.replace(/^#\/?/, '') || '').split('/').filter(Boolean), k = parts[0] || 'explore';
-    const nav = k === 'place' || k === 'chip' || k === 'board' || k === 'dive' || k === 'line' || k === 'bench' ? 'explore' : MENU.includes(k) ? k : 'explore';
-    menu.querySelectorAll('[data-nav]').forEach(a => a.setAttribute('aria-current', a.dataset.nav === nav ? 'page' : 'false'));
-    page.hidden = true;
+  /* which view an address shows, and how deep it sits: the island 0, a place 1, the board 2, the chip 3, the dive 4.
+     Going between views is never a cut: deeper zooms in, higher zooms out, the Turn turns, along slides. */
+  const partsOf = h => (h.replace(/^#\/?/, '') || '').split('/').filter(Boolean);
+  const viewOf = p => { const k = p[0];
+    return k === 'board' ? ['board', 2] : k === 'dive' ? ['dive', 4] : k === 'line' ? ['line', 1] : k === 'bench' ? ['bench', 1] : k === 'chip' ? ['chip', 3]
+      : k === 'place' && p[1] === 'datacentre' && p[2] !== 'inside' ? ['dc', 1] : ['map', 0]; };
+  let viewNow = null, rankNow = 0, nextMove = null, lastPlace = null, entering = false;
+  /* going inside from the island: the camera dives into the place first, then the view zooms in from it */
+  function enter(href) {
+    if (entering) return;
+    if (still() || !map || $('mapCanvas').hidden || !lastFocus()) { location.hash = href; return; }
+    entering = true; map.dive(lastFocus()).then(() => { entering = false; location.hash = href; });
+  }
+  const lastFocus = () => (cur && cur.place) || null;
+  sheet.addEventListener('click', e => { const a = e.target.closest('a[href^="#/"]'); if (!a || viewOf(partsOf(a.getAttribute('href')))[0] === 'map') return; e.preventDefault(); e.stopPropagation(); enter(a.getAttribute('href')); }, true);
+  function show(parts, from) {
+    const k = parts[0] || 'explore';
     if (k === 'board') return showBoard();
     if (k === 'dive') return showDive(parts[1]);
     if (k === 'line') return showFlat('line', parts[1]);
     if (k === 'bench') return showFlat('bench', parts[1], parts[2]);
-    if (k === 'do' && parts[1]) { showMap().then(() => openChallenge(Game.challengeOf(parts[1]))); return; }
+    if (k === 'do' && parts[1]) return showMap(from).then(() => openChallenge(Game.challengeOf(parts[1])));
     if (k === 'chip') return showChip(parts[1] != null ? +parts[1] : null, parts[2]);
     if (k === 'place' && parts[1] === 'datacentre' && parts[2] !== 'inside') return showPlace('datacentre', parts[2] != null ? +parts[2] : null);
-    if (k === 'place' && Game.PLACES.includes(parts[1])) { showMap().then(() => openPlace(parts[1], parts[2] === 'inside' ? 'look' : null)); return; }
-    showMap().then(() => { if (k === 'ecosystem') showEcosystem(); });
+    if (k === 'place' && Game.PLACES.includes(parts[1])) return showMap(from).then(() => openPlace(parts[1], parts[2] === 'inside' ? 'look' : null));
     if (['challenges', 'questions', 'build'].includes(k)) showPage(k);
+    return showMap(from).then(() => { if (k === 'ecosystem') showEcosystem(); });
+  }
+  function route() {
+    const parts = partsOf(location.hash), k = parts[0] || 'explore';
+    const nav = k === 'place' || k === 'chip' || k === 'board' || k === 'dive' || k === 'line' || k === 'bench' ? 'explore' : MENU.includes(k) ? k : 'explore';
+    menu.querySelectorAll('[data-nav]').forEach(a => a.setAttribute('aria-current', a.dataset.nav === nav ? 'page' : 'false'));
+    page.hidden = true;
+    const [view, rank] = viewOf(parts), from = viewNow, move = nextMove || (rank > rankNow ? 'in' : rank < rankNow ? 'out' : 'along');
+    nextMove = null; viewNow = view; rankNow = rank;
+    if (!from || from === view || still() || !document.startViewTransition) return show(parts, from && from !== view ? from : null);
+    /* the old picture holds while the new view is made (at most a moment), then one zooms into the other */
+    const root = document.documentElement; root.dataset.move = move;
+    const tr = document.startViewTransition(() => Promise.race([show(parts, from), new Promise(r => setTimeout(r, 1500))]));
+    tr.finished.finally(() => { if (root.dataset.move === move) delete root.dataset.move; });
   }
   /* one set of keys on every frame: ← → step along (the dock's back and next), Escape goes up */
   document.addEventListener('keydown', e => {
-    if (e.target.closest && e.target.closest('input, textarea, select, [data-live], canvas')) return; /* i18n-ok */
+    /* a picture that steps along by itself (the flat world) has already taken the key */
+    if (e.defaultPrevented || (e.target.closest && e.target.closest('input, textarea, select, [data-live]'))) return; /* i18n-ok */
     const host = [vui, cui, pui, bui].find(h => h && !h.hidden); if (!host) return;
     if (e.key === 'Escape') { const up = host.querySelector('.homebtn'); if (up) { location.hash = up.getAttribute('href'); e.preventDefault(); } return; }
     if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
