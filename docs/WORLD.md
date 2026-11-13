@@ -11,8 +11,8 @@ chip, yours, round the loop every chip goes round:
 **Design → Make → Test → Ship → Use**, and what fails in use goes back to design.
 
 The loop is a ring road on the island, with a numbered stop for each step and your chip standing at the step
-you are on. The HUD (top left) always shows the five steps, how many challenges each has left, and the next
-challenge. Each step has a station: Design at the studio, Make at the factory (the crystal is the first part of
+you are on. The tracker in the bar always shows the five steps (a tick when one is done) and the next challenge, on the
+island and in every view. Each step has a station: Design at the studio, Make at the factory (the crystal is the first part of
 making), Test at the test house, Ship at the port, Use at the data centre. Where a chip goes after the port
 (a phone, a car, a data centre) is a challenge at Ship, because what it must survive depends on where it
 lives.
@@ -77,13 +77,15 @@ centre's flight ends by going into it; the levels block to atom, and the factory
 
 ## Every place has three doors
 
-Whatever you tap opens the same sheet, with three doors:
+Whatever you tap opens the same dock at the bottom, with three doors (Look first, with Go inside; tap the
+place again to go in):
 
 - **Do**: challenges, each checked for real by one of the lab's engines. A circuit by the tiny-chip engine
   (`src/engines/design.js`), your chip's settings by `src/engines/chip.js`, a chip's years in a phone, a car or
   a data centre by `src/engines/life.js`, a broken copy by the design engine's factory faults. AI can propose;
   the check decides.
-- **Inside**: the place's levels, one inside the next, with how many questions and challenges wait at each;
+- **Look** (inside): the place's levels, one inside the next, as small chips with how many questions wait at
+  each and a dot where a challenge waits;
   then any other way in (the supply map at the port, the plan at the Lab).
 - **Ask**: the questions that stop at this place (stops of the threads), its debates, and at the Lab the ways
   people are trying.

@@ -27,8 +27,8 @@ export function createStory(dock, scene, story, on = {}) {
     if (st.predict && S.guess == null) h += '<div class="opts">' + st.predict.map(o => '<button type="button" class="opt" data-guess="' + o + '">' + esc(story.text(st.id + '.' + o)) + '</button>').join('') + '</div>';
     if (st.predict && S.guess != null) h += '<p class="after ' + (S.guess === st.right ? 'good' : '') + '">' + esc(story.text(st.id + (S.guess === st.right ? '.right' : '.wrong'))) + ' ' + esc(story.text(st.id + '.why', story.vars(S))) + '</p>';
     if (st.ask) h += '<a class="askline" href="' + esc(on.follow(st.ask)) + '"><span class="q">' + esc(t('stop.' + st.ask + '.q')) + '</span></a>';
-    h += '<div class="nav">' + (at ? '<button type="button" class="btn ghost" data-go="' + (at - 1) + '">' + esc(t('story.back')) + '</button>' : '<span></span>') +
-      (st.end ? st.end.map((e, i) => '<a class="btn' + (i === 0 ? ' primary' : '') + '" href="' + esc(e.href) + '">' + esc(t(e.words)) + '</a>').join('') : '<button type="button" class="btn primary" data-go="' + (at + 1) + '"' + (predicted ? '' : ' disabled') + '>' + esc(t('story.next')) + '</button>') + '</div>';
+    h += '<div class="nav">' + (at ? '<button type="button" class="btn ghost" data-key="back" data-go="' + (at - 1) + '">' + esc(t('story.back')) + '</button>' : '<span></span>') +
+      (st.end ? st.end.map((e, i) => '<a class="btn' + (i === 0 ? ' primary" data-key="next' : '') + '" href="' + esc(e.href) + '">' + esc(t(e.words)) + '</a>').join('') : '<button type="button" class="btn primary" data-key="next" data-go="' + (at + 1) + '"' + (predicted ? '' : ' disabled') + '>' + esc(t('story.next')) + '</button>') + '</div>';
     dock.innerHTML = h;
     dock.classList.toggle('locked', st.predict && S.guess == null);
     on.step && on.step(st, v);

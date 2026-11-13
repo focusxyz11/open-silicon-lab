@@ -126,7 +126,7 @@ for (const [tag, viewport, scheme] of [['desktop', { width: 1360, height: 860 },
   await page.close();
 }
 /* the chip world (index.html): your chip's life on the island. The first challenge is played and won, the island
-   grows and says so, the HUD moves on; a place opens its three doors; the pages list every challenge and the plan. */
+   grows and says so, the tracker in the bar moves on; a place opens its three doors in the dock, Look first with a way inside; the pages list every challenge and the plan. */
 /* its own browser, with software WebGL, so the island can draw on a machine without a GPU */
 const browser3d = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
 for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height: 800 }, 'light'], ['explore phone', { width: 390, height: 844 }, 'dark']]) {
@@ -134,20 +134,22 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
   page.on('pageerror', e => problems.push(tag + ': ' + e.message));
   page.on('console', m => { if (m.type() === 'error' && !/fonts\.g|net::ERR|WebGL|GPU/.test(m.text())) problems.push(tag + ': console: ' + m.text()); });
   await page.goto(base + 'index.html');
-  await page.waitForSelector('#hud .steps button', { timeout: 15000 }).catch(() => problems.push(tag + ': no HUD with the five steps'));
-  if ((await page.$$('#hud .steps button')).length !== 5) problems.push(tag + ': the HUD does not show five steps');
+  await page.waitForSelector('#track .tsteps button', { timeout: 15000 }).catch(() => problems.push(tag + ': no tracker with the five steps'));
+  if ((await page.$$('#track .tsteps button')).length !== 5) problems.push(tag + ': the tracker does not show five steps');
   await page.click('#hero [data-start]');
   await page.waitForSelector('#sheet .player #chCode', { timeout: 10000 }).catch(() => problems.push(tag + ': the first challenge did not open'));
   await page.fill('#chCode', 'sum = a ^ b;\ncarry = a & b;');
   await page.click('#sheet [data-check]');
   await page.waitForSelector('#sheet .won', { timeout: 10000 }).catch(() => problems.push(tag + ': a right design did not win the challenge'));
   if (!/grew/i.test(await page.textContent('#toast').catch(() => ''))) problems.push(tag + ': winning did not say what grew');
-  if (!/1\/3/.test(await page.textContent('#hud [data-step="design"]').catch(() => ''))) problems.push(tag + ': the HUD did not count the win');
+  if (!/1 of 3/.test(await page.getAttribute('#track [data-step="design"]', 'aria-label').catch(() => ''))) problems.push(tag + ': the tracker did not count the win');
   await page.click('#sheet [data-next]').catch(() => problems.push(tag + ': no way on to the next challenge'));
   if (!/voter/i.test(await page.textContent('#sheet .player h3').catch(() => ''))) problems.push(tag + ': the next challenge is not the majority voter');
   await page.click('#sheet [data-back]');
   for (const door of ['look', 'ask', 'do']) { await page.click('#sheet [data-door="' + door + '"]').catch(() => problems.push(tag + ': no door ' + door)); }
   if (!(await page.$$('#sheet .chcard')).length) problems.push(tag + ': the studio has nothing to do');
+  await page.click('#sheet [data-door="look"]');
+  if (!(await page.$('#sheet .lvchips a')) || !(await page.$('#sheet .nav .btn.primary'))) problems.push(tag + ': Look shows no way inside the studio');
   await page.evaluate(() => { location.hash = '#/challenges'; });
   await page.waitForSelector('#page .stepsec', { timeout: 10000 }).catch(() => {});
   if ((await page.$$('#page .stepsec')).length !== 6) problems.push(tag + ': the challenges page does not show five steps and the open jobs');
