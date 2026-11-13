@@ -51,7 +51,7 @@ test('every "Try it" sits at a real stop and changes a real setting; every depth
   assert.equal(EN['chip.gen.names'].length, GENS);
   for (const [id, ks] of Object.entries(SHOWS)) {
     assert.ok(DEPTHS[id], id + ' is not a depth');
-    assert.ok(EN['chip.show.' + id], id + ' has no words for your chip');
+    assert.ok(EN['chip.show.' + (id === 'test' ? 'wafer' : id)], id + ' has no words for your chip');   /* the test house shares the wafer's words */
     ks.forEach(k => assert.ok(SETTINGS.includes(k)));
   }
 });

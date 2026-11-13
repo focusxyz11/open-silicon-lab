@@ -6,6 +6,7 @@
    z is the factory step at work. Words: chipx.* and the depths' own (src/i18n/en.json). */
 import { THREE, PALETTES, theme, stage, light, group, labels, clamp, smooth, reduced, rnd } from './kit3d.js';
 import { t } from '../core/i18n.js';
+import { VIEW_PARTS } from '../data/atlas.js';
 
 /* each row: the depth you dive to, and the factory steps that make it (src/data/weave.js MADE) */
 export const ROWS = [
@@ -60,11 +61,11 @@ export function createChip(canvas, host, on = {}) {
   for (let i = 0; i < 6; i++) for (let k = 0; k < 6; k++) { const b = new THREE.Mesh(ball, bump); b.position.set(-4.5 + i * 1.8, 7.45, -4.5 + k * 1.8); b.castShadow = true; rows[0].g.add(b); }
   B(0, S + 2, 0.7, S + 2, sub, 0, 7.75, 0); B(0, S + 1, 0.5, S + 1, lid, 0, 8.45, 0);
 
-  /* names on the parts (HTML over points); shown while their row is in view */
+  /* names on the parts (HTML over points), from their one home in the atlas; shown while their row is in view */
   const named = [
-    [0, [5.5, 8.95, 5.5], 'lid'], [0, [-4.5, 7.75, 6.2], 'bumps'], [1, [5.6, 6.6, 3], 'wires'], [1, [-3.2, 4.4, -4], 'vias'],
+    [0, [5.5, 8.95, 5.5], 'lid'], [0, [-4.5, 7.75, 6.2], 'bumps'], [1, [5.6, 6.6, 3], 'wires'],
     [2, [5.8, 3.4, 0.0], 'gates'], [2, [-4.5, 3.98, -3.3], 'contacts'], [3, [-5, 3.2, 5], 'fins'], [4, [-4.5, 2.3, 5.6], 'wells'], [4, [5.8, 1.1, 5.8], 'silicon']
-  ].map(([r, p, id]) => { const lb = L.add(rows[r].g, new THREE.Vector3(...p), t('chipx.part.' + id), { cls: 'part3' }); lb.row = r; return lb; });
+  ].map(([r, p, id]) => { const lb = L.add(rows[r].g, new THREE.Vector3(...p), t('part.' + VIEW_PARTS.chip[id]), { cls: 'part3' }); lb.row = r; return lb; });
 
   /* ---- the position and the mode, and what each row does at them ---- */
   let z = 0, goal = 0, mode = 'dive', W = 1, Hh = 1, running = true, raf = 0, last = performance.now(), work = 0;

@@ -18,11 +18,12 @@ test('every place on the map has a name, a kind and a line', () => {
   for (const id of PLACES) for (const k of ['t', 'kind', 'd']) assert.ok(EN['map.' + id + '.' + k], id + ' has no ' + k);
 });
 
-test('every level of the data centre has its words and a real question; every part named has its name', () => {
+test('every level of the data centre has its words and a real question; every part named has its name', async () => {
   assert.deepEqual(LEVELS, ['campus', 'hall', 'rack', 'server', 'board', 'chip']);
   for (const lv of LEVELS) { assert.ok(EN['place.dc.' + lv + '.t'] && EN['place.dc.' + lv + '.d'], lv); assert.ok(EN['stop.' + ASKS[lv] + '.q'], lv + ': ' + ASKS[lv]); }
   assert.ok(PARTS.length >= 15);
-  for (const p of PARTS) assert.ok(EN['place.dc.part.' + p], p);
+  const { VIEW_PARTS } = await import('../src/data/atlas.js');
+  for (const p of PARTS) assert.ok(VIEW_PARTS.flight[p] && EN['part.' + VIEW_PARTS.flight[p]], p + ' is named by no part of the atlas');
 });
 
 test('the menu has its five parts, each with its words', () => {
@@ -43,5 +44,4 @@ test('inside a chip: each row is a depth of the dive and the factory steps that 
   const asks = src('chip3d.js').match(/export const ASK = \{([^}]+)\}/)[1].match(/'([a-z]+\.[a-z]+)'/g).map(x => x.slice(1, -1));
   assert.equal(asks.length, 10);
   for (const k of asks) assert.ok(STOPS[k] && EN['stop.' + k + '.q'], k);
-  for (const id of [...src('chip3d.js').matchAll(/\], '([a-z]+)'\]/g)].map(m => m[1])) assert.ok(EN['chipx.part.' + id], 'chipx.part.' + id);
 });

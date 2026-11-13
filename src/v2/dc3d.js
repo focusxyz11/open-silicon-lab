@@ -3,7 +3,8 @@
    One scene at true scale, in metres, with the followed chip near the origin so that the closest views stay
    steady. The camera moves along a single path (depth z from 0 to 5, one step per level); everything that
    opens (the roof, the rack door, the tray, its lid, the heat sink, the chip's lid) opens as a function of z,
-   so nothing appears from nowhere. Words: place.dc.<level>.t / .d, place.dc.part.<id>. */
+   so nothing appears from nowhere. Words: place.dc.<level>.t / .d; the parts' names come from their one home in the atlas (src/data/atlas.js). */
+import { VIEW_PARTS } from '../data/atlas.js';
 import { THREE, PALETTES, theme, stage, light, mat, metal, glow, glass, box, cyl, group, labels, clamp, smooth, ease, reduced, rnd } from './kit3d.js';
 import { t } from '../core/i18n.js';
 
@@ -179,7 +180,7 @@ export function createDataCentre(canvas, host, on = {}) {
     ['package', pkg, W3(0.038, 0.012, 0.03), [3.7, 4.5]], ['powerstages', tray, W3(0.06, 0.03, 0.11), [3.7, 4.4]],
     ['die', pkg, W3(-0.004, 0.006, -0.012), [4.6, 5.1]], ['hbm', pkg, W3(0.0175, 0.0065, 0.018), [4.6, 5.1]]
   ];
-  const named = NAMES.map(([id, obj, at, lv]) => { const lb = L.add(obj, at, t('place.dc.part.' + id), { cls: 'part3' }); lb.lv = lv; return lb; });
+  const named = NAMES.map(([id, obj, at, lv]) => { const lb = L.add(obj, at, t('part.' + VIEW_PARTS.flight[id]), { cls: 'part3' }); lb.lv = lv; return lb; });
 
   /* ---- the camera along the path ---- */
   let z = 0, goal = 0, raf = 0, running = true, W = 1, H = 1, last = performance.now();
