@@ -85,6 +85,14 @@ lends them the stage (`setChrome({ stage })` in `src/app/world.js`), they draw w
 did and show the canvas once their first picture is on it. One context instead of five: less memory on a phone and
 no rebuilding. The earlier site, which lends nothing, keeps its own renderer for the line.
 
+**Questions stay inside.** Following a question (`#/ask/<thread>/<depth>`) never leaves the chip world. A
+thread's stops make one trail (`Game.trail`, in `DEPTH_ORDER`: a chip in use from the building down, then designed,
+then made), and each stop opens in the view that shows its level (`Game.viewOfDepth`). Its words are pinned in the
+dock under Ask (`frame.stop()`): the question, something true to notice, what people are trying, and back and next
+stop, which may be in another view (the move between views is the usual zoom or slide). A level not yet drawn in a
+view of its own is met at its place on the island. After two stops of a thread, the question underneath may show,
+one at a time (`rootShown`).
+
 **The first minute and feedback.** A first visit opens on a wide shot of the sea and comes down to the island
 (`map.intro`), and the hero rises after it with one sentence and one glowing button. The first challenge is won by
 tapping, not typing: the half adder's description shows its gates as buttons (OR, AND, XOR), the table checks all
@@ -147,6 +155,7 @@ shows what it becomes. Your own design rides through all three: its masks drive 
 | Line | the earlier site's factory in the frame (`#/line/<step>`): a wafer travelling between the machines, step by step; your design at printing, etching and wiring |
 | Bench | the studio in the frame (`#/bench/<level>[/<challenge>]`): its drawings show your design; a design challenge is played in the dock and the drawings follow it; masks lead to the line |
 | Turn | in the atlas and in the frame: each face opens its view, used the dive, made the line, designed the bench |
+| Questions inside | every question's trail walks through the chip world's own views; none leads to the earlier site |
 | First minute | the intro shot, one sentence, a glowing start; the first win in one tap; feedback for wrong, right, reached and won |
 | One stage | one renderer and one GL canvas for the island, the data centre, the chip, the board and the line's machines; the views made and compiled ahead while the island is shown |
 | No cuts | the camera dives into a place and rises out of it; views zoom in, out, turn or slide into each other; the bar, the dock and the ornaments stay; code preloaded, spinner only when slow |

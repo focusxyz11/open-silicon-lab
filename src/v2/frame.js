@@ -7,7 +7,8 @@
    createFrame(host, o): o.up { href, label }, o.path [{ href, label }], o.rail { label, items: [{ id, label }] },
    o.turn (true to offer it), o.follow(key) → address of a question, o.askAt(depth) → stop keys,
    o.doAt(depth) → [{ id, title, where, href }], o.onRail(id), o.onTurn(face, twin), o.onLook().
-   Returns { dock, level(depth), rail(at, fill), goal(html), mode(), look() }. */
+   Returns { dock, level(depth), rail(at, fill), goal(html), mode(), look(), stop(html) }: stop() pins a question you
+   are following in the dock, under Ask, until you choose a mode again. */
 import { t } from '../core/i18n.js';
 import { twinOf, TWINS } from '../data/atlas.js';
 
@@ -16,7 +17,7 @@ export const MODES = ['look', 'do', 'ask'];
 export const FACES = ['designed', 'made', 'used'];
 
 export function createFrame(host, o) {
-  let mode = 'look', depth = null, face = o.face || 'used';
+  let mode = 'look', depth = null, face = o.face || 'used', pinned = false;
   host.innerHTML =
     '<a class="homebtn" href="' + esc(o.up.href) + '" aria-label="' + esc(o.up.label) + '">↑</a>' +
     '<nav class="crumbs2">' + o.path.map((p, i) => (i ? '<span aria-hidden="true">›</span>' : '') + (p.href ? '<a href="' + esc(p.href) + '">' + esc(p.label) + '</a>' : '<b>' + esc(p.label) + '</b>')).join('') + '</nav>' +
@@ -49,20 +50,22 @@ export function createFrame(host, o) {
     dock.innerHTML = h; dock.classList.remove('locked');
   };
   host.addEventListener('click', e => {
-    const m = e.target.closest('[data-mode]'); if (m) { mode = m.dataset.mode; return fill(); }
+    const m = e.target.closest('[data-mode]'); if (m) { mode = m.dataset.mode; pinned = false; return fill(); }
     const r = e.target.closest('[data-rail]'); if (r) return o.onRail && o.onRail(r.dataset.rail);
     const f = e.target.closest('[data-face]'); if (f && !f.disabled) { face = f.dataset.face; drawTurn(); return o.onTurn && o.onTurn(face, twinOf(depth)); }
   });
   return {
     dock,
     /* the level in view: Do and Ask follow it, and so does the Turn */
-    level(d) { depth = d; counts(); drawTurn(); if (mode !== 'look') fill(); },
+    level(d) { depth = d; counts(); drawTurn(); if (mode !== 'look' && !pinned) fill(); },
     /* the rail: which item is here, and how far along (0..1) */
     rail(at, f) { host.querySelectorAll('[data-rail]').forEach(b => { if (b.dataset.rail === at) b.setAttribute('aria-current', 'step'); else b.removeAttribute('aria-current'); }); if (f != null) { const el = $('.rfill'); if (el) el.style.height = (f * 100).toFixed(1) + '%'; } },
     face(f) { face = f; drawTurn(); },
     goal(html) { const g = $('.goal2'); g.hidden = !html; if (html) g.innerHTML = html; },
     mode() { return mode; },
-    look() { mode = 'look'; fill(); }
+    look() { mode = 'look'; pinned = false; fill(); },
+    /* a question being followed: shown under Ask, and kept while the level changes beneath it */
+    stop(html) { mode = 'ask'; pinned = true; host.querySelectorAll('[data-mode]').forEach(b => b.setAttribute('aria-selected', String(b.dataset.mode === 'ask'))); dock.innerHTML = html; dock.classList.remove('locked'); }
   };
 }
 export { TWINS };

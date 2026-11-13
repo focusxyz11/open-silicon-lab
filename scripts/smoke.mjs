@@ -151,6 +151,15 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
   if (!(await page.$$('#sheet .chcard')).length) problems.push(tag + ': the studio has nothing to do');
   await page.click('#sheet [data-door="look"]');
   if (!(await page.$('#sheet .lvchips a')) || !(await page.$('#sheet .nav .btn.primary'))) problems.push(tag + ': Look shows no way inside the studio');
+  /* questions stay in the chip world: the questions page and a followed question never send you to the earlier site */
+  await page.evaluate(() => { location.hash = '#/questions'; });
+  await page.waitForSelector('#page .qcard', { timeout: 10000 }).catch(() => problems.push(tag + ': the questions page shows no questions'));
+  if (await page.$('#page .qcard[href*="classic"]')) problems.push(tag + ': a question still leads to the earlier site');
+  await page.evaluate(() => { location.hash = '#/ask/think/gate'; });
+  await page.waitForSelector('#diveui .dock .trailq', { timeout: 20000 }).catch(() => problems.push(tag + ': following a question did not show its stop in the dive'));
+  await page.click('#diveui .dock [data-key="next"]').catch(() => problems.push(tag + ': a stop has no next stop'));
+  await page.waitForFunction(() => location.hash === '#/ask/think/switch', null, { timeout: 15000 }).catch(() => problems.push(tag + ': the next stop is not the switch'));
+  await page.waitForSelector('#diveui .dock .root2', { timeout: 15000 }).catch(() => problems.push(tag + ': after two stops the question underneath did not show'));
   await page.evaluate(() => { location.hash = '#/challenges'; });
   await page.waitForSelector('#page .stepsec', { timeout: 10000 }).catch(() => {});
   if ((await page.$$('#page .stepsec')).length !== 6) problems.push(tag + ': the challenges page does not show five steps and the open jobs');

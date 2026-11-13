@@ -299,7 +299,7 @@ export function createMap(canvas, host, on = {}) {
   const easeBack = k => { const c1 = 1.70158, c3 = c1 + 1; return 1 + c3 * Math.pow(k - 1, 3) + c1 * Math.pow(k - 1, 2); };
   const frame = now => {
     if (!running) return; raf = requestAnimationFrame(frame);
-    const dt = Math.min(0.05, (now - last) / 1000), tm = now / 1000; last = now;
+    const dt = Math.min(0.05, Math.max(0, now - last) / 1000), tm = now / 1000; last = now;
     if (fly) { const k = ease(clamp((now - fly.t0) / fly.ms)); ['x', 'z', 'd', 'yaw', 'pitch'].forEach(q => { cam[q] = fly.from[q] + (fly.to[q] - fly.from[q]) * k; }); if (k >= 1) fly = null; }
     else { const want = cam.d > 400 ? 1.0 : cam.d > 90 ? 0.92 : 0.8; cam.pitch += (want - cam.pitch) * 0.08; }
     place2();
