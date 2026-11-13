@@ -126,7 +126,7 @@ for (const [tag, viewport, scheme] of [['desktop', { width: 1360, height: 860 },
   await page.close();
 }
 /* the chip world (index.html): your chip's life on the island. The first challenge is played and won, the island
-   grows and says so, the tracker in the bar moves on; a place opens its three doors in the dock, Look first with a way inside; the pages list every challenge and the plan. */
+   grows and says so (the first fixed with one tap), the tracker in the bar moves on; a place opens its three doors in the dock, Look first with a way inside; the pages list every challenge and the plan. */
 /* its own browser, with software WebGL, so the island can draw on a machine without a GPU */
 const browser3d = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
 for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height: 800 }, 'light'], ['explore phone', { width: 390, height: 844 }, 'dark']]) {
@@ -137,9 +137,10 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
   await page.waitForSelector('#track .tsteps button', { timeout: 15000 }).catch(() => problems.push(tag + ': no tracker with the five steps'));
   if ((await page.$$('#track .tsteps button')).length !== 5) problems.push(tag + ': the tracker does not show five steps');
   await page.click('#hero [data-start]');
-  await page.waitForSelector('#sheet .player #chCode', { timeout: 10000 }).catch(() => problems.push(tag + ': the first challenge did not open'));
-  await page.fill('#chCode', 'sum = a ^ b;\ncarry = a & b;');
-  await page.click('#sheet [data-check]');
+  /* the first challenge is fixed by tapping the wrong gate: OR becomes XOR, and the table checks at once */
+  await page.waitForSelector('#sheet .player .tapcode [data-op]', { timeout: 10000 }).catch(() => problems.push(tag + ': the first challenge did not open with its gates to tap'));
+  if (!(await page.$('#sheet .verdict.bad'))) problems.push(tag + ': the first challenge does not show its wrong row before any tap');
+  await page.click('#sheet [data-op="0"]');
   await page.waitForSelector('#sheet .won', { timeout: 10000 }).catch(() => problems.push(tag + ': a right design did not win the challenge'));
   if (!/grew/i.test(await page.textContent('#toast').catch(() => ''))) problems.push(tag + ': winning did not say what grew');
   if (!/1 of 3/.test(await page.getAttribute('#track [data-step="design"]', 'aria-label').catch(() => ''))) problems.push(tag + ': the tracker did not count the win');
@@ -179,7 +180,8 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
   await page.waitForFunction(() => { const c = document.querySelector('#diveui .rail2 [aria-current]'); return c && c.dataset.rail === 'implant'; }, null, { timeout: 20000 }).catch(() => problems.push(tag + ': the next step on the line is not implanting'));
   /* the bench: a design written in the dock, checked, won */
   await page.evaluate(() => { location.hash = '#/bench/logic/half'; });
-  await page.waitForSelector('#diveui .dock #chCode', { timeout: 15000 }).catch(() => problems.push(tag + ': the bench did not open the design'));
+  await page.waitForSelector('#diveui .dock .player [data-write], #diveui .dock #chCode', { timeout: 15000 }).catch(() => problems.push(tag + ': the bench did not open the design'));
+  await page.click('#diveui .dock [data-write]', { timeout: 3000 }).catch(() => {});   /* the half adder opens for tapping; write it instead */
   await page.fill('#diveui .dock #chCode', 'sum = a ^ b;\ncarry = a & b;').catch(() => {});
   await page.click('#diveui .dock [data-check]').catch(() => {});
   await page.waitForSelector('#diveui .dock .won', { timeout: 10000 }).catch(() => problems.push(tag + ': a right design on the bench did not win'));

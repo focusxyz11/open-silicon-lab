@@ -404,6 +404,36 @@ button.link { padding: 0; margin: 2px 14px 8px 0; border: 0; background: none; c
 
 body.immersive .toast { top: 136px; bottom: auto; left: 50%; }
 
+/* the first minute and feedback */
+.hero.intro { animation: herorise .8s 2.2s cubic-bezier(.2, .8, .2, 1) both; }
+@keyframes herorise { from { opacity: 0; transform: translateY(24px); } }
+.btn.pulse { animation: pulse 2.2s ease-in-out infinite; }
+@keyframes pulse { 0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 55%, transparent); } 50% { box-shadow: 0 0 0 10px color-mix(in srgb, var(--accent) 0%, transparent); } }
+.pin3.here::after { content: ''; position: absolute; inset: -2px; border-radius: inherit; border: 2px solid var(--accent); animation: ring 2.4s ease-out infinite; pointer-events: none; }
+@keyframes ring { 0% { opacity: .8; transform: scale(1); } 70%, 100% { opacity: 0; transform: scale(1.6); } }
+/* a press is felt (not on the 3D labels: their transform is their place on the screen) */
+.btn { transition: transform .15s ease, filter .2s; }
+.lvchips a { transition: border-color .2s, background .2s, transform .15s ease; }
+.lvchips a:active, .btn:active:not([disabled]), .tapcode .op:active { transform: scale(.94); }
+.tsteps li { position: relative; }
+.tsteps .bump { animation: bump .7s cubic-bezier(.2, 1.6, .4, 1); }
+@keyframes bump { 0% { transform: scale(1); } 35% { transform: scale(1.45); } 100% { transform: scale(1); } }
+.tsteps .plus { position: absolute; left: 50%; top: -2px; transform: translateX(-50%); font: 800 12px var(--mono); color: var(--good); pointer-events: none; animation: plus 1.4s ease-out forwards; }
+@keyframes plus { 0% { opacity: 0; transform: translate(-50%, 6px); } 20% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, 34px); } }
+.tnext.glow { animation: pulse 1.6s ease-in-out 3; }
+/* the first challenge, fixed by tapping a gate */
+.tapcode { font: 15px/2.2 var(--mono); }
+.tapcode .op { display: inline-grid; justify-items: center; vertical-align: middle; min-width: 44px; margin: 0 4px; padding: 2px 8px 3px; border-radius: 10px; border: 1.5px solid var(--accent); background: color-mix(in srgb, var(--accent) 14%, transparent); color: var(--ink); cursor: pointer; line-height: 1.1; }
+.tapcode .op b { font: 700 16px var(--mono); }
+.tapcode .op span { font: 700 9px var(--sans); letter-spacing: .06em; color: var(--accent); }
+.tapcode .op:hover { background: color-mix(in srgb, var(--accent) 26%, transparent); }
+.won { position: relative; }
+.burst { position: absolute; left: 50%; top: 18px; width: 0; height: 0; pointer-events: none; }
+.burst i { position: absolute; left: -4px; top: -4px; width: 8px; height: 8px; border-radius: 2px; background: var(--good); animation: burst .9s var(--d) cubic-bezier(.1, .7, .3, 1) both; }
+.burst i:nth-child(3n) { background: var(--accent); } .burst i:nth-child(3n+1) { background: var(--warm); }
+@keyframes burst { from { opacity: 1; transform: rotate(var(--a)) translateY(0) scale(1); } to { opacity: 0; transform: rotate(var(--a)) translateY(-90px) scale(.4); } }
+@media (prefers-reduced-motion: reduce) { .hero.intro, .btn.pulse, .pin3.here::after, .tnext.glow, .tsteps .bump, .burst { animation: none !important; } .burst { display: none; } }
+
 /* no cuts: going between views is a view transition. The bar, the dock and the frame's ornaments stay where they
    are (or move to their new place); the picture zooms in when you go deeper, out when you rise, turns with the
    Turn, slides along. Without motion (reduced motion, or no view transitions) the view simply changes. */

@@ -334,6 +334,11 @@ export function createMap(canvas, host, on = {}) {
       flyTo(p.at[0] + Math.sin(cam.yaw) * upv, p.at[1] + Math.cos(cam.yaw) * upv, d);
     },
     overview() { const h = home(); flyTo(h.x, h.z, h.d); },
+    /* the first visit opens on a wide shot of the sea and comes down to the island, turning toward it */
+    intro() { if (reduced()) return; const h = home(); Object.assign(cam, { x: h.x + 70, z: h.z + 120, d: MAXD * 0.8, yaw: cam.yaw - 0.8, pitch: 1.08 }); place2();
+      fly = { from: { ...cam }, to: { x: h.x, z: h.z, d: h.d, yaw: -0.42, pitch: 0.92 }, t0: performance.now(), ms: 2800 }; },
+    /* a win lands: the camera leans in and settles back */
+    punch() { if (reduced() || fly) return; const d0 = cam.d; cam.d *= 0.9; place2(); flyTo(cam.x, cam.z, d0, 700); },
     /* the hand-offs with the views below: dive close into a place before going inside, and start close to the
        place you come back from, then rise (no cut: the camera carries you in and out) */
     dive(id) { const p = placeAt(id); if (!p) return Promise.resolve(); const ms = reduced() ? 1 : 650; flyTo(p.at[0], p.at[1], Math.max(38, p.d * 0.55), ms); return new Promise(r => setTimeout(r, ms)); },
