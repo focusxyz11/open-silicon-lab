@@ -3,6 +3,7 @@
    The board: one chip and its memory, and the wall between them (src/engines/chip.js: reuse, busy, movePJ). */
 import { t } from '../core/i18n.js';
 import { model, START, REUSES } from '../engines/chip.js';
+import { VIEW_PARTS } from '../data/atlas.js';
 
 export function boardStory() {
   const M = i => model(Object.assign({}, START, { reuse: i }));
@@ -10,7 +11,8 @@ export function boardStory() {
   /* how much is streaming from memory: full while the cores wait for it, then less as each number is reused */
   const flowOf = i => { const m = M(i); return Math.min(1, m.busy * 16 / REUSES[i]); };
   const figs = (S, which) => { const m = M(S.reuse); return { die: which.includes('die') ? t('board.fig.busy', { v: pct(m.busy) }) : '', hbm: which.includes('hbm') ? t('board.fig.move', { v: Math.round(m.movePJ) }) : '' }; };
-  const names = Object.fromEntries(['chip', 'die', 'hbm', 'vrm', 'links'].map(id => [id, t('board.part.' + id)]));
+  /* the parts' names come from their one home in the atlas */
+  const names = Object.fromEntries(Object.entries(VIEW_PARTS.board).map(([id, home]) => [id, t('part.' + home)]));
   return {
     text: (k, v) => t('board.story.' + k, v),
     state: { reuse: 0, guess: null },

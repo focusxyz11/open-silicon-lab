@@ -207,7 +207,7 @@ export function start(facts) {
     const timing = m.late > 0 ? t('chip.late', { late: Math.round(m.late * 100) }) : t('chip.inTime');
     const f = m.fab[id] || { busy: 0, wait: 0 };
     const fed = m.busy >= 0.999 ? t('chip.fed', { work: x2(m.work) }) : t('chip.starved', { peak: x2(m.peak), idle: Math.round((1 - m.busy) * 100), work: x2(m.work) });
-    return t('chip.show.' + id, { fed, moving: Math.round(m.moving * 100), where: t('chip.memWhere', { mem: t('chip.mem.names')[m.mem] }), busy: Math.round(f.busy * 100), wait: x2(f.wait), days: Math.round(m.days), per: x2(m.perLayer), waiting: Math.round(m.waiting * 100), slow: t('depth.' + m.slow + '.name'), power: x2(m.power), clock: x2(m.clock), cores: m.cores, timing, battery: x2(m.battery), area: x2(m.area), density: x2(m.density),
+    return t('chip.show.' + (id === 'test' ? 'wafer' : id), { /* the test house shows what the wafer shows: one text */ fed, moving: Math.round(m.moving * 100), where: t('chip.memWhere', { mem: t('chip.mem.names')[m.mem] }), busy: Math.round(f.busy * 100), wait: x2(f.wait), days: Math.round(m.days), per: x2(m.perLayer), waiting: Math.round(m.waiting * 100), slow: t('depth.' + m.slow + '.name'), power: x2(m.power), clock: x2(m.clock), cores: m.cores, timing, battery: x2(m.battery), area: x2(m.area), density: x2(m.density),
       tick: x2(m.tick), path: x2(m.path), length: x2(m.s), wall: x2(m.wall), steps: x2(m.steps), layers: m.layers, dies: m.dies, good: m.good, yield: Math.round(m.yield * 100), cost: x2(m.cost), mm: m.side });
   };
   const readout = k => {
