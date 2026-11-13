@@ -14,17 +14,39 @@ export const PALETTES = {
 };
 export const theme = () => (document.documentElement.getAttribute('data-theme') || (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'));
 
-/* a renderer on a canvas, with soft shadows and image-based light for the metal and glass */
-export function stage(canvas) {
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false, powerPreference: 'high-performance' });
+/* one stage: a single renderer and one GL canvas, shared by every 3D view (the island, the data centre, the chip,
+   the board). Each view keeps its own canvas as the surface you touch and focus; the pictures are all drawn on
+   the one GL canvas beneath, by whichever view is running. One context instead of one per view: less memory on a
+   phone, shaders compiled once for every scene that shares a material, and a view that comes back has nothing
+   to rebuild. Soft shadows and image-based light for the metal and glass. */
+let ONE = null;
+const SZ = new THREE.Vector2();
+function one() {
+  if (ONE) return ONE;
+  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false, powerPreference: 'high-performance' });
   renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
-  renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFShadowMap;
   renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 0.92;
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   const pm = new THREE.PMREMGenerator(renderer), env = pm.fromScene(new RoomEnvironment(), 0.04).texture;
-  /* the environment lights metal and glass; keep it from flattening the sun's shadows */
-  return { renderer, env };
+  const cv = renderer.domElement; cv.className = 'gl'; cv.setAttribute('aria-hidden', 'true');
+  return (ONE = { renderer, env, cv });
 }
+/* a view on the stage: size() says how big its picture is (a hidden view's zero size is ignored), draw() puts
+   its scene on the GL canvas, warm() compiles its shaders ahead while another view is showing */
+export function stage(canvas) {
+  const o = one();
+  if (!o.cv.parentNode) canvas.parentNode.insertBefore(o.cv, canvas.parentNode.firstChild);
+  let w = 0, h = 0;
+  return {
+    renderer: o.renderer, env: o.env,
+    size(W, H) { if (W > 0 && H > 0) { w = W; h = H; } },
+    draw(scene, camera) { if (!w) return; o.renderer.getSize(SZ); if (SZ.x !== w || SZ.y !== h) o.renderer.setSize(w, h, false); o.renderer.render(scene, camera); },
+    warm(scene, camera) { const c = o.renderer.compileAsync; return c ? c.call(o.renderer, scene, camera).catch(() => { /* compiled on first draw instead */ }) : Promise.resolve(); }
+  };
+}
+/* the GL canvas shows while a 3D view is in front, and steps aside for the flat views and the pages */
+export const showStage = on => { if (ONE) ONE.cv.hidden = !on; };
 
 /* light for a scene: sky and ground bounce, and a sun that casts soft shadows over a square of side `span` */
 export function light(scene, P, span = 120) {

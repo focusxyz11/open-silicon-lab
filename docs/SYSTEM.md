@@ -76,6 +76,13 @@ place, or glide to their new one. The views' code is fetched while the island is
 only if a view takes longer than a moment. With reduced motion, or where view transitions are missing, the view
 simply changes.
 
+**One stage.** The 3D views (the island, the data centre, the chip, the board) draw with one renderer on one GL
+canvas (`stage()` and `showStage()` in `src/v2/kit3d.js`). Each view keeps its own canvas as the surface you touch
+and focus, and the one that is running draws its scene on the shared canvas beneath. While the island is shown,
+the other three are made one by one in idle time, paused, and their shaders compiled (`warm()`), so going inside
+finds them ready. One context instead of four: less memory on a phone and no rebuilding. The line's machines,
+from the earlier site (`src/app/journey3d.js`), keep their own renderer for now.
+
 Text has a budget: about one sentence per story step, one line per card. Longer reading (notes, sources, the full
 explanation) goes into a reading view, opened on purpose, at a reading width.
 
@@ -128,5 +135,6 @@ shows what it becomes. Your own design rides through all three: its masks drive 
 | Line | the earlier site's factory in the frame (`#/line/<step>`): a wafer travelling between the machines, step by step; your design at printing, etching and wiring |
 | Bench | the studio in the frame (`#/bench/<level>[/<challenge>]`): its drawings show your design; a design challenge is played in the dock and the drawings follow it; masks lead to the line |
 | Turn | in the atlas and in the frame: each face opens its view, used the dive, made the line, designed the bench |
+| One stage | one renderer and one GL canvas for the island, the data centre, the chip and the board; the views made and compiled ahead while the island is shown; the line's machines still have their own |
 | No cuts | the camera dives into a place and rises out of it; views zoom in, out, turn or slide into each other; the bar, the dock and the ornaments stay; code preloaded, spinner only when slow |
 | One HUD | the bar never hides and carries the tracker; the island's place opens in a dock (Look first, Go inside); the earlier site's chrome is off inside the frame; ← → and Escape everywhere |
