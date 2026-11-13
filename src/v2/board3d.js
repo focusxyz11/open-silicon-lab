@@ -103,7 +103,7 @@ export function createBoard(canvas, host, on = {}) {
   new ResizeObserver(resize).observe(canvas); resize();
   const frame = now => {
     if (!running) return; raf = requestAnimationFrame(frame);
-    const dt = Math.min(0.05, (now - last) / 1000), tm = now / 1000, k = reduced() ? 1 : Math.min(1, dt * 2.6); last = now;
+    const dt = Math.min(0.05, Math.max(0, now - last) / 1000), tm = now / 1000, k = reduced() ? 1 : Math.min(1, dt * 2.6); last = now;
     cam.look.lerp(goal.look, k); cam.dist += (goal.dist - cam.dist) * k; cam.yaw += (goal.yaw - cam.yaw) * k; cam.pitch += (goal.pitch - cam.pitch) * k;
     if (!drag) orbit *= 1 - Math.min(1, dt * 0.6);
     /* narrow screens stand back, so the board sits above the story */

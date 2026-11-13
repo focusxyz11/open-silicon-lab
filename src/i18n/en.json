@@ -2085,5 +2085,10 @@
  "game.tap.half": "It adds two bits, but one gate is wrong. Tap a gate to change it: the table checks all four sums after every tap.",
  "game.tap.vote": "The output should be 1 when at least two inputs are 1, but one pair is missing. Add the piece that covers it: the table checks all eight patterns after every tap.",
  "game.tap.full": "The sum should be 1 when an odd number of the three inputs are 1, but the sum line forgets one input. Add the piece that brings it in.",
- "game.tap.pieces": "Pieces to add to the first line (tap again to take one off)"
+ "game.tap.pieces": "Pieces to add to the first line (tap again to take one off)",
+ "trail.k": "Following a question · stop {n} of {total} · {level}",
+ "trail.next": "Next stop: {level}",
+ "trail.prev": "Back: {level}",
+ "trail.leave": "Leave the question",
+ "trail.tried": "What people are trying"
 }

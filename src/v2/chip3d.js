@@ -105,7 +105,7 @@ export function createChip(canvas, host, on = {}) {
   let settle = 0, lastRow = -1;
   const frame = now => {
     if (!running) return; raf = requestAnimationFrame(frame);
-    const dt = Math.min(0.05, (now - last) / 1000); last = now;
+    const dt = Math.min(0.05, Math.max(0, now - last) / 1000); last = now;
     if (!drag && Math.abs(goal - z) < 0.002) { settle += dt; if (settle > 0.6 && Math.abs(goal - Math.round(goal)) > 0.001) goal = Math.round(goal); } else settle = 0;
     z += (goal - z) * (reduced() ? 1 : Math.min(1, dt * 4));
     work = reduced() ? 0 : Math.max(0, work - dt * 0.6);

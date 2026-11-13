@@ -186,7 +186,7 @@ export function createDataCentre(canvas, host, on = {}) {
   let z = 0, goal = 0, raf = 0, running = true, W = 1, H = 1, last = performance.now();
   const lerp = (a, b, k) => a + (b - a) * k;
   const keyAt = zz => {
-    const i = Math.min(KEYS.length - 2, Math.floor(zz)), k = ease(clamp(zz - i)), A = KEYS[i], B = KEYS[i + 1];
+    const i = Math.max(0, Math.min(KEYS.length - 2, Math.floor(zz))), k = ease(clamp(zz - i)), A = KEYS[i], B = KEYS[i + 1];
     return { look: A.look.map((v, j) => lerp(v, B.look[j], k)), dist: Math.exp(lerp(Math.log(A.dist), Math.log(B.dist), k)), yaw: lerp(A.yaw, B.yaw, k), pitch: lerp(A.pitch, B.pitch, k) };
   };
   const pose = () => {
@@ -226,7 +226,7 @@ export function createDataCentre(canvas, host, on = {}) {
   new ResizeObserver(resize).observe(canvas); resize();
   const frame = now => {
     if (!running) return; raf = requestAnimationFrame(frame);
-    const dt = Math.min(0.05, (now - last) / 1000), tm = now / 1000; last = now;
+    const dt = Math.min(0.05, Math.max(0, now - last) / 1000), tm = now / 1000; last = now;
     /* after a pause in scrolling, come to rest at the nearest level */
     if (!drag && Math.abs(goal - z) < 0.002) { settle += dt; if (settle > 0.6 && Math.abs(goal - Math.round(goal)) > 0.001) goal = Math.round(goal); } else settle = 0;
     z += (goal - z) * (reduced() ? 1 : Math.min(1, dt * 4.5));

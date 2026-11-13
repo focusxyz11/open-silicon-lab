@@ -17,6 +17,7 @@ import { PLACES } from './map3d.js';
 import { LEVELS, ASKS } from './dc3d.js';
 import { stopsAt } from '../data/places.js';
 import { showStage, stage } from './kit3d.js';
+import { rootShown } from '../engines/weave.js';
 import { ROWS, ASK as CHIP_ASK } from './chip3d.js';
 
 const $ = id => document.getElementById(id);
@@ -26,7 +27,8 @@ const OLD = 'classic.html?'; /* i18n-ok: a file name: the earlier site, for the 
 const oldUrl = (world, extra) => OLD + new URLSearchParams(Object.assign({ world }, extra || {}));
 const hue = th => (THREADS.find(x => x.id === th) || { hue: 200 }).hue;
 const qColor = key => 'hsl(' + hue(key.split('.')[0]) + ' 70% 55%)';
-const follow = key => { const [th, depth] = key.split('.'); return oldUrl(Game.worldOfDepth(depth), { thread: th, depth }); };
+/* following a question stays in the chip world: its trail walks from view to view (Game.askHref) */
+const follow = key => Game.askHref(key);
 
 export function start() {
   let map = null, dc = null, chip = null, board = null, dive = null, mapReady = null;
@@ -115,7 +117,7 @@ export function start() {
   const rowOf = d => { const i = ROWS.findIndex(r => r.dive === d || r.made.includes(d)); return i < 0 ? null : { row: i, build: !ROWS.some(r => r.dive === d) }; };
   const DIVE_CHIP = { soc: 0, mcu: 0 };
   /* the flat dive's levels (the earlier site's zoom, in the frame): from the chip down to the atom */
-  const DIVE_LEVELS = ['chip', 'block', 'gate', 'switch', 'atom'];
+  const DIVE_LEVELS = Game.DIVE_LEVELS;
   const levelHref = (place, l) => { if (place === 'datacentre' && l.depth === 'board') return '#/board'; const f = (Game.FLOWN[place] || {})[l.depth]; if (f != null) return '#/place/' + place + '/' + f;
     if (DIVE_LEVELS.includes(l.depth) && l.depth !== 'chip') return '#/dive/' + l.depth;
     if (l.world === 'design') return '#/bench/' + l.depth;
@@ -388,7 +390,7 @@ export function start() {
     loading(true); lastPlace = 'datacentre';
     return Promise.all([withFrame(), ensureBoard(), import('./story.js'), import('./stories.js')]).then(([, b, St, Sd]) => {
       loading(false); b.resume(); const data = Sd.boardStory();
-      const fr = frameOf(bui, { up: { href: '#/place/datacentre/4', label: t('board.up') }, path: [{ href: '#/', label: t('place.back') }, { href: '#/place/datacentre/4', label: t('map.datacentre.t') }, { label: t('place.dc.board.t') }],
+      const fr = boardFrame = frameOf(bui, { up: { href: '#/place/datacentre/4', label: t('board.up') }, path: [{ href: '#/', label: t('place.back') }, { href: '#/place/datacentre/4', label: t('map.datacentre.t') }, { label: t('place.dc.board.t') }],
         rail: { label: t('place.levels'), items: LEVELS.map(k => ({ id: k, label: t('place.dc.' + k + '.t') })) }, turn: true,
         onRail: k => { location.hash = k === 'chip' ? '#/chip/0' : k === 'board' ? '#/board' : '#/place/datacentre/' + LEVELS.indexOf(k); }, onTurn: turnTo, onLook: () => story && story.go(story.at) });
       fr.rail('board', LEVELS.indexOf('board') / (LEVELS.length - 1)); fr.level('board');
@@ -396,7 +398,7 @@ export function start() {
       $('boardCanvas').focus({ preventScroll: true });
     });
   }
-  let story = null;
+  let story = null, boardFrame = null;
   /* every view hides the others first */
   function hideAll() {
     $('diveCanvas').hidden = true; vui.hidden = true; dive && dive.stop(); hide3d();
@@ -452,13 +454,48 @@ export function start() {
     sheet.hidden = false; cur = null;
   }
 
+  /* ---- following a question: one stop of a thread's trail, in the dock of the view that shows its level ---- */
+  const trailSeen = {};   /* the stops of each thread seen in this visit: after two, the question underneath may show */
+  function stopHtml(th, d) {
+    const T = Game.trail(th), i = T.indexOf(d), key = th + '.' + d, tried = t('stop.' + key + '.tried');
+    const step = (j, k) => T[j] != null ? '<a class="btn' + (k === 'next' ? ' primary' : ' ghost') + '" data-key="' + k + '" href="' + esc(Game.askHref(th + '.' + T[j])) + '">' + esc(t(k === 'next' ? 'trail.next' : 'trail.prev', { level: t('depth.' + T[j] + '.name') })) + '</a>' : '<span></span>';
+    let h = '<p class="kicker trailk" style="--qc:' + qColor(key) + '"><span class="dotq"></span>' + esc(t('trail.k', { n: i + 1, total: T.length, level: t('depth.' + d + '.name') })) + '</p>';
+    h += '<p class="line trailq">' + esc(t('stop.' + key + '.q')) + '</p><p class="small">' + esc(t('stop.' + key + '.note')) + '</p>';
+    if (Array.isArray(tried)) h += '<p class="kicker">' + esc(t('trail.tried')) + '</p><ul class="tried2">' + tried.map(x => '<li>' + esc(x) + '</li>').join('') + '</ul>';
+    /* the question behind the question: one root at a time, once two of its stops have been seen */
+    if (rootShown(trailSeen[th])) h += '<div class="root2"><p class="small muted">' + esc(t('ui.rootOf')) + '</p><p class="rootq">' + esc(t('thread.' + th + '.root')) + '</p><p class="small muted">' + esc(t('ui.behind')) + ' <em>' + esc(t('thread.' + th + '.behind')) + '</em></p></div>';
+    return h + '<div class="nav"><span class="navl">' + step(i - 1, 'back') + '<button type="button" class="btn ghost" data-leave>' + esc(t('trail.leave')) + '</button></span>' + step(i + 1, 'next') + '</div>';
+  }
+  function askStop(th, d) {
+    if (!Game.trail(th).includes(d)) return;
+    trailSeen[th] = [...new Set([...(trailSeen[th] || []), d])];
+    const html = stopHtml(th, d);
+    const fr = !vui.hidden ? diveFrame : !cui.hidden ? chipFrame : !pui.hidden ? dcFrame : !bui.hidden ? boardFrame : null;
+    if (fr) {
+      fr.stop(html);
+      /* on the flat dive, the question's parts light up on the picture */
+      if (fr === diveFrame && dive && dive.setThread) { diveThread = th; dive.setThread(th); }
+      if (fr === diveFrame) requestAnimationFrame(diveInset);
+      return;
+    }
+    /* a level met at its place on the island: the question in the island's dock */
+    sheet.onclick = null; sheet.oninput = null;
+    sheet.innerHTML = '<button type="button" class="x" data-close aria-label="' + esc(t('sheet.close')) + '">×</button>' + html;
+    sheet.hidden = false; sheet.scrollTop = 0; $('hero').classList.add('away');
+  }
+  /* leaving a question: back to the view's own words */
+  document.addEventListener('click', e => { const l = e.target.closest('[data-leave]'); if (!l) return;
+    const fr = !vui.hidden ? diveFrame : !cui.hidden ? chipFrame : !pui.hidden ? dcFrame : !bui.hidden ? boardFrame : null;
+    if (fr) { if (fr === diveFrame && dive) { diveThread = null; dive.setThread(null); } fr.look(); } else closeSheet(); });
+
   /* ---- routes ---- */
   /* which view an address shows, and how deep it sits: the island 0, a place 1, the board 2, the chip 3, the dive 4.
      Going between views is never a cut: deeper zooms in, higher zooms out, the Turn turns, along slides. */
   const partsOf = h => (h.replace(/^#\/?/, '') || '').split('/').filter(Boolean);
-  const viewOf = p => { const k = p[0];
+  const viewOf = p => { const k = p[0]; if (k === 'ask') return viewOf(partsOf(Game.viewOfDepth(p[2] || 'chip')));
     return k === 'board' ? ['board', 2] : k === 'dive' ? ['dive', 4] : k === 'line' ? ['line', 1] : k === 'bench' ? ['bench', 1] : k === 'chip' ? ['chip', 3]
       : k === 'place' && p[1] === 'datacentre' && p[2] !== 'inside' ? ['dc', 1] : ['map', 0]; };
+  let shownAt = null;   /* the address of the view now made, so a question at the same level only changes the dock */
   let viewNow = null, rankNow = 0, nextMove = null, lastPlace = null, entering = false;
   /* going inside from the island: the camera dives into the place first, then the view zooms in from it */
   function enter(href) {
@@ -470,6 +507,9 @@ export function start() {
   sheet.addEventListener('click', e => { const a = e.target.closest('a[href^="#/"]'); if (!a || viewOf(partsOf(a.getAttribute('href')))[0] === 'map') return; e.preventDefault(); e.stopPropagation(); enter(a.getAttribute('href')); }, true);
   function show(parts, from) {
     const k = parts[0] || 'explore';
+    /* a question at a level already in view: no need to make the view again, only the dock changes */
+    if (k === 'ask' && parts[1] && parts[2]) { const at = Game.viewOfDepth(parts[2]); if (at === shownAt && !from) { askStop(parts[1], parts[2]); return Promise.resolve(); } return show(partsOf(at), from).then(() => askStop(parts[1], parts[2])); }
+    shownAt = '#/' + parts.join('/');
     if (k === 'board') return showBoard();
     if (k === 'dive') return showDive(parts[1]);
     if (k === 'line') return showFlat('line', parts[1]);
@@ -483,7 +523,7 @@ export function start() {
   }
   function route() {
     const parts = partsOf(location.hash), k = parts[0] || 'explore';
-    const nav = k === 'place' || k === 'chip' || k === 'board' || k === 'dive' || k === 'line' || k === 'bench' ? 'explore' : MENU.includes(k) ? k : 'explore';
+    const nav = k === 'ask' || k === 'place' || k === 'chip' || k === 'board' || k === 'dive' || k === 'line' || k === 'bench' ? 'explore' : MENU.includes(k) ? k : 'explore';
     menu.querySelectorAll('[data-nav]').forEach(a => a.setAttribute('aria-current', a.dataset.nav === nav ? 'page' : 'false'));
     page.hidden = true;
     const [view, rank] = viewOf(parts), from = viewNow, move = nextMove || (rank > rankNow ? 'in' : rank < rankNow ? 'out' : 'along');

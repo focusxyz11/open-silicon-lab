@@ -18,7 +18,7 @@ import { plan, progress, needOf, childrenOf, designsFor } from '../engines/build
 import { NEEDS, DESIGNS, AGENT } from '../data/build.js';
 import { DEBATES } from '../data/debates.js';
 import { WAYS } from '../data/ways.js';
-import { STOPS } from '../data/weave.js';
+import { STOPS, WORLDS } from '../data/weave.js';
 import { INSIDE, placeOf, SHARED, askAt as levelStops } from '../data/places.js';
 
 /* the loop, in order, and the station of each step on the island */
@@ -120,6 +120,27 @@ export const LOOK = {
 };
 /* the world of the current site where a depth is drawn (the first place that holds it) */
 export const worldOfDepth = depth => { for (const L of Object.values(INSIDE)) { const l = L.find(x => x.depth === depth); if (l) return l.world; } return 'journey'; };
+
+/* ---- following a question: a thread's stops as one trail through the chip world ---- */
+/* the order a trail walks: a chip in use from the building down to the atom (the data centre, then what only a
+   phone or a car adds), then designed, then made */
+export const DEPTH_ORDER = (() => { const o = []; WORLDS.forEach(w => w.depths.forEach(d => { if (!o.includes(d)) o.push(d); })); return o; })();
+export const trail = th => DEPTH_ORDER.filter(d => STOPS[th + '.' + d]);
+/* the levels of the flat dive (the earlier site's zoom, in the frame): from the chip down to the atom */
+export const DIVE_LEVELS = ['chip', 'block', 'gate', 'switch', 'atom'];
+/* a level not yet drawn in a view of its own is met at its place on the island */
+export const AT_PLACE = { phone: 'phones', phoneboard: 'phones', car: 'cars', ecu: 'cars', scanner: 'fab', wafer: 'fab', die: 'fab' };
+/* where a level is shown in the chip world: always an address inside it, never the earlier site */
+export function viewOfDepth(d) {
+  if (AT_PLACE[d]) return '#/place/' + AT_PLACE[d];
+  if (d === 'board') return '#/board';
+  const f = FLOWN.datacentre[d]; if (f != null) return '#/place/datacentre/' + f;
+  if (DIVE_LEVELS.includes(d)) return '#/dive/' + d;
+  if (d === 'soc' || d === 'mcu') return '#/dive/chip';
+  const w = worldOfDepth(d);
+  return w === 'design' ? '#/bench/' + d : '#/line/' + d;
+}
+export const askHref = key => { const [th, d] = key.split('.'); return '#/ask/' + th + '/' + d; };
 
 /* ---- your state: what you have done, and what you were working on ---- */
 export const KEY = 'osl-world-v1';
