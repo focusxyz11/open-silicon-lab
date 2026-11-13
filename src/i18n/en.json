@@ -30,7 +30,7 @@
  "depth.gate.name": "Gate",
  "depth.gate.see": "One logic gate: four switches, drawn as the coloured layers they are made from.",
  "depth.switch.name": "Switch",
- "depth.switch.see": "One switch in cross-section: a gate wrapped around thin sheets of silicon.",
+ "depth.switch.see": "One switch, called a transistor, in cross-section. In the newest chips, its gate wraps around thin sheets of silicon.",
  "depth.atom.name": "Atom",
  "depth.atom.see": "Silicon atoms in a crystal, with electrons moving between them.",
  "part.building.racks": "racks",
@@ -93,9 +93,9 @@
  "stop.think.block.q": "A memory cell here is a loop that holds one bit. Is remembering part of thinking, or something separate?",
  "stop.think.block.note": "Feed a circuit's output back into its input and it holds its state.",
  "stop.think.gate.q": "These switches make one kind of logic. Rewire the same switches and you get another. Does meaning come from the wiring?",
- "stop.think.gate.note": "The four switches here are identical. Only their connections differ.",
- "stop.think.switch.q": "This switch knows two states: on and off. How can on and off mean anything at all?",
- "stop.think.switch.note": "Meaning comes from an agreement about how to read a group of switches.",
+ "stop.think.gate.note": "Every gate here is built from the same two kinds of switch. Only their connections differ.",
+ "stop.think.switch.q": "We use this switch in only two states: on and off. How can on and off mean anything at all?",
+ "stop.think.switch.note": "The same group of switches can be read as a number, a letter or a colour; nothing in the switches says which.",
  "stop.think.atom.q": "Down here there are only electrons moving through a crystal. At which depth did the thinking begin?",
  "stop.think.atom.note": "Nothing at this depth knows it is part of a computer.",
  "stop.strange.chip.q": "Almost every chip is made of silicon. What else could a chip be made of, and what would change?",
@@ -111,12 +111,12 @@
   "optical logic",
   "logic in flowing liquids"
  ],
- "stop.strange.switch.q": "What could replace the switch itself: a beam of light, a magnet's spin, a living cell?",
- "stop.strange.switch.note": "Every candidate so far beats the transistor at something and loses at something else.",
+ "stop.strange.switch.q": "What could replace the switch itself: a beam of light, an electron's spin, a living cell?",
+ "stop.strange.switch.note": "Every candidate so far beats today's switch at something and loses at something else.",
  "stop.strange.switch.tried": [
-  "spintronics",
-  "photonic switches",
-  "genetic circuits in cells"
+  "switches that use an electron's spin (spintronics)",
+  "switches that use light (photonics)",
+  "genetic circuits in living cells"
  ],
  "stop.strange.atom.q": "Could single atoms or molecules be the parts? What would we gain, and what would we lose?",
  "stop.strange.atom.note": "A working transistor has been made from a single atom in the laboratory.",
@@ -163,7 +163,7 @@
   "error-correcting codes"
  ],
  "stop.fail.switch.q": "A few atoms out of place change how this switch behaves. Is perfection even a meaningful goal?",
- "stop.fail.switch.note": "The thinnest layers here are only a few atoms thick.",
+ "stop.fail.switch.note": "The thinnest layer here, the insulating skin, is only a few atoms thick.",
  "stop.fail.atom.q": "Walls this thin let electrons leak straight through. What do you do when the rules themselves change?",
  "stop.fail.atom.note": "At this size electrons behave partly like waves and can cross barriers that should stop them.",
  "stop.idea.chip.q": "Faster, cooler, smaller, cheaper: no chip gets all four. Who chose the trade-offs in this one?",
@@ -186,8 +186,8 @@
   "writing patterns with electron beams",
   "stamping patterns like a seal"
  ],
- "stop.make.switch.q": "This shape is made by adding and carving away dozens of layers. Could it be grown instead?",
- "stop.make.switch.note": "A modern chip takes a thousand steps or more to make, and billions of switches are made at once.",
+ "stop.make.switch.q": "This shape is made by adding layers and carving most of them away again. Could the whole shape grow by itself instead?",
+ "stop.make.switch.note": "A modern chip takes a thousand steps or more to make, and every switch on the wafer, many billions of them, is made at the same time.",
  "stop.make.switch.tried": [
   "materials that arrange themselves"
  ],
@@ -239,10 +239,10 @@
  "stop.life.block.tried": [
   "spiking, brain-like chips"
  ],
- "stop.life.switch.q": "A synapse stores and computes in the same place. What would a switch like that be?",
+ "stop.life.switch.q": "A synapse, the junction between two brain cells, stores and computes in the same place. What would a switch like that be?",
  "stop.life.switch.note": "In a brain, the connections that hold memories are the ones that do the computing.",
  "stop.life.switch.tried": [
-  "memristors"
+  "memristors: parts whose resistance remembers the current that has passed through them"
  ],
  "stop.life.atom.q": "Life builds with atoms cheaply, at room temperature. What could chemistry teach a factory?",
  "stop.life.atom.note": "A cell assembles complex molecular machines without a clean room.",
@@ -250,11 +250,11 @@
  "stop.scale.building.note": "Nearly all the electricity a hall like this uses leaves it as heat.",
  "stop.scale.chip.q": "Shrinking is slowing. What should double next: switches, usefulness, or something nobody measures yet?",
  "stop.scale.chip.note": "For decades the number of switches on the best chips doubled about every two years.",
- "stop.scale.switch.q": "Flat, then fins, then sheets. What comes after the sheet, and can anything keep doubling forever?",
- "stop.scale.switch.note": "Each new shape gave the gate a firmer grip on the channel, so it could shrink again.",
+ "stop.scale.switch.q": "Flat, then fins, then sheets. What comes after the sheet, and what happens when there is no next shape?",
+ "stop.scale.switch.note": "Each new shape gave the gate a firmer grip on the channel, so the switch could shrink again.",
  "stop.scale.switch.tried": [
-  "stacking the two kinds of switch on top of each other",
-  "channels one atom thick"
+  "stacking the two kinds of switch, one that turns on with a high gate voltage and one with a low, on top of each other",
+  "channels only a few atoms thick"
  ],
  "stop.scale.atom.q": "When a channel is a few dozen atoms long, what is left to shrink?",
  "stop.scale.atom.note": "The pattern of a silicon crystal repeats about every half a nanometre.",
@@ -434,7 +434,7 @@
   "one generation newer",
   "two generations newer, smallest"
  ],
- "chip.gen.notice": "Smaller switches are faster, and more of them fit. But their walls get thinner. Is there a size where shrinking stops paying?",
+ "chip.gen.notice": "Smaller switches are faster, and more of them fit. But they leak more when they are off. Is there a size where shrinking stops paying?",
  "chip.readout": "{clock}× as fast · {power}× the power · {late}% of signals late",
  "chip.inTime": "Every signal arrives within the tick.",
  "chip.late": "{late}% of signals arrive after the tick, so the chip reads wrong values.",
@@ -448,7 +448,7 @@
  "chip.show.phoneboard": "{power}× the heat, and no fan to carry it away.",
  "chip.show.block": "Each switch takes {area}× the space, so {density}× as many cells fit here. Of the energy your chip spends, {moving}% goes to fetching numbers from memory, not to computing with them.",
  "chip.show.gate": "Each tick lasts {tick}× as long as the starting chip's; the slowest signal needs {path}×. {timing}",
- "chip.show.switch": "This switch is {length}× as long as the starting one, and its walls leak {wall}× as much.",
+ "chip.show.switch": "This switch is {length}× as long as the starting one, and leaks {wall}× as much current when it is off.",
  "chip.show.atom": "The walls here let {wall}× as many electrons slip through.",
  "part.gate.tick": "the tick",
  "part.gate.signal": "slowest signal",
@@ -660,11 +660,11 @@
  "what.gate.gates": "Strips of material that switch the channels under them on and off.",
  "what.gate.diff": "Where current flows when a gate lets it.",
  "what.gate.metal": "Wires that carry the inputs in and the result out.",
- "what.switch.gate": "Wraps around the sheets; its voltage decides whether current can flow.",
+ "what.switch.gate": "The part that controls the switch (not a logic gate). It wraps around the sheets, and its voltage decides whether current can flow.",
  "what.switch.channel": "Thin sheets of silicon the current flows through.",
- "what.switch.oxide": "A very thin insulating skin between the gate and the sheets.",
- "what.switch.source": "Where the current comes from.",
- "what.switch.drain": "Where the current goes to.",
+ "what.switch.oxide": "A very thin insulating skin that lets the gate act on the sheets without current flowing into them.",
+ "what.switch.source": "Where the moving charges enter the sheets.",
+ "what.switch.drain": "Where the moving charges leave the sheets.",
  "what.atom.lattice": "Silicon atoms, each joined to four neighbours in a regular pattern.",
  "what.atom.dopant": "An atom of another element, added on purpose to change how easily current flows.",
  "what.atom.electrons": "The moving charges that carry the current.",
@@ -1983,7 +1983,7 @@
  "gauge.clock": "Clock",
  "chipx.yours": "Your design",
  "chipx.yours.print": "Your {name}'s {gates} gates are printed here, with about {masks} masks.",
- "chipx.yours.etch": "Its {transistors} transistors are etched here, as fins.",
+ "chipx.yours.etch": "Its {transistors} transistors are etched here.",
  "chipx.yours.wires": "Its gates are joined here by {wire} steps of wire.",
  "chipx.yours.gate": "Your {name} is down here: {gates} gates, {transistors} transistors.",
  "chipx.yoursNone": "Design something at the studio, and you will find it in these layers",
