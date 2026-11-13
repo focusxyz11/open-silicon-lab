@@ -1970,7 +1970,6 @@
  "chipx.ship": "Packaged: on to the port",
  "chipx.back": "Back to the island",
  "chipx.atFab": "This step at the factory",
- "chipx.current": "In the current version",
  "game.goalNow": "The goal, now",
  "gauge.ge": "· at least {target}",
  "gauge.le": "· at most {target}",
@@ -2052,5 +2051,10 @@
  "frame.turnNone": "Nobody designs this level: it is the material itself",
  "frame.face.designed": "Designed",
  "frame.face.made": "Made",
- "frame.face.used": "Used"
+ "frame.face.used": "Used",
+ "dive.aria": "The flat dive inside a chip, from the chip down to its atoms: scroll or use the arrow keys to go deeper, tap a part to name it",
+ "dive.title": "The dive, chip to atom",
+ "dive.flat": "The flat dive",
+ "dive.up": "Up to the chip in its rack",
+ "dive.hint": "Scroll to go deeper. Tap a part to name it; a coloured dot is a question that crosses here."
 }

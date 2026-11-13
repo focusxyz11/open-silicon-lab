@@ -478,7 +478,9 @@ export function createWorld(cv, on) {
     setNotes(list) { notes = Array.isArray(list) ? list : []; },
     setInset(i) { inset = i; },
     retheme() { col = palette(); },
-    stop() { running = false; }
+    stop() { running = false; },
+    /* start again after stop (the redesign hides and shows this view) */
+    start() { if (!running) { running = true; requestAnimationFrame(tick); } }
   };
   requestAnimationFrame(tick);
   return api;

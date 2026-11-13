@@ -106,7 +106,7 @@ shows what it becomes. Your own design rides through all three: its masks drive 
 | Map | the island |
 | Flight | the data centre |
 | Stack | inside a chip (`#/chip`) |
-| Dive | the earlier site; moves into the frame next |
+| Dive | the earlier site's flat zoom in the frame (`#/dive/<depth>`), chip to atom; the flight goes on into it |
 | Line | the earlier site's 3D factory; moves into the frame |
 | Bench | the challenge player in a sheet; becomes the dock's Do |
-| Turn | in the atlas and in the frame: from the flight's chip and every layer of the stack |
+| Turn | in the atlas and in the frame: the dive is the used face, the stack the made face, the studio the designed face |
