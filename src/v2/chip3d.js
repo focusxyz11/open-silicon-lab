@@ -98,7 +98,9 @@ export function createChip(canvas, host, on = {}) {
   const end = () => { drag = null; }; canvas.addEventListener('pointerup', end); canvas.addEventListener('pointercancel', end);
   canvas.addEventListener('keydown', e => { if (e.key === 'ArrowDown' || e.key === 'PageDown') { go(Math.floor(goal + 1)); e.preventDefault(); } if (e.key === 'ArrowUp' || e.key === 'PageUp') { go(Math.ceil(goal - 1)); e.preventDefault(); } });
 
-  const resize = () => { const r = canvas.getBoundingClientRect(); W = r.width; Hh = r.height; renderer.setSize(W, Hh, false); camera.aspect = W / Math.max(1, Hh); camera.updateProjectionMatrix(); };
+  const resize = () => { const r = canvas.getBoundingClientRect(); W = r.width; Hh = r.height; renderer.setSize(W, Hh, false); camera.aspect = W / Math.max(1, Hh);
+    /* the frame's dock sits below: lift the picture into the open part of the screen */
+    if (W > 720) camera.setViewOffset(W, Hh, 0, Hh * 0.14, W, Hh); else camera.clearViewOffset(); camera.updateProjectionMatrix(); };
   new ResizeObserver(resize).observe(canvas); resize();
   let settle = 0, lastRow = -1;
   const frame = now => {
