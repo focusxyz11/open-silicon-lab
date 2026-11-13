@@ -149,7 +149,7 @@ export const CASES = [
 /* The figures behind a stop: ids in src/data/facts.json. */
 export const FIGURES = {
   'life.building': ['dc-electricity', 'brain-power'], 'limit.rack': ['turing-1936'], 'make.chip': ['euv-wavelength'],
-  'fail.building': ['sdc-rate'], 'divide.block': ['energy-moving-data'], 'make.switch': ['fab-steps'],
+  'fail.building': ['sdc-rate'], 'divide.block': ['energy-moving-data'], 'make.switch': ['fab-steps', 'transistor-trend'],
   'idea.soc': ['riscv-rva23'], 'fail.car': ['car-life'], 'divide.car': ['chips-per-car'], 'know.car': ['car-shortage-2021'],
   'fail.ecu': ['car-ppm'], 'scale.mcu': ['legacy-auto'], 'make.mcu': ['chip-units'],
   'make.clean': ['fab-build-time'], 'scale.clean': ['fab-module-cost'], 'open.clean': ['wafer-space-run'], 'know.etch': ['workforce'], 'divide.wires': ['fab-cycle-time'],
