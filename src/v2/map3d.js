@@ -217,7 +217,7 @@ export function createMap(canvas, host, on = {}) {
   let tokenGoal = token.position.clone();
 
   /* ---- the camera: a target on the ground, a distance, a fixed tilt and turn ---- */
-  /* on wide screens the island sits right of centre: the HUD and the hero take the left */
+  /* on wide screens the island sits right of centre: the hero takes the lower left */
   const home = () => (innerWidth > 900 ? { x: -32, z: -8, d: 230 } : { x: -8, z: 4, d: 300 });
   const cam = Object.assign({ yaw: -0.42, pitch: 0.92 }, home());
   let fly = null;
@@ -329,8 +329,9 @@ export function createMap(canvas, host, on = {}) {
   return {
     focus(id) {
       const p = placeAt(id); if (!p) return;
-      const wide = innerWidth > 720, d = p.d * (wide ? 1.6 : 2), k = wide ? d * 0.2 : 0, upv = wide ? 0 : d * 0.22;
-      flyTo(p.at[0] + Math.cos(cam.yaw) * k + Math.sin(cam.yaw) * upv, p.at[1] - Math.sin(cam.yaw) * k + Math.cos(cam.yaw) * upv, d);
+      /* the place sits in the upper part of the screen: the dock takes the lower part */
+      const wide = innerWidth > 720, d = p.d * (wide ? 1.6 : 2), upv = d * (wide ? 0.14 : 0.24);
+      flyTo(p.at[0] + Math.sin(cam.yaw) * upv, p.at[1] + Math.cos(cam.yaw) * upv, d);
     },
     overview() { const h = home(); flyTo(h.x, h.z, h.d); },
     /* the archipelago: the islands where chips live, and the sea between */

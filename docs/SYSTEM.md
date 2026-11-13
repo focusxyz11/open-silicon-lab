@@ -58,6 +58,15 @@ Every view wears the same frame. There is no column of text beside the picture.
   follow one as a thread across places. Do and Ask are filled by the frame itself from the atlas, for the level in
   view, so a view gets them by saying which level it shows (`frame.level(depth)`).
 
+**One HUD.** The bar at the top never hides, on the island and in every view: the menu, the theme, and the
+tracker with your chip's life (the five steps, a tick when a step is done, and the next challenge). The goal never
+leaves the screen. The frame's ornaments sit below the bar. On the island a picked place opens in a dock at the
+bottom, like a view's story: Look first (one line, Go inside, the levels as small chips), then Do and Ask. Tapping
+the same place again goes inside. Inside the frame the earlier site's own marks (its top dots, its dive label, the
+factory's band) are switched off (`setChrome` in `src/app/world.js`, `setBand` in `src/app/journey.js`): the frame
+says where you are, once. Every dock keeps one order: back and the other views on the left, the next step on the
+right (marked `data-key="back"` and `data-key="next"`).
+
 Text has a budget: about one sentence per story step, one line per card. Longer reading (notes, sources, the full
 explanation) goes into a reading view, opened on purpose, at a reading width.
 
@@ -67,9 +76,9 @@ The same four moves in every view, by touch, mouse and keys.
 
 | Move | Means | Gesture |
 | --- | --- | --- |
-| Tap | select a part: it lights, its card opens on it, the story goes to its step | tap, click, Enter |
-| In · out | scale: dive into the selected part, or rise to the level above | tap again, pinch, scroll; ↑ |
-| Along | process: the next or previous step on the line or in the story | swipe sideways, ← → |
+| Tap | select a part: it lights, its card opens on it, the story goes to its step | tap, click, Enter; on the island, tap a place again to go inside |
+| In · out | scale: dive into the selected part, or rise to the level above | tap again, pinch, scroll; ↑; Escape goes up |
+| Along | process: the next or previous step on the line or in the story | swipe sideways, ← → (the dock's back and next, in every view) |
 | Turn | the same level seen as designed, made or used | the Turn button on a level |
 
 ## 5. The Turn: design and the factory as one story
@@ -110,3 +119,4 @@ shows what it becomes. Your own design rides through all three: its masks drive 
 | Line | the earlier site's factory in the frame (`#/line/<step>`): a wafer travelling between the machines, step by step; your design at printing, etching and wiring |
 | Bench | the studio in the frame (`#/bench/<level>[/<challenge>]`): its drawings show your design; a design challenge is played in the dock and the drawings follow it; masks lead to the line |
 | Turn | in the atlas and in the frame: each face opens its view, used the dive, made the line, designed the bench |
+| One HUD | the bar never hides and carries the tracker; the island's place opens in a dock (Look first, Go inside); the earlier site's chrome is off inside the frame; ← → and Escape everywhere |

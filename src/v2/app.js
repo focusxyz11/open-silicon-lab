@@ -51,19 +51,19 @@ export function start() {
   /* ---- the 3D views, made when first needed ---- */
   const loading = on => $('loading').classList.toggle('on', on);
   const ensureMap = () => mapReady || (mapReady = import('./map3d.js').then(m => {
-    map = m.createMap($('mapCanvas'), $('mapLabels'), { place: id => openPlace(id), question: key => openQuestion(key), job: need => openJob(need), interact: () => $('hero').classList.add('away') });
+    map = m.createMap($('mapCanvas'), $('mapLabels'), { place: id => (cur && cur.place === id && !sheet.hidden && enterOf(id) ? (location.hash = enterOf(id)) : openPlace(id)), question: key => openQuestion(key), job: need => openJob(need), interact: () => $('hero').classList.add('away') });
     loading(false); map.setState(islandState(), false); return map;
   }));
   const ensureDc = () => dc ? Promise.resolve(dc) : import('./dc3d.js').then(m => { dc = m.createDataCentre($('placeCanvas'), $('placeLabels'), { level: lv => placeUI(lv), depth: z => depthBar(z) }); return dc; });
 
   /* ---- the HUD: your chip's life, always in view ---- */
-  const hudEl = $('hud');
+  /* the tracker: your chip's life, in the bar on every view, so the goal never leaves the screen */
+  const hudEl = $('track');
   function hud() {
     const at = Game.chipAt(S), nx = Game.next(S);
-    hudEl.innerHTML = '<p class="kicker">' + esc(t('game.yourChip')) + '<a class="inlink" href="#/chip/0">' + esc(t('chipx.open')) + '</a></p><ol class="steps">' + Game.STEPS.map((s, i) => {
-      const st = Game.stepState(S, s), full = st.done === st.total;
-      return '<li><button type="button" data-step="' + s + '" class="' + (full ? 'full' : '') + (s === at ? ' here' : '') + '" aria-label="' + esc(t('game.stepAria', { n: i + 1, step: t('game.step.' + s), done: st.done, total: st.total })) + '"><span class="n">' + (full ? '✓' : i + 1) + '</span><span class="w">' + esc(t('game.step.' + s)) + '</span><span class="p">' + st.done + '/' + st.total + '</span></button></li>';
-    }).join('') + '</ol>' + (nx ? '<button type="button" class="next" data-ch="' + nx.id + '"><span class="kicker">' + esc(t('game.next')) + '</span>' + esc(titleOf(nx)) + '</button>' : '<p class="small good">' + esc(t('game.allDone')) + '</p>');
+    hudEl.innerHTML = '<ol class="tsteps">' + Game.STEPS.map((s, i) => { const st = Game.stepState(S, s), full = st.done === st.total;
+      return '<li><button type="button" data-step="' + s + '" class="' + (full ? 'full' : '') + (s === at ? ' here' : '') + '" title="' + esc(t('game.step.' + s)) + '" aria-label="' + esc(t('game.stepAria', { n: i + 1, step: t('game.step.' + s), done: st.done, total: st.total })) + '">' + (full ? '✓' : i + 1) + '</button></li>'; }).join('') + '</ol>' +
+      (nx ? '<button type="button" class="tnext" data-ch="' + nx.id + '"><span class="kicker">' + esc(t('game.next')) + '</span><span class="tn">' + esc(titleOf(nx)) + '</span></button>' : '<span class="tnext done" title="' + esc(t('game.allDone')) + '">✓</span>');
   }
   hudEl.addEventListener('click', e => { const s = e.target.closest('[data-step]'); if (s) { goExplore(() => openPlace(Game.STATION[s.dataset.step], 'do')); return; } const c = e.target.closest('[data-ch]'); if (c) goExplore(() => openChallenge(Game.challengeOf(c.dataset.ch))); });
 
@@ -102,27 +102,30 @@ export function start() {
     if (l.world === 'design') return '#/bench/' + l.depth;
     if (l.world === 'journey') return '#/line/' + l.depth;
     const c = DIVE_CHIP[l.depth] != null ? { row: 0, build: false } : rowOf(l.depth); return c ? '#/chip/' + c.row + (c.build ? '/build' : '') : oldUrl(l.world, { depth: l.depth }); };
+  /* where going inside a place leads: its first level, drawn in the frame */
+  const enterOf = id => { const L = Game.INSIDE[id] || []; if (L.length) return levelHref(id, L[0]); const x = (Game.LOOK[id] || [])[0]; return x ? (x.to ? '#/place/' + x.to : x.page ? '#/' + x.page : null) : null; };
   function insideHtml(id) {
     const L = Game.INSIDE[id] || [], extra = Game.LOOK[id] || [];
-    let h = L.length ? '<p class="small muted">' + esc(t('game.inside.d')) + '</p><ol class="ladder2">' + L.map((l, i) => {
-      const nq = stopsAt(l.depth).length, chs = Game.placeChallenges(id).filter(c => c.at === l.depth), flown = (Game.FLOWN[id] || {})[l.depth] != null;
-      const drawn = flown || /^#\/chip/.test(levelHref(id, l)), meta = [nq ? t('game.inside.qs', { n: nq }) : '', chs.length ? t('game.inside.ch', { n: chs.length }) : '', Game.SHARED.includes(l.depth) ? t('game.inside.shared') : '', drawn ? t('game.inside.fly') : t('game.inside.current')].filter(Boolean).join(' · ');
-      return '<li><a href="' + esc(levelHref(id, l)) + '"><span class="i">' + (i + 1) + '</span><span><b>' + esc(t('depth.' + l.depth + '.name')) + '</b><span class="see">' + esc(t('depth.' + l.depth + '.see')) + '</span><span class="small muted">' + esc(meta) + '</span></span></a></li>';
+    let h = L.length ? '<ol class="lvchips" aria-label="' + esc(t('door.look.d')) + '">' + L.map((l, i) => {
+      const nq = stopsAt(l.depth).length, chs = Game.placeChallenges(id).filter(c => c.at === l.depth).length;
+      const href = levelHref(id, l), old = !href.startsWith('#'), fly = (Game.FLOWN[id] || {})[l.depth] != null, shared = id !== 'datacentre' && Game.SHARED.includes(l.depth);
+      const note = [t('depth.' + l.depth + '.see'), fly && t('game.inside.fly'), shared && t('game.inside.shared'), old && t('game.inside.current')].filter(Boolean).join(' · ');
+      return '<li><a href="' + esc(href) + '" title="' + esc(note) + '" class="' + (old ? 'old' : '') + (shared ? ' shared' : '') + '"><span class="i">' + (i + 1) + '</span>' + esc(t('depth.' + l.depth + '.name')) + (chs ? '<span class="dotc" role="img" aria-label="' + esc(t('game.inside.ch', { n: chs })) + '"></span>' : '') + (nq ? '<span class="qn" title="' + esc(t('game.inside.qs', { n: nq })) + '">' + nq + '</span>' : '') + (old ? '<span class="ext" aria-hidden="true">↗</span>' : '') + '</a></li>';
     }).join('') + '</ol>' : '';
     h += extra.map(l => { const href = l.to ? '#/place/' + l.to : l.page ? '#/' + l.page : oldUrl(l.world, Object.assign({ depth: l.depth }, l.map ? { map: 1 } : {}));
       return '<a class="look" href="' + esc(href) + '"><b>' + esc(t('look.' + l.id + '.t')) + '</b><span class="small">' + esc(t('look.' + l.id + '.d')) + '</span>' + (l.world ? '<span class="small muted">' + esc(t('game.current')) + '</span>' : '') + '</a>'; }).join('');
     return h || '<p class="small muted">' + esc(t('game.noLook')) + '</p>';
   }
   function openPlace(id, tab) {
-    cur = { place: id, tab: tab || (doList(id).length || id === 'village' || id === 'lab' || id === 'idea' ? 'do' : 'look') };
+    cur = { place: id, tab: tab || 'look' };
     map && map.focus(id); $('hero').classList.add('away'); drawPlace();
   }
   function drawPlace() {
     const id = cur.place, C = Game.community(S), asks = Game.ASK[id] || [], debates = Game.debatesAt(id), dos = doList(id);
     const nDo = id === 'lab' ? C.jobs.length + C.engines.length : id === 'village' ? C.jobs.length : dos.filter(c => !S.done[c.id]).length, nAsk = asks.length + debates.length;
     let h = '<button type="button" class="x" data-close aria-label="' + esc(t('sheet.close')) + '">×</button>';
-    h += '<p class="kicker">' + esc(kickerOf(id)) + '</p><h2>' + esc(t('map.' + id + '.t')) + '</h2><p>' + esc(t('map.' + id + '.d')) + '</p>';
-    h += '<div class="doors" role="tablist">' + ['do', 'look', 'ask'].map(k => '<button type="button" role="tab" data-door="' + k + '" aria-selected="' + (cur.tab === k) + '"><b>' + esc(t('door.' + k)) + (k === 'do' && nDo ? ' <span class="n">' + nDo + '</span>' : k === 'ask' && nAsk ? ' <span class="n">' + nAsk + '</span>' : '') + '</b><span class="small">' + esc(t('door.' + k + '.d')) + '</span></button>').join('') + '</div><div class="door">';
+    h += '<p class="kicker">' + esc(kickerOf(id)) + '</p><h2>' + esc(t('map.' + id + '.t')) + '</h2>';
+    h += '<div class="doors" role="tablist">' + ['look', 'do', 'ask'].map(k => '<button type="button" role="tab" data-door="' + k + '" aria-selected="' + (cur.tab === k) + '" title="' + esc(t('door.' + k + '.d')) + '"><b>' + esc(t('door.' + k)) + (k === 'do' && nDo ? ' <span class="n">' + nDo + '</span>' : k === 'ask' && nAsk ? ' <span class="n">' + nAsk + '</span>' : '') + '</b></button>').join('') + '</div><div class="door">';
     if (cur.tab === 'do') {
       if (id === 'lab') h += '<p class="small">' + esc(t('game.lab.do', { built: C.built, total: C.total })) + '</p>' + C.jobs.map(jobCard).join('') + C.engines.map(e => '<a class="chcard engine" target="_blank" rel="noopener" href="' + esc(REPO + '/issues/new?' + new URLSearchParams({ template: 'need.yml', title: t('game.engineFor', { piece: t('build.need.' + e.need + '.t') }) })) + '"><span class="st">⚙</span><span><b>' + esc(t('build.need.' + e.need + '.t')) + '</b><span class="small">' + esc(t('game.engineWanted')) + '</span></span></a>').join('') + '<a class="link" href="#/build">' + esc(t('game.seePlan')) + '</a>';
       else if (id === 'village') h += '<p class="small">' + esc(t('game.village.do')) + '</p>' + C.designs.map(d => '<div class="chcard done"><span class="st">⌂</span><span><b>' + esc(d.title) + '</b><span class="small">' + esc(d.author) + ' · ' + esc(t('build.kind.' + d.kind)) + '</span></span></div>').join('') + C.jobs.map(jobCard).join('');
@@ -130,7 +133,9 @@ export function start() {
       else if (dos.length) h += dos.map(chCard).join('');
       else h += '<p class="small muted">' + esc(t('game.noDo')) + '</p>';
     } else if (cur.tab === 'look') {
-      h += insideHtml(id);
+      /* one line, and the way in; the levels as small steps to jump to */
+      const enter = enterOf(id);
+      h += '<p class="line">' + esc(t('map.' + id + '.d')) + '</p>' + (enter ? '<div class="nav"><span></span><a class="btn primary" href="' + esc(enter) + '">' + esc(t('door.enter')) + '</a></div>' : '') + insideHtml(id);
     } else {
       h += Game.askAt(id).map(g => (g.level && Game.askAt(id).length > 1 ? '<p class="kicker">' + esc(t('depth.' + g.level.depth + '.name')) + '</p>' : '') + g.stops.map(askLink).join('')).join('');
       if (debates.length) h += '<p class="kicker">' + esc(t('game.debates')) + '</p>' + debates.map(d => '<div class="debate2"><b>' + esc(t('debate.' + d + '.t')) + '</b><span class="small">' + esc(t('debate.' + d + '.q')) + '</span></div>').join('');
@@ -234,8 +239,10 @@ export function start() {
     const yours = yk ? '<div class="yours"><span class="kicker">' + esc(t('chipx.yours')) + '</span>' + esc(t('chipx.yours.' + yk, { name: t('design.proj.' + Y.p + '.t'), gates: Y.B.M.cells.length, transistors: Y.B.transistors, masks: Y.B.masks, wire: Math.round(Y.B.RT ? Y.B.RT.wl : 0) })) + '</div>'
       : !Y && r === 2 ? '<a class="yours none" href="#/place/studio">' + esc(t('chipx.yoursNone')) + '</a>' : '';
     chipFrame.dock.innerHTML = lineHtml(kicker, line, key,
-      (done ? '<a class="btn primary" href="' + (build ? '#/place/port' : '#/') + '">' + esc(t(build ? 'chipx.ship' : 'chipx.back')) + '</a>' : '<button type="button" class="btn primary" data-rowgo="' + nextR + '">' + esc(t(build ? 'chipx.next' : 'chipx.deeper')) + '</button>') +
-      '<a class="btn" href="' + esc(build ? '#/place/fab/inside' : '#/dive/' + R.dive) + '">' + esc(t(build ? 'chipx.atFab' : 'dive.flat')) + '</a>').replace('<div class="nav">', yours + '<div class="nav">');
+      /* the same order on every dock: back and the other views on the left, the next step on the right */
+      '<span class="navl">' + ((build ? r < ROWS.length - 1 : r > 0) ? '<button type="button" class="btn ghost" data-key="back" data-rowgo="' + (build ? r + 1 : r - 1) + '">' + esc(t('story.back')) + '</button>' : '') +
+      '<a class="btn" href="' + esc(build ? '#/place/fab/inside' : '#/dive/' + R.dive) + '">' + esc(t(build ? 'chipx.atFab' : 'dive.flat')) + '</a></span>' +
+      (done ? '<a class="btn primary" data-key="next" href="' + (build ? '#/place/port' : '#/') + '">' + esc(t(build ? 'chipx.ship' : 'chipx.back')) + '</a>' : '<button type="button" class="btn primary" data-key="next" data-rowgo="' + nextR + '">' + esc(t(build ? 'chipx.next' : 'chipx.deeper')) + '</button>')).replace('<div class="nav">', yours + '<div class="nav">');
   }
   function showChip(row, mode) {
     hideAll();
@@ -268,8 +275,10 @@ export function start() {
   let flatKind = 'dive', diveFrame = null, diveD = -1, divePart = null, diveThread = null, benchCh = null, WE = null, DiveData = null, DS = null;
   const levelsOf = k => FLAT[k].levels || DiveData.WORLDS.find(w => w.id === FLAT[k].world).depths;
   const diveId = () => WE.IDS[diveD];
-  const ensureDive = () => dive ? Promise.resolve(dive) : Promise.all([import('../engines/weave.js'), import('../app/world.js'), import('../data/weave.js'), import('../app/design.js')]).then(([E, Wm, Wd, Ds]) => {
+  const ensureDive = () => dive ? Promise.resolve(dive) : Promise.all([import('../engines/weave.js'), import('../app/world.js'), import('../data/weave.js'), import('../app/design.js'), import('../app/journey.js')]).then(([E, Wm, Wd, Ds, Jm]) => {
     WE = E; DiveData = Wd; DS = Ds;
+    /* one HUD: the earlier site's own marks, dive label and band give way to the frame */
+    Wm.setChrome({ dots: false, dive: false }); Jm.setBand(false);
     dive = Wm.createWorld($('diveCanvas'), { depth: d => diveAt(d), arrive: d => diveAt(d), part: (d, key) => { divePart = key; diveNotes(); }, pick: th => { diveThread = th; dive.setThread(th); if (!benchCh) drawDive(); } });
     return dive;
   });
@@ -300,12 +309,12 @@ export function start() {
     const yours = benchYours + (yk ? '<div class="yours"><span class="kicker">' + esc(t('chipx.yours')) + '</span>' + esc(t('chipx.yours.' + yk, { name: t('design.proj.' + Y.p + '.t'), gates: Y.B.M.cells.length, transistors: Y.B.transistors, masks: Y.B.masks, wire: Math.round(Y.B.RT ? Y.B.RT.wl : 0) })) + '</div>' : '');
     const end = { dive: '<a class="btn primary" href="#/">' + esc(t('chipx.back')) + '</a>', line: '<a class="btn primary" href="#/place/port">' + esc(t('line.end')) + '</a>', bench: '<a class="btn primary" href="#/line/print">' + esc(t('bench.toFab')) + '</a>' }[flatKind];
     diveFrame.dock.innerHTML = lineHtml(t(F.kicker, { n: i + 1, total: L.length }) + ' · ' + t('depth.' + id + '.name'), t('depth.' + id + '.see'), key,
-      (i || flatKind === 'dive' ? '<button type="button" class="btn ghost" data-divego="' + (diveD - 1) + '">' + esc(t(i ? 'story.back' : 'dive.up')) + '</button>' : '<span></span>') +
-      (last ? end : '<button type="button" class="btn primary" data-divego="' + (diveD + 1) + '">' + esc(t(F.next)) + '</button>')).replace('<div class="nav">', yours + '<p class="small muted hintline">' + esc(t(F.hint)) + '</p><div class="nav">');
+      (i || flatKind === 'dive' ? '<button type="button" class="btn ghost" data-key="back" data-divego="' + (diveD - 1) + '">' + esc(t(i ? 'story.back' : 'dive.up')) + '</button>' : '<span></span>') +
+      (last ? end : '<button type="button" class="btn primary" data-key="next" data-divego="' + (diveD + 1) + '">' + esc(t(F.next)) + '</button>')).replace('<div class="nav">', yours + '<p class="small muted hintline">' + esc(t(F.hint)) + '</p><div class="nav">');
     requestAnimationFrame(diveInset);
   }
   /* keep the picture clear of the frame: the rail on the left, the corner, the dock below */
-  const diveInset = () => { if (!dive || !diveFrame) return; const wide = innerWidth > 720, b = diveFrame.dock.offsetHeight + (wide ? 34 : 18); dive.setInset({ l: wide ? 90 : 8, r: wide ? 20 : 8, t: wide ? 70 : 120, b }); };
+  const diveInset = () => { if (!dive || !diveFrame) return; const wide = innerWidth > 720, b = diveFrame.dock.offsetHeight + (wide ? 34 : 18); dive.setInset({ l: wide ? 90 : 8, r: wide ? 20 : 8, t: wide ? 136 : 236, b }); };
   /* the bench: a design challenge played in the dock; the drawings above follow your description */
   const syncDesign = ch => { if (DS && ch && ch.kind === 'design') DS.setDesign(Game.checkDesign(ch.p, S.codes[ch.p] || Game.starter(ch.p))); };
   function openBench(ch) {
@@ -360,7 +369,7 @@ export function start() {
   /* every view hides the others first */
   function hideAll() {
     $('diveCanvas').hidden = true; vui.hidden = true; dive && dive.stop(); hide3d();
-    hideBoard(); $('hero').hidden = true; hudEl.hidden = true; closeSheet(); pui.hidden = true; cui.hidden = true; dc && dc.pause(); map && map.pause(); chip && chip.pause();
+    hideBoard(); $('hero').hidden = true; closeSheet(); pui.hidden = true; cui.hidden = true; dc && dc.pause(); map && map.pause(); chip && chip.pause();
     ['mapCanvas', 'mapLabels', 'placeCanvas', 'placeLabels', 'chipCanvas', 'chipLabels'].forEach(k => { $(k).hidden = true; });
     document.body.classList.remove('immersive'); page.hidden = true;
   }
@@ -369,7 +378,7 @@ export function start() {
     hideBoard(); document.body.classList.remove('immersive');
     $('chipCanvas').hidden = $('chipLabels').hidden = true; cui.hidden = true; chip && chip.pause();
     $('placeCanvas').hidden = $('placeLabels').hidden = true; pui.hidden = true; dc && dc.pause();
-    $('mapCanvas').hidden = $('mapLabels').hidden = false; $('hero').hidden = false; hudEl.hidden = false;
+    $('mapCanvas').hidden = $('mapLabels').hidden = false; $('hero').hidden = false;
     loading(!map); return ensureMap().then(m => { m.resume(); return m; });
   }
   const goExplore = then => { page.hidden = true; if ((location.hash || '#/') !== '#/' && location.hash !== '') { location.hash = '#/'; setTimeout(then, 80); } else then(); };
@@ -429,6 +438,15 @@ export function start() {
     showMap().then(() => { if (k === 'ecosystem') showEcosystem(); });
     if (['challenges', 'questions', 'build'].includes(k)) showPage(k);
   }
+  /* one set of keys on every frame: ← → step along (the dock's back and next), Escape goes up */
+  document.addEventListener('keydown', e => {
+    if (e.target.closest && e.target.closest('input, textarea, select, [data-live], canvas')) return; /* i18n-ok */
+    const host = [vui, cui, pui, bui].find(h => h && !h.hidden); if (!host) return;
+    if (e.key === 'Escape') { const up = host.querySelector('.homebtn'); if (up) { location.hash = up.getAttribute('href'); e.preventDefault(); } return; }
+    if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+    const b = host.querySelector('.dock [data-key="' + (e.key === 'ArrowRight' ? 'next' : 'back') + '"]');
+    if (b) { b.click(); e.preventDefault(); }
+  });
   window.addEventListener('hashchange', route);
   hud();
   route();

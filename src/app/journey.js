@@ -915,6 +915,9 @@ function lensWords(G, id, mode, L, band) {
 let capKey = '', capT = 0;
 
 /* o: { ids, Z, near, dist, run }: called by world.js, in the box's own 1000 x 1000 space */
+/* the band under the line (the step, the slice, the controls); the chip world's frame switches it off */
+let BAND = true;
+export const setBand = v => { BAND = v; };
 export function drawJourney(G, o) {
   const c = G.col, ctx = G.ctx, id = o.ids[o.near], cfg = CFG[id], si = o.ids.indexOf('slice'), pk = o.ids.indexOf('pkg');
   const lo = Math.max(0, Math.floor(o.Z + 1e-6)), hi = Math.min(o.ids.length - 1, Math.ceil(o.Z - 1e-6)), cross = PLANTS[o.ids[lo]] !== PLANTS[o.ids[hi]];
@@ -944,6 +947,8 @@ export function drawJourney(G, o) {
     if (now && P[now] && P[now][0] && !(o.lens && o.lens.alpha > 0.3)) keys.unshift(now);
     [...new Set(keys)].forEach(key => { const sh = P[key] && P[key][0]; if (!sh) return; const q = topOf(sh); if (q[1] > bandTop - 10 || q[1] < 0) return; tag(G, t('part.' + partWord(id, key)), q[0], q[1], key === now, used, bandTop - 6); });
   }
+  /* in the chip world's frame the dock tells the step: no band */
+  if (!BAND) return { chips: [], pause: null, names: null, lens: null, map: null };
   /* the band: what is happening, and the slice through your wafer. Inside the bottom of the picture, or,
      on a phone, under it. */
   const under = o.below > 120, top = under ? 1000 : 818, bottom = under ? 1000 + o.below : 1000, small = !roomy(G);

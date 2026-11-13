@@ -79,6 +79,10 @@ function along(pts, f) {
 }
 const smooth = (a, b, x) => { const u = Math.max(0, Math.min(1, (x - a) / (b - a))); return u * u * (3 - 2 * u); };
 
+/* the earlier site's own chrome over the picture: the marks along the top and the dive label. The chip world's
+   frame says the same things, so it switches them off (setChrome). */
+const CHROME = { dots: true, dive: true };
+export const setChrome = o => Object.assign(CHROME, o);
 export function createWorld(cv, on) {
   const ctx = cv.getContext('2d'), t0 = performance.now();
   let W = 0, H = 0, dpr = 1, col = palette(), Z = 0, fly = null, lastD = -1, lastZ = -1;
@@ -183,7 +187,7 @@ export function createWorld(cv, on) {
     ctx.restore();
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     const y = top + 12, gap = Math.min(18, (b.B - 40) / N);
-    for (let i = 0; i < N; i++) { const x = b.cx + (i - (N - 1) / 2) * gap; ctx.globalAlpha = i === near ? 1 : 0.5; ctx.fillStyle = i === near ? col.warm : col.line; ctx.beginPath(); ctx.arc(x, y, i === near ? 4 : 2.5, 0, 6.2832); ctx.fill(); }
+    for (let i = 0; i < (CHROME.dots ? N : 0); i++) { const x = b.cx + (i - (N - 1) / 2) * gap; ctx.globalAlpha = i === near ? 1 : 0.5; ctx.fillStyle = i === near ? col.warm : col.line; ctx.beginPath(); ctx.arc(x, y, i === near ? 4 : 2.5, 0, 6.2832); ctx.fill(); }
     ctx.globalAlpha = 0.3; ctx.fillStyle = col.bg; const L = b.cx - b.B / 2, Rr = b.cx + b.B / 2;
     ctx.fillRect(0, 0, L, H); ctx.fillRect(Rr, 0, W - Rr, H); ctx.globalAlpha = 1;
     return { pi: near, ptr: { tx: left, ty: top, s: k } };
@@ -208,7 +212,7 @@ export function createWorld(cv, on) {
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     /* where you are on the line: a mark per station */
     const y = top + 12, gap = Math.min(18, (b.B - 40) / N);
-    for (let i = 0; i < N; i++) { const x = b.cx + (i - (N - 1) / 2) * gap; ctx.globalAlpha = i === near ? 1 : 0.5; ctx.fillStyle = i === near ? col.warm : col.line; ctx.beginPath(); ctx.arc(x, y, i === near ? 4 : 2.5, 0, 6.2832); ctx.fill(); }
+    for (let i = 0; i < (CHROME.dots ? N : 0); i++) { const x = b.cx + (i - (N - 1) / 2) * gap; ctx.globalAlpha = i === near ? 1 : 0.5; ctx.fillStyle = i === near ? col.warm : col.line; ctx.beginPath(); ctx.arc(x, y, i === near ? 4 : 2.5, 0, 6.2832); ctx.fill(); }
     /* everything outside the box fades back */
     ctx.globalAlpha = 0.45; ctx.fillStyle = col.bg;
     const L = b.cx - b.B / 2, Rr = b.cx + b.B / 2;
@@ -266,7 +270,7 @@ export function createWorld(cv, on) {
     /* standing at a depth: the way down, marked where it is, and the notes pinned to parts */
     dive = null;
     const settled = !fly && !drag && Math.abs(Z - Math.round(Z)) < 0.04 && pi === F.i;
-    if (settled && F.next && !worldOf(WORLD).flat) diveMark(tm, F, b);
+    if (settled && F.next && !worldOf(WORLD).flat && CHROME.dive) diveMark(tm, F, b);
     if (settled) drawNotes(F.cur, b);
   }
   /* "Dive into" the next depth: its square, outlined where it sits in this scene, with its name */

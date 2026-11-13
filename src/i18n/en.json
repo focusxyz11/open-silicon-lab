@@ -1818,8 +1818,8 @@
  "map.plot.engine": "This piece needs an engine to check it first",
  "door.do": "Do",
  "door.do.d": "Challenges, checked by real engines",
- "door.look": "Inside",
- "door.look.d": "Its levels, one inside the next",
+ "door.look": "Look",
+ "door.look.d": "The place, and its levels one inside the next",
  "door.ask": "Ask",
  "door.ask.d": "Questions still open",
  "look.supply.t": "The supply map",
@@ -1838,7 +1838,6 @@
  "grow.dc-solar": "solar panels for the data centre",
  "grow.clock-tower": "a clock tower at the Lab",
  "game.hudAria": "Your chip's life",
- "game.yourChip": "Your chip's life",
  "game.stepAria": "Step {n}, {step}: {done} of {total} challenges done",
  "game.step.design": "Design",
  "game.step.make": "Make",
@@ -1939,7 +1938,6 @@
  "game.goNext": "Next: {what}",
  "map.home": "Chip island",
  "grow.masks": "your first masks, on a truck from the studio's mask house to the factory",
- "game.inside.d": "Each level sits inside the one before. A few still open in the earlier version of the site.",
  "game.inside.qs": {
   "one": "{n} question",
   "other": "{n} questions"
@@ -1962,7 +1960,6 @@
  "ui.toWorldAria": "See this place in the chip world",
  "chipx.aria": "A cut through a chip, layer by layer: scroll or drag to move through the layers",
  "chipx.title": "Inside a chip, layer by layer",
- "chipx.open": "Inside your chip",
  "chipx.levelN": "Level {n} of {total}",
  "chipx.stepN": "Factory step {n} of {total}",
  "chipx.next": "Next step up",
@@ -2064,5 +2061,6 @@
  "line.hint": "The wafer travels between the machines. Tap a machine or a part to name it.",
  "bench.title": "The bench: your design, step by step",
  "bench.toFab": "Send the masks to the factory",
- "bench.hint": "The drawings show your design. Open Do to write one, and watch them change."
+ "bench.hint": "The drawings show your design. Open Do to write one, and watch them change.",
+ "door.enter": "Go inside"
 }
