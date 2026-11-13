@@ -202,7 +202,7 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
    (a view transition); rising goes back out. A duplicate name or a stuck view would show as an error here. */
 {
   const tag = 'motion', page = await browser3d.newPage({ viewport: { width: 1280, height: 800 } });
-  page.on('pageerror', e => problems.push(tag + ': ' + e.message));
+  page.on('pageerror', e => problems.push(tag + ': ' + (e.stack || e.message).split('\n').slice(0, 3).join(' | ')));
   page.on('console', m => { if (m.type() === 'error' && !/fonts\.g|net::ERR|WebGL|GPU/.test(m.text())) problems.push(tag + ': console: ' + m.text()); });
   await page.addInitScript(() => { window.GL = 0; const g = HTMLCanvasElement.prototype.getContext; HTMLCanvasElement.prototype.getContext = function (k, ...a) { if (/webgl/.test(k) && !this.__gl) { this.__gl = 1; window.GL++; } return g.call(this, k, ...a); };
     window.MOVES = []; const o = document.startViewTransition && document.startViewTransition.bind(document); if (!o) return;
@@ -211,11 +211,13 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
   await page.waitForSelector('#sheet .nav .btn.primary', { timeout: 15000 }).catch(() => problems.push(tag + ': the factory has no way inside'));
   await page.click('#sheet .nav .btn.primary');
   await page.waitForFunction(() => location.hash.startsWith('#/line/'), null, { timeout: 15000 }).catch(() => problems.push(tag + ': going inside did not reach the line'));
-  await page.waitForTimeout(3000);
+  /* the key is pressed once the line's frame is drawn and the zoom has finished: on a slow machine the view can
+     still be making itself seconds after the address changed, and a key before its way up exists does nothing */
+  await page.waitForFunction(() => !document.getElementById('diveui').hidden && document.querySelector('#diveui .homebtn') && document.querySelector('#diveui .dock .line') && !document.documentElement.dataset.move, null, { timeout: 60000 }).catch(() => problems.push(tag + ': the line never finished opening'));
   await page.keyboard.press('Escape');
   /* software rendering on a CI machine can take seconds per frame of the line: give the key time to be handled */
   await page.waitForFunction(() => location.hash === '#/place/fab', null, { timeout: 45000 }).catch(() => problems.push(tag + ': Escape did not rise to the factory'));
-  await page.waitForTimeout(3000);
+  await page.waitForFunction(() => !document.documentElement.dataset.move, null, { timeout: 60000 }).catch(() => {});
   const moves = await page.evaluate(() => window.MOVES);
   if (moves.join() !== 'in,out') problems.push(tag + ': the views did not zoom in and out (' + moves.join() + ')');
   /* one stage: the island, the data centre, the chip, the board and the line's machines all draw with one renderer */
