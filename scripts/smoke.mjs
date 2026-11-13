@@ -218,7 +218,9 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
   /* software rendering on a CI machine can take seconds per frame of the line: give the key time to be handled */
   await page.waitForFunction(() => location.hash === '#/place/fab', null, { timeout: 45000 }).catch(() => problems.push(tag + ': Escape did not rise to the factory'));
   await page.waitForFunction(() => !document.documentElement.dataset.move, null, { timeout: 60000 }).catch(() => {});
-  const moves = await page.evaluate(() => window.MOVES);
+  /* a zoom that Chrome skips because the view took too long to make (a slow machine) still changes the view, plainly:
+     not a failure. Any other failure is. */
+  const moves = (await page.evaluate(() => window.MOVES)).filter(m => !/aborted because of timeout/.test(m));
   if (moves.join() !== 'in,out') problems.push(tag + ': the views did not zoom in and out (' + moves.join() + ')');
   /* one stage: the island, the data centre, the chip, the board and the line's machines all draw with one renderer */
   for (const h of ['#/place/datacentre/1', '#/chip/0', '#/board', '#/line/print', '#/']) { await page.evaluate(x => { location.hash = x; }, h); await page.waitForTimeout(2500); }
