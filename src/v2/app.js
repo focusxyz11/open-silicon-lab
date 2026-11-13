@@ -16,7 +16,7 @@ import { play, titleOf, goalOf } from './play.js';
 import { PLACES } from './map3d.js';
 import { LEVELS, ASKS } from './dc3d.js';
 import { stopsAt } from '../data/places.js';
-import { showStage } from './kit3d.js';
+import { showStage, stage } from './kit3d.js';
 import { ROWS, ASK as CHIP_ASK } from './chip3d.js';
 
 const $ = id => document.getElementById(id);
@@ -307,7 +307,8 @@ export function start() {
   const ensureDive = () => dive ? Promise.resolve(dive) : Promise.all([import('../engines/weave.js'), import('../app/world.js'), import('../data/weave.js'), import('../app/design.js'), import('../app/journey.js')]).then(([E, Wm, Wd, Ds, Jm]) => {
     WE = E; DiveData = Wd; DS = Ds;
     /* one HUD: the earlier site's own marks, dive label and band give way to the frame */
-    Wm.setChrome({ dots: false, dive: false }); Jm.setBand(false);
+    /* one stage: the line's machines draw on the shared renderer too */
+    Wm.setChrome({ dots: false, dive: false, stage: () => stage($('diveCanvas')) }); Jm.setBand(false);
     dive = Wm.createWorld($('diveCanvas'), { depth: d => diveAt(d), arrive: d => diveAt(d), part: (d, key) => { divePart = key; diveNotes(); }, pick: th => { diveThread = th; dive.setThread(th); if (!benchCh) drawDive(); } });
     return dive;
   });

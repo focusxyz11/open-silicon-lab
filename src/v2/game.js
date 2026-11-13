@@ -34,6 +34,23 @@ const STARTERS = { half: 'sum = a | b;\ncarry = a & b;' };
 export const starter = p => STARTERS[p] || projectOf(p).starter;
 export const ownStarter = p => p in STARTERS;   /* its words: game.own.<p> */
 
+/* The design challenges are fixed by tapping, not typing (src/v2/play.js). Every gate in a description is a button
+   that turns into the next kind (AND → OR → XOR); where the fix needs more than a gate, a tray holds pieces that
+   can be added to one line and taken off again. Exactly one way leads to a right design, and the engine checks it
+   after every tap. Typing stays open for anyone who wants it. */
+export const TAPS = {
+  half: { pieces: null },
+  vote: { line: 0, pieces: ['| (a | c)', '| (a & c)', '& (a ^ c)'] },
+  full: { line: 0, pieces: ['& cin', '| cin', '^ cin'] }
+};
+export const GATE_TURN = { '&': '|', '|': '^', '^': '&' };
+/* turn the k-th gate of a description into the next kind */
+export const turnGate = (code, k) => { let i = -1; return code.replace(/[&|^]/g, m => (++i === k ? GATE_TURN[m] : m)); };
+/* a piece on a line, added before its ';' or taken off */
+const lineOf = (code, n) => code.split('\n')[n] || '';
+export const hasPiece = (code, n, piece) => lineOf(code, n).includes(' ' + piece);
+export const togglePiece = (code, n, piece) => code.split('\n').map((l, i) => i !== n ? l : hasPiece(code, n, piece) ? l.replace(' ' + piece, '') : l.replace(/;?\s*$/, ' ' + piece + ';')).join('\n');
+
 /* Do: the challenges. kind: 'design' (write a circuit; p: its job), 'chip' (reach a goal of chip.js with
    your chip's settings; goal: its id), 'life' (ship a chip that lives through a place's life; mission),
    'spot' (find the broken chip with a few test patterns). Each happens at a place and a level inside it
