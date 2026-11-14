@@ -23,6 +23,8 @@ let M = model(START);
 let HITS = hits(START.size, START.gen), DIES = dies(START.size), SPECKS = defects(START.gen);
 /* your chip as the scenes draw it (the gate in 3D reads its timing from here too) */
 export const chipNow = () => M;
+/* your wafer as the scenes draw it: its chips, which a speck touched, the specks, and the chip the dive follows */
+export const waferNow = () => ({ dies: DIES, hits: HITS, specks: SPECKS, R: WAFER.R, follow: dieSquare(M.size) });
 export const setChip = c => { M = model(c); HITS = hits(M.size, M.gen); DIES = dies(M.size); SPECKS = defects(M.gen); setJourneyChip(M, HITS, DIES); };
 setJourneyChip(M, HITS, DIES);
 /* "Build it": how far the switch has been made (null: finished) */

@@ -74,6 +74,9 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
   await page.click('#diveui [data-mode="ask"]').catch(() => {});
   await page.waitForSelector('#flatLabels .q3', { timeout: 10000 }).catch(() => problems.push(tag + ': under Ask the questions have no marks on the picture'));
   await page.click('#diveui [data-mode="look"]').catch(() => {});
+  /* the wafer in 3D, with its two names */
+  await page.evaluate(() => { location.hash = '#/dive/wafer/made'; });
+  await page.waitForFunction(() => document.querySelectorAll('#l3-wafer [data-part3]').length === 2 && !document.getElementById('l3-wafer').hidden, null, { timeout: 25000 }).catch(() => problems.push(tag + ': the wafer did not appear in 3D'));
   await page.evaluate(() => { location.hash = '#/dive/scanner/made'; });
   await page.waitForFunction(() => /scanner|light|machine/i.test(document.querySelector('#diveui .dock') ? document.querySelector('#diveui .dock').textContent : ''), null, { timeout: 20000 }).catch(() => problems.push(tag + ': the made chip did not open at the machine'));
   await page.evaluate(() => { location.hash = '#/supply'; });
