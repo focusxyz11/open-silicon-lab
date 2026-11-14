@@ -25,14 +25,19 @@ const MONO = '"Martian Mono", ui-monospace, Menlo, monospace'; /* i18n-ok: a fon
 const SANS = '"Atkinson Hyperlegible Next", system-ui, sans-serif'; /* i18n-ok: a font name */
 
 
-/* the chip world's look (CHROME.lit): the same palette as its 3D views and its pages (src/styles/v2.css), and
+/* the chip world's look (CHROME.lit): the same palette as its 3D views and its pages (src/styles/v2.css), with the
+   same materials (si silicon, doped silicon, cu copper wires, au contact metal, glass insulator; the switch's gate is
+   cool, the accent), and
    light from above: shapes are lit at the top and cast a soft shadow, as the lit 3D scenes do */
 const WORLD_LOOK = {
-  dark: { lit: true, dark: true, bg: '#0b1120', lo: '#111a2b', mid: '#18233a', up: '#23314d', line: '#6f7f9c', hi: '#eef2f8', dim: '#2a3854', veil: 'rgba(11,17,32,0.6)', warm: '#ffb347', cool: '#5aa9ff', grn: '#45d08a', red: '#ff6b62' },
-  light: { lit: true, dark: false, bg: '#dfe8f2', lo: '#f5f8fc', mid: '#e7eef6', up: '#d4dfeb', line: '#5b6a80', hi: '#16202e', dim: '#c8d3e1', veil: 'rgba(223,232,242,0.66)', warm: '#c27400', cool: '#2f7de1', grn: '#138a5a', red: '#cc3f2b' }
+  dark: { lit: true, dark: true, bg: '#0b1120', lo: '#111a2b', mid: '#18233a', up: '#23314d', line: '#6f7f9c', hi: '#eef2f8', dim: '#2a3854', veil: 'rgba(11,17,32,0.6)', warm: '#ffb347', cool: '#5aa9ff', grn: '#45d08a', red: '#ff6b62', si: '#46536b', doped: '#87755e', cu: '#c77b45', au: '#c9a14a', glass: '#5aa9e6' },
+  light: { lit: true, dark: false, bg: '#dfe8f2', lo: '#f5f8fc', mid: '#e7eef6', up: '#d4dfeb', line: '#5b6a80', hi: '#16202e', dim: '#c8d3e1', veil: 'rgba(223,232,242,0.66)', warm: '#c27400', cool: '#2f7de1', grn: '#138a5a', red: '#cc3f2b', si: '#8d99ab', doped: '#a08c6f', cu: '#b5683a', au: '#d2a744', glass: '#9fc4dc' }
 };
 function palette() {
   if (CHROME.lit) return WORLD_LOOK[theme() === 'dark' ? 'dark' : 'light'];
+  return Object.assign({}, WORLD_LOOK[theme() === 'dark' ? 'dark' : 'light'], earlierPalette());
+}
+function earlierPalette() {
   return theme() === 'dark'
     ? { dark: true, bg: '#05070d', lo: '#0b1020', mid: '#151d36', up: '#1f2a4a', line: '#5a6b93', hi: '#c9d4ee', dim: '#27324f', veil: 'rgba(5,7,13,0.58)', warm: '#ffb057', cool: '#63b6ff', grn: '#35c994', red: '#ff6f5c' }
     : { dark: false, bg: '#e6eaf0', lo: '#f7f9fb', mid: '#e2e8f0', up: '#cfd8e4', line: '#5c6a82', hi: '#18222f', dim: '#c3ccd9', veil: 'rgba(240,243,247,0.66)', warm: '#b86a00', cool: '#1c64c8', grn: '#0b8a5c', red: '#cc3f2b' };

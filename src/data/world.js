@@ -28,18 +28,18 @@ export const ROUTES = {
   datacentre: [
     { id: 'design', at: ['sv', 'cam', 'isr'], more: true, needs: [], flow: [['cam', 'sv'], ['isr', 'sv']], st: null },
     WAFERS,
-    { id: 'tools', at: ['vel', 'sv', 'tky'], needs: [{ at: ['obk'], sole: true }], flow: [['obk', 'vel']], st: 'print' },
-    { id: 'fab', at: ['hsc', 'tnn'], more: true, needs: [{ at: ['vel'], sole: true }, { at: ['odz'] }], flow: [['tky', 'hsc'], ['vel', 'hsc'], ['sv', 'hsc'], ['odz', 'hsc']], st: 'etch' },
+    { id: 'tools', at: ['vel', 'sv', 'tky'], capital: true, needs: [{ at: ['obk'], sole: true }], flow: [['obk', 'vel']], st: 'print' },
+    { id: 'fab', at: ['hsc', 'tnn'], needs: [{ at: ['vel'] }, { at: ['odz'] }], flow: [['tky', 'hsc'], ['vel', 'hsc'], ['sv', 'hsc'], ['odz', 'hsc']], st: 'etch' },
     { id: 'memory', at: ['ich'], more: true, needs: [], flow: [], st: 'wires' },
-    { id: 'package', at: ['tnn'], more: true, needs: [], flow: [['hsc', 'tnn'], ['ich', 'tnn'], ['tky', 'tnn']], st: 'pkg' },
+    { id: 'package', at: ['tnn'], needs: [], flow: [['hsc', 'tnn'], ['ich', 'tnn'], ['tky', 'tnn']], st: 'pkg' },
     { id: 'systems', at: ['tpe', 'gdl'], more: true, needs: [], flow: [['tnn', 'tpe'], ['tpe', 'gdl']], st: 'ship' },
     { id: 'use', at: ['abi'], more: true, needs: [], flow: [['gdl', 'abi'], ['tpe', 'abi']], st: null, dive: 'datacentre' }
   ],
   phone: [
     { id: 'design', at: ['sv', 'sd', 'hsc', 'sha'], more: true, needs: [], flow: [['cam', 'sd'], ['cam', 'hsc']], st: null },
     WAFERS,
-    { id: 'tools', at: ['vel', 'sv', 'tky'], needs: [{ at: ['obk'], sole: true }], flow: [['obk', 'vel']], st: 'print' },
-    { id: 'fab', at: ['hsc', 'tnn', 'ich'], more: true, needs: [{ at: ['vel'], sole: true }, { at: ['odz'] }], flow: [['tky', 'hsc'], ['vel', 'hsc'], ['sd', 'hsc'], ['odz', 'hsc']], st: 'etch' },
+    { id: 'tools', at: ['vel', 'sv', 'tky'], capital: true, needs: [{ at: ['obk'], sole: true }], flow: [['obk', 'vel']], st: 'print' },
+    { id: 'fab', at: ['hsc', 'tnn', 'ich'], more: true, needs: [{ at: ['vel'] }, { at: ['odz'] }], flow: [['tky', 'hsc'], ['vel', 'hsc'], ['sd', 'hsc'], ['odz', 'hsc']], st: 'etch' },
     { id: 'package', at: ['tnn'], more: true, needs: [], flow: [['hsc', 'tnn']], st: 'pkg' },
     { id: 'assembly', at: ['zz', 'chn'], more: true, needs: [], flow: [['tnn', 'zz'], ['tnn', 'chn']], st: 'ship' },
     { id: 'use', at: [], more: true, needs: [], flow: [], st: null, dive: 'phone' }
@@ -47,7 +47,7 @@ export const ROUTES = {
   car: [
     { id: 'design', at: ['mun', 'vel', 'tky'], more: true, needs: [], flow: [], st: null },
     WAFERS,
-    { id: 'tools', at: ['vel', 'tky'], more: true, needs: [], flow: [], st: 'print' },
+    { id: 'tools', at: ['vel', 'tky'], more: true, capital: true, needs: [], flow: [], st: 'print' },
     { id: 'fab', at: ['dre', 'naka', 'hsc', 'kum'], more: true, needs: [{ at: ['odz'] }], flow: [['tky', 'naka'], ['mun', 'dre'], ['vel', 'dre'], ['odz', 'dre']], st: 'clean' },
     { id: 'package', at: ['pen'], more: true, needs: [], flow: [['dre', 'pen'], ['naka', 'pen'], ['hsc', 'pen']], st: 'pkg' },
     { id: 'modules', at: ['stu'], more: true, needs: [], flow: [['pen', 'stu']], st: 'ship' },
