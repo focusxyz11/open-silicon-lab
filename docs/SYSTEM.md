@@ -93,6 +93,13 @@ stop, which may be in another view (the move between views is the usual zoom or 
 view of its own is met at its place on the island. After two stops of a thread, the question underneath may show,
 one at a time (`rootShown`).
 
+**One look.** The flat views (the dive in every world, the line's stations, the bench, the supply map) are drawn in
+the chip world's palette, the same colours as its 3D views and its pages (`WORLD_LOOK` in `src/app/world.js`,
+switched on by `setChrome({ lit: true })`), and lit like them: light from the top left, so the background has a
+soft sky, a part big enough to read gets rounded corners, a shadow below and light on its top, and a round part is a
+small sphere. The line's machines take the 3D views' slate and warm white instead of the earlier site's blueprint
+blue. The earlier site, which does not switch it on, keeps its own look.
+
 **Everything inside.** Nothing in the chip world leads to the earlier site any more. The flat dive starts from any
 world (`#/dive/<depth>/<world>`): the data centre's chip, a phone, a car, or the made chip (the factory's machine,
 a wafer and a die), each from its top level down to the atom; a place's levels open there. The supply map (`#/supply`)
@@ -161,6 +168,7 @@ shows what it becomes. Your own design rides through all three: its masks drive 
 | Line | the earlier site's factory in the frame (`#/line/<step>`): a wafer travelling between the machines, step by step; your design at printing, etching and wiring |
 | Bench | the studio in the frame (`#/bench/<level>[/<challenge>]`): its drawings show your design; a design challenge is played in the dock and the drawings follow it; masks lead to the line |
 | Turn | in the atlas and in the frame: each face opens its view, used the dive, made the line, designed the bench |
+| One look | the flat views and the line's machines in the 3D views' palette and light |
 | Everything inside | every place's levels, every question and the supply map open in the chip world's own views |
 | Questions inside | every question's trail walks through the chip world's own views; none leads to the earlier site |
 | First minute | the intro shot, one sentence, a glowing start; the first win in one tap; feedback for wrong, right, reached and won |

@@ -319,7 +319,7 @@ export function start() {
     WE = E; DiveData = Wd; DS = Ds;
     /* one HUD: the earlier site's own marks, dive label and band give way to the frame */
     /* one stage: the line's machines draw on the shared renderer too */
-    Wm.setChrome({ dots: false, dive: false, stage: () => stage($('diveCanvas')) }); Jm.setBand(false);
+    Wm.setChrome({ dots: false, dive: false, lit: true, stage: () => stage($('diveCanvas')) }); Jm.setBand(false);
     dive = Wm.createWorld($('diveCanvas'), { depth: d => diveAt(d), arrive: d => diveAt(d), part: (d, key) => { divePart = key; diveNotes(); }, pick: th => { diveThread = th; dive.setThread(th); if (!benchCh && flatKind !== 'supply') drawDive(); },
       site: id => supplySite(id), mapStep: i => supplyStep(i) });
     return dive;

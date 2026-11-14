@@ -27,22 +27,27 @@ const lerp = (a, b, t) => a + (b - a) * t;
 function materials(col) {
   const d = col.dark, L = (c, o) => new THREE.MeshLambertMaterial(Object.assign({ color: c }, o || {}));
   const glow = (c, i) => new THREE.MeshBasicMaterial({ color: c, transparent: true, opacity: i, depthWrite: false, blending: d ? THREE.AdditiveBlending : THREE.NormalBlending });
+  /* in the chip world (col.lit) the machines take the colours of its 3D views (src/v2/kit3d.js PALETTES): slate and
+     warm white, not the earlier site's blueprint blue */
+  const w = col.lit ? (d ? { body: '#3a4456', panel: '#2f3848', base: '#262e3c', dark: '#141a26', inner: '#171e2b', floor: '#1a2230', aisle: '#151c28', wall: '#161d2a', metal: '#7d8796', rail: '#8a94a3', edge: '#8794a8', seam: '#3a4456', pod: '#c9d1dc', podOther: '#4a5568', waferOther: '#5d6b7e', off: '#2c3546' }
+    : { body: '#f3f1ec', panel: '#e6e2da', base: '#dcd8d0', dark: '#5d6b7e', inner: '#cfd6df', floor: '#e9e6df', aisle: '#dedad2', wall: '#dcd8d0', metal: '#b7bec8', rail: '#8c96a3', edge: '#6f7a88', seam: '#c9c4ba', pod: '#ffffff', podOther: '#e2ded6', waferOther: '#aab3bf', off: '#cfcac0' }) : null;
+  const pick = (k, dk, lt) => w ? w[k] : d ? dk : lt;
   return {
-    body: L(d ? '#2a375f' : '#f4f6f9'), panel: L(d ? '#212d50' : '#e6ebf2'), base: L(d ? '#182240' : '#d3dbe6'),
-    dark: L(d ? '#0b1020' : '#aeb9c9'), inner: L(d ? '#0d1428' : '#c5cedb', { side: THREE.DoubleSide }),
-    floor: L(d ? '#111a33' : '#e9edf3'), aisle: L(d ? '#0d1529' : '#dde3eb'), wall: L(d ? '#0c1225' : '#d2d9e4'),
-    metal: L(d ? '#3c4c7c' : '#c3ccda'), rail: L(d ? '#4a5b8c' : '#9aa8bd', { transparent: true, opacity: 1 }),
+    body: L(pick('body', '#2a375f', '#f4f6f9')), panel: L(pick('panel', '#212d50', '#e6ebf2')), base: L(pick('base', '#182240', '#d3dbe6')),
+    dark: L(pick('dark', '#0b1020', '#aeb9c9')), inner: L(pick('inner', '#0d1428', '#c5cedb'), { side: THREE.DoubleSide }),
+    floor: L(pick('floor', '#111a33', '#e9edf3')), aisle: L(pick('aisle', '#0d1529', '#dde3eb')), wall: L(pick('wall', '#0c1225', '#d2d9e4')),
+    metal: L(pick('metal', '#3c4c7c', '#c3ccda')), rail: L(pick('rail', '#4a5b8c', '#9aa8bd'), { transparent: true, opacity: 1 }),
     glass: L(d ? '#7d93c7' : '#a9bde3', { transparent: true, opacity: d ? 0.14 : 0.22, depthWrite: false, side: THREE.DoubleSide }),
-    pod: L(d ? '#9db1e6' : '#ffffff', { emissive: d ? '#2a3a6a' : '#000000' }), podOther: L(d ? '#3a4a78' : '#dfe5ee'),
-    wafer: L('#c9d7ff', { emissive: d ? '#5a7de0' : '#3d63c8', emissiveIntensity: d ? 0.7 : 0.35 }), waferOther: L(d ? '#5a6894' : '#aab6c9'),
+    pod: L(pick('pod', '#9db1e6', '#ffffff'), { emissive: d ? (w ? '#1c2638' : '#2a3a6a') : '#000000' }), podOther: L(pick('podOther', '#3a4a78', '#dfe5ee')),
+    wafer: L('#c9d7ff', { emissive: d ? '#5a7de0' : '#3d63c8', emissiveIntensity: d ? 0.7 : 0.35 }), waferOther: L(pick('waferOther', '#5a6894', '#aab6c9')),
     chip: L('#c9d7ff', { emissive: d ? '#5a7de0' : '#3d63c8', emissiveIntensity: d ? 0.7 : 0.35 }),
     warm: L(col.warm, { emissive: col.warm, emissiveIntensity: d ? 0.5 : 0.15 }), cool: L(col.cool, { emissive: col.cool, emissiveIntensity: d ? 0.4 : 0.1 }),
     grn: L(col.grn, { emissive: col.grn, emissiveIntensity: d ? 0.6 : 0.2 }), red: L(col.red, { emissive: col.red, emissiveIntensity: d ? 0.6 : 0.2 }),
-    off: L(d ? '#2a3350' : '#c9d1dc'), silicon: L(d ? '#8fa6dc' : '#6f84ad', { emissive: d ? '#1c2c5a' : '#000000' }), copper: L('#d58a3a', { emissive: '#7a4310', emissiveIntensity: d ? 0.4 : 0.05 }),
+    off: L(pick('off', '#2a3350', '#c9d1dc')), silicon: L(d ? '#8fa6dc' : '#6f84ad', { emissive: d ? '#1c2c5a' : '#000000' }), copper: L('#d58a3a', { emissive: '#7a4310', emissiveIntensity: d ? 0.4 : 0.05 }),
     crate: L(d ? '#5a4628' : '#e8d4b0'), screen: new THREE.MeshBasicMaterial({ color: d ? '#06090f' : '#f9fbfd' }),
     plasma: glow(col.red, d ? 0.42 : 0.3), beam: glow(col.grn, d ? 0.7 : 0.55), light: glow(col.warm, d ? 0.55 : 0.4), heat: glow(col.warm, d ? 0.35 : 0.25), spray: glow(col.cool, 0.6),
-    edge: new THREE.LineBasicMaterial({ color: d ? '#7083b6' : '#5c6a82', transparent: true, opacity: d ? 0.75 : 0.55 }),
-    seam: new THREE.LineBasicMaterial({ color: d ? '#3a4a78' : '#b7c1cf', transparent: true, opacity: 0.8 }),
+    edge: new THREE.LineBasicMaterial({ color: pick('edge', '#7083b6', '#5c6a82'), transparent: true, opacity: w ? (d ? 0.5 : 0.4) : d ? 0.75 : 0.55 }),
+    seam: new THREE.LineBasicMaterial({ color: pick('seam', '#3a4a78', '#b7c1cf'), transparent: true, opacity: 0.8 }),
     hi: new THREE.LineBasicMaterial({ color: col.warm })
   };
 }
@@ -604,9 +609,9 @@ export function createJourney3D(host, before, shared) {
     if (lens) lens.dispose();
     M = materials(col);
     lens = createLens(M, col);
-    scene.background = new THREE.Color(col.dark ? '#05070d' : '#e6eaf0');
+    scene.background = new THREE.Color(col.lit ? col.bg : col.dark ? '#05070d' : '#e6eaf0');
     scene.fog = new THREE.Fog(scene.background, 14, 34);
-    hemi.color.set(col.dark ? '#aab8e6' : '#ffffff'); hemi.groundColor.set(col.dark ? '#141c34' : '#9aa6b8'); hemi.intensity = col.dark ? 1.25 : 1.7;
+    hemi.color.set(col.dark ? (col.lit ? '#c4d0e4' : '#aab8e6') : '#ffffff'); hemi.groundColor.set(col.dark ? '#141c34' : '#9aa6b8'); hemi.intensity = col.dark ? 1.25 : 1.7;
     sun.intensity = col.dark ? 1.1 : 1.6;
     /* your pod, the vehicle that carries it along the track, and the crate it travels in between plants */
     const g = new THREE.Group(), veh = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.42, 0.5), M.metal); veh.add(new THREE.LineSegments(new THREE.EdgesGeometry(veh.geometry), M.edge));
