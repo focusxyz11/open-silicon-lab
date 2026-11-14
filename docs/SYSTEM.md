@@ -121,11 +121,13 @@ data centre's chip, the phone's, the car's, and the die on the wafer with its te
 the flat scenes' parts so the plan is written once: a slab, compute blocks that are alike and warm while they work,
 memory as a low regular field of bits, pads round the edge, copper wires with the clock's beat travelling on them, seen
 from 72° and never turned; coming down from the data centre's flight the camera rises from the flight's angle to the
-plan's; the block, the same relief (rows of ready-made cells of different widths between copper rails, the memory
+plan's (a level's arrival goes by frames, each counting at most 50 ms, so a slow first frame never eats it); the block, the same relief (rows of ready-made cells of different widths between copper rails, the memory
 array as a lower, finer field, your design as a few warm cells in a row, and the wires over them faint until you pick
 them, since drawn true, copper would cover the cells); the wafer (`src/v2/wafer3d.js`), a polished disc printed with
 your chips, the pieces cut by the rim grey and lost, and each chip a speck lands on red, from your chip's size and
-generation; a phone's board and a car's control unit (`src/v2/pcb3d.js`), built from the same table of board
+generation; the phone (`src/v2/phone3d.js`), arriving closed and coming apart along one axis into a teardown
+laid side by side (screen, the frame with the battery that fills most of it and the small board, the back with its
+lenses), so you see that most of a phone is battery and screen; a phone's board and a car's control unit (`src/v2/pcb3d.js`), built from the same table of board
 materials as the data centre's board (`BOARD` in `src/v2/kit3d.js`), so a board is a board to the eye, the control
 unit's case lid lifting as you arrive from the car; the gate (`src/v2/gate3d.js`), a relief of the same plan as the flat gate, its layers in true order and height
 (silicon, the gate strips over it, contacts as studs, copper on top), seen from 65° and never turned, lifting apart
