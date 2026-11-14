@@ -115,7 +115,7 @@ export const WAYS_AT = { lab: WAYS.map(w => w.id) };
 /* more ways inside, besides the levels. to: a place of the redesign (#/place/<id>), page: a page, or the
    current site (world, depth, map). Words: look.<id>.t / .d */
 export const LOOK = {
-  port: [{ id: 'supply', world: 'journey', depth: 'ship', map: true }],
+  port: [{ id: 'supply', page: 'supply' }],
   lab: [{ id: 'plan', page: 'build' }], village: [{ id: 'plan', page: 'build' }]
 };
 /* the world of the current site where a depth is drawn (the first place that holds it) */
@@ -128,15 +128,15 @@ export const DEPTH_ORDER = (() => { const o = []; WORLDS.forEach(w => w.depths.f
 export const trail = th => DEPTH_ORDER.filter(d => STOPS[th + '.' + d]);
 /* the levels of the flat dive (the earlier site's zoom, in the frame): from the chip down to the atom */
 export const DIVE_LEVELS = ['chip', 'block', 'gate', 'switch', 'atom'];
-/* a level not yet drawn in a view of its own is met at its place on the island */
-export const AT_PLACE = { phone: 'phones', phoneboard: 'phones', car: 'cars', ecu: 'cars', scanner: 'fab', wafer: 'fab', die: 'fab' };
+/* the worlds the flat dive starts from besides the data centre: a phone, a car, and the made chip (the factory's
+   machine, its wafer and a finished die), each from its own top level down to the atom */
+export const DIVE_WORLD = { phone: 'phone', phoneboard: 'phone', soc: 'phone', car: 'car', ecu: 'car', mcu: 'car', scanner: 'made', wafer: 'made', die: 'made' };
 /* where a level is shown in the chip world: always an address inside it, never the earlier site */
 export function viewOfDepth(d) {
-  if (AT_PLACE[d]) return '#/place/' + AT_PLACE[d];
+  if (DIVE_WORLD[d]) return '#/dive/' + d + '/' + DIVE_WORLD[d];
   if (d === 'board') return '#/board';
   const f = FLOWN.datacentre[d]; if (f != null) return '#/place/datacentre/' + f;
   if (DIVE_LEVELS.includes(d)) return '#/dive/' + d;
-  if (d === 'soc' || d === 'mcu') return '#/dive/chip';
   const w = worldOfDepth(d);
   return w === 'design' ? '#/bench/' + d : '#/line/' + d;
 }

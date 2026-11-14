@@ -93,6 +93,12 @@ stop, which may be in another view (the move between views is the usual zoom or 
 view of its own is met at its place on the island. After two stops of a thread, the question underneath may show,
 one at a time (`rootShown`).
 
+**Everything inside.** Nothing in the chip world leads to the earlier site any more. The flat dive starts from any
+world (`#/dive/<depth>/<world>`): the data centre's chip, a phone, a car, or the made chip (the factory's machine,
+a wafer and a die), each from its top level down to the atom; a place's levels open there. The supply map (`#/supply`)
+is the earlier site's map in the frame: the flat world draws it over the line, the rail is the trip's steps, and
+the dock tells a step, a place, and what stops when a place shuts. `classic.html` stays only until it is retired.
+
 **The first minute and feedback.** A first visit opens on a wide shot of the sea and comes down to the island
 (`map.intro`), and the hero rises after it with one sentence and one glowing button. The first challenge is won by
 tapping, not typing: the half adder's description shows its gates as buttons (OR, AND, XOR), the table checks all
@@ -155,6 +161,7 @@ shows what it becomes. Your own design rides through all three: its masks drive 
 | Line | the earlier site's factory in the frame (`#/line/<step>`): a wafer travelling between the machines, step by step; your design at printing, etching and wiring |
 | Bench | the studio in the frame (`#/bench/<level>[/<challenge>]`): its drawings show your design; a design challenge is played in the dock and the drawings follow it; masks lead to the line |
 | Turn | in the atlas and in the frame: each face opens its view, used the dive, made the line, designed the bench |
+| Everything inside | every place's levels, every question and the supply map open in the chip world's own views |
 | Questions inside | every question's trail walks through the chip world's own views; none leads to the earlier site |
 | First minute | the intro shot, one sentence, a glowing start; the first win in one tap; feedback for wrong, right, reached and won |
 | One stage | one renderer and one GL canvas for the island, the data centre, the chip, the board and the line's machines; the views made and compiled ahead while the island is shown |
