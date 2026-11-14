@@ -29,5 +29,5 @@ export const eye = p => [p.at[0] + Math.sin(p.turn) * Math.cos(p.tilt) * p.dist,
 /* the windows of a join, so the shell, the levels and the tests agree: joined between from and to, the child drawn
    from child, the child leads from lead, the parent fades into the sky over veil; behind a door with tiles in front
    of it (door.front) the child is hidden by them until the parent's leave reaches clear (the parent has lowered them
-   by then) */
-export const JOIN = { from: 0.08, to: 0.92, child: 0.12, lead: 0.5, veil: [0.55, 0.92], clear: 0.7 };
+   by then); a rising plan (a relief, the gate) fades in over fade */
+export const JOIN = { from: 0.08, to: 0.92, child: 0.12, lead: 0.5, veil: [0.55, 0.92], clear: 0.7, fade: [0.12, 0.4] };

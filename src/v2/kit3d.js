@@ -59,6 +59,15 @@ export function stage(canvas) {
     /* a second scene over the picture already drawn, in front of it (its depth cleared): a join's child. keep: the
        depth is kept, so what was drawn first can hide it (its camera must then be the same view, near and far too) */
     over(scene, camera, keep) { if (!w) return; const r = o.renderer; r.autoClear = false; if (!keep) r.clearDepth(); r.render(scene, camera); r.autoClear = true; },
+    /* a second scene over the picture, faded in by alpha (0..1): drawn into an image of its own, then laid over. A
+       join's child that would otherwise appear at once (a relief rising out of its door, over a parent tile of several
+       tones). One image the size of the canvas, made when first needed */
+    fade(scene, camera, alpha) {
+      if (!w || alpha <= 0.001) return;
+      const r = o.renderer, F = FADE(r); r.getClearColor(CC); const ca = r.getClearAlpha();
+      r.setRenderTarget(F.rt); r.setClearColor(0x000000, 0); r.clear(); r.render(scene, camera); r.setRenderTarget(null); r.setClearColor(CC, ca);
+      F.mat.opacity = F.mat.blendAlpha = Math.min(1, alpha); r.autoClear = false; r.render(F.scene, F.cam); r.autoClear = true;
+    },
     /* one square of a colour over the whole picture (the sky closing over a join's parent) */
     veil(color, alpha) { if (!w || alpha <= 0.001) return; const v = VEIL(); v.mat.color.copy(color); v.mat.opacity = Math.min(1, alpha); const r = o.renderer; r.autoClear = false; r.render(v.scene, v.cam); r.autoClear = true; },
     /* a view drawing on its own schedule (the line's machines) shows the canvas once its first picture is on it,
@@ -66,6 +75,22 @@ export function stage(canvas) {
     shown() { o.cv.hidden = false; },
     warm(scene, camera) { const c = o.renderer.compileAsync; return c ? c.call(o.renderer, scene, camera).catch(() => { /* compiled on first draw instead */ }) : Promise.resolve(); }
   };
+}
+/* the fade's image: linear light in half floats (tone mapping and the screen's colours are applied as it is laid over,
+   as they are for a scene drawn straight), smoothed edges; laid over with its colours scaled by alpha, since the image
+   holds them already multiplied by its own coverage at the edges */
+const CC = new THREE.Color(), DB = new THREE.Vector2();
+let FADES = null;
+function FADE(r) {
+  if (!FADES) {
+    const rt = new THREE.WebGLRenderTarget(1, 1, { type: THREE.HalfFloatType, samples: innerWidth > 900 ? 4 : 2 });
+    const mat = new THREE.MeshBasicMaterial({ map: rt.texture, transparent: true, depthTest: false, depthWrite: false, toneMapped: true,
+      blending: THREE.CustomBlending, blendSrc: THREE.ConstantAlphaFactor, blendDst: THREE.OneMinusSrcAlphaFactor, blendSrcAlpha: THREE.ConstantAlphaFactor, blendDstAlpha: THREE.OneMinusSrcAlphaFactor });
+    const scene = new THREE.Scene(); scene.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), mat));
+    FADES = { rt, mat, scene, cam: new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1) };
+  }
+  r.getDrawingBufferSize(DB); if (FADES.rt.width !== DB.x || FADES.rt.height !== DB.y) FADES.rt.setSize(DB.x, DB.y);
+  return FADES;
 }
 /* the veil: a square in front of everything, not tone-mapped, so at full strength it is the sky's own colour */
 let VEILS = null;
