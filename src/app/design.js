@@ -31,7 +31,9 @@ function panel(G, x, y, w, h, fill, edge) {
   G.ctx.fillStyle = c.dark ? c.up : c.dim; G.ctx.fill();
   G.r(x, y, w, h, fill || c.lo, edge || c.line, edge ? 1.6 : 1);
 }
+/* words in a drawing; too small to read on this screen (under 8 px), they are left out (art direction) */
 function text(G, s, x, y, size, color, align, weight) {
+  if (size * G.s < 8) return;
   const ctx = G.ctx; ctx.font = (weight || 500) + ' ' + size + 'px ' + MONO; ctx.fillStyle = color; ctx.textAlign = align || 'left'; ctx.textBaseline = 'middle'; ctx.fillText(s, x, y);
 }
 /* the floor of the studio: a faint grid, so every station reads as one room */
@@ -385,6 +387,12 @@ const masks = {
 
 export const DESIGN_SCENES = { need, logic, check, gates, layout, masks };
 
+/* your design's state in words: right or not, who wrote it, and which job it is (the chip world puts these in its
+   dock, the earlier site in the band under the picture) */
+export function bandState() {
+  const state = B.errs.length ? 'errs' : B.spec ? (B.bad ? 'wrong' : 'right') : 'free', vars = { bad: B.bad || 0, total: B.total || 0, errs: B.errs.length };
+  return { ok: !!B.ok, right: state === 'right' || state === 'free', said: (B.p === 'core' ? t('core.state.' + state, vars) : t('design.state.' + state, vars)) + ' · ' + t('build.by.' + BY), job: t('design.proj.' + B.p + '.t') };
+}
 /* ---- the band under the picture: what this station does with your design ---- */
 export function drawDesignBand(G, o) {
   const c = G.col, id = o.id, u = 1 / G.s, top = o.below > 120 ? 1000 : 818, bottom = top + (o.below > 120 ? o.below : 182);

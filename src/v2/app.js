@@ -386,7 +386,9 @@ export function start() {
     /* your design, where the line carries it */
     const Y = flatKind === 'line' && Game.yourDesign(S), yk = Y && ({ print: 'print', etch: 'etch', wires: 'wires' })[id];
     /* on the bench, what this station did with your design (the studio's caption, moved off the picture) */
-    const benchYours = flatKind === 'bench' ? '<div class="yours"><span class="kicker">' + esc(t('chipx.yours')) + '</span>' + esc(t('design.cap.' + id + '.d', DS.numbers())) + '</div>' : '';
+    /* on the bench, your design's state (right or not, who wrote it, which job) is words, so it is here, not drawn */
+    const BS = flatKind === 'bench' ? DS.bandState() : null;
+    const benchYours = BS ? '<div class="yours"><span class="kicker">' + esc(t('chipx.yours')) + ' · ' + esc(BS.job) + '</span><p class="verdict ' + (BS.right ? 'good' : 'bad') + '">' + esc(BS.said) + '</p>' + esc(t('design.cap.' + id + '.d', DS.numbers())) + '</div>' : '';
     const yours = benchYours + (yk ? '<div class="yours"><span class="kicker">' + esc(t('chipx.yours')) + '</span>' + esc(t('chipx.yours.' + yk, { name: t('design.proj.' + Y.p + '.t'), gates: Y.B.M.cells.length, transistors: Y.B.transistors, masks: Y.B.masks, wire: Math.round(Y.B.RT ? Y.B.RT.wl : 0) })) + '</div>' : '');
     const end = { dive: '<a class="btn primary" href="#/">' + esc(t('chipx.back')) + '</a>', line: '<a class="btn primary" href="#/place/port">' + esc(t('line.end')) + '</a>', bench: '<a class="btn primary" href="#/line/print">' + esc(t('bench.toFab')) + '</a>' }[flatKind];
     diveFrame.dock.innerHTML = lineHtml(t(F.kicker, { n: i + 1, total: L.length }) + ' · ' + t('depth.' + id + '.name'), t('depth.' + id + '.see'), key,
@@ -410,7 +412,7 @@ export function start() {
   }
   function showFlat(kind, depth, chId, world) {
     hideAll(); document.body.classList.add('immersive'); flatKind = kind; benchCh = null; if (kind === 'dive') diveWorld = DIVES[world] ? world : 'datacentre';
-    $('diveCanvas').hidden = false; vui.hidden = false; $('flatLabels').hidden = kind !== 'dive';
+    $('diveCanvas').hidden = false; vui.hidden = false; $('flatLabels').hidden = false;
     loading(true); lastPlace = kind === 'dive' ? DIVES[diveWorld].place : { line: 'fab', bench: 'studio' }[kind];
     return Promise.all([withFrame(), ensureDive()]).then(([, w]) => {
       const F = FL(kind); WE.setWorld(F.world); w.setMap(null); diveFrame && diveFrame.dock.classList.remove('supdock'); if (kind !== 'line') hide3d(); DS.setBandCaption(false);
@@ -437,7 +439,7 @@ export function start() {
   const siteBtn = id => '<button type="button" class="chipb" data-site="' + id + '" aria-pressed="' + (SUP.site === id) + '">' + esc(t('site.' + id + '.name')) + '</button>';
   function drawSupply() {
     const r = Wdata.ROUTES[SUP.world], st = Sup.status(r, SUP.closed), step = r[SUP.step] || r[0], bad = Sup.worst(st);
-    let h = '<div class="chips">' + Object.keys(Wdata.ROUTES).map(w => '<button type="button" class="chipb" data-supworld="' + w + '" aria-pressed="' + (w === SUP.world) + '">' + esc(t('world.' + w + '.name')) + '</button>').join('') + '</div>';
+    let h = '<p class="kicker">' + esc(t('map.route.' + SUP.world)) + '</p><div class="chips">' + Object.keys(Wdata.ROUTES).map(w => '<button type="button" class="chipb" data-supworld="' + w + '" aria-pressed="' + (w === SUP.world) + '">' + esc(t('world.' + w + '.name')) + '</button>').join('') + '</div>';
     /* what stops, if anything does: the question a shut place raises */
     if (SUP.closed.length) {
       const places = bad ? (st[bad.i].why.map(id => t('site.' + id + '.name')).join(', ') || SUP.closed.map(id => t('site.' + id + '.name')).join(', ')) : '';
