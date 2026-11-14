@@ -12,6 +12,7 @@ import * as THREE from '../vendor/three.min.js';
 import { mat, box } from './kit3d.js';
 import { createLevel3D } from './level3d.js';
 import { chipNow } from '../app/scenes.js';
+import { DEPTHS } from '../data/weave.js';
 
 /* the layout, from the flat gate: [x, y, w, h] in its 1000 x 1000 space */
 const DIFF = [[200, 220, 600, 150], [200, 630, 600, 150]];
@@ -56,7 +57,10 @@ export function create(canvas, host, on = {}) {
       level: 'gate', parts: ['gates', 'diff', 'metal', 'tick', 'signal'],
       anchors: { gates: [X(410), H.si + H.gate, Z(560)], diff: [X(260), H.si, Z(330)], metal: [X(200), TOPY, Z(118)], tick: [XT(chipNow().tick), 0.4, Z(940)], signal: [X(170), 0.08, Z(960)] },
       /* looking down 65° (the review's 70° hides every side), never turned: the plan's across is the screen's across */
-      view: { tilt: 1.13, turn: 0, r: 5.9, at: [0, 0.3, 0.35], fixed: true },
+      view: { tilt: 1.13, turn: 0, r: 5.9, at: [0, 0.3, 0.35], fixed: true,
+        /* the door into the switch: the flat level's portal, the crossing of the left gate strip with the lower silicon
+           strip, on the plane the tiles stand on (docs/reviews/transitions.md) */
+        door: (() => { const p = DEPTHS.gate.portal; return { at: [X(p[0] + p[2] / 2), 0, Z(p[1] + p[2] / 2)], side: p[2] / 100 }; })() },
       update(dt, k) {
         t += dt;
         /* on arrival, once, the layers lift apart and settle back */

@@ -367,6 +367,9 @@ export function start() {
   const l3Active = () => Object.values(L3).find(l => l.obj && l.obj.active());
   const lastTap = { x: 0, y: 0 };
   $('diveCanvas').addEventListener('pointerup', e => { lastTap.x = e.clientX; lastTap.y = e.clientY; }, true);
+  /* the join's windows and switch, loaded with the first level in 3D */
+  let L3M = null, JOIN = { from: 0.08, to: 0.92, lead: 0.5 };
+  Promise.all([import('./level3d.js'), import('../engines/join.js')]).then(([m, j]) => { L3M = m; JOIN = j.JOIN; }).catch(() => { /* no joins: the flat picture between levels, as before */ });
   const ensureL3 = lv => { const l = L3[lv]; return l.making || (l.making = import(l.mod).then(m => (l.obj = (l.arg ? m.create(l.arg) : m.create)($('diveCanvas'), l3Host(lv), { part: key => pickPart(key),
     marks: () => (diveFrame && diveFrame.mode() === 'ask' ? askMarks(lv) : null), mark: th => { location.hash = follow(th + '.' + lv); }, askMany: ths => markAsk(ths),
     /* too slow even at low settings: this level is drawn flat for the rest of the visit */
@@ -375,8 +378,28 @@ export function start() {
   const askMarks = id => { const by = new Map(); DiveData.THREADS.forEach(th => { const nm = DiveData.STOPS[th.id + '.' + id], key = nm && nm[0]; if (!key) return; if (!by.has(key)) by.set(key, []); by.get(key).push({ id: th.id, color: threadColorOf(th.id) }); }); return [...by].map(([part, threads]) => ({ part, threads })); };
   let threadColorOf = () => '';
   const hideL3 = () => { Object.values(L3).forEach(l => { if (l.obj) l.obj.show(0); }); $('diveCanvas').style.opacity = ''; $('flatLabels').style.visibility = ''; if (dive) dive.setCovered(false); };
+  /* a join (docs/reviews/transitions.md): between two neighbouring levels in 3D, both drawn in one frame on one camera
+     path, so no flat picture shows between. Only when both models are made, neither failed, the parent has a door and
+     the child a foot, joins are not off for slowness, and the move did not begin without them; else, as before */
+  let unjoined = false;
+  const joinOf = z => {
+    const i = Math.floor(z), f = z - i, a = L3[WE.IDS[i]], b = L3[WE.IDS[i + 1]];
+    if (Math.abs(z - Math.round(z)) < JOIN.from) unjoined = false;
+    if (!(f > JOIN.from && f < JOIN.to)) return null;
+    const ok = a && b && a.obj && b.obj && !a.obj.failed && !b.obj.failed && a.obj.door && b.obj.foot && !L3M.JOINS.off;
+    if (!ok) { unjoined = true; return null; }
+    return unjoined ? null : { a, b, f };
+  };
   function levelZoom(z) {
     if (!dive || !WE || flatKind !== 'dive' || $('diveCanvas').hidden) { hideL3(); return; }
+    const J = L3M && joinOf(z);
+    if (J) {
+      Object.values(L3).forEach(l => { if (l.obj && l !== J.a && l !== J.b) l.obj.show(0); });
+      if (J.f < JOIN.lead) { J.b.obj.show(0); J.a.obj.show(1, J.f, dive.frame, { guest: J.b.obj }); }
+      else { J.a.obj.show(0); J.b.obj.show(1, J.f - 1, dive.frame, { host: J.a.obj }); }
+      $('diveCanvas').style.opacity = '0'; dive.setCovered(true); $('flatLabels').style.visibility = 'hidden'; showStage(true);
+      return;
+    }
     let top = 0;
     Object.entries(L3).forEach(([lv, l]) => {
       const ds = WE.IDS.indexOf(lv), d = z - ds, k = ds < 0 ? 0 : 1 - Math.min(1, Math.max(0, (Math.abs(d) - 0.08) / 0.32));
@@ -384,6 +407,8 @@ export function start() {
       if (!l.obj) { ensureL3(lv).then(o => { if (o && flatKind === 'dive') { levelZoom(dive.z); diveNotes(); } }); return; }
       if (l.obj.failed) { l.obj.show(0); return; }
       l.obj.show(k, d, dive.frame); top = Math.max(top, k);
+      /* at a level, its neighbours are made and their shaders compiled, so a move to them can be joined */
+      if (k >= 1 && !l.near) { l.near = true; [-1, 1].forEach(n => { const nb = WE.IDS[WE.IDS.indexOf(lv) + n]; if (L3[nb]) ensureL3(nb).then(o => { if (o && o.warm) o.warm(); }); }); }
     });
     /* the flat picture and its words give way to the model; the stage shows while one is there */
     $('diveCanvas').style.opacity = String(1 - top); dive.setCovered(top >= 0.999);

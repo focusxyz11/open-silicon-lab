@@ -10,6 +10,8 @@ Read for it: `docs/reviews/art-direction.md` (all), `docs/SYSTEM.md` ("The flat 
 
 Step 1 applied 2026-11-14 by Claude Opus 5.5, as written: `src/engines/join.js` and `tests/join.test.mjs`; the tests pass.
 
+Step 2 applied the same day: the gate and the switch are joined. `stage()` has `over()` and `veil()`; `level3d.js` has `size`, `fitOf`, `aim`, a `rig`, `show(k, off, frame, link)` and `joinFrame()`, with names, note and marks hidden in a join and a frame count of its own (`JOINS.off`); the gate has its door (from `DEPTHS.gate.portal`), the switch its foot; `levelZoom` pairs them, with the latch, and makes and warms a level's neighbours at rest. The smoke test scrolls half way and back. Seen in SwiftShader at 1280 and 390 px, dark and light: the veil's colour matches the sky. Not yet: the latch is per move, the parent's `leave` is passed but nothing uses it (step 3).
+
 ## Summary
 
 - **Today the flat picture is seen for about three quarters of a second in every move**, alone for about 0.12 s. The model also does not follow the flat zoom while the two are mixed (it closes in on its own centre, the flat picture on the portal), so the mix slides.
