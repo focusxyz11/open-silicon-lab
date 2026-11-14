@@ -21,7 +21,7 @@ import { rootShown } from '../engines/weave.js';
 import { FIGURES, CASES } from '../data/weave.js';
 import { fmtDate } from '../core/i18n.js';
 import { ROWS, ASK as CHIP_ASK } from './chip3d.js';
-import { signHtml, signOf, keep, refusal, slipHtml, slipClick, byLine, merged } from './commons.js';
+import { signHtml, signOf, keep, refusal, slipHtml, slipClick, byLine } from './commons.js';
 
 const $ = id => document.getElementById(id);
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
@@ -611,7 +611,7 @@ export function start() {
     const C = Game.community(S);
     if (k === 'challenges') {
       h += Game.STEPS.map((s, i) => { const st = Game.stepState(S, s); return '<section class="stepsec"><h2><span class="num">' + (i + 1) + '</span>' + esc(t('game.step.' + s)) + ' <span class="small muted">' + esc(t('map.' + Game.STATION[s] + '.t')) + ' · ' + st.done + '/' + st.total + '</span></h2><div class="grid">' + Game.stepChallenges(s).map(chCard).join('') + '</div></section>'; }).join('');
-      h += '<section class="stepsec"><h2><span class="num">⚙</span>' + esc(t('game.jobs')) + ' <span class="small muted">' + esc(t('game.jobsD')) + '</span></h2><div class="grid">' + C.jobs.map(jobCard).join('') + '</div></section>';
+      h += '<section class="stepsec"><h2><span class="num">⚙</span>' + esc(t('game.jobs')) + ' <span class="small muted">' + esc(t('game.jobsD')) + '</span></h2><div class="grid">' + C.breaks.map(b => chCard(chOf('break:' + b.of))).join('') + C.jobs.map(jobCard).join('') + '</div></section>';
     } else if (k === 'questions') {
       /* never a list of every question: the ones you have met, as strands you can pick up again, one way to meet
          the next, and the ones you asked yourself. Only the strand you followed last shows what lies underneath. */

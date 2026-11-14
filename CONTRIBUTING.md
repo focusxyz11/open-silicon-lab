@@ -14,7 +14,9 @@ Thanks for helping. You do not need to be a chip expert: a good question and a s
 
 **Back a stop with a figure or a case.** A figure is an entry in `src/data/facts.json` (value, label, source, link, kind, date checked), named for a stop in `FIGURES` in `src/data/weave.js`. Any number in a stop's words needs one. A case is a real event in `CASES`, with its words `case.<id>.*` in `src/i18n/en.json`.
 
-**Build a piece of the community's computer.** Pick an open piece of the plan in the design studio (Design, in the top bar), write it yourself or with any AI assistant, and check it. At Layout, *Add your design to the shared chip* opens a form with your design and how AI was used. Or add it yourself to `DESIGNS` in `src/data/build.js`; `npm test` checks that it reads, does its job and can be built into gates and wires. Designs written with AI are welcome: say how it was used.
+**Build a piece of the community's computer, or break one.** Everything the community adds is an entry of the ledger: one small file in `community/ledger/` (see `community/README.md`). On the site, win an open job at the Lab or break a design in the Makers' village, sign it, and *Add it to the ledger* opens GitHub with the file filled in, as a pull request. Or add the file yourself. `npm test` replays the whole ledger through the lab's engines: a design must read, do its job and pass every case a break has added; a break must make its design answer wrong, and come from someone else. Entries made with AI are welcome: say how it was used. Nothing is voted on.
+
+**Ask a question under a question.** Follow any question, open *asked here*, and *Ask your own here*. It needs a home (it has one: where you stand), the form of a question, and what you noticed.
 
 **Propose a need, or bring an engine.** A piece the computer needs goes through the *Propose a piece* form (`need.yml`). A piece no engine can check yet (registers, the decoder, the serial port, the core) waits for one: an engine is a `check(need, design)` in `ENGINES` in `src/engines/build.js`.
 

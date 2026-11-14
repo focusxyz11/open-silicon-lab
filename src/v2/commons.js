@@ -28,7 +28,7 @@ export function keep(S, fields, name, sign) {
 }
 export const refusal = r => t('ledger.no.' + r.reason, { n: r.wrong || 0, of: r.of || 0 });
 export const draftOf = (S, id) => (S.drafts || []).find(d => d.id === id) || null;
-export const merged = id => ledger().some(x => x.id === id);
+const merged = id => ledger().some(x => x.id === id);
 
 /* the slip of an entry of yours: what it is, where it stands, and the way into the ledger */
 export function slipHtml(S, id) {

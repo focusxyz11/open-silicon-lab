@@ -643,3 +643,4 @@ pre.code { margin: 4px 0; white-space: pre-wrap; overflow-wrap: anywhere; }
 /* a question's world and a break can be taller than a line of story: they scroll inside the dock, never over the bar */
 .dock:has(.stopx) { max-height: min(64vh, calc(100% - 150px)); overflow-y: auto; }
 .sheet:has(.ticks) { max-height: 66vh; }
+@media (max-width: 720px) { .dock:has(.stopx) { max-height: 54vh; } .sheet:has(.ticks) { max-height: 62vh; } }
