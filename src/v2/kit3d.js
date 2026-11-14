@@ -56,8 +56,9 @@ export function stage(canvas) {
     renderer: o.renderer, env: o.env,
     size(W, H) { if (W > 0 && H > 0) { w = W; h = H; } },
     draw(scene, camera) { if (!w) return; o.renderer.getSize(SZ); if (SZ.x !== w || SZ.y !== h) o.renderer.setSize(w, h, false); o.renderer.render(scene, camera); },
-    /* a second scene over the picture already drawn, in front of it (its depth cleared): a join's child */
-    over(scene, camera) { if (!w) return; const r = o.renderer; r.autoClear = false; r.clearDepth(); r.render(scene, camera); r.autoClear = true; },
+    /* a second scene over the picture already drawn, in front of it (its depth cleared): a join's child. keep: the
+       depth is kept, so what was drawn first can hide it (its camera must then be the same view, near and far too) */
+    over(scene, camera, keep) { if (!w) return; const r = o.renderer; r.autoClear = false; if (!keep) r.clearDepth(); r.render(scene, camera); r.autoClear = true; },
     /* one square of a colour over the whole picture (the sky closing over a join's parent) */
     veil(color, alpha) { if (!w || alpha <= 0.001) return; const v = VEIL(); v.mat.color.copy(color); v.mat.opacity = Math.min(1, alpha); const r = o.renderer; r.autoClear = false; r.render(v.scene, v.cam); r.autoClear = true; },
     /* a view drawing on its own schedule (the line's machines) shows the canvas once its first picture is on it,

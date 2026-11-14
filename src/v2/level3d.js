@@ -9,11 +9,12 @@
    createLevel3D(canvas, host, on, model) -> { show(k, depthOffset, frame), select(key, note), hit(x, y), active(),
      warm(), dispose(), failed }   (failed: too slow even at low settings; the shell then keeps the flat drawing)
    model(scene, root, P, night) -> { level, parts: [key], anchors: { key: [x, y, z] }, view: { tilt, turn, r, at: [x, y, z], fixed,
-     arrive: { tilt, turn, ms } }, update(dt, k, dist, arrived, picked), has(key) }   (r: the object's radius, so it fills the square; at:
+     arrive: { tilt, turn, ms }, door, foot, enter }, update(dt, k, dist, arrived, picked, leave), has(key) }   (r: the object's radius, so it fills the square; at:
      where the camera looks; dist: the camera's distance from it, which changes with the screen and the zoom; arrive:
      coming down from the level above, the camera starts at that angle and rises to the level's own, once, and
      arrived (0..1) says how far, for the model's own part of the move; 1 when there is none; picked: the part picked;
-     has: optional, whether a part is there to name now)
+     has: optional, whether a part is there to name now; in a join (joinFrame) the child's arrived runs over its
+     view.enter, the parent's leave (0 at rest) says how far the child has come into its view.door)
    on.part(key), on.marks() -> [{ part, threads }] under Ask, else null, on.mark(threadId), on.askMany([threadId]),
    on.failed(). */
 import * as THREE from '../vendor/three.min.js';
@@ -84,12 +85,22 @@ export function createLevel3D(canvas, host, on, model) {
     const fr = size(); P.size(); C.size();
     const p = pose(f, P.V, C.V, door, foot, P.fitOf(fr)), cp = childPose(p, door, foot);
     const quiet = still() || QUALITY.low, step = v => (quiet ? (f >= JOIN.lead ? 1 : 0) : v), win = C.V.enter || [JOIN.child, 0.8];
-    P.aim(p, fr); P.M.update(quiet ? 0 : dt, 1, p.dist, 1, null, step(sm(JOIN.child, JOIN.lead, f)));
+    /* a child with a move of its own (enter) starts as exactly what the parent shows in its door, so it is drawn only
+       once that move has begun: until then the parent's door is the parent's (drawn over it, the child's flat form
+       would show faces the parent's tiles in front of the door hide) */
+    const enter = step(sm(win[0], win[1], f)), drawn = f >= JOIN.child && (!C.V.enter || enter > 0);
+    const leave = drawn ? step(sm(JOIN.child, JOIN.lead, f)) : 0;
+    P.aim(p, fr); P.M.update(quiet ? 0 : dt, 1, p.dist, 1, null, leave);
     st.draw(P.scene, P.camera);
     st.veil(P.scene.background, sm(JOIN.veil[0], JOIN.veil[1], f));
-    if (f >= JOIN.child) {
-      C.aim(cp, fr); C.M.update(quiet ? 0 : dt, 1, cp.dist, step(sm(win[0], win[1], f)), null, 0);
-      const bg = C.scene.background; C.scene.background = null; st.over(C.scene, C.camera); C.scene.background = bg;
+    if (drawn) {
+      C.aim(cp, fr); C.M.update(quiet ? 0 : dt, 1, cp.dist, enter, null, 0);
+      /* such a child is hidden by the parent's tiles in front of the door while the parent clears them (leave below
+         JOIN.clear); its camera is the parent's in its own units, near and far included, so the two depths agree.
+         After that it is drawn in front, as every child is */
+      const keep = !!C.V.enter && leave < JOIN.clear;
+      if (keep) { C.camera.near = P.camera.near / p.s; C.camera.far = P.camera.far / p.s; C.camera.updateProjectionMatrix(); }
+      const bg = C.scene.background; C.scene.background = null; st.over(C.scene, C.camera, keep); C.scene.background = bg;
     }
     document.documentElement.dataset.join = P.M.level + '>' + C.M.level;
   }  function placeCard() {
@@ -162,7 +173,7 @@ export function createLevel3D(canvas, host, on, model) {
     const key = [k.toFixed(3), off.toFixed(3), yaw.toFixed(4), arrived.toFixed(3), W, H, picked, frame ? frame.B + ',' + frame.cx + ',' + frame.cy : '', ms ? ms.length : 0].join('|');
     if (!quiet || key !== shown) {
       shown = key;
-      M.update(quiet ? 0 : dt, k, camera.position.distanceTo(at), arrived, picked);
+      M.update(quiet ? 0 : dt, k, camera.position.distanceTo(at), arrived, picked, 0);
       /* names hide while the camera moves in (the arrival) and show once it rests */
       names.forEach(n => { n.show = k > 0.85 && arrived >= 1 && (!M.has || M.has(n.key)); n.el.classList.toggle('on', n.key === picked); });
       L.update(camera, W, H);
