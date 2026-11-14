@@ -49,7 +49,7 @@ export function createLevel3D(canvas, host, on, model) {
   let picked = null;
   const marks = createOverlay(host, { mark: th => on.mark && on.mark(th), marks: ths => on.askMany && on.askMany(ths) }), mv = new THREE.Vector3();
 
-  let k = 0, off = 0, raf = 0, last = performance.now(), yaw = 0, yawGoal = 0, frame = null, W = 1, H = 1, arr = null, arrived = 1, link = null;
+  let below = false, k = 0, off = 0, raf = 0, last = performance.now(), yaw = 0, yawGoal = 0, frame = null, W = 1, H = 1, arr = null, arrived = 1, link = null;
   /* a plan (V.fixed: the gate) is read straight, not turned: it neither sways nor turns with a drag */
   const sway = now => (still() || V.fixed ? 0 : Math.sin(now / 14000 * Math.PI * 2) * 0.052);
   /* the picture's size, and the square of the flat level it fills */
@@ -213,8 +213,11 @@ export function createLevel3D(canvas, host, on, model) {
     show(kk, depthOffset, f, lk) {
       if (api.failed) kk = 0;
       const was = k; k = clamp(kk); off = depthOffset || 0; if (f) frame = f; link = lk || null;
+      /* where the zoom was last seen while this level was present: below it (going on down, or the parent of a join)
+         or above; coming back up from below is not an arrival, even when a jump lands exactly on the level */
+      if (k > 0) { if (link && link.guest || off > 0.05) below = true; else if (off < -0.05) below = false; }
       host.hidden = k <= 0;
-      if (k > 0 && was <= 0) { last = performance.now(); arr = V.arrive && off <= 0.05 && !still() && !link ? { hold: 250, t: 0 } : null; }
+      if (k > 0 && was <= 0) { last = performance.now(); arr = V.arrive && off <= 0.05 && !below && !still() && !link ? { hold: 250, t: 0 } : null; }
       if (k <= 0 && was > 0) { card.hidden = true; marks.clear(); }
       if (k > 0 && !raf) raf = requestAnimationFrame(tick);
     },

@@ -36,6 +36,7 @@ Step 6 applied the same day: the boards, the wafer and the phone are joined. `pc
 
 - **Every child with no move of its own fades in over `JOIN.fade`**, not only the rising reliefs: the phone's board came on at once over the phone's, which is a different drawing of the same board.
 - **The phone's five board boxes are hidden only once the board coming in is whole** (`leave` at the end of `JOIN.fade`), not from `leave > 0`: hidden at once, the place was empty for a moment while the new board was still faint. Kept, the two boards cross.
+- **Found by CI: coming back up is never an arrival.** A wheel that jumps from the board straight to the phone lands on it at offset 0, which `show()` took for coming down from above, so the phone came apart again with its names hidden for the whole arrival (on CI's slower machine, past the test's 15 s). Each level now remembers whether the zoom was last below it (`below`, set while it is the parent of a join or the zoom is past it); the phone's own words already said that coming back up it stays apart. Slowed six times here, its names came back in 0.3 s, against 4.5 s before.
 - The control unit's and the wafer's doors are small (the zoom inside one level is about 25 times), so the last part of those moves closes in fast. That is the zoom's own law, the same as the flat drawing's.
 
 ## Summary
