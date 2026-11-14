@@ -8,12 +8,15 @@
 
    createLevel3D(canvas, host, on, model) -> { show(k, depthOffset, frame), select(key, note), hit(x, y), active(),
      warm(), dispose() }
-   model(scene, root, P, night) -> { level, parts: [key], anchors: { key: [x, y, z] }, view: { tilt, turn, r, at: [x, y, z], fixed },
-     update(dt, k, dist) }   (r: the object's radius, so it fills the square; at: where the camera looks; dist: the
-     camera's distance from it, which changes with the screen and the zoom)
+   model(scene, root, P, night) -> { level, parts: [key], anchors: { key: [x, y, z] }, view: { tilt, turn, r, at: [x, y, z], fixed,
+     arrive: { tilt, turn, ms } }, update(dt, k, dist, arrived) }   (r: the object's radius, so it fills the square; at:
+     where the camera looks; dist: the camera's distance from it, which changes with the screen and the zoom; arrive:
+     coming down from the level above, the camera starts at that angle and rises to the level's own, once, and
+     arrived (0..1) says how far, for the model's own part of the move; 1 when there is none)
    on.part(key), on.marks() -> [{ part, threads }] under Ask, else null, on.mark(threadId), on.askMany([threadId]). */
 import * as THREE from '../vendor/three.min.js';
-import { PALETTES, theme, stage, light, labels, showStage, clamp } from './kit3d.js';
+import { PALETTES, theme, stage, light, labels, showStage, clamp, ease } from './kit3d.js';
+import { partWord } from '../data/weave.js';
 import { t } from '../core/i18n.js';
 import { createOverlay } from './overlay.js';
 
@@ -32,13 +35,13 @@ export function createLevel3D(canvas, host, on, model) {
 
   /* names on the parts, from the level's words; a tap picks the part */
   const L = labels(host);
-  const names = M.parts.map(k => { const lb = L.add(root, new THREE.Vector3(...M.anchors[k]), t('part.' + M.level + '.' + k), { cls: 'part3 pick', button: true, data: { part3: k } }); lb.key = k; return lb; });
+  const names = M.parts.map(k => { const lb = L.add(root, new THREE.Vector3(...M.anchors[k]), t('part.' + partWord(M.level, k)), { cls: 'part3 pick', button: true, data: { part3: k } }); lb.key = k; return lb; });
   host.addEventListener('click', e => { const b = e.target.closest('[data-part3]'); if (b) { e.stopPropagation(); on.part && on.part(b.dataset.part3); } });
   const card = document.createElement('div'); card.className = 'swnote'; card.hidden = true; host.appendChild(card);
   let picked = null;
   const marks = createOverlay(host, { mark: th => on.mark && on.mark(th), marks: ths => on.askMany && on.askMany(ths) }), mv = new THREE.Vector3();
 
-  let k = 0, off = 0, raf = 0, last = performance.now(), yaw = 0, yawGoal = 0, frame = null, W = 1, H = 1;
+  let k = 0, off = 0, raf = 0, last = performance.now(), yaw = 0, yawGoal = 0, frame = null, W = 1, H = 1, arriveAt = -1, arrived = 1;
   /* a plan (V.fixed: the gate) is read straight, not turned: it neither sways nor turns with a drag */
   const sway = now => (still() || V.fixed ? 0 : Math.sin(now / 14000 * Math.PI * 2) * 0.052);
   function place(now) {
@@ -46,8 +49,13 @@ export function createLevel3D(canvas, host, on, model) {
     const f = frame || { B: Math.min(W, H) * 0.8, cx: W / 2, cy: H / 2 };
     /* the object fills the square the flat level stood in; farther while you are still above it */
     const fov = camera.fov * Math.PI / 180, fit = (V.r / Math.tan(fov / 2)) * (H / Math.min(f.B * 1.05, W * 0.74));
-    const dist = fit * (off < 0 ? 1 + 3 * -off : 1 / (1 + 2.5 * off));
-    const a = V.turn + yaw + sway(now), b = V.tilt;
+    /* arriving from the level above: from its angle to this level's own, closing in (the camera carries the change of
+       style) */
+    if (arriveAt === 0) arriveAt = now + 250;   /* from the first frame drawn, after a moment at the old angle */
+    arrived = arriveAt < 0 ? 1 : ease(clamp((now - arriveAt) / V.arrive.ms));
+    if (arrived >= 1) arriveAt = -1;
+    const dist = fit * (off < 0 ? 1 + 3 * -off : 1 / (1 + 2.5 * off)) * (1 + 0.45 * (1 - arrived));
+    const A = V.arrive && arrived < 1 ? V.arrive : V, a = A.turn + (V.turn - A.turn) * arrived + yaw + sway(now), b = A.tilt + (V.tilt - A.tilt) * arrived;
     camera.position.set(at.x + Math.sin(a) * Math.cos(b) * dist, at.y + Math.sin(b) * dist, at.z + Math.cos(a) * Math.cos(b) * dist);
     camera.lookAt(at);
     camera.aspect = W / H; camera.setViewOffset(W, H, W / 2 - f.cx, H / 2 - f.cy, W, H); camera.updateProjectionMatrix();
@@ -75,10 +83,11 @@ export function createLevel3D(canvas, host, on, model) {
     const dt = Math.min(0.05, Math.max(0, now - last) / 1000); last = now;
     yaw += (yawGoal - yaw) * Math.min(1, dt * 6);
     place(now);
-    M.update(still() ? 0 : dt, k, camera.position.distanceTo(at));
-    names.forEach(n => { n.show = k > 0.85; n.el.classList.toggle('on', n.key === picked); });
+    M.update(still() ? 0 : dt, k, camera.position.distanceTo(at), arrived);
+    /* names hide while the camera moves in (the arrival) and show once it rests */
+    names.forEach(n => { n.show = k > 0.85 && arrived >= 1; n.el.classList.toggle('on', n.key === picked); });
     L.update(camera, W, H);
-    if (picked && k > 0.85) placeCard(); else card.hidden = true;
+    if (picked && k > 0.85 && arrived >= 1) placeCard(); else card.hidden = true;
     placeMarks();
     st.draw(scene, camera);
     raf = requestAnimationFrame(tick);
@@ -97,7 +106,7 @@ export function createLevel3D(canvas, host, on, model) {
     show(kk, depthOffset, f) {
       const was = k; k = clamp(kk); off = depthOffset || 0; if (f) frame = f;
       host.hidden = k <= 0;
-      if (k > 0 && was <= 0) last = performance.now();
+      if (k > 0 && was <= 0) { last = performance.now(); arriveAt = V.arrive && off <= 0.05 && !still() ? 0 : -1; }
       if (k <= 0 && was > 0) { card.hidden = true; marks.clear(); }
       if (k > 0 && !raf) raf = requestAnimationFrame(tick);
     },

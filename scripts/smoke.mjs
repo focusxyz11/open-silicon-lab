@@ -47,17 +47,20 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
   /* every level and the supply map are inside the chip world: a phone's dive, the made chip, the map at the port */
   /* the switch is drawn in 3D on the one stage, in the flat picture's place, with its five names */
   at = tag + ' 3D switch'; await page.evaluate(() => { location.hash = '#/dive/switch'; });
-  await page.waitForFunction(() => document.querySelectorAll('#swLabels [data-part3]').length === 5 && !document.getElementById('swLabels').hidden, null, { timeout: 25000 }).catch(() => problems.push(tag + ': the switch did not appear in 3D with its five names'));
+  await page.waitForFunction(() => document.querySelectorAll('#l3-switch [data-part3]').length === 5 && !document.getElementById('l3-switch').hidden, null, { timeout: 25000 }).catch(() => problems.push(tag + ': the switch did not appear in 3D with its five names'));
   if (await page.evaluate(() => +getComputedStyle(document.getElementById('diveCanvas')).opacity > 0.5)) problems.push(tag + ': the flat switch did not give way to the 3D one');
-  await page.click('#swLabels [data-part3="gate"]').catch(() => problems.push(tag + ': the 3D switch\'s gate cannot be picked'));
-  await page.waitForSelector('#swLabels .swnote:not([hidden])', { timeout: 10000 }).catch(() => problems.push(tag + ': picking the gate opened no note'));
+  await page.click('#l3-switch [data-part3="gate"]').catch(() => problems.push(tag + ': the 3D switch\'s gate cannot be picked'));
+  await page.waitForSelector('#l3-switch .swnote:not([hidden])', { timeout: 10000 }).catch(() => problems.push(tag + ': picking the gate opened no note'));
+  /* the chip as a relief on the stage, with its four names */
+  await page.evaluate(() => { location.hash = '#/dive/chip'; });
+  await page.waitForFunction(() => document.querySelectorAll('#l3-chip [data-part3]').length === 4 && !document.getElementById('l3-chip').hidden, null, { timeout: 25000 }).catch(() => problems.push(tag + ': the chip did not appear as a relief with its four names'));
   /* the gate as a relief on the stage, with its five names */
   await page.evaluate(() => { location.hash = '#/dive/gate'; });
-  await page.waitForFunction(() => document.querySelectorAll('#gateLabels [data-part3]').length === 5 && !document.getElementById('gateLabels').hidden, null, { timeout: 25000 }).catch(() => problems.push(tag + ': the gate did not appear as a relief with its five names'));
+  await page.waitForFunction(() => document.querySelectorAll('#l3-gate [data-part3]').length === 5 && !document.getElementById('l3-gate').hidden, null, { timeout: 25000 }).catch(() => problems.push(tag + ': the gate did not appear as a relief with its five names'));
   /* the atom too: a crystal on the stage, with its four names */
   await page.evaluate(() => { location.hash = '#/dive/atom'; });
-  await page.waitForFunction(() => document.querySelectorAll('#atomLabels [data-part3]').length === 4 && !document.getElementById('atomLabels').hidden, null, { timeout: 25000 }).catch(() => problems.push(tag + ': the atom did not appear in 3D with its four names'));
-  if (await page.evaluate(() => !document.getElementById('swLabels').hidden)) problems.push(tag + ': the 3D switch stayed up at the atom');
+  await page.waitForFunction(() => document.querySelectorAll('#l3-atom [data-part3]').length === 4 && !document.getElementById('l3-atom').hidden, null, { timeout: 25000 }).catch(() => problems.push(tag + ': the atom did not appear in 3D with its four names'));
+  if (await page.evaluate(() => !document.getElementById('l3-switch').hidden)) problems.push(tag + ': the 3D switch stayed up at the atom');
   at = tag + ' dives and map'; await page.evaluate(() => { location.hash = '#/dive/phone/phone'; });
   await page.waitForSelector('#diveui .dock [data-key="next"]', { timeout: 20000 }).catch(() => problems.push(tag + ': the phone dive did not open with a way deeper'));
   /* the flat dive's words are HTML over the picture: names at rest, a note on a picked part, marks only under Ask */

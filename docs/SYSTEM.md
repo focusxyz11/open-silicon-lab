@@ -115,8 +115,13 @@ Ask). The supply map has no grid, title or row of steps (the rail and the dock s
 The line at night has a plain floor and quiet edges, so its machines read as solids; the board's copper goes
 somewhere (traces to each link, wide traces bringing power), not rows of stripes.
 
-**The levels in 3D.** The bottom of the zoom is drawn on the one stage (following `docs/reviews/art-direction.md`):
-the gate (`src/v2/gate3d.js`), a relief of the same plan as the flat gate, its layers in true order and height
+**The levels in 3D.** The zoom from the chip down is drawn on the one stage (following
+`docs/reviews/art-direction.md`): the chip as a relief (`src/v2/relief3d.js`), one drawing with four sets of data (the
+data centre's chip, the phone's, the car's, and the die on the wafer with its test needles), its districts read from
+the flat scenes' parts so the plan is written once: a slab, compute blocks that are alike and warm while they work,
+memory as a low regular field of bits, pads round the edge, copper wires with the clock's beat travelling on them, seen
+from 72° and never turned; coming down from the data centre's flight the camera rises from the flight's angle to the
+plan's; the gate (`src/v2/gate3d.js`), a relief of the same plan as the flat gate, its layers in true order and height
 (silicon, the gate strips over it, contacts as studs, copper on top), seen from 65° and never turned, lifting apart
 once on arrival, with your chip's slowest signal racing the tick along the bottom; the switch (`src/v2/switch3d.js`), one transistor cut open at the front, so the cut face shows the gate wrapped round
 three sheets of silicon, each in its skin, with source and drain on either side and electrons flowing through the
