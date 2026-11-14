@@ -4,9 +4,7 @@ A static site: plain ES modules, one stylesheet and one file of words. No framew
 
 ```
 index.html              the site: the chip world (src/main2.js, src/v2/)
-classic.html            the earlier site: the world canvas, the top bar, the depth rail and the card (src/main.js)
-src/main.js             boot: load the words, then start the dive
-src/app/ui.js           the shell: world switch, rail, card, theme, saved state (localStorage), layout around the world
+classic.html            the earlier site's address, now leading to the chip world (the earlier site: branch claude/before-retire-2026-11)
 src/app/world.js        the zoom: draws the current, previous and next depths, highlights, dots, tether, input
 src/app/scenes.js       one scene per depth, drawn in a 1000 x 1000 space, with its named parts
 src/app/journey.js      the journey's stations as machines, the steps each plays with your wafer, your pod, the caption and slice
@@ -36,12 +34,12 @@ src/data/ways.js        other ways to compute, each at the depth where the probl
 src/data/debates.js     where informed people disagree: the earlier site's debates, each placed at the depths and stations it is about
 src/data/build.js       the build: the community's goal as a plan of needs, the designs people and AI proposed, AI agents' proposals
 src/data/world.js       the map: places, and each kind of chip's trip through them, joined to the line's stations
-src/data/facts.json     sourced figures, loaded at start (src/main.js); FIGURES and CASES in weave.js point to them
+src/data/facts.json     sourced figures, loaded when a question's stop first shows (src/v2/app.js); FIGURES and CASES in weave.js point to them
 src/core/i18n.js        words: t('name'), plurals, numbers, dates
 src/i18n/en.json        every word on screen
 src/styles/site.css     the styles, dark and light
 tests/                  node:test: the weave and the words
-scripts/                serve.mjs, smoke.mjs (browser test), build-single.mjs, i18n-check.mjs
+scripts/                serve.mjs, smoke.mjs (browser test), i18n-check.mjs
 ```
 
 ## The zoom
@@ -70,7 +68,6 @@ Every word on screen lives in `src/i18n/en.json` and is read with `t('name')`, i
 
 - `npm test`: your chip's model (`tests/chip.test.mjs`), the chip world's game (`tests/game.test.mjs`), the weave (continuity of the zoom, parts, threads, the core-question rule, figures and cases with sources) and the words.
 - `npm run test:browser`: Playwright opens the site on desktop and phone, in dark and light, dives, follows a question and lets it go, opens a real case and the companion, finds the invitation in a gap, and changes world.
-- `npm run build`: `dist/open-silicon-lab.html`, one self-contained file.
 
 ## The journey: lens, names, ways down and back
 
@@ -107,5 +104,5 @@ Design and factory are one story: every station's card has *At the factory*, say
 
 ## One world: the dive, the journey and the build meet
 
-Every depth of a dive that a design can be (chip, block, gate, switch) says what the community and you have built of a thing like it, and links to the studio station that builds it (`BUILT` in `src/app/ui.js`); the studio's need, gates and layout link back to the chip, gate and block of the last dive you were in (`SEEN_IN`). The block depth outlines your design's cells among the others (`designNow()` in `src/app/scenes.js`). With `MADE` (a depth to the station where it is made), each of these depths is where scale, process and the build meet.
+Every depth of a dive that a design can be (chip, block, gate, switch) says what the community and you have built of a thing like it, and links to the studio station that builds it (`BUILT` in the earlier site's shell; waiting for a view in the chip world); the studio's need, gates and layout link back to the chip, gate and block of the last dive you were in (`SEEN_IN`). The block depth outlines your design's cells among the others (`designNow()` in `src/app/scenes.js`). With `MADE` (a depth to the station where it is made), each of these depths is where scale, process and the build meet.
 

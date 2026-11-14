@@ -33,7 +33,7 @@ const heat = G => Math.max(0, Math.min(1, (M.power - 0.6) / 3));   /* 0 cool .. 
 /* a dive's next depth; on the journey's line there is no depth below, except the picture a station holds (inner) */
 const NEXT = {}; WORLDS.filter(w => !w.line).forEach(w => w.depths.forEach((d, i) => { if (i + 1 < w.depths.length) NEXT[d] = w.depths[i + 1]; }));
 Object.entries(DEPTHS).forEach(([d, v]) => { if (v.inner) NEXT[d] = v.inner; });
-/* the wafer's portal follows your chip's size, as in src/app/ui.js */
+/* the wafer's portal follows your chip's size */
 const portalOf = id => (id === 'wafer' ? dieSquare(M.size) : DEPTHS[id].portal);
 /* The side of the box the dive is drawn in, in screen pixels: line weights depend on it (world.js: k).
    world.js passes it as G.box; without it, it is read back from a scene drawn at a size where k is not

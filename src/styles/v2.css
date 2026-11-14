@@ -415,6 +415,11 @@ body.immersive .toast { top: 136px; bottom: auto; left: 50%; }
 .dock .trailq, .sheet .trailq { font-weight: 600; }
 .tried2 { margin: 2px 0 12px; padding-left: 18px; font-size: 14px; }
 .tried2 li + li { margin-top: 3px; }
+.figs2 { margin: 2px 0 12px; padding-left: 18px; font-size: 14px; }
+.figs2 li + li { margin-top: 4px; }
+.case2 { margin: 0 0 12px; padding: 8px 12px; border-radius: 12px; border: 1px solid var(--line); }
+.case2 summary { cursor: pointer; }
+.case2 p { margin: 6px 0 0; }
 .root2 { margin: 0 0 12px; padding: 10px 12px; border-radius: 12px; border: 1px dashed var(--warm); background: color-mix(in srgb, var(--warm) 8%, transparent); }
 .root2 .rootq { margin: 2px 0; font: 600 18px/1.35 var(--serif); }
 .root2 p { margin: 0; }
