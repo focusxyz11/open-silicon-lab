@@ -26,7 +26,10 @@ export function status(route, closed) {
     let state = own;
     if (own !== 'stopped' && up === 'stopped') state = 'waits';
     else if (own === 'ok' && (up === 'strained' || up === 'waits')) state = up === 'waits' ? 'waits' : 'strained';
-    if (state === 'stopped' || state === 'waits') up = 'stopped'; else if (state === 'strained' && up === 'ok') up = 'strained';
+    /* a step that makes machines, not parts of the chip (capital): if it stops, no new machines come, but the
+       ones already in the fabs go on working, so what comes after is strained, not stopped */
+    if (step.capital && (state === 'stopped' || state === 'waits')) { if (up !== 'stopped') up = 'strained'; }
+    else if (state === 'stopped' || state === 'waits') up = 'stopped'; else if (state === 'strained' && up === 'ok') up = 'strained';
     return { state, why: [...new Set(why)] };
   });
 }

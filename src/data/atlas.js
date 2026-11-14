@@ -32,7 +32,7 @@ export const VIEW_PARTS = {
     switch: 'rack.switch', servers: 'rack.servers', power: 'rack.power', fans: 'rack.fans', accelerator: 'board.bigchip', memory: 'board.memory', network: 'board.connectors',
     package: 'chip.package', powerstages: 'board.power', die: 'pkg.die', hbm: 'pkg.memory' },
   board: { chip: 'board.bigchip', die: 'pkg.die', hbm: 'pkg.memory', vrm: 'board.power', links: 'board.connectors' },
-  chip: { lid: 'pkg.lid', bumps: 'pkg.bumps', wires: 'block.wires', contacts: 'gate.metal', gates: 'gate.gates', fins: 'switch.channel', wells: 'atom.dopant', silicon: 'atom.lattice' }
+  chip: { lid: 'pkg.lid', bumps: 'pkg.bumps', wires: 'block.wires', contacts: 'gate.metal', gates: 'gate.gates', sheets: 'switch.channel', wells: 'atom.dopant', silicon: 'atom.lattice' }
 };
 
 /* the stories that drive scenes (src/v2/stories.js), each at home at one level */

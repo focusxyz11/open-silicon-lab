@@ -71,11 +71,20 @@ function spoil(B, vecs, seed) {
 
 /* the core as a design: your slice inside, and your register bit and select if you have written them;
    checked by the test programs, running your program */
+/* the core's speed: its adder is 32 slices in a row, and in one tick the carry must pass through all of them, then
+   settle before the next tick (a flip-flop's clock-to-output and setup). One slice's own speed would be about 30
+   times too fast. */
+function coreTiming(S) {
+  const carry = TC.pathDelay(S.M, NODE, 'cin', 'cout');
+  if (carry == null) return S.st;
+  const crit = 32 * carry + Math.max(0, S.st.crit - carry) + TC.LIB.DFF[2] + TC.SETUP;
+  return Object.assign({}, S.st, { crit, depth: S.st.depth, fmax: 1e6 / crit });
+}
 function coreDesign(code, slice, defect, regs) {
   const C = buildCore(slice, code, defect, regs), S = build({ p: 'alu', code: slice });
   const out = { p: 'core', code, proj: CORE, ins: CORE.ins, outs: CORE.outs, seq: false, spec: true, core: C, slice: S,
     errs: C.errs.map(e => ({ l: e.l, k: 'core.' + e.k, n: e.n })), bad: C.total - C.passed, total: C.total };
-  if (S.M) Object.assign(out, { M: S.M, st: S.st, PL: S.PL, RT: S.RT, levels: S.levels, masks: S.masks, vectors: S.vectors, coverage: S.coverage, area: S.area * 32 });
+  if (S.M) Object.assign(out, { M: S.M, st: coreTiming(S), PL: S.PL, RT: S.RT, levels: S.levels, masks: S.masks, vectors: S.vectors, coverage: S.coverage, area: S.area * 32 });
   out.transistors = C.budget.alu + C.budget.regs + C.budget.rest;
   out.ok = C.ok;
   return out;

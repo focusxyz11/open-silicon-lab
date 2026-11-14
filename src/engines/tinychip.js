@@ -194,6 +194,12 @@ function stats(M,node){const f=E.NODE[node].dly;let tr=0;M.cells.forEach(c=>tr+=
  (M.regs||[]).forEach(r=>{crit=Math.max(crit,at(r.d)+E.SETUP*f);depth=Math.max(depth,lvl[r.d]);});
  const ovh=450*f;return {cells:M.cells.length,tr,crit,depth,fmax:1e6/(crit+ovh)};}
 E.SETUP=120;
+/* the delay from one input to one output only (ps): how long a change on 'from' takes to reach 'to', other inputs
+   steady. A 32-bit adder is 32 slices in a row, so the carry's own path, from cin to cout, sets its speed. */
+E.pathDelay=function(M,node,from,to){const f=E.NODE[node].dly;const src=M.inputs.find(i=>i.name===from),dst=M.outs.find(o=>o.name===to);if(!src||!dst)return null;
+ const byOut={};M.cells.forEach(c=>{if(c.type!=='DFF')byOut[c.out]=c;});const memo={};
+ const at=n=>{if(n in memo)return memo[n];if(n===src.net)return memo[n]=0;const c=byOut[n];if(!c)return memo[n]=-Infinity;const a=Math.max(...c.ins.map(at));return memo[n]=a===-Infinity?-Infinity:a+E.LIB[c.type][2]*f+10*f;};
+ const d=at(dst.net);return d===-Infinity?null:d;};
 E.NODE={'180':{t:'180 nm',dly:1.45,site:[0.56,5.04],masks:22,mask$:0.2,shuttle:true,wafer:200,d0:0.08,days:1.1},'130':{t:'130 nm',dly:1,site:[0.46,2.72],masks:26,mask$:0.4,shuttle:true,wafer:200,d0:0.1,days:1.1},'28':{t:'28 nm',dly:0.3,site:[0.136,1.2],masks:45,mask$:2,shuttle:true,wafer:300,d0:0.07,days:1.2},'3':{t:'3 nm',dly:0.1,site:[0.048,0.169],masks:80,mask$:18,shuttle:false,wafer:300,d0:0.1,days:1.4}};
 /* Flip-flops: synthesis treats each one's output as an extra input of the logic and its next value
    as an extra output, then adds a DFF cell joining the two. */

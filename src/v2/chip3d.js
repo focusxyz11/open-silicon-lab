@@ -40,10 +40,12 @@ export function createChip(canvas, host, on = {}) {
   B(4, S, 2.2, S, si, 0, 0, 0);
   const wellN = M(4, P.warm, { emissive: P.warm, emissiveIntensity: night ? 0.35 : 0.1 }), wellP = M(4, P.accent, { emissive: P.accent, emissiveIntensity: night ? 0.35 : 0.1 });
   for (let i = 0; i < 4; i++) B(4, 2.2, 0.08, S - 1, i % 2 ? wellP : wellN, -4.5 + i * 3, 2.2, 0);
-  /* 3: the switches: thin fins of silicon standing on the wells, etched out of the crystal */
-  const fin = M(3, night ? 0x9fb0c8 : 0xb7c2d2, { roughness: 0.3, metalness: 0.35 });
-  for (let i = 0; i < 4; i++) for (let k = 0; k < 2; k++) B(3, 0.28, 0.9, S - 1.6, fin, -5 + i * 3 + k * 1, 2.28, 0);
-  /* 2: the gates: printed lines crossing the fins; where a gate crosses a fin there is a switch. Contacts above */
+  /* 3: the switches: stacks of thin sheets of silicon above the wells (as the switch level shows; older chips stood
+     them up as fins). Each stack is three sheets with gaps between, where the gate will wrap round them */
+  const sheet = M(3, night ? 0x8a9bb6 : 0x9aa7ba, { roughness: 0.32, metalness: 0.35 });
+  for (let i = 0; i < 4; i++) for (let k = 0; k < 2; k++) for (let s = 0; s < 3; s++) B(3, 0.7, 0.13, S - 1.6, sheet, -5.15 + i * 3 + k * 1.3, 2.34 + s * 0.3, 0);
+  /* 2: the gates: printed lines crossing the sheets and wrapping round them; where a gate crosses a stack there is a
+     switch. Contacts above */
   const gate = M(2, P.accent, { roughness: 0.35, metalness: 0.6 }), contact = M(2, 0xc9a14a, { roughness: 0.3, metalness: 0.9 });
   for (let j = 0; j < 5; j++) B(2, S - 0.6, 1.1, 0.42, gate, 0, 2.28, -4.4 + j * 2.2);
   for (let i = 0; i < 8; i++) B(2, 0.3, 0.6, 0.3, contact, -5 + (i % 4) * 3 + 0.5, 3.38, -3.3 + Math.floor(i / 4) * 4.4 + (i % 2) * 2.2);
@@ -64,7 +66,7 @@ export function createChip(canvas, host, on = {}) {
   /* names on the parts (HTML over points), from their one home in the atlas; shown while their row is in view */
   const named = [
     [0, [5.5, 8.95, 5.5], 'lid'], [0, [-4.5, 7.75, 6.2], 'bumps'], [1, [5.6, 6.6, 3], 'wires'],
-    [2, [5.8, 3.4, 0.0], 'gates'], [2, [-4.5, 3.98, -3.3], 'contacts'], [3, [-5, 3.2, 5], 'fins'], [4, [-4.5, 2.3, 5.6], 'wells'], [4, [5.8, 1.1, 5.8], 'silicon']
+    [2, [5.8, 3.4, 0.0], 'gates'], [2, [-4.5, 3.98, -3.3], 'contacts'], [3, [-5, 3.2, 5], 'sheets'], [4, [-4.5, 2.3, 5.6], 'wells'], [4, [5.8, 1.1, 5.8], 'silicon']
   ].map(([r, p, id]) => { const lb = L.add(rows[r].g, new THREE.Vector3(...p), t('part.' + VIEW_PARTS.chip[id]), { cls: 'part3' }); lb.row = r; return lb; });
 
   /* ---- the position and the mode, and what each row does at them ---- */

@@ -383,14 +383,14 @@
   {
    "id": "energy-moving-data",
    "topic": "beyond",
-   "detail": "Table I of Dally and colleagues. On-chip SRAM costs 8–11 pJ per 16-bit read.",
+   "detail": "Table I of Pedram, Richardson, Galal, Kvatinsky and Horowitz, Dark Memory and Accelerator-Rich System Optimization in the Dark Silicon Era (45 nm): a 16-bit multiply costs 0.62 pJ; on-chip SRAM costs 8–11 pJ per 16-bit read.",
    "kind": "reported",
    "label": "Moving data vs computing (45 nm)",
-   "source": "arXiv (Dally et al.)",
+   "source": "arXiv (Pedram et al.)",
    "status": "current",
    "url": "https://arxiv.org/pdf/1602.04183",
    "value": "Reading 16 bits from DRAM costs 640 pJ; a 16-bit add costs 0.18 pJ: about 3,500× more",
-   "verified": "2026-10-29"
+   "verified": "2026-11-13"
   },
   {
    "id": "landauer-measured",

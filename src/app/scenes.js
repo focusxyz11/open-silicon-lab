@@ -352,7 +352,8 @@ const block = {
     G.bg(c.lo);
     for (let i = 0; i < 12; i++) {
       const y = 60 + i * 74;
-      G.l([[40, y], [624, y]], c.warm, 1.4); G.l([[40, y + 60], [624, y + 60]], c.cool, 1.4);
+      /* each row of cells between its two copper power rails */
+      G.l([[40, y], [624, y]], c.cu, 1.4); G.l([[40, y + 60], [624, y + 60]], c.cu, 1.4);
       let x = 44, n = 0;
       while (x < 600) {
         let w = Math.max(10, Math.round((22 + Math.floor(rnd(i, n) * 44)) * Math.min(1.8, M.s)));
@@ -368,7 +369,7 @@ const block = {
     for (let i = 0; i < 14; i++) for (let j = 0; j < 27; j++) G.r(670 + i * 20, 70 + j * 20, 14, 14, rnd(i * 31 + j, Math.floor(G.t * 1.2)) > 0.86 ? c.cool : c.up, null);
     G.r(660, 650, 300, 290, c.mid, c.line, 1.2);
     G.r(680, 672, 120, 110, c.up, c.dim, 1); G.r(820, 672, 120, 250, c.up, c.dim, 1); G.r(680, 800, 120, 122, c.lo, c.dim, 1);
-    G.a(0.75); wires.forEach(w => G.l(w.p, c.cool, 1.3)); G.a(1);
+    G.a(0.85); wires.forEach(w => G.l(w.p, c.cu, 1.4)); G.a(1);
     /* your design (the design studio): cells like these, as many as it became, outlined in two rows */
     const D = designNow(), n = D && D.M ? Math.min(40, D.M.cells.length * (D.p === 'core' ? 32 : 1)) : 0;
     if (n) { const w = Math.min(584, 40 + n * 26); G.ctx.setLineDash([6 / G.s, 5 / G.s]); G.r(40, 196, w, 128, null, c.warm, 1.8); G.ctx.setLineDash([]); G.a(0.12); G.r(40, 196, w, 128, c.warm); G.a(1); }
@@ -377,7 +378,8 @@ const block = {
   }
 };
 
-/* ---- gate: one logic gate, drawn as its layers. Green: where current flows; red: gates; blue: metal ---- */
+/* ---- gate: one logic gate, drawn as its layers, in the materials every view shares: silicon strips, the switches'
+   gates in the accent, copper wires, contacts in contact metal. Green and red mean right and wrong only ---- */
 const gate = {
   parts: {
     gates: [{ r: [380, 150, 60, 700] }, { r: [560, 150, 60, 700] }],
@@ -388,15 +390,15 @@ const gate = {
     const c = G.col;
     G.bg(c.lo);
     for (let i = 1; i < 20; i++) { G.l([[i * 50, 0], [i * 50, 1000]], c.dim, 0.4); G.l([[0, i * 50], [1000, i * 50]], c.dim, 0.4); }
-    G.a(0.5); G.r(200, 220, 600, 150, c.grn); G.r(200, 630, 600, 150, c.grn); G.a(1);
-    G.r(200, 220, 600, 150, null, c.grn, 1.5); G.r(200, 630, 600, 150, null, c.grn, 1.5);
+    G.r(200, 220, 600, 150, c.si); G.r(200, 630, 600, 150, c.si);
+    G.r(200, 220, 600, 150, null, c.line, 1); G.r(200, 630, 600, 150, null, c.line, 1);
     /* a real two-input NAND: on the upper strip the middle contact takes power and both ends feed the output, so
        either switch can pull it high; on the lower strip the two switches sit in a row between the output and ground */
-    G.a(0.45); [[120, 90, 760, 56], [120, 854, 760, 56], [690, 250, 50, 470], [476, 146, 44, 110], [240, 250, 44, 170], [240, 380, 500, 40], [240, 744, 44, 110]].forEach(m => G.r(m[0], m[1], m[2], m[3], c.cool)); G.a(1);
-    [[120, 90, 760, 56], [120, 854, 760, 56], [690, 250, 50, 470], [240, 380, 500, 40]].forEach(m => G.r(m[0], m[1], m[2], m[3], null, c.cool, 1.3));
-    G.a(0.62); G.r(380, 150, 60, 700, c.red); G.r(560, 150, 60, 700, c.red); G.a(1);
-    G.r(380, 150, 60, 700, null, c.red, 1.5); G.r(560, 150, 60, 700, null, c.red, 1.5);
-    [[250, 240], [486, 240], [702, 262], [250, 680], [702, 680], [702, 330], [250, 310]].forEach(k => G.r(k[0], k[1], 26, 26, c.hi));
+    G.a(0.45); [[120, 90, 760, 56], [120, 854, 760, 56], [690, 250, 50, 470], [476, 146, 44, 110], [240, 250, 44, 170], [240, 380, 500, 40], [240, 744, 44, 110]].forEach(m => G.r(m[0], m[1], m[2], m[3], c.cu)); G.a(1);
+    [[120, 90, 760, 56], [120, 854, 760, 56], [690, 250, 50, 470], [240, 380, 500, 40]].forEach(m => G.r(m[0], m[1], m[2], m[3], null, c.cu, 1.3));
+    G.a(0.85); G.r(380, 150, 60, 700, c.cool); G.r(560, 150, 60, 700, c.cool); G.a(1);
+    G.r(380, 150, 60, 700, null, c.cool, 1.5); G.r(560, 150, 60, 700, null, c.cool, 1.5);
+    [[250, 240], [486, 240], [702, 262], [250, 680], [702, 680], [702, 330], [250, 310]].forEach(k => G.r(k[0], k[1], 26, 26, c.au));
     const u = (G.t * 0.35) % 1;
     G.r(708, 250 + u * 440, 14, 14, c.warm);
     inside(G, 'gate');
@@ -424,22 +426,22 @@ const swtch = {
     /* 1-2: a stack of thin layers grown on top, then cut down to a narrow stack */
     if (b >= 1 && b <= 4) {
       const x0 = b === 1 ? 110 : 340, x1 = b === 1 ? 890 : 660;
-      [400, 520, 640].forEach(y => { G.a(0.6); G.r(x0, y, x1 - x0, 50, c.grn); G.a(1); G.r(x0, y, x1 - x0, 50, null, c.grn, 1.1); });
+      [400, 520, 640].forEach(y => { G.r(x0, y, x1 - x0, 50, c.si); G.r(x0, y, x1 - x0, 50, null, c.line, 1); });
       [450, 570, 690].forEach(y => G.r(x0, y, x1 - x0, 70, c.up, c.dim, 0.9));
       G.r(x0, 760, x1 - x0, 40, c.up, c.dim, 0.9);
     }
     /* 3-4: a placeholder gate holds the shape while the source and drain grow on either side */
     if (b >= 3) { G.r(345, 300, 45, 500, c.mid, c.line, 1); G.r(610, 300, 45, 500, c.mid, c.line, 1); }
     if (b === 3 || b === 4) { G.a(0.7); G.r(390, 300, 220, 500, c.dim); G.a(1); G.r(390, 300, 220, 500, null, c.line, 1.2); }
-    if (b >= 4) { G.r(110, 340, 235, 460, c.up, c.hi, 1.4); G.r(655, 340, 235, 460, c.up, c.hi, 1.4); }
+    if (b >= 4) { G.r(110, 340, 235, 460, c.doped, c.line, 1.2); G.r(655, 340, 235, 460, c.doped, c.line, 1.2); }
     /* 5: the placeholder and the layers between the sheets are dissolved away, leaving sheets in the air */
-    if (b === 5) sheets.forEach(sh => { G.a(0.6); G.r(sh.r[0], sh.r[1], sh.r[2], sh.r[3], c.grn); G.a(1); G.r(sh.r[0], sh.r[1], sh.r[2], sh.r[3], null, c.grn, 1.3); });
+    if (b === 5) sheets.forEach(sh => { G.r(sh.r[0], sh.r[1], sh.r[2], sh.r[3], c.si); G.r(sh.r[0], sh.r[1], sh.r[2], sh.r[3], null, c.hi, 1.2); });
     /* 6: a thin insulating skin and the real gate wrap every sheet */
     if (b >= 6) {
-      G.a(0.5); G.r(390, 300, 220, 500, c.red); G.a(1); G.r(390, 300, 220, 500, null, c.red, 1.5);
-      skins.forEach(k => G.r(k.r[0], k.r[1], k.r[2], k.r[3], c.lo, c.warm, 1.6 * Math.min(1.6, M.s)));
+      G.a(0.85); G.r(390, 300, 220, 500, c.cool); G.a(1); G.r(390, 300, 220, 500, null, c.cool, 1.5);
+      skins.forEach(k => { G.r(k.r[0], k.r[1], k.r[2], k.r[3], c.lo); G.a(0.6); G.r(k.r[0], k.r[1], k.r[2], k.r[3], null, c.glass, 2.2 * Math.min(1.6, M.s)); G.a(1); });
       sheets.forEach((sh, i) => {
-        G.a(0.6); G.r(sh.r[0], sh.r[1], sh.r[2], sh.r[3], c.grn); G.a(1); G.r(sh.r[0], sh.r[1], sh.r[2], sh.r[3], null, c.grn, 1.3);
+        G.r(sh.r[0], sh.r[1], sh.r[2], sh.r[3], c.si); G.r(sh.r[0], sh.r[1], sh.r[2], sh.r[3], null, c.hi, 1.2);
         if (b === BUILD_STEPS - 1) for (let k = 0; k < 3; k++) { const x = 340 + (((G.t * 0.28 + k / 3 + i * 0.17) % 1) * 320); G.r(x - 5, sh.r[1] + 20, 10, 10, c.hi); }
       });
     }
@@ -447,9 +449,9 @@ const swtch = {
     if (b >= 1) inside(G, 'switch');
     /* 7: metal contacts reach down to connect it */
     if (b >= 7) {
-      G.a(0.45); G.r(180, 150, 90, 190, c.cool); G.r(730, 150, 90, 190, c.cool); G.r(465, 120, 70, 180, c.cool); G.a(1);
-      G.r(180, 150, 90, 190, null, c.cool, 1.2); G.r(730, 150, 90, 190, null, c.cool, 1.2); G.r(465, 120, 70, 180, null, c.cool, 1.2);
-      /* your chip: current slipping through the thinner walls */
+      G.r(180, 150, 90, 190, c.au); G.r(730, 150, 90, 190, c.au); G.r(465, 120, 70, 180, c.au);
+      G.r(180, 150, 90, 190, null, c.line, 1); G.r(730, 150, 90, 190, null, c.line, 1); G.r(465, 120, 70, 180, null, c.line, 1);
+      /* your chip: current leaking while the switch is off (red: something going wrong) */
       const leaks = Math.round(2 * M.wall);
       for (let n = 0; n < leaks; n++) { const k = skins[n % 3].r, x = 400 + rnd(n, 7) * 200, u = (G.t * 0.7 + rnd(n, 9)) % 1; G.c(x, k[1] + 4 - u * 40, 5, c.red); }
       G.label('gate', 470, 290); G.label('channel', 668, 560); G.label('source', 120, 330); G.label('drain', 880, 330, 'right'); G.label('oxide', 400, 386);
@@ -457,7 +459,8 @@ const swtch = {
   }
 };
 
-/* ---- atom: silicon atoms in a crystal, an added atom, an oxide wall, electrons moving through ---- */
+/* ---- atom: silicon atoms in a crystal, each joined to four neighbours, an added atom, the insulating skin, electrons
+   moving through ---- */
 const pos = (r, k) => [80 + k * 95 + (r % 2) * 47, 210 + r * 95];
 const atom = {
   parts: { lattice: [{ r: [40, 170, 920, 790] }], dopant: [{ c: [507, 495, 44] }], electrons: [{ r: [40, 452, 920, 86] }], boundary: [{ r: [0, 0, 1000, 150] }] },
@@ -479,7 +482,7 @@ const atom = {
       G.c(p[0], p[1], dop ? 27 : 23, dop ? c.mid : c.up, dop ? c.warm : c.hi, dop ? 2 : 1.2);
       G.c(p[0] - 7, p[1] - 7, 5, c.lo);
     }
-    /* your chip: electrons slipping through the wall, more as it gets thinner */
+    /* your chip: electrons slipping through the insulating skin, more as it gets thinner */
     const through = Math.round(1.5 * M.wall);
     for (let n = 0; n < through; n++) { const x = 60 + rnd(n, 21) * 880, u = (G.t * 0.5 + rnd(n, 22)) % 1; G.c(x, 200 - u * 170, 6, c.red); }
     for (let i = 0; i < 11; i++) {

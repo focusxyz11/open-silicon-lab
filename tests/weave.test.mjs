@@ -276,20 +276,30 @@ test('the world around the line: every place a trip uses is on the map with its 
   for (const [id, s] of Object.entries(SITES)) if (s[3]) assert.ok(LINE.depths.includes(s[3]), id + ' joins a station that does not exist');
 });
 
-test('a trip stops after the only place that can do a step, and only strains where others can take over', async () => {
+test('a trip stops after the only place that can do a step, strains where others can take over, and goes on without new machines', async () => {
   const { ROUTES } = await import('../src/data/world.js');
   const { status, worst } = await import('../src/engines/supply.js');
   const dc = ROUTES.datacentre, car = ROUTES.car, at = (r, id) => r.findIndex(s => s.id === id);
   assert.ok(status(dc, []).every(s => s.state === 'ok'), 'nothing closed, nothing stops');
+  /* the machine makers are capital: without them no new machines come, but the fabs go on with the ones they have */
   const euv = status(dc, ['vel']);
-  assert.equal(euv[at(dc, 'fab')].state, 'stopped', 'no EUV scanners, no advanced fab');
-  assert.equal(euv[at(dc, 'use')].state, 'waits', 'and everything after it waits');
-  assert.equal(euv[at(dc, 'design')].state, 'ok', 'what comes before goes on');
-  assert.deepEqual(worst(euv), { i: at(dc, 'fab'), state: 'stopped' }, 'the trip stops at the fab');
   assert.equal(euv[at(dc, 'tools')].state, 'strained', 'other tools are still made');
+  assert.equal(euv[at(dc, 'fab')].state, 'strained', 'no new scanners: the fabs go on with the ones they have, and cannot grow');
+  const mirrors = status(dc, ['obk']);
+  assert.equal(mirrors[at(dc, 'tools')].state, 'stopped', 'no mirrors, no new scanners');
+  assert.equal(mirrors[at(dc, 'fab')].state, 'strained', 'but the scanners already in the fabs keep printing');
+  assert.notEqual(mirrors[at(dc, 'use')].state, 'waits', 'so the trip does not stop');
+  assert.deepEqual(worst(mirrors), { i: at(dc, 'tools'), state: 'stopped' }, 'what stops is the making of machines');
+  /* the newest AI chips are made and packaged in Taiwan: for a year or more there is nowhere else */
+  const taiwan = status(dc, ['hsc', 'tnn']);
+  assert.equal(taiwan[at(dc, 'fab')].state, 'stopped', 'no other fab makes the newest chips, not in time');
+  assert.equal(taiwan[at(dc, 'use')].state, 'waits', 'and everything after it waits');
+  assert.equal(taiwan[at(dc, 'design')].state, 'ok', 'what comes before goes on');
+  assert.deepEqual(worst(taiwan), { i: at(dc, 'fab'), state: 'stopped' }, 'the trip stops at the fab');
+  assert.equal(status(dc, ['hsc'])[at(dc, 'fab')].state, 'strained', 'one of the two sites shut: the other takes some of the work');
   assert.notEqual(status(car, ['vel'])[at(car, 'fab')].state, 'stopped', 'car chips need no EUV');
   assert.equal(status(dc, ['odz'])[at(dc, 'fab')].state, 'strained', 'neon comes from elsewhere too, dearer');
-  assert.equal(status(dc, ['hsc', 'tnn'])[at(dc, 'fab')].state, 'strained', 'other fabs exist, not drawn');
+  assert.notEqual(status(ROUTES.phone, ['hsc', 'tnn'])[at(ROUTES.phone, 'fab')].state, 'stopped', 'a phone chip has a third fab');
 });
 
 test('debates sit where they arise: at least two views each, every view with a claim and an assumption, one debate per place', async () => {

@@ -405,7 +405,9 @@ export function start() {
     /* what stops, if anything does: the question a shut place raises */
     if (SUP.closed.length) {
       const places = bad ? (st[bad.i].why.map(id => t('site.' + id + '.name')).join(', ') || SUP.closed.map(id => t('site.' + id + '.name')).join(', ')) : '';
-      h += '<div class="mapstop2 ' + (bad ? bad.state : '') + '">' + (bad ? '<p><b>' + esc(t(bad.state === 'stopped' ? 'map.stops' : 'map.strained', { step: t('route.step.' + r[bad.i].id), places })) + '</b></p><p class="small">' + esc(t(bad.state === 'stopped' ? 'map.qStop' : 'map.qStrain')) + '</p>' : '') +
+      /* a stopped maker of machines (capital) stops no chips at once: the fabs go on with the machines they have */
+      const cap = bad && bad.state === 'stopped' && r[bad.i].capital;
+      h += '<div class="mapstop2 ' + (bad ? (cap ? 'strained' : bad.state) : '') + '">' + (bad ? '<p><b>' + esc(t(cap ? 'map.capital' : bad.state === 'stopped' ? 'map.stops' : 'map.strained', { step: t('route.step.' + r[bad.i].id), places })) + '</b></p><p class="small">' + esc(t(bad.state === 'stopped' && !cap ? 'map.qStop' : 'map.qStrain')) + '</p>' : '') +
         '<button type="button" class="link" data-openall>' + esc(t('map.openAll')) + '</button></div>';
     }
     h += '<p class="kicker">' + esc(t('map.step')) + ' · ' + esc(t('route.step.' + step.id)) + '</p>' + (SUP.site ? '' : '<p class="small">' + esc(t('route.' + (t('route.' + SUP.world + '.' + step.id) !== 'route.' + SUP.world + '.' + step.id ? SUP.world : 'any') + '.' + step.id)) + '</p>');
