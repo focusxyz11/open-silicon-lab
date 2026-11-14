@@ -213,9 +213,9 @@ export function createLevel3D(canvas, host, on, model) {
     show(kk, depthOffset, f, lk) {
       if (api.failed) kk = 0;
       const was = k; k = clamp(kk); off = depthOffset || 0; if (f) frame = f; link = lk || null;
-      /* where the zoom was last seen while this level was present: below it (going on down, or the parent of a join)
-         or above; coming back up from below is not an arrival, even when a jump lands exactly on the level */
-      if (k > 0) { if (link && link.guest || off > 0.05) below = true; else if (off < -0.05) below = false; }
+      /* where the zoom was last seen, present or not (the shell passes the offset to a hidden level too): below it or
+         above; coming back up from below is not an arrival, even when a jump lands exactly on the level */
+      if (link && link.guest || off > 0.05) below = true; else if (off < -0.05) below = false;
       host.hidden = k <= 0;
       if (k > 0 && was <= 0) { last = performance.now(); arr = V.arrive && off <= 0.05 && !below && !still() && !link ? { hold: 250, t: 0 } : null; }
       if (k <= 0 && was > 0) { card.hidden = true; marks.clear(); }

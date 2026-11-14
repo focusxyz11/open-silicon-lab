@@ -173,7 +173,11 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
     await page.mouse.wheel(0, 312);
     await page.waitForFunction(b => !document.documentElement.dataset.join && [...document.querySelectorAll('#l3-' + b + ' .part3')].some(e => e.style.opacity !== '0'), b, { timeout: 15000 }).catch(() => problems.push(tag + ': the ' + b + ' did not settle with its names'));
     await page.mouse.wheel(0, -624);
-    await page.waitForFunction(a => [...document.querySelectorAll('#l3-' + a + ' .part3')].some(e => e.style.opacity !== '0') && !document.getElementById('l3-' + a).hidden, a, { timeout: 15000 }).catch(() => problems.push(tag + ': back up, the ' + a + ' did not come back with its names'));
+    await page.waitForFunction(a => [...document.querySelectorAll('#l3-' + a + ' .part3')].some(e => e.style.opacity !== '0') && !document.getElementById('l3-' + a).hidden, a, { timeout: 15000 }).catch(async () => {
+      /* what the level was doing, so a failure seen only on a slower machine can be read from the log */
+      const state = await page.evaluate(a => JSON.stringify({ join: document.documentElement.dataset.join || '', hidden: document.getElementById('l3-' + a).hidden, names: [...document.querySelectorAll('#l3-' + a + ' .part3')].map(e => e.style.opacity + '@' + e.style.transform), flat: getComputedStyle(document.getElementById('diveCanvas')).opacity, hash: location.hash }), a).catch(e => e.message);
+      problems.push(tag + ': back up, the ' + a + ' did not come back with its names ' + state);
+    });
     await page.close();
   }
   /* a device too slow for a level in 3D gets its flat drawing back (osl-quality = slow makes every level count as too slow) */
