@@ -178,8 +178,6 @@ button.chcard:hover, a.chcard:hover { transform: translateY(-2px); border-color:
 .lvchips .dotc { width: 7px; height: 7px; border-radius: 50%; background: var(--good); }
 .lvchips .qn { font: 600 11px var(--mono); color: var(--muted); }
 .lvchips .qn::before { content: '?'; margin-right: 1px; }
-.lvchips .ext { font-size: 11px; color: var(--muted); }
-.lvchips a.old { border-style: dashed; }
 .ladder2 { list-style: none; margin: 8px 0 12px; padding: 0; display: grid; gap: 6px; }
 .ladder2 a { display: grid; grid-template-columns: 26px 1fr; gap: 10px; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--line); text-decoration: none; transition: border-color .2s; }
 .ladder2 a:hover { border-color: var(--accent); }
@@ -403,6 +401,13 @@ button.link { padding: 0; margin: 2px 14px 8px 0; border: 0; background: none; c
 .dock .hintline { margin: 0 0 10px; }
 
 body.immersive .toast { top: 136px; bottom: auto; left: 50%; }
+
+/* the supply map's dock: short, so the map keeps most of the screen; what stops when a place shuts */
+.dock.supdock { max-height: 40vh; overflow: auto; }
+.dock.supdock .yours { margin: 6px 0 8px; }
+.mapstop2 { margin: 8px 0 12px; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--warm); background: color-mix(in srgb, var(--warm) 10%, transparent); }
+.mapstop2.stopped { border-color: var(--bad); background: color-mix(in srgb, var(--bad) 10%, transparent); }
+.mapstop2 p { margin: 0 0 4px; }
 
 /* following a question: one stop of its trail, in the dock */
 .trailk { display: flex; align-items: center; gap: 8px; color: var(--qc); }

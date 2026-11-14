@@ -155,6 +155,16 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
   if (!(await page.$$('#sheet .chcard')).length) problems.push(tag + ': the studio has nothing to do');
   await page.click('#sheet [data-door="look"]');
   if (!(await page.$('#sheet .lvchips a')) || !(await page.$('#sheet .nav .btn.primary'))) problems.push(tag + ': Look shows no way inside the studio');
+  /* every level and the supply map are inside the chip world: a phone's dive, the made chip, the map at the port */
+  at = tag + ' dives and map'; await page.evaluate(() => { location.hash = '#/dive/phone/phone'; });
+  await page.waitForSelector('#diveui .dock [data-key="next"]', { timeout: 20000 }).catch(() => problems.push(tag + ': the phone dive did not open with a way deeper'));
+  await page.evaluate(() => { location.hash = '#/dive/scanner/made'; });
+  await page.waitForFunction(() => /scanner|light|machine/i.test(document.querySelector('#diveui .dock') ? document.querySelector('#diveui .dock').textContent : ''), null, { timeout: 20000 }).catch(() => problems.push(tag + ': the made chip did not open at the machine'));
+  await page.evaluate(() => { location.hash = '#/supply'; });
+  await page.waitForSelector('#diveui .dock [data-site]', { timeout: 20000 }).catch(() => problems.push(tag + ': the supply map did not open with its places'));
+  await page.evaluate(() => { location.hash = '#/place/fab'; });
+  await page.waitForSelector('#sheet .lvchips a', { timeout: 15000 }).catch(() => {});
+  if (await page.$('#sheet .lvchips a.old, #sheet a[href*="classic"]')) problems.push(tag + ': a level of the factory still leads to the earlier site');
   /* questions stay in the chip world: the questions page and a followed question never send you to the earlier site */
   at = tag + ' ' + '#/questions'; await page.evaluate(() => { location.hash = '#/questions'; });
   await page.waitForSelector('#page .qcard', { timeout: 10000 }).catch(() => problems.push(tag + ': the questions page shows no questions'));

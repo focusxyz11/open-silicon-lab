@@ -23,8 +23,6 @@ import { ROWS, ASK as CHIP_ASK } from './chip3d.js';
 const $ = id => document.getElementById(id);
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 const MENU = ['explore', 'challenges', 'questions', 'build', 'ecosystem'];
-const OLD = 'classic.html?'; /* i18n-ok: a file name: the earlier site, for the pages not yet in the frame */
-const oldUrl = (world, extra) => OLD + new URLSearchParams(Object.assign({ world }, extra || {}));
 const hue = th => (THREADS.find(x => x.id === th) || { hue: 200 }).hue;
 const qColor = key => 'hsl(' + hue(key.split('.')[0]) + ' 70% 55%)';
 /* following a question stays in the chip world: its trail walks from view to view (Game.askHref) */
@@ -115,25 +113,27 @@ export function start() {
   /* a level opens where it is drawn best: the flight through the data centre, the chip's layers (a depth of the
      dive, or the factory step that makes it), or else the current site */
   const rowOf = d => { const i = ROWS.findIndex(r => r.dive === d || r.made.includes(d)); return i < 0 ? null : { row: i, build: !ROWS.some(r => r.dive === d) }; };
-  const DIVE_CHIP = { soc: 0, mcu: 0 };
   /* the flat dive's levels (the earlier site's zoom, in the frame): from the chip down to the atom */
   const DIVE_LEVELS = Game.DIVE_LEVELS;
   const levelHref = (place, l) => { if (place === 'datacentre' && l.depth === 'board') return '#/board'; const f = (Game.FLOWN[place] || {})[l.depth]; if (f != null) return '#/place/' + place + '/' + f;
+    if (FLAT_WORLDS.includes(l.world)) return '#/dive/' + l.depth + '/' + l.world;
     if (DIVE_LEVELS.includes(l.depth) && l.depth !== 'chip') return '#/dive/' + l.depth;
     if (l.world === 'design') return '#/bench/' + l.depth;
     if (l.world === 'journey') return '#/line/' + l.depth;
-    const c = DIVE_CHIP[l.depth] != null ? { row: 0, build: false } : rowOf(l.depth); return c ? '#/chip/' + c.row + (c.build ? '/build' : '') : oldUrl(l.world, { depth: l.depth }); };
+    const c = rowOf(l.depth); return c ? '#/chip/' + c.row + (c.build ? '/build' : '') : Game.viewOfDepth(l.depth); };
+  /* the worlds with a flat dive of their own, besides the data centre's */
+  const FLAT_WORLDS = ['phone', 'car', 'made'];
   /* where going inside a place leads: its first level, drawn in the frame */
   const enterOf = id => { const L = Game.INSIDE[id] || []; if (L.length) return levelHref(id, L[0]); const x = (Game.LOOK[id] || [])[0]; return x ? (x.to ? '#/place/' + x.to : x.page ? '#/' + x.page : null) : null; };
   function insideHtml(id) {
     const L = Game.INSIDE[id] || [], extra = Game.LOOK[id] || [];
     let h = L.length ? '<ol class="lvchips" aria-label="' + esc(t('door.look.d')) + '">' + L.map((l, i) => {
       const nq = stopsAt(l.depth).length, chs = Game.placeChallenges(id).filter(c => c.at === l.depth).length;
-      const href = levelHref(id, l), old = !href.startsWith('#'), fly = (Game.FLOWN[id] || {})[l.depth] != null, shared = id !== 'datacentre' && Game.SHARED.includes(l.depth);
-      const note = [t('depth.' + l.depth + '.see'), fly && t('game.inside.fly'), shared && t('game.inside.shared'), old && t('game.inside.current')].filter(Boolean).join(' · ');
-      return '<li><a href="' + esc(href) + '" title="' + esc(note) + '" class="' + (old ? 'old' : '') + (shared ? ' shared' : '') + '"><span class="i">' + (i + 1) + '</span>' + esc(t('depth.' + l.depth + '.name')) + (chs ? '<span class="dotc" role="img" aria-label="' + esc(t('game.inside.ch', { n: chs })) + '"></span>' : '') + (nq ? '<span class="qn" title="' + esc(t('game.inside.qs', { n: nq })) + '">' + nq + '</span>' : '') + (old ? '<span class="ext" aria-hidden="true">↗</span>' : '') + '</a></li>';
+      const href = levelHref(id, l), fly = (Game.FLOWN[id] || {})[l.depth] != null, shared = id !== 'datacentre' && Game.SHARED.includes(l.depth);
+      const note = [t('depth.' + l.depth + '.see'), fly && t('game.inside.fly'), shared && t('game.inside.shared')].filter(Boolean).join(' · ');
+      return '<li><a href="' + esc(href) + '" title="' + esc(note) + '" class="' + (shared ? 'shared' : '') + '"><span class="i">' + (i + 1) + '</span>' + esc(t('depth.' + l.depth + '.name')) + (chs ? '<span class="dotc" role="img" aria-label="' + esc(t('game.inside.ch', { n: chs })) + '"></span>' : '') + (nq ? '<span class="qn" title="' + esc(t('game.inside.qs', { n: nq })) + '">' + nq + '</span>' : '') + '</a></li>';
     }).join('') + '</ol>' : '';
-    h += extra.map(l => { const href = l.to ? '#/place/' + l.to : l.page ? '#/' + l.page : oldUrl(l.world, Object.assign({ depth: l.depth }, l.map ? { map: 1 } : {}));
+    h += extra.map(l => { const href = l.to ? '#/place/' + l.to : '#/' + l.page;
       return '<a class="look" href="' + esc(href) + '"><b>' + esc(t('look.' + l.id + '.t')) + '</b><span class="small">' + esc(t('look.' + l.id + '.d')) + '</span>' + (l.world ? '<span class="small muted">' + esc(t('game.current')) + '</span>' : '') + '</a>'; }).join('');
     return h || '<p class="small muted">' + esc(t('game.noLook')) + '</p>';
   }
@@ -299,29 +299,40 @@ export function start() {
      of it). Tap a part and its note sits on the picture; the questions crossing a level are dots on their parts. ---- */
   const vui = $('diveui');
   const FLAT = {
-    dive: { world: 'datacentre', levels: DIVE_LEVELS, title: 'dive.title', up: '#/place/datacentre/5', upWord: 'map.datacentre.t', face: 'used', kicker: 'place.level', next: 'chipx.deeper', hint: 'dive.hint' },
+    dive: { world: 'datacentre', title: 'dive.title', up: '#/place/datacentre/5', upWord: 'map.datacentre.t', face: 'used', kicker: 'place.level', next: 'chipx.deeper', hint: 'dive.hint' },
     line: { world: 'journey', title: 'line.title', up: '#/place/fab', upWord: 'map.fab.t', face: 'made', kicker: 'line.stepN', next: 'line.next', hint: 'line.hint' },
     bench: { world: 'design', title: 'bench.title', up: '#/place/studio', upWord: 'map.studio.t', face: 'designed', kicker: 'line.stepN', next: 'line.next', hint: 'bench.hint' }
   };
+  /* the dive starts from any world: the data centre's chip, a phone, a car, or the made chip */
+  const DIVES = {
+    datacentre: { levels: DIVE_LEVELS, place: 'datacentre' },
+    phone: { title: 'dive.phone.title', up: '#/place/phones', upWord: 'map.phones.t', place: 'phones' },
+    car: { title: 'dive.car.title', up: '#/place/cars', upWord: 'map.cars.t', place: 'cars' },
+    made: { title: 'dive.made.title', up: '#/place/fab', upWord: 'map.fab.t', place: 'fab', face: 'made' }
+  };
+  let diveWorld = 'datacentre';
+  const FL = k => k === 'dive' ? Object.assign({}, FLAT.dive, { world: diveWorld }, DIVES[diveWorld]) : FLAT[k];
   let flatKind = 'dive', diveFrame = null, diveD = -1, divePart = null, diveThread = null, benchCh = null, WE = null, DiveData = null, DS = null;
-  const levelsOf = k => FLAT[k].levels || DiveData.WORLDS.find(w => w.id === FLAT[k].world).depths;
+  const levelsOf = k => FL(k).levels || DiveData.WORLDS.find(w => w.id === FL(k).world).depths;
   const diveId = () => WE.IDS[diveD];
   const ensureDive = () => dive ? Promise.resolve(dive) : Promise.all([import('../engines/weave.js'), import('../app/world.js'), import('../data/weave.js'), import('../app/design.js'), import('../app/journey.js')]).then(([E, Wm, Wd, Ds, Jm]) => {
     WE = E; DiveData = Wd; DS = Ds;
     /* one HUD: the earlier site's own marks, dive label and band give way to the frame */
     /* one stage: the line's machines draw on the shared renderer too */
     Wm.setChrome({ dots: false, dive: false, stage: () => stage($('diveCanvas')) }); Jm.setBand(false);
-    dive = Wm.createWorld($('diveCanvas'), { depth: d => diveAt(d), arrive: d => diveAt(d), part: (d, key) => { divePart = key; diveNotes(); }, pick: th => { diveThread = th; dive.setThread(th); if (!benchCh) drawDive(); } });
+    dive = Wm.createWorld($('diveCanvas'), { depth: d => diveAt(d), arrive: d => diveAt(d), part: (d, key) => { divePart = key; diveNotes(); }, pick: th => { diveThread = th; dive.setThread(th); if (!benchCh && flatKind !== 'supply') drawDive(); },
+      site: id => supplySite(id), mapStep: i => supplyStep(i) });
     return dive;
   });
   /* the factory's 3D machines draw under the flat world on the line; nowhere else */
   const hide3d = () => { const w3 = document.getElementById('world3d'); if (w3) w3.style.display = 'none'; };
   function diveAt(d) {
+    if (flatKind === 'supply') { diveD = d; return; }   /* the map stays over the line's last station */
     const id = WE.IDS[d];
-    if (!levelsOf(flatKind).includes(id)) { if (flatKind === 'dive') location.hash = '#/place/datacentre/' + (id === 'board' ? 4 : 2); return; }   /* above the chip, the flight takes over */
+    if (!levelsOf(flatKind).includes(id)) { if (flatKind === 'dive' && diveWorld === 'datacentre') location.hash = '#/place/datacentre/' + (id === 'board' ? 4 : 2); return; }   /* above the chip, the flight takes over */
     if (d !== diveD) { divePart = null; diveThread = null; dive.setThread(null); }
     diveD = d; if (!diveFrame) return;
-    const L = levelsOf(flatKind); diveFrame.rail(id, L.indexOf(id) / (L.length - 1)); diveFrame.level(id); diveFrame.face(FLAT[flatKind].face); diveNotes();
+    const L = levelsOf(flatKind); diveFrame.rail(id, L.indexOf(id) / (L.length - 1)); diveFrame.level(id); diveFrame.face(FL(flatKind).face); diveNotes();
     if (diveFrame.mode() === 'look' && !benchCh) drawDive();
   }
   /* words on the picture: the part you tapped, else the part this level is about, from its one home in the atlas */
@@ -332,7 +343,7 @@ export function start() {
   }
   const EN_HAS = w => t('part.' + w) !== 'part.' + w;
   function drawDive() {
-    const F = FLAT[flatKind], L = levelsOf(flatKind), id = diveId(), i = L.indexOf(id), last = i === L.length - 1;
+    const F = FL(flatKind), L = levelsOf(flatKind), id = diveId(), i = L.indexOf(id), last = i === L.length - 1;
     const key = diveThread && DiveData.STOPS[diveThread + '.' + id] ? diveThread + '.' + id : stopsAt(id)[0];
     /* your design, where the line carries it */
     const Y = flatKind === 'line' && Game.yourDesign(S), yk = Y && ({ print: 'print', etch: 'etch', wires: 'wires' })[id];
@@ -341,7 +352,7 @@ export function start() {
     const yours = benchYours + (yk ? '<div class="yours"><span class="kicker">' + esc(t('chipx.yours')) + '</span>' + esc(t('chipx.yours.' + yk, { name: t('design.proj.' + Y.p + '.t'), gates: Y.B.M.cells.length, transistors: Y.B.transistors, masks: Y.B.masks, wire: Math.round(Y.B.RT ? Y.B.RT.wl : 0) })) + '</div>' : '');
     const end = { dive: '<a class="btn primary" href="#/">' + esc(t('chipx.back')) + '</a>', line: '<a class="btn primary" href="#/place/port">' + esc(t('line.end')) + '</a>', bench: '<a class="btn primary" href="#/line/print">' + esc(t('bench.toFab')) + '</a>' }[flatKind];
     diveFrame.dock.innerHTML = lineHtml(t(F.kicker, { n: i + 1, total: L.length }) + ' · ' + t('depth.' + id + '.name'), t('depth.' + id + '.see'), key,
-      (i || flatKind === 'dive' ? '<button type="button" class="btn ghost" data-key="back" data-divego="' + (diveD - 1) + '">' + esc(t(i ? 'story.back' : 'dive.up')) + '</button>' : '<span></span>') +
+      (i || (flatKind === 'dive' && diveWorld === 'datacentre') ? '<button type="button" class="btn ghost" data-key="back" data-divego="' + (diveD - 1) + '">' + esc(t(i ? 'story.back' : 'dive.up')) + '</button>' : '<span></span>') +
       (last ? end : '<button type="button" class="btn primary" data-key="next" data-divego="' + (diveD + 1) + '">' + esc(t(F.next)) + '</button>')).replace('<div class="nav">', yours + '<p class="small muted hintline">' + esc(t(F.hint)) + '</p><div class="nav">');
     requestAnimationFrame(diveInset);
   }
@@ -359,12 +370,12 @@ export function start() {
       done: c => { won(c); dive.flyTo(WE.IDS.indexOf('gates')); } });
     requestAnimationFrame(diveInset);
   }
-  function showFlat(kind, depth, chId) {
-    hideAll(); document.body.classList.add('immersive'); flatKind = kind; benchCh = null;
+  function showFlat(kind, depth, chId, world) {
+    hideAll(); document.body.classList.add('immersive'); flatKind = kind; benchCh = null; if (kind === 'dive') diveWorld = DIVES[world] ? world : 'datacentre';
     $('diveCanvas').hidden = false; vui.hidden = false;
-    loading(true); lastPlace = { dive: 'datacentre', line: 'fab', bench: 'studio' }[kind];
+    loading(true); lastPlace = kind === 'dive' ? DIVES[diveWorld].place : { line: 'fab', bench: 'studio' }[kind];
     return Promise.all([withFrame(), ensureDive()]).then(([, w]) => {
-      const F = FLAT[kind]; WE.setWorld(F.world); if (kind !== 'line') hide3d(); DS.setBandCaption(false);
+      const F = FL(kind); WE.setWorld(F.world); w.setMap(null); diveFrame && diveFrame.dock.classList.remove('supdock'); if (kind !== 'line') hide3d(); DS.setBandCaption(false);
       /* the bench draws your design: the last you won, else the first job's */
       if (kind === 'bench') { const Y = Game.yourDesign(S); DS.setDesign(Y ? Y.B : Game.checkDesign('half', S.codes.half || Game.starter('half'))); }
       const L = levelsOf(kind);
@@ -377,7 +388,58 @@ export function start() {
       const ch = chId && Game.challengeOf(chId); if (ch) openBench(ch);
     });
   }
-  const showDive = depth => showFlat('dive', depth);
+  /* ---- the supply map: a chip's whole trip across the world (the earlier site's map, src/app/map.js), drawn by
+     the flat world over the line and told in the dock: a route, its steps, a place, and what stops if it shuts ---- */
+  let SUP = null, Wdata = null, Sup = null;
+  const supState = () => { const r = Wdata.ROUTES[SUP.world], focus = r[SUP.step] || r[0], first = SUP.site || focus.at[0] || (focus.flow[0] || [])[1] || 'hsc';
+    return { route: r, world: SUP.world, step: SUP.step, here: null, site: SUP.site, closed: new Set(SUP.closed), st: Sup.status(r, SUP.closed), from: Wdata.SITES[first] }; };
+  const supShow = () => { if (!SUP || flatKind !== 'supply') return; dive.setMap(supState()); diveFrame.rail(Wdata.ROUTES[SUP.world][SUP.step].id, SUP.step / (Wdata.ROUTES[SUP.world].length - 1)); if (diveFrame.mode() === 'look') drawSupply(); };
+  function supplySite(id) { if (!SUP) return; SUP.site = SUP.site === id ? null : id; if (SUP.site) { const i = Wdata.ROUTES[SUP.world].findIndex(st => st.at.includes(id)); if (i >= 0) SUP.step = i; } supShow(); }
+  function supplyStep(i) { if (!SUP) return; SUP.step = i; SUP.site = null; supShow(); }
+  const siteBtn = id => '<button type="button" class="chipb" data-site="' + id + '" aria-pressed="' + (SUP.site === id) + '">' + esc(t('site.' + id + '.name')) + '</button>';
+  function drawSupply() {
+    const r = Wdata.ROUTES[SUP.world], st = Sup.status(r, SUP.closed), step = r[SUP.step] || r[0], bad = Sup.worst(st);
+    let h = '<div class="chips">' + Object.keys(Wdata.ROUTES).map(w => '<button type="button" class="chipb" data-supworld="' + w + '" aria-pressed="' + (w === SUP.world) + '">' + esc(t('world.' + w + '.name')) + '</button>').join('') + '</div>';
+    /* what stops, if anything does: the question a shut place raises */
+    if (SUP.closed.length) {
+      const places = bad ? (st[bad.i].why.map(id => t('site.' + id + '.name')).join(', ') || SUP.closed.map(id => t('site.' + id + '.name')).join(', ')) : '';
+      h += '<div class="mapstop2 ' + (bad ? bad.state : '') + '">' + (bad ? '<p><b>' + esc(t(bad.state === 'stopped' ? 'map.stops' : 'map.strained', { step: t('route.step.' + r[bad.i].id), places })) + '</b></p><p class="small">' + esc(t(bad.state === 'stopped' ? 'map.qStop' : 'map.qStrain')) + '</p>' : '') +
+        '<button type="button" class="link" data-openall>' + esc(t('map.openAll')) + '</button></div>';
+    }
+    h += '<p class="kicker">' + esc(t('map.step')) + ' · ' + esc(t('route.step.' + step.id)) + '</p>' + (SUP.site ? '' : '<p class="small">' + esc(t('route.' + (t('route.' + SUP.world + '.' + step.id) !== 'route.' + SUP.world + '.' + step.id ? SUP.world : 'any') + '.' + step.id)) + '</p>');
+    if (step.at.length) h += '<p class="small muted">' + esc(t('map.places')) + '</p><div class="chips">' + step.at.map(siteBtn).join('') + '</div>';
+    if (SUP.site) { const id = SUP.site, shut = SUP.closed.includes(id);
+      h += '<div class="yours"><span class="kicker">' + esc(t('site.' + id + '.name')) + ' · ' + esc(t('site.' + id + '.where')) + '</span>' + esc(t('site.' + id + '.what')) + ' <span class="muted">' + esc(t('site.' + id + '.who')) + '</span></div>' +
+        '<button type="button" class="btn' + (shut ? '' : ' primary') + '" data-shut="' + id + '">' + esc(t(shut ? 'map.reopen' : 'map.shut')) + '</button>'; }
+    const i = SUP.step, n = r.length;
+    h += '<div class="nav">' + (i ? '<button type="button" class="btn ghost" data-key="back" data-supstep="' + (i - 1) + '">' + esc(t('story.back')) + '</button>' : '<span></span>') +
+      (step.st ? '<a class="btn" href="#/line/' + step.st + '">' + esc(t('map.toStation', { station: t('depth.' + step.st + '.name') })) + '</a>' : '') +
+      (i < n - 1 ? '<button type="button" class="btn primary" data-key="next" data-supstep="' + (i + 1) + '">' + esc(t('line.next')) + '</button>' : '<a class="btn primary" href="#/place/port">' + esc(t('chipx.back')) + '</a>') + '</div>';
+    diveFrame.dock.innerHTML = h; diveFrame.dock.classList.add('supdock'); requestAnimationFrame(diveInset);
+  }
+  function showSupply(world) {
+    hideAll(); document.body.classList.add('immersive'); flatKind = 'supply'; benchCh = null;
+    $('diveCanvas').hidden = false; vui.hidden = false; loading(true); lastPlace = 'port';
+    return Promise.all([withFrame(), ensureDive(), import('../data/world.js'), import('../engines/supply.js')]).then(([, w, Wd, Sp]) => {
+      Wdata = Wd; Sup = Sp; WE.setWorld('journey'); DS.setBandCaption(false);
+      const wd = Wdata.ROUTES[world] ? world : (SUP && SUP.world) || 'datacentre';
+      SUP = { world: wd, step: 0, site: null, closed: [] };
+      const r = Wdata.ROUTES[wd];
+      diveFrame = frameOf(vui, { up: { href: '#/place/port', label: t('map.port.t') }, path: [{ href: '#/', label: t('place.back') }, { href: '#/place/port', label: t('map.port.t') }, { label: t('page.ecosystem.map') }],
+        rail: { label: t('map.routes'), items: r.map(st => ({ id: st.id, label: t('route.step.' + st.id) })) },
+        onRail: id => supplyStep(Wdata.ROUTES[SUP.world].findIndex(st => st.id === id)), onLook: drawSupply });
+      vui.onclick = e => {
+        const s = e.target.closest('[data-supstep]'); if (s) return supplyStep(+s.dataset.supstep);
+        const st = e.target.closest('[data-site]'); if (st) return supplySite(st.dataset.site);
+        const wb = e.target.closest('[data-supworld]'); if (wb) { location.hash = '#/supply/' + wb.dataset.supworld; return; }
+        const sh = e.target.closest('[data-shut]'); if (sh) { const id = sh.dataset.shut; SUP.closed = SUP.closed.includes(id) ? SUP.closed.filter(x => x !== id) : SUP.closed.concat(id); return supShow(); }
+        if (e.target.closest('[data-openall]')) { SUP.closed = []; return supShow(); }
+      };
+      loading(false); w.start(); w.setZ(WE.IDS.indexOf('ship')); diveD = WE.IDS.indexOf('ship'); hide3d();
+      diveFrame.level('ship'); supShow(); $('diveCanvas').focus({ preventScroll: true });
+    });
+  }
+  const showDive = (depth, world) => showFlat('dive', depth, null, world || Game.DIVE_WORLD[depth]);
   addEventListener('resize', () => { if (!vui.hidden) diveInset(); });
 
   /* ---- one board, no side panel: words on the parts, a story docked below that drives the camera ---- */
@@ -432,7 +494,7 @@ export function start() {
       const tree = id => { const st = C.state[id], kids = childrenOf(id); return '<ul class="tree"><li><span class="node ' + st.state + (st.yours ? ' yours' : '') + '">' + esc(t('build.need.' + id + '.t')) + (st.n ? ' ×' + st.n : '') + '</span>' + kids.map(c => tree(c.id)).join('') + '</li></ul>'; };
       h += '<div class="plan2"><div class="tower" aria-hidden="true">' + islandState().floors.slice().reverse().map(f => '<span class="fl ' + f + '"></span>').join('') + '</div><div><p class="big">' + esc(t('page.build.progress', { built: C.built, total: C.total })) + '</p><p class="small muted">' + esc(t('page.build.legend')) + '</p>' + tree('computer') + '</div></div>';
       h += '<h2>' + esc(t('game.jobs')) + '</h2><div class="grid">' + C.jobs.map(jobCard).join('') + '</div>';
-      h += '<h2>' + esc(t('page.build.how')) + '</h2><div class="cards"><a class="card2" href="' + esc(oldUrl('design')) + '"><b>' + esc(t('page.build.studio')) + '</b><span>' + esc(t('page.build.studioD')) + '</span></a>' +
+      h += '<h2>' + esc(t('page.build.how')) + '</h2><div class="cards"><a class="card2" href="#/bench/need"><b>' + esc(t('page.build.studio')) + '</b><span>' + esc(t('page.build.studioD')) + '</span></a>' +
         '<a class="card2" href="' + esc(REPO + '/blob/main/docs/MCP.md') + '" target="_blank" rel="noopener"><b>' + esc(t('page.build.port')) + '</b><span>' + esc(t('page.build.portD')) + '</span></a>' +
         '<a class="card2" href="' + esc(REPO + '/issues/new?template=need.yml') + '" target="_blank" rel="noopener"><b>' + esc(t('page.build.join')) + '</b><span>' + esc(t('page.build.joinD')) + '</span></a></div>';
       h += '<h2>' + esc(t('page.build.designs')) + '</h2><div class="grid">' + C.designs.map(d => '<div class="chcard done"><span class="st">⌂</span><span><b>' + esc(d.title) + '</b><span class="small">' + esc(d.author) + ' · ' + esc(t('build.kind.' + d.kind)) + ' · ' + esc(t('build.need.' + d.need + '.t')) + '</span></span></div>').join('') + '</div>';
@@ -449,7 +511,7 @@ export function start() {
     $('hero').classList.add('away'); sheet.onclick = null; sheet.oninput = null;
     sheet.innerHTML = '<button type="button" class="x" data-close aria-label="' + esc(t('sheet.close')) + '">×</button><p class="kicker">' + esc(t('nav.ecosystem')) + '</p><h2>' + esc(t('page.ecosystem.title')) + '</h2><p>' + esc(t('page.ecosystem.lead')) + '</p>' +
       ['phones', 'cars', 'idea'].map(id => '<button type="button" class="chcard" data-place="' + id + '"><span class="st">' + (id === 'idea' ? '+' : S.done[id === 'phones' ? 'phone' : 'car'] ? '✓' : '') + '</span><span><b>' + esc(t('map.' + id + '.t')) + '</b><span class="small">' + esc(t('map.' + id + '.d')) + '</span></span></button>').join('') +
-      '<p class="kicker">' + esc(t('page.ecosystem.world')) + '</p><a class="look" href="' + esc(oldUrl('journey', { depth: 'ship', map: 1 })) + '"><b>' + esc(t('page.ecosystem.map')) + '</b><span class="small">' + esc(t('page.ecosystem.mapD')) + '</span><span class="small muted">' + esc(t('game.current')) + '</span></a>' +
+      '<p class="kicker">' + esc(t('page.ecosystem.world')) + '</p><a class="look" href="#/supply"><b>' + esc(t('page.ecosystem.map')) + '</b><span class="small">' + esc(t('page.ecosystem.mapD')) + '</span><span class="small muted">' + esc(t('game.current')) + '</span></a>' +
       '<div class="debate2"><b>' + esc(t('debate.supply.t')) + '</b><span class="small">' + esc(t('debate.supply.q')) + '</span></div>';
     sheet.hidden = false; cur = null;
   }
@@ -493,7 +555,9 @@ export function start() {
      Going between views is never a cut: deeper zooms in, higher zooms out, the Turn turns, along slides. */
   const partsOf = h => (h.replace(/^#\/?/, '') || '').split('/').filter(Boolean);
   const viewOf = p => { const k = p[0]; if (k === 'ask') return viewOf(partsOf(Game.viewOfDepth(p[2] || 'chip')));
-    return k === 'board' ? ['board', 2] : k === 'dive' ? ['dive', 4] : k === 'line' ? ['line', 1] : k === 'bench' ? ['bench', 1] : k === 'chip' ? ['chip', 3]
+    if (k === 'dive') { const w = p[2] || Game.DIVE_WORLD[p[1]] || 'datacentre'; if (w === 'datacentre') return ['dive', 4]; const i = Math.max(0, ['phone', 'phoneboard', 'soc', 'car', 'ecu', 'mcu', 'scanner', 'wafer', 'die'].indexOf(p[1]) % 3); return ['dive:' + w, Game.DIVE_WORLD[p[1]] ? 1 + i : 4]; }
+    if (k === 'supply') return ['supply', 0];
+    return k === 'board' ? ['board', 2] : k === 'line' ? ['line', 1] : k === 'bench' ? ['bench', 1] : k === 'chip' ? ['chip', 3]
       : k === 'place' && p[1] === 'datacentre' && p[2] !== 'inside' ? ['dc', 1] : ['map', 0]; };
   let shownAt = null;   /* the address of the view now made, so a question at the same level only changes the dock */
   let viewNow = null, rankNow = 0, nextMove = null, lastPlace = null, entering = false;
@@ -511,7 +575,8 @@ export function start() {
     if (k === 'ask' && parts[1] && parts[2]) { const at = Game.viewOfDepth(parts[2]); if (at === shownAt && !from) { askStop(parts[1], parts[2]); return Promise.resolve(); } return show(partsOf(at), from).then(() => askStop(parts[1], parts[2])); }
     shownAt = '#/' + parts.join('/');
     if (k === 'board') return showBoard();
-    if (k === 'dive') return showDive(parts[1]);
+    if (k === 'dive') return showDive(parts[1], parts[2]);
+    if (k === 'supply') return showSupply(parts[1]);
     if (k === 'line') return showFlat('line', parts[1]);
     if (k === 'bench') return showFlat('bench', parts[1], parts[2]);
     if (k === 'do' && parts[1]) return showMap(from).then(() => openChallenge(Game.challengeOf(parts[1])));
@@ -523,7 +588,7 @@ export function start() {
   }
   function route() {
     const parts = partsOf(location.hash), k = parts[0] || 'explore';
-    const nav = k === 'ask' || k === 'place' || k === 'chip' || k === 'board' || k === 'dive' || k === 'line' || k === 'bench' ? 'explore' : MENU.includes(k) ? k : 'explore';
+    const nav = k === 'ask' || k === 'supply' || k === 'place' || k === 'chip' || k === 'board' || k === 'dive' || k === 'line' || k === 'bench' ? 'explore' : MENU.includes(k) ? k : 'explore';
     menu.querySelectorAll('[data-nav]').forEach(a => a.setAttribute('aria-current', a.dataset.nav === nav ? 'page' : 'false'));
     page.hidden = true;
     const [view, rank] = viewOf(parts), from = viewNow, move = nextMove || (rank > rankNow ? 'in' : rank < rankNow ? 'out' : 'along');

@@ -1960,7 +1960,6 @@
  },
  "game.inside.shared": "in every chip",
  "game.inside.fly": "fly through it",
- "game.inside.current": "earlier version",
  "game.tape.k": "From your description to the factory",
  "game.tape.gates": "{n} gates, {transistors} transistors",
  "game.tape.layout": "placed and joined by {wire} steps of wire",
@@ -2090,5 +2089,8 @@
  "trail.next": "Next stop: {level}",
  "trail.prev": "Back: {level}",
  "trail.leave": "Leave the question",
- "trail.tried": "What people are trying"
+ "trail.tried": "What people are trying",
+ "dive.phone.title": "The dive, phone to atom",
+ "dive.car.title": "The dive, car to atom",
+ "dive.made.title": "The made chip: machine, wafer, die, down to the atom"
 }
