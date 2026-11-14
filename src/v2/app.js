@@ -321,6 +321,8 @@ export function start() {
     WE = E; DiveData = Wd; DS = Ds; threadColorOf = Wm.threadColor;
     /* the dive's words in HTML over the picture: names, the note on a picked part, the questions' marks under Ask */
     flatWords = Om.createOverlay($('flatLabels'), { part: key => pickPart(key), mark: th => { location.hash = follow(th + '.' + diveId()); }, marks: ths => markAsk(ths), door: () => dive.flyTo(diveD + 1) });
+    /* a wheel over one of those words still moves the dive (as over the 3D levels' names, level3d.js) */
+    $('flatLabels').addEventListener('wheel', e => { e.preventDefault(); $('diveCanvas').dispatchEvent(new WheelEvent('wheel', { deltaX: e.deltaX, deltaY: e.deltaY, deltaMode: e.deltaMode, clientX: e.clientX, clientY: e.clientY, bubbles: true, cancelable: true })); }, { passive: false });
     /* one HUD: the earlier site's own marks, dive label and band give way to the frame */
     /* one stage: the line's machines draw on the shared renderer too */
     Wm.setChrome({ dots: false, dive: false, lit: true, stage: () => stage($('diveCanvas')), overlay: flatWords,

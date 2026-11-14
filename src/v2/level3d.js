@@ -45,6 +45,11 @@ export function createLevel3D(canvas, host, on, model) {
   const L = labels(host);
   const names = M.parts.map(k => { const lb = L.add(root, new THREE.Vector3(...M.anchors[k]), t('part.' + partWord(M.level, k)), { cls: 'part3 pick', button: true, data: { part3: k } }); lb.key = k; return lb; });
   host.addEventListener('click', e => { const b = e.target.closest('[data-part3]'); if (b) { e.stopPropagation(); on.part && on.part(b.dataset.part3); } });
+  /* a wheel over a name, a note or a mark still moves the dive: it is passed on to the picture beneath */
+  host.addEventListener('wheel', e => {
+    e.preventDefault();
+    canvas.dispatchEvent(new WheelEvent('wheel', { deltaX: e.deltaX, deltaY: e.deltaY, deltaZ: e.deltaZ, deltaMode: e.deltaMode, clientX: e.clientX, clientY: e.clientY, ctrlKey: e.ctrlKey, shiftKey: e.shiftKey, bubbles: true, cancelable: true }));
+  }, { passive: false });
   const card = document.createElement('div'); card.className = 'swnote'; card.hidden = true; host.appendChild(card);
   let picked = null;
   const marks = createOverlay(host, { mark: th => on.mark && on.mark(th), marks: ths => on.askMany && on.askMany(ths) }), mv = new THREE.Vector3();
