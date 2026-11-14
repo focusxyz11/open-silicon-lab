@@ -29,7 +29,7 @@ export const needForProject = p => NEEDS.find(n => n.project === p) || null;
 const shape = e => ({ id: e.id, need: e.piece, title: e.title, author: e.by, kind: e.made, ai: e.ai || '', description: e.words || '', code: e.code, state: e.state, facts: e.facts, draft: !!e.draft });
 export const designsFor = (id, W) => standing(W || settled(), id).map(shape);
 /* every design of the ledger, standing or broken, in the order they came */
-export const allDesigns = W => { W = W || settled(); return W.entries.filter(e => e.kind === 'design').map(e => Object.assign(shape(e), { brokenBy: e.brokenBy, inside: W.inside[e.piece] === e.id })); };
+export const allDesigns = W => { W = W || settled(); return W.entries.filter(e => e.kind === 'design').map(e => Object.assign(shape(e), { brokenBy: e.brokenBy, inside: W.inside[e.piece] === e.id, tries: e.tries.length })); };
 
 /* the state of every need; mine: projects whose design you have finished here (they count as yours, not the plan's) */
 export function plan(mine, W) {

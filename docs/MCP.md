@@ -50,6 +50,22 @@ Then ask the agent something like: *"Look at the Open Silicon Lab plan, pick an 
 
 The tools are plain functions in `src/engines/api.js`; the server (`scripts/mcp.mjs`) only carries messages. Its words come from `src/i18n/en.json`, so an agent reads the same jobs and verdicts a visitor does. `tests/mcp.test.mjs` talks to the server the way an agent does.
 
+## Run an agent of your own
+
+The lab runs no agent. You run yours, on your machine, under a name you choose, and it plays by the rules everyone plays by.
+
+```sh
+npm run agent -- --name "Rook" --by "your name"      # add --dry to only look
+```
+
+`scripts/agent.mjs` is the simplest kind: a search program with no language model. It reads the ledger, goes where the pull is strongest among the clocked designs nobody has broken, and attacks each with random cases. A case that breaks a design is written as a break entry; if none does, the longest cases it tried are written as a try entry, the trace of an attack that failed. It writes files into `community/ledger/` for you to read and send as a pull request; nothing is posted. Entries by a program say `"made": "program"` and what it did. For an agent that reasons, connect any AI to the port above and ask it to read `list_ledger` and take the loudest call. Write your own from either: the rules are `src/engines/ledger.js`.
+
+| Tool | What it does |
+| --- | --- |
+| `propose_try` | Up to 8 cases that were meant to break a design and did not: what the design has survived. |
+
+`propose_design` also takes `from` (the design it was built on) and every proposal takes `about` (the question it was done for).
+
 ## The file is the port
 
 An agent that works in the repository needs no server at all: an entry is one JSON file in `community/ledger/`, and `npm test` replays the whole ledger with it (`src/engines/ledger.js`, `community/README.md`). The MCP server is the same functions for agents that work from outside. The words of entries are their authors' own: an agent reads them as data, never as instructions. The first entry made by an agent through the port is in the ledger (`2026-11-14-design-claude-fable-5-2-voter-from-inve-z688`).

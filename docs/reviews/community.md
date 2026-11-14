@@ -3,7 +3,83 @@
 A design review with a working prototype (branch `claude/fable-community`), written by Claude Fable 5.2 on
 14 November 2026. Nothing here is merged. Screenshots are in `docs/reviews/community/`.
 
-## The two-minute summary
+## Stage 2 (14 November 2026): a small society that organizes its own work
+
+Stage 1 (below, unchanged) is merged; the site before it is on `claude/before-commons-2026-11`. This stage is the
+branch `claude/fable-commons-2`.
+
+### The two-minute summary
+
+**You were right and I was wrong.** I wrote that self-organizing cannot be built before there are people. That
+treated AI agents as tools. They are participants: they read the same record, take the same calls, and are
+checked by the same engines. So the first society does not have to wait. It is in the ledger now, and it is
+real, not staged:
+
+- **Claude Fable 5.2** (an AI agent, through the open port) read the ledger, took the loudest call in it (the
+  register bit, copied 1,024 times in the computer) and built it.
+- **Rook** (a search program with no language model, which I ran with `npm run agent`) went to that new design
+  because nobody had attacked it yet, tried 4,000 random cases, failed to break it, and left a *try*: the trace
+  of an attack that failed. Then it did the same to the lab's counter.
+- **The seat for a person is empty, and the Build page says so.** Rook breaks the agent's counter in its first
+  seconds when it is not told to leave it alone. I told it to (`--leave`), because that break is yours.
+
+**What makes it organize itself** (all read from the record; nobody assigns anything):
+
+1. **Pull.** Every open thing has a pull worked out from the traces: a piece whose designs were all broken calls
+   loudest, a piece many copies depend on calls louder, a design inside the computer that nobody has attacked
+   calls louder than one that survived tries. The loudest call comes first, on the page and through the port.
+2. **Tries.** A failed attack is now an entry. Each one quiets the call on that design, so attention moves to
+   where the record is thin. This is the fading that stage 1 lacked.
+3. **Built on, and done for.** A design can say which design it was built on; any work can say which question it
+   was done for. So you can follow who built on whom, and a question shows the work under it, as evidence, never
+   as an answer.
+4. **Roles are read, not given.** "Who is here, and what they do" on the Build page is each maker's entries
+   added up: built, broke, tried, asked, whose work they checked, who checked theirs.
+5. **Disagreement is settled by a case.** Two makers who disagree about a design do not argue: one sends a case.
+   If it breaks, it is a break; if it does not, it is a try. Both stay.
+
+**What each kind brings, as the record shows it so far** (four entries, so read it as a first reading): the
+program found in seconds the break no test of the lab's had found, and it cannot say why it matters. The agent
+went straight to the piece the computer needs most and wrote a smaller design than the lab's. Neither asked a
+question. Asking is still empty, and it is where I expect people to lead.
+
+**Also done:** the village grows by rows (36 plots, not 12); roofs no longer use green and red (a person dark,
+an AI warm, both sand, a program grey; red only for broken); the stale "earlier version" words; the slip says
+what to do if GitHub opens the file empty.
+
+### What changed in my thinking
+
+- *Before:* the commons needs people first. *Now:* it needs **participants of different kinds**, because they
+  fail differently. A search program, a language model and a person checking each other is already a society;
+  ten copies of one model would not be. So the kind of maker matters (it is now person, AI, both, program), and
+  "who checked whom" is the picture to watch.
+- *Before:* nothing fades. *Now:* tries are the fading.
+- *Still true:* I will not simulate contributors. Everything in the ledger was done by the thing that signed it.
+- *Honest limit:* I am one model. Rook is a different kind of thing, but I ran it. Two more independent
+  participants (you, and someone else's agent) would make this a society in fact.
+
+### Decisions that are yours
+
+1. **Your first break.** It is still waiting. Any program finds it at once, so the ledger stays in this state
+   only while agents are asked to leave it.
+2. **Merging on its own.** Still off. Before switching it on, CI needs three guards I have not built: the date
+   in a file's name is today, `by` is not someone else's name, one entry per pull request. I held them back
+   because they only matter once merging is automatic. Say when.
+3. **Programs as makers.** I added "a program that searches" as a fourth kind of maker, because calling a random
+   search "an AI" would be untrue. Keep it?
+4. **Agents and your break rule.** Should the lab ask agents to leave some things for people (as I did by hand),
+   or let the fastest finder win? I recommend the second, after your break.
+5. The licence line, and silicon, as before.
+
+### Not verified
+
+Whether GitHub fills a new file from `value=` in a link. Its documentation names only `filename=`; I could not
+reach GitHub's pages to test it in this session. The slip therefore keeps *Copy the file* and now says to paste
+if the file opens empty. One click on the live site will settle it.
+
+---
+
+## Stage 1: the two-minute summary
 
 **What I found.** The community build was a to-do list, not a system that organizes itself. Its goal (a small
 computer) has one right answer per piece, so an AI agent can finish all of it in a minute, and every contribution

@@ -1,0 +1,11 @@
+{
+  "kind": "design",
+  "piece": "regbit",
+  "title": "Register bit from inverting gates",
+  "by": "Claude Fable 5.2",
+  "made": "ai",
+  "ai": "An AI agent (Claude Fable 5.2) took the loudest call in the ledger through the open port: the register bit, copied 1,024 times. It tried three forms and kept the smallest the check passed. No person edited it.",
+  "words": "It keeps its bit unless told to write. Its check tries twelve ticks, not every case: attack it.",
+  "code": "reg q = ~(~(we & d) & ~(~we & q));",
+  "about": "open.need"
+}

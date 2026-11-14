@@ -64,7 +64,7 @@ test('a case joins the check for good: the broken design falls, the computer tak
   assert.equal(W.byId[AGENT].state, 'broken'); assert.equal(W.byId[AGENT].brokenBy, b.id);
   assert.equal(W.byId[LAB].state, 'holds'); assert.equal(W.inside.timer, LAB);
   assert.equal(plan([], W).timer.state, 'built', 'the lab\'s counter keeps the timer built');
-  assert.deepEqual(W.cross, { 'example>person': 1 });
+  assert.equal(W.cross['example>person'], 1);
   /* the same wrong counter under another name is refused by the case now; a second break of it has nothing to do */
   const again = draft({ kind: 'design', piece: 'timer', title: 'Fast counter', by: 'Bo', made: 'ai', ai: 'an agent wrote it', code: 'reg q0 = q0 ^ en;\nreg q1 = q1 ^ (en & q0);\nreg q2 = q2 ^ (q0 & q1);' }, 'bo fast counter', '2026-11-21');
   assert.equal(checkEntry(again, W).reason, 'case');
@@ -148,4 +148,27 @@ test('a core question shows alone, after two of its stops, or one once you have 
   const { rootShown } = await import('../src/engines/weave.js');
   assert.equal(rootShown(['check']), false); assert.equal(rootShown(['check', 'gate']), true); assert.equal(rootShown(['check'], true), true); assert.equal(rootShown([], true), false);
   const S = Game.fresh(); assert.equal(Game.didOn(S, 'fail'), false); S.done.half = true; assert.equal(Game.didOn(S, 'fail'), true); assert.equal(Game.didOn(S, 'make'), false);
+});
+
+test('a try is the trace of an attack that failed; pull comes from the traces; roles are read from the entries', async () => {
+  const { society, workFor } = await import('../src/engines/ledger.js');
+  const held = [{ en: 1 }, { en: 0 }, { en: 1 }];
+  const tr = (o = {}) => draft(Object.assign({ kind: 'try', of: LAB, by: 'Ada', made: 'person', cases: [held], about: 'fail.check' }, o), 'ada lab counter', '2026-11-20');
+  assert.equal(tryEntry(tr()).ok, true);
+  assert.equal(tryEntry(tr({ by: 'Open Silicon Lab' })).reason, 'own');
+  assert.equal(tryEntry(tr({ cases: [] })).reason, 'caseForm');
+  assert.equal(tryEntry(tr({ about: 'no.where' })).reason, 'about');
+  assert.equal(tryEntry(tr({ made: 'program' })).reason, 'sayAI', 'a program says what it is too');
+  if (settled().byId[AGENT].state !== 'broken') assert.equal(tryEntry(tr({ of: AGENT, cases: [CASE] })).reason, 'breaks', 'a case that breaks is a break, not a try');
+  /* every try quiets the call to attack that design, so attention moves to what nobody has looked at */
+  const before = frontier(settled()).find(f => f.kind === 'break' && f.of === LAB), after = frontier(settle(ledger().concat(tr()))).find(f => f.kind === 'break' && f.of === LAB);
+  assert.ok(after.pull < before.pull && after.tries === before.tries + 1);
+  const F = frontier(settled()); assert.deepEqual(F.map(f => f.pull), F.map(f => f.pull).sort((a, b) => b - a), 'the loudest call first');
+  /* a design may say what it was built on, and work may say which question it was done for */
+  const d = draft({ kind: 'design', piece: 'half', title: 'Half adder', by: 'Ada', made: 'person', code: 'sum = a ^ b;\ncarry = a & b;', from: LAB, about: 'open.need' }, 'ada half', '2026-11-20');
+  assert.equal(tryEntry(d).ok, true); assert.equal(tryEntry(Object.assign({}, d, { from: 'nothing' })).reason, 'from');
+  const W = settle(ledger().concat(tr(), d)), ada = society(W).find(m => m.by === 'Ada');
+  assert.deepEqual(ada.does, { design: 1, try: 1 }); assert.ok(ada.checked.includes('Open Silicon Lab') && ada.builtOn.includes('Open Silicon Lab'));
+  assert.ok(workFor(W, 'fail.check').some(e => e.by === 'Ada'));
+  for (const m of society(settled())) for (const k of Object.keys(m.does)) assert.ok(EN['society.does.' + k]);
 });

@@ -15,7 +15,8 @@ import { build, projectOf, solutionOf } from '../engines/design.js';
 import { model, CHALLENGES as CHIP, START, normal, SETTINGS } from '../engines/chip.js';
 import { live, PERFECT, normalLife } from '../engines/life.js';
 import { plan, progress, needOf, childrenOf, designsFor, allDesigns } from '../engines/build.js';
-import { ledger, settle, frontier, questionsAt, KINDS as ENTRY_KINDS } from '../engines/ledger.js';
+import { ledger, settle, frontier, questionsAt, society, workFor, KINDS as ENTRY_KINDS } from '../engines/ledger.js';
+import { t } from '../core/i18n.js';
 import { NEEDS, AGENT } from '../data/build.js';
 import { DEBATES } from '../data/debates.js';
 import { WAYS } from '../data/ways.js';
@@ -255,6 +256,12 @@ export const across = key => { const [, d] = key.split('.'), mine = STOPS[key] |
 const levelStops_ = d => Object.keys(STOPS).filter(k => k.split('.')[1] === d);
 /* what people have asked under a question, yours first */
 export const askedAt = (key, s) => { const W = world(s); return questionsAt(W, key.split('.')[1], key).sort((a, b) => !!b.draft - !!a.draft); };
+/* the society, the work done for a question, and an entry or a question in a few words */
+export const societyOf = W => society(W);
+export const workAt = (key, s) => workFor(world(s), key);
+export const aboutWords = (about, W) => (STOPS[about] ? t('stop.' + about + '.q') : (W.byId[about] || {}).q || about);
+export function entryWords(e, s) { const W = world(s), T = W.byId[e.of];
+  return e.kind === 'design' ? t('ledger.rec.design', { title: e.title, piece: t('build.need.' + e.piece + '.t') }) : e.kind === 'break' ? t('ledger.rec.break', { title: T.title }) : e.kind === 'try' ? t('ledger.rec.try', { title: T.title, n: e.facts.cases }) : e.q; }
 /* break a design: a challenge made by the ledger itself, for every clocked design that stands, and kept for the
    broken ones, so anyone can find the case again */
 export function breakOf(id, s) { const e = world(s).byId[id]; if (!e || e.kind !== 'design' || !e.ok) return null; const n = needOf(e.piece);

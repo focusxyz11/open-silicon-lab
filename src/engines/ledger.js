@@ -23,13 +23,17 @@ import { build, projectOf } from './design.js';
 import { NEEDS } from '../data/build.js';
 import { DEPTHS, STOPS, REPO } from '../data/weave.js';
 
-export const KINDS = ['design', 'break', 'question'];
-export const MADE = ['person', 'ai', 'both', 'example'];
+export const KINDS = ['design', 'break', 'try', 'question'];
+/* who made it: a person, an AI agent, both, a program that searches (no language model), or the lab as an example */
+export const MADE = ['person', 'ai', 'both', 'program', 'example'];
 export const DIR = 'community/ledger';
-const ID = /^(\d{4}-\d{2}-\d{2})-(design|break|question)-[a-z0-9]+(?:-[a-z0-9]+)*$/;
+const ID = /^(\d{4}-\d{2}-\d{2})-(design|break|try|question)-[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const FIELDS = {
-  design: ['kind', 'piece', 'title', 'by', 'made', 'ai', 'words', 'code'],
-  break: ['kind', 'of', 'by', 'made', 'ai', 'words', 'case'],
+  design: ['kind', 'piece', 'title', 'by', 'made', 'ai', 'words', 'code', 'from', 'about'],
+  break: ['kind', 'of', 'by', 'made', 'ai', 'words', 'case', 'about'],
+  /* a try: cases that were meant to break a design and did not. The trace of an attack that failed: what a
+     design has survived is why it can be trusted, and where the next attacker need not look */
+  try: ['kind', 'of', 'by', 'made', 'ai', 'words', 'cases', 'about'],
   question: ['kind', 'at', 'part', 'under', 'q', 'noticed', 'by', 'made', 'ai']
 };
 /* plain words: no markup, no links (a link in free text is how spam pays), nothing a page or an agent could run */
@@ -65,8 +69,12 @@ export function checkEntry(e, W) {
   if (Object.keys(e).some(k => k !== 'id' && k !== 'draft' && !FIELDS[e.kind].includes(k))) return no('fields');
   if (!plain(e.by, 2, 40)) return no('by');
   if (!MADE.includes(e.made)) return no('made');
-  if (!plain(e.ai || '', 0, 300) || ((e.made === 'ai' || e.made === 'both') && !String(e.ai || '').trim())) return no('sayAI');
+  if (!plain(e.ai || '', 0, 300) || ((e.made === 'ai' || e.made === 'both' || e.made === 'program') && !String(e.ai || '').trim())) return no('sayAI');
   if (W.byId[e.id]) return no('same');
+  /* traces that join the work up: the question this was done for (a stop, or a question someone added), and the
+     design this one was built on */
+  if (e.about != null && e.kind !== 'question' && !STOPS[e.about] && !(W.byId[e.about] && W.byId[e.about].ok && W.byId[e.about].kind === 'question')) return no('about');
+  if (e.from != null && !(W.byId[e.from] && W.byId[e.from].ok && W.byId[e.from].kind === 'design')) return no('from');
   if (e.kind === 'design') {
     const n = needOf(e.piece); if (!n || n.engine !== 'logic') return no('piece');
     if (!plain(e.title, 3, 60) || !plain(e.words || '', 0, 300) || typeof e.code !== 'string' || e.code.length > 2000) return no('words');
@@ -77,6 +85,17 @@ export function checkEntry(e, W) {
     if (failed) return no('case', { by: failed.by });
     if ((W.pieces[e.piece] || []).some(id => norm(W.byId[id].code) === norm(e.code))) return no('same');
     return { ok: true, facts: { transistors: B.transistors, ps: Math.round(B.st.crit), caught: Math.round(B.coverage * 100) } };
+  }
+  if (e.kind === 'try') {
+    const T = W.byId[e.of]; if (!T || T.kind !== 'design' || !T.ok) return no('target');
+    if (norm(T.by) === norm(e.by)) return no('own');
+    if (!plain(e.words || '', 0, 300)) return no('words');
+    const p = needOf(T.piece).project;
+    if (!projectOf(p).seq) return no('proven');
+    if (T.state === 'broken') return no('already');
+    if (!Array.isArray(e.cases) || e.cases.length < 1 || e.cases.length > 8 || !e.cases.every(c => caseOk(p, c))) return no('caseForm');
+    if (e.cases.some(c => runCase(p, T.code, c).first >= 0)) return no('breaks');
+    return { ok: true, facts: { cases: e.cases.length, ticks: e.cases.reduce((a, c) => a + c.length, 0) } };
   }
   if (e.kind === 'break') {
     const T = W.byId[e.of]; if (!T || T.kind !== 'design' || !T.ok) return no('target');
@@ -106,7 +125,7 @@ const beats = (a, b) => a.facts.transistors <= b.facts.transistors && a.facts.ps
 export function settle(list) {
   const W = { entries: [], byId: {}, pieces: {}, cases: {}, refused: [], feed: [] };
   list.slice().sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0)).forEach(raw => {
-    const r = checkEntry(raw, W), e = Object.assign({}, raw, { ok: r.ok, reason: r.reason || null, facts: r.facts || null, state: null, brokenBy: null, breaks: [] });
+    const r = checkEntry(raw, W), e = Object.assign({}, raw, { ok: r.ok, reason: r.reason || null, facts: r.facts || null, state: null, brokenBy: null, breaks: [], tries: [] });
     if (!r.ok) { W.refused.push(e); if (!W.byId[e.id]) W.byId[e.id] = e; return; }
     W.entries.push(e); W.byId[e.id] = e;
     if (e.kind === 'design') { (W.pieces[e.piece] = W.pieces[e.piece] || []).push(e.id); e.state = 'right'; W.feed.push({ type: 'built', id: e.id }); }
@@ -116,7 +135,8 @@ export function settle(list) {
       /* the case joins the check: every right design of the piece meets it now */
       W.pieces[T.piece].map(id => W.byId[id]).filter(d => d.state === 'right').forEach(d => { const x = runCase(p, d.code, e.case); if (x && x.first >= 0) { d.state = 'broken'; d.brokenBy = e.id; e.breaks.push(d.id); } });
       e.state = 'stands'; W.feed.push({ type: 'broke', id: e.id });
-    } else { e.state = 'stands'; W.feed.push({ type: 'asked', id: e.id }); }
+    } else if (e.kind === 'try') { W.byId[e.of].tries.push(e.id); e.state = 'stands'; W.feed.push({ type: 'tried', id: e.id }); }
+    else { e.state = 'stands'; W.feed.push({ type: 'asked', id: e.id }); }
   });
   /* standings: among a piece's right designs, the ones nothing beats on both size and speed hold a record; an
      equal design that came later is behind; the smallest holder (the earliest, if equal) is inside the computer */
@@ -128,7 +148,7 @@ export function settle(list) {
     if (holders.length) W.inside[piece] = holders[0].id;
   });
   /* who checks whom: for every break, who made the design and who made the break */
-  W.cross = {}; W.entries.filter(e => e.kind === 'break').forEach(e => { const k = W.byId[e.of].made + '>' + e.made; W.cross[k] = (W.cross[k] || 0) + 1; });
+  W.cross = {}; W.entries.filter(e => e.kind === 'break' || e.kind === 'try').forEach(e => { const k = W.byId[e.of].made + '>' + e.made; W.cross[k] = (W.cross[k] || 0) + 1; });
   /* who makes what: entries by kind and by maker */
   W.mix = {}; W.entries.forEach(e => { const M = (W.mix[e.kind] = W.mix[e.kind] || {}); M[e.made] = (M[e.made] || 0) + 1; });
   W.makers = [...new Set(W.entries.map(e => e.by))];
@@ -150,9 +170,26 @@ export function frontier(W) {
     if (n.engine === 'logic' && !standing(W, n.id).length) out.push({ kind: 'build', piece: n.id, p: n.project });
     if (n.engine == null) out.push({ kind: 'engine', piece: n.id });
   });
-  W.entries.filter(e => e.kind === 'design' && e.state !== 'broken' && projectOf(needOf(e.piece).project).seq).forEach(e => out.push({ kind: 'break', of: e.id, piece: e.piece, p: needOf(e.piece).project, inside: W.inside[e.piece] === e.id }));
-  return out;
+  W.entries.filter(e => e.kind === 'design' && e.state !== 'broken' && projectOf(needOf(e.piece).project).seq).forEach(e => out.push({ kind: 'break', of: e.id, piece: e.piece, p: needOf(e.piece).project, inside: W.inside[e.piece] === e.id, tries: e.tries.length }));
+  /* the pull of each open thing, from the traces alone (nobody assigns it): a piece whose only designs were broken
+     calls loudest; a piece many copies depend on calls louder; a design inside the computer that nobody has attacked
+     calls louder than one that has survived tries, and each try quiets it. So attention goes where the record is
+     thinnest, and moves on once it is thick. */
+  const copies = id => { let n = 1, x = needOf(id); while (x && x.parent) { x = needOf(x.parent); if (x && x.engine === 'repeat') n *= x.n; } return n; };
+  out.forEach(f => { f.pull = f.kind === 'build' ? 2 + Math.log10(copies(f.piece)) + ((W.pieces[f.piece] || []).length ? 3 : 0) : f.kind === 'break' ? (f.inside ? 4 : 2) / (1 + f.tries) : 1; });
+  return out.sort((a, b) => b.pull - a.pull);
 }
+/* the small society the ledger shows: every maker, what they do (roles are not given, they are what someone's
+   entries add up to), whose work they checked (a break or a try) and whose they built on */
+export function society(W) {
+  const M = {}; const at = e => (M[e.by] = M[e.by] || { by: e.by, made: new Set(), does: {}, checked: new Set(), builtOn: new Set(), checkedBy: new Set() });
+  W.entries.forEach(e => { const m = at(e); m.made.add(e.made); m.does[e.kind] = (m.does[e.kind] || 0) + 1;
+    if (e.kind === 'break' || e.kind === 'try') { const T = W.byId[e.of]; m.checked.add(T.by); at(T).checkedBy.add(e.by); }
+    if (e.from && W.byId[e.from].by !== e.by) m.builtOn.add(W.byId[e.from].by); });
+  return Object.values(M).map(m => Object.assign(m, { made: [...m.made], checked: [...m.checked], builtOn: [...m.builtOn], checkedBy: [...m.checkedBy] }));
+}
+/* the work done for a question: every entry that names it (a stop, or a question someone added) */
+export const workFor = (W, key) => W.entries.filter(e => e.about === key);
 
 /* ---- writing an entry: its id, its file, and the link that opens it on GitHub as a new file in a pull request ---- */
 const slug = s => String(s || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+/, '').slice(0, 32).replace(/-+$/, '') || 'entry';

@@ -1334,7 +1334,7 @@
  "api.arg.need": "The piece of the plan the design is for.",
  "api.arg.title": "A short title for the design.",
  "api.arg.author": "The name or handle the design should carry.",
- "api.arg.kind": "Who wrote it: person, ai, or both.",
+ "api.arg.kind": "Who made it: person, ai, both, or program (a search with no language model).",
  "api.arg.ai": "How AI was used, in plain words: which agent, what it did, what a person changed and checked.",
  "api.noJob": "There is no job called {id}. Jobs: {jobs}.",
  "api.noNeed": "{need} is not a piece of the plan that takes a design yet.",
@@ -1734,7 +1734,7 @@
  "page.ecosystem.lead": "No country makes a chip alone. Sand, machines, designs, factories and packaging come from different places, and every border is a risk.",
  "page.ecosystem.map": "The supply map",
  "page.ecosystem.mapD": "Follow a data centre chip, a phone chip and a car chip across the world.",
- "page.preview": "The lab is being rebuilt place by place: a few deep pages still open in the earlier version.",
+ "page.preview": "The lab grows place by place: some levels are still flat drawings, waiting to be built in 3D.",
  "nav.challenges": "Challenges",
  "hero.start": "Start the first challenge",
  "hero.look": "Look around",
@@ -1746,7 +1746,7 @@
  "map.lab.d": "Where the community builds one small computer in the open. Every piece built adds a floor; the boats at the dock are AI agents joining through the open port.",
  "map.village.t": "Makers' village",
  "map.village.kind": "The community",
- "map.village.d": "Every house is a design someone added to the shared computer, by a person, an AI or both. A design that passed its test can still be broken: the towers are the cases that did it.",
+ "map.village.d": "Every house is a design someone added to the shared computer: a person, an AI, both, or a program. A design that passed its test can still be broken: the towers are the cases that did it.",
  "map.phones.t": "Phone island",
  "map.phones.kind": "Another island",
  "map.phones.d": "Billions of phones, each with a chip that must be cheap, cool and quick, and live a few years in a pocket.",
@@ -1796,7 +1796,7 @@
  "game.idea.title": "An idea for the island",
  "game.idea.propose": "Propose an idea",
  "game.noDo": "No challenge here yet.",
- "game.current": "Opens in the earlier version of the site",
+ "game.current": "Opens inside the chip world",
  "game.noLook": "Nothing to look inside here yet.",
  "game.debates": "Where people disagree",
  "game.ways": "Ways people are trying",
@@ -1866,7 +1866,7 @@
  "game.ch.fast.why": "For decades chips got much faster every generation. Now a generation buys about an eighth more speed, and the slowest signal and the heat set the limit.",
  "page.challenges.lead": "Every step of a chip's life has its challenges, each checked by a real engine. Finish one and something new grows on the island.",
  "page.build.progress": "{built} of {total} pieces built",
- "page.build.legend": "Green is built, blue is yours, dashed is an open job, grey needs an engine to check it first.",
+ "page.build.legend": "Green is built, blue is yours, dashed is an open job, grey needs an engine to check it first. The loudest call comes first.",
  "page.build.how": "Ways to help",
  "page.ecosystem.title": "Beyond the island",
  "page.ecosystem.world": "The world chips depend on",
@@ -2137,5 +2137,56 @@
  "api.arg.under": "The question it sits under, as thread.level, for example fail.check (optional).",
  "api.arg.question": "The question: one sentence ending with a question mark.",
  "api.arg.noticed": "What you noticed that made you ask: something true, not an answer.",
- "ledger.sign.made": "Who made it"
+ "ledger.sign.made": "Who made it",
+ "ledger.no.breaks": "One of these cases breaks the design: send that one as a break.",
+ "ledger.no.from": "The design it was built on is not in the ledger.",
+ "ledger.no.about": "The question it was done for is not in the lab.",
+ "ledger.kind.try": "Try",
+ "ledger.rec.try": {
+  "one": "Tried to break: {title} · it held on {n} case",
+  "other": "Tried to break: {title} · it held on {n} cases"
+ },
+ "ledger.rec.from": "built on {who}'s",
+ "ledger.rec.about": "for the question: {q}",
+ "ledger.keep.try": "Keep the try: it held",
+ "ledger.tries": {
+  "one": "survived {n} try",
+  "other": "survived {n} tries"
+ },
+ "build.kind.program": "by a program that searches",
+ "game.break.heldNote": "A try that fails is worth keeping too: it says what this design has survived, and where the next person need not look.",
+ "page.build.society": "Who is here, and what they do",
+ "page.build.societyD": "Nobody was given a role. Each line is what one maker's entries add up to: what they build, whose work they checked, whose they built on. A program, an AI agent and a person each see different things; the record shows which.",
+ "page.build.empty": "No person has added an entry yet. The agent's counter is waiting for its first break.",
+ "society.does.design": {
+  "one": "built {n}",
+  "other": "built {n}"
+ },
+ "society.does.break": {
+  "one": "broke {n}",
+  "other": "broke {n}"
+ },
+ "society.does.try": {
+  "one": "tried {n}",
+  "other": "tried {n}"
+ },
+ "society.does.question": {
+  "one": "asked {n}",
+  "other": "asked {n}"
+ },
+ "society.checked": "checked the work of {who}",
+ "society.checkedBy": "checked by {who}",
+ "society.builtOn": "built on {who}",
+ "trail.work": {
+  "one": "{n} piece of work done for this question",
+  "other": "{n} pieces of work done for this question"
+ },
+ "trail.workD": "Work is not an answer: it is what people and agents found while the question stayed open.",
+ "ledger.slip.paste": "If GitHub opens the file empty, paste it with Copy the file.",
+ "page.build.agent": "Run an agent of your own",
+ "page.build.agentD": "On your machine, under your name: a search program that attacks designs, or any AI through the open port. The lab runs none.",
+ "api.tool.try": "Propose a try: up to 8 cases that were meant to break a design and did not. It records what the design has survived, so the next attacker looks elsewhere. If one of the cases does break it, send that one with propose_break.",
+ "api.arg.cases": "A list of cases, each a list of ticks as in propose_break.",
+ "api.arg.about": "The question this was done for: a stop as thread.level (for example fail.check) or the id of a question in the ledger (optional).",
+ "api.arg.from": "The id of the design in the ledger this one was built on (optional)."
 }

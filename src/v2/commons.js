@@ -21,6 +21,7 @@ export const signOf = el => { const n = el.querySelector('[data-sign]'), m = el.
 export function keep(S, fields, name, sign) {
   const made = MADE.includes(sign.made) ? sign.made : 'person';
   const e = draft(Object.assign({}, fields, { by: sign.by, made, ai: made === 'person' ? '' : t('build.aiUse.' + USE[made]) }), sign.by + ' ' + name);
+  Object.keys(e).forEach(k => { if (e[k] == null) delete e[k]; });
   const mine = (S.drafts || []).filter(d => !ledger().some(x => x.id === d.id));
   const r = tryEntry(e, mine);
   if (r.ok) { S.name = sign.by; S.drafts = mine.concat(e); }
@@ -35,7 +36,7 @@ export function slipHtml(S, id) {
   const e = draftOf(S, id); if (!e) return '';
   const f = fileOf(e), inLedger = merged(id), sent = S.sent && S.sent[id];
   return '<div class="slip' + (inLedger ? ' in' : '') + '" data-slip="' + esc(id) + '"><p class="kicker">' + esc(t(inLedger ? 'ledger.slip.in' : sent ? 'ledger.slip.sent' : 'ledger.slip.yours')) + '</p>' +
-    '<p class="small">' + esc(t(inLedger ? 'ledger.slip.inD' : 'ledger.slip.d')) + '</p><p class="mono small path">' + esc(f.path) + '</p>' +
+    '<p class="small">' + esc(t(inLedger ? 'ledger.slip.inD' : 'ledger.slip.d')) + '</p><p class="mono small path">' + esc(f.path) + '</p>' + (inLedger ? '' : '<p class="small muted">' + esc(t('ledger.slip.paste')) + '</p>') +
     (inLedger ? '' : '<div class="acts"><a class="btn primary" target="_blank" rel="noopener" data-send="' + esc(id) + '" href="' + esc(proposeUrl(e)) + '">' + esc(t('ledger.slip.send')) + '</a><button type="button" class="btn" data-copy="' + esc(id) + '">' + esc(t('ledger.slip.copy')) + '</button><button type="button" class="link" data-drop="' + esc(id) + '">' + esc(t('ledger.slip.drop')) + '</button></div>') + '</div>';
 }
 /* the slip's buttons; returns true when it handled the click (and changed is called when your state changed) */

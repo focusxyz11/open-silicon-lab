@@ -15,7 +15,7 @@ import { build, projectOf, PROJECTS, starterOf, patterns } from './design.js';
 import { TESTS, START_PROGRAM } from './core.js';
 import { live, MISSION_IDS, PERFECT } from './life.js';
 
-const KINDS = ['person', 'ai', 'both'];
+const KINDS = ['person', 'ai', 'both', 'program'];
 const jobOf = id => { const n = needOf(id); if (n && n.project) return n.project; return PROJECTS.includes(id) ? id : null; };
 
 /* the community's plan: every piece, its state, and who built it */
@@ -96,27 +96,27 @@ function entryOut(e, extra) {
   const f = fileOf(e);
   return Object.assign({ ok: true, entry: { id: e.id, path: f.path, file: f.text }, link: proposeUrl(e), facts: r.facts, note: t('api.person') }, extra || {});
 }
-const whoOk = (kind, ai) => !KINDS.includes(kind) ? t('api.kind') : (kind === 'ai' || kind === 'both') && !(ai && String(ai).trim()) ? t('api.sayAI') : null;
+const whoOk = (kind, ai) => !KINDS.includes(kind) ? t('api.kind') : (kind !== 'person') && !(ai && String(ai).trim()) ? t('api.sayAI') : null;
 export function listLedger() {
   const W = settled(), F = frontier(W);
   return {
     note: t('api.untrusted'),
     entries: W.entries.map(e => Object.assign({ id: e.id, kind: e.kind, by: e.by, made: e.made, state: e.state }, e.kind === 'design' ? { piece: e.piece, title: e.title, inside: W.inside[e.piece] === e.id, transistors: e.facts.transistors, longestPathPs: e.facts.ps, brokenBy: e.brokenBy, code: e.code }
-      : e.kind === 'break' ? { of: e.of, case: e.case, wrongAtTick: e.facts.tick } : { at: e.at, under: e.under || null, question: e.q, noticed: e.noticed || '' })),
+      : e.kind === 'break' ? { of: e.of, case: e.case, wrongAtTick: e.facts.tick } : e.kind === 'try' ? { of: e.of, casesItHeldOn: e.facts.cases } : { at: e.at, under: e.under || null, question: e.q, noticed: e.noticed || '' })),
     open: F.map(f => f.kind === 'build' ? { do: 'build', piece: f.piece, job: f.p, what: t('build.need.' + f.piece + '.d') }
-      : f.kind === 'break' ? { do: 'break', design: f.of, piece: f.piece, job: f.p, insideTheComputer: f.inside, what: t('api.open.break') } : { do: 'engine', piece: f.piece, what: t('build.need.' + f.piece + '.d') }),
+      : f.kind === 'break' ? { do: 'break', design: f.of, piece: f.piece, job: f.p, insideTheComputer: f.inside, triesSurvived: f.tries, pull: +f.pull.toFixed(2), what: t('api.open.break') } : { do: 'engine', piece: f.piece, what: t('build.need.' + f.piece + '.d') }),
     whoChecksWhom: W.cross, whoMakesWhat: W.mix
   };
 }
 /* propose a design for a piece of the plan: checked by the ledger first (it must read, do the job, pass every case a
    break has added, and not be there already) */
-export function proposeDesign({ need, code, title, author, kind, ai, words }) {
+export function proposeDesign({ need, code, title, author, kind, ai, words, from, about }) {
   const n = needOf(need); if (!n || !n.project || n.engine !== 'logic') return { ok: false, reason: t('api.noNeed', { need }) };
   const bad = whoOk(kind, ai); if (bad) return { ok: false, reason: bad };
   const c = checkDesign({ job: n.project, code });
   if (!c.right) return { ok: false, reason: t('api.notRight'), check: c };
   const name = title || t('design.proj.' + n.project + '.t');
-  return entryOut(draft({ kind: 'design', piece: need, title: name, by: author || t('api.anon'), made: kind, ai: ai || '', words: words || '', code }, (author || '') + ' ' + name), { check: c });
+  return entryOut(draft({ kind: 'design', piece: need, title: name, by: author || t('api.anon'), made: kind, ai: ai || '', words: words || '', code, from: from || null, about: about || null }, (author || '') + ' ' + name), { check: c });
 }
 /* propose a break: a case, tick by tick, that makes a design of the ledger answer wrong */
 export function proposeBreak({ design, case: seq, author, kind, ai, words }) {
@@ -126,6 +126,12 @@ export function proposeBreak({ design, case: seq, author, kind, ai, words }) {
   const out = entryOut(e);
   if (T && T.kind === 'design' && T.ok && caseOk(needOf(T.piece).project, seq)) { const r = runCase(needOf(T.piece).project, T.code, seq); if (r) out.ticks = r.rows.map((x, i) => ({ tick: i + 1, inputs: x.v, should: x.e, does: x.o, wrong: x.mis.length > 0 })); }
   return out;
+}
+/* propose a try: cases meant to break a design that did not. It records what the design has survived. */
+export function proposeTry({ design, cases, author, kind, ai, words, about }) {
+  const bad = whoOk(kind, ai); if (bad) return { ok: false, reason: bad };
+  const T = settled().byId[design];
+  return entryOut(draft({ kind: 'try', of: design, by: author || t('api.anon'), made: kind, ai: ai || '', words: words || '', cases, about: about || null }, (author || '') + ' ' + (T && T.title || 'try')));
 }
 /* propose a question: it needs a home (a level, perhaps the question it sits under) and what was noticed */
 export function proposeQuestion({ at, under, part, question, noticed, author, kind, ai }) {
