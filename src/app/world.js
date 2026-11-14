@@ -235,14 +235,16 @@ export function createWorld(cv, on) {
     const run = stay.i === near ? (reduced() ? -1 : tm - stay.t) : null;
     ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1; ctx.fillStyle = col.bg; ctx.fillRect(0, 0, W * dpr, H * dpr);
     const all = [[F.i - 1, F.prev], [F.i, F.cur], [F.i + 1, F.next], [F.i + 2, F.after]].filter(k => k[1]);
+    htmlNames = []; G.html = !!CHROME.overlay && flat();
     all.forEach(([k, tr]) => { G.mine = k === near && dist < 0.5; G.run = G.mine ? run : null; drawLevel(k, tr, 1, k === pi, b.B, tm); });
-    G.mine = false; G.run = null;
+    G.mine = false; G.run = null; G.html = false;
     /* over the stations, fixed in the box: your pod, and the band that says what is happening */
     const k = b.B / 1000, left = b.cx - b.B / 2, top = b.cy - b.B / 2;
     const below = (H - inset.b - (top + b.B)) / k;
     ctx.save(); ctx.setTransform(dpr * k, 0, 0, dpr * k, dpr * left, dpr * top); ctx.beginPath(); ctx.rect(0, 0, 1000, 1000 + (b.below ? below : 0)); ctx.clip();
     Object.assign(G, { s: k, k: 1, primary: true, t: tm, col, id: IDS[near], base: 1, box: b.B });
-    if (flat()) { drawDesignBand(G, { id: IDS[near], below: b.below ? below : 0 }); jhits = null; } else jhits = drawJourney(G, { ids: IDS, Z, near, dist, run, paused, names, below: b.below ? below : 0 }); jbox = { k, left, top, near };
+    /* the studio's band of words under the picture: in the chip world they are in the dock (bandState) */
+    if (flat()) { if (!CHROME.overlay) drawDesignBand(G, { id: IDS[near], below: b.below ? below : 0 }); jhits = null; } else jhits = drawJourney(G, { ids: IDS, Z, near, dist, run, paused, names, below: b.below ? below : 0 }); jbox = { k, left, top, near };
     ctx.restore();
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     /* where you are on the line: a mark per station */
@@ -252,7 +254,8 @@ export function createWorld(cv, on) {
     ctx.globalAlpha = 0.45; ctx.fillStyle = col.bg;
     const L = b.cx - b.B / 2, Rr = b.cx + b.B / 2;
     ctx.fillRect(0, 0, L, H); ctx.fillRect(Rr, 0, W - Rr, H);
-    ctx.globalAlpha = 0.5; ctx.strokeStyle = col.line; ctx.lineWidth = 1; const ptr = pi === F.i ? F.cur : F.next; ctx.strokeRect(ptr.tx, ptr.ty, b.B, b.B);
+    const ptr = pi === F.i ? F.cur : F.next;
+    if (!CHROME.lit) { ctx.globalAlpha = 0.5; ctx.strokeStyle = col.line; ctx.lineWidth = 1; ctx.strokeRect(ptr.tx, ptr.ty, b.B, b.B); }
     ctx.globalAlpha = 1;
     return { F, pi, ptr };
   }
@@ -265,7 +268,9 @@ export function createWorld(cv, on) {
     const k = b.B / 1000, left = b.cx - b.B / 2, top = b.cy - b.B / 2, below = (H - inset.b - (top + b.B)) / k;
     ctx.save(); ctx.setTransform(dpr * k, 0, 0, dpr * k, dpr * left, dpr * top); ctx.beginPath(); ctx.rect(-left / k, -top / k, W / k, H / k); ctx.clip();
     Object.assign(G, { s: k, k: 1, primary: true, t: tm, col, base: 1, box: b.B });
-    mapHits = drawMap(G, Object.assign({}, mapLast, { k: mapK, dt, below: b.below ? below : 0 })); mapBox = { k, left, top };
+    /* in the chip world the map fills the free screen, between the frame's ornaments and the dock */
+    const area = { x: (inset.l + 16 - left) / k, y: (inset.t + 8 - top) / k, w: (W - inset.l - inset.r - 32) / k, h: (H - inset.t - inset.b - 16) / k };
+    mapHits = drawMap(G, Object.assign({}, mapLast, { k: mapK, dt, below: b.below ? below : 0, bare: CHROME.lit, area })); mapBox = { k, left, top };
     ctx.restore();
   }
   const mapTap = e => {
@@ -281,11 +286,14 @@ export function createWorld(cv, on) {
     if (isLine()) {
       const dt = Math.min(0.1, Math.max(0, tm - mapT)); mapT = tm;
       mapK = mapO ? (reduced() ? 1 : Math.min(1, mapK + dt / 0.8)) : (reduced() ? 0 : Math.max(0, mapK - dt / 0.5));
-      if (mapK >= 1) { renderMap(tm, b, dt, true); return; }
+      if (mapK >= 1) { if (CHROME.overlay) CHROME.overlay.clear(); renderMap(tm, b, dt, true); return; }
       const L = renderLine(tm, b); overlays(tm, L.pi, L.ptr);
-      /* in the studio, the notes pinned to the station's picture */
+      /* in the studio, the notes pinned to the station's picture; in the chip world they are the HTML overlay's, with
+         the questions' marks under Ask, on the factory's line too (which keeps its own names and has no way deeper) */
       dive = null;
-      if (worldOf(WORLD).flat && !fly && !drag && Math.abs(Z - Math.round(Z)) < 0.04 && L.pi === Math.round(Z) && L.ptr) drawNotes(L.ptr, b);
+      const still = !fly && !drag && Math.abs(Z - Math.round(Z)) < 0.04 && L.pi === Math.round(Z) && !!L.ptr;
+      if (CHROME.overlay && L.ptr) htmlOverlay({ i: L.pi }, L.pi, L.ptr, still, !worldOf(WORLD).flat);
+      else if (worldOf(WORLD).flat && still) drawNotes(L.ptr, b);
       if (mapK > 0 && mapLast) renderMap(tm, b, dt, false);
       return;
     }
@@ -315,7 +323,7 @@ export function createWorld(cv, on) {
      phone): the part you picked, then the parts the story is about, then the scene's own order; the rest appear on a
      tap. The note on the picked part beside its name. Under Ask, the questions' marks on their parts. At rest in Look
      for three seconds, four corner marks on the way deeper */
-  function htmlOverlay(F, pi, ptr, settled) {
+  function htmlOverlay(F, pi, ptr, settled, noNote) {
     const id = IDS[pi], P = partsOf(id), at = p => [ptr.tx + p[0] * ptr.s, ptr.ty + p[1] * ptr.s], now = performance.now();
     if (!settled) restT = now;
     const rank = k => (k === picked ? -1 : lead.includes(k) ? lead.indexOf(k) : 50), seen = new Set();
@@ -323,7 +331,7 @@ export function createWorld(cv, on) {
       .sort((a, z) => rank(a.n.key) - rank(z.n.key) || a.i - z.i).slice(0, W < 520 ? 3 : 5)
       .map(({ n }) => { const p = at([n.x, n.y]); return { key: n.key, text: t('part.' + partWord(id, n.key)), x: p[0], y: p[1], align: n.align, on: n.key === picked }; });
     const centreOf = key => { const sh = P[key] && P[key][0]; if (!sh) return null; const o = outline(sh), xs = o.map(p => p[0]), ys = o.map(p => p[1]); return at([(Math.min(...xs) + Math.max(...xs)) / 2, (Math.min(...ys) + Math.max(...ys)) / 2]); };
-    const n0 = notes[0], nc = n0 && centreOf(n0.part);
+    const n0 = noNote ? null : notes[0], nc = n0 && centreOf(n0.part);
     const note = n0 && nc ? { key: n0.part, title: n0.title, text: n0.text, x: nc[0], y: nc[1] } : null;
     let marks = [];
     if (CHROME.ask && CHROME.ask()) {

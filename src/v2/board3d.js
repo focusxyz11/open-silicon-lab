@@ -35,7 +35,14 @@ export function createBoard(canvas, host, on = {}) {
   const board = group(scene);
   B('board', board, 40, 0.2, 28, M(night ? 0x16352d : 0x2b5e4c, { roughness: 0.7 }), 0, -0.2, 0);
   const cu = M(0xb88a4a, { roughness: 0.35, metalness: 0.8 });
-  for (let i = 0; i < 26; i++) { const z = -12 + i * 0.95, w = 6 + rnd(i, 3) * 8; B(null, board, w, 0.02, 0.12, cu, (i % 2 ? 1 : -1) * (6 + w / 2), 0, z); }
+  /* copper that goes somewhere (art direction: no rows of stripes): three traces from the package to each link on the
+     far edge, turning in order so none crosses another, and wide ones that bring power from the regulators */
+  const run = (x0, z0, x1, z1) => { const b = B(null, board, Math.abs(x1 - x0) + 0.12, 0.02, Math.abs(z1 - z0) + 0.12, cu, (x0 + x1) / 2, 0, (z0 + z1) / 2); b.castShadow = false; };
+  [[-4.2, -9, -5.6], [-1.2, -3, -7.6], [1.2, 3, -7.6], [4.2, 9, -5.6]].forEach(([x0, xc, zb]) => [-0.4, 0, 0.4].forEach(o => {
+    const z = zb - (xc < x0 ? o + 0.4 : 0.4 - o);   /* the trace on the outside of the turn turns first */
+    run(x0 + o, -5, x0 + o, z); run(x0 + o, z, xc + o, z); run(xc + o, z, xc + o, -11.5);
+  }));
+  [-3.5, -1.2, 1.1, 3.4, 5.7].forEach(z => run(-8.6, z, -5.1, z + 0.45));   /* wide power traces, clear of those to the links */
   /* the power stages: a row of regulators and their coils, feeding the chip from one side */
   const vrmM = M(0x1d2129, { roughness: 0.4 }), coil = M(0x7c8594, { roughness: 0.3, metalness: 0.7 });
   for (let i = 0; i < 10; i++) { B('vrm', board, 1.2, 0.5, 1.2, vrmM, -11.5, 0, -6.3 + i * 1.4); B('vrm', board, 1.5, 1.1, 1.3, coil, -9.4, 0, -6.3 + i * 1.4); }

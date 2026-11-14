@@ -109,6 +109,11 @@ on the part and no line drawn to it; under Ask, the questions as marks on their 
 three on one part become one mark with a count, which lights those lines in the dock); and after three seconds at
 rest in Look, four corner marks on the way deeper. A portal holds no miniature: the parent's own drawing there (a
 core, a cell, one crossing, one sheet) is the next level at its simplest, and the next level fades in over it.
+The same overlay serves the bench (your design's state, right or not, is words in the dock, not a band drawn under
+the picture; words in a drawing too small to read are left out) and the factory's line (its questions' marks under
+Ask). The supply map has no grid, title or row of steps (the rail and the dock say those) and fills the free screen.
+The line at night has a plain floor and quiet edges, so its machines read as solids; the board's copper goes
+somewhere (traces to each link, wide traces bringing power), not rows of stripes.
 
 **The switch in 3D.** The first level of the zoom drawn on the one stage (`src/v2/switch3d.js`, following
 `docs/reviews/art-direction.md`): one transistor cut open at the front, so the cut face shows the gate wrapped

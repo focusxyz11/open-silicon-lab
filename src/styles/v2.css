@@ -425,6 +425,7 @@ body.immersive .toast { top: 136px; bottom: auto; left: 50%; }
 .door4:hover i, .door4:focus-visible i { border-color: var(--ink); }
 /* in the dive, Ask's list stays short, so the picture and the marks on it keep their room */
 #diveui .asklist { max-height: 24vh; }
+.yours .verdict { margin: 2px 0 4px; font-size: 14px; }
 .askline.hit { background: color-mix(in srgb, var(--warm) 14%, transparent); border-radius: 0 10px 10px 0; }
 
 /* the supply map's dock: short, so the map keeps most of the screen; what stops when a place shuts */

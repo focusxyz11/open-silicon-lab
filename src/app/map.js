@@ -3,7 +3,9 @@
    like the pods on the line). Stop a place and the trip shows what stops after it (src/engines/supply.js).
 
    Drawn on the 2D canvas, in the box's 1000 x 1000 space, by world.js when the map is open. No words in
-   code: names are site.<id>.name and route.step.<id>. Returns where its sites and steps are, for taps. */
+   code: names are site.<id>.name and route.step.<id>. Returns where its sites and steps are, for taps.
+   In the chip world (o.bare) the map has no grid, title or row of steps (the frame's rail and dock say those) and
+   fills the free screen (o.area, in the box's units), not a square (docs/reviews/art-direction.md). */
 import { t } from '../core/i18n.js';
 import { LAND, SITES, map as P } from '../data/world.js';
 import { sitesOf } from '../engines/supply.js';
@@ -11,10 +13,10 @@ import { sitesOf } from '../engines/supply.js';
 const MONO = '"Martian Mono", ui-monospace, Menlo, monospace'; /* i18n-ok: a font name */
 const sm = u => { u = Math.max(0, Math.min(1, u)); return u * u * (3 - 2 * u); };
 let land = null, view = null;
-const AREA = { x: 24, y: 70, w: 952, h: 560 };
+const AREA0 = { x: 24, y: 70, w: 952, h: 560 };
 
 /* the part of the map a route covers, fitted into the area above the steps */
-function fit(route, step, narrow) {
+function fit(route, step, narrow, AREA) {
   /* the picked step's places and what flows into it; or the whole route */
   const ids = step != null && route[step] ? sitesOf([route[step]]) : [];
   const pts = (ids.length > 1 ? ids : sitesOf(route)).map(id => P(SITES[id][0], SITES[id][1]));
@@ -33,7 +35,7 @@ export function drawMap(G, o) {
   const ctx = G.ctx, c = G.col, u = 1 / G.s, k = sm(o.k), narrow = 1000 * G.s < 560;
   if (!land) land = new Path2D(LAND);
   /* the view: fitted to the route, opening from the place your station is in */
-  const goal = fit(o.route, o.step, narrow);
+  const AREA = o.bare && o.area ? o.area : AREA0, goal = fit(o.route, o.step, narrow, AREA);
   if (!view || o.reset) view = Object.assign({}, goal);
   const e = Math.min(1, (o.dt || 0.016) * 4);
   view.x += (goal.x - view.x) * e; view.y += (goal.y - view.y) * e; view.s += (goal.s - view.s) * e;
@@ -45,11 +47,13 @@ export function drawMap(G, o) {
 
   ctx.save(); ctx.globalAlpha = k;
   ctx.fillStyle = c.bg; ctx.fillRect(-2000, -2000, 5000, 5000);
-  ctx.beginPath(); ctx.rect(-2000, AREA.y - 40, 5000, AREA.h + 80); ctx.clip();
-  /* lines of longitude and latitude, every 15 degrees */
+  if (!o.bare) { ctx.beginPath(); ctx.rect(-2000, AREA.y - 40, 5000, AREA.h + 80); ctx.clip(); }
+  /* lines of longitude and latitude, every 15 degrees (not in the chip world: the land is enough) */
   ctx.strokeStyle = c.dim; ctx.lineWidth = 0.6 * u; ctx.beginPath();
+  if (!o.bare) {
   for (let lon = -180; lon <= 180; lon += 15) { const a = at(P(lon, 0)[0], P(0, 80)[1]), b = at(P(lon, 0)[0], P(0, -60)[1]); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); }
   for (let lat = -60; lat <= 75; lat += 15) { const a = at(P(-180, 0)[0], P(0, lat)[1]), b = at(P(180, 0)[0], P(0, lat)[1]); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); }
+  }
   ctx.stroke();
   /* the land */
   ctx.save(); ctx.translate(cx - vx * vs, cy - vy * vs); ctx.scale(vs, vs);
@@ -92,7 +96,9 @@ export function drawMap(G, o) {
   });
   ctx.restore();
 
-  /* the trip as steps, in a row under the map: picked, where your wafer is now, and what stops */
+  /* the trip as steps, in a row under the map: picked, where your wafer is now, and what stops (in the chip world the
+     frame's rail is that row) */
+  if (o.bare) return hits;
   ctx.save(); ctx.globalAlpha = k;
   const n = o.route.length, x0 = 70, x1 = 930, y = 700, gap = (x1 - x0) / (n - 1);
   ctx.font = '600 ' + 10.5 * u + 'px ' + MONO; ctx.textBaseline = 'alphabetic'; ctx.fillStyle = c.warm; ctx.textAlign = 'left';

@@ -37,7 +37,7 @@ function materials(col) {
     dark: L(pick('dark', '#0b1020', '#aeb9c9')), inner: L(pick('inner', '#0d1428', '#c5cedb'), { side: THREE.DoubleSide }),
     floor: L(pick('floor', '#111a33', '#e9edf3')), aisle: L(pick('aisle', '#0d1529', '#dde3eb')), wall: L(pick('wall', '#0c1225', '#d2d9e4')),
     metal: L(pick('metal', '#3c4c7c', '#c3ccda')), rail: L(pick('rail', '#4a5b8c', '#9aa8bd'), { transparent: true, opacity: 1 }),
-    glass: L(d ? '#7d93c7' : '#a9bde3', { transparent: true, opacity: d ? 0.14 : 0.22, depthWrite: false, side: THREE.DoubleSide }),
+    glass: L(w && d ? '#56688c' : d ? '#7d93c7' : '#a9bde3', { transparent: true, opacity: w && d ? 0.2 : d ? 0.14 : 0.22, depthWrite: false, side: THREE.DoubleSide }),
     pod: L(pick('pod', '#9db1e6', '#ffffff'), { emissive: d ? (w ? '#1c2638' : '#2a3a6a') : '#000000' }), podOther: L(pick('podOther', '#3a4a78', '#dfe5ee')),
     wafer: L('#c9d7ff', { emissive: d ? '#5a7de0' : '#3d63c8', emissiveIntensity: d ? 0.7 : 0.35 }), waferOther: L(pick('waferOther', '#5a6894', '#aab6c9')),
     chip: L('#c9d7ff', { emissive: d ? '#5a7de0' : '#3d63c8', emissiveIntensity: d ? 0.7 : 0.35 }),
@@ -46,9 +46,11 @@ function materials(col) {
     off: L(pick('off', '#2a3350', '#c9d1dc')), silicon: L(d ? '#8fa6dc' : '#6f84ad', { emissive: d ? '#1c2c5a' : '#000000' }), copper: L('#d58a3a', { emissive: '#7a4310', emissiveIntensity: d ? 0.4 : 0.05 }),
     crate: L(d ? '#5a4628' : '#e8d4b0'), screen: new THREE.MeshBasicMaterial({ color: d ? '#06090f' : '#f9fbfd' }),
     plasma: glow(col.red, d ? 0.42 : 0.3), beam: glow(col.grn, d ? 0.7 : 0.55), light: glow(col.warm, d ? 0.55 : 0.4), heat: glow(col.warm, d ? 0.35 : 0.25), spray: glow(col.cool, 0.6),
-    edge: new THREE.LineBasicMaterial({ color: pick('edge', '#7083b6', '#5c6a82'), transparent: true, opacity: w ? (d ? 0.5 : 0.4) : d ? 0.75 : 0.55 }),
+    /* in the chip world at night the edges stay quiet, so the machines read as solids, not wire (art direction) */
+    edge: new THREE.LineBasicMaterial({ color: pick('edge', '#7083b6', '#5c6a82'), transparent: true, opacity: w ? (d ? 0.24 : 0.4) : d ? 0.75 : 0.55 }),
     seam: new THREE.LineBasicMaterial({ color: pick('seam', '#3a4a78', '#b7c1cf'), transparent: true, opacity: 0.8 }),
-    hi: new THREE.LineBasicMaterial({ color: col.warm })
+    hi: new THREE.LineBasicMaterial({ color: col.warm }),
+    lit: !!col.lit
   };
 }
 
@@ -101,14 +103,19 @@ function bay(b, plant, firstOfPlant) {
   const M = b.M;
   b.box(-450, -460, -12, 900, 460, 12, M.aisle, false);
   b.box(-450, 0, -12, 900, 700, 12, M.floor, false);
-  for (let x = -420; x <= 450; x += 60) { b.line([x, -460, 0.3], [x, 700, 0.3], true); }
-  for (let d = -420; d <= 700; d += 60) { b.line([-450, d, 0.3], [450, d, 0.3], true); }
+  /* the earlier site's floor was a grid of lines; the chip world's is a plain floor, as in its 3D views */
+  if (!M.lit) {
+    for (let x = -420; x <= 450; x += 60) { b.line([x, -460, 0.3], [x, 700, 0.3], true); }
+    for (let d = -420; d <= 700; d += 60) { b.line([-450, d, 0.3], [450, d, 0.3], true); }
+  }
   b.box(-450, 690, 0, 900, 20, plant === 'fab' ? 420 : 360, M.wall, false);
   b.line([-450, 690, 0.4], [450, 690, 0.4]);
   if (plant === 'fab') {
     /* the ceiling of air filters, as a lattice (so you can see down into the bay), and the columns */
-    for (let x = -450; x <= 450; x += 120) b.line([x, 0, 430], [x, 690, 430], true);
-    for (let d = 0; d <= 690; d += 115) b.line([-450, d, 430], [450, d, 430], true);
+    if (!M.lit) {
+      for (let x = -450; x <= 450; x += 120) b.line([x, 0, 430], [x, 690, 430], true);
+      for (let d = 0; d <= 690; d += 115) b.line([-450, d, 430], [450, d, 430], true);
+    }
     b.box(-450, 670, 0, 26, 20, 430, M.base);
   } else if (plant === 'pack' || plant === 'wafers') {
     for (let x = -390; x < 450; x += 240) b.box(x, 686, 160, 160, 4, 120, M.dark, false);
