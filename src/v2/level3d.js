@@ -9,10 +9,11 @@
    createLevel3D(canvas, host, on, model) -> { show(k, depthOffset, frame), select(key, note), hit(x, y), active(),
      warm(), dispose() }
    model(scene, root, P, night) -> { level, parts: [key], anchors: { key: [x, y, z] }, view: { tilt, turn, r, at: [x, y, z], fixed,
-     arrive: { tilt, turn, ms } }, update(dt, k, dist, arrived) }   (r: the object's radius, so it fills the square; at:
+     arrive: { tilt, turn, ms } }, update(dt, k, dist, arrived, picked), has(key) }   (r: the object's radius, so it fills the square; at:
      where the camera looks; dist: the camera's distance from it, which changes with the screen and the zoom; arrive:
      coming down from the level above, the camera starts at that angle and rises to the level's own, once, and
-     arrived (0..1) says how far, for the model's own part of the move; 1 when there is none)
+     arrived (0..1) says how far, for the model's own part of the move; 1 when there is none; picked: the part picked;
+     has: optional, whether a part is there to name now)
    on.part(key), on.marks() -> [{ part, threads }] under Ask, else null, on.mark(threadId), on.askMany([threadId]). */
 import * as THREE from '../vendor/three.min.js';
 import { PALETTES, theme, stage, light, labels, showStage, clamp, ease } from './kit3d.js';
@@ -83,9 +84,9 @@ export function createLevel3D(canvas, host, on, model) {
     const dt = Math.min(0.05, Math.max(0, now - last) / 1000); last = now;
     yaw += (yawGoal - yaw) * Math.min(1, dt * 6);
     place(now);
-    M.update(still() ? 0 : dt, k, camera.position.distanceTo(at), arrived);
+    M.update(still() ? 0 : dt, k, camera.position.distanceTo(at), arrived, picked);
     /* names hide while the camera moves in (the arrival) and show once it rests */
-    names.forEach(n => { n.show = k > 0.85 && arrived >= 1; n.el.classList.toggle('on', n.key === picked); });
+    names.forEach(n => { n.show = k > 0.85 && arrived >= 1 && (!M.has || M.has(n.key)); n.el.classList.toggle('on', n.key === picked); });
     L.update(camera, W, H);
     if (picked && k > 0.85 && arrived >= 1) placeCard(); else card.hidden = true;
     placeMarks();
