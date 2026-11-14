@@ -12,6 +12,7 @@ import * as THREE from '../vendor/three.min.js';
 import { mat, box, BOARD } from './kit3d.js';
 import { createLevel3D } from './level3d.js';
 import { chipNow } from '../app/scenes.js';
+import { DEPTHS } from '../data/weave.js';
 
 const X = x => (x - 500) / 100, Z = y => (y - 500) / 100;
 const rnd = (i, s) => { const x = Math.sin(i * 127.1 + s * 311.7) * 43758.5453; return x - Math.floor(x); };
@@ -32,7 +33,8 @@ export const create = level => (canvas, host, on = {}) => createLevel3D(canvas, 
   const cyl = (key, x, y, r, y0, h, m) => { const c = new THREE.Mesh(new THREE.CylinderGeometry(r / 100, r / 100, h, 20), m); c.position.set(X(x), y0 + h / 2, Z(y)); c.userData.part = key || null; root.add(c); return c; };
   /* a trace that goes somewhere: along the plan's points, flat on the board */
   const traces = [], trace = pts => { for (let i = 1; i < pts.length; i++) { const a = pts[i - 1], b = pts[i]; traces.push([Math.min(a[0], b[0]) - 3, Math.min(a[1], b[1]) - 3, Math.abs(b[0] - a[0]) + 6, Math.abs(b[1] - a[1]) + 6]); } return pts; };
-  const T = 0.16, paths = [];
+  const T = 0.16, paths = [], over = [];
+  const own = (c, o) => new THREE.MeshStandardMaterial(Object.assign({ color: c, transparent: true, opacity: 1 }, o));
   let lid = null, drivers = [], heat = null;
 
   if (level === 'phoneboard') {
@@ -63,8 +65,10 @@ export const create = level => (canvas, host, on = {}) => createLevel3D(canvas, 
     many(passives, 0, 0.05, M.body);
     /* the phone's chip: on its substrate, the processor, and the memory stacked on top of it; it warms with your chip */
     part('soc', [402, 352, 256, 256], 0, 0.08, M.substrate);
-    part('soc', [420, 370, 220, 220], 0.08, 0.1, mat(col(0x1d2433, 0x2a3142), { roughness: 0.3, metalness: 0.5 }));
-    part('soc', [430, 380, 200, 200], 0.18, 0.16, M.plastic);
+    /* the processor and the memory stacked on it lift away and fade as the chip inside comes (a join; their own
+       materials, since a cached one is shared) */
+    over.push(part('soc', [420, 370, 220, 220], 0.08, 0.1, own(col(0x1d2433, 0x2a3142), { roughness: 0.3, metalness: 0.5 })));
+    over.push(part('soc', [430, 380, 200, 200], 0.18, 0.16, own(K.plastic, { roughness: 0.5 })));
     heat = part(null, [396, 346, 268, 268], -0.005, 0.02, new THREE.MeshStandardMaterial({ color: P.warm, emissive: P.warm, emissiveIntensity: 0, transparent: true, opacity: 0, depthWrite: false }), 0.01);
     [[90, 130], [910, 130], [90, 870]].forEach(([x, y]) => cyl(null, x, y, 12, 0, 0.02, M.pin));
   } else {
@@ -82,7 +86,7 @@ export const create = level => (canvas, host, on = {}) => createLevel3D(canvas, 
     [0, 1, 2, 3].forEach(i => paths.push(trace([[525, 410 + i * 24], [600, 410 + i * 24], [600, 250 + i * 110], [660, 250 + i * 110]])));
     trace([[210, 760], [270, 760]]); trace([[330, 760], [430, 760], [430, 730]]); trace([[475, 640], [475, 495]]);
     /* the microcontroller: a package with legs, the one that decides */
-    part('mcu', [425, 395, 100, 100], 0, 0.14, M.plastic, 0.01);
+    over.push(part('mcu', [425, 395, 100, 100], 0, 0.14, own(K.plastic, { roughness: 0.5 }), 0.01));   /* lifts away in a join, as the phone's */
     const legs = []; for (let i = 0; i < 9; i++) legs.push([430 + i * 10.5, 387, 5, 8], [430 + i * 10.5, 495, 5, 8], [417, 400 + i * 10.5, 8, 5], [525, 400 + i * 10.5, 8, 5]); many(legs, 0, 0.04, M.pin);
     /* power in: big capacitors and a coil; a crystal, a transceiver, a watchdog */
     [[300, 230], [300, 760], [560, 770], [800, 770]].forEach(([x, y]) => cyl(null, x, y, 30, 0, 0.5, M.coil));
@@ -105,9 +109,14 @@ export const create = level => (canvas, host, on = {}) => createLevel3D(canvas, 
   return {
     level, parts: Object.keys(NAMES), anchors,
     /* a hero object: seen at an angle, turned like the stack, turnable and swaying; the control unit opens on arrival */
-    view: { tilt: 0.62, turn: -0.62, r: 5.2, at: [0, 0, 0.1], arrive: level === 'ecu' ? { tilt: 0.8, turn: -0.45, ms: 1600 } : null },
-    update(dt, k, dist, arrived) {
+    view: { tilt: 0.62, turn: -0.62, r: 5.2, at: [0, 0, 0.1], arrive: level === 'ecu' ? { tilt: 0.8, turn: -0.45, ms: 1600 } : null,
+      /* door: the chip inside the package, the flat level's portal, on the substrate's top (the phone's) or in the
+         middle of the package (the control unit's); foot: a board stands on the phone's small board by the middle of
+         its top (docs/reviews/transitions.md) */
+      door: (([px, py, side]) => ({ at: [X(px + side / 2), level === 'ecu' ? 0.07 : 0.08, Z(py + side / 2)], side: side / 100 }))(DEPTHS[level].portal), foot: [0, 0, 0] },
+    update(dt, k, dist, arrived, picked, leave = 0) {
       t += dt;
+      over.forEach(b => { if (b.userData.y == null) b.userData.y = b.position.y; b.position.y = b.userData.y + 1.5 * leave; b.material.opacity = Math.max(0, 1 - leave / 0.5); b.visible = leave < 0.5; b.material.depthWrite = leave <= 0; });
       if (lid) { lid.visible = arrived < 1; lid.position.y = 0.25 + 0.04 + arrived * 2.6; lid.material.opacity = Math.max(0, 1 - arrived * 1.4); }
       drivers.forEach((d, i) => { d.material.emissiveIntensity = (night ? 0.5 : 0.25) * (0.5 + 0.5 * Math.sin(t * 2 + i)); });
       if (heat) { const c = chipNow(), h = Math.max(0, Math.min(1, ((c.power || 1) - 0.6) / 3)); heat.material.opacity = 0.15 + 0.5 * h; heat.material.emissiveIntensity = night ? 0.8 : 0.4; }

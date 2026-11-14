@@ -82,7 +82,10 @@ export function create(canvas, host, on = {}) {
       level: 'wafer', parts: ['dies', 'defects'],
       anchors: { dies: [X(aChip[0] + aChip[2] / 2), 0.08, Z(aChip[1] + aChip[3] / 2)], defects: [X(firstSpeck[0]), 0.14, Z(firstSpeck[1])] },
       /* looking down 65°, turned like the stack */
-      view: { tilt: 1.13, turn: -0.62, r: R / 100 + 0.6, at: [0, 0, 0] },
+      view: { tilt: 1.13, turn: -0.62, r: R / 100 + 0.6, at: [0, 0, 0],
+        /* the door into the die: the chip the dive follows, on its top (it changes with your chip's size, so it is
+           asked for each time) */
+        door: () => { const [x, y, side] = waferNow().follow; return { at: [X(x + side / 2), 0.1, Z(y + side / 2)], side: side / 100 }; } },
       update(dt) { if (!dt) return; t += dt; placeSpecks(t); }
     };
   });

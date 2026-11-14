@@ -153,10 +153,10 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
 /* one stage and no cuts: with motion on, going inside from the island dives the camera in, then the view zooms in from it
    (a view transition); rising goes back out. A duplicate name or a stuck view would show as an error here. */
 {
-  /* joins: from the chip to the block, the block to the gate, the gate to the switch and the switch to the atom no flat
-     picture shows between; both levels are
+  /* joins: every pair of neighbouring levels in 3D (the phone to its board to its chip, the control unit to its chip,
+     the wafer to the die, a chip to the block, down to the atom): no flat picture shows between; both levels are
      drawn in one frame on one camera path, half way and back */
-  for (const [a, b, na] of [['chip', 'block', 4], ['block', 'gate', 4], ['gate', 'switch', 5], ['switch', 'atom', 5]]) {
+  for (const [a, b, na] of [['phone', 'phoneboard', 4], ['phoneboard', 'soc', 4], ['ecu', 'mcu', 3], ['wafer', 'die', 2], ['chip', 'block', 4], ['block', 'gate', 4], ['gate', 'switch', 5], ['switch', 'atom', 5]]) {
     const tag = 'join ' + a + '>' + b;
     at = tag; const page = await browser3d.newPage({ viewport: { width: 1280, height: 800 } });
     page.on('pageerror', e => problems.push(tag + ': ' + e.message));
@@ -173,7 +173,11 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
     await page.mouse.wheel(0, 312);
     await page.waitForFunction(b => !document.documentElement.dataset.join && [...document.querySelectorAll('#l3-' + b + ' .part3')].some(e => e.style.opacity !== '0'), b, { timeout: 15000 }).catch(() => problems.push(tag + ': the ' + b + ' did not settle with its names'));
     await page.mouse.wheel(0, -624);
-    await page.waitForFunction(a => [...document.querySelectorAll('#l3-' + a + ' .part3')].some(e => e.style.opacity !== '0') && !document.getElementById('l3-' + a).hidden, a, { timeout: 15000 }).catch(() => problems.push(tag + ': back up, the ' + a + ' did not come back with its names'));
+    await page.waitForFunction(a => [...document.querySelectorAll('#l3-' + a + ' .part3')].some(e => e.style.opacity !== '0') && !document.getElementById('l3-' + a).hidden, a, { timeout: 15000 }).catch(async () => {
+      /* what the level was doing, so a failure seen only on a slower machine can be read from the log */
+      const state = await page.evaluate(a => JSON.stringify({ join: document.documentElement.dataset.join || '', hidden: document.getElementById('l3-' + a).hidden, names: [...document.querySelectorAll('#l3-' + a + ' .part3')].map(e => e.style.opacity + '@' + e.style.transform), flat: getComputedStyle(document.getElementById('diveCanvas')).opacity, hash: location.hash }), a).catch(e => e.message);
+      problems.push(tag + ': back up, the ' + a + ' did not come back with its names ' + state);
+    });
     await page.close();
   }
   /* a device too slow for a level in 3D gets its flat drawing back (osl-quality = slow makes every level count as too slow) */

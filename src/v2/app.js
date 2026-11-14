@@ -321,6 +321,8 @@ export function start() {
     WE = E; DiveData = Wd; DS = Ds; threadColorOf = Wm.threadColor;
     /* the dive's words in HTML over the picture: names, the note on a picked part, the questions' marks under Ask */
     flatWords = Om.createOverlay($('flatLabels'), { part: key => pickPart(key), mark: th => { location.hash = follow(th + '.' + diveId()); }, marks: ths => markAsk(ths), door: () => dive.flyTo(diveD + 1) });
+    /* a wheel over one of those words still moves the dive (as over the 3D levels' names, level3d.js) */
+    $('flatLabels').addEventListener('wheel', e => { e.preventDefault(); $('diveCanvas').dispatchEvent(new WheelEvent('wheel', { deltaX: e.deltaX, deltaY: e.deltaY, deltaMode: e.deltaMode, clientX: e.clientX, clientY: e.clientY, bubbles: true, cancelable: true })); }, { passive: false });
     /* one HUD: the earlier site's own marks, dive label and band give way to the frame */
     /* one stage: the line's machines draw on the shared renderer too */
     Wm.setChrome({ dots: false, dive: false, lit: true, stage: () => stage($('diveCanvas')), overlay: flatWords,
@@ -395,15 +397,17 @@ export function start() {
     const J = L3M && joinOf(z);
     if (J) {
       Object.values(L3).forEach(l => { if (l.obj && l !== J.a && l !== J.b) l.obj.show(0); });
-      if (J.f < JOIN.lead) { J.b.obj.show(0); J.a.obj.show(1, J.f, dive.frame, { guest: J.b.obj }); }
-      else { J.a.obj.show(0); J.b.obj.show(1, J.f - 1, dive.frame, { host: J.a.obj }); }
+      /* a hidden level is still told where the zoom is (above it or below), so coming back to it is never taken
+         for an arrival from above */
+      if (J.f < JOIN.lead) { J.b.obj.show(0, J.f - 1); J.a.obj.show(1, J.f, dive.frame, { guest: J.b.obj }); }
+      else { J.a.obj.show(0, J.f); J.b.obj.show(1, J.f - 1, dive.frame, { host: J.a.obj }); }
       $('diveCanvas').style.opacity = '0'; dive.setCovered(true); $('flatLabels').style.visibility = 'hidden'; showStage(true);
       return;
     }
     let top = 0;
     Object.entries(L3).forEach(([lv, l]) => {
       const ds = WE.IDS.indexOf(lv), d = z - ds, k = ds < 0 ? 0 : 1 - Math.min(1, Math.max(0, (Math.abs(d) - 0.08) / 0.32));
-      if (k <= 0) { if (l.obj) l.obj.show(0); return; }
+      if (k <= 0) { if (l.obj) l.obj.show(0, ds < 0 ? 0 : d); return; }
       if (!l.obj) { ensureL3(lv).then(o => { if (o && flatKind === 'dive') { levelZoom(dive.z); diveNotes(); } }); return; }
       if (l.obj.failed) { l.obj.show(0); return; }
       l.obj.show(k, d, dive.frame); top = Math.max(top, k);

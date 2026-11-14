@@ -45,11 +45,16 @@ export function createLevel3D(canvas, host, on, model) {
   const L = labels(host);
   const names = M.parts.map(k => { const lb = L.add(root, new THREE.Vector3(...M.anchors[k]), t('part.' + partWord(M.level, k)), { cls: 'part3 pick', button: true, data: { part3: k } }); lb.key = k; return lb; });
   host.addEventListener('click', e => { const b = e.target.closest('[data-part3]'); if (b) { e.stopPropagation(); on.part && on.part(b.dataset.part3); } });
+  /* a wheel over a name, a note or a mark still moves the dive: it is passed on to the picture beneath */
+  host.addEventListener('wheel', e => {
+    e.preventDefault();
+    canvas.dispatchEvent(new WheelEvent('wheel', { deltaX: e.deltaX, deltaY: e.deltaY, deltaZ: e.deltaZ, deltaMode: e.deltaMode, clientX: e.clientX, clientY: e.clientY, ctrlKey: e.ctrlKey, shiftKey: e.shiftKey, bubbles: true, cancelable: true }));
+  }, { passive: false });
   const card = document.createElement('div'); card.className = 'swnote'; card.hidden = true; host.appendChild(card);
   let picked = null;
   const marks = createOverlay(host, { mark: th => on.mark && on.mark(th), marks: ths => on.askMany && on.askMany(ths) }), mv = new THREE.Vector3();
 
-  let k = 0, off = 0, raf = 0, last = performance.now(), yaw = 0, yawGoal = 0, frame = null, W = 1, H = 1, arr = null, arrived = 1, link = null;
+  let below = false, k = 0, off = 0, raf = 0, last = performance.now(), yaw = 0, yawGoal = 0, frame = null, W = 1, H = 1, arr = null, arrived = 1, link = null;
   /* a plan (V.fixed: the gate) is read straight, not turned: it neither sways nor turns with a drag */
   const sway = now => (still() || V.fixed ? 0 : Math.sin(now / 14000 * Math.PI * 2) * 0.052);
   /* the picture's size, and the square of the flat level it fills */
@@ -104,9 +109,9 @@ export function createLevel3D(canvas, host, on, model) {
          the two depths agree. After that, and always for an open door, the child is drawn in front */
       const keep = !!door.front && leave < JOIN.clear;
       if (keep) { C.camera.near = P.camera.near / p.s; C.camera.far = P.camera.far / p.s; C.camera.updateProjectionMatrix(); }
-      /* a rising plan fades in over the door as it starts (JOIN.fade), so it grows out of the parent's tiles instead
-         of appearing on them */
-      const fade = V_rise(C.V) && !QUALITY.low ? sm(JOIN.fade[0], JOIN.fade[1], f) : 1;
+      /* a child with no move of its own fades in over the door as it starts (JOIN.fade), so it grows out of the
+         parent's parts instead of appearing on them (a rising plan, the phone's board) */
+      const fade = !C.V.enter && !QUALITY.low ? sm(JOIN.fade[0], JOIN.fade[1], f) : 1;
       const bg = C.scene.background; C.scene.background = null;
       if (fade < 1) st.fade(C.scene, C.camera, fade); else st.over(C.scene, C.camera, keep);
       C.scene.background = bg;
@@ -213,8 +218,11 @@ export function createLevel3D(canvas, host, on, model) {
     show(kk, depthOffset, f, lk) {
       if (api.failed) kk = 0;
       const was = k; k = clamp(kk); off = depthOffset || 0; if (f) frame = f; link = lk || null;
+      /* where the zoom was last seen, present or not (the shell passes the offset to a hidden level too): below it or
+         above; coming back up from below is not an arrival, even when a jump lands exactly on the level */
+      if (link && link.guest || off > 0.05) below = true; else if (off < -0.05) below = false;
       host.hidden = k <= 0;
-      if (k > 0 && was <= 0) { last = performance.now(); arr = V.arrive && off <= 0.05 && !still() && !link ? { hold: 250, t: 0 } : null; }
+      if (k > 0 && was <= 0) { last = performance.now(); arr = V.arrive && off <= 0.05 && !below && !still() && !link ? { hold: 250, t: 0 } : null; }
       if (k <= 0 && was > 0) { card.hidden = true; marks.clear(); }
       if (k > 0 && !raf) raf = requestAnimationFrame(tick);
     },
