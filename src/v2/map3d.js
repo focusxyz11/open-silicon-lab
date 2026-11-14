@@ -150,7 +150,8 @@ export function createMap(canvas, host, on = {}) {
     moving.push({ obj: b, path: route([[-30 + i * 70, 120], [-10 + i * 30, 76], [10, 54], [10, 52.5]]), speed: 0.025, ship: true, u: i * 0.5, bounce: true }); }
   /* ---- the makers' village: workshops (community designs) and plots (open jobs, engines to write) ---- */
   const village = place('village');
-  const SLOTS = []; for (let j = 0; j < 3; j++) for (let i = 0; i < 4; i++) SLOTS.push([-10.5 + i * 7, -6 + j * 7]);
+  /* the village grows by rows: six plots across, and as many rows as the ledger needs (the first four fit its ground) */
+  const SLOT = i => [-12.5 + (i % 6) * 5, -6 + Math.floor(i / 6) * 6.5], SLOTS = { length: 36 };
   const slotsG = group(village, 0, 0, 0);
 
   /* ---- the islands across the sea ---- */
@@ -280,12 +281,12 @@ export function createMap(canvas, host, on = {}) {
     const seenNow = new Set(), vp = m => { m.userData.village = true; pulses.push(m); };
     for (let i = pulses.length - 1; i >= 0; i--) if (pulses[i].userData.village) pulses.splice(i, 1);
     items.slice(0, SLOTS.length).forEach((it, i) => {
-      const [sx, sz] = SLOTS[i], g = group(slotsG, sx, 0, sz);
-      box(g, 6, 0.15, 6, mat(it.kind === 'design' ? P.grass : P.sand), 0, 0, 0, 0.05, { cast: false });
+      const [sx, sz] = SLOT(i), g = group(slotsG, sx, 0, sz); if (it.kind === 'design') g.scale.setScalar(0.8);
+      box(g, it.kind === 'design' ? 5.5 : 4.4, 0.15, it.kind === 'design' ? 5.5 : 4.4, mat(it.kind === 'design' ? P.grass : P.sand), 0, 0, 0, 0.05, { cast: false });
       if (it.kind === 'design') {
         const d = it.d, stt = d.draft ? 'draft' : d.state; seenNow.add(d.id);
         if (d.draft) { [[new THREE.BoxGeometry(3, 2, 2.8), 1.1], [houseRoof, 2.1]].forEach(([geo, y]) => { const e = new THREE.LineSegments(new THREE.EdgesGeometry(geo), new THREE.LineBasicMaterial({ color: P.accent })); e.position.y = y; g.add(e); }); }
-        else house(g, 0, 0, 0, d.state === 'broken' ? P.slate : ({ example: P.accent, person: P.good, ai: P.warm, both: P.bad }[d.kind] || P.accent), d.state === 'holds');
+        else house(g, 0, 0, 0, d.state === 'broken' ? P.bad : ({ example: P.accent, person: P.dark, ai: P.warm, both: P.sand, program: P.metal }[d.kind] || P.accent), d.state === 'holds');
         if (d.state === 'broken') { box(g, 0.18, 3.4, 0.18, metal(P.dark), 2.2, 0.15, 1.8, 0.02); vp(box(g, 0.5, 0.5, 0.5, glow(P.bad, 1.6), 2.2, 3.5, 1.8, 0.1, { cast: false })); }
         const lb = L.add(g, new THREE.Vector3(0, 4.6, 0), d.title, { cls: 'work3 ent ' + stt, button: true, data: { entry: d.id }, max: 150 });
         lb.el.title = t('map.house.' + stt, { by: d.author }); slotLabels.push(lb);
@@ -298,7 +299,7 @@ export function createMap(canvas, host, on = {}) {
     /* every case a break added to a check stands guard at the village's edge: a watchtower with its lamp lit
        (an outline, while the break is only yours) */
     (st.cases || []).slice(0, 6).forEach((c, i) => {
-      const g = group(slotsG, -10.5 + i * 4.2, 0, -11.5); seenNow.add(c.id);
+      const g = group(slotsG, -12.5 + i * 4.2, 0, -11); seenNow.add(c.id);
       box(g, 1, 6.4, 1, mat(P.white), 0, 0, 0, 0.1); box(g, 1.9, 0.3, 1.9, mat(P.slate), 0, 6.4, 0, 0.05); box(g, 1.2, 0.5, 1.2, mat(P.wall), 0, 0, 0, 0.05);
       vp(box(g, 0.8, 0.8, 0.8, glow(c.draft ? P.accent : P.good, 1.6), 0, 6.9, 0, 0.14, { cast: false }));
       const lb = L.add(g, new THREE.Vector3(0, 9.4, 0), '✓', { cls: 'plot3 guard' + (c.draft ? ' draft' : ''), button: true, data: { entry: c.of }, max: 260 });
