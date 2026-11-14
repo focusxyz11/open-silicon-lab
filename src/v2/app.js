@@ -64,7 +64,7 @@ export function start() {
      their shaders compiled on the shared renderer, so going inside finds them ready */
   const ready = (make, view) => () => { if (viewNow !== 'map') return; make().then(v => { if (viewNow !== view) v.pause(); return v.warm(); }); };
   const prewarm = () => [ready(ensureDc, 'dc'), ready(ensureChip, 'chip'), ready(ensureBoard, 'board')].reduce((p, f) => p.then(() => new Promise(r => idle(() => { f(); r(); }))), Promise.resolve());
-  const preload = () => { prewarm(); ['./frame.js', './board3d.js', './story.js', './stories.js', '../engines/weave.js', '../app/world.js', '../data/weave.js', '../app/design.js', '../app/journey.js', './switch3d.js', './overlay.js'].forEach(u => import(u).catch(() => { /* fetched again when needed */ })); };
+  const preload = () => { prewarm(); ['./frame.js', './board3d.js', './story.js', './stories.js', '../engines/weave.js', '../app/world.js', '../data/weave.js', '../app/design.js', '../app/journey.js', './level3d.js', './switch3d.js', './atom3d.js', './overlay.js'].forEach(u => import(u).catch(() => { /* fetched again when needed */ })); };
   const ensureMap = () => mapReady || (mapReady = import('./map3d.js').then(m => {
     map = m.createMap($('mapCanvas'), $('mapLabels'), { place: id => (cur && cur.place === id && !sheet.hidden && enterOf(id) ? enter(enterOf(id)) : openPlace(id)), question: key => openQuestion(key), job: need => openJob(need), interact: () => $('hero').classList.add('away') });
     loading(false); map.setState(islandState(), false); idle(preload);
@@ -325,7 +325,7 @@ export function start() {
     /* one stage: the line's machines draw on the shared renderer too */
     Wm.setChrome({ dots: false, dive: false, lit: true, stage: () => stage($('diveCanvas')), overlay: flatWords,
       look: () => !!diveFrame && diveFrame.mode() === 'look' && !benchCh, ask: () => !!diveFrame && diveFrame.mode() === 'ask' }); Jm.setBand(false);
-    dive = Wm.createWorld($('diveCanvas'), { depth: d => diveAt(d), arrive: d => diveAt(d), zoom: z => switchZoom(z), part: (d, key) => pickPart(sw && sw.active() ? sw.hit(lastTap.x, lastTap.y) : key), pick: th => { diveThread = th; dive.setThread(th); if (!benchCh && flatKind !== 'supply') drawDive(); },
+    dive = Wm.createWorld($('diveCanvas'), { depth: d => diveAt(d), arrive: d => diveAt(d), zoom: z => levelZoom(z), part: (d, key) => { const a = l3Active(); pickPart(a ? a.obj.hit(lastTap.x, lastTap.y) : key); }, pick: th => { diveThread = th; dive.setThread(th); if (!benchCh && flatKind !== 'supply') drawDive(); },
       site: id => supplySite(id), mapStep: i => supplyStep(i) });
     return dive;
   });
@@ -353,29 +353,36 @@ export function start() {
      part you pick, flat or in 3D; until then the picture and its names explain themselves */
   function diveNotes() {
     const id = diveId(), key = divePart;
-    if (sw) sw.select(id === 'switch' && divePart ? divePart : null, key && EN_HAS('switch.' + key) ? { title: t('part.switch.' + key), text: t('what.switch.' + key) } : null);
+    Object.entries(L3).forEach(([lv, l]) => { if (l.obj) l.obj.select(id === lv && key ? key : null, key && EN_HAS(lv + '.' + key) ? { title: t('part.' + lv + '.' + key), text: t('what.' + lv + '.' + key) } : null); });
     if (!key) return dive.setNotes([]);
     const w = DiveData.partWord(id, key); if (!EN_HAS(w)) return dive.setNotes([]);
     dive.setNotes([{ part: key, title: t('part.' + w), text: t('what.' + w), tone: 'cool' }]);
   }
-  /* ---- the switch in 3D (src/v2/switch3d.js): as the dive reaches the switch, the flat picture gives way to a model
-     of it on the one stage, in the same square; the flat drawing stays the fallback ---- */
-  let sw = null, swMaking = null;
+  /* ---- the levels in 3D (src/v2/level3d.js: the switch, the atom): as the dive reaches one, the flat picture gives
+     way to a model of it on the one stage, in the same square; the flat drawing stays the fallback ---- */
+  const L3 = { switch: { mod: './switch3d.js', host: 'swLabels' }, atom: { mod: './atom3d.js', host: 'atomLabels' } };
+  const l3Active = () => Object.values(L3).find(l => l.obj && l.obj.active());
   const lastTap = { x: 0, y: 0 };
   $('diveCanvas').addEventListener('pointerup', e => { lastTap.x = e.clientX; lastTap.y = e.clientY; }, true);
-  const ensureSwitch = () => swMaking || (swMaking = import('./switch3d.js').then(m => (sw = m.createSwitch($('diveCanvas'), $('swLabels'), { part: key => { divePart = key; diveNotes(); },
-    marks: () => (diveFrame && diveFrame.mode() === 'ask' ? askMarks('switch') : null), mark: th => { location.hash = follow(th + '.switch'); }, askMany: ths => markAsk(ths) }))).catch(() => null));
+  const ensureL3 = lv => { const l = L3[lv]; return l.making || (l.making = import(l.mod).then(m => (l.obj = m.create($('diveCanvas'), $(l.host), { part: key => pickPart(key),
+    marks: () => (diveFrame && diveFrame.mode() === 'ask' ? askMarks(lv) : null), mark: th => { location.hash = follow(th + '.' + lv); }, askMany: ths => markAsk(ths) }))).catch(() => null)); };
   /* the questions at a level, grouped by the part each is about (the first of its parts): the marks under Ask */
   const askMarks = id => { const by = new Map(); DiveData.THREADS.forEach(th => { const nm = DiveData.STOPS[th.id + '.' + id], key = nm && nm[0]; if (!key) return; if (!by.has(key)) by.set(key, []); by.get(key).push({ id: th.id, color: threadColorOf(th.id) }); }); return [...by].map(([part, threads]) => ({ part, threads })); };
   let threadColorOf = () => '';
-  function switchZoom(z) {
-    if (!dive || !WE || flatKind !== 'dive' || $('diveCanvas').hidden) { if (sw) sw.show(0); return; }
-    const ds = WE.IDS.indexOf('switch'), d = z - ds, k = ds < 0 ? 0 : 1 - Math.min(1, Math.max(0, (Math.abs(d) - 0.08) / 0.32));
-    /* the flat picture's words give way with it */
-    $('flatLabels').style.visibility = k > 0.5 ? 'hidden' : '';
-    if (k <= 0) { if (sw) sw.show(0); return; }
-    if (!sw) { ensureSwitch().then(s => { if (s) { s.show(k, d, dive.frame); diveNotes(); } }); return; }
-    sw.show(k, d, dive.frame);
+  const hideL3 = () => { Object.values(L3).forEach(l => { if (l.obj) l.obj.show(0); }); $('diveCanvas').style.opacity = ''; $('flatLabels').style.visibility = ''; };
+  function levelZoom(z) {
+    if (!dive || !WE || flatKind !== 'dive' || $('diveCanvas').hidden) { hideL3(); return; }
+    let top = 0;
+    Object.entries(L3).forEach(([lv, l]) => {
+      const ds = WE.IDS.indexOf(lv), d = z - ds, k = ds < 0 ? 0 : 1 - Math.min(1, Math.max(0, (Math.abs(d) - 0.08) / 0.32));
+      if (k <= 0) { if (l.obj) l.obj.show(0); return; }
+      if (!l.obj) { ensureL3(lv).then(o => { if (o && flatKind === 'dive') { levelZoom(dive.z); diveNotes(); } }); return; }
+      l.obj.show(k, d, dive.frame); top = Math.max(top, k);
+    });
+    /* the flat picture and its words give way to the model; the stage shows while one is there */
+    $('diveCanvas').style.opacity = String(1 - top);
+    $('flatLabels').style.visibility = top > 0.5 ? 'hidden' : '';
+    showStage(top > 0);
   }
   const EN_HAS = w => t('part.' + w) !== 'part.' + w;
   function drawDive() {
@@ -511,7 +518,7 @@ export function start() {
     $('diveCanvas').hidden = true; vui.hidden = true; dive && dive.stop(); hide3d(); $('flatLabels').hidden = true; if (flatWords) flatWords.clear();
     hideBoard(); $('hero').hidden = true; closeSheet(); pui.hidden = true; cui.hidden = true; dc && dc.pause(); map && map.pause(); chip && chip.pause();
     ['mapCanvas', 'mapLabels', 'placeCanvas', 'placeLabels', 'chipCanvas', 'chipLabels'].forEach(k => { $(k).hidden = true; });
-    document.body.classList.remove('immersive'); page.hidden = true; if (sw) sw.show(0); showStage(false);
+    document.body.classList.remove('immersive'); page.hidden = true; hideL3(); showStage(false);
   }
   function showMap(from) {
     $('diveCanvas').hidden = true; vui.hidden = true; dive && dive.stop(); hide3d(); $('flatLabels').hidden = true; if (flatWords) flatWords.clear();

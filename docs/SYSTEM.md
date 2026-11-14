@@ -115,14 +115,18 @@ Ask). The supply map has no grid, title or row of steps (the rail and the dock s
 The line at night has a plain floor and quiet edges, so its machines read as solids; the board's copper goes
 somewhere (traces to each link, wide traces bringing power), not rows of stripes.
 
-**The switch in 3D.** The first level of the zoom drawn on the one stage (`src/v2/switch3d.js`, following
-`docs/reviews/art-direction.md`): one transistor cut open at the front, so the cut face shows the gate wrapped
-round three sheets of silicon, each in its skin, with source and drain on either side and electrons flowing through
-the sheets. As the dive comes within a little of the switch (`zoom` from `src/app/world.js`), the flat picture fades
-and the model takes its place in the same square (`dive.frame`), farther while you are still above it and nearer as
-you go on to the atom, so the zoom stays one movement. Its five names are HTML; a picked part's note opens beside its
-name; under Ask its questions are the same marks as on the flat levels. A sideways drag turns it 20° each way; up and
-down still zoom. The flat drawing stays the fallback.
+**The levels in 3D.** The bottom of the zoom is drawn on the one stage (following `docs/reviews/art-direction.md`):
+the switch (`src/v2/switch3d.js`), one transistor cut open at the front, so the cut face shows the gate wrapped round
+three sheets of silicon, each in its skin, with source and drain on either side and electrons flowing through the
+sheets; and the atom (`src/v2/atom3d.js`), a small crystal two cells deep where every atom holds four neighbours in
+the diamond pattern, one added atom of another kind sits in a place of it, a few electrons drift loose, and the
+disordered insulating skin lies on top, the back fading into the sky. What they share is one module
+(`src/v2/level3d.js`): as the dive comes within a little of the level (`zoom` from `src/app/world.js`), the flat
+picture fades and the model takes its place in the same square (`dive.frame`), farther while you are still above it
+and nearer as you go on, so the zoom stays one movement; between the two, the flat picture shows for a moment.
+Names are HTML; a picked part's note opens beside its name; under Ask its questions are the same marks as on the flat
+levels. A sideways drag turns it 20° each way; up and down still zoom; it sways when idle and holds still with
+reduced motion. The flat drawings stay the fallback.
 
 **Everything inside.** Nothing in the chip world leads to the earlier site any more. The flat dive starts from any
 world (`#/dive/<depth>/<world>`): the data centre's chip, a phone, a car, or the made chip (the factory's machine,
