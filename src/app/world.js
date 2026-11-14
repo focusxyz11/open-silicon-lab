@@ -25,7 +25,14 @@ const MONO = '"Martian Mono", ui-monospace, Menlo, monospace'; /* i18n-ok: a fon
 const SANS = '"Atkinson Hyperlegible Next", system-ui, sans-serif'; /* i18n-ok: a font name */
 
 
+/* the chip world's look (CHROME.lit): the same palette as its 3D views and its pages (src/styles/v2.css), and
+   light from above: shapes are lit at the top and cast a soft shadow, as the lit 3D scenes do */
+const WORLD_LOOK = {
+  dark: { lit: true, dark: true, bg: '#0b1120', lo: '#111a2b', mid: '#18233a', up: '#23314d', line: '#6f7f9c', hi: '#eef2f8', dim: '#2a3854', veil: 'rgba(11,17,32,0.6)', warm: '#ffb347', cool: '#5aa9ff', grn: '#45d08a', red: '#ff6b62' },
+  light: { lit: true, dark: false, bg: '#dfe8f2', lo: '#f5f8fc', mid: '#e7eef6', up: '#d4dfeb', line: '#5b6a80', hi: '#16202e', dim: '#c8d3e1', veil: 'rgba(223,232,242,0.66)', warm: '#c27400', cool: '#2f7de1', grn: '#138a5a', red: '#cc3f2b' }
+};
 function palette() {
+  if (CHROME.lit) return WORLD_LOOK[theme() === 'dark' ? 'dark' : 'light'];
   return theme() === 'dark'
     ? { dark: true, bg: '#05070d', lo: '#0b1020', mid: '#151d36', up: '#1f2a4a', line: '#5a6b93', hi: '#c9d4ee', dim: '#27324f', veil: 'rgba(5,7,13,0.58)', warm: '#ffb057', cool: '#63b6ff', grn: '#35c994', red: '#ff6f5c' }
     : { dark: false, bg: '#e6eaf0', lo: '#f7f9fb', mid: '#e2e8f0', up: '#cfd8e4', line: '#5c6a82', hi: '#18222f', dim: '#c3ccd9', veil: 'rgba(240,243,247,0.66)', warm: '#b86a00', cool: '#1c64c8', grn: '#0b8a5c', red: '#cc3f2b' };
@@ -81,7 +88,7 @@ const smooth = (a, b, x) => { const u = Math.max(0, Math.min(1, (x - a) / (b - a
 
 /* the earlier site's own chrome over the picture: the marks along the top and the dive label. The chip world's
    frame says the same things, so it switches them off (setChrome). */
-const CHROME = { dots: true, dive: true, stage: null };
+const CHROME = { dots: true, dive: true, stage: null, lit: false };
 export const setChrome = o => Object.assign(CHROME, o);
 export function createWorld(cv, on) {
   const ctx = cv.getContext('2d'), t0 = performance.now();
@@ -94,10 +101,28 @@ export function createWorld(cv, on) {
   const G = {
     ctx, s: 1, k: 1, primary: false, t: 0, col, id: '', base: 1, mine: false, run: null,
     lw(px) { return (px * this.k) / this.s; },
-    bg(c) { this.ctx.fillStyle = c || this.col.lo; this.ctx.fillRect(0, 0, 1000, 1000); },
-    r(x, y, w, h, fill, stroke, lw) { const c = this.ctx; if (fill) { c.fillStyle = fill; c.fillRect(x, y, w, h); } if (stroke) { c.strokeStyle = stroke; c.lineWidth = this.lw(lw || 1); c.strokeRect(x, y, w, h); } },
+    bg(c) { const x = this.ctx; x.fillStyle = c || this.col.lo; x.fillRect(0, 0, 1000, 1000);
+      /* lit: the light falls from the top left, as on the 3D views */
+      if (CHROME.lit && this.primary) { const g = x.createRadialGradient(260, 120, 40, 420, 380, 1050); g.addColorStop(0, this.col.dark ? 'rgba(120,160,230,0.10)' : 'rgba(255,255,255,0.55)'); g.addColorStop(1, this.col.dark ? 'rgba(0,0,0,0.28)' : 'rgba(30,50,80,0.10)'); x.fillStyle = g; x.fillRect(0, 0, 1000, 1000); } },
+    r(x, y, w, h, fill, stroke, lw) {
+      const c = this.ctx;
+      /* lit: a shape big enough to read as a part gets rounded corners, a soft shadow below and light on its top */
+      if (CHROME.lit && fill && w * h > 1600 && w > 14 && h > 14) {
+        const rad = Math.min(7, w / 8, h / 8);
+        c.save(); c.beginPath(); c.roundRect(x, y, w, h, rad);
+        c.shadowColor = this.col.dark ? 'rgba(0,0,0,0.45)' : 'rgba(30,50,80,0.22)'; c.shadowBlur = 14 * this.k; c.shadowOffsetY = 4 * this.k;
+        c.fillStyle = fill; c.fill(); c.shadowColor = 'transparent';
+        const g = c.createLinearGradient(0, y, 0, y + h); g.addColorStop(0, this.col.dark ? 'rgba(255,255,255,0.10)' : 'rgba(255,255,255,0.45)'); g.addColorStop(0.5, 'rgba(255,255,255,0)'); g.addColorStop(1, this.col.dark ? 'rgba(0,0,0,0.18)' : 'rgba(30,50,80,0.06)');
+        c.fillStyle = g; c.fill();
+        if (stroke) { c.strokeStyle = stroke; c.lineWidth = this.lw(lw || 1); c.stroke(); }
+        c.restore(); return;
+      }
+      if (fill) { c.fillStyle = fill; c.fillRect(x, y, w, h); } if (stroke) { c.strokeStyle = stroke; c.lineWidth = this.lw(lw || 1); c.strokeRect(x, y, w, h); } },
     l(pts, stroke, lw) { const c = this.ctx; c.beginPath(); pts.forEach((p, i) => (i ? c.lineTo(p[0], p[1]) : c.moveTo(p[0], p[1]))); c.strokeStyle = stroke; c.lineWidth = this.lw(lw || 1); c.stroke(); },
-    c(x, y, r, fill, stroke, lw) { const c = this.ctx; c.beginPath(); c.arc(x, y, r, 0, 6.2832); if (fill) { c.fillStyle = fill; c.fill(); } if (stroke) { c.strokeStyle = stroke; c.lineWidth = this.lw(lw || 1); c.stroke(); } },
+    c(x, y, r, fill, stroke, lw) { const c = this.ctx; c.beginPath(); c.arc(x, y, r, 0, 6.2832);
+      /* lit: a round part is a small sphere, light on its upper left */
+      if (CHROME.lit && fill && r > 6) { c.fillStyle = fill; c.fill(); const g = c.createRadialGradient(x - r * 0.35, y - r * 0.4, r * 0.1, x, y, r); g.addColorStop(0, this.col.dark ? 'rgba(255,255,255,0.28)' : 'rgba(255,255,255,0.55)'); g.addColorStop(1, 'rgba(0,0,0,' + (this.col.dark ? 0.25 : 0.1) + ')'); c.fillStyle = g; c.fill(); fill = null; }
+      if (fill) { c.fillStyle = fill; c.fill(); } if (stroke) { c.strokeStyle = stroke; c.lineWidth = this.lw(lw || 1); c.stroke(); } },
     a(alpha) { this.ctx.globalAlpha = this.base * alpha; },
     /* a small name beside a part, only on the depth you are standing in */
     label(key, x, y, align) {
