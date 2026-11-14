@@ -45,6 +45,12 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
   await page.click('#sheet [data-door="look"]');
   if (!(await page.$('#sheet .lvchips a')) || !(await page.$('#sheet .nav .btn.primary'))) problems.push(tag + ': Look shows no way inside the studio');
   /* every level and the supply map are inside the chip world: a phone's dive, the made chip, the map at the port */
+  /* the switch is drawn in 3D on the one stage, in the flat picture's place, with its five names */
+  at = tag + ' 3D switch'; await page.evaluate(() => { location.hash = '#/dive/switch'; });
+  await page.waitForFunction(() => document.querySelectorAll('#swLabels [data-swpart]').length === 5 && !document.getElementById('swLabels').hidden, null, { timeout: 25000 }).catch(() => problems.push(tag + ': the switch did not appear in 3D with its five names'));
+  if (await page.evaluate(() => +getComputedStyle(document.getElementById('diveCanvas')).opacity > 0.5)) problems.push(tag + ': the flat switch did not give way to the 3D one');
+  await page.click('#swLabels [data-swpart="gate"]').catch(() => problems.push(tag + ': the 3D switch\'s gate cannot be picked'));
+  await page.waitForSelector('#swLabels .swnote:not([hidden])', { timeout: 10000 }).catch(() => problems.push(tag + ': picking the gate opened no note'));
   at = tag + ' dives and map'; await page.evaluate(() => { location.hash = '#/dive/phone/phone'; });
   await page.waitForSelector('#diveui .dock [data-key="next"]', { timeout: 20000 }).catch(() => problems.push(tag + ': the phone dive did not open with a way deeper'));
   await page.evaluate(() => { location.hash = '#/dive/scanner/made'; });
