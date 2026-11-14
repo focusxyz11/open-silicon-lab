@@ -1,8 +1,9 @@
 /* The world: one continuous dive, from Fable's world build (OSL-02). Each depth is a scene in a 1000 x 1000
    space (src/app/scenes.js); the next depth lives inside its portal square, and the camera slides between
-   the whole scene and that square, so the dive never cuts. The depth you came from stays faintly around it.
-   The active question lights up the parts it is about; the other questions crossing this depth sit on their
-   parts as coloured dots you can pick. The maths is in src/engines/weave.js. */
+   the whole scene and that square, so the dive never cuts. In the chip world the picture stands on the page's
+   ground with no frame, its words are HTML over it (src/v2/overlay.js) and the questions' marks show under Ask
+   (docs/reviews/art-direction.md). The active question lights up the parts it is about. The maths is in
+   src/engines/weave.js. */
 import { t } from '../core/i18n.js';
 import { DEPTHS, THREADS, partWord } from '../data/weave.js';
 import { N, IDS, WORLD, worldOf, clampZ, frames, lineFrames, isLine, stop } from '../engines/weave.js';
@@ -92,31 +93,35 @@ function along(pts, f) {
 const smooth = (a, b, x) => { const u = Math.max(0, Math.min(1, (x - a) / (b - a))); return u * u * (3 - 2 * u); };
 
 /* the earlier site's own chrome over the picture: the marks along the top and the dive label. The chip world's
-   frame says the same things, so it switches them off (setChrome). */
-const CHROME = { dots: true, dive: true, stage: null, lit: false };
+   frame says the same things, so it switches them off (setChrome). It also hands over overlay (src/v2/overlay.js),
+   which writes the dive's names, notes and marks in HTML, and look() and ask(), which say which mode the frame is in. */
+const CHROME = { dots: true, dive: true, stage: null, lit: false, overlay: null, look: null, ask: null };
 export const setChrome = o => Object.assign(CHROME, o);
 export function createWorld(cv, on) {
   const ctx = cv.getContext('2d'), t0 = performance.now();
   let W = 0, H = 0, dpr = 1, col = palette(), Z = 0, fly = null, lastD = -1, lastZ = -1;
   let inset = { l: 0, r: 0, t: 0, b: 0 }, anchor = null, thread = null, hits = [], hot = null, running = true;
-  /* words on the picture: notes pinned to parts (set by the shell), and the way down into the next depth */
-  let notes = [], dive = null;
+  /* words on the picture: notes pinned to parts (set by the shell), and the way down into the next depth; in the dive,
+     the parts' names the scene asked for (G.label), the part you picked, and the parts the story is about */
+  let notes = [], dive = null, htmlNames = [], picked = null, lead = [], restT = performance.now();
 
   /* The drawing helper handed to every scene. */
   const G = {
     ctx, s: 1, k: 1, primary: false, t: 0, col, id: '', base: 1, mine: false, run: null,
     lw(px) { return (px * this.k) / this.s; },
-    bg(c) { const x = this.ctx; x.fillStyle = c || this.col.lo; x.fillRect(0, 0, 1000, 1000);
-      /* lit: the light falls from the top left, as on the 3D views */
-      if (CHROME.lit && this.primary) { const g = x.createRadialGradient(260, 120, 40, 420, 380, 1050); g.addColorStop(0, this.col.dark ? 'rgba(120,160,230,0.10)' : 'rgba(255,255,255,0.55)'); g.addColorStop(1, this.col.dark ? 'rgba(0,0,0,0.28)' : 'rgba(30,50,80,0.10)'); x.fillStyle = g; x.fillRect(0, 0, 1000, 1000); } },
+    /* lit: the picture stands on the page's own ground, with no card or frame round it, as the 3D views do */
+    bg(c) { const x = this.ctx; x.fillStyle = CHROME.lit ? this.col.bg : c || this.col.lo; x.fillRect(0, 0, 1000, 1000); },
     r(x, y, w, h, fill, stroke, lw) {
       const c = this.ctx;
-      /* lit: a shape big enough to read as a part gets rounded corners, a soft shadow below and light on its top */
+      /* lit: a shape big enough to read as a part gets rounded corners, a soft shadow below and light on its top. The
+         shadow is two offset layers, not a blur, which is slow on phones (src/app/solid.js does the same) */
       if (CHROME.lit && fill && w * h > 1600 && w > 14 && h > 14) {
-        const rad = Math.min(7, w / 8, h / 8);
-        c.save(); c.beginPath(); c.roundRect(x, y, w, h, rad);
-        c.shadowColor = this.col.dark ? 'rgba(0,0,0,0.45)' : 'rgba(30,50,80,0.22)'; c.shadowBlur = 14 * this.k; c.shadowOffsetY = 4 * this.k;
-        c.fillStyle = fill; c.fill(); c.shadowColor = 'transparent';
+        const rad = Math.min(7, w / 8, h / 8), d = this.k / this.s, a = c.globalAlpha;
+        c.save(); c.fillStyle = this.col.dark ? '#000' : '#1e3250';
+        c.globalAlpha = a * (this.col.dark ? 0.22 : 0.08); c.beginPath(); c.roundRect(x + d, y + 5 * d, w, h, rad); c.fill();
+        c.globalAlpha = a * (this.col.dark ? 0.2 : 0.07); c.beginPath(); c.roundRect(x, y + 2 * d, w, h, rad); c.fill();
+        c.globalAlpha = a; c.beginPath(); c.roundRect(x, y, w, h, rad);
+        c.fillStyle = fill; c.fill();
         const g = c.createLinearGradient(0, y, 0, y + h); g.addColorStop(0, this.col.dark ? 'rgba(255,255,255,0.10)' : 'rgba(255,255,255,0.45)'); g.addColorStop(0.5, 'rgba(255,255,255,0)'); g.addColorStop(1, this.col.dark ? 'rgba(0,0,0,0.18)' : 'rgba(30,50,80,0.06)');
         c.fillStyle = g; c.fill();
         if (stroke) { c.strokeStyle = stroke; c.lineWidth = this.lw(lw || 1); c.stroke(); }
@@ -129,9 +134,11 @@ export function createWorld(cv, on) {
       if (CHROME.lit && fill && r > 6) { c.fillStyle = fill; c.fill(); const g = c.createRadialGradient(x - r * 0.35, y - r * 0.4, r * 0.1, x, y, r); g.addColorStop(0, this.col.dark ? 'rgba(255,255,255,0.28)' : 'rgba(255,255,255,0.55)'); g.addColorStop(1, 'rgba(0,0,0,' + (this.col.dark ? 0.25 : 0.1) + ')'); c.fillStyle = g; c.fill(); fill = null; }
       if (fill) { c.fillStyle = fill; c.fill(); } if (stroke) { c.strokeStyle = stroke; c.lineWidth = this.lw(lw || 1); c.stroke(); } },
     a(alpha) { this.ctx.globalAlpha = this.base * alpha; },
-    /* a small name beside a part, only on the depth you are standing in */
+    /* a small name beside a part, only on the depth you are standing in; in the dive it is written in HTML over the
+       picture (CHROME.overlay), not into it */
     label(key, x, y, align) {
       if (!this.primary) return;
+      if (this.html) { htmlNames.push({ key, x, y, align }); return; }
       const s = t('part.' + partWord(this.id, key)), c = this.ctx, size = 11.5 / this.s;
       c.save(); c.font = '500 ' + size + 'px ' + MONO; c.textAlign = align || 'left';
       const m = c.measureText(s).width, bx = align === 'center' ? x - m / 2 : align === 'right' ? x - m : x;
@@ -150,13 +157,11 @@ export function createWorld(cv, on) {
     ctx.beginPath(); ctx.rect(0, 0, 1000, 1000); shapes.forEach(sh => shapePath(ctx, sh));
     ctx.fillStyle = col.veil; ctx.fill('evenodd');
     ctx.strokeStyle = color; ctx.fillStyle = color; ctx.lineJoin = 'round';
-    if (col.dark && !many) { ctx.shadowColor = color; ctx.shadowBlur = 14 * dpr; }
     shapes.forEach(sh => {
       const o = outline(sh); ctx.beginPath(); o.forEach((p, k) => (k ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1])));
       ctx.lineWidth = (sh.p && !sh.closed ? 3 : 2) * px; ctx.stroke();
       if (!sh.p || sh.closed) { ctx.globalAlpha = alpha * 0.1; ctx.fill(); ctx.globalAlpha = alpha; }
     });
-    ctx.shadowBlur = 0;
     shapes.forEach((sh, k) => {
       if (many && k % 4) return;
       const p = along(outline(sh), (tm * 0.22 + k * 0.37) % 1), r = 3.6 * px;
@@ -173,8 +178,8 @@ export function createWorld(cv, on) {
     ctx.setTransform(dpr * tr.s, 0, 0, dpr * tr.s, dpr * tr.tx, dpr * tr.ty);
     ctx.beginPath(); ctx.rect(0, 0, 1000, 1000); ctx.clip();
     ctx.globalAlpha = alpha;
-    Object.assign(G, { s: tr.s, k: Math.max(0.3, Math.min(1.5, size / B)), primary, t: tm, col, id, base: alpha, box: B });
-    /* while it is small, the depth fading in is already drawn, small, by the scene around it (scenes.js) */
+    Object.assign(G, { s: tr.s, k: Math.max(0.3, Math.min(1.5, size / B)), primary, t: tm, col, id, base: alpha, box: B, sel: primary ? picked : null, lead: primary ? lead : [] });
+    /* while it is small, the depth fading in is left to the scene around it, whose drawing there is that depth at its simplest */
     if (size < 46 && !primary) { ctx.restore(); return; }
     sc.draw(G);
     ctx.globalAlpha = alpha;
@@ -285,23 +290,49 @@ export function createWorld(cv, on) {
       return;
     }
     mapK = 0;
-    const F = frames(Z, b.B, b.cx, b.cy), pi = F.f < 0.5 ? F.i : F.i + 1;
+    const F = frames(Z, b.B, b.cx, b.cy), pi = F.f < 0.5 ? F.i : F.i + 1, html = !!CHROME.overlay;
     ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1; ctx.fillStyle = col.bg; ctx.fillRect(0, 0, W * dpr, H * dpr);
-    if (F.prev) {
-      /* the depth you came from stays as faint surroundings */
+    /* the earlier site kept the depth you came from faintly around the picture, inside a thin frame; the chip world
+       draws neither: the move itself and the rail say where you are */
+    if (F.prev && !CHROME.lit) {
       drawLevel(F.i - 1, F.prev, 1, false, b.B, tm);
       ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 0.74; ctx.fillStyle = col.bg; ctx.fillRect(0, 0, W * dpr, H * dpr); ctx.globalAlpha = 1;
     }
+    htmlNames = []; G.html = html;
     drawLevel(F.i, F.cur, 1, pi === F.i, b.B, tm);
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.globalAlpha = 0.5; ctx.strokeStyle = col.line; ctx.lineWidth = 1;
-    ctx.strokeRect(F.cur.tx, F.cur.ty, F.cur.s * 1000, F.cur.s * 1000); ctx.globalAlpha = 1;
+    if (!CHROME.lit) { ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.globalAlpha = 0.5; ctx.strokeStyle = col.line; ctx.lineWidth = 1; ctx.strokeRect(F.cur.tx, F.cur.ty, F.cur.s * 1000, F.cur.s * 1000); ctx.globalAlpha = 1; }
     if (F.next) drawLevel(F.i + 1, F.next, smooth(0.16, 0.7, F.f), pi === F.i + 1, b.B, tm);
-    overlays(tm, pi, pi === F.i ? F.cur : F.next);
+    G.html = false;
+    const ptr = pi === F.i ? F.cur : F.next;
+    overlays(tm, pi, ptr);
     /* standing at a depth: the way down, marked where it is, and the notes pinned to parts */
     dive = null;
     const settled = !fly && !drag && Math.abs(Z - Math.round(Z)) < 0.04 && pi === F.i;
     if (settled && F.next && !worldOf(WORLD).flat && CHROME.dive) diveMark(tm, F, b);
-    if (settled) drawNotes(F.cur, b);
+    if (html) htmlOverlay(F, pi, ptr, settled); else if (settled) drawNotes(F.cur, b);
+  }
+  /* the dive's words, in HTML over the picture (CHROME.overlay, src/v2/overlay.js): at most five names (three on a
+     phone): the part you picked, then the parts the story is about, then the scene's own order; the rest appear on a
+     tap. The note on the picked part beside its name. Under Ask, the questions' marks on their parts. At rest in Look
+     for three seconds, four corner marks on the way deeper */
+  function htmlOverlay(F, pi, ptr, settled) {
+    const id = IDS[pi], P = partsOf(id), at = p => [ptr.tx + p[0] * ptr.s, ptr.ty + p[1] * ptr.s], now = performance.now();
+    if (!settled) restT = now;
+    const rank = k => (k === picked ? -1 : lead.includes(k) ? lead.indexOf(k) : 50), seen = new Set();
+    const labels = htmlNames.filter(n => !seen.has(n.key) && seen.add(n.key)).map((n, i) => ({ n, i }))
+      .sort((a, z) => rank(a.n.key) - rank(z.n.key) || a.i - z.i).slice(0, W < 520 ? 3 : 5)
+      .map(({ n }) => { const p = at([n.x, n.y]); return { key: n.key, text: t('part.' + partWord(id, n.key)), x: p[0], y: p[1], align: n.align, on: n.key === picked }; });
+    const centreOf = key => { const sh = P[key] && P[key][0]; if (!sh) return null; const o = outline(sh), xs = o.map(p => p[0]), ys = o.map(p => p[1]); return at([(Math.min(...xs) + Math.max(...xs)) / 2, (Math.min(...ys) + Math.max(...ys)) / 2]); };
+    const n0 = notes[0], nc = n0 && centreOf(n0.part);
+    const note = n0 && nc ? { key: n0.part, title: n0.title, text: n0.text, x: nc[0], y: nc[1] } : null;
+    let marks = [];
+    if (CHROME.ask && CHROME.ask()) {
+      const by = new Map();
+      THREADS.forEach(th => { const nm = stop(th.id, pi), key = nm && nm.find(n => P[n] && P[n].length); if (!key) return; if (!by.has(key)) by.set(key, []); by.get(key).push({ id: th.id, color: threadColor(th.id) }); });
+      marks = [...by].map(([key, threads]) => { const c = centreOf(key); return { part: key, x: c[0], y: c[1] - 14, threads }; });
+    }
+    const door = settled && F.next && now - restT > 3000 && CHROME.look && CHROME.look() ? [F.next.tx, F.next.ty, F.next.s * 1000] : null;
+    CHROME.overlay.draw({ labels, note, marks, moving: !settled, door, doorWord: door ? t('ui.diveInto', { depth: t('depth.' + IDS[F.i + 1] + '.name') }) : '' });
   }
   /* "Dive into" the next depth: its square, outlined where it sits in this scene, with its name */
   function diveMark(tm, F, b) {
@@ -383,9 +414,26 @@ export function createWorld(cv, on) {
   }
 
   /* drawn over the scene in view, in a dive or on the line */
+  /* the part you picked: a ring 3 px off it, never a fill (blue is a material) */
+  function drawPicked(pi, ptr) {
+    const shapes = picked && !fly ? partsOf(IDS[pi])[picked] || [] : [];
+    if (!shapes.length) return;
+    const o = 3 / ptr.s;
+    ctx.save(); ctx.setTransform(dpr * ptr.s, 0, 0, dpr * ptr.s, dpr * ptr.tx, dpr * ptr.ty);
+    ctx.strokeStyle = col.hi; ctx.lineWidth = 2 / ptr.s; ctx.lineJoin = 'round';
+    shapes.forEach(sh => {
+      ctx.beginPath();
+      if (sh.r) ctx.roundRect(sh.r[0] - o, sh.r[1] - o, sh.r[2] + 2 * o, sh.r[3] + 2 * o, 4 / ptr.s);
+      else if (sh.c) ctx.arc(sh.c[0], sh.c[1], sh.c[2] + o, 0, 6.2832);
+      else { outline(sh).forEach((p, k) => (k ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1]))); if (sh.closed) ctx.closePath(); }
+      ctx.stroke();
+    });
+    ctx.restore();
+  }
   function overlays(tm, pi, ptr) {
     view = { pi, ptr };
-    drawHotPart(pi, ptr);
+    if (CHROME.overlay) drawPicked(pi, ptr);
+    if (!CHROME.overlay || hotPart !== picked) drawHotPart(pi, ptr);
     /* the tether: from the question in the card to what it is about */
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     if (anchor && thread && ptr && !fly) {
@@ -398,8 +446,9 @@ export function createWorld(cv, on) {
         ctx.globalAlpha = 1; ctx.fillStyle = color; ctx.beginPath(); ctx.arc(fx, fy, 4, 0, 6.2832); ctx.fill();
       }
     }
-    /* the other questions crossing here, sitting on the parts they are about */
+    /* the other questions crossing here, sitting on the parts they are about (in the chip world, HTML marks under Ask) */
     hits = [];
+    if (CHROME.overlay) { ctx.globalAlpha = 1; return; }
     const near = 1 - smooth(0.12, 0.34, Math.abs(Z - Math.round(Z)));
     if (!fly && ptr && near > 0.02) {
       const P = partsOf(IDS[pi]), used = [];
@@ -481,7 +530,7 @@ export function createWorld(cv, on) {
   };
   const onDive = e => { if (!dive) return false; const r = cv.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top; return dive.rects.some(q => x >= q[0] && x <= q[0] + q[2] && y >= q[1] && y <= q[1] + q[3]); };
   const diveTap = e => { if (!onDive(e)) return false; api.flyTo(dive.to); return true; };
-  const end = e => { if (!drag) return; const tap = !drag.moved, onMap = drag.map; drag = null; if (onMap) { if (tap && e.type === 'pointerup') mapTap(e); return; } if (tap && e.type === 'pointerup' && stepTap(e)) return; if (tap && e.type === 'pointerup' && diveTap(e)) return; if (tap && e.type === 'pointerup') { const h = hitAt(e); if (h) on.pick && on.pick(h.id); else { const pt = partAt(e); if (pt && view) { hotPart = pt.key; on.part && on.part(view.pi, pt.key); } } } if (!tap && isLine()) settleLine(); };
+  const end = e => { if (!drag) return; const tap = !drag.moved, onMap = drag.map; drag = null; if (onMap) { if (tap && e.type === 'pointerup') mapTap(e); return; } if (tap && e.type === 'pointerup' && stepTap(e)) return; if (tap && e.type === 'pointerup' && diveTap(e)) return; if (tap && e.type === 'pointerup') { const h = hitAt(e); if (h) on.pick && on.pick(h.id); else { const pt = partAt(e); if (pt && view) { hotPart = pt.key; on.part && on.part(view.pi, pt.key); } else if (view && CHROME.overlay) on.part && on.part(view.pi, null); } } if (!tap && isLine()) settleLine(); };
   cv.addEventListener('pointerup', end); cv.addEventListener('pointercancel', end);
   cv.addEventListener('keydown', e => {
     const d = Math.round(Z);
@@ -506,6 +555,9 @@ export function createWorld(cv, on) {
       fly = { from: Z, to: d, t0: performance.now(), ms: Math.min(5200, isLine() ? 1000 + Math.abs(d - Z) * 1300 : 500 + Math.abs(d - Z) * 1150) };
     },
     setThread(th) { thread = th; },
+    /* the part you picked (a ring on it, its name lit), and the parts the story in the dock is about (named first) */
+    select(key) { picked = key || null; },
+    setLead(keys) { lead = Array.isArray(keys) ? keys : []; },
     /* the map: o (see map.js) to open or update it, null to close it */
     setMap(o) { mapO = o; if (o) mapLast = o; },
     get mapOpen() { return !!mapO; },

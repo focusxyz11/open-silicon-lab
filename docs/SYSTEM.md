@@ -95,10 +95,20 @@ one at a time (`rootShown`).
 
 **One look.** The flat views (the dive in every world, the line's stations, the bench, the supply map) are drawn in
 the chip world's palette, the same colours as its 3D views and its pages (`WORLD_LOOK` in `src/app/world.js`,
-switched on by `setChrome({ lit: true })`), and lit like them: light from the top left, so the background has a
-soft sky, a part big enough to read gets rounded corners, a shadow below and light on its top, and a round part is a
-small sphere. The line's machines take the 3D views' slate and warm white instead of the earlier site's blueprint
-blue. The earlier site, which does not switch it on, keeps its own look.
+switched on by `setChrome({ lit: true })`), and lit like them: light from the top left, so a part big enough to read
+gets rounded corners, a shadow below (two offset layers, never a canvas blur) and light on its top, and a round part
+is a small sphere. One thing has one colour everywhere (`docs/reviews/art-direction.md`): silicon blue-grey, the
+switch's gate in the accent, copper wires, contact metal, glass; green and red mean right and wrong, and nothing else.
+The line's machines take the 3D views' slate and warm white instead of the earlier site's blueprint blue.
+
+**The flat dive, tidied.** The picture stands on the page's own ground, with no card, frame or ghost of the level
+above round it: the move itself and the rail say where you are. Its words are HTML over it (`src/v2/overlay.js`, set
+by `setChrome({ overlay })`): at most five names (three on a phone), the parts the story is about first, shown a
+moment after the picture rests and hidden while it moves; a note only on a part you pick, beside its name, with a ring
+on the part and no line drawn to it; under Ask, the questions as marks on their parts (the island's mark; more than
+three on one part become one mark with a count, which lights those lines in the dock); and after three seconds at
+rest in Look, four corner marks on the way deeper. A portal holds no miniature: the parent's own drawing there (a
+core, a cell, one crossing, one sheet) is the next level at its simplest, and the next level fades in over it.
 
 **The switch in 3D.** The first level of the zoom drawn on the one stage (`src/v2/switch3d.js`, following
 `docs/reviews/art-direction.md`): one transistor cut open at the front, so the cut face shows the gate wrapped
@@ -106,7 +116,8 @@ round three sheets of silicon, each in its skin, with source and drain on either
 the sheets. As the dive comes within a little of the switch (`zoom` from `src/app/world.js`), the flat picture fades
 and the model takes its place in the same square (`dive.frame`), farther while you are still above it and nearer as
 you go on to the atom, so the zoom stays one movement. Its five names are HTML; a picked part's note opens beside its
-name. A sideways drag turns it 20° each way; up and down still zoom. The flat drawing stays the fallback.
+name; under Ask its questions are the same marks as on the flat levels. A sideways drag turns it 20° each way; up and
+down still zoom. The flat drawing stays the fallback.
 
 **Everything inside.** Nothing in the chip world leads to the earlier site any more. The flat dive starts from any
 world (`#/dive/<depth>/<world>`): the data centre's chip, a phone, a car, or the made chip (the factory's machine,

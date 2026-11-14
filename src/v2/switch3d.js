@@ -10,10 +10,13 @@
    Words are never drawn into the scene: the names are HTML over projected points, as everywhere.
 
    createSwitch(canvas, host, on) -> { show(k, depthOffset, frame), select(key, note), hit(x, y), active(), dispose() }
-   on.part(key): a name or a part was tapped. */
+   on.part(key): a name or a part was tapped. on.marks() -> [{ part, threads: [{ id, color }] }] under Ask, else null:
+   the questions' marks, drawn by the flat dive's overlay (overlay.js) so they look and behave the same;
+   on.mark(threadId) and on.askMany([threadId]) when one is tapped. */
 import * as THREE from '../vendor/three.min.js';
 import { PALETTES, theme, stage, light, mat, glass, labels, showStage, clamp } from './kit3d.js';
 import { t } from '../core/i18n.js';
+import { createOverlay } from './overlay.js';
 
 const PARTS = ['gate', 'channel', 'oxide', 'source', 'drain'];
 const still = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -82,6 +85,15 @@ export function createSwitch(canvas, host, on = {}) {
   /* the note on the picked part: beside its name, in HTML */
   const card = document.createElement('div'); card.className = 'swnote'; card.hidden = true; host.appendChild(card);
   let picked = null;
+  /* under Ask, the questions' marks on their parts, beside the names, never on them */
+  const marks = createOverlay(host, { mark: th => on.mark && on.mark(th), marks: ths => on.askMany && on.askMany(ths) }), mv = new THREE.Vector3();
+  function placeMarks() {
+    const ms = k > 0.85 && on.marks ? on.marks() : null;
+    if (!ms || !ms.length) return marks.draw({ labels: [], marks: [] });
+    const hr = host.getBoundingClientRect(), avoid = names.filter(n => n.el.style.opacity !== '0').map(n => { const r = n.el.getBoundingClientRect(); return [r.left - hr.left, r.top - hr.top, r.width, r.height]; });
+    root.updateWorldMatrix(true, false);
+    marks.draw({ labels: [], avoid, marks: ms.filter(m => anchor[m.part]).map(m => { mv.set(...anchor[m.part]).applyMatrix4(root.matrixWorld).project(camera); return { part: m.part, x: (mv.x + 1) / 2 * W, y: (1 - mv.y) / 2 * H, threads: m.threads }; }) });
+  }
 
   /* camera: looking down about 32° from a little left of the front, so the cut face of the gate shows between the
      source and the drain (the stack's -35° would hide it behind the source); you may turn it 20° each way; it sways */
@@ -110,6 +122,7 @@ export function createSwitch(canvas, host, on = {}) {
     names.forEach(n => { n.show = k > 0.85; n.el.classList.toggle('on', n.key === picked); });
     L.update(camera, W, H);
     if (picked && k > 0.85) placeCard(); else card.hidden = true;
+    placeMarks();
     st.draw(scene, camera);
     raf = requestAnimationFrame(tick);
   }
@@ -137,7 +150,7 @@ export function createSwitch(canvas, host, on = {}) {
       canvas.style.opacity = String(1 - k);
       host.hidden = k <= 0;
       if (k > 0 && was <= 0) { showStage(true); last = performance.now(); }
-      if (k <= 0 && was > 0) { showStage(false); card.hidden = true; }
+      if (k <= 0 && was > 0) { showStage(false); card.hidden = true; marks.clear(); }
       if (k > 0 && !raf) raf = requestAnimationFrame(tick);
     },
     active: () => k > 0.5,
@@ -155,6 +168,6 @@ export function createSwitch(canvas, host, on = {}) {
       if (!picked) card.hidden = true;
     },
     warm: () => st.warm(scene, camera),
-    dispose() { cancelAnimationFrame(raf); L.clear(); card.remove(); canvas.style.opacity = ''; }
+    dispose() { cancelAnimationFrame(raf); L.clear(); marks.clear(); card.remove(); canvas.style.opacity = ''; }
   };
 }

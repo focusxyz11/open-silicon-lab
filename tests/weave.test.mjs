@@ -108,10 +108,13 @@ test('changing world keeps a shared depth, and matches the steps above it', () =
   assert.equal(E.WORLD, 'datacentre');
 });
 
-test('one picture all the way down: every scene with a depth below draws it, small, in its portal', () => {
+test('the portal is the next depth, small: no scene draws a picture of it there, and every portal lies inside its scene', () => {
   const src = readFileSync(new URL('../src/app/scenes.js', import.meta.url), 'utf8');
-  for (const w of DIVE_WORLDS) w.depths.slice(0, -1).forEach(id => assert.ok(src.includes("inside(G, '" + id + "')"), id + ' does not draw the next depth in its portal'));
-  for (const [id, d] of Object.entries(DEPTHS)) if (d.inner) assert.ok(src.includes("inside(G, '" + id + "')"), id + ' does not draw the depth it holds');
+  assert.ok(!/inside\(G,/.test(src), 'a scene still draws a miniature of the next depth in its portal (docs/reviews/art-direction.md §6)');
+  for (const w of DIVE_WORLDS) w.depths.slice(0, -1).forEach(id => {
+    const p = DEPTHS[id].portal;
+    assert.ok(p && p[0] >= 0 && p[1] >= 0 && p[0] + p[2] <= 1000 && p[1] + p[2] <= 1000, id + ': its portal is not inside its scene');
+  });
 });
 
 test('every part of every scene has a name and says what it does', () => {

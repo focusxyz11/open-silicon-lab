@@ -7,12 +7,12 @@
    The journey's stations (crystal .. ship) are drawn in src/app/journey.js; inside the factory, a dive from
    the machine that prints with light: scanner, wafer, die.
    Every chip: block, gate, switch, atom.
-   One picture all the way down: every scene draws the next depth's scene, small, inside its portal square
-   (inside(G, id)), so the depth that fades in during the dive is the picture that was already there. */
+   One picture all the way down: what a scene draws in its portal square is the next depth at its simplest, and
+   the next depth fades in over it during the dive. */
 
-import { DEPTHS, WORLDS } from '../data/weave.js';
+import { DEPTHS } from '../data/weave.js';
 import { START, model, dies, defects, hits, WAFER, dieSquare } from '../engines/chip.js';
-import { rnd, clamp, poly, rr, blob, along2, closed } from './draw.js';
+import { rnd, poly, rr, blob, along2, closed } from './draw.js';
 import { STATIONS, setJourneyChip } from './journey.js';
 import { DESIGN_SCENES, designNow } from './design.js';
 import { proj, kit, tones, mix } from './solid.js';
@@ -30,38 +30,20 @@ export const setBuild = n => { BUILD = n == null || n >= BUILD_STEPS - 1 ? null 
 const heat = G => Math.max(0, Math.min(1, (M.power - 0.6) / 3));   /* 0 cool .. 1 very hot */
 
 /* ---- the next depth, inside this one ---- */
-/* a dive's next depth; on the journey's line there is no depth below, except the picture a station holds (inner) */
-const NEXT = {}; WORLDS.filter(w => !w.line).forEach(w => w.depths.forEach((d, i) => { if (i + 1 < w.depths.length) NEXT[d] = w.depths[i + 1]; }));
-Object.entries(DEPTHS).forEach(([d, v]) => { if (v.inner) NEXT[d] = v.inner; });
 /* the wafer's portal follows your chip's size */
 const portalOf = id => (id === 'wafer' ? dieSquare(M.size) : DEPTHS[id].portal);
-/* The side of the box the dive is drawn in, in screen pixels: line weights depend on it (world.js: k).
-   world.js passes it as G.box; without it, it is read back from a scene drawn at a size where k is not
-   clamped, and until then from the canvas. */
-let BOX = 0, ROUGH = 800, NEST = 0;
-function measure(G) {
-  const cv = G.ctx.canvas, dpr = G.ctx.getTransform().a / G.s || 1;
-  ROUGH = Math.min(cv.width, cv.height) / dpr;
-  if (G.k > 0.3 && G.k < 1.5) BOX = (1000 * G.s) / G.k;
-  if (BOX > ROUGH * 1.02) BOX = 0;
+/* A band that runs across the whole scene (a road, a skin, the silicon underneath) fades into the page's ground at its
+   two ends, so the scene's square never shows as a card */
+const rgba = (hex, a) => 'rgba(' + [1, 3, 5].map(i => parseInt(hex.slice(i, i + 2), 16)).join(',') + ',' + a + ')';
+function fadeEnds(G, y0, y1, round) {
+  const ctx = G.ctx, bg = G.col.bg; if (!/^#[0-9a-f]{6}$/i.test(bg)) return;
+  [[0, 160], [1000, 840]].forEach(([a, b]) => { const g = ctx.createLinearGradient(a, 0, b, 0); g.addColorStop(0, rgba(bg, 1)); g.addColorStop(1, rgba(bg, 0)); ctx.fillStyle = g; ctx.fillRect(Math.min(a, b), y0, 160, y1 - y0); });
+  /* a ground seen from above (the road): its top and bottom fade too */
+  if (round) [[0, 160], [1000, 840]].forEach(([a, b]) => { const g = ctx.createLinearGradient(0, a, 0, b); g.addColorStop(0, rgba(bg, 1)); g.addColorStop(1, rgba(bg, 0)); ctx.fillStyle = g; ctx.fillRect(0, Math.min(a, b), 1000, 160); });
 }
-/* Draw the next depth's scene in this scene's portal: the same code, the same clock, the same line weights
-   it will have when it fades in. Too small to see, it is left as a plain square. */
-function inside(G, id) {
-  const p = portalOf(id), next = SCENES[NEXT[id]], px = G.s * p[2], ctx = G.ctx, c = G.col;
-  G.a(1);
-  if (px < 9) { G.r(p[0], p[1], p[2], p[2], c.lo, c.line, 0.6); return; }
-  /* As large as the dive's box, the next depth is the one being drawn there anyway (world.js draws it in
-     full, on top): drawing it twice only costs time. */
-  if (px > (G.box || BOX || ROUGH) * 0.9) return;
-  const keep = { s: G.s, k: G.k, primary: G.primary, id: G.id };
-  ctx.save(); ctx.translate(p[0], p[1]); ctx.scale(p[2] / 1000, p[2] / 1000); ctx.beginPath(); ctx.rect(0, 0, 1000, 1000); ctx.clip();
-  Object.assign(G, { s: px / 1000, k: clamp(px / (G.box || BOX || ROUGH), 0.3, 1.5), primary: false, id: NEXT[id] });
-  NEST++; try { next.draw(G); } finally { NEST--; ctx.restore(); Object.assign(G, keep); }
-  /* the same thin frame the dive draws around the depth you are in */
-  ctx.save(); ctx.globalAlpha = 0.5 * G.base; ctx.strokeStyle = c.line; ctx.lineWidth = 1 / G.s; ctx.strokeRect(p[0], p[1], p[2], p[2]); ctx.restore();
-}
-
+/* The portal holds no picture of its own: the parent's own drawing there is the next depth at its simplest (a core of
+   the chip, a cell of the block, one crossing of the gate, one sheet of the switch), so the thing you fly into is the
+   thing you arrive at; world.js fades the next depth in over it as you go (docs/reviews/art-direction.md §3). */
 
 /* ---- chip X-ray (src/engines/xray.js): the chip at the bottom of each dive, seen as a photo of its die.
    Every district keeps its place; what changes is its look under a microscope: memory a perfectly regular
@@ -127,7 +109,6 @@ function xrayScene(G, id) {
   /* what no block covers: wiring and spacing, a faint even texture */
   G.a(0.35); lattice(G, 100, 100, 800, 800, 25, 25, c.dim); G.a(1);
   xrayOf(id).forEach((b, i) => TEX[b.type](G, b.r, i));
-  inside(G, id);
 }
 
 /* ---- building: one hall of an AI data centre ---- */
@@ -209,7 +190,6 @@ const building = {
     /* cold air rising out of the floor in front of each row */
     G.a(0.35); [60, 240, 420].forEach(y => { for (let k = 0; k < 8; k++) { const u = (G.t * 0.35 + k / 8) % 1, q = PB(RACKX[0] + 20 + k * 44, y + 30, u * 40); G.l([q, [q[0], q[1] - 6]], c.cool, 1.2); } }); G.a(1);
     /* the rack the dive follows: the next depth is its front */
-    inside(G, 'building');
     KB.person(G, 170, 70, 0.3);
     const at = (k, q, al) => G.label(k, q[0], q[1], al);
     at('racks', PB(RACKX[0] + 40, ROWS[ROWS.length - 1][0] + RACKD, RACKH + 26)); at('cooling', PB(150, 600, 206)); at('power', PB(560, 150, 126));
@@ -247,7 +227,6 @@ const rack = {
       G.r(652, y + 12, 8, 8, rnd(i, Math.floor(G.t * 2)) > 0.3 ? c.cool : c.dim); G.r(652, y + 26, 8, 8, c.warm);
       G.l([[676, 96 + i * 2], [684 + i * 2, 96 + i * 2], [684 + i * 2, y + 36], [670, y + 36]], c.line, 0.8);
     });
-    inside(G, 'rack');
     G.r(330, 862, 340, 66, c.up, c.line, 1.2);
     for (let i = 0; i < 4; i++) G.r(340 + i * 83, 872, 72, 46, c.mid, c.warm, 1);
     G.a(0.15 + 0.6 * heat(G)); for (let i = 0; i < 4; i++) G.r(346 + i * 83, 878, 60, 34, c.warm); G.a(1);
@@ -289,7 +268,6 @@ const board = {
       for (let j = 0; j < 5; j++) G.r(p[0] + j * 1.5, p[1] + 70 - j * 12, 40, 12, j % 2 ? c.mid : c.up, c.line, 0.8);
       const u = (G.t * 1.6 + k * 0.25) % 1, x = k < 2 ? p[0] + 40 + u * 13 : p[0] - u * 13; G.r(x - 2, p[1] + 40, 4, 4, c.cool);
     });
-    inside(G, 'board');
     G.r(220, 858, 560, 32, c.up, c.line, 1.1);
     for (let i = 0; i < 40; i++) G.l([[228 + i * 14, 862], [228 + i * 14, 886]], c.warm, 1.4);
     G.label('bigchip', 350, 340); G.label('memory', 345, 216); G.label('power', 142, 240);
@@ -324,7 +302,7 @@ const chip = {
     if (XRAY) return xrayScene(G, 'chip');
     const c = G.col;
     G.bg(c.lo);
-    G.r(40, 40, 920, 920, c.mid, c.hi, 1.8);
+    G.r(40, 40, 920, 920, c.mid, c.line, 1.2);
     for (let i = 0; i < 22; i++) { const t = 78 + i * 39; G.r(t, 56, 24, 24, c.lo, c.line, 0.9); G.r(t, 920, 24, 24, c.lo, c.line, 0.9); G.r(56, t, 24, 24, c.lo, c.line, 0.9); G.r(920, t, 24, 24, c.lo, c.line, 0.9); }
     G.r(112, 112, 776, 776, c.lo, c.line, 1);
     drawCores(G);   /* your chip's cores; signals that arrive after the tick turn red */
@@ -336,7 +314,6 @@ const chip = {
     /* numbers arriving from memory: never faster than memory sends them */
     const flow = M.work;
     for (let i = 0; i < 8; i++) { const u = (G.t * 0.5 * flow + i * 0.37) % 1; G.a(0.8); G.r(146 + i * 92, 820 - u * 190, 12, 10, c.cool); G.a(1); }
-    inside(G, 'chip');
     G.label('cores', 136, 126); G.label('cache', 136, 612); G.label('io', 136, 846); G.label('clock', 508, 380);
   }
 };
@@ -365,15 +342,16 @@ const block = {
         x += w + 4; n++;
       }
     }
-    G.r(660, 60, 300, 560, c.mid, c.hi, 1.3);
+    G.r(660, 60, 300, 560, c.mid, c.line, 1.2);
     for (let i = 0; i < 14; i++) for (let j = 0; j < 27; j++) G.r(670 + i * 20, 70 + j * 20, 14, 14, rnd(i * 31 + j, Math.floor(G.t * 1.2)) > 0.86 ? c.cool : c.up, null);
     G.r(660, 650, 300, 290, c.mid, c.line, 1.2);
     G.r(680, 672, 120, 110, c.up, c.dim, 1); G.r(820, 672, 120, 250, c.up, c.dim, 1); G.r(680, 800, 120, 122, c.lo, c.dim, 1);
-    G.a(0.85); wires.forEach(w => G.l(w.p, c.cu, 1.4)); G.a(1);
+    /* the wires over the cells: faint, unless you picked them or the story is about them */
+    const lit = G.sel === 'wires' || (G.lead || []).includes('wires');
+    G.a(lit ? 0.9 : 0.22); wires.forEach(w => G.l(w.p, c.cu, lit ? 1.6 : 0.9)); G.a(1);
     /* your design (the design studio): cells like these, as many as it became, outlined in two rows */
     const D = designNow(), n = D && D.M ? Math.min(40, D.M.cells.length * (D.p === 'core' ? 32 : 1)) : 0;
     if (n) { const w = Math.min(584, 40 + n * 26); G.ctx.setLineDash([6 / G.s, 5 / G.s]); G.r(40, 196, w, 128, null, c.warm, 1.8); G.ctx.setLineDash([]); G.a(0.12); G.r(40, 196, w, 128, c.warm); G.a(1); }
-    inside(G, 'block');
     G.label('cells', 44, 52); G.label('sram', 660, 50); G.label('wires', 480, 968); if (n) G.label('yours', 44, 190);
   }
 };
@@ -389,7 +367,6 @@ const gate = {
   draw(G) {
     const c = G.col;
     G.bg(c.lo);
-    for (let i = 1; i < 20; i++) { G.l([[i * 50, 0], [i * 50, 1000]], c.dim, 0.4); G.l([[0, i * 50], [1000, i * 50]], c.dim, 0.4); }
     G.r(200, 220, 600, 150, c.si); G.r(200, 630, 600, 150, c.si);
     G.r(200, 220, 600, 150, null, c.line, 1); G.r(200, 630, 600, 150, null, c.line, 1);
     /* a real two-input NAND: on the upper strip the middle contact takes power and both ends feed the output, so
@@ -401,7 +378,6 @@ const gate = {
     [[250, 240], [486, 240], [702, 262], [250, 680], [702, 680], [702, 330], [250, 310]].forEach(k => G.r(k[0], k[1], 26, 26, c.au));
     const u = (G.t * 0.35) % 1;
     G.r(708, 250 + u * 440, 14, 14, c.warm);
-    inside(G, 'gate');
     /* your chip's timing: the slowest signal racing the tick */
     const X = v => 140 + v * 340, late = M.path > M.tick, sig = Math.min(1, ((G.t * 0.4) % 1.25)) * M.path;
     G.l([[140, 960], [880, 960]], c.line, 1);
@@ -423,6 +399,7 @@ const swtch = {
     /* 0: the silicon underneath */
     G.r(0, 800, 1000, 200, c.mid, null);
     G.l([[0, 800], [1000, 800]], c.line, 1.2);
+    fadeEnds(G, 798, 1000);
     /* 1-2: a stack of thin layers grown on top, then cut down to a narrow stack */
     if (b >= 1 && b <= 4) {
       const x0 = b === 1 ? 110 : 340, x1 = b === 1 ? 890 : 660;
@@ -445,8 +422,6 @@ const swtch = {
         if (b === BUILD_STEPS - 1) for (let k = 0; k < 3; k++) { const x = 340 + (((G.t * 0.28 + k / 3 + i * 0.17) % 1) * 320); G.r(x - 5, sh.r[1] + 20, 10, 10, c.hi); }
       });
     }
-    /* the atoms of one sheet, once there is a sheet */
-    if (b >= 1) inside(G, 'switch');
     /* 7: metal contacts reach down to connect it */
     if (b >= 7) {
       G.r(180, 150, 90, 190, c.au); G.r(730, 150, 90, 190, c.au); G.r(465, 120, 70, 180, c.au);
@@ -469,6 +444,7 @@ const atom = {
     G.bg(c.lo);
     G.r(0, 0, 1000, 150, c.mid, null);
     G.l([[0, 150], [1000, 150]], c.warm, 1.4);
+    fadeEnds(G, 0, 152);
     for (let i = 0; i < 26; i++) { const x = 20 + i * 39 + rnd(i, 5) * 14, y = 34 + rnd(i, 6) * 86; G.c(x, y, i % 3 ? 13 : 19, i % 3 ? c.up : c.lo, i % 3 ? c.warm : c.line, 1); }
     for (let r = 0; r < 8; r++) for (let k = 0; k < 10; k++) {
       const p = pos(r, k);
@@ -574,8 +550,8 @@ const phone = {
     rr(G, 310, 400, 380, 430, 10, c.up, c.line, 1.2);
     G.r(330, 420, 340, 390, c.mid, c.dim, 0.8);
     const lvl = Math.max(0.06, Math.min(0.95, 0.55 * Math.sqrt(M.battery))) + 0.03 * Math.sin(G.t * 0.4);
-    G.a(0.35); G.r(330, 420 + 390 * (1 - lvl), 340, 390 * lvl, c.grn); G.a(1);
-    G.l([[330, 420 + 390 * (1 - lvl)], [670, 420 + 390 * (1 - lvl)]], c.grn, 1.2);
+    G.a(0.35); G.r(330, 420 + 390 * (1 - lvl), 340, 390 * lvl, c.warm); G.a(1);
+    G.l([[330, 420 + 390 * (1 - lvl)], [670, 420 + 390 * (1 - lvl)]], c.warm, 1.2);
     [150, 136, 122, 108, 94].forEach(r => G.c(500, 615, r, null, c.dim, 1));
     G.l([[500, 521], [500, 400]], c.dim, 1);
     G.ctx.restore();
@@ -594,7 +570,6 @@ const phone = {
     G.ctx.beginPath(); rim.forEach((q, i) => (i ? G.ctx.lineTo(q[0], q[1]) : G.ctx.moveTo(q[0], q[1]))); G.ctx.closePath(); inn.forEach((q, i) => (i ? G.ctx.lineTo(q[0], q[1]) : G.ctx.moveTo(q[0], q[1]))); G.ctx.closePath();
     G.ctx.fillStyle = T.body.top; G.ctx.fill('evenodd'); G.ctx.strokeStyle = T.edge; G.ctx.lineWidth = G.lw(1); G.ctx.stroke();
     G.s = s0; G.ctx.restore();
-    inside(G, 'phone');
     { const q = k => pr([k[0], k[1], 0, 0]); const [cx, cy] = q([300, 64]), [bx, by] = q([380, 62]), [tx, ty] = q([310, 392]); G.label('camera', cx, cy); G.label('board', bx + 150, by); G.label('battery', tx, ty); }
   }
 };
@@ -643,7 +618,6 @@ const phoneboard = {
     for (let k = 3; k >= 1; k--) { G.a((0.05 + 0.16 * h + 0.05 * beat) / k); const e = 14 * k * (0.6 + h); G.r(410 - e, 360 - e, 240 + 2 * e, 240 + 2 * e, c.warm); }
     G.a(1);
     G.r(402, 352, 256, 256, c.up, c.hi, 1.4);
-    inside(G, 'phoneboard');
     G.label('soc', 404, 342); G.label('pmic', 150, 610); G.label('modem', 668, 96); G.label('storage', 150, 160);
   }
 };
@@ -657,7 +631,7 @@ const soc = {
     if (XRAY) return xrayScene(G, 'soc');
     const c = G.col, tick = Math.floor(G.t * 1.5 * M.clock);
     G.bg(c.lo);
-    G.r(40, 40, 920, 920, c.mid, c.hi, 1.8); pads(G, 24);
+    G.r(40, 40, 920, 920, c.mid, c.line, 1.2); pads(G, 24);
     G.r(112, 112, 776, 776, c.lo, c.line, 1);
     /* the camera's district: a pipeline of stages, and the lines of the picture waiting below */
     G.r(130, 130, 330, 260, c.mid, c.line, 1.2);
@@ -693,7 +667,6 @@ const soc = {
       if (rnd(n, tick) > 0.5) { G.a(0.45); G.r(r[0] + 8, r[1] + 8, r[2] * 0.52, r[3] * 0.5, c.warm); G.a(1); }
       if (rnd(n + 50, tick) < M.late) { G.a(0.55); G.r(r[0], r[1], r[2], r[3], c.red); G.a(1); }
     });
-    inside(G, 'soc');
     /* shared memory along the bottom */
     G.r(130, 740, 740, 130, c.mid, c.line, 1.2);
     for (let i = 0; i < 8; i++) { const x = 140 + i * 91; G.r(x, 750, 82, 110, c.up, c.dim, 0.8); for (let k = 1; k < 6; k++) G.l([[x + k * 14, 756], [x + k * 14, 854]], c.dim, 0.6); G.r(x, 750, 82, 10, c.mid, null); }
@@ -754,6 +727,7 @@ const car = {
     K.fill(G, [P(-200, -120, 0), P(900, -120, 0), P(900, 330, 0), P(-200, 330, 0)], c.dark ? mix(c.lo, c.mid, 0.3) : mix(c.mid, c.lo, 0.3));
     const run = (G.t * 260) % 140;
     [-60, 250].forEach(y => { for (let i = -3; i < 8; i++) { const x = i * 140 - run; K.fill(G, [P(x, y, 0.2), P(x + 70, y, 0.2), P(x + 70, y + 5, 0.2), P(x, y + 5, 0.2)], T.seam); } });
+    fadeEnds(G, 0, 1000, true);
     /* what the radar watches, ahead */
     G.a(0.12); K.fill(G, [P(462, 90, 52), P(760, -20, 10), P(760, 200, 80)], c.cool); G.a(1);
     const sw = (G.t * 0.8) % 1; G.a(0.5 * (1 - sw)); G.l([P(470 + sw * 260, 90 - sw * 90, 52 - sw * 30), P(470 + sw * 260, 90 + sw * 90, 52 + sw * 20)], c.cool, 1.2); G.a(1);
@@ -792,7 +766,6 @@ const car = {
     G.l([P(fx - 30, fy + 18, 46), P(fx - 12, fy + 4, 54), P(fx - 3, fy, 55)], c.cool, 2.2); G.l([P(fx - 30, fy + 22, 44), P(fx - 12, fy + 6, 50), P(fx - 3, fy, 51)], c.cool, 1.4);
     K.box(G, fx - 4, fy, fz + 2, 4, 8, 12, { tone: 'base' });
     K.box(G, fx - 1, fy, fz - 1, fw + 2, fd, fh + 2, { tone: 'base' });
-    inside(G, 'car');
     /* sensors: the radar in front, a camera at the top of the windscreen, one at the back */
     [[460, 90, 52], [330, 90, 128], [4, 90, 70]].forEach(([x, y, z]) => { const q = P(x, y, z); G.c(q[0], q[1], 7, c.lo, c.warm, 1.4); G.c(q[0], q[1], 3, c.warm); });
     /* the glass that is left: the windscreen and the back window, edge on */
@@ -847,7 +820,7 @@ const ecu = {
     /* a clock crystal, a transceiver for the car's network, a watchdog */
     rr(G, 555, 330, 50, 24, 10, c.mid, c.line, 1); G.r(540, 362, 12, 8, c.up, c.warm, 0.7); G.r(608, 362, 12, 8, c.up, c.warm, 0.7);
     G.r(290, 580, 70, 56, c.mid, c.line, 1); for (let i = 0; i < 4; i++) { G.r(298 + i * 15, 572, 6, 8, c.line); G.r(298 + i * 15, 636, 6, 8, c.line); }
-    G.r(540, 548, 46, 46, c.mid, c.line, 1); G.c(563, 571, 9, null, c.grn, 1);
+    G.r(540, 548, 46, 46, c.mid, c.line, 1); G.c(563, 571, 9, null, c.warm, 1);
     /* the drivers: power parts that switch real current, on a metal strip that takes their heat */
     G.r(790, 190, 60, 470, c.mid, c.line, 1);
     for (let i = 0; i < 10; i++) G.l([[796, 205 + i * 45], [844, 205 + i * 45]], c.dim, 1);
@@ -863,7 +836,6 @@ const ecu = {
     for (let i = 0; i < 9; i++) { G.r(430 + i * 10.5, 387, 5, 8, c.line); G.r(430 + i * 10.5, 495, 5, 8, c.line); G.r(417, 400 + i * 10.5, 8, 5, c.line); G.r(525, 400 + i * 10.5, 8, 5, c.line); }
     G.c(434, 404, 3, c.line);
     for (let i = 0; i < 9; i++) { const u = 432.5 + i * 10.5, v = 459 + (i - 4) * 4; G.l([[u, 398], [v + 16, 425]], c.dim, 0.5); G.l([[u, 492], [v + 16, 465]], c.dim, 0.5); G.l([[428, u - 30], [455, v - 14]], c.dim, 0.5); G.l([[522, u - 30], [495, v - 14]], c.dim, 0.5); }
-    inside(G, 'ecu');
     G.label('mcu', 425, 380); G.label('connector', 120, 180); G.label('drivers', 660, 200);
   }
 };
@@ -878,7 +850,7 @@ const mcu = {
     if (XRAY) return xrayScene(G, 'mcu');
     const c = G.col, tick = Math.floor(G.t * 1.5 * M.clock);
     G.bg(c.lo);
-    G.r(40, 40, 920, 920, c.mid, c.hi, 1.8); pads(G, 14);
+    G.r(40, 40, 920, 920, c.mid, c.line, 1.2); pads(G, 14);
     G.r(112, 112, 776, 776, c.lo, c.line, 1);
     G.a(0.5); G.r(120, 120, 760, 760, null, c.warm, 0.8); G.a(1);
     /* the two cores run the same work; a checker between them compares every result */
@@ -889,9 +861,8 @@ const mcu = {
       if (tick % 2) { G.a(0.45); G.r(r[0] + 10, r[1] + 10, r[2] - 20, r[3] * 0.45, c.warm); G.a(1); }
       if (rnd(n + 50, tick) < M.late) { G.a(0.55); G.r(r[0], r[1], r[2], r[3], c.red); G.a(1); }
     });
-    G.l([[280, 250], [300, 250]], c.grn, 1.2); G.l([[280, 270], [300, 270]], c.grn, 1.2);
-    G.r(282, 240, 16, 40, c.mid, c.grn, 1.2); G.a(tick % 2 ? 0.7 : 0.25); G.r(285, 244, 10, 32, c.grn); G.a(1);
-    inside(G, 'mcu');
+    G.l([[280, 250], [300, 250]], c.warm, 1.2); G.l([[280, 270], [300, 270]], c.warm, 1.2);
+    G.r(282, 240, 16, 40, c.mid, c.warm, 1.2); G.a(tick % 2 ? 0.7 : 0.25); G.r(285, 244, 10, 32, c.warm); G.a(1);
     /* flash memory: the program, kept with the power off; around it, the parts that pick a row and read it */
     G.r(490, 130, 380, 420, c.mid, c.line, 1.2);
     for (let j = 0; j < 18; j++) G.r(500, 142 + j * 21, 18, 15, c.up, c.dim, 0.5);
@@ -909,7 +880,7 @@ const mcu = {
     periph.forEach((k, n) => {
       const r = k.r, x0 = r[0] + 12, w = r[2] - 24, my = r[1] + r[3] / 2; G.r(r[0], r[1], r[2], r[3], c.mid, c.line, 1.2);
       if (n === 0) {
-        const pts = []; for (let i = 0; i <= 30; i++) pts.push([x0 + i * (w / 30), my + Math.sin(i * 0.5 + G.t * 2) * 30]); G.l(pts, c.grn, 1.4);
+        const pts = []; for (let i = 0; i <= 30; i++) pts.push([x0 + i * (w / 30), my + Math.sin(i * 0.5 + G.t * 2) * 30]); G.l(pts, c.warm, 1.4);
         for (let i = 0; i < 8; i++) { const v = Math.round((Math.sin(i * 1.9 + G.t * 2) * 30) / 12) * 12; G.r(x0 + i * (w / 8) + 4, my + Math.min(0, v), 6, Math.abs(v) + 2, c.dim); }
       } else if (n === 1) {
         const pts = [[x0, my + 22]]; for (let i = 0; i < 12; i++) { const b = rnd(i + Math.floor(G.t * 4), 9) > 0.5 ? -22 : 22, x = x0 + i * (w / 12); pts.push([x, my + b], [x + w / 12, my + b]); } G.l(pts, c.cool, 1.4);
@@ -934,21 +905,21 @@ const mcu = {
 const beam = [[230, 640], [300, 330], [470, 210], [530, 110], [620, 210], [760, 330], [730, 760]];
 const scanMirrors = [[300, 330], [470, 210], [620, 210], [760, 330]];
 const scanner = {
-  parts: { source: [{ r: [60, 580, 240, 300] }], mirrors: scanMirrors.map(m => ({ c: [m[0], m[1], 26] })), mask: [{ r: [430, 70, 200, 40] }], stage: [{ r: [600, 640, 260, 240] }] },
+  parts: { source: [{ r: [60, 580, 240, 300] }], mirrors: scanMirrors.map(m => ({ c: [m[0], m[1], 26] })), mask: [{ r: [430, 70, 200, 40] }], stage: [{ r: [600, 640, 260, 240] }], vacuum: [{ r: [94, 100, 180, 96] }] },
   draw(G) {
     const c = G.col, ctx = G.ctx;
     G.bg(c.lo);
     /* the frame, standing on feet that keep the floor's shaking out */
     [100, 430, 840].forEach(x => { G.r(x, 940, 60, 26, c.mid, c.line, 1); G.l([[x + 8, 953], [x + 52, 953]], c.dim, 1); });
-    G.r(40, 40, 920, 900, c.mid, c.hi, 1.8);
+    G.r(40, 40, 920, 900, c.mid, c.line, 1.2);
     G.r(70, 60, 860, 860, c.lo, c.line, 1);
-    /* pumps keep the inside empty: the light cannot travel through air */
+    /* pumps keep the inside empty: this light cannot travel through air (a part with a name: vacuum) */
     for (let i = 0; i < 3; i++) { const x = 122 + i * 62, a = G.t * 2.4 + i; G.c(x, 130, 24, c.mid, c.line, 1); for (let k = 0; k < 3; k++) G.l([[x, 130], [x + Math.cos(a + k * 2.094) * 19, 130 + Math.sin(a + k * 2.094) * 19]], c.dim, 1.2); G.l([[x, 154], [x, 190]], c.dim, 1.4); }
     G.l([[100, 190], [270, 190]], c.dim, 1.4);
     /* the light: a laser hits drops of tin, which glow with very short light; a curved mirror gathers it */
     G.r(60, 580, 240, 300, c.mid, c.line, 1.2);
     G.r(204, 588, 40, 22, c.up, c.line, 0.9); G.r(204, 856, 40, 16, c.up, c.line, 0.9);
-    G.r(70, 796, 44, 56, c.up, c.red, 1); G.l([[114, 800], [222, 694]], c.red, 2);
+    G.r(70, 796, 44, 56, c.up, c.line, 1); G.l([[114, 800], [222, 694]], c.warm, 2);
     for (let i = 0; i < 6; i++) { const y = 612 + ((G.t * 0.9 + i / 6) % 1) * 240; G.c(224, y, 5, c.warm); }
     ctx.beginPath(); ctx.arc(225, 690, 74, 0.12 * Math.PI, 0.88 * Math.PI); ctx.strokeStyle = c.hi; ctx.lineWidth = G.lw(2.2); ctx.stroke();
     const flash = 0.5 + 0.5 * Math.sin(G.t * 9);
@@ -968,15 +939,11 @@ const scanner = {
     /* the mask: the pattern, held upside down on its own moving stage */
     G.r(396, 62, 268, 8, c.up, c.line, 0.9); G.l([[380, 66], [396, 66]], c.dim, 1.4); G.l([[664, 66], [680, 66]], c.dim, 1.4);
     G.r(430, 70, 200, 40, c.up, c.hi, 1.4); for (let i = 0; i < 9; i++) G.r(440 + i * 21, 78, 12, 24, i % 3 ? c.lo : c.cool);
-    /* wafers waiting their turn, and the arm that brings them */
-    G.r(360, 690, 120, 150, c.mid, c.line, 1.1); for (let i = 0; i < 8; i++) G.l([[372, 708 + i * 16], [468, 708 + i * 16]], i === 2 ? c.warm : c.cool, 1.2);
-    G.l([[480, 770], [540, 800], [600, 770]], c.line, 2); G.c(540, 800, 7, c.up, c.line, 1); G.c(480, 770, 5, c.up, c.line, 1);
     /* the stage: the wafer, moving under the light */
     G.r(600, 640, 260, 240, c.mid, c.line, 1.2);
     G.r(626, 656, 208, 208, c.up, c.dim, 0.9);
     G.l([[580, 896], [880, 896]], c.line, 1.4); const sl = 0.5 + 0.5 * Math.sin(G.t * 1.6); G.r(600 + sl * 216, 890, 44, 12, c.warm);
-    inside(G, 'scanner');
-    G.label('source', 66, 570); G.label('mirrors', 330, 380); G.label('mask', 640, 96); G.label('stage', 860, 630, 'right');
+    G.label('source', 66, 570); G.label('mirrors', 330, 380); G.label('mask', 640, 96); G.label('stage', 860, 630, 'right'); G.label('vacuum', 96, 90);
   }
 };
 
@@ -989,7 +956,7 @@ const wafer = {
     /* the plate that holds it, and the three pins that lift it */
     G.c(500, 500, R + 46, null, c.dim, 1); G.c(500, 500, R + 34, null, c.dim, 0.6);
     for (let i = 0; i < 3; i++) { const a = -1.5708 + i * 2.0944; G.c(500 + Math.cos(a) * (R + 40), 500 + Math.sin(a) * (R + 40), 7, c.mid, c.line, 0.9); }
-    G.c(500, 500, R + 12, c.mid, c.hi, 1.8);
+    G.c(500, 500, R + 12, c.mid, c.line, 1.2);
     G.c(500, 500 + R + 12, 11, c.lo, c.hi, 1.2);
     /* the pattern is printed across the whole disc; chips cut by the edge are lost */
     ctx.save(); ctx.beginPath(); ctx.arc(500, 500, R + 4, 0, 6.2832); ctx.clip();
@@ -1005,9 +972,8 @@ const wafer = {
     });
     /* the specks, each pulsing where it landed */
     SPECKS.forEach((p, i) => { const k = 0.6 + 0.4 * Math.sin(G.t * 2 + i); G.a(0.3); G.c(p[0], p[1], 7 + 3 * k, c.warm); G.a(1); G.c(p[0], p[1], 3 + 2 * k, c.warm); });
-    /* the chip the dive follows: the next depth, as it is */
+    /* the chip the dive follows */
     const q = portalOf('wafer');
-    inside(G, 'wafer');
     const e = G.lw(1.6) / 2 + 0.5 / G.s; G.r(q[0] - e, q[1] - e, q[2] + 2 * e, q[2] + 2 * e, null, c.hi, 1.6);
     G.label('dies', 70, 60); G.label('defects', 930, 60, 'right');
   }
@@ -1024,7 +990,7 @@ const die = {
     /* the cutting lines around it, with the small test patterns the factory measures */
     G.bg(c.lo);
     for (let i = 0; i < 16; i++) { G.r(44 + i * 60, 9, 22, 12, i % 4 ? c.mid : c.up, c.dim, 0.6); G.r(44 + i * 60, 979, 22, 12, i % 4 ? c.mid : c.up, c.dim, 0.6); G.r(9, 44 + i * 60, 12, 22, c.mid, c.dim, 0.6); G.r(979, 44 + i * 60, 12, 22, c.mid, c.dim, 0.6); }
-    G.r(30, 30, 940, 940, c.mid, c.hi, 1.8);
+    G.r(30, 30, 940, 940, c.mid, c.line, 1.2);
     G.r(44, 44, 912, 912, null, c.dim, 0.8);
     [[100, 100], [900, 100], [100, 900], [900, 900]].forEach(k => { G.l([[k[0] - 9, k[1]], [k[0] + 9, k[1]]], c.line, 1.2); G.l([[k[0], k[1] - 9], [k[0], k[1] + 9]], c.line, 1.2); });
     pads(G, 22);
@@ -1033,19 +999,16 @@ const die = {
     G.a(0.6); clock.forEach(k => G.l(k.p, c.warm, 1.1)); G.a(1);
     for (let i = 0; i < 6; i++) { const x = 136 + i * 123; G.r(x, 626, 113, 88, c.up, c.line, 1); for (let k = 1; k < 8; k++) G.l([[x + k * 14, 630], [x + k * 14, 710]], c.dim, 0.7); }
     for (let i = 0; i < 8; i++) { G.r(136 + i * 92, 746, 82, 78, c.mid, c.line, 1); G.r(148 + i * 92, 758, 58, 24, c.up, c.dim, 0.7); }
-    inside(G, 'die');
     /* the needles, touching down: each sends a test signal in, or listens */
     dieProbes.forEach((pr, i) => {
       const e = pr.p[1], on = rnd(i, Math.floor(G.t * 3)) > 0.45;
       G.l(pr.p, c.hi, 1.6); G.c(e[0], e[1], 5, on ? c.warm : c.line);
       if (on) { G.a(0.4); G.c(e[0], e[1], 11, null, c.warm, 1); G.a(1); }
     });
-    G.label('cores', 136, 126); G.label('probes', 40, 150); G.label('pads', 500, 18, 'center'); G.label('scribe', 990, 18, 'right');
+    G.label('cores', 136, 126); G.label('probes', 20, 300); G.label('pads', 500, 18, 'center'); G.label('scribe', 990, 18, 'right');
   }
 };
 
 export const SCENES = { building, rack, board, chip, phone, phoneboard, soc, car, ecu, mcu, scanner, wafer, die, block, gate, switch: swtch, atom, ...STATIONS, ...DESIGN_SCENES };
-/* a scene drawn by the dive itself tells how large the dive's box is */
-Object.values(SCENES).forEach(sc => { const draw = sc.draw; sc.draw = function (G) { if (!NEST) measure(G); draw.call(sc, G); }; });
 /* in X-ray, the chips' parts are their blocks, one part per type (keys are types: xray.type.<type>) */
 export const partsOf = id => (XRAY && XRAY_AT.includes(id) ? partsFor(xrayOf(id)) : SCENES[id].parts);
