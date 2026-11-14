@@ -21,6 +21,8 @@ import { mat, glass } from './kit3d.js';
 import { createLevel3D } from './level3d.js';
 import { DIFF, GATES, H as GH, X, Z, DOOR, PORTAL } from './gate3d.js';
 import { toChild, square, smooth } from '../engines/join.js';
+import { TURN as ATOM_TURN } from './atom3d.js';
+import { DEPTHS } from '../data/weave.js';
 
 /* the switch stands on the gate's door by the middle of its base slab's underside; R is its radius (view.r) */
 const FOOT = [0, 0, -0.6], R = 4.1;
@@ -125,11 +127,17 @@ export function create(canvas, host, on = {}) {
       anchors: { gate: [0, 3.65, -0.9], channel: [1.75, 2.99, 0.05], oxide: [-0.55, 1.5, 0.08], source: [-3.9, 3.5, 0.05], drain: [3.9, 3.5, 0.05] },
       /* foot: where the switch stands on the gate's door, the middle of its base slab's underside */
       /* enter: the stretch of a join over which it stands up */
-      view: { tilt: 0.44, turn: -0.32, r: R, at: [0, 2.1, -0.4], foot: FOOT, enter: [0.25, 0.85] },
-      /* arrived: how far it has stood up (1 at rest). Electrons only flow once you are at the switch */
-      update(dt, k, dist, arrived = 1) {
+      view: { tilt: 0.44, turn: -0.32, r: R, at: [0, 2.1, -0.4], foot: FOOT, enter: [0.25, 0.85],
+        /* the door into the atom: the flat level's portal, the middle sheet at its centre under the gate. Here, the
+           top front edge of the middle sheet on its cut face, its side the portal's share of the switch's square,
+           turned to undo the crystal's own turn so its faces lie along the sheet's (docs/reviews/transitions.md) */
+        door: { at: [0, SHEETS[1] + 0.24, CUT], side: DEPTHS.switch.portal[2] / 1000 * square(R), yaw: -ATOM_TURN } },
+      /* arrived: how far it has stood up (1 at rest); leave: how far the atom has come into its door. Electrons only
+         flow once you are at the switch; going down, they shrink away first (each is as large as the door) */
+      update(dt, k, dist, arrived = 1, picked, leave = 0) {
         stand(arrived);
-        electrons.forEach(e => { const d = e.userData; d.u = (d.u + dt * 0.22) % 1; e.position.set(-2.2 + d.u * 4.4, SHEETS[d.sheet] + 0.12, d.z); e.visible = k > 0.6 && arrived >= 0.9; });
+        const es = 1 - smooth(0, 0.3, leave);
+        electrons.forEach(e => { const d = e.userData; d.u = (d.u + dt * 0.22) % 1; e.position.set(-2.2 + d.u * 4.4, SHEETS[d.sheet] + 0.12, d.z); e.scale.setScalar(Math.max(es, 1e-3)); e.visible = k > 0.6 && arrived >= 0.9 && es > 0; });
       }
     };
   });
