@@ -74,6 +74,13 @@ export const metal = (color, o = {}) => mat(color, Object.assign({ roughness: 0.
 export const glow = (color, intensity = 1, o = {}) => mat(color, Object.assign({ emissive: color, emissiveIntensity: intensity, roughness: 0.4 }, o));
 export const glass = (color, o = {}) => mat(color, Object.assign({ roughness: 0.08, metalness: 0.1, transparent: true, opacity: 0.45 }, o));
 export const clearMats = () => MATS.clear();
+/* one table for every circuit board, so a board is a board wherever it is seen (the data centre's, a phone's, a car's
+   control unit): the board, its traces and pins in contact metal (the art direction's table), the plastic of
+   packages and connectors, power parts, coils, the substrate under a chip, bright metal for lids and cases */
+export const BOARD = night => ({
+  board: night ? 0x16352d : 0x2b5e4c, trace: night ? 0xc9a14a : 0xe0b070, pin: night ? 0xc9a14a : 0xe0b070,
+  plastic: 0x2a2f38, power: 0x1d2129, coil: 0x7c8594, substrate: 0x2f3d35, lid: 0xb9c1cc
+});
 
 /* shapes: a rounded box standing on y = 0 of its own frame, placed at (x, y, z) */
 const GEO = new Map();

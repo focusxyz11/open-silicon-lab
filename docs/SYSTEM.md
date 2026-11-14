@@ -125,7 +125,9 @@ plan's; the block, the same relief (rows of ready-made cells of different widths
 array as a lower, finer field, your design as a few warm cells in a row, and the wires over them faint until you pick
 them, since drawn true, copper would cover the cells); the wafer (`src/v2/wafer3d.js`), a polished disc printed with
 your chips, the pieces cut by the rim grey and lost, and each chip a speck lands on red, from your chip's size and
-generation; the gate (`src/v2/gate3d.js`), a relief of the same plan as the flat gate, its layers in true order and height
+generation; a phone's board and a car's control unit (`src/v2/pcb3d.js`), built from the same table of board
+materials as the data centre's board (`BOARD` in `src/v2/kit3d.js`), so a board is a board to the eye, the control
+unit's case lid lifting as you arrive from the car; the gate (`src/v2/gate3d.js`), a relief of the same plan as the flat gate, its layers in true order and height
 (silicon, the gate strips over it, contacts as studs, copper on top), seen from 65° and never turned, lifting apart
 once on arrival, with your chip's slowest signal racing the tick along the bottom; the switch (`src/v2/switch3d.js`), one transistor cut open at the front, so the cut face shows the gate wrapped round
 three sheets of silicon, each in its skin, with source and drain on either side and electrons flowing through the
