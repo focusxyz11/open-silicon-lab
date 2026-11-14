@@ -8,7 +8,7 @@
 
    createLevel3D(canvas, host, on, model) -> { show(k, depthOffset, frame), select(key, note), hit(x, y), active(),
      warm(), dispose() }
-   model(scene, root, P, night) -> { level, parts: [key], anchors: { key: [x, y, z] }, view: { tilt, turn, r, at: [x, y, z] },
+   model(scene, root, P, night) -> { level, parts: [key], anchors: { key: [x, y, z] }, view: { tilt, turn, r, at: [x, y, z], fixed },
      update(dt, k, dist) }   (r: the object's radius, so it fills the square; at: where the camera looks; dist: the
      camera's distance from it, which changes with the screen and the zoom)
    on.part(key), on.marks() -> [{ part, threads }] under Ask, else null, on.mark(threadId), on.askMany([threadId]). */
@@ -39,7 +39,8 @@ export function createLevel3D(canvas, host, on, model) {
   const marks = createOverlay(host, { mark: th => on.mark && on.mark(th), marks: ths => on.askMany && on.askMany(ths) }), mv = new THREE.Vector3();
 
   let k = 0, off = 0, raf = 0, last = performance.now(), yaw = 0, yawGoal = 0, frame = null, W = 1, H = 1;
-  const sway = now => (still() ? 0 : Math.sin(now / 14000 * Math.PI * 2) * 0.052);
+  /* a plan (V.fixed: the gate) is read straight, not turned: it neither sways nor turns with a drag */
+  const sway = now => (still() || V.fixed ? 0 : Math.sin(now / 14000 * Math.PI * 2) * 0.052);
   function place(now) {
     const r = canvas.getBoundingClientRect(); W = r.width || 1; H = r.height || 1;
     const f = frame || { B: Math.min(W, H) * 0.8, cx: W / 2, cy: H / 2 };
@@ -85,7 +86,7 @@ export function createLevel3D(canvas, host, on, model) {
 
   /* turning with a sideways drag */
   let drag = null;
-  canvas.addEventListener('pointerdown', e => { if (k > 0.5) drag = { x: e.clientX, y0: yawGoal }; });
+  canvas.addEventListener('pointerdown', e => { if (k > 0.5 && !V.fixed) drag = { x: e.clientX, y0: yawGoal }; });
   canvas.addEventListener('pointermove', e => { if (drag && k > 0.5) yawGoal = clamp(drag.y0 + (e.clientX - drag.x) / 260, -0.35, 0.35); });
   addEventListener('pointerup', () => { drag = null; });
 

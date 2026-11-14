@@ -51,6 +51,9 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
   if (await page.evaluate(() => +getComputedStyle(document.getElementById('diveCanvas')).opacity > 0.5)) problems.push(tag + ': the flat switch did not give way to the 3D one');
   await page.click('#swLabels [data-part3="gate"]').catch(() => problems.push(tag + ': the 3D switch\'s gate cannot be picked'));
   await page.waitForSelector('#swLabels .swnote:not([hidden])', { timeout: 10000 }).catch(() => problems.push(tag + ': picking the gate opened no note'));
+  /* the gate as a relief on the stage, with its five names */
+  await page.evaluate(() => { location.hash = '#/dive/gate'; });
+  await page.waitForFunction(() => document.querySelectorAll('#gateLabels [data-part3]').length === 5 && !document.getElementById('gateLabels').hidden, null, { timeout: 25000 }).catch(() => problems.push(tag + ': the gate did not appear as a relief with its five names'));
   /* the atom too: a crystal on the stage, with its four names */
   await page.evaluate(() => { location.hash = '#/dive/atom'; });
   await page.waitForFunction(() => document.querySelectorAll('#atomLabels [data-part3]').length === 4 && !document.getElementById('atomLabels').hidden, null, { timeout: 25000 }).catch(() => problems.push(tag + ': the atom did not appear in 3D with its four names'));

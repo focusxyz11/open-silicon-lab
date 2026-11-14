@@ -21,6 +21,8 @@ import { DIE, partsFor } from '../engines/xray.js';
 /* Your chip (src/engines/chip.js): the scenes that show it read its settings from here. */
 let M = model(START);
 let HITS = hits(START.size, START.gen), DIES = dies(START.size), SPECKS = defects(START.gen);
+/* your chip as the scenes draw it (the gate in 3D reads its timing from here too) */
+export const chipNow = () => M;
 export const setChip = c => { M = model(c); HITS = hits(M.size, M.gen); DIES = dies(M.size); SPECKS = defects(M.gen); setJourneyChip(M, HITS, DIES); };
 setJourneyChip(M, HITS, DIES);
 /* "Build it": how far the switch has been made (null: finished) */

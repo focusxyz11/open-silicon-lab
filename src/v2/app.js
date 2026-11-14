@@ -64,7 +64,7 @@ export function start() {
      their shaders compiled on the shared renderer, so going inside finds them ready */
   const ready = (make, view) => () => { if (viewNow !== 'map') return; make().then(v => { if (viewNow !== view) v.pause(); return v.warm(); }); };
   const prewarm = () => [ready(ensureDc, 'dc'), ready(ensureChip, 'chip'), ready(ensureBoard, 'board')].reduce((p, f) => p.then(() => new Promise(r => idle(() => { f(); r(); }))), Promise.resolve());
-  const preload = () => { prewarm(); ['./frame.js', './board3d.js', './story.js', './stories.js', '../engines/weave.js', '../app/world.js', '../data/weave.js', '../app/design.js', '../app/journey.js', './level3d.js', './switch3d.js', './atom3d.js', './overlay.js'].forEach(u => import(u).catch(() => { /* fetched again when needed */ })); };
+  const preload = () => { prewarm(); ['./frame.js', './board3d.js', './story.js', './stories.js', '../engines/weave.js', '../app/world.js', '../data/weave.js', '../app/design.js', '../app/journey.js', './level3d.js', './gate3d.js', './switch3d.js', './atom3d.js', './overlay.js'].forEach(u => import(u).catch(() => { /* fetched again when needed */ })); };
   const ensureMap = () => mapReady || (mapReady = import('./map3d.js').then(m => {
     map = m.createMap($('mapCanvas'), $('mapLabels'), { place: id => (cur && cur.place === id && !sheet.hidden && enterOf(id) ? enter(enterOf(id)) : openPlace(id)), question: key => openQuestion(key), job: need => openJob(need), interact: () => $('hero').classList.add('away') });
     loading(false); map.setState(islandState(), false); idle(preload);
@@ -358,9 +358,9 @@ export function start() {
     const w = DiveData.partWord(id, key); if (!EN_HAS(w)) return dive.setNotes([]);
     dive.setNotes([{ part: key, title: t('part.' + w), text: t('what.' + w), tone: 'cool' }]);
   }
-  /* ---- the levels in 3D (src/v2/level3d.js: the switch, the atom): as the dive reaches one, the flat picture gives
+  /* ---- the levels in 3D (src/v2/level3d.js: the gate, the switch, the atom): as the dive reaches one, the flat picture gives
      way to a model of it on the one stage, in the same square; the flat drawing stays the fallback ---- */
-  const L3 = { switch: { mod: './switch3d.js', host: 'swLabels' }, atom: { mod: './atom3d.js', host: 'atomLabels' } };
+  const L3 = { gate: { mod: './gate3d.js', host: 'gateLabels' }, switch: { mod: './switch3d.js', host: 'swLabels' }, atom: { mod: './atom3d.js', host: 'atomLabels' } };
   const l3Active = () => Object.values(L3).find(l => l.obj && l.obj.active());
   const lastTap = { x: 0, y: 0 };
   $('diveCanvas').addEventListener('pointerup', e => { lastTap.x = e.clientX; lastTap.y = e.clientY; }, true);

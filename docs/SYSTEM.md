@@ -116,7 +116,9 @@ The line at night has a plain floor and quiet edges, so its machines read as sol
 somewhere (traces to each link, wide traces bringing power), not rows of stripes.
 
 **The levels in 3D.** The bottom of the zoom is drawn on the one stage (following `docs/reviews/art-direction.md`):
-the switch (`src/v2/switch3d.js`), one transistor cut open at the front, so the cut face shows the gate wrapped round
+the gate (`src/v2/gate3d.js`), a relief of the same plan as the flat gate, its layers in true order and height
+(silicon, the gate strips over it, contacts as studs, copper on top), seen from 65° and never turned, lifting apart
+once on arrival, with your chip's slowest signal racing the tick along the bottom; the switch (`src/v2/switch3d.js`), one transistor cut open at the front, so the cut face shows the gate wrapped round
 three sheets of silicon, each in its skin, with source and drain on either side and electrons flowing through the
 sheets; and the atom (`src/v2/atom3d.js`), a small crystal two cells deep where every atom holds four neighbours in
 the diamond pattern, one added atom of another kind sits in a place of it, a few electrons drift loose, and the
@@ -125,8 +127,8 @@ disordered insulating skin lies on top, the back fading into the sky. What they 
 picture fades and the model takes its place in the same square (`dive.frame`), farther while you are still above it
 and nearer as you go on, so the zoom stays one movement; between the two, the flat picture shows for a moment.
 Names are HTML; a picked part's note opens beside its name; under Ask its questions are the same marks as on the flat
-levels. A sideways drag turns it 20° each way; up and down still zoom; it sways when idle and holds still with
-reduced motion. The flat drawings stay the fallback.
+levels. A sideways drag turns a model 20° each way (not the gate, which is a plan); up and down still zoom; a model
+sways when idle and holds still with reduced motion. The flat drawings stay the fallback.
 
 **Everything inside.** Nothing in the chip world leads to the earlier site any more. The flat dive starts from any
 world (`#/dive/<depth>/<world>`): the data centre's chip, a phone, a car, or the made chip (the factory's machine,
