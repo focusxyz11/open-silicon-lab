@@ -3,12 +3,14 @@
    server (scripts/mcp.mjs) wraps these functions; so could anything else. Words come from en.json
    through t(), so an agent reads the same job and the same verdicts a visitor does.
 
-   Every tool returns plain data. Nothing here posts anywhere: proposeDesign checks a design and returns
-   the GitHub form to submit it, so a person stays in the loop. */
+   Every tool returns plain data. Nothing here posts anywhere: a proposal is checked against the ledger
+   (src/engines/ledger.js) and comes back as the entry's file and the link that opens it in a pull request,
+   so a person stays in the loop. */
 import { t } from '../core/i18n.js';
 import { REPO } from '../data/weave.js';
-import { NEEDS, GOAL, DESIGNS } from '../data/build.js';
+import { NEEDS, GOAL } from '../data/build.js';
 import { plan, progress, needOf, needForProject, childrenOf } from './build.js';
+import { settled, frontier, draft, tryEntry, fileOf, proposeUrl, runCase, caseOk } from './ledger.js';
 import { build, projectOf, PROJECTS, starterOf, patterns } from './design.js';
 import { TESTS, START_PROGRAM } from './core.js';
 import { live, MISSION_IDS, PERFECT } from './life.js';
@@ -84,14 +86,49 @@ export function lifeOf({ job, code, slice, where, choices }) {
   };
 }
 
-/* propose a design for a piece of the plan: checked first; returns the GitHub form, filled in, for a person to submit */
-export function proposeDesign({ need, code, slice, title, author, kind, ai }) {
-  const n = needOf(need); if (!n || !n.project) return { ok: false, reason: t('api.noNeed', { need }) };
-  if (!KINDS.includes(kind)) return { ok: false, reason: t('api.kind') };
-  if ((kind === 'ai' || kind === 'both') && !(ai && String(ai).trim())) return { ok: false, reason: t('api.sayAI') };
-  const c = checkDesign({ job: n.project, code, slice });
+/* ---- the ledger: what the community has added, as it settles, and what is open ---- */
+const refusal = r => t('ledger.no.' + r.reason, { n: r.wrong || 0, of: r.of || 0 });
+/* an entry, checked against the ledger as it stands: its file, and the link that opens it on GitHub as a new file
+   in a pull request. Nothing is posted: a person opens the link and sends it. */
+function entryOut(e, extra) {
+  const r = tryEntry(e);
+  if (!r.ok) return Object.assign({ ok: false, reason: refusal(r) }, extra || {});
+  const f = fileOf(e);
+  return Object.assign({ ok: true, entry: { id: e.id, path: f.path, file: f.text }, link: proposeUrl(e), facts: r.facts, note: t('api.person') }, extra || {});
+}
+const whoOk = (kind, ai) => !KINDS.includes(kind) ? t('api.kind') : (kind === 'ai' || kind === 'both') && !(ai && String(ai).trim()) ? t('api.sayAI') : null;
+export function listLedger() {
+  const W = settled(), F = frontier(W);
+  return {
+    note: t('api.untrusted'),
+    entries: W.entries.map(e => Object.assign({ id: e.id, kind: e.kind, by: e.by, made: e.made, state: e.state }, e.kind === 'design' ? { piece: e.piece, title: e.title, inside: W.inside[e.piece] === e.id, transistors: e.facts.transistors, longestPathPs: e.facts.ps, brokenBy: e.brokenBy, code: e.code }
+      : e.kind === 'break' ? { of: e.of, case: e.case, wrongAtTick: e.facts.tick } : { at: e.at, under: e.under || null, question: e.q, noticed: e.noticed || '' })),
+    open: F.map(f => f.kind === 'build' ? { do: 'build', piece: f.piece, job: f.p, what: t('build.need.' + f.piece + '.d') }
+      : f.kind === 'break' ? { do: 'break', design: f.of, piece: f.piece, job: f.p, insideTheComputer: f.inside, what: t('api.open.break') } : { do: 'engine', piece: f.piece, what: t('build.need.' + f.piece + '.d') }),
+    whoChecksWhom: W.cross, whoMakesWhat: W.mix
+  };
+}
+/* propose a design for a piece of the plan: checked by the ledger first (it must read, do the job, pass every case a
+   break has added, and not be there already) */
+export function proposeDesign({ need, code, title, author, kind, ai, words }) {
+  const n = needOf(need); if (!n || !n.project || n.engine !== 'logic') return { ok: false, reason: t('api.noNeed', { need }) };
+  const bad = whoOk(kind, ai); if (bad) return { ok: false, reason: bad };
+  const c = checkDesign({ job: n.project, code });
   if (!c.right) return { ok: false, reason: t('api.notRight'), check: c };
-  if (DESIGNS.some(d => d.need === need && d.code.trim() === String(code).trim())) return { ok: false, reason: t('api.same') };
-  const url = REPO + '/issues/new?' + new URLSearchParams({ template: 'design.yml', title: t('design.addYours') + ': ' + (title || t('design.proj.' + n.project + '.t')), need, author: author || '', code: n.project === 'core' ? slice || '' : code, ai: ai || t('build.aiUse.you') });
-  return { ok: true, form: url, note: t('api.person'), check: c };
+  const name = title || t('design.proj.' + n.project + '.t');
+  return entryOut(draft({ kind: 'design', piece: need, title: name, by: author || t('api.anon'), made: kind, ai: ai || '', words: words || '', code }, (author || '') + ' ' + name), { check: c });
+}
+/* propose a break: a case, tick by tick, that makes a design of the ledger answer wrong */
+export function proposeBreak({ design, case: seq, author, kind, ai, words }) {
+  const bad = whoOk(kind, ai); if (bad) return { ok: false, reason: bad };
+  const T = settled().byId[design];
+  const e = draft({ kind: 'break', of: design, by: author || t('api.anon'), made: kind, ai: ai || '', words: words || '', case: seq }, (author || '') + ' ' + (T && T.title || 'break'));
+  const out = entryOut(e);
+  if (T && T.kind === 'design' && T.ok && caseOk(needOf(T.piece).project, seq)) { const r = runCase(needOf(T.piece).project, T.code, seq); if (r) out.ticks = r.rows.map((x, i) => ({ tick: i + 1, inputs: x.v, should: x.e, does: x.o, wrong: x.mis.length > 0 })); }
+  return out;
+}
+/* propose a question: it needs a home (a level, perhaps the question it sits under) and what was noticed */
+export function proposeQuestion({ at, under, part, question, noticed, author, kind, ai }) {
+  const bad = whoOk(kind, ai); if (bad) return { ok: false, reason: bad };
+  return entryOut(draft({ kind: 'question', at, part: part || null, under: under || null, q: question, noticed: noticed || '', by: author || t('api.anon'), made: kind, ai: ai || '' }, (author || '') + ' ' + String(question || '').split(/\s+/).slice(0, 5).join(' ')));
 }

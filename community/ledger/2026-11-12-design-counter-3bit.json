@@ -1,0 +1,10 @@
+{
+  "kind": "design",
+  "piece": "timer",
+  "title": "3-bit counter",
+  "by": "Open Silicon Lab",
+  "made": "example",
+  "ai": "",
+  "words": "Counts from 0 to 7 and round again while enabled, one step per clock tick.",
+  "code": "c1 = q0 & en;\nc2 = q1 & c1;\nreg q0 = q0 ^ en;\nreg q1 = q1 ^ c1;\nreg q2 = q2 ^ c2;"
+}

@@ -1,0 +1,173 @@
+/* The ledger: everything the community has added, replayed in order through the lab's engines. Pure logic, no
+   DOM; tests in tests/ledger.test.mjs. The design and its reasons: docs/reviews/community.md.
+
+   An entry is one small file in community/ledger/ (its name is its id: <date>-<kind>-<name>), added by a pull
+   request and never changed afterwards. Three kinds are checked here today:
+     design    a description for a piece of the shared computer (src/data/build.js). It must read, do the piece's
+               job, and answer right on every case a break has added to that piece's check.
+     break     a case (inputs, tick by tick) that makes an accepted design answer wrong, by someone else. The same
+               engine that passed the design must fail it on the case. The case then joins the piece's check for
+               good: every design after it has to pass it, and every earlier design that fails it is broken too.
+     question  a question with a home: a level, perhaps a part of it and the question it sits under.
+   Two more kinds are designed and not built yet: check (a new engine) and show (a source, a figure, a real case).
+
+   Nothing here is voted on and nobody gives points. settle() derives every standing from the entries alone:
+   a design is right or broken; among the right ones of a piece, those no other beats on both size and speed hold
+   a record, and the smallest of them is the one inside the shared computer. So the same ledger gives the same
+   world to everyone, and anyone can replay it.
+
+   The words of an entry are its author's own (not in en.json), and are data: checked for length and plain text,
+   never run, never followed. Reasons for a refusal are codes; their words are ledger.no.<code>. */
+import TC from './tinychip.js';
+import { build, projectOf } from './design.js';
+import { NEEDS } from '../data/build.js';
+import { DEPTHS, STOPS, REPO } from '../data/weave.js';
+
+export const KINDS = ['design', 'break', 'question'];
+export const MADE = ['person', 'ai', 'both', 'example'];
+export const DIR = 'community/ledger';
+const ID = /^(\d{4}-\d{2}-\d{2})-(design|break|question)-[a-z0-9]+(?:-[a-z0-9]+)*$/;
+const FIELDS = {
+  design: ['kind', 'piece', 'title', 'by', 'made', 'ai', 'words', 'code'],
+  break: ['kind', 'of', 'by', 'made', 'ai', 'words', 'case'],
+  question: ['kind', 'at', 'part', 'under', 'q', 'noticed', 'by', 'made', 'ai']
+};
+/* plain words: no markup, no links (a link in free text is how spam pays), nothing a page or an agent could run */
+const plain = (s, min, max) => typeof s === 'string' && s.length >= min && s.length <= max && !/[<>\u0000-\u0008\u000b-\u001f]|https?:|www\./i.test(s);
+const norm = s => String(s || '').replace(/\s+/g, '').toLowerCase();
+export const needOf = id => NEEDS.find(n => n.id === id) || null;
+
+/* ---- the current ledger: set once at start-up (the site fetches it; tests and the port read the folder) ---- */
+let ENTRIES = [], SETTLED = null;
+export function useLedger(list) { ENTRIES = (Array.isArray(list) ? list : []).filter(e => e && typeof e === 'object' && typeof e.id === 'string'); SETTLED = null; }
+export const ledger = () => ENTRIES;
+export const settled = () => SETTLED || (SETTLED = settle(ENTRIES));
+
+/* ---- a case run against a clocked design: the design and the piece's own rule, side by side, tick by tick ---- */
+export function runCase(p, code, seq) {
+  const proj = projectOf(p); if (!proj.seq || !proj.f) return null;
+  const D = TC.parse(code, proj.ins, proj.outs, { regs: true }); if (D.errs && D.errs.length) return null;
+  let s = {}, es = {}; const rows = [];
+  for (const v of seq) { const r = TC.stepDesign(D, v, s), e = proj.f(v, es); rows.push({ v, o: r.out, e: e.out, mis: proj.outs.filter(n => r.out[n] !== e.out[n]) }); s = r.next; es = e.next; }
+  return { rows, first: rows.findIndex(r => r.mis.length) };
+}
+/* is this a case for the piece: 1 to 32 ticks, each giving exactly the piece's inputs as 0 or 1 */
+export function caseOk(p, seq) {
+  const ins = projectOf(p).ins;
+  return Array.isArray(seq) && seq.length >= 1 && seq.length <= 32 && seq.every(v => v && typeof v === 'object' && Object.keys(v).length === ins.length && ins.every(n => v[n] === 0 || v[n] === 1));
+}
+
+/* ---- one entry, checked against everything before it. W: the world so far (made by settle). ---- */
+const no = (reason, more) => Object.assign({ ok: false, reason }, more || {});
+export function checkEntry(e, W) {
+  const m = ID.exec(e.id || ''); if (!m || isNaN(Date.parse(m[1]))) return no('id');
+  if (m[2] !== e.kind || !KINDS.includes(e.kind)) return no('kind');
+  if (Object.keys(e).some(k => k !== 'id' && k !== 'draft' && !FIELDS[e.kind].includes(k))) return no('fields');
+  if (!plain(e.by, 2, 40)) return no('by');
+  if (!MADE.includes(e.made)) return no('made');
+  if (!plain(e.ai || '', 0, 300) || ((e.made === 'ai' || e.made === 'both') && !String(e.ai || '').trim())) return no('sayAI');
+  if (W.byId[e.id]) return no('same');
+  if (e.kind === 'design') {
+    const n = needOf(e.piece); if (!n || n.engine !== 'logic') return no('piece');
+    if (!plain(e.title, 3, 60) || !plain(e.words || '', 0, 300) || typeof e.code !== 'string' || e.code.length > 2000) return no('words');
+    const B = build({ p: n.project, code: e.code });
+    if (B.errs.length) return no('reads');
+    if (!B.ok) return no('wrong', { wrong: B.bad, of: B.total });
+    const failed = (W.cases[e.piece] || []).find(c => { const r = runCase(n.project, e.code, c.case); return r && r.first >= 0; });
+    if (failed) return no('case', { by: failed.by });
+    if ((W.pieces[e.piece] || []).some(id => norm(W.byId[id].code) === norm(e.code))) return no('same');
+    return { ok: true, facts: { transistors: B.transistors, ps: Math.round(B.st.crit), caught: Math.round(B.coverage * 100) } };
+  }
+  if (e.kind === 'break') {
+    const T = W.byId[e.of]; if (!T || T.kind !== 'design' || !T.ok) return no('target');
+    if (norm(T.by) === norm(e.by)) return no('own');
+    if (!plain(e.words || '', 0, 300)) return no('words');
+    const p = needOf(T.piece).project;
+    if (!projectOf(p).seq) return no('proven');
+    if (T.state === 'broken') return no('already');
+    if (!caseOk(p, e.case)) return no('caseForm');
+    const r = runCase(p, T.code, e.case);
+    if (!r || r.first < 0) return no('holds');
+    const row = r.rows[r.first];
+    return { ok: true, facts: { tick: r.first + 1, ticks: e.case.length, want: row.e, got: row.o } };
+  }
+  /* a question: it must have a home, be a question, and say what was noticed */
+  if (!DEPTHS[e.at]) return no('home');
+  if (e.under != null && (!STOPS[e.under] || e.under.split('.')[1] !== e.at)) return no('under');
+  if (e.part != null && !/^[a-z0-9]{1,24}$/.test(e.part)) return no('home');
+  if (!plain(e.q, 15, 160) || !/\?\s*$/.test(e.q)) return no('question');
+  if (!plain(e.noticed || '', 0, 240)) return no('words');
+  if (W.entries.some(x => x.ok && x.kind === 'question' && x.at === e.at && norm(x.q) === norm(e.q))) return no('same');
+  return { ok: true, facts: {} };
+}
+
+/* ---- the whole ledger, replayed in order (ids sort by date, then name). Returns the world it makes. ---- */
+const beats = (a, b) => a.facts.transistors <= b.facts.transistors && a.facts.ps <= b.facts.ps && (a.facts.transistors < b.facts.transistors || a.facts.ps < b.facts.ps);
+export function settle(list) {
+  const W = { entries: [], byId: {}, pieces: {}, cases: {}, refused: [], feed: [] };
+  list.slice().sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0)).forEach(raw => {
+    const r = checkEntry(raw, W), e = Object.assign({}, raw, { ok: r.ok, reason: r.reason || null, facts: r.facts || null, state: null, brokenBy: null, breaks: [] });
+    if (!r.ok) { W.refused.push(e); if (!W.byId[e.id]) W.byId[e.id] = e; return; }
+    W.entries.push(e); W.byId[e.id] = e;
+    if (e.kind === 'design') { (W.pieces[e.piece] = W.pieces[e.piece] || []).push(e.id); e.state = 'right'; W.feed.push({ type: 'built', id: e.id }); }
+    else if (e.kind === 'break') {
+      const T = W.byId[e.of], p = needOf(T.piece).project;
+      (W.cases[T.piece] = W.cases[T.piece] || []).push({ case: e.case, by: e.id });
+      /* the case joins the check: every right design of the piece meets it now */
+      W.pieces[T.piece].map(id => W.byId[id]).filter(d => d.state === 'right').forEach(d => { const x = runCase(p, d.code, e.case); if (x && x.first >= 0) { d.state = 'broken'; d.brokenBy = e.id; e.breaks.push(d.id); } });
+      e.state = 'stands'; W.feed.push({ type: 'broke', id: e.id });
+    } else { e.state = 'stands'; W.feed.push({ type: 'asked', id: e.id }); }
+  });
+  /* standings: among a piece's right designs, the ones nothing beats on both size and speed hold a record; an
+     equal design that came later is behind; the smallest holder (the earliest, if equal) is inside the computer */
+  W.inside = {};
+  Object.entries(W.pieces).forEach(([piece, ids]) => {
+    const right = ids.map(id => W.byId[id]).filter(d => d.state === 'right');
+    right.forEach((d, i) => { const beaten = right.some((o, j) => o !== d && (beats(o, d) || (j < i && o.facts.transistors === d.facts.transistors && o.facts.ps === d.facts.ps))); d.state = beaten ? 'behind' : 'holds'; });
+    const holders = right.filter(d => d.state === 'holds').sort((a, b) => a.facts.transistors - b.facts.transistors);
+    if (holders.length) W.inside[piece] = holders[0].id;
+  });
+  /* who checks whom: for every break, who made the design and who made the break */
+  W.cross = {}; W.entries.filter(e => e.kind === 'break').forEach(e => { const k = W.byId[e.of].made + '>' + e.made; W.cross[k] = (W.cross[k] || 0) + 1; });
+  /* who makes what: entries by kind and by maker */
+  W.mix = {}; W.entries.forEach(e => { const M = (W.mix[e.kind] = W.mix[e.kind] || {}); M[e.made] = (M[e.made] || 0) + 1; });
+  W.makers = [...new Set(W.entries.map(e => e.by))];
+  return W;
+}
+
+/* the designs of a piece that stand (right, not broken), the one inside the computer first */
+export function standing(W, piece) { return (W.pieces[piece] || []).map(id => W.byId[id]).filter(d => d.state !== 'broken').sort((a, b) => (W.inside[piece] === b.id) - (W.inside[piece] === a.id)); }
+/* the questions people have added at a level, or under one question */
+export const questionsAt = (W, at, under) => W.entries.filter(e => e.kind === 'question' && e.at === at && (under == null || e.under === under));
+
+/* ---- the frontier: what is open right now, read from the ledger. Each is where a contribution can start. ----
+   build   a piece an engine can check, with no right design yet
+   break   a clocked design that stands: its check tried some cases, not all. Nobody has broken it (yet)
+   engine  a piece nothing can check yet: the contribution is the check itself */
+export function frontier(W) {
+  const leaf = n => !NEEDS.some(x => x.parent === n.id), out = [];
+  NEEDS.filter(leaf).forEach(n => {
+    if (n.engine === 'logic' && !standing(W, n.id).length) out.push({ kind: 'build', piece: n.id, p: n.project });
+    if (n.engine == null) out.push({ kind: 'engine', piece: n.id });
+  });
+  W.entries.filter(e => e.kind === 'design' && e.state !== 'broken' && projectOf(needOf(e.piece).project).seq).forEach(e => out.push({ kind: 'break', of: e.id, piece: e.piece, p: needOf(e.piece).project, inside: W.inside[e.piece] === e.id }));
+  return out;
+}
+
+/* ---- writing an entry: its id, its file, and the link that opens it on GitHub as a new file in a pull request ---- */
+const slug = s => String(s || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+/, '').slice(0, 32).replace(/-+$/, '') || 'entry';
+const hash = s => { let h = 5381; for (let i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) >>> 0; return h.toString(36).slice(0, 4).padStart(4, '0'); };
+export const today = d => (d || new Date()).toISOString().slice(0, 10);
+/* fields: the entry without its id; name: a few words for the file's name */
+export function draft(fields, name, day) {
+  const body = {}; FIELDS[fields.kind].forEach(k => { if (fields[k] != null && fields[k] !== '') body[k] = fields[k]; });
+  if (body.ai == null) body.ai = '';
+  return Object.assign({ id: (day || today()) + '-' + fields.kind + '-' + slug(name) + '-' + hash(JSON.stringify(body)) }, body);
+}
+export function fileOf(e) {
+  const body = {}; FIELDS[e.kind].forEach(k => { if (e[k] != null) body[k] = e[k]; });
+  return { path: DIR + '/' + e.id + '.json', text: JSON.stringify(body, null, 2) + '\n' };
+}
+export function proposeUrl(e) { const f = fileOf(e); return REPO + '/new/main/' + DIR + '?filename=' + encodeURIComponent(e.id + '.json') + '&value=' + encodeURIComponent(f.text); }
+/* check a draft against the ledger as it stands (and any other drafts of yours before it) */
+export function tryEntry(e, extra) { const W = settle(ENTRIES.concat(extra || [])); return W.byId[e.id] ? no('same') : checkEntry(e, W); }

@@ -1,5 +1,6 @@
 /* The redesign's chip world and its data centre (src/v2): every place, level and part has its words, and
    every question asked there is a real stop. The game behind the island is tested in tests/game.test.mjs. */
+import './ledger.setup.mjs';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';

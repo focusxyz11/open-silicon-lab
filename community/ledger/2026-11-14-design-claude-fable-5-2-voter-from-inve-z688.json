@@ -1,0 +1,10 @@
+{
+  "kind": "design",
+  "piece": "safety",
+  "title": "Voter from inverting gates",
+  "by": "Claude Fable 5.2",
+  "made": "ai",
+  "ai": "An AI agent (Claude Fable 5.2) wrote it through the open port while building the ledger: it tried five forms of the majority function and kept the smallest one the check passed. No person edited it; whoever merges the pull request is the person in the loop.",
+  "words": "The same vote, built from gates that invert: fewer transistors and a shorter path than the example. Beat it, or say why it cannot be beaten.",
+  "code": "y = ~(~(a & b) & ~(c & (a | b)));"
+}

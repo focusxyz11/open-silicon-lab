@@ -21,6 +21,7 @@ import { rootShown } from '../engines/weave.js';
 import { FIGURES, CASES } from '../data/weave.js';
 import { fmtDate } from '../core/i18n.js';
 import { ROWS, ASK as CHIP_ASK } from './chip3d.js';
+import { signHtml, signOf, keep, refusal, slipHtml, slipClick, byLine, merged } from './commons.js';
 
 const $ = id => document.getElementById(id);
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
@@ -47,7 +48,7 @@ export function start() {
     const C = Game.community(S), leaves = NEEDS.filter(n => !childrenOf(n.id).length), order = ['built', 'yours', 'open', 'engine'];
     const floors = leaves.map(n => { const p = C.state[n.id]; return p.state === 'built' ? 'built' : p.state === 'engine' ? 'engine' : p.yours ? 'yours' : 'open'; }).sort((a, b) => order.indexOf(a) - order.indexOf(b));
     const places = Object.fromEntries(Game.PLACES.map(id => { const L = doList(id); return [id, { done: L.filter(c => S.done[c.id]).length, total: L.length }]; }));
-    return { grown: Game.grown(S), steps: Object.fromEntries(Game.STEPS.map(s => [s, Game.stepState(S, s)])), places, chipAt: Game.chipAt(S), floors, designs: C.designs, jobList: C.jobs, engineList: C.engines };
+    return { grown: Game.grown(S), steps: Object.fromEntries(Game.STEPS.map(s => [s, Game.stepState(S, s)])), places, chipAt: Game.chipAt(S), floors, designs: C.designs, cases: C.cases, jobList: C.jobs, engineList: C.engines };
   }
   const refresh = animate => { if (map) map.setState(islandState(), animate); hud(); firstGo(); };
   /* until the first win, the way to start glows */
@@ -66,7 +67,7 @@ export function start() {
   const prewarm = () => [ready(ensureDc, 'dc'), ready(ensureChip, 'chip'), ready(ensureBoard, 'board')].reduce((p, f) => p.then(() => new Promise(r => idle(() => { f(); r(); }))), Promise.resolve());
   const preload = () => { prewarm(); ['./frame.js', './board3d.js', './story.js', './stories.js', '../engines/weave.js', '../app/world.js', '../data/weave.js', '../app/design.js', '../app/journey.js', './level3d.js', './relief3d.js', './wafer3d.js', './pcb3d.js', './phone3d.js', './gate3d.js', './switch3d.js', './atom3d.js', './overlay.js'].forEach(u => import(u).catch(() => { /* fetched again when needed */ })); };
   const ensureMap = () => mapReady || (mapReady = import('./map3d.js').then(m => {
-    map = m.createMap($('mapCanvas'), $('mapLabels'), { place: id => (cur && cur.place === id && !sheet.hidden && enterOf(id) ? enter(enterOf(id)) : openPlace(id)), question: key => openQuestion(key), job: need => openJob(need), interact: () => $('hero').classList.add('away') });
+    map = m.createMap($('mapCanvas'), $('mapLabels'), { place: id => (cur && cur.place === id && !sheet.hidden && enterOf(id) ? enter(enterOf(id)) : openPlace(id)), question: key => openQuestion(key), job: need => openJob(need), entry: id => openEntry(id), interact: () => $('hero').classList.add('away') });
     loading(false); map.setState(islandState(), false); idle(preload);
     /* the first minute: a first visit to the island opens on a wide shot and comes down to it, and the hero rises after */
     if (!S.seen && (!location.hash || location.hash === '#/') && !still()) { map.intro(); $('hero').classList.add('intro'); }
@@ -104,10 +105,21 @@ export function start() {
   /* what to do at a place: its own challenges, and at a step's station the step's challenges played elsewhere */
   const doList = id => { const step = Game.STEP_OF[id] || Game.STEP_PLACE[id], here = Game.placeChallenges(id);
     return here.concat(step ? Game.stepChallenges(step).filter(c => c.place !== id) : []); };
-  const whereOf = ch => t('map.' + (ch.need ? 'lab' : ch.place) + '.t') + (ch.at ? ' › ' + t('depth.' + ch.at + '.name') : '');
+  const whereOf = ch => t('map.' + (ch.kind === 'break' ? 'village' : ch.need ? 'lab' : ch.place) + '.t') + (ch.at ? ' › ' + t('depth.' + ch.at + '.name') : '');
   function chCard(ch) {
     const done = S.done[ch.id];
     return '<button type="button" class="chcard' + (done ? ' done' : '') + '" data-open="' + esc(ch.id) + '"><span class="st">' + (done ? '✓' : '') + '</span><span><span class="kicker">' + esc(whereOf(ch)) + '</span><b>' + esc(titleOf(ch)) + '</b><span class="small">' + esc(goalOf(ch)) + '</span>' + (ch.grows ? '<span class="small muted">' + esc(t(done ? 'game.grew' : 'game.grows', { what: t('grow.' + ch.grows) })) + '</span>' : '') + '</span></button>';
+  }
+  /* a challenge by its id: the loop's, an open job, or a break the ledger offers */
+  const chOf = id => Game.anyChallenge(id, S);
+  const doHref = c => c.kind === 'design' && !c.need ? '#/bench/' + c.at + '/' + c.id : '#/do/' + c.id;
+  /* a design of the ledger: who made it, where it stands, and (for a clocked one) the way to try to break it */
+  function designCard(d) {
+    const ch = chOf('break:' + d.id), st = d.draft ? 'draft' : d.state;
+    const facts = t('ledger.facts', { tr: d.facts.transistors, ps: d.facts.ps }) + (d.inside ? ' · ' + t('ledger.inside') : '');
+    const body = '<span class="st">' + (d.state === 'broken' ? '✕' : '⌂') + '</span><span><span class="kicker">' + esc(t('build.need.' + d.need + '.t')) + ' · ' + esc(t('ledger.state.' + st)) + '</span><b>' + esc(d.title) + '</b><span class="small">' + esc(d.author) + ' · ' + esc(t('build.kind.' + d.kind)) + '</span><span class="small muted">' + esc(facts) + '</span>' +
+      (ch ? '<span class="small ' + (d.state === 'broken' ? 'bad' : 'hint') + '">' + esc(t(d.state === 'broken' ? 'ledger.card.broken' : 'ledger.card.unbroken')) + '</span>' : '') + '</span>';
+    return ch ? '<button type="button" class="chcard entry ' + st + '" data-open="' + esc(ch.id) + '">' + body + '</button>' : '<div class="chcard entry ' + st + '">' + body + '</div>';
   }
   const jobCard = j => '<button type="button" class="chcard job" data-job="' + j.need + '"><span class="st">?</span><span><b>' + esc(t('design.proj.' + j.p + '.t')) + '</b><span class="small">' + esc(t('build.need.' + j.need + '.d')) + '</span></span></button>';
   const askLink = k => '<a class="askq" href="' + esc(follow(k)) + '" style="--qc:' + qColor(k) + '"><span class="q">' + esc(t('stop.' + k + '.q')) + '</span><span class="small muted">' + esc(t('sheet.follow')) + '</span></a>';
@@ -150,8 +162,8 @@ export function start() {
     h += '<p class="kicker">' + esc(kickerOf(id)) + '</p><h2>' + esc(t('map.' + id + '.t')) + '</h2>';
     h += '<div class="doors" role="tablist">' + ['look', 'do', 'ask'].map(k => '<button type="button" role="tab" data-door="' + k + '" aria-selected="' + (cur.tab === k) + '" title="' + esc(t('door.' + k + '.d')) + '"><b>' + esc(t('door.' + k)) + (k === 'do' && nDo ? ' <span class="n">' + nDo + '</span>' : k === 'ask' && nAsk ? ' <span class="n">' + nAsk + '</span>' : '') + '</b></button>').join('') + '</div><div class="door">';
     if (cur.tab === 'do') {
-      if (id === 'lab') h += '<p class="small">' + esc(t('game.lab.do', { built: C.built, total: C.total })) + '</p>' + C.jobs.map(jobCard).join('') + C.engines.map(e => '<a class="chcard engine" target="_blank" rel="noopener" href="' + esc(REPO + '/issues/new?' + new URLSearchParams({ template: 'need.yml', title: t('game.engineFor', { piece: t('build.need.' + e.need + '.t') }) })) + '"><span class="st">⚙</span><span><b>' + esc(t('build.need.' + e.need + '.t')) + '</b><span class="small">' + esc(t('game.engineWanted')) + '</span></span></a>').join('') + '<a class="link" href="#/build">' + esc(t('game.seePlan')) + '</a>';
-      else if (id === 'village') h += '<p class="small">' + esc(t('game.village.do')) + '</p>' + C.designs.map(d => '<div class="chcard done"><span class="st">⌂</span><span><b>' + esc(d.title) + '</b><span class="small">' + esc(d.author) + ' · ' + esc(t('build.kind.' + d.kind)) + '</span></span></div>').join('') + C.jobs.map(jobCard).join('');
+      if (id === 'lab') h += '<p class="small">' + esc(t('game.lab.do', { built: C.built, total: C.total })) + '</p>' + C.breaks.map(b => chCard(chOf('break:' + b.of))).join('') + C.jobs.map(jobCard).join('') + C.engines.map(e => '<a class="chcard engine" target="_blank" rel="noopener" href="' + esc(REPO + '/issues/new?' + new URLSearchParams({ template: 'need.yml', title: t('game.engineFor', { piece: t('build.need.' + e.need + '.t') }) })) + '"><span class="st">⚙</span><span><b>' + esc(t('build.need.' + e.need + '.t')) + '</b><span class="small">' + esc(t('game.engineWanted')) + '</span></span></a>').join('') + '<a class="link" href="#/build">' + esc(t('game.seePlan')) + '</a>';
+      else if (id === 'village') h += '<p class="small">' + esc(t('game.village.do')) + '</p>' + C.designs.map(designCard).join('') + C.jobs.map(jobCard).join('');
       else if (id === 'idea') h += '<p>' + esc(t('game.idea.do')) + '</p><a class="btn primary" target="_blank" rel="noopener" href="' + esc(REPO + '/issues/new?' + new URLSearchParams({ template: 'idea.yml', title: t('game.idea.title') })) + '">' + esc(t('game.idea.propose')) + '</a>';
       else if (dos.length) h += dos.map(chCard).join('');
       else h += '<p class="small muted">' + esc(t('game.noDo')) + '</p>';
@@ -170,17 +182,21 @@ export function start() {
   /* a challenge, played in the sheet */
   function openChallenge(ch) {
     if (!ch) return;
-    const placeId = ch.need ? 'lab' : ch.place;
+    const placeId = ch.kind === 'break' ? 'village' : ch.need ? 'lab' : ch.place;
     if (!cur || cur.place !== placeId) { cur = { place: placeId, tab: 'do' }; map && map.focus(placeId); }
     $('hero').classList.add('away'); sheet.hidden = false; sheet.scrollTop = 0;
-    play(sheet, ch, { state: S, save, startChip: () => Object.assign({}, Game.START), open: openChallenge, back: () => { sheet.onclick = null; sheet.oninput = null; drawPlace(); }, done: won });
+    play(sheet, ch, { state: S, save, kept, startChip: () => Object.assign({}, Game.START), open: openChallenge, back: () => { sheet.onclick = null; sheet.oninput = null; drawPlace(); }, done: won });
   }
   const openJob = need => { const j = Game.jobOf(need); if (j) openChallenge(j); };
+  /* a house of the village: a clocked design opens the try to break it; any other, the village's list */
+  const openEntry = id => { const ch = chOf('break:' + id); if (ch) openChallenge(ch); else openPlace('village', 'do'); };
+  /* an entry of yours was kept (or dropped): the island shows it at once, as yours, and says who can see it */
+  function kept(e) { save(); refresh(true); if (e) { toast(t('ledger.toast')); if (map && !$('mapCanvas').hidden) map.punch(); } }
   /* something was won: the island grows, the HUD moves on, a note says what appeared */
   /* a win is felt: the island grows where it happened and the camera leans in, the step in the bar bumps and counts
      one up, the next challenge glows, and a toast says what grew */
   function won(ch) {
-    refresh(true); toast(ch.grows ? t('game.toast', { what: t('grow.' + ch.grows) }) : t('game.toastJob'));
+    refresh(true); toast(ch.grows ? t('game.toast', { what: t('grow.' + ch.grows) }) : t(ch.kind === 'break' ? 'game.toastBreak' : 'game.toastJob'));
     if (map && !$('mapCanvas').hidden) map.punch();
     const b = ch.step && hudEl.querySelector('[data-step="' + ch.step + '"]');
     if (b && !still()) { b.classList.add('bump'); const plus = document.createElement('span'); plus.className = 'plus'; plus.setAttribute('aria-hidden', 'true'); plus.textContent = '+1'; b.parentNode.appendChild(plus); setTimeout(() => plus.remove(), 1500); }
@@ -200,7 +216,7 @@ export function start() {
     if (e.target.closest('.player')) return;   /* the player handles its own clicks */
     if (e.target.closest('[data-close]')) { closeSheet(); if (location.hash !== '#/ecosystem') map && map.overview(); return; }
     const d = e.target.closest('[data-door]'); if (d) { cur.tab = d.dataset.door; drawPlace(); return; }
-    const o = e.target.closest('[data-open]'); if (o) { openChallenge(Game.challengeOf(o.dataset.open)); return; }
+    const o = e.target.closest('[data-open]'); if (o) { openChallenge(chOf(o.dataset.open)); return; }
     const j = e.target.closest('[data-job]'); if (j) { openJob(j.dataset.job); return; }
     const p = e.target.closest('[data-place]'); if (p) openPlace(p.dataset.place);
   });
@@ -466,7 +482,7 @@ export function start() {
   function openBench(ch) {
     benchCh = ch; const dock = diveFrame.dock; dock.classList.add('benchdock'); syncDesign(ch);
     play(dock, ch, { state: S, startChip: () => Object.assign({}, Game.START),
-      save: () => { save(); syncDesign(ch); },
+      save: () => { save(); syncDesign(ch); }, kept,
       open: c => { location.hash = c.kind === 'design' ? '#/bench/' + c.at + '/' + c.id : '#/do/' + c.id; },
       back: () => { benchCh = null; dock.classList.remove('benchdock'); dock.onclick = null; dock.oninput = null; drawDive(); },
       /* won: the island grows, and the drawings fly to your gates */
@@ -588,29 +604,51 @@ export function start() {
 
   /* ---- the pages ---- */
   const page = $('page');
+  let pageNow = 'build';
   function showPage(k) {
+    pageNow = k;
     let h = '<div class="inner"><h1>' + esc(t('nav.' + k)) + '</h1><p class="lead">' + esc(t('page.' + k + '.lead')) + '</p>';
     const C = Game.community(S);
     if (k === 'challenges') {
       h += Game.STEPS.map((s, i) => { const st = Game.stepState(S, s); return '<section class="stepsec"><h2><span class="num">' + (i + 1) + '</span>' + esc(t('game.step.' + s)) + ' <span class="small muted">' + esc(t('map.' + Game.STATION[s] + '.t')) + ' · ' + st.done + '/' + st.total + '</span></h2><div class="grid">' + Game.stepChallenges(s).map(chCard).join('') + '</div></section>'; }).join('');
       h += '<section class="stepsec"><h2><span class="num">⚙</span>' + esc(t('game.jobs')) + ' <span class="small muted">' + esc(t('game.jobsD')) + '</span></h2><div class="grid">' + C.jobs.map(jobCard).join('') + '</div></section>';
     } else if (k === 'questions') {
-      /* by place, level by level; the block, gate, switch and atom every chip shares are shown once, in the data centre */
-      h += PLACES.filter(p => (Game.ASK[p.id] || []).length).map(p => '<section class="stepsec"><h2>' + esc(t('map.' + p.id + '.t')) + ' <span class="small muted">' + esc(kickerOf(p.id)) + '</span></h2>' +
-        Game.askAt(p.id).filter(g => !g.level || p.id === 'datacentre' || !Game.SHARED.includes(g.level.depth)).map(g => (g.level ? '<p class="kicker">' + esc(t('depth.' + g.level.depth + '.name')) + '</p>' : '') + '<div class="qgrid">' + g.stops.map(key => '<a class="qcard" href="' + esc(follow(key)) + '" style="--qc:' + qColor(key) + '"><span class="q">' + esc(t('stop.' + key + '.q')) + '</span><span class="small muted">' + esc(t('sheet.follow')) + '</span></a>').join('') + '</div>').join('') + '</section>').join('');
+      /* never a list of every question: the ones you have met, as strands you can pick up again, one way to meet
+         the next, and the ones you asked yourself. Only the strand you followed last shows what lies underneath. */
+      const strands = Object.keys(S.met).filter(th => THREADS.some(x => x.id === th) && S.met[th].some(d => Game.trail(th).includes(d))), last = strands[strands.length - 1];
+      if (strands.length) h += '<section class="stepsec"><h2>' + esc(t('page.questions.met')) + '</h2>' + strands.slice().reverse().map(th => { const ds = S.met[th].filter(d => Game.trail(th).includes(d)), d = ds[ds.length - 1], key = th + '.' + d;
+        return '<div class="strand" style="--qc:' + qColor(key) + '"><a class="q" href="' + esc(follow(key)) + '">' + esc(t('stop.' + key + '.q')) + '</a><div class="chips">' + ds.map(x => '<a class="chipb" href="' + esc(follow(th + '.' + x)) + '">' + esc(t('depth.' + x + '.name')) + '</a>').join('') + '</div>' +
+          (th === last && rootShown(S.met[th], Game.didOn(S, th)) ? '<p class="small muted">' + esc(t('ui.rootOf')) + ' <em class="rootq">' + esc(t('thread.' + th + '.root')) + '</em></p>' : '') + '</div>'; }).join('') + '</section>';
+      const bk = Game.BEACON[Game.STATION[Game.chipAt(S)]];
+      h += '<section class="stepsec"><h2>' + esc(t(strands.length ? 'page.questions.next' : 'page.questions.first')) + '</h2><p class="small muted">' + esc(t('page.questions.where')) + '</p><div class="qgrid">' +
+        '<a class="qcard" href="' + esc(follow(bk)) + '" style="--qc:' + qColor(bk) + '"><span class="kicker">' + esc(t('map.' + Game.STATION[Game.chipAt(S)] + '.t')) + '</span><span class="q">' + esc(t('stop.' + bk + '.q')) + '</span><span class="small muted">' + esc(t('sheet.follow')) + '</span></a></div></section>';
+      const asked = C.W.entries.filter(e => e.kind === 'question');
+      h += '<section class="stepsec"><h2>' + esc(t('page.questions.asked')) + '</h2>' + (asked.length ? asked.slice().reverse().map(askedHtml).join('') : '<p class="small muted">' + esc(t('page.questions.none')) + '</p>') + '</section>';
     } else if (k === 'build') {
-      const tree = id => { const st = C.state[id], kids = childrenOf(id); return '<ul class="tree"><li><span class="node ' + st.state + (st.yours ? ' yours' : '') + '">' + esc(t('build.need.' + id + '.t')) + (st.n ? ' ×' + st.n : '') + '</span>' + kids.map(c => tree(c.id)).join('') + '</li></ul>'; };
+      /* the commons: the computer and whose pieces are inside it, what is open now, the record, and who makes what */
+      const W = C.W, whose = id => { const d = W.inside[id] && W.byId[W.inside[id]]; return d ? ' <span class="who">' + esc(d.by) + '</span>' : ''; };
+      const tree = id => { const st = C.state[id], kids = childrenOf(id); return '<ul class="tree"><li><span class="node ' + st.state + (st.yours ? ' yours' : '') + '">' + esc(t('build.need.' + id + '.t')) + (st.n ? ' ×' + st.n : '') + whose(id) + '</span>' + kids.map(c => tree(c.id)).join('') + '</li></ul>'; };
       h += '<div class="plan2"><div class="tower" aria-hidden="true">' + islandState().floors.slice().reverse().map(f => '<span class="fl ' + f + '"></span>').join('') + '</div><div><p class="big">' + esc(t('page.build.progress', { built: C.built, total: C.total })) + '</p><p class="small muted">' + esc(t('page.build.legend')) + '</p>' + tree('computer') + '</div></div>';
-      h += '<h2>' + esc(t('game.jobs')) + '</h2><div class="grid">' + C.jobs.map(jobCard).join('') + '</div>';
+      h += '<h2>' + esc(t('page.build.open')) + '</h2><p class="small muted">' + esc(t('page.build.openD')) + '</p><div class="grid">' + C.breaks.map(b => chCard(chOf('break:' + b.of))).join('') + C.jobs.map(jobCard).join('') +
+        C.engines.map(e => '<a class="chcard engine" target="_blank" rel="noopener" href="' + esc(REPO + '/issues/new?' + new URLSearchParams({ template: 'need.yml', title: t('game.engineFor', { piece: t('build.need.' + e.need + '.t') }) })) + '"><span class="st">⚙</span><span><b>' + esc(t('build.need.' + e.need + '.t')) + '</b><span class="small">' + esc(t('game.engineWanted')) + '</span></span></a>').join('') + '</div>';
+      /* the record: every entry, the newest first, each with who made it and where it stands now */
+      const line = e => { const T = e.kind === 'break' ? W.byId[e.of] : null, what = e.kind === 'design' ? t('ledger.rec.design', { title: e.title, piece: t('build.need.' + e.piece + '.t') }) : e.kind === 'break' ? t('ledger.rec.break', { title: T.title }) : e.q;
+        return '<li class="rec ' + e.kind + (e.draft ? ' draft' : '') + ' ' + e.state + '"><span class="made ' + esc(e.made) + '"></span><span><b>' + esc(what) + '</b><span class="small muted"> · ' + byLine(e) + ' · ' + esc(e.id.slice(0, 10)) + ' · ' + esc(t('ledger.state.' + (e.draft ? 'draft' : e.state))) + (e.brokenBy ? ' · ' + esc(t('ledger.brokenBy', { who: W.byId[e.brokenBy].by })) : '') + '</span>' + (e.draft ? slipHtml(S, e.id) : '') + '</span></li>'; };
+      h += '<h2>' + esc(t('page.build.record')) + '</h2><p class="small muted">' + esc(t('page.build.recordD')) + '</p><ol class="record">' + W.entries.slice().reverse().map(line).join('') + '</ol>';
+      /* who makes what: one bar per kind of entry, split by who made it, as each entry says */
+      const kinds = ['design', 'break', 'question'], made = ['person', 'both', 'ai', 'example'];
+      h += '<h2>' + esc(t('page.build.mix')) + '</h2><p class="small muted">' + esc(t('page.build.mixD')) + '</p><div class="mix">' + kinds.map(kd => { const M = W.mix[kd] || {}, n = made.reduce((a, m) => a + (M[m] || 0), 0);
+        return '<div class="mixrow"><span class="ml">' + esc(t('ledger.kind.' + kd)) + '</span><span class="mbar">' + (n ? made.filter(m => M[m]).map(m => '<span class="made ' + m + '" style="flex:' + M[m] + '" title="' + esc(t('build.kind.' + m)) + ': ' + M[m] + '">' + M[m] + '</span>').join('') : '<span class="none">' + esc(t('page.build.mixNone')) + '</span>') + '</span></div>'; }).join('') +
+        '<p class="legend small muted">' + made.map(m => '<span><span class="made ' + m + '"></span>' + esc(t('build.kind.' + m)) + '</span>').join('') + '</p></div>';
       h += '<h2>' + esc(t('page.build.how')) + '</h2><div class="cards"><a class="card2" href="#/bench/need"><b>' + esc(t('page.build.studio')) + '</b><span>' + esc(t('page.build.studioD')) + '</span></a>' +
         '<a class="card2" href="' + esc(REPO + '/blob/main/docs/MCP.md') + '" target="_blank" rel="noopener"><b>' + esc(t('page.build.port')) + '</b><span>' + esc(t('page.build.portD')) + '</span></a>' +
         '<a class="card2" href="' + esc(REPO + '/issues/new?template=need.yml') + '" target="_blank" rel="noopener"><b>' + esc(t('page.build.join')) + '</b><span>' + esc(t('page.build.joinD')) + '</span></a></div>';
-      h += '<h2>' + esc(t('page.build.designs')) + '</h2><div class="grid">' + C.designs.map(d => '<div class="chcard done"><span class="st">⌂</span><span><b>' + esc(d.title) + '</b><span class="small">' + esc(d.author) + ' · ' + esc(t('build.kind.' + d.kind)) + ' · ' + esc(t('build.need.' + d.need + '.t')) + '</span></span></div>').join('') + '</div>';
     }
     page.innerHTML = h + '<p class="small muted">' + esc(t('page.preview')) + '</p></div>'; page.hidden = false; page.scrollTop = 0;
   }
   page.addEventListener('click', e => {
-    const o = e.target.closest('[data-open]'); if (o) { const ch = Game.challengeOf(o.dataset.open); goExplore(() => openChallenge(ch)); return; }
+    const o = e.target.closest('[data-open]'); if (o) { const ch = chOf(o.dataset.open); goExplore(() => openChallenge(ch)); return; }
+    if (slipClick(e, S, redraw => { save(); refresh(true); if (redraw) showPage(pageNow); })) return;
     const j = e.target.closest('[data-job]'); if (j) { const need = j.dataset.job; goExplore(() => openJob(need)); }
   });
   /* the ecosystem: fly out to the islands; the sheet tells what lies beyond */
@@ -634,22 +672,42 @@ export function start() {
   /* a real case that happened at this stop: what, why, and what came after, with its source */
   const casesHtml = key => CASES.filter(c => c.stop === key).map(c => '<details class="case2"><summary><span class="kicker">' + esc(t('trail.case', { year: c.year })) + '</span> <b>' + esc(t('case.' + c.id + '.t')) + '</b></summary>' +
     ['what', 'why', 'after'].map(k => '<p class="small">' + esc(t('case.' + c.id + '.' + k)) + '</p>').join('') + '<p class="small muted">' + ext(c.url, esc(t('case.' + c.id + '.src'))) + '</p></details>').join('');
-  const trailSeen = {};   /* the stops of each thread seen in this visit: after two, the question underneath may show */
+  /* ---- a question's world: where it leads, what you can do about it, what people have asked under it ---- */
+  /* a question someone added under a stop: its words, who asked, and (for yours) the slip that leads into the ledger */
+  const askedHtml = e => '<div class="asked1' + (e.draft ? ' draft' : '') + '"><p class="q">' + esc(e.q) + '</p>' + (e.noticed ? '<p class="small">' + esc(e.noticed) + '</p>' : '') + '<p class="small muted">' + byLine(e) + (e.under ? ' · ' + esc(t('depth.' + e.at + '.name')) : '') + '</p>' + (e.draft ? slipHtml(S, e.id) : '') + '</div>';
+  let nowStop = null, askOpen = false, askNo = null, askVals = { q: '', noticed: '' };
   function stopHtml(th, d) {
     const T = Game.trail(th), i = T.indexOf(d), key = th + '.' + d, tried = t('stop.' + key + '.tried');
     const step = (j, k) => T[j] != null ? '<a class="btn' + (k === 'next' ? ' primary' : ' ghost') + '" data-key="' + k + '" href="' + esc(Game.askHref(th + '.' + T[j])) + '">' + esc(t(k === 'next' ? 'trail.next' : 'trail.prev', { level: t('depth.' + T[j] + '.name') })) + '</a>' : '<span></span>';
-    let h = '<p class="kicker trailk" style="--qc:' + qColor(key) + '"><span class="dotq"></span>' + esc(t('trail.k', { n: i + 1, total: T.length, level: t('depth.' + d + '.name') })) + '</p>';
+    let h = '<div class="stopx"><p class="kicker trailk" style="--qc:' + qColor(key) + '"><span class="dotq"></span>' + esc(t('trail.k', { level: t('depth.' + d + '.name') })) + '</p>';
     h += '<p class="line trailq">' + esc(t('stop.' + key + '.q')) + '</p><p class="small">' + esc(t('stop.' + key + '.note')) + '</p>';
-    if (Array.isArray(tried)) h += '<p class="kicker">' + esc(t('trail.tried')) + '</p><ul class="tried2">' + tried.map(x => '<li>' + esc(x) + '</li>').join('') + '</ul>';
+    /* what you can do about it: the challenges that open this question, and the open things of the ledger that sit here */
+    const dos = Game.doAtStop(key, S);
+    if (dos.length) h += '<div class="stopdo">' + dos.slice(0, 4).map(x => x.ch ? '<a class="dochip' + (S.done[x.ch.id] ? ' done' : '') + '" href="' + esc(doHref(x.ch)) + '"><span class="kicker">' + esc(t(S.done[x.ch.id] ? 'trail.did' : x.ch.kind === 'break' ? 'trail.open' : 'trail.do')) + '</span><b>' + esc(titleOf(x.ch)) + '</b></a>'
+      : '<a class="dochip engine" target="_blank" rel="noopener" href="' + esc(REPO + '/issues/new?' + new URLSearchParams({ template: 'need.yml', title: t('game.engineFor', { piece: t('build.need.' + x.engine + '.t') }) })) + '"><span class="kicker">' + esc(t('trail.open')) + '</span><b>' + esc(t('trail.engine', { piece: t('build.need.' + x.engine + '.t') })) + '</b></a>').join('') + '</div>';
+    if (Array.isArray(tried)) h += '<details class="more2"><summary>' + esc(t('trail.tried')) + '</summary><ul class="tried2">' + tried.map(x => '<li>' + esc(x) + '</li>').join('') + '</ul></details>';
     h += casesHtml(key) + figuresHtml(key);
-    /* the question behind the question: one root at a time, once two of its stops have been seen */
-    if (rootShown(trailSeen[th])) h += '<div class="root2"><p class="small muted">' + esc(t('ui.rootOf')) + '</p><p class="rootq">' + esc(t('thread.' + th + '.root')) + '</p><p class="small muted">' + esc(t('ui.behind')) + ' <em>' + esc(t('thread.' + th + '.behind')) + '</em></p></div>';
-    return h + '<div class="nav"><span class="navl">' + step(i - 1, 'back') + '<button type="button" class="btn ghost" data-leave>' + esc(t('trail.leave')) + '</button></span>' + step(i + 1, 'next') + '</div>';
+    /* the questions that meet this one on a part they share: a way across, not only down */
+    const X = Game.across(key);
+    if (X.length) h += '<details class="more2"><summary>' + esc(t('trail.across', { n: X.length })) + '</summary>' + X.map(k2 => '<a class="askline" href="' + esc(follow(k2)) + '" style="--qc:' + qColor(k2) + '"><span class="q">' + esc(t('stop.' + k2 + '.q')) + '</span></a>').join('') + '</details>';
+    /* what people have asked under it, and a place for yours */
+    const A = Game.askedAt(key, S);
+    h += '<details class="more2 asked"' + (A.some(e => e.draft) || askOpen ? ' open' : '') + '><summary>' + esc(t(A.length ? 'trail.asked' : 'trail.askedNone', { n: A.length })) + '</summary>' + A.map(askedHtml).join('') +
+      (askOpen ? '<div class="askform"><label><span class="kicker">' + esc(t('ask.q')) + '</span><input type="text" data-askq maxlength="160" value="' + esc(askVals.q) + '" placeholder="' + esc(t('ask.qPh')) + '"></label><label><span class="kicker">' + esc(t('ask.noticed')) + '</span><input type="text" data-asknoticed maxlength="240" value="' + esc(askVals.noticed) + '" placeholder="' + esc(t('ask.noticedPh')) + '"></label>' +
+        signHtml(S) + (askNo ? '<p class="small bad">' + esc(askNo) + '</p>' : '') + '<div class="acts"><button type="button" class="btn primary" data-askkeep>' + esc(t('ask.keep')) + '</button><span class="small muted">' + esc(t('ask.rule')) + '</span></div></div>'
+        : '<button type="button" class="btn" data-askown>' + esc(t('ask.own')) + '</button>') + '</details>';
+    /* the question behind the question: one root at a time, once two of its stops have been met, or one after you
+       have done something about it */
+    if (rootShown(S.met[th], Game.didOn(S, th))) h += '<div class="root2"><p class="small muted">' + esc(t('ui.rootOf')) + '</p><p class="rootq">' + esc(t('thread.' + th + '.root')) + '</p><p class="small muted">' + esc(t('ui.behind')) + ' <em>' + esc(t('thread.' + th + '.behind')) + '</em></p></div>';
+    return h + '<div class="nav"><span class="navl">' + step(i - 1, 'back') + '<button type="button" class="btn ghost" data-leave>' + esc(t('trail.leave')) + '</button></span>' + step(i + 1, 'next') + '</div></div>';
   }
-  function askStop(th, d) {
+  function askStop(th, d, again) {
     if (!Game.trail(th).includes(d)) return;
-    trailSeen[th] = [...new Set([...(trailSeen[th] || []), d])];
-    if (!FACT) return facts().then(() => askStop(th, d));
+    if (!again) { askOpen = false; askNo = null; askVals = { q: '', noticed: '' }; }
+    nowStop = { th, d };
+    /* the questions you have met stay met (your state), and the strand you followed last goes to the end */
+    const was = S.met[th] || []; delete S.met[th]; S.met[th] = [...new Set([...was, d])]; save();
+    if (!FACT) return facts().then(() => askStop(th, d, again));
     const html = stopHtml(th, d);
     const fr = !vui.hidden ? diveFrame : !cui.hidden ? chipFrame : !pui.hidden ? dcFrame : !bui.hidden ? boardFrame : null;
     if (fr) {
@@ -664,6 +722,20 @@ export function start() {
     sheet.innerHTML = '<button type="button" class="x" data-close aria-label="' + esc(t('sheet.close')) + '">×</button>' + html;
     sheet.hidden = false; sheet.scrollTop = 0; $('hero').classList.add('away');
   }
+  /* asking your own, under the question in view: it is checked for a home and a question's form, kept as yours, and
+     the slip leads into the ledger */
+  document.addEventListener('click', e => {
+    const box = e.target.closest('.stopx'); if (!box || !nowStop) return;
+    const again = () => askStop(nowStop.th, nowStop.d, true);
+    if (e.target.closest('[data-askown]')) { askOpen = true; again(); const f = document.querySelector('.stopx [data-askq]'); if (f) f.focus(); return; }
+    if (e.target.closest('[data-askkeep]')) {
+      askVals = { q: box.querySelector('[data-askq]').value.trim(), noticed: box.querySelector('[data-asknoticed]').value.trim() };
+      const key = nowStop.th + '.' + nowStop.d, k = keep(S, { kind: 'question', at: nowStop.d, under: key, q: askVals.q, noticed: askVals.noticed }, askVals.q.split(/\s+/).slice(0, 5).join(' '), signOf(box));
+      if (k.ok) { askOpen = false; askNo = null; askVals = { q: '', noticed: '' }; kept(k.e); } else askNo = refusal(k.r);
+      return again();
+    }
+    if (slipClick(e, S, redraw => { save(); refresh(true); if (redraw) again(); })) return;
+  });
   /* leaving a question: back to the view's own words */
   document.addEventListener('click', e => { const l = e.target.closest('[data-leave]'); if (!l) return;
     const fr = !vui.hidden ? diveFrame : !cui.hidden ? chipFrame : !pui.hidden ? dcFrame : !bui.hidden ? boardFrame : null;
@@ -698,7 +770,7 @@ export function start() {
     if (k === 'supply') return showSupply(parts[1]);
     if (k === 'line') return showFlat('line', parts[1]);
     if (k === 'bench') return showFlat('bench', parts[1], parts[2]);
-    if (k === 'do' && parts[1]) return showMap(from).then(() => openChallenge(Game.challengeOf(parts[1])));
+    if (k === 'do' && parts[1]) return showMap(from).then(() => openChallenge(chOf(decodeURIComponent(parts[1]))));
     if (k === 'chip') return showChip(parts[1] != null ? +parts[1] : null, parts[2]);
     if (k === 'place' && parts[1] === 'datacentre' && parts[2] !== 'inside') return showPlace('datacentre', parts[2] != null ? +parts[2] : null);
     if (k === 'place' && Game.PLACES.includes(parts[1])) return showMap(from).then(() => openPlace(parts[1], parts[2] === 'inside' ? 'look' : null));

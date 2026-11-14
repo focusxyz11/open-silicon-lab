@@ -10,7 +10,8 @@
 
    A need's state: 'built' (a design that passes its check is in the plan), 'open' (it can be checked,
    nobody has built it yet), 'engine' (nothing can check it yet) or, for a need made of others, 'partly'. */
-import { NEEDS, DESIGNS, GOAL } from '../data/build.js';
+import { NEEDS, GOAL } from '../data/build.js';
+import { settled, standing } from './ledger.js';
 import { build as buildDesign } from './design.js';
 import { buildCore, START_PROGRAM } from './core.js';
 
@@ -23,17 +24,29 @@ export const ENGINES = {
 export const needOf = id => NEEDS.find(n => n.id === id) || null;
 export const childrenOf = id => NEEDS.filter(n => n.parent === id);
 export const needForProject = p => NEEDS.find(n => n.project === p) || null;
-export const designsFor = id => DESIGNS.filter(d => d.need === id);
+/* the designs for a need: the ledger's entries that stand (right, not broken), the one inside the computer first,
+   in the shape the plan and the pictures use */
+const shape = e => ({ id: e.id, need: e.piece, title: e.title, author: e.by, kind: e.made, ai: e.ai || '', description: e.words || '', code: e.code, state: e.state, facts: e.facts, draft: !!e.draft });
+export const designsFor = (id, W) => standing(W || settled(), id).map(shape);
+/* every design of the ledger, standing or broken, in the order they came */
+export const allDesigns = W => { W = W || settled(); return W.entries.filter(e => e.kind === 'design').map(e => Object.assign(shape(e), { brokenBy: e.brokenBy, inside: W.inside[e.piece] === e.id })); };
 
 /* the state of every need; mine: projects whose design you have finished here (they count as yours, not the plan's) */
-export function plan(mine) {
+export function plan(mine, W) {
+  W = W || settled();
   const own = new Set(mine || []), out = {};
   const state = id => {
     if (out[id]) return out[id];
     const n = needOf(id), kids = childrenOf(id);
     let s;
-    if (n.engine === 'logic' || n.engine === 'riscv') {
-      const ds = designsFor(id).filter(d => ENGINES[n.engine].check(n, d));
+    if (n.engine === 'riscv') {
+      /* the core is not written, it is put together: the community's slice (and its register bit and select, when
+         they stand) must run every test program */
+      const one = k => designsFor(k, W)[0] || null, sl = one('slice'), core = sl ? { slice: sl.code, regs: { bit: (one('regbit') || {}).code || null, select: (one('select') || {}).code || null } } : null;
+      const ok = !!core && ENGINES.riscv.check(n, core);
+      s = { state: ok ? 'built' : 'open', designs: ok ? [sl] : [], kinds: ok ? [sl.kind] : [], yours: own.has(n.project) };
+    } else if (n.engine === 'logic') {
+      const ds = designsFor(id, W).filter(d => ENGINES[n.engine].check(n, d));
       s = { state: ds.length ? 'built' : 'open', designs: ds, kinds: [...new Set(ds.map(d => d.kind))], yours: own.has(n.project) };
     } else if (n.engine === 'repeat') {
       const of = state(n.of);

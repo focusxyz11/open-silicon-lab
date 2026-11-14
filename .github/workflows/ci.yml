@@ -42,7 +42,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Collect the site
-        run: mkdir _site && cp -r index.html classic.html explore.html src assets _site/
+        # the ledger's entries (community/ledger/, one file each) become the one list the site reads
+        run: mkdir _site && cp -r index.html classic.html explore.html src assets _site/ && node scripts/ledger.mjs _site/community/ledger.json
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
