@@ -7,9 +7,14 @@
    Six draws in all: one instanced sphere and one instanced bond for the crystal, the same for the skin, the added
    atom, and the electrons. Materials are the shared ones: silicon blue-grey, the added atom doped (silicon mixed
    towards warm), the skin glass, electrons glowing in the accent.
+
+   Coming down from the switch (a join, docs/reviews/transitions.md) it starts as a smooth piece of the switch's middle
+   sheet behind the glass of its skin, lying where it is part of the sheet; then it breaks into atoms from the cut face
+   back, row by row, as the zoom goes on. Two more solids while it moves, none at rest.
    create(canvas, host, on) -> the level (level3d.js). */
 import * as THREE from '../vendor/three.min.js';
-import { mat } from './kit3d.js';
+import { mat, glass } from './kit3d.js';
+import { smooth, rotY } from '../engines/join.js';
 import { createLevel3D } from './level3d.js';
 
 /* the diamond lattice: a face-centred cubic pattern, and the same again shifted a quarter along the diagonal */
@@ -28,7 +33,8 @@ export function crystal(nx, ny, nz) {
   for (let a = 0; a < keep.length; a++) for (let b = a + 1; b < keep.length; b++) if (near(keep[a], keep[b])) bonds.push([a, b]);
   return { pts: keep, bonds };
 }
-const TURN = -0.17;
+/* the crystal's turn (exported: the switch's door undoes it, so the crystal's faces lie along the sheet's) */
+export const TURN = -0.17;
 const rnd = (i, s) => { const x = Math.sin(i * 127.1 + s * 311.7) * 43758.5453; return x - Math.floor(x); };
 
 export function create(canvas, host, on = {}) {
@@ -76,6 +82,35 @@ export function create(canvas, host, on = {}) {
     [atoms, bonds, skin, skinB, elec].forEach(m => { m.instanceMatrix.needsUpdate = true; if (m.instanceColor) m.instanceColor.needsUpdate = true; m.castShadow = m.receiveShadow = false; });
     dop.castShadow = false;
 
+    /* the break (brk, 0..1, the join's arrived): at 0 the crystal is a smooth piece of the switch's middle sheet. Of
+       that piece only its cut face can be seen in the switch (the rest is inside the sheet, under the gate), behind
+       the glass the switch's skin puts in front of it: so it is that face, in the sheet's own material, and a pane of
+       the same glass the same size, no box (drawn in front of
+       the switch, a box would show sides the sheet hides). A front moves from the cut face to the back: the face goes
+       back with it, and in front of it the atoms come, each as the front reaches its row */
+    const EX = NX * A, EY = NY * A, EZ = NZ * A;
+    const sheet = new THREE.MeshStandardMaterial({ color: night ? 0x7f93b3 : 0xa7b3c4, roughness: 0.32, metalness: 0.35 });
+    const face = new THREE.PlaneGeometry(EX, EY);
+    const block = new THREE.Mesh(face, sheet), pane = new THREE.Mesh(face, glass(night ? 0x5aa9e6 : 0x9fc4dc, { opacity: 0.55, depthWrite: false }));
+    [block, pane].forEach(b => { b.castShadow = b.receiveShadow = false; b.visible = false; root.add(b); });
+    const grow = z => w => smooth(0, 0.25, 1.25 * w - (EZ - z) / EZ);   /* the back row is whole as w reaches 1 */
+    const atomG = C.pts.map(p => grow(p[2] * A)), skinG = skinPts.map(p => grow(p[2]));
+    const size = (mesh, n, at) => { for (let i = 0; i < n; i++) at(i); mesh.instanceMatrix.needsUpdate = true; };
+    let brk = -1;
+    function breakUp(b) {
+      if (b === brk) return; brk = b;
+      const w = smooth(0.1, 0.9, b), zf = EZ * (1 - w), ga = atomG.map(g => g(w)), gs = skinG.map(g => g(w));
+      block.visible = b < 1 && zf > 0.001; block.position.set(EX / 2, EY / 2, zf);
+      /* the pane lies on the face: in front of it by the skin's real depth, it would not cover the face exactly at an
+         angle, and its edges would show */
+      pane.visible = block.visible; pane.position.set(EX / 2, EY / 2, zf + 0.004);
+      let k = 0; C.pts.forEach((p, i) => { if (i !== DOP) atomAt(atoms, k++, p.map(x => x * A), R * ga[i]); }); atoms.instanceMatrix.needsUpdate = true;
+      size(bonds, C.bonds.length, i => { const [a, c] = C.bonds[i]; bondAt(bonds, i, [C.pts[a].map(x => x * A), C.pts[c].map(x => x * A)], BR * Math.min(ga[a], ga[c])); });
+      dop.scale.setScalar(Math.max(R * 1.25 * ga[DOP], 1e-4)); dop.visible = ga[DOP] > 0;
+      skinPts.forEach((p, i) => atomAt(skin, i, p, (i % 3 !== 0 ? R * 0.75 : R) * gs[i])); skin.instanceMatrix.needsUpdate = true;
+      size(skinB, skinBonds.length, i => { const [a, c] = skinBonds[i]; bondAt(skinB, i, [skinPts[a], skinPts[c]], BR * 0.8 * Math.min(gs[a], gs[c])); });
+    }
+
     /* turned so that one of the crystal's diagonals ([1 1 0]) lies near the line of sight: its rows and channels line up,
        and the sway shows the bonds that go back */
     root.rotation.y = TURN;
@@ -83,11 +118,15 @@ export function create(canvas, host, on = {}) {
     return {
       level: 'atom', parts: ['lattice', 'dopant', 'electrons', 'boundary'],
       anchors: { lattice: [0.25, 0.15, NZ * A], dopant: [1.75 * A, 1.25 * A + 0.2, 1.75 * A], electrons: [NX * A * 0.78, 0.75, NZ * A], boundary: [cx, TOP + 0.95, cz] },
-      /* looking down about 17°, turned like the stack (-35°) */
-      view: { tilt: 0.3, turn: -0.62, r: 2.5, at: [cx, TOP * 0.62, cz] },
-      update(dt, k, dist) {
-        fog.near = dist - 1.4; fog.far = dist + 2.2;
-        elec.visible = k > 0.6;
+      /* looking down about 17°, turned like the stack (-35°). foot: where it stands in the switch's door, the
+         crystal's top front edge in the middle, in the scene's coordinates (through the crystal's turn); enter: the
+         stretch of a join over which it breaks into atoms */
+      view: { tilt: 0.3, turn: -0.62, r: 2.5, at: [cx, TOP * 0.62, cz], foot: rotY([EX / 2, EY, EZ], TURN), enter: [0.2, 0.8] },
+      update(dt, k, dist, arrived = 1) {
+        breakUp(arrived);
+        /* while it is still part of the sheet, the fog is pushed back: the sheet behind it does not fade */
+        const far = (1 - arrived) * 50; fog.near = dist - 1.4 + far; fog.far = dist + 2.2 + far;
+        elec.visible = k > 0.6 && arrived >= 0.9;
         if (!dt) return;
         /* each crosses in about three seconds */
         paths.forEach(p => { p.u = (p.u + dt * 0.33 * p.s) % 1; });

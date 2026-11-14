@@ -95,10 +95,10 @@ export function createLevel3D(canvas, host, on, model) {
     st.veil(P.scene.background, sm(JOIN.veil[0], JOIN.veil[1], f));
     if (drawn) {
       C.aim(cp, fr); C.M.update(quiet ? 0 : dt, 1, cp.dist, enter, null, 0);
-      /* such a child is hidden by the parent's tiles in front of the door while the parent clears them (leave below
-         JOIN.clear); its camera is the parent's in its own units, near and far included, so the two depths agree.
-         After that it is drawn in front, as every child is */
-      const keep = !!C.V.enter && leave < JOIN.clear;
+      /* a door with tiles in front of it (door.front: the gate's) hides the child behind them while the parent
+         lowers them (leave below JOIN.clear); its camera is the parent's in its own units, near and far included, so
+         the two depths agree. After that, and always for an open door, the child is drawn in front */
+      const keep = !!door.front && leave < JOIN.clear;
       if (keep) { C.camera.near = P.camera.near / p.s; C.camera.far = P.camera.far / p.s; C.camera.updateProjectionMatrix(); }
       const bg = C.scene.background; C.scene.background = null; st.over(C.scene, C.camera, keep); C.scene.background = bg;
     }

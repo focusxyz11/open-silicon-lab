@@ -153,23 +153,25 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
 /* one stage and no cuts: with motion on, going inside from the island dives the camera in, then the view zooms in from it
    (a view transition); rising goes back out. A duplicate name or a stuck view would show as an error here. */
 {
-  /* a join: from the gate to the switch no flat picture shows between; both are drawn in one frame on one camera path */
-  {
-    at = 'join'; const page = await browser3d.newPage({ viewport: { width: 1280, height: 800 } });
-    page.on('pageerror', e => problems.push('join: ' + e.message));
+  /* joins: from the gate to the switch and from the switch to the atom no flat picture shows between; both levels are
+     drawn in one frame on one camera path, half way and back */
+  for (const [a, b, na] of [['gate', 'switch', 5], ['switch', 'atom', 5]]) {
+    const tag = 'join ' + a + '>' + b;
+    at = tag; const page = await browser3d.newPage({ viewport: { width: 1280, height: 800 } });
+    page.on('pageerror', e => problems.push(tag + ': ' + e.message));
     await page.addInitScript(() => { localStorage.setItem('osl-quality', 'keep'); localStorage.setItem('osl-hints-v1', JSON.stringify({ seen: {}, off: true })); });
-    await page.goto(base + 'index.html#/dive/gate');
-    await page.waitForFunction(() => document.querySelectorAll('#l3-gate [data-part3]').length === 5 && !!document.getElementById('l3-switch'), null, { timeout: 40000 }).catch(() => problems.push('join: the gate and the switch were not both made'));
+    await page.goto(base + 'index.html#/dive/' + a);
+    await page.waitForFunction(([a, b, na]) => document.querySelectorAll('#l3-' + a + ' [data-part3]').length === na && !!document.getElementById('l3-' + b), [a, b, na], { timeout: 40000 }).catch(() => problems.push(tag + ': the ' + a + ' and the ' + b + ' were not both made'));
     await page.waitForTimeout(1500);
     const c = await page.$eval('#diveCanvas', e => { const r = e.getBoundingClientRect(); return [r.x + r.width / 2, r.y + r.height / 3]; });
     await page.mouse.move(c[0], c[1]); await page.mouse.wheel(0, 312);
-    await page.waitForFunction(() => document.documentElement.dataset.join === 'gate>switch', null, { timeout: 15000 }).catch(() => problems.push('join: half way from the gate to the switch they were not drawn together'));
-    if (await page.evaluate(() => +getComputedStyle(document.getElementById('diveCanvas')).opacity > 0.05)) problems.push('join: the flat picture showed between the gate and the switch');
-    if (await page.evaluate(() => [...document.querySelectorAll('#l3-gate .part3, #l3-switch .part3')].some(e => e.style.opacity !== '0' && e.offsetParent))) problems.push('join: names showed in the middle of a join');
+    await page.waitForFunction(j => document.documentElement.dataset.join === j, a + '>' + b, { timeout: 15000 }).catch(() => problems.push(tag + ': half way they were not drawn together'));
+    if (await page.evaluate(() => +getComputedStyle(document.getElementById('diveCanvas')).opacity > 0.05)) problems.push(tag + ': the flat picture showed between them');
+    if (await page.evaluate(([a, b]) => [...document.querySelectorAll('#l3-' + a + ' .part3, #l3-' + b + ' .part3')].some(e => e.style.opacity !== '0' && e.offsetParent), [a, b])) problems.push(tag + ': names showed in the middle of a join');
     await page.mouse.wheel(0, 312);
-    await page.waitForFunction(() => !document.documentElement.dataset.join && [...document.querySelectorAll('#l3-switch .part3')].some(e => e.style.opacity !== '0'), null, { timeout: 15000 }).catch(() => problems.push('join: the switch did not settle with its names'));
+    await page.waitForFunction(b => !document.documentElement.dataset.join && [...document.querySelectorAll('#l3-' + b + ' .part3')].some(e => e.style.opacity !== '0'), b, { timeout: 15000 }).catch(() => problems.push(tag + ': the ' + b + ' did not settle with its names'));
     await page.mouse.wheel(0, -624);
-    await page.waitForFunction(() => [...document.querySelectorAll('#l3-gate .part3')].some(e => e.style.opacity !== '0') && !document.getElementById('l3-gate').hidden, null, { timeout: 15000 }).catch(() => problems.push('join: back up, the gate did not come back with its names'));
+    await page.waitForFunction(a => [...document.querySelectorAll('#l3-' + a + ' .part3')].some(e => e.style.opacity !== '0') && !document.getElementById('l3-' + a).hidden, a, { timeout: 15000 }).catch(() => problems.push(tag + ': back up, the ' + a + ' did not come back with its names'));
     await page.close();
   }
   /* a device too slow for a level in 3D gets its flat drawing back (osl-quality = slow makes every level count as too slow) */

@@ -27,7 +27,7 @@ export const childPose = (p, door, foot) => ({ at: toChild(p.at, door, foot, p.s
 /* where the camera stands (as place() in level3d.js) */
 export const eye = p => [p.at[0] + Math.sin(p.turn) * Math.cos(p.tilt) * p.dist, p.at[1] + Math.sin(p.tilt) * p.dist, p.at[2] + Math.cos(p.turn) * Math.cos(p.tilt) * p.dist];
 /* the windows of a join, so the shell, the levels and the tests agree: joined between from and to, the child drawn
-   from child, the child leads from lead, the parent fades into the sky over veil; a child with a move of its own is
-   hidden by the parent's tiles until the parent's leave reaches clear (the parent has lowered what stands in front
-   of its door by then) */
+   from child, the child leads from lead, the parent fades into the sky over veil; behind a door with tiles in front
+   of it (door.front) the child is hidden by them until the parent's leave reaches clear (the parent has lowered them
+   by then) */
 export const JOIN = { from: 0.08, to: 0.92, child: 0.12, lead: 0.5, veil: [0.55, 0.92], clear: 0.7 };

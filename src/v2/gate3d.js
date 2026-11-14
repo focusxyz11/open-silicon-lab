@@ -27,9 +27,10 @@ export const H = { si: 0.3, gate: 0.3, stud: 0.6, metal: 0.3 };
 const LIFT = 1.2;
 export const X = x => (x - 500) / 100, Z = y => (y - 500) / 100;
 /* the door into the switch: the flat level's portal, the crossing of the left gate strip with the lower silicon strip,
-   on the plane the tiles stand on (docs/reviews/transitions.md). Nothing lies over it: no stud, no copper */
+   on the plane the tiles stand on (docs/reviews/transitions.md). Nothing lies over it: no stud, no copper. front: the
+   strips run on in front of it, and are lowered as the switch stands up */
 export const PORTAL = DEPTHS.gate.portal;
-export const DOOR = { at: [X(PORTAL[0] + PORTAL[2] / 2), 0, Z(PORTAL[1] + PORTAL[2] / 2)], side: PORTAL[2] / 100 };
+export const DOOR = { at: [X(PORTAL[0] + PORTAL[2] / 2), 0, Z(PORTAL[1] + PORTAL[2] / 2)], side: PORTAL[2] / 100, front: true };
 
 export function create(canvas, host, on = {}) {
   return createLevel3D(canvas, host, on, (scene, root, P, night) => {
