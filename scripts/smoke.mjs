@@ -66,12 +66,15 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
   if (await page.evaluate(() => !document.getElementById('l3-switch').hidden)) problems.push(tag + ': the 3D switch stayed up at the atom');
   at = tag + ' dives and map'; await page.evaluate(() => { location.hash = '#/dive/phone/phone'; });
   await page.waitForSelector('#diveui .dock [data-key="next"]', { timeout: 20000 }).catch(() => problems.push(tag + ': the phone dive did not open with a way deeper'));
+  /* the phone itself in 3D, taken apart, with its four names */
+  await page.waitForFunction(() => document.querySelectorAll('#l3-phone [data-part3]').length === 4 && !document.getElementById('l3-phone').hidden, null, { timeout: 25000 }).catch(() => problems.push(tag + ': the phone did not appear in 3D'));
   /* the phone's board is a 3D board, like the data centre's, with its four names */
   await page.evaluate(() => { location.hash = '#/dive/phoneboard/phone'; });
   await page.waitForFunction(() => document.querySelectorAll('#l3-phoneboard [data-part3]').length === 4 && !document.getElementById('l3-phoneboard').hidden, null, { timeout: 25000 }).catch(() => problems.push(tag + ': the phone board did not appear in 3D'));
-  await page.evaluate(() => { location.hash = '#/dive/phone/phone'; });
+  /* the flat dive's words are HTML over the picture: names at rest, a note on a picked part, marks only under Ask
+     (on the car, a level kept flat on purpose) */
+  await page.evaluate(() => { location.hash = '#/dive/car/car'; });
   await page.waitForSelector('#diveui .dock [data-key="next"]', { timeout: 20000 }).catch(() => {});
-  /* the flat dive's words are HTML over the picture: names at rest, a note on a picked part, marks only under Ask */
   await page.waitForSelector('#flatLabels [data-fpart]', { timeout: 15000 }).catch(() => problems.push(tag + ': the flat dive shows no names'));
   if (await page.$('#flatLabels .q3')) problems.push(tag + ': question marks show while looking');
   await page.click('#flatLabels [data-fpart]').catch(() => problems.push(tag + ': a name in the flat dive cannot be picked'));

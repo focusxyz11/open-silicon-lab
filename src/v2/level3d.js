@@ -42,7 +42,7 @@ export function createLevel3D(canvas, host, on, model) {
   let picked = null;
   const marks = createOverlay(host, { mark: th => on.mark && on.mark(th), marks: ths => on.askMany && on.askMany(ths) }), mv = new THREE.Vector3();
 
-  let k = 0, off = 0, raf = 0, last = performance.now(), yaw = 0, yawGoal = 0, frame = null, W = 1, H = 1, arriveAt = -1, arrived = 1;
+  let k = 0, off = 0, raf = 0, last = performance.now(), yaw = 0, yawGoal = 0, frame = null, W = 1, H = 1, arr = null, arrived = 1;
   /* a plan (V.fixed: the gate) is read straight, not turned: it neither sways nor turns with a drag */
   const sway = now => (still() || V.fixed ? 0 : Math.sin(now / 14000 * Math.PI * 2) * 0.052);
   function place(now) {
@@ -52,9 +52,8 @@ export function createLevel3D(canvas, host, on, model) {
     const fov = camera.fov * Math.PI / 180, fit = (V.r / Math.tan(fov / 2)) * (H / Math.min(f.B * 1.05, W * 0.74));
     /* arriving from the level above: from its angle to this level's own, closing in (the camera carries the change of
        style) */
-    if (arriveAt === 0) arriveAt = now + 250;   /* from the first frame drawn, after a moment at the old angle */
-    arrived = arriveAt < 0 ? 1 : ease(clamp((now - arriveAt) / V.arrive.ms));
-    if (arrived >= 1) arriveAt = -1;
+    arrived = arr ? ease(clamp(arr.t / V.arrive.ms)) : 1;
+    if (arrived >= 1) arr = null;
     const dist = fit * (off < 0 ? 1 + 3 * -off : 1 / (1 + 2.5 * off)) * (1 + 0.45 * (1 - arrived));
     const A = V.arrive && arrived < 1 ? V.arrive : V, a = A.turn + (V.turn - A.turn) * arrived + yaw + sway(now), b = A.tilt + (V.tilt - A.tilt) * arrived;
     camera.position.set(at.x + Math.sin(a) * Math.cos(b) * dist, at.y + Math.sin(b) * dist, at.z + Math.cos(a) * Math.cos(b) * dist);
@@ -82,6 +81,9 @@ export function createLevel3D(canvas, host, on, model) {
   function tick(now) {
     raf = 0; if (k <= 0) return;
     const dt = Math.min(0.05, Math.max(0, now - last) / 1000); last = now;
+    /* the arrival goes by frames (each counting at most 50 ms), so a slow first frame (shaders compiling) never eats
+       it; it starts after a moment at the old angle */
+    if (arr) { if (arr.hold > 0) arr.hold -= dt * 1000; else arr.t += dt * 1000; }
     yaw += (yawGoal - yaw) * Math.min(1, dt * 6);
     place(now);
     M.update(still() ? 0 : dt, k, camera.position.distanceTo(at), arrived, picked);
@@ -107,7 +109,7 @@ export function createLevel3D(canvas, host, on, model) {
     show(kk, depthOffset, f) {
       const was = k; k = clamp(kk); off = depthOffset || 0; if (f) frame = f;
       host.hidden = k <= 0;
-      if (k > 0 && was <= 0) { last = performance.now(); arriveAt = V.arrive && off <= 0.05 && !still() ? 0 : -1; }
+      if (k > 0 && was <= 0) { last = performance.now(); arr = V.arrive && off <= 0.05 && !still() ? { hold: 250, t: 0 } : null; }
       if (k <= 0 && was > 0) { card.hidden = true; marks.clear(); }
       if (k > 0 && !raf) raf = requestAnimationFrame(tick);
     },

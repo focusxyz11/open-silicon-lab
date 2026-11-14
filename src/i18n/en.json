@@ -263,7 +263,7 @@
  "world.phone.name": "Phone",
  "world.car.name": "Car",
  "depth.phone.name": "Phone",
- "depth.phone.see": "A phone with its back opened: the main board, the battery that has to last the day, the camera.",
+ "depth.phone.see": "A phone taken apart: the screen, the battery that has to last the day and fills most of it, and one small main board with the camera beside it.",
  "depth.phoneboard.name": "Board",
  "depth.phoneboard.see": "The phone's main board, a few centimetres across, packed with parts. There is no fan.",
  "depth.soc.name": "Chip",
