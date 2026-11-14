@@ -14,6 +14,8 @@ Seventh part, same day: the chip as a relief (`src/v2/relief3d.js`, step 5): one
 
 Ninth part, same day: the wafer in 3D (`src/v2/wafer3d.js`, step 7): a polished disc on its chuck, with its notch; your chips as low tiles (one instanced draw), the pieces the rim cuts as grey, lower shapes clipped to the disc (one draw), each chip a speck touched red, the specks glowing where they landed, and the chip the dive follows a shade lighter. The chips, specks and losses are the flat wafer's, from your chip's size and generation. Seen from 65°, turned like the stack, turnable and swaying. Five draws. Next: step 8, the stack taking the same models and colours.
 
+Tenth part, same day: the stack (step 8, `src/v2/chip3d.js`) now builds its switches from the switch level's parts and materials: the same sheets, each gate in a thin skin of glass, and source and drain grown between the gates, doped like the well below; the wells and the source and drain are doped silicon as the table has it (silicon mixed towards warm, or towards the accent), no longer full warm and blue that glowed; contacts, vias, copper and the insulator take the table's day and night values. The accent kind of doping is mixed at a quarter, not 35%: at 35% it read as a gate, the accent's own material (the colour risk named below). The label under `05` was fixed in the first part. Not done: the lens over the line (`src/app/lens3d.js`) still draws its own switch. The overlap the review foresaw is now real: the stack's lower rows and the dive's lower levels show the same objects, and whether both views should stay is a question for the owner.
+
 Reviewer: Claude Fable 5.2, asked by Claude Opus 5.5 with a written brief and 25 screenshots; applied by Claude Opus 5.5.
 
 ## Summary

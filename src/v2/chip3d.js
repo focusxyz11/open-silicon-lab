@@ -38,19 +38,33 @@ export function createChip(canvas, host, on = {}) {
   /* 4: the silicon: one crystal, with regions doped by implanting (the wells under the switches) */
   const si = M(4, night ? 0x46536b : 0x8d99ab, { roughness: 0.35, metalness: 0.3 });
   B(4, S, 2.2, S, si, 0, 0, 0);
-  const wellN = M(4, P.warm, { emissive: P.warm, emissiveIntensity: night ? 0.35 : 0.1 }), wellP = M(4, P.accent, { emissive: P.accent, emissiveIntensity: night ? 0.35 : 0.1 });
+  /* doped silicon, the art direction's way: silicon mixed 35% towards warm for one kind, towards the accent for the
+     other, pale, so it never reads as live (the same as the switch level's source and drain) */
+  /* (the accent kind at a quarter, so it never reads as a gate, the accent's own material: the review's colour risk) */
+  const SI = night ? 0x46536b : 0x8d99ab, dope = c => new THREE.Color(SI).lerp(new THREE.Color(c), c === P.accent ? 0.22 : 0.35).getHex();
+  const wellN = M(4, dope(P.warm), { roughness: 0.35, metalness: 0.3 }), wellP = M(4, dope(P.accent), { roughness: 0.35, metalness: 0.3 });
   for (let i = 0; i < 4; i++) B(4, 2.2, 0.08, S - 1, i % 2 ? wellP : wellN, -4.5 + i * 3, 2.2, 0);
-  /* 3: the switches: stacks of thin sheets of silicon above the wells (as the switch level shows; older chips stood
-     them up as fins). Each stack is three sheets with gaps between, where the gate will wrap round them */
-  const sheet = M(3, night ? 0x8a9bb6 : 0x9aa7ba, { roughness: 0.32, metalness: 0.35 });
+  /* 3: the switches: stacks of thin sheets of silicon above the wells, the same sheets as the switch level (older chips
+     stood them up as fins). Each stack is three sheets with gaps between, where the gate will wrap round them; between
+     the gates, source and drain grow on the sheets' ends, doped like the well below */
+  const sheet = M(3, night ? 0x7f93b3 : 0xa7b3c4, { roughness: 0.32, metalness: 0.35 });
   for (let i = 0; i < 4; i++) for (let k = 0; k < 2; k++) for (let s = 0; s < 3; s++) B(3, 0.7, 0.13, S - 1.6, sheet, -5.15 + i * 3 + k * 1.3, 2.34 + s * 0.3, 0);
+  const sdN = M(3, dope(P.warm), { roughness: 0.35, metalness: 0.3 }), sdP = M(3, dope(P.accent), { roughness: 0.35, metalness: 0.3 });
+  [sdN, sdP].forEach((m, kind) => {
+    const spots = []; for (let i = kind; i < 4; i += 2) for (let k = 0; k < 2; k++) for (let j = 0; j < 4; j++) spots.push([-5.15 + i * 3 + k * 1.3, -4.4 + j * 2.2 + 1.1]);
+    const sd = new THREE.InstancedMesh(new THREE.BoxGeometry(0.84, 0.86, 1.5), m, spots.length), o = new THREE.Object3D();
+    spots.forEach(([x, zz], n) => { o.position.set(x, 2.3 + 0.43, zz); o.updateMatrix(); sd.setMatrixAt(n, o.matrix); });
+    sd.castShadow = sd.receiveShadow = true; rows[3].g.add(sd);
+  });
   /* 2: the gates: printed lines crossing the sheets and wrapping round them; where a gate crosses a stack there is a
      switch. Contacts above */
-  const gate = M(2, P.accent, { roughness: 0.35, metalness: 0.6 }), contact = M(2, 0xc9a14a, { roughness: 0.3, metalness: 0.9 });
-  for (let j = 0; j < 5; j++) B(2, S - 0.6, 1.1, 0.42, gate, 0, 2.28, -4.4 + j * 2.2);
+  const gate = M(2, P.accent, { roughness: 0.35, metalness: 0.6 }), contact = M(2, night ? 0xc9a14a : 0xe0b070, { roughness: 0.3, metalness: 0.9 });
+  /* each gate in its skin of insulator, which shows as a thin glass edge where the gate meets the sheets */
+  const skin = M(2, night ? 0x5aa9e6 : 0x9fc4dc, { roughness: 0.08, metalness: 0.1, opacity: 0.5, depthWrite: false });
+  for (let j = 0; j < 5; j++) { B(2, S - 0.6, 1.1, 0.42, gate, 0, 2.28, -4.4 + j * 2.2); B(2, S - 0.7, 1.0, 0.56, skin, 0, 2.3, -4.4 + j * 2.2); }
   for (let i = 0; i < 8; i++) B(2, 0.3, 0.6, 0.3, contact, -5 + (i % 4) * 3 + 0.5, 3.38, -3.3 + Math.floor(i / 4) * 4.4 + (i % 2) * 2.2);
   /* 1: the wires: layers of copper, each running across the one below, joined by vias; wider as they go up */
-  const cu = M(1, 0xc77b45, { roughness: 0.3, metalness: 0.85 }), via = M(1, 0xe0b070, { roughness: 0.3, metalness: 0.9 }), ild = M(1, night ? 0x6d8db8 : 0xa9c2e0, { opacity: 0.12, depthWrite: false });
+  const cu = M(1, night ? 0xc77b45 : 0xb5683a, { roughness: 0.3, metalness: 0.85 }), via = M(1, night ? 0xc9a14a : 0xe0b070, { roughness: 0.3, metalness: 0.9 }), ild = M(1, night ? 0x5aa9e6 : 0x9fc4dc, { opacity: 0.12, depthWrite: false });
   for (let l = 0; l < 4; l++) {
     const y = 4.0 + l * 0.8, n = [10, 8, 6, 4][l], w = [0.25, 0.35, 0.5, 0.8][l];
     for (let i = 0; i < n; i++) { const u = -H + 0.8 + i * (S - 1.6) / (n - 1); if (l % 2) B(1, S - 0.6, 0.32, w, cu, 0, y, u); else B(1, w, 0.32, S - 0.6, cu, u, y, 0); }
