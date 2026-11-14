@@ -18,6 +18,8 @@ import { LEVELS, ASKS } from './dc3d.js';
 import { stopsAt } from '../data/places.js';
 import { showStage, stage } from './kit3d.js';
 import { rootShown } from '../engines/weave.js';
+import { FIGURES, CASES } from '../data/weave.js';
+import { fmtDate } from '../core/i18n.js';
 import { ROWS, ASK as CHIP_ASK } from './chip3d.js';
 
 const $ = id => document.getElementById(id);
@@ -517,6 +519,15 @@ export function start() {
   }
 
   /* ---- following a question: one stop of a thread's trail, in the dock of the view that shows its level ---- */
+  /* the figures behind a stop, each with its source, kind and the date it was checked (src/data/facts.json) */
+  let FACT = null;
+  const facts = () => FACT ? Promise.resolve(FACT) : fetch('src/data/facts.json').then(r => r.json()).then(j => (FACT = Object.fromEntries((j.facts || []).map(f => [f.id, f]))), () => (FACT = {}));
+  const ext = (href, html) => '<a href="' + esc(href) + '" target="_blank" rel="noopener">' + html + '</a>';
+  const figuresHtml = key => { const fs = (FIGURES[key] || []).map(id => FACT && FACT[id]).filter(Boolean); if (!fs.length) return '';
+    return '<p class="kicker">' + esc(t('trail.figures')) + '</p><ul class="figs2">' + fs.map(f => '<li><b>' + esc(f.value) + '</b> ' + esc(f.label) + '<span class="small muted"> · ' + ext(f.url, esc(f.source)) + ' · ' + esc(t('trail.checked', { kind: t('fact.' + f.kind), date: fmtDate(f.verified) })) + '</span></li>').join('') + '</ul>'; };
+  /* a real case that happened at this stop: what, why, and what came after, with its source */
+  const casesHtml = key => CASES.filter(c => c.stop === key).map(c => '<details class="case2"><summary><span class="kicker">' + esc(t('trail.case', { year: c.year })) + '</span> <b>' + esc(t('case.' + c.id + '.t')) + '</b></summary>' +
+    ['what', 'why', 'after'].map(k => '<p class="small">' + esc(t('case.' + c.id + '.' + k)) + '</p>').join('') + '<p class="small muted">' + ext(c.url, esc(t('case.' + c.id + '.src'))) + '</p></details>').join('');
   const trailSeen = {};   /* the stops of each thread seen in this visit: after two, the question underneath may show */
   function stopHtml(th, d) {
     const T = Game.trail(th), i = T.indexOf(d), key = th + '.' + d, tried = t('stop.' + key + '.tried');
@@ -524,6 +535,7 @@ export function start() {
     let h = '<p class="kicker trailk" style="--qc:' + qColor(key) + '"><span class="dotq"></span>' + esc(t('trail.k', { n: i + 1, total: T.length, level: t('depth.' + d + '.name') })) + '</p>';
     h += '<p class="line trailq">' + esc(t('stop.' + key + '.q')) + '</p><p class="small">' + esc(t('stop.' + key + '.note')) + '</p>';
     if (Array.isArray(tried)) h += '<p class="kicker">' + esc(t('trail.tried')) + '</p><ul class="tried2">' + tried.map(x => '<li>' + esc(x) + '</li>').join('') + '</ul>';
+    h += casesHtml(key) + figuresHtml(key);
     /* the question behind the question: one root at a time, once two of its stops have been seen */
     if (rootShown(trailSeen[th])) h += '<div class="root2"><p class="small muted">' + esc(t('ui.rootOf')) + '</p><p class="rootq">' + esc(t('thread.' + th + '.root')) + '</p><p class="small muted">' + esc(t('ui.behind')) + ' <em>' + esc(t('thread.' + th + '.behind')) + '</em></p></div>';
     return h + '<div class="nav"><span class="navl">' + step(i - 1, 'back') + '<button type="button" class="btn ghost" data-leave>' + esc(t('trail.leave')) + '</button></span>' + step(i + 1, 'next') + '</div>';
@@ -531,6 +543,7 @@ export function start() {
   function askStop(th, d) {
     if (!Game.trail(th).includes(d)) return;
     trailSeen[th] = [...new Set([...(trailSeen[th] || []), d])];
+    if (!FACT) return facts().then(() => askStop(th, d));
     const html = stopHtml(th, d);
     const fr = !vui.hidden ? diveFrame : !cui.hidden ? chipFrame : !pui.hidden ? dcFrame : !bui.hidden ? boardFrame : null;
     if (fr) {

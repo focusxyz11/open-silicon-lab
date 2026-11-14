@@ -27,7 +27,6 @@ Then open <http://localhost:8000/>. Opening `index.html` from disk does not work
 ```sh
 npm test                 # the logic and the words
 npm run test:browser     # needs Playwright: the dive on desktop and phone
-npm run build            # dist/open-silicon-lab.html, one self-contained file
 ```
 
 ## Learn more

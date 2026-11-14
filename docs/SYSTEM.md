@@ -104,7 +104,7 @@ blue. The earlier site, which does not switch it on, keeps its own look.
 world (`#/dive/<depth>/<world>`): the data centre's chip, a phone, a car, or the made chip (the factory's machine,
 a wafer and a die), each from its top level down to the atom; a place's levels open there. The supply map (`#/supply`)
 is the earlier site's map in the frame: the flat world draws it over the line, the rail is the trip's steps, and
-the dock tells a step, a place, and what stops when a place shuts. `classic.html` stays only until it is retired.
+the dock tells a step, a place, and what stops when a place shuts. The earlier site is retired (branch `claude/before-retire-2026-11`). A followed question's stop also shows its real cases and the figures behind it, with their sources. What the earlier site showed and the chip world does not yet (die photos, the energy floor, station timings, the core running its program, the studio's and the factory's panels) waits in `src/data/waiting-words.json`.
 
 **The first minute and feedback.** A first visit opens on a wide shot of the sea and comes down to the island
 (`map.intro`), and the hero rises after it with one sentence and one glowing button. The first challenge is won by

@@ -12,7 +12,7 @@ const root = new URL('..', import.meta.url);
 const read = p => readFileSync(new URL(p, root), 'utf8');
 const EN = JSON.parse(read('src/i18n/en.json'));
 /* The code that draws something for a reader. */
-const SHELL = ['src/main.js', 'src/main2.js'].concat(...['src/app/', 'src/core/', 'src/v2/'].map(d => readdirSync(new URL(d, root)).filter(f => f.endsWith('.js')).map(f => d + f)));
+const SHELL = ['src/main2.js'].concat(...['src/app/', 'src/core/', 'src/v2/'].map(d => readdirSync(new URL(d, root)).filter(f => f.endsWith('.js')).map(f => d + f)));
 const LANGS = readdirSync(new URL('src/i18n/', root)).filter(f => f.endsWith('.json')).map(f => f.slice(0, -5));
 
 test('the shell has no visible English in its code (put it in src/i18n/en.json)', () => {
@@ -22,14 +22,17 @@ test('the shell has no visible English in its code (put it in src/i18n/en.json)'
 
 test('every text the code names exists, and every text is used', () => {
   /* the open port (src/engines/api.js and its MCP server) gives agents the same words */
-  const code = SHELL.map(read).join('\n') + read('index.html') + read('classic.html') + read('src/engines/api.js') + read('scripts/mcp.mjs');
+  const code = SHELL.map(read).join('\n') + read('index.html') + read('src/engines/api.js') + read('scripts/mcp.mjs');
   const literals = new Set([...code.matchAll(/'([\w.-]+)'|"([\w.-]+)"/g)].map(m => m[1] || m[2]));
   const prefixes = [...code.matchAll(/\bt[x]?\(\s*'([\w.-]+[.\w-]*)'\s*\+/g)].map(m => m[1]);
   const named = [...code.matchAll(/\bt[x]?\(\s*'([\w.-]+)'\s*[,)]/g)].map(m => m[1]).concat([...code.matchAll(/data-i18n="([\w.-]+)"/g)].map(m => m[1]), [...code.matchAll(/data-i18n-attr="([^"]+)"/g)].flatMap(m => m[1].split(';').map(p => p.split(':')[1])));
   const missing = [...new Set(named)].filter(k => !(k in EN));
   assert.deepEqual(missing, [], 'The code asks for texts that src/i18n/en.json does not have:\n' + missing.join('\n'));
   named.forEach(k => literals.add(k));
-  const unused = Object.keys(EN).filter(k => !literals.has(k) && !prefixes.some(p => k.startsWith(p)));
+  /* words from the earlier site waiting for a view in the chip world (src/data/waiting-words.json): kept, not yet shown */
+  const WAITING = new Set(JSON.parse(readFileSync(new URL('src/data/waiting-words.json', root), 'utf8')).keys);
+  [...WAITING].forEach(k => assert.ok(k in EN, 'src/data/waiting-words.json names ' + k + ', which src/i18n/en.json does not have'));
+  const unused = Object.keys(EN).filter(k => !literals.has(k) && !prefixes.some(p => k.startsWith(p)) && !WAITING.has(k));
   assert.deepEqual(unused, [], 'These texts in src/i18n/en.json are not used anywhere; remove them or use them:\n' + unused.join('\n'));
 });
 

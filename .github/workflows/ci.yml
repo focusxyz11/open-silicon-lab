@@ -21,19 +21,13 @@ jobs:
         run: npm test
       - name: Install Playwright
         run: |
-          npm install --no-save playwright@1.48.2 esbuild@0.24.0
+          npm install --no-save playwright@1.48.2
           # The runner image already has most system libraries; if Ubuntu's package servers cannot be
           # reached, install only the browser (from Playwright's own servers) and go on.
           npx playwright install --with-deps chromium || npx playwright install chromium
       - name: Browser smoke test
         timeout-minutes: 25
         run: npm run test:browser
-      - name: Build the single-file version
-        run: npm run build
-      - uses: actions/upload-artifact@v4
-        with:
-          name: open-silicon-lab-single-file
-          path: dist/open-silicon-lab.html
 
   deploy:
     if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
