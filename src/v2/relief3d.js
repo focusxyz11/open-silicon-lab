@@ -1,5 +1,5 @@
 /* A chip as a relief on the one stage (docs/reviews/art-direction.md, "Data-centre chip" and "Phone chip, car chip,
-   die"): one drawing, four sets of data. A chip is a town of districts: compute blocks that are alike, memory that
+   die"): one drawing, four sets of data, and the block inside a chip drawn the same way. A chip is a town of districts: compute blocks that are alike, memory that
    looks different (a low, regular field of bits), a ring of pads at the edge, and wires that reach every block. So the
    die is a slab and its districts stand a little proud of it, read straight from above and never turned: at this level
    direction means nothing, and a tilted floorplan is harder to read than a straight one. Drawing the data centre's
@@ -13,6 +13,8 @@ import * as THREE from '../vendor/three.min.js';
 import { mat, box } from './kit3d.js';
 import { createLevel3D } from './level3d.js';
 import { partsOf, chipNow } from '../app/scenes.js';
+import { rnd as rnd2 } from '../app/draw.js';
+import { designNow } from '../app/design.js';
 
 const X = x => (x - 500) / 100, Z = y => (y - 500) / 100;
 const rnd = (i, s) => { const x = Math.sin(i * 127.1 + s * 311.7) * 43758.5453; return x - Math.floor(x); };
@@ -31,6 +33,11 @@ const PLANS = {
   mcu: { slab: [40, 40, 920, 920], pads: 14,
     districts: P => [['cores', 'core', P.cores.map(R)], ['flash', 'memory', [P.flash[0].r], [16, 18]], ['sram', 'memory', [P.sram[0].r], [15, 5]], ['periph', 'blocks', P.periph.map(R)], [null, 'blocks', [[130, 750, 740, 120]]]],
     wires: () => [[[130, 570], [870, 570]]] },
+  /* inside the chip, one block: rows of ready-made cells between copper rails, a memory array, your design in a row;
+     the wires over the cells stay faint unless you pick them (drawn true, copper would cover the cells) */
+  block: { slab: [20, 20, 960, 960], pads: 0, yours: true,
+    districts: P => [['cells', 'cellrows'], ['sram', 'memory', [P.sram[0].r], [14, 27]], [null, 'blocks', [[660, 650, 300, 290]]]],
+    wires: P => P.wires.map(w => w.p), wiresPart: 'wires', faint: true },
   die: { slab: [30, 30, 940, 940], pads: 22, scribe: true, probes: true,
     districts: P => [['cores', 'core', P.cores.map(R)], [null, 'memory', split([130, 620, 740, 100], 6), [7, 5]], [null, 'row', split([130, 740, 740, 90], 8)]],
     wires: () => [[[500, 136], [500, 594]], [[315, 365], [685, 365]], [[315, 208], [315, 522]], [[685, 208], [685, 522]]] }
@@ -39,7 +46,8 @@ const NAMES = {
   chip: { cores: [175, 165], cache: [185, 650], io: [175, 770], clock: [500, 250] },
   soc: { isp: [180, 170], gpu: [560, 170], npu: [560, 480], cpu: [190, 470], cache: [190, 780] },
   mcu: { cores: [180, 170], flash: [560, 170], sram: [190, 450], periph: [200, 620] },
-  die: { cores: [175, 165], pads: [330, 68], probes: [68, 300], scribe: [860, 15] }
+  die: { cores: [175, 165], pads: [330, 68], probes: [68, 300], scribe: [860, 15] },
+  block: { cells: [150, 95], sram: [760, 110], wires: P => P.wires[0].p[1], yours: [150, 228] }
 };
 /* heights, three times the review's table (step 4: lower, a relief reads as a flat drawing) */
 const H = { slab: 0.25, core: 0.2, logic: 0.12, field: 0.07, bit: 0.05, row: 0.14, unit: 0.16, wire: 0.05, pad: 0.1 };
@@ -71,7 +79,7 @@ export const create = level => (canvas, host, on = {}) => createLevel3D(canvas, 
   const s = plan.slab; box(root, s[2] / 100, H.slab, s[3] / 100, M.slab, X(s[0] + s[2] / 2), -H.slab, Z(s[1] + s[3] / 2), 0.04, { cast: false, receive: false });
   const pads = [], step = 836 / plan.pads;
   for (let i = 0; i < plan.pads; i++) { const t = 82 + i * step + step * 0.2, w = step * 0.6; pads.push([t, 56, w, 24], [t, 920, w, 24], [56, t, 24, w], [920, t, 24, w]); }
-  many(pads, 0, H.pad, M.pad, level === 'die' ? 'pads' : null);
+  if (pads.length) many(pads, 0, H.pad, M.pad, level === 'die' ? 'pads' : null);
 
   /* the districts, each kind with its own look */
   const live = {};
@@ -88,6 +96,25 @@ export const create = level => (canvas, host, on = {}) => createLevel3D(canvas, 
       const [nx, ny] = grid, bits = [];
       rects.forEach(r => { const w = r[2] / nx, h = r[3] / ny; for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) bits.push([r[0] + i * w + w * 0.18, r[1] + j * h + h * 0.18, w * 0.64, h * 0.64]); });
       many(bits, H.field, H.bit, M.bit, part);
+    } else if (kind === 'cellrows') {
+      /* twelve rows, each between two copper power rails: cells of different widths, as the flat block has them (the
+         same widths, from your chip's switch size); row six holds the cell the dive goes into next */
+      const cells = [], rails = [], sc = Math.min(1.8, C().s || 1);
+      for (let i = 0; i < 12; i++) {
+        const y = 60 + i * 74; rails.push([40, y - 3, 584, 6], [40, y + 57, 584, 6]);
+        let x = 44, n = 0;
+        while (x < 600) {
+          let w = Math.max(10, Math.round((22 + Math.floor(rnd2(i, n) * 44)) * sc));
+          if (i === 5 && x < 300 && x + w > 296) w = 296 - x;
+          if (i === 5 && Math.abs(x - 300) < 5) { x = 300; w = 44; }
+          if (x + w > 620) w = 620 - x;
+          if (w > 8) cells.push({ r: [x, y + 8, w, 44], row: i, mine: i === 5 && x === 300 });
+          x += w + 4; n++;
+        }
+      }
+      live.cells = many(cells.map(c => c.r), 0, H.row, M.tile, part, TONE.tile); live.cellList = cells;
+      cells.forEach((c, i) => { if (c.mine) live.cells.setColorAt(i, TONE.top); });
+      many(rails, 0, H.wire, M.cu, null);
     } else if (kind === 'row') many(rects, 0, H.row, M.tile, part, TONE.tile);
     else if (kind === 'units' || kind === 'array' || kind === 'stages') {
       /* many identical units on one base (graphics, the AI unit's multipliers, the camera's pipeline) */
@@ -98,14 +125,16 @@ export const create = level => (canvas, host, on = {}) => createLevel3D(canvas, 
     } else if (kind === 'blocks') {
       many(rects, 0, H.field, M.field, part);
       const sub = []; rects.forEach((r, n) => split(r, 3 + (n % 2), 2, 10).forEach((q, j) => { if (rnd(n * 7 + j, 3) > 0.25) sub.push(q); }));
-      live.blocks = many(sub, H.field, H.row * 0.7, M.tile, part, TONE.tile); live.blocksN = sub.length;
+      /* only a district with a name lights at work; one without (a block's other circuits, power) stays still */
+      const m = many(sub, H.field, H.row * 0.7, M.tile, part, TONE.tile); if (part) { live.blocks = m; live.blocksN = sub.length; }
     }
   });
 
   /* the wires that reach every block (the clock, or the roads between districts), in copper, with what travels on them */
   const lines = plan.wires(parts), WY = H.core + H.logic + 0.02, strips = [];
   lines.forEach(p => { for (let i = 1; i < p.length; i++) { const a = p[i - 1], b = p[i]; strips.push([Math.min(a[0], b[0]) - 5, Math.min(a[1], b[1]) - 5, Math.abs(b[0] - a[0]) + 10, Math.abs(b[1] - a[1]) + 10]); } });
-  many(strips, WY, H.wire, M.cu, plan.wiresPart || null);
+  const wireM = plan.faint ? mat(col(0xc77b45, 0xb5683a), { roughness: 0.3, metalness: 0.85, transparent: true, opacity: 0.2, depthWrite: false }) : M.cu;
+  many(strips, WY, H.wire, wireM, plan.wiresPart || null);
   const pulses = many(lines.map(() => [0, 0, 14, 14]), WY + H.wire, 0.07, M.live, plan.wiresPart || null);
 
   /* the die on the wafer: the cutting line round it, with the factory's test patterns, and needles on its pads */
@@ -121,14 +150,29 @@ export const create = level => (canvas, host, on = {}) => createLevel3D(canvas, 
     });
   }
 
+  /* your design in the block: as many cells as it became (a core counts many), warm, from the start of row three */
+  let shownDesign = null, mine = 0;
+  const showYours = () => {
+    const D = designNow(); if (D === shownDesign || !live.cells) return; shownDesign = D;
+    mine = D && D.M ? Math.min(40, D.M.cells.length * (D.p === 'core' ? 32 : 1)) : 0;
+    let left = mine; live.cellList.forEach((c, i) => { const yours = left > 0 && (c.row === 2 || c.row === 3) && !c.mine; if (yours) left--; live.cells.setColorAt(i, yours ? TONE.yours : c.mine ? TONE.top : TONE.tile); });
+    live.cells.instanceColor.needsUpdate = true;
+  };
+  TONE.yours = TONE.tile.clone().lerp(new THREE.Color(P.warm), night ? 0.55 : 0.5);
+  if (plan.yours) showYours();
+
   let t = 0, tick = -1;
-  const anchors = {}; Object.entries(NAMES[level]).forEach(([k, p]) => { anchors[k] = [X(p[0]), k === 'clock' ? WY + H.wire : k === 'scribe' ? 0 : k === 'probes' ? 0.6 : H.core + H.logic, Z(p[1])]; });
+  const anchors = {}; Object.entries(NAMES[level]).forEach(([k, p]) => { if (typeof p === 'function') p = p(parts); anchors[k] = [X(p[0]), k === 'clock' || k === 'wires' ? WY + H.wire : k === 'scribe' ? 0 : k === 'probes' ? 0.6 : level === 'block' ? H.row : H.core + H.logic, Z(p[1])]; });
   return {
     level, parts: Object.keys(NAMES[level]), anchors,
     /* read from straight above, nearly: 72°, never turned */
     view: { tilt: 1.26, turn: 0, r: 5.6, at: [0, 0.1, 0.25], fixed: true, arrive: plan.arrive ? { tilt: 0.5, turn: -0.62, ms: 1800 } : null },
-    update(dt, k) {
+    has: key => key !== 'yours' || mine > 0,
+    update(dt, k, dist, arrived, picked) {
       t += dt;
+      if (plan.yours) showYours();
+      /* the faint wires come up, with what travels on them, only when you pick them */
+      if (plan.faint) { const lit = picked === plan.wiresPart; wireM.opacity = lit ? 1 : 0.2; wireM.depthWrite = lit; pulses.visible = lit; }
       const c = C(), now = Math.floor(t * 1.5 * (c.clock || 1));
       /* the clock's beat (or the data) travelling along each wire */
       const o = new THREE.Object3D();

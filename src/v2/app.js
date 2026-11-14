@@ -360,7 +360,7 @@ export function start() {
   }
   /* ---- the levels in 3D (src/v2/level3d.js: the chips as reliefs, the gate, the switch, the atom): as the dive reaches one, the flat picture gives
      way to a model of it on the one stage, in the same square; the flat drawing stays the fallback ---- */
-  const L3 = { chip: { mod: './relief3d.js', arg: 'chip' }, soc: { mod: './relief3d.js', arg: 'soc' }, mcu: { mod: './relief3d.js', arg: 'mcu' }, die: { mod: './relief3d.js', arg: 'die' },
+  const L3 = { chip: { mod: './relief3d.js', arg: 'chip' }, soc: { mod: './relief3d.js', arg: 'soc' }, mcu: { mod: './relief3d.js', arg: 'mcu' }, die: { mod: './relief3d.js', arg: 'die' }, block: { mod: './relief3d.js', arg: 'block' },
     gate: { mod: './gate3d.js' }, switch: { mod: './switch3d.js' }, atom: { mod: './atom3d.js' } };
   /* each level writes its names in a layer of its own over the stage */
   const l3Host = lv => { let h = $('l3-' + lv); if (!h) { h = document.createElement('div'); h.className = 'labels'; h.id = 'l3-' + lv; h.hidden = true; $('flatLabels').after(h); } return h; };

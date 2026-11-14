@@ -54,6 +54,9 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
   /* the chip as a relief on the stage, with its four names */
   await page.evaluate(() => { location.hash = '#/dive/chip'; });
   await page.waitForFunction(() => document.querySelectorAll('#l3-chip [data-part3]').length === 4 && !document.getElementById('l3-chip').hidden, null, { timeout: 25000 }).catch(() => problems.push(tag + ': the chip did not appear as a relief with its four names'));
+  /* the block too, with its names (your design's only once you have one) */
+  await page.evaluate(() => { location.hash = '#/dive/block'; });
+  await page.waitForFunction(() => document.querySelectorAll('#l3-block [data-part3]').length === 4 && !document.getElementById('l3-block').hidden, null, { timeout: 25000 }).catch(() => problems.push(tag + ': the block did not appear as a relief'));
   /* the gate as a relief on the stage, with its five names */
   await page.evaluate(() => { location.hash = '#/dive/gate'; });
   await page.waitForFunction(() => document.querySelectorAll('#l3-gate [data-part3]').length === 5 && !document.getElementById('l3-gate').hidden, null, { timeout: 25000 }).catch(() => problems.push(tag + ': the gate did not appear as a relief with its five names'));

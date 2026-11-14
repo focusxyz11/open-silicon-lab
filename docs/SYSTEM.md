@@ -121,7 +121,9 @@ data centre's chip, the phone's, the car's, and the die on the wafer with its te
 the flat scenes' parts so the plan is written once: a slab, compute blocks that are alike and warm while they work,
 memory as a low regular field of bits, pads round the edge, copper wires with the clock's beat travelling on them, seen
 from 72° and never turned; coming down from the data centre's flight the camera rises from the flight's angle to the
-plan's; the gate (`src/v2/gate3d.js`), a relief of the same plan as the flat gate, its layers in true order and height
+plan's; the block, the same relief (rows of ready-made cells of different widths between copper rails, the memory
+array as a lower, finer field, your design as a few warm cells in a row, and the wires over them faint until you pick
+them, since drawn true, copper would cover the cells); the gate (`src/v2/gate3d.js`), a relief of the same plan as the flat gate, its layers in true order and height
 (silicon, the gate strips over it, contacts as studs, copper on top), seen from 65° and never turned, lifting apart
 once on arrival, with your chip's slowest signal racing the tick along the bottom; the switch (`src/v2/switch3d.js`), one transistor cut open at the front, so the cut face shows the gate wrapped round
 three sheets of silicon, each in its skin, with source and drain on either side and electrons flowing through the
