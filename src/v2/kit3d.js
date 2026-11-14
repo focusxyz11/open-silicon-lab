@@ -30,7 +30,21 @@ function one() {
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   const pm = new THREE.PMREMGenerator(renderer), env = pm.fromScene(new RoomEnvironment(), 0.04).texture;
   const cv = renderer.domElement; cv.className = 'stage3d';   /* not 'gl': the challenge gauges' labels use that name */ cv.setAttribute('aria-hidden', 'true');
-  return (ONE = { renderer, env, cv });
+  ONE = { renderer, env, cv };
+  /* a software renderer (the browser drawing without a graphics chip) starts low */
+  try { const gl = renderer.getContext(), ext = gl.getExtension('WEBGL_debug_renderer_info'), name = String(gl.getParameter(ext ? ext.UNMASKED_RENDERER_WEBGL : gl.RENDERER) || ''); QUALITY.soft = /swiftshader|llvmpipe|software/i.test(name); } catch (e) { /* the name stays unknown */ }
+  if (QUALITY.soft) lowQuality();
+  return ONE;
+}
+/* how much this device can draw (docs/reviews/art-direction.md §4). low: pixel ratio 1, no shadows, nothing live
+   moving (the levels hold their live things still, as with reduced motion). A software renderer starts low; a level
+   whose frames come too slowly asks for it (level3d.js), and if that is still too slow it is drawn flat instead.
+   For the tests: localStorage osl-quality = 'keep' never drops anything, 'slow' makes every level count as too slow. */
+export const QUALITY = { soft: false, low: false, test: (() => { try { return localStorage.getItem('osl-quality') || ''; } catch (e) { return ''; } })() };
+export function lowQuality() {
+  if (QUALITY.low || QUALITY.test === 'keep') return;
+  QUALITY.low = true;
+  if (ONE) { ONE.renderer.setPixelRatio(1); ONE.renderer.shadowMap.enabled = false; }
 }
 /* a view on the stage: size() says how big its picture is (a hidden view's zero size is ignored), draw() puts
    its scene on the GL canvas, warm() compiles its shaders ahead while another view is showing */

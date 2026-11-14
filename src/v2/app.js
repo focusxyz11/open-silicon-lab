@@ -368,11 +368,13 @@ export function start() {
   const lastTap = { x: 0, y: 0 };
   $('diveCanvas').addEventListener('pointerup', e => { lastTap.x = e.clientX; lastTap.y = e.clientY; }, true);
   const ensureL3 = lv => { const l = L3[lv]; return l.making || (l.making = import(l.mod).then(m => (l.obj = (l.arg ? m.create(l.arg) : m.create)($('diveCanvas'), l3Host(lv), { part: key => pickPart(key),
-    marks: () => (diveFrame && diveFrame.mode() === 'ask' ? askMarks(lv) : null), mark: th => { location.hash = follow(th + '.' + lv); }, askMany: ths => markAsk(ths) }))).catch(() => null)); };
+    marks: () => (diveFrame && diveFrame.mode() === 'ask' ? askMarks(lv) : null), mark: th => { location.hash = follow(th + '.' + lv); }, askMany: ths => markAsk(ths),
+    /* too slow even at low settings: this level is drawn flat for the rest of the visit */
+    failed: () => { if (dive) levelZoom(dive.z); } }))).catch(() => null)); };
   /* the questions at a level, grouped by the part each is about (the first of its parts): the marks under Ask */
   const askMarks = id => { const by = new Map(); DiveData.THREADS.forEach(th => { const nm = DiveData.STOPS[th.id + '.' + id], key = nm && nm[0]; if (!key) return; if (!by.has(key)) by.set(key, []); by.get(key).push({ id: th.id, color: threadColorOf(th.id) }); }); return [...by].map(([part, threads]) => ({ part, threads })); };
   let threadColorOf = () => '';
-  const hideL3 = () => { Object.values(L3).forEach(l => { if (l.obj) l.obj.show(0); }); $('diveCanvas').style.opacity = ''; $('flatLabels').style.visibility = ''; };
+  const hideL3 = () => { Object.values(L3).forEach(l => { if (l.obj) l.obj.show(0); }); $('diveCanvas').style.opacity = ''; $('flatLabels').style.visibility = ''; if (dive) dive.setCovered(false); };
   function levelZoom(z) {
     if (!dive || !WE || flatKind !== 'dive' || $('diveCanvas').hidden) { hideL3(); return; }
     let top = 0;
@@ -380,10 +382,11 @@ export function start() {
       const ds = WE.IDS.indexOf(lv), d = z - ds, k = ds < 0 ? 0 : 1 - Math.min(1, Math.max(0, (Math.abs(d) - 0.08) / 0.32));
       if (k <= 0) { if (l.obj) l.obj.show(0); return; }
       if (!l.obj) { ensureL3(lv).then(o => { if (o && flatKind === 'dive') { levelZoom(dive.z); diveNotes(); } }); return; }
+      if (l.obj.failed) { l.obj.show(0); return; }
       l.obj.show(k, d, dive.frame); top = Math.max(top, k);
     });
     /* the flat picture and its words give way to the model; the stage shows while one is there */
-    $('diveCanvas').style.opacity = String(1 - top);
+    $('diveCanvas').style.opacity = String(1 - top); dive.setCovered(top >= 0.999);
     $('flatLabels').style.visibility = top > 0.5 ? 'hidden' : '';
     showStage(top > 0);
   }

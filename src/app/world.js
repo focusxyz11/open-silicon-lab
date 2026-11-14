@@ -103,7 +103,7 @@ export function createWorld(cv, on) {
   let inset = { l: 0, r: 0, t: 0, b: 0 }, anchor = null, thread = null, hits = [], hot = null, running = true;
   /* words on the picture: notes pinned to parts (set by the shell), and the way down into the next depth; in the dive,
      the parts' names the scene asked for (G.label), the part you picked, and the parts the story is about */
-  let notes = [], dive = null, htmlNames = [], picked = null, lead = [], restT = performance.now();
+  let notes = [], dive = null, htmlNames = [], picked = null, lead = [], restT = performance.now(), covered = false;
 
   /* The drawing helper handed to every scene. */
   const G = {
@@ -298,6 +298,9 @@ export function createWorld(cv, on) {
       return;
     }
     mapK = 0;
+    /* a level drawn in 3D on top covers this canvas whole: nothing here is seen, so nothing is drawn (the zoom and the
+       depth still move, from settle() in tick) */
+    if (covered) { if (CHROME.overlay) CHROME.overlay.clear(); return; }
     const F = frames(Z, b.B, b.cx, b.cy), pi = F.f < 0.5 ? F.i : F.i + 1, html = !!CHROME.overlay;
     ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1; ctx.fillStyle = col.bg; ctx.fillRect(0, 0, W * dpr, H * dpr);
     /* the earlier site kept the depth you came from faintly around the picture, inside a thin frame; the chip world
@@ -566,6 +569,8 @@ export function createWorld(cv, on) {
     /* the part you picked (a ring on it, its name lit), and the parts the story in the dock is about (named first) */
     select(key) { picked = key || null; },
     setLead(keys) { lead = Array.isArray(keys) ? keys : []; },
+    /* a 3D level covers the picture whole (the shell, src/v2/app.js): stop drawing it until it shows again */
+    setCovered(on) { covered = !!on; },
     /* the map: o (see map.js) to open or update it, null to close it */
     setMap(o) { mapO = o; if (o) mapLast = o; },
     get mapOpen() { return !!mapO; },
