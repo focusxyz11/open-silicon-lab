@@ -3,7 +3,7 @@
    and figures, a story docked below moves the camera, and the scene answers what you do. The numbers stream
    between memory and the die as light; the die's cores light up as much as they are busy (src/engines/chip.js).
    Units: centimetres. Words: board.* (src/i18n/en.json). */
-import { THREE, PALETTES, theme, stage, light, group, labels, clamp, smooth, reduced, rnd } from './kit3d.js';
+import { THREE, PALETTES, theme, stage, light, group, labels, clamp, smooth, reduced, rnd, BOARD } from './kit3d.js';
 
 /* the camera for each view of the story: where it looks, how far, the turn and the tilt */
 export const VIEWS = {
@@ -32,9 +32,9 @@ export function createBoard(canvas, host, on = {}) {
   };
 
   /* the board and its copper */
-  const board = group(scene);
-  B('board', board, 40, 0.2, 28, M(night ? 0x16352d : 0x2b5e4c, { roughness: 0.7 }), 0, -0.2, 0);
-  const cu = M(0xb88a4a, { roughness: 0.35, metalness: 0.8 });
+  const board = group(scene), K = BOARD(night);
+  B('board', board, 40, 0.2, 28, M(K.board, { roughness: 0.7 }), 0, -0.2, 0);
+  const cu = M(K.trace, { roughness: 0.35, metalness: 0.8 });
   /* copper that goes somewhere (art direction: no rows of stripes): three traces from the package to each link on the
      far edge, turning in order so none crosses another, and wide ones that bring power from the regulators */
   const run = (x0, z0, x1, z1) => { const b = B(null, board, Math.abs(x1 - x0) + 0.12, 0.02, Math.abs(z1 - z0) + 0.12, cu, (x0 + x1) / 2, 0, (z0 + z1) / 2); b.castShadow = false; };
@@ -44,14 +44,14 @@ export function createBoard(canvas, host, on = {}) {
   }));
   [-3.5, -1.2, 1.1, 3.4, 5.7].forEach(z => run(-8.6, z, -5.1, z + 0.45));   /* wide power traces, clear of those to the links */
   /* the power stages: a row of regulators and their coils, feeding the chip from one side */
-  const vrmM = M(0x1d2129, { roughness: 0.4 }), coil = M(0x7c8594, { roughness: 0.3, metalness: 0.7 });
+  const vrmM = M(K.power, { roughness: 0.4 }), coil = M(K.coil, { roughness: 0.3, metalness: 0.7 });
   for (let i = 0; i < 10; i++) { B('vrm', board, 1.2, 0.5, 1.2, vrmM, -11.5, 0, -6.3 + i * 1.4); B('vrm', board, 1.5, 1.1, 1.3, coil, -9.4, 0, -6.3 + i * 1.4); }
   /* the links: connectors on the far edge, to other boards and the network */
-  const conn = M(0x2a2f38, { roughness: 0.5 }), pin = M(0xd8b25a, { metalness: 0.9, roughness: 0.3 });
+  const conn = M(K.plastic, { roughness: 0.5 }), pin = M(K.pin, { metalness: 0.9, roughness: 0.3 });
   for (let i = 0; i < 4; i++) { B('links', board, 5, 1.6, 2, conn, -9 + i * 6, 0, -12.6); B('links', board, 4.4, 0.12, 0.3, pin, -9 + i * 6, 1.6, -11.8); }
   /* the package: a substrate, the interposer, the die with its cores, four memory stacks, and a lid */
   const pkg = group(scene);
-  B('chip', pkg, 10, 0.4, 10, M(0x2f3d35, { roughness: 0.6 }), 0, 0, 0);
+  B('chip', pkg, 10, 0.4, 10, M(K.substrate, { roughness: 0.6 }), 0, 0, 0);
   B('chip', pkg, 8, 0.15, 6.4, M(0x4b5566, { roughness: 0.4, metalness: 0.4 }), 0, 0.4, 0);
   const dieM = M(night ? 0x1d2433 : 0x2a3142, { roughness: 0.3, metalness: 0.5 });
   B('die', pkg, 3.6, 0.15, 4.4, dieM, 0, 0.55, 0);
@@ -60,7 +60,7 @@ export function createBoard(canvas, host, on = {}) {
   const hbmM = M(0x3a4458, { roughness: 0.35, metalness: 0.5 }), hbmTop = M(0x8a96aa, { roughness: 0.3, metalness: 0.7 });
   const stacks = [[-2.9, -1.4], [-2.9, 1.4], [2.9, -1.4], [2.9, 1.4]];
   stacks.forEach(([x, z]) => { for (let l = 0; l < 6; l++) B('hbm', pkg, 1.3, 0.11, 2.2, l === 5 ? hbmTop : hbmM, x, 0.55 + l * 0.12, z); });
-  const lidM = M(0xb9c1cc, { roughness: 0.25, metalness: 0.85, transparent: true });
+  const lidM = M(K.lid, { roughness: 0.25, metalness: 0.85, transparent: true });
   const lid = B('chip', pkg, 9.4, 0.6, 9.4, lidM, 0, 0.45, 0);
 
   /* the numbers on their way: light running from the memory stacks into the die */
