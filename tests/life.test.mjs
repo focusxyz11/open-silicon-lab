@@ -27,6 +27,7 @@ test('every place can be met, and each asks for something different', () => {
   for (const m of MISSION_IDS) { wins[m] = every().filter(c => live(m, c, { coverage: 1 }).pass); assert.ok(wins[m].length, m + ' can ship'); }
   assert.ok(wins.phone.every(c => c.protect !== 'logic'), 'a phone cannot pay for a second copy of its logic');
   assert.ok(wins.car.every(c => c.protect === 'logic' && c.burn && c.hot), 'a car needs everything');
+  assert.ok(wins.datacentre.some(c => c.protect === 'memory'), 'a data centre ships with error-correcting memory alone: it re-checks results in software, it does not copy its logic');
   assert.ok(!wins.phone.some(w => wins.car.some(c => JSON.stringify(c) === JSON.stringify(w))), 'what ships in a phone does not ship in a car');
 });
 
