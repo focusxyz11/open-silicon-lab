@@ -82,7 +82,9 @@ export function create(canvas, host, on = {}) {
       anchors: { gates: [X(410), H.si + H.gate, Z(560)], diff: [X(260), H.si, Z(330)], metal: [X(200), TOPY, Z(118)], tick: [XT(chipNow().tick), 0.4, Z(940)], signal: [X(170), 0.08, Z(960)] },
       /* looking down 65° (the review's 70° hides every side), never turned: the plan's across is the screen's across */
       view: { tilt: 1.13, turn: 0, r: 5.9, at: [0, 0.3, 0.35], fixed: true,
-        door: DOOR },
+        door: DOOR,
+        /* foot: it stands in the block's lighter cell by the middle of its plan, on the plane its tiles stand on */
+        foot: [0, 0, 0] },
       /* leave (0..1): how far a join into the switch has gone; the door is the switch's while it is above 0 */
       update(dt, k, dist, arrived, picked, leave = 0) {
         t += dt;
@@ -90,7 +92,7 @@ export function create(canvas, host, on = {}) {
         if (leave > 0) lift = -1;   /* the lift is at rest before a join draws over the door */
         /* on arrival, once, the layers lift apart and settle back */
         if (k < 0.5) armed = true;
-        if (armed && k > 0.85) { armed = false; lift = 0; }
+        if (armed && k > 0.85 && arrived >= 1) { armed = false; lift = 0; }   /* not while it is still rising in a join */
         if (lift >= 0 && dt) { lift += dt / 1.8; if (lift >= 1) lift = -1; }
         const up = lift >= 0 ? Math.sin(Math.PI * lift) * LIFT : 0;
         L.forEach((g, i) => { g.position.y = i * up / 3; });

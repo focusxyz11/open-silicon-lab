@@ -27,6 +27,7 @@ import { pose, childPose, eye, smooth as sm, JOIN } from '../engines/join.js';
 export const still = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 /* joins, for the visit: off once joined frames have come too slowly (or osl-quality = slow) */
 export const JOINS = { off: false };
+const V_rise = V => !!V.fixed && !V.enter;
 const JP = { skip: 4, times: [], done: false };
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 
@@ -95,12 +96,20 @@ export function createLevel3D(canvas, host, on, model) {
     st.veil(P.scene.background, sm(JOIN.veil[0], JOIN.veil[1], f));
     if (drawn) {
       C.aim(cp, fr); C.M.update(quiet ? 0 : dt, 1, cp.dist, enter, null, 0);
+      /* a plan with no move of its own (the reliefs, the gate) rises out of the door: flat as it comes, whole as it
+         takes over */
+      C.root.scale.y = V_rise(C.V) ? 0.02 + 0.98 * enter : 1;
       /* a door with tiles in front of it (door.front: the gate's) hides the child behind them while the parent
          lowers them (leave below JOIN.clear); its camera is the parent's in its own units, near and far included, so
          the two depths agree. After that, and always for an open door, the child is drawn in front */
       const keep = !!door.front && leave < JOIN.clear;
       if (keep) { C.camera.near = P.camera.near / p.s; C.camera.far = P.camera.far / p.s; C.camera.updateProjectionMatrix(); }
-      const bg = C.scene.background; C.scene.background = null; st.over(C.scene, C.camera, keep); C.scene.background = bg;
+      /* a rising plan fades in over the door as it starts (JOIN.fade), so it grows out of the parent's tiles instead
+         of appearing on them */
+      const fade = V_rise(C.V) && !QUALITY.low ? sm(JOIN.fade[0], JOIN.fade[1], f) : 1;
+      const bg = C.scene.background; C.scene.background = null;
+      if (fade < 1) st.fade(C.scene, C.camera, fade); else st.over(C.scene, C.camera, keep);
+      C.scene.background = bg;
     }
     document.documentElement.dataset.join = P.M.level + '>' + C.M.level;
   }  function placeCard() {
@@ -162,6 +171,7 @@ export function createLevel3D(canvas, host, on, model) {
       raf = requestAnimationFrame(tick); return;
     }
     if (document.documentElement.dataset.join) delete document.documentElement.dataset.join;
+    if (root.scale.y !== 1) root.scale.y = 1;   /* risen, at rest */
     watch(raw);
     if (api.failed) return;
     /* the arrival goes by frames (each counting at most 50 ms), so a slow first frame (shaders compiling) never eats
@@ -194,7 +204,7 @@ export function createLevel3D(canvas, host, on, model) {
   const api = {
     failed: false,
     /* what a join needs of this level: its scene and camera, its model and view, and how to aim and fit */
-    rig: { scene, camera, M, V, size, fitOf, aim },
+    rig: { scene, camera, root, M, V, size, fitOf, aim },
     get door() { return V.door || null; }, get foot() { return V.foot || null; },
     /* how present the level is (0..1), how far the zoom is from it (negative: still above), and the square to fill;
        the shell fades the flat picture and shows the stage */

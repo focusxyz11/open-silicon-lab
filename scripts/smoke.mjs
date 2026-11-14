@@ -153,9 +153,10 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
 /* one stage and no cuts: with motion on, going inside from the island dives the camera in, then the view zooms in from it
    (a view transition); rising goes back out. A duplicate name or a stuck view would show as an error here. */
 {
-  /* joins: from the gate to the switch and from the switch to the atom no flat picture shows between; both levels are
+  /* joins: from the chip to the block, the block to the gate, the gate to the switch and the switch to the atom no flat
+     picture shows between; both levels are
      drawn in one frame on one camera path, half way and back */
-  for (const [a, b, na] of [['gate', 'switch', 5], ['switch', 'atom', 5]]) {
+  for (const [a, b, na] of [['chip', 'block', 4], ['block', 'gate', 4], ['gate', 'switch', 5], ['switch', 'atom', 5]]) {
     const tag = 'join ' + a + '>' + b;
     at = tag; const page = await browser3d.newPage({ viewport: { width: 1280, height: 800 } });
     page.on('pageerror', e => problems.push(tag + ': ' + e.message));
@@ -163,7 +164,8 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
     await page.goto(base + 'index.html#/dive/' + a);
     await page.waitForFunction(([a, b, na]) => document.querySelectorAll('#l3-' + a + ' [data-part3]').length === na && !!document.getElementById('l3-' + b), [a, b, na], { timeout: 40000 }).catch(() => problems.push(tag + ': the ' + a + ' and the ' + b + ' were not both made'));
     await page.waitForTimeout(1500);
-    const c = await page.$eval('#diveCanvas', e => { const r = e.getBoundingClientRect(); return [r.x + r.width / 2, r.y + r.height / 3]; });
+    /* a point over the picture itself, not over one of its names (a wheel there goes to the name) */
+    const c = await page.$eval('#diveCanvas', e => { const r = e.getBoundingClientRect(); for (const k of [0.33, 0.45, 0.55, 0.25, 0.65]) { const x = r.x + r.width / 2, y = r.y + r.height * k; if (document.elementFromPoint(x, y) === e) return [x, y]; } return [r.x + r.width / 2, r.y + r.height / 3]; });
     await page.mouse.move(c[0], c[1]); await page.mouse.wheel(0, 312);
     await page.waitForFunction(j => document.documentElement.dataset.join === j, a + '>' + b, { timeout: 15000 }).catch(() => problems.push(tag + ': half way they were not drawn together'));
     if (await page.evaluate(() => +getComputedStyle(document.getElementById('diveCanvas')).opacity > 0.05)) problems.push(tag + ': the flat picture showed between them');

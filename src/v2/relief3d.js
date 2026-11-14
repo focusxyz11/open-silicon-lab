@@ -15,6 +15,7 @@ import { createLevel3D } from './level3d.js';
 import { partsOf, chipNow } from '../app/scenes.js';
 import { rnd as rnd2 } from '../app/draw.js';
 import { designNow } from '../app/design.js';
+import { DEPTHS } from '../data/weave.js';
 
 const X = x => (x - 500) / 100, Z = y => (y - 500) / 100;
 const rnd = (i, s) => { const x = Math.sin(i * 127.1 + s * 311.7) * 43758.5453; return x - Math.floor(x); };
@@ -165,8 +166,11 @@ export const create = level => (canvas, host, on = {}) => createLevel3D(canvas, 
   const anchors = {}; Object.entries(NAMES[level]).forEach(([k, p]) => { if (typeof p === 'function') p = p(parts); anchors[k] = [X(p[0]), k === 'clock' || k === 'wires' ? WY + H.wire : k === 'scribe' ? 0 : k === 'probes' ? 0.6 : level === 'block' ? H.row : H.core + H.logic, Z(p[1])]; });
   return {
     level, parts: Object.keys(NAMES[level]), anchors,
-    /* read from straight above, nearly: 72°, never turned */
-    view: { tilt: 1.26, turn: 0, r: 5.6, at: [0, 0.1, 0.25], fixed: true, arrive: plan.arrive ? { tilt: 0.5, turn: -0.62, ms: 1800 } : null },
+    /* read from straight above, nearly: 72°, never turned. door: where the next level stands, the flat level's portal
+       on the plane the districts stand on (a core, or the block's lighter cell); foot: the next level stands on it by
+       the middle of its slab's top, and rises out of it (level3d.js) */
+    view: { tilt: 1.26, turn: 0, r: 5.6, at: [0, 0.1, 0.25], fixed: true, arrive: plan.arrive ? { tilt: 0.5, turn: -0.62, ms: 1800 } : null,
+      door: (([px, py, side]) => ({ at: [X(px + side / 2), 0, Z(py + side / 2)], side: side / 100 }))(DEPTHS[level].portal), foot: [0, 0, 0] },
     has: key => key !== 'yours' || mine > 0,
     update(dt, k, dist, arrived, picked) {
       t += dt;
