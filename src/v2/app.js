@@ -64,7 +64,7 @@ export function start() {
      their shaders compiled on the shared renderer, so going inside finds them ready */
   const ready = (make, view) => () => { if (viewNow !== 'map') return; make().then(v => { if (viewNow !== view) v.pause(); return v.warm(); }); };
   const prewarm = () => [ready(ensureDc, 'dc'), ready(ensureChip, 'chip'), ready(ensureBoard, 'board')].reduce((p, f) => p.then(() => new Promise(r => idle(() => { f(); r(); }))), Promise.resolve());
-  const preload = () => { prewarm(); ['./frame.js', './board3d.js', './story.js', './stories.js', '../engines/weave.js', '../app/world.js', '../data/weave.js', '../app/design.js', '../app/journey.js', './level3d.js', './gate3d.js', './switch3d.js', './atom3d.js', './overlay.js'].forEach(u => import(u).catch(() => { /* fetched again when needed */ })); };
+  const preload = () => { prewarm(); ['./frame.js', './board3d.js', './story.js', './stories.js', '../engines/weave.js', '../app/world.js', '../data/weave.js', '../app/design.js', '../app/journey.js', './level3d.js', './relief3d.js', './gate3d.js', './switch3d.js', './atom3d.js', './overlay.js'].forEach(u => import(u).catch(() => { /* fetched again when needed */ })); };
   const ensureMap = () => mapReady || (mapReady = import('./map3d.js').then(m => {
     map = m.createMap($('mapCanvas'), $('mapLabels'), { place: id => (cur && cur.place === id && !sheet.hidden && enterOf(id) ? enter(enterOf(id)) : openPlace(id)), question: key => openQuestion(key), job: need => openJob(need), interact: () => $('hero').classList.add('away') });
     loading(false); map.setState(islandState(), false); idle(preload);
@@ -353,18 +353,21 @@ export function start() {
      part you pick, flat or in 3D; until then the picture and its names explain themselves */
   function diveNotes() {
     const id = diveId(), key = divePart;
-    Object.entries(L3).forEach(([lv, l]) => { if (l.obj) l.obj.select(id === lv && key ? key : null, key && EN_HAS(lv + '.' + key) ? { title: t('part.' + lv + '.' + key), text: t('what.' + lv + '.' + key) } : null); });
+    Object.entries(L3).forEach(([lv, l]) => { const w = key && DiveData.partWord(lv, key); if (l.obj) l.obj.select(id === lv && key ? key : null, w && EN_HAS(w) ? { title: t('part.' + w), text: t('what.' + w) } : null); });
     if (!key) return dive.setNotes([]);
     const w = DiveData.partWord(id, key); if (!EN_HAS(w)) return dive.setNotes([]);
     dive.setNotes([{ part: key, title: t('part.' + w), text: t('what.' + w), tone: 'cool' }]);
   }
-  /* ---- the levels in 3D (src/v2/level3d.js: the gate, the switch, the atom): as the dive reaches one, the flat picture gives
+  /* ---- the levels in 3D (src/v2/level3d.js: the chips as reliefs, the gate, the switch, the atom): as the dive reaches one, the flat picture gives
      way to a model of it on the one stage, in the same square; the flat drawing stays the fallback ---- */
-  const L3 = { gate: { mod: './gate3d.js', host: 'gateLabels' }, switch: { mod: './switch3d.js', host: 'swLabels' }, atom: { mod: './atom3d.js', host: 'atomLabels' } };
+  const L3 = { chip: { mod: './relief3d.js', arg: 'chip' }, soc: { mod: './relief3d.js', arg: 'soc' }, mcu: { mod: './relief3d.js', arg: 'mcu' }, die: { mod: './relief3d.js', arg: 'die' },
+    gate: { mod: './gate3d.js' }, switch: { mod: './switch3d.js' }, atom: { mod: './atom3d.js' } };
+  /* each level writes its names in a layer of its own over the stage */
+  const l3Host = lv => { let h = $('l3-' + lv); if (!h) { h = document.createElement('div'); h.className = 'labels'; h.id = 'l3-' + lv; h.hidden = true; $('flatLabels').after(h); } return h; };
   const l3Active = () => Object.values(L3).find(l => l.obj && l.obj.active());
   const lastTap = { x: 0, y: 0 };
   $('diveCanvas').addEventListener('pointerup', e => { lastTap.x = e.clientX; lastTap.y = e.clientY; }, true);
-  const ensureL3 = lv => { const l = L3[lv]; return l.making || (l.making = import(l.mod).then(m => (l.obj = m.create($('diveCanvas'), $(l.host), { part: key => pickPart(key),
+  const ensureL3 = lv => { const l = L3[lv]; return l.making || (l.making = import(l.mod).then(m => (l.obj = (l.arg ? m.create(l.arg) : m.create)($('diveCanvas'), l3Host(lv), { part: key => pickPart(key),
     marks: () => (diveFrame && diveFrame.mode() === 'ask' ? askMarks(lv) : null), mark: th => { location.hash = follow(th + '.' + lv); }, askMany: ths => markAsk(ths) }))).catch(() => null)); };
   /* the questions at a level, grouped by the part each is about (the first of its parts): the marks under Ask */
   const askMarks = id => { const by = new Map(); DiveData.THREADS.forEach(th => { const nm = DiveData.STOPS[th.id + '.' + id], key = nm && nm[0]; if (!key) return; if (!by.has(key)) by.set(key, []); by.get(key).push({ id: th.id, color: threadColorOf(th.id) }); }); return [...by].map(([part, threads]) => ({ part, threads })); };
