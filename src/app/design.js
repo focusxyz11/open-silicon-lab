@@ -319,6 +319,8 @@ const gates = {
 
 /* ---- 5. the layout: the gates placed in rows on a tile of a shared chip, joined by two layers of metal ---- */
 function tileXY(x0, y0, w, h) { const P = B.PL, s = Math.min(w / P.GW, h / P.H); return { s, X: x => x0 + (w - P.GW * s) / 2 + x * s, Y: y => y0 + (h - P.H * s) / 2 + y * s }; }
+/* the upper metal layer: copper, lighter (mixed a third towards the light) */
+const M2 = c => { if (!c.cu || !c.hi || c.cu[0] !== '#' || c.hi[0] !== '#') return c.warm; const a = parseInt(c.cu.slice(1), 16), b = parseInt(c.hi.slice(1), 16), m = sh => Math.round(((a >> sh) & 255) * 0.66 + ((b >> sh) & 255) * 0.34); return 'rgb(' + m(16) + ',' + m(8) + ',' + m(0) + ')'; };
 function drawTile(G, x0, y0, w, h, layers) {
   const c = G.col, P = B.PL, RT = B.RT, M = B.M, { s, X, Y } = tileXY(x0, y0, w, h), on = k => !layers || layers.includes(k);
   if (on('cells')) {
@@ -327,11 +329,13 @@ function drawTile(G, x0, y0, w, h, layers) {
   }
   const seg = (want) => Object.values(RT.paths).forEach(segs => segs.forEach(path => { for (let k = 1; k < path.length; k++) {
     const a = path[k - 1], b = path[k], la = a % 2, lb = b % 2, ca = (a - la) / 2, cb = (b - lb) / 2, ax = ca % P.GW, ay = (ca - ax) / P.GW, bx = cb % P.GW, by = (cb - bx) / P.GW;
-    if (la !== lb) { if (want === 'via') G.r(X(ax + 0.5) - s * 0.2, Y(ay + 0.5) - s * 0.2, s * 0.4, s * 0.4, c.hi); continue; }
-    if ((want === 'm1' && la === 1) || (want === 'm2' && la === 0)) G.l([[X(ax + 0.5), Y(ay + 0.5)], [X(bx + 0.5), Y(by + 0.5)]], la === 1 ? c.cool : c.warm, Math.max(1.4, s * 0.3 * G.s));
+    /* the gate level's materials (art direction): every wire copper, the upper layer a lighter copper and a little wider,
+       vias and pins contact metal */
+    if (la !== lb) { if (want === 'via') G.r(X(ax + 0.5) - s * 0.2, Y(ay + 0.5) - s * 0.2, s * 0.4, s * 0.4, c.au || c.hi); continue; }
+    if ((want === 'm1' && la === 1) || (want === 'm2' && la === 0)) G.l([[X(ax + 0.5), Y(ay + 0.5)], [X(bx + 0.5), Y(by + 0.5)]], la === 1 ? c.cu || c.cool : M2(c), Math.max(1.4, s * (la === 1 ? 0.3 : 0.38) * G.s));
   } }));
   if (on('m1')) seg('m1'); if (on('m2')) seg('m2'); if (on('via')) seg('via');
-  if (on('pins')) { Object.values(P.ioIn).concat(Object.values(P.ioOut)).forEach(p => G.r(X(p.x), Y(p.y), s, s, c.warm)); }
+  if (on('pins')) { Object.values(P.ioIn).concat(Object.values(P.ioOut)).forEach(p => G.r(X(p.x), Y(p.y), s, s, c.au || c.warm)); }
   return { s, X, Y };
 }
 const layout = {
@@ -375,7 +379,7 @@ const masks = {
       G.a(0.85); G.r(0, 0, W, H, c.lo, c.line, 1.2); G.a(1);
       drawTile(G, 10, 10, W - 20, H - 20, [ly, 'pins']);
       ctx.restore();
-      text(G, t('design.layer.' + ly), ox + W + 30, oy + 52, 14, ly === 'm1' ? c.cool : ly === 'm2' ? c.warm : c.hi, 'left', 600);
+      text(G, t('design.layer.' + ly), ox + W + 30, oy + 52, 14, ly === 'm1' ? c.cu || c.cool : ly === 'm2' ? M2(c) : c.hi, 'left', 600);
     });
     /* the reticle: one plate of quartz and chrome per layer, which the factory's scanner prints from */
     panel(G, 790, 600, 160, 160, c.mid);

@@ -45,7 +45,8 @@ function materials(col) {
     grn: L(col.grn, { emissive: col.grn, emissiveIntensity: d ? 0.6 : 0.2 }), red: L(col.red, { emissive: col.red, emissiveIntensity: d ? 0.6 : 0.2 }),
     off: L(pick('off', '#2a3350', '#c9d1dc')), silicon: L(d ? '#8fa6dc' : '#6f84ad', { emissive: d ? '#1c2c5a' : '#000000' }), copper: L('#d58a3a', { emissive: '#7a4310', emissiveIntensity: d ? 0.4 : 0.05 }),
     crate: L(d ? '#5a4628' : '#e8d4b0'), screen: new THREE.MeshBasicMaterial({ color: d ? '#06090f' : '#f9fbfd' }),
-    plasma: glow(col.red, d ? 0.42 : 0.3), beam: glow(col.grn, d ? 0.7 : 0.55), light: glow(col.warm, d ? 0.55 : 0.4), heat: glow(col.warm, d ? 0.35 : 0.25), spray: glow(col.cool, 0.6),
+    /* a plasma and a beam of atoms are live things, so warm (in the chip world green and red mean right and wrong) */
+    plasma: glow(col.lit ? col.warm : col.red, d ? 0.42 : 0.3), beam: glow(col.lit ? col.warm : col.grn, d ? 0.7 : 0.55), light: glow(col.warm, d ? 0.55 : 0.4), heat: glow(col.warm, d ? 0.35 : 0.25), spray: glow(col.cool, 0.6),
     /* in the chip world at night the edges stay quiet, so the machines read as solids, not wire (art direction) */
     edge: new THREE.LineBasicMaterial({ color: pick('edge', '#7083b6', '#5c6a82'), transparent: true, opacity: w ? (d ? 0.24 : 0.4) : d ? 0.75 : 0.55 }),
     seam: new THREE.LineBasicMaterial({ color: pick('seam', '#3a4a78', '#b7c1cf'), transparent: true, opacity: 0.8 }),
@@ -604,7 +605,9 @@ export function createJourney3D(host, before, shared) {
   const scene = new THREE.Scene(), camera = new THREE.PerspectiveCamera(30, 1, 0.1, 120);
   const hemi = new THREE.HemisphereLight(0xffffff, 0x8090a8, 1.6), sun = new THREE.DirectionalLight(0xffffff, 1.7);
   sun.castShadow = true; sun.shadow.mapSize.set(1024, 1024); Object.assign(sun.shadow.camera, { left: -7, right: 7, top: 7, bottom: -7, near: 1, far: 40 }); sun.shadow.bias = -0.0005; sun.shadow.normalBias = 0.025;
-  scene.add(hemi, sun, sun.target);
+  /* at night the hall is dark and the machine at work on your wafer is lit (art direction: night is lit by what works) */
+  const work = new THREE.PointLight(0xfff1dc, 0, 9, 0);
+  scene.add(hemi, sun, sun.target, work);
   let M = null, theme = '', ids = [], built = new Map(), pod = null, lastT = 0, lens = null;
   /* the camera is kept relative to where you are on the line, so travelling never leaves it behind */
   const cam = { p: new THREE.Vector3(), t: new THREE.Vector3(), init: false };
@@ -618,8 +621,8 @@ export function createJourney3D(host, before, shared) {
     lens = createLens(M, col);
     scene.background = new THREE.Color(col.lit ? col.bg : col.dark ? '#05070d' : '#e6eaf0');
     scene.fog = new THREE.Fog(scene.background, 14, 34);
-    hemi.color.set(col.dark ? (col.lit ? '#c4d0e4' : '#aab8e6') : '#ffffff'); hemi.groundColor.set(col.dark ? '#141c34' : '#9aa6b8'); hemi.intensity = col.dark ? 1.25 : 1.7;
-    sun.intensity = col.dark ? 1.1 : 1.6;
+    hemi.color.set(col.dark ? (col.lit ? '#c4d0e4' : '#aab8e6') : '#ffffff'); hemi.groundColor.set(col.dark ? '#141c34' : '#9aa6b8'); hemi.intensity = col.dark ? (col.lit ? 0.9 : 1.25) : 1.7;
+    sun.intensity = col.dark ? (col.lit ? 0.8 : 1.1) : 1.6; work.userData.on = !!(col.dark && col.lit);
     /* your pod, the vehicle that carries it along the track, and the crate it travels in between plants */
     const g = new THREE.Group(), veh = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.42, 0.5), M.metal); veh.add(new THREE.LineSegments(new THREE.EdgesGeometry(veh.geometry), M.edge));
     const p = makePod(M, true), tr = makeTray(M, true), cr = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.55, 0.58).translate(0, 0.24, 0), M.crate); cr.add(new THREE.LineSegments(new THREE.EdgesGeometry(cr.geometry), M.edge));
@@ -687,6 +690,7 @@ export function createJourney3D(host, before, shared) {
       if (s.queue) { const Fm = chipNow().M, q = Fm && Fm.fab && Fm.fab[s.id]; const n = q ? Math.max(0, Math.min(12, Math.round((q.wait / q.work) * 2 + 0.4 * Math.sin(o.tm * 0.7 + s.i)))) : 0; s.queue.forEach((p, k) => { p.visible = k < n; }); }
       if (mine && o.run != null && o.dist < 0.02) focus = { s, f };
     });
+    work.position.set(o.near * S / 100, 4.2, -2.4); work.intensity = work.userData.on ? 2.2 * smooth((0.5 - o.dist) / 0.4) : 0;
     /* your pod: on the track while you travel, lowered onto the machine's door when you stop */
     const si = ids.indexOf('slice'), pk = ids.indexOf('pkg'), lo = Math.floor(o.Z + 1e-6), hi = Math.ceil(o.Z - 1e-6);
     const cross = PLANTS[ids[lo]] !== PLANTS[ids[Math.min(hi, ids.length - 1)]];

@@ -592,7 +592,7 @@ const phoneboard = {
     poly(G, [[72, 112], [928, 112], [928, 628], [848, 628], [848, 888], [72, 888]], null, c.dim, 0.7);
     [[90, 130], [910, 130], [90, 870]].forEach(k => { G.c(k[0], k[1], 12, c.lo, c.line, 1); G.c(k[0], k[1], 17, null, c.warm, 0.6); });
     /* wires inside the board: data to the storage and the modem, power from the power chip */
-    pbBus.forEach(b => G.l(b, c.cool, 1));
+    pbBus.forEach(b => G.l(b, c.au || c.cool, 1));
     for (let i = 0; i < 3; i++) G.l([[370, 640 + i * 48], [480 + i * 30, 640 + i * 48], [480 + i * 30, 600]], c.warm, 2);
     pbBus.forEach((b, i) => { if (i % 2) return; const p = along2(b, (G.t * 0.45 + i * 0.17) % 1); G.r(p[0] - 3.5, p[1] - 3.5, 7, 7, c.cool); });
     /* tiny resistors and capacitors everywhere */
@@ -733,14 +733,14 @@ const car = {
     [-60, 250].forEach(y => { for (let i = -3; i < 8; i++) { const x = i * 140 - run; K.fill(G, [P(x, y, 0.2), P(x + 70, y, 0.2), P(x + 70, y + 5, 0.2), P(x, y + 5, 0.2)], T.seam); } });
     fadeEnds(G, 0, 1000, true);
     /* what the radar watches, ahead */
-    G.a(0.12); K.fill(G, [P(462, 90, 52), P(760, -20, 10), P(760, 200, 80)], c.cool); G.a(1);
-    const sw = (G.t * 0.8) % 1; G.a(0.5 * (1 - sw)); G.l([P(470 + sw * 260, 90 - sw * 90, 52 - sw * 30), P(470 + sw * 260, 90 + sw * 90, 52 + sw * 20)], c.cool, 1.2); G.a(1);
+    G.a(0.12); K.fill(G, [P(462, 90, 52), P(760, -20, 10), P(760, 200, 80)], c.glass || c.cool); G.a(1);
+    const sw = (G.t * 0.8) % 1; G.a(0.5 * (1 - sw)); G.l([P(470 + sw * 260, 90 - sw * 90, 52 - sw * 30), P(470 + sw * 260, 90 + sw * 90, 52 + sw * 20)], c.warm, 1.2); G.a(1);
     K.shadow(G, [[0, 0], [462, 0], [462, 180], [0, 180]], 0, 24);
     /* the far wheels, then the far side of the body, seen from inside */
     WHEELS.forEach(x => wheel(G, x, 160, 180));
     /* the far side: solid up to the windows, then glass, the roof's edge a line */
     const belt = CAR.map(([x, z]) => [x, Math.min(z, 82)]);
-    G.a(0.3); K.fill(G, CAR.map(([x, z]) => P(x, 180, z)), mix(c.cool, c.bg, 0.6), null); G.a(1);
+    G.a(0.3); K.fill(G, CAR.map(([x, z]) => P(x, 180, z)), mix(c.glass || c.cool, c.bg, 0.6), null); G.a(1);
     G.l(CAR.concat([CAR[0]]).map(([x, z]) => P(x, 180, z)), T.edge, 0.9);
     K.fill(G, belt.map(([x, z]) => P(x, 180, z)), T.inner.front, T.edge, 0.8);
     /* the floor is the battery: modules of cells, seen through the cut-away carpet */
@@ -760,20 +760,20 @@ const car = {
     /* the other control units, each with its status light */
     ECUS.forEach(([x, y, z, w, d, h], i) => { K.box(G, x, y, z, w, d, h, {}); led(G, x + 4, y, z + h - 4, (Math.floor(G.t * 2) + i) % 3 !== 0); });
     /* the wiring, with messages travelling along it */
-    HARNESS.forEach((h, i) => { const q = h.map(p => P(...p)); G.l(q, c.cool, i < 2 ? 2 : 1.3); const pt = along2(q, (G.t * 0.45 + i * 0.17) % 1); G.a(0.9); G.r(pt[0] - 3, pt[1] - 3, 6, 6, c.cool); G.a(1); });
+    HARNESS.forEach((h, i) => { const q = h.map(p => P(...p)); G.l(q, c.cu || c.cool, i < 2 ? 2 : 1.3); const pt = along2(q, (G.t * 0.45 + i * 0.17) % 1); G.a(0.9); G.r(pt[0] - 3, pt[1] - 3, 6, 6, c.warm); G.a(1); });
     /* the unit the dive follows: on its bracket in the footwell, the lid off and lying beside it, the plug
        and its wires coming in from the left, the board facing you */
     const [fx, fy, fz, fw, fd, fh] = FOLLOW;
     [fx + 2, fx + fw - 4].forEach(x => K.box(G, x, fy + 2, 31, 2, fd - 4, fz - 31, { tone: 'base' }));
     K.box(G, fx - 4, fy, 31, fw + 8, fd + 4, 1.2, { tone: 'base' });
     K.onTop(G, fx + fw + 6, fy - 4, 31.4, 18, 16, T.body.top, T.edge, 0.8); K.onTop(G, fx + fw + 8, fy - 2, 31.6, 14, 12, null, T.seam, 0.5);
-    G.l([P(fx - 30, fy + 18, 46), P(fx - 12, fy + 4, 54), P(fx - 3, fy, 55)], c.cool, 2.2); G.l([P(fx - 30, fy + 22, 44), P(fx - 12, fy + 6, 50), P(fx - 3, fy, 51)], c.cool, 1.4);
+    G.l([P(fx - 30, fy + 18, 46), P(fx - 12, fy + 4, 54), P(fx - 3, fy, 55)], c.cu || c.cool, 2.2); G.l([P(fx - 30, fy + 22, 44), P(fx - 12, fy + 6, 50), P(fx - 3, fy, 51)], c.cu || c.cool, 1.4);
     K.box(G, fx - 4, fy, fz + 2, 4, 8, 12, { tone: 'base' });
     K.box(G, fx - 1, fy, fz - 1, fw + 2, fd, fh + 2, { tone: 'base' });
     /* sensors: the radar in front, a camera at the top of the windscreen, one at the back */
     [[460, 90, 52], [330, 90, 128], [4, 90, 70]].forEach(([x, y, z]) => { const q = P(x, y, z); G.c(q[0], q[1], 7, c.lo, c.warm, 1.4); G.c(q[0], q[1], 3, c.warm); });
     /* the glass that is left: the windscreen and the back window, edge on */
-    [[[298, 141], [362, 102]], [[72, 108], [118, 140]]].forEach(([a, b]) => { G.a(0.25); K.fill(G, [P(a[0], 8, a[1]), P(b[0], 8, b[1]), P(b[0], 172, b[1]), P(a[0], 172, a[1])], mix(c.cool, c.bg, 0.5), T.edge, 0.8); G.a(1); });
+    [[[298, 141], [362, 102]], [[72, 108], [118, 140]]].forEach(([a, b]) => { G.a(0.25); K.fill(G, [P(a[0], 8, a[1]), P(b[0], 8, b[1]), P(b[0], 172, b[1]), P(a[0], 172, a[1])], mix(c.glass || c.cool, c.bg, 0.5), T.edge, 0.8); G.a(1); });
     /* the near side, cut away just above the floor, and the near wheels */
     K.fill(G, [[0, 52], [3, 40], [462, 40], [462, 52], [455, 33], [415, 31], [338, 31], [122, 31], [48, 33], [8, 34]].map(([x, z]) => P(x, 0, z)), T.body.front, T.edge, 1);
     G.l(CAR.concat([CAR[0]]).map(([x, z]) => P(x, 0, z)), T.edge, 0.8);
@@ -925,28 +925,28 @@ const scanner = {
     G.r(204, 588, 40, 22, c.up, c.line, 0.9); G.r(204, 856, 40, 16, c.up, c.line, 0.9);
     G.r(70, 796, 44, 56, c.up, c.line, 1); G.l([[114, 800], [222, 694]], c.warm, 2);
     for (let i = 0; i < 6; i++) { const y = 612 + ((G.t * 0.9 + i / 6) % 1) * 240; G.c(224, y, 5, c.warm); }
-    ctx.beginPath(); ctx.arc(225, 690, 74, 0.12 * Math.PI, 0.88 * Math.PI); ctx.strokeStyle = c.hi; ctx.lineWidth = G.lw(2.2); ctx.stroke();
+    ctx.beginPath(); ctx.arc(225, 690, 74, 0.12 * Math.PI, 0.88 * Math.PI); ctx.strokeStyle = c.hi; ctx.lineWidth = G.lw(1.5); ctx.stroke();
     const flash = 0.5 + 0.5 * Math.sin(G.t * 9);
     G.a(0.25 + 0.3 * flash); G.c(225, 690, 30, c.warm); G.a(1); G.c(225, 690, 34, null, c.warm, 1.4); G.c(225, 690, 7, c.hi);
     /* the barrel of mirrors that shrinks the picture */
     G.r(684, 388, 150, 226, c.mid, c.line, 1.1);
-    [430, 490, 550].forEach((y, i) => { G.l([[704 + i * 8, y], [814 - i * 8, y]], c.cool, 1.6); G.l([[700 + i * 8, y + 7], [818 - i * 8, y + 7]], c.dim, 0.8); });
+    [430, 490, 550].forEach((y, i) => { G.l([[704 + i * 8, y], [814 - i * 8, y]], c.hi, 1.5); G.l([[700 + i * 8, y + 7], [818 - i * 8, y + 7]], c.dim, 1); });
     /* the path: bounced off mirrors, off the mask, down to the wafer */
-    G.a(0.22); G.l(beam, c.warm, 9); G.a(0.85); G.l(beam, c.warm, 2); G.a(1);
+    G.a(0.22); G.l(beam, c.warm, 9); G.a(0.9); G.l(beam, c.warm, 2.5); G.a(1);
     const u = (G.t * 0.5) % 1, n = beam.length - 1, k = Math.floor(u * n), f = u * n - k, a = beam[k], b = beam[k + 1];
     G.c(a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f, 9, c.warm);
     scanMirrors.forEach((m, i) => {
       const j = i < 2 ? i + 1 : i + 2, p = beam[j - 1], q = beam[j + 1], d1 = Math.atan2(p[1] - m[1], p[0] - m[0]), d2 = Math.atan2(q[1] - m[1], q[0] - m[0]), t = (d1 + d2) / 2 + Math.PI / 2;
-      G.c(m[0], m[1], 26, c.up, c.hi, 1.4); G.c(m[0], m[1], 14, null, c.cool, 1);
+      G.c(m[0], m[1], 26, c.up, c.hi, 1.5); G.c(m[0], m[1], 14, null, c.line, 1);
       G.l([[m[0] - Math.cos(t) * 22, m[1] - Math.sin(t) * 22], [m[0] + Math.cos(t) * 22, m[1] + Math.sin(t) * 22]], c.hi, 2.4);
     });
     /* the mask: the pattern, held upside down on its own moving stage */
     G.r(396, 62, 268, 8, c.up, c.line, 0.9); G.l([[380, 66], [396, 66]], c.dim, 1.4); G.l([[664, 66], [680, 66]], c.dim, 1.4);
-    G.r(430, 70, 200, 40, c.up, c.hi, 1.4); for (let i = 0; i < 9; i++) G.r(440 + i * 21, 78, 12, 24, i % 3 ? c.lo : c.cool);
+    G.r(430, 70, 200, 40, c.up, c.hi, 1.5); for (let i = 0; i < 9; i++) G.r(440 + i * 21, 78, 12, 24, i % 3 ? c.lo : c.hi);
     /* the stage: the wafer, moving under the light */
     G.r(600, 640, 260, 240, c.mid, c.line, 1.2);
     G.r(626, 656, 208, 208, c.up, c.dim, 0.9);
-    G.l([[580, 896], [880, 896]], c.line, 1.4); const sl = 0.5 + 0.5 * Math.sin(G.t * 1.6); G.r(600 + sl * 216, 890, 44, 12, c.warm);
+    G.l([[580, 896], [880, 896]], c.line, 1); const sl = 0.5 + 0.5 * Math.sin(G.t * 1.6); G.r(600 + sl * 216, 890, 44, 12, c.up, c.line, 1);
     G.label('source', 66, 570); G.label('mirrors', 330, 380); G.label('mask', 640, 96); G.label('stage', 860, 630, 'right'); G.label('vacuum', 96, 90);
   }
 };
