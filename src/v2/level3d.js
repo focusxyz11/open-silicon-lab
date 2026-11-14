@@ -7,16 +7,17 @@
    each way (up and down still zoom); it sways when idle and holds still with reduced motion.
 
    createLevel3D(canvas, host, on, model) -> { show(k, depthOffset, frame), select(key, note), hit(x, y), active(),
-     warm(), dispose() }
+     warm(), dispose(), failed }   (failed: too slow even at low settings; the shell then keeps the flat drawing)
    model(scene, root, P, night) -> { level, parts: [key], anchors: { key: [x, y, z] }, view: { tilt, turn, r, at: [x, y, z], fixed,
      arrive: { tilt, turn, ms } }, update(dt, k, dist, arrived, picked), has(key) }   (r: the object's radius, so it fills the square; at:
      where the camera looks; dist: the camera's distance from it, which changes with the screen and the zoom; arrive:
      coming down from the level above, the camera starts at that angle and rises to the level's own, once, and
      arrived (0..1) says how far, for the model's own part of the move; 1 when there is none; picked: the part picked;
      has: optional, whether a part is there to name now)
-   on.part(key), on.marks() -> [{ part, threads }] under Ask, else null, on.mark(threadId), on.askMany([threadId]). */
+   on.part(key), on.marks() -> [{ part, threads }] under Ask, else null, on.mark(threadId), on.askMany([threadId]),
+   on.failed(). */
 import * as THREE from '../vendor/three.min.js';
-import { PALETTES, theme, stage, light, labels, showStage, clamp, ease } from './kit3d.js';
+import { PALETTES, theme, stage, light, labels, showStage, clamp, ease, QUALITY, lowQuality } from './kit3d.js';
 import { partWord } from '../data/weave.js';
 import { t } from '../core/i18n.js';
 import { createOverlay } from './overlay.js';
@@ -59,6 +60,7 @@ export function createLevel3D(canvas, host, on, model) {
     camera.position.set(at.x + Math.sin(a) * Math.cos(b) * dist, at.y + Math.sin(b) * dist, at.z + Math.cos(a) * Math.cos(b) * dist);
     camera.lookAt(at);
     camera.aspect = W / H; camera.setViewOffset(W, H, W / 2 - f.cx, H / 2 - f.cy, W, H); camera.updateProjectionMatrix();
+    camera.updateMatrixWorld();   /* now, not at the draw: the names are projected first, and a still level draws once */
     st.size(W, H);
   }
   function placeCard() {
@@ -78,21 +80,44 @@ export function createLevel3D(canvas, host, on, model) {
     root.updateWorldMatrix(true, false);
     marks.draw({ labels: [], avoid, marks: ms.filter(m => M.anchors[m.part]).map(m => { mv.set(...M.anchors[m.part]).applyMatrix4(root.matrixWorld).project(camera); return { part: m.part, x: (mv.x + 1) / 2 * W, y: (1 - mv.y) / 2 * H, threads: m.threads }; }) });
   }
+  /* too slow? the middle of a level's first 20 frame times, after it has settled: above 40 ms it drops to low
+     settings and counts again; still above, the level gives up and the flat drawing stays (the shell reads failed) */
+  const perf = { skip: 4, times: [], done: false };
+  function watch(ms) {
+    if (perf.done || k < 0.85) return;
+    if (perf.skip > 0) { perf.skip--; return; }
+    perf.times.push(QUALITY.test === 'slow' ? 99 : ms);
+    if (perf.times.length < 20) return;
+    const mid = perf.times.slice().sort((a, b) => a - b)[10]; perf.times = [];
+    if (mid <= 40 || QUALITY.test === 'keep') { perf.done = true; return; }
+    if (!QUALITY.low) { lowQuality(); perf.skip = 4; return; }
+    perf.done = true; api.failed = true; on.failed && on.failed();
+  }
+  /* draw on demand: with nothing live moving (reduced motion, or low settings), a frame is drawn only when what it
+     shows changes: the camera, the size, the presence, the picked part, the marks */
+  let shown = '';
   function tick(now) {
     raf = 0; if (k <= 0) return;
-    const dt = Math.min(0.05, Math.max(0, now - last) / 1000); last = now;
+    const raw = Math.max(0, now - last), dt = Math.min(0.05, raw / 1000); last = now;
+    watch(raw);
+    if (api.failed) return;
     /* the arrival goes by frames (each counting at most 50 ms), so a slow first frame (shaders compiling) never eats
        it; it starts after a moment at the old angle */
     if (arr) { if (arr.hold > 0) arr.hold -= dt * 1000; else arr.t += dt * 1000; }
     yaw += (yawGoal - yaw) * Math.min(1, dt * 6);
     place(now);
-    M.update(still() ? 0 : dt, k, camera.position.distanceTo(at), arrived, picked);
-    /* names hide while the camera moves in (the arrival) and show once it rests */
-    names.forEach(n => { n.show = k > 0.85 && arrived >= 1 && (!M.has || M.has(n.key)); n.el.classList.toggle('on', n.key === picked); });
-    L.update(camera, W, H);
-    if (picked && k > 0.85 && arrived >= 1) placeCard(); else card.hidden = true;
-    placeMarks();
-    st.draw(scene, camera);
+    const quiet = still() || QUALITY.low, ms = on.marks ? on.marks() : null;
+    const key = [k.toFixed(3), off.toFixed(3), yaw.toFixed(4), arrived.toFixed(3), W, H, picked, frame ? frame.B + ',' + frame.cx + ',' + frame.cy : '', ms ? ms.length : 0].join('|');
+    if (!quiet || key !== shown) {
+      shown = key;
+      M.update(quiet ? 0 : dt, k, camera.position.distanceTo(at), arrived, picked);
+      /* names hide while the camera moves in (the arrival) and show once it rests */
+      names.forEach(n => { n.show = k > 0.85 && arrived >= 1 && (!M.has || M.has(n.key)); n.el.classList.toggle('on', n.key === picked); });
+      L.update(camera, W, H);
+      if (picked && k > 0.85 && arrived >= 1) placeCard(); else card.hidden = true;
+      placeMarks();
+      st.draw(scene, camera);
+    }
     raf = requestAnimationFrame(tick);
   }
 
@@ -103,10 +128,12 @@ export function createLevel3D(canvas, host, on, model) {
   addEventListener('pointerup', () => { drag = null; });
 
   const ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
-  return {
+  const api = {
+    failed: false,
     /* how present the level is (0..1), how far the zoom is from it (negative: still above), and the square to fill;
        the shell fades the flat picture and shows the stage */
     show(kk, depthOffset, f) {
+      if (api.failed) kk = 0;
       const was = k; k = clamp(kk); off = depthOffset || 0; if (f) frame = f;
       host.hidden = k <= 0;
       if (k > 0 && was <= 0) { last = performance.now(); arr = V.arrive && off <= 0.05 && !still() ? { hold: 250, t: 0 } : null; }
@@ -130,5 +157,6 @@ export function createLevel3D(canvas, host, on, model) {
     warm: () => st.warm(scene, camera),
     dispose() { cancelAnimationFrame(raf); L.clear(); marks.clear(); card.remove(); }
   };
+  return api;
 }
 export { showStage };

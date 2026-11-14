@@ -143,6 +143,12 @@ Names are HTML; a picked part's note opens beside its name; under Ask its questi
 levels. A sideways drag turns a model 20° each way (not the gate, which is a plan); up and down still zoom; a model
 sways when idle and holds still with reduced motion. The flat drawings stay the fallback.
 
+**Slow devices.** A software renderer starts the stage at low settings (pixel ratio 1, no shadows, live things
+still: `QUALITY` in `src/v2/kit3d.js`). A level in 3D that draws its first frames too slowly (the middle of 20 above
+40 ms) drops to low settings, and if still too slow is drawn flat for the rest of the visit (`level3d.js`). A still
+level draws only when what it shows changes, and the flat canvas under a level in 3D is not drawn while covered.
+For the tests, `localStorage['osl-quality']` = `keep` pins the quality and `slow` makes every level too slow.
+
 **Everything inside.** Nothing in the chip world leads to the earlier site any more. The flat dive starts from any
 world (`#/dive/<depth>/<world>`): the data centre's chip, a phone, a car, or the made chip (the factory's machine,
 a wafer and a die), each from its top level down to the atom; a place's levels open there. The supply map (`#/supply`)
