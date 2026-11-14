@@ -21,7 +21,7 @@ test('an agent connects, lists the tools, reads the plan and takes a job', async
     assert.equal(init.result.serverInfo.name, 'open-silicon-lab');
     assert.ok(init.result.capabilities.tools && init.result.instructions);
     const tools = (await S.call('tools/list', {})).result.tools.map(t => t.name);
-    assert.deepEqual(tools, ['list_plan', 'get_job', 'check_design', 'at_factory', 'life_of', 'propose_design']);
+    assert.deepEqual(tools, ['list_plan', 'get_job', 'check_design', 'at_factory', 'life_of', 'propose_design', 'list_ledger', 'propose_break', 'propose_question']);
     const plan = (await S.tool('list_plan', {})).structuredContent;
     assert.ok(plan.pieces.some(p => p.id === 'core' && p.engine === 'riscv'));
     const job = (await S.tool('get_job', { job: 'vote' })).structuredContent;
@@ -50,7 +50,19 @@ test('an agent checks a design, finds its bug, sees the factory spoil a copy, an
     const noSay = (await S.tool('propose_design', { need: 'display', code: 'a = 1;', kind: 'ai' })).structuredContent;
     assert.equal(noSay.ok, false);
     const yes = (await S.tool('propose_design', { need: 'half', code: 'sum = a ^ b;\ncarry = a & b;', kind: 'ai', ai: 'Written by an agent through the open port, checked by the lab.' })).structuredContent;
-    assert.equal(yes.ok, true); assert.match(yes.form, /issues\/new\?template=design\.yml/);
+    assert.equal(yes.ok, true); assert.match(yes.link, /\/new\/main\/community\/ledger\?filename=/); assert.match(yes.entry.path, /^community\/ledger\/\d{4}-\d\d-\d\d-design-[a-z0-9-]+\.json$/);
+    assert.equal(JSON.parse(yes.entry.file).piece, 'half');
+    /* the ledger: an agent reads what stands and what is open, breaks a design that passed its check with a case the
+       check never tried, and cannot break one that is right, or with a case that does not fail it */
+    const L = (await S.tool('list_ledger', {})).structuredContent, target = L.open.find(o => o.do === 'break' && o.insideTheComputer);
+    assert.ok(L.entries.length >= 4 && target && L.note);
+    const miss = (await S.tool('propose_break', { design: target.design, case: [{ en: 1 }, { en: 0 }], kind: 'ai', ai: 'an agent tried a case' })).structuredContent;
+    assert.equal(miss.ok, false);
+    const hit = (await S.tool('propose_break', { design: target.design, case: [{ en: 1 }, { en: 1 }, { en: 1 }, { en: 0 }, { en: 0 }], kind: 'ai', ai: 'An agent searched for a case the test never tried.' })).structuredContent;
+    assert.equal(hit.ok, true); assert.equal(hit.facts.tick, 5); assert.ok(hit.ticks[4].wrong && !hit.ticks[3].wrong);
+    const q = (await S.tool('propose_question', { at: 'check', under: 'fail.check', question: 'If a case can break a design that passed, who decides how many cases are enough?', noticed: 'The counter passed thirteen ticks and failed on the fourteenth kind.', kind: 'ai', ai: 'asked by an agent' })).structuredContent;
+    assert.equal(q.ok, true);
+    assert.equal((await S.tool('propose_question', { at: 'check', question: 'Not a question', kind: 'person' })).structuredContent.ok, false);
     const core = (await S.tool('check_design', { job: 'core', code: 'li a0, 42', slice: 'bb = b ^ sub;\np = a ^ bb;\ns = p ^ cin;\ncout = (a & bb) | (cin & p);\ny = (~op1 & ~op0 & (a & b)) | (~op1 & op0 & (a | b)) | (op1 & ~op0 & (a ^ b)) | (op1 & op0 & s);' })).structuredContent;
     assert.equal(core.right, true); assert.equal(core.result, 42);
   } finally { S.stop(); }

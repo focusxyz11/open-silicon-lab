@@ -14,8 +14,9 @@
 import { build, projectOf, solutionOf } from '../engines/design.js';
 import { model, CHALLENGES as CHIP, START, normal, SETTINGS } from '../engines/chip.js';
 import { live, PERFECT, normalLife } from '../engines/life.js';
-import { plan, progress, needOf, childrenOf, designsFor } from '../engines/build.js';
-import { NEEDS, DESIGNS, AGENT } from '../data/build.js';
+import { plan, progress, needOf, childrenOf, designsFor, allDesigns } from '../engines/build.js';
+import { ledger, settle, frontier, questionsAt, KINDS as ENTRY_KINDS } from '../engines/ledger.js';
+import { NEEDS, AGENT } from '../data/build.js';
 import { DEBATES } from '../data/debates.js';
 import { WAYS } from '../data/ways.js';
 import { STOPS, WORLDS } from '../data/weave.js';
@@ -144,17 +145,22 @@ export const askHref = key => { const [th, d] = key.split('.'); return '#/ask/' 
 
 /* ---- your state: what you have done, and what you were working on ---- */
 export const KEY = 'osl-world-v1';
-export function fresh() { return { done: {}, codes: {}, chip: Object.assign({}, START), life: {}, seen: false }; }
+export function fresh() { return { done: {}, codes: {}, chip: Object.assign({}, START), life: {}, seen: false, drafts: [], sent: {}, met: {}, name: '' }; }
 export function normalState(s) {
   const f = fresh();
   if (!s || typeof s !== 'object') return f;
-  const done = {}; Object.keys(s.done || {}).forEach(k => { if (challengeOf(k) || k.startsWith('job:')) done[k] = true; });
+  const done = {}; Object.keys(s.done || {}).forEach(k => { if (challengeOf(k) || k.startsWith('job:') || k.startsWith('break:')) done[k] = true; });
+  /* your entries not yet in the ledger (at most 24), which of them you have sent, the questions you have met
+     (thread: the levels where), and the name you sign with */
+  const drafts = (Array.isArray(s.drafts) ? s.drafts : []).filter(d => d && typeof d.id === 'string' && ENTRY_KINDS.includes(d.kind)).slice(-24);
+  const sent = {}; Object.keys(s.sent || {}).forEach(k => { if (drafts.some(d => d.id === k)) sent[k] = true; });
+  const met = {}; Object.entries(s.met || {}).forEach(([k, v]) => { if (Array.isArray(v)) met[k] = v.filter(x => typeof x === 'string').slice(0, 40); });
   const codes = {}; Object.entries(s.codes || {}).forEach(([k, v]) => { if (typeof v === 'string') codes[k] = v.slice(0, 4000); });
   const lifeC = {}; Object.entries(s.life || {}).forEach(([k, v]) => { lifeC[k] = normalLife(v); });
-  return { done, codes, chip: normal(s.chip || START), life: lifeC, seen: !!s.seen };
+  return { done, codes, chip: normal(s.chip || START), life: lifeC, seen: !!s.seen, drafts, sent, met, name: typeof s.name === 'string' ? s.name.slice(0, 40) : '' };
 }
 export function load(store) { try { return normalState(JSON.parse(store.getItem(KEY) || 'null')); } catch (e) { return fresh(); } }
-export function save(store, s) { try { store.setItem(KEY, JSON.stringify({ done: s.done, codes: s.codes, chip: s.chip, life: s.life, seen: s.seen })); } catch (e) { /* storage unavailable */ } }
+export function save(store, s) { try { store.setItem(KEY, JSON.stringify({ done: s.done, codes: s.codes, chip: s.chip, life: s.life, seen: s.seen, drafts: s.drafts, sent: s.sent, met: s.met, name: s.name })); } catch (e) { /* storage unavailable */ } }
 
 /* ---- checks: each challenge asks its engine ---- */
 export function checkDesign(p, code) { return build({ p, code }); }
@@ -197,23 +203,67 @@ export function chipAt(s) { const n = next(s); return n ? n.step : STEPS[STEPS.l
 /* what has grown on the island */
 export function grown(s) { return new Set(GROWTH.filter(g => isDone(s, g.by)).map(g => g.id)); }
 
-/* ---- the community: the shared computer, its built pieces, the designs, the open jobs ---- */
+/* ---- the community: the ledger replayed (src/engines/ledger.js), with your own entries not yet in it ---- */
+/* the world the ledger makes, with your drafts on top (marked draft: only you see them, until they are merged).
+   A draft that is already in the ledger (merged since) is left out. */
+let worldKey = null, worldOf_ = null;
+export function world(s) {
+  const L = ledger(), ids = new Set(L.map(e => e.id)), mine = ((s && s.drafts) || []).filter(d => !ids.has(d.id)).map(d => Object.assign({}, d, { draft: true }));
+  const key = L.length + '|' + mine.map(d => d.id).join(',');
+  if (key !== worldKey) { worldKey = key; worldOf_ = settle(L.concat(mine)); }
+  return worldOf_;
+}
 export function community(s) {
   const jobsDone = Object.keys(s.done).filter(k => k.startsWith('job:')).map(k => needOf(k.slice(4))).filter(n => n && n.project).map(n => n.project);
   const mine = CHALLENGES.filter(c => c.kind === 'design' && isDone(s, c.id)).map(c => c.p).concat(jobsDone);
-  const P = plan(mine), pr = progress(P);
+  const W = world(s), P = plan(mine, W), pr = progress(P), F = frontier(W);
   const leaves = NEEDS.filter(n => !childrenOf(n.id).length);
   return {
-    built: pr.built, total: pr.total,
+    built: pr.built, total: pr.total, W,
     /* jobs anyone can take: pieces a design can fill, still without one */
     jobs: leaves.filter(n => P[n.id].state === 'open' && n.engine === 'logic').map(n => ({ need: n.id, p: n.project, ai: !!AGENT[n.project] })),
     /* pieces no engine can check yet: the job is to write the engine */
     engines: leaves.filter(n => P[n.id].state === 'engine').map(n => ({ need: n.id })),
-    designs: DESIGNS.map(d => ({ need: d.need, title: d.title, author: d.author, kind: d.kind })),
+    /* every design of the ledger: standing (holding a record, or behind one), broken, or yours and not yet in it */
+    designs: allDesigns(W),
+    /* the cases that breaks have added to the checks: each stands guard over its piece from then on */
+    cases: W.entries.filter(e => e.kind === 'break').map(e => ({ id: e.id, piece: W.byId[e.of].piece, of: e.of, by: e.by, made: e.made, draft: !!e.draft })),
+    /* designs whose check tried some cases, not all: nobody has broken them yet */
+    breaks: F.filter(f => f.kind === 'break'),
     state: P
   };
 }
+/* ---- challenges and questions are two faces of one thing ---- */
+/* the question a challenge opens once you have won it: a stop, at its own level or the one beside it */
+export const OPENS = { half: 'fail.check', vote: 'idea.check', full: 'make.gates', months: 'make.clean', quick: 'scale.clean', spot: 'fail.test', cores: 'divide.test',
+  phone: 'life.phone', car: 'fail.car', dclife: 'fail.ship', fed: 'divide.board', fast: 'fail.chip' };
+/* and where the open things of the ledger sit: a break under "is the design right?", a piece to build under
+   "could anyone design a chip?", a missing check under "who checks, and with what?" */
+export const FRONT_ASK = { break: 'fail.check', build: 'open.need', engine: 'idea.check' };
+export const opensOf = ch => (ch.kind === 'break' ? 'idea.check' : ch.need ? 'open.layout' : OPENS[ch.id]) || null;
+/* what there is to do about a question: the challenges that open it, and the open things of the ledger that sit there */
+export function doAtStop(key, s) {
+  const out = CHALLENGES.filter(c => OPENS[c.id] === key).map(c => ({ ch: c }));
+  const C = community(s);
+  if (FRONT_ASK.break === key) C.breaks.forEach(b => out.unshift({ ch: breakOf(b.of, s) }));
+  if (FRONT_ASK.build === key) C.jobs.forEach(j => out.push({ ch: jobOf(j.need) }));
+  if (FRONT_ASK.engine === key) C.engines.forEach(e => out.push({ engine: e.need }));
+  return out.filter(x => x.engine || x.ch);
+}
+/* the other questions that meet this one: at the same level, about a part they share */
+export const across = key => { const [, d] = key.split('.'), mine = STOPS[key] || []; return levelStops_(d).filter(k => k !== key && STOPS[k].some(p => mine.includes(p))); };
+const levelStops_ = d => Object.keys(STOPS).filter(k => k.split('.')[1] === d);
+/* what people have asked under a question, yours first */
+export const askedAt = (key, s) => { const W = world(s); return questionsAt(W, key.split('.')[1], key).sort((a, b) => !!b.draft - !!a.draft); };
+/* break a design: a challenge made by the ledger itself, for every clocked design that stands, and kept for the
+   broken ones, so anyone can find the case again */
+export function breakOf(id, s) { const e = world(s).byId[id]; if (!e || e.kind !== 'design' || !e.ok) return null; const n = needOf(e.piece);
+  return projectOf(n.project).seq ? { id: 'break:' + id, step: null, kind: 'break', of: id, p: n.project, need: e.piece, title: e.title, place: 'village', at: 'check', grows: null } : null; }
+/* a challenge by its id: one of the loop's, an open job (job:<piece>) or a break (break:<entry>) */
+export const anyChallenge = (id, s) => !id ? null : id.startsWith('break:') ? breakOf(id.slice(6), s) : id.startsWith('job:') ? jobOf(id.slice(4)) : challengeOf(id);
 export const jobOf = need => { const n = needOf(need); return n && n.project ? { id: 'job:' + need, step: null, kind: 'design', p: n.project, need, grows: null } : null; };
 export const debatesAt = place => (DEBATES_AT[place] || []).filter(id => DEBATES.some(d => d.id === id));
 export const aiProposal = p => AGENT[p] || null;
 export { SETTINGS, START, PERFECT, designsFor };
+/* a question's root may show once two of its stops have been met, or one, after a challenge that opens that question was won */
+export const didOn = (s, th) => CHALLENGES.some(c => isDone(s, c.id) && (OPENS[c.id] || '').startsWith(th + '.')) || (th === 'idea' && Object.keys(s.done).some(k => k.startsWith('break:')));

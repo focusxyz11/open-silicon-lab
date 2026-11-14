@@ -9,13 +9,17 @@ import { readFileSync } from 'node:fs';
 import { createInterface } from 'node:readline';
 import { useTexts } from '../src/core/i18n.js';
 import * as API from '../src/engines/api.js';
+import { useLedger } from '../src/engines/ledger.js';
+import { collect } from './ledger.mjs';
 
 const root = new URL('..', import.meta.url);
 const EN = JSON.parse(readFileSync(new URL('src/i18n/en.json', root), 'utf8'));
 const PKG = JSON.parse(readFileSync(new URL('package.json', root), 'utf8'));
 useTexts(EN, 'en');
+useLedger(collect());
 
 const str = d => ({ type: 'string', description: d });
+const WHO = { author: str(EN['api.arg.author']), kind: { type: 'string', enum: ['person', 'ai', 'both'], description: EN['api.arg.kind'] }, ai: str(EN['api.arg.ai']) };
 const TOOLS = [
   { name: 'list_plan', fn: () => API.listPlan(), description: EN['api.tool.plan'], inputSchema: { type: 'object', properties: {} } },
   { name: 'get_job', fn: a => API.getJob(a.job), description: EN['api.tool.job'], inputSchema: { type: 'object', properties: { job: str(EN['api.arg.job']) }, required: ['job'] } },
@@ -23,7 +27,10 @@ const TOOLS = [
   { name: 'at_factory', fn: a => API.atFactory(a), description: EN['api.tool.factory'], inputSchema: { type: 'object', properties: { job: str(EN['api.arg.job']), code: str(EN['api.arg.code']), slice: str(EN['api.arg.slice']), seed: { type: 'integer', description: EN['api.arg.seed'] } }, required: ['job', 'code'] } },
   { name: 'life_of', fn: a => API.lifeOf(a), description: EN['api.tool.life'], inputSchema: { type: 'object', properties: { job: str(EN['api.arg.job']), code: str(EN['api.arg.code']), slice: str(EN['api.arg.slice']), where: { type: 'string', enum: ['phone', 'car', 'datacentre'], description: EN['api.arg.where'] },
     choices: { type: 'object', description: EN['api.arg.choices'], properties: { margin: { type: 'integer', minimum: 0, maximum: 6 }, grid: { type: 'boolean' }, protect: { type: 'string', enum: ['none', 'memory', 'logic'] }, hot: { type: 'boolean' }, burn: { type: 'boolean' } } } }, required: ['job', 'code', 'where'] } },
-  { name: 'propose_design', fn: a => API.proposeDesign(a), description: EN['api.tool.propose'], inputSchema: { type: 'object', properties: { need: str(EN['api.arg.need']), code: str(EN['api.arg.code']), slice: str(EN['api.arg.slice']), title: str(EN['api.arg.title']), author: str(EN['api.arg.author']), kind: { type: 'string', enum: ['person', 'ai', 'both'], description: EN['api.arg.kind'] }, ai: str(EN['api.arg.ai']) }, required: ['need', 'code', 'kind'] } }
+  { name: 'propose_design', fn: a => API.proposeDesign(a), description: EN['api.tool.propose'], inputSchema: { type: 'object', properties: { need: str(EN['api.arg.need']), code: str(EN['api.arg.code']), title: str(EN['api.arg.title']), words: str(EN['api.arg.words']), ...WHO }, required: ['need', 'code', 'kind'] } },
+  { name: 'list_ledger', fn: () => API.listLedger(), description: EN['api.tool.ledger'], inputSchema: { type: 'object', properties: {} } },
+  { name: 'propose_break', fn: a => API.proposeBreak(a), description: EN['api.tool.break'], inputSchema: { type: 'object', properties: { design: str(EN['api.arg.design']), case: { type: 'array', description: EN['api.arg.case'], items: { type: 'object' } }, words: str(EN['api.arg.words']), ...WHO }, required: ['design', 'case', 'kind'] } },
+  { name: 'propose_question', fn: a => API.proposeQuestion(a), description: EN['api.tool.question'], inputSchema: { type: 'object', properties: { at: str(EN['api.arg.at']), under: str(EN['api.arg.under']), question: str(EN['api.arg.question']), noticed: str(EN['api.arg.noticed']), ...WHO }, required: ['at', 'question', 'kind'] } }
 ];
 
 const send = m => process.stdout.write(JSON.stringify(m) + '\n');

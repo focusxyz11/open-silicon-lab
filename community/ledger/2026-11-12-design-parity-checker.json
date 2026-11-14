@@ -1,0 +1,10 @@
+{
+  "kind": "design",
+  "piece": "check",
+  "title": "Parity checker",
+  "by": "Open Silicon Lab",
+  "made": "example",
+  "ai": "",
+  "words": "Lights when an odd number of the four switches are on: the check that catches a flipped bit in memory.",
+  "code": "odd = a ^ b ^ c ^ d;"
+}

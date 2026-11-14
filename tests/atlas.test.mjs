@@ -1,5 +1,6 @@
 /* The atlas (src/data/atlas.js, docs/SYSTEM.md): every thing has exactly one home, views name things by that
    home, and nothing is written twice. */
+import './ledger.setup.mjs';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';

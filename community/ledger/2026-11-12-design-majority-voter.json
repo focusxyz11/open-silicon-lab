@@ -1,0 +1,10 @@
+{
+  "kind": "design",
+  "piece": "safety",
+  "title": "Majority voter",
+  "by": "Open Silicon Lab",
+  "made": "example",
+  "ai": "",
+  "words": "Trusts whichever answer at least two of three copies agree on, as spacecraft computers do.",
+  "code": "y = (a & b) | (b & c) | (a & c);"
+}

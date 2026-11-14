@@ -89,4 +89,6 @@ export function nearest(th, d) { let best = null; for (const x of threadDepths(t
 /* A core question is never listed with the others. It appears on its own once its moment has come: when
    the visitor has followed its thread through at least two depths, in any world. seen = the ids of the
    depths where it was met (indexes saved by an earlier version are not counted). */
-export const rootShown = seen => new Set((seen || []).filter(x => typeof x === 'string')).size >= 2;
+/* It may also come sooner: after one depth, when the visitor has done something about the question (won a
+   challenge that opens it). Doing counts for more than passing by. */
+export const rootShown = (seen, did) => { const n = new Set((seen || []).filter(x => typeof x === 'string')).size; return n >= 2 || (n >= 1 && !!did); };

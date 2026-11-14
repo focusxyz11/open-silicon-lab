@@ -1,0 +1,10 @@
+{
+  "kind": "design",
+  "piece": "timer",
+  "title": "The agent's counter",
+  "by": "The studio's agent",
+  "made": "example",
+  "ai": "The proposal the design studio loads as an AI agent's: written for the lab as the kind of answer an assistant gives, with a confident claim. It passed the timer's check as the check stood.",
+  "words": "Each bit flips when all the bits below it are 1, so it counts up. It is shorter and faster than the lab's counter.",
+  "code": "reg q0 = q0 ^ en;\nreg q1 = q1 ^ (q0 & en);\nreg q2 = q2 ^ (q1 & q0);"
+}

@@ -1,6 +1,7 @@
 /* The chip world as a game (src/v2/game.js): the main thread is a chip's life loop, every challenge is
    checked by a real engine and can be won, every growth is drawn and named, every door leads somewhere real,
    and the community's open jobs come from the plan. */
+import './ledger.setup.mjs';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';

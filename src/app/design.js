@@ -8,7 +8,7 @@
 import { t } from '../core/i18n.js';
 import { build, simulate, patterns, START_DESIGN } from '../engines/design.js';
 import { ripple, aluOp } from '../engines/core.js';
-import { DESIGNS } from '../data/build.js';
+import { allDesigns } from '../engines/build.js';
 import { plan, levels, needForProject } from '../engines/build.js';
 import { NEEDS } from '../data/build.js';
 
@@ -349,7 +349,7 @@ const layout = {
     /* the shared chip: many small designs side by side, each on its own tile, picked by a selector (as Tiny Tapeout does) */
     const sx = 700, sy = 170, cols = 4, rows = 6, tw = 60, th = 60, gap = 4;
     panel(G, sx - 16, sy - 16, cols * (tw + gap) + 28, rows * (th + gap) + 28, c.mid);
-    const mineAt = DESIGNS.length;
+    const DESIGNS = allDesigns().filter(d => d.state !== 'broken'), mineAt = DESIGNS.length;
     for (let j = 0; j < rows; j++) for (let i = 0; i < cols; i++) {
       const n = j * cols + i, x = sx + i * (tw + gap), y = sy + j * (th + gap);
       if (n < DESIGNS.length) { G.r(x, y, tw, th, c.dark ? c.up : c.dim, c.line, 0.8); who(G, DESIGNS[n].kind, x + tw / 2, y + th / 2, 9); }

@@ -1,5 +1,6 @@
 // The weave: every world is one continuous zoom, every question is tied to real parts of real scenes,
 // questions connect the depths, and a core question never shows before its moment.
+import './ledger.setup.mjs';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';

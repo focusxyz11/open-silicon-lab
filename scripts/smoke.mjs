@@ -38,6 +38,7 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
   await page.click('#sheet [data-op="0"]');
   await page.waitForSelector('#sheet .won', { timeout: 10000 }).catch(() => problems.push(tag + ': a right design did not win the challenge'));
   if (!/grew/i.test(await page.textContent('#toast').catch(() => ''))) problems.push(tag + ': winning did not say what grew');
+  if (!(await page.$('#sheet .opens[href^="#/ask/"]'))) problems.push(tag + ': the first win opens no question');
   if (!/1 of 3/.test(await page.getAttribute('#track [data-step="design"]', 'aria-label').catch(() => ''))) problems.push(tag + ': the tracker did not count the win');
   await page.click('#sheet [data-next]').catch(() => problems.push(tag + ': no way on to the next challenge'));
   if (!/voter/i.test(await page.textContent('#sheet .player h3').catch(() => ''))) problems.push(tag + ': the next challenge is not the majority voter');
@@ -94,6 +95,33 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
   await page.evaluate(() => { location.hash = '#/place/fab'; });
   await page.waitForSelector('#sheet .lvchips a', { timeout: 15000 }).catch(() => {});
   if (await page.$('#sheet .lvchips a.old, #sheet a[href*="classic"]')) problems.push(tag + ': a level of the factory still leads to the earlier site');
+  /* the commons (docs/reviews/community.md): the ledger offers a design that passed its test; one paused tick breaks it;
+     the case is kept as yours, with the one link that adds it to the ledger as a new file; the island shows the design
+     broken and the case standing guard; and a question can be asked under a question, kept the same way */
+  at = tag + ' commons'; await page.evaluate(() => { location.hash = '#/do/break:2026-11-12-design-studio-agent-counter'; });
+  await page.waitForSelector('#sheet .ticks [data-tick="3"]', { timeout: 20000 }).catch(() => problems.push(tag + ': the break did not open with its ticks'));
+  if (await page.$('#sheet .verdict.good')) problems.push(tag + ': the counter looks broken before any case was set');
+  await page.click('#sheet [data-tick="3"]').catch(() => {});
+  await page.waitForSelector('#sheet .verdict.good', { timeout: 10000 }).catch(() => problems.push(tag + ': pausing the counter at three did not break it'));
+  if (!(await page.$('#sheet .opens'))) problems.push(tag + ': a won break opens no question');
+  if (await page.$('#sheet [data-keep]')) {   /* not once someone's break of it is in the ledger: then the case is only found again */
+    await page.fill('#sheet [data-sign]', 'Smoke test'); await page.click('#sheet [data-keep]');
+    await page.waitForSelector('#sheet .slip [data-send]', { timeout: 10000 }).catch(() => problems.push(tag + ': a kept case has no slip'));
+    if (!/\/new\/main\/community\/ledger\?filename=[^&]*break[^&]*\.json&value=/.test(await page.getAttribute('#sheet .slip [data-send]', 'href').catch(() => '') || '')) problems.push(tag + ': the slip does not lead to a new file in the ledger');
+    await page.waitForFunction(() => !!document.querySelector('#mapLabels .work3.ent.broken') && !!document.querySelector('#mapLabels .plot3.guard.draft'), null, { timeout: 10000 }).catch(() => problems.push(tag + ': the island does not show the broken design and the case guarding its piece'));
+  }
+  await page.evaluate(() => { location.hash = '#/ask/fail/check'; });
+  await page.waitForSelector('.stopx .dochip', { timeout: 25000 }).catch(() => problems.push(tag + ': a question shows nothing to do about it'));
+  await page.click('.stopx .asked summary').catch(() => problems.push(tag + ': a question has no place for what people ask'));
+  await page.click('.stopx [data-askown]').catch(() => {});
+  await page.fill('.stopx [data-askq]', 'Not a question').catch(() => {}); await page.fill('.stopx [data-sign]', 'Smoke test').catch(() => {}); await page.click('.stopx [data-askkeep]').catch(() => {});
+  await page.waitForSelector('.stopx .askform .bad', { timeout: 10000 }).catch(() => problems.push(tag + ': a sentence that is not a question was not refused'));
+  await page.fill('.stopx [data-askq]', 'If one case can break a design that passed, how many cases are enough?').catch(() => {}); await page.click('.stopx [data-askkeep]').catch(() => {});
+  await page.waitForSelector('.stopx .asked1.draft .slip', { timeout: 10000 }).catch(() => problems.push(tag + ': a question asked under a question was not kept'));
+  await page.evaluate(() => { location.hash = '#/build'; });
+  await page.waitForSelector('#page .record .rec', { timeout: 10000 }).catch(() => problems.push(tag + ': the build page shows no record'));
+  if (!(await page.$('#page .mix .mbar'))) problems.push(tag + ': the build page does not show who makes what');
+  if (await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)) problems.push(tag + ': the build page scrolls sideways');
   /* questions stay in the chip world: the questions page and a followed question never send you to the earlier site */
   at = tag + ' ' + '#/questions'; await page.evaluate(() => { location.hash = '#/questions'; });
   await page.waitForSelector('#page .qcard', { timeout: 10000 }).catch(() => problems.push(tag + ': the questions page shows no questions'));

@@ -3,13 +3,18 @@
      design  write or fix a circuit's description; ask an AI for a proposal, then let the check decide;
      chip    move your chip's settings until it reaches a goal no single setting can reach;
      life    choose what the design and the factory do, then see whether the chip lives through a place's life;
-     spot    run a few test patterns on four copies, and find the one the factory broke.
+     spot    run a few test patterns on four copies, and find the one the factory broke;
+     break   a design of the ledger that passed its check: find the case, tick by tick, that makes it answer wrong.
+   A win says which question it opens (a challenge is where a question starts), and where the work could join the
+   community's ledger, a slip gives the way in (src/v2/commons.js).
    play(el, ch, ctx) draws into el; ctx: { state, save(), done(ch), back(), open(challenge), startChip() }. */
 import { t } from '../core/i18n.js';
 import { CLOCKS, SIDES, LOADS, REUSES, MEMS, GENS, x2 } from '../engines/chip.js';
 import { MISSIONS, MARGINS, PROTECT, normalLife } from '../engines/life.js';
-import { REPO } from '../data/weave.js';
-import { TAPS, turnGate, hasPiece, togglePiece, checkDesign, checkChip, checkLife, chipGoal, starter, ownStarter, aiProposal, spotCase, spotCode, spotAnswer, SPOT, STEPS, next, INSIDE, challengeOf, GAUGES, gauge } from './game.js';
+import { TAPS, turnGate, hasPiece, togglePiece, checkDesign, checkChip, checkLife, chipGoal, starter, ownStarter, aiProposal, spotCase, spotCode, spotAnswer, SPOT, STEPS, next, INSIDE, challengeOf, GAUGES, gauge, world, opensOf, askHref } from './game.js';
+import { runCase } from '../engines/ledger.js';
+import { projectOf, patterns as testOf } from '../engines/design.js';
+import { signHtml, signOf, keep, refusal, slipHtml, slipClick, draftOf } from './commons.js';
 import { build } from '../engines/design.js';
 
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
@@ -36,8 +41,9 @@ function patch(a, b) {
 }
 
 /* the title, goal and reward of a challenge */
-export function titleOf(ch) { return ch.kind === 'design' ? t('design.proj.' + ch.p + '.t') : t('game.ch.' + ch.id + '.t'); }
+export function titleOf(ch) { return ch.kind === 'break' ? t('game.break.t', { what: ch.title || t('design.proj.' + ch.p + '.t') }) : ch.kind === 'design' ? t('design.proj.' + ch.p + '.t') : t('game.ch.' + ch.id + '.t'); }
 export function goalOf(ch) {
+  if (ch.kind === 'break') return t('game.break.goal');
   if (ch.kind === 'design') return t(ch.need ? 'game.job.goal' : 'game.ch.' + ch.id + '.goal', { job: t('design.proj.' + ch.p + '.t') });
   if (ch.kind === 'chip') return t('chal.' + ch.goal + '.goal');
   return t('game.ch.' + ch.id + '.goal');
@@ -45,24 +51,28 @@ export function goalOf(ch) {
 
 export function play(el, ch, ctx) {
   const S = ctx.state;
-  let view = { msg: null, B: null, ai: false, hint: false, tests: [], guess: null, wrong: null, write: false, won: false, rows: null, okG: null, op: -1 };
+  let view = { msg: null, B: null, ai: false, hint: false, tests: [], guess: null, wrong: null, write: false, won: false, rows: null, okG: null, op: -1, seq: null, slip: null, no: null };
   /* the design challenges are fixed by tapping, not typing: the gates in a description are buttons, a tray holds
      pieces to add where a gate is not enough, and the table checks every pattern after each tap (the engine still
      decides). "Write it yourself" opens the text. */
   const TC = ch.kind === 'design' && TAPS[ch.id], TAP = !!TC;
   if (TAP) view.B = checkDesign(ch.p, S.codes[ch.p] != null ? S.codes[ch.p] : starter(ch.p));
   const head = () => '<button type="button" class="back" data-back>' + esc(t('game.back')) + '</button>' +
-    '<p class="kicker">' + esc(ch.step ? t('game.stepN', { n: STEPS.indexOf(ch.step) + 1, step: t('game.step.' + ch.step) }) + ' · ' + t('map.' + ch.place + '.t') : t('game.jobKicker')) + '</p>' +
+    '<p class="kicker">' + esc(ch.step ? t('game.stepN', { n: STEPS.indexOf(ch.step) + 1, step: t('game.step.' + ch.step) }) + ' · ' + t('map.' + ch.place + '.t') : t(ch.kind === 'break' ? 'game.break.kicker' : 'game.jobKicker')) + '</p>' +
     where() + '<h3 class="ch-t">' + esc(titleOf(ch)) + '</h3><p class="goal">' + esc(goalOf(ch)) + '</p>' +
-    ((ch.kind !== 'design' || !ch.need) && !(ch.id === 'half' && !view.write) ? '<p class="small muted why">' + esc(t('game.ch.' + ch.id + '.why')) + '</p>' : '');
+    (ch.kind !== 'break' && (ch.kind !== 'design' || !ch.need) && !(ch.id === 'half' && !view.write) ? '<p class="small muted why">' + esc(t('game.ch.' + ch.id + '.why')) + '</p>' : '');
   /* where it happens: the place, and its levels with this one lit */
-  const where = () => { const place = ch.need ? 'studio' : ch.place, at = ch.need ? 'logic' : ch.at, L = INSIDE[place] || [];
+  const where = () => { const place = ch.need ? 'studio' : ch.place, at = ch.kind === 'break' ? 'check' : ch.need ? 'logic' : ch.at, L = INSIDE[place] || [];
     return L.length > 1 ? '<ol class="levels" aria-label="' + esc(t('map.' + place + '.t')) + '">' + L.map(l => '<li' + (l.depth === at ? ' class="on" aria-current="step"' : '') + '>' + esc(t('depth.' + l.depth + '.name')) + '</li>').join('') + '</ol>' : ''; };
   const reward = () => ch.grows && !S.done[ch.id] ? '<p class="grows small">' + esc(t('game.grows', { what: t('grow.' + ch.grows) })) + '</p>' : '';
   const doneNote = () => { if (!S.done[ch.id]) return ''; const n = next(S);
     return '<div class="won"><b>' + esc(t('game.won')) + '</b>' + (ch.grows ? ' ' + esc(t('game.grew', { what: t('grow.' + ch.grows) })) : '') +
       (view.won ? '<span class="burst" aria-hidden="true">' + Array.from({ length: 14 }, (_, i) => '<i style="--a:' + Math.round(i * 360 / 14) + 'deg;--d:' + (i % 3) * 40 + 'ms"></i>').join('') + '</span>' : '') +
-      (n && ctx.open ? '<button type="button" class="btn primary" data-next>' + esc(t('game.goNext', { what: titleOf(n) })) + '</button>' : '') + '</div>'; };
+      (n && ctx.open ? '<button type="button" class="btn primary" data-next>' + esc(t('game.goNext', { what: titleOf(n) })) + '</button>' : '') + '</div>' + opens(); };
+  /* what a win opens: the question this challenge was about all along, one tap away */
+  const opens = () => { const k = opensOf(ch); return k ? '<a class="opens" href="' + esc(askHref(k)) + '"><span class="kicker">' + esc(t('game.opens')) + '</span><span class="q">' + esc(t('stop.' + k + '.q')) + '</span><span class="small muted">' + esc(t('sheet.follow')) + '</span></a>' : ''; };
+  /* your work as an entry of the ledger: sign it and keep it, then the slip gives the way in */
+  const entry = (label) => view.slip && draftOf(S, view.slip) ? slipHtml(S, view.slip) : '<div class="keep">' + signHtml(S, view.ai ? 'both' : 'person') + (view.no ? '<p class="small bad">' + esc(view.no) + '</p>' : '') + '<button type="button" class="btn primary" data-keep>' + esc(t(label)) + '</button><p class="small muted">' + esc(t('ledger.keep.note')) + '</p></div>';
 
   function win() { if (S.done[ch.id]) return; S.done[ch.id] = true; view.won = true; ctx.save(); ctx.done(ch); }
 
@@ -99,7 +109,7 @@ export function play(el, ch, ctx) {
     }
     if (TAP && !view.write) h += '<button type="button" class="link" data-write>' + esc(t('game.tap.write')) + '</button>';
     if (B && B.ok) h += tapeOut(B);
-    if (B && B.ok && ch.need) h += '<a class="btn primary" target="_blank" rel="noopener" href="' + esc(REPO + '/issues/new?' + new URLSearchParams({ template: 'design.yml', title: t('design.addYours') + ': ' + t('design.proj.' + ch.p + '.t'), need: ch.need, code: S.codes[ch.p] || '', ai: t(view.ai ? 'game.aiUsed' : 'game.aiNone') })) + '">' + esc(t('game.addToPlan')) + '</a><p class="small muted">' + esc(t('game.addNote')) + '</p>';
+    if (B && B.ok && ch.need) h += entry('ledger.keep.design');
     return h + doneNote() + reward();
   }
   /* the rest of the design line, then what the factory does to it: the design and the factory are one story */
@@ -160,10 +170,33 @@ export function play(el, ch, ctx) {
     return h + doneNote() + reward();
   }
 
+  /* ---- break: a design of the ledger that passed its check. Set the inputs tick by tick; the piece's own rule
+     and the design answer side by side. The first tick where they differ is a break: a case the check never tried. ---- */
+  const TICKS = 8;
+  function brk() {
+    const W = world(S), T = W.byId[ch.of], proj = projectOf(ch.p), lab = testOf({ proj }), bits = (o, outs) => outs.map(k => o[k]).join('');
+    if (!view.seq) view.seq = Array.from({ length: TICKS }, () => Object.fromEntries(proj.ins.map(k => [k, 1])));
+    const R = runCase(ch.p, T.code, view.seq), hit = R.first >= 0, mine = view.slip && draftOf(S, view.slip), was = T.state === 'broken' && !(mine && T.brokenBy === mine.id) ? W.byId[T.brokenBy] : null;
+    let h = head() + '<p class="small why">' + esc(t(was ? 'game.break.was' : 'game.break.why', { ticks: lab.length, by: T.by, who: was ? was.by : '' })) + '</p>';
+    h += '<div class="yours"><span class="kicker">' + esc(T.title) + ' · ' + esc(T.by) + ' · ' + esc(t('build.kind.' + T.made)) + '</span><pre class="mono small code">' + esc(T.code) + '</pre>' + (T.words ? '<span class="small muted">' + esc(t('game.break.says', { words: T.words })) + '</span>' : '') + '</div>';
+    h += '<div class="tt ticks"><table><thead><tr><th>' + esc(t('game.break.tick')) + '</th>' + view.seq.map((_, i) => '<th>' + (i + 1) + '</th>').join('') + '</tr></thead><tbody>' +
+      proj.ins.map(k => '<tr><th class="mono">' + esc(k) + '</th>' + view.seq.map((v, i) => '<td><button type="button" class="tick' + (v[k] ? ' on' : '') + '" data-tick="' + i + '" data-in="' + esc(k) + '" aria-pressed="' + !!v[k] + '" aria-label="' + esc(t('game.break.set', { name: k, n: i + 1 })) + '">' + v[k] + '</button></td>').join('') + '</tr>').join('') +
+      '<tr><th>' + esc(t('game.spot.should')) + '</th>' + R.rows.map(r => '<td class="mono">' + esc(bits(r.e, proj.outs)) + '</td>').join('') + '</tr>' +
+      '<tr><th>' + esc(t('game.break.does')) + '</th>' + R.rows.map((r, i) => '<td class="mono' + (r.mis.length ? ' wrongc' : '') + (i === R.first ? ' first' : '') + '">' + esc(bits(r.o, proj.outs)) + '</td>').join('') + '</tr></tbody></table>' +
+      '<p class="small muted">' + esc(t('game.break.cols', { ins: proj.ins.join(' '), outs: proj.outs.join(' ') })) + '</p></div>';
+    h += '<div class="acts"><button type="button" class="btn" data-labtest>' + esc(t('game.break.lab')) + '</button>' + (view.hint ? '' : '<button type="button" class="link" data-hint>' + esc(t('game.hint')) + '</button>') + '</div>';
+    if (view.hint && !hit) h += '<p class="small hint">' + esc(t('game.break.hint')) + '</p>';
+    if (hit) { const r = R.rows[R.first];
+      h += '<p class="verdict good">' + esc(t('game.break.found', { n: R.first + 1, want: bits(r.e, proj.outs), got: bits(r.o, proj.outs) })) + '</p>';
+      h += was ? '<p class="small">' + esc(t('game.break.too', { who: was.by })) + '</p>' : '<p class="small">' + esc(t('game.break.then')) + '</p>' + entry('ledger.keep.break'); }
+    else h += '<p class="verdict">' + esc(t('game.break.holds', { n: view.seq.length })) + '</p>';
+    return h + doneNote();
+  }
+
   /* bring what just changed into view inside the sheet */
   const show = sel => { const n = el.querySelector(sel); if (n && n.scrollIntoView) n.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); };
   function draw() {
-    const f = ch.kind === 'design' ? design : ch.kind === 'chip' ? chip : ch.kind === 'life' ? life : spot;
+    const f = ch.kind === 'design' ? design : ch.kind === 'chip' ? chip : ch.kind === 'life' ? life : ch.kind === 'break' ? brk : spot;
     const html = '<div class="player">' + f() + '</div>', old = el.firstElementChild;
     if (!old || !old.classList.contains('player')) { el.innerHTML = html; return; }
     const tpl = document.createElement('template'); tpl.innerHTML = html; patch(old, tpl.content.firstElementChild);
@@ -191,6 +224,17 @@ export function play(el, ch, ctx) {
   el.onclick = e => {
     const q = s => e.target.closest(s);
     if (q('[data-back]')) return ctx.back();
+    /* the ledger: a tick of a case, the lab's own test, keeping your work as an entry, the slip's buttons */
+    const tk = q('[data-tick]'); if (tk) { const v = view.seq[+tk.dataset.tick], k = tk.dataset.in; v[k] = v[k] ? 0 : 1; const R = runCase(ch.p, world(S).byId[ch.of].code, view.seq); if (R.first >= 0) win(); draw(); if (R.first >= 0) { fx('check'); show('.verdict'); } return; }
+    if (q('[data-labtest]')) { const proj = projectOf(ch.p); view.seq = testOf({ proj }).slice(0, TICKS).map(v => Object.assign({}, v)); return draw(); }
+    if (q('[data-keep]')) {
+      const sign = signOf(el), W = world(S), T = ch.kind === 'break' ? W.byId[ch.of] : null;
+      const seq = T ? view.seq.slice(0, runCase(ch.p, T.code, view.seq).first + 1) : null;
+      const k = T ? keep(S, { kind: 'break', of: ch.of, case: seq, words: '' }, T.title, sign) : keep(S, { kind: 'design', piece: ch.need, title: t('design.proj.' + ch.p + '.t'), words: '', code: S.codes[ch.p] || '' }, t('design.proj.' + ch.p + '.t'), Object.assign(sign, view.ai && sign.made === 'person' ? { made: 'both' } : {}));
+      view.no = k.ok ? null : refusal(k.r); if (k.ok) { view.slip = k.e.id; ctx.save(); ctx.kept && ctx.kept(k.e); }
+      draw(); return show('.slip, .keep');
+    }
+    if (slipClick(e, S, redraw => { ctx.save(); if (redraw) { view.slip = null; ctx.kept && ctx.kept(null); draw(); } })) return;
     if (q('[data-next]')) { const n = next(S); return n && ctx.open(n); }
     const gt = q('[data-goto]'); if (gt) return ctx.open(challengeOf(gt.dataset.goto));
     if (q('[data-check]')) { const code = el.querySelector('#chCode').value; S.codes[ch.p] = code; ctx.save(); view.B = checkDesign(ch.p, code); if (view.B.ok) win(); draw(); fx('check'); return show('.won, .verdict, .errs'); }

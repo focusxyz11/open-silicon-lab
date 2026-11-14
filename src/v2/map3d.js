@@ -247,11 +247,11 @@ export function createMap(canvas, host, on = {}) {
   const up = e => { ptrs.delete(e.pointerId); if (ptrs.size < 2) pinch0 = null; if (downAt && moved < 8 && !ptrs.size) { const h = pickAt(e); if (h && h.place) on.place && on.place(h.place); else if (h && h.q) on.question && on.question(h.q); } downAt = null; };
   canvas.addEventListener('pointerup', up); canvas.addEventListener('pointercancel', up);
   canvas.addEventListener('wheel', e => { e.preventDefault(); fly = null; cam.d = clamp(cam.d * Math.exp(e.deltaY * 0.0012), 38, MAXD); on.interact && on.interact(); }, { passive: false });
-  host.addEventListener('click', e => { const b = e.target.closest('[data-place],[data-q],[data-step],[data-job]'); if (!b) return; if (b.dataset.place) on.place && on.place(b.dataset.place); else if (b.dataset.step) on.place && on.place(STATION[b.dataset.step]); else if (b.dataset.job) on.job && on.job(b.dataset.job); else on.question && on.question(b.dataset.q); });
+  host.addEventListener('click', e => { const b = e.target.closest('[data-place],[data-q],[data-step],[data-job],[data-entry]'); if (!b) return; if (b.dataset.entry) on.entry && on.entry(b.dataset.entry); else if (b.dataset.place) on.place && on.place(b.dataset.place); else if (b.dataset.step) on.place && on.place(STATION[b.dataset.step]); else if (b.dataset.job) on.job && on.job(b.dataset.job); else on.question && on.question(b.dataset.q); });
 
   /* ---- the state: what has grown, the community's pieces, where your chip is ---- */
   const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
-  let slotLabels = [];
+  let slotLabels = [], villageSeen = null;
   function setState(st, animate) {
     /* growth */
     let grew = false;
@@ -274,15 +274,38 @@ export function createMap(canvas, host, on = {}) {
     /* the village: a workshop for each community design, a plot for each open job, a sign for each engine wanted */
     while (slotsG.children.length) slotsG.remove(slotsG.children[0]);
     slotLabels.forEach(lb => { lb.el.remove(); const i = L.list.indexOf(lb); if (i >= 0) L.list.splice(i, 1); }); slotLabels = [];
+    /* a design stands as a workshop: lit while it holds a record, dark once another beats it, its roof grey and a red
+       lamp beside it when a case has broken it; one of yours that is not in the ledger yet is only its outline */
     const items = st.designs.map(d => ({ kind: 'design', d })).concat(st.jobList.map(j => ({ kind: 'job', j })), st.engineList.map(e => ({ kind: 'engine', e })));
+    const seenNow = new Set(), vp = m => { m.userData.village = true; pulses.push(m); };
+    for (let i = pulses.length - 1; i >= 0; i--) if (pulses[i].userData.village) pulses.splice(i, 1);
     items.slice(0, SLOTS.length).forEach((it, i) => {
       const [sx, sz] = SLOTS[i], g = group(slotsG, sx, 0, sz);
       box(g, 6, 0.15, 6, mat(it.kind === 'design' ? P.grass : P.sand), 0, 0, 0, 0.05, { cast: false });
-      if (it.kind === 'design') { house(g, 0, 0, 0, { example: P.accent, person: P.good, ai: P.warm, both: P.bad }[it.d.kind] || P.accent, true); slotLabels.push(L.add(g, new THREE.Vector3(0, 4.6, 0), it.d.title, { cls: 'work3', max: 140 })); }
+      if (it.kind === 'design') {
+        const d = it.d, stt = d.draft ? 'draft' : d.state; seenNow.add(d.id);
+        if (d.draft) { [[new THREE.BoxGeometry(3, 2, 2.8), 1.1], [houseRoof, 2.1]].forEach(([geo, y]) => { const e = new THREE.LineSegments(new THREE.EdgesGeometry(geo), new THREE.LineBasicMaterial({ color: P.accent })); e.position.y = y; g.add(e); }); }
+        else house(g, 0, 0, 0, d.state === 'broken' ? P.slate : ({ example: P.accent, person: P.good, ai: P.warm, both: P.bad }[d.kind] || P.accent), d.state === 'holds');
+        if (d.state === 'broken') { box(g, 0.18, 3.4, 0.18, metal(P.dark), 2.2, 0.15, 1.8, 0.02); vp(box(g, 0.5, 0.5, 0.5, glow(P.bad, 1.6), 2.2, 3.5, 1.8, 0.1, { cast: false })); }
+        const lb = L.add(g, new THREE.Vector3(0, 4.6, 0), d.title, { cls: 'work3 ent ' + stt, button: true, data: { entry: d.id }, max: 150 });
+        lb.el.title = t('map.house.' + stt, { by: d.author }); slotLabels.push(lb);
+        if (animate && villageSeen && !villageSeen.has(d.id)) sparkle(g);
+      }
       else { box(g, 0.2, 2.4, 0.2, mat(0x7a5b40), -1.6, 0.15, 1.6, 0.02); box(g, 1.8, 1.1, 0.12, mat(it.kind === 'job' ? P.white : P.bad), -1.6, 2, 1.6, 0.03);
         const lb = L.add(g, new THREE.Vector3(-1.6, 3.6, 1.6), it.kind === 'job' ? '?' : '⚙', { cls: 'plot3' + (it.kind === 'engine' ? ' engine' : ''), button: true, data: it.kind === 'job' ? { job: it.j.need } : { place: 'lab' }, max: 260 });
         lb.el.title = it.kind === 'job' ? t('map.plot.job', { job: t('design.proj.' + it.j.p + '.t') }) : t('map.plot.engine'); slotLabels.push(lb); }
     });
+    /* every case a break added to a check stands guard at the village's edge: a watchtower with its lamp lit
+       (an outline, while the break is only yours) */
+    (st.cases || []).slice(0, 6).forEach((c, i) => {
+      const g = group(slotsG, -10.5 + i * 4.2, 0, -11.5); seenNow.add(c.id);
+      box(g, 1, 6.4, 1, mat(P.white), 0, 0, 0, 0.1); box(g, 1.9, 0.3, 1.9, mat(P.slate), 0, 6.4, 0, 0.05); box(g, 1.2, 0.5, 1.2, mat(P.wall), 0, 0, 0, 0.05);
+      vp(box(g, 0.8, 0.8, 0.8, glow(c.draft ? P.accent : P.good, 1.6), 0, 6.9, 0, 0.14, { cast: false }));
+      const lb = L.add(g, new THREE.Vector3(0, 9.4, 0), '✓', { cls: 'plot3 guard' + (c.draft ? ' draft' : ''), button: true, data: { entry: c.of }, max: 260 });
+      lb.el.title = t('map.tower', { piece: t('build.need.' + c.piece + '.t'), by: c.by }); slotLabels.push(lb);
+      if (animate && villageSeen && !villageSeen.has(c.id)) sparkle(g);
+    });
+    villageSeen = seenNow;
     if (grew) pickable();
   }
   /* sparkles where something grew */
