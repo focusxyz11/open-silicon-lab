@@ -138,7 +138,7 @@ the diamond pattern, one added atom of another kind sits in a place of it, a few
 disordered insulating skin lies on top, the back fading into the sky. What they share is one module
 (`src/v2/level3d.js`): as the dive comes within a little of the level (`zoom` from `src/app/world.js`), the flat
 picture fades and the model takes its place in the same square (`dive.frame`), farther while you are still above it
-and nearer as you go on, so the zoom stays one movement; between the two, the flat picture shows for a moment.
+and nearer as you go on, so the zoom stays one movement. Between the gate and the switch the two are joined (`docs/reviews/transitions.md`): both drawn in one frame on one camera path, the switch standing in the gate's crossing as the gate fades into the sky, so no flat picture shows; between other levels the flat picture still shows for a moment.
 Names are HTML; a picked part's note opens beside its name; under Ask its questions are the same marks as on the flat
 levels. A sideways drag turns a model 20° each way (not the gate, which is a plan); up and down still zoom; a model
 sways when idle and holds still with reduced motion. The flat drawings stay the fallback.

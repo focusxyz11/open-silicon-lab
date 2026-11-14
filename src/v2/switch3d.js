@@ -68,7 +68,8 @@ export function create(canvas, host, on = {}) {
     return {
       level: 'switch', parts: ['gate', 'channel', 'oxide', 'source', 'drain'],
       anchors: { gate: [0, 3.65, -0.9], channel: [1.75, 2.99, 0.05], oxide: [-0.55, 1.5, 0.08], source: [-3.9, 3.5, 0.05], drain: [3.9, 3.5, 0.05] },
-      view: { tilt: 0.44, turn: -0.32, r: 4.1, at: [0, 2.1, -0.4] },
+      /* foot: where the switch stands on the gate's door, the middle of its base slab's underside */
+      view: { tilt: 0.44, turn: -0.32, r: 4.1, at: [0, 2.1, -0.4], foot: [0, 0, -0.6] },
       /* electrons only flow once you are at the switch */
       update(dt, k) { electrons.forEach(e => { const d = e.userData; d.u = (d.u + dt * 0.22) % 1; e.position.set(-2.2 + d.u * 4.4, SHEETS[d.sheet] + 0.12, d.z); e.visible = k > 0.6; }); }
     };

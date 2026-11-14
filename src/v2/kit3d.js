@@ -56,12 +56,19 @@ export function stage(canvas) {
     renderer: o.renderer, env: o.env,
     size(W, H) { if (W > 0 && H > 0) { w = W; h = H; } },
     draw(scene, camera) { if (!w) return; o.renderer.getSize(SZ); if (SZ.x !== w || SZ.y !== h) o.renderer.setSize(w, h, false); o.renderer.render(scene, camera); },
+    /* a second scene over the picture already drawn, in front of it (its depth cleared): a join's child */
+    over(scene, camera) { if (!w) return; const r = o.renderer; r.autoClear = false; r.clearDepth(); r.render(scene, camera); r.autoClear = true; },
+    /* one square of a colour over the whole picture (the sky closing over a join's parent) */
+    veil(color, alpha) { if (!w || alpha <= 0.001) return; const v = VEIL(); v.mat.color.copy(color); v.mat.opacity = Math.min(1, alpha); const r = o.renderer; r.autoClear = false; r.render(v.scene, v.cam); r.autoClear = true; },
     /* a view drawing on its own schedule (the line's machines) shows the canvas once its first picture is on it,
        so the last view's picture never shows through */
     shown() { o.cv.hidden = false; },
     warm(scene, camera) { const c = o.renderer.compileAsync; return c ? c.call(o.renderer, scene, camera).catch(() => { /* compiled on first draw instead */ }) : Promise.resolve(); }
   };
 }
+/* the veil: a square in front of everything, not tone-mapped, so at full strength it is the sky's own colour */
+let VEILS = null;
+const VEIL = () => VEILS || (VEILS = (() => { const mat = new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0, depthTest: false, depthWrite: false, toneMapped: false }); const scene = new THREE.Scene(); scene.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), mat)); return { mat, scene, cam: new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1) }; })());
 /* the GL canvas shows while a 3D view is in front, and steps aside for the flat views and the pages */
 export const showStage = on => { if (ONE) ONE.cv.hidden = !on; };
 
