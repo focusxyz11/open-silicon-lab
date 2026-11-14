@@ -74,9 +74,9 @@ export const CHALLENGES = [
 export const GAUGES = {
   months: [{ k: 'days', le: 60 }, { k: 'load', ge: 0.92 }],
   quick: [{ k: 'layers', le: 50 }, { k: 'cores', ge: 12 }],
-  cores: [{ k: 'cores', ge: 20 }, { k: 'cost', le: 0.7 }],
-  fed: [{ k: 'work', ge: 2.9 }, { k: 'late', le: 0 }],
-  fast: [{ k: 'clock', ge: 2 }, { k: 'late', le: 0 }]
+  cores: [{ k: 'cores', ge: 16 }, { k: 'cost', le: 1.2 }],
+  fed: [{ k: 'work', ge: 2.5 }, { k: 'late', le: 0 }],
+  fast: [{ k: 'clock', ge: 1.5 }, { k: 'late', le: 0 }]
 };
 /* how far a gauge is toward its bound, 0..1, and whether it is there */
 export function gauge(g, m) {

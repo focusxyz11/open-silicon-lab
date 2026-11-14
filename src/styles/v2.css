@@ -35,7 +35,7 @@ button { font: inherit; color: inherit; }
 /* the stage: the 3D world, and its labels */
 .stage { position: absolute; inset: 0; }
 .c3 { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; outline: none; }
-.gl { position: absolute; inset: 0; width: 100%; height: 100%; display: block; pointer-events: none; }
+.stage3d { position: absolute; inset: 0; width: 100%; height: 100%; display: block; pointer-events: none; }
 .c3[hidden], .labels[hidden], [hidden] { display: none !important; }
 .labels { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
 .lbl3 { position: absolute; left: 0; top: 0; white-space: nowrap; transition: opacity .25s; will-change: transform; }

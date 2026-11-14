@@ -32,10 +32,13 @@ test('a faster clock always costs more power, and past some speed signals arrive
   }
 });
 
-test('smaller switches are faster and more fit, but leak more', () => {
+test('smaller switches are a little faster and more fit, but the same area runs hotter and each step buys less', () => {
   for (let g = 1; g < GENS; g++) {
     const a = model({ clock: 1, gen: g - 1 }), b = model({ clock: 1, gen: g });
-    assert.ok(b.path < a.path && b.density > a.density && b.wall > a.wall && b.leakShare > a.leakShare);
+    assert.ok(b.path < a.path && b.density > a.density && b.wall > a.wall && b.power > a.power);
+    /* today's rules: about an eighth faster and well under twice the switches each step (docs/reviews/models.md) */
+    assert.ok(b.path / a.path > 0.8 && b.density / a.density <= 2);
+    if (g >= 3) assert.ok(b.density / a.density < 1.8, 'the newer steps give less than the old 2x');
     assert.ok(b.grid[0] * b.grid[1] > a.grid[0] * a.grid[1]);
   }
   assert.equal(model(START).grid[0] * model(START).grid[1], 12, 'the words say the starting chip has 12 cores');

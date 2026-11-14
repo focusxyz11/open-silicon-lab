@@ -1327,6 +1327,30 @@
    "url": "https://en.wikipedia.org/wiki/Turing%27s_proof",
    "value": "Proved by Alan Turing in 1936",
    "verified": "2026-11-10"
+  },
+  {
+   "id": "node-n2",
+   "topic": "transistor",
+   "detail": "TSMC's figures for its N2 process against N3E, compiled by Tom's Hardware. The density is for a 'mixed' chip of 50% logic, 30% SRAM and 20% analog; logic alone gains more, memory less. Used for the chip model's rules for a newer generation (src/engines/chip.js).",
+   "kind": "claim",
+   "label": "What one new generation gives (TSMC N2 against N3E)",
+   "source": "Tom's Hardware (TSMC)",
+   "status": "current",
+   "url": "https://www.tomshardware.com/tech-industry/tsmcs-2nm-n2-process-node-enters-production-this-year-a16-and-n2p-arriving-next-year",
+   "value": "About 1.15× the transistors in the same area, 10–15% faster at the same power, or 25–30% less power at the same speed",
+   "verified": "2026-11-14"
+  },
+  {
+   "id": "wafer-price",
+   "topic": "economics",
+   "detail": "CSET's estimate of the foundry sale price of a 300 mm wafer in 2020 (Khan and Mann, AI Chips: What They Are and Why They Matter, Table 9). Used for the chip model's wafer cost per generation (src/engines/chip.js).",
+   "kind": "estimate",
+   "label": "Price of one wafer, by process (2020)",
+   "source": "CSET",
+   "status": "current",
+   "url": "https://cset.georgetown.edu/article/analysts-believe-that-a-single-tsmc-5nm-wafer-costs-17000/",
+   "value": "$3,984 at 16/12 nm, $5,992 at 10 nm, $9,346 at 7 nm, $16,988 at 5 nm",
+   "verified": "2026-11-14"
   }
  ],
  "changes": [

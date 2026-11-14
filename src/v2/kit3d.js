@@ -29,7 +29,7 @@ function one() {
   renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 0.92;
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   const pm = new THREE.PMREMGenerator(renderer), env = pm.fromScene(new RoomEnvironment(), 0.04).texture;
-  const cv = renderer.domElement; cv.className = 'gl'; cv.setAttribute('aria-hidden', 'true');
+  const cv = renderer.domElement; cv.className = 'stage3d';   /* not 'gl': the challenge gauges' labels use that name */ cv.setAttribute('aria-hidden', 'true');
   return (ONE = { renderer, env, cv });
 }
 /* a view on the stage: size() says how big its picture is (a hidden view's zero size is ignored), draw() puts

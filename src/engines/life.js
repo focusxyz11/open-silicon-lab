@@ -56,7 +56,10 @@ const D0 = delay(V0, VT0);                          // the signed-off delay of t
 export const MISSIONS = {
   phone: { life: 3, duty: 0.25, tMax: 75, tUse: 45, fleet: 1e7, mem: 64, need: { fail: 0.01, perf: 0.85, cost: 1.4 } },
   car: { life: 15, duty: 0.1, tMax: 125, tUse: 87, fleet: 1e6, mem: 16, need: { fail: 1e-4, silent: 10, cost: 2.2 } },
-  datacentre: { life: 5, duty: 0.9, tMax: 95, tUse: 85, fleet: 1e5, mem: 400, need: { fail: 0.02, silent: 50, perf: 0.8 } }
+  /* a data centre accepts a few silent wrong answers a year across its fleet (about 2,000) and catches them in software
+     that re-checks results and retires bad machines (Google, Cores that don't count; Meta, Silent data corruptions at
+     scale): error-correcting memory is enough there. Only cars and aircraft run a second copy of the logic (lockstep) */
+  datacentre: { life: 5, duty: 0.9, tMax: 95, tUse: 85, fleet: 1e5, mem: 400, need: { fail: 0.02, silent: 2000, perf: 0.8 } }
 };
 export const MISSION_IDS = Object.keys(MISSIONS);
 /* where each depth's chip lives */
