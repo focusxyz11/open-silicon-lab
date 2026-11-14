@@ -554,3 +554,8 @@ html[data-move=turn]::view-transition-new(root) { animation-name: vt-turn-in; }
   .plan2 .tower { display: none; }
 }
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+
+/* a jump between levels dips the stage to the page's ground and back, 100 ms each way (app.js levelZoom). It is what
+   reduced motion gets instead of a cut (a fade moves nothing), so it stands above the rule that turns transitions off */
+.stage3d.dipout, .stage3d.dipin { transition: opacity .1s linear !important; }
+.stage3d.dipout { opacity: 0; }

@@ -392,8 +392,29 @@ export function start() {
     if (!ok) { unjoined = true; return null; }
     return unjoined ? null : { a, b, f };
   };
+  /* the square a level fills: at rest the dive's own; coming down into it from a level not joined to it (a diagram kept
+     flat, the car or the scanner, or any pair when joins are off), the square where the flat drawing has it now, inside
+     the portal, so the model and the drawing lie on each other while they mix (exact: no zoom factor of its own) */
+  const squareOf = (ds, z) => {
+    const b = dive.frame, F = WE.frames(z, b.B, b.cx, b.cy);
+    if (F.i !== ds - 1 || !F.next || F.f <= 0) return b;
+    const S = 1000 * F.next.s; return { B: S, cx: F.next.tx + S / 2, cy: F.next.ty + S / 2, exact: true };
+  };
+  /* a jump (one call moving the zoom half a level or more: reduced motion, or a link to another level) is never a
+     cut on the stage: the picture dips to the page's ground in 100 ms, the level changes at the bottom of the dip,
+     and it comes back in 100 ms. Not into a join, which is a picture of its own */
+  let lastZ = null, dip = 0;
+  const undip = () => { clearTimeout(dip); dip = 0; const cv = document.querySelector('.stage3d'); if (cv) cv.classList.remove('dipout', 'dipin'); };
   function levelZoom(z) {
-    if (!dive || !WE || flatKind !== 'dive' || $('diveCanvas').hidden) { hideL3(); return; }
+    if (!dive || !WE || flatKind !== 'dive' || $('diveCanvas').hidden) { lastZ = null; undip(); hideL3(); return; }
+    const was = lastZ; lastZ = z;
+    if (dip) return;   /* in the dip the old picture holds; the new one comes at its bottom */
+    const cv = document.querySelector('.stage3d');
+    if (was != null && Math.abs(z - was) >= 0.5 && cv && !cv.hidden && !(L3M && joinOf(z))) {
+      cv.classList.add('dipout');
+      dip = setTimeout(() => { dip = 0; cv.classList.remove('dipout'); cv.classList.add('dipin'); levelZoom(dive.z); setTimeout(() => cv.classList.remove('dipin'), 120); }, 100);
+      return;
+    }
     const J = L3M && joinOf(z);
     if (J) {
       Object.values(L3).forEach(l => { if (l.obj && l !== J.a && l !== J.b) l.obj.show(0); });
@@ -410,7 +431,7 @@ export function start() {
       if (k <= 0) { if (l.obj) l.obj.show(0, ds < 0 ? 0 : d); return; }
       if (!l.obj) { ensureL3(lv).then(o => { if (o && flatKind === 'dive') { levelZoom(dive.z); diveNotes(); } }); return; }
       if (l.obj.failed) { l.obj.show(0); return; }
-      l.obj.show(k, d, dive.frame); top = Math.max(top, k);
+      l.obj.show(k, d, squareOf(ds, z), null); top = Math.max(top, k);
       /* at a level, its neighbours are made and their shaders compiled, so a move to them can be joined */
       if (k >= 1 && !l.near) { l.near = true; [-1, 1].forEach(n => { const nb = WE.IDS[WE.IDS.indexOf(lv) + n]; if (L3[nb]) ensureL3(nb).then(o => { if (o && o.warm) o.warm(); }); }); }
     });

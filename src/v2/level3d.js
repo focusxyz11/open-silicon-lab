@@ -77,7 +77,7 @@ export function createLevel3D(canvas, host, on, model) {
     arrived = arr ? ease(clamp(arr.t / V.arrive.ms)) : 1;
     if (arrived >= 1) arr = null;
     /* the object fills the square the flat level stood in; farther while you are still above it */
-    const dist = fitOf(f) * (off < 0 ? 1 + 3 * -off : 1 / (1 + 2.5 * off)) * (1 + 0.45 * (1 - arrived));
+    const dist = fitOf(f) * (f.exact ? 1 : off < 0 ? 1 + 3 * -off : 1 / (1 + 2.5 * off)) * (1 + 0.45 * (1 - arrived));
     const A = V.arrive && arrived < 1 ? V.arrive : V, a = A.turn + (V.turn - A.turn) * arrived + yaw + sway(now), b = A.tilt + (V.tilt - A.tilt) * arrived;
     aim({ at: V.at, tilt: b, turn: a, dist }, f);
   }
