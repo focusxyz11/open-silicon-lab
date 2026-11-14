@@ -104,9 +104,9 @@ export function createLevel3D(canvas, host, on, model) {
          the two depths agree. After that, and always for an open door, the child is drawn in front */
       const keep = !!door.front && leave < JOIN.clear;
       if (keep) { C.camera.near = P.camera.near / p.s; C.camera.far = P.camera.far / p.s; C.camera.updateProjectionMatrix(); }
-      /* a rising plan fades in over the door as it starts (JOIN.fade), so it grows out of the parent's tiles instead
-         of appearing on them */
-      const fade = V_rise(C.V) && !QUALITY.low ? sm(JOIN.fade[0], JOIN.fade[1], f) : 1;
+      /* a child with no move of its own fades in over the door as it starts (JOIN.fade), so it grows out of the
+         parent's parts instead of appearing on them (a rising plan, the phone's board) */
+      const fade = !C.V.enter && !QUALITY.low ? sm(JOIN.fade[0], JOIN.fade[1], f) : 1;
       const bg = C.scene.background; C.scene.background = null;
       if (fade < 1) st.fade(C.scene, C.camera, fade); else st.over(C.scene, C.camera, keep);
       C.scene.background = bg;

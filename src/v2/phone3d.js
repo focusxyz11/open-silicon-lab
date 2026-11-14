@@ -11,6 +11,7 @@ import * as THREE from '../vendor/three.min.js';
 import { mat, box, glass, BOARD } from './kit3d.js';
 import { createLevel3D } from './level3d.js';
 import { chipNow } from '../app/scenes.js';
+import { smooth, JOIN } from '../engines/join.js';
 
 /* the phone's size in units: across, thick, long */
 const PW = 3.6, PT = 0.32, PL = 7.6;
@@ -48,11 +49,13 @@ export function create(canvas, host, on = {}) {
     const charge = new THREE.Mesh(new THREE.BoxGeometry(1, 0.01, 1), new THREE.MeshStandardMaterial({ color: P.warm, emissive: P.warm, emissiveIntensity: night ? 0.5 : 0.2, roughness: 0.5 }));
     charge.position.set(PW / 2 - 0.62, 0.245, 1.15); midL.add(tag(charge, 'battery'));   /* a thin gauge along its edge */
     /* the main board: small, at the top end, with the chip and its memory stacked on it, and a few parts */
-    tag(box(midL, PW - 0.5, 0.05, 2.2, M.board, 0.1, 0.02, -2.4, 0.06), 'board');
-    tag(box(midL, 0.95, 0.12, 0.95, M.plastic, 0.45, 0.07, -2.35, 0.03), 'board');
-    tag(box(midL, 0.7, 0.08, 0.5, M.plastic, -0.4, 0.07, -1.75, 0.02), 'board');
-    tag(box(midL, 0.5, 0.06, 0.5, M.plastic, 1.15, 0.07, -1.7, 0.02), 'board');
-    tag(box(midL, 0.8, 0.04, 0.22, M.pin, 1.1, 0.07, -3.2, 0.01), 'board');
+    /* (hidden while the board itself, larger, comes into their place: a join) */
+    const boardParts = [
+      tag(box(midL, PW - 0.5, 0.05, 2.2, M.board, 0.1, 0.02, -2.4, 0.06), 'board'),
+      tag(box(midL, 0.95, 0.12, 0.95, M.plastic, 0.45, 0.07, -2.35, 0.03), 'board'),
+      tag(box(midL, 0.7, 0.08, 0.5, M.plastic, -0.4, 0.07, -1.75, 0.02), 'board'),
+      tag(box(midL, 0.5, 0.06, 0.5, M.plastic, 1.15, 0.07, -1.7, 0.02), 'board'),
+      tag(box(midL, 0.8, 0.04, 0.22, M.pin, 1.1, 0.07, -3.2, 0.01), 'board')];
     /* the camera's module, beside the board, under the bump */
     tag(box(midL, 1.1, 0.24, 1.1, M.plastic, -0.95, 0.02, -2.75, 0.08), 'camera');
 
@@ -63,6 +66,7 @@ export function create(canvas, host, on = {}) {
     /* closed, the layers sit on each other; apart, they slide along one axis and lie side by side, as in a teardown:
        the screen to one side, the frame and what is in it in the middle, the back (turned over, camera up) to the other */
     const shut = { back: 0, mid: 0.06, top: 0.06 + PT }, GAP = PW + 0.7;
+    const GONE = smooth(JOIN.child, JOIN.lead, JOIN.fade[1]);   /* leave when the board coming in is whole */
     const place = e => {
       const lift = Math.sin(Math.PI * e) * 0.9;   /* each lifts as it slides, and settles */
       backL.position.set(GAP * e, shut.back * (1 - e) + lift * 0.6, 0);
@@ -75,10 +79,15 @@ export function create(canvas, host, on = {}) {
       level: 'phone', parts: ['battery', 'board', 'camera', 'antenna'],
       anchors: { battery: [-0.3, 0.3, 1.6], board: [0.5, 0.25, -2.0], camera: [-0.95 + GAP, 0.3, -2.75], antenna: [-PW / 2, 0.35, PL / 2 - 0.7] },
       /* a hero object: seen from above at an angle, turned like the stack; as you arrive, it comes apart */
-      view: { tilt: 0.75, turn: -0.42, r: 6.4, at: [0, 0.2, 0.3], arrive: { tilt: 0.5, turn: -0.7, ms: 2200 } },
-      update(dt, k, dist, arrived) {
+      view: { tilt: 0.75, turn: -0.42, r: 6.4, at: [0, 0.2, 0.3], arrive: { tilt: 0.5, turn: -0.7, ms: 2200 },
+        /* the door into the board: the small main board, on its top, wide enough that the board coming in is as wide
+           as it is (the board's 8.8 of its square 9.9 over this one's 3.1). Set by eye */
+        door: { at: [0.1, 0.07, -2.4], side: 3.5 } },
+      update(dt, k, dist, arrived, picked, leave = 0) {
         t += dt;
         place(arrived);
+        /* kept until the board coming in has faded in over them (JOIN.fade), so the two cross */
+        boardParts.forEach(b => { b.visible = leave < GONE; });
         const c = chipNow(), level = Math.max(0.08, Math.min(0.95, 0.55 * Math.sqrt(c.battery || 1)));
         charge.scale.set(0.16, 1, 4.0 * level); charge.position.z = 1.15 + 2.0 * (1 - level);
       }

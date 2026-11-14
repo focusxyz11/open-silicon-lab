@@ -139,7 +139,7 @@ export const create = level => (canvas, host, on = {}) => createLevel3D(canvas, 
   const pulses = many(lines.map(() => [0, 0, 14, 14]), WY + H.wire, 0.07, M.live, plan.wiresPart || null);
 
   /* the die on the wafer: the cutting line round it, with the factory's test patterns, and needles on its pads */
-  let probes = null;
+  let probes = null; const needles = [];
   if (plan.scribe) { const ring = []; for (let i = 0; i < 16; i++) ring.push([44 + i * 60, 9, 22, 12], [44 + i * 60, 979, 22, 12], [9, 44 + i * 60, 12, 22], [979, 44 + i * 60, 12, 22]); many(ring, -H.slab, 0.08, M.field, 'scribe'); }
   if (plan.probes) {
     const tips = []; [200, 440, 680].forEach(y => tips.push([68, y], [932, y + 120])); [260, 500, 740].forEach(x => tips.push([x, 68], [x + 160, 932]));
@@ -147,7 +147,7 @@ export const create = level => (canvas, host, on = {}) => createLevel3D(canvas, 
     probes = tips.map(([x, y], i) => {
       const from = new THREE.Vector3(X(x) * 1.25, 1.6, Z(y) * 1.25), to = new THREE.Vector3(X(x), H.pad, Z(y)), d = to.clone().sub(from), n = new THREE.Mesh(needle, nm);
       n.position.copy(from).add(to).multiplyScalar(0.5); n.scale.y = d.length(); n.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), d.normalize()); n.userData.part = 'probes'; root.add(n);
-      const tip = new THREE.Mesh(new THREE.SphereGeometry(0.05, 8, 6), M.live); tip.position.copy(to); tip.userData.part = 'probes'; root.add(tip); return tip;
+      const tip = new THREE.Mesh(new THREE.SphereGeometry(0.05, 8, 6), M.live); tip.position.copy(to); tip.userData.part = 'probes'; root.add(tip); needles.push(n); return tip;
     });
   }
 
@@ -172,8 +172,10 @@ export const create = level => (canvas, host, on = {}) => createLevel3D(canvas, 
     view: { tilt: 1.26, turn: 0, r: 5.6, at: [0, 0.1, 0.25], fixed: true, arrive: plan.arrive ? { tilt: 0.5, turn: -0.62, ms: 1800 } : null,
       door: (([px, py, side]) => ({ at: [X(px + side / 2), 0, Z(py + side / 2)], side: side / 100 }))(DEPTHS[level].portal), foot: [0, 0, 0] },
     has: key => key !== 'yours' || mine > 0,
-    update(dt, k, dist, arrived, picked) {
+    update(dt, k, dist, arrived = 1, picked) {
       t += dt;
+      /* the die's test needles come down only once it has risen (a join from the wafer) */
+      needles.forEach(n => { n.visible = arrived >= 0.9; }); if (probes && arrived < 0.9) probes.forEach(p => { p.visible = false; });
       if (plan.yours) showYours();
       /* the faint wires come up, with what travels on them, only when you pick them */
       if (plan.faint) { const lit = picked === plan.wiresPart; wireM.opacity = lit ? 1 : 0.2; wireM.depthWrite = lit; pulses.visible = lit; }
@@ -189,7 +191,7 @@ export const create = level => (canvas, host, on = {}) => createLevel3D(canvas, 
       if (live.array) { const [nx] = live.arrayG, col0 = now % nx; for (let i = 0; i < live.arrayN; i++) live.array.setColorAt(i, i % nx === col0 ? TONE.busy : TONE.tile); live.array.instanceColor.needsUpdate = true; }
       if (live.stages) { for (let i = 0; i < live.stagesN; i++) live.stages.setColorAt(i, i === now % live.stagesN ? TONE.busy : TONE.tile); live.stages.instanceColor.needsUpdate = true; }
       if (live.blocks) { for (let i = 0; i < live.blocksN; i++) live.blocks.setColorAt(i, rnd(i, now) > 0.7 ? TONE.busy : TONE.tile); live.blocks.instanceColor.needsUpdate = true; }
-      if (probes) probes.forEach((p, i) => { p.visible = rnd(i, now) > 0.45; });
+      if (probes) probes.forEach((p, i) => { p.visible = arrived >= 0.9 && rnd(i, now) > 0.45; });
     }
   };
 });
