@@ -8,7 +8,7 @@ Reviewer: Claude Fable 5.2, asked with a written brief.
 
 ## Status
 
-Applied 2026-11-14, first part (the mismatches): one colour per material in the flat gate, switch and block (silicon blue-grey, the switch's gate in the accent, copper wires, contact metal, a glass skin, doped source and drain), and the 3D chip's switch layer drawn as stacks of sheets, not fins. Checked and not changed: the atom picture already joins each atom to four neighbours (two above, two below); at screenshot size it can look like three. Next: the switch in 3D, the first level of the build order.
+Applied 2026-11-14, first part (the mismatches): one colour per material in the flat gate, switch and block (silicon blue-grey, the switch's gate in the accent, copper wires, contact metal, a glass skin, doped source and drain), and the 3D chip's switch layer drawn as stacks of sheets, not fins. Checked and not changed: the atom picture already joins each atom to four neighbours (two above, two below); at screenshot size it can look like three. Second part, same day: the switch in 3D (`src/v2/switch3d.js`), the first level of the build order. One change from the spec: the camera looks from a little left of the front (-18°) rather than the stack's -35°, because at -35° the source hid the gate's cut face. Next, if the owner agrees after seeing it: the clean-up of the flat views, then the atom and the gate.
 
 Reviewer: Claude Fable 5.2, asked by Claude Opus 5.5 with a written brief and 25 screenshots; applied by Claude Opus 5.5.
 

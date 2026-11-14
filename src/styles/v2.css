@@ -402,6 +402,12 @@ button.link { padding: 0; margin: 2px 14px 8px 0; border: 0; background: none; c
 
 body.immersive .toast { top: 136px; bottom: auto; left: 50%; }
 
+/* the switch in 3D: the note on a picked part sits beside its name */
+.swnote { position: absolute; left: 0; top: 0; max-width: 240px; padding: 10px 12px; border-radius: 12px; background: var(--panel); border: 1px solid var(--line); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); box-shadow: var(--shadow); font-size: 13px; line-height: 1.45; pointer-events: none; }
+.swnote b { display: block; margin-bottom: 3px; font: 600 11px var(--mono); color: var(--accent); }
+.swnote span { display: block; }
+.c3.dive2 { transition: opacity .25s; }
+
 /* the supply map's dock: short, so the map keeps most of the screen; what stops when a place shuts */
 .dock.supdock { max-height: 40vh; overflow: auto; }
 .dock.supdock .yours { margin: 6px 0 8px; }

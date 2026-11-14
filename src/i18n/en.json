@@ -19,7 +19,7 @@
  "depth.gate.name": "Gate",
  "depth.gate.see": "One logic gate: a tiny circuit that turns the ones and zeros on its inputs into one output, by a fixed rule. This one is four switches, drawn as the coloured layers they are made from.",
  "depth.switch.name": "Switch",
- "depth.switch.see": "One switch, called a transistor, in cross-section. In the newest chips, its gate wraps around thin sheets of silicon.",
+ "depth.switch.see": "One switch, called a transistor. In the newest chips, its gate wraps around thin sheets of silicon.",
  "depth.atom.name": "Atom",
  "depth.atom.see": "Silicon atoms in a crystal, with electrons moving between them.",
  "part.building.racks": "racks",

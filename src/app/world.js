@@ -496,6 +496,8 @@ export function createWorld(cv, on) {
   const api = {
     get z() { return Z; },
     get flying() { return !!fly; },
+    /* the square the current depth is drawn in, in CSS pixels: { B, cx, cy } (for a 3D level drawn in its place) */
+    get frame() { const b = box(); return { B: b.B, cx: b.cx, cy: b.cy }; },
     setZ(z) { setZ(z); },
     flyTo(d) {
       d = clampZ(d);

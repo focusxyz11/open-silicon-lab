@@ -64,7 +64,7 @@ export function start() {
      their shaders compiled on the shared renderer, so going inside finds them ready */
   const ready = (make, view) => () => { if (viewNow !== 'map') return; make().then(v => { if (viewNow !== view) v.pause(); return v.warm(); }); };
   const prewarm = () => [ready(ensureDc, 'dc'), ready(ensureChip, 'chip'), ready(ensureBoard, 'board')].reduce((p, f) => p.then(() => new Promise(r => idle(() => { f(); r(); }))), Promise.resolve());
-  const preload = () => { prewarm(); ['./frame.js', './board3d.js', './story.js', './stories.js', '../engines/weave.js', '../app/world.js', '../data/weave.js', '../app/design.js', '../app/journey.js'].forEach(u => import(u).catch(() => { /* fetched again when needed */ })); };
+  const preload = () => { prewarm(); ['./frame.js', './board3d.js', './story.js', './stories.js', '../engines/weave.js', '../app/world.js', '../data/weave.js', '../app/design.js', '../app/journey.js', './switch3d.js'].forEach(u => import(u).catch(() => { /* fetched again when needed */ })); };
   const ensureMap = () => mapReady || (mapReady = import('./map3d.js').then(m => {
     map = m.createMap($('mapCanvas'), $('mapLabels'), { place: id => (cur && cur.place === id && !sheet.hidden && enterOf(id) ? enter(enterOf(id)) : openPlace(id)), question: key => openQuestion(key), job: need => openJob(need), interact: () => $('hero').classList.add('away') });
     loading(false); map.setState(islandState(), false); idle(preload);
@@ -322,7 +322,7 @@ export function start() {
     /* one HUD: the earlier site's own marks, dive label and band give way to the frame */
     /* one stage: the line's machines draw on the shared renderer too */
     Wm.setChrome({ dots: false, dive: false, lit: true, stage: () => stage($('diveCanvas')) }); Jm.setBand(false);
-    dive = Wm.createWorld($('diveCanvas'), { depth: d => diveAt(d), arrive: d => diveAt(d), part: (d, key) => { divePart = key; diveNotes(); }, pick: th => { diveThread = th; dive.setThread(th); if (!benchCh && flatKind !== 'supply') drawDive(); },
+    dive = Wm.createWorld($('diveCanvas'), { depth: d => diveAt(d), arrive: d => diveAt(d), zoom: z => switchZoom(z), part: (d, key) => { divePart = sw && sw.active() ? sw.hit(lastTap.x, lastTap.y) : key; diveNotes(); }, pick: th => { diveThread = th; dive.setThread(th); if (!benchCh && flatKind !== 'supply') drawDive(); },
       site: id => supplySite(id), mapStep: i => supplyStep(i) });
     return dive;
   });
@@ -339,9 +339,25 @@ export function start() {
   }
   /* words on the picture: the part you tapped, else the part this level is about, from its one home in the atlas */
   function diveNotes() {
-    const id = diveId(), key = divePart || DiveData.NOTE_AT[id]; if (!key) return dive.setNotes([]);
+    const id = diveId(), key = divePart || DiveData.NOTE_AT[id];
+    /* in 3D a note opens only on a part you pick; the picture explains itself until then */
+    if (sw) sw.select(id === 'switch' && divePart ? divePart : null, key && EN_HAS('switch.' + key) ? { title: t('part.switch.' + key), text: t('what.switch.' + key) } : null);
+    if (!key) return dive.setNotes([]);
     const w = DiveData.partWord(id, key); if (!EN_HAS(w)) return dive.setNotes([]);
     dive.setNotes([{ part: key, title: t('part.' + w), text: t('what.' + w), tone: 'cool' }]);
+  }
+  /* ---- the switch in 3D (src/v2/switch3d.js): as the dive reaches the switch, the flat picture gives way to a model
+     of it on the one stage, in the same square; the flat drawing stays the fallback ---- */
+  let sw = null, swMaking = null;
+  const lastTap = { x: 0, y: 0 };
+  $('diveCanvas').addEventListener('pointerup', e => { lastTap.x = e.clientX; lastTap.y = e.clientY; }, true);
+  const ensureSwitch = () => swMaking || (swMaking = import('./switch3d.js').then(m => (sw = m.createSwitch($('diveCanvas'), $('swLabels'), { part: key => { divePart = key; diveNotes(); } }))).catch(() => null));
+  function switchZoom(z) {
+    if (!dive || !WE || flatKind !== 'dive' || $('diveCanvas').hidden) { if (sw) sw.show(0); return; }
+    const ds = WE.IDS.indexOf('switch'), d = z - ds, k = ds < 0 ? 0 : 1 - Math.min(1, Math.max(0, (Math.abs(d) - 0.08) / 0.32));
+    if (k <= 0) { if (sw) sw.show(0); return; }
+    if (!sw) { ensureSwitch().then(s => { if (s) { s.show(k, d, dive.frame); diveNotes(); } }); return; }
+    sw.show(k, d, dive.frame);
   }
   const EN_HAS = w => t('part.' + w) !== 'part.' + w;
   function drawDive() {
@@ -470,7 +486,7 @@ export function start() {
     $('diveCanvas').hidden = true; vui.hidden = true; dive && dive.stop(); hide3d();
     hideBoard(); $('hero').hidden = true; closeSheet(); pui.hidden = true; cui.hidden = true; dc && dc.pause(); map && map.pause(); chip && chip.pause();
     ['mapCanvas', 'mapLabels', 'placeCanvas', 'placeLabels', 'chipCanvas', 'chipLabels'].forEach(k => { $(k).hidden = true; });
-    document.body.classList.remove('immersive'); page.hidden = true; showStage(false);
+    document.body.classList.remove('immersive'); page.hidden = true; if (sw) sw.show(0); showStage(false);
   }
   function showMap(from) {
     $('diveCanvas').hidden = true; vui.hidden = true; dive && dive.stop(); hide3d();

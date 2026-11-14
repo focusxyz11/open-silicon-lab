@@ -100,6 +100,14 @@ soft sky, a part big enough to read gets rounded corners, a shadow below and lig
 small sphere. The line's machines take the 3D views' slate and warm white instead of the earlier site's blueprint
 blue. The earlier site, which does not switch it on, keeps its own look.
 
+**The switch in 3D.** The first level of the zoom drawn on the one stage (`src/v2/switch3d.js`, following
+`docs/reviews/art-direction.md`): one transistor cut open at the front, so the cut face shows the gate wrapped
+round three sheets of silicon, each in its skin, with source and drain on either side and electrons flowing through
+the sheets. As the dive comes within a little of the switch (`zoom` from `src/app/world.js`), the flat picture fades
+and the model takes its place in the same square (`dive.frame`), farther while you are still above it and nearer as
+you go on to the atom, so the zoom stays one movement. Its five names are HTML; a picked part's note opens beside its
+name. A sideways drag turns it 20° each way; up and down still zoom. The flat drawing stays the fallback.
+
 **Everything inside.** Nothing in the chip world leads to the earlier site any more. The flat dive starts from any
 world (`#/dive/<depth>/<world>`): the data centre's chip, a phone, a car, or the made chip (the factory's machine,
 a wafer and a die), each from its top level down to the atom; a place's levels open there. The supply map (`#/supply`)
