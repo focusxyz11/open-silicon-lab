@@ -53,6 +53,14 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
   await page.waitForSelector('#swLabels .swnote:not([hidden])', { timeout: 10000 }).catch(() => problems.push(tag + ': picking the gate opened no note'));
   at = tag + ' dives and map'; await page.evaluate(() => { location.hash = '#/dive/phone/phone'; });
   await page.waitForSelector('#diveui .dock [data-key="next"]', { timeout: 20000 }).catch(() => problems.push(tag + ': the phone dive did not open with a way deeper'));
+  /* the flat dive's words are HTML over the picture: names at rest, a note on a picked part, marks only under Ask */
+  await page.waitForSelector('#flatLabels [data-fpart]', { timeout: 15000 }).catch(() => problems.push(tag + ': the flat dive shows no names'));
+  if (await page.$('#flatLabels .q3')) problems.push(tag + ': question marks show while looking');
+  await page.click('#flatLabels [data-fpart]').catch(() => problems.push(tag + ': a name in the flat dive cannot be picked'));
+  await page.waitForSelector('#flatLabels .swnote:not([hidden])', { timeout: 10000 }).catch(() => problems.push(tag + ': picking a part opened no note'));
+  await page.click('#diveui [data-mode="ask"]').catch(() => {});
+  await page.waitForSelector('#flatLabels .q3', { timeout: 10000 }).catch(() => problems.push(tag + ': under Ask the questions have no marks on the picture'));
+  await page.click('#diveui [data-mode="look"]').catch(() => {});
   await page.evaluate(() => { location.hash = '#/dive/scanner/made'; });
   await page.waitForFunction(() => /scanner|light|machine/i.test(document.querySelector('#diveui .dock') ? document.querySelector('#diveui .dock').textContent : ''), null, { timeout: 20000 }).catch(() => problems.push(tag + ': the made chip did not open at the machine'));
   await page.evaluate(() => { location.hash = '#/supply'; });

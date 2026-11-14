@@ -403,10 +403,29 @@ button.link { padding: 0; margin: 2px 14px 8px 0; border: 0; background: none; c
 body.immersive .toast { top: 136px; bottom: auto; left: 50%; }
 
 /* the switch in 3D: the note on a picked part sits beside its name */
-.swnote { position: absolute; left: 0; top: 0; max-width: 240px; padding: 10px 12px; border-radius: 12px; background: var(--panel); border: 1px solid var(--line); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); box-shadow: var(--shadow); font-size: 13px; line-height: 1.45; pointer-events: none; }
+.swnote { position: absolute; z-index: 3; left: 0; top: 0; max-width: 240px; padding: 10px 12px; border-radius: 12px; background: var(--panel); border: 1px solid var(--line); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); box-shadow: var(--shadow); font-size: 13px; line-height: 1.45; pointer-events: none; }
 .swnote b { display: block; margin-bottom: 3px; font: 600 11px var(--mono); color: var(--accent); }
 .swnote span { display: block; }
 .c3.dive2 { transition: opacity .25s; }
+
+/* the flat dive's words in HTML (src/v2/overlay.js): the names stand where the picture placed them, beside their parts,
+   so they carry no stem; they show a moment after the picture comes to rest. The way deeper: four corner marks */
+.part3.flat::after { display: none; }
+.lbl3.flat { animation: fadein .25s .3s both; z-index: 2; }
+@keyframes fadein { from { opacity: 0; } }
+.q3.flat { margin-top: 0; }
+/* only the corners take a tap: the parts inside the square stay yours to pick */
+.door4 { position: absolute; z-index: 1; left: 0; top: 0; padding: 0; border: 0; background: none; pointer-events: none; animation: fadein .5s both; }
+.door4 i { position: absolute; width: 12px; height: 12px; border: 1.5px solid var(--accent); pointer-events: auto; cursor: pointer; }
+.door4 i::before { content: ''; position: absolute; inset: -8px; }
+.door4 i:nth-child(1) { left: 0; top: 0; border-right: 0; border-bottom: 0; border-top-left-radius: 3px; }
+.door4 i:nth-child(2) { right: 0; top: 0; border-left: 0; border-bottom: 0; border-top-right-radius: 3px; }
+.door4 i:nth-child(3) { left: 0; bottom: 0; border-right: 0; border-top: 0; border-bottom-left-radius: 3px; }
+.door4 i:nth-child(4) { right: 0; bottom: 0; border-left: 0; border-top: 0; border-bottom-right-radius: 3px; }
+.door4:hover i, .door4:focus-visible i { border-color: var(--ink); }
+/* in the dive, Ask's list stays short, so the picture and the marks on it keep their room */
+#diveui .asklist { max-height: 24vh; }
+.askline.hit { background: color-mix(in srgb, var(--warm) 14%, transparent); border-radius: 0 10px 10px 0; }
 
 /* the supply map's dock: short, so the map keeps most of the screen; what stops when a place shuts */
 .dock.supdock { max-height: 40vh; overflow: auto; }
@@ -516,7 +535,9 @@ html[data-move=turn]::view-transition-new(root) { animation-name: vt-turn-in; }
   .brand b { display: none; }
   .tracker { order: 1; margin-left: auto; }
   .bar .round { order: 2; margin-left: 0; }
-  .tnext { max-width: 150px; }
+  /* the bar keeps to two rows whatever the next challenge is called: its name shortens, the theme stays on the first */
+  .tracker { flex: 1 1 0; justify-content: flex-end; }
+  .tnext { max-width: 118px; min-width: 0; }
   .crumbs { top: 116px; left: 8px; }
   .ladder { top: auto; bottom: auto; right: 8px; transform: none; top: 160px; }
   .ladder button { padding: 5px 10px; font-size: 12px; }
