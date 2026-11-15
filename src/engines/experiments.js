@@ -2,8 +2,8 @@
    them, and the ways on from each. Pure: data in, data out; words are chosen by the views.
 
    The state is never written down, so it cannot go stale:
-   - live    it can be done on the site today: a challenge puts a target on it, a stop of it has a try, or it
-             names an address where it is played
+   - live    it can be done on the site today: a challenge puts a target on it, a try sits on its own page
+             (src/v2/probes.js), a stop of it has a try, or it names an address where it is played
    - wanted  it waits for something the lab does not have: an engine not written, a part of an engine, or
              cases, sources and people from outside
    - ready   an engine that exists could judge it; nothing on the site asks it yet
@@ -26,7 +26,7 @@ const unique = a => [...new Set(a)];
 /* the tries of its stops: [{ stop, setting }] (src/data/weave.js TRIES, played inside the stop's question) */
 export const triesOf = x => (x.stops || []).filter(s => TRIES[s]).map(s => ({ stop: s, setting: TRIES[s] }));
 export function stateOf(x) {
-  if ((x.ch && x.ch.length) || x.go || triesOf(x).length) return 'live';
+  if ((x.ch && x.ch.length) || x.probe || x.go || triesOf(x).length) return 'live';
   if (x.wants) return 'wanted';
   const e = x.engine && engineOf(x.engine);
   if (e && e.state !== 'missing') return 'ready';
@@ -43,6 +43,7 @@ export const askKeys = x => ['exp.' + x.id + '.ask'].concat(x.stops && x.stops.l
 /* where it is played: a challenge first, then an address of its own, then the stop that holds its try */
 export function playOf(x) {
   if (x.ch && x.ch.length) return { kind: 'ch', id: x.ch[0], href: '#/do/' + x.ch[0] };
+  if (x.probe) return { kind: 'probe', href: '#/read/' + x.id };
   if (x.go) return { kind: 'go', href: x.go };
   const t = triesOf(x)[0]; if (t) { const [th, d] = t.stop.split('.'); return { kind: 'try', id: t.setting, href: '#/ask/' + th + '/' + d }; }
   return null;

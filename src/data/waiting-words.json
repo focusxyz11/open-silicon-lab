@@ -133,18 +133,9 @@
   "xray.note",
   "floor.title",
   "floor.q",
-  "floor.energy",
-  "floor.rung.floor",
-  "floor.rung.math",
-  "floor.rung.total",
-  "floor.yours",
   "floor.coldTitle",
-  "floor.kelvin",
-  "floor.room",
-  "floor.cold",
   "floor.speedTitle",
   "floor.speed",
-  "floor.aim",
-  "floor.model"
+  "floor.aim"
  ]
 }

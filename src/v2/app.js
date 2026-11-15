@@ -735,6 +735,7 @@ export function start() {
     page.classList.add('reading'); page.hidden = false; page.scrollTop = 0;
   }
   page.addEventListener('input', e => { const f = e.target.closest('[data-readfind]'); if (f) Read.filterIndex(page, f.value); });
+  page.addEventListener('click', e => { const b = e.target.closest('[data-probe] [data-pk]'); if (b) Read.probePick(b, S.chip); });   /* i18n-ok: a selector */
   /* jump: type a name, go to its address. Every place, level and challenge, and the two pages; the list is never
      shown whole, only what matches */
   const jumpIndex = () => Game.PLACES.map(p => ({ name: t('map.' + p + '.t'), kind: kickerOf(p), href: '#/place/' + p }))

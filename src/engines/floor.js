@@ -51,3 +51,11 @@ export function reach(m) {
   const across = Math.SQRT2 * m.side / 1000;
   return { ghz, tick, glass, across, ticks: across / glass };
 }
+
+/* Trying every case: to be sure of a circuit by testing alone, every input it can get must be tried. An adder of
+   b bits takes two numbers, so 2^(2b) pairs; at `rate` tries a second that takes pairs / rate seconds. Exact
+   arithmetic: the only choice is the rate. */
+export const YEAR = 365.25 * 24 * 3600;
+export const WIDTHS = [8, 16, 32, 64];
+export const RATES = [1e6, 1e9, 1e12];
+export function exhaust(bits, rate) { const pairs = Math.pow(2, 2 * bits); return { pairs, seconds: pairs / rate, years: pairs / rate / YEAR }; }

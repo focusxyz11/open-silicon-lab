@@ -19,6 +19,7 @@
                exists but cannot work this out yet) or 'outside' (it needs real cases, sources or people)
    - lens      the way of seeing it is best shown through
    - ch        the challenges that put a target on it (src/v2/game.js): then it is played
+   - probe     1 when a try of its engine sits on its own page (src/v2/probes.js)
    - go        an address where it can be done on the site today, besides a challenge or a try
    - trade     measures that move · given: what it stands on · open: directions being tried
    - figures, cases: beyond its stops' own · debate: an open argument it raises (src/data/debates.js)

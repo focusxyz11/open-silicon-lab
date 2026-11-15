@@ -7,12 +7,14 @@
 
    The index (#/read) is the questions and challenges the lab has, by what can be done with them now. The eleven
    core questions are never listed: one appears under an experiment only once it has been earned (rootShown). */
-import { t, has, fmtDate } from '../core/i18n.js';
+import { t, has, fmtDate, fmtNum, fmtWords } from '../core/i18n.js';
 import { THREADS, CASES } from '../data/weave.js';
 import { DEBATES } from '../data/debates.js';
 import { engineOf, directionOf } from '../data/layers.js';
 import * as X from '../engines/experiments.js';
 import { rootShown } from '../engines/weave.js';
+import { probeOf, startOf } from './probes.js';
+import { YEAR } from '../engines/floor.js';
 
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 const ext = (href, html) => '<a href="' + esc(href) + '" target="_blank" rel="noopener">' + html + '</a>';
@@ -32,12 +34,59 @@ export function card(x, note) {
 }
 
 /* the label of the button that plays it */
-function playHtml(x, titleOf, chOf) {
+function playHtml(x, titleOf, chOf, chip) {
   const p = X.playOf(x); if (!p) return '';
+  if (p.kind === 'probe') return probeHtml(x, chip);
   const ch = p.kind === 'ch' ? chOf(p.id) : null;
   const label = ch ? t('read.try.ch', { name: titleOf(ch) }) : t('read.try.' + p.kind);
   return '<div class="readplay"><a class="btn primary" href="' + esc(p.href) + '">' + esc(label) + '</a>' +
     ((x.ch || []).slice(1).map(id => chOf(id)).filter(Boolean).map(c => '<a class="btn ghost" href="#/do/' + esc(c.id) + '">' + esc(titleOf(c)) + '</a>').join('')) + '</div>';
+}
+
+/* ---- a try on the page (src/v2/probes.js): controls, and the engine's answer in words and one small picture ---- */
+const SUP = '⁰¹²³⁴⁵⁶⁷⁸⁹', sup = n => String(n).replace('-', '⁻').replace(/\d/g, d => SUP[d]);
+const sci = v => { const e = Math.floor(Math.log10(Math.abs(v))), m = v / Math.pow(10, e); return fmtNum(Number(m.toPrecision(2))) + ' × 10' + sup(e); };
+export const num = v => typeof v !== 'number' ? String(v) : !Number.isFinite(v) ? '—' : v === 0 ? '0'
+  : Math.abs(v) >= 1e15 || Math.abs(v) < 1e-3 ? sci(v) : Math.abs(v) >= 1e6 ? fmtWords(v) : Number.isInteger(v) ? fmtNum(v) : fmtNum(Number(v.toPrecision(2)));
+/* a length of time, in the largest unit that keeps it readable */
+export function dur(s) {
+  const U = [['y', YEAR], ['d', 86400], ['h', 3600], ['min', 60], ['s', 1]], [u, k] = U.find(([, k]) => s >= k) || U[U.length - 1], v = s / k;
+  return t('probe.dur.' + u, { v: num(v < 10 && !Number.isInteger(v) ? Number(v.toPrecision(2)) : v >= 10 && v < 1e6 ? Math.round(v) : v), n: v });
+}
+const fill = vars => vars ? Object.fromEntries(Object.entries(vars).map(([k, v]) => [k, k === 'n' ? v : v && typeof v === 'object' && 's' in v ? dur(v.s) : num(v)])) : vars;
+const cell = c => c && typeof c === 'object' ? (c.code != null ? '<code>' + esc(c.code) + '</code>' : esc(t(c.key, fill(c.vars)))) : esc(num(c));
+const valName = (c, i) => { const v = c.values[i]; if (c.keys) return t(c.keys[i]); if (c.names) { const L = t(c.names); return Array.isArray(L) ? L[i] : String(v); } return c.each ? t(c.each, { k: v, v, n: v }) : String(v); };
+const VALS = {};
+function barsHtml(B) {
+  const L = B.items.map(b => (b.v > 0 ? Math.log10(b.v) : null)), ok = L.filter(v => v != null), lo = Math.floor(Math.min(...ok)) - 0.4, hi = Math.max(...ok);
+  return '<div class="pbars">' + B.items.map((b, i) => '<div class="pbar' + (b.floor ? ' floor' : '') + '"><span class="pl">' + esc(t(b.key)) + '</span><span class="pt"><i style="width:' + (L[i] == null ? 0 : (4 + 96 * (L[i] - lo) / Math.max(1e-9, hi - lo))).toFixed(1) + '%"></i></span><span class="pv">' + esc(b.v > 0 ? t(B.unit, { v: sci(b.v) }) : '0') + '</span></div>').join('') + '<p class="small muted">' + esc(t('probe.tenfold')) + '</p></div>';
+}
+function lineHtml(Ln, label) {
+  const n = Ln.pts.length, X = i => 24 + i * (284 / (n - 1)), Y = v => 104 - v * 92, pts = Ln.pts.map((v, i) => X(i).toFixed(1) + ',' + Y(v).toFixed(1)).join(' ');
+  return '<svg class="pline" viewBox="0 0 320 124" role="img" aria-label="' + esc(label) + '"><rect class="band" x="24" y="' + Y(Ln.hi) + '" width="284" height="' + (Y(Ln.lo) - Y(Ln.hi)) + '"></rect>' +
+    '<line class="ax" x1="24" y1="' + Y(1) + '" x2="308" y2="' + Y(1) + '"></line><line class="ax" x1="24" y1="' + Y(0) + '" x2="308" y2="' + Y(0) + '"></line>' +
+    '<text x="12" y="' + (Y(1) + 4) + '">1</text><text x="12" y="' + (Y(0) + 4) + '">0</text><polyline points="' + pts + '"></polyline>' +
+    Ln.pts.map((v, i) => '<circle cx="' + X(i).toFixed(1) + '" cy="' + Y(v).toFixed(1) + '" r="3.2" class="' + (v >= Ln.hi ? 'hi' : v <= Ln.lo ? 'lo' : 'mid') + '"></circle>').join('') + '</svg>';
+}
+export function probeHtml(x, chip) {
+  const P = probeOf(x.id); if (!P) return '';
+  const v = VALS[x.id] || (VALS[x.id] = startOf(P, chip || {})), R = P.run(v, chip || {}), says = R.says.map(s => t(s.key, fill(s.vars)));
+  let h = '<section class="probe" data-probe="' + esc(x.id) + '"><p class="kicker">' + esc(t('probe.k')) + '</p>';
+  h += P.controls.map(c => '<div class="pctl"><span class="small"><b>' + esc(t(c.label)) + '</b></span><div class="chips">' + c.values.map((val, i) => '<button type="button" class="chipb" data-pk="' + esc(c.k) + '" data-pv="' + i + '" aria-pressed="' + (val === v[c.k]) + '">' + esc(valName(c, i)) + '</button>').join('') + '</div></div>').join('');
+  h += '<div class="pout" aria-live="polite">' + says.map((w, i) => '<p' + (i ? '' : ' class="plead"') + '>' + esc(w) + '</p>').join('');
+  if (R.bars) h += barsHtml(R.bars);
+  if (R.line) h += lineHtml(R.line, says[0]);
+  if (R.table) h += '<div class="ptabw"><table class="ptab"><thead><tr>' + R.table.head.map(k => '<th>' + esc(t(k)) + '</th>').join('') + '</tr></thead><tbody>' + R.table.rows.map(r => '<tr>' + r.map((c, i) => '<td data-h="' + esc(t(R.table.head[i])) + '">' + cell(c) + '</td>').join('') + '</tr>').join('') + '</tbody></table></div>';
+  if (R.foot) h += '<p class="small muted">' + esc(t(R.foot)) + '</p>';
+  return h + '</div></section>';
+}
+/* a control was picked: the engine runs again and the try is drawn anew, with the same control in focus */
+export function probePick(btn, chip) {
+  const sec = btn.closest('[data-probe]'), x = sec && X.experimentOf(sec.dataset.probe), P = x && probeOf(x.id); if (!P) return;
+  const c = P.controls.find(k => k.k === btn.dataset.pk); if (!c) return;
+  VALS[x.id] = Object.assign({}, VALS[x.id] || startOf(P, chip || {}), { [c.k]: c.values[+btn.dataset.pv] });
+  const wrap = document.createElement('div'); wrap.innerHTML = probeHtml(x, chip); const fresh = wrap.firstElementChild;
+  sec.replaceWith(fresh); const f = fresh.querySelector('[data-pk="' + c.k + '"][data-pv="' + btn.dataset.pv + '"]'); if (f) f.focus();
 }
 
 /* one experiment, as a document. ctx: { S, FACT, titleOf, chOf, didOn } */
@@ -47,7 +96,7 @@ export function experimentHtml(id, ctx) {
   const st = X.stateOf(x), ask = askOf(x), e = x.engine && engineOf(x.engine), FACT = ctx.FACT || {};
   let h = '<article class="readx" style="--qc:' + colorOf(x) + '">';
   h += '<p class="kicker"><span class="rstate rs-' + st + '">' + esc(t('read.state.' + st)) + '</span></p>';
-  h += '<h1 class="readq">' + esc(ask) + '</h1>' + playHtml(x, ctx.titleOf, ctx.chOf);
+  h += '<h1 class="readq">' + esc(ask) + '</h1>' + playHtml(x, ctx.titleOf, ctx.chOf, ctx.S && ctx.S.chip);
 
   /* what is true: where it is seen, each with its note; the engine; the figures and the real cases */
   let tr = '';
