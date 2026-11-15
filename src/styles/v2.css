@@ -945,3 +945,41 @@ textarea.fcode { width: 100%; min-height: 110px; resize: vertical; box-sizing: b
 .fmask { width: 100%; height: auto; display: block; }
 @media (max-width: 900px) { .fgrid { grid-template-columns: 1fr 1fr; } }
 @media (max-width: 560px) { .fgrid { grid-template-columns: 1fr; } }
+
+/* ---- Plan (src/v2/plan.js) ---- */
+.planbox { display: grid; gap: 10px; }
+.plansvg { width: 100%; height: auto; }
+.plansvg .die { fill: var(--panel-solid); stroke: var(--line); stroke-width: 1.5; }
+.plansvg .sram, .plansvg .io { fill: color-mix(in srgb, var(--ink) 6%, transparent); stroke: var(--line); }
+.plansvg .core { fill: color-mix(in srgb, var(--ink) 9%, transparent); transition: fill .3s; } .plansvg .core.on { fill: var(--qc); }
+.plansvg .special { fill: color-mix(in srgb, var(--warm) 35%, var(--panel-solid)); stroke: var(--warm); }
+.plansvg .mem { fill: color-mix(in srgb, var(--ink) 8%, var(--panel-solid)); stroke: var(--muted); }
+.plansvg .ask { fill: none; stroke: var(--bad); opacity: .28; stroke-linecap: round; transition: stroke-width .4s; }
+.plansvg .got { fill: none; stroke: var(--qc); opacity: .9; stroke-linecap: round; transition: stroke-width .4s; }
+.plansvg .pl { fill: var(--muted); font: 600 11px var(--mono); } .plansvg .pl.strong { fill: var(--ink); }
+.pkey { display: flex; flex-wrap: wrap; gap: 4px 14px; margin: 0; } .pkey .k { display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; background: color-mix(in srgb, var(--ink) 12%, transparent); }
+.pkey .k.on { background: var(--qc); } .pkey .k.kask { background: var(--bad); opacity: .35; } .pkey .k.kgot { background: var(--qc); height: 6px; }
+.plancard { padding: 14px 16px; border-radius: 14px; background: var(--panel-solid); border: 1px solid var(--line); }
+.plancard p { margin: 6px 0; } .plancard .kicker { color: var(--qc); } .plancard .pctl { margin-top: 8px; }
+.planbox .chipb[aria-pressed=true], .clockbox .chipb[aria-pressed=true] { background: var(--qc); color: #fff; }
+/* ---- Clock (src/v2/clock.js) ---- */
+.clockbox { display: grid; gap: 8px; }
+.clkc { width: 100%; height: auto; }
+.clkc .grid { stroke: var(--line); stroke-width: 1; }
+.clkc .u { fill: var(--muted); font: 600 10px var(--mono); }
+.clkl { display: grid; gap: 6px; }
+.clr { display: grid; grid-template-columns: minmax(0, 15em) 1fr; gap: 12px; align-items: center; }
+.cll { font-size: 13px; font-weight: 600; }
+.clt { position: relative; height: 14px; border-radius: 7px; background: linear-gradient(var(--line), var(--line)) 0 50% / 100% 2px no-repeat; }
+.clt i { position: absolute; top: 2px; bottom: 2px; width: 1px; background: var(--line); }
+.clt b { position: absolute; top: 50%; width: 12px; height: 12px; margin: -6px 0 0 -6px; border-radius: 50%; background: var(--qc); box-shadow: 0 0 0 3px color-mix(in srgb, var(--qc) 25%, transparent); }
+.cla .clt { background: none; height: 16px; }
+.clt em { position: absolute; top: 0; transform: translateX(-50%); font: 600 10.5px var(--mono); font-style: normal; color: var(--muted); white-space: nowrap; }
+@media (max-width: 560px) { .clr { grid-template-columns: 1fr; gap: 3px; } .cla .cll { display: none; } .clt em { font-size: 9.5px; } .clt em:nth-child(2) { display: none; } }
+.clkc { background: var(--panel-solid); border-radius: 12px; }
+.clkc .ref { fill: none; stroke: var(--ink); stroke-width: 1.5; stroke-dasharray: 6 5; opacity: .8; }
+.chipb .sw { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 6px; }
+.clkcard { padding: 14px 16px; border-radius: 14px; background: var(--panel-solid); border: 1px solid var(--line); }
+.clkcard p { margin: 6px 0; }
+.clkdec { display: flex; flex-wrap: wrap; gap: 6px; } .clkdec span { padding: 4px 10px; border-radius: 999px; font-size: 13px; background: color-mix(in srgb, var(--qc) 12%, transparent); }
+.clkdec span.stop { background: color-mix(in srgb, var(--bad) 14%, transparent); }
