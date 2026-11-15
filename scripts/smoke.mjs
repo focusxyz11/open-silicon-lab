@@ -95,6 +95,14 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
     await page.click('#page [data-clock] [data-clk="frequency"]').catch(() => problems.push(tag + ': the clock cannot be changed'));
     const after = await page.textContent('#page [data-clock] .clkcard').catch(() => '');
     if (!after || after === before) problems.push(tag + ': the clock did not answer another measure'); }
+  /* Side by side: count the cooling, and the card says what it did to the loops */
+  await page.evaluate(() => { location.hash = '#/w/strange'; });
+  await page.waitForSelector('#page [data-side] .sbl', { timeout: 15000 }).catch(() => problems.push(tag + ': the lanes are not drawn'));
+  if ((await page.$$('#page [data-side] .sbl')).length < 6) problems.push(tag + ': a lane is missing');
+  { const before = await page.textContent('#page [data-side] .sbcard').catch(() => '');
+    await page.click('#page [data-side] [data-sbk="cool"][data-sbv="2"]').catch(() => problems.push(tag + ': the cooling cannot be counted'));
+    const after = await page.textContent('#page [data-side] .sbcard').catch(() => '');
+    if (!after || after === before) problems.push(tag + ': the lanes did not answer the cooling'); }
   await page.evaluate(() => { location.hash = '#/w'; });
   await page.waitForFunction(() => document.querySelectorAll('#page .qgrid .qcard').length > 90, null, { timeout: 15000 }).catch(() => problems.push(tag + ': the questions that lead in are not there'));
   /* a try on the page: change a choice, and the engine answers again */

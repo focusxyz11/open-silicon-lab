@@ -13,6 +13,7 @@ import { wallsHtml } from './walls.js';
 import { formsHtml } from './forms.js';
 import { planHtml } from './plan.js';
 import { clockHtml } from './clock.js';
+import { sideHtml } from './side.js';
 import { probeHtml } from './read.js';
 import { experimentOf } from '../engines/experiments.js';
 
@@ -36,6 +37,7 @@ function lensHtml(id, P, chip) {
   else if (W.lens === 'forms') live = formsHtml();
   else if (W.lens === 'plan') live = planHtml(chip);
   else if (W.lens === 'clock') live = clockHtml(chip);
+  else if (W.lens === 'side') live = sideHtml();
   else if (W.lens === 'probes') live = W.probes.map(pid => { const x = experimentOf(pid); return x ? probeHtml(x, chip) : ''; }).join('');
   let h = '<section class="wlens"><p class="kicker">' + esc(t('world.lens', { name: P.lens })) + '</p><p class="wlays">' + il(laysOut(P)) + '</p>';
   if (live) h += live;
