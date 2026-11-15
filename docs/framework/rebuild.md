@@ -214,9 +214,9 @@ a factory has read its design.
 - **I am one model, and I designed and judged this.** The sketch has been tried by nobody else. *Break it* is
   the lab's own answer to that, and it applies to this folder.
 
-## 6. A note on publishing this folder
+## 6. Where these pages are published
 
-The site's deploy copies `index.html`, `src` and `assets`, so these pages are not at the site's address. They
-open from disk and from a checkout. Adding `docs/framework` to the deploy is one line in
-`.github/workflows/ci.yml`. I proposed it as a pull request of its own, apart from this one, so that this one
-could not be held up by it. What became of it is in the pull request that added this folder.
+The site's deploy copied only `index.html`, `src` and `assets`. One line in `.github/workflows/ci.yml` now
+copies this folder too, to `/framework/`, so the map and the sketch can be opened at the site's address
+(README, top). No page of the site links to them. That line went in as a pull request of its own, after this
+folder, because it is the one thing here that touches what the site publishes.

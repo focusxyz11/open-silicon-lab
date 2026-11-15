@@ -19,7 +19,10 @@ in which order.
 | [forms.html](forms.html) | A working sketch of one world's way of seeing: the design studio rebuilt, running on the lab's real engine |
 | [atom.svg](atom.svg), [moves.svg](moves.svg) | The experiment and its seven sides; how a visitor and a contributor move |
 
-The two HTML files open in any browser, straight from disk, in dark and light.
+The two HTML files open in any browser, straight from disk, in dark and light. They are also published with
+the site, at [/framework/map.html](https://focusxyz11.github.io/open-silicon-lab/framework/map.html) and
+[/framework/forms.html](https://focusxyz11.github.io/open-silicon-lab/framework/forms.html); no page of the
+site links to them.
 
 ## The two-minute summary
 
@@ -92,9 +95,10 @@ I read the site's data, engines and words, and counted.
 - **The words are thin where the owner feels it.** The eleven questions hold about 4,600 words between them, in
   one-line stops: a question, a note, sometimes a list of what people try. *What could a chip never do* has 172
   words. *What part of making chips can't be written down* has 274 and no engine.
-- **The engines are the real content, and half of them cannot be seen.** Fifteen pure, tested modules. The
+- **The engines are the real content, and half of them cannot be seen.** Seventeen pure, tested modules in
+  `src/engines/`. The
   physics floor (the least energy a step can take) has no picture at all; its words wait in a file. The stress
-  model runs ten years of a chip's life and is reached through three challenges at the port.
+  model runs ten years of a chip's life and is reached through three challenges at one stage of the loop.
 - **The pictures show things, not tensions.** A gate in 3D is a good picture of a gate. None of the eleven
   questions is about what a gate looks like. *Why can a perfect design fail?* is about the gap between one exact
   design and a million inexact copies, and no picture on the site shows a million copies.
@@ -304,9 +308,9 @@ I decided everything I could. These four I should not.
 3. **People who have made chips.** The world of *what can't be written down* cannot be filled by me or by any
    AI: it needs stories from people who have worked in a factory or taped out a chip. Whether and how to invite
    them is yours.
-4. **Publishing this folder with the site.** These pages open from disk and from the repository. Showing them
-   at the site's address needs one line in the deploy workflow. I tried to add it in a pull request of its own;
-   see the note at the end of [rebuild.md](rebuild.md) for whether it went through.
+4. **The licence of what the community adds.** Still open from the community review, and it matters more as
+   the kinds of entry grow to engines and experiments: the code is MIT, and an entry's words are its author's
+   own. Whether entries need a stated licence of their own is yours to settle.
 
 ## 8. What I looked at
 
