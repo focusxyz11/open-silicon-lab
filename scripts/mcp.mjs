@@ -21,6 +21,7 @@ useLedger(collect());
 const str = d => ({ type: 'string', description: d });
 const WHO = { author: str(EN['api.arg.author']), kind: { type: 'string', enum: ['person', 'ai', 'both', 'program'], description: EN['api.arg.kind'] }, ai: str(EN['api.arg.ai']), about: str(EN['api.arg.about']) };
 const TOOLS = [
+  { name: 'look', fn: a => API.look(a || {}), description: EN['api.tool.look'], inputSchema: { type: 'object', properties: { at: str(EN['api.arg.lookAt']) } } },
   { name: 'list_plan', fn: () => API.listPlan(), description: EN['api.tool.plan'], inputSchema: { type: 'object', properties: {} } },
   { name: 'get_job', fn: a => API.getJob(a.job), description: EN['api.tool.job'], inputSchema: { type: 'object', properties: { job: str(EN['api.arg.job']) }, required: ['job'] } },
   { name: 'check_design', fn: a => API.checkDesign(a), description: EN['api.tool.check'], inputSchema: { type: 'object', properties: { job: str(EN['api.arg.job']), code: str(EN['api.arg.code']), slice: str(EN['api.arg.slice']), regbit: str(EN['api.arg.regbit']), select: str(EN['api.arg.select']) }, required: ['job', 'code'] } },
