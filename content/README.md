@@ -94,5 +94,5 @@ truths as the only connections, two halves (what a chip is, how a chip comes to 
 | know | yes | new | missing |
 | open | yes | exists (the supply map) | exists (the chain); the cost of making is missing |
 | divide | yes | live (Plan) | exists (Work, with the Chip engine) |
-| life | yes | new | missing |
+| life | yes | live (Swarm) | exists in part (Swarm: trails and eyes) |
 | scale | yes | live (Clock) | exists (Scaling, from open data) |

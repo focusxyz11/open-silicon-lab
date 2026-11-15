@@ -29,7 +29,7 @@ export const WORLDS = {
   know: { sketch: 'probe', play: {} },
   open: { lens: 'view', href: '#/supply', sketch: 'map', play: { 'Close one place.': '#/supply' } },
   divide: { lens: 'plan', sketch: 'plan', play: { 'Feed the cores.': '#/do/fed', 'More cores, still cheap.': '#/do/cores' } },
-  life: { sketch: 'swarm', play: {} },
+  life: { lens: 'swarm', sketch: 'swarm', play: { 'Quiet costs nothing.': 'here', 'Survive the damage.': 'here' } },
   scale: { lens: 'clock', sketch: 'clock', play: { 'One generation smaller.': '#/ask/scale/switch', 'Half as fast again': '#/do/fast' } }
 };
 /* a challenge's name as the documents write it: the bold words at the start of its first cell */

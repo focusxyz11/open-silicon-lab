@@ -56,8 +56,10 @@ fall when nothing happens and the pattern survive damage, or not.
 **What it shows that words cannot:** that behaviour can belong to the whole and to no part, and what that costs and
 gains.
 
-**Status:** partly: the lab's own record of who worked on what is a swarm already, read by its engine. A picture for
-spikes and swarms is new.
+**Status:** live on the world's page: a colony of ants on a short and a long bridge, each ant following the rule
+measured on Argentine ants, with the rule, the colony, the shortcut and the damage to change; and two eyes side by
+side, a camera that reads every pixel and eye-like pixels that report only what changed. Still to come: spiking
+neurons, and the clocked chip doing the same task beside the swarm.
 
 ![Swarm](img/swarm.svg)
 
@@ -72,8 +74,11 @@ not ticks), and how much damage it survives.
 **What it decides:** whether a swarm solves a task; how much energy it spends against a clocked chip; how it degrades
 when parts are removed.
 
-**Today:** missing, except for one live specimen: the lab itself, whose ledger works out what is open and pulls work
-toward it (`src/engines/ledger.js`, the frontier). The first version of the lab had a pair of spiking neurons to tune.
+**Today:** exists in part (`src/engines/swarm.js`): trails, with the choice rule fitted by Deneubourg and colleagues
+(1990) and the late shortcut of Goss and colleagues (1989); and eyes, counting a camera's reads against an event
+camera's reports. Missing: spiking neurons that collect, leak and fire (the first version of the lab had a pair to
+tune), and local learning. One more live specimen: the lab itself, whose ledger works out what is open and pulls
+work toward it (`src/engines/ledger.js`, the frontier).
 
 ## Questions inside
 
@@ -97,8 +102,9 @@ toward it (`src/engines/ledger.js`, the frontier). The first version of the lab 
 | **Survive the damage.** Remove units one by one. How many before the swarm fails, and the chip? | how many are removed | the task still done |
 | **Change the rule.** Change how this lab decides which open thing calls loudest. Does work spread better? | the rule | how the record's work would have spread under it |
 
-"Tune a neuron" came from the first version of the lab; "change the rule" can be run on the lab's record today; the
-others need the Swarm engine.
+"Quiet costs nothing" and "Survive the damage" are played on the page (the eyes, and a third of the ants taken
+away); "Tune a neuron" came from the first version of the lab and needs spiking neurons in the engine; "change the
+rule" can be run on the lab's record today.
 
 ## Innovation direction: neuromorphic, event-driven and living computers
 
