@@ -9,6 +9,8 @@ import { THREADS } from '../data/weave.js';
 import { WORLDS, WORLD_IDS, challengeName } from '../data/worlds.js';
 import { parseWorld, render, inline } from './md.js';
 import { copiesHtml } from './copies.js';
+import { wallsHtml } from './walls.js';
+import { formsHtml } from './forms.js';
 import { probeHtml } from './read.js';
 import { experimentOf } from '../engines/experiments.js';
 
@@ -28,6 +30,8 @@ function lensHtml(id, P, chip) {
   const W = WORLDS[id] || {}, sketch = '<img class="wsketch" src="content/img/' + esc(W.sketch || id) + '.svg" alt="' + esc(P.lens) + '">';
   let live = '';
   if (W.lens === 'copies') live = copiesHtml();
+  else if (W.lens === 'walls') live = wallsHtml(chip) + (W.probes || []).map(pid => { const x = experimentOf(pid); return x ? probeHtml(x, chip) : ''; }).join('');
+  else if (W.lens === 'forms') live = formsHtml();
   else if (W.lens === 'probes') live = W.probes.map(pid => { const x = experimentOf(pid); return x ? probeHtml(x, chip) : ''; }).join('');
   let h = '<section class="wlens"><p class="kicker">' + esc(t('world.lens', { name: P.lens })) + '</p><p class="wlays">' + il(laysOut(P)) + '</p>';
   if (live) h += live;

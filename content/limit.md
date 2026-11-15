@@ -63,8 +63,8 @@ and see which walls fell.
 **What it shows that words cannot:** that walls are of different kinds, at very different distances. The hard
 ones are mostly far away; the ones that stop us now are mostly soft.
 
-**Status:** new. Three tries from the Floor engine are on the lab's pages today (the floor, the cold, trying every
-case).
+**Status:** live on the world's page: six directions with their walls, your chip placed on each by the Floor engine;
+the cold as a try beside it.
 
 ![Walls](img/walls.svg)
 

@@ -65,8 +65,9 @@ said ("chosen by a program: 5 gates, 42 switches"; "placed by a program: 700 mov
 **What it shows that words cannot:** where meaning can slip, between the forms. The questions of this world sit in
 those gaps.
 
-**Status:** partly. The studio has every form today, as a row of steps. A working sketch of Forms runs on the lab's
-real engine ([forms.html](https://focusxyz11.github.io/open-silicon-lab/framework/forms.html)).
+**Status:** live on the world's page: the six forms of the half adder, the voter or the full adder, from the Design
+flow engine, with a touched signal lit in all of them, and a description you can write yourself. The studio keeps
+its stations for the longer jobs.
 
 ![Forms](img/forms.svg)
 
