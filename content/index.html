@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Open Silicon Lab · The eleven, from first principles</title>
+<!-- A reader for the documents in this folder: it shows README.md, or the document named in ?d=, as a page. The
+     documents are Markdown so they read the same on GitHub; this page renders the small part of Markdown they use. -->
+<style>
+  :root { --bg: #0b1120; --panel: #121b2e; --line: #26344f; --ink: #e6ecf5; --muted: #93a3bb; --accent: #5aa9ff; color-scheme: dark; }
+  @media (prefers-color-scheme: light) { :root { --bg: #eef2f7; --panel: #ffffff; --line: #d5dde8; --ink: #16202e; --muted: #5b6a80; --accent: #2f7de1; color-scheme: light; } }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 17px/1.6 Inter, system-ui, -apple-system, "Segoe UI", sans-serif; }
+  header { position: sticky; top: 0; z-index: 2; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; padding: 10px 20px; background: color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); font-size: 14px; }
+  header a { color: var(--muted); text-decoration: none; } header a:hover, header a[aria-current] { color: var(--ink); }
+  header b { color: var(--ink); margin-right: 8px; }
+  @media (max-width: 600px) { header { position: static; } }
+  main { max-width: 860px; margin: 0 auto; padding: 32px 22px 80px; }
+  h1 { font: 700 clamp(28px, 4vw, 40px)/1.15 Georgia, "Besley", serif; margin: 8px 0 18px; }
+  h2 { font: 700 23px/1.25 Georgia, "Besley", serif; margin: 40px 0 12px; padding-top: 14px; border-top: 1px solid var(--line); }
+  h3 { font-size: 18px; margin: 26px 0 8px; }
+  p, li { max-width: 72ch; }
+  a { color: var(--accent); }
+  blockquote { margin: 0 0 22px; padding: 10px 16px; border-left: 4px solid var(--accent); background: var(--panel); border-radius: 0 12px 12px 0; color: var(--ink); }
+  blockquote p { margin: 0; }
+  code { font: 0.88em ui-monospace, "SF Mono", Menlo, monospace; background: var(--panel); padding: 1px 5px; border-radius: 5px; border: 1px solid var(--line); }
+  img { display: block; max-width: 100%; height: auto; margin: 18px 0; border-radius: 14px; }
+  .tw { overflow-x: auto; margin: 14px 0 22px; border: 1px solid var(--line); border-radius: 12px; background: var(--panel); }
+  table { border-collapse: collapse; width: 100%; font-size: 14.5px; line-height: 1.45; }
+  th, td { text-align: left; vertical-align: top; padding: 8px 12px; border-bottom: 1px solid var(--line); }
+  th { font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+  tr:last-child td { border-bottom: 0; }
+  .muted { color: var(--muted); }
+</style>
+</head>
+<body>
+<header id="nav"></header>
+<main id="doc"><p class="muted">Loading…</p></main>
+<script type="module">
+  const DOCS = [['README', 'The eleven'], ['think'], ['strange'], ['limit'], ['fail'], ['idea'], ['make'], ['know'], ['open'], ['divide'], ['life'], ['scale'], ['STRUCTURE', 'What came out']];
+  const want = new URLSearchParams(location.search).get('d') || 'README', name = DOCS.some(d => d[0] === want) ? want : 'README';
+  document.getElementById('nav').innerHTML = '<b>Open Silicon Lab</b>' + DOCS.map(([d, label]) => '<a href="?d=' + d + '"' + (d === name ? ' aria-current="page"' : '') + '>' + (label || d) + '</a>').join('');
+  const esc = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  /* inline: code first (kept as is), then images, links, bold, italics */
+  const inline = s => esc(s).split(/(`[^`]+`)/).map((part, i) => i % 2 ? '<code>' + part.slice(1, -1) + '</code>' : part
+    .replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (_, alt, src) => '<img src="' + src + '" alt="' + alt + '">')
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_, label, href) => { const m = /^([A-Za-z]+)\.md$/.exec(href); return '<a href="' + (m ? '?d=' + m[1] : href) + '"' + (/^https?:/.test(href) ? ' target="_blank" rel="noopener"' : '') + '>' + label + '</a>'; })
+    .replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>').replace(/(^|[^*])\*([^*\s][^*]*)\*/g, '$1<em>$2</em>')).join('');
+  function render(md) {
+    const lines = md.replace(/\r/g, '').split('\n'), out = []; let i = 0;
+    while (i < lines.length) {
+      const L = lines[i];
+      if (!L.trim()) { i++; continue; }
+      let m;
+      if ((m = /^(#{1,3}) (.*)$/.exec(L))) { out.push('<h' + m[1].length + '>' + inline(m[2]) + '</h' + m[1].length + '>'); i++; continue; }
+      if (L.startsWith('|')) { const rows = []; while (i < lines.length && lines[i].startsWith('|')) rows.push(lines[i++]);
+        const cells = r => r.slice(1, r.lastIndexOf('|')).split('|').map(c => c.trim());
+        out.push('<div class="tw"><table><thead><tr>' + cells(rows[0]).map(c => '<th>' + inline(c) + '</th>').join('') + '</tr></thead><tbody>' + rows.slice(2).map(r => '<tr>' + cells(r).map(c => '<td>' + inline(c) + '</td>').join('') + '</tr>').join('') + '</tbody></table></div>'); continue; }
+      if (L.startsWith('>')) { const q = []; while (i < lines.length && lines[i].startsWith('>')) q.push(lines[i++].replace(/^>\s?/, '')); out.push('<blockquote><p>' + inline(q.join(' ')) + '</p></blockquote>'); continue; }
+      if (/^(- |\d+\. )/.test(L)) { const ol = /^\d/.test(L), items = []; while (i < lines.length && (/^(- |\d+\. )/.test(lines[i]) || /^ {2,}\S/.test(lines[i]))) { if (/^ {2,}/.test(lines[i])) items[items.length - 1] += ' ' + lines[i].trim(); else items.push(lines[i].replace(/^(- |\d+\. )/, '')); i++; }
+        out.push((ol ? '<ol>' : '<ul>') + items.map(x => '<li>' + inline(x) + '</li>').join('') + (ol ? '</ol>' : '</ul>')); continue; }
+      const para = []; while (i < lines.length && lines[i].trim() && !/^(#{1,3} |\||>|- |\d+\. )/.test(lines[i])) para.push(lines[i++]);
+      out.push('<p>' + inline(para.join(' ')) + '</p>');
+    }
+    return out.join('\n');
+  }
+  fetch(name + '.md').then(r => (r.ok ? r.text() : Promise.reject(r.status))).then(md => {
+    document.getElementById('doc').innerHTML = render(md);
+    const h = document.querySelector('#doc h1'); if (h) document.title = 'Open Silicon Lab · ' + h.textContent;
+  }, () => { document.getElementById('doc').innerHTML = '<p class="muted">This document could not be opened.</p>'; });
+</script>
+</body>
+</html>
