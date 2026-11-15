@@ -46,7 +46,7 @@ test('the site shows each world from its document: every challenge it says is pl
     assert.equal(P.title, EN['thread.' + id + '.root'], id + ': title');
     for (const k of Object.keys(W.play)) assert.ok(names.includes(k), id + ': "' + k + '" is not a challenge its document names');
     for (const v of Object.values(W.play)) assert.ok(v === 'here' || /^#\/[a-z0-9\/-]+$/.test(v), id + ': ' + v);
-    if (Object.values(W.play).includes('here')) assert.ok(['copies', 'walls', 'probes', 'forms', 'plan', 'clock', 'side', 'swarm'].includes(W.lens), id + ': played "here" needs a live picture');
+    if (Object.values(W.play).includes('here')) assert.ok(['copies', 'walls', 'probes', 'forms', 'plan', 'clock', 'side', 'swarm', 'tune'].includes(W.lens), id + ': played "here" needs a live picture');
     for (const p of W.probes || []) assert.ok(PROBES[p], id + ': no try ' + p);
     assert.ok(existsSync(new URL('../content/img/' + (W.sketch || id) + '.svg', import.meta.url)), id + ': its sketch');
   }

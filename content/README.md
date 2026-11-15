@@ -91,7 +91,7 @@ truths as the only connections, two halves (what a chip is, how a chip comes to 
 | fail | yes | live (Copies) | exists |
 | idea | yes | live (Forms) | exists |
 | make | yes | exists (the line) | missing (the factory's flow exists) |
-| know | yes | new | missing |
+| know | yes | live, a draft (Probe) | a draft for review (Tune) |
 | open | yes | exists (the supply map) | exists (the chain); the cost of making is missing |
 | divide | yes | live (Plan) | exists (Work, with the Chip engine) |
 | life | yes | live (Swarm) | exists in part (Swarm: trails and eyes) |

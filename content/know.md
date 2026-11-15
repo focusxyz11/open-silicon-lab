@@ -55,7 +55,11 @@ note of what you learned; hand the note to someone else, or to an AI, and watch 
 **What it shows that words cannot:** what it is like to learn a thing by trying, and how much of it a note carries.
 Two traces of the same machine, from a person who read the note and one who did not, side by side.
 
-**Status:** new. This is the world the lab can least fill by itself.
+**Status:** live on the world's page, as a draft: the face of a closed box (two dials, and a third nobody
+labelled), every try lighting a patch of what you know; a note (a setting and how far you trust it, and words) handed
+to a search program, on this box and on its twin; and the box opened at the end, which real machines never are.
+Still to come: a person reading the note instead of a program, and the review below. This is the world the lab can
+least fill by itself.
 
 ![Probe](img/probe.svg)
 
@@ -71,8 +75,10 @@ note you wrote helps someone else on the same machine or on its twin.
 **What it decides:** whether a note carries what was learned; whether a search program does better or worse than a
 person; how much a second machine has to be learned again.
 
-**Today:** missing. It must not be written as a fake factory: it is a model of learning a process, and its design
-should be read by someone who has worked in one before it is built. Its words must say plainly what it is not.
+**Today:** a first draft (`src/engines/tune.js`): three dials, a ridge that needs two of them together, a
+second-best patch, noise, drift with use, a twin, and a simple search program that reads a note. It is not written as
+a fake factory: it is a model of learning by trying, and its words say plainly what it is not. It still needs what
+this document asked for before it was built: to be read by someone who has worked in a factory, and changed by them.
 
 ## Questions inside
 
@@ -91,7 +97,7 @@ should be read by someone who has worked in one before it is built. Its words mu
 
 | Challenge | What you change | What the engine judges |
 | --- | --- | --- |
-| **Nine dials.** Some unlabelled. Get the process right without being told how. | the dials | the best result, and the tries it took |
+| **Three dials.** One unlabelled. Get the process right without being told how. | the dials | the best result, and the tries it took |
 | **The note.** Write down what you learned. Someone else starts from your note alone. | your note | how far your note gets them, against starting cold |
 | **The twin.** The same machine in a second factory gives worse results. Copy your settings, or learn again? | your strategy | the result, and the tries |
 | **You or the program.** A search program turns the same dials. Who gets there in fewer tries, and what does each know at the end? | nothing: you compare | tries and result for each; whether the program's answer carries to the twin |

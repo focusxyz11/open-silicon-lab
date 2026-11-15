@@ -26,7 +26,7 @@ export const WORLDS = {
   idea: { lens: 'forms', href: '#/bench/logic', hrefKey: 'world.studio', sketch: 'forms',
     play: { 'Fix the half adder': '#/do/half', 'Smaller, or faster?': 'here', 'Check the agent.': '#/build', 'A piece of the computer.': '#/build' } },
   make: { lens: 'view', href: '#/line/crystal', sketch: 'line', play: { 'Through in time.': '#/do/months', 'Fewer layers.': '#/do/quick' } },
-  know: { sketch: 'probe', play: {} },
+  know: { lens: 'tune', sketch: 'probe', play: { 'Three dials.': 'here', 'The note.': 'here', 'The twin.': 'here', 'You or the program.': 'here' } },
   open: { lens: 'view', href: '#/supply', sketch: 'map', play: { 'Close one place.': '#/supply' } },
   divide: { lens: 'plan', sketch: 'plan', play: { 'Feed the cores.': '#/do/fed', 'More cores, still cheap.': '#/do/cores' } },
   life: { lens: 'swarm', sketch: 'swarm', play: { 'Quiet costs nothing.': 'here', 'Survive the damage.': 'here' } },
