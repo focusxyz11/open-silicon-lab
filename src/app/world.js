@@ -95,7 +95,9 @@ const smooth = (a, b, x) => { const u = Math.max(0, Math.min(1, (x - a) / (b - a
 /* the earlier site's own chrome over the picture: the marks along the top and the dive label. The chip world's
    frame says the same things, so it switches them off (setChrome). It also hands over overlay (src/v2/overlay.js),
    which writes the dive's names, notes and marks in HTML, and look() and ask(), which say which mode the frame is in. */
-const CHROME = { dots: true, dive: true, stage: null, lit: false, overlay: null, look: null, ask: null };
+/* keys: which arrows move this picture. In the chip world the two moves have their own keys in every view (↑ ↓ in and
+   out, ← → along), so a dive answers only ↑ ↓ ('scale') and a line of steps only ← → ('steps'); null: all four */
+const CHROME = { dots: true, dive: true, stage: null, lit: false, overlay: null, look: null, ask: null, keys: null };
 export const setChrome = o => Object.assign(CHROME, o);
 export function createWorld(cv, on) {
   const ctx = cv.getContext('2d'), t0 = performance.now();
@@ -545,8 +547,9 @@ export function createWorld(cv, on) {
   cv.addEventListener('pointerup', end); cv.addEventListener('pointercancel', end);
   cv.addEventListener('keydown', e => {
     const d = Math.round(Z);
-    if (e.key === 'ArrowDown' || e.key === 'PageDown' || e.key === '+' || e.key === 'ArrowRight') { e.preventDefault(); api.flyTo(d + 1); }
-    else if (e.key === 'ArrowUp' || e.key === 'PageUp' || e.key === '-' || e.key === 'ArrowLeft') { e.preventDefault(); api.flyTo(d - 1); }
+    const m = CHROME.keys ? CHROME.keys() : null, down = m !== 'steps' && (e.key === 'ArrowDown' || e.key === 'PageDown' || e.key === '+'), up = m !== 'steps' && (e.key === 'ArrowUp' || e.key === 'PageUp' || e.key === '-');
+    if (down || (m !== 'scale' && e.key === 'ArrowRight')) { e.preventDefault(); api.flyTo(d + 1); }
+    else if (up || (m !== 'scale' && e.key === 'ArrowLeft')) { e.preventDefault(); api.flyTo(d - 1); }
     else if (e.key === 'Home') { e.preventDefault(); api.flyTo(0); }
     else if (e.key === 'End') { e.preventDefault(); api.flyTo(N - 1); }
   });

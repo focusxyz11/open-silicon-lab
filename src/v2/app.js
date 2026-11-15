@@ -370,7 +370,7 @@ export function start() {
     $('flatLabels').addEventListener('wheel', e => { e.preventDefault(); $('diveCanvas').dispatchEvent(new WheelEvent('wheel', { deltaX: e.deltaX, deltaY: e.deltaY, deltaMode: e.deltaMode, clientX: e.clientX, clientY: e.clientY, bubbles: true, cancelable: true })); }, { passive: false });
     /* one HUD: the earlier site's own marks, dive label and band give way to the frame */
     /* one stage: the line's machines draw on the shared renderer too */
-    Wm.setChrome({ dots: false, dive: false, lit: true, stage: () => stage($('diveCanvas')), overlay: flatWords,
+    Wm.setChrome({ dots: false, dive: false, lit: true, keys: () => (flatKind === 'dive' ? 'scale' : 'steps'), stage: () => stage($('diveCanvas')), overlay: flatWords,
       look: () => !!diveFrame && diveFrame.mode() === 'look' && !benchCh, ask: () => !!diveFrame && diveFrame.mode() === 'ask' }); Jm.setBand(false);
     dive = Wm.createWorld($('diveCanvas'), { depth: d => diveAt(d), arrive: d => diveAt(d), zoom: z => levelZoom(z), part: (d, key) => { const a = l3Active(); pickPart(a ? a.obj.hit(lastTap.x, lastTap.y) : key); }, pick: th => { diveThread = th; dive.setThread(th); if (!benchCh && flatKind !== 'supply') drawDive(); },
       site: id => supplySite(id), mapStep: i => supplyStep(i) });
@@ -848,7 +848,10 @@ export function start() {
     const tr = document.startViewTransition(() => Promise.race([after(show(parts, from)), new Promise(r => setTimeout(r, 1500))]));
     tr.finished.finally(() => { if (root.dataset.move === move) delete root.dataset.move; });
   }
-  /* one set of keys on every frame: ← → step along (the dock's back and next), Escape goes up */
+  /* one set of keys in every view, one pair for each move: ↑ ↓ are out and in (scale), ← → are along. Where the
+     view is a column of levels (the flight, the dive, the stack), along is the loop: the stage before or after,
+     keeping your level. Where it is a row of steps (the line, the bench, a story, the island's places), along is
+     the step before or after, ↑ leads out and ↓ into what the step makes, where that is drawn. Escape goes out. */
   document.addEventListener('keydown', e => {
     /* a picture that steps along by itself (the flat world) has already taken the key */
     if (e.defaultPrevented || (e.target.closest && e.target.closest('input, textarea, select, [data-live]'))) return; /* i18n-ok */
@@ -856,7 +859,15 @@ export function start() {
     if (e.key === '/') { e.preventDefault(); if (partsOf(location.hash)[0] !== 'log') location.hash = '#/log'; setTimeout(() => { const f = page.querySelector('[data-jump]'); if (f) f.focus(); }, 60); return; }
     const host = [vui, cui, pui, bui].find(h => h && !h.hidden) || (!sheet.hidden && !sheet.querySelector('.player') ? sheet : null); if (!host) return;
     if (e.key === 'Escape') { const up = host.querySelector('.homebtn'); if (up) { location.hash = up.getAttribute('href'); e.preventDefault(); } return; }
+    const W = whereNow(), column = ['dive', 'flight', 'chip'].includes(W.view) && !host.querySelector('.dock .player, .dock .stopx');
+    if (e.key === 'ArrowUp' || e.key === 'ArrowDown') { const down = e.key === 'ArrowDown';
+      if (column) { const b = host.querySelector('.dock [data-key="' + (down ? 'next' : 'back') + '"]'); if (b) { b.click(); e.preventDefault(); } else if (!down) { const up = host.querySelector('.homebtn'); if (up) { location.hash = up.getAttribute('href'); e.preventDefault(); } } return; }
+      if (host === sheet) { const a = down && sheet.querySelector('.nav a.btn.primary'); if (a) { a.click(); e.preventDefault(); } return; }
+      if (down) { const to = W.view === 'line' && W.level === 'print' ? '#/dive/scanner/made' : null; if (to) { location.hash = to; e.preventDefault(); } return; }
+      const up = host.querySelector('.homebtn'); if (up) { location.hash = up.getAttribute('href'); e.preventDefault(); } return; }
     if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+    if (column) { const i = Way.STAGES.indexOf(W.stage), n = Way.STAGES.length; along(Way.STAGES[(i + (e.key === 'ArrowRight' ? 1 : n - 1)) % n]); e.preventDefault(); return; }
+    if (host === sheet && e.key === 'ArrowLeft' && cur) { const st = Way.stageOfPlace(cur.place), prev = st && Object.values(Way.STAGE_PLACE).find(p => Way.nextPlace(p) === Way.STAGE_PLACE[st]); if (prev) { location.hash = '#/place/' + prev; e.preventDefault(); } return; }
     const b = host.querySelector((host === sheet ? '' : '.dock ') + '[data-key="' + (e.key === 'ArrowRight' ? 'next' : 'back') + '"]');
     if (b) { b.click(); e.preventDefault(); }
   });
