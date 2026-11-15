@@ -19,11 +19,14 @@ export const PLACES = [
   { id: 'phones', at: [-178, 132], d: 110, far: true }, { id: 'cars', at: [158, 150], d: 110, far: true }, { id: 'idea', at: [214, -78], d: 90, far: true }
 ];
 /* the loop road, closed, and the number pins along it (one per step) */
-const LOOP = [[-28, -14], [-12, 0], [6, 8], [26, 10], [46, 12], [53, -6], [44, -20], [24, -22], [12, -32], [-8, -38], [-26, -38], [-29, -26]];
-const PINS = { design: [-29, -22], make: [-12, 1], test: [22, 10], ship: [48, 11], use: [36, -21] };
+/* the ring road passes the Lab's square: the loop starts and comes back where the community stands */
+const LOOP = [[-28, -14], [-12, 0], [-3, 9], [6, 15], [16, 13], [28, 10], [46, 12], [53, -6], [44, -20], [24, -22], [12, -32], [-8, -38], [-26, -38], [-29, -26]];
+/* six stops, one for each stage of the loop, with no numbers: a loop has no first and no last */
+const PINS = { open: [6, 16], design: [-29, -22], make: [-12, 1], test: [24, 11.5], ship: [48, 11], use: [36, -21] };
+const STOPS6 = ['open'].concat(STEPS), STOP_PLACE = Object.assign({ open: 'lab' }, STATION);
 /* where your chip stands when you are at the need: at the end of the Lab's road, off the loop */
-const NEED_AT = [3, 14];
-const SPOKES = [[[-60, 2], [-40, -2], [-22, -5]], [[6, 8], [6, 17]], [[-12, 0], [-24, 12], [-30, 17]], [[53, -6], [60, 2]]];
+const NEED_AT = PINS.open;
+const SPOKES = [[[-60, 2], [-40, -2], [-22, -5]], [[6, 15], [6, 19]], [[-12, 0], [-24, 12], [-30, 17]], [[53, -6], [60, 2]]];
 const ISLAND = [[-82, -16], [-66, -46], [-34, -56], [2, -54], [40, -56], [72, -38], [82, -6], [78, 22], [54, 44], [16, 48], [-24, 48], [-60, 40], [-82, 14]];
 const ISLE = (cx, cz, r, k = 9) => Array.from({ length: k }, (_, i) => { const a = i / k * Math.PI * 2, rr = r * (0.82 + rnd(i, cx) * 0.36); return [cx + Math.cos(a) * rr, cz + Math.sin(a) * rr * 0.8]; });
 
@@ -212,7 +215,7 @@ export function createMap(canvas, host, on = {}) {
   L.add(scene, new THREE.Vector3(0, 12, 0), t('map.home'), { cls: 'place3 far home', min: 560 });
   /* the number pins of the loop, and your chip on it */
   const pins = {};
-  STEPS.forEach((s, i) => { const [x, z] = PINS[s], g = group(scene, x, 0, z); cyl(g, 0.12, 0.12, 3, metal(P.metal), 0, 0, 0, 8); pins[s] = L.add(g, new THREE.Vector3(0, 3.6, 0), String(i + 1), { cls: 'pin3', button: true, data: { step: s }, max: 380 }); });
+  STOPS6.forEach(s => { const [x, z] = PINS[s], g = group(scene, x, 0, z); cyl(g, 0.12, 0.12, 3, metal(P.metal), 0, 0, 0, 8); pins[s] = L.add(g, new THREE.Vector3(0, 3.6, 0), '', { cls: 'pin3', button: true, data: { place: STOP_PLACE[s] }, max: 380 }); });
   const token = new THREE.Group();
   box(token, 2.2, 0.35, 2.2, mat(P.chip, { roughness: 0.35, metalness: 0.4 }), 0, 0, 0, 0.12); box(token, 1.3, 0.12, 1.3, glow(P.accent, 1.5), 0, 0.35, 0, 0.05);
   for (let k = 0; k < 4; k++) for (let j = 0; j < 5; j++) { const a = k * Math.PI / 2, pn = box(token, 0.12, 0.08, 0.4, metal(P.gold), 0, 0.1, 0, 0.02); pn.position.set(Math.cos(a) * 1.25 + Math.sin(a) * (j - 2) * 0.4, 0.14, Math.sin(a) * 1.25 - Math.cos(a) * (j - 2) * 0.4); pn.rotation.y = -a; }
@@ -265,7 +268,7 @@ export function createMap(canvas, host, on = {}) {
       names[p.id].el.innerHTML = esc(t('map.' + p.id + '.t')) + flag; });
     /* your chip, at the pin of its step */
     const [x, z] = PINS[st.chipAt] || NEED_AT; tokenGoal = new THREE.Vector3(x + 3, 1.2, z + 2.4);
-    STEPS.forEach(s => { pins[s].el.classList.toggle('full', st.steps[s].done === st.steps[s].total); pins[s].el.classList.toggle('here', s === st.chipAt); pins[s].el.innerHTML = (STEPS.indexOf(s) + 1) + (s === st.chipAt ? '<span class="you">' + esc(t('map.yourChip')) + '</span>' : ''); pins[s].el.setAttribute('aria-label', t('game.stepN', { n: STEPS.indexOf(s) + 1, step: t('game.step.' + s) })); });
+    STOPS6.forEach(s => { const full = !!st.steps[s] && st.steps[s].done === st.steps[s].total; pins[s].el.classList.toggle('full', full); pins[s].el.classList.toggle('here', s === st.chipAt); pins[s].el.innerHTML = (full ? '✓' : '') + (s === st.chipAt ? '<span class="you">' + esc(t('map.yourChip')) + '</span>' : ''); pins[s].el.setAttribute('aria-label', t('loop.at.' + s)); });
     /* the shared computer: a floor for every piece; built, yours (not yet in the plan), open, or waiting for an engine */
     while (floors.children.length) floors.remove(floors.children[0]);
     st.floors.forEach((f, i) => {
