@@ -100,7 +100,8 @@ Whatever you tap opens the same card at the bottom, on the island and inside eve
   at the Lab the new ways to compute, first.
 
 There is no menu. *Your log* (`#/log`) keeps the questions you met, what you did, the challenges by step, and a
-jump to anything by name; the Lab's inside (`#/build`) is the record of the shared computer; the world around
+jump to anything by name; the Lab's inside (`#/build`, in the Lab's own card) goes from the shared computer to a piece of it to the
+designs for that piece, with the record, who is here and who makes what beside it; the world around
 the island (the islands across the sea, the supply map) is the way out from it, ↑ on the island.
 
 ## The island grows

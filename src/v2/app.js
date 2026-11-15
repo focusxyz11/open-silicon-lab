@@ -178,8 +178,8 @@ export function start() {
       return '<a class="look" href="' + esc(href) + '"><b>' + esc(t('look.' + l.id + '.t')) + '</b><span class="small">' + esc(t('look.' + l.id + '.d')) + '</span>' + (l.world ? '<span class="small muted">' + esc(t('game.current')) + '</span>' : '') + '</a>'; }).join('');
     return h || (enterOf(id) ? '' : '<p class="small muted">' + esc(t('game.noLook')) + '</p>');
   }
-  function openPlace(id, tab) {
-    cur = { place: id, tab: tab || 'look' };
+  function openPlace(id, tab, step, piece) {
+    cur = { place: id, tab: tab || 'look', step: step || null, piece: piece || null };
     map && map.focus(id); $('hero').classList.add('away'); drawPlace(); hud(); if (map) map.setState(islandState(), false);
   }
   function drawPlace() {
@@ -194,6 +194,8 @@ export function start() {
       else if (id === 'idea') h += '<p>' + esc(t('game.idea.do')) + '</p><a class="btn primary" target="_blank" rel="noopener" href="' + esc(REPO + '/issues/new?' + new URLSearchParams({ template: 'idea.yml', title: t('game.idea.title') })) + '">' + esc(t('game.idea.propose')) + '</a>';
       else if (dos.length) h += dos.map(chCard).join('');
       else h += '<p class="small muted">' + esc(t('game.noDo')) + '</p>';
+    } else if (cur.tab === 'look' && id === 'lab' && cur.step) {
+      h += labInside();
     } else if (cur.tab === 'look') {
       /* one line, and the way in; the levels as small steps to jump to */
       const enter = enterOf(id);
@@ -209,7 +211,7 @@ export function start() {
       if (debates.length) h += '<p class="kicker">' + esc(t('game.debates')) + '</p>' + debates.map(d => '<div class="debate2"><b>' + esc(t('debate.' + d + '.t')) + '</b><span class="small">' + esc(t('debate.' + d + '.q')) + '</span></div>').join('');
       if (!nAsk && id !== 'lab') h += '<p class="small muted">' + esc(t('game.noAsk')) + '</p>';
     }
-    sheet.innerHTML = h + '</div>'; sheet.hidden = false; sheet.scrollTop = 0;
+    sheet.innerHTML = h + '</div>'; sheet.hidden = false; sheet.scrollTop = 0; sheet.classList.toggle('inside', id === 'lab' && !!cur.step && cur.tab === 'look');
   }
   /* a challenge, played in the sheet */
   function openChallenge(ch) {
@@ -248,6 +250,10 @@ export function start() {
     if (e.target.closest('.player')) return;   /* the player handles its own clicks */
     if (e.target.closest('[data-close]')) { closeSheet(); if (location.hash !== '#/ecosystem') map && map.overview(); return; }
     const d = e.target.closest('[data-door]'); if (d) { cur.tab = d.dataset.door; drawPlace(); return; }
+    /* inside the Lab: its steps, and a piece of the computer (the address follows, so a piece can be shared) */
+    const ls = e.target.closest('[data-labstep]'); if (ls) { location.hash = ls.dataset.labstep ? '#/build/' + ls.dataset.labstep : '#/place/lab'; return; }
+    const pc = e.target.closest('[data-piece]'); if (pc) { location.hash = '#/build/computer/' + pc.dataset.piece; return; }
+    if (slipClick(e, S, redraw => { save(); refresh(true); if (redraw) drawPlace(); })) return;
     const o = e.target.closest('[data-open]'); if (o) { openChallenge(chOf(o.dataset.open)); return; }
     const j = e.target.closest('[data-job]'); if (j) { openJob(j.dataset.job); return; }
     const p = e.target.closest('[data-place]'); if (p) openPlace(p.dataset.place);
@@ -633,12 +639,58 @@ export function start() {
   /* ---- the pages ---- */
   const page = $('page');
   let pageNow = 'build';
+  /* ---- the Lab's inside (docs/reviews/structure.md, stage 3): the commons as levels, in the Lab's own card with the
+     island behind it. The computer, then a piece of it, then the designs for that piece, each an entry of the ledger;
+     and beside the computer, the record, who is here, and who makes what. There is no Build page. ---- */
+  const LAB_STEPS = ['computer', 'record', 'society', 'mix'];
+  function labParts() {
+    const C = Game.community(S), P = {};
+      /* the commons: the computer and whose pieces are inside it, what is open now, the record, and who makes what */
+      const W = C.W, whose = id => { const d = W.inside[id] && W.byId[W.inside[id]]; return d ? ' <span class="who">' + esc(d.by) + '</span>' : ''; };
+      const tree = id => { const st = C.state[id], kids = childrenOf(id); return '<ul class="tree"><li><button type="button" data-piece="' + id + '" class="node ' + st.state + (st.yours ? ' yours' : '') + '">' + esc(t('build.need.' + id + '.t')) + (st.n ? ' ×' + st.n : '') + whose(id) + '</button>' + kids.map(c => tree(c.id)).join('') + '</li></ul>'; };
+      P.computer = '<div class="plan2"><div class="tower" aria-hidden="true">' + islandState().floors.slice().reverse().map(f => '<span class="fl ' + f + '"></span>').join('') + '</div><div><p class="big">' + esc(t('page.build.progress', { built: C.built, total: C.total })) + '</p><p class="small muted">' + esc(t('page.build.legend')) + '</p>' + tree('computer') + '</div></div>';
+      P.open = '<h2>' + esc(t('page.build.open')) + '</h2><p class="small muted">' + esc(t('page.build.openD')) + '</p><div class="grid">' + C.asks.map(a => '<a class="chcard job" href="' + esc(a.under ? follow(a.under) : '#/questions') + '"><span class="st">?</span><span><span class="kicker">' + esc(t('page.build.askK', { by: a.by, n: a.work })) + '</span><b>' + esc(a.words) + '</b></span></a>').join('') + C.breaks.map(b => chCard(chOf('break:' + b.of))).join('') + C.jobs.map(jobCard).join('') +
+        C.engines.map(e => '<a class="chcard engine" target="_blank" rel="noopener" href="' + esc(REPO + '/issues/new?' + new URLSearchParams({ template: 'need.yml', title: t('game.engineFor', { piece: t('build.need.' + e.need + '.t') }) })) + '"><span class="st">⚙</span><span><b>' + esc(t('build.need.' + e.need + '.t')) + '</b><span class="small">' + esc(t('game.engineWanted')) + '</span></span></a>').join('') + '</div>';
+      /* the record: every entry, the newest first, each with who made it and where it stands now */
+      const line = e => { const T = e.kind === 'break' ? W.byId[e.of] : null, T2 = e.kind === 'try' ? W.byId[e.of] : null, what = e.kind === 'design' ? t('ledger.rec.design', { title: e.title, piece: t('build.need.' + e.piece + '.t') }) : e.kind === 'break' ? t('ledger.rec.break', { title: T.title }) : T2 ? t('ledger.rec.try', { title: T2.title, n: e.facts.cases }) : e.q,
+          links = (e.from ? ' · ' + esc(t('ledger.rec.from', { who: W.byId[e.from].by })) + ' ' + esc(W.byId[e.from].title) : '') + (e.tries && e.tries.length ? ' · ' + esc(t('ledger.tries', { n: e.tries.length })) : '') + (e.about ? ' · ' + esc(t('ledger.rec.about', { q: Game.aboutWords(e.about, W) })) : '');
+        return '<li class="rec ' + e.kind + (e.draft ? ' draft' : '') + ' ' + e.state + '"><span class="made ' + esc(e.made) + '"></span><span><b>' + esc(what) + '</b><span class="small muted"> · ' + byLine(e) + ' · ' + esc(e.id.slice(0, 10)) + ' · ' + esc(t('ledger.state.' + (e.draft ? 'draft' : e.state))) + (e.brokenBy ? ' · ' + esc(t('ledger.brokenBy', { who: W.byId[e.brokenBy].by })) : '') + links + '</span>' + (e.draft ? slipHtml(S, e.id) : '') + '</span></li>'; };
+      P.record = '<h2>' + esc(t('page.build.record')) + '</h2><p class="small muted">' + esc(t('page.build.recordD')) + '</p><ol class="record">' + W.entries.slice().reverse().map(line).join('') + '</ol>';
+      /* the society: every maker and what their entries add up to. Roles are read, not given. */
+      const SO = Game.societyOf(W), list = a => a.map(esc).join(', ');
+      P.society = '<h2>' + esc(t('page.build.society')) + '</h2><p class="small muted">' + esc(t('page.build.societyD')) + '</p><ul class="record society">' + SO.map(m => '<li class="rec"><span class="made ' + esc(m.made[0]) + '"></span><span><b>' + esc(m.by) + '</b><span class="small muted"> · ' + m.made.map(k => esc(t('build.kind.' + k))).join(', ') + '</span><br><span class="small">' +
+        ['design', 'break', 'try', 'question'].filter(k => m.does[k]).map(k => esc(t('society.does.' + k, { n: m.does[k] }))).concat(m.checked.length ? [esc(t('society.checked', { who: '' })) + list(m.checked)] : [], m.checkedBy.length ? [esc(t('society.checkedBy', { who: '' })) + list(m.checkedBy)] : [], m.builtOn.length ? [esc(t('society.builtOn', { who: '' })) + list(m.builtOn)] : []).join(' · ') + '</span></span></li>').join('') + '</ul>' +
+        (SO.some(m => m.made.includes('person') || m.made.includes('both')) ? '' : '<p class="small hint">' + esc(t('page.build.empty')) + '</p>');
+      /* who makes what: one bar per kind of entry, split by who made it, as each entry says */
+      const kinds = ['design', 'break', 'try', 'question'], made = ['person', 'both', 'ai', 'program', 'example'];
+      P.mix = '<h2>' + esc(t('page.build.mix')) + '</h2><p class="small muted">' + esc(t('page.build.mixD')) + '</p><div class="mix">' + kinds.map(kd => { const M = W.mix[kd] || {}, n = made.reduce((a, m) => a + (M[m] || 0), 0);
+        return '<div class="mixrow"><span class="ml">' + esc(t('ledger.kind.' + kd)) + '</span><span class="mbar">' + (n ? made.filter(m => M[m]).map(m => '<span class="made ' + m + '" style="flex:' + M[m] + '" title="' + esc(t('build.kind.' + m)) + ': ' + M[m] + '">' + M[m] + '</span>').join('') : '<span class="none">' + esc(t('page.build.mixNone')) + '</span>') + '</span></div>'; }).join('') +
+        '<p class="legend small muted">' + made.map(m => '<span><span class="made ' + m + '"></span>' + esc(t('build.kind.' + m)) + '</span>').join('') + '</p></div>';
+      P.how = '<h2>' + esc(t('page.build.how')) + '</h2><div class="cards"><a class="card2" href="#/bench/need"><b>' + esc(t('page.build.studio')) + '</b><span>' + esc(t('page.build.studioD')) + '</span></a>' +
+        '<a class="card2" href="' + esc(REPO + '/blob/main/docs/MCP.md') + '" target="_blank" rel="noopener"><b>' + esc(t('page.build.port')) + '</b><span>' + esc(t('page.build.portD')) + '</span></a>' +
+        '<a class="card2" href="' + esc(REPO + '/blob/main/docs/MCP.md#run-an-agent-of-your-own') + '" target="_blank" rel="noopener"><b>' + esc(t('page.build.agent')) + '</b><span>' + esc(t('page.build.agentD')) + '</span></a>' +
+        '<a class="card2" href="' + esc(REPO + '/issues/new?template=need.yml') + '" target="_blank" rel="noopener"><b>' + esc(t('page.build.join')) + '</b><span>' + esc(t('page.build.joinD')) + '</span></a></div>';
+    return P;
+  }
+  function labInside() {
+    const C = Game.community(S), step = LAB_STEPS.includes(cur.step) ? cur.step : 'computer', i = LAB_STEPS.indexOf(step);
+    const head = '<div class="labsteps" role="tablist">' + LAB_STEPS.map(k => '<button type="button" role="tab" data-labstep="' + k + '" aria-selected="' + (k === step && !cur.piece) + '">' + esc(t('lab.step.' + k)) + '</button>').join('') + '</div>';
+    if (cur.piece && C.state[cur.piece]) { const id = cur.piece, st = C.state[id], ds = C.designs.filter(d => d.need === id), job = C.jobs.find(j => j.need === id), kids = childrenOf(id);
+      return head + '<p class="kicker">' + esc(t('lab.pieceK', { state: t('lab.state.' + st.state) })) + '</p><h3>' + esc(t('build.need.' + id + '.t')) + (st.n ? ' ×' + st.n : '') + '</h3><p class="small">' + esc(t('build.need.' + id + '.d')) + '</p>' +
+        (kids.length ? '<p class="kicker">' + esc(t('lab.madeOf')) + '</p><div class="chips">' + kids.map(c => '<button type="button" class="chipb" data-piece="' + c.id + '">' + esc(t('build.need.' + c.id + '.t')) + '</button>').join('') + '</div>' : '') +
+        (ds.length ? '<p class="kicker">' + esc(t('lab.designs', { n: ds.length })) + '</p>' + ds.map(designCard).join('') : '') + (job ? jobCard(job) : '') +
+        '<div class="nav"><button type="button" class="btn ghost" data-key="back" data-labstep="computer">' + esc(t('lab.step.computer')) + '</button><span></span></div>'; }
+    const P = labParts();
+    return head + (step === 'computer' ? '<p class="small muted">' + esc(t('page.build.lead')) + '</p>' + P.computer + P.open : step === 'mix' ? P.mix + P.how : P[step]) +
+      '<div class="nav">' + (i ? '<button type="button" class="btn ghost" data-key="back" data-labstep="' + LAB_STEPS[i - 1] + '">' + esc(t('story.back')) + '</button>' : '<button type="button" class="btn ghost" data-key="back" data-labstep="">' + esc(t('map.lab.t')) + '</button>') +
+      (LAB_STEPS[i + 1] ? '<button type="button" class="btn primary" data-key="next" data-labstep="' + LAB_STEPS[i + 1] + '">' + esc(t('lab.step.' + LAB_STEPS[i + 1])) + '</button>' : '<a class="btn primary" data-key="next" href="#/place/studio">' + esc(t('loop.next', { place: t('map.studio.t') })) + '</a>') + '</div>';
+  }
   /* two reading views, opened on purpose: your log (the questions you met, what you did, what waits: the loop's
      challenges are kept here, never as a menu of their own) and the Lab's record (the commons, at the place where
      the loop starts and comes back) */
   function showPage(k0) {
-    const k = k0 === 'build' ? 'build' : 'log'; pageNow = k0;
-    let h = '<div class="inner"><a class="x pagex" href="' + (k === 'build' ? '#/place/lab' : '#/') + '" aria-label="' + esc(t('sheet.close')) + '">×</a><p class="kicker">' + esc(t(k === 'build' ? 'loop.open.k' : 'loop.logK')) + '</p><h1>' + esc(t(k === 'build' ? 'nav.build' : 'loop.log')) + '</h1><p class="lead">' + esc(t('page.' + k + '.lead')) + '</p>', hc = '';
+    const k = 'log'; pageNow = k0;
+    let h = '<div class="inner"><a class="x pagex" href="' + '#/' + '" aria-label="' + esc(t('sheet.close')) + '">×</a><p class="kicker">' + esc(t('loop.logK')) + '</p><h1>' + esc(t('loop.log')) + '</h1><p class="lead">' + esc(t('page.' + k + '.lead')) + '</p>', hc = '';
     const C = Game.community(S);
     if (k === 'log') {
       const nx = Game.next(S);
@@ -657,32 +709,6 @@ export function start() {
         '<a class="qcard" href="' + esc(follow(bk)) + '" style="--qc:' + qColor(bk) + '"><span class="kicker">' + esc(t('map.' + Game.STATION[Game.chipAt(S)] + '.t')) + '</span><span class="q">' + esc(t('stop.' + bk + '.q')) + '</span><span class="small muted">' + esc(t('sheet.follow')) + '</span></a></div></section>';
       const asked = C.W.entries.filter(e => e.kind === 'question');
       h += '<section class="stepsec"><h2>' + esc(t('page.questions.asked')) + '</h2>' + (asked.length ? asked.slice().reverse().map(askedHtml).join('') : '<p class="small muted">' + esc(t('page.questions.none')) + '</p>') + '</section>' + hc;
-    } else if (k === 'build') {
-      /* the commons: the computer and whose pieces are inside it, what is open now, the record, and who makes what */
-      const W = C.W, whose = id => { const d = W.inside[id] && W.byId[W.inside[id]]; return d ? ' <span class="who">' + esc(d.by) + '</span>' : ''; };
-      const tree = id => { const st = C.state[id], kids = childrenOf(id); return '<ul class="tree"><li><span class="node ' + st.state + (st.yours ? ' yours' : '') + '">' + esc(t('build.need.' + id + '.t')) + (st.n ? ' ×' + st.n : '') + whose(id) + '</span>' + kids.map(c => tree(c.id)).join('') + '</li></ul>'; };
-      h += '<div class="plan2"><div class="tower" aria-hidden="true">' + islandState().floors.slice().reverse().map(f => '<span class="fl ' + f + '"></span>').join('') + '</div><div><p class="big">' + esc(t('page.build.progress', { built: C.built, total: C.total })) + '</p><p class="small muted">' + esc(t('page.build.legend')) + '</p>' + tree('computer') + '</div></div>';
-      h += '<h2>' + esc(t('page.build.open')) + '</h2><p class="small muted">' + esc(t('page.build.openD')) + '</p><div class="grid">' + C.asks.map(a => '<a class="chcard job" href="' + esc(a.under ? follow(a.under) : '#/questions') + '"><span class="st">?</span><span><span class="kicker">' + esc(t('page.build.askK', { by: a.by, n: a.work })) + '</span><b>' + esc(a.words) + '</b></span></a>').join('') + C.breaks.map(b => chCard(chOf('break:' + b.of))).join('') + C.jobs.map(jobCard).join('') +
-        C.engines.map(e => '<a class="chcard engine" target="_blank" rel="noopener" href="' + esc(REPO + '/issues/new?' + new URLSearchParams({ template: 'need.yml', title: t('game.engineFor', { piece: t('build.need.' + e.need + '.t') }) })) + '"><span class="st">⚙</span><span><b>' + esc(t('build.need.' + e.need + '.t')) + '</b><span class="small">' + esc(t('game.engineWanted')) + '</span></span></a>').join('') + '</div>';
-      /* the record: every entry, the newest first, each with who made it and where it stands now */
-      const line = e => { const T = e.kind === 'break' ? W.byId[e.of] : null, T2 = e.kind === 'try' ? W.byId[e.of] : null, what = e.kind === 'design' ? t('ledger.rec.design', { title: e.title, piece: t('build.need.' + e.piece + '.t') }) : e.kind === 'break' ? t('ledger.rec.break', { title: T.title }) : T2 ? t('ledger.rec.try', { title: T2.title, n: e.facts.cases }) : e.q,
-          links = (e.from ? ' · ' + esc(t('ledger.rec.from', { who: W.byId[e.from].by })) + ' ' + esc(W.byId[e.from].title) : '') + (e.tries && e.tries.length ? ' · ' + esc(t('ledger.tries', { n: e.tries.length })) : '') + (e.about ? ' · ' + esc(t('ledger.rec.about', { q: Game.aboutWords(e.about, W) })) : '');
-        return '<li class="rec ' + e.kind + (e.draft ? ' draft' : '') + ' ' + e.state + '"><span class="made ' + esc(e.made) + '"></span><span><b>' + esc(what) + '</b><span class="small muted"> · ' + byLine(e) + ' · ' + esc(e.id.slice(0, 10)) + ' · ' + esc(t('ledger.state.' + (e.draft ? 'draft' : e.state))) + (e.brokenBy ? ' · ' + esc(t('ledger.brokenBy', { who: W.byId[e.brokenBy].by })) : '') + links + '</span>' + (e.draft ? slipHtml(S, e.id) : '') + '</span></li>'; };
-      h += '<h2>' + esc(t('page.build.record')) + '</h2><p class="small muted">' + esc(t('page.build.recordD')) + '</p><ol class="record">' + W.entries.slice().reverse().map(line).join('') + '</ol>';
-      /* the society: every maker and what their entries add up to. Roles are read, not given. */
-      const SO = Game.societyOf(W), list = a => a.map(esc).join(', ');
-      h += '<h2>' + esc(t('page.build.society')) + '</h2><p class="small muted">' + esc(t('page.build.societyD')) + '</p><ul class="record society">' + SO.map(m => '<li class="rec"><span class="made ' + esc(m.made[0]) + '"></span><span><b>' + esc(m.by) + '</b><span class="small muted"> · ' + m.made.map(k => esc(t('build.kind.' + k))).join(', ') + '</span><br><span class="small">' +
-        ['design', 'break', 'try', 'question'].filter(k => m.does[k]).map(k => esc(t('society.does.' + k, { n: m.does[k] }))).concat(m.checked.length ? [esc(t('society.checked', { who: '' })) + list(m.checked)] : [], m.checkedBy.length ? [esc(t('society.checkedBy', { who: '' })) + list(m.checkedBy)] : [], m.builtOn.length ? [esc(t('society.builtOn', { who: '' })) + list(m.builtOn)] : []).join(' · ') + '</span></span></li>').join('') + '</ul>' +
-        (SO.some(m => m.made.includes('person') || m.made.includes('both')) ? '' : '<p class="small hint">' + esc(t('page.build.empty')) + '</p>');
-      /* who makes what: one bar per kind of entry, split by who made it, as each entry says */
-      const kinds = ['design', 'break', 'try', 'question'], made = ['person', 'both', 'ai', 'program', 'example'];
-      h += '<h2>' + esc(t('page.build.mix')) + '</h2><p class="small muted">' + esc(t('page.build.mixD')) + '</p><div class="mix">' + kinds.map(kd => { const M = W.mix[kd] || {}, n = made.reduce((a, m) => a + (M[m] || 0), 0);
-        return '<div class="mixrow"><span class="ml">' + esc(t('ledger.kind.' + kd)) + '</span><span class="mbar">' + (n ? made.filter(m => M[m]).map(m => '<span class="made ' + m + '" style="flex:' + M[m] + '" title="' + esc(t('build.kind.' + m)) + ': ' + M[m] + '">' + M[m] + '</span>').join('') : '<span class="none">' + esc(t('page.build.mixNone')) + '</span>') + '</span></div>'; }).join('') +
-        '<p class="legend small muted">' + made.map(m => '<span><span class="made ' + m + '"></span>' + esc(t('build.kind.' + m)) + '</span>').join('') + '</p></div>';
-      h += '<h2>' + esc(t('page.build.how')) + '</h2><div class="cards"><a class="card2" href="#/bench/need"><b>' + esc(t('page.build.studio')) + '</b><span>' + esc(t('page.build.studioD')) + '</span></a>' +
-        '<a class="card2" href="' + esc(REPO + '/blob/main/docs/MCP.md') + '" target="_blank" rel="noopener"><b>' + esc(t('page.build.port')) + '</b><span>' + esc(t('page.build.portD')) + '</span></a>' +
-        '<a class="card2" href="' + esc(REPO + '/blob/main/docs/MCP.md#run-an-agent-of-your-own') + '" target="_blank" rel="noopener"><b>' + esc(t('page.build.agent')) + '</b><span>' + esc(t('page.build.agentD')) + '</span></a>' +
-        '<a class="card2" href="' + esc(REPO + '/issues/new?template=need.yml') + '" target="_blank" rel="noopener"><b>' + esc(t('page.build.join')) + '</b><span>' + esc(t('page.build.joinD')) + '</span></a></div>';
     }
     page.innerHTML = h + '<p class="small muted">' + esc(t('page.preview')) + '</p></div>'; page.hidden = false; page.scrollTop = 0;
     if (k0 === 'challenges') { const el = $('log-challenges'); if (el) page.scrollTop = el.offsetTop - 16; }
@@ -833,7 +859,8 @@ export function start() {
     if (k === 'chip') return showChip(parts[1] != null ? +parts[1] : null, parts[2]);
     if (k === 'place' && parts[1] === 'datacentre' && parts[2] !== 'inside') return showPlace('datacentre', parts[2] != null ? +parts[2] : null);
     if (k === 'place' && Game.PLACES.includes(parts[1])) return showMap(from).then(() => openPlace(parts[1], parts[2] === 'inside' ? 'look' : null));
-    if (['log', 'challenges', 'questions', 'build'].includes(k)) showPage(k);
+    if (k === 'build') return showMap(from).then(() => openPlace('lab', 'look', parts[1] || 'computer', parts[2]));
+    if (['log', 'challenges', 'questions'].includes(k)) showPage(k);
     return showMap(from).then(() => { if (k === 'ecosystem') showEcosystem(); });
   }
   function route() {
