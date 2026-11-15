@@ -29,6 +29,7 @@ import { fmtDate } from '../core/i18n.js';
 import { ROWS, ASK as CHIP_ASK } from './chip3d.js';
 import { signHtml, signOf, keep, refusal, slipHtml, slipClick, byLine } from './commons.js';
 import { reportsAt, SAYS } from '../engines/ledger.js';
+import * as Read from './read.js';
 
 const $ = id => document.getElementById(id);
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
@@ -60,9 +61,9 @@ export function start() {
     const places = Object.fromEntries(Game.PLACES.map(id => { const L = doList(id); return [id, { done: L.filter(c => S.done[c.id]).length, total: L.length }]; }));
     return { grown: Game.grown(S), steps: Object.fromEntries(Game.STEPS.map(s => [s, Game.stepState(S, s)])), places, chipAt: (cur && Way.stageOfPlace(cur.place)) || Game.chipAt(S), floors, designs: C.designs, cases: C.cases, asks: C.asks, loud: C.loud, jobList: C.jobs, engineList: C.engines };
   }
-  const refresh = animate => { if (map) map.setState(islandState(), animate); hud(); firstGo(); };
+  const refresh = animate => { if (map) map.setState(islandState(), animate); hud(); drawHero(); firstGo(); };
   /* until the first win, the way to start glows */
-  const firstGo = () => { const b = $('hero').querySelector('[data-start]'); if (b) b.classList.toggle('pulse', !Object.keys(S.done).length); };
+  const firstGo = () => { const b = $('hero').querySelector('.row .btn.primary'); if (b) b.classList.toggle('pulse', !Object.keys(S.done).length); };
 
   /* ---- the 3D views, made when first needed ---- */
   /* the spinner shows only when a view takes long to make: a quick view comes in without one */
@@ -117,10 +118,17 @@ export function start() {
   hudEl.addEventListener('click', e => { const s = e.target.closest('[data-stage]'); if (s) along(s.dataset.stage); });
 
   /* ---- the hero: what this is, and where to start ---- */
-  $('hero').innerHTML = '<p class="kicker">' + esc(t('hero.kicker')) + '</p><h1>' + esc(t('loop.title')) + '</h1><p class="lead">' + esc(t('loop.lead')) + '</p>' +
-    '<div class="row"><button type="button" class="btn primary" data-start>' + esc(t('loop.follow')) + '</button><span class="small muted">' + esc(t('loop.any')) + '</span></div>';
+  /* the first page: questions to start with and challenges to take, over the island. Questions you can try now,
+     a few at a time and changing day by day (never the core questions, which stay hidden); the next challenges you
+     have not done; every question and challenge on one page; and a chip's life round the loop for whoever wants it */
+  function drawHero() {
+    const Q = Read.starters(3), C = Game.CHALLENGES.filter(c => !S.done[c.id]).slice(0, 3);
+    $('hero').innerHTML = '<p class="kicker">' + esc(t('hero.kicker')) + '</p><h1>' + esc(t('hero.start')) + '</h1><div class="heroq">' + Q.map(x => Read.card(x)).join('') + '</div>' +
+      (C.length ? '<p class="kicker herok">' + esc(t('hero.or')) + '</p><div class="chips heroc">' + C.map(c => '<a class="chipb" href="' + esc(doHref(c)) + '">' + esc(titleOf(c)) + '</a>').join('') + '</div>' : '') +
+      '<div class="row"><a class="btn primary" href="#/read">' + esc(t('hero.all')) + '</a><button type="button" class="btn ghost" data-start>' + esc(t('hero.follow')) + '</button></div>';
+  }
   /* following the chip is no guide: it opens the place where the loop starts, and every place offers the next */
-  $('hero').addEventListener('click', e => { if (e.target.closest('[data-start]')) { $('hero').classList.add('away'); location.hash = '#/place/' + Way.STAGE_PLACE.open; } });
+  $('hero').addEventListener('click', e => { if (e.target.closest('a[href]')) $('hero').classList.add('away'); if (e.target.closest('[data-start]')) { $('hero').classList.add('away'); location.hash = '#/place/' + Way.STAGE_PLACE.open; } });
 
   /* ---- the sheet: a place with its three doors, a question, or a challenge ---- */
   const sheet = $('sheet');
@@ -718,6 +726,15 @@ export function start() {
     page.innerHTML = h + '<p class="small muted">' + esc(t('page.preview')) + '</p></div>'; page.hidden = false; page.scrollTop = 0;
     if (k0 === 'challenges') { const el = $('log-challenges'); if (el) page.scrollTop = el.offsetTop - 16; }
   }
+  /* reading: every experiment as a document (src/v2/read.js), over the island; the index is the questions and
+     challenges there are, by what can be done with them now */
+  function showRead(id) {
+    if (!FACT) { facts().then(() => { if (partsOf(location.hash)[0] === 'read') showRead(id); }); return; }
+    const ctx = { S, FACT, titleOf, chOf, didOn: Game.didOn };
+    page.innerHTML = '<div class="inner"><a class="x pagex" href="#/" aria-label="' + esc(t('sheet.close')) + '">×</a>' + (id ? Read.experimentHtml(id, ctx) : Read.indexHtml()) + '</div>';
+    page.classList.add('reading'); page.hidden = false; page.scrollTop = 0;
+  }
+  page.addEventListener('input', e => { const f = e.target.closest('[data-readfind]'); if (f) Read.filterIndex(page, f.value); });
   /* jump: type a name, go to its address. Every place, level and challenge, and the two pages; the list is never
      shown whole, only what matches */
   const jumpIndex = () => Game.PLACES.map(p => ({ name: t('map.' + p + '.t'), kind: kickerOf(p), href: '#/place/' + p }))
@@ -866,11 +883,12 @@ export function start() {
     if (k === 'place' && Game.PLACES.includes(parts[1])) return showMap(from).then(() => openPlace(parts[1], parts[2] === 'inside' ? 'look' : null));
     if (k === 'build') return showMap(from).then(() => openPlace('lab', 'look', parts[1] || 'computer', parts[2]));
     if (['log', 'challenges', 'questions'].includes(k)) showPage(k);
+    if (k === 'read') showRead(parts[1] ? decodeURIComponent(parts[1]) : null);
     return showMap(from).then(() => { if (k === 'ecosystem') showEcosystem(); });
   }
   function route() {
     const parts = partsOf(location.hash), k = parts[0] || 'explore';
-    page.hidden = true; $('logbtn').setAttribute('aria-current', ['log', 'challenges', 'questions'].includes(k) ? 'page' : 'false'); $('logbtn').classList.remove('glow');
+    page.hidden = true; page.classList.remove('reading'); $('logbtn').setAttribute('aria-current', ['log', 'challenges', 'questions'].includes(k) ? 'page' : 'false'); $('logbtn').classList.remove('glow');
     const after = pr => { hud(); return Promise.resolve(pr).then(hud); };
     const [view, rank] = viewOf(parts), from = viewNow, move = nextMove || (rank > rankNow ? 'in' : rank < rankNow ? 'out' : 'along');
     nextMove = null; viewNow = view; rankNow = rank;
@@ -938,6 +956,6 @@ export function start() {
   /* the place changes under an open panel: it follows, and shows what was reported there */
   window.addEventListener('hashchange', () => { if (!breakp.hidden) { breakMine = null; breakErr = ''; drawBreak(); } });
   window.addEventListener('hashchange', route);
-  hud(); firstGo();
+  hud(); drawHero(); firstGo();
   route();
 }
