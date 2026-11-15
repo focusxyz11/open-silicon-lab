@@ -103,6 +103,13 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
     await page.click('#page [data-side] [data-sbk="cool"][data-sbv="2"]').catch(() => problems.push(tag + ': the cooling cannot be counted'));
     const after = await page.textContent('#page [data-side] .sbcard').catch(() => '');
     if (!after || after === before) problems.push(tag + ': the lanes did not answer the cooling'); }
+  /* Swarm: the colony walks, and a still room costs the eye-like pixels nothing */
+  await page.evaluate(() => { location.hash = '#/w/life'; });
+  await page.waitForSelector('#page [data-swarm] .swants', { timeout: 15000 }).catch(() => problems.push(tag + ': the colony is not drawn'));
+  await page.waitForFunction(() => +(document.querySelector('#page [data-swarm] [data-sw="t"]') || {}).textContent?.replace(/\D/g, '') > 0, null, { timeout: 15000 }).catch(() => problems.push(tag + ': the colony does not walk'));
+  await page.click('#page [data-swarm] [data-swk="eye"][data-swv="0"]').catch(() => problems.push(tag + ': the scene cannot be changed'));
+  await page.waitForTimeout(600);
+  if (!/^0\b/.test(await page.textContent('#page [data-swarm] [data-sw="events"]').catch(() => 'x'))) problems.push(tag + ': a still room made the eye-like pixels report');
   await page.evaluate(() => { location.hash = '#/w'; });
   await page.waitForFunction(() => document.querySelectorAll('#page .qgrid .qcard').length > 90, null, { timeout: 15000 }).catch(() => problems.push(tag + ': the questions that lead in are not there'));
   /* a try on the page: change a choice, and the engine answers again */
