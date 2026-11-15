@@ -129,11 +129,12 @@ export const BOARD = night => ({
   plastic: 0x2a2f38, power: 0x1d2129, coil: 0x7c8594, substrate: 0x2f3d35, lid: 0xb9c1cc
 });
 
-/* shapes: a rounded box standing on y = 0 of its own frame, placed at (x, y, z) */
+/* shapes: a rounded box standing on y = 0 of its own frame, placed at (x, y, z). o.segs: the rounding's segments (2, or
+   1 where the rounding is a pixel or two on screen: 108 triangles instead of 300) */
 const GEO = new Map();
-const rbox = (w, h, d, r) => { const k = [w, h, d, r].join(); if (!GEO.has(k)) GEO.set(k, new RoundedBoxGeometry(w, h, d, 2, Math.min(r, w / 2, h / 2, d / 2))); return GEO.get(k); };
+const rbox = (w, h, d, r, n = 2) => { const k = [w, h, d, r, n].join(); if (!GEO.has(k)) GEO.set(k, new RoundedBoxGeometry(w, h, d, n, Math.min(r, w / 2, h / 2, d / 2))); return GEO.get(k); };
 export function box(parent, w, h, d, material, x = 0, y = 0, z = 0, r = 0.08, o = {}) {
-  const m = new THREE.Mesh(r > 0 ? rbox(w, h, d, r) : new THREE.BoxGeometry(w, h, d), material);
+  const m = new THREE.Mesh(r > 0 ? rbox(w, h, d, r, o.segs) : new THREE.BoxGeometry(w, h, d), material);
   m.position.set(x, y + h / 2, z); m.castShadow = o.cast !== false; m.receiveShadow = o.receive !== false;
   parent.add(m); return m;
 }
