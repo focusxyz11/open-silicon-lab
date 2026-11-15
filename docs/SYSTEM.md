@@ -7,6 +7,16 @@ The problem it solves: views built one by one each invent their own way to show 
 things (the chip, a gate, printing) end up told several times in several ways, and words pile up in a column beside
 the picture. The lab grows by adding content, so the way content is shown must not grow with it.
 
+## 0. Experiments, and reading
+
+The lab is being rebuilt on experiments (`docs/framework/`): one small question, put to an engine, seen through one
+way of seeing. They are data (`src/data/experiments/`, one file per world, with the shared layers in
+`src/data/layers.js`), and every stop, challenge and try is part of exactly one. What is not written down is worked
+out (`src/engines/experiments.js`): an experiment's state (live, ready, only words, wanted), where it is seen, what
+backs it, and its ways on, from what experiments share. Every experiment is a page at `#/read/<id>`; `#/read` holds
+all the questions and challenges, by what can be done with them now. Until the frame is rebuilt (stage 4), the rest
+of this document describes the views as they stand.
+
 ## 1. The atlas: one home for every thing
 
 Every part, figure, question, challenge and story has exactly one address: a place of the chip world and a level

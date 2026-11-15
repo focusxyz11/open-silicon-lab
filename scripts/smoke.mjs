@@ -35,6 +35,9 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
   await page.waitForSelector('#loop [data-stage]', { timeout: 15000 }).catch(() => problems.push(tag + ': the bar does not hold the loop'));
   if ((await page.$$('#loop [data-stage]')).length !== 6) problems.push(tag + ': the loop does not show its six stages');
   if (await page.$('#sections')) problems.push(tag + ': the menu of sections shows without being asked for');
+  /* the first page: questions to start with and the next challenges (never the core questions together) */
+  if ((await page.$$('#hero .heroq .qcard')).length < 2) problems.push(tag + ': the first page offers no questions to start with');
+  if (!(await page.$('#hero .heroc a'))) problems.push(tag + ': the first page offers no challenge');
   await page.click('#hero [data-start]');
   await page.waitForFunction(() => location.hash === '#/place/lab' && !!document.querySelector('#sheet [data-key="next"]'), null, { timeout: 15000 }).catch(() => problems.push(tag + ': following the chip did not open the Lab, where the loop starts'));
   if ((await page.getAttribute('#loop [aria-current]', 'data-stage').catch(() => '')) !== 'open') problems.push(tag + ': at the Lab the loop does not light its first stage, what is open');
@@ -57,6 +60,12 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
   if (!(await page.$$('#sheet .chcard')).length) problems.push(tag + ': the studio has nothing to do');
   await page.click('#sheet [data-door="look"]');
   if (!(await page.$('#sheet .lvchips a')) || !(await page.$('#sheet .nav .btn.primary'))) problems.push(tag + ': Look shows no way inside the studio');
+  /* every experiment reads as a page: its question, what is true and open, and ways on to others */
+  await page.evaluate(() => { location.hash = '#/read/fail-ontime'; });
+  await page.waitForSelector('#page:not([hidden]) .readq', { timeout: 10000 }).catch(() => problems.push(tag + ': a question does not open as a page'));
+  if ((await page.$$('#page .readsec .qcard')).length < 3) problems.push(tag + ': a question\'s page offers no ways on');
+  await page.evaluate(() => { location.hash = '#/read'; });
+  await page.waitForFunction(() => document.querySelectorAll('#page [data-readsec] .qcard').length > 100, null, { timeout: 10000 }).catch(() => problems.push(tag + ': the questions and challenges page is not there'));
   /* every level and the supply map are inside the chip world: a phone's dive, the made chip, the map at the port */
   /* the switch is drawn in 3D on the one stage, in the flat picture's place, with its five names */
   at = tag + ' 3D switch'; await page.evaluate(() => { location.hash = '#/dive/switch'; });

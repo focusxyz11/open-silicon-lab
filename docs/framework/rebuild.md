@@ -3,6 +3,14 @@
 What the site already has that fits, what has to be rebuilt (the design studio first), what should go, and the
 plan in stages. Every replaced version is kept on a named branch first, as always.
 
+**Status (15 November 2026).** Stage 1 is built, and the start of stage 2 with it, because the owner asked for
+the questions and a document first. Every stop of the weave, every challenge and every try is part of exactly one
+experiment (`src/data/experiments/`, one file per world; worked out in `src/engines/experiments.js`; checked by
+`tests/experiments.test.mjs`). Gathering the stops gave 135 experiments, not the 87 counted above: 26 live, 22 ready,
+67 only words, 20 wanted. Every experiment reads as a page at `#/read/<id>` (`src/v2/read.js`), and the first page
+offers questions you can try now and the next challenges, over the island. Not yet: `look` in the open port, the
+skeleton's list replaced by the real one, the measures and claims of the engines.
+
 ## 1. What fits, and stays
 
 More fits than not. The lab's parts are good; it is their arrangement that changes.
