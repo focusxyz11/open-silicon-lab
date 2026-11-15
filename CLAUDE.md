@@ -1,6 +1,6 @@
 # Open Silicon Lab — notes for Claude
 
-> **On the branch `claude/fable-structure` (a prototype, not merged):** the shell follows `docs/reviews/structure.md`: no menu; the bar holds the loop (Need → Design → Make → Test → Ship → Use), which says where you are and moves you along, keeping your level; one card with Look · Do · Ask on the island and in every view; your log and the Lab's record are the only pages. The text below still describes `main` and is rewritten once the owner has decided.
+> **Merged to `main` on 2026-11-15 to be tried live (PR #145; the site before it is on `claude/before-structure-2026-11`):** the shell follows `docs/reviews/structure.md`: no menu; the bar holds the loop (Need → Design → Make → Test → Ship → Use), which says where you are and moves you along, keeping your level; one card with Look · Do · Ask on the island and in every view; your log and the Lab's record are the only pages. The text below still describes `main` and is rewritten once the owner has decided.
 
 An open-source lab for chips. The site is one thing: a continuous dive from a data centre, a phone or a car down to silicon atoms (scale), meeting in four shared depths, and a journey along the line a chip is made on, from crystal to the world (process), with open questions running through both as threads. Static site: plain ES modules, one stylesheet, one file of words. No framework, no build step for development.
 
