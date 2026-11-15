@@ -43,7 +43,7 @@ export function create(canvas, host, on = {}) {
     };
     const layer = () => { const g = new THREE.Group(); root.add(g); return g; };
     const L = [layer(), layer(), layer(), layer()];
-    const tile = (g, part, r, y, h, m) => { const b = box(g, r[2] / 100, h, r[3] / 100, m, X(r[0] + r[2] / 2), y, Z(r[1] + r[3] / 2), 0.02, { cast: false, receive: false }); b.userData.part = part; return b; };
+    const tile = (g, part, r, y, h, m) => { const b = box(g, r[2] / 100, h, r[3] / 100, m, X(r[0] + r[2] / 2), y, Z(r[1] + r[3] / 2), 0.02, { cast: false, receive: false, segs: 1 }); b.userData.part = part; return b; };   /* the rounding is a pixel or two: one segment (budget 2,000 triangles) */
     const whole = [tile(L[0], 'diff', DIFF[0], 0, H.si, M.si), tile(L[0], 'diff', DIFF[1], 0, H.si, M.si)];
     whole.push(tile(L[1], 'gates', GATES[0], H.si, H.gate, M.gate), tile(L[1], 'gates', GATES[1], H.si, H.gate, M.gate));
     /* in a join the switch stands in the door: the lower silicon strip and the left gate strip are then drawn in pieces

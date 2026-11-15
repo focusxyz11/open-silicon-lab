@@ -44,7 +44,9 @@ export function create(canvas, host, on = {}) {
     const NX = 3, NY = 2, NZ = 2, A = 1, C = crystal(NX, NY, NZ);
     const SI = night ? 0x7f93b3 : 0x8d99ab, R = 0.105, BR = 0.03;
     const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), up = new THREE.Vector3(0, 1, 0), v = new THREE.Vector3(), w = new THREE.Vector3();
-    const sphere = new THREE.SphereGeometry(1, 14, 10), rod = new THREE.CylinderGeometry(1, 1, 1, 6, 1, true);
+    /* spheres with the detail each kind needs (the review's budget, 25,000 triangles): the crystal's 144 triangles each,
+       the skin's (smaller, behind glass) 100, the electrons' (tiny) 80 */
+    const sphere = new THREE.SphereGeometry(1, 12, 7), small = new THREE.SphereGeometry(1, 10, 6), rod = new THREE.CylinderGeometry(1, 1, 1, 6, 1, true);
     /* a bond from p to q: a thin rod, scaled and turned to join them */
     const bondAt = (mesh, i, p, r) => { v.set(...p[0]); w.set(...p[1]); const d = w.clone().sub(v), len = d.length(); q.setFromUnitVectors(up, d.normalize()); m4.compose(v.add(w).multiplyScalar(0.5), q, new THREE.Vector3(r, len, r)); mesh.setMatrixAt(i, m4); };
     const atomAt = (mesh, i, p, r) => { m4.compose(new THREE.Vector3(...p), new THREE.Quaternion(), new THREE.Vector3(r, r, r)); mesh.setMatrixAt(i, m4); };
@@ -67,7 +69,7 @@ export function create(canvas, host, on = {}) {
     skinPts.forEach((p, i) => { let c = 0; for (let j = i + 1; j < skinPts.length && c < 3; j++) { const d = Math.hypot(p[0] - skinPts[j][0], p[1] - skinPts[j][1], p[2] - skinPts[j][2]); if (d > 0.3 && d < 0.62) { skinBonds.push([i, j]); c++; } } });
     const glassC = new THREE.Color(night ? 0x5aa9e6 : 0x7fb1d2), siC = new THREE.Color(SI);
     const skinM = mat(0xffffff, { roughness: 0.15, metalness: 0.05, transparent: true, opacity: 0.85 });
-    const skin = new THREE.InstancedMesh(sphere, skinM, skinPts.length); skin.userData.part = 'boundary';
+    const skin = new THREE.InstancedMesh(small, skinM, skinPts.length); skin.userData.part = 'boundary';
     skinPts.forEach((p, i) => { const o = i % 3 !== 0; atomAt(skin, i, p, o ? R * 0.75 : R); skin.setColorAt(i, o ? glassC : siC); });
     const skinB = new THREE.InstancedMesh(rod, mat(night ? 0x3f6f99 : 0x9cc0d8, { roughness: 0.3, transparent: true, opacity: 0.7 }), skinBonds.length); skinB.userData.part = 'boundary';
     skinBonds.forEach(([a, b], i) => bondAt(skinB, i, [skinPts[a], skinPts[b]], BR * 0.8));
@@ -75,7 +77,7 @@ export function create(canvas, host, on = {}) {
 
     /* a few loose electrons drifting through, from left to right */
     const E = 10, eM = new THREE.MeshStandardMaterial({ color: P.accent, emissive: P.accent, emissiveIntensity: night ? 1.2 : 0.7, roughness: 0.4 });
-    const elec = new THREE.InstancedMesh(new THREE.SphereGeometry(0.07, 10, 8), eM, E); elec.userData.part = 'electrons';
+    const elec = new THREE.InstancedMesh(new THREE.SphereGeometry(0.07, 8, 6), eM, E); elec.userData.part = 'electrons';
     const paths = Array.from({ length: E }, (_, i) => ({ u: rnd(i, 7), y: 0.2 + rnd(i, 8) * (TOP - 0.4), z: 0.15 + rnd(i, 9) * (NZ * A - 0.3), s: 0.75 + rnd(i, 10) * 0.5 }));
     const placeE = () => paths.forEach((p, i) => atomAt(elec, i, [p.u * NX * A, p.y + Math.sin(p.u * 18 + i) * 0.06, p.z], 1));
     placeE(); root.add(elec);
