@@ -17,6 +17,13 @@ backs it, and its ways on, from what experiments share. Every experiment is a pa
 all the questions and challenges, by what can be done with them now. Until the frame is rebuilt (stage 4), the rest
 of this document describes the views as they stand.
 
+## 0b. The eleven worlds
+
+Each core question is a world with a page of its own (`#/w/<id>`, `src/v2/worlds.js`), made at the moment it opens from
+its document in `content/`, which is the one home of its words. Its visual system sits at the top: live where an
+engine draws it (the crowd of copies; the tries), a view of the site where one exists (the dive, the line, the map),
+else its sketch. `#/w` lists every question that leads in, mixed, never the eleven themselves.
+
 ## 1. The atlas: one home for every thing
 
 Every part, figure, question, challenge and story has exactly one address: a place of the chip world and a level

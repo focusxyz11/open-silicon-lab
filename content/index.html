@@ -37,33 +37,11 @@
 <header id="nav"></header>
 <main id="doc"><p class="muted">Loading…</p></main>
 <script type="module">
+  import { render as renderMd } from '../src/v2/md.js';
   const DOCS = [['README', 'The eleven'], ['think'], ['strange'], ['limit'], ['fail'], ['idea'], ['make'], ['know'], ['open'], ['divide'], ['life'], ['scale'], ['STRUCTURE', 'What came out']];
   const want = new URLSearchParams(location.search).get('d') || 'README', name = DOCS.some(d => d[0] === want) ? want : 'README';
   document.getElementById('nav').innerHTML = '<b>Open Silicon Lab</b>' + DOCS.map(([d, label]) => '<a href="?d=' + d + '"' + (d === name ? ' aria-current="page"' : '') + '>' + (label || d) + '</a>').join('');
-  const esc = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-  /* inline: code first (kept as is), then images, links, bold, italics */
-  const inline = s => esc(s).split(/(`[^`]+`)/).map((part, i) => i % 2 ? '<code>' + part.slice(1, -1) + '</code>' : part
-    .replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (_, alt, src) => '<img src="' + src + '" alt="' + alt + '">')
-    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_, label, href) => { const m = /^([A-Za-z]+)\.md$/.exec(href); return '<a href="' + (m ? '?d=' + m[1] : href) + '"' + (/^https?:/.test(href) ? ' target="_blank" rel="noopener"' : '') + '>' + label + '</a>'; })
-    .replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>').replace(/(^|[^*])\*([^*\s][^*]*)\*/g, '$1<em>$2</em>')).join('');
-  function render(md) {
-    const lines = md.replace(/\r/g, '').split('\n'), out = []; let i = 0;
-    while (i < lines.length) {
-      const L = lines[i];
-      if (!L.trim()) { i++; continue; }
-      let m;
-      if ((m = /^(#{1,3}) (.*)$/.exec(L))) { out.push('<h' + m[1].length + '>' + inline(m[2]) + '</h' + m[1].length + '>'); i++; continue; }
-      if (L.startsWith('|')) { const rows = []; while (i < lines.length && lines[i].startsWith('|')) rows.push(lines[i++]);
-        const cells = r => r.slice(1, r.lastIndexOf('|')).split('|').map(c => c.trim());
-        out.push('<div class="tw"><table><thead><tr>' + cells(rows[0]).map(c => '<th>' + inline(c) + '</th>').join('') + '</tr></thead><tbody>' + rows.slice(2).map(r => '<tr>' + cells(r).map(c => '<td>' + inline(c) + '</td>').join('') + '</tr>').join('') + '</tbody></table></div>'); continue; }
-      if (L.startsWith('>')) { const q = []; while (i < lines.length && lines[i].startsWith('>')) q.push(lines[i++].replace(/^>\s?/, '')); out.push('<blockquote><p>' + inline(q.join(' ')) + '</p></blockquote>'); continue; }
-      if (/^(- |\d+\. )/.test(L)) { const ol = /^\d/.test(L), items = []; while (i < lines.length && (/^(- |\d+\. )/.test(lines[i]) || /^ {2,}\S/.test(lines[i]))) { if (/^ {2,}/.test(lines[i])) items[items.length - 1] += ' ' + lines[i].trim(); else items.push(lines[i].replace(/^(- |\d+\. )/, '')); i++; }
-        out.push((ol ? '<ol>' : '<ul>') + items.map(x => '<li>' + inline(x) + '</li>').join('') + (ol ? '</ol>' : '</ul>')); continue; }
-      const para = []; while (i < lines.length && lines[i].trim() && !/^(#{1,3} |\||>|- |\d+\. )/.test(lines[i])) para.push(lines[i++]);
-      out.push('<p>' + inline(para.join(' ')) + '</p>');
-    }
-    return out.join('\n');
-  }
+  const render = md => renderMd(md, { link: h => { const m = /^([A-Za-z]+)\.md$/.exec(h); return m ? '?d=' + m[1] : h; } });
   fetch(name + '.md').then(r => (r.ok ? r.text() : Promise.reject(r.status))).then(md => {
     document.getElementById('doc').innerHTML = render(md);
     const h = document.querySelector('#doc h1'); if (h) document.title = 'Open Silicon Lab · ' + h.textContent;
