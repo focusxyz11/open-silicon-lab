@@ -21,7 +21,7 @@ test('an agent connects, lists the tools, reads the plan and takes a job', async
     assert.equal(init.result.serverInfo.name, 'open-silicon-lab');
     assert.ok(init.result.capabilities.tools && init.result.instructions);
     const tools = (await S.call('tools/list', {})).result.tools.map(t => t.name);
-    assert.deepEqual(tools, ['list_plan', 'get_job', 'check_design', 'at_factory', 'life_of', 'propose_design', 'list_ledger', 'propose_break', 'propose_try', 'propose_question']);
+    assert.deepEqual(tools, ['look', 'list_plan', 'get_job', 'check_design', 'at_factory', 'life_of', 'propose_design', 'list_ledger', 'propose_break', 'propose_try', 'propose_question']);
     const plan = (await S.tool('list_plan', {})).structuredContent;
     assert.ok(plan.pieces.some(p => p.id === 'core' && p.engine === 'riscv'));
     const job = (await S.tool('get_job', { job: 'vote' })).structuredContent;

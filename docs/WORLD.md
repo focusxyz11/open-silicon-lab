@@ -1,5 +1,7 @@
 # The chip world
 
+> **On the branch `claude/fable-structure` (a prototype, not merged):** the shell follows `docs/reviews/structure.md`: no menu; the bar holds the loop (Need → Design → Make → Test → Ship → Use), which says where you are and moves you along, keeping your level; one card with Look · Do · Ask on the island and in every view; your log and the Lab's record are the only pages. The text below still describes `main` and is rewritten once the owner has decided.
+
 How the chip world (`index.html`, `src/v2/`) holds everything together. The island is the first page; this
 note is about what connects it: one main thread, the same three doors everywhere, and an island that grows.
 

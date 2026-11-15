@@ -29,9 +29,19 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
   page.on('pageerror', e => problems.push(tag + ': ' + e.message));
   page.on('console', m => { if (m.type() === 'error' && !/fonts\.g|net::ERR|WebGL|GPU/.test(m.text())) problems.push(tag + ': console: ' + m.text()); });
   await page.goto(base + 'index.html');
-  await page.waitForSelector('#track .tsteps button', { timeout: 15000 }).catch(() => problems.push(tag + ': no tracker with the five steps'));
-  if ((await page.$$('#track .tsteps button')).length !== 5) problems.push(tag + ': the tracker does not show five steps');
+  /* the structure (docs/reviews/structure.md): no menu; the bar holds the loop, six stages from the need round to use.
+     Following the chip opens the place where the loop starts, the Lab, and every place's card offers the next: the
+     studio comes after it, and its first challenge is under Do */
+  await page.waitForSelector('#loop [data-stage]', { timeout: 15000 }).catch(() => problems.push(tag + ': the bar does not hold the loop'));
+  if ((await page.$$('#loop [data-stage]')).length !== 6) problems.push(tag + ': the loop does not show its six stages');
+  if (await page.$('#menu, .menu')) problems.push(tag + ': there is still a menu of sections');
   await page.click('#hero [data-start]');
+  await page.waitForFunction(() => location.hash === '#/place/lab' && !!document.querySelector('#sheet [data-key="next"]'), null, { timeout: 15000 }).catch(() => problems.push(tag + ': following the chip did not open the Lab, where the loop starts'));
+  if ((await page.getAttribute('#loop [aria-current]', 'data-stage').catch(() => '')) !== 'need') problems.push(tag + ': at the Lab the loop does not light the need');
+  await page.click('#sheet [data-key="next"]').catch(() => problems.push(tag + ': the Lab offers no next place'));
+  await page.waitForFunction(() => { const c = document.querySelector('#loop [aria-current]'); return c && c.dataset.stage === 'design'; }, null, { timeout: 10000 }).catch(() => problems.push(tag + ': the next place after the Lab is not the studio'));
+  await page.click('#sheet [data-door="do"]').catch(() => problems.push(tag + ': the studio has no Do'));
+  await page.click('#sheet [data-open="half"]').catch(() => problems.push(tag + ': the studio does not offer the first challenge'));
   /* the first challenge is fixed by tapping the wrong gate: OR becomes XOR, and the table checks at once */
   await page.waitForSelector('#sheet .player .tapcode [data-op]', { timeout: 10000 }).catch(() => problems.push(tag + ': the first challenge did not open with its gates to tap'));
   if (!(await page.$('#sheet .verdict.bad'))) problems.push(tag + ': the first challenge does not show its wrong row before any tap');
@@ -39,7 +49,7 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
   await page.waitForSelector('#sheet .won', { timeout: 10000 }).catch(() => problems.push(tag + ': a right design did not win the challenge'));
   if (!/grew/i.test(await page.textContent('#toast').catch(() => ''))) problems.push(tag + ': winning did not say what grew');
   if (!(await page.$('#sheet .opens[href^="#/ask/"]'))) problems.push(tag + ': the first win opens no question');
-  if (!/1 of 3/.test(await page.getAttribute('#track [data-step="design"]', 'aria-label').catch(() => ''))) problems.push(tag + ': the tracker did not count the win');
+  if (!/1 of 3/.test(await page.getAttribute('#loop [data-stage="design"]', 'aria-label').catch(() => ''))) problems.push(tag + ': the tracker did not count the win');
   await page.click('#sheet [data-next]').catch(() => problems.push(tag + ': no way on to the next challenge'));
   if (!/voter/i.test(await page.textContent('#sheet .player h3').catch(() => ''))) problems.push(tag + ': the next challenge is not the majority voter');
   await page.click('#sheet [data-back]');
@@ -133,7 +143,14 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
   await page.waitForSelector('#diveui .dock .root2', { timeout: 15000 }).catch(() => problems.push(tag + ': after two stops the question underneath did not show'));
   at = tag + ' ' + '#/challenges'; await page.evaluate(() => { location.hash = '#/challenges'; });
   await page.waitForSelector('#page .stepsec', { timeout: 10000 }).catch(() => {});
-  if ((await page.$$('#page .stepsec')).length !== 6) problems.push(tag + ': the challenges page does not show five steps and the open jobs');
+  if ((await page.$$('#page #log-challenges ~ .stepsec')).length !== 6) problems.push(tag + ': the log does not show the five steps\' challenges and the open jobs');
+  /* a challenge is played where its level is shown: the card of the factory's line, with the machines behind it */
+  at = tag + ' do in place'; await page.evaluate(() => { location.hash = '#/do/quick'; });
+  await page.waitForSelector('#diveui .dock .player', { timeout: 20000 }).catch(() => problems.push(tag + ': a factory challenge is not played in the line\'s card'));
+  if (!(await page.evaluate(() => { const c = document.querySelector('#diveui .rail2 [aria-current]'); return c && c.dataset.rail === 'deposit'; }))) problems.push(tag + ': the challenge is not played at its own level');
+  if ((await page.getAttribute('#diveui .modes3 [aria-selected="true"]', 'data-mode').catch(() => '')) !== 'do') problems.push(tag + ': a challenge in the card is not under Do');
+  await page.click('#diveui .modes3 [data-mode="look"]').catch(() => {});
+  if (await page.$('#diveui .dock .player')) problems.push(tag + ': Look does not lead back from a challenge to the story');
   at = tag + ' ' + '#/build'; await page.evaluate(() => { location.hash = '#/build'; });
   await page.waitForSelector('#page .tree', { timeout: 10000 }).catch(() => problems.push(tag + ': the build page has no plan'));
   /* inside a chip: dive down the layers, then switch to building them and step up */
@@ -142,7 +159,9 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
   await page.waitForSelector('#chipui .dock .line', { timeout: 15000 }).catch(() => problems.push(tag + ': the chip view did not open in its frame'));
   await page.click('#chipui [data-rowgo="1"]').catch(() => problems.push(tag + ': no way deeper in the chip'));
   await page.waitForFunction(() => { const c = document.querySelector('#chipui .rail2 [aria-current]'); return c && c.dataset.rail === 'block'; }, null, { timeout: 15000 }).catch(() => problems.push(tag + ': going deeper did not reach the blocks'));
-  await page.click('#chipui [data-face="made"]').catch(() => problems.push(tag + ': no Turn'));
+  /* along: the loop in the bar turns the stack to the same layer as it is made, in place */
+  await page.click('#loop [data-stage="make"]').catch(() => problems.push(tag + ': no way along the loop from the chip'));
+  await page.waitForFunction(() => location.hash === '#/chip/1/build' && /Wires/.test((document.querySelector('#chipui .dock .kicker') || {}).textContent || ''), null, { timeout: 15000 }).catch(() => {});
   if (!/Wires/.test(await page.textContent('#chipui .dock .kicker').catch(() => ''))) problems.push(tag + ': turning to made does not name the step that made this layer');
   await page.click('#chipui .modes3 [data-mode="ask"]').catch(() => {});
   if (!(await page.$('#chipui .dock .askline'))) problems.push(tag + ': Ask shows no questions at this level');
@@ -152,7 +171,8 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
   await page.waitForFunction(() => { const c = document.querySelector('#diveui .rail2 [aria-current]'); return c && c.dataset.rail === 'gate'; }, null, { timeout: 15000 }).catch(() => problems.push(tag + ': the dive did not open at the gate'));
   await page.click('#diveui [data-divego]:not(.ghost)').catch(() => problems.push(tag + ': no way deeper in the dive'));
   await page.waitForFunction(() => { const c = document.querySelector('#diveui .rail2 [aria-current]'); return c && c.dataset.rail === 'switch'; }, null, { timeout: 15000 }).catch(() => problems.push(tag + ': going deeper in the dive did not reach the switch'));
-  await page.click('#diveui [data-face="made"]').catch(() => problems.push(tag + ': no Turn in the dive'));
+  if (!(await page.$('#loop [data-stage="make"].holds'))) problems.push(tag + ': the loop does not say that Make holds the level in view');
+  await page.click('#loop [data-stage="make"]').catch(() => problems.push(tag + ': no way along the loop from the dive'));
   await page.waitForFunction(() => location.hash === '#/line/etch', null, { timeout: 8000 }).catch(() => problems.push(tag + ': turning the switch to made did not open its factory step'));
   /* the line: the factory step by step, in the frame */
   await page.waitForFunction(() => { const c = document.querySelector('#diveui .rail2 [aria-current]'); return c && c.dataset.rail === 'etch'; }, null, { timeout: 15000 }).catch(() => problems.push(tag + ': the line did not open at etching'));

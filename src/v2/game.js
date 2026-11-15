@@ -256,6 +256,8 @@ export const across = key => { const [, d] = key.split('.'), mine = STOPS[key] |
 const levelStops_ = d => Object.keys(STOPS).filter(k => k.split('.')[1] === d);
 /* what people have asked under a question, yours first */
 export const askedAt = (key, s) => { const W = world(s); return questionsAt(W, key.split('.')[1], key).sort((a, b) => !!b.draft - !!a.draft); };
+/* everything people and agents have asked at a level, under whichever question */
+export const askedAtLevel = (d, s) => questionsAt(world(s), d, null).sort((a, b) => !!b.draft - !!a.draft);
 /* the society, the work done for a question, and an entry or a question in a few words */
 export const societyOf = W => society(W);
 export const workAt = (key, s) => workFor(world(s), key);

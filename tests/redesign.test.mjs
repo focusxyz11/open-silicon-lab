@@ -27,11 +27,13 @@ test('every level of the data centre has its words and a real question; every pa
   for (const p of PARTS) assert.ok(VIEW_PARTS.flight[p] && EN['part.' + VIEW_PARTS.flight[p]], p + ' is named by no part of the atlas');
 });
 
-test('the menu has its five parts, each with its words', () => {
-  const menu = src('app.js').match(/MENU = \[([^\]]+)\]/)[1].match(/'([a-z]+)'/g).map(x => x.slice(1, -1));
-  assert.deepEqual(menu, ['explore', 'challenges', 'questions', 'build', 'ecosystem']);
-  for (const k of menu) assert.ok(EN['nav.' + k], k);
-  for (const k of ['challenges', 'questions', 'build', 'ecosystem']) assert.ok(EN['page.' + k + '.lead'], k);
+test('there is no menu: the bar holds the loop, six stages each with its words, and the shell says so', async () => {
+  const { STAGES, STAGE_PLACE } = await import('../src/engines/way.js');
+  assert.ok(!/MENU\s*=/.test(src('app.js')), 'the shell still has a menu of sections');
+  assert.deepEqual(STAGES, ['need', 'design', 'make', 'test', 'ship', 'use']);
+  for (const s of STAGES) { assert.ok(EN['loop.stage.' + s] && EN['loop.at.' + s], s); assert.ok(EN['map.' + STAGE_PLACE[s] + '.t'], s); if (s !== 'need') assert.ok(EN['loop.as.' + s], s); }
+  /* the reading views that remain, each opened on purpose: your log, and the Lab's record */
+  for (const k of ['log', 'build', 'ecosystem']) assert.ok(EN['page.' + k + '.lead'], k);
 });
 
 test('inside a chip: each row is a depth of the dive and the factory steps that make it, as the weave says', async () => {

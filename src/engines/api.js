@@ -6,8 +6,11 @@
    Every tool returns plain data. Nothing here posts anywhere: a proposal is checked against the ledger
    (src/engines/ledger.js) and comes back as the entry's file and the link that opens it in a pull request,
    so a person stays in the loop. */
-import { t } from '../core/i18n.js';
-import { REPO } from '../data/weave.js';
+import { t, has } from '../core/i18n.js';
+import { REPO, STOPS, partWord } from '../data/weave.js';
+import { INSIDE, stopsAt } from '../data/places.js';
+import { STAGES, STAGE_PLACE, stageOfPlace, nextPlace, whereOf, alongTo } from './way.js';
+import { viewOfDepth, CHALLENGES, PLACES } from '../v2/game.js';
 import { NEEDS, GOAL } from '../data/build.js';
 import { plan, progress, needOf, needForProject, childrenOf } from './build.js';
 import { settled, frontier, draft, tryEntry, fileOf, proposeUrl, runCase, caseOk } from './ledger.js';
@@ -97,6 +100,29 @@ function entryOut(e, extra) {
   return Object.assign({ ok: true, entry: { id: e.id, path: f.path, file: f.text }, link: proposeUrl(e), facts: r.facts, note: t('api.person') }, extra || {});
 }
 const whoOk = (kind, ai) => !KINDS.includes(kind) ? t('api.kind') : (kind !== 'person') && !(ai && String(ai).trim()) ? t('api.sayAI') : null;
+/* ---- look: the lab as a visitor sees it, for an agent. The same grid (src/engines/way.js): a place or a level, what
+   is there (its parts, the questions that stop there, what people asked, what there is to do), and where each move
+   leads: in and out for scale, along for the chip's life. With nothing, the island and its loop. ---- */
+const levelOut = (d, extra) => Object.assign({ level: d, name: t('depth.' + d + '.name') }, extra);
+export function look({ at } = {}) {
+  const moves = t('api.look.moves');
+  if (!at) return { where: 'island', what: t('loop.lead'), moves,
+    loop: STAGES.map(s => ({ stage: s, place: STAGE_PLACE[s], name: t('map.' + STAGE_PLACE[s] + '.t'), what: t('loop.at.' + s) })),
+    places: PLACES.filter(p => stageOfPlace(p)).map(p => ({ place: p, name: t('map.' + p + '.t'), stage: stageOfPlace(p), levels: (INSIDE[p] || []).map(l => l.depth) })) };
+  if (PLACES.includes(at) && stageOfPlace(at)) return { where: at, name: t('map.' + at + '.t'), what: t('map.' + at + '.d'), stage: stageOfPlace(at), moves,
+    levels: (INSIDE[at] || []).map(l => levelOut(l.depth, { questions: stopsAt(l.depth).length, challenges: CHALLENGES.filter(c => c.at === l.depth).length })),
+    out: 'island', in: ((INSIDE[at] || [])[0] || {}).depth || null, along: nextPlace(at), ...(stageOfPlace(at) === 'need' ? { record: ['list_plan', 'list_ledger'] } : {}) };
+  const W = has('depth.' + at + '.name') ? whereOf(viewOfDepth(at)) : null, L = W && INSIDE[W.place], i = L ? L.findIndex(l => l.depth === at) : -1;
+  if (i < 0) return { ok: false, reason: t('api.look.none') };
+  /* the steps of a line (the factory, the studio) follow each other; the levels of a dive are one inside the next */
+  const steps = ['journey', 'design'].includes(L[i].world) && (!L[i + 1] || L[i + 1].world === L[i].world), prev = i ? L[i - 1].depth : W.place, next = L[i + 1] ? L[i + 1].depth : null;
+  const parts = [...new Set(stopsAt(at).flatMap(k => STOPS[k]))].map(k => partWord(at, k)).filter(w => has('part.' + w)).map(w => ({ name: t('part.' + w), what: t('what.' + w) }));
+  const along = {}; STAGES.filter(s => s !== W.stage).forEach(s => { const w = whereOf(alongTo(W, s)); along[s] = w.view === 'island' ? w.place : w.level; });
+  return Object.assign(levelOut(at, { where: at, place: W.place, stage: W.stage, what: t('depth.' + at + '.see'), moves }), steps ? { back: prev, on: next } : { out: prev, in: next }, { along, parts,
+    questions: stopsAt(at).map(k => ({ id: k, question: t('stop.' + k + '.q'), noticed: t('stop.' + k + '.note') })),
+    asked: settled().entries.filter(e => e.kind === 'question' && e.at === at).map(e => ({ id: e.id, by: e.by, under: e.under || null, question: e.q })),
+    challenges: CHALLENGES.filter(c => c.at === at).map(c => ({ id: c.id, goal: t('game.ch.' + c.id + '.goal') })), note: t('api.untrusted') });
+}
 export function listLedger() {
   const W = settled(), F = frontier(W);
   return {
