@@ -1,28 +1,33 @@
 # The chip world
 
-> **Merged to `main` on 2026-11-15 to be tried live (PR #145; the site before it is on `claude/before-structure-2026-11`):** the shell follows `docs/reviews/structure.md`: no menu; the bar holds the loop (Need → Design → Make → Test → Ship → Use), which says where you are and moves you along, keeping your level; one card with Look · Do · Ask on the island and in every view; your log and the Lab's record are the only pages. The text below still describes `main` and is rewritten once the owner has decided.
-
 How the chip world (`index.html`, `src/v2/`) holds everything together. The island is the first page; this
 note is about what connects it: one main thread, the same three doors everywhere, and an island that grows.
 
-## The main thread: your chip's life
+## The main thread: a chip's life, round the loop
 
 A chip is the brain of almost anything, so the lab does not draw everything a chip goes into. It follows one
-chip, yours, round the loop every chip goes round:
+chip round the loop every chip goes round (`docs/SYSTEM.md` §2, `src/engines/way.js`):
 
-**Design → Make → Test → Ship → Use**, and what fails in use goes back to design.
+**Open → Design → Make → Test → Ship → Use**, and what is learned in use opens the next.
 
-The loop is a ring road on the island, with a numbered stop for each step and your chip standing at the step
-you are on. The tracker in the bar always shows the five steps (a tick when one is done) and the next challenge, on the
-island and in every view. Each step has a station: Design at the studio, Make at the factory (the crystal is the first part of
-making), Test at the test house, Ship at the port, Use at the data centre. Where a chip goes after the port
-(a phone, a car, a data centre) is a challenge at Ship, because what it must survive depends on where it
-lives.
+It starts with what is open, and there are two ways in. *Someone needs it:* the pieces of the shared computer
+nobody has built. *It has become possible:* a new way to compute that is still looking for what it is best at.
+Much of chip history ran the second way, so the stage is not called a need. The community stands here, at the
+Lab, and the Lab's card shows both ways in.
+
+The loop is in the bar on every screen (the stage you are at is lit; a tap moves you along, keeping your level)
+and on the island as a ring road, with your chip standing at the stage you are looking at. Each stage has a
+place: Open at the Lab (and the village), Design at the studio, Make at the factory (the crystal is the first
+part of making), Test at the test house, Ship at the port, Use at the data centre. Every place's card offers
+*Next*, the next place round the loop, so the thread can be followed from anywhere and left at any tap. Where a
+chip goes after the port (a phone, a car, a data centre) is a challenge at Ship, because what it must survive
+depends on where it lives. The five steps after Open keep a tick each when their challenges are done; Open has
+none, because it is never finished.
 
 ## Every place has an inside: where the earlier site lives
 
-The island is the journey: moving along the loop, a chip's life. Going into a place is the dive: down its
-levels, one inside the next. So every page of the earlier site (retired; a world and a depth) has an address
+The island is the top row of the grid: moving along the loop, a chip's life. Going into a place is going
+down its column: its steps and levels. So every page of the earlier site (retired; a world and a depth) has an address
 on the island, a place and a level (`src/data/places.js`):
 
 | Place | Levels |
@@ -77,24 +82,26 @@ a depth and the steps that make it), and what this row is or how it is made, wit
 too: its gates printed at Print, its transistors etched at Etch, its wires laid at Wires (`yourDesign`). The data
 centre's flight ends by going into it; the levels block to atom, and the factory steps that make them, open it.
 
-## Every place has three doors
+## Every place has one card, with three faces
 
-Whatever you tap opens the same dock at the bottom, with three doors (Look first, with Go inside; tap the
-place again to go in):
+Whatever you tap opens the same card at the bottom, on the island and inside every view (`docs/SYSTEM.md` §4):
 
+- **Look**: one line on what this is, and the two moves from here: *Go inside* (tap the place again to go in)
+  and *Next* round the loop. Then the place's insides: its **steps**, where they follow each other in time
+  (drawn with arrows), and its **levels**, where one is inside the next, each with how many questions wait there
+  and a dot where a challenge waits; then any other way in (the supply map at the port).
 - **Do**: challenges, each checked for real by one of the lab's engines. A circuit by the tiny-chip engine
   (`src/engines/design.js`), your chip's settings by `src/engines/chip.js`, a chip's years in a phone, a car or
-  a data centre by `src/engines/life.js`, a broken copy by the design engine's factory faults. AI can propose;
-  the check decides.
-- **Look** (inside): the place's levels, one inside the next, as small chips with how many questions wait at
-  each and a dot where a challenge waits;
-  then any other way in (the supply map at the port, the plan at the Lab).
-- **Ask**: the questions that stop at this place (stops of the threads), its debates, and at the Lab the ways
-  people are trying.
+  a data centre by `src/engines/life.js`, a broken copy by the design engine's factory faults. A challenge is
+  played in the card of the view that shows its level. Under Do also sit the open things of the ledger that
+  belong there: designs nobody has broken where designs are checked, pieces nobody has built where the job is
+  chosen. AI can propose; the check decides.
+- **Ask**: the questions that stop here (stops of the threads), what people and agents asked, its debates, and
+  at the Lab the new ways to compute, first.
 
-The menu gives the same content another way: **Explore** (the island), **Challenges** (every challenge by step,
-and the open jobs), **Questions** (by place), **Build** (the shared computer) and **Ecosystem** (the islands
-across the sea, and the world chips depend on).
+There is no menu. *Your log* (`#/log`) keeps the questions you met, what you did, the challenges by step, and a
+jump to anything by name; the Lab's inside (`#/build`) is the record of the shared computer; the world around
+the island (the islands across the sea, the supply map) is the way out from it, ↑ on the island.
 
 ## The island grows
 

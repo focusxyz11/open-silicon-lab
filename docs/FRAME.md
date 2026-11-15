@@ -1,6 +1,6 @@
 # The frame
 
-The structure of the lab from November 2026 on. New content fills it; it does not change it.
+How the dive, the journey and the threads of questions were first put together (November 2026), and the data behind them. **The structure of the lab is now the grid in `docs/SYSTEM.md` §2**: this note's "one world, seen two ways" (scale and process) became its two axes and two moves, and "the build" became the stage where the loop starts, Open. What follows is kept for the data model (worlds, depths, threads, stops), the table of where each core question has a form, and the history; where it speaks of a top bar with Journey and Design in it, or of a card with tabs, it describes the earlier site.
 Data: `src/data/weave.js`. Logic: `src/engines/weave.js`. Tests: `tests/weave.test.mjs`.
 
 ## The idea
