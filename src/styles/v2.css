@@ -714,3 +714,8 @@ pre.code { margin: 4px 0; white-space: pre-wrap; overflow-wrap: anywhere; }
 .lbl3.loud { box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 40%, transparent); animation: loud 1.8s ease-in-out infinite; }
 @keyframes loud { 50% { box-shadow: 0 0 0 9px color-mix(in srgb, var(--accent) 0%, transparent); } }
 @media (prefers-reduced-motion: reduce) { .lbl3.loud { animation: none; } }
+/* the island's six stops carry no numbers: a small ring, a tick when the stage's challenges are done */
+.pin3 { width: 18px; height: 18px; font-size: 11px; background: var(--panel-solid); border-color: var(--ink); color: var(--ink); }
+.pin3.full { width: 24px; height: 24px; border-color: transparent; }
+.pin3.here { height: 28px; border-color: var(--panel-solid); }
+.pin3.here .you { margin-left: 0; }
