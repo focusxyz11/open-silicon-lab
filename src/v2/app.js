@@ -30,6 +30,9 @@ import { ROWS, ASK as CHIP_ASK } from './chip3d.js';
 import { signHtml, signOf, keep, refusal, slipHtml, slipClick, byLine } from './commons.js';
 import { reportsAt, SAYS } from '../engines/ledger.js';
 import * as Read from './read.js';
+import * as Worlds from './worlds.js';
+import { copiesInput } from './copies.js';
+import { WORLD_IDS } from '../data/worlds.js';
 
 const $ = id => document.getElementById(id);
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
@@ -122,10 +125,12 @@ export function start() {
      a few at a time and changing day by day (never the core questions, which stay hidden); the next challenges you
      have not done; every question and challenge on one page; and a chip's life round the loop for whoever wants it */
   function drawHero() {
-    const Q = Read.starters(3), C = Game.CHALLENGES.filter(c => !S.done[c.id]).slice(0, 3);
-    $('hero').innerHTML = '<p class="kicker">' + esc(t('hero.kicker')) + '</p><h1>' + esc(t('hero.start')) + '</h1><div class="heroq">' + Q.map(x => Read.card(x)).join('') + '</div>' +
+    const C = Game.CHALLENGES.filter(c => !S.done[c.id]).slice(0, 3);
+    $('hero').innerHTML = '<p class="kicker">' + esc(t('hero.kicker')) + '</p><h1>' + esc(t('hero.start')) + '</h1><div class="heroq" data-heroq></div>' +
       (C.length ? '<p class="kicker herok">' + esc(t('hero.or')) + '</p><div class="chips heroc">' + C.map(c => '<a class="chipb" href="' + esc(doHref(c)) + '">' + esc(titleOf(c)) + '</a>').join('') + '</div>' : '') +
-      '<div class="row"><a class="btn primary" href="#/read">' + esc(t('hero.all')) + '</a><button type="button" class="btn ghost" data-start>' + esc(t('hero.follow')) + '</button></div>';
+      '<div class="row"><a class="btn primary" href="#/w">' + esc(t('hero.all')) + '</a><button type="button" class="btn ghost" data-start>' + esc(t('hero.follow')) + '</button></div>';
+    /* the questions come from inside the worlds' documents */
+    Worlds.loadAll().then(all => { const box = $('hero').querySelector('[data-heroq]'); if (box) box.innerHTML = Worlds.starters(all).map(Worlds.qCard).join(''); }, () => {});
   }
   /* following the chip is no guide: it opens the place where the loop starts, and every place offers the next */
   $('hero').addEventListener('click', e => { if (e.target.closest('a[href]')) $('hero').classList.add('away'); if (e.target.closest('[data-start]')) { $('hero').classList.add('away'); location.hash = '#/place/' + Way.STAGE_PLACE.open; } });
@@ -734,7 +739,26 @@ export function start() {
     page.innerHTML = '<div class="inner"><a class="x pagex" href="#/" aria-label="' + esc(t('sheet.close')) + '">×</a>' + (id ? Read.experimentHtml(id, ctx) : Read.indexHtml()) + '</div>';
     page.classList.add('reading'); page.hidden = false; page.scrollTop = 0;
   }
-  page.addEventListener('input', e => { const f = e.target.closest('[data-readfind]'); if (f) Read.filterIndex(page, f.value); });
+  page.addEventListener('input', e => { const f = e.target.closest('[data-readfind]'); if (f) Read.filterIndex(page, f.value); if (e.target.matches('[data-cyear]')) copiesInput(e.target); });
+  page.addEventListener('click', e => { const b = e.target.closest('[data-copies] [data-cp]'); if (b) copiesInput(b); });   /* i18n-ok: a selector */
+  /* a world (src/v2/worlds.js): one core question, its page made from its document; #/w/<id>/q<n> opens a question inside */
+  function showWorlds() {
+    const shown = location.hash;
+    page.innerHTML = '<div class="inner"><a class="x pagex" href="#/" aria-label="' + esc(t('sheet.close')) + '">×</a><p class="muted">' + esc(t('world.loading')) + '</p></div>';
+    page.classList.add('reading'); page.hidden = false; page.scrollTop = 0;
+    Worlds.loadAll().then(all => { if (location.hash === shown) page.innerHTML = '<div class="inner"><a class="x pagex" href="#/" aria-label="' + esc(t('sheet.close')) + '">×</a>' + Worlds.indexHtml(all) + '</div>'; });
+  }
+  function showWorld(id, at) {
+    if (!WORLD_IDS.includes(id)) { location.hash = '#/'; return; }
+    const q = /^q(\d+)$/.exec(at || ''), shown = location.hash;
+    page.innerHTML = '<div class="inner"><a class="x pagex" href="#/" aria-label="' + esc(t('sheet.close')) + '">×</a><p class="muted">' + esc(t('world.loading')) + '</p></div>';
+    page.classList.add('reading'); page.hidden = false; page.scrollTop = 0;
+    const draw = P => { if (location.hash !== shown) return;
+      page.innerHTML = '<div class="inner"><a class="x pagex" href="#/" aria-label="' + esc(t('sheet.close')) + '">×</a>' + Worlds.worldHtml(id, P, { chip: S.chip, q: q ? +q[1] : null }) + '</div>';
+      const el = q && page.querySelector('#q' + q[1]); if (el) el.scrollIntoView({ block: 'center' }); };
+    const go = () => Worlds.loadWorld(id).then(draw, () => { page.querySelector('.inner').innerHTML += '<p>' + esc(t('world.missing')) + '</p>'; });
+    if (!FACT) facts().then(go); else go();
+  }
   page.addEventListener('click', e => { const b = e.target.closest('[data-probe] [data-pk]'); if (b) Read.probePick(b, S.chip); });   /* i18n-ok: a selector */
   /* jump: type a name, go to its address. Every place, level and challenge, and the two pages; the list is never
      shown whole, only what matches */
@@ -885,6 +909,7 @@ export function start() {
     if (k === 'build') return showMap(from).then(() => openPlace('lab', 'look', parts[1] || 'computer', parts[2]));
     if (['log', 'challenges', 'questions'].includes(k)) showPage(k);
     if (k === 'read') showRead(parts[1] ? decodeURIComponent(parts[1]) : null);
+    if (k === 'w') { if (parts[1]) showWorld(parts[1], parts[2]); else showWorlds(); }
     return showMap(from).then(() => { if (k === 'ecosystem') showEcosystem(); });
   }
   function route() {

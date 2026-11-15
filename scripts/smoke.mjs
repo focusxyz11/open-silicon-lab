@@ -64,6 +64,15 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
   await page.evaluate(() => { location.hash = '#/read/fail-ontime'; });
   await page.waitForSelector('#page:not([hidden]) .readq', { timeout: 10000 }).catch(() => problems.push(tag + ': a question does not open as a page'));
   if ((await page.$$('#page .readsec .qcard')).length < 3) problems.push(tag + ': a question\'s page offers no ways on');
+  /* a world, made from its document, with its picture live: the crowd of copies answers a change of margin */
+  await page.evaluate(() => { location.hash = '#/w/fail'; });
+  await page.waitForSelector('#page .world .truths li', { timeout: 15000 }).catch(() => problems.push(tag + ': a world does not open from its document'));
+  { const before = await page.textContent('#page .creq').catch(() => '');
+    await page.click('#page [data-cp="margin"][data-cv="4"]').catch(() => problems.push(tag + ': the copies cannot be changed'));
+    const after = await page.textContent('#page .creq').catch(() => '');
+    if (!after || after === before) problems.push(tag + ': the crowd of copies did not answer a change of margin'); }
+  await page.evaluate(() => { location.hash = '#/w'; });
+  await page.waitForFunction(() => document.querySelectorAll('#page .qgrid .qcard').length > 90, null, { timeout: 15000 }).catch(() => problems.push(tag + ': the questions that lead in are not there'));
   /* a try on the page: change a choice, and the engine answers again */
   await page.evaluate(() => { location.hash = '#/read/strange-chain'; });
   await page.waitForSelector('#page .probe [data-pk]', { timeout: 10000 }).catch(() => problems.push(tag + ': the chain has no try on its page'));

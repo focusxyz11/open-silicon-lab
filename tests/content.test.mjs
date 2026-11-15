@@ -34,3 +34,20 @@ test('the README names all eleven and the reader lists every document', () => {
   const readme = read('README.md'), reader = read('index.html');
   for (const { id } of THREADS) { assert.ok(readme.includes('](' + id + '.md)'), 'README links ' + id); assert.ok(reader.includes("['" + id + "']"), 'the reader lists ' + id); }
 });
+
+test('the site shows each world from its document: every challenge it says is playable is one the document names, and every picture it uses exists', async () => {
+  const { WORLDS, WORLD_IDS, challengeName } = await import('../src/data/worlds.js');
+  const { parseWorld } = await import('../src/v2/md.js');
+  const { PROBES } = await import('../src/v2/probes.js');
+  assert.deepEqual(WORLD_IDS, THREADS.map(t => t.id));
+  for (const id of WORLD_IDS) {
+    const W = WORLDS[id], P = parseWorld(read(id + '.md')), names = P.challenges.map(r => challengeName(r[0]));
+    assert.ok(P.truths.length >= 6 && P.questions.length >= 6 && P.challenges.length >= 3, id + ': truths, questions and challenges parsed');
+    assert.equal(P.title, EN['thread.' + id + '.root'], id + ': title');
+    for (const k of Object.keys(W.play)) assert.ok(names.includes(k), id + ': "' + k + '" is not a challenge its document names');
+    for (const v of Object.values(W.play)) assert.ok(v === 'here' || /^#\/[a-z0-9\/-]+$/.test(v), id + ': ' + v);
+    if (Object.values(W.play).includes('here')) assert.ok(W.lens === 'copies' || W.lens === 'probes', id + ': played "here" needs a live picture');
+    for (const p of W.probes || []) assert.ok(PROBES[p], id + ': no try ' + p);
+    assert.ok(existsSync(new URL('../content/img/' + (W.sketch || id) + '.svg', import.meta.url)), id + ': its sketch');
+  }
+});
