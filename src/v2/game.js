@@ -231,6 +231,8 @@ export function community(s) {
     cases: W.entries.filter(e => e.kind === 'break').map(e => ({ id: e.id, piece: W.byId[e.of].piece, of: e.of, by: e.by, made: e.made, draft: !!e.draft })),
     /* designs whose check tried some cases, not all: nobody has broken them yet */
     breaks: F.filter(f => f.kind === 'break'),
+    /* the questions people and agents asked, each a call of its own, and the loudest call of all */
+    asks: F.filter(f => f.kind === 'ask').map(f => Object.assign({}, f, { words: W.byId[f.q].q, by: W.byId[f.q].by, draft: !!W.byId[f.q].draft })), loud: F[0] || null,
     state: P
   };
 }

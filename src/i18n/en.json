@@ -1791,7 +1791,7 @@
  "game.engineFor": "An engine to check: {piece}",
  "game.engineWanted": "No engine can check this piece yet. Writing one is a job too.",
  "game.seePlan": "See the whole plan",
- "game.village.do": "Every house is a design in the ledger: lit while it holds a record, grey with a red lamp once a case has broken it. A watchtower is a case that guards a piece. Empty plots are open jobs.",
+ "game.village.do": "Every house is a design in the ledger: lit while it holds a record, red once a case has broken it, with a small green light for every try it survived. A watchtower is a case that guards a piece; a lantern is a question someone asked. The loudest call glows.",
  "game.idea.do": "This sandbank is for what the island does not have yet: a new place, a new challenge, a new question. Propose it; if the community takes it up, it grows here.",
  "game.idea.title": "An idea for the island",
  "game.idea.propose": "Propose an idea",
@@ -2113,7 +2113,7 @@
  "page.questions.asked": "Asked by people here",
  "page.questions.none": "Nobody has added a question yet. Follow one, and ask yours under it.",
  "page.build.open": "Open now",
- "page.build.openD": "Read from the ledger, not written by anyone: designs nobody has broken, pieces nobody has built, checks nobody has written.",
+ "page.build.openD": "Read from the ledger, not written by anyone: questions asked, designs nobody has broken, pieces nobody has built, checks nobody has written.",
  "page.build.record": "The record",
  "page.build.recordD": "Every entry, the newest first. Nothing is changed or deleted: a design that turned out wrong stays, with the case that broke it.",
  "page.build.mix": "Who makes what",
@@ -2188,5 +2188,12 @@
  "api.tool.try": "Propose a try: up to 8 cases that were meant to break a design and did not. It records what the design has survived, so the next attacker looks elsewhere. If one of the cases does break it, send that one with propose_break.",
  "api.arg.cases": "A list of cases, each a list of ticks as in propose_break.",
  "api.arg.about": "The question this was done for: a stop as thread.level (for example fail.check) or the id of a question in the ledger (optional).",
- "api.arg.from": "The id of the design in the ledger this one was built on (optional)."
+ "api.arg.from": "The id of the design in the ledger this one was built on (optional).",
+ "map.asked": "{by} asks: {q}",
+ "ask.workOn": "To work on it, send a design, a break, a try or a question that names it:",
+ "page.build.askK": {
+  "one": "A question from {by} · {n} piece of work so far",
+  "other": "A question from {by} · {n} pieces of work so far"
+ },
+ "api.open.ask": "A question someone asked, still open. Do work for it (a design, a break, a try, or a question under it) and name it in about. Work is evidence, never an answer."
 }

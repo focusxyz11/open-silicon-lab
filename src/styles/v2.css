@@ -646,3 +646,9 @@ pre.code { margin: 4px 0; white-space: pre-wrap; overflow-wrap: anywhere; }
 @media (max-width: 720px) { .dock:has(.stopx) { max-height: 54vh; } .sheet:has(.ticks) { max-height: 62vh; } }
 .made.program { background: var(--muted); }
 .society .rec b { font-size: 15px; }
+/* the loudest call on the island glows; a question someone asked is a warm mark */
+.plot3.asked { border-style: solid; border-color: var(--warm); background: var(--panel-solid); }
+.plot3.asked.draft { border-style: dashed; }
+.lbl3.loud { box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 40%, transparent); animation: loud 1.8s ease-in-out infinite; }
+@keyframes loud { 50% { box-shadow: 0 0 0 9px color-mix(in srgb, var(--accent) 0%, transparent); } }
+@media (prefers-reduced-motion: reduce) { .lbl3.loud { animation: none; } }
