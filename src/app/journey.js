@@ -945,7 +945,8 @@ export function drawJourney(G, o) {
   if (cfg && o.dist < 0.02 && STATIONS[id]) {
     const P = STATIONS[id].parts, now = f && cfg.part ? cfg.part[f.s.to] : null, keys = o.names ? Object.keys(P) : [];
     if (now && P[now] && P[now][0] && !(o.lens && o.lens.alpha > 0.3)) keys.unshift(now);
-    [...new Set(keys)].forEach(key => { const sh = P[key] && P[key][0]; if (!sh) return; const q = topOf(sh); if (q[1] > bandTop - 10 || q[1] < 0) return; tag(G, t('part.' + partWord(id, key)), q[0], q[1], key === now, used, bandTop - 6); });
+    /* in the chip world they are HTML (G.html: world.js places them, clear of each other); in the studio, drawn */
+    [...new Set(keys)].forEach(key => { const sh = P[key] && P[key][0]; if (!sh) return; const q = topOf(sh); if (q[1] > bandTop - 10 || q[1] < 0) return; if (G.html) G.label(key, q[0], q[1]); else tag(G, t('part.' + partWord(id, key)), q[0], q[1], key === now, used, bandTop - 6); });
   }
   /* in the chip world's frame the dock tells the step: no band */
   if (!BAND) return { chips: [], pause: null, names: null, lens: null, map: null };
