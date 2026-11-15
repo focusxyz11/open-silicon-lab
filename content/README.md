@@ -86,7 +86,7 @@ truths as the only connections, two halves (what a chip is, how a chip comes to 
 | World | Written | Visual system | Engine |
 | --- | --- | --- | --- |
 | think | yes | exists (the dive) | exists |
-| strange | yes | new | begun |
+| strange | yes | live (Side by side) | exists in part (Substrate: chain, energy, time, reset) |
 | limit | yes | live (Walls) | exists |
 | fail | yes | live (Copies) | exists |
 | idea | yes | live (Forms) | exists |

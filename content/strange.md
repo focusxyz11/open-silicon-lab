@@ -56,7 +56,10 @@ which lanes keep their 1 and which fade, which are fast and which wait, which ne
 **What it shows that words cannot:** that each medium wins somewhere and loses somewhere, at a glance, and that
 the losses are what keep strange computers strange.
 
-**Status:** new. Its first piece (a 1 passed down a chain) is a try on the lab's pages today.
+**Status:** live on the world's page: six lanes (silicon, superconducting loops, light, neurons, DNA, dominoes)
+pass a 1 down a chain of ten, a hundred or a thousand parts, each at the pace of its own step, with energy, time
+and reset under every lane and a source for each number. Still to come: the other jobs (adding two bits, storing
+one), adding a lane, and the numbers still missing (light's, DNA's energy).
 
 ![Side by side](img/side.svg)
 
@@ -72,8 +75,9 @@ sums of energy and time.
 **What it decides:** whether a medium can compute in long chains; which medium does a given job at the least energy
 or time; whether a claimed new device is good enough to chain.
 
-**Today:** begun (`src/engines/substrate.js`): the chain of curve and noise, as a model of the principle. Missing:
-delay, energy and reset, and each medium's numbers from sources (the shelf below).
+**Today:** exists in part (`src/engines/substrate.js`): the chain of curve and noise, as a model of the principle,
+and each step's energy, time and reset from the media's numbers and their sources (`src/data/media.js`, the
+first shelf). Missing: storing a bit, a device described only by its curve, and the jobs' own measures.
 
 ## Questions inside
 
@@ -98,7 +102,8 @@ delay, energy and reset, and each medium's numbers from sources (the shelf below
 | **The right medium.** A job card (a sensor that must run ten years on a coin cell; a search with many good answers; a model of a molecule): choose the medium. | the medium | the measures that job cares about |
 | **Shelve it.** Add a medium to the shelf with its numbers and their sources. | a new lane | the numbers chain or do not; the sources hold |
 
-The first exists in part (the chain try); the others need the Substrate engine's energy, time and reset.
+The first is played on the page (the lanes and the cooling); the others need a device described only by its
+curve, job cards with their own measures, and a way to add a lane.
 
 ## Innovation direction: new media
 

@@ -36,6 +36,7 @@ import { wallsInput } from './walls.js';
 import { formsInput } from './forms.js';
 import { planInput } from './plan.js';
 import { clockInput } from './clock.js';
+import { sideInput } from './side.js';
 import { WORLD_IDS } from '../data/worlds.js';
 
 const $ = id => document.getElementById(id);
@@ -744,7 +745,7 @@ export function start() {
     page.classList.add('reading'); page.hidden = false; page.scrollTop = 0;
   }
   page.addEventListener('input', e => { const f = e.target.closest('[data-readfind]'); if (f) Read.filterIndex(page, f.value); if (e.target.matches('[data-cyear]')) copiesInput(e.target); if (e.target.matches('[data-forms] [data-fcode]')) formsInput(e.target); });   /* i18n-ok: selectors */
-  page.addEventListener('click', e => { const b = e.target.closest('[data-copies] [data-cp]'); if (b) copiesInput(b); const w = e.target.closest('[data-walls] [data-wk], [data-walls] [data-wrow]'); if (w) wallsInput(w, S.chip); const f = e.target.closest('[data-forms] [data-fjob], [data-forms] [data-fver], [data-forms] [data-fedit], [data-forms] [data-fsig]'); if (f) formsInput(f); const pl = e.target.closest('[data-plan] [data-pk2]'); if (pl) planInput(pl, S.chip); const ck = e.target.closest('[data-clock] [data-clk], [data-clock] [data-clkref]'); if (ck) clockInput(ck, S.chip); });   /* i18n-ok: a selector */
+  page.addEventListener('click', e => { const b = e.target.closest('[data-copies] [data-cp]'); if (b) copiesInput(b); const w = e.target.closest('[data-walls] [data-wk], [data-walls] [data-wrow]'); if (w) wallsInput(w, S.chip); const f = e.target.closest('[data-forms] [data-fjob], [data-forms] [data-fver], [data-forms] [data-fedit], [data-forms] [data-fsig]'); if (f) formsInput(f); const pl = e.target.closest('[data-plan] [data-pk2]'); if (pl) planInput(pl, S.chip); const ck = e.target.closest('[data-clock] [data-clk], [data-clock] [data-clkref]'); if (ck) clockInput(ck, S.chip); const sb = e.target.closest('[data-side] [data-sbk]'); if (sb) sideInput(sb); });   /* i18n-ok: a selector */
   /* a world (src/v2/worlds.js): one core question, its page made from its document; #/w/<id>/q<n> opens a question inside */
   function showWorlds() {
     const shown = location.hash;

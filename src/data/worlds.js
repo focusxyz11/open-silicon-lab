@@ -19,7 +19,7 @@ export const WORLD_IDS = ['think', 'strange', 'limit', 'fail', 'idea', 'make', '
 export const WORLDS = {
   think: { lens: 'view', href: '#/dive/chip', sketch: 'dive',
     play: { 'Make a bit remember.': '#/build/computer/regbit', 'Count.': '#/build/computer/timer', 'Your slice, 32 times.': '#/build/computer/slice' } },
-  strange: { lens: 'probes', probes: ['strange-chain'], sketch: 'side', play: { 'Keep the 1.': 'here' } },
+  strange: { lens: 'side', sketch: 'side', play: { 'Keep the 1.': 'here' } },
   limit: { lens: 'walls', probes: ['limit-cold'], sketch: 'walls', play: { 'Close to the floor.': 'here', 'Cold that pays.': 'here' } },
   fail: { lens: 'copies', sketch: 'copies',
     play: { "Through a phone's life.": '#/do/phone', "Through a car's life.": '#/do/car', "Through a data centre's life.": '#/do/dclife', 'Find the broken copy.': '#/do/spot', 'How much margin?': 'here' } },
