@@ -52,7 +52,7 @@ picture at all. That is the test for every one of them.
 | --- | --- | --- | --- |
 | **Why** | Questions | 11, hidden | The core questions. Each is a tension between two things that are both true. |
 | **About** | Specimens | 6 | The chip on the bench: the open computer the community builds, your design, your chip, three real kinds of chip. |
-| **Judged by** | Engines | 15 (8 exist, 3 partly, 4 missing) | Tested models: the maths behind chips. They decide what is true and whether a challenge is met. |
+| **Judged by** | Engines | 15 (8 exist, 4 partly, 3 missing) | Tested models: the maths behind chips. They decide what is true and whether a challenge is met. |
 | **Seen through** | Lenses | 11 | Ways of seeing. The dive is one. Each lays one thing out across the picture: scale, time, form, copies. |
 | **Trades** | Measures | 9 | What a chip costs and gives: work, energy, space, money, time, good copies, years, certainty, reach. |
 | **Takes as given** | Givens and directions | 15 and 32 | What today's chips assume (silicon, a clock, masks). A direction is a bet that drops one. This is the frontier. |

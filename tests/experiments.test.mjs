@@ -120,3 +120,36 @@ test('ways on: every experiment leads to others, mostly across questions, never 
     for (const w of W) assert.ok(has('read.by.' + w.by), 'read.by.' + w.by);
   }
 });
+
+test('a try on the page: every experiment that says it has one has one, it runs for every choice, and its words have every number they name', async () => {
+  const { PROBES, startOf } = await import('../src/v2/probes.js');
+  const flagged = EXPERIMENTS.filter(x => x.probe).map(x => x.id).sort();
+  assert.deepEqual(Object.keys(PROBES).sort(), flagged, 'the experiments with a try on their page are the ones src/v2/probes.js has');
+  for (const id of flagged) {
+    const x = X.experimentOf(id), P = PROBES[id];
+    assert.ok(x.engine && engineOf(x.engine).state !== 'missing', id + ': a try needs an engine that is there');
+    assert.equal(X.stateOf(x), 'live');
+    for (const c of P.controls) {
+      assert.ok(has(c.label), id + ': ' + c.label);
+      if (c.names) assert.ok(Array.isArray(EN[c.names]) && EN[c.names].length >= c.values.length, id + ': ' + c.names + ' names every value');
+      if (c.keys) c.keys.forEach(k => assert.ok(has(k), id + ': ' + k));
+      if (c.each) assert.ok(has(c.each), id + ': ' + c.each);
+    }
+    /* every combination of choices */
+    const combos = P.controls.reduce((all, c) => all.flatMap(v => c.values.map(val => Object.assign({}, v, { [c.k]: val }))), [{}]);
+    assert.ok(Object.values(startOf(P, {})).every(v => v !== undefined), id + ': it starts somewhere');
+    for (const v of combos) {
+      const R = P.run(v, {});
+      assert.ok(R.says.length, id + ' says nothing for ' + JSON.stringify(v));
+      for (const s of R.says) {
+        const text = EN[s.key]; assert.ok(text, id + ': ' + s.key);
+        for (const [, name] of String(typeof text === 'object' ? text.other : text).matchAll(/\{(\w+)\}/g)) assert.ok(s.vars && s.vars[name] !== undefined, id + ': ' + s.key + ' names {' + name + '}');
+        for (const val of Object.values(s.vars || {})) { const n = val && typeof val === 'object' ? val.s : val; assert.ok(Number.isFinite(n), id + ': ' + s.key + ' gets ' + val); }
+      }
+      if (R.bars) R.bars.items.forEach(b => assert.ok(has(b.key) && b.v >= 0, id + ': bar ' + b.key));
+      if (R.line) assert.ok(R.line.pts.every(p => p >= 0 && p <= 1), id + ': the line stays between 0 and 1');
+      if (R.table) { R.table.head.forEach(k => assert.ok(has(k), id + ': ' + k)); R.table.rows.forEach(r => assert.equal(r.length, R.table.head.length)); }
+      if (R.foot) assert.ok(has(R.foot), id + ': ' + R.foot);
+    }
+  }
+});

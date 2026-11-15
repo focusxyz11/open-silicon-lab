@@ -804,3 +804,32 @@ button.node:hover { border-color: var(--accent); }
 .readtags b { color: var(--ink); font-weight: 600; margin-right: 4px; }
 .readback { margin-top: 30px; }
 .page .qcard[hidden], .page [data-readsec][hidden] { display: none; }
+
+/* ---- a try on the page (src/v2/probes.js) ---- */
+.probe { margin: 0 0 26px; padding: 16px 18px 14px; border-radius: 16px; border: 1px solid color-mix(in srgb, var(--qc) 40%, var(--line)); background: color-mix(in srgb, var(--qc) 5%, var(--panel-solid)); }
+.probe > .kicker { color: var(--qc); margin-bottom: 8px; }
+.pctl { display: grid; gap: 4px; margin: 0 0 6px; }
+.pctl .chips { margin: 0; }
+.pctl .chipb[aria-pressed=true] { background: var(--qc); color: #fff; }
+.pout { margin-top: 10px; }
+.pout p { margin: 0 0 8px; }
+.pout .plead { font: 600 17px/1.4 var(--serif); }
+.pbars { display: grid; gap: 7px; margin: 12px 0 6px; }
+.pbar { display: grid; grid-template-columns: minmax(120px, 30%) 1fr auto; align-items: center; gap: 10px; font-size: 13px; }
+.pbar .pt { height: 12px; border-radius: 6px; background: color-mix(in srgb, var(--ink) 7%, transparent); overflow: hidden; }
+.pbar .pt i { display: block; height: 100%; border-radius: 6px; background: var(--qc); transition: width .35s ease; }
+.pbar.floor .pt i { background: var(--muted); }
+.pbar .pv { font: 500 12px var(--mono); color: var(--muted); white-space: nowrap; }
+.pline { width: 100%; max-width: 520px; height: auto; margin: 6px 0; }
+.pline .band { fill: color-mix(in srgb, var(--warm) 14%, transparent); }
+.pline .ax { stroke: var(--line); stroke-width: 1; }
+.pline text { fill: var(--muted); font: 600 11px var(--mono); }
+.pline polyline { fill: none; stroke: var(--qc); stroke-width: 2; }
+.pline circle.hi { fill: var(--qc); } .pline circle.mid { fill: var(--warm); } .pline circle.lo { fill: var(--bad); }
+.ptabw { overflow-x: auto; margin: 10px 0; }
+.ptab { width: 100%; border-collapse: collapse; font-size: 13px; }
+.ptab th, .ptab td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.ptab th { font: 600 11px var(--mono); text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+.ptab code { font: 12px/1.45 var(--mono); white-space: pre; }
+@media (max-width: 720px) { .ptab thead { display: none; } .ptab tr { display: grid; grid-template-columns: repeat(4, auto); gap: 2px 10px; padding: 8px 0; border-bottom: 1px solid var(--line); } .ptab td { border: 0; padding: 0; } .ptab td:first-child { grid-column: 1 / -1; padding-bottom: 6px; } .ptab td:not(:first-child)::before { content: attr(data-h); display: block; font: 600 10px var(--mono); text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+  .page .pagex { top: 44px; } .pbar { grid-template-columns: 1fr auto; } .pbar .pt { grid-column: 1 / -1; grid-row: 2; } .probe { padding: 14px; } }

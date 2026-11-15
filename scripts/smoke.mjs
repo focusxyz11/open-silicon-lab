@@ -64,6 +64,16 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
   await page.evaluate(() => { location.hash = '#/read/fail-ontime'; });
   await page.waitForSelector('#page:not([hidden]) .readq', { timeout: 10000 }).catch(() => problems.push(tag + ': a question does not open as a page'));
   if ((await page.$$('#page .readsec .qcard')).length < 3) problems.push(tag + ': a question\'s page offers no ways on');
+  /* a try on the page: change a choice, and the engine answers again */
+  await page.evaluate(() => { location.hash = '#/read/strange-chain'; });
+  await page.waitForSelector('#page .probe [data-pk]', { timeout: 10000 }).catch(() => problems.push(tag + ': the chain has no try on its page'));
+  { const before = await page.textContent('#page .probe .plead').catch(() => '');
+    await page.click('#page .probe [data-pk="restoring"][data-pv="0"]').catch(() => problems.push(tag + ': the try cannot be changed'));
+    await page.click('#page .probe [data-pk="restoring"][data-pv="1"]').catch(() => {});
+    await page.click('#page .probe [data-pk="noise"][data-pv="2"]').catch(() => {});
+    const after = await page.textContent('#page .probe .plead').catch(() => '');
+    if (!after || !(await page.$('#page .probe svg.pline'))) problems.push(tag + ': the try draws no answer');
+    if (before === '' && after === '') problems.push(tag + ': the try says nothing'); }
   await page.evaluate(() => { location.hash = '#/read'; });
   await page.waitForFunction(() => document.querySelectorAll('#page [data-readsec] .qcard').length > 100, null, { timeout: 10000 }).catch(() => problems.push(tag + ': the questions and challenges page is not there'));
   /* every level and the supply map are inside the chip world: a phone's dive, the made chip, the map at the port */

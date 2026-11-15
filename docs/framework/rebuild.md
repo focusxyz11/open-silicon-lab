@@ -6,9 +6,13 @@ plan in stages. Every replaced version is kept on a named branch first, as alway
 **Status (15 November 2026).** Stage 1 is built, and the start of stage 2 with it, because the owner asked for
 the questions and a document first. Every stop of the weave, every challenge and every try is part of exactly one
 experiment (`src/data/experiments/`, one file per world; worked out in `src/engines/experiments.js`; checked by
-`tests/experiments.test.mjs`). Gathering the stops gave 135 experiments, not the 87 counted above: 26 live, 22 ready,
-67 only words, 20 wanted. Every experiment reads as a page at `#/read/<id>` (`src/v2/read.js`), and the first page
-offers questions you can try now and the next challenges, over the island. Not yet: `look` in the open port, the
+`tests/experiments.test.mjs`). Gathering the stops gave 135 experiments, not the 87 counted above. Every experiment reads as a page at `#/read/<id>` (`src/v2/read.js`), and the first page
+offers questions you can try now and the next challenges, over the island. An experiment with an engine can carry
+a try on its own page (`src/v2/probes.js`): controls, and the engine's answer in words and one small picture, every
+number read from the engine. The first five gave the empty worlds something to do: how far a chip is from the energy
+floor, why cooling cannot lower it, how long trying every input takes (limit), two descriptions that are not the same
+chip (idea), and whether a 1 survives a chain of parts (strange; the Substrate engine, begun). Counts now: 31 live,
+19 ready, 67 only words, 18 wanted. Not yet: `look` in the open port, the
 skeleton's list replaced by the real one, the measures and claims of the engines.
 
 ## 1. What fits, and stays

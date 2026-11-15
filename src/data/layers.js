@@ -33,7 +33,7 @@ export const ENGINES = [
   {"id":"work","state":"partly","files":["src/engines/chip.js","src/engines/xray.js"],"gives":["work","energy","area"]},
   {"id":"scaling","state":"partly","files":["src/engines/chip.js"],"gives":["area","work","energy","cost"]},
   {"id":"process","state":"missing","files":[],"gives":["yield","time","cost"]},
-  {"id":"substrate","state":"missing","files":[],"gives":["energy","work","sure"]},
+  {"id":"substrate","state":"partly","files":["src/engines/substrate.js"],"gives":["energy","work","sure"]},
   {"id":"tune","state":"missing","files":[],"gives":["yield","time"]},
   {"id":"swarm","state":"missing","files":[],"gives":["energy","life","work"]}];
 export const MEASURES = ["work","energy","area","cost","time","yield","life","sure","reach"];

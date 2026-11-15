@@ -2479,5 +2479,73 @@
  "hero.follow": "Follow a chip's life",
  "read.kind.ch": "A challenge",
  "read.kind.try": "A try in the picture",
- "read.kind.go": "In the lab"
+ "read.kind.go": "In the lab",
+ "probe.k": "Try it here",
+ "probe.tenfold": "Each step along the bar is ten times more than the one before.",
+ "probe.unit.j": "{v} J",
+ "probe.dur.y": {
+  "one": "{v} year",
+  "other": "{v} years"
+ },
+ "probe.dur.d": {
+  "one": "{v} day",
+  "other": "{v} days"
+ },
+ "probe.dur.h": {
+  "one": "{v} hour",
+  "other": "{v} hours"
+ },
+ "probe.dur.min": {
+  "one": "{v} minute",
+  "other": "{v} minutes"
+ },
+ "probe.dur.s": {
+  "one": "{v} second",
+  "other": "{v} seconds"
+ },
+ "probe.cold.temp": "Temperature of the chip",
+ "probe.cold.chip": "The chip's own floor",
+ "probe.cold.pump": "Pumping its heat to the room",
+ "probe.cold.total": "Both together",
+ "probe.cold.room": "The floor at room temperature",
+ "probe.all.bits": "Width of the adder",
+ "probe.all.bitsEach": "{n} bits",
+ "probe.all.rate": "Tries a second",
+ "probe.all.rates": [
+  "a million",
+  "a billion",
+  "a trillion"
+ ],
+ "probe.all.says": "A {n}-bit adder takes two numbers, so there are {pairs} pairs of inputs to try. Trying them all would take {time}.",
+ "probe.all.never": "Nobody can wait that long. So big circuits are not proved right by trying every case: their designers prove them with logic, or test them in pieces small enough to try whole.",
+ "probe.all.can": "That can be done. For a small circuit, trying every case is a real proof, and the lab's engines do it for every design you make.",
+ "probe.two.job": "The job",
+ "probe.two.code": "Description",
+ "probe.two.ok": "Answers",
+ "probe.two.right": "all right",
+ "probe.two.wrong": "some wrong",
+ "probe.two.gates": "Gates",
+ "probe.two.tr": "Switches",
+ "probe.two.delay": "Slowest path",
+ "probe.two.ps": "{v} ps",
+ "probe.two.same": "The engine tried both descriptions on all {rows} inputs: they give the same answers every time.",
+ "probe.two.slower": "But they are not the same chip. One needs {a} switches, the other {b}, and the smaller one is slower: {da} picoseconds on its slowest path against {db}. Which one is right depends on what the chip is for.",
+ "probe.two.faster": "But they are not the same chip. One needs {a} switches, the other {b}, and the smaller one is also faster: {da} picoseconds on its slowest path against {db}.",
+ "probe.two.tie": "But they are not the same chip. One needs {a} switches, the other {b}, and both take {da} picoseconds on their slowest path: the smaller one costs less for the same speed.",
+ "probe.chain.kind": "Each part in the chain",
+ "probe.chain.pass": "only passes the signal on",
+ "probe.chain.restore": "has gain and a threshold",
+ "probe.chain.noise": "Noise each part adds",
+ "probe.chain.noises": [
+  "a little",
+  "some",
+  "a lot"
+ ],
+ "probe.chain.one": "A 1 went in, and after {n} parts it is still a clear 1.",
+ "probe.chain.zero": "A 1 went in, and after {n} parts it reads as a 0. The answer is wrong.",
+ "probe.chain.unsure": "A 1 went in, and after {n} parts nobody can tell whether it is a 1 or a 0.",
+ "probe.chain.whyRestore": "Each part pushes a weak 1 back up to a full one before it can drift into the grey band, so the chain could go on for ever. Transistors do this; so must anything else that is to compute in long chains.",
+ "probe.chain.whyPass": "Each part loses a little and adds a little noise, and nothing pushes the signal back. Whatever the parts are made of, without gain and a threshold a long chain cannot compute.",
+ "probe.chain.model": "A model of the principle, not of any material: each part without gain keeps nine tenths of its signal, and the noise is the same every time you try, so you can compare. After R. W. Keyes, What makes a good computer device? (Science, 1985).",
+ "read.kind.probe": "A try on this page"
 }
