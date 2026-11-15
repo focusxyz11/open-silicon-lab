@@ -34,10 +34,10 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
      studio comes after it, and its first challenge is under Do */
   await page.waitForSelector('#loop [data-stage]', { timeout: 15000 }).catch(() => problems.push(tag + ': the bar does not hold the loop'));
   if ((await page.$$('#loop [data-stage]')).length !== 6) problems.push(tag + ': the loop does not show its six stages');
-  if (await page.$('#menu, .menu')) problems.push(tag + ': there is still a menu of sections');
+  if (await page.$('#sections')) problems.push(tag + ': the menu of sections shows without being asked for');
   await page.click('#hero [data-start]');
   await page.waitForFunction(() => location.hash === '#/place/lab' && !!document.querySelector('#sheet [data-key="next"]'), null, { timeout: 15000 }).catch(() => problems.push(tag + ': following the chip did not open the Lab, where the loop starts'));
-  if ((await page.getAttribute('#loop [aria-current]', 'data-stage').catch(() => '')) !== 'need') problems.push(tag + ': at the Lab the loop does not light the need');
+  if ((await page.getAttribute('#loop [aria-current]', 'data-stage').catch(() => '')) !== 'open') problems.push(tag + ': at the Lab the loop does not light its first stage, what is open');
   await page.click('#sheet [data-key="next"]').catch(() => problems.push(tag + ': the Lab offers no next place'));
   await page.waitForFunction(() => { const c = document.querySelector('#loop [aria-current]'); return c && c.dataset.stage === 'design'; }, null, { timeout: 10000 }).catch(() => problems.push(tag + ': the next place after the Lab is not the studio'));
   await page.click('#sheet [data-door="do"]').catch(() => problems.push(tag + ': the studio has no Do'));
