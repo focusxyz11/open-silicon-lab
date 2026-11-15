@@ -219,7 +219,11 @@ export function createWorld(cv, on) {
     const k = b.B / 1000, left = b.cx - b.B / 2, top = b.cy - b.B / 2, below = (H - inset.b - (top + b.B)) / k;
     ctx.save(); ctx.setTransform(dpr * k, 0, 0, dpr * k, dpr * left, dpr * top); ctx.beginPath(); ctx.rect(-left / k, 0, W / k, 1000 + (b.below ? below : 0)); ctx.clip();
     Object.assign(G, { s: k, k: 1, primary: true, t: tm, col, id: IDS[near], base: 1, box: b.B });
+    /* in the chip world the parts' names over the 3D line are HTML, as on every other view (never words in the
+       picture): the line hands them to G.label, and htmlOverlay places them */
+    htmlNames = []; G.html = !!CHROME.overlay;
     jhits = drawJourney(G, { ids: IDS, Z, near, dist, run, paused, names, below: b.below ? below : 0, three: true, lens: r3 && r3.lens, lensMode: r3 && r3.mode }); jbox = { k, left, top, near };
+    G.html = false;
     lensBox = r3 && r3.lens && r3.lens.alpha > 0.2 ? r3.lens.rect : null;
     ctx.restore();
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -291,7 +295,7 @@ export function createWorld(cv, on) {
       if (mapK >= 1) { if (CHROME.overlay) CHROME.overlay.clear(); renderMap(tm, b, dt, true); return; }
       const L = renderLine(tm, b); overlays(tm, L.pi, L.ptr);
       /* in the studio, the notes pinned to the station's picture; in the chip world they are the HTML overlay's, with
-         the questions' marks under Ask, on the factory's line too (which keeps its own names and has no way deeper) */
+         the questions' marks under Ask and the parts' names, on the factory's line too (which has no way deeper) */
       dive = null;
       const still = !fly && !drag && Math.abs(Z - Math.round(Z)) < 0.04 && L.pi === Math.round(Z) && !!L.ptr;
       if (CHROME.overlay && L.ptr) htmlOverlay({ i: L.pi }, L.pi, L.ptr, still, !worldOf(WORLD).flat);
