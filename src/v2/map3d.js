@@ -8,8 +8,7 @@
    World units: 1 = 10 metres. x east, z south, y up. Words: map.<place>.t / .d / .kind. */
 import { THREE, PALETTES, theme, stage, light, mat, metal, glow, glass, box, cyl, group, flat, blob, ribbon, labels, clamp, ease, reduced, rnd } from './kit3d.js';
 import { t } from '../core/i18n.js';
-import { THREADS } from '../data/weave.js';
-import { BEACON, STEPS, STATION, GROWTH } from './game.js';
+import { STEPS, STATION, GROWTH } from './game.js';
 
 /* where every place stands, and how close the camera comes */
 export const PLACES = [
@@ -30,6 +29,44 @@ const SPOKES = [[[-60, 2], [-40, -2], [-22, -5]], [[6, 15], [6, 19]], [[-12, 0],
 const ISLAND = [[-82, -16], [-66, -46], [-34, -56], [2, -54], [40, -56], [72, -38], [82, -6], [78, 22], [54, 44], [16, 48], [-24, 48], [-60, 40], [-82, 14]];
 const ISLE = (cx, cz, r, k = 9) => Array.from({ length: k }, (_, i) => { const a = i / k * Math.PI * 2, rr = r * (0.82 + rnd(i, cx) * 0.36); return [cx + Math.cos(a) * rr, cz + Math.sin(a) * rr * 0.8]; });
 
+/* the island's own ground, sea and trees, muted (the shared palette stays as it is for every other scene) */
+const TERRAIN = {
+  light: { ground: 0x95a982, lush: 0x76935f, dry: 0xb8b48a, dark: 0x667d58, sand: 0xd8c8a2, wet: 0xa99a7c, shallow: 0x7fb7c4, sea: 0x4c80a6, pine: 0x4a6b4c, leaf: 0x67845a, bark: 0x6b5643 },
+  dark: { ground: 0x1d2a2f, lush: 0x1b302b, dry: 0x2a3330, dark: 0x15221f, sand: 0x4f4a3e, wet: 0x38362f, shallow: 0x16405a, sea: 0x0a1a2c, pine: 0x1d3a2e, leaf: 0x284534, bark: 0x3a3128 }
+};
+/* a slow value noise, smooth, from 0 to 1 */
+const hash2 = (x, y) => { const s = Math.sin(x * 127.1 + y * 311.7) * 43758.5453; return s - Math.floor(s); };
+const smooth = t => t * t * (3 - 2 * t);
+export function noise2(x, y) {
+  const xi = Math.floor(x), yi = Math.floor(y), u = smooth(x - xi), v = smooth(y - yi);
+  const a = hash2(xi, yi), b = hash2(xi + 1, yi), c = hash2(xi, yi + 1), d = hash2(xi + 1, yi + 1);
+  return a + (b - a) * u + (c - a) * v + (a - b - c + d) * u * v;
+}
+const fbm = (x, y) => 0.55 * noise2(x, y) + 0.3 * noise2(x * 2.1 + 5, y * 2.1 + 9) + 0.15 * noise2(x * 4.3 + 11, y * 4.3 + 3);
+/* the ground's top: a fine grid inside the coast whose colour wanders between lush, dry and dark, and settles to
+   the plain ground colour near the coast, so the grid's edge never shows */
+function terrain(coast, T) {
+  const X0 = -92, X1 = 92, Z0 = -62, Z1 = 58, NX = 184, NZ = 120;
+  const g = new THREE.PlaneGeometry(X1 - X0, Z1 - Z0, NX, NZ); g.rotateX(-Math.PI / 2); g.translate((X0 + X1) / 2, 0.012, (Z0 + Z1) / 2);
+  const pos = g.attributes.position, col = new Float32Array(pos.count * 3), base = new THREE.Color(T.ground), c = new THREE.Color();
+  const lush = new THREE.Color(T.lush), dry = new THREE.Color(T.dry), dark = new THREE.Color(T.dark);
+  const segD = (x, z) => { let m = 1e9; for (let i = 0, j = coast.length - 1; i < coast.length; j = i++) { const [ax, az] = coast[j], [bx, bz] = coast[i], dx = bx - ax, dz = bz - az, t = Math.max(0, Math.min(1, ((x - ax) * dx + (z - az) * dz) / (dx * dx + dz * dz || 1e-9))); m = Math.min(m, Math.hypot(x - ax - t * dx, z - az - t * dz)); } return m; };
+  const inside = (x, z) => { let k = false; for (let i = 0, j = coast.length - 1; i < coast.length; j = i++) { const [xi, zi] = coast[i], [xj, zj] = coast[j]; if ((zi > z) !== (zj > z) && x < (xj - xi) * (z - zi) / (zj - zi) + xi) k = !k; } return k; };
+  const keep = new Uint8Array(pos.count);
+  for (let i = 0; i < pos.count; i++) {
+    const x = pos.getX(i), z = pos.getZ(i), d = inside(x, z) ? segD(x, z) : 0; keep[i] = d > 2.5 ? 1 : 0;
+    const n = fbm(x / 26, z / 26), m = fbm(x / 9 + 40, z / 9 + 40), f = Math.min(1, Math.max(0, (d - 3) / 9));
+    c.copy(base).lerp(n > 0.5 ? dry : lush, Math.min(1, Math.abs(n - 0.5) * 3.4)).lerp(dark, Math.min(0.7, Math.max(0, m - 0.56) * 2.4));
+    c.lerp(base, 1 - f); col.set([c.r, c.g, c.b], i * 3);
+  }
+  g.setAttribute('color', new THREE.BufferAttribute(col, 3));
+  const idx = g.index.array, out = [];
+  for (let i = 0; i < idx.length; i += 3) if (keep[idx[i]] && keep[idx[i + 1]] && keep[idx[i + 2]]) out.push(idx[i], idx[i + 1], idx[i + 2]);
+  g.setIndex(out);
+  const m = new THREE.Mesh(g, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.96, metalness: 0 }));
+  m.receiveShadow = true; return m;
+}
+
 export function createMap(canvas, host, on = {}) {
   const P = PALETTES[theme()], night = P.emissive > 0;
   const st = stage(canvas), { env } = st;
@@ -42,16 +79,20 @@ export function createMap(canvas, host, on = {}) {
   const placeAt = id => PLACES.find(x => x.id === id);
   const place = id => { const p = placeAt(id), g = group(scene, p.at[0], 0, p.at[1]); g.userData.place = id; G[id] = g; return g; };
 
-  /* ---- sea, beach, islands ---- */
-  const sea = new THREE.Mesh(new THREE.CircleGeometry(1400, 72), mat(P.sea, { roughness: 0.25, metalness: 0.15 }));
+  /* ---- sea, beach, islands ----
+     Grown up, not a toy (docs/reviews/art-direction.md): muted ground whose colour wanders the way fields, scrub and
+     dry grass do, a narrow beach with wet sand at the water, a ring of shallow water, and deep sea beyond. */
+  const T = TERRAIN[night ? 'dark' : 'light'];
+  const sea = new THREE.Mesh(new THREE.CircleGeometry(1400, 72), mat(T.sea, { roughness: 0.18, metalness: 0.2 }));
   sea.rotation.x = -Math.PI / 2; sea.position.y = -0.6; sea.receiveShadow = true; scene.add(sea);
   const mean = (c, k) => c.reduce((a, p) => a + p[k], 0) / c.length;
-  const island = (pts, n) => { const c = blob(pts, n), mx = mean(c, 0), mz = mean(c, 1); flat(scene, c.map(([x, z]) => [x + (x - mx) * 0.035, z + (z - mz) * 0.045]), mat(P.sand), -2.1, { depth: 1.2, bevel: 0.6 }); flat(scene, c, mat(P.ground), -1.6, { depth: 1.2, bevel: 0.4 }); return c; };
+  const grow = (c, k) => { const mx = mean(c, 0), mz = mean(c, 1); return c.map(([x, z]) => [x + (x - mx) * k, z + (z - mz) * k * 1.25]); };
+  const shallowM = new THREE.MeshStandardMaterial({ color: T.shallow, roughness: 0.3, metalness: 0.05, transparent: true, opacity: night ? 0.55 : 0.6, depthWrite: false });
+  const island = (pts, n) => { const c = blob(pts, n); flat(scene, grow(c, 0.09), shallowM, -0.55); flat(scene, grow(c, 0.03), mat(T.wet, { roughness: 0.5 }), -2.2, { depth: 1.2, bevel: 0.6 }); flat(scene, grow(c, 0.016), mat(T.sand, { roughness: 0.95 }), -2.0, { depth: 1.2, bevel: 0.6 }); flat(scene, c, mat(T.ground, { roughness: 0.95 }), -1.6, { depth: 1.2, bevel: 0.4 }); return c; };
   const coast = island(ISLAND, 160);
-  [[[-72, 0], [-64, -18], [-48, -18], [-46, 4]], [[-60, 30], [-48, 30], [-46, 40], [-62, 40]], [[26, 30], [40, 28], [44, 40], [24, 42]], [[50, -50], [66, -42], [70, -28], [56, -24]], [[-22, -52], [0, -50], [-2, -44], [-20, -44]]]
-    .forEach(f => flat(scene, blob(f, 40), mat(P.grass), 0.02));
+  scene.add(terrain(coast, T));
   island(ISLE(-178, 132, 34), 60); island(ISLE(158, 150, 36), 60);
-  flat(scene, blob(ISLE(214, -78, 12, 7), 40), mat(P.sand), -0.45);
+  flat(scene, blob(ISLE(214, -78, 12, 7), 40), mat(T.sand, { roughness: 0.95 }), -0.45);
 
   /* ---- the loop road: the chip's life ---- */
   const roadM = mat(P.road, { roughness: 0.9 });
@@ -65,18 +106,25 @@ export function createMap(canvas, host, on = {}) {
   const loopPts = loop.curve.getSpacedPoints(120).map(p => [p.x, p.z]);
   const inPoly = (pts, x, z) => { let c = false; for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) { const [xi, zi] = pts[i], [xj, zj] = pts[j]; if ((zi > z) !== (zj > z) && x < (xj - xi) * (z - zi) / (zj - zi) + xi) c = !c; } return c; };
   const free = (x, z) => inPoly(coast, x, z) && !PLACES.some(p => Math.hypot(p.at[0] - x, p.at[1] - z) < (p.r || 16)) && !loopPts.some(([a, b]) => Math.hypot(a - x, b - z) < 5) && !SPOKES.flat().some(([a, b]) => Math.hypot(a - x, b - z) < 4);
-  const trees = []; for (let i = 0; i < 1200 && trees.length < 170; i++) { const x = -80 + rnd(i, 3) * 160, z = -54 + rnd(i, 7) * 100; if (free(x, z)) trees.push([x, z, 0.7 + rnd(i, 9) * 0.6]); }
-  ['phones', 'cars'].forEach((k, j) => { const c = placeAt(k).at; for (let i = 0; i < 70; i++) { const a = rnd(i, 11 + j) * 6.28, r = 16 + rnd(i, 13 + j) * 14; trees.push([c[0] + Math.cos(a) * r, c[1] + Math.sin(a) * r * 0.75, 0.6 + rnd(i, 5) * 0.5]); } });
-  const crown = new THREE.InstancedMesh(new THREE.IcosahedronGeometry(1.2, 1), mat(night ? 0x2e4a3a : 0x6f9a62, { flatShading: true }), trees.length);
-  const trunk = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.16, 0.22, 1.2, 6), mat(night ? 0x3a3128 : 0x7a5b40), trees.length);
-  const M4 = new THREE.Matrix4(), Q = new THREE.Quaternion(), S3 = new THREE.Vector3(), V = new THREE.Vector3();
-  trees.forEach(([x, z, s], i) => { M4.compose(V.set(x, 2.1 * s, z), Q, S3.set(s, s * 1.15, s)); crown.setMatrixAt(i, M4); M4.compose(V.set(x, 0.6 * s, z), Q, S3.set(s, s, s)); trunk.setMatrixAt(i, M4); });
-  crown.castShadow = trunk.castShadow = true; crown.receiveShadow = true; scene.add(crown, trunk);
+  /* groves, not a scatter: trees stand where a slow noise says the ground is wooded, thicker inland, in two kinds
+     (pines and broadleaf), each one a little taller or darker than the next */
+  const trees = []; for (let i = 0; i < 6000 && trees.length < 520; i++) { const x = -82 + rnd(i, 3) * 164, z = -56 + rnd(i, 7) * 104; if (free(x, z) && noise2(x / 22, z / 22) > 0.52 - 0.12 * rnd(i, 4)) trees.push([x, z, 0.65 + rnd(i, 9) * 0.6, rnd(i, 17)]); }
+  ['phones', 'cars'].forEach((k, j) => { const c = placeAt(k).at; for (let i = 0; i < 110; i++) { const a = rnd(i, 11 + j) * 6.28, r = 15 + rnd(i, 13 + j) * 15; trees.push([c[0] + Math.cos(a) * r, c[1] + Math.sin(a) * r * 0.75, 0.55 + rnd(i, 5) * 0.5, rnd(i, 19 + j)]); } });
+  const pines = trees.filter(tr => tr[3] < 0.45), broad = trees.filter(tr => tr[3] >= 0.45);
+  const pineG = new THREE.ConeGeometry(1, 1, 7, 1); pineG.translate(0, 0.5, 0);
+  const broadG = new THREE.IcosahedronGeometry(1, 2);
+  const leafM = mat(0xffffff, { roughness: 0.9 }), M4 = new THREE.Matrix4(), Q = new THREE.Quaternion(), S3 = new THREE.Vector3(), V = new THREE.Vector3(), C = new THREE.Color(), UP = new THREE.Vector3(0, 1, 0);
+  const crown = new THREE.InstancedMesh(pineG, leafM, pines.length), canopy = new THREE.InstancedMesh(broadG, leafM, broad.length);
+  const trunk = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.1, 0.16, 1, 5), mat(T.bark), trees.length);
+  pines.forEach(([x, z, s, k], i) => { const h = 4.2 * s * (0.85 + k * 0.6); Q.setFromAxisAngle(UP, k * 40); M4.compose(V.set(x, 0.9 * s, z), Q, S3.set(0.95 * s, h, 0.95 * s)); crown.setMatrixAt(i, M4); crown.setColorAt(i, C.setHex(T.pine).offsetHSL((k - 0.2) * 0.03, 0, (k - 0.22) * 0.12)); });
+  broad.forEach(([x, z, s, k], i) => { Q.setFromAxisAngle(UP, k * 40); M4.compose(V.set(x, 2.3 * s, z), Q, S3.set(1.35 * s, 1.05 * s, 1.35 * s)); canopy.setMatrixAt(i, M4); canopy.setColorAt(i, C.setHex(T.leaf).offsetHSL((k - 0.7) * 0.06, -0.04 * k, (k - 0.72) * 0.16)); });
+  trees.forEach(([x, z, s], i) => { M4.compose(V.set(x, 0.6 * s, z), Q.identity(), S3.set(s, 1.3 * s, s)); trunk.setMatrixAt(i, M4); });
+  [crown, canopy, trunk].forEach(m => { m.castShadow = true; m.receiveShadow = true; scene.add(m); });
 
   const winM = night ? glow(0xffd58a, 0.9) : mat(0x3d4f66, { roughness: 0.2, metalness: 0.3 });
   const winCool = night ? glow(0x8fd0ff, 0.8) : mat(0x3d4f66, { roughness: 0.2, metalness: 0.3 });
   const cols = [P.accent, P.warm, P.bad, P.good, P.slate];
-  const tree = (g, x, z, s = 0.8, y = 0) => { const m = new THREE.Mesh(new THREE.IcosahedronGeometry(s, 1), mat(night ? 0x2e4a3a : 0x6f9a62, { flatShading: true })); m.position.set(x, y + s * 1.4, z); m.castShadow = true; g.add(m); cyl(g, s * 0.13, s * 0.18, s, mat(0x7a5b40), x, y, z, 6); };
+  const tree = (g, x, z, s = 0.8, y = 0) => { const m = new THREE.Mesh(broadG, mat(T.leaf, { roughness: 0.9 })); m.position.set(x, y + s * 1.9, z); m.scale.set(1.2 * s, 0.95 * s, 1.2 * s); m.castShadow = true; g.add(m); cyl(g, s * 0.1, s * 0.15, s * 1.3, mat(T.bark), x, y, z, 5); };
   const houseRoof = new THREE.ExtrudeGeometry(new THREE.Shape([new THREE.Vector2(-1.6, 0), new THREE.Vector2(1.6, 0), new THREE.Vector2(0, 1.4)]), { depth: 3, bevelEnabled: false }); houseRoof.translate(0, 0, -1.5);
   const house = (g, x, z, ry, roofC, lit) => { const h = group(g, x, 0, z, ry); box(h, 3, 2, 2.8, mat(P.white), 0, 0, 0, 0.1); const r = new THREE.Mesh(houseRoof, mat(roofC)); r.position.y = 2; r.castShadow = true; h.add(r); box(h, 0.6, 0.7, 0.06, lit ? winM : mat(P.dark), -0.6, 0.7, 1.42, 0.02, { cast: false }); return h; };
   const carModel = color => { const c = new THREE.Group(); box(c, 4.2, 1, 1.9, mat(color, { roughness: 0.35, metalness: 0.3 }), 0, 0.35, 0, 0.35); box(c, 2.4, 0.8, 1.7, glass(P.dark, { opacity: 0.85 }), -0.2, 1.3, 0, 0.3);
@@ -192,18 +240,9 @@ export function createMap(canvas, host, on = {}) {
     'island-phones': [0, 0], 'island-cars': [0, 0], 'dc-hall': [0, 10], 'dc-solar': [21, 4], 'clock-tower': [-8, -2] };
   GROWTH.forEach(gw => { const [x, z, y] = GROW_SPOT[gw.id] || [0, 0], g = group(G[gw.at], x, y || 0, z); g.visible = false; g.scale.setScalar(0.001); growing.push({ id: gw.id, g, built: false, t0: 0 }); });
 
-  /* ---- one question glowing above each place ---- */
-  const hue = id => (THREADS.find(x => x.id === id) || { hue: 200 }).hue;
+  /* No question floats over a place any more (docs/framework/rebuild.md, section 3): a question shown as a dot on a
+     map was rejected once already. The questions are on the first page and on every page of #/read. */
   const beaconOrbs = [];
-  PLACES.filter(p => !p.far && p.id !== 'village').forEach(p => {
-    const key = BEACON[p.id]; if (!key) return;
-    const th = key.split('.')[0], color = new THREE.Color().setHSL(hue(th) / 360, 0.85, night ? 0.62 : 0.48), b = group(G[p.id], -7, 0, -7);
-    cyl(b, 0.16, 0.16, 12, new THREE.MeshBasicMaterial({ color, transparent: true, opacity: night ? 0.45 : 0.6, depthWrite: false }), 0, 0, 0, 8, { cast: false });
-    const orb = new THREE.Mesh(new THREE.SphereGeometry(0.85, 24, 16), new THREE.MeshStandardMaterial({ color, emissive: color, emissiveIntensity: night ? 0.9 : 0.45, roughness: 0.3 }));
-    orb.position.y = 12.5; b.add(orb); bobbing.push({ obj: orb, base: 12.5, k: rnd(p.id.length, 3) * 6 }); orb.userData.question = key; beaconOrbs.push(orb);
-    const lb = L.add(orb, new THREE.Vector3(0, 1.3, 0), '?', { cls: 'q3', button: true, data: { q: key }, max: 520 });
-    lb.el.style.setProperty('--qc', '#' + color.getHexString()); lb.el.setAttribute('aria-label', t('stop.' + key + '.q'));
-  });
   /* ---- every place can be picked ---- */
   const pickable = () => { pick.length = 0; Object.values(G).forEach(g => g.traverse(o => { if (o.isMesh) { o.userData.place = g.userData.place; pick.push(o); } })); beaconOrbs.forEach(o => pick.push(o)); };
   pickable();
