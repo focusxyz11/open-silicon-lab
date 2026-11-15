@@ -83,7 +83,29 @@ My recommendation stays: no menu, Jump visible. But this is now a measurement, n
 
 ### Stage 1, pull request by pull request
 
-(Updated as each is merged.)
+| Pull request | What it did |
+| --- | --- |
+| #147 | The loop starts with what is open, with two ways in at the Lab; Jump; a menu that can be switched on to compare; the Lab's and the village's words. |
+| #148 | The keys: ↑ ↓ are out and in, ← → are along, in every view. |
+| #150 | `CLAUDE.md`, `docs/SYSTEM.md` and `docs/WORLD.md` rewritten for the grid; `docs/FRAME.md` folded in by reference (it keeps the data model and the history); the roadmap points here. |
+
+**Not done from stage 1, and why:**
+
+- *One card in code.* The island's card and the frame's look and behave the same, and are still two pieces of
+  code. Joining them touches every view's card at once; it is a refactor with no visible gain, so it should ride
+  with the next change that needs it (the Lab's inside as levels, below).
+- *Along gets its picture.* Still a slide between two pictures. It needs both levels drawn at one camera (stage
+  2's second item), so it belongs after that, not before.
+- *The board's story into the flight.* Not started.
+
+**The order after stage 1 changes: the commons goes before the pictures.** The owner left the timing of the
+commons' stage 3 to me. Stage 2 (one picture per cell) makes the lab tidier; stage 3 (the commons in the grid)
+makes it more itself, and the owner calls the commons the heart. Nothing in stage 3 needs stage 2. So the next
+stage is the commons: the Lab's inside as levels (the computer → a piece → a design → an entry), entries as marks
+on what they are about, questions as shared work, and the island drawing who is here. The unfinished work on
+`claude/fable-commons-3` (one question, two tries, and a start on the island and on questions) is reworked into
+that stage, onto addresses, not merged as it stands: it was saved untested and unreviewed, and its island and
+page changes were written for the shell that had a menu.
 
 ## The two-minute summary
 
