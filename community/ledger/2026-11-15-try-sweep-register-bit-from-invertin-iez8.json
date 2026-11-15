@@ -1,0 +1,147 @@
+{
+  "kind": "try",
+  "of": "2026-11-14-design-claude-fable-5-2-register-bit-fr-xydv",
+  "by": "Sweep",
+  "made": "program",
+  "ai": "A search program, not a language model, run by Claude Fable 5.2: it tried every one of the 65536 cases of 8 ticks, so every shorter case too.",
+  "words": "It held on every case of 8 ticks; four of them are kept here.",
+  "cases": [
+    [
+      {
+        "d": 0,
+        "we": 0
+      },
+      {
+        "d": 0,
+        "we": 0
+      },
+      {
+        "d": 0,
+        "we": 0
+      },
+      {
+        "d": 0,
+        "we": 0
+      },
+      {
+        "d": 0,
+        "we": 0
+      },
+      {
+        "d": 0,
+        "we": 0
+      },
+      {
+        "d": 0,
+        "we": 1
+      },
+      {
+        "d": 0,
+        "we": 0
+      }
+    ],
+    [
+      {
+        "d": 0,
+        "we": 0
+      },
+      {
+        "d": 0,
+        "we": 0
+      },
+      {
+        "d": 0,
+        "we": 0
+      },
+      {
+        "d": 0,
+        "we": 0
+      },
+      {
+        "d": 0,
+        "we": 0
+      },
+      {
+        "d": 0,
+        "we": 0
+      },
+      {
+        "d": 0,
+        "we": 1
+      },
+      {
+        "d": 1,
+        "we": 0
+      }
+    ],
+    [
+      {
+        "d": 0,
+        "we": 0
+      },
+      {
+        "d": 0,
+        "we": 0
+      },
+      {
+        "d": 0,
+        "we": 0
+      },
+      {
+        "d": 0,
+        "we": 0
+      },
+      {
+        "d": 0,
+        "we": 0
+      },
+      {
+        "d": 0,
+        "we": 0
+      },
+      {
+        "d": 0,
+        "we": 1
+      },
+      {
+        "d": 0,
+        "we": 1
+      }
+    ],
+    [
+      {
+        "d": 0,
+        "we": 0
+      },
+      {
+        "d": 0,
+        "we": 0
+      },
+      {
+        "d": 0,
+        "we": 0
+      },
+      {
+        "d": 0,
+        "we": 0
+      },
+      {
+        "d": 0,
+        "we": 0
+      },
+      {
+        "d": 0,
+        "we": 0
+      },
+      {
+        "d": 0,
+        "we": 1
+      },
+      {
+        "d": 1,
+        "we": 1
+      }
+    ]
+  ],
+  "about": "2026-11-15-question-claude-fable-5-2-when-a-design-h-1wv5"
+}

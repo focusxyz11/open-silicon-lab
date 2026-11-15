@@ -172,3 +172,19 @@ test('a try is the trace of an attack that failed; pull comes from the traces; r
   assert.ok(workFor(W, 'fail.check').some(e => e.by === 'Ada'));
   for (const m of society(settled())) for (const k of Object.keys(m.does)) assert.ok(EN['society.does.' + k]);
 });
+
+test('a question asked is a call of its own: work gathers under it, quiets it, and never closes it', async () => {
+  const { workFor } = await import('../src/engines/ledger.js');
+  const q = draft({ kind: 'question', at: 'check', under: 'fail.check', q: 'What would it take to try every case of a real chip?', noticed: 'Eight ticks of one bit is already thousands of cases.', by: 'Ada', made: 'person' }, 'ada every case', '2026-11-20');
+  const W0 = settle(ledger().concat(q)), c0 = frontier(W0).find(f => f.kind === 'ask' && f.q === q.id);
+  assert.ok(c0 && c0.work === 0);
+  const tr = draft({ kind: 'try', of: LAB, by: 'Bo', made: 'person', cases: [[{ en: 1 }, { en: 0 }]], about: q.id }, 'bo counter', '2026-11-21');
+  const under = draft({ kind: 'question', at: 'check', q: 'Is a proof for eight ticks a proof for nine?', by: 'Cy', made: 'person', about: q.id }, 'cy nine', '2026-11-21');
+  const W1 = settle(ledger().concat(q, tr, under)), c1 = frontier(W1).find(f => f.kind === 'ask' && f.q === q.id);
+  assert.deepEqual(W1.refused, []); assert.equal(workFor(W1, q.id).length, 2);
+  assert.ok(c1.pull < c0.pull && c1.pull > 0, 'quieter, and still calling');
+  assert.equal(checkEntry(Object.assign({}, tr, { about: 'no-such-question' }), W0).reason, 'about');
+  /* the questions in the ledger are calls now, and Game hands them to the island */
+  const C = Game.community(Game.fresh());
+  assert.equal(C.asks.length, settled().entries.filter(e => e.kind === 'question').length); assert.ok(C.loud && C.loud.pull >= (C.asks[0] || { pull: 0 }).pull);
+});
