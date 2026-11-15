@@ -32,6 +32,8 @@ import { reportsAt, SAYS } from '../engines/ledger.js';
 import * as Read from './read.js';
 import * as Worlds from './worlds.js';
 import { copiesInput } from './copies.js';
+import { wallsInput } from './walls.js';
+import { formsInput } from './forms.js';
 import { WORLD_IDS } from '../data/worlds.js';
 
 const $ = id => document.getElementById(id);
@@ -739,8 +741,8 @@ export function start() {
     page.innerHTML = '<div class="inner"><a class="x pagex" href="#/" aria-label="' + esc(t('sheet.close')) + '">×</a>' + (id ? Read.experimentHtml(id, ctx) : Read.indexHtml()) + '</div>';
     page.classList.add('reading'); page.hidden = false; page.scrollTop = 0;
   }
-  page.addEventListener('input', e => { const f = e.target.closest('[data-readfind]'); if (f) Read.filterIndex(page, f.value); if (e.target.matches('[data-cyear]')) copiesInput(e.target); });
-  page.addEventListener('click', e => { const b = e.target.closest('[data-copies] [data-cp]'); if (b) copiesInput(b); });   /* i18n-ok: a selector */
+  page.addEventListener('input', e => { const f = e.target.closest('[data-readfind]'); if (f) Read.filterIndex(page, f.value); if (e.target.matches('[data-cyear]')) copiesInput(e.target); if (e.target.matches('[data-forms] [data-fcode]')) formsInput(e.target); });   /* i18n-ok: selectors */
+  page.addEventListener('click', e => { const b = e.target.closest('[data-copies] [data-cp]'); if (b) copiesInput(b); const w = e.target.closest('[data-walls] [data-wk], [data-walls] [data-wrow]'); if (w) wallsInput(w, S.chip); const f = e.target.closest('[data-forms] [data-fjob], [data-forms] [data-fver], [data-forms] [data-fedit], [data-forms] [data-fsig]'); if (f) formsInput(f); });   /* i18n-ok: a selector */
   /* a world (src/v2/worlds.js): one core question, its page made from its document; #/w/<id>/q<n> opens a question inside */
   function showWorlds() {
     const shown = location.hash;

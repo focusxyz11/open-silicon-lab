@@ -87,9 +87,9 @@ truths as the only connections, two halves (what a chip is, how a chip comes to 
 | --- | --- | --- | --- |
 | think | yes | exists (the dive) | exists |
 | strange | yes | new | begun |
-| limit | yes | new | exists |
-| fail | yes | partly (yield, life) | exists |
-| idea | yes | partly (the studio; Forms sketched) | exists |
+| limit | yes | live (Walls) | exists |
+| fail | yes | live (Copies) | exists |
+| idea | yes | live (Forms) | exists |
 | make | yes | exists (the line) | missing (the factory's flow exists) |
 | know | yes | new | missing |
 | open | yes | exists (the supply map) | exists (the chain); the cost of making is missing |

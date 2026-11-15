@@ -884,3 +884,64 @@ button.node:hover { border-color: var(--accent); }
 .creq { margin: 0; padding-left: 18px; font-size: 14px; } .creq li.ok::marker { content: '✓  '; color: var(--good); } .creq li.bad::marker { content: '✕  '; color: var(--bad); }
 .copiesbox .chipb[aria-pressed=true] { background: var(--qc); color: #fff; }
 @media (max-width: 720px) { .cgrid { grid-template-columns: 1fr; } .cyear { grid-template-columns: 1fr; } }
+
+/* ---- Walls (src/v2/walls.js): directions out from today's chips, each to its wall; one card for the chosen one ---- */
+.wallsbox { display: grid; gap: 12px; }
+.wmap { position: relative; display: grid; gap: 6px; padding: 14px 14px 12px; border-radius: 16px; background: var(--panel-solid); border: 1px solid var(--line); }
+.wtoday { font: 600 10px var(--mono); text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+.wrow { all: unset; box-sizing: border-box; display: grid; grid-template-columns: minmax(150px, 30%) 1fr 150px; align-items: center; gap: 12px; padding: 6px 8px; border-radius: 10px; cursor: pointer; }
+.wrow:hover, .wrow:focus-visible { background: color-mix(in srgb, var(--qc) 8%, transparent); }
+.wrow[aria-pressed=true] { background: color-mix(in srgb, var(--qc) 14%, transparent); }
+.wrl { font-size: 14px; font-weight: 600; }
+.wkind { font: 600 10px var(--mono); text-transform: uppercase; letter-spacing: .05em; color: var(--muted); text-align: right; }
+.wtrack { position: relative; height: 22px; border-radius: 11px; background: linear-gradient(90deg, color-mix(in srgb, var(--qc) 3%, transparent), color-mix(in srgb, var(--qc) 18%, transparent)); }
+.wwall { position: absolute; right: 0; top: -5px; bottom: -5px; width: 7px; border-radius: 4px; background: var(--ink); }
+.wrow.counting .wwall, .wrow.maths .wwall { background: var(--qc); }
+.wrow.unproven .wwall { background: repeating-linear-gradient(180deg, var(--qc) 0 5px, transparent 5px 9px); }
+.wrow.soft .wwall { background: repeating-linear-gradient(180deg, var(--warm) 0 5px, transparent 5px 9px); right: 35%; }
+.wrow.soft .wtrack::after { content: ''; position: absolute; left: 65%; right: 0; top: 0; bottom: 0; border-radius: 0 11px 11px 0; background: color-mix(in srgb, var(--warm) 10%, transparent); }
+.wdot { position: absolute; top: 2px; width: 18px; height: 18px; border-radius: 50%; background: var(--qc); box-shadow: 0 0 0 4px color-mix(in srgb, var(--qc) 25%, transparent); transition: left .45s cubic-bezier(.2,.8,.2,1); }
+.wrow.past .wdot { background: var(--bad); box-shadow: 0 0 0 4px color-mix(in srgb, var(--bad) 25%, transparent); left: calc(100% - 9px) !important; }
+.wcard { padding: 14px 16px; border-radius: 14px; background: var(--panel-solid); border: 1px solid color-mix(in srgb, var(--qc) 35%, var(--line)); }
+.wcard p { margin: 6px 0; } .wcard .kicker { color: var(--qc); } .wcard .plead.bad { color: var(--bad); }
+.wcard .pctl { margin-top: 10px; }
+.wallsbox .chipb[aria-pressed=true] { background: var(--qc); color: #fff; }
+@media (max-width: 720px) { .wrow { grid-template-columns: 1fr; gap: 4px; } .wkind { text-align: left; } }
+
+/* ---- Forms (src/v2/forms.js): one design in every form at once ---- */
+.formsbox { display: grid; gap: 10px; }
+.fctl { display: grid; gap: 4px; }
+.formsbox .chipb[aria-pressed=true] { background: var(--qc); color: #fff; }
+.fstate { margin: 4px 0 0; font-weight: 600; } .fstate.ok { color: var(--good); } .fstate.bad { color: var(--bad); }
+.fhint { margin: 0; }
+.fgrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.fform { display: grid; grid-template-rows: auto 1fr auto; gap: 6px; min-width: 0; padding: 12px; border-radius: 14px; background: var(--panel-solid); border: 1px solid var(--line); }
+.fform h3 { margin: 0; font: 600 11px var(--mono); text-transform: uppercase; letter-spacing: .07em; color: var(--qc); }
+.fmade { margin: 0; color: var(--muted); }
+.fjob { margin: 0; font-size: 14px; } .fform p.small { margin: 2px 0; }
+.fsig { all: unset; cursor: pointer; padding: 0 4px; border-radius: 5px; font: 600 13px var(--mono); color: var(--ink); background: color-mix(in srgb, var(--ink) 8%, transparent); }
+.fsig.out { color: var(--qc); } .fsig.on { background: var(--qc); color: #fff; } .fsig:focus-visible { outline: 2px solid var(--qc); }
+.fcode { margin: 0; padding: 10px; border-radius: 10px; font: 13px/1.7 var(--mono); white-space: pre-wrap; background: color-mix(in srgb, var(--ink) 4%, transparent); border: 1px solid var(--line); color: var(--ink); overflow-x: auto; }
+textarea.fcode { width: 100%; min-height: 110px; resize: vertical; box-sizing: border-box; }
+.fcode .fn { color: var(--muted); }
+.ftw { overflow: auto; max-height: 210px; }
+.ftab { border-collapse: collapse; font: 12px var(--mono); width: 100%; }
+.ftab th, .ftab td { padding: 3px 6px; text-align: center; border-bottom: 1px solid var(--line); }
+.ftab td.o { font-weight: 700; } .ftab td.bad { color: var(--bad); background: color-mix(in srgb, var(--bad) 14%, transparent); }
+.ftab .on { background: color-mix(in srgb, var(--qc) 16%, transparent); }
+.fgates, .flayout { width: 100%; height: auto; }
+.fgates .fw { fill: none; stroke: var(--muted); stroke-width: 1.2; opacity: .55; } .fgates .fw.on { stroke: var(--qc); stroke-width: 2.2; opacity: 1; }
+.fgates .fg { fill: color-mix(in srgb, var(--ink) 7%, var(--panel-solid)); stroke: var(--line); } .fgates .fg.on { fill: color-mix(in srgb, var(--qc) 30%, var(--panel-solid)); stroke: var(--qc); }
+.fgates text { fill: var(--ink); font: 600 10px var(--mono); } .fgates .fio { fill: var(--muted); font-size: 11px; } .fgates .fio.on { fill: var(--qc); }
+.fgates .fpin { fill: var(--muted); }
+.flayout, .fmask { background: color-mix(in srgb, var(--ink) 3%, transparent); border-radius: 8px; }
+.frow { fill: color-mix(in srgb, var(--ink) 5%, transparent); }
+.fcell { fill: color-mix(in srgb, var(--ink) 10%, var(--panel-solid)); stroke: var(--line); stroke-width: .8; } .fcell.on { fill: color-mix(in srgb, var(--qc) 35%, var(--panel-solid)); stroke: var(--qc); }
+.fm1 { stroke: #c9894a; stroke-width: 2.6; stroke-linecap: round; opacity: .8; } .fm2 { stroke: #e3b778; stroke-width: 3.2; stroke-linecap: round; opacity: .8; }
+.fm1.on, .fm2.on { stroke: var(--qc); opacity: 1; } .fvia { fill: var(--ink); opacity: .7; } .fvia.on { fill: var(--qc); opacity: 1; }
+.fpinr { fill: var(--warm); }
+.fmasks { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.fplate { margin: 0; } .fplate figcaption { font: 600 10px var(--mono); color: var(--muted); text-align: center; margin-top: 2px; }
+.fmask { width: 100%; height: auto; display: block; }
+@media (max-width: 900px) { .fgrid { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 560px) { .fgrid { grid-template-columns: 1fr; } }

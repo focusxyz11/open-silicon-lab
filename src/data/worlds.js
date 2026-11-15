@@ -5,6 +5,8 @@
 
    lens: the world's visual system as it can be shown now.
      copies   drawn live on the page from its engine (src/v2/copies.js)
+     walls    drawn live from the Floor engine (src/v2/walls.js), with any tries named in probes under it
+     forms    one design in all its forms at once, from the Design flow engine (src/v2/forms.js)
      probes   tries of its engine on the page (src/v2/probes.js)
      view     a view of the site that already draws it (href), opened from the page
      (none)   its sketch only, until it is built (content/img/)
@@ -16,10 +18,10 @@ export const WORLDS = {
   think: { lens: 'view', href: '#/dive/chip', sketch: 'dive',
     play: { 'Make a bit remember.': '#/build/computer/regbit', 'Count.': '#/build/computer/timer', 'Your slice, 32 times.': '#/build/computer/slice' } },
   strange: { lens: 'probes', probes: ['strange-chain'], sketch: 'side', play: { 'Keep the 1.': 'here' } },
-  limit: { lens: 'probes', probes: ['limit-floor', 'limit-cold', 'limit-all'], sketch: 'walls', play: { 'Close to the floor.': 'here', 'Cold that pays.': 'here' } },
+  limit: { lens: 'walls', probes: ['limit-cold'], sketch: 'walls', play: { 'Close to the floor.': 'here', 'Cold that pays.': 'here' } },
   fail: { lens: 'copies', sketch: 'copies',
     play: { "Through a phone's life.": '#/do/phone', "Through a car's life.": '#/do/car', "Through a data centre's life.": '#/do/dclife', 'Find the broken copy.': '#/do/spot', 'How much margin?': 'here' } },
-  idea: { lens: 'probes', probes: ['idea-two-ways'], href: '#/bench/logic', sketch: 'forms',
+  idea: { lens: 'forms', href: '#/bench/logic', sketch: 'forms',
     play: { 'Fix the half adder': '#/do/half', 'Smaller, or faster?': 'here', 'Check the agent.': '#/build', 'A piece of the computer.': '#/build' } },
   make: { lens: 'view', href: '#/line/crystal', sketch: 'line', play: { 'Through in time.': '#/do/months', 'Fewer layers.': '#/do/quick' } },
   know: { sketch: 'probe', play: {} },

@@ -71,6 +71,17 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
     await page.click('#page [data-cp="margin"][data-cv="4"]').catch(() => problems.push(tag + ': the copies cannot be changed'));
     const after = await page.textContent('#page .creq').catch(() => '');
     if (!after || after === before) problems.push(tag + ': the crowd of copies did not answer a change of margin'); }
+  /* Walls: choose a direction, change the chip, the dot moves; Forms: touch a signal, it lights in every form */
+  await page.evaluate(() => { location.hash = '#/w/limit'; });
+  await page.waitForSelector('#page [data-walls] .wdot', { timeout: 15000 }).catch(() => problems.push(tag + ': the walls are not drawn'));
+  { const before = await page.getAttribute('#page [data-walls] .wdot', 'style').catch(() => '');
+    await page.click('#page [data-walls] [data-wk="reuse"][data-wv="5"]').catch(() => problems.push(tag + ': the walls cannot be changed'));
+    const after = await page.getAttribute('#page [data-walls] .wdot', 'style').catch(() => '');
+    if (!after || after === before) problems.push(tag + ': the dot did not move toward the wall'); }
+  await page.evaluate(() => { location.hash = '#/w/idea'; });
+  await page.waitForSelector('#page [data-forms] .fgates', { timeout: 15000 }).catch(() => problems.push(tag + ': the forms are not drawn'));
+  await page.click('#page [data-forms] .fform [data-fsig="sum"]').catch(() => problems.push(tag + ': a signal cannot be touched'));
+  if (!(await page.$('#page [data-forms] .fcell.on')) || !(await page.$('#page [data-forms] .fg.on'))) problems.push(tag + ': a touched signal does not light its gates and cells');
   await page.evaluate(() => { location.hash = '#/w'; });
   await page.waitForFunction(() => document.querySelectorAll('#page .qgrid .qcard').length > 90, null, { timeout: 15000 }).catch(() => problems.push(tag + ': the questions that lead in are not there'));
   /* a try on the page: change a choice, and the engine answers again */
