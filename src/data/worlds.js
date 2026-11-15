@@ -7,6 +7,8 @@
      copies   drawn live on the page from its engine (src/v2/copies.js)
      walls    drawn live from the Floor engine (src/v2/walls.js), with any tries named in probes under it
      forms    one design in all its forms at once, from the Design flow engine (src/v2/forms.js)
+     plan     your chip as a floor plan, fed or waiting, with a special district (src/v2/plan.js)
+     clock    time at every length, and fifty years of processors fitted (src/v2/clock.js)
      probes   tries of its engine on the page (src/v2/probes.js)
      view     a view of the site that already draws it (href), opened from the page
      (none)   its sketch only, until it is built (content/img/)
@@ -21,14 +23,14 @@ export const WORLDS = {
   limit: { lens: 'walls', probes: ['limit-cold'], sketch: 'walls', play: { 'Close to the floor.': 'here', 'Cold that pays.': 'here' } },
   fail: { lens: 'copies', sketch: 'copies',
     play: { "Through a phone's life.": '#/do/phone', "Through a car's life.": '#/do/car', "Through a data centre's life.": '#/do/dclife', 'Find the broken copy.': '#/do/spot', 'How much margin?': 'here' } },
-  idea: { lens: 'forms', href: '#/bench/logic', sketch: 'forms',
+  idea: { lens: 'forms', href: '#/bench/logic', hrefKey: 'world.studio', sketch: 'forms',
     play: { 'Fix the half adder': '#/do/half', 'Smaller, or faster?': 'here', 'Check the agent.': '#/build', 'A piece of the computer.': '#/build' } },
   make: { lens: 'view', href: '#/line/crystal', sketch: 'line', play: { 'Through in time.': '#/do/months', 'Fewer layers.': '#/do/quick' } },
   know: { sketch: 'probe', play: {} },
   open: { lens: 'view', href: '#/supply', sketch: 'map', play: { 'Close one place.': '#/supply' } },
-  divide: { lens: 'view', href: '#/ask/divide/block', sketch: 'plan', play: { 'Feed the cores.': '#/do/fed', 'More cores, still cheap.': '#/do/cores' } },
+  divide: { lens: 'plan', sketch: 'plan', play: { 'Feed the cores.': '#/do/fed', 'More cores, still cheap.': '#/do/cores' } },
   life: { sketch: 'swarm', play: {} },
-  scale: { lens: 'view', href: '#/ask/scale/switch', sketch: 'clock', play: { 'One generation smaller.': '#/ask/scale/switch', 'Half as fast again': '#/do/fast' } }
+  scale: { lens: 'clock', sketch: 'clock', play: { 'One generation smaller.': '#/ask/scale/switch', 'Half as fast again': '#/do/fast' } }
 };
 /* a challenge's name as the documents write it: the bold words at the start of its first cell */
 export const challengeName = cell => ((/\*\*([^*]+)\*\*/.exec(cell) || [])[1] || cell).trim();

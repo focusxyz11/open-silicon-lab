@@ -93,6 +93,6 @@ truths as the only connections, two halves (what a chip is, how a chip comes to 
 | make | yes | exists (the line) | missing (the factory's flow exists) |
 | know | yes | new | missing |
 | open | yes | exists (the supply map) | exists (the chain); the cost of making is missing |
-| divide | yes | partly (the die photo, the memory wall) | exists in part |
+| divide | yes | live (Plan) | exists (Work, with the Chip engine) |
 | life | yes | new | missing |
-| scale | yes | new | exists in part |
+| scale | yes | live (Clock) | exists (Scaling, from open data) |

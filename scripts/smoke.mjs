@@ -82,6 +82,19 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
   await page.waitForSelector('#page [data-forms] .fgates', { timeout: 15000 }).catch(() => problems.push(tag + ': the forms are not drawn'));
   await page.click('#page [data-forms] .fform [data-fsig="sum"]').catch(() => problems.push(tag + ': a signal cannot be touched'));
   if (!(await page.$('#page [data-forms] .fcell.on')) || !(await page.$('#page [data-forms] .fg.on'))) problems.push(tag + ': a touched signal does not light its gates and cells');
+  /* Plan: give part of the floor to a district, the engine answers; Clock: pick another measure, the card answers */
+  await page.evaluate(() => { location.hash = '#/w/divide'; });
+  await page.waitForSelector('#page [data-plan] .plead', { timeout: 15000 }).catch(() => problems.push(tag + ': the floor plan is not drawn'));
+  { const before = await page.textContent('#page [data-plan]').catch(() => '');
+    await page.click('#page [data-plan] [data-pk2="area"][data-pv2="1"]').catch(() => problems.push(tag + ': the floor plan cannot be changed'));
+    const after = await page.textContent('#page [data-plan]').catch(() => '');
+    if (!after || after === before) problems.push(tag + ': the floor plan did not answer a district'); }
+  await page.evaluate(() => { location.hash = '#/w/scale'; });
+  await page.waitForSelector('#page [data-clock] .clkcard', { timeout: 15000 }).catch(() => problems.push(tag + ': the clock is not drawn'));
+  { const before = await page.textContent('#page [data-clock] .clkcard').catch(() => '');
+    await page.click('#page [data-clock] [data-clk="frequency"]').catch(() => problems.push(tag + ': the clock cannot be changed'));
+    const after = await page.textContent('#page [data-clock] .clkcard').catch(() => '');
+    if (!after || after === before) problems.push(tag + ': the clock did not answer another measure'); }
   await page.evaluate(() => { location.hash = '#/w'; });
   await page.waitForFunction(() => document.querySelectorAll('#page .qgrid .qcard').length > 90, null, { timeout: 15000 }).catch(() => problems.push(tag + ': the questions that lead in are not there'));
   /* a try on the page: change a choice, and the engine answers again */

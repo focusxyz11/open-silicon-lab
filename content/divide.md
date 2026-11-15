@@ -58,8 +58,9 @@ chip's photo and say what it is for from where its area goes.
 **What it shows that words cannot:** that a chip's design is a choice about distance; the streams show the cost of
 every boundary at a glance.
 
-**Status:** partly: the die photos of real chips, and the memory wall as a setting of your chip. The plan with
-streams is new.
+**Status:** live on the world's page: your chip as a floor plan, cores lit by how busy the Chip engine says they
+are, what they ask for against what arrives, and a special district whose worth the Work engine weighs. The die
+photos of real chips wait to join it.
 
 ![Plan](img/plan.svg)
 

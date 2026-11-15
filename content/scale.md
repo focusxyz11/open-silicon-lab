@@ -69,7 +69,9 @@ place a dated forecast and wait for its date.
 **What it shows that words cannot:** that every doubling is a straight line on a scale that grows tenfold at each
 step, and that each line bends at its own moment.
 
-**Status:** new. The first version of the lab had a roadmap to the 2040s and a time slider from 1971.
+**Status:** live on the world's page: one scale of time with marks from the lab's engines, and fifty years of
+processors (Karl Rupp's open data) with the Scaling engine fitting a doubling time to each decade. The first
+version's roadmap to the 2040s waits for the forecasts.
 
 ![Clock](img/clock.svg)
 
