@@ -107,9 +107,11 @@ Every view wears the same frame. There is no column of text beside the picture.
 
 **The bar.** It never hides: the lab's mark (home), the loop, *Your log*, the theme. There is no menu of sections
 by default; `?menu=1` adds one for that browser, to compare (not decided: `docs/reviews/structure.md`, Status).
-Two reading views are opened on purpose: **your log** (`#/log`: a jump to any place, level or challenge by name,
-also on the `/` key; what is next for your chip; the questions you met; the challenges by step) and **the Lab's
-record** (`#/build`: the computer, what is open, every entry, who is here). Inside the frame the earlier site's
+One reading view is opened on purpose: **your log** (`#/log`: a jump to any place, level or challenge by name,
+also on the `/` key; what is next for your chip; the questions you met; the challenges by step). The commons has no page: **the Lab's inside**
+(`#/build[/<step>[/<piece>]]`) is in the Lab's own card, with the island behind it: the computer, then a piece of it,
+then the designs for that piece, each an entry of the ledger; and beside the computer, the record, who is here, and
+who makes what (`labInside` in `src/v2/app.js`). Inside the frame the earlier site's
 own marks are switched off (`setChrome` in `src/app/world.js`, `setBand` in `src/app/journey.js`). Inside a view,
 back is on the card's left and the next step on its right (`data-key="back"`, `data-key="next"`).
 

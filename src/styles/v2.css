@@ -719,3 +719,15 @@ pre.code { margin: 4px 0; white-space: pre-wrap; overflow-wrap: anywhere; }
 .pin3.full { width: 24px; height: 24px; border-color: transparent; }
 .pin3.here { height: 28px; border-color: var(--panel-solid); }
 .pin3.here .you { margin-left: 0; }
+/* the Lab's inside, in its own card */
+.sheet.inside { max-height: 68vh; }
+.labsteps { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 12px; }
+.labsteps button { padding: 5px 12px; border-radius: 999px; border: 1px solid var(--line); background: transparent; color: var(--muted); font: 600 13px var(--sans); cursor: pointer; }
+.labsteps button[aria-selected=true] { border-color: var(--accent); color: var(--ink); background: color-mix(in srgb, var(--accent) 12%, transparent); }
+button.node { font: 600 13px var(--sans); color: inherit; cursor: pointer; }
+button.node:not(.built) { background: transparent; }
+button.node:hover { border-color: var(--accent); }
+.sheet h3 { margin: 2px 0 6px; font: 700 20px var(--serif); }
+.sheet .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 8px; margin: 0 0 12px; }
+.sheet .grid .chcard { margin: 0; }
+@media (max-width: 720px) { .sheet.inside { max-height: 62%; } }

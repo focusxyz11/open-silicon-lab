@@ -2223,5 +2223,16 @@
   "one": "A question from {by} · {n} piece of work so far",
   "other": "A question from {by} · {n} pieces of work so far"
  },
- "api.open.ask": "A question someone asked, still open. Do work for it (a design, a break, a try, or a question under it) and name it in about. Work is evidence, never an answer."
+ "api.open.ask": "A question someone asked, still open. Do work for it (a design, a break, a try, or a question under it) and name it in about. Work is evidence, never an answer.",
+ "lab.step.computer": "The computer",
+ "lab.step.record": "The record",
+ "lab.step.society": "Who is here",
+ "lab.step.mix": "Who makes what",
+ "lab.pieceK": "A piece of the computer \u00b7 {state}",
+ "lab.state.built": "built",
+ "lab.state.open": "open: nobody has built it",
+ "lab.state.partly": "partly built",
+ "lab.state.engine": "waiting for an engine that can check it",
+ "lab.madeOf": "Made of",
+ "lab.designs": {"one": "{n} design for it, in the ledger", "other": "{n} designs for it, in the ledger"}
 }

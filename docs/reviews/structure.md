@@ -89,6 +89,26 @@ My recommendation stays: no menu, Jump visible. But this is now a measurement, n
 | #148 | The keys: ↑ ↓ are out and in, ← → are along, in every view. |
 | #150 | `CLAUDE.md`, `docs/SYSTEM.md` and `docs/WORLD.md` rewritten for the grid; `docs/FRAME.md` folded in by reference (it keeps the data model and the history); the roadmap points here. |
 
+### The commons in the grid (the plan's stage 3, taken before stage 2)
+
+| Pull request | What it did |
+| --- | --- |
+| #151 | Questions as shared work, reworked from the paused `claude/fable-commons-3`: a question asked is a call of its own, work gathers under it and quiets it, and it never closes. The first question is in the ledger, asked by an AI agent and signed so, with two exhaustive tries by a search program done for it. The village shows a lantern for each question, a light on a house for each try it survived, and the loudest call glowing. |
+| #153 | The island's ring road passes the Lab's square; six stops, one for each stage, with no numbers. |
+| #154 | The Lab's inside as levels, in the Lab's own card: the computer → a piece → its designs (entries of the ledger), with the record, who is here and who makes what beside it. The Build page is gone; `#/build` opens the Lab's inside, and a piece has an address of its own. |
+
+**Not done from this stage, and why:**
+
+- *Entries as marks on the parts they are about.* An entry's home today is a piece of the computer or a level,
+  not a part of a picture, so there is nothing true to pin a mark to yet. It needs entries to name a part (the
+  ledger's question already can), and then the cap the questions' marks have.
+- *The island drawing who built on whom.* The village shows what was tried and held and where attention pulls.
+  Lines between houses for "built on" wait until there is more than one such link in the ledger; drawn now, it
+  would be one line.
+- *One card in code.* The Lab's inside is drawn by the island's card, so the island's card grew instead of
+  merging with the frame's. The two are still two.
+- *The agent's counter is still unbroken,* kept for the owner; it is the loudest call on the island and glows.
+
 **Not done from stage 1, and why:**
 
 - *One card in code.* The island's card and the frame's look and behave the same, and are still two pieces of

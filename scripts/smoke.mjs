@@ -128,9 +128,10 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
   await page.waitForSelector('.stopx .askform .bad', { timeout: 10000 }).catch(() => problems.push(tag + ': a sentence that is not a question was not refused'));
   await page.fill('.stopx [data-askq]', 'If one case can break a design that passed, how many cases are enough?').catch(() => {}); await page.click('.stopx [data-askkeep]').catch(() => {});
   await page.waitForSelector('.stopx .asked1.draft .slip', { timeout: 10000 }).catch(() => problems.push(tag + ': a question asked under a question was not kept'));
-  await page.evaluate(() => { location.hash = '#/build'; });
-  await page.waitForSelector('#page .record .rec', { timeout: 10000 }).catch(() => problems.push(tag + ': the build page shows no record'));
-  if (!(await page.$('#page .mix .mbar'))) problems.push(tag + ': the build page does not show who makes what');
+  await page.evaluate(() => { location.hash = '#/build/record'; });
+  await page.waitForSelector('#sheet .record .rec', { timeout: 10000 }).catch(() => problems.push(tag + ': the build page shows no record'));
+  await page.evaluate(() => { location.hash = '#/build/mix'; }); await page.waitForSelector('#sheet .mix .mbar', { timeout: 10000 }).catch(() => {});
+  if (!(await page.$('#sheet .mix .mbar'))) problems.push(tag + ': the build page does not show who makes what');
   if (await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)) problems.push(tag + ': the build page scrolls sideways');
   /* questions stay in the chip world: the questions page and a followed question never send you to the earlier site */
   at = tag + ' ' + '#/questions'; await page.evaluate(() => { location.hash = '#/questions'; });
@@ -152,7 +153,7 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
   await page.click('#diveui .modes3 [data-mode="look"]').catch(() => {});
   if (await page.$('#diveui .dock .player')) problems.push(tag + ': Look does not lead back from a challenge to the story');
   at = tag + ' ' + '#/build'; await page.evaluate(() => { location.hash = '#/build'; });
-  await page.waitForSelector('#page .tree', { timeout: 10000 }).catch(() => problems.push(tag + ': the build page has no plan'));
+  await page.waitForSelector('#sheet .tree [data-piece]', { timeout: 10000 }).catch(() => problems.push(tag + ': the build page has no plan'));
   /* inside a chip: dive down the layers, then switch to building them and step up */
   at = tag + ' ' + '#/chip/0'; await page.evaluate(() => { location.hash = '#/chip/0'; });
   /* the frame: the rail, Look · Do · Ask from the atlas, and the Turn between used and made */
