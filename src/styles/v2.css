@@ -708,3 +708,9 @@ pre.code { margin: 4px 0; white-space: pre-wrap; overflow-wrap: anywhere; }
 .sections nav { position: absolute; right: 0; top: 46px; display: grid; min-width: 180px; padding: 6px; border-radius: 14px; background: var(--panel-solid); border: 1px solid var(--line); box-shadow: var(--shadow); }
 .sections nav a { padding: 9px 12px; border-radius: 9px; text-decoration: none; font-weight: 600; }
 .sections nav a:hover { background: color-mix(in srgb, var(--ink) 8%, transparent); }
+/* the loudest call on the island glows; a question someone asked is a warm mark */
+.plot3.asked { border-style: solid; border-color: var(--warm); background: var(--panel-solid); }
+.plot3.asked.draft { border-style: dashed; }
+.lbl3.loud { box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 40%, transparent); animation: loud 1.8s ease-in-out infinite; }
+@keyframes loud { 50% { box-shadow: 0 0 0 9px color-mix(in srgb, var(--accent) 0%, transparent); } }
+@media (prefers-reduced-motion: reduce) { .lbl3.loud { animation: none; } }

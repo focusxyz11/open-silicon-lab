@@ -34,7 +34,7 @@ const FIELDS = {
   /* a try: cases that were meant to break a design and did not. The trace of an attack that failed: what a
      design has survived is why it can be trusted, and where the next attacker need not look */
   try: ['kind', 'of', 'by', 'made', 'ai', 'words', 'cases', 'about'],
-  question: ['kind', 'at', 'part', 'under', 'q', 'noticed', 'by', 'made', 'ai']
+  question: ['kind', 'at', 'part', 'under', 'q', 'noticed', 'by', 'made', 'ai', 'about']
 };
 /* plain words: no markup, no links (a link in free text is how spam pays), nothing a page or an agent could run */
 const plain = (s, min, max) => typeof s === 'string' && s.length >= min && s.length <= max && !/[<>\u0000-\u0008\u000b-\u001f]|https?:|www\./i.test(s);
@@ -73,7 +73,7 @@ export function checkEntry(e, W) {
   if (W.byId[e.id]) return no('same');
   /* traces that join the work up: the question this was done for (a stop, or a question someone added), and the
      design this one was built on */
-  if (e.about != null && e.kind !== 'question' && !STOPS[e.about] && !(W.byId[e.about] && W.byId[e.about].ok && W.byId[e.about].kind === 'question')) return no('about');
+  if (e.about != null && !STOPS[e.about] && !(W.byId[e.about] && W.byId[e.about].ok && W.byId[e.about].kind === 'question')) return no('about');
   if (e.from != null && !(W.byId[e.from] && W.byId[e.from].ok && W.byId[e.from].kind === 'design')) return no('from');
   if (e.kind === 'design') {
     const n = needOf(e.piece); if (!n || n.engine !== 'logic') return no('piece');
@@ -175,8 +175,11 @@ export function frontier(W) {
      calls loudest; a piece many copies depend on calls louder; a design inside the computer that nobody has attacked
      calls louder than one that has survived tries, and each try quiets it. So attention goes where the record is
      thinnest, and moves on once it is thick. */
+  /* a question someone asked is a call of its own: loud while nothing has been done for it, quieter as work gathers
+     under it (designs, breaks, tries, questions that name it), and never silent, because it stays open */
+  W.entries.filter(e => e.kind === 'question').forEach(e => out.push({ kind: 'ask', q: e.id, under: e.under || null, at: e.at, work: workFor(W, e.id).length }));
   const copies = id => { let n = 1, x = needOf(id); while (x && x.parent) { x = needOf(x.parent); if (x && x.engine === 'repeat') n *= x.n; } return n; };
-  out.forEach(f => { f.pull = f.kind === 'build' ? 2 + Math.log10(copies(f.piece)) + ((W.pieces[f.piece] || []).length ? 3 : 0) : f.kind === 'break' ? (f.inside ? 4 : 2) / (1 + f.tries) : 1; });
+  out.forEach(f => { f.pull = f.kind === 'build' ? 2 + Math.log10(copies(f.piece)) + ((W.pieces[f.piece] || []).length ? 3 : 0) : f.kind === 'break' ? (f.inside ? 4 : 2) / (1 + f.tries) : f.kind === 'ask' ? 0.5 + 4 / (1 + f.work) : 1; });
   return out.sort((a, b) => b.pull - a.pull);
 }
 /* the small society the ledger shows: every maker, what they do (roles are not given, they are what someone's

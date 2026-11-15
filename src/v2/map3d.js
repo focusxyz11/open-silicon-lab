@@ -205,7 +205,7 @@ export function createMap(canvas, host, on = {}) {
   const pickable = () => { pick.length = 0; Object.values(G).forEach(g => g.traverse(o => { if (o.isMesh) { o.userData.place = g.userData.place; pick.push(o); } })); beaconOrbs.forEach(o => pick.push(o)); };
   pickable();
   /* ---- names, with the state of each station's challenges ---- */
-  const HGT = { studio: 9, quarry: 7, fab: 10, test: 7, port: 11, datacentre: 7, lab: 22, village: 6, phones: 16, cars: 9, idea: 8 };
+  const HGT = { studio: 9, quarry: 7, fab: 10, test: 7, port: 11, datacentre: 7, lab: 22, village: 19, phones: 16, cars: 9, idea: 8 };
   const names = {};
   PLACES.forEach(p => { names[p.id] = L.add(G[p.id], new THREE.Vector3(0, HGT[p.id], 0), '', { cls: 'place3' + (p.far ? ' far' : ''), button: true, data: { place: p.id }, html: '', max: p.far ? Infinity : 520 }); });
   /* seen from far out, the island's places fold into one name */
@@ -280,6 +280,7 @@ export function createMap(canvas, host, on = {}) {
     /* a design stands as a workshop: lit while it holds a record, dark once another beats it, its roof grey and a red
        lamp beside it when a case has broken it; one of yours that is not in the ledger yet is only its outline */
     const items = st.designs.map(d => ({ kind: 'design', d })).concat(st.jobList.map(j => ({ kind: 'job', j })), st.engineList.map(e => ({ kind: 'engine', e })));
+    const loud = st.loud || {};
     const seenNow = new Set(), vp = m => { m.userData.village = true; pulses.push(m); };
     for (let i = pulses.length - 1; i >= 0; i--) if (pulses[i].userData.village) pulses.splice(i, 1);
     items.slice(0, SLOTS.length).forEach((it, i) => {
@@ -290,12 +291,14 @@ export function createMap(canvas, host, on = {}) {
         if (d.draft) { [[new THREE.BoxGeometry(3, 2, 2.8), 1.1], [houseRoof, 2.1]].forEach(([geo, y]) => { const e = new THREE.LineSegments(new THREE.EdgesGeometry(geo), new THREE.LineBasicMaterial({ color: P.accent })); e.position.y = y; g.add(e); }); }
         else house(g, 0, 0, 0, d.state === 'broken' ? P.bad : ({ example: P.accent, person: P.dark, ai: P.warm, both: P.sand, program: P.metal }[d.kind] || P.accent), d.state === 'holds');
         if (d.state === 'broken') { box(g, 0.18, 3.4, 0.18, metal(P.dark), 2.2, 0.15, 1.8, 0.02); vp(box(g, 0.5, 0.5, 0.5, glow(P.bad, 1.6), 2.2, 3.5, 1.8, 0.1, { cast: false })); }
-        const lb = L.add(g, new THREE.Vector3(0, 4.6, 0), d.title, { cls: 'work3 ent ' + stt, button: true, data: { entry: d.id }, max: 150 });
+        /* what it has survived: a small green light in front for every try that held */
+        for (let k = 0; k < Math.min(d.tries || 0, 6); k++) vp(box(g, 0.34, 0.34, 0.34, glow(P.good, 1.3), -1.6 + k * 0.62, 0.15, 2.5, 0.08, { cast: false }));
+        const lb = L.add(g, new THREE.Vector3(0, 4.6, 0), d.title, { cls: 'work3 ent ' + stt + (loud.kind === 'break' && loud.of === d.id ? ' loud' : ''), button: true, data: { entry: d.id }, max: 150 });
         lb.el.title = t('map.house.' + stt, { by: d.author }); slotLabels.push(lb);
         if (animate && villageSeen && !villageSeen.has(d.id)) sparkle(g);
       }
       else { box(g, 0.2, 2.4, 0.2, mat(0x7a5b40), -1.6, 0.15, 1.6, 0.02); box(g, 1.8, 1.1, 0.12, mat(it.kind === 'job' ? P.white : P.bad), -1.6, 2, 1.6, 0.03);
-        const lb = L.add(g, new THREE.Vector3(-1.6, 3.6, 1.6), it.kind === 'job' ? '?' : '⚙', { cls: 'plot3' + (it.kind === 'engine' ? ' engine' : ''), button: true, data: it.kind === 'job' ? { job: it.j.need } : { place: 'lab' }, max: 260 });
+        const lb = L.add(g, new THREE.Vector3(-1.6, 3.6, 1.6), it.kind === 'job' ? '?' : '⚙', { cls: 'plot3' + (it.kind === 'engine' ? ' engine' : '') + (it.kind === 'job' && loud.kind === 'build' && loud.piece === it.j.need ? ' loud' : ''), button: true, data: it.kind === 'job' ? { job: it.j.need } : { place: 'lab' }, max: 260 });
         lb.el.title = it.kind === 'job' ? t('map.plot.job', { job: t('design.proj.' + it.j.p + '.t') }) : t('map.plot.engine'); slotLabels.push(lb); }
     });
     /* every case a break added to a check stands guard at the village's edge: a watchtower with its lamp lit
@@ -307,6 +310,16 @@ export function createMap(canvas, host, on = {}) {
       const lb = L.add(g, new THREE.Vector3(0, 9.4, 0), '✓', { cls: 'plot3 guard' + (c.draft ? ' draft' : ''), button: true, data: { entry: c.of }, max: 260 });
       lb.el.title = t('map.tower', { piece: t('build.need.' + c.piece + '.t'), by: c.by }); slotLabels.push(lb);
       if (animate && villageSeen && !villageSeen.has(c.id)) sparkle(g);
+    });
+    /* a question someone asked stands at the village's edge as a lantern: warm while it calls, with a small light for
+       each piece of work done for it. It never goes out: a question stays open. */
+    (st.asks || []).slice(0, 6).forEach((a, i) => {
+      const g = group(slotsG, 17.5, 0, 0.5 + i * 4.4); seenNow.add(a.q);
+      box(g, 0.22, 3.6, 0.22, metal(P.dark), 0, 0, 0, 0.03); vp(box(g, 0.9, 0.9, 0.9, glow(P.warm, 1.5), 0, 3.6, 0, 0.2, { cast: false }));
+      for (let k = 0; k < Math.min(a.work, 6); k++) vp(box(g, 0.3, 0.3, 0.3, glow(P.accent, 1.2), 0.8 + k * 0.55, 0.1, 0, 0.07, { cast: false }));
+      const lb = L.add(g, new THREE.Vector3(0, 5.8, 0), '?', { cls: 'plot3 asked' + (a.draft ? ' draft' : '') + (loud.kind === 'ask' && loud.q === a.q ? ' loud' : ''), button: true, data: a.under ? { q: a.under } : { place: 'village' }, max: 260 });
+      lb.el.title = t('map.asked', { by: a.by, q: a.words }); slotLabels.push(lb);
+      if (animate && villageSeen && !villageSeen.has(a.q)) sparkle(g);
     });
     villageSeen = seenNow;
     if (grew) pickable();
@@ -356,7 +369,7 @@ export function createMap(canvas, host, on = {}) {
     focus(id) {
       const p = placeAt(id); if (!p) return;
       /* the place sits in the upper part of the screen: the dock takes the lower part */
-      const wide = innerWidth > 720, d = p.d * (wide ? 1.6 : 2), upv = d * (wide ? 0.14 : 0.24);
+      const wide = innerWidth > 720, d = p.d * (wide ? 1.6 : 2), upv = d * (wide ? 0.14 : id === 'village' ? 0.08 : 0.24);
       flyTo(p.at[0] + Math.sin(cam.yaw) * upv, p.at[1] + Math.cos(cam.yaw) * upv, d);
     },
     overview() { const h = home(); flyTo(h.x, h.z, h.d); },

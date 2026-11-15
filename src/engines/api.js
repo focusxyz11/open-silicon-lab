@@ -130,7 +130,7 @@ export function listLedger() {
     entries: W.entries.map(e => Object.assign({ id: e.id, kind: e.kind, by: e.by, made: e.made, state: e.state }, e.kind === 'design' ? { piece: e.piece, title: e.title, inside: W.inside[e.piece] === e.id, transistors: e.facts.transistors, longestPathPs: e.facts.ps, brokenBy: e.brokenBy, code: e.code }
       : e.kind === 'break' ? { of: e.of, case: e.case, wrongAtTick: e.facts.tick } : e.kind === 'try' ? { of: e.of, casesItHeldOn: e.facts.cases } : { at: e.at, under: e.under || null, question: e.q, noticed: e.noticed || '' })),
     open: F.map(f => f.kind === 'build' ? { do: 'build', piece: f.piece, job: f.p, what: t('build.need.' + f.piece + '.d') }
-      : f.kind === 'break' ? { do: 'break', design: f.of, piece: f.piece, job: f.p, insideTheComputer: f.inside, triesSurvived: f.tries, pull: +f.pull.toFixed(2), what: t('api.open.break') } : { do: 'engine', piece: f.piece, what: t('build.need.' + f.piece + '.d') }),
+      : f.kind === 'break' ? { do: 'break', design: f.of, piece: f.piece, job: f.p, insideTheComputer: f.inside, triesSurvived: f.tries, pull: +f.pull.toFixed(2), what: t('api.open.break') } : f.kind === 'ask' ? { do: 'work on a question', question: f.q, words: W.byId[f.q].q, workSoFar: f.work, pull: +f.pull.toFixed(2), what: t('api.open.ask') } : { do: 'engine', piece: f.piece, what: t('build.need.' + f.piece + '.d') }),
     whoChecksWhom: W.cross, whoMakesWhat: W.mix
   };
 }
@@ -160,7 +160,7 @@ export function proposeTry({ design, cases, author, kind, ai, words, about }) {
   return entryOut(draft({ kind: 'try', of: design, by: author || t('api.anon'), made: kind, ai: ai || '', words: words || '', cases, about: about || null }, (author || '') + ' ' + (T && T.title || 'try')));
 }
 /* propose a question: it needs a home (a level, perhaps the question it sits under) and what was noticed */
-export function proposeQuestion({ at, under, part, question, noticed, author, kind, ai }) {
+export function proposeQuestion({ at, under, part, question, noticed, author, kind, ai, about }) {
   const bad = whoOk(kind, ai); if (bad) return { ok: false, reason: bad };
-  return entryOut(draft({ kind: 'question', at, part: part || null, under: under || null, q: question, noticed: noticed || '', by: author || t('api.anon'), made: kind, ai: ai || '' }, (author || '') + ' ' + String(question || '').split(/\s+/).slice(0, 5).join(' ')));
+  return entryOut(draft({ kind: 'question', at, part: part || null, under: under || null, q: question, noticed: noticed || '', by: author || t('api.anon'), made: kind, ai: ai || '', about: about || null }, (author || '') + ' ' + String(question || '').split(/\s+/).slice(0, 5).join(' ')));
 }
