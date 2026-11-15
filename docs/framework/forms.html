@@ -1,0 +1,791 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Forms: one design, in every form it takes</title>
+<!-- A working sketch for the framework (docs/framework/README.md, rebuild.md): the design studio as the lens
+     "Forms". It is a document, not a page of the site: its words are here and it opens from disk.
+     The engine below is the lab's own tiny-chip engine, src/engines/tinychip.js, copied in whole (as it stood at
+     commit 7b060cd) so the file needs nothing else. On the site this would import the engine and keep its words in src/i18n/en.json. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Besley:wght@500;600;700&family=Atkinson+Hyperlegible+Next:wght@400;500;700&family=Martian+Mono:wdth,wght@75..112.5,400..600&display=swap">
+<script>try { var th = localStorage.getItem('osl-theme'); if (th === 'dark' || th === 'light') document.documentElement.setAttribute('data-theme', th); } catch (e) {}</script>
+<style>
+  :root {
+    --bg: #0b1120; --panel: #111a2b; --well: #0d1524; --line: rgba(160, 180, 210, .18); --ink: #eef2f8; --muted: #9aa8bd;
+    --accent: #5aa9ff; --accent-ink: #06101f; --warm: #ffb347; --good: #45d08a; --bad: #ff6b62;
+    --cu: #c98f58; --cu2: #e3bd8f; --si: #33435c; --cell: #1b2740; --via: #f1f4f9; --idea: hsl(24 85% 66%);
+    --sans: "Atkinson Hyperlegible Next", system-ui, sans-serif; --serif: "Besley", Georgia, serif; --mono: "Martian Mono", ui-monospace, monospace;
+    color-scheme: dark;
+  }
+  :root[data-theme=light] { --bg: #dfe8f2; --panel: #fff; --well: #f1f5fa; --line: rgba(40, 60, 90, .16); --ink: #16202e; --muted: #5b6a80; --accent: #2f7de1; --accent-ink: #fff; --warm: #c06a00; --good: #1c8a54; --bad: #c8372f; --cu: #b0703a; --cu2: #d09a62; --si: #c9d5e3; --cell: #e9eff6; --via: #16202e; --idea: hsl(24 75% 40%); color-scheme: light; }
+  @media (prefers-color-scheme: light) { :root:not([data-theme]) { --bg: #dfe8f2; --panel: #fff; --well: #f1f5fa; --line: rgba(40, 60, 90, .16); --ink: #16202e; --muted: #5b6a80; --accent: #2f7de1; --accent-ink: #fff; --warm: #c06a00; --good: #1c8a54; --bad: #c8372f; --cu: #b0703a; --cu2: #d09a62; --si: #c9d5e3; --cell: #e9eff6; --via: #16202e; --idea: hsl(24 75% 40%); color-scheme: light; } }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.5 var(--sans); -webkit-font-smoothing: antialiased; }
+  button, select, textarea, input { font: inherit; color: inherit; }
+  button { cursor: pointer; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
+  .page { max-width: 1320px; margin: 0 auto; padding: 22px 24px 56px; }
+  header { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; }
+  .kind { margin: 0 0 4px; color: var(--muted); font-size: 14px; }
+  .theme { flex: none; width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--line); background: none; font-size: 17px; }
+  .theme:hover { background: color-mix(in srgb, var(--ink) 8%, transparent); }
+
+  /* the experiment: its question on top of the picture, what you may change, and what is true */
+  .exp { margin: 6px 0 18px; padding-left: 18px; border-left: 4px solid var(--idea); }
+  .exp h1 { font: 700 clamp(24px, 2.9vw, 36px)/1.14 var(--serif); margin: 0 0 12px; letter-spacing: -.01em; max-width: 34ch; }
+  .try { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; margin-bottom: 10px; }
+  .b { padding: 7px 14px; border-radius: 999px; border: 1px solid var(--line); background: var(--panel); font-weight: 500; font-size: 14.5px; }
+  .b:hover { border-color: var(--muted); }
+  .b.go { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 700; }
+  .b.on { border-color: var(--ink); background: color-mix(in srgb, var(--ink) 10%, var(--panel)); }
+  .try label { font-size: 14.5px; color: var(--muted); display: inline-flex; align-items: center; gap: 10px; }
+  .try input[type=range] { width: 180px; accent-color: var(--accent); }
+  .claim { margin: 0 0 10px; padding: 8px 12px; border-radius: 12px; background: var(--panel); border: 1px dashed var(--line); font-size: 14.5px; max-width: 70ch; }
+  .claim b { font-weight: 500; color: var(--muted); }
+  .notice { margin: 0 0 6px; max-width: 78ch; font-size: 17px; line-height: 1.45; }
+  .notice b { font-weight: 700; }
+  .notice .ok { color: var(--good); } .notice .no { color: var(--bad); }
+  .open { margin: 0; max-width: 78ch; color: var(--muted); font-size: 14.5px; }
+  .open b { color: var(--ink); font-weight: 500; }
+
+  /* the six forms */
+  .frow { display: grid; gap: 12px; margin-bottom: 12px; }
+  .frow.r1 { grid-template-columns: minmax(0, .8fr) minmax(0, 1.15fr) minmax(0, .95fr); }
+  .frow.r2 { grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr) minmax(0, .95fr); }
+  .form { position: relative; border: 1px solid var(--line); border-radius: 16px; background: var(--panel); padding: 14px 16px 16px; min-width: 0; transition: border-color .2s; }
+  .form.at { border-color: var(--idea); }
+  .form h2 { font: 700 17px/1.2 var(--serif); margin: 0; }
+  .made { margin: 2px 0 12px; font-size: 13px; line-height: 1.35; color: var(--muted); min-height: 2.7em; }
+  .form svg { display: block; width: 100%; height: auto; }
+  .jobsel { width: 100%; padding: 7px 10px; border-radius: 10px; border: 1px solid var(--line); background: var(--well); margin-bottom: 10px; }
+  .jobwords { margin: 0 0 10px; font-size: 14.5px; }
+  table { border-collapse: collapse; font: 500 14px/1 var(--mono); }
+  th, td { padding: 6px 9px; text-align: center; border-radius: 4px; }
+  th { font-weight: 600; color: var(--muted); cursor: default; }
+  th.out, td.out { color: var(--ink); }
+  td.gap, th.gap { width: 10px; padding: 0; }
+  td.bad { background: color-mix(in srgb, var(--bad) 24%, transparent); color: var(--bad); font-weight: 700; }
+  td.mark { font-family: var(--sans); font-size: 13px; }
+  td.mark.y { color: var(--good); } td.mark.n { color: var(--bad); }
+  tr.untested td { opacity: .38; }
+  .lit { background: color-mix(in srgb, var(--warm) 26%, transparent); }
+  th.lit, td.lit { color: var(--ink); }
+  .code { background: var(--well); border-radius: 12px; padding: 12px 12px; font: 500 16px/2.15 var(--mono); overflow-wrap: anywhere; }
+  .code .ln { border-radius: 8px; padding: 0 6px; margin: 0 -6px; transition: background .15s; }
+  .code .ln.own { background: color-mix(in srgb, var(--warm) 12%, transparent); }
+  .code .id { border-radius: 5px; padding: 2px 3px; cursor: default; }
+  .code .op { display: inline-block; min-width: 26px; padding: 0 6px; margin: 0 1px; line-height: 1.6; border-radius: 7px; border: 1px solid color-mix(in srgb, var(--accent) 55%, transparent); background: color-mix(in srgb, var(--accent) 16%, transparent); font: inherit; font-weight: 600; text-align: center; }
+  .code .op:hover { background: color-mix(in srgb, var(--accent) 32%, transparent); }
+  .code .err { color: var(--bad); font: 500 13.5px/1.4 var(--sans); margin-top: 6px; }
+  textarea { width: 100%; min-height: 92px; margin-top: 8px; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--line); background: var(--well); font: 500 14px/1.6 var(--mono); resize: vertical; }
+  .row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .row .b { font-size: 13px; padding: 5px 11px; }
+  .by { margin: 8px 0 0; font-size: 13px; color: var(--muted); }
+
+  /* drawings: one thing has one colour. Wires are copper; what you touch is lit; red is wrong and nothing else. */
+  .w { fill: none; stroke: var(--cu); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; transition: stroke .12s; }
+  .w.m2 { stroke: var(--cu2); }
+  .w.lit, .gate.lit .shape { stroke: var(--warm); }
+  .w.lit { stroke-width: 3.6; }
+  .w.stuck { stroke: var(--bad); stroke-width: 3.4; }
+  .gate .shape { fill: var(--cell); stroke: var(--muted); stroke-width: 1.5; transition: stroke .12s, fill .12s; }
+  .gate.lit .shape { stroke-width: 2.4; fill: color-mix(in srgb, var(--warm) 22%, var(--cell)); }
+  .gate.own .shape { fill: color-mix(in srgb, var(--warm) 12%, var(--cell)); }
+  .gate text, .cellr text { font: 600 12px var(--mono); fill: var(--muted); text-anchor: middle; pointer-events: none; }
+  .pin text { font: 600 12px var(--mono); fill: var(--ink); }
+  .pin circle { fill: var(--muted); }
+  .pin.lit text { fill: var(--warm); } .pin.lit circle { fill: var(--warm); }
+  .rowband { fill: var(--si); opacity: .5; }
+  .cellr rect { fill: var(--cell); stroke: var(--muted); stroke-width: 1; }
+  .cellr.lit rect { stroke: var(--warm); stroke-width: 2.2; fill: color-mix(in srgb, var(--warm) 22%, var(--cell)); }
+  .cellr.own rect { fill: color-mix(in srgb, var(--warm) 12%, var(--cell)); }
+  .via { fill: var(--via); }
+  .io { fill: var(--warm); opacity: .85; }
+  .plates { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .plate { background: var(--well); border-radius: 10px; padding: 6px 6px 4px; }
+  .plate p { margin: 4px 2px 0; font-size: 12px; color: var(--muted); }
+  .plate .sh { fill: var(--ink); opacity: .82; } .plate .shs { stroke: var(--ink); opacity: .82; fill: none; stroke-linecap: square; }
+  .plate .lit { fill: var(--warm); opacity: 1; } .plate .shs.lit { stroke: var(--warm); fill: none; }
+  .stucktag { font: 600 11px var(--sans); fill: var(--bad); }
+
+  .read { display: flex; flex-wrap: wrap; gap: 6px 22px; margin: 14px 2px 0; font-size: 14px; color: var(--muted); min-height: 1.5em; }
+  .read b { font: 600 14px var(--mono); color: var(--ink); }
+  .read .touch { color: var(--ink); }
+
+  .ways { margin-top: 30px; }
+  .ways h2 { font: 600 14px/1.3 var(--sans); color: var(--muted); margin: 0 0 10px; }
+  .wlist { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+  .way { text-align: left; padding: 12px 14px; border-radius: 14px; border: 1px solid var(--line); background: var(--panel); font: 600 15px/1.3 var(--serif); }
+  .way:hover { border-color: var(--muted); }
+  .way small { display: block; margin-top: 6px; font: 400 12.5px/1.35 var(--sans); color: var(--muted); }
+  .way[aria-current=true] { border-color: var(--idea); }
+  .about { margin-top: 34px; max-width: 80ch; color: var(--muted); font-size: 14px; }
+  .about b { color: var(--ink); font-weight: 500; }
+
+  @media (max-width: 1080px) { .frow.r1, .frow.r2 { grid-template-columns: 1fr 1fr; } .wlist { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 700px) { .page { padding: 16px 14px 44px; } .frow.r1, .frow.r2, .wlist { grid-template-columns: 1fr; } .made { min-height: 0; } .exp { padding-left: 12px; } }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="page">
+  <header>
+    <p class="kind">A sketch for Open Silicon Lab: the design studio, rebuilt as one way of seeing. One design, in every form it takes. Touch a name, a gate or a wire and it lights in all of them.</p>
+    <button class="theme" id="theme" aria-label="Switch between dark and light">◐</button>
+  </header>
+
+  <section class="exp" aria-live="polite">
+    <h1 id="ask"></h1>
+    <div class="try" id="try"></div>
+    <div id="claim"></div>
+    <p class="notice" id="notice"></p>
+    <p class="open" id="open"></p>
+  </section>
+
+  <div class="forms" id="forms">
+    <div class="frow r1">
+    <article class="form" id="f-job"><h2>The job</h2><p class="made">What the chip must do. Someone has to write this down, and everything else is measured against it.</p><div id="job"></div></article>
+    <article class="form" id="f-desc"><h2>The description</h2><p class="made" id="m-desc"></p><div id="desc"><div id="tokens"></div><textarea id="code" spellcheck="false" aria-label="The description, as text" hidden></textarea><div class="row"><button type="button" class="b" data-act="edit" id="editb">Write it yourself</button><button type="button" class="b" data-act="lab">The lab’s own</button></div></div></article>
+    <article class="form" id="f-does"><h2>What it does</h2><p class="made" id="m-does"></p><div id="does"></div></article>
+    </div>
+    <div class="frow r2">
+    <article class="form" id="f-gates"><h2>Its gates</h2><p class="made" id="m-gates"></p><div id="gates"></div></article>
+    <article class="form" id="f-layout"><h2>Its layout</h2><p class="made" id="m-layout"></p><div id="layout"></div></article>
+    <article class="form" id="f-masks"><h2>Its masks</h2><p class="made" id="m-masks"></p><div id="masks"></div></article>
+    </div>
+  </div>
+  <div class="read" id="read"></div>
+
+  <nav class="ways" aria-label="Other questions here">
+    <h2>Other questions that live between these forms</h2>
+    <div class="wlist" id="ways"></div>
+  </nav>
+
+  <p class="about"><b>About this sketch.</b> Everything you see is worked out by the lab's own tiny-chip engine as you change things: it reads the description, tries every input, chooses gates, places and wires them. Nothing is a drawing made by hand, and every sentence under the question that states a number reads it from the engine. It shows one idea from the framework: an experiment is a question, an engine and a way of seeing, and the picture and the words are the same thing. It is not the site: it has no 3D, it does not follow your design to the factory, and its words are in this file. The engine's figures are rough on purpose: they keep the direction and the size of an effect right, not the digits.</p>
+</div>
+
+<script>/* Tiny chip engine: parse, simulate, synthesize, place, route and fault-test small logic designs.
+   From the earlier site's tiny-chip studio. Pure logic, no DOM. The projects' words are in en.json
+   (design.proj.<id>.*); errors carry a key (k) and a name (n) for their words (design.err.<k>), the
+   English m is only for tests and tools. */
+/* ---- tiny chip engine: parse, simulate, synthesize, place, route, fault-test ---- */
+const TC={};
+(function(E){
+/* projects */
+const seg7={0:'abcdef',1:'bc',2:'abdeg',3:'abcdg',4:'bcfg',5:'acdfg',6:'acdefg',7:'abc'};
+E.PROJ=[
+ {id:'half',ins:['a','b'],outs:['sum','carry'],demo:'add',
+ 
+  f:v=>({sum:v.a^v.b,carry:v.a&v.b}),
+  starter:'sum = a ^ b;\ncarry = a & b;',
+  sol:'sum = a ^ b;\ncarry = a & b;'},
+ {id:'vote',ins:['a','b','c'],outs:['y'],demo:'lamp',
+ 
+  f:v=>({y:(v.a+v.b+v.c)>=2?1:0}),
+  starter:'y = (a & b) | (b & c);',
+  sol:'y = (a & b) | (b & c) | (a & c);'},
+ {id:'full',ins:['a','b','cin'],outs:['sum','cout'],demo:'add',
+ 
+  f:v=>({sum:v.a^v.b^v.cin,cout:(v.a+v.b+v.cin)>=2?1:0}),
+  starter:'sum = a ^ b;\ncout = (a & b) | (cin & (a ^ b));',
+  sol:'p = a ^ b;\nsum = p ^ cin;\ncout = (a & b) | (cin & p);'},
+ {id:'add2',ins:['a1','a0','b1','b0'],outs:['s2','s1','s0'],demo:'add2',
+ 
+  f:v=>{const s=(v.a1*2+v.a0)+(v.b1*2+v.b0);return {s2:s>>2&1,s1:s>>1&1,s0:s&1};},
+  starter:'s0 = a0 ^ b0;\nc0 = a0 & b0;\ns1 = a1 ^ b1 ^ c0;\ns2 = (a1 & b1) | (c0 & (a1 ^ b1));',
+  sol:'s0 = a0 ^ b0;\nc0 = a0 & b0;\np1 = a1 ^ b1;\ns1 = p1 ^ c0;\ns2 = (a1 & b1) | (c0 & p1);'},
+ {id:'seg',ins:['x2','x1','x0'],outs:['a','b','c','d','e','f','g'],demo:'seg',
+ 
+  f:v=>{const n=v.x2*4+v.x1*2+v.x0,o={};'abcdefg'.split('').forEach(s=>o[s]=seg7[n].includes(s)?1:0);return o;},
+  starter:'a = ~(~x2 & ~x1 & x0) & ~(x2 & ~x1 & ~x0);\nb = ~(x2 & ~x1 & x0) & ~(x2 & x1 & ~x0);\nc = ~(~x2 & x1 & ~x0);\nd = 0;\ne = 0;\nf = 0;\ng = 0;',
+  sol:'a = ~(~x2 & ~x1 & x0) & ~(x2 & ~x1 & ~x0);\nb = ~(x2 & ~x1 & x0) & ~(x2 & x1 & ~x0);\nc = ~(~x2 & x1 & ~x0);\nd = ~(~x2 & ~x1 & x0) & ~(x2 & ~x1 & ~x0) & ~(x2 & x1 & x0);\ne = ~x0 & (~x2 | x1);\nf = (~x1 & ~x0) | (x2 & ~x1) | (x2 & ~x0);\ng = (~x2 & x1) | (x2 & ~x1) | (x2 & ~x0);'},
+ {id:'alu',ins:['a','b','cin','sub','op1','op0'],outs:['y','cout'],demo:'alu',
+ 
+  f:v=>{const bb=v.b^v.sub,op=v.op1*2+v.op0;return {y:op===0?v.a&v.b:op===1?v.a|v.b:op===2?v.a^v.b:v.a^bb^v.cin,cout:(v.a&bb)|(v.cin&(v.a^bb))};},
+  starter:'bb = b ^ sub;\ns = a ^ bb ^ cin;\ncout = (a & bb) | (cin & (a ^ bb));\ny = ~op1 & ~op0 & (a & b);',
+  sol:'bb = b ^ sub;\np = a ^ bb;\ns = p ^ cin;\ncout = (a & bb) | (cin & p);\ny = (~op1 & ~op0 & (a & b)) | (~op1 & op0 & (a | b)) | (op1 & ~op0 & (a ^ b)) | (op1 & op0 & s);'},
+ {id:'regbit',ins:['d','we'],outs:['q'],demo:'lamp',seq:true,
+  tests:{d:[1,0,0,1,1,0,1,0,0,1,1,0],we:[1,0,1,0,1,1,0,0,1,0,1,1]},
+  f:(v,s)=>{const q=s.q|0;return {out:{q},next:{q:v.we?v.d:q}};},
+  starter:'reg q = d;',
+  sol:'reg q = (we & d) | (~we & q);'},
+ {id:'select',ins:['s1','s0','en'],outs:['y0','y1','y2','y3'],demo:'lamp',
+  f:v=>({y0:+(!v.s1&&!v.s0&&!!v.en),y1:+(!v.s1&&!!v.s0&&!!v.en),y2:+(!!v.s1&&!v.s0&&!!v.en),y3:+(!!v.s1&&!!v.s0&&!!v.en)}),
+  starter:'y0 = ~s1 & ~s0;\ny1 = ~s1 & s0;\ny2 = s1 & ~s0;\ny3 = s1 & s0;',
+  sol:'y0 = ~s1 & ~s0 & en;\ny1 = ~s1 & s0 & en;\ny2 = s1 & ~s0 & en;\ny3 = s1 & s0 & en;'},
+ {id:'parity',ins:['a','b','c','d'],outs:['odd'],demo:'lamp',
+  f:v=>({odd:v.a^v.b^v.c^v.d}),
+  starter:'odd = a ^ b ^ c;',
+  sol:'odd = a ^ b ^ c ^ d;'},
+ {id:'free',ins:['a','b','c','d'],outs:['y','z'],demo:'lamp',spec:false,
+ 
+  f:null,starter:'y = (a | b) & ~(c ^ d);\nz = a ^ b ^ c ^ d;',sol:null},
+ {id:'count',ins:['en'],outs:['q2','q1','q0'],demo:'count',seq:true,
+ 
+  tests:{en:[1,1,1,1,0,1,1,1,1,1,0,1,1]},
+  f:(v,s)=>{const n=s.n|0;return {out:{q2:n>>2&1,q1:n>>1&1,q0:n&1},next:{n:(n+v.en)&7}};},
+  starter:'reg q0 = q0 ^ en;\nreg q1 = q1 ^ (q0 & en);\nreg q2 = q2 ^ (q1 & en);',
+  sol:'c1 = q0 & en;\nc2 = q1 & c1;\nreg q0 = q0 ^ en;\nreg q1 = q1 ^ c1;\nreg q2 = q2 ^ c2;'}
+];
+/* cell library: transistors, width in sites, delay ps at 130 nm */
+/* DFF: a flip-flop. Its delay is clock-to-output; it also needs its input steady SETUP ps before the tick. */
+E.LIB={DFF:[24,16,310],INV:[2,2,60],BUF:[4,3,110],NAND2:[4,3,80],NOR2:[4,3,110],AND2:[6,4,140],OR2:[6,4,160],XOR2:[12,6,200],XNOR2:[12,6,200],TIE0:[2,2,0],TIE1:[2,2,0]};
+
+/* ---- parser ---- */
+E.parse=function(src,ins,outs,opt){opt=opt||{};
+ const errs=[],asg={},order=[],lines=src.split('\n');
+ const isName=s=>/^[A-Za-z_][A-Za-z0-9_]*$/.test(s);
+ lines.forEach((raw,li)=>{let line=raw.replace(/\/\/.*$/,'').trim();if(!line)return;
+  line.split(';').map(x=>x.trim()).filter(Boolean).forEach(st=>{
+   let isReg=false;if(/^reg\s+/.test(st)){isReg=true;st=st.replace(/^reg\s+/,'');}
+   st=st.replace(/^(assign|wire|logic)\s+/,'');
+   const m=/^([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.+)$/.exec(st);
+   if(!m){errs.push({l:li+1,k:'form',m:'Expected "name = expression".'});return;}
+   const nm=m[1];if(ins.includes(nm)){errs.push({l:li+1,k:'input',n:nm,m:'"'+nm+'" is an input; inputs come from outside the chip and cannot be assigned.'});return;}
+   if(isReg&&!opt.regs){errs.push({l:li+1,k:'noclock',m:'This project has no clock, so it cannot use reg. Flip-flops need a clocked project such as the Counter.'});return;}
+   if(asg[nm]){errs.push({l:li+1,k:'twice',n:nm,m:'"'+nm+'" is assigned twice. In hardware each wire has exactly one driver.'});return;}
+   let toks=[],s=m[2],i=0;
+   while(i<s.length){const ch=s[i];if(/\s/.test(ch)){i++;continue;}
+    if('&|^~()!'.includes(ch)){toks.push(ch==='!'?'~':ch);i++;continue;}
+    if(ch==='+'){toks.push('|');i++;continue;}
+    const mm=/^[A-Za-z_][A-Za-z0-9_]*|^[01]/.exec(s.slice(i));if(mm){toks.push(mm[0]);i+=mm[0].length;continue;}
+    errs.push({l:li+1,k:'char',n:ch,m:'Unexpected character "'+ch+'". Use & (AND), | (OR), ^ (XOR) and ~ (NOT).'});return;}
+   let p=0;const peek=()=>toks[p];
+   const bad=msg=>{throw new Error(msg);};
+   function prim(){const t=toks[p++];if(t===undefined)bad('The expression ends too early.');
+    if(t==='~')return {op:'not',a:prim()};
+    if(t==='('){const e=orx();if(toks[p++]!==')')bad('A closing bracket ")" is missing.');return e;}
+    if(t==='0'||t==='1')return {op:'const',v:+t};
+    if(isName(t))return {op:'var',n:t};
+    bad('Unexpected "'+t+'".');}
+   function andx(){let a=prim();while(peek()==='&'){p++;a={op:'and',a,b:prim()};}return a;}
+   function xorx(){let a=andx();while(peek()==='^'){p++;a={op:'xor',a,b:andx()};}return a;}
+   function orx(){let a=xorx();while(peek()==='|'){p++;a={op:'or',a,b:xorx()};}return a;}
+   try{const e=orx();if(p<toks.length)bad('Unexpected "'+toks[p]+'". Is an operator missing?');asg[nm]={e,l:li+1,reg:isReg};order.push(nm);}
+   catch(x){errs.push({l:li+1,k:'expr',m:x.message});}
+  });});
+ const used=new Set();const walk=e=>{if(!e)return;if(e.op==='var')used.add(e.n);walk(e.a);walk(e.b);};
+ Object.values(asg).forEach(a=>walk(a.e));
+ used.forEach(n=>{if(!ins.includes(n)&&!asg[n])errs.push({l:Object.values(asg).find(a=>{let f=false;const w=e=>{if(!e)return;if(e.op==='var'&&e.n===n)f=true;w(e.a);w(e.b);};w(a.e);return f;}).l,k:'undef',n,m:'"'+n+'" is used but never defined. Inputs are '+ins.join(', ')+'.'});});
+ outs.forEach(o=>{if(!asg[o])errs.push({l:0,k:'unassigned',n:o,m:'Output "'+o+'" is never assigned.'});});
+ /* loops */
+ const state={};let loop=null;const dfs=n=>{if(loop)return;if(state[n]===1){loop=n;return;}if(state[n]===2||!asg[n])return;state[n]=1;const deps=new Set();const w=e=>{if(!e)return;if(e.op==='var')deps.add(e.n);w(e.a);w(e.b);};w(asg[n].e);deps.forEach(x=>{if(!(asg[x]&&asg[x].reg))dfs(x);});state[n]=2;};
+ Object.keys(asg).forEach(dfs);if(loop)errs.push({l:asg[loop].l,k:'loop',n:loop,m:'"'+loop+'" depends on itself, making a loop. Logic without a clock must flow in one direction; to feed a value back, store it in a flip-flop with reg.'});
+ const warns=[];Object.keys(asg).forEach(n=>{if(!outs.includes(n)&&!used.has(n))warns.push('"'+n+'" is computed but never used, so synthesis will remove it.');});
+ return {errs,warns,asg,order,regs:order.filter(n=>asg[n].reg)};
+};
+/* A design's outputs (and every wire) for one input pattern. s: the flip-flops' current values (0 if not given). */
+function evalAll(d,v,s){const memo=Object.assign({},v);Object.keys(d.asg).forEach(n=>{if(d.asg[n].reg&&!(n in memo))memo[n]=s&&s[n]!==undefined?s[n]:0;});
+ const ev=e=>{switch(e.op){case 'const':return e.v;case 'var':if(!(e.n in memo))memo[e.n]=ev(d.asg[e.n].e);return memo[e.n];case 'not':return 1-ev(e.a);case 'and':return ev(e.a)&ev(e.b);case 'or':return ev(e.a)|ev(e.b);case 'xor':return ev(e.a)^ev(e.b);}};
+ const o={};Object.keys(d.asg).forEach(n=>{o[n]=ev({op:'var',n});});const next={};Object.keys(d.asg).forEach(n=>{if(d.asg[n].reg)next[n]=ev(d.asg[n].e);});return {o,next};}
+E.evalDesign=function(d,v,s){return evalAll(d,v,s).o;};
+/* One clock cycle: the outputs during the cycle, and what each flip-flop takes at the tick. */
+E.stepDesign=function(d,v,s){const r=evalAll(d,v,s);return {out:r.o,next:r.next};};
+E.regsOf=d=>Object.keys(d.asg).filter(n=>d.asg[n].reg);
+/* A clocked project's test: one input pattern per clock cycle. */
+E.seqVectors=p=>{const ks=Object.keys(p.tests),L=p.tests[ks[0]].length;return Array.from({length:L},(_,k)=>Object.fromEntries(p.ins.map(n=>[n,p.tests[n][k]|0])));};
+/* Check a design against its project's specification: every input pattern, or every cycle of a
+   clocked project's test (starting from all flip-flops at 0, as after a reset). */
+E.verify=function(d,p){
+ if(p.seq){let s={},es={};const rows=E.seqVectors(p).map((v,k)=>{const r=E.stepDesign(d,v,s),e=p.f?p.f(v,es):null;const mis=e?p.outs.filter(n=>r.out[n]!==e.out[n]):[];const row={k,v,o:r.out,e:e&&e.out,mis,s};s=r.next;if(e)es=e.next;return row;});return {rows,bad:rows.filter(r=>r.mis.length).length,seq:true};}
+ const rows=E.vectors(p.ins).map(v=>{const o=E.evalDesign(d,v),e=p.f?p.f(v):null;return {v,o,e,mis:e?p.outs.filter(n=>o[n]!==e[n]):[]};});
+ return {rows,bad:rows.filter(r=>r.mis.length).length,seq:false};};
+/* The test patterns for a project, in order. */
+E.testVectors=p=>p.seq?E.seqVectors(p):E.vectors(p.ins);
+E.vectors=ins=>{const n=ins.length,V=[];for(let k=0;k<(1<<n);k++){const v={};ins.forEach((x,i)=>v[x]=(k>>(n-1-i))&1);V.push(v);}return V;};
+
+/* ---- synthesis ---- */
+/* netlist: nodes[] {id,t:'IN'|'C0'|'C1'|op,ins:[ids],name?}; outs {name:id} */
+function builder(){const nodes=[],key={};
+ const add=(t,ins,name)=>{if(t==='and'||t==='or'||t==='xor')ins=ins.slice().sort((a,b)=>a-b);const k=t+':'+ins.join(',');if(t!=='IN'&&key[k]!==undefined)return key[k];const id=nodes.length;nodes.push({id,t,ins,name});if(t!=='IN')key[k]=id;return id;};
+ const C=v=>add(v?'C1':'C0',[]);
+ const mk=(t,a,b)=>{const na=nodes[a],nb=b!==undefined?nodes[b]:null;
+  if(t==='not'){if(na.t==='C0')return C(1);if(na.t==='C1')return C(0);if(na.t==='not')return na.ins[0];return add('not',[a]);}
+  const c0a=na.t==='C0',c1a=na.t==='C1',c0b=nb.t==='C0',c1b=nb.t==='C1';
+  if(t==='and'){if(c0a||c0b)return C(0);if(c1a)return b;if(c1b)return a;if(a===b)return a;if((na.t==='not'&&na.ins[0]===b)||(nb.t==='not'&&nb.ins[0]===a))return C(0);}
+  if(t==='or'){if(c1a||c1b)return C(1);if(c0a)return b;if(c0b)return a;if(a===b)return a;if((na.t==='not'&&na.ins[0]===b)||(nb.t==='not'&&nb.ins[0]===a))return C(1);}
+  if(t==='xor'){if(c0a)return b;if(c0b)return a;if(c1a)return mk('not',b);if(c1b)return mk('not',a);if(a===b)return C(0);}
+  return add(t,[a,b]);};
+ return {nodes,add,mk,C};}
+function fromDesign(d,ins,outs){const B=builder();const env={};ins.forEach(n=>env[n]=B.add('IN',[],n));
+ const go=e=>{switch(e.op){case 'const':return B.C(e.v);case 'var':if(env[e.n]===undefined)env[e.n]=go(d.asg[e.n].e);return env[e.n];case 'not':return B.mk('not',go(e.a));default:return B.mk(e.op,go(e.a),go(e.b));}};
+ const o={};outs.forEach(n=>o[n]=go({op:'var',n}));return {B,outs:o};}
+/* Quine-McCluskey minimal SOP */
+function qm(n,ones){if(!ones.length)return [];if(ones.length===(1<<n))return [{m:0,v:0}];
+ let groups=ones.map(x=>({v:x,m:0,c:[x]}));let primes=[];
+ while(groups.length){const used=new Set(),next=[],seen=new Set();
+  for(let i=0;i<groups.length;i++)for(let j=i+1;j<groups.length;j++){const a=groups[i],b=groups[j];if(a.m!==b.m)continue;const d=a.v^b.v;if(d&&(d&(d-1))===0){const t={v:a.v&~d,m:a.m|d,c:a.c.concat(b.c)};const k=t.v+'/'+t.m;used.add(i);used.add(j);if(!seen.has(k)){seen.add(k);next.push(t);}}}
+  groups.forEach((g,i)=>{if(!used.has(i))primes.push(g);});groups=next;}
+ const uniq={};primes.forEach(p=>{uniq[p.v+'/'+p.m]=p;});primes=Object.values(uniq);
+ const covers=(p,x)=>(x&~p.m)===p.v;let left=new Set(ones),chosen=[];
+ /* essential first, then greedy */
+ let changed=true;while(changed){changed=false;for(const x of [...left]){const ps=primes.filter(p=>covers(p,x));if(ps.length===1&&!chosen.includes(ps[0])){chosen.push(ps[0]);ones.forEach(y=>{if(covers(ps[0],y))left.delete(y);});changed=true;}}}
+ while(left.size){let best=null,bc=-1;primes.forEach(p=>{if(chosen.includes(p))return;let c=0;left.forEach(x=>{if(covers(p,x))c++;});const lits=n-popc(p.m);const score=c*10-lits;if(c>0&&score>bc){bc=score;best=p;}});chosen.push(best);[...left].forEach(x=>{if(covers(best,x))left.delete(x);});}
+ return chosen;}
+const popc=x=>{let c=0;while(x){c+=x&1;x>>=1;}return c;};
+function fromSOP(d,ins,outs){const B=builder();const n=ins.length;const ids=ins.map(nm=>B.add('IN',[],nm));const V=E.vectors(ins);const o={};
+ outs.forEach(on=>{const ones=[];V.forEach((v,k)=>{if(E.evalDesign(d,v)[on])ones.push(k);});const terms=qm(n,ones);
+  if(!terms.length){o[on]=B.C(0);return;}
+  let acc=null;terms.forEach(t=>{let p=null;if(t.m===(1<<n)-1){p=B.C(1);}for(let i=0;i<n;i++){const bit=1<<(n-1-i);if(t.m&bit)continue;const lit=(t.v&bit)?ids[i]:B.mk('not',ids[i]);p=p===null?lit:B.mk('and',p,lit);}acc=acc===null?p:B.mk('or',acc,p);});o[on]=acc;});
+ return {B,outs:o};}
+/* technology mapping to cells */
+function mapCells(G,lib){const N=G.B.nodes;const live=new Set();const mark=id=>{if(live.has(id))return;live.add(id);N[id].ins.forEach(mark);};Object.values(G.outs).forEach(mark);
+ const fan={};N.forEach(nd=>{if(live.has(nd.id))nd.ins.forEach(i=>fan[i]=(fan[i]||0)+1);});Object.values(G.outs).forEach(i=>fan[i]=(fan[i]||0)+1);
+ const cells=[];const drv={};/* node id -> net id */
+ let netN=0;const net=()=>netN++;
+ const inputs=[];N.forEach(nd=>{if(nd.t==='IN'){const k=net();drv[nd.id]=k;inputs.push({name:nd.name,net:k});}});
+ const emit=(type,insNets)=>{const o=net();cells.push({type,ins:insNets,out:o});return o;};
+ const getNet=id=>{if(drv[id]!==undefined)return drv[id];const nd=N[id];let o;
+  if(nd.t==='C0'||nd.t==='C1')o=emit(nd.t==='C0'?'TIE0':'TIE1',[]);
+  else if(lib==='nand'){
+   if(nd.t==='not'){const a=getNet(nd.ins[0]);o=emit('NAND2',[a,a]);}
+   else if(nd.t==='and'){const a=getNet(nd.ins[0]),b=getNet(nd.ins[1]);const x=emit('NAND2',[a,b]);o=emit('NAND2',[x,x]);}
+   else if(nd.t==='or'){const a=getNet(nd.ins[0]),b=getNet(nd.ins[1]);const na=emit('NAND2',[a,a]),nb=emit('NAND2',[b,b]);o=emit('NAND2',[na,nb]);}
+   else if(nd.t==='xor'){const a=getNet(nd.ins[0]),b=getNet(nd.ins[1]);const x=emit('NAND2',[a,b]);const p=emit('NAND2',[a,x]),q=emit('NAND2',[b,x]);o=emit('NAND2',[p,q]);}
+  }else{
+   if(nd.t==='not'){const src=N[nd.ins[0]];if(['and','or','xor'].includes(src.t)&&fan[src.id]===1){const a=getNet(src.ins[0]),b=getNet(src.ins[1]);o=emit({and:'NAND2',or:'NOR2',xor:'XNOR2'}[src.t],[a,b]);}else o=emit('INV',[getNet(nd.ins[0])]);}
+   else o=emit({and:'AND2',or:'OR2',xor:'XOR2'}[nd.t],[getNet(nd.ins[0]),getNet(nd.ins[1])]);
+  }
+  drv[id]=o;return o;};
+ const outs=[];Object.entries(G.outs).forEach(([name,id])=>{let k=getNet(id);if(N[id].t==='IN'||outs.some(x=>x.net===k))k=emit('BUF',[k]);outs.push({name,net:k});});
+ return {cells,inputs,outs,nets:netN};}
+function stats(M,node){const f=E.NODE[node].dly;let tr=0;M.cells.forEach(c=>tr+=E.LIB[c.type][0]);
+ const arr={};M.inputs.forEach(i=>arr[i.net]=0);const lvl={};M.inputs.forEach(i=>lvl[i.net]=0);
+ /* a flip-flop's output starts each cycle: it is ready clock-to-output after the tick */
+ (M.regs||[]).forEach(r=>{arr[r.q]=E.LIB.DFF[2]*f;lvl[r.q]=0;});
+ const byOut={};M.cells.forEach(c=>{if(c.type!=='DFF')byOut[c.out]=c;});
+ const at=n=>{if(arr[n]!==undefined)return arr[n];const c=byOut[n];const a=Math.max(0,...c.ins.map(at));lvl[n]=Math.max(0,...c.ins.map(i=>lvl[i]))+1;arr[n]=a+E.LIB[c.type][2]*f+10*f;return arr[n];};
+ let crit=0,depth=0;M.outs.forEach(o=>{crit=Math.max(crit,at(o.net));depth=Math.max(depth,lvl[o.net]);});
+ /* and a flip-flop's input must settle SETUP before the next tick */
+ (M.regs||[]).forEach(r=>{crit=Math.max(crit,at(r.d)+E.SETUP*f);depth=Math.max(depth,lvl[r.d]);});
+ const ovh=450*f;return {cells:M.cells.length,tr,crit,depth,fmax:1e6/(crit+ovh)};}
+E.SETUP=120;
+/* the delay from one input to one output only (ps): how long a change on 'from' takes to reach 'to', other inputs
+   steady. A 32-bit adder is 32 slices in a row, so the carry's own path, from cin to cout, sets its speed. */
+E.pathDelay=function(M,node,from,to){const f=E.NODE[node].dly;const src=M.inputs.find(i=>i.name===from),dst=M.outs.find(o=>o.name===to);if(!src||!dst)return null;
+ const byOut={};M.cells.forEach(c=>{if(c.type!=='DFF')byOut[c.out]=c;});const memo={};
+ const at=n=>{if(n in memo)return memo[n];if(n===src.net)return memo[n]=0;const c=byOut[n];if(!c)return memo[n]=-Infinity;const a=Math.max(...c.ins.map(at));return memo[n]=a===-Infinity?-Infinity:a+E.LIB[c.type][2]*f+10*f;};
+ const d=at(dst.net);return d===-Infinity?null:d;};
+E.NODE={'180':{t:'180 nm',dly:1.45,site:[0.56,5.04],masks:22,mask$:0.2,shuttle:true,wafer:200,d0:0.08,days:1.1},'130':{t:'130 nm',dly:1,site:[0.46,2.72],masks:26,mask$:0.4,shuttle:true,wafer:200,d0:0.1,days:1.1},'28':{t:'28 nm',dly:0.3,site:[0.136,1.2],masks:45,mask$:2,shuttle:true,wafer:300,d0:0.07,days:1.2},'3':{t:'3 nm',dly:0.1,site:[0.048,0.169],masks:80,mask$:18,shuttle:false,wafer:300,d0:0.1,days:1.4}};
+/* Flip-flops: synthesis treats each one's output as an extra input of the logic and its next value
+   as an extra output, then adds a DFF cell joining the two. */
+E.synth=function(d,ins,outs,lib,opt,node){const R=E.regsOf(d);let d2=d,ins2=ins,outs2=outs;
+ if(R.length){d2={asg:Object.assign({},d.asg)};R.forEach(r=>{d2.asg[r+'$d']={e:d.asg[r].e};});ins2=ins.concat(R);outs2=outs.concat(R.map(r=>r+'$d'));}
+ const fin=M=>{if(!R.length){M.regs=[];return M;}const regs=R.map(r=>({name:r,q:M.inputs.find(i=>i.name===r).net,d:M.outs.find(o=>o.name===r+'$d').net}));
+  M.inputs=M.inputs.filter(i=>!R.includes(i.name));M.outs=M.outs.filter(o=>!/\$d$/.test(o.name));regs.forEach(r=>M.cells.push({type:'DFF',ins:[r.d],out:r.q}));M.regs=regs;return M;};
+ const A=fin(mapCells(fromDesign(d2,ins2,outs2),lib));let M=A,used='yours',alt=null;
+ if(opt){const B=fin(mapCells(fromSOP(d2,ins2,outs2),lib));const ta=stats(A,node).tr,tb=stats(B,node).tr;alt={yours:ta,sop:tb};if(tb<ta){M=B;used='sop';}}
+ return {M,used,alt,st:stats(M,node)};};
+E.stats=stats;
+/* state: each flip-flop's current value by name (0 if not given); next: what each takes at the tick. */
+E.simCells=function(M,v,fault,state){const val={};M.inputs.forEach(i=>val[i.net]=v[i.name]);(M.regs||[]).forEach(r=>{val[r.q]=state&&state[r.name]!==undefined?state[r.name]:0;});if(fault&&val[fault.net]!==undefined)val[fault.net]=fault.v;
+ M.cells.forEach(c=>{if(c.type==='DFF')return;const x=c.ins.map(n=>val[n]);let o;switch(c.type){case 'INV':o=1-x[0];break;case 'BUF':o=x[0];break;case 'NAND2':o=1-(x[0]&x[1]);break;case 'NOR2':o=1-(x[0]|x[1]);break;case 'AND2':o=x[0]&x[1];break;case 'OR2':o=x[0]|x[1];break;case 'XOR2':o=x[0]^x[1];break;case 'XNOR2':o=1-(x[0]^x[1]);break;case 'TIE0':o=0;break;case 'TIE1':o=1;break;}
+  if(fault&&fault.net===c.out)o=fault.v;val[c.out]=o;});
+ const out={};M.outs.forEach(o=>out[o.name]=val[o.net]);const next={};(M.regs||[]).forEach(r=>next[r.name]=val[r.d]);return {out,val,next};};
+
+/* ---- placement ---- */
+E.place=function(M,util,seed){const R=(function(s){return function(){s|=0;s=s+0x6D2B79F5|0;let t=Math.imul(s^s>>>15,1|s);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};})(seed||1);
+ const C=M.cells.map((c,i)=>({i,w:E.LIB[c.type][1]}));const tot=C.reduce((s,c)=>s+c.w,0);
+ const area=tot/util;let rows=Math.max(1,Math.round(Math.sqrt(area/6)));let W=Math.ceil(area/rows);W=Math.max(W,Math.max(...C.map(c=>c.w))+1);
+ /* rows as ordered lists */
+ const rowsL=Array.from({length:rows},()=>[]);let r=0;C.slice().sort(()=>R()-.5).forEach(c=>{let tries=0;while(rowsL[r].reduce((s,x)=>s+x.w,0)+c.w>W&&tries<rows){r=(r+1)%rows;tries++;}if(tries>=rows){W+=c.w;}rowsL[r].push(c);r=(r+1)%rows;});
+ const pos={};const pack=k=>{const L=rowsL[k];const used=L.reduce((s,x)=>s+x.w,0);const gap=(W-used)/(L.length+1);let x=gap;L.forEach(c=>{pos[c.i]={x:Math.round(x),r:k,w:c.w};x+=c.w+gap;});
+  /* fix overlaps from rounding */let cur=0;L.forEach(c=>{if(pos[c.i].x<cur)pos[c.i].x=cur;cur=pos[c.i].x+c.w;});if(cur>W){let e=W;for(let j=L.length-1;j>=0;j--){const p=pos[L[j].i];if(p.x+p.w>e)p.x=e-p.w;e=p.x;}}};
+ for(let k=0;k<rows;k++)pack(k);
+ /* nets: driver cell/IO and sinks */
+ const TR=util>=0.8?3:4,H=rows*TR+2,GW=W+4;
+ const ioIn={},ioOut={};M.inputs.forEach((p,k)=>ioIn[p.net]={x:0,y:Math.round((k+1)*(H-1)/(M.inputs.length+1))});M.outs.forEach((p,k)=>ioOut[p.name]={x:GW-1,y:Math.round((k+1)*(H-1)/(M.outs.length+1)),net:p.net});
+ let PP=null;const pinXY=(ci,pin)=>{const p=(PP||pos)[ci],c=M.cells[ci],w=p.w;const y=p.r*TR+2;let dx;if(pin==='o')dx=w-1;else{const n=c.ins.length;dx=n===1?0:(pin===0?0:Math.min(w-2,Math.max(1,Math.floor((w-1)/2))));}return {x:2+p.x+dx,y};};
+ const netPins=(pp)=>{PP=pp||null;const P={};const addp=(n,pt,kind)=>{(P[n]=P[n]||[]).push(Object.assign({k:kind},pt));};
+  M.inputs.forEach(p=>addp(p.net,ioIn[p.net],'d'));M.cells.forEach((c,ci)=>{addp(c.out,pinXY(ci,'o'),'d');c.ins.forEach((n,k)=>{if(k===1&&c.ins[0]===n)return;addp(n,pinXY(ci,k),'s');});});
+  Object.values(ioOut).forEach(o=>addp(o.net,{x:o.x,y:o.y},'s'));PP=null;return P;};
+ const hpwl=()=>{const P=netPins();let s=0;Object.values(P).forEach(L=>{if(L.length<2)return;const xs=L.map(p=>p.x),ys=L.map(p=>p.y);s+=Math.max(...xs)-Math.min(...xs)+Math.max(...ys)-Math.min(...ys);});return s;};
+ const snapshot=()=>JSON.parse(JSON.stringify(pos));
+ const anneal=(steps,cb)=>{let cost=hpwl(),T=Math.max(2,cost/8);const hist=[cost];
+  for(let s=0;s<steps;s++){const r1=Math.floor(R()*rows),r2=Math.floor(R()*rows);const L1=rowsL[r1],L2=rowsL[r2];if(!L1.length||!L2.length)continue;const i1=Math.floor(R()*L1.length),i2=Math.floor(R()*L2.length);
+   const a=L1[i1],b=L2[i2];if(a===b)continue;const u2=L2.reduce((t,x)=>t+x.w,0)-b.w+a.w,u1=L1.reduce((t,x)=>t+x.w,0)-a.w+b.w;if(r1!==r2&&(u1>W||u2>W))continue;
+   L1[i1]=b;L2[i2]=a;pack(r1);if(r2!==r1)pack(r2);const nc=hpwl();if(nc<=cost||R()<Math.exp((cost-nc)/T)){cost=nc;}else{L1[i1]=a;L2[i2]=b;pack(r1);if(r2!==r1)pack(r2);}
+   T*=0.995;if(s%Math.max(1,Math.floor(steps/40))===0){hist.push(cost);if(cb)cb(snapshot(),cost);}}
+  return hist;};
+ return {pos,rows,W,H,GW,TR,ioIn,ioOut,netPins,hpwl,anneal,snapshot};};
+
+/* ---- routing: 2 layers (0: horizontal M2, 1: vertical M3) ---- */
+E.route=function(PL){const {GW,H}=PL;const P=PL.netPins();const occ=new Int32Array(GW*H*2).fill(-1);const idx=(x,y,l)=>(y*GW+x)*2+l;
+ const pinOwn=new Int32Array(GW*H).fill(-1);Object.entries(P).forEach(([n,L])=>L.forEach(p=>{pinOwn[p.y*GW+p.x]=+n;}));
+ const nets=Object.entries(P).filter(([n,L])=>L.length>=2).map(([n,L])=>({n:+n,L,h:Math.max(...L.map(p=>p.x))-Math.min(...L.map(p=>p.x))+Math.max(...L.map(p=>p.y))-Math.min(...L.map(p=>p.y))}));
+ const paths={},failed=[];
+ const routeNet=(nt)=>{const tree=new Set();const segs=[];const d=nt.L.find(p=>p.k==='d')||nt.L[0];const rest=nt.L.filter(p=>p!==d).sort((a,b)=>(Math.abs(a.x-d.x)+Math.abs(a.y-d.y))-(Math.abs(b.x-d.x)+Math.abs(b.y-d.y)));
+  [0,1].forEach(l=>tree.add(idx(d.x,d.y,l)));let ok=true;
+  for(const t of rest){/* dijkstra from tree to target */const N=GW*H*2,dist=new Float32Array(N).fill(1e9),prev=new Int32Array(N).fill(-1);const Q=[];
+   tree.forEach(i=>{dist[i]=0;Q.push([0,i]);});const tgt=new Set([idx(t.x,t.y,0),idx(t.x,t.y,1)]);let found=-1;
+   while(Q.length){let bi=0;for(let k=1;k<Q.length;k++)if(Q[k][0]<Q[bi][0])bi=k;const [dd,i]=Q[bi];Q[bi]=Q[Q.length-1];Q.pop();if(dd>dist[i])continue;if(tgt.has(i)){found=i;break;}
+    const l=i%2,cell=(i-l)/2,x=cell%GW,y=(cell-x)/GW;const nb=[];if(l===0){if(x>0)nb.push([x-1,y,0,1]);if(x<GW-1)nb.push([x+1,y,0,1]);}else{if(y>0)nb.push([x,y-1,1,1]);if(y<H-1)nb.push([x,y+1,1,1]);}nb.push([x,y,1-l,2.5]);
+    for(const [nx,ny,nl,c] of nb){const j=idx(nx,ny,nl);const own=occ[j];if(own!==-1&&own!==nt.n)continue;const po=pinOwn[ny*GW+nx];if(po!==-1&&po!==nt.n)continue;const nd2=dd+c;if(nd2<dist[j]){dist[j]=nd2;prev[j]=i;Q.push([nd2,j]);}}}
+   if(found<0){ok=false;continue;}
+   let k=found;const path=[];while(k!==-1&&!tree.has(k)){path.push(k);k=prev[k];}if(k!==-1)path.push(k);path.reverse();path.forEach(i=>{tree.add(i);occ[i]=nt.n;});segs.push(path);}
+  return {ok,segs};};
+ const order=nets.slice().sort((a,b)=>a.h-b.h);
+ order.forEach(nt=>{const r=routeNet(nt);paths[nt.n]=r.segs;if(!r.ok)failed.push(nt.n);});
+ let ordc=order;for(let it=0;it<5&&failed.length;it++){/* rip up and reroute, failed nets first */occ.fill(-1);const f=new Set(failed);failed.length=0;ordc=ordc.filter(n=>f.has(n.n)).concat(ordc.filter(n=>!f.has(n.n)));ordc.forEach(nt=>{const r=routeNet(nt);paths[nt.n]=r.segs;if(!r.ok)failed.push(nt.n);});}
+ let wl=0,vias=0;Object.values(paths).forEach(S=>S.forEach(p=>{for(let k=1;k<p.length;k++){if(p[k]%2!==p[k-1]%2)vias++;else wl++;}}));
+ return {paths,failed,wl,vias,GW,H,P};};
+
+/* ---- fault coverage: stuck-at on every net ---- */
+E.faults=function(M,vecs){
+ /* vecs run in order; flip-flops carry their values from one pattern to the next (from 0, as after a reset) */
+ const golden=[];let s={};vecs.forEach(v=>{const r=E.simCells(M,v,null,s);golden.push(r.out);s=r.next;});
+ const F=[];for(let n=0;n<M.nets;n++)for(const sv of [0,1])F.push({net:n,v:sv});
+ let det=0;const detected=F.map(f=>{let st={};for(let k=0;k<vecs.length;k++){const r=E.simCells(M,vecs[k],f,st);for(const key in r.out)if(r.out[key]!==golden[k][key])return k;st=r.next;}return -1;});detected.forEach(x=>{if(x>=0)det++;});
+ return {F,detected,cov:F.length?det/F.length:1};};
+})(TC);
+</script>
+<script>
+(function () {
+  'use strict';
+  var $ = function (id) { return document.getElementById(id); };
+  var esc = function (s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
+  var NS = 'http://www.w3.org/2000/svg';
+
+  /* ---- the jobs: the lab's own (TC.PROJ), with the ways to write each that the experiments use ---- */
+  var JOBS = {
+    half: { t: 'Add two bits', d: 'Add two bits. Say their sum, and whether it carries.',
+      lab: 'sum = a ^ b;\ncarry = a & b;', near: 'sum = a | b;\ncarry = a & b;', other: 'sum = (a | b) & ~(a & b);\ncarry = a & b;',
+      ai: 'sum = a ^ b;\ncarry = a & b;', claim: 'Done: sum is XOR, carry is AND. This is the standard half adder and covers every input.' },
+    full: { t: 'Add three bits', d: 'Add three bits: a, b and the carry from the column to the right. Chain these and you can add numbers of any size.',
+      lab: 'p = a ^ b;\nsum = p ^ cin;\ncout = (a & b) | (cin & p);', near: 'p = a ^ b;\nsum = p | cin;\ncout = (a & b) | (cin & p);', other: 'sum = a ^ b ^ cin;\ncout = (a & b) | (a & cin) | (b & cin);',
+      ai: 'sum = a ^ b ^ cin;\ncout = (a & b) | (a & cin) | (b & cin);', claim: 'Done: the sum is the XOR of all three, and the carry is 1 when at least two inputs are 1.' },
+    vote: { t: 'Take a vote of three', d: 'Three inputs vote. Say what at least two of them say. Spacecraft run three copies of a computer and trust the majority.',
+      lab: 'y = (a & b) | (b & c) | (a & c);', near: 'y = (a & b) | (b & c) | (a ^ c);', other: 'y = (a & (b | c)) | (b & c);',
+      ai: 'y = (a & b) | (a & c);', claim: 'Done: y is 1 whenever a agrees with b or with c, so any two agreeing inputs win.' },
+    parity: { t: 'Check a memory', d: 'Say whether an odd number of the four inputs are 1. Memories store this extra bit to catch one that flips.',
+      lab: 'odd = a ^ b ^ c ^ d;', near: 'odd = a ^ b ^ c | d;', other: 'p = a ^ b;\nq = c ^ d;\nodd = p ^ q;',
+      ai: 'odd = a ^ b ^ c ^ d;', claim: 'Done: the XOR of all four inputs is 1 exactly when an odd number of them are 1.' }
+  };
+  var NODES = ['180', '130', '28', '3'];
+  var TURN = { '&': '|', '|': '^', '^': '&' }, OPNAME = { '&': 'AND', '|': 'OR', '^': 'XOR' };
+
+  /* ---- the experiments: each a question that sits between two forms ---- */
+  var EXPS = [
+    { id: 'one', between: ['desc', 'does'], ask: 'Change one character of the description. Which form of the design notices?',
+      open: '<b>Still open.</b> Here the job is a table of a few rows. Nobody can write that table for a processor, and most real failures of design are a job that was written wrong, not a description that broke it.' },
+    { id: 'two', between: ['desc', 'gates'], ask: 'Two descriptions give the same answers. Are they the same chip?',
+      open: '<b>Still open.</b> Programs choose between millions of chips that all do the same job, by rules their makers tuned for years, and AI now proposes its own. Nobody can say which is best for a job it has not seen.' },
+    { id: 'placed', between: ['gates', 'layout'], ask: 'Nobody chose where these cells go. Who is the designer?',
+      open: '<b>Still open.</b> On a real chip this choice decides speed and heat, there are billions of cells, and the best arrangement cannot be found, only approached. When software arranges what software chose, who designed the chip?' },
+    { id: 'ai', between: ['job', 'desc'], ask: 'An AI wrote this in seconds and says it is right. Who checks it, and with what?',
+      open: '<b>Still open.</b> When an AI writes the design and another writes its tests, the check is only as good as the job someone wrote down. Who signs for the chip?' },
+    { id: 'tests', between: ['masks', 'does'], ask: 'The masks are perfect. A speck of dust leaves one wire stuck. Would your tests notice?', also: 'Why can a perfect design fail in the real world?',
+      open: '<b>Still open.</b> A real chip has billions of wires and its test must take seconds, so no test tries everything. In one large fleet about one machine in a thousand was found computing wrong answers with no error raised (reported by Meta, 2021 to 2022; it is in the lab’s figures).' },
+    { id: 'kit', between: ['layout', 'masks'], ask: 'The same design goes to another factory. What has to be done again?', also: 'What happens when anyone can make a chip?',
+      open: '<b>Still open.</b> A description travels anywhere. A layout fits one factory’s rules, and most factories keep theirs secret. It is one reason open chip parts have not spread the way open software did.' }
+  ];
+  var FORMS = { job: 'the job', desc: 'the description', does: 'what it does', gates: 'its gates', layout: 'its layout', masks: 'its masks' };
+
+  /* ---- the state: one design, carried through every experiment ---- */
+  var S = { job: 'full', code: JOBS.full.lab, by: 'lab', node: '130', seed: 7, tests: null, fault: null, exp: 'one', edit: false, touched: false, wl: {} };
+  var B = null, sel = null, pinned = false;
+
+  /* ---- the engine: the whole flow for the design as it stands ---- */
+  function flow(job, code, node, seed) {
+    var proj = TC.PROJ.find(function (p) { return p.id === job; });
+    var D = TC.parse(code, proj.ins, proj.outs, { regs: false });
+    var o = { proj: proj, D: D, errs: D.errs || [] };
+    if (o.errs.length) return o;
+    var V = TC.verify(D, proj); o.rows = V.rows; o.bad = V.bad;
+    var SY = TC.synth(D, proj.ins, proj.outs, 'basic', false, node); o.M = SY.M; o.st = SY.st;
+    o.iters = Math.min(3000, 300 + SY.M.cells.length * 80);
+    var PL = TC.place(SY.M, 0.5, seed); PL.anneal(o.iters, null); o.PL = PL; o.RT = TC.route(PL);
+    o.area = SY.M.cells.reduce(function (a, c) { return a + TC.LIB[c.type][1]; }, 0) * TC.NODE[node].site[0] * TC.NODE[node].site[1];
+    return o;
+  }
+  function build() {
+    B = flow(S.job, S.code, S.node, S.seed);
+    if (B.errs.length) return;
+    var M = B.M, proj = B.proj;
+    /* tests: the first k patterns, and what they would catch */
+    B.vecs = TC.testVectors(proj); B.k = S.tests == null ? B.vecs.length : Math.max(1, Math.min(S.tests, B.vecs.length));
+    var F = TC.faults(M, B.vecs.slice(0, B.k)); B.F = F; B.caught = F.detected.filter(function (x) { return x >= 0; }).length;
+    /* which wire is which name: a wire carries a name if it behaves as that name does on every input */
+    var sims = B.vecs.map(function (v) { return TC.simCells(M, v, null, {}).val; });
+    var vecOf = function (net) { return sims.map(function (s) { return s[net]; }).join(''); };
+    B.netOf = {}; B.nameOf = {};
+    M.inputs.forEach(function (i) { B.netOf[i.name] = i.net; B.nameOf[i.net] = i.name; });
+    M.outs.forEach(function (x) { B.netOf[x.name] = x.net; if (B.nameOf[x.net] == null) B.nameOf[x.net] = x.name; });
+    var byVec = {}; for (var n = 0; n < M.nets; n++) { var k = vecOf(n); if (!(k in byVec)) byVec[k] = n; }
+    var rowOf = {}; B.rows.forEach(function (r) { rowOf[JSON.stringify(r.v)] = r; });
+    B.D.order.forEach(function (name) {
+      if (B.netOf[name] != null) return;
+      var k = B.vecs.map(function (v) { var r = rowOf[JSON.stringify(v)]; return r ? r.o[name] : '?'; }).join('');
+      if (k in byVec && B.nameOf[byVec[k]] == null) { B.netOf[name] = byVec[k]; B.nameOf[byVec[k]] = name; }
+    });
+    /* which gates came from which line: back from a named wire until another named wire, or an input */
+    B.driver = {}; M.cells.forEach(function (c, i) { B.driver[c.out] = i; });
+    B.cone = {}; B.owner = {};
+    B.D.order.slice().reverse().forEach(function (name) {
+      var net = B.netOf[name], cells = [], seen = {}; if (net == null) { B.cone[name] = cells; return; }
+      (function back(nn, first) {
+        if (seen[nn]) return; seen[nn] = 1;
+        if (!first && B.nameOf[nn] != null) return;
+        var ci = B.driver[nn]; if (ci == null) return;
+        cells.push(ci); if (B.owner[ci] == null) B.owner[ci] = name;
+        M.cells[ci].ins.forEach(function (x) { back(x, false); });
+      })(net, true);
+      B.cone[name] = cells;
+    });
+    /* a copy the factory spoiled: one wire stuck */
+    if (S.fault) {
+      var gst = {}, st = {};
+      B.spoil = B.vecs.map(function (v) { var r = TC.simCells(M, v, S.fault, st), g = TC.simCells(M, v, null, gst); st = r.next; gst = g.next; return { o: r.out, mis: Object.keys(r.out).filter(function (kk) { return r.out[kk] !== g.out[kk]; }) }; });
+      B.spoilWrong = B.spoil.filter(function (r) { return r.mis.length; }).length;
+      B.spoilCaught = B.spoil.slice(0, B.k).some(function (r) { return r.mis.length; });
+    }
+    var key = S.job + '\n' + S.code + '\n' + S.node; (S.wl[key] = S.wl[key] || {})[S.seed] = B.RT.wl; B.wls = Object.keys(S.wl[key]).map(function (kk) { return S.wl[key][kk]; });
+  }
+  var netName = function (n) { return B.nameOf[n] != null ? B.nameOf[n] : 'a wire with no name'; };
+  var wireOf = function (n) { var p = B.RT.paths[n]; if (!p) return 0; return p.reduce(function (a, seg) { return a + seg.length - 1; }, 0); };
+
+  /* ---- drawing ---- */
+  function svg(w, h, inner, cls) { return '<svg viewBox="0 0 ' + w + ' ' + h + '"' + (cls ? ' class="' + cls + '"' : '') + ' role="img">' + inner + '</svg>'; }
+  function shape(type, w, h) {
+    var t = type.replace('2', ''), neg = t === 'NAND' || t === 'NOR' || t === 'XNOR' || t === 'INV', base = t === 'NAND' ? 'AND' : t === 'NOR' ? 'OR' : t === 'XNOR' ? 'XOR' : t, s = '', bw = neg ? w - 8 : w;
+    if (base === 'AND') s = '<path class="shape" d="M0 0 H' + (bw - h / 2) + ' A' + h / 2 + ' ' + h / 2 + ' 0 0 1 ' + (bw - h / 2) + ' ' + h + ' H0 Z"/>';
+    else if (base === 'OR' || base === 'XOR') { var x0 = base === 'XOR' ? 6 : 0; s = '<path class="shape" d="M' + x0 + ' 0 Q' + (bw * 0.6) + ' 0 ' + bw + ' ' + h / 2 + ' Q' + (bw * 0.6) + ' ' + h + ' ' + x0 + ' ' + h + ' Q' + (x0 + bw * 0.24) + ' ' + h / 2 + ' ' + x0 + ' 0 Z"/>' + (base === 'XOR' ? '<path class="shape" style="fill:none" d="M0 0 Q' + (bw * 0.24) + ' ' + h / 2 + ' 0 ' + h + '"/>' : ''); }
+    else if (base === 'INV' || base === 'BUF') s = '<path class="shape" d="M0 0 L' + bw + ' ' + h / 2 + ' L0 ' + h + ' Z"/>';
+    else s = '<rect class="shape" width="' + bw + '" height="' + h + '" rx="5"/>';
+    if (neg) s += '<circle class="shape" cx="' + (bw + 4) + '" cy="' + h / 2 + '" r="4"/>';
+    var sign = { AND: '&', OR: '|', XOR: '^', NAND: '&', NOR: '|', XNOR: '^', INV: '~', BUF: '', TIE0: '0', TIE1: '1' }[t] || '';
+    return s + '<text x="' + (base === 'INV' || base === 'BUF' ? bw * 0.3 : bw * 0.46) + '" y="' + (h / 2 + 4) + '">' + esc(sign) + '</text>';
+  }
+  function drawGates() {
+    var M = B.M, lv = {}, byOut = B.driver, GW = 50, GH = 34, COL = 96, PAD = 54, ROW = 50;
+    var level = function (n) { var ci = byOut[n]; if (ci == null) return 0; if (lv[ci] != null) return lv[ci]; lv[ci] = 0; return (lv[ci] = 1 + Math.max.apply(null, [0].concat(M.cells[ci].ins.map(level)))); };
+    M.cells.forEach(function (c) { level(c.out); });
+    var depth = Math.max.apply(null, [1].concat(M.cells.map(function (c, i) { return lv[i]; })));
+    var cols = []; M.cells.forEach(function (c, i) { (cols[lv[i]] = cols[lv[i]] || []).push(i); });
+    var rowsN = Math.max(M.inputs.length, M.outs.length, Math.max.apply(null, cols.filter(Boolean).map(function (c) { return c.length; })));
+    var H = Math.max(120, rowsN * ROW + 20), W = PAD * 2 + depth * COL + 10, yOf = {}, at = {};
+    M.inputs.forEach(function (p, k) { yOf[p.net] = H * (k + 1) / (M.inputs.length + 1); });
+    for (var L = 1; L <= depth; L++) {
+      var col = (cols[L] || []).slice();
+      col.sort(function (a, b) { var f = function (ci) { var ins = M.cells[ci].ins; return ins.reduce(function (s, n) { return s + (yOf[n] || H / 2); }, 0) / ins.length; }; return f(a) - f(b); });
+      col.forEach(function (ci, k) { var y = H * (k + 1) / (col.length + 1); at[ci] = { x: PAD + (L - 1) * COL + 18, y: y - GH / 2 }; yOf[M.cells[ci].out] = y; });
+    }
+    var out = '', wires = '';
+    var wire = function (net, x1, y1, x2, y2) { var dx = Math.max(16, (x2 - x1) * 0.5); wires += '<path class="w' + (S.fault && S.fault.net === net ? ' stuck' : '') + '" data-net="' + net + '" d="M' + x1 + ' ' + y1 + ' C' + (x1 + dx) + ' ' + y1 + ' ' + (x2 - dx) + ' ' + y2 + ' ' + x2 + ' ' + y2 + '"/>'; };
+    var src = function (net) { var ci = byOut[net]; return ci == null ? { x: PAD - 14, y: yOf[net] } : { x: at[ci].x + GW, y: at[ci].y + GH / 2 }; };
+    M.cells.forEach(function (c, i) {
+      var p = at[i]; if (!p) return;
+      c.ins.forEach(function (n, k) { var s = src(n), y = p.y + (c.ins.length === 1 ? GH / 2 : GH * (k === 0 ? 0.28 : 0.72)); wire(n, s.x, s.y, p.x + (c.type.indexOf('OR') >= 0 ? 5 : 0), y); });
+      out += '<g class="gate" data-cell="' + i + '" transform="translate(' + p.x + ' ' + p.y + ')">' + shape(c.type, GW, GH) + '</g>';
+    });
+    M.inputs.forEach(function (p) { out += '<g class="pin" data-net="' + p.net + '" data-name="' + esc(p.name) + '"><circle cx="' + (PAD - 14) + '" cy="' + yOf[p.net] + '" r="3.5"/><text x="' + (PAD - 22) + '" y="' + (yOf[p.net] + 4) + '" text-anchor="end">' + esc(p.name) + '</text></g>'; });
+    M.outs.forEach(function (p, k) { var y = H * (k + 1) / (M.outs.length + 1), s = src(p.net), x = W - PAD + 14; wire(p.net, s.x, s.y, x, y); out += '<g class="pin" data-net="' + p.net + '" data-name="' + esc(p.name) + '"><circle cx="' + x + '" cy="' + y + '" r="3.5"/><text x="' + (x + 8) + '" y="' + (y + 4) + '">' + esc(p.name) + '</text></g>'; });
+    if (S.fault && yOf[S.fault.net] != null) out += '<text class="stucktag" x="4" y="13">In red: the wire stuck at ' + S.fault.v + '</text>';
+    return svg(W, H, wires + out);
+  }
+  /* the tile: cells in rows, two layers of wire. want: which layers; mask: draw as a mask plate */
+  function drawTile(want, mask) {
+    var P = B.PL, RT = B.RT, M = B.M, s = 22, W = P.GW * s, H = P.H * s, o = '', X = function (x) { return x * s; }, on = function (k) { return !want || want.indexOf(k) >= 0; };
+    if (on('cells')) {
+      if (!mask) for (var r = 0; r < P.rows; r++) o += '<rect class="rowband" x="' + X(2) + '" y="' + X(r * P.TR + 1) + '" width="' + (P.GW - 4) * s + '" height="' + 3 * s + '" rx="3"/>';
+      M.cells.forEach(function (c, i) { var p = P.pos[i]; if (!p) return; var x = X(2 + p.x) + 1.5, y = X(p.r * P.TR + 1) + 1.5, w = p.w * s - 3, h = 3 * s - 3;
+        if (mask) { /* a cell on a mask: the strips of its switches */ var n = Math.max(2, p.w); for (var k = 0; k < n; k++) o += '<rect class="sh" data-cell="' + i + '" x="' + (x + 3 + k * (w - 6) / n) + '" y="' + (y + 4) + '" width="' + Math.max(2, (w - 6) / n - 4) + '" height="' + (h - 8) + '"/>'; }
+        else o += '<g class="cellr" data-cell="' + i + '"><rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" rx="3"/>' + (w > 40 ? '<text style="text-anchor:start" x="' + (x + 5) + '" y="' + (y + h - 6) + '">' + esc(c.type.replace('2', '')) + '</text>' : '') + '</g>'; });
+    }
+    var segs = { m1: '', m2: '', via: '' };
+    Object.keys(RT.paths).forEach(function (net) { RT.paths[net].forEach(function (path) {
+      for (var k = 1; k < path.length; k++) {
+        var a = path[k - 1], b = path[k], la = a % 2, lb = b % 2, ca = (a - la) / 2, cb = (b - lb) / 2, ax = ca % P.GW, ay = (ca - ax) / P.GW, bx = cb % P.GW, by = (cb - bx) / P.GW;
+        if (la !== lb) { segs.via += '<rect class="' + (mask ? 'sh' : 'via') + '" data-net="' + net + '" x="' + (X(ax + 0.5) - 3.5) + '" y="' + (X(ay + 0.5) - 3.5) + '" width="7" height="7" rx="1"/>'; continue; }
+        var layer = la === 1 ? 'm1' : 'm2', stuck = !mask && S.fault && S.fault.net === +net;
+        segs[layer] += '<path class="' + (mask ? 'shs' : 'w' + (layer === 'm2' ? ' m2' : '') + (stuck ? ' stuck' : '')) + '" data-net="' + net + '"' + (mask ? ' stroke-width="5"' : '') + ' d="M' + X(ax + 0.5) + ' ' + X(ay + 0.5) + ' L' + X(bx + 0.5) + ' ' + X(by + 0.5) + '"/>';
+      }
+    }); });
+    if (on('m1')) o += segs.m1; if (on('m2')) o += segs.m2; if (on('via')) o += segs.via;
+    if (on('pins') && !mask) {
+      M.inputs.forEach(function (p) { var q = P.ioIn[p.net]; if (q) o += '<rect class="io" data-net="' + p.net + '" x="' + (X(q.x) + 4) + '" y="' + (X(q.y) + 4) + '" width="' + (s - 8) + '" height="' + (s - 8) + '" rx="2"/>'; });
+      Object.keys(P.ioOut).forEach(function (name) { var q = P.ioOut[name]; o += '<rect class="io" data-net="' + q.net + '" x="' + (X(q.x) + 4) + '" y="' + (X(q.y) + 4) + '" width="' + (s - 8) + '" height="' + (s - 8) + '" rx="2"/>'; });
+    }
+    return svg(W, H, o);
+  }
+
+  /* ---- the six forms ---- */
+  function renderJob() {
+    var J = JOBS[S.job], p = B.proj, vecs = TC.testVectors(p);
+    var h = '<select class="jobsel" id="jobsel" aria-label="The job">' + Object.keys(JOBS).map(function (k) { return '<option value="' + k + '"' + (k === S.job ? ' selected' : '') + '>' + esc(JOBS[k].t) + '</option>'; }).join('') + '</select><p class="jobwords">' + esc(J.d) + '</p>';
+    h += '<table aria-label="What it must answer"><tr>' + p.ins.map(function (n) { return '<th data-name="' + n + '">' + n + '</th>'; }).join('') + '<th class="gap"></th>' + p.outs.map(function (n) { return '<th class="out" data-name="' + n + '">' + n + '</th>'; }).join('') + '</tr>';
+    vecs.forEach(function (v) { var e = p.f(v); h += '<tr>' + p.ins.map(function (n) { return '<td data-name="' + n + '">' + v[n] + '</td>'; }).join('') + '<td class="gap"></td>' + p.outs.map(function (n) { return '<td class="out" data-name="' + n + '">' + e[n] + '</td>'; }).join('') + '</tr>'; });
+    $('job').innerHTML = h + '</table>';
+  }
+  function renderDesc() {
+    var who = { lab: 'Written by the lab.', near: 'Written by the lab, with one thing wrong.', other: 'Written by the lab, another way.', ai: 'Written by an AI agent.', you: 'Written by you.' }[S.by];
+    $('m-desc').textContent = who + ' A few lines that say what each output is. Tap a gate to turn it into another.';
+    var k = 0, h = '<div class="code">';
+    S.code.split('\n').forEach(function (line) {
+      var m = /^\s*([A-Za-z_]\w*)\s*=/.exec(line), own = m ? m[1] : '';
+      h += '<div class="ln" data-line="' + esc(own) + '">' + line.replace(/[A-Za-z_]\w*|[&|^]|[^A-Za-z_&|^]+/g, function (t) {
+        if (/^[A-Za-z_]/.test(t)) return '<span class="id" data-name="' + esc(t) + '">' + esc(t) + '</span>';
+        if (TURN[t]) return '<button type="button" class="op" data-op="' + (k++) + '" aria-label="' + OPNAME[t] + ': tap to turn into ' + OPNAME[TURN[t]] + '">' + esc(t) + '</button>';
+        return esc(t);
+      }) + '</div>';
+    });
+    if (B.errs.length) h += '<div class="err">' + B.errs.map(function (e) { return esc((e.l ? 'Line ' + e.l + ': ' : '') + e.m); }).join('<br>') + '</div>';
+    h += '</div>';
+    $('tokens').innerHTML = h;
+    var ta = $('code'); ta.hidden = !S.edit; if (document.activeElement !== ta) ta.value = S.code;
+    $('editb').textContent = S.edit ? 'Done writing' : 'Write it yourself';
+  }
+  function renderDoes() {
+    var p = B.proj;
+    if (B.errs.length) { $('m-does').textContent = 'Nothing: a description that cannot be read is not a design yet.'; $('does').innerHTML = ''; return; }
+    $('m-does').textContent = 'Worked out by trying every input: ' + B.rows.length + ' of them. Set against the job, this is the only form that can say right or wrong.';
+    var sp = S.fault ? B.spoil : null;
+    var h = '<table aria-label="What the design answers"><tr>' + p.ins.map(function (n) { return '<th data-name="' + n + '">' + n + '</th>'; }).join('') + '<th class="gap"></th>' + p.outs.map(function (n) { return '<th class="out" data-name="' + n + '">' + n + '</th>'; }).join('') + '<th></th>' + (sp ? '<th class="gap"></th>' + p.outs.map(function (n) { return '<th class="out">' + n + '</th>'; }).join('') + '<th>this copy</th>' : '') + '</tr>';
+    B.rows.forEach(function (r, i) {
+      h += '<tr' + (S.exp === 'tests' && i >= B.k ? ' class="untested"' : '') + '>' + p.ins.map(function (n) { return '<td data-name="' + n + '">' + r.v[n] + '</td>'; }).join('') + '<td class="gap"></td>' + p.outs.map(function (n) { return '<td class="out' + (r.mis.indexOf(n) >= 0 ? ' bad' : '') + '" data-name="' + n + '">' + r.o[n] + '</td>'; }).join('') + '<td class="mark ' + (r.mis.length ? 'n">✗' : 'y">✓') + '</td>';
+      if (sp) h += '<td class="gap"></td>' + p.outs.map(function (n) { return '<td class="out' + (sp[i].mis.indexOf(n) >= 0 ? ' bad' : '') + '">' + sp[i].o[n] + '</td>'; }).join('') + '<td class="mark ' + (sp[i].mis.length ? 'n">✗' : 'y">✓') + '</td>';
+      h += '</tr>';
+    });
+    $('does').innerHTML = h + '</table>';
+  }
+  function renderRest() {
+    if (B.errs.length) { ['gates', 'layout', 'masks'].forEach(function (k) { $(k).innerHTML = ''; $('m-' + k).textContent = 'Waiting for a description that can be read.'; }); return; }
+    var st = B.st, N = TC.NODE[S.node];
+    $('m-gates').textContent = 'Chosen by a program from a library of ready-made gates: ' + st.cells + ' of them, ' + st.tr + ' switches. You never said which.';
+    $('gates').innerHTML = drawGates();
+    $('m-layout').textContent = 'Placed and wired by a program: it tried ' + B.iters + ' moves, then found a way through for every wire, on two layers.';
+    $('layout').innerHTML = drawTile(['cells', 'm1', 'm2', 'via', 'pins']);
+    $('m-masks').textContent = 'Split by a program into the patterns the factory prints, one layer each. Four of the ' + N.masks + ' this process needs are shown.';
+    $('masks').innerHTML = '<div class="plates">' + [['cells', 'The switches'], ['m1', 'Wires, lower layer'], ['via', 'Hops between layers'], ['m2', 'Wires, upper layer']].map(function (x) { return '<div class="plate">' + drawTile([x[0]], true) + '<p>' + x[1] + '</p></div>'; }).join('') + '</div>';
+  }
+  function renderRead() {
+    if (B.errs.length) { $('read').innerHTML = ''; return; }
+    var st = B.st, h = '';
+    if (sel) {
+      var parts = [];
+      if (sel.name) parts.push('<b>' + esc(sel.name) + '</b>');
+      else if (sel.nets.length) parts.push('a wire with no name');
+      if (sel.cells.length) parts.push(sel.cells.length + (sel.cells.length === 1 ? ' gate' : ' gates'));
+      var wl = sel.nets.reduce(function (a, n) { return a + wireOf(n); }, 0); if (wl) parts.push(wl + ' steps of wire');
+      h += '<span class="touch">In every form: ' + parts.join(', ') + '</span>';
+    }
+    h += '<span><b>' + st.cells + '</b> gates</span><span><b>' + st.tr + '</b> switches</span><span>slowest path <b>' + Math.round(st.crit) + '</b> ps</span><span><b>' + B.RT.wl + '</b> steps of wire, <b>' + B.RT.vias + '</b> hops</span><span><b>' + (B.area < 10 ? B.area.toFixed(2) : B.area.toFixed(1)) + '</b> µm² at ' + TC.NODE[S.node].t + '</span>';
+    $('read').innerHTML = h;
+  }
+
+  /* ---- the experiment on top: its question, what you may change, what is true ---- */
+  var n2 = function (n, one, many) { return n + ' ' + (n === 1 ? one : many); };
+  function renderExp(keep) {
+    var E = EXPS.find(function (e) { return e.id === S.exp; }), J = JOBS[S.job], t = '', notice = '', claim = '';
+    $('ask').textContent = E.ask;
+    var btn = function (act, label, go, on) { return '<button type="button" class="b' + (go ? ' go' : '') + (on ? ' on' : '') + '" data-act="' + act + '">' + label + '</button>'; };
+    var ok = !B.errs.length, n = ok ? B.rows.length : 0;
+    if (!ok) notice = 'The description cannot be read, so no other form of the design exists. <span class="no">' + esc(B.errs[0].m) + '</span>';
+    if (E.id === 'one') {
+      t = btn('near', 'Start from one that is almost right', !S.touched) + btn('lab', 'The lab’s own');
+      if (ok) notice = B.bad ? 'Every form followed you. The gates are real gates, the layout is a real layout, and the masks would print. Only one form says anything is wrong, because it is the only one set against the job: <b class="no">' + B.bad + ' of ' + n + ' rows</b>.'
+        : S.touched ? '<b class="ok">All ' + n + ' rows agree with the job.</b> Every form changed when you did, and none of the other five could have told you whether you were right.'
+        : 'All ' + n + ' rows agree with the job. Tap a gate in the description (&amp;, |, ^) to turn it into another kind, and watch all six forms.';
+    } else if (E.id === 'two') {
+      t = btn('lab', 'One way', false, S.code === J.lab) + btn('other', 'Another way to write it', S.code !== J.other, S.code === J.other);
+      var a = flow(S.job, J.lab, S.node, 7), b = flow(S.job, J.other, S.node, 7);
+      var same = !a.bad && !b.bad && a.rows.every(function (r, i) { return a.proj.outs.every(function (k) { return r.o[k] === b.rows[i].o[k]; }); });
+      var line = function (x) { return n2(x.st.cells, 'gate', 'gates') + ', ' + x.st.tr + ' switches, slowest path ' + Math.round(x.st.crit) + ' ps'; };
+      var verdict = a.st.cells !== b.st.cells && (a.st.cells < b.st.cells) === (a.st.crit > b.st.crit) && a.st.crit !== b.st.crit ? 'The smaller one is the slower one.'
+        : a.st.cells === b.st.cells && a.st.crit !== b.st.crit ? 'The same gates, arranged differently, and one is faster.'
+        : a.st.cells !== b.st.cells ? 'One is smaller and no slower: nothing was given up for it.' : 'Here the program found the same chip both times.';
+      notice = (same ? 'The same table, all ' + a.rows.length + ' rows. ' : '') + '<b>One way:</b> ' + line(a) + '. <b>The other:</b> ' + line(b) + '. ' + verdict + ' The description fixes what the chip does. It does not fix what the chip is.';
+    } else if (E.id === 'placed') {
+      t = btn('place', 'Place it again', true);
+      if (ok) { var lo = Math.min.apply(null, B.wls), hi = Math.max.apply(null, B.wls);
+        notice = 'A program tried <b>' + B.iters + ' moves</b> and kept the shortest wiring it found: <b>' + B.RT.wl + ' steps of wire</b>, ' + B.RT.vias + ' hops between layers.' + (B.wls.length > 1 ? ' Placed ' + B.wls.length + ' times so far: from ' + lo + ' to ' + hi + ' steps, for the same gates.' : '') + ' It never knew what the circuit is for.'; }
+    } else if (E.id === 'ai') {
+      t = btn('ai', 'Load the AI’s proposal', S.by !== 'ai', S.by === 'ai') + btn('lab', 'The lab’s own');
+      claim = '<p class="claim"><b>An AI agent says:</b> “' + esc(J.claim) + '”</p>';
+      if (ok) {
+        if (S.by !== 'ai') notice = 'The proposal is not loaded yet. It arrives with a confident sentence. Load it and look at the only form that can answer.';
+        else if (B.bad) { var r = B.rows.find(function (x) { return x.mis.length; }); notice = 'The check does not care who wrote it, or how sure they sound: <b class="no">' + B.bad + ' of ' + n + ' rows are wrong</b>. The first: ' + B.proj.ins.map(function (k) { return k + ' = ' + r.v[k]; }).join(', ') + ' should give ' + r.mis.map(function (k) { return k + ' = ' + r.e[k]; }).join(', ') + '.'; }
+        else notice = '<b class="ok">This one is right: all ' + n + ' rows.</b> The check does not care who wrote it. It compares answers, and it can only do that because here the job fits in a table.';
+      }
+    } else if (E.id === 'tests') {
+      if (ok) {
+        t = '<label>The test house runs <input type="range" id="tests" min="1" max="' + B.vecs.length + '" value="' + B.k + '" aria-label="How many patterns the test house runs"> <b style="color:var(--ink)" id="testsn">' + B.k + ' of ' + B.vecs.length + '</b> patterns</label>' + btn('spoil', S.fault ? 'Spoil another copy' : 'Spoil a copy', !S.fault) + (S.fault ? btn('clean', 'A perfect copy') : '');
+        notice = 'With ' + n2(B.k, 'pattern', 'patterns') + ' the tests would catch <b>' + B.caught + ' of the ' + B.F.F.length + '</b> ways a single wire can stick.';
+        if (S.fault) notice += ' This copy has ' + (B.nameOf[S.fault.net] != null ? '<b>' + esc(B.nameOf[S.fault.net]) + '</b>' : 'a wire with no name') + ' stuck at ' + S.fault.v + ', and answers wrong on ' + B.spoilWrong + ' of ' + n + ' inputs. ' + (B.spoilCaught ? '<b class="ok">One of your patterns catches it.</b>' : '<b class="no">None of your patterns catches it: it ships.</b>');
+      }
+    } else if (E.id === 'kit') {
+      t = NODES.map(function (k) { return btn('node-' + k, TC.NODE[k].t, false, S.node === k); }).join('');
+      if (ok) { var N = TC.NODE[S.node];
+        notice = 'Not one character of the description changed. For this process the gates were chosen again, placed again and wired again: slowest path <b>' + Math.round(B.st.crit) + ' ps</b>, <b>' + (B.area < 10 ? B.area.toFixed(2) : B.area.toFixed(1)) + ' µm²</b>, <b>' + N.masks + ' masks</b>, about <b>$' + N['mask$'] + ' million</b> for the set. ' + (N.shuttle ? 'Shared runs exist for it, so many small designs can split that cost.' : '<span class="no">No shared run exists for it: you pay for the whole set.</span>'); }
+    }
+    if (keep && $('testsn')) $('testsn').textContent = B.k + ' of ' + B.vecs.length; else $('try').innerHTML = t;
+    $('claim').innerHTML = claim; $('notice').innerHTML = notice;
+    $('open').innerHTML = E.open + (E.also ? ' <span>This experiment also belongs to another question: <b>' + esc(E.also) + '</b></span>' : '');
+    Object.keys(FORMS).forEach(function (k) { $('f-' + k).classList.toggle('at', E.between.indexOf(k) >= 0); });
+    $('ways').innerHTML = EXPS.map(function (e) { return '<button type="button" class="way" data-exp="' + e.id + '"' + (e.id === S.exp ? ' aria-current="true"' : '') + '>' + esc(e.ask) + '<small>between ' + FORMS[e.between[0]] + ' and ' + FORMS[e.between[1]] + '</small></button>'; }).join('');
+  }
+
+  /* ---- touching: one thing, lit in every form ---- */
+  function selFrom(el) {
+    if (!el || B.errs.length) return null;
+    var c = el.closest('[data-cell]'), nn = el.closest('[data-net]'), nm = el.closest('[data-name]'), ln = el.closest('[data-line]');
+    if (c) { var ci = +c.dataset.cell, out = B.M.cells[ci].out; return { cells: [ci], nets: [out], name: B.nameOf[out] != null ? B.nameOf[out] : null, owner: B.owner[ci] }; }
+    if (nn) { var net = +nn.dataset.net, d = B.driver[net]; return { cells: d != null ? [d] : [], nets: [net], name: B.nameOf[net] != null ? B.nameOf[net] : null, owner: d != null ? B.owner[d] : null }; }
+    if (nm) { var name = nm.dataset.name, n2 = B.netOf[name]; if (n2 == null) return null; return { cells: B.cone[name] || [], nets: [n2], name: name, owner: B.cone[name] ? name : null }; }
+    if (ln && ln.dataset.line && B.cone[ln.dataset.line]) { var nm2 = ln.dataset.line; return { cells: B.cone[nm2], nets: [B.netOf[nm2]], name: nm2, owner: nm2 }; }
+    return null;
+  }
+  function light() {
+    var root = $('forms');
+    root.querySelectorAll('.lit, .own').forEach(function (e) { e.classList.remove('lit'); e.classList.remove('own'); });
+    if (sel) {
+      sel.nets.forEach(function (n) { root.querySelectorAll('[data-net="' + n + '"]').forEach(function (e) { e.classList.add('lit'); }); });
+      sel.cells.forEach(function (c) { root.querySelectorAll('[data-cell="' + c + '"]').forEach(function (e) { e.classList.add('lit'); }); });
+      if (sel.name) root.querySelectorAll('[data-name="' + sel.name + '"]').forEach(function (e) { e.classList.add('lit'); });
+      if (sel.owner) { root.querySelectorAll('[data-line="' + sel.owner + '"]').forEach(function (e) { e.classList.add('own'); });
+        (B.cone[sel.owner] || []).forEach(function (c) { if (sel.cells.indexOf(c) < 0) root.querySelectorAll('[data-cell="' + c + '"]').forEach(function (e) { e.classList.add('own'); }); }); }
+    }
+    renderRead();
+  }
+
+  function render() { build(); sel = null; pinned = false; renderExp(); renderJob(); renderDesc(); renderDoes(); renderRest(); renderRead(); }
+  function setCode(code, by) { S.code = code; S.by = by; S.fault = null; }
+
+  document.addEventListener('click', function (ev) {
+    var t = ev.target, a = t.closest('[data-act]'), w = t.closest('[data-exp]'), op = t.closest('[data-op]');
+    if (w) { S.exp = w.dataset.exp; if (S.exp !== 'tests') { S.tests = null; S.fault = null; } render(); document.querySelector('.exp').scrollIntoView({ behavior: 'auto', block: 'start' }); return; }
+    if (op) { var k = +op.dataset.op, i = -1; setCode(S.code.replace(/[&|^]/g, function (m) { return ++i === k ? TURN[m] : m; }), 'you'); S.touched = true; render(); return; }
+    if (a) {
+      var act = a.dataset.act, J = JOBS[S.job];
+      if (act === 'lab' || act === 'near' || act === 'other' || act === 'ai') { setCode(J[act], act); S.touched = S.touched || act === 'near'; }
+      else if (act === 'edit') S.edit = !S.edit;
+      else if (act === 'place') S.seed = S.seed + 1;
+      else if (act === 'spoil') { var live = B.F.F.filter(function (f) { var st = {}, g = {}; return B.vecs.some(function (v) { var r = TC.simCells(B.M, v, f, st), q = TC.simCells(B.M, v, null, g); st = r.next; g = q.next; return Object.keys(r.out).some(function (kk) { return r.out[kk] !== q.out[kk]; }); }); }); var cur = S.fault ? live.findIndex(function (f) { return f.net === S.fault.net && f.v === S.fault.v; }) : -1; S.fault = live.length ? live[(cur + 1 + Math.floor(live.length / 3)) % live.length] : null; }
+      else if (act === 'clean') S.fault = null;
+      else if (act.indexOf('node-') === 0) S.node = act.slice(5);
+      render(); return;
+    }
+    /* a tap pins what is touched, for fingers; a tap elsewhere lets go */
+    var s = t.closest('#forms') ? selFrom(t) : null;
+    if (s) { sel = s; pinned = true; light(); } else if (pinned && !t.closest('select, textarea, input')) { sel = null; pinned = false; light(); }
+  });
+  document.addEventListener('change', function (ev) { if (ev.target.id === 'jobsel') { S.job = ev.target.value; setCode(JOBS[S.job].lab, 'lab'); S.tests = null; S.touched = false; render(); } });
+  document.addEventListener('input', function (ev) {
+    if (ev.target.id === 'tests') { S.tests = +ev.target.value; build(); renderExp(true); renderDoes(); renderRest(); }
+    if (ev.target.id === 'code') { setCode(ev.target.value.slice(0, 2000), 'you'); S.touched = true; render(); }
+  });
+  $('forms').addEventListener('mouseover', function (ev) { if (pinned) return; var s = selFrom(ev.target); if (s) { sel = s; light(); } });
+  $('forms').addEventListener('mouseleave', function () { if (!pinned && sel) { sel = null; light(); } });
+  $('theme').addEventListener('click', function () {
+    var root = document.documentElement, cur = root.getAttribute('data-theme') || (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'), next = cur === 'dark' ? 'light' : 'dark';
+    root.setAttribute('data-theme', next); try { localStorage.setItem('osl-theme', next); } catch (e) {}
+  });
+  var m = /^#(\w+)(?:\/(\w+))?$/.exec(location.hash); if (m && EXPS.some(function (e) { return e.id === m[1]; })) S.exp = m[1]; if (m && m[2] && JOBS[m[2]]) { S.job = m[2]; S.code = JOBS[m[2]].lab; }
+  render();
+})();
+</script>
+</body>
+</html>

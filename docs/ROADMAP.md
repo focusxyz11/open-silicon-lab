@@ -2,7 +2,11 @@
 
 Where Open Silicon Lab is heading. This is the one place for what happens next. Nothing here is a promise or a date. Ideas not yet picked are kept in the [idea bank](IDEAS.md).
 
-## Now: the structure
+## Now: the framework
+
+The lab is being rebuilt on one skeleton ([framework/](framework/README.md), 15 November 2026): it is made of experiments, each one small question put to an engine and seen through one lens, and the questions, engines, lenses, measures and the record are layers the experiments share. The plan is in six stages ([framework/rebuild.md](framework/rebuild.md), section 4): experiments as data; every world as a document; the design studio as Forms; one frame with no tabs; the worlds one at a time; growth. Nothing on the site has changed yet. The structure below describes the site as it stands until then.
+
+## Before that: the structure
 
 The lab is one grid, a chip's life across and scale down, with two moves (`docs/SYSTEM.md` §2). The plan in stages, and where it stands, is in `docs/reviews/structure.md` (Status, and section 9): stage 1 makes the structure true everywhere, stage 2 leaves one picture per cell, stage 3 puts the commons in the grid, stage 4 is growth. The numbered list below is how the site got here.
 

@@ -1,0 +1,84 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-90 0 1160 600" role="img" aria-labelledby="t d">
+  <title id="t">An experiment and its seven sides</title>
+  <desc id="d">One experiment in the middle, shown as a picture and as a document. Around it its seven sides: why, about, judged by, seen through, trades, takes as given, who did what. Each side is a layer the whole lab shares.</desc>
+  <style>
+    .bg { fill: #0b1120; } .card { fill: #111a2b; stroke: rgba(160,180,210,.28); } .ink { fill: #eef2f8; } .mut { fill: #9aa8bd; }
+    .ln { stroke: rgba(160,180,210,.45); fill: none; } .hair { stroke: rgba(160,180,210,.22); fill: none; }
+    .w { fill: #f0718a; } .ws { stroke: #f0718a; fill: none; } .wf { fill: rgba(240,113,138,.16); stroke: #f0718a; }
+    .die { fill: rgba(160,180,210,.16); stroke: rgba(160,180,210,.5); } .dead { fill: #f0718a; stroke: #f0718a; } .edge { fill: none; stroke: rgba(160,180,210,.25); }
+    .acc { fill: #5aa9ff; } .warm { fill: #ffb347; }
+    text { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
+    .h { font: 700 17px Georgia, "Times New Roman", serif; } .s { font-size: 13.5px; } .xs { font-size: 12px; } .k { font-size: 12.5px; font-weight: 600; }
+    .q { font: 600 15px Georgia, "Times New Roman", serif; }
+    @media (prefers-color-scheme: light) {
+      .bg { fill: #dfe8f2; } .card { fill: #fff; stroke: rgba(40,60,90,.22); } .ink { fill: #16202e; } .mut { fill: #5b6a80; }
+      .ln { stroke: rgba(40,60,90,.4); } .hair { stroke: rgba(40,60,90,.18); }
+      .w { fill: #b3243f; } .ws { stroke: #b3243f; } .wf { fill: rgba(179,36,63,.1); stroke: #b3243f; }
+      .die { fill: rgba(40,60,90,.08); stroke: rgba(40,60,90,.45); } .dead { fill: #b3243f; stroke: #b3243f; } .edge { stroke: rgba(40,60,90,.2); }
+      .acc { fill: #2f7de1; } .warm { fill: #b86a00; }
+    }
+  </style>
+  <rect class="bg" x="-90" width="1160" height="600" rx="16"/>
+
+  <!-- the experiment -->
+  <rect class="card" x="270" y="150" width="440" height="300" rx="16"/>
+  <line class="hair" x1="490" y1="206" x2="490" y2="432"/>
+  <text class="q ink" x="292" y="180">Specks land at random. Why does a bigger chip</text>
+  <text class="q ink" x="292" y="199">come out broken more often?</text>
+  <!-- as a picture: a wafer, its chips, the ones a speck killed -->
+  <g transform="translate(380 318)">
+    <circle class="edge" r="92"/>
+    <g class="die">
+      <rect x="-63" y="-63" width="40" height="40" rx="3"/><rect x="-21" y="-63" width="40" height="40" rx="3"/><rect x="21" y="-63" width="40" height="40" rx="3"/>
+      <rect x="-63" y="-21" width="40" height="40" rx="3"/><rect x="21" y="-21" width="40" height="40" rx="3"/>
+      <rect x="-63" y="21" width="40" height="40" rx="3"/><rect x="-21" y="21" width="40" height="40" rx="3"/>
+    </g>
+    <g class="wf"><rect x="-21" y="-21" width="40" height="40" rx="3"/><rect x="21" y="21" width="40" height="40" rx="3"/></g>
+    <g class="dead"><circle cx="-8" cy="6" r="2.6"/><circle cx="46" cy="33" r="2.6"/></g>
+    <g class="mut"><circle cx="-80" cy="-12" r="1.6"/><circle cx="74" cy="-44" r="1.6"/><circle cx="-30" cy="78" r="1.6"/></g>
+  </g>
+  <text class="xs mut" x="380" y="432" text-anchor="middle">as a picture: what the engine worked out</text>
+  <!-- as a document -->
+  <g transform="translate(506 226)">
+    <text class="k w" x="0" y="0">Try</text><text class="s ink" x="0" y="18">Make the chip twice as wide.</text>
+    <text class="k w" x="0" y="46">Notice</text><text class="s ink" x="0" y="64">A quarter as many chips fit,</text><text class="s ink" x="0" y="81">and more of them are hit: good</text><text class="s ink" x="0" y="98">chips fall by more than four.</text>
+    <text class="k w" x="0" y="126">Open</text><text class="s ink" x="0" y="144">When does cutting one big</text><text class="s ink" x="0" y="161">chip into small ones win?</text>
+  </g>
+  <text class="xs mut" x="600" y="432" text-anchor="middle">as a document: the same fields</text>
+
+  <!-- the seven sides -->
+  <g class="ln">
+    <path d="M490 150 V112"/>
+    <path d="M270 222 H232"/><path d="M270 300 H232"/><path d="M270 378 H232"/>
+    <path d="M710 222 H748"/><path d="M710 300 H748"/><path d="M710 378 H748"/>
+  </g>
+  <g>
+    <text class="h ink" x="490" y="44" text-anchor="middle">Why</text>
+    <text class="s ink" x="490" y="66" text-anchor="middle">Why can a perfect design fail in the real world?</text>
+    <text class="xs mut" x="490" y="86" text-anchor="middle">Questions: 11, never shown together. Each is a tension.</text>
+    <circle class="w" cx="490" cy="106" r="5"/>
+  </g>
+  <g text-anchor="end">
+    <circle class="acc" cx="226" cy="222" r="5"/>
+    <text class="h ink" x="212" y="212">About</text><text class="s ink" x="212" y="232">your chip, on its wafer</text><text class="xs mut" x="212" y="250">Specimens: 6</text>
+    <circle class="acc" cx="226" cy="300" r="5"/>
+    <text class="h ink" x="212" y="290">Judged by</text><text class="s ink" x="212" y="310">the Yield and money engine</text><text class="xs mut" x="212" y="328">Engines: 15, shared</text>
+    <circle class="acc" cx="226" cy="378" r="5"/>
+    <text class="h ink" x="212" y="368">Seen through</text><text class="s ink" x="212" y="388">Copies: one design, many chips</text><text class="xs mut" x="212" y="406">Lenses: 11, each at home in one world</text>
+  </g>
+  <g>
+    <circle class="acc" cx="754" cy="222" r="5"/>
+    <text class="h ink" x="768" y="212">Trades</text><text class="s ink" x="768" y="232">space against good copies</text><text class="xs mut" x="768" y="250">Measures: 9</text>
+    <circle class="warm" cx="754" cy="300" r="5"/>
+    <text class="h ink" x="768" y="290">Takes as given</text><text class="s ink" x="768" y="310">a chip is one piece of silicon</text><text class="xs mut" x="768" y="328">Givens: 15. Directions drop them: 32</text>
+    <circle class="acc" cx="754" cy="378" r="5"/>
+    <text class="h ink" x="768" y="368">Who did what</text><text class="s ink" x="768" y="388">runs, breaks, questions</text><text class="xs mut" x="768" y="406">The record: people and AI, in every world</text>
+  </g>
+
+  <!-- what follows -->
+  <g text-anchor="middle">
+    <text class="s ink" x="490" y="500">A challenge is an experiment with a target. A design, a break or a forecast is one that someone ran and kept.</text>
+    <text class="s mut" x="490" y="524">Ways on are never written: two experiments that share a side are neighbours.</text>
+    <text class="xs mut" x="490" y="566">Open Silicon Lab, the framework. The example is one of 87 in skeleton.json.</text>
+  </g>
+</svg>
