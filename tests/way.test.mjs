@@ -10,9 +10,9 @@ import { TWINS } from '../src/data/atlas.js';
 test('every place is at a stage of the loop, and the loop closes', () => {
   for (const p of PLACES) if (p !== 'idea') assert.ok(STAGES.includes(stageOfPlace(p)), p + ' is at no stage');
   for (const s of STAGES) assert.equal(stageOfPlace(STAGE_PLACE[s]), s);
-  /* following the next place from the need goes round every stage once and comes back */
-  const seen = []; let p = STAGE_PLACE.need;
-  do { seen.push(stageOfPlace(p)); p = nextPlace(p); } while (p !== STAGE_PLACE.need && seen.length < 20);
+  /* following the next place from what is open goes round every stage once and comes back */
+  const seen = []; let p = STAGE_PLACE.open;
+  do { seen.push(stageOfPlace(p)); p = nextPlace(p); } while (p !== STAGE_PLACE.open && seen.length < 20);
   assert.deepEqual(seen, STAGES);
   assert.equal(nextPlace('quarry'), 'fab');
 });
@@ -20,7 +20,7 @@ test('every place is at a stage of the loop, and the loop closes', () => {
 test('every level of every place has an address with a stage', () => {
   for (const d of DEPTH_ORDER) { const W = whereOf(viewOfDepth(d)); assert.ok(STAGES.includes(W.stage), d + ' → ' + viewOfDepth(d) + ' has no stage'); assert.ok(W.place, d + ' has no place'); }
   for (const [place, L] of Object.entries(INSIDE)) for (const l of L) assert.ok(whereOf(viewOfDepth(l.depth)).place, place + '/' + l.depth);
-  assert.equal(whereOf('#/').view, 'island'); assert.equal(whereOf('#/build').stage, 'need'); assert.equal(whereOf('#/place/village').stage, 'need');
+  assert.equal(whereOf('#/').view, 'island'); assert.equal(whereOf('#/build').stage, 'open'); assert.equal(whereOf('#/place/village').stage, 'open');
   assert.equal(whereOf('#/ask/fail/gate').level, 'gate'); assert.equal(whereOf('#/chip/2/build').stage, 'make');
 });
 

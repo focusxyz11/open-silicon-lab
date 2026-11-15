@@ -111,7 +111,7 @@ export function look({ at } = {}) {
     places: PLACES.filter(p => stageOfPlace(p)).map(p => ({ place: p, name: t('map.' + p + '.t'), stage: stageOfPlace(p), levels: (INSIDE[p] || []).map(l => l.depth) })) };
   if (PLACES.includes(at) && stageOfPlace(at)) return { where: at, name: t('map.' + at + '.t'), what: t('map.' + at + '.d'), stage: stageOfPlace(at), moves,
     levels: (INSIDE[at] || []).map(l => levelOut(l.depth, { questions: stopsAt(l.depth).length, challenges: CHALLENGES.filter(c => c.at === l.depth).length })),
-    out: 'island', in: ((INSIDE[at] || [])[0] || {}).depth || null, along: nextPlace(at), ...(stageOfPlace(at) === 'need' ? { record: ['list_plan', 'list_ledger'] } : {}) };
+    out: 'island', in: ((INSIDE[at] || [])[0] || {}).depth || null, along: nextPlace(at), ...(stageOfPlace(at) === 'open' ? { record: ['list_plan', 'list_ledger'] } : {}) };
   const W = has('depth.' + at + '.name') ? whereOf(viewOfDepth(at)) : null, L = W && INSIDE[W.place], i = L ? L.findIndex(l => l.depth === at) : -1;
   if (i < 0) return { ok: false, reason: t('api.look.none') };
   /* the steps of a line (the factory, the studio) follow each other; the levels of a dive are one inside the next */

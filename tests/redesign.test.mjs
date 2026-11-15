@@ -29,9 +29,10 @@ test('every level of the data centre has its words and a real question; every pa
 
 test('there is no menu: the bar holds the loop, six stages each with its words, and the shell says so', async () => {
   const { STAGES, STAGE_PLACE } = await import('../src/engines/way.js');
-  assert.ok(!/MENU\s*=/.test(src('app.js')), 'the shell still has a menu of sections');
-  assert.deepEqual(STAGES, ['need', 'design', 'make', 'test', 'ship', 'use']);
-  for (const s of STAGES) { assert.ok(EN['loop.stage.' + s] && EN['loop.at.' + s], s); assert.ok(EN['map.' + STAGE_PLACE[s] + '.t'], s); if (s !== 'need') assert.ok(EN['loop.as.' + s], s); }
+  /* a menu of sections is off unless a visitor asks for it (?menu=1): the choice is the owner's, and easy to reverse */
+  assert.match(src('app.js'), /SECTIONS_ON/);
+  assert.deepEqual(STAGES, ['open', 'design', 'make', 'test', 'ship', 'use']);
+  for (const s of STAGES) { assert.ok(EN['loop.stage.' + s] && EN['loop.at.' + s], s); assert.ok(EN['map.' + STAGE_PLACE[s] + '.t'], s); if (s !== 'open') assert.ok(EN['loop.as.' + s], s); }
   /* the reading views that remain, each opened on purpose: your log, and the Lab's record */
   for (const k of ['log', 'build', 'ecosystem']) assert.ok(EN['page.' + k + '.lead'], k);
 });

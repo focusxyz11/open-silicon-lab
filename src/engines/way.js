@@ -1,8 +1,8 @@
 /* The way: where you are in the lab, and where each move leads (docs/reviews/structure.md). Pure logic, no DOM;
    tests in tests/way.test.mjs.
 
-   The lab is one grid. Across it runs a chip's life, the loop: someone needs it, then it is designed, made,
-   tested, shipped and used, and what is learned in use comes back as the next need. Down it runs scale: a place,
+   The lab is one grid. Across it runs a chip's life, the loop: something is open, then it is designed, made,
+   tested, shipped and used, and what is learned in use opens the next. Down it runs scale: a place,
    then its levels, one inside the next, to the atom. An address is a cell of that grid, and there are two moves:
      in · out   scale: into the part in view, or up to the level above;
      along      the chip's life: the next stage, holding the depth you are at wherever that depth exists there
@@ -13,12 +13,15 @@ import { twinOf } from '../data/atlas.js';
 import { placeOf } from '../data/places.js';
 import { viewOfDepth, challengeOf, DIVE_WORLD, DIVE_LEVELS, PLACES } from '../v2/game.js';
 
-/* the loop, in order; the need is where it starts and where it comes back */
-export const STAGES = ['need', 'design', 'make', 'test', 'ship', 'use'];
+/* the loop, in order. It starts with what is open, and there are two ways in: something someone needs (pull), or
+   something that has just become possible and is still looking for its use (push). Much of chip history ran the
+   second way, so the first stage is not called a need. What is learned in use opens the next thing: the loop
+   comes back here, and here is where the community stands. */
+export const STAGES = ['open', 'design', 'make', 'test', 'ship', 'use'];
 /* the place that stands for each stage on the island */
-export const STAGE_PLACE = { need: 'lab', design: 'studio', make: 'fab', test: 'test', ship: 'port', use: 'datacentre' };
+export const STAGE_PLACE = { open: 'lab', design: 'studio', make: 'fab', test: 'test', ship: 'port', use: 'datacentre' };
 /* and the stage every place belongs to (the sandbank for what does not exist yet has none) */
-const PLACE_STAGE = { lab: 'need', village: 'need', studio: 'design', quarry: 'make', fab: 'make', test: 'test', port: 'ship', datacentre: 'use', phones: 'use', cars: 'use' };
+const PLACE_STAGE = { lab: 'open', village: 'open', studio: 'design', quarry: 'make', fab: 'make', test: 'test', port: 'ship', datacentre: 'use', phones: 'use', cars: 'use' };
 export const stageOfPlace = place => PLACE_STAGE[place] || null;
 /* the next place round the loop: the crystal goes on to the factory, everything else to the next stage's place */
 export const nextPlace = place => {
@@ -66,7 +69,7 @@ export function alongTo(where, stage) {
   if (!STAGES.includes(stage)) return null;
   const W = where || cell('island'), home = '#/place/' + STAGE_PLACE[stage];
   if (W.stage === stage && W.view !== 'island' && W.view !== 'page') return null;
-  if (stage === 'need') return home;
+  if (stage === 'open') return home;
   if (W.view === 'chip' && (stage === 'make' || stage === 'use')) return '#/chip/' + W.row + (stage === 'make' ? '/build' : '');
   if (W.view === 'line' && (stage === 'make' || stage === 'test' || stage === 'ship')) return '#/line/' + ({ make: 'wires', test: 'test', ship: 'pkg' })[stage];
   const tw = W.level && W.view !== 'island' ? twinOf(W.level === 'die' ? 'chip' : W.level) : null;

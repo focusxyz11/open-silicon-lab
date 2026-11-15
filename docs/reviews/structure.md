@@ -6,6 +6,85 @@ Screenshots are in `docs/reviews/structure/` (`before-*` is the site on `main`, 
 
 To play it: check out the branch, `npm start`, open `http://localhost:8000`.
 
+## Status
+
+**15 November 2026.** The prototype was merged to `main` to be tried live (PR #145). The owner's answers, and
+what followed:
+
+| Decision | The owner | What was done |
+| --- | --- | --- |
+| 1, 2. The loop starts at the Need | "Partly agree, because it's changing and technology development does not all start with need." | The first stage is now **Open** (below). The community stays there. |
+| 3. No menu | "It depends." Not decided. | Still no menu by default. *Jump* was brought forward from stage 4, and a menu of sections can be switched on to compare (below). |
+| 4. The first button | No answer | *Follow the chip* stays. |
+| 5. Go on to stage 1 | Yes; the commons' stage 3 waits | Stage 1 is being built in small pull requests, listed at the end of this section. |
+
+### The loop's start: *Open*, with two ways in
+
+The owner is right, and I was wrong to call it Need. A loop that starts with "someone needs it" says demand always
+comes first. Much of chip history ran the other way: the transistor, the integrated circuit and the
+microprocessor were possibilities before most of their uses were known, and today's new ways to compute are
+possibilities still looking for theirs. Both happen, and the second is the one the lab's own questions care about
+most ("what is the strangest thing that could compute?").
+
+What I considered:
+
+- **Two first stages** (Need and Possibility), or a loop that forks. The bar would have to show a fork, and every
+  other stage is one word. It also suggests a chip is one or the other, when most are both.
+- **Idea, Spark, Why.** "Idea" is what the studio already does with a job. "Spark" is warm and says nothing.
+  "Why" promises an answer.
+- **Open.** What is still open: a piece someone needs and nobody has built, a possibility nobody has used, a
+  question nobody has settled. It holds both directions without choosing. It is the word the ledger already uses
+  for its frontier ("what is open now"), the word in the lab's name, and it is the one stage that is honestly
+  never finished, so it carries no tick.
+
+So the first stage is **Open**, and the Lab's card shows the **two ways in** side by side: *Someone needs it* (the
+pieces of the shared computer nobody has built) and *It has become possible* (the new ways to compute people are
+trying, which were already at the Lab, at the bottom of a list). The first card now reads: *It starts with
+something open: a thing someone needs, or a thing that has just become possible.* The community stays at this
+stage, as before: what is open is exactly what a commons holds. Where this review says "Need" below, read "Open".
+
+One thing this does not solve: the second way in has little to do yet. A visitor can read the ten ways; they
+cannot yet take one and carry it round the loop. That is content, not structure, and it is worth a challenge of
+its own ("here is a new kind of switch: what is it for?").
+
+### The menu: what it depends on
+
+It depends on one thing: **can a visitor who wants a specific thing get to it in one or two moves without a
+menu?** A menu is for people who already know what they want. The loop and the card are for people who do not
+yet. A site needs both kinds of way in; the question is only whether the second kind has to be a row of sections.
+
+What exists now for the visitor who knows what they want:
+
+| They want | Moves |
+| --- | --- |
+| All the challenges | 1: *Your log* (they are listed there by step) |
+| The questions they met | 1: *Your log* |
+| The record of the build | 2: *Open* in the bar, *Go inside* |
+| A place, a level or a challenge by name | 2: press `/` (or open *Your log*) and type; Enter goes to the first match |
+| The page they saw yesterday | 0: every address now says where you are, so the browser's history and bookmarks work |
+
+*Jump* is new here, brought forward from stage 4 because this question needed it. It never shows a list of
+everything: only what matches what you typed.
+
+**To compare, the menu can be switched on:** add `?menu=1` to the address and a ☰ appears in the bar with
+Explore, Challenges, Questions, Build and Ecosystem; `?menu=0` removes it. It is remembered in that browser. So
+the choice costs nothing to try and one line to make permanent either way (`SECTIONS_ON` in `src/v2/app.js`).
+
+**What I would watch, with five people, to settle it:**
+
+1. Ask a returning visitor to "find the list of challenges" and "find who built the register bit". If they need
+   more than two moves or ask where the menu is, switch it on.
+2. Whether anyone uses Jump unprompted. If nobody finds it, it needs to be visible (a field in the bar on wide
+   screens), and until then the menu covers for it.
+3. Whether first-time visitors with the menu on leave the world for the lists and never come back. If they do,
+   the menu is doing harm and stays off.
+
+My recommendation stays: no menu, Jump visible. But this is now a measurement, not an argument.
+
+### Stage 1, pull request by pull request
+
+(Updated as each is merged.)
+
 ## The two-minute summary
 
 **What I found.** The pictures are not the problem. The site has three different ways of getting around, and each

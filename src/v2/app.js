@@ -41,6 +41,12 @@ export function start() {
   const S = Game.load(localStorage);
   const save = () => Game.save(localStorage, S);
 
+  /* ---- a menu of sections, only if asked for: ?menu=1 turns it on for this browser, ?menu=0 off. Whether the lab
+     needs one is not decided (docs/reviews/structure.md, "The menu"); this keeps the choice one line to reverse ---- */
+  const SECTIONS_ON = (() => { try { const q = new URLSearchParams(location.search).get('menu'); if (q === '1' || q === '0') localStorage.setItem('osl-menu', q === '1' ? 'on' : 'off'); return localStorage.getItem('osl-menu') === 'on'; } catch (e) { return false; } })();
+  if (SECTIONS_ON) { const m = document.createElement('details'); m.className = 'sections'; m.id = 'sections';
+    m.innerHTML = '<summary aria-label="' + esc(t('nav.aria')) + '">☰</summary><nav>' + [['', 'nav.explore'], ['challenges', 'nav.challenges'], ['questions', 'nav.questions'], ['build', 'nav.build'], ['ecosystem', 'nav.ecosystem']].map(([h, k]) => '<a href="#/' + h + '">' + esc(t(k)) + '</a>').join('') + '</nav>';
+    $('logbtn').before(m); m.addEventListener('click', e => { if (e.target.closest('a')) m.open = false; }); }
   /* ---- the theme ---- */
   const theme = () => document.documentElement.getAttribute('data-theme') || (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
   const tb = $('theme'), k0 = theme() === 'dark' ? 'ui.toLight' : 'ui.toDark'; tb.setAttribute('aria-label', t(k0)); tb.title = t(k0);
@@ -96,8 +102,8 @@ export function start() {
     hud(); };
   function hud() {
     const W = whereNow(), chipS = Game.chipAt(S);
-    hudEl.innerHTML = '<ol>' + Way.STAGES.map((s, i) => { const st = s === 'need' ? null : Game.stepState(S, s), full = !!st && st.done === st.total, name = t('loop.stage.' + s), held = W.stage !== s && Way.holds(W, s);
-      return '<li><button type="button" data-stage="' + s + '"' + (s === W.stage ? ' aria-current="step"' : '') + ' class="' + (full ? 'full' : '') + (s === chipS ? ' chip' : '') + (held ? ' holds' : '') + '" title="' + esc(held ? t('loop.same', { as: t('loop.as.' + s) }) : t('loop.at.' + s)) + '" aria-label="' + esc(st ? t('game.stepAria', { n: i, step: name, done: st.done, total: st.total }) : t('loop.at.need')) + '"><span class="ld">' + (full ? '✓' : '') + '</span><span class="ln">' + esc(name) + '</span></button></li>'; }).join('') + '</ol>';
+    hudEl.innerHTML = '<ol>' + Way.STAGES.map((s, i) => { const st = s === 'open' ? null : Game.stepState(S, s), full = !!st && st.done === st.total, name = t('loop.stage.' + s), held = W.stage !== s && Way.holds(W, s);
+      return '<li><button type="button" data-stage="' + s + '"' + (s === W.stage ? ' aria-current="step"' : '') + ' class="' + (full ? 'full' : '') + (s === chipS ? ' chip' : '') + (held ? ' holds' : '') + '" title="' + esc(held ? t('loop.same', { as: t('loop.as.' + s) }) : t('loop.at.' + s)) + '" aria-label="' + esc(st ? t('game.stepAria', { n: i, step: name, done: st.done, total: st.total }) : t('loop.at.open')) + '"><span class="ld">' + (full ? '✓' : '') + '</span><span class="ln">' + esc(name) + '</span></button></li>'; }).join('') + '</ol>';
     $('logbtn').innerHTML = '<span class="lg">' + esc(t('loop.log')) + '</span>';
   }
   function along(stage) {
@@ -112,7 +118,7 @@ export function start() {
   $('hero').innerHTML = '<p class="kicker">' + esc(t('hero.kicker')) + '</p><h1>' + esc(t('loop.title')) + '</h1><p class="lead">' + esc(t('loop.lead')) + '</p>' +
     '<div class="row"><button type="button" class="btn primary" data-start>' + esc(t('loop.follow')) + '</button><span class="small muted">' + esc(t('loop.any')) + '</span></div>';
   /* following the chip is no guide: it opens the place where the loop starts, and every place offers the next */
-  $('hero').addEventListener('click', e => { if (e.target.closest('[data-start]')) { $('hero').classList.add('away'); location.hash = '#/place/' + Way.STAGE_PLACE.need; } });
+  $('hero').addEventListener('click', e => { if (e.target.closest('[data-start]')) { $('hero').classList.add('away'); location.hash = '#/place/' + Way.STAGE_PLACE.open; } });
 
   /* ---- the sheet: a place with its three doors, a question, or a challenge ---- */
   const sheet = $('sheet');
@@ -120,7 +126,7 @@ export function start() {
   new MutationObserver(() => $('stage').classList.toggle('sheeted', !sheet.hidden)).observe(sheet, { attributes: true, attributeFilter: ['hidden'] });
   let cur = null;   /* { place, tab } */
   const closeSheet = () => { const was = cur; sheet.hidden = true; cur = null; if (was) { hud(); if (map && !$('mapCanvas').hidden) map.setState(islandState(), false); } };
-  const kickerOf = id => { const step = Game.STEP_OF[id] || Game.STEP_PLACE[id]; return Way.stageOfPlace(id) === 'need' ? t('loop.need.k') : step ? t('game.stepN', { n: Game.STEPS.indexOf(step) + 1, step: t('game.step.' + step) }) : t('map.' + id + '.kind'); };
+  const kickerOf = id => { const step = Game.STEP_OF[id] || Game.STEP_PLACE[id]; return Way.stageOfPlace(id) === 'open' ? t('loop.open.k') : step ? t('game.stepN', { n: Game.STEPS.indexOf(step) + 1, step: t('game.step.' + step) }) : t('map.' + id + '.kind'); };
   /* what to do at a place: its own challenges, and at a step's station the step's challenges played elsewhere */
   const doList = id => { const step = Game.STEP_OF[id] || Game.STEP_PLACE[id], here = Game.placeChallenges(id);
     return here.concat(step ? Game.stepChallenges(step).filter(c => c.place !== id) : []); };
@@ -193,11 +199,14 @@ export function start() {
       const enter = enterOf(id);
       const nx = Way.stageOfPlace(id) ? Way.nextPlace(id) : null;
       h += '<p class="line">' + esc(t('map.' + id + '.d')) + '</p><div class="nav">' + (nx ? '<button type="button" class="btn" data-key="next" data-place="' + nx + '">' + esc(t('loop.next', { place: t('map.' + nx + '.t') })) + '</button>' : '<span></span>') +
-        (enter ? '<a class="btn primary" href="' + esc(enter) + '">' + esc(t('door.enter')) + '</a>' : '') + '</div>' + insideHtml(id);
+        (enter ? '<a class="btn primary" href="' + esc(enter) + '">' + esc(t('door.enter')) + '</a>' : '') + '</div>' +
+        /* where the loop starts there are two ways in: what someone needs, and what has just become possible */
+        (id === 'lab' ? '<div class="ways2"><button type="button" class="look" data-door="do"><b>' + esc(t('lab.pull.t')) + '</b><span class="small">' + esc(t('lab.pull.d', { n: C.jobs.length + C.engines.length })) + '</span></button><button type="button" class="look" data-door="ask"><b>' + esc(t('lab.push.t')) + '</b><span class="small">' + esc(t('lab.push.d', { n: WAYS.length })) + '</span></button></div>' : '') + insideHtml(id);
     } else {
+      /* at the Lab, what has just become possible comes first: it is one of the two ways the loop starts */
+      if (id === 'lab') h += '<p class="kicker">' + esc(t('game.ways')) + '</p>' + WAYS.map(w => '<div class="debate2"><b>' + esc(t('way.' + w.id + '.t')) + '</b><span class="small">' + esc(t('way.' + w.id + '.how')) + '</span></div>').join('');
       h += Game.askAt(id).map(g => (g.level && Game.askAt(id).length > 1 ? '<p class="kicker">' + esc(t('depth.' + g.level.depth + '.name')) + '</p>' : '') + g.stops.map(askLink).join('')).join('');
       if (debates.length) h += '<p class="kicker">' + esc(t('game.debates')) + '</p>' + debates.map(d => '<div class="debate2"><b>' + esc(t('debate.' + d + '.t')) + '</b><span class="small">' + esc(t('debate.' + d + '.q')) + '</span></div>').join('');
-      if (id === 'lab') h += '<p class="kicker">' + esc(t('game.ways')) + '</p>' + WAYS.map(w => '<div class="debate2"><b>' + esc(t('way.' + w.id + '.t')) + '</b><span class="small">' + esc(t('way.' + w.id + '.how')) + '</span></div>').join('');
       if (!nAsk && id !== 'lab') h += '<p class="small muted">' + esc(t('game.noAsk')) + '</p>';
     }
     sheet.innerHTML = h + '</div>'; sheet.hidden = false; sheet.scrollTop = 0;
@@ -629,10 +638,11 @@ export function start() {
      the loop starts and comes back) */
   function showPage(k0) {
     const k = k0 === 'build' ? 'build' : 'log'; pageNow = k0;
-    let h = '<div class="inner"><a class="x pagex" href="' + (k === 'build' ? '#/place/lab' : '#/') + '" aria-label="' + esc(t('sheet.close')) + '">×</a><p class="kicker">' + esc(t(k === 'build' ? 'loop.need.k' : 'loop.logK')) + '</p><h1>' + esc(t(k === 'build' ? 'nav.build' : 'loop.log')) + '</h1><p class="lead">' + esc(t('page.' + k + '.lead')) + '</p>', hc = '';
+    let h = '<div class="inner"><a class="x pagex" href="' + (k === 'build' ? '#/place/lab' : '#/') + '" aria-label="' + esc(t('sheet.close')) + '">×</a><p class="kicker">' + esc(t(k === 'build' ? 'loop.open.k' : 'loop.logK')) + '</p><h1>' + esc(t(k === 'build' ? 'nav.build' : 'loop.log')) + '</h1><p class="lead">' + esc(t('page.' + k + '.lead')) + '</p>', hc = '';
     const C = Game.community(S);
     if (k === 'log') {
       const nx = Game.next(S);
+      h += '<div class="jump"><input type="search" data-jump autocomplete="off" placeholder="' + esc(t('jump.ph')) + '" aria-label="' + esc(t('jump.ph')) + '"><div class="jumpres" data-jumpres></div></div>';
       if (nx) h += '<section class="stepsec"><h2>' + esc(t('loop.nextUp')) + '</h2><div class="grid">' + chCard(nx) + '</div></section>';
       hc += '<h2 id="log-challenges">' + esc(t('nav.challenges')) + '</h2><p class="small muted">' + esc(t(nx ? 'page.challenges.lead' : 'game.allDone')) + '</p>' + Game.STEPS.map((s, i) => { const st = Game.stepState(S, s); return '<section class="stepsec"><h2><span class="num">' + (i + 1) + '</span>' + esc(t('game.step.' + s)) + ' <span class="small muted">' + esc(t('map.' + Game.STATION[s] + '.t')) + ' · ' + st.done + '/' + st.total + '</span></h2><div class="grid">' + Game.stepChallenges(s).map(chCard).join('') + '</div></section>'; }).join('');
       hc += '<section class="stepsec"><h2><span class="num">⚙</span>' + esc(t('game.jobs')) + ' <span class="small muted">' + esc(t('game.jobsD')) + '</span></h2><div class="grid">' + C.breaks.map(b => chCard(chOf('break:' + b.of))).join('') + C.jobs.map(jobCard).join('') + '</div></section>';
@@ -677,6 +687,15 @@ export function start() {
     page.innerHTML = h + '<p class="small muted">' + esc(t('page.preview')) + '</p></div>'; page.hidden = false; page.scrollTop = 0;
     if (k0 === 'challenges') { const el = $('log-challenges'); if (el) page.scrollTop = el.offsetTop - 16; }
   }
+  /* jump: type a name, go to its address. Every place, level and challenge, and the two pages; the list is never
+     shown whole, only what matches */
+  const jumpIndex = () => Game.PLACES.map(p => ({ name: t('map.' + p + '.t'), kind: kickerOf(p), href: '#/place/' + p }))
+    .concat(Object.entries(Game.INSIDE).flatMap(([p, L]) => L.filter(l => p === 'datacentre' || !Game.SHARED.includes(l.depth)).map(l => ({ name: t('depth.' + l.depth + '.name'), kind: t('map.' + p + '.t'), href: levelHref(p, l) }))),
+      Game.CHALLENGES.map(c => ({ name: titleOf(c), kind: whereOf(c), href: doHref(c) })),
+      [{ name: t('look.plan.t'), kind: t('map.lab.t'), href: '#/build' }, { name: t('nav.challenges'), kind: t('loop.log'), href: '#/challenges' }, { name: t('loop.outShort'), kind: t('nav.ecosystem'), href: '#/ecosystem' }]);
+  page.addEventListener('input', e => { const f = e.target.closest('[data-jump]'); if (!f) return; const q = f.value.trim().toLowerCase(), R = q ? jumpIndex().filter(x => x.name.toLowerCase().includes(q)).slice(0, 8) : [];
+    page.querySelector('[data-jumpres]').innerHTML = R.map(x => '<a class="jumpto" href="' + esc(x.href) + '"><b>' + esc(x.name) + '</b><span class="small muted">' + esc(x.kind) + '</span></a>').join('') || (q ? '<p class="small muted">' + esc(t('jump.none')) + '</p>' : ''); });
+  page.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.closest('[data-jump]')) { const a = page.querySelector('.jumpto'); if (a) location.hash = a.getAttribute('href'); } });
   page.addEventListener('click', e => {
     const o = e.target.closest('[data-open]'); if (o) { const ch = chOf(o.dataset.open); if (ch) location.hash = doHref(ch); return; }
     if (slipClick(e, S, redraw => { save(); refresh(true); if (redraw) showPage(pageNow); })) return;
@@ -833,6 +852,8 @@ export function start() {
   document.addEventListener('keydown', e => {
     /* a picture that steps along by itself (the flat world) has already taken the key */
     if (e.defaultPrevented || (e.target.closest && e.target.closest('input, textarea, select, [data-live]'))) return; /* i18n-ok */
+    /* / jumps: the log opens with its box ready */
+    if (e.key === '/') { e.preventDefault(); if (partsOf(location.hash)[0] !== 'log') location.hash = '#/log'; setTimeout(() => { const f = page.querySelector('[data-jump]'); if (f) f.focus(); }, 60); return; }
     const host = [vui, cui, pui, bui].find(h => h && !h.hidden) || (!sheet.hidden && !sheet.querySelector('.player') ? sheet : null); if (!host) return;
     if (e.key === 'Escape') { const up = host.querySelector('.homebtn'); if (up) { location.hash = up.getAttribute('href'); e.preventDefault(); } return; }
     if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
