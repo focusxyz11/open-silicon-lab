@@ -70,7 +70,7 @@ everything: only what matches what you typed.
 Explore, Challenges, Questions, Build and Ecosystem; `?menu=0` removes it. It is remembered in that browser. So
 the choice costs nothing to try and one line to make permanent either way (`SECTIONS_ON` in `src/v2/app.js`).
 
-**What I would watch, with five people, to settle it:**
+**What I would watch, with five people, to settle it** (since 15 November there is no five-person stage: the reports people send with *Break it*, at any time, are where this shows):
 
 1. Ask a returning visitor to "find the list of challenges" and "find who built the register bit". If they need
    more than two moves or ask where the menu is, switch it on.
@@ -493,8 +493,13 @@ steps instead of scrolling; the island as the first page; the questions' rules; 
 
 Small pull requests, each leaving the site whole.
 
-**Stage 0. Try it with five people** before building more (the roadmap's item 9, never done). Watch for three
-things: do they find *along* without being told, do they understand Need, do they miss the menu.
+~~**Stage 0. Try it with five people** before building more.~~ Withdrawn on 15 November 2026 at the owner's word:
+"The human's feedback shouldn't be in the loop or in the plan. That would make it confused, because people should be
+outside, breaking the current design and line, and give feedback any time. That's the gap we have now." So there is
+no stage for people. Instead there is *Break it* (⚑ on every screen): anyone, at any time, reports what is untrue,
+confusing, broken or could be better, at the place they saw it, into the ledger, where it calls for a fix like any
+open thing (`report` and `fix` in `src/engines/ledger.js`). The three things this stage would have watched (do they
+find *along*, do they understand *Open*, do they miss the menu) are now for the reports to show.
 
 **Stage 1. Make it true everywhere.**
 - Rewrite `CLAUDE.md`, `docs/SYSTEM.md` and `docs/WORLD.md` for the grid; retire `docs/FRAME.md`'s "two ways of

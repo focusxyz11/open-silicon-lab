@@ -229,6 +229,29 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
     });
     await page.close();
   }
+  /* Break it: on every screen, on a phone too, anyone reports what is wrong at the place they saw it; it is kept as a
+     draft entry of the ledger with the one link that opens it on GitHub, and a report without a name is refused in words */
+  for (const [w, h] of [[1280, 800], [390, 844]]) {
+    const tag = 'break it ' + w; at = tag;
+    const page = await browser3d.newPage({ viewport: { width: w, height: h } });
+    page.on('pageerror', e => problems.push(tag + ': ' + e.message));
+    await page.addInitScript(() => { localStorage.setItem('osl-quality', 'keep'); localStorage.setItem('osl-hints-v1', JSON.stringify({ seen: {}, off: true })); });
+    await page.goto(base + 'index.html#/line/print');
+    await page.waitForSelector('#breakbtn', { timeout: 30000 }).catch(() => problems.push(tag + ': no Break it button'));
+    await page.waitForTimeout(1500);
+    await page.click('#breakbtn').catch(() => problems.push(tag + ': Break it cannot be tapped'));
+    await page.waitForSelector('#breakp:not([hidden]) [data-breakwords]', { timeout: 5000 }).catch(() => problems.push(tag + ': the panel did not open'));
+    if (!/#\/line\/print/.test(await page.textContent('#breakp').catch(() => ''))) problems.push(tag + ': the panel does not say where you are');
+    await page.fill('[data-breakwords]', 'Next step did nothing the first time I pressed it.').catch(() => {});
+    await page.click('[data-breakkeep]').catch(() => {});
+    if (!(await page.$('#breakp .err'))) problems.push(tag + ': a report without a name was not refused');
+    await page.fill('[data-sign]', 'A tester').catch(() => {}); await page.fill('[data-breakwords]', 'Next step did nothing the first time I pressed it.').catch(() => {});
+    await page.click('[data-say="broken"]').catch(() => {}); await page.click('[data-breakkeep]').catch(() => {});
+    const href = await page.getAttribute('#breakp [data-send]', 'href').catch(() => '');
+    if (!/\/new\/main\/community\/ledger\?filename=\d{4}-\d{2}-\d{2}-report-/.test(href || '')) problems.push(tag + ': the report was not kept as an entry with its link');
+    if (await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)) problems.push(tag + ': sideways scrolling with the panel open');
+    await page.close();
+  }
   /* a device too slow for a level in 3D gets its flat drawing back (osl-quality = slow makes every level count as too slow) */
   {
     at = 'slow device'; const page = await browser3d.newPage({ viewport: { width: 1280, height: 800 }, reducedMotion: 'reduce' });

@@ -9,6 +9,11 @@
                engine that passed the design must fail it on the case. The case then joins the piece's check for
                good: every design after it has to pass it, and every earlier design that fails it is broken too.
      question  a question with a home: a level, perhaps a part of it and the question it sits under.
+     report    the lab itself broken, by anyone, at any time: where (the site's address, perhaps a part), what kind
+               (wrong, confusing, does not work, could be better) and the words. Feedback is not a stage of a plan:
+               people stand outside it and break the design, the words and the way through, and the record keeps it.
+     fix       a report answered: the report it closes, what changed, and the pull request that changed it. A fix
+               that did not fix is answered by a new report at the same place.
    Two more kinds are designed and not built yet: check (a new engine) and show (a source, a figure, a real case).
 
    Nothing here is voted on and nobody gives points. settle() derives every standing from the entries alone:
@@ -23,19 +28,25 @@ import { build, projectOf } from './design.js';
 import { NEEDS } from '../data/build.js';
 import { DEPTHS, STOPS, REPO } from '../data/weave.js';
 
-export const KINDS = ['design', 'break', 'try', 'question'];
+export const KINDS = ['design', 'break', 'try', 'question', 'report', 'fix'];
+/* what a report says about the lab */
+export const SAYS = ['wrong', 'confusing', 'broken', 'better'];
 /* who made it: a person, an AI agent, both, a program that searches (no language model), or the lab as an example */
 export const MADE = ['person', 'ai', 'both', 'program', 'example'];
 export const DIR = 'community/ledger';
-const ID = /^(\d{4}-\d{2}-\d{2})-(design|break|try|question)-[a-z0-9]+(?:-[a-z0-9]+)*$/;
+const ID = /^(\d{4}-\d{2}-\d{2})-(design|break|try|question|report|fix)-[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const FIELDS = {
   design: ['kind', 'piece', 'title', 'by', 'made', 'ai', 'words', 'code', 'from', 'about'],
   break: ['kind', 'of', 'by', 'made', 'ai', 'words', 'case', 'about'],
   /* a try: cases that were meant to break a design and did not. The trace of an attack that failed: what a
      design has survived is why it can be trusted, and where the next attacker need not look */
   try: ['kind', 'of', 'by', 'made', 'ai', 'words', 'cases', 'about'],
-  question: ['kind', 'at', 'part', 'under', 'q', 'noticed', 'by', 'made', 'ai', 'about']
+  question: ['kind', 'at', 'part', 'under', 'q', 'noticed', 'by', 'made', 'ai', 'about'],
+  report: ['kind', 'at', 'part', 'say', 'words', 'by', 'made', 'ai'],
+  fix: ['kind', 'of', 'words', 'pr', 'by', 'made', 'ai']
 };
+/* a report's place: the site's own address, as the bar shows it (#/line/print, #/dive/gate, #/build/record) */
+export const PLACE = /^#\/[a-z0-9._\/-]{0,80}$/;
 /* plain words: no markup, no links (a link in free text is how spam pays), nothing a page or an agent could run */
 const plain = (s, min, max) => typeof s === 'string' && s.length >= min && s.length <= max && !/[<>\u0000-\u0008\u000b-\u001f]|https?:|www\./i.test(s);
 const norm = s => String(s || '').replace(/\s+/g, '').toLowerCase();
@@ -110,6 +121,23 @@ export function checkEntry(e, W) {
     const row = r.rows[r.first];
     return { ok: true, facts: { tick: r.first + 1, ticks: e.case.length, want: row.e, got: row.o } };
   }
+  /* a report: a place in the lab, what kind, and words enough to find it again */
+  if (e.kind === 'report') {
+    if (typeof e.at !== 'string' || !PLACE.test(e.at)) return no('where');
+    if (e.part != null && !/^[a-z0-9]{1,24}$/.test(e.part)) return no('where');
+    if (!SAYS.includes(e.say)) return no('say');
+    if (!plain(e.words, 10, 400)) return no('report');
+    if (W.entries.some(x => x.kind === 'report' && x.at === e.at && norm(x.words) === norm(e.words))) return no('same');
+    return { ok: true, facts: {} };
+  }
+  /* a fix: an open report, what changed, and (if there is one) the pull request's number */
+  if (e.kind === 'fix') {
+    const T = W.byId[e.of]; if (!T || T.kind !== 'report' || !T.ok) return no('target');
+    if (T.state === 'fixed') return no('fixed');
+    if (!plain(e.words, 5, 300)) return no('words');
+    if (e.pr != null && !(Number.isInteger(e.pr) && e.pr > 0 && e.pr < 100000)) return no('pr');
+    return { ok: true, facts: {} };
+  }
   /* a question: it must have a home, be a question, and say what was noticed */
   if (!DEPTHS[e.at]) return no('home');
   if (e.under != null && (!STOPS[e.under] || e.under.split('.')[1] !== e.at)) return no('under');
@@ -136,6 +164,8 @@ export function settle(list) {
       W.pieces[T.piece].map(id => W.byId[id]).filter(d => d.state === 'right').forEach(d => { const x = runCase(p, d.code, e.case); if (x && x.first >= 0) { d.state = 'broken'; d.brokenBy = e.id; e.breaks.push(d.id); } });
       e.state = 'stands'; W.feed.push({ type: 'broke', id: e.id });
     } else if (e.kind === 'try') { W.byId[e.of].tries.push(e.id); e.state = 'stands'; W.feed.push({ type: 'tried', id: e.id }); }
+    else if (e.kind === 'report') { e.state = 'open'; W.feed.push({ type: 'reported', id: e.id }); }
+    else if (e.kind === 'fix') { const T = W.byId[e.of]; T.state = 'fixed'; T.fixedBy = e.id; e.state = 'stands'; W.feed.push({ type: 'fixed', id: e.id }); }
     else { e.state = 'stands'; W.feed.push({ type: 'asked', id: e.id }); }
   });
   /* standings: among a piece's right designs, the ones nothing beats on both size and speed hold a record; an
@@ -178,8 +208,12 @@ export function frontier(W) {
   /* a question someone asked is a call of its own: loud while nothing has been done for it, quieter as work gathers
      under it (designs, breaks, tries, questions that name it), and never silent, because it stays open */
   W.entries.filter(e => e.kind === 'question').forEach(e => out.push({ kind: 'ask', q: e.id, under: e.under || null, at: e.at, work: workFor(W, e.id).length }));
+  /* a report nobody has fixed: something that does not work calls loudest, then something untrue, something
+     confusing, an idea; and louder for every other open report at the same place. A fix takes it off the list */
+  const open = W.entries.filter(e => e.kind === 'report' && e.state === 'open');
+  open.forEach(e => out.push({ kind: 'report', of: e.id, at: e.at, say: e.say, same: open.filter(x => x !== e && x.at === e.at).length }));
   const copies = id => { let n = 1, x = needOf(id); while (x && x.parent) { x = needOf(x.parent); if (x && x.engine === 'repeat') n *= x.n; } return n; };
-  out.forEach(f => { f.pull = f.kind === 'build' ? 2 + Math.log10(copies(f.piece)) + ((W.pieces[f.piece] || []).length ? 3 : 0) : f.kind === 'break' ? (f.inside ? 4 : 2) / (1 + f.tries) : f.kind === 'ask' ? 0.5 + 4 / (1 + f.work) : 1; });
+  out.forEach(f => { f.pull = f.kind === 'build' ? 2 + Math.log10(copies(f.piece)) + ((W.pieces[f.piece] || []).length ? 3 : 0) : f.kind === 'break' ? (f.inside ? 4 : 2) / (1 + f.tries) : f.kind === 'ask' ? 0.5 + 4 / (1 + f.work) : f.kind === 'report' ? { broken: 2.5, wrong: 2, confusing: 1.5, better: 1 }[f.say] + 0.5 * f.same : 1; });
   return out.sort((a, b) => b.pull - a.pull);
 }
 /* the small society the ledger shows: every maker, what they do (roles are not given, they are what someone's
@@ -191,6 +225,8 @@ export function society(W) {
     if (e.from && W.byId[e.from].by !== e.by) m.builtOn.add(W.byId[e.from].by); });
   return Object.values(M).map(m => Object.assign(m, { made: [...m.made], checked: [...m.checked], builtOn: [...m.builtOn], checkedBy: [...m.checkedBy] }));
 }
+/* the reports at a place in the lab (its address), open first, then the newest */
+export const reportsAt = (W, at) => W.entries.filter(e => e.kind === 'report' && e.at === at).sort((a, b) => (a.state === 'open' ? 0 : 1) - (b.state === 'open' ? 0 : 1) || (a.id < b.id ? 1 : -1));
 /* the work done for a question: every entry that names it (a stop, or a question someone added) */
 export const workFor = (W, key) => W.entries.filter(e => e.about === key);
 

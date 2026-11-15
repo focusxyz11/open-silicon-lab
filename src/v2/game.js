@@ -264,8 +264,11 @@ export const askedAtLevel = (d, s) => questionsAt(world(s), d, null).sort((a, b)
 export const societyOf = W => society(W);
 export const workAt = (key, s) => workFor(world(s), key);
 export const aboutWords = (about, W) => (STOPS[about] ? t('stop.' + about + '.q') : (W.byId[about] || {}).q || about);
+/* what is open now, loudest first, read from the ledger and your drafts */
+export const frontierOf = s => frontier(world(s));
 export function entryWords(e, s) { const W = world(s), T = W.byId[e.of];
-  return e.kind === 'design' ? t('ledger.rec.design', { title: e.title, piece: t('build.need.' + e.piece + '.t') }) : e.kind === 'break' ? t('ledger.rec.break', { title: T.title }) : e.kind === 'try' ? t('ledger.rec.try', { title: T.title, n: e.facts.cases }) : e.q; }
+  return e.kind === 'design' ? t('ledger.rec.design', { title: e.title, piece: t('build.need.' + e.piece + '.t') }) : e.kind === 'break' ? t('ledger.rec.break', { title: T.title }) : e.kind === 'try' ? t('ledger.rec.try', { title: T.title, n: e.facts.cases })
+    : e.kind === 'report' ? t('ledger.rec.report', { say: t('report.say.' + e.say), at: e.at, words: e.words }) : e.kind === 'fix' ? t('ledger.rec.fix', { words: e.words }) : e.q; }
 /* break a design: a challenge made by the ledger itself, for every clocked design that stands, and kept for the
    broken ones, so anyone can find the case again */
 export function breakOf(id, s) { const e = world(s).byId[id]; if (!e || e.kind !== 'design' || !e.ok) return null; const n = needOf(e.piece);

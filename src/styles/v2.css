@@ -731,3 +731,29 @@ button.node:hover { border-color: var(--accent); }
 .sheet .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 8px; margin: 0 0 12px; }
 .sheet .grid .chcard { margin: 0; }
 @media (max-width: 720px) { .sheet.inside { max-height: 62%; } }
+
+/* Break it: the lab itself, broken by anyone, from anywhere (app.js; a report in the ledger). Under the bar, at its
+   right, over whatever is open; on a phone, the width of the screen */
+.breakbtn { flex: none; color: var(--ink); }
+.breakbtn[aria-expanded=true] { background: color-mix(in srgb, var(--ink) 10%, transparent); }
+.breakp { position: absolute; z-index: 25; top: 76px; right: 14px; width: min(420px, calc(100% - 28px)); max-height: calc(100% - 96px); overflow: auto; padding: 16px 18px 14px; background: var(--panel); border: 1px solid var(--line); border-radius: 22px; backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); box-shadow: var(--shadow); animation: rise .25s ease; }
+.breakp h2 { margin: 2px 32px 6px 0; font: 600 20px/1.2 var(--serif); }
+.breakp .x { position: absolute; top: 10px; right: 10px; }
+.breakp .reports { list-style: none; margin: 0 0 12px; padding: 0; display: grid; gap: 8px; }
+.breakp .reports li { display: grid; grid-template-columns: 10px 1fr; gap: 8px; align-items: start; padding: 8px 10px; border: 1px solid var(--line); border-radius: 12px; font-size: 14px; }
+.breakp .reports li .made { margin-top: 6px; }
+.breakp .reports li.fixed { opacity: .7; }
+.breakp .breakform { display: grid; gap: 10px; }
+.breakp .breakform .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.breakp .breakform label { display: grid; gap: 4px; }
+.breakp .breakform .kicker { margin: 0; }
+.breakp textarea { width: 100%; min-width: 0; resize: vertical; padding: 8px 10px; border-radius: 10px; border: 1px solid var(--line); background: var(--panel-solid); color: var(--ink); font: 14px/1.4 var(--sans); }
+.breakp .err { color: var(--bad, #c0392b); margin: 0; }
+.breakp .acts { display: flex; gap: 8px; }
+.chcard.report .st { color: var(--warm); }
+/* on a phone the bar has no room for it: it stands just under the bar's right end, on the row where the way out
+   stands at the left, and the panel opens below it */
+@media (max-width: 560px) {
+  .breakbtn { position: absolute; top: calc(100% + 10px); right: 4px; background: var(--panel); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); box-shadow: var(--shadow); }
+  .breakp { top: 124px; right: 8px; width: calc(100% - 16px); max-height: calc(100% - 136px); padding: 14px 14px 12px; }
+}

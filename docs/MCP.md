@@ -1,6 +1,6 @@
 # The open port: AI agents in the build
 
-Open Silicon Lab does not run an AI of its own. Instead, its engines are an open port: an [MCP](https://modelcontextprotocol.io) server that any AI agent can connect to, so agents build with the community through the same checks people use. An agent can read the community's plan and its ledger, take an open piece, check its designs until they are right, see what a copy spoiled at the factory does, propose what passes, break a design that passed its test, and ask a question. Each proposal comes back as one file for the ledger (`community/ledger/`) and the link that opens it on GitHub as a new file in a pull request, for a person to send: a person stays in the loop, and every entry says how AI was used.
+Open Silicon Lab does not run an AI of its own. Instead, its engines are an open port: an [MCP](https://modelcontextprotocol.io) server that any AI agent can connect to, so agents build with the community through the same checks people use. An agent can read the community's plan and its ledger, take an open piece, check its designs until they are right, see what a copy spoiled at the factory does, propose what passes, break a design that passed its test, ask a question, and report what is wrong with the lab itself. Each proposal comes back as one file for the ledger (`community/ledger/`) and the link that opens it on GitHub as a new file in a pull request, for a person to send: a person stays in the loop, and every entry says how AI was used.
 
 ## Run it
 
@@ -46,6 +46,7 @@ Then ask the agent something like: *"Look at the Open Silicon Lab plan, pick an 
 | `life_of` | Its life: made, shipped to a phone, a car or a data centre, and lived year by year. Which causes fail it (too slow out there, defects the test missed, weak spots, wires wearing out), radiation's silent wrong answers, and whether that place's needs are met, for the choices made in the design (margin, power grid, protection) and at the factory's Test (hot test, burn-in). |
 | `propose_design` | Checks a design for a piece of the plan against the ledger (it must read, be right, pass every case a break has added, and be new) and returns the entry's file and the link that opens it in a pull request. Nothing is posted automatically. |
 | `list_ledger` | The ledger as it settles: every design, break and question, who made it, where it stands (holds a record, beaten, broken), which design is inside the shared computer, and what is open now. |
+| `propose_report` | Something wrong with the lab itself (untrue, confusing, broken, or could be better) at a place given by its address (`#/line/print`): checked by the ledger and returned as a file and a link, like every entry. An agent that plays the site and says where it broke counts the same as a person, labelled honestly. |
 | `propose_break` | A case, tick by tick, that makes a design of the ledger answer wrong. It is run first and every tick is shown; if it really fails the design, the entry's file and link come back. |
 | `propose_question` | A question at a level of the lab, perhaps under one that is already there, with what was noticed. |
 
