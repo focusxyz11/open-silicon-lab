@@ -7,7 +7,7 @@ import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
 import './ledger.setup.mjs';
 import { collect, FOLDER } from '../scripts/ledger.mjs';
-import { ledger, settle, settled, checkEntry, tryEntry, draft, fileOf, proposeUrl, frontier, runCase, standing, questionsAt, KINDS, MADE, DIR } from '../src/engines/ledger.js';
+import { ledger, settle, settled, checkEntry, tryEntry, draft, fileOf, proposeUrl, frontier, runCase, standing, questionsAt, reportsAt, KINDS, MADE, DIR } from '../src/engines/ledger.js';
 import { plan } from '../src/engines/build.js';
 import * as Game from '../src/v2/game.js';
 import { STOPS } from '../src/data/weave.js';
@@ -187,4 +187,31 @@ test('a question asked is a call of its own: work gathers under it, quiets it, a
   /* the questions in the ledger are calls now, and Game hands them to the island */
   const C = Game.community(Game.fresh());
   assert.equal(C.asks.length, settled().entries.filter(e => e.kind === 'question').length); assert.ok(C.loud && C.loud.pull >= (C.asks[0] || { pull: 0 }).pull);
+});
+
+test('a report breaks the lab itself, anywhere, at any time; a fix closes it; nothing else does', () => {
+  const rep = { id: '2026-11-15-report-tester-line-a1b2', kind: 'report', at: '#/line/print', say: 'confusing', words: 'I could not tell which machine does the printing.', by: 'Tester', made: 'person', ai: '' };
+  const again = { id: '2026-11-15-report-tester-line-c3d4', kind: 'report', at: '#/line/print', say: 'broken', words: 'Next step did nothing on my phone.', by: 'Someone', made: 'person', ai: '' };
+  let W = settle([rep, again]);
+  assert.equal(W.byId[rep.id].state, 'open');
+  const calls = frontier(W).filter(f => f.kind === 'report');
+  assert.equal(calls.length, 2);
+  assert.equal(calls[0].of, again.id, 'what does not work calls louder than what confuses');
+  assert.ok(calls.every(f => f.same === 1), 'two reports at one place pull louder together');
+  /* refusals: not a place in the lab, not a kind, too few words, a link, the same words twice */
+  const bad = (o, why) => assert.equal(checkEntry(Object.assign({}, rep, { id: '2026-11-15-report-x-zz' }, o), settle([rep])).reason, why);
+  bad({ at: 'https://example.com' }, 'where');
+  bad({ say: 'angry' }, 'say');
+  bad({ words: 'bad' }, 'report');
+  bad({ words: 'see www.example.com for more words' }, 'report');
+  bad({}, 'same');
+  /* a fix closes it, once; the call goes */
+  const fix = { id: '2026-11-16-fix-claude-line-e5f6', kind: 'fix', of: rep.id, words: 'The scanner is named while it prints.', pr: 160, by: 'Claude', made: 'ai', ai: 'Claude found and wrote the change.' };
+  W = settle([rep, again, fix]);
+  assert.equal(W.byId[rep.id].state, 'fixed');
+  assert.equal(W.byId[rep.id].fixedBy, fix.id);
+  assert.deepEqual(frontier(W).filter(f => f.kind === 'report').map(f => f.of), [again.id]);
+  assert.equal(checkEntry(Object.assign({}, fix, { id: '2026-11-16-fix-other-line-g7h8' }), W).reason, 'fixed');
+  assert.equal(checkEntry(Object.assign({}, fix, { id: '2026-11-16-fix-other-line-i9j0', of: '2026-11-12-design-majority-voter' }), W).reason, 'target');
+  assert.deepEqual(reportsAt(W, '#/line/print').map(e => e.id), [again.id, rep.id], 'open first');
 });

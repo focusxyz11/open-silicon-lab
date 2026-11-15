@@ -18,9 +18,11 @@
   <header class="bar">
     <a class="brand" href="#/"><span class="mark" aria-hidden="true"></span><b data-i18n="ui.lab"></b></a>
     <nav class="loop" id="loop" data-i18n-attr="aria-label:loop.aria"></nav>
+    <button type="button" class="round breakbtn" id="breakbtn" aria-haspopup="dialog" aria-controls="breakp"><span aria-hidden="true">⚑</span></button>
     <a class="logbtn" id="logbtn" href="#/log"></a>
     <button type="button" class="round" id="theme"><span aria-hidden="true">◐</span></button>
   </header>
+  <section class="breakp" id="breakp" role="dialog" aria-modal="false" hidden></section>
   <main class="stage" id="stage">
     <canvas class="c3" id="mapCanvas" tabindex="0" data-i18n-attr="aria-label:map.aria"></canvas>
     <canvas class="c3" id="placeCanvas" tabindex="0" hidden data-i18n-attr="aria-label:place.aria"></canvas>

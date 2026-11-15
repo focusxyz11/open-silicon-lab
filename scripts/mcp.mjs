@@ -32,6 +32,7 @@ const TOOLS = [
   { name: 'list_ledger', fn: () => API.listLedger(), description: EN['api.tool.ledger'], inputSchema: { type: 'object', properties: {} } },
   { name: 'propose_break', fn: a => API.proposeBreak(a), description: EN['api.tool.break'], inputSchema: { type: 'object', properties: { design: str(EN['api.arg.design']), case: { type: 'array', description: EN['api.arg.case'], items: { type: 'object' } }, words: str(EN['api.arg.words']), ...WHO }, required: ['design', 'case', 'kind'] } },
   { name: 'propose_try', fn: a => API.proposeTry(a), description: EN['api.tool.try'], inputSchema: { type: 'object', properties: { design: str(EN['api.arg.design']), cases: { type: 'array', description: EN['api.arg.cases'], items: { type: 'array' } }, words: str(EN['api.arg.words']), ...WHO }, required: ['design', 'cases', 'kind'] } },
+  { name: 'propose_report', fn: a => API.proposeReport(a), description: EN['api.tool.report'], inputSchema: { type: 'object', properties: { at: str(EN['api.arg.place']), say: { type: 'string', enum: ['wrong', 'confusing', 'broken', 'better'], description: EN['api.arg.say'] }, words: str(EN['api.arg.reportWords']), ...WHO }, required: ['at', 'say', 'words', 'kind'] } },
   { name: 'propose_question', fn: a => API.proposeQuestion(a), description: EN['api.tool.question'], inputSchema: { type: 'object', properties: { at: str(EN['api.arg.at']), under: str(EN['api.arg.under']), question: str(EN['api.arg.question']), noticed: str(EN['api.arg.noticed']), ...WHO }, required: ['at', 'question', 'kind'] } }
 ];
 

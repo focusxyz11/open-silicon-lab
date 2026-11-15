@@ -28,6 +28,7 @@ import { FIGURES, CASES } from '../data/weave.js';
 import { fmtDate } from '../core/i18n.js';
 import { ROWS, ASK as CHIP_ASK } from './chip3d.js';
 import { signHtml, signOf, keep, refusal, slipHtml, slipClick, byLine } from './commons.js';
+import { reportsAt, SAYS } from '../engines/ledger.js';
 
 const $ = id => document.getElementById(id);
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
@@ -105,6 +106,7 @@ export function start() {
     hudEl.innerHTML = '<ol>' + Way.STAGES.map((s, i) => { const st = s === 'open' ? null : Game.stepState(S, s), full = !!st && st.done === st.total, name = t('loop.stage.' + s), held = W.stage !== s && Way.holds(W, s);
       return '<li><button type="button" data-stage="' + s + '"' + (s === W.stage ? ' aria-current="step"' : '') + ' class="' + (full ? 'full' : '') + (s === chipS ? ' chip' : '') + (held ? ' holds' : '') + '" title="' + esc(held ? t('loop.same', { as: t('loop.as.' + s) }) : t('loop.at.' + s)) + '" aria-label="' + esc(st ? t('game.stepAria', { n: i, step: name, done: st.done, total: st.total }) : t('loop.at.open')) + '"><span class="ld">' + (full ? '✓' : '') + '</span><span class="ln">' + esc(name) + '</span></button></li>'; }).join('') + '</ol>';
     $('logbtn').innerHTML = '<span class="lg">' + esc(t('loop.log')) + '</span>';
+    $('breakbtn').setAttribute('aria-label', t('break.btn')); $('breakbtn').title = t('break.btn');
   }
   function along(stage) {
     const W = whereNow(), to = Way.alongTo(W, stage); if (!to) return;
@@ -651,18 +653,21 @@ export function start() {
       P.computer = '<div class="plan2"><div class="tower" aria-hidden="true">' + islandState().floors.slice().reverse().map(f => '<span class="fl ' + f + '"></span>').join('') + '</div><div><p class="big">' + esc(t('page.build.progress', { built: C.built, total: C.total })) + '</p><p class="small muted">' + esc(t('page.build.legend')) + '</p>' + tree('computer') + '</div></div>';
       P.open = '<h2>' + esc(t('page.build.open')) + '</h2><p class="small muted">' + esc(t('page.build.openD')) + '</p><div class="grid">' + C.asks.map(a => '<a class="chcard job" href="' + esc(a.under ? follow(a.under) : '#/questions') + '"><span class="st">?</span><span><span class="kicker">' + esc(t('page.build.askK', { by: a.by, n: a.work })) + '</span><b>' + esc(a.words) + '</b></span></a>').join('') + C.breaks.map(b => chCard(chOf('break:' + b.of))).join('') + C.jobs.map(jobCard).join('') +
         C.engines.map(e => '<a class="chcard engine" target="_blank" rel="noopener" href="' + esc(REPO + '/issues/new?' + new URLSearchParams({ template: 'need.yml', title: t('game.engineFor', { piece: t('build.need.' + e.need + '.t') }) })) + '"><span class="st">⚙</span><span><b>' + esc(t('build.need.' + e.need + '.t')) + '</b><span class="small">' + esc(t('game.engineWanted')) + '</span></span></a>').join('') + '</div>';
+      /* the lab broken by the people using it: every open report, loudest first, each a link to where it was seen */
+      const reps = Game.frontierOf(S).filter(f => f.kind === 'report');
+      if (reps.length) P.open += '<h2>' + esc(t('lab.reports')) + '</h2><p class="small muted">' + esc(t('lab.reportsD')) + '</p><div class="grid">' + reps.map(f => { const e = W.byId[f.of]; return '<a class="chcard report' + (e.draft ? ' draft' : '') + '" href="' + esc(e.at) + '"><span class="st">⚑</span><span><span class="kicker">' + esc(t('report.say.' + e.say)) + ' · ' + esc(e.at) + '</span><b>' + esc(e.words) + '</b><span class="small muted">' + byLine(e) + '</span></span></a>'; }).join('') + '</div>';
       /* the record: every entry, the newest first, each with who made it and where it stands now */
-      const line = e => { const T = e.kind === 'break' ? W.byId[e.of] : null, T2 = e.kind === 'try' ? W.byId[e.of] : null, what = e.kind === 'design' ? t('ledger.rec.design', { title: e.title, piece: t('build.need.' + e.piece + '.t') }) : e.kind === 'break' ? t('ledger.rec.break', { title: T.title }) : T2 ? t('ledger.rec.try', { title: T2.title, n: e.facts.cases }) : e.q,
+      const line = e => { const T = e.kind === 'break' ? W.byId[e.of] : null, T2 = e.kind === 'try' ? W.byId[e.of] : null, what = e.kind === 'design' ? t('ledger.rec.design', { title: e.title, piece: t('build.need.' + e.piece + '.t') }) : e.kind === 'break' ? t('ledger.rec.break', { title: T.title }) : T2 ? t('ledger.rec.try', { title: T2.title, n: e.facts.cases }) : e.kind === 'report' || e.kind === 'fix' ? Game.entryWords(e, S) : e.q,
           links = (e.from ? ' · ' + esc(t('ledger.rec.from', { who: W.byId[e.from].by })) + ' ' + esc(W.byId[e.from].title) : '') + (e.tries && e.tries.length ? ' · ' + esc(t('ledger.tries', { n: e.tries.length })) : '') + (e.about ? ' · ' + esc(t('ledger.rec.about', { q: Game.aboutWords(e.about, W) })) : '');
         return '<li class="rec ' + e.kind + (e.draft ? ' draft' : '') + ' ' + e.state + '"><span class="made ' + esc(e.made) + '"></span><span><b>' + esc(what) + '</b><span class="small muted"> · ' + byLine(e) + ' · ' + esc(e.id.slice(0, 10)) + ' · ' + esc(t('ledger.state.' + (e.draft ? 'draft' : e.state))) + (e.brokenBy ? ' · ' + esc(t('ledger.brokenBy', { who: W.byId[e.brokenBy].by })) : '') + links + '</span>' + (e.draft ? slipHtml(S, e.id) : '') + '</span></li>'; };
       P.record = '<h2>' + esc(t('page.build.record')) + '</h2><p class="small muted">' + esc(t('page.build.recordD')) + '</p><ol class="record">' + W.entries.slice().reverse().map(line).join('') + '</ol>';
       /* the society: every maker and what their entries add up to. Roles are read, not given. */
       const SO = Game.societyOf(W), list = a => a.map(esc).join(', ');
       P.society = '<h2>' + esc(t('page.build.society')) + '</h2><p class="small muted">' + esc(t('page.build.societyD')) + '</p><ul class="record society">' + SO.map(m => '<li class="rec"><span class="made ' + esc(m.made[0]) + '"></span><span><b>' + esc(m.by) + '</b><span class="small muted"> · ' + m.made.map(k => esc(t('build.kind.' + k))).join(', ') + '</span><br><span class="small">' +
-        ['design', 'break', 'try', 'question'].filter(k => m.does[k]).map(k => esc(t('society.does.' + k, { n: m.does[k] }))).concat(m.checked.length ? [esc(t('society.checked', { who: '' })) + list(m.checked)] : [], m.checkedBy.length ? [esc(t('society.checkedBy', { who: '' })) + list(m.checkedBy)] : [], m.builtOn.length ? [esc(t('society.builtOn', { who: '' })) + list(m.builtOn)] : []).join(' · ') + '</span></span></li>').join('') + '</ul>' +
+        ['design', 'break', 'try', 'question', 'report', 'fix'].filter(k => m.does[k]).map(k => esc(t('society.does.' + k, { n: m.does[k] }))).concat(m.checked.length ? [esc(t('society.checked', { who: '' })) + list(m.checked)] : [], m.checkedBy.length ? [esc(t('society.checkedBy', { who: '' })) + list(m.checkedBy)] : [], m.builtOn.length ? [esc(t('society.builtOn', { who: '' })) + list(m.builtOn)] : []).join(' · ') + '</span></span></li>').join('') + '</ul>' +
         (SO.some(m => m.made.includes('person') || m.made.includes('both')) ? '' : '<p class="small hint">' + esc(t('page.build.empty')) + '</p>');
       /* who makes what: one bar per kind of entry, split by who made it, as each entry says */
-      const kinds = ['design', 'break', 'try', 'question'], made = ['person', 'both', 'ai', 'program', 'example'];
+      const kinds = ['design', 'break', 'try', 'question', 'report', 'fix'].filter((k, i) => i < 4 || W.mix[k]), made = ['person', 'both', 'ai', 'program', 'example'];
       P.mix = '<h2>' + esc(t('page.build.mix')) + '</h2><p class="small muted">' + esc(t('page.build.mixD')) + '</p><div class="mix">' + kinds.map(kd => { const M = W.mix[kd] || {}, n = made.reduce((a, m) => a + (M[m] || 0), 0);
         return '<div class="mixrow"><span class="ml">' + esc(t('ledger.kind.' + kd)) + '</span><span class="mbar">' + (n ? made.filter(m => M[m]).map(m => '<span class="made ' + m + '" style="flex:' + M[m] + '" title="' + esc(t('build.kind.' + m)) + ': ' + M[m] + '">' + M[m] + '</span>').join('') : '<span class="none">' + esc(t('page.build.mixNone')) + '</span>') + '</span></div>'; }).join('') +
         '<p class="legend small muted">' + made.map(m => '<span><span class="made ' + m + '"></span>' + esc(t('build.kind.' + m)) + '</span>').join('') + '</p></div>';
@@ -898,6 +903,40 @@ export function start() {
     const b = host.querySelector((host === sheet ? '' : '.dock ') + '[data-key="' + (e.key === 'ArrowRight' ? 'next' : 'back') + '"]');
     if (b) { b.click(); e.preventDefault(); }
   });
+  /* ---- Break it: the lab itself, broken by anyone, from anywhere, at any time. Not a stage of a plan: whoever uses
+     the lab stands outside it and says what is untrue, confusing, broken or could be better, where they saw it. It
+     becomes a report in the ledger (src/engines/ledger.js), through the same slip as every entry, and calls for a fix
+     until someone makes one. What was reported here already is shown first, so it is said once and seen by all. ---- */
+  const breakp = $('breakp');
+  let breakSay = 'confusing', breakMine = null, breakErr = '';
+  const breakAt = () => (/^#\/[a-z0-9._\/-]{0,80}$/.test(location.hash) ? location.hash : '#/');
+  function drawBreak() {
+    const at = breakAt(), here = reportsAt(Game.world(S), at);
+    let h = '<button type="button" class="x" data-breakx aria-label="' + esc(t('sheet.close')) + '">×</button><p class="kicker">' + esc(t('break.k')) + '</p><h2>' + esc(t('break.t')) + '</h2>' +
+      '<p class="small">' + esc(t('break.lead')) + '</p><p class="small muted">' + esc(t('break.here')) + ' <span class="mono">' + esc(at) + '</span></p>';
+    h += here.length ? '<p class="kicker">' + esc(t('break.reported')) + '</p><ul class="reports">' + here.map(e => '<li class="' + esc(e.state || '') + (e.draft ? ' draft' : '') + '"><span class="made ' + esc(e.made) + '"></span><span><b>' + esc(t('report.say.' + e.say)) + '</b> ' + esc(e.words) +
+      '<span class="small muted"> · ' + byLine(e) + ' · ' + esc(t('ledger.state.' + (e.draft ? 'draft' : e.state))) + (e.fixedBy ? ' · ' + esc(t('break.fixedBy', { words: (Game.world(S).byId[e.fixedBy] || {}).words || '' })) : '') + '</span>' + (e.draft ? slipHtml(S, e.id) : '') + '</span></li>').join('') + '</ul>'
+      : '<p class="small muted">' + esc(t('break.none')) + '</p>';
+    if (!breakMine) h += '<div class="breakform"><p class="kicker">' + esc(t('break.say')) + '</p><div class="chips">' + SAYS.map(k => '<button type="button" class="chipb" data-say="' + k + '" aria-pressed="' + (k === breakSay) + '">' + esc(t('report.say.' + k)) + '</button>').join('') + '</div>' +
+      '<label><span class="kicker">' + esc(t('break.words')) + '</span><textarea data-breakwords rows="3" maxlength="400" placeholder="' + esc(t('break.ph')) + '"></textarea></label>' + signHtml(S) +
+      (breakErr ? '<p class="small err" role="alert">' + esc(breakErr) + '</p>' : '') + '<div class="acts"><button type="button" class="btn primary" data-breakkeep>' + esc(t('break.keep')) + '</button></div><p class="small muted">' + esc(t('break.gh')) + '</p></div>';
+    breakp.innerHTML = h;
+  }
+  const openBreak = on => { breakp.hidden = !on; $('breakbtn').setAttribute('aria-expanded', String(on)); if (on) { breakMine = null; breakErr = ''; drawBreak(); const f = breakp.querySelector('textarea'); if (f && innerWidth > 700) f.focus(); } };
+  $('breakbtn').addEventListener('click', () => openBreak(breakp.hidden));
+  breakp.addEventListener('click', e => {
+    if (e.target.closest('[data-breakx]')) { openBreak(false); $('breakbtn').focus(); return; }
+    if (slipClick(e, S, () => { save(); refresh(true); drawBreak(); })) return;
+    const say = e.target.closest('[data-say]'); if (say) { breakSay = say.dataset.say; breakp.querySelectorAll('[data-say]').forEach(b => b.setAttribute('aria-pressed', String(b === say))); return; }
+    if (e.target.closest('[data-breakkeep]')) {
+      const words = (breakp.querySelector('[data-breakwords]') || {}).value || '', r = keep(S, { kind: 'report', at: breakAt(), say: breakSay, words: words.trim() }, breakSay, signOf(breakp));
+      if (r.ok) { breakMine = r.e.id; breakErr = ''; save(); refresh(true); } else breakErr = refusal(r.r);
+      const keepWords = words; drawBreak(); const f = breakp.querySelector('[data-breakwords]'); if (f && !r.ok) f.value = keepWords;
+    }
+  });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && !breakp.hidden) { openBreak(false); $('breakbtn').focus(); } });
+  /* the place changes under an open panel: it follows, and shows what was reported there */
+  window.addEventListener('hashchange', () => { if (!breakp.hidden) { breakMine = null; breakErr = ''; drawBreak(); } });
   window.addEventListener('hashchange', route);
   hud(); firstGo();
   route();
