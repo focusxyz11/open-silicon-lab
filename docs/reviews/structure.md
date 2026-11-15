@@ -87,7 +87,7 @@ My recommendation stays: no menu, Jump visible. But this is now a measurement, n
 | --- | --- |
 | #147 | The loop starts with what is open, with two ways in at the Lab; Jump; a menu that can be switched on to compare; the Lab's and the village's words. |
 | #148 | The keys: ↑ ↓ are out and in, ← → are along, in every view. |
-| #149 | `CLAUDE.md`, `docs/SYSTEM.md` and `docs/WORLD.md` rewritten for the grid; `docs/FRAME.md` folded in by reference (it keeps the data model and the history); the roadmap points here. |
+| #150 | `CLAUDE.md`, `docs/SYSTEM.md` and `docs/WORLD.md` rewritten for the grid; `docs/FRAME.md` folded in by reference (it keeps the data model and the history); the roadmap points here. |
 
 **Not done from stage 1, and why:**
 
