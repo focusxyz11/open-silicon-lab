@@ -83,8 +83,12 @@ function terrain(coast, T) {
 export function createMap(canvas, host, on = {}) {
   const P = PALETTES[theme()], night = P.emissive > 0;
   const st = stage(canvas), { env } = st;
-  const scene = new THREE.Scene(); scene.background = new THREE.Color(P.sky); scene.fog = new THREE.Fog(P.fog, 240, 560); scene.environment = env; scene.environmentIntensity = night ? 0.35 : 0.5;
-  const sunL = light(scene, P, 200);
+  /* the sky is a gradient, deeper overhead and paler at the horizon, where the fog meets it (the art pass) */
+  const skyTex = (() => { const c = document.createElement('canvas'); c.width = 4; c.height = 256; const x = c.getContext('2d'), g = x.createLinearGradient(0, 0, 0, 256);
+    (night ? [[0, '#03060d'], [0.55, '#0a1222'], [1, '#13213a']] : [[0, '#8db6d6'], [0.6, '#c4d9e7'], [1, '#e4ecf0']]).forEach(([o, col]) => g.addColorStop(o, col)); x.fillStyle = g; x.fillRect(0, 0, 4, 256);
+    const tx = new THREE.CanvasTexture(c); tx.colorSpace = THREE.SRGBColorSpace; return tx; })();
+  const scene = new THREE.Scene(); scene.background = skyTex; scene.fog = new THREE.Fog(P.fog, 240, 560); scene.environment = env; scene.environmentIntensity = night ? 0.35 : 0.5;
+  const sunL = light(scene, P, 200); if (!night) { sunL.sun.color.setHex(0xffead0); sunL.sun.intensity = 2.3; sunL.hemi.intensity = 0.6; }
   const camera = new THREE.PerspectiveCamera(32, 1, 0.5, 2400);
   const L = labels(host);
   const moving = [], spinning = [], bobbing = [], pulses = [], pick = [], growing = [];
@@ -96,7 +100,15 @@ export function createMap(canvas, host, on = {}) {
      Grown up, not a toy (docs/reviews/art-direction.md): muted ground whose colour wanders the way fields, scrub and
      dry grass do, a narrow beach with wet sand at the water, a ring of shallow water, and deep sea beyond. */
   const T = TERRAIN[night ? 'dark' : 'light'], A = ARCH[night ? 'dark' : 'light'];
-  const sea = new THREE.Mesh(new THREE.CircleGeometry(1400, 72), mat(T.sea, { roughness: 0.18, metalness: 0.2 }));
+  /* the sea moves: a field of small ripples (a normal map drawn once from noise, tiled and drifting), so the sky and
+     the sun catch on it */
+  const ripples = (() => { const N = 128, c = document.createElement('canvas'); c.width = c.height = N; const x = c.getContext('2d'), im = x.createImageData(N, N);
+    const h = (i, j) => noise2(i / 9, j / 9) * 0.6 + noise2(i / 3.5 + 40, j / 3.5) * 0.4;
+    for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) { const dx = h((i + 1) % N, j) - h((i + N - 1) % N, j), dy = h(i, (j + 1) % N) - h(i, (j + N - 1) % N), k = (j * N + i) * 4;
+      im.data[k] = 128 + dx * 160; im.data[k + 1] = 128 + dy * 160; im.data[k + 2] = 255; im.data[k + 3] = 255; }
+    x.putImageData(im, 0, 0); const tx = new THREE.CanvasTexture(c); tx.wrapS = tx.wrapT = THREE.RepeatWrapping; tx.repeat.set(90, 90); return tx; })();
+  const seaM = new THREE.MeshStandardMaterial({ color: T.sea, roughness: night ? 0.22 : 0.16, metalness: 0.25, normalMap: ripples, normalScale: new THREE.Vector2(night ? 0.3 : 0.5, night ? 0.3 : 0.5) });
+  const sea = new THREE.Mesh(new THREE.CircleGeometry(1400, 72), seaM);
   sea.rotation.x = -Math.PI / 2; sea.position.y = -0.6; sea.receiveShadow = true; scene.add(sea);
   const mean = (c, k) => c.reduce((a, p) => a + p[k], 0) / c.length;
   const grow = (c, k) => { const mx = mean(c, 0), mz = mean(c, 1); return c.map(([x, z]) => [x + (x - mx) * k, z + (z - mz) * k * 1.25]); };
@@ -114,6 +126,13 @@ export function createMap(canvas, host, on = {}) {
   const flowGeo = new THREE.BoxGeometry(1.2, 0.08, 0.32), flows = [];
   for (let i = 0; i < 42; i++) { const m = new THREE.Mesh(flowGeo, flowM); scene.add(m); flows.push(m); }
   SPOKES.forEach(s => ribbon(scene, s, 1.8, roadM, 0.04));
+  /* street lamps along the loop road: a pole, an arm, and a lamp that is lit at night */
+  { const pole = metal(night ? 0x4a5464 : 0x7d8794, { roughness: 0.5 }), lampM = night ? glow(0xffd9a0, 3) : mat(0xe9e6de, { roughness: 0.4 }), poolM = new THREE.MeshBasicMaterial({ color: 0xffb860, transparent: true, opacity: 0.2, depthWrite: false, blending: THREE.AdditiveBlending, fog: false });
+    const poolG = (() => { const c = document.createElement('canvas'); c.width = c.height = 64; const x = c.getContext('2d'), g = x.createRadialGradient(32, 32, 0, 32, 32, 32); g.addColorStop(0, 'rgba(255,255,255,1)'); g.addColorStop(1, 'rgba(255,255,255,0)'); x.fillStyle = g; x.fillRect(0, 0, 64, 64); poolM.map = new THREE.CanvasTexture(c); return new THREE.PlaneGeometry(5, 5); })();
+    const pts = loop.curve.getSpacedPoints(36); pts.slice(0, -1).forEach((p, i) => { const tg = loop.curve.getTangentAt(i / 36), side = i % 2 ? 1 : -1, nx = -tg.z * side, nz = tg.x * side, x = p.x + nx * 2.2, z = p.z + nz * 2.2;
+      cyl(scene, 0.07, 0.09, 3.2, pole, x, 0, z, 6); const arm = box(scene, 0.9, 0.06, 0.06, pole, x - nx * 0.4, 3.15, z - nz * 0.4, 0.01, { cast: false }); arm.rotation.y = Math.atan2(nx, nz) + Math.PI / 2;
+      box(scene, 0.34, 0.1, 0.18, lampM, x - nx * 0.82, 3.05, z - nz * 0.82, 0.03, { cast: false });
+      if (night) { const pool = new THREE.Mesh(poolG, poolM); pool.rotation.x = -Math.PI / 2; pool.position.set(x - nx * 0.82, 0.12, z - nz * 0.82); scene.add(pool); } }); }
 
   /* ---- trees where nothing stands ---- */
   const loopPts = loop.curve.getSpacedPoints(120).map(p => [p.x, p.z]);
@@ -709,7 +728,7 @@ export function createMap(canvas, host, on = {}) {
     place2();
     /* the sun's shadows follow what is in view */
     const sp = Math.min(260, Math.max(120, cam.d * 0.9)), sc = sunL.sun.shadow.camera; if (Math.abs(sc.right - sp / 2) > 1) { Object.assign(sc, { left: -sp / 2, right: sp / 2, top: sp / 2, bottom: -sp / 2 }); sc.updateProjectionMatrix(); }
-    sunL.sun.position.set(cam.x - sp * 0.5, sp * 0.9, cam.z + sp * 0.6); sunL.sun.target.position.set(cam.x, 0, cam.z);
+    sunL.sun.position.set(cam.x - sp * 0.55, sp * (night ? 0.9 : 0.66), cam.z + sp * 0.6);   /* a lower sun by day: longer, softer shadows */ sunL.sun.target.position.set(cam.x, 0, cam.z);
     growing.forEach(gr => { if (gr.t0 > 0) { const k = clamp((now - gr.t0) / 1300); gr.g.scale.setScalar(Math.max(0.001, easeBack(k))); if (k >= 1) gr.t0 = -1; } });
     for (let i = sparks.length - 1; i >= 0; i--) { const m = sparks[i]; m.userData.t += dt; m.userData.v.y -= 18 * dt; m.position.addScaledVector(m.userData.v, dt); m.rotation.y += dt * 4; m.material.opacity = Math.max(0, 1 - m.userData.t / 1.4); if (m.userData.t > 1.4) { scene.remove(m); sparks.splice(i, 1); } }
     /* the factory opens and closes with the camera */
@@ -727,6 +746,7 @@ export function createMap(canvas, host, on = {}) {
     token.position.lerp(tokenGoal, Math.min(1, dt * 2.2)); token.position.y = 1.2 + Math.sin(tm * 2) * 0.25; token.rotation.y += dt * 0.8;
     if (!reduced()) {
       spinning.forEach((f, i) => { if (f.jib) f.jib.rotation.y = Math.sin(tm * 0.2) * 0.9; else if (f.hand) f.hand.rotation.z = -tm * 0.8; else f.rotation.y += dt * (2 + (i % 3)); });
+      ripples.offset.set(tm * 0.004, tm * 0.0025);
       pulses.forEach((p, i) => { if (p.material.emissiveIntensity != null) p.material.emissiveIntensity = (night ? 1.2 : 0.6) * (0.75 + 0.25 * Math.sin(tm * 2 + i)); });
       bobbing.forEach(b => { if (b.ring !== undefined) { const u = (tm * 0.5 + b.ring / 3) % 1; b.obj.scale.setScalar(1 + u * 6); b.obj.material.opacity = 0.6 * (1 - u); } else b.obj.position.y = b.base + Math.sin(tm * 1.4 + b.k) * 0.4; });
       flows.forEach((m, i) => { const u = (tm * 0.018 + i / flows.length) % 1, p = loop.curve.getPointAt(u), tg = loop.curve.getTangentAt(u); m.position.set(p.x, 0.12, p.z); m.rotation.y = Math.atan2(-tg.z, tg.x); });
