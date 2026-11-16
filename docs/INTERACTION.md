@@ -47,9 +47,12 @@ should look like a cartoon. Consistency comes before any single feature.
 2. The design studio and the test house opened the same way (done: the studio's upper floor lifts away from a
    ground floor where the job is written, described, checked, turned into gates and laid out, with the mask house as
    its last part; the test house shows its probers, the needles and the wafer map; the port's packing hall on the
-   quay shows the saw, the bonder, the lid press, the last test and the packed boxes).
+   quay shows the saw, the bonder, the lid press, the last test and the packed boxes; the data centre's nearer hall
+   shows its rows of racks and a server pulled out onto a cart, and `#/place/datacentre` is now the place on the
+   island, like every other, while its flight is entered at a level, `#/place/datacentre/2`).
 3. The hand-off from a part into the view inside made one move (first pass done: the camera dives at the part, and
    the view inside opens from that point on the screen, as through a portal; going out, it closes back into the
-   place). Next: the view inside starting from the same picture the island ends on.
+   place). The line now starts high above the machine the camera dived at and comes down to it, so the dive
+   continues instead of starting again.
 4. The first page as a surface to play: the questions and challenges met in the world, with the hero folding
    into the heads-up layer once you start.

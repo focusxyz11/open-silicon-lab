@@ -216,6 +216,7 @@ export function start() {
     fab: { list: FAB_PARTS, name: p => t('depth.' + p + '.name'), see: p => t('depth.' + p + '.see'), qs: p => stopsAt(p), deeper: p => '#/line/' + p },
     studio: { list: ['need', 'logic', 'check', 'gates', 'layout', 'masks'], name: p => t('depth.' + p + '.name'), see: p => t('depth.' + p + '.see'), qs: p => stopsAt(p), deeper: p => levelHref('studio', { world: 'design', depth: p }) },
     port: { list: ['saw', 'bumps', 'lid', 'trays', 'boxes'], name: p => { const w = t('part.' + shipOrPkg(p) + '.' + p); return w.charAt(0).toUpperCase() + w.slice(1); }, see: p => t('what.' + shipOrPkg(p) + '.' + p), qs: p => stopsAt(shipOrPkg(p)), deeper: p => '#/line/' + shipOrPkg(p) },
+    datacentre: { list: ['rack', 'board'], name: p => t('depth.' + p + '.name'), see: p => t('depth.' + p + '.see'), qs: p => stopsAt(p), deeper: p => levelHref('datacentre', { world: 'datacentre', depth: p }) },
     test: { list: ['prober', 'needles', 'map'], name: p => { const w = t('part.test.' + p); return w.charAt(0).toUpperCase() + w.slice(1); }, see: p => t('what.test.' + p), qs: () => stopsAt('test'), deeper: () => '#/line/test' }
   };
   const isPart = (place, p) => !!PARTS[place] && PARTS[place].list.includes(p);
@@ -596,7 +597,7 @@ export function start() {
         onRail: k => w.flyTo(WE.IDS.indexOf(k)), onLook: () => { if (benchCh) { benchCh = null; const dk = diveFrame.dock; dk.classList.remove('benchdock'); dk.onclick = null; dk.oninput = null; } drawDive(); } }); watchDock();
       vui.onclick = e => { const b = e.target.closest('[data-divego]'); if (b) w.flyTo(+b.dataset.divego); };
       const d = WE.IDS.indexOf(L.includes(depth) ? depth : L[0]);
-      loading(false); w.start(); w.setZ(d); diveD = -1; diveAt(d); $('diveCanvas').focus({ preventScroll: true });
+      loading(false); w.start(); w.setZ(d); if (arriving && kind === 'line') w.arrive(); arriving = false; diveD = -1; diveAt(d); $('diveCanvas').focus({ preventScroll: true });
       const ch = chId && Game.challengeOf(chId); if (ch) openBench(ch);
     });
   }
@@ -922,7 +923,7 @@ export function start() {
     if (k === 'dive') { const w = p[2] || Game.DIVE_WORLD[p[1]] || 'datacentre'; if (w === 'datacentre') return ['dive', 4]; const i = Math.max(0, ['phone', 'phoneboard', 'soc', 'car', 'ecu', 'mcu', 'scanner', 'wafer', 'die'].indexOf(p[1]) % 3); return ['dive:' + w, Game.DIVE_WORLD[p[1]] ? 1 + i : 4]; }
     if (k === 'supply') return ['supply', 0];
     return k === 'board' ? ['board', 2] : k === 'line' ? ['line', 1] : k === 'bench' ? ['bench', 1] : k === 'chip' ? ['chip', 3]
-      : k === 'place' && p[1] === 'datacentre' && p[2] !== 'inside' ? ['dc', 1] : ['map', 0]; };
+      : k === 'place' && p[1] === 'datacentre' && /^\d+$/.test(p[2] || '') ? ['dc', 1] : ['map', 0]; };
   let shownAt = null;   /* the address of the view now made, so a question at the same level only changes the dock */
   let viewNow = null, rankNow = 0, nextMove = null, lastPlace = null, entering = false;
   /* going inside from the island: the camera dives into the place first, then the view zooms in from it */
@@ -931,9 +932,10 @@ export function start() {
     if (still() || !map || $('mapCanvas').hidden || !lastFocus()) { location.hash = href; return; }
     /* the camera dives at what is selected, and the view inside opens from that point on the screen, as through a
        portal (docs/INTERACTION.md) */
-    entering = true; map.dive(lastFocus(), cur && cur.part).then(() => { entering = false; portalAt(map.screenOf(lastFocus(), cur && cur.part)); location.hash = href; });
+    entering = true; map.dive(lastFocus(), cur && cur.part).then(() => { entering = false; portalAt(map.screenOf(lastFocus(), cur && cur.part)); arriving = true; location.hash = href; });
   }
   const lastFocus = () => (cur && cur.place) || null;
+  let arriving = false;   /* the next view was entered from the island: it starts from above, coming down */
   /* where the next zoom opens or closes on the screen */
   const portalAt = p => { const r = document.documentElement.style; if (p && p.x > 0 && p.x < 1 && p.y > 0 && p.y < 1) { r.setProperty('--vx', (p.x * 100).toFixed(1) + '%'); r.setProperty('--vy', (p.y * 100).toFixed(1) + '%'); } else { r.removeProperty('--vx'); r.removeProperty('--vy'); } };
   sheet.addEventListener('click', e => { const a = e.target.closest('a[href^="#/"]'); if (!a || viewOf(partsOf(a.getAttribute('href')))[0] === 'map') return; e.preventDefault(); e.stopPropagation(); enter(a.getAttribute('href')); }, true);
@@ -953,7 +955,8 @@ export function start() {
       if (home) return show(partsOf(home), from).then(() => { shownAt = '#/' + parts.join('/'); openBench(ch); });
       return showMap(from).then(() => openChallenge(ch)); }
     if (k === 'chip') return showChip(parts[1] != null ? +parts[1] : null, parts[2]);
-    if (k === 'place' && parts[1] === 'datacentre' && parts[2] !== 'inside') return showPlace('datacentre', parts[2] != null ? +parts[2] : null);
+    /* the data centre's flight is entered at one of its levels (#/place/datacentre/2); the place itself opens on the island */
+    if (k === 'place' && parts[1] === 'datacentre' && /^\d+$/.test(parts[2] || '')) return showPlace('datacentre', +parts[2]);
     if (k === 'place' && isPart(parts[1], parts[2])) return showMap(from).then(() => openPlace(parts[1], 'look', null, null, parts[2]));
     if (k === 'place' && Game.PLACES.includes(parts[1])) return showMap(from).then(() => openPlace(parts[1], parts[2] === 'inside' ? 'look' : null));
     if (k === 'build') return showMap(from).then(() => openPlace('lab', 'look', parts[1] || 'computer', parts[2]));

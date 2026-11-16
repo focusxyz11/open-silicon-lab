@@ -201,7 +201,7 @@ export function createWorld(cv, on) {
   let stay = { i: -1, t: 0 }, paused = false, names = false, lastTm = 0, jhits = null, jbox = null, lensBox = null;
   /* the journey in 3D (src/app/journey3d.js), loaded the first time the line is shown; until then, or
      without WebGL, the 2D stations */
-  let J3 = null, j3state = 'none';
+  let J3 = null, j3state = 'none', arriving = false;
   const want3d = () => {
     if (j3state !== 'none') return;
     j3state = 'loading';
@@ -213,7 +213,7 @@ export function createWorld(cv, on) {
     lastTm = tm;
     const run = stay.i === near ? (reduced() ? -1 : tm - stay.t) : null;
     J3.canvas.style.display = '';
-    const r3 = J3.render({ ids: IDS, Z, near, dist, run, tm, W, H, dpr, box: b, col });
+    const r3 = J3.render({ ids: IDS, Z, near, dist, run, tm, W, H, dpr, box: b, col, arrive: arriving }); arriving = false;
     setParts3(id => (id === IDS[near] ? J3.parts(id, b, W, H) : null));
     ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, W * dpr, H * dpr);
     const k = b.B / 1000, left = b.cx - b.B / 2, top = b.cy - b.B / 2, below = (H - inset.b - (top + b.B)) / k;
@@ -578,6 +578,8 @@ export function createWorld(cv, on) {
     setLead(keys) { lead = Array.isArray(keys) ? keys : []; },
     /* a 3D level covers the picture whole (the shell, src/v2/app.js): stop drawing it until it shows again */
     setCovered(on) { covered = !!on; },
+    /* the next frame of the line starts from high above, coming down (arriving from the island) */
+    arrive() { arriving = true; },
     /* the map: o (see map.js) to open or update it, null to close it */
     setMap(o) { mapO = o; if (o) mapLast = o; },
     get mapOpen() { return !!mapO; },

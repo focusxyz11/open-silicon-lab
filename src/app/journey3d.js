@@ -713,6 +713,9 @@ export function createJourney3D(host, before, shared) {
     cam.k = lerp(cam.k || 0, closeK, 1 - Math.exp(-dt * 3)); M.rail.opacity = 1 - 0.85 * cam.k; M.rail.depthWrite = cam.k < 0.2;
     P.sub(base); T.sub(base);
     if (!cam.init) { cam.p.copy(P); cam.t.copy(T); cam.init = true; }
+    /* arriving from the island (docs/INTERACTION.md): the camera starts high above the machine, where the dive left
+       it, and comes down to the line */
+    if (o.arrive) { cam.p.copy(P).add(new THREE.Vector3(-2.2, 14, 9)); cam.t.copy(T); }
     const k = 1 - Math.exp(-dt * 2.6); cam.p.lerp(P, k); cam.t.lerp(T, k);
     camera.position.copy(cam.p).add(base); const look = cam.t.clone().add(base); camera.lookAt(look);
     sun.position.set(look.x - 4, 12, look.z + 6); sun.target.position.copy(look);
