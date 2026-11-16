@@ -211,9 +211,11 @@ export function start() {
   /* the buildings that open where they stand, and their parts, each selected as itself (#/place/fab/etch): what it is
      called, the sentence that says what it does, its questions, and where going closer leads */
   const FAB_PARTS = ['clean', 'deposit', 'print', 'etch', 'implant', 'wires'];
+  const shipOrPkg = p => (['trays', 'boxes'].includes(p) ? 'ship' : 'pkg');
   const PARTS = {
     fab: { list: FAB_PARTS, name: p => t('depth.' + p + '.name'), see: p => t('depth.' + p + '.see'), qs: p => stopsAt(p), deeper: p => '#/line/' + p },
     studio: { list: ['need', 'logic', 'check', 'gates', 'layout', 'masks'], name: p => t('depth.' + p + '.name'), see: p => t('depth.' + p + '.see'), qs: p => stopsAt(p), deeper: p => levelHref('studio', { world: 'design', depth: p }) },
+    port: { list: ['saw', 'bumps', 'lid', 'trays', 'boxes'], name: p => { const w = t('part.' + shipOrPkg(p) + '.' + p); return w.charAt(0).toUpperCase() + w.slice(1); }, see: p => t('what.' + shipOrPkg(p) + '.' + p), qs: p => stopsAt(shipOrPkg(p)), deeper: p => '#/line/' + shipOrPkg(p) },
     test: { list: ['prober', 'needles', 'map'], name: p => { const w = t('part.test.' + p); return w.charAt(0).toUpperCase() + w.slice(1); }, see: p => t('what.test.' + p), qs: () => stopsAt('test'), deeper: () => '#/line/test' }
   };
   const isPart = (place, p) => !!PARTS[place] && PARTS[place].list.includes(p);
@@ -927,9 +929,13 @@ export function start() {
   function enter(href) {
     if (entering) return;
     if (still() || !map || $('mapCanvas').hidden || !lastFocus()) { location.hash = href; return; }
-    entering = true; map.dive(lastFocus(), cur && cur.part).then(() => { entering = false; location.hash = href; });
+    /* the camera dives at what is selected, and the view inside opens from that point on the screen, as through a
+       portal (docs/INTERACTION.md) */
+    entering = true; map.dive(lastFocus(), cur && cur.part).then(() => { entering = false; portalAt(map.screenOf(lastFocus(), cur && cur.part)); location.hash = href; });
   }
   const lastFocus = () => (cur && cur.place) || null;
+  /* where the next zoom opens or closes on the screen */
+  const portalAt = p => { const r = document.documentElement.style; if (p && p.x > 0 && p.x < 1 && p.y > 0 && p.y < 1) { r.setProperty('--vx', (p.x * 100).toFixed(1) + '%'); r.setProperty('--vy', (p.y * 100).toFixed(1) + '%'); } else { r.removeProperty('--vx'); r.removeProperty('--vy'); } };
   sheet.addEventListener('click', e => { const a = e.target.closest('a[href^="#/"]'); if (!a || viewOf(partsOf(a.getAttribute('href')))[0] === 'map') return; e.preventDefault(); e.stopPropagation(); enter(a.getAttribute('href')); }, true);
   function show(parts, from) {
     const k = parts[0] || 'explore';
@@ -964,7 +970,7 @@ export function start() {
     nextMove = null; viewNow = view; rankNow = rank;
     if (!from || from === view || still() || !document.startViewTransition) return after(show(parts, from && from !== view ? from : null));
     /* the old picture holds while the new view is made (at most a moment), then one zooms into the other */
-    const root = document.documentElement; root.dataset.move = move;
+    const root = document.documentElement; root.dataset.move = move; if (move !== 'in') portalAt(null);
     const tr = document.startViewTransition(() => Promise.race([after(show(parts, from)), new Promise(r => setTimeout(r, 1500))]));
     tr.finished.finally(() => { if (root.dataset.move === move) delete root.dataset.move; });
   }

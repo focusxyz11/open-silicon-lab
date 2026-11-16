@@ -46,7 +46,10 @@ should look like a cartoon. Consistency comes before any single feature.
    step. The card loses its "Go inside" button everywhere; zoom does it.
 2. The design studio and the test house opened the same way (done: the studio's upper floor lifts away from a
    ground floor where the job is written, described, checked, turned into gates and laid out, with the mask house as
-   its last part; the test house shows its probers, the needles and the wafer map). The port next.
-3. The hand-off from a tool into the line and the dive made one camera move.
+   its last part; the test house shows its probers, the needles and the wafer map; the port's packing hall on the
+   quay shows the saw, the bonder, the lid press, the last test and the packed boxes).
+3. The hand-off from a part into the view inside made one move (first pass done: the camera dives at the part, and
+   the view inside opens from that point on the screen, as through a portal; going out, it closes back into the
+   place). Next: the view inside starting from the same picture the island ends on.
 4. The first page as a surface to play: the questions and challenges met in the world, with the hero folding
    into the heads-up layer once you start.
