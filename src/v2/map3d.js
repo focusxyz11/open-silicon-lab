@@ -76,7 +76,14 @@ function terrain(coast, T) {
   const idx = g.index.array, out = [];
   for (let i = 0; i < idx.length; i += 3) if (keep[idx[i]] && keep[idx[i + 1]] && keep[idx[i + 2]]) out.push(idx[i], idx[i + 1], idx[i + 2]);
   g.setIndex(out);
-  const m = new THREE.Mesh(g, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.96, metalness: 0 }));
+  /* the grass up close: a fine speckle of lighter and darker blades over the colour, tiled, so the ground is not one
+     smooth paint when the camera comes down */
+  const tex = (() => { const N = 128, cv = document.createElement('canvas'); cv.width = cv.height = N; const x = cv.getContext('2d'), im = x.createImageData(N, N);
+    for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) { const k = (j * N + i) * 4, r = (Math.sin(i * 12.9898 + j * 78.233) * 43758.5453) % 1, v = 0.86 + 0.14 * (0.6 * Math.abs(r) + 0.4 * noise2(i / 6, j / 6));
+      im.data[k] = im.data[k + 1] = im.data[k + 2] = Math.round(v * 255); im.data[k + 3] = 255; }
+    x.putImageData(im, 0, 0); const t2 = new THREE.CanvasTexture(cv); t2.wrapS = t2.wrapT = THREE.RepeatWrapping; t2.repeat.set(46, 30); t2.anisotropy = 4; return t2; })();
+  const uv = g.attributes.uv; if (uv) for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i), uv.getY(i));
+  const m = new THREE.Mesh(g, new THREE.MeshStandardMaterial({ vertexColors: true, map: tex, roughness: 0.96, metalness: 0 }));
   m.receiveShadow = true; return m;
 }
 
@@ -116,6 +123,12 @@ export function createMap(canvas, host, on = {}) {
   const island = (pts, n) => { const c = blob(pts, n); flat(scene, grow(c, 0.09), shallowM, -0.55); flat(scene, grow(c, 0.03), mat(T.wet, { roughness: 0.5 }), -2.2, { depth: 1.2, bevel: 0.6 }); flat(scene, grow(c, 0.016), mat(T.sand, { roughness: 0.95 }), -2.0, { depth: 1.2, bevel: 0.6 }); flat(scene, c, mat(T.ground, { roughness: 0.95 }), -1.6, { depth: 1.2, bevel: 0.4 }); return c; };
   const coast = island(ISLAND, 160);
   scene.add(terrain(coast, T));
+  /* the shore: a line of foam where the water meets the wet sand, and rocks here and there along it */
+  const foamM = new THREE.MeshBasicMaterial({ color: night ? 0x8fb0d0 : 0xffffff, transparent: true, opacity: night ? 0.45 : 0.75, depthWrite: false, side: THREE.DoubleSide });
+  const foamR = ribbon(scene, grow(coast, 0.05).filter((_, i) => i % 2 === 0), 1.1, foamM, -0.46, true);
+  const rockM = mat(night ? 0x3b4048 : 0x8d8f8c, { roughness: 0.9, flatShading: true }), rockG = new THREE.DodecahedronGeometry(1, 0);
+  grow(coast, 0.028).forEach(([x, z], i) => { if (rnd(i, 31) > 0.16) return; for (let k = 0; k < 1 + Math.floor(rnd(i, 32) * 3); k++) { const r = new THREE.Mesh(rockG, rockM), sc = 0.5 + rnd(i * 3 + k, 33) * 0.9;
+    r.scale.set(sc * 1.3, sc * 0.7, sc); r.position.set(x + (rnd(i + k, 34) - 0.5) * 2, -0.45 + sc * 0.2, z + (rnd(i + k, 35) - 0.5) * 2); r.rotation.set(rnd(i, 36) * 3, rnd(i, 37) * 6, 0); r.castShadow = true; r.receiveShadow = true; scene.add(r); } });
   island(ISLE(-178, 132, 34), 60); island(ISLE(158, 150, 36), 60);
   flat(scene, blob(ISLE(214, -78, 12, 7), 40), mat(T.sand, { roughness: 0.95 }), -0.45);
 
@@ -136,8 +149,26 @@ export function createMap(canvas, host, on = {}) {
 
   /* ---- trees where nothing stands ---- */
   const loopPts = loop.curve.getSpacedPoints(120).map(p => [p.x, p.z]);
+  /* the ground between: a footpath from every building's way in to the road, and car parks with their bays marked and
+     some cars in them (docs/INTERACTION.md: grown up, not a toy; colour only where it means something) */
+  const ENTRANCES = [[-50.6, -25.4], [-18.2, -7.9], [25.9, 2.1], [57.6, 17.5], [25.8, -30.9]];
+  const nearRoad = ([x, z]) => loopPts.reduce((b, p) => (Math.hypot(p[0] - x, p[1] - z) < Math.hypot(b[0] - x, b[1] - z) ? p : b));
+  const PATHS = ENTRANCES.map(e => [[e[0], e[1] + 1.4], nearRoad([e[0], e[1] + 1.4])]);
+  const pathM = mat(night ? 0x46443f : 0xd8d1c0, { roughness: 0.95 });
+  PATHS.forEach(([a, b]) => ribbon(scene, [a, [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2], b], 1.3, pathM, 0.035));
+  const segD2 = (x, z, [ax, az], [bx, bz]) => { const dx = bx - ax, dz = bz - az, u = Math.max(0, Math.min(1, ((x - ax) * dx + (z - az) * dz) / (dx * dx + dz * dz || 1e-9))); return Math.hypot(x - ax - u * dx, z - az - u * dz); };
+  const CARS = [0x8e949b, 0x3d4652, 0xd9d9d4, 0x6b2f2f, 0x2f4a63, 0x56604f, 0x1f2329];
+  const LOTS = [[-41, -20, 'x', 4], [37.5, -26.5, 'x', 5], [31.5, -3, 'z', 3]];
+  const asphalt = mat(night ? 0x2a303a : 0x5d636c, { roughness: 0.92 }), lineM = mat(night ? 0x8a919c : 0xf1efe8, { roughness: 0.6 });
+  LOTS.forEach(([cx, cz, along, n], li) => { const X = along === 'x', L = n * 2.7, D = 5.4, g = group(scene, cx, 0, cz);
+    box(g, X ? L + 0.6 : D, 0.06, X ? D : L + 0.6, asphalt, 0, 0.02, 0, 0.02, { cast: false });
+    for (let i = 0; i <= n; i++) { const o = -L / 2 + i * 2.7; box(g, X ? 0.1 : D - 0.6, 0.02, X ? D - 0.6 : 0.1, lineM, X ? o : 0, 0.085, X ? 0 : o, 0.005, { cast: false }); }
+    for (let i = 0; i < n; i++) { if (rnd(i + li * 7, 41) < 0.3) continue; const o = -L / 2 + 1.35 + i * 2.7, c = group(g, X ? o : 0, 0.08, X ? 0 : o, X ? Math.PI / 2 : 0), col = mat(CARS[Math.floor(rnd(i + li * 7, 42) * CARS.length)], { roughness: 0.35, metalness: 0.4 });
+      box(c, 1.9, 0.55, 3.9, col, 0, 0.18, 0, 0.18); box(c, 1.6, 0.48, 2.0, mat(night ? 0x2a3442 : 0x33404f, { roughness: 0.15, metalness: 0.4 }), 0, 0.72, -0.15, 0.16);
+      [[-0.85, -1.25], [0.85, -1.25], [-0.85, 1.25], [0.85, 1.25]].forEach(([wx, wz]) => { const w = cyl(c, 0.32, 0.32, 0.22, mat(0x15181d, { roughness: 0.8 }), wx, 0.3, wz, 12); w.rotation.z = Math.PI / 2; w.position.y = 0.32; }); } });
+  const inLot = (x, z) => LOTS.some(([cx, cz, along, n]) => { const hx = (along === 'x' ? n * 2.7 + 0.6 : 5.4) / 2 + 1.5, hz = (along === 'x' ? 5.4 : n * 2.7 + 0.6) / 2 + 1.5; return Math.abs(x - cx) < hx && Math.abs(z - cz) < hz; });
   const inPoly = (pts, x, z) => { let c = false; for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) { const [xi, zi] = pts[i], [xj, zj] = pts[j]; if ((zi > z) !== (zj > z) && x < (xj - xi) * (z - zi) / (zj - zi) + xi) c = !c; } return c; };
-  const free = (x, z) => inPoly(coast, x, z) && !PLACES.some(p => Math.hypot(p.at[0] - x, p.at[1] - z) < (p.r || 16)) && !loopPts.some(([a, b]) => Math.hypot(a - x, b - z) < 5) && !SPOKES.flat().some(([a, b]) => Math.hypot(a - x, b - z) < 4);
+  const free = (x, z) => inPoly(coast, x, z) && !PLACES.some(p => Math.hypot(p.at[0] - x, p.at[1] - z) < (p.r || 16)) && !loopPts.some(([a, b]) => Math.hypot(a - x, b - z) < 5) && !SPOKES.flat().some(([a, b]) => Math.hypot(a - x, b - z) < 4) && !PATHS.some(([a, b]) => segD2(x, z, a, b) < 2.2) && !inLot(x, z);
   /* groves, not a scatter: trees stand where a slow noise says the ground is wooded, thicker inland, in two kinds
      (pines and broadleaf), each one a little taller or darker than the next */
   const trees = []; for (let i = 0; i < 6000 && trees.length < 520; i++) { const x = -82 + rnd(i, 3) * 164, z = -56 + rnd(i, 7) * 104; if (free(x, z) && noise2(x / 22, z / 22) > 0.52 - 0.12 * rnd(i, 4)) trees.push([x, z, 0.65 + rnd(i, 9) * 0.6, rnd(i, 17)]); }
@@ -298,7 +329,7 @@ export function createMap(canvas, host, on = {}) {
     parapet(mh, 0, 4.15, 0, 8.1, 7.1, 0.35); unit(mh, -1.6, 4.15, -1.4, 0.8); band(mh, -4.05, 1.4, 0, 5.4, 1.1, 'z', winCool, 1.35); plinth(mh, -4.03, 0, 7, 'z');
     for (let i = 0; i < 4; i++) pulses.push(box(mh, 0.9, 0.9, 0.06, glow([P.accent, P.good, P.warm, P.accent][i], 1.1), -2.6 + i * 1.7, 2, 3.56, 0.02, { cast: false }));
     tagParts(O, 'masks', mh);
-    [[-15, 10], [-6, 11], [4, 10.5], [10, 11.5]].forEach(([x, z]) => tree(g, x, z, 0.9)); }
+    [[-15, 10], [-6, 11], [-17, 12.5]].forEach(([x, z]) => tree(g, x, z, 0.9)); }
   /* 2 make: sand to crystal, and the factory */
   { const g = place('quarry');
     [[-6, 2, 3.2], [-2, -4, 2.6], [-9, -5, 2.2]].forEach(([x, z, r]) => { const m = new THREE.Mesh(new THREE.ConeGeometry(r, r * 0.9, 20), mat(P.sand, { roughness: 1 })); m.position.set(x, r * 0.45, z); m.castShadow = m.receiveShadow = true; g.add(m); });
@@ -779,7 +810,7 @@ export function createMap(canvas, host, on = {}) {
     token.position.lerp(tokenGoal, Math.min(1, dt * 2.2)); token.position.y = 1.2 + Math.sin(tm * 2) * 0.25; token.rotation.y += dt * 0.8;
     if (!reduced()) {
       spinning.forEach((f, i) => { if (f.jib) f.jib.rotation.y = Math.sin(tm * 0.2) * 0.9; else if (f.hand) f.hand.rotation.z = -tm * 0.8; else f.rotation.y += dt * (2 + (i % 3)); });
-      ripples.offset.set(tm * 0.004, tm * 0.0025);
+      ripples.offset.set(tm * 0.004, tm * 0.0025); foamM.opacity = (night ? 0.4 : 0.68) + (night ? 0.1 : 0.2) * Math.sin(tm * 0.9);
       pulses.forEach((p, i) => { if (p.material.emissiveIntensity != null) p.material.emissiveIntensity = (night ? 1.2 : 0.6) * (0.75 + 0.25 * Math.sin(tm * 2 + i)); });
       bobbing.forEach(b => { if (b.ring !== undefined) { const u = (tm * 0.5 + b.ring / 3) % 1; b.obj.scale.setScalar(1 + u * 6); b.obj.material.opacity = 0.6 * (1 - u); } else b.obj.position.y = b.base + Math.sin(tm * 1.4 + b.k) * 0.4; });
       flows.forEach((m, i) => { const u = (tm * 0.018 + i / flows.length) % 1, p = loop.curve.getPointAt(u), tg = loop.curve.getTangentAt(u); m.position.set(p.x, 0.12, p.z); m.rotation.y = Math.atan2(-tg.z, tg.x); });
