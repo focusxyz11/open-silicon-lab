@@ -358,6 +358,17 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
     await page.evaluate(h => { location.hash = h; }, '#/place/' + pl + '/' + part);
     await page.waitForSelector('#sheet.part [data-deeper]', { timeout: 15000 }).catch(() => problems.push(tag + ': ' + pl + ' does not open with its parts'));
   }
+  /* what calls stands in the world (docs/INTERACTION.md): by the test house, a square with a board of its questions and
+     a bench for each challenge played there; the board opens what is asked there, a bench plays its challenge */
+  await page.evaluate(() => { location.hash = '#/place/test'; });
+  await page.waitForFunction(() => !!document.querySelector('#mapLabels .poi3.qs[data-poi="ask:test"]') && document.querySelectorAll('#mapLabels .poi3.ch').length >= 2, null, { timeout: 15000 }).catch(() => problems.push(tag + ': the test house has no square of what calls there'));
+  await page.evaluate(() => { const b = document.querySelector('#mapLabels .poi3[data-poi="ask:test"]'); if (b) b.click(); });
+  await page.waitForSelector('#sheet [data-door="ask"][aria-selected="true"]', { timeout: 10000 }).catch(() => problems.push(tag + ': the board of a square does not open what is asked there'));
+  await page.evaluate(() => { const b = document.querySelector('#mapLabels .poi3[data-poi="ch:spot"]'); if (b) b.click(); });
+  await page.waitForFunction(() => location.hash === '#/do/spot', null, { timeout: 10000 }).catch(() => problems.push(tag + ': a bench does not play its challenge'));
+  /* the world around the island is many islands, each its own kind of place */
+  await page.evaluate(() => { location.hash = '#/ecosystem'; });
+  await page.waitForFunction(() => document.querySelectorAll('#sheet .isles [data-place]').length === 6, null, { timeout: 15000 }).catch(() => problems.push(tag + ': the world around does not show its six islands'));
   await page.evaluate(() => { location.hash = '#/place/fab/etch'; });
   /* a part leads into the worlds its questions belong to, and a world says where it is met on the island */
   await page.waitForFunction(() => [...document.querySelectorAll('#sheet .wchip')].some(a => !a.hidden && a.getAttribute('href') === '#/w/fail'), null, { timeout: 15000 }).catch(() => problems.push(tag + ': the etch tool does not lead to the world of its questions'));

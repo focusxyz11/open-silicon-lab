@@ -21,7 +21,7 @@ export const STAGES = ['open', 'design', 'make', 'test', 'ship', 'use'];
 /* the place that stands for each stage on the island */
 export const STAGE_PLACE = { open: 'lab', design: 'studio', make: 'fab', test: 'test', ship: 'port', use: 'datacentre' };
 /* and the stage every place belongs to (the sandbank for what does not exist yet has none) */
-const PLACE_STAGE = { lab: 'open', village: 'open', studio: 'design', quarry: 'make', fab: 'make', test: 'test', port: 'ship', datacentre: 'use', phones: 'use', cars: 'use' };
+const PLACE_STAGE = { lab: 'open', village: 'open', studio: 'design', quarry: 'make', fab: 'make', test: 'test', port: 'ship', datacentre: 'use', phones: 'use', cars: 'use', tools: 'make', materials: 'make', power: 'use' };
 export const stageOfPlace = place => PLACE_STAGE[place] || null;
 /* the next place round the loop: the crystal goes on to the factory, everything else to the next stage's place */
 export const nextPlace = place => {
