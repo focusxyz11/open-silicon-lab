@@ -55,6 +55,8 @@ export function worldHtml(id, P, ctx = {}) {
   const W = WORLDS[id] || { play: {} }, S = P.sections;
   let h = '<article class="world" style="--qc:' + colorOf(id) + '">';
   h += '<p class="kicker">' + esc(t('world.k')) + '</p><h1 class="wq">' + esc(P.title) + '</h1>' + (P.behind ? '<p class="wbehind">' + il(P.behind) + '</p>' : '');
+  /* arrived by a question met on the island: that question first, as it was met there */
+  if (ctx.arrive) h += '<section class="warrive" data-arrive>' + ctx.arrive + '</section><p class="kicker warrnext">' + esc(t('world.arriveNext')) + '</p>';
   h += lensHtml(id, P, ctx.chip);
   if (S.open) h += '<section class="wsec wopen">' + md(S.open.body) + '</section>';
   /* the truths: the unit of every world */

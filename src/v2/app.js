@@ -47,6 +47,10 @@ const hue = th => (THREADS.find(x => x.id === th) || { hue: 200 }).hue;
 const qColor = key => 'hsl(' + hue(key.split('.')[0]) + ' 70% 55%)';
 /* following a question stays in the chip world: its trail walks from view to view (Game.askHref) */
 const follow = key => Game.askHref(key);
+/* following a question from a card opens it in its world (#/w/<world>/at/<depth>): the question as it was met at its
+   place, with what is tried and asked there, then the world it belongs to. Its marks inside a picture still open it
+   in the picture (follow). */
+const followW = key => { const [th, d] = key.split('.'); return WORLD_IDS.includes(th) ? '#/w/' + th + '/at/' + d : Game.askHref(key); };
 
 export function start() {
   let map = null, dc = null, chip = null, board = null, dive = null, mapReady = null;
@@ -191,7 +195,7 @@ export function start() {
   const worldsRow = keys => { const ids = worldsOf(keys).slice(0, 3); if (!ids.length) return '';
     loadWT().then(() => fillWorlds(sheet));
     return '<div class="wmeet"><p class="kicker">' + esc(t('world.here')) + '</p>' + ids.map(id => '<a class="wchip" href="#/w/' + id + '" data-wt="' + id + '" style="--qc:' + Worlds.colorOf(id) + '"' + (WT ? '' : ' hidden') + '><span class="wq"></span><span class="wl small"></span></a>').join('') + '</div>'; };
-  const askLink = k => '<a class="askq" href="' + esc(follow(k)) + '" style="--qc:' + qColor(k) + '"><span class="q">' + esc(t('stop.' + k + '.q')) + '</span><span class="small muted">' + esc(t('sheet.follow')) + '</span></a>';
+  const askLink = k => '<a class="askq" href="' + esc(followW(k)) + '" style="--qc:' + qColor(k) + '"><span class="q">' + esc(t('stop.' + k + '.q')) + '</span><span class="small muted">' + esc(t('sheet.follow')) + '</span></a>';
   /* Inside: the place's levels, one inside the next, with what waits at each; then any other way in */
   /* a level opens where it is drawn best: the flight through the data centre, the chip's layers (a depth of the
      dive, or the factory step that makes it), or else the current site */
@@ -317,7 +321,7 @@ export function start() {
     if (pid) { cur = { place: pid, tab: 'ask' }; map && map.focus(pid); }
     $('hero').classList.add('away'); sheet.onclick = null; sheet.oninput = null;
     sheet.innerHTML = '<button type="button" class="x" data-close aria-label="' + esc(t('sheet.close')) + '">×</button><div class="ask big" style="--qc:' + qColor(key) + '"><p class="kicker">' + esc(pid ? t('map.' + pid + '.t') : t('sheet.ask')) + '</p><p class="q">' + esc(t('stop.' + key + '.q')) + '</p><p>' + esc(t('stop.' + key + '.note')) + '</p></div>' +
-      '<div class="acts"><a class="btn primary" href="' + esc(follow(key)) + '">' + esc(t('sheet.follow')) + '</a>' + (pid ? '<button type="button" class="btn" data-place="' + pid + '">' + esc(t('game.allHere', { place: t('map.' + pid + '.t') })) + '</button>' : '') + '</div>';
+      '<div class="acts"><a class="btn primary" href="' + esc(followW(key)) + '">' + esc(t('sheet.follow')) + '</a>' + (pid ? '<button type="button" class="btn" data-place="' + pid + '">' + esc(t('game.allHere', { place: t('map.' + pid + '.t') })) + '</button>' : '') + '</div>';
     sheet.hidden = false;
   }
   sheet.addEventListener('click', e => {
@@ -787,7 +791,7 @@ export function start() {
           (th === last && rootShown(S.met[th], Game.didOn(S, th)) ? '<p class="small muted">' + esc(t('ui.rootOf')) + ' <em class="rootq">' + esc(t('thread.' + th + '.root')) + '</em></p>' : '') + '</div>'; }).join('') + '</section>';
       const bk = Game.BEACON[Game.STATION[Game.chipAt(S)]];
       h += '<section class="stepsec"><h2>' + esc(t(strands.length ? 'page.questions.next' : 'page.questions.first')) + '</h2><p class="small muted">' + esc(t('page.questions.where')) + '</p><div class="qgrid">' +
-        '<a class="qcard" href="' + esc(follow(bk)) + '" style="--qc:' + qColor(bk) + '"><span class="kicker">' + esc(t('map.' + Game.STATION[Game.chipAt(S)] + '.t')) + '</span><span class="q">' + esc(t('stop.' + bk + '.q')) + '</span><span class="small muted">' + esc(t('sheet.follow')) + '</span></a></div></section>';
+        '<a class="qcard" href="' + esc(followW(bk)) + '" style="--qc:' + qColor(bk) + '"><span class="kicker">' + esc(t('map.' + Game.STATION[Game.chipAt(S)] + '.t')) + '</span><span class="q">' + esc(t('stop.' + bk + '.q')) + '</span><span class="small muted">' + esc(t('sheet.follow')) + '</span></a></div></section>';
       const asked = C.W.entries.filter(e => e.kind === 'question');
       h += '<section class="stepsec"><h2>' + esc(t('page.questions.asked')) + '</h2>' + (asked.length ? asked.slice().reverse().map(askedHtml).join('') : '<p class="small muted">' + esc(t('page.questions.none')) + '</p>') + '</section>' + hc;
     }
@@ -824,13 +828,21 @@ export function start() {
       if (href && !seen.has(href)) { seen.add(href); out.push({ href, label, q: t('stop.' + k + '.q') }); } }));
     return out;
   }
-  function showWorld(id, at) {
+  /* a question met at its place, opened in its world: where it was met (with the way back there and the picture it is
+     asked in), the question, what to notice, what is tried and what people asked, all kept as before */
+  function arriveHtml(th, d) {
+    const back = islandOf(th).find(x => x.q === t('stop.' + th + '.' + d + '.q'));
+    return '<p class="kicker warrk">' + (back ? '<a href="' + esc(back.href) + '">← ' + esc(back.label) + '</a> · ' : '') + '<a href="' + esc(Game.askHref(th + '.' + d)) + '">' + esc(t('world.inPicture')) + '</a></p>' + stopHtml(th, d, followW);
+  }
+  function showWorld(id, at, d) {
     if (!WORLD_IDS.includes(id)) { location.hash = '#/'; return; }
+    const atStop = at === 'at' && d && Game.trail(id).includes(d) ? d : null;
+    if (atStop) { nowStop = { th: id, d: atStop }; askOpen = false; askNo = null; askVals = { q: '', noticed: '' }; const was = S.met[id] || []; delete S.met[id]; S.met[id] = [...new Set([...was, atStop])]; save(); }
     const q = /^q(\d+)$/.exec(at || ''), shown = location.hash;
     page.innerHTML = '<div class="inner"><a class="x pagex" href="#/" aria-label="' + esc(t('sheet.close')) + '">×</a><p class="muted">' + esc(t('world.loading')) + '</p></div>';
     page.classList.add('reading'); page.hidden = false; page.scrollTop = 0;
     const draw = P => { if (location.hash !== shown) return;
-      page.innerHTML = '<div class="inner"><a class="x pagex" href="#/" aria-label="' + esc(t('sheet.close')) + '">×</a>' + Worlds.worldHtml(id, P, { chip: S.chip, q: q ? +q[1] : null, island: islandOf(id) }) + '</div>';
+      page.innerHTML = '<div class="inner"><a class="x pagex" href="#/" aria-label="' + esc(t('sheet.close')) + '">×</a>' + Worlds.worldHtml(id, P, { chip: S.chip, q: q ? +q[1] : null, island: islandOf(id), arrive: atStop ? arriveHtml(id, atStop) : null }) + '</div>';
       swarmStart(page);
       const el = q && page.querySelector('#q' + q[1]); if (el) el.scrollIntoView({ block: 'center' }); };
     const go = () => Worlds.loadWorld(id).then(draw, () => { page.querySelector('.inner').innerHTML += '<p>' + esc(t('world.missing')) + '</p>'; });
@@ -876,9 +888,9 @@ export function start() {
   /* a question someone added under a stop: its words, who asked, and (for yours) the slip that leads into the ledger */
   const askedHtml = e => '<div class="asked1' + (e.draft ? ' draft' : '') + '"><p class="q">' + esc(e.q) + '</p>' + (e.noticed ? '<p class="small">' + esc(e.noticed) + '</p>' : '') + '<p class="small muted">' + byLine(e) + (e.under ? ' · ' + esc(t('depth.' + e.at + '.name')) : '') + '</p>' + (Game.workAt(e.id, S).length ? '<p class="kicker">' + esc(t('trail.work', { n: Game.workAt(e.id, S).length })) + '</p>' + Game.workAt(e.id, S).map(w => '<p class="small"><span class="made ' + esc(w.made) + '"></span> ' + esc(Game.entryWords(w, S)) + ' <span class="muted">· ' + byLine(w) + '</span></p>').join('') : '') + (e.draft ? slipHtml(S, e.id) : '<p class="small muted">' + esc(t('ask.workOn')) + ' <span class="mono">' + esc(e.id) + '</span></p>') + '</div>';
   let nowStop = null, askOpen = false, askNo = null, askVals = { q: '', noticed: '' };
-  function stopHtml(th, d) {
+  function stopHtml(th, d, hrefOf = Game.askHref) {
     const T = Game.trail(th), i = T.indexOf(d), key = th + '.' + d, tried = t('stop.' + key + '.tried');
-    const step = (j, k) => T[j] != null ? '<a class="btn' + (k === 'next' ? ' primary' : ' ghost') + '" data-key="' + k + '" href="' + esc(Game.askHref(th + '.' + T[j])) + '">' + esc(t(k === 'next' ? 'trail.next' : 'trail.prev', { level: t('depth.' + T[j] + '.name') })) + '</a>' : '<span></span>';
+    const step = (j, k) => T[j] != null ? '<a class="btn' + (k === 'next' ? ' primary' : ' ghost') + '" data-key="' + k + '" href="' + esc(hrefOf(th + '.' + T[j])) + '">' + esc(t(k === 'next' ? 'trail.next' : 'trail.prev', { level: t('depth.' + T[j] + '.name') })) + '</a>' : '<span></span>';
     let h = '<div class="stopx"><p class="kicker trailk" style="--qc:' + qColor(key) + '"><span class="dotq"></span>' + esc(t('trail.k', { level: t('depth.' + d + '.name') })) + '</p>';
     h += '<p class="line trailq">' + esc(t('stop.' + key + '.q')) + '</p><p class="small">' + esc(t('stop.' + key + '.note')) + '</p>';
     /* what you can do about it: the challenges that open this question, and the open things of the ledger that sit here */
@@ -889,7 +901,7 @@ export function start() {
     h += casesHtml(key) + figuresHtml(key);
     /* the questions that meet this one on a part they share: a way across, not only down */
     const X = Game.across(key);
-    if (X.length) h += '<details class="more2"><summary>' + esc(t('trail.across', { n: X.length })) + '</summary>' + X.map(k2 => '<a class="askline" href="' + esc(follow(k2)) + '" style="--qc:' + qColor(k2) + '"><span class="q">' + esc(t('stop.' + k2 + '.q')) + '</span></a>').join('') + '</details>';
+    if (X.length) h += '<details class="more2"><summary>' + esc(t('trail.across', { n: X.length })) + '</summary>' + X.map(k2 => '<a class="askline" href="' + esc(hrefOf(k2)) + '" style="--qc:' + qColor(k2) + '"><span class="q">' + esc(t('stop.' + k2 + '.q')) + '</span></a>').join('') + '</details>';
     /* the work done for this question, by people and agents: evidence, never an answer */
     const WK = Game.workAt(key, S);
     if (WK.length) h += '<details class="more2"><summary>' + esc(t('trail.work', { n: WK.length })) + '</summary><p class="small muted">' + esc(t('trail.workD')) + '</p>' + WK.map(e => '<p class="small"><span class="made ' + esc(e.made) + '"></span> ' + esc(Game.entryWords(e, S)) + ' <span class="muted">· ' + byLine(e) + '</span></p>').join('') + '</details>';
@@ -911,6 +923,9 @@ export function start() {
     /* the questions you have met stay met (your state), and the strand you followed last goes to the end */
     const was = S.met[th] || []; delete S.met[th]; S.met[th] = [...new Set([...was, d])]; save();
     if (!FACT) return facts().then(() => askStop(th, d, again));
+    /* met in its world: the block at the top of the world's page */
+    const arrive = !page.hidden && page.querySelector('[data-arrive]');
+    if (arrive && location.hash === '#/w/' + th + '/at/' + d) { arrive.innerHTML = arriveHtml(th, d); return; }
     const html = stopHtml(th, d);
     const fr = !vui.hidden ? diveFrame : !cui.hidden ? chipFrame : !pui.hidden ? dcFrame : !bui.hidden ? boardFrame : null;
     if (fr) {
@@ -941,6 +956,8 @@ export function start() {
   });
   /* leaving a question: back to the view's own words */
   document.addEventListener('click', e => { const l = e.target.closest('[data-leave]'); if (!l) return;
+    /* in a world's page, leaving the question goes on to the world it belongs to */
+    if (l.closest('[data-arrive]')) { const w = page.querySelector('.warrnext'); if (w) w.scrollIntoView({ behavior: 'smooth', block: 'start' }); return; }
     const fr = !vui.hidden ? diveFrame : !cui.hidden ? chipFrame : !pui.hidden ? dcFrame : !bui.hidden ? boardFrame : null;
     if (fr) { if (fr === diveFrame && dive) { diveThread = null; dive.setThread(null); } fr.look(); } else closeSheet(); });
 
@@ -993,7 +1010,7 @@ export function start() {
     if (k === 'build') return showMap(from).then(() => openPlace('lab', 'look', parts[1] || 'computer', parts[2]));
     if (['log', 'challenges', 'questions'].includes(k)) showPage(k);
     if (k === 'read') showRead(parts[1] ? decodeURIComponent(parts[1]) : null);
-    if (k === 'w') { if (parts[1]) showWorld(parts[1], parts[2]); else showWorlds(); }
+    if (k === 'w') { if (parts[1]) showWorld(parts[1], parts[2], parts[3]); else showWorlds(); }
     return showMap(from).then(() => { if (k === 'ecosystem') showEcosystem(); else if (k === 'explore' && cur && !sheet.hidden) { closeSheet(); map && map.overview(); } });
   }
   function route() {
