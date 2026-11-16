@@ -88,7 +88,10 @@ follows what they make across the world map, and going out of it comes back to t
 ## An open world
 
 No one way on. Exploring is not a tour: a place's card offers what stands around it on the island, nearest first,
-with the next stage of a chip's life as one way among them (→ still takes it), and no card counts steps. Everything
+with the next stage of a chip's life as one way among them (→ still takes it), and no card counts steps. Inside, the same: the dive, the line, the studio's bench and the data centre's flight end
+their card with the ways around the level, the levels on either side (up and down in a dive, earlier and later along
+the work) and the same level seen at other stages of a chip's life (as designed, as made, in use), all in one row,
+none of them "next". Everything
 that moves can be tapped and followed, as in an open-world game: a ship (what it carries, from where to where), the
 plane, a truck on the loop, a figure walking to what is open (which open thing pulls it; never who). The camera keeps
 it in the middle until you drag; its card offers the way to where it is going. Attention moves: when a challenge is
