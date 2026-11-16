@@ -93,7 +93,7 @@ export function start() {
     map = m.createMap($('mapCanvas'), $('mapLabels'), { place: id => (cur && cur.place === id && !cur.part && !sheet.hidden ? null : openPlace(id)), part: (place, part) => { location.hash = '#/place/' + place + '/' + part; },
       deeper: (place, part) => { const to = deeperOf(place, part); if (to) enter(to); },
       leave: id => { if (cur && cur.place === id) { closeSheet(); if (location.hash.startsWith('#/place/')) history.replaceState(null, '', '#/'); hud(); } },
-      question: key => openQuestion(key), job: need => openJob(need), entry: id => openEntry(id), interact: () => $('hero').classList.add('away') });
+      question: key => openQuestion(key), job: need => openJob(need), entry: id => openEntry(id), interact: () => foldHero() });
     loading(false); map.setState(islandState(), false); idle(preload);
     /* the first minute: a first visit to the island opens on a wide shot and comes down to it, and the hero rises after */
     if (!S.seen && (!location.hash || location.hash === '#/') && !still()) { map.intro(); $('hero').classList.add('intro'); }
@@ -138,21 +138,25 @@ export function start() {
      have not done; every question and challenge on one page; and a chip's life round the loop for whoever wants it */
   function drawHero() {
     const C = Game.CHALLENGES.filter(c => !S.done[c.id]).slice(0, 3);
-    $('hero').innerHTML = '<p class="kicker">' + esc(t('hero.kicker')) + '</p><h1>' + esc(t('hero.start')) + '</h1><div class="heroq" data-heroq></div>' +
+    $('hero').innerHTML = '<button type="button" class="herofold" data-unfold aria-label="' + esc(t('hero.unfold')) + '"><span class="q" aria-hidden="true">?</span><span><b>' + esc(t('hero.start')) + '</b><span class="small">' + esc(t('hero.pill')) + '</span></span></button>' +
+      '<button type="button" class="x herox" data-fold aria-label="' + esc(t('hero.fold')) + '">–</button><p class="kicker">' + esc(t('hero.kicker')) + '</p><h1>' + esc(t('hero.start')) + '</h1><div class="heroq" data-heroq></div>' +
       '<div class="herofoot">' + (C.length ? '<p class="kicker herok">' + esc(t('hero.or')) + '</p><div class="chips heroc">' + C.map(c => '<a class="chipb" href="' + esc(doHref(c)) + '">' + esc(titleOf(c)) + '</a>').join('') + '</div>' : '') +
       '<div class="row"><a class="btn primary" href="#/w">' + esc(t('hero.all')) + '</a><button type="button" class="btn ghost" data-start>' + esc(t('hero.follow')) + '</button></div></div>';
     /* the questions come from inside the worlds' documents */
     Worlds.loadAll().then(all => { const box = $('hero').querySelector('[data-heroq]'); if (box) box.innerHTML = Worlds.starters(all).map(Worlds.qCard).join(''); }, () => {});
   }
   /* following the chip is no guide: it opens the place where the loop starts, and every place offers the next */
-  $('hero').addEventListener('click', e => { if (e.target.closest('a[href]')) $('hero').classList.add('away'); if (e.target.closest('[data-start]')) { $('hero').classList.add('away'); location.hash = '#/place/' + Way.STAGE_PLACE.open; } });
+  /* the first page's questions and challenges never go away: exploring folds them into a small button in the corner,
+     which opens them again (docs/INTERACTION.md: a heads-up layer that steps aside, not one that is gone) */
+  function foldHero() { const h = $('hero'); if (!h.classList.contains('away')) h.classList.add('folded'); }
+  $('hero').addEventListener('click', e => { if (e.target.closest('[data-unfold]')) { $('hero').classList.remove('folded'); return; } if (e.target.closest('[data-fold]')) { $('hero').classList.add('folded'); return; } if (e.target.closest('a[href]')) $('hero').classList.add('away'); if (e.target.closest('[data-start]')) { $('hero').classList.add('away'); location.hash = '#/place/' + Way.STAGE_PLACE.open; } });
 
   /* ---- the sheet: a place with its three doors, a question, or a challenge ---- */
   const sheet = $('sheet');
   /* the stage knows when a sheet is open (phones fold the HUD's next button away) */
   new MutationObserver(() => $('stage').classList.toggle('sheeted', !sheet.hidden)).observe(sheet, { attributes: true, attributeFilter: ['hidden'] });
   let cur = null;   /* { place, tab } */
-  const closeSheet = () => { const was = cur; sheet.hidden = true; cur = null; if (was) { hud(); if (map) map.select(null); if (map && !$('mapCanvas').hidden) map.setState(islandState(), false); } };
+  const closeSheet = () => { const was = cur; sheet.hidden = true; cur = null; if (was) { $('hero').classList.remove('away'); $('hero').classList.add('folded'); hud(); if (map) map.select(null); if (map && !$('mapCanvas').hidden) map.setState(islandState(), false); } };
   const kickerOf = id => { const step = Game.STEP_OF[id] || Game.STEP_PLACE[id]; return Way.stageOfPlace(id) === 'open' ? t('loop.open.k') : step ? t('game.stepN', { n: Game.STEPS.indexOf(step) + 1, step: t('game.step.' + step) }) : t('map.' + id + '.kind'); };
   /* what to do at a place: its own challenges, and at a step's station the step's challenges played elsewhere */
   const doList = id => { const step = Game.STEP_OF[id] || Game.STEP_PLACE[id], here = Game.placeChallenges(id);

@@ -38,6 +38,10 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
   /* the first page: questions to start with and the next challenges (never the core questions together) */
   if ((await page.$$('#hero .heroq .qcard')).length < 2) problems.push(tag + ': the first page offers no questions to start with');
   if (!(await page.$('#hero .heroc a'))) problems.push(tag + ': the first page offers no challenge');
+  /* exploring folds the questions into a button in the corner, which opens them again */
+  await page.evaluate(() => document.getElementById('mapCanvas').dispatchEvent(new WheelEvent('wheel', { deltaY: -60, bubbles: true, cancelable: true })));
+  if (!(await page.$('#hero.folded [data-unfold]'))) problems.push(tag + ': exploring does not fold the first page\'s questions away');
+  await page.click('#hero [data-unfold]').catch(() => problems.push(tag + ': the folded questions cannot be opened again'));
   await page.click('#hero [data-start]');
   await page.waitForFunction(() => location.hash === '#/place/lab' && !!document.querySelector('#sheet [data-key="next"]'), null, { timeout: 15000 }).catch(() => problems.push(tag + ': following the chip did not open the Lab, where the loop starts'));
   if ((await page.getAttribute('#loop [aria-current]', 'data-stage').catch(() => '')) !== 'open') problems.push(tag + ': at the Lab the loop does not light its first stage, what is open');

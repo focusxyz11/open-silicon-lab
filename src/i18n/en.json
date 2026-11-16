@@ -2864,5 +2864,9 @@
  "zoom.tool.studio": "Zoom in to sit down here and work on the design yourself.",
  "zoom.tool.test": "Zoom in to watch your wafer being tested, chip by chip.",
  "zoom.tool.port": "Zoom in to follow your chips through cutting, packaging and out to the world.",
- "zoom.tool.datacentre": "Zoom in to fly into it, down to the chip and further."
+ "zoom.tool.datacentre": "Zoom in to fly into it, down to the chip and further.",
+ "hero.pill": "Questions and challenges",
+ "hero.unfold": "Open the questions and challenges",
+ "hero.fold": "Fold the questions away",
+ "mini.aria": "The island from above: tap a place to open it, anywhere else to fly there"
 }
