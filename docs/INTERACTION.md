@@ -1,0 +1,50 @@
+# Interaction: one world, one camera, one card
+
+What the lab feels like to move through, and the rules every view keeps. Written in November 2026 after the owner's
+review: going into a building meant pressing a button in a window, and coming back dropped you on the island with
+a jump; the factory was far behind the rest; the first page should already be a rich, playable surface; and nothing
+should look like a cartoon. Consistency comes before any single feature.
+
+## What we take from games and from zooming interfaces
+
+- **Zoom is the way in and out.** Zooming interfaces put everything in one space and let you zoom in to see detail
+  and out to see context, instead of opening and closing windows; the move between levels is continuous and
+  animated so you never lose your place (Raskin's ZUI; Bederson and Hollan's Pad++ and its *semantic zoom*, where a
+  thing is drawn differently at each scale). City builders work the same way: you never "open" a building, you
+  come closer and it shows more.
+- **The world carries the interface.** Diegetic and spatial interface (labels on parts, lights on machines, a
+  status you can see from far away) instead of panels over the picture; a small heads-up layer that appears when
+  something changes and fades when idle. Factory games let you point at any machine and see what it is doing and
+  what is holding it back, in place.
+- **One inspector.** Whatever you select (a place, a machine, a part, a person's design) is described by the same
+  card, in the same spot, with the same three faces: Look, Do, Ask.
+
+## The rules
+
+1. **Tap selects; the camera frames what you selected; the card describes it.** Nothing else happens on a tap.
+2. **In and out are zoom.** Scroll, pinch, double-tap, or ↓ ↑. Zooming into a selected building opens it where it
+   stands: the roof lifts away and the near walls fade, and what is inside is there, in the same scene. Zooming
+   into a selected machine goes closer still, into the machine. Zooming out reverses the same path: the walls come
+   back and the roof closes as you pull away. There is no "Go inside" button; the card only reminds you how
+   ("zoom in to go inside"), with a small ↓ for keyboards and for anyone who prefers to press.
+3. **No cuts.** A level that is not yet built into the island's scene is entered by the camera diving into the
+   place first, and left by starting close to the place and pulling back. Each new level is built into the scene
+   it belongs to, one at a time; the factory is first.
+4. **The address always says where you are**: `#/place/fab` is the factory, open; `#/place/fab/etch` is its etch
+   tool, selected; `#/line/etch` is inside the etch tool.
+5. **Words are on things.** Inside an open building, every machine has its name over it, in HTML over the scene
+   (never drawn into it). The card holds the sentence and the questions, never the navigation.
+6. **Grown up, not a toy.** Muted materials (white enclosures, steel, glass, epoxy floors), light that tells you
+   something (the yellow light of the lithography bay, the glow of a plasma), motion that is the process itself
+   (carriers riding the overhead rail, a platen turning), and colour only where it carries meaning.
+
+## The plan
+
+1. **The factory, opened in place** (this change): the fab's shell lifts away as you come close; inside, six tools
+   in their bays along an aisle, carriers moving on the overhead rail between them, each tool selectable, named,
+   and described in the card with its questions and challenges; zooming into a tool goes into the line at that
+   step. The card loses its "Go inside" button everywhere; zoom does it.
+2. The design studio, the test house and the port opened the same way.
+3. The hand-off from a tool into the line and the dive made one camera move.
+4. The first page as a surface to play: the questions and challenges met in the world, with the hero folding
+   into the heads-up layer once you start.

@@ -1067,3 +1067,15 @@ textarea.fcode { width: 100%; min-height: 110px; resize: vertical; box-sizing: b
 .hero .herofoot .herok { margin: 0; } .hero .herofoot .heroc { margin: 0; }
 .hero .herofoot .row { margin: 0 0 0 auto; }
 @media (max-width: 720px) { .hero .herofoot { margin-top: 10px; } .hero .herofoot .row { margin: 0; width: 100%; } }
+
+/* one world, one camera (docs/INTERACTION.md): the names of the factory's tools over them, and the card's quiet
+   reminder of how to go closer */
+.tool3 { pointer-events: auto; cursor: pointer; padding: 3px 9px; border-radius: 999px; border: 1px solid var(--line); background: color-mix(in srgb, var(--panel-solid) 82%, transparent); font: 600 12px var(--sans); color: var(--ink); box-shadow: 0 2px 8px rgba(0, 0, 0, .18); transition: opacity .3s; }
+.tool3:hover, .tool3.on { background: var(--ink); color: var(--bg); }
+.sheet .zoomhint { display: flex; align-items: center; gap: 10px; margin: 0 0 12px; }
+.sheet .zoomhint .chipb { width: 34px; height: 34px; padding: 0; display: grid; place-items: center; font-size: 16px; }
+.sheet .lvchips.steps button { all: unset; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 999px; border: 1px solid var(--line); font: 600 13px var(--sans); }
+.sheet .lvchips.steps button[aria-current] { background: var(--ink); color: var(--bg); }
+.sheet .lvchips.steps button:focus-visible { outline: 2px solid var(--accent); }
+.sheet.part { max-height: 42vh; }
+.tool3.sel { background: var(--accent); color: var(--accent-ink); border-color: transparent; }

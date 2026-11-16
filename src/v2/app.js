@@ -88,7 +88,12 @@ export function start() {
   const prewarm = () => [ready(ensureDc, 'dc'), ready(ensureChip, 'chip'), ready(ensureBoard, 'board')].reduce((p, f) => p.then(() => new Promise(r => idle(() => { f(); r(); }))), Promise.resolve());
   const preload = () => { prewarm(); ['./frame.js', './board3d.js', './story.js', './stories.js', '../engines/weave.js', '../app/world.js', '../data/weave.js', '../app/design.js', '../app/journey.js', './level3d.js', './relief3d.js', './wafer3d.js', './pcb3d.js', './phone3d.js', './gate3d.js', './switch3d.js', './atom3d.js', './overlay.js'].forEach(u => import(u).catch(() => { /* fetched again when needed */ })); };
   const ensureMap = () => mapReady || (mapReady = import('./map3d.js').then(m => {
-    map = m.createMap($('mapCanvas'), $('mapLabels'), { place: id => (cur && cur.place === id && !sheet.hidden && enterOf(id) ? enter(enterOf(id)) : openPlace(id)), question: key => openQuestion(key), job: need => openJob(need), entry: id => openEntry(id), interact: () => $('hero').classList.add('away') });
+    /* tap selects, zoom goes in and out (docs/INTERACTION.md): a second tap on the same place selects it again, it
+       does not go in */
+    map = m.createMap($('mapCanvas'), $('mapLabels'), { place: id => (cur && cur.place === id && !cur.part && !sheet.hidden ? null : openPlace(id)), part: (place, part) => { location.hash = '#/place/' + place + '/' + part; },
+      deeper: (place, part) => { const to = part ? '#/line/' + part : enterOf(place); if (to) enter(to); },
+      leave: id => { if (cur && cur.place === id) { closeSheet(); if (location.hash.startsWith('#/place/')) history.replaceState(null, '', '#/'); hud(); } },
+      question: key => openQuestion(key), job: need => openJob(need), entry: id => openEntry(id), interact: () => $('hero').classList.add('away') });
     loading(false); map.setState(islandState(), false); idle(preload);
     /* the first minute: a first visit to the island opens on a wide shot and comes down to it, and the hero rises after */
     if (!S.seen && (!location.hash || location.hash === '#/') && !still()) { map.intro(); $('hero').classList.add('intro'); }
@@ -147,7 +152,7 @@ export function start() {
   /* the stage knows when a sheet is open (phones fold the HUD's next button away) */
   new MutationObserver(() => $('stage').classList.toggle('sheeted', !sheet.hidden)).observe(sheet, { attributes: true, attributeFilter: ['hidden'] });
   let cur = null;   /* { place, tab } */
-  const closeSheet = () => { const was = cur; sheet.hidden = true; cur = null; if (was) { hud(); if (map && !$('mapCanvas').hidden) map.setState(islandState(), false); } };
+  const closeSheet = () => { const was = cur; sheet.hidden = true; cur = null; if (was) { hud(); if (map) map.select(null); if (map && !$('mapCanvas').hidden) map.setState(islandState(), false); } };
   const kickerOf = id => { const step = Game.STEP_OF[id] || Game.STEP_PLACE[id]; return Way.stageOfPlace(id) === 'open' ? t('loop.open.k') : step ? t('game.stepN', { n: Game.STEPS.indexOf(step) + 1, step: t('game.step.' + step) }) : t('map.' + id + '.kind'); };
   /* what to do at a place: its own challenges, and at a step's station the step's challenges played elsewhere */
   const doList = id => { const step = Game.STEP_OF[id] || Game.STEP_PLACE[id], here = Game.placeChallenges(id);
@@ -194,22 +199,31 @@ export function start() {
       const nq = stopsAt(l.depth).length, chs = Game.placeChallenges(id).filter(c => c.at === l.depth).length;
       const href = levelHref(id, l), fly = (Game.FLOWN[id] || {})[l.depth] != null, shared = id !== 'datacentre' && Game.SHARED.includes(l.depth);
       const note = [t('depth.' + l.depth + '.see'), fly && t('game.inside.fly'), shared && t('game.inside.shared')].filter(Boolean).join(' · ');
+      /* the factory's tools are in the scene: a step selects its tool where it stands */
+      if (id === 'fab' && FAB_PARTS.includes(l.depth)) return '<li><a href="#/place/fab/' + l.depth + '" data-part="' + l.depth + '" title="' + esc(note) + '"><span class="i">' + (i + 1) + '</span>' + esc(t('depth.' + l.depth + '.name')) + (chs ? '<span class="dotc" role="img" aria-label="' + esc(t('game.inside.ch', { n: chs })) + '"></span>' : '') + (nq ? '<span class="qn" title="' + esc(t('game.inside.qs', { n: nq })) + '">' + nq + '</span>' : '') + '</a></li>';
       return '<li><a href="' + esc(href) + '" title="' + esc(note) + '" class="' + (shared ? 'shared' : '') + '"><span class="i">' + (i + 1) + '</span>' + esc(t('depth.' + l.depth + '.name')) + (chs ? '<span class="dotc" role="img" aria-label="' + esc(t('game.inside.ch', { n: chs })) + '"></span>' : '') + (nq ? '<span class="qn" title="' + esc(t('game.inside.qs', { n: nq })) + '">' + nq + '</span>' : '') + '</a></li>';
     }).join('') + '</ol>').join('');
     h += extra.map(l => { const href = l.to ? '#/place/' + l.to : '#/' + l.page;
       return '<a class="look" href="' + esc(href) + '"><b>' + esc(t('look.' + l.id + '.t')) + '</b><span class="small">' + esc(t('look.' + l.id + '.d')) + '</span>' + (l.world ? '<span class="small muted">' + esc(t('game.current')) + '</span>' : '') + '</a>'; }).join('');
     return h || (enterOf(id) ? '' : '<p class="small muted">' + esc(t('game.noLook')) + '</p>');
   }
-  function openPlace(id, tab, step, piece) {
-    cur = { place: id, tab: tab || 'look', step: step || null, piece: piece || null };
-    map && map.focus(id); $('hero').classList.add('away'); drawPlace(); hud(); if (map) map.setState(islandState(), false);
+  /* the tools of the factory, opened where it stands: each is selected as a part of it (#/place/fab/etch) */
+  const FAB_PARTS = ['clean', 'deposit', 'print', 'etch', 'implant', 'wires'];
+  function openPlace(id, tab, step, piece, part) {
+    cur = { place: id, tab: tab || 'look', step: step || null, piece: piece || null, part: part || null };
+    if (map) { if (!part) map.focus(id); map.select(id, part); }
+    /* the address says where you are: a place picked on the island is written into it (without going anywhere) */
+    const at = '#/place/' + id + (part ? '/' + part : '');
+    if (!step && /^#?\/?$|^#\/(place|explore)/.test(location.hash) && location.hash !== at && !location.hash.startsWith(at + '/')) history.pushState(null, '', at);
+    $('hero').classList.add('away'); drawPlace(); hud(); if (map) map.setState(islandState(), false);
   }
   function drawPlace() {
     const id = cur.place, C = Game.community(S), asks = Game.ASK[id] || [], debates = Game.debatesAt(id), dos = doList(id);
     const nDo = id === 'lab' ? C.jobs.length + C.engines.length : id === 'village' ? C.jobs.length : dos.filter(c => !S.done[c.id]).length, nAsk = asks.length + debates.length;
     let h = '<button type="button" class="x" data-close aria-label="' + esc(t('sheet.close')) + '">×</button>';
     h += '<div class="doors" role="tablist">' + ['look', 'do', 'ask'].map(k => '<button type="button" role="tab" data-door="' + k + '" aria-selected="' + (cur.tab === k) + '" title="' + esc(t('door.' + k + '.d')) + '"><b>' + esc(t('door.' + k)) + (k === 'do' && nDo ? ' <span class="n">' + nDo + '</span>' : k === 'ask' && nAsk ? ' <span class="n">' + nAsk + '</span>' : '') + '</b></button>').join('') + '</div>';
-    h += '<p class="kicker">' + esc(kickerOf(id)) + '</p><h2>' + esc(t('map.' + id + '.t')) + '</h2><div class="door">';
+    h += cur.part && cur.tab === 'look' ? '<p class="kicker">' + esc(t('map.fab.t')) + ' · ' + esc(t('zoom.stepN', { n: FAB_PARTS.indexOf(cur.part) + 1, of: FAB_PARTS.length })) + '</p><h2>' + esc(t('depth.' + cur.part + '.name')) + '</h2><div class="door">'
+      : '<p class="kicker">' + esc(kickerOf(id)) + '</p><h2>' + esc(t('map.' + id + '.t')) + '</h2><div class="door">';
     if (cur.tab === 'do') {
       if (id === 'lab') h += '<p class="small">' + esc(t('game.lab.do', { built: C.built, total: C.total })) + '</p>' + C.breaks.map(b => chCard(chOf('break:' + b.of))).join('') + C.jobs.map(jobCard).join('') + C.engines.map(e => '<a class="chcard engine" target="_blank" rel="noopener" href="' + esc(REPO + '/issues/new?' + new URLSearchParams({ template: 'need.yml', title: t('game.engineFor', { piece: t('build.need.' + e.need + '.t') }) })) + '"><span class="st">⚙</span><span><b>' + esc(t('build.need.' + e.need + '.t')) + '</b><span class="small">' + esc(t('game.engineWanted')) + '</span></span></a>').join('') + '<a class="link" href="#/build">' + esc(t('game.seePlan')) + '</a>';
       else if (id === 'village') h += '<p class="small">' + esc(t('game.village.do')) + '</p>' + C.designs.map(designCard).join('') + C.jobs.map(jobCard).join('');
@@ -218,12 +232,19 @@ export function start() {
       else h += '<p class="small muted">' + esc(t('game.noDo')) + '</p>';
     } else if (cur.tab === 'look' && id === 'lab' && cur.step) {
       h += labInside();
+    } else if (cur.tab === 'look' && cur.part) {
+      /* a tool of the open factory: what it does, its question, and how to go closer (zoom in) */
+      const P = cur.part, qs = stopsAt(P);
+      h += '<p class="line">' + esc(t('depth.' + P + '.see')) + '</p>' +
+        '<div class="zoomhint"><button type="button" class="chipb" data-deeper aria-label="' + esc(t('zoom.inBtn')) + '">↓</button><span class="small muted">' + esc(t('zoom.tool')) + '</span></div>' + qs.slice(0, 1).map(askLink).join('') +
+        '<ol class="lvchips steps" aria-label="' + esc(t('zoom.tools')) + '">' + FAB_PARTS.map((s2, i) => '<li><button type="button" data-part="' + s2 + '"' + (s2 === P ? ' aria-current="true"' : '') + '><span class="i">' + (i + 1) + '</span>' + esc(t('depth.' + s2 + '.name')) + '</button></li>').join('') + '</ol>';
     } else if (cur.tab === 'look') {
-      /* one line, and the way in; the levels as small steps to jump to */
+      /* one line; the way in is zooming in (docs/INTERACTION.md), the card only says so; the levels as small steps */
       const enter = enterOf(id);
       const nx = Way.stageOfPlace(id) ? Way.nextPlace(id) : null;
-      h += '<p class="line">' + esc(t('map.' + id + '.d')) + '</p><div class="nav">' + (nx ? '<button type="button" class="btn" data-key="next" data-place="' + nx + '">' + esc(t('loop.next', { place: t('map.' + nx + '.t') })) + '</button>' : '<span></span>') +
-        (enter ? '<a class="btn primary" href="' + esc(enter) + '">' + esc(t('door.enter')) + '</a>' : '') + '</div>' +
+      h += '<p class="line">' + esc(t('map.' + id + '.d')) + '</p>' +
+        (id === 'fab' ? '<div class="zoomhint"><span class="small muted">' + esc(t('zoom.fab')) + '</span></div>' : enter ? '<div class="zoomhint"><button type="button" class="chipb" data-deeper aria-label="' + esc(t('zoom.inBtn')) + '">↓</button><span class="small muted">' + esc(t('zoom.place')) + '</span></div>' : '') +
+        (nx ? '<div class="nav"><button type="button" class="btn" data-key="next" data-place="' + nx + '">' + esc(t('loop.next', { place: t('map.' + nx + '.t') })) + '</button><span></span></div>' : '') +
         /* where the loop starts there are two ways in: what someone needs, and what has just become possible */
         (id === 'lab' ? '<div class="ways2"><button type="button" class="look" data-door="do"><b>' + esc(t('lab.pull.t')) + '</b><span class="small">' + esc(t('lab.pull.d', { n: C.jobs.length + C.engines.length })) + '</span></button><button type="button" class="look" data-door="ask"><b>' + esc(t('lab.push.t')) + '</b><span class="small">' + esc(t('lab.push.d', { n: WAYS.length })) + '</span></button></div>' : '') + insideHtml(id);
     } else {
@@ -233,7 +254,7 @@ export function start() {
       if (debates.length) h += '<p class="kicker">' + esc(t('game.debates')) + '</p>' + debates.map(d => '<div class="debate2"><b>' + esc(t('debate.' + d + '.t')) + '</b><span class="small">' + esc(t('debate.' + d + '.q')) + '</span></div>').join('');
       if (!nAsk && id !== 'lab') h += '<p class="small muted">' + esc(t('game.noAsk')) + '</p>';
     }
-    sheet.innerHTML = h + '</div>'; sheet.hidden = false; sheet.scrollTop = 0; sheet.classList.toggle('inside', id === 'lab' && !!cur.step && cur.tab === 'look');
+    sheet.innerHTML = h + '</div>'; sheet.hidden = false; sheet.scrollTop = 0; sheet.classList.toggle('inside', id === 'lab' && !!cur.step && cur.tab === 'look'); sheet.classList.toggle('part', !!cur.part);
   }
   /* a challenge, played in the sheet */
   function openChallenge(ch) {
@@ -270,8 +291,11 @@ export function start() {
   }
   sheet.addEventListener('click', e => {
     if (e.target.closest('.player')) return;   /* the player handles its own clicks */
-    if (e.target.closest('[data-close]')) { closeSheet(); if (location.hash !== '#/ecosystem') map && map.overview(); return; }
+    if (e.target.closest('[data-close]')) { closeSheet(); if (location.hash !== '#/ecosystem') { map && map.overview(); if (location.hash.startsWith('#/place/')) history.replaceState(null, '', '#/'); } return; }
     const d = e.target.closest('[data-door]'); if (d) { cur.tab = d.dataset.door; drawPlace(); return; }
+    /* going closer from the card is the same move as zooming in; a tool of the open factory is selected in place */
+    if (e.target.closest('[data-deeper]')) { const to = cur.part ? '#/line/' + cur.part : enterOf(cur.place); if (to) enter(to); return; }
+    const tp = e.target.closest('[data-part]'); if (tp) { location.hash = '#/place/' + cur.place + '/' + tp.dataset.part; return; }
     /* inside the Lab: its steps, and a piece of the computer (the address follows, so a piece can be shared) */
     const ls = e.target.closest('[data-labstep]'); if (ls) { location.hash = ls.dataset.labstep ? '#/build/' + ls.dataset.labstep : '#/place/lab'; return; }
     const pc = e.target.closest('[data-piece]'); if (pc) { location.hash = '#/build/computer/' + pc.dataset.piece; return; }
@@ -655,7 +679,8 @@ export function start() {
     $('chipCanvas').hidden = $('chipLabels').hidden = true; cui.hidden = true; chip && chip.pause();
     $('placeCanvas').hidden = $('placeLabels').hidden = true; pui.hidden = true; dc && dc.pause();
     $('mapCanvas').hidden = $('mapLabels').hidden = false; $('hero').hidden = false; $('outbtn').hidden = false; showStage(true);
-    loading(!map); return ensureMap().then(m => { if (from && lastPlace) { m.from(lastPlace); m.focus(lastPlace); } m.resume(); return m; });
+    const part = from && lastPlace === 'fab' && flatKind === 'line' && WE && FAB_PARTS.includes(diveId()) ? diveId() : null;
+    loading(!map); return ensureMap().then(m => { if (from && lastPlace) { m.from(lastPlace, part); if (!part) m.focus(lastPlace); } m.resume(); return m; });
   }
 
   /* ---- the pages ---- */
@@ -892,7 +917,7 @@ export function start() {
   function enter(href) {
     if (entering) return;
     if (still() || !map || $('mapCanvas').hidden || !lastFocus()) { location.hash = href; return; }
-    entering = true; map.dive(lastFocus()).then(() => { entering = false; location.hash = href; });
+    entering = true; map.dive(lastFocus(), cur && cur.part).then(() => { entering = false; location.hash = href; });
   }
   const lastFocus = () => (cur && cur.place) || null;
   sheet.addEventListener('click', e => { const a = e.target.closest('a[href^="#/"]'); if (!a || viewOf(partsOf(a.getAttribute('href')))[0] === 'map') return; e.preventDefault(); e.stopPropagation(); enter(a.getAttribute('href')); }, true);
@@ -913,12 +938,13 @@ export function start() {
       return showMap(from).then(() => openChallenge(ch)); }
     if (k === 'chip') return showChip(parts[1] != null ? +parts[1] : null, parts[2]);
     if (k === 'place' && parts[1] === 'datacentre' && parts[2] !== 'inside') return showPlace('datacentre', parts[2] != null ? +parts[2] : null);
+    if (k === 'place' && parts[1] === 'fab' && FAB_PARTS.includes(parts[2])) return showMap(from).then(() => openPlace('fab', 'look', null, null, parts[2]));
     if (k === 'place' && Game.PLACES.includes(parts[1])) return showMap(from).then(() => openPlace(parts[1], parts[2] === 'inside' ? 'look' : null));
     if (k === 'build') return showMap(from).then(() => openPlace('lab', 'look', parts[1] || 'computer', parts[2]));
     if (['log', 'challenges', 'questions'].includes(k)) showPage(k);
     if (k === 'read') showRead(parts[1] ? decodeURIComponent(parts[1]) : null);
     if (k === 'w') { if (parts[1]) showWorld(parts[1], parts[2]); else showWorlds(); }
-    return showMap(from).then(() => { if (k === 'ecosystem') showEcosystem(); });
+    return showMap(from).then(() => { if (k === 'ecosystem') showEcosystem(); else if (k === 'explore' && cur && !sheet.hidden) { closeSheet(); map && map.overview(); } });
   }
   function route() {
     const parts = partsOf(location.hash), k = parts[0] || 'explore';

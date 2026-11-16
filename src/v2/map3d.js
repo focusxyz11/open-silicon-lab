@@ -174,14 +174,89 @@ export function createMap(canvas, host, on = {}) {
     box(g, 8, 3.2, 6, mat(P.white), 5, 0, 1, 0.3);
     [3, 5, 7].forEach(x => { cyl(g, 0.55, 0.55, 2.8, metal(P.metal), x, 3.2, 1); pulses.push(cyl(g, 0.3, 0.3, 0.3, glow(P.warm, 1.4), x, 6, 1)); });
     const ingot = cyl(g, 0.7, 0.7, 4, metal(0x8c95a3, { roughness: 0.2 }), 5, 0.7, 5.2); ingot.rotation.z = Math.PI / 2; ingot.position.y = 0.75; }
+  /* the factory opens where it stands (docs/INTERACTION.md): come close and its roof lifts away and the near walls
+     fade, and inside are the tools of the loop in their bays along an aisle, carriers riding the overhead rail
+     between them. Every tool can be picked; its name stands over it once the factory is open. */
+  const FAB = { k: 0, want: 0, lid: null, near: [], deco: null, inside: null, tools: {}, oht: null, carriers: [] };
+  const FAB_W = 26, FAB_D = 16, FAB_H = 6.4, FAB_T = 0.4;
+  /* the six steps of the loop, in the order a wafer meets them: along the far row, then back along the near one */
+  const FAB_TOOLS = [['clean', -8, -1], ['deposit', 0, -1], ['print', 8, -1], ['etch', 8, 1], ['implant', 0, 1], ['wires', -8, 1]];
   { const g = place('fab');
-    box(g, 26, 7, 16, mat(P.white), 0, 0, 0, 0.5);
-    box(g, 26.2, 0.9, 16.2, mat(A.roof, { roughness: 0.7 }), 0, 5.6, 0, 0.2);
-    for (let i = 0; i < 5; i++) for (let j = 0; j < 2; j++) { const x = -9 + i * 4.5, z = -3.6 + j * 7.2; box(g, 3.4, 1.2, 3.2, mat(P.wall), x, 7, z, 0.15); spinning.push(cyl(g, 1.1, 1.1, 0.2, metal(P.dark), x, 8.2, z, 20)); }
+    const ghost = () => new THREE.MeshStandardMaterial({ color: P.white, roughness: 0.72, metalness: 0.02, transparent: true, opacity: 1 });
+    /* the cleanroom floor, and the shell: the far walls stay, the near ones fade, the roof lifts */
+    box(g, FAB_W - 0.6, 0.12, FAB_D - 0.6, mat(night ? 0x2b323d : 0xe6e7e3, { roughness: 0.45 }), 0, 0, 0, 0.02, { cast: false });
+    box(g, FAB_W, FAB_H, FAB_T, mat(P.white), 0, 0, -FAB_D / 2 + FAB_T / 2, 0.08);
+    box(g, FAB_T, FAB_H, FAB_D, mat(P.white), FAB_W / 2 - FAB_T / 2, 0, 0, 0.08);
+    const south = box(g, FAB_W, FAB_H, FAB_T, ghost(), 0, 0, FAB_D / 2 - FAB_T / 2, 0.08), west = box(g, FAB_T, FAB_H, FAB_D, ghost(), -FAB_W / 2 + FAB_T / 2, 0, 0, 0.08);
+    FAB.near = [south, west]; FAB.near.forEach(w => { w.userData.ghost = true; });
+    FAB.deco = group(g, 0, 0, 0);
+    for (let i = 0; i < 10; i++) box(FAB.deco, 1.6, 0.7, 0.1, winM, -10 + i * 2.3, 3, FAB_D / 2 + 0.05, 0.03, { cast: false });
+    const lid = FAB.lid = group(g, 0, 0, 0);
+    box(lid, FAB_W + 0.2, 0.6, FAB_D + 0.2, mat(A.roof, { roughness: 0.7 }), 0, FAB_H, 0, 0.2);
+    for (let i = 0; i < 5; i++) for (let j = 0; j < 2; j++) { const x = -9 + i * 4.5, z = -3.6 + j * 7.2; box(lid, 3.4, 1.2, 3.2, mat(P.wall), x, FAB_H + 0.6, z, 0.15); spinning.push(cyl(lid, 1.1, 1.1, 0.2, metal(P.dark), x, FAB_H + 1.8, z, 20)); }
+    /* outside: the gas annex, its tanks and the stacks */
     box(g, 10, 5, 8, mat(P.wall), -18.5, 0, 3, 0.3);
     [-21.5, -18.5, -15.5].forEach(x => cyl(g, 1.2, 1.2, 6, metal(P.metal), x, 0, -4));
     [[-22, 8], [-15, 8]].forEach(([x, z]) => { cyl(g, 0.45, 0.6, 12, mat(P.wall), x, 0, z, 16); cyl(g, 0.48, 0.48, 0.8, mat(A.trim), x, 12, z, 16); });
-    for (let i = 0; i < 10; i++) box(g, 1.6, 0.7, 0.1, winM, -10 + i * 2.3, 3, 8.05, 0.03, { cast: false }); }
+
+    /* ---- inside ---- */
+    const IN = FAB.inside = group(g, 0, 0, 0); IN.visible = false;
+    const shell = mat(night ? 0xc3cad4 : 0xf4f4f1, { roughness: 0.45 }), panel = mat(night ? 0x8d97a5 : 0xd9dbd8, { roughness: 0.55 }), dark = glass(P.dark, { opacity: 0.8 });
+    const steel = metal(night ? 0x8a929e : 0xb9c0c8), run = glow(P.good, 0.9);
+    box(IN, FAB_W - 3, 0.02, 2.4, mat(night ? 0x232a33 : 0xd2d4d0, { roughness: 0.4 }), 0, 0.12, 0, 0.01, { cast: false });
+    const tool = (id, x, side) => {
+      const tg = group(IN, x, 0.12, side * 4.3, side < 0 ? 0 : Math.PI); FAB.tools[id] = tg;
+      /* the front of every tool faces the aisle: a load port where carriers set down, and a light that says it runs */
+      box(tg, 1.6, 0.9, 0.7, panel, -1.9, 0, 2.3, 0.06); box(tg, 0.5, 0.06, 0.5, steel, -1.9, 0.9, 2.3, 0.02, { cast: false });
+      pulses.push(box(tg, 1.2, 0.08, 0.05, run, -1.9, 0.6, 2.67, 0.01, { cast: false }));
+      if (id === 'clean') {
+        /* a wet bench: a long cabinet under a glass hood, three wafers spinning in their bowls */
+        box(tg, 6.2, 2.1, 2.4, shell, 0.4, 0, 0, 0.1); box(tg, 6, 0.8, 2.2, glass(P.glass, { opacity: 0.3 }), 0.4, 2.1, 0, 0.05);
+        [-1.6, 0.4, 2.4].forEach(bx => { cyl(tg, 0.62, 0.62, 0.14, steel, bx, 2.1, 0.1, 24); spinning.push(cyl(tg, 0.5, 0.5, 0.05, glow(0x8cc8ff, night ? 0.8 : 0.35), bx, 2.25, 0.1, 24)); });
+        box(tg, 6.2, 0.35, 0.08, dark, 0.4, 1.2, 1.22, 0.02, { cast: false });
+      } else if (id === 'deposit' || id === 'etch') {
+        /* a cluster tool: a robot in a six-sided hub hands each wafer to the chambers around it; deposition glows
+           warm with heat, etch violet with plasma */
+        const c = id === 'etch' ? 0xb48cff : 0xffab5c;
+        cyl(tg, 1.35, 1.35, 1.5, shell, 0, 0, 0, 6); cyl(tg, 1.4, 1.4, 0.12, panel, 0, 1.5, 0, 6);
+        [[-2.2, -0.4], [0, -2.3], [2.2, -0.4]].forEach(([cx, cz], i) => { cyl(tg, 0.95, 0.95, 2, shell, cx, 0, cz, 20); pulses.push(cyl(tg, 0.5, 0.5, 0.06, glow(c, night ? 1.4 : 0.8), cx, 2, cz, 20)); box(tg, 0.4, 0.5, 0.4, panel, cx * 0.55, 0.5, cz * 0.55, 0.04); });
+        box(tg, 2, 1.7, 1, shell, 0, 0, 1.7, 0.08);
+      } else if (id === 'print') {
+        /* lithography: the scanner, the largest tool in the room, joined to its coating track; the bay is lit
+           yellow, because the coating it prints into is changed by ordinary light */
+        flat(IN, [[x - 4.6, side * 4.3 - 2.6], [x + 4.6, side * 4.3 - 2.6], [x + 4.6, side * 4.3 + 2.8], [x - 4.6, side * 4.3 + 2.8]], mat(night ? 0x4a4126 : 0xeee0a8, { roughness: 0.5, emissive: night ? 0x3a3014 : 0, emissiveIntensity: 0.6 }), 0.15);
+        box(tg, 4.6, 3.3, 3.2, shell, 1.2, 0, -0.2, 0.15); box(tg, 4.62, 0.5, 3.22, panel, 1.2, 2.5, -0.2, 0.05, { cast: false });
+        box(tg, 0.08, 1.5, 2, dark, 3.52, 0.8, -0.2, 0.02, { cast: false });
+        box(tg, 2.4, 2.2, 3, panel, -2.5, 0, -0.2, 0.1); box(tg, 2.2, 0.3, 0.06, dark, -2.5, 1.5, 1.32, 0.02, { cast: false });
+        pulses.push(box(tg, 8, 0.12, 0.3, glow(0xffd25a, night ? 1.3 : 0.7), 0, 5.6, 0, 0.02, { cast: false }));
+      } else if (id === 'implant') {
+        /* an ion implanter: a source, a magnet that bends the beam to pick one kind of atom, a long beamline, and the
+           end station where the wafer waits */
+        box(tg, 1.8, 2.4, 2, shell, -2.6, 0, -0.2, 0.1);
+        const bl = cyl(tg, 0.32, 0.32, 3.8, steel, 0, 1.2, -0.2, 16); bl.rotation.z = Math.PI / 2; bl.position.set(0.1, 1.55, -0.2);
+        box(tg, 1.1, 1.6, 1.6, mat(night ? 0x5d6878 : 0x7f8a99, { roughness: 0.4 }), -0.9, 0.7, -0.2, 0.08);
+        const beam = box(tg, 3.6, 0.06, 0.06, glow(0x7fc4ff, night ? 1.6 : 1), 0.1, 1.52, 0.18, 0.01, { cast: false }); pulses.push(beam);
+        box(tg, 2, 2.6, 2.2, shell, 2.6, 0, -0.2, 0.1); box(tg, 0.06, 1.2, 1.6, dark, 3.62, 0.8, -0.2, 0.02, { cast: false });
+      } else if (id === 'wires') {
+        /* copper: plating tanks fill the trenches, then a polisher grinds the wafer flat on a turning platen */
+        box(tg, 3.4, 1.3, 2.8, shell, -1.4, 0, -0.2, 0.1);
+        spinning.push(cyl(tg, 1.15, 1.15, 0.12, metal(night ? 0x77808c : 0xa7aeb6, { roughness: 0.25 }), -1.4, 1.3, -0.2, 32));
+        const arm = box(tg, 0.2, 0.2, 1.6, steel, -0.3, 1.9, -0.2, 0.04); arm.rotation.y = 0.5; cyl(tg, 0.12, 0.12, 0.5, steel, 0.2, 1.4, -0.2, 8);
+        [1.6, 2.9].forEach(bx => { box(tg, 1.1, 1.6, 2.2, shell, bx, 0, -0.2, 0.08); box(tg, 0.9, 0.06, 1.9, metal(0xb87333, { roughness: 0.3 }), bx, 1.6, -0.2, 0.02, { cast: false }); });
+      }
+      tg.traverse(o => { if (o.isMesh) o.userData.part = id; });
+    };
+    FAB_TOOLS.forEach(([id, x, side]) => tool(id, x, side));
+    /* the overhead rail: one loop over the aisle, past every tool's load port, and the carriers riding it */
+    const railPts = [[-11, -2.0], [11, -2.0], [12.2, 0], [11, 2.0], [-11, 2.0], [-12.2, 0]].map(([x, z]) => new THREE.Vector3(x, 5.6, z));
+    const rail = FAB.oht = new THREE.CatmullRomCurve3(railPts, true, 'catmullrom', 0.2);
+    const railM = new THREE.Mesh(new THREE.TubeGeometry(rail, 120, 0.08, 6, true), steel); IN.add(railM);
+    for (let i = 0; i < 8; i++) { const p = rail.getPointAt(i / 8); box(IN, 0.08, 0.8, 0.08, steel, p.x, 5.6, p.z, 0.01, { cast: false }); }
+    for (let i = 0; i < 7; i++) {
+      const c = new THREE.Group(); box(c, 0.8, 0.45, 0.6, shell, 0, -0.5, 0, 0.06); box(c, 0.05, 0.4, 0.05, steel, 0, -0.1, 0, 0.01, { cast: false });
+      box(c, 0.6, 0.55, 0.5, glass(night ? 0x7fa6d6 : 0x9ab7cf, { opacity: 0.75 }), 0, -1.1, 0, 0.08); IN.add(c); c.position.copy(rail.getPointAt(i / 7)); FAB.carriers.push({ obj: c, u: i / 7 });
+    }
+  }
   /* 3 test: the hall where every chip is probed before it is cut and packed */
   { const g = place('test');
     box(g, 12, 4, 8, mat(P.white), 0, 0, 0, 0.3);
@@ -264,6 +339,11 @@ export function createMap(canvas, host, on = {}) {
   const HGT = { studio: 9, quarry: 7, fab: 10, test: 7, port: 11, datacentre: 7, lab: 22, village: 19, phones: 16, cars: 9, idea: 8 };
   const names = {};
   PLACES.forEach(p => { names[p.id] = L.add(G[p.id], new THREE.Vector3(0, HGT[p.id], 0), '', { cls: 'place3' + (p.far ? ' far' : ''), button: true, data: { place: p.id }, html: '', max: p.far ? Infinity : 520 }); });
+  /* the tool selected stands on a ring of light */
+  const ring = new THREE.Mesh(new THREE.RingGeometry(3.4, 3.7, 48), new THREE.MeshBasicMaterial({ color: P.accent, transparent: true, opacity: 0.85, depthWrite: false }));
+  ring.rotation.x = -Math.PI / 2; ring.position.y = 0.2; ring.visible = false; FAB.inside.add(ring);
+  /* inside the open factory, every tool's name over it (shown only while the inside is) */
+  const toolNames = {}; FAB_TOOLS.forEach(([id]) => { toolNames[id] = L.add(FAB.tools[id], new THREE.Vector3(0, id === 'print' ? 4.2 : 3.4, 0), t('depth.' + id + '.name'), { cls: 'tool3', button: true, data: { place: 'fab', part: id }, need: FAB.inside, max: 340 }); });
   /* seen from far out, the island's places fold into one name */
   L.add(scene, new THREE.Vector3(0, 12, 0), t('map.home'), { cls: 'place3 far home', min: 560 });
   /* the number pins of the loop, and your chip on it */
@@ -293,20 +373,37 @@ export function createMap(canvas, host, on = {}) {
   const ray = new THREE.Raycaster(), ndc = new THREE.Vector2(), groundPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
   const toNdc = e => { const r = canvas.getBoundingClientRect(); ndc.set((e.clientX - r.left) / r.width * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1); };
   const ground = e => { toNdc(e); ray.setFromCamera(ndc, camera); const p = new THREE.Vector3(); return ray.ray.intersectPlane(groundPlane, p) ? p : null; };
-  const pickAt = e => { toNdc(e); ray.setFromCamera(ndc, camera); const h = ray.intersectObjects(pick, false)[0]; return h ? (h.object.userData.question ? { q: h.object.userData.question } : { place: h.object.userData.place }) : null; };
+  /* what is under the pointer: hidden things and the faded walls of an open building do not count; inside an open
+     building, a tool is picked as itself */
+  const seen = o => { for (let x = o; x; x = x.parent) if (!x.visible) return false; return true; };
+  const pickAt = e => { toNdc(e); ray.setFromCamera(ndc, camera); const open = FAB.k > 0.5;
+    for (const h of ray.intersectObjects(pick, false)) { const u = h.object.userData; if (!seen(h.object) || (u.ghost && open)) continue;
+      return u.question ? { q: u.question } : { place: u.place, part: open && u.part ? u.part : null }; }
+    return null; };
+  /* what is selected (docs/INTERACTION.md): a place, and inside an open one a part; zooming further into it goes
+     deeper, zooming far enough out leaves it */
+  let sel = null, push = 0, pinchDeep = false;
+  const deepAt = () => (!sel ? 0 : sel.part ? 40 : sel.place === 'fab' ? 0 : Math.max(38, placeAt(sel.place).d * 0.6));
+  const leaveAt = () => placeAt(sel.place).d * 3.2;
+  const deeper = () => { if (!sel || !on.deeper) return; const s0 = sel; push = 0; on.deeper(s0.place, s0.part); };
   const MAXD = innerWidth > 720 ? 820 : 1300;
   canvas.addEventListener('pointerdown', e => { canvas.setPointerCapture(e.pointerId); ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY, g: ground(e) }); downAt = { x: e.clientX, y: e.clientY }; moved = 0; fly = null; if (ptrs.size === 2) { const [a, b] = [...ptrs.values()]; pinch0 = { dist: Math.hypot(a.x - b.x, a.y - b.y), d: cam.d }; } on.interact && on.interact(); });
   canvas.addEventListener('pointermove', e => {
-    if (!ptrs.size) { const h = pickAt(e), id = h && (h.place || h.q); if (id !== hover) { hover = id; canvas.style.cursor = id ? 'pointer' : ''; Object.entries(names).forEach(([k, lb]) => lb.el.classList.toggle('on', k === hover)); } return; }
+    if (!ptrs.size) { const h = pickAt(e), id = h && (h.part ? 'part:' + h.part : h.place || h.q); if (id !== hover) { hover = id; canvas.style.cursor = id ? 'pointer' : ''; Object.entries(names).forEach(([k, lb]) => lb.el.classList.toggle('on', k === hover)); Object.entries(toolNames).forEach(([k, lb]) => lb.el.classList.toggle('on', 'part:' + k === hover)); } return; }
     const p = ptrs.get(e.pointerId); if (!p) return;
     moved += Math.abs(e.clientX - p.x) + Math.abs(e.clientY - p.y); p.x = e.clientX; p.y = e.clientY;
-    if (ptrs.size === 2 && pinch0) { const [a, b] = [...ptrs.values()]; cam.d = clamp(pinch0.d * pinch0.dist / Math.max(20, Math.hypot(a.x - b.x, a.y - b.y)), 38, MAXD); return; }
+    if (ptrs.size === 2 && pinch0) { const [a, b] = [...ptrs.values()], want = pinch0.d * pinch0.dist / Math.max(20, Math.hypot(a.x - b.x, a.y - b.y)); cam.d = clamp(want, 38, MAXD);
+      if (!pinchDeep && sel && deepAt() && want < deepAt() * 0.8) { pinchDeep = true; deeper(); } return; }
     const g = ground(e); if (g && p.g) { const lim = cam.d > 300 ? 220 : 80; cam.x = clamp(cam.x + p.g.x - g.x, -lim, lim); cam.z = clamp(cam.z + p.g.z - g.z, -lim * 0.7, lim * 0.9); place2(); p.g = ground(e); }
   });
-  const up = e => { ptrs.delete(e.pointerId); if (ptrs.size < 2) pinch0 = null; if (downAt && moved < 8 && !ptrs.size) { const h = pickAt(e); if (h && h.place) on.place && on.place(h.place); else if (h && h.q) on.question && on.question(h.q); } downAt = null; };
+  const up = e => { ptrs.delete(e.pointerId); if (ptrs.size < 2) { pinch0 = null; pinchDeep = false; } if (downAt && moved < 8 && !ptrs.size) { const h = pickAt(e); if (h && h.part) on.part && on.part(h.place, h.part); else if (h && h.place) on.place && on.place(h.place); else if (h && h.q) on.question && on.question(h.q); } downAt = null; };
+  /* a double tap goes in: into a building (it opens), or deeper into what is already selected */
+  canvas.addEventListener('dblclick', e => { const h = pickAt(e); if (!h || !h.place) return; if (sel && sel.place === h.place && (h.part || null) === (sel.part || null) && deepAt()) deeper(); });
   canvas.addEventListener('pointerup', up); canvas.addEventListener('pointercancel', up);
-  canvas.addEventListener('wheel', e => { e.preventDefault(); fly = null; cam.d = clamp(cam.d * Math.exp(e.deltaY * 0.0012), 38, MAXD); on.interact && on.interact(); }, { passive: false });
-  host.addEventListener('click', e => { const b = e.target.closest('[data-place],[data-q],[data-step],[data-job],[data-entry]'); if (!b) return; if (b.dataset.entry) on.entry && on.entry(b.dataset.entry); else if (b.dataset.place) on.place && on.place(b.dataset.place); else if (b.dataset.step) on.place && on.place(STATION[b.dataset.step]); else if (b.dataset.job) on.job && on.job(b.dataset.job); else on.question && on.question(b.dataset.q); });
+  canvas.addEventListener('wheel', e => { e.preventDefault(); fly = null; cam.d = clamp(cam.d * Math.exp(e.deltaY * 0.0012), 38, MAXD); on.interact && on.interact();
+    /* zooming on into what is selected, past where the camera stops, goes deeper */
+    if (e.deltaY < 0 && sel && deepAt() && cam.d <= deepAt() + 0.5) { push += -e.deltaY; if (push > 180) deeper(); } else if (e.deltaY > 0) push = 0; }, { passive: false });
+  host.addEventListener('click', e => { const b = e.target.closest('[data-place],[data-q],[data-step],[data-job],[data-entry]'); if (!b) return; if (b.dataset.part) on.part && on.part(b.dataset.place, b.dataset.part); else if (b.dataset.entry) on.entry && on.entry(b.dataset.entry); else if (b.dataset.place) on.place && on.place(b.dataset.place); else if (b.dataset.step) on.place && on.place(STATION[b.dataset.step]); else if (b.dataset.job) on.job && on.job(b.dataset.job); else on.question && on.question(b.dataset.q); });
 
   /* ---- the state: what has grown, the community's pieces, where your chip is ---- */
   const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
@@ -403,6 +500,13 @@ export function createMap(canvas, host, on = {}) {
     sunL.sun.position.set(cam.x - sp * 0.5, sp * 0.9, cam.z + sp * 0.6); sunL.sun.target.position.set(cam.x, 0, cam.z);
     growing.forEach(gr => { if (gr.t0 > 0) { const k = clamp((now - gr.t0) / 1300); gr.g.scale.setScalar(Math.max(0.001, easeBack(k))); if (k >= 1) gr.t0 = -1; } });
     for (let i = sparks.length - 1; i >= 0; i--) { const m = sparks[i]; m.userData.t += dt; m.userData.v.y -= 18 * dt; m.position.addScaledVector(m.userData.v, dt); m.rotation.y += dt * 4; m.material.opacity = Math.max(0, 1 - m.userData.t / 1.4); if (m.userData.t > 1.4) { scene.remove(m); sparks.splice(i, 1); } }
+    /* the factory opens and closes with the camera */
+    FAB.k += (FAB.want - FAB.k) * Math.min(1, dt * (reduced() ? 60 : 3.2)); { const k = ease(clamp(FAB.k));
+      FAB.lid.position.y = 20 * k; FAB.lid.visible = k < 0.96; FAB.deco.visible = k < 0.4; FAB.inside.visible = k > 0.02; names.fab.show = k < 0.5;
+      FAB.near.forEach(w => { w.material.opacity = 1 - 0.9 * k; w.material.depthWrite = k < 0.5; w.castShadow = k < 0.5; }); }
+    if (FAB.inside.visible && !reduced()) FAB.carriers.forEach(c => { c.u = (c.u + dt * 0.03) % 1; c.obj.position.copy(FAB.oht.getPointAt(c.u)); const tg = FAB.oht.getTangentAt(c.u); c.obj.rotation.y = Math.atan2(-tg.z, tg.x); });
+    /* pulling far enough out of what is selected leaves it */
+    if (sel && !fly && cam.d > leaveAt()) { const was = sel; sel = null; FAB.want = 0; on.leave && on.leave(was.place); }
     token.position.lerp(tokenGoal, Math.min(1, dt * 2.2)); token.position.y = 1.2 + Math.sin(tm * 2) * 0.25; token.rotation.y += dt * 0.8;
     if (!reduced()) {
       spinning.forEach((f, i) => { if (f.jib) f.jib.rotation.y = Math.sin(tm * 0.2) * 0.9; else if (f.hand) f.hand.rotation.z = -tm * 0.8; else f.rotation.y += dt * (2 + (i % 3)); });
@@ -425,10 +529,18 @@ export function createMap(canvas, host, on = {}) {
     focus(id) {
       const p = placeAt(id); if (!p) return;
       /* the place sits in the upper part of the screen: the dock takes the lower part */
-      const wide = innerWidth > 720, d = p.d * (wide ? 1.6 : 2), upv = d * (wide ? 0.14 : id === 'village' ? 0.08 : 0.24);
+      const wide = innerWidth > 720, d = p.d * (wide ? (id === 'fab' ? 1.3 : 1.6) : (id === 'fab' ? 1.7 : 2)), upv = d * (wide ? 0.14 : id === 'village' ? 0.08 : 0.24);
       flyTo(p.at[0] + Math.sin(cam.yaw) * upv, p.at[1] + Math.cos(cam.yaw) * upv, d);
     },
     overview() { const h = home(); flyTo(h.x, h.z, h.d); },
+    selected: () => sel,
+    /* select a place, and inside an open one a part; the factory opens while it is selected */
+    select(place, part) {
+      sel = place ? { place, part: part || null } : null; push = 0; FAB.want = place === 'fab' ? 1 : 0;
+      ring.visible = !!(place === 'fab' && part && FAB.tools[part]); if (ring.visible) { ring.position.x = FAB.tools[part].position.x; ring.position.z = FAB.tools[part].position.z; }
+      Object.entries(toolNames).forEach(([k, lb]) => lb.el.classList.toggle('sel', k === (place === 'fab' && part)));
+      if (place === 'fab' && part && FAB.tools[part]) { const v = new THREE.Vector3(), wide = innerWidth > 720; FAB.tools[part].getWorldPosition(v); const d = wide ? 48 : 64, upv = d * (wide ? 0.12 : 0.26); flyTo(v.x + Math.sin(cam.yaw) * upv, v.z + Math.cos(cam.yaw) * upv, d); }
+    },
     /* the first visit opens on a wide shot of the sea and comes down to the island, turning toward it */
     intro() { if (reduced()) return; const h = home(); Object.assign(cam, { x: h.x + 70, z: h.z + 120, d: MAXD * 0.8, yaw: cam.yaw - 0.8, pitch: 1.08 }); place2();
       fly = { from: { ...cam }, to: { x: h.x, z: h.z, d: h.d, yaw: -0.42, pitch: 0.92 }, t0: performance.now(), ms: 2800 }; },
@@ -436,8 +548,9 @@ export function createMap(canvas, host, on = {}) {
     punch() { if (reduced() || fly) return; const d0 = cam.d; cam.d *= 0.9; place2(); flyTo(cam.x, cam.z, d0, 700); },
     /* the hand-offs with the views below: dive close into a place before going inside, and start close to the
        place you come back from, then rise (no cut: the camera carries you in and out) */
-    dive(id) { const p = placeAt(id); if (!p) return Promise.resolve(); const ms = reduced() ? 1 : 650; flyTo(p.at[0], p.at[1], Math.max(38, p.d * 0.55), ms); return new Promise(r => setTimeout(r, ms)); },
-    from(id) { const p = placeAt(id); if (!p) return; fly = null; Object.assign(cam, { x: p.at[0], z: p.at[1], d: Math.max(38, p.d * 0.55), pitch: 0.8 }); place2(); },
+    dive(id, part) { const p = placeAt(id); if (!p) return Promise.resolve(); const ms = reduced() ? 1 : 650, v = new THREE.Vector3(p.at[0], 0, p.at[1]); if (id === 'fab' && part && FAB.tools[part]) FAB.tools[part].getWorldPosition(v); flyTo(v.x, v.z, part ? 30 : Math.max(38, p.d * 0.55), ms); return new Promise(r => setTimeout(r, ms)); },
+    from(id, part) { const p = placeAt(id); if (!p) return; fly = null; const v = new THREE.Vector3(p.at[0], 0, p.at[1]); if (id === 'fab') { FAB.want = FAB.k = 1; if (part && FAB.tools[part]) FAB.tools[part].getWorldPosition(v); }
+      Object.assign(cam, { x: v.x, z: v.z, d: part ? 32 : Math.max(38, p.d * 0.55), pitch: 0.8 }); place2(); },
     /* the archipelago: the islands where chips live, and the sea between */
     ecosystem() { if (innerWidth > 720) flyTo(106, 80, 800, 1500); else flyTo(-22, 166, 1250, 1500); },
     setState,
