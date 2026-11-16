@@ -85,6 +85,22 @@ a line of moving light under the water, and a plane, since finished chips are sm
 gases and machines come ashore at a jetty by the quarry; everything else at the port. Going closer at the machine or the materials island
 follows what they make across the world map, and going out of it comes back to that island.
 
+## The world is the interface
+
+The card beside the picture was the problem: words in a window, a few questions in a list, the picture to look at.
+Three things replace it on the island, each learned from games rather than from documents.
+
+- **An inspector beside what you tap.** A place or a part tapped on the island is answered next to it, in a small
+  panel that stays with it as the camera moves: what it is in one line, the way closer, what there is to do and to
+  ask (with how many), and More for the full card. The full card is one tap further and never covers the world first.
+  A link or an address still opens the full card, since that is what it was asked for.
+- **Lenses.** The same island seen for one thing at a time: heat, flow, failure, time. The world drains to grey and
+  what the lens is about rises out of it, a column of light over each place as tall as that place has of it (relative,
+  never a figure without a source). Each lens says in one line what it shows and opens onto the question it belongs
+  to, one at a time; seen through a lens, a place's inspector offers that question where it is asked there.
+- **Carry your chip.** Your chip on the island can be picked up (or its name pressed) and carried to any place. The
+  place reacts: the chip goes in, and the inspector says what that place would do with it, with the way to try it.
+
 ## An open world
 
 No one way on. Exploring is not a tour: a place's card offers what stands around it on the island, nearest first,
