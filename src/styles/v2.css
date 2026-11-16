@@ -1159,3 +1159,38 @@ textarea.fcode { width: 100%; min-height: 110px; resize: vertical; box-sizing: b
 .dock .nav > .chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .dock .nav .chipb.else { border-style: dashed; }
 .chipb.else, a.chipb { text-decoration: none; }
+
+/* ---- the world is the interface: the inspector beside what you tapped, lenses, your chip carried ---- */
+.insp { position: absolute; z-index: 11; left: 0; top: 0; width: 320px; padding: 14px 16px 12px; background: var(--panel); border: 1px solid var(--line); border-radius: 16px; backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); box-shadow: var(--shadow); transition: transform .12s linear; animation: inspin .22s ease; }
+@keyframes inspin { from { opacity: 0; } }
+.insp .kicker { margin: 0 0 2px; }
+.insp h3 { margin: 0 22px 6px 0; font: 600 19px/1.25 var(--serif); }
+.insp .il { margin: 0 0 10px; font-size: 13.5px; line-height: 1.45; color: var(--ink-2, var(--ink)); }
+.insp .ix { position: absolute; right: 8px; top: 8px; width: 28px; height: 28px; border: 0; border-radius: 50%; background: transparent; color: var(--muted); font-size: 18px; cursor: pointer; }
+.insp .ix:hover { background: color-mix(in srgb, var(--ink) 8%, transparent); }
+.insp .iacts { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.insp .chipb.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+.insp .n { display: inline-block; min-width: 18px; padding: 0 5px; margin-left: 2px; border-radius: 9px; background: var(--accent); color: #fff; font-size: 11px; text-align: center; }
+.insp .icarry { display: flex; gap: 8px; align-items: center; justify-content: space-between; margin: 0 0 10px; padding: 8px 10px; border-radius: 10px; background: color-mix(in srgb, var(--accent) 12%, transparent); font-size: 13px; }
+@media (max-width: 720px) { .insp { left: 10px; right: 10px; top: auto; bottom: 12px; width: auto; transform: none !important; } }
+.lensbar { position: absolute; z-index: 6; left: 16px; top: 50%; transform: translateY(-50%); display: flex; align-items: flex-start; gap: 10px; pointer-events: none; }
+.lensbar .lb { display: flex; flex-direction: column; gap: 6px; padding: 6px; background: var(--panel); border: 1px solid var(--line); border-radius: 18px; backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); box-shadow: var(--shadow); pointer-events: auto; }
+.lensbar button { display: flex; align-items: center; gap: 8px; height: 38px; min-width: 38px; padding: 0 10px; border: 0; border-radius: 12px; background: transparent; color: var(--ink); font: 500 13px var(--sans); cursor: pointer; }
+.lensbar button .g { width: 18px; text-align: center; font-size: 17px; }
+.lensbar button .nm { display: none; }
+.lensbar button:hover .nm, .lensbar button[aria-pressed="true"] .nm { display: inline; }
+.lensbar button[aria-pressed="true"] { background: var(--ink); color: var(--panel-solid); }
+.lensbar .lensnote { max-width: 300px; padding: 12px 14px; background: var(--panel); border: 1px solid var(--line); border-radius: 14px; backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); box-shadow: var(--shadow); pointer-events: auto; animation: inspin .3s ease; }
+.lensbar .lensnote p { margin: 0 0 8px; font: 400 15px/1.45 var(--serif); }
+.lensbar .lensnote a { font-size: 13px; }
+@media (max-width: 720px) { .lensbar { top: auto; bottom: 150px; left: 10px; transform: none; } .lensbar .lb { flex-direction: row; } .lensbar .lensnote { max-width: calc(100vw - 260px); font-size: 13px; } .lensbar .lensnote p { font-size: 13px; } }
+.stage.sheeted .lensbar { opacity: 0; pointer-events: none; }
+.place3.drop { outline: 2px solid var(--accent); transform-origin: center; }
+.insp .icarry .chipb { white-space: nowrap; }
+.insp .ilens { margin: 0 0 10px; } .insp .ilens .askline { margin: 0; }
+@media (max-width: 720px) {
+  .lensbar { left: 10px; right: 10px; top: auto; bottom: 92px; transform: none; flex-direction: column-reverse; align-items: stretch; }
+  .lensbar .lb { flex-direction: row; justify-content: space-between; align-self: flex-start; }
+  .lensbar .lensnote { max-width: none; }
+  .stage:has(.insp:not([hidden])) .lensbar { display: none; }
+}

@@ -382,6 +382,17 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
      not a failure. Any other failure is. */
   const moves = (await page.evaluate(() => window.MOVES)).filter(m => !/aborted because of timeout/.test(m));
   if (moves.join() !== 'in,out') problems.push(tag + ': the views did not zoom in and out (' + moves.join() + ')');
+  /* the world is the interface: a place tapped is answered beside it, the full card one tap further; a lens drains the
+     island and says what it shows */
+  await page.evaluate(() => { location.hash = '#/'; }); await page.waitForTimeout(1500);
+  await page.evaluate(() => { const b = document.querySelector('#mapLabels .place3[data-place="fab"]'); if (b) b.click(); });
+  await page.waitForFunction(() => { const i = document.querySelector('.insp'); return i && !i.hidden && !!i.querySelector('[data-iact="more"]') && document.getElementById('sheet').hidden; }, null, { timeout: 15000 }).catch(() => problems.push(tag + ': a place tapped on the island is not answered beside it'));
+  await page.evaluate(() => { const b = document.querySelector('.insp [data-iact="more"]'); if (b) b.click(); });
+  await page.waitForFunction(() => !document.getElementById('sheet').hidden && document.querySelector('.insp').hidden, null, { timeout: 10000 }).catch(() => problems.push(tag + ': More does not open the full card'));
+  await page.evaluate(() => { const b = document.querySelector('#sheet [data-close]'); if (b) b.click(); });
+  await page.evaluate(() => { const b = document.querySelector('.lensbar [data-lens="fail"]'); if (b) b.click(); });
+  await page.waitForSelector('.lensbar .lensnote a[href="#/w/fail"]', { timeout: 10000 }).catch(() => problems.push(tag + ': a lens does not say what it shows'));
+  await page.evaluate(() => { const b = document.querySelector('.lensbar [data-lens="look"]'); if (b) b.click(); });
   /* what calls stands in the world (docs/INTERACTION.md): by the test house, a square with a board of its questions and
      a bench for each challenge played there; the board opens what is asked there, a bench plays its challenge */
   await page.evaluate(() => { location.hash = '#/place/test'; });

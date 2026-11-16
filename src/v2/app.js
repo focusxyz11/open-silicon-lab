@@ -112,7 +112,8 @@ export function start() {
   const ensureMap = () => mapReady || (mapReady = import('./map3d.js').then(m => {
     /* tap selects, zoom goes in and out (docs/INTERACTION.md): a second tap on the same place selects it again, it
        does not go in */
-    map = m.createMap($('mapCanvas'), $('mapLabels'), { place: id => (cur && cur.place === id && !cur.part && !sheet.hidden ? null : openPlace(id)), part: (place, part) => { location.hash = '#/place/' + place + '/' + part; },
+    map = m.createMap($('mapCanvas'), $('mapLabels'), { place: id => { if (cur && cur.place === id && !cur.part && (!sheet.hidden || !insp.hidden)) return; quickNext = true; openPlace(id); }, part: (place, part) => { quickNext = true; location.hash = '#/place/' + place + '/' + part; },
+      carry: id => { carryNote = carryAt(id); quickNext = true; openPlace(id); },
       deeper: (place, part) => { const to = deeperOf(place, part); if (to) enter(to); },
       leave: id => { if (cur && cur.place === id) { closeSheet(); if (location.hash.startsWith('#/place/')) history.replaceState(null, '', '#/'); hud(); } },
       question: key => openQuestion(key), mover: info => openMover(info), unfollow: () => { if (sheet.classList.contains('mover')) closeSheet(); }, challenge: id => { const ch = chOf(id); if (ch) location.hash = doHref(ch); }, report: at => { if (location.hash !== at) location.hash = at; setTimeout(() => openBreak(true), 0); }, ask: id => openPlace(id, 'ask'), job: need => openJob(need), entry: id => openEntry(id), interact: () => foldHero() });
@@ -178,7 +179,52 @@ export function start() {
   /* the stage knows when a sheet is open (phones fold the HUD's next button away) */
   new MutationObserver(() => $('stage').classList.toggle('sheeted', !sheet.hidden)).observe(sheet, { attributes: true, attributeFilter: ['hidden'] });
   let cur = null;   /* { place, tab } */
-  const closeSheet = () => { const was = cur; sheet.hidden = true; cur = null; if (sheet.classList.contains('mover')) { sheet.classList.remove('mover'); map && map.unfollow(); } if (was) { $('hero').classList.remove('away'); $('hero').classList.add('folded'); hud(); if (map) map.select(null); if (map && !$('mapCanvas').hidden) map.setState(islandState(), false); } };
+  /* ---- the world is the interface (docs/INTERACTION.md): what you tap on the island is answered beside it, by a
+     small inspector that stays with it as the camera moves; the full card is one tap further, never in the way ---- */
+  const insp = document.createElement('div'); insp.className = 'insp'; insp.hidden = true; insp.setAttribute('role', 'dialog'); $('stage').appendChild(insp);
+  let quickNext = false, carryNote = null, inspRaf = 0;
+  const hideInsp = () => { insp.hidden = true; cancelAnimationFrame(inspRaf); };
+  function drawInsp() {
+    if (!cur) return hideInsp(); const id = cur.place, P = cur.part && PARTS[id], C = Game.community(S), dos = doList(id);
+    const nDo = id === 'lab' ? C.jobs.length + C.engines.length : id === 'village' ? C.jobs.length : dos.filter(c => !S.done[c.id]).length, nAsk = (Game.ASK[id] || []).length + Game.debatesAt(id).length;
+    const deep = P ? P.deeper(cur.part) : PARTS[id] ? null : enterOf(id), cn = carryNote && carryNote.place === id ? carryNote : null;
+    insp.innerHTML = '<button type="button" class="ix" data-iact="close" aria-label="' + esc(t('sheet.close')) + '">×</button><p class="kicker">' + esc(P ? t('map.' + id + '.t') : kickerOf(id)) + '</p><h3>' + esc(P ? P.name(cur.part) : t('map.' + id + '.t')) + '</h3>' +
+      '<p class="il">' + esc(P ? P.see(cur.part) : t('map.' + id + '.d')) + '</p>' +
+      /* seen through a lens, a place offers the question that lens belongs to, where it is asked here */
+      (lensQ(id) ? '<div class="ilens">' + askLink(lensQ(id)) + '</div>' : '') +
+      (cn ? '<div class="icarry"><span>' + esc(cn.text) + '</span>' + (cn.ch ? '<button type="button" class="chipb" data-iact="play">' + esc(t('carry.go')) + '</button>' : '') + '</div>' : '') +
+      '<div class="iacts">' + (deep ? '<button type="button" class="chipb primary" data-iact="deeper">↓ ' + esc(t('insp.closer')) + '</button>' : PARTS[id] && !P ? '<span class="small muted">' + esc(t('insp.open')) + '</span>' : '') +
+      '<button type="button" class="chipb" data-iact="do">' + esc(t('door.do')) + (nDo ? ' <span class="n">' + nDo + '</span>' : '') + '</button>' +
+      '<button type="button" class="chipb" data-iact="ask">' + esc(t('door.ask')) + (nAsk ? ' <span class="n">' + nAsk + '</span>' : '') + '</button>' +
+      '<button type="button" class="chipb" data-iact="more">' + esc(t('insp.more')) + '</button></div>';
+    insp.hidden = false; sheet.hidden = true; cancelAnimationFrame(inspRaf); inspTrack();
+  }
+  /* it stays beside what it is about, above it where there is room, below where there is not (a phone keeps it at the foot) */
+  function inspTrack() { inspRaf = requestAnimationFrame(inspTrack); if (insp.hidden || !map || !cur) return; if (innerWidth <= 720) { insp.style.transform = ''; return; }
+    const p = map.screenOf(cur.place, cur.part), r = $('stage').getBoundingClientRect(); if (!p) return; const w = insp.offsetWidth, h = insp.offsetHeight;
+    /* beside it: to the right where there is room, else to the left, its middle level with the thing */
+    const px = p.x * r.width, py = p.y * r.height, off = cur.part ? 70 : 150; let x = px + off; if (x + w > r.width - 12) x = px - off - w; let y = py - h / 2;
+    x = Math.max(12, Math.min(r.width - w - 12, x)); y = Math.max(84, Math.min(r.height - h - 12, y));
+    insp.style.transform = 'translate(' + Math.round(x) + 'px,' + Math.round(y) + 'px)'; }
+  insp.addEventListener('click', e => { const b = e.target.closest('[data-iact]'); if (!b || !cur) return; const a = b.dataset.iact;
+    if (a === 'close') { closeSheet(); map && map.select(null); return; }
+    if (a === 'deeper') { const to = deeperOf(cur.place, cur.part); if (to) enter(to); return; }
+    if (a === 'play') { const ch = chOf(carryNote && carryNote.ch); carryNote = null; if (ch) location.hash = doHref(ch); return; }
+    cur.tab = a === 'more' ? 'look' : a; drawPlace(); });
+  /* ---- lenses: the same island seen for one thing at a time; each opens onto the question it belongs to, one at a
+     time, never as a list ---- */
+  const LENSES = [['look', '○'], ['heat', '≋'], ['flow', '⇄'], ['fail', '✕'], ['time', '◷']], LENS_WORLD = { heat: 'limit', fail: 'fail', time: 'make', flow: 'open' };
+  const lensbar = document.createElement('nav'); lensbar.className = 'lensbar'; lensbar.hidden = true; lensbar.setAttribute('aria-label', t('lens.aria')); $('stage').appendChild(lensbar);
+  const drawLens = k => { lensbar.innerHTML = '<div class="lb">' + LENSES.map(([id, g]) => '<button type="button" data-lens="' + id + '" aria-pressed="' + (id === k) + '" title="' + esc(t('lens.' + id + '.t')) + '"><span class="g" aria-hidden="true">' + g + '</span><span class="nm">' + esc(t('lens.' + id + '.t')) + '</span></button>').join('') + '</div>' +
+    (k !== 'look' ? '<div class="lensnote"><p>' + esc(t('lens.' + k + '.d')) + '</p><a href="#/w/' + LENS_WORLD[k] + '">' + esc(t('lens.follow')) + ' →</a></div>' : ''); };
+  drawLens('look');
+  lensbar.addEventListener('click', e => { const b = e.target.closest('[data-lens]'); if (!b || !map) return; const k = map.lens() === b.dataset.lens ? 'look' : b.dataset.lens; map.setLens(k); drawLens(k); foldHero(); });
+  const lensQ = id => { const k = map && map.lens(), w = k && LENS_WORLD[k]; if (!w) return null; const P = cur && cur.part && PARTS[id], L = P ? P.qs(cur.part) : (Game.ASK[id] || []); return L.find(q => q.startsWith(w + '.')) || null; };
+  lensbar.addEventListener('click', () => { if (!insp.hidden) drawInsp(); });
+  /* your chip carried to a place: what that place would do with it, there and then */
+  const carryAt = id => { const L = doList(id), open = L.filter(c => !S.done[c.id]); if (open.length) return { place: id, text: t('carry.play', { what: titleOf(open[0]) }), ch: open[0].id };
+    return { place: id, text: t(L.length ? 'carry.done' : 'carry.none') }; };
+  const closeSheet = () => { const was = cur; sheet.hidden = true; cur = null; hideInsp(); if (carryNote) { carryNote = null; map && map.chipHome(); } if (sheet.classList.contains('mover')) { sheet.classList.remove('mover'); map && map.unfollow(); } if (was) { $('hero').classList.remove('away'); $('hero').classList.add('folded'); hud(); if (map) map.select(null); if (map && !$('mapCanvas').hidden) map.setState(islandState(), false); } };
   const kickerOf = id => { const step = Game.STEP_OF[id] || Game.STEP_PLACE[id]; return Way.stageOfPlace(id) === 'open' ? t('loop.open.k') : step ? t('game.stepN', { n: Game.STEPS.indexOf(step) + 1, step: t('game.step.' + step) }) : t('map.' + id + '.kind'); };
   /* what to do at a place: its own challenges, and at a step's station the step's challenges played elsewhere */
   const doList = id => { const step = Game.STEP_OF[id] || Game.STEP_PLACE[id], here = Game.placeChallenges(id);
@@ -287,13 +333,13 @@ export function start() {
     sheet.classList.add('mover'); sheet.classList.remove('part', 'inside'); sheet.hidden = false; sheet.scrollTop = 0; hud();
   }
   function openPlace(id, tab, step, piece, part) {
-    sheet.classList.remove('mover');
+    sheet.classList.remove('mover'); const quick = quickNext; quickNext = false; if (!carryNote || carryNote.place !== id) carryNote = null;
     cur = { place: id, tab: tab || 'look', step: step || null, piece: piece || null, part: part || null };
-    if (map) { if (!part) map.focus(id); map.select(id, part); }
+    if (map) { if (!part) map.focus(id, { center: quick }); map.select(id, part); }
     /* the address says where you are: a place picked on the island is written into it (without going anywhere) */
     const at = '#/place/' + id + (part ? '/' + part : '');
     if (!step && /^#?\/?$|^#\/(place|explore)/.test(location.hash) && location.hash !== at && !location.hash.startsWith(at + '/')) history.pushState(null, '', at);
-    $('hero').classList.add('away'); drawPlace(); hud(); if (map) map.setState(islandState(), false);
+    $('hero').classList.add('away'); drawPlace(); if (quick) drawInsp(); hud(); if (map) map.setState(islandState(), false);
   }
   function drawPlace() {
     const id = cur.place, C = Game.community(S), asks = Game.ASK[id] || [], debates = Game.debatesAt(id), dos = doList(id);
@@ -336,7 +382,7 @@ export function start() {
       if (debates.length) h += '<p class="kicker">' + esc(t('game.debates')) + '</p>' + debates.map(d => '<div class="debate2"><b>' + esc(t('debate.' + d + '.t')) + '</b><span class="small">' + esc(t('debate.' + d + '.q')) + '</span></div>').join('');
       if (!nAsk && id !== 'lab') h += '<p class="small muted">' + esc(t('game.noAsk')) + '</p>';
     }
-    sheet.innerHTML = h + '</div>'; sheet.hidden = false; sheet.scrollTop = 0; sheet.classList.toggle('inside', id === 'lab' && !!cur.step && cur.tab === 'look'); sheet.classList.toggle('part', !!cur.part);
+    sheet.innerHTML = h + '</div>'; sheet.hidden = false; hideInsp(); sheet.scrollTop = 0; sheet.classList.toggle('inside', id === 'lab' && !!cur.step && cur.tab === 'look'); sheet.classList.toggle('part', !!cur.part);
   }
   /* a challenge, played in the sheet */
   function openChallenge(ch) {
@@ -762,7 +808,7 @@ export function start() {
   /* every view hides the others first */
   function hideAll() {
     $('diveCanvas').hidden = true; vui.hidden = true; dive && dive.stop(); hide3d(); $('flatLabels').hidden = true; if (flatWords) flatWords.clear();
-    hideBoard(); $('hero').hidden = true; $('outbtn').hidden = true; closeSheet(); pui.hidden = true; cui.hidden = true; dc && dc.pause(); map && map.pause(); chip && chip.pause();
+    hideBoard(); $('hero').hidden = true; $('outbtn').hidden = true; lensbar.hidden = true; closeSheet(); pui.hidden = true; cui.hidden = true; dc && dc.pause(); map && map.pause(); chip && chip.pause();
     ['mapCanvas', 'mapLabels', 'placeCanvas', 'placeLabels', 'chipCanvas', 'chipLabels'].forEach(k => { $(k).hidden = true; });
     document.body.classList.remove('immersive'); page.hidden = true; hideL3(); showStage(false);
   }
@@ -771,7 +817,7 @@ export function start() {
     hideBoard(); document.body.classList.remove('immersive');
     $('chipCanvas').hidden = $('chipLabels').hidden = true; cui.hidden = true; chip && chip.pause();
     $('placeCanvas').hidden = $('placeLabels').hidden = true; pui.hidden = true; dc && dc.pause();
-    $('mapCanvas').hidden = $('mapLabels').hidden = false; $('hero').hidden = false; $('outbtn').hidden = false; showStage(true);
+    $('mapCanvas').hidden = $('mapLabels').hidden = false; $('hero').hidden = false; $('outbtn').hidden = false; lensbar.hidden = false; showStage(true);
     const part = from && ['line', 'bench'].includes(flatKind) && WE && isPart(lastPlace, diveId()) ? diveId() : null;
     loading(!map); return ensureMap().then(m => { if (from && lastPlace) { m.from(lastPlace, part); if (!part) m.focus(lastPlace); } m.resume(); return m; });
   }
