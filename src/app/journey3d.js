@@ -102,6 +102,7 @@ function mergeAll(list) {
 /* the floor (the aisle in front, the tools' floor behind), the back wall, the overhead track */
 function bay(b, plant, firstOfPlant) {
   const M = b.M;
+  if (b.noBay) return;   /* a machine alone, to stand in another scene (the island's factory, machineModel) */
   b.box(-450, -460, -12, 900, 460, 12, M.aisle, false);
   b.box(-450, 0, -12, 900, 700, 12, M.floor, false);
   /* the earlier site's floor was a grid of lines; the chip world's is a plain floor, as in its 3D views */
@@ -579,6 +580,16 @@ function person(b, x, d) {
 
 /* stations not drawn yet in 3D get the bay and a simple stand-in, so the line stays whole */
 function standIn(b, plant, first) { bay(b, plant, first); b.box(-120, 60, 0, 240, 200, 160, b.M.body); return {}; }
+
+/* one machine of the line, alone (no floor, wall or track), as a group in metres: the island's factory stands the
+   same machines in its bays, so the picture you dive into is the picture you came from (docs/INTERACTION.md).
+   col: { lit, dark, warm, cool, grn, red }. */
+export function machineModel(id, col) {
+  if (!BUILD[id]) return null;
+  const b = new Builder(materials(col)); b.noBay = true;
+  const extra = BUILD[id](b, PLANTS[id], false) || {};
+  return { group: b.finish(0), update: extra.update || null };
+}
 
 /* for the tests: build one station without drawing it, and say what it holds */
 export function stationForTest(id, ids) {

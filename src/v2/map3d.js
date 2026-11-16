@@ -231,7 +231,7 @@ export function createMap(canvas, host, on = {}) {
   const FAB_TOOLS = [['clean', -8, -1], ['deposit', 0, -1], ['print', 8, -1], ['etch', 8, 1], ['implant', 0, 1], ['wires', -8, 1]];
   { const g = place('fab');
     /* the cleanroom floor, and the shell: the far walls stay, the near ones fade, the roof lifts */
-    box(g, FAB_W - 0.6, 0.12, FAB_D - 0.6, mat(night ? 0x2b323d : 0xe6e7e3, { roughness: 0.45 }), 0, 0, 0, 0.02, { cast: false });
+    box(g, FAB_W - 0.6, 0.12, FAB_D - 0.6, mat(night ? 0x2b323d : 0xc6cbcf, { roughness: 0.45 }), 0, 0, 0, 0.02, { cast: false });
     box(g, FAB_W, FAB_H, FAB_T, mat(P.white), 0, 0, -FAB_D / 2 + FAB_T / 2, 0.08);
     box(g, FAB_T, FAB_H, FAB_D, mat(P.white), FAB_W / 2 - FAB_T / 2, 0, 0, 0.08);
     const south = box(g, FAB_W, FAB_H, FAB_T, ghost(), 0, 0, FAB_D / 2 - FAB_T / 2, 0.08), west = box(g, FAB_T, FAB_H, FAB_D, ghost(), -FAB_W / 2 + FAB_T / 2, 0, 0, 0.08);
@@ -250,7 +250,7 @@ export function createMap(canvas, host, on = {}) {
     const IN = FAB.inside = group(g, 0, 0, 0); IN.visible = false;
     const shell = mat(night ? 0xc3cad4 : 0xf4f4f1, { roughness: 0.45 }), panel = mat(night ? 0x8d97a5 : 0xd9dbd8, { roughness: 0.55 }), dark = glass(P.dark, { opacity: 0.8 });
     const steel = metal(night ? 0x8a929e : 0xb9c0c8), run = glow(P.good, 0.9);
-    box(IN, FAB_W - 3, 0.02, 2.4, mat(night ? 0x232a33 : 0xd2d4d0, { roughness: 0.4 }), 0, 0.12, 0, 0.01, { cast: false });
+    box(IN, FAB_W - 3, 0.02, 2.4, mat(night ? 0x232a33 : 0xb3b9bf, { roughness: 0.4 }), 0, 0.12, 0, 0.01, { cast: false });
     const tool = (id, x, side) => {
       const tg = group(IN, x, 0.12, side * 4.3, side < 0 ? 0 : Math.PI);
       /* the front of every tool faces the aisle: a load port where carriers set down, and a light that says it runs */
@@ -441,13 +441,25 @@ export function createMap(canvas, host, on = {}) {
   const HGT = { studio: 9, quarry: 7, fab: 10, test: 7, port: 11, datacentre: 7, lab: 22, village: 19, phones: 16, cars: 9, idea: 8 };
   const names = {};
   PLACES.forEach(p => { names[p.id] = L.add(G[p.id], new THREE.Vector3(0, HGT[p.id], 0), '', { cls: 'place3' + (p.far ? ' far' : ''), button: true, data: { place: p.id }, html: '', max: p.far ? Infinity : 520 }); });
+  /* the factory's tools, drawn as the line draws them: on the first opening, each simple tool is replaced by the
+     line's own machine (src/app/journey3d.js machineModel), so diving in shows the same machine, closer */
+  let detailed = null;
+  const detail = () => { if (detailed) return; detailed = import('../app/journey3d.js').then(m => {
+    if (!m.machineModel) return;
+    const col = { lit: true, dark: night, warm: P.warm, cool: P.accent, grn: P.good, red: P.bad };
+    FAB_TOOLS.forEach(([id]) => { const tg = FAB.tools[id], mm = m.machineModel(id, col); if (!tg || !mm) return;
+      while (tg.children.length) tg.remove(tg.children[0]);
+      const g = mm.group; g.scale.setScalar(1); g.position.set(0, 0, 3.1); tg.add(g);
+      g.traverse(o => { o.userData.part = id; if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } }); });
+    pickable();
+  }).catch(() => { /* the simple tools stay */ }); };
   /* the tool selected stands on a ring of light */
   const ring = new THREE.Mesh(new THREE.RingGeometry(0.92, 1, 48), new THREE.MeshBasicMaterial({ color: P.accent, transparent: true, opacity: 0.85, depthWrite: false }));
   ring.rotation.x = -Math.PI / 2; ring.visible = false; scene.add(ring);
   /* inside an open building, every part's name over it (shown only while the inside is) */
   const cap = w => w.charAt(0).toUpperCase() + w.slice(1), PART_WORD = { test: id => cap(t('part.test.' + id)), port: id => cap(t('part.' + (['trays', 'boxes'].includes(id) ? 'ship' : 'pkg') + '.' + id)) }, PART_UP = { print: 4.2, masks: 5.4, need: 3.2, check: 3, prober: 2.4, needles: 3, map: 3.2, rack: 3.2, board: 1.8 };
   const RING_R = { studio: 2.6, test: 1.9, masks: 5.4, port: 1.5, rack: 2.4, board: 1.6 };
-  const toolNames = {}; Object.entries(OPEN).forEach(([pl, O]) => Object.entries(O.tools).forEach(([id, g]) => { toolNames[pl + ':' + id] = L.add(g, new THREE.Vector3(0, PART_UP[id] || (pl === 'fab' ? 3.4 : 2.6), 0), (PART_WORD[pl] || (x => t('depth.' + x + '.name')))(id), { cls: 'tool3', button: true, data: { place: pl, part: id }, need: O.inside, max: 340 }); }));
+  const toolNames = {}; Object.entries(OPEN).forEach(([pl, O]) => Object.entries(O.tools).forEach(([id, g]) => { toolNames[pl + ':' + id] = L.add(g, new THREE.Vector3(0, PART_UP[id] || (pl === 'fab' ? 3.8 : 2.6), 0), (PART_WORD[pl] || (x => t('depth.' + x + '.name')))(id), { cls: 'tool3', button: true, data: { place: pl, part: id }, need: O.inside, max: 340 }); }));
   /* seen from far out, the island's places fold into one name */
   L.add(scene, new THREE.Vector3(0, 12, 0), t('map.home'), { cls: 'place3 far home', min: 560 });
   /* the number pins of the loop, and your chip on it */
@@ -619,6 +631,7 @@ export function createMap(canvas, host, on = {}) {
     for (let i = sparks.length - 1; i >= 0; i--) { const m = sparks[i]; m.userData.t += dt; m.userData.v.y -= 18 * dt; m.position.addScaledVector(m.userData.v, dt); m.rotation.y += dt * 4; m.material.opacity = Math.max(0, 1 - m.userData.t / 1.4); if (m.userData.t > 1.4) { scene.remove(m); sparks.splice(i, 1); } }
     /* the factory opens and closes with the camera */
     /* the buildings open and close with the camera */
+    if (FAB.want > 0) detail();
     Object.entries(OPEN).forEach(([id, O]) => { O.k += (O.want - O.k) * Math.min(1, dt * (reduced() ? 60 : 3.2)); const k = ease(clamp(O.k));
       O.lid.position.y = O.lidUp * k; O.lid.visible = k < 0.96; if (O.deco) O.deco.visible = k < 0.4; O.inside.visible = k > 0.02; names[id].show = k < 0.5;
       O.near.forEach(w => { w.material.opacity = (w.userData.glass || 1) * (1 - 0.9 * k); w.material.depthWrite = k < 0.5 && !w.userData.glass; w.castShadow = k < 0.5; }); });
