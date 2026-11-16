@@ -58,7 +58,11 @@ should look like a cartoon. Consistency comes before any single feature.
    line's prober station and the port's hall its packaging station, their parts picked by the station's own named
    boxes; and the machines work while you watch (plasma, beams, sprays, the polisher's head, the prober stepping
    and its wafer map filling; the robots hand a wafer from port to airlock to chamber and back, on each machine's own
-   round).
+   round). The studio and the data centre, which have no machine in the line to borrow, are furnished in the same
+   grown-up way: people at desks with two screens each, showing the work in shapes (code, waveforms, gates, the
+   layout's two metals; never words, which are HTML over the scene); racks whose fronts are their servers, lights
+   blinking, a cold aisle closed in glass, cable trays and cooling units; a server pulled out with its board, chip,
+   memory and heat sink.
 4. The first page as a surface to play (first pass done): the questions and challenges stay, folding into a
    button in the corner while you explore and opening again from it; a place pointed at says in one line what it is;
    a minimap keeps the whole island in view, with what the camera sees, and takes you anywhere on it.

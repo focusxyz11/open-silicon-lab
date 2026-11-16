@@ -150,12 +150,50 @@ export function createMap(canvas, host, on = {}) {
   const route = pts => new THREE.CatmullRomCurve3(pts.map(([x, z]) => new THREE.Vector3(x, 0, z)));
 
   /* ---- the stations of the loop ---- */
+  /* ---- furnishing, drawn small but whole ---- */
+  /* screens show the work in shapes, never words (words are HTML over the scene): code as indented lines, a
+     simulation as waveforms, the circuit as gates, the layout as its two metals, a rack's front as its servers */
+  const TEX = {};
+  const screenTex = kind => {
+    if (TEX[kind]) return TEX[kind];
+    const c = document.createElement('canvas'); c.width = 256; c.height = 160; const x = c.getContext('2d'), R = (i, k) => rnd(i * 7 + kind.length, k);
+    x.fillStyle = kind === 'rack' ? '#1a1f28' : '#0d1522'; x.fillRect(0, 0, 256, 160);
+    if (kind === 'code') for (let i = 0; i < 14; i++) { const ind = [0, 1, 2, 2, 1, 2, 3, 3, 2, 1, 0, 1, 2, 1][i] * 14; x.fillStyle = ['#7fb6ff', '#e8c56a', '#8fd6b0', '#c9d3e6'][i % 4]; x.fillRect(14 + ind, 10 + i * 10.5, 30 + R(i, 1) * 120, 5); }
+    if (kind === 'wave') { x.lineWidth = 2; for (let r = 0; r < 6; r++) { x.strokeStyle = r % 2 ? '#5ee0a0' : '#7fb6ff'; x.beginPath(); let hi = R(r, 2) > 0.5; x.moveTo(8, 18 + r * 24 + (hi ? 0 : 12)); for (let k = 1; k < 16; k++) { const nx = 8 + k * 15.5; x.lineTo(nx, 18 + r * 24 + (hi ? 0 : 12)); if (R(r * 20 + k, 3) > 0.55) { hi = !hi; x.lineTo(nx, 18 + r * 24 + (hi ? 0 : 12)); } } x.stroke(); } }
+    if (kind === 'gates') { x.strokeStyle = '#66d0e0'; x.lineWidth = 2; for (let i = 0; i < 6; i++) { const gx = 30 + (i % 3) * 76, gy = 30 + Math.floor(i / 3) * 70; x.beginPath(); x.moveTo(gx, gy); x.lineTo(gx + 18, gy); x.arc(gx + 18, gy + 16, 16, -Math.PI / 2, Math.PI / 2); x.lineTo(gx, gy + 32); x.closePath(); x.stroke(); x.beginPath(); x.moveTo(gx - 16, gy + 8); x.lineTo(gx, gy + 8); x.moveTo(gx - 16, gy + 24); x.lineTo(gx, gy + 24); x.moveTo(gx + 34, gy + 16); x.lineTo(gx + 58, gy + 16); x.stroke(); } }
+    if (kind === 'layout') { for (let i = 0; i < 12; i++) { x.fillStyle = 'rgba(90,169,255,.85)'; x.fillRect(0, 8 + i * 13, 256, 5); } for (let i = 0; i < 18; i++) { x.fillStyle = 'rgba(224,136,79,.8)'; x.fillRect(6 + i * 14, 0, 5, 160); } for (let i = 0; i < 30; i++) { x.fillStyle = 'rgba(94,224,160,.7)'; x.fillRect(R(i, 4) * 240, R(i, 5) * 150, 10, 6); } }
+    if (kind === 'rack') for (let u = 0; u < 20; u++) { x.fillStyle = u % 5 === 4 ? '#11151c' : '#2a313d'; x.fillRect(6, 4 + u * 7.6, 244, 6.4); for (let k = 0; k < 3; k++) { x.fillStyle = R(u * 3 + k, 6) > 0.3 ? (k === 0 ? '#45d08a' : '#5aa9ff') : '#333'; x.fillRect(224 + k * 8, 5.5 + u * 7.6, 4, 3); } x.fillStyle = '#151a22'; for (let h = 0; h < 22; h++) x.fillRect(14 + h * 9, 5 + u * 7.6, 5, 4.4); }
+    if (kind === 'back') { x.fillStyle = '#161a21'; x.fillRect(0, 0, 256, 160); for (let i = 0; i < 4; i++) { x.fillStyle = '#232934'; x.beginPath(); x.arc(40 + i * 58, 40, 20, 0, 7); x.fill(); x.beginPath(); x.arc(40 + i * 58, 112, 20, 0, 7); x.fill(); }
+      for (let k = 0; k < 16; k++) { x.strokeStyle = ['#3b8ad9', '#e0b43c', '#45d08a', '#c9d3e6'][k % 4]; x.lineWidth = 1.5; x.beginPath(); x.moveTo(228 + (k % 4) * 6, 0); x.lineTo(228 + (k % 4) * 6, 10 + k * 9); x.lineTo(8 + R(k, 7) * 200, 10 + k * 9); x.stroke(); } }
+    const tx = new THREE.CanvasTexture(c); tx.colorSpace = THREE.SRGBColorSpace; tx.anisotropy = 4; return (TEX[kind] = tx);
+  };
+  const scrM = kind => new THREE.MeshBasicMaterial({ map: screenTex(kind), color: night ? 0xffffff : 0xd8dde6, toneMapped: false });
+  const sheet = (g, w, h, kind, x, y, z, ry = 0, rx = 0) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), scrM(kind)); m.position.set(x, y, z); m.rotation.set(rx, ry, 0); g.add(m); return m; };
+  const CLOTHES = [0x3d5a80, 0x7a5c61, 0x4f6d5a, 0x8a7a5c, 0x5b5f73], SKIN = [0xc99a7a, 0x8d5f45, 0xe2bfa2, 0xa8745a];
+  const headG = new THREE.SphereGeometry(0.11, 14, 10);
+  const figure = (g, x, z, ry, k, seated) => { const f = group(g, x, 0, z, ry), cl = mat(CLOTHES[k % 5], { roughness: 0.8 });
+    if (seated) { box(f, 0.34, 0.12, 0.42, mat(0x2b2f38, { roughness: 0.8 }), 0, 0.46, -0.12, 0.04); box(f, 0.36, 0.52, 0.22, cl, 0, 0.56, 0.08, 0.08); [-0.1, 0.1].forEach(a => box(f, 0.1, 0.46, 0.12, mat(0x2b2f38), a, 0, -0.3, 0.03, { cast: false })); box(f, 0.44, 0.1, 0.3, cl, 0, 0.82, -0.12, 0.04); }
+    else { [-0.08, 0.08].forEach(a => box(f, 0.12, 0.8, 0.14, mat(0x2b2f38, { roughness: 0.8 }), a, 0, 0, 0.04)); box(f, 0.38, 0.58, 0.22, cl, 0, 0.8, 0, 0.08); [-0.24, 0.24].forEach(a => box(f, 0.09, 0.52, 0.1, cl, a, 0.84, 0, 0.03)); }
+    const hd = new THREE.Mesh(headG, mat(SKIN[k % 4], { roughness: 0.7 })); hd.position.set(0, seated ? 1.22 : 1.52, seated ? 0.06 : 0); hd.castShadow = true; f.add(hd); return f; };
+  const chair = (g, x, z, ry) => { const ch = group(g, x, 0, z, ry), dk = mat(P.dark, { roughness: 0.6 }), leg = metal(P.slate);
+    cyl(ch, 0.24, 0.24, 0.07, dk, 0, 0.44, 0, 16); box(ch, 0.42, 0.48, 0.06, dk, 0, 0.5, 0.22, 0.03); cyl(ch, 0.03, 0.03, 0.42, leg, 0, 0.02, 0, 8);
+    for (let k = 0; k < 5; k++) { const a = k * 1.2566; box(ch, 0.05, 0.03, 0.3, leg, Math.sin(a) * 0.14, 0, Math.cos(a) * 0.14, 0.01, { cast: false }).rotation.y = a; } return ch; };
+  /* a workplace: a desk on panel legs, two screens on one stand, a keyboard, a chair, and often someone at it */
+  let who = 0;
+  const workdesk = (g, x, z, ry, kind, seated = true) => { const d = group(g, x, 0, z, ry), top = mat(night ? 0x8f8270 : 0xd2bf9f, { roughness: 0.55 }), leg = metal(P.slate);
+    box(d, 1.6, 0.05, 0.8, top, 0, 0.72, 0, 0.02); [-0.74, 0.74].forEach(a => box(d, 0.05, 0.72, 0.7, leg, a, 0, 0, 0.01, { cast: false }));
+    box(d, 0.3, 0.02, 0.18, leg, 0, 0.77, -0.25, 0.01, { cast: false }); box(d, 0.04, 0.2, 0.04, leg, 0, 0.77, -0.3, 0.005, { cast: false });
+    [-0.33, 0.33].forEach((mx, i) => { const mon = group(d, mx, 0.94, -0.28, i ? -0.2 : 0.2); box(mon, 0.64, 0.4, 0.03, mat(P.dark, { roughness: 0.4 }), 0, 0, 0, 0.01, { cast: false }); sheet(mon, 0.6, 0.36, kind, 0, 0.2, 0.017); });
+    box(d, 0.46, 0.015, 0.15, mat(P.dark), 0, 0.77, 0.12, 0.004, { cast: false });
+    chair(d, 0, 0.62, Math.PI); if (seated) figure(d, 0, 0.62, Math.PI, who++, true); return d; };
+  const plant = (g, x, z, s = 1) => { cyl(g, 0.22 * s, 0.17 * s, 0.4 * s, mat(night ? 0x6b5f52 : 0xb7a48d, { roughness: 0.8 }), x, 0, z, 12); const c = new THREE.Mesh(lump(), mat(T.leaf, { roughness: 0.8 })); c.scale.setScalar(0.42 * s); c.position.set(x, 0.75 * s, z); c.castShadow = true; g.add(c); };
+
   /* 1 design: the studio, a campus at the start of the loop. The design halls, a plaza, and on the road
      the mask house, where a finished design leaves as masks for the factory (the mask truck grows from it) */
   /* ---- buildings that open where they stand (docs/INTERACTION.md) ----
      each has a lid that lifts away, near walls that fade (south and west: the camera looks from the south-west), a
      little that hides (windows on the near walls), and an inside with its parts, each one picked as itself */
-  const OPEN = {};
+  const OPEN = {}, working = [];   /* what moves inside the open buildings, each frame */
   const opening = (id, o) => (OPEN[id] = Object.assign({ k: 0, want: 0, near: [], tools: {}, lidUp: 16, deco: null, inside: null, lid: null }, o));
   const ghost = (color = P.white, o = {}) => new THREE.MeshStandardMaterial(Object.assign({ color, roughness: 0.72, metalness: 0.02, transparent: true, opacity: 1 }, o));
   const panelM = () => mat(night ? 0x8d97a5 : 0xd9dbd8, { roughness: 0.55 });
@@ -190,22 +228,23 @@ export function createMap(canvas, host, on = {}) {
     /* inside: one corner for each step of the design */
     const IN = O.inside = group(g, 0, 0, 0); IN.visible = false;
     const st = {}; STUDIO_PARTS.forEach(([id, x, z]) => { st[id] = group(IN, x, 0.1, z); });
-    /* the job: a wall of notes, and a table to talk round */
+    /* the job: a wall of notes, two people at it, and a table to talk round */
     box(st.need, 4, 2, 0.08, mat(0xf4f3ee, { roughness: 0.5 }), 0, 0.7, -2.6, 0.02);
-    for (let i = 0; i < 12; i++) box(st.need, 0.36, 0.36, 0.03, mat([0xe8c86a, 0x9cc7e0, 0xe9a38c, 0xa8d4a0][i % 4]), -1.5 + (i % 6) * 0.6, 1.1 + Math.floor(i / 6) * 0.7, -2.54, 0.01, { cast: false });
-    cyl(st.need, 0.9, 0.9, 0.06, mat(night ? 0x8f8270 : 0xcdb99a, { roughness: 0.6 }), 0, 0.72, -0.4, 28); cyl(st.need, 0.08, 0.12, 0.72, metal(P.slate), 0, 0, -0.4, 8);
-    [0, 2.1, 4.2].forEach(a => cyl(st.need, 0.24, 0.24, 0.46, mat(P.dark, { roughness: 0.6 }), Math.cos(a) * 1.3, 0, -0.4 + Math.sin(a) * 1.3, 12));
-    /* describe: desks of people writing the circuit as text */
-    [[-1, -1], [1, -1], [-1, 0.6], [1, 0.6]].forEach(([dx, dz], i) => desk(st.logic, dx, dz, i < 2 ? 0 : Math.PI, 0x2f5f9e));
-    /* check: the machines that run every case, and a wall of results */
-    [-1.2, 0, 1.2].forEach(dx => { box(st.check, 1, 2.2, 1, mat(P.rack, { roughness: 0.5 }), dx, 0, -1.6, 0.04); pulses.push(box(st.check, 0.7, 0.06, 0.02, glow(P.good, 1), dx, 1.6, -1.09, 0.01, { cast: false })); });
-    screen(st.check, 3.4, 1.4, 0x1f6b4e, 0, 1.4, -2.55); desk(st.check, 0, 0.6, Math.PI, 0x1f6b4e);
+    for (let i = 0; i < 14; i++) box(st.need, 0.34, 0.34, 0.03, mat([0xe8c86a, 0x9cc7e0, 0xe9a38c, 0xa8d4a0][i % 4]), -1.6 + (i % 7) * 0.52, 1.05 + Math.floor(i / 7) * 0.62 + rnd(i, 9) * 0.1, -2.54, 0.01, { cast: false });
+    figure(st.need, -0.9, -1.9, Math.PI, 1, false); figure(st.need, 0.5, -1.7, Math.PI + 0.4, 2, false);
+    cyl(st.need, 0.85, 0.85, 0.05, mat(night ? 0x8f8270 : 0xd2bf9f, { roughness: 0.55 }), 0, 0.72, 0.1, 28); cyl(st.need, 0.06, 0.1, 0.72, metal(P.slate), 0, 0, 0.1, 8);
+    [0.4, 2.5, 4.6].forEach((a, i) => { chair(st.need, Math.cos(a) * 1.25, 0.1 + Math.sin(a) * 1.25, -a - Math.PI / 2); if (i === 1) figure(st.need, Math.cos(a) * 1.25, 0.1 + Math.sin(a) * 1.25, -a - Math.PI / 2, 3, true); });
+    plant(st.need, 1.9, -2.2, 1.2);
+    /* describe: four desks of people writing the circuit as text */
+    [[-0.9, -0.9], [0.9, -0.9], [-0.9, 0.8], [0.9, 0.8]].forEach(([dx, dz], i) => workdesk(st.logic, dx, dz, i < 2 ? 0 : Math.PI, 'code', i !== 3));
+    /* check: the machines that run every case, a wall of results, and someone watching them */
+    [-1.2, 0, 1.2].forEach(dx => { box(st.check, 1, 2.2, 1, mat(P.rack, { roughness: 0.5 }), dx, 0, -1.6, 0.04); sheet(st.check, 0.9, 2, 'rack', dx, 1.1, -1.09); });
+    box(st.check, 3.5, 1.5, 0.06, mat(P.dark), 0, 0.85, -2.6, 0.02); sheet(st.check, 3.36, 1.36, 'wave', 0, 1.6, -2.56); workdesk(st.check, 0, 0.7, Math.PI, 'wave');
     /* gates: the program's drawing of the circuit, on every screen */
-    [[-1, 0], [1, 0], [0, 1.4]].forEach(([dx, dz], i) => desk(st.gates, dx, dz, i < 2 ? 0 : Math.PI, 0x2a7a8c));
-    /* layout: a table that is a screen, the tile's wires in two colours of metal */
-    box(st.layout, 3.2, 0.9, 1.8, mat(P.dark, { roughness: 0.4 }), 0, 0, 0, 0.06);
-    const tile = group(st.layout, 0, 0.92, 0); for (let i = 0; i < 9; i++) { box(tile, 2.8, 0.02, 0.08, glow(0x5aa9ff, night ? 0.9 : 0.5), 0, 0, -0.7 + i * 0.17, 0.005, { cast: false }); box(tile, 0.08, 0.025, 1.5, glow(0xe0884f, night ? 0.9 : 0.5), -1.3 + i * 0.32, 0, 0, 0.005, { cast: false }); }
-    [-1.9, 1.9].forEach(dx => cyl(st.layout, 0.26, 0.26, 0.5, mat(P.dark, { roughness: 0.6 }), dx, 0, 0, 12));
+    [[-0.9, -0.4], [0.9, -0.4], [0, 1.2]].forEach(([dx, dz], i) => workdesk(st.gates, dx, dz, i < 2 ? 0 : Math.PI, 'gates', i !== 1));
+    /* layout: a table that is a screen, the tile's two metals on it, and two people leaning over it */
+    box(st.layout, 3.2, 0.86, 1.8, mat(P.dark, { roughness: 0.4 }), 0, 0, 0, 0.06); sheet(st.layout, 3, 1.6, 'layout', 0, 0.87, 0, 0, -Math.PI / 2);
+    figure(st.layout, -0.6, 1.25, Math.PI, 0, false); figure(st.layout, 1.0, -1.2, 0, 4, false); plant(st.layout, -2.2, -0.9);
     STUDIO_PARTS.forEach(([id]) => tagParts(O, id, st[id]));
     /* the mask house: a loading bay facing the road to the factory; once the studio is open it is the last step */
     const mh = group(g, 13, 0, 3);
@@ -370,14 +409,29 @@ export function createMap(canvas, host, on = {}) {
     O.lid = group(g, 0, 0, 0); box(O.lid, 24.2, 0.4, 6.2, mat(A.roof, { roughness: 0.7 }), 0, HH, z0, 0.1);
     for (let i = 0; i < 7; i++) { box(O.lid, 2.4, 0.8, 2.4, mat(P.white), -9 + i * 3, HH + 0.4, z0, 0.12); spinning.push(cyl(O.lid, 0.9, 0.9, 0.15, metal(P.dark), -9 + i * 3, HH + 1.2, z0, 18)); }
     const IN = O.inside = group(g, 0, 0, 0); IN.visible = false;
-    /* two rows of racks with a cold aisle between: every rack lit by its servers */
-    const racks = group(IN, 0, 0.1, z0);
-    [-1.25, 1.25].forEach(rz => { for (let i = 0; i < 11; i++) { const x = -9 + i * 1.6; box(racks, 1.2, 2.4, 1.1, mat(P.rack, { roughness: 0.5 }), x, 0, rz, 0.04);
-      for (let k = 0; k < 5; k++) pulses.push(box(racks, 0.8, 0.05, 0.02, glow(k % 3 ? P.accent : P.good, night ? 1 : 0.6), x, 0.4 + k * 0.38, rz + (rz < 0 ? 0.56 : -0.56), 0.005, { cast: false })); } });
-    /* a server pulled out onto a cart: its board, the big chip in the middle and memory round it */
-    const cart = group(IN, 9.8, 0.1, z0 + 1.2);
-    box(cart, 1.6, 0.8, 1, metal(P.slate), 0, 0, 0, 0.04); box(cart, 1.4, 0.05, 0.9, mat(night ? 0x1f4a37 : 0x2b5e4c, { roughness: 0.6 }), 0, 0.8, 0, 0.01, { cast: false });
-    box(cart, 0.36, 0.08, 0.36, metal(P.gold), 0, 0.85, 0, 0.01, { cast: false }); [[-0.4, 0], [0.4, 0], [0, -0.3], [0, 0.3]].forEach(([x, z]) => box(cart, 0.14, 0.07, 0.14, mat(P.dark), x, 0.85, z, 0.01, { cast: false }));
+    /* two rows of racks facing a cold aisle closed in glass, cable trays over them, and the cooling units at the end;
+       every rack's front its servers, their lights blinking */
+    const racks = group(IN, 0, 0.1, z0), leds = [], ledOn = glow(P.good, night ? 1.6 : 1), ledOff = mat(0x30353f);
+    [-1.25, 1.25].forEach(rz => { const face = rz < 0 ? 1 : -1; for (let i = 0; i < 11; i++) { const x = -9 + i * 1.6;
+      box(racks, 1.2, 2.4, 1.1, mat(P.rack, { roughness: 0.5 }), x, 0, rz, 0.04); sheet(racks, 1.06, 2.2, 'rack', x, 1.2, rz + face * 0.556, face < 0 ? Math.PI : 0); sheet(racks, 1.06, 2.2, 'back', x, 1.2, rz - face * 0.556, face < 0 ? 0 : Math.PI);
+      for (let k = 0; k < 3; k++) { const l = box(racks, 0.06, 0.04, 0.02, ledOn, x - 0.42, 0.5 + k * 0.6 + rnd(i * 3 + k, 7) * 0.2, rz + face * 0.565, 0.005, { cast: false }); leds.push(l); } } });
+    const gl2 = glass(P.glass, { opacity: night ? 0.22 : 0.18 });
+    box(racks, 17.6, 0.04, 1.4, gl2, -1, 2.4, 0, 0.01, { cast: false }); [-9.9, 7.9].forEach(x => box(racks, 0.04, 2.4, 1.4, gl2, x, 0, 0, 0.01, { cast: false }));
+    [-1.25, 1.25].forEach(rz => { box(racks, 17.6, 0.06, 0.3, mat(0xe0b43c, { roughness: 0.6 }), -1, 2.75, rz - 0.2, 0.01, { cast: false }); box(racks, 17.6, 0.06, 0.3, mat(P.dark), -1, 2.75, rz + 0.2, 0.01, { cast: false });
+      for (let x = -9; x <= 7; x += 4) box(racks, 0.03, 0.5, 0.03, metal(P.slate), x, 2.8, rz, 0.005, { cast: false }); });
+    [-1.3, 1.3].forEach(rz => { box(racks, 1.3, 2.3, 1.9, mat(P.white, { roughness: 0.6 }), 9.7, 0, rz, 0.06); for (let k = 0; k < 6; k++) box(racks, 0.04, 1.5, 1.5, mat(P.slate), 9.03, 0.5, rz - 0.6 + k * 0.24, 0.005, { cast: false }); });
+    working.push({ place: 'datacentre', animate: t => { const s0 = Math.floor(t * 6); leds.forEach((l, i) => { l.material = rnd(i * 31 + s0, 8) > 0.25 ? ledOn : ledOff; }); } });
+    /* a server pulled out onto a cart: its board, the big chip in the middle with memory stacked round it, rows of
+       memory either side, fans at the front; its heat sink lifted off beside it */
+    const cart = group(IN, -10.4, 0.1, z0 + 1.4);
+    box(cart, 1.6, 0.06, 1, metal(P.slate), 0, 0.72, 0, 0.02); [[-0.72, -0.42], [0.72, -0.42], [-0.72, 0.42], [0.72, 0.42]].forEach(([a, b]) => { box(cart, 0.05, 0.72, 0.05, metal(P.slate), a, 0.06, b, 0.01, { cast: false }); cyl(cart, 0.05, 0.05, 0.04, mat(P.dark), a, 0, b, 10); });
+    box(cart, 1.36, 0.08, 0.86, metal(0x9aa3ad, { roughness: 0.4 }), -0.05, 0.78, 0, 0.01);
+    box(cart, 1.28, 0.02, 0.78, mat(night ? 0x1f4a37 : 0x2b6b52, { roughness: 0.6 }), -0.05, 0.86, 0, 0.005, { cast: false });
+    box(cart, 0.34, 0.04, 0.34, mat(0x2a2f38), -0.05, 0.88, 0, 0.01); box(cart, 0.24, 0.03, 0.24, metal(0xc9ccd2, { roughness: 0.2 }), -0.05, 0.92, 0, 0.01);
+    [[-0.27, 0], [0.17, 0], [-0.05, -0.22], [-0.05, 0.22]].forEach(([x, z]) => box(cart, 0.07, 0.06, 0.07, mat(P.dark), x, 0.9, z, 0.005, { cast: false }));
+    for (let k = 0; k < 6; k++) { [-0.55, 0.45].forEach(x => box(cart, 0.03, 0.1, 0.5, mat(P.dark), x + (k % 3) * 0.04 * (x < 0 ? 1 : -1), 0.88, k < 3 ? -0.05 : 0.05, 0.003, { cast: false })); }
+    for (let k = 0; k < 5; k++) cyl(cart, 0.06, 0.06, 0.12, mat(P.dark), -0.55 + k * 0.26, 0.88, 0.36, 14);
+    const sink = group(cart, 0.55, 0.78, -0.3); box(sink, 0.3, 0.04, 0.3, metal(0xb9c0c8), 0, 0, 0, 0.01); for (let k = 0; k < 9; k++) box(sink, 0.3, 0.16, 0.012, metal(0xb9c0c8, { roughness: 0.3 }), 0, 0.04, -0.14 + k * 0.035, 0.002, { cast: false });
     tagParts(O, 'rack', racks); tagParts(O, 'board', cart);
     box(g, 6, 0.3, 10, mat(P.road), -17, 0, -2, 0.1);
     [[-18.5, -5], [-15.5, -5], [-18.5, -1], [-15.5, -1]].forEach(([x, z]) => { box(g, 2, 2, 1.6, mat(P.slate), x, 0.3, z, 0.1); for (let k = 0; k < 3; k++) cyl(g, 0.12, 0.12, 0.8, mat(P.white), x - 0.5 + k * 0.5, 2.3, z, 8); }); }
@@ -443,7 +497,7 @@ export function createMap(canvas, host, on = {}) {
   PLACES.forEach(p => { names[p.id] = L.add(G[p.id], new THREE.Vector3(0, HGT[p.id], 0), '', { cls: 'place3' + (p.far ? ' far' : ''), button: true, data: { place: p.id }, html: '', max: p.far ? Infinity : 520 }); });
   /* the factory's tools, drawn as the line draws them: on the first opening, each simple tool is replaced by the
      line's own machine (src/app/journey3d.js machineModel), so diving in shows the same machine, closer */
-  const detailed = {}, working = [], IDLE = { s: { k: '' }, p: null }, LABEL_NUDGE = { needles: [-1.9, 1.3], lid: [1.1, 0.3], bumps: [-0.7, 0] };
+  const detailed = {}, IDLE = { s: { k: '' }, p: null }, LABEL_NUDGE = { needles: [-1.9, 1.3], lid: [1.1, 0.3], bumps: [-0.7, 0] };
   const lineCol = () => ({ lit: true, dark: night, warm: P.warm, cool: P.accent, grn: P.good, red: P.bad });
   const shade = g => g.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
   /* a part of a machine is picked by an unseen box round it, and stands where its box stands */
