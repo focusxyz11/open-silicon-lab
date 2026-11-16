@@ -344,7 +344,12 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
   /* the factory opens where it stands (docs/INTERACTION.md): its six tools are named in the scene, a tool is selected
      in place, and going closer from it reaches the line */
   await page.goto(base + 'index.html#/place/fab');
-  await page.waitForFunction(() => document.querySelectorAll('#mapLabels .tool3').length === 6, null, { timeout: 15000 }).catch(() => problems.push(tag + ': the open factory does not name its tools'));
+  await page.waitForFunction(() => document.querySelectorAll('#mapLabels .tool3[data-place="fab"]').length === 6, null, { timeout: 15000 }).catch(() => problems.push(tag + ': the open factory does not name its tools'));
+  /* the studio and the test house open the same way, and a part of each is selected in place */
+  for (const [pl, part] of [['studio', 'layout'], ['test', 'map']]) {
+    await page.evaluate(h => { location.hash = h; }, '#/place/' + pl + '/' + part);
+    await page.waitForSelector('#sheet.part [data-deeper]', { timeout: 15000 }).catch(() => problems.push(tag + ': ' + pl + ' does not open with its parts'));
+  }
   await page.evaluate(() => { location.hash = '#/place/fab/etch'; });
   await page.waitForSelector('#sheet.part [data-deeper]', { timeout: 15000 }).catch(() => problems.push(tag + ': a tool of the factory cannot be selected'));
   await page.click('#sheet [data-deeper]');

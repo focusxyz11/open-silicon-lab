@@ -152,19 +152,66 @@ export function createMap(canvas, host, on = {}) {
   /* ---- the stations of the loop ---- */
   /* 1 design: the studio, a campus at the start of the loop. The design halls, a plaza, and on the road
      the mask house, where a finished design leaves as masks for the factory (the mask truck grows from it) */
-  { const g = place('studio');
+  /* ---- buildings that open where they stand (docs/INTERACTION.md) ----
+     each has a lid that lifts away, near walls that fade (south and west: the camera looks from the south-west), a
+     little that hides (windows on the near walls), and an inside with its parts, each one picked as itself */
+  const OPEN = {};
+  const opening = (id, o) => (OPEN[id] = Object.assign({ k: 0, want: 0, near: [], tools: {}, lidUp: 16, deco: null, inside: null, lid: null }, o));
+  const ghost = (color = P.white, o = {}) => new THREE.MeshStandardMaterial(Object.assign({ color, roughness: 0.72, metalness: 0.02, transparent: true, opacity: 1 }, o));
+  const ghosts = (O, ...walls) => walls.forEach(w => { w.userData.ghost = true; O.near.push(w); });
+  const tagParts = (O, id, g) => { O.tools[id] = g; g.traverse(o => { if (o.isMesh) o.userData.part = id; }); };
+  /* a screen: dark glass with a lit face (code, a waveform, gates, a layout) */
+  const screen = (g, w, h, color, x, y, z, ry = 0) => { const m = box(g, w, h, 0.06, mat(color, { emissive: color, emissiveIntensity: night ? 0.9 : 0.45, roughness: 0.3 }), x, y, z, 0.02, { cast: false }); m.rotation.y = ry; return m; };
+  const desk = (g, x, z, ry, face) => { const d = group(g, x, 0, z, ry); box(d, 1.8, 0.08, 0.9, mat(night ? 0x8f8270 : 0xcdb99a, { roughness: 0.6 }), 0, 0.74, 0, 0.02); [[-0.8, -0.35], [0.8, -0.35], [-0.8, 0.35], [0.8, 0.35]].forEach(([a, b]) => box(d, 0.06, 0.74, 0.06, metal(P.slate), a, 0, b, 0.01, { cast: false }));
+    box(d, 0.08, 0.35, 0.08, metal(P.slate), 0, 0.82, -0.25, 0.01, { cast: false }); screen(d, 1.1, 0.62, face, 0, 1.12, -0.25); cyl(d, 0.26, 0.26, 0.5, mat(P.dark, { roughness: 0.6 }), 0, 0, 0.75, 12); return d; };
+
+  /* 1 design: the studio, a campus at the start of the loop. Its ground floor opens: where a job is written down,
+     described, checked, turned into gates and laid out. On the road, the mask house, where a finished design leaves
+     as masks for the factory (the mask truck grows from it) */
+  const STUDIO_PARTS = [['need', -12, -3.6], ['logic', -6.4, -3.6], ['check', -0.6, -3.8], ['gates', -0.6, 1.8], ['layout', -6.4, 1.8]];
+  { const g = place('studio'), O = opening('studio', { lidUp: 14 });
     flat(g, [[-20, 5], [12, 5], [14, 13], [-18, 13]], mat(P.wall, { roughness: 0.9 }), 0.03);
-    box(g, 22, 3.6, 11, glass(P.glass, { opacity: night ? 0.6 : 0.5, emissive: night ? P.glass : 0, emissiveIntensity: night ? 0.35 : 0 }), -4, 0, -1, 0.2);
-    box(g, 24, 3.4, 11.6, mat(P.white), -4, 3.6, -1.2, 0.3);
-    box(g, 24.2, 0.5, 11.8, mat(A.roof, { roughness: 0.7 }), -4, 7, -1.2, 0.12);
-    for (let i = 0; i < 9; i++) box(g, 1.6, 1.2, 0.12, winCool, -14.2 + i * 2.55, 4.7, 4.66, 0.04, { cast: false });
-    for (let i = 0; i < 6; i++) box(g, 2.4, 2.6, 0.06, mat(P.white, { roughness: 0.6 }), -13 + i * 3.6, 0.2, 4.52, 0.03, { cast: false });
+    /* the ground floor: a floor, the far walls, glass on the near side */
+    box(g, 21.6, 0.1, 10.6, mat(night ? 0x3a3631 : 0xd9cfbf, { roughness: 0.55 }), -4, 0, -1, 0.02, { cast: false });
+    box(g, 22, 3.6, 0.3, mat(P.white), -4, 0, -6.35, 0.06); box(g, 0.3, 3.6, 11, mat(P.white), 6.85, 0, -1, 0.06);
+    const gl = { opacity: night ? 0.6 : 0.5, emissive: night ? P.glass : 0, emissiveIntensity: night ? 0.35 : 0, roughness: 0.08, metalness: 0.1 };
+    ghosts(O, box(g, 22, 3.6, 0.2, ghost(P.glass, gl), -4, 0, 4.4, 0.04), box(g, 0.2, 3.6, 11, ghost(P.glass, gl), -14.9, 0, -1, 0.04));
+    O.near.forEach(w => { w.userData.glass = gl.opacity; });
+    O.deco = group(g, 0, 0, 0);
+    for (let i = 0; i < 6; i++) box(O.deco, 2.4, 2.6, 0.06, mat(P.white, { roughness: 0.6 }), -13 + i * 3.6, 0.2, 4.52, 0.03, { cast: false });
+    /* the upper floor and roof lift away together */
+    const lid = O.lid = group(g, 0, 0, 0);
+    box(lid, 24, 3.4, 11.6, mat(P.white), -4, 3.6, -1.2, 0.3);
+    box(lid, 24.2, 0.5, 11.8, mat(A.roof, { roughness: 0.7 }), -4, 7, -1.2, 0.12);
+    for (let i = 0; i < 9; i++) box(lid, 1.6, 1.2, 0.12, winCool, -14.2 + i * 2.55, 4.7, 4.66, 0.04, { cast: false });
     box(g, 9, 6.2, 7, mat(P.white), -20, 0, -6, 0.3); box(g, 9.2, 0.5, 7.2, mat(P.slate), -20, 6.2, -6, 0.1);
     for (let i = 0; i < 3; i++) box(g, 1.8, 3.6, 0.1, winCool, -22.6 + i * 2.6, 1.4, -2.45, 0.03, { cast: false });
-    /* the mask house: a loading bay facing the road to the factory */
-    box(g, 8, 4, 7, mat(P.white), 13, 0, 3, 0.3); box(g, 8.1, 0.6, 7.1, mat(A.roof, { roughness: 0.7 }), 13, 3.4, 3, 0.1);
-    box(g, 0.12, 2.6, 3.6, mat(P.dark), 17.06, 0, 3, 0.02, { cast: false });
-    for (let i = 0; i < 4; i++) pulses.push(box(g, 0.9, 0.9, 0.06, glow([P.accent, P.good, P.warm, P.accent][i], 1.1), 10.4 + i * 1.7, 2, 6.56, 0.02, { cast: false }));
+    /* inside: one corner for each step of the design */
+    const IN = O.inside = group(g, 0, 0, 0); IN.visible = false;
+    const st = {}; STUDIO_PARTS.forEach(([id, x, z]) => { st[id] = group(IN, x, 0.1, z); });
+    /* the job: a wall of notes, and a table to talk round */
+    box(st.need, 4, 2, 0.08, mat(0xf4f3ee, { roughness: 0.5 }), 0, 0.7, -2.6, 0.02);
+    for (let i = 0; i < 12; i++) box(st.need, 0.36, 0.36, 0.03, mat([0xe8c86a, 0x9cc7e0, 0xe9a38c, 0xa8d4a0][i % 4]), -1.5 + (i % 6) * 0.6, 1.1 + Math.floor(i / 6) * 0.7, -2.54, 0.01, { cast: false });
+    cyl(st.need, 0.9, 0.9, 0.06, mat(night ? 0x8f8270 : 0xcdb99a, { roughness: 0.6 }), 0, 0.72, -0.4, 28); cyl(st.need, 0.08, 0.12, 0.72, metal(P.slate), 0, 0, -0.4, 8);
+    [0, 2.1, 4.2].forEach(a => cyl(st.need, 0.24, 0.24, 0.46, mat(P.dark, { roughness: 0.6 }), Math.cos(a) * 1.3, 0, -0.4 + Math.sin(a) * 1.3, 12));
+    /* describe: desks of people writing the circuit as text */
+    [[-1, -1], [1, -1], [-1, 0.6], [1, 0.6]].forEach(([dx, dz], i) => desk(st.logic, dx, dz, i < 2 ? 0 : Math.PI, 0x2f5f9e));
+    /* check: the machines that run every case, and a wall of results */
+    [-1.2, 0, 1.2].forEach(dx => { box(st.check, 1, 2.2, 1, mat(P.rack, { roughness: 0.5 }), dx, 0, -1.6, 0.04); pulses.push(box(st.check, 0.7, 0.06, 0.02, glow(P.good, 1), dx, 1.6, -1.09, 0.01, { cast: false })); });
+    screen(st.check, 3.4, 1.4, 0x1f6b4e, 0, 1.4, -2.55); desk(st.check, 0, 0.6, Math.PI, 0x1f6b4e);
+    /* gates: the program's drawing of the circuit, on every screen */
+    [[-1, 0], [1, 0], [0, 1.4]].forEach(([dx, dz], i) => desk(st.gates, dx, dz, i < 2 ? 0 : Math.PI, 0x2a7a8c));
+    /* layout: a table that is a screen, the tile's wires in two colours of metal */
+    box(st.layout, 3.2, 0.9, 1.8, mat(P.dark, { roughness: 0.4 }), 0, 0, 0, 0.06);
+    const tile = group(st.layout, 0, 0.92, 0); for (let i = 0; i < 9; i++) { box(tile, 2.8, 0.02, 0.08, glow(0x5aa9ff, night ? 0.9 : 0.5), 0, 0, -0.7 + i * 0.17, 0.005, { cast: false }); box(tile, 0.08, 0.025, 1.5, glow(0xe0884f, night ? 0.9 : 0.5), -1.3 + i * 0.32, 0, 0, 0.005, { cast: false }); }
+    [-1.9, 1.9].forEach(dx => cyl(st.layout, 0.26, 0.26, 0.5, mat(P.dark, { roughness: 0.6 }), dx, 0, 0, 12));
+    STUDIO_PARTS.forEach(([id]) => tagParts(O, id, st[id]));
+    /* the mask house: a loading bay facing the road to the factory; once the studio is open it is the last step */
+    const mh = group(g, 13, 0, 3);
+    box(mh, 8, 4, 7, mat(P.white), 0, 0, 0, 0.3); box(mh, 8.1, 0.7, 7.1, mat(A.roof, { roughness: 0.7 }), 0, 3.45, 0, 0.1);
+    box(mh, 0.12, 2.6, 3.6, mat(P.dark), 4.06, 0, 0, 0.02, { cast: false });
+    for (let i = 0; i < 4; i++) pulses.push(box(mh, 0.9, 0.9, 0.06, glow([P.accent, P.good, P.warm, P.accent][i], 1.1), -2.6 + i * 1.7, 2, 3.56, 0.02, { cast: false }));
+    tagParts(O, 'masks', mh);
     [[-15, 10], [-6, 11], [4, 10.5], [10, 11.5]].forEach(([x, z]) => tree(g, x, z, 0.9)); }
   /* 2 make: sand to crystal, and the factory */
   { const g = place('quarry');
@@ -177,18 +224,17 @@ export function createMap(canvas, host, on = {}) {
   /* the factory opens where it stands (docs/INTERACTION.md): come close and its roof lifts away and the near walls
      fade, and inside are the tools of the loop in their bays along an aisle, carriers riding the overhead rail
      between them. Every tool can be picked; its name stands over it once the factory is open. */
-  const FAB = { k: 0, want: 0, lid: null, near: [], deco: null, inside: null, tools: {}, oht: null, carriers: [] };
+  const FAB = opening('fab', { lidUp: 20, oht: null, carriers: [] });
   const FAB_W = 26, FAB_D = 16, FAB_H = 6.4, FAB_T = 0.4;
   /* the six steps of the loop, in the order a wafer meets them: along the far row, then back along the near one */
   const FAB_TOOLS = [['clean', -8, -1], ['deposit', 0, -1], ['print', 8, -1], ['etch', 8, 1], ['implant', 0, 1], ['wires', -8, 1]];
   { const g = place('fab');
-    const ghost = () => new THREE.MeshStandardMaterial({ color: P.white, roughness: 0.72, metalness: 0.02, transparent: true, opacity: 1 });
     /* the cleanroom floor, and the shell: the far walls stay, the near ones fade, the roof lifts */
     box(g, FAB_W - 0.6, 0.12, FAB_D - 0.6, mat(night ? 0x2b323d : 0xe6e7e3, { roughness: 0.45 }), 0, 0, 0, 0.02, { cast: false });
     box(g, FAB_W, FAB_H, FAB_T, mat(P.white), 0, 0, -FAB_D / 2 + FAB_T / 2, 0.08);
     box(g, FAB_T, FAB_H, FAB_D, mat(P.white), FAB_W / 2 - FAB_T / 2, 0, 0, 0.08);
     const south = box(g, FAB_W, FAB_H, FAB_T, ghost(), 0, 0, FAB_D / 2 - FAB_T / 2, 0.08), west = box(g, FAB_T, FAB_H, FAB_D, ghost(), -FAB_W / 2 + FAB_T / 2, 0, 0, 0.08);
-    FAB.near = [south, west]; FAB.near.forEach(w => { w.userData.ghost = true; });
+    ghosts(FAB, south, west);
     FAB.deco = group(g, 0, 0, 0);
     for (let i = 0; i < 10; i++) box(FAB.deco, 1.6, 0.7, 0.1, winM, -10 + i * 2.3, 3, FAB_D / 2 + 0.05, 0.03, { cast: false });
     const lid = FAB.lid = group(g, 0, 0, 0);
@@ -205,7 +251,7 @@ export function createMap(canvas, host, on = {}) {
     const steel = metal(night ? 0x8a929e : 0xb9c0c8), run = glow(P.good, 0.9);
     box(IN, FAB_W - 3, 0.02, 2.4, mat(night ? 0x232a33 : 0xd2d4d0, { roughness: 0.4 }), 0, 0.12, 0, 0.01, { cast: false });
     const tool = (id, x, side) => {
-      const tg = group(IN, x, 0.12, side * 4.3, side < 0 ? 0 : Math.PI); FAB.tools[id] = tg;
+      const tg = group(IN, x, 0.12, side * 4.3, side < 0 ? 0 : Math.PI);
       /* the front of every tool faces the aisle: a load port where carriers set down, and a light that says it runs */
       box(tg, 1.6, 0.9, 0.7, panel, -1.9, 0, 2.3, 0.06); box(tg, 0.5, 0.06, 0.5, steel, -1.9, 0.9, 2.3, 0.02, { cast: false });
       pulses.push(box(tg, 1.2, 0.08, 0.05, run, -1.9, 0.6, 2.67, 0.01, { cast: false }));
@@ -244,7 +290,7 @@ export function createMap(canvas, host, on = {}) {
         const arm = box(tg, 0.2, 0.2, 1.6, steel, -0.3, 1.9, -0.2, 0.04); arm.rotation.y = 0.5; cyl(tg, 0.12, 0.12, 0.5, steel, 0.2, 1.4, -0.2, 8);
         [1.6, 2.9].forEach(bx => { box(tg, 1.1, 1.6, 2.2, shell, bx, 0, -0.2, 0.08); box(tg, 0.9, 0.06, 1.9, metal(0xb87333, { roughness: 0.3 }), bx, 1.6, -0.2, 0.02, { cast: false }); });
       }
-      tg.traverse(o => { if (o.isMesh) o.userData.part = id; });
+      tagParts(FAB, id, tg);
     };
     FAB_TOOLS.forEach(([id, x, side]) => tool(id, x, side));
     /* the overhead rail: one loop over the aisle, past every tool's load port, and the carriers riding it */
@@ -258,11 +304,29 @@ export function createMap(canvas, host, on = {}) {
     }
   }
   /* 3 test: the hall where every chip is probed before it is cut and packed */
-  { const g = place('test');
-    box(g, 12, 4, 8, mat(P.white), 0, 0, 0, 0.3);
-    box(g, 12.1, 0.5, 8.1, mat(A.roof, { roughness: 0.7 }), 0, 3.2, 0, 0.1);
-    for (let i = 0; i < 4; i++) box(g, 1.8, 0.8, 0.08, winCool, -4 + i * 2.6, 1.8, 4.02, 0.02, { cast: false });
-    pulses.push(cyl(g, 1.6, 1.6, 0.12, glow(0x9aa6b8, 0.3, { metalness: 0.6, roughness: 0.15 }), -3, 4, 0, 40)); }
+  { const g = place('test'), O = opening('test', { lidUp: 12 });
+    box(g, 11.6, 0.1, 7.6, mat(night ? 0x2b323d : 0xe6e7e3, { roughness: 0.45 }), 0, 0, 0, 0.02, { cast: false });
+    box(g, 12, 3.4, 0.3, mat(P.white), 0, 0, -3.85, 0.06); box(g, 0.3, 3.4, 8, mat(P.white), 5.85, 0, 0, 0.06);
+    ghosts(O, box(g, 12, 3.4, 0.3, ghost(), 0, 0, 3.85, 0.06), box(g, 0.3, 3.4, 8, ghost(), -5.85, 0, 0, 0.06));
+    O.deco = group(g, 0, 0, 0); for (let i = 0; i < 4; i++) box(O.deco, 1.8, 0.8, 0.08, winCool, -4 + i * 2.6, 1.8, 4.02, 0.02, { cast: false });
+    const lid = O.lid = group(g, 0, 0, 0);
+    box(lid, 12.1, 0.6, 8.1, mat(A.roof, { roughness: 0.7 }), 0, 3.4, 0, 0.1);
+    pulses.push(cyl(lid, 1.6, 1.6, 0.12, glow(0x9aa6b8, 0.3, { metalness: 0.6, roughness: 0.15 }), -3, 4, 0, 40));
+    /* inside: probers that bring each chip under the needles, the test head with its card of needles docked on one,
+       and the wafer map on the wall, every chip green or red */
+    const IN = O.inside = group(g, 0, 0, 0); IN.visible = false;
+    const shell = mat(night ? 0xc3cad4 : 0xf4f4f1, { roughness: 0.45 }), steel = metal(night ? 0x8a929e : 0xb9c0c8);
+    const pr = group(IN, -3.4, 0.1, -1.2);
+    [-1.3, 1.3].forEach(dx => { box(pr, 1.8, 1.3, 1.8, shell, dx, 0, 0, 0.08); box(pr, 1.2, 0.05, 1.2, mat(P.dark, { roughness: 0.3 }), dx, 1.3, 0, 0.02, { cast: false }); cyl(pr, 0.45, 0.45, 0.04, metal(0x9aa3ad, { roughness: 0.2 }), dx, 1.35, 0, 28); pulses.push(box(pr, 0.8, 0.06, 0.04, glow(P.good, 0.9), dx, 1.05, 0.92, 0.01, { cast: false })); });
+    const nd = group(IN, 0.6, 0.1, -1.2);
+    box(nd, 1.8, 1.3, 1.8, shell, 0, 0, 0, 0.08); box(nd, 1.1, 2.2, 1.1, mat(P.rack, { roughness: 0.5 }), 1.7, 0, -0.2, 0.06);
+    const arm = box(nd, 1.6, 0.2, 0.3, steel, 0.9, 2.1, -0.2, 0.04); arm.rotation.y = 0.2;
+    box(nd, 1.3, 0.5, 1.3, mat(P.dark, { roughness: 0.4 }), 0, 1.35, 0, 0.06);
+    for (let i = 0; i < 8; i++) box(nd, 0.02, 0.12, 0.02, metal(P.gold), -0.35 + i * 0.1, 1.28, 0, 0.002, { cast: false });
+    const mp = group(IN, 3.7, 0.1, -3.55);
+    box(mp, 2.6, 1.8, 0.08, mat(P.dark, { roughness: 0.4 }), 0, 0.9, 0, 0.02);
+    for (let i = -5; i <= 5; i++) for (let j = -5; j <= 5; j++) if (i * i + j * j <= 26) { const bad = rnd(i * 13 + j, 5) < 0.14; box(mp, 0.18, 0.13, 0.02, glow(bad ? P.bad : P.good, night ? 0.9 : 0.5), i * 0.2, 1.75 + j * 0.15, 0.06, 0.005, { cast: false }); }
+    tagParts(O, 'prober', pr); tagParts(O, 'needles', nd); tagParts(O, 'map', mp); }
   /* 4 ship: the port; ships to the islands and to the world */
   { const g = place('port');
     box(g, 8, 1.4, 30, mat(P.wall), 4, -1, 0, 0.2);
@@ -340,10 +404,12 @@ export function createMap(canvas, host, on = {}) {
   const names = {};
   PLACES.forEach(p => { names[p.id] = L.add(G[p.id], new THREE.Vector3(0, HGT[p.id], 0), '', { cls: 'place3' + (p.far ? ' far' : ''), button: true, data: { place: p.id }, html: '', max: p.far ? Infinity : 520 }); });
   /* the tool selected stands on a ring of light */
-  const ring = new THREE.Mesh(new THREE.RingGeometry(3.4, 3.7, 48), new THREE.MeshBasicMaterial({ color: P.accent, transparent: true, opacity: 0.85, depthWrite: false }));
-  ring.rotation.x = -Math.PI / 2; ring.position.y = 0.2; ring.visible = false; FAB.inside.add(ring);
-  /* inside the open factory, every tool's name over it (shown only while the inside is) */
-  const toolNames = {}; FAB_TOOLS.forEach(([id]) => { toolNames[id] = L.add(FAB.tools[id], new THREE.Vector3(0, id === 'print' ? 4.2 : 3.4, 0), t('depth.' + id + '.name'), { cls: 'tool3', button: true, data: { place: 'fab', part: id }, need: FAB.inside, max: 340 }); });
+  const ring = new THREE.Mesh(new THREE.RingGeometry(0.92, 1, 48), new THREE.MeshBasicMaterial({ color: P.accent, transparent: true, opacity: 0.85, depthWrite: false }));
+  ring.rotation.x = -Math.PI / 2; ring.visible = false; scene.add(ring);
+  /* inside an open building, every part's name over it (shown only while the inside is) */
+  const cap = w => w.charAt(0).toUpperCase() + w.slice(1), PART_WORD = { test: id => cap(t('part.test.' + id)) }, PART_UP = { print: 4.2, masks: 5.4, need: 3.2, check: 3, prober: 2.4, needles: 3, map: 3.2 };
+  const RING_R = { studio: 2.6, test: 1.9, masks: 5.4 };
+  const toolNames = {}; Object.entries(OPEN).forEach(([pl, O]) => Object.entries(O.tools).forEach(([id, g]) => { toolNames[pl + ':' + id] = L.add(g, new THREE.Vector3(0, PART_UP[id] || (pl === 'fab' ? 3.4 : 2.6), 0), (PART_WORD[pl] || (x => t('depth.' + x + '.name')))(id), { cls: 'tool3', button: true, data: { place: pl, part: id }, need: O.inside, max: 340 }); }));
   /* seen from far out, the island's places fold into one name */
   L.add(scene, new THREE.Vector3(0, 12, 0), t('map.home'), { cls: 'place3 far home', min: 560 });
   /* the number pins of the loop, and your chip on it */
@@ -376,20 +442,20 @@ export function createMap(canvas, host, on = {}) {
   /* what is under the pointer: hidden things and the faded walls of an open building do not count; inside an open
      building, a tool is picked as itself */
   const seen = o => { for (let x = o; x; x = x.parent) if (!x.visible) return false; return true; };
-  const pickAt = e => { toNdc(e); ray.setFromCamera(ndc, camera); const open = FAB.k > 0.5;
-    for (const h of ray.intersectObjects(pick, false)) { const u = h.object.userData; if (!seen(h.object) || (u.ghost && open)) continue;
+  const pickAt = e => { toNdc(e); ray.setFromCamera(ndc, camera);
+    for (const h of ray.intersectObjects(pick, false)) { const u = h.object.userData, open = !!OPEN[u.place] && OPEN[u.place].k > 0.5; if (!seen(h.object) || (u.ghost && open)) continue;
       return u.question ? { q: u.question } : { place: u.place, part: open && u.part ? u.part : null }; }
     return null; };
   /* what is selected (docs/INTERACTION.md): a place, and inside an open one a part; zooming further into it goes
      deeper, zooming far enough out leaves it */
   let sel = null, push = 0, pinchDeep = false;
-  const deepAt = () => (!sel ? 0 : sel.part ? 40 : sel.place === 'fab' ? 0 : Math.max(38, placeAt(sel.place).d * 0.6));
+  const deepAt = () => (!sel ? 0 : sel.part ? 40 : OPEN[sel.place] ? 0 : Math.max(38, placeAt(sel.place).d * 0.6));
   const leaveAt = () => placeAt(sel.place).d * 3.2;
   const deeper = () => { if (!sel || !on.deeper) return; const s0 = sel; push = 0; on.deeper(s0.place, s0.part); };
   const MAXD = innerWidth > 720 ? 820 : 1300;
   canvas.addEventListener('pointerdown', e => { canvas.setPointerCapture(e.pointerId); ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY, g: ground(e) }); downAt = { x: e.clientX, y: e.clientY }; moved = 0; fly = null; if (ptrs.size === 2) { const [a, b] = [...ptrs.values()]; pinch0 = { dist: Math.hypot(a.x - b.x, a.y - b.y), d: cam.d }; } on.interact && on.interact(); });
   canvas.addEventListener('pointermove', e => {
-    if (!ptrs.size) { const h = pickAt(e), id = h && (h.part ? 'part:' + h.part : h.place || h.q); if (id !== hover) { hover = id; canvas.style.cursor = id ? 'pointer' : ''; Object.entries(names).forEach(([k, lb]) => lb.el.classList.toggle('on', k === hover)); Object.entries(toolNames).forEach(([k, lb]) => lb.el.classList.toggle('on', 'part:' + k === hover)); } return; }
+    if (!ptrs.size) { const h = pickAt(e), id = h && (h.part ? 'part:' + h.part : h.place || h.q); if (id !== hover) { hover = id; canvas.style.cursor = id ? 'pointer' : ''; Object.entries(names).forEach(([k, lb]) => lb.el.classList.toggle('on', k === hover)); Object.entries(toolNames).forEach(([k, lb]) => lb.el.classList.toggle('on', 'part:' + k.split(':')[1] === hover && OPEN[k.split(':')[0]].k > 0.5)); } return; }
     const p = ptrs.get(e.pointerId); if (!p) return;
     moved += Math.abs(e.clientX - p.x) + Math.abs(e.clientY - p.y); p.x = e.clientX; p.y = e.clientY;
     if (ptrs.size === 2 && pinch0) { const [a, b] = [...ptrs.values()], want = pinch0.d * pinch0.dist / Math.max(20, Math.hypot(a.x - b.x, a.y - b.y)); cam.d = clamp(want, 38, MAXD);
@@ -501,12 +567,14 @@ export function createMap(canvas, host, on = {}) {
     growing.forEach(gr => { if (gr.t0 > 0) { const k = clamp((now - gr.t0) / 1300); gr.g.scale.setScalar(Math.max(0.001, easeBack(k))); if (k >= 1) gr.t0 = -1; } });
     for (let i = sparks.length - 1; i >= 0; i--) { const m = sparks[i]; m.userData.t += dt; m.userData.v.y -= 18 * dt; m.position.addScaledVector(m.userData.v, dt); m.rotation.y += dt * 4; m.material.opacity = Math.max(0, 1 - m.userData.t / 1.4); if (m.userData.t > 1.4) { scene.remove(m); sparks.splice(i, 1); } }
     /* the factory opens and closes with the camera */
-    FAB.k += (FAB.want - FAB.k) * Math.min(1, dt * (reduced() ? 60 : 3.2)); { const k = ease(clamp(FAB.k));
-      FAB.lid.position.y = 20 * k; FAB.lid.visible = k < 0.96; FAB.deco.visible = k < 0.4; FAB.inside.visible = k > 0.02; names.fab.show = k < 0.5;
-      FAB.near.forEach(w => { w.material.opacity = 1 - 0.9 * k; w.material.depthWrite = k < 0.5; w.castShadow = k < 0.5; }); }
+    /* the buildings open and close with the camera */
+    Object.entries(OPEN).forEach(([id, O]) => { O.k += (O.want - O.k) * Math.min(1, dt * (reduced() ? 60 : 3.2)); const k = ease(clamp(O.k));
+      O.lid.position.y = O.lidUp * k; O.lid.visible = k < 0.96; if (O.deco) O.deco.visible = k < 0.4; O.inside.visible = k > 0.02; names[id].show = k < 0.5;
+      O.near.forEach(w => { w.material.opacity = (w.userData.glass || 1) * (1 - 0.9 * k); w.material.depthWrite = k < 0.5 && !w.userData.glass; w.castShadow = k < 0.5; }); });
+    ring.visible = !!(sel && sel.part && OPEN[sel.place] && OPEN[sel.place].k > 0.4);
     if (FAB.inside.visible && !reduced()) FAB.carriers.forEach(c => { c.u = (c.u + dt * 0.03) % 1; c.obj.position.copy(FAB.oht.getPointAt(c.u)); const tg = FAB.oht.getTangentAt(c.u); c.obj.rotation.y = Math.atan2(-tg.z, tg.x); });
     /* pulling far enough out of what is selected leaves it */
-    if (sel && !fly && cam.d > leaveAt()) { const was = sel; sel = null; FAB.want = 0; on.leave && on.leave(was.place); }
+    if (sel && !fly && cam.d > leaveAt()) { const was = sel; sel = null; Object.values(OPEN).forEach(O => { O.want = 0; }); on.leave && on.leave(was.place); }
     token.position.lerp(tokenGoal, Math.min(1, dt * 2.2)); token.position.y = 1.2 + Math.sin(tm * 2) * 0.25; token.rotation.y += dt * 0.8;
     if (!reduced()) {
       spinning.forEach((f, i) => { if (f.jib) f.jib.rotation.y = Math.sin(tm * 0.2) * 0.9; else if (f.hand) f.hand.rotation.z = -tm * 0.8; else f.rotation.y += dt * (2 + (i % 3)); });
@@ -529,17 +597,18 @@ export function createMap(canvas, host, on = {}) {
     focus(id) {
       const p = placeAt(id); if (!p) return;
       /* the place sits in the upper part of the screen: the dock takes the lower part */
-      const wide = innerWidth > 720, d = p.d * (wide ? (id === 'fab' ? 1.3 : 1.6) : (id === 'fab' ? 1.7 : 2)), upv = d * (wide ? 0.14 : id === 'village' ? 0.08 : 0.24);
+      const wide = innerWidth > 720, near = { fab: 1.3, studio: 1.15, test: 1.05 }[id], d = p.d * (wide ? near || 1.6 : near ? near + 0.4 : 2), upv = d * (wide ? 0.14 : id === 'village' ? 0.08 : 0.24);
       flyTo(p.at[0] + Math.sin(cam.yaw) * upv, p.at[1] + Math.cos(cam.yaw) * upv, d);
     },
     overview() { const h = home(); flyTo(h.x, h.z, h.d); },
     selected: () => sel,
     /* select a place, and inside an open one a part; the factory opens while it is selected */
     select(place, part) {
-      sel = place ? { place, part: part || null } : null; push = 0; FAB.want = place === 'fab' ? 1 : 0;
-      ring.visible = !!(place === 'fab' && part && FAB.tools[part]); if (ring.visible) { ring.position.x = FAB.tools[part].position.x; ring.position.z = FAB.tools[part].position.z; }
-      Object.entries(toolNames).forEach(([k, lb]) => lb.el.classList.toggle('sel', k === (place === 'fab' && part)));
-      if (place === 'fab' && part && FAB.tools[part]) { const v = new THREE.Vector3(), wide = innerWidth > 720; FAB.tools[part].getWorldPosition(v); const d = wide ? 48 : 64, upv = d * (wide ? 0.12 : 0.26); flyTo(v.x + Math.sin(cam.yaw) * upv, v.z + Math.cos(cam.yaw) * upv, d); }
+      sel = place ? { place, part: part || null } : null; push = 0; Object.entries(OPEN).forEach(([id, O]) => { O.want = id === place ? 1 : 0; });
+      const T = place && part && OPEN[place] && OPEN[place].tools[part];
+      Object.entries(toolNames).forEach(([k, lb]) => lb.el.classList.toggle('sel', !!T && k === place + ':' + part));
+      if (T) { const v = new THREE.Vector3(), wide = innerWidth > 720; T.getWorldPosition(v); ring.position.set(v.x, 0.25, v.z); ring.scale.setScalar(RING_R[part] || RING_R[place] || 3.6);
+        const d = wide ? 48 : 64, upv = d * (wide ? 0.12 : 0.26); flyTo(v.x + Math.sin(cam.yaw) * upv, v.z + Math.cos(cam.yaw) * upv, d); }
     },
     /* the first visit opens on a wide shot of the sea and comes down to the island, turning toward it */
     intro() { if (reduced()) return; const h = home(); Object.assign(cam, { x: h.x + 70, z: h.z + 120, d: MAXD * 0.8, yaw: cam.yaw - 0.8, pitch: 1.08 }); place2();
@@ -548,8 +617,8 @@ export function createMap(canvas, host, on = {}) {
     punch() { if (reduced() || fly) return; const d0 = cam.d; cam.d *= 0.9; place2(); flyTo(cam.x, cam.z, d0, 700); },
     /* the hand-offs with the views below: dive close into a place before going inside, and start close to the
        place you come back from, then rise (no cut: the camera carries you in and out) */
-    dive(id, part) { const p = placeAt(id); if (!p) return Promise.resolve(); const ms = reduced() ? 1 : 650, v = new THREE.Vector3(p.at[0], 0, p.at[1]); if (id === 'fab' && part && FAB.tools[part]) FAB.tools[part].getWorldPosition(v); flyTo(v.x, v.z, part ? 30 : Math.max(38, p.d * 0.55), ms); return new Promise(r => setTimeout(r, ms)); },
-    from(id, part) { const p = placeAt(id); if (!p) return; fly = null; const v = new THREE.Vector3(p.at[0], 0, p.at[1]); if (id === 'fab') { FAB.want = FAB.k = 1; if (part && FAB.tools[part]) FAB.tools[part].getWorldPosition(v); }
+    dive(id, part) { const p = placeAt(id); if (!p) return Promise.resolve(); const ms = reduced() ? 1 : 650, v = new THREE.Vector3(p.at[0], 0, p.at[1]); if (part && OPEN[id] && OPEN[id].tools[part]) OPEN[id].tools[part].getWorldPosition(v); flyTo(v.x, v.z, part ? 30 : Math.max(38, p.d * 0.55), ms); return new Promise(r => setTimeout(r, ms)); },
+    from(id, part) { const p = placeAt(id); if (!p) return; fly = null; const v = new THREE.Vector3(p.at[0], 0, p.at[1]); if (OPEN[id]) { OPEN[id].want = OPEN[id].k = 1; if (part && OPEN[id].tools[part]) OPEN[id].tools[part].getWorldPosition(v); }
       Object.assign(cam, { x: v.x, z: v.z, d: part ? 32 : Math.max(38, p.d * 0.55), pitch: 0.8 }); place2(); },
     /* the archipelago: the islands where chips live, and the sea between */
     ecosystem() { if (innerWidth > 720) flyTo(106, 80, 800, 1500); else flyTo(-22, 166, 1250, 1500); },
