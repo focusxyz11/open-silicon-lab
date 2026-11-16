@@ -1129,3 +1129,22 @@ textarea.fcode { width: 100%; min-height: 110px; resize: vertical; box-sizing: b
 .world .warrive { margin: 8px 0 26px; padding: 18px 20px; border-radius: 18px; border: 1px solid var(--line); border-left: 4px solid var(--qc); background: color-mix(in srgb, var(--qc) 6%, var(--panel-solid)); }
 .world .warrive .warrk { margin: 0 0 10px; } .world .warrive .warrk a { color: inherit; }
 .world .warrnext { margin: 0 0 4px; }
+
+/* ---- what calls, standing in the world: the names of a square's board, benches and lanterns (src/v2/map3d.js) ---- */
+.poi3 { pointer-events: auto; cursor: pointer; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--line); background: var(--panel-solid); color: var(--ink); font: 500 11px/1.5 var(--sans); max-width: 170px; overflow: hidden; text-overflow: ellipsis; box-shadow: 0 1px 4px rgb(0 0 0 / .12); }
+.poi3.qs { border-color: color-mix(in srgb, var(--warm) 60%, var(--line)); }
+.poi3.qs::before { content: '?'; display: inline-block; margin-right: 5px; font-weight: 700; color: var(--warm); }
+.poi3.ch { border-color: color-mix(in srgb, var(--accent) 55%, var(--line)); }
+.poi3.ch::before { content: ''; display: inline-block; width: 6px; height: 6px; margin: 0 6px 1px 0; border-radius: 50%; background: var(--accent); }
+.poi3.ch.done { color: var(--muted); border-color: var(--line); }
+.poi3.ch.done::before { display: none; }
+.poi3.asked { width: 22px; height: 22px; padding: 0; text-align: center; font-weight: 700; border: 2px solid var(--warm); background: color-mix(in srgb, var(--warm) 22%, var(--panel-solid)); }
+.poi3.asked.draft { border-style: dashed; }
+.poi3:hover { background: var(--ink); color: var(--panel-solid); }
+.poi3.hush { opacity: 0 !important; pointer-events: none; }
+/* the islands beyond: a compact grid, so the sea stays in view above the card */
+.isles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 10px 0 14px; }
+.isles .isle { display: grid; gap: 2px; text-align: left; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--line); background: var(--panel-solid); color: var(--ink); cursor: pointer; font: inherit; }
+.isles .isle:hover { border-color: var(--accent); }
+.isles .isle b { font: 600 14px var(--sans); }
+@media (max-width: 720px) { .isles { grid-template-columns: repeat(2, 1fr); } }

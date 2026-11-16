@@ -15,7 +15,7 @@ const ASKS = Object.fromEntries([...src('dc3d.js').match(/ASKS = \{([^}]+)\}/)[1
 const PARTS = [...src('dc3d.js').matchAll(/\['([a-z]+)', (?:scene|rack|tray|pkg), W3\(/g)].map(m => m[1]);
 
 test('every place on the map has a name, a kind and a line', () => {
-  assert.equal(PLACES.length, 11);
+  assert.equal(PLACES.length, 14);
   for (const id of PLACES) for (const k of ['t', 'kind', 'd']) assert.ok(EN['map.' + id + '.' + k], id + ' has no ' + k);
 });
 

@@ -30,6 +30,7 @@ import { ROWS, ASK as CHIP_ASK } from './chip3d.js';
 import { signHtml, signOf, keep, refusal, slipHtml, slipClick, byLine } from './commons.js';
 import { reportsAt, SAYS } from '../engines/ledger.js';
 import * as Read from './read.js';
+import * as Exp from '../engines/experiments.js';
 import * as Worlds from './worlds.js';
 import { copiesInput } from './copies.js';
 import { wallsInput } from './walls.js';
@@ -73,8 +74,14 @@ export function start() {
     const C = Game.community(S), leaves = NEEDS.filter(n => !childrenOf(n.id).length), order = ['built', 'yours', 'open', 'engine'];
     const floors = leaves.map(n => { const p = C.state[n.id]; return p.state === 'built' ? 'built' : p.state === 'engine' ? 'engine' : p.yours ? 'yours' : 'open'; }).sort((a, b) => order.indexOf(a) - order.indexOf(b));
     const places = Object.fromEntries(Game.PLACES.map(id => { const L = doList(id); return [id, { done: L.filter(c => S.done[c.id]).length, total: L.length }]; }));
-    return { grown: Game.grown(S), steps: Object.fromEntries(Game.STEPS.map(s => [s, Game.stepState(S, s)])), places, chipAt: (cur && Way.stageOfPlace(cur.place)) || Game.chipAt(S), floors, designs: C.designs, cases: C.cases, asks: C.asks, loud: C.loud, jobList: C.jobs, engineList: C.engines };
+    return { grown: Game.grown(S), steps: Object.fromEntries(Game.STEPS.map(s => [s, Game.stepState(S, s)])), places, chipAt: (cur && Way.stageOfPlace(cur.place)) || Game.chipAt(S), floors, designs: C.designs, cases: C.cases, asks: C.asks.map(a => Object.assign({}, a, { at: placeOfStop(a.under) })), loud: C.loud, square: squareState(), wanted: wantedNow(), jobList: C.jobs, engineList: C.engines };
   }
+  /* what calls at each place, for its square on the island: how many questions are asked there, and the challenges
+     played there, each with its name and whether it is done; a question added under a stop stands where that stop is */
+  const placeOfStop = key => (key && (Object.entries(Game.ASK).find(([, ks]) => ks.includes(key)) || [])[0]) || 'idea';
+  const squareState = () => Object.fromEntries(Game.PLACES.map(id => [id, { n: (Game.ASK[id] || []).length + Game.debatesAt(id).length, chs: Game.placeChallenges(id).map(c => ({ id: c.id, done: !!S.done[c.id], name: titleOf(c) })) }]));
+  /* the questions nobody can try yet: each a stake on the sandbank of what is not yet */
+  const wantedNow = () => Exp.EXPERIMENTS.filter(x => Exp.stateOf(x) === 'wanted').map(x => ({ id: x.id, hue: (THREADS.find(th => th.id === x.world) || { hue: 0 }).hue }));
   const refresh = animate => { if (map) map.setState(islandState(), animate); hud(); drawHero(); firstGo(); };
   /* until the first win, the way to start glows */
   const firstGo = () => { const b = $('hero').querySelector('.row .btn.primary'); if (b) b.classList.toggle('pulse', !Object.keys(S.done).length); };
@@ -97,7 +104,7 @@ export function start() {
     map = m.createMap($('mapCanvas'), $('mapLabels'), { place: id => (cur && cur.place === id && !cur.part && !sheet.hidden ? null : openPlace(id)), part: (place, part) => { location.hash = '#/place/' + place + '/' + part; },
       deeper: (place, part) => { const to = deeperOf(place, part); if (to) enter(to); },
       leave: id => { if (cur && cur.place === id) { closeSheet(); if (location.hash.startsWith('#/place/')) history.replaceState(null, '', '#/'); hud(); } },
-      question: key => openQuestion(key), job: need => openJob(need), entry: id => openEntry(id), interact: () => foldHero() });
+      question: key => openQuestion(key), challenge: id => { const ch = chOf(id); if (ch) location.hash = doHref(ch); }, ask: id => openPlace(id, 'ask'), job: need => openJob(need), entry: id => openEntry(id), interact: () => foldHero() });
     loading(false); map.setState(islandState(), false); idle(preload);
     /* the first minute: a first visit to the island opens on a wide shot and comes down to it, and the hero rises after */
     if (!S.seen && (!location.hash || location.hash === '#/') && !still()) { map.intro(); $('hero').classList.add('intro'); }
@@ -281,6 +288,8 @@ export function start() {
         worldsRow((Game.INSIDE[id] || []).flatMap(l => stopsAt(l.depth))) +
         (nx ? '<div class="nav"><button type="button" class="btn" data-key="next" data-place="' + nx + '">' + esc(t('loop.next', { place: t('map.' + nx + '.t') })) + '</button><span></span></div>' : '') +
         /* where the loop starts there are two ways in: what someone needs, and what has just become possible */
+        /* the sandbank: a stake for every question nobody can try yet, the first few as cards */
+        (id === 'idea' ? (() => { const W = Exp.EXPERIMENTS.filter(x => Exp.stateOf(x) === 'wanted'); return W.length ? '<p class="kicker">' + esc(t('map.idea.staked', { n: W.length })) + '</p><div class="qcards">' + W.slice(0, 4).map(x => Read.card(x)).join('') + '</div>' + (W.length > 4 ? '<a class="more" href="#/read">' + esc(t('map.idea.all')) + '</a>' : '') : ''; })() : '') +
         (id === 'lab' ? '<div class="ways2"><button type="button" class="look" data-door="do"><b>' + esc(t('lab.pull.t')) + '</b><span class="small">' + esc(t('lab.pull.d', { n: C.jobs.length + C.engines.length })) + '</span></button><button type="button" class="look" data-door="ask"><b>' + esc(t('lab.push.t')) + '</b><span class="small">' + esc(t('lab.push.d', { n: WAYS.length })) + '</span></button></div>' : '') + insideHtml(id);
     } else {
       /* at the Lab, what has just become possible comes first: it is one of the two ways the loop starts */
@@ -868,7 +877,7 @@ export function start() {
     map && map.ecosystem(); $('outbtn').hidden = true;
     $('hero').classList.add('away'); sheet.onclick = null; sheet.oninput = null;
     sheet.innerHTML = '<button type="button" class="x" data-close aria-label="' + esc(t('sheet.close')) + '">×</button><p class="kicker">' + esc(t('nav.ecosystem')) + '</p><h2>' + esc(t('page.ecosystem.title')) + '</h2><p>' + esc(t('page.ecosystem.lead')) + '</p>' +
-      ['phones', 'cars', 'idea'].map(id => '<button type="button" class="chcard" data-place="' + id + '"><span class="st">' + (id === 'idea' ? '+' : S.done[id === 'phones' ? 'phone' : 'car'] ? '✓' : '') + '</span><span><b>' + esc(t('map.' + id + '.t')) + '</b><span class="small">' + esc(t('map.' + id + '.d')) + '</span></span></button>').join('') +
+      '<div class="isles">' + ['phones', 'cars', 'tools', 'materials', 'power', 'idea'].map(id => '<button type="button" class="isle" data-place="' + id + '" title="' + esc(t('map.' + id + '.d')) + '"><b>' + esc(t('map.' + id + '.t')) + (S.done[{ phones: 'phone', cars: 'car' }[id]] ? ' ✓' : '') + '</b><span class="small muted">' + esc(t('map.' + id + '.role')) + '</span></button>').join('') + '</div>' +
       '<p class="kicker">' + esc(t('page.ecosystem.world')) + '</p><a class="look" href="#/supply"><b>' + esc(t('page.ecosystem.map')) + '</b><span class="small">' + esc(t('page.ecosystem.mapD')) + '</span><span class="small muted">' + esc(t('game.current')) + '</span></a>' +
       '<div class="debate2"><b>' + esc(t('debate.supply.t')) + '</b><span class="small">' + esc(t('debate.supply.q')) + '</span></div>';
     sheet.hidden = false; cur = null;

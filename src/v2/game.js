@@ -28,7 +28,7 @@ export const STEPS = ['design', 'make', 'test', 'ship', 'use'];
 export const STATION = { design: 'studio', make: 'fab', test: 'test', ship: 'port', use: 'datacentre' };
 export const STEP_OF = Object.fromEntries(Object.entries(STATION).map(([s, p]) => [p, s]));
 /* places that are not a step: the start of making, the community, and the islands across the sea */
-export const PLACES = ['studio', 'quarry', 'fab', 'test', 'port', 'datacentre', 'lab', 'village', 'phones', 'cars', 'idea'];
+export const PLACES = ['studio', 'quarry', 'fab', 'test', 'port', 'datacentre', 'lab', 'village', 'phones', 'cars', 'idea', 'tools', 'materials', 'power'];
 export const STEP_PLACE = { quarry: 'make' };
 
 /* a circuit's starting description: the job's own, or one that is almost right (a fix-it job) */
@@ -110,14 +110,14 @@ export const ASK = Object.fromEntries(PLACES.map(p => [p, askAt(p).flatMap(x => 
 export const BEACON = { studio: 'idea.need', quarry: 'make.crystal', fab: 'make.clean', test: 'fail.test', port: 'divide.ship', datacentre: 'life.building', lab: 'open.need' };
 export const DEBATES_AT = {
   studio: ['designcost', 'signoff', 'skills'], fab: ['shrink'], test: ['bigdie'], port: ['supply'], datacentre: ['memory', 'power', 'paradigm', 'quantum'],
-  lab: ['open'], cars: ['mature'], phones: [], quarry: [], village: [], idea: []
+  lab: ['open'], cars: ['mature'], phones: [], quarry: [], village: [], idea: [], tools: ['shrink', 'supply'], materials: ['supply'], power: ['power']
 };
 /* the other ways to compute belong where people imagine what comes next: the Lab */
 export const WAYS_AT = { lab: WAYS.map(w => w.id) };
 /* more ways inside, besides the levels. to: a place of the redesign (#/place/<id>), page: a page, or the
    current site (world, depth, map). Words: look.<id>.t / .d */
 export const LOOK = {
-  port: [{ id: 'supply', page: 'supply' }],
+  port: [{ id: 'supply', page: 'supply' }], tools: [{ id: 'supply', page: 'supply' }], materials: [{ id: 'supply', page: 'supply' }],
   lab: [{ id: 'plan', page: 'build' }], village: [{ id: 'plan', page: 'build' }]
 };
 /* the world of the current site where a depth is drawn (the first place that holds it) */

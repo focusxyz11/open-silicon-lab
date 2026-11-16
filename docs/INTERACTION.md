@@ -49,6 +49,29 @@ world (`#/w/fail/at/etch`): the question as it was met there first, with what to
 asked and a place for yours, the way back to the place and the picture it is asked in; then the world it belongs to.
 Inside a picture, a question's marks still open it in the picture.
 
+## What calls, standing in the world
+
+What there is to do and to ask is not a list beside the picture, nor a sign floating over a place (that was tried
+and dropped: docs/framework/rebuild.md, section 3). It stands on the ground, the way a game puts its quests in the
+world: by the door of every place that holds questions or challenges there is a small paved square, with a board
+for the questions asked there (a light for each), a standing bench for each challenge played there (its screen lit
+while it waits, green once done) and a lantern for each question someone added under one of them, where that
+question is. Each is named only when you come near; from far out they fold into the count on the place's name.
+Tapping one does what tapping does everywhere: the board opens the place's questions in the card, a bench plays its
+challenge in the card, a lantern opens its question. Questions nobody has a place for yet stand on the sandbank of
+what is not yet, beside a stake for every question the lab cannot let anyone try yet.
+
+## The islands across the sea
+
+The world around the island is many islands, each one kind of place a chip depends on, in an arc beyond the north
+shore so you see them on the horizon: the phone makers' town and the car works (where chips are used), the machine
+makers and the materials works (where what a factory needs comes from), the power island (where a data centre's
+electricity comes from), and the sandbank (what is not here yet). What joins them is drawn and moving: lanes on the
+sea with a ship of its own kind on each (container ship, car carrier, heavy-lift ship with a machine in crates, gas
+carrier), a power cable from the wind and the sun to the data centre and a data cable from the Lab's open port, each
+a line of moving light under the water, and a plane, since finished chips are small and dear and mostly fly. Sand,
+gases and machines come ashore at a jetty by the quarry; everything else at the port.
+
 ## The plan
 
 1. **The factory, opened in place** (this change): the fab's shell lifts away as you come close; inside, six tools

@@ -375,6 +375,17 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
      not a failure. Any other failure is. */
   const moves = (await page.evaluate(() => window.MOVES)).filter(m => !/aborted because of timeout/.test(m));
   if (moves.join() !== 'in,out') problems.push(tag + ': the views did not zoom in and out (' + moves.join() + ')');
+  /* what calls stands in the world (docs/INTERACTION.md): by the test house, a square with a board of its questions and
+     a bench for each challenge played there; the board opens what is asked there, a bench plays its challenge */
+  await page.evaluate(() => { location.hash = '#/place/test'; });
+  await page.waitForFunction(() => !!document.querySelector('#mapLabels .poi3.qs[data-poi="ask:test"]') && document.querySelectorAll('#mapLabels .poi3.ch').length >= 2, null, { timeout: 15000 }).catch(() => problems.push(tag + ': the test house has no square of what calls there'));
+  await page.evaluate(() => { const b = document.querySelector('#mapLabels .poi3[data-poi="ask:test"]'); if (b) b.click(); });
+  await page.waitForSelector('#sheet [data-door="ask"][aria-selected="true"]', { timeout: 10000 }).catch(() => problems.push(tag + ': the board of a square does not open what is asked there'));
+  await page.evaluate(() => { const b = document.querySelector('#mapLabels .poi3[data-poi="ch:spot"]'); if (b) b.click(); });
+  await page.waitForFunction(() => location.hash === '#/do/spot', null, { timeout: 10000 }).catch(() => problems.push(tag + ': a bench does not play its challenge'));
+  /* the world around the island is many islands, each its own kind of place */
+  await page.evaluate(() => { location.hash = '#/ecosystem'; });
+  await page.waitForFunction(() => document.querySelectorAll('#sheet .isles [data-place]').length === 6, null, { timeout: 15000 }).catch(() => problems.push(tag + ': the world around does not show its six islands'));
   /* one stage: the island, the data centre, the chip, the board and the line's machines all draw with one renderer */
   for (const h of ['#/place/datacentre/1', '#/chip/0', '#/board', '#/line/print', '#/']) { await page.evaluate(x => { location.hash = x; }, h); await page.waitForTimeout(2500); }
   const gl = await page.evaluate(() => window.GL);
