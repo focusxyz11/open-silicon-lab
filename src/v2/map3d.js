@@ -443,7 +443,7 @@ export function createMap(canvas, host, on = {}) {
   PLACES.forEach(p => { names[p.id] = L.add(G[p.id], new THREE.Vector3(0, HGT[p.id], 0), '', { cls: 'place3' + (p.far ? ' far' : ''), button: true, data: { place: p.id }, html: '', max: p.far ? Infinity : 520 }); });
   /* the factory's tools, drawn as the line draws them: on the first opening, each simple tool is replaced by the
      line's own machine (src/app/journey3d.js machineModel), so diving in shows the same machine, closer */
-  const detailed = {}, working = [], IDLE = { s: { k: '' }, p: null }, LABEL_NUDGE = { needles: [-1.9, 0.7], lid: [1.1, 0.3], bumps: [-0.7, 0] };
+  const detailed = {}, working = [], IDLE = { s: { k: '' }, p: null }, LABEL_NUDGE = { needles: [-1.9, 1.3], lid: [1.1, 0.3], bumps: [-0.7, 0] };
   const lineCol = () => ({ lit: true, dark: night, warm: P.warm, cool: P.accent, grn: P.good, red: P.bad });
   const shade = g => g.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
   /* a part of a machine is picked by an unseen box round it, and stands where its box stands */
@@ -452,7 +452,7 @@ export function createMap(canvas, host, on = {}) {
     fab: m => FAB_TOOLS.forEach(([id]) => { const tg = FAB.tools[id], mm = m.machineModel(id, lineCol()); if (!tg || !mm) return;
       while (tg.children.length) tg.remove(tg.children[0]);
       const g = mm.group; g.position.set(0, 0, 3.1); tg.add(g); shade(g);
-      g.traverse(o => { o.userData.part = id; }); if (mm.update) working.push({ place: 'fab', update: mm.update }); }),
+      g.traverse(o => { o.userData.part = id; }); working.push({ place: 'fab', animate: mm.animate }); }),
     /* the test house and the port's hall hold the line's whole station, and their parts are the station's own */
     test: m => station(m, 'test', 'test', 1.6, [0, 0.2], { prober: 'prober', needles: 'needles', map: 'map' }),
     port: m => station(m, 'port', 'pkg', 0.95, [-8, 6.4], { saw: 'saw', bumps: 'bumps', lid: 'lid' })
@@ -467,7 +467,7 @@ export function createMap(canvas, host, on = {}) {
       tg.position.set(wc.x, 0.1, wc.z); const pb = pickBox(tg, W); pb.userData.part = part;
       /* its name stands just over it, nudged where two parts share one cabinet */
       const lb = toolNames[place + ':' + part], nd = LABEL_NUDGE[part] || [0, 0]; if (lb) lb.offset.set(nd[0], W.max.y + 0.5 + nd[1], 0); });
-    if (mm.update) working.push({ place, update: mm.update });
+    working.push({ place, animate: mm.animate });
   }
   /* the ring of light under the part selected (placed again once a building's machines have arrived) */
   const placeRing = (place, part) => { const T = OPEN[place] && OPEN[place].tools[part]; if (!T) return; const v = new THREE.Vector3(); T.getWorldPosition(v); ring.position.set(v.x, 0.25, v.z); ring.scale.setScalar(RING_R[part] || RING_R[place] || 3.6); };
@@ -652,7 +652,7 @@ export function createMap(canvas, host, on = {}) {
     /* the buildings open and close with the camera */
     Object.entries(OPEN).forEach(([id, O]) => { if (O.want > 0) detail(id); });
     /* the machines work while you watch: plasma, beams, sprays, the polisher's head, the prober stepping */
-    if (!reduced()) for (const w of working) if (OPEN[w.place].inside.visible) w.update(IDLE, false, tm);
+    if (!reduced()) for (const w of working) if (OPEN[w.place].inside.visible) w.animate(tm, dt);
     Object.entries(OPEN).forEach(([id, O]) => { O.k += (O.want - O.k) * Math.min(1, dt * (reduced() ? 60 : 3.2)); const k = ease(clamp(O.k));
       O.lid.position.y = O.lidUp * k; O.lid.visible = k < 0.96; if (O.deco) O.deco.visible = k < 0.4; O.inside.visible = k > 0.02; names[id].show = k < 0.5;
       O.near.forEach(w => { w.material.opacity = (w.userData.glass || 1) * (1 - 0.9 * k); w.material.depthWrite = k < 0.5 && !w.userData.glass; w.castShadow = k < 0.5; }); });
