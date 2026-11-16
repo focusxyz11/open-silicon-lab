@@ -11,6 +11,7 @@
    levels at the side, and the open port gives the same graph to AI agents (look, in src/engines/api.js). */
 import { twinOf } from '../data/atlas.js';
 import { placeOf } from '../data/places.js';
+import { SEAMS } from '../data/questions.js';
 import { viewOfDepth, challengeOf, DIVE_WORLD, DIVE_LEVELS, PLACES } from '../v2/game.js';
 
 /* the loop, in order. It starts with what is open, and there are two ways in: something someone needs (pull), or
@@ -81,6 +82,22 @@ export function alongTo(where, stage) {
     if (stage === 'use') return '#/dive/' + tw.used;
   }
   return home;
+}
+/* the seam a move crosses, and the leak that sits on it (src/data/questions.js). Going in or out crosses the line
+   between two levels at one stage; going along crosses the line between two stages. A leak's seam is the pair of
+   levels or the pair of stages, either way round; where one pair of stages holds two, one is met on the island
+   (place to place) and the other inside a view. Null when the move crosses no seam with a leak on it. */
+export function seamOf(from, to) {
+  if (!from || !to) return null;
+  const pair = (x, y, a, b) => (x === a && y === b) || (x === b && y === a);
+  const isle = w => w.view === 'island';
+  for (const q of SEAMS) {
+    const s = q.seam;
+    if (s.a && from.stage === to.stage && from.level && to.level && pair(from.level, to.level, s.a, s.b)) return q.id;
+    if (s.along && from.stage !== to.stage && pair(from.stage, to.stage, s.along[0], s.along[1]) &&
+      (!s.on || (s.on === 'island' ? isle(from) && isle(to) : !isle(to)))) return q.id;
+  }
+  return null;
 }
 /* whether that move holds the depth you are at (the bar says so before you take it) */
 export const holds = (where, stage) => { const h = alongTo(where, stage); return !!h && !h.startsWith('#/place/'); };

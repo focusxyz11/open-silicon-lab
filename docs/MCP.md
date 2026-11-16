@@ -38,7 +38,7 @@ Then ask the agent something like: *"Look at the Open Silicon Lab plan, pick an 
 
 | Tool | What it does |
 | --- | --- |
-| `look` | The lab as a visitor sees it. With nothing: the island and the loop a chip goes round (need, design, make, test, ship, use). With a place or a level: what is there (its parts, the questions that stop there, what people asked, its challenges) and where each move leads: in and out for scale, along for the chip's life. An agent starts here, so it stands in the same world as people (`docs/reviews/structure.md`). |
+| `look` | The lab as a visitor sees it. With nothing: the island and the loop a chip goes round (need, design, make, test, ship, use). With a place or a level: what is there (its parts, the questions from the field asked there, each a limit, a leak or a bet with who asked it and its source, the questions that stop there, what people asked, its challenges) and where each move leads: in and out for scale, along for the chip's life. An agent starts here, so it stands in the same world as people (`docs/reviews/structure.md`). |
 | `list_plan` | The community's plan: every piece the shared computer needs, its state (built, open, partly, waiting for an engine) and who built it. |
 | `get_job` | One job: what it must do, its inputs and outputs, the rules of its description, the code to start from; for the core, its test programs. |
 | `check_design` | Whether a design reads and is right (with the first wrong answer), and what it becomes: gates, transistors, speed, layout, test coverage, masks. For the core, the test programs run with your ALU slice inside. |

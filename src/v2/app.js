@@ -32,7 +32,8 @@ import { reportsAt, SAYS } from '../engines/ledger.js';
 import * as Read from './read.js';
 import * as Exp from '../engines/experiments.js';
 import * as Chip from '../engines/chip.js';
-import { levelAt } from '../data/atlas.js';
+import { levelAt, fieldAtLevel } from '../data/atlas.js';
+import * as Field from './field.js';
 import * as Worlds from './worlds.js';
 import { copiesInput } from './copies.js';
 import { wallsInput } from './walls.js';
@@ -59,6 +60,16 @@ export function start() {
   let map = null, dc = null, chip = null, board = null, dive = null, mapReady = null;
   const S = Game.load(localStorage);
   const save = () => Game.save(localStorage, S);
+  /* a leak raised when you cross its seam (src/data/questions.js), shown beside the view until you follow or close it */
+  const seamEl = document.createElement('aside'); seamEl.className = 'seamnote'; seamEl.hidden = true; seamEl.setAttribute('aria-live', 'polite'); document.body.appendChild(seamEl);
+  let seamTimer = null, seamFrom = null;
+  function hideSeam() { seamEl.hidden = true; clearTimeout(seamTimer); }
+  /* a move from one cell to another: if it crossed a seam with a leak not yet met, the leak rises beside the view */
+  function crossed(from, to) {
+    const id = Way.seamOf(from, to); if (!id || S.crossed[id]) return;
+    S.crossed[id] = true; save();
+    seamEl.innerHTML = Field.seamNote(id); seamEl.hidden = false; clearTimeout(seamTimer); seamTimer = setTimeout(hideSeam, 14000);
+  }
 
   /* ---- a menu of sections, only if asked for: ?menu=1 turns it on for this browser, ?menu=0 off. Whether the lab
      needs one is not decided (docs/reviews/structure.md, "The menu"); this keeps the choice one line to reverse ---- */
@@ -81,7 +92,7 @@ export function start() {
   /* what calls at each place, for its square on the island: how many questions are asked there, and the challenges
      played there, each with its name and whether it is done; a question added under a stop stands where that stop is */
   const placeOfStop = key => (key && (Object.entries(Game.ASK).find(([, ks]) => ks.includes(key)) || [])[0]) || 'idea';
-  const squareState = () => Object.fromEntries(Game.PLACES.map(id => [id, { n: (Game.ASK[id] || []).length + Game.debatesAt(id).length, chs: Game.placeChallenges(id).map(c => ({ id: c.id, done: !!S.done[c.id], name: titleOf(c) })) }]));
+  const squareState = () => Object.fromEntries(Game.PLACES.map(id => [id, { n: (Game.ASK[id] || []).length + Game.debatesAt(id).length + Game.fieldsAt(id).length, chs: Game.placeChallenges(id).map(c => ({ id: c.id, done: !!S.done[c.id], name: titleOf(c) })) }]));
   /* the questions nobody can try yet: each a stake on the sandbank of what is not yet */
   const wantedNow = () => Exp.EXPERIMENTS.filter(x => Exp.stateOf(x) === 'wanted').map(x => ({ id: x.id, hue: (THREADS.find(th => th.id === x.world) || { hue: 0 }).hue }));
   /* the reports nobody has fixed yet (yours kept, and the ledger's), each at the place of the island where it was seen:
@@ -187,7 +198,7 @@ export function start() {
   const hideInsp = () => { insp.hidden = true; cancelAnimationFrame(inspRaf); };
   function drawInsp() {
     if (!cur) return hideInsp(); const id = cur.place, P = cur.part && PARTS[id], C = Game.community(S), dos = doList(id);
-    const nDo = id === 'lab' ? C.jobs.length + C.engines.length : id === 'village' ? C.jobs.length : dos.filter(c => !S.done[c.id]).length, nAsk = (Game.ASK[id] || []).length + Game.debatesAt(id).length;
+    const nDo = id === 'lab' ? C.jobs.length + C.engines.length : id === 'village' ? C.jobs.length : dos.filter(c => !S.done[c.id]).length, nAsk = (Game.ASK[id] || []).length + Game.debatesAt(id).length + Game.fieldsAt(id).length;
     const deep = P ? P.deeper(cur.part) : PARTS[id] ? null : enterOf(id), cn = carryNote && carryNote.place === id ? carryNote : null;
     insp.innerHTML = '<button type="button" class="ix" data-iact="close" aria-label="' + esc(t('sheet.close')) + '">×</button><p class="kicker">' + esc(P ? t('map.' + id + '.t') : kickerOf(id)) + '</p><h3>' + esc(P ? P.name(cur.part) : t('map.' + id + '.t')) + '</h3>' +
       '<p class="il">' + esc(P ? P.see(cur.part) : t('map.' + id + '.d')) + '</p>' +
@@ -355,6 +366,7 @@ export function start() {
   function openPlace(id, tab, step, piece, part) {
     sheet.classList.remove('mover'); dialLast = null; const quick = quickNext; quickNext = false; if (!carryNote || carryNote.place !== id) carryNote = null;
     cur = { place: id, tab: tab || 'look', step: step || null, piece: piece || null, part: part || null };
+    { const to = Way.whereOf('#/place/' + id); crossed(seamFrom, to); seamFrom = to; }
     if (map) { if (!part) map.focus(id, { center: quick }); map.select(id, part); }
     /* the address says where you are: a place picked on the island is written into it (without going anywhere) */
     const at = '#/place/' + id + (part ? '/' + part : '');
@@ -362,8 +374,8 @@ export function start() {
     $('hero').classList.add('away'); drawPlace(); if (quick) drawInsp(); hud(); if (map) map.setState(islandState(), false);
   }
   function drawPlace() {
-    const id = cur.place, C = Game.community(S), asks = Game.ASK[id] || [], debates = Game.debatesAt(id), dos = doList(id);
-    const nDo = id === 'lab' ? C.jobs.length + C.engines.length : id === 'village' ? C.jobs.length : dos.filter(c => !S.done[c.id]).length, nAsk = asks.length + debates.length;
+    const id = cur.place, C = Game.community(S), asks = Game.ASK[id] || [], debates = Game.debatesAt(id), dos = doList(id), fields = Game.fieldsAt(id);
+    const nDo = id === 'lab' ? C.jobs.length + C.engines.length : id === 'village' ? C.jobs.length : dos.filter(c => !S.done[c.id]).length, nAsk = asks.length + debates.length + fields.length;
     let h = '<button type="button" class="x" data-close aria-label="' + esc(t('sheet.close')) + '">×</button>';
     h += '<div class="doors" role="tablist">' + ['look', 'do', 'ask'].map(k => '<button type="button" role="tab" data-door="' + k + '" aria-selected="' + (cur.tab === k) + '" title="' + esc(t('door.' + k + '.d')) + '"><b>' + esc(t('door.' + k)) + (k === 'do' && nDo ? ' <span class="n">' + nDo + '</span>' : k === 'ask' && nAsk ? ' <span class="n">' + nAsk + '</span>' : '') + '</b></button>').join('') + '</div>';
     const PP = cur.part && PARTS[id];
@@ -398,6 +410,7 @@ export function start() {
     } else {
       /* at the Lab, what has just become possible comes first: it is one of the two ways the loop starts */
       if (id === 'lab') h += '<p class="kicker">' + esc(t('game.ways')) + '</p>' + WAYS.map(w => '<div class="debate2"><b>' + esc(t('way.' + w.id + '.t')) + '</b><span class="small">' + esc(t('way.' + w.id + '.how')) + '</span></div>').join('');
+      if (fields.length) h += '<p class="kicker">' + esc(t('field.ui.k')) + '</p><div class="fieldlist">' + fields.map(Field.fieldLine).join('') + '</div>';
       h += Game.askAt(id).map(g => (g.level && Game.askAt(id).length > 1 ? '<p class="kicker">' + esc(t('depth.' + g.level.depth + '.name')) + '</p>' : '') + g.stops.map(askLink).join('')).join('');
       if (debates.length) h += '<p class="kicker">' + esc(t('game.debates')) + '</p>' + debates.map(d => '<div class="debate2"><b>' + esc(t('debate.' + d + '.t')) + '</b><span class="small">' + esc(t('debate.' + d + '.q')) + '</span></div>').join('');
       if (!nAsk && id !== 'lab') h += '<p class="small muted">' + esc(t('game.noAsk')) + '</p>';
@@ -460,7 +473,7 @@ export function start() {
   /* the open things of the ledger that sit at a level: a design nobody has broken where designs are checked, a
      piece nobody has built where the job is chosen. The commons is on the thing itself, not on a page of its own */
   const openAt = d => { const C = Game.community(S); return (d === 'check' ? C.breaks.map(b => chOf('break:' + b.of)) : d === 'need' ? C.jobs.map(j => Game.jobOf(j.need)) : []).filter(Boolean); };
-  const frameOf = (host, o) => FrameM.createFrame(host, Object.assign({ follow, askAt: d => stopsAt(d),
+  const frameOf = (host, o) => FrameM.createFrame(host, Object.assign({ follow, askAt: d => stopsAt(d), fieldAt: d => fieldAtLevel(d).map(q => q.id),
     askedAt: d => { const A = Game.askedAtLevel(d, S); return A.length ? '<p class="kicker">' + esc(t('page.questions.asked')) + '</p>' + A.map(askedHtml).join('') : ''; },
     doAt: d => Game.CHALLENGES.filter(c => c.at === d).map(c => ({ id: c.id, title: titleOf(c), where: whereOf(c), href: doHref(c) }))
       .concat(openAt(d).map(c => ({ id: c.id, title: titleOf(c), where: whereOf(c), href: '#/do/' + encodeURIComponent(c.id), open: true }))) }, o));
@@ -1078,6 +1091,24 @@ export function start() {
     }
     if (slipClick(e, S, redraw => { save(); refresh(true); if (redraw) again(); })) return;
   });
+  /* ---- the questions from the field (src/data/questions.js, src/v2/field.js): one opens in the card of the view
+     you are in, or in the island's dock; a leak is raised when you cross its seam, the first time, and then waits
+     under Ask at its home ---- */
+  const frameNow = () => (!vui.hidden ? diveFrame : !cui.hidden ? chipFrame : !pui.hidden ? dcFrame : !bui.hidden ? boardFrame : null);
+  function openField(id) {
+    hideSeam(); const html = Field.fieldHtml(id); if (!html) return;
+    if (!S.crossed[id]) { S.crossed[id] = true; save(); }
+    const fr = frameNow(); if (fr) return fr.stop(html);
+    sheet.onclick = null; sheet.oninput = null; cur = null;
+    sheet.innerHTML = '<button type="button" class="x" data-close aria-label="' + esc(t('sheet.close')) + '">×</button>' + html;
+    sheet.classList.remove('mover', 'part', 'inside'); sheet.hidden = false; sheet.scrollTop = 0; $('hero').classList.add('away'); hud();
+  }
+  document.addEventListener('click', e => {
+    if (e.target.closest('[data-seamx]')) return hideSeam();
+    const f = e.target.closest('[data-field]'); if (f) { e.preventDefault(); return openField(f.dataset.field); }
+    if (!e.target.closest('[data-fieldleave]')) return;
+    const fr = frameNow(); if (fr) fr.look(); else closeSheet();
+  });
   /* leaving a question: back to the view's own words */
   document.addEventListener('click', e => { const l = e.target.closest('[data-leave]'); if (!l) return;
     /* in a world's page, leaving the question goes on to the world it belongs to */
@@ -1139,6 +1170,8 @@ export function start() {
   }
   function route() {
     const parts = partsOf(location.hash), k = parts[0] || 'explore';
+    /* the cell you came from and the one you are in: a seam between them may raise its leak */
+    { const to = Way.whereOf(location.hash); hideSeam(); crossed(seamFrom, to); seamFrom = to; }
     page.hidden = true; page.classList.remove('reading'); $('logbtn').setAttribute('aria-current', ['log', 'challenges', 'questions'].includes(k) ? 'page' : 'false'); $('logbtn').classList.remove('glow');
     const after = pr => { hud(); return Promise.resolve(pr).then(hud); };
     const [view, rank] = viewOf(parts), from = viewNow, move = nextMove || (rank > rankNow ? 'in' : rank < rankNow ? 'out' : 'along');

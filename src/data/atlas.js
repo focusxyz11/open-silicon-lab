@@ -5,12 +5,14 @@
 
    - Parts are the named shapes of the scenes, ids 'depth.part' (words part.<id> and what.<id>); the depth in the
      id is their home. A view that draws a part names it by that id (VIEW_PARTS), never with words of its own.
-   - Questions are the stops 'thread.depth'; their depth is their home.
+   - Questions are the stops 'thread.depth'; their depth is their home. The questions from the field
+     (src/data/questions.js) each have one home too, a level or a place; a leak also sits on a seam.
    - Challenges carry their place and level (src/v2/game.js); stories carry theirs (STORIES).
    - TWINS is the Turn: each level of a chip seen three ways, designed in the studio, made at the factory, used in
      the dive. */
 import { INSIDE, placeOf, stopsAt, SHARED } from './places.js';
 import { MADE, WORLDS } from './weave.js';
+import { FIELD, fieldOf, fieldAtLevel, fieldAtPlace } from './questions.js';
 
 /* the world where a depth is drawn first (a place's own level before a shared one) */
 export const worldOf = depth => {
@@ -24,6 +26,9 @@ export const levelAt = depth => { const world = worldOf(depth); return world ? {
 const AT = { handle: 'clean' };
 export const partHome = id => { const d = id.split('.')[0]; return levelAt(AT[d] || d); };
 export const stopHome = key => levelAt(key.split('.')[1]);
+/* the questions from the field (src/data/questions.js): each at a level, or at a place of the island */
+export const fieldHome = id => { const q = fieldOf(id); return !q ? null : q.home.level ? levelAt(q.home.level) : { place: q.home.place, world: null, level: null }; };
+export { FIELD, fieldOf, fieldAtLevel, fieldAtPlace };
 
 /* the parts each 3D view draws, by the id of their one home */
 export const VIEW_PARTS = {

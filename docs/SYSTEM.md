@@ -85,6 +85,27 @@ along lands at that stage's place on the island. `TWINS` in the atlas says which
 
 Your own design rides through all three: its masks drive printing, its copies are tested.
 
+### Questions from the field, and the seams
+
+The deepest questions in the lab are the ones the field itself was stuck on (`src/data/questions.js`; the framework
+behind them is the page *The open framework*). A chip is matter arranged so that energy moves information, made over
+time by people and machines, under chance, at a cost: seven primitives. A question's shape is how many of them meet in
+it:
+
+| Shape | Primitives | Means | Example |
+| --- | --- | --- | --- |
+| **Limit** | one | how far one thing can go | *Must thinking make heat at all?* (Landauer, 1961) |
+| **Leak** | two | what one level hides comes back through the other | *Why does a perfect design fail in the real world?* |
+| **Bet** | three | three pull at once, so people choose without proof | *Two strong oxen or a thousand chickens?* (Cray) |
+
+Each has one home, a level or a place, and is listed first under Ask there with its shape as a mark. A leak also
+sits on a **seam** of the grid: between two levels (crossed going in or out) or between two stages (crossed going
+along). The two moves are how you meet them: the first time you cross a seam, its leak rises beside the view
+(`seamOf` in `src/engines/way.js`), then waits under Ask. A question joins when someone real was stuck on it, it
+opened something, and part of it is still open; its words are `field.<id>.*`, with who asked it and where to read it
+in their words. Empty columns of the grid (Test, Ship) and places with none yet (the quarry, the tools, the
+materials, the power) are where to look next.
+
 ## 3. Six kinds of view
 
 A view is a way of drawing a row or a column of the grid. Each kind is used for what it shows best, and for
