@@ -85,6 +85,16 @@ a line of moving light under the water, and a plane, since finished chips are sm
 gases and machines come ashore at a jetty by the quarry; everything else at the port. Going closer at the machine or the materials island
 follows what they make across the world map, and going out of it comes back to that island.
 
+## An open world
+
+No one way on. Exploring is not a tour: a place's card offers what stands around it on the island, nearest first,
+with the next stage of a chip's life as one way among them (→ still takes it), and no card counts steps. Everything
+that moves can be tapped and followed, as in an open-world game: a ship (what it carries, from where to where), the
+plane, a truck on the loop, a figure walking to what is open (which open thing pulls it; never who). The camera keeps
+it in the middle until you drag; its card offers the way to where it is going. Attention moves: when a challenge is
+won or an entry is added, the pull changes, and the figures already out turn from where they are toward the new
+calls instead of starting again.
+
 ## The plan
 
 1. **The factory, opened in place** (this change): the fab's shell lifts away as you come close; inside, six tools

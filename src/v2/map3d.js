@@ -102,6 +102,9 @@ export function createMap(canvas, host, on = {}) {
   const camera = new THREE.PerspectiveCamera(32, 1, 0.5, 2400);
   const L = labels(host);
   const moving = [], spinning = [], bobbing = [], pulses = [], pick = [], growing = [];
+  /* everything that moves can be tapped and followed: a ship, the plane, a truck on the loop, a figure */
+  const moverPick = [], tagMover = (obj, info) => { info.obj = obj; obj.traverse(o => { if (o.isMesh) { o.userData.mover = info; moverPick.push(o); } }); return obj; };
+  let follow = null;
   const G = {};
   const placeAt = id => PLACES.find(x => x.id === id);
   const place = id => { const p = placeAt(id), g = group(scene, p.at[0], 0, p.at[1]); g.userData.place = id; G[id] = g; return g; };
@@ -206,7 +209,7 @@ export function createMap(canvas, host, on = {}) {
   const truck = color => { const tr = new THREE.Group(); box(tr, 1.6, 1.4, 1.5, mat(P.white), 1.6, 0.3, 0, 0.15); box(tr, 3.2, 1.8, 1.6, mat(color), -0.9, 0.3, 0, 0.12); return tr; };
   const ship = len => { const s = new THREE.Group(); box(s, len, 1.6, 3.4, mat(A.hull), 0, -1, 0, 0.4); box(s, len * 0.96, 0.3, 3.2, mat(P.dark), 0, 0.6, 0, 0.1);
     for (let i = 0; i < Math.floor(len / 1.5) - 2; i++) box(s, 1.2, 1, 2.6, mat(cols[(i * 3) % 5]), -len / 2 + 1.6 + i * 1.3, 0.9, 0, 0.04); box(s, 1.8, 2.4, 2.6, mat(P.white), len / 2 - 1.4, 0.9, 0, 0.1); return s; };
-  const onLoop = (obj, u, speed, lane) => { scene.add(obj); moving.push({ obj, curve: loop.curve, u, speed, lane, car: true }); };
+  const onLoop = (obj, u, speed, lane) => { scene.add(obj); tagMover(obj, { kind: 'truck' }); moving.push({ obj, curve: loop.curve, u, speed, lane, car: true }); };
   const route = pts => new THREE.CatmullRomCurve3(pts.map(([x, z]) => new THREE.Vector3(x, 0, z)));
 
   /* ---- the stations of the loop ---- */
@@ -662,9 +665,9 @@ export function createMap(canvas, host, on = {}) {
   lane([[86, -166], [66, -120], [46, -80], [40, -60]], P.warm, 34, 0.03, { glow: true, w: 0.5, len: 1.4, op: night ? 0.9 : 0.75, y: -0.38 });
   lane([[12, 56], [70, 54], [96, 10], [120, -50], [168, -100]], P.accent, 60, 0.02, { glow: true, w: 0.45, len: 1.2, op: night ? 0.9 : 0.7, y: -0.38 });
   /* a ship on every lane, each its own kind */
-  [['phones', ship(10)], ['cars', carShip()], ['tools', liftShip()], ['materials', gasShip()]].forEach(([k, s], i) => { scene.add(s); moving.push({ obj: s, path: laneC[k], speed: 0.012 + i * 0.002, ship: true, u: 0.3 + i * 0.37, bounce: true }); });
+  [['phones', ship(10)], ['cars', carShip()], ['tools', liftShip()], ['materials', gasShip()]].forEach(([k, s], i) => { scene.add(s); tagMover(s, { kind: 'ship', lane: k }); moving.push({ obj: s, path: laneC[k], speed: 0.012 + i * 0.002, ship: true, u: 0.3 + i * 0.37, bounce: true }); });
   /* the plane */
-  const plane = new THREE.Group(); { const f = cyl(plane, 0.5, 0.55, 8, paleM, 0, -4, 0, 12); f.geometry = f.geometry.clone().rotateZ(-Math.PI / 2); f.position.set(0, 0, 0); box(plane, 1.7, 0.14, 10, paleM, 0.4, -0.15, 0, 0.05); box(plane, 0.9, 0.1, 3.4, paleM, -3.4, 0.3, 0, 0.03); box(plane, 1, 1.8, 0.12, paleM, -3.5, 0.3, 0, 0.03); scene.add(plane); }
+  const plane = new THREE.Group(); { const f = cyl(plane, 0.5, 0.55, 8, paleM, 0, -4, 0, 12); f.geometry = f.geometry.clone().rotateZ(-Math.PI / 2); f.position.set(0, 0, 0); box(plane, 1.7, 0.14, 10, paleM, 0.4, -0.15, 0, 0.05); box(plane, 0.9, 0.1, 3.4, paleM, -3.4, 0.3, 0, 0.03); box(plane, 1, 1.8, 0.12, paleM, -3.5, 0.3, 0, 0.03); scene.add(plane); } tagMover(plane, { kind: 'plane' });
   const flight = new THREE.CatmullRomCurve3([[-62, 40, -190], [40, 44, -150], [110, 42, -40], [60, 40, 40], [-80, 38, 30], [-150, 36, -110]].map(([x, y, z]) => new THREE.Vector3(x, y, z)), true, 'centripetal');
   /* ---- what calls, standing in the world (docs/INTERACTION.md, "What calls"): by the door of every place that holds
      questions or challenges, a small paved square with a board for the questions asked there (a light for each), a
@@ -737,10 +740,10 @@ export function createMap(canvas, host, on = {}) {
     'test-hall': g => { box(g, 9, 3.2, 7, mat(P.white), 0, 0, 0, 0.3); box(g, 9.1, 0.4, 7.1, mat(A.roof, { roughness: 0.7 }), 0, 2.6, 0, 0.1); },
     'island-phones': g => { for (let i = 0; i < 4; i++) for (let j = 0; j < 3; j++) box(g, 0.9, 1.1, 0.08, winM, -1.6 + j * 1.6, 1 + i * 2.2, 2.55, 0.02, { cast: false });
       for (let k = 0; k < 3; k++) { const r = new THREE.Mesh(new THREE.TorusGeometry(1, 0.08, 6, 48), glow(P.accent, 1, { transparent: true, opacity: 0.6, depthWrite: false })); r.rotation.x = Math.PI / 2; r.position.set(7, 13.5, -4); g.add(r); bobbing.push({ obj: r, ring: k }); }
-      const f = ship(9); scene.add(f); moving.push({ obj: f, path: laneC.phones, speed: 0.016, ship: true, bounce: true, u: 0.9 }); },
+      const f = ship(9); scene.add(f); tagMover(f, { kind: 'ship', lane: 'phones' }); pickable(); moving.push({ obj: f, path: laneC.phones, speed: 0.016, ship: true, bounce: true, u: 0.9 }); },
     'island-cars': g => { for (let i = 0; i < 7; i++) { const c = carModel(cols[i % 5]); scene.add(c); moving.push({ obj: c, curve: carLoop.curve, u: i / 7, speed: 0.02, lane: 0.7, car: true }); }
       for (let i = 0; i < 3; i++) pulses.push(box(g, 1.4, 0.5, 0.1, glow(P.good, 1.3), -4 + i * 4, 2.6, 4.6, 0.02, { cast: false }));
-      const f = ship(9); scene.add(f); moving.push({ obj: f, path: laneC.cars, speed: 0.03, ship: true, bounce: true, u: 0.9 }); },
+      const f = ship(9); scene.add(f); tagMover(f, { kind: 'ship', lane: 'cars' }); pickable(); moving.push({ obj: f, path: laneC.cars, speed: 0.03, ship: true, bounce: true, u: 0.9 }); },
     'dc-hall': g => { box(g, 24, 4, 6, mat(P.wall), 0, 0, 0, 0.3); for (let i = 0; i < 7; i++) { box(g, 2.4, 0.8, 2.4, mat(P.white), -9 + i * 3, 4, 0, 0.12); spinning.push(cyl(g, 0.9, 0.9, 0.15, metal(P.dark), -9 + i * 3, 4.8, 0, 18)); } for (let i = 0; i < 9; i++) box(g, 1.6, 0.5, 0.08, winCool, -9.6 + i * 2.4, 2.4, 3.02, 0.02, { cast: false }); },
     'dc-solar': g => { for (let i = 0; i < 4; i++) for (let j = 0; j < 3; j++) { const p = box(g, 2.6, 0.12, 1.6, metal(0x27406a, { roughness: 0.25 }), -4.5 + i * 3, 0.9, -3 + j * 3, 0.03); p.rotation.x = -0.4; } },
     'clock-tower': g => { box(g, 2.4, 9, 2.4, mat(P.white), 0, 0, 0, 0.2); const face = cyl(g, 1, 1, 0.2, mat(P.wall), 0, 7, 1.25, 24); face.rotation.x = Math.PI / 2; const hand = box(g, 0.12, 0.9, 0.08, mat(P.dark), 0, 6.95, 1.42, 0.02, { cast: false }); hand.geometry = hand.geometry.clone().translate(0, 0.4, 0); spinning.push({ hand }); }
@@ -754,7 +757,7 @@ export function createMap(canvas, host, on = {}) {
      map was rejected once already. The questions are on the first page and on every page of #/read. */
   const beaconOrbs = [];
   /* ---- every place can be picked ---- */
-  const pickable = () => { pick.length = 0; Object.values(G).forEach(g => g.traverse(o => { if (o.isMesh && !o.userData.nopick) { o.userData.place = g.userData.place; pick.push(o); } })); beaconOrbs.forEach(o => pick.push(o)); poiPick.forEach(o => pick.push(o)); };
+  const pickable = () => { pick.length = 0; Object.values(G).forEach(g => g.traverse(o => { if (o.isMesh && !o.userData.nopick) { o.userData.place = g.userData.place; pick.push(o); } })); beaconOrbs.forEach(o => pick.push(o)); poiPick.forEach(o => pick.push(o)); moverPick.forEach(o => pick.push(o)); };
   pickable();
   /* ---- names, with the state of each station's challenges ---- */
   const HGT = { studio: 9, quarry: 7, fab: 10, test: 7, port: 11, datacentre: 7, lab: 22, village: 19, phones: 16, cars: 9, idea: 8, tools: 10, materials: 13, power: 18 };
@@ -855,6 +858,8 @@ export function createMap(canvas, host, on = {}) {
   const seen = o => { for (let x = o; x; x = x.parent) if (!x.visible) return false; return true; };
   const pickAt = e => { toNdc(e); ray.setFromCamera(ndc, camera);
     for (const h of ray.intersectObjects(pick, false)) { const u = h.object.userData, open = !!OPEN[u.place] && OPEN[u.place].k > 0.5; if (!seen(h.object) || (u.ghost && open)) continue;
+      if (u.walk) { const w = walkers.find(x => x.ai === (u.walk === 'd') && x.slot === h.instanceId); if (w) return { mover: w }; continue; }
+      if (u.mover) return { mover: u.mover };
       return u.poi ? { poi: u.poi } : u.question ? { q: u.question } : { place: u.place, part: open && u.part ? u.part : null }; }
     return null; };
   /* what is selected (docs/INTERACTION.md): a place, and inside an open one a part; zooming further into it goes
@@ -864,23 +869,27 @@ export function createMap(canvas, host, on = {}) {
   const leaveAt = () => placeAt(sel.place).d * 3.2;
   const deeper = () => { if (!sel || !on.deeper) return; const s0 = sel; push = 0; on.deeper(s0.place, s0.part); };
   const MAXD = innerWidth > 720 ? 1100 : 1400;
-  canvas.addEventListener('pointerdown', e => { canvas.setPointerCapture(e.pointerId); ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY, g: ground(e) }); downAt = { x: e.clientX, y: e.clientY }; moved = 0; fly = null; if (ptrs.size === 2) { const [a, b] = [...ptrs.values()]; pinch0 = { dist: Math.hypot(a.x - b.x, a.y - b.y), d: cam.d }; } on.interact && on.interact(); });
+  canvas.addEventListener('pointerdown', e => { canvas.setPointerCapture(e.pointerId); if (follow) { follow = null; on.unfollow && on.unfollow(); } ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY, g: ground(e) }); downAt = { x: e.clientX, y: e.clientY }; moved = 0; fly = null; if (ptrs.size === 2) { const [a, b] = [...ptrs.values()]; pinch0 = { dist: Math.hypot(a.x - b.x, a.y - b.y), d: cam.d }; } on.interact && on.interact(); });
   canvas.addEventListener('pointermove', e => {
-    if (!ptrs.size) { const h = pickAt(e), id = h && (h.part ? 'part:' + h.part : h.place || h.q || h.poi); if (id !== hover) { hover = id; canvas.style.cursor = id ? 'pointer' : ''; Object.entries(names).forEach(([k, lb]) => lb.el.classList.toggle('on', k === hover)); Object.entries(toolNames).forEach(([k, lb]) => lb.el.classList.toggle('on', 'part:' + k.split(':')[1] === hover && OPEN[k.split(':')[0]].k > 0.5)); } return; }
+    if (!ptrs.size) { const h = pickAt(e), id = h && (h.part ? 'part:' + h.part : h.place || h.q || h.poi || (h.mover && 'mover')); if (id !== hover) { hover = id; canvas.style.cursor = id ? 'pointer' : ''; Object.entries(names).forEach(([k, lb]) => lb.el.classList.toggle('on', k === hover)); Object.entries(toolNames).forEach(([k, lb]) => lb.el.classList.toggle('on', 'part:' + k.split(':')[1] === hover && OPEN[k.split(':')[0]].k > 0.5)); } return; }
     const p = ptrs.get(e.pointerId); if (!p) return;
     moved += Math.abs(e.clientX - p.x) + Math.abs(e.clientY - p.y); p.x = e.clientX; p.y = e.clientY;
     if (ptrs.size === 2 && pinch0) { const [a, b] = [...ptrs.values()], want = pinch0.d * pinch0.dist / Math.max(20, Math.hypot(a.x - b.x, a.y - b.y)); cam.d = clamp(want, 38, MAXD);
       if (!pinchDeep && sel && deepAt() && want < deepAt() * 0.8) { pinchDeep = true; deeper(); } return; }
     const g = ground(e); if (g && p.g) { const lim = cam.d > 300 ? 220 : 80; cam.x = clamp(cam.x + p.g.x - g.x, -lim, lim); cam.z = clamp(cam.z + p.g.z - g.z, -lim * 0.7, lim * 0.9); place2(); p.g = ground(e); }
   });
-  const up = e => { ptrs.delete(e.pointerId); if (ptrs.size < 2) { pinch0 = null; pinchDeep = false; } if (downAt && moved < 8 && !ptrs.size) { const h = pickAt(e); if (h && h.part) on.part && on.part(h.place, h.part); else if (h && h.place) on.place && on.place(h.place); else if (h && h.q) on.question && on.question(h.q); else if (h && h.poi) poiGo(h.poi); } downAt = null; };
+  const up = e => { ptrs.delete(e.pointerId); if (ptrs.size < 2) { pinch0 = null; pinchDeep = false; } if (downAt && moved < 8 && !ptrs.size) { const h = pickAt(e); if (h && h.part) on.part && on.part(h.place, h.part); else if (h && h.place) on.place && on.place(h.place); else if (h && h.q) on.question && on.question(h.q); else if (h && h.poi) poiGo(h.poi); else if (h && h.mover) followMover(h.mover); } downAt = null; };
+  /* following something that moves: the camera keeps it in the middle until you take the camera back (a drag, a
+     pinch, a scroll) or close its card */
+  const followMover = m => { follow = m; fly = null; sel = null; Object.values(OPEN).forEach(O => { O.want = 0; }); on.mover && on.mover(m.call ? { kind: m.ai ? 'agent' : 'person', call: m.call } : { kind: m.kind, lane: m.lane }); };
+  const followAt = () => { if (!follow) return null; if (follow.pos) return follow.pos; if (follow.obj) return follow.obj.position; return null; };
   /* what calls: a bench plays its challenge, a board opens the questions asked at its place, a lantern its question */
   const poiGo = poi => { const [k, v] = [poi.slice(0, poi.indexOf(':')), poi.slice(poi.indexOf(':') + 1)];
     if (k === 'ch') on.challenge && on.challenge(v); else if (k === 'report') on.report && on.report(v); else if (k === 'ask') on.ask && on.ask(v); else if (k === 'q') on.question && on.question(v); else if (k === 'place') on.place && on.place(v); };
   /* a double tap goes in: into a building (it opens), or deeper into what is already selected */
   canvas.addEventListener('dblclick', e => { const h = pickAt(e); if (!h || !h.place) return; if (sel && sel.place === h.place && (h.part || null) === (sel.part || null) && deepAt()) deeper(); });
   canvas.addEventListener('pointerup', up); canvas.addEventListener('pointercancel', up);
-  canvas.addEventListener('wheel', e => { e.preventDefault(); fly = null; cam.d = clamp(cam.d * Math.exp(e.deltaY * 0.0012), 38, MAXD); on.interact && on.interact();
+  canvas.addEventListener('wheel', e => { e.preventDefault(); fly = null; if (follow) follow.near = true;   /* closer or further, still following */ cam.d = clamp(cam.d * Math.exp(e.deltaY * 0.0012), 38, MAXD); on.interact && on.interact();
     /* zooming on into what is selected, past where the camera stops, goes deeper */
     if (e.deltaY < 0 && sel && deepAt() && cam.d <= deepAt() + 0.5) { push += -e.deltaY; if (push > 180) deeper(); } else if (e.deltaY > 0) push = 0; }, { passive: false });
   host.addEventListener('click', e => { const b = e.target.closest('[data-poi],[data-place],[data-q],[data-step],[data-job],[data-entry]'); if (!b) return; if (b.dataset.poi) poiGo(b.dataset.poi); else if (b.dataset.part) on.part && on.part(b.dataset.place, b.dataset.part); else if (b.dataset.entry) on.entry && on.entry(b.dataset.entry); else if (b.dataset.place) on.place && on.place(b.dataset.place); else if (b.dataset.step) on.place && on.place(STATION[b.dataset.step]); else if (b.dataset.job) on.job && on.job(b.dataset.job); else on.question && on.question(b.dataset.q); });
@@ -965,6 +974,7 @@ export function createMap(canvas, host, on = {}) {
   const W3 = { legs: inst(legG, mat(0x2b2f38, { roughness: 0.8 })), body: inst(bodyG, mat(0xffffff, { roughness: 0.8 })), head: inst(headG, mat(0xffffff, { roughness: 0.7 })),
     drone: inst(droneG, mat(night ? 0x6b7480 : 0x5a626d, { roughness: 0.4, metalness: 0.4 })), eye: inst(eyeG, glow(P.accent, 1.6)) };
   let walkers = [], walkSig = '';
+  [W3.legs, W3.body, W3.drone].forEach(m => { m.userData.walk = m === W3.drone ? 'd' : 'p'; });
   /* the nearest point of the loop road, as a fraction of the way round */
   const LOOPN = 240, loopAt = [...Array(LOOPN)].map((_, i) => loop.curve.getPointAt(i / LOOPN));
   const nearLoop = ([x, z]) => { let b = 0, bd = Infinity; loopAt.forEach((p, i) => { const d = (p.x - x) ** 2 + (p.z - z) ** 2; if (d < bd) { bd = d; b = i; } }); return b; };
@@ -984,11 +994,16 @@ export function createMap(canvas, host, on = {}) {
     const vIdx = f => { const D = st.designs.findIndex(d => d.id === f.key); if (f.kind === 'break' && D >= 0) return D; const J = st.jobList.findIndex(j => j.need === f.key); if (J >= 0) return st.designs.length + J; const E = st.engineList.findIndex(e => e.need === f.key); return E >= 0 ? st.designs.length + st.jobList.length + E : -1; };
     const at = f => { if (['break', 'build', 'engine'].includes(f.kind)) { const i = vIdx(f); if (i >= 0 && i < SLOTS.length) { const [sx, sz] = SLOT(i), v = placeAt('village').at; return [v[0] + sx, v[1] + sz + 2.6]; } }
       const q = SQUARE[f.at] || SQUARE.lab; return [q[0] + 1.5, q[1] + 2.4]; };
-    walkers = []; let j = 0;
+    const was = walkers; walkers = []; let j = 0;
     for (const f of pull) { const n = Math.max(1, Math.min(2, Math.round(f.pull / 2))), T = at(f), far = Math.hypot(T[0], T[1]) > 120; if (far) continue;
       for (let k = 0; k < n && walkers.length < NW; k++, j++) { const ai = rnd(j, 77) < (st.aiShare == null ? 0.5 : st.aiShare), Tk = [T[0] + (rnd(j, 78) - 0.5) * 2.4, T[1] + (rnd(j, 79) - 0.5) * 1.6];
         const path = ai ? flightTo(Tk) : roadTo(f.kind + f.key + k, Tk), len = path.getLength(), speed = ai ? 7 : 3.2;
-        walkers.push({ ai, path, go: len / speed, stay: 5 + rnd(j, 80) * 6, rest: 2 + rnd(j, 81) * 5, t: rnd(j, 82) * (len / speed * 2 + 10), col: CLOTHES[j % 5] }); } }
+        const w = { ai, path, go: len / speed, stay: 5 + rnd(j, 80) * 6, rest: 2 + rnd(j, 81) * 5, t: rnd(j, 82) * (len / speed * 2 + 10), col: CLOTHES[j % 5], call: { kind: f.kind, key: f.key, at: f.at } };
+        /* attention moves: a figure already out on the island turns from where it is toward the new call, rather than
+           starting again from the Lab */
+        const old = was.find(o => o.ai === ai && o.pos && !o.taken); if (old && was.length) { old.taken = true; const a = old.pos.clone(), b = new THREE.Vector3(Tk[0], ai ? 2.4 : 0, Tk[1]), m = a.clone().lerp(b, 0.5); if (ai) m.y = Math.max(a.y, b.y) + 4;
+          w.lead = new THREE.QuadraticBezierCurve3(a, m, b); w.leadT = 0; w.leadGo = w.lead.getLength() / speed; w.t = w.rest + w.go; w.col = old.col; if (follow === old) follow = w; }
+        walkers.push(w); } }
     const C2 = new THREE.Color(); let p = 0;
     walkers.forEach((w, i) => { if (!w.ai) { W3.body.setColorAt(p, C2.setHex(w.col)); W3.head.setColorAt(p, C2.setHex(SKIN[i % 4])); w.slot = p++; } });
     W3.legs.count = W3.body.count = W3.head.count = p; W3.drone.count = W3.eye.count = walkers.filter(w => w.ai).length; let q = 0; walkers.forEach(w => { if (w.ai) w.slot = q++; });
@@ -998,18 +1013,24 @@ export function createMap(canvas, host, on = {}) {
   function walkFrame(dt, tm) {
     if (!walkers.length) return;
     walkers.forEach(w => {
-      const cyc = w.rest + w.go + w.stay + w.go; if (!reduced()) w.t = (w.t + dt) % cyc; const t = reduced() ? w.rest + w.go + 1 : w.t;
+      const cyc = w.rest + w.go + w.stay + w.go;
+      if (w.lead) { if (!reduced()) w.leadT += dt; const k = reduced() ? 1 : Math.min(1, w.leadT / w.leadGo); w.lead.getPointAt(k, WP); w.lead.getTangentAt(Math.min(0.999, Math.max(0.001, k)), WT); if (k >= 1) w.lead = null; place1(w, WP, WT, k < 1, tm); return; }
+      if (!reduced()) w.t = (w.t + dt) % cyc; const t = reduced() ? w.rest + w.go + 1 : w.t;
       /* resting at the Lab, on the way, there for a while, and back */
       let s, back = false; if (t < w.rest) s = 0; else if (t < w.rest + w.go) s = (t - w.rest) / w.go; else if (t < w.rest + w.go + w.stay) s = 1; else { s = 1 - (t - w.rest - w.go - w.stay) / w.go; back = true; }
       w.path.getPointAt(Math.min(1, Math.max(0, s)), WP); w.path.getTangentAt(Math.min(0.999, Math.max(0.001, s)), WT); if (back) WT.negate();
-      const moving = s > 0 && s < 1, yaw = Math.atan2(WT.x, WT.z);
+      place1(w, WP, WT, s > 0 && s < 1, tm);
+    });
+    Object.values(W3).forEach(m => { m.instanceMatrix.needsUpdate = true; m.boundingSphere = null; });
+  }
+  /* one figure drawn where it is, facing the way it goes; where it is is kept, for following and for turning it */
+  function place1(w, WP, WT, moving, tm) {
+      const yaw = Math.atan2(WT.x, WT.z); w.pos = (w.pos || new THREE.Vector3()).copy(WP);
       if (w.ai) { const y = WP.y + Math.sin(tm * 3 + w.slot) * 0.12; WQ.setFromAxisAngle(WUP, yaw); WS.set(0.7, 0.7, 0.7);
         WM.compose(WT.set(WP.x, y, WP.z), WQ, WS); W3.drone.setMatrixAt(w.slot, WM); WM.compose(WT.set(WP.x, y + 0.06, WP.z), WQ, WS); W3.eye.setMatrixAt(w.slot, WM); WS.set(1, 1, 1); }
       else { const bob = moving ? Math.abs(Math.sin(tm * 9 + w.slot)) * 0.06 : 0; WQ.setFromAxisAngle(WUP, yaw);
         WM.compose(WT.set(WP.x, 0.4 + bob, WP.z), WQ, WS); W3.legs.setMatrixAt(w.slot, WM); WM.compose(WT.set(WP.x, 1.11 + bob, WP.z), WQ, WS); W3.body.setMatrixAt(w.slot, WM);
         WM.compose(WT.set(WP.x, 1.56 + bob, WP.z), WQ, WS.set(1.6, 1.6, 1.6)); W3.head.setMatrixAt(w.slot, WM); WS.set(1, 1, 1); }
-    });
-    Object.values(W3).forEach(m => { m.instanceMatrix.needsUpdate = true; });
   }
   /* sparkles where something grew */
   const sparks = [];
@@ -1028,6 +1049,7 @@ export function createMap(canvas, host, on = {}) {
     const dt = Math.min(0.05, Math.max(0, now - last) / 1000), tm = now / 1000; last = now;
     if (fly) { const k = ease(clamp((now - fly.t0) / fly.ms)); ['x', 'z', 'd', 'yaw', 'pitch'].forEach(q => { cam[q] = fly.from[q] + (fly.to[q] - fly.from[q]) * k; }); if (k >= 1) fly = null; }
     else { const want = cam.d > 400 ? 1.0 : cam.d > 90 ? 0.92 : 0.8; cam.pitch += (want - cam.pitch) * 0.08; }
+    { const fp = followAt(); if (fp && !fly) { const k = Math.min(1, dt * 2.5), want = follow.kind === 'plane' ? 140 : follow.kind === 'ship' ? 70 : 34; cam.x += (fp.x - cam.x) * k; cam.z += (fp.z - cam.z) * k; if (!follow.near) { cam.d += (want - cam.d) * k; if (Math.abs(cam.d - want) < 1) follow.near = true; } } }
     place2();
     /* the sun's shadows follow what is in view */
     const sp = Math.min(260, Math.max(120, cam.d * 0.9)), sc = sunL.sun.shadow.camera; if (Math.abs(sc.right - sp / 2) > 1) { Object.assign(sc, { left: -sp / 2, right: sp / 2, top: sp / 2, bottom: -sp / 2 }); sc.updateProjectionMatrix(); }
@@ -1073,7 +1095,7 @@ export function createMap(canvas, host, on = {}) {
 
   return {
     focus(id) {
-      const p = placeAt(id); if (!p) return;
+      const p = placeAt(id); if (!p) return; follow = null;
       /* the place sits in the upper part of the screen: the dock takes the lower part */
       /* an opened place is framed on its inside (the port's packing hall stands off its centre) */
       const off = { port: [-8, 8], datacentre: [0, 2], studio: [-4, -1] }[id] || [0, 0];
@@ -1082,7 +1104,8 @@ export function createMap(canvas, host, on = {}) {
       const d = p.d * (wide ? near || 1.6 : nearP || 2), upv = d * (wide ? 0.14 : id === 'village' ? 0.08 : nearP ? 0.17 : 0.24);
       flyTo(p.at[0] + off[0] + Math.sin(cam.yaw) * upv, p.at[1] + off[1] + Math.cos(cam.yaw) * upv, d);
     },
-    overview() { const h = home(); flyTo(h.x, h.z, h.d); },
+    overview() { follow = null; const h = home(); flyTo(h.x, h.z, h.d); },
+    unfollow() { follow = null; },
     selected: () => sel,
     /* where a place, or a part inside it, is on the screen now: the point a portal opens from (0 to 1 across, down) */
     screenOf(place, part) { const p = placeAt(place); if (!p) return null; const v = new THREE.Vector3(p.at[0], 2, p.at[1]); const T = part && OPEN[place] && OPEN[place].tools[part]; if (T) { T.getWorldPosition(v); v.y += 1; } v.project(camera); return { x: (v.x + 1) / 2, y: (1 - v.y) / 2 }; },
