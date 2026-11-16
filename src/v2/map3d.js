@@ -472,6 +472,19 @@ export function createMap(canvas, host, on = {}) {
   };
   const flyTo = (x, z, d, ms = 1100) => { fly = { from: { ...cam }, to: { x, z, d, yaw: cam.yaw, pitch: d < 90 ? 0.8 : d > 400 ? 1.0 : 0.92 }, t0: performance.now(), ms: reduced() ? 1 : ms }; };
 
+  /* ---- the minimap (docs/INTERACTION.md: an overview kept in step with the view): the island, its road, every
+     place, and what the camera sees now; a place on it is picked as on the island, anywhere else flies there ---- */
+  const mini = document.createElement('div'); mini.className = 'mini3'; mini.setAttribute('aria-label', t('mini.aria')); host.appendChild(mini);
+  { const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]), M0 = { x0: -90, z0: -60, w: 180, h: 112 }, pt = ([x, z]) => (x - M0.x0).toFixed(1) + ',' + (z - M0.z0).toFixed(1);
+    let h = '<svg viewBox="0 0 ' + M0.w + ' ' + M0.h + '" role="img" aria-hidden="true"><polygon class="isle" points="' + coast.filter((_, i) => i % 4 === 0).map(pt).join(' ') + '"/>';
+    h += '<polyline class="road" points="' + loopPts.filter((_, i) => i % 3 === 0).concat([loopPts[0]]).map(pt).join(' ') + '"/><polygon class="view" points=""/></svg>';
+    h += PLACES.filter(p => !p.far).map(p => '<button type="button" class="mdot" data-place="' + p.id + '" style="left:' + ((p.at[0] - M0.x0) / M0.w * 100).toFixed(1) + '%;top:' + ((p.at[1] - M0.z0) / M0.h * 100).toFixed(1) + '%" title="' + esc(t('map.' + p.id + '.t')) + '" aria-label="' + esc(t('map.' + p.id + '.t')) + '"></button>').join('');
+    mini.innerHTML = h; mini.M0 = M0; }
+  const miniView = mini.querySelector('.view');
+  const corners = [[-1, -1], [1, -1], [1, 1], [-1, 1]];
+  const footprint = () => { const out = []; for (const [cx, cy] of corners) { ray.setFromCamera(new THREE.Vector2(cx, cy), camera); const p = new THREE.Vector3(); if (!ray.ray.intersectPlane(groundPlane, p)) { const d = ray.ray.direction; p.set(camera.position.x + d.x * 400, 0, camera.position.z + d.z * 400); } out.push([clamp(p.x, -400, 400), clamp(p.z, -400, 400)]); } return out; };
+  mini.addEventListener('click', e => { if (e.target.closest('[data-place]')) return; const r = mini.getBoundingClientRect(), M0 = mini.M0; flyTo(M0.x0 + (e.clientX - r.left) / r.width * M0.w, M0.z0 + (e.clientY - r.top) / r.height * M0.h, Math.min(cam.d, 230)); on.interact && on.interact(); });
+
   /* ---- input ---- */
   const ptrs = new Map(); let downAt = null, moved = 0, pinch0 = null, hover = null;
   const ray = new THREE.Raycaster(), ndc = new THREE.Vector2(), groundPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
@@ -519,7 +532,7 @@ export function createMap(canvas, host, on = {}) {
     /* names, with a flag for what is left to do */
     PLACES.forEach(p => { const s = st.places[p.id];
       const flag = s && s.total ? (s.done === s.total ? '<span class="flag done">✓</span>' : '<span class="flag">' + (s.total - s.done) + '</span>') : p.id === 'village' && st.jobList.length ? '<span class="flag job">' + st.jobList.length + '</span>' : '';
-      names[p.id].el.innerHTML = esc(t('map.' + p.id + '.t')) + flag; });
+      names[p.id].el.innerHTML = esc(t('map.' + p.id + '.t')) + flag + '<span class="peek">' + esc(t('map.' + p.id + '.d')) + '</span>'; });
     /* your chip, at the pin of its step */
     const [x, z] = PINS[st.chipAt] || NEED_AT; tokenGoal = new THREE.Vector3(x + 3, 1.2, z + 2.4);
     STOPS6.forEach(s => { const full = !!st.steps[s] && st.steps[s].done === st.steps[s].total; pins[s].el.classList.toggle('full', full); pins[s].el.classList.toggle('here', s === st.chipAt); pins[s].el.innerHTML = (full ? '✓' : '') + (s === st.chipAt ? '<span class="you">' + esc(t('map.yourChip')) + '</span>' : ''); pins[s].el.setAttribute('aria-label', t('loop.at.' + s)); });
@@ -589,7 +602,7 @@ export function createMap(canvas, host, on = {}) {
   }
 
   /* ---- the loop ---- */
-  let raf = 0, last = performance.now(), W = 1, H = 1, running = true;
+  let raf = 0, last = performance.now(), W = 1, H = 1, running = true, frameN = 0;
   const resize = () => { const r = canvas.getBoundingClientRect(); if (!r.width || !r.height) return; W = r.width; H = r.height; st.size(W, H); camera.aspect = W / Math.max(1, H); camera.updateProjectionMatrix(); };
   new ResizeObserver(resize).observe(canvas); resize();
   const easeBack = k => { const c1 = 1.70158, c3 = c1 + 1; return 1 + c3 * Math.pow(k - 1, 3) + c1 * Math.pow(k - 1, 2); };
@@ -627,6 +640,7 @@ export function createMap(canvas, host, on = {}) {
     }
     st.draw(scene, camera);
     L.update(camera, W, H);
+    if ((frameN = (frameN + 1) % 6) === 0 && mini.offsetParent) { const M0 = mini.M0; miniView.setAttribute('points', footprint().map(([x, z]) => (x - M0.x0).toFixed(1) + ',' + (z - M0.z0).toFixed(1)).join(' ')); mini.querySelectorAll('.mdot').forEach(b => b.classList.toggle('sel', !!sel && b.dataset.place === sel.place)); }
   };
   raf = requestAnimationFrame(frame);
   place2();

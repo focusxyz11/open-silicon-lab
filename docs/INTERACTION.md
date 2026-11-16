@@ -54,5 +54,6 @@ should look like a cartoon. Consistency comes before any single feature.
    the view inside opens from that point on the screen, as through a portal; going out, it closes back into the
    place). The line now starts high above the machine the camera dived at and comes down to it, so the dive
    continues instead of starting again.
-4. The first page as a surface to play: the questions and challenges met in the world, with the hero folding
-   into the heads-up layer once you start.
+4. The first page as a surface to play (first pass done): the questions and challenges stay, folding into a
+   button in the corner while you explore and opening again from it; a place pointed at says in one line what it is;
+   a minimap keeps the whole island in view, with what the camera sees, and takes you anywhere on it.
