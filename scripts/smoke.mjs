@@ -59,7 +59,7 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
   for (const door of ['look', 'ask', 'do']) { await page.click('#sheet [data-door="' + door + '"]').catch(() => problems.push(tag + ': no door ' + door)); }
   if (!(await page.$$('#sheet .chcard')).length) problems.push(tag + ': the studio has nothing to do');
   await page.click('#sheet [data-door="look"]');
-  if (!(await page.$('#sheet .lvchips a')) || !(await page.$('#sheet [data-deeper]'))) problems.push(tag + ': Look shows no way inside the studio');
+  if (!(await page.$('#sheet .lvchips a')) || !(await page.$('#sheet .zoomhint'))) problems.push(tag + ': Look shows no way inside the studio');
   /* every experiment reads as a page: its question, what is true and open, and ways on to others */
   await page.evaluate(() => { location.hash = '#/read/fail-ontime'; });
   await page.waitForSelector('#page:not([hidden]) .readq', { timeout: 10000 }).catch(() => problems.push(tag + ': a question does not open as a page'));
