@@ -207,6 +207,27 @@ export function createMap(canvas, host, on = {}) {
     chair(d, 0, 0.62, Math.PI); if (seated) figure(d, 0, 0.62, Math.PI, who++, true); return d; };
   const plant = (g, x, z, s = 1) => { cyl(g, 0.22 * s, 0.17 * s, 0.4 * s, mat(night ? 0x6b5f52 : 0xb7a48d, { roughness: 0.8 }), x, 0, z, 12); const c = new THREE.Mesh(lump(), mat(T.leaf, { roughness: 0.8 })); c.scale.setScalar(0.42 * s); c.position.set(x, 0.75 * s, z); c.castShadow = true; g.add(c); };
 
+  /* ---- fronts (the art pass): what makes a box read as a building from above. Windows in bands with frames, a sill
+     and a head; a parapet round the roof; plant on the roof; a canopy and glass doors at the way in; a darker plinth
+     at the foot of a wall; louvres where air goes in. On the near walls of a building that opens they hide with it. ---- */
+  const frameM = mat(night ? 0x59616e : 0xebe9e3, { roughness: 0.5 }), trimM = mat(night ? 0x343c49 : 0x9aa2ab, { roughness: 0.6 });
+  const plantM = mat(night ? 0x687282 : 0xc6cacf, { roughness: 0.5 });
+  const band = (g, x, y, z, len, h, along, m = winCool, step = 1.3) => { const X = along === 'x', bx = (l, hh, px, py, pz, mm, t) => box(g, X ? l : t, hh, X ? t : l, mm, px, py, pz, 0.005, { cast: false });
+    bx(len, h, x, y, z, m, 0.05); const n = Math.max(1, Math.round(len / step));
+    for (let i = 0; i <= n; i++) { const o = -len / 2 + i * len / n; bx(0.09, h, X ? x + o : x, y, X ? z : z + o, frameM, 0.1); }
+    bx(len + 0.2, 0.1, x, y - 0.1, z, frameM, 0.16); bx(len + 0.1, 0.07, x, y + h, z, frameM, 0.12); };
+  const parapet = (g, cx, y, cz, w, d, h = 0.45, m = trimM) => { const t = 0.22;
+    box(g, w, h, t, m, cx, y, cz - d / 2 + t / 2, 0.02); box(g, w, h, t, m, cx, y, cz + d / 2 - t / 2, 0.02); box(g, t, h, d, m, cx - w / 2 + t / 2, y, cz, 0.02); box(g, t, h, d, m, cx + w / 2 - t / 2, y, cz, 0.02); };
+  const unit = (g, x, y, z, k = 1) => { box(g, 1.6 * k, 0.8 * k, 1.1 * k, plantM, x, y, z, 0.06); [-0.38, 0.38].forEach(o => cyl(g, 0.34 * k, 0.34 * k, 0.05, mat(P.dark, { roughness: 0.5 }), x + o * k, y + 0.8 * k, z, 16));
+    box(g, 0.32 * k, 0.32 * k, 1.2 * k, metal(night ? 0x6c7584 : 0xb5bcc4), x + 1.0 * k, y, z, 0.03); };
+  const entrance = (g, x, z, along, side = 1, w = 2.4) => { const X = along === 'x';
+    box(g, X ? w + 0.8 : 1.3, 0.14, X ? 1.3 : w + 0.8, frameM, X ? x : x + side * 0.65, 2.7, X ? z + side * 0.65 : z, 0.03);
+    box(g, X ? w : 0.08, 2.5, X ? 0.08 : w, winM, x, 0, z, 0.01, { cast: false }); box(g, X ? 0.08 : 0.1, 2.5, X ? 0.1 : 0.08, frameM, x, 0, z, 0.01, { cast: false });
+    box(g, X ? w + 0.6 : 0.9, 0.1, X ? 0.9 : w + 0.6, trimM, X ? x : x + side * 0.45, 0, X ? z + side * 0.45 : z, 0.02, { cast: false }); };
+  const plinth = (g, x, z, len, along) => box(g, along === 'x' ? len : 0.06, 0.45, along === 'x' ? 0.06 : len, trimM, x, 0, z, 0.005, { cast: false });
+  const louvres = (g, x, y, z, len, h, along) => { const n = Math.round(h / 0.22); for (let i = 0; i < n; i++) box(g, along === 'x' ? len : 0.12, 0.07, along === 'x' ? 0.12 : len, trimM, x, y + i * 0.22, z, 0.005, { cast: false }); };
+  const fins = (g, x0, x1, y, z, h, step = 1) => { for (let x = x0; x <= x1 + 1e-6; x += step) box(g, 0.12, h, 0.34, trimM, x, y, z, 0.01, { cast: false }); };
+
   /* 1 design: the studio, a campus at the start of the loop. The design halls, a plaza, and on the road
      the mask house, where a finished design leaves as masks for the factory (the mask truck grows from it) */
   /* ---- buildings that open where they stand (docs/INTERACTION.md) ----
@@ -236,14 +257,18 @@ export function createMap(canvas, host, on = {}) {
     ghosts(O, box(g, 22, 3.6, 0.2, ghost(P.glass, gl), -4, 0, 4.4, 0.04), box(g, 0.2, 3.6, 11, ghost(P.glass, gl), -14.9, 0, -1, 0.04));
     O.near.forEach(w => { w.userData.glass = gl.opacity; });
     O.deco = group(g, 0, 0, 0);
-    for (let i = 0; i < 6; i++) box(O.deco, 2.4, 2.6, 0.06, mat(P.white, { roughness: 0.6 }), -13 + i * 3.6, 0.2, 4.52, 0.03, { cast: false });
+    for (let i = 0; i < 7; i++) box(O.deco, 0.12, 3.5, 0.12, frameM, -14.8 + i * 3.6, 0, 4.52, 0.01, { cast: false });
+    box(O.deco, 22, 0.12, 0.14, frameM, -4, 3.45, 4.52, 0.01, { cast: false }); entrance(O.deco, -2.6, 4.56, 'x', 1, 2.8);
     /* the upper floor and roof lift away together */
     const lid = O.lid = group(g, 0, 0, 0);
     box(lid, 24, 3.4, 11.6, mat(P.white), -4, 3.6, -1.2, 0.3);
     box(lid, 24.2, 0.5, 11.8, mat(A.roof, { roughness: 0.7 }), -4, 7, -1.2, 0.12);
-    for (let i = 0; i < 9; i++) box(lid, 1.6, 1.2, 0.12, winCool, -14.2 + i * 2.55, 4.7, 4.66, 0.04, { cast: false });
+    band(lid, -4, 4.4, 4.64, 22.4, 1.5, 'x', winCool, 1.6); band(lid, -16.04, 4.4, -1.2, 10.6, 1.5, 'z', winCool, 1.6);
+    parapet(lid, -4, 7.5, -1.2, 24.2, 11.8); unit(lid, -11, 7.5, -3.5); unit(lid, -1, 7.5, -4.5); unit(lid, 4, 7.5, 0.5, 0.8);
     box(g, 9, 6.2, 7, mat(P.white), -20, 0, -6, 0.3); box(g, 9.2, 0.5, 7.2, mat(P.slate), -20, 6.2, -6, 0.1);
     for (let i = 0; i < 3; i++) box(g, 1.8, 3.6, 0.1, winCool, -22.6 + i * 2.6, 1.4, -2.45, 0.03, { cast: false });
+    band(g, -24.56, 1.2, -6, 6.2, 1.4, 'z', winCool, 1.55); band(g, -24.56, 3.9, -6, 6.2, 1.4, 'z', winCool, 1.55); plinth(g, -24.53, -6, 7, 'z');
+    parapet(g, -20, 6.7, -6, 9.2, 7.2, 0.4); unit(g, -21.5, 6.7, -7.5, 0.9);
     /* inside: one corner for each step of the design */
     const IN = O.inside = group(g, 0, 0, 0); IN.visible = false;
     const st = {}; STUDIO_PARTS.forEach(([id, x, z]) => { st[id] = group(IN, x, 0.1, z); });
@@ -268,7 +293,9 @@ export function createMap(canvas, host, on = {}) {
     /* the mask house: a loading bay facing the road to the factory; once the studio is open it is the last step */
     const mh = group(g, 13, 0, 3);
     box(mh, 8, 4, 7, mat(P.white), 0, 0, 0, 0.3); box(mh, 8.1, 0.7, 7.1, mat(A.roof, { roughness: 0.7 }), 0, 3.45, 0, 0.1);
-    box(mh, 0.12, 2.6, 3.6, mat(P.dark), 4.06, 0, 0, 0.02, { cast: false });
+    box(mh, 0.12, 2.6, 3.6, mat(P.dark), 4.06, 0, 0, 0.02, { cast: false }); box(mh, 1.3, 0.12, 4.4, frameM, 4.65, 2.8, 0, 0.02);
+    for (let i = 0; i < 9; i++) box(mh, 0.14, 0.05, 3.5, trimM, 4.13, 0.2 + i * 0.27, 0, 0.005, { cast: false });
+    parapet(mh, 0, 4.15, 0, 8.1, 7.1, 0.35); unit(mh, -1.6, 4.15, -1.4, 0.8); band(mh, -4.05, 1.4, 0, 5.4, 1.1, 'z', winCool, 1.35); plinth(mh, -4.03, 0, 7, 'z');
     for (let i = 0; i < 4; i++) pulses.push(box(mh, 0.9, 0.9, 0.06, glow([P.accent, P.good, P.warm, P.accent][i], 1.1), -2.6 + i * 1.7, 2, 3.56, 0.02, { cast: false }));
     tagParts(O, 'masks', mh);
     [[-15, 10], [-6, 11], [4, 10.5], [10, 11.5]].forEach(([x, z]) => tree(g, x, z, 0.9)); }
@@ -295,12 +322,14 @@ export function createMap(canvas, host, on = {}) {
     const south = box(g, FAB_W, FAB_H, FAB_T, ghost(), 0, 0, FAB_D / 2 - FAB_T / 2, 0.08), west = box(g, FAB_T, FAB_H, FAB_D, ghost(), -FAB_W / 2 + FAB_T / 2, 0, 0, 0.08);
     ghosts(FAB, south, west);
     FAB.deco = group(g, 0, 0, 0);
-    for (let i = 0; i < 10; i++) box(FAB.deco, 1.6, 0.7, 0.1, winM, -10 + i * 2.3, 3, FAB_D / 2 + 0.05, 0.03, { cast: false });
+    band(FAB.deco, 1.5, 2.9, FAB_D / 2 + 0.06, 21, 0.9, 'x', winM, 2.1); band(FAB.deco, -FAB_W / 2 - 0.06, 2.9, 0, 13, 0.9, 'z', winM, 2.2);
+    plinth(FAB.deco, 0, FAB_D / 2 + 0.04, FAB_W, 'x'); plinth(FAB.deco, -FAB_W / 2 - 0.04, 0, FAB_D, 'z'); entrance(FAB.deco, -10.2, FAB_D / 2 + 0.08, 'x', 1, 2.6);
+    louvres(FAB.deco, 8, 0.7, FAB_D / 2 + 0.08, 6, 1.4, 'x');
     const lid = FAB.lid = group(g, 0, 0, 0);
-    box(lid, FAB_W + 0.2, 0.6, FAB_D + 0.2, mat(A.roof, { roughness: 0.7 }), 0, FAB_H, 0, 0.2);
+    box(lid, FAB_W + 0.2, 0.6, FAB_D + 0.2, mat(A.roof, { roughness: 0.7 }), 0, FAB_H, 0, 0.2); parapet(lid, 0, FAB_H + 0.6, 0, FAB_W + 0.2, FAB_D + 0.2, 0.5);
     for (let i = 0; i < 5; i++) for (let j = 0; j < 2; j++) { const x = -9 + i * 4.5, z = -3.6 + j * 7.2; box(lid, 3.4, 1.2, 3.2, mat(P.wall), x, FAB_H + 0.6, z, 0.15); spinning.push(cyl(lid, 1.1, 1.1, 0.2, metal(P.dark), x, FAB_H + 1.8, z, 20)); }
     /* outside: the gas annex, its tanks and the stacks */
-    box(g, 10, 5, 8, mat(P.wall), -18.5, 0, 3, 0.3);
+    box(g, 10, 5, 8, mat(P.wall), -18.5, 0, 3, 0.3); parapet(g, -18.5, 5, 3, 10, 8, 0.4); louvres(g, -23.56, 0.8, 3, 5, 2.6, 'z'); louvres(g, -18.5, 0.8, 7.06, 7, 2.6, 'x'); unit(g, -17, 5, 1.5, 0.9);
     [-21.5, -18.5, -15.5].forEach(x => cyl(g, 1.2, 1.2, 6, metal(P.metal), x, 0, -4));
     [[-22, 8], [-15, 8]].forEach(([x, z]) => { cyl(g, 0.45, 0.6, 12, mat(P.wall), x, 0, z, 16); cyl(g, 0.48, 0.48, 0.8, mat(A.trim), x, 12, z, 16); });
 
@@ -367,9 +396,10 @@ export function createMap(canvas, host, on = {}) {
     box(g, 11.6, 0.1, 7.6, mat(night ? 0x2b323d : 0xe6e7e3, { roughness: 0.45 }), 0, 0, 0, 0.02, { cast: false });
     box(g, 12, 3.4, 0.3, mat(P.white), 0, 0, -3.85, 0.06); box(g, 0.3, 3.4, 8, mat(P.white), 5.85, 0, 0, 0.06);
     ghosts(O, box(g, 12, 3.4, 0.3, ghost(), 0, 0, 3.85, 0.06), box(g, 0.3, 3.4, 8, ghost(), -5.85, 0, 0, 0.06));
-    O.deco = group(g, 0, 0, 0); for (let i = 0; i < 4; i++) box(O.deco, 1.8, 0.8, 0.08, winCool, -4 + i * 2.6, 1.8, 4.02, 0.02, { cast: false });
+    O.deco = group(g, 0, 0, 0); band(O.deco, -1.6, 1.6, 4.06, 7.6, 1.0, 'x', winCool, 1.5); entrance(O.deco, 3.9, 4.06, 'x', 1, 2); plinth(O.deco, 0, 4.03, 12, 'x');
+    band(O.deco, -6.06, 1.6, 0, 6, 1.0, 'z', winCool, 1.5); plinth(O.deco, -6.03, 0, 8, 'z');
     const lid = O.lid = group(g, 0, 0, 0);
-    box(lid, 12.1, 0.6, 8.1, mat(A.roof, { roughness: 0.7 }), 0, 3.4, 0, 0.1);
+    box(lid, 12.1, 0.6, 8.1, mat(A.roof, { roughness: 0.7 }), 0, 3.4, 0, 0.1); parapet(lid, 0, 4.0, 0, 12.1, 8.1, 0.35); unit(lid, 2.6, 4.0, 1.6, 0.8);
     pulses.push(cyl(lid, 1.6, 1.6, 0.12, glow(0x9aa6b8, 0.3, { metalness: 0.6, roughness: 0.15 }), -3, 4, 0, 40));
     /* inside: probers that bring each chip under the needles, the test head with its card of needles docked on one,
        and the wafer map on the wall, every chip green or red */
@@ -399,8 +429,9 @@ export function createMap(canvas, host, on = {}) {
     box(g, HW - 0.4, 0.1, HD - 0.4, mat(night ? 0x2b323d : 0xe6e7e3, { roughness: 0.45 }), hx, 0, hz, 0.02, { cast: false });
     box(g, HW, HH, 0.3, mat(P.white), hx, 0, hz - HD / 2 + 0.15, 0.06); box(g, 0.3, HH, HD, mat(P.white), hx + HW / 2 - 0.15, 0, hz, 0.06);
     ghosts(O, box(g, HW, HH, 0.3, ghost(), hx, 0, hz + HD / 2 - 0.15, 0.06), box(g, 0.3, HH, HD, ghost(), hx - HW / 2 + 0.15, 0, hz, 0.06));
-    O.deco = group(g, 0, 0, 0); for (let i = 0; i < 4; i++) box(O.deco, 1.6, 0.7, 0.08, winCool, hx - 3.9 + i * 2.6, 1.9, hz + HD / 2 + 0.02, 0.02, { cast: false });
-    O.lid = group(g, 0, 0, 0); box(O.lid, HW + 0.2, 0.6, HD + 0.2, mat(A.roof, { roughness: 0.7 }), hx, HH, hz, 0.1);
+    O.deco = group(g, 0, 0, 0); band(O.deco, hx - 1.6, 1.8, hz + HD / 2 + 0.06, 7, 0.9, 'x', winCool, 1.4); entrance(O.deco, hx + 3.6, hz + HD / 2 + 0.06, 'x', 1, 2); plinth(O.deco, hx, hz + HD / 2 + 0.03, HW, 'x');
+    box(O.deco, 0.1, 2.8, 3.2, mat(P.dark), hx - HW / 2 - 0.06, 0, hz, 0.01, { cast: false }); for (let i = 0; i < 10; i++) box(O.deco, 0.14, 0.05, 3.1, trimM, hx - HW / 2 - 0.13, 0.2 + i * 0.27, hz, 0.005, { cast: false });
+    O.lid = group(g, 0, 0, 0); box(O.lid, HW + 0.2, 0.6, HD + 0.2, mat(A.roof, { roughness: 0.7 }), hx, HH, hz, 0.1); parapet(O.lid, hx, HH + 0.6, hz, HW + 0.2, HD + 0.2, 0.35); unit(O.lid, hx + 2.5, HH + 0.6, hz - 1.6, 0.8);
     const IN = O.inside = group(g, 0, 0, 0); IN.visible = false;
     const shell = mat(night ? 0xc3cad4 : 0xf4f4f1, { roughness: 0.45 }), steel = metal(night ? 0x8a929e : 0xb9c0c8);
     const part = (id, x, z) => group(IN, hx + x, 0.1, hz + z);
@@ -420,12 +451,14 @@ export function createMap(canvas, host, on = {}) {
     box(g, 24, 4, 6, mat(P.wall), 0, 0, -6, 0.3);
     for (let i = 0; i < 7; i++) { box(g, 2.4, 0.8, 2.4, mat(P.white), -9 + i * 3, 4, -6, 0.12); spinning.push(cyl(g, 0.9, 0.9, 0.15, metal(P.dark), -9 + i * 3, 4.8, -6, 18)); }
     for (let i = 0; i < 9; i++) box(g, 1.6, 0.5, 0.08, winCool, -9.6 + i * 2.4, 2.4, -2.98, 0.02, { cast: false });
+    fins(g, -11.5, 11.5, 0.3, -2.8, 3.3); parapet(g, 0, 4, -6, 24, 6, 0.35); louvres(g, -12.06, 0.6, -6, 4.5, 2.6, 'z');
     const z0 = 2, HH = 3.6;
     box(g, 23.6, 0.1, 5.6, mat(night ? 0x2b323d : 0xe6e7e3, { roughness: 0.45 }), 0, 0, z0, 0.02, { cast: false });
     box(g, 24, HH, 0.3, mat(P.wall), 0, 0, z0 - 2.85, 0.06); box(g, 0.3, HH, 6, mat(P.wall), 11.85, 0, z0, 0.06);
     ghosts(O, box(g, 24, HH, 0.3, ghost(P.wall), 0, 0, z0 + 2.85, 0.06), box(g, 0.3, HH, 6, ghost(P.wall), -11.85, 0, z0, 0.06));
-    O.deco = group(g, 0, 0, 0); for (let i = 0; i < 9; i++) box(O.deco, 1.6, 0.5, 0.08, winCool, -9.6 + i * 2.4, 2.4, z0 + 3.02, 0.02, { cast: false });
-    O.lid = group(g, 0, 0, 0); box(O.lid, 24.2, 0.4, 6.2, mat(A.roof, { roughness: 0.7 }), 0, HH, z0, 0.1);
+    O.deco = group(g, 0, 0, 0); for (let i = 0; i < 8; i++) box(O.deco, 1.6, 0.5, 0.08, winCool, -7.2 + i * 2.4, 2.4, z0 + 3.02, 0.02, { cast: false });
+    fins(O.deco, -8.5, 11.5, 0.3, z0 + 3.2, 3.0); entrance(O.deco, -10.2, z0 + 3.06, 'x', 1, 2); plinth(O.deco, 0, z0 + 3.03, 24, 'x'); louvres(O.deco, -12.06, 0.6, z0, 4.5, 2.6, 'z');
+    O.lid = group(g, 0, 0, 0); box(O.lid, 24.2, 0.4, 6.2, mat(A.roof, { roughness: 0.7 }), 0, HH, z0, 0.1); parapet(O.lid, 0, HH + 0.4, z0, 24.2, 6.2, 0.35);
     for (let i = 0; i < 7; i++) { box(O.lid, 2.4, 0.8, 2.4, mat(P.white), -9 + i * 3, HH + 0.4, z0, 0.12); spinning.push(cyl(O.lid, 0.9, 0.9, 0.15, metal(P.dark), -9 + i * 3, HH + 1.2, z0, 18)); }
     const IN = O.inside = group(g, 0, 0, 0); IN.visible = false;
     /* two rows of racks facing a cold aisle closed in glass, cable trays over them, and the cooling units at the end;
