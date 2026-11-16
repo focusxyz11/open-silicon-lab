@@ -2862,5 +2862,6 @@
  "zoom.open": "Zoom in and it opens. Tap anything inside to see what it does.",
  "zoom.tool.fab": "Zoom in to go into the tool and follow a wafer through it.",
  "zoom.tool.studio": "Zoom in to sit down here and work on the design yourself.",
- "zoom.tool.test": "Zoom in to watch your wafer being tested, chip by chip."
+ "zoom.tool.test": "Zoom in to watch your wafer being tested, chip by chip.",
+ "zoom.tool.port": "Zoom in to follow your chips through cutting, packaging and out to the world."
 }

@@ -346,7 +346,7 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
   await page.goto(base + 'index.html#/place/fab');
   await page.waitForFunction(() => document.querySelectorAll('#mapLabels .tool3[data-place="fab"]').length === 6, null, { timeout: 15000 }).catch(() => problems.push(tag + ': the open factory does not name its tools'));
   /* the studio and the test house open the same way, and a part of each is selected in place */
-  for (const [pl, part] of [['studio', 'layout'], ['test', 'map']]) {
+  for (const [pl, part] of [['studio', 'layout'], ['test', 'map'], ['port', 'saw']]) {
     await page.evaluate(h => { location.hash = h; }, '#/place/' + pl + '/' + part);
     await page.waitForSelector('#sheet.part [data-deeper]', { timeout: 15000 }).catch(() => problems.push(tag + ': ' + pl + ' does not open with its parts'));
   }

@@ -468,10 +468,14 @@ body.immersive .toast { top: 136px; bottom: auto; left: 50%; }
 ::view-transition-old(root), ::view-transition-new(root) { animation-duration: .55s; animation-fill-mode: both; transform-origin: 50% 46%; }
 ::view-transition-old(root) { animation-timing-function: cubic-bezier(.5, 0, .7, .4); }
 ::view-transition-new(root) { animation-timing-function: cubic-bezier(.2, .7, .2, 1); }
-html[data-move=in]::view-transition-old(root) { animation-name: vt-past; }
-html[data-move=in]::view-transition-new(root) { animation-name: vt-from-far; }
-html[data-move=out]::view-transition-old(root) { animation-name: vt-away; }
-html[data-move=out]::view-transition-new(root) { animation-name: vt-from-near; }
+/* in and out go through a portal (docs/INTERACTION.md): going in, the scene swells round what you chose and the view
+   inside opens from that point; going out, the view inside closes back into it while the scene settles round it */
+html[data-move=in]::view-transition-old(root) { animation-name: vt-past; transform-origin: var(--vx, 50%) var(--vy, 46%); }
+html[data-move=in]::view-transition-new(root) { animation-name: vt-portal-in; animation-duration: .7s; }
+html[data-move=out]::view-transition-old(root) { animation-name: vt-portal-out; animation-duration: .7s; z-index: 2; }
+html[data-move=out]::view-transition-new(root) { animation-name: vt-from-near; transform-origin: var(--vx, 50%) var(--vy, 40%); }
+@keyframes vt-portal-in { from { clip-path: circle(0% at var(--vx, 50%) var(--vy, 46%)); } to { clip-path: circle(150% at var(--vx, 50%) var(--vy, 46%)); } }
+@keyframes vt-portal-out { from { clip-path: circle(150% at var(--vx, 50%) var(--vy, 40%)); } to { clip-path: circle(0% at var(--vx, 50%) var(--vy, 40%)); opacity: .6; } }
 html[data-move=along]::view-transition-old(root) { animation-name: vt-left; }
 html[data-move=along]::view-transition-new(root) { animation-name: vt-from-right; }
 html[data-move=turn]::view-transition-old(root) { animation-name: vt-turn-out; }
