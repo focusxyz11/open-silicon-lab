@@ -1052,3 +1052,18 @@ textarea.fcode { width: 100%; min-height: 110px; resize: vertical; box-sizing: b
 .tfig { margin: 0; display: grid; gap: 4px; } .tthumb { width: 100%; height: auto; } .tpath { fill: none; stroke: #fff; stroke-width: 1.2; opacity: .8; }
 .tfig figcaption { display: grid; font-size: 12.5px; } .tfig figcaption span { color: var(--muted); }
 @media (max-width: 640px) { .tgrid { grid-template-columns: 1fr; } .thand { grid-template-columns: 1fr 1fr 1fr; gap: 6px; } .tfig figcaption { font-size: 11.5px; } }
+
+/* The island, grown up (art pass): quieter names and stops over the scene, and a shorter hero so the island shows */
+.place3 { padding: 4px 10px 4px 9px; font: 600 12px var(--sans); background: color-mix(in srgb, var(--panel-solid) 78%, transparent); box-shadow: 0 2px 8px rgba(0, 0, 0, .16); }
+.place3::before { width: 6px; height: 6px; margin-right: 6px; background: var(--muted); }
+.place3:hover::before, .place3.on::before { background: var(--accent); }
+.place3.far { font-size: 13px; padding: 6px 12px 6px 10px; }
+.flag { min-width: 16px; height: 16px; margin-left: 6px; font-size: 10px; background: color-mix(in srgb, var(--accent) 22%, transparent); color: var(--ink); }
+.flag.done { background: color-mix(in srgb, var(--good) 28%, transparent); color: var(--ink); }
+.flag.job { background: color-mix(in srgb, var(--warm) 28%, transparent); color: var(--ink); }
+.pin3 { width: 12px; height: 12px; border-width: 2px; box-shadow: 0 1px 4px rgba(0, 0, 0, .3); background: var(--panel-solid); border-color: var(--muted); }
+.pin3.full { width: 16px; height: 16px; font-size: 9px; }
+.hero .herofoot { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; margin-top: 12px; }
+.hero .herofoot .herok { margin: 0; } .hero .herofoot .heroc { margin: 0; }
+.hero .herofoot .row { margin: 0 0 0 auto; }
+@media (max-width: 720px) { .hero .herofoot { margin-top: 10px; } .hero .herofoot .row { margin: 0; width: 100%; } }
