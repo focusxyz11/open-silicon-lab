@@ -1153,3 +1153,9 @@ textarea.fcode { width: 100%; min-height: 110px; resize: vertical; box-sizing: b
 /* around a place: what stands near it, the next stage of a chip's life one way among them */
 .around { margin: 12px 0 4px; }
 .around .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+/* the ways around a level: one row, the levels either side and the same level at other stages */
+.dock .nav:has(> .chips) { display: block; }
+.dock .nav > .kicker { display: block; margin: 0 0 6px; }
+.dock .nav > .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.dock .nav .chipb.else { border-style: dashed; }
+.chipb.else, a.chipb { text-decoration: none; }
