@@ -694,19 +694,27 @@ export function createMap(canvas, host, on = {}) {
     const l = box(b, 0.6, 0.6, 0.6, glow(P.warm, 1.5), 0, 3.2, 0, 0.12, { cast: false }); l.userData.square = true; pulses.push(l);
     for (let k = 0; k < Math.min(a.work, 5); k++) box(b, 0.24, 0.24, 0.24, glow(P.accent, 1.2), 0.45 + k * 0.4, 0.05, 0, 0.05, { cast: false });
     const poi = a.under ? 'q:' + a.under : 'place:idea'; poiMark(b, poi); poiLabel(b, 4.4, '?', 'asked' + (a.draft ? ' draft' : ''), poi, t('map.asked', { by: a.by, q: a.words })); };
+  /* a report: the lab said to be broken here, by someone using it. A striped barrier with an amber lamp stands at the
+     square of the place it was seen, until a fix names it (docs/reviews/community.md); it is never part of the plan */
+  const stripeA = mat(night ? 0xb8463c : 0xc9483c, { roughness: 0.6 }), stripeB = mat(night ? 0xc9c2b6 : 0xf1eee8, { roughness: 0.6 });
+  const barrier = (g, x, z, r) => { const b = group(g, x, 0, z, 0.25); [-0.8, 0.8].forEach(px => box(b, 0.12, 1.05, 0.12, metal(P.slate), px, 0, 0, 0.02, { cast: false }));
+    for (let k = 0; k < 6; k++) box(b, 0.3, 0.2, 0.08, k % 2 ? stripeB : stripeA, -0.75 + k * 0.3, 0.72, 0, 0.01, { cast: false });
+    const l = box(b, 0.22, 0.22, 0.22, glow(P.warm, 1.6), 0.8, 1.05, 0, 0.06, { cast: false }); l.userData.square = true; pulses.push(l);
+    const poi = 'report:' + r.href; poiMark(b, poi); poiLabel(b, 1.9, '⚑', 'report' + (r.draft ? ' draft' : ''), poi, t('map.reported', { say: t('report.say.' + r.say), words: r.words })); };
   function squares(st) {
-    const sig = JSON.stringify([st.square, (st.asks || []).map(a => [a.q, a.work, a.at, a.draft]), (st.wanted || []).length]); if (sig === squareSig) return false; squareSig = sig;
+    const sig = JSON.stringify([st.square, (st.asks || []).map(a => [a.q, a.work, a.at, a.draft]), (st.wanted || []).length, (st.reports || []).map(r => [r.id, r.draft])]); if (sig === squareSig) return false; squareSig = sig;
     while (squaresG.children.length) squaresG.remove(squaresG.children[0]); while (stakesG.children.length) stakesG.remove(stakesG.children[0]);
     poiLabels.forEach(lb => { lb.el.remove(); const i = L.list.indexOf(lb); if (i >= 0) L.list.splice(i, 1); }); poiLabels = []; poiPick.length = 0;
     for (let i = pulses.length - 1; i >= 0; i--) if (pulses[i].userData.square) pulses.splice(i, 1);
     Object.entries(SQUARE).forEach(([pl, at]) => {
-      const s = (st.square || {})[pl] || { n: 0, chs: [] }, asks = (st.asks || []).filter(a => a.at === pl).slice(0, 4);
-      if (!s.n && !s.chs.length && !asks.length) return;
+      const s = (st.square || {})[pl] || { n: 0, chs: [] }, asks = (st.asks || []).filter(a => a.at === pl).slice(0, 4), reps = (st.reports || []).filter(rp => (SQUARE[rp.at] ? rp.at : 'lab') === pl).slice(0, 3);
+      if (!s.n && !s.chs.length && !asks.length && !reps.length) return;
       const g = group(squaresG, at[0], 0, at[1], FACE), r = 2.3 + Math.max(s.chs.length, 1) * 0.5;
       cyl(g, r, r, 0.1, paveM, 0, -0.02, 0, 40, { cast: false }); cyl(g, r + 0.25, r + 0.25, 0.06, kerbM, 0, -0.03, 0, 40, { cast: false });
       if (s.n) board(g, 0, -r * 0.45, s.n, 'ask:' + pl, pl);
       s.chs.forEach((c, i) => bench(g, (i - (s.chs.length - 1) / 2) * 2.3, r * 0.34, Object.assign({ k: i }, c)));
       asks.forEach((a, i) => lantern(g, (i % 2 ? 1 : -1) * (r - 0.6), -r * 0.35 + Math.floor(i / 2) * 1.2, a));
+      reps.forEach((rp, i) => barrier(g, -r * 0.55 + i * 2, r * 0.82, rp));
     });
     /* on the sandbank, a stake for every question nobody can try yet, flagged in the colour of its world */
     const W = st.wanted || [], rows = Math.ceil(W.length / 6);
@@ -868,7 +876,7 @@ export function createMap(canvas, host, on = {}) {
   const up = e => { ptrs.delete(e.pointerId); if (ptrs.size < 2) { pinch0 = null; pinchDeep = false; } if (downAt && moved < 8 && !ptrs.size) { const h = pickAt(e); if (h && h.part) on.part && on.part(h.place, h.part); else if (h && h.place) on.place && on.place(h.place); else if (h && h.q) on.question && on.question(h.q); else if (h && h.poi) poiGo(h.poi); } downAt = null; };
   /* what calls: a bench plays its challenge, a board opens the questions asked at its place, a lantern its question */
   const poiGo = poi => { const [k, v] = [poi.slice(0, poi.indexOf(':')), poi.slice(poi.indexOf(':') + 1)];
-    if (k === 'ch') on.challenge && on.challenge(v); else if (k === 'ask') on.ask && on.ask(v); else if (k === 'q') on.question && on.question(v); else if (k === 'place') on.place && on.place(v); };
+    if (k === 'ch') on.challenge && on.challenge(v); else if (k === 'report') on.report && on.report(v); else if (k === 'ask') on.ask && on.ask(v); else if (k === 'q') on.question && on.question(v); else if (k === 'place') on.place && on.place(v); };
   /* a double tap goes in: into a building (it opens), or deeper into what is already selected */
   canvas.addEventListener('dblclick', e => { const h = pickAt(e); if (!h || !h.place) return; if (sel && sel.place === h.place && (h.part || null) === (sel.part || null) && deepAt()) deeper(); });
   canvas.addEventListener('pointerup', up); canvas.addEventListener('pointercancel', up);

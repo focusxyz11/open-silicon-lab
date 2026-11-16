@@ -31,6 +31,7 @@ import { signHtml, signOf, keep, refusal, slipHtml, slipClick, byLine } from './
 import { reportsAt, SAYS } from '../engines/ledger.js';
 import * as Read from './read.js';
 import * as Exp from '../engines/experiments.js';
+import { levelAt } from '../data/atlas.js';
 import * as Worlds from './worlds.js';
 import { copiesInput } from './copies.js';
 import { wallsInput } from './walls.js';
@@ -74,7 +75,7 @@ export function start() {
     const C = Game.community(S), leaves = NEEDS.filter(n => !childrenOf(n.id).length), order = ['built', 'yours', 'open', 'engine'];
     const floors = leaves.map(n => { const p = C.state[n.id]; return p.state === 'built' ? 'built' : p.state === 'engine' ? 'engine' : p.yours ? 'yours' : 'open'; }).sort((a, b) => order.indexOf(a) - order.indexOf(b));
     const places = Object.fromEntries(Game.PLACES.map(id => { const L = doList(id); return [id, { done: L.filter(c => S.done[c.id]).length, total: L.length }]; }));
-    return { grown: Game.grown(S), steps: Object.fromEntries(Game.STEPS.map(s => [s, Game.stepState(S, s)])), places, chipAt: (cur && Way.stageOfPlace(cur.place)) || Game.chipAt(S), floors, designs: C.designs, cases: C.cases, asks: C.asks.map(a => Object.assign({}, a, { at: placeOfStop(a.under) })), loud: C.loud, square: squareState(), wanted: wantedNow(), jobList: C.jobs, engineList: C.engines };
+    return { grown: Game.grown(S), steps: Object.fromEntries(Game.STEPS.map(s => [s, Game.stepState(S, s)])), places, chipAt: (cur && Way.stageOfPlace(cur.place)) || Game.chipAt(S), floors, designs: C.designs, cases: C.cases, asks: C.asks.map(a => Object.assign({}, a, { at: placeOfStop(a.under) })), loud: C.loud, square: squareState(), wanted: wantedNow(), reports: reportsNow(), jobList: C.jobs, engineList: C.engines };
   }
   /* what calls at each place, for its square on the island: how many questions are asked there, and the challenges
      played there, each with its name and whether it is done; a question added under a stop stands where that stop is */
@@ -82,6 +83,11 @@ export function start() {
   const squareState = () => Object.fromEntries(Game.PLACES.map(id => [id, { n: (Game.ASK[id] || []).length + Game.debatesAt(id).length, chs: Game.placeChallenges(id).map(c => ({ id: c.id, done: !!S.done[c.id], name: titleOf(c) })) }]));
   /* the questions nobody can try yet: each a stake on the sandbank of what is not yet */
   const wantedNow = () => Exp.EXPERIMENTS.filter(x => Exp.stateOf(x) === 'wanted').map(x => ({ id: x.id, hue: (THREADS.find(th => th.id === x.world) || { hue: 0 }).hue }));
+  /* the reports nobody has fixed yet (yours kept, and the ledger's), each at the place of the island where it was seen:
+     a page of a place's levels is at that place, a page with no place on the island (a world, the record) at the Lab */
+  const placeOfAt = at => { const [k, a] = partsOf(at || ''); if (k === 'place' && Game.PLACES.includes(a)) return a; if (k === 'line' || k === 'dive') { const h = levelAt(a); return (h && h.place) || 'lab'; }
+    return { bench: 'studio', chip: 'datacentre', board: 'datacentre', supply: 'port', ecosystem: 'port', do: 'lab' }[k] || 'lab'; };
+  const reportsNow = () => { const W = Game.world(S); return Game.frontierOf(S).filter(f => f.kind === 'report').map(f => { const e = W.byId[f.of]; return { id: e.id, at: placeOfAt(e.at), href: e.at, say: e.say, words: e.words, draft: !!e.draft }; }); };
   const refresh = animate => { if (map) map.setState(islandState(), animate); hud(); drawHero(); firstGo(); };
   /* until the first win, the way to start glows */
   const firstGo = () => { const b = $('hero').querySelector('.row .btn.primary'); if (b) b.classList.toggle('pulse', !Object.keys(S.done).length); };
@@ -104,7 +110,7 @@ export function start() {
     map = m.createMap($('mapCanvas'), $('mapLabels'), { place: id => (cur && cur.place === id && !cur.part && !sheet.hidden ? null : openPlace(id)), part: (place, part) => { location.hash = '#/place/' + place + '/' + part; },
       deeper: (place, part) => { const to = deeperOf(place, part); if (to) enter(to); },
       leave: id => { if (cur && cur.place === id) { closeSheet(); if (location.hash.startsWith('#/place/')) history.replaceState(null, '', '#/'); hud(); } },
-      question: key => openQuestion(key), challenge: id => { const ch = chOf(id); if (ch) location.hash = doHref(ch); }, ask: id => openPlace(id, 'ask'), job: need => openJob(need), entry: id => openEntry(id), interact: () => foldHero() });
+      question: key => openQuestion(key), challenge: id => { const ch = chOf(id); if (ch) location.hash = doHref(ch); }, report: at => { if (location.hash !== at) location.hash = at; setTimeout(() => openBreak(true), 0); }, ask: id => openPlace(id, 'ask'), job: need => openJob(need), entry: id => openEntry(id), interact: () => foldHero() });
     loading(false); map.setState(islandState(), false); idle(preload);
     /* the first minute: a first visit to the island opens on a wide shot and comes down to it, and the hero rises after */
     if (!S.seen && (!location.hash || location.hash === '#/') && !still()) { map.intro(); $('hero').classList.add('intro'); }
@@ -660,18 +666,21 @@ export function start() {
     const i = SUP.step, n = r.length;
     h += '<div class="nav">' + (i ? '<button type="button" class="btn ghost" data-key="back" data-supstep="' + (i - 1) + '">' + esc(t('story.back')) + '</button>' : '<span></span>') +
       (step.st ? '<a class="btn" href="#/line/' + step.st + '">' + esc(t('map.toStation', { station: t('depth.' + step.st + '.name') })) + '</a>' : '') +
-      (i < n - 1 ? '<button type="button" class="btn primary" data-key="next" data-supstep="' + (i + 1) + '">' + esc(t('line.next')) + '</button>' : '<a class="btn primary" href="#/place/port">' + esc(t('chipx.back')) + '</a>') + '</div>';
+      (i < n - 1 ? '<button type="button" class="btn primary" data-key="next" data-supstep="' + (i + 1) + '">' + esc(t('line.next')) + '</button>' : '<a class="btn primary" href="#/place/' + (SUP.back || 'port') + '">' + esc(t('chipx.back')) + '</a>') + '</div>';
     diveFrame.dock.innerHTML = h; diveFrame.dock.classList.add('supdock'); requestAnimationFrame(diveInset);
   }
   function showSupply(world) {
     hideAll(); document.body.classList.add('immersive'); flatKind = 'supply'; benchCh = null;
-    $('diveCanvas').hidden = false; vui.hidden = false; loading(true); lastPlace = 'port';
+    /* the world map is entered from the port, or from the island whose machines or materials it follows: going out
+       comes back to where you came in */
+    const back = ['tools', 'materials'].includes(enteredFrom) ? enteredFrom : 'port'; enteredFrom = null;
+    $('diveCanvas').hidden = false; vui.hidden = false; loading(true); lastPlace = back;
     return Promise.all([withFrame(), ensureDive(), import('../data/world.js'), import('../engines/supply.js')]).then(([, w, Wd, Sp]) => {
       Wdata = Wd; Sup = Sp; WE.setWorld('journey'); DS.setBandCaption(false);
       const wd = Wdata.ROUTES[world] ? world : (SUP && SUP.world) || 'datacentre';
-      SUP = { world: wd, step: 0, site: null, closed: [] };
+      SUP = { world: wd, step: 0, site: null, closed: [], back };
       const r = Wdata.ROUTES[wd];
-      diveFrame = frameOf(vui, { up: { href: '#/place/port', label: t('map.port.t') }, path: [{ href: '#/', label: t('place.back') }, { href: '#/place/port', label: t('map.port.t') }, { label: t('page.ecosystem.map') }],
+      diveFrame = frameOf(vui, { up: { href: '#/place/' + back, label: t('map.' + back + '.t') }, path: [{ href: '#/', label: t('place.back') }, { href: '#/place/' + back, label: t('map.' + back + '.t') }, { label: t('page.ecosystem.map') }],
         rail: { label: t('map.routes'), items: r.map(st => ({ id: st.id, label: t('route.step.' + st.id) })) },
         onRail: id => supplyStep(Wdata.ROUTES[SUP.world].findIndex(st => st.id === id)), onLook: drawSupply }); watchDock();
       vui.onclick = e => {
@@ -982,14 +991,14 @@ export function start() {
     return k === 'board' ? ['board', 2] : k === 'line' ? ['line', 1] : k === 'bench' ? ['bench', 1] : k === 'chip' ? ['chip', 3]
       : k === 'place' && p[1] === 'datacentre' && /^\d+$/.test(p[2] || '') ? ['dc', 1] : ['map', 0]; };
   let shownAt = null;   /* the address of the view now made, so a question at the same level only changes the dock */
-  let viewNow = null, rankNow = 0, nextMove = null, lastPlace = null, entering = false;
+  let viewNow = null, rankNow = 0, nextMove = null, lastPlace = null, entering = false, enteredFrom = null;
   /* going inside from the island: the camera dives into the place first, then the view zooms in from it */
   function enter(href) {
     if (entering) return;
     if (still() || !map || $('mapCanvas').hidden || !lastFocus()) { location.hash = href; return; }
     /* the camera dives at what is selected, and the view inside opens from that point on the screen, as through a
        portal (docs/INTERACTION.md) */
-    entering = true; map.dive(lastFocus(), cur && cur.part).then(() => { entering = false; portalAt(map.screenOf(lastFocus(), cur && cur.part)); arriving = true; location.hash = href; });
+    enteredFrom = lastFocus(); entering = true; map.dive(lastFocus(), cur && cur.part).then(() => { entering = false; portalAt(map.screenOf(lastFocus(), cur && cur.part)); arriving = true; location.hash = href; });
   }
   const lastFocus = () => (cur && cur.place) || null;
   let arriving = false;   /* the next view was entered from the island: it starts from above, coming down */
