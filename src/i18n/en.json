@@ -2946,5 +2946,11 @@
  "lens.heat.d": "Nearly all the electricity a chip uses leaves it as heat. The data centre glows brightest; the factory's furnaces and plasma next.",
  "lens.flow.d": "No country makes a chip alone. Sand, gases, machines, designs and chips cross the sea and the roads, and every crossing can stop.",
  "lens.fail.d": "Specks land at random, parts wear out, no two copies are the same. Every place catches some failures and lets others through.",
- "lens.time.d": "A chip spends months in the factory, one layer per lap, and longer still being designed. Testing and packing are quicker."
+ "lens.time.d": "A chip spends months in the factory, one layer per lap, and longer still being designed. Testing and packing are quicker.",
+ "dial.k": "Your chip, decided here",
+ "dial.read.clock": "{late}% of paths now arrive late · power ×{power}. Watch the test house.",
+ "dial.read.size": "{yield}% of chips come out good · power ×{power}.",
+ "dial.read.gen": "Power ×{power} in the same space · {yield}% good · {weeks} weeks in the factory.",
+ "dial.read.load": "{weeks} weeks in the factory · each wafer costs ×{cost}. Watch the trucks.",
+ "dial.read.mem": "The cores work {busy}% of the time · the board's power ×{board}."
 }
