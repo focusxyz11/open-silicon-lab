@@ -697,7 +697,7 @@ export function createMap(canvas, host, on = {}) {
   }
 
   /* ---- the loop ---- */
-  let raf = 0, last = performance.now(), W = 1, H = 1, running = true, frameN = 0;
+  let raf = 0, last = performance.now(), W = 1, H = 1, running = true, frameN = 0, declutAt = 0;
   const resize = () => { const r = canvas.getBoundingClientRect(); if (!r.width || !r.height) return; W = r.width; H = r.height; st.size(W, H); camera.aspect = W / Math.max(1, H); camera.updateProjectionMatrix(); };
   new ResizeObserver(resize).observe(canvas); resize();
   const easeBack = k => { const c1 = 1.70158, c3 = c1 + 1; return 1 + c3 * Math.pow(k - 1, 3) + c1 * Math.pow(k - 1, 2); };
@@ -738,7 +738,8 @@ export function createMap(canvas, host, on = {}) {
     }
     st.draw(scene, camera);
     L.update(camera, W, H);
-    if (frameN % 6 === 3) declutter();
+    /* by the clock, not by frames, so a slow device does not leave names on one another for long */
+    if (now - declutAt > 120) { declutAt = now; declutter(); }
     if ((frameN = (frameN + 1) % 6) === 0 && mini.offsetParent) { const M0 = mini.M0; miniView.setAttribute('points', footprint().map(([x, z]) => (x - M0.x0).toFixed(1) + ',' + (z - M0.z0).toFixed(1)).join(' ')); mini.querySelectorAll('.mdot').forEach(b => b.classList.toggle('sel', !!sel && b.dataset.place === sel.place)); }
   };
   raf = requestAnimationFrame(frame);
