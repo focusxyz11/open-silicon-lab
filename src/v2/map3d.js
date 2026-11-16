@@ -912,6 +912,10 @@ export function createMap(canvas, host, on = {}) {
   const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
   let slotLabels = [], villageSeen = null;
   function setState(st, animate) {
+    /* your chip's numbers: the columns they move, and the pace of the trucks round the loop (a fuller factory is slower) */
+    if (st.chip) { const c = st.chip, fx = { heat: { datacentre: Math.min(1, 0.4 + 0.4 * c.powerBoard) }, fail: { test: Math.min(1, 0.45 + 0.8 * c.late + 1.2 * (1 - c.yield)), fab: Math.min(1, 0.4 + 1.5 * (1 - c.yield)) }, time: { fab: Math.min(1, c.days / 120) } };
+      const was = JSON.stringify(chipFx); chipFx = fx; if (lens !== 'look' && was !== JSON.stringify(fx)) setLens(lens);
+      const pace = Math.max(0.35, Math.min(1.6, 68 / c.days)); moving.forEach(m => { if (m.car) { if (m.base == null) m.base = m.speed; m.speed = m.base * pace; } }); }
     /* growth */
     let grew = false;
     growing.forEach(gr => { if (st.grown.has(gr.id) && !gr.built) { GROWERS[gr.id](gr.g); gr.built = true; gr.g.visible = true; grew = true; gr.t0 = animate && !reduced() ? performance.now() : -1; if (gr.t0 < 0) gr.g.scale.setScalar(1); if (animate) sparkle(gr.g); } });
@@ -1058,6 +1062,8 @@ export function createMap(canvas, host, on = {}) {
   const LENS_COL = { heat: [0xf2c14e, 0xe0442e], fail: [0xf3a0a0, 0xd02f3a], time: [0xa9d0f2, 0x2f6fd0] };
   const lensG = group(scene, 0, 0, 0), colG = new THREE.CylinderGeometry(1, 1, 1, 32, 1, true); colG.translate(0, 0.5, 0);
   const discG = new THREE.CircleGeometry(1, 40); discG.rotateX(-Math.PI / 2);
+  /* your chip's own numbers move the columns where it is made, tested and used (src/engines/chip.js, model) */
+  let chipFx = null;
   let lens = 'look', lensK = 0, colK = 0, lensWant = 0, lensMats = null, lensCols = [], lensArrs = null;
   const lensSave = () => { if (lensMats) return; const seen = new Set(); lensMats = [];
     /* colours kept per vertex (the ground) or per copy (the trees) drain too */
@@ -1071,7 +1077,7 @@ export function createMap(canvas, host, on = {}) {
   function setLens(name) {
     lens = name || 'look'; lensWant = lens === 'look' ? 0 : 1; if (lensWant) lensSave();
     lensCols.forEach(c => { lensG.remove(c.mesh); lensG.remove(c.disc); }); lensCols = [];
-    const V = LENS_VAL[lens]; if (!V) return;
+    const V = LENS_VAL[lens] && Object.assign({}, LENS_VAL[lens], (chipFx || {})[lens] || {}); if (!V) return;
     const [lo, hi] = LENS_COL[lens];
     Object.entries(V).forEach(([id, v]) => { const p = placeAt(id); if (!p) return; const col = new THREE.Color(lo).lerp(new THREE.Color(hi), v), r = p.far ? 14 : Math.min(9, (p.r || 9) * 0.55);
       const mesh = new THREE.Mesh(colG, new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: 0, depthWrite: false, side: THREE.DoubleSide, blending: night ? THREE.AdditiveBlending : THREE.NormalBlending }));
@@ -1080,7 +1086,18 @@ export function createMap(canvas, host, on = {}) {
       lensG.add(mesh, disc); lensCols.push({ mesh, disc, r, h: 6 + v * 38, v }); });
     colK = 0;
   }
-  function lensFrame(dt) { const k0 = lensK, c0 = colK; lensK += (lensWant - lensK) * Math.min(1, dt * 3); colK += (lensWant - colK) * Math.min(1, dt * 2.2); if (Math.abs(lensK - k0) > 1e-4 || Math.abs(colK - c0) > 1e-4) lensPaint(lensK);
+  /* a change made at one place, seen arriving at the others: a light travels over the island from where you changed
+     something to where it shows, and rings out there */
+  const flashes = [], ripG = new THREE.SphereGeometry(1, 16, 10), ringG = new THREE.RingGeometry(0.8, 1, 48); ringG.rotateX(-Math.PI / 2);
+  function ripple(from, tos, color) { const a = placeAt(from); if (!a || reduced()) return; tos.forEach((to, i) => { const b = placeAt(to); if (!b) return;
+    const m = new THREE.Mesh(ripG, new THREE.MeshBasicMaterial({ color: color || P.accent, transparent: true, opacity: 0.95, depthWrite: false })); m.scale.setScalar(1.3); m.userData.lens = true; scene.add(m);
+    const A = new THREE.Vector3(a.at[0], 3, a.at[1]), B = new THREE.Vector3(b.at[0], 3, b.at[1]), M = A.clone().lerp(B, 0.5); M.y = 10 + A.distanceTo(B) * 0.25;
+    flashes.push({ m, c: new THREE.QuadraticBezierCurve3(A, M, B), t: -i * 0.25, to: B, color: color || P.accent }); }); }
+  function rippleFrame(dt) { for (let i = flashes.length - 1; i >= 0; i--) { const r = flashes[i]; r.t += dt / 1.3;
+      if (!r.ring && r.t >= 0) { r.c.getPointAt(Math.min(1, r.t), r.m.position); }
+      if (!r.ring && r.t >= 1) { scene.remove(r.m); r.ring = new THREE.Mesh(ringG, new THREE.MeshBasicMaterial({ color: r.color, transparent: true, opacity: 0.9, depthWrite: false, side: THREE.DoubleSide })); r.ring.position.set(r.to.x, 0.4, r.to.z); r.ring.userData.lens = true; scene.add(r.ring); r.t0 = r.t; }
+      if (r.ring) { const k = (r.t - r.t0) / 0.9; r.ring.scale.setScalar(2 + k * 16); r.ring.material.opacity = 0.9 * (1 - k); if (k >= 1) { scene.remove(r.ring); flashes.splice(i, 1); } } } }
+  function lensFrame(dt) { rippleFrame(dt); const k0 = lensK, c0 = colK; lensK += (lensWant - lensK) * Math.min(1, dt * 3); colK += (lensWant - colK) * Math.min(1, dt * 2.2); if (Math.abs(lensK - k0) > 1e-4 || Math.abs(colK - c0) > 1e-4) lensPaint(lensK);
     if (!lensWant && lensK < 0.002 && lensMats) { lensPaint(0); lensMats = null; lensArrs = null; lensCols.forEach(c => { lensG.remove(c.mesh); lensG.remove(c.disc); }); lensCols = []; } }
   /* sparkles where something grew */
   const sparks = [];
@@ -1157,6 +1174,10 @@ export function createMap(canvas, host, on = {}) {
     overview() { follow = null; const h = home(); flyTo(h.x, h.z, h.d); },
     unfollow() { follow = null; },
     setLens,
+    ripple,
+    /* pull back far enough to see several places at once (a change and where it shows) */
+    frame(ids) { const ps = ids.map(placeAt).filter(Boolean); if (!ps.length) return; follow = null; const xs = ps.map(p => p.at[0]), zs = ps.map(p => p.at[1]), cx = (Math.min(...xs) + Math.max(...xs)) / 2, cz = (Math.min(...zs) + Math.max(...zs)) / 2;
+      const ext = Math.max(Math.max(...xs) - Math.min(...xs), (Math.max(...zs) - Math.min(...zs)) * 1.5); flyTo(cx, cz + 6, Math.max(cam.d, ext * 1.25 + 70), 900); },
     lens: () => lens,
     /* your chip, set down by the island after a carry it did not take (it goes back to its step) */
     chipHome() { carriedTo = null; tokenGoal.copy(tokenHome); },

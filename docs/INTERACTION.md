@@ -101,6 +101,15 @@ Three things replace it on the island, each learned from games rather than from 
 - **Carry your chip.** Your chip on the island can be picked up (or its name pressed) and carried to any place. The
   place reacts: the chip goes in, and the inspector says what that place would do with it, with the way to try it.
 
+## Change it in place
+
+Your chip's settings are dials at the places that decide them: its clock and its size at the studio, its switch
+generation and how full the factory runs at the factory, where its memory sits and how often each number is reused at
+the data centre (src/engines/chip.js, the same model every challenge uses). Turning one is seen where it shows: the
+camera pulls back, a light travels from the place you changed to the places it reaches and rings out there, the lens
+that shows it comes on (a faster clock: failure, so the test house's column rises; a fuller factory: time, and the
+trucks round the loop slow down), and the numbers that moved are said in one line beside the dial.
+
 ## An open world
 
 No one way on. Exploring is not a tour: a place's card offers what stands around it on the island, nearest first,

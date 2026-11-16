@@ -31,6 +31,7 @@ import { signHtml, signOf, keep, refusal, slipHtml, slipClick, byLine } from './
 import { reportsAt, SAYS } from '../engines/ledger.js';
 import * as Read from './read.js';
 import * as Exp from '../engines/experiments.js';
+import * as Chip from '../engines/chip.js';
 import { levelAt } from '../data/atlas.js';
 import * as Worlds from './worlds.js';
 import { copiesInput } from './copies.js';
@@ -75,7 +76,7 @@ export function start() {
     const C = Game.community(S), leaves = NEEDS.filter(n => !childrenOf(n.id).length), order = ['built', 'yours', 'open', 'engine'];
     const floors = leaves.map(n => { const p = C.state[n.id]; return p.state === 'built' ? 'built' : p.state === 'engine' ? 'engine' : p.yours ? 'yours' : 'open'; }).sort((a, b) => order.indexOf(a) - order.indexOf(b));
     const places = Object.fromEntries(Game.PLACES.map(id => { const L = doList(id); return [id, { done: L.filter(c => S.done[c.id]).length, total: L.length }]; }));
-    return { grown: Game.grown(S), steps: Object.fromEntries(Game.STEPS.map(s => [s, Game.stepState(S, s)])), places, chipAt: (cur && Way.stageOfPlace(cur.place)) || Game.chipAt(S), floors, designs: C.designs, cases: C.cases, asks: C.asks.map(a => Object.assign({}, a, { at: placeOfStop(a.under) })), loud: C.loud, square: squareState(), wanted: wantedNow(), reports: reportsNow(), pull: pullNow(), aiShare: aiShare(), jobList: C.jobs, engineList: C.engines };
+    return { grown: Game.grown(S), steps: Object.fromEntries(Game.STEPS.map(s => [s, Game.stepState(S, s)])), places, chipAt: (cur && Way.stageOfPlace(cur.place)) || Game.chipAt(S), floors, designs: C.designs, cases: C.cases, asks: C.asks.map(a => Object.assign({}, a, { at: placeOfStop(a.under) })), loud: C.loud, square: squareState(), wanted: wantedNow(), reports: reportsNow(), pull: pullNow(), aiShare: aiShare(), chip: Chip.model(S.chip), jobList: C.jobs, engineList: C.engines };
   }
   /* what calls at each place, for its square on the island: how many questions are asked there, and the challenges
      played there, each with its name and whether it is done; a question added under a stop stands where that stop is */
@@ -192,6 +193,7 @@ export function start() {
       '<p class="il">' + esc(P ? P.see(cur.part) : t('map.' + id + '.d')) + '</p>' +
       /* seen through a lens, a place offers the question that lens belongs to, where it is asked here */
       (lensQ(id) ? '<div class="ilens">' + askLink(lensQ(id)) + '</div>' : '') +
+      (DIALS[id] && !P ? '<div class="dials"><p class="kicker">' + esc(t('dial.k')) + '</p>' + dialsHtml(id) + '</div>' : '') +
       (cn ? '<div class="icarry"><span>' + esc(cn.text) + '</span>' + (cn.ch ? '<button type="button" class="chipb" data-iact="play">' + esc(t('carry.go')) + '</button>' : '') + '</div>' : '') +
       '<div class="iacts">' + (deep ? '<button type="button" class="chipb primary" data-iact="deeper">↓ ' + esc(t('insp.closer')) + '</button>' : PARTS[id] && !P ? '<span class="small muted">' + esc(t('insp.open')) + '</span>' : '') +
       '<button type="button" class="chipb" data-iact="do">' + esc(t('door.do')) + (nDo ? ' <span class="n">' + nDo + '</span>' : '') + '</button>' +
@@ -206,7 +208,8 @@ export function start() {
     const px = p.x * r.width, py = p.y * r.height, off = cur.part ? 70 : 150; let x = px + off; if (x + w > r.width - 12) x = px - off - w; let y = py - h / 2;
     x = Math.max(12, Math.min(r.width - w - 12, x)); y = Math.max(84, Math.min(r.height - h - 12, y));
     insp.style.transform = 'translate(' + Math.round(x) + 'px,' + Math.round(y) + 'px)'; }
-  insp.addEventListener('click', e => { const b = e.target.closest('[data-iact]'); if (!b || !cur) return; const a = b.dataset.iact;
+  insp.addEventListener('click', e => { const dl = e.target.closest('[data-dial]'); if (dl && cur) { turnDial(dl.dataset.dial, +dl.dataset.d); return; }
+    const b = e.target.closest('[data-iact]'); if (!b || !cur) return; const a = b.dataset.iact;
     if (a === 'close') { closeSheet(); map && map.select(null); return; }
     if (a === 'deeper') { const to = deeperOf(cur.place, cur.part); if (to) enter(to); return; }
     if (a === 'play') { const ch = chOf(carryNote && carryNote.ch); carryNote = null; if (ch) location.hash = doHref(ch); return; }
@@ -221,6 +224,23 @@ export function start() {
   lensbar.addEventListener('click', e => { const b = e.target.closest('[data-lens]'); if (!b || !map) return; const k = map.lens() === b.dataset.lens ? 'look' : b.dataset.lens; map.setLens(k); drawLens(k); foldHero(); });
   const lensQ = id => { const k = map && map.lens(), w = k && LENS_WORLD[k]; if (!w) return null; const P = cur && cur.part && PARTS[id], L = P ? P.qs(cur.part) : (Game.ASK[id] || []); return L.find(q => q.startsWith(w + '.')) || null; };
   lensbar.addEventListener('click', () => { if (!insp.hidden) drawInsp(); });
+  /* ---- change it where it is decided (docs/INTERACTION.md, "Change it in place"): your chip's settings are dials
+     at the places that decide them, and what a change does is seen arriving where it shows: a light travels to those
+     places, the lens that shows it comes on, and the numbers that moved are said in one line (src/engines/chip.js) ---- */
+  const DIALS = { studio: ['clock', 'size'], fab: ['gen', 'load'], datacentre: ['mem', 'reuse'] };
+  const DIAL_FX = { clock: [['test', 'datacentre'], 'fail'], size: [['fab', 'test'], 'fail'], gen: [['fab', 'test', 'datacentre'], 'heat'], load: [['fab', 'port'], 'time'], mem: [['datacentre'], 'heat'], reuse: [['datacentre'], 'heat'] };
+  const dialMax = { clock: Chip.CLOCKS.length - 1, gen: Chip.GENS - 1, size: Chip.SIDES.length - 1, load: Chip.LOADS.length - 1, reuse: Chip.REUSES.length - 1, mem: Chip.MEMS.length - 1 };
+  const dialIdx = k => (k === 'clock' ? Chip.CLOCKS.indexOf(S.chip.clock) : S.chip[k]);
+  const dialText = k => { const c = S.chip; return k === 'clock' ? t('chip.clock.value', { v: Chip.x2(c.clock) }) : k === 'size' ? t('chip.size.value', { mm: Chip.SIDES[c.size] }) : k === 'load' ? t('chip.load.value', { v: Math.round(Chip.LOADS[c.load] * 100) }) : k === 'reuse' ? t('chip.reuse.value', { v: Chip.REUSES[c.reuse] }) : k === 'mem' ? t('chip.mem.names')[c.mem] : t('chip.gen.names')[c.gen]; };
+  const dialRead = k => { const m = Chip.model(S.chip), pc = v => Math.round(v * 100);
+    return k === 'clock' ? t('dial.read.clock', { late: pc(m.late), power: Chip.x2(m.power) }) : k === 'size' ? t('dial.read.size', { yield: pc(m.yield), power: Chip.x2(m.power) })
+      : k === 'gen' ? t('dial.read.gen', { power: Chip.x2(m.power), yield: pc(m.yield), weeks: Math.round(m.days / 7) }) : k === 'load' ? t('dial.read.load', { weeks: Math.round(m.days / 7), cost: Chip.x2(m.cost) })
+      : t('dial.read.mem', { busy: pc(m.busy), board: Chip.x2(m.powerBoard) }); };
+  let dialLast = null;
+  const dialsHtml = id => (DIALS[id] || []).map(k => '<div class="dial"><span class="dl">' + esc(t('chip.' + k + '.label')) + '</span><span class="dv"><button type="button" class="db" data-dial="' + k + '" data-d="-1"' + (dialIdx(k) <= 0 ? ' disabled' : '') + ' aria-label="−">−</button><output>' + esc(dialText(k)) + '</output><button type="button" class="db" data-dial="' + k + '" data-d="1"' + (dialIdx(k) >= dialMax[k] ? ' disabled' : '') + ' aria-label="+">+</button></span></div>' +
+    (dialLast === k ? '<p class="dread">' + esc(dialRead(k)) + '</p>' : '')).join('');
+  function turnDial(k, d) { const i = Math.max(0, Math.min(dialMax[k], dialIdx(k) + d)); S.chip[k] = k === 'clock' ? Chip.CLOCKS[i] : i; S.chip = Chip.normal(S.chip); save(); dialLast = k;
+    const [to, lk] = DIAL_FX[k]; if (map) { map.frame([cur.place].concat(to)); map.ripple(cur.place, to); if (map.lens() !== lk) { map.setLens(lk); drawLens(lk); } map.setState(islandState(), false); } drawInsp(); }
   /* your chip carried to a place: what that place would do with it, there and then */
   const carryAt = id => { const L = doList(id), open = L.filter(c => !S.done[c.id]); if (open.length) return { place: id, text: t('carry.play', { what: titleOf(open[0]) }), ch: open[0].id };
     return { place: id, text: t(L.length ? 'carry.done' : 'carry.none') }; };
@@ -333,7 +353,7 @@ export function start() {
     sheet.classList.add('mover'); sheet.classList.remove('part', 'inside'); sheet.hidden = false; sheet.scrollTop = 0; hud();
   }
   function openPlace(id, tab, step, piece, part) {
-    sheet.classList.remove('mover'); const quick = quickNext; quickNext = false; if (!carryNote || carryNote.place !== id) carryNote = null;
+    sheet.classList.remove('mover'); dialLast = null; const quick = quickNext; quickNext = false; if (!carryNote || carryNote.place !== id) carryNote = null;
     cur = { place: id, tab: tab || 'look', step: step || null, piece: piece || null, part: part || null };
     if (map) { if (!part) map.focus(id, { center: quick }); map.select(id, part); }
     /* the address says where you are: a place picked on the island is written into it (without going anywhere) */
