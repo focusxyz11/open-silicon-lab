@@ -198,6 +198,10 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
     if (!/\/new\/main\/community\/ledger\?filename=[^&]*break[^&]*\.json&value=/.test(await page.getAttribute('#sheet .slip [data-send]', 'href').catch(() => '') || '')) problems.push(tag + ': the slip does not lead to a new file in the ledger');
     await page.waitForFunction(() => !!document.querySelector('#mapLabels .work3.ent.broken') && !!document.querySelector('#mapLabels .plot3.guard.draft'), null, { timeout: 10000 }).catch(() => problems.push(tag + ': the island does not show the broken design and the case guarding its piece'));
   }
+  /* a question followed from a card opens in its world: the stop first, with its asking, then the world */
+  await page.evaluate(() => { location.hash = '#/w/fail/at/check'; });
+  await page.waitForSelector('#page [data-arrive] .trailq', { timeout: 15000 }).catch(() => problems.push(tag + ': a question followed does not open in its world'));
+  if (!(await page.$('#page [data-arrive] [data-askown]'))) problems.push(tag + ': a question in its world cannot be asked under');
   await page.evaluate(() => { location.hash = '#/ask/fail/check'; });
   await page.waitForSelector('.stopx .dochip', { timeout: 25000 }).catch(() => problems.push(tag + ': a question shows nothing to do about it'));
   await page.click('.stopx .asked summary').catch(() => problems.push(tag + ': a question has no place for what people ask'));

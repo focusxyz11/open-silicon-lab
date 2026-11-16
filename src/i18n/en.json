@@ -2871,5 +2871,7 @@
  "mini.aria": "The island from above: tap a place to open it, anywhere else to fly there",
  "world.tryIt": "Try it: {name}",
  "world.seeIt": "Seen as: {name}",
- "world.isle": "Where you meet it on the island"
+ "world.isle": "Where you meet it on the island",
+ "world.inPicture": "See it in the picture",
+ "world.arriveNext": "The question it belongs to"
 }

@@ -44,7 +44,10 @@ Every question asked at a place belongs to one of the eleven core questions alre
 `stop.<world>.<depth>`). So a place leads into a world only through the questions it already holds, never through
 a link drawn for the purpose: a part's card ends with the worlds its questions belong to (with the world's way of
 seeing, and "try it" where that is live), and each world's page says where you meet it on the island, every part
-or level whose question belongs to it, as an address to fly to.
+or level whose question belongs to it, as an address to fly to. Following a question from a card opens it in its
+world (`#/w/fail/at/etch`): the question as it was met there first, with what to notice, what is tried, what people
+asked and a place for yours, the way back to the place and the picture it is asked in; then the world it belongs to.
+Inside a picture, a question's marks still open it in the picture.
 
 ## The plan
 
