@@ -1079,3 +1079,4 @@ textarea.fcode { width: 100%; min-height: 110px; resize: vertical; box-sizing: b
 .sheet .lvchips.steps button:focus-visible { outline: 2px solid var(--accent); }
 .sheet.part { max-height: 42vh; }
 .tool3.sel { background: var(--accent); color: var(--accent-ink); border-color: transparent; }
+.sheet h2.cap::first-letter, .tool3::first-letter { text-transform: uppercase; }

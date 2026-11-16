@@ -2857,8 +2857,10 @@
  "tune.model": "The box is the Tune engine: not a model of any real machine, recipe or factory, but of learning by trying. Two dials work only together, a second-best patch can hold you, the unlabelled dial moves everything, every run has noise, the box drifts a little each time it runs, and its twin is set a little differently. Every shape is chosen; someone who has run a real process should check it, and until then it is a draft. The program is a simple search that keeps a step when it gives a better number; its results are over {runs} runs, each of {b} tries, and a setting counts as good from {good} out of 100.",
  "zoom.inBtn": "Go closer",
  "zoom.place": "Zoom in to go inside: scroll, pinch, double-tap, or ↓.",
- "zoom.fab": "Zoom in and the factory opens. Tap a tool to see what it does.",
- "zoom.tool": "Zoom in to go into the tool and follow a wafer through it.",
- "zoom.tools": "The tools, in the order a wafer meets them",
- "zoom.stepN": "step {n} of {of}"
+ "zoom.tools": "Its parts, in the order the work meets them",
+ "zoom.stepN": "step {n} of {of}",
+ "zoom.open": "Zoom in and it opens. Tap anything inside to see what it does.",
+ "zoom.tool.fab": "Zoom in to go into the tool and follow a wafer through it.",
+ "zoom.tool.studio": "Zoom in to sit down here and work on the design yourself.",
+ "zoom.tool.test": "Zoom in to watch your wafer being tested, chip by chip."
 }

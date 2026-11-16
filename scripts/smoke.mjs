@@ -59,7 +59,7 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
   for (const door of ['look', 'ask', 'do']) { await page.click('#sheet [data-door="' + door + '"]').catch(() => problems.push(tag + ': no door ' + door)); }
   if (!(await page.$$('#sheet .chcard')).length) problems.push(tag + ': the studio has nothing to do');
   await page.click('#sheet [data-door="look"]');
-  if (!(await page.$('#sheet .lvchips a')) || !(await page.$('#sheet [data-deeper]'))) problems.push(tag + ': Look shows no way inside the studio');
+  if (!(await page.$('#sheet .lvchips a')) || !(await page.$('#sheet .zoomhint'))) problems.push(tag + ': Look shows no way inside the studio');
   /* every experiment reads as a page: its question, what is true and open, and ways on to others */
   await page.evaluate(() => { location.hash = '#/read/fail-ontime'; });
   await page.waitForSelector('#page:not([hidden]) .readq', { timeout: 10000 }).catch(() => problems.push(tag + ': a question does not open as a page'));
@@ -344,7 +344,12 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
   /* the factory opens where it stands (docs/INTERACTION.md): its six tools are named in the scene, a tool is selected
      in place, and going closer from it reaches the line */
   await page.goto(base + 'index.html#/place/fab');
-  await page.waitForFunction(() => document.querySelectorAll('#mapLabels .tool3').length === 6, null, { timeout: 15000 }).catch(() => problems.push(tag + ': the open factory does not name its tools'));
+  await page.waitForFunction(() => document.querySelectorAll('#mapLabels .tool3[data-place="fab"]').length === 6, null, { timeout: 15000 }).catch(() => problems.push(tag + ': the open factory does not name its tools'));
+  /* the studio and the test house open the same way, and a part of each is selected in place */
+  for (const [pl, part] of [['studio', 'layout'], ['test', 'map']]) {
+    await page.evaluate(h => { location.hash = h; }, '#/place/' + pl + '/' + part);
+    await page.waitForSelector('#sheet.part [data-deeper]', { timeout: 15000 }).catch(() => problems.push(tag + ': ' + pl + ' does not open with its parts'));
+  }
   await page.evaluate(() => { location.hash = '#/place/fab/etch'; });
   await page.waitForSelector('#sheet.part [data-deeper]', { timeout: 15000 }).catch(() => problems.push(tag + ': a tool of the factory cannot be selected'));
   await page.click('#sheet [data-deeper]');

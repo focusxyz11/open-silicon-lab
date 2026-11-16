@@ -44,7 +44,9 @@ should look like a cartoon. Consistency comes before any single feature.
    in their bays along an aisle, carriers moving on the overhead rail between them, each tool selectable, named,
    and described in the card with its questions and challenges; zooming into a tool goes into the line at that
    step. The card loses its "Go inside" button everywhere; zoom does it.
-2. The design studio, the test house and the port opened the same way.
+2. The design studio and the test house opened the same way (done: the studio's upper floor lifts away from a
+   ground floor where the job is written, described, checked, turned into gates and laid out, with the mask house as
+   its last part; the test house shows its probers, the needles and the wafer map). The port next.
 3. The hand-off from a tool into the line and the dive made one camera move.
 4. The first page as a surface to play: the questions and challenges met in the world, with the hero folding
    into the heads-up layer once you start.
