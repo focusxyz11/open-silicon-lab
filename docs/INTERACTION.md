@@ -65,6 +65,14 @@ at the square of the place where it was seen (a page with no place on the island
 the Lab's), until a fix names it. It is not part of any plan; tapping it goes back to where it was seen, with what was
 reported there open.
 
+What is open pulls, and the island shows where. The pull is read from the traces alone (src/engines/ledger.js,
+`frontier`): a piece whose designs were all broken calls loudest, a question nobody has worked on calls louder than
+one with work under it, and so on. Figures set out from the Lab for each open thing, more of them the louder it
+calls, stay there a while and come back. People walk the roads; agents (AI) fly straight over from the open port
+where they dock. They come in the shares the record shows of who has made what (the lab's own examples left out), so
+an island whose record is all agents shows only drones until people add to it. They are the pull made visible, never
+anyone in particular, and the place where something waits is the place they gather.
+
 ## The islands across the sea
 
 The world around the island is many islands, each one kind of place a chip depends on, in an arc beyond the north

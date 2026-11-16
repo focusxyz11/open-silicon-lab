@@ -946,6 +946,70 @@ export function createMap(canvas, host, on = {}) {
     });
     villageSeen = seenNow;
     if (squares(st) || grew) pickable();
+    walk(st);
+  }
+  /* ---- the pull, walking (docs/INTERACTION.md, "What calls"): what is open pulls attention, read from the traces
+     alone (src/engines/ledger.js, frontier), and the island shows it as figures setting out from the Lab for where the
+     pull is, more of them the louder the call. People walk the roads; agents (AI) fly straight from the open port
+     where they dock. They come in the shares the record shows of who has made what. They are the pull made visible,
+     never anyone in particular. ---- */
+  const WALK_FROM = [6, 21], PORT_AT = [10, 47], LANE = 2.3;
+  const legG = new THREE.BoxGeometry(0.3, 0.8, 0.14), bodyG = new THREE.BoxGeometry(0.4, 0.62, 0.24), eyeG = new THREE.BoxGeometry(0.16, 0.05, 0.16);
+  /* an agent: a small four-rotor drone, one geometry (a body, two crossed arms, four rotors) */
+  const droneG = (() => { const parts = [new THREE.BoxGeometry(0.46, 0.14, 0.46)], arm = a => { const g0 = new THREE.BoxGeometry(1.3, 0.05, 0.08); g0.rotateY(a); return g0; };
+    parts.push(arm(Math.PI / 4), arm(-Math.PI / 4)); [[1, 1], [1, -1], [-1, 1], [-1, -1]].forEach(([a, b]) => { const r0 = new THREE.CylinderGeometry(0.26, 0.26, 0.03, 16); r0.translate(a * 0.46, 0.08, b * 0.46); parts.push(r0); });
+    const flatP = parts.map(g0 => (g0.index ? g0.toNonIndexed() : g0)), n = flatP.reduce((a, g0) => a + g0.attributes.position.count, 0), pos = new Float32Array(n * 3), nor = new Float32Array(n * 3); let k = 0;
+    flatP.forEach(g0 => { pos.set(g0.attributes.position.array, k * 3); nor.set(g0.attributes.normal.array, k * 3); k += g0.attributes.position.count; });
+    const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); g.setAttribute('normal', new THREE.BufferAttribute(nor, 3)); return g; })();
+  const NW = 28, inst = (geo, m) => { const im = new THREE.InstancedMesh(geo, m, NW); im.count = 0; im.castShadow = true; im.frustumCulled = false; scene.add(im); return im; };
+  const W3 = { legs: inst(legG, mat(0x2b2f38, { roughness: 0.8 })), body: inst(bodyG, mat(0xffffff, { roughness: 0.8 })), head: inst(headG, mat(0xffffff, { roughness: 0.7 })),
+    drone: inst(droneG, mat(night ? 0x6b7480 : 0x5a626d, { roughness: 0.4, metalness: 0.4 })), eye: inst(eyeG, glow(P.accent, 1.6)) };
+  let walkers = [], walkSig = '';
+  /* the nearest point of the loop road, as a fraction of the way round */
+  const LOOPN = 240, loopAt = [...Array(LOOPN)].map((_, i) => loop.curve.getPointAt(i / LOOPN));
+  const nearLoop = ([x, z]) => { let b = 0, bd = Infinity; loopAt.forEach((p, i) => { const d = (p.x - x) ** 2 + (p.z - z) ** 2; if (d < bd) { bd = d; b = i; } }); return b; };
+  const roads = {};
+  /* a person's way: down the Lab's road to the loop, along the loop on its pavement the shorter way, then across to
+     where the call is */
+  const roadTo = (key, T) => roads[key] || (roads[key] = (() => {
+    const a = nearLoop([6, 15]), b = nearLoop(T), n = LOOPN, fw = (b - a + n) % n, dir = fw <= n / 2 ? 1 : -1, steps = dir > 0 ? fw : n - fw, pts = [new THREE.Vector3(WALK_FROM[0], 0, WALK_FROM[1]), new THREE.Vector3(6.6, 0, 17)];
+    for (let k = 0; k <= steps; k += 4) { const i = (a + dir * k + n) % n, p = loopAt[i], tg = loop.curve.getTangentAt(i / n), nx = -tg.z * dir, nz = tg.x * dir; pts.push(new THREE.Vector3(p.x + nx * LANE, 0, p.z + nz * LANE)); }
+    pts.push(new THREE.Vector3(T[0], 0, T[1])); return new THREE.CatmullRomCurve3(pts, false, 'centripetal'); })());
+  /* an agent's way: up from the open port and straight over, coming down where the call is */
+  const flightTo = T => { const a = new THREE.Vector3(PORT_AT[0], 3, PORT_AT[1]), b = new THREE.Vector3(T[0], 2.4, T[1]), m = a.clone().lerp(b, 0.5); m.y = 9 + a.distanceTo(b) * 0.06; return new THREE.QuadraticBezierCurve3(a, m, b); };
+  function walk(st) {
+    const pull = st.pull || [], sig = JSON.stringify([pull.map(f => [f.kind, f.key, f.at, Math.round(f.pull)]), st.aiShare, st.designs.length, st.jobList.length]);
+    if (sig === walkSig) return; walkSig = sig;
+    /* where each call stands: a workshop or a plot of the village, or a place's square */
+    const vIdx = f => { const D = st.designs.findIndex(d => d.id === f.key); if (f.kind === 'break' && D >= 0) return D; const J = st.jobList.findIndex(j => j.need === f.key); if (J >= 0) return st.designs.length + J; const E = st.engineList.findIndex(e => e.need === f.key); return E >= 0 ? st.designs.length + st.jobList.length + E : -1; };
+    const at = f => { if (['break', 'build', 'engine'].includes(f.kind)) { const i = vIdx(f); if (i >= 0 && i < SLOTS.length) { const [sx, sz] = SLOT(i), v = placeAt('village').at; return [v[0] + sx, v[1] + sz + 2.6]; } }
+      const q = SQUARE[f.at] || SQUARE.lab; return [q[0] + 1.5, q[1] + 2.4]; };
+    walkers = []; let j = 0;
+    for (const f of pull) { const n = Math.max(1, Math.min(2, Math.round(f.pull / 2))), T = at(f), far = Math.hypot(T[0], T[1]) > 120; if (far) continue;
+      for (let k = 0; k < n && walkers.length < NW; k++, j++) { const ai = rnd(j, 77) < (st.aiShare == null ? 0.5 : st.aiShare), Tk = [T[0] + (rnd(j, 78) - 0.5) * 2.4, T[1] + (rnd(j, 79) - 0.5) * 1.6];
+        const path = ai ? flightTo(Tk) : roadTo(f.kind + f.key + k, Tk), len = path.getLength(), speed = ai ? 7 : 3.2;
+        walkers.push({ ai, path, go: len / speed, stay: 5 + rnd(j, 80) * 6, rest: 2 + rnd(j, 81) * 5, t: rnd(j, 82) * (len / speed * 2 + 10), col: CLOTHES[j % 5] }); } }
+    const C2 = new THREE.Color(); let p = 0;
+    walkers.forEach((w, i) => { if (!w.ai) { W3.body.setColorAt(p, C2.setHex(w.col)); W3.head.setColorAt(p, C2.setHex(SKIN[i % 4])); w.slot = p++; } });
+    W3.legs.count = W3.body.count = W3.head.count = p; W3.drone.count = W3.eye.count = walkers.filter(w => w.ai).length; let q = 0; walkers.forEach(w => { if (w.ai) w.slot = q++; });
+    [W3.body, W3.head].forEach(m => { if (m.instanceColor) m.instanceColor.needsUpdate = true; });
+  }
+  const WP = new THREE.Vector3(), WT = new THREE.Vector3(), WQ = new THREE.Quaternion(), WS = new THREE.Vector3(1, 1, 1), WM = new THREE.Matrix4(), WUP = new THREE.Vector3(0, 1, 0);
+  function walkFrame(dt, tm) {
+    if (!walkers.length) return;
+    walkers.forEach(w => {
+      const cyc = w.rest + w.go + w.stay + w.go; if (!reduced()) w.t = (w.t + dt) % cyc; const t = reduced() ? w.rest + w.go + 1 : w.t;
+      /* resting at the Lab, on the way, there for a while, and back */
+      let s, back = false; if (t < w.rest) s = 0; else if (t < w.rest + w.go) s = (t - w.rest) / w.go; else if (t < w.rest + w.go + w.stay) s = 1; else { s = 1 - (t - w.rest - w.go - w.stay) / w.go; back = true; }
+      w.path.getPointAt(Math.min(1, Math.max(0, s)), WP); w.path.getTangentAt(Math.min(0.999, Math.max(0.001, s)), WT); if (back) WT.negate();
+      const moving = s > 0 && s < 1, yaw = Math.atan2(WT.x, WT.z);
+      if (w.ai) { const y = WP.y + Math.sin(tm * 3 + w.slot) * 0.12; WQ.setFromAxisAngle(WUP, yaw); WS.set(0.7, 0.7, 0.7);
+        WM.compose(WT.set(WP.x, y, WP.z), WQ, WS); W3.drone.setMatrixAt(w.slot, WM); WM.compose(WT.set(WP.x, y + 0.06, WP.z), WQ, WS); W3.eye.setMatrixAt(w.slot, WM); WS.set(1, 1, 1); }
+      else { const bob = moving ? Math.abs(Math.sin(tm * 9 + w.slot)) * 0.06 : 0; WQ.setFromAxisAngle(WUP, yaw);
+        WM.compose(WT.set(WP.x, 0.4 + bob, WP.z), WQ, WS); W3.legs.setMatrixAt(w.slot, WM); WM.compose(WT.set(WP.x, 1.11 + bob, WP.z), WQ, WS); W3.body.setMatrixAt(w.slot, WM);
+        WM.compose(WT.set(WP.x, 1.56 + bob, WP.z), WQ, WS.set(1.6, 1.6, 1.6)); W3.head.setMatrixAt(w.slot, WM); WS.set(1, 1, 1); }
+    });
+    Object.values(W3).forEach(m => { m.instanceMatrix.needsUpdate = true; });
   }
   /* sparkles where something grew */
   const sparks = [];
@@ -997,6 +1061,7 @@ export function createMap(canvas, host, on = {}) {
         m.obj.position.set(p.x + n.x * m.lane, 0.05, p.z + n.z * m.lane); m.obj.rotation.y = Math.atan2(-tg.z, tg.x) + (m.speed < 0 ? Math.PI : 0);
       });
     }
+    walkFrame(dt, tm);
     st.draw(scene, camera);
     L.update(camera, W, H);
     /* by the clock, not by frames, so a slow device does not leave names on one another for long */
