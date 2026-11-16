@@ -31,12 +31,25 @@ const ISLE = (cx, cz, r, k = 9) => Array.from({ length: k }, (_, i) => { const a
 
 /* the island's own ground, sea and trees, muted (the shared palette stays as it is for every other scene) */
 const TERRAIN = {
-  light: { ground: 0x95a982, lush: 0x76935f, dry: 0xb8b48a, dark: 0x667d58, sand: 0xd8c8a2, wet: 0xa99a7c, shallow: 0x7fb7c4, sea: 0x4c80a6, pine: 0x4a6b4c, leaf: 0x67845a, bark: 0x6b5643 },
+  light: { ground: 0x95a982, lush: 0x76935f, dry: 0xb8b48a, dark: 0x667d58, sand: 0xd8c8a2, wet: 0xa99a7c, shallow: 0x88b0b8, sea: 0x56809a, pine: 0x4a6b4c, leaf: 0x67845a, bark: 0x6b5643 },
   dark: { ground: 0x1d2a2f, lush: 0x1b302b, dry: 0x2a3330, dark: 0x15221f, sand: 0x4f4a3e, wet: 0x38362f, shallow: 0x16405a, sea: 0x0a1a2c, pine: 0x1d3a2e, leaf: 0x284534, bark: 0x3a3128 }
+};
+/* the island's buildings, grown up: roofs, trims, cranes, hulls and containers in the muted colours real ones wear,
+   so the few bright things left (your chip, the loop's flow, lit windows, the lights of what grows) carry meaning */
+const ARCH = {
+  light: { roof: 0x8d969f, trim: 0x59626d, crane: 0xb39a66, hull: 0x6c4f48, truck: 0xe4e2dc, tile: 0x9a6f60, box: [0x6f8796, 0x9c6352, 0x878a76, 0xb4a07e, 0x5f6b77] },
+  dark: { roof: 0x2f3845, trim: 0x232a35, crane: 0x7a6846, hull: 0x3a2f2f, truck: 0x8f98a3, tile: 0x5a4039, box: [0x3c4d5a, 0x5c3c35, 0x4a4d43, 0x675b47, 0x3a434e] }
 };
 /* a slow value noise, smooth, from 0 to 1 */
 const hash2 = (x, y) => { const s = Math.sin(x * 127.1 + y * 311.7) * 43758.5453; return s - Math.floor(s); };
 const smooth = t => t * t * (3 - 2 * t);
+/* three overlapping faceted balls in one geometry: a tree crown with an outline */
+function lump() {
+  const parts = [[0, 0, 0, 1], [0.55, -0.15, 0.25, 0.72], [-0.5, -0.2, -0.3, 0.68]].map(([x, y, z, r]) => { const g = new THREE.IcosahedronGeometry(r, 1); g.translate(x, y, z); return g.toNonIndexed(); });
+  const n = parts.reduce((a, g) => a + g.attributes.position.count, 0), pos = new Float32Array(n * 3);
+  let o = 0; parts.forEach(g => { pos.set(g.attributes.position.array, o); o += g.attributes.position.array.length; });
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); g.computeVertexNormals(); return g;
+}
 export function noise2(x, y) {
   const xi = Math.floor(x), yi = Math.floor(y), u = smooth(x - xi), v = smooth(y - yi);
   const a = hash2(xi, yi), b = hash2(xi + 1, yi), c = hash2(xi, yi + 1), d = hash2(xi + 1, yi + 1);
@@ -82,7 +95,7 @@ export function createMap(canvas, host, on = {}) {
   /* ---- sea, beach, islands ----
      Grown up, not a toy (docs/reviews/art-direction.md): muted ground whose colour wanders the way fields, scrub and
      dry grass do, a narrow beach with wet sand at the water, a ring of shallow water, and deep sea beyond. */
-  const T = TERRAIN[night ? 'dark' : 'light'];
+  const T = TERRAIN[night ? 'dark' : 'light'], A = ARCH[night ? 'dark' : 'light'];
   const sea = new THREE.Mesh(new THREE.CircleGeometry(1400, 72), mat(T.sea, { roughness: 0.18, metalness: 0.2 }));
   sea.rotation.x = -Math.PI / 2; sea.position.y = -0.6; sea.receiveShadow = true; scene.add(sea);
   const mean = (c, k) => c.reduce((a, p) => a + p[k], 0) / c.length;
@@ -96,7 +109,7 @@ export function createMap(canvas, host, on = {}) {
 
   /* ---- the loop road: the chip's life ---- */
   const roadM = mat(P.road, { roughness: 0.9 });
-  const loop = ribbon(scene, LOOP, 3.2, roadM, 0.05, true);
+  const loop = ribbon(scene, LOOP, 2.6, roadM, 0.05, true);
   const flowM = new THREE.MeshBasicMaterial({ color: P.accent, transparent: true, opacity: night ? 0.9 : 0.8 });
   const flowGeo = new THREE.BoxGeometry(1.2, 0.08, 0.32), flows = [];
   for (let i = 0; i < 42; i++) { const m = new THREE.Mesh(flowGeo, flowM); scene.add(m); flows.push(m); }
@@ -112,25 +125,26 @@ export function createMap(canvas, host, on = {}) {
   ['phones', 'cars'].forEach((k, j) => { const c = placeAt(k).at; for (let i = 0; i < 110; i++) { const a = rnd(i, 11 + j) * 6.28, r = 15 + rnd(i, 13 + j) * 15; trees.push([c[0] + Math.cos(a) * r, c[1] + Math.sin(a) * r * 0.75, 0.55 + rnd(i, 5) * 0.5, rnd(i, 19 + j)]); } });
   const pines = trees.filter(tr => tr[3] < 0.45), broad = trees.filter(tr => tr[3] >= 0.45);
   const pineG = new THREE.ConeGeometry(1, 1, 7, 1); pineG.translate(0, 0.5, 0);
-  const broadG = new THREE.IcosahedronGeometry(1, 2);
+  /* a broadleaf crown is a lump of three, not a ball on a stick */
+  const broadG = lump();
   const leafM = mat(0xffffff, { roughness: 0.9 }), M4 = new THREE.Matrix4(), Q = new THREE.Quaternion(), S3 = new THREE.Vector3(), V = new THREE.Vector3(), C = new THREE.Color(), UP = new THREE.Vector3(0, 1, 0);
   const crown = new THREE.InstancedMesh(pineG, leafM, pines.length), canopy = new THREE.InstancedMesh(broadG, leafM, broad.length);
   const trunk = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.1, 0.16, 1, 5), mat(T.bark), trees.length);
-  pines.forEach(([x, z, s, k], i) => { const h = 4.2 * s * (0.85 + k * 0.6); Q.setFromAxisAngle(UP, k * 40); M4.compose(V.set(x, 0.9 * s, z), Q, S3.set(0.95 * s, h, 0.95 * s)); crown.setMatrixAt(i, M4); crown.setColorAt(i, C.setHex(T.pine).offsetHSL((k - 0.2) * 0.03, 0, (k - 0.22) * 0.12)); });
-  broad.forEach(([x, z, s, k], i) => { Q.setFromAxisAngle(UP, k * 40); M4.compose(V.set(x, 2.3 * s, z), Q, S3.set(1.35 * s, 1.05 * s, 1.35 * s)); canopy.setMatrixAt(i, M4); canopy.setColorAt(i, C.setHex(T.leaf).offsetHSL((k - 0.7) * 0.06, -0.04 * k, (k - 0.72) * 0.16)); });
+  pines.forEach(([x, z, s, k], i) => { const h = 4.2 * s * (0.85 + k * 0.6); Q.setFromAxisAngle(UP, k * 40); M4.compose(V.set(x, 0.9 * s, z), Q, S3.set(0.95 * s, h, 0.95 * s)); crown.setMatrixAt(i, M4); crown.setColorAt(i, C.setHex(T.pine).offsetHSL((k - 0.2) * 0.02, 0, (k - 0.22) * 0.07)); });
+  broad.forEach(([x, z, s, k], i) => { Q.setFromAxisAngle(UP, k * 40); M4.compose(V.set(x, 1.9 * s, z), Q, S3.set(1.5 * s, 1.15 * s, 1.5 * s)); canopy.setMatrixAt(i, M4); canopy.setColorAt(i, C.setHex(T.leaf).offsetHSL((k - 0.7) * 0.03, -0.03 * k, (k - 0.72) * 0.08)); });
   trees.forEach(([x, z, s], i) => { M4.compose(V.set(x, 0.6 * s, z), Q.identity(), S3.set(s, 1.3 * s, s)); trunk.setMatrixAt(i, M4); });
   [crown, canopy, trunk].forEach(m => { m.castShadow = true; m.receiveShadow = true; scene.add(m); });
 
   const winM = night ? glow(0xffd58a, 0.9) : mat(0x3d4f66, { roughness: 0.2, metalness: 0.3 });
   const winCool = night ? glow(0x8fd0ff, 0.8) : mat(0x3d4f66, { roughness: 0.2, metalness: 0.3 });
-  const cols = [P.accent, P.warm, P.bad, P.good, P.slate];
+  const cols = A.box;
   const tree = (g, x, z, s = 0.8, y = 0) => { const m = new THREE.Mesh(broadG, mat(T.leaf, { roughness: 0.9 })); m.position.set(x, y + s * 1.9, z); m.scale.set(1.2 * s, 0.95 * s, 1.2 * s); m.castShadow = true; g.add(m); cyl(g, s * 0.1, s * 0.15, s * 1.3, mat(T.bark), x, y, z, 5); };
   const houseRoof = new THREE.ExtrudeGeometry(new THREE.Shape([new THREE.Vector2(-1.6, 0), new THREE.Vector2(1.6, 0), new THREE.Vector2(0, 1.4)]), { depth: 3, bevelEnabled: false }); houseRoof.translate(0, 0, -1.5);
   const house = (g, x, z, ry, roofC, lit) => { const h = group(g, x, 0, z, ry); box(h, 3, 2, 2.8, mat(P.white), 0, 0, 0, 0.1); const r = new THREE.Mesh(houseRoof, mat(roofC)); r.position.y = 2; r.castShadow = true; h.add(r); box(h, 0.6, 0.7, 0.06, lit ? winM : mat(P.dark), -0.6, 0.7, 1.42, 0.02, { cast: false }); return h; };
   const carModel = color => { const c = new THREE.Group(); box(c, 4.2, 1, 1.9, mat(color, { roughness: 0.35, metalness: 0.3 }), 0, 0.35, 0, 0.35); box(c, 2.4, 0.8, 1.7, glass(P.dark, { opacity: 0.85 }), -0.2, 1.3, 0, 0.3);
     [[-1.3, -0.95], [1.3, -0.95], [-1.3, 0.95], [1.3, 0.95]].forEach(([x, z]) => { const w = cyl(c, 0.42, 0.42, 0.3, mat(0x1d1f24), x, 0, z, 14); w.rotation.x = Math.PI / 2; w.position.y = 0.42; }); return c; };
   const truck = color => { const tr = new THREE.Group(); box(tr, 1.6, 1.4, 1.5, mat(P.white), 1.6, 0.3, 0, 0.15); box(tr, 3.2, 1.8, 1.6, mat(color), -0.9, 0.3, 0, 0.12); return tr; };
-  const ship = len => { const s = new THREE.Group(); box(s, len, 1.6, 3.4, mat(night ? 0x3a2f2f : 0x8a3b32), 0, -1, 0, 0.4); box(s, len * 0.96, 0.3, 3.2, mat(P.dark), 0, 0.6, 0, 0.1);
+  const ship = len => { const s = new THREE.Group(); box(s, len, 1.6, 3.4, mat(A.hull), 0, -1, 0, 0.4); box(s, len * 0.96, 0.3, 3.2, mat(P.dark), 0, 0.6, 0, 0.1);
     for (let i = 0; i < Math.floor(len / 1.5) - 2; i++) box(s, 1.2, 1, 2.6, mat(cols[(i * 3) % 5]), -len / 2 + 1.6 + i * 1.3, 0.9, 0, 0.04); box(s, 1.8, 2.4, 2.6, mat(P.white), len / 2 - 1.4, 0.9, 0, 0.1); return s; };
   const onLoop = (obj, u, speed, lane) => { scene.add(obj); moving.push({ obj, curve: loop.curve, u, speed, lane, car: true }); };
   const route = pts => new THREE.CatmullRomCurve3(pts.map(([x, z]) => new THREE.Vector3(x, 0, z)));
@@ -142,13 +156,13 @@ export function createMap(canvas, host, on = {}) {
     flat(g, [[-20, 5], [12, 5], [14, 13], [-18, 13]], mat(P.wall, { roughness: 0.9 }), 0.03);
     box(g, 22, 3.6, 11, glass(P.glass, { opacity: night ? 0.6 : 0.5, emissive: night ? P.glass : 0, emissiveIntensity: night ? 0.35 : 0 }), -4, 0, -1, 0.2);
     box(g, 24, 3.4, 11.6, mat(P.white), -4, 3.6, -1.2, 0.3);
-    box(g, 24.2, 0.5, 11.8, mat(P.accent, { roughness: 0.5 }), -4, 7, -1.2, 0.12);
+    box(g, 24.2, 0.5, 11.8, mat(A.roof, { roughness: 0.7 }), -4, 7, -1.2, 0.12);
     for (let i = 0; i < 9; i++) box(g, 1.6, 1.2, 0.12, winCool, -14.2 + i * 2.55, 4.7, 4.66, 0.04, { cast: false });
     for (let i = 0; i < 6; i++) box(g, 2.4, 2.6, 0.06, mat(P.white, { roughness: 0.6 }), -13 + i * 3.6, 0.2, 4.52, 0.03, { cast: false });
     box(g, 9, 6.2, 7, mat(P.white), -20, 0, -6, 0.3); box(g, 9.2, 0.5, 7.2, mat(P.slate), -20, 6.2, -6, 0.1);
     for (let i = 0; i < 3; i++) box(g, 1.8, 3.6, 0.1, winCool, -22.6 + i * 2.6, 1.4, -2.45, 0.03, { cast: false });
     /* the mask house: a loading bay facing the road to the factory */
-    box(g, 8, 4, 7, mat(P.white), 13, 0, 3, 0.3); box(g, 8.1, 0.6, 7.1, mat(P.warm, { roughness: 0.5 }), 13, 3.4, 3, 0.1);
+    box(g, 8, 4, 7, mat(P.white), 13, 0, 3, 0.3); box(g, 8.1, 0.6, 7.1, mat(A.roof, { roughness: 0.7 }), 13, 3.4, 3, 0.1);
     box(g, 0.12, 2.6, 3.6, mat(P.dark), 17.06, 0, 3, 0.02, { cast: false });
     for (let i = 0; i < 4; i++) pulses.push(box(g, 0.9, 0.9, 0.06, glow([P.accent, P.good, P.warm, P.accent][i], 1.1), 10.4 + i * 1.7, 2, 6.56, 0.02, { cast: false }));
     [[-15, 10], [-6, 11], [4, 10.5], [10, 11.5]].forEach(([x, z]) => tree(g, x, z, 0.9)); }
@@ -162,23 +176,23 @@ export function createMap(canvas, host, on = {}) {
     const ingot = cyl(g, 0.7, 0.7, 4, metal(0x8c95a3, { roughness: 0.2 }), 5, 0.7, 5.2); ingot.rotation.z = Math.PI / 2; ingot.position.y = 0.75; }
   { const g = place('fab');
     box(g, 26, 7, 16, mat(P.white), 0, 0, 0, 0.5);
-    box(g, 26.2, 0.9, 16.2, mat(P.accent, { roughness: 0.5 }), 0, 5.6, 0, 0.2);
+    box(g, 26.2, 0.9, 16.2, mat(A.roof, { roughness: 0.7 }), 0, 5.6, 0, 0.2);
     for (let i = 0; i < 5; i++) for (let j = 0; j < 2; j++) { const x = -9 + i * 4.5, z = -3.6 + j * 7.2; box(g, 3.4, 1.2, 3.2, mat(P.wall), x, 7, z, 0.15); spinning.push(cyl(g, 1.1, 1.1, 0.2, metal(P.dark), x, 8.2, z, 20)); }
     box(g, 10, 5, 8, mat(P.wall), -18.5, 0, 3, 0.3);
     [-21.5, -18.5, -15.5].forEach(x => cyl(g, 1.2, 1.2, 6, metal(P.metal), x, 0, -4));
-    [[-22, 8], [-15, 8]].forEach(([x, z]) => { cyl(g, 0.45, 0.6, 12, mat(P.wall), x, 0, z, 16); cyl(g, 0.48, 0.48, 0.8, mat(P.bad), x, 12, z, 16); });
+    [[-22, 8], [-15, 8]].forEach(([x, z]) => { cyl(g, 0.45, 0.6, 12, mat(P.wall), x, 0, z, 16); cyl(g, 0.48, 0.48, 0.8, mat(A.trim), x, 12, z, 16); });
     for (let i = 0; i < 10; i++) box(g, 1.6, 0.7, 0.1, winM, -10 + i * 2.3, 3, 8.05, 0.03, { cast: false }); }
   /* 3 test: the hall where every chip is probed before it is cut and packed */
   { const g = place('test');
     box(g, 12, 4, 8, mat(P.white), 0, 0, 0, 0.3);
-    box(g, 12.1, 0.5, 8.1, mat(P.good, { roughness: 0.5 }), 0, 3.2, 0, 0.1);
+    box(g, 12.1, 0.5, 8.1, mat(A.roof, { roughness: 0.7 }), 0, 3.2, 0, 0.1);
     for (let i = 0; i < 4; i++) box(g, 1.8, 0.8, 0.08, winCool, -4 + i * 2.6, 1.8, 4.02, 0.02, { cast: false });
     pulses.push(cyl(g, 1.6, 1.6, 0.12, glow(0x9aa6b8, 0.3, { metalness: 0.6, roughness: 0.15 }), -3, 4, 0, 40)); }
   /* 4 ship: the port; ships to the islands and to the world */
   { const g = place('port');
     box(g, 8, 1.4, 30, mat(P.wall), 4, -1, 0, 0.2);
     for (let i = 0; i < 18; i++) box(g, 1.2, 1.1, 2.6, mat(cols[i % 5]), -2 + (i % 3) * 1.3, Math.floor(i / 9) * 1.1, -8 + Math.floor(i % 9 / 3) * 3 + (i > 8 ? 9 : 0), 0.04);
-    [-6, 6].forEach(z => { const c = group(g, 5, 0, z); [-1.4, 1.4].forEach(x => box(c, 0.4, 9, 0.4, mat(P.warm), x, 0, 0, 0.05)); box(c, 0.6, 0.6, 10, mat(P.warm), 0, 9, 3, 0.05); box(c, 3.4, 0.5, 0.5, mat(P.warm), 0, 9, 0, 0.05); });
+    [-6, 6].forEach(z => { const c = group(g, 5, 0, z); [-1.4, 1.4].forEach(x => box(c, 0.4, 9, 0.4, mat(A.crane), x, 0, 0, 0.05)); box(c, 0.6, 0.6, 10, mat(A.crane), 0, 9, 3, 0.05); box(c, 3.4, 0.5, 0.5, mat(A.crane), 0, 9, 0, 0.05); });
     const moored = ship(14); moored.position.set(11.5, 0, -2); moored.rotation.y = Math.PI / 2; g.add(moored);
     const out = ship(18); scene.add(out); moving.push({ obj: out, path: route([[78, 16], [120, 30], [260, 40], [420, 60]]), speed: 0.016, ship: true }); }
   /* 5 use: the data centre */
@@ -191,12 +205,12 @@ export function createMap(canvas, host, on = {}) {
     box(g, 6, 0.3, 10, mat(P.road), -17, 0, -2, 0.1);
     [[-18.5, -5], [-15.5, -5], [-18.5, -1], [-15.5, -1]].forEach(([x, z]) => { box(g, 2, 2, 1.6, mat(P.slate), x, 0.3, z, 0.1); for (let k = 0; k < 3; k++) cyl(g, 0.12, 0.12, 0.8, mat(P.white), x - 0.5 + k * 0.5, 2.3, z, 8); }); }
   /* trucks carrying wafers round the loop */
-  for (let i = 0; i < 3; i++) onLoop(truck(P.accent), i / 3, 0.012, 0.7);
+  for (let i = 0; i < 3; i++) onLoop(truck(A.box[i]), i / 3, 0.012, 0.7);
 
   /* ---- the Lab: the shared computer, one floor per piece, a crane, and the open port where AI agents dock ---- */
   const lab = place('lab');
   box(lab, 16, 0.3, 14, mat(P.road), 0, 0, 0, 0.1);
-  const crane = group(lab, 6.5, 0, -3); box(crane, 0.5, 18, 0.5, mat(P.warm), 0, 0, 0, 0.05); const jib = group(crane, 0, 18, 0); box(jib, 12, 0.5, 0.5, mat(P.warm), -3, 0, 0, 0.05); box(jib, 0.3, 4, 0.3, metal(P.dark), -7, -4, 0, 0.02); spinning.push({ jib });
+  const crane = group(lab, 6.5, 0, -3); box(crane, 0.5, 18, 0.5, mat(A.crane), 0, 0, 0, 0.05); const jib = group(crane, 0, 18, 0); box(jib, 12, 0.5, 0.5, mat(A.crane), -3, 0, 0, 0.05); box(jib, 0.3, 4, 0.3, metal(P.dark), -7, -4, 0, 0.02); spinning.push({ jib });
   const floors = group(lab, -1.5, 0.3, 0);
   const dock = group(lab, 4, 0, 18); box(dock, 3, 0.6, 9, mat(P.wall), 0, -0.4, 0, 0.1); box(dock, 0.3, 3, 0.3, metal(P.metal), 0, 0.2, 4, 0.02); pulses.push(cyl(dock, 0.3, 0.3, 0.3, glow(P.accent, 1.6), 0, 3.2, 4));
   for (let i = 0; i < 2; i++) { const b = new THREE.Group(); box(b, 3, 0.8, 1.4, mat(P.white), 0, -0.3, 0, 0.3); box(b, 1, 0.5, 0.9, glow(P.accent, 1.2), 0.2, 0.5, 0, 0.15); scene.add(b);
@@ -209,22 +223,22 @@ export function createMap(canvas, host, on = {}) {
 
   /* ---- the islands across the sea ---- */
   const phones = place('phones'), cars = place('cars'), idea = place('idea');
-  for (let i = 0; i < 12; i++) { const a = i / 12 * 6.28; house(phones, Math.cos(a) * 12, Math.sin(a) * 9, -a, night ? 0x5a3f3a : 0xb4574a, false); }
+  for (let i = 0; i < 12; i++) { const a = i / 12 * 6.28; house(phones, Math.cos(a) * 12, Math.sin(a) * 9, -a, A.tile, false); }
   box(phones, 5, 10, 5, mat(P.wall), 0, 0, 0, 0.3); cyl(phones, 0.2, 0.5, 15, metal(P.metal), 7, 0, -4, 8);
   const carLoop = ribbon(scene, ISLE(158, 150, 18, 8), 3, roadM, 0.05, true);
-  box(cars, 14, 5, 9, mat(P.white), 0, 0, 0, 0.4); box(cars, 14.1, 0.6, 9.1, mat(P.bad, { roughness: 0.5 }), 0, 4, 0, 0.1);
-  { const f = group(idea, 0, 0, 0); box(f, 0.25, 6, 0.25, metal(P.metal), 0, -0.4, 0, 0.03); box(f, 3, 1.8, 0.1, mat(P.warm), 1.6, 3.6, 0, 0.03); }
+  box(cars, 14, 5, 9, mat(P.white), 0, 0, 0, 0.4); box(cars, 14.1, 0.6, 9.1, mat(A.roof, { roughness: 0.7 }), 0, 4, 0, 0.1);
+  { const f = group(idea, 0, 0, 0); box(f, 0.25, 6, 0.25, metal(P.metal), 0, -0.4, 0, 0.03); box(f, 3, 1.8, 0.1, mat(A.crane), 1.6, 3.6, 0, 0.03); }
 
   /* ---- what grows: one builder per growth (src/v2/game.js GROWTH); each starts hidden and grows in ---- */
   const GROWERS = {
     'studio-screen': g => { const s = box(g, 5, 2.8, 0.25, glow(P.accent, night ? 1.3 : 0.7), 0, 0.5, 0, 0.1); s.rotation.y = 0.5; box(g, 0.25, 0.6, 0.25, metal(P.slate), 0, 0, 0, 0.05); pulses.push(s); },
     /* your first masks leave the studio: a truck goes back and forth on the road between the mask house and the factory */
-    'masks': () => { const tr = truck(P.warm); box(tr, 2.6, 0.12, 1.2, glow(P.accent, 1.2), -0.9, 2.15, 0, 0.03, { cast: false }); scene.add(tr); moving.push({ obj: tr, path: route([[-31, -27], [-29, -20], [-27.5, -13], [-22, -6], [-14, -2], [-8, -6]]), speed: 0.05, ship: true, bounce: true }); },
+    'masks': () => { const tr = truck(A.truck); box(tr, 2.6, 0.12, 1.2, glow(P.accent, 1.2), -0.9, 2.15, 0, 0.03, { cast: false }); scene.add(tr); moving.push({ obj: tr, path: route([[-31, -27], [-29, -20], [-27.5, -13], [-22, -6], [-14, -2], [-8, -6]]), speed: 0.05, ship: true, bounce: true }); },
     'studio-wing': g => { box(g, 8, 4.5, 6, glass(P.glass, { opacity: 0.55, emissive: night ? P.glass : 0, emissiveIntensity: night ? 0.4 : 0 }), 0, 0, 0, 0.3); box(g, 8.2, 0.4, 6.2, mat(P.white), 0, 4.5, 0, 0.1); },
-    'fab-trucks': () => { for (let i = 0; i < 4; i++) onLoop(truck([P.warm, P.good, P.white, P.slate][i]), 0.12 + i * 0.25, 0.012, -0.7); },
-    'fab-line': g => { box(g, 22, 6, 7, mat(P.white), 0, 0, 0, 0.4); box(g, 22.2, 0.7, 7.2, mat(P.accent, { roughness: 0.5 }), 0, 4.8, 0, 0.15); for (let i = 0; i < 4; i++) { box(g, 3, 1, 3, mat(P.wall), -7.5 + i * 5, 6, 0, 0.12); spinning.push(cyl(g, 1, 1, 0.18, metal(P.dark), -7.5 + i * 5, 7, 0, 18)); } },
+    'fab-trucks': () => { for (let i = 0; i < 4; i++) onLoop(truck(A.box[(i + 3) % 5]), 0.12 + i * 0.25, 0.012, -0.7); },
+    'fab-line': g => { box(g, 22, 6, 7, mat(P.white), 0, 0, 0, 0.4); box(g, 22.2, 0.7, 7.2, mat(A.roof, { roughness: 0.7 }), 0, 4.8, 0, 0.15); for (let i = 0; i < 4; i++) { box(g, 3, 1, 3, mat(P.wall), -7.5 + i * 5, 6, 0, 0.12); spinning.push(cyl(g, 1, 1, 0.18, metal(P.dark), -7.5 + i * 5, 7, 0, 18)); } },
     'test-probe': g => { cyl(g, 0.3, 0.4, 6, metal(P.metal), 0, 0, 0, 10); for (let i = 0; i < 3; i++) pulses.push(box(g, 0.5, 0.5, 0.5, glow([P.good, P.warm, P.accent][i], 1.4), 0, 2 + i * 1.6, 0.35, 0.1)); },
-    'test-hall': g => { box(g, 9, 3.2, 7, mat(P.white), 0, 0, 0, 0.3); box(g, 9.1, 0.4, 7.1, mat(P.good, { roughness: 0.5 }), 0, 2.6, 0, 0.1); },
+    'test-hall': g => { box(g, 9, 3.2, 7, mat(P.white), 0, 0, 0, 0.3); box(g, 9.1, 0.4, 7.1, mat(A.roof, { roughness: 0.7 }), 0, 2.6, 0, 0.1); },
     'island-phones': g => { for (let i = 0; i < 4; i++) for (let j = 0; j < 3; j++) box(g, 0.9, 1.1, 0.08, winM, -1.6 + j * 1.6, 1 + i * 2.2, 2.55, 0.02, { cast: false });
       for (let k = 0; k < 3; k++) { const r = new THREE.Mesh(new THREE.TorusGeometry(1, 0.08, 6, 48), glow(P.accent, 1, { transparent: true, opacity: 0.6, depthWrite: false })); r.rotation.x = Math.PI / 2; r.position.set(7, 13.5, -4); g.add(r); bobbing.push({ obj: r, ring: k }); }
       const f = ship(9); scene.add(f); moving.push({ obj: f, path: route([[72, 18], [10, 72], [-100, 110], [-148, 118]]), speed: 0.02, ship: true, bounce: true }); },
