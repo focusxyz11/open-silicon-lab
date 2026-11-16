@@ -59,7 +59,7 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
   for (const door of ['look', 'ask', 'do']) { await page.click('#sheet [data-door="' + door + '"]').catch(() => problems.push(tag + ': no door ' + door)); }
   if (!(await page.$$('#sheet .chcard')).length) problems.push(tag + ': the studio has nothing to do');
   await page.click('#sheet [data-door="look"]');
-  if (!(await page.$('#sheet .lvchips a')) || !(await page.$('#sheet .nav .btn.primary'))) problems.push(tag + ': Look shows no way inside the studio');
+  if (!(await page.$('#sheet .lvchips a')) || !(await page.$('#sheet [data-deeper]'))) problems.push(tag + ': Look shows no way inside the studio');
   /* every experiment reads as a page: its question, what is true and open, and ways on to others */
   await page.evaluate(() => { location.hash = '#/read/fail-ontime'; });
   await page.waitForSelector('#page:not([hidden]) .readq', { timeout: 10000 }).catch(() => problems.push(tag + ': a question does not open as a page'));
@@ -341,9 +341,13 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
   await page.addInitScript(() => { window.GL = 0; const g = HTMLCanvasElement.prototype.getContext; HTMLCanvasElement.prototype.getContext = function (k, ...a) { if (/webgl/.test(k) && !this.__gl) { this.__gl = 1; window.GL++; } return g.call(this, k, ...a); };
     window.MOVES = []; const o = document.startViewTransition && document.startViewTransition.bind(document); if (!o) return;
     document.startViewTransition = f => { const tr = o(f); window.MOVES.push(document.documentElement.dataset.move); tr.ready.catch(e => window.MOVES.push('failed: ' + e.message)); return tr; }; });
+  /* the factory opens where it stands (docs/INTERACTION.md): its six tools are named in the scene, a tool is selected
+     in place, and going closer from it reaches the line */
   await page.goto(base + 'index.html#/place/fab');
-  await page.waitForSelector('#sheet .nav .btn.primary', { timeout: 15000 }).catch(() => problems.push(tag + ': the factory has no way inside'));
-  await page.click('#sheet .nav .btn.primary');
+  await page.waitForFunction(() => document.querySelectorAll('#mapLabels .tool3').length === 6, null, { timeout: 15000 }).catch(() => problems.push(tag + ': the open factory does not name its tools'));
+  await page.evaluate(() => { location.hash = '#/place/fab/etch'; });
+  await page.waitForSelector('#sheet.part [data-deeper]', { timeout: 15000 }).catch(() => problems.push(tag + ': a tool of the factory cannot be selected'));
+  await page.click('#sheet [data-deeper]');
   await page.waitForFunction(() => location.hash.startsWith('#/line/'), null, { timeout: 15000 }).catch(() => problems.push(tag + ': going inside did not reach the line'));
   /* the key is pressed once the line's frame is drawn and the zoom has finished: on a slow machine the view can
      still be making itself seconds after the address changed, and a key before its way up exists does nothing */
