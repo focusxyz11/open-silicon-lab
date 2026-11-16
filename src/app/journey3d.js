@@ -588,7 +588,10 @@ export function machineModel(id, col) {
   if (!BUILD[id]) return null;
   const b = new Builder(materials(col)); b.noBay = true;
   const extra = BUILD[id](b, PLANTS[id], false) || {};
-  return { group: b.finish(0), update: extra.update || null };
+  /* where each named part is, as a box in the machine's own metres (the island picks parts by these) */
+  const parts = {};
+  for (const k in b.parts) { const B = new THREE.Box3(); b.parts[k].forEach(list => list.forEach(v => B.expandByPoint(v))); parts[k] = B; }
+  return { group: b.finish(0), update: extra.update || null, parts };
 }
 
 /* for the tests: build one station without drawing it, and say what it holds */

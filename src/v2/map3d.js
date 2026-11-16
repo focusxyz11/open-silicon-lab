@@ -435,7 +435,7 @@ export function createMap(canvas, host, on = {}) {
      map was rejected once already. The questions are on the first page and on every page of #/read. */
   const beaconOrbs = [];
   /* ---- every place can be picked ---- */
-  const pickable = () => { pick.length = 0; Object.values(G).forEach(g => g.traverse(o => { if (o.isMesh) { o.userData.place = g.userData.place; pick.push(o); } })); beaconOrbs.forEach(o => pick.push(o)); };
+  const pickable = () => { pick.length = 0; Object.values(G).forEach(g => g.traverse(o => { if (o.isMesh && !o.userData.nopick) { o.userData.place = g.userData.place; pick.push(o); } })); beaconOrbs.forEach(o => pick.push(o)); };
   pickable();
   /* ---- names, with the state of each station's challenges ---- */
   const HGT = { studio: 9, quarry: 7, fab: 10, test: 7, port: 11, datacentre: 7, lab: 22, village: 19, phones: 16, cars: 9, idea: 8 };
@@ -443,16 +443,35 @@ export function createMap(canvas, host, on = {}) {
   PLACES.forEach(p => { names[p.id] = L.add(G[p.id], new THREE.Vector3(0, HGT[p.id], 0), '', { cls: 'place3' + (p.far ? ' far' : ''), button: true, data: { place: p.id }, html: '', max: p.far ? Infinity : 520 }); });
   /* the factory's tools, drawn as the line draws them: on the first opening, each simple tool is replaced by the
      line's own machine (src/app/journey3d.js machineModel), so diving in shows the same machine, closer */
-  let detailed = null;
-  const detail = () => { if (detailed) return; detailed = import('../app/journey3d.js').then(m => {
-    if (!m.machineModel) return;
-    const col = { lit: true, dark: night, warm: P.warm, cool: P.accent, grn: P.good, red: P.bad };
-    FAB_TOOLS.forEach(([id]) => { const tg = FAB.tools[id], mm = m.machineModel(id, col); if (!tg || !mm) return;
+  const detailed = {}, working = [], IDLE = { s: { k: '' }, p: null }, LABEL_NUDGE = { needles: [-1.9, 0.7], lid: [1.1, 0.3], bumps: [-0.7, 0] };
+  const lineCol = () => ({ lit: true, dark: night, warm: P.warm, cool: P.accent, grn: P.good, red: P.bad });
+  const shade = g => g.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+  /* a part of a machine is picked by an unseen box round it, and stands where its box stands */
+  const pickBox = (tg, B) => { const sz = new THREE.Vector3(), c = new THREE.Vector3(); B.getSize(sz); B.getCenter(c); const m = new THREE.Mesh(new THREE.BoxGeometry(Math.max(sz.x, 0.6), Math.max(sz.y, 0.6), Math.max(sz.z, 0.6)), new THREE.MeshBasicMaterial({ visible: false })); m.position.copy(c).sub(tg.position); tg.add(m); return m; };
+  const DRESS = {
+    fab: m => FAB_TOOLS.forEach(([id]) => { const tg = FAB.tools[id], mm = m.machineModel(id, lineCol()); if (!tg || !mm) return;
       while (tg.children.length) tg.remove(tg.children[0]);
-      const g = mm.group; g.scale.setScalar(1); g.position.set(0, 0, 3.1); tg.add(g);
-      g.traverse(o => { o.userData.part = id; if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } }); });
-    pickable();
-  }).catch(() => { /* the simple tools stay */ }); };
+      const g = mm.group; g.position.set(0, 0, 3.1); tg.add(g); shade(g);
+      g.traverse(o => { o.userData.part = id; }); if (mm.update) working.push({ place: 'fab', update: mm.update }); }),
+    /* the test house and the port's hall hold the line's whole station, and their parts are the station's own */
+    test: m => station(m, 'test', 'test', 1.6, [0, 0.2], { prober: 'prober', needles: 'needles', map: 'map' }),
+    port: m => station(m, 'port', 'pkg', 0.95, [-8, 6.4], { saw: 'saw', bumps: 'bumps', lid: 'lid' })
+  };
+  function station(m, place, id, s, [cx, cz], partOf) {
+    const O = OPEN[place], mm = m.machineModel(id, lineCol()); if (!O || !mm) return;
+    const g = mm.group; g.scale.setScalar(s); const B = new THREE.Box3().setFromObject(g), c = new THREE.Vector3(); B.getCenter(c);
+    g.position.set(cx - c.x, 0.1, cz - c.z); O.inside.add(g); shade(g); g.traverse(o => { o.userData.nopick = true; });
+    Object.entries(partOf).forEach(([part, key]) => { const tg = O.tools[part], PB = mm.parts[key]; if (!tg || !PB) return;
+      while (tg.children.length) tg.remove(tg.children[0]);
+      const W = PB.clone().applyMatrix4(new THREE.Matrix4().makeScale(s, s, s)); W.translate(g.position); const wc = new THREE.Vector3(); W.getCenter(wc);
+      tg.position.set(wc.x, 0.1, wc.z); const pb = pickBox(tg, W); pb.userData.part = part;
+      /* its name stands just over it, nudged where two parts share one cabinet */
+      const lb = toolNames[place + ':' + part], nd = LABEL_NUDGE[part] || [0, 0]; if (lb) lb.offset.set(nd[0], W.max.y + 0.5 + nd[1], 0); });
+    if (mm.update) working.push({ place, update: mm.update });
+  }
+  /* the ring of light under the part selected (placed again once a building's machines have arrived) */
+  const placeRing = (place, part) => { const T = OPEN[place] && OPEN[place].tools[part]; if (!T) return; const v = new THREE.Vector3(); T.getWorldPosition(v); ring.position.set(v.x, 0.25, v.z); ring.scale.setScalar(RING_R[part] || RING_R[place] || 3.6); };
+  const detail = place => { if (detailed[place] || !DRESS[place]) return; detailed[place] = import('../app/journey3d.js').then(m => { if (m.machineModel) { DRESS[place](m); pickable(); if (sel && sel.place === place && sel.part) placeRing(place, sel.part); } }).catch(() => { /* the simple ones stay */ }); };
   /* the tool selected stands on a ring of light */
   const ring = new THREE.Mesh(new THREE.RingGeometry(0.92, 1, 48), new THREE.MeshBasicMaterial({ color: P.accent, transparent: true, opacity: 0.85, depthWrite: false }));
   ring.rotation.x = -Math.PI / 2; ring.visible = false; scene.add(ring);
@@ -631,7 +650,9 @@ export function createMap(canvas, host, on = {}) {
     for (let i = sparks.length - 1; i >= 0; i--) { const m = sparks[i]; m.userData.t += dt; m.userData.v.y -= 18 * dt; m.position.addScaledVector(m.userData.v, dt); m.rotation.y += dt * 4; m.material.opacity = Math.max(0, 1 - m.userData.t / 1.4); if (m.userData.t > 1.4) { scene.remove(m); sparks.splice(i, 1); } }
     /* the factory opens and closes with the camera */
     /* the buildings open and close with the camera */
-    if (FAB.want > 0) detail();
+    Object.entries(OPEN).forEach(([id, O]) => { if (O.want > 0) detail(id); });
+    /* the machines work while you watch: plasma, beams, sprays, the polisher's head, the prober stepping */
+    if (!reduced()) for (const w of working) if (OPEN[w.place].inside.visible) w.update(IDLE, false, tm);
     Object.entries(OPEN).forEach(([id, O]) => { O.k += (O.want - O.k) * Math.min(1, dt * (reduced() ? 60 : 3.2)); const k = ease(clamp(O.k));
       O.lid.position.y = O.lidUp * k; O.lid.visible = k < 0.96; if (O.deco) O.deco.visible = k < 0.4; O.inside.visible = k > 0.02; names[id].show = k < 0.5;
       O.near.forEach(w => { w.material.opacity = (w.userData.glass || 1) * (1 - 0.9 * k); w.material.depthWrite = k < 0.5 && !w.userData.glass; w.castShadow = k < 0.5; }); });
@@ -676,7 +697,7 @@ export function createMap(canvas, host, on = {}) {
       sel = place ? { place, part: part || null } : null; push = 0; Object.entries(OPEN).forEach(([id, O]) => { O.want = id === place ? 1 : 0; });
       const T = place && part && OPEN[place] && OPEN[place].tools[part];
       Object.entries(toolNames).forEach(([k, lb]) => lb.el.classList.toggle('sel', !!T && k === place + ':' + part));
-      if (T) { const v = new THREE.Vector3(), wide = innerWidth > 720; T.getWorldPosition(v); ring.position.set(v.x, 0.25, v.z); ring.scale.setScalar(RING_R[part] || RING_R[place] || 3.6);
+      if (T) { const v = new THREE.Vector3(), wide = innerWidth > 720; placeRing(place, part); T.getWorldPosition(v);
         const d = wide ? 48 : 64, upv = d * (wide ? 0.12 : 0.18); flyTo(v.x + Math.sin(cam.yaw) * upv, v.z + Math.cos(cam.yaw) * upv, d); }
     },
     /* the first visit opens on a wide shot of the sea and comes down to the island, turning toward it */
