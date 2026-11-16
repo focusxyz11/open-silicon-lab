@@ -178,6 +178,19 @@ export function start() {
     return ch ? '<button type="button" class="chcard entry ' + st + '" data-open="' + esc(ch.id) + '">' + body + '</button>' : '<div class="chcard entry ' + st + '">' + body + '</div>';
   }
   const jobCard = j => '<button type="button" class="chcard job" data-job="' + j.need + '"><span class="st">?</span><span><b>' + esc(t('design.proj.' + j.p + '.t')) + '</b><span class="small">' + esc(t('build.need.' + j.need + '.d')) + '</span></span></button>';
+  /* the worlds a place meets (docs/INTERACTION.md, content/): every question asked at a place belongs to one of the
+     eleven core questions (its thread is the world, stop.<world>.<depth>), so the link from a place to a world is the
+     questions already there, never one drawn for the purpose. Each world's own words come from its document, loaded
+     once; until then the chip waits for them. */
+  let WT = null;
+  const LIVE = ['copies', 'walls', 'forms', 'plan', 'clock', 'side', 'swarm', 'tune', 'probes'];
+  const fillWorlds = root => { if (!WT) return; root.querySelectorAll('[data-wt]').forEach(a => { const P = WT[a.dataset.wt]; if (!P) return; const live = LIVE.includes((Worlds.WORLD_OF(a.dataset.wt) || {}).lens);
+    a.querySelector('.wq').textContent = P.title.replace(/\*\*|\*/g, ''); a.querySelector('.wl').textContent = live ? t('world.tryIt', { name: P.lens }) : t('world.seeIt', { name: P.lens }); a.hidden = false; }); };
+  const loadWT = () => (WT ? Promise.resolve() : Worlds.loadAll().then(all => { WT = Object.fromEntries(all); }));
+  const worldsOf = keys => [...new Set(keys.map(k => k.split('.')[0]).filter(id => WORLD_IDS.includes(id)))];
+  const worldsRow = keys => { const ids = worldsOf(keys).slice(0, 3); if (!ids.length) return '';
+    loadWT().then(() => fillWorlds(sheet));
+    return '<div class="wmeet"><p class="kicker">' + esc(t('world.here')) + '</p>' + ids.map(id => '<a class="wchip" href="#/w/' + id + '" data-wt="' + id + '" style="--qc:' + Worlds.colorOf(id) + '"' + (WT ? '' : ' hidden') + '><span class="wq"></span><span class="wl small"></span></a>').join('') + '</div>'; };
   const askLink = k => '<a class="askq" href="' + esc(follow(k)) + '" style="--qc:' + qColor(k) + '"><span class="q">' + esc(t('stop.' + k + '.q')) + '</span><span class="small muted">' + esc(t('sheet.follow')) + '</span></a>';
   /* Inside: the place's levels, one inside the next, with what waits at each; then any other way in */
   /* a level opens where it is drawn best: the flight through the data centre, the chip's layers (a depth of the
@@ -253,7 +266,7 @@ export function start() {
       /* a part of an open building: what it does, its question, and how to go closer (zoom in) */
       const P = cur.part, PP2 = PARTS[id], qs = PP2.qs(P);
       h += '<p class="line">' + esc(PP2.see(P)) + '</p>' +
-        '<div class="zoomhint"><button type="button" class="chipb" data-deeper aria-label="' + esc(t('zoom.inBtn')) + '">↓</button><span class="small muted">' + esc(t('zoom.tool.' + id)) + '</span></div>' + qs.slice(0, 1).map(askLink).join('') +
+        '<div class="zoomhint"><button type="button" class="chipb" data-deeper aria-label="' + esc(t('zoom.inBtn')) + '">↓</button><span class="small muted">' + esc(t('zoom.tool.' + id)) + '</span></div>' + qs.slice(0, 1).map(askLink).join('') + worldsRow(qs) +
         '<ol class="lvchips steps" aria-label="' + esc(t('zoom.tools')) + '">' + PP2.list.map((s2, i) => '<li><button type="button" data-part="' + s2 + '"' + (s2 === P ? ' aria-current="true"' : '') + '><span class="i">' + (i + 1) + '</span>' + esc(PP2.name(s2)) + '</button></li>').join('') + '</ol>';
     } else if (cur.tab === 'look') {
       /* one line; the way in is zooming in (docs/INTERACTION.md), the card only says so; the levels as small steps */
@@ -261,6 +274,7 @@ export function start() {
       const nx = Way.stageOfPlace(id) ? Way.nextPlace(id) : null;
       h += '<p class="line">' + esc(t('map.' + id + '.d')) + '</p>' +
         (PARTS[id] ? '<div class="zoomhint"><span class="small muted">' + esc(t('zoom.open')) + '</span></div>' : enter ? '<div class="zoomhint"><button type="button" class="chipb" data-deeper aria-label="' + esc(t('zoom.inBtn')) + '">↓</button><span class="small muted">' + esc(t('zoom.place')) + '</span></div>' : '') +
+        worldsRow((Game.INSIDE[id] || []).flatMap(l => stopsAt(l.depth))) +
         (nx ? '<div class="nav"><button type="button" class="btn" data-key="next" data-place="' + nx + '">' + esc(t('loop.next', { place: t('map.' + nx + '.t') })) + '</button><span></span></div>' : '') +
         /* where the loop starts there are two ways in: what someone needs, and what has just become possible */
         (id === 'lab' ? '<div class="ways2"><button type="button" class="look" data-door="do"><b>' + esc(t('lab.pull.t')) + '</b><span class="small">' + esc(t('lab.pull.d', { n: C.jobs.length + C.engines.length })) + '</span></button><button type="button" class="look" data-door="ask"><b>' + esc(t('lab.push.t')) + '</b><span class="small">' + esc(t('lab.push.d', { n: WAYS.length })) + '</span></button></div>' : '') + insideHtml(id);
@@ -797,13 +811,26 @@ export function start() {
     page.classList.add('reading'); page.hidden = false; page.scrollTop = 0;
     Worlds.loadAll().then(all => { if (location.hash === shown) page.innerHTML = '<div class="inner"><a class="x pagex" href="#/" aria-label="' + esc(t('sheet.close')) + '">×</a>' + Worlds.indexHtml(all) + '</div>'; });
   }
+  /* where a world's questions are asked on the island: each part or level whose question belongs to it, as an address */
+  const ISLE_OF = { test: ['test', null], pkg: ['port', null], ship: ['port', null] };
+  function islandOf(id) {
+    const seen = new Set(), out = [], depths = new Set([...Object.values(PARTS).flatMap(P => P.list), ...Object.values(Game.INSIDE).flatMap(L => L.map(l => l.depth))]);
+    depths.forEach(d => stopsAt(d).filter(k => k.startsWith(id + '.')).forEach(k => { let href = null, label = null;
+      const P = Object.keys(PARTS).find(pl => PARTS[pl].list.includes(d));
+      if (P) { href = '#/place/' + P + '/' + d; label = t('map.' + P + '.t') + ' · ' + PARTS[P].name(d); }
+      else if (ISLE_OF[d]) { href = '#/place/' + ISLE_OF[d][0]; label = t('map.' + ISLE_OF[d][0] + '.t') + ' · ' + t('depth.' + d + '.name'); }
+      else { const pl = Object.keys(Game.INSIDE).find(p2 => Game.INSIDE[p2].some(l => l.depth === d));
+        if (pl) { href = levelHref(pl, Game.INSIDE[pl].find(l => l.depth === d)); label = t('map.' + pl + '.t') + ' · ' + t('depth.' + d + '.name'); } }
+      if (href && !seen.has(href)) { seen.add(href); out.push({ href, label, q: t('stop.' + k + '.q') }); } }));
+    return out;
+  }
   function showWorld(id, at) {
     if (!WORLD_IDS.includes(id)) { location.hash = '#/'; return; }
     const q = /^q(\d+)$/.exec(at || ''), shown = location.hash;
     page.innerHTML = '<div class="inner"><a class="x pagex" href="#/" aria-label="' + esc(t('sheet.close')) + '">×</a><p class="muted">' + esc(t('world.loading')) + '</p></div>';
     page.classList.add('reading'); page.hidden = false; page.scrollTop = 0;
     const draw = P => { if (location.hash !== shown) return;
-      page.innerHTML = '<div class="inner"><a class="x pagex" href="#/" aria-label="' + esc(t('sheet.close')) + '">×</a>' + Worlds.worldHtml(id, P, { chip: S.chip, q: q ? +q[1] : null }) + '</div>';
+      page.innerHTML = '<div class="inner"><a class="x pagex" href="#/" aria-label="' + esc(t('sheet.close')) + '">×</a>' + Worlds.worldHtml(id, P, { chip: S.chip, q: q ? +q[1] : null, island: islandOf(id) }) + '</div>';
       swarmStart(page);
       const el = q && page.querySelector('#q' + q[1]); if (el) el.scrollIntoView({ block: 'center' }); };
     const go = () => Worlds.loadWorld(id).then(draw, () => { page.querySelector('.inner').innerHTML += '<p>' + esc(t('world.missing')) + '</p>'; });
