@@ -57,7 +57,8 @@ should look like a cartoon. Consistency comes before any single feature.
    src/app/journey3d.js), so the machine you dive into is the one you were looking at; the test house holds the
    line's prober station and the port's hall its packaging station, their parts picked by the station's own named
    boxes; and the machines work while you watch (plasma, beams, sprays, the polisher's head, the prober stepping
-   and its wafer map filling).
+   and its wafer map filling; the robots hand a wafer from port to airlock to chamber and back, on each machine's own
+   round).
 4. The first page as a surface to play (first pass done): the questions and challenges stay, folding into a
    button in the corner while you explore and opening again from it; a place pointed at says in one line what it is;
    a minimap keeps the whole island in view, with what the camera sees, and takes you anywhere on it.

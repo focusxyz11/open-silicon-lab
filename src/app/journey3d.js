@@ -588,10 +588,26 @@ export function machineModel(id, col) {
   if (!BUILD[id]) return null;
   const b = new Builder(materials(col)); b.noBay = true;
   const extra = BUILD[id](b, PLANTS[id], false) || {};
+  /* its robots and a wafer, as on the line: the wafer goes the machine's own round (flow, src/app/journey.js), handed
+     from robot to robot, into the chamber and out */
+  const J = JOURNEY[id], cluster = !!extra.ch && !extra.at, at = extra.at || (cluster ? CLUSTER_AT : null);
+  const robots = extra.robots || (cluster ? CLUSTER_ROBOTS : (J && J.robots) || []);
+  const cfg = J && at ? Object.assign({}, J, { at, robots }) : null;
+  const arms = cfg && (extra.robots || cluster) ? robots.map(R => ({ R, move: robot(b, R) })) : [];
+  const wafer = cfg && !J.nowafer ? makeWafer(b, false) : null, chip = cfg ? makeChip(b) : null;
   /* where each named part is, as a box in the machine's own metres (the island picks parts by these) */
   const parts = {};
   for (const k in b.parts) { const B = new THREE.Box3(); b.parts[k].forEach(list => list.forEach(v => B.expandByPoint(v))); parts[k] = B; }
-  return { group: b.finish(0), update: extra.update || null, parts };
+  const IDLE = { s: { k: '' }, p: null };
+  const animate = (t, dt) => {
+    if (!cfg) { if (extra.update) extra.update(IDLE, false, t); return; }
+    const f = flow(cfg, t * 0.8 + (cfg.seed || 0) * cfg.tot);
+    arms.forEach(({ R, move }) => move(f.p && f.hold === R.id ? f.p : R.rest.length > 2 ? R.rest : R.rest.concat([R.h]), dt));
+    if (wafer) wafer.visible = false; if (chip) chip.visible = false;
+    if (f.p && !f.home) { const m = f.chip ? chip : wafer; if (m) { m.visible = true; m.position.copy(V(f.p[0], f.p[1], f.p[2])); } }
+    if (extra.update) extra.update(f, false, t);
+  };
+  return { group: b.finish(0), update: extra.update || null, parts, animate };
 }
 
 /* for the tests: build one station without drawing it, and say what it holds */
