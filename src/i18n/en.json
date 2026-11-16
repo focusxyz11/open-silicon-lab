@@ -2892,5 +2892,6 @@
  "map.tools.role": "Where the factory's machines come from",
  "map.materials.role": "Where crystals, gases and chemicals come from",
  "map.power.role": "Where a data centre's electricity comes from",
- "map.idea.role": "What is not here yet"
+ "map.idea.role": "What is not here yet",
+ "map.reported": "{say}, reported here: {words}"
 }

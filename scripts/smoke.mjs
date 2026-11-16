@@ -332,6 +332,11 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
     const href = await page.getAttribute('#breakp [data-send]', 'href').catch(() => '');
     if (!/\/new\/main\/community\/ledger\?filename=\d{4}-\d{2}-\d{2}-report-/.test(href || '')) problems.push(tag + ': the report was not kept as an entry with its link');
     if (await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)) problems.push(tag + ': sideways scrolling with the panel open');
+    /* the report stands on the island, at the factory where printing is, until a fix names it; tapping it goes back there */
+    if (w > 700) { await page.evaluate(() => { location.hash = '#/'; });
+      await page.waitForSelector('#mapLabels .poi3.report[data-poi="report:#/line/print"]', { state: 'attached', timeout: 30000 }).catch(() => problems.push(tag + ': a kept report does not stand on the island'));
+      await page.evaluate(() => { const b = document.querySelector('#mapLabels .poi3.report'); if (b) b.click(); });
+      await page.waitForFunction(() => location.hash === '#/line/print' && !document.getElementById('breakp').hidden, null, { timeout: 15000 }).catch(() => problems.push(tag + ': a report on the island does not lead back to where it was seen')); }
     await page.close();
   }
   /* a device too slow for a level in 3D gets its flat drawing back (osl-quality = slow makes every level count as too slow) */

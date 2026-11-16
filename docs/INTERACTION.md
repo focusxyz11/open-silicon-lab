@@ -60,6 +60,10 @@ question is. Each is named only when you come near; from far out they fold into 
 Tapping one does what tapping does everywhere: the board opens the place's questions in the card, a bench plays its
 challenge in the card, a lantern opens its question. Questions nobody has a place for yet stand on the sandbank of
 what is not yet, beside a stake for every question the lab cannot let anyone try yet.
+The lab said to be broken stands there too: a report made with *Break it* (⚑) is a striped barrier with an amber lamp
+at the square of the place where it was seen (a page with no place on the island, such as a world or the record, at
+the Lab's), until a fix names it. It is not part of any plan; tapping it goes back to where it was seen, with what was
+reported there open.
 
 ## The islands across the sea
 
@@ -70,7 +74,8 @@ electricity comes from), and the sandbank (what is not here yet). What joins the
 sea with a ship of its own kind on each (container ship, car carrier, heavy-lift ship with a machine in crates, gas
 carrier), a power cable from the wind and the sun to the data centre and a data cable from the Lab's open port, each
 a line of moving light under the water, and a plane, since finished chips are small and dear and mostly fly. Sand,
-gases and machines come ashore at a jetty by the quarry; everything else at the port.
+gases and machines come ashore at a jetty by the quarry; everything else at the port. Going closer at the machine or the materials island
+follows what they make across the world map, and going out of it comes back to that island.
 
 ## The plan
 
