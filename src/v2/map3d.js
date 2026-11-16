@@ -570,6 +570,16 @@ export function createMap(canvas, host, on = {}) {
   const footprint = () => { const out = []; for (const [cx, cy] of corners) { ray.setFromCamera(new THREE.Vector2(cx, cy), camera); const p = new THREE.Vector3(); if (!ray.ray.intersectPlane(groundPlane, p)) { const d = ray.ray.direction; p.set(camera.position.x + d.x * 400, 0, camera.position.z + d.z * 400); } out.push([clamp(p.x, -400, 400), clamp(p.z, -400, 400)]); } return out; };
   mini.addEventListener('click', e => { if (e.target.closest('[data-place]')) return; const r = mini.getBoundingClientRect(), M0 = mini.M0; flyTo(M0.x0 + (e.clientX - r.left) / r.width * M0.w, M0.z0 + (e.clientY - r.top) / r.height * M0.h, Math.min(cam.d, 230)); on.interact && on.interact(); });
 
+  /* names never sit on one another: where two meet, the one that matters less steps back until there is room (the
+     selected part first, then the one pointed at, then the parts of an open building, then the places) */
+  const declutter = () => {
+    const els = [...Object.values(toolNames), ...Object.values(names), ...Object.values(pins)].map(lb => lb.el).filter(e => e && e.isConnected && e.offsetParent && e.style.opacity !== '0');
+    const rank = e => (e.classList.contains('sel') ? 0 : e.classList.contains('on') ? 1 : e.classList.contains('tool3') ? 2 : e.classList.contains('place3') ? 4 : 3);
+    els.sort((a, b) => rank(a) - rank(b)); const kept = [];
+    for (const e of els) { const r = e.getBoundingClientRect(); if (!r.width) continue;
+      const hit = kept.some(k => Math.min(k.right, r.right) - Math.max(k.left, r.left) > 2 && Math.min(k.bottom, r.bottom) - Math.max(k.top, r.top) > 2);
+      e.classList.toggle('hush', hit); if (!hit) kept.push(r); } };
+
   /* ---- input ---- */
   const ptrs = new Map(); let downAt = null, moved = 0, pinch0 = null, hover = null;
   const ray = new THREE.Raycaster(), ndc = new THREE.Vector2(), groundPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
@@ -728,6 +738,7 @@ export function createMap(canvas, host, on = {}) {
     }
     st.draw(scene, camera);
     L.update(camera, W, H);
+    if (frameN % 6 === 3) declutter();
     if ((frameN = (frameN + 1) % 6) === 0 && mini.offsetParent) { const M0 = mini.M0; miniView.setAttribute('points', footprint().map(([x, z]) => (x - M0.x0).toFixed(1) + ',' + (z - M0.z0).toFixed(1)).join(' ')); mini.querySelectorAll('.mdot').forEach(b => b.classList.toggle('sel', !!sel && b.dataset.place === sel.place)); }
   };
   raf = requestAnimationFrame(frame);
@@ -738,8 +749,10 @@ export function createMap(canvas, host, on = {}) {
       const p = placeAt(id); if (!p) return;
       /* the place sits in the upper part of the screen: the dock takes the lower part */
       /* an opened place is framed on its inside (the port's packing hall stands off its centre) */
-      const off = { port: [-8, 8], datacentre: [0, 2] }[id] || [0, 0];
-      const wide = innerWidth > 720, near = { fab: 1.3, studio: 1.15, test: 1.05, port: 1.05, datacentre: 1.2 }[id], d = p.d * (wide ? near || 1.6 : near ? near + 0.4 : 2), upv = d * (wide ? 0.14 : id === 'village' ? 0.08 : 0.24);
+      const off = { port: [-8, 8], datacentre: [0, 2], studio: [-4, -1] }[id] || [0, 0];
+      /* on a phone an opened building is framed closer and lower, in the room between the bar and the card */
+      const wide = innerWidth > 720, near = { fab: 1.3, studio: 1.15, test: 1.05, port: 1.05, datacentre: 1.2 }[id], nearP = { fab: 1.3, studio: 1.0, test: 1.0, port: 0.85, datacentre: 1.15 }[id];
+      const d = p.d * (wide ? near || 1.6 : nearP || 2), upv = d * (wide ? 0.14 : id === 'village' ? 0.08 : nearP ? 0.17 : 0.24);
       flyTo(p.at[0] + off[0] + Math.sin(cam.yaw) * upv, p.at[1] + off[1] + Math.cos(cam.yaw) * upv, d);
     },
     overview() { const h = home(); flyTo(h.x, h.z, h.d); },

@@ -1106,3 +1106,12 @@ textarea.fcode { width: 100%; min-height: 110px; resize: vertical; box-sizing: b
 .mini3 .mdot { position: absolute; width: 10px; height: 10px; margin: -5px 0 0 -5px; padding: 0; border-radius: 50%; border: 2px solid var(--panel-solid); background: var(--ink); cursor: pointer; }
 .mini3 .mdot:hover, .mini3 .mdot.sel { background: var(--accent); transform: scale(1.3); }
 @media (max-width: 1179px) { .mini3 { display: none; } }
+
+/* the phone pass: names step back instead of overlapping; a place's steps run in one row on a phone */
+.place3.hush, .tool3.hush { opacity: 0 !important; pointer-events: none; }
+@media (max-width: 560px) {
+  .sheet .lvchips { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; margin-right: -24px; padding-right: 24px; }
+  .sheet .lvchips::-webkit-scrollbar { display: none; }
+  .sheet .lvchips > li { flex: none; }
+}
+.pin3.hush { opacity: 0 !important; pointer-events: none; }
