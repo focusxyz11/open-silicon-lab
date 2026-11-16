@@ -50,6 +50,7 @@ function lensHtml(id, P, chip) {
   return h + '</section>';
 }
 
+export const WORLD_OF = id => WORLDS[id];
 export function worldHtml(id, P, ctx = {}) {
   const W = WORLDS[id] || { play: {} }, S = P.sections;
   let h = '<article class="world" style="--qc:' + colorOf(id) + '">';
@@ -58,6 +59,8 @@ export function worldHtml(id, P, ctx = {}) {
   if (S.open) h += '<section class="wsec wopen">' + md(S.open.body) + '</section>';
   /* the truths: the unit of every world */
   h += '<section class="wsec"><h2>' + esc(t('world.true')) + '</h2><ol class="truths">' + P.truths.map(x => '<li id="t' + x.n + '"><b>' + il(x.title) + '</b> ' + il(x.text) + '</li>').join('') + '</ol></section>';
+  /* where this world is met on the island: the places whose questions belong to it */
+  if (ctx.island && ctx.island.length) h += '<section class="wsec"><h2>' + esc(t('world.isle')) + '</h2><div class="wisle">' + ctx.island.map(x => '<a class="wisl" href="' + esc(x.href) + '"><b>' + esc(x.label) + '</b><span>' + esc(x.q) + '</span></a>').join('') + '</div></section>';
   /* the questions that lead in: each one met somewhere, with something true to notice */
   h += '<section class="wsec"><h2>' + esc(t('world.inside')) + '</h2><div class="wqs">' + P.questions.map(([q, n], i) => '<details class="wqi" id="q' + (i + 1) + '"' + (ctx.q === i + 1 ? ' open' : '') + '><summary>' + il(q) + '</summary><p>' + il(n) + '</p></details>').join('') + '</div></section>';
   /* challenges: where each is played, or that it is not playable yet */

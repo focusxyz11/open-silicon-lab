@@ -355,6 +355,8 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
     await page.waitForSelector('#sheet.part [data-deeper]', { timeout: 15000 }).catch(() => problems.push(tag + ': ' + pl + ' does not open with its parts'));
   }
   await page.evaluate(() => { location.hash = '#/place/fab/etch'; });
+  /* a part leads into the worlds its questions belong to, and a world says where it is met on the island */
+  await page.waitForFunction(() => [...document.querySelectorAll('#sheet .wchip')].some(a => !a.hidden && a.getAttribute('href') === '#/w/fail'), null, { timeout: 15000 }).catch(() => problems.push(tag + ': the etch tool does not lead to the world of its questions'));
   await page.waitForSelector('#sheet.part [data-deeper]', { timeout: 15000 }).catch(() => problems.push(tag + ': a tool of the factory cannot be selected'));
   await page.click('#sheet [data-deeper]');
   await page.waitForFunction(() => location.hash.startsWith('#/line/'), null, { timeout: 15000 }).catch(() => problems.push(tag + ': going inside did not reach the line'));

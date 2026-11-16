@@ -38,6 +38,14 @@ should look like a cartoon. Consistency comes before any single feature.
    something (the yellow light of the lithography bay, the glow of a plasma), motion that is the process itself
    (carriers riding the overhead rail, a platen turning), and colour only where it carries meaning.
 
+## Places and the eleven worlds
+
+Every question asked at a place belongs to one of the eleven core questions already (its thread is the world:
+`stop.<world>.<depth>`). So a place leads into a world only through the questions it already holds, never through
+a link drawn for the purpose: a part's card ends with the worlds its questions belong to (with the world's way of
+seeing, and "try it" where that is live), and each world's page says where you meet it on the island, every part
+or level whose question belongs to it, as an address to fly to.
+
 ## The plan
 
 1. **The factory, opened in place** (this change): the fab's shell lifts away as you come close; inside, six tools
