@@ -45,6 +45,8 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
   await page.click('#hero [data-start]');
   await page.waitForFunction(() => location.hash === '#/place/lab' && !!document.querySelector('#sheet [data-key="next"]'), null, { timeout: 15000 }).catch(() => problems.push(tag + ': following the chip did not open the Lab, where the loop starts'));
   if ((await page.getAttribute('#loop [aria-current]', 'data-stage').catch(() => '')) !== 'open') problems.push(tag + ': at the Lab the loop does not light its first stage, what is open');
+  /* no one way on: the next stage of a chip's life is one of the places around, not the only one */
+  if ((await page.$$('#sheet .around [data-place]')).length < 3) problems.push(tag + ': a place offers no places around it');
   await page.click('#sheet [data-key="next"]').catch(() => problems.push(tag + ': the Lab offers no next place'));
   await page.waitForFunction(() => { const c = document.querySelector('#loop [aria-current]'); return c && c.dataset.stage === 'design'; }, null, { timeout: 10000 }).catch(() => problems.push(tag + ': the next place after the Lab is not the studio'));
   await page.click('#sheet [data-door="do"]').catch(() => problems.push(tag + ': the studio has no Do'));

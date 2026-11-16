@@ -115,7 +115,7 @@ export function start() {
     map = m.createMap($('mapCanvas'), $('mapLabels'), { place: id => (cur && cur.place === id && !cur.part && !sheet.hidden ? null : openPlace(id)), part: (place, part) => { location.hash = '#/place/' + place + '/' + part; },
       deeper: (place, part) => { const to = deeperOf(place, part); if (to) enter(to); },
       leave: id => { if (cur && cur.place === id) { closeSheet(); if (location.hash.startsWith('#/place/')) history.replaceState(null, '', '#/'); hud(); } },
-      question: key => openQuestion(key), challenge: id => { const ch = chOf(id); if (ch) location.hash = doHref(ch); }, report: at => { if (location.hash !== at) location.hash = at; setTimeout(() => openBreak(true), 0); }, ask: id => openPlace(id, 'ask'), job: need => openJob(need), entry: id => openEntry(id), interact: () => foldHero() });
+      question: key => openQuestion(key), mover: info => openMover(info), unfollow: () => { if (sheet.classList.contains('mover')) closeSheet(); }, challenge: id => { const ch = chOf(id); if (ch) location.hash = doHref(ch); }, report: at => { if (location.hash !== at) location.hash = at; setTimeout(() => openBreak(true), 0); }, ask: id => openPlace(id, 'ask'), job: need => openJob(need), entry: id => openEntry(id), interact: () => foldHero() });
     loading(false); map.setState(islandState(), false); idle(preload);
     /* the first minute: a first visit to the island opens on a wide shot and comes down to it, and the hero rises after */
     if (!S.seen && (!location.hash || location.hash === '#/') && !still()) { map.intro(); $('hero').classList.add('intro'); }
@@ -178,7 +178,7 @@ export function start() {
   /* the stage knows when a sheet is open (phones fold the HUD's next button away) */
   new MutationObserver(() => $('stage').classList.toggle('sheeted', !sheet.hidden)).observe(sheet, { attributes: true, attributeFilter: ['hidden'] });
   let cur = null;   /* { place, tab } */
-  const closeSheet = () => { const was = cur; sheet.hidden = true; cur = null; if (was) { $('hero').classList.remove('away'); $('hero').classList.add('folded'); hud(); if (map) map.select(null); if (map && !$('mapCanvas').hidden) map.setState(islandState(), false); } };
+  const closeSheet = () => { const was = cur; sheet.hidden = true; cur = null; if (sheet.classList.contains('mover')) { sheet.classList.remove('mover'); map && map.unfollow(); } if (was) { $('hero').classList.remove('away'); $('hero').classList.add('folded'); hud(); if (map) map.select(null); if (map && !$('mapCanvas').hidden) map.setState(islandState(), false); } };
   const kickerOf = id => { const step = Game.STEP_OF[id] || Game.STEP_PLACE[id]; return Way.stageOfPlace(id) === 'open' ? t('loop.open.k') : step ? t('game.stepN', { n: Game.STEPS.indexOf(step) + 1, step: t('game.step.' + step) }) : t('map.' + id + '.kind'); };
   /* what to do at a place: its own challenges, and at a step's station the step's challenges played elsewhere */
   const doList = id => { const step = Game.STEP_OF[id] || Game.STEP_PLACE[id], here = Game.placeChallenges(id);
@@ -260,7 +260,34 @@ export function start() {
   };
   const isPart = (place, p) => !!PARTS[place] && PARTS[place].list.includes(p);
   const deeperOf = (place, p) => (p && PARTS[place] ? PARTS[place].deeper(p) : enterOf(place));
+  /* something that moves, followed (docs/INTERACTION.md, "An open world"): what it is, where it is going, and the
+     way there. A figure is the pull of an open thing made visible; it says which, never who. */
+  /* no one way on (docs/INTERACTION.md, "An open world"): from a place, what stands around it on the island, nearest
+     first, and the next stage of a chip's life as one way among them (→ still takes it) */
+  const aroundHtml = (id, nx) => { const me = PLACES.find(p => p.id === id); if (!me) return '';
+    const near = PLACES.filter(p => p.id !== id && p.id !== nx && !!p.far === !!me.far).map(p => [p.id, Math.hypot(p.at[0] - me.at[0], p.at[1] - me.at[1])]).sort((a, b) => a[1] - b[1]).slice(0, nx ? 2 : 3).map(x => x[0]);
+    const chip = (p, key) => '<button type="button" class="chipb"' + (key ? ' data-key="next"' : '') + ' data-place="' + p + '">' + esc(key ? t('around.loop', { place: t('map.' + p + '.t') }) : t('map.' + p + '.t')) + '</button>';
+    return '<div class="around"><p class="kicker">' + esc(t('around.k')) + '</p><div class="chips">' + (nx ? chip(nx, true) : '') + near.map(p => chip(p)).join('') + '</div></div>'; };
+  function openMover(m) {
+    const W = Game.world(S), c = m.call, e = c && W.byId[c.key];
+    let k, title, line, go;
+    if (c) { k = t('follow.' + m.kind + '.k');
+      if (c.kind === 'break' && e) { title = e.title; line = t('follow.call.break'); go = ['open', 'break:' + c.key]; }
+      else if (c.kind === 'build') { title = t('build.need.' + c.key + '.t'); line = t('follow.call.build'); go = ['job', c.key]; }
+      else if (c.kind === 'engine') { title = t('build.need.' + c.key + '.t'); line = t('follow.call.engine'); go = ['place', 'village']; }
+      else if (c.kind === 'ask' && e) { title = e.q; line = t('follow.call.ask', { by: e.by }); go = e.under ? ['q', e.under] : ['place', 'idea']; }
+      else if (c.kind === 'report' && e) { title = e.words; line = t('follow.call.report', { say: t('report.say.' + e.say) }); go = ['report', e.at]; }
+      else { title = t('follow.call.gone'); line = ''; go = null; } }
+    else { k = t('follow.k'); const id = m.kind === 'ship' ? 'ship.' + m.lane : m.kind; title = t('follow.' + id + '.t'); line = t('follow.' + id + '.d');
+      go = ['place', m.kind === 'ship' ? m.lane : m.kind === 'plane' ? 'port' : 'fab']; }
+    cur = null; $('hero').classList.add('away');
+    sheet.innerHTML = '<button type="button" class="x" data-close aria-label="' + esc(t('sheet.close')) + '">×</button><p class="kicker">' + esc(k) + '</p><h2>' + esc(title) + '</h2><div class="door">' +
+      (line ? '<p class="line">' + esc(line) + '</p>' : '') + (go ? '<button type="button" class="btn primary" data-fgo="' + go[0] + '" data-v="' + esc(go[1]) + '">' + esc(go[0] === 'place' ? t('follow.goPlace', { place: t('map.' + go[1] + '.t') }) : t('follow.go')) + '</button>' : '') +
+      '<p class="small muted">' + esc(t(c ? 'follow.pullNote' : 'follow.note')) + '</p></div>';
+    sheet.classList.add('mover'); sheet.classList.remove('part', 'inside'); sheet.hidden = false; sheet.scrollTop = 0; hud();
+  }
   function openPlace(id, tab, step, piece, part) {
+    sheet.classList.remove('mover');
     cur = { place: id, tab: tab || 'look', step: step || null, piece: piece || null, part: part || null };
     if (map) { if (!part) map.focus(id); map.select(id, part); }
     /* the address says where you are: a place picked on the island is written into it (without going anywhere) */
@@ -274,7 +301,7 @@ export function start() {
     let h = '<button type="button" class="x" data-close aria-label="' + esc(t('sheet.close')) + '">×</button>';
     h += '<div class="doors" role="tablist">' + ['look', 'do', 'ask'].map(k => '<button type="button" role="tab" data-door="' + k + '" aria-selected="' + (cur.tab === k) + '" title="' + esc(t('door.' + k + '.d')) + '"><b>' + esc(t('door.' + k)) + (k === 'do' && nDo ? ' <span class="n">' + nDo + '</span>' : k === 'ask' && nAsk ? ' <span class="n">' + nAsk + '</span>' : '') + '</b></button>').join('') + '</div>';
     const PP = cur.part && PARTS[id];
-    h += PP && cur.tab === 'look' ? '<p class="kicker">' + esc(t('map.' + id + '.t')) + ' · ' + esc(t('zoom.stepN', { n: PP.list.indexOf(cur.part) + 1, of: PP.list.length })) + '</p><h2 class="cap">' + esc(PP.name(cur.part)) + '</h2><div class="door">'
+    h += PP && cur.tab === 'look' ? '<p class="kicker">' + esc(t('map.' + id + '.t')) + '</p><h2 class="cap">' + esc(PP.name(cur.part)) + '</h2><div class="door">'
       : '<p class="kicker">' + esc(kickerOf(id)) + '</p><h2>' + esc(t('map.' + id + '.t')) + '</h2><div class="door">';
     if (cur.tab === 'do') {
       if (id === 'lab') h += '<p class="small">' + esc(t('game.lab.do', { built: C.built, total: C.total })) + '</p>' + C.breaks.map(b => chCard(chOf('break:' + b.of))).join('') + C.jobs.map(jobCard).join('') + C.engines.map(e => '<a class="chcard engine" target="_blank" rel="noopener" href="' + esc(REPO + '/issues/new?' + new URLSearchParams({ template: 'need.yml', title: t('game.engineFor', { piece: t('build.need.' + e.need + '.t') }) })) + '"><span class="st">⚙</span><span><b>' + esc(t('build.need.' + e.need + '.t')) + '</b><span class="small">' + esc(t('game.engineWanted')) + '</span></span></a>').join('') + '<a class="link" href="#/build">' + esc(t('game.seePlan')) + '</a>';
@@ -297,7 +324,7 @@ export function start() {
       h += '<p class="line">' + esc(t('map.' + id + '.d')) + '</p>' +
         (PARTS[id] ? '<div class="zoomhint"><span class="small muted">' + esc(t('zoom.open')) + '</span></div>' : enter ? '<div class="zoomhint"><button type="button" class="chipb" data-deeper aria-label="' + esc(t('zoom.inBtn')) + '">↓</button><span class="small muted">' + esc(t('zoom.place')) + '</span></div>' : '') +
         worldsRow((Game.INSIDE[id] || []).flatMap(l => stopsAt(l.depth))) +
-        (nx ? '<div class="nav"><button type="button" class="btn" data-key="next" data-place="' + nx + '">' + esc(t('loop.next', { place: t('map.' + nx + '.t') })) + '</button><span></span></div>' : '') +
+        aroundHtml(id, nx) +
         /* where the loop starts there are two ways in: what someone needs, and what has just become possible */
         /* the sandbank: a stake for every question nobody can try yet, the first few as cards */
         (id === 'idea' ? (() => { const W = Exp.EXPERIMENTS.filter(x => Exp.stateOf(x) === 'wanted'); return W.length ? '<p class="kicker">' + esc(t('map.idea.staked', { n: W.length })) + '</p><div class="qcards">' + W.slice(0, 4).map(x => Read.card(x)).join('') + '</div>' + (W.length > 4 ? '<a class="more" href="#/read">' + esc(t('map.idea.all')) + '</a>' : '') : ''; })() : '') +
@@ -346,6 +373,8 @@ export function start() {
   }
   sheet.addEventListener('click', e => {
     if (e.target.closest('.player')) return;   /* the player handles its own clicks */
+    const fg = e.target.closest('[data-fgo]'); if (fg) { sheet.classList.remove('mover'); map && map.unfollow(); const [k, v] = [fg.dataset.fgo, fg.dataset.v];
+      if (k === 'open') openChallenge(chOf(v)); else if (k === 'job') openJob(v); else if (k === 'q') openQuestion(v); else if (k === 'report') { location.hash = v; setTimeout(() => openBreak(true), 0); } else openPlace(v); return; }
     if (e.target.closest('[data-close]')) { closeSheet(); if (location.hash !== '#/ecosystem') { map && map.overview(); if (location.hash.startsWith('#/place/')) history.replaceState(null, '', '#/'); } return; }
     const d = e.target.closest('[data-door]'); if (d) { cur.tab = d.dataset.door; drawPlace(); return; }
     /* going closer from the card is the same move as zooming in; a tool of the open factory is selected in place */
