@@ -316,7 +316,7 @@ export function start() {
       const P = cur.part, PP2 = PARTS[id], qs = PP2.qs(P);
       h += '<p class="line">' + esc(PP2.see(P)) + '</p>' +
         '<div class="zoomhint"><button type="button" class="chipb" data-deeper aria-label="' + esc(t('zoom.inBtn')) + '">↓</button><span class="small muted">' + esc(t('zoom.tool.' + id)) + '</span></div>' + qs.slice(0, 1).map(askLink).join('') + worldsRow(qs) +
-        '<ol class="lvchips steps" aria-label="' + esc(t('zoom.tools')) + '">' + PP2.list.map((s2, i) => '<li><button type="button" data-part="' + s2 + '"' + (s2 === P ? ' aria-current="true"' : '') + '><span class="i">' + (i + 1) + '</span>' + esc(PP2.name(s2)) + '</button></li>').join('') + '</ol>';
+        '<ol class="lvchips steps" aria-label="' + esc(t('zoom.tools')) + '">' + PP2.list.map((s2, i) => '<li><button type="button" data-part="' + s2 + '"' + (s2 === P ? ' aria-current="true"' : '') + '>' + esc(PP2.name(s2)) + '</button></li>').join('') + '</ol>';
     } else if (cur.tab === 'look') {
       /* one line; the way in is zooming in (docs/INTERACTION.md), the card only says so; the levels as small steps */
       const enter = enterOf(id);
@@ -401,6 +401,10 @@ export function start() {
   let FrameM = null;
   const withFrame = () => FrameM ? Promise.resolve(FrameM) : import('./frame.js').then(m => (FrameM = m));
   let turnT = 0;   /* a move along is spent by the next route, or forgotten when it changed nothing */
+  /* around a level (docs/INTERACTION.md, "An open world"): the levels on either side, and the same level seen at
+     other stages of a chip's life (as designed, as made, in use), all as one row of ways, none of them "next" */
+  const elsewhere = () => { const W = Way.whereOf(location.hash); return Way.STAGES.filter(st => st !== W.stage && Way.holds(W, st)).map(st => '<a class="chipb else" href="' + esc(Way.alongTo(W, st)) + '">' + esc(t('around.as.' + st)) + '</a>').join(''); };
+  const aroundRow = (...ways) => '<span class="kicker">' + esc(t('around.k')) + '</span><span class="chips">' + ways.filter(Boolean).join('') + elsewhere() + '</span>';
   const lineHtml = (kicker, line, key, nav) => '<p class="kicker">' + esc(kicker) + '</p><p class="line">' + esc(line) + '</p>' +
     (key ? '<a class="askline" href="' + esc(follow(key)) + '"><span class="q">' + esc(t('stop.' + key + '.q')) + '</span></a>' : '') + '<div class="nav">' + nav + '</div>';
 
@@ -416,10 +420,10 @@ export function start() {
   }
   function drawDc() {
     const id = LEVELS[dcLv], last = dcLv === LEVELS.length - 1;
-    dcFrame.dock.innerHTML = lineHtml(t('place.level', { n: dcLv + 1, total: LEVELS.length }) + ' · ' + t('place.dc.' + id + '.t'), t('place.dc.' + id + '.d'), ASKS[id],
-      (dcLv ? '<button type="button" class="btn ghost" data-key="back" data-lvgo="' + (dcLv - 1) + '">' + esc(t('story.back')) + '</button>' : '<span></span>') +
-      (id === 'board' ? '<a class="btn" href="#/board">' + esc(t('board.enter')) + '</a>' : '') +
-      (last ? '<a class="btn primary" data-key="next" href="#/dive/chip">' + esc(t('place.next')) + '</a>' : '<button type="button" class="btn primary" data-key="next" data-lvgo="' + (dcLv + 1) + '">' + esc(t('chipx.deeper')) + '</button>'));
+    dcFrame.dock.innerHTML = lineHtml(t('place.dc.' + id + '.t'), t('place.dc.' + id + '.d'), ASKS[id], aroundRow(
+      dcLv ? '<button type="button" class="chipb" data-key="back" data-lvgo="' + (dcLv - 1) + '">↑ ' + esc(t('place.dc.' + LEVELS[dcLv - 1] + '.t')) + '</button>' : '',
+      last ? '<a class="chipb" data-key="next" href="#/dive/chip">↓ ' + esc(t('place.next')) + '</a>' : '<button type="button" class="chipb" data-key="next" data-lvgo="' + (dcLv + 1) + '">↓ ' + esc(t('place.dc.' + LEVELS[dcLv + 1] + '.t')) + '</button>',
+      id === 'board' ? '<a class="chipb" href="#/board">' + esc(t('board.enter')) + '</a>' : ''));
   }
   function showPlace(id, lv) {
     hideAll();
@@ -634,10 +638,12 @@ export function start() {
     const BS = flatKind === 'bench' ? DS.bandState() : null;
     const benchYours = BS ? '<div class="yours"><span class="kicker">' + esc(t('chipx.yours')) + ' · ' + esc(BS.job) + '</span><p class="verdict ' + (BS.right ? 'good' : 'bad') + '">' + esc(BS.said) + '</p>' + esc(t('design.cap.' + id + '.d', DS.numbers())) + '</div>' : '';
     const yours = benchYours + (yk ? '<div class="yours"><span class="kicker">' + esc(t('chipx.yours')) + '</span>' + esc(t('chipx.yours.' + yk, { name: t('design.proj.' + Y.p + '.t'), gates: Y.B.M.cells.length, transistors: Y.B.transistors, masks: Y.B.masks, wire: Math.round(Y.B.RT ? Y.B.RT.wl : 0) })) + '</div>' : '');
-    const end = { dive: '<a class="btn primary" href="#/">' + esc(t('chipx.back')) + '</a>', line: '<a class="btn primary" href="#/place/port">' + esc(t('line.end')) + '</a>', bench: '<a class="btn primary" href="#/line/print">' + esc(t('bench.toFab')) + '</a>' }[flatKind];
-    diveFrame.dock.innerHTML = lineHtml(t(F.kicker, { n: i + 1, total: L.length }) + ' · ' + t('depth.' + id + '.name'), t('depth.' + id + '.see'), key,
-      (i || (flatKind === 'dive' && diveWorld === 'datacentre') ? '<button type="button" class="btn ghost" data-key="back" data-divego="' + (diveD - 1) + '">' + esc(t(i ? 'story.back' : 'dive.up')) + '</button>' : '<span></span>') +
-      (last ? end : '<button type="button" class="btn primary" data-key="next" data-divego="' + (diveD + 1) + '">' + esc(t(F.next)) + '</button>')).replace('<div class="nav">', yours + '<p class="small muted hintline">' + esc(t(F.hint)) + '</p><div class="nav">');
+    const end = { dive: '<a class="chipb" href="#/">' + esc(t('chipx.back')) + '</a>', line: '<a class="chipb" href="#/place/port">' + esc(t('line.end')) + '</a>', bench: '<a class="chipb" href="#/line/print">' + esc(t('bench.toFab')) + '</a>' }[flatKind];
+    /* a dive goes up and down; the line and the studio go earlier and later in the work */
+    const [ar0, ar1] = flatKind === 'dive' ? ['↑ ', '↓ '] : ['← ', '→ '], nm = d => t('depth.' + d + '.name');
+    diveFrame.dock.innerHTML = lineHtml(t('around.view.' + flatKind) + ' · ' + t('depth.' + id + '.name'), t('depth.' + id + '.see'), key, aroundRow(
+      i ? '<button type="button" class="chipb" data-key="back" data-divego="' + (diveD - 1) + '">' + ar0 + esc(nm(L[i - 1])) + '</button>' : flatKind === 'dive' && diveWorld === 'datacentre' ? '<button type="button" class="chipb" data-key="back" data-divego="' + (diveD - 1) + '">' + esc(t('dive.up')) + '</button>' : '',
+      last ? end : '<button type="button" class="chipb" data-key="next" data-divego="' + (diveD + 1) + '">' + ar1 + esc(nm(L[i + 1])) + '</button>')).replace('<div class="nav">', yours + '<p class="small muted hintline">' + esc(t(F.hint)) + '</p><div class="nav">');
     requestAnimationFrame(diveInset);
   }
   /* keep the picture clear of the frame: the rail on the left, the corner, the dock below */

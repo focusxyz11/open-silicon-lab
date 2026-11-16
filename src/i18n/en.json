@@ -2919,5 +2919,14 @@
  "follow.truck.t": "A truck on the loop",
  "follow.truck.d": "Wafers and masks, carried between the stations round the loop.",
  "around.k": "Around here",
- "around.loop": "{place}, next in a chip's life →"
+ "around.loop": "{place}, next in a chip's life →",
+ "around.view.dive": "Inside",
+ "around.view.line": "On the line",
+ "around.view.bench": "In the studio",
+ "around.as.open": "Where it started",
+ "around.as.design": "As it is designed",
+ "around.as.make": "As it is made",
+ "around.as.test": "As it is tested",
+ "around.as.ship": "As it is packed",
+ "around.as.use": "In use"
 }
