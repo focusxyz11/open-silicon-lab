@@ -89,7 +89,8 @@ test('HBM moves the right way; the height limit bites; hybrid bonding gives room
   assert.equal(A.hbmStack({ ...tall, dies: 40 }).fits, false);  // not offered by any generation, but the limit still bites
   assert.equal(A.hbmStack({ ...d, pin: 13 }).pinAboveAnnounced, true);
   const e = A.withGeneration(d, 'hbm4e');
-  assert.equal(e.pin, 12); assert.equal(e.dies, 16);
+  assert.equal(e.pin, 12); assert.equal(e.dies, 12);
+  assert.equal(A.withGeneration({ ...d, dies: 8 }, 'hbm4e').dies, 16);
   assert.equal(A.withGeneration(d, 'hbm3e').dies, 12);
   assert.ok(A.hbmStack(A.withGeneration(d, 'hbm3e')).tbs < A.hbmStack(d).tbs);
 });
