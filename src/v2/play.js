@@ -523,7 +523,9 @@ export function play(el, ch, ctx) {
   const evOf = () => { const o = S.evolve || {}; return (S.evolve = { job: EV.jobOf(o.job) ? o.job : 'vote', gates: EV.GATE_SETS[o.gates] ? o.gates : 'all', room: Number.isInteger(o.room) ? Math.max(EV.ROOM.min, Math.min(EV.ROOM.max, o.room)) : EV.ROOM.default, seed: Number.isInteger(o.seed) && o.seed > 0 ? o.seed : 1, code: typeof o.code === 'string' ? o.code : '' }); };
   const evFresh = () => { const E = evOf(); view.ev = EV.start(E.job, { seed: E.seed, gates: E.gates, room: E.room }); view.evR = EV.step(view.ev, 0); E.code = ''; };
   const evLoop = () => { if (!view.evRun || !el.isConnected) { view.evRun = false; return; }
-    const R = view.evR = EV.step(view.ev, 40), E = evOf();
+    /* as many generations as fit in a slice of each frame, so a slow screen does not slow the search */
+    const t0 = performance.now(); let R = EV.step(view.ev, 40); while (performance.now() - t0 < 12 && !(R.solved && R.gen - R.solvedAt > 3000) && R.gen < 20000) R = EV.step(view.ev, 40);
+    view.evR = R; const E = evOf();
     if (R.solved) E.code = R.code.split('\n').filter(l => !/^\s*\/\//.test(l)).join('\n');
     if (R.challenges.beat && !S.done[ch.id]) win();
     const quiet = R.solved && R.gen - R.solvedAt > 3000;
