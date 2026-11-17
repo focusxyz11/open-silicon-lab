@@ -199,10 +199,11 @@ export function play(el, ch, ctx) {
 
   /* ---- bet: say where you think the balance is, then find it. Moore's bet: a real wafer, cut into chips of the
      size you choose, specked by the line you choose; each part's cost is counted from what works ---- */
-  const betOf = () => (S.bets[ch.id] = Bet.normalBet(S.bets[ch.id]));
+  const betOf = () => (S.bets[ch.id] = Bet.normalBetOf(ch.bet, S.bets[ch.id]));
   const million = i => t('bet.sizeV', { n: Bet.SIZES[i] });
   const times = v => isFinite(v) ? t('bet.times', { v: v >= 10 ? Math.round(v) : v.toFixed(2) }) : t('bet.none');
-  function bet() {
+  function bet() { return ch.bet === 'oxen' ? betOxen() : betMoore(); }
+  function betMoore() {
     const b = betOf();
     let h = head();
     if (b.guess == null) {
@@ -226,6 +227,45 @@ export function play(el, ch, ctx) {
     if (C.ok) { win(); h += '<p class="small">' + esc(t('bet.why')) + '</p>'; }
     return h + doneNote() + reward();
   }
+  /* ---- Cray's bet: one strong core, many small ones, or both, on one chip that serves two jobs ---- */
+  function betOxen() {
+    const b = betOf(), G = Bet.GUESSES;
+    let h = head();
+    if (b.guess == null) {
+      h += '<p class="kicker">' + esc(t('bet.predictK')) + '</p><p class="small">' + esc(t('bet.ox.predict')) + '</p><div class="chips">' +
+        G.map((g, i) => '<button type="button" class="chipb" data-guess-ox="' + i + '">' + esc(t('bet.ox.g.' + g)) + '</button>').join('') + '</div><p class="small muted">' + esc(t('bet.ox.model')) + '</p>';
+      return h + reward();
+    }
+    const C = Bet.checkOxen(b), M = C.M, X = Bet.OX_GOAL;
+    const gs = [{ k: 'app', ok: C.app, v: times(M.app), target: t('bet.ox.gApp', { v: X.app }), f: Math.min(1, M.app / X.app) },
+      { k: 'ai', ok: C.ai, v: times(M.ai), target: t('bet.ox.gApp', { v: X.ai }), f: Math.min(1, M.ai / X.ai) },
+      { k: 'size', ok: C.size, v: t('bet.ox.sizeV', { v: M.size }), target: t('bet.ox.gSize', { v: X.size }), f: C.size ? 1 : X.size / M.size }];
+    h += '<div class="goalbox' + (C.ok ? ' ok' : '') + '"><p class="kicker">' + esc(t(C.ok ? 'game.reached' : 'game.goalNow')) + '</p>' + gs.map(g => '<div class="gauge' + (g.ok ? ' ok' : '') + '"><span class="gl">' + esc(t('bet.ox.g.' + g.k)) + '</span><span class="gv">' + esc(g.v) + ' <span class="muted">' + esc(g.target) + '</span></span><span class="gbar"><span style="width:' + (g.f * 100).toFixed(0) + '%"></span></span></div>').join('') + '</div>';
+    h += '<div class="betview">' + planSvg(M) + '<div class="races">' + ['app', 'ai'].map(k => race(k, M[k], X[k])).join('') + '<p class="small muted">' + esc(t('bet.ox.raceNote')) + '</p></div></div>';
+    h += '<label class="lab" for="bet-ox"><b>' + esc(t('bet.ox.ox')) + '</b> <output>' + esc(M.r > 1 ? t('bet.ox.units', { n: M.r }) : t('bet.ox.noOx')) + '</output></label><input type="range" id="bet-ox" data-bet="ox" min="0" max="' + (Bet.OX.length - 1) + '" step="1" value="' + b.ox + '">';
+    h += '<label class="lab" for="bet-hens"><b>' + esc(t('bet.ox.hens')) + '</b> <output>' + esc(t('bet.ox.hensV', { n: M.m })) + '</output></label><input type="range" id="bet-hens" data-bet="hens" min="0" max="' + (Bet.HENS.length - 1) + '" step="1" value="' + b.hens + '">';
+    h += '<p class="small ' + (G[b.guess] === 'both' ? 'good' : 'hint') + '">' + esc(t(G[b.guess] === 'both' ? 'bet.ox.right' : 'bet.ox.off', { g: t('bet.ox.g.' + G[b.guess]) })) + '</p>';
+    if (!C.ok) h += view.hint ? '<p class="small hint">' + esc(t('bet.ox.hint')) + '</p>' : '<button type="button" class="link" data-hint>' + esc(t('game.hint')) + '</button>';
+    h += '<button type="button" class="link" data-reguess>' + esc(t('bet.again')) + '</button>';
+    if (C.ok) { win(); h += '<p class="small">' + esc(t('bet.ox.why')) + '</p>'; }
+    return h + doneNote() + reward();
+  }
+  /* one job's speed, on a log scale up to 300 times one small core, with the goal as a mark */
+  function race(k, v, goal) {
+    const p = x => Math.max(2, Math.min(100, 100 * Math.log(x) / Math.log(300)));
+    return '<div class="race' + (v >= goal ? ' ok' : '') + '"><span class="rl">' + esc(t('bet.ox.race.' + k)) + '</span><span class="rbar"><span style="width:' + p(v).toFixed(1) + '%"></span><i style="left:' + p(goal).toFixed(1) + '%"></i></span><span class="rv">' + esc(times(v)) + '</span></div>';
+  }
+  /* the chip as units: the strong core a dark block, small cores squares, more than the budget past a dashed line */
+  function planSvg(M) {
+    const F = Bet.floorplan(M.r, M.m), c = 10, W = F.W * c, H = F.rows * c, over = F.rows > F.budgetRows;
+    return '<figure class="oxplan"><svg viewBox="-2 -2 ' + (W + 4) + ' ' + (H + 4) + '" role="img" aria-label="' + esc(t('bet.ox.planAria', { r: M.r, m: M.m, size: M.size })) + '">' +
+      (over ? '<rect class="over" x="0" y="' + F.budgetRows * c + '" width="' + W + '" height="' + (H - F.budgetRows * c) + '"/>' : '') +
+      (F.ox ? '<rect class="ox" x="0.6" y="0.6" width="' + (F.ox.w * c - 1.2) + '" height="' + (F.ox.h * c - 1.2) + '" rx="2"/>' : '') +
+      F.hens.map(([x, y]) => '<rect class="hen" x="' + (x * c + 1.2) + '" y="' + (y * c + 1.2) + '" width="' + (c - 2.4) + '" height="' + (c - 2.4) + '" rx="1"/>').join('') +
+      '<rect class="edge" x="0" y="0" width="' + W + '" height="' + Math.min(H, F.budgetRows * c) + '"/>' +
+      (over ? '<line class="budget" x1="0" x2="' + W + '" y1="' + F.budgetRows * c + '" y2="' + F.budgetRows * c + '"/>' : '') +
+      '</svg><figcaption class="small muted">' + esc(t('bet.ox.plan', { size: M.size })) + '</figcaption></figure>';
+  }
   /* each part's cost at every size on this line (log scale), the cheapest point, your size, your guess, the goal */
   function curveSvg(cur, low, b) {
     const W = 300, H = 200, l = 34, r = 10, top = 12, bot = 34, n = cur.length, top2 = 6, x = i => l + i * (W - l - r) / (n - 1);
@@ -245,7 +285,7 @@ export function play(el, ch, ctx) {
   }
   /* the wafer, painted from the engine's own layout and specks: dead chips dark, working ones light */
   function paintWafer() {
-    const cv = el.querySelector('.betwafer'); if (!cv || ch.kind !== 'bet') return;
+    const cv = el.querySelector('.betwafer'); if (!cv || ch.kind !== 'bet' || ch.bet !== 'cheaper') return;
     const b = betOf(), M = Bet.moore(b.size, b.clean), dpr = Math.min(2, window.devicePixelRatio || 1), px = 320;
     if (cv.width !== px * dpr) { cv.width = px * dpr; cv.height = px * dpr; }
     const g = cv.getContext('2d'), cs = getComputedStyle(el), ink = cs.getPropertyValue('--ink').trim() || '#222', bad = cs.getPropertyValue('--bad').trim() || '#c33', good = cs.getPropertyValue('--good').trim() || '#2a7';
@@ -324,6 +364,7 @@ export function play(el, ch, ctx) {
     const pt = q('[data-pat]'); if (pt) { view.tests.push(+pt.dataset.pat); view.wrong = null; return draw(); }
     const gs = q('[data-guess]'); if (gs) { const k = +gs.dataset.guess; if (k === spotCase(spotCode(S)).broken) { view.guess = k; win(); } else view.wrong = k; draw(); fx(); if (view.wrong === k) anim(el.querySelector('p.bad'), [{ transform: 'translateX(-6px)' }, { transform: 'translateX(5px)' }, { transform: 'translateX(0)' }], { duration: 300 }); return show('.won, .verdict, p.bad'); }
     if (q('[data-again]')) { view.tests = []; view.wrong = null; view.guess = null; return draw(); }
+    const go = q('[data-guess-ox]'); if (go) { betOf().guess = +go.dataset.guessOx; ctx.save(); draw(); fx(); return show('.betview'); }
     const gz = q('[data-guess-size]'); if (gz) { const b = betOf(); b.guess = +gz.dataset.guessSize; ctx.save(); draw(); fx(); return show('.betview'); }
     if (q('[data-reguess]')) { betOf().guess = null; ctx.save(); return draw(); }
   };

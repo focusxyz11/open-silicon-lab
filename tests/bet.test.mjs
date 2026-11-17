@@ -35,3 +35,22 @@ test('the goal needs both dials: no size alone, no line alone', () => {
   assert.ok(!B.check({ size: B.SIZES.length - 1, clean: B.CLEAN.length - 1 }).ok);
   assert.deepEqual(B.normalBet({ size: 99, clean: -1, guess: 'x' }), { size: B.START.size, clean: B.START.clean, guess: null });
 });
+
+// Cray's bet: Hill and Marty's asymmetric chip (IEEE Computer, 2008). Neither the ox alone nor the chickens alone
+// serve both jobs; every chip that does has both, within the budget.
+test('oxen or chickens: only a chip with both serves the everyday app and the AI, within its budget', () => {
+  const hm = (f, n, r) => 1 / ((1 - f) / Math.sqrt(r) + f / (Math.sqrt(r) + n - r));
+  for (let o = 0; o < B.OX.length; o++) for (let h = 0; h < B.HENS.length; h++) {
+    const M = B.oxen(o, h);
+    assert.ok(Math.abs(M.ai - hm(B.JOBS.ai, M.size, M.r)) < 1e-9 && Math.abs(M.app - hm(B.JOBS.app, M.size, M.r)) < 1e-9, 'not the model');
+    const F = B.floorplan(M.r, M.m);
+    assert.equal(F.hens.length + (F.ox ? F.ox.w * F.ox.h : 0), M.size, 'the plan does not hold every unit');
+    assert.equal(new Set(F.hens.map(p => p.join(','))).size, F.hens.length);
+    if (B.checkOxen({ ox: o, hens: h }).ok) { assert.ok(M.r > 1 && M.m > 0, 'passed without both'); assert.ok(M.size <= B.BUDGET); }
+  }
+  assert.ok(!B.checkOxen(B.OX_START).ok);
+  assert.ok(!B.checkOxen({ ox: 0, hens: B.HENS.length - 2 }).ok, 'the chickens alone serve the everyday app');
+  assert.ok(!B.checkOxen({ ox: B.OX.length - 1, hens: B.HENS.length - 1 }).ok, 'spending past the budget passes');
+  assert.ok(B.OX.some((_, o) => B.HENS.some((_, h) => B.checkOxen({ ox: o, hens: h }).ok)));
+  assert.deepEqual(B.normalBetOf('oxen', { ox: 3, hens: 99, guess: 2 }), { ox: 3, hens: B.OX_START.hens, guess: 2 });
+});

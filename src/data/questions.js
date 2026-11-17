@@ -42,7 +42,7 @@ export const FIELD = [
   { id: 'trust', shape: 'leak', prims: ['agents', 'info'], home: { place: 'port' }, seam: { along: ['ship', 'use'] }, src: 'https://doi.org/10.1145/358198.358210' },
   { id: 'package', shape: 'leak', prims: ['matter', 'value'], home: { level: 'pkg' }, seam: { along: ['test', 'ship'] }, src: 'https://www.tomshardware.com/news/tsmc-shortage-of-nvidias-ai-gpus-to-persist-for-15-years' },
   /* bets */
-  { id: 'oxen', shape: 'bet', prims: ['info', 'time', 'value'], home: { level: 'rack' }, src: 'https://todayinsci.com/C/Cray_Seymour/CraySeymour-Quotations.htm' },
+  { id: 'oxen', shape: 'bet', prims: ['info', 'time', 'value'], home: { level: 'chip' }, src: 'https://todayinsci.com/C/Cray_Seymour/CraySeymour-Quotations.htm' },
   { id: 'fabless', shape: 'bet', prims: ['matter', 'agents', 'value'], home: { place: 'fab' }, src: 'https://computerhistory.org/profile/morris-chang/' },
   { id: 'printer', shape: 'bet', prims: ['matter', 'chance', 'value'], home: { level: 'scanner' }, src: 'https://worksinprogress.co/issue/the-worlds-most-complex-machine/' },
   { id: 'anyone', shape: 'bet', prims: ['info', 'agents', 'matter'], home: { place: 'studio' }, src: 'https://ai.eecs.umich.edu/people/conway/Memoirs/VLSI/Files/The-book-that-changed-everything.htm' },
