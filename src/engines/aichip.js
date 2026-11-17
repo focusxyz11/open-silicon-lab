@@ -1,7 +1,7 @@
 /* Three small models of an AI chip, as engines (the labs' words: src/i18n/en.json; the views that read them: not yet built).
    Brought over from the first version of the site, with the same numbers: topics/accelerators/labs/roofline.js,
    topics/memory/labs/hbm-stack-builder.js and topics/economics/labs/gpu-cost-breakdown.js (the first version's
-   checkout, /tmp/v1, and its src/data/chips.js). Pure functions, no DOM, no words shown to people: ids only.
+   checkout, the branch 'before', and its src/data/chips.js). Pure functions, no DOM, no words shown to people: ids only.
 
    roofline: serving a language model one token at a time (decode) reads every weight once per step, so the step takes
    as long as the slower of two things: reading the weights (bytes over bandwidth) and doing the math (2 x parameters x

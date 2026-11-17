@@ -1,5 +1,5 @@
 /* New ways to compute: the machines, the jobs they suit, how mature each idea is, and a gallery of frontier ideas.
-   Ported from the first version of the site (src/data/paradigms.js there, read-only copy at /tmp/v1) for the
+   Ported from the first version of the site (src/data/paradigms.js there, read-only copy at the branch 'before') for the
    engines in src/engines/paradigms.js and src/engines/grover.js. Data only: ids and numbers. Every visible word
    (machine names, job names, reasons, stages, gallery text, challenge goals) lives in WORDS below, keyed
    para.machine.<id>.t / .how, para.job.<id> / .d, para.fit.<job>.<machine>, para.stage.<i>, para.saves.<id>,
