@@ -483,6 +483,29 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
     await fp.waitForSelector('[data-cz-go]', { timeout: 60000 }).catch(() => problems.push(tag + ': Grow a crystal does not offer to start'));
     await fp.evaluate(() => { for (const s of ['[data-cz-auto]', '[data-cz-fast]', '[data-cz-go]']) { const b = document.querySelector(s); if (b) b.click(); } });
     await fp.waitForSelector('.player .won', { timeout: 120000 }).catch(() => problems.push(tag + ': the autopilot does not grow a perfect crystal'));
+    /* the factory's labs: each is played to its win; a poll does every move again, as the sheet may be drawn anew
+       when the flight lands. SET sets a dial the way a person drags it. */
+    const SET = "const SET = (q, v) => { const i = document.querySelector(q); if (i) { i.value = v; i.dispatchEvent(new Event('input', { bubbles: true })); } }, CL = q => { const b = document.querySelector(q); if (b) b.click(); };";
+    const playLab = async (id, moves, what, wait = 90000) => {
+      await fp.goto(base + 'index.html#/do/' + id);
+      await fp.waitForSelector('.player', { timeout: 60000 }).catch(() => problems.push(tag + ': ' + what + ' does not open'));
+      await fp.waitForFunction(new Function('return (async () => { ' + SET + moves + '; return !!document.querySelector(".player .won"); })()'), null, { timeout: wait, polling: 3000 }).catch(() => problems.push(tag + ': ' + what + ' is not won by the moves that win it'));
+    };
+    await playLab('furnace', "CL('[data-im-ion=\"B\"]'); SET('#im-le', 0.3); CL('[data-im-anneal=\"furnace\"]'); CL('[data-im-anneal=\"laser\"]')", 'The furnace spreads it');
+    await playLab('shallow', "CL('[data-im-ion=\"As\"]'); SET('#im-le', 0.3); CL('[data-im-anneal=\"laser\"]')", 'Shallow and switched on');
+    await playLab('vias', "SET('#ov-shift', 0); SET('#ov-sigma', 0.65); SET('#ov-shift', 2)", 'Ten billion vias');
+    await playLab('euv-1000', "SET('#eu-power', 1000); SET('#eu-reflect', 0.72); SET('#eu-mirrors', 8); SET('#eu-dose', 15)", 'The 1,000-watt source');
+    /* every scanner at its finest: the engine finds the setting, the person's dials are set to it */
+    await playLab('litho-finest', "const X = await import(new URL('src/engines/litho.js', location.href).href); for (const s of X.SOURCES) { const f = X.finestHalfPitch(s.id); let pick = null;"
+      + " for (const dp of [false, true]) for (const illum of ['dipole', 'conventional']) for (let v = 0; v <= 1000 && !pick; v++) { const r = X.litho({ src: s.id, na: X.naOf(s, 9), hp: X.hpOfSlider(v), dose: 0.86, illum, dp }); if (r.status !== 'bad' && r.hp <= f * 1.1) pick = { v, illum, dp }; }"
+      + " if (!pick) continue; CL('[data-lt-src=\"' + s.id + '\"]'); CL('[data-lt-illum=\"' + pick.illum + '\"]'); const d = document.querySelector('[data-lt-dp]'); if (d && (d.getAttribute('aria-pressed') === 'true') !== pick.dp) d.click();"
+      + " SET('#lt-na', 9); SET('#lt-hp', pick.v); }", 'Print the finest lines');
+    /* the films labs run in time: start a run, go on if it was paused, start again if it ended short of the goal */
+    const GO = "const g = document.querySelector('[data-fl-go]'), lab = g ? g.textContent.trim() : '';";
+    await playLab('etch', GO + " if (lab === 'Start etching') { SET('#fl-ions', 100); SET('#fl-chem', 0); const f = document.querySelector('[data-fl-fast]'); if (f && f.getAttribute('aria-pressed') !== 'true') f.click(); CL('[data-fl-go]'); }"
+      + " else if (g && g.disabled) CL('[data-fl-reset]'); else if (lab === 'Go on') CL('[data-fl-go]')", 'Etch straight down', 180000);
+    await playLab('bottom', GO + " const m = document.querySelector('[data-fl-mode].on'), mode = m ? m.dataset.flMode : 'cvd';"
+      + " if (g && g.disabled) { if (mode === 'cvd') CL('[data-fl-mode=\"ald\"]'); else CL('[data-fl-reset]'); } else if (lab === 'Deposit' || lab === 'Go on') CL('[data-fl-go]')", 'The bare bottom', 180000);
     /* Verify the agent, at the Lab: a tool checks a case, and eight right calls win */
     await fp.goto(base + 'index.html#/do/agent');
     await fp.waitForSelector('#sheet .agcases [data-ag-case]', { timeout: 60000 }).catch(() => problems.push(tag + ': Verify the agent does not show its cases'));

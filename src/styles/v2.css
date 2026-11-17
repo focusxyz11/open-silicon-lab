@@ -1357,6 +1357,8 @@ button.opens { width: 100%; text-align: left; border: 0; border-left: 3px solid 
    1100 px the card stays below the picture, as before. */
 @media (min-width: 1100px) {
   :root { --bench: 452px; }
+  /* the bench is tall: the goal scrolls with the lab, so it never covers the picture being watched */
+  .goalbox { position: static; box-shadow: none; }
   .sheet, .dockwrap { left: auto; right: 16px; top: 84px; bottom: auto; transform: none; width: calc(var(--bench) - 32px); max-height: calc(100% - 100px); overflow: auto; animation: benchin .35s ease; }
   .sheet:has(.ticks), .sheet.inside, .sheet.whatif { max-height: calc(100% - 100px); }
   .dockwrap:has(.benchdock) { width: calc(var(--bench) - 32px); }
