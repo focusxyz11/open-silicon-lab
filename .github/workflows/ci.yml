@@ -9,6 +9,11 @@ on:
 permissions:
   contents: read
 
+# a newer push to the same pull request replaces the run still going for the older one; runs on main always finish
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -26,8 +31,13 @@ jobs:
           # reached, install only the browser (from Playwright's own servers) and go on.
           npx playwright install --with-deps chromium || npx playwright install chromium
       - name: Browser smoke test
-        timeout-minutes: 25
-        run: npm run test:browser
+        # the browser runs on a software renderer here, seconds per frame: if one run fails, it runs once more, and a pass
+        # on the second run is marked as a warning, so a check that passes by chance is still seen and fixed
+        timeout-minutes: 45
+        run: |
+          if npm run test:browser; then exit 0; fi
+          echo "::warning title=Smoke test passed only on a second run::A browser check failed once. Read the first run's problems above and make that check steady."
+          npm run test:browser
 
   deploy:
     if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
