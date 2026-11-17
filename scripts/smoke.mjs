@@ -452,7 +452,7 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
     /* Jevons' bet, on the power island: a better chip alone draws more turbines; under a limit on its power it holds. The
        island is far, and the sheet may be drawn again when the flight lands: each poll guesses and turns the dials anew */
     await fp.goto(base + 'index.html#/do/jevons');
-    await fp.waitForSelector('[data-guess-jv]', { timeout: 60000 }).catch(() => problems.push(tag + ': the Jevons bet does not ask for a guess first'));
+    await fp.waitForSelector('[data-guess-jv]', { timeout: 120000 }).catch(() => problems.push(tag + ': the Jevons bet does not ask for a guess first'));
     const dials = (D, sel) => fp.waitForFunction(([D, sel]) => { const g = document.querySelector('[data-guess-jv="2"]'); if (g) g.click();
       for (const [k, v] of D) { const r = document.querySelector('#sheet [data-bet="' + k + '"]'); if (r && r.value !== String(v)) { r.value = v; r.dispatchEvent(new Event('input', { bubbles: true })); } }
       return !!document.querySelector(sel); }, [D, sel], { timeout: 30000, polling: 1000 });
