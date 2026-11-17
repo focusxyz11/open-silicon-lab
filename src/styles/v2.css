@@ -1531,3 +1531,45 @@ button.opens { width: 100%; text-align: left; border: 0; border-left: 3px solid 
 .euhfig .eures { fill: color-mix(in srgb, var(--ink) 25%, var(--panel-solid)); } .euhfig .euhole { fill: var(--accent); }
 .euhfig .euc { fill: none; stroke-width: 1.4; } .euhfig .euc.ok { stroke: var(--good); } .euhfig .euc.no { stroke: var(--bad); stroke-dasharray: 3 2; stroke-width: 2; }
 @media (max-width: 720px) { .ltread .small { display: none; } .euholes { grid-template-columns: 110px 1fr; } }
+
+/* ---- the way in, on the picture (src/v2/frame.js): the card's way deeper, again as one large button over the scene;
+   beside the thing it enters when the view knows where that is (a ring on it), else at the foot of the picture.
+   Below 1100 px the card covers the foot, so the button waits at the top right, under the bar. ---- */
+.wayin { position: absolute; inset: 0; pointer-events: none; z-index: 3; }
+.wayin[hidden] { display: none; }
+.wibox { position: absolute; right: 16px; top: 84px; display: grid; justify-items: end; gap: 6px; pointer-events: auto; }
+.wigo, .igo { display: inline-flex; align-items: center; gap: 12px; padding: 9px 18px 9px 9px; border-radius: 999px; border: 0; cursor: pointer; text-decoration: none; font: inherit;
+  background: var(--accent); color: var(--accent-ink); box-shadow: 0 10px 30px color-mix(in srgb, var(--accent) 35%, transparent); transition: transform .15s; }
+.wigo:hover, .igo:hover { transform: translateY(1px); } .wigo:focus-visible, .igo:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
+.wia { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; background: color-mix(in srgb, var(--accent-ink) 16%, transparent); font-size: 18px; font-weight: 700; }
+.wit { display: grid; line-height: 1.15; text-align: left; } .wit b { font-size: 15px; }
+.wik { font-size: 11px; letter-spacing: .06em; text-transform: uppercase; opacity: .8; }
+.wih { font-size: 12px; color: var(--muted); padding: 3px 10px; border-radius: 999px; background: var(--panel); }
+.wiring { display: none; }
+@media (prefers-reduced-motion: no-preference) { .wia { animation: wipulse 2.4s ease-in-out infinite; } }
+@keyframes wipulse { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(3px); } }
+@media (min-width: 1100px) {
+  .wayin { right: var(--bench); }
+  .wibox { right: auto; top: auto; left: 50%; bottom: 28px; transform: translateX(-50%); justify-items: center; }
+  /* beside the thing it enters, with a ring on it */
+  .wayin.at .wiring { display: block; position: absolute; left: var(--wx); top: var(--wy); width: 46px; height: 46px; margin: -23px 0 0 -23px; border-radius: 50%;
+    border: 2px solid var(--accent); box-shadow: 0 0 0 6px color-mix(in srgb, var(--accent) 18%, transparent); }
+  .wayin.at .wibox { left: calc(var(--wx) + 40px); top: var(--wy); bottom: auto; transform: translateY(-50%); justify-items: start; }
+  .wayin.at.left .wibox { left: auto; right: calc(100% - var(--wx) + 40px); justify-items: end; }
+  @media (prefers-reduced-motion: no-preference) { .wayin.at .wiring { animation: wiring 2.4s ease-out infinite; } }
+  /* the levels at the side, all named: where you are, and how far there is to go */
+  .rail2 .nm { opacity: .8; transform: none; padding: 1px 8px; border-radius: 999px; background: color-mix(in srgb, var(--panel-solid) 72%, transparent); }
+  .rail2 [aria-current] ~ li .nm, .rail2 li:has([aria-current]) ~ li .nm { opacity: .55; }
+}
+@keyframes wiring { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 45%, transparent); } 100% { box-shadow: 0 0 0 18px transparent; } }
+@media (max-width: 720px) { .wibox { top: 116px; right: 10px; } .wigo { padding: 6px 14px 6px 6px; gap: 8px; } .wia { width: 28px; height: 28px; font-size: 15px; } .wit b { font-size: 14px; } .wih { display: none; } }
+/* what you see here, in the card: each part, and what it does; pointing at one lights its name on the picture */
+.here2 { list-style: none; margin: 10px 0 4px; padding: 0; display: grid; gap: 4px; }
+.here2 button { display: grid; gap: 1px; width: 100%; text-align: left; padding: 7px 10px; border-radius: 10px; border: 1px solid transparent; background: none; color: var(--ink); font: inherit; cursor: pointer; }
+.here2 button:hover, .here2 button:focus-visible, .here2 button.on { border-color: var(--line); background: color-mix(in srgb, var(--accent) 8%, transparent); }
+.here2 b { font-size: 14px; } .here2 span { font-size: 13px; color: var(--muted); line-height: 1.35; }
+.lbl3.part3.hl { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); transform-origin: center; }
+@media (max-width: 720px) { .here2 span { display: none; } .here2 { grid-template-columns: 1fr 1fr; } }
+/* the same way in, in the island's cards */
+.igo { margin: 4px 0 2px; padding: 7px 16px 7px 7px; } .igo .wia { width: 30px; height: 30px; font-size: 16px; } .igo .wit b { font-size: 14px; }
+.insp .ihint { margin: 4px 0 8px; font-size: 12px; } .zoomhint:has(.igo) { display: grid; justify-items: start; gap: 4px; }

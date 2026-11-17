@@ -32,7 +32,7 @@ import { reportsAt, SAYS } from '../engines/ledger.js';
 import * as Read from './read.js';
 import * as Exp from '../engines/experiments.js';
 import * as Chip from '../engines/chip.js';
-import { levelAt, fieldAtLevel } from '../data/atlas.js';
+import { levelAt, fieldAtLevel, VIEW_PARTS } from '../data/atlas.js';
 import * as Field from './field.js';
 import { setBetScene } from '../app/betscene.js';
 import { whatif as whatifView } from './whatif.js';
@@ -140,7 +140,8 @@ export function start() {
   }));
   /* each view is made once, even when the prewarm and a visit ask for it at the same moment */
   let dcP = null, chipP = null, boardP = null;
-  const ensureDc = () => dcP || (dcP = import('./dc3d.js').then(m => { dc = m.createDataCentre($('placeCanvas'), $('placeLabels'), { level: lv => placeUI(lv), depth: z => depthBar(z) }); return dc; }));
+  const ensureDc = () => dcP || (dcP = import('./dc3d.js').then(m => { dc = m.createDataCentre($('placeCanvas'), $('placeLabels'), { level: lv => placeUI(lv), depth: z => depthBar(z),
+    portal: p => dcFrame && dcFrame.inwardAt(p), beyond: () => { if (!pui.hidden) location.hash = '#/dive/chip'; } }); return dc; }));
 
   /* ---- the loop: a chip's life in the bar, on every view. It is where you are (the stage lit) and how you move
      along: a tap goes to that stage, holding the level you are at wherever that level exists there (a gate as used,
@@ -202,14 +203,16 @@ export function start() {
   function drawInsp() {
     if (!cur) return hideInsp(); const id = cur.place, P = cur.part && PARTS[id], C = Game.community(S), dos = doList(id);
     const nDo = id === 'lab' ? C.jobs.length + C.engines.length : id === 'village' ? C.jobs.length : dos.filter(c => !S.done[c.id]).length, nAsk = (Game.ASK[id] || []).length + Game.debatesAt(id).length + Game.fieldsAt(id).length;
-    const deep = P ? P.deeper(cur.part) : PARTS[id] ? null : enterOf(id), cn = carryNote && carryNote.place === id ? carryNote : null;
+    const deep = P ? P.deeper(cur.part) : enterOf(id), cn = carryNote && carryNote.place === id ? carryNote : null;
     insp.innerHTML = '<button type="button" class="ix" data-iact="close" aria-label="' + esc(t('sheet.close')) + '">×</button><p class="kicker">' + esc(P ? t('map.' + id + '.t') : kickerOf(id)) + '</p><h3>' + esc(P ? P.name(cur.part) : t('map.' + id + '.t')) + '</h3>' +
       '<p class="il">' + esc(P ? P.see(cur.part) : t('map.' + id + '.d')) + '</p>' +
       /* seen through a lens, a place offers the question that lens belongs to, where it is asked here */
       (lensQ(id) ? '<div class="ilens">' + askLink(lensQ(id)) + '</div>' : '') +
       (DIALS[id] && !P ? '<div class="dials"><p class="kicker">' + esc(t('dial.k')) + '</p>' + dialsHtml(id) + '</div>' : '') +
       (cn ? '<div class="icarry"><span>' + esc(cn.text) + '</span>' + (cn.ch ? '<button type="button" class="chipb" data-iact="play">' + esc(t('carry.go')) + '</button>' : '') + '</div>' : '') +
-      '<div class="iacts">' + (deep ? '<button type="button" class="chipb primary" data-iact="deeper">↓ ' + esc(t('insp.closer')) + '</button>' : PARTS[id] && !P ? '<span class="small muted">' + esc(t('insp.open')) + '</span>' : '') +
+      /* the way in comes first, large, with the gestures that do the same said once beside it */
+      (deep ? '<button type="button" class="igo" data-iact="deeper"><span class="wia" aria-hidden="true">↓</span><span class="wit"><span class="wik">' + esc(t('frame.in.k')) + '</span><b>' + esc(P ? P.name(cur.part) : t('map.' + id + '.t')) + '</b></span></button><p class="small muted ihint">' + esc(t('insp.inHint')) + '</p>' : '') +
+      '<div class="iacts">' +
       '<button type="button" class="chipb" data-iact="do">' + esc(t('door.do')) + (nDo ? ' <span class="n">' + nDo + '</span>' : '') + '</button>' +
       '<button type="button" class="chipb" data-iact="ask">' + esc(t('door.ask')) + (nAsk ? ' <span class="n">' + nAsk + '</span>' : '') + '</button>' +
       '<button type="button" class="chipb" data-iact="more">' + esc(t('insp.more')) + '</button></div>';
@@ -396,14 +399,14 @@ export function start() {
       /* a part of an open building: what it does, its question, and how to go closer (zoom in) */
       const P = cur.part, PP2 = PARTS[id], qs = PP2.qs(P);
       h += '<p class="line">' + esc(PP2.see(P)) + '</p>' +
-        '<div class="zoomhint"><button type="button" class="chipb" data-deeper aria-label="' + esc(t('zoom.inBtn')) + '">↓</button><span class="small muted">' + esc(t('zoom.tool.' + id)) + '</span></div>' + qs.slice(0, 1).map(askLink).join('') + worldsRow(qs) +
+        '<div class="zoomhint"><button type="button" class="igo" data-deeper><span class="wia" aria-hidden="true">↓</span><span class="wit"><span class="wik">' + esc(t('frame.in.k')) + '</span><b>' + esc(PP2.name(P)) + '</b></span></button><span class="small muted">' + esc(t('zoom.tool.' + id)) + '</span></div>' + qs.slice(0, 1).map(askLink).join('') + worldsRow(qs) +
         '<ol class="lvchips steps" aria-label="' + esc(t('zoom.tools')) + '">' + PP2.list.map((s2, i) => '<li><button type="button" data-part="' + s2 + '"' + (s2 === P ? ' aria-current="true"' : '') + '>' + esc(PP2.name(s2)) + '</button></li>').join('') + '</ol>';
     } else if (cur.tab === 'look') {
       /* one line; the way in is zooming in (docs/INTERACTION.md), the card only says so; the levels as small steps */
       const enter = enterOf(id);
       const nx = Way.stageOfPlace(id) ? Way.nextPlace(id) : null;
       h += '<p class="line">' + esc(t('map.' + id + '.d')) + '</p>' +
-        (PARTS[id] ? '<div class="zoomhint"><span class="small muted">' + esc(t('zoom.open')) + '</span></div>' : enter ? '<div class="zoomhint"><button type="button" class="chipb" data-deeper aria-label="' + esc(t('zoom.inBtn')) + '">↓</button><span class="small muted">' + esc(t('zoom.place')) + '</span></div>' : '') +
+        (enter ? '<div class="zoomhint"><button type="button" class="igo" data-deeper><span class="wia" aria-hidden="true">↓</span><span class="wit"><span class="wik">' + esc(t('frame.in.k')) + '</span><b>' + esc(t('map.' + id + '.t')) + '</b></span></button><span class="small muted">' + esc(t(PARTS[id] ? 'zoom.open' : 'zoom.place')) + '</span></div>' : '') +
         worldsRow((Game.INSIDE[id] || []).flatMap(l => stopsAt(l.depth))) +
         aroundHtml(id, nx) +
         /* What if?: the levers that sit on this island, each a way to see the change it makes cross the sea */
@@ -504,10 +507,13 @@ export function start() {
   }
   function drawDc() {
     const id = LEVELS[dcLv], last = dcLv === LEVELS.length - 1;
+    /* what you see here: every part named on the picture at this level, and what it does; pointing at one lights it */
+    const here = dc ? dc.parts(dcLv) : [], PF = VIEW_PARTS.flight;
+    const hereHtml = here.length ? '<p class="kicker">' + esc(t('place.here')) + '</p><ul class="here2">' + here.map(k => '<li><button type="button" data-hl="' + k + '"><b>' + esc(t('part.' + PF[k])) + '</b><span>' + esc(t('what.' + PF[k])) + '</span></button></li>').join('') + '</ul>' : '';
     dcFrame.dock.innerHTML = lineHtml(t('place.dc.' + id + '.t'), t('place.dc.' + id + '.d'), ASKS[id], aroundRow(
       dcLv ? '<button type="button" class="chipb" data-key="back" data-lvgo="' + (dcLv - 1) + '">↑ ' + esc(t('place.dc.' + LEVELS[dcLv - 1] + '.t')) + '</button>' : '',
-      last ? '<a class="chipb" data-key="next" href="#/dive/chip">↓ ' + esc(t('place.next')) + '</a>' : '<button type="button" class="chipb" data-key="next" data-lvgo="' + (dcLv + 1) + '">↓ ' + esc(t('place.dc.' + LEVELS[dcLv + 1] + '.t')) + '</button>',
-      id === 'board' ? '<a class="chipb" href="#/board">' + esc(t('board.enter')) + '</a>' : ''));
+      last ? '<a class="chipb" data-key="next" data-in href="#/dive/chip">↓ ' + esc(t('place.next')) + '</a>' : '<button type="button" class="chipb" data-key="next" data-in data-lvgo="' + (dcLv + 1) + '">↓ ' + esc(t('place.dc.' + LEVELS[dcLv + 1] + '.t')) + '</button>',
+      id === 'board' ? '<a class="chipb" href="#/board">' + esc(t('board.enter')) + '</a>' : '')).replace('<div class="nav">', hereHtml + '<div class="nav">');
   }
   function showPlace(id, lv) {
     hideAll();
@@ -515,8 +521,9 @@ export function start() {
     loading(true); lastPlace = id;
     return Promise.all([withFrame(), ensureDc()]).then(([, d]) => {
       dcFrame = frameOf(pui, { up: { href: '#/', label: t('place.back') }, path: [{ href: '#/', label: t('place.back') }, { label: t('map.' + id + '.t') }],
-        rail: { label: t('place.levels'), items: LEVELS.map(k => ({ id: k, label: t('place.dc.' + k + '.t') })) }, onRail: k => d.go(LEVELS.indexOf(k)), onLook: drawDc });
-      pui.onclick = e => { const b = e.target.closest('[data-lvgo]'); if (b) d.go(+b.dataset.lvgo); };
+        rail: { label: t('place.levels'), items: LEVELS.map(k => ({ id: k, label: t('place.dc.' + k + '.t') })) }, onRail: k => d.go(LEVELS.indexOf(k)), onLook: drawDc, scroll: true });
+      pui.onclick = e => { const b = e.target.closest('[data-lvgo]'); if (b) d.go(+b.dataset.lvgo); const h = e.target.closest('[data-hl]'); if (h) d.mark(h.dataset.hl); };
+      pui.onpointerover = e => { const h = e.target.closest('[data-hl]'); d.mark(h ? h.dataset.hl : null); };
       loading(false); d.resume(); if (lv != null && lv >= 0 && lv < LEVELS.length) d.go(lv); placeUI(Math.round(d.z)); $('placeCanvas').focus({ preventScroll: true });
     });
   }
@@ -546,7 +553,7 @@ export function start() {
       /* the same order on every dock: back and the other views on the left, the next step on the right */
       '<span class="navl">' + ((build ? r < ROWS.length - 1 : r > 0) ? '<button type="button" class="btn ghost" data-key="back" data-rowgo="' + (build ? r + 1 : r - 1) + '">' + esc(t('story.back')) + '</button>' : '') +
       '<a class="btn" href="' + esc(build ? '#/place/fab/inside' : '#/dive/' + R.dive) + '">' + esc(t(build ? 'chipx.atFab' : 'dive.flat')) + '</a></span>' +
-      (done ? '<a class="btn primary" data-key="next" href="' + (build ? '#/place/port' : '#/') + '">' + esc(t(build ? 'chipx.ship' : 'chipx.back')) + '</a>' : '<button type="button" class="btn primary" data-key="next" data-rowgo="' + nextR + '">' + esc(t(build ? 'chipx.next' : 'chipx.deeper')) + '</button>')).replace('<div class="nav">', yours + '<div class="nav">');
+      (done ? '<a class="btn primary" data-key="next" href="' + (build ? '#/place/port' : '#/') + '">' + esc(t(build ? 'chipx.ship' : 'chipx.back')) + '</a>' : '<button type="button" class="btn primary" data-key="next"' + (build ? '' : ' data-in data-inname="' + esc(t('depth.' + ROWS[nextR].dive + '.name')) + '"') + ' data-rowgo="' + nextR + '">' + esc(t(build ? 'chipx.next' : 'chipx.deeper')) + '</button>')).replace('<div class="nav">', yours + '<div class="nav">');
   }
   function showChip(row, mode) {
     hideAll();
@@ -727,7 +734,7 @@ export function start() {
     const [ar0, ar1] = flatKind === 'dive' ? ['↑ ', '↓ '] : ['← ', '→ '], nm = d => t('depth.' + d + '.name');
     diveFrame.dock.innerHTML = lineHtml(t('around.view.' + flatKind) + ' · ' + t('depth.' + id + '.name'), t('depth.' + id + '.see'), key, aroundRow(
       i ? '<button type="button" class="chipb" data-key="back" data-divego="' + (diveD - 1) + '">' + ar0 + esc(nm(L[i - 1])) + '</button>' : flatKind === 'dive' && diveWorld === 'datacentre' ? '<button type="button" class="chipb" data-key="back" data-divego="' + (diveD - 1) + '">' + esc(t('dive.up')) + '</button>' : '',
-      last ? end : '<button type="button" class="chipb" data-key="next" data-divego="' + (diveD + 1) + '">' + ar1 + esc(nm(L[i + 1])) + '</button>')).replace('<div class="nav">', yours + '<p class="small muted hintline">' + esc(t(F.hint)) + '</p><div class="nav">');
+      last ? end : '<button type="button" class="chipb" data-key="next"' + (flatKind === 'dive' ? ' data-in' : '') + ' data-divego="' + (diveD + 1) + '">' + ar1 + esc(nm(L[i + 1])) + '</button>')).replace('<div class="nav">', yours + '<p class="small muted hintline">' + esc(t(F.hint)) + '</p><div class="nav">');
     requestAnimationFrame(diveInset);
   }
   /* keep the picture clear of the frame: the rail on the left, the corner, the dock below */

@@ -918,7 +918,8 @@ export function createMap(canvas, host, on = {}) {
   /* what is selected (docs/INTERACTION.md): a place, and inside an open one a part; zooming further into it goes
      deeper, zooming far enough out leaves it */
   let sel = null, push = 0, pinchDeep = false;
-  const deepAt = () => (!sel ? 0 : sel.part ? 40 : OPEN[sel.place] ? 0 : Math.max(38, placeAt(sel.place).d * 0.6));
+  /* how close the camera must come before pushing on goes in: a part, an opened building as a whole (its first level), or a place */
+  const deepAt = () => (!sel ? 0 : sel.part ? 40 : Math.max(38, placeAt(sel.place).d * 0.6));
   const leaveAt = () => placeAt(sel.place).d * 3.2;
   const deeper = () => { if (!sel || !on.deeper) return; const s0 = sel; push = 0; on.deeper(s0.place, s0.part); };
   const MAXD = innerWidth > 720 ? 1100 : 1400;
