@@ -1229,7 +1229,8 @@ export function createMap(canvas, host, on = {}) {
       const off = { port: [-8, 8], datacentre: [0, 2], studio: [-4, -1] }[id] || [0, 0];
       /* on a phone an opened building is framed closer and lower, in the room between the bar and the card */
       const wide = innerWidth > 720, near = { fab: 1.3, studio: 1.15, test: 1.05, port: 1.05, datacentre: 1.2 }[id], nearP = { fab: 1.3, studio: 1.0, test: 1.0, port: 0.85, datacentre: 1.15 }[id];
-      const d = p.d * (wide ? near || 1.6 : nearP || 2), upv = o.center ? (wide ? -d * 0.03 : d * 0.16) : d * (wide ? 0.14 : id === 'village' ? 0.08 : nearP ? 0.17 : 0.24);
+      /* on a wide screen the card is a bench at the right and the picture keeps the place in its middle */
+      const d = p.d * (wide ? near || 1.6 : nearP || 2), upv = innerWidth >= 1100 ? 0 : o.center ? (wide ? -d * 0.03 : d * 0.16) : d * (wide ? 0.14 : id === 'village' ? 0.08 : nearP ? 0.17 : 0.24);
       flyTo(p.at[0] + off[0] + Math.sin(cam.yaw) * upv, p.at[1] + off[1] + Math.cos(cam.yaw) * upv, d);
     },
     overview() { follow = null; const h = home(); flyTo(h.x, h.z, h.d); },
@@ -1252,7 +1253,7 @@ export function createMap(canvas, host, on = {}) {
       const T = place && part && OPEN[place] && OPEN[place].tools[part];
       Object.entries(toolNames).forEach(([k, lb]) => lb.el.classList.toggle('sel', !!T && k === place + ':' + part));
       if (T) { const v = new THREE.Vector3(), wide = innerWidth > 720; placeRing(place, part); T.getWorldPosition(v);
-        const d = wide ? 48 : 64, upv = d * (wide ? 0.12 : 0.18); flyTo(v.x + Math.sin(cam.yaw) * upv, v.z + Math.cos(cam.yaw) * upv, d); }
+        const d = wide ? 48 : 64, upv = innerWidth >= 1100 ? 0 : d * (wide ? 0.12 : 0.18); flyTo(v.x + Math.sin(cam.yaw) * upv, v.z + Math.cos(cam.yaw) * upv, d); }
     },
     /* the first visit opens on a wide shot of the sea and comes down to the island, turning toward it */
     intro() { if (reduced()) return; const h = home(); Object.assign(cam, { x: h.x + 70, z: h.z + 120, d: MAXD * 0.8, yaw: cam.yaw - 0.8, pitch: 1.08 }); place2();
@@ -1266,7 +1267,7 @@ export function createMap(canvas, host, on = {}) {
       Object.assign(cam, { x: v.x, z: v.z, d: part ? 32 : Math.max(38, p.d * 0.55), pitch: 0.8 }); place2(); },
     /* What if?: every island in view, and on a desktop the world set to the right of the bench at the left */
     whatifView() { const xs = PLACES.map(p => p.at[0]), zs = PLACES.map(p => p.at[1]), cx = (Math.min(...xs) + Math.max(...xs)) / 2, cz = (Math.min(...zs) + Math.max(...zs)) / 2, wide = innerWidth > 720;
-      const d = wide ? 640 : 1250, k = wide ? d * 0.22 * (420 / innerWidth) * 2.2 : 0; flyTo(cx - Math.cos(cam.yaw) * k, cz + Math.sin(cam.yaw) * k + (wide ? 0 : 60), d, 1400); },
+      const d = wide ? 640 : 1250, k = wide && innerWidth < 1100 ? d * 0.22 * (420 / innerWidth) * 2.2 : 0; flyTo(cx - Math.cos(cam.yaw) * k, cz + Math.sin(cam.yaw) * k + (wide ? 0 : 60), d, 1400); },
     /* the archipelago: the islands where chips live, and the sea between */
     ecosystem() { if (innerWidth > 720) flyTo(-6, 6, 760, 1500); else flyTo(-4, 120, 1400, 1500); },
     setState,

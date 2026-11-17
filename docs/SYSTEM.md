@@ -270,6 +270,11 @@ looking at, and its pin pulses. With reduced motion none of it moves.
 Text has a budget: about one sentence per story step, one line per card. Longer reading (notes, sources, the full
 explanation) goes into a reading view, opened on purpose, at a reading width.
 
+On a desktop (1100 px and wider) the one card stands as a bench at the right, as tall as it needs to be, and the
+picture takes the rest: the canvases, the shared stage and the labels end where the bench begins, and each view
+frames its picture in that space. Below that width the card stays below the picture (CLAUDE.md, desktop first
+where it is richer).
+
 ## 5. Adding something
 
 - **A part:** words `part.<depth>.<id>` and `what.<depth>.<id>` at the depth that is its home; a view that draws it
