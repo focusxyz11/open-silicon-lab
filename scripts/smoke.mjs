@@ -356,12 +356,6 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
   await page.addInitScript(() => { window.GL = 0; const g = HTMLCanvasElement.prototype.getContext; HTMLCanvasElement.prototype.getContext = function (k, ...a) { if (/webgl/.test(k) && !this.__gl) { this.__gl = 1; window.GL++; } return g.call(this, k, ...a); };
     window.MOVES = []; const o = document.startViewTransition && document.startViewTransition.bind(document); if (!o) return;
     document.startViewTransition = f => { const tr = o(f); window.MOVES.push(document.documentElement.dataset.move); tr.ready.catch(e => window.MOVES.push('failed: ' + e.message)); return tr; }; });
-  /* the way in is on the picture (src/v2/frame.js): inside the data centre, the button over the scene goes one level
-     deeper, and at the chip, scrolling on carries the flight into it */
-  await page.goto(base + 'index.html#/place/datacentre/2');
-  await page.waitForFunction(() => { const b = document.querySelector('#placeui .wayin:not([hidden]) .wigo'); if (b && location.hash === '#/place/datacentre/2') b.click(); return location.hash === '#/place/datacentre/3'; }, null, { timeout: 90000, polling: 3000 }).catch(() => problems.push(tag + ': the way in on the picture does not go deeper in the data centre'));
-  await page.evaluate(() => { location.hash = '#/place/datacentre/5'; });
-  await page.waitForFunction(() => { const c = document.getElementById('placeCanvas'); if (c && location.hash === '#/place/datacentre/5') { c.focus(); c.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true })); } return location.hash === '#/dive/chip'; }, null, { timeout: 90000, polling: 3000 }).catch(() => problems.push(tag + ': going on past the chip does not carry the flight into it'));
   /* the factory opens where it stands (docs/INTERACTION.md): its six tools are named in the scene, a tool is selected
      in place, and going closer from it reaches the line */
   await page.goto(base + 'index.html#/place/fab');
@@ -539,6 +533,16 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
     await fp.evaluate(() => { location.hash = '#/'; });
     await fp.waitForFunction(() => !document.querySelector('#mapLabels .wf3') || [...document.querySelectorAll('#mapLabels .wf3')].every(e => e.style.opacity === '0'), null, { timeout: 10000 }).catch(() => problems.push(tag + ': What if? stays on the island after leaving it'));
     await fp.close(); }
+  /* a page of its own, so its moves do not mix with the zooms counted below */
+  { const page = await browser3d.newPage({ viewport: { width: 1280, height: 800 } });
+    page.on('pageerror', e => problems.push(tag + ' (way in): ' + e.message));
+  /* the way in is on the picture (src/v2/frame.js): inside the data centre, the button over the scene goes one level
+     deeper, and at the chip, scrolling on carries the flight into it */
+    await page.goto(base + 'index.html#/place/datacentre/2');
+  await page.waitForFunction(() => { const b = document.querySelector('#placeui .wayin:not([hidden]) .wigo'); if (b && location.hash === '#/place/datacentre/2') b.click(); return location.hash === '#/place/datacentre/3'; }, null, { timeout: 90000, polling: 3000 }).catch(() => problems.push(tag + ': the way in on the picture does not go deeper in the data centre'));
+  await page.evaluate(() => { location.hash = '#/place/datacentre/5'; });
+  await page.waitForFunction(() => { const c = document.getElementById('placeCanvas'); if (c && location.hash === '#/place/datacentre/5') { c.focus(); c.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true })); } return location.hash === '#/dive/chip'; }, null, { timeout: 90000, polling: 3000 }).catch(() => problems.push(tag + ': going on past the chip does not carry the flight into it'));
+    await page.close(); }
   await page.evaluate(() => { location.hash = '#/dive/block'; });
   /* the dive may still be making its view: Ask is chosen again until the block's questions show */
   await page.waitForFunction(() => { if (document.querySelector('#diveui .fieldline[data-field="fetch"]')) return true; const b = document.querySelector('#diveui .modes3 [data-mode="ask"]'); if (b && b.getAttribute('aria-selected') !== 'true') b.click(); return false; }, null, { timeout: 30000, polling: 1000 })
