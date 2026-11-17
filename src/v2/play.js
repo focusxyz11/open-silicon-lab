@@ -22,6 +22,7 @@ import { setBetScene } from '../app/betscene.js';
 import { WAFER as SCENE_WAFER } from '../engines/chip.js';
 import { glyph } from './field.js';
 import * as Agent from '../data/agent.js';
+import * as TD from '../data/teardown.js';
 
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 /* the gates a description can use, and the one a tap turns each into */
@@ -205,7 +206,7 @@ export function play(el, ch, ctx) {
   const betOf = () => (S.bets[ch.id] = Bet.normalBetOf(ch.bet, S.bets[ch.id]));
   const million = i => t('bet.sizeV', { n: Bet.SIZES[i] });
   const times = v => isFinite(v) ? t('bet.times', { v: v >= 10 ? Math.round(v) : v.toFixed(2) }) : t('bet.none');
-  function bet() { return ch.bet === 'oxen' ? betOxen() : ch.bet === 'onebad' ? betPieces() : ch.bet === 'prove' ? betProve() : ch.bet === 'jevons' ? betJevons() : betMoore(); }
+  function bet() { return ch.bet === 'oxen' ? betOxen() : ch.bet === 'onebad' ? betPieces() : ch.bet === 'prove' ? betProve() : ch.bet === 'jevons' ? betJevons() : ch.bet === 'batch' ? betBatch() : betMoore(); }
   function betMoore() {
     const b = betOf();
     let h = head();
@@ -312,6 +313,8 @@ export function play(el, ch, ctx) {
   function betScene() {
     if (ch.kind !== 'bet') return;
     const b = betOf(); if (b.guess == null) return setBetScene(null, null, '');
+    /* bets whose answer is in the card alone leave the scene as it is */
+    if (ch.bet === 'prove' || ch.bet === 'batch') return setBetScene(null, null, '');
     if (ch.bet === 'jevons') { const J = Bet.jevons(b.eff, b.cap); return setBetScene(null, null, 'jevons:' + b.eff + ':' + b.cap, { need: J.turbines, own: Bet.TURBINES }); }
     if (ch.bet === 'oxen') { const M = Bet.oxen(b.ox, b.hens); return setBetScene(null, { r: M.r, m: M.m, plan: Bet.floorplan(M.r, M.m) }, 'oxen:' + b.ox + ':' + b.hens); }
     let s, cells, tone, d;
@@ -418,6 +421,101 @@ export function play(el, ch, ctx) {
       '<text class="ax" transform="translate(11 ' + ((top + H - bot) / 2) + ') rotate(-90)" text-anchor="middle">' + esc(t('bet.jv.axisY')) + '</text>' +
       '</svg><figcaption class="small muted">' + esc(t('bet.jv.legend')) + '</figcaption></figure>';
   }
+  /* ---- the batch bet: how many people the chip serves at once, and how many bits each number takes ---- */
+  function betBatch() {
+    const b = betOf(), G = Bet.BATCH_GUESSES, right = Bet.batchAnswer();
+    let h = head();
+    if (b.guess == null) {
+      h += '<p class="kicker">' + esc(t('bet.predictK')) + '</p><p class="small">' + esc(t('bet.bt.predict')) + '</p><div class="chips">' +
+        G.map((g, i) => '<button type="button" class="chipb" data-guess-bt="' + i + '">' + esc(t('bet.bt.g.' + g)) + '</button>').join('') + '</div><p class="small muted">' + esc(t('bet.bt.model')) + '</p>';
+      return h + reward();
+    }
+    const C = Bet.checkBatch(b), R = C.R, X = Bet.BATCH_GOAL, pctB = v => v < 0.01 ? t('bet.pv.pctFine', { v: (v * 100).toFixed(2) }) : t('gauge.pct', { v: Math.round(v * 100) });
+    const gs = [{ k: 'speed', ok: C.fast, v: t('bet.bt.tps', { v: Math.round(R.tokPerUser) }), target: t('bet.bt.gSpeed', { v: X.minSpeed }), f: Math.min(1, R.tokPerUser / X.minSpeed) },
+      { k: 'busy', ok: C.busy, v: pctB(R.utilization), target: t('bet.bt.gBusy', { v: Math.round(X.minBusy * 100) }), f: Math.min(1, R.utilization / X.minBusy) }];
+    h += '<div class="goalbox' + (C.ok ? ' ok' : '') + '"><p class="kicker">' + esc(t(C.ok ? 'game.reached' : 'game.goalNow')) + '</p>' + gs.map(g => '<div class="gauge' + (g.ok ? ' ok' : '') + '"><span class="gl">' + esc(t('bet.bt.g.' + g.k)) + '</span><span class="gv">' + esc(g.v) + ' <span class="muted">' + esc(g.target) + '</span></span><span class="gbar"><span style="width:' + (g.f * 100).toFixed(0) + '%"></span></span></div>').join('') + '</div>';
+    /* one step of writing: reading every weight, against doing the sums for everyone; the step takes the longer */
+    const ms = v => v * 1000 < 1 ? (v * 1000).toFixed(2) : (v * 1000).toFixed(1), top = Math.max(R.tMemS, R.tCmpS), w = v => Math.max(0.8, v / top * 100).toFixed(1);
+    h += '<div class="betview"><figure class="btstep"><div class="agrace"><span class="small">' + esc(t('bet.bt.read')) + '</span><span class="agbar' + (R.memoryBound ? ' hot' : '') + '"><span style="width:' + w(R.tMemS) + '%"></span></span><b class="mono small">' + esc(t('agent.tool.ms', { v: ms(R.tMemS) })) + '</b>' +
+      '<span class="small">' + esc(t('bet.bt.sums', { n: R.people })) + '</span><span class="agbar' + (R.memoryBound ? '' : ' hot') + '"><span style="width:' + w(R.tCmpS) + '%"></span></span><b class="mono small">' + esc(t('agent.tool.ms', { v: ms(R.tCmpS) })) + '</b></div>' +
+      '<figcaption class="small muted">' + esc(t(R.memoryBound ? 'bet.bt.waitsMem' : 'bet.bt.waitsSum', { n: R.people })) + '</figcaption></figure>' + batchSvg(b) + '</div>';
+    h += '<label class="lab" for="bet-batch"><b>' + esc(t('bet.bt.batch')) + '</b> <output>' + esc(t('bet.bt.batchV', { n: R.people })) + '</output></label><input type="range" id="bet-batch" data-bet="batch" min="0" max="' + (Bet.BATCH.length - 1) + '" step="1" value="' + b.batch + '">';
+    h += '<label class="lab" for="bet-format"><b>' + esc(t('bet.bt.format')) + '</b> <output>' + esc(t('bet.bt.f.' + Bet.BFORMATS[b.format])) + '</output></label><input type="range" id="bet-format" data-bet="format" min="0" max="' + (Bet.BFORMATS.length - 1) + '" step="1" value="' + b.format + '">';
+    const R1 = Bet.batched(0, 0);
+    h += '<p class="small ' + (G[b.guess] === right ? 'good' : 'hint') + '">' + esc(t(G[b.guess] === right ? 'bet.bt.right' : 'bet.bt.off', { g: t('bet.bt.g.' + G[b.guess]), v: (R1.utilization * 100).toFixed(1) })) + '</p>';
+    if (!C.ok) h += view.hint ? '<p class="small hint">' + esc(t('bet.bt.hint')) + '</p>' : '<button type="button" class="link" data-hint>' + esc(t('game.hint')) + '</button>';
+    h += '<button type="button" class="link" data-reguess>' + esc(t('bet.again')) + '</button>';
+    if (C.ok) { win(); h += '<p class="small">' + esc(t('bet.bt.why')) + '</p>'; }
+    return h + doneNote() + reward();
+  }
+  /* each person's speed against how many are served at once, one line for each number size; the chip is 80% busy
+     right of the dashed line; the green corner is the goal */
+  function batchSvg(b) {
+    const W = 300, H = 210, l = 40, r = 10, top = 10, bot = 36, lx = [1, 4096], ly = [10, 1000];
+    const x = v => l + (W - l - r) * Math.log(v / lx[0]) / Math.log(lx[1] / lx[0]), y = v => top + (H - top - bot) * (1 - Math.log(Math.max(ly[0], Math.min(ly[1], v)) / ly[0]) / Math.log(ly[1] / ly[0]));
+    const line = fi => Bet.BATCH.map((_, bi) => { const R = Bet.batched(bi, fi); return x(R.people).toFixed(1) + ',' + y(R.tokPerUser).toFixed(1); }).join(' ');
+    /* while the chip waits on memory, each person more adds the same share of busy arithmetic */
+    const busyAt = Math.min(4096, Bet.BATCH_GOAL.minBusy / Bet.batched(0, 0).utilization);
+    const R = Bet.batched(b.batch, b.format), gx = x(busyAt), gy = y(Bet.BATCH_GOAL.minSpeed);
+    return '<figure class="betcurve jpath btcurve"><svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="' + esc(t('bet.bt.aria')) + '">' +
+      '<rect class="goalzone" x="' + gx.toFixed(1) + '" y="' + top + '" width="' + (W - r - gx).toFixed(1) + '" height="' + (gy - top).toFixed(1) + '"/>' +
+      [1, 16, 256, 4096].map(v => '<line class="grid" x1="' + x(v).toFixed(1) + '" x2="' + x(v).toFixed(1) + '" y1="' + top + '" y2="' + (H - bot) + '"/><text class="ax" x="' + x(v).toFixed(1) + '" y="' + (H - bot + 14) + '" text-anchor="' + (v === 4096 ? 'end' : 'middle') + '">' + v + '</text>').join('') +
+      [10, 100, 1000].map(v => '<text class="ax" x="' + (l - 5) + '" y="' + (y(v) + 4).toFixed(1) + '" text-anchor="end">' + v + '</text>').join('') +
+      '<line class="cap" x1="' + gx.toFixed(1) + '" x2="' + gx.toFixed(1) + '" y1="' + top + '" y2="' + (H - bot) + '"/>' +
+      Bet.BFORMATS.map((_, fi) => fi === b.format ? '' : '<polyline class="other" points="' + line(fi) + '"/>').join('') + '<polyline class="line" points="' + line(b.format) + '"/>' +
+      '<circle class="you" cx="' + x(R.people).toFixed(1) + '" cy="' + y(R.tokPerUser).toFixed(1) + '" r="5"/>' +
+      '<text class="ax" x="' + ((l + W - r) / 2) + '" y="' + (H - 6) + '" text-anchor="middle">' + esc(t('bet.bt.axisX')) + '</text>' +
+      '<text class="ax" transform="translate(11 ' + ((top + H - bot) / 2) + ') rotate(-90)" text-anchor="middle">' + esc(t('bet.bt.axisY')) + '</text>' +
+      '</svg><figcaption class="small muted">' + esc(t('bet.bt.legend')) + '</figcaption></figure>';
+  }
+  /* ---- Look inside (src/data/teardown.js): open five products, see every kind of chip each holds, coloured by what it
+     does or how it is made, and count the kinds that need a leading-edge factory ---- */
+  const tdOf = () => { const o = S.teardown || {}; return (S.teardown = { opened: (o.opened || []).filter(id => TD.productById(id)), count: Number.isInteger(o.count) ? o.count : null, by: o.by === 'made' ? 'made' : 'job', at: TD.productById(o.at) ? o.at : null }); };
+  function teardown() {
+    const D = tdOf(), C = TD.checkNewest(D), P = D.at && TD.productById(D.at);
+    let h = head() + '<p class="kicker">' + esc(t('td.open')) + '</p><div class="chips tdprod">' + TD.PRODUCTS.map(p => '<button type="button" class="chipb' + (D.at === p.id ? ' on' : '') + '" data-td-open="' + p.id + '" aria-pressed="' + (D.at === p.id) + '">' + (D.opened.includes(p.id) ? '✓ ' : '') + esc(t('td.product.' + p.id + '.t')) + '</button>').join('') + '</div>';
+    if (!P) return h + '<p class="small hint">' + esc(t('td.start')) + '</p>' + reward();
+    h += '<div class="chips tdby"><span class="small muted">' + esc(t('td.by.label')) + '</span>' + ['job', 'made'].map(k => '<button type="button" class="chipb' + (D.by === k ? ' on' : '') + '" data-td-by="' + k + '" aria-pressed="' + (D.by === k) + '">' + esc(t('td.by.' + k)) + '</button>').join('') + '</div>';
+    /* the board: one tile for each kind of chip, the main one bigger; a diamond marks the leading edge */
+    const sel = view.tdChip && P.chips.find(c => c.id === view.tdChip);
+    h += '<div class="tdboard by-' + D.by + '">' + P.chips.map(c => '<button type="button" class="tdchip ' + D.by + '-' + (D.by === 'job' ? c.job : c.made) + (c.big ? ' big' : '') + (sel && sel.id === c.id ? ' on' : '') + '" data-td-chip="' + c.id + '"><span>' + esc(t('td.chip.' + c.id + '.t')) + '</span>' + (c.leading ? '<i class="lead" aria-label="' + esc(t('td.rd.lead')) + '">◆</i>' : '') + '</button>').join('') + '</div>';
+    const keys = D.by === 'job' ? TD.JOBS : TD.MADE;
+    h += '<div class="tdkey">' + keys.map(k => '<span class="small"><i class="sw ' + D.by + '-' + k + '"></i>' + esc(t('td.' + D.by + '.' + k)) + '</span>').join('') + '<span class="small"><i class="lead">◆</i> ' + esc(t('td.rd.lead')) + '</span></div>';
+    if (sel) h += '<div class="tdsel"><b>' + esc(t('td.chip.' + sel.id + '.t')) + '</b><span class="small muted">' + esc(t('td.job.' + sel.job)) + ' · ' + esc(t('td.how')) + ' ' + esc(t('td.chip.' + sel.id + '.m')) + '</span><span class="small">' + esc(t('td.chip.' + sel.id + '.d')) + '</span></div>';
+    const S1 = TD.summaryOf(P.id);
+    h += '<p class="small">' + esc(t(S1.key, S1.vars)) + ' ' + esc(t(S1.then[0])) + '</p>';
+    /* the count, once every product is open */
+    if (C.all) {
+      h += '<p class="kicker">' + esc(t('td.askCount', { n: TD.PRODUCTS.reduce((a, p) => a + p.chips.length, 0) })) + '</p><div class="agab"><label>' + esc(t('td.yourCount')) + ' <input type="number" min="0" max="60" data-td-count value="' + (D.count == null ? '' : D.count) + '"></label><button type="button" class="chipb" data-td-check>' + esc(t('td.check')) + '</button></div>';
+      if (view.tdTried && !C.ok) h += '<p class="small bad">' + esc(t('td.notYet')) + '</p>';
+    } else h += '<p class="small muted">' + esc(t('td.openAll', { n: TD.PRODUCTS.length - D.opened.length })) + '</p>';
+    if (C.ok) { win(); h += '<p class="small good">' + esc(t('td.ch.newest.done')) + '</p>'; }
+    return h + '<p class="small muted">' + esc(t('td.note')) + '</p>' + doneNote() + reward();
+  }
+  /* ---- The right chip for the job: eight jobs, a line from flexible to specialized, the best kind for each ---- */
+  const fitOf = () => { const o = S.fit || {}, a = {}; TD.FIT_JOBS.forEach(j => { const k = (o.answers || {})[j.id]; if (TD.FIT_KINDS.some(x => x.id === k)) a[j.id] = k; }); return (S.fit = { answers: a }); };
+  function fitJobs() {
+    const F = fitOf(), C = TD.checkJobs(F), i = view.fitJob != null ? view.fitJob : Math.max(0, TD.FIT_JOBS.findIndex(j => F.answers[j.id] !== j.best)), J = TD.FIT_JOBS[i];
+    let h = head() + '<p class="kicker">' + esc(t('td.fit.score', { n: C.best, m: C.of })) + (C.of - C.best ? ' · ' + esc(t('td.fit.togo', { n: C.of - C.best })) : '') + '</p>';
+    h += '<div class="fitjobs">' + TD.FIT_JOBS.map((j, k) => { const v = F.answers[j.id] ? TD.verdict(j.id, F.answers[j.id]) : ''; return '<button type="button" class="agcase ' + (v === 'best' ? 'ok' : v ? 'no' : '') + (k === i ? ' on' : '') + '" data-fit-job="' + k + '"><span class="n">' + (k + 1) + '</span><span class="small">' + esc(t('td.fit.job.' + j.id + '.t')) + '</span></button>'; }).join('') + '</div>';
+    h += '<p class="kicker">' + esc(t('td.fit.pick', { n: i + 1 })) + '</p><h4 class="agt">' + esc(t('td.fit.job.' + J.id + '.t')) + '</h4>';
+    /* the line: flexible at the left, one job done efficiently at the right; the power chip stands apart */
+    const a = F.answers[J.id], v = a ? TD.verdict(J.id, a) : null;
+    h += '<div class="fitline"><span class="end small muted">' + esc(t('td.fit.end.l')) + '</span><span class="end r small muted">' + esc(t('td.fit.end.r')) + '</span>' +
+      TD.FIT_KINDS.filter(k => k.pos != null).map(k => '<button type="button" class="fitk' + (a === k.id ? ' on ' + v : '') + '" style="left:' + (k.pos * 100).toFixed(0) + '%;transform:translateX(-' + (k.pos * 100).toFixed(0) + '%)" data-fit-kind="' + k.id + '" title="' + esc(t('td.fit.kind.' + k.id + '.d')) + '">' + esc(t('td.fit.kind.' + k.id + '.t')) + '</button>').join('') + '</div>' +
+      TD.FIT_KINDS.filter(k => k.pos == null).map(k => '<button type="button" class="chipb fitk2' + (a === k.id ? ' on ' + v : '') + '" data-fit-kind="' + k.id + '">' + esc(t('td.fit.kind.' + k.id + '.t')) + '</button>').join('');
+    if (a) {
+      const kd = TD.FIT_KINDS.find(k => k.id === a);
+      h += '<p class="small"><b>' + esc(t('td.fit.kind.' + kd.id + '.t')) + '</b> · ' + esc(t('td.fit.kind.' + kd.id + '.d')) + '</p>';
+      h += '<p class="small ' + (v === 'best' ? 'good' : v === 'ok' ? 'hint' : 'bad') + '">' + esc(v === 'ok' ? t('td.fit.ok', { kind: t('td.fit.kind.' + J.best + '.t') }) : t('td.fit.' + v)) + '</p>';
+      if (v === 'best') h += '<p class="small">' + esc(t('td.fit.job.' + J.id + '.why')) + '</p>';
+      else if (view.fitShow === J.id) h += '<p class="small">' + esc(t('td.fit.answer', { kind: t('td.fit.kind.' + J.best + '.t') })) + ' ' + esc(t('td.fit.job.' + J.id + '.why')) + '</p>';
+      else h += '<button type="button" class="link" data-fit-show>' + esc(t('td.fit.show')) + '</button>';
+    }
+    const nx = TD.FIT_JOBS.findIndex((j, k) => k !== i && F.answers[j.id] !== j.best); if (v === 'best' && nx >= 0) h += ' <button type="button" class="btn primary" data-fit-job="' + nx + '">' + esc(t('agent.next')) + '</button>';
+    if (C.ok) { win(); h += '<p class="small good">' + esc(t('td.ch.jobs.done')) + '</p>'; }
+    return h + '<p class="small muted">' + esc(t('td.fit.note')) + '</p>' + doneNote() + reward();
+  }
   /* ---- Verify the agent: eight proposals from an AI agent; check each with the lab's own engines, then trust it or
      reject it for its real flaw (src/data/agent.js). The facts come from the lab's dated file when asked for. ---- */
   let FACTS = null;
@@ -523,7 +621,7 @@ export function play(el, ch, ctx) {
   /* bring what just changed into view inside the sheet */
   const show = sel => { const n = el.querySelector(sel); if (n && n.scrollIntoView) n.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); };
   function draw() {
-    const f = ch.kind === 'design' ? design : ch.kind === 'chip' ? chip : ch.kind === 'life' ? life : ch.kind === 'break' ? brk : ch.kind === 'bet' ? bet : ch.kind === 'agent' ? agentDesk : spot;
+    const f = ch.kind === 'design' ? design : ch.kind === 'chip' ? chip : ch.kind === 'life' ? life : ch.kind === 'break' ? brk : ch.kind === 'bet' ? bet : ch.kind === 'agent' ? agentDesk : ch.kind === 'teardown' ? teardown : ch.kind === 'fit' ? fitJobs : spot;
     const html = '<div class="player">' + f() + '</div>', old = el.firstElementChild;
     if (!old || !old.classList.contains('player')) el.innerHTML = html;
     else { const tpl = document.createElement('template'); tpl.innerHTML = html; patch(old, tpl.content.firstElementChild); }
@@ -585,6 +683,14 @@ export function play(el, ch, ctx) {
     const pt = q('[data-pat]'); if (pt) { view.tests.push(+pt.dataset.pat); view.wrong = null; return draw(); }
     const gs = q('[data-guess]'); if (gs) { const k = +gs.dataset.guess; if (k === spotCase(spotCode(S)).broken) { view.guess = k; win(); } else view.wrong = k; draw(); fx(); if (view.wrong === k) anim(el.querySelector('p.bad'), [{ transform: 'translateX(-6px)' }, { transform: 'translateX(5px)' }, { transform: 'translateX(0)' }], { duration: 300 }); return show('.won, .verdict, p.bad'); }
     if (q('[data-again]')) { view.tests = []; view.wrong = null; view.guess = null; return draw(); }
+    /* Look inside, and the right chip for the job */
+    const tdo = q('[data-td-open]'); if (tdo) { const D = tdOf(); D.at = tdo.dataset.tdOpen; if (!D.opened.includes(D.at)) D.opened.push(D.at); view.tdChip = null; ctx.save(); draw(); return show('.tdboard'); }
+    const tdb = q('[data-td-by]'); if (tdb) { tdOf().by = tdb.dataset.tdBy; ctx.save(); return draw(); }
+    const tdc = q('[data-td-chip]'); if (tdc) { view.tdChip = view.tdChip === tdc.dataset.tdChip ? null : tdc.dataset.tdChip; draw(); return show('.tdsel'); }
+    if (q('[data-td-check]')) { const D = tdOf(), inp = el.querySelector('[data-td-count]'); D.count = inp && inp.value !== '' ? Math.round(+inp.value) : null; view.tdTried = true; ctx.save(); draw(); fx(); return show('.won, p.bad'); }
+    const fj = q('[data-fit-job]'); if (fj) { view.fitJob = +fj.dataset.fitJob; view.fitShow = null; draw(); return show('.agt'); }
+    const fk = q('[data-fit-kind]'); if (fk) { const F = fitOf(), i = view.fitJob != null ? view.fitJob : Math.max(0, TD.FIT_JOBS.findIndex(j => F.answers[j.id] !== j.best)); view.fitJob = i; F.answers[TD.FIT_JOBS[i].id] = fk.dataset.fitKind; ctx.save(); draw(); fx(); return; }
+    if (q('[data-fit-show]')) { const i = view.fitJob != null ? view.fitJob : 0; view.fitShow = TD.FIT_JOBS[i].id; return draw(); }
     /* Verify the agent */
     const agc = q('[data-ag-case]'); if (agc) { view.agc = agc.dataset.agCase; view.agReject = null; view.agRedo = null; draw(); return show('.agt'); }
     if (ch.kind === 'agent') { const c = Agent.caseOf(view.agc), T = c && (view.ag[c.id] = view.ag[c.id] || {});
@@ -598,6 +704,7 @@ export function play(el, ch, ctx) {
       if (c && q('[data-ag-reject]')) { view.agReject = c.id; draw(); return show('.agreasons'); }
       const rs = q('[data-ag-reason]'); if (c && rs) { const A = agentOf(); A[c.id] = { decision: 'reject', reason: +rs.dataset.agReason }; view.agRedo = null; view.agReject = null; ctx.save(); draw(); fx(); return show('.agverdict'); }
       if (c && q('[data-ag-redo]')) { view.agRedo = c.id; return draw(); } }
+    const gbt = q('[data-guess-bt]'); if (gbt) { betOf().guess = +gbt.dataset.guessBt; ctx.save(); draw(); fx(); return show('.betview'); }
     const gj = q('[data-guess-jv]'); if (gj) { betOf().guess = +gj.dataset.guessJv; ctx.save(); draw(); fx(); return show('.betview'); }
     const gv = q('[data-guess-pv]'); if (gv) { betOf().guess = +gv.dataset.guessPv; ctx.save(); draw(); fx(); return show('.pblocks'); }
     const pb = q('[data-prove]'); if (pb) { const b = betOf(); b.proved ^= 1 << +pb.dataset.prove; ctx.save(); draw(); fx(); return; }

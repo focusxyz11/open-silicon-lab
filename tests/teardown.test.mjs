@@ -1,6 +1,8 @@
 // The teardown and the right chip for the job as data (src/data/teardown.js): every id exists, every word is there
 // and used, the leading-edge counts are the first version's, and each challenge check passes only for its answer.
 import { test } from 'node:test';
+import { readFileSync } from 'node:fs';
+const EN = JSON.parse(readFileSync(new URL('../src/i18n/en.json', import.meta.url), 'utf8'));
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import * as T from '../src/data/teardown.js';
@@ -36,16 +38,16 @@ test('every fact id exists in the repo facts', () => {
 });
 
 test('every thing has its words, and no word is unused', () => {
-  const have = Object.keys(T.WORDS), want = T.wordKeys();
+  const have = Object.keys(EN).filter(k => k.startsWith('td.')), want = T.wordKeys();
   assert.equal(new Set(want).size, want.length, 'a key listed twice');
-  for (const k of want) assert.ok(typeof T.WORDS[k] === 'string' && T.WORDS[k].length > 0, 'missing words: ' + k);
+  for (const k of want) assert.ok((typeof EN[k] === 'string' && EN[k].length > 0) || (EN[k] && typeof EN[k].other === 'string'), 'missing words: ' + k);
   assert.deepEqual(have.filter(k => !want.includes(k)), [], 'words nothing uses');
   for (const k of have) assert.ok(k.startsWith('td.'), k);
   for (const p of T.PRODUCTS) {
-    assert.ok(T.WORDS['td.product.' + p.id + '.t']);
-    for (const c of p.chips) assert.ok(T.WORDS['td.chip.' + c.id + '.t'] && T.WORDS['td.chip.' + c.id + '.d'], c.id);
+    assert.ok(EN['td.product.' + p.id + '.t']);
+    for (const c of p.chips) assert.ok(EN['td.chip.' + c.id + '.t'] && EN['td.chip.' + c.id + '.d'], c.id);
   }
-  for (const c of T.CHALLENGES) for (const s of ['t', 'goal', 'done']) assert.ok(T.WORDS['td.ch.' + c.id + '.' + s]);
+  for (const c of T.CHALLENGES) assert.ok(EN['td.ch.' + c.id + '.done'] && EN['game.ch.' + c.id + '.t'] && EN['game.ch.' + c.id + '.goal']);
 });
 
 test('the leading-edge counts are what the first version showed', () => {
@@ -61,7 +63,7 @@ test('the summary picks the first version\'s words', () => {
   assert.equal(T.summaryOf('car').key, 'td.sum.car');
   assert.equal(T.summaryOf('phone').key, 'td.sum.some');
   assert.deepEqual(T.summaryOf('server').vars, { lead: 3, n: 10 });
-  for (const p of T.PRODUCTS) assert.ok(T.WORDS[T.summaryOf(p.id).key] && T.WORDS[T.summaryOf(p.id).then[0]]);
+  for (const p of T.PRODUCTS) assert.ok(EN[T.summaryOf(p.id).key] && EN[T.summaryOf(p.id).then[0]]);
 });
 
 test('newest-fab challenge: all five opened and the right count, nothing less', () => {
