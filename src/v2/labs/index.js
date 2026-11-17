@@ -4,5 +4,7 @@ import agent from './agent.js';
 import teardown from './teardown.js';
 import evolve from './evolve.js';
 import crystal from './crystal.js';
+import implant from './implant.js';
+import overlay from './overlay.js';
 
-export const LABS = { agent, teardown, fit: teardown, evolve, pull: crystal };
+export const LABS = { agent, teardown, fit: teardown, evolve, pull: crystal, implant, overlay };

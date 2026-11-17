@@ -5,7 +5,7 @@ export default [
   { id: 'make-grow', strand: 1, stops: ['make.switch'], engine: null, lens: 'dive', open: ['self'] },
   { id: 'make-atoms', strand: 1, stops: ['make.atom'], engine: null, lens: 'dive', open: ['atoms'] },
   { id: 'make-etch', strand: 1, stops: ['make.etch'], engine: null, lens: 'dive' },
-  { id: 'make-impure', strand: 1, stops: ['make.implant'], engine: null, lens: 'dive' },
+  { id: 'make-impure', strand: 1, stops: ['make.implant'], ch: ['furnace', 'shallow'], engine: null, lens: 'dive' },
   { id: 'make-quick', strand: 2, at: ['deposit'], ch: ['quick'], engine: 'factory', lens: 'line', trade: ['time', 'cost'] },
   { id: 'make-layers', strand: 2, stops: ['make.wires'], engine: null, lens: 'line', given: ['flat'], open: ['stack'] },
   { id: 'make-package', strand: 2, stops: ['make.die', 'make.pkg'], ch: ['onebad'], engine: null, lens: 'line', given: ['onepiece'], open: ['chiplets', 'stack'] },
