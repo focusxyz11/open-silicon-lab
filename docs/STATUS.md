@@ -74,6 +74,21 @@ Each task below is self-contained and can be handed to Claude Code on the web as
    - A 404 in the console on the factory labs, not traced.
    - Move each engine's remaining `WORDS` into `en.json` as its views are built (`aiserve`, `analog`, `aibuild`, `clockpower`, `paradigms`, `fabline`, `etch`, `dope`, `litho`).
 
+### The dive and the interface
+
+Each is an issue labelled `task`; #230 waits for a decision (`blocked`).
+
+- #229 The chip you land on is the chip you saw (the flight's die continues into the dive).
+- #230 One way down through a chip, not two side by side (the dive and the layer stack).
+- #231 Chip layers: the chip framed beside the card, its names never under it.
+- #232 The ring on the way in, in every view.
+- #233 The factory line: the way along and the way in, on the picture.
+- #234 How big is it here: size at every level.
+- #235 Something to do at every level of the dive.
+- #236 The phone and the car, flown through like the data centre.
+- #237 On the island, buildings invite you in.
+- #238 The dive on a phone: a card that steps aside.
+
 ## Ideas still to bring over
 
 - From the first version of the site (the branch `before`, which has more content as documents): the economics of a chip, the memory wall at Use, the X-ray at Test, die photos, and the energy floor. The words already brought over wait in `src/data/waiting-words.json`.
