@@ -311,7 +311,7 @@ export function play(el, ch, ctx) {
   function betScene() {
     if (ch.kind !== 'bet') return;
     const b = betOf(); if (b.guess == null) return setBetScene(null, null, '');
-    if (ch.bet === 'jevons') { const J = Bet.jevons(b.eff, b.charge); return setBetScene(null, null, 'jevons:' + b.eff + ':' + b.charge, { need: J.turbines, own: Bet.TURBINES }); }
+    if (ch.bet === 'jevons') { const J = Bet.jevons(b.eff, b.cap); return setBetScene(null, null, 'jevons:' + b.eff + ':' + b.cap, { need: J.turbines, own: Bet.TURBINES }); }
     if (ch.bet === 'oxen') { const M = Bet.oxen(b.ox, b.hens); return setBetScene(null, { r: M.r, m: M.m, plan: Bet.floorplan(M.r, M.m) }, 'oxen:' + b.ox + ':' + b.hens); }
     let s, cells, tone, d;
     if (ch.bet === 'onebad') { const P = Bet.pieces(b.k, b.test); s = P.s; cells = P.cells; d = Bet.CLEAN[2]; tone = n => P.state[n] === 'good' ? 'ok' : P.state[n] === 'caught' ? 'lost' : 'missed'; }
@@ -368,45 +368,49 @@ export function play(el, ch, ctx) {
     }
     const C = Bet.checkJevons(b), J = C.J, X = Bet.J_GOAL;
     const gs = [{ k: 'answers', ok: C.many, v: xTimes(J.answers), target: t('bet.jv.gAnswers', { v: X.minAnswers }), f: Math.min(1, J.answers / X.minAnswers) },
-      { k: 'energy', ok: C.held, v: xTimes(J.energy), target: t('bet.jv.gEnergy'), f: C.held ? 1 : X.maxEnergy / J.energy }];
+      { k: 'energy', ok: C.held, v: xTimes(J.energy), target: t('bet.jv.gEnergy', { v: Math.round(X.maxEnergy * 100) }), f: C.held ? 1 : X.maxEnergy / J.energy }];
     h += '<div class="goalbox' + (C.ok ? ' ok' : '') + '"><p class="kicker">' + esc(t(C.ok ? 'game.reached' : 'game.goalNow')) + '</p>' + gs.map(g => '<div class="gauge' + (g.ok ? ' ok' : '') + '"><span class="gl">' + esc(t('bet.jv.g.' + g.k)) + '</span><span class="gv">' + esc(g.v) + ' <span class="muted">' + esc(g.target) + '</span></span><span class="gbar"><span style="width:' + (g.f * 100).toFixed(0) + '%"></span></span></div>').join('') + '</div>';
     h += '<div class="betview">' + turbinesSvg(J) + pathSvg(b) + '</div>';
     h += '<label class="lab" for="bet-eff"><b>' + esc(t('bet.jv.eff')) + '</b> <output>' + esc(t(b.eff ? 'bet.jv.effV' : 'bet.jv.eff0', { v: frac(J.e) })) + '</output></label><input type="range" id="bet-eff" data-bet="eff" min="0" max="' + (Bet.EFF.length - 1) + '" step="1" value="' + b.eff + '">';
-    h += '<label class="lab" for="bet-charge"><b>' + esc(t('bet.jv.charge')) + '</b> <output>' + esc(t(b.charge ? 'bet.jv.chargeV' : 'bet.jv.charge0', { v: J.q })) + '</output></label><input type="range" id="bet-charge" data-bet="charge" min="0" max="' + (Bet.CHARGE.length - 1) + '" step="1" value="' + b.charge + '">';
-    const J8 = Bet.jevons(3, 0);
+    h += '<label class="lab" for="bet-cap"><b>' + esc(t('bet.jv.cap')) + '</b> <output>' + esc(isFinite(J.cap) ? t('bet.jv.capV', { v: J.cap }) : t('bet.jv.capNone')) + '</output></label><input type="range" id="bet-cap" data-bet="cap" min="0" max="' + (Bet.CAP.length - 1) + '" step="1" value="' + b.cap + '">';
+    const J8 = Bet.jevons(3, Bet.CAP.length - 1);
     h += '<p class="small ' + (G[b.guess] === right ? 'good' : 'hint') + '">' + esc(t(G[b.guess] === right ? 'bet.jv.right' : 'bet.jv.off', { g: t('bet.jv.g.' + G[b.guess]), a: Math.round(J8.answers), e: J8.energy.toFixed(1) })) + '</p>';
     if (!C.ok) h += view.hint ? '<p class="small hint">' + esc(t('bet.jv.hint')) + '</p>' : '<button type="button" class="link" data-hint>' + esc(t('game.hint')) + '</button>';
     h += '<button type="button" class="link" data-reguess>' + esc(t('bet.again')) + '</button>';
     if (C.ok) { win(); h += '<p class="small">' + esc(t('bet.jv.why')) + '</p>'; }
     return h + doneNote() + reward();
   }
-  /* the turbines the answers draw: the island's own (turning, or standing idle), and the ones it would need beyond */
+  /* the turbines the answers draw: the island's own (turning, or standing idle), the ones it would need beyond them,
+     and, past the island's limit, the asking it turns away (drawn as outlines) */
   function turbinesSvg(J) {
-    const n = J.turbines, N = Bet.TURBINES, all = Math.max(N, Math.ceil(n - 1e-9)), cols = 15, c = 20, rows = Math.ceil(all / cols), W = cols * c, H = rows * 26 + 4;
-    const one = i => { const x = (i % cols) * c + c / 2, y = Math.floor(i / cols) * 26 + 2, hub = y + 8, st = i < N ? (i < n ? 'on' : 'idle') : 'more', part = i + 1 > n && i < n ? Math.max(0.25, n - i) : 1;
+    const n = J.turbines, N = Bet.TURBINES, want = J.asked * J.e * N, all = Math.max(N, Math.ceil(want - 1e-9)), cols = 15, c = 20, rows = Math.ceil(all / cols), W = cols * c, H = rows * 26 + 4;
+    const one = i => { const x = (i % cols) * c + c / 2, y = Math.floor(i / cols) * 26 + 2, hub = y + 8, st = i < n ? (i < N ? 'on' : 'more') : i < N ? 'idle' : 'away', part = i + 1 > n && i < n ? Math.max(0.25, n - i) : 1;
       return '<g class="tb ' + st + '"' + (part < 1 ? ' opacity="' + part.toFixed(2) + '"' : '') + '><line class="mast" x1="' + x + '" y1="' + (y + 24) + '" x2="' + x + '" y2="' + hub + '"/>' +
         '<g class="rot" style="transform-origin:' + x + 'px ' + hub + 'px">' + [0, 120, 240].map(a => { const r = (a - 90) * Math.PI / 180; return '<line x1="' + x + '" y1="' + hub + '" x2="' + (x + 7 * Math.cos(r)).toFixed(1) + '" y2="' + (hub + 7 * Math.sin(r)).toFixed(1) + '"/>'; }).join('') + '</g></g>'; };
     const shore = '<rect class="isle" x="0.5" y="0.5" width="' + (Math.min(N, cols) * c - 1) + '" height="' + (Math.ceil(N / cols) * 26 + 1) + '" rx="6"/>';
     /* past the island's own, a part of a turbine still needs a whole one */
-    const k = n > N ? Math.ceil(n - 1e-9) : Math.round(n), key = k > N ? 'bet.jv.more' : k < N ? 'bet.jv.idle' : 'bet.jv.held', words = t(key, { n: k, N, x: k - N, i: N - k });
+    const k = n > N ? Math.ceil(n - 1e-9) : Math.round(n), key = k > N ? 'bet.jv.more' : k < N ? 'bet.jv.idle' : 'bet.jv.held', away = Math.round(want - n);
+    const words = t(key, { n: k, N, x: k - N, i: N - k }) + (away >= 1 ? ' ' + t('bet.jv.away', { w: away }) : '');
     return '<figure class="turbines"><svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="' + esc(words) + '">' + shore + Array.from({ length: all }, (_, i) => one(i)).join('') + '</svg>' +
       '<figcaption class="small muted">' + esc(words) + '</figcaption></figure>';
   }
-  /* where the world goes: answers across, energy up, both against today, on scales of tens. Each line is one price of
-     power; along it, each dot a better chip. The island's turbines hold everything under the dashed line. */
+  /* where the world goes: answers across, energy up, both against today, on scales of tens. Each line is one limit on
+     the island's power; along it, each dot a better chip. Under a limit the line turns flat: a better chip then buys
+     answers, not energy. The ring is today; the hollow dot what the world asks, the asking past the limit dashed. */
   function pathSvg(b) {
-    const W = 300, H = 210, l = 36, r = 10, top = 10, bot = 36, lx = [0.05, 400], ly = [0.04, 8];
+    const W = 300, H = 210, l = 36, r = 10, top = 10, bot = 36, lx = [0.5, 400], ly = [0.3, 8];
     const x = v => l + (W - l - r) * Math.log(v / lx[0]) / Math.log(lx[1] / lx[0]), y = v => top + (H - top - bot) * (1 - Math.log(v / ly[0]) / Math.log(ly[1] / ly[0]));
-    const P = (ei, qi) => { const J = Bet.jevons(ei, qi); return [x(J.answers), y(J.energy)]; };
-    const line = qi => Bet.EFF.map((_, ei) => P(ei, qi).map(v => v.toFixed(1)).join(',')).join(' ');
-    const gx = x(Bet.J_GOAL.minAnswers), gy = y(Bet.J_GOAL.maxEnergy), [px, py] = P(b.eff, b.charge);
+    const P = (ei, ci) => { const J = Bet.jevons(ei, ci); return [x(J.answers), y(J.energy)]; };
+    const line = ci => Bet.EFF.map((_, ei) => P(ei, ci).map(v => v.toFixed(1)).join(',')).join(' ');
+    const J = Bet.jevons(b.eff, b.cap), gx = x(Bet.J_GOAL.minAnswers), gy = y(Bet.J_GOAL.maxEnergy), [px, py] = P(b.eff, b.cap), ax = x(J.asked), ay = y(J.asked * J.e);
     return '<figure class="betcurve jpath"><svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="' + esc(t('bet.jv.pathAria')) + '">' +
       '<rect class="goalzone" x="' + gx.toFixed(1) + '" y="' + gy.toFixed(1) + '" width="' + (W - r - gx).toFixed(1) + '" height="' + (H - bot - gy).toFixed(1) + '"/>' +
-      [0.1, 1, 10, 100].map(v => '<line class="grid" x1="' + x(v).toFixed(1) + '" x2="' + x(v).toFixed(1) + '" y1="' + top + '" y2="' + (H - bot) + '"/><text class="ax" x="' + x(v).toFixed(1) + '" y="' + (H - bot + 14) + '" text-anchor="middle">' + esc(t('bet.times', { v })) + '</text>').join('') +
-      [0.1, 1].map(v => '<text class="ax" x="' + (l - 5) + '" y="' + (y(v) + 4).toFixed(1) + '" text-anchor="end">' + esc(t('bet.times', { v })) + '</text>').join('') +
-      '<line class="cap" x1="' + l + '" x2="' + (W - r) + '" y1="' + gy.toFixed(1) + '" y2="' + gy.toFixed(1) + '"/>' +
-      Bet.CHARGE.map((_, qi) => qi === b.charge ? '' : '<polyline class="other" points="' + line(qi) + '"/>').join('') +
-      '<polyline class="line" points="' + line(b.charge) + '"/>' + Bet.EFF.map((_, ei) => { const [cx, cy] = P(ei, b.charge); return '<circle class="step" cx="' + cx.toFixed(1) + '" cy="' + cy.toFixed(1) + '" r="2.4"/>'; }).join('') +
+      [1, 10, 100].map(v => '<line class="grid" x1="' + x(v).toFixed(1) + '" x2="' + x(v).toFixed(1) + '" y1="' + top + '" y2="' + (H - bot) + '"/><text class="ax" x="' + x(v).toFixed(1) + '" y="' + (H - bot + 14) + '" text-anchor="middle">' + esc(t('bet.times', { v })) + '</text>').join('') +
+      [0.5, 1, 4].map(v => '<text class="ax" x="' + (l - 5) + '" y="' + (y(v) + 4).toFixed(1) + '" text-anchor="end">' + esc(t('bet.times', { v })) + '</text>').join('') +
+      '<line class="cap" x1="' + l + '" x2="' + (W - r) + '" y1="' + y(1).toFixed(1) + '" y2="' + y(1).toFixed(1) + '"/>' +
+      Bet.CAP.map((_, ci) => ci === b.cap ? '' : '<polyline class="other" points="' + line(ci) + '"/>').join('') +
+      '<polyline class="line" points="' + line(b.cap) + '"/>' + Bet.EFF.map((_, ei) => { const [cx, cy] = P(ei, b.cap); return '<circle class="step" cx="' + cx.toFixed(1) + '" cy="' + cy.toFixed(1) + '" r="2.4"/>'; }).join('') +
+      (J.waiting > 1e-9 ? '<line class="awayline" x1="' + px.toFixed(1) + '" y1="' + py.toFixed(1) + '" x2="' + ax.toFixed(1) + '" y2="' + ay.toFixed(1) + '"/><circle class="asked" cx="' + ax.toFixed(1) + '" cy="' + ay.toFixed(1) + '" r="4"/>' : '') +
       '<circle class="today" cx="' + x(1).toFixed(1) + '" cy="' + y(1).toFixed(1) + '" r="5"/>' +
       '<circle class="you" cx="' + px.toFixed(1) + '" cy="' + py.toFixed(1) + '" r="5"/>' +
       '<text class="ax" x="' + ((l + W - r) / 2) + '" y="' + (H - 6) + '" text-anchor="middle">' + esc(t('bet.jv.axisX')) + '</text>' +

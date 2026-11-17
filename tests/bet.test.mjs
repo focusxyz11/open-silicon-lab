@@ -93,18 +93,20 @@ test('test it, or prove it: only proofs where they are cheap and tests for the r
   assert.deepEqual(B.normalBetOf('prove', { tests: 2, proved: 999, guess: 1 }), { tests: 2, proved: 0, guess: 1 });
 });
 
-test("Jevons' bet: a better chip alone uses more energy, a price alone asks less, and the goal needs both", () => {
-  /* at today's price every better chip makes the world's energy rise: the paradox */
-  for (let e = 1; e < B.EFF.length; e++) assert.ok(B.jevons(e, 0).energy > B.jevons(e - 1, 0).energy, 'efficiency alone saved energy');
+test("Jevons' bet: a better chip alone uses more energy, a limit alone serves fewer answers, and the goal needs both", () => {
+  const free = B.CAP.length - 1;
+  /* with no limit every better chip makes the world's energy rise: the paradox */
+  for (let e = 1; e < B.EFF.length; e++) assert.ok(B.jevons(e, free).energy > B.jevons(e - 1, free).energy, 'efficiency alone saved energy');
   assert.equal(B.jevonsAnswer(), 'more');
-  /* the energy is the answers times what each draws, and the turbines count it */
-  for (let e = 0; e < B.EFF.length; e++) for (let q = 0; q < B.CHARGE.length; q++) { const J = B.jevons(e, q); assert.ok(Math.abs(J.energy - J.answers * J.e) < 1e-12); assert.ok(Math.abs(J.turbines - J.energy * B.TURBINES) < 1e-9); }
+  /* the energy is the answers times what each draws, never past the limit; the turbines count it */
+  for (let e = 0; e < B.EFF.length; e++) for (let c = 0; c < B.CAP.length; c++) { const J = B.jevons(e, c);
+    assert.ok(Math.abs(J.energy - J.answers * J.e) < 1e-12); assert.ok(J.energy <= J.cap + 1e-12); assert.ok(J.answers <= J.asked + 1e-12); assert.ok(Math.abs(J.turbines - J.energy * B.TURBINES) < 1e-9); }
   const pass = [];
-  for (let e = 0; e < B.EFF.length; e++) for (let q = 0; q < B.CHARGE.length; q++) if (B.checkJevons({ eff: e, charge: q }).ok) pass.push([e, q]);
+  for (let e = 0; e < B.EFF.length; e++) for (let c = 0; c < B.CAP.length; c++) if (B.checkJevons({ eff: e, cap: c }).ok) pass.push([e, c]);
   assert.ok(pass.length >= 2);
-  assert.ok(pass.every(([e, q]) => e > 0 && q > 0), 'one dial was enough');
+  assert.ok(pass.every(([e, c]) => e > 0 && c < free), 'one dial was enough');
   assert.equal(B.checkJevons(B.J_START).ok, false);
   /* no winning setting sits on the edge of the goal */
-  for (const [e, q] of pass) { const J = B.jevons(e, q); assert.ok(J.answers >= B.J_GOAL.minAnswers * 1.05 && J.energy <= B.J_GOAL.maxEnergy * 0.95); }
-  assert.deepEqual(B.normalBetOf('jevons', { eff: 9, charge: -1, guess: 2 }), { eff: B.J_START.eff, charge: B.J_START.charge, guess: 2 });
+  for (const [e, c] of pass) { const J = B.jevons(e, c); assert.ok(J.answers >= B.J_GOAL.minAnswers * 1.05 && J.energy <= B.J_GOAL.maxEnergy * 0.95); }
+  assert.deepEqual(B.normalBetOf('jevons', { eff: 9, charge: 2, guess: 2 }), { eff: B.J_START.eff, cap: B.J_START.cap, guess: 2 });
 });

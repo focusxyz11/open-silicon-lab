@@ -1266,12 +1266,15 @@ button.opens { width: 100%; text-align: left; border: 0; border-left: 3px solid 
 .turbines .tb line { stroke: var(--ink); stroke-width: 1.4; stroke-linecap: round; }
 .turbines .tb.idle line { stroke-opacity: .28; }
 .turbines .tb.more line { stroke: var(--warm); }
+.turbines .tb.away line { stroke: var(--muted); stroke-opacity: .55; stroke-dasharray: 1.5 2; }
 .turbines .tb.on .rot, .turbines .tb.more .rot { transform-box: view-box; animation: tbspin 3.2s linear infinite; }
 @keyframes tbspin { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { .turbines .rot { animation: none !important; } }
 .jpath .other { fill: none; stroke: var(--ink); stroke-opacity: .16; stroke-width: 1.2; }
 .jpath .step { fill: var(--ink); }
 .jpath .cap { stroke: var(--warm); stroke-width: 1.4; stroke-dasharray: 5 4; }
+.jpath .awayline { stroke: var(--muted); stroke-width: 1.2; stroke-dasharray: 3 3; }
+.jpath .asked { fill: none; stroke: var(--muted); stroke-width: 1.4; }
 .jpath .today { fill: none; stroke: var(--ink); stroke-width: 1.6; }
 .jpath .you { fill: var(--accent); stroke: var(--bg); stroke-width: 1.5; }
 
