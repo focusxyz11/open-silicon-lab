@@ -34,6 +34,7 @@ import * as Exp from '../engines/experiments.js';
 import * as Chip from '../engines/chip.js';
 import { levelAt, fieldAtLevel } from '../data/atlas.js';
 import * as Field from './field.js';
+import { setBetScene } from '../app/betscene.js';
 import * as Worlds from './worlds.js';
 import { copiesInput } from './copies.js';
 import { wallsInput } from './walls.js';
@@ -1172,6 +1173,8 @@ export function start() {
     const parts = partsOf(location.hash), k = parts[0] || 'explore';
     /* the cell you came from and the one you are in: a seam between them may raise its leak */
     { const to = Way.whereOf(location.hash); hideSeam(); crossed(seamFrom, to); seamFrom = to; }
+    /* a bet's wafer or chip stands in the scene only while its challenge is open */
+    if (!/^#\/do\/(cheaper|onebad|oxen)$/.test(location.hash)) setBetScene(null, null, '');
     page.hidden = true; page.classList.remove('reading'); $('logbtn').setAttribute('aria-current', ['log', 'challenges', 'questions'].includes(k) ? 'page' : 'false'); $('logbtn').classList.remove('glow');
     const after = pr => { hud(); return Promise.resolve(pr).then(hud); };
     const [view, rank] = viewOf(parts), from = viewNow, move = nextMove || (rank > rankNow ? 'in' : rank < rankNow ? 'out' : 'along');

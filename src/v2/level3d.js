@@ -185,7 +185,7 @@ export function createLevel3D(canvas, host, on, model) {
     yaw += (yawGoal - yaw) * Math.min(1, dt * 6);
     place(now);
     const quiet = still() || QUALITY.low, ms = on.marks ? on.marks() : null;
-    const key = [k.toFixed(3), off.toFixed(3), yaw.toFixed(4), arrived.toFixed(3), W, H, picked, frame ? frame.B + ',' + frame.cx + ',' + frame.cy : '', ms ? ms.length : 0].join('|');
+    const key = [k.toFixed(3), off.toFixed(3), yaw.toFixed(4), arrived.toFixed(3), W, H, picked, frame ? frame.B + ',' + frame.cx + ',' + frame.cy : '', ms ? ms.length : 0, M.version ? M.version() : ''].join('|');
     if (!quiet || key !== shown) {
       shown = key;
       M.update(quiet ? 0 : dt, k, camera.position.distanceTo(at), arrived, picked, 0);

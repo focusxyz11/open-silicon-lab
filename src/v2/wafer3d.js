@@ -5,12 +5,14 @@
    the rim, one for the specks. Seen from 65°, so the grid still reads as a grid; it turns 20° each way and sways.
 
    The chips, the specks and which chips they kill are the flat wafer's (src/app/scenes.js: waferNow), from your
-   chip's size and generation, so a bigger chip shows fewer chips and more of them lost.
+   chip's size and generation, so a bigger chip shows fewer chips and more of them lost. While a bet on the wafer is
+   open (Moore's, the pieces'), it is the bet's wafer, built again as its dials turn.
    create(canvas, host, on) -> the level (level3d.js). */
 import * as THREE from '../vendor/three.min.js';
 import { mat } from './kit3d.js';
 import { createLevel3D } from './level3d.js';
 import { waferNow } from '../app/scenes.js';
+import { sceneVersion } from '../app/betscene.js';
 
 const X = x => (x - 500) / 100, Z = y => (y - 500) / 100;
 /* the part of a square inside a circle (the circle as a polygon of 72 sides), clipped edge by edge */
@@ -30,7 +32,7 @@ function clipToDisc(r, R) {
 
 export function create(canvas, host, on = {}) {
   return createLevel3D(canvas, host, on, (scene, root, P, night) => {
-    const W = waferNow(), R = W.R, col = (n, d) => (night ? n : d);
+    const R = waferNow().R, col = (n, d) => (night ? n : d);
     /* the chuck that holds it, and the disc: polished silicon, with its notch */
     const chuck = new THREE.Mesh(new THREE.CylinderGeometry(R / 100 + 0.35, R / 100 + 0.35, 0.12, 96), mat(col(0x151d2c, 0x9aa4b2), { roughness: 0.7 }));
     chuck.position.y = -0.2; root.add(chuck);
@@ -39,54 +41,70 @@ export function create(canvas, host, on = {}) {
     const notch = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 0.1, 16), mat(col(0x151d2c, 0x9aa4b2), { roughness: 0.7 }));
     notch.position.set(0, -0.04, R / 100); root.add(notch);
 
-    /* the whole chips: each a low tile; one a speck touched is lost (red: wrong), and the one the dive follows is a
-       shade lighter */
-    const unit = new THREE.BoxGeometry(1, 1, 1), o = new THREE.Object3D(), f = W.follow;
+    /* what is printed on it is built again whenever it changes: your chip's wafer, or a bet's while its challenge
+       is open (scenes.js: sceneVersion) */
+    const unit = new THREE.BoxGeometry(1, 1, 1), o = new THREE.Object3D(), printed = new THREE.Group(); root.add(printed);
     const tones = { ok: new THREE.Color(col(0x33415c, 0xd5dde8)), lost: new THREE.Color(col(0x33415c, 0xd5dde8)).lerp(new THREE.Color(P.bad), night ? 0.45 : 0.55), follow: new THREE.Color(col(0x51678d, 0xf3f6fa)) };
-    const chips = new THREE.InstancedMesh(unit, mat(0xffffff, { roughness: 0.35, metalness: 0.3 }), W.dies.length); chips.userData.part = 'dies';
-    W.dies.forEach((d, i) => {
-      const followed = Math.abs(d[0] - f[0]) < 1 && Math.abs(d[1] - f[1]) < 1;
-      o.position.set(X(d[0] + d[2] / 2), followed ? 0.05 : 0.025, Z(d[1] + d[3] / 2)); o.scale.set(d[2] / 100, followed ? 0.1 : 0.05, d[3] / 100); o.updateMatrix();
-      chips.setMatrixAt(i, o.matrix); chips.setColorAt(i, W.hits[i] ? tones.lost : followed ? tones.follow : tones.ok);
-    });
-    root.add(chips);
+    /* a bad piece a test missed (the pieces' bet): warm, still standing whole; one the test caught sinks, red */
+    tones.missed = new THREE.Color(P.warm);
+    const chipMat = mat(0xffffff, { roughness: 0.35, metalness: 0.3 }), rimMat = mat(col(0x4d5566, 0x9aa5b4), { roughness: 0.75, metalness: 0.1 });
+    const speckMat = new THREE.MeshStandardMaterial({ color: P.warm, emissive: P.warm, emissiveIntensity: night ? 1.1 : 0.6, roughness: 0.4 }), speckGeo = new THREE.SphereGeometry(1, 10, 8);
+    const anchors = { dies: [0, 0.08, 0], defects: [0, 0.14, 0] };
+    let W = null, specks = null, built = -1;
+    function build() {
+      built = sceneVersion(); W = waferNow();
+      printed.children.slice().forEach(m => { printed.remove(m); if (m.geometry !== unit && m.geometry !== speckGeo) m.geometry.dispose(); if (m.dispose) m.dispose(); });
+      /* the whole chips: each a low tile; one a speck touched is lost (red: wrong), and the one the dive follows is a
+         shade lighter */
+      const f = W.follow, chips = new THREE.InstancedMesh(unit, chipMat, Math.max(1, W.dies.length)); chips.userData.part = 'dies'; chips.count = W.dies.length;
+      W.dies.forEach((d, i) => {
+        const followed = Math.abs(d[0] - f[0]) < 1 && Math.abs(d[1] - f[1]) < 1, tone = W.tones ? W.tones[i] : W.hits[i] ? 'lost' : 'ok';
+        const h = followed ? 0.1 : W.tones && tone === 'lost' ? 0.02 : 0.05;
+        o.position.set(X(d[0] + d[2] / 2), h / 2, Z(d[1] + d[3] / 2)); o.scale.set(d[2] / 100, h, d[3] / 100); o.updateMatrix();
+        chips.setMatrixAt(i, o.matrix); chips.setColorAt(i, tone !== 'ok' ? tones[tone] : followed ? tones.follow : tones.ok);
+      });
+      printed.add(chips);
 
-    /* the pieces at the rim: the pattern is printed across the whole disc, but a chip cut by the edge is wasted */
-    const side = W.dies.length ? W.dies[0][2] : 44, pitch = side + 2, x0 = W.dies.length ? W.dies[0][0] : 500 - side / 2, y0 = W.dies.length ? W.dies[0][1] : 500 - side / 2;
-    const whole = new Set(W.dies.map(d => Math.round(d[0]) + ',' + Math.round(d[1]))), shapes = [];
-    const n = Math.ceil(R / pitch) + 2, i0 = Math.round((500 - x0) / pitch), j0 = Math.round((500 - y0) / pitch);
-    for (let j = -n; j <= n; j++) for (let i = -n; i <= n; i++) {
-      const x = x0 + i0 * pitch + i * pitch, y = y0 + j0 * pitch + j * pitch;   /* the grid, from the chip at the middle */
-      if (whole.has(Math.round(x) + ',' + Math.round(y))) continue;
-      const poly = clipToDisc([x, y, side, side], R - 2); if (poly.length < 3) continue;
-      const area = Math.abs(poly.reduce((a, p, k) => { const q = poly[(k + 1) % poly.length]; return a + p[0] * q[1] - q[0] * p[1]; }, 0)) / 2; if (area < 30) continue;
-      shapes.push(new THREE.Shape(poly.map(p => new THREE.Vector2(X(p[0]), -Z(p[1])))));
-    }
-    if (shapes.length) {
-      /* lower and duller than a whole chip: printed, but lost */
-      const g = new THREE.ExtrudeGeometry(shapes, { depth: 0.025, bevelEnabled: false }); g.rotateX(-Math.PI / 2);
-      const rim = new THREE.Mesh(g, mat(col(0x4d5566, 0x9aa5b4), { roughness: 0.75, metalness: 0.1 })); rim.userData.part = 'dies'; root.add(rim);
-    }
+      /* the pieces at the rim: the pattern is printed across the whole disc, but a chip cut by the edge is wasted */
+      const side = W.dies.length ? W.dies[0][2] : 44, pitch = side + 2, x0 = W.dies.length ? W.dies[0][0] : 500 - side / 2, y0 = W.dies.length ? W.dies[0][1] : 500 - side / 2;
+      const whole = new Set(W.dies.map(d => Math.round(d[0]) + ',' + Math.round(d[1]))), shapes = [];
+      const n = Math.ceil(R / pitch) + 2, i0 = Math.round((500 - x0) / pitch), j0 = Math.round((500 - y0) / pitch);
+      for (let j = -n; j <= n; j++) for (let i = -n; i <= n; i++) {
+        const x = x0 + i0 * pitch + i * pitch, y = y0 + j0 * pitch + j * pitch;   /* the grid, from the chip at the middle */
+        if (whole.has(Math.round(x) + ',' + Math.round(y))) continue;
+        const poly = clipToDisc([x, y, side, side], R - 2); if (poly.length < 3) continue;
+        const area = Math.abs(poly.reduce((a, p, k) => { const q = poly[(k + 1) % poly.length]; return a + p[0] * q[1] - q[0] * p[1]; }, 0)) / 2; if (area < 30) continue;
+        shapes.push(new THREE.Shape(poly.map(p => new THREE.Vector2(X(p[0]), -Z(p[1])))));
+      }
+      if (shapes.length) {
+        /* lower and duller than a whole chip: printed, but lost */
+        const g = new THREE.ExtrudeGeometry(shapes, { depth: 0.025, bevelEnabled: false }); g.rotateX(-Math.PI / 2);
+        const rim = new THREE.Mesh(g, rimMat); rim.userData.part = 'dies'; printed.add(rim);
+      }
 
-    /* the specks, each glowing where it landed */
-    const specks = new THREE.InstancedMesh(new THREE.SphereGeometry(1, 10, 8), new THREE.MeshStandardMaterial({ color: P.warm, emissive: P.warm, emissiveIntensity: night ? 1.1 : 0.6, roughness: 0.4 }), Math.max(1, W.specks.length));
-    specks.userData.part = 'defects'; specks.count = W.specks.length; root.add(specks);
+      /* the specks, each glowing where it landed */
+      specks = new THREE.InstancedMesh(speckGeo, speckMat, Math.max(1, W.specks.length));
+      specks.userData.part = 'defects'; specks.count = W.specks.length; printed.add(specks);
+      placeSpecks(0);
+      [chips, specks].forEach(m => { m.instanceMatrix.needsUpdate = true; if (m.instanceColor) m.instanceColor.needsUpdate = true; });
+      printed.traverse(m => { m.castShadow = m.receiveShadow = false; });
+      const firstSpeck = W.specks[0] || [700, 300], aChip = W.dies.find((d, i) => !W.hits[i] && d[0] < 400 && d[1] < 400) || W.dies[0] || [300, 300, 40];
+      anchors.dies = [X(aChip[0] + aChip[2] / 2), 0.08, Z(aChip[1] + aChip[3] / 2)]; anchors.defects = [X(firstSpeck[0]), 0.14, Z(firstSpeck[1])];
+    }
     const placeSpecks = t => { W.specks.forEach((p, i) => { const k = 0.6 + 0.4 * Math.sin(t * 2 + i); o.position.set(X(p[0]), 0.1, Z(p[1])); o.scale.setScalar(0.05 + 0.03 * k); o.updateMatrix(); specks.setMatrixAt(i, o.matrix); }); specks.instanceMatrix.needsUpdate = true; };
-    placeSpecks(0);
-    [chips, specks].forEach(m => { m.instanceMatrix.needsUpdate = true; if (m.instanceColor) m.instanceColor.needsUpdate = true; });
+    build();
     root.traverse(m => { m.castShadow = m.receiveShadow = false; });
 
     let t = 0;
-    const firstSpeck = W.specks[0] || [700, 300], aChip = W.dies.find((d, i) => !W.hits[i] && d[0] < 400 && d[1] < 400) || W.dies[0] || [300, 300, 40];
     return {
-      level: 'wafer', parts: ['dies', 'defects'],
-      anchors: { dies: [X(aChip[0] + aChip[2] / 2), 0.08, Z(aChip[1] + aChip[3] / 2)], defects: [X(firstSpeck[0]), 0.14, Z(firstSpeck[1])] },
+      level: 'wafer', parts: ['dies', 'defects'], anchors,
       /* looking down 65°, turned like the stack */
       view: { tilt: 1.13, turn: -0.62, r: R / 100 + 0.6, at: [0, 0, 0],
         /* the door into the die: the chip the dive follows, on its top (it changes with your chip's size, so it is
            asked for each time) */
         door: () => { const [x, y, side] = waferNow().follow; return { at: [X(x + side / 2), 0.1, Z(y + side / 2)], side: side / 100 }; } },
-      update(dt) { if (!dt) return; t += dt; placeSpecks(t); }
+      version: () => sceneVersion(),
+      update(dt) { if (sceneVersion() !== built) build(); if (!dt) return; t += dt; placeSpecks(t); }
     };
   });
 }

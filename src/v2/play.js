@@ -18,6 +18,8 @@ import { projectOf, patterns as testOf } from '../engines/design.js';
 import { signHtml, signOf, keep, refusal, slipHtml, slipClick, draftOf } from './commons.js';
 import { build } from '../engines/design.js';
 import * as Bet from '../engines/bet.js';
+import { setBetScene } from '../app/betscene.js';
+import { WAFER as SCENE_WAFER } from '../engines/chip.js';
 import { glyph } from './field.js';
 
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
@@ -304,6 +306,22 @@ export function play(el, ch, ctx) {
     Bet.specksOf(d).forEach(([x, y]) => { g.beginPath(); g.arc(x, y, rr, 0, Math.PI * 2); g.fill(); });
     g.restore();
   }
+  /* the scene behind the card answers the dials (src/app/scenes.js setBetScene): the 3D wafer shows the bet's
+     wafer, the data centre's chip the bet's cores. Before the guess, the scene stays yours. */
+  function betScene() {
+    if (ch.kind !== 'bet') return;
+    const b = betOf(); if (b.guess == null) return setBetScene(null, null, '');
+    if (ch.bet === 'oxen') { const M = Bet.oxen(b.ox, b.hens); return setBetScene(null, { r: M.r, m: M.m, plan: Bet.floorplan(M.r, M.m) }, 'oxen:' + b.ox + ':' + b.hens); }
+    let s, cells, tone, d;
+    if (ch.bet === 'onebad') { const P = Bet.pieces(b.k, b.test); s = P.s; cells = P.cells; d = Bet.CLEAN[2]; tone = n => P.state[n] === 'good' ? 'ok' : P.state[n] === 'caught' ? 'lost' : 'missed'; }
+    else { const M = Bet.moore(b.size, b.clean); s = M.s; cells = M.cells; d = M.d; tone = n => M.alive[n] ? 'ok' : 'lost'; }
+    /* millimetres on the bet's wafer to the scene's 1000 x 1000, the wafer's middle at 500; a 2-unit gap between chips */
+    const k = SCENE_WAFER.R / Bet.WAFER.r, at = v => 500 + v * k, side = s * k;
+    const dies = cells.map(([i, j]) => [at(i * s) + 1, at(j * s) + 1, side - 2, side - 2]), tones = cells.map((_, n) => tone(n));
+    const near = dies.map((q, n) => [n, Math.hypot(q[0] + q[2] / 2 - 500, q[1] + q[3] / 2 - 500)]).filter(([n]) => tones[n] === 'ok').sort((x, y) => x[1] - y[1])[0];
+    const f = dies[near ? near[0] : 0] || [500, 500, 40, 40];
+    setBetScene({ dies, hits: tones.map(x => x !== 'ok'), tones, specks: Bet.specksOf(d).map(([x, y]) => [at(x), at(y)]), R: SCENE_WAFER.R, follow: [f[0], f[1], f[2]] }, null, ch.bet + ':' + JSON.stringify(b));
+  }
   /* ---- the pieces' bet: one big piece, or many joined in one package; test each first, or not ---- */
   function betPieces() {
     const b = betOf(), G = Bet.PIECE_GUESSES, right = Bet.piecesAnswer();
@@ -343,7 +361,7 @@ export function play(el, ch, ctx) {
     const html = '<div class="player">' + f() + '</div>', old = el.firstElementChild;
     if (!old || !old.classList.contains('player')) el.innerHTML = html;
     else { const tpl = document.createElement('template'); tpl.innerHTML = html; patch(old, tpl.content.firstElementChild); }
-    paintWafer();
+    paintWafer(); betScene();
   }
   /* feedback: what changed moves. A wrong answer shakes, a row that turned right flashes, a gauge that reached its
      target pops, a tapped gate bounces. Nothing moves with reduced motion. */

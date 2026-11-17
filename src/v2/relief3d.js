@@ -7,12 +7,16 @@
 
    The districts are the flat scenes' parts (src/app/scenes.js: partsOf), so the plan is written once; your chip's
    cores, clock and timing come from there too (chipNow). Coming down from the board (the data centre's flight, which
-   ends over the bare die), the camera rises from the flight's angle to the plan's and turns square to it.
+   ends over the bare die), the camera rises from the flight's angle to the plan's and turns square to it. While
+   Cray's bet is open (src/v2/play.js), the data centre's chip shows its strong core and small cores in the cores'
+   place, built again as the dials turn: the strong core lights for the steps that must come in order, the small
+   ones for the work that can be split, and cores past the budget stand red.
    create(level)(canvas, host, on) -> the level (level3d.js). */
 import * as THREE from '../vendor/three.min.js';
 import { mat, box } from './kit3d.js';
 import { createLevel3D } from './level3d.js';
 import { partsOf, chipNow } from '../app/scenes.js';
+import { betChipNow, sceneVersion } from '../app/betscene.js';
 import { rnd as rnd2 } from '../app/draw.js';
 import { designNow } from '../app/design.js';
 import { DEPTHS } from '../data/weave.js';
@@ -83,14 +87,15 @@ export const create = level => (canvas, host, on = {}) => createLevel3D(canvas, 
   if (pads.length) many(pads, 0, H.pad, M.pad, level === 'die' ? 'pads' : null);
 
   /* the districts, each kind with its own look */
-  const live = {};
+  const live = {}, coreMeshes = []; let coreArea = null;
   plan.districts(parts).forEach(([part, kind, rects, grid]) => {
     if (kind === 'core') {
       /* alike: a block, its logic standing on it, its own small memory beside it; lit while it works */
-      many(rects, 0, H.core, M.tile, part, TONE.tile);
+      coreArea = rects.reduce((a, r) => [Math.min(a[0], r[0]), Math.min(a[1], r[1]), Math.max(a[2], r[0] + r[2]), Math.max(a[3], r[1] + r[3])], [1e9, 1e9, -1e9, -1e9]);
+      coreMeshes.push(many(rects, 0, H.core, M.tile, part, TONE.tile));
       const logic = rects.map(r => { const m = Math.min(r[2], r[3]) * 0.08; return [r[0] + m, r[1] + m, r[2] * 0.52, r[3] * 0.5]; });
-      live.cores = many(logic, H.core, H.logic, M.tile, part, TONE.top); live.n = rects.length;
-      many(rects.map(r => [r[0] + r[2] * 0.6, r[1] + r[3] * 0.1, r[2] * 0.32, r[3] * 0.8]), H.core, H.bit, M.bit, part);
+      live.cores = many(logic, H.core, H.logic, M.tile, part, TONE.top); live.n = rects.length; coreMeshes.push(live.cores);
+      coreMeshes.push(many(rects.map(r => [r[0] + r[2] * 0.6, r[1] + r[3] * 0.1, r[2] * 0.32, r[3] * 0.8]), H.core, H.bit, M.bit, part));
     } else if (kind === 'memory') {
       /* different: a low field of bits in a perfect grid */
       many(rects, 0, H.field, M.field, part);
@@ -162,6 +167,24 @@ export const create = level => (canvas, host, on = {}) => createLevel3D(canvas, 
   TONE.yours = TONE.tile.clone().lerp(new THREE.Color(P.warm), night ? 0.55 : 0.5);
   if (plan.yours) showYours();
 
+  /* Cray's bet on the data centre's chip: the strong core a tall block, the small cores tiles, in the cores' place;
+     the plan's 16 units across fill that place, its 16 rows down are the budget, and rows past it spill over, red */
+  const betG = new THREE.Group(); root.add(betG); let betBuilt = -1, bet = null;
+  function buildBet() {
+    betBuilt = sceneVersion(); const B = level === 'chip' && coreArea ? betChipNow() : null;
+    betG.children.slice().forEach(m => { betG.remove(m); if (m.dispose) m.dispose(); });
+    coreMeshes.forEach(m => { m.visible = !B; }); bet = null; if (!B) return;
+    const F = B.plan, a = coreArea, cw = (a[2] - a[0]) / F.W, rh = (a[3] - a[1]) / F.budgetRows, g = Math.min(cw, rh) * 0.12;
+    const at = (x, y, w, h) => [a[0] + x * cw + g, a[1] + y * rh + g, w * cw - 2 * g, h * rh - 2 * g];
+    const into = m => { root.remove(m); betG.add(m); return m; };
+    const ox = F.ox ? into(many([at(F.ox.x, F.ox.y, F.ox.w, F.ox.h)], 0, H.core * 1.8, M.tile, 'cores', TONE.top)) : null;
+    const over = F.hens.map(([, y]) => y >= F.budgetRows);
+    const hens = F.hens.length ? into(many(F.hens.map(([x, y]) => at(x, y, 1, 1)), 0, H.core, M.tile, 'cores', TONE.tile)) : null;
+    if (hens) over.forEach((o, i) => { if (o) hens.setColorAt(i, TONE.late); });
+    bet = { ox, hens, over };
+  }
+  buildBet();
+
   let t = 0, tick = -1;
   const anchors = {}; Object.entries(NAMES[level]).forEach(([k, p]) => { if (typeof p === 'function') p = p(parts); anchors[k] = [X(p[0]), k === 'clock' || k === 'wires' ? WY + H.wire : k === 'scribe' ? 0 : k === 'probes' ? 0.6 : level === 'block' ? H.row : H.core + H.logic, Z(p[1])]; });
   return {
@@ -172,7 +195,9 @@ export const create = level => (canvas, host, on = {}) => createLevel3D(canvas, 
     view: { tilt: 1.26, turn: 0, r: 5.6, at: [0, 0.1, 0.25], fixed: true, arrive: plan.arrive ? { tilt: 0.5, turn: -0.62, ms: 1800 } : null,
       door: (([px, py, side]) => ({ at: [X(px + side / 2), 0, Z(py + side / 2)], side: side / 100 }))(DEPTHS[level].portal), foot: [0, 0, 0] },
     has: key => key !== 'yours' || mine > 0,
+    version: () => sceneVersion(),
     update(dt, k, dist, arrived = 1, picked) {
+      if (sceneVersion() !== betBuilt) { buildBet(); tick = -1; }
       t += dt;
       /* the die's test needles come down only once it has risen (a join from the wafer) */
       needles.forEach(n => { n.visible = arrived >= 0.9; }); if (probes && arrived < 0.9) probes.forEach(p => { p.visible = false; });
@@ -185,6 +210,13 @@ export const create = level => (canvas, host, on = {}) => createLevel3D(canvas, 
       lines.forEach((p, i) => { const u = (t * 0.6 * (c.clock || 1) + i * 0.25) % 1, n = p.length - 1, seg = Math.min(n - 1, Math.floor(u * n)), f = u * n - seg, a = p[seg], b = p[seg + 1]; o.position.set(X(a[0] + (b[0] - a[0]) * f), WY + H.wire + 0.035, Z(a[1] + (b[1] - a[1]) * f)); o.scale.set(0.14, 0.07, 0.14); o.updateMatrix(); pulses.setMatrixAt(i, o.matrix); });
       pulses.instanceMatrix.needsUpdate = true;
       if (now === tick) return; tick = now;
+      /* the bet's chip at work: a step that must come in order (the strong core alone), then work split across every
+         core; cores past the budget stay red */
+      if (bet) {
+        const order = now % 2 === 0;
+        if (bet.ox) { bet.ox.setColorAt(0, order || !bet.hens ? TONE.busy : TONE.top); bet.ox.instanceColor.needsUpdate = true; }
+        if (bet.hens) { bet.over.forEach((o, i) => bet.hens.setColorAt(i, o ? TONE.late : !order && rnd(i, now) > 0.15 ? TONE.busy : TONE.idle)); bet.hens.instanceColor.needsUpdate = true; }
+      }
       /* each beat: a core waiting for memory stands dark, a working one lights, one whose signal came late turns red */
       if (live.cores) { for (let i = 0; i < live.n; i++) live.cores.setColorAt(i, rnd(i + 50, now) < (c.late || 0) ? TONE.late : rnd(i + 90, now) > (c.busy == null ? 1 : c.busy) ? TONE.idle : rnd(i, now) > 0.55 ? TONE.busy : TONE.top); live.cores.instanceColor.needsUpdate = true; }
       if (live.units) { for (let i = 0; i < live.unitsN; i++) live.units.setColorAt(i, rnd(i, now) > 0.6 ? TONE.busy : TONE.tile); live.units.instanceColor.needsUpdate = true; }
