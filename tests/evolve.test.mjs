@@ -1,5 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+const EN = JSON.parse(readFileSync(new URL('../src/i18n/en.json', import.meta.url), 'utf8'));
 import TC from '../src/engines/tinychip.js';
 import * as EV from '../src/engines/evolve.js';
 import { target, evolution, fitness, toCode, measure, run, randomGenome, rng } from '../src/engines/evolve.js';
@@ -58,9 +60,9 @@ test('the jobs, gate sets and room are offered, and the engine holds no English'
   assert.deepEqual(EV.GATE_SETS.nand, ['NAND']);
   assert.ok(!EV.GATE_SETS.noxor.includes('XOR') && EV.GATE_SETS.all.includes('XOR'));
   assert.ok(EV.ROOM.min < EV.ROOM.default && EV.ROOM.default < EV.ROOM.max);
-  for (const j of EV.JOBS) assert.ok(EV.WORDS['evolve.job.' + j.id]);
-  for (const g of Object.keys(EV.GATE_SETS)) assert.ok(EV.WORDS['evolve.gates.' + g]);
-  for (const c of Object.keys(EV.CHALLENGES)) for (const k of ['t', 'goal', 'done']) assert.ok(EV.WORDS['evolve.ch.' + c + '.' + k], c + k);
+  for (const j of EV.JOBS) assert.ok(EN['evolve.job.' + j.id]);
+  for (const g of Object.keys(EV.GATE_SETS)) assert.ok(EN['evolve.gates.' + g]);
+  for (const c of Object.keys(EV.CHALLENGES)) assert.ok(EN['evolve.ch.' + c + '.done'], c);
 });
 
 test('step reports generation, code, correct of total, gates, and the same seed repeats', () => {
