@@ -412,13 +412,16 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
   await page.waitForFunction(() => document.querySelectorAll('#sheet .isles [data-place]').length === 6, null, { timeout: 15000 }).catch(() => problems.push(tag + ': the world around does not show its six islands'));
   /* the questions from the field (src/data/questions.js): crossing a seam raises the leak on it, and its card opens;
      under Ask at a level, the questions people were stuck on there come first */
-  /* a fresh visitor: earlier steps here crossed seams already, and a leak rises only the first time */
-  await page.evaluate(() => { localStorage.removeItem('osl-world-v1'); });
-  await page.goto(base + 'index.html#/line/test'); await page.waitForTimeout(3000);
-  await page.evaluate(() => { location.hash = '#/line/pkg'; });
-  await page.waitForFunction(() => { const s = document.querySelector('.seamnote'); return !!s && !s.hidden && !!s.querySelector('[data-field="package"]'); }, null, { timeout: 15000 }).catch(() => problems.push(tag + ': crossing a seam does not raise its leak'));
-  await page.evaluate(() => { const b = document.querySelector('.seamnote [data-field]'); if (b) b.click(); });
-  await page.waitForSelector('.fieldx', { timeout: 10000 }).catch(() => problems.push(tag + ': a question from the field does not open its card'));
+  /* a fresh visitor (a new page, its own storage): earlier steps here crossed seams already, and a leak rises only
+     the first time */
+  { const fp = await browser3d.newPage({ viewport: { width: 1280, height: 800 } });
+    fp.on('pageerror', e => problems.push(tag + ' (seams): ' + e.message));
+    await fp.goto(base + 'index.html#/line/test'); await fp.waitForTimeout(3000);
+    await fp.evaluate(() => { location.hash = '#/line/pkg'; });
+    await fp.waitForFunction(() => { const s = document.querySelector('.seamnote'); return !!s && !s.hidden && !!s.querySelector('[data-field="package"]'); }, null, { timeout: 15000 }).catch(() => problems.push(tag + ': crossing a seam does not raise its leak'));
+    await fp.evaluate(() => { const b = document.querySelector('.seamnote [data-field]'); if (b) b.click(); });
+    await fp.waitForSelector('.fieldx', { timeout: 10000 }).catch(() => problems.push(tag + ': a question from the field does not open its card'));
+    await fp.close(); }
   await page.evaluate(() => { location.hash = '#/dive/block'; });
   /* the dive may still be making its view: Ask is chosen again until the block's questions show */
   await page.waitForFunction(() => { if (document.querySelector('#diveui .fieldline[data-field="fetch"]')) return true; const b = document.querySelector('#diveui .modes3 [data-mode="ask"]'); if (b && b.getAttribute('aria-selected') !== 'true') b.click(); return false; }, null, { timeout: 30000, polling: 1000 })
