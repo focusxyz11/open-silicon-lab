@@ -1,7 +1,7 @@
 /* Evolve a circuit (the evolve engine): let blind search find a small logic circuit for a job, instead of designing it.
-   Pure logic, no DOM, no English (ids only; the words are in WORDS, to be merged into src/i18n/en.json by the owner).
+   Pure logic, no DOM, no English (ids only; the words are evolve.* in src/i18n/en.json).
    Ported from the earlier site (/src/engines/evolve.js, kept on claude/before-retire-2026-11) with the same search
-   and the same tests; added here: JOBS, GATE_SETS, ROOM, CHALLENGES, WORDS, and a seeded start(job, options) with
+   and the same tests; added here: JOBS, GATE_SETS, ROOM, CHALLENGES and a seeded start(job, options) with
    step(state, n) for a player. Built on the tiny-chip engine (tinychip.js): jobs are its projects, and an evolved
    circuit is written as tiny-chip code, so it can be verified, synthesized and counted in cells there.
 
@@ -146,18 +146,6 @@ export const CHALLENGES = {
   nand: { job: 'half', gates: 'nand', check: r => r.solved && r.gates > 0 }
 };
 
-/* Words for the owner to merge into en.json (the engine itself holds none). */
-export const WORDS = {
-  'evolve.job.half': 'Half adder', 'evolve.job.vote': 'Majority voter', 'evolve.job.full': 'Full adder',
-  'evolve.job.add2': '2-bit adder', 'evolve.job.seg': 'Display decoder',
-  'evolve.gates.all': 'All gates', 'evolve.gates.nand': 'NAND only', 'evolve.gates.noxor': 'No XOR',
-  'evolve.ch.beat.t': 'Beat the person',
-  'evolve.ch.beat.goal': 'Evolve a majority voter that uses fewer cells than the human solution.',
-  'evolve.ch.beat.done': 'Evolution found a majority voter with fewer cells than the person\'s design.',
-  'evolve.ch.nand.t': 'NAND only',
-  'evolve.ch.nand.goal': 'Evolve a half adder from NAND gates alone. How many does it need?',
-  'evolve.ch.nand.done': 'A working half adder from NAND gates alone. Count the gates it needed.'
-};
 
 /* Begin a seeded evolution. job: an id of JOBS (or a job); options: seed, gates (a key of GATE_SETS), room. */
 export function start(job, { seed = 1, gates = 'all', room = ROOM.default } = {}) {

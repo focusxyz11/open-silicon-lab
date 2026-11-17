@@ -733,7 +733,9 @@ export function start() {
   /* keep the picture clear of the frame: the rail on the left, the corner, the dock below */
   const diveInset = () => { if (!dive || !diveFrame) return; const wide = innerWidth > 720, b = innerWidth >= 1100 ? 24 : diveFrame.dock.parentNode.offsetHeight + (wide ? 24 : 18); dive.setInset({ l: wide ? 90 : 8, r: wide ? 20 : 8, t: wide ? 122 : 116, b }); };
   /* the bench: a design challenge played in the dock; the drawings above follow your description */
-  const syncDesign = ch => { if (DS && ch && ch.kind === 'design') DS.setDesign(Game.checkDesign(ch.p, S.codes[ch.p] || Game.starter(ch.p))); };
+  const syncDesign = ch => { if (DS && ch && ch.kind === 'design') DS.setDesign(Game.checkDesign(ch.p, S.codes[ch.p] || Game.starter(ch.p)));
+    /* an evolved circuit for a job the studio knows is drawn there too, gate by gate and wave by wave */
+    else if (DS && ch && ch.kind === 'evolve' && S.evolve && S.evolve.code && Game.hasProject(S.evolve.job)) DS.setDesign(Game.checkDesign(S.evolve.job, S.evolve.code)); };
   function openBench(ch) {
     benchCh = ch; const dock = diveFrame.dock; dock.classList.add('benchdock'); syncDesign(ch); diveFrame.doing();
     play(dock, ch, { state: S, startChip: () => Object.assign({}, Game.START),

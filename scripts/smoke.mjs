@@ -58,7 +58,7 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
   await page.waitForSelector('#sheet .won', { timeout: 10000 }).catch(() => problems.push(tag + ': a right design did not win the challenge'));
   if (!/grew/i.test(await page.textContent('#toast').catch(() => ''))) problems.push(tag + ': winning did not say what grew');
   if (!(await page.$('#sheet .opens[href^="#/ask/"]'))) problems.push(tag + ': the first win opens no question');
-  if (!/1 of 6/.test(await page.getAttribute('#loop [data-stage="design"]', 'aria-label').catch(() => ''))) problems.push(tag + ': the tracker did not count the win');
+  if (!/1 of 7/.test(await page.getAttribute('#loop [data-stage="design"]', 'aria-label').catch(() => ''))) problems.push(tag + ': the tracker did not count the win');
   await page.click('#sheet [data-next]').catch(() => problems.push(tag + ': no way on to the next challenge'));
   if (!/voter/i.test(await page.textContent('#sheet .player h3').catch(() => ''))) problems.push(tag + ': the next challenge is not the majority voter');
   await page.click('#sheet [data-back]');
@@ -473,6 +473,11 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
     await fp.waitForSelector('[data-fit-kind]', { timeout: 60000 }).catch(() => problems.push(tag + ': the right chip for the job does not show its chips'));
     await fp.evaluate(() => { for (const [i, k] of [[0, 'cpu'], [1, 'mcu'], [2, 'gpu'], [3, 'asic'], [4, 'asic'], [5, 'fpga'], [6, 'dsp'], [7, 'power']]) { const j = document.querySelector('[data-fit-job="' + i + '"]'); if (j) j.click(); const b = document.querySelector('[data-fit-kind="' + k + '"]'); if (b) b.click(); } });
     await fp.waitForSelector('.player .won', { timeout: 10000 }).catch(() => problems.push(tag + ': eight best fits do not win the right chip for the job'));
+    /* Evolve a circuit, at the studio's gates: evolution finds a voter smaller than the person's */
+    await fp.goto(base + 'index.html#/do/evolve');
+    await fp.waitForSelector('[data-ev-go]', { timeout: 60000 }).catch(() => problems.push(tag + ': Evolve a circuit does not offer to evolve'));
+    await fp.evaluate(() => { const b = document.querySelector('[data-ev-go]'); if (b) b.click(); });
+    await fp.waitForSelector('.player .won', { timeout: 60000 }).catch(() => problems.push(tag + ': evolution does not beat the person\'s voter'));
     /* Verify the agent, at the Lab: a tool checks a case, and eight right calls win */
     await fp.goto(base + 'index.html#/do/agent');
     await fp.waitForSelector('#sheet .agcases [data-ag-case]', { timeout: 60000 }).catch(() => problems.push(tag + ': Verify the agent does not show its cases'));

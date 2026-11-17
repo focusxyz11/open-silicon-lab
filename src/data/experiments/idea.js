@@ -5,7 +5,7 @@ export default [
   { id: 'idea-journey', strand: 0, stops: ['idea.die'], engine: null, lens: 'line' },
   { id: 'idea-one-char', strand: 1, at: ['logic', 'check'], ch: ['half', 'vote', 'full'], engine: 'logic', lens: 'forms', trade: ['sure'] },
   { id: 'idea-two-ways', strand: 1, at: ['logic', 'gates'], engine: 'logic', probe: 1, lens: 'forms', trade: ['area', 'work'] },
-  { id: 'idea-placed', strand: 1, stops: ['idea.block'], engine: 'logic', lens: 'forms', trade: ['area'], given: ['closed', 'hands'], open: ['aidesign'] },
+  { id: 'idea-placed', strand: 1, stops: ['idea.block'], ch: ['evolve'], engine: 'logic', lens: 'forms', trade: ['area'], given: ['closed', 'hands'], open: ['aidesign'] },
   { id: 'idea-masks', strand: 1, at: ['need', 'logic', 'check', 'gates', 'layout', 'masks'], engine: 'logic', lens: 'forms' },
   { id: 'idea-sure', strand: 2, stops: ['idea.gate'], engine: null, lens: 'probe', trade: ['sure'], given: ['frozen', 'tried'], open: ['proof'] },
   { id: 'idea-coverage', strand: 2, at: ['check'], ch: ['prove'], engine: 'logic', lens: 'probe', trade: ['sure'], given: ['tried'] },

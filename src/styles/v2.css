@@ -1424,3 +1424,9 @@ button.opens { width: 100%; text-align: left; border: 0; border-left: 3px solid 
 .fitk.on, .fitk2.on { border-color: var(--ink); } .fitk.best, .fitk2.best { background: color-mix(in srgb, var(--good) 30%, var(--panel-solid)); } .fitk.no, .fitk2.no { background: color-mix(in srgb, var(--bad) 25%, var(--panel-solid)); } .fitk.ok, .fitk2.ok { background: color-mix(in srgb, var(--warm) 25%, var(--panel-solid)); }
 .fitk2 { margin: 22px 0 8px; }
 @media (max-width: 720px) { .fitjobs { grid-template-columns: repeat(4, 1fr); } .fitjobs .agcase .small { display: none; } .fitjobs .agcase { min-height: 0; place-items: center; } .tdboard { grid-template-columns: repeat(3, 1fr); } }
+
+/* ---- Evolve a circuit (src/v2/play.js evolve) ---- */
+.evread { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin: 10px 0 6px; }
+.evread > span { display: grid; gap: 1px; padding: 6px 8px; border-radius: 10px; border: 1px solid var(--line); }
+.evread b { font-size: 15px; } .evread b.good { color: var(--good); }
+.evbar { margin: 0 0 4px; } .evbar > span { background: var(--good); transition: width .2s; }
