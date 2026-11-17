@@ -46,6 +46,7 @@ export const FIELD = [
   { id: 'mask', shape: 'leak', prims: ['info', 'matter'], home: { place: 'tools' }, src: 'https://doi.org/10.1515/aot-2015-0023' },
   { id: 'oxide', shape: 'leak', prims: ['matter', 'energy'], home: { place: 'materials' }, src: 'https://www.intel.com/pressroom/kits/advancedtech/doodle/ref_HiK-MG/high-k.htm' },
   /* bets */
+  { id: 'batch', shape: 'bet', prims: ['info', 'time', 'value'], home: { level: 'chip' }, src: 'https://arxiv.org/abs/2309.06180' },
   { id: 'oxen', shape: 'bet', prims: ['info', 'time', 'value'], home: { level: 'chip' }, src: 'https://todayinsci.com/C/Cray_Seymour/CraySeymour-Quotations.htm' },
   { id: 'fabless', shape: 'bet', prims: ['matter', 'agents', 'value'], home: { place: 'fab' }, src: 'https://computerhistory.org/profile/morris-chang/' },
   { id: 'printer', shape: 'bet', prims: ['matter', 'chance', 'value'], home: { level: 'scanner' }, src: 'https://worksinprogress.co/issue/the-worlds-most-complex-machine/' },
