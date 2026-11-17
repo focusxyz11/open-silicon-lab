@@ -202,7 +202,7 @@ export function play(el, ch, ctx) {
   const betOf = () => (S.bets[ch.id] = Bet.normalBetOf(ch.bet, S.bets[ch.id]));
   const million = i => t('bet.sizeV', { n: Bet.SIZES[i] });
   const times = v => isFinite(v) ? t('bet.times', { v: v >= 10 ? Math.round(v) : v.toFixed(2) }) : t('bet.none');
-  function bet() { return ch.bet === 'oxen' ? betOxen() : betMoore(); }
+  function bet() { return ch.bet === 'oxen' ? betOxen() : ch.bet === 'onebad' ? betPieces() : betMoore(); }
   function betMoore() {
     const b = betOf();
     let h = head();
@@ -283,21 +283,58 @@ export function play(el, ch, ctx) {
       '<circle class="you" cx="' + x(b.size).toFixed(1) + '" cy="' + y(isFinite(cur[b.size]) ? cur[b.size] : top2).toFixed(1) + '" r="4.5"/>' +
       '</svg><figcaption class="small muted">' + esc(t('bet.legend')) + '</figcaption></figure>';
   }
-  /* the wafer, painted from the engine's own layout and specks: dead chips dark, working ones light */
+  /* the wafer, painted from the engine's own layout and specks. Moore's bet: dead chips dark, working ones light.
+     The pieces' bet: good pieces light, pieces the test caught dark, bad pieces it missed in the warm colour. */
   function paintWafer() {
-    const cv = el.querySelector('.betwafer'); if (!cv || ch.kind !== 'bet' || ch.bet !== 'cheaper') return;
-    const b = betOf(), M = Bet.moore(b.size, b.clean), dpr = Math.min(2, window.devicePixelRatio || 1), px = 320;
+    const cv = el.querySelector('.betwafer'); if (!cv || ch.kind !== 'bet') return;
+    const b = betOf(), dpr = Math.min(2, window.devicePixelRatio || 1), px = 320;
     if (cv.width !== px * dpr) { cv.width = px * dpr; cv.height = px * dpr; }
-    const g = cv.getContext('2d'), cs = getComputedStyle(el), ink = cs.getPropertyValue('--ink').trim() || '#222', bad = cs.getPropertyValue('--bad').trim() || '#c33', good = cs.getPropertyValue('--good').trim() || '#2a7';
+    const g = cv.getContext('2d'), cs = getComputedStyle(el), col = (k, d) => cs.getPropertyValue(k).trim() || d;
+    const ink = col('--ink', '#222'), bad = col('--bad', '#c33'), good = col('--good', '#2a7'), warm = col('--warm', '#d80');
+    let s, cells, paint, d;
+    if (ch.bet === 'onebad') { const P = Bet.pieces(b.k, b.test); s = P.s; cells = P.cells; d = Bet.CLEAN[2]; paint = n => P.state[n] === 'good' ? [good, 0.55] : P.state[n] === 'caught' ? [bad, 0.75] : [warm, 0.95]; }
+    else { const M = Bet.moore(b.size, b.clean); s = M.s; cells = M.cells; d = M.d; paint = n => M.alive[n] ? [good, 0.55] : [bad, 0.75]; }
     const k = px * dpr / (2 * Bet.WAFER.r + 8), o = px * dpr / 2;
     g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, cv.width, cv.height);
     g.save(); g.translate(o, o); g.scale(k, -k);
     g.beginPath(); g.arc(0, 0, Bet.WAFER.r, 0, Math.PI * 2); g.fillStyle = ink; g.globalAlpha = 0.07; g.fill(); g.globalAlpha = 0.35; g.lineWidth = 1 / k * dpr; g.strokeStyle = ink; g.stroke();
-    const s = M.s, gap = Math.min(0.6, s * 0.06);
-    M.cells.forEach(([i, j], n) => { g.globalAlpha = M.alive[n] ? 0.55 : 0.75; g.fillStyle = M.alive[n] ? good : bad; g.fillRect(i * s + gap / 2, j * s + gap / 2, s - gap, s - gap); });
+    const gap = Math.min(0.6, s * 0.06);
+    cells.forEach(([i, j], n) => { const [c, a] = paint(n); g.globalAlpha = a; g.fillStyle = c; g.fillRect(i * s + gap / 2, j * s + gap / 2, s - gap, s - gap); });
     g.globalAlpha = 0.9; g.fillStyle = ink; const rr = Math.max(0.7, 1.1 / k * dpr);
-    Bet.specksOf(M.d).forEach(([x, y]) => { g.beginPath(); g.arc(x, y, rr, 0, Math.PI * 2); g.fill(); });
+    Bet.specksOf(d).forEach(([x, y]) => { g.beginPath(); g.arc(x, y, rr, 0, Math.PI * 2); g.fill(); });
     g.restore();
+  }
+  /* ---- the pieces' bet: one big piece, or many joined in one package; test each first, or not ---- */
+  function betPieces() {
+    const b = betOf(), G = Bet.PIECE_GUESSES, right = Bet.piecesAnswer();
+    let h = head();
+    if (b.guess == null) {
+      h += '<p class="kicker">' + esc(t('bet.predictK')) + '</p><p class="small">' + esc(t('bet.pc.predict')) + '</p><div class="chips">' +
+        G.map((g, i) => '<button type="button" class="chipb" data-guess-pc="' + i + '">' + esc(t('bet.pc.g.' + g)) + '</button>').join('') + '</div><p class="small muted">' + esc(t('bet.pc.model')) + '</p>';
+      return h + reward();
+    }
+    const C = Bet.checkPieces(b), P = C.P, X = Bet.PIECES_GOAL;
+    const gs = [{ k: 'cost', ok: C.cheap, v: times(C.rel), target: t('bet.pc.gCost', { v: X.maxRel }), f: C.cheap ? 1 : Math.min(1, X.maxRel / C.rel) },
+      { k: 'share', ok: C.works, v: t('gauge.pct', { v: Math.round(P.share * 100) }), target: t('bet.pc.gShare', { v: Math.round(X.minShare * 100) }), f: Math.min(1, P.share / X.minShare) }];
+    h += '<div class="goalbox' + (C.ok ? ' ok' : '') + '"><p class="kicker">' + esc(t(C.ok ? 'game.reached' : 'game.goalNow')) + '</p>' + gs.map(g => '<div class="gauge' + (g.ok ? ' ok' : '') + '"><span class="gl">' + esc(t('bet.pc.g.' + g.k)) + '</span><span class="gv">' + esc(g.v) + ' <span class="muted">' + esc(g.target) + '</span></span><span class="gbar"><span style="width:' + (g.f * 100).toFixed(0) + '%"></span></span></div>').join('') + '</div>';
+    const caught = P.state.filter(x => x === 'caught').length, missed = P.state.filter(x => x === 'missed').length;
+    h += '<div class="betview"><figure class="wafer"><canvas class="betwafer" width="320" height="320" role="img" aria-label="' + esc(t('bet.pc.waferAria', { n: P.cells.length, good: P.good, caught, missed })) + '"></canvas><figcaption class="small muted">' + esc(t('bet.pc.counts', { n: P.cells.length, good: P.good, caught, missed })) + '</figcaption></figure>' + packsSvg(P) + '</div>';
+    h += '<label class="lab" for="bet-k"><b>' + esc(t('bet.pc.k')) + '</b> <output>' + esc(t(P.k === 1 ? 'bet.pc.one' : 'bet.pc.kV', { n: P.k, a: Math.round(Bet.LOGIC / P.k + (P.k > 1 ? Bet.LINK : 0)) })) + '</output></label><input type="range" id="bet-k" data-bet="k" min="0" max="' + (Bet.PIECES.length - 1) + '" step="1" value="' + b.k + '">';
+    h += '<label class="lab" for="bet-test"><b>' + esc(t('bet.pc.test')) + '</b> <output>' + esc(t('bet.pc.t.' + Bet.TESTS[b.test])) + '</output></label><input type="range" id="bet-test" data-bet="test" min="0" max="' + (Bet.TESTS.length - 1) + '" step="1" value="' + b.test + '">';
+    h += '<p class="small ' + (G[b.guess] === right ? 'good' : 'hint') + '">' + esc(t(G[b.guess] === right ? 'bet.pc.right' : 'bet.pc.off', { g: t('bet.pc.g.' + G[b.guess]), r: t('bet.pc.g.' + right) })) + '</p>';
+    if (!C.ok) h += view.hint ? '<p class="small hint">' + esc(t('bet.pc.hint')) + '</p>' : '<button type="button" class="link" data-hint>' + esc(t('game.hint')) + '</button>';
+    h += '<button type="button" class="link" data-reguess>' + esc(t('bet.again')) + '</button>';
+    if (C.ok) { win(); h += '<p class="small">' + esc(t('bet.pc.why')) + '</p>'; }
+    return h + doneNote() + reward();
+  }
+  /* the first packages off the wafer: each holds its pieces; one bad piece, or a join that fails, sinks it */
+  function packsSvg(P) {
+    const N = 12, L = P.packs.slice(0, N), cols = Math.ceil(Math.sqrt(P.k)), rows = Math.ceil(P.k / cols), cell = 40 / Math.max(cols, rows), W = 6 * 52, H = 2 * 56;
+    const pk = (q, n) => { const x0 = (n % 6) * 52 + 4, y0 = Math.floor(n / 6) * 56 + 4;
+      return '<g class="pack' + (q.ok ? '' : ' sunk') + '"><rect class="pk" x="' + x0 + '" y="' + y0 + '" width="44" height="44" rx="5"' + (q.joins ? '' : ' stroke-dasharray="3 2"') + '/>' +
+        q.ids.map((id, i) => { const st = P.state[id]; return '<rect class="pc ' + st + '" x="' + (x0 + 2 + (i % cols) * cell + 0.8).toFixed(1) + '" y="' + (y0 + 2 + Math.floor(i / cols) * cell + 0.8).toFixed(1) + '" width="' + (cell - 1.6).toFixed(1) + '" height="' + (cell - 1.6).toFixed(1) + '" rx="1"/>'; }).join('') +
+        (q.ok ? '' : '<path class="x" d="M' + (x0 + 8) + ' ' + (y0 + 8) + 'l28 28M' + (x0 + 36) + ' ' + (y0 + 8) + 'l-28 28"/>') + '</g>'; };
+    return '<figure class="packs"><svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="' + esc(t('bet.pc.packsAria', { ok: L.filter(q => q.ok).length, n: L.length })) + '">' + L.map(pk).join('') + '</svg><figcaption class="small muted">' + esc(t('bet.pc.packs', { ok: P.working, n: P.packs.length })) + '</figcaption></figure>';
   }
   /* bring what just changed into view inside the sheet */
   const show = sel => { const n = el.querySelector(sel); if (n && n.scrollIntoView) n.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); };
@@ -364,6 +401,7 @@ export function play(el, ch, ctx) {
     const pt = q('[data-pat]'); if (pt) { view.tests.push(+pt.dataset.pat); view.wrong = null; return draw(); }
     const gs = q('[data-guess]'); if (gs) { const k = +gs.dataset.guess; if (k === spotCase(spotCode(S)).broken) { view.guess = k; win(); } else view.wrong = k; draw(); fx(); if (view.wrong === k) anim(el.querySelector('p.bad'), [{ transform: 'translateX(-6px)' }, { transform: 'translateX(5px)' }, { transform: 'translateX(0)' }], { duration: 300 }); return show('.won, .verdict, p.bad'); }
     if (q('[data-again]')) { view.tests = []; view.wrong = null; view.guess = null; return draw(); }
+    const gp = q('[data-guess-pc]'); if (gp) { betOf().guess = +gp.dataset.guessPc; ctx.save(); draw(); fx(); return show('.betview'); }
     const go = q('[data-guess-ox]'); if (go) { betOf().guess = +go.dataset.guessOx; ctx.save(); draw(); fx(); return show('.betview'); }
     const gz = q('[data-guess-size]'); if (gz) { const b = betOf(); b.guess = +gz.dataset.guessSize; ctx.save(); draw(); fx(); return show('.betview'); }
     if (q('[data-reguess]')) { betOf().guess = null; ctx.save(); return draw(); }

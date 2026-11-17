@@ -54,3 +54,23 @@ test('oxen or chickens: only a chip with both serves the everyday app and the AI
   assert.ok(B.OX.some((_, o) => B.HENS.some((_, h) => B.checkOxen({ ox: o, hens: h }).ok)));
   assert.deepEqual(B.normalBetOf('oxen', { ox: 3, hens: 99, guess: 2 }), { ox: 3, hens: B.OX_START.hens, guess: 2 });
 });
+
+// The pieces' bet (known good die): every number counted from the wafer's pieces and the packages they go into;
+// splitting pays only once the bad pieces are tested out, and testing alone does not pay for one big piece.
+test('one bad piece sinks its package: splitting pays only with a test first', () => {
+  for (let k = 0; k < B.PIECES.length; k++) for (let ti = 0; ti < B.TESTS.length; ti++) {
+    const P = B.pieces(k, ti);
+    assert.equal(P.state.length, P.cells.length);
+    if (ti === 0) assert.ok(!P.state.includes('caught'), 'no test caught a piece');
+    const used = P.packs.flatMap(q => q.ids);
+    assert.equal(new Set(used).size, used.length, 'a piece is in two packages');
+    for (const q of P.packs) { assert.equal(q.ids.length, B.PIECES[k]); assert.equal(q.ok, q.joins && q.ids.every(i => P.state[i] === 'good')); for (const i of q.ids) assert.notEqual(P.state[i], 'caught'); }
+    assert.equal(P.working, P.packs.filter(q => q.ok).length);
+    const pass = B.checkPieces({ k, test: ti }).ok;
+    if (pass) { assert.ok(B.PIECES[k] > 1 && ti > 0, 'passed without both a split and a test'); }
+  }
+  for (let k = 0; k < B.PIECES.length; k++) assert.ok(!B.checkPieces({ k, test: 0 }).ok, 'untested pieces pass');
+  for (let ti = 0; ti < B.TESTS.length; ti++) assert.ok(!B.checkPieces({ k: 0, test: ti }).ok, 'one tested piece passes');
+  assert.ok(B.PIECES.some((_, k) => B.TESTS.some((_, ti) => B.checkPieces({ k, test: ti }).ok)));
+  assert.ok(B.PIECE_GUESSES.includes(B.piecesAnswer()));
+});

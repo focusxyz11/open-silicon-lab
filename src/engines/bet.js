@@ -32,8 +32,9 @@ export const SPECKS = (() => {
 export const specksOf = d => SPECKS.slice(0, Math.round(d * WAFER_CM2));
 
 /* the chips of one size on the wafer: grid cells [i, j] whose four corners lie inside the usable disc */
-export function layout(n) {
-  const s = chipSide(n), lim = WAFER.r - WAFER.edge, k = Math.ceil(WAFER.r / s) + 1, cells = [];
+export const layout = n => layoutSide(chipSide(n));
+export function layoutSide(s) {
+  const lim = WAFER.r - WAFER.edge, k = Math.ceil(WAFER.r / s) + 1, cells = [];
   for (let i = -k; i < k; i++) for (let j = -k; j < k; j++) {
     const far = Math.max(Math.hypot(i * s, j * s), Math.hypot((i + 1) * s, j * s), Math.hypot(i * s, (j + 1) * s), Math.hypot((i + 1) * s, (j + 1) * s));
     if (far <= lim) cells.push([i, j]);
@@ -108,5 +109,59 @@ export function floorplan(r, m) {
   return { W, rows, ox: r > 1 ? { x: 0, y: 0, w, h } : null, hens: r > 1 ? hens : [[0, 0], ...hens], budgetRows: BUDGET / W };
 }
 
+/* ---- The pieces' bet (the question 'onebad'): why can one bad piece throw away four good ones? A big chip can be
+   made as one piece, or split into pieces joined in one package (chiplets). Smaller pieces each come out good more
+   often, but a package works only if every piece in it is good, so without a test first nothing is won: one bad
+   piece wastes the good ones beside it. Test each piece before joining (known good die) and the bad ones are left
+   out, but testing costs, and every piece needs a link to the others and a place in the package. Matter (how many
+   pieces), chance (which are good, which a test catches) and cost meet.
+   Counted, like Moore's bet: the same 300 mm wafer and the same specks (the middle line, 0.25 per cm²), cut into
+   pieces; the pieces are tested, then joined in packages in the order they come off the wafer; a package works if
+   every piece in it is good and every join holds. What a working chip costs is everything spent over the packages
+   that work. Costs are in wafers: one wafer is 100. ---- */
+export const LOGIC = 600;                              // mm² of logic in the whole chip
+export const LINK = 6;                                 // mm² each piece spends on links to the others
+export const PIECES = [1, 2, 4, 8, 16];
+export const TESTS = ['none', 'quick', 'careful', 'thorough'];
+export const CATCH = [0, 0.9, 0.99, 0.999];            // the share of bad pieces each test catches
+export const TEST_COST = [0, 0.03, 0.08, 0.3];         // what testing one piece costs
+export const JOIN = 0.99;                              // the chance one more piece joins well
+export const assembly = k => 0.15 + 0.1 * k;           // what putting k pieces in one package costs
+const PIECE_LINE = 2;                                  // the line the pieces are made on: CLEAN[2]
+/* a fixed, even spread in [0, 1) for the i-th thing: which bad pieces a test misses, which joins fail */
+const spread = (i, seed) => ((i + 1) * 0.6180339887 + seed) % 1;
+const PCACHE = new Map();
+export function pieces(ki, ti) {
+  const key = ki + ':' + ti; if (PCACHE.has(key)) return PCACHE.get(key);
+  const k = PIECES[ki], area = LOGIC / k + (k > 1 ? LINK : 0), s = Math.sqrt(area), cells = layoutSide(s).cells, dead = new Set();
+  for (const [x, y] of specksOf(CLEAN[PIECE_LINE])) dead.add(Math.floor(x / s) + ',' + Math.floor(y / s));
+  /* each piece: good, caught by the test (left out), or bad and missed (joined anyway) */
+  let bad = 0; const state = cells.map(([i, j]) => dead.has(i + ',' + j) ? (spread(bad++, 0.13) < CATCH[ti] ? 'caught' : 'missed') : 'good');
+  const passed = state.map((st, i) => st === 'caught' ? -1 : i).filter(i => i >= 0), packs = [];
+  for (let p = 0; (p + 1) * k <= passed.length; p++) {
+    const ids = passed.slice(p * k, (p + 1) * k), joins = k === 1 || spread(p, 0.71) < JOIN ** (k - 1);
+    packs.push({ ids, ok: joins && ids.every(i => state[i] === 'good'), joins });
+  }
+  const working = packs.filter(q => q.ok).length;
+  const spent = 100 + cells.length * TEST_COST[ti] + packs.length * assembly(k);
+  const R = { k, s, cells, state, packs, working, good: state.filter(x => x === 'good').length, cost: working ? spent / working : Infinity, share: packs.length ? working / packs.length : 0 };
+  PCACHE.set(key, R); return R;
+}
+/* against one big piece, untested: what everyone starts from */
+export const piecesRel = (ki, ti) => pieces(ki, ti).cost / pieces(0, 0).cost;
+export const PIECES_GOAL = { maxRel: 0.5, minShare: 0.9 };
+export const PIECES_START = { k: 0, test: 0, guess: null };
+export const PIECE_GUESSES = ['cheaper', 'same', 'dearer'];
+/* the guess: four pieces, untested, against one; what the wafer says */
+export function piecesAnswer() { const r = piecesRel(2, 0); return r < 0.7 ? 'cheaper' : r <= 1.3 ? 'same' : 'dearer'; }
+export function checkPieces(b) {
+  const P = pieces(b.k, b.test), rel = P.cost / pieces(0, 0).cost, cheap = rel <= PIECES_GOAL.maxRel, works = P.share >= PIECES_GOAL.minShare;
+  return { P, rel, cheap, works, ok: cheap && works };
+}
+export function normalPieces(b) {
+  const o = Object.assign({}, PIECES_START, b || {}), i = (v, L) => Number.isInteger(v) && v >= 0 && v < L.length;
+  return { k: i(o.k, PIECES) ? o.k : PIECES_START.k, test: i(o.test, TESTS) ? o.test : PIECES_START.test, guess: i(o.guess, PIECE_GUESSES) ? o.guess : null };
+}
+
 /* every bet, by its question */
-export function normalBetOf(id, b) { return id === 'oxen' ? normalOxen(b) : normalBet(b); }
+export function normalBetOf(id, b) { return id === 'oxen' ? normalOxen(b) : id === 'onebad' ? normalPieces(b) : normalBet(b); }
