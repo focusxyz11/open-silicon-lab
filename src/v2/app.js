@@ -1025,7 +1025,7 @@ export function start() {
     wf = whatifView(sheet, { S, save, map, name: id => t('map.' + id + '.t'), close: () => { location.hash = '#/ecosystem'; } });
     if (lever) wf.lever(lever);
   }
-  function leaveWhatif() { if (!wf && !sheet.classList.contains('whatif')) return; wf = null; map && map.whatif(null); sheet.classList.remove('whatif'); sheet.oninput = null; sheet.onchange = null; sheet.onclick = null; }
+  function leaveWhatif() { if (!wf && !sheet.classList.contains('whatif')) return; wf = null; map && map.whatif(null); sheet.classList.remove('whatif'); sheet.oninput = null; sheet.onchange = null; sheet.onclick = null; sheet.hidden = true; sheet.innerHTML = ''; }
 
   /* ---- following a question: one stop of a thread's trail, in the dock of the view that shows its level ---- */
   /* the figures behind a stop, each with its source, kind and the date it was checked (src/data/facts.json) */
