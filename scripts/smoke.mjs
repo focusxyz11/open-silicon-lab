@@ -58,7 +58,7 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
   await page.waitForSelector('#sheet .won', { timeout: 10000 }).catch(() => problems.push(tag + ': a right design did not win the challenge'));
   if (!/grew/i.test(await page.textContent('#toast').catch(() => ''))) problems.push(tag + ': winning did not say what grew');
   if (!(await page.$('#sheet .opens[href^="#/ask/"]'))) problems.push(tag + ': the first win opens no question');
-  if (!/1 of 5/.test(await page.getAttribute('#loop [data-stage="design"]', 'aria-label').catch(() => ''))) problems.push(tag + ': the tracker did not count the win');
+  if (!/1 of 6/.test(await page.getAttribute('#loop [data-stage="design"]', 'aria-label').catch(() => ''))) problems.push(tag + ': the tracker did not count the win');
   await page.click('#sheet [data-next]').catch(() => problems.push(tag + ': no way on to the next challenge'));
   if (!/voter/i.test(await page.textContent('#sheet .player h3').catch(() => ''))) problems.push(tag + ': the next challenge is not the majority voter');
   await page.click('#sheet [data-back]');
@@ -464,6 +464,15 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
     await fp.waitForFunction(() => { const g = document.querySelector('[data-guess-bt="2"]'); if (g) g.click();
       for (const [k, v] of [['batch', 9], ['format', 2]]) { const r = document.querySelector('[data-bet="' + k + '"]'); if (r && r.value !== String(v)) { r.value = v; r.dispatchEvent(new Event('input', { bubbles: true })); } }
       return !!document.querySelector('.player .won'); }, null, { timeout: 30000, polling: 1000 }).catch(() => problems.push(tag + ': the batch bet cannot be won with many people and fewer bits'));
+    /* Look inside, at the phone's board: open five products, count the leading-edge kinds; the right chip for the job */
+    await fp.goto(base + 'index.html#/do/newest');
+    await fp.waitForSelector('[data-td-open]', { timeout: 60000 }).catch(() => problems.push(tag + ': Look inside does not offer its products'));
+    await fp.evaluate(() => { for (const id of ['phone', 'car', 'thermo', 'laptop', 'server']) { const b = document.querySelector('[data-td-open="' + id + '"]'); if (b) b.click(); } const i = document.querySelector('[data-td-count]'); if (i) i.value = 7; const c = document.querySelector('[data-td-check]'); if (c) c.click(); });
+    await fp.waitForSelector('.player .won', { timeout: 10000 }).catch(() => problems.push(tag + ': counting the leading-edge kinds right does not win Look inside'));
+    await fp.goto(base + 'index.html#/do/jobs');
+    await fp.waitForSelector('[data-fit-kind]', { timeout: 60000 }).catch(() => problems.push(tag + ': the right chip for the job does not show its chips'));
+    await fp.evaluate(() => { for (const [i, k] of [[0, 'cpu'], [1, 'mcu'], [2, 'gpu'], [3, 'asic'], [4, 'asic'], [5, 'fpga'], [6, 'dsp'], [7, 'power']]) { const j = document.querySelector('[data-fit-job="' + i + '"]'); if (j) j.click(); const b = document.querySelector('[data-fit-kind="' + k + '"]'); if (b) b.click(); } });
+    await fp.waitForSelector('.player .won', { timeout: 10000 }).catch(() => problems.push(tag + ': eight best fits do not win the right chip for the job'));
     /* Verify the agent, at the Lab: a tool checks a case, and eight right calls win */
     await fp.goto(base + 'index.html#/do/agent');
     await fp.waitForSelector('#sheet .agcases [data-ag-case]', { timeout: 60000 }).catch(() => problems.push(tag + ': Verify the agent does not show its cases'));

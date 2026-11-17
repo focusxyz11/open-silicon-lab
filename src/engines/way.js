@@ -43,8 +43,9 @@ export function doHome(ch) {
   if (ch.kind === 'design' || ch.kind === 'break') return ch.need || ch.kind === 'break' ? null : '#/bench/' + ch.at;
   if (DIVE_LEVELS.includes(ch.at)) return '#/dive/' + ch.at;
   const h = viewOfDepth(ch.at);
-  /* a bet at a level of the design (the proof's bet, at the check) is played at the bench, beside the design */
-  if (ch.kind === 'bet' && /^#\/bench\//.test(h)) return h;
+  /* a challenge at a level of the design that is not a design to write (the proof's bet at the check, the right chip
+     for the job at the need) is played at the bench, beside the design */
+  if (/^#\/bench\//.test(h)) return h;
   return /^#\/(dive|line)\//.test(h) ? h : null;
 }
 

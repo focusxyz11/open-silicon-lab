@@ -1400,3 +1400,27 @@ button.opens { width: 100%; text-align: left; border: 0; border-left: 3px solid 
 .agverdict.good { background: color-mix(in srgb, var(--good) 14%, transparent); }
 .agverdict.bad { background: color-mix(in srgb, var(--bad) 14%, transparent); }
 @media (max-width: 720px) { .agcases { grid-template-columns: repeat(4, 1fr); } .agcase .small { display: none; } .agcase { min-height: 0; place-items: center; } .say.you { margin-left: 0; } .say.ai { margin-right: 0; } }
+
+/* ---- Look inside, and the right chip for the job (src/v2/play.js teardown, fitJobs; src/data/teardown.js) ---- */
+.tdprod .chipb.on, .tdby .chipb.on { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.tdby { align-items: center; margin: 4px 0 10px; }
+.tdboard { display: grid; grid-template-columns: repeat(4, 1fr); grid-auto-rows: 54px; gap: 6px; margin: 0 0 8px; padding: 10px; border-radius: 14px; background: color-mix(in srgb, #1f4a37 70%, var(--panel-solid)); }
+.tdchip { all: unset; cursor: pointer; position: relative; display: flex; align-items: flex-end; padding: 6px 8px; border-radius: 6px; font: 600 11.5px/1.2 var(--sans); color: #fff; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .15), 0 2px 0 rgba(0, 0, 0, .35); }
+.tdchip.big { grid-column: span 2; grid-row: span 2; font-size: 13px; }
+.tdchip.on { box-shadow: 0 0 0 2px var(--ink), 0 2px 0 rgba(0, 0, 0, .35); }
+.tdchip:focus-visible { outline: 2px solid var(--accent); }
+.tdchip .lead, .tdkey .lead { position: absolute; top: 4px; right: 6px; color: #ffd76a; font-style: normal; font-size: 12px; }
+.tdkey .lead { position: static; }
+.job-proc { background: #2f6fd0; } .job-mem { background: #7a52c7; } .job-power { background: #c4752b; } .job-radio { background: #2a9c8a; } .job-sense { background: #b0457a; }
+.made-lead { background: #c23b3b; } .made-adv { background: #c4752b; } .made-mat { background: #4f6a86; } .made-mem { background: #7a52c7; } .made-spec { background: #2a9c8a; }
+.tdkey { display: flex; flex-wrap: wrap; gap: 4px 12px; margin: 0 0 10px; }
+.tdkey .sw { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; }
+.tdsel { display: grid; gap: 3px; margin: 0 0 10px; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--line); }
+.fitjobs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin: 4px 0 12px; }
+.fitline { position: relative; height: 92px; margin: 8px 6px 10px; border-bottom: 2px solid var(--line); }
+.fitline .end { position: absolute; bottom: -22px; left: 0; } .fitline .end.r { left: auto; right: 0; }
+.fitk { position: absolute; bottom: 8px; padding: 6px 10px; border-radius: 999px; border: 1px solid var(--line); background: var(--panel-solid); color: var(--ink); font: 600 12px var(--sans); cursor: pointer; white-space: nowrap; }
+.fitk:nth-of-type(even) { bottom: 48px; }
+.fitk.on, .fitk2.on { border-color: var(--ink); } .fitk.best, .fitk2.best { background: color-mix(in srgb, var(--good) 30%, var(--panel-solid)); } .fitk.no, .fitk2.no { background: color-mix(in srgb, var(--bad) 25%, var(--panel-solid)); } .fitk.ok, .fitk2.ok { background: color-mix(in srgb, var(--warm) 25%, var(--panel-solid)); }
+.fitk2 { margin: 22px 0 8px; }
+@media (max-width: 720px) { .fitjobs { grid-template-columns: repeat(4, 1fr); } .fitjobs .agcase .small { display: none; } .fitjobs .agcase { min-height: 0; place-items: center; } .tdboard { grid-template-columns: repeat(3, 1fr); } }

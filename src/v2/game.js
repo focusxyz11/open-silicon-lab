@@ -81,7 +81,9 @@ export const CHALLENGES = [
   { id: 'oxen', step: 'use', place: 'datacentre', at: 'chip', kind: 'bet', bet: 'oxen', grows: 'dc-cores' },
   { id: 'jevons', step: 'use', place: 'power', kind: 'bet', bet: 'jevons', grows: 'power-store' },
   { id: 'agent', step: 'design', place: 'lab', kind: 'agent', grows: 'lab-desk' },
-  { id: 'batch', step: 'use', place: 'datacentre', at: 'chip', kind: 'bet', bet: 'batch', grows: 'dc-batch' }
+  { id: 'batch', step: 'use', place: 'datacentre', at: 'chip', kind: 'bet', bet: 'batch', grows: 'dc-batch' },
+  { id: 'newest', step: 'ship', place: 'phones', at: 'phoneboard', kind: 'teardown', grows: 'island-teardown' },
+  { id: 'jobs', step: 'design', place: 'studio', at: 'need', kind: 'fit', grows: 'studio-fit' }
 ];
 /* the goal of a chip challenge as gauges: each a value of your chip's model and the bound it must reach
    (ge: at least, le: at most). Together they say the same as the goal's met() in src/engines/chip.js. */
@@ -158,7 +160,7 @@ export const askHref = key => { const [th, d] = key.split('.'); return '#/ask/' 
 
 /* ---- your state: what you have done, and what you were working on ---- */
 export const KEY = 'osl-world-v1';
-export function fresh() { return { done: {}, codes: {}, chip: Object.assign({}, START), life: {}, seen: false, drafts: [], sent: {}, met: {}, crossed: {}, bets: {}, whatif: { levers: {}, solved: {} }, agent: {}, name: '' }; }
+export function fresh() { return { done: {}, codes: {}, chip: Object.assign({}, START), life: {}, seen: false, drafts: [], sent: {}, met: {}, crossed: {}, bets: {}, whatif: { levers: {}, solved: {} }, agent: {}, teardown: {}, fit: {}, name: '' }; }
 export function normalState(s) {
   const f = fresh();
   if (!s || typeof s !== 'object') return f;
@@ -176,10 +178,10 @@ export function normalState(s) {
   const bets = {}; CHALLENGES.filter(c => c.kind === 'bet').forEach(c => { if (s.bets && s.bets[c.id]) bets[c.id] = normalBetOf(c.bet, s.bets[c.id]); });
   /* What if?: the levers where you left them, and the puzzles you solved (src/engines/ripple.js) */
   const w = s.whatif || {}, whatif = { levers: normalLevers(w.levers), solved: {} }; Object.keys(w.solved || {}).forEach(k => { if (PUZZLES.some(p => p.id === k)) whatif.solved[k] = true; });
-  return { done, codes, chip: normal(s.chip || START), life: lifeC, seen: !!s.seen, drafts, sent, met, crossed, bets, whatif, agent: normalAgent(s.agent), name: typeof s.name === 'string' ? s.name.slice(0, 40) : '' };
+  return { done, codes, chip: normal(s.chip || START), life: lifeC, seen: !!s.seen, drafts, sent, met, crossed, bets, whatif, agent: normalAgent(s.agent), teardown: s.teardown && typeof s.teardown === 'object' ? s.teardown : {}, fit: s.fit && typeof s.fit === 'object' ? s.fit : {}, name: typeof s.name === 'string' ? s.name.slice(0, 40) : '' };
 }
 export function load(store) { try { return normalState(JSON.parse(store.getItem(KEY) || 'null')); } catch (e) { return fresh(); } }
-export function save(store, s) { try { store.setItem(KEY, JSON.stringify({ done: s.done, codes: s.codes, chip: s.chip, life: s.life, seen: s.seen, drafts: s.drafts, sent: s.sent, met: s.met, crossed: s.crossed, bets: s.bets, whatif: s.whatif, agent: s.agent, name: s.name })); } catch (e) { /* storage unavailable */ } }
+export function save(store, s) { try { store.setItem(KEY, JSON.stringify({ done: s.done, codes: s.codes, chip: s.chip, life: s.life, seen: s.seen, drafts: s.drafts, sent: s.sent, met: s.met, crossed: s.crossed, bets: s.bets, whatif: s.whatif, agent: s.agent, teardown: s.teardown, fit: s.fit, name: s.name })); } catch (e) { /* storage unavailable */ } }
 
 /* ---- checks: each challenge asks its engine ---- */
 export function checkDesign(p, code) { return build({ p, code }); }
@@ -256,7 +258,7 @@ export function community(s) {
 }
 /* ---- challenges and questions are two faces of one thing ---- */
 /* the question a challenge opens once you have won it: a stop, at its own level or the one beside it */
-export const OPENS = { agent: 'idea.check', half: 'fail.check', vote: 'idea.check', full: 'make.gates', months: 'make.clean', quick: 'scale.clean', spot: 'fail.test', cores: 'divide.test',
+export const OPENS = { newest: 'open.phoneboard', jobs: 'divide.need', agent: 'idea.check', half: 'fail.check', vote: 'idea.check', full: 'make.gates', months: 'make.clean', quick: 'scale.clean', spot: 'fail.test', cores: 'divide.test',
   phone: 'life.phone', car: 'fail.car', dclife: 'fail.ship', fed: 'divide.board', fast: 'fail.chip' };
 /* and where the open things of the ledger sit: a break under "is the design right?", a piece to build under
    "could anyone design a chip?", a missing check under "who checks, and with what?" */
