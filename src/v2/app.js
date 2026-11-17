@@ -1203,7 +1203,10 @@ export function start() {
     /* the old picture holds while the new view is made (at most a moment), then one zooms into the other */
     const root = document.documentElement; root.dataset.move = move; if (move !== 'in') portalAt(null);
     const tr = document.startViewTransition(() => Promise.race([after(show(parts, from)), new Promise(r => setTimeout(r, 1500))]));
-    tr.finished.finally(() => { if (root.dataset.move === move) delete root.dataset.move; });
+    /* a transition the browser skips (a newer one began, or the view took too long) rejects its promises: the view still
+       changes, plainly, so the rejections are expected and caught here */
+    const quiet = () => {}; tr.ready.catch(quiet); tr.updateCallbackDone.catch(quiet);
+    tr.finished.catch(quiet).finally(() => { if (root.dataset.move === move) delete root.dataset.move; });
   }
   /* one set of keys in every view, one pair for each move: ↑ ↓ are out and in (scale), ← → are along. Where the
      view is a column of levels (the flight, the dive, the stack), along is the loop: the stage before or after,

@@ -421,6 +421,12 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
     await fp.waitForFunction(() => { const s = document.querySelector('.seamnote'); return !!s && !s.hidden && !!s.querySelector('[data-field="package"]'); }, null, { timeout: 30000 }).catch(() => problems.push(tag + ': crossing a seam does not raise its leak'));
     await fp.evaluate(() => { const b = document.querySelector('.seamnote [data-field]'); if (b) b.click(); });
     await fp.waitForSelector('.fieldx', { timeout: 10000 }).catch(() => problems.push(tag + ': a question from the field does not open its card'));
+    /* the labs and bets are played on a flat page of their own: none needs the 3D world, and on a CI machine's software
+       renderer the flights between islands take long enough to redraw a card while it is played, which made these
+       checks pass or fail by chance. A fresh visitor again (its own storage). */
+    { const tag = 'labs', fp = await browser.newPage({ viewport: { width: 1280, height: 800 } });
+    fp.on('pageerror', e => problems.push(tag + ': ' + e.message));
+    await fp.addInitScript(() => { localStorage.setItem('osl-quality', 'flat'); localStorage.setItem('osl-hints-v1', JSON.stringify({ seen: {}, off: true })); });
     /* a bet is played: guess first, then the two dials find the balance (src/engines/bet.js) */
     await fp.goto(base + 'index.html#/do/cheaper');
     await fp.waitForSelector('[data-guess-size]', { timeout: 30000 }).catch(() => problems.push(tag + ': the bet does not ask for a guess first'));
@@ -514,6 +520,7 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
     await fp.waitForFunction(() => { const calls = [['eq', 0], ['maj'], ['sum', 0], ['mul'], ['yield', 0], ['roof', 0], ['fact', 0], ['cov', 0]], c = s => { const e = document.querySelector('#sheet ' + s); if (e) e.click(); };
       for (const [id, r] of calls) { c('[data-ag-case="' + id + '"]'); if (document.querySelector('#sheet .agverdict.good')) continue; c('[data-ag-redo]'); if (r == null) c('[data-ag-trust]'); else { c('[data-ag-reject]'); c('[data-ag-reason="' + r + '"]'); } }
       return !!document.querySelector('#sheet .player .won'); }, null, { timeout: 30000, polling: 1500 }).catch(() => problems.push(tag + ': eight right calls do not win Verify the agent'));
+    await fp.close(); }
     /* What if? between the islands: a scenario moves the levers, the change lands on other islands, and one of
        them shows the chain back to the lever */
     await fp.goto(base + 'index.html#/whatif');
