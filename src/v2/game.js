@@ -23,6 +23,7 @@ import { WAYS } from '../data/ways.js';
 import { STOPS, WORLDS } from '../data/weave.js';
 import { INSIDE, placeOf, SHARED, askAt as levelStops } from '../data/places.js';
 import { fieldOf, fieldAtLevel, fieldAtPlace } from '../data/questions.js';
+import { normalBet } from '../engines/bet.js';
 
 /* the loop, in order, and the station of each step on the island */
 export const STEPS = ['design', 'make', 'test', 'ship', 'use'];
@@ -54,7 +55,8 @@ const lineOf = (code, n) => code.split('\n')[n] || '';
 export const hasPiece = (code, n, piece) => lineOf(code, n).includes(' ' + piece);
 export const togglePiece = (code, n, piece) => code.split('\n').map((l, i) => i !== n ? l : hasPiece(code, n, piece) ? l.replace(' ' + piece, '') : l.replace(/;?\s*$/, ' ' + piece + ';')).join('\n');
 
-/* Do: the challenges. kind: 'design' (write a circuit; p: its job), 'chip' (reach a goal of chip.js with
+/* Do: the challenges. kind: 'bet' (find a place among two dials where three primitives balance; bet: its question
+   and engine, src/engines/bet.js), 'design' (write a circuit; p: its job), 'chip' (reach a goal of chip.js with
    your chip's settings; goal: its id), 'life' (ship a chip that lives through a place's life; mission),
    'spot' (find the broken chip with a few test patterns). Each happens at a place and a level inside it
    (place, at: a depth of src/data/places.js), on the step of the loop it belongs to. grows: what appears. */
@@ -64,6 +66,7 @@ export const CHALLENGES = [
   { id: 'full', step: 'design', place: 'studio', at: 'check', kind: 'design', p: 'full', grows: 'studio-wing' },
   { id: 'months', step: 'make', place: 'fab', at: 'clean', kind: 'chip', goal: 'months', grows: 'fab-trucks' },
   { id: 'quick', step: 'make', place: 'fab', at: 'deposit', kind: 'chip', goal: 'quick', grows: 'fab-line' },
+  { id: 'cheaper', step: 'make', place: 'fab', at: 'wafer', kind: 'bet', bet: 'cheaper', grows: 'fab-wafers' },
   { id: 'spot', step: 'test', place: 'test', at: 'test', kind: 'spot', p: 'full', grows: 'test-probe' },
   { id: 'cores', step: 'test', place: 'test', at: 'test', kind: 'chip', goal: 'cores', grows: 'test-hall' },
   { id: 'phone', step: 'ship', place: 'phones', at: 'soc', kind: 'life', mission: 'phone', grows: 'island-phones' },
@@ -147,7 +150,7 @@ export const askHref = key => { const [th, d] = key.split('.'); return '#/ask/' 
 
 /* ---- your state: what you have done, and what you were working on ---- */
 export const KEY = 'osl-world-v1';
-export function fresh() { return { done: {}, codes: {}, chip: Object.assign({}, START), life: {}, seen: false, drafts: [], sent: {}, met: {}, crossed: {}, name: '' }; }
+export function fresh() { return { done: {}, codes: {}, chip: Object.assign({}, START), life: {}, seen: false, drafts: [], sent: {}, met: {}, crossed: {}, bets: {}, name: '' }; }
 export function normalState(s) {
   const f = fresh();
   if (!s || typeof s !== 'object') return f;
@@ -161,10 +164,12 @@ export function normalState(s) {
   const lifeC = {}; Object.entries(s.life || {}).forEach(([k, v]) => { lifeC[k] = normalLife(v); });
   /* the seams you have crossed: their leak is raised once, then waits in Ask */
   const crossed = {}; Object.keys(s.crossed || {}).forEach(k => { if (fieldOf(k)) crossed[k] = true; });
-  return { done, codes, chip: normal(s.chip || START), life: lifeC, seen: !!s.seen, drafts, sent, met, crossed, name: typeof s.name === 'string' ? s.name.slice(0, 40) : '' };
+  /* where you left each bet's dials (src/engines/bet.js) */
+  const bets = {}; CHALLENGES.filter(c => c.kind === 'bet').forEach(c => { if (s.bets && s.bets[c.id]) bets[c.id] = normalBet(s.bets[c.id]); });
+  return { done, codes, chip: normal(s.chip || START), life: lifeC, seen: !!s.seen, drafts, sent, met, crossed, bets, name: typeof s.name === 'string' ? s.name.slice(0, 40) : '' };
 }
 export function load(store) { try { return normalState(JSON.parse(store.getItem(KEY) || 'null')); } catch (e) { return fresh(); } }
-export function save(store, s) { try { store.setItem(KEY, JSON.stringify({ done: s.done, codes: s.codes, chip: s.chip, life: s.life, seen: s.seen, drafts: s.drafts, sent: s.sent, met: s.met, crossed: s.crossed, name: s.name })); } catch (e) { /* storage unavailable */ } }
+export function save(store, s) { try { store.setItem(KEY, JSON.stringify({ done: s.done, codes: s.codes, chip: s.chip, life: s.life, seen: s.seen, drafts: s.drafts, sent: s.sent, met: s.met, crossed: s.crossed, bets: s.bets, name: s.name })); } catch (e) { /* storage unavailable */ } }
 
 /* ---- checks: each challenge asks its engine ---- */
 export function checkDesign(p, code) { return build({ p, code }); }

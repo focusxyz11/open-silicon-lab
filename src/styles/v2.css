@@ -1227,3 +1227,19 @@ textarea.fcode { width: 100%; min-height: 110px; resize: vertical; box-sizing: b
 @keyframes seamin { from { opacity: 0; transform: translateY(-8px); } }
 @media (max-width: 720px) { .seamnote { top: 136px; left: 16px; right: 16px; width: auto; } }
 @media (prefers-reduced-motion: reduce) { .seamnote { animation: none; } }
+
+/* ---- a bet (src/v2/play.js, kind 'bet'): the wafer as the engine counts it, beside each part's cost at every size ---- */
+button.opens { width: 100%; text-align: left; border: 0; border-left: 3px solid var(--warm); color: var(--ink); cursor: pointer; font: inherit; }
+.opens .kicker { display: flex; align-items: center; gap: 6px; }
+.betview { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin: 12px 0 6px; align-items: start; }
+.betview figure { margin: 0; }
+.betview figcaption { margin-top: 4px; }
+.betwafer { display: block; width: 100%; max-width: 300px; height: auto; aspect-ratio: 1; margin: 0 auto; }
+.betcurve svg { display: block; width: 100%; height: auto; }
+.betcurve .line { fill: none; stroke: var(--ink); stroke-width: 2; stroke-linejoin: round; }
+.betcurve .grid { stroke: var(--line); stroke-width: 1; }
+.betcurve .ax { font: 11px var(--sans); fill: var(--muted); }
+.betcurve .goalzone { fill: color-mix(in srgb, var(--good) 16%, transparent); }
+.betcurve .low { fill: none; stroke: var(--warm); stroke-width: 2.2; }
+.betcurve .you { fill: var(--ink); }
+.betcurve .guess { fill: var(--warm); }

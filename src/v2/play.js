@@ -4,7 +4,8 @@
      chip    move your chip's settings until it reaches a goal no single setting can reach;
      life    choose what the design and the factory do, then see whether the chip lives through a place's life;
      spot    run a few test patterns on four copies, and find the one the factory broke;
-     break   a design of the ledger that passed its check: find the case, tick by tick, that makes it answer wrong.
+     break   a design of the ledger that passed its check: find the case, tick by tick, that makes it answer wrong;
+     bet     say where you think the balance is, then turn two dials until three primitives meet (src/engines/bet.js).
    A win says which question it opens (a challenge is where a question starts), and where the work could join the
    community's ledger, a slip gives the way in (src/v2/commons.js).
    play(el, ch, ctx) draws into el; ctx: { state, save(), done(ch), back(), open(challenge), startChip() }. */
@@ -16,6 +17,8 @@ import { runCase } from '../engines/ledger.js';
 import { projectOf, patterns as testOf } from '../engines/design.js';
 import { signHtml, signOf, keep, refusal, slipHtml, slipClick, draftOf } from './commons.js';
 import { build } from '../engines/design.js';
+import * as Bet from '../engines/bet.js';
+import { glyph } from './field.js';
 
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 /* the gates a description can use, and the one a tap turns each into */
@@ -70,7 +73,8 @@ export function play(el, ch, ctx) {
       (view.won ? '<span class="burst" aria-hidden="true">' + Array.from({ length: 14 }, (_, i) => '<i style="--a:' + Math.round(i * 360 / 14) + 'deg;--d:' + (i % 3) * 40 + 'ms"></i>').join('') + '</span>' : '') +
       (n && ctx.open ? '<button type="button" class="btn primary" data-next>' + esc(t('game.goNext', { what: titleOf(n) })) + '</button>' : '') + '</div>' + opens(); };
   /* what a win opens: the question this challenge was about all along, one tap away */
-  const opens = () => { const k = opensOf(ch); return k ? '<a class="opens" href="' + esc(askHref(k)) + '"><span class="kicker">' + esc(t('game.opens')) + '</span><span class="q">' + esc(t('stop.' + k + '.q')) + '</span><span class="small muted">' + esc(t('sheet.follow')) + '</span></a>' : ''; };
+  const opens = () => { if (ch.kind === 'bet') return '<button type="button" class="opens" data-field="' + esc(ch.bet) + '"><span class="kicker">' + glyph('bet') + esc(t('game.opens')) + '</span><span class="q">' + esc(t('field.' + ch.bet + '.q')) + '</span><span class="small muted">' + esc(t('field.' + ch.bet + '.who')) + '</span></button>';
+    const k = opensOf(ch); return k ? '<a class="opens" href="' + esc(askHref(k)) + '"><span class="kicker">' + esc(t('game.opens')) + '</span><span class="q">' + esc(t('stop.' + k + '.q')) + '</span><span class="small muted">' + esc(t('sheet.follow')) + '</span></a>' : ''; };
   /* your work as an entry of the ledger: sign it and keep it, then the slip gives the way in */
   const entry = (label) => view.slip && draftOf(S, view.slip) ? slipHtml(S, view.slip) : '<div class="keep">' + signHtml(S, view.ai ? 'both' : 'person') + (view.no ? '<p class="small bad">' + esc(view.no) + '</p>' : '') + '<button type="button" class="btn primary" data-keep>' + esc(t(label)) + '</button><p class="small muted">' + esc(t('ledger.keep.note')) + '</p></div>';
 
@@ -193,13 +197,76 @@ export function play(el, ch, ctx) {
     return h + doneNote();
   }
 
+  /* ---- bet: say where you think the balance is, then find it. Moore's bet: a real wafer, cut into chips of the
+     size you choose, specked by the line you choose; each part's cost is counted from what works ---- */
+  const betOf = () => (S.bets[ch.id] = Bet.normalBet(S.bets[ch.id]));
+  const million = i => t('bet.sizeV', { n: Bet.SIZES[i] });
+  const times = v => isFinite(v) ? t('bet.times', { v: v >= 10 ? Math.round(v) : v.toFixed(2) }) : t('bet.none');
+  function bet() {
+    const b = betOf();
+    let h = head();
+    if (b.guess == null) {
+      /* first, a guess: the act of predicting before you look */
+      h += '<p class="kicker">' + esc(t('bet.predictK')) + '</p><p class="small">' + esc(t('bet.predict')) + '</p><div class="chips">' +
+        Bet.SIZES.map((_, i) => '<button type="button" class="chipb" data-guess-size="' + i + '">' + esc(million(i)) + '</button>').join('') + '</div><p class="small muted">' + esc(t('bet.model')) + '</p>';
+      return h + reward();
+    }
+    const M = Bet.moore(b.size, b.clean), C = Bet.check(b), cur = Bet.curve(b.clean), low = Bet.cheapest(b.clean);
+    const gs = [{ k: 'size', ok: C.big, v: million(b.size), target: t('bet.gSize', { n: Bet.GOAL.minParts }), f: Math.min(1, Bet.SIZES[b.size] / Bet.GOAL.minParts) },
+      { k: 'cost', ok: C.close, v: times(C.rel), target: t('bet.gCost', { v: Bet.GOAL.maxRel }), f: C.ok || C.close ? 1 : Math.min(1, Bet.GOAL.maxRel / C.rel) }];
+    h += '<div class="goalbox' + (C.ok ? ' ok' : '') + '"><p class="kicker">' + esc(t(C.ok ? 'game.reached' : 'game.goalNow')) + '</p>' + gs.map(g => '<div class="gauge' + (g.ok ? ' ok' : '') + '"><span class="gl">' + esc(t('bet.g.' + g.k)) + '</span><span class="gv">' + esc(g.v) + ' <span class="muted">' + esc(g.target) + '</span></span><span class="gbar"><span style="width:' + (g.f * 100).toFixed(0) + '%"></span></span></div>').join('') + '</div>';
+    /* the wafer and the curve, side by side where there is room */
+    h += '<div class="betview"><figure class="wafer"><canvas class="betwafer" width="320" height="320" role="img" aria-label="' + esc(t('bet.waferAria', { chips: M.chips, good: M.good })) + '"></canvas><figcaption class="small muted">' + esc(t('bet.counts', { chips: M.chips, good: M.good })) + '</figcaption></figure>' + curveSvg(cur, low, b) + '</div>';
+    h += '<label class="lab" for="bet-size"><b>' + esc(t('bet.size')) + '</b> <output>' + esc(million(b.size)) + '</output></label><input type="range" id="bet-size" data-bet="size" min="0" max="' + (Bet.SIZES.length - 1) + '" step="1" value="' + b.size + '">';
+    h += '<label class="lab" for="bet-clean"><b>' + esc(t('bet.clean')) + '</b> <output>' + esc(t('bet.cleanV', { d: Bet.CLEAN[b.clean] })) + '</output></label><input type="range" id="bet-clean" data-bet="clean" min="0" max="' + (Bet.CLEAN.length - 1) + '" step="1" value="' + b.clean + '">';
+    h += '<p class="readout small">' + esc(t('bet.readout', { wafer: times(M.wafer), cost: times(C.rel) })) + '</p>';
+    h += '<p class="small ' + (b.guess === low ? 'good' : 'hint') + '">' + esc(t(b.guess === low ? 'bet.guessRight' : 'bet.guessOff', { g: Bet.SIZES[b.guess], n: Bet.SIZES[low] })) + '</p>';
+    if (!C.ok) h += view.hint ? '<p class="small hint">' + esc(t('bet.hint')) + '</p>' : '<button type="button" class="link" data-hint>' + esc(t('game.hint')) + '</button>';
+    h += '<button type="button" class="link" data-reguess>' + esc(t('bet.again')) + '</button>';
+    if (C.ok) { win(); h += '<p class="small">' + esc(t('bet.why')) + '</p>'; }
+    return h + doneNote() + reward();
+  }
+  /* each part's cost at every size on this line (log scale), the cheapest point, your size, your guess, the goal */
+  function curveSvg(cur, low, b) {
+    const W = 300, H = 200, l = 34, r = 10, top = 12, bot = 34, n = cur.length, top2 = 6, x = i => l + i * (W - l - r) / (n - 1);
+    const y = v => top + (H - top - bot) * (1 - Math.log(Math.min(v, top2)) / Math.log(top2));
+    const pts = cur.map((v, i) => x(i).toFixed(1) + ',' + y(isFinite(v) ? v : top2).toFixed(1)).join(' ');
+    const gx = x(Bet.SIZES.indexOf(Bet.GOAL.minParts)), gy = y(Bet.GOAL.maxRel);
+    return '<figure class="betcurve"><svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="' + esc(t('bet.curveAria', { n: Bet.SIZES[low] })) + '">' +
+      '<rect class="goalzone" x="' + (gx - 8).toFixed(1) + '" y="' + top + '" width="' + (W - r - gx + 8).toFixed(1) + '" height="' + (gy - top).toFixed(1) + '"/>' +
+      [1, 2, 4].map(v => '<line class="grid" x1="' + l + '" x2="' + (W - r) + '" y1="' + y(v).toFixed(1) + '" y2="' + y(v).toFixed(1) + '"/><text class="ax" x="' + (l - 6) + '" y="' + (y(v) + 4).toFixed(1) + '" text-anchor="end">' + esc(t('bet.times', { v })) + '</text>').join('') +
+      Bet.SIZES.map((sz, i) => i % 2 ? '' : '<text class="ax" x="' + x(i).toFixed(1) + '" y="' + (H - bot + 20) + '" text-anchor="middle">' + sz + '</text>').join('') +
+      '<text class="ax" x="' + ((l + W - r) / 2) + '" y="' + (H - 4) + '" text-anchor="middle">' + esc(t('bet.axis')) + '</text>' +
+      '<polyline class="line" points="' + pts + '"/>' +
+      '<circle class="low" cx="' + x(low).toFixed(1) + '" cy="' + y(cur[low]).toFixed(1) + '" r="7"/>' +
+      '<path class="guess" d="M' + x(b.guess).toFixed(1) + ' ' + (H - bot + 1) + 'l-4.5 6.5h9z"/>' +
+      '<circle class="you" cx="' + x(b.size).toFixed(1) + '" cy="' + y(isFinite(cur[b.size]) ? cur[b.size] : top2).toFixed(1) + '" r="4.5"/>' +
+      '</svg><figcaption class="small muted">' + esc(t('bet.legend')) + '</figcaption></figure>';
+  }
+  /* the wafer, painted from the engine's own layout and specks: dead chips dark, working ones light */
+  function paintWafer() {
+    const cv = el.querySelector('.betwafer'); if (!cv || ch.kind !== 'bet') return;
+    const b = betOf(), M = Bet.moore(b.size, b.clean), dpr = Math.min(2, window.devicePixelRatio || 1), px = 320;
+    if (cv.width !== px * dpr) { cv.width = px * dpr; cv.height = px * dpr; }
+    const g = cv.getContext('2d'), cs = getComputedStyle(el), ink = cs.getPropertyValue('--ink').trim() || '#222', bad = cs.getPropertyValue('--bad').trim() || '#c33', good = cs.getPropertyValue('--good').trim() || '#2a7';
+    const k = px * dpr / (2 * Bet.WAFER.r + 8), o = px * dpr / 2;
+    g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, cv.width, cv.height);
+    g.save(); g.translate(o, o); g.scale(k, -k);
+    g.beginPath(); g.arc(0, 0, Bet.WAFER.r, 0, Math.PI * 2); g.fillStyle = ink; g.globalAlpha = 0.07; g.fill(); g.globalAlpha = 0.35; g.lineWidth = 1 / k * dpr; g.strokeStyle = ink; g.stroke();
+    const s = M.s, gap = Math.min(0.6, s * 0.06);
+    M.cells.forEach(([i, j], n) => { g.globalAlpha = M.alive[n] ? 0.55 : 0.75; g.fillStyle = M.alive[n] ? good : bad; g.fillRect(i * s + gap / 2, j * s + gap / 2, s - gap, s - gap); });
+    g.globalAlpha = 0.9; g.fillStyle = ink; const rr = Math.max(0.7, 1.1 / k * dpr);
+    Bet.specksOf(M.d).forEach(([x, y]) => { g.beginPath(); g.arc(x, y, rr, 0, Math.PI * 2); g.fill(); });
+    g.restore();
+  }
   /* bring what just changed into view inside the sheet */
   const show = sel => { const n = el.querySelector(sel); if (n && n.scrollIntoView) n.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); };
   function draw() {
-    const f = ch.kind === 'design' ? design : ch.kind === 'chip' ? chip : ch.kind === 'life' ? life : ch.kind === 'break' ? brk : spot;
+    const f = ch.kind === 'design' ? design : ch.kind === 'chip' ? chip : ch.kind === 'life' ? life : ch.kind === 'break' ? brk : ch.kind === 'bet' ? bet : spot;
     const html = '<div class="player">' + f() + '</div>', old = el.firstElementChild;
-    if (!old || !old.classList.contains('player')) { el.innerHTML = html; return; }
-    const tpl = document.createElement('template'); tpl.innerHTML = html; patch(old, tpl.content.firstElementChild);
+    if (!old || !old.classList.contains('player')) el.innerHTML = html;
+    else { const tpl = document.createElement('template'); tpl.innerHTML = html; patch(old, tpl.content.firstElementChild); }
+    paintWafer();
   }
   /* feedback: what changed moves. A wrong answer shakes, a row that turned right flashes, a gauge that reached its
      target pops, a tapped gate bounces. Nothing moves with reduced motion. */
@@ -257,10 +324,13 @@ export function play(el, ch, ctx) {
     const pt = q('[data-pat]'); if (pt) { view.tests.push(+pt.dataset.pat); view.wrong = null; return draw(); }
     const gs = q('[data-guess]'); if (gs) { const k = +gs.dataset.guess; if (k === spotCase(spotCode(S)).broken) { view.guess = k; win(); } else view.wrong = k; draw(); fx(); if (view.wrong === k) anim(el.querySelector('p.bad'), [{ transform: 'translateX(-6px)' }, { transform: 'translateX(5px)' }, { transform: 'translateX(0)' }], { duration: 300 }); return show('.won, .verdict, p.bad'); }
     if (q('[data-again]')) { view.tests = []; view.wrong = null; view.guess = null; return draw(); }
+    const gz = q('[data-guess-size]'); if (gz) { const b = betOf(); b.guess = +gz.dataset.guessSize; ctx.save(); draw(); fx(); return show('.betview'); }
+    if (q('[data-reguess]')) { betOf().guess = null; ctx.save(); return draw(); }
   };
   el.oninput = e => {
     const r = e.target.closest('[data-set]');
     if (r) { const k = r.dataset.set, v = +r.value; S.chip[k] = k === 'clock' ? CLOCKS[v] : v; ctx.save(); draw(); fx(); return; }
+    const bd = e.target.closest('[data-bet]'); if (bd) { betOf()[bd.dataset.bet] = +bd.value; ctx.save(); draw(); fx(); return; }
     if (e.target.closest('[data-margin]')) { const c = normalLife(S.life[ch.mission]); c.margin = +e.target.value; S.life[ch.mission] = c; ctx.save(); draw(); }
   };
   draw(); fx();
