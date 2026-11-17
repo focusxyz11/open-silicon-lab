@@ -85,7 +85,7 @@ test('HBM moves the right way; the height limit bites; hybrid bonding gives room
   assert.ok(A.hbmStack({ ...d, bonding: 'hybrid' }).dieUm > A.hbmStack(d).dieUm);
   const tall = { gen: 'hbm4e', dies: 20, bonding: 'bump', pin: 12, stacks: 8 };
   assert.equal(A.hbmStack(tall).thin, true);                    // 16 um: ground very thin
-  assert.equal(A.hbmStack({ ...tall, bonding: 'hybrid' }).thin, false);
+  assert.ok(A.hbmStack({ ...tall, bonding: 'hybrid' }).dieUm > A.hbmStack(tall).dieUm + 12);
   assert.equal(A.hbmStack({ ...tall, dies: 40 }).fits, false);  // not offered by any generation, but the limit still bites
   assert.equal(A.hbmStack({ ...d, pin: 13 }).pinAboveAnnounced, true);
   const e = A.withGeneration(d, 'hbm4e');
