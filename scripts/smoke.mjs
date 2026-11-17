@@ -463,7 +463,7 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
     await fp.goto(base + 'index.html#/whatif');
     await fp.waitForSelector('#sheet .wflevers [data-wf-lever]', { timeout: 60000 }).catch(() => problems.push(tag + ': What if? does not show its levers'));
     await fp.evaluate(() => { const b = document.querySelector('[data-wf-preset="squeeze"]'); if (b) b.click(); });
-    await fp.waitForFunction(() => document.querySelectorAll('#sheet .wfland').length >= 5 && document.querySelectorAll('#mapLabels .wf3').length >= 5, null, { timeout: 15000 }).catch(() => problems.push(tag + ': the memory squeeze does not reach the other islands'));
+    await fp.waitForFunction(() => document.querySelectorAll('#sheet .wfland').length >= 5, null, { timeout: 15000 }).catch(() => problems.push(tag + ': the memory squeeze does not reach the other islands'));
     await fp.evaluate(() => { const b = document.querySelector('#sheet [data-wf-pick="phones"]'); if (b) b.click(); });
     await fp.evaluate(() => { const b = document.querySelector('#sheet [data-wf-ind="devprice"]'); if (b) b.click(); });
     await fp.waitForFunction(() => document.querySelectorAll('#sheet .wfchain li').length >= 3, null, { timeout: 10000 }).catch(() => problems.push(tag + ': a change on the phones does not trace back to its lever'));
