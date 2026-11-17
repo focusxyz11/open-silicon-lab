@@ -104,7 +104,7 @@ along). The two moves are how you meet them: the first time you cross a seam, it
 (`seamOf` in `src/engines/way.js`), then waits under Ask. A question joins when someone real was stuck on it, it
 opened something, and part of it is still open; its words are `field.<id>.*`, with who asked it and where to read it
 in their words. A bet becomes a challenge (kind `bet`, its engine in `src/engines/bet.js`): first a guess, then two dials and a picture
-the engine counts from, until the three primitives balance; Moore's bet at the wafer, the pieces' bet (one bad piece in a package, the known good die) at the die, and Cray's (oxen or chickens, after Hill and Marty's model) at the data centre's chip. Places with none yet (the quarry, the tools, the
+the engine counts from, until the three primitives balance; Moore's bet and the pieces' bet (one bad piece in a package, the known good die) at the wafer, and Cray's (oxen or chickens, after Hill and Marty's model) at the data centre's chip. While a bet is open, the 3D scene behind its card answers the dials (`src/app/betscene.js`): the wafer is the bet's wafer, the chip shows the bet's cores. Places with none yet (the quarry, the tools, the
 materials, the power) are where to look next.
 
 ## 3. Six kinds of view

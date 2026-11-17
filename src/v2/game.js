@@ -67,7 +67,7 @@ export const CHALLENGES = [
   { id: 'months', step: 'make', place: 'fab', at: 'clean', kind: 'chip', goal: 'months', grows: 'fab-trucks' },
   { id: 'quick', step: 'make', place: 'fab', at: 'deposit', kind: 'chip', goal: 'quick', grows: 'fab-line' },
   { id: 'cheaper', step: 'make', place: 'fab', at: 'wafer', kind: 'bet', bet: 'cheaper', grows: 'fab-wafers' },
-  { id: 'onebad', step: 'make', place: 'fab', at: 'die', kind: 'bet', bet: 'onebad', grows: 'test-dies' },
+  { id: 'onebad', step: 'make', place: 'fab', at: 'wafer', kind: 'bet', bet: 'onebad', grows: 'test-dies' },
   { id: 'spot', step: 'test', place: 'test', at: 'test', kind: 'spot', p: 'full', grows: 'test-probe' },
   { id: 'cores', step: 'test', place: 'test', at: 'test', kind: 'chip', goal: 'cores', grows: 'test-hall' },
   { id: 'phone', step: 'ship', place: 'phones', at: 'soc', kind: 'life', mission: 'phone', grows: 'island-phones' },
