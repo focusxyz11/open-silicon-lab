@@ -203,34 +203,32 @@ export function normalProve(b) {
    less energy, why does the world use more? Jevons saw that better steam engines made coal cheaper to use, so
    Britain found more uses for it and burned more coal, not less. Energy (what each answer draws), cost (what an
    answer is sold for) and people and machines (how much the world asks when the price falls) meet.
-   A model, not a forecast. Today's answers, their energy and their price are 1. An answer's price is the chip's
-   time and the power it draws, half each today; a chip that needs half the energy per answer also answers twice as
-   fast, so both halves fall with it. The island may charge more for each unit of its power (a tariff, a carbon
-   price). The world answers the price: every time an answer's price halves, it asks 2^1.5, nearly three times as
-   much (an elasticity of 1.5; nobody knows the real one for AI, and Jevons needs it above 1). The energy is the
-   answers times the energy of each. ---- */
+   A model, not a forecast. Today's answers, their energy and their price are 1. Power is a small part of an
+   answer's price; the chip is most of it, and a chip that needs half the energy per answer also answers twice as
+   fast, so the price of an answer falls with its energy. The world answers the price: every time it halves, it asks
+   2^1.5, nearly three times as much (an elasticity of 1.5; nobody knows the real one for AI, and Jevons needs it
+   above 1). So a price on power barely moves the asking; what holds the energy is how much power the island can
+   connect (a grid's limit, a moratorium on new data centres): answers past it are not served. ---- */
 export const EFF = [1, 1 / 2, 1 / 4, 1 / 8, 1 / 16, 1 / 32]; // energy per answer, against today's: each step a better chip
-export const CHARGE = [1, 1.5, 2, 4, 6, 8, 12];              // what the island charges for a unit of its power, against today
+export const CAP = [0.6, 0.8, 1, 1.5, 2, 4, Infinity];      // the power the island can connect, against what today's answers draw
 export const ASK = 1.5;                                      // how strongly the world asks more as the price falls
-export const CHIP_SHARE = 0.5;                               // the chip's share of an answer's price today
 export const TURBINES = 13;                                  // the island's turbines: what today's answers draw
-export const answerPrice = (e, q) => e * (CHIP_SHARE + (1 - CHIP_SHARE) * q);
-export function jevons(ei, qi) {
-  const e = EFF[ei], q = CHARGE[qi], p = answerPrice(e, q), answers = p ** -ASK;
-  return { e, q, p, answers, energy: answers * e, turbines: answers * e * TURBINES };
+export function jevons(ei, ci) {
+  const e = EFF[ei], cap = CAP[ci], asked = e ** -ASK, answers = Math.min(asked, cap / e), energy = answers * e;
+  return { e, cap, asked, answers, energy, turbines: energy * TURBINES, waiting: asked - answers };
 }
-export const J_GOAL = { minAnswers: 8, maxEnergy: 1 };
-export const J_START = { eff: 0, charge: 0, guess: null };
+export const J_GOAL = { minAnswers: 8, maxEnergy: 0.9 };
+export const J_START = { eff: 0, cap: CAP.length - 1, guess: null };
 export const J_GUESSES = ['less', 'same', 'more'];
-/* the guess: chips eight times as efficient, the island's price as today; what the model says */
-export function jevonsAnswer() { const E = jevons(3, 0).energy; return E < 0.8 ? 'less' : E <= 1.25 ? 'same' : 'more'; }
+/* the guess: chips eight times as efficient, no limit on the island's power; what the model says */
+export function jevonsAnswer() { const E = jevons(3, CAP.length - 1).energy; return E < 0.8 ? 'less' : E <= 1.25 ? 'same' : 'more'; }
 export function checkJevons(b) {
-  const J = jevons(b.eff, b.charge), many = J.answers >= J_GOAL.minAnswers, held = J.energy <= J_GOAL.maxEnergy;
+  const J = jevons(b.eff, b.cap), many = J.answers >= J_GOAL.minAnswers, held = J.energy <= J_GOAL.maxEnergy;
   return { J, many, held, ok: many && held };
 }
 export function normalJevons(b) {
   const o = Object.assign({}, J_START, b || {}), i = (v, L) => Number.isInteger(v) && v >= 0 && v < L.length;
-  return { eff: i(o.eff, EFF) ? o.eff : J_START.eff, charge: i(o.charge, CHARGE) ? o.charge : J_START.charge, guess: i(o.guess, J_GUESSES) ? o.guess : null };
+  return { eff: i(o.eff, EFF) ? o.eff : J_START.eff, cap: i(o.cap, CAP) ? o.cap : J_START.cap, guess: i(o.guess, J_GUESSES) ? o.guess : null };
 }
 
 /* every bet, by its question */
