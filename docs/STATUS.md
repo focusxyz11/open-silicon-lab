@@ -35,19 +35,19 @@ Where the lab stands, and what is ready to be built next. Read this first when s
 
 ## Ready to build
 
-Each task below is self-contained and can be handed to Claude Code on the web as written. Open it as an issue with the *Task* form, one task, one branch, one pull request.
+Each task below is self-contained and can be handed to Claude Code on the web as written. Each is open as an issue labelled `task` (numbers below): one task, one branch, one pull request, and the PR says `Closes #<number>`.
 
-1. **The semiconductor lab** (`too-hot`, at the switch level, engine `src/engines/dope.js`: `siliconPure`, `junction`, `mosfet`).
+1. **The semiconductor lab** (#216) (`too-hot`, at the switch level, engine `src/engines/dope.js`: `siliconPure`, `junction`, `mosfet`).
    - Heat pure silicon until its own free electrons match lightly doped silicon (590 to 615 K).
    - Picture: the free carriers against temperature on a log scale, with the doped level marked.
    - Then the junction and the transistor, as the engine allows.
-2. **Serving a language model** (engine `src/engines/aiserve.js`, at the data centre's chip and rack).
+2. **Serving a language model** (#217) (engine `src/engines/aiserve.js`, at the data centre's chip and rack).
    - Quantization (`quantize`, `fourBits`): the weights' bits against answer quality and memory.
    - Prefill against decode (`prefillDecode`).
    - Energy per token (`energyPerToken`).
    - The cluster's network (`clusterNetwork`).
    - Two or three labs; words from its `WORDS` into `en.json`.
-3. **New ways to compute** (engines `src/engines/paradigms.js` and `grover.js`, data and words in `src/data/paradigms.js`), each at the depth where the problem it attacks is met:
+3. **New ways to compute** (#218) (engines `src/engines/paradigms.js` and `grover.js`, data and words in `src/data/paradigms.js`), each at the depth where the problem it attacks is met:
    - compute in memory;
    - spiking neurons;
    - light (MZI);
@@ -56,22 +56,22 @@ Each task below is self-contained and can be handed to Claude Code on the web as
    - dataflow;
    - quantum search.
    - Start with two.
-4. **The clock and the power** (engine `src/engines/clockpower.js`).
+4. **The clock and the power** (#219) (engine `src/engines/clockpower.js`).
    - The power curve against voltage and clock (`power`, `frontier`) at the block.
    - The pipeline and its stalls (`schedule`).
    - The counter that fails when the clock outruns its slowest path (`runCounter`) at the gate.
-5. **Chips that touch the real world** (engine `src/engines/analog.js`, at the phone's and the car's boards).
+5. **Chips that touch the real world** (#220) (engine `src/engines/analog.js`, at the phone's and the car's boards).
    - The path from a signal to bits (`capture`, `judge`).
    - The power chip (`regulate`).
-6. **Build your own AI chip** (engine `src/engines/aibuild.js`, a capstone at the studio or the Lab): the architect's choices against speed, power, cost, yield and schedule.
-7. **Small fixes found while building the factory labs:**
+6. **Build your own AI chip** (#221) (engine `src/engines/aibuild.js`, a capstone at the studio or the Lab): the architect's choices against speed, power, cost, yield and schedule.
+7. **Small fixes found while building the factory labs:** (#222)
    - The films labs' smoke check matches button words ("Start etching", "Deposit"); give the run state a data attribute and select by it.
    - Print the finest lines keeps its row of scanners only in the view, so it is lost on reload; keep it in the save, as the other labs do.
    - At realistic error, the via field rarely shows a miss; show a larger sample, or mark the expected misses.
    - The EUV holes can show 0 of 9 out of spec at the lowest dose, so the speed-against-quality lesson may not appear; pick a seed or a sample that shows it.
    - A 404 in the console on the factory labs, not traced.
    - Move each engine's remaining `WORDS` into `en.json` as its views are built (`aiserve`, `analog`, `aibuild`, `clockpower`, `paradigms`, `fabline`, `etch`, `dope`, `litho`).
-8. **Try it with people:** three to five learners, from a child to an engineer, while someone watches where they get stuck (ROADMAP item 9). Not a code task, but the next most useful thing.
+8. **Try it with people:** (#223) three to five learners, from a child to an engineer, while someone watches where they get stuck (ROADMAP item 9). Not a code task, but the next most useful thing.
 
 ## Ideas still to bring over
 
