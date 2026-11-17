@@ -7,12 +7,13 @@
    the level in view and what the community has left there, so every view has them for free.
 
    createFrame(host, o): o.up { href, label }, o.path [{ href, label }], o.rail { label, items: [{ id, label }] },
-   o.follow(key) → address of a question, o.askAt(depth) → stop keys, o.askedAt(depth) → html of what people asked,
+   o.follow(key) → address of a question, o.askAt(depth) → stop keys, o.askedAt(depth) → html of what people asked, o.fieldAt(depth) → ids of the questions from the field there,
    o.doAt(depth) → [{ id, title, where, href, open }], o.onRail(id), o.onLook().
    Returns { dock, level(depth), rail(at, fill), goal(html), mode(), look(), stop(html) }: stop() pins a question you
    are following in the card, under Ask, until you choose a face again. */
 import { t } from '../core/i18n.js';
 import { TWINS } from '../data/atlas.js';
+import { fieldLine } from './field.js';
 
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 export const MODES = ['look', 'do', 'ask'];
@@ -31,13 +32,17 @@ export function createFrame(host, o) {
   const $ = s => host.querySelector(s), dock = $('.dock');
 
   /* Do and Ask, from the atlas, for the level in view */
-  const counts = () => { const q = depth ? o.askAt(depth).length : 0, c = depth ? o.doAt(depth).length : 0;
-    host.querySelectorAll('[data-mode]').forEach(b => { const n = b.dataset.mode === 'ask' ? q : b.dataset.mode === 'do' ? c : 0; b.querySelector('.mc').textContent = n ? String(n) : ''; }); };
+  const fields = () => (depth && o.fieldAt ? o.fieldAt(depth) : []);
+  const counts = () => { const q = depth ? o.askAt(depth).length + fields().length : 0, c = depth ? o.doAt(depth).length : 0;
+    host.querySelectorAll('.modes3 [data-mode]').forEach(b => { const n = b.dataset.mode === 'ask' ? q : b.dataset.mode === 'do' ? c : 0; b.querySelector('.mc').textContent = n ? String(n) : ''; }); };
   const fill = () => {
     host.querySelectorAll('[data-mode]').forEach(b => b.setAttribute('aria-selected', String(b.dataset.mode === mode)));
     if (mode === 'look') return o.onLook && o.onLook();
     let h = '<p class="kicker">' + esc(t('frame.' + mode + 'At', { level: depth ? t('depth.' + depth + '.name') : '' })) + '</p>';
-    if (mode === 'ask') { const ks = depth ? o.askAt(depth) : []; h += ks.length ? '<div class="asklist">' + ks.map(k => '<a class="askline" href="' + esc(o.follow(k)) + '"><span class="q">' + esc(t('stop.' + k + '.q')) + '</span></a>').join('') + '</div>' : '<p class="small muted">' + esc(t('frame.noAsk')) + '</p>';
+    if (mode === 'ask') { const ks = depth ? o.askAt(depth) : [], fs = fields();
+      /* first the questions people were stuck on here, each with its shape (src/v2/field.js) */
+      if (fs.length) h += '<p class="kicker">' + esc(t('field.ui.k')) + '</p><div class="fieldlist">' + fs.map(fieldLine).join('') + '</div>';
+      h += ks.length ? '<div class="asklist">' + ks.map(k => '<a class="askline" href="' + esc(o.follow(k)) + '"><span class="q">' + esc(t('stop.' + k + '.q')) + '</span></a>').join('') + '</div>' : fs.length ? '' : '<p class="small muted">' + esc(t('frame.noAsk')) + '</p>';
       /* what people and agents have asked at this level: the commons' trace, on the thing itself */
       h += depth && o.askedAt ? o.askedAt(depth) : ''; }
     else { const cs = depth ? o.doAt(depth) : []; h += cs.length ? '<div class="dolist">' + cs.map(c => '<a class="dochip' + (c.open ? ' open' : '') + '" href="' + esc(c.href || '#/do/' + c.id) + '">' + (c.open ? '<span class="kicker">' + esc(t('trail.open')) + '</span>' : '') + '<b>' + esc(c.title) + '</b><span class="small muted">' + esc(c.where) + '</span></a>').join('') + '</div>' : '<p class="small muted">' + esc(t('frame.noDo')) + '</p>'; }
