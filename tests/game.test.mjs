@@ -102,10 +102,12 @@ test('every page of the earlier site has an address: a place and a level, and ev
   for (const [place, key] of Object.entries(G.BEACON)) assert.ok(G.ASK[place].includes(key), place + ': its beacon ' + key + ' is not asked there');
 });
 
-test('every challenge happens at a place, at one of its levels', () => {
+test('every challenge happens at a place, at one of its levels (a place without levels, the power island, at the place itself)', () => {
   for (const c of G.CHALLENGES) {
     assert.ok(G.PLACES.includes(c.place), c.id);
-    assert.ok((G.INSIDE[c.place] || []).some(l => l.depth === c.at), c.id + ': ' + c.at + ' is not a level of ' + c.place);
+    const L = G.INSIDE[c.place] || [];
+    if (!L.length) { assert.equal(c.at, undefined, c.id + ': ' + c.place + ' has no levels'); continue; }
+    assert.ok(L.some(l => l.depth === c.at), c.id + ': ' + c.at + ' is not a level of ' + c.place);
   }
 });
 

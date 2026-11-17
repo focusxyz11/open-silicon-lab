@@ -1174,7 +1174,7 @@ export function start() {
     /* the cell you came from and the one you are in: a seam between them may raise its leak */
     { const to = Way.whereOf(location.hash); hideSeam(); crossed(seamFrom, to); seamFrom = to; }
     /* a bet's wafer or chip stands in the scene only while its challenge is open */
-    if (!/^#\/do\/(cheaper|onebad|oxen)$/.test(location.hash)) setBetScene(null, null, '');
+    if (!/^#\/do\/(cheaper|onebad|oxen|jevons)$/.test(location.hash)) setBetScene(null, null, '');
     page.hidden = true; page.classList.remove('reading'); $('logbtn').setAttribute('aria-current', ['log', 'challenges', 'questions'].includes(k) ? 'page' : 'false'); $('logbtn').classList.remove('glow');
     const after = pr => { hud(); return Promise.resolve(pr).then(hud); };
     const [view, rank] = viewOf(parts), from = viewNow, move = nextMove || (rank > rankNow ? 'in' : rank < rankNow ? 'out' : 'along');

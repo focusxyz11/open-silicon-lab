@@ -76,7 +76,8 @@ export const CHALLENGES = [
   { id: 'dclife', step: 'ship', place: 'port', at: 'ship', kind: 'life', mission: 'datacentre', grows: 'dc-hall' },
   { id: 'fed', step: 'use', place: 'datacentre', at: 'board', kind: 'chip', goal: 'fed', grows: 'dc-solar' },
   { id: 'fast', step: 'use', place: 'datacentre', at: 'chip', kind: 'chip', goal: 'fast', grows: 'clock-tower' },
-  { id: 'oxen', step: 'use', place: 'datacentre', at: 'chip', kind: 'bet', bet: 'oxen', grows: 'dc-cores' }
+  { id: 'oxen', step: 'use', place: 'datacentre', at: 'chip', kind: 'bet', bet: 'oxen', grows: 'dc-cores' },
+  { id: 'jevons', step: 'use', place: 'power', kind: 'bet', bet: 'jevons', grows: 'power-store' }
 ];
 /* the goal of a chip challenge as gauges: each a value of your chip's model and the bound it must reach
    (ge: at least, le: at most). Together they say the same as the goal's met() in src/engines/chip.js. */

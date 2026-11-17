@@ -13,5 +13,5 @@ export default [
   { id: 'scale-up', strand: 3, stops: ['scale.phoneboard'], engine: null, lens: 'dive', given: ['flat'], figures: ['imec-cfet'], open: ['stack'] },
   { id: 'scale-big', strand: 3, stops: ['scale.gates'], engine: null, lens: 'forms', open: ['aidesign'], debate: 'designcost' },
   { id: 'scale-forecast', strand: 3, at: ['switch'], engine: 'record', lens: 'clock' },
-  { id: 'scale-planet', strand: 4, stops: ['scale.building'], engine: null, lens: 'walls', trade: ['energy'], figures: ['dc-electricity'] }
+  { id: 'scale-planet', strand: 4, stops: ['scale.building'], ch: ['jevons'], engine: null, lens: 'walls', trade: ['energy'], figures: ['dc-electricity'] }
 ];
