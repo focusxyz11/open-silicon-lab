@@ -74,3 +74,21 @@ test('one bad piece sinks its package: splitting pays only with a test first', (
   assert.ok(B.PIECES.some((_, k) => B.TESTS.some((_, ti) => B.checkPieces({ k, test: ti }).ok)));
   assert.ok(B.PIECE_GUESSES.includes(B.piecesAnswer()));
 });
+
+// The proof's bet: tests alone cannot reach the rarest bugs within the budget, proving everything costs too much;
+// every way through proves the divider, whose bug a billion tests miss most of the time.
+test('test it, or prove it: only proofs where they are cheap and tests for the rest', () => {
+  const all = (1 << B.PBLOCKS.length) - 1, div = B.PBLOCKS.findIndex(x => x.id === 'div');
+  for (let ti = 0; ti < B.PTESTS.length; ti++) assert.ok(!B.checkProve({ tests: ti, proved: 0 }).ok, 'tests alone pass');
+  for (let ti = 0; ti < B.PTESTS.length; ti++) assert.ok(!B.checkProve({ tests: ti, proved: all }).cheap, 'proving everything is cheap');
+  let n = 0;
+  for (let ti = 0; ti < B.PTESTS.length; ti++) for (let m = 0; m <= all; m++) {
+    const C = B.checkProve({ tests: ti, proved: m });
+    for (const [i, x] of C.R.blocks.entries()) assert.equal(x.hidden, B.isProved({ proved: m }, i) ? 0 : Math.exp(-B.PTESTS[ti] * x.p));
+    if (C.ok) { n++; assert.ok(B.isProved({ proved: m }, div), 'passed without proving the divider'); }
+  }
+  assert.ok(n >= 2);
+  /* the guess: a billion tests against the divider's bug */
+  assert.ok(Math.exp(-1e9 * B.PBLOCKS[div].p) > 0.5);
+  assert.deepEqual(B.normalBetOf('prove', { tests: 2, proved: 999, guess: 1 }), { tests: 2, proved: 0, guess: 1 });
+});

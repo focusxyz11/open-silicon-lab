@@ -41,6 +41,10 @@ export const FIELD = [
   { id: 'later', shape: 'leak', prims: ['chance', 'time'], home: { level: 'chip' }, seam: { along: ['test', 'use'] }, src: 'https://research.google/pubs/cores-that-dont-count/' },
   { id: 'trust', shape: 'leak', prims: ['agents', 'info'], home: { place: 'port' }, seam: { along: ['ship', 'use'] }, src: 'https://doi.org/10.1145/358198.358210' },
   { id: 'package', shape: 'leak', prims: ['matter', 'value'], home: { level: 'pkg' }, seam: { along: ['test', 'ship'] }, src: 'https://www.tomshardware.com/news/tsmc-shortage-of-nvidias-ai-gpus-to-persist-for-15-years' },
+  /* the places that make the makers: the quarry, the tools, the materials, the power */
+  { id: 'purity', shape: 'limit', prims: ['matter'], home: { place: 'quarry' }, src: 'https://halbleiter.org/en/waferfabrication/rawsilicon/' },
+  { id: 'mask', shape: 'leak', prims: ['info', 'matter'], home: { place: 'tools' }, src: 'https://doi.org/10.1515/aot-2015-0023' },
+  { id: 'oxide', shape: 'leak', prims: ['matter', 'energy'], home: { place: 'materials' }, src: 'https://www.intel.com/pressroom/kits/advancedtech/doodle/ref_HiK-MG/high-k.htm' },
   /* bets */
   { id: 'oxen', shape: 'bet', prims: ['info', 'time', 'value'], home: { level: 'chip' }, src: 'https://todayinsci.com/C/Cray_Seymour/CraySeymour-Quotations.htm' },
   { id: 'fabless', shape: 'bet', prims: ['matter', 'agents', 'value'], home: { place: 'fab' }, src: 'https://computerhistory.org/profile/morris-chang/' },
@@ -53,6 +57,10 @@ export const FIELD = [
   { id: 'top', shape: 'bet', prims: ['info', 'agents', 'time'], home: { place: 'lab' }, src: 'https://doi.org/10.1126/science.aam9744' },
   { id: 'prove', shape: 'bet', prims: ['info', 'chance', 'value'], home: { level: 'check' }, src: 'https://en.wikipedia.org/wiki/Pentium_FDIV_bug' },
   { id: 'onebad', shape: 'bet', prims: ['chance', 'value', 'matter'], home: { level: 'die' }, src: 'https://www.synopsys.com/articles/test-die-to-die-phy.html' },
+  { id: 'quartz', shape: 'bet', prims: ['matter', 'chance', 'value'], home: { place: 'quarry' }, src: 'https://www.trendforce.com/news/2024/10/02/news-quartz-mines-hit-by-hurricane-helene-could-disrupt-the-semiconductor-supply-chain/' },
+  { id: 'neon', shape: 'bet', prims: ['matter', 'chance', 'agents'], home: { place: 'materials' }, src: 'https://www.theregister.com/2022/03/11/ukraine_neon_supplies/' },
+  { id: 'station', shape: 'bet', prims: ['energy', 'time', 'value'], home: { place: 'power' }, src: 'https://www.iea.org/reports/energy-and-ai/executive-summary' },
+  { id: 'jevons', shape: 'bet', prims: ['energy', 'value', 'agents'], home: { place: 'power' }, src: 'https://www.sigarch.org/the-jevons-paradox-why-efficiency-alone-wont-solve-our-data-center-carbon-challenge/' },
   { id: 'dollar', shape: 'bet', prims: ['time', 'chance', 'value'], home: { level: 'car' }, src: 'https://sgp.fas.org/crs/misc/IF12000.pdf' }
 ];
 

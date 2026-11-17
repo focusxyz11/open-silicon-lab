@@ -204,7 +204,7 @@ export function play(el, ch, ctx) {
   const betOf = () => (S.bets[ch.id] = Bet.normalBetOf(ch.bet, S.bets[ch.id]));
   const million = i => t('bet.sizeV', { n: Bet.SIZES[i] });
   const times = v => isFinite(v) ? t('bet.times', { v: v >= 10 ? Math.round(v) : v.toFixed(2) }) : t('bet.none');
-  function bet() { return ch.bet === 'oxen' ? betOxen() : ch.bet === 'onebad' ? betPieces() : betMoore(); }
+  function bet() { return ch.bet === 'oxen' ? betOxen() : ch.bet === 'onebad' ? betPieces() : ch.bet === 'prove' ? betProve() : betMoore(); }
   function betMoore() {
     const b = betOf();
     let h = head();
@@ -322,6 +322,38 @@ export function play(el, ch, ctx) {
     const f = dies[near ? near[0] : 0] || [500, 500, 40, 40];
     setBetScene({ dies, hits: tones.map(x => x !== 'ok'), tones, specks: Bet.specksOf(d).map(([x, y]) => [at(x), at(y)]), R: SCENE_WAFER.R, follow: [f[0], f[1], f[2]] }, null, ch.bet + ':' + JSON.stringify(b));
   }
+  /* ---- the proof's bet: run random tests, or prove blocks by machine; tap a block to prove it ---- */
+  /* a power of ten as it is written: 10⁶ */
+  const sup = n => String(n).replace(/\d/g, d => '⁰¹²³⁴⁵⁶⁷⁸⁹'[d]);
+  const pct = v => v < 0.0001 ? t('bet.pv.tiny') : v < 0.01 ? t('bet.pv.pctFine', { v: (v * 100).toFixed(2) }) : t('gauge.pct', { v: Math.round(v * 100) });
+  function betProve() {
+    const b = betOf(), G = Bet.PROVE_GUESSES;
+    let h = head();
+    if (b.guess == null) {
+      h += '<p class="kicker">' + esc(t('bet.predictK')) + '</p><p class="small">' + esc(t('bet.pv.predict')) + '</p><div class="chips">' +
+        G.map((g, i) => '<button type="button" class="chipb" data-guess-pv="' + i + '">' + esc(t('bet.pv.g.' + g)) + '</button>').join('') + '</div><p class="small muted">' + esc(t('bet.pv.model')) + '</p>';
+      return h + reward();
+    }
+    const C = Bet.checkProve(b), R = C.R, X = Bet.PROVE_GOAL;
+    const gs = [{ k: 'escape', ok: C.safe, v: pct(R.escape), target: t('bet.pv.gEscape', { v: Math.round(X.maxEscape * 100) }), f: C.safe ? 1 : Math.min(1, X.maxEscape / R.escape) },
+      { k: 'cost', ok: C.cheap, v: t('bet.pv.costV', { v: R.cost < 10 ? R.cost.toFixed(1) : Math.round(R.cost) }), target: t('bet.pv.gCost', { v: X.maxCost }), f: C.cheap ? 1 : X.maxCost / R.cost }];
+    h += '<div class="goalbox' + (C.ok ? ' ok' : '') + '"><p class="kicker">' + esc(t(C.ok ? 'game.reached' : 'game.goalNow')) + '</p>' + gs.map(g => '<div class="gauge' + (g.ok ? ' ok' : '') + '"><span class="gl">' + esc(t('bet.pv.g.' + g.k)) + '</span><span class="gv">' + esc(g.v) + ' <span class="muted">' + esc(g.target) + '</span></span><span class="gbar"><span style="width:' + (g.f * 100).toFixed(0) + '%"></span></span></div>').join('') + '</div>';
+    /* the chip, block by block: how rare its bug is, the chance it is still hidden, and the proof's price */
+    h += '<p class="kicker">' + esc(t('bet.pv.blocksK')) + '</p><div class="pblocks">' + R.blocks.map((B, i) => {
+      const st = B.proved ? 'proved' : B.hidden > 0.01 ? 'hidden' : 'found';
+      return '<button type="button" class="pblock ' + st + '" data-prove="' + i + '" aria-pressed="' + B.proved + '"><span class="pn">' + (B.proved ? glyph('limit') : '') + esc(t('bet.pv.b.' + B.id)) + '</span>' +
+        '<span class="pr small muted">' + esc(t('bet.pv.rare', { n: sup(Math.round(-Math.log10(B.p))) })) + '</span>' +
+        '<span class="ph"><span style="width:' + (B.hidden * 100).toFixed(1) + '%"></span></span>' +
+        '<span class="pv small">' + esc(B.proved ? t('bet.pv.provedV', { c: B.proof }) : t('bet.pv.hiddenV', { v: pct(B.hidden), c: B.proof })) + '</span></button>';
+    }).join('') + '</div><p class="small muted">' + esc(t('bet.pv.blocksNote')) + '</p>';
+    const n = Math.round(Math.log10(R.T));
+    h += '<label class="lab" for="bet-tests"><b>' + esc(t('bet.pv.tests')) + '</b> <output>' + esc(t('bet.pv.testsV', { n: sup(n), c: Bet.testCost(R.T) < 1 ? Bet.testCost(R.T).toFixed(2) : Math.round(Bet.testCost(R.T)) })) + '</output></label><input type="range" id="bet-tests" data-bet="tests" min="0" max="' + (Bet.PTESTS.length - 1) + '" step="1" value="' + b.tests + '">';
+    h += '<p class="small ' + (G[b.guess] === Bet.PROVE_ANSWER ? 'good' : 'hint') + '">' + esc(t(G[b.guess] === Bet.PROVE_ANSWER ? 'bet.pv.right' : 'bet.pv.off', { g: t('bet.pv.g.' + G[b.guess]) })) + '</p>';
+    if (!C.ok) h += view.hint ? '<p class="small hint">' + esc(t('bet.pv.hint')) + '</p>' : '<button type="button" class="link" data-hint>' + esc(t('game.hint')) + '</button>';
+    h += '<button type="button" class="link" data-reguess>' + esc(t('bet.again')) + '</button>';
+    if (C.ok) { win(); h += '<p class="small">' + esc(t('bet.pv.why')) + '</p>'; }
+    return h + doneNote() + reward();
+  }
   /* ---- the pieces' bet: one big piece, or many joined in one package; test each first, or not ---- */
   function betPieces() {
     const b = betOf(), G = Bet.PIECE_GUESSES, right = Bet.piecesAnswer();
@@ -419,6 +451,8 @@ export function play(el, ch, ctx) {
     const pt = q('[data-pat]'); if (pt) { view.tests.push(+pt.dataset.pat); view.wrong = null; return draw(); }
     const gs = q('[data-guess]'); if (gs) { const k = +gs.dataset.guess; if (k === spotCase(spotCode(S)).broken) { view.guess = k; win(); } else view.wrong = k; draw(); fx(); if (view.wrong === k) anim(el.querySelector('p.bad'), [{ transform: 'translateX(-6px)' }, { transform: 'translateX(5px)' }, { transform: 'translateX(0)' }], { duration: 300 }); return show('.won, .verdict, p.bad'); }
     if (q('[data-again]')) { view.tests = []; view.wrong = null; view.guess = null; return draw(); }
+    const gv = q('[data-guess-pv]'); if (gv) { betOf().guess = +gv.dataset.guessPv; ctx.save(); draw(); fx(); return show('.pblocks'); }
+    const pb = q('[data-prove]'); if (pb) { const b = betOf(); b.proved ^= 1 << +pb.dataset.prove; ctx.save(); draw(); fx(); return; }
     const gp = q('[data-guess-pc]'); if (gp) { betOf().guess = +gp.dataset.guessPc; ctx.save(); draw(); fx(); return show('.betview'); }
     const go = q('[data-guess-ox]'); if (go) { betOf().guess = +go.dataset.guessOx; ctx.save(); draw(); fx(); return show('.betview'); }
     const gz = q('[data-guess-size]'); if (gz) { const b = betOf(); b.guess = +gz.dataset.guessSize; ctx.save(); draw(); fx(); return show('.betview'); }

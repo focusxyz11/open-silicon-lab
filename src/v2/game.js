@@ -64,6 +64,7 @@ export const CHALLENGES = [
   { id: 'half', step: 'design', place: 'studio', at: 'logic', kind: 'design', p: 'half', grows: 'masks' },
   { id: 'vote', step: 'design', place: 'studio', at: 'check', kind: 'design', p: 'vote', grows: 'studio-screen' },
   { id: 'full', step: 'design', place: 'studio', at: 'check', kind: 'design', p: 'full', grows: 'studio-wing' },
+  { id: 'prove', step: 'design', place: 'studio', at: 'check', kind: 'bet', bet: 'prove', grows: 'studio-proof' },
   { id: 'months', step: 'make', place: 'fab', at: 'clean', kind: 'chip', goal: 'months', grows: 'fab-trucks' },
   { id: 'quick', step: 'make', place: 'fab', at: 'deposit', kind: 'chip', goal: 'quick', grows: 'fab-line' },
   { id: 'cheaper', step: 'make', place: 'fab', at: 'wafer', kind: 'bet', bet: 'cheaper', grows: 'fab-wafers' },

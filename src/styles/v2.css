@@ -1267,3 +1267,14 @@ button.opens { width: 100%; text-align: left; border: 0; border-left: 3px solid 
 .packs .sunk .pk { stroke: var(--bad); stroke-opacity: 1; }
 .packs .sunk .pc.good { fill-opacity: .3; }
 .packs .x { stroke: var(--bad); stroke-width: 2; stroke-linecap: round; opacity: .8; }
+/* the proof's bet: the chip's blocks, each a button; proved ones solid, hidden bugs red, found ones calm */
+.pblocks { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; margin: 6px 0; }
+.pblock { display: grid; gap: 4px; text-align: left; padding: 10px 11px; border: 1px solid var(--line); border-radius: 10px; background: color-mix(in srgb, var(--ink) 3%, transparent); color: var(--ink); cursor: pointer; font: inherit; }
+.pblock .pn { display: flex; align-items: center; gap: 6px; font-weight: 700; font-size: 14px; }
+.pblock .ph { height: 6px; border-radius: 999px; background: color-mix(in srgb, var(--ink) 8%, transparent); overflow: hidden; }
+.pblock .ph > span { display: block; height: 100%; background: var(--bad); transition: width .25s ease; }
+.pblock.hidden { border-color: color-mix(in srgb, var(--bad) 55%, var(--line)); }
+.pblock.found .ph > span { background: var(--good); }
+.pblock.proved { background: color-mix(in srgb, var(--good) 16%, transparent); border-color: var(--good); }
+.pblock:hover, .pblock:focus-visible { border-color: var(--ink); }
+@media (prefers-reduced-motion: reduce) { .pblock .ph > span { transition: none; } }
