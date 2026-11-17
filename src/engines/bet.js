@@ -163,5 +163,41 @@ export function normalPieces(b) {
   return { k: i(o.k, PIECES) ? o.k : PIECES_START.k, test: i(o.test, TESTS) ? o.test : PIECES_START.test, guess: i(o.guess, PIECE_GUESSES) ? o.guess : null };
 }
 
+/* ---- The proof's bet (the question 'prove'): test it, or prove it? A chip's design is checked before it is made.
+   Random tests are cheap each, but a bug that shows once in ten billion inputs needs tens of billions of them;
+   that is how the Pentium's division bug slipped through in 1994. A proof by machine (formal verification) covers
+   every input of a block at once, but costs far more, and most for blocks full of control and memory, where the
+   cases multiply. Information (what is checked), chance (which bug a test happens to hit) and cost meet.
+   A chip of eight blocks, each hiding one bug that a random test hits with chance p (from once in a thousand to
+   once in ten billion). After T tests a bug is still hidden with chance exp(-T p), unless its block is proved. ---- */
+export const PBLOCKS = [
+  { id: 'fetch', p: 1e-3, proof: 4 }, { id: 'decode', p: 1e-4, proof: 6 }, { id: 'regs', p: 1e-5, proof: 3 }, { id: 'cache', p: 1e-6, proof: 25 },
+  { id: 'branch', p: 1e-7, proof: 20 }, { id: 'adder', p: 1e-8, proof: 2 }, { id: 'mul', p: 1e-9, proof: 3 }, { id: 'div', p: 1e-10, proof: 4 }
+];
+export const PTESTS = [1e3, 1e4, 1e5, 1e6, 1e7, 1e8, 1e9, 1e10];
+export const testCost = T => T / 1e8;                       // in the same units as a proof
+export const PROVE_GOAL = { maxEscape: 0.01, maxCost: 20 };
+export const PROVE_START = { tests: 3, proved: 0, guess: null };
+export const PROVE_GUESSES = ['tests', 'proof', 'either'];
+export const PROVE_ANSWER = 'proof';                         // a billion tests against a bug of one in ten billion
+export const isProved = (b, i) => ((b.proved >> i) & 1) === 1;
+/* one setting: each block's chance its bug is still hidden, the chance that any bug ships, what it all cost */
+export function proofs(b) {
+  const T = PTESTS[b.tests], blocks = PBLOCKS.map((B, i) => ({ ...B, proved: isProved(b, i), hidden: isProved(b, i) ? 0 : Math.exp(-T * B.p) }));
+  const escape = 1 - blocks.reduce((a, B) => a * (1 - B.hidden), 1);
+  const cost = testCost(T) + blocks.reduce((a, B) => a + (B.proved ? B.proof : 0), 0);
+  return { T, blocks, escape, cost };
+}
+export function checkProve(b) {
+  const R = proofs(b), safe = R.escape <= PROVE_GOAL.maxEscape, cheap = R.cost <= PROVE_GOAL.maxCost;
+  return { R, safe, cheap, ok: safe && cheap };
+}
+export function normalProve(b) {
+  const o = Object.assign({}, PROVE_START, b || {});
+  return { tests: Number.isInteger(o.tests) && o.tests >= 0 && o.tests < PTESTS.length ? o.tests : PROVE_START.tests,
+    proved: Number.isInteger(o.proved) && o.proved >= 0 && o.proved < 1 << PBLOCKS.length ? o.proved : 0,
+    guess: Number.isInteger(o.guess) && o.guess >= 0 && o.guess < PROVE_GUESSES.length ? o.guess : null };
+}
+
 /* every bet, by its question */
-export function normalBetOf(id, b) { return id === 'oxen' ? normalOxen(b) : id === 'onebad' ? normalPieces(b) : normalBet(b); }
+export function normalBetOf(id, b) { return id === 'oxen' ? normalOxen(b) : id === 'onebad' ? normalPieces(b) : id === 'prove' ? normalProve(b) : normalBet(b); }
