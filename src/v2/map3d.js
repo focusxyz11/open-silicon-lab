@@ -938,7 +938,7 @@ export function createMap(canvas, host, on = {}) {
   /* the name over your chip is a handle too: pressing it picks the chip up */
   host.addEventListener('pointerdown', e => { if (!e.target.closest('.you')) return; e.preventDefault(); try { canvas.setPointerCapture(e.pointerId); } catch (er) { /* the canvas follows the pointer anyway */ }
     carrying = { id: e.pointerId, over: null }; carriedOnce = true; fly = null; follow = null; canvas.style.cursor = 'grabbing'; on.interact && on.interact(); });
-  host.addEventListener('click', e => { if (carriedOnce) { carriedOnce = false; return; } const b = e.target.closest('[data-poi],[data-place],[data-q],[data-step],[data-job],[data-entry]'); if (!b) return; if (b.dataset.poi) poiGo(b.dataset.poi); else if (b.dataset.part) on.part && on.part(b.dataset.place, b.dataset.part); else if (b.dataset.entry) on.entry && on.entry(b.dataset.entry); else if (b.dataset.place) on.place && on.place(b.dataset.place); else if (b.dataset.step) on.place && on.place(STATION[b.dataset.step]); else if (b.dataset.job) on.job && on.job(b.dataset.job); else on.question && on.question(b.dataset.q); });
+  host.addEventListener('click', e => { if (carriedOnce) { carriedOnce = false; return; } const b = e.target.closest('[data-wf],[data-poi],[data-place],[data-q],[data-step],[data-job],[data-entry]'); if (!b) return; if (b.dataset.wf) on.whatif && on.whatif(b.dataset.wf); else if (b.dataset.poi) poiGo(b.dataset.poi); else if (b.dataset.part) on.part && on.part(b.dataset.place, b.dataset.part); else if (b.dataset.entry) on.entry && on.entry(b.dataset.entry); else if (b.dataset.place) on.place && on.place(b.dataset.place); else if (b.dataset.step) on.place && on.place(STATION[b.dataset.step]); else if (b.dataset.job) on.job && on.job(b.dataset.job); else on.question && on.question(b.dataset.q); });
 
   /* ---- the state: what has grown, the community's pieces, where your chip is ---- */
   const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
@@ -1129,8 +1129,36 @@ export function createMap(canvas, host, on = {}) {
       if (!r.ring && r.t >= 0) { r.c.getPointAt(Math.min(1, r.t), r.m.position); }
       if (!r.ring && r.t >= 1) { scene.remove(r.m); r.ring = new THREE.Mesh(ringG, new THREE.MeshBasicMaterial({ color: r.color, transparent: true, opacity: 0.9, depthWrite: false, side: THREE.DoubleSide })); r.ring.position.set(r.to.x, 0.4, r.to.z); r.ring.userData.lens = true; scene.add(r.ring); r.t0 = r.t; }
       if (r.ring) { const k = (r.t - r.t0) / 0.9; r.ring.scale.setScalar(2 + k * 16); r.ring.material.opacity = 0.9 * (1 - k); if (k >= 1) { scene.remove(r.ring); flashes.splice(i, 1); } } } }
-  function lensFrame(dt) { rippleFrame(dt); const k0 = lensK, c0 = colK; lensK += (lensWant - lensK) * Math.min(1, dt * 3); colK += (lensWant - colK) * Math.min(1, dt * 2.2); if (Math.abs(lensK - k0) > 1e-4 || Math.abs(colK - c0) > 1e-4) lensPaint(lensK);
+  function lensFrame(dt) { rippleFrame(dt); whatifFrame(dt); const k0 = lensK, c0 = colK; lensK += (lensWant - lensK) * Math.min(1, dt * 3); colK += (lensWant - colK) * Math.min(1, dt * 2.2); if (Math.abs(lensK - k0) > 1e-4 || Math.abs(colK - c0) > 1e-4) lensPaint(lensK);
     if (!lensWant && lensK < 0.002 && lensMats) { lensPaint(0); lensMats = null; lensArrs = null; lensCols.forEach(c => { lensG.remove(c.mesh); lensG.remove(c.disc); }); lensCols = []; } }
+  /* What if? between the islands (src/engines/ripple.js, src/v2/whatif.js): the world goes grey as under a lens, and
+     each island the levers reach raises a column, warm where a thing rises and cool where it falls, as tall as the
+     change (on a scale of tens); a tag over it says the island's largest change. When a lever moves, a light flies
+     from its island to each island it reaches. st: { heads: [{ place, v, up, lever, html }], flights } or null. */
+  const wfG = group(scene, 0, 0, 0); let wfCols = [], wfTags = [], wfK = 0, wfWant = 0;
+  const wfClear = () => { wfCols.forEach(c => { wfG.remove(c.mesh, c.disc); c.mesh.material.dispose(); c.disc.material.dispose(); }); wfCols = [];
+    wfTags.forEach(T => { T.el.remove(); const i = L.list.indexOf(T); if (i >= 0) L.list.splice(i, 1); }); wfTags = []; };
+  function whatif(state) {
+    const on = !!state; host.classList.toggle('whatif', on); wfWant = on ? 1 : 0;
+    if (!on) { wfTags.forEach(T => { T.show = false; }); if (lens === 'whatif') setLens('look'); return; }
+    if (lens !== 'whatif') setLens('whatif');
+    wfClear();
+    state.heads.forEach(h => { const p = placeAt(h.place); if (!p) return; const r = p.far ? 9 : 5.5, col = h.up ? P.warm : P.accent;
+      const mesh = new THREE.Mesh(colG, new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: 0, depthWrite: false, side: THREE.DoubleSide, blending: night ? THREE.AdditiveBlending : THREE.NormalBlending }));
+      const disc = new THREE.Mesh(discG, new THREE.MeshBasicMaterial({ color: h.lever ? P.white : col, transparent: true, opacity: 0, depthWrite: false }));
+      mesh.position.set(p.at[0], 0.2, p.at[1]); disc.position.set(p.at[0], 0.3, p.at[1]); disc.scale.setScalar(r * (h.lever ? 2.1 : 1.6)); mesh.userData.lens = disc.userData.lens = true;
+      const hgt = 4 + 14 * Math.log10(1 + Math.abs(h.v)); wfG.add(mesh, disc); const c = { mesh, disc, r, h: hgt, lever: h.lever }; wfCols.push(c);
+      const anchor = new THREE.Object3D(); anchor.position.set(p.at[0], 0, p.at[1]); wfG.add(anchor); c.anchor = anchor;
+      wfTags.push(L.add(anchor, new THREE.Vector3(0, hgt + 3, 0), '', { cls: 'wf3' + (h.up ? ' up' : ' down') + (h.lever ? ' lever' : ''), button: true, data: { wf: h.place }, html: h.html })); });
+    (state.flights || []).forEach(f => ripple(f.from, f.to, P.warm));
+  }
+  function whatifFrame(dt) { wfK += (wfWant - wfK) * Math.min(1, dt * 2.4); const pulse = 0.75 + 0.25 * Math.sin(performance.now() / 380);
+    wfCols.forEach(c => { c.mesh.scale.set(c.r, Math.max(0.01, c.h * wfK), c.r); c.mesh.material.opacity = (night ? 0.45 : 0.62) * wfK; c.disc.material.opacity = (c.lever ? 0.55 * pulse : 0.45) * wfK; });
+    if (!wfWant && wfK < 0.01 && wfCols.length) wfClear(); }
+  /* tags over islands close together (the main island holds seven places) step down out of each other's way */
+  function whatifDeclutter() { if (!wfTags.length) return; const R0 = wfTags.map(T => { T.el.style.marginTop = '0px'; return { T, r: T.el.getBoundingClientRect() }; }).filter(x => x.r.width).sort((a, b) => a.r.top - b.r.top), placed = [];
+    R0.forEach(({ T, r }) => { let dy = 0; for (let n = 0; n < 6; n++) { const hit = placed.find(q => r.left < q.right + 4 && r.right > q.left - 4 && r.top + dy < q.bottom + 3 && r.bottom + dy > q.top - 3); if (!hit) break; dy = hit.bottom + 3 - r.top; }
+      if (dy) T.el.style.marginTop = dy.toFixed(0) + 'px'; placed.push({ left: r.left, right: r.right, top: r.top + dy, bottom: r.bottom + dy }); }); }
   /* sparkles where something grew */
   const sparks = [];
   function sparkle(g) {
@@ -1185,7 +1213,7 @@ export function createMap(canvas, host, on = {}) {
     }
     walkFrame(dt, tm); lensFrame(dt);
     st.draw(scene, camera);
-    L.update(camera, W, H);
+    L.update(camera, W, H); if (wfTags.length && frameN % 6 === 3) whatifDeclutter();
     /* by the clock, not by frames, so a slow device does not leave names on one another for long */
     if (now - declutAt > 120) { declutAt = now; declutter(); }
     if ((frameN = (frameN + 1) % 6) === 0 && mini.offsetParent) { const M0 = mini.M0; miniView.setAttribute('points', footprint().map(([x, z]) => (x - M0.x0).toFixed(1) + ',' + (z - M0.z0).toFixed(1)).join(' ')); mini.querySelectorAll('.mdot').forEach(b => b.classList.toggle('sel', !!sel && b.dataset.place === sel.place)); }
@@ -1208,6 +1236,7 @@ export function createMap(canvas, host, on = {}) {
     unfollow() { follow = null; },
     setLens,
     ripple,
+    whatif,
     /* pull back far enough to see several places at once (a change and where it shows) */
     frame(ids) { const ps = ids.map(placeAt).filter(Boolean); if (!ps.length) return; follow = null; const xs = ps.map(p => p.at[0]), zs = ps.map(p => p.at[1]), cx = (Math.min(...xs) + Math.max(...xs)) / 2, cz = (Math.min(...zs) + Math.max(...zs)) / 2;
       const ext = Math.max(Math.max(...xs) - Math.min(...xs), (Math.max(...zs) - Math.min(...zs)) * 1.5); flyTo(cx, cz + 6, Math.max(cam.d, ext * 1.25 + 70), 900); },
@@ -1235,6 +1264,9 @@ export function createMap(canvas, host, on = {}) {
     dive(id, part) { const p = placeAt(id); if (!p) return Promise.resolve(); const ms = reduced() ? 1 : 650, v = new THREE.Vector3(p.at[0], 0, p.at[1]); if (part && OPEN[id] && OPEN[id].tools[part]) OPEN[id].tools[part].getWorldPosition(v); flyTo(v.x, v.z, part ? 30 : Math.max(38, p.d * 0.55), ms); return new Promise(r => setTimeout(r, ms)); },
     from(id, part) { const p = placeAt(id); if (!p) return; fly = null; const v = new THREE.Vector3(p.at[0], 0, p.at[1]); if (OPEN[id]) { OPEN[id].want = OPEN[id].k = 1; if (part && OPEN[id].tools[part]) OPEN[id].tools[part].getWorldPosition(v); }
       Object.assign(cam, { x: v.x, z: v.z, d: part ? 32 : Math.max(38, p.d * 0.55), pitch: 0.8 }); place2(); },
+    /* What if?: every island in view, and on a desktop the world set to the right of the bench at the left */
+    whatifView() { const xs = PLACES.map(p => p.at[0]), zs = PLACES.map(p => p.at[1]), cx = (Math.min(...xs) + Math.max(...xs)) / 2, cz = (Math.min(...zs) + Math.max(...zs)) / 2, wide = innerWidth > 720;
+      const d = wide ? 640 : 1250, k = wide ? d * 0.22 * (420 / innerWidth) * 2.2 : 0; flyTo(cx - Math.cos(cam.yaw) * k, cz + Math.sin(cam.yaw) * k + (wide ? 0 : 60), d, 1400); },
     /* the archipelago: the islands where chips live, and the sea between */
     ecosystem() { if (innerWidth > 720) flyTo(-6, 6, 760, 1500); else flyTo(-4, 120, 1400, 1500); },
     setState,

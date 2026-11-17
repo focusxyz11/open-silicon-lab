@@ -106,6 +106,20 @@ opened something, and part of it is still open; its words are `field.<id>.*`, wi
 in their words. A bet becomes a challenge (kind `bet`, its engine in `src/engines/bet.js`): first a guess, then two dials and a picture
 the engine counts from, until the three primitives balance; Moore's bet and the pieces' bet (one bad piece in a package, the known good die) at the wafer, Cray's (oxen or chickens, after Hill and Marty's model) at the data centre's chip, the proof's bet (test it, or prove it?) at the design's check, played at the bench, and Jevons' bet (does a better chip save energy? a better chip and a limit on the island's power) on the power island, a place with no levels, where the challenge is met at the place itself. While a bet is open, the 3D scene behind its card answers the dials (`src/app/betscene.js`): the wafer is the bet's wafer, the chip shows the bet's cores, and the power island's turbines turn or stand still for the answers asked, with the turbines it would need beyond its own rising from the sea. Every place now holds at least one; the tools and the phones and cars hold fewest.
 
+### What if? between the islands
+
+The islands are joined by more than lanes and cables: a change decided on one reaches the others. `#/whatif` is a
+small causal model of the chip industry (`src/data/ripple.js`, `src/engines/ripple.js`, brought over from the first
+version of the site): five levers, each on the island where it is decided (AI demand at the data centre, HBM supply
+at the port, the price of power on the power island, a late next node and the supply of mature chips at the factory),
+and 32 effects, each on the island where it is felt. The world goes grey as under a lens; each island the change
+reaches raises a column, warm where something rises and cool where it falls, with a tag naming its largest change; a
+light flies from the lever's island to each island it reaches; picking an island traces each change back, rule by
+rule, to its lever. Four scenarios (three that happened) and four puzzles. A lever's island card leads to it, and the
+world around the island does too. On a desktop the levers stand in a bench at the left and the tags are on the
+islands; on a phone the card lists where the change lands instead (desktop first where it is richer).
+Directions follow 2021–2026 events; the sizes are round numbers, not a forecast.
+
 ## 3. Six kinds of view
 
 A view is a way of drawing a row or a column of the grid. Each kind is used for what it shows best, and for

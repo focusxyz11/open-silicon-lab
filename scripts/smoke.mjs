@@ -458,6 +458,17 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
       return !!document.querySelector(sel); }, [D, sel], { timeout: 30000, polling: 1000 });
     await dials([['eff', 3], ['cap', 6]], '#sheet .turbines .tb.more').catch(() => problems.push(tag + ': a better chip alone does not draw turbines beyond the island'));
     await dials([['eff', 4], ['cap', 1]], '#sheet .player .won').catch(() => problems.push(tag + ': the Jevons bet cannot be won with a better chip and a limit on power'));
+    /* What if? between the islands: a scenario moves the levers, the change lands on other islands, and one of
+       them shows the chain back to the lever */
+    await fp.goto(base + 'index.html#/whatif');
+    await fp.waitForSelector('#sheet .wflevers [data-wf-lever]', { timeout: 60000 }).catch(() => problems.push(tag + ': What if? does not show its levers'));
+    await fp.evaluate(() => { const b = document.querySelector('[data-wf-preset="squeeze"]'); if (b) b.click(); });
+    await fp.waitForFunction(() => document.querySelectorAll('#sheet .wfland').length >= 5 && document.querySelectorAll('#mapLabels .wf3').length >= 5, null, { timeout: 15000 }).catch(() => problems.push(tag + ': the memory squeeze does not reach the other islands'));
+    await fp.evaluate(() => { const b = document.querySelector('#sheet [data-wf-pick="phones"]'); if (b) b.click(); });
+    await fp.evaluate(() => { const b = document.querySelector('#sheet [data-wf-ind="devprice"]'); if (b) b.click(); });
+    await fp.waitForFunction(() => document.querySelectorAll('#sheet .wfchain li').length >= 3, null, { timeout: 10000 }).catch(() => problems.push(tag + ': a change on the phones does not trace back to its lever'));
+    await fp.evaluate(() => { location.hash = '#/'; });
+    await fp.waitForFunction(() => !document.querySelector('#mapLabels .wf3') || [...document.querySelectorAll('#mapLabels .wf3')].every(e => e.style.opacity === '0'), null, { timeout: 10000 }).catch(() => problems.push(tag + ': What if? stays on the island after leaving it'));
     await fp.close(); }
   await page.evaluate(() => { location.hash = '#/dive/block'; });
   /* the dive may still be making its view: Ask is chosen again until the block's questions show */
