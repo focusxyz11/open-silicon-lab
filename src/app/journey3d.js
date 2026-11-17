@@ -517,7 +517,7 @@ BUILD.test = (b, plant, first) => {
       const st = Math.floor(t * 4), ox = testing ? ((st % 5) - 2) * 4 : 0, od = testing ? ((Math.floor(st / 5) % 5) - 2) * 4 : 0;
       chuck.position.copy(V(230 + ox, 265 + od, 96 + (testing && (t * 4) % 1 < 0.5 ? 2 : 0)));
       card.visible = true;
-      if (mapM.userData.k !== k) { for (let i = 0; i < n; i++) mapM.setColorAt(i, c.set(i < k ? (hits[i] ? M.red.color : M.grn.color) : M.dark.color)); mapM.instanceColor.needsUpdate = true; mapM.userData.k = k; }
+      if (mapM.userData.k !== k) { for (let i = 0; i < n; i++) mapM.setColorAt(i, c.set(i < k ? (hits[i] ? M.red.color : M.grn.color) : M.dark.color)); if (mapM.instanceColor) mapM.instanceColor.needsUpdate = true; mapM.userData.k = k; }
     } };
 };
 
