@@ -8,7 +8,7 @@ export default [
   { id: 'make-impure', strand: 1, stops: ['make.implant'], engine: null, lens: 'dive' },
   { id: 'make-quick', strand: 2, at: ['deposit'], ch: ['quick'], engine: 'factory', lens: 'line', trade: ['time', 'cost'] },
   { id: 'make-layers', strand: 2, stops: ['make.wires'], engine: null, lens: 'line', given: ['flat'], open: ['stack'] },
-  { id: 'make-package', strand: 2, stops: ['make.die', 'make.pkg'], engine: null, lens: 'line', given: ['onepiece'], open: ['chiplets', 'stack'] },
+  { id: 'make-package', strand: 2, stops: ['make.die', 'make.pkg'], ch: ['onebad'], engine: null, lens: 'line', given: ['onepiece'], open: ['chiplets', 'stack'] },
   { id: 'make-months', strand: 3, at: ['clean'], ch: ['months'], engine: 'factory', lens: 'line', trade: ['time', 'cost'] },
   { id: 'make-room', strand: 3, stops: ['make.clean'], engine: null, lens: 'map', given: ['giant'], open: ['smallfab'] },
   { id: 'make-crystal', strand: 3, stops: ['make.crystal', 'make.slice'], engine: null, lens: 'line', given: ['silicon'] },

@@ -67,6 +67,7 @@ export const CHALLENGES = [
   { id: 'months', step: 'make', place: 'fab', at: 'clean', kind: 'chip', goal: 'months', grows: 'fab-trucks' },
   { id: 'quick', step: 'make', place: 'fab', at: 'deposit', kind: 'chip', goal: 'quick', grows: 'fab-line' },
   { id: 'cheaper', step: 'make', place: 'fab', at: 'wafer', kind: 'bet', bet: 'cheaper', grows: 'fab-wafers' },
+  { id: 'onebad', step: 'make', place: 'fab', at: 'die', kind: 'bet', bet: 'onebad', grows: 'test-dies' },
   { id: 'spot', step: 'test', place: 'test', at: 'test', kind: 'spot', p: 'full', grows: 'test-probe' },
   { id: 'cores', step: 'test', place: 'test', at: 'test', kind: 'chip', goal: 'cores', grows: 'test-hall' },
   { id: 'phone', step: 'ship', place: 'phones', at: 'soc', kind: 'life', mission: 'phone', grows: 'island-phones' },
@@ -100,7 +101,7 @@ export const challengeOf = id => CHALLENGES.find(c => c.id === id) || null;
 export const chipGoal = id => CHIP.find(c => c.id === id);
 export const placeChallenges = place => CHALLENGES.filter(c => c.place === place);
 /* what grows, and where (the island draws each one: src/v2/map3d.js GROWERS) */
-const GROW_AT = { half: 'studio', phone: 'phones', car: 'cars', dclife: 'datacentre', fast: 'lab' };
+const GROW_AT = { onebad: 'test', half: 'studio', phone: 'phones', car: 'cars', dclife: 'datacentre', fast: 'lab' };
 export const GROWTH = CHALLENGES.map(c => ({ id: c.grows, by: c.id, at: GROW_AT[c.id] || c.place }));
 
 /* Inside: every place's levels, one inside the next (src/data/places.js). These hold the earlier site's
