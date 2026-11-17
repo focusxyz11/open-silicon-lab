@@ -1476,3 +1476,26 @@ button.opens { width: 100%; text-align: left; border: 0; border-left: 3px solid 
 .ovfig .m1 { stroke: var(--ink); stroke-width: 1.5; }
 .goalbox .gauge .small { grid-column: 1 / -1; }
 @media (max-width: 720px) { .imrow { grid-template-columns: 90px 1fr 50px; gap: 8px; } .imread { grid-template-columns: 1fr 1fr; } }
+
+/* Films labs: Etch straight down and The bare bottom (src/v2/labs/films.js) */
+.flfig { margin: 8px 0; }
+.flfig svg { display: block; width: 100%; height: auto; max-height: 250px; border-radius: 10px; border: 1px solid var(--line); }
+.flfig .fl-air { fill: color-mix(in srgb, var(--ink) 5%, var(--panel-solid)); }
+.flfig .fl-was { fill: none; }
+.flfig .fl-film { fill: color-mix(in srgb, var(--accent) 42%, var(--panel-solid)); }
+.flfig .fl-mask { fill: var(--warm); opacity: .9; }
+.flfig .fl-ion, .flfig .fl-rad { fill: none; stroke-width: .7; stroke-linejoin: round; }
+.flfig .fl-ion { stroke: var(--accent); opacity: .7; }
+.flfig .fl-rad { stroke: var(--warm); opacity: .55; }
+.flfig .fl-uc path { stroke-width: 1.6; fill: none; }
+.flfig .fl-uc.good { stroke: var(--good); color: var(--good); } .flfig .fl-uc.bad { stroke: var(--bad); color: var(--bad); }
+.flfig .fl-uc text { font: 600 10px var(--mono); fill: currentColor; stroke: none; }
+.flfig .fl-t { font: 10.5px var(--sans); fill: var(--muted); }
+.flfig .fl-t.mid { fill: var(--ink); font-weight: 600; }
+.flfig .fl-sub { fill: color-mix(in srgb, var(--ink) 30%, var(--panel-solid)); }
+.flfig .fl-dfilm > * { fill: color-mix(in srgb, var(--accent) 65%, var(--panel-solid)); }
+.flfig .fl-dim { stroke: var(--muted); fill: none; stroke-width: 1; }
+.flread { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin: 6px 0; }
+.flread > span { display: grid; gap: 1px; padding: 6px 8px; border-radius: 10px; border: 1px solid var(--line); min-width: 0; }
+.flread b { font-size: 13px; overflow-wrap: anywhere; } .flread .good b { color: var(--good); } .flread .bad b { color: var(--bad); }
+@media (max-width: 520px) { .flread { grid-template-columns: 1fr 1fr; } }

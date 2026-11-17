@@ -6,5 +6,5 @@ import evolve from './evolve.js';
 import crystal from './crystal.js';
 import implant from './implant.js';
 import overlay from './overlay.js';
-
-export const LABS = { agent, teardown, fit: teardown, evolve, pull: crystal, implant, overlay };
+import films from './films.js';
+export const LABS = { agent, teardown, fit: teardown, evolve, pull: crystal, implant, overlay, etch: films, deposit: films };
