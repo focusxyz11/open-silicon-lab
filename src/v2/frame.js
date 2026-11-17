@@ -9,8 +9,12 @@
    createFrame(host, o): o.up { href, label }, o.path [{ href, label }], o.rail { label, items: [{ id, label }] },
    o.follow(key) → address of a question, o.askAt(depth) → stop keys, o.askedAt(depth) → html of what people asked, o.fieldAt(depth) → ids of the questions from the field there,
    o.doAt(depth) → [{ id, title, where, href, open }], o.onRail(id), o.onLook().
-   Returns { dock, level(depth), rail(at, fill), goal(html), mode(), look(), stop(html) }: stop() pins a question you
-   are following in the card, under Ask, until you choose a face again. */
+   Returns { dock, level(depth), rail(at, fill), goal(html), mode(), look(), stop(html), inwardAt(p) }: stop() pins a
+   question you are following in the card, under Ask, until you choose a face again.
+   The way in is on the picture, never only in the card: whatever way deeper the view writes in its card (an element
+   with data-in) is shown again as one large button over the scene, by the frame, in every view the same. A view that
+   knows where the thing you would enter is on the screen says so with inwardAt({ x, y }) (0..1 of the picture), and
+   the button stands beside it with a ring on it; o.scroll says the view also flies in when scrolled. */
 import { t } from '../core/i18n.js';
 import { TWINS } from '../data/atlas.js';
 import { fieldLine } from './field.js';
@@ -27,9 +31,33 @@ export function createFrame(host, o) {
     '<nav class="crumbs2">' + path.map((p, i) => (i ? '<span aria-hidden="true">›</span>' : '') + (p.href ? '<a href="' + esc(p.href) + '">' + esc(p.label) + '</a>' : '<b>' + esc(p.label) + '</b>')).join('') + '</nav>' +
     (o.rail ? '<ol class="rail2" aria-label="' + esc(o.rail.label) + '"><span class="rfill"></span>' + o.rail.items.map(x => '<li><button type="button" data-rail="' + esc(x.id) + '"><span class="dot"></span><span class="nm">' + esc(x.label) + '</span></button></li>').join('') + '</ol>' : '') +
     '<div class="corner"><aside class="goal2" hidden></aside></div>' +
+    '<div class="wayin" hidden><span class="wiring" aria-hidden="true"></span><div class="wibox"></div></div>' +
     '<div class="dockwrap"><div class="modes3" role="tablist" aria-label="' + esc(t('frame.modes')) + '">' + MODES.map(m => '<button type="button" role="tab" data-mode="' + m + '" aria-selected="' + (m === mode) + '"><span class="mn">' + esc(t('frame.' + m)) + '</span><span class="mc"></span></button>').join('') + '</div>' +
     '<section class="dock" aria-live="polite"></section></div>';
   const $ = s => host.querySelector(s), dock = $('.dock');
+
+  /* the way in, mirrored from the card onto the picture: a copy of the card's own control (same data, so the view's
+     handlers answer it), without its key, kept while the card shows Do or Ask */
+  const wayin = $('.wayin'), wibox = $('.wibox');
+  let inKey = '', at = null;
+  const mirror = () => {
+    const src = dock.querySelector('[data-in]');
+    if (!src) { if (mode === 'look') { wayin.hidden = true; inKey = ''; } return; }
+    const name = src.dataset.inname || src.textContent.replace(/^\s*[↓↑]\s*/, '').trim(), key = src.outerHTML;
+    if (key === inKey && !wayin.hidden) return; inKey = key;
+    const go = src.cloneNode(false); go.className = 'wigo'; go.removeAttribute('data-key'); go.removeAttribute('data-in'); go.removeAttribute('data-inname');
+    go.innerHTML = '<span class="wia" aria-hidden="true">↓</span><span class="wit"><span class="wik">' + esc(t('frame.in.k')) + '</span><b>' + esc(name) + '</b></span>';
+    wibox.innerHTML = ''; wibox.appendChild(go);
+    if (o.scroll) wibox.insertAdjacentHTML('beforeend', '<span class="wih">' + esc(t('frame.in.scroll')) + '</span>');
+    wayin.hidden = false; place();
+  };
+  const place = () => {
+    wayin.classList.toggle('at', !!at);
+    if (!at) { wayin.style.removeProperty('--wx'); wayin.style.removeProperty('--wy'); return; }
+    wayin.style.setProperty('--wx', (at.x * 100).toFixed(2) + '%'); wayin.style.setProperty('--wy', (at.y * 100).toFixed(2) + '%');
+    wayin.classList.toggle('left', at.x > 0.62);
+  };
+  new MutationObserver(mirror).observe(dock, { childList: true, subtree: true });
 
   /* Do and Ask, from the atlas, for the level in view */
   const fields = () => (depth && o.fieldAt ? o.fieldAt(depth) : []);
@@ -61,6 +89,8 @@ export function createFrame(host, o) {
     rail(at, f) { host.querySelectorAll('[data-rail]').forEach(b => { if (b.dataset.rail === at) b.setAttribute('aria-current', 'step'); else b.removeAttribute('aria-current'); }); if (f != null) { const el = $('.rfill'); if (el) el.style.height = (f * 100).toFixed(1) + '%'; } },
     /* the stage of the loop a view shows is the shell's to say (the bar); kept so views need not know */
     face() {},
+    /* where the thing the way in leads into stands on the picture now (0..1 across and down), or null */
+    inwardAt(p) { const q = p && p.x >= 0.04 && p.x <= 0.96 && p.y >= 0.1 && p.y <= 0.92 ? p : null; if (!q && !at) return; at = q; place(); },
     goal(html) { const g = $('.goal2'); g.hidden = !html; if (html) g.innerHTML = html; },
     mode() { return mode; },
     look() { mode = 'look'; pinned = false; fill(); },

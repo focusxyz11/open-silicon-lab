@@ -181,6 +181,15 @@ export function createDataCentre(canvas, host, on = {}) {
     ['die', pkg, W3(-0.004, 0.006, -0.012), [4.6, 5.1]], ['hbm', pkg, W3(0.0175, 0.0065, 0.018), [4.6, 5.1]]
   ];
   const named = NAMES.map(([id, obj, at, lv]) => { const lb = L.add(obj, at, t('part.' + VIEW_PARTS.flight[id]), { cls: 'part3' }); lb.lv = lv; return lb; });
+  named.forEach((lb, i) => { lb.id = NAMES[i][0]; });
+  /* the way in at each level: the thing you would enter next, where the shell's button stands with a ring on it */
+  const INTO = [[scene, W3(0, HALL.h, -4.5)], [rack, W3(0, 1.2, 0.45)], [rack, W3(0.02, 1.0, 0.5)], [tray, W3(0, 0.08, 0.02)], [pkg, W3(0, 0.012, 0)], [pkg, W3(-0.004, 0.006, -0.012)]];
+  const pv = new THREE.Vector3();
+  const portal = () => {
+    const lv = Math.round(z), T = INTO[lv]; if (!T || Math.abs(z - lv) > 0.08 || drag) return on.portal && on.portal(null);
+    T[0].updateWorldMatrix(true, false); pv.copy(T[1]).applyMatrix4(T[0].matrixWorld).project(camera);
+    on.portal && on.portal(pv.z < 1 ? { x: (pv.x + 1) / 2, y: (1 - pv.y) / 2 } : null);
+  };
 
   /* ---- the camera along the path ---- */
   let z = 0, goal = 0, raf = 0, running = true, W = 1, H = 1, last = performance.now();
@@ -214,12 +223,17 @@ export function createDataCentre(canvas, host, on = {}) {
   /* ---- input: scroll, drag or keys move along the path; on.level tells the shell where you are ---- */
   const go = v => { goal = clamp(v, 0, LEVELS.length - 1); };
   let drag = null;
-  canvas.addEventListener('wheel', e => { e.preventDefault(); go(goal + e.deltaY * 0.0016); }, { passive: false });
+  /* past the chip, the flight carries on into it: a scroll that keeps pushing at the last level, or ↓ there, goes inside */
+  const END = LEVELS.length - 1; let push = 0;
+  const atEnd = () => goal >= END - 1e-6 && Math.abs(z - END) < 0.06;
+  canvas.addEventListener('wheel', e => { e.preventDefault();
+    if (e.deltaY > 0 && atEnd()) { push += e.deltaY; if (push > 260) { push = 0; on.beyond && on.beyond(); } return; }
+    push = 0; go(goal + e.deltaY * 0.0016); }, { passive: false });
   canvas.addEventListener('pointerdown', e => { canvas.setPointerCapture(e.pointerId); drag = { y: e.clientY, g: goal }; });
   canvas.addEventListener('pointermove', e => { if (drag) go(drag.g + (drag.y - e.clientY) * 0.006); });
   const end = () => { drag = null; };
   canvas.addEventListener('pointerup', end); canvas.addEventListener('pointercancel', end);
-  canvas.addEventListener('keydown', e => { if (e.key === 'ArrowDown' || e.key === 'PageDown') { go(Math.floor(goal + 1)); e.preventDefault(); } if (e.key === 'ArrowUp' || e.key === 'PageUp') { go(Math.ceil(goal - 1)); e.preventDefault(); } });
+  canvas.addEventListener('keydown', e => { if (e.key === 'ArrowDown' || e.key === 'PageDown') { if (atEnd()) on.beyond && on.beyond(); else go(Math.floor(goal + 1)); e.preventDefault(); } if (e.key === 'ArrowUp' || e.key === 'PageUp') { go(Math.ceil(goal - 1)); e.preventDefault(); } });
   let settle = 0, lastLevel = -1;
 
   const resize = () => { const r = canvas.getBoundingClientRect(); if (!r.width || !r.height) return; W = r.width; H = r.height; st.size(W, H); camera.aspect = W / Math.max(1, H); camera.updateProjectionMatrix(); };
@@ -239,11 +253,15 @@ export function createDataCentre(canvas, host, on = {}) {
     on.depth && on.depth(z);
     st.draw(scene, camera);
     L.update(camera, W, H);
+    portal();
   };
   raf = requestAnimationFrame(frame);
   return {
     go(v) { go(v); },
     get z() { return z; },
+    /* the parts named at a level (ids of src/data/atlas.js VIEW_PARTS.flight), and one of them lit on the picture */
+    parts: lv => named.filter(lb => lv >= lb.lv[0] - 0.01 && lv <= lb.lv[1] + 0.01).map(lb => lb.id),
+    mark(id) { named.forEach(lb => lb.el.classList.toggle('hl', lb.id === id)); },
     pause() { running = false; cancelAnimationFrame(raf); },
     warm: () => st.warm(scene, camera),
     resume() { if (!running) { running = true; last = performance.now(); raf = requestAnimationFrame(frame); } },
