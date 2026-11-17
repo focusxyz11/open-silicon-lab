@@ -9,7 +9,7 @@ export default [
   { id: 'idea-masks', strand: 1, at: ['need', 'logic', 'check', 'gates', 'layout', 'masks'], engine: 'logic', lens: 'forms' },
   { id: 'idea-sure', strand: 2, stops: ['idea.gate'], engine: null, lens: 'probe', trade: ['sure'], given: ['frozen', 'tried'], open: ['proof'] },
   { id: 'idea-coverage', strand: 2, at: ['check'], ch: ['prove'], engine: 'logic', lens: 'probe', trade: ['sure'], given: ['tried'] },
-  { id: 'idea-ai', strand: 3, stops: ['idea.check'], engine: 'logic', lens: 'side', go: '#/build', trade: ['sure'], open: ['aidesign'], debate: 'signoff' },
+  { id: 'idea-ai', strand: 3, stops: ['idea.check'], ch: ['agent'], engine: 'logic', lens: 'side', go: '#/build', trade: ['sure'], open: ['aidesign'], debate: 'signoff' },
   { id: 'idea-blocks', strand: 4, stops: ['idea.soc'], engine: null, lens: 'map', given: ['closed'], open: ['riscv', 'openkit'] },
   { id: 'idea-precise', strand: 4, stops: ['idea.deposit'], also: ['make'], engine: null, lens: 'line', open: ['atoms'] },
   { id: 'idea-afford', strand: 4, at: ['layout'], engine: 'money', wants: 'part', lens: 'map', trade: ['cost'], figures: ['wafer-space-run', 'tt-tile'], open: ['shuttle'] }
