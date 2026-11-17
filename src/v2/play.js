@@ -205,7 +205,7 @@ export function play(el, ch, ctx) {
   const betOf = () => (S.bets[ch.id] = Bet.normalBetOf(ch.bet, S.bets[ch.id]));
   const million = i => t('bet.sizeV', { n: Bet.SIZES[i] });
   const times = v => isFinite(v) ? t('bet.times', { v: v >= 10 ? Math.round(v) : v.toFixed(2) }) : t('bet.none');
-  function bet() { return ch.bet === 'oxen' ? betOxen() : ch.bet === 'onebad' ? betPieces() : ch.bet === 'prove' ? betProve() : ch.bet === 'jevons' ? betJevons() : betMoore(); }
+  function bet() { return ch.bet === 'oxen' ? betOxen() : ch.bet === 'onebad' ? betPieces() : ch.bet === 'prove' ? betProve() : ch.bet === 'jevons' ? betJevons() : ch.bet === 'batch' ? betBatch() : betMoore(); }
   function betMoore() {
     const b = betOf();
     let h = head();
@@ -312,6 +312,8 @@ export function play(el, ch, ctx) {
   function betScene() {
     if (ch.kind !== 'bet') return;
     const b = betOf(); if (b.guess == null) return setBetScene(null, null, '');
+    /* bets whose answer is in the card alone leave the scene as it is */
+    if (ch.bet === 'prove' || ch.bet === 'batch') return setBetScene(null, null, '');
     if (ch.bet === 'jevons') { const J = Bet.jevons(b.eff, b.cap); return setBetScene(null, null, 'jevons:' + b.eff + ':' + b.cap, { need: J.turbines, own: Bet.TURBINES }); }
     if (ch.bet === 'oxen') { const M = Bet.oxen(b.ox, b.hens); return setBetScene(null, { r: M.r, m: M.m, plan: Bet.floorplan(M.r, M.m) }, 'oxen:' + b.ox + ':' + b.hens); }
     let s, cells, tone, d;
@@ -417,6 +419,53 @@ export function play(el, ch, ctx) {
       '<text class="ax" x="' + ((l + W - r) / 2) + '" y="' + (H - 6) + '" text-anchor="middle">' + esc(t('bet.jv.axisX')) + '</text>' +
       '<text class="ax" transform="translate(11 ' + ((top + H - bot) / 2) + ') rotate(-90)" text-anchor="middle">' + esc(t('bet.jv.axisY')) + '</text>' +
       '</svg><figcaption class="small muted">' + esc(t('bet.jv.legend')) + '</figcaption></figure>';
+  }
+  /* ---- the batch bet: how many people the chip serves at once, and how many bits each number takes ---- */
+  function betBatch() {
+    const b = betOf(), G = Bet.BATCH_GUESSES, right = Bet.batchAnswer();
+    let h = head();
+    if (b.guess == null) {
+      h += '<p class="kicker">' + esc(t('bet.predictK')) + '</p><p class="small">' + esc(t('bet.bt.predict')) + '</p><div class="chips">' +
+        G.map((g, i) => '<button type="button" class="chipb" data-guess-bt="' + i + '">' + esc(t('bet.bt.g.' + g)) + '</button>').join('') + '</div><p class="small muted">' + esc(t('bet.bt.model')) + '</p>';
+      return h + reward();
+    }
+    const C = Bet.checkBatch(b), R = C.R, X = Bet.BATCH_GOAL, pctB = v => v < 0.01 ? t('bet.pv.pctFine', { v: (v * 100).toFixed(2) }) : t('gauge.pct', { v: Math.round(v * 100) });
+    const gs = [{ k: 'speed', ok: C.fast, v: t('bet.bt.tps', { v: Math.round(R.tokPerUser) }), target: t('bet.bt.gSpeed', { v: X.minSpeed }), f: Math.min(1, R.tokPerUser / X.minSpeed) },
+      { k: 'busy', ok: C.busy, v: pctB(R.utilization), target: t('bet.bt.gBusy', { v: Math.round(X.minBusy * 100) }), f: Math.min(1, R.utilization / X.minBusy) }];
+    h += '<div class="goalbox' + (C.ok ? ' ok' : '') + '"><p class="kicker">' + esc(t(C.ok ? 'game.reached' : 'game.goalNow')) + '</p>' + gs.map(g => '<div class="gauge' + (g.ok ? ' ok' : '') + '"><span class="gl">' + esc(t('bet.bt.g.' + g.k)) + '</span><span class="gv">' + esc(g.v) + ' <span class="muted">' + esc(g.target) + '</span></span><span class="gbar"><span style="width:' + (g.f * 100).toFixed(0) + '%"></span></span></div>').join('') + '</div>';
+    /* one step of writing: reading every weight, against doing the sums for everyone; the step takes the longer */
+    const ms = v => v * 1000 < 1 ? (v * 1000).toFixed(2) : (v * 1000).toFixed(1), top = Math.max(R.tMemS, R.tCmpS), w = v => Math.max(0.8, v / top * 100).toFixed(1);
+    h += '<div class="betview"><figure class="btstep"><div class="agrace"><span class="small">' + esc(t('bet.bt.read')) + '</span><span class="agbar' + (R.memoryBound ? ' hot' : '') + '"><span style="width:' + w(R.tMemS) + '%"></span></span><b class="mono small">' + esc(t('agent.tool.ms', { v: ms(R.tMemS) })) + '</b>' +
+      '<span class="small">' + esc(t('bet.bt.sums', { n: R.people })) + '</span><span class="agbar' + (R.memoryBound ? '' : ' hot') + '"><span style="width:' + w(R.tCmpS) + '%"></span></span><b class="mono small">' + esc(t('agent.tool.ms', { v: ms(R.tCmpS) })) + '</b></div>' +
+      '<figcaption class="small muted">' + esc(t(R.memoryBound ? 'bet.bt.waitsMem' : 'bet.bt.waitsSum', { n: R.people })) + '</figcaption></figure>' + batchSvg(b) + '</div>';
+    h += '<label class="lab" for="bet-batch"><b>' + esc(t('bet.bt.batch')) + '</b> <output>' + esc(t('bet.bt.batchV', { n: R.people })) + '</output></label><input type="range" id="bet-batch" data-bet="batch" min="0" max="' + (Bet.BATCH.length - 1) + '" step="1" value="' + b.batch + '">';
+    h += '<label class="lab" for="bet-format"><b>' + esc(t('bet.bt.format')) + '</b> <output>' + esc(t('bet.bt.f.' + Bet.BFORMATS[b.format])) + '</output></label><input type="range" id="bet-format" data-bet="format" min="0" max="' + (Bet.BFORMATS.length - 1) + '" step="1" value="' + b.format + '">';
+    const R1 = Bet.batched(0, 0);
+    h += '<p class="small ' + (G[b.guess] === right ? 'good' : 'hint') + '">' + esc(t(G[b.guess] === right ? 'bet.bt.right' : 'bet.bt.off', { g: t('bet.bt.g.' + G[b.guess]), v: (R1.utilization * 100).toFixed(1) })) + '</p>';
+    if (!C.ok) h += view.hint ? '<p class="small hint">' + esc(t('bet.bt.hint')) + '</p>' : '<button type="button" class="link" data-hint>' + esc(t('game.hint')) + '</button>';
+    h += '<button type="button" class="link" data-reguess>' + esc(t('bet.again')) + '</button>';
+    if (C.ok) { win(); h += '<p class="small">' + esc(t('bet.bt.why')) + '</p>'; }
+    return h + doneNote() + reward();
+  }
+  /* each person's speed against how many are served at once, one line for each number size; the chip is 80% busy
+     right of the dashed line; the green corner is the goal */
+  function batchSvg(b) {
+    const W = 300, H = 210, l = 40, r = 10, top = 10, bot = 36, lx = [1, 4096], ly = [10, 1000];
+    const x = v => l + (W - l - r) * Math.log(v / lx[0]) / Math.log(lx[1] / lx[0]), y = v => top + (H - top - bot) * (1 - Math.log(Math.max(ly[0], Math.min(ly[1], v)) / ly[0]) / Math.log(ly[1] / ly[0]));
+    const line = fi => Bet.BATCH.map((_, bi) => { const R = Bet.batched(bi, fi); return x(R.people).toFixed(1) + ',' + y(R.tokPerUser).toFixed(1); }).join(' ');
+    /* while the chip waits on memory, each person more adds the same share of busy arithmetic */
+    const busyAt = Math.min(4096, Bet.BATCH_GOAL.minBusy / Bet.batched(0, 0).utilization);
+    const R = Bet.batched(b.batch, b.format), gx = x(busyAt), gy = y(Bet.BATCH_GOAL.minSpeed);
+    return '<figure class="betcurve jpath btcurve"><svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="' + esc(t('bet.bt.aria')) + '">' +
+      '<rect class="goalzone" x="' + gx.toFixed(1) + '" y="' + top + '" width="' + (W - r - gx).toFixed(1) + '" height="' + (gy - top).toFixed(1) + '"/>' +
+      [1, 16, 256, 4096].map(v => '<line class="grid" x1="' + x(v).toFixed(1) + '" x2="' + x(v).toFixed(1) + '" y1="' + top + '" y2="' + (H - bot) + '"/><text class="ax" x="' + x(v).toFixed(1) + '" y="' + (H - bot + 14) + '" text-anchor="' + (v === 4096 ? 'end' : 'middle') + '">' + v + '</text>').join('') +
+      [10, 100, 1000].map(v => '<text class="ax" x="' + (l - 5) + '" y="' + (y(v) + 4).toFixed(1) + '" text-anchor="end">' + v + '</text>').join('') +
+      '<line class="cap" x1="' + gx.toFixed(1) + '" x2="' + gx.toFixed(1) + '" y1="' + top + '" y2="' + (H - bot) + '"/>' +
+      Bet.BFORMATS.map((_, fi) => fi === b.format ? '' : '<polyline class="other" points="' + line(fi) + '"/>').join('') + '<polyline class="line" points="' + line(b.format) + '"/>' +
+      '<circle class="you" cx="' + x(R.people).toFixed(1) + '" cy="' + y(R.tokPerUser).toFixed(1) + '" r="5"/>' +
+      '<text class="ax" x="' + ((l + W - r) / 2) + '" y="' + (H - 6) + '" text-anchor="middle">' + esc(t('bet.bt.axisX')) + '</text>' +
+      '<text class="ax" transform="translate(11 ' + ((top + H - bot) / 2) + ') rotate(-90)" text-anchor="middle">' + esc(t('bet.bt.axisY')) + '</text>' +
+      '</svg><figcaption class="small muted">' + esc(t('bet.bt.legend')) + '</figcaption></figure>';
   }
   /* ---- Verify the agent: eight proposals from an AI agent; check each with the lab's own engines, then trust it or
      reject it for its real flaw (src/data/agent.js). The facts come from the lab's dated file when asked for. ---- */
@@ -598,6 +647,7 @@ export function play(el, ch, ctx) {
       if (c && q('[data-ag-reject]')) { view.agReject = c.id; draw(); return show('.agreasons'); }
       const rs = q('[data-ag-reason]'); if (c && rs) { const A = agentOf(); A[c.id] = { decision: 'reject', reason: +rs.dataset.agReason }; view.agRedo = null; view.agReject = null; ctx.save(); draw(); fx(); return show('.agverdict'); }
       if (c && q('[data-ag-redo]')) { view.agRedo = c.id; return draw(); } }
+    const gbt = q('[data-guess-bt]'); if (gbt) { betOf().guess = +gbt.dataset.guessBt; ctx.save(); draw(); fx(); return show('.betview'); }
     const gj = q('[data-guess-jv]'); if (gj) { betOf().guess = +gj.dataset.guessJv; ctx.save(); draw(); fx(); return show('.betview'); }
     const gv = q('[data-guess-pv]'); if (gv) { betOf().guess = +gv.dataset.guessPv; ctx.save(); draw(); fx(); return show('.pblocks'); }
     const pb = q('[data-prove]'); if (pb) { const b = betOf(); b.proved ^= 1 << +pb.dataset.prove; ctx.save(); draw(); fx(); return; }

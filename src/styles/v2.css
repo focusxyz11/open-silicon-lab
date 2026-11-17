@@ -1365,7 +1365,6 @@ button.opens { width: 100%; text-align: left; border: 0; border-left: 3px solid 
   .stage:has(> .sheet:not([hidden])) :is(.c3, .stage3d, .labels),
   .stage:has(> section:not([hidden]) .dockwrap) :is(.c3, .stage3d, .labels) { right: var(--bench); width: calc(100% - var(--bench)); }
   .sheet .grid { grid-template-columns: 1fr; }
-  .sheet .doors, .dockwrap .modes3 { position: sticky; top: -12px; z-index: 2; background: var(--panel-solid); }
 }
 /* ---- Verify the agent (src/v2/play.js agentDesk, src/data/agent.js) ---- */
 .agcases { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin: 4px 0 12px; }

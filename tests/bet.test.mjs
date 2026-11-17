@@ -110,3 +110,17 @@ test("Jevons' bet: a better chip alone uses more energy, a limit alone serves fe
   for (const [e, c] of pass) { const J = B.jevons(e, c); assert.ok(J.answers >= B.J_GOAL.minAnswers * 1.05 && J.energy <= B.J_GOAL.maxEnergy * 0.95); }
   assert.deepEqual(B.normalBetOf('jevons', { eff: 9, charge: 2, guess: 2 }), { eff: B.J_START.eff, cap: B.J_START.cap, guess: 2 });
 });
+
+test('the batch bet: one person leaves the arithmetic idle, many people slow each other, and the goal needs both dials', () => {
+  assert.equal(B.batchAnswer(), 'tiny');
+  /* while the chip waits on memory, more people make it busier and leave each as fast; past the ridge each slows */
+  const s0 = B.batched(0, 0); for (let i = 1; i < B.BATCH.length; i++) { const R = B.batched(i, 0); assert.ok(R.utilization >= B.batched(i - 1, 0).utilization - 1e-12); assert.ok(R.tokPerUser <= s0.tokPerUser + 1e-9); }
+  assert.ok(B.batched(B.BATCH.length - 1, 0).tokPerUser < s0.tokPerUser / 4);
+  /* fewer bits: each person faster at the same number served */
+  for (let i = 0; i < B.BATCH.length; i++) assert.ok(B.batched(i, 2).tokPerUser > B.batched(i, 0).tokPerUser);
+  const pass = []; for (let i = 0; i < B.BATCH.length; i++) for (let f = 0; f < B.BFORMATS.length; f++) if (B.checkBatch({ batch: i, format: f }).ok) pass.push([i, f]);
+  assert.ok(pass.length >= 2); assert.ok(pass.every(([i, f]) => i > 0 && f > 0), 'one dial was enough');
+  for (const [i, f] of pass) { const R = B.batched(i, f); assert.ok(R.tokPerUser >= B.BATCH_GOAL.minSpeed * 1.05 && R.utilization >= B.BATCH_GOAL.minBusy * 1.05); }
+  assert.equal(B.checkBatch(B.BATCH_START).ok, false);
+  assert.deepEqual(B.normalBetOf('batch', { batch: 99, format: 1, guess: 2 }), { batch: 0, format: 1, guess: 2 });
+});

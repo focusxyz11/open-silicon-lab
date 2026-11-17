@@ -13,6 +13,8 @@
    were), and a chip with any speck on it is dead. What a part costs is a wafer's cost over the parts on the chips
    that work. Simple on purpose: every number on the screen can be counted on the wafer. */
 
+import { roofline } from './aichip.js';
+
 export const WAFER = { r: 150, edge: 3 };            // mm: a 300 mm wafer, and the ring at its edge no chip uses
 export const SIZES = [1, 2, 4, 8, 16, 32, 64, 128, 256]; // parts on one chip, in millions
 export const CLEAN = [1, 0.5, 0.25, 0.1, 0.05];      // specks per square centimetre, from a dusty line to a clean one
@@ -231,5 +233,32 @@ export function normalJevons(b) {
   return { eff: i(o.eff, EFF) ? o.eff : J_START.eff, cap: i(o.cap, CAP) ? o.cap : J_START.cap, guess: i(o.guess, J_GUESSES) ? o.guess : null };
 }
 
+/* ---- The batch bet (the question 'batch'): fast for one person, or busy for many? An AI chip answering one person
+   reads every weight of the model from memory for each word it writes, and does only two sums per weight, so it
+   waits on memory and its arithmetic sits nearly idle (the memory wall, Wulf and McKee, 1995). Serving many people
+   at once shares each read among them: the chip gets busier and each answer cheaper, until the arithmetic is full and
+   every person waits on everyone else. Fewer bits per number make each read smaller and each sum faster. Information
+   (the weights to read), time (each person's speed) and cost (how busy the chip is) meet. The model is the roofline
+   of src/engines/aichip.js (from the first version of the site): a 70-billion-weight model on one 2026 accelerator.
+   Simple on purpose: it leaves out the memory each conversation's notes take (the KV cache), which in practice
+   limits how many fit at once. ---- */
+export const BATCH = [1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096]; // people served at once
+export const BFORMATS = ['fp16', 'fp8', 'fp4'];                                       // bits per number: 16, 8, 4
+export const BATCH_MODEL = { chip: 'rubin', params: 70 };
+export const BATCH_GOAL = { minSpeed: 200, minBusy: 0.8 };
+export const BATCH_START = { batch: 0, format: 0, guess: null };
+export const BATCH_GUESSES = ['most', 'some', 'tiny'];
+export function batched(bi, fi) { const R = roofline(BATCH_MODEL.chip, BATCH_MODEL.params, BFORMATS[fi], BATCH[bi]); return { ...R, people: BATCH[bi], format: BFORMATS[fi] }; }
+/* the guess: one person, 16-bit numbers; what share of the arithmetic works */
+export function batchAnswer() { const u = batched(0, 0).utilization; return u > 0.5 ? 'most' : u > 0.05 ? 'some' : 'tiny'; }
+export function checkBatch(b) {
+  const R = batched(b.batch, b.format), fast = R.tokPerUser >= BATCH_GOAL.minSpeed, busy = R.utilization >= BATCH_GOAL.minBusy;
+  return { R, fast, busy, ok: fast && busy };
+}
+export function normalBatch(b) {
+  const o = Object.assign({}, BATCH_START, b || {}), i = (v, L) => Number.isInteger(v) && v >= 0 && v < L.length;
+  return { batch: i(o.batch, BATCH) ? o.batch : BATCH_START.batch, format: i(o.format, BFORMATS) ? o.format : BATCH_START.format, guess: i(o.guess, BATCH_GUESSES) ? o.guess : null };
+}
+
 /* every bet, by its question */
-export function normalBetOf(id, b) { return id === 'oxen' ? normalOxen(b) : id === 'onebad' ? normalPieces(b) : id === 'prove' ? normalProve(b) : id === 'jevons' ? normalJevons(b) : normalBet(b); }
+export function normalBetOf(id, b) { return id === 'oxen' ? normalOxen(b) : id === 'onebad' ? normalPieces(b) : id === 'prove' ? normalProve(b) : id === 'jevons' ? normalJevons(b) : id === 'batch' ? normalBatch(b) : normalBet(b); }

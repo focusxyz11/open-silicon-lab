@@ -3588,5 +3588,53 @@
  "agent.tool.lookup": "Look it up",
  "agent.tool.factSrc": "{src} · {kind} · checked {date}",
  "agent.tool.open": "Open the source",
- "agent.tool.loading": "Looking it up…"
+ "agent.tool.loading": "Looking it up…",
+ "field.batch.q": "Fast for one person, or busy for many?",
+ "field.batch.who": "Woosuk Kwon and colleagues, vLLM, 2023",
+ "field.batch.opened": "Serving systems that answer many conversations at once, sharing every read of the model.",
+ "field.batch.open": "How to keep each person fast when the chip is full, and who waits.",
+ "game.ch.batch.t": "The batch bet: fast for one, or busy for many?",
+ "game.ch.batch.goal": "Serve a 70-billion-weight model on one 2026 AI chip so that each person gets at least 200 words a second, and the chip's arithmetic is busy at least 80% of the time.",
+ "game.ch.batch.why": "For every word it writes, the chip reads all 70 billion weights from memory and does only two sums with each. Serving one person, it mostly waits; serving many at once, each read is shared, until the sums fill up and everyone waits on everyone else.",
+ "grow.dc-batch": "a second hall that answers many people at once",
+ "bet.bt.predict": "One person chats with a 70-billion-weight model on a 2026 AI chip, in 16-bit numbers. While it answers, how much of the chip's arithmetic is working?",
+ "bet.bt.g.most": "most of it",
+ "bet.bt.g.some": "about a tenth",
+ "bet.bt.g.tiny": "under 1%",
+ "bet.bt.model": "A simple model (the roofline): each step of writing takes as long as the slower of reading every weight from memory and doing two sums per weight for each person served. It leaves out the memory each conversation's notes take, which in practice limits how many fit at once.",
+ "bet.bt.g.speed": "Each person's speed",
+ "bet.bt.g.busy": "The chip's arithmetic at work",
+ "bet.bt.tps": "{v} words/s",
+ "bet.bt.gSpeed": "at least {v}",
+ "bet.bt.gBusy": "at least {v}%",
+ "bet.bt.read": "Reading every weight",
+ "bet.bt.sums": {
+  "one": "Sums for 1 person",
+  "other": "Sums for {n} people"
+ },
+ "bet.bt.waitsMem": {
+  "one": "The step waits on memory: the arithmetic is idle most of the time.",
+  "other": "The step still waits on memory, but {n} people now share each read."
+ },
+ "bet.bt.waitsSum": {
+  "one": "The step waits on the sums.",
+  "other": "The step waits on the sums for {n} people: each person now waits on everyone else."
+ },
+ "bet.bt.batch": "People served at once",
+ "bet.bt.batchV": {
+  "one": "1 person",
+  "other": "{n} people"
+ },
+ "bet.bt.format": "Bits per number",
+ "bet.bt.f.fp16": "16 bits",
+ "bet.bt.f.fp8": "8 bits",
+ "bet.bt.f.fp4": "4 bits",
+ "bet.bt.right": "Your guess holds: serving one person, only {v}% of the arithmetic works; the rest waits on memory.",
+ "bet.bt.off": "You guessed: {g}. Serving one person, only {v}% of the arithmetic works; the rest waits on memory.",
+ "bet.bt.hint": "More people share each read until the sums are full; past that point everyone slows down. Fewer bits make every read smaller, so each person is faster while the chip waits on memory.",
+ "bet.bt.why": "This is why AI services answer many people together, and why chips moved to 8-bit and 4-bit numbers. Compute on AI hardware has grown about three times every two years, memory bandwidth only 1.6 times, so the chip's arithmetic waits more each generation: the memory wall, named in 1995. Who waits, when the chip is full, is still being worked out.",
+ "bet.bt.aria": "Each person's speed against how many people are served at once, one line for each size of number.",
+ "bet.bt.axisX": "people served at once",
+ "bet.bt.axisY": "words a second, each",
+ "bet.bt.legend": "Each line is a size of number; yours is bold. Right of the dashed line the chip is at least 80% busy; the green corner is the goal."
 }

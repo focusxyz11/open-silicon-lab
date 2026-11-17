@@ -37,7 +37,7 @@ test('everything the lab had is part of exactly one experiment: every stop, ever
     assert.ok(!at[s], s + ' is in ' + at[s] + ' and ' + x.id); at[s] = x.id;
   }
   for (const s of Object.keys(STOPS)) assert.ok(at[s], 'the stop ' + s + ' is in no experiment');
-  assert.equal(CHALLENGES.length, 18);
+  assert.equal(CHALLENGES.length, 19);
   for (const c of CHALLENGES) assert.equal(EXPERIMENTS.filter(x => (x.ch || []).includes(c)).length, 1, 'the challenge ' + c + ' is in exactly one experiment');
   for (const s of Object.keys(TRIES)) assert.equal(X.stateOf(X.experimentAtStop(s)), 'live', 'the try at ' + s + ' makes its experiment live');
   for (const c of CASES) assert.ok(EXPERIMENTS.some(x => X.casesOf(x).includes(c.id)), 'the case ' + c.id + ' is read somewhere');
