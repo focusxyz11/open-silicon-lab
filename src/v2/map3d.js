@@ -11,6 +11,7 @@
 import { THREE, PALETTES, theme, stage, light, mat, metal, glow, glass, box, cyl, group, flat, blob, ribbon, labels, clamp, ease, reduced, rnd } from './kit3d.js';
 import { t } from '../core/i18n.js';
 import { STEPS, STATION, GROWTH } from './game.js';
+import { betPowerNow } from '../app/betscene.js';
 
 /* where every place stands, and how close the camera comes */
 export const PLACES = [
@@ -625,6 +626,32 @@ export function createMap(canvas, host, on = {}) {
   [[-8, -6], [-1, -10], [6, -7], [-12, 3]].forEach(([x, z], i) => turbine(power, x, z, 0, i));
   const offshore = group(scene, 0, 0, 0);
   for (let i = 0; i < 3; i++) for (let j = 0; j < 3; j++) turbine(offshore, AT('power')[0] + 32 + i * 14 + j * 4, AT('power')[1] - 22 + j * 14, -0.6, i * 3 + j + 4);
+  /* Jevons' bet (src/v2/play.js betJevons): the island's thirteen turbines turn for the answers the world asks, and
+     stand still when fewer are needed; the turbines it would need beyond its own rise from the sea further out, pale
+     and warm, one for each (built when first needed, one mesh for every tower, one for every blade) */
+  const powerSpin = spinning.filter(f => f.rotor);
+  const GHOST_AT = (() => { const c = AT('power'), sb = AT('idea'), mid = [c[0] + 50, c[1] - 8], out = [];
+    for (let i = 0; i < 11; i++) for (let j = -3; j < 6; j++) { if (i < 3 && j >= 0 && j < 3) continue; const x = c[0] + 32 + i * 14 + j * 4, z = c[1] - 22 + j * 14; if (Math.hypot(x - sb[0], z - sb[1]) > 36) out.push([x, z]); }
+    return out.sort((a, b) => Math.hypot(a[0] - mid[0], a[1] - mid[1]) - Math.hypot(b[0] - mid[0], b[1] - mid[1])).slice(0, 64); })();
+  let spare = null;
+  const ghostsBuild = () => { const n = GHOST_AT.length, m = mat(P.warm, { transparent: true, opacity: 0.62, roughness: 0.5 });
+    const im = (geo, k) => { const x = new THREE.InstancedMesh(geo, m, k); x.count = 0; x.frustumCulled = false; scene.add(x); return x; };
+    spare = { tower: im(new THREE.CylinderGeometry(0.16, 0.34, 13, 8), n), nac: im(new THREE.BoxGeometry(0.7, 0.7, 1.7), n), blade: im(bladeG, n * 3), h: new Float32Array(n), turn: GHOST_AT.map((_, i) => rnd(i, 71) * 6.28) }; };
+  const GM = new THREE.Matrix4(), GB = new THREE.Matrix4(), GT = new THREE.Matrix4(), GR = new THREE.Matrix4();
+  function powerBet(dt) {
+    const B = betPowerNow(), need = !B ? powerSpin.length : B.need > B.own ? Math.ceil(B.need - 1e-9) : Math.round(B.need), want = B ? Math.max(0, Math.min(GHOST_AT.length, need - B.own)) : 0;
+    powerSpin.forEach((f, i) => { const go = i < need ? 1 : 0; f.on = f.on == null ? 1 : reduced() ? go : f.on + (go - f.on) * Math.min(1, dt * 1.5); });
+    if (!want && !spare) return; if (!spare) ghostsBuild();
+    let top = 0; for (let i = 0; i < GHOST_AT.length; i++) { const go = i < want ? 1 : 0; spare.h[i] = reduced() ? go : spare.h[i] + (go - spare.h[i]) * Math.min(1, dt * (2.2 - (i % 5) * 0.25)); if (spare.h[i] > 0.01) top = i + 1; }
+    ['tower', 'nac'].forEach(k => { spare[k].count = top; }); spare.blade.count = top * 3;
+    for (let i = 0; i < top; i++) { const [x, z] = GHOST_AT[i], y = -0.6 - 15 * (1 - ease(spare.h[i])); if (!reduced()) spare.turn[i] -= dt * 0.8 * spare.h[i];
+      GB.makeRotationY(FACE).setPosition(x, y, z);
+      spare.tower.setMatrixAt(i, GM.multiplyMatrices(GB, GT.makeTranslation(0, 6.5, 0)));
+      spare.nac.setMatrixAt(i, GM.multiplyMatrices(GB, GT.makeTranslation(0, 13.25, -0.3)));
+      for (let b = 0; b < 3; b++) spare.blade.setMatrixAt(i * 3 + b, GM.multiplyMatrices(GB, GT.makeTranslation(0, 13.25, 0.62)).multiply(GR.makeRotationZ(spare.turn[i] + b * 2.094)));
+    }
+    ['tower', 'nac', 'blade'].forEach(k => { spare[k].instanceMatrix.needsUpdate = true; });
+  }
   { const sf = group(power, 4, 0, 6, FACE * 0.3); for (let i = 0; i < 6; i++) for (let j = 0; j < 4; j++) { const p = box(sf, 2.6, 0.1, 1.5, metal(0x27406a, { roughness: 0.25 }), -7 + i * 2.8, 0.8, -3.4 + j * 2.3, 0.02); p.rotation.x = -0.45; } }
   { const ss = group(power, -6, 0, 8, FACE * 0.3); box(ss, 7, 0.06, 5, mat(P.road), 0, 0.02, 0, 0.05, { cast: false }); for (let k = 0; k < 3; k++) { box(ss, 1.4, 1.6, 1.2, mat(P.slate), -2.2 + k * 2.2, 0.08, -0.8, 0.08); for (let j = 0; j < 3; j++) cyl(ss, 0.1, 0.1, 0.9, mat(P.white), -2.6 + k * 2.2 + j * 0.4, 1.68, -0.8, 6); }
     box(ss, 3, 2.2, 1.6, paleM, 0, 0.08, 1.4, 0.1); }
@@ -736,6 +763,7 @@ export function createMap(canvas, host, on = {}) {
     'masks': () => { const tr = truck(A.truck); box(tr, 2.6, 0.12, 1.2, glow(P.accent, 1.2), -0.9, 2.15, 0, 0.03, { cast: false }); scene.add(tr); moving.push({ obj: tr, path: route([[-31, -27], [-29, -20], [-27.5, -13], [-22, -6], [-14, -2], [-8, -6]]), speed: 0.05, ship: true, bounce: true }); },
     'studio-wing': g => { box(g, 8, 4.5, 6, glass(P.glass, { opacity: 0.55, emissive: night ? P.glass : 0, emissiveIntensity: night ? 0.4 : 0 }), 0, 0, 0, 0.3); box(g, 8.2, 0.4, 6.2, mat(P.white), 0, 4.5, 0, 0.1); },
     'fab-trucks': () => { for (let i = 0; i < 4; i++) onLoop(truck(A.box[(i + 3) % 5]), 0.12 + i * 0.25, 0.012, -0.7); },
+    'power-store': g => { for (let k = 0; k < 4; k++) { box(g, 1.8, 2.2, 4.2, mat(P.white), -3.3 + k * 2.2, 0, 0, 0.15); box(g, 0.08, 0.3, 3.2, glow(P.good, night ? 1.2 : 0.5), -3.3 + k * 2.2 + 0.92, 1.5, 0, 0.02, { cast: false }); } },
     'studio-proof': g => { box(g, 6, 3, 6, mat(P.white), 0, 0, 0, 0.3); const d = new THREE.Mesh(new THREE.SphereGeometry(2.6, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2), glass(P.glass, { opacity: 0.6, emissive: night ? P.glass : 0, emissiveIntensity: night ? 0.4 : 0 })); d.position.y = 3; g.add(d); },
     'test-dies': g => { box(g, 10, 2.6, 6, mat(P.white), 0, 0, 0, 0.3); box(g, 10.2, 0.3, 6.2, mat(A.roof, { roughness: 0.7 }), 0, 2.6, 0, 0.1); for (let i = 0; i < 4; i++) { box(g, 1.1, 0.5, 1.1, mat(P.wall), -3.3 + i * 2.2, 2.9, 0, 0.1); cyl(g, 0.12, 0.12, 1.1, metal(P.dark), -3.3 + i * 2.2, 3.4, 0, 8); } },
     'dc-cores': g => { box(g, 12, 3, 7, mat(P.white), 0, 0, 0, 0.3); box(g, 12.2, 0.3, 7.2, mat(A.roof, { roughness: 0.7 }), 0, 3, 0, 0.1); spinning.push(cyl(g, 1.7, 1.7, 0.25, metal(P.dark), -3.4, 3.3, 0, 28)); for (let i = 0; i < 4; i++) for (let j = 0; j < 3; j++) spinning.push(cyl(g, 0.55, 0.55, 0.2, metal(P.dark), 0.4 + i * 1.5, 3.3, -1.8 + j * 1.8, 16)); },
@@ -754,7 +782,7 @@ export function createMap(canvas, host, on = {}) {
     'clock-tower': g => { box(g, 2.4, 9, 2.4, mat(P.white), 0, 0, 0, 0.2); const face = cyl(g, 1, 1, 0.2, mat(P.wall), 0, 7, 1.25, 24); face.rotation.x = Math.PI / 2; const hand = box(g, 0.12, 0.9, 0.08, mat(P.dark), 0, 6.95, 1.42, 0.02, { cast: false }); hand.geometry = hand.geometry.clone().translate(0, 0.4, 0); spinning.push({ hand }); }
   };
   /* where each growth stands, relative to its place: [x, z, y] */
-  const GROW_SPOT = { 'studio-screen': [-4, 9], masks: [0, 0], 'studio-wing': [-4, -12], 'fab-trucks': [0, 0], 'fab-line': [2, -14], 'fab-wafers': [-13, 9], 'dc-cores': [-14, 6], 'test-dies': [-11, 9], 'studio-proof': [10, -10], 'test-probe': [3, 0, 4], 'test-hall': [11, 0],
+  const GROW_SPOT = { 'studio-screen': [-4, 9], masks: [0, 0], 'studio-wing': [-4, -12], 'fab-trucks': [0, 0], 'fab-line': [2, -14], 'fab-wafers': [-13, 9], 'dc-cores': [-14, 6], 'test-dies': [-11, 9], 'studio-proof': [10, -10], 'power-store': [12, -3], 'test-probe': [3, 0, 4], 'test-hall': [11, 0],
     'island-phones': [0, 0], 'island-cars': [0, 0], 'dc-hall': [0, 10], 'dc-solar': [21, 4], 'clock-tower': [-8, -2] };
   GROWTH.forEach(gw => { const [x, z, y] = GROW_SPOT[gw.id] || [0, 0], g = group(G[gw.at], x, y || 0, z); g.visible = false; g.scale.setScalar(0.001); growing.push({ id: gw.id, g, built: false, t0: 0 }); });
 
@@ -1140,8 +1168,9 @@ export function createMap(canvas, host, on = {}) {
     /* pulling far enough out of what is selected leaves it */
     if (sel && !fly && cam.d > leaveAt()) { const was = sel; sel = null; Object.values(OPEN).forEach(O => { O.want = 0; }); on.leave && on.leave(was.place); }
     token.position.lerp(tokenGoal, Math.min(1, dt * (carrying ? 12 : 2.2))); token.position.y = (carrying ? 4 : 1.2) + Math.sin(tm * 2) * 0.25; token.rotation.y += dt * 0.8;
+    powerBet(dt);
     if (!reduced()) {
-      spinning.forEach((f, i) => { if (f.rotor) f.rotor.rotation.z -= dt * f.spin; else if (f.jib) f.jib.rotation.y = Math.sin(tm * 0.2) * 0.9; else if (f.hand) f.hand.rotation.z = -tm * 0.8; else f.rotation.y += dt * (2 + (i % 3)); });
+      spinning.forEach((f, i) => { if (f.rotor) f.rotor.rotation.z -= dt * f.spin * (f.on == null ? 1 : f.on); else if (f.jib) f.jib.rotation.y = Math.sin(tm * 0.2) * 0.9; else if (f.hand) f.hand.rotation.z = -tm * 0.8; else f.rotation.y += dt * (2 + (i % 3)); });
       ripples.offset.set(tm * 0.004, tm * 0.0025); foamM.opacity = (night ? 0.4 : 0.68) + (night ? 0.1 : 0.2) * Math.sin(tm * 0.9);
       pulses.forEach((p, i) => { if (p.material.emissiveIntensity != null) p.material.emissiveIntensity = (night ? 1.2 : 0.6) * (0.75 + 0.25 * Math.sin(tm * 2 + i)); });
       bobbing.forEach(b => { if (b.ring !== undefined) { const u = (tm * 0.5 + b.ring / 3) % 1; b.obj.scale.setScalar(1 + u * 6); b.obj.material.opacity = 0.6 * (1 - u); } else b.obj.position.y = b.base + Math.sin(tm * 1.4 + b.k) * 0.4; });
