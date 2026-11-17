@@ -1,0 +1,34 @@
+name: Task for a build session
+description: One piece of work, ready for a person or an AI session (Claude Code on the web) to build in one pull request.
+title: "[Task] "
+labels: [task]
+body:
+  - type: textarea
+    id: goal
+    attributes:
+      label: What and why
+      description: What should exist when this is done, and what a learner can do or see that they could not before.
+    validations:
+      required: true
+  - type: input
+    id: where
+    attributes:
+      label: Where it lives
+      description: The place and level, or the files, for example "the factory, level print; src/v2/labs/".
+  - type: textarea
+    id: material
+    attributes:
+      label: What to build on
+      description: Engines, data, documents or earlier versions to read first (for example src/engines/aiserve.js, the branch before).
+  - type: textarea
+    id: done
+    attributes:
+      label: Done when
+      description: How anyone can check it, for example "plays to a win at #/do/<id>; npm test passes; desktop and phone screenshots in the PR".
+    validations:
+      required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes and limits
+      description: Decisions already made, things not to change, open questions.
