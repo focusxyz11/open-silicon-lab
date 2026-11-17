@@ -549,8 +549,9 @@ export function play(el, ch, ctx) {
      body held at 300 mm, a tail tapered before it is lifted off. Time runs faster in the slow phases. ---- */
   const czSet = () => { const o = view.cz || (view.cz = { pull: CZ.PULL_DEFAULTS.pull, temp: CZ.PULL_DEFAULTS.temp, rot: CZ.PULL_DEFAULTS.rot, auto: false }); return o; };
   const czLoop = now => { if (!view.czRun || !el.isConnected) { view.czRun = false; return; }
-    const dtS = Math.min(0.1, (now - (view.czT || now)) / 1000); view.czT = now;
-    const st = view.czS, ph = st.phase || 'dip', min = CZ.PULL_TIMESCALE[ph] * dtS * (view.czFast ? 4 : 1);
+    /* time follows the clock, so a slow device grows the same crystal in the same time, in bigger steps */
+    const dtS = Math.min(0.5, (now - (view.czT || now)) / 1000); view.czT = now;
+    const st = view.czS, ph = st.phase || 'dip', min = CZ.PULL_TIMESCALE[ph] * dtS * (view.czFast ? 8 : 1);
     view.czS = CZ.pullStep(st, min, czSet()); view.czSeen.push(view.czS);
     if (CZ.pullMet(view.czSeen)) win();
     if (view.czS.done) view.czRun = false;
