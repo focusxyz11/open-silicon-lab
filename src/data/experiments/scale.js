@@ -2,7 +2,7 @@
 export default [
   { id: 'scale-gen', strand: 0, stops: ['scale.switch', 'scale.soc'], engine: 'timing', lens: 'dive', trade: ['work', 'energy', 'cost'], open: ['thin', 'stack'], debate: 'shrink' },
   { id: 'scale-atom', strand: 0, stops: ['scale.atom'], engine: null, lens: 'dive', open: ['thin', 'nanotube'] },
-  { id: 'scale-light', strand: 0, stops: ['scale.scanner', 'scale.print'], engine: null, lens: 'line', given: ['masks'], open: ['beam', 'imprint'] },
+  { id: 'scale-light', strand: 0, stops: ['scale.scanner', 'scale.print'], ch: ['litho-finest', 'euv-1000'], engine: null, lens: 'line', given: ['masks'], open: ['beam', 'imprint'] },
   { id: 'scale-rules', strand: 0, at: ['switch'], engine: 'scaling', wants: 'part', lens: 'clock', trade: ['work', 'energy'] },
   { id: 'scale-older', strand: 1, stops: ['scale.mcu'], engine: 'timing', lens: 'side', trade: ['cost', 'life'], debate: 'mature' },
   { id: 'scale-afford', strand: 2, stops: ['scale.masks'], engine: null, lens: 'clock', trade: ['cost'], figures: ['design-cost-2nm', 'wafer-price'] },
