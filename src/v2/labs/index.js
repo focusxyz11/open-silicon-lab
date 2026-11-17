@@ -4,5 +4,8 @@ import agent from './agent.js';
 import teardown from './teardown.js';
 import evolve from './evolve.js';
 import crystal from './crystal.js';
-
-export const LABS = { agent, teardown, fit: teardown, evolve, pull: crystal };
+import implant from './implant.js';
+import overlay from './overlay.js';
+import films from './films.js';
+import litho from './litho.js';
+export const LABS = { agent, teardown, fit: teardown, evolve, pull: crystal, implant, overlay, etch: films, deposit: films, litho, euv: litho };
