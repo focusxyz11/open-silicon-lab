@@ -449,14 +449,15 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
     await fp.waitForSelector('.pblocks [data-prove]', { timeout: 10000 }).catch(() => problems.push(tag + ': the proof bet does not show its blocks'));
     await fp.evaluate(() => { for (const i of [5, 6, 7]) { const b = document.querySelector('[data-prove="' + i + '"]'); if (b) b.click(); } const r = document.querySelector('[data-bet="tests"]'); if (r) { r.value = 5; r.dispatchEvent(new Event('input', { bubbles: true })); } });
     await fp.waitForSelector('.player .won', { timeout: 10000 }).catch(() => problems.push(tag + ': the proof bet cannot be won by proving the arithmetic'));
-    /* Jevons' bet, on the power island: a better chip alone draws more turbines; with a price on power it holds */
+    /* Jevons' bet, on the power island: a better chip alone draws more turbines; with a price on power it holds. The
+       island is far, and the sheet may be drawn again when the flight lands: each poll guesses and turns the dials anew */
     await fp.goto(base + 'index.html#/do/jevons');
-    await fp.waitForSelector('[data-guess-jv]', { timeout: 30000 }).catch(() => problems.push(tag + ': the Jevons bet does not ask for a guess first'));
-    await fp.evaluate(() => { const b = document.querySelector('[data-guess-jv="2"]'); if (b) b.click(); });
-    await fp.evaluate(() => { const r = document.querySelector('[data-bet="eff"]'); if (r) { r.value = 3; r.dispatchEvent(new Event('input', { bubbles: true })); } });
-    await fp.waitForSelector('.turbines .tb.more', { timeout: 10000 }).catch(() => problems.push(tag + ': a better chip alone does not draw turbines beyond the island'));
-    await fp.evaluate(() => { for (const [k, v] of [['eff', 4], ['charge', 4]]) { const r = document.querySelector('[data-bet="' + k + '"]'); if (r) { r.value = v; r.dispatchEvent(new Event('input', { bubbles: true })); } } });
-    await fp.waitForSelector('.player .won', { timeout: 10000 }).catch(() => problems.push(tag + ': the Jevons bet cannot be won with a better chip and a price on power'));
+    await fp.waitForSelector('[data-guess-jv]', { timeout: 60000 }).catch(() => problems.push(tag + ': the Jevons bet does not ask for a guess first'));
+    const dials = (D, sel) => fp.waitForFunction(([D, sel]) => { const g = document.querySelector('[data-guess-jv="2"]'); if (g) g.click();
+      for (const [k, v] of D) { const r = document.querySelector('#sheet [data-bet="' + k + '"]'); if (r && r.value !== String(v)) { r.value = v; r.dispatchEvent(new Event('input', { bubbles: true })); } }
+      return !!document.querySelector(sel); }, [D, sel], { timeout: 30000, polling: 1000 });
+    await dials([['eff', 3], ['charge', 0]], '#sheet .turbines .tb.more').catch(() => problems.push(tag + ': a better chip alone does not draw turbines beyond the island'));
+    await dials([['eff', 4], ['charge', 4]], '#sheet .player .won').catch(() => problems.push(tag + ': the Jevons bet cannot be won with a better chip and a price on power'));
     await fp.close(); }
   await page.evaluate(() => { location.hash = '#/dive/block'; });
   /* the dive may still be making its view: Ask is chosen again until the block's questions show */
