@@ -412,15 +412,17 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
   await page.waitForFunction(() => document.querySelectorAll('#sheet .isles [data-place]').length === 6, null, { timeout: 15000 }).catch(() => problems.push(tag + ': the world around does not show its six islands'));
   /* the questions from the field (src/data/questions.js): crossing a seam raises the leak on it, and its card opens;
      under Ask at a level, the questions people were stuck on there come first */
-  await page.evaluate(() => { location.hash = '#/line/test'; }); await page.waitForTimeout(2500);
+  /* a fresh visitor: earlier steps here crossed seams already, and a leak rises only the first time */
+  await page.evaluate(() => { localStorage.removeItem('osl-world-v1'); });
+  await page.goto(base + 'index.html#/line/test'); await page.waitForTimeout(3000);
   await page.evaluate(() => { location.hash = '#/line/pkg'; });
-  await page.waitForFunction(() => { const s = document.querySelector('.seamnote'); return !!s && !s.hidden && !!s.querySelector('[data-field="package"]'); }, null, { timeout: 10000 }).catch(() => problems.push(tag + ': crossing a seam does not raise its leak'));
+  await page.waitForFunction(() => { const s = document.querySelector('.seamnote'); return !!s && !s.hidden && !!s.querySelector('[data-field="package"]'); }, null, { timeout: 15000 }).catch(() => problems.push(tag + ': crossing a seam does not raise its leak'));
   await page.evaluate(() => { const b = document.querySelector('.seamnote [data-field]'); if (b) b.click(); });
   await page.waitForSelector('.fieldx', { timeout: 10000 }).catch(() => problems.push(tag + ': a question from the field does not open its card'));
   await page.evaluate(() => { location.hash = '#/dive/block'; });
-  await page.waitForSelector('#diveui [data-mode="ask"]', { timeout: 15000 }).catch(() => {});
-  await page.evaluate(() => { const b = document.querySelector('#diveui [data-mode="ask"]'); if (b) b.click(); });
-  await page.waitForSelector('#diveui .fieldline[data-field="fetch"]', { timeout: 10000 }).catch(() => problems.push(tag + ': Ask at the block does not list the questions from the field there'));
+  /* the dive may still be making its view: Ask is chosen again until the block's questions show */
+  await page.waitForFunction(() => { if (document.querySelector('#diveui .fieldline[data-field="fetch"]')) return true; const b = document.querySelector('#diveui .modes3 [data-mode="ask"]'); if (b && b.getAttribute('aria-selected') !== 'true') b.click(); return false; }, null, { timeout: 30000, polling: 1000 })
+    .catch(() => problems.push(tag + ': Ask at the block does not list the questions from the field there'));
   /* one stage: the island, the data centre, the chip, the board and the line's machines all draw with one renderer */
   for (const h of ['#/place/datacentre/1', '#/chip/0', '#/board', '#/line/print', '#/']) { await page.evaluate(x => { location.hash = x; }, h); await page.waitForTimeout(2500); }
   const gl = await page.evaluate(() => window.GL);
