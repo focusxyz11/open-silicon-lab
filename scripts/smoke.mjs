@@ -58,7 +58,7 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
   await page.waitForSelector('#sheet .won', { timeout: 10000 }).catch(() => problems.push(tag + ': a right design did not win the challenge'));
   if (!/grew/i.test(await page.textContent('#toast').catch(() => ''))) problems.push(tag + ': winning did not say what grew');
   if (!(await page.$('#sheet .opens[href^="#/ask/"]'))) problems.push(tag + ': the first win opens no question');
-  if (!/1 of 4/.test(await page.getAttribute('#loop [data-stage="design"]', 'aria-label').catch(() => ''))) problems.push(tag + ': the tracker did not count the win');
+  if (!/1 of 5/.test(await page.getAttribute('#loop [data-stage="design"]', 'aria-label').catch(() => ''))) problems.push(tag + ': the tracker did not count the win');
   await page.click('#sheet [data-next]').catch(() => problems.push(tag + ': no way on to the next challenge'));
   if (!/voter/i.test(await page.textContent('#sheet .player h3').catch(() => ''))) problems.push(tag + ': the next challenge is not the majority voter');
   await page.click('#sheet [data-back]');
@@ -458,6 +458,14 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
       return !!document.querySelector(sel); }, [D, sel], { timeout: 30000, polling: 1000 });
     await dials([['eff', 3], ['cap', 6]], '#sheet .turbines .tb.more').catch(() => problems.push(tag + ': a better chip alone does not draw turbines beyond the island'));
     await dials([['eff', 4], ['cap', 1]], '#sheet .player .won').catch(() => problems.push(tag + ': the Jevons bet cannot be won with a better chip and a limit on power'));
+    /* Verify the agent, at the Lab: a tool checks a case, and eight right calls win */
+    await fp.goto(base + 'index.html#/do/agent');
+    await fp.waitForSelector('#sheet .agcases [data-ag-case]', { timeout: 60000 }).catch(() => problems.push(tag + ': Verify the agent does not show its cases'));
+    await fp.evaluate(() => { const b = document.querySelector('#sheet [data-ag-run]'); if (b) b.click(); });
+    await fp.waitForSelector('#sheet .agtt tr.bad', { timeout: 10000 }).catch(() => problems.push(tag + ': checking every input does not find the equality checker\'s wrong rows'));
+    await fp.evaluate(() => { const calls = [['eq', 0], ['maj'], ['sum', 0], ['mul'], ['yield', 0], ['roof', 0], ['fact', 0], ['cov', 0]], c = s => { const e = document.querySelector('#sheet ' + s); if (e) e.click(); };
+      for (const [id, r] of calls) { c('[data-ag-case="' + id + '"]'); c('[data-ag-redo]'); if (r == null) c('[data-ag-trust]'); else { c('[data-ag-reject]'); c('[data-ag-reason="' + r + '"]'); } } });
+    await fp.waitForSelector('#sheet .player .won', { timeout: 10000 }).catch(() => problems.push(tag + ': eight right calls do not win Verify the agent'));
     /* What if? between the islands: a scenario moves the levers, the change lands on other islands, and one of
        them shows the chain back to the lever */
     await fp.goto(base + 'index.html#/whatif');
