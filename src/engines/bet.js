@@ -1,6 +1,7 @@
 /* The bets, as engines (the questions: src/data/questions.js; the player: src/v2/play.js, kind 'bet').
    A bet is where three primitives pull at once: push one, and the other two move. Its challenge gives two dials
-   and asks for a place among them that no single dial reaches.
+   and asks for a place among them that no single dial reaches. Each bet here has a guess (asked before you look),
+   a starting place, a check, and normalBetOf(id, saved) to read back what you left.
 
    Moore's bet (the question 'cheaper', Gordon Moore, 1965): put more parts on one chip and each part gets cheaper,
    until the chip is so big that specks of dust kill most copies, and each part gets dearer again. Matter (how big
@@ -69,3 +70,43 @@ export function normalBet(b) {
   const o = Object.assign({}, START, b || {}), i = (v, L) => Number.isInteger(v) && v >= 0 && v < L.length;
   return { size: i(o.size, SIZES) ? o.size : START.size, clean: i(o.clean, CLEAN) ? o.clean : START.clean, guess: i(o.guess, SIZES) ? o.guess : null };
 }
+
+/* ---- Cray's bet (the question 'oxen', Seymour Cray): two strong oxen or a thousand chickens? One strong core, or
+   many simple ones? Information (how much of a job can be split), time (how fast it finishes) and cost (how much
+   chip you spend) meet. The model is Hill and Marty's (Amdahl's law in the multicore era, IEEE Computer, 2008): a
+   chip is made of units, each the size of one small core; a strong core of r units runs one step at a time
+   sqrt(r) times as fast as a small one (Pollack's rule); the part of a job that cannot be split runs on the strong
+   core alone, the rest on every core at once. Two jobs: an everyday app (half of it can be split) and training an
+   AI (999 steps in 1000 can). One chip has to serve both. ---- */
+export const OX = [1, 2, 4, 8, 16, 32, 64, 128, 256];       // units in the strong core (1 is just another chicken)
+export const HENS = [0, 32, 64, 96, 128, 160, 192, 224, 256]; // small cores beside it
+export const JOBS = { app: 0.5, ai: 0.999 };                  // the share of each job that can be split
+export const BUDGET = 256;                                    // units a chip may spend
+export const GUESSES = ['ox', 'hens', 'both'];
+export const oxSpeed = (f, r, m) => 1 / ((1 - f) / Math.sqrt(r) + f / (Math.sqrt(r) + m));
+export function oxen(ox, hens) {
+  const r = OX[ox], m = HENS[hens];
+  return { r, m, size: r + m, app: oxSpeed(JOBS.app, r, m), ai: oxSpeed(JOBS.ai, r, m) };
+}
+export const OX_GOAL = { app: 10, ai: 150, size: BUDGET };
+export const OX_START = { ox: OX.length - 1, hens: 0, guess: null };
+export function checkOxen(b) {
+  const M = oxen(b.ox, b.hens), app = M.app >= OX_GOAL.app, ai = M.ai >= OX_GOAL.ai, size = M.size <= OX_GOAL.size;
+  return { M, app, ai, size, ok: app && ai && size };
+}
+export function normalOxen(b) {
+  const o = Object.assign({}, OX_START, b || {}), i = (v, L) => Number.isInteger(v) && v >= 0 && v < L.length;
+  return { ox: i(o.ox, OX) ? o.ox : OX_START.ox, hens: i(o.hens, HENS) ? o.hens : OX_START.hens, guess: i(o.guess, GUESSES) ? o.guess : null };
+}
+/* where a chip of r strong units and m small cores puts them, on a grid 16 units wide: the strong core a block at
+   the top left, the small cores filling the rest row by row */
+export function floorplan(r, m) {
+  const W = 16, w = Math.min(W, 2 ** Math.ceil(Math.log2(r) / 2)), h = r / w, used = new Set(), hens = [];
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) used.add(x + ',' + y);
+  for (let k = 0; hens.length < m; k++) { const x = k % W, y = Math.floor(k / W); if (!used.has(x + ',' + y)) hens.push([x, y]); }
+  const rows = Math.max(h, ...hens.map(([, y]) => y + 1), 1);
+  return { W, rows, ox: r > 1 ? { x: 0, y: 0, w, h } : null, hens: r > 1 ? hens : [[0, 0], ...hens], budgetRows: BUDGET / W };
+}
+
+/* every bet, by its question */
+export function normalBetOf(id, b) { return id === 'oxen' ? normalOxen(b) : normalBet(b); }

@@ -23,7 +23,7 @@ import { WAYS } from '../data/ways.js';
 import { STOPS, WORLDS } from '../data/weave.js';
 import { INSIDE, placeOf, SHARED, askAt as levelStops } from '../data/places.js';
 import { fieldOf, fieldAtLevel, fieldAtPlace } from '../data/questions.js';
-import { normalBet } from '../engines/bet.js';
+import { normalBetOf } from '../engines/bet.js';
 
 /* the loop, in order, and the station of each step on the island */
 export const STEPS = ['design', 'make', 'test', 'ship', 'use'];
@@ -73,7 +73,8 @@ export const CHALLENGES = [
   { id: 'car', step: 'ship', place: 'cars', at: 'mcu', kind: 'life', mission: 'car', grows: 'island-cars' },
   { id: 'dclife', step: 'ship', place: 'port', at: 'ship', kind: 'life', mission: 'datacentre', grows: 'dc-hall' },
   { id: 'fed', step: 'use', place: 'datacentre', at: 'board', kind: 'chip', goal: 'fed', grows: 'dc-solar' },
-  { id: 'fast', step: 'use', place: 'datacentre', at: 'chip', kind: 'chip', goal: 'fast', grows: 'clock-tower' }
+  { id: 'fast', step: 'use', place: 'datacentre', at: 'chip', kind: 'chip', goal: 'fast', grows: 'clock-tower' },
+  { id: 'oxen', step: 'use', place: 'datacentre', at: 'chip', kind: 'bet', bet: 'oxen', grows: 'dc-cores' }
 ];
 /* the goal of a chip challenge as gauges: each a value of your chip's model and the bound it must reach
    (ge: at least, le: at most). Together they say the same as the goal's met() in src/engines/chip.js. */
@@ -165,7 +166,7 @@ export function normalState(s) {
   /* the seams you have crossed: their leak is raised once, then waits in Ask */
   const crossed = {}; Object.keys(s.crossed || {}).forEach(k => { if (fieldOf(k)) crossed[k] = true; });
   /* where you left each bet's dials (src/engines/bet.js) */
-  const bets = {}; CHALLENGES.filter(c => c.kind === 'bet').forEach(c => { if (s.bets && s.bets[c.id]) bets[c.id] = normalBet(s.bets[c.id]); });
+  const bets = {}; CHALLENGES.filter(c => c.kind === 'bet').forEach(c => { if (s.bets && s.bets[c.id]) bets[c.id] = normalBetOf(c.bet, s.bets[c.id]); });
   return { done, codes, chip: normal(s.chip || START), life: lifeC, seen: !!s.seen, drafts, sent, met, crossed, bets, name: typeof s.name === 'string' ? s.name.slice(0, 40) : '' };
 }
 export function load(store) { try { return normalState(JSON.parse(store.getItem(KEY) || 'null')); } catch (e) { return fresh(); } }
