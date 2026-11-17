@@ -476,8 +476,8 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
     /* Evolve a circuit, at the studio's gates: evolution finds a voter smaller than the person's */
     await fp.goto(base + 'index.html#/do/evolve');
     await fp.waitForSelector('[data-ev-go]', { timeout: 60000 }).catch(() => problems.push(tag + ': Evolve a circuit does not offer to evolve'));
-    await fp.evaluate(() => { const b = document.querySelector('[data-ev-go]'); if (b) b.click(); });
-    await fp.waitForSelector('.player .won', { timeout: 60000 }).catch(() => problems.push(tag + ': evolution does not beat the person\'s voter'));
+    /* start it, and start it again if the sheet was drawn anew when the flight landed */
+    await fp.waitForFunction(() => { const b = document.querySelector('[data-ev-go]'); if (b && !b.dataset.ran) { b.dataset.ran = '1'; b.click(); } return !!document.querySelector('.player .won'); }, null, { timeout: 90000, polling: 2000 }).catch(() => problems.push(tag + ': evolution does not beat the person\'s voter'));
     /* Grow a crystal, at the quarry's first step: the autopilot grows a dislocation-free ingot */
     await fp.goto(base + 'index.html#/do/crystal');
     await fp.waitForSelector('[data-cz-go]', { timeout: 60000 }).catch(() => problems.push(tag + ': Grow a crystal does not offer to start'));
