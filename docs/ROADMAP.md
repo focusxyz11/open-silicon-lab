@@ -1,6 +1,6 @@
 # Roadmap
 
-Where Open Silicon Lab is heading. This is the one place for what happens next. Nothing here is a promise or a date. Ideas not yet picked are kept in the [idea bank](IDEAS.md).
+Where Open Silicon Lab is heading. This is the one place for what happens next. Nothing here is a promise or a date. Ideas not yet picked are kept in the [idea bank](IDEAS.md). Where things stand today, and the tasks ready to build, are in [STATUS.md](STATUS.md).
 
 ## Now: the framework
 
