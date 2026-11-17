@@ -1295,3 +1295,57 @@ button.opens { width: 100%; text-align: left; border: 0; border-left: 3px solid 
 .pblock.proved { background: color-mix(in srgb, var(--good) 16%, transparent); border-color: var(--good); }
 .pblock:hover, .pblock:focus-visible { border-color: var(--ink); }
 @media (prefers-reduced-motion: reduce) { .pblock .ph > span { transition: none; } }
+
+/* ---- What if? between the islands (src/v2/whatif.js; the islands answer in src/v2/map3d.js whatif) ----
+   On a desktop the levers stand in a bench at the left and the world is the picture, with a tag over each island the
+   change reaches. On a phone the bench is the usual card and lists where the change lands; the tags are left out,
+   since over far islands they would crowd a small screen (desktop first where it is richer). */
+.sheet.whatif { max-height: 58vh; }
+@media (min-width: 721px) {
+  .sheet.whatif { left: 20px; top: 86px; bottom: 20px; transform: none; width: 400px; max-height: none; animation: wfin .35s ease; }
+  @keyframes wfin { from { opacity: 0; translate: -16px 0; } }
+}
+.wflevers { display: grid; gap: 4px; margin: 6px 0 10px; }
+.wfl { padding: 8px 10px 4px; border-radius: 12px; border: 1px solid transparent; transition: border-color .2s, background .2s; }
+.wfl.moved { border-color: color-mix(in srgb, var(--warm) 55%, transparent); background: color-mix(in srgb, var(--warm) 7%, transparent); }
+.wfl label { display: flex; align-items: baseline; gap: 8px; font-size: 14px; }
+.wfl label output { margin-left: auto; font: 600 13px var(--mono); color: var(--muted); }
+.wfl.moved label output { color: var(--warm); }
+.wfl input[type=range] { width: 100%; margin: 4px 0 2px; }
+.wfat { all: unset; cursor: pointer; padding: 1px 8px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); }
+.wfat:hover, .wfat:focus-visible { border-color: var(--accent); color: var(--ink); }
+.wfd { margin: 0 0 4px !important; }
+.wfpre { margin: 0 0 12px; }
+.wflands { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 6px; margin: 0 0 12px; }
+.wfland { all: unset; cursor: pointer; display: grid; gap: 1px; padding: 8px 10px; border-radius: 12px; border: 1px solid var(--line); }
+.wfland:hover, .wfland:focus-visible { border-color: var(--accent); }
+.wv { font: 700 13px var(--mono); }
+.up .wv, .wfc.up .wv { color: var(--warm); }
+.down .wv, .wfc.down .wv { color: var(--accent); }
+.wfisle { margin: 0 0 8px; }
+.wfch { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 8px; }
+.wfc { padding: 5px 10px; border-radius: 999px; border: 1px solid var(--line); background: transparent; font-size: 13px; cursor: pointer; text-align: left; }
+.wfc.on { border-color: var(--ink); }
+.wfchain { list-style: none; margin: 4px 0 10px; padding: 0 0 0 14px; border-left: 2px solid color-mix(in srgb, var(--warm) 60%, transparent); display: grid; gap: 8px; }
+.wfchain li { display: grid; gap: 1px; font-size: 14px; }
+.wfrule { font-weight: 600; }
+.wfrule::before { content: '↳ '; color: var(--warm); }
+.wfpuz { margin: 6px 0 10px; }
+.wfpuz summary { cursor: pointer; font-weight: 600; font-size: 14px; }
+.wfpuz ol { margin: 8px 0 0; padding-left: 20px; display: grid; gap: 8px; font-size: 14px; }
+.wfpuz li { display: grid; gap: 2px; }
+.wfpuz li.done > span:first-child { text-decoration: line-through; text-decoration-color: color-mix(in srgb, var(--good) 70%, transparent); }
+.wfpuz li.just { animation: dockrise .5s ease; }
+.wfnote { margin-top: 4px; }
+#mapLabels.whatif .place3 { opacity: 0 !important; pointer-events: none !important; }
+.lbl3.wf3 { pointer-events: auto; display: grid; grid-template-columns: auto auto; column-gap: 8px; align-items: baseline; padding: 4px 10px; border-radius: 10px; background: var(--panel); border: 1px solid var(--line); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); color: var(--ink); font: 500 12px var(--sans); cursor: pointer; text-align: left; }
+.lbl3.wf3 b { font-size: 12px; }
+.lbl3.wf3 .wn, .lbl3.wf3 .wm { grid-column: 1 / -1; color: var(--muted); display: none; }
+.lbl3.wf3 .wm { font-size: 11px; }
+.lbl3.wf3:hover, .lbl3.wf3:focus-visible, .lbl3.wf3.lever { z-index: 3; }
+.lbl3.wf3:hover .wn, .lbl3.wf3:hover .wm, .lbl3.wf3:focus-visible .wn, .lbl3.wf3.lever .wn { display: block; }
+.lbl3.wf3.up { border-color: color-mix(in srgb, var(--warm) 70%, transparent); }
+.lbl3.wf3.down { border-color: color-mix(in srgb, var(--accent) 70%, transparent); }
+.lbl3.wf3.lever { box-shadow: 0 0 0 3px color-mix(in srgb, var(--warm) 35%, transparent); }
+.lbl3.wf3:hover, .lbl3.wf3:focus-visible { border-color: var(--ink); }
+@media (max-width: 720px) { .lbl3.wf3 { display: none; } .wfd { display: none; } }

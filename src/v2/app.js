@@ -35,6 +35,8 @@ import * as Chip from '../engines/chip.js';
 import { levelAt, fieldAtLevel } from '../data/atlas.js';
 import * as Field from './field.js';
 import { setBetScene } from '../app/betscene.js';
+import { whatif as whatifView } from './whatif.js';
+import { LEVERS as WF_LEVERS } from '../engines/ripple.js';
 import * as Worlds from './worlds.js';
 import { copiesInput } from './copies.js';
 import { wallsInput } from './walls.js';
@@ -125,7 +127,7 @@ export function start() {
   const ensureMap = () => mapReady || (mapReady = import('./map3d.js').then(m => {
     /* tap selects, zoom goes in and out (docs/INTERACTION.md): a second tap on the same place selects it again, it
        does not go in */
-    map = m.createMap($('mapCanvas'), $('mapLabels'), { place: id => { if (cur && cur.place === id && !cur.part && (!sheet.hidden || !insp.hidden)) return; quickNext = true; openPlace(id); }, part: (place, part) => { quickNext = true; location.hash = '#/place/' + place + '/' + part; },
+    map = m.createMap($('mapCanvas'), $('mapLabels'), { whatif: id => wf && wf.pick(id), place: id => { if (wf) return wf.pick(id); if (cur && cur.place === id && !cur.part && (!sheet.hidden || !insp.hidden)) return; quickNext = true; openPlace(id); }, part: (place, part) => { quickNext = true; location.hash = '#/place/' + place + '/' + part; },
       carry: id => { carryNote = carryAt(id); quickNext = true; openPlace(id); },
       deeper: (place, part) => { const to = deeperOf(place, part); if (to) enter(to); },
       leave: id => { if (cur && cur.place === id) { closeSheet(); if (location.hash.startsWith('#/place/')) history.replaceState(null, '', '#/'); hud(); } },
@@ -404,6 +406,8 @@ export function start() {
         (PARTS[id] ? '<div class="zoomhint"><span class="small muted">' + esc(t('zoom.open')) + '</span></div>' : enter ? '<div class="zoomhint"><button type="button" class="chipb" data-deeper aria-label="' + esc(t('zoom.inBtn')) + '">↓</button><span class="small muted">' + esc(t('zoom.place')) + '</span></div>' : '') +
         worldsRow((Game.INSIDE[id] || []).flatMap(l => stopsAt(l.depth))) +
         aroundHtml(id, nx) +
+        /* What if?: the levers that sit on this island, each a way to see the change it makes cross the sea */
+        WF_LEVERS.filter(l => l.place === id).map(l => '<a class="look wfgo" href="#/whatif/' + l.id + '"><b>' + esc(t('whatif.ui.go', { lever: t('whatif.lever.' + l.id + '.t') })) + '</b><span class="small">' + esc(t('whatif.lever.' + l.id + '.d')) + '</span></a>').join('') +
         /* where the loop starts there are two ways in: what someone needs, and what has just become possible */
         /* the sandbank: a stake for every question nobody can try yet, the first few as cards */
         (id === 'idea' ? (() => { const W = Exp.EXPERIMENTS.filter(x => Exp.stateOf(x) === 'wanted'); return W.length ? '<p class="kicker">' + esc(t('map.idea.staked', { n: W.length })) + '</p><div class="qcards">' + W.slice(0, 4).map(x => Read.card(x)).join('') + '</div>' + (W.length > 4 ? '<a class="more" href="#/read">' + esc(t('map.idea.all')) + '</a>' : '') : ''; })() : '') +
@@ -1007,10 +1011,21 @@ export function start() {
     $('hero').classList.add('away'); sheet.onclick = null; sheet.oninput = null;
     sheet.innerHTML = '<button type="button" class="x" data-close aria-label="' + esc(t('sheet.close')) + '">×</button><p class="kicker">' + esc(t('nav.ecosystem')) + '</p><h2>' + esc(t('page.ecosystem.title')) + '</h2><p>' + esc(t('page.ecosystem.lead')) + '</p>' +
       '<div class="isles">' + ['phones', 'cars', 'tools', 'materials', 'power', 'idea'].map(id => '<button type="button" class="isle" data-place="' + id + '" title="' + esc(t('map.' + id + '.d')) + '"><b>' + esc(t('map.' + id + '.t')) + (S.done[{ phones: 'phone', cars: 'car' }[id]] ? ' ✓' : '') + '</b><span class="small muted">' + esc(t('map.' + id + '.role')) + '</span></button>').join('') + '</div>' +
+      '<a class="look wfgo" href="#/whatif"><b>' + esc(t('whatif.ui.kicker')) + '</b><span class="small">' + esc(t('whatif.ui.title')) + '</span></a>' +
       '<p class="kicker">' + esc(t('page.ecosystem.world')) + '</p><a class="look" href="#/supply"><b>' + esc(t('page.ecosystem.map')) + '</b><span class="small">' + esc(t('page.ecosystem.mapD')) + '</span><span class="small muted">' + esc(t('game.current')) + '</span></a>' +
       '<div class="debate2"><b>' + esc(t('debate.supply.t')) + '</b><span class="small">' + esc(t('debate.supply.q')) + '</span></div>';
     sheet.hidden = false; cur = null;
   }
+
+  /* What if? between the islands: the levers in the sheet (a bench at the side on a desktop), the world answering */
+  let wf = null;
+  function showWhatif(lever) {
+    map && map.whatifView(); $('outbtn').hidden = true; $('hero').classList.add('away'); hideInsp();
+    sheet.classList.remove('inside', 'part'); sheet.classList.add('whatif'); sheet.innerHTML = ''; sheet.hidden = false; cur = null;
+    wf = whatifView(sheet, { S, save, map, name: id => t('map.' + id + '.t'), close: () => { location.hash = '#/ecosystem'; } });
+    if (lever) wf.lever(lever);
+  }
+  function leaveWhatif() { if (!wf && !sheet.classList.contains('whatif')) return; wf = null; map && map.whatif(null); sheet.classList.remove('whatif'); sheet.oninput = null; sheet.onchange = null; sheet.onclick = null; }
 
   /* ---- following a question: one stop of a thread's trail, in the dock of the view that shows its level ---- */
   /* the figures behind a stop, each with its source, kind and the date it was checked (src/data/facts.json) */
@@ -1167,6 +1182,7 @@ export function start() {
     if (['log', 'challenges', 'questions'].includes(k)) showPage(k);
     if (k === 'read') showRead(parts[1] ? decodeURIComponent(parts[1]) : null);
     if (k === 'w') { if (parts[1]) showWorld(parts[1], parts[2], parts[3]); else showWorlds(); }
+    if (k === 'whatif') return showMap(from).then(() => showWhatif(parts[1]));
     return showMap(from).then(() => { if (k === 'ecosystem') showEcosystem(); else if (k === 'explore' && cur && !sheet.hidden) { closeSheet(); map && map.overview(); } });
   }
   function route() {
@@ -1175,6 +1191,8 @@ export function start() {
     { const to = Way.whereOf(location.hash); hideSeam(); crossed(seamFrom, to); seamFrom = to; }
     /* a bet's wafer or chip stands in the scene only while its challenge is open */
     if (!/^#\/do\/(cheaper|onebad|oxen|jevons)$/.test(location.hash)) setBetScene(null, null, '');
+    /* What if? holds the world grey with its columns only while it is open */
+    if (k !== 'whatif') leaveWhatif();
     page.hidden = true; page.classList.remove('reading'); $('logbtn').setAttribute('aria-current', ['log', 'challenges', 'questions'].includes(k) ? 'page' : 'false'); $('logbtn').classList.remove('glow');
     const after = pr => { hud(); return Promise.resolve(pr).then(hud); };
     const [view, rank] = viewOf(parts), from = viewNow, move = nextMove || (rank > rankNow ? 'in' : rank < rankNow ? 'out' : 'along');
