@@ -2,6 +2,10 @@
 // version showed, results move the right way, and each challenge can be met by some setting and fails at the defaults.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync as readEN } from 'node:fs';
+const EN = JSON.parse(readEN(new URL('../src/i18n/en.json', import.meta.url), 'utf8'));
+/* a word: still in an engine's WORDS, or moved into en.json once its view was built (the puller's are cz.*) */
+const has = k => F.WORDS[k] || EN[k] || EN[k.replace('fab.puller.dislocations.', 'cz.disl.').replace('fab.puller.', 'cz.')] || EN[k.replace(/^fab\.ch\.(\w+)\.(t|goal)$/, 'game.ch.$1.$2')];
 import { readFileSync } from 'node:fs';
 import * as F from '../src/engines/fabsteps.js';
 
@@ -265,19 +269,19 @@ test('EUV scanner: the photons are random, seeded, and the holes spread more at 
 test('every challenge has its words, every word is named fab.*, and the fact ids exist', () => {
   assert.equal(F.CHALLENGES.length, 9);
   for (const c of F.CHALLENGES) {
-    for (const k of ['t', 'goal', 'done']) assert.ok(F.WORDS['fab.ch.' + c.id + '.' + k], c.id + ' ' + k);
+    for (const k of ['t', 'goal', 'done']) assert.ok(has('fab.ch.' + c.id + '.' + k), c.id + ' ' + k);
     assert.ok(c.groups.length && c.groups.every(g => typeof g === 'function'));
     assert.equal(F.met(c.id, []), false, c.id + ' is not met by nothing');
   }
   for (const [k, v] of Object.entries(F.WORDS)) { assert.ok(k.startsWith('fab.'), k); assert.equal(typeof v, 'string'); assert.ok(v.length > 0); }
   assert.equal(F.met('nope', []), false);
-  for (const id of F.PULL_PHASES) assert.ok(F.WORDS['fab.puller.phase.' + id]);
-  for (const id of F.LOOP_STEPS) for (const k of ['t', 'text', 'gear']) assert.ok(F.WORDS['fab.loop.' + id + '.' + k], id);
-  for (const s of F.SOURCES) assert.ok(F.WORDS['fab.litho.src.' + s.id] && F.WORDS['fab.litho.era.' + s.id]);
-  for (const id of F.ION_IDS) assert.ok(F.WORDS['fab.implant.ion.' + id]);
-  for (const a of F.ANNEALS) assert.ok(F.WORDS['fab.implant.anneal.' + a] && F.WORDS['fab.implant.note.' + a]);
-  for (const c of F.CLEAN_CLASSES) assert.ok(F.WORDS['fab.clean.' + c.id] && F.WORDS['fab.clean.name.' + c.id]);
-  for (const k of ['neckfail', 'shock', 'done', 'neck', 'shoulder', 'thin', 'wide', 'ok', 'tail']) assert.ok(F.WORDS['fab.puller.msg.' + k], k);
+  for (const id of F.PULL_PHASES) assert.ok(has('fab.puller.phase.' + id));
+  for (const id of F.LOOP_STEPS) for (const k of ['t', 'text', 'gear']) assert.ok(has('fab.loop.' + id + '.' + k), id);
+  for (const s of F.SOURCES) assert.ok(has('fab.litho.src.' + s.id) && has('fab.litho.era.' + s.id));
+  for (const id of F.ION_IDS) assert.ok(has('fab.implant.ion.' + id));
+  for (const a of F.ANNEALS) assert.ok(has('fab.implant.anneal.' + a) && has('fab.implant.note.' + a));
+  for (const c of F.CLEAN_CLASSES) assert.ok(has('fab.clean.' + c.id) && has('fab.clean.name.' + c.id));
+  for (const k of ['neckfail', 'shock', 'done', 'neck', 'shoulder', 'thin', 'wide', 'ok', 'tail']) assert.ok(has('fab.puller.msg.' + k), k);
   for (const ids of Object.values(F.FACT_IDS)) for (const id of ids) assert.ok(facts.includes(id), id);
 });
 

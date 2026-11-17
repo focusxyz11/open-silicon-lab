@@ -1430,3 +1430,18 @@ button.opens { width: 100%; text-align: left; border: 0; border-left: 3px solid 
 .evread > span { display: grid; gap: 1px; padding: 6px 8px; border-radius: 10px; border: 1px solid var(--line); }
 .evread b { font-size: 15px; } .evread b.good { color: var(--good); }
 .evbar { margin: 0 0 4px; } .evbar > span { background: var(--good); transition: width .2s; }
+/* ---- Grow a crystal (src/v2/play.js puller, src/engines/crystal.js) ---- */
+.czph { display: flex; gap: 4px; list-style: none; padding: 0; margin: 4px 0 10px; }
+.czph li { flex: 1; padding: 5px 6px; border-radius: 8px; border: 1px solid var(--line); font-size: 11.5px; line-height: 1.2; color: var(--muted); }
+.czph li.on { border-color: var(--warm); color: var(--ink); background: color-mix(in srgb, var(--warm) 12%, transparent); }
+.czph li.past { color: var(--good); }
+.czfig svg { display: block; width: 100%; height: auto; }
+.czfig .ingot { fill: color-mix(in srgb, #b8c2cc 70%, var(--panel-solid)); stroke: var(--ink); stroke-opacity: .5; stroke-width: 1; }
+.czfig .melt { fill: #ff8a3a; opacity: .85; }
+.czfig .crucible { fill: none; stroke: var(--muted); stroke-width: 2; }
+.czfig .band { stroke: var(--good); stroke-dasharray: 3 3; stroke-width: 1; }
+.czfig .ax { font: 11px var(--sans); fill: var(--muted); }
+.czread { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; align-content: start; }
+.czread > span { display: grid; gap: 1px; padding: 6px 8px; border-radius: 10px; border: 1px solid var(--line); }
+.czread > span.wide { grid-column: 1 / -1; } .czread .good b { color: var(--good); } .czread .bad b { color: var(--bad); }
+.czread b { font-size: 14px; }

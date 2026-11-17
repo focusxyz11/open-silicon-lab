@@ -478,6 +478,11 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
     await fp.waitForSelector('[data-ev-go]', { timeout: 60000 }).catch(() => problems.push(tag + ': Evolve a circuit does not offer to evolve'));
     await fp.evaluate(() => { const b = document.querySelector('[data-ev-go]'); if (b) b.click(); });
     await fp.waitForSelector('.player .won', { timeout: 60000 }).catch(() => problems.push(tag + ': evolution does not beat the person\'s voter'));
+    /* Grow a crystal, at the quarry's first step: the autopilot grows a dislocation-free ingot */
+    await fp.goto(base + 'index.html#/do/crystal');
+    await fp.waitForSelector('[data-cz-go]', { timeout: 60000 }).catch(() => problems.push(tag + ': Grow a crystal does not offer to start'));
+    await fp.evaluate(() => { for (const s of ['[data-cz-auto]', '[data-cz-fast]', '[data-cz-go]']) { const b = document.querySelector(s); if (b) b.click(); } });
+    await fp.waitForSelector('.player .won', { timeout: 120000 }).catch(() => problems.push(tag + ': the autopilot does not grow a perfect crystal'));
     /* Verify the agent, at the Lab: a tool checks a case, and eight right calls win */
     await fp.goto(base + 'index.html#/do/agent');
     await fp.waitForSelector('#sheet .agcases [data-ag-case]', { timeout: 60000 }).catch(() => problems.push(tag + ': Verify the agent does not show its cases'));

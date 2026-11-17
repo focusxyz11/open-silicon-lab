@@ -106,22 +106,5 @@ export const PULL_CHALLENGES = [
 ];
 export const pullMet = seen => metBy(PULL_CHALLENGES[0], seen);
 
-export const PULL_WORDS = {
-  'fab.puller.phase.dip': 'Dip the seed', 'fab.puller.phase.neck': 'Neck: thin to shed defects', 'fab.puller.phase.shoulder': 'Shoulder: widen',
-  'fab.puller.phase.body': 'Body: hold 300 mm', 'fab.puller.phase.tail': 'Tail: taper off',
-  'fab.puller.dislocations.none': 'No dislocations', 'fab.puller.dislocations.seed': 'Dislocations from the seed', 'fab.puller.dislocations.shock': 'Dislocations from thermal shock',
-  'fab.puller.msg.neckfail': 'The neck never got thinner than 6 mm, so dislocations from the seed kept running into the crystal. Real growers would melt it back and start again. Pull the neck fast and hot.',
-  'fab.puller.msg.shock': 'You lifted the crystal off the melt at full width. The thermal shock sends dislocations back up about one diameter, so the last 30 cm was scrapped. Taper the tail first next time.',
-  'fab.puller.msg.done': 'Done: a dislocation-free ingot. It will be ground to exactly 300 mm, sliced into about {wafers} wafers, and each wafer may carry hundreds of chips.',
-  'fab.puller.msg.neck': 'Pull fast and keep the melt hot so the neck narrows to about 3-5 mm. Any dislocations from the seed grow out of the thin neck and vanish (the Dash necking technique).',
-  'fab.puller.msg.shoulder': 'Neck done and dislocation-free. Now slow the pull and cool the melt slightly so the crystal spreads out toward 300 mm.',
-  'fab.puller.msg.thin': 'Too thin: below 300 mm the crystal can\'t be ground to a full wafer. Slow down or cool the melt.',
-  'fab.puller.msg.wide': 'Too wide: usable, but extra silicon is ground away and wasted. Speed up a little.',
-  'fab.puller.msg.ok': 'In tolerance. Every millimeter grown now becomes wafers.',
-  'fab.puller.msg.tail': 'The melt is running out. Speed up and heat the melt to taper the crystal to a point before lifting it off.',
-  'fab.puller.rotation.slow': 'Rotation is very slow, so heat and dopants spread unevenly (striations).',
-  'fab.puller.rotation.fast': 'Rotation this fast stirs up turbulence in the melt.',
-  'fab.ch.crystal.t': 'Grow a perfect crystal',
-  'fab.ch.crystal.goal': 'Pull a dislocation-free 300 mm ingot and taper it off safely.',
-  'fab.ch.crystal.done': 'A dislocation-free ingot, lifted off thin. Every millimeter held at 300 mm becomes wafers.'
-};
+/* the words: cz.* in src/i18n/en.json (the challenge's: game.ch.crystal.*, fab.ch.crystal.done) */
+export const PULL_WORDS = {};
