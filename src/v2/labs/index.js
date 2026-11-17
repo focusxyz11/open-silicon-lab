@@ -1,0 +1,8 @@
+/* The labs of the challenge player, by kind (src/v2/play.js): each is a module of its own, lab(L) -> { draw, click,
+   input }, so a new lab is a new file here and a line below. */
+import agent from './agent.js';
+import teardown from './teardown.js';
+import evolve from './evolve.js';
+import crystal from './crystal.js';
+
+export const LABS = { agent, teardown, fit: teardown, evolve, pull: crystal };

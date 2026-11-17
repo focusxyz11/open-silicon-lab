@@ -21,10 +21,7 @@ import * as Bet from '../engines/bet.js';
 import { setBetScene } from '../app/betscene.js';
 import { WAFER as SCENE_WAFER } from '../engines/chip.js';
 import { glyph } from './field.js';
-import * as Agent from '../data/agent.js';
-import * as TD from '../data/teardown.js';
-import * as EV from '../engines/evolve.js';
-import * as CZ from '../engines/crystal.js';
+import { LABS } from './labs/index.js';
 
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 /* the gates a description can use, and the one a tap turns each into */
@@ -84,6 +81,7 @@ export function play(el, ch, ctx) {
   /* your work as an entry of the ledger: sign it and keep it, then the slip gives the way in */
   const entry = (label) => view.slip && draftOf(S, view.slip) ? slipHtml(S, view.slip) : '<div class="keep">' + signHtml(S, view.ai ? 'both' : 'person') + (view.no ? '<p class="small bad">' + esc(view.no) + '</p>' : '') + '<button type="button" class="btn primary" data-keep>' + esc(t(label)) + '</button><p class="small muted">' + esc(t('ledger.keep.note')) + '</p></div>';
 
+  let lab = null;
   function win() { if (S.done[ch.id]) return; S.done[ch.id] = true; view.won = true; ctx.save(); ctx.done(ch); }
 
   /* ---- design: write a circuit, check it ---- */
@@ -470,192 +468,6 @@ export function play(el, ch, ctx) {
       '<text class="ax" transform="translate(11 ' + ((top + H - bot) / 2) + ') rotate(-90)" text-anchor="middle">' + esc(t('bet.bt.axisY')) + '</text>' +
       '</svg><figcaption class="small muted">' + esc(t('bet.bt.legend')) + '</figcaption></figure>';
   }
-  /* ---- Look inside (src/data/teardown.js): open five products, see every kind of chip each holds, coloured by what it
-     does or how it is made, and count the kinds that need a leading-edge factory ---- */
-  const tdOf = () => { const o = S.teardown || {}; return (S.teardown = { opened: (o.opened || []).filter(id => TD.productById(id)), count: Number.isInteger(o.count) ? o.count : null, by: o.by === 'made' ? 'made' : 'job', at: TD.productById(o.at) ? o.at : null }); };
-  function teardown() {
-    const D = tdOf(), C = TD.checkNewest(D), P = D.at && TD.productById(D.at);
-    let h = head() + '<p class="kicker">' + esc(t('td.open')) + '</p><div class="chips tdprod">' + TD.PRODUCTS.map(p => '<button type="button" class="chipb' + (D.at === p.id ? ' on' : '') + '" data-td-open="' + p.id + '" aria-pressed="' + (D.at === p.id) + '">' + (D.opened.includes(p.id) ? '✓ ' : '') + esc(t('td.product.' + p.id + '.t')) + '</button>').join('') + '</div>';
-    if (!P) return h + '<p class="small hint">' + esc(t('td.start')) + '</p>' + reward();
-    h += '<div class="chips tdby"><span class="small muted">' + esc(t('td.by.label')) + '</span>' + ['job', 'made'].map(k => '<button type="button" class="chipb' + (D.by === k ? ' on' : '') + '" data-td-by="' + k + '" aria-pressed="' + (D.by === k) + '">' + esc(t('td.by.' + k)) + '</button>').join('') + '</div>';
-    /* the board: one tile for each kind of chip, the main one bigger; a diamond marks the leading edge */
-    const sel = view.tdChip && P.chips.find(c => c.id === view.tdChip);
-    h += '<div class="tdboard by-' + D.by + '">' + P.chips.map(c => '<button type="button" class="tdchip ' + D.by + '-' + (D.by === 'job' ? c.job : c.made) + (c.big ? ' big' : '') + (sel && sel.id === c.id ? ' on' : '') + '" data-td-chip="' + c.id + '"><span>' + esc(t('td.chip.' + c.id + '.t')) + '</span>' + (c.leading ? '<i class="lead" aria-label="' + esc(t('td.rd.lead')) + '">◆</i>' : '') + '</button>').join('') + '</div>';
-    const keys = D.by === 'job' ? TD.JOBS : TD.MADE;
-    h += '<div class="tdkey">' + keys.map(k => '<span class="small"><i class="sw ' + D.by + '-' + k + '"></i>' + esc(t('td.' + D.by + '.' + k)) + '</span>').join('') + '<span class="small"><i class="lead">◆</i> ' + esc(t('td.rd.lead')) + '</span></div>';
-    if (sel) h += '<div class="tdsel"><b>' + esc(t('td.chip.' + sel.id + '.t')) + '</b><span class="small muted">' + esc(t('td.job.' + sel.job)) + ' · ' + esc(t('td.how')) + ' ' + esc(t('td.chip.' + sel.id + '.m')) + '</span><span class="small">' + esc(t('td.chip.' + sel.id + '.d')) + '</span></div>';
-    const S1 = TD.summaryOf(P.id);
-    h += '<p class="small">' + esc(t(S1.key, S1.vars)) + ' ' + esc(t(S1.then[0])) + '</p>';
-    /* the count, once every product is open */
-    if (C.all) {
-      h += '<p class="kicker">' + esc(t('td.askCount', { n: TD.PRODUCTS.reduce((a, p) => a + p.chips.length, 0) })) + '</p><div class="agab"><label>' + esc(t('td.yourCount')) + ' <input type="number" min="0" max="60" data-td-count value="' + (D.count == null ? '' : D.count) + '"></label><button type="button" class="chipb" data-td-check>' + esc(t('td.check')) + '</button></div>';
-      if (view.tdTried && !C.ok) h += '<p class="small bad">' + esc(t('td.notYet')) + '</p>';
-    } else h += '<p class="small muted">' + esc(t('td.openAll', { n: TD.PRODUCTS.length - D.opened.length })) + '</p>';
-    if (C.ok) { win(); h += '<p class="small good">' + esc(t('td.ch.newest.done')) + '</p>'; }
-    return h + '<p class="small muted">' + esc(t('td.note')) + '</p>' + doneNote() + reward();
-  }
-  /* ---- The right chip for the job: eight jobs, a line from flexible to specialized, the best kind for each ---- */
-  const fitOf = () => { const o = S.fit || {}, a = {}; TD.FIT_JOBS.forEach(j => { const k = (o.answers || {})[j.id]; if (TD.FIT_KINDS.some(x => x.id === k)) a[j.id] = k; }); return (S.fit = { answers: a }); };
-  function fitJobs() {
-    const F = fitOf(), C = TD.checkJobs(F), i = view.fitJob != null ? view.fitJob : Math.max(0, TD.FIT_JOBS.findIndex(j => F.answers[j.id] !== j.best)), J = TD.FIT_JOBS[i];
-    let h = head() + '<p class="kicker">' + esc(t('td.fit.score', { n: C.best, m: C.of })) + (C.of - C.best ? ' · ' + esc(t('td.fit.togo', { n: C.of - C.best })) : '') + '</p>';
-    h += '<div class="fitjobs">' + TD.FIT_JOBS.map((j, k) => { const v = F.answers[j.id] ? TD.verdict(j.id, F.answers[j.id]) : ''; return '<button type="button" class="agcase ' + (v === 'best' ? 'ok' : v ? 'no' : '') + (k === i ? ' on' : '') + '" data-fit-job="' + k + '"><span class="n">' + (k + 1) + '</span><span class="small">' + esc(t('td.fit.job.' + j.id + '.t')) + '</span></button>'; }).join('') + '</div>';
-    h += '<p class="kicker">' + esc(t('td.fit.pick', { n: i + 1 })) + '</p><h4 class="agt">' + esc(t('td.fit.job.' + J.id + '.t')) + '</h4>';
-    /* the line: flexible at the left, one job done efficiently at the right; the power chip stands apart */
-    const a = F.answers[J.id], v = a ? TD.verdict(J.id, a) : null;
-    h += '<div class="fitline"><span class="end small muted">' + esc(t('td.fit.end.l')) + '</span><span class="end r small muted">' + esc(t('td.fit.end.r')) + '</span>' +
-      TD.FIT_KINDS.filter(k => k.pos != null).map(k => '<button type="button" class="fitk' + (a === k.id ? ' on ' + v : '') + '" style="left:' + (k.pos * 100).toFixed(0) + '%;transform:translateX(-' + (k.pos * 100).toFixed(0) + '%)" data-fit-kind="' + k.id + '" title="' + esc(t('td.fit.kind.' + k.id + '.d')) + '">' + esc(t('td.fit.kind.' + k.id + '.t')) + '</button>').join('') + '</div>' +
-      TD.FIT_KINDS.filter(k => k.pos == null).map(k => '<button type="button" class="chipb fitk2' + (a === k.id ? ' on ' + v : '') + '" data-fit-kind="' + k.id + '">' + esc(t('td.fit.kind.' + k.id + '.t')) + '</button>').join('');
-    if (a) {
-      const kd = TD.FIT_KINDS.find(k => k.id === a);
-      h += '<p class="small"><b>' + esc(t('td.fit.kind.' + kd.id + '.t')) + '</b> · ' + esc(t('td.fit.kind.' + kd.id + '.d')) + '</p>';
-      h += '<p class="small ' + (v === 'best' ? 'good' : v === 'ok' ? 'hint' : 'bad') + '">' + esc(v === 'ok' ? t('td.fit.ok', { kind: t('td.fit.kind.' + J.best + '.t') }) : t('td.fit.' + v)) + '</p>';
-      if (v === 'best') h += '<p class="small">' + esc(t('td.fit.job.' + J.id + '.why')) + '</p>';
-      else if (view.fitShow === J.id) h += '<p class="small">' + esc(t('td.fit.answer', { kind: t('td.fit.kind.' + J.best + '.t') })) + ' ' + esc(t('td.fit.job.' + J.id + '.why')) + '</p>';
-      else h += '<button type="button" class="link" data-fit-show>' + esc(t('td.fit.show')) + '</button>';
-    }
-    const nx = TD.FIT_JOBS.findIndex((j, k) => k !== i && F.answers[j.id] !== j.best); if (v === 'best' && nx >= 0) h += ' <button type="button" class="btn primary" data-fit-job="' + nx + '">' + esc(t('agent.next')) + '</button>';
-    if (C.ok) { win(); h += '<p class="small good">' + esc(t('td.ch.jobs.done')) + '</p>'; }
-    return h + '<p class="small muted">' + esc(t('td.fit.note')) + '</p>' + doneNote() + reward();
-  }
-  /* ---- Evolve a circuit (src/engines/evolve.js): pick a job, the gates allowed and the room, and let evolution run;
-     the circuit it has now is shared with the studio's drawings above (S.evolve.code, src/v2/app.js syncDesign) ---- */
-  const evOf = () => { const o = S.evolve || {}; return (S.evolve = { job: EV.jobOf(o.job) ? o.job : 'vote', gates: EV.GATE_SETS[o.gates] ? o.gates : 'all', room: Number.isInteger(o.room) ? Math.max(EV.ROOM.min, Math.min(EV.ROOM.max, o.room)) : EV.ROOM.default, seed: Number.isInteger(o.seed) && o.seed > 0 ? o.seed : 1, code: typeof o.code === 'string' ? o.code : '' }); };
-  const evFresh = () => { const E = evOf(); view.ev = EV.start(E.job, { seed: E.seed, gates: E.gates, room: E.room }); view.evR = EV.step(view.ev, 0); E.code = ''; };
-  const evLoop = () => { if (!view.evRun || !el.isConnected) { view.evRun = false; return; }
-    /* as many generations as fit in a slice of each frame, so a slow screen does not slow the search */
-    const t0 = performance.now(); let R = EV.step(view.ev, 40); while (performance.now() - t0 < 12 && !(R.solved && R.gen - R.solvedAt > 3000) && R.gen < 20000) R = EV.step(view.ev, 40);
-    view.evR = R; const E = evOf();
-    if (R.solved) E.code = R.code.split('\n').filter(l => !/^\s*\/\//.test(l)).join('\n');
-    if (R.challenges.beat && !S.done[ch.id]) win();
-    const quiet = R.solved && R.gen - R.solvedAt > 3000;
-    if (quiet || R.gen >= 20000) view.evRun = false;
-    ctx.save(); draw(); fx(); if (view.evRun) requestAnimationFrame(evLoop); };
-  function evolve() {
-    const E = evOf(); if (!view.ev) evFresh();
-    const R = view.evR, J = EV.jobOf(E.job), code = R.code.split('\n').filter(l => !/^\s*\/\//.test(l)).join('\n');
-    let h = head() + '<p class="kicker">' + esc(t('evolve.ui.job')) + '</p><div class="chips tdby">' + EV.JOBS.map(j => '<button type="button" class="chipb' + (E.job === j.id ? ' on' : '') + '" data-ev-job="' + j.id + '" aria-pressed="' + (E.job === j.id) + '">' + esc(t('evolve.job.' + j.id)) + '</button>').join('') + '</div>';
-    h += '<p class="kicker">' + esc(t('evolve.ui.gates')) + '</p><div class="chips tdby">' + Object.keys(EV.GATE_SETS).map(g => '<button type="button" class="chipb' + (E.gates === g ? ' on' : '') + '" data-ev-gates="' + g + '" aria-pressed="' + (E.gates === g) + '">' + esc(t('evolve.gates.' + g)) + '</button>').join('') + '</div>';
-    h += '<label class="lab" for="ev-room"><b>' + esc(t('evolve.ui.room')) + '</b> <output>' + E.room + '</output></label><input type="range" id="ev-room" data-ev-room min="' + EV.ROOM.min + '" max="' + EV.ROOM.max + '" step="1" value="' + E.room + '">';
-    h += '<div class="chips"><button type="button" class="btn primary" data-ev-go>' + esc(t(view.evRun ? 'evolve.ui.stop' : 'evolve.ui.go')) + '</button><button type="button" class="chipb" data-ev-new>' + esc(t('evolve.ui.again')) + '</button></div>';
-    const f = R.correct / R.total, beat = R.solved && R.cells != null && R.cells < R.human;
-    h += '<div class="evread"><span><span class="small muted">' + esc(t('evolve.ui.gen')) + '</span><b class="mono">' + R.gen + '</b></span><span><span class="small muted">' + esc(t('evolve.ui.right')) + '</span><b class="mono">' + esc(t('evolve.ui.ofV', { a: R.correct, b: R.total })) + '</b></span><span><span class="small muted">' + esc(t('evolve.ui.used')) + '</span><b class="mono">' + R.gates + '</b></span><span><span class="small muted">' + esc(t('evolve.ui.cells')) + '</span><b class="mono ' + (beat ? 'good' : '') + '">' + (R.cells == null ? '—' : R.cells) + '</b></span></div>' +
-      '<div class="agbar evbar"><span style="width:' + (f * 100).toFixed(1) + '%"></span></div><p class="small muted">' + esc(t('evolve.ui.human', { n: J.human })) + '</p>';
-    h += '<p class="kicker">' + esc(t('evolve.ui.firstK')) + '</p><pre class="agcode mono">' + esc(code) + '</pre>';
-    h += '<p class="small ' + (R.solved ? (beat ? 'good' : 'hint') : 'muted') + '">' + esc(R.gen === 0 ? t('evolve.ui.start') : R.solved ? t('evolve.ui.solved', { n: R.solvedAt }) + ' ' + t(beat ? 'evolve.ui.beaten' : 'evolve.ui.notBeaten') : t('evolve.ui.start')) + '</p>';
-    if (S.done[ch.id]) h += '<p class="small good">' + esc(t('evolve.ch.beat.done')) + '</p><p class="small">' + esc(t('evolve.ui.nand')) + (R.challenges.nand ? ' ' + esc(t('evolve.ch.nand.done')) : '') + '</p>';
-    return h + '<p class="small muted">' + esc(t('evolve.ui.note')) + '</p>' + doneNote() + reward();
-  }
-  /* ---- Grow a crystal (src/engines/crystal.js, the Czochralski puller): dip a seed in molten silicon and pull it up
-     turning; set the pull speed and the melt's heat, and keep the crystal on its way: a thin neck, a wide shoulder, a
-     body held at 300 mm, a tail tapered before it is lifted off. Time runs faster in the slow phases. ---- */
-  const czSet = () => { const o = view.cz || (view.cz = { pull: CZ.PULL_DEFAULTS.pull, temp: CZ.PULL_DEFAULTS.temp, rot: CZ.PULL_DEFAULTS.rot, auto: false }); return o; };
-  const czLoop = now => { if (!view.czRun || !el.isConnected) { view.czRun = false; return; }
-    /* time follows the clock, so a slow device grows the same crystal in the same time, in bigger steps */
-    const dtS = Math.min(0.5, (now - (view.czT || now)) / 1000); view.czT = now;
-    const st = view.czS, ph = st.phase || 'dip', min = CZ.PULL_TIMESCALE[ph] * dtS * (view.czFast ? 8 : 1);
-    view.czS = CZ.pullStep(st, min, czSet()); view.czSeen.push(view.czS);
-    if (CZ.pullMet(view.czSeen)) win();
-    if (view.czS.done) view.czRun = false;
-    draw(); fx(); if (view.czRun) requestAnimationFrame(czLoop); };
-  function czSvg(st) {
-    /* the ingot so far, side on: its length down the page, its diameter across, the band that becomes wafers */
-    const W = 300, H = 230, cx = W / 2, top = 10, len = Math.max(600, st.L + 60), k = (H - 60) / len, sx = 0.32;
-    const pts = st.hist.concat([[st.L, st.D]]), side = sgn => pts.map(([L, D]) => (cx + sgn * D / 2 * sx).toFixed(1) + ',' + (top + L * k).toFixed(1)).join(' ');
-    const meltY = top + st.L * k + 6, meltH = Math.max(4, 40 * st.melt / CZ.PULL.melt);
-    return '<figure class="czfig"><svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="' + esc(t('cz.aria', { d: Math.round(st.D), l: Math.round(st.L) })) + '">' +
-      '<line class="band" x1="' + (cx - 150 * sx) + '" x2="' + (cx - 150 * sx) + '" y1="' + top + '" y2="' + (H - 10) + '"/><line class="band" x1="' + (cx + 150 * sx) + '" x2="' + (cx + 150 * sx) + '" y1="' + top + '" y2="' + (H - 10) + '"/>' +
-      '<polygon class="ingot" points="' + side(-1) + ' ' + side(1).split(' ').reverse().join(' ') + '"/>' +
-      '<rect class="melt" x="' + (cx - 80) + '" y="' + meltY.toFixed(1) + '" width="160" height="' + meltH.toFixed(1) + '" rx="6"/>' +
-      '<path class="crucible" d="M' + (cx - 86) + ' ' + (meltY - 4).toFixed(1) + 'v' + (meltH + 8).toFixed(1) + 'q0 6 6 6h148q6 0 6-6v-' + (meltH + 8).toFixed(1) + '"/>' +
-      '<text class="ax" x="' + (cx + 150 * sx + 4) + '" y="' + (top + 10) + '">' + esc(t('cz.band')) + '</text></svg></figure>';
-  }
-  function puller() {
-    const set = czSet(); if (!view.czS) { view.czS = CZ.pullStart(); view.czSeen = [view.czS]; }
-    const st = view.czS, ph = st.phase || 'dip';
-    let h = head() + '<ol class="czph">' + CZ.PULL_PHASES.map(p => '<li class="' + (p === ph ? 'on' : CZ.PULL_PHASES.indexOf(p) < CZ.PULL_PHASES.indexOf(ph) ? 'past' : '') + '">' + esc(t('cz.phase.' + p)) + '</li>').join('') + '</ol>';
-    h += '<div class="betview">' + czSvg(st) + '<div class="czread">' +
-      [['d', t('cz.mm', { v: st.D < 20 ? st.D.toFixed(1) : Math.round(st.D) })], ['l', t('cz.mm', { v: Math.round(st.L) })], ['melt', t('cz.kg', { v: Math.round(st.melt) })], ['wafers', String(st.wafers || 0)]].map(([k2, v]) => '<span><span class="small muted">' + esc(t('cz.r.' + k2)) + '</span><b class="mono">' + esc(v) + '</b></span>').join('') +
-      '<span class="wide"><span class="small muted">' + esc(t('cz.r.target')) + '</span><b class="mono">' + esc(t('cz.mm', { v: Math.round(st.target || CZ.pullTarget(set.pull, set.temp)) })) + '</b></span>' +
-      '<span class="wide ' + (st.dislocations === 'none' ? 'good' : 'bad') + '"><b class="small">' + esc(t('cz.disl.' + (st.dislocations || 'none'))) + '</b></span></div></div>';
-    h += '<p class="small ' + (st.msg === 'done' ? 'good' : st.msg === 'neckfail' || st.msg === 'shock' || st.msg === 'thin' ? 'bad' : '') + '">' + esc(t('cz.msg.' + (st.msg || 'neck'), { wafers: st.wafers || 0 })) + '</p>';
-    if (st.rotation && st.rotation !== 'ok') h += '<p class="small hint">' + esc(t('cz.rotation.' + st.rotation)) + '</p>';
-    const R = CZ.PULL_RANGE, slider = (k2, step) => '<label class="lab" for="cz-' + k2 + '"><b>' + esc(t('cz.set.' + k2)) + '</b> <output>' + esc(t('cz.v.' + k2, { v: set[k2] })) + '</output></label><input type="range" id="cz-' + k2 + '" data-cz="' + k2 + '" min="' + R[k2][0] + '" max="' + R[k2][1] + '" step="' + step + '" value="' + set[k2] + '"' + (set.auto && k2 !== 'rot' ? ' disabled' : '') + '>';
-    h += slider('pull', 0.05) + slider('temp', 0.5) + slider('rot', 1);
-    h += '<div class="chips"><button type="button" class="btn primary" data-cz-go' + (st.done ? ' disabled' : '') + '>' + esc(t(view.czRun ? 'cz.pause' : st.L > 0 ? 'cz.resume' : 'cz.start')) + '</button><button type="button" class="chipb" data-cz-fast aria-pressed="' + !!view.czFast + '">' + esc(t('cz.fast')) + '</button><button type="button" class="chipb" data-cz-auto aria-pressed="' + set.auto + '">' + esc(t('cz.auto')) + '</button><button type="button" class="chipb" data-cz-reset>' + esc(t('cz.reset')) + '</button></div>';
-    if (S.done[ch.id]) h += '<p class="small good">' + esc(t('fab.ch.crystal.done')) + '</p>';
-    return h + '<p class="small muted">' + esc(t('cz.note')) + '</p>' + doneNote() + reward();
-  }
-  /* ---- Verify the agent: eight proposals from an AI agent; check each with the lab's own engines, then trust it or
-     reject it for its real flaw (src/data/agent.js). The facts come from the lab's dated file when asked for. ---- */
-  let FACTS = null;
-  const factsNow = () => FACTS ? Promise.resolve(FACTS) : fetch('src/data/facts.json').then(r => r.json()).then(j => (FACTS = Object.fromEntries((j.facts || []).map(f => [f.id, f]))), () => (FACTS = {}));
-  const agentOf = () => (S.agent = Agent.normalAgent(S.agent));
-  function agentTool(c) {
-    const a = c.art, T = view.ag[c.id] || (view.ag[c.id] = {});
-    const k = (n, v) => '<span class="small muted">' + esc(n) + '</span> <b class="mono">' + esc(v) + '</b>';
-    if (a.kind === 'tiny' || a.kind === 'cov') {
-      const code = T.code != null ? T.code : a.code;
-      let h = '<p class="kicker">' + esc(t('agent.tool.tiny')) + '</p><textarea class="agcode mono" data-ag-code rows="' + Math.max(2, code.split('\n').length) + '" spellcheck="false" aria-label="' + esc(t('agent.tool.codeAria')) + '">' + esc(code) + '</textarea>' +
-        '<div class="chips"><button type="button" class="chipb" data-ag-run>' + esc(t('agent.tool.verify')) + '</button>' + (T.code != null && T.code !== a.code ? '<button type="button" class="link" data-ag-reset>' + esc(t('agent.tool.reset')) + '</button>' : '') + '</div>';
-      if (T.ran) { const R = Agent.tinyCheck(code, a.ins, a.outs, a.f), key = r => a.ins.map(n => r.v[n]).join('');
-        if (R.errs.length) h += '<p class="small bad">' + esc(t('agent.tool.errs')) + '</p>';
-        else h += '<p class="small ' + (R.bad.length ? 'bad' : 'good') + '">' + esc(R.bad.length ? t('agent.tool.bad', { n: R.bad.length, total: R.rows.length }) : t('agent.tool.allOk', { total: R.rows.length })) + '</p>' +
-          '<table class="agtt mono"><thead><tr>' + a.ins.map(n => '<th>' + esc(n) + '</th>').join('') + a.outs.map(n => '<th>' + esc(n) + '</th><th class="muted">' + esc(t('agent.tool.want')) + '</th>').join('') + '<th></th></tr></thead><tbody>' +
-          R.rows.map(r => '<tr class="' + (r.ok ? '' : 'bad') + (a.tested && a.tested.includes(key(r)) ? ' tried' : '') + '">' + a.ins.map(n => '<td>' + r.v[n] + '</td>').join('') + a.outs.map(n => '<td>' + r.got[n] + '</td><td class="muted">' + r.want[n] + '</td>').join('') + '<td class="small">' + (a.tested && a.tested.includes(key(r)) ? esc(t('agent.tool.tried')) : '') + '</td></tr>').join('') + '</tbody></table>'; }
-      return h;
-    }
-    if (a.kind === 'asm') { const n = T.n != null ? T.n : a.tried;
-      let h = '<p class="kicker">' + esc(t('agent.tool.asm')) + '</p><pre class="agcode mono">' + esc(a.code) + '</pre><label class="lab" for="ag-n"><b>' + esc(t('agent.tool.n')) + '</b> <output>' + n + '</output></label><input type="range" id="ag-n" data-ag-n min="0" max="' + a.data.length + '" step="1" value="' + n + '">' +
-        '<p class="small muted">' + esc(t('agent.tool.data', { list: a.data.join(', ') })) + '</p><button type="button" class="chipb" data-ag-run>' + esc(t('agent.tool.run')) + '</button>';
-      if (T.ran) { const R = Agent.sumRun(a.code, a.data, n); h += '<p class="small ' + (R.ok ? 'good' : 'bad') + '">' + esc(R.ok ? t('agent.tool.sumOk', { v: R.a0 }) : R.err ? t('agent.tool.crash', { steps: R.steps }) : t('agent.tool.sumBad', { v: R.a0, want: R.want })) + '</p>'; }
-      return h;
-    }
-    if (a.kind === 'asm2') { const [x, y] = T.ab || a.tried;
-      let h = '<p class="kicker">' + esc(t('agent.tool.asm')) + '</p><pre class="agcode mono">' + esc(a.code) + '</pre><div class="agab"><label>' + esc(t('agent.tool.a')) + ' <input type="number" min="0" max="1000" data-ag-a value="' + x + '"></label><label>' + esc(t('agent.tool.b')) + ' <input type="number" min="0" max="1000" data-ag-b value="' + y + '"></label><button type="button" class="chipb" data-ag-run>' + esc(t('agent.tool.run')) + '</button></div>';
-      if (T.ran) { const R = Agent.asmRun(a.code, [x, y], 0x1000), ok = !R.err && !R.errs && R.a0 === x * y; h += '<p class="small ' + (ok ? 'good' : 'bad') + '">' + esc(ok ? t('agent.tool.mulOk', { a: x, b: y, v: R.a0, steps: R.steps }) : t('agent.tool.mulBad', { a: x, b: y, v: R.a0 })) + '</p>'; }
-      return h;
-    }
-    if (a.kind === 'yield') { const area = T.area != null ? T.area : a.area, d0 = T.d0 != null ? T.d0 : a.d0, y = Agent.poissonYield(area, d0);
-      return '<p class="kicker">' + esc(t('agent.tool.yield')) + '</p><div class="agab"><label>' + esc(t('agent.tool.area')) + ' <input type="number" min="1" max="900" data-ag-area value="' + area + '"></label><label>' + esc(t('agent.tool.d0')) + ' <input type="number" min="0" max="2" step="0.01" data-ag-d0 value="' + d0 + '"></label></div>' +
-        '<p class="small">' + esc(t('agent.tool.yieldV', { cm: (area / 100).toFixed(2), d0, v: (y * 100).toFixed(1) })) + '</p><div class="agbar"><span style="width:' + (y * 100).toFixed(1) + '%"></span></div>';
-    }
-    if (a.kind === 'roof') { const x2 = !!T.x2, D = Agent.decodeTime(a.params, a.bytes, a.bw, a.pf * (x2 ? 2 : 1)), base = Agent.decodeTime(a.params, a.bytes, a.bw, a.pf), ms = v => (v * 1000).toFixed(v < 0.001 ? 3 : 1);
-      const w = v => Math.max(0.6, v / base.t * 100).toFixed(1);
-      return '<p class="kicker">' + esc(t('agent.tool.roof')) + '</p><p class="small muted">' + esc(t('agent.tool.roofSet', { p: a.params, bw: a.bw, pf: a.pf * (x2 ? 2 : 1) })) + '</p>' +
-        '<div class="agrace"><span class="small">' + esc(t('agent.tool.read')) + '</span><span class="agbar"><span style="width:' + w(D.mem) + '%"></span></span><b class="mono small">' + esc(t('agent.tool.ms', { v: ms(D.mem) })) + '</b>' +
-        '<span class="small">' + esc(t('agent.tool.math')) + '</span><span class="agbar hot"><span style="width:' + w(D.math) + '%"></span></span><b class="mono small">' + esc(t('agent.tool.ms', { v: ms(D.math) })) + '</b></div>' +
-        '<p class="small">' + esc(t('agent.tool.roofV', { tps: Math.round(1 / D.t), was: Math.round(1 / base.t) })) + '</p><button type="button" class="chipb" data-ag-x2 aria-pressed="' + x2 + '">' + esc(t(x2 ? 'agent.tool.x1' : 'agent.tool.x2')) + '</button>';
-    }
-    if (a.kind === 'fact') {
-      if (!T.ran) return '<p class="kicker">' + esc(t('agent.tool.fact')) + '</p><button type="button" class="chipb" data-ag-run>' + esc(t('agent.tool.lookup')) + '</button>';
-      const f = FACTS && FACTS[a.fact];
-      return '<p class="kicker">' + esc(t('agent.tool.fact')) + '</p>' + (f ? '<div class="agfact"><b>' + esc(f.label) + ': ' + esc(f.value) + '</b><span class="small muted">' + esc(t('agent.tool.factSrc', { src: f.source, kind: f.kind, date: f.verified || f.date || '' })) + '</span>' + (f.url ? '<a class="small" href="' + esc(f.url) + '" target="_blank" rel="noopener">' + esc(t('agent.tool.open')) + '</a>' : '') + '</div>' : '<p class="small muted">' + esc(t('agent.tool.loading')) + '</p>');
-    }
-    return '';
-  }
-  function agentDesk() {
-    const A = agentOf(), C = Agent.checkAgent(A), id = view.agc || (Agent.CASES.find(c => !A[c.id] || !Agent.score(c, A[c.id].decision, A[c.id].reason).ok) || Agent.CASES[0]).id, c = Agent.caseOf(id);
-    view.agc = id; view.ag = view.ag || {};
-    let h = head() + '<div class="agprog"><p class="kicker">' + esc(t('agent.progress', { n: C.done, total: C.total })) + '</p><div class="agcases">' + Agent.CASES.map((x, i) => { const d = A[x.id], st = d ? (Agent.score(x, d.decision, d.reason).ok ? 'ok' : 'no') : '';
-      return '<button type="button" class="agcase ' + st + (x.id === id ? ' on' : '') + '" data-ag-case="' + x.id + '" aria-pressed="' + (x.id === id) + '"><span class="n">' + (i + 1) + '</span><span class="small">' + esc(t('agent.case.' + x.id + '.t')) + '</span></button>'; }).join('') + '</div></div>';
-    const a = c.art, d = A[id];
-    h += '<p class="kicker">' + esc(t('agent.caseN', { n: Agent.CASES.indexOf(c) + 1, area: t('agent.area.' + c.area) })) + '</p><h4 class="agt">' + esc(t('agent.case.' + id + '.t')) + '</h4>' +
-      '<div class="say you"><span class="who small">' + esc(t('agent.you')) + '</span>' + esc(t('agent.case.' + id + '.ask')) + '</div>' +
-      '<div class="say ai"><span class="who small">' + esc(t('agent.ai')) + '</span>' + esc(t('agent.case.' + id + '.says')) + (a.kind === 'tiny' || a.kind === 'cov' ? '<pre class="agcode mono">' + esc(a.code) + '</pre>' : '') + '</div>' +
-      '<div class="agtool">' + agentTool(c) + '</div>';
-    if (!d || view.agRedo === id) {
-      h += '<p class="kicker">' + esc(t('agent.decide')) + '</p><div class="chips"><button type="button" class="btn" data-ag-trust>' + esc(t('agent.trust')) + '</button><button type="button" class="btn" data-ag-reject aria-pressed="' + (view.agReject === id) + '">' + esc(t('agent.reject')) + '</button></div>';
-      if (view.agReject === id) h += '<p class="small">' + esc(t('agent.why')) + '</p><div class="agreasons">' + [0, 1, 2, 3].map(i => '<button type="button" class="agr" data-ag-reason="' + i + '">' + esc(t('agent.case.' + id + '.r' + i)) + '</button>').join('') + '</div>';
-    } else {
-      const S0 = Agent.score(c, d.decision, d.reason);
-      h += '<div class="agverdict ' + (S0.ok ? 'good' : 'bad') + '"><b>' + esc(t(S0.ok ? 'agent.right' : S0.rightCall ? 'agent.halfRight' : 'agent.wrong')) + '</b> <span class="small muted">' + esc(t('agent.skill.' + c.skill + '.t')) + ': ' + esc(t('agent.skill.' + c.skill + '.d')) + '</span></div>' +
-        '<p class="small">' + esc(t('agent.case.' + id + '.why')) + '</p>' + (c.at ? '<a class="small" href="' + esc(c.at) + '">' + esc(t('agent.inWorld')) + '</a> ' : '') + '<button type="button" class="link" data-ag-redo>' + esc(t('agent.again')) + '</button>';
-      const nx = Agent.CASES.find(x => !A[x.id]); if (nx) h += ' <button type="button" class="btn primary" data-ag-case="' + nx.id + '">' + esc(t('agent.next')) + '</button>';
-    }
-    if (C.ok) win();
-    return h + doneNote() + reward();
-  }
   /* ---- the pieces' bet: one big piece, or many joined in one package; test each first, or not ---- */
   function betPieces() {
     const b = betOf(), G = Bet.PIECE_GUESSES, right = Bet.piecesAnswer();
@@ -691,7 +503,7 @@ export function play(el, ch, ctx) {
   /* bring what just changed into view inside the sheet */
   const show = sel => { const n = el.querySelector(sel); if (n && n.scrollIntoView) n.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); };
   function draw() {
-    const f = ch.kind === 'design' ? design : ch.kind === 'chip' ? chip : ch.kind === 'life' ? life : ch.kind === 'break' ? brk : ch.kind === 'bet' ? bet : ch.kind === 'agent' ? agentDesk : ch.kind === 'teardown' ? teardown : ch.kind === 'fit' ? fitJobs : ch.kind === 'evolve' ? evolve : ch.kind === 'pull' ? puller : spot;
+    const f = ch.kind === 'design' ? design : ch.kind === 'chip' ? chip : ch.kind === 'life' ? life : ch.kind === 'break' ? brk : ch.kind === 'bet' ? bet : lab ? lab.draw : spot;
     const html = '<div class="player">' + f() + '</div>', old = el.firstElementChild;
     if (!old || !old.classList.contains('player')) el.innerHTML = html;
     else { const tpl = document.createElement('template'); tpl.innerHTML = html; patch(old, tpl.content.firstElementChild); }
@@ -717,9 +529,12 @@ export function play(el, ch, ctx) {
     view.okG = ok;
     if (view.won) { anim(el.querySelector('.won'), [{ transform: 'scale(.92)', opacity: 0 }, { transform: 'scale(1)', opacity: 1 }], { duration: 520 }); view.won = false; }
   }
+  /* a lab of its own file answers its own events first (src/v2/labs) */
+  lab = LABS[ch.kind] ? LABS[ch.kind]({ S, view, ch, ctx, el, esc, t, head, reward, doneNote, win, draw, fx, show }) : null;
   el.onclick = e => {
     const q = s => e.target.closest(s);
     if (q('[data-back]')) return ctx.back();
+    if (lab && lab.click(e)) return;
     /* the ledger: a tick of a case, the lab's own test, keeping your work as an entry, the slip's buttons */
     const tk = q('[data-tick]'); if (tk) { const v = view.seq[+tk.dataset.tick], k = tk.dataset.in; v[k] = v[k] ? 0 : 1; view.tried = true; view.slip = null; const R = runCase(ch.p, world(S).byId[ch.of].code, view.seq); if (R.first >= 0) win(); draw(); if (R.first >= 0) { fx('check'); show('.verdict'); } return; }
     if (q('[data-labtest]')) { const proj = projectOf(ch.p); view.seq = testOf({ proj }).slice(0, TICKS).map(v => Object.assign({}, v)); return draw(); }
@@ -753,39 +568,6 @@ export function play(el, ch, ctx) {
     const pt = q('[data-pat]'); if (pt) { view.tests.push(+pt.dataset.pat); view.wrong = null; return draw(); }
     const gs = q('[data-guess]'); if (gs) { const k = +gs.dataset.guess; if (k === spotCase(spotCode(S)).broken) { view.guess = k; win(); } else view.wrong = k; draw(); fx(); if (view.wrong === k) anim(el.querySelector('p.bad'), [{ transform: 'translateX(-6px)' }, { transform: 'translateX(5px)' }, { transform: 'translateX(0)' }], { duration: 300 }); return show('.won, .verdict, p.bad'); }
     if (q('[data-again]')) { view.tests = []; view.wrong = null; view.guess = null; return draw(); }
-    /* Evolve a circuit */
-    const evj = q('[data-ev-job]'); if (evj) { evOf().job = evj.dataset.evJob; view.evRun = false; evFresh(); ctx.save(); return draw(); }
-    const evg = q('[data-ev-gates]'); if (evg) { evOf().gates = evg.dataset.evGates; view.evRun = false; evFresh(); ctx.save(); return draw(); }
-    if (q('[data-ev-new]')) { evOf().seed += 1; view.evRun = false; evFresh(); ctx.save(); return draw(); }
-    if (q('[data-ev-go]')) { view.evRun = !view.evRun; draw(); if (view.evRun) requestAnimationFrame(evLoop); return; }
-    /* Grow a crystal */
-    if (q('[data-cz-go]')) { view.czRun = !view.czRun; view.czT = null; draw(); if (view.czRun) requestAnimationFrame(czLoop); return; }
-    if (q('[data-cz-fast]')) { view.czFast = !view.czFast; return draw(); }
-    if (q('[data-cz-auto]')) { const o = czSet(); o.auto = !o.auto; return draw(); }
-    if (q('[data-cz-reset]')) { view.czRun = false; view.czS = null; return draw(); }
-    /* Look inside, and the right chip for the job */
-    const tdo = q('[data-td-open]'); if (tdo) { const D = tdOf(); D.at = tdo.dataset.tdOpen; if (!D.opened.includes(D.at)) D.opened.push(D.at); view.tdChip = null; ctx.save(); draw(); return show('.tdboard'); }
-    const tdb = q('[data-td-by]'); if (tdb) { tdOf().by = tdb.dataset.tdBy; ctx.save(); return draw(); }
-    const tdc = q('[data-td-chip]'); if (tdc) { view.tdChip = view.tdChip === tdc.dataset.tdChip ? null : tdc.dataset.tdChip; draw(); return show('.tdsel'); }
-    if (q('[data-td-check]')) { const D = tdOf(), inp = el.querySelector('[data-td-count]'); D.count = inp && inp.value !== '' ? Math.round(+inp.value) : null; view.tdTried = true; ctx.save(); draw(); fx(); return show('.won, p.bad'); }
-    const fj = q('[data-fit-job]'); if (fj) { view.fitJob = +fj.dataset.fitJob; view.fitShow = null; draw(); return show('.agt'); }
-    const fk = q('[data-fit-kind]'); if (fk) { const F = fitOf(), i = view.fitJob != null ? view.fitJob : Math.max(0, TD.FIT_JOBS.findIndex(j => F.answers[j.id] !== j.best)); view.fitJob = i; F.answers[TD.FIT_JOBS[i].id] = fk.dataset.fitKind; ctx.save(); draw(); fx(); return; }
-    if (q('[data-fit-show]')) { const i = view.fitJob != null ? view.fitJob : 0; view.fitShow = TD.FIT_JOBS[i].id; return draw(); }
-    /* Verify the agent */
-    const agc = q('[data-ag-case]'); if (agc) { view.agc = agc.dataset.agCase; view.agReject = null; view.agRedo = null; draw(); return show('.agt'); }
-    if (e.target.closest('[data-ev-room]')) { evOf().room = +e.target.value; view.evRun = false; evFresh(); ctx.save(); return draw(); }
-    const czr = e.target.closest('[data-cz]'); if (czr) { czSet()[czr.dataset.cz] = +czr.value; if (view.czS) view.czS = CZ.pullStep(view.czS, 0, czSet()); return draw(); }
-    if (ch.kind === 'agent') { const c = Agent.caseOf(view.agc), T = c && (view.ag[c.id] = view.ag[c.id] || {});
-      if (c && q('[data-ag-run]')) { T.ran = true; const ta = el.querySelector('[data-ag-code]'); if (ta) T.code = ta.value;
-        if (c.art.kind === 'asm2') T.ab = [+el.querySelector('[data-ag-a]').value || 0, +el.querySelector('[data-ag-b]').value || 0].map(v => Math.max(0, Math.min(1000, Math.round(v))));
-        if (c.art.kind === 'fact') { draw(); factsNow().then(() => draw()); return; }
-        draw(); return show('.agtool'); }
-      if (c && q('[data-ag-reset]')) { T.code = null; T.ran = false; return draw(); }
-      if (c && q('[data-ag-x2]')) { T.x2 = !T.x2; return draw(); }
-      if (c && q('[data-ag-trust]')) { const A = agentOf(); A[c.id] = { decision: 'trust', reason: null }; view.agRedo = null; view.agReject = null; ctx.save(); draw(); fx(); return show('.agverdict'); }
-      if (c && q('[data-ag-reject]')) { view.agReject = c.id; draw(); return show('.agreasons'); }
-      const rs = q('[data-ag-reason]'); if (c && rs) { const A = agentOf(); A[c.id] = { decision: 'reject', reason: +rs.dataset.agReason }; view.agRedo = null; view.agReject = null; ctx.save(); draw(); fx(); return show('.agverdict'); }
-      if (c && q('[data-ag-redo]')) { view.agRedo = c.id; return draw(); } }
     const gbt = q('[data-guess-bt]'); if (gbt) { betOf().guess = +gbt.dataset.guessBt; ctx.save(); draw(); fx(); return show('.betview'); }
     const gj = q('[data-guess-jv]'); if (gj) { betOf().guess = +gj.dataset.guessJv; ctx.save(); draw(); fx(); return show('.betview'); }
     const gv = q('[data-guess-pv]'); if (gv) { betOf().guess = +gv.dataset.guessPv; ctx.save(); draw(); fx(); return show('.pblocks'); }
@@ -796,13 +578,9 @@ export function play(el, ch, ctx) {
     if (q('[data-reguess]')) { betOf().guess = null; ctx.save(); return draw(); }
   };
   el.oninput = e => {
+    if (lab && lab.input(e)) return;
     const r = e.target.closest('[data-set]');
     if (r) { const k = r.dataset.set, v = +r.value; S.chip[k] = k === 'clock' ? CLOCKS[v] : v; ctx.save(); draw(); fx(); return; }
-    if (ch.kind === 'agent') { const c = Agent.caseOf(view.agc), T = c && (view.ag[c.id] = view.ag[c.id] || {});
-      if (c && e.target.closest('[data-ag-n]')) { T.n = +e.target.value; T.ran = true; return draw(); }
-      if (c && e.target.closest('[data-ag-area]')) { T.area = Math.max(1, Math.min(900, +e.target.value || 1)); return draw(); }
-      if (c && e.target.closest('[data-ag-d0]')) { T.d0 = Math.max(0, Math.min(2, +e.target.value || 0)); return draw(); }
-      if (c && e.target.closest('[data-ag-code]')) { T.code = e.target.value; return; } }
     const bd = e.target.closest('[data-bet]'); if (bd) { betOf()[bd.dataset.bet] = +bd.value; ctx.save(); draw(); fx(); return; }
     if (e.target.closest('[data-margin]')) { const c = normalLife(S.life[ch.mission]); c.margin = +e.target.value; S.life[ch.mission] = c; ctx.save(); draw(); }
   };

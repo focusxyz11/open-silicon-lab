@@ -12,7 +12,7 @@ const root = new URL('..', import.meta.url);
 const read = p => readFileSync(new URL(p, root), 'utf8');
 const EN = JSON.parse(read('src/i18n/en.json'));
 /* The code that draws something for a reader. */
-const SHELL = ['src/main2.js'].concat(...['src/app/', 'src/core/', 'src/v2/'].map(d => readdirSync(new URL(d, root)).filter(f => f.endsWith('.js')).map(f => d + f)));
+const SHELL = ['src/main2.js'].concat(...['src/app/', 'src/core/', 'src/v2/', 'src/v2/labs/'].map(d => readdirSync(new URL(d, root)).filter(f => f.endsWith('.js')).map(f => d + f)));
 const LANGS = readdirSync(new URL('src/i18n/', root)).filter(f => f.endsWith('.json')).map(f => f.slice(0, -5));
 
 test('the shell has no visible English in its code (put it in src/i18n/en.json)', () => {
