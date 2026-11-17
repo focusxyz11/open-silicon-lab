@@ -1141,7 +1141,7 @@ export function createMap(canvas, host, on = {}) {
     wfTags.forEach(T => { T.el.remove(); const i = L.list.indexOf(T); if (i >= 0) L.list.splice(i, 1); }); wfTags = []; };
   function whatif(state) {
     const on = !!state; host.classList.toggle('whatif', on); wfWant = on ? 1 : 0;
-    if (!on) { wfTags.forEach(T => { T.show = false; }); if (lens === 'whatif') setLens('look'); return; }
+    if (!on) { wfTags.forEach(T => { T.show = false; T.el.style.opacity = '0'; T.el.style.pointerEvents = 'none'; }); if (lens === 'whatif') setLens('look'); return; }
     if (lens !== 'whatif') setLens('whatif');
     wfClear();
     state.heads.forEach(h => { const p = placeAt(h.place); if (!p) return; const r = p.far ? 9 : 5.5, col = h.up ? P.warm : P.accent;
