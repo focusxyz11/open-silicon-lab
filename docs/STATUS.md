@@ -29,6 +29,7 @@ Where the lab stands, and what is ready to be built next. Read this first when s
 - Visuals over words.
 - Nothing cartoonish.
 - Feedback goes through GitHub only (issues, *Break it*).
+- People's feedback is outside the loop: anyone may break the lab at any time, for any reason. It is never a planned stage, a roadmap item or a task.
 - Desktop first where it is richer; the phone gets a simpler design or less content, never the other way round.
 - One home for every thing (the atlas); words only in `en.json`; figures only in `facts.json`.
 - Not decided yet: whether the site has a menu (`?menu=1` shows one, to compare).
@@ -71,7 +72,6 @@ Each task below is self-contained and can be handed to Claude Code on the web as
    - The EUV holes can show 0 of 9 out of spec at the lowest dose, so the speed-against-quality lesson may not appear; pick a seed or a sample that shows it.
    - A 404 in the console on the factory labs, not traced.
    - Move each engine's remaining `WORDS` into `en.json` as its views are built (`aiserve`, `analog`, `aibuild`, `clockpower`, `paradigms`, `fabline`, `etch`, `dope`, `litho`).
-8. **Try it with people:** (#223) three to five learners, from a child to an engineer, while someone watches where they get stuck (ROADMAP item 9). Not a code task, but the next most useful thing.
 
 ## Ideas still to bring over
 
