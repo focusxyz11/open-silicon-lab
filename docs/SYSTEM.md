@@ -103,7 +103,8 @@ sits on a **seam** of the grid: between two levels (crossed going in or out) or 
 along). The two moves are how you meet them: the first time you cross a seam, its leak rises beside the view
 (`seamOf` in `src/engines/way.js`), then waits under Ask. A question joins when someone real was stuck on it, it
 opened something, and part of it is still open; its words are `field.<id>.*`, with who asked it and where to read it
-in their words. Empty columns of the grid (Test, Ship) and places with none yet (the quarry, the tools, the
+in their words. A bet becomes a challenge (kind `bet`, its engine in `src/engines/bet.js`): first a guess, then two dials and a picture
+the engine counts from, until the three primitives balance; the first is Moore's bet at the wafer. Places with none yet (the quarry, the tools, the
 materials, the power) are where to look next.
 
 ## 3. Six kinds of view

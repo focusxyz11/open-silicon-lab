@@ -10,6 +10,7 @@ import { collect, FOLDER } from '../scripts/ledger.mjs';
 import { ledger, settle, settled, checkEntry, tryEntry, draft, fileOf, proposeUrl, frontier, runCase, standing, questionsAt, reportsAt, KINDS, MADE, DIR } from '../src/engines/ledger.js';
 import { plan } from '../src/engines/build.js';
 import * as Game from '../src/v2/game.js';
+import { fieldOf } from '../src/data/questions.js';
 import { STOPS } from '../src/data/weave.js';
 
 const EN = JSON.parse(readFileSync(new URL('../src/i18n/en.json', import.meta.url), 'utf8'));
@@ -120,7 +121,8 @@ test('an entry becomes one file and one link: a new file in a pull request, noth
 test('every refusal has its words, and every challenge opens a real question', () => {
   const src = readFileSync(new URL('../src/engines/ledger.js', import.meta.url), 'utf8');
   for (const m of src.matchAll(/no\('(\w+)'/g)) assert.ok(EN['ledger.no.' + m[1]], 'no words for the refusal ' + m[1]);
-  for (const c of Game.CHALLENGES) assert.ok(STOPS[Game.OPENS[c.id]], c.id + ' opens no question');
+  /* a bet opens its question from the field (src/data/questions.js); every other challenge a stop */
+  for (const c of Game.CHALLENGES) assert.ok(c.kind === 'bet' ? fieldOf(c.bet) && fieldOf(c.bet).shape === 'bet' : STOPS[Game.OPENS[c.id]], c.id + ' opens no question');
   for (const k of Object.values(Game.FRONT_ASK)) assert.ok(STOPS[k]);
 });
 

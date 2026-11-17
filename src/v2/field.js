@@ -4,6 +4,7 @@
    what is still open, and how to try it here; the asker's own words are one tap away. */
 import { t } from '../core/i18n.js';
 import { fieldOf, fieldHome } from '../data/atlas.js';
+import { CHALLENGES } from './game.js';
 
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 const GLYPH = {
@@ -28,6 +29,7 @@ export const fieldLine = id => { const q = fieldOf(id); return q ? '<button type
 /* the card */
 export function fieldHtml(id) {
   const q = fieldOf(id); if (!q) return '';
+  const play = CHALLENGES.find(c => c.kind === 'bet' && c.bet === id);
   return '<div class="fieldx stopx" data-shape="' + q.shape + '"><p class="kicker fieldk">' + glyph(q.shape) + esc(t('field.shape.' + q.shape)) + ' · ' + esc(whereWords(q)) + '</p>' +
     '<p class="line trailq">' + esc(t('field.' + id + '.q')) + '</p>' +
     '<p class="small muted">' + esc(t('field.' + id + '.who')) + ' · <a href="' + esc(q.src) + '" target="_blank" rel="noopener">' + esc(t('field.ui.read')) + '</a></p>' +
@@ -35,6 +37,8 @@ export function fieldHtml(id) {
     '<dt>' + esc(t('field.ui.opened')) + '</dt><dd>' + esc(t('field.' + id + '.opened')) + '</dd>' +
     '<dt>' + esc(t('field.ui.open')) + '</dt><dd>' + esc(t('field.' + id + '.open')) + '</dd>' +
     '<dt>' + esc(t('field.ui.try')) + '</dt><dd>' + esc(t('field.try.' + q.shape)) + '</dd></dl>' +
+    /* a bet you can play: its challenge, one tap away */
+    (play ? '<a class="btn primary" href="#/do/' + esc(play.id) + '">' + esc(t('field.ui.play')) + '</a>' : '') +
     '<div class="nav"><button type="button" class="btn ghost" data-fieldleave>' + esc(t('field.ui.leave')) + '</button></div></div>';
 }
 

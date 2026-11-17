@@ -12,7 +12,7 @@ export default [
   { id: 'make-months', strand: 3, at: ['clean'], ch: ['months'], engine: 'factory', lens: 'line', trade: ['time', 'cost'] },
   { id: 'make-room', strand: 3, stops: ['make.clean'], engine: null, lens: 'map', given: ['giant'], open: ['smallfab'] },
   { id: 'make-crystal', strand: 3, stops: ['make.crystal', 'make.slice'], engine: null, lens: 'line', given: ['silicon'] },
-  { id: 'make-round', strand: 3, stops: ['make.wafer'], engine: 'money', lens: 'copies', trade: ['yield', 'cost'] },
+  { id: 'make-round', strand: 3, stops: ['make.wafer'], ch: ['cheaper'], engine: 'money', lens: 'copies', trade: ['yield', 'cost'] },
   { id: 'make-cheap', strand: 3, stops: ['make.mcu'], engine: null, lens: 'copies', trade: ['cost', 'yield'] },
   { id: 'make-gates', strand: 4, stops: ['make.gates'], also: ['idea'], engine: 'logic', lens: 'forms', trade: ['area', 'work', 'energy'] },
   { id: 'make-order', strand: 4, at: ['switch'], engine: null, wants: 'process', lens: 'dive', trade: ['yield'] }

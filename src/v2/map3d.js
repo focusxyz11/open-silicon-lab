@@ -736,6 +736,7 @@ export function createMap(canvas, host, on = {}) {
     'masks': () => { const tr = truck(A.truck); box(tr, 2.6, 0.12, 1.2, glow(P.accent, 1.2), -0.9, 2.15, 0, 0.03, { cast: false }); scene.add(tr); moving.push({ obj: tr, path: route([[-31, -27], [-29, -20], [-27.5, -13], [-22, -6], [-14, -2], [-8, -6]]), speed: 0.05, ship: true, bounce: true }); },
     'studio-wing': g => { box(g, 8, 4.5, 6, glass(P.glass, { opacity: 0.55, emissive: night ? P.glass : 0, emissiveIntensity: night ? 0.4 : 0 }), 0, 0, 0, 0.3); box(g, 8.2, 0.4, 6.2, mat(P.white), 0, 4.5, 0, 0.1); },
     'fab-trucks': () => { for (let i = 0; i < 4; i++) onLoop(truck(A.box[(i + 3) % 5]), 0.12 + i * 0.25, 0.012, -0.7); },
+    'fab-wafers': g => { box(g, 9, 3.2, 6, mat(P.white), 0, 0, 0, 0.3); box(g, 9.2, 0.35, 6.2, mat(A.roof, { roughness: 0.7 }), 0, 3.2, 0, 0.1); for (let i = 0; i < 3; i++) box(g, 1.5, 1.3, 1.5, mat(P.wall), -3 + i * 3, 0, 3.9, 0.2); for (let i = 0; i < 7; i++) cyl(g, 1.25, 1.25, 0.07, metal(P.dark), 6.3, 0.25 + i * 0.2, 0, 32); },
     'fab-line': g => { box(g, 22, 6, 7, mat(P.white), 0, 0, 0, 0.4); box(g, 22.2, 0.7, 7.2, mat(A.roof, { roughness: 0.7 }), 0, 4.8, 0, 0.15); for (let i = 0; i < 4; i++) { box(g, 3, 1, 3, mat(P.wall), -7.5 + i * 5, 6, 0, 0.12); spinning.push(cyl(g, 1, 1, 0.18, metal(P.dark), -7.5 + i * 5, 7, 0, 18)); } },
     'test-probe': g => { cyl(g, 0.3, 0.4, 6, metal(P.metal), 0, 0, 0, 10); for (let i = 0; i < 3; i++) pulses.push(box(g, 0.5, 0.5, 0.5, glow([P.good, P.warm, P.accent][i], 1.4), 0, 2 + i * 1.6, 0.35, 0.1)); },
     'test-hall': g => { box(g, 9, 3.2, 7, mat(P.white), 0, 0, 0, 0.3); box(g, 9.1, 0.4, 7.1, mat(A.roof, { roughness: 0.7 }), 0, 2.6, 0, 0.1); },
@@ -750,7 +751,7 @@ export function createMap(canvas, host, on = {}) {
     'clock-tower': g => { box(g, 2.4, 9, 2.4, mat(P.white), 0, 0, 0, 0.2); const face = cyl(g, 1, 1, 0.2, mat(P.wall), 0, 7, 1.25, 24); face.rotation.x = Math.PI / 2; const hand = box(g, 0.12, 0.9, 0.08, mat(P.dark), 0, 6.95, 1.42, 0.02, { cast: false }); hand.geometry = hand.geometry.clone().translate(0, 0.4, 0); spinning.push({ hand }); }
   };
   /* where each growth stands, relative to its place: [x, z, y] */
-  const GROW_SPOT = { 'studio-screen': [-4, 9], masks: [0, 0], 'studio-wing': [-4, -12], 'fab-trucks': [0, 0], 'fab-line': [2, -14], 'test-probe': [3, 0, 4], 'test-hall': [11, 0],
+  const GROW_SPOT = { 'studio-screen': [-4, 9], masks: [0, 0], 'studio-wing': [-4, -12], 'fab-trucks': [0, 0], 'fab-line': [2, -14], 'fab-wafers': [-13, 9], 'test-probe': [3, 0, 4], 'test-hall': [11, 0],
     'island-phones': [0, 0], 'island-cars': [0, 0], 'dc-hall': [0, 10], 'dc-solar': [21, 4], 'clock-tower': [-8, -2] };
   GROWTH.forEach(gw => { const [x, z, y] = GROW_SPOT[gw.id] || [0, 0], g = group(G[gw.at], x, y || 0, z); g.visible = false; g.scale.setScalar(0.001); growing.push({ id: gw.id, g, built: false, t0: 0 }); });
 
