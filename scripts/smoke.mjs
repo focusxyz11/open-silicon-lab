@@ -561,6 +561,24 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
     await fp.evaluate(() => { location.hash = '#/'; });
     await fp.waitForFunction(() => !document.querySelector('#mapLabels .wf3') || [...document.querySelectorAll('#mapLabels .wf3')].every(e => e.style.opacity === '0'), null, { timeout: 10000 }).catch(() => problems.push(tag + ': What if? stays on the island after leaving it'));
     await fp.close(); }
+  /* something to do at a level (src/data/seek.js): the card says what to look for, a part tapped gives something to
+     notice, the part that leads in lights the question, and finding it is kept in your log. A page of its own (a
+     fresh visitor), since it moves between views; each tap is done again inside the poll, as the view may still be
+     making its card */
+  { const sp = await browser3d.newPage({ viewport }); sp.on('pageerror', e => problems.push(tag + ' (search): ' + e.message));
+    await sp.addInitScript(() => { try { localStorage.setItem('osl-hints-v1', JSON.stringify({ seen: {}, off: true })); } catch (e) { /* no storage */ } });
+    await sp.goto(base + 'index.html#/dive/gate');
+    await sp.waitForFunction(() => { const b = document.querySelector('#diveui .seek [data-seek="diff"]'); if (b && !b.classList.contains('looked')) b.click(); return !!document.querySelector('#diveui .seek .seeknote b') && !!document.querySelector('#diveui .seek:not(.found)'); }, null, { timeout: 90000, polling: 2000 })
+      .catch(() => problems.push(tag + ': at the gate, the card does not say what to look for, or a tapped part gives nothing to notice'));
+    await sp.waitForFunction(() => { const b = document.querySelector('#diveui .seek [data-seek="metal"]'); if (b && !b.classList.contains('looked')) b.click(); return !!document.querySelector('#diveui .seek.found') && !!document.querySelector('#diveui .askline.seeklit'); }, null, { timeout: 30000, polling: 1500 })
+      .catch(() => problems.push(tag + ': at the gate, the part that leads in does not light the question'));
+    await sp.evaluate(() => { location.hash = '#/place/datacentre/3'; });
+    await sp.waitForFunction(() => { const b = document.querySelector('#placeui .seek [data-seek="accelerator"]'); if (b && !b.classList.contains('looked')) b.click(); return !!document.querySelector('#placeui .seek.found') && !!document.querySelector('#placeui .askline.seeklit'); }, null, { timeout: 120000, polling: 3000 })
+      .catch(() => problems.push(tag + ': in the data centre\'s server, finding the part that does the sums does not light the question'));
+    await sp.evaluate(() => { location.hash = '#/log'; });
+    await sp.waitForFunction(() => document.querySelectorAll('#page .seeklog .strand').length === 2, null, { timeout: 20000, polling: 1000 })
+      .catch(() => problems.push(tag + ': your log does not keep what you found'));
+    await sp.close(); }
   /* a page of its own, so its moves do not mix with the zooms counted below */
   { const page = await browser3d.newPage({ viewport: { width: 1280, height: 800 } });
     page.on('pageerror', e => problems.push(tag + ' (way in): ' + e.message));

@@ -204,7 +204,7 @@ export function createDataCentre(canvas, host, on = {}) {
     ['die', pkg, W3(...onTop(300, 60, 0.006)), [4.6, 5.1]], ['hbm', pkg, W3(...onTop(1125, 820, 0.0065)), [4.6, 5.1]]
   ];
   const named = NAMES.map(([id, obj, at, lv]) => { const lb = L.add(obj, at, t('part.' + VIEW_PARTS.flight[id]), { cls: 'part3' }); lb.lv = lv; return lb; });
-  named.forEach((lb, i) => { lb.id = NAMES[i][0]; });
+  named.forEach((lb, i) => { lb.id = lb.el.dataset.hl = NAMES[i][0]; });
   /* the way in at each level: the thing you would enter next, where the shell's button stands with a ring on it */
   const INTO = [[scene, W3(0, HALL.h, -4.5)], [rack, W3(0, 1.2, 0.45)], [rack, W3(0.02, 1.0, 0.5)], [tray, W3(0, 0.08, 0.02)], [pkg, W3(0, 0.012, 0)], [pkg, W3(...onTop(500, 150, 0.006))]];
   const pv = new THREE.Vector3();
