@@ -28,7 +28,8 @@ import { FIGURES, CASES } from '../data/weave.js';
 import { fmtDate } from '../core/i18n.js';
 import { ROWS, ASK as CHIP_ASK } from './chip3d.js';
 import { signHtml, signOf, keep, refusal, slipHtml, slipClick, byLine } from './commons.js';
-import { reportsAt, SAYS } from '../engines/ledger.js';
+import { reportsAt, SAYS, attemptsAt } from '../engines/ledger.js';
+import { createJoule } from './joule.js';
 import * as Read from './read.js';
 import * as Exp from '../engines/experiments.js';
 import * as Chip from '../engines/chip.js';
@@ -106,8 +107,8 @@ export function start() {
   const reportsNow = () => { const W = Game.world(S); return Game.frontierOf(S).filter(f => f.kind === 'report').map(f => { const e = W.byId[f.of]; return { id: e.id, at: placeOfAt(e.at), href: e.at, say: e.say, words: e.words, draft: !!e.draft }; }); };
   /* what is open and how hard it pulls (the ledger's frontier), each with where it stands; and how much of the record
      agents made, so the figures the pull sets walking come in the same shares (the lab's own examples left out) */
-  const pullNow = () => { const W = Game.world(S); return Game.frontierOf(S).map(f => ({ kind: f.kind, key: f.piece && f.kind !== 'break' ? f.piece : f.of || f.q || f.piece, pull: f.pull,
-    at: f.kind === 'ask' ? placeOfStop((W.byId[f.q] || {}).under) : f.kind === 'report' ? placeOfAt((W.byId[f.of] || {}).at) : null })); };
+  const pullNow = () => { const W = Game.world(S); return Game.frontierOf(S).map(f => ({ kind: f.kind, key: f.piece && f.kind !== 'break' ? f.piece : f.of || f.q || f.piece || f.puzzle, pull: f.pull,
+    at: f.kind === 'puzzle' ? 'datacentre' : f.kind === 'ask' ? placeOfStop((W.byId[f.q] || {}).under) : f.kind === 'report' ? placeOfAt((W.byId[f.of] || {}).at) : null })); };
   const aiShare = () => { const E = Game.world(S).entries.filter(e => e.made && e.made !== 'example'); if (!E.length) return null; return E.reduce((a, e) => a + (e.made === 'ai' || e.made === 'program' ? 1 : e.made === 'both' ? 0.5 : 0), 0) / E.length; };
   const refresh = animate => { if (map) map.setState(islandState(), animate); hud(); drawHero(); firstGo(); };
   /* until the first win, the way to start glows */
@@ -666,6 +667,7 @@ export function start() {
   let diveWorld = 'datacentre';
   const FL = k => k === 'dive' ? Object.assign({}, FLAT.dive, { world: diveWorld }, DIVES[diveWorld]) : FLAT[k];
   let partsAt = null;   /* the parts each level's scene draws (src/app/scenes.js), for what you see here */
+  let Joule = null;   /* the lens of the energy puzzle on the data centre's dive (src/v2/joule.js) */
   let flatKind = 'dive', diveFrame = null, diveD = -1, divePart = null, diveThread = null, benchCh = null, WE = null, DiveData = null, DS = null;
   const levelsOf = k => FL(k).levels || DiveData.WORLDS.find(w => w.id === FL(k).world).depths;
   const diveId = () => WE.IDS[diveD];
@@ -703,7 +705,7 @@ export function start() {
     const id = WE.IDS[d];
     if (!levelsOf(flatKind).includes(id)) { if (flatKind === 'dive' && diveWorld === 'datacentre') location.hash = '#/place/datacentre/' + (id === 'board' ? 4 : 2); return; }   /* above the chip, the flight takes over */
     if (d !== diveD) { divePart = null; diveThread = null; dive.setThread(null); dive.select(null); }
-    diveD = d; if (!diveFrame) return;
+    diveD = d; if (Joule && flatKind === 'dive') Joule.level(id); if (!diveFrame) return;
     const L = levelsOf(flatKind); diveFrame.rail(id, L.indexOf(id) / (L.length - 1)); diveFrame.level(id); diveNotes(); here();
     if (diveFrame.mode() === 'look' && !benchCh) drawDive();
   }
@@ -858,7 +860,11 @@ export function start() {
     lineRingT = setTimeout(lineRing, 250);
   };
   /* keep the picture clear of the frame: the rail on the left, the corner, the dock below (on a phone, the card at rest) */
-  const diveInset = () => { if (!dive || !diveFrame) return; const wide = innerWidth > 720, b = innerWidth >= 1100 ? 24 : (diveFrame.restH ? diveFrame.restH() : diveFrame.dock.parentNode.offsetHeight) + (wide ? 24 : 18); dive.setInset({ l: wide ? 90 : 8, r: wide ? 20 : 8, t: wide ? 122 : 116, b }); };
+  /* the lens of the energy puzzle is part of the frame: on a desktop at the picture's right edge, on a phone (folded) at its
+     top, and the picture keeps clear of it */
+  const diveInset = () => { if (!dive || !diveFrame) return; const wide = innerWidth > 720, b = innerWidth >= 1100 ? 24 : (diveFrame.restH ? diveFrame.restH() : diveFrame.dock.parentNode.offsetHeight) + (wide ? 24 : 18), lens = Joule && S.joule.on && innerWidth >= 1100 ? 356 : 0, top = Joule ? Joule.bottom() : 0; dive.setInset({ l: wide ? 90 : 8, r: (wide ? 20 : 8) + lens, t: top ? top + 8 : wide ? 122 : 116, b });
+    /* a level drawn in 3D takes its square when the zoom moves; it is told now, so it moves with the frame */
+    if (flatKind === 'dive' && WE) levelZoom(dive.z); };
   /* the bench: a design challenge played in the dock; the drawings above follow your description */
   const syncDesign = ch => { if (DS && ch && ch.kind === 'design') DS.setDesign(Game.checkDesign(ch.p, S.codes[ch.p] || Game.starter(ch.p)));
     /* an evolved circuit for a job the studio knows is drawn there too, gate by gate and wave by wave */
@@ -885,6 +891,13 @@ export function start() {
       diveFrame = frameOf(vui, { up: { href: F.up, label: t(F.upWord) }, path: [{ href: '#/', label: t('place.back') }, { href: F.up, label: t(F.upWord) }, { label: t(F.title) }],
         rail: { label: t('place.levels'), items: L.map(k => ({ id: k, label: t('depth.' + k + '.name'), size: kind === 'dive' ? sizeOf(k) : null })) },
         onRail: k => w.flyTo(WE.IDS.indexOf(k)), onLook: () => { if (benchCh) { benchCh = null; const dk = diveFrame.dock; dk.classList.remove('benchdock'); dk.onclick = null; dk.oninput = null; } drawDive(); } }); watchDock();
+      /* the data centre's dive wears the lens of the energy puzzle: Follow the joule */
+      vui.classList.remove('jouling');
+      Joule = kind === 'dive' && diveWorld === 'datacentre' ? createJoule(vui, { S, save,
+        keep: (plan, el) => keep(S, { kind: 'try', puzzle: 'energy', plan, words: '' }, 'energy', signOf(el)),
+        slip: id => slipHtml(S, id), slipClick: (ev, done) => slipClick(ev, S, redraw => { save(); refresh(true); done(redraw); }),
+        refusal, signHtml: () => signHtml(S), attempts: () => attemptsAt(Game.world(S), 'energy'), changed: () => requestAnimationFrame(diveInset) }) : null;
+      if (Joule) Joule.redraw();
       vui.onclick = e => { const b = e.target.closest('[data-divego]'); if (b) w.flyTo(+b.dataset.divego); const sk = e.target.closest('[data-seek]'); if (sk) return pickPart(sk.dataset.seek); const pk = e.target.closest('[data-pick]'); if (pk) { pickPart(pk.dataset.pick === divePart ? null : pk.dataset.pick); vui.querySelectorAll('[data-pick]').forEach(x => x.classList.toggle('on', x.dataset.pick === divePart)); } };
       const d = WE.IDS.indexOf(L.includes(depth) ? depth : L[0]);
       loading(false); w.start(); w.setZ(d); if (!ringRaf) ringRaf = requestAnimationFrame(diveRing); if (arriving && kind === 'line') w.arrive(); arriving = false; diveD = -1; diveAt(d); $('diveCanvas').focus({ preventScroll: true });
@@ -1013,7 +1026,7 @@ export function start() {
       const reps = Game.frontierOf(S).filter(f => f.kind === 'report');
       if (reps.length) P.open += '<h2>' + esc(t('lab.reports')) + '</h2><p class="small muted">' + esc(t('lab.reportsD')) + '</p><div class="grid">' + reps.map(f => { const e = W.byId[f.of]; return '<a class="chcard report' + (e.draft ? ' draft' : '') + '" href="' + esc(e.at) + '"><span class="st">⚑</span><span><span class="kicker">' + esc(t('report.say.' + e.say)) + ' · ' + esc(e.at) + '</span><b>' + esc(e.words) + '</b><span class="small muted">' + byLine(e) + '</span></span></a>'; }).join('') + '</div>';
       /* the record: every entry, the newest first, each with who made it and where it stands now */
-      const line = e => { const T = e.kind === 'break' ? W.byId[e.of] : null, T2 = e.kind === 'try' ? W.byId[e.of] : null, what = e.kind === 'design' ? t('ledger.rec.design', { title: e.title, piece: t('build.need.' + e.piece + '.t') }) : e.kind === 'break' ? t('ledger.rec.break', { title: T.title }) : T2 ? t('ledger.rec.try', { title: T2.title, n: e.facts.cases }) : e.kind === 'report' || e.kind === 'fix' ? Game.entryWords(e, S) : e.q,
+      const line = e => { const T = e.kind === 'break' ? W.byId[e.of] : null, T2 = e.kind === 'try' && !e.puzzle ? W.byId[e.of] : null, what = e.kind === 'design' ? t('ledger.rec.design', { title: e.title, piece: t('build.need.' + e.piece + '.t') }) : e.kind === 'break' ? t('ledger.rec.break', { title: T.title }) : T2 ? t('ledger.rec.try', { title: T2.title, n: e.facts.cases }) : e.kind === 'report' || e.kind === 'fix' || e.puzzle ? Game.entryWords(e, S) : e.q,
           links = (e.from ? ' · ' + esc(t('ledger.rec.from', { who: W.byId[e.from].by })) + ' ' + esc(W.byId[e.from].title) : '') + (e.tries && e.tries.length ? ' · ' + esc(t('ledger.tries', { n: e.tries.length })) : '') + (e.about ? ' · ' + esc(t('ledger.rec.about', { q: Game.aboutWords(e.about, W) })) : '');
         return '<li class="rec ' + e.kind + (e.draft ? ' draft' : '') + ' ' + e.state + '"><span class="made ' + esc(e.made) + '"></span><span><b>' + esc(what) + '</b><span class="small muted"> · ' + byLine(e) + ' · ' + esc(e.id.slice(0, 10)) + ' · ' + esc(t('ledger.state.' + (e.draft ? 'draft' : e.state))) + (e.brokenBy ? ' · ' + esc(t('ledger.brokenBy', { who: W.byId[e.brokenBy].by })) : '') + links + '</span>' + (e.draft ? slipHtml(S, e.id) : '') + '</span></li>'; };
       P.record = '<h2>' + esc(t('page.build.record')) + '</h2><p class="small muted">' + esc(t('page.build.recordD')) + '</p><ol class="record">' + W.entries.slice().reverse().map(line).join('') + '</ol>';
@@ -1257,6 +1270,14 @@ export function start() {
     sheet.innerHTML = '<button type="button" class="x" data-close aria-label="' + esc(t('sheet.close')) + '">×</button>' + html;
     sheet.classList.remove('mover', 'part', 'inside'); sheet.hidden = false; sheet.scrollTop = 0; $('hero').classList.add('away'); hud();
   }
+  /* the energy puzzle, offered where it runs through (the fetch seam, the questions on it, energy per token): the lens
+     on the dive, Follow the joule (src/v2/joule.js), at the level named, or where you are in the dive */
+  document.addEventListener('click', e => {
+    const j = e.target.closest('[data-joule]'); if (!j) return;
+    S.joule.on = true; save(); hideSeam();
+    if (Joule && !vui.hidden && flatKind === 'dive' && diveWorld === 'datacentre') { e.preventDefault(); return Joule.on(true); }
+    if (j.tagName !== 'A') location.hash = '#/dive/' + (j.dataset.joule || 'chip');   /* i18n-ok */
+  });
   document.addEventListener('click', e => {
     if (e.target.closest('[data-seamx]')) return hideSeam();
     const f = e.target.closest('[data-field]'); if (f) { e.preventDefault(); return openField(f.dataset.field); }

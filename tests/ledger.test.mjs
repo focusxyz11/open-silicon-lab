@@ -217,3 +217,40 @@ test('a report breaks the lab itself, anywhere, at any time; a fix closes it; no
   assert.equal(checkEntry(Object.assign({}, fix, { id: '2026-11-16-fix-other-line-i9j0', of: '2026-11-12-design-majority-voter' }), W).reason, 'target');
   assert.deepEqual(reportsAt(W, '#/line/print').map(e => e.id), [again.id, rep.id], 'open first');
 });
+
+test('an attempt at the energy puzzle is a try with a plan: the budget engine scores it, and the frontier comes from the scores alone', async () => {
+  const { budget, JOB } = await import('../src/engines/budget.js');
+  const { attemptsAt, PUZZLES } = await import('../src/engines/ledger.js');
+  const at = (by, plan, name, day = '2026-11-20') => draft({ kind: 'try', puzzle: 'energy', plan, by, made: 'person', words: '' }, by + ' ' + name, day);
+  const a = at('Ada', { batch: 64 }, 'batch'), b = at('Bo', { batch: 64, precision: 'fp8' }, 'fp8'), c = at('Cy', { precision: 'fp4' }, 'fp4'), d = at('Di', { home: 'dram' }, 'dram');
+  /* among these four alone (the ledger's own attempts would change who stands where) */
+  const W = settle([a, b, c, d]);
+  for (const e of [a, b, c, d]) assert.ok(W.byId[e.id].ok, e.id + ': ' + W.byId[e.id].reason);
+  assert.equal(W.byId[a.id].facts.joules, budget(JOB, { batch: 64 }).total, 'the score is the engine\'s');
+  assert.ok(PUZZLES.energy);
+  /* fewer bits beat the same batch at 16 bits on energy and time, but lose on accuracy: both stay on the frontier */
+  assert.equal(W.byId[a.id].state, 'front'); assert.equal(W.byId[b.id].state, 'front');
+  /* memory chips on the board are worse on energy and time at the same accuracy than the starting plan's best rival */
+  assert.equal(W.byId[d.id].state, 'beaten');
+  assert.equal(W.best.energy, attemptsAt(W, 'energy')[0].id);
+  assert.ok(W.byId[W.best.energy].facts.joules <= Math.min(...[a, b, c].map(e => W.byId[e.id].facts.joules)));
+  /* the same plan again, a plan the engine cannot run, a plan with keys it does not have, or cases on a puzzle: refused */
+  const no = (e, why) => assert.equal(checkEntry(e, W).reason, why, JSON.stringify(e.plan));
+  no(at('Ed', { batch: 64 }, 'again'), 'same');
+  no(at('Ed', { batch: 64, home: 'hbm' }, 'again2'), 'same');
+  no(at('Ed', { clock: 40 }, 'fast'), 'plan');
+  no(at('Ed', { magic: true }, 'magic'), 'plan');
+  no(at('Ed', { batch: [64] }, 'arr'), 'plan');
+  no(Object.assign(at('Ed', { batch: 8 }, 'cases'), { cases: [[{ en: 1 }]] }), 'fields');
+  no(Object.assign(at('Ed', { batch: 8 }, 'what'), { puzzle: 'cold-fusion' }), 'puzzle');
+  /* the puzzle is open for good, louder while few have tried it */
+  const p0 = frontier(settle([])).find(f => f.kind === 'puzzle'), p4 = frontier(W).find(f => f.kind === 'puzzle');
+  assert.ok(p0 && p4 && p0.pull > p4.pull && p4.attempts >= 4);
+  /* the ledger's own attempts replay with it, and a try at a design is still what it was */
+  const L = settled(); assert.ok(L.puzzles.energy.length >= 2 && L.best.energy);
+  assert.ok(L.entries.some(e => e.kind === 'try' && e.of && e.facts.cases));
+  /* the record says it in words, and its maker's standing has words too */
+  for (const e of [a, d]) assert.ok(EN['ledger.state.' + W.byId[e.id].state]);
+  const { useTexts } = await import('../src/core/i18n.js'); useTexts(EN, 'en');
+  assert.match(Game.entryWords(W.byId[a.id], Game.fresh()), /Wh/);
+});

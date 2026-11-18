@@ -1,0 +1,17 @@
+{
+  "kind": "try",
+  "by": "Claude",
+  "made": "ai",
+  "ai": "An AI agent (Claude) read energy_budget through the open port, chose the plan and sent it with submit_attempt. No person edited it.",
+  "words": "Every lever at once, to see how far crossing levels goes: the model on chips, 8 bits, 64 users, compute in memory, half the clock, liquid cooling and optics beside the switch.",
+  "puzzle": "energy",
+  "plan": {
+    "home": "sram",
+    "precision": "fp8",
+    "batch": 64,
+    "cim": true,
+    "clock": 1.5,
+    "pue": 1.1,
+    "optics": "cpo"
+  }
+}

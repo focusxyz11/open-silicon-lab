@@ -1943,3 +1943,75 @@ button.opens { width: 100%; text-align: left; border: 0; border-left: 3px solid 
   .wogo { padding: 5px 5px 5px 12px; gap: 8px; } .woa { width: 26px; height: 26px; font-size: 14px; } .wogo .wit b { font-size: 14px; }
 }
 @keyframes peekup { from { opacity: 0; transform: translateY(12px); } }
+
+/* Follow the joule: the lens of the energy puzzle on the dive (src/v2/joule.js). Computing, moving data and heat
+   are the palette's green, blue and warm; the level in view is open, the others a thin trace */
+.joulebtn { position: absolute; left: 16px; top: 136px; display: inline-flex; align-items: center; gap: 8px; padding: 7px 14px 7px 10px; border-radius: 999px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); font: 600 13px var(--sans); cursor: pointer; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+.joulebtn:hover, .joulebtn:focus-visible { border-color: var(--warm); }
+.joulebtn.on { border-color: var(--warm); background: color-mix(in srgb, var(--warm) 16%, var(--panel)); }
+.jbolt { width: 10px; height: 14px; background: var(--warm); clip-path: polygon(60% 0, 0 58%, 42% 58%, 30% 100%, 100% 38%, 56% 38%); }
+.joule { position: absolute; left: 10px; bottom: calc(var(--dockh, 140px) + 30px); width: min(440px, calc(100% - 20px)); max-height: calc(100% - var(--dockh, 140px) - 200px); overflow: auto; display: grid; gap: 8px; padding: 12px 14px 14px; border-radius: var(--r); background: var(--panel); border: 1px solid var(--line); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); box-shadow: var(--shadow); }
+.joule[hidden] { display: none; }
+.joule { z-index: 5; }
+.jlist .jai { display: block; }
+.joule p { margin: 0; }
+.jhead { display: flex; justify-content: space-between; align-items: center; }
+.jhead .kicker { margin: 0; color: var(--warm); }
+.jx { width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--line); background: transparent; color: var(--ink); cursor: pointer; font-size: 16px; line-height: 1; }
+.jq { font: 600 15px/1.35 var(--serif); }
+.jtot b { font: 700 20px var(--sans); }
+.jbig { display: flex; height: 10px; border-radius: 999px; overflow: hidden; background: color-mix(in srgb, var(--ink) 8%, transparent); }
+.jp { display: inline-block; flex: none; } .jbig .jp, .jfill .jp { display: block; height: 100%; min-width: 1px; }
+.jp.compute { background: var(--good); } .jp.move { background: var(--accent); } .jp.heat { background: var(--warm); }
+.jkey, .jsplit { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 12.5px; color: var(--muted); }
+.jkey .jp, .jsplit .jp { width: 9px; height: 9px; border-radius: 2px; margin-right: 5px; vertical-align: -1px; }
+.jd { margin-left: 6px; font: 700 11.5px var(--mono); } .jd.down { color: var(--good); } .jd.up { color: var(--bad); }
+.jsay { color: var(--ink); }
+.jtrace { list-style: none; margin: 2px 0 0; padding: 0; display: grid; gap: 3px; }
+.jrow { display: grid; grid-template-columns: 64px 1fr auto; align-items: center; gap: 2px 8px; font-size: 12.5px; color: var(--muted); }
+.jrow .jn { font-weight: 600; }
+.jbar { height: 6px; border-radius: 999px; background: color-mix(in srgb, var(--ink) 7%, transparent); overflow: hidden; }
+.jfill { display: flex; height: 100%; border-radius: 999px; overflow: hidden; transition: width .5s ease; }
+.js { font: 600 11.5px var(--mono); text-align: right; white-space: nowrap; }
+.jlv { grid-column: 2 / -1; display: flex; flex-wrap: wrap; gap: 4px; }
+.jchip { padding: 1px 8px; border-radius: 999px; border: 1px dashed var(--line); background: none; color: var(--muted); font: 11.5px var(--sans); cursor: pointer; }
+.jchip:hover, .jchip:focus-visible { border-color: var(--warm); color: var(--ink); }
+.jrow.here { color: var(--ink); margin: 4px 0; padding: 8px 10px; border-radius: 12px; background: color-mix(in srgb, var(--warm) 9%, transparent); border: 1px solid color-mix(in srgb, var(--warm) 35%, transparent); }
+.jrow.here .jbar { height: 10px; }
+.jopen { grid-column: 1 / -1; display: grid; gap: 6px; margin-top: 4px; }
+.jline b { font: 700 15px var(--sans); }
+.jlever { display: grid; gap: 4px; padding-top: 6px; border-top: 1px solid var(--line); }
+.jlt { font-size: 13px; } .jlt a { color: var(--muted); margin-left: 4px; }
+.jseg { display: flex; flex-wrap: wrap; gap: 3px; }
+.jseg button { padding: 4px 10px; border-radius: 999px; border: 1px solid var(--line); background: none; color: var(--ink); font: 600 12px var(--sans); cursor: pointer; }
+.jseg button[aria-pressed=true] { background: var(--warm); border-color: var(--warm); color: #1a1004; }
+.jkeep .sign { display: flex; flex-wrap: wrap; gap: 8px; } .jkeep .sign label { display: grid; gap: 2px; flex: 1 1 140px; }
+.jkeep .acts { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 6px; }
+.jmapt { justify-self: start; }
+.jmap { width: 100%; height: auto; }
+.jmap .ax { stroke: var(--line); stroke-width: 1; } .jmap .axt { fill: var(--muted); font: 10px var(--sans); }
+.jmap .jdot { fill: var(--muted); fill-opacity: .75; } .jmap .jdot.person { fill: var(--ink); } .jmap .jdot.ai { fill: var(--warm); } .jmap .jdot.both { fill: color-mix(in srgb, var(--ink) 50%, var(--warm)); } .jmap .jdot.example { fill: var(--accent); }
+.jmap .jdot.front { stroke: var(--panel-solid); stroke-width: 1.5; fill-opacity: 1; } .jmap .jdot.draft { fill-opacity: .25; stroke: currentColor; stroke-dasharray: 2 2; }
+.jmap .jyou { fill: none; stroke: var(--warm); stroke-width: 2; }
+.jlist { list-style: none; margin: 4px 0 0; padding: 0; display: grid; gap: 4px; font-size: 12.5px; }
+.jlist li { display: flex; gap: 8px; align-items: flex-start; } .jlist .made { margin-top: 4px; }
+.jofferd { margin-top: 10px; }
+.jmore { display: none; justify-self: start; }
+@media (max-width: 720px) { .jmore { display: inline; } }
+@media (min-width: 1100px) {
+  .joule { left: auto; bottom: auto; right: calc(var(--bench) + 16px); top: 84px; width: 340px; max-height: calc(100% - 120px); }
+}
+/* on a phone: the trace and the levers where you are; no map, no lever chips on the other levels */
+@media (max-width: 720px) {
+  .joulebtn { left: 10px; top: 116px; padding: 6px 12px 6px 9px; }
+  .joule { top: 156px; bottom: auto; max-height: calc(100% - var(--dockh, 120px) - 190px); padding: 10px 12px 12px; gap: 6px; }
+  .joule:not(.more) :is(.jrow:not(.here), .jlever, .jsay) { display: none; }
+  .joule:not(.more) .jrow.here { margin: 0; }
+  .jq, .jmapt, .jmapbox, .jlv, .jkey, .jkeep, .jother, .jopen > .small.muted, .joule > .small.muted:last-child { display: none; }
+  .jtot b { font-size: 17px; } .jtot .small { display: none; }
+  .jrow { grid-template-columns: 56px 1fr auto; }
+  .jrow.here { padding: 6px 8px; margin: 2px 0; }
+  .jlever { padding-top: 4px; } .jlt a { display: none; }
+  .jseg button { padding: 3px 9px; }
+}
+@media (prefers-reduced-motion: reduce) { .jfill { transition: none; } }

@@ -14,7 +14,8 @@ import { STAGES, STAGE_PLACE, stageOfPlace, nextPlace, whereOf, alongTo } from '
 import { viewOfDepth, CHALLENGES, PLACES } from '../v2/game.js';
 import { NEEDS, GOAL } from '../data/build.js';
 import { plan, progress, needOf, needForProject, childrenOf } from './build.js';
-import { settled, frontier, draft, tryEntry, fileOf, proposeUrl, runCase, caseOk } from './ledger.js';
+import { settled, frontier, draft, tryEntry, fileOf, proposeUrl, runCase, caseOk, attemptsAt } from './ledger.js';
+import { budget, where as whereEnergy, LEVELS as ENERGY_LEVELS, LEVERS, PLAN, JOB } from './budget.js';
 import { build, projectOf, PROJECTS, starterOf, patterns } from './design.js';
 import { TESTS, START_PROGRAM } from './core.js';
 import { live, MISSION_IDS, PERFECT } from './life.js';
@@ -133,10 +134,11 @@ export function listLedger() {
   return {
     note: t('api.untrusted'),
     entries: W.entries.map(e => Object.assign({ id: e.id, kind: e.kind, by: e.by, made: e.made, state: e.state }, e.kind === 'design' ? { piece: e.piece, title: e.title, inside: W.inside[e.piece] === e.id, transistors: e.facts.transistors, longestPathPs: e.facts.ps, brokenBy: e.brokenBy, code: e.code }
-      : e.kind === 'break' ? { of: e.of, case: e.case, wrongAtTick: e.facts.tick } : e.kind === 'try' ? { of: e.of, casesItHeldOn: e.facts.cases }
+      : e.kind === 'break' ? { of: e.of, case: e.case, wrongAtTick: e.facts.tick } : e.kind === 'try' && e.puzzle ? { puzzle: e.puzzle, plan: e.plan, ...attemptFacts(e), best: W.best[e.puzzle] === e.id }
+      : e.kind === 'try' ? { of: e.of, casesItHeldOn: e.facts.cases }
       : e.kind === 'report' ? { at: e.at, part: e.part || null, says: e.say, words: e.words, fixedBy: e.fixedBy || null } : e.kind === 'fix' ? { of: e.of, words: e.words, pullRequest: e.pr || null }
       : { at: e.at, under: e.under || null, question: e.q, noticed: e.noticed || '' })),
-    open: F.map(f => f.kind === 'report' ? { do: 'fix', report: f.of, at: f.at, says: f.say, words: W.byId[f.of].words, pull: +f.pull.toFixed(2), what: t('api.open.report') } : f.kind === 'build' ? { do: 'build', piece: f.piece, job: f.p, what: t('build.need.' + f.piece + '.d') }
+    open: F.map(f => f.kind === 'puzzle' ? { do: 'attempt a puzzle', puzzle: f.puzzle, attempts: f.attempts, best: f.best, pull: +f.pull.toFixed(2), what: t('api.open.puzzle'), tools: ['energy_budget', 'submit_attempt'] } : f.kind === 'report' ? { do: 'fix', report: f.of, at: f.at, says: f.say, words: W.byId[f.of].words, pull: +f.pull.toFixed(2), what: t('api.open.report') } : f.kind === 'build' ? { do: 'build', piece: f.piece, job: f.p, what: t('build.need.' + f.piece + '.d') }
       : f.kind === 'break' ? { do: 'break', design: f.of, piece: f.piece, job: f.p, insideTheComputer: f.inside, triesSurvived: f.tries, pull: +f.pull.toFixed(2), what: t('api.open.break') } : f.kind === 'ask' ? { do: 'work on a question', question: f.q, words: W.byId[f.q].q, workSoFar: f.work, pull: +f.pull.toFixed(2), what: t('api.open.ask') } : { do: 'engine', piece: f.piece, what: t('build.need.' + f.piece + '.d') }),
     whoChecksWhom: W.cross, whoMakesWhat: W.mix
   };
@@ -175,4 +177,32 @@ export function proposeReport({ at, part, say, words, author, kind, ai }) {
 export function proposeQuestion({ at, under, part, question, noticed, author, kind, ai, about }) {
   const bad = whoOk(kind, ai); if (bad) return { ok: false, reason: bad };
   return entryOut(draft({ kind: 'question', at, part: part || null, under: under || null, q: question, noticed: noticed || '', by: author || t('api.anon'), made: kind, ai: ai || '', about: about || null }, (author || '') + ' ' + String(question || '').split(/\s+/).slice(0, 5).join(' ')));
+}
+
+/* ---- the energy puzzle (content/puzzles/energy.md): where does the energy of one answer go? ---- */
+const sig = x => +x.toPrecision(4);
+const attemptFacts = e => ({ joules: sig(e.facts.joules), wattHours: sig(e.facts.joules / 3600), secondsPerAnswer: sig(e.facts.seconds), accuracyDb: sig(e.facts.snrDb), timesTheFloor: sig(e.facts.times) });
+/* the budget of one answer for a plan: joules at every level of the data centre's dive, split into computing, moving
+   data and heat, with the floor, the time and the accuracy; the levers (each a parameter of the plan, at its level, with
+   the lab already there), and the attempts so far, the best first */
+export function energyBudget({ plan } = {}) {
+  const P = plan && typeof plan === 'object' ? plan : {}, b = budget(JOB, P);
+  const levers = LEVERS.map(l => ({ id: l.id, level: l.level, lab: l.lab, labName: t('game.ch.' + l.lab + '.t'), values: l.values, now: P[l.id] === undefined ? PLAN[l.id] : P[l.id], what: t('joule.lever.' + l.id + '.d') }));
+  const W = settled(), tried = attemptsAt(W, 'energy').map(e => ({ id: e.id, by: e.by, made: e.made, ai: e.ai || '', state: e.state, plan: e.plan, ...attemptFacts(e) }));
+  const base = { puzzle: 'energy', question: t('joule.q'), job: { ...JOB, what: t('joule.job') }, levers, attempts: tried, note: t('api.untrusted') };
+  if (!b.ok) return { ...base, ok: false, reason: t('joule.no.' + b.why) };
+  const W2 = whereEnergy(b);
+  return { ...base, ok: true, plan: { ...PLAN, ...P, volt: b.volt },
+    levels: ENERGY_LEVELS.map(l => ({ level: l, name: t('depth.' + l + '.name'), joules: sig(b.levels[l].total), share: sig(b.shares[l]), computing: sig(b.levels[l].compute), moving: sig(b.levels[l].move), heat: sig(b.levels[l].heat) })),
+    total: { joules: sig(b.total), wattHours: sig(b.total / 3600), floorJoules: sig(b.floor), timesTheFloor: sig(b.times), computing: sig(b.parts.compute), moving: sig(b.parts.move), heat: sig(b.parts.heat) },
+    mostAt: W2.level, mostIs: { compute: 'computing', move: 'moving', heat: 'heat' }[W2.part], secondsPerAnswer: sig(b.seconds), answersPerSecond: sig(b.perSecond), accuracyDb: sig(b.snrDb), model: t('joule.model') };
+}
+/* submit an attempt at the energy puzzle: a plan, scored by the budget engine and checked by the ledger (new among the
+   attempts, a plan the engine can run). Comes back as the entry's file and the link, like every proposal */
+export function submitAttempt({ plan, words, author, kind, ai, about }) {
+  const bad = whoOk(kind, ai); if (bad) return { ok: false, reason: bad };
+  const P = plan && typeof plan === 'object' && !Array.isArray(plan) ? plan : null;
+  if (!P) return { ok: false, reason: t('ledger.no.plan') };
+  const b = budget(JOB, P);
+  return entryOut(draft({ kind: 'try', puzzle: 'energy', plan: P, by: author || t('api.anon'), made: kind, ai: ai || '', words: words || '', about: about || null }, (author || '') + ' energy'), b.ok ? { joules: sig(b.total), wattHours: sig(b.total / 3600), secondsPerAnswer: sig(b.seconds), accuracyDb: sig(b.snrDb) } : {});
 }

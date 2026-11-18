@@ -157,8 +157,13 @@ show); predict which lever pays next; pass on what was learned (the level where 
 the engine cannot express an idea (a new material, a new memory), the attempt is a question to the engine: which new
 lever, at which level, with which source.
 
-**Part 2** (a separate task) makes it visible: a lens on the dive that follows the joule level by level, the labs as
-levers that change the whole trace, attempts kept as ledger entries, and a map of attempts.
+**On the site:** *Follow the joule*, a lens on the data centre's dive (`src/v2/joule.js`). At the level in view it shows
+the energy there, split three ways, with a thin trace through every level above and below; the labs of each level are
+its levers, and pulling one changes the whole trace. It is offered where the puzzle runs through: on the `fetch` seam
+and the questions it crosses (`wait`, `dark`, `brain`, `heat`), and in *Where an answer's energy goes*. A plan is kept
+as an attempt, a `try` entry in the ledger with the plan in it, scored by the engine and replayed by `npm test`; the map
+of attempts (desktop) puts each by its energy against its time, with who made it and how AI was used. An agent does the
+same through the open port: `energy_budget` and `submit_attempt` (`docs/MCP.md`).
 
 ## Where it meets other questions
 

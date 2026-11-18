@@ -1,6 +1,6 @@
 # Status
 
-Where the lab stands, and what is ready to be built next. Read this first when starting a new session. The direction is in [ROADMAP.md](ROADMAP.md), ideas not yet picked are in [IDEAS.md](IDEAS.md), and how we work is in [WORKFLOW.md](WORKFLOW.md). Last updated 18 November 2026 (after the labs of #216 to #222, and #229: the chip you land on is the chip you saw).
+Where the lab stands, and what is ready to be built next. Read this first when starting a new session. The direction is in [ROADMAP.md](ROADMAP.md), ideas not yet picked are in [IDEAS.md](IDEAS.md), and how we work is in [WORKFLOW.md](WORKFLOW.md). Last updated 18 November 2026 (after the labs of #216 to #222, #229: the chip you land on is the chip you saw, and the energy puzzle of #248 and #249).
 
 ## Where it stands
 
@@ -25,6 +25,7 @@ Where the lab stands, and what is ready to be built next. Read this first when s
   - **Test:** find the broken copy; more cores, still cheap.
   - **Ship:** through a phone's, a car's and a data centre's life; Look inside the newest phone; from a signal to bits (a heartbeat at the phone's board, a bearing at the car's control unit); the power chip (at the phone's board).
   - **Use:** feed the cores; half as fast again; Cray's bet; the batch bet; Jevons' bet (at the power island). Serving a language model: quantization and prefill against decode (at the chip), energy per token (at the rack). Down the dive: half the power (block), the counter that fails (gate), too hot for silicon (switch). New ways to compute: compute in memory (block), quantum search with noise (atom).
+- **A puzzle: where does the energy go?** (#248, #249; `content/puzzles/`). A new kind of open question, one problem that runs through every level, scored by one engine (`src/engines/budget.js`: the energy of one AI answer at every level of the data centre's dive, split into computing, moving data and heat). On the site it is *Follow the joule*, a lens on the data centre's dive (`src/v2/joule.js`), offered on the `fetch` seam, on the field questions it crosses and in *Where an answer's energy goes*; the labs of each level are its levers. Attempts are `try` entries with a plan, from people (kept from the lens) or agents (`energy_budget`, `submit_attempt`); the map of attempts is on the desktop only.
 - **Elsewhere on the site:**
   - What if? between the islands (`#/whatif`).
   - The questions from the field.

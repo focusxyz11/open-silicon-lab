@@ -39,12 +39,19 @@ export function fieldHtml(id) {
     '<dt>' + esc(t('field.ui.try')) + '</dt><dd>' + esc(t('field.try.' + q.shape)) + '</dd></dl>' +
     /* a bet you can play: its challenge, one tap away */
     (play ? '<a class="btn primary" href="#/do/' + esc(play.id) + '">' + esc(t('field.ui.play')) + '</a>' : '') +
+    /* a question the energy puzzle runs through: the puzzle, offered here (content/puzzles/energy.md) */
+    (JOULE_AT[id] ? jouleOffer(id) : '') +
     '<div class="nav"><button type="button" class="btn ghost" data-fieldleave>' + esc(t('field.ui.leave')) + '</button></div></div>';
 }
 
+/* the questions of the field the energy puzzle runs through, and the level of the dive where its lens opens */
+export const JOULE_AT = { fetch: 'block', wait: 'chip', dark: 'chip', brain: 'gate', heat: 'switch' };
+const jouleOffer = id => '<p class="small jofferd">' + esc(t('joule.offer.d')) + '</p><button type="button" class="btn" data-joule="' + esc(JOULE_AT[id]) + '">' + esc(t('joule.offer')) + '</button>';
 /* the note a crossed seam raises: the leak on it, with a way to follow it */
 export function seamNote(id) {
   const q = fieldOf(id); if (!q) return '';
   return '<p class="kicker">' + glyph('leak') + esc(t('field.ui.seam')) + '</p><p class="sq">' + esc(t('field.' + id + '.q')) + '</p>' +
-    '<div class="acts"><button type="button" class="btn primary" data-field="' + esc(id) + '">' + esc(t('field.ui.go')) + '</button><button type="button" class="seamx" data-seamx aria-label="' + esc(t('field.ui.hide')) + '">×</button></div>';
+    '<div class="acts"><button type="button" class="btn primary" data-field="' + esc(id) + '">' + esc(t('field.ui.go')) + '</button>' +
+    (JOULE_AT[id] ? '<button type="button" class="btn" data-joule="' + esc(JOULE_AT[id]) + '">' + esc(t('joule.offer')) + '</button>' : '') +
+    '<button type="button" class="seamx" data-seamx aria-label="' + esc(t('field.ui.hide')) + '">×</button></div>';
 }
