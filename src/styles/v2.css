@@ -1853,6 +1853,31 @@ button.opens { width: 100%; text-align: left; border: 0; border-left: 3px solid 
 .srvsay { margin: 8px 0; padding: 8px 10px; border-radius: 10px; background: color-mix(in srgb, var(--ink) 6%, transparent); }
 .srvsay.bad { color: var(--ink); background: color-mix(in srgb, var(--bad) 12%, transparent); }
 @media (max-width: 720px) { .srvread { grid-template-columns: 1fr 1fr; } .srvmap { display: none; } }
+/* something to do at a level (src/data/seek.js, seekHtml in src/v2/app.js): what to look for, the parts to tap, a
+   true thing to notice on the one tapped, and, once found, the question above lit in its thread's colour */
+.seek { margin: 4px 0 12px; padding: 12px 14px; border-radius: 14px; border: 1px solid var(--line); background: color-mix(in srgb, var(--qc) 5%, transparent); }
+.seek.found { border-color: color-mix(in srgb, var(--qc) 55%, var(--line)); }
+.seekk { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.seek.found .seekk > span:first-child { color: var(--qc); }
+.seekn { display: inline-flex; gap: 5px; } .seekn i { width: 8px; height: 8px; border-radius: 50%; border: 1.5px solid var(--muted); }
+.seekn i.on { background: var(--qc); border-color: var(--qc); }
+.seekq { margin: 6px 0 10px; font: 600 16px/1.4 var(--serif); }
+.seekparts { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.seekp { padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--panel-solid); color: var(--ink); font: 500 13px var(--sans); cursor: pointer; transition: border-color .15s, background .15s; }
+.seekp:hover, .seekp:focus-visible { border-color: var(--qc); }
+.seekp.looked { border-color: color-mix(in srgb, var(--qc) 45%, var(--line)); }
+.seekp.on { background: color-mix(in srgb, var(--qc) 18%, var(--panel-solid)); border-color: var(--qc); }
+.seekp.seeklead { box-shadow: 0 0 0 2px var(--qc); }
+.seeknote { margin: 10px 0 0; font-size: 14px; line-height: 1.45; } .seeknote b { margin-right: 4px; }
+.seekfound { margin: 8px 0 0; font-size: 13px; color: var(--muted); }
+.askline.seeklit { border-left-color: var(--qc); background: color-mix(in srgb, var(--qc) 13%, transparent); border-radius: 0 10px 10px 0; box-shadow: -3px 0 14px -4px var(--qc); }
+@media (prefers-reduced-motion: no-preference) { .askline.seeklit { animation: seeklit 1.2s ease-out 1; } }
+@keyframes seeklit { 0% { background: color-mix(in srgb, var(--qc) 40%, transparent); } 100% { background: color-mix(in srgb, var(--qc) 13%, transparent); } }
+/* in the flight, at a level with a search, the names on the picture are the parts to tap */
+.labels.seeking .part3[data-hl] { pointer-events: auto; cursor: pointer; }
+.seeklog { display: grid; gap: 0; } .seeklog .kicker { text-decoration: none; }
+/* a phone: the same search, smaller */
+@media (max-width: 720px) { .seek { padding: 10px 12px; margin-bottom: 10px; } .seekq { font-size: 15px; margin: 4px 0 8px; } .seekp { padding: 5px 10px; font-size: 12.5px; } .seeknote { font-size: 13px; margin-top: 8px; } .seekfound { display: none; } }
 /* ---- the way along, on the picture (src/v2/frame.js): the card's next step along (data-along), again as a button at
    the picture's right edge, pointing on along the line. Quieter than the way in: the panel's colours, the arrow lit ---- */
 .wayon { position: absolute; inset: 0; pointer-events: none; z-index: 3; }
