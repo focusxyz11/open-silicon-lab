@@ -82,16 +82,21 @@ export function createFrame(host, o) {
      desktop or a tablet: there the card is as it was */
   const wrap = $('.dockwrap'), bar = $('.peekbar'), phone = () => matchMedia('(max-width: 720px)').matches;
   let restH = 0;
-  const peek = v => { const on = !!v && phone(); wrap.classList.toggle('peek', on); host.classList.toggle('peeked', on); bar.setAttribute('aria-expanded', String(!on)); bar.setAttribute('aria-label', t(on ? 'frame.peek.open' : 'frame.peek.fold')); };
+  const peek = v => { const on = !!v && phone(); if (on) wrap.scrollTop = 0; wrap.classList.toggle('peek', on); host.classList.toggle('peeked', on); bar.setAttribute('aria-expanded', String(!on)); bar.setAttribute('aria-label', t(on ? 'frame.peek.open' : 'frame.peek.fold')); };
   const busy = () => !!dock.querySelector('.player, .stopx') || dock.classList.contains('benchdock');
   peek(true);
   new ResizeObserver(() => { const h = wrap.offsetHeight; if (!h) return; host.style.setProperty('--dockh', h + 'px'); if (wrap.classList.contains('peek')) restH = h; }).observe(wrap);
   new MutationObserver(() => { if (busy() && wrap.classList.contains('peek')) peek(false); }).observe(dock, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] });
-  /* a touch anywhere on the peek opens it (and does nothing else); the bar folds it again */
+  /* a touch on the peek opens it: on its name or its question it does nothing else (a control reached under the fold,
+     by the keyboard, still acts); the bar folds it again */
   wrap.addEventListener('click', e => {
     if (e.target.closest('.peekbar')) { e.preventDefault(); e.stopPropagation(); return peek(!wrap.classList.contains('peek') && !busy()); }
-    if (wrap.classList.contains('peek')) { e.preventDefault(); e.stopPropagation(); peek(false); }
+    if (!wrap.classList.contains('peek')) return;
+    const act = e.target.closest('button, a, input, select, textarea'); peek(false);   /* i18n-ok */
+    if (!act || act.classList.contains('askline')) { e.preventDefault(); e.stopPropagation(); }
   }, true);
+  /* reached by the keyboard, the card opens */
+  wrap.addEventListener('focusin', e => { if (wrap.classList.contains('peek') && !e.target.closest('.peekbar') && e.target.matches(':focus-visible')) peek(false); });
   /* a touch on the picture (the canvas or the names on it) lets the card down. One listener per stage, for the frame shown now */
   const stage = host.parentNode;
   if (stage && !stage.dataset.peekOn) { stage.dataset.peekOn = '1';

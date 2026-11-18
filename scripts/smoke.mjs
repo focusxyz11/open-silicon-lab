@@ -561,30 +561,28 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
     await fp.evaluate(() => { location.hash = '#/'; });
     await fp.waitForFunction(() => !document.querySelector('#mapLabels .wf3') || [...document.querySelectorAll('#mapLabels .wf3')].every(e => e.style.opacity === '0'), null, { timeout: 10000 }).catch(() => problems.push(tag + ': What if? stays on the island after leaving it'));
     await fp.close(); }
-  /* the ways on the picture (src/v2/frame.js): on the line, the next station is a button along the line (→), and a
-     station with an inside has its way in (↓) with the machine ringed; each is the card's own control, mirrored */
+  /* the ways on the picture (src/v2/frame.js): on the island, pointing at a building with an inside says so (a ring
+     round it, Go inside over it); on the line, the next station is a button along the line (→), and a station with an
+     inside has its way in (↓) with the machine ringed; each is the card's own control, mirrored */
   { const tag = 'ways', wp = await browser3d.newPage({ viewport: { width: 1280, height: 800 } });
     wp.on('pageerror', e => problems.push(tag + ': ' + e.message));
-    await wp.goto(base + 'index.html#/line/print');
-    await wp.waitForFunction(() => !!document.querySelector('#diveui .wayon:not([hidden]) .wogo') && !!document.querySelector('#diveui .wayin:not([hidden]) .wigo') && !!document.querySelector('#diveui .dock [data-in][href="#/dive/scanner/made"]'), null, { timeout: 90000, polling: 1000 })
-      .catch(() => problems.push(tag + ': at print, the line shows no way along and no way into the machine on the picture'));
-    await wp.waitForFunction(() => !!document.querySelector('#diveui .wayin.at'), null, { timeout: 60000, polling: 1000 }).catch(() => problems.push(tag + ': at print, the way in does not stand beside the machine with a ring on it'));
-    await wp.waitForFunction(() => { const b = document.querySelector('#diveui .wayon:not([hidden]) .wogo'); if (b && location.hash === '#/line/print') b.click(); return location.hash === '#/line/etch'; }, null, { timeout: 60000, polling: 3000 })
-      .catch(() => problems.push(tag + ': the way along on the picture does not go to the next station'));
-    await wp.evaluate(() => { location.hash = '#/line/print'; });
-    await wp.waitForFunction(() => { const b = document.querySelector('#diveui .wayin:not([hidden]) .wigo'); if (b && location.hash === '#/line/print' && /scanner/.test(b.getAttribute('href') || '')) b.click(); return location.hash.startsWith('#/dive/scanner'); }, null, { timeout: 60000, polling: 3000 })
-      .catch(() => problems.push(tag + ': the way in on the line does not go inside the printing machine'));
-    /* on the island, pointing at a building with an inside says so: a ring round it and Go inside over it (the island
-       loaded afresh, so the factory is not still open from the line) */
     await wp.goto(base + 'index.html#/');
-    await wp.waitForFunction(() => { const e = document.querySelector('#mapLabels .place3[data-place="fab"]'); return !!e && e.style.opacity !== '0' && !document.getElementById('mapCanvas').hidden; }, null, { timeout: 60000, polling: 1000 }).catch(() => {});
     let goSeen = false;
-    for (let i = 0; i < 4 && !goSeen; i++) {
-      const r = await wp.evaluate(() => { const e = document.querySelector('#mapLabels .place3[data-place="fab"]'); if (!e) return null; const q = e.getBoundingClientRect(); return { x: q.x + q.width / 2, y: q.y + q.height / 2 }; });
+    for (let i = 0; i < 6 && !goSeen; i++) {
+      const r = await wp.waitForFunction(() => { const e = document.querySelector('#mapLabels .place3[data-place="fab"]'); if (!e || e.style.opacity === '0') return null; const q = e.getBoundingClientRect(); return { x: q.x + q.width / 2, y: q.y + q.height / 2 }; }, null, { timeout: 30000, polling: 1000 }).then(h => h.jsonValue(), () => null);
       if (r) { await wp.mouse.move(r.x + 40, r.y + 40); await wp.mouse.move(r.x, r.y, { steps: 3 }); }
-      goSeen = await wp.waitForFunction(() => { const g = document.querySelector('#mapLabels .go3'); return document.getElementById('mapCanvas').classList.contains('goin') && !!g && g.style.opacity !== '0'; }, null, { timeout: 15000, polling: 500 }).then(() => true, () => false);
+      goSeen = await wp.waitForFunction(() => { const g = document.querySelector('#mapLabels .go3'); return document.getElementById('mapCanvas').classList.contains('goin') && !!g && g.style.opacity !== '0'; }, null, { timeout: 10000, polling: 500 }).then(() => true, () => false);
     }
     if (!goSeen) problems.push(tag + ': pointing at the factory on the island does not invite you in');
+    await wp.mouse.move(5, 790);
+    await wp.evaluate(() => { location.hash = '#/line/print'; });
+    await wp.waitForFunction(() => !!document.querySelector('#diveui .wayon:not([hidden]) .wogo') && !!document.querySelector('#diveui .wayin:not([hidden]) .wigo') && !!document.querySelector('#diveui .dock [data-in][href="#/dive/scanner/made"]'), null, { timeout: 90000, polling: 1000 })
+      .catch(() => problems.push(tag + ': at print, the line shows no way along and no way into the printing machine on the picture'));
+    await wp.waitForFunction(() => !!document.querySelector('#diveui .wayin.at'), null, { timeout: 30000, polling: 1000 }).catch(() => problems.push(tag + ': at print, the way in does not stand beside the machine with a ring on it'));
+    await wp.waitForFunction(() => { const b = document.querySelector('#diveui .wayon:not([hidden]) .wogo'); if (b && location.hash === '#/line/print') b.click(); return location.hash === '#/line/etch'; }, null, { timeout: 60000, polling: 3000 })
+      .catch(() => problems.push(tag + ': the way along on the picture does not go to the next station'));
+    await wp.waitForFunction(() => { const b = document.querySelector('#diveui .wayin:not([hidden]) .wigo'); if (b && location.hash === '#/line/etch' && /switch/.test(b.getAttribute('href') || '')) b.click(); return location.hash.startsWith('#/dive/switch'); }, null, { timeout: 60000, polling: 3000 })
+      .catch(() => problems.push(tag + ': the way in on the line does not go inside what the station makes'));
     await wp.close(); }
   /* the dive on a phone: the card rests as a peek, opens when touched and steps aside when the picture is touched; a
      swipe up on the picture goes one level in */
