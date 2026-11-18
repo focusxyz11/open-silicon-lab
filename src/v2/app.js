@@ -32,7 +32,7 @@ import { reportsAt, SAYS } from '../engines/ledger.js';
 import * as Read from './read.js';
 import * as Exp from '../engines/experiments.js';
 import * as Chip from '../engines/chip.js';
-import { levelAt, fieldAtLevel, VIEW_PARTS, diveWord } from '../data/atlas.js';
+import { levelAt, fieldAtLevel, VIEW_PARTS, diveWord, sizeOf } from '../data/atlas.js';
 import * as Field from './field.js';
 import { setBetScene } from '../app/betscene.js';
 import { whatif as whatifView } from './whatif.js';
@@ -555,7 +555,7 @@ export function start() {
     loading(true); lastPlace = id;
     return Promise.all([withFrame(), ensureDc()]).then(([, d]) => {
       dcFrame = frameOf(pui, { up: { href: '#/', label: t('place.back') }, path: [{ href: '#/', label: t('place.back') }, { label: t('map.' + id + '.t') }],
-        rail: { label: t('place.levels'), items: LEVELS.map(k => ({ id: k, label: t('place.dc.' + k + '.t') })) }, onRail: k => d.go(LEVELS.indexOf(k)), onLook: drawDc, scroll: true });
+        rail: { label: t('place.levels'), items: LEVELS.map(k => ({ id: k, label: t('place.dc.' + k + '.t'), size: sizeOf(k) })) }, onRail: k => d.go(LEVELS.indexOf(k)), onLook: drawDc, scroll: true });
       pui.onclick = e => { const b = e.target.closest('[data-lvgo]'); if (b) d.go(+b.dataset.lvgo); const sk = e.target.closest('[data-seek]'); if (sk) return dcSeek(sk.dataset.seek); const h = e.target.closest('[data-hl]'); if (h) d.mark(h.dataset.hl); };
       pui.onpointerover = e => { const h = e.target.closest('[data-hl]'); d.mark(h ? h.dataset.hl : dcHold()); };
       /* at a level with a search, the names on the picture are the parts to tap */
@@ -590,7 +590,7 @@ export function start() {
     loading(true); lastPlace = 'phones';
     return Promise.all([withFrame(), ensurePh()]).then(([, d]) => {
       phFrame = frameOf(fui, { up: { href: '#/', label: t('place.back') }, path: [{ href: '#/', label: t('place.back') }, { label: t('map.phones.t') }],
-        rail: { label: t('place.levels'), items: PH.LEVELS.map(k => ({ id: k, label: t('place.phone.' + k + '.t') })) }, onRail: k => d.go(PH.LEVELS.indexOf(k)), onLook: drawPh, scroll: true });
+        rail: { label: t('place.levels'), items: PH.LEVELS.map(k => ({ id: k, label: t('place.phone.' + k + '.t'), size: sizeOf(PH.DEPTH[k] === 'phone' ? 'handset' : PH.DEPTH[k]) })) }, onRail: k => d.go(PH.LEVELS.indexOf(k)), onLook: drawPh, scroll: true });
       fui.onclick = e => { const b = e.target.closest('[data-lvgo]'); if (b) d.go(+b.dataset.lvgo); const h = e.target.closest('[data-hl]'); if (h) d.mark(h.dataset.hl); };
       fui.onpointerover = e => { const h = e.target.closest('[data-hl]'); d.mark(h ? h.dataset.hl : null); };
       loading(false); d.resume(); if (lv != null && lv >= 0 && lv < PH.LEVELS.length) d.go(lv); phUI(Math.round(d.z)); $('flyCanvas').focus({ preventScroll: true });
@@ -602,7 +602,13 @@ export function start() {
   const cui = $('chipui');
   let chipMode = 'dive', chipRow = 0, chipFrame = null;
   const ensureChip = () => chipP || (chipP = import('./chip3d.js').then(m => { chip = m.createChip($('chipCanvas'), $('chipLabels'), { row: r => { chipRow = r; chipPanel(); },
-    depth: z => { if (chipFrame) chipFrame.rail(ROWS[Math.round(z)].dive, chipMode === 'build' ? 1 - z / (ROWS.length - 1) : z / (ROWS.length - 1)); } }); return chip; }));
+    depth: z => { if (chipFrame) chipFrame.rail(ROWS[Math.round(z)].dive, chipMode === 'build' ? 1 - z / (ROWS.length - 1) : z / (ROWS.length - 1), z); },
+    /* the picture is framed in what the frame leaves free, and the way in stands beside the next layer, with its ring */
+    inset: () => frameInset(chipFrame), portal: p => chipFrame && chipFrame.inwardAt(chipMode === 'dive' ? p : null) }); return chip; }));
+  /* the part of the picture the frame leaves free, in pixels from each edge: the rail at the left, the bar and the way
+     out at the top, and the card below where it is not a bench at the right (the canvas already ends at the bench) */
+  const frameInset = fr => { const wide = innerWidth > 720, bench = innerWidth >= 1100, dw = fr && fr.dock.parentNode;
+    return { l: wide ? 100 : 10, r: wide ? 24 : 10, t: wide ? 128 : 112, b: bench ? 24 : (dw && dw.offsetHeight ? (fr.restH ? fr.restH() : dw.offsetHeight) + (wide ? 30 : 22) : 260) }; };
   const stepNames = r => ROWS[r].made.map(d => t('depth.' + d + '.name')).join(' → ');
   function chipPanel() {
     if (!chipFrame) return;
@@ -633,7 +639,7 @@ export function start() {
     lastPlace = 'datacentre';
     return Promise.all([withFrame(), ensureChip()]).then(([, c]) => {
       chipFrame = frameOf(cui, { up: { href: '#/place/datacentre/5', label: t('board.up') }, path: [{ href: '#/', label: t('place.back') }, { href: '#/place/datacentre/5', label: t('map.datacentre.t') }, { label: t('chipx.title') }],
-        rail: { label: t('place.levels'), items: ROWS.map(x => ({ id: x.dive, label: t('depth.' + x.dive + '.name') })) },
+        rail: { label: t('place.levels'), items: ROWS.map(x => ({ id: x.dive, label: t('depth.' + x.dive + '.name'), size: sizeOf(x.dive) })) },
         onRail: d => c.go(ROWS.findIndex(x => x.dive === d)), onLook: drawChip });
       cui.onclick = e => { const b = e.target.closest('[data-rowgo]'); if (b) c.go(+b.dataset.rowgo); };
       loading(false); chipRow = want; c.mode(chipMode); c.set(want); c.resume(); chipPanel(); $('chipCanvas').focus({ preventScroll: true });
@@ -673,7 +679,7 @@ export function start() {
     /* one stage: the line's machines draw on the shared renderer too */
     Wm.setChrome({ dots: false, dive: false, lit: true, keys: () => (flatKind === 'dive' ? 'scale' : 'steps'), stage: () => stage($('diveCanvas')), overlay: flatWords,
       look: () => !!diveFrame && diveFrame.mode() === 'look' && !benchCh, ask: () => !!diveFrame && diveFrame.mode() === 'ask' }); Jm.setBand(false);
-    dive = Wm.createWorld($('diveCanvas'), { depth: d => diveAt(d), arrive: d => diveAt(d), zoom: z => levelZoom(z), part: (d, key) => { const a = l3Active(); pickPart(a ? a.obj.hit(lastTap.x, lastTap.y) : key); }, pick: th => { diveThread = th; dive.setThread(th); if (!benchCh && flatKind !== 'supply') drawDive(); },
+    dive = Wm.createWorld($('diveCanvas'), { depth: d => diveAt(d), arrive: d => diveAt(d), zoom: z => { diveRail(z); levelZoom(z); }, part: (d, key) => { const a = l3Active(); pickPart(a ? a.obj.hit(lastTap.x, lastTap.y) : key); }, pick: th => { diveThread = th; dive.setThread(th); if (!benchCh && flatKind !== 'supply') drawDive(); },
       site: id => supplySite(id), mapStep: i => supplyStep(i) });
     return dive;
   });
@@ -791,6 +797,24 @@ export function start() {
     showStage(top > 0);
   }
   const EN_HAS = w => t('part.' + w) !== 'part.' + w;
+  /* the rail follows the zoom continuously, so the card can say how many times closer the next level is */
+  function diveRail(z) {
+    if (!diveFrame || !WE || flatKind !== 'dive') return;
+    const L = levelsOf('dive'), i = Math.floor(z), a = L.indexOf(WE.IDS[i]); if (a < 0) return;
+    const pos = a + (L[a + 1] && L[a + 1] === WE.IDS[i + 1] ? z - i : 0);
+    diveFrame.rail(L[Math.round(pos)], pos / (L.length - 1), pos);
+  }
+  /* the way in, beside the square the next level lives in, with a ring on it: the door of a level drawn in 3D, else
+     the portal of the flat picture (the model lies in the same square). Read while the dive is on screen */
+  let ringRaf = 0;
+  function diveRing() {
+    ringRaf = 0; if (vui.hidden || !dive || !diveFrame) return;
+    ringRaf = requestAnimationFrame(diveRing);
+    if (flatKind !== 'dive') return;   /* the line rings its own machine (lineRing) */
+    if (dip) return diveFrame.inwardAt(null);
+    const a = l3Active(), p = a ? a.obj.portal() : undefined;   /* undefined: the level has no door of its own */
+    diveFrame.inwardAt(p === undefined ? dive.portal : p);
+  }
   function drawDive() {
     const F = FL(flatKind), L = levelsOf(flatKind), id = diveId(), i = L.indexOf(id), last = i === L.length - 1;
     const key = diveThread && DiveData.STOPS[diveThread + '.' + id] ? diveThread + '.' + id : stopsAt(id)[0];
@@ -859,11 +883,11 @@ export function start() {
       if (kind === 'bench') { const Y = Game.yourDesign(S); DS.setDesign(Y ? Y.B : Game.checkDesign('half', S.codes.half || Game.starter('half'))); }
       const L = levelsOf(kind);
       diveFrame = frameOf(vui, { up: { href: F.up, label: t(F.upWord) }, path: [{ href: '#/', label: t('place.back') }, { href: F.up, label: t(F.upWord) }, { label: t(F.title) }],
-        rail: { label: t('place.levels'), items: L.map(k => ({ id: k, label: t('depth.' + k + '.name') })) },
+        rail: { label: t('place.levels'), items: L.map(k => ({ id: k, label: t('depth.' + k + '.name'), size: kind === 'dive' ? sizeOf(k) : null })) },
         onRail: k => w.flyTo(WE.IDS.indexOf(k)), onLook: () => { if (benchCh) { benchCh = null; const dk = diveFrame.dock; dk.classList.remove('benchdock'); dk.onclick = null; dk.oninput = null; } drawDive(); } }); watchDock();
       vui.onclick = e => { const b = e.target.closest('[data-divego]'); if (b) w.flyTo(+b.dataset.divego); const sk = e.target.closest('[data-seek]'); if (sk) return pickPart(sk.dataset.seek); const pk = e.target.closest('[data-pick]'); if (pk) { pickPart(pk.dataset.pick === divePart ? null : pk.dataset.pick); vui.querySelectorAll('[data-pick]').forEach(x => x.classList.toggle('on', x.dataset.pick === divePart)); } };
       const d = WE.IDS.indexOf(L.includes(depth) ? depth : L[0]);
-      loading(false); w.start(); w.setZ(d); if (arriving && kind === 'line') w.arrive(); arriving = false; diveD = -1; diveAt(d); $('diveCanvas').focus({ preventScroll: true });
+      loading(false); w.start(); w.setZ(d); if (!ringRaf) ringRaf = requestAnimationFrame(diveRing); if (arriving && kind === 'line') w.arrive(); arriving = false; diveD = -1; diveAt(d); $('diveCanvas').focus({ preventScroll: true });
       lineRing();
       const ch = chId && Game.challengeOf(chId); if (ch) openBench(ch);
     });
@@ -933,7 +957,8 @@ export function start() {
   /* ---- one board, no side panel: words on the parts, a story docked below that drives the camera ---- */
   const bui = $('boardui');
   const hideBoard = () => { $('boardCanvas').hidden = $('boardLabels').hidden = true; bui.hidden = true; board && board.pause(); };
-  const ensureBoard = () => boardP || (boardP = import('./board3d.js').then(m => (board = m.createBoard($('boardCanvas'), $('boardLabels'), { part: id => story && story.part(id), dive: () => { location.hash = '#/chip/0'; } }))));
+  const ensureBoard = () => boardP || (boardP = import('./board3d.js').then(m => (board = m.createBoard($('boardCanvas'), $('boardLabels'), { part: id => story && story.part(id), dive: () => { location.hash = '#/chip/0'; },
+    inset: () => frameInset(boardFrame), portal: p => boardFrame && boardFrame.inwardAt(p) }))));
   function showBoard() {
     hideAll(); document.body.classList.add('immersive');
     $('boardCanvas').hidden = $('boardLabels').hidden = false; bui.hidden = false; showStage(true);
@@ -941,14 +966,16 @@ export function start() {
     return Promise.all([withFrame(), ensureBoard(), import('./story.js'), import('./stories.js')]).then(([, b, St, Sd]) => {
       loading(false); b.resume(); const data = Sd.boardStory();
       const fr = boardFrame = frameOf(bui, { up: { href: '#/place/datacentre/4', label: t('board.up') }, path: [{ href: '#/', label: t('place.back') }, { href: '#/place/datacentre/4', label: t('map.datacentre.t') }, { label: t('place.dc.board.t') }],
-        rail: { label: t('place.levels'), items: LEVELS.map(k => ({ id: k, label: t('place.dc.' + k + '.t') })) },
+        rail: { label: t('place.levels'), items: LEVELS.map(k => ({ id: k, label: t('place.dc.' + k + '.t'), size: sizeOf(k) })) },
         onRail: k => { location.hash = k === 'chip' ? '#/chip/0' : k === 'board' ? '#/board' : '#/place/datacentre/' + LEVELS.indexOf(k); }, onLook: () => story && story.go(story.at) });
       fr.rail('board', LEVELS.indexOf('board') / (LEVELS.length - 1)); fr.level('board');
-      story = St.createStory(fr.dock, b, data, { follow, step: st => fr.goal(st.live ? '<p class="kicker">' + esc(t('board.goal')) + '</p>' + data.gauges(data.state).map(x => '<div class="gauge' + (x.warm ? ' warmg' : ' ok') + '"><span class="gl">' + esc(t('board.gauge.' + x.id)) + '</span><span class="gv">' + esc(x.text) + '</span><span class="gbar"><span style="width:' + Math.round(x.v * 100) + '%"></span></span></div>').join('') : null) });
+      story = St.createStory(fr.dock, b, data, { follow, step: st => wayToChip(fr, st) || fr.goal(st.live ? '<p class="kicker">' + esc(t('board.goal')) + '</p>' + data.gauges(data.state).map(x => '<div class="gauge' + (x.warm ? ' warmg' : ' ok') + '"><span class="gl">' + esc(t('board.gauge.' + x.id)) + '</span><span class="gv">' + esc(x.text) + '</span><span class="gbar"><span style="width:' + Math.round(x.v * 100) + '%"></span></span></div>').join('') : null) });
       $('boardCanvas').focus({ preventScroll: true });
     });
   }
   let story = null, boardFrame = null;
+  /* the board's way in, into its chip, on every step of its story (the last step's own way on is that way) */
+  const wayToChip = (fr, st) => { if (!st.end) { const nav = fr.dock.querySelector('.nav'); if (nav) nav.insertAdjacentHTML('beforebegin', '<p class="wayrow"><a class="chipb" data-in data-inname="' + esc(t('depth.chip.name')) + '" href="#/chip/0">↓ ' + esc(t('board.end.dive')) + '</a></p>'); } return false; };
   /* every view hides the others first */
   function hideAll() {
     $('diveCanvas').hidden = true; vui.hidden = true; dive && dive.stop(); hide3d(); $('flatLabels').hidden = true; if (flatWords) flatWords.clear();

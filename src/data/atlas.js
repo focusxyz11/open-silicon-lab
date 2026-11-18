@@ -11,7 +11,7 @@
    - TWINS is the Turn: each level of a chip seen three ways, designed in the studio, made at the factory, used in
      the dive. */
 import { INSIDE, placeOf, stopsAt, SHARED } from './places.js';
-import { MADE, WORLDS, partWord } from './weave.js';
+import { MADE, WORLDS, DEPTHS, partWord } from './weave.js';
 import { FIELD, fieldOf, fieldAtLevel, fieldAtPlace } from './questions.js';
 
 /* the world where a depth is drawn first (a place's own level before a shared one) */
@@ -48,6 +48,14 @@ export const VIEW_PARTS = {
 };
 /* the words of a part a level of the dive draws: its own, or those of the part's home elsewhere */
 export const diveWord = (level, key) => VIEW_PARTS.dive[level + '.' + key] || partWord(level, key);
+
+/* how big each level is, roughly: metres across one picture of it. A level of the dive has its size in its one home
+   (m in DEPTHS, src/data/weave.js, which the zoom itself runs on); the flight's levels above the board, which the dive
+   does not have, have theirs here. Physical sizes rounded to a figure, not industry figures; they agree with the
+   levels' own words (depth.*.see, place.dc.*.d). The frame's rail says them, and how many times closer the next level
+   is (src/v2/frame.js). Steps of a line (the factory's, the studio's) are steps, not sizes, and have none */
+const FLIGHT_SIZES = { campus: 500, hall: 100, server: 0.8, handset: 0.15 };   /* handset: the phone flown through, closed or opened like a book */
+export const sizeOf = level => (DEPTHS[level] && DEPTHS[level].m) || FLIGHT_SIZES[level] || null;
 
 /* the stories that drive scenes (src/v2/stories.js), each at home at one level */
 export const STORIES = { board: { place: 'datacentre', level: 'board', view: 'board' } };

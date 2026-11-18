@@ -644,6 +644,38 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
   await page.waitForFunction(() => !document.documentElement.dataset.arrive && !!document.querySelector('#l3-chip [data-part3="hbm"]'), null, { timeout: 60000, polling: 500 })
     .catch(() => problems.push(tag + ': the dive\'s chip does not come to rest with the memory beside it'));
     await page.close(); }
+  /* how big it is here, and the ring on the way in, in every view (#231, #232, #234): a page of its own, as it moves
+     between views. The layers of a chip stand in the free part of the picture, their names inside it and never under
+     the card; each level on the rail says its size; the way in stands beside the next layer, the dive's next level and
+     the board's chip, with a ring on it; and while the dive moves the card says how many times closer it goes */
+  for (const [vt, viewport, scheme] of [['desktop', { width: 1280, height: 800 }, 'dark'], ['phone', { width: 390, height: 844 }, 'light']]) {
+    const page = await browser3d.newPage({ viewport, colorScheme: scheme }), tg = tag + ' (' + vt + ')';
+    await page.addInitScript(() => { try { localStorage.setItem('osl-quality', 'keep'); } catch (e) { /* no storage */ } });
+    page.on('pageerror', e => problems.push(tg + ' (size and ring): ' + e.message));
+    await page.goto(base + 'index.html#/chip/1');
+    const ringAt = ui => { const w = document.querySelector(ui + ' .wayin.at:not([hidden])'); return !!w && !!w.style.getPropertyValue('--wx') && !!w.querySelector('.wigo'); };
+    await page.waitForFunction(ringAt, '#chipui', { timeout: 90000, polling: 1000 }).catch(() => problems.push(tg + ': the chip\'s layers put no ring on the way in'));
+    if ((await page.$$('#chipui .rail2 .sz')).length !== 5) problems.push(tg + ': the chip\'s layers do not say their sizes on the rail');
+    /* the names shown stay inside the picture, and clear of the card (polled: on a slow renderer the names may still
+       stand where the frame before a resize put them, until the next frame is drawn) */
+    const strayNames = () => { const c = document.getElementById('chipCanvas').getBoundingClientRect(), d = document.querySelector('#chipui .dockwrap').getBoundingClientRect();
+      return [...document.querySelectorAll('#chipLabels .lbl3')].filter(e => e.style.opacity !== '0').filter(e => { const r = e.getBoundingClientRect();
+        return r.left < c.left - 2 || r.right > c.right + 2 || r.top < c.top - 2 || (r.right > d.left && r.left < d.right && r.bottom > d.top && r.top < d.bottom); }).map(e => { const r = e.getBoundingClientRect(); return e.textContent + ' at ' + [r.left, r.top, r.right, r.bottom].map(Math.round).join(',') + ' (picture ' + [c.right, c.bottom].map(Math.round).join(',') + ', card from ' + Math.round(d.left) + ')'; }); };
+    await page.waitForFunction(f => !new Function('return (' + f + ')()')().length, strayNames.toString(), { timeout: 60000, polling: 1000 })
+      .catch(async () => problems.push(tg + ': names of the chip\'s layers outside the picture or under the card: ' + (await page.evaluate(strayNames)).join(', ')));
+    /* the rest is the same frame on a phone: checked once, on the desktop, to keep the run short */
+    if (vt === 'phone') { await page.close(); continue; }
+    await page.evaluate(() => { location.hash = '#/board'; });
+    await page.waitForFunction(ringAt, '#boardui', { timeout: 90000, polling: 1000 }).catch(() => problems.push(tg + ': the board puts no ring on its way into the chip'));
+    await page.evaluate(() => { location.hash = '#/dive/block'; });
+    await page.waitForFunction(ringAt, '#diveui', { timeout: 90000, polling: 1000 }).catch(() => problems.push(tg + ': the dive puts no ring on the square it goes into'));
+    if ((await page.$$('#diveui .rail2 .sz')).length < 5) problems.push(tg + ': the dive\'s levels do not say their sizes on the rail');
+    /* going in: every line the card shows is kept, so a quick move is not missed between two polls */
+    await page.evaluate(() => { window.zooms = []; const keep = () => { const l = document.querySelector('#diveui .scale2.moving:not([hidden])'); if (l) window.zooms.push(l.textContent); };
+      new MutationObserver(keep).observe(document.getElementById('diveui'), { subtree: true, attributes: true, childList: true, characterData: true }); });
+    await page.waitForFunction(() => { if (/#\/dive\/block$/.test(location.hash)) { const b = document.querySelector('#diveui .wayin:not([hidden]) .wigo'); if (b) b.click(); } return window.zooms.some(z => /times closer/.test(z)); }, null, { timeout: 90000, polling: 2000 })
+      .catch(() => problems.push(tg + ': going deeper, the card does not say how many times closer'));
+    await page.close(); }
   /* a phone is flown through like the data centre (src/v2/phone3d-flight.js): going inside the phone island opens the
      flight, the way in on the picture goes deeper, and going on past the chip carries the flight into the dive's phone
      chip, which comes down from where the flight ended */

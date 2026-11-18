@@ -1853,6 +1853,30 @@ button.opens { width: 100%; text-align: left; border: 0; border-left: 3px solid 
 .srvsay { margin: 8px 0; padding: 8px 10px; border-radius: 10px; background: color-mix(in srgb, var(--ink) 6%, transparent); }
 .srvsay.bad { color: var(--ink); background: color-mix(in srgb, var(--bad) 12%, transparent); }
 @media (max-width: 720px) { .srvread { grid-template-columns: 1fr 1fr; } .srvmap { display: none; } }
+/* how big it is here (src/v2/frame.js, SIZES in src/data/atlas.js): each level's rough size beside its name on the rail,
+   and in the card, beside its faces, how many times closer the next level is while the view moves there. At rest the
+   card's line says the level's size only on a phone, where the rail is hidden */
+.rail2 .nm { display: inline-flex; align-items: baseline; gap: 6px; }
+.rail2 .sz { font: 500 10.5px var(--mono); color: var(--muted); font-weight: 500; letter-spacing: -.01em; }
+.rail2 [aria-current] .sz { color: var(--accent); }
+.scale2 { position: absolute; top: 15px; right: 18px; max-width: calc(100% - 250px); margin: 0; display: flex; align-items: center; justify-content: flex-end; gap: 6px; text-align: right;
+  font-size: 12px; line-height: 1.25; color: var(--muted); pointer-events: none; }
+.scale2[hidden] { display: none; }
+.scale2 b { color: var(--ink); font-weight: 600; }
+.scale2 .za { display: grid; place-items: center; flex: none; width: 20px; height: 20px; border-radius: 50%; background: var(--accent); color: var(--accent-ink); font-size: 12px; font-weight: 700; }
+.scale2.moving .zt { display: none; }
+@media (min-width: 721px) { .scale2:not(.moving) { display: none; } }
+@media (max-width: 720px) { .scale2 { top: 13px; right: 14px; max-width: calc(100% - 230px); font-size: 11.5px; } }
+/* the ring on the way in, at every width; where the card is below the picture, the button waits at the top and the
+   ring alone marks the thing it enters, unless the card would cover it */
+@media (max-width: 1099px) {
+  .wayin.at .wiring { display: block; position: absolute; left: var(--wx); top: var(--wy); width: 38px; height: 38px; margin: -19px 0 0 -19px; border-radius: 50%;
+    border: 2px solid var(--accent); box-shadow: 0 0 0 5px color-mix(in srgb, var(--accent) 18%, transparent); }
+  @media (prefers-reduced-motion: no-preference) { .wayin.at .wiring { animation: wiring 2.4s ease-out infinite; } }
+}
+.wayin.under .wiring { display: none !important; }
+/* the board's way into its chip, under each step of its story (src/v2/app.js wayToChip) */
+.dock .wayrow { margin: 2px 0 10px; }
 /* something to do at a level (src/data/seek.js, seekHtml in src/v2/app.js): what to look for, the parts to tap, a
    true thing to notice on the one tapped, and, once found, the question above lit in its thread's colour */
 .seek { margin: 4px 0 12px; padding: 12px 14px; border-radius: 14px; border: 1px solid var(--line); background: color-mix(in srgb, var(--qc) 5%, transparent); }

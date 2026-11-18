@@ -570,6 +570,13 @@ export function createWorld(cv, on) {
     get flying() { return !!fly; },
     /* the square the current depth is drawn in, in CSS pixels: { B, cx, cy } (for a 3D level drawn in its place) */
     get frame() { const b = box(); return { B: b.B, cx: b.cx, cy: b.cy }; },
+    /* at rest at a depth, the middle of the square the next depth lives in (its portal), 0..1 across and down the
+       picture; null while moving, or at the last depth (the shell's way in stands beside it with a ring on it) */
+    get portal() {
+      if (fly || drag || Math.abs(Z - Math.round(Z)) > 0.02 || !W || !H) return null;
+      const b = box(), F = frames(Math.round(Z), b.B, b.cx, b.cy); if (!F.next) return null;
+      return { x: (F.next.tx + F.next.s * 500) / W, y: (F.next.ty + F.next.s * 500) / H };
+    },
     setZ(z) { setZ(z); },
     flyTo(d) {
       d = clampZ(d);
