@@ -33,7 +33,7 @@ jobs:
       - name: Browser smoke test
         # the browser runs on a software renderer here, seconds per frame: if one run fails, it runs once more, and a pass
         # on the second run is marked as a warning, so a check that passes by chance is still seen and fixed
-        timeout-minutes: 45
+        timeout-minutes: 60
         run: |
           if npm run test:browser; then exit 0; fi
           echo "::warning title=Smoke test passed only on a second run::A browser check failed once. Read the first run's problems above and make that check steady."

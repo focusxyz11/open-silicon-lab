@@ -206,7 +206,9 @@ export function createDataCentre(canvas, host, on = {}) {
   const named = NAMES.map(([id, obj, at, lv]) => { const lb = L.add(obj, at, t('part.' + VIEW_PARTS.flight[id]), { cls: 'part3' }); lb.lv = lv; return lb; });
   named.forEach((lb, i) => { lb.id = lb.el.dataset.hl = NAMES[i][0]; });
   /* the way in at each level: the thing you would enter next, where the shell's button stands with a ring on it */
-  const INTO = [[scene, W3(0, HALL.h, -4.5)], [rack, W3(0, 1.2, 0.45)], [rack, W3(0.02, 1.0, 0.5)], [tray, W3(0, 0.08, 0.02)], [pkg, W3(0, 0.012, 0)], [pkg, W3(...onTop(500, 150, 0.006))]];
+  /* at the server, the ring stands on the board beside the accelerator, never on its name: finding that chip is the
+     level's search (src/data/seek.js) */
+  const INTO = [[scene, W3(0, HALL.h, -4.5)], [rack, W3(0, 1.2, 0.45)], [rack, W3(0.02, 1.0, 0.5)], [tray, W3(0.1, 0.016, 0.17)], [pkg, W3(0, 0.012, 0)], [pkg, W3(...onTop(500, 150, 0.006))]];
   const pv = new THREE.Vector3();
   const portal = () => {
     const lv = Math.round(z), T = INTO[lv]; if (!T || Math.abs(z - lv) > 0.08 || drag) return on.portal && on.portal(null);
@@ -254,9 +256,12 @@ export function createDataCentre(canvas, host, on = {}) {
   canvas.addEventListener('wheel', e => { e.preventDefault();
     if (e.deltaY > 0 && atEnd()) { push += e.deltaY; if (push > 260) { push = 0; on.beyond && on.beyond(); } return; }
     push = 0; go(goal + e.deltaY * 0.0016); }, { passive: false });
-  canvas.addEventListener('pointerdown', e => { canvas.setPointerCapture(e.pointerId); drag = { y: e.clientY, g: goal }; });
+  canvas.addEventListener('pointerdown', e => { canvas.setPointerCapture(e.pointerId); drag = { y: e.clientY, x: e.clientX, g: goal, t: performance.now(), touch: e.pointerType === 'touch' }; });
   canvas.addEventListener('pointermove', e => { if (drag) go(drag.g + (drag.y - e.clientY) * 0.006); });
-  const end = () => { drag = null; };
+  /* on a touch screen, a quick swipe up or down moves one whole level in or out; up at the chip goes inside it */
+  const end = e => { const d = drag; drag = null; if (!d || !d.touch || e.type !== 'pointerup') return;
+    const dy = e.clientY - d.y, dx = e.clientX - d.x; if (performance.now() - d.t > 450 || Math.abs(dy) < 36 || Math.abs(dy) < 1.5 * Math.abs(dx)) return;
+    const from = Math.round(d.g); if (dy < 0 && from >= END) { go(END); on.beyond && on.beyond(); return; } go(from + (dy < 0 ? 1 : -1)); };
   canvas.addEventListener('pointerup', end); canvas.addEventListener('pointercancel', end);
   canvas.addEventListener('keydown', e => { if (e.key === 'ArrowDown' || e.key === 'PageDown') { if (atEnd()) on.beyond && on.beyond(); else go(Math.floor(goal + 1)); e.preventDefault(); } if (e.key === 'ArrowUp' || e.key === 'PageUp') { go(Math.ceil(goal - 1)); e.preventDefault(); } });
   let settle = 0, lastLevel = -1;

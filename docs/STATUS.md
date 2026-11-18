@@ -10,6 +10,9 @@ Where the lab stands, and what is ready to be built next. Read this first when s
   - Every place and level has one card with Look, Do and Ask.
 - **On a desktop** (1100 px and wider), the card is a bench at the right and the picture takes the rest. On a phone, the card sits below the picture.
 - **The way in is on the picture.** Every view that can go deeper shows one large *Go inside* button over the scene, a copy of the card's own way deeper (any element marked `data-in`, mirrored by `src/v2/frame.js`). In the data centre it stands beside the thing you would enter, with a ring on it; scrolling past the chip carries the flight into the chip, and the card lists what you see at each level and what each part does (in the flight and in every dive, chip to atom; choosing a part in the dive picks it on the picture, with its note). On the island, a place's card offers *Go inside* even before a part is picked, and zooming in close then pushing on goes inside too.
+- **The way along is on the picture too.** Whatever next step a card writes (`data-along`: the next station on the line, the next step in the studio, the next step up the chip's stack) is mirrored by the frame as a *Next →* button at the picture's right edge. On the line, a station with an inside (`DIVES` in `src/data/weave.js`) has its way in on the picture, ringed on its machine (`DIVE_PART`): at print, *Go inside · Printing machine*; ↓ follows it (#233).
+- **On the island, buildings invite you in** (desktop): pointing at a building or a machine with an inside rings it on the ground and shows *Go inside* over it; a click selects, a double click goes in (#237).
+- **On a phone, the card steps aside** (below 720 px only): in the dive, the line, the studio and the flight it rests as a peek (the level's name and its question), slides up when touched and folds when the picture is touched; the ways in and along wait above it, at the thumb; a quick swipe up or down on the picture moves one level in or out (#238).
 - **From the flight into the dive, one chip.** The die the flight lands on and the dive's chip level are drawn from one plan (`src/data/die.js`, in the tones of `CHIP_TONES` in `src/v2/kit3d.js`): the same tiles, memory band, links, clock wires and pads, with four stacks of memory beside the die on one base, at the dive's own scale. The dive's chip starts where the flight ended (its angle, the point it looked at, as close; `HANDOFF` in `src/v2/dc3d.js`, `arrive` in `src/v2/level3d.js`, marked `data-arrive` on the page while it lasts), the package fading as it rises to the plan; going on comes down into one tile (the block). The stacks are named by their home (`VIEW_PARTS.dive` and `diveWord` in `src/data/atlas.js`).
 - **Something to do at a level** (#235, `src/data/seek.js`): at the data centre's server, the phone's board and the gate, the card says what to look for; tapping a part, on the picture or in the card, gives something true to notice; the part that leads into the level's question lights it (in the card, and its parts on the flat picture); what you found is kept in *Your log*. The other levels take a search by adding data and words.
 - **A phone is flown through too** (`src/v2/phone3d-flight.js`, `#/place/phones/<level>`): from the phone on a desk, its screen opened like a book, into the frame where the battery fills most of it, onto the board as its shields lift, to the chip as the memory on top lifts off; past the chip it carries on into the dive's phone chip, which starts where the flight ended (`HANDOFF`, as the data centre's does). The flat dive keeps its phone and board levels, where their challenges are played.
@@ -53,16 +56,13 @@ The labs of #216 to #221 and the fixes of #222 are built. What they left open:
 
 ### The dive and the interface
 
-Each is an issue labelled `task`; #230 waits for a decision (`blocked`). #229 (the chip you land on is the chip you saw) is built.
+Each is an issue labelled `task`; #230 waits for a decision (`blocked`). #229 (the chip you land on is the chip you saw), #233, #237 and #238 are built.
 
 - #230 One way down through a chip, not two side by side (the dive and the layer stack).
 - #231 Chip layers: the chip framed beside the card, its names never under it.
 - #232 The ring on the way in, in every view.
-- #233 The factory line: the way along and the way in, on the picture.
 - #234 How big is it here: size at every level.
 - #236 The phone and the car, flown through like the data centre: the phone is built (below); the car waits.
-- #237 On the island, buildings invite you in.
-- #238 The dive on a phone: a card that steps aside.
 
 ## Ideas still to bring over
 

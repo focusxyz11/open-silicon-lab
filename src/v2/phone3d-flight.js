@@ -239,9 +239,12 @@ export function createPhoneFlight(canvas, host, on = {}) {
   canvas.addEventListener('wheel', e => { e.preventDefault();
     if (e.deltaY > 0 && atEnd()) { push += e.deltaY; if (push > 260) { push = 0; on.beyond && on.beyond(); } return; }
     push = 0; go(goal + e.deltaY * 0.0016); }, { passive: false });
-  canvas.addEventListener('pointerdown', e => { canvas.setPointerCapture(e.pointerId); drag = { y: e.clientY, g: goal }; });
+  canvas.addEventListener('pointerdown', e => { canvas.setPointerCapture(e.pointerId); drag = { y: e.clientY, x: e.clientX, g: goal, t: performance.now(), touch: e.pointerType === 'touch' }; });
   canvas.addEventListener('pointermove', e => { if (drag) go(drag.g + (drag.y - e.clientY) * 0.006); });
-  const end = () => { drag = null; };
+  /* on a touch screen, a quick swipe up or down moves one whole level in or out; up at the last goes inside (as dc3d.js) */
+  const end = e => { const d = drag; drag = null; if (!d || !d.touch || e.type !== 'pointerup') return;
+    const dy = e.clientY - d.y, dx = e.clientX - d.x; if (performance.now() - d.t > 450 || Math.abs(dy) < 36 || Math.abs(dy) < 1.5 * Math.abs(dx)) return;
+    const from = Math.round(d.g); if (dy < 0 && from >= END) { go(END); on.beyond && on.beyond(); return; } go(from + (dy < 0 ? 1 : -1)); };
   canvas.addEventListener('pointerup', end); canvas.addEventListener('pointercancel', end);
   canvas.addEventListener('keydown', e => { if (e.key === 'ArrowDown' || e.key === 'PageDown') { if (atEnd()) on.beyond && on.beyond(); else go(Math.floor(goal + 1)); e.preventDefault(); } if (e.key === 'ArrowUp' || e.key === 'PageUp') { go(Math.ceil(goal - 1)); e.preventDefault(); } });
   let settle = 0, lastLevel = -1;
