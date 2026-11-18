@@ -48,7 +48,8 @@ Figures are SVG (a viewBox of about 300 × 200, `width: 100%`) drawn from the en
   - Take screenshots at 1280 × 820 in dark (`localStorage['osl-theme'] = 'dark'`) and 390 × 844 in light, plus one desktop shot mid-play.
   - Look at them and fix overflow, clipped or overlapping words, unreadable colours and sideways scroll.
   - A full-page shot does not show the card's inner scroll, so scroll the card on the phone too.
-- Add the lab to `scripts/smoke.mjs` with `playLab(id, moves, name)`. The moves are done again on every poll, because the card may be drawn anew when the flight lands.
+- Add the lab to the `labs` section of `scripts/smoke.mjs` with `playLab(id, moves, name)`. The moves are done again on every poll, because the card may be drawn anew when the flight lands.
+- Run that section: `npm run test:browser -- --only labs` (about 2 minutes on a laptop), plus the section of any view the lab touches (`npm run test:browser -- --list` names them).
   - Select controls by data attributes, never by words.
   - The fab labs' player sits outside `#sheet`, so use plain `.player`.
 - CI runs the smoke on a slow software renderer (about 1.5 s a frame), so be patient: poll, never fixed waits.
