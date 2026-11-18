@@ -83,6 +83,9 @@ export const CHALLENGES = [
   { id: 'agent', step: 'design', place: 'lab', kind: 'agent', grows: 'lab-desk' },
   { id: 'batch', step: 'use', place: 'datacentre', at: 'chip', kind: 'bet', bet: 'batch', grows: 'dc-batch' },
   { id: 'newest', step: 'ship', place: 'phones', at: 'phoneboard', kind: 'teardown', grows: 'island-teardown' },
+  { id: 'sig-heart', step: 'ship', place: 'phones', at: 'phoneboard', kind: 'capture', grows: 'island-adc' },
+  { id: 'sig-bearing', step: 'ship', place: 'cars', at: 'ecu', kind: 'capture', grows: 'island-sensor' },
+  { id: 'reg-jobs', step: 'ship', place: 'phones', at: 'phoneboard', kind: 'regulate', grows: 'island-reg' },
   { id: 'jobs', step: 'design', place: 'studio', at: 'need', kind: 'fit', grows: 'studio-fit' },
   { id: 'evolve', step: 'design', place: 'studio', at: 'gates', kind: 'evolve', grows: 'studio-evolve' },
   { id: 'crystal', step: 'make', place: 'quarry', at: 'crystal', kind: 'pull', grows: 'quarry-ingot' },
@@ -286,6 +289,7 @@ Object.assign(OPENS, { cim: 'divide.block', grover: 'strange.atom' });
 OPENS['ai-chip'] = 'divide.need';
   phone: 'life.phone', car: 'fail.car', dclife: 'fail.ship', fed: 'divide.board', fast: 'fail.chip',
   'power-curve': 'life.block', counter: 'fail.gate' };
+  'sig-heart': 'fail.phoneboard', 'sig-bearing': 'fail.ecu', 'reg-jobs': 'fail.phoneboard' };
 /* and where the open things of the ledger sit: a break under "is the design right?", a piece to build under
    "could anyone design a chip?", a missing check under "who checks, and with what?" */
 export const FRONT_ASK = { break: 'fail.check', build: 'open.need', engine: 'idea.check' };

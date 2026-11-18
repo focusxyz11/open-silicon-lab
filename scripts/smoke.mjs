@@ -507,6 +507,10 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
     await playLab('furnace', "CL('[data-im-ion=\"B\"]'); SET('#im-le', 0.3); CL('[data-im-anneal=\"furnace\"]'); CL('[data-im-anneal=\"laser\"]')", 'The furnace spreads it');
     await playLab('shallow', "CL('[data-im-ion=\"As\"]'); SET('#im-le', 0.3); CL('[data-im-anneal=\"laser\"]')", 'Shallow and switched on');
     await playLab('vias', "SET('#ov-shift', 0); SET('#ov-sigma', 0.65); SET('#ov-shift', 2)", 'Ten billion vias');
+    /* chips that touch the real world (#220): the heartbeat inside its budget, the edge where the bearing's tone is lost, and a regulator for each of four jobs (a wrong one first, then the best) */
+    await playLab('sig-heart', "SET('#ana-rate', 10)", 'A heartbeat on a coin cell');
+    await playLab('sig-bearing', "SET('#ana-rate', 14); SET('#ana-rate', 15)", 'Hear the failing bearing');
+    await playLab('reg-jobs', "for (const [j, a, b] of [['wearable', 'ldo', 'buck'], ['cpu', 'ldo', 'buck'], ['adc', 'buck', 'both'], ['nearly', 'buck', 'ldo']]) { CL('[data-reg-job=\"' + j + '\"]'); CL('[data-reg-type=\"' + a + '\"]'); CL('[data-reg-type=\"' + b + '\"]'); }", 'Four jobs, four regulators');
     await playLab('euv-1000', "SET('#eu-power', 1000); SET('#eu-reflect', 0.72); SET('#eu-mirrors', 8); SET('#eu-dose', 15)", 'The 1,000-watt source');
     /* every scanner at its finest: the engine finds the setting, the person's dials are set to it */
     /* new ways to compute: the cheapest converter of a grid of memory cells, and a quantum search stepped past its peak */

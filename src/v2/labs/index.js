@@ -18,3 +18,5 @@ import aibuild from './aibuild.js';
 LABS.aibuild = aibuild;
 import clockpower from './clockpower.js';
 Object.assign(LABS, { powercurve: clockpower, counter: clockpower });
+import analog from './analog.js';
+Object.assign(LABS, { capture: analog, regulate: analog });

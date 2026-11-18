@@ -764,6 +764,13 @@ export function createMap(canvas, host, on = {}) {
     'studio-wing': g => { box(g, 8, 4.5, 6, glass(P.glass, { opacity: 0.55, emissive: night ? P.glass : 0, emissiveIntensity: night ? 0.4 : 0 }), 0, 0, 0, 0.3); box(g, 8.2, 0.4, 6.2, mat(P.white), 0, 4.5, 0, 0.1); },
     'fab-trucks': () => { for (let i = 0; i < 4; i++) onLoop(truck(A.box[(i + 3) % 5]), 0.12 + i * 0.25, 0.012, -0.7); },
     'island-teardown': g => { box(g, 6, 1.1, 3, mat(P.wall), 0, 0, 0, 0.2); for (let k = 0; k < 4; k++) box(g, 1, 0.12, 1.6, mat(k % 2 ? P.chip : P.board), -2.1 + k * 1.4, 1.1, 0, 0.04); box(g, 0.2, 2.6, 0.2, metal(P.metal), 2.6, 1.1, -1, 0.02); pulses.push(cyl(g, 0.5, 0.3, 0.4, glow(P.warm, 1.1), 2.6, 3.4, -1, 12)); },
+    /* chips that touch the real world (#220): a listening post whose roof is a converter's steps, a power house with its coils, and a stand where a sensor listens to a wheel */
+    'island-adc': g => { box(g, 4, 1.5, 2.6, mat(P.white), 0, 0, 0, 0.2); box(g, 4.2, 0.2, 2.8, mat(A.roof, { roughness: 0.7 }), 0, 1.5, 0, 0.06); for (let k = 0; k < 6; k++) pulses.push(box(g, 0.42, 0.3 + k * 0.3, 0.9, glow(P.accent, night ? 1.1 : 0.55), -1.5 + k * 0.6, 1.7, 0, 0.03, { cast: false })); box(g, 0.9, 1, 0.06, mat(P.slate), 0, 0.1, 1.31, 0.02, { cast: false }); },
+    'island-reg': g => { box(g, 4.4, 0.25, 3, mat(P.slate), 0, 0, 0, 0.06); box(g, 1.5, 2, 2.2, mat(P.wall), -1.2, 0.25, 0, 0.12); pulses.push(box(g, 0.9, 0.22, 0.06, glow(P.good, 1), -1.2, 1.6, 1.11, 0.02, { cast: false }));
+      [[0.5, -0.6], [1.5, -0.6], [1, 0.6]].forEach(([x, z]) => { cyl(g, 0.42, 0.42, 1.3, metal(0xb87333, { roughness: 0.35 }), x, 0.45, z, 18); cyl(g, 0.5, 0.5, 0.2, metal(P.dark), x, 0.25, z, 18); cyl(g, 0.16, 0.16, 0.3, metal(P.metal), x, 1.75, z, 10); }); },
+    'island-sensor': g => { box(g, 3.8, 0.25, 2.4, mat(P.slate), 0, 0, 0, 0.06); [-0.45, 0.45].forEach(z => box(g, 0.3, 1.5, 0.22, metal(P.metal), -0.6, 0.25, z, 0.04));
+      const w = cyl(g, 1, 1, 0.5, metal(P.dark, { roughness: 0.5 }), -0.6, 1.55, 0, 28); w.rotation.x = Math.PI / 2; const hub = cyl(g, 0.36, 0.36, 0.56, metal(P.metal), -0.6, 1.55, 0, 16); hub.rotation.x = Math.PI / 2;
+      box(g, 1, 1.5, 1.2, mat(P.white), 1.2, 0.25, 0, 0.1); pulses.push(box(g, 0.26, 0.26, 0.26, glow(P.warm, 1.2), -0.6, 1.42, 0.62, 0.05, { cast: false })); },
     'studio-evolve': g => { box(g, 7, 0.4, 5, mat(P.wall), 0, 0, 0, 0.1); const d = new THREE.Mesh(new THREE.CylinderGeometry(2.6, 2.6, 7, 20, 1, false, 0, Math.PI), glass(P.glass, { opacity: 0.45 })); d.rotation.z = Math.PI / 2; d.position.y = 0.4; g.add(d); for (let k = 0; k < 6; k++) box(g, 0.5, 0.5 + rnd(k, 31) * 1.2, 0.5, mat(P.good), -2.5 + k, 0.4, (k % 2) - 0.5, 0.1); },
     'studio-fit': g => { box(g, 9, 3, 0.6, mat(P.white), 0, 0, 0, 0.1); for (let k = 0; k < 6; k++) box(g, 1.1, 1.1, 0.12, mat(k < 2 ? P.accent : k < 4 ? P.good : P.warm), -3.4 + k * 1.36, 1, 0.36, 0.05, { cast: false }); },
     /* your chip's first wafer on show: a wafer standing on a plinth, its dies good and dead, and the packaged chip in front of it */
@@ -823,6 +830,7 @@ export function createMap(canvas, host, on = {}) {
   Object.assign(GROW_SPOT, { 'dc-heat': [19, -5] });
   GROW_SPOT['studio-aichip'] = [-21, 3];
     'blk-power': [-21, 0.5], 'gate-counter': [5, 6] };
+    'island-adc': [11.5, 18.5], 'island-reg': [5.5, 24], 'island-sensor': [-11.5, 3] };
   GROWTH.forEach(gw => { const [x, z, y] = GROW_SPOT[gw.id] || [0, 0], g = group(G[gw.at], x, y || 0, z); g.visible = false; g.scale.setScalar(0.001); growing.push({ id: gw.id, g, built: false, t0: 0 }); });
 
   /* No question floats over a place any more (docs/framework/rebuild.md, section 3): a question shown as a dot on a
