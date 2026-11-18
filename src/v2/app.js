@@ -149,12 +149,12 @@ export function start() {
   const hudEl = $('loop');
   /* the address of what is in view now: moving inside a view (deeper, along the line) changes it too */
   const liveHash = () => !vui.hidden && flatKind !== 'supply' && WE && diveD >= 0 && diveId() ? (flatKind === 'dive' ? '#/dive/' + diveId() + (diveWorld !== 'datacentre' ? '/' + diveWorld : '') : '#/' + flatKind + '/' + diveId())
-    : !cui.hidden ? '#/chip/' + chipRow + (chipMode === 'build' ? '/build' : '') : !pui.hidden ? '#/place/datacentre/' + dcLv : location.hash;
+    : !cui.hidden ? '#/chip/' + chipRow + (chipMode === 'build' ? '/build' : '') : !pui.hidden ? '#/place/datacentre/' + dcLv : !fui.hidden ? '#/place/phones/' + phLv : location.hash;
   const whereNow = () => { const k = partsOf(location.hash)[0], W = Way.whereOf(k === 'ask' || k === 'do' || k === 'supply' ? location.hash : liveHash()); return W.view === 'island' && cur && !sheet.hidden ? Way.whereOf('#/place/' + cur.place) : W; };
   /* the address always says where you are (so it can be shared, and a reload comes back here), and the loop in the
      bar follows: walking the line from the wires to the test house to the port, the stage lit moves with you */
   const here = () => { const h = liveHash(), p = partsOf(location.hash), k = p[0];
-    if (h !== location.hash && (['dive', 'line', 'chip'].includes(k) || (k === 'bench' && !p[2]) || (k === 'place' && !pui.hidden))) { history.replaceState(null, '', h); shownAt = h; }
+    if (h !== location.hash && (['dive', 'line', 'chip'].includes(k) || (k === 'bench' && !p[2]) || (k === 'place' && (!pui.hidden || !fui.hidden)))) { history.replaceState(null, '', h); shownAt = h; }
     hud(); };
   function hud() {
     const W = whereNow(), chipS = Game.chipAt(S);
@@ -529,6 +529,39 @@ export function start() {
   }
   const depthBar = z => { if (dcFrame) dcFrame.rail(LEVELS[Math.round(z)], z / (LEVELS.length - 1)); };
 
+  /* ---- a place flown through: a phone (src/v2/phone3d-flight.js), as the data centre is: its own canvas, card and
+     levels, and past the chip the flight carries on into the dive's phone chip ---- */
+  const fui = $('flyui');
+  let ph = null, phP = null, PH = null, phFrame = null, phLv = 0;
+  const ensurePh = () => phP || (phP = import('./phone3d-flight.js').then(m => { PH = m; ph = m.createPhoneFlight($('flyCanvas'), $('flyLabels'), { level: lv => phUI(lv),
+    depth: z => { if (phFrame) phFrame.rail(PH.LEVELS[Math.round(z)], z / (PH.LEVELS.length - 1)); },
+    portal: p => phFrame && phFrame.inwardAt(p), beyond: () => { if (!fui.hidden) location.hash = PH.BEYOND; } }); return ph; }));
+  function phUI(lv) {
+    phLv = lv; if (!phFrame) return; const id = PH.LEVELS[lv];
+    phFrame.rail(id, lv / (PH.LEVELS.length - 1)); phFrame.level(PH.DEPTH[id]); here();
+    if (phFrame.mode() === 'look') drawPh();
+  }
+  function drawPh() {
+    const LV = PH.LEVELS, id = LV[phLv], last = phLv === LV.length - 1, PP = VIEW_PARTS.phone, seen = ph ? ph.parts(phLv) : [];
+    const hereHtml = seen.length ? '<div class="herebox"><p class="kicker">' + esc(t('place.here')) + '</p><ul class="here2">' + seen.map(k => '<li><button type="button" data-hl="' + k + '"><b>' + esc(t('part.' + PP[k])) + '</b><span>' + esc(t('what.' + PP[k])) + '</span></button></li>').join('') + '</ul></div>' : '';
+    phFrame.dock.innerHTML = lineHtml(t('place.phone.' + id + '.t'), t('place.phone.' + id + '.d'), PH.ASKS[id], aroundRow(
+      phLv ? '<button type="button" class="chipb" data-key="back" data-lvgo="' + (phLv - 1) + '">↑ ' + esc(t('place.phone.' + LV[phLv - 1] + '.t')) + '</button>' : '',
+      last ? '<a class="chipb" data-key="next" data-in href="' + PH.BEYOND + '">↓ ' + esc(t('place.next')) + '</a>' : '<button type="button" class="chipb" data-key="next" data-in data-lvgo="' + (phLv + 1) + '">↓ ' + esc(t('place.phone.' + LV[phLv + 1] + '.t')) + '</button>')).replace('<div class="nav">', hereHtml + '<div class="nav">');
+  }
+  function showPhone(lv) {
+    hideAll();
+    $('flyCanvas').hidden = $('flyLabels').hidden = false; fui.hidden = false; showStage(true); document.body.classList.add('immersive');
+    loading(true); lastPlace = 'phones';
+    return Promise.all([withFrame(), ensurePh()]).then(([, d]) => {
+      phFrame = frameOf(fui, { up: { href: '#/', label: t('place.back') }, path: [{ href: '#/', label: t('place.back') }, { label: t('map.phones.t') }],
+        rail: { label: t('place.levels'), items: PH.LEVELS.map(k => ({ id: k, label: t('place.phone.' + k + '.t') })) }, onRail: k => d.go(PH.LEVELS.indexOf(k)), onLook: drawPh, scroll: true });
+      fui.onclick = e => { const b = e.target.closest('[data-lvgo]'); if (b) d.go(+b.dataset.lvgo); const h = e.target.closest('[data-hl]'); if (h) d.mark(h.dataset.hl); };
+      fui.onpointerover = e => { const h = e.target.closest('[data-hl]'); d.mark(h ? h.dataset.hl : null); };
+      loading(false); d.resume(); if (lv != null && lv >= 0 && lv < PH.LEVELS.length) d.go(lv); phUI(Math.round(d.z)); $('flyCanvas').focus({ preventScroll: true });
+    });
+  }
+  const hidePh = () => { $('flyCanvas').hidden = $('flyLabels').hidden = true; fui.hidden = true; if (ph) ph.pause(); };
+
   /* ---- inside a chip, layer by layer: the dive (used) and the line (made) as one picture, turned by the Turn ---- */
   const cui = $('chipui');
   let chipMode = 'dive', chipRow = 0, chipFrame = null;
@@ -584,7 +617,7 @@ export function start() {
   /* the dive starts from any world: the data centre's chip, a phone, a car, or the made chip */
   const DIVES = {
     datacentre: { levels: DIVE_LEVELS, place: 'datacentre' },
-    phone: { title: 'dive.phone.title', up: '#/place/phones', upWord: 'map.phones.t', place: 'phones' },
+    phone: { title: 'dive.phone.title', up: '#/place/phones/3', upWord: 'map.phones.t', place: 'phones' },
     car: { title: 'dive.car.title', up: '#/place/cars', upWord: 'map.cars.t', place: 'cars' },
     made: { title: 'dive.made.title', up: '#/place/fab', upWord: 'map.fab.t', place: 'fab', face: 'made' }
   };
@@ -861,13 +894,14 @@ export function start() {
     $('diveCanvas').hidden = true; vui.hidden = true; dive && dive.stop(); hide3d(); $('flatLabels').hidden = true; if (flatWords) flatWords.clear();
     hideBoard(); $('hero').hidden = true; $('outbtn').hidden = true; lensbar.hidden = true; closeSheet(); pui.hidden = true; cui.hidden = true; dc && dc.pause(); map && map.pause(); chip && chip.pause();
     ['mapCanvas', 'mapLabels', 'placeCanvas', 'placeLabels', 'chipCanvas', 'chipLabels'].forEach(k => { $(k).hidden = true; });
+    hidePh();
     document.body.classList.remove('immersive'); page.hidden = true; hideL3(); showStage(false);
   }
   function showMap(from) {
     $('diveCanvas').hidden = true; vui.hidden = true; dive && dive.stop(); hide3d(); $('flatLabels').hidden = true; if (flatWords) flatWords.clear();
     hideBoard(); document.body.classList.remove('immersive');
     $('chipCanvas').hidden = $('chipLabels').hidden = true; cui.hidden = true; chip && chip.pause();
-    $('placeCanvas').hidden = $('placeLabels').hidden = true; pui.hidden = true; dc && dc.pause();
+    $('placeCanvas').hidden = $('placeLabels').hidden = true; pui.hidden = true; dc && dc.pause(); hidePh();
     $('mapCanvas').hidden = $('mapLabels').hidden = false; $('hero').hidden = false; $('outbtn').hidden = false; lensbar.hidden = false; showStage(true);
     const part = from && ['line', 'bench'].includes(flatKind) && WE && isPart(lastPlace, diveId()) ? diveId() : null;
     loading(!map); return ensureMap().then(m => { if (from && lastPlace) { m.from(lastPlace, part); if (!part) m.focus(lastPlace); } m.resume(); return m; });
@@ -1093,7 +1127,7 @@ export function start() {
     const arrive = !page.hidden && page.querySelector('[data-arrive]');
     if (arrive && location.hash === '#/w/' + th + '/at/' + d) { arrive.innerHTML = arriveHtml(th, d); return; }
     const html = stopHtml(th, d);
-    const fr = !vui.hidden ? diveFrame : !cui.hidden ? chipFrame : !pui.hidden ? dcFrame : !bui.hidden ? boardFrame : null;
+    const fr = !vui.hidden ? diveFrame : !cui.hidden ? chipFrame : !pui.hidden ? dcFrame : !fui.hidden ? phFrame : !bui.hidden ? boardFrame : null;
     if (fr) {
       fr.stop(html);
       /* on the flat dive, the question's parts light up on the picture */
@@ -1123,7 +1157,7 @@ export function start() {
   /* ---- the questions from the field (src/data/questions.js, src/v2/field.js): one opens in the card of the view
      you are in, or in the island's dock; a leak is raised when you cross its seam, the first time, and then waits
      under Ask at its home ---- */
-  const frameNow = () => (!vui.hidden ? diveFrame : !cui.hidden ? chipFrame : !pui.hidden ? dcFrame : !bui.hidden ? boardFrame : null);
+  const frameNow = () => (!vui.hidden ? diveFrame : !cui.hidden ? chipFrame : !pui.hidden ? dcFrame : !fui.hidden ? phFrame : !bui.hidden ? boardFrame : null);
   function openField(id) {
     hideSeam(); const html = Field.fieldHtml(id); if (!html) return;
     if (!S.crossed[id]) { S.crossed[id] = true; save(); }
@@ -1142,7 +1176,7 @@ export function start() {
   document.addEventListener('click', e => { const l = e.target.closest('[data-leave]'); if (!l) return;
     /* in a world's page, leaving the question goes on to the world it belongs to */
     if (l.closest('[data-arrive]')) { const w = page.querySelector('.warrnext'); if (w) w.scrollIntoView({ behavior: 'smooth', block: 'start' }); return; }
-    const fr = !vui.hidden ? diveFrame : !cui.hidden ? chipFrame : !pui.hidden ? dcFrame : !bui.hidden ? boardFrame : null;
+    const fr = !vui.hidden ? diveFrame : !cui.hidden ? chipFrame : !pui.hidden ? dcFrame : !fui.hidden ? phFrame : !bui.hidden ? boardFrame : null;
     if (fr) { if (fr === diveFrame && dive) { diveThread = null; dive.setThread(null); } fr.look(); } else closeSheet(); });
 
   /* ---- routes ---- */
@@ -1155,7 +1189,7 @@ export function start() {
     if (k === 'dive') { const w = p[2] || Game.DIVE_WORLD[p[1]] || 'datacentre'; if (w === 'datacentre') return ['dive', 4]; const i = Math.max(0, ['phone', 'phoneboard', 'soc', 'car', 'ecu', 'mcu', 'scanner', 'wafer', 'die'].indexOf(p[1]) % 3); return ['dive:' + w, Game.DIVE_WORLD[p[1]] ? 1 + i : 4]; }
     if (k === 'supply') return ['supply', 0];
     return k === 'board' ? ['board', 2] : k === 'line' ? ['line', 1] : k === 'bench' ? ['bench', 1] : k === 'chip' ? ['chip', 3]
-      : k === 'place' && p[1] === 'datacentre' && /^\d+$/.test(p[2] || '') ? ['dc', 1] : ['map', 0]; };
+      : k === 'place' && p[1] === 'datacentre' && /^\d+$/.test(p[2] || '') ? ['dc', 1] : k === 'place' && p[1] === 'phones' && /^\d+$/.test(p[2] || '') ? ['fly', 1] : ['map', 0]; };
   let shownAt = null;   /* the address of the view now made, so a question at the same level only changes the dock */
   let viewNow = null, rankNow = 0, nextMove = null, lastPlace = null, entering = false, enteredFrom = null;
   /* going inside from the island: the camera dives into the place first, then the view zooms in from it */
@@ -1189,6 +1223,8 @@ export function start() {
     if (k === 'chip') return showChip(parts[1] != null ? +parts[1] : null, parts[2]);
     /* the data centre's flight is entered at one of its levels (#/place/datacentre/2); the place itself opens on the island */
     if (k === 'place' && parts[1] === 'datacentre' && /^\d+$/.test(parts[2] || '')) return showPlace('datacentre', +parts[2]);
+    /* and a phone's, the same way (#/place/phones/2) */
+    if (k === 'place' && parts[1] === 'phones' && /^\d+$/.test(parts[2] || '')) return showPhone(+parts[2]);
     if (k === 'place' && isPart(parts[1], parts[2])) return showMap(from).then(() => openPlace(parts[1], 'look', null, null, parts[2]));
     if (k === 'place' && Game.PLACES.includes(parts[1])) return showMap(from).then(() => openPlace(parts[1], parts[2] === 'inside' ? 'look' : null));
     if (k === 'build') return showMap(from).then(() => openPlace('lab', 'look', parts[1] || 'computer', parts[2]));

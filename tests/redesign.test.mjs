@@ -27,6 +27,23 @@ test('every level of the data centre has its words and a real question; every pa
   for (const p of PARTS) assert.ok(VIEW_PARTS.flight[p] && EN['part.' + VIEW_PARTS.flight[p]], p + ' is named by no part of the atlas');
 });
 
+test('a phone is flown through like the data centre: every level has its words and a real question, every part its name', async () => {
+  const f = src('phone3d-flight.js');
+  const levels = f.match(/LEVELS = \[([^\]]+)\]/)[1].match(/'([a-z]+)'/g).map(s => s.slice(1, -1));
+  const asks = Object.fromEntries([...f.match(/ASKS = \{([^}]+)\}/)[1].matchAll(/([a-z]+): '([a-z.]+)'/g)].map(m => [m[1], m[2]]));
+  const depth = Object.fromEntries([...f.match(/DEPTH = \{([^}]+)\}/)[1].matchAll(/([a-z]+): '([a-z]+)'/g)].map(m => [m[1], m[2]]));
+  assert.deepEqual(levels, ['phone', 'inside', 'board', 'chip']);
+  const { STOPS, WORLDS } = await import('../src/data/weave.js');
+  const phone = WORLDS.find(w => w.id === 'phone').depths;
+  for (const lv of levels) { assert.ok(EN['place.phone.' + lv + '.t'] && EN['place.phone.' + lv + '.d'], lv); assert.ok(STOPS[asks[lv]] && EN['stop.' + asks[lv] + '.q'], lv + ': ' + asks[lv]); assert.ok(phone.includes(depth[lv]), lv + ' shows ' + depth[lv]); }
+  /* it ends where the dive's phone chip begins */
+  assert.equal(depth.chip, 'soc'); assert.match(f, /BEYOND = '#\/dive\/soc\/phone'/);
+  const { VIEW_PARTS } = await import('../src/data/atlas.js');
+  const named = [...f.matchAll(/\['([a-z]+)', (?:hinge|phone|parts|soc|dram|scene), W3\(/g)].map(m => m[1]).concat(['isp', 'gpu', 'npu', 'cpu', 'cache']);
+  assert.ok(named.length >= 15);
+  for (const p of named) assert.ok(VIEW_PARTS.phone[p] && EN['part.' + VIEW_PARTS.phone[p]], p + ' is named by no part of the atlas');
+});
+
 test('there is no menu: the bar holds the loop, six stages each with its words, and the shell says so', async () => {
   const { STAGES, STAGE_PLACE } = await import('../src/engines/way.js');
   /* a menu of sections is off unless a visitor asks for it (?menu=1): the choice is the owner's, and easy to reverse */
