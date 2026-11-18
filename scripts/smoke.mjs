@@ -289,7 +289,7 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
   /* joins: every pair of neighbouring levels in 3D (the phone to its board to its chip, the control unit to its chip,
      the wafer to the die, a chip to the block, down to the atom): no flat picture shows between; both levels are
      drawn in one frame on one camera path, half way and back */
-  for (const [a, b, na] of [['phone', 'phoneboard', 4], ['phoneboard', 'soc', 4], ['ecu', 'mcu', 3], ['wafer', 'die', 2], ['chip', 'block', 4], ['block', 'gate', 4], ['gate', 'switch', 5], ['switch', 'atom', 5]]) {
+  for (const [a, b, na] of [['phone', 'phoneboard', 4], ['phoneboard', 'soc', 4], ['ecu', 'mcu', 3], ['wafer', 'die', 2], ['chip', 'block', 5], ['block', 'gate', 4], ['gate', 'switch', 5], ['switch', 'atom', 5]]) {
     const tag = 'join ' + a + '>' + b;
     at = tag; const page = await browser3d.newPage({ viewport: { width: 1280, height: 800 } });
     page.on('pageerror', e => problems.push(tag + ': ' + e.message));
