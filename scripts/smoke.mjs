@@ -524,6 +524,8 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
       + " if (st === 'ended') { if (mode === 'cvd') CL('[data-fl-mode=\"ald\"]'); else CL('[data-fl-reset]'); } else if (st === 'ready' || st === 'paused') CL('[data-fl-go]')", 'The bare bottom', 180000);
     /* too hot for silicon, at the switch: the heater is set to 600 K and the silicon warms through the crossing */
     await playLab('too-hot', "SET('#semi-T', 600)", 'Too hot for silicon');
+    /* Build your own AI chip: the data-centre brief, met by stacked memory on an interposer, 4-bit weights, more math and a faster clock, then taped out */
+    await playLab('ai-chip', "CL('[data-aib-brief=\"infer\"]'); CL('[data-aib-set=\"mem:h4\"]'); SET('#aib-memN', 6); CL('[data-aib-set=\"pkg:cs\"]'); CL('[data-aib-set=\"fp4:true\"]'); SET('#aib-area', 863); SET('#aib-f', 2); CL('[data-aib-tape]')", 'Build your own AI chip');
     /* Verify the agent, at the Lab: a tool checks a case, and eight right calls win */
     await fp.goto(base + 'index.html#/do/agent');
     await fp.waitForSelector('#sheet .agcases [data-ag-case]', { timeout: 60000 }).catch(() => problems.push(tag + ': Verify the agent does not show its cases'));

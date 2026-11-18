@@ -1633,3 +1633,99 @@ button.opens { width: 100%; text-align: left; border: 0; border-left: 3px solid 
 .semiread > span { display: grid; gap: 1px; padding: 6px 10px; border-radius: 10px; border: 1px solid var(--line); align-content: start; min-width: 0; } .semiread b { font-size: 13px; white-space: nowrap; }
 .semidial { margin: 6px 0; } .semistep { display: flex; align-items: center; gap: 8px; } .semistep input { flex: 1; min-width: 0; } .semistep .chipb { min-width: 34px; padding: 4px 0; text-align: center; }
 .semisay { min-height: 3.9em; }
+
+/* ---- Build your own AI chip (src/v2/labs/aibuild.js): the capstone's bench. On a wide desktop the bench takes two
+   columns (what you get at the left, what you choose at the right); a phone gets one column and fewer things. ---- */
+.aib { display: grid; gap: 4px 22px; min-width: 0; }
+.aib > * { min-width: 0; }
+.aibbriefs { margin: 6px 0 4px; } .aibbriefs .chipb[aria-pressed=true] { background: var(--ink); color: var(--bg); }
+.aibstory { margin: 2px 0 8px; }
+.aib .goalbox { margin: 0 0 10px; }
+.aibgauge .gbar, .aibstrip .gbar { position: relative; } .aibgauge .gbar span { background: var(--warm); } .aibgauge.ok .gbar span { background: var(--good); }
+.aibstrip { display: none; }
+.aib .aibtick { position: absolute; left: 80%; top: 0; bottom: 0; width: 2px; background: var(--ink); opacity: .55; }
+.aibscore { margin: 2px 0 0; } .aibstars i { font-style: normal; color: color-mix(in srgb, var(--ink) 22%, transparent); } .aibstars i.on { color: var(--warm); }
+.aibfig { margin: 0 0 6px; padding: 8px 8px 6px; border: 1px solid var(--line); border-radius: 14px; background: color-mix(in srgb, var(--ink) 3%, transparent); }
+.aibfig svg { display: block; width: 100%; height: auto; }
+.aibfig .ax { font: 9px var(--sans); fill: var(--muted); }
+.aibfig .wf { fill: color-mix(in srgb, var(--ink) 7%, transparent); stroke: var(--muted); stroke-width: 1; }
+.aibfig path.wf { fill: var(--panel-solid); }
+.aibfig .dg { fill: color-mix(in srgb, var(--good) 78%, transparent); } .aibfig .dd { fill: var(--bad); }
+.aibfig .pk { fill: color-mix(in srgb, var(--good) 9%, transparent); stroke: var(--muted); stroke-width: 1; }
+.aibfig .pk.si { fill: color-mix(in srgb, var(--accent) 10%, transparent); stroke-dasharray: none; }
+.aibfig .mm { fill: color-mix(in srgb, var(--warm) 55%, var(--panel-solid)); stroke: color-mix(in srgb, var(--warm) 80%, var(--ink)); stroke-width: .6; }
+.aibfig .mm.hb { fill: color-mix(in srgb, var(--warm) 85%, var(--panel-solid)); }
+.aibfig .ml { fill: none; stroke: color-mix(in srgb, var(--ink) 45%, transparent); stroke-width: .6; }
+.aibfig .di { fill: color-mix(in srgb, var(--ink) 30%, var(--panel-solid)); stroke: var(--ink); stroke-width: .7; }
+.aibfig .dc { fill: var(--accent); } .aibfig .dc.a-sys { fill: color-mix(in srgb, var(--accent) 70%, var(--good)); } .aibfig .dc.a-cpu { fill: color-mix(in srgb, var(--accent) 60%, var(--ink)); }
+.aibfig .dl { fill: none; stroke: var(--panel-solid); stroke-width: .5; opacity: .6; }
+.aibfig .ds { fill: color-mix(in srgb, var(--accent) 35%, var(--panel-solid)); }
+.aibfig .sb { fill: none; stroke: var(--muted); stroke-width: 1; }
+.aibcap { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 2px; } .aibcap span:last-child { text-align: right; }
+.aibkey { display: flex; flex-wrap: wrap; gap: 2px 12px; margin-top: 6px; color: var(--muted); }
+.aib .sw { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: 5px; }
+.aib .sw.dg { background: var(--good); } .aib .sw.dd { background: var(--bad); } .aib .sw.dc { background: var(--accent); }
+.aib .sw.ds { background: color-mix(in srgb, var(--accent) 35%, var(--panel-solid)); border: 1px solid var(--line); } .aib .sw.mm { background: color-mix(in srgb, var(--warm) 55%, var(--panel-solid)); } .aib .sw.mm.hb { background: color-mix(in srgb, var(--warm) 85%, var(--panel-solid)); }
+.aibread { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin: 8px 0 10px; }
+.aibread > span { display: grid; gap: 1px; padding: 6px 8px; border-radius: 10px; border: 1px solid var(--line); align-content: start; min-width: 0; }
+.aibread b { font-size: 13px; white-space: nowrap; } .aibread b.bad { color: var(--bad); } .aibread .small { font-size: 11px; line-height: 1.25; }
+.aibbal { margin: 0 0 10px; } .aibbal .kicker, .aibtl .kicker, .aibrev .kicker { margin: 10px 0 6px; }
+.aibrow { display: grid; grid-template-columns: 112px 1fr 58px; gap: 8px; align-items: center; margin: 3px 0; } .aibrow b { text-align: right; }
+.aibbar { height: 8px; border-radius: 4px; background: color-mix(in srgb, var(--ink) 9%, transparent); overflow: hidden; }
+.aibbar span { display: block; height: 100%; border-radius: 4px; background: color-mix(in srgb, var(--ink) 40%, transparent); transition: width .3s; } .aibrow.slow .aibbar span { background: var(--warm); }
+.aibtrack { position: relative; display: flex; height: 16px; border-radius: 5px; background: color-mix(in srgb, var(--ink) 8%, transparent); }
+.aibtrack .tls { height: 100%; transition: width .3s; } .aibtrack .tls:first-child { border-radius: 5px 0 0 5px; }
+.aib .p-design { background: var(--accent); } .aib .p-masks { background: color-mix(in srgb, var(--accent) 50%, var(--panel-solid)); } .aib .p-fab { background: var(--warm); }
+.aib .p-packaging { background: color-mix(in srgb, var(--warm) 50%, var(--panel-solid)); } .aib .p-bringup { background: var(--good); }
+.aibdead { position: absolute; top: -4px; bottom: -4px; width: 2px; margin-left: -1px; transition: left .3s; background: var(--ink); }
+.aibdead::after { content: ''; position: absolute; left: -3px; top: -4px; border: 4px solid transparent; border-top-color: var(--ink); }
+.aibsweep { display: none; position: absolute; inset: 0; background: var(--panel-solid); opacity: .85; transform-origin: right; border-radius: 5px; }
+.aibwhen { display: flex; justify-content: space-between; gap: 10px; margin: 8px 0 4px; } .aibwhen .good, .aibwhen .bad { font-weight: 700; text-align: right; }
+.aibph { list-style: none; margin: 0 0 10px; padding: 0; display: flex; flex-wrap: wrap; gap: 2px 12px; color: var(--muted); } .aib .aibph b { color: var(--ink); font: 600 11px var(--mono); }
+.aibgo { display: flex; align-items: center; gap: 12px; margin: 10px 0 8px; } .aibgo .btn { flex: none; }
+.aibverdict { margin: 0 0 8px; padding: 9px 12px; border-radius: 12px; border: 1px solid var(--line); }
+.aibverdict.good { color: var(--ink); border-color: color-mix(in srgb, var(--good) 60%, transparent); background: color-mix(in srgb, var(--good) 12%, transparent); }
+.aibverdict.bad { color: var(--ink); border-color: color-mix(in srgb, var(--bad) 60%, transparent); background: color-mix(in srgb, var(--bad) 10%, transparent); }
+.aibrev ul { list-style: none; margin: 0 0 8px; padding: 0; display: grid; gap: 6px; }
+.aibrev li { display: grid; grid-template-columns: 96px 1fr; gap: 8px; align-items: start; padding: 7px 8px; border-radius: 10px; border: 1px solid var(--line); }
+.aibrev li.no { border-color: color-mix(in srgb, var(--bad) 60%, transparent); background: color-mix(in srgb, var(--bad) 8%, transparent); }
+.aibrev li > span:only-child { grid-column: 1 / -1; }
+.aibat { padding: 3px 6px; border-radius: 7px; border: 1px solid var(--line); background: none; color: var(--accent); font: 600 10px/1.3 var(--mono); letter-spacing: .04em; text-transform: uppercase; text-align: left; cursor: pointer; }
+.aibat:hover, .aibat:focus-visible { border-color: var(--accent); }
+.aib .aibsec { margin: 14px 0 2px; color: var(--ink); } .aib .aibsec:first-child { margin-top: 0; }
+.aibg { padding: 2px 10px 8px; margin: 0 -10px; border-radius: 12px; border: 1px solid transparent; }
+.aibg.on { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 7%, transparent); }
+.aibg .kicker { display: flex; align-items: center; gap: 6px; }
+.aibdot { width: 7px; height: 7px; border-radius: 50%; background: var(--warm); }
+.aibseg { gap: 5px; } .aibseg .chipb { padding: 5px 10px; font-size: 12px; }
+.aibg .lab { margin-top: 2px; } .aibd { margin: 4px 0 0; font-size: 12px; line-height: 1.4; } .aibsub { margin: 4px 0 4px; font-weight: 600; }
+.aibelse { display: inline-block; margin-top: 4px; color: var(--accent); text-decoration: none; font-size: 12px; } .aibelse::before { content: '↗ '; }
+.aibreset { margin-top: 12px; justify-self: start; } .aibnote { margin: 8px 0; font-size: 12px; }
+@media (prefers-reduced-motion: no-preference) {
+  .aib.run .aibsweep { display: block; animation: aibsweep 1.6s linear both; }
+  .aib.run .aibfig .dg, .aib.run .aibfig .dd { animation: aibdies .5s 1.1s both; }
+}
+@keyframes aibsweep { from { transform: scaleX(1); } to { transform: scaleX(0); } }
+@keyframes aibdies { from { opacity: 0; } to { opacity: 1; } }
+/* a wide desktop: the bench grows to hold the picture and the choices side by side */
+@media (min-width: 1240px) {
+  :root:has(.player .aib) { --bench: min(820px, 62vw); }
+  .aib { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; }
+  .aibtop { grid-column: 1 / -1; }
+}
+/* one column: the brief and the picture, then the choices, then the schedule, the tape-out and the reviewer */
+@media (max-width: 1239px) {
+  .aibL, .aibR { display: contents; } .aib { gap: 0; }
+  .aibR > * { order: 5; } .aibtl, .aibgo, .aibverdict, .aibrev, .aibL > .link, .aibL > .hint, .aibL > .aibnote, .aibL > .won, .aibL > .opens, .aibL > .grows { order: 6; }
+}
+/* a phone: the brief stays in sight as a thin strip, and the small print stays away */
+@media (max-width: 720px) {
+  .aibstrip { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 8px; position: sticky; top: 0; z-index: 3; margin: 0 -4px 8px; padding: 6px 10px 8px; border-radius: 12px; background: var(--panel-solid); border: 1px solid var(--line); box-shadow: 0 6px 14px rgba(0, 0, 0, .14); }
+  .aibstrip > span { display: grid; gap: 3px; min-width: 0; font: 600 10px/1.2 var(--sans); color: var(--muted); } .aibstrip > span.ok { color: var(--good); }
+  .aibstrip .gbar { display: block; height: 5px; border-radius: 3px; background: color-mix(in srgb, var(--ink) 10%, transparent); overflow: hidden; }
+  .aibstrip .gbar span { display: block; height: 100%; background: var(--warm); } .aibstrip .ok .gbar span { background: var(--good); }
+  .aib .goalbox { position: static; box-shadow: none; }
+  .aibd, .aibelse, .aibkey, .aibbal, .aibph, .aibnote { display: none; }
+  .aibread { grid-template-columns: repeat(2, 1fr); }
+  .aibrev li { grid-template-columns: 1fr; gap: 4px; } .aibat { justify-self: start; }
+}

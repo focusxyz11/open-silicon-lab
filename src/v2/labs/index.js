@@ -14,3 +14,5 @@ export const LABS = { agent, teardown, fit: teardown, evolve, pull: crystal, imp
 Object.assign(LABS, { cim, grover });
 import semiconductor from './semiconductor.js';
 Object.assign(LABS, { semiconductor });
+import aibuild from './aibuild.js';
+LABS.aibuild = aibuild;
