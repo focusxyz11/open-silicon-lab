@@ -1,0 +1,15 @@
+{
+  "kind": "try",
+  "by": "Open Silicon Lab",
+  "made": "example",
+  "ai": "",
+  "words": "The filter as software on a bought core: it can change every day, and costs the most energy.",
+  "machine": "hearing",
+  "plan": {
+    "mic": "circuit",
+    "filter": "software",
+    "mem": "circuit",
+    "ctl": "circuit",
+    "fab": "giant"
+  }
+}

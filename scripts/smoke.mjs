@@ -28,7 +28,7 @@ const SECTIONS = [
   ['ways', 'the ways on the picture: Go inside on the island, along and in on the line, the phone\'s peek and swipe'],
   ['frame', 'the size at every level and the ring on the way in, desktop and phone'],
   ['flights', 'the data centre\'s way in and its flight into the chip; the phone\'s flight into its chip'],
-  ['machines', 'machines from shared blocks: a form changed, an agent\'s pick used, new matter\'s claims and the guesses switch, desktop and phone'],
+  ['machines', 'machines from shared blocks: a form changed, an agent\'s pick used, where it is made, the lab\'s curve and an attempt kept, new matter\'s claims and the guesses switch, desktop and phone'],
 ];
 const argv = process.argv.slice(2);
 if (argv.includes('--list')) { for (const [n, about] of SECTIONS) console.log(n.padEnd(16) + about); process.exit(0); }
@@ -789,6 +789,13 @@ run['machines'] = async () => {
     /* the agent offers a real choice, and a pick is used */
     await fp.waitForFunction(() => { const a = document.querySelector('[data-magent]'); if (a) a.click(); return document.querySelectorAll('.mach .mpick').length >= 2; }, null, { timeout: 15000, polling: 300 }).catch(() => problems.push(tag + ': the agent does not offer a choice'));
     await fp.waitForFunction(() => { const u = document.querySelector('[data-muse="0"]'); if (u) u.click(); return !!document.querySelector('.mach .mpick.on'); }, null, { timeout: 15000, polling: 300 }).catch(() => problems.push(tag + ': a pick is not put to use'));
+    /* fab on a desk: memory that computes is made only in a giant fab; on a desk the grammar breaks, back in the giant
+       fab it holds, and a try there takes months */
+    await fp.waitForFunction(() => { const b = document.querySelector('[data-mform="filter:matter:cim"]'); if (b && b.getAttribute('aria-pressed') !== 'true') b.click(); const d = document.querySelector('[data-mfab="desk"]'); if (d && d.getAttribute('aria-pressed') !== 'true') d.click(); return !!document.querySelector('.mach .mchecks li.bad'); }, null, { timeout: 15000, polling: 300 }).catch(() => problems.push(tag + ': a fab on a desk does not refuse memory that computes'));
+    await fp.waitForFunction(() => { const g = document.querySelector('[data-mfab="giant"]'); if (g && g.getAttribute('aria-pressed') !== 'true') g.click(); return !document.querySelector('.mach .mchecks li.bad') && /126/.test([...document.querySelectorAll('.mach .mread b')].map(b => b.textContent).join(' ')); }, null, { timeout: 15000, polling: 300 }).catch(() => problems.push(tag + ': the giant fab does not show months a try'));
+    /* Moore's law for ideas: the lab's curve draws the attempts kept, the best so far, and where yours would land; kept, yours joins it */
+    await fp.waitForFunction(() => document.querySelectorAll('.mach .mcurve .dot:not(.you)').length >= 4 && !!document.querySelector('.mach .mcurve .best') && !!document.querySelector('.mach .mcurve .dot.you'), null, { timeout: 15000, polling: 300 }).catch(() => problems.push(tag + ': the lab\'s curve does not draw'));
+    await fp.waitForFunction(() => { const b = document.querySelector('[data-mform="filter:matter:living"]'); if (b && b.getAttribute('aria-pressed') !== 'true') b.click(); const n = document.querySelector('.mach .mkeep [data-sign]'); if (n && !n.value) n.value = 'Smoke'; const k = document.querySelector('[data-mkeep]'); if (k && !document.querySelector('.mach .mkeep .slip')) k.click(); return !!document.querySelector('.mach .mkeep .slip') && !!document.querySelector('.mach .mcurve .dot.mine'); }, null, { timeout: 15000, polling: 300 }).catch(() => problems.push(tag + ': an attempt is not kept on the curve'));
     /* beyond today's chip: a part made of living neurons shows its claims, guesses labelled, and a range */
     await fp.evaluate(() => { location.hash = '#/machines/wildfire'; });
     await fp.waitForFunction(() => { const b = document.querySelector('[data-mform="detect:matter:living"]'); if (b && b.getAttribute('aria-pressed') !== 'true') b.click(); else if (!b) { const m = document.querySelector('[data-mform^="detect:matter"]'); if (m) m.click(); } return document.querySelectorAll('.mach .mclaims .mst.s-guess').length >= 2 && /–/.test((document.querySelector('.mach .mread b') || {}).textContent || ''); }, null, { timeout: 15000, polling: 300 }).catch(() => problems.push(tag + ': new matter does not show its claims and its range'));

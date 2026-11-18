@@ -8,12 +8,20 @@
    checks, the scores and the agent: src/engines/machine.js; how each block is checked: the community's plan
    (src/engines/build.js).
 
-   machines(el, ctx) draws into el and keeps its own state; ctx: { need, go(need), FACT (facts.json by id, optional) }. */
+   Fab on a desk: where the made parts are made (src/data/fabs.js) sets how many days one try takes. Moore's law for
+   ideas: every attempt kept for a need joins the lab's curve (src/engines/ledger.js labCurve), the best so far against
+   the attempts so far; an attempt of yours is kept as a draft with its slip (src/v2/commons.js), like any entry.
+
+   machines(el, ctx) draws into el and keeps its own state; ctx: { need, go(need), FACT (facts.json by id, optional),
+   and, to keep attempts (optional): world() (the ledger with your drafts), keep(need, plan, el), slip(id),
+   slipClick(ev, done), refusal(r), signHtml() }. */
 import { t, fmtNum } from '../core/i18n.js';
 import { BLOCKS, NEEDS, FORMS, blockOf, needOf } from '../data/blocks.js';
 import { mattersFor } from '../data/inventions.js';
 import * as M from '../engines/machine.js';
 import { plan as buildPlan } from '../engines/build.js';
+import { FABS, fabOf } from '../data/fabs.js';
+import { labCurve } from '../engines/ledger.js';
 
 const REPO = 'https://github.com/focusxyz11/open-silicon-lab/blob/main/';
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
@@ -27,11 +35,20 @@ const markOf = f => MARK[M.familyOf(f)] || '';
 const fam = f => 'f-' + M.familyOf(f);
 const times = x => (x >= 10 ? fmtNum(Math.round(x)) : fmtNum(x, x < 0.01 ? { maximumSignificantDigits: 1 } : { maximumFractionDigits: x < 1 ? 2 : 1 })) + '×';
 const span = s => (Math.abs(s.low - s.high) / s.high < 0.005 ? times(s.high) : times(s.low) + ' – ' + times(s.high));
+const days = (lo, hi) => (!isFinite(lo) ? t('machines.ui.never') : lo === hi || !isFinite(hi) ? fmtNum(lo) + (isFinite(hi) ? '' : '+') : fmtNum(lo) + '–' + fmtNum(hi));
+const frac = v => (v >= 1 ? '1' : '1/' + fmtNum(Math.round(1 / v)));
+/* a place to make parts, drawn as one small mark: a giant fab, a small one, a roll of film, a desk */
+const FABMARK = {
+  giant: '<svg class="fmark" viewBox="0 0 32 24" aria-hidden="true"><path d="M2 22V10l7 4V10l7 4V10l7 4V3h6v19z"/></svg>',
+  small: '<svg class="fmark" viewBox="0 0 32 24" aria-hidden="true"><rect x="5" y="9" width="8" height="13" rx="1.5"/><rect x="15" y="9" width="8" height="13" rx="1.5"/><path d="M5 6h18"/></svg>',
+  flexible: '<svg class="fmark" viewBox="0 0 32 24" aria-hidden="true"><path d="M3 15c5-9 9 9 14 0s9-9 12 0"/><path d="M3 20c5-9 9 9 14 0s9-9 12 0"/></svg>',
+  desk: '<svg class="fmark" viewBox="0 0 32 24" aria-hidden="true"><path d="M3 13h26M6 13v9M26 13v9"/><rect x="11" y="5" width="10" height="8" rx="1.5"/></svg>'
+};
 const formName = f => (M.matterIn(f) ? t('invent.matter.' + M.matterIn(f).id + '.t') : t('machines.form.' + f));
 
 export function machines(el, ctx) {
   const id = needOf(ctx.need) ? ctx.need : NEEDS[0].id, need = needOf(id);
-  const view = { plan: M.startPlan(id), agent: null, guesses: false };
+  const view = { plan: M.startPlan(id), agent: null, guesses: false, kept: null, keepErr: '' };
   let P = null; try { P = buildPlan(); } catch (e) { P = null; }
   const partName = p => t('machines.role.' + id + '.' + p);
 
@@ -49,15 +66,19 @@ export function machines(el, ctx) {
     if (M.familyOf(f) === 'matter' && kinds.length > 1) h += '<div class="mkinds" role="group" aria-label="' + esc(t('machines.form.matter')) + '">' + kinds.map(k => '<button type="button" data-mform="' + p.id + ':matter:' + k.id + '" aria-pressed="' + (f === 'matter:' + k.id) + '">' + esc(t('invent.matter.' + k.id + '.t')) + '</button>').join('') + '</div>';
     return h + '</div>';
   }
+  /* a machine its fab cannot make has no days a try */
+  const unmade = m => m.check.breaks.some(x => x.rule === 'fab');
   function scoreHtml(m) {
-    const s = m.score, list = [];
+    const s = Object.assign({}, m.score), list = [];
+    if (unmade(m)) Object.assign(s, { daysLow: Infinity, daysHigh: Infinity, tries: 0 });
     m.check.breaks.forEach(x => list.push('<li class="bad">' + esc(t('machines.rule.' + x.rule, { part: partName(x.part) })) + '</li>'));
     m.meets.misses.forEach(x => list.push('<li class="bad">' + esc(t('machines.miss.' + x.rule, { part: partName(x.part) })) + '</li>'));
     if (m.check.ok) list.unshift('<li class="good">' + esc(t('machines.ui.grammarOk')) + '</li>');
     if (m.check.ok && m.meets.ok) list.push('<li class="good">' + esc(t('machines.ui.meetsOk')) + '</li>');
     return '<div class="mscore"><div class="mread"><b>' + esc(span(s)) + '</b><span class="small">' + esc(t('machines.ui.energy')) + '</span></div>' +
       '<div class="mread"><b>' + s.changes + ' / ' + s.parts + '</b><span class="small">' + esc(t('machines.ui.changes')) + '</span></div>' +
-      '<div class="mread"><b>' + s.exact + ' / ' + s.parts + '</b><span class="small">' + esc(t('machines.ui.exact')) + '</span></div></div><ul class="mchecks">' + list.join('') + '</ul>';
+      '<div class="mread"><b>' + s.exact + ' / ' + s.parts + '</b><span class="small">' + esc(t('machines.ui.exact')) + '</span></div>' +
+      '<div class="mread"><b>' + esc(days(s.daysLow, s.daysHigh)) + '</b><span class="small">' + esc(t('machines.ui.days')) + (s.tries ? ' · ' + esc(t('machines.ui.tries', { n: fmtNum(Math.round(s.tries)) })) : '') + '</span></div></div><ul class="mchecks">' + list.join('') + '</ul>';
   }
   /* beyond today's chip: the claims behind every part made of new matter */
   function inventHtml(m) {
@@ -74,6 +95,73 @@ export function machines(el, ctx) {
     });
     return h + '</section>';
   }
+  /* fab on a desk: where the made parts are made, and how long a try takes there */
+  function fabHtml(m) {
+    const cur = view.plan.fab || M.START_FAB, F = fabOf(cur), none = !M.made(need, view.plan).length;
+    const grown = need.parts.some(p => (M.matterIn(view.plan[p.id]) || {}).grown);
+    let h = '<section class="mfab"><p class="kicker">' + esc(t('fab.ui.kicker')) + '</p><p class="small muted">' + esc(t('fab.ui.lead')) + '</p><div class="mfabs" role="group" aria-label="' + esc(t('fab.ui.kicker')) + '">' +
+      FABS.map(f => {
+        const d = M.daysOf(f.id), dc = f.claims.find(c => c.kind === 'days'), su = M.setupOf(f.id);
+        return '<button type="button" data-mfab="' + f.id + '" aria-pressed="' + (f.id === cur) + '">' + FABMARK[f.id] + '<b>' + esc(t('fab.name.' + f.id + '.t')) + '</b>' +
+          '<span class="small"><span class="mst s-' + dc.status + '">' + esc(t('invent.status.' + dc.status)) + '</span> ' + esc(isFinite(d.high) ? t('fab.ui.days', { low: fmtNum(d.low), high: fmtNum(d.high) }) : t('fab.ui.guessDays', { low: fmtNum(d.low) + '–' + fmtNum(dc.value[1]) })) + '</span>' +
+          (su ? '<span class="small muted">' + esc(t('fab.ui.setup', { x: su.value.map(frac).join('–') })) + '</span>' : '') + '</button>';
+      }).join('') + '</div>';
+    if (none) h += '<p class="small mfabnone">' + esc(t('fab.ui.none')) + '</p>';
+    if (grown) h += '<p class="small mfabnone">' + esc(t('fab.ui.grown')) + '</p>';
+    h += '<div class="mclaims"><p><b>' + esc(t('fab.name.' + cur + '.t')) + '</b> <span class="small muted">' + esc(t('fab.name.' + cur + '.d')) + ' ' + esc(t('fab.ui.makes', { list: F.makes.map(formName).join(', ') })) + '</span></p><ul>' + F.claims.map(cl => {
+      const f = cl.fact && ctx.FACT && ctx.FACT[cl.fact], src = f && f.url ? ' <span class="small"><a href="' + esc(f.url) + '" target="_blank" rel="noopener">' + esc(t('invent.ui.source')) + '</a></span>' : '';
+      return '<li class="k-note"><span class="mst s-' + cl.status + '">' + esc(t('invent.status.' + cl.status)) + '</span><span>' + esc(t('fab.claim.' + cl.id)) + src + '</span></li>';
+    }).join('') + '</ul>' + (cur !== 'giant' ? '<p class="small muted">' + esc(t('fab.ui.note')) + '</p>' : '') + '</div></section>';
+    return h;
+  }
+  /* Moore's law for ideas: the attempts kept for this need, the best so far, and where yours would land */
+  const LAWS = [['moore', 'ideas-harder'], ['wright', 'wright-law'], ['lab', null]];
+  const LAWMARK = {
+    moore: '<svg class="lmark" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>',
+    wright: '<svg class="lmark" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="15" width="16" height="4" rx="1"/><rect x="6" y="10" width="12" height="4" rx="1"/><rect x="8" y="5" width="8" height="4" rx="1"/></svg>',
+    lab: '<svg class="lmark" viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="7" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="15" cy="15" r="2"/><circle cx="20" cy="17" r="2"/></svg>'
+  };
+  function curveSvg(C, mine) {
+    const pts = C.points, N = Math.max(pts.length + (mine ? 1 : 0), 4), W = 640, H = 230, L = 46, R = 14, T = 12, B = 30;
+    const vals = pts.map(p => p.energy).concat(mine ? [mine.energy] : []).filter(v => isFinite(v) && v > 0);
+    if (!vals.length) vals.push(1);
+    const lo = Math.pow(10, Math.floor(Math.log10(Math.min(...vals)))), hi = Math.pow(10, Math.ceil(Math.log10(Math.max(...vals)) + 1e-9));
+    const top = hi === lo ? hi * 10 : hi;
+    const X = n => L + (W - L - R) * Math.log2(n) / Math.log2(N), Y = v => T + (H - T - B) * (1 - (Math.log10(v) - Math.log10(lo)) / (Math.log10(top) - Math.log10(lo)));
+    let g = '';
+    for (let e = Math.log10(lo); e <= Math.log10(top) + 1e-9; e++) g += '<line class="grid" x1="' + L + '" x2="' + (W - R) + '" y1="' + Y(Math.pow(10, e)).toFixed(1) + '" y2="' + Y(Math.pow(10, e)).toFixed(1) + '"/><text class="tick" x="' + (L - 6) + '" y="' + (Y(Math.pow(10, e)) + 4).toFixed(1) + '" text-anchor="end">' + esc(times(Math.pow(10, e))) + '</text>';
+    for (let n = 1; n <= N; n *= 2) g += '<line class="grid" y1="' + T + '" y2="' + (H - B) + '" x1="' + X(n).toFixed(1) + '" x2="' + X(n).toFixed(1) + '"/><text class="tick" x="' + X(n).toFixed(1) + '" y="' + (H - B + 16) + '" text-anchor="middle">' + n + '</text>';
+    let path = '';
+    pts.forEach((p, i) => { path += (i ? 'H' + X(p.n).toFixed(1) + 'V' : 'M' + X(p.n).toFixed(1) + ',') + Y(p.best).toFixed(1); });
+    if (pts.length) path += 'H' + X(N).toFixed(1);
+    const dots = pts.map(p => '<circle class="dot c-' + esc(p.made) + (p.draft ? ' mine' : '') + '" cx="' + X(p.n).toFixed(1) + '" cy="' + Y(p.energy).toFixed(1) + '" r="5"><title>' + esc(p.by + ' · ' + times(p.energy)) + '</title></circle>').join('');
+    const you = mine && isFinite(mine.energy) ? '<circle class="dot you" cx="' + X(pts.length + 1).toFixed(1) + '" cy="' + Y(mine.energy).toFixed(1) + '" r="6"><title>' + esc(t('curve.ui.yours') + ' · ' + times(mine.energy)) + '</title></circle>' : '';
+    return '<svg class="mcurve" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="' + esc(t('curve.ui.kicker')) + '">' + g + (path ? '<path class="best" d="' + path + '"/>' : '') + dots + you + '</svg>';
+  }
+  function curveHtml(m) {
+    const W = ctx.world ? ctx.world() : null, C = W ? labCurve(W, id) : { points: [], slope: null, perDoubling: null }, n = C.points.length;
+    const mine = m.ok ? { energy: m.score.high } : null;
+    let h = '<section class="mlab"><p class="kicker">' + esc(t('curve.ui.kicker')) + '</p><h2>' + esc(t('curve.ui.title')) + '</h2><p class="small muted">' + esc(t('curve.ui.lead')) + '</p>' +
+      '<div class="mcurvebox"><div class="mplot"><span class="small muted maxis ay">' + esc(t('curve.ui.axisY')) + '</span>' + curveSvg(C, mine) + '<span class="small muted maxis ax">' + esc(t('curve.ui.axisX')) + '</span>' +
+      '<p class="small mlegend"><span class="dot you"></span> ' + esc(t('curve.ui.yours')) + '</p></div><div class="mlawbox">';
+    h += '<p class="mlaw"><b>' + esc(!n ? t('curve.ui.none') : C.slope == null ? t('curve.ui.noLaw', { n }) : t('curve.ui.law', { x: fmtNum(Math.pow(2, C.slope), { maximumSignificantDigits: 2 }) + '×' })) + '</b></p>';
+    const tries = m.score.tries;
+    if (!m.ok) h += '<p class="small">' + esc(t('curve.ui.cannot')) + '</p>';
+    else if (!tries) h += '<p class="small">' + esc(t('curve.ui.paceNever')) + '</p>';
+    else {
+      const yrs = Math.max(n, 1) / tries, time = yrs * 365 < 60 ? t('curve.time.days', { n: fmtNum(Math.max(1, Math.round(yrs * 365))) }) : yrs < 2 ? t('curve.time.months', { n: fmtNum(Math.round(yrs * 12)) }) : t('curve.time.years', { n: fmtNum(Math.round(yrs)) });
+      h += '<p class="small">' + esc(t('curve.ui.pace', { tries: fmtNum(Math.round(tries)), n: Math.max(n, 1), time })) + '</p>';
+    }
+    h += '<p class="small muted">' + esc(t('curve.ui.many')) + '</p></div></div>';
+    h += '<p class="kicker">' + esc(t('curve.ui.laws')) + '</p><div class="mlaws">' + LAWS.map(([k, fact]) => { const f = fact && ctx.FACT && ctx.FACT[fact];
+      return '<div class="mlaw1 l-' + k + '">' + LAWMARK[k] + '<p class="small">' + esc(t('curve.law.' + k)) + (f && f.url ? ' <a href="' + esc(f.url) + '" target="_blank" rel="noopener">' + esc(t('invent.ui.source')) + '</a>' : '') + '</p></div>'; }).join('') + '</div>';
+    if (ctx.keep) {
+      h += '<div class="mkeep"><p class="small muted">' + esc(t('curve.ui.keepLead')) + '</p>' + ctx.signHtml() + (view.keepErr ? '<p class="small err" role="alert">' + esc(view.keepErr) + '</p>' : '') +
+        '<div class="acts"><button type="button" class="btn primary" data-mkeep' + (m.ok ? '' : ' disabled') + '>' + esc(t('curve.ui.keep')) + '</button>' + (m.ok ? '' : '<span class="small muted">' + esc(t('curve.ui.cannot')) + '</span>') + '</div>' +
+        (view.kept ? ctx.slip(view.kept) : '') + '</div>';
+    }
+    return h + '</section>';
+  }
   function agentHtml() {
     const A = view.agent;
     let h = '<div class="magent"><p class="kicker">' + esc(t('machines.ui.agentK')) + '</p><p class="small muted">' + esc(t('machines.ui.agentLead')) + '</p>' +
@@ -81,9 +169,10 @@ export function machines(el, ctx) {
     if (!A) return h + '<button type="button" class="btn primary" data-magent>' + esc(t('machines.ui.agent')) + '</button></div>';
     h += '<p class="small">' + esc(t('machines.ui.tried', { tried: A.tried, valid: A.valid, front: A.front })) + '</p><div class="mpicks">';
     A.picks.forEach((p, i) => {
-      const on = need.parts.every(q => p.plan[q.id] === view.plan[q.id]);
+      const on = need.parts.every(q => p.plan[q.id] === view.plan[q.id]) && (!p.score.fab || p.plan.fab === (view.plan.fab || M.START_FAB));
       h += '<div class="mpick' + (on ? ' on' : '') + '"><div class="mpickf">' + need.parts.map(q => '<span class="' + fam(p.plan[q.id]) + '" title="' + esc(partName(q.id) + ' · ' + formName(p.plan[q.id])) + '">' + markOf(p.plan[q.id]) + '</span>').join('') + '</div>' +
         '<p class="small"><b>' + esc(span(p.score)) + '</b> · ' + esc(t('machines.ui.pickKeeps', { changes: p.score.changes, exact: p.score.exact, parts: p.score.parts })) + '</p>' +
+        '<p class="small">' + (p.score.fab ? FABMARK[p.score.fab] + ' ' + esc(t('fab.name.' + p.score.fab + '.t')) + ' · ' : '') + esc(days(p.score.daysLow, p.score.daysHigh)) + ' · ' + esc(t('machines.ui.daysShort')) + '</p>' +
         '<p class="small muted">' + esc(need.parts.filter(q => p.plan[q.id] !== 'circuit').map(q => partName(q.id) + ': ' + formName(p.plan[q.id])).join(' · ') || t('machines.ui.allCircuit')) + '</p>' +
         (on ? '<p class="small mon">' + esc(t('machines.ui.inUse')) + '</p>' : '<button type="button" class="btn" data-muse="' + i + '">' + esc(t('machines.ui.use')) + '</button>') + '</div>';
     });
@@ -104,12 +193,19 @@ export function machines(el, ctx) {
       needsHtml() +
       '<section class="mmachine"><p class="kicker">' + esc(t('machines.ui.machine')) + '</p><div class="mrail">' + need.parts.map(p => partHtml(p, m)).join('') + '</div>' +
       '<button type="button" class="link small" data-mreset>' + esc(t('machines.ui.reset')) + '</button></section>' +
-      '<div class="mbody"><div class="mresult">' + scoreHtml(m) + inventHtml(m) + '</div>' + agentHtml() + '</div>' +
-      blocksHtml() + '<p class="small muted mnote">' + t('machines.ui.note') + '</p></article>';
+      '<div class="mbody"><div class="mresult">' + scoreHtml(m) + fabHtml(m) + inventHtml(m) + '</div>' + agentHtml() + '</div>' +
+      curveHtml(m) + blocksHtml() + '<p class="small muted mnote">' + t('machines.ui.note') + '</p></article>';
   }
   el.onclick = e => {
     const q = s => e.target.closest(s);
     const n = q('[data-mneed]'); if (n) { if (n.dataset.mneed !== id) ctx.go(n.dataset.mneed); return; }
+    if (ctx.slipClick && ctx.slipClick(e, () => draw())) return;
+    const fb = q('[data-mfab]'); if (fb) { view.plan = Object.assign({}, view.plan, { fab: fb.dataset.mfab }); return draw(); }
+    const kp = q('[data-mkeep]'); if (kp && !kp.disabled && ctx.keep) {
+      const k = ctx.keep(id, Object.assign({}, M.machine(id, view.plan).plan), el.querySelector('.mkeep'));
+      if (k.ok) { view.kept = k.e.id; view.keepErr = ''; } else view.keepErr = ctx.refusal(k.r);
+      return draw();
+    }
     const f = q('[data-mform]'); if (f && !f.disabled) { const s = f.dataset.mform, i = s.indexOf(':'); view.plan = Object.assign({}, view.plan, { [s.slice(0, i)]: s.slice(i + 1) }); return draw(); }
     if (q('[data-magent]')) { view.agent = M.assemble(id, 4, view.guesses); return draw(); }
     const u = q('[data-muse]'); if (u && view.agent) { const p = view.agent.picks[+u.dataset.muse]; if (p) { view.plan = Object.assign({}, p.plan); return draw(); } }

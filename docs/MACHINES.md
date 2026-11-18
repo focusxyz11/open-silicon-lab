@@ -75,13 +75,54 @@ that matters: counting guesses, a hearing aid's filter becomes living neurons at
 
 **Next in Invent:** the switch (invent a transistor: material properties to a switch, with the gain-and-threshold
 test of the `strange` world) and the machine (a new machine and its code invented together, against the hardware
-lottery). Anyone can raise a claim with a source or lower it with a break; keeping those in the ledger comes with
-machine attempts.
+lottery). Anyone can raise a claim with a source or lower it with a break; machine attempts are kept in the ledger now
+(see Moore's law for ideas), claims are next.
+
+## Fab on a desk
+
+A try that runs as software can change the same day. Anything else has to be made first, and *where* it is made sets
+how many tries fit in a year. A machine's plan now names a place to make its parts (`src/data/fabs.js`):
+
+| Place | Makes | Days a try | A line costs, against a giant fab | Rests on |
+| --- | --- | --- | --- | --- |
+| A giant fab | every form but living matter | 126–182 (in products) | 1, the yardstick | Pragmatic's comparison, 18–26 weeks |
+| A small fab | circuits | 3–14 (a guess) | 1/1,000–1/100 (in products) | Minimal Fab (AIST, Yokogawa) |
+| A flexible line | circuits | 2–7 (in products) | 1/100 (the maker's claim) | Pragmatic FlexLogic: under 48 hours a run |
+| A fab on a desk | circuits | 1–7 (a guess) | 1/10,000 (a guess) | a garage chip of 1,200 transistors; Fab2's "fab fab" |
+
+Parts anyone can buy (a sensor, a memory, a core: `stock` in `src/data/blocks.js`) are bought, not made; living matter
+is grown, and its days are not known, so they count as never. The engine adds a rule, **fab** (a place makes only
+what it makes), a range of days a try (if a guessed number fails, the days are not known) and tries a year. The agent
+now weighs four things at once: energy, change, exactness and days, so a flexible line stays on the frontier beside
+the cheapest machine from a giant fab. Energy is still counted as if made at 45 nm: coarse lines cost more energy per
+step, so the page says to try here and make the winner at a giant fab.
+
+## Moore's law for ideas
+
+Moore's law counts years, and keeping its pace now takes more than 18 times the researchers of the early 1970s (Bloom
+et al., 2020). Wright's law counts things made, and it forecast 62 technologies best (Nagy et al., 2013). The lab's
+curve counts **attempts**.
+
+- An attempt at a machine is a `try` entry in the ledger with `machine` (the need) and `plan` (a form for each part,
+  and a place to make them). `src/engines/ledger.js` checks it with the machine engine: it must follow the grammar,
+  meet its need and be new (a plan with nothing to make is the same in every place). Its facts are the engine's score,
+  counting only what is shown.
+- Standings come from the scores alone: an attempt is on the frontier while no other beats it on energy, change,
+  exactness and days; the best is the cheapest there.
+- `labCurve(W, need)`: every attempt in order, its energy and the best so far; the law is a straight line through the
+  best so far against the attempts so far, both on log scales (the share the best falls by each time the attempts
+  double). It needs three attempts and a best that has moved.
+- The page draws the curve, where your machine would land, and how long doubling the attempts would take at your
+  machine's pace. *Keep this attempt* keeps it as a draft with its slip into the ledger, like every entry. Four
+  example attempts at the hearing aid start the curve.
+- This is where the two ideas meet: faster tries (a fab on a desk) mean more attempts a year, and more attempts move
+  the curve.
 
 ## Not yet
 
 - The agent chooses forms only; choosing the blocks themselves, and the wires, comes next.
-- Attempts are not kept in the ledger yet, and the open port has no tool for machines yet.
+- The open port lists machine attempts with the ledger, but has no tool to score or submit one yet.
+- Energy does not yet depend on where a part is made (coarser lines cost more per step).
 - The energy and errors puzzles (`src/engines/budget.js`, `src/engines/errors.js`) do not score machines yet: each
   need already names its place among the errors engine's environments.
 - New blocks and needs from the community, through the forms on GitHub.

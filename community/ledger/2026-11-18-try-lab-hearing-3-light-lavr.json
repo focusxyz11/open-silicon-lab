@@ -1,0 +1,15 @@
+{
+  "kind": "try",
+  "by": "Open Silicon Lab",
+  "made": "example",
+  "ai": "",
+  "words": "The filter in light: cheap to multiply, if turning sound into light and back does not eat the gain.",
+  "machine": "hearing",
+  "plan": {
+    "mic": "circuit",
+    "filter": "matter:light",
+    "mem": "circuit",
+    "ctl": "circuit",
+    "fab": "giant"
+  }
+}

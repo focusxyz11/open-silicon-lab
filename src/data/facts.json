@@ -1519,6 +1519,102 @@
    "url": "https://research.nvidia.com/sites/default/files/pubs/2017-11_Understanding-Error-Propagation/SC17_DNN_Resilience.pdf",
    "value": "0.4% to 7% of single bit flips changed AlexNet's top answer, depending on the number format",
    "verified": "2026-11-18"
+  },
+  {
+   "id": "minimal-fab",
+   "topic": "fab",
+   "detail": "As stated by AIST, which developed it; Yokogawa offers device prototyping on Minimal Fab lines.",
+   "kind": "claim",
+   "label": "Minimal Fab (AIST)",
+   "source": "AIST",
+   "status": "current",
+   "url": "https://www.aist.go.jp/sst/en/exhibition/innovation_zone/zone21/index.html",
+   "value": "No cleanroom; half-inch (12.5 mm) wafers; manufacturing cost cut to 1/100 to 1/1000",
+   "verified": "2026-11-18"
+  },
+  {
+   "id": "pragmatic-flexic",
+   "topic": "fab",
+   "detail": "From Pragmatic's own manufacturing page; FlexLogic lines run in Sedgefield, with a second line being built in Durham.",
+   "kind": "claim",
+   "label": "Pragmatic FlexLogic cycle time",
+   "source": "Pragmatic",
+   "status": "current",
+   "url": "https://www.pragmaticsemi.com/manufacturing",
+   "value": "Production cycle time under 48 hours, against several months for a typical silicon fab",
+   "verified": "2026-11-18"
+  },
+  {
+   "id": "flexlogic-cost",
+   "topic": "fab",
+   "detail": "Pragmatic's claim, reported when it raised money for a second fab in Durham (December 2022).",
+   "kind": "claim",
+   "label": "Cost of a FlexLogic line",
+   "source": "SiliconANGLE",
+   "status": "current",
+   "url": "https://siliconangle.com/2022/12/14/pragmatic-reels-35m-manufacture-chips-without-silicon/",
+   "value": "A FlexLogic facility can be built for a hundredth of the cost of a standard fab",
+   "verified": "2026-11-18"
+  },
+  {
+   "id": "zeloof-garage",
+   "topic": "fab",
+   "detail": "The Z2, finished in August 2021 with salvaged and homemade equipment in his family's garage; the same 10 µm polysilicon-gate process as Intel's first microprocessor.",
+   "kind": "reported",
+   "label": "Chips made in a garage (Sam Zeloof)",
+   "source": "Tom's Hardware",
+   "status": "current",
+   "url": "https://www.tomshardware.com/news/man-builds-own-silicon-chip-at-home",
+   "value": "1,200 transistors on one homemade chip, at 10 µm",
+   "verified": "2026-11-18"
+  },
+  {
+   "id": "fab2",
+   "topic": "fab",
+   "detail": "Founded in 2022 by Jim Keller and Sam Zeloof as Atomic Semi; renamed Fab2 and moved to Texas in July 2026.",
+   "kind": "reported",
+   "label": "Fab2 (formerly Atomic Semi)",
+   "source": "Tom's Hardware",
+   "status": "current",
+   "url": "https://www.tomshardware.com/tech-industry/atomic-semi-rebrands-as-fab2-and-shifts-operations-to-texas",
+   "value": "A \"fab fab\": a factory that mass-produces small chip fabs and the tools inside them",
+   "verified": "2026-11-18"
+  },
+  {
+   "id": "silicon-turnaround",
+   "topic": "fab",
+   "detail": "Pragmatic's comparison, written to recruit fab engineers: under a week for its flexible line.",
+   "kind": "claim",
+   "label": "Tape-out to tested wafer",
+   "source": "Pragmatic",
+   "status": "current",
+   "url": "https://www.pragmaticsemi.com/newsroom/blog/working-in-ic-manufacturing",
+   "value": "18 to 26 weeks from tape-out to wafer test data for silicon; under a week on FlexLogic",
+   "verified": "2026-11-18"
+  },
+  {
+   "id": "ideas-harder",
+   "topic": "ideas",
+   "detail": "Bloom, Jones, Van Reenen and Webb, American Economic Review 110(4), 2020. Research productivity on chips fell about 6.8% a year.",
+   "kind": "reported",
+   "label": "Are ideas getting harder to find?",
+   "source": "American Economic Review",
+   "status": "current",
+   "url": "https://www.nber.org/papers/w23782",
+   "value": "Keeping chip density doubling takes more than 18 times as many researchers as in the early 1970s",
+   "verified": "2026-11-18"
+  },
+  {
+   "id": "wright-law",
+   "topic": "ideas",
+   "detail": "Nagy, Farmer, Bui and Trancik, PLOS ONE 8(2), 2013: six proposed laws tested by hindcasting on the cost and production of 62 technologies.",
+   "kind": "reported",
+   "label": "Wright's law against Moore's law",
+   "source": "PLOS ONE",
+   "status": "current",
+   "url": "https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0052669",
+   "value": "Cost falling as a power of how much has been made (Wright, 1936) forecast best; Moore's law came close",
+   "verified": "2026-11-18"
   }
  ],
  "changes": [

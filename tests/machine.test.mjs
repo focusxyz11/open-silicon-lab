@@ -6,6 +6,7 @@ import assert from 'node:assert/strict';
 import { readFileSync, existsSync } from 'node:fs';
 import { BLOCKS, NEEDS, PORTS, FORMS, blockOf, needOf } from '../src/data/blocks.js';
 import { MATTERS, STATUS, KINDS, ACTIVITY } from '../src/data/inventions.js';
+import { FABS, TRY_DAYS, YEAR, fabOf } from '../src/data/fabs.js';
 import * as M from '../src/engines/machine.js';
 import { E16 } from '../src/engines/paradigms.js';
 import { landauer, bitsErased, T_ROOM } from '../src/engines/floor.js';
@@ -126,8 +127,8 @@ test('score: all circuits is the yardstick; software costs more, new matter can 
 
 test('the agent tries every plan and offers only machines that pass and that nothing beats, cheapest first', () => {
   for (const guesses of [false, true]) for (const n of NEEDS) {
-    const A = M.assemble(n.id, 99, guesses), every = n.parts.reduce((k, p) => k * M.formsOf(p.block).length, 1);
-    assert.equal(A.tried, every, n.id + ' tried every plan');
+    const A = M.assemble(n.id, 99, guesses), every = n.parts.reduce((k, p) => k * M.formsOf(p.block).length, FABS.length);
+    assert.equal(A.tried, every, n.id + ' tried every plan in every fab');
     assert.ok(A.picks.length >= 2, n.id + ' offers a real choice');
     assert.equal(A.picks.length, A.front);
     A.picks.forEach(p => assert.ok(M.machine(n.id, p.plan).ok, n.id + ' pick passes'));
@@ -141,6 +142,58 @@ test('the agent tries every plan and offers only machines that pass and that not
   assert.equal(g.plan.filter, 'matter:living');
   assert.ok(g.score.high > 1);
   assert.ok(M.assemble('wildfire', 2).picks.length <= 2);
+});
+
+test('fabs: every place makes circuits, says how sure its days are, and rests on a source', () => {
+  const kinds = ['days', 'cost', 'note'];
+  for (const F of FABS) {
+    assert.ok(F.makes.includes('circuit'), F.id + ' makes circuits');
+    F.makes.forEach(f => assert.ok(f === 'circuit' || MATTERS.some(m => 'matter:' + m.id === f && !m.grown), F.id + ' makes ' + f));
+    assert.equal(F.claims.filter(c => c.kind === 'days').length, 1, F.id + ' has one claim about days');
+    F.claims.forEach(c => {
+      assert.ok(STATUS.includes(c.status) && kinds.includes(c.kind), F.id + '.' + c.id);
+      if (c.fact) assert.ok(factOf(c.fact) && factOf(c.fact).url, F.id + '.' + c.id + ' rests on ' + c.fact);
+      if (c.status !== 'guess' && c.kind !== 'note' && c.id !== 'giantCost') assert.ok(c.fact, F.id + '.' + c.id + ': a number shown in a product or a lab needs its source');
+      if (c.kind === 'days') assert.ok(c.value[0] >= 1 && c.value[0] <= c.value[1], F.id + ' days');
+    });
+  }
+  assert.ok(MATTERS.filter(m => m.grown).every(m => !FABS.some(F => F.makes.includes('matter:' + m.id))), 'grown matter is made in no fab');
+  /* the giant fab takes months; a flexible line, shown in products, days */
+  assert.ok(M.daysOf('flexible').high < M.daysOf('giant').low / 10);
+  /* a guess about days, if it fails, leaves them unknown */
+  assert.equal(M.daysOf('desk').high, Infinity);
+  assert.ok(M.daysOf('desk').low <= M.daysOf('flexible').low);
+});
+
+test('a try: software and bought parts take a day; made parts wait on their fab; grown parts on nobody knows', () => {
+  const H = needOf('hearing');
+  assert.deepEqual(M.made(H, M.startPlan('hearing')), ['filter'], 'the mic, the memory and the core are bought');
+  assert.deepEqual(M.tryDays(H, Object.assign(M.startPlan('hearing'), { filter: 'software' })), { low: TRY_DAYS, high: TRY_DAYS });
+  const giant = M.machine('hearing', { filter: 'matter:cim' }).score;
+  assert.equal(giant.fab, 'giant');
+  assert.ok(giant.days > 100 && giant.tries < 3);
+  const flex = M.machine('rover', { nav: 'software', fab: 'flexible' });
+  assert.equal(flex.ok, true);
+  assert.equal(flex.score.tries, YEAR / M.daysOf('flexible').high);
+  assert.equal(M.machine('hearing', { filter: 'matter:living' }).score.days, Infinity);
+  assert.equal(M.machine('hearing', { filter: 'software' }).score.fab, null, 'nothing to make: no fab');
+});
+
+test('the rule fab: a place makes only what it makes; software, bought and grown parts are never stopped by it', () => {
+  const W = M.machine('wildfire', { detect: 'matter:cim', fab: 'desk' });
+  assert.ok(W.check.breaks.some(b => b.rule === 'fab' && b.part === 'detect'));
+  assert.ok(!W.check.breaks.some(b => b.rule === 'fab' && b.part === 'smoke'), 'the smoke sensor is bought');
+  assert.equal(M.machine('wildfire', { detect: 'matter:living', fab: 'desk' }).check.ok, true, 'living matter is grown');
+  assert.equal(M.machine('wildfire', { fab: 'desk' }).check.ok, true);
+  assert.equal(M.machine('wildfire', { fab: 'nowhere' }).check.ok, false);
+  assert.ok(M.RULES.includes('fab'));
+});
+
+test('the agent weighs days too: a fast fab stays on the frontier beside the cheapest machine', () => {
+  const picks = M.assemble('wildfire', 99).picks;
+  assert.ok(picks.some(p => p.score.fab === 'flexible'), 'a flexible line, fast and shown in products');
+  assert.ok(!picks.some(p => p.score.fab === 'desk' || p.score.fab === 'small'), 'days that are only guessed count as never unless guesses count');
+  assert.ok(M.assemble('wildfire', 99, true).picks.some(p => p.score.fab === 'desk'));
 });
 
 test('a block is checked by its piece of the plan, or by a lab', () => {
