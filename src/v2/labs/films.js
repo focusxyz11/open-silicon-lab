@@ -2,7 +2,8 @@
    from src/engines/etch.js and src/engines/fabline.js. One module for the two films labs, since both draw a cross-section
    of a film on silicon and both run as a short animation of the engine's own steps (the engines hold the numbers; this
    file only draws them). A lab of the challenge player (src/v2/play.js): lab(L) gets the player's pieces and returns
-   { draw, click, input }; draw gives the card's HTML, click and input say whether they handled the event. */
+   { draw, click, input }; draw gives the card's HTML, click and input say whether they handled the event.
+   The start button says where the run is (data-fl-state: ready, running, paused, ended), for anything that drives the lab. */
 import { ETCH_GRID, ETCH_DEFAULTS, ETCH_RANGE, ETCH_CHALLENGES, ETCH, etchStart, etchStep } from '../../engines/etch.js';
 import { TRENCH, DEPO_RANGE, FABLINE_CHALLENGES, depoStart, depoStep } from '../../engines/fabline.js';
 import { metBy } from '../../engines/fabkit.js';
@@ -58,7 +59,7 @@ export default function lab(L) {
     const key = !s.frames ? 'ready' : !o.ended ? 'running' : s.undercutNm >= 5 ? (o.chem > 35 ? 'radicals' : 'spread') : s.maskPct < 70 ? 'mask' : 'ok';
     h += '<p class="small ' + (key === 'ok' ? 'good' : o.ended ? 'bad' : '') + '">' + esc(t('fl.etch.msg.' + key)) + '</p>';
     h += '<p class="small muted">' + esc(t('fl.etch.intro')) + '</p>' + slider('fl-ions', 'ions', t('fl.etch.ions'), o.ions, t('fl.pct', { v: o.ions }), ETCH_RANGE.ions, 1) + slider('fl-chem', 'chem', t('fl.etch.chem'), o.chem, t('fl.pct', { v: o.chem }), ETCH_RANGE.chem, 1);
-    h += '<div class="chips"><button type="button" class="btn primary" data-fl-go' + (o.ended ? ' disabled' : '') + '>' + esc(t(o.run ? 'fl.pause' : s.frames ? 'fl.resume' : 'fl.etch.go')) + '</button><button type="button" class="chipb" data-fl-fast aria-pressed="' + o.fast + '">' + esc(t('fl.fast')) + '</button>' + (s.frames ? '<button type="button" class="chipb" data-fl-reset>' + esc(t('fl.etch.again')) + '</button>' : '') + '</div>';
+    h += '<div class="chips"><button type="button" class="btn primary" data-fl-go data-fl-state="' + (o.ended ? 'ended' : o.run ? 'running' : s.frames ? 'paused' : 'ready') + '"' + (o.ended ? ' disabled' : '') + '>' + esc(t(o.run ? 'fl.pause' : s.frames ? 'fl.resume' : 'fl.etch.go')) + '</button><button type="button" class="chipb" data-fl-fast aria-pressed="' + o.fast + '">' + esc(t('fl.fast')) + '</button>' + (s.frames ? '<button type="button" class="chipb" data-fl-reset>' + esc(t('fl.etch.again')) + '</button>' : '') + '</div>';
     if (S.done[ch.id]) h += '<p class="small good">' + esc(t('fl.etch.done')) + '</p>';
     return h + (ok ? '' : hintOf('fl.etch.hint')) + '<p class="small muted">' + esc(t('fl.etch.note', { n: ETCH.perFrame })) + '</p>' + doneNote() + reward();
   }
@@ -110,7 +111,7 @@ export default function lab(L) {
     if (lc && la && lc.ar === la.ar) h += '<p class="small"><b>' + esc(t('fl.dep.cost', { x: Math.round(la.time / lc.time), a: clock(la.time), c: clock(lc.time) })) + '</b></p>';
     h += '<p class="small muted">' + esc(t('fl.dep.intro')) + '</p><div class="chips"><span class="small muted">' + esc(t('fl.dep.mode')) + '</span>' + ['cvd', 'ald'].map(m => '<button type="button" class="chipb' + (o.mode === m ? ' on' : '') + '" data-fl-mode="' + m + '" aria-pressed="' + (o.mode === m) + '">' + esc(t('fl.dep.mode.' + m)) + '</button>').join('') + '</div>';
     h += slider('fl-ar', 'ar', t('fl.dep.ar'), o.ar, t('fl.dep.arV', { d: TRENCH.widthNm * o.ar, v: o.ar }), DEPO_RANGE.ar, 1);
-    h += '<div class="chips"><button type="button" class="btn primary" data-fl-go' + (s.done ? ' disabled' : '') + '>' + esc(t(o.run ? 'fl.pause' : s.top ? 'fl.resume' : 'fl.dep.go')) + '</button><button type="button" class="chipb" data-fl-fast aria-pressed="' + o.fast + '">' + esc(t('fl.fast')) + '</button>' + (s.top ? '<button type="button" class="chipb" data-fl-reset>' + esc(t('fl.dep.again')) + '</button>' : '') + '</div>';
+    h += '<div class="chips"><button type="button" class="btn primary" data-fl-go data-fl-state="' + (s.done ? 'ended' : o.run ? 'running' : s.top ? 'paused' : 'ready') + '"' + (s.done ? ' disabled' : '') + '>' + esc(t(o.run ? 'fl.pause' : s.top ? 'fl.resume' : 'fl.dep.go')) + '</button><button type="button" class="chipb" data-fl-fast aria-pressed="' + o.fast + '">' + esc(t('fl.fast')) + '</button>' + (s.top ? '<button type="button" class="chipb" data-fl-reset>' + esc(t('fl.dep.again')) + '</button>' : '') + '</div>';
     if (S.done[ch.id]) h += '<p class="small good">' + esc(t('fl.dep.done')) + '</p>';
     return h + (ok ? '' : hintOf('fl.dep.hint')) + '<p class="small muted">' + esc(t('fl.dep.note', { n: TRENCH.topNm })) + '</p>' + doneNote() + reward();
   }

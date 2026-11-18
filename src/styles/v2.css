@@ -1476,6 +1476,7 @@ button.opens { width: 100%; text-align: left; border: 0; border-left: 3px solid 
 .ovfig .mtr { fill: color-mix(in srgb, var(--ink) 10%, transparent); }
 .ovfig .mfill { fill: var(--good); } .ovfig .mfill.marginal { fill: var(--warm); } .ovfig .mfill.fail { fill: var(--bad); }
 .ovfig .m1 { stroke: var(--ink); stroke-width: 1.5; }
+.ovfig .ovrate { margin: 6px 0 2px; font-size: 13px; }
 .goalbox .gauge .small { grid-column: 1 / -1; }
 @media (max-width: 720px) { .imrow { grid-template-columns: 90px 1fr 50px; gap: 8px; } .imread { grid-template-columns: 1fr 1fr; } }
 

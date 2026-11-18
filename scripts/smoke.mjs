@@ -426,6 +426,8 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
        checks pass or fail by chance. A fresh visitor again (its own storage). */
     { const tag = 'labs', fp = await browser.newPage({ viewport: { width: 1280, height: 800 } });
     fp.on('pageerror', e => problems.push(tag + ': ' + e.message));
+    /* a file the labs ask for and do not get is named, so a 404 never goes untraced */
+    fp.on('response', r => { if (r.status() >= 400) problems.push(tag + ': ' + r.status() + ' for ' + r.url()); });
     await fp.addInitScript(() => { localStorage.setItem('osl-quality', 'flat'); localStorage.setItem('osl-hints-v1', JSON.stringify({ seen: {}, off: true })); });
     /* a bet is played: guess first, then the two dials find the balance (src/engines/bet.js) */
     await fp.goto(base + 'index.html#/do/cheaper');
@@ -507,11 +509,11 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
       + " if (!pick) continue; CL('[data-lt-src=\"' + s.id + '\"]'); CL('[data-lt-illum=\"' + pick.illum + '\"]'); const d = document.querySelector('[data-lt-dp]'); if (d && (d.getAttribute('aria-pressed') === 'true') !== pick.dp) d.click();"
       + " SET('#lt-na', 9); SET('#lt-hp', pick.v); }", 'Print the finest lines');
     /* the films labs run in time: start a run, go on if it was paused, start again if it ended short of the goal */
-    const GO = "const g = document.querySelector('[data-fl-go]'), lab = g ? g.textContent.trim() : '';";
-    await playLab('etch', GO + " if (lab === 'Start etching') { SET('#fl-ions', 100); SET('#fl-chem', 0); const f = document.querySelector('[data-fl-fast]'); if (f && f.getAttribute('aria-pressed') !== 'true') f.click(); CL('[data-fl-go]'); }"
-      + " else if (g && g.disabled) CL('[data-fl-reset]'); else if (lab === 'Go on') CL('[data-fl-go]')", 'Etch straight down', 180000);
+    const GO = "const g = document.querySelector('[data-fl-go]'), st = g ? g.dataset.flState : '';";
+    await playLab('etch', GO + " if (st === 'ready') { SET('#fl-ions', 100); SET('#fl-chem', 0); const f = document.querySelector('[data-fl-fast]'); if (f && f.getAttribute('aria-pressed') !== 'true') f.click(); CL('[data-fl-go]'); }"
+      + " else if (st === 'ended') CL('[data-fl-reset]'); else if (st === 'paused') CL('[data-fl-go]')", 'Etch straight down', 180000);
     await playLab('bottom', GO + " const m = document.querySelector('[data-fl-mode].on'), mode = m ? m.dataset.flMode : 'cvd';"
-      + " if (g && g.disabled) { if (mode === 'cvd') CL('[data-fl-mode=\"ald\"]'); else CL('[data-fl-reset]'); } else if (lab === 'Deposit' || lab === 'Go on') CL('[data-fl-go]')", 'The bare bottom', 180000);
+      + " if (st === 'ended') { if (mode === 'cvd') CL('[data-fl-mode=\"ald\"]'); else CL('[data-fl-reset]'); } else if (st === 'ready' || st === 'paused') CL('[data-fl-go]')", 'The bare bottom', 180000);
     /* Verify the agent, at the Lab: a tool checks a case, and eight right calls win */
     await fp.goto(base + 'index.html#/do/agent');
     await fp.waitForSelector('#sheet .agcases [data-ag-case]', { timeout: 60000 }).catch(() => problems.push(tag + ': Verify the agent does not show its cases'));

@@ -96,7 +96,7 @@ export function finestHalfPitch(srcId) {
 /* ---- the EUV scanner ---- */
 export const EUV_DEFAULTS = { power: 600, reflect: 0.7, mirrors: 11, dose: 50 };      // W, per mirror, count, mJ/cm2
 export const EUV_RANGE = { power: [250, 1000], reflect: [0.6, 0.72], mirrors: [8, 14], dose: [15, 80] };
-export const EUV = { overheadSec: 12.6, areaCm2: 700, photonsPerNm2PerMJ: 0.678, absorbed: 0.2, holeNm: 16, target: 201, grid: 96 };
+export const EUV = { overheadSec: 12.6, areaCm2: 700, photonsPerNm2PerMJ: 0.678, absorbed: 0.2, holeNm: 16, target: 201, tol: 0.1, grid: 96 };
 export function euv(settings = {}) {
   const { power: p, reflect: r, mirrors: n, dose: d } = { ...EUV_DEFAULTS, ...settings };
   const atWafer = p * Math.pow(r, n), exposeSec = d / 1000 * EUV.areaCm2 / atWafer, wph = 3600 / (exposeSec + EUV.overheadSec);
@@ -125,7 +125,9 @@ export function euvExpose(settings = {}, seed = 1) {
     for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) { const xx = x + dx, yy = y + dy; if (xx >= 0 && yy >= 0 && xx < G && yy < G) { s += cnt[yy * G + xx]; n++; } }
     if (s / n > thr) { printed[y * G + x] = 1; area[Math.min(2, Math.floor(y / 32)) * 3 + Math.min(2, Math.floor(x / 32))]++; }
   }
-  const ok = area.map(a => a >= 0.6 * EUV.target && a <= 1.5 * EUV.target);
+  /* in spec: the hole's area within a tenth of its target (about 5% in width). A looser band never caught a hole at any
+     dose the scanner can be set to, so the price of a small dose could not be seen. */
+  const ok = area.map(a => Math.abs(a - EUV.target) <= EUV.tol * EUV.target);
   return { dose: d, seed, area, ok, bad: ok.filter(v => !v).length, printed };
 }
 
