@@ -84,7 +84,8 @@ export const normalLife = c => ({
 });
 
 /* ---- the model ---- */
-const FIT_PER_MBIT = 500, VULNERABLE = 0.3, LOGIC_SHARE = 0.02, ECC_LEFT = 1e-4, LOCK_LEFT = 0.01;  // radiation
+export const FIT_PER_MBIT = 500, VULNERABLE = 0.3, LOGIC_SHARE = 0.02;   // radiation: flips per 10⁹ hours per Mbit (facts.json sram-ser), the share that are read, the share in logic (src/engines/errors.js reuses them)
+const ECC_LEFT = 1e-4, LOCK_LEFT = 0.01;  // radiation
 const DEFECTIVE = 0.10, LATENT = 0.0015, EM_T50 = 6, EM_EA = 0.9;
 /* the stuck-at model your test patterns are graded by misses some real defects (bridges, slow wires) */
 const UNMODELLED = { cool: 1e-3, hot: 1e-4 };

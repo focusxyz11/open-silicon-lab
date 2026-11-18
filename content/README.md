@@ -85,7 +85,8 @@ truths as the only connections, two halves (what a chip is, how a chip comes to 
 
 Beside the eleven, a **puzzle** is one real problem that runs through every level and stage, so no single world or
 level can solve it; people and AI attack it together, and one engine scores every attempt. See
-[puzzles/README.md](puzzles/README.md). The first: [where does the energy go?](puzzles/energy.md)
+[puzzles/README.md](puzzles/README.md). The first: [where does the energy go?](puzzles/energy.md); the second:
+[how can a chip be right when its parts aren't?](puzzles/errors.md)
 
 ## Status
 

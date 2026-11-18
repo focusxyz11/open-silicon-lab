@@ -20,7 +20,7 @@ test('one document for each core question, titled with the question itself, in t
 });
 
 test('every link to another document or picture resolves, and every web link is https', () => {
-  for (const f of ['README.md', 'STRUCTURE.md', ...THREADS.map(t => t.id + '.md'), 'puzzles/README.md', 'puzzles/energy.md']) {
+  for (const f of ['README.md', 'STRUCTURE.md', ...THREADS.map(t => t.id + '.md'), 'puzzles/README.md', 'puzzles/energy.md', 'puzzles/errors.md']) {
     const md = read(f), dir = f.includes('/') ? f.slice(0, f.lastIndexOf('/') + 1) : '';
     for (const [, href] of md.matchAll(/\]\(([^)]+)\)/g)) {
       if (/^https:\/\//.test(href)) continue;
