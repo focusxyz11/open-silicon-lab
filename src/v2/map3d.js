@@ -884,6 +884,25 @@ export function createMap(canvas, host, on = {}) {
   const cap = w => w.charAt(0).toUpperCase() + w.slice(1), PART_WORD = { test: id => cap(t('part.test.' + id)), port: id => cap(t('part.' + (['trays', 'boxes'].includes(id) ? 'ship' : 'pkg') + '.' + id)) }, PART_UP = { print: 4.2, masks: 5.4, need: 3.2, check: 3, prober: 2.4, needles: 3, map: 3.2, rack: 3.2, board: 1.8 };
   const RING_R = { studio: 2.6, test: 1.9, masks: 5.4, port: 1.5, rack: 2.4, board: 1.6 };
   const toolNames = {}; Object.entries(OPEN).forEach(([pl, O]) => Object.entries(O.tools).forEach(([id, g]) => { toolNames[pl + ':' + id] = L.add(g, new THREE.Vector3(0, PART_UP[id] || (pl === 'fab' ? 3.8 : 2.6), 0), (PART_WORD[pl] || (x => t('depth.' + x + '.name')))(id), { cls: 'tool3', button: true, data: { place: pl, part: id }, need: O.inside, max: 340 }); }));
+  /* a building with an inside (or a machine in an open one) says so when the mouse points at it: a ring of light round
+     it on the ground, and Go inside over it, like the parts' names. A click still selects it, a double click goes in;
+     a phone has the card's button */
+  const canHover = matchMedia('(hover: hover) and (pointer: fine)');
+  const goAt = new THREE.Object3D(); scene.add(goAt);
+  const goLbl = L.add(goAt, new THREE.Vector3(), '', { cls: 'go3', html: '<span class="wia" aria-hidden="true">↓</span>' + t('frame.in.k').replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[c]) });
+  goLbl.show = false;
+  const goRing = new THREE.Mesh(new THREE.RingGeometry(0.94, 1, 72), new THREE.MeshBasicMaterial({ color: P.accent, transparent: true, opacity: 0.9, depthWrite: false }));
+  goRing.rotation.x = -Math.PI / 2; goRing.visible = false; goRing.renderOrder = 3; scene.add(goRing);
+  const footR = {}, gv = new THREE.Vector3();
+  const footOf = id => { if (footR[id]) return footR[id]; const B = new THREE.Box3().setFromObject(G[id]), sz = new THREE.Vector3(); B.getSize(sz); return (footR[id] = Math.min(30, Math.max(6, Math.max(sz.x, sz.z) * 0.58))); };
+  let goOn = null;
+  const goHover = h => {
+    const ok = !!(h && h.place && canHover.matches && on.inside && on.inside(h.place, h.part || null) && !(OPEN[h.place] && !h.part && OPEN[h.place].k > 0.5));
+    goOn = ok ? h : null; goRing.visible = goLbl.show = ok; goLbl.el.classList.toggle('tool', ok && !!h.part); canvas.classList.toggle('goin', ok);
+    if (!ok) return;
+    if (h.part) { const T = OPEN[h.place].tools[h.part]; T.getWorldPosition(gv); goRing.position.set(gv.x, 0.3, gv.z); goRing.scale.setScalar((RING_R[h.part] || RING_R[h.place] || 3.6) * 1.2); goAt.position.set(gv.x, (PART_UP[h.part] || (h.place === 'fab' ? 3.8 : 2.6)) + 0.1, gv.z); }
+    else { G[h.place].getWorldPosition(gv); goRing.position.set(gv.x, 0.3, gv.z); goRing.scale.setScalar(footOf(h.place)); goAt.position.set(gv.x, HGT[h.place] || 8, gv.z); }
+  };
   /* seen from far out, the island's places fold into one name */
   L.add(scene, new THREE.Vector3(0, 12, 0), t('map.home'), { cls: 'place3 far home', min: 560 });
   /* the number pins of the loop, and your chip on it */
@@ -962,7 +981,7 @@ export function createMap(canvas, host, on = {}) {
     if (carrying && e.pointerId === carrying.id) { const g = ground(e); if (!g) return; tokenGoal.set(g.x, 4, g.z); token.position.x = g.x; token.position.z = g.z;
       const over = PLACES.filter(p => !p.far).map(p => [p.id, Math.hypot(p.at[0] - g.x, p.at[1] - g.z)]).filter(([id, d]) => d < (placeAt(id).r || 14)).sort((a, b) => a[1] - b[1])[0];
       const id = over ? over[0] : null; if (id !== carrying.over) { Object.entries(names).forEach(([k, lb]) => lb.el.classList.toggle('drop', k === id)); carrying.over = id; } return; }
-    if (!ptrs.size) { const h = pickAt(e), id = h && (h.part ? 'part:' + h.part : h.place || h.q || h.poi || (h.mover && 'mover') || (h.token && 'token')); if (id !== hover) { hover = id; canvas.style.cursor = id === 'token' ? 'grab' : id ? 'pointer' : ''; Object.entries(names).forEach(([k, lb]) => lb.el.classList.toggle('on', k === hover)); Object.entries(toolNames).forEach(([k, lb]) => lb.el.classList.toggle('on', 'part:' + k.split(':')[1] === hover && OPEN[k.split(':')[0]].k > 0.5)); } return; }
+    if (!ptrs.size) { const h = pickAt(e), id = h && (h.part ? 'part:' + h.part : h.place || h.q || h.poi || (h.mover && 'mover') || (h.token && 'token')); if (id !== hover) { hover = id; canvas.style.cursor = id === 'token' ? 'grab' : id ? 'pointer' : ''; Object.entries(names).forEach(([k, lb]) => lb.el.classList.toggle('on', k === hover)); Object.entries(toolNames).forEach(([k, lb]) => lb.el.classList.toggle('on', 'part:' + k.split(':')[1] === hover && OPEN[k.split(':')[0]].k > 0.5)); goHover(h); } return; }
     const p = ptrs.get(e.pointerId); if (!p) return;
     moved += Math.abs(e.clientX - p.x) + Math.abs(e.clientY - p.y); p.x = e.clientX; p.y = e.clientY;
     if (ptrs.size === 2 && pinch0) { const [a, b] = [...ptrs.values()], want = pinch0.d * pinch0.dist / Math.max(20, Math.hypot(a.x - b.x, a.y - b.y)); cam.d = clamp(want, 38, MAXD);
@@ -983,6 +1002,10 @@ export function createMap(canvas, host, on = {}) {
   /* a double tap goes in: into a building (it opens), or deeper into what is already selected */
   canvas.addEventListener('dblclick', e => { const h = pickAt(e); if (!h || !h.place) return; if (sel && sel.place === h.place && (h.part || null) === (sel.part || null) && deepAt()) deeper(); });
   canvas.addEventListener('pointerup', up); canvas.addEventListener('pointercancel', up);
+  canvas.addEventListener('pointerleave', () => { if (ptrs.size) return; hover = null; goHover(null); });
+  /* pointing at a place's or a part's name says the same */
+  host.addEventListener('pointerover', e => { const b = e.target.closest('[data-place]'); if (b && e.pointerType === 'mouse') goHover({ place: b.dataset.place, part: b.dataset.part || null }); });
+  host.addEventListener('pointerout', e => { if (e.target.closest('[data-place]')) { hover = null; goHover(null); } });
   canvas.addEventListener('wheel', e => { e.preventDefault(); fly = null; if (follow) follow.near = true;   /* closer or further, still following */ cam.d = clamp(cam.d * Math.exp(e.deltaY * 0.0012), 38, MAXD); on.interact && on.interact();
     /* zooming on into what is selected, past where the camera stops, goes deeper */
     if (e.deltaY < 0 && sel && deepAt() && cam.d <= deepAt() + 0.5) { push += -e.deltaY; if (push > 180) deeper(); } else if (e.deltaY > 0) push = 0; }, { passive: false });
@@ -1243,6 +1266,7 @@ export function createMap(canvas, host, on = {}) {
       O.lid.position.y = O.lidUp * k; O.lid.visible = k < 0.96; if (O.deco) O.deco.visible = k < 0.4; O.inside.visible = k > 0.02; names[id].show = k < 0.5;
       O.near.forEach(w => { w.material.opacity = (w.userData.glass || 1) * (1 - 0.9 * k); w.material.depthWrite = k < 0.5 && !w.userData.glass; w.castShadow = k < 0.5; }); });
     ring.visible = !!(sel && sel.part && OPEN[sel.place] && OPEN[sel.place].k > 0.4);
+    if (goRing.visible) goRing.material.opacity = reduced() ? 0.9 : 0.62 + 0.3 * Math.sin(tm * 4);
     if (FAB.inside.visible && !reduced()) FAB.carriers.forEach(c => { c.u = (c.u + dt * 0.03) % 1; c.obj.position.copy(FAB.oht.getPointAt(c.u)); const tg = FAB.oht.getTangentAt(c.u); c.obj.rotation.y = Math.atan2(-tg.z, tg.x); });
     /* pulling far enough out of what is selected leaves it */
     if (sel && !fly && cam.d > leaveAt()) { const was = sel; sel = null; Object.values(OPEN).forEach(O => { O.want = 0; }); on.leave && on.leave(was.place); }
