@@ -796,6 +796,9 @@ export function createMap(canvas, host, on = {}) {
       for (let i = 0; i < 3; i++) pulses.push(box(g, 1.4, 0.5, 0.1, glow(P.good, 1.3), -4 + i * 4, 2.6, 4.6, 0.02, { cast: false }));
       const f = ship(9); scene.add(f); tagMover(f, { kind: 'ship', lane: 'cars' }); pickable(); moving.push({ obj: f, path: laneC.cars, speed: 0.03, ship: true, bounce: true, u: 0.9 }); },
     'dc-hall': g => { box(g, 24, 4, 6, mat(P.wall), 0, 0, 0, 0.3); for (let i = 0; i < 7; i++) { box(g, 2.4, 0.8, 2.4, mat(P.white), -9 + i * 3, 4, 0, 0.12); spinning.push(cyl(g, 0.9, 0.9, 0.15, metal(P.dark), -9 + i * 3, 4.8, 0, 18)); } for (let i = 0; i < 9; i++) box(g, 1.6, 0.5, 0.08, winCool, -9.6 + i * 2.4, 2.4, 3.02, 0.02, { cast: false }); },
+    /* a hot plate under test: a wafer on a glowing plate, and a thermometer beside it with its red top mark */
+    'dc-heat': g => { box(g, 5, 0.3, 4, mat(P.wall), 0, 0, 0, 0.1); box(g, 2.8, 1, 2.8, mat(P.white), -0.6, 0.3, 0, 0.15); pulses.push(cyl(g, 1.15, 1.15, 0.14, glow(P.warm, night ? 1.5 : 0.9), -0.6, 1.3, 0, 28)); cyl(g, 0.95, 0.95, 0.06, metal(P.dark, { roughness: 0.25 }), -0.6, 1.44, 0, 28);
+      box(g, 0.5, 3.2, 0.3, mat(P.white), 1.7, 0.3, 0.9, 0.06); box(g, 0.16, 1.9, 0.06, glow(P.warm, night ? 1.3 : 0.7), 1.7, 0.7, 1.06, 0.02, { cast: false }); box(g, 0.34, 0.08, 0.06, glow(P.bad, 1), 1.7, 2.95, 1.06, 0.01, { cast: false }); },
     'dc-solar': g => { for (let i = 0; i < 4; i++) for (let j = 0; j < 3; j++) { const p = box(g, 2.6, 0.12, 1.6, metal(0x27406a, { roughness: 0.25 }), -4.5 + i * 3, 0.9, -3 + j * 3, 0.03); p.rotation.x = -0.4; } },
     /* new ways to compute, at the Lab: a grid of memory cells (rows under, columns over, a cell at every crossing), and a quantum machine's cold stage hanging in its frame */
     'way-cim': g => { box(g, 5, 1, 5, mat(P.white), 0, 0, 0, 0.2); box(g, 5.2, 0.14, 5.2, mat(A.roof, { roughness: 0.7 }), 0, 1, 0, 0.05);
@@ -810,6 +813,7 @@ export function createMap(canvas, host, on = {}) {
   const GROW_SPOT = { 'studio-screen': [-4, 9], masks: [0, 0], 'studio-wing': [-4, -12], 'fab-trucks': [0, 0], 'fab-line': [2, -14], 'fab-wafers': [-13, 9], 'dc-cores': [-14, 6], 'test-dies': [-11, 9], 'studio-proof': [10, -10], 'power-store': [12, -3], 'lab-desk': [-9, 9], 'dc-batch': [-14, -8], 'quarry-ingot': [10, 6], 'fab-scanner': [18.5, -5], 'fab-euv': [18.5, 0.5], 'fab-overlay': [16.5, 5.5], 'fab-anneal': [20.8, 5.5], 'fab-ald': [-4, -24], 'fab-etch': [8.5, -21], 'fab-implanter': [8, -26.5], 'island-teardown': [14, -4], 'studio-fit': [10, 10], 'studio-evolve': [-14, 6], 'test-probe': [3, 0, 4], 'test-hall': [11, 0],
     'island-phones': [0, 0], 'island-cars': [0, 0], 'dc-hall': [0, 10], 'dc-solar': [21, 4], 'clock-tower': [-8, -2] };
   Object.assign(GROW_SPOT, { 'way-cim': [13, 3], 'way-quantum': [13, -5] });
+  Object.assign(GROW_SPOT, { 'dc-heat': [19, -5] });
   GROWTH.forEach(gw => { const [x, z, y] = GROW_SPOT[gw.id] || [0, 0], g = group(G[gw.at], x, y || 0, z); g.visible = false; g.scale.setScalar(0.001); growing.push({ id: gw.id, g, built: false, t0: 0 }); });
 
   /* No question floats over a place any more (docs/framework/rebuild.md, section 3): a question shown as a dot on a

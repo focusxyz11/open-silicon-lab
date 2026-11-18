@@ -12,3 +12,5 @@ import cim from './cim.js';
 import grover from './grover.js';
 export const LABS = { agent, teardown, fit: teardown, evolve, pull: crystal, implant, overlay, etch: films, deposit: films, litho, euv: litho };
 Object.assign(LABS, { cim, grover });
+import semiconductor from './semiconductor.js';
+Object.assign(LABS, { semiconductor });

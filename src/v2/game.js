@@ -95,7 +95,8 @@ export const CHALLENGES = [
   /* new ways to compute, each at the depth where the problem it attacks is met (src/v2/labs/cim.js, grover.js) */
   { id: 'cim', step: 'use', place: 'datacentre', at: 'block', kind: 'cim', grows: 'way-cim' },
   { id: 'grover', step: 'use', place: 'datacentre', at: 'atom', kind: 'grover', grows: 'way-quantum' },
-  { id: 'euv-1000', step: 'make', place: 'fab', at: 'print', kind: 'euv', grows: 'fab-euv' }
+  { id: 'euv-1000', step: 'make', place: 'fab', at: 'print', kind: 'euv', grows: 'fab-euv' },
+  { id: 'too-hot', step: 'use', place: 'datacentre', at: 'switch', kind: 'semiconductor', grows: 'dc-heat' }
 ];
 /* the goal of a chip challenge as gauges: each a value of your chip's model and the bound it must reach
    (ge: at least, le: at most). Together they say the same as the goal's met() in src/engines/chip.js. */
@@ -275,7 +276,7 @@ export function community(s) {
 }
 /* ---- challenges and questions are two faces of one thing ---- */
 /* the question a challenge opens once you have won it: a stop, at its own level or the one beside it */
-export const OPENS = { 'litho-finest': 'scale.print', 'euv-1000': 'fail.print', etch: 'make.etch', bottom: 'idea.deposit', crystal: 'make.crystal', furnace: 'make.implant', shallow: 'fail.implant', vias: 'fail.print', evolve: 'idea.block', newest: 'open.phoneboard', jobs: 'divide.need', agent: 'idea.check', half: 'fail.check', vote: 'idea.check', full: 'make.gates', months: 'make.clean', quick: 'scale.clean', spot: 'fail.test', cores: 'divide.test',
+export const OPENS = { 'too-hot': 'fail.switch', 'litho-finest': 'scale.print', 'euv-1000': 'fail.print', etch: 'make.etch', bottom: 'idea.deposit', crystal: 'make.crystal', furnace: 'make.implant', shallow: 'fail.implant', vias: 'fail.print', evolve: 'idea.block', newest: 'open.phoneboard', jobs: 'divide.need', agent: 'idea.check', half: 'fail.check', vote: 'idea.check', full: 'make.gates', months: 'make.clean', quick: 'scale.clean', spot: 'fail.test', cores: 'divide.test',
   phone: 'life.phone', car: 'fail.car', dclife: 'fail.ship', fed: 'divide.board', fast: 'fail.chip' };
 Object.assign(OPENS, { cim: 'divide.block', grover: 'strange.atom' });
 /* and where the open things of the ledger sit: a break under "is the design right?", a piece to build under
