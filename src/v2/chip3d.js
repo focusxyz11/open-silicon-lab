@@ -18,7 +18,10 @@ export const ROWS = [
 ];
 /* the question at each row, one for diving and one for building (stops: stop.<key>.q) */
 export const ASK = { dive: ['think.chip', 'divide.block', 'think.gate', 'scale.switch', 'limit.atom'], build: ['make.pkg', 'make.wires', 'scale.print', 'make.etch', 'make.implant'] };
-const CENTER = [8.4, 5.4, 3.0, 2.6, 1.1];   /* the height of each row's middle */
+/* each row's top and half width: at a row the picture is framed on it and everything under it */
+const TOP = [8.95, 7.25, 3.98, 3.2, 2.3], HALF = [7, 6, 6, 6, 6];
+/* the way in at each row: a point on the next row, where it shows under this one (in that row's own space) */
+const INTO = [[-2, 5.4, 6], [-2, 2.9, 4.62], [-2.15, 2.7, 5.2], [-2, 1.1, 6]];
 
 export function createChip(canvas, host, on = {}) {
   const P = PALETTES[theme()], night = P.emissive > 0;
@@ -97,12 +100,32 @@ export function createChip(canvas, host, on = {}) {
     const r = Math.round(z); rows.forEach((R, i) => R.mats.forEach(m => { if (m.emissive && m.userData.e == null) m.userData.e = m.emissiveIntensity; if (m.emissive) m.emissiveIntensity = (m.userData.e || 0) + (mode === 'build' && i === r ? 0.25 * work : 0); }));
     named.forEach(lb => { lb.show = Math.abs(lb.row - z) < 0.6; });
   };
-  const pose = () => {
-    const i = Math.floor(clamp(z, 0, 3.999)), f = z - i, cy = CENTER[i] + (CENTER[i + 1] - CENTER[i]) * f, d = 30 - z * 2.4, yaw = -0.62, pitch = 0.5 - z * 0.03;
-    /* a narrow screen stands back, and keeps the chip in the top part, above the panel */
-    const narrow = camera.aspect < 0.8, D = narrow ? d * 2.6 : d, ty = narrow ? cy - D * 0.12 : cy;
+  /* framed in the part of the picture the frame leaves free (on.inset: pixels from each edge): the row in view and
+     what is under it fit there, with room round them for the names, as near as they can be */
+  const corner = new THREE.Vector3(), box = [];
+  const aimAt = (D, ty, yaw, pitch) => {
     camera.position.set(Math.sin(yaw) * Math.cos(pitch) * D, ty + Math.sin(pitch) * D, Math.cos(yaw) * Math.cos(pitch) * D);
-    camera.lookAt(0, ty, 0);
+    camera.lookAt(0, ty, 0); camera.updateMatrixWorld();
+  };
+  const pose = () => {
+    const i = Math.floor(clamp(z, 0, 3.999)), f = clamp(z - i, 0, 1), top = TOP[i] + (TOP[i + 1] - TOP[i]) * f, hw = HALF[i] + (HALF[i + 1] - HALF[i]) * f;
+    const yaw = -0.62, pitch = 0.5 - z * 0.03, ty = top / 2;
+    const n = on.inset ? on.inset() : { l: 0, r: 0, t: 0, b: 0 }, l = n.l, r = Math.max(l + 80, W - n.r), t0 = n.t, b = Math.max(t0 + 80, Hh - n.b);
+    camera.setViewOffset(W, Hh, W / 2 - (l + r) / 2, Hh / 2 - (t0 + b) / 2, W, Hh); camera.updateProjectionMatrix();
+    /* a name stands above its point and half its width to each side: keep that much room inside the edges */
+    const mx = Math.min(56, (r - l) * 0.12), L = l + mx, R = r - mx, T = t0 + 30, Bm = b - 6;
+    box.length = 0; for (const x of [-hw, hw]) for (const y of [0, top]) for (const zz of [-hw, hw]) box.push([x, y, zz]);
+    const fits = D => { aimAt(D, ty, yaw, pitch); return box.every(([x, y, zz]) => { corner.set(x, y, zz).project(camera); const px = (corner.x + 1) / 2 * W, py = (1 - corner.y) / 2 * Hh; return px >= L && px <= R && py >= T && py <= Bm; }); };
+    let lo = 4, hi = 400; for (let k = 0; k < 16; k++) { const mid = Math.sqrt(lo * hi); if (fits(mid)) hi = mid; else lo = mid; }
+    aimAt(hi, ty, yaw, pitch);
+  };
+  /* the way in: beside the next row, at rest, diving */
+  const pv = new THREE.Vector3();
+  const portal = () => {
+    const r = Math.round(z); if (!on.portal) return;
+    if (mode !== 'dive' || drag || Math.abs(z - r) > 0.02 || Math.abs(goal - z) > 0.02 || !INTO[r]) return on.portal(null);
+    rows[r + 1].g.updateWorldMatrix(true, false); pv.set(...INTO[r]).applyMatrix4(rows[r + 1].g.matrixWorld).project(camera);
+    on.portal(pv.z < 1 ? { x: (pv.x + 1) / 2, y: (1 - pv.y) / 2 } : null);
   };
 
   /* ---- input: scroll or drag up and down the stack; keys step a row ---- */
@@ -114,9 +137,7 @@ export function createChip(canvas, host, on = {}) {
   const end = () => { drag = null; }; canvas.addEventListener('pointerup', end); canvas.addEventListener('pointercancel', end);
   canvas.addEventListener('keydown', e => { if (e.key === 'ArrowDown' || e.key === 'PageDown') { go(Math.floor(goal + 1)); e.preventDefault(); } if (e.key === 'ArrowUp' || e.key === 'PageUp') { go(Math.ceil(goal - 1)); e.preventDefault(); } });
 
-  const resize = () => { const r = canvas.getBoundingClientRect(); if (!r.width || !r.height) return; W = r.width; Hh = r.height; st.size(W, Hh); camera.aspect = W / Math.max(1, Hh);
-    /* the frame's dock sits below: lift the picture into the open part of the screen */
-    if (W > 720) camera.setViewOffset(W, Hh, 0, Hh * 0.14, W, Hh); else camera.clearViewOffset(); camera.updateProjectionMatrix(); };
+  const resize = () => { const r = canvas.getBoundingClientRect(); if (!r.width || !r.height) return; W = r.width; Hh = r.height; st.size(W, Hh); camera.aspect = W / Math.max(1, Hh); camera.updateProjectionMatrix(); };
   new ResizeObserver(resize).observe(canvas); resize();
   let settle = 0, lastRow = -1;
   const frame = now => {
@@ -130,7 +151,7 @@ export function createChip(canvas, host, on = {}) {
     const row = Math.round(z); if (row !== lastRow) { lastRow = row; if (mode === 'build') work = 1; on.row && on.row(row); }
     on.depth && on.depth(z);
     st.draw(scene, camera);
-    L.update(camera, W, Hh);
+    L.update(camera, W, Hh); portal();
   };
   raf = requestAnimationFrame(frame);
   return {

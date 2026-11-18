@@ -27,7 +27,7 @@ export function boardStory() {
       { id: 'reuse', live: 'reuse', predict: ['a', 'b', 'c'], right: 'b', scene: S => ({ view: 'flow', open: 1, lit: null, busy: M(S.reuse).busy, flow: flowOf(S.reuse), figs: figs(S, ['die', 'hbm']) }) },
       { id: 'links', parts: ['links'], scene: S => ({ view: 'links', open: 0, lit: 'links', flow: 0, figs: figs(S, []) }) },
       { id: 'power', parts: ['vrm'], ask: 'divide.block', scene: S => ({ view: 'vrm', open: 0, lit: 'vrm', flow: 0, figs: figs(S, []) }),
-        end: [{ href: '#/chip/0', words: 'board.end.dive' }, { href: '#/place/datacentre/4', words: 'board.end.back' }] }
+        end: [{ href: '#/chip/0', words: 'board.end.dive', in: 'depth.chip.name' }, { href: '#/place/datacentre/4', words: 'board.end.back' }] }
     ]
   };
 }

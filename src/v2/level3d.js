@@ -234,6 +234,14 @@ export function createLevel3D(canvas, host, on, model) {
       if (k > 0 && !raf) raf = requestAnimationFrame(tick);
     },
     active: () => k > 0.5,
+    /* the middle of the door into the next level on the picture (0..1 across and down), at rest; null while it moves
+       or arrives; undefined when the level has no door (the shell then reads the flat picture's portal) */
+    portal() {
+      const d = V.door && (typeof V.door === 'function' ? V.door() : V.door); if (!d || !d.at) return undefined;
+      if (k < 0.99 || arr || link || drag || Math.abs(off) > 0.02) return null;
+      const p = root.localToWorld(new THREE.Vector3(...d.at)).project(camera);
+      return p.z < 1 ? { x: (p.x + 1) / 2, y: (1 - p.y) / 2 } : null;
+    },
     /* the part under a point of the screen, or null */
     hit(x, y) {
       const r = canvas.getBoundingClientRect(); ndc.set(((x - r.left) / r.width) * 2 - 1, -((y - r.top) / r.height) * 2 + 1);

@@ -103,9 +103,17 @@ export function createBoard(canvas, host, on = {}) {
   canvas.addEventListener('dblclick', e => { if (pick(e) === 'die' || pick(e) === 'chip') on.dive && on.dive(); });
   host.addEventListener('click', e => { const b = e.target.closest('[data-part]'); if (b) on.part && on.part(b.dataset.part); });
 
-  const resize = () => { const r = canvas.getBoundingClientRect(); if (!r.width || !r.height) return; W = r.width; H = r.height; st.size(W, H); camera.aspect = W / Math.max(1, H);
-    /* the story docks below: lift the picture so its middle sits in the open part of the screen */
-    camera.setViewOffset(W, H, 0, H * 0.13, W, H); camera.updateProjectionMatrix(); };
+  const resize = () => { const r = canvas.getBoundingClientRect(); if (!r.width || !r.height) return; W = r.width; H = r.height; st.size(W, H); camera.aspect = W / Math.max(1, H); camera.updateProjectionMatrix(); };
+  /* the picture's middle sits in the middle of what the frame leaves free (on.inset: pixels from each edge): above the
+     story where it docks below, left of it where it is a bench */
+  const centre = () => { const n = on.inset ? on.inset() : { l: 0, r: 0, t: 0, b: H * 0.26 };
+    camera.setViewOffset(W, H, W / 2 - (n.l + W - n.r) / 2, H / 2 - (n.t + H - n.b) / 2, W, H); camera.updateProjectionMatrix(); };
+  /* the way in: the chip, at the middle of the package, once the camera rests */
+  const pv = new THREE.Vector3();
+  const portal = () => { if (!on.portal) return;
+    const still = !drag && Math.abs(orbit) < 0.01 && cam.look.distanceTo(goal.look) < 0.05 && Math.abs(goal.dist - cam.dist) < 0.05 * goal.dist + (camera.aspect < 0.8 ? goal.dist : 0);
+    if (!still) return on.portal(null);
+    pv.set(0, 1.05, 0).project(camera); on.portal(pv.z < 1 ? { x: (pv.x + 1) / 2, y: (1 - pv.y) / 2 } : null); };
   let W = 1, H = 1, running = true, raf = 0, last = performance.now();
   new ResizeObserver(resize).observe(canvas); resize();
   const frame = now => {
@@ -115,7 +123,7 @@ export function createBoard(canvas, host, on = {}) {
     if (!drag) orbit *= 1 - Math.min(1, dt * 0.6);
     /* narrow screens stand back, so the board sits above the story */
     const narrow = camera.aspect < 0.8; if (narrow) { cam.dist = Math.max(cam.dist, goal.dist * 1.7); }
-    pose();
+    centre(); pose();
     open += (openGoal - open) * k; lid.position.y = 0.45 + 0.3 + smooth(0, 1, open) * 6; lidM.opacity = 1 - 0.85 * open; lid.visible = lidM.opacity > 0.05; lidM.depthWrite = open < 0.5;
     /* the cores: as many lit as are busy, flickering as work arrives */
     cores.forEach(({ m, k: s }) => { const on = s < busy, f = reduced() ? 0 : Math.sin(tm * 9 + s * 40) * 0.25; m.emissiveIntensity += ((on ? 1.6 + f : 0) - m.emissiveIntensity) * (reduced() ? 1 : Math.min(1, dt * 8)); });
@@ -123,7 +131,7 @@ export function createBoard(canvas, host, on = {}) {
     dots.forEach((o, i) => { const show = i < flow * dots.length && open > 0.4; o.d.visible = show; if (!show) return; o.u = (o.u + dt * (reduced() ? 0 : 0.7)) % 1; const [x, z] = o.s, t2 = o.u;
       o.d.position.set(x + (0 - x) * t2 * 0.62, 0.9 + Math.sin(t2 * Math.PI) * 0.45, z * (1 - t2 * 0.6) + o.j * 1.2); });
     sun.position.set(-30, 50, 26); sun.target.position.set(0, 0, 0);
-    st.draw(scene, camera); L.update(camera, W, H);
+    st.draw(scene, camera); L.update(camera, W, H); portal();
   };
   raf = requestAnimationFrame(frame);
   return {

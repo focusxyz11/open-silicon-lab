@@ -144,8 +144,13 @@ Every view wears the same frame. There is no column of text beside the picture.
 - **The scene** fills the screen. A part's name sits on the part; a figure is a reading on the part; a question is a
   mark on the part. Words are HTML over projected points, never drawn into the scene.
 - **Two rails** say where you are, one for each move: the loop in the bar (the stage lit; a tap moves along) and
-  the levels at the side (a tap moves in or out). The way out is top left, with the place's name. A live goal may
-  sit top right. Nothing at the edges holds a paragraph.
+  the levels at the side (a tap moves in or out), each with its rough size (Rack · 2 m, Chip · 2 cm, Switch · 50 nm:
+  `sizeOf` in the atlas, from the depths' own `m`); while the view moves between two levels, the card says how many
+  times closer the next one is (on a phone, where the rail is hidden, the card says the level's size at rest). The
+  way out is top left, with the place's name. A live goal may sit top right. Nothing at the edges holds a paragraph.
+- **The way in** is on the picture: the card's way deeper again as one button, beside the thing it enters with a ring
+  on it, in every view that knows where that is (the flight, the dive's next square or a 3D level's door, the chip's
+  next layer, the board's chip). A 3D view frames its picture in the part the frame leaves free (`inset`).
 - **One card** at the bottom, the same on the island and in every view (`src/v2/frame.js`; the island's is drawn
   by `drawPlace` in `src/v2/app.js`). Its three faces are at its top, with how much waits behind each:
   **Look** is what this is, one step at a time (steps, not scrolling), with the moves from here: on the island,

@@ -580,6 +580,33 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
   await page.waitForFunction(() => !document.documentElement.dataset.arrive && !!document.querySelector('#l3-chip [data-part3="hbm"]'), null, { timeout: 60000, polling: 500 })
     .catch(() => problems.push(tag + ': the dive\'s chip does not come to rest with the memory beside it'));
     await page.close(); }
+  /* how big it is here, and the ring on the way in, in every view (#231, #232, #234): a page of its own, as it moves
+     between views. The layers of a chip stand in the free part of the picture, their names inside it and never under
+     the card; each level on the rail says its size; the way in stands beside the next layer, the dive's next level and
+     the board's chip, with a ring on it; and while the dive moves the card says how many times closer it goes */
+  { const page = await browser3d.newPage({ viewport, colorScheme: scheme });
+    await page.addInitScript(() => { try { localStorage.setItem('osl-quality', 'keep'); } catch (e) { /* no storage */ } });
+    page.on('pageerror', e => problems.push(tag + ' (size and ring): ' + e.message));
+    await page.goto(base + 'index.html#/chip/1');
+    const ringAt = ui => { const w = document.querySelector(ui + ' .wayin.at:not([hidden])'); return !!w && !!w.style.getPropertyValue('--wx') && !!w.querySelector('.wigo'); };
+    await page.waitForFunction(ringAt, '#chipui', { timeout: 90000, polling: 1000 }).catch(() => problems.push(tag + ': the chip\'s layers put no ring on the way in'));
+    if ((await page.$$('#chipui .rail2 .sz')).length !== 5) problems.push(tag + ': the chip\'s layers do not say their sizes on the rail');
+    /* the names shown stay inside the picture, and clear of the card */
+    const stray = await page.evaluate(() => { const c = document.getElementById('chipCanvas').getBoundingClientRect(), d = document.querySelector('#chipui .dockwrap').getBoundingClientRect();
+      return [...document.querySelectorAll('#chipLabels .lbl3')].filter(e => e.style.opacity !== '0').filter(e => { const r = e.getBoundingClientRect();
+        return r.left < c.left - 2 || r.right > c.right + 2 || r.top < c.top - 2 || (r.right > d.left && r.left < d.right && r.bottom > d.top && r.top < d.bottom); }).map(e => e.textContent); });
+    if (stray.length) problems.push(tag + ': names of the chip\'s layers outside the picture or under the card: ' + stray.join(', '));
+    await page.evaluate(() => { location.hash = '#/board'; });
+    await page.waitForFunction(ringAt, '#boardui', { timeout: 90000, polling: 1000 }).catch(() => problems.push(tag + ': the board puts no ring on its way into the chip'));
+    await page.evaluate(() => { location.hash = '#/dive/block'; });
+    await page.waitForFunction(ringAt, '#diveui', { timeout: 90000, polling: 1000 }).catch(() => problems.push(tag + ': the dive puts no ring on the square it goes into'));
+    if ((await page.$$('#diveui .rail2 .sz')).length < 5) problems.push(tag + ': the dive\'s levels do not say their sizes on the rail');
+    /* going in: every line the card shows is kept, so a quick move is not missed between two polls */
+    await page.evaluate(() => { window.zooms = []; const keep = () => { const l = document.querySelector('#diveui .scale2.moving:not([hidden])'); if (l) window.zooms.push(l.textContent); };
+      new MutationObserver(keep).observe(document.getElementById('diveui'), { subtree: true, attributes: true, childList: true, characterData: true }); });
+    await page.waitForFunction(() => { if (/#\/dive\/block$/.test(location.hash)) { const b = document.querySelector('#diveui .wayin:not([hidden]) .wigo'); if (b) b.click(); } return window.zooms.some(z => /times closer/.test(z)); }, null, { timeout: 90000, polling: 2000 })
+      .catch(() => problems.push(tag + ': going deeper, the card does not say how many times closer'));
+    await page.close(); }
   await page.evaluate(() => { location.hash = '#/dive/block'; });
   /* the dive may still be making its view: Ask is chosen again until the block's questions show */
   await page.waitForFunction(() => { if (document.querySelector('#diveui .fieldline[data-field="fetch"]')) return true; const b = document.querySelector('#diveui .modes3 [data-mode="ask"]'); if (b && b.getAttribute('aria-selected') !== 'true') b.click(); return false; }, null, { timeout: 30000, polling: 1000 })
