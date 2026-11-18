@@ -497,7 +497,12 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
     const playLab = async (id, moves, what, wait = 90000) => {
       await fp.goto(base + 'index.html#/do/' + id);
       await fp.waitForSelector('.player', { timeout: 60000 }).catch(() => problems.push(tag + ': ' + what + ' does not open'));
-      await fp.waitForFunction(new Function('return (async () => { ' + SET + moves + '; return !!document.querySelector(".player .won"); })()'), null, { timeout: wait, polling: 3000 }).catch(() => problems.push(tag + ': ' + what + ' is not won by the moves that win it'));
+      /* polled from here: waitForFunction does not wait for an async predicate (its promise counts as true at once),
+         so it would pass without a win; evaluate does wait */
+      const play = new Function('return (async () => { ' + SET + moves + '; return !!document.querySelector(".player .won"); })()'), until = Date.now() + wait;
+      let won = false;
+      while (!won && Date.now() < until) { won = await fp.evaluate(play).catch(() => false); if (!won) await fp.waitForTimeout(3000); }
+      if (!won) problems.push(tag + ': ' + what + ' is not won by the moves that win it');
     };
     await playLab('furnace', "CL('[data-im-ion=\"B\"]'); SET('#im-le', 0.3); CL('[data-im-anneal=\"furnace\"]'); CL('[data-im-anneal=\"laser\"]')", 'The furnace spreads it');
     await playLab('shallow', "CL('[data-im-ion=\"As\"]'); SET('#im-le', 0.3); CL('[data-im-anneal=\"laser\"]')", 'Shallow and switched on');
