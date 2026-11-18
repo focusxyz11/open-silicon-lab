@@ -34,3 +34,5 @@ at a seam or a lab it runs through. "Puzzle" is a working name.
 
 - [Where does the energy go?](energy.md): one answer from an AI costs energy. Where does it all go, and how far down
   could we bring it?
+- [How can a chip be right when its parts aren't?](errors.md): every part goes wrong now and then. Where should the
+  checking live, and who pays for it?

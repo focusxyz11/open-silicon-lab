@@ -153,6 +153,7 @@ People and AI agents break things side by side; the record says who found what.
 - **[limit](limit.md):** no test can try every case of a big circuit.
 - **[divide](divide.md):** yield is the reason big chips are split into several small ones.
 - **[idea](idea.md):** a design that is right by its description and wrong for its job.
+- **[the errors puzzle](puzzles/errors.md):** how to stay right anyway, across the whole stack, with a score.
 
 ## From earlier work
 
