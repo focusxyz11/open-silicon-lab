@@ -2074,3 +2074,24 @@ button.opens { width: 100%; text-align: left; border: 0; border-left: 3px solid 
 .mach .mnote { margin-top: 18px; max-width: 760px; }
 @media (max-width: 900px) { .mach .mbody { grid-template-columns: 1fr; } .mach .mrail { flex-wrap: wrap; } .mach .mpart { flex: 1 1 150px; } .mach .mpart::after { display: none; } .mach .mrail { border-bottom: 0; padding-bottom: 0; } }
 @media (max-width: 600px) { .mach .mneeds { grid-template-columns: 1fr; } .mach .mread b { font-size: 16px; } .mach .mpart { flex-basis: 100%; } }
+/* beyond today's chip: kinds of new matter, the claims behind them, how sure each is */
+.mach .mkinds { display: flex; flex-wrap: wrap; gap: 4px; }
+.mach .mkinds button { font: inherit; font-size: 12px; padding: 5px 9px; border-radius: 999px; border: 1px solid var(--line); background: transparent; color: var(--ink); cursor: pointer; }
+.mach .mkinds button[aria-pressed=true] { border-color: var(--matter); background: color-mix(in srgb, var(--matter) 18%, transparent); font-weight: 700; }
+.mach .minvent { margin-top: 14px; display: grid; gap: 8px; }
+.mach .minvent > p { margin: 0; }
+.mach .minvent .kicker { color: var(--matter); }
+.mach .mclaims { padding: 12px 14px; border-radius: 14px; border: 1px solid color-mix(in srgb, var(--matter) 45%, var(--line)); background: color-mix(in srgb, var(--matter) 5%, var(--panel-solid)); }
+.mach .mclaims p { margin: 0 0 6px; }
+.mach .mclaims ul { list-style: none; margin: 6px 0 0; padding: 0; display: grid; gap: 6px; }
+.mach .mclaims li { display: grid; grid-template-columns: 112px 1fr; gap: 10px; align-items: start; font-size: 14px; }
+.mach .mst { justify-self: start; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px; white-space: nowrap; }
+.mach .mst.s-product { background: color-mix(in srgb, var(--good) 20%, transparent); color: var(--good); }
+.mach .mst.s-lab { background: color-mix(in srgb, var(--accent) 18%, transparent); color: var(--accent); }
+.mach .mst.s-guess { background: color-mix(in srgb, var(--ink) 8%, transparent); color: var(--muted); border: 1px dashed var(--line); }
+:root[data-theme=light] .mach .mst.s-product { color: color-mix(in srgb, var(--good) 55%, var(--ink)); }
+.mach .mrange { color: var(--ink); font-weight: 600; }
+.mach .mwall { color: var(--warm); margin: 8px 0 0; }
+.mach .mguess { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+.mach .mguess input { width: 18px; height: 18px; accent-color: var(--warm); }
+@media (max-width: 600px) { .mach .mclaims li { grid-template-columns: 1fr; gap: 2px; } }
