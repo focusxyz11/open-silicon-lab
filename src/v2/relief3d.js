@@ -16,6 +16,7 @@ import * as THREE from '../vendor/three.min.js';
 import { mat, box, CHIP_TONES } from './kit3d.js';
 import { SLAB, CLOCK, split, padsOf, tileOf, bitsOf, CACHE_FIELDS, CACHE_BITS, IO_BLOCKS, STACKS, STACK_LAYERS, BASE, PACKAGE, PADS } from '../data/die.js';
 import { HANDOFF } from './dc3d.js';
+import { HANDOFF as PHONE_HANDOFF } from './phone3d-flight.js';
 import { createLevel3D } from './level3d.js';
 import { partsOf, chipNow } from '../app/scenes.js';
 import { betChipNow, sceneVersion } from '../app/betscene.js';
@@ -207,7 +208,8 @@ export const create = level => (canvas, host, on = {}) => createLevel3D(canvas, 
       /* the die and its stacks fill the square; coming from the flight, the camera starts where the flight ended (its
          angle, the point it looked at, and as close: as much of the plan from top to bottom), then rises to the plan */
       ? { r: 6.6, at: [X(BASE[0] + BASE[2] / 2), 0.1, 0.25], arrive: { tilt: HANDOFF.tilt, turn: HANDOFF.turn, span: HANDOFF.span / 100, fit: HANDOFF.fit, at: [X(HANDOFF.at[0]), 0.1, Z(HANDOFF.at[1])], ms: 1800 } }
-      : { r: 5.6, at: [0, 0.1, 0.25], arrive: null }),
+      /* the phone's chip, coming from the phone's flight, starts where that flight ended too */
+      : { r: 5.6, at: [0, 0.1, 0.25], arrive: level === 'soc' ? { tilt: PHONE_HANDOFF.tilt, turn: PHONE_HANDOFF.turn, span: PHONE_HANDOFF.span / 100, fit: PHONE_HANDOFF.fit, at: [X(PHONE_HANDOFF.at[0]), 0.1, Z(PHONE_HANDOFF.at[1])], ms: 1800 } : null }),
       door: (([px, py, side]) => ({ at: [X(px + side / 2), 0, Z(py + side / 2)], side: side / 100 }))(DEPTHS[level].portal), foot: [0, 0, 0] },
     has: key => key !== 'yours' || mine > 0,
     version: () => sceneVersion(),
