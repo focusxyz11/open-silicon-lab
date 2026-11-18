@@ -3,7 +3,7 @@ export default [
   { id: 'fail-bigger', strand: 0, stops: ['fail.wafer'], engine: 'money', lens: 'copies', trade: ['yield', 'cost'], open: ['chiplets'] },
   { id: 'fail-ontime', strand: 0, stops: ['fail.chip'], ch: ['fast'], engine: 'timing', lens: 'clock', trade: ['work', 'sure'], given: ['clocked'], open: ['events'] },
   { id: 'fail-margin', strand: 0, stops: ['fail.gate'], engine: 'stress', lens: 'copies', trade: ['work', 'yield'] },
-  { id: 'fail-atoms', strand: 0, stops: ['fail.switch', 'fail.atom'], engine: null, lens: 'dive' },
+  { id: 'fail-atoms', strand: 0, stops: ['fail.switch', 'fail.atom'], ch: ['too-hot'], engine: null, lens: 'dive' },
   { id: 'fail-align', strand: 0, stops: ['fail.print'], ch: ['vias'], also: ['make'], engine: null, lens: 'line', trade: ['yield'] },
   { id: 'fail-forgive', strand: 0, stops: ['fail.implant'], also: ['make'], engine: null, lens: 'line' },
   { id: 'fail-phone', strand: 1, at: ['soc'], ch: ['phone'], engine: 'stress', lens: 'copies', trade: ['life', 'cost'] },

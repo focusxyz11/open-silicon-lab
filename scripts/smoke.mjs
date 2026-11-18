@@ -512,6 +512,8 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
       + " else if (g && g.disabled) CL('[data-fl-reset]'); else if (lab === 'Go on') CL('[data-fl-go]')", 'Etch straight down', 180000);
     await playLab('bottom', GO + " const m = document.querySelector('[data-fl-mode].on'), mode = m ? m.dataset.flMode : 'cvd';"
       + " if (g && g.disabled) { if (mode === 'cvd') CL('[data-fl-mode=\"ald\"]'); else CL('[data-fl-reset]'); } else if (lab === 'Deposit' || lab === 'Go on') CL('[data-fl-go]')", 'The bare bottom', 180000);
+    /* too hot for silicon, at the switch: the heater is set to 600 K and the silicon warms through the crossing */
+    await playLab('too-hot', "SET('#semi-T', 600)", 'Too hot for silicon');
     /* Verify the agent, at the Lab: a tool checks a case, and eight right calls win */
     await fp.goto(base + 'index.html#/do/agent');
     await fp.waitForSelector('#sheet .agcases [data-ag-case]', { timeout: 60000 }).catch(() => problems.push(tag + ': Verify the agent does not show its cases'));

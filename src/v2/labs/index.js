@@ -8,4 +8,5 @@ import implant from './implant.js';
 import overlay from './overlay.js';
 import films from './films.js';
 import litho from './litho.js';
-export const LABS = { agent, teardown, fit: teardown, evolve, pull: crystal, implant, overlay, etch: films, deposit: films, litho, euv: litho };
+import semiconductor from './semiconductor.js';
+export const LABS = { agent, teardown, fit: teardown, evolve, pull: crystal, implant, overlay, etch: films, deposit: films, litho, euv: litho, semiconductor };
