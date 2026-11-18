@@ -32,7 +32,8 @@ export function createFrame(host, o) {
     (o.rail ? '<ol class="rail2" aria-label="' + esc(o.rail.label) + '"><span class="rfill"></span>' + o.rail.items.map(x => '<li><button type="button" data-rail="' + esc(x.id) + '"><span class="dot"></span><span class="nm">' + esc(x.label) + '</span></button></li>').join('') + '</ol>' : '') +
     '<div class="corner"><aside class="goal2" hidden></aside></div>' +
     '<div class="wayin" hidden><span class="wiring" aria-hidden="true"></span><div class="wibox"></div></div>' +
-    '<div class="dockwrap"><div class="modes3" role="tablist" aria-label="' + esc(t('frame.modes')) + '">' + MODES.map(m => '<button type="button" role="tab" data-mode="' + m + '" aria-selected="' + (m === mode) + '"><span class="mn">' + esc(t('frame.' + m)) + '</span><span class="mc"></span></button>').join('') + '</div>' +
+    '<div class="wayon" hidden><div class="wobox"></div></div>' +
+    '<div class="dockwrap"><button type="button" class="peekbar" aria-expanded="true" aria-label="' + esc(t('frame.peek.fold')) + '"><span aria-hidden="true"></span></button><div class="modes3" role="tablist" aria-label="' + esc(t('frame.modes')) + '">' + MODES.map(m => '<button type="button" role="tab" data-mode="' + m + '" aria-selected="' + (m === mode) + '"><span class="mn">' + esc(t('frame.' + m)) + '</span><span class="mc"></span></button>').join('') + '</div>' +
     '<section class="dock" aria-live="polite"></section></div>';
   const $ = s => host.querySelector(s), dock = $('.dock');
 
@@ -58,6 +59,45 @@ export function createFrame(host, o) {
     wayin.classList.toggle('left', at.x > 0.62);
   };
   new MutationObserver(mirror).observe(dock, { childList: true, subtree: true });
+
+  /* the way along, mirrored the same way: whatever next step along the view writes in its card (an element with
+     data-along: the next station on the line, the next step in the studio) is shown again over the scene, at the
+     picture's right edge (→), a copy that the view's own handlers answer */
+  const wayon = $('.wayon'), wobox = $('.wobox');
+  let onKey = '';
+  const mirrorOn = () => {
+    const src = dock.querySelector('[data-along]');
+    if (!src) { if (mode === 'look') { wayon.hidden = true; onKey = ''; } return; }
+    const key = src.outerHTML; if (key === onKey && !wayon.hidden) return; onKey = key;
+    const name = src.dataset.alongname || src.textContent.replace(/^\s*[←→↓↑]\s*/, '').trim();
+    const go = src.cloneNode(false); go.className = 'wogo'; ['data-key', 'data-along', 'data-alongname', 'data-in', 'data-inname'].forEach(a => go.removeAttribute(a));
+    go.innerHTML = '<span class="wit"><span class="wik">' + esc(t('frame.along.k')) + '</span><b>' + esc(name) + '</b></span><span class="woa" aria-hidden="true">→</span>';
+    wobox.innerHTML = ''; wobox.appendChild(go); wayon.hidden = false;
+  };
+  new MutationObserver(mirrorOn).observe(dock, { childList: true, subtree: true });
+
+  /* on a phone the card rests as a peek (the level's name and its question) and steps aside for the picture: a touch
+     on it slides it up, a touch on the picture lets it down again. The picture is framed for the peek, so it never
+     jumps when the card opens over it (restH). A challenge or a question being followed keeps it open. Not on a
+     desktop or a tablet: there the card is as it was */
+  const wrap = $('.dockwrap'), bar = $('.peekbar'), phone = () => matchMedia('(max-width: 720px)').matches;
+  let restH = 0;
+  const peek = v => { const on = !!v && phone(); wrap.classList.toggle('peek', on); host.classList.toggle('peeked', on); bar.setAttribute('aria-expanded', String(!on)); bar.setAttribute('aria-label', t(on ? 'frame.peek.open' : 'frame.peek.fold')); };
+  const busy = () => !!dock.querySelector('.player, .stopx') || dock.classList.contains('benchdock');
+  peek(true);
+  new ResizeObserver(() => { const h = wrap.offsetHeight; if (!h) return; host.style.setProperty('--dockh', h + 'px'); if (wrap.classList.contains('peek')) restH = h; }).observe(wrap);
+  new MutationObserver(() => { if (busy() && wrap.classList.contains('peek')) peek(false); }).observe(dock, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] });
+  /* a touch anywhere on the peek opens it (and does nothing else); the bar folds it again */
+  wrap.addEventListener('click', e => {
+    if (e.target.closest('.peekbar')) { e.preventDefault(); e.stopPropagation(); return peek(!wrap.classList.contains('peek') && !busy()); }
+    if (wrap.classList.contains('peek')) { e.preventDefault(); e.stopPropagation(); peek(false); }
+  }, true);
+  /* a touch on the picture (the canvas or the names on it) lets the card down. One listener per stage, for the frame shown now */
+  const stage = host.parentNode;
+  if (stage && !stage.dataset.peekOn) { stage.dataset.peekOn = '1';
+    stage.addEventListener('pointerdown', e => { const f = [...stage.querySelectorAll(':scope > section')].find(x => !x.hidden && x.querySelector(':scope > .dockwrap'));
+      if (f && f.peekDown && e.target.closest('canvas, .labels') && !e.target.closest('button, a')) f.peekDown(); }, true); }   /* i18n-ok */
+  host.peekDown = () => { if (!busy()) peek(true); };
 
   /* Do and Ask, from the atlas, for the level in view */
   const fields = () => (depth && o.fieldAt ? o.fieldAt(depth) : []);
@@ -95,6 +135,8 @@ export function createFrame(host, o) {
     mode() { return mode; },
     look() { mode = 'look'; pinned = false; fill(); },
     /* a challenge being played in the card: its face is Do, and it stays while the level changes beneath it */
+    /* the height of the card at rest (on a phone, the peek): what the picture is framed above */
+    restH() { return phone() && restH ? restH : wrap.offsetHeight; },
     doing() { mode = 'do'; pinned = true; host.querySelectorAll('[data-mode]').forEach(b => b.setAttribute('aria-selected', String(b.dataset.mode === 'do'))); },
     /* a question being followed: shown under Ask, and kept while the level changes beneath it */
     stop(html) { mode = 'ask'; pinned = true; host.querySelectorAll('[data-mode]').forEach(b => b.setAttribute('aria-selected', String(b.dataset.mode === 'ask'))); dock.innerHTML = html; dock.classList.remove('locked'); }

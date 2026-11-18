@@ -130,6 +130,7 @@ export function start() {
     map = m.createMap($('mapCanvas'), $('mapLabels'), { whatif: id => wf && wf.pick(id), place: id => { if (wf) return wf.pick(id); if (cur && cur.place === id && !cur.part && (!sheet.hidden || !insp.hidden)) return; quickNext = true; openPlace(id); }, part: (place, part) => { quickNext = true; location.hash = '#/place/' + place + '/' + part; },
       carry: id => { carryNote = carryAt(id); quickNext = true; openPlace(id); },
       deeper: (place, part) => { const to = deeperOf(place, part); if (to) enter(to); },
+      inside: (place, part) => !!deeperOf(place, part),
       leave: id => { if (cur && cur.place === id) { closeSheet(); if (location.hash.startsWith('#/place/')) history.replaceState(null, '', '#/'); hud(); } },
       question: key => openQuestion(key), mover: info => openMover(info), unfollow: () => { if (sheet.classList.contains('mover')) closeSheet(); }, challenge: id => { const ch = chOf(id); if (ch) location.hash = doHref(ch); }, report: at => { if (location.hash !== at) location.hash = at; setTimeout(() => openBreak(true), 0); }, ask: id => openPlace(id, 'ask'), job: need => openJob(need), entry: id => openEntry(id), interact: () => foldHero() });
     loading(false); map.setState(islandState(), false); idle(preload);
@@ -553,7 +554,7 @@ export function start() {
       /* the same order on every dock: back and the other views on the left, the next step on the right */
       '<span class="navl">' + ((build ? r < ROWS.length - 1 : r > 0) ? '<button type="button" class="btn ghost" data-key="back" data-rowgo="' + (build ? r + 1 : r - 1) + '">' + esc(t('story.back')) + '</button>' : '') +
       '<a class="btn" href="' + esc(build ? '#/place/fab/inside' : '#/dive/' + R.dive) + '">' + esc(t(build ? 'chipx.atFab' : 'dive.flat')) + '</a></span>' +
-      (done ? '<a class="btn primary" data-key="next" href="' + (build ? '#/place/port' : '#/') + '">' + esc(t(build ? 'chipx.ship' : 'chipx.back')) + '</a>' : '<button type="button" class="btn primary" data-key="next"' + (build ? '' : ' data-in data-inname="' + esc(t('depth.' + ROWS[nextR].dive + '.name')) + '"') + ' data-rowgo="' + nextR + '">' + esc(t(build ? 'chipx.next' : 'chipx.deeper')) + '</button>')).replace('<div class="nav">', yours + '<div class="nav">');
+      (done ? '<a class="btn primary" data-key="next" href="' + (build ? '#/place/port' : '#/') + '">' + esc(t(build ? 'chipx.ship' : 'chipx.back')) + '</a>' : '<button type="button" class="btn primary" data-key="next"' + (build ? ' data-along data-alongname="' + esc(stepNames(nextR)) + '"' : ' data-in data-inname="' + esc(t('depth.' + ROWS[nextR].dive + '.name')) + '"') + ' data-rowgo="' + nextR + '">' + esc(t(build ? 'chipx.next' : 'chipx.deeper')) + '</button>')).replace('<div class="nav">', yours + '<div class="nav">');
   }
   function showChip(row, mode) {
     hideAll();
@@ -730,19 +731,36 @@ export function start() {
     const BS = flatKind === 'bench' ? DS.bandState() : null;
     const benchYours = BS ? '<div class="yours"><span class="kicker">' + esc(t('chipx.yours')) + ' · ' + esc(BS.job) + '</span><p class="verdict ' + (BS.right ? 'good' : 'bad') + '">' + esc(BS.said) + '</p>' + esc(t('design.cap.' + id + '.d', DS.numbers())) + '</div>' : '';
     const yours = benchYours + (yk ? '<div class="yours"><span class="kicker">' + esc(t('chipx.yours')) + '</span>' + esc(t('chipx.yours.' + yk, { name: t('design.proj.' + Y.p + '.t'), gates: Y.B.M.cells.length, transistors: Y.B.transistors, masks: Y.B.masks, wire: Math.round(Y.B.RT ? Y.B.RT.wl : 0) })) + '</div>' : '');
-    const end = { dive: '<a class="chipb" href="#/">' + esc(t('chipx.back')) + '</a>', line: '<a class="chipb" href="#/place/port">' + esc(t('line.end')) + '</a>', bench: '<a class="chipb" href="#/line/print">' + esc(t('bench.toFab')) + '</a>' }[flatKind];
     /* a dive goes up and down; the line and the studio go earlier and later in the work */
     const [ar0, ar1] = flatKind === 'dive' ? ['↑ ', '↓ '] : ['← ', '→ '], nm = d => t('depth.' + d + '.name');
+    /* along (the line, the studio): the next step is marked data-along, and the frame shows it on the picture too */
+    const al = flatKind === 'dive' ? '' : ' data-along';
+    const end = { dive: '<a class="chipb" href="#/">' + esc(t('chipx.back')) + '</a>', line: '<a class="chipb" data-along href="#/place/port">' + esc(t('line.end')) + '</a>', bench: '<a class="chipb" data-along href="#/line/print">' + esc(t('bench.toFab')) + '</a>' }[flatKind];
+    /* on the line, a station with an inside: the way into it (the machine, or what it makes), on the picture as Go inside */
+    const dv = flatKind === 'line' && (DiveData.DIVES[id] || [])[0], inName = dv && (dv[1] === 'scanner' ? cap1(t('part.' + DiveData.partWord(id, DiveData.DIVE_PART[id]))) : nm(dv[1])),
+      inHtml = dv ? '<a class="chipb" data-in data-inname="' + esc(inName) + '" href="' + esc(lineIn(id)) + '">↓ ' + esc(inName) + '</a>' : '';
     /* what you see here: the parts the level draws, each with what it does; choosing one picks it on the picture */
     const pk = flatKind === 'dive' && partsAt ? Object.keys(partsAt(id) || {}).filter(k => EN_HAS(DiveData.partWord(id, k)) && t('what.' + DiveData.partWord(id, k)) !== 'what.' + DiveData.partWord(id, k)) : [];
     const hereHtml = pk.length ? '<div class="herebox"><p class="kicker">' + esc(t('place.here')) + '</p><ul class="here2">' + pk.map(k => { const w = DiveData.partWord(id, k); return '<li><button type="button" data-pick="' + esc(k) + '"' + (k === divePart ? ' class="on"' : '') + '><b>' + esc(t('part.' + w)) + '</b><span>' + esc(t('what.' + w)) + '</span></button></li>'; }).join('') + '</ul></div>' : '';
     diveFrame.dock.innerHTML = lineHtml(t('around.view.' + flatKind) + ' · ' + t('depth.' + id + '.name'), t('depth.' + id + '.see'), key, aroundRow(
       i ? '<button type="button" class="chipb" data-key="back" data-divego="' + (diveD - 1) + '">' + ar0 + esc(nm(L[i - 1])) + '</button>' : flatKind === 'dive' && diveWorld === 'datacentre' ? '<button type="button" class="chipb" data-key="back" data-divego="' + (diveD - 1) + '">' + esc(t('dive.up')) + '</button>' : '',
-      last ? end : '<button type="button" class="chipb" data-key="next"' + (flatKind === 'dive' ? ' data-in' : '') + ' data-divego="' + (diveD + 1) + '">' + ar1 + esc(nm(L[i + 1])) + '</button>')).replace('<div class="nav">', yours + '<p class="small muted hintline">' + esc(t(F.hint)) + '</p>' + hereHtml + '<div class="nav">');
+      last ? end : '<button type="button" class="chipb" data-key="next"' + (flatKind === 'dive' ? ' data-in' : al) + ' data-divego="' + (diveD + 1) + '">' + ar1 + esc(nm(L[i + 1])) + '</button>', inHtml)).replace('<div class="nav">', yours + '<p class="small muted hintline">' + esc(t(F.hint)) + '</p>' + hereHtml + '<div class="nav">');
     requestAnimationFrame(diveInset);
   }
-  /* keep the picture clear of the frame: the rail on the left, the corner, the dock below */
-  const diveInset = () => { if (!dive || !diveFrame) return; const wide = innerWidth > 720, b = innerWidth >= 1100 ? 24 : diveFrame.dock.parentNode.offsetHeight + (wide ? 24 : 18); dive.setInset({ l: wide ? 90 : 8, r: wide ? 20 : 8, t: wide ? 122 : 116, b }); };
+  /* the way into a station of the line (src/data/weave.js DIVES): the machine that prints with light, or what the step makes */
+  const cap1 = w => w.charAt(0).toUpperCase() + w.slice(1);
+  const lineIn = id => { const dv = DiveData && (DiveData.DIVES[id] || [])[0]; return dv ? '#/dive/' + dv[1] + '/' + dv[0] : null; };
+  /* while the line is shown, the frame rings the machine the way in starts from, wherever the camera has it now */
+  let lineRingT = 0;
+  const lineRing = () => {
+    clearTimeout(lineRingT);
+    if (!dive || !diveFrame || vui.hidden || flatKind !== 'line') return;
+    const id = diveId(), part = id && DiveData.DIVES[id] ? DiveData.DIVE_PART[id] : null;
+    if (part && dive.partPoint) diveFrame.inwardAt(dive.partPoint(part) || dive.partPoint('chamber'));
+    lineRingT = setTimeout(lineRing, 250);
+  };
+  /* keep the picture clear of the frame: the rail on the left, the corner, the dock below (on a phone, the card at rest) */
+  const diveInset = () => { if (!dive || !diveFrame) return; const wide = innerWidth > 720, b = innerWidth >= 1100 ? 24 : (diveFrame.restH ? diveFrame.restH() : diveFrame.dock.parentNode.offsetHeight) + (wide ? 24 : 18); dive.setInset({ l: wide ? 90 : 8, r: wide ? 20 : 8, t: wide ? 122 : 116, b }); };
   /* the bench: a design challenge played in the dock; the drawings above follow your description */
   const syncDesign = ch => { if (DS && ch && ch.kind === 'design') DS.setDesign(Game.checkDesign(ch.p, S.codes[ch.p] || Game.starter(ch.p)));
     /* an evolved circuit for a job the studio knows is drawn there too, gate by gate and wave by wave */
@@ -772,6 +790,7 @@ export function start() {
       vui.onclick = e => { const b = e.target.closest('[data-divego]'); if (b) w.flyTo(+b.dataset.divego); const pk = e.target.closest('[data-pick]'); if (pk) { pickPart(pk.dataset.pick === divePart ? null : pk.dataset.pick); vui.querySelectorAll('[data-pick]').forEach(x => x.classList.toggle('on', x.dataset.pick === divePart)); } };
       const d = WE.IDS.indexOf(L.includes(depth) ? depth : L[0]);
       loading(false); w.start(); w.setZ(d); if (arriving && kind === 'line') w.arrive(); arriving = false; diveD = -1; diveAt(d); $('diveCanvas').focus({ preventScroll: true });
+      lineRing();
       const ch = chId && Game.challengeOf(chId); if (ch) openBench(ch);
     });
   }
@@ -1234,7 +1253,7 @@ export function start() {
     if (e.key === 'ArrowUp' || e.key === 'ArrowDown') { const down = e.key === 'ArrowDown';
       if (column) { const b = host.querySelector('.dock [data-key="' + (down ? 'next' : 'back') + '"]'); if (b) { b.click(); e.preventDefault(); } else if (!down) { const up = host.querySelector('.homebtn'); if (up) { location.hash = up.getAttribute('href'); e.preventDefault(); } } return; }
       if (host === sheet) { const a = down && sheet.querySelector('.nav a.btn.primary'); if (a) { a.click(); e.preventDefault(); } return; }
-      if (down) { const to = W.view === 'line' && W.level === 'print' ? '#/dive/scanner/made' : null; if (to) { location.hash = to; e.preventDefault(); } return; }
+      if (down) { const a = host.querySelector('.dock [data-in]'); if (a) { a.click(); e.preventDefault(); } return; }
       const up = host.querySelector('.homebtn'); if (up) { location.hash = up.getAttribute('href'); e.preventDefault(); } return; }
     if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
     if (column) { const i = Way.STAGES.indexOf(W.stage), n = Way.STAGES.length; along(Way.STAGES[(i + (e.key === 'ArrowRight' ? 1 : n - 1)) % n]); e.preventDefault(); return; }

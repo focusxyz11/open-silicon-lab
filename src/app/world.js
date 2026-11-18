@@ -521,7 +521,7 @@ export function createWorld(cv, on) {
   const settleLine = () => { clearTimeout(settleT); settleT = setTimeout(() => { if (isLine() && !drag && !fly && Math.abs(Z - Math.round(Z)) > 0.001) api.flyTo(Math.round(Z)); }, 260); };
   cv.addEventListener('wheel', e => { e.preventDefault(); if (isLine() && mapO) return; const d = isLine() && Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY; setZ(Z + d * (e.deltaMode ? 0.03 : 0.0016)); if (isLine()) settleLine(); }, { passive: false });
   let drag = null;
-  cv.addEventListener('pointerdown', e => { drag = { y: e.clientY, x: e.clientX, z: Z, moved: false, map: isLine() && !!mapO }; try { cv.setPointerCapture(e.pointerId); } catch (x) { /* no capture */ } });
+  cv.addEventListener('pointerdown', e => { drag = { y: e.clientY, x: e.clientX, z: Z, moved: false, map: isLine() && !!mapO, t: performance.now(), touch: e.pointerType === 'touch' }; try { cv.setPointerCapture(e.pointerId); } catch (x) { /* no capture */ } });
   cv.addEventListener('pointermove', e => {
     if (drag) {
       if (Math.abs(e.clientY - drag.y) + Math.abs(e.clientX - drag.x) > 6) drag.moved = true;
@@ -547,7 +547,12 @@ export function createWorld(cv, on) {
   };
   const onDive = e => { if (!dive) return false; const r = cv.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top; return dive.rects.some(q => x >= q[0] && x <= q[0] + q[2] && y >= q[1] && y <= q[1] + q[3]); };
   const diveTap = e => { if (!onDive(e)) return false; api.flyTo(dive.to); return true; };
-  const end = e => { if (!drag) return; const tap = !drag.moved, onMap = drag.map; drag = null; if (onMap) { if (tap && e.type === 'pointerup') mapTap(e); return; } if (tap && e.type === 'pointerup' && stepTap(e)) return; if (tap && e.type === 'pointerup' && diveTap(e)) return; if (tap && e.type === 'pointerup') { const h = hitAt(e); if (h) on.pick && on.pick(h.id); else { const pt = partAt(e); if (pt && view) { hotPart = pt.key; on.part && on.part(view.pi, pt.key); } else if (view && CHROME.overlay) on.part && on.part(view.pi, null); } } if (!tap && isLine()) settleLine(); };
+  /* on a touch screen, a quick swipe up or down in the dive moves one whole level in or out (a slow drag still moves
+     as far as the finger goes) */
+  const flick = (d, e) => { if (!d.touch || isLine() || e.type !== 'pointerup') return false; const dy = e.clientY - d.y, dx = e.clientX - d.x;
+    if (performance.now() - d.t > 450 || Math.abs(dy) < 36 || Math.abs(dy) < 1.5 * Math.abs(dx)) return false;
+    api.flyTo(Math.round(d.z) + (dy < 0 ? 1 : -1)); return true; };
+  const end = e => { if (!drag) return; const tap = !drag.moved, onMap = drag.map, d0 = drag; drag = null; if (!tap && !onMap && flick(d0, e)) return; if (onMap) { if (tap && e.type === 'pointerup') mapTap(e); return; } if (tap && e.type === 'pointerup' && stepTap(e)) return; if (tap && e.type === 'pointerup' && diveTap(e)) return; if (tap && e.type === 'pointerup') { const h = hitAt(e); if (h) on.pick && on.pick(h.id); else { const pt = partAt(e); if (pt && view) { hotPart = pt.key; on.part && on.part(view.pi, pt.key); } else if (view && CHROME.overlay) on.part && on.part(view.pi, null); } } if (!tap && isLine()) settleLine(); };
   cv.addEventListener('pointerup', end); cv.addEventListener('pointercancel', end);
   cv.addEventListener('keydown', e => {
     const d = Math.round(Z);
@@ -587,6 +592,15 @@ export function createWorld(cv, on) {
     /* words pinned to parts of the depth you stand in: [{ part, title, text, tone }] */
     setNotes(list) { notes = Array.isArray(list) ? list : []; },
     setInset(i) { inset = i; },
+    /* where a part of the station or level you stand at is on the picture now (its middle, 0..1 of the canvas across
+       and down), or null while moving or where it is not drawn: the frame rings it beside the way in */
+    partPoint(key) {
+      if (!view || !view.ptr || fly || drag || Math.abs(Z - Math.round(Z)) > 0.04) return null;
+      const sh = ((partsOf(IDS[Math.round(Z)]) || {})[key] || [])[0]; if (!sh) return null;
+      const o = outline(sh); if (!o.length) return null;
+      const xs = o.map(p => p[0]), ys = o.map(p => p[1]), x = (Math.min(...xs) + Math.max(...xs)) / 2, y = (Math.min(...ys) + Math.max(...ys)) / 2;
+      return { x: (view.ptr.tx + x * view.ptr.s) / W, y: (view.ptr.ty + y * view.ptr.s) / H };
+    },
     retheme() { col = palette(); },
     stop() { running = false; },
     /* start again after stop (the redesign hides and shows this view) */
