@@ -14,7 +14,7 @@ const browser = await chromium.launch(), problems = [];
 /* a watchdog: a page that stops answering (a stuck software renderer on a CI machine) fails the test with where it was,
    instead of hanging the run */
 let at = 'start';
-setTimeout(() => { console.error('Smoke test stuck at: ' + at + (problems.length ? '\nProblems so far:\n' + problems.join('\n') : '')); process.exit(1); }, 20 * 60 * 1000).unref();
+setTimeout(() => { console.error('Smoke test stuck at: ' + at + (problems.length ? '\nProblems so far:\n' + problems.join('\n') : '')); process.exit(1); }, 28 * 60 * 1000).unref();
 /* the earlier site (classic.html) was retired in 2026-11 and kept on the branch claude/before-retire-2026-11; the old
    address now leads to the chip world */
 at = 'old address'; { const page = await browser.newPage(); await page.goto(base + 'classic.html#/questions'); await page.waitForFunction(() => /index\.html/.test(location.pathname) || location.pathname.endsWith('/'), null, { timeout: 15000 }).catch(() => problems.push('the old address does not lead to the chip world')); await page.close(); }
@@ -414,6 +414,9 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
      under Ask at a level, the questions people were stuck on there come first */
   /* a fresh visitor (a new page, its own storage): earlier steps here crossed seams already, and a leak rises only
      the first time */
+  /* the motion page rests on a blank page while the 3D pages below run: on a CI machine's software renderer, a page
+     left drawing the island takes the time the pages below need, and their checks ran out of it */
+  await page.goto('about:blank');
   { const fp = await browser3d.newPage({ viewport: { width: 1280, height: 800 } });
     fp.on('pageerror', e => problems.push(tag + ' (seams): ' + e.message));
     await fp.goto(base + 'index.html#/line/test'); await fp.waitForTimeout(9000);
@@ -552,7 +555,7 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
     /* What if? between the islands: a scenario moves the levers, the change lands on other islands, and one of
        them shows the chain back to the lever */
     await fp.goto(base + 'index.html#/whatif');
-    await fp.waitForSelector('#sheet .wflevers [data-wf-lever]', { timeout: 60000 }).catch(() => problems.push(tag + ': What if? does not show its levers'));
+    await fp.waitForSelector('#sheet .wflevers [data-wf-lever]', { timeout: 120000 }).catch(() => problems.push(tag + ': What if? does not show its levers'));
     await fp.evaluate(() => { const b = document.querySelector('[data-wf-preset="squeeze"]'); if (b) b.click(); });
     await fp.waitForFunction(() => document.querySelectorAll('#sheet .wfland').length >= 5, null, { timeout: 15000 }).catch(() => problems.push(tag + ': the memory squeeze does not reach the other islands'));
     await fp.evaluate(() => { const b = document.querySelector('#sheet [data-wf-pick="phones"]'); if (b) b.click(); });
@@ -561,13 +564,55 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
     await fp.evaluate(() => { location.hash = '#/'; });
     await fp.waitForFunction(() => !document.querySelector('#mapLabels .wf3') || [...document.querySelectorAll('#mapLabels .wf3')].every(e => e.style.opacity === '0'), null, { timeout: 10000 }).catch(() => problems.push(tag + ': What if? stays on the island after leaving it'));
     await fp.close(); }
+  /* the ways on the picture (src/v2/frame.js): on the island, pointing at a building with an inside says so (a ring
+     round it, Go inside over it); on the line, the next station is a button along the line (→), and a station with an
+     inside has its way in (↓) with the machine ringed; each is the card's own control, mirrored */
+  at = 'ways'; { const tag = 'ways', wp = await browser3d.newPage({ viewport: { width: 1280, height: 800 } });
+    wp.on('pageerror', e => problems.push(tag + ': ' + e.message));
+    await wp.goto(base + 'index.html#/');
+    let goSeen = false;
+    for (let i = 0; i < 6 && !goSeen; i++) {
+      const r = await wp.waitForFunction(() => { const e = document.querySelector('#mapLabels .place3[data-place="fab"]'); if (!e || e.style.opacity === '0') return null; const q = e.getBoundingClientRect(); return { x: q.x + q.width / 2, y: q.y + q.height / 2 }; }, null, { timeout: 30000, polling: 1000 }).then(h => h.jsonValue(), () => null);
+      if (r) { await wp.mouse.move(r.x + 40, r.y + 40); await wp.mouse.move(r.x, r.y, { steps: 3 }); }
+      goSeen = await wp.waitForFunction(() => { const g = document.querySelector('#mapLabels .go3'); return document.getElementById('mapCanvas').classList.contains('goin') && !!g && g.style.opacity !== '0'; }, null, { timeout: 10000, polling: 500 }).then(() => true, () => false);
+    }
+    if (!goSeen) problems.push(tag + ': pointing at the factory on the island does not invite you in');
+    await wp.mouse.move(5, 790);
+    await wp.evaluate(() => { location.hash = '#/line/print'; });
+    await wp.waitForFunction(() => !!document.querySelector('#diveui .wayon:not([hidden]) .wogo') && !!document.querySelector('#diveui .wayin:not([hidden]) .wigo') && !!document.querySelector('#diveui .dock [data-in][href="#/dive/scanner/made"]'), null, { timeout: 90000, polling: 1000 })
+      .catch(() => problems.push(tag + ': at print, the line shows no way along and no way into the printing machine on the picture'));
+    await wp.waitForFunction(() => !!document.querySelector('#diveui .wayin.at'), null, { timeout: 30000, polling: 1000 }).catch(() => problems.push(tag + ': at print, the way in does not stand beside the machine with a ring on it'));
+    await wp.waitForFunction(() => { const b = document.querySelector('#diveui .wayon:not([hidden]) .wogo'); if (b && location.hash === '#/line/print') b.click(); return location.hash === '#/line/etch'; }, null, { timeout: 60000, polling: 3000 })
+      .catch(() => problems.push(tag + ': the way along on the picture does not go to the next station'));
+    await wp.waitForFunction(() => { const b = document.querySelector('#diveui .wayin:not([hidden]) .wigo'); if (b && location.hash === '#/line/etch' && /switch/.test(b.getAttribute('href') || '')) b.click(); return location.hash.startsWith('#/dive/switch'); }, null, { timeout: 60000, polling: 3000 })
+      .catch(() => problems.push(tag + ': the way in on the line does not go inside what the station makes'));
+    await wp.close(); }
+  /* the dive on a phone: the card rests as a peek, opens when touched and steps aside when the picture is touched; a
+     swipe up on the picture goes one level in */
+  at = 'ways phone'; { const tag = 'ways phone', pp = await browser3d.newPage({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
+    pp.on('pageerror', e => problems.push(tag + ': ' + e.message));
+    await pp.goto(base + 'index.html#/dive/chip');
+    await pp.waitForSelector('#diveui .dockwrap.peek .dock .kicker', { timeout: 90000 }).catch(() => problems.push(tag + ': the dive\'s card does not rest as a peek on a phone'));
+    await pp.waitForFunction(() => { const w = document.querySelector('#diveui .dockwrap'); if (w && w.classList.contains('peek')) w.click(); return !!w && !w.classList.contains('peek'); }, null, { timeout: 30000, polling: 1000 })
+      .catch(() => problems.push(tag + ': touching the peek does not open the card'));
+    { const c = await pp.context().newCDPSession(pp); await c.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: 200, y: 300 }] }); await c.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] }); await c.detach(); }
+    await pp.waitForSelector('#diveui .dockwrap.peek', { timeout: 15000 }).catch(() => problems.push(tag + ': touching the picture does not let the card down'));
+    const swipe = async () => { const c = await pp.context().newCDPSession(pp);
+      await c.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: 200, y: 420 }] });
+      for (let i = 1; i <= 5; i++) await c.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: 200, y: 420 - i * 30 }] });
+      await c.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] }); await c.detach(); };
+    let deeper = false;
+    for (let i = 0; i < 4 && !deeper; i++) { await swipe(); deeper = await pp.waitForFunction(() => location.hash === '#/dive/block', null, { timeout: 15000, polling: 500 }).then(() => true, () => false); }
+    if (!deeper) problems.push(tag + ': a swipe up on the picture does not go a level in');
+    await pp.close(); }
+  at = 'motion';
   /* a page of its own, so its moves do not mix with the zooms counted below */
   { const page = await browser3d.newPage({ viewport: { width: 1280, height: 800 } });
     page.on('pageerror', e => problems.push(tag + ' (way in): ' + e.message));
   /* the way in is on the picture (src/v2/frame.js): inside the data centre, the button over the scene goes one level
      deeper, and at the chip, scrolling on carries the flight into it */
     await page.goto(base + 'index.html#/place/datacentre/2');
-  await page.waitForFunction(() => { const b = document.querySelector('#placeui .wayin:not([hidden]) .wigo'); if (b && location.hash === '#/place/datacentre/2') b.click(); return location.hash === '#/place/datacentre/3'; }, null, { timeout: 90000, polling: 3000 }).catch(() => problems.push(tag + ': the way in on the picture does not go deeper in the data centre'));
+  await page.waitForFunction(() => { const b = document.querySelector('#placeui .wayin:not([hidden]) .wigo'); if (b && location.hash === '#/place/datacentre/2') b.click(); return location.hash === '#/place/datacentre/3'; }, null, { timeout: 150000, polling: 3000 }).catch(() => problems.push(tag + ': the way in on the picture does not go deeper in the data centre'));
   await page.evaluate(() => { location.hash = '#/place/datacentre/5'; });
   /* every arrival the page announces is kept, so a quick one is not missed between two polls */
   await page.evaluate(() => { window.arrivals = []; new MutationObserver(() => { const a = document.documentElement.dataset.arrive; if (a) window.arrivals.push(a); }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-arrive'] }); });
@@ -619,14 +664,14 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
     page.on('pageerror', e => problems.push(tag + ' (phone flight): ' + e.message));
     await page.goto(base + 'index.html#/place/phones');
     await page.waitForFunction(() => { if (location.hash === '#/place/phones') { const b = document.querySelector('.insp:not([hidden]) [data-iact="deeper"]') || document.querySelector('#sheet:not([hidden]) a[href="#/place/phones/0"]'); if (b) b.click(); }
-      return location.hash === '#/place/phones/0' && !document.getElementById('flyui').hidden; }, null, { timeout: 90000, polling: 3000 }).catch(() => problems.push(tag + ': going inside the phone island does not open its flight'));
+      return location.hash === '#/place/phones/0' && !document.getElementById('flyui').hidden; }, null, { timeout: 150000, polling: 3000 }).catch(() => problems.push(tag + ': going inside the phone island does not open its flight'));
     await page.waitForFunction(() => { const b = document.querySelector('#flyui .wayin:not([hidden]) .wigo'); if (b && location.hash === '#/place/phones/0') b.click(); return location.hash === '#/place/phones/1'; }, null, { timeout: 90000, polling: 3000 }).catch(() => problems.push(tag + ': the way in on the picture does not go deeper in the phone'));
     await page.waitForFunction(() => !!document.querySelector('#flyui .here2 [data-hl="battery"]'), null, { timeout: 90000, polling: 1000 }).catch(() => problems.push(tag + ': inside the phone, the card does not name the battery'));
     await page.evaluate(() => { location.hash = '#/place/phones/3'; window.arrivals = []; new MutationObserver(() => { const a = document.documentElement.dataset.arrive; if (a) window.arrivals.push(a); }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-arrive'] }); });
     await page.waitForFunction(() => { const c = document.getElementById('flyCanvas'); if (c && location.hash === '#/place/phones/3') { c.focus(); c.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true })); } return location.hash === '#/dive/soc/phone'; }, null, { timeout: 90000, polling: 3000 }).catch(() => problems.push(tag + ': going on past the phone\'s chip does not carry the flight into it'));
     await page.waitForFunction(() => window.arrivals.includes('soc'), null, { timeout: 60000, polling: 500 }).catch(() => problems.push(tag + ': the dive\'s phone chip does not come down from where the flight ended'));
     await page.close(); }
-  await page.evaluate(() => { location.hash = '#/dive/block'; });
+  await page.goto(base + 'index.html#/dive/block');
   /* the dive may still be making its view: Ask is chosen again until the block's questions show */
   await page.waitForFunction(() => { if (document.querySelector('#diveui .fieldline[data-field="fetch"]')) return true; const b = document.querySelector('#diveui .modes3 [data-mode="ask"]'); if (b && b.getAttribute('aria-selected') !== 'true') b.click(); return false; }, null, { timeout: 30000, polling: 1000 })
     .catch(() => problems.push(tag + ': Ask at the block does not list the questions from the field there'));

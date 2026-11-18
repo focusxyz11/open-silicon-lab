@@ -59,6 +59,8 @@ export const SHARED = ['block', 'gate', 'switch', 'atom'];
 /* the journey's ways down, and its ways out: station -> [world, depth] */
 export const DIVES = { crystal: [['made', 'atom']], clean: [['made', 'wafer']], deposit: [['made', 'switch']], print: [['made', 'scanner']], etch: [['made', 'switch']], implant: [['made', 'atom']],
   wires: [['made', 'block']], test: [['made', 'wafer'], ['made', 'die']], pkg: [['made', 'die']] };
+/* the machine at each station that its way down starts from: ringed on the picture beside the way in */
+export const DIVE_PART = { crystal: 'furnace', clean: 'chamber', deposit: 'heater', print: 'scanner', etch: 'plasma', implant: 'beam', wires: 'plating', test: 'prober', pkg: 'die' };
 /* and back: from a depth of a dive to the station where that part of the chip is made */
 export const MADE = { chip: 'pkg', soc: 'pkg', mcu: 'pkg', block: 'wires', gate: 'print', switch: 'etch', atom: 'implant' };
 /* where the journey happens: a wafer plant, the chip factory itself (every layer goes round its loop), a
