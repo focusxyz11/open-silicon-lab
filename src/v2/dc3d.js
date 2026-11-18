@@ -5,33 +5,51 @@
    opens (the roof, the rack door, the tray, its lid, the heat sink, the chip's lid) opens as a function of z,
    so nothing appears from nowhere. Words: place.dc.<level>.t / .d; the parts' names come from their one home in the atlas (src/data/atlas.js). */
 import { VIEW_PARTS } from '../data/atlas.js';
-import { THREE, PALETTES, theme, stage, light, mat, metal, glow, glass, box, cyl, group, labels, clamp, smooth, ease, reduced, rnd } from './kit3d.js';
+import { THREE, PALETTES, CHIP_TONES, theme, stage, light, mat, metal, glow, glass, box, cyl, group, labels, clamp, smooth, ease, reduced, rnd } from './kit3d.js';
+import { SLAB, METRES, PADS, padsOf, coreGrid, tileOf, CACHE, CACHE_FIELDS, CACHE_BITS, bitsOf, IO, IO_BLOCKS, CLOCK, split, STACKS, STACK_LAYERS, BASE, PACKAGE } from '../data/die.js';
+import { model, START } from '../engines/chip.js';
 import { t } from '../core/i18n.js';
 
 export const LEVELS = ['campus', 'hall', 'rack', 'server', 'board', 'chip'];
 /* the question asked at each level: a stop of one thread (stop.<key>.q) */
 export const ASKS = { campus: 'life.building', hall: 'divide.building', rack: 'think.rack', server: 'divide.rack', board: 'think.board', chip: 'think.chip' };
 
+/* a point of the dive's plan of the chip (src/data/die.js), in metres on the package, and at a height */
+const onPkg = (x, y) => [(x - PACKAGE.at[0]) * METRES, (y - PACKAGE.at[1]) * METRES];
+const onTop = (x, y, h) => { const [a, b] = onPkg(x, y); return [a, h, b]; };
 /* where the camera looks at each level: the point, the distance to it, the turn and the tilt */
 const KEYS = [
   { look: [8, 2, -6], dist: 120, yaw: -0.62, pitch: 0.6 },
   { look: [0, 0.8, -4.5], dist: 22, yaw: -0.4, pitch: 0.82 },
   { look: [0, 1.15, 0.6], dist: 3.4, yaw: -0.22, pitch: 0.14 },
   { look: [0, 1.08, 0.82], dist: 1.0, yaw: -0.32, pitch: 0.8 },
-  { look: [0, 1.082, 0.77], dist: 0.3, yaw: -0.2, pitch: 1.0 },
-  { look: [-0.004, 1.081, 0.77], dist: 0.07, yaw: -0.12, pitch: 1.12 }
+  { look: [0, 1.082, 0.77], dist: 0.24, yaw: -0.2, pitch: 1.0 },
+  { look: [0, 1.081, 0.77], dist: 0.052, yaw: -0.12, pitch: 1.12 }
 ];
+const FOV = 38, FIT = 0.8;
+/* where the flight ends, for the dive's chip level to start from (src/v2/relief3d.js): the camera's turn and tilt, the
+   point of the plan it looks at (the middle of the package: the die and its stacks), and how much of the plan's units
+   it sees from top to bottom, on a screen at least fit as wide as it is tall (narrower, it stands back by as much) */
+export const HANDOFF = { turn: KEYS[5].yaw, tilt: KEYS[5].pitch, at: PACKAGE.at, span: 2 * KEYS[5].dist * Math.tan(FOV * Math.PI / 360) / METRES, fit: FIT };
 
-/* the die, as a photo of it would show: copies of one compute tile, a band of memory, links on the edges */
-function dieTexture(P) {
+/* the die, as the dive's chip level has it (src/data/die.js, in the relief's tones), so the chip you land on is the
+   chip you saw: copies of one compute tile, a band of memory, the links to the outside, the clock wires, the pads */
+function dieTexture(night) {
+  const T = CHIP_TONES[night ? 'dark' : 'light'], hex = n => '#' + n.toString(16).padStart(6, '0');
   const c = document.createElement('canvas'); c.width = c.height = 1024; const g = c.getContext('2d');
-  g.fillStyle = '#1c2230'; g.fillRect(0, 0, 1024, 1024);
-  const tile = (x, y, w, h, s) => { g.fillStyle = '#3a3324'; g.fillRect(x, y, w, h); for (let i = 0; i < 260; i++) { g.fillStyle = rnd(i, s) > 0.8 ? '#e9c37a' : rnd(i, s + 1) > 0.5 ? '#9a7b44' : '#5d4a2c'; g.fillRect(x + rnd(i, s + 2) * (w - 6), y + rnd(i, s + 3) * (h * 0.66 - 4), 2 + rnd(i, s + 4) * 6, 1.5 + rnd(i, s + 5) * 3); }
-    g.fillStyle = '#244a6a'; g.fillRect(x + 3, y + h * 0.7, w - 6, h * 0.27); g.strokeStyle = 'rgba(140,200,255,.35)'; g.lineWidth = 1; for (let u = x + 5; u < x + w - 3; u += 4) { g.beginPath(); g.moveTo(u, y + h * 0.7); g.lineTo(u, y + h * 0.97); g.stroke(); } };
-  for (let j = 0; j < 8; j++) for (let i = 0; i < 12; i++) tile(60 + i * 76, 70 + j * 76, 70, 70, 7);
-  g.fillStyle = '#20476a'; g.fillRect(60, 690, 908, 120); g.strokeStyle = 'rgba(140,200,255,.45)'; for (let u = 64; u < 966; u += 5) { g.beginPath(); g.moveTo(u, 692); g.lineTo(u, 808); g.stroke(); }
-  g.fillStyle = '#2f3a2e'; for (let i = 0; i < 24; i++) g.fillRect(60 + i * 38, 840, 30, 110);
-  g.strokeStyle = '#c9a14a'; g.lineWidth = 6; g.strokeRect(20, 20, 984, 984);
+  const k = 1024 / SLAB[2], R = (r, col) => { g.fillStyle = hex(col); g.fillRect((r[0] - SLAB[0]) * k, (r[1] - SLAB[1]) * k, r[2] * k, r[3] * k); };
+  /* a district stands a little proud of the slab: a shade on its far edges, light on its near ones */
+  const shade = (r, d, a) => { g.globalAlpha = a; R([r[0] + d, r[1] + d, r[2], r[3]], 0x000000); g.globalAlpha = 1; };
+  const proud = (r, col) => { shade(r, 3, 0.35); R(r, col); g.fillStyle = 'rgba(255,255,255,.08)'; g.fillRect((r[0] - SLAB[0]) * k, (r[1] - SLAB[1]) * k, r[2] * k, 2); };
+  R(SLAB, T.slab);
+  padsOf(PADS).forEach(r => shade(r, 3, 0.35));
+  padsOf(PADS).forEach(r => R(r, T.pad));
+  /* the tiles of the chip the dive shows: the starting chip's (src/app/scenes.js draws the same) */
+  const tiles = coreGrid(...model(START).grid).map(x => x.r);
+  tiles.forEach(r => { shade(r, 4, 0.4); R(r, T.tile); const { logic, own } = tileOf(r); proud(logic, T.top); R(own, T.bit); });
+  split(CACHE, CACHE_FIELDS).forEach(r => { R(r, T.field); bitsOf(r, ...CACHE_BITS).forEach(b => R(b, T.bit)); });
+  split(IO, IO_BLOCKS).forEach(r => proud(r, T.tile));
+  CLOCK.forEach(p => { for (let i = 1; i < p.length; i++) { const a = p[i - 1], b = p[i]; R([Math.min(a[0], b[0]) - 5, Math.min(a[1], b[1]) - 5, Math.abs(b[0] - a[0]) + 10, Math.abs(b[1] - a[1]) + 10], T.cu); } });
   const tx = new THREE.CanvasTexture(c); tx.colorSpace = THREE.SRGBColorSpace; tx.anisotropy = 8; return tx;
 }
 /* a rack's front: the servers stacked, their lights */
@@ -43,11 +61,11 @@ function rackTexture() {
 }
 
 export function createDataCentre(canvas, host, on = {}) {
-  const P = PALETTES[theme()], night = P.emissive > 0;
+  const P = PALETTES[theme()], night = P.emissive > 0, CT = CHIP_TONES[night ? 'dark' : 'light'];
   const st = stage(canvas), { env } = st;
   const scene = new THREE.Scene(); scene.background = new THREE.Color(P.sky); scene.fog = new THREE.Fog(P.fog, 260, 700); scene.environment = env; scene.environmentIntensity = night ? 0.35 : 0.5;
   const { sun } = light(scene, P, 60);
-  const camera = new THREE.PerspectiveCamera(38, 1, 0.01, 2000);
+  const camera = new THREE.PerspectiveCamera(FOV, 1, 0.01, 2000);
   const L = labels(host);
   const fades = [];                                     /* [material, from z, to z, direction] */
   const fader = (m, a, b, out = true) => { const mm = m.clone(); mm.transparent = true; fades.push({ m: mm, a, b, out }); return mm; };
@@ -151,15 +169,20 @@ export function createDataCentre(canvas, host, on = {}) {
   const lid = box(tray, TRAY.w, 0.006, TRAY.d, fader(metal(P.slate, { roughness: 0.55 }), 2.55, 2.95), 0, TRAY.h - 0.006, 0, 0.002);
   for (let k = 0; k < 6; k++) { const f = cyl(tray, 0.033, 0.033, 0.03, mat(P.dark), -0.2 + k * 0.08, 0.012, 0.42, 16); f.rotation.x = Math.PI / 2; f.position.y = 0.045; spins.push({ rotation: f.rotation, axis: 'y', f }); }
   const pcb = box(tray, 0.44, 0.004, 0.62, mat(P.board, { roughness: 0.6 }), 0, 0.012, 0.02, 0.002);
-  /* the package sits at the board's centre: x 0, z 0.02 in the tray; in the scene, z = 1.32 once the tray is out */
+  /* the package sits at the board's centre: x 0, z 0.02 in the tray; in the scene, z = 1.32 once the tray is out. On it,
+     the base (the interposer), the die and the four memory stacks beside it, placed as the dive's plan has them */
   const pkg = group(tray, 0, 0.016, 0.02);
-  box(pkg, 0.075, 0.003, 0.075, mat(0x2b3a2f, { roughness: 0.5 }), 0, 0, 0, 0.001);
-  box(pkg, 0.058, 0.0012, 0.05, mat(0x55606e, { roughness: 0.4, metalness: 0.3 }), 0, 0.003, 0, 0.0004);
-  const dieM = new THREE.MeshStandardMaterial({ map: dieTexture(P), roughness: 0.25, metalness: 0.35, emissive: 0xffffff, emissiveMap: null, emissiveIntensity: 0 });
-  const die = new THREE.Mesh(new THREE.BoxGeometry(0.028, 0.0008, 0.03), [mat(0x2a2f38), mat(0x2a2f38), dieM, mat(0x2a2f38), mat(0x2a2f38), mat(0x2a2f38)]);
-  die.position.set(-0.004, 0.0046, 0); die.castShadow = true; pkg.add(die);
-  for (let k = 0; k < 4; k++) { const s = group(pkg, 0.0175, 0.0042, -0.0135 + k * 0.009); for (let l = 0; l < 8; l++) box(s, 0.011, 0.00025, 0.0075, mat(l % 2 ? 0x3a4250 : 0x6b7586, { metalness: 0.4, roughness: 0.4 }), 0, l * 0.00026, 0, 0.0001, { cast: false }); }
-  const ihs = box(pkg, 0.066, 0.004, 0.062, fader(metal(0xb8bec6, { roughness: 0.25 }), 4.35, 4.8), 0, 0.0055, 0, 0.002);
+  const Sz = r => [r[2] * METRES, r[3] * METRES], mid = r => onPkg(r[0] + r[2] / 2, r[1] + r[3] / 2);
+  box(pkg, PACKAGE.side * METRES, 0.003, PACKAGE.side * METRES, mat(CT.pkg, { roughness: 0.5 }), 0, 0, 0, 0.001);
+  const [bw, bd] = Sz(BASE), [bx, bz] = mid(BASE);
+  box(pkg, bw, 0.0012, bd, mat(CT.base, { roughness: 0.4, metalness: 0.3 }), bx, 0.003, bz, 0.0004);
+  const dieM = new THREE.MeshStandardMaterial({ map: dieTexture(night), roughness: 0.45, metalness: 0.15, emissive: 0xffffff, emissiveMap: null, emissiveIntensity: 0 });
+  const edgeM = mat(CT.slab);
+  const [dw, dd] = Sz(SLAB), [dx, dz] = mid(SLAB);
+  const die = new THREE.Mesh(new THREE.BoxGeometry(dw, 0.0008, dd), [edgeM, edgeM, dieM, edgeM, edgeM, edgeM]);
+  die.position.set(dx, 0.0046, dz); die.castShadow = true; pkg.add(die);
+  STACKS.forEach(r => { const [x, z] = mid(r), [w, d] = Sz(r), s = group(pkg, x, 0.0042, z); for (let l = 0; l < STACK_LAYERS; l++) box(s, w, 0.00025, d, mat(CT.stack[l % 2], { metalness: 0.4, roughness: 0.4 }), 0, l * 0.00026, 0, 0.0001, { cast: false }); });
+  const ihs = box(pkg, 0.048, 0.004, 0.045, fader(metal(0xb8bec6, { roughness: 0.25 }), 4.35, 4.8), 0, 0.0055, 0, 0.002);
   /* the heat sink: a block of fins; it lifts away as you come close to the board */
   const sink = group(pkg, 0, 0.0095, 0); const sinkM = fader(metal(0xc9ced6, { roughness: 0.3 }), 3.35, 3.85);
   box(sink, 0.11, 0.006, 0.11, sinkM, 0, 0, 0, 0.002);
@@ -177,13 +200,13 @@ export function createDataCentre(canvas, host, on = {}) {
     ['racks', scene, W3(-3.5, 2.4, -6.2), [0.6, 1.6]], ['hotaisle', scene, W3(3.5, 2.3, -7.7), [0.6, 1.6]], ['trays', scene, W3(-3.6, 3.05, -12.6), [0.6, 1.5]], ['coldair', scene, W3(-3, 0.4, 1.6), [1.3, 2.3]],
     ['switch', rack, W3(0.3, 1.98, 0.5), [1.6, 2.5]], ['servers', rack, W3(0.32, 1.3, 0.5), [1.6, 2.4]], ['power', rack, W3(0.3, 0.3, 0.5), [1.6, 2.5]],
     ['fans', tray, W3(0.21, 0.09, 0.42), [2.6, 3.5]], ['accelerator', tray, W3(0.0, 0.08, 0.02), [2.7, 3.4]], ['memory', tray, W3(-0.17, 0.06, 0.1), [2.7, 3.5]], ['network', tray, W3(0.12, 0.05, -0.44), [2.7, 3.4]],
-    ['package', pkg, W3(0.038, 0.012, 0.03), [3.7, 4.5]], ['powerstages', tray, W3(0.06, 0.03, 0.11), [3.7, 4.4]],
-    ['die', pkg, W3(-0.004, 0.006, -0.012), [4.6, 5.1]], ['hbm', pkg, W3(0.0175, 0.0065, 0.018), [4.6, 5.1]]
+    ['package', pkg, W3(0.028, 0.012, 0.022), [3.7, 4.5]], ['powerstages', tray, W3(0.06, 0.03, 0.11), [3.7, 4.4]],
+    ['die', pkg, W3(...onTop(300, 60, 0.006)), [4.6, 5.1]], ['hbm', pkg, W3(...onTop(1125, 820, 0.0065)), [4.6, 5.1]]
   ];
   const named = NAMES.map(([id, obj, at, lv]) => { const lb = L.add(obj, at, t('part.' + VIEW_PARTS.flight[id]), { cls: 'part3' }); lb.lv = lv; return lb; });
   named.forEach((lb, i) => { lb.id = NAMES[i][0]; });
   /* the way in at each level: the thing you would enter next, where the shell's button stands with a ring on it */
-  const INTO = [[scene, W3(0, HALL.h, -4.5)], [rack, W3(0, 1.2, 0.45)], [rack, W3(0.02, 1.0, 0.5)], [tray, W3(0, 0.08, 0.02)], [pkg, W3(0, 0.012, 0)], [pkg, W3(-0.004, 0.006, -0.012)]];
+  const INTO = [[scene, W3(0, HALL.h, -4.5)], [rack, W3(0, 1.2, 0.45)], [rack, W3(0.02, 1.0, 0.5)], [tray, W3(0, 0.08, 0.02)], [pkg, W3(0, 0.012, 0)], [pkg, W3(...onTop(500, 150, 0.006))]];
   const pv = new THREE.Vector3();
   const portal = () => {
     const lv = Math.round(z), T = INTO[lv]; if (!T || Math.abs(z - lv) > 0.08 || drag) return on.portal && on.portal(null);
@@ -200,6 +223,8 @@ export function createDataCentre(canvas, host, on = {}) {
   };
   const pose = () => {
     const K = keyAt(z), c = Math.cos(K.pitch);
+    /* at the chip, a narrow screen (a phone) stands back until the die and its stacks fit across it */
+    K.dist *= 1 + (Math.max(1, FIT / camera.aspect) - 1) * smooth(4, 5, z);
     camera.position.set(K.look[0] + Math.sin(K.yaw) * c * K.dist, K.look[1] + Math.sin(K.pitch) * K.dist, K.look[2] + Math.cos(K.yaw) * c * K.dist);
     camera.lookAt(K.look[0], K.look[1], K.look[2]);
     camera.near = Math.max(0.002, K.dist * 0.04); camera.far = Math.max(60, K.dist * 30 + 400); camera.updateProjectionMatrix();

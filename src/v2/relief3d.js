@@ -13,7 +13,9 @@
    ones for the work that can be split, and cores past the budget stand red.
    create(level)(canvas, host, on) -> the level (level3d.js). */
 import * as THREE from '../vendor/three.min.js';
-import { mat, box } from './kit3d.js';
+import { mat, box, CHIP_TONES } from './kit3d.js';
+import { SLAB, CLOCK, split, padsOf, tileOf, bitsOf, CACHE_FIELDS, CACHE_BITS, IO_BLOCKS, STACKS, STACK_LAYERS, BASE, PACKAGE, PADS } from '../data/die.js';
+import { HANDOFF } from './dc3d.js';
 import { createLevel3D } from './level3d.js';
 import { partsOf, chipNow } from '../app/scenes.js';
 import { betChipNow, sceneVersion } from '../app/betscene.js';
@@ -23,14 +25,14 @@ import { DEPTHS } from '../data/weave.js';
 
 const X = x => (x - 500) / 100, Z = y => (y - 500) / 100;
 const rnd = (i, s) => { const x = Math.sin(i * 127.1 + s * 311.7) * 43758.5453; return x - Math.floor(x); };
-/* split a rectangle into n across (and m down), with a gap */
-const split = (r, n, m = 1, g = 8) => { const out = [], w = (r[2] - g * (n + 1)) / n, h = (r[3] - g * (m + 1)) / m; for (let j = 0; j < m; j++) for (let i = 0; i < n; i++) out.push([r[0] + g + i * (w + g), r[1] + g + j * (h + g), w, h]); return out; };
 const R = p => p.r;
 
 /* each chip: its slab, its pads, and its districts by kind; names point where the flat level put them */
 const PLANS = {
-  chip: { slab: [40, 40, 920, 920], pads: 22, arrive: true,
-    districts: P => [['cores', 'core', P.cores.map(R)], ['cache', 'memory', split(P.cache[0].r, 6), [7, 5]], ['io', 'row', split(P.io[0].r, 8)]],
+  /* the data centre's chip, as its plan has it (src/data/die.js), with its memory stacked beside it on one base; it is
+     the die the flight came down to, so the dive starts where the flight ended */
+  chip: { slab: SLAB, pads: PADS, stacks: true,
+    districts: P => [['cores', 'core', P.cores.map(R)], ['cache', 'memory', split(P.cache[0].r, CACHE_FIELDS), CACHE_BITS], ['io', 'row', split(P.io[0].r, IO_BLOCKS)]],
     wires: P => P.clock.map(c => c.p), wiresPart: 'clock' },
   soc: { slab: [40, 40, 920, 920], pads: 24,
     districts: P => [['cpu', 'core', P.cpu.map(R)], ['gpu', 'units', [P.gpu[0].r], [6, 4]], ['npu', 'array', [P.npu[0].r], [10, 8]], ['isp', 'stages', [P.isp[0].r], [5, 1]], ['cache', 'memory', split(P.cache[0].r, 8), [4, 7]]],
@@ -45,10 +47,10 @@ const PLANS = {
     wires: P => P.wires.map(w => w.p), wiresPart: 'wires', faint: true },
   die: { slab: [30, 30, 940, 940], pads: 22, scribe: true, probes: true,
     districts: P => [['cores', 'core', P.cores.map(R)], [null, 'memory', split([130, 620, 740, 100], 6), [7, 5]], [null, 'row', split([130, 740, 740, 90], 8)]],
-    wires: () => [[[500, 136], [500, 594]], [[315, 365], [685, 365]], [[315, 208], [315, 522]], [[685, 208], [685, 522]]] }
+    wires: () => CLOCK }
 };
 const NAMES = {
-  chip: { cores: [175, 165], cache: [185, 650], io: [175, 770], clock: [500, 250] },
+  chip: { cores: [175, 165], cache: [185, 650], io: [175, 770], clock: [500, 250], hbm: [1125, 936] },
   soc: { isp: [180, 170], gpu: [560, 170], npu: [560, 480], cpu: [190, 470], cache: [190, 780] },
   mcu: { cores: [180, 170], flash: [560, 170], sram: [190, 450], periph: [200, 620] },
   die: { cores: [175, 165], pads: [330, 68], probes: [68, 300], scribe: [860, 15] },
@@ -60,17 +62,18 @@ const H = { slab: 0.25, core: 0.2, logic: 0.12, field: 0.07, bit: 0.05, row: 0.1
 export const create = level => (canvas, host, on = {}) => createLevel3D(canvas, host, on, (scene, root, P, night) => {
   const plan = PLANS[level], parts = partsOf(level), C = () => chipNow();
   const col = (n, d) => (night ? n : d);
+  const T = CHIP_TONES[night ? 'dark' : 'light'];
   const M = {
-    slab: mat(col(0x1f2a3e, 0x7f8da2), { roughness: 0.5, metalness: 0.3 }),
+    slab: mat(T.slab, { roughness: 0.5, metalness: 0.3 }),
     tile: mat(0xffffff, { roughness: 0.45, metalness: 0.15 }),
-    field: mat(col(0x222e47, 0xaebdd0), { roughness: 0.5 }),
-    bit: mat(col(0x56709a, 0x6a809f), { roughness: 0.4, metalness: 0.2 }),
-    cu: mat(col(0xc77b45, 0xb5683a), { roughness: 0.3, metalness: 0.85 }),
-    pad: mat(col(0xc9a14a, 0xe0b070), { roughness: 0.3, metalness: 0.9 }),
+    field: mat(T.field, { roughness: 0.5 }),
+    bit: mat(T.bit, { roughness: 0.4, metalness: 0.2 }),
+    cu: mat(T.cu, { roughness: 0.3, metalness: 0.85 }),
+    pad: mat(T.pad, { roughness: 0.3, metalness: 0.9 }),
     live: new THREE.MeshStandardMaterial({ color: P.warm, emissive: P.warm, emissiveIntensity: night ? 1 : 0.5, roughness: 0.4 })
   };
   /* a block at work is live, so it warms (blue is a material here: the switch's gate); late is wrong, so red */
-  const TONE = { tile: new THREE.Color(col(0x2f3d58, 0xc9d4e2)), top: new THREE.Color(col(0x3d4f70, 0xe8edf4)), idle: new THREE.Color(col(0x1c2638, 0xa9b6c8)), late: new THREE.Color(P.bad) };
+  const TONE = { tile: new THREE.Color(T.tile), top: new THREE.Color(T.top), idle: new THREE.Color(T.idle), late: new THREE.Color(P.bad) };
   TONE.busy = TONE.top.clone().lerp(new THREE.Color(P.warm), night ? 0.5 : 0.6);
   const unit = new THREE.BoxGeometry(1, 1, 1);
   /* many boxes of one kind in one draw: [x, y, w, h] in the plan, from height y0, h tall */
@@ -82,9 +85,20 @@ export const create = level => (canvas, host, on = {}) => createLevel3D(canvas, 
 
   /* the die, and the ring of pads at its edge */
   const s = plan.slab; box(root, s[2] / 100, H.slab, s[3] / 100, M.slab, X(s[0] + s[2] / 2), -H.slab, Z(s[1] + s[3] / 2), 0.04, { cast: false, receive: false });
-  const pads = [], step = 836 / plan.pads;
-  for (let i = 0; i < plan.pads; i++) { const t = 82 + i * step + step * 0.2, w = step * 0.6; pads.push([t, 56, w, 24], [t, 920, w, 24], [56, t, 24, w], [920, t, 24, w]); }
+  const pads = plan.pads ? padsOf(plan.pads) : [];
   if (pads.length) many(pads, 0, H.pad, M.pad, level === 'die' ? 'pads' : null);
+
+  /* beside the data centre's die, on the base they share, its memory: four stacks of chips; under them, while the
+     camera still comes down from the flight, the package the flight showed, which gives way to the dive's ground */
+  let pkgM = null;
+  if (plan.stacks) {
+    box(root, BASE[2] / 100, 0.12, BASE[3] / 100, mat(T.base, { roughness: 0.4, metalness: 0.3 }), X(BASE[0] + BASE[2] / 2), -H.slab - 0.12, Z(BASE[1] + BASE[3] / 2), 0.03, { cast: false, receive: false });
+    const layer = (H.core + H.logic + H.slab + 0.1) / STACK_LAYERS;
+    for (let l = 0; l < STACK_LAYERS; l++) many(STACKS.map(r => [r[0], r[1], r[2], r[3]]), -H.slab + l * layer, layer * 0.92, mat(T.stack[l % 2], { roughness: 0.4, metalness: 0.4 }), 'hbm');
+    pkgM = mat(T.pkg, { roughness: 0.5, transparent: true, opacity: 0, depthWrite: false });
+    const side = PACKAGE.side / 100;
+    box(root, side, 0.06, side, pkgM, X(PACKAGE.at[0]), -H.slab - 0.18, Z(PACKAGE.at[1]), 0.05, { cast: false, receive: false });
+  }
 
   /* the districts, each kind with its own look */
   const live = {}, coreMeshes = []; let coreArea = null;
@@ -93,15 +107,12 @@ export const create = level => (canvas, host, on = {}) => createLevel3D(canvas, 
       /* alike: a block, its logic standing on it, its own small memory beside it; lit while it works */
       coreArea = rects.reduce((a, r) => [Math.min(a[0], r[0]), Math.min(a[1], r[1]), Math.max(a[2], r[0] + r[2]), Math.max(a[3], r[1] + r[3])], [1e9, 1e9, -1e9, -1e9]);
       coreMeshes.push(many(rects, 0, H.core, M.tile, part, TONE.tile));
-      const logic = rects.map(r => { const m = Math.min(r[2], r[3]) * 0.08; return [r[0] + m, r[1] + m, r[2] * 0.52, r[3] * 0.5]; });
-      live.cores = many(logic, H.core, H.logic, M.tile, part, TONE.top); live.n = rects.length; coreMeshes.push(live.cores);
-      coreMeshes.push(many(rects.map(r => [r[0] + r[2] * 0.6, r[1] + r[3] * 0.1, r[2] * 0.32, r[3] * 0.8]), H.core, H.bit, M.bit, part));
+      live.cores = many(rects.map(r => tileOf(r).logic), H.core, H.logic, M.tile, part, TONE.top); live.n = rects.length; coreMeshes.push(live.cores);
+      coreMeshes.push(many(rects.map(r => tileOf(r).own), H.core, H.bit, M.bit, part));
     } else if (kind === 'memory') {
       /* different: a low field of bits in a perfect grid */
       many(rects, 0, H.field, M.field, part);
-      const [nx, ny] = grid, bits = [];
-      rects.forEach(r => { const w = r[2] / nx, h = r[3] / ny; for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) bits.push([r[0] + i * w + w * 0.18, r[1] + j * h + h * 0.18, w * 0.64, h * 0.64]); });
-      many(bits, H.field, H.bit, M.bit, part);
+      many(rects.flatMap(r => bitsOf(r, ...grid)), H.field, H.bit, M.bit, part);
     } else if (kind === 'cellrows') {
       /* twelve rows, each between two copper power rails: cells of different widths, as the flat block has them (the
          same widths, from your chip's switch size); row six holds the cell the dive goes into next */
@@ -139,7 +150,7 @@ export const create = level => (canvas, host, on = {}) => createLevel3D(canvas, 
   /* the wires that reach every block (the clock, or the roads between districts), in copper, with what travels on them */
   const lines = plan.wires(parts), WY = H.core + H.logic + 0.02, strips = [];
   lines.forEach(p => { for (let i = 1; i < p.length; i++) { const a = p[i - 1], b = p[i]; strips.push([Math.min(a[0], b[0]) - 5, Math.min(a[1], b[1]) - 5, Math.abs(b[0] - a[0]) + 10, Math.abs(b[1] - a[1]) + 10]); } });
-  const wireM = plan.faint ? mat(col(0xc77b45, 0xb5683a), { roughness: 0.3, metalness: 0.85, transparent: true, opacity: 0.2, depthWrite: false }) : M.cu;
+  const wireM = plan.faint ? mat(T.cu, { roughness: 0.3, metalness: 0.85, transparent: true, opacity: 0.2, depthWrite: false }) : M.cu;
   many(strips, WY, H.wire, wireM, plan.wiresPart || null);
   const pulses = many(lines.map(() => [0, 0, 14, 14]), WY + H.wire, 0.07, M.live, plan.wiresPart || null);
 
@@ -192,12 +203,18 @@ export const create = level => (canvas, host, on = {}) => createLevel3D(canvas, 
     /* read from straight above, nearly: 72°, never turned. door: where the next level stands, the flat level's portal
        on the plane the districts stand on (a core, or the block's lighter cell); foot: the next level stands on it by
        the middle of its slab's top, and rises out of it (level3d.js) */
-    view: { tilt: 1.26, turn: 0, r: 5.6, at: [0, 0.1, 0.25], fixed: true, arrive: plan.arrive ? { tilt: 0.5, turn: -0.62, ms: 1800 } : null,
+    view: { tilt: 1.26, turn: 0, fixed: true, ...(plan.stacks
+      /* the die and its stacks fill the square; coming from the flight, the camera starts where the flight ended (its
+         angle, the point it looked at, and as close: as much of the plan from top to bottom), then rises to the plan */
+      ? { r: 6.6, at: [X(BASE[0] + BASE[2] / 2), 0.1, 0.25], arrive: { tilt: HANDOFF.tilt, turn: HANDOFF.turn, span: HANDOFF.span / 100, fit: HANDOFF.fit, at: [X(HANDOFF.at[0]), 0.1, Z(HANDOFF.at[1])], ms: 1800 } }
+      : { r: 5.6, at: [0, 0.1, 0.25], arrive: null }),
       door: (([px, py, side]) => ({ at: [X(px + side / 2), 0, Z(py + side / 2)], side: side / 100 }))(DEPTHS[level].portal), foot: [0, 0, 0] },
     has: key => key !== 'yours' || mine > 0,
     version: () => sceneVersion(),
     update(dt, k, dist, arrived = 1, picked) {
       if (sceneVersion() !== betBuilt) { buildBet(); tick = -1; }
+      /* the package the flight showed, under the die while the camera comes down from it */
+      if (pkgM) { const o = 1 - Math.min(1, arrived / 0.6); pkgM.opacity = o; pkgM.visible = o > 0.01; }
       t += dt;
       /* the die's test needles come down only once it has risen (a join from the wafer) */
       needles.forEach(n => { n.visible = arrived >= 0.9; }); if (probes && arrived < 0.9) probes.forEach(p => { p.visible = false; });

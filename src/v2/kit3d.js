@@ -12,6 +12,13 @@ export const PALETTES = {
   light: { sky: 0xcfe0ee, fog: 0xcfe0ee, ground: 0xb9cf9e, grass: 0x93b679, sea: 0x6fa8d0, road: 0x6f7682, roadLine: 0xf4f1ea, white: 0xf3f1ec, wall: 0xdcd8d0, slate: 0x5d6b7e, dark: 0x2f3a4a, metal: 0xb7bec8, glass: 0x9fc4dc, accent: 0x2f7de1, warm: 0xf0a33a, good: 0x2fa36b, bad: 0xd8504a, sand: 0xe6cf9c, rack: 0x39424f, board: 0x2b5f45, gold: 0xd2a744, chip: 0x2a2f38, emissive: 0.0 },
   dark: { sky: 0x0b1120, fog: 0x0b1120, ground: 0x1d2a33, grass: 0x1f3a32, sea: 0x0e2238, road: 0x343c4c, roadLine: 0x6b7586, white: 0xc9d1dc, wall: 0x3a4456, slate: 0x55657c, dark: 0x1c2330, metal: 0x7d8796, glass: 0x5aa9e6, accent: 0x5aa9ff, warm: 0xffb347, good: 0x45d08a, bad: 0xff6b62, sand: 0x6e6047, rack: 0x262d38, board: 0x1f4a37, gold: 0xc9a14a, chip: 0x1d222a, emissive: 1.0 }
 };
+/* a chip's own tones, the same wherever its die is drawn (the flight's die, the dive's relief): its slab, a tile and
+   the logic standing on it, a field of memory and its bits, copper, the pads, the base it stands on, the stacked
+   memory's chips, the package */
+export const CHIP_TONES = {
+  light: { slab: 0x7f8da2, tile: 0xc9d4e2, top: 0xe8edf4, idle: 0xa9b6c8, field: 0xaebdd0, bit: 0x6a809f, cu: 0xb5683a, pad: 0xe0b070, base: 0x55606e, stack: [0x3a4250, 0x6b7586], pkg: 0x2b3a2f },
+  dark: { slab: 0x1f2a3e, tile: 0x2f3d58, top: 0x3d4f70, idle: 0x1c2638, field: 0x222e47, bit: 0x56709a, cu: 0xc77b45, pad: 0xc9a14a, base: 0x55606e, stack: [0x3a4250, 0x6b7586], pkg: 0x2b3a2f }
+};
 export const theme = () => (document.documentElement.getAttribute('data-theme') || (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'));
 
 /* one stage: a single renderer and one GL canvas, shared by every 3D view (the island, the data centre, the chip,
