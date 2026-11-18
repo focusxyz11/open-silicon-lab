@@ -8,4 +8,7 @@ import implant from './implant.js';
 import overlay from './overlay.js';
 import films from './films.js';
 import litho from './litho.js';
+import cim from './cim.js';
+import grover from './grover.js';
 export const LABS = { agent, teardown, fit: teardown, evolve, pull: crystal, implant, overlay, etch: films, deposit: films, litho, euv: litho };
+Object.assign(LABS, { cim, grover });

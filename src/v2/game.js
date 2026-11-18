@@ -92,6 +92,9 @@ export const CHALLENGES = [
   { id: 'etch', step: 'make', place: 'fab', at: 'etch', kind: 'etch', grows: 'fab-etch' },
   { id: 'bottom', step: 'make', place: 'fab', at: 'deposit', kind: 'deposit', grows: 'fab-ald' },
   { id: 'litho-finest', step: 'make', place: 'fab', at: 'print', kind: 'litho', grows: 'fab-scanner' },
+  /* new ways to compute, each at the depth where the problem it attacks is met (src/v2/labs/cim.js, grover.js) */
+  { id: 'cim', step: 'use', place: 'datacentre', at: 'block', kind: 'cim', grows: 'way-cim' },
+  { id: 'grover', step: 'use', place: 'datacentre', at: 'atom', kind: 'grover', grows: 'way-quantum' },
   { id: 'euv-1000', step: 'make', place: 'fab', at: 'print', kind: 'euv', grows: 'fab-euv' }
 ];
 /* the goal of a chip challenge as gauges: each a value of your chip's model and the bound it must reach
@@ -119,6 +122,7 @@ export const chipGoal = id => CHIP.find(c => c.id === id);
 export const placeChallenges = place => CHALLENGES.filter(c => c.place === place);
 /* what grows, and where (the island draws each one: src/v2/map3d.js GROWERS) */
 const GROW_AT = { onebad: 'test', half: 'studio', phone: 'phones', car: 'cars', dclife: 'datacentre', fast: 'lab' };
+Object.assign(GROW_AT, { cim: 'lab', grover: 'lab' });   /* the other ways to compute grow at the Lab (WAYS_AT) */
 export const GROWTH = CHALLENGES.map(c => ({ id: c.grows, by: c.id, at: GROW_AT[c.id] || c.place }));
 
 /* Inside: every place's levels, one inside the next (src/data/places.js). These hold the earlier site's
@@ -273,6 +277,7 @@ export function community(s) {
 /* the question a challenge opens once you have won it: a stop, at its own level or the one beside it */
 export const OPENS = { 'litho-finest': 'scale.print', 'euv-1000': 'fail.print', etch: 'make.etch', bottom: 'idea.deposit', crystal: 'make.crystal', furnace: 'make.implant', shallow: 'fail.implant', vias: 'fail.print', evolve: 'idea.block', newest: 'open.phoneboard', jobs: 'divide.need', agent: 'idea.check', half: 'fail.check', vote: 'idea.check', full: 'make.gates', months: 'make.clean', quick: 'scale.clean', spot: 'fail.test', cores: 'divide.test',
   phone: 'life.phone', car: 'fail.car', dclife: 'fail.ship', fed: 'divide.board', fast: 'fail.chip' };
+Object.assign(OPENS, { cim: 'divide.block', grover: 'strange.atom' });
 /* and where the open things of the ledger sit: a break under "is the design right?", a piece to build under
    "could anyone design a chip?", a missing check under "who checks, and with what?" */
 export const FRONT_ASK = { break: 'fail.check', build: 'open.need', engine: 'idea.check' };
