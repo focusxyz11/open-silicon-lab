@@ -66,7 +66,7 @@ export function whereOf(hash) {
   if (k === 'place' && p[1] === 'datacentre' && p[2] != null && p[2] !== 'inside') return cell('flight', 'datacentre', FLIGHT[+p[2]] || 'building');
   if (k === 'place' && p[1] === 'phones' && /^\d+$/.test(p[2] || '')) return cell('flight', 'phones', PHONE_FLIGHT[+p[2]] || 'phone');
   if (k === 'place' && PLACES.includes(p[1])) return cell('island', p[1]);
-  return cell(k === 'ecosystem' || k === 'whatif' ? 'out' : ['log', 'challenges', 'questions', 'read', 'w'].includes(k) ? 'log' : 'island');
+  return cell(k === 'ecosystem' || k === 'whatif' ? 'out' : ['log', 'challenges', 'questions', 'read', 'w', 'machines'].includes(k) ? 'log' : 'island');
 }
 
 /* along: the address of another stage of the loop, from where you are. The depth is held where the level has a
