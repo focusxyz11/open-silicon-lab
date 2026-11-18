@@ -8,4 +8,6 @@ import implant from './implant.js';
 import overlay from './overlay.js';
 import films from './films.js';
 import litho from './litho.js';
+import clockpower from './clockpower.js';
 export const LABS = { agent, teardown, fit: teardown, evolve, pull: crystal, implant, overlay, etch: films, deposit: films, litho, euv: litho };
+Object.assign(LABS, { powercurve: clockpower, counter: clockpower });
