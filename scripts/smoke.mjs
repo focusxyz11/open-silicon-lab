@@ -564,7 +564,7 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
   /* the ways on the picture (src/v2/frame.js): on the island, pointing at a building with an inside says so (a ring
      round it, Go inside over it); on the line, the next station is a button along the line (→), and a station with an
      inside has its way in (↓) with the machine ringed; each is the card's own control, mirrored */
-  { const tag = 'ways', wp = await browser3d.newPage({ viewport: { width: 1280, height: 800 } });
+  at = 'ways'; { const tag = 'ways', wp = await browser3d.newPage({ viewport: { width: 1280, height: 800 } });
     wp.on('pageerror', e => problems.push(tag + ': ' + e.message));
     await wp.goto(base + 'index.html#/');
     let goSeen = false;
@@ -586,7 +586,7 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
     await wp.close(); }
   /* the dive on a phone: the card rests as a peek, opens when touched and steps aside when the picture is touched; a
      swipe up on the picture goes one level in */
-  { const tag = 'ways phone', pp = await browser3d.newPage({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
+  at = 'ways phone'; { const tag = 'ways phone', pp = await browser3d.newPage({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
     pp.on('pageerror', e => problems.push(tag + ': ' + e.message));
     await pp.goto(base + 'index.html#/dive/chip');
     await pp.waitForSelector('#diveui .dockwrap.peek .dock .kicker', { timeout: 90000 }).catch(() => problems.push(tag + ': the dive\'s card does not rest as a peek on a phone'));
@@ -602,6 +602,7 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
     for (let i = 0; i < 4 && !deeper; i++) { await swipe(); deeper = await pp.waitForFunction(() => location.hash === '#/dive/block', null, { timeout: 15000, polling: 500 }).then(() => true, () => false); }
     if (!deeper) problems.push(tag + ': a swipe up on the picture does not go a level in');
     await pp.close(); }
+  at = 'motion';
   /* a page of its own, so its moves do not mix with the zooms counted below */
   { const page = await browser3d.newPage({ viewport: { width: 1280, height: 800 } });
     page.on('pageerror', e => problems.push(tag + ' (way in): ' + e.message));
