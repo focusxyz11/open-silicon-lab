@@ -17,6 +17,7 @@ Where the lab stands, and what is ready to be built next. Read this first when s
 - **On the island, buildings invite you in** (desktop): pointing at a building or a machine with an inside rings it on the ground and shows *Go inside* over it; a click selects, a double click goes in (#237).
 - **On a phone, the card steps aside** (below 720 px only): in the dive, the line, the studio and the flight it rests as a peek (the level's name and its question), slides up when touched and folds when the picture is touched; the ways in and along wait above it, at the thumb; a quick swipe up or down on the picture moves one level in or out (#238).
 - **From the flight into the dive, one chip.** The die the flight lands on and the dive's chip level are drawn from one plan (`src/data/die.js`, in the tones of `CHIP_TONES` in `src/v2/kit3d.js`): the same tiles, memory band, links, clock wires and pads, with four stacks of memory beside the die on one base, at the dive's own scale. The dive's chip starts where the flight ended (its angle, the point it looked at, as close; `HANDOFF` in `src/v2/dc3d.js`, `arrive` in `src/v2/level3d.js`, marked `data-arrive` on the page while it lasts), the package fading as it rises to the plan; going on comes down into one tile (the block). The stacks are named by their home (`VIEW_PARTS.dive` and `diveWord` in `src/data/atlas.js`).
+- **Something to do at a level** (#235, `src/data/seek.js`): at the data centre's server, the phone's board and the gate, the card says what to look for; tapping a part, on the picture or in the card, gives something true to notice; the part that leads into the level's question lights it (in the card, and its parts on the flat picture); what you found is kept in *Your log*. The other levels take a search by adding data and words.
 - **A phone is flown through too** (`src/v2/phone3d-flight.js`, `#/place/phones/<level>`): from the phone on a desk, its screen opened like a book, into the frame where the battery fills most of it, onto the board as its shields lift, to the chip as the memory on top lifts off; past the chip it carries on into the dive's phone chip, which starts where the flight ended (`HANDOFF`, as the data centre's does). The flat dive keeps its phone and board levels, where their challenges are played.
 - **Challenges:** 42 in all, listed in `CHALLENGES` in `src/v2/game.js`, each played in the card where it lives. The newer labs are one file each in `src/v2/labs/` (how to build one: [LABS.md](LABS.md)).
   - **Design:** the half adder, the majority voter and the full adder; the proof's bet; Verify the agent (at the Lab); the right chip for the job; Evolve a circuit; Build your own AI chip (the capstone, at the studio's need).
@@ -58,10 +59,9 @@ The labs of #216 to #221 and the fixes of #222 are built. What they left open:
 
 ### The dive and the interface
 
-Each is an issue labelled `task`; #230 waits for a decision (`blocked`). #229 (the chip you land on is the chip you saw), #231, #232, #233, #234, #237 and #238 are built.
+Each is an issue labelled `task`; #230 waits for a decision (`blocked`). #229 (the chip you land on is the chip you saw), #231 to #235, #237 and #238 are built.
 
 - #230 One way down through a chip, not two side by side (the dive and the layer stack).
-- #235 Something to do at every level of the dive.
 - #236 The phone and the car, flown through like the data centre: the phone is built (below); the car waits.
 
 ## Ideas still to bring over

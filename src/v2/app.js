@@ -47,6 +47,7 @@ import { sideInput } from './side.js';
 import { swarmInput, swarmStart } from './swarm.js';
 import { tuneInput, tuneType } from './tunebox.js';
 import { WORLD_IDS } from '../data/worlds.js';
+import { SEEK, foundAt } from '../data/seek.js';
 
 const $ = id => document.getElementById(id);
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
@@ -496,12 +497,40 @@ export function start() {
   const lineHtml = (kicker, line, key, nav) => '<p class="kicker">' + esc(kicker) + '</p><p class="line">' + esc(line) + '</p>' +
     (key ? '<a class="askline" href="' + esc(follow(key)) + '"><span class="q">' + esc(t('stop.' + key + '.q')) + '</span></a>' : '') + '<div class="nav">' + nav + '</div>';
 
+  /* ---- something to do at a level (src/data/seek.js): its question turned into a small search on the picture. The card
+     says what to look for; a part tapped, on the picture or here, gives something true to notice; the part that leads
+     into the question lights the question (the card's line, and its parts on the picture); finding it is kept in your
+     log. The search leads to the question and never answers it. One design in the flight and in the dive ---- */
+  const seekName = (lv, p) => t('part.' + (SEEK[lv].view === 'flight' ? VIEW_PARTS.flight[p] : DiveData.partWord(lv, p)));
+  function seekHtml(lv, picked) {
+    const Q = SEEK[lv], seen = (S.looked && S.looked[lv]) || [], found = foundAt(S.looked, lv), last = Q.parts.includes(picked) ? picked : null;
+    return '<div class="seek' + (found ? ' found' : '') + '" data-seekat="' + esc(lv) + '" style="--qc:' + qColor(Q.ask) + '">' +
+      '<p class="kicker seekk"><span>' + esc(t(found ? 'seek.foundK' : 'seek.k')) + '</span><span class="seekn" aria-label="' + esc(t('seek.n', { n: seen.length, total: Q.parts.length })) + '">' + Q.parts.map(p => '<i' + (seen.includes(p) ? ' class="on"' : '') + '></i>').join('') + '</span></p>' +
+      '<p class="seekq">' + esc(t('seek.' + lv + '.find')) + '</p>' +
+      '<div class="seekparts">' + Q.parts.map(p => '<button type="button" class="seekp' + (seen.includes(p) ? ' looked' : '') + (p === last ? ' on' : '') + (found && p === Q.leads ? ' seeklead' : '') + '" data-seek="' + esc(p) + '"' + (Q.view === 'flight' ? ' data-hl="' + esc(p) + '"' : '') + '>' + esc(seekName(lv, p)) + '</button>').join('') + '</div>' +
+      (last ? '<p class="seeknote"><b>' + esc(seekName(lv, last)) + '</b> ' + esc(t('seek.' + lv + '.' + last)) + '</p>' : '<p class="small muted seeknote">' + esc(t('seek.tap')) + '</p>') +
+      (found ? '<p class="seekfound">' + esc(t('seek.found')) + '</p>' : '') + '</div>';
+  }
+  /* a part looked at: kept; the first time the search is found, a word that it is in your log */
+  function seekTap(lv, p) {
+    const Q = SEEK[lv]; if (!Q || !Q.parts.includes(p)) return false;
+    const was = foundAt(S.looked, lv), seen = (S.looked[lv] || []);
+    if (!seen.includes(p)) { S.looked[lv] = Q.parts.filter(x => x === p || seen.includes(x)); save(); }
+    if (!was && foundAt(S.looked, lv)) toast(t('seek.kept'));
+    return true;
+  }
+  /* the card's question, lit once its search is found */
+  const seekLit = (html, lv) => { const Q = SEEK[lv], at = Q && '<a class="askline" href="' + esc(follow(Q.ask)) + '"'; return Q && foundAt(S.looked, lv) && html.includes(at) ? html.replace(at, '<a class="askline seeklit" style="--qc:' + qColor(Q.ask) + '" href="' + esc(follow(Q.ask)) + '"') : html; };
+
   /* ---- a place flown through: the data centre ---- */
   const pui = $('placeui');
   const DC_DEPTH = { campus: 'building', hall: 'building', rack: 'rack', server: 'rack', board: 'board', chip: 'chip' };
-  let dcFrame = null, dcLv = 0;
+  let dcFrame = null, dcLv = 0, dcPick = null;
   function placeUI(lv) {
+    if (lv !== dcLv) dcPick = null;
     dcLv = lv; const id = LEVELS[lv];
+    $('placeLabels').classList.toggle('seeking', !!SEEK[id]);
+    if (dc) dc.mark(dcHold());
     if (!dcFrame) return;
     dcFrame.rail(id, lv / (LEVELS.length - 1)); dcFrame.level(DC_DEPTH[id]); here();
     if (dcFrame.mode() === 'look') drawDc();
@@ -510,12 +539,16 @@ export function start() {
     const id = LEVELS[dcLv], last = dcLv === LEVELS.length - 1;
     /* what you see here: every part named on the picture at this level, and what it does; pointing at one lights it */
     const here = dc ? dc.parts(dcLv) : [], PF = VIEW_PARTS.flight;
-    const hereHtml = here.length ? '<div class="herebox"><p class="kicker">' + esc(t('place.here')) + '</p><ul class="here2">' + here.map(k => '<li><button type="button" data-hl="' + k + '"><b>' + esc(t('part.' + PF[k])) + '</b><span>' + esc(t('what.' + PF[k])) + '</span></button></li>').join('') + '</ul></div>' : '';
+    const hereHtml = SEEK[id] ? seekHtml(id, dcPick) : here.length ? '<div class="herebox"><p class="kicker">' + esc(t('place.here')) + '</p><ul class="here2">' + here.map(k => '<li><button type="button" data-hl="' + k + '"><b>' + esc(t('part.' + PF[k])) + '</b><span>' + esc(t('what.' + PF[k])) + '</span></button></li>').join('') + '</ul></div>' : '';
     dcFrame.dock.innerHTML = lineHtml(t('place.dc.' + id + '.t'), t('place.dc.' + id + '.d'), ASKS[id], aroundRow(
       dcLv ? '<button type="button" class="chipb" data-key="back" data-lvgo="' + (dcLv - 1) + '">↑ ' + esc(t('place.dc.' + LEVELS[dcLv - 1] + '.t')) + '</button>' : '',
       last ? '<a class="chipb" data-key="next" data-in href="#/dive/chip">↓ ' + esc(t('place.next')) + '</a>' : '<button type="button" class="chipb" data-key="next" data-in data-lvgo="' + (dcLv + 1) + '">↓ ' + esc(t('place.dc.' + LEVELS[dcLv + 1] + '.t')) + '</button>',
-      id === 'board' ? '<a class="chipb" href="#/board">' + esc(t('board.enter')) + '</a>' : '')).replace('<div class="nav">', hereHtml + '<div class="nav">');
+      id === 'board' ? '<a class="chipb" href="#/board">' + esc(t('board.enter')) + '</a>' : ''));
+    dcFrame.dock.innerHTML = seekLit(dcFrame.dock.innerHTML, id).replace('<div class="nav">', hereHtml + '<div class="nav">');
   }
+  /* in the flight, the part kept lit on the picture: the one you tapped, else, once found, the one that leads in */
+  const dcHold = () => { const Q = SEEK[LEVELS[dcLv]]; return dcPick || (Q && foundAt(S.looked, LEVELS[dcLv]) ? Q.leads : null); };
+  const dcSeek = id => { const lv = LEVELS[dcLv]; if (!SEEK[lv] || !SEEK[lv].parts.includes(id)) return false; dcPick = id; seekTap(lv, id); if (dc) dc.mark(id); if (dcFrame && dcFrame.mode() === 'look') drawDc(); return true; };
   function showPlace(id, lv) {
     hideAll();
     $('placeCanvas').hidden = $('placeLabels').hidden = false; pui.hidden = false; showStage(true); document.body.classList.add('immersive');
@@ -523,8 +556,10 @@ export function start() {
     return Promise.all([withFrame(), ensureDc()]).then(([, d]) => {
       dcFrame = frameOf(pui, { up: { href: '#/', label: t('place.back') }, path: [{ href: '#/', label: t('place.back') }, { label: t('map.' + id + '.t') }],
         rail: { label: t('place.levels'), items: LEVELS.map(k => ({ id: k, label: t('place.dc.' + k + '.t'), size: sizeOf(k) })) }, onRail: k => d.go(LEVELS.indexOf(k)), onLook: drawDc, scroll: true });
-      pui.onclick = e => { const b = e.target.closest('[data-lvgo]'); if (b) d.go(+b.dataset.lvgo); const h = e.target.closest('[data-hl]'); if (h) d.mark(h.dataset.hl); };
-      pui.onpointerover = e => { const h = e.target.closest('[data-hl]'); d.mark(h ? h.dataset.hl : null); };
+      pui.onclick = e => { const b = e.target.closest('[data-lvgo]'); if (b) d.go(+b.dataset.lvgo); const sk = e.target.closest('[data-seek]'); if (sk) return dcSeek(sk.dataset.seek); const h = e.target.closest('[data-hl]'); if (h) d.mark(h.dataset.hl); };
+      pui.onpointerover = e => { const h = e.target.closest('[data-hl]'); d.mark(h ? h.dataset.hl : dcHold()); };
+      /* at a level with a search, the names on the picture are the parts to tap */
+      $('placeLabels').onclick = e => { const h = e.target.closest('[data-hl]'); if (h) dcSeek(h.dataset.hl); };
       loading(false); d.resume(); if (lv != null && lv >= 0 && lv < LEVELS.length) d.go(lv); placeUI(Math.round(d.z)); $('placeCanvas').focus({ preventScroll: true });
     });
   }
@@ -650,7 +685,11 @@ export function start() {
   });
   /* a part picked on the picture or by its name: a ring on it and its note beside its name; a tap on nothing clears it */
   let flatWords = null;
-  function pickPart(key) { divePart = key || null; dive.select(divePart); diveNotes(); }
+  function pickPart(key) { divePart = key || null; dive.select(divePart); diveNotes();
+    /* at a level with a search, a part picked is a part looked at */
+    const lv = diveId(); if (divePart && flatKind === 'dive' && !benchCh && SEEK[lv] && SEEK[lv].view === 'dive' && seekTap(lv, divePart)) { seekLight(lv); if (diveFrame && diveFrame.mode() === 'look') drawDive(); } }
+  /* found: the question's parts light on the flat picture, as when you follow it */
+  const seekLight = lv => { if (!foundAt(S.looked, lv) || diveThread) return; const th = SEEK[lv].ask.split('.')[0]; dive.setThread(th); };
   /* a mark standing for several questions: those lines light up in the dock's list */
   function markAsk(ths) {
     const want = new Set(ths.map(th => follow(th + '.' + diveId()))), lines = [...diveFrame.dock.querySelectorAll('.askline')];
@@ -798,10 +837,12 @@ export function start() {
       inHtml = dv ? '<a class="chipb" data-in data-inname="' + esc(inName) + '" href="' + esc(lineIn(id)) + '">↓ ' + esc(inName) + '</a>' : '';
     /* what you see here: the parts the level draws, each with what it does; choosing one picks it on the picture */
     const pk = flatKind === 'dive' && partsAt ? Object.keys(partsAt(id) || {}).filter(k => EN_HAS(DiveData.partWord(id, k)) && t('what.' + DiveData.partWord(id, k)) !== 'what.' + DiveData.partWord(id, k)) : [];
-    const hereHtml = pk.length ? '<div class="herebox"><p class="kicker">' + esc(t('place.here')) + '</p><ul class="here2">' + pk.map(k => { const w = DiveData.partWord(id, k); return '<li><button type="button" data-pick="' + esc(k) + '"' + (k === divePart ? ' class="on"' : '') + '><b>' + esc(t('part.' + w)) + '</b><span>' + esc(t('what.' + w)) + '</span></button></li>'; }).join('') + '</ul></div>' : '';
+    const hereHtml = flatKind === 'dive' && SEEK[id] && SEEK[id].view === 'dive' ? seekHtml(id, divePart) : pk.length ? '<div class="herebox"><p class="kicker">' + esc(t('place.here')) + '</p><ul class="here2">' + pk.map(k => { const w = DiveData.partWord(id, k); return '<li><button type="button" data-pick="' + esc(k) + '"' + (k === divePart ? ' class="on"' : '') + '><b>' + esc(t('part.' + w)) + '</b><span>' + esc(t('what.' + w)) + '</span></button></li>'; }).join('') + '</ul></div>' : '';
     diveFrame.dock.innerHTML = lineHtml(t('around.view.' + flatKind) + ' · ' + t('depth.' + id + '.name'), t('depth.' + id + '.see'), key, aroundRow(
       i ? '<button type="button" class="chipb" data-key="back" data-divego="' + (diveD - 1) + '">' + ar0 + esc(nm(L[i - 1])) + '</button>' : flatKind === 'dive' && diveWorld === 'datacentre' ? '<button type="button" class="chipb" data-key="back" data-divego="' + (diveD - 1) + '">' + esc(t('dive.up')) + '</button>' : '',
-      last ? end : '<button type="button" class="chipb" data-key="next"' + (flatKind === 'dive' ? ' data-in' : al) + ' data-divego="' + (diveD + 1) + '">' + ar1 + esc(nm(L[i + 1])) + '</button>', inHtml)).replace('<div class="nav">', yours + '<p class="small muted hintline">' + esc(t(F.hint)) + '</p>' + hereHtml + '<div class="nav">');
+      last ? end : '<button type="button" class="chipb" data-key="next"' + (flatKind === 'dive' ? ' data-in' : al) + ' data-divego="' + (diveD + 1) + '">' + ar1 + esc(nm(L[i + 1])) + '</button>', inHtml));
+    diveFrame.dock.innerHTML = (flatKind === 'dive' ? seekLit(diveFrame.dock.innerHTML, id) : diveFrame.dock.innerHTML).replace('<div class="nav">', yours + (hereHtml.startsWith('<div class="seek') ? '' : '<p class="small muted hintline">' + esc(t(F.hint)) + '</p>') + hereHtml + '<div class="nav">');
+    if (flatKind === 'dive' && SEEK[id]) seekLight(id);
     requestAnimationFrame(diveInset);
   }
   /* the way into a station of the line (src/data/weave.js DIVES): the machine that prints with light, or what the step makes */
@@ -844,7 +885,7 @@ export function start() {
       diveFrame = frameOf(vui, { up: { href: F.up, label: t(F.upWord) }, path: [{ href: '#/', label: t('place.back') }, { href: F.up, label: t(F.upWord) }, { label: t(F.title) }],
         rail: { label: t('place.levels'), items: L.map(k => ({ id: k, label: t('depth.' + k + '.name'), size: kind === 'dive' ? sizeOf(k) : null })) },
         onRail: k => w.flyTo(WE.IDS.indexOf(k)), onLook: () => { if (benchCh) { benchCh = null; const dk = diveFrame.dock; dk.classList.remove('benchdock'); dk.onclick = null; dk.oninput = null; } drawDive(); } }); watchDock();
-      vui.onclick = e => { const b = e.target.closest('[data-divego]'); if (b) w.flyTo(+b.dataset.divego); const pk = e.target.closest('[data-pick]'); if (pk) { pickPart(pk.dataset.pick === divePart ? null : pk.dataset.pick); vui.querySelectorAll('[data-pick]').forEach(x => x.classList.toggle('on', x.dataset.pick === divePart)); } };
+      vui.onclick = e => { const b = e.target.closest('[data-divego]'); if (b) w.flyTo(+b.dataset.divego); const sk = e.target.closest('[data-seek]'); if (sk) return pickPart(sk.dataset.seek); const pk = e.target.closest('[data-pick]'); if (pk) { pickPart(pk.dataset.pick === divePart ? null : pk.dataset.pick); vui.querySelectorAll('[data-pick]').forEach(x => x.classList.toggle('on', x.dataset.pick === divePart)); } };
       const d = WE.IDS.indexOf(L.includes(depth) ? depth : L[0]);
       loading(false); w.start(); w.setZ(d); if (!ringRaf) ringRaf = requestAnimationFrame(diveRing); if (arriving && kind === 'line') w.arrive(); arriving = false; diveD = -1; diveAt(d); $('diveCanvas').focus({ preventScroll: true });
       lineRing();
@@ -1024,6 +1065,10 @@ export function start() {
       if (strands.length) h += '<section class="stepsec"><h2>' + esc(t('page.questions.met')) + '</h2>' + strands.slice().reverse().map(th => { const ds = S.met[th].filter(d => Game.trail(th).includes(d)), d = ds[ds.length - 1], key = th + '.' + d;
         return '<div class="strand" style="--qc:' + qColor(key) + '"><a class="q" href="' + esc(follow(key)) + '">' + esc(t('stop.' + key + '.q')) + '</a><div class="chips">' + ds.map(x => '<a class="chipb" href="' + esc(follow(th + '.' + x)) + '">' + esc(t('depth.' + x + '.name')) + '</a>').join('') + '</div>' +
           (th === last && rootShown(S.met[th], Game.didOn(S, th)) ? '<p class="small muted">' + esc(t('ui.rootOf')) + ' <em class="rootq">' + esc(t('thread.' + th + '.root')) + '</em></p>' : '') + '</div>'; }).join('') + '</section>';
+      /* what you looked for and found at a level: where, what you looked for, and the question it led into */
+      const found = Object.keys(SEEK).filter(lv => foundAt(S.looked, lv));
+      if (found.length) h += '<section class="stepsec"><h2>' + esc(t('seek.log')) + '</h2><div class="seeklog">' + found.map(lv => { const Q = SEEK[lv];
+        return '<div class="strand" style="--qc:' + qColor(Q.ask) + '"><a class="kicker" href="' + esc(Q.at) + '">' + esc(Q.view === 'flight' ? t('place.dc.' + lv + '.t') : t('depth.' + lv + '.name')) + '</a><p class="small muted">' + esc(t('seek.' + lv + '.find')) + '</p><a class="q" href="' + esc(follow(Q.ask)) + '">' + esc(t('stop.' + Q.ask + '.q')) + '</a></div>'; }).join('') + '</div></section>';
       const bk = Game.BEACON[Game.STATION[Game.chipAt(S)]];
       h += '<section class="stepsec"><h2>' + esc(t(strands.length ? 'page.questions.next' : 'page.questions.first')) + '</h2><p class="small muted">' + esc(t('page.questions.where')) + '</p><div class="qgrid">' +
         '<a class="qcard" href="' + esc(followW(bk)) + '" style="--qc:' + qColor(bk) + '"><span class="kicker">' + esc(t('map.' + Game.STATION[Game.chipAt(S)] + '.t')) + '</span><span class="q">' + esc(t('stop.' + bk + '.q')) + '</span><span class="small muted">' + esc(t('sheet.follow')) + '</span></a></div></section>';
