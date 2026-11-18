@@ -45,7 +45,7 @@ jobs:
           - group: motion
             sections: motion,joins,seams
           - group: labs and ways
-            sections: labs,ways
+            sections: labs,ways,machines
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

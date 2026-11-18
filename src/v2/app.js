@@ -39,6 +39,7 @@ import { setBetScene } from '../app/betscene.js';
 import { whatif as whatifView } from './whatif.js';
 import { LEVERS as WF_LEVERS } from '../engines/ripple.js';
 import * as Worlds from './worlds.js';
+import { machines as machinesView } from './machines.js';
 import { copiesInput } from './copies.js';
 import { wallsInput } from './walls.js';
 import { formsInput } from './forms.js';
@@ -391,7 +392,7 @@ export function start() {
     h += PP && cur.tab === 'look' ? '<p class="kicker">' + esc(t('map.' + id + '.t')) + '</p><h2 class="cap">' + esc(PP.name(cur.part)) + '</h2><div class="door">'
       : '<p class="kicker">' + esc(kickerOf(id)) + '</p><h2>' + esc(t('map.' + id + '.t')) + '</h2><div class="door">';
     if (cur.tab === 'do') {
-      if (id === 'lab') h += '<p class="small">' + esc(t('game.lab.do', { built: C.built, total: C.total })) + '</p>' + C.breaks.map(b => chCard(chOf('break:' + b.of))).join('') + C.jobs.map(jobCard).join('') + C.engines.map(e => '<a class="chcard engine" target="_blank" rel="noopener" href="' + esc(REPO + '/issues/new?' + new URLSearchParams({ template: 'need.yml', title: t('game.engineFor', { piece: t('build.need.' + e.need + '.t') }) })) + '"><span class="st">⚙</span><span><b>' + esc(t('build.need.' + e.need + '.t')) + '</b><span class="small">' + esc(t('game.engineWanted')) + '</span></span></a>').join('') + '<a class="link" href="#/build">' + esc(t('game.seePlan')) + '</a>';
+      if (id === 'lab') h += '<p class="small">' + esc(t('game.lab.do', { built: C.built, total: C.total })) + '</p>' + '<a class="chcard" href="#/machines"><span class="st">◇</span><span><b>' + esc(t('machines.ui.kicker')) + '</b><span class="small">' + esc(t('machines.ui.go')) + '</span></span></a>' + C.breaks.map(b => chCard(chOf('break:' + b.of))).join('') + C.jobs.map(jobCard).join('') + C.engines.map(e => '<a class="chcard engine" target="_blank" rel="noopener" href="' + esc(REPO + '/issues/new?' + new URLSearchParams({ template: 'need.yml', title: t('game.engineFor', { piece: t('build.need.' + e.need + '.t') }) })) + '"><span class="st">⚙</span><span><b>' + esc(t('build.need.' + e.need + '.t')) + '</b><span class="small">' + esc(t('game.engineWanted')) + '</span></span></a>').join('') + '<a class="link" href="#/build">' + esc(t('game.seePlan')) + '</a>';
       else if (id === 'village') h += '<p class="small">' + esc(t('game.village.do')) + '</p>' + C.designs.map(designCard).join('') + C.jobs.map(jobCard).join('');
       else if (id === 'idea') h += '<p>' + esc(t('game.idea.do')) + '</p><a class="btn primary" target="_blank" rel="noopener" href="' + esc(REPO + '/issues/new?' + new URLSearchParams({ template: 'idea.yml', title: t('game.idea.title') })) + '">' + esc(t('game.idea.propose')) + '</a>';
       else if (dos.length) h += dos.map(chCard).join('');
@@ -1101,6 +1102,12 @@ export function start() {
   }
   page.addEventListener('input', e => { const f = e.target.closest('[data-readfind]'); if (f) Read.filterIndex(page, f.value); if (e.target.matches('[data-cyear]')) copiesInput(e.target); if (e.target.matches('[data-forms] [data-fcode]')) formsInput(e.target); if (e.target.matches('[data-tune] [data-tin]')) tuneType(e.target); });   /* i18n-ok: selectors */
   page.addEventListener('click', e => { const b = e.target.closest('[data-copies] [data-cp]'); if (b) copiesInput(b); const w = e.target.closest('[data-walls] [data-wk], [data-walls] [data-wrow]'); if (w) wallsInput(w, S.chip); const f = e.target.closest('[data-forms] [data-fjob], [data-forms] [data-fver], [data-forms] [data-fedit], [data-forms] [data-fsig]'); if (f) formsInput(f); const pl = e.target.closest('[data-plan] [data-pk2]'); if (pl) planInput(pl, S.chip); const ck = e.target.closest('[data-clock] [data-clk], [data-clock] [data-clkref]'); if (ck) clockInput(ck, S.chip); const sb = e.target.closest('[data-side] [data-sbk]'); if (sb) sideInput(sb); const sw = e.target.closest('[data-swarm] [data-swk]'); if (sw) swarmInput(sw); const tn = e.target.closest('[data-tune] [data-tk], [data-tune] [data-tplane]'); if (tn) tuneInput(tn, e); });   /* i18n-ok: a selector */
+  /* machines from shared blocks (src/v2/machines.js): a need, its machine, an agent that assembles it */
+  function showMachines(need) {
+    page.innerHTML = '<div class="inner"><a class="x pagex" href="#/" aria-label="' + esc(t('sheet.close')) + '">×</a><div data-machines></div></div>';
+    page.hidden = false; page.scrollTop = 0;
+    machinesView(page.querySelector('[data-machines]'), { need, go: id => { location.hash = '#/machines/' + id; } });
+  }
   /* a world (src/v2/worlds.js): one core question, its page made from its document; #/w/<id>/q<n> opens a question inside */
   function showWorlds() {
     const shown = location.hash;
@@ -1344,6 +1351,7 @@ export function start() {
     if (k === 'read') showRead(parts[1] ? decodeURIComponent(parts[1]) : null);
     if (k === 'w') { if (parts[1]) showWorld(parts[1], parts[2], parts[3]); else showWorlds(); }
     if (k === 'whatif') return showMap(from).then(() => showWhatif(parts[1]));
+    if (k === 'machines') showMachines(parts[1]);
     return showMap(from).then(() => { if (k === 'ecosystem') showEcosystem(); else if (k === 'explore' && cur && !sheet.hidden) { closeSheet(); map && map.overview(); } });
   }
   function route() {
