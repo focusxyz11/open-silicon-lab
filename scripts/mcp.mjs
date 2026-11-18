@@ -20,6 +20,11 @@ useLedger(collect());
 
 const str = d => ({ type: 'string', description: d });
 const WHO = { author: str(EN['api.arg.author']), kind: { type: 'string', enum: ['person', 'ai', 'both', 'program'], description: EN['api.arg.kind'] }, ai: str(EN['api.arg.ai']), about: str(EN['api.arg.about']) };
+/* a plan for the energy puzzle (src/engines/budget.js PLAN): every field optional, the engine checks the values */
+const PLAN_ARG = { type: 'object', description: EN['api.arg.plan'], properties: {
+  home: { type: 'string', enum: ['dram', 'hbm', 'sram'] }, precision: { type: 'string', enum: ['fp16', 'fp8', 'fp4'] }, clock: { type: 'number', minimum: 0.5, maximum: 4.5 },
+  volt: { type: ['number', 'null'], minimum: 0.5, maximum: 1.1 }, batch: { type: 'integer', minimum: 1, maximum: 4096 }, cim: { type: 'boolean' }, adcBits: { type: 'integer', minimum: 2, maximum: 12 },
+  pue: { type: 'number', minimum: 1, maximum: 3 }, optics: { type: 'string', enum: ['plug', 'cpo'] } } };
 const TOOLS = [
   { name: 'look', fn: a => API.look(a || {}), description: EN['api.tool.look'], inputSchema: { type: 'object', properties: { at: str(EN['api.arg.lookAt']) } } },
   { name: 'list_plan', fn: () => API.listPlan(), description: EN['api.tool.plan'], inputSchema: { type: 'object', properties: {} } },
@@ -33,6 +38,8 @@ const TOOLS = [
   { name: 'propose_break', fn: a => API.proposeBreak(a), description: EN['api.tool.break'], inputSchema: { type: 'object', properties: { design: str(EN['api.arg.design']), case: { type: 'array', description: EN['api.arg.case'], items: { type: 'object' } }, words: str(EN['api.arg.words']), ...WHO }, required: ['design', 'case', 'kind'] } },
   { name: 'propose_try', fn: a => API.proposeTry(a), description: EN['api.tool.try'], inputSchema: { type: 'object', properties: { design: str(EN['api.arg.design']), cases: { type: 'array', description: EN['api.arg.cases'], items: { type: 'array' } }, words: str(EN['api.arg.words']), ...WHO }, required: ['design', 'cases', 'kind'] } },
   { name: 'propose_report', fn: a => API.proposeReport(a), description: EN['api.tool.report'], inputSchema: { type: 'object', properties: { at: str(EN['api.arg.place']), say: { type: 'string', enum: ['wrong', 'confusing', 'broken', 'better'], description: EN['api.arg.say'] }, words: str(EN['api.arg.reportWords']), ...WHO }, required: ['at', 'say', 'words', 'kind'] } },
+  { name: 'energy_budget', fn: a => API.energyBudget(a || {}), description: EN['api.tool.energy'], inputSchema: { type: 'object', properties: { plan: PLAN_ARG } } },
+  { name: 'submit_attempt', fn: a => API.submitAttempt(a), description: EN['api.tool.attempt'], inputSchema: { type: 'object', properties: { plan: PLAN_ARG, words: str(EN['api.arg.words']), ...WHO }, required: ['plan', 'kind'] } },
   { name: 'propose_question', fn: a => API.proposeQuestion(a), description: EN['api.tool.question'], inputSchema: { type: 'object', properties: { at: str(EN['api.arg.at']), under: str(EN['api.arg.under']), question: str(EN['api.arg.question']), noticed: str(EN['api.arg.noticed']), ...WHO }, required: ['at', 'question', 'kind'] } }
 ];
 

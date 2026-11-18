@@ -21,7 +21,7 @@ test('an agent connects, lists the tools, reads the plan and takes a job', async
     assert.equal(init.result.serverInfo.name, 'open-silicon-lab');
     assert.ok(init.result.capabilities.tools && init.result.instructions);
     const tools = (await S.call('tools/list', {})).result.tools.map(t => t.name);
-    assert.deepEqual(tools, ['look', 'list_plan', 'get_job', 'check_design', 'at_factory', 'life_of', 'propose_design', 'list_ledger', 'propose_break', 'propose_try', 'propose_report', 'propose_question']);
+    assert.deepEqual(tools, ['look', 'list_plan', 'get_job', 'check_design', 'at_factory', 'life_of', 'propose_design', 'list_ledger', 'propose_break', 'propose_try', 'propose_report', 'energy_budget', 'submit_attempt', 'propose_question']);
     const plan = (await S.tool('list_plan', {})).structuredContent;
     assert.ok(plan.pieces.some(p => p.id === 'core' && p.engine === 'riscv'));
     const job = (await S.tool('get_job', { job: 'vote' })).structuredContent;
@@ -69,5 +69,24 @@ test('an agent checks a design, finds its bug, sees the factory spoil a copy, an
     assert.equal((await S.tool('propose_report', { at: 'https://example.com', say: 'wrong', words: 'Somewhere outside the lab entirely.', kind: 'ai', ai: 'x' })).structuredContent.ok, false);
     const core = (await S.tool('check_design', { job: 'core', code: 'li a0, 42', slice: 'bb = b ^ sub;\np = a ^ bb;\ns = p ^ cin;\ncout = (a & bb) | (cin & p);\ny = (~op1 & ~op0 & (a & b)) | (~op1 & op0 & (a | b)) | (op1 & ~op0 & (a ^ b)) | (op1 & op0 & s);' })).structuredContent;
     assert.equal(core.right, true); assert.equal(core.result, 42);
+  } finally { S.stop(); }
+});
+
+test('an agent reads the energy budget, pulls a lever, and submits an attempt the engine scores', async () => {
+  const S = server();
+  try {
+    const B = (await S.tool('energy_budget', {})).structuredContent;
+    assert.equal(B.ok, true); assert.equal(B.levels.length, 8); assert.equal(B.mostAt, 'board'); assert.equal(B.mostIs, 'moving');
+    assert.ok(B.levers.some(l => l.id === 'cim' && l.level === 'block' && l.labName) && B.total.timesTheFloor > 1 && B.note);
+    const L = (await S.tool('energy_budget', { plan: { batch: 64, precision: 'fp8' } })).structuredContent;
+    assert.ok(L.total.joules < B.total.joules);
+    assert.equal((await S.tool('energy_budget', { plan: { clock: 99 } })).structuredContent.ok, false);
+    const open = (await S.tool('list_ledger', {})).structuredContent.open.find(o => o.do === 'attempt a puzzle');
+    assert.ok(open && open.tools.includes('submit_attempt'));
+    const yes = (await S.tool('submit_attempt', { plan: { batch: 256, precision: 'fp4', home: 'sram' }, kind: 'ai', ai: 'An agent read the budget and chose the plan.' })).structuredContent;
+    assert.equal(yes.ok, true); assert.match(yes.entry.path, /-try-[a-z0-9-]+\.json$/); assert.ok(yes.joules > 0 && yes.facts.joules > 0);
+    assert.equal(JSON.parse(yes.entry.file).puzzle, 'energy');
+    assert.equal((await S.tool('submit_attempt', { plan: { batch: 256 }, kind: 'ai' })).structuredContent.ok, false, 'say how AI was used');
+    assert.equal((await S.tool('submit_attempt', { plan: { home: 'cloud' }, kind: 'person' })).structuredContent.ok, false);
   } finally { S.stop(); }
 });

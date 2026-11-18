@@ -2,7 +2,8 @@
 
 Everything the community has added to Open Silicon Lab, one small file per entry, in `ledger/`.
 An entry is a design for a piece of the shared computer, a break (a case that makes an accepted design
-answer wrong), a try (cases that failed to break one), a question with a place, a report (the lab itself
+answer wrong), a try (cases that failed to break one, or an attempt at a puzzle: a plan its engine scores, as for
+`content/puzzles/energy.md`), a question with a place, a report (the lab itself
 broken: something untrue, confusing, not working, or that could be better, at a place given by its address)
 or a fix (a report answered). The file's name is the entry's id: `<date>-<kind>-<name>.json`.
 

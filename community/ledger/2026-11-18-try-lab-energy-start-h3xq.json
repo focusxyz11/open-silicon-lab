@@ -1,0 +1,9 @@
+{
+  "kind": "try",
+  "by": "Open Silicon Lab",
+  "made": "example",
+  "ai": "",
+  "words": "The starting plan: one user at a time, 16 bits, weights in memory stacked beside the chip, at 3 GHz, in a hall with a PUE of 1.2.",
+  "puzzle": "energy",
+  "plan": {}
+}

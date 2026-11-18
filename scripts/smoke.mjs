@@ -184,6 +184,19 @@ const explore = async (tag, viewport, scheme) => {
   /* the gate as a relief on the stage, with its five names */
   await page.evaluate(() => { location.hash = '#/dive/gate'; });
   await page.waitForFunction(() => document.querySelectorAll('#l3-gate [data-part3]').length === 5 && !document.getElementById('l3-gate').hidden, null, { timeout: 25000 }).catch(() => problems.push(tag + ': the gate did not appear as a relief with its five names'));
+  /* the energy puzzle's lens on the dive: the whole answer level by level, and a lab at the block as a lever that
+     changes the whole trace; closed again so the dive below is as it was */
+  at = tag + ' follow the joule';
+  await page.click('#diveui .joulebtn').catch(() => problems.push(tag + ': the dive has no Follow the joule'));
+  await page.waitForFunction(() => { const j = document.querySelector('#diveui .joule'); return j && !j.hidden && j.querySelectorAll('.jrow').length === 8 && /Gate/.test((j.querySelector('.jrow.here') || {}).textContent || ''); }, null, { timeout: 10000 }).catch(() => problems.push(tag + ': the lens does not show the eight levels with the gate open'));
+  await page.evaluate(() => { location.hash = '#/dive/block'; });
+  await page.waitForSelector('#diveui .jrow.here[data-jl="block"]', { timeout: 10000 }).catch(() => problems.push(tag + ': the lens does not follow the dive to the block'));
+  { const before = await page.textContent('#diveui .jtot b').catch(() => '');
+    const more = await page.$('#diveui .jmore'); if (more && await more.isVisible()) await more.click();
+    await page.click('#diveui [data-jv="cim:1"]').catch(() => problems.push(tag + ': compute in memory is no lever at the block'));
+    await page.waitForFunction(b => { const t = document.querySelector('#diveui .jtot b'); return t && t.textContent !== b; }, before, { timeout: 5000 }).catch(() => problems.push(tag + ': pulling a lever did not change the answer\'s energy')); }
+  if (await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1)) problems.push(tag + ': the lens scrolls the page sideways');
+  await page.click('#diveui [data-jx]').catch(() => problems.push(tag + ': the lens cannot be closed'));
   /* the atom too: a crystal on the stage, with its four names */
   await page.evaluate(() => { location.hash = '#/dive/atom'; });
   await page.waitForFunction(() => document.querySelectorAll('#l3-atom [data-part3]').length === 4 && !document.getElementById('l3-atom').hidden, null, { timeout: 25000 }).catch(() => problems.push(tag + ': the atom did not appear in 3D with its four names'));

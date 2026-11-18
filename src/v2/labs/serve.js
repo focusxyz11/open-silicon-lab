@@ -149,6 +149,8 @@ export default function lab(L) {
     h += '<p class="small srvsay">' + esc(d === 0 ? t('srv.e.say.same') : t(d > 0 ? 'srv.e.say.less' : 'srv.e.say.more', { v: Math.abs(d) })) + (M.building ? ' ' + esc(t('srv.e.say.building', { v: cut(M.building.r.joulesPerToken) })) : '') + '</p>';
     h += '<button type="button" class="link" data-se-reset>' + esc(t('srv.e.reset')) + '</button>' + hint(M.ok || S.done[ch.id], 'srv.e.hint');
     if (S.done[ch.id]) h += '<p class="small good">' + esc(t('srv.e.done')) + '</p>';
+    /* the energy puzzle runs through here: the whole answer, level by level, on the dive (src/v2/joule.js) */
+    h += '<p class="small">' + esc(t('joule.offer.d')) + '</p><a class="btn" href="#/dive/chip" data-joule="chip">' + esc(t('joule.offer')) + '</a>';
     return h + '<p class="small muted">' + esc(t('srv.e.note')) + '</p>' + doneNote() + reward();
   }
 

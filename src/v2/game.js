@@ -16,7 +16,8 @@ import { model, CHALLENGES as CHIP, START, normal, SETTINGS } from '../engines/c
 import { live, PERFECT, normalLife } from '../engines/life.js';
 import { plan, progress, needOf, childrenOf, designsFor, allDesigns } from '../engines/build.js';
 import { ledger, settle, frontier, questionsAt, society, workFor, KINDS as ENTRY_KINDS } from '../engines/ledger.js';
-import { t } from '../core/i18n.js';
+import { t, fmtNum } from '../core/i18n.js';
+import { normalJoule } from './joule.js';
 import { NEEDS, AGENT } from '../data/build.js';
 import { DEBATES } from '../data/debates.js';
 import { WAYS } from '../data/ways.js';
@@ -186,7 +187,7 @@ export const askHref = key => { const [th, d] = key.split('.'); return '#/ask/' 
 
 /* ---- your state: what you have done, and what you were working on ---- */
 export const KEY = 'osl-world-v1';
-export function fresh() { return { done: {}, codes: {}, chip: Object.assign({}, START), life: {}, seen: false, drafts: [], sent: {}, met: {}, crossed: {}, bets: {}, whatif: { levers: {}, solved: {} }, agent: {}, teardown: {}, fit: {}, evolve: {}, litho: { best: {} }, aibuild: {}, looked: {}, name: '' }; }
+export function fresh() { return { done: {}, codes: {}, chip: Object.assign({}, START), life: {}, seen: false, drafts: [], sent: {}, met: {}, crossed: {}, bets: {}, whatif: { levers: {}, solved: {} }, agent: {}, teardown: {}, fit: {}, evolve: {}, litho: { best: {} }, aibuild: {}, looked: {}, joule: { on: false, plan: {} }, name: '' }; }
 export function normalState(s) {
   const f = fresh();
   if (!s || typeof s !== 'object') return f;
@@ -206,10 +207,10 @@ export function normalState(s) {
   const w = s.whatif || {}, whatif = { levers: normalLevers(w.levers), solved: {} }; Object.keys(w.solved || {}).forEach(k => { if (PUZZLES.some(p => p.id === k)) whatif.solved[k] = true; });
   /* Print the finest lines: the setting that printed each scanner's finest lines (src/v2/labs/litho.js prints them again) */
   const litho = { best: {} }; Object.entries((s.litho && s.litho.best) || {}).slice(0, 12).forEach(([k, v]) => { if (v && typeof v === 'object' && [v.na, v.v, v.dose].every(Number.isFinite)) litho.best[k] = { na: v.na, v: v.v, dose: v.dose, illum: v.illum === 'dipole' ? 'dipole' : 'conventional', dp: !!v.dp }; });
-  return { done, codes, chip: normal(s.chip || START), life: lifeC, seen: !!s.seen, drafts, sent, met, crossed, bets, whatif, agent: normalAgent(s.agent), teardown: s.teardown && typeof s.teardown === 'object' ? s.teardown : {}, fit: s.fit && typeof s.fit === 'object' ? s.fit : {}, evolve: s.evolve && typeof s.evolve === 'object' ? s.evolve : {}, litho, aibuild: s.aibuild && typeof s.aibuild === 'object' ? s.aibuild : {}, looked: normalLooked(s.looked), name: typeof s.name === 'string' ? s.name.slice(0, 40) : '' };
+  return { done, codes, chip: normal(s.chip || START), life: lifeC, seen: !!s.seen, drafts, sent, met, crossed, bets, whatif, agent: normalAgent(s.agent), teardown: s.teardown && typeof s.teardown === 'object' ? s.teardown : {}, fit: s.fit && typeof s.fit === 'object' ? s.fit : {}, evolve: s.evolve && typeof s.evolve === 'object' ? s.evolve : {}, litho, aibuild: s.aibuild && typeof s.aibuild === 'object' ? s.aibuild : {}, looked: normalLooked(s.looked), joule: normalJoule(s.joule), name: typeof s.name === 'string' ? s.name.slice(0, 40) : '' };
 }
 export function load(store) { try { return normalState(JSON.parse(store.getItem(KEY) || 'null')); } catch (e) { return fresh(); } }
-export function save(store, s) { try { store.setItem(KEY, JSON.stringify({ done: s.done, codes: s.codes, chip: s.chip, life: s.life, seen: s.seen, drafts: s.drafts, sent: s.sent, met: s.met, crossed: s.crossed, bets: s.bets, whatif: s.whatif, agent: s.agent, teardown: s.teardown, fit: s.fit, evolve: s.evolve, litho: s.litho, aibuild: s.aibuild, looked: s.looked, name: s.name })); } catch (e) { /* storage unavailable */ } }
+export function save(store, s) { try { store.setItem(KEY, JSON.stringify({ done: s.done, codes: s.codes, chip: s.chip, life: s.life, seen: s.seen, drafts: s.drafts, sent: s.sent, met: s.met, crossed: s.crossed, bets: s.bets, whatif: s.whatif, agent: s.agent, teardown: s.teardown, fit: s.fit, evolve: s.evolve, litho: s.litho, aibuild: s.aibuild, looked: s.looked, joule: s.joule, name: s.name })); } catch (e) { /* storage unavailable */ } }
 
 /* ---- checks: each challenge asks its engine ---- */
 export function checkDesign(p, code) { return build({ p, code }); }
@@ -319,7 +320,8 @@ export const aboutWords = (about, W) => (STOPS[about] ? t('stop.' + about + '.q'
 /* what is open now, loudest first, read from the ledger and your drafts */
 export const frontierOf = s => frontier(world(s));
 export function entryWords(e, s) { const W = world(s), T = W.byId[e.of];
-  return e.kind === 'design' ? t('ledger.rec.design', { title: e.title, piece: t('build.need.' + e.piece + '.t') }) : e.kind === 'break' ? t('ledger.rec.break', { title: T.title }) : e.kind === 'try' ? t('ledger.rec.try', { title: T.title, n: e.facts.cases })
+  return e.kind === 'design' ? t('ledger.rec.design', { title: e.title, piece: t('build.need.' + e.piece + '.t') }) : e.kind === 'break' ? t('ledger.rec.break', { title: T.title }) : e.kind === 'try' && e.puzzle ? t('ledger.rec.attempt', { wh: fmtNum(+(e.facts.joules / 3600).toPrecision(2)) })
+    : e.kind === 'try' ? t('ledger.rec.try', { title: T.title, n: e.facts.cases })
     : e.kind === 'report' ? t('ledger.rec.report', { say: t('report.say.' + e.say), at: e.at, words: e.words }) : e.kind === 'fix' ? t('ledger.rec.fix', { words: e.words }) : e.q; }
 /* break a design: a challenge made by the ledger itself, for every clocked design that stands, and kept for the
    broken ones, so anyone can find the case again */
