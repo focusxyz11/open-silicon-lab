@@ -509,7 +509,7 @@ export function start() {
     const id = LEVELS[dcLv], last = dcLv === LEVELS.length - 1;
     /* what you see here: every part named on the picture at this level, and what it does; pointing at one lights it */
     const here = dc ? dc.parts(dcLv) : [], PF = VIEW_PARTS.flight;
-    const hereHtml = here.length ? '<p class="kicker">' + esc(t('place.here')) + '</p><ul class="here2">' + here.map(k => '<li><button type="button" data-hl="' + k + '"><b>' + esc(t('part.' + PF[k])) + '</b><span>' + esc(t('what.' + PF[k])) + '</span></button></li>').join('') + '</ul>' : '';
+    const hereHtml = here.length ? '<div class="herebox"><p class="kicker">' + esc(t('place.here')) + '</p><ul class="here2">' + here.map(k => '<li><button type="button" data-hl="' + k + '"><b>' + esc(t('part.' + PF[k])) + '</b><span>' + esc(t('what.' + PF[k])) + '</span></button></li>').join('') + '</ul></div>' : '';
     dcFrame.dock.innerHTML = lineHtml(t('place.dc.' + id + '.t'), t('place.dc.' + id + '.d'), ASKS[id], aroundRow(
       dcLv ? '<button type="button" class="chipb" data-key="back" data-lvgo="' + (dcLv - 1) + '">↑ ' + esc(t('place.dc.' + LEVELS[dcLv - 1] + '.t')) + '</button>' : '',
       last ? '<a class="chipb" data-key="next" data-in href="#/dive/chip">↓ ' + esc(t('place.next')) + '</a>' : '<button type="button" class="chipb" data-key="next" data-in data-lvgo="' + (dcLv + 1) + '">↓ ' + esc(t('place.dc.' + LEVELS[dcLv + 1] + '.t')) + '</button>',
@@ -590,11 +590,12 @@ export function start() {
   };
   let diveWorld = 'datacentre';
   const FL = k => k === 'dive' ? Object.assign({}, FLAT.dive, { world: diveWorld }, DIVES[diveWorld]) : FLAT[k];
+  let partsAt = null;   /* the parts each level's scene draws (src/app/scenes.js), for what you see here */
   let flatKind = 'dive', diveFrame = null, diveD = -1, divePart = null, diveThread = null, benchCh = null, WE = null, DiveData = null, DS = null;
   const levelsOf = k => FL(k).levels || DiveData.WORLDS.find(w => w.id === FL(k).world).depths;
   const diveId = () => WE.IDS[diveD];
-  const ensureDive = () => dive ? Promise.resolve(dive) : Promise.all([import('../engines/weave.js'), import('../app/world.js'), import('../data/weave.js'), import('../app/design.js'), import('../app/journey.js'), import('./overlay.js')]).then(([E, Wm, Wd, Ds, Jm, Om]) => {
-    WE = E; DiveData = Wd; DS = Ds; threadColorOf = Wm.threadColor;
+  const ensureDive = () => dive ? Promise.resolve(dive) : Promise.all([import('../engines/weave.js'), import('../app/world.js'), import('../data/weave.js'), import('../app/design.js'), import('../app/journey.js'), import('./overlay.js'), import('../app/scenes.js')]).then(([E, Wm, Wd, Ds, Jm, Om, Sc]) => {
+    WE = E; DiveData = Wd; DS = Ds; threadColorOf = Wm.threadColor; partsAt = Sc.partsOf;
     /* the dive's words in HTML over the picture: names, the note on a picked part, the questions' marks under Ask */
     flatWords = Om.createOverlay($('flatLabels'), { part: key => pickPart(key), mark: th => { location.hash = follow(th + '.' + diveId()); }, marks: ths => markAsk(ths), door: () => dive.flyTo(diveD + 1) });
     /* a wheel over one of those words still moves the dive (as over the 3D levels' names, level3d.js) */
@@ -732,9 +733,12 @@ export function start() {
     const end = { dive: '<a class="chipb" href="#/">' + esc(t('chipx.back')) + '</a>', line: '<a class="chipb" href="#/place/port">' + esc(t('line.end')) + '</a>', bench: '<a class="chipb" href="#/line/print">' + esc(t('bench.toFab')) + '</a>' }[flatKind];
     /* a dive goes up and down; the line and the studio go earlier and later in the work */
     const [ar0, ar1] = flatKind === 'dive' ? ['↑ ', '↓ '] : ['← ', '→ '], nm = d => t('depth.' + d + '.name');
+    /* what you see here: the parts the level draws, each with what it does; choosing one picks it on the picture */
+    const pk = flatKind === 'dive' && partsAt ? Object.keys(partsAt(id) || {}).filter(k => EN_HAS(DiveData.partWord(id, k)) && t('what.' + DiveData.partWord(id, k)) !== 'what.' + DiveData.partWord(id, k)) : [];
+    const hereHtml = pk.length ? '<div class="herebox"><p class="kicker">' + esc(t('place.here')) + '</p><ul class="here2">' + pk.map(k => { const w = DiveData.partWord(id, k); return '<li><button type="button" data-pick="' + esc(k) + '"' + (k === divePart ? ' class="on"' : '') + '><b>' + esc(t('part.' + w)) + '</b><span>' + esc(t('what.' + w)) + '</span></button></li>'; }).join('') + '</ul></div>' : '';
     diveFrame.dock.innerHTML = lineHtml(t('around.view.' + flatKind) + ' · ' + t('depth.' + id + '.name'), t('depth.' + id + '.see'), key, aroundRow(
       i ? '<button type="button" class="chipb" data-key="back" data-divego="' + (diveD - 1) + '">' + ar0 + esc(nm(L[i - 1])) + '</button>' : flatKind === 'dive' && diveWorld === 'datacentre' ? '<button type="button" class="chipb" data-key="back" data-divego="' + (diveD - 1) + '">' + esc(t('dive.up')) + '</button>' : '',
-      last ? end : '<button type="button" class="chipb" data-key="next"' + (flatKind === 'dive' ? ' data-in' : '') + ' data-divego="' + (diveD + 1) + '">' + ar1 + esc(nm(L[i + 1])) + '</button>')).replace('<div class="nav">', yours + '<p class="small muted hintline">' + esc(t(F.hint)) + '</p><div class="nav">');
+      last ? end : '<button type="button" class="chipb" data-key="next"' + (flatKind === 'dive' ? ' data-in' : '') + ' data-divego="' + (diveD + 1) + '">' + ar1 + esc(nm(L[i + 1])) + '</button>')).replace('<div class="nav">', yours + '<p class="small muted hintline">' + esc(t(F.hint)) + '</p>' + hereHtml + '<div class="nav">');
     requestAnimationFrame(diveInset);
   }
   /* keep the picture clear of the frame: the rail on the left, the corner, the dock below */
@@ -765,7 +769,7 @@ export function start() {
       diveFrame = frameOf(vui, { up: { href: F.up, label: t(F.upWord) }, path: [{ href: '#/', label: t('place.back') }, { href: F.up, label: t(F.upWord) }, { label: t(F.title) }],
         rail: { label: t('place.levels'), items: L.map(k => ({ id: k, label: t('depth.' + k + '.name') })) },
         onRail: k => w.flyTo(WE.IDS.indexOf(k)), onLook: () => { if (benchCh) { benchCh = null; const dk = diveFrame.dock; dk.classList.remove('benchdock'); dk.onclick = null; dk.oninput = null; } drawDive(); } }); watchDock();
-      vui.onclick = e => { const b = e.target.closest('[data-divego]'); if (b) w.flyTo(+b.dataset.divego); };
+      vui.onclick = e => { const b = e.target.closest('[data-divego]'); if (b) w.flyTo(+b.dataset.divego); const pk = e.target.closest('[data-pick]'); if (pk) { pickPart(pk.dataset.pick === divePart ? null : pk.dataset.pick); vui.querySelectorAll('[data-pick]').forEach(x => x.classList.toggle('on', x.dataset.pick === divePart)); } };
       const d = WE.IDS.indexOf(L.includes(depth) ? depth : L[0]);
       loading(false); w.start(); w.setZ(d); if (arriving && kind === 'line') w.arrive(); arriving = false; diveD = -1; diveAt(d); $('diveCanvas').focus({ preventScroll: true });
       const ch = chId && Game.challengeOf(chId); if (ch) openBench(ch);

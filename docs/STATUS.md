@@ -9,7 +9,7 @@ Where the lab stands, and what is ready to be built next. Read this first when s
   - Phones and cars are islands of their own.
   - Every place and level has one card with Look, Do and Ask.
 - **On a desktop** (1100 px and wider), the card is a bench at the right and the picture takes the rest. On a phone, the card sits below the picture.
-- **The way in is on the picture.** Every view that can go deeper shows one large *Go inside* button over the scene, a copy of the card's own way deeper (any element marked `data-in`, mirrored by `src/v2/frame.js`). In the data centre it stands beside the thing you would enter, with a ring on it; scrolling past the chip carries the flight into the chip, and the card lists what you see at each level and what each part does. On the island, a place's card offers *Go inside* even before a part is picked, and zooming in close then pushing on goes inside too.
+- **The way in is on the picture.** Every view that can go deeper shows one large *Go inside* button over the scene, a copy of the card's own way deeper (any element marked `data-in`, mirrored by `src/v2/frame.js`). In the data centre it stands beside the thing you would enter, with a ring on it; scrolling past the chip carries the flight into the chip, and the card lists what you see at each level and what each part does (in the flight and in every dive, chip to atom; choosing a part in the dive picks it on the picture, with its note). On the island, a place's card offers *Go inside* even before a part is picked, and zooming in close then pushing on goes inside too.
 - **Challenges:** 30 in all, listed in `CHALLENGES` in `src/v2/game.js`, each played in the card where it lives. The newer labs are one file each in `src/v2/labs/` (how to build one: [LABS.md](LABS.md)).
   - **Design:** the half adder, the majority voter and the full adder; the proof's bet; Verify the agent (at the Lab); the right chip for the job; Evolve a circuit.
   - **Make:** Grow a perfect crystal (at the quarry); through the factory in time; a chip that is quick to make; Moore's bet; the pieces' bet. Then the factory line, one lab per step: print the finest lines, the 1,000-watt source, ten billion vias, etch straight down, the bare bottom, the furnace spreads it, shallow and switched on.
@@ -73,6 +73,21 @@ Each task below is self-contained and can be handed to Claude Code on the web as
    - The EUV holes can show 0 of 9 out of spec at the lowest dose, so the speed-against-quality lesson may not appear; pick a seed or a sample that shows it.
    - A 404 in the console on the factory labs, not traced.
    - Move each engine's remaining `WORDS` into `en.json` as its views are built (`aiserve`, `analog`, `aibuild`, `clockpower`, `paradigms`, `fabline`, `etch`, `dope`, `litho`).
+
+### The dive and the interface
+
+Each is an issue labelled `task`; #230 waits for a decision (`blocked`).
+
+- #229 The chip you land on is the chip you saw (the flight's die continues into the dive).
+- #230 One way down through a chip, not two side by side (the dive and the layer stack).
+- #231 Chip layers: the chip framed beside the card, its names never under it.
+- #232 The ring on the way in, in every view.
+- #233 The factory line: the way along and the way in, on the picture.
+- #234 How big is it here: size at every level.
+- #235 Something to do at every level of the dive.
+- #236 The phone and the car, flown through like the data centre.
+- #237 On the island, buildings invite you in.
+- #238 The dive on a phone: a card that steps aside.
 
 ## Ideas still to bring over
 
