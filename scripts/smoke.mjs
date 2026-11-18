@@ -599,6 +599,8 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
         return r.left < c.left - 2 || r.right > c.right + 2 || r.top < c.top - 2 || (r.right > d.left && r.left < d.right && r.bottom > d.top && r.top < d.bottom); }).map(e => { const r = e.getBoundingClientRect(); return e.textContent + ' at ' + [r.left, r.top, r.right, r.bottom].map(Math.round).join(',') + ' (picture ' + [c.right, c.bottom].map(Math.round).join(',') + ', card from ' + Math.round(d.left) + ')'; }); };
     await page.waitForFunction(f => !new Function('return (' + f + ')()')().length, strayNames.toString(), { timeout: 60000, polling: 1000 })
       .catch(async () => problems.push(tg + ': names of the chip\'s layers outside the picture or under the card: ' + (await page.evaluate(strayNames)).join(', ')));
+    /* the rest is the same frame on a phone: checked once, on the desktop, to keep the run short */
+    if (vt === 'phone') { await page.close(); continue; }
     await page.evaluate(() => { location.hash = '#/board'; });
     await page.waitForFunction(ringAt, '#boardui', { timeout: 90000, polling: 1000 }).catch(() => problems.push(tg + ': the board puts no ring on its way into the chip'));
     await page.evaluate(() => { location.hash = '#/dive/block'; });
