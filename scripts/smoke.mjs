@@ -592,11 +592,13 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
     const ringAt = ui => { const w = document.querySelector(ui + ' .wayin.at:not([hidden])'); return !!w && !!w.style.getPropertyValue('--wx') && !!w.querySelector('.wigo'); };
     await page.waitForFunction(ringAt, '#chipui', { timeout: 90000, polling: 1000 }).catch(() => problems.push(tg + ': the chip\'s layers put no ring on the way in'));
     if ((await page.$$('#chipui .rail2 .sz')).length !== 5) problems.push(tg + ': the chip\'s layers do not say their sizes on the rail');
-    /* the names shown stay inside the picture, and clear of the card */
-    const stray = await page.evaluate(() => { const c = document.getElementById('chipCanvas').getBoundingClientRect(), d = document.querySelector('#chipui .dockwrap').getBoundingClientRect();
+    /* the names shown stay inside the picture, and clear of the card (polled: on a slow renderer the names may still
+       stand where the frame before a resize put them, until the next frame is drawn) */
+    const strayNames = () => { const c = document.getElementById('chipCanvas').getBoundingClientRect(), d = document.querySelector('#chipui .dockwrap').getBoundingClientRect();
       return [...document.querySelectorAll('#chipLabels .lbl3')].filter(e => e.style.opacity !== '0').filter(e => { const r = e.getBoundingClientRect();
-        return r.left < c.left - 2 || r.right > c.right + 2 || r.top < c.top - 2 || (r.right > d.left && r.left < d.right && r.bottom > d.top && r.top < d.bottom); }).map(e => e.textContent); });
-    if (stray.length) problems.push(tg + ': names of the chip\'s layers outside the picture or under the card: ' + stray.join(', '));
+        return r.left < c.left - 2 || r.right > c.right + 2 || r.top < c.top - 2 || (r.right > d.left && r.left < d.right && r.bottom > d.top && r.top < d.bottom); }).map(e => { const r = e.getBoundingClientRect(); return e.textContent + ' at ' + [r.left, r.top, r.right, r.bottom].map(Math.round).join(',') + ' (picture ' + [c.right, c.bottom].map(Math.round).join(',') + ', card from ' + Math.round(d.left) + ')'; }); };
+    await page.waitForFunction(f => !new Function('return (' + f + ')()')().length, strayNames.toString(), { timeout: 60000, polling: 1000 })
+      .catch(async () => problems.push(tg + ': names of the chip\'s layers outside the picture or under the card: ' + (await page.evaluate(strayNames)).join(', ')));
     await page.evaluate(() => { location.hash = '#/board'; });
     await page.waitForFunction(ringAt, '#boardui', { timeout: 90000, polling: 1000 }).catch(() => problems.push(tg + ': the board puts no ring on its way into the chip'));
     await page.evaluate(() => { location.hash = '#/dive/block'; });
