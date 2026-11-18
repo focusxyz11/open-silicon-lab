@@ -97,7 +97,9 @@ export const CHALLENGES = [
   { id: 'grover', step: 'use', place: 'datacentre', at: 'atom', kind: 'grover', grows: 'way-quantum' },
   { id: 'euv-1000', step: 'make', place: 'fab', at: 'print', kind: 'euv', grows: 'fab-euv' },
   { id: 'too-hot', step: 'use', place: 'datacentre', at: 'switch', kind: 'semiconductor', grows: 'dc-heat' },
-  { id: 'ai-chip', step: 'design', place: 'studio', at: 'need', kind: 'aibuild', grows: 'studio-aichip' }
+  { id: 'ai-chip', step: 'design', place: 'studio', at: 'need', kind: 'aibuild', grows: 'studio-aichip' },
+  { id: 'power-curve', step: 'use', place: 'datacentre', at: 'block', kind: 'powercurve', grows: 'blk-power' },
+  { id: 'counter', step: 'use', place: 'datacentre', at: 'gate', kind: 'counter', grows: 'gate-counter' }
 ];
 /* the goal of a chip challenge as gauges: each a value of your chip's model and the bound it must reach
    (ge: at least, le: at most). Together they say the same as the goal's met() in src/engines/chip.js. */
@@ -125,6 +127,7 @@ export const placeChallenges = place => CHALLENGES.filter(c => c.place === place
 /* what grows, and where (the island draws each one: src/v2/map3d.js GROWERS) */
 const GROW_AT = { onebad: 'test', half: 'studio', phone: 'phones', car: 'cars', dclife: 'datacentre', fast: 'lab' };
 Object.assign(GROW_AT, { cim: 'lab', grover: 'lab' });   /* the other ways to compute grow at the Lab (WAYS_AT) */
+const GROW_AT = { onebad: 'test', half: 'studio', phone: 'phones', car: 'cars', dclife: 'datacentre', fast: 'lab', 'power-curve': 'studio', counter: 'studio' };
 export const GROWTH = CHALLENGES.map(c => ({ id: c.grows, by: c.id, at: GROW_AT[c.id] || c.place }));
 
 /* Inside: every place's levels, one inside the next (src/data/places.js). These hold the earlier site's
@@ -281,6 +284,8 @@ export const OPENS = { 'too-hot': 'fail.switch', 'litho-finest': 'scale.print', 
   phone: 'life.phone', car: 'fail.car', dclife: 'fail.ship', fed: 'divide.board', fast: 'fail.chip' };
 Object.assign(OPENS, { cim: 'divide.block', grover: 'strange.atom' });
 OPENS['ai-chip'] = 'divide.need';
+  phone: 'life.phone', car: 'fail.car', dclife: 'fail.ship', fed: 'divide.board', fast: 'fail.chip',
+  'power-curve': 'life.block', counter: 'fail.gate' };
 /* and where the open things of the ledger sit: a break under "is the design right?", a piece to build under
    "could anyone design a chip?", a missing check under "who checks, and with what?" */
 export const FRONT_ASK = { break: 'fail.check', build: 'open.need', engine: 'idea.check' };

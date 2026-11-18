@@ -16,3 +16,5 @@ import semiconductor from './semiconductor.js';
 Object.assign(LABS, { semiconductor });
 import aibuild from './aibuild.js';
 LABS.aibuild = aibuild;
+import clockpower from './clockpower.js';
+Object.assign(LABS, { powercurve: clockpower, counter: clockpower });

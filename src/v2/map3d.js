@@ -811,6 +811,9 @@ export function createMap(canvas, host, on = {}) {
     'way-quantum': g => { box(g, 3.6, 0.3, 3.6, mat(P.wall), 0, 0, 0, 0.08); [[-1.5, -1.5], [1.5, -1.5], [-1.5, 1.5], [1.5, 1.5]].forEach(([x, z]) => box(g, 0.2, 6.4, 0.2, metal(P.dark), x, 0.3, z, 0.04)); [-1.5, 1.5].forEach(v => { box(g, 3.2, 0.2, 0.2, metal(P.dark), 0, 6.5, v, 0.04); box(g, 0.2, 0.2, 3.2, metal(P.dark), v, 6.5, 0, 0.04); }); box(g, 3.2, 0.16, 0.16, metal(P.dark), 0, 6.52, 0, 0.03);
       cyl(g, 0.07, 0.07, 4.1, metal(P.metal), 0, 2.4, 0, 8); [[1.3, 5.7], [1.05, 4.8], [0.8, 4], [0.58, 3.3]].forEach(([r, y]) => { cyl(g, r, r, 0.12, metal(P.gold, { roughness: 0.25 }), 0, y, 0, 32); for (let k = 0; k < 3; k++) cyl(g, 0.035, 0.035, 0.8, metal(P.gold), Math.cos(k * 2.094) * r * 0.75, y - 0.8, Math.sin(k * 2.094) * r * 0.75, 6, { cast: false }); });
       pulses.push(box(g, 0.42, 0.14, 0.42, glow(P.accent, night ? 1.4 : 0.8), 0, 2.28, 0, 0.03, { cast: false })); },
+    /* the clock and the power (src/v2/labs/clockpower.js): a meter whose column climbs from green to red, and four lamps that count */
+    'blk-power': g => { box(g, 2.8, 1.3, 2.2, mat(P.white), 0, 0, 0, 0.12); box(g, 3, 0.2, 2.4, mat(A.roof, { roughness: 0.7 }), 0, 1.3, 0, 0.05); box(g, 1, 6, 0.8, metal(P.slate), 0, 1.5, -0.3, 0.08); [P.good, P.good, P.warm, P.warm, P.bad].forEach((c, i) => pulses.push(box(g, 0.62, 0.8, 0.1, glow(c, night ? 1.4 : 0.8), 0, 2.1 + i * 1.02, 0.12, 0.03, { cast: false }))); box(g, 1.3, 0.25, 1.1, metal(P.dark), 0, 7.5, -0.3, 0.05); },
+    'gate-counter': g => { box(g, 5.4, 0.45, 1.5, mat(P.wall), 0, 0, 0, 0.08); for (let i = 0; i < 4; i++) { cyl(g, 0.1, 0.14, 1.3, metal(P.slate), -1.8 + i * 1.2, 0.45, 0, 10); const l = box(g, 0.62, 0.62, 0.62, glow(i % 2 ? P.accent : P.warm, night ? 1.5 : 0.9), -1.8 + i * 1.2, 1.75, 0, 0.14, { cast: false }); if (i !== 2) pulses.push(l); } },
     'clock-tower': g => { box(g, 2.4, 9, 2.4, mat(P.white), 0, 0, 0, 0.2); const face = cyl(g, 1, 1, 0.2, mat(P.wall), 0, 7, 1.25, 24); face.rotation.x = Math.PI / 2; const hand = box(g, 0.12, 0.9, 0.08, mat(P.dark), 0, 6.95, 1.42, 0.02, { cast: false }); hand.geometry = hand.geometry.clone().translate(0, 0.4, 0); spinning.push({ hand }); }
   };
   /* where each growth stands, relative to its place: [x, z, y] */
@@ -819,6 +822,7 @@ export function createMap(canvas, host, on = {}) {
   Object.assign(GROW_SPOT, { 'way-cim': [13, 3], 'way-quantum': [13, -5] });
   Object.assign(GROW_SPOT, { 'dc-heat': [19, -5] });
   GROW_SPOT['studio-aichip'] = [-21, 3];
+    'blk-power': [-21, 0.5], 'gate-counter': [5, 6] };
   GROWTH.forEach(gw => { const [x, z, y] = GROW_SPOT[gw.id] || [0, 0], g = group(G[gw.at], x, y || 0, z); g.visible = false; g.scale.setScalar(0.001); growing.push({ id: gw.id, g, built: false, t0: 0 }); });
 
   /* No question floats over a place any more (docs/framework/rebuild.md, section 3): a question shown as a dot on a
