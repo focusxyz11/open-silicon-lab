@@ -496,10 +496,11 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
     const SET = "const SET = (q, v) => { const i = document.querySelector(q); if (i) { i.value = v; i.dispatchEvent(new Event('input', { bubbles: true })); } }, CL = q => { const b = document.querySelector(q); if (b) b.click(); };";
     const playLab = async (id, moves, what, wait = 90000) => {
       await fp.goto(base + 'index.html#/do/' + id);
-      await fp.waitForSelector('.player', { timeout: 60000 }).catch(() => problems.push(tag + ': ' + what + ' does not open'));
+      /* this challenge's own card (data-ch): the card of the lab before stays up until the new one is drawn */
+      await fp.waitForSelector('.player[data-ch="' + id + '"]', { timeout: 60000 }).catch(() => problems.push(tag + ': ' + what + ' does not open'));
       /* polled from here: waitForFunction does not wait for an async predicate (its promise counts as true at once),
          so it would pass without a win; evaluate does wait */
-      const play = new Function('return (async () => { ' + SET + moves + '; return !!document.querySelector(".player .won"); })()'), until = Date.now() + wait;
+      const play = new Function('return (async () => { ' + SET + moves + '; return !!document.querySelector(\'.player[data-ch="' + id + '"] .won\'); })()'), until = Date.now() + wait;
       let won = false;
       while (!won && Date.now() < until) { won = await fp.evaluate(play).catch(() => false); if (!won) await fp.waitForTimeout(3000); }
       if (!won) problems.push(tag + ': ' + what + ' is not won by the moves that win it');
