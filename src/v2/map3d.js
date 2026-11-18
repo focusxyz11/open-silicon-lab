@@ -825,11 +825,8 @@ export function createMap(canvas, host, on = {}) {
   };
   /* where each growth stands, relative to its place: [x, z, y] */
   const GROW_SPOT = { 'studio-screen': [-4, 9], masks: [0, 0], 'studio-wing': [-4, -12], 'fab-trucks': [0, 0], 'fab-line': [2, -14], 'fab-wafers': [-13, 9], 'dc-cores': [-14, 6], 'test-dies': [-11, 9], 'studio-proof': [10, -10], 'power-store': [12, -3], 'lab-desk': [-9, 9], 'dc-batch': [-14, -8], 'quarry-ingot': [10, 6], 'fab-scanner': [18.5, -5], 'fab-euv': [18.5, 0.5], 'fab-overlay': [16.5, 5.5], 'fab-anneal': [20.8, 5.5], 'fab-ald': [-4, -24], 'fab-etch': [8.5, -21], 'fab-implanter': [8, -26.5], 'island-teardown': [14, -4], 'studio-fit': [10, 10], 'studio-evolve': [-14, 6], 'test-probe': [3, 0, 4], 'test-hall': [11, 0],
-    'island-phones': [0, 0], 'island-cars': [0, 0], 'dc-hall': [0, 10], 'dc-solar': [21, 4], 'clock-tower': [-8, -2] };
-  Object.assign(GROW_SPOT, { 'way-cim': [13, 3], 'way-quantum': [13, -5] });
-  Object.assign(GROW_SPOT, { 'dc-heat': [19, -5] });
-  GROW_SPOT['studio-aichip'] = [-21, 3];
-    'blk-power': [-21, 0.5], 'gate-counter': [5, 6] };
+    'island-phones': [0, 0], 'island-cars': [0, 0], 'dc-hall': [0, 10], 'dc-solar': [21, 4], 'clock-tower': [-8, -2],
+    'way-cim': [13, 3], 'way-quantum': [13, -5], 'dc-heat': [19, -5], 'studio-aichip': [-21, 3], 'blk-power': [-20.5, 8.5], 'gate-counter': [5, 6],
     'island-adc': [11.5, 18.5], 'island-reg': [5.5, 24], 'island-sensor': [-11.5, 3] };
   GROWTH.forEach(gw => { const [x, z, y] = GROW_SPOT[gw.id] || [0, 0], g = group(G[gw.at], x, y || 0, z); g.visible = false; g.scale.setScalar(0.001); growing.push({ id: gw.id, g, built: false, t0: 0 }); });
 

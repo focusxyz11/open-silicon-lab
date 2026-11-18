@@ -10,13 +10,9 @@ import films from './films.js';
 import litho from './litho.js';
 import cim from './cim.js';
 import grover from './grover.js';
-export const LABS = { agent, teardown, fit: teardown, evolve, pull: crystal, implant, overlay, etch: films, deposit: films, litho, euv: litho };
-Object.assign(LABS, { cim, grover });
 import semiconductor from './semiconductor.js';
-Object.assign(LABS, { semiconductor });
 import aibuild from './aibuild.js';
-LABS.aibuild = aibuild;
 import clockpower from './clockpower.js';
-Object.assign(LABS, { powercurve: clockpower, counter: clockpower });
 import analog from './analog.js';
-Object.assign(LABS, { capture: analog, regulate: analog });
+export const LABS = { agent, teardown, fit: teardown, evolve, pull: crystal, implant, overlay, etch: films, deposit: films, litho, euv: litho,
+  cim, grover, semiconductor, aibuild, powercurve: clockpower, counter: clockpower, capture: analog, regulate: analog };
