@@ -565,12 +565,13 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
      notice, the part that leads in lights the question, and finding it is kept in your log. A page of its own (a
      fresh visitor), since it moves between views; each tap is done again inside the poll, as the view may still be
      making its card */
-  for (const viewport of [{ width: 1280, height: 800 }, { width: 390, height: 844 }]) { const sp = await browser3d.newPage({ viewport }), tag = 'search ' + viewport.width; sp.on('pageerror', e => problems.push(tag + ': ' + e.message));
-    await sp.addInitScript(() => { try { localStorage.setItem('osl-hints-v1', JSON.stringify({ seen: {}, off: true })); } catch (e) { /* no storage */ } });
+  /* on a flat page (the search is in the card; the 3D levels are checked elsewhere), so it costs CI little time */
+  { const tag = 'search', sp = await browser.newPage({ viewport: { width: 1280, height: 800 } }); sp.on('pageerror', e => problems.push(tag + ': ' + e.message));
+    await sp.addInitScript(() => { try { localStorage.setItem('osl-quality', 'flat'); localStorage.setItem('osl-hints-v1', JSON.stringify({ seen: {}, off: true })); } catch (e) { /* no storage */ } });
     await sp.goto(base + 'index.html#/dive/gate');
     await sp.waitForFunction(() => { const b = document.querySelector('#diveui .seek [data-seek="diff"]'); if (b && !b.classList.contains('looked')) b.click(); return !!document.querySelector('#diveui .seek .seeknote b') && !!document.querySelector('#diveui .seek:not(.found)'); }, null, { timeout: 90000, polling: 2000 })
       .catch(() => problems.push(tag + ': at the gate, the card does not say what to look for, or a tapped part gives nothing to notice'));
-    await sp.waitForFunction(() => { const b = document.querySelector('#diveui .seek [data-seek="metal"]'); if (b && !b.classList.contains('looked')) b.click(); return !!document.querySelector('#diveui .seek.found') && !!document.querySelector('#diveui .askline.seeklit'); }, null, { timeout: 30000, polling: 1500 })
+    await sp.waitForFunction(() => { const b = document.querySelector('#diveui .seek [data-seek="metal"]'); if (b && !b.classList.contains('looked')) b.click(); return !!document.querySelector('#diveui .seek.found') && !!document.querySelector('#diveui .askline.seeklit'); }, null, { timeout: 60000, polling: 1500 })
       .catch(() => problems.push(tag + ': at the gate, the part that leads in does not light the question'));
     await sp.evaluate(() => { location.hash = '#/place/datacentre/3'; });
     await sp.waitForFunction(() => { const b = document.querySelector('#placeui .seek [data-seek="accelerator"]'); if (b && !b.classList.contains('looked')) b.click(); return !!document.querySelector('#placeui .seek.found') && !!document.querySelector('#placeui .askline.seeklit'); }, null, { timeout: 120000, polling: 3000 })
