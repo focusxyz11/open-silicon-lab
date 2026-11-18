@@ -9,7 +9,7 @@
    createLevel3D(canvas, host, on, model) -> { show(k, depthOffset, frame), select(key, note), hit(x, y), active(),
      warm(), dispose(), failed }   (failed: too slow even at low settings; the shell then keeps the flat drawing)
    model(scene, root, P, night) -> { level, parts: [key], anchors: { key: [x, y, z] }, view: { tilt, turn, r, at: [x, y, z], fixed,
-     arrive: { tilt, turn, ms }, door, foot, enter }, update(dt, k, dist, arrived, picked, leave), has(key) }   (r: the object's radius, so it fills the square; at:
+     arrive: { tilt, turn, ms, span, fit, at }, door, foot, enter }, update(dt, k, dist, arrived, picked, leave), has(key) }   (r: the object's radius, so it fills the square; at:
      where the camera looks; dist: the camera's distance from it, which changes with the screen and the zoom; arrive:
      coming down from the level above, the camera starts at that angle and rises to the level's own, once, and
      arrived (0..1) says how far, for the model's own part of the move; 1 when there is none; picked: the part picked;
@@ -19,7 +19,7 @@
    on.failed(). */
 import * as THREE from '../vendor/three.min.js';
 import { PALETTES, theme, stage, light, labels, showStage, clamp, ease, QUALITY, lowQuality } from './kit3d.js';
-import { partWord } from '../data/weave.js';
+import { diveWord } from '../data/atlas.js';
 import { t } from '../core/i18n.js';
 import { createOverlay } from './overlay.js';
 import { pose, childPose, eye, smooth as sm, JOIN } from '../engines/join.js';
@@ -43,7 +43,7 @@ export function createLevel3D(canvas, host, on, model) {
 
   /* names on the parts, from the level's words; a tap picks the part */
   const L = labels(host);
-  const names = M.parts.map(k => { const lb = L.add(root, new THREE.Vector3(...M.anchors[k]), t('part.' + partWord(M.level, k)), { cls: 'part3 pick', button: true, data: { part3: k } }); lb.key = k; return lb; });
+  const names = M.parts.map(k => { const lb = L.add(root, new THREE.Vector3(...M.anchors[k]), t('part.' + diveWord(M.level, k)), { cls: 'part3 pick', button: true, data: { part3: k } }); lb.key = k; return lb; });
   host.addEventListener('click', e => { const b = e.target.closest('[data-part3]'); if (b) { e.stopPropagation(); on.part && on.part(b.dataset.part3); } });
   /* a wheel over a name, a note or a mark still moves the dive: it is passed on to the picture beneath */
   host.addEventListener('wheel', e => {
@@ -73,13 +73,20 @@ export function createLevel3D(canvas, host, on, model) {
   function place(now) {
     const f = size();
     /* arriving from the level above: from its angle to this level's own, closing in (the camera carries the change of
-       style) */
+       style); the page says so while it lasts (data-arrive, as data-join says a join) */
     arrived = arr ? ease(clamp(arr.t / V.arrive.ms)) : 1;
-    if (arrived >= 1) arr = null;
-    /* the object fills the square the flat level stood in; farther while you are still above it */
-    const dist = fitOf(f) * (f.exact ? 1 : off < 0 ? 1 + 3 * -off : 1 / (1 + 2.5 * off)) * (1 + 0.45 * (1 - arrived));
-    const A = V.arrive && arrived < 1 ? V.arrive : V, a = A.turn + (V.turn - A.turn) * arrived + yaw + sway(now), b = A.tilt + (V.tilt - A.tilt) * arrived;
-    aim({ at: V.at, tilt: b, turn: a, dist }, f);
+    if (arrived >= 1 && arr) { arr = null; delete document.documentElement.dataset.arrive; }
+    /* the object fills the square the flat level stood in; farther while you are still above it. An arrival with a
+       start of its own (span: how much of the level it sees from top to bottom; at: where it looks) comes from there:
+       the distance falls geometrically, as a zoom does, and the look slides to the level's own */
+    const rest = fitOf(f) * (f.exact ? 1 : off < 0 ? 1 + 3 * -off : 1 / (1 + 2.5 * off)), A = V.arrive && arrived < 1 ? V.arrive : V;
+    const from = A.span ? A.span / 2 / Math.tan(camera.fov * Math.PI / 360) * (A.fit ? Math.max(1, A.fit * H / W) : 1) : rest * 1.45;
+    const dist = A === V ? rest : Math.exp(Math.log(from) + (Math.log(rest) - Math.log(from)) * arrived);
+    const look = A.at ? A.at.map((v, i) => v + (V.at[i] - v) * arrived) : V.at;
+    const a = A.turn + (V.turn - A.turn) * arrived + yaw + sway(now), b = A.tilt + (V.tilt - A.tilt) * arrived;
+    /* such a start was a picture filling the whole canvas (the flight): its look begins at the canvas's middle */
+    const fr = A.span ? Object.assign({}, f, { cx: W / 2 + (f.cx - W / 2) * arrived, cy: H / 2 + (f.cy - H / 2) * arrived }) : f;
+    aim({ at: look, tilt: b, turn: a, dist }, fr);
   }
   /* a join (docs/reviews/transitions.md): this level and its neighbour in one frame, on one camera path. The parent's
      scene, a veil of the sky over it as the child comes, then the child's scene over that with the same camera in its
@@ -222,8 +229,8 @@ export function createLevel3D(canvas, host, on, model) {
          above; coming back up from below is not an arrival, even when a jump lands exactly on the level */
       if (link && link.guest || off > 0.05) below = true; else if (off < -0.05) below = false;
       host.hidden = k <= 0;
-      if (k > 0 && was <= 0) { last = performance.now(); arr = V.arrive && off <= 0.05 && !below && !still() && !link ? { hold: 250, t: 0 } : null; }
-      if (k <= 0 && was > 0) { card.hidden = true; marks.clear(); }
+      if (k > 0 && was <= 0) { last = performance.now(); arr = V.arrive && off <= 0.05 && !below && !still() && !link ? { hold: 250, t: 0 } : null; if (arr) document.documentElement.dataset.arrive = M.level; }
+      if (k <= 0 && was > 0) { card.hidden = true; marks.clear(); if (arr) { arr = null; delete document.documentElement.dataset.arrive; } }
       if (k > 0 && !raf) raf = requestAnimationFrame(tick);
     },
     active: () => k > 0.5,

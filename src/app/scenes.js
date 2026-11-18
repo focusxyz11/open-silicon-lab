@@ -18,6 +18,7 @@ import { DESIGN_SCENES, designNow } from './design.js';
 import { proj, kit, tones, mix } from './solid.js';
 import { DIE, partsFor } from '../engines/xray.js';
 import { betWaferNow } from './betscene.js';
+import { coreGrid, CLOCK, CACHE, IO } from '../data/die.js';
 
 /* Your chip (src/engines/chip.js): the scenes that show it read its settings from here. */
 let M = model(START);
@@ -61,7 +62,7 @@ const PADS = [[56, 56, 888, 24], [56, 920, 888, 24], [56, 80, 24, 840], [920, 80
 const X = (type, list) => list.map(k => ({ type, r: k.r || k }));
 /* the blocks of each chip, in the same places as its districts in the scene above */
 export function xrayOf(id) {
-  if (id === 'chip') return [...PADS, ...X('core', cores()), { type: 'cache', r: [130, 620, 740, 100] }, { type: 'phy', r: [130, 740, 740, 90] }];
+  if (id === 'chip') return [...PADS, ...X('core', cores()), { type: 'cache', r: CACHE }, { type: 'phy', r: IO }];
   if (id === 'soc') return [...PADS, { type: 'logic', r: [130, 130, 330, 260] }, { type: 'gpu', r: [500, 130, 370, 280] }, { type: 'npu', r: [500, 440, 300, 270] }, { type: 'cache', r: [806, 440, 64, 270] },
     ...X('core', socCpu), { type: 'cache', r: [130, 740, 740, 130] }];
   if (id === 'mcu') return [...PADS, ...X('core', mcuCores), { type: 'flash', r: [490, 130, 380, 420] }, { type: 'cache', r: [130, 420, 320, 130] },
@@ -280,9 +281,8 @@ const board = {
   }
 };
 
-/* ---- chip: compute blocks, memory, input and output, and the clock wires ---- */
+/* ---- chip: compute blocks, memory, input and output, and the clock wires (its plan: src/data/die.js) ---- */
 /* the cores that fit depend on your chip's switch size */
-const coreGrid = (cols, rows) => { const w = 740 / cols, h = 470 / rows, g = Math.min(14, w * 0.08), out = []; for (let j = 0; j < rows; j++) for (let i = 0; i < cols; i++) out.push({ r: [130 + i * w + g / 2, 130 + j * h + g / 2, w - g, h - g] }); return out; };
 const GRID_CACHE = {};
 const cores = () => { const k = M.grid.join('x'); return GRID_CACHE[k] || (GRID_CACHE[k] = coreGrid(M.grid[0], M.grid[1])); };
 function drawCores(G) {
@@ -301,9 +301,9 @@ function drawCores(G) {
     if (rnd(n + 50, tick) < M.late) { G.a(0.55); G.r(r[0], r[1], r[2], r[3], c.red); G.a(1); }
   });
 }
-const clock = [{ p: [[500, 136], [500, 594]] }, { p: [[315, 365], [685, 365]] }, { p: [[315, 208], [315, 522]] }, { p: [[685, 208], [685, 522]] }];
+const clock = CLOCK.map(p => ({ p }));
 const chip = {
-  get parts() { return { cores: cores(), cache: [{ r: [130, 620, 740, 100] }], io: [{ r: [130, 740, 740, 90] }], clock }; },
+  get parts() { return { cores: cores(), cache: [{ r: CACHE }], io: [{ r: IO }], clock }; },
   draw(G) {
     if (XRAY) return xrayScene(G, 'chip');
     const c = G.col;

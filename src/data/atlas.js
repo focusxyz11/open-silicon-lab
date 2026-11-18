@@ -11,7 +11,7 @@
    - TWINS is the Turn: each level of a chip seen three ways, designed in the studio, made at the factory, used in
      the dive. */
 import { INSIDE, placeOf, stopsAt, SHARED } from './places.js';
-import { MADE, WORLDS } from './weave.js';
+import { MADE, WORLDS, partWord } from './weave.js';
 import { FIELD, fieldOf, fieldAtLevel, fieldAtPlace } from './questions.js';
 
 /* the world where a depth is drawn first (a place's own level before a shared one) */
@@ -37,8 +37,13 @@ export const VIEW_PARTS = {
     switch: 'rack.switch', servers: 'rack.servers', power: 'rack.power', fans: 'rack.fans', accelerator: 'board.bigchip', memory: 'board.memory', network: 'board.connectors',
     package: 'chip.package', powerstages: 'board.power', die: 'pkg.die', hbm: 'pkg.memory' },
   board: { chip: 'board.bigchip', die: 'pkg.die', hbm: 'pkg.memory', vrm: 'board.power', links: 'board.connectors' },
-  chip: { lid: 'pkg.lid', bumps: 'pkg.bumps', wires: 'block.wires', contacts: 'gate.metal', gates: 'gate.gates', sheets: 'switch.channel', wells: 'atom.dopant', silicon: 'atom.lattice' }
+  chip: { lid: 'pkg.lid', bumps: 'pkg.bumps', wires: 'block.wires', contacts: 'gate.metal', gates: 'gate.gates', sheets: 'switch.channel', wells: 'atom.dopant', silicon: 'atom.lattice' },
+  /* the dive's levels in 3D, the parts they draw besides their own scene's, by 'level.key' (src/v2/relief3d.js): the
+     data centre's chip shows the memory stacked beside its die, as the flight did */
+  dive: { 'chip.hbm': 'pkg.memory' }
 };
+/* the words of a part a level of the dive draws: its own, or those of the part's home elsewhere */
+export const diveWord = (level, key) => VIEW_PARTS.dive[level + '.' + key] || partWord(level, key);
 
 /* the stories that drive scenes (src/v2/stories.js), each at home at one level */
 export const STORIES = { board: { place: 'datacentre', level: 'board', view: 'board' } };

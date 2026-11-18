@@ -144,9 +144,9 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
   if (await page.evaluate(() => +getComputedStyle(document.getElementById('diveCanvas')).opacity > 0.5)) problems.push(tag + ': the flat switch did not give way to the 3D one');
   await page.click('#l3-switch [data-part3="gate"]').catch(() => problems.push(tag + ': the 3D switch\'s gate cannot be picked'));
   await page.waitForSelector('#l3-switch .swnote:not([hidden])', { timeout: 10000 }).catch(() => problems.push(tag + ': picking the gate opened no note'));
-  /* the chip as a relief on the stage, with its four names */
+  /* the chip as a relief on the stage, with its four names and the memory stacked beside it, as the flight showed it */
   await page.evaluate(() => { location.hash = '#/dive/chip'; });
-  await page.waitForFunction(() => document.querySelectorAll('#l3-chip [data-part3]').length === 4 && !document.getElementById('l3-chip').hidden, null, { timeout: 25000 }).catch(() => problems.push(tag + ': the chip did not appear as a relief with its four names'));
+  await page.waitForFunction(() => document.querySelectorAll('#l3-chip [data-part3]').length === 5 && !!document.querySelector('#l3-chip [data-part3="hbm"]') && !document.getElementById('l3-chip').hidden, null, { timeout: 25000 }).catch(() => problems.push(tag + ': the chip did not appear as a relief with its four names and its stacked memory'));
   /* the block too, with its names (your design's only once you have one) */
   await page.evaluate(() => { location.hash = '#/dive/block'; });
   await page.waitForFunction(() => document.querySelectorAll('#l3-block [data-part3]').length === 4 && !document.getElementById('l3-block').hidden, null, { timeout: 25000 }).catch(() => problems.push(tag + ': the block did not appear as a relief'));
@@ -289,7 +289,7 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
   /* joins: every pair of neighbouring levels in 3D (the phone to its board to its chip, the control unit to its chip,
      the wafer to the die, a chip to the block, down to the atom): no flat picture shows between; both levels are
      drawn in one frame on one camera path, half way and back */
-  for (const [a, b, na] of [['phone', 'phoneboard', 4], ['phoneboard', 'soc', 4], ['ecu', 'mcu', 3], ['wafer', 'die', 2], ['chip', 'block', 4], ['block', 'gate', 4], ['gate', 'switch', 5], ['switch', 'atom', 5]]) {
+  for (const [a, b, na] of [['phone', 'phoneboard', 4], ['phoneboard', 'soc', 4], ['ecu', 'mcu', 3], ['wafer', 'die', 2], ['chip', 'block', 5], ['block', 'gate', 4], ['gate', 'switch', 5], ['switch', 'atom', 5]]) {
     const tag = 'join ' + a + '>' + b;
     at = tag; const page = await browser3d.newPage({ viewport: { width: 1280, height: 800 } });
     page.on('pageerror', e => problems.push(tag + ': ' + e.message));
@@ -569,7 +569,16 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
     await page.goto(base + 'index.html#/place/datacentre/2');
   await page.waitForFunction(() => { const b = document.querySelector('#placeui .wayin:not([hidden]) .wigo'); if (b && location.hash === '#/place/datacentre/2') b.click(); return location.hash === '#/place/datacentre/3'; }, null, { timeout: 90000, polling: 3000 }).catch(() => problems.push(tag + ': the way in on the picture does not go deeper in the data centre'));
   await page.evaluate(() => { location.hash = '#/place/datacentre/5'; });
+  /* every arrival the page announces is kept, so a quick one is not missed between two polls */
+  await page.evaluate(() => { window.arrivals = []; new MutationObserver(() => { const a = document.documentElement.dataset.arrive; if (a) window.arrivals.push(a); }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-arrive'] }); });
   await page.waitForFunction(() => { const c = document.getElementById('placeCanvas'); if (c && location.hash === '#/place/datacentre/5') { c.focus(); c.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true })); } return location.hash === '#/dive/chip'; }, null, { timeout: 90000, polling: 3000 }).catch(() => problems.push(tag + ': going on past the chip does not carry the flight into it'));
+  /* the chip you land on is the chip you saw: the dive's chip comes down from where the flight ended (data-arrive while
+     the camera moves), then rests with its names, the memory stacked beside it among them (a slow software renderer
+     may then keep the flat drawing: the names are shown in 3D on the page above) */
+  await page.waitForFunction(() => window.arrivals.includes('chip'), null, { timeout: 60000, polling: 500 })
+    .catch(() => problems.push(tag + ': the dive\'s chip does not come down from where the flight ended'));
+  await page.waitForFunction(() => !document.documentElement.dataset.arrive && !!document.querySelector('#l3-chip [data-part3="hbm"]'), null, { timeout: 60000, polling: 500 })
+    .catch(() => problems.push(tag + ': the dive\'s chip does not come to rest with the memory beside it'));
     await page.close(); }
   await page.evaluate(() => { location.hash = '#/dive/block'; });
   /* the dive may still be making its view: Ask is chosen again until the block's questions show */

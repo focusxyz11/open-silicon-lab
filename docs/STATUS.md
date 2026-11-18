@@ -1,6 +1,6 @@
 # Status
 
-Where the lab stands, and what is ready to be built next. Read this first when starting a new session. The direction is in [ROADMAP.md](ROADMAP.md), ideas not yet picked are in [IDEAS.md](IDEAS.md), and how we work is in [WORKFLOW.md](WORKFLOW.md). Last updated 18 November 2026 (after the labs of #216 to #222).
+Where the lab stands, and what is ready to be built next. Read this first when starting a new session. The direction is in [ROADMAP.md](ROADMAP.md), ideas not yet picked are in [IDEAS.md](IDEAS.md), and how we work is in [WORKFLOW.md](WORKFLOW.md). Last updated 18 November 2026 (after the labs of #216 to #222, and #229: the chip you land on is the chip you saw).
 
 ## Where it stands
 
@@ -10,6 +10,7 @@ Where the lab stands, and what is ready to be built next. Read this first when s
   - Every place and level has one card with Look, Do and Ask.
 - **On a desktop** (1100 px and wider), the card is a bench at the right and the picture takes the rest. On a phone, the card sits below the picture.
 - **The way in is on the picture.** Every view that can go deeper shows one large *Go inside* button over the scene, a copy of the card's own way deeper (any element marked `data-in`, mirrored by `src/v2/frame.js`). In the data centre it stands beside the thing you would enter, with a ring on it; scrolling past the chip carries the flight into the chip, and the card lists what you see at each level and what each part does (in the flight and in every dive, chip to atom; choosing a part in the dive picks it on the picture, with its note). On the island, a place's card offers *Go inside* even before a part is picked, and zooming in close then pushing on goes inside too.
+- **From the flight into the dive, one chip.** The die the flight lands on and the dive's chip level are drawn from one plan (`src/data/die.js`, in the tones of `CHIP_TONES` in `src/v2/kit3d.js`): the same tiles, memory band, links, clock wires and pads, with four stacks of memory beside the die on one base, at the dive's own scale. The dive's chip starts where the flight ended (its angle, the point it looked at, as close; `HANDOFF` in `src/v2/dc3d.js`, `arrive` in `src/v2/level3d.js`, marked `data-arrive` on the page while it lasts), the package fading as it rises to the plan; going on comes down into one tile (the block). The stacks are named by their home (`VIEW_PARTS.dive` and `diveWord` in `src/data/atlas.js`).
 - **Challenges:** 42 in all, listed in `CHALLENGES` in `src/v2/game.js`, each played in the card where it lives. The newer labs are one file each in `src/v2/labs/` (how to build one: [LABS.md](LABS.md)).
   - **Design:** the half adder, the majority voter and the full adder; the proof's bet; Verify the agent (at the Lab); the right chip for the job; Evolve a circuit; Build your own AI chip (the capstone, at the studio's need).
   - **Make:** Grow a perfect crystal (at the quarry); through the factory in time; a chip that is quick to make; Moore's bet; the pieces' bet. Then the factory line, one lab per step: print the finest lines, the 1,000-watt source, ten billion vias, etch straight down, the bare bottom, the furnace spreads it, shallow and switched on.
@@ -50,9 +51,8 @@ The labs of #216 to #221 and the fixes of #222 are built. What they left open:
 
 ### The dive and the interface
 
-Each is an issue labelled `task`; #230 waits for a decision (`blocked`).
+Each is an issue labelled `task`; #230 waits for a decision (`blocked`). #229 (the chip you land on is the chip you saw) is built.
 
-- #229 The chip you land on is the chip you saw (the flight's die continues into the dive).
 - #230 One way down through a chip, not two side by side (the dive and the layer stack).
 - #231 Chip layers: the chip framed beside the card, its names never under it.
 - #232 The ring on the way in, in every view.

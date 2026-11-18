@@ -32,7 +32,7 @@ import { reportsAt, SAYS } from '../engines/ledger.js';
 import * as Read from './read.js';
 import * as Exp from '../engines/experiments.js';
 import * as Chip from '../engines/chip.js';
-import { levelAt, fieldAtLevel, VIEW_PARTS } from '../data/atlas.js';
+import { levelAt, fieldAtLevel, VIEW_PARTS, diveWord } from '../data/atlas.js';
 import * as Field from './field.js';
 import { setBetScene } from '../app/betscene.js';
 import { whatif as whatifView } from './whatif.js';
@@ -632,7 +632,7 @@ export function start() {
      part you pick, flat or in 3D; until then the picture and its names explain themselves */
   function diveNotes() {
     const id = diveId(), key = divePart;
-    Object.entries(L3).forEach(([lv, l]) => { const w = key && DiveData.partWord(lv, key); if (l.obj) l.obj.select(id === lv && key ? key : null, w && EN_HAS(w) ? { title: t('part.' + w), text: t('what.' + w) } : null); });
+    Object.entries(L3).forEach(([lv, l]) => { const w = key && diveWord(lv, key); if (l.obj) l.obj.select(id === lv && key ? key : null, w && EN_HAS(w) ? { title: t('part.' + w), text: t('what.' + w) } : null); });
     if (!key) return dive.setNotes([]);
     const w = DiveData.partWord(id, key); if (!EN_HAS(w)) return dive.setNotes([]);
     dive.setNotes([{ part: key, title: t('part.' + w), text: t('what.' + w), tone: 'cool' }]);
