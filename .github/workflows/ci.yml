@@ -36,14 +36,16 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          # seconds per section on CI (2026-11-18): labs 102, explore-desktop 87, explore-phone 69, flights 61, joins 58,
+          # motion 40, break 25, ways 25, frame 17, seams 15, search 13, old 4, slow 4
           - group: explore desktop
-            sections: explore-desktop,old,search
+            sections: explore-desktop,frame,search,old
           - group: explore phone
-            sections: explore-phone,slow,break
+            sections: explore-phone,flights,break,slow
           - group: motion
             sections: motion,joins,seams
           - group: labs and ways
-            sections: labs,ways,frame,flights
+            sections: labs,ways
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
