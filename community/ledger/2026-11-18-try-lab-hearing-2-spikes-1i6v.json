@@ -1,0 +1,15 @@
+{
+  "kind": "try",
+  "by": "Open Silicon Lab",
+  "made": "example",
+  "ai": "",
+  "words": "The filter as spiking matter: it only spends when sound arrives, but a hearing aid is never quiet.",
+  "machine": "hearing",
+  "plan": {
+    "mic": "circuit",
+    "filter": "matter:spikes",
+    "mem": "circuit",
+    "ctl": "circuit",
+    "fab": "giant"
+  }
+}

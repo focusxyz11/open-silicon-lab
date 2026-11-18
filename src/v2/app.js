@@ -1027,7 +1027,7 @@ export function start() {
       const reps = Game.frontierOf(S).filter(f => f.kind === 'report');
       if (reps.length) P.open += '<h2>' + esc(t('lab.reports')) + '</h2><p class="small muted">' + esc(t('lab.reportsD')) + '</p><div class="grid">' + reps.map(f => { const e = W.byId[f.of]; return '<a class="chcard report' + (e.draft ? ' draft' : '') + '" href="' + esc(e.at) + '"><span class="st">⚑</span><span><span class="kicker">' + esc(t('report.say.' + e.say)) + ' · ' + esc(e.at) + '</span><b>' + esc(e.words) + '</b><span class="small muted">' + byLine(e) + '</span></span></a>'; }).join('') + '</div>';
       /* the record: every entry, the newest first, each with who made it and where it stands now */
-      const line = e => { const T = e.kind === 'break' ? W.byId[e.of] : null, T2 = e.kind === 'try' && !e.puzzle ? W.byId[e.of] : null, what = e.kind === 'design' ? t('ledger.rec.design', { title: e.title, piece: t('build.need.' + e.piece + '.t') }) : e.kind === 'break' ? t('ledger.rec.break', { title: T.title }) : T2 ? t('ledger.rec.try', { title: T2.title, n: e.facts.cases }) : e.kind === 'report' || e.kind === 'fix' || e.puzzle ? Game.entryWords(e, S) : e.q,
+      const line = e => { const T = e.kind === 'break' ? W.byId[e.of] : null, T2 = e.kind === 'try' && !e.puzzle && !e.machine ? W.byId[e.of] : null, what = e.kind === 'design' ? t('ledger.rec.design', { title: e.title, piece: t('build.need.' + e.piece + '.t') }) : e.kind === 'break' ? t('ledger.rec.break', { title: T.title }) : T2 ? t('ledger.rec.try', { title: T2.title, n: e.facts.cases }) : e.kind === 'report' || e.kind === 'fix' || e.puzzle || e.machine ? Game.entryWords(e, S) : e.q,
           links = (e.from ? ' · ' + esc(t('ledger.rec.from', { who: W.byId[e.from].by })) + ' ' + esc(W.byId[e.from].title) : '') + (e.tries && e.tries.length ? ' · ' + esc(t('ledger.tries', { n: e.tries.length })) : '') + (e.about ? ' · ' + esc(t('ledger.rec.about', { q: Game.aboutWords(e.about, W) })) : '');
         return '<li class="rec ' + e.kind + (e.draft ? ' draft' : '') + ' ' + e.state + '"><span class="made ' + esc(e.made) + '"></span><span><b>' + esc(what) + '</b><span class="small muted"> · ' + byLine(e) + ' · ' + esc(e.id.slice(0, 10)) + ' · ' + esc(t('ledger.state.' + (e.draft ? 'draft' : e.state))) + (e.brokenBy ? ' · ' + esc(t('ledger.brokenBy', { who: W.byId[e.brokenBy].by })) : '') + links + '</span>' + (e.draft ? slipHtml(S, e.id) : '') + '</span></li>'; };
       P.record = '<h2>' + esc(t('page.build.record')) + '</h2><p class="small muted">' + esc(t('page.build.recordD')) + '</p><ol class="record">' + W.entries.slice().reverse().map(line).join('') + '</ol>';
@@ -1107,7 +1107,10 @@ export function start() {
     page.innerHTML = '<div class="inner"><a class="x pagex" href="#/" aria-label="' + esc(t('sheet.close')) + '">×</a><div data-machines></div></div>';
     page.hidden = false; page.scrollTop = 0;
     /* the claims behind new matter link to their sources in facts.json: drawn at once, and again when the facts arrive */
-    const draw = () => { const el = page.querySelector('[data-machines]'); if (el && partsOf(location.hash)[0] === 'machines') machinesView(el, { need, FACT, go: id => { location.hash = '#/machines/' + id; } }); };
+    const draw = () => { const el = page.querySelector('[data-machines]'); if (el && partsOf(location.hash)[0] === 'machines') machinesView(el, { need, FACT, go: id => { location.hash = '#/machines/' + id; },
+      /* an attempt of yours joins the lab's curve as a draft, with its slip into the ledger */
+      world: () => Game.world(S), keep: (id, plan, box) => keep(S, { kind: 'try', machine: id, plan, words: '' }, 'machine ' + id, signOf(box)),
+      slip: id => slipHtml(S, id), slipClick: (ev, done) => slipClick(ev, S, () => { save(); refresh(true); done(); }), refusal, signHtml: () => signHtml(S) }); };
     draw(); if (!FACT) facts().then(draw);
   }
   /* a world (src/v2/worlds.js): one core question, its page made from its document; #/w/<id>/q<n> opens a question inside */

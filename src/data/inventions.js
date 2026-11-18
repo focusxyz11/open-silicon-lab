@@ -7,7 +7,7 @@
 
    STATUS: how sure a claim is, from most to least: in products, shown in a lab, a guess.
    MATTERS: each kind of new matter, the blocks it can be a form of (on), whether it can still change after it is made,
-   whether its answers are exact, the bits its floor counts (floor: 'op', every bit a multiply-add erases; or a number,
+   whether its answers are exact, whether it is grown rather than made in a fab (grown), the bits its floor counts (floor: 'op', every bit a multiply-add erases; or a number,
    the bits of the answer alone, for logic that erases nothing on the way), and its claims:
      status   product | lab | guess;
      kind     gain (lowers the energy), catch (raises it) or note (says something true, changes no number);
@@ -40,10 +40,12 @@ export const MATTERS = [
   { id: 'reversible', on: ['adder', 'counter', 'voter', 'parity'], changes: false, exact: true, floor: 16, claims: [
     { id: 'revChip', status: 'lab', kind: 'gain', energy: 1 / 1.41, fact: 'vaire-ice-river' },
     { id: 'revFree', status: 'guess', kind: 'gain', energy: 0 }] },
-  { id: 'living', on: ['learner'], changes: true, exact: false, floor: 'op', claims: [
+  /* living matter is grown from cells, not made in a fab (src/data/fabs.js): how long a try takes is not known */
+  { id: 'living', on: ['learner'], changes: true, exact: false, floor: 'op', grown: true, claims: [
     { id: 'liveReal', status: 'product', kind: 'note', fact: 'cortical-cl1' },
     { id: 'liveBrain', status: 'guess', kind: 'gain', energy: 0.001, fact: 'brain-power' },
-    { id: 'liveSupport', status: 'guess', kind: 'catch', energy: 100 }] }
+    { id: 'liveSupport', status: 'guess', kind: 'catch', energy: 100 },
+    { id: 'liveGrown', status: 'lab', kind: 'note', fact: 'cortical-cl1' }] }
 ];
 export const MATTER_IDS = MATTERS.map(m => m.id);
 export const matterOf = id => MATTERS.find(m => m.id === id) || null;

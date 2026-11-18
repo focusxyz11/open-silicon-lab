@@ -8,11 +8,15 @@
      the same kind, every input is fed, and a block run as software has a core, made as a circuit, to run on;
    - whether it meets its need's rules (meets): parts that must stay changeable after the machine is made can change in
      their form; parts that must be exact are in a form that is exact;
+   - whether its made parts can be made where the plan says (the rule fab): a plan also names a fab (plan.fab, a place
+     of src/data/fabs.js, 'giant' if none), and every part that is neither software, bought (a stock block) nor grown
+     must be a form that place makes;
    - what it costs and keeps (score): its energy against the same machine made all as circuits, as a range (if the
-     guesses hold, and if they fail), how many parts can still change, how many are exact, and where a claim hit the
-     floor.
-   An agent (assemble) tries every plan, keeps those that pass, and offers the ones no other beats on all three at
-   once. By default it counts only what is in products or shown in a lab (the energy if the guesses fail); told to
+     guesses hold, and if they fail), how many parts can still change, how many are exact, where a claim hit the
+     floor, and how many days one try takes, as a range (a try with nothing to make takes TRY_DAYS; a grown part's
+     days are not known, so never), with the tries that fit in a year.
+   An agent (assemble) tries every plan in every fab, keeps those that pass, and offers the ones no other beats on all
+   four at once. By default it counts only what is in products or shown in a lab (the energy if the guesses fail); told to
    count guesses, it ranks by the energy if they hold. It decides nothing: the person picks.
 
    The cost of each form, for the same work, against a circuit made for it (1):
@@ -31,6 +35,7 @@ import { MATTERS, ACTIVITY, matterOf, mattersFor } from '../data/inventions.js';
 import { cimEnergy, E16 } from './paradigms.js';
 import { CIM_ARRAY, CIM_ADC } from './budget.js';
 import { landauer, bitsErased, T_ROOM } from './floor.js';
+import { FABS, TRY_DAYS, YEAR, fabOf } from '../data/fabs.js';
 
 export const SOFTWARE_COST = 500;                                   // facts.json asic-vs-cpu
 const CIM = cimEnergy(CIM_ARRAY, CIM_ARRAY, CIM_ADC);
@@ -38,8 +43,9 @@ export const MATTER_COST = CIM.analog / CIM.digital;                 // compute 
 /* the floor against a circuit: kT ln 2 for each bit erased, over a 16-bit multiply-add (E16 is in pJ) */
 const OP_PJ = E16.add + E16.mul, BIT_PJ = landauer(T_ROOM) * 1e12;
 export const floorOf = m => (m.floor === 'op' ? bitsErased(16) : m.floor) * BIT_PJ / OP_PJ;
-export const RULES = ['form', 'kind', 'fed', 'core'];
-export { FORMS, PORTS, MATTERS };
+export const RULES = ['form', 'kind', 'fed', 'core', 'fab'];
+export { FORMS, PORTS, MATTERS, FABS };
+export const START_FAB = 'giant';
 
 /* the forms a block can take: its own, then every kind of new matter that can be made into it */
 export const formsOf = blockId => { const b = blockOf(blockId); return b ? b.forms.concat(mattersFor(blockId).map(m => 'matter:' + m.id)) : []; };
@@ -66,6 +72,31 @@ export function costOf(f, need) {
   return { low: Math.max(low, floor), high: Math.max(high, floor), wall };
 }
 
+/* the days one try takes in a fab, as a range: { low: if the guesses hold, high: if they fail } (never: Infinity) */
+export function daysOf(fabId) {
+  const F = fabOf(fabId); if (!F) return { low: Infinity, high: Infinity };
+  const c = F.claims.find(k => k.kind === 'days');
+  return c ? { low: c.value[0], high: c.status === 'guess' ? Infinity : c.value[1] } : { low: Infinity, high: Infinity };
+}
+/* what a line costs to set up, against a giant fab: [least, most] */
+export function setupOf(fabId) {
+  const F = fabOf(fabId), c = F && F.claims.find(k => k.kind === 'cost');
+  return c ? { value: [].concat(c.value), status: c.status } : null;
+}
+/* the parts of a machine a fab has to make: not software, not bought ready-made, not grown */
+export function made(need, plan) {
+  return need.parts.filter(p => { const f = norm(plan[p.id]), b = blockOf(p.block); return f !== 'software' && !(b && b.stock) && !(matterIn(f) || {}).grown; }).map(p => p.id);
+}
+const grownIn = (need, plan) => need.parts.some(p => (matterIn(norm(plan[p.id])) || {}).grown);
+/* how long one try of the machine takes, as a range in days */
+export function tryDays(need, plan) {
+  if (grownIn(need, plan)) return { low: Infinity, high: Infinity };
+  if (!made(need, plan).length) return { low: TRY_DAYS, high: TRY_DAYS };
+  const d = daysOf(plan.fab || START_FAB);
+  return { low: Math.max(TRY_DAYS, d.low), high: Math.max(TRY_DAYS, d.high) };
+}
+export const triesAYear = days => (isFinite(days) ? YEAR / days : 0);
+
 const partOf = (need, id) => need.parts.find(p => p.id === id) || null;
 /* 'mic.in0' → { part, dir: 'in', i: 0 } */
 export function portOf(ref) {
@@ -78,6 +109,7 @@ const kindAt = (need, p) => { const part = partOf(need, p.part), b = part && blo
 export function startPlan(id) {
   const need = needOf(id), plan = {};
   need.parts.forEach(p => { const fs = formsOf(p.block); plan[p.id] = fs.includes('circuit') ? 'circuit' : fs[0]; });
+  plan.fab = START_FAB;
   return plan;
 }
 
@@ -96,6 +128,8 @@ export function check(need, plan) {
   need.parts.forEach(p => { const b = blockOf(p.block); (b ? b.in : []).forEach((k, i) => { const ref = p.id + '.in' + i; if (!fed.has(ref)) breaks.push({ rule: 'fed', part: p.id, port: ref }); }); });
   const core = need.parts.some(p => { const b = blockOf(p.block); return b && b.runs && plan[p.id] === 'circuit'; });
   need.parts.forEach(p => { if (plan[p.id] === 'software' && !core) breaks.push({ rule: 'core', part: p.id }); });
+  const F = fabOf(plan.fab || START_FAB);
+  made(need, plan).forEach(id => { if (!F || !F.makes.includes(norm(plan[id]))) breaks.push({ rule: 'fab', part: id }); });
   return { ok: breaks.length === 0, breaks };
 }
 
@@ -118,7 +152,9 @@ export function score(need, plan, guesses = false) {
     if (changes(f)) kept++;
     if (exact(f)) sure++;
   });
-  return { energy: (guesses ? low : high) / base, low: low / base, high: high / base, changes: kept, exact: sure, parts: need.parts.length, walls };
+  const D = tryDays(need, plan), days = guesses ? D.low : D.high;
+  return { energy: (guesses ? low : high) / base, low: low / base, high: high / base, changes: kept, exact: sure, parts: need.parts.length, walls,
+    days, daysLow: D.low, daysHigh: D.high, tries: triesAYear(days), fab: made(need, plan).length ? (plan.fab || START_FAB) : null };
 }
 
 /* everything about one machine */
@@ -129,25 +165,30 @@ export function machine(id, plan, guesses = false) {
   return { id, plan, check: C, meets: M, score: score(need, plan, guesses), ok: C.ok && M.ok };
 }
 
-/* a beats b when it is no worse on all three and better on one */
-export const beats = (a, b) => a.energy <= b.energy && a.changes >= b.changes && a.exact >= b.exact && (a.energy < b.energy || a.changes > b.changes || a.exact > b.exact);
+/* a beats b when it is no worse on all four and better on one */
+export const beats = (a, b) => a.energy <= b.energy && a.changes >= b.changes && a.exact >= b.exact && a.days <= b.days &&
+  (a.energy < b.energy || a.changes > b.changes || a.exact > b.exact || a.days < b.days);
 
-/* an agent: try every plan, keep those that pass, offer the ones nothing beats, cheapest first */
+/* an agent: try every plan in every fab, keep those that pass, offer the ones nothing beats, cheapest first. A plan
+   with nothing to make is the same in every fab, so it is kept once */
 export function assemble(id, max = 4, guesses = false) {
   const need = needOf(id), parts = need.parts, choices = parts.map(p => formsOf(p.block));
   const valid = [];
   let tried = 0;
   const walk = (i, plan) => {
     if (i === parts.length) {
-      tried++;
-      if (check(need, plan).ok && meets(need, plan).ok) valid.push({ plan: Object.assign({}, plan), score: score(need, plan, guesses) });
+      FABS.forEach((F, k) => {
+        tried++; plan.fab = F.id;
+        if (k > 0 && !made(need, plan).length) return;
+        if (check(need, plan).ok && meets(need, plan).ok) valid.push({ plan: Object.assign({}, plan), score: score(need, plan, guesses) });
+      });
       return;
     }
     choices[i].forEach(f => { plan[parts[i].id] = f; walk(i + 1, plan); });
   };
   walk(0, {});
   const front = valid.filter(v => !valid.some(w => w !== v && beats(w.score, v.score)));
-  front.sort((a, b) => a.score.energy - b.score.energy || b.score.changes - a.score.changes);
+  front.sort((a, b) => a.score.energy - b.score.energy || b.score.changes - a.score.changes || a.score.days - b.score.days);
   return { tried, valid: valid.length, front: front.length, picks: front.slice(0, max), guesses };
 }
 

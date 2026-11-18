@@ -7,7 +7,8 @@ import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
 import './ledger.setup.mjs';
 import { collect, FOLDER } from '../scripts/ledger.mjs';
-import { ledger, settle, settled, checkEntry, tryEntry, draft, fileOf, proposeUrl, frontier, runCase, standing, questionsAt, reportsAt, KINDS, MADE, DIR } from '../src/engines/ledger.js';
+import { ledger, settle, settled, checkEntry, tryEntry, draft, fileOf, proposeUrl, frontier, runCase, standing, questionsAt, reportsAt, labCurve, machineAttemptsAt, KINDS, MADE, DIR } from '../src/engines/ledger.js';
+import { machine } from '../src/engines/machine.js';
 import { plan } from '../src/engines/build.js';
 import * as Game from '../src/v2/game.js';
 import { fieldOf } from '../src/data/questions.js';
@@ -253,4 +254,37 @@ test('an attempt at the energy puzzle is a try with a plan: the budget engine sc
   for (const e of [a, d]) assert.ok(EN['ledger.state.' + W.byId[e.id].state]);
   const { useTexts } = await import('../src/core/i18n.js'); useTexts(EN, 'en');
   assert.match(Game.entryWords(W.byId[a.id], Game.fresh()), /Wh/);
+});
+
+test('an attempt at a machine is a try with a plan the machine engine checks; the lab\'s curve comes from the attempts alone', () => {
+  const at = (plan, name, o = {}) => draft(Object.assign({ kind: 'try', machine: 'rover', by: 'Ada', made: 'person', plan, words: '' }, o), name, '2026-11-20');
+  const L = ledger(), rover = machine('rover').plan;
+  /* the rover's navigation must change: all circuits does not meet the need */
+  assert.equal(checkEntry(at(rover, 'all circuits'), settle(L)).reason, 'machineFails');
+  assert.equal(checkEntry(at({ nav: 'software', fly: 'circuit' }, 'bad part'), settle(L)).reason, 'plan');
+  assert.equal(checkEntry(at({ nav: 'software' }, 'no need', { machine: 'toaster' }), settle(L)).reason, 'machine');
+  assert.equal(checkEntry(at({ nav: 'software' }, 'and a puzzle', { puzzle: 'energy' }), settle(L)).reason, 'fields');
+  const a = at({ nav: 'software', fab: 'flexible' }, '1 soft flex'), b = at({ nav: 'matter:cim', vote: 'circuit', clock: 'circuit' }, '2 cim giant'), c = at({ nav: 'software', fab: 'giant' }, '3 soft giant');
+  const W = settle(L.concat([a, b, c]));
+  assert.deepEqual(W.refused.map(e => e.reason), []);
+  assert.equal(W.byId[a.id].facts.days, 7, 'a flexible line: a week a try at most');
+  assert.ok(W.byId[b.id].facts.energy < 1 && W.byId[b.id].facts.days > 100);
+  /* the same plan again, in another fab, is a new attempt only if the fab changes something */
+  assert.equal(tryEntry(at({ nav: 'software', fab: 'flexible' }, 'again'), [a]).reason, 'same');
+  /* standings from the scores alone: the giant fab's copy of the software plan is slower and no cheaper */
+  assert.equal(W.byId[c.id].state, 'beaten');
+  assert.equal(W.byId[a.id].state, 'front');
+  assert.equal(W.bestMachine.rover, b.id);
+  assert.deepEqual(machineAttemptsAt(W, 'rover').map(e => e.id), [a, b, c].map(e => e.id));
+  /* the curve: the best so far never rises, and a law once three attempts have moved it */
+  const C = labCurve(W, 'rover');
+  C.points.forEach((p, i) => { assert.equal(p.n, i + 1); if (i) assert.ok(p.best <= C.points[i - 1].best); });
+  assert.ok(C.slope < 0 && C.perDoubling > 0 && C.perDoubling < 1);
+  assert.equal(labCurve(settle(L.concat([a])), 'rover').slope, null, 'one attempt: no law yet');
+  /* the record has words for an attempt, and its file is the form the port writes */
+  assert.ok(Game.entryWords(W.byId[a.id]).length > 10);
+  assert.ok(fileOf(a).text.includes('"machine": "rover"'));
+  /* the example attempts in the ledger draw a curve that has fallen */
+  const H = labCurve(settled(), 'hearing');
+  assert.ok(H.points.length >= 3 && H.slope < 0);
 });

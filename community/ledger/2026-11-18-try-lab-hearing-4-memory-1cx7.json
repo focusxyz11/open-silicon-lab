@@ -1,0 +1,15 @@
+{
+  "kind": "try",
+  "by": "Open Silicon Lab",
+  "made": "example",
+  "ai": "",
+  "words": "The filter computed inside its memory: far less energy, approximate, and still able to change.",
+  "machine": "hearing",
+  "plan": {
+    "mic": "circuit",
+    "filter": "matter:cim",
+    "mem": "circuit",
+    "ctl": "circuit",
+    "fab": "giant"
+  }
+}

@@ -9,7 +9,11 @@
                engine that passed the design must fail it on the case. The case then joins the piece's check for
                good: every design after it has to pass it, and every earlier design that fails it is broken too.
      try       cases meant to break a design that did not; or an attempt at a puzzle (content/puzzles/): a plan the
-               puzzle's engine scores (PUZZLES below).
+               puzzle's engine scores (PUZZLES below); or an attempt at a machine for a need (src/data/blocks.js): a
+               plan (a form for each part, and a fab) the machine engine checks and scores (src/engines/machine.js); a plan
+               with nothing to make is the same in every fab.
+               Every attempt kept, in order, draws the lab's curve: the best so far against the attempts so far
+               (labCurve below, "Moore's law for ideas").
      question  a question with a home: a level, perhaps a part of it and the question it sits under.
      report    the lab itself broken, by anyone, at any time: where (the site's address, perhaps a part), what kind
                (wrong, confusing, does not work, could be better) and the words. Feedback is not a stage of a plan:
@@ -30,6 +34,8 @@ import { build, projectOf } from './design.js';
 import { NEEDS } from '../data/build.js';
 import { DEPTHS, STOPS, REPO } from '../data/weave.js';
 import { budget, problem, PLAN, JOB } from './budget.js';
+import { machine as runMachine, beats as machineBeats } from './machine.js';
+import { needOf as machineNeed } from '../data/blocks.js';
 
 export const KINDS = ['design', 'break', 'try', 'question', 'report', 'fix'];
 /* what a report says about the lab */
@@ -43,7 +49,7 @@ const FIELDS = {
   break: ['kind', 'of', 'by', 'made', 'ai', 'words', 'case', 'about'],
   /* a try: cases that were meant to break a design and did not. The trace of an attack that failed: what a
      design has survived is why it can be trusted, and where the next attacker need not look */
-  try: ['kind', 'of', 'by', 'made', 'ai', 'words', 'cases', 'puzzle', 'plan', 'about'],
+  try: ['kind', 'of', 'by', 'made', 'ai', 'words', 'cases', 'puzzle', 'machine', 'plan', 'about'],
   question: ['kind', 'at', 'part', 'under', 'q', 'noticed', 'by', 'made', 'ai', 'about'],
   report: ['kind', 'at', 'part', 'say', 'words', 'by', 'made', 'ai'],
   fix: ['kind', 'of', 'words', 'pr', 'by', 'made', 'ai']
@@ -56,6 +62,11 @@ const planKey = p => JSON.stringify(Object.keys(PLAN).map(k => [k, p[k] === unde
 /* a plan as an entry holds it: only the plan's own keys, each a plain value (the engine checks the values) */
 const planOk = p => p && typeof p === 'object' && !Array.isArray(p) && Object.keys(p).length <= Object.keys(PLAN).length &&
   Object.entries(p).every(([k, v]) => Object.hasOwn(PLAN, k) && (v === null || ['number', 'string', 'boolean'].includes(typeof v)));
+/* a machine's plan as an entry holds it: a form for some of the need's parts, and perhaps a fab, each a short word (the
+   engine checks the forms and the fab); the key of a machine is its whole plan, with the start filled in */
+const machinePlanOk = (n, p) => p && typeof p === 'object' && !Array.isArray(p) && Object.keys(p).length <= n.parts.length + 1 &&
+  Object.entries(p).every(([k, v]) => (k === 'fab' || n.parts.some(q => q.id === k)) && typeof v === 'string' && v.length <= 40);
+const machineKey = (need, plan) => { const R = runMachine(need, plan), P = R.plan; return JSON.stringify(Object.keys(P).filter(k => k !== 'fab' || R.score.fab).sort().map(k => [k, P[k]])); };
 /* a report's place: the site's own address, as the bar shows it (#/line/print, #/dive/gate, #/build/record) */
 export const PLACE = /^#\/[a-z0-9._\/-]{0,80}$/;
 /* plain words: no markup, no links (a link in free text is how spam pays), nothing a page or an agent could run */
@@ -107,6 +118,18 @@ export function checkEntry(e, W) {
     if (failed) return no('case', { by: failed.by });
     if ((W.pieces[e.piece] || []).some(id => norm(W.byId[id].code) === norm(e.code))) return no('same');
     return { ok: true, facts: { transistors: B.transistors, ps: Math.round(B.st.crit), caught: Math.round(B.coverage * 100) } };
+  }
+  /* an attempt at a machine: a plan that follows the grammar and meets the need, new among the attempts so far; its
+     facts are the engine's score, counting only what is shown (the energy and days if the guesses fail) */
+  if (e.kind === 'try' && e.machine != null) {
+    const n = typeof e.machine === 'string' ? machineNeed(e.machine) : null; if (!n) return no('machine');
+    if (e.of != null || e.cases != null || e.puzzle != null) return no('fields');
+    if (!plain(e.words || '', 0, 300)) return no('words');
+    if (!machinePlanOk(n, e.plan)) return no('plan');
+    const R = runMachine(n.id, e.plan); if (!R.ok) return no('machineFails');
+    if ((W.machines[n.id] || []).some(id => machineKey(n.id, W.byId[id].plan) === machineKey(n.id, e.plan))) return no('same');
+    const S = R.score;
+    return { ok: true, facts: { energy: S.high, low: S.low, changes: S.changes, exact: S.exact, days: S.daysHigh, fab: S.fab } };
   }
   /* an attempt at a puzzle: a plan the puzzle's engine runs, new among the attempts so far; its facts are the score */
   if (e.kind === 'try' && e.puzzle != null) {
@@ -173,7 +196,7 @@ export function checkEntry(e, W) {
 /* ---- the whole ledger, replayed in order (ids sort by date, then name). Returns the world it makes. ---- */
 const beats = (a, b) => a.facts.transistors <= b.facts.transistors && a.facts.ps <= b.facts.ps && (a.facts.transistors < b.facts.transistors || a.facts.ps < b.facts.ps);
 export function settle(list) {
-  const W = { entries: [], byId: {}, pieces: {}, cases: {}, puzzles: {}, refused: [], feed: [] };
+  const W = { entries: [], byId: {}, pieces: {}, cases: {}, puzzles: {}, machines: {}, refused: [], feed: [] };
   list.slice().sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0)).forEach(raw => {
     const r = checkEntry(raw, W), e = Object.assign({}, raw, { ok: r.ok, reason: r.reason || null, facts: r.facts || null, state: null, brokenBy: null, breaks: [], tries: [] });
     if (!r.ok) { W.refused.push(e); if (!W.byId[e.id]) W.byId[e.id] = e; return; }
@@ -185,7 +208,8 @@ export function settle(list) {
       /* the case joins the check: every right design of the piece meets it now */
       W.pieces[T.piece].map(id => W.byId[id]).filter(d => d.state === 'right').forEach(d => { const x = runCase(p, d.code, e.case); if (x && x.first >= 0) { d.state = 'broken'; d.brokenBy = e.id; e.breaks.push(d.id); } });
       e.state = 'stands'; W.feed.push({ type: 'broke', id: e.id });
-    } else if (e.kind === 'try' && e.puzzle != null) { (W.puzzles[e.puzzle] = W.puzzles[e.puzzle] || []).push(e.id); e.state = 'front'; W.feed.push({ type: 'attempted', id: e.id }); }
+    } else if (e.kind === 'try' && e.machine != null) { (W.machines[e.machine] = W.machines[e.machine] || []).push(e.id); e.state = 'front'; W.feed.push({ type: 'attempted', id: e.id }); }
+    else if (e.kind === 'try' && e.puzzle != null) { (W.puzzles[e.puzzle] = W.puzzles[e.puzzle] || []).push(e.id); e.state = 'front'; W.feed.push({ type: 'attempted', id: e.id }); }
     else if (e.kind === 'try') { W.byId[e.of].tries.push(e.id); e.state = 'stands'; W.feed.push({ type: 'tried', id: e.id }); }
     else if (e.kind === 'report') { e.state = 'open'; W.feed.push({ type: 'reported', id: e.id }); }
     else if (e.kind === 'fix') { const T = W.byId[e.of]; T.state = 'fixed'; T.fixedBy = e.id; e.state = 'stands'; W.feed.push({ type: 'fixed', id: e.id }); }
@@ -211,6 +235,16 @@ export function settle(list) {
     A.forEach((a, i) => { a.state = A.some((o, j) => o !== a && (better(o, a) || (j < i && same(o, a)))) ? 'beaten' : 'front'; });
     const H = A.filter(a => a.state === 'front').sort((a, b) => f(a).joules - f(b).joules);
     if (H.length) W.best[z] = H[0].id;
+  });
+  /* a machine's standings, the same way: on the frontier while no other attempt beats it on energy, what can change,
+     what is exact and days a try (src/engines/machine.js beats); the best is the cheapest on the frontier */
+  W.bestMachine = {};
+  Object.entries(W.machines).forEach(([n, ids]) => {
+    const A = ids.map(id => W.byId[id]), f = a => a.facts;
+    const same = (o, a) => ['energy', 'changes', 'exact', 'days'].every(k => f(o)[k] === f(a)[k]);
+    A.forEach((a, i) => { a.state = A.some((o, j) => o !== a && (machineBeats(f(o), f(a)) || (j < i && same(o, a)))) ? 'beaten' : 'front'; });
+    const H = A.filter(a => a.state === 'front').sort((a, b) => f(a).energy - f(b).energy);
+    if (H.length) W.bestMachine[n] = H[0].id;
   });
   /* who checks whom: for every break, who made the design and who made the break */
   W.cross = {}; W.entries.filter(e => (e.kind === 'break' || e.kind === 'try') && e.of).forEach(e => { const k = W.byId[e.of].made + '>' + e.made; W.cross[k] = (W.cross[k] || 0) + 1; });
@@ -261,6 +295,21 @@ export function society(W) {
     if ((e.kind === 'break' || e.kind === 'try') && e.of) { const T = W.byId[e.of]; m.checked.add(T.by); at(T).checkedBy.add(e.by); }
     if (e.from && W.byId[e.from].by !== e.by) m.builtOn.add(W.byId[e.from].by); });
   return Object.values(M).map(m => Object.assign(m, { made: [...m.made], checked: [...m.checked], builtOn: [...m.builtOn], checkedBy: [...m.checkedBy] }));
+}
+/* the attempts at a machine for a need, in the order they were kept */
+export const machineAttemptsAt = (W, need) => (W.machines[need] || []).map(id => W.byId[id]);
+/* the lab's curve (Moore's law for ideas): for every attempt kept at a need, in order, its energy and the best energy so
+   far. Moore's law counts years; Wright's law counts how many have been made (facts.json wright-law); this counts
+   attempts. The law is a straight line through the best so far against the attempts so far, both on log scales:
+   slope b, so the best falls to 2^b of itself each time the attempts double (perDoubling: the share it falls by).
+   It needs three attempts and a best that has moved; until then there is no law, only points. */
+export function labCurve(W, need) {
+  let best = Infinity;
+  const points = machineAttemptsAt(W, need).map((e, i) => { best = Math.min(best, e.facts.energy); return { n: i + 1, id: e.id, by: e.by, made: e.made, energy: e.facts.energy, best, draft: !!e.draft }; });
+  if (points.length < 3 || points[0].best === best) return { points, slope: null, perDoubling: null };
+  const X = points.map(p => Math.log(p.n)), Y = points.map(p => Math.log(p.best)), mx = X.reduce((a, b) => a + b) / X.length, my = Y.reduce((a, b) => a + b) / Y.length;
+  const slope = X.reduce((a, x, i) => a + (x - mx) * (Y[i] - my), 0) / X.reduce((a, x) => a + (x - mx) ** 2, 0);
+  return { points, slope, perDoubling: 1 - Math.pow(2, slope) };
 }
 /* the attempts at a puzzle, the best first, then those on the frontier, then the newest */
 export const attemptsAt = (W, z) => (W.puzzles[z] || []).map(id => W.byId[id]).sort((a, b) => (W.best[z] === b.id) - (W.best[z] === a.id) || (a.state === 'front' ? 0 : 1) - (b.state === 'front' ? 0 : 1) || (a.id < b.id ? 1 : -1));

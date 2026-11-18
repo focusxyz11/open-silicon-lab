@@ -11,7 +11,9 @@
    PORTS: the kinds of thing that flow between blocks. A port joins only a port of the same kind.
    BLOCKS: what anyone can add. Each has its ports (in, out), the forms it can take (software, circuit; the kinds of new
    matter that can be made into it are listed with each matter, src/data/inventions.js), and how it is checked: a piece
-   of the community's plan (need, src/data/build.js, checked by the build's engines) or a lab's engine (lab).
+   of the community's plan (need, src/data/build.js, checked by the build's engines) or a lab's engine (lab). A block
+   anyone can buy ready-made (stock: a sensor, a memory, a core) is bought, not made, so it never waits on a fab
+   (src/data/fabs.js).
    NEEDS: one machine each, assembled from blocks (parts: an id, the block, its share of the work per answer; a
    choice of the model, never shown as a figure), the wires between them (from 'part.out<i>' to 'part.in<i>', or
    from 'world' for what comes in from outside), and the need's rules: parts that must stay changeable after the
@@ -22,14 +24,14 @@ export const PORTS = ['signal', 'word', 'bit'];
 export const FORMS = ['software', 'circuit', 'matter'];   /* the three families; new matter is matter:<kind> */
 
 export const BLOCKS = [
-  { id: 'sensor', in: ['signal'], out: ['word'], forms: ['circuit'], lab: 'analog' },
+  { id: 'sensor', in: ['signal'], out: ['word'], forms: ['circuit'], lab: 'analog', stock: true },
   { id: 'learner', in: ['word'], out: ['word'], forms: ['software', 'circuit'], lab: 'cim' },
   { id: 'adder', in: ['word', 'word'], out: ['word'], forms: ['software', 'circuit'], need: 'adder2' },
-  { id: 'memory', in: ['word'], out: ['word'], forms: ['circuit'], need: 'regbit' },
+  { id: 'memory', in: ['word'], out: ['word'], forms: ['circuit'], need: 'regbit', stock: true },
   { id: 'counter', in: ['bit'], out: ['word'], forms: ['software', 'circuit'], need: 'timer' },
   { id: 'voter', in: ['bit', 'bit', 'bit'], out: ['bit'], forms: ['software', 'circuit'], need: 'safety' },
   { id: 'parity', in: ['word'], out: ['bit'], forms: ['software', 'circuit'], need: 'check' },
-  { id: 'core', in: ['word'], out: ['word'], forms: ['circuit'], need: 'core', runs: true }
+  { id: 'core', in: ['word'], out: ['word'], forms: ['circuit'], need: 'core', runs: true, stock: true }
 ];
 export const BLOCK_IDS = BLOCKS.map(b => b.id);
 export const blockOf = id => BLOCKS.find(b => b.id === id) || null;
