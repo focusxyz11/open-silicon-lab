@@ -139,9 +139,9 @@ export const GROWTH = CHALLENGES.map(c => ({ id: c.grows, by: c.id, at: GROW_AT[
 
 /* Inside: every place's levels, one inside the next (src/data/places.js). These hold the earlier site's
    pages: each level opens there until it is redrawn here. The data centre's first levels are flown through
-   (src/v2/dc3d.js; FLOWN: a depth and its level in the flight). */
+   (src/v2/dc3d.js; FLOWN: a depth and its level in the flight), and so are a phone's (src/v2/phone3d-flight.js). */
 export { INSIDE, placeOf, SHARED };
-export const FLOWN = { datacentre: { building: 0, rack: 2, board: 4, chip: 5 } };
+export const FLOWN = { datacentre: { building: 0, rack: 2, board: 4, chip: 5 }, phones: { phone: 0, phoneboard: 2, soc: 3 } };
 /* Ask: the questions at each level of a place; the Lab holds the open thread's questions, where the
    community asks them. BEACON: the one question glowing above a place. */
 export function askAt(place) { return place === 'lab' ? [{ level: null, stops: Object.keys(STOPS).filter(k => k.startsWith('open.')) }] : levelStops(place); }

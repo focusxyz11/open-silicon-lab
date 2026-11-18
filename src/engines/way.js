@@ -32,6 +32,8 @@ export const nextPlace = place => {
 
 /* the data centre is flown through: each stop of the flight shows one level */
 const FLIGHT = ['building', 'building', 'rack', 'rack', 'board', 'chip'];
+/* and so is a phone (src/v2/phone3d-flight.js DEPTH) */
+const PHONE_FLIGHT = ['phone', 'phone', 'phoneboard', 'soc'];
 const DIVE_PLACE = { datacentre: 'datacentre', phone: 'phones', car: 'cars', made: 'fab' };
 const parts = h => String(h || '').replace(/^#\/?/, '').split('/').filter(Boolean);
 const cell = (view, place, level, stage, more) => Object.assign({ view, place: place || null, level: level || null, stage: stage || (place ? stageOfPlace(place) : null) }, more);
@@ -62,6 +64,7 @@ export function whereOf(hash) {
   if (k === 'supply') return cell('supply', 'port', 'ship');
   if (k === 'build') return cell('page', 'lab');
   if (k === 'place' && p[1] === 'datacentre' && p[2] != null && p[2] !== 'inside') return cell('flight', 'datacentre', FLIGHT[+p[2]] || 'building');
+  if (k === 'place' && p[1] === 'phones' && /^\d+$/.test(p[2] || '')) return cell('flight', 'phones', PHONE_FLIGHT[+p[2]] || 'phone');
   if (k === 'place' && PLACES.includes(p[1])) return cell('island', p[1]);
   return cell(k === 'ecosystem' || k === 'whatif' ? 'out' : ['log', 'challenges', 'questions', 'read', 'w'].includes(k) ? 'log' : 'island');
 }
