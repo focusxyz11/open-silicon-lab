@@ -8,16 +8,25 @@
 import * as X from '../../engines/litho.js';
 import { metBy } from '../../engines/fabkit.js';
 
+const EUV_SEED = 7;
 const chal = id => X.LITHO_CHALLENGES.find(c => c.id === id);
 const f1 = (v, d = 1) => v.toFixed(d), nm = v => v < 20 ? v.toFixed(1) : String(Math.round(v));
 
 export default function lab(L) {
-  const { S, ch, el, esc, t, head, reward, doneNote, win, draw } = L, view = L.view;
+  const { S, ch, ctx, esc, t, head, reward, doneNote, win, draw } = L, view = L.view;
 
   /* ================= Print the finest lines ================= */
-  const LT = () => view.lt || (view.lt = { src: 'iline', na: X.sourceOf('iline').na, v: 1000, dose: X.LITHO_DEFAULTS.dose, illum: 'conventional', dp: false, best: {} });
+  /* the finest print of each scanner is kept in the save as the setting that made it (S.litho.best), and printed again
+     from it when the lab opens, so the row of finished scanners is still there after a reload */
+  const LT = () => { if (view.lt) return view.lt;
+    const o = view.lt = { src: 'iline', na: X.sourceOf('iline').na, v: 1000, dose: X.LITHO_DEFAULTS.dose, illum: 'conventional', dp: false, best: {} };
+    Object.entries((S.litho && S.litho.best) || {}).forEach(([src, b]) => { if (!X.SOURCES.some(q => q.id === src)) return;
+      const r = X.litho({ src, na: b.na, hp: X.hpOfSlider(b.v), dose: b.dose, illum: b.illum, dp: b.dp }); if (r.status !== 'bad') o.best[src] = r; });
+    return o; };
   const ltRun = () => { const o = LT(), r = X.litho({ src: o.src, na: o.na, hp: X.hpOfSlider(o.v), dose: o.dose, illum: o.illum, dp: o.dp });
-    if (r.status !== 'bad' && (!o.best[o.src] || r.hp < o.best[o.src].hp)) o.best[o.src] = r;
+    if (r.status !== 'bad' && (!o.best[o.src] || r.hp < o.best[o.src].hp)) { o.best[o.src] = r;
+      if (!S.litho || !S.litho.best) S.litho = { best: {} };
+      S.litho.best[o.src] = { na: o.na, v: o.v, dose: o.dose, illum: o.illum, dp: o.dp }; ctx.save(); }
     if (S.done[ch.id] === undefined && metBy(chal('litho-finest'), Object.values(o.best))) win();
     return r; };
   const ltDone = i => !!S.done[ch.id] || chal('litho-finest').groups[i](LT().best[X.SOURCES[i].id] || {});
@@ -69,7 +78,9 @@ export default function lab(L) {
   }
 
   /* ================= The 1,000-watt source ================= */
-  const EU = () => view.eu || (view.eu = { ...X.EUV_DEFAULTS, seed: 1, seen: [] });
+  /* the first sample of holes is one where the lesson shows: fewer photons, more holes out of spec (EUV_SEED);
+     Expose again draws others, as chance has them */
+  const EU = () => view.eu || (view.eu = { ...X.EUV_DEFAULTS, seed: EUV_SEED, seen: [] });
   const euRun = () => { const o = EU(), r = X.euv(o); if (r.power >= 1000 && r.wphRounded >= 275) o.seen = [r];
     if (S.done[ch.id] === undefined && metBy(chal('euv-1000'), o.seen)) win(); return r; };
   function euSvg(r) {
@@ -98,7 +109,7 @@ export default function lab(L) {
     const g = [['power', r.power, t('eu.g.v.power', { v: Math.round(r.power) }), r.power >= 1000, r.power / 1000], ['wph', r.wph, String(r.wphRounded), r.wphRounded >= 275, r.wph / 275]];
     let h = head() + '<div class="goalbox' + (won ? ' ok' : '') + '"><p class="kicker">' + esc(t(won ? 'game.reached' : 'game.goalNow')) + '</p>' + g.map(([k, , v, ok, f]) => '<div class="gauge' + (ok ? ' ok' : '') + '"><span class="gl">' + esc(t('eu.g.' + k)) + '</span><span class="gv">' + esc(v) + ' <span class="muted">' + esc(t('eu.g.t.' + k)) + '</span></span><span class="gbar"><span style="width:' + (Math.min(1, f) * 100).toFixed(0) + '%"></span></span></div>').join('') + '</div>';
     h += '<div class="betview">' + euSvg(r) + '</div>';
-    h += '<div class="euholes"><figure class="euhfig">' + H.svg + '</figure><div><p class="kicker">' + esc(t('eu.holes.t')) + '</p><p class="' + (H.E.bad ? 'bad' : 'good') + '"><b>' + esc(t('eu.holes.n', { n: H.E.bad })) + '</b></p><p class="small muted">' + esc(t('eu.holes.d', { n: Math.round(r.photonsPerHole) })) + '</p><button type="button" class="chipb" data-eu-again>' + esc(t('eu.again')) + '</button></div></div>';
+    h += '<div class="euholes"><figure class="euhfig">' + H.svg + '</figure><div><p class="kicker">' + esc(t('eu.holes.t')) + '</p><p class="' + (H.E.bad ? 'bad' : 'good') + '"><b>' + esc(t('eu.holes.n', { n: H.E.bad })) + '</b></p><p class="small muted">' + esc(t('eu.holes.d', { n: Math.round(r.photonsPerHole), p: Math.round(X.EUV.tol * 100) })) + '</p><button type="button" class="chipb" data-eu-again>' + esc(t('eu.again')) + '</button></div></div>';
     const sl = (k, step, v) => '<label class="lab" for="eu-' + k + '"><b>' + esc(t('eu.set.' + k)) + '</b> <output>' + esc(t('eu.v.' + k, { v })) + '</output></label><input type="range" id="eu-' + k + '" data-eu="' + k + '" min="' + Rg[k][0] + '" max="' + Rg[k][1] + '" step="' + step + '" value="' + o[k] + '">';
     h += sl('power', 10, Math.round(o.power)) + sl('reflect', 0.005, (o.reflect * 100).toFixed(1)) + sl('mirrors', 1, o.mirrors) + sl('dose', 1, Math.round(o.dose));
     h += '<p class="small muted">' + esc(t('eu.mirrors.d')) + '</p>';
@@ -117,7 +128,7 @@ export default function lab(L) {
       if ((b = q('[data-lt-illum]'))) { LT().illum = b.dataset.ltIllum; draw(); return true; }
       if (q('[data-lt-dp]')) { const o = LT(); o.dp = !o.dp; draw(); return true; }
       if (q('[data-eu-again]')) { EU().seed++; draw(); return true; }
-      if (q('[data-eu-reset]')) { Object.assign(EU(), X.EUV_DEFAULTS, { seed: 1 }); draw(); return true; }
+      if (q('[data-eu-reset]')) { Object.assign(EU(), X.EUV_DEFAULTS, { seed: EUV_SEED }); draw(); return true; }
       return false; },
     input(e) {
       const a = e.target.closest('[data-lt]'); if (a) { LT()[a.dataset.lt] = +a.value; draw(); return true; }

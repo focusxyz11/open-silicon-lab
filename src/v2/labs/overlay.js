@@ -28,7 +28,9 @@ export default function lab(L) {
     const my = 160, a = 20, b = 280, lo = -2, hi = 10, x = v => a + (b - a) * (Math.log10(Math.max(v, 0.01)) - lo) / (hi - lo);
     s += '<rect class="mtr" x="' + a + '" y="' + my + '" width="' + (b - a) + '" height="8" rx="4"/><rect class="mfill ' + r.verdict + '" x="' + a + '" y="' + my + '" width="' + (x(r.failed) - a).toFixed(1) + '" height="8" rx="4"/>' +
       '<line class="m1" x1="' + x(1) + '" x2="' + x(1) + '" y1="' + (my - 5) + '" y2="' + (my + 13) + '"/><text class="ax" x="' + x(1) + '" y="' + (my + 25) + '" text-anchor="middle">' + esc(t('ovl.one')) + '</text><text class="ax" x="' + b + '" y="' + (my + 25) + '" text-anchor="end">' + esc(t('ovl.all')) + '</text></svg>';
-    return '<figure class="ovfig">' + s + '<figcaption class="small muted">' + esc(t('ovl.legend')) + '</figcaption></figure>';
+    /* 40 vias cannot show a miss that happens once in millions: say what the sample shows, and how rare a miss is on the chip */
+    const every = r.p > 1e-11 ? t('ovl.rate', { n: count(1 / r.p) }) : t('ovl.rate.none');
+    return '<figure class="ovfig">' + s + '<p class="ovrate"><span class="' + (miss ? 'bad' : 'muted') + '">' + esc(t('ovl.sample', { k: miss })) + '</span> <b>' + esc(every) + '</b></p><figcaption class="small muted">' + esc(t('ovl.legend')) + '</figcaption></figure>';
   }
   function goalbox() {
     const ok = met(ch.id, seen()), A = group(0), B = group(1);

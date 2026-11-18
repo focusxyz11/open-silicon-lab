@@ -83,6 +83,9 @@ export const CHALLENGES = [
   { id: 'agent', step: 'design', place: 'lab', kind: 'agent', grows: 'lab-desk' },
   { id: 'batch', step: 'use', place: 'datacentre', at: 'chip', kind: 'bet', bet: 'batch', grows: 'dc-batch' },
   { id: 'newest', step: 'ship', place: 'phones', at: 'phoneboard', kind: 'teardown', grows: 'island-teardown' },
+  { id: 'sig-heart', step: 'ship', place: 'phones', at: 'phoneboard', kind: 'capture', grows: 'island-adc' },
+  { id: 'sig-bearing', step: 'ship', place: 'cars', at: 'ecu', kind: 'capture', grows: 'island-sensor' },
+  { id: 'reg-jobs', step: 'ship', place: 'phones', at: 'phoneboard', kind: 'regulate', grows: 'island-reg' },
   { id: 'jobs', step: 'design', place: 'studio', at: 'need', kind: 'fit', grows: 'studio-fit' },
   { id: 'evolve', step: 'design', place: 'studio', at: 'gates', kind: 'evolve', grows: 'studio-evolve' },
   { id: 'crystal', step: 'make', place: 'quarry', at: 'crystal', kind: 'pull', grows: 'quarry-ingot' },
@@ -92,7 +95,18 @@ export const CHALLENGES = [
   { id: 'etch', step: 'make', place: 'fab', at: 'etch', kind: 'etch', grows: 'fab-etch' },
   { id: 'bottom', step: 'make', place: 'fab', at: 'deposit', kind: 'deposit', grows: 'fab-ald' },
   { id: 'litho-finest', step: 'make', place: 'fab', at: 'print', kind: 'litho', grows: 'fab-scanner' },
-  { id: 'euv-1000', step: 'make', place: 'fab', at: 'print', kind: 'euv', grows: 'fab-euv' }
+  /* new ways to compute, each at the depth where the problem it attacks is met (src/v2/labs/cim.js, grover.js) */
+  { id: 'cim', step: 'use', place: 'datacentre', at: 'block', kind: 'cim', grows: 'way-cim' },
+  { id: 'grover', step: 'use', place: 'datacentre', at: 'atom', kind: 'grover', grows: 'way-quantum' },
+  { id: 'euv-1000', step: 'make', place: 'fab', at: 'print', kind: 'euv', grows: 'fab-euv' },
+  { id: 'too-hot', step: 'use', place: 'datacentre', at: 'switch', kind: 'semiconductor', grows: 'dc-heat' },
+  { id: 'ai-chip', step: 'design', place: 'studio', at: 'need', kind: 'aibuild', grows: 'studio-aichip' },
+  { id: 'power-curve', step: 'use', place: 'datacentre', at: 'block', kind: 'powercurve', grows: 'blk-power' },
+  { id: 'counter', step: 'use', place: 'datacentre', at: 'gate', kind: 'counter', grows: 'gate-counter' },
+  /* serving a language model (src/v2/labs/serve.js, src/engines/aiserve.js) */
+  { id: 'quantize', step: 'use', place: 'datacentre', at: 'chip', kind: 'quantize', grows: 'dc-quant' },
+  { id: 'token-energy', step: 'use', place: 'datacentre', at: 'rack', kind: 'tokenenergy', grows: 'dc-token' },
+  { id: 'prefill', step: 'use', place: 'datacentre', at: 'chip', kind: 'prefill', grows: 'dc-prefill' }
 ];
 /* the goal of a chip challenge as gauges: each a value of your chip's model and the bound it must reach
    (ge: at least, le: at most). Together they say the same as the goal's met() in src/engines/chip.js. */
@@ -118,7 +132,9 @@ export const challengeOf = id => CHALLENGES.find(c => c.id === id) || null;
 export const chipGoal = id => CHIP.find(c => c.id === id);
 export const placeChallenges = place => CHALLENGES.filter(c => c.place === place);
 /* what grows, and where (the island draws each one: src/v2/map3d.js GROWERS) */
-const GROW_AT = { onebad: 'test', half: 'studio', phone: 'phones', car: 'cars', dclife: 'datacentre', fast: 'lab' };
+/* where a growth stands when it is not at its challenge's place: the other ways to compute grow at the Lab (WAYS_AT), and the
+   clock and the power budget, design decisions, at the studio */
+const GROW_AT = { onebad: 'test', half: 'studio', phone: 'phones', car: 'cars', dclife: 'datacentre', fast: 'lab', cim: 'lab', grover: 'lab', 'power-curve': 'studio', counter: 'studio' };
 export const GROWTH = CHALLENGES.map(c => ({ id: c.grows, by: c.id, at: GROW_AT[c.id] || c.place }));
 
 /* Inside: every place's levels, one inside the next (src/data/places.js). These hold the earlier site's
@@ -169,7 +185,7 @@ export const askHref = key => { const [th, d] = key.split('.'); return '#/ask/' 
 
 /* ---- your state: what you have done, and what you were working on ---- */
 export const KEY = 'osl-world-v1';
-export function fresh() { return { done: {}, codes: {}, chip: Object.assign({}, START), life: {}, seen: false, drafts: [], sent: {}, met: {}, crossed: {}, bets: {}, whatif: { levers: {}, solved: {} }, agent: {}, teardown: {}, fit: {}, evolve: {}, name: '' }; }
+export function fresh() { return { done: {}, codes: {}, chip: Object.assign({}, START), life: {}, seen: false, drafts: [], sent: {}, met: {}, crossed: {}, bets: {}, whatif: { levers: {}, solved: {} }, agent: {}, teardown: {}, fit: {}, evolve: {}, litho: { best: {} }, aibuild: {}, name: '' }; }
 export function normalState(s) {
   const f = fresh();
   if (!s || typeof s !== 'object') return f;
@@ -187,10 +203,12 @@ export function normalState(s) {
   const bets = {}; CHALLENGES.filter(c => c.kind === 'bet').forEach(c => { if (s.bets && s.bets[c.id]) bets[c.id] = normalBetOf(c.bet, s.bets[c.id]); });
   /* What if?: the levers where you left them, and the puzzles you solved (src/engines/ripple.js) */
   const w = s.whatif || {}, whatif = { levers: normalLevers(w.levers), solved: {} }; Object.keys(w.solved || {}).forEach(k => { if (PUZZLES.some(p => p.id === k)) whatif.solved[k] = true; });
-  return { done, codes, chip: normal(s.chip || START), life: lifeC, seen: !!s.seen, drafts, sent, met, crossed, bets, whatif, agent: normalAgent(s.agent), teardown: s.teardown && typeof s.teardown === 'object' ? s.teardown : {}, fit: s.fit && typeof s.fit === 'object' ? s.fit : {}, evolve: s.evolve && typeof s.evolve === 'object' ? s.evolve : {}, name: typeof s.name === 'string' ? s.name.slice(0, 40) : '' };
+  /* Print the finest lines: the setting that printed each scanner's finest lines (src/v2/labs/litho.js prints them again) */
+  const litho = { best: {} }; Object.entries((s.litho && s.litho.best) || {}).slice(0, 12).forEach(([k, v]) => { if (v && typeof v === 'object' && [v.na, v.v, v.dose].every(Number.isFinite)) litho.best[k] = { na: v.na, v: v.v, dose: v.dose, illum: v.illum === 'dipole' ? 'dipole' : 'conventional', dp: !!v.dp }; });
+  return { done, codes, chip: normal(s.chip || START), life: lifeC, seen: !!s.seen, drafts, sent, met, crossed, bets, whatif, agent: normalAgent(s.agent), teardown: s.teardown && typeof s.teardown === 'object' ? s.teardown : {}, fit: s.fit && typeof s.fit === 'object' ? s.fit : {}, evolve: s.evolve && typeof s.evolve === 'object' ? s.evolve : {}, litho, aibuild: s.aibuild && typeof s.aibuild === 'object' ? s.aibuild : {}, name: typeof s.name === 'string' ? s.name.slice(0, 40) : '' };
 }
 export function load(store) { try { return normalState(JSON.parse(store.getItem(KEY) || 'null')); } catch (e) { return fresh(); } }
-export function save(store, s) { try { store.setItem(KEY, JSON.stringify({ done: s.done, codes: s.codes, chip: s.chip, life: s.life, seen: s.seen, drafts: s.drafts, sent: s.sent, met: s.met, crossed: s.crossed, bets: s.bets, whatif: s.whatif, agent: s.agent, teardown: s.teardown, fit: s.fit, evolve: s.evolve, name: s.name })); } catch (e) { /* storage unavailable */ } }
+export function save(store, s) { try { store.setItem(KEY, JSON.stringify({ done: s.done, codes: s.codes, chip: s.chip, life: s.life, seen: s.seen, drafts: s.drafts, sent: s.sent, met: s.met, crossed: s.crossed, bets: s.bets, whatif: s.whatif, agent: s.agent, teardown: s.teardown, fit: s.fit, evolve: s.evolve, litho: s.litho, aibuild: s.aibuild, name: s.name })); } catch (e) { /* storage unavailable */ } }
 
 /* ---- checks: each challenge asks its engine ---- */
 export function checkDesign(p, code) { return build({ p, code }); }
@@ -269,8 +287,10 @@ export function community(s) {
 }
 /* ---- challenges and questions are two faces of one thing ---- */
 /* the question a challenge opens once you have won it: a stop, at its own level or the one beside it */
-export const OPENS = { 'litho-finest': 'scale.print', 'euv-1000': 'fail.print', etch: 'make.etch', bottom: 'idea.deposit', crystal: 'make.crystal', furnace: 'make.implant', shallow: 'fail.implant', vias: 'fail.print', evolve: 'idea.block', newest: 'open.phoneboard', jobs: 'divide.need', agent: 'idea.check', half: 'fail.check', vote: 'idea.check', full: 'make.gates', months: 'make.clean', quick: 'scale.clean', spot: 'fail.test', cores: 'divide.test',
-  phone: 'life.phone', car: 'fail.car', dclife: 'fail.ship', fed: 'divide.board', fast: 'fail.chip' };
+export const OPENS = { 'too-hot': 'fail.switch', 'litho-finest': 'scale.print', 'euv-1000': 'fail.print', etch: 'make.etch', bottom: 'idea.deposit', crystal: 'make.crystal', furnace: 'make.implant', shallow: 'fail.implant', vias: 'fail.print', evolve: 'idea.block', newest: 'open.phoneboard', jobs: 'divide.need', agent: 'idea.check', half: 'fail.check', vote: 'idea.check', full: 'make.gates', months: 'make.clean', quick: 'scale.clean', spot: 'fail.test', cores: 'divide.test',
+  phone: 'life.phone', car: 'fail.car', dclife: 'fail.ship', fed: 'divide.board', fast: 'fail.chip',
+  cim: 'divide.block', grover: 'strange.atom', 'ai-chip': 'divide.need', 'power-curve': 'life.block', counter: 'fail.gate',
+  'sig-heart': 'fail.phoneboard', 'sig-bearing': 'fail.ecu', 'reg-jobs': 'fail.phoneboard', quantize: 'think.chip', 'token-energy': 'divide.rack', prefill: 'think.board' };
 /* and where the open things of the ledger sit: a break under "is the design right?", a piece to build under
    "could anyone design a chip?", a missing check under "who checks, and with what?" */
 export const FRONT_ASK = { break: 'fail.check', build: 'open.need', engine: 'idea.check' };

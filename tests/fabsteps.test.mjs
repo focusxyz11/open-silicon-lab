@@ -263,6 +263,10 @@ test('EUV scanner: the photons are random, seeded, and the holes spread more at 
   assert.ok(spread(15) > spread(80), 'edges get rougher as the dose falls');
   const m = F.euvExpose({}, 1); assert.equal(m.area.length, 9); assert.ok(m.area.every(x => x > 150 && x < 260)); assert.equal(m.bad, 0);
   assert.ok(F.euvExpose({ dose: 2 }, 2).bad > 0, 'at a tiny dose holes fail');
+  /* within the scanner's own range of doses the price of little light shows: most samples at the smallest dose hold a
+     hole out of spec, hardly any at the largest */
+  const R = F.EUV_RANGE.dose, withBad = dose => { let n = 0; for (let sd = 1; sd <= 40; sd++) if (F.euvExpose({ dose }, sd).bad > 0) n++; return n; };
+  assert.ok(withBad(R[0]) >= 30, 'at the smallest dose most samples show a hole out of spec'); assert.ok(withBad(R[1]) <= 2, 'at the largest dose hardly any');
 });
 
 /* ---- words and facts ---- */

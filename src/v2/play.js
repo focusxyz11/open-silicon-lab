@@ -504,9 +504,10 @@ export function play(el, ch, ctx) {
   const show = sel => { const n = el.querySelector(sel); if (n && n.scrollIntoView) n.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); };
   function draw() {
     const f = ch.kind === 'design' ? design : ch.kind === 'chip' ? chip : ch.kind === 'life' ? life : ch.kind === 'break' ? brk : ch.kind === 'bet' ? bet : lab ? lab.draw : spot;
-    const html = '<div class="player">' + f() + '</div>', old = el.firstElementChild;
+    /* the card says which challenge it holds (data-ch), so whatever drives it never reads the card before it */
+    const html = '<div class="player" data-ch="' + esc(ch.id) + '">' + f() + '</div>', old = el.firstElementChild;
     if (!old || !old.classList.contains('player')) el.innerHTML = html;
-    else { const tpl = document.createElement('template'); tpl.innerHTML = html; patch(old, tpl.content.firstElementChild); }
+    else { old.dataset.ch = ch.id; const tpl = document.createElement('template'); tpl.innerHTML = html; patch(old, tpl.content.firstElementChild); }
     paintWafer(); betScene();
   }
   /* feedback: what changed moves. A wrong answer shakes, a row that turned right flashes, a gauge that reached its

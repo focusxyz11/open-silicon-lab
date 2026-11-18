@@ -58,7 +58,7 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
   await page.waitForSelector('#sheet .won', { timeout: 10000 }).catch(() => problems.push(tag + ': a right design did not win the challenge'));
   if (!/grew/i.test(await page.textContent('#toast').catch(() => ''))) problems.push(tag + ': winning did not say what grew');
   if (!(await page.$('#sheet .opens[href^="#/ask/"]'))) problems.push(tag + ': the first win opens no question');
-  if (!/1 of 7/.test(await page.getAttribute('#loop [data-stage="design"]', 'aria-label').catch(() => ''))) problems.push(tag + ': the tracker did not count the win');
+  if (!/1 of 8/.test(await page.getAttribute('#loop [data-stage="design"]', 'aria-label').catch(() => ''))) problems.push(tag + ': the tracker did not count the win');
   await page.click('#sheet [data-next]').catch(() => problems.push(tag + ': no way on to the next challenge'));
   if (!/voter/i.test(await page.textContent('#sheet .player h3').catch(() => ''))) problems.push(tag + ': the next challenge is not the majority voter');
   await page.click('#sheet [data-back]');
@@ -426,6 +426,8 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
        checks pass or fail by chance. A fresh visitor again (its own storage). */
     { const tag = 'labs', fp = await browser.newPage({ viewport: { width: 1280, height: 800 } });
     fp.on('pageerror', e => problems.push(tag + ': ' + e.message));
+    /* a file the labs ask for and do not get is named, so a 404 never goes untraced */
+    fp.on('response', r => { if (r.status() >= 400) problems.push(tag + ': ' + r.status() + ' for ' + r.url()); });
     await fp.addInitScript(() => { localStorage.setItem('osl-quality', 'flat'); localStorage.setItem('osl-hints-v1', JSON.stringify({ seen: {}, off: true })); });
     /* a bet is played: guess first, then the two dials find the balance (src/engines/bet.js) */
     await fp.goto(base + 'index.html#/do/cheaper');
@@ -494,24 +496,50 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
     const SET = "const SET = (q, v) => { const i = document.querySelector(q); if (i) { i.value = v; i.dispatchEvent(new Event('input', { bubbles: true })); } }, CL = q => { const b = document.querySelector(q); if (b) b.click(); };";
     const playLab = async (id, moves, what, wait = 90000) => {
       await fp.goto(base + 'index.html#/do/' + id);
-      await fp.waitForSelector('.player', { timeout: 60000 }).catch(() => problems.push(tag + ': ' + what + ' does not open'));
-      await fp.waitForFunction(new Function('return (async () => { ' + SET + moves + '; return !!document.querySelector(".player .won"); })()'), null, { timeout: wait, polling: 3000 }).catch(() => problems.push(tag + ': ' + what + ' is not won by the moves that win it'));
+      /* this challenge's own card (data-ch): the card of the lab before stays up until the new one is drawn */
+      await fp.waitForSelector('.player[data-ch="' + id + '"]', { timeout: 60000 }).catch(() => problems.push(tag + ': ' + what + ' does not open'));
+      /* polled from here: waitForFunction does not wait for an async predicate (its promise counts as true at once),
+         so it would pass without a win; evaluate does wait */
+      const play = new Function('return (async () => { ' + SET + moves + '; return !!document.querySelector(\'.player[data-ch="' + id + '"] .won\'); })()'), until = Date.now() + wait;
+      let won = false;
+      while (!won && Date.now() < until) { won = await fp.evaluate(play).catch(() => false); if (!won) await fp.waitForTimeout(3000); }
+      if (!won) problems.push(tag + ': ' + what + ' is not won by the moves that win it');
     };
+    /* serving a language model, at the data centre: four bits despite outliers, where an answer's energy goes, read fast and write slow */
+    await playLab('quantize', "CL('[data-sq-format=\"fp4\"]:not([aria-pressed=\"true\"])'); CL('[data-sq-scale=\"nv16\"]:not([aria-pressed=\"true\"])'); SET('#sq-outliers', 1)", 'Four bits, despite outliers');
+    await playLab('token-energy', "SET('#se-watts', 2300); SET('#se-tokExp', 3.9); SET('#se-pue', 1.05); SET('#se-overhead', 10); SET('#se-tokExp', 4.5)", 'Where an answer\'s energy goes');
+    await playLab('prefill', "CL('[data-sp-chip=\"rubin\"]:not([aria-pressed=\"true\"])'); CL('[data-sp-model=\"70\"]:not([aria-pressed=\"true\"])'); CL('[data-sp-answer=\"270\"]:not([aria-pressed=\"true\"])'); SET('#sp-prompt', 929)", 'Read fast, write slow');
     await playLab('furnace', "CL('[data-im-ion=\"B\"]'); SET('#im-le', 0.3); CL('[data-im-anneal=\"furnace\"]'); CL('[data-im-anneal=\"laser\"]')", 'The furnace spreads it');
     await playLab('shallow', "CL('[data-im-ion=\"As\"]'); SET('#im-le', 0.3); CL('[data-im-anneal=\"laser\"]')", 'Shallow and switched on');
     await playLab('vias', "SET('#ov-shift', 0); SET('#ov-sigma', 0.65); SET('#ov-shift', 2)", 'Ten billion vias');
+    /* chips that touch the real world (#220): the heartbeat inside its budget, the edge where the bearing's tone is lost, and a regulator for each of four jobs (a wrong one first, then the best) */
+    await playLab('sig-heart', "SET('#ana-rate', 10)", 'A heartbeat on a coin cell');
+    await playLab('sig-bearing', "SET('#ana-rate', 14); SET('#ana-rate', 15)", 'Hear the failing bearing');
+    await playLab('reg-jobs', "for (const [j, a, b] of [['wearable', 'ldo', 'buck'], ['cpu', 'ldo', 'buck'], ['adc', 'buck', 'both'], ['nearly', 'buck', 'ldo']]) { CL('[data-reg-job=\"' + j + '\"]'); CL('[data-reg-type=\"' + a + '\"]'); CL('[data-reg-type=\"' + b + '\"]'); }", 'Four jobs, four regulators');
     await playLab('euv-1000', "SET('#eu-power', 1000); SET('#eu-reflect', 0.72); SET('#eu-mirrors', 8); SET('#eu-dose', 15)", 'The 1,000-watt source');
     /* every scanner at its finest: the engine finds the setting, the person's dials are set to it */
+    /* new ways to compute: the cheapest converter of a grid of memory cells, and a quantum search stepped past its peak */
+    await playLab('cim', "SET('#cim-w', 8); SET('#cim-n', 0.03); SET('#cim-adc', 7)", 'Fewest bits that still work');
+    await playLab('grover', "SET('#grv-noise', -4); const gk = document.querySelector('[data-grv-k]'); if (gk && +gk.dataset.grvK < 3) CL('[data-grv-step]')", 'One step too many');
     await playLab('litho-finest', "const X = await import(new URL('src/engines/litho.js', location.href).href); for (const s of X.SOURCES) { const f = X.finestHalfPitch(s.id); let pick = null;"
       + " for (const dp of [false, true]) for (const illum of ['dipole', 'conventional']) for (let v = 0; v <= 1000 && !pick; v++) { const r = X.litho({ src: s.id, na: X.naOf(s, 9), hp: X.hpOfSlider(v), dose: 0.86, illum, dp }); if (r.status !== 'bad' && r.hp <= f * 1.1) pick = { v, illum, dp }; }"
       + " if (!pick) continue; CL('[data-lt-src=\"' + s.id + '\"]'); CL('[data-lt-illum=\"' + pick.illum + '\"]'); const d = document.querySelector('[data-lt-dp]'); if (d && (d.getAttribute('aria-pressed') === 'true') !== pick.dp) d.click();"
       + " SET('#lt-na', 9); SET('#lt-hp', pick.v); }", 'Print the finest lines');
     /* the films labs run in time: start a run, go on if it was paused, start again if it ended short of the goal */
-    const GO = "const g = document.querySelector('[data-fl-go]'), lab = g ? g.textContent.trim() : '';";
-    await playLab('etch', GO + " if (lab === 'Start etching') { SET('#fl-ions', 100); SET('#fl-chem', 0); const f = document.querySelector('[data-fl-fast]'); if (f && f.getAttribute('aria-pressed') !== 'true') f.click(); CL('[data-fl-go]'); }"
-      + " else if (g && g.disabled) CL('[data-fl-reset]'); else if (lab === 'Go on') CL('[data-fl-go]')", 'Etch straight down', 180000);
+    const GO = "const g = document.querySelector('[data-fl-go]'), st = g ? g.dataset.flState : '';";
+    await playLab('etch', GO + " if (st === 'ready') { SET('#fl-ions', 100); SET('#fl-chem', 0); const f = document.querySelector('[data-fl-fast]'); if (f && f.getAttribute('aria-pressed') !== 'true') f.click(); CL('[data-fl-go]'); }"
+      + " else if (st === 'ended') CL('[data-fl-reset]'); else if (st === 'paused') CL('[data-fl-go]')", 'Etch straight down', 180000);
     await playLab('bottom', GO + " const m = document.querySelector('[data-fl-mode].on'), mode = m ? m.dataset.flMode : 'cvd';"
-      + " if (g && g.disabled) { if (mode === 'cvd') CL('[data-fl-mode=\"ald\"]'); else CL('[data-fl-reset]'); } else if (lab === 'Deposit' || lab === 'Go on') CL('[data-fl-go]')", 'The bare bottom', 180000);
+      + " if (st === 'ended') { if (mode === 'cvd') CL('[data-fl-mode=\"ald\"]'); else CL('[data-fl-reset]'); } else if (st === 'ready' || st === 'paused') CL('[data-fl-go]')", 'The bare bottom', 180000);
+    /* too hot for silicon, at the switch: the heater is set to 600 K and the silicon warms through the crossing */
+    await playLab('too-hot', "SET('#semi-T', 600)", 'Too hot for silicon');
+    /* Build your own AI chip: the data-centre brief, met by stacked memory on an interposer, 4-bit weights, more math and a faster clock, then taped out */
+    await playLab('ai-chip', "CL('[data-aib-brief=\"infer\"]'); CL('[data-aib-set=\"mem:h4\"]'); SET('#aib-memN', 6); CL('[data-aib-set=\"pkg:cs\"]'); CL('[data-aib-set=\"fp4:true\"]'); SET('#aib-area', 863); SET('#aib-f', 2); CL('[data-aib-tape]')", 'Build your own AI chip');
+    /* the clock and the power: the dials at a point the engine's check accepts; the counter is run at the same place on its
+       dial at one process after another, and a run in progress is left to finish */
+    await playLab('power-curve', "SET('#ckp-f', 2.25); SET('#ckp-v', 0.61)", 'Half the power');
+    await playLab('counter', "const n = ['130', '28'].find(k => !document.querySelector('[data-ckp-node=\"' + k + '\"][data-top]'));"
+      + " if (n && !document.querySelector('[data-ckp-run][aria-pressed=\"true\"]')) { CL('[data-ckp-node=\"' + n + '\"]'); SET('#ckp-hz', 61); CL('[data-ckp-run]'); }", 'The counter that fails', 180000);
     /* Verify the agent, at the Lab: a tool checks a case, and eight right calls win */
     await fp.goto(base + 'index.html#/do/agent');
     await fp.waitForSelector('#sheet .agcases [data-ag-case]', { timeout: 60000 }).catch(() => problems.push(tag + ': Verify the agent does not show its cases'));
