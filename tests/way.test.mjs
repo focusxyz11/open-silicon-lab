@@ -53,7 +53,7 @@ test('a challenge is played where its level is shown, or met at its place', () =
   for (const c of CHALLENGES) { const h = doHome(c), W = whereOf('#/do/' + c.id);
     if (h) { assert.match(h, /^#\/(bench|dive|line)\//); assert.equal(W.level, c.at, c.id + ' is not played at its level'); }
     else assert.equal(W.place, c.place, c.id); }
-  assert.ok(CHALLENGES.filter(c => c.at && !doHome(c)).length <= 1, 'most challenges with a level are played at it');
+  assert.ok(CHALLENGES.filter(c => c.at && !doHome(c)).length <= 2, 'most challenges with a level are played at it');
 });
 
 test('the port shows agents the same world: from the island, every name look gives can be looked at again, and every level is reached', async () => {

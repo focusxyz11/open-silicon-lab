@@ -92,7 +92,11 @@ export const CHALLENGES = [
   { id: 'etch', step: 'make', place: 'fab', at: 'etch', kind: 'etch', grows: 'fab-etch' },
   { id: 'bottom', step: 'make', place: 'fab', at: 'deposit', kind: 'deposit', grows: 'fab-ald' },
   { id: 'litho-finest', step: 'make', place: 'fab', at: 'print', kind: 'litho', grows: 'fab-scanner' },
-  { id: 'euv-1000', step: 'make', place: 'fab', at: 'print', kind: 'euv', grows: 'fab-euv' }
+  { id: 'euv-1000', step: 'make', place: 'fab', at: 'print', kind: 'euv', grows: 'fab-euv' },
+  /* serving a language model (src/v2/labs/serve.js, src/engines/aiserve.js) */
+  { id: 'quantize', step: 'use', place: 'datacentre', at: 'chip', kind: 'quantize', grows: 'dc-quant' },
+  { id: 'token-energy', step: 'use', place: 'datacentre', at: 'rack', kind: 'tokenenergy', grows: 'dc-token' },
+  { id: 'prefill', step: 'use', place: 'datacentre', at: 'chip', kind: 'prefill', grows: 'dc-prefill' }
 ];
 /* the goal of a chip challenge as gauges: each a value of your chip's model and the bound it must reach
    (ge: at least, le: at most). Together they say the same as the goal's met() in src/engines/chip.js. */
@@ -273,6 +277,7 @@ export const OPENS = { 'litho-finest': 'scale.print', 'euv-1000': 'fail.print', 
   phone: 'life.phone', car: 'fail.car', dclife: 'fail.ship', fed: 'divide.board', fast: 'fail.chip' };
 /* and where the open things of the ledger sit: a break under "is the design right?", a piece to build under
    "could anyone design a chip?", a missing check under "who checks, and with what?" */
+Object.assign(OPENS, { quantize: 'think.chip', 'token-energy': 'divide.rack', prefill: 'think.board' });   // serving a language model
 export const FRONT_ASK = { break: 'fail.check', build: 'open.need', engine: 'idea.check' };
 export const opensOf = ch => (ch.kind === 'break' ? 'idea.check' : ch.need ? 'open.layout' : OPENS[ch.id]) || null;
 /* what there is to do about a question: the challenges that open it, and the open things of the ledger that sit there */
