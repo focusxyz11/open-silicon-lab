@@ -26,7 +26,7 @@ const KEYS = [
   { look: [0, 1.082, 0.77], dist: 0.24, yaw: -0.2, pitch: 1.0 },
   { look: [0, 1.081, 0.77], dist: 0.052, yaw: -0.12, pitch: 1.12 }
 ];
-const FOV = 38, FIT = 0.8;
+const FOV = 38, FIT = 0.95;
 /* where the flight ends, for the dive's chip level to start from (src/v2/relief3d.js): the camera's turn and tilt, the
    point of the plan it looks at (the middle of the package: the die and its stacks), and how much of the plan's units
    it sees from top to bottom, on a screen at least fit as wide as it is tall (narrower, it stands back by as much) */
