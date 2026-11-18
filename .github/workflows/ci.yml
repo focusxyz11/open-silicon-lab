@@ -15,7 +15,8 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  test:
+  logic:
+    name: logic and words
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -24,24 +25,62 @@ jobs:
           node-version: 22
       - name: Logic and words tests
         run: npm test
+
+  # the browser smoke test in sections (node scripts/smoke.mjs --list), run in groups side by side: one long run on the
+  # software renderer took about 20 minutes and starved its own late 3D checks. Groups are balanced by the time each
+  # section takes here (every run prints "Section <name>: <s> s").
+  browser:
+    name: browser (${{ matrix.group }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # seconds per section on CI (2026-11-18): labs 102, explore-desktop 87, explore-phone 69, flights 61, joins 58,
+          # motion 40, break 25, ways 25, frame 17, seams 15, search 13, old 4, slow 4
+          - group: explore desktop
+            sections: explore-desktop,frame,search,old
+          - group: explore phone
+            sections: explore-phone,flights,break,slow
+          - group: motion
+            sections: motion,joins,seams
+          - group: labs and ways
+            sections: labs,ways
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
       - name: Install Playwright
         run: |
           npm install --no-save playwright@1.48.2
           # The runner image already has most system libraries; if Ubuntu's package servers cannot be
           # reached, install only the browser (from Playwright's own servers) and go on.
           npx playwright install --with-deps chromium || npx playwright install chromium
-      - name: Browser smoke test
+      - name: Browser smoke test (${{ matrix.sections }})
         # the browser runs on a software renderer here, seconds per frame: if one run fails, it runs once more, and a pass
         # on the second run is marked as a warning, so a check that passes by chance is still seen and fixed
         timeout-minutes: 60
         run: |
-          if npm run test:browser; then exit 0; fi
-          echo "::warning title=Smoke test passed only on a second run::A browser check failed once. Read the first run's problems above and make that check steady."
-          npm run test:browser
+          if npm run test:browser -- --only "${{ matrix.sections }}"; then exit 0; fi
+          echo "::warning title=Smoke test (${{ matrix.group }}) passed only on a second run::A browser check failed once. Read the first run's problems above and make that check steady."
+          npm run test:browser -- --only "${{ matrix.sections }}"
+
+  # the one check pull requests and the nightly build look for: green only when every part above is green
+  test:
+    name: test
+    if: always()
+    needs: [logic, browser]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Every part passed
+        run: |
+          echo "logic and words: ${{ needs.logic.result }}, browser: ${{ needs.browser.result }}"
+          test "${{ needs.logic.result }}" = success && test "${{ needs.browser.result }}" = success
 
   deploy:
     if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
-    needs: test
+    needs: [logic, browser, test]
     runs-on: ubuntu-latest
     permissions:
       pages: write

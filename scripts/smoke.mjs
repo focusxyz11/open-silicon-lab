@@ -9,20 +9,51 @@ import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
 const { chromium } = require('playwright');
 
+/* The run is made of sections, each opening its own pages and closing them, and leaning on no other section's state:
+     node scripts/smoke.mjs                 every section
+     node scripts/smoke.mjs --only a,b      only the sections named
+     node scripts/smoke.mjs --list          the sections and what each covers
+   (npm run test:browser -- --only a,b does the same). CI runs them in groups, side by side (.github/workflows/ci.yml). */
+const SECTIONS = [
+  ['old', 'the old address (classic.html) leads to the chip world'],
+  ['explore-desktop', 'the chip world at 1280 px, light: the loop, the first challenge, the worlds and their tries, every 3D level, the dives, the commons, the frame, the bench, the board'],
+  ['explore-phone', 'the same walk at 390 px, dark'],
+  ['joins', 'every pair of neighbouring 3D levels drawn together half way, and back'],
+  ['break', 'Break it on desktop and phone: the report kept as a ledger entry, standing on the island'],
+  ['slow', 'a device too slow for 3D gets the flat drawing back'],
+  ['motion', 'one stage and no cuts: the factory opens, zooms in and out, the island answers a tap, lenses and dials, the test house square, the islands around, Ask at the block, one WebGL context'],
+  ['seams', 'a fresh visitor crosses a seam and its leak rises; What if? between the islands'],
+  ['labs', 'every lab and bet played to its win on a flat page'],
+  ['search', 'something to look for at a level, kept in your log'],
+  ['ways', 'the ways on the picture: Go inside on the island, along and in on the line, the phone\'s peek and swipe'],
+  ['frame', 'the size at every level and the ring on the way in, desktop and phone'],
+  ['flights', 'the data centre\'s way in and its flight into the chip; the phone\'s flight into its chip'],
+];
+const argv = process.argv.slice(2);
+if (argv.includes('--list')) { for (const [n, about] of SECTIONS) console.log(n.padEnd(16) + about); process.exit(0); }
+const oi = argv.indexOf('--only'), onlyArg = oi >= 0 ? argv[oi + 1] || '' : (argv.find(a => a.startsWith('--only=')) || '').slice(7);
+const only = oi >= 0 || argv.some(a => a.startsWith('--only=')) ? onlyArg.split(',').map(s => s.trim()).filter(Boolean) : null;
+if (only) { const unknown = only.filter(n => !SECTIONS.some(([s]) => s === n)); if (unknown.length || !only.length) { console.error('Unknown section: ' + (unknown.join(', ') || '(none given)') + '\nThe sections: ' + SECTIONS.map(([s]) => s).join(', ')); process.exit(2); } }
+
 const server = await serve(0), base = 'http://localhost:' + server.address().port + '/';
 const browser = await chromium.launch(), problems = [];
 /* a watchdog: a page that stops answering (a stuck software renderer on a CI machine) fails the test with where it was,
    instead of hanging the run */
 let at = 'start';
 setTimeout(() => { console.error('Smoke test stuck at: ' + at + (problems.length ? '\nProblems so far:\n' + problems.join('\n') : '')); process.exit(1); }, 28 * 60 * 1000).unref();
-/* the earlier site (classic.html) was retired in 2026-11 and kept on the branch claude/before-retire-2026-11; the old
-   address now leads to the chip world */
-at = 'old address'; { const page = await browser.newPage(); await page.goto(base + 'classic.html#/questions'); await page.waitForFunction(() => /index\.html/.test(location.pathname) || location.pathname.endsWith('/'), null, { timeout: 15000 }).catch(() => problems.push('the old address does not lead to the chip world')); await page.close(); }
+/* its own browser, with software WebGL, so the 3D levels can draw on a machine without a GPU */
+const browser3d = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
+const run = {};
+
+run['old'] = async () => {
+  /* the earlier site (classic.html) was retired in 2026-11 and kept on the branch claude/before-retire-2026-11; the old
+     address now leads to the chip world */
+  at = 'old address'; { const page = await browser.newPage(); await page.goto(base + 'classic.html#/questions'); await page.waitForFunction(() => /index\.html/.test(location.pathname) || location.pathname.endsWith('/'), null, { timeout: 15000 }).catch(() => problems.push('the old address does not lead to the chip world')); await page.close(); }
+};
+
 /* the chip world (index.html): your chip's life on the island. The first challenge is played and won, the island
    grows and says so (the first fixed with one tap), the tracker in the bar moves on; a place opens its three doors in the dock, Look first with a way inside; the pages list every challenge and the plan. */
-/* its own browser, with software WebGL, so the island can draw on a machine without a GPU */
-const browser3d = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
-for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height: 800 }, 'light'], ['explore phone', { width: 390, height: 844 }, 'dark']]) {
+const explore = async (tag, viewport, scheme) => {
   at = tag; const page = await browser3d.newPage({ viewport, colorScheme: scheme, reducedMotion: 'reduce' });
   /* the software renderer here is slow: pin the quality, so the 3D levels are tested as 3D (the fallback has its own page) */
   await page.addInitScript(() => { try { localStorage.setItem('osl-quality', 'keep'); } catch (e) { /* no storage */ } });
@@ -282,10 +313,13 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
   if (await page.$eval('#boardui .goal2', el => el.hidden).catch(() => true)) problems.push(tag + ': the goal does not show while the number moves');
   if (await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1)) problems.push(tag + ': the page scrolls sideways');
   await page.close();
-}
+};
+run['explore-desktop'] = () => explore('explore desktop', { width: 1280, height: 800 }, 'light');
+run['explore-phone'] = () => explore('explore phone', { width: 390, height: 844 }, 'dark');
+
 /* one stage and no cuts: with motion on, going inside from the island dives the camera in, then the view zooms in from it
    (a view transition); rising goes back out. A duplicate name or a stuck view would show as an error here. */
-{
+run['joins'] = async () => {
   /* joins: every pair of neighbouring levels in 3D (the phone to its board to its chip, the control unit to its chip,
      the wafer to the die, a chip to the block, down to the atom): no flat picture shows between; both levels are
      drawn in one frame on one camera path, half way and back */
@@ -313,6 +347,9 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
     });
     await page.close();
   }
+};
+
+run['break'] = async () => {
   /* Break it: on every screen, on a phone too, anyone reports what is wrong at the place they saw it; it is kept as a
      draft entry of the ledger with the one link that opens it on GitHub, and a report without a name is refused in words */
   for (const [w, h] of [[1280, 800], [390, 844]]) {
@@ -341,6 +378,9 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
       await page.waitForFunction(() => location.hash === '#/line/print' && !document.getElementById('breakp').hidden, null, { timeout: 15000 }).catch(() => problems.push(tag + ': a report on the island does not lead back to where it was seen')); }
     await page.close();
   }
+};
+
+run['slow'] = async () => {
   /* a device too slow for a level in 3D gets its flat drawing back (osl-quality = slow makes every level count as too slow) */
   {
     at = 'slow device'; const page = await browser3d.newPage({ viewport: { width: 1280, height: 800 }, reducedMotion: 'reduce' });
@@ -350,6 +390,9 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
     await page.waitForFunction(() => { const h = document.getElementById('l3-atom'); return h && h.hidden && +getComputedStyle(document.getElementById('diveCanvas')).opacity > 0.9; }, null, { timeout: 30000 }).catch(() => problems.push('slow device: a level too slow in 3D did not fall back to its flat drawing'));
     await page.close();
   }
+};
+
+run['motion'] = async () => {
   at = 'motion'; const tag = 'motion', page = await browser3d.newPage({ viewport: { width: 1280, height: 800 } });
   page.on('pageerror', e => problems.push(tag + ': ' + (e.stack || e.message).split('\n').slice(0, 3).join(' | ')));
   page.on('console', m => { if (m.type() === 'error' && !/fonts\.g|net::ERR|WebGL|GPU/.test(m.text())) problems.push(tag + ': console: ' + m.text()); });
@@ -410,160 +453,177 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
   /* the world around the island is many islands, each its own kind of place */
   await page.evaluate(() => { location.hash = '#/ecosystem'; });
   await page.waitForFunction(() => document.querySelectorAll('#sheet .isles [data-place]').length === 6, null, { timeout: 15000 }).catch(() => problems.push(tag + ': the world around does not show its six islands'));
+  /* Ask at the block, and one stage (the counter of WebGL contexts starts again with the page, from its init script) */
+  await page.goto(base + 'index.html#/dive/block');
+  /* the dive may still be making its view: Ask is chosen again until the block's questions show */
+  await page.waitForFunction(() => { if (document.querySelector('#diveui .fieldline[data-field="fetch"]')) return true; const b = document.querySelector('#diveui .modes3 [data-mode="ask"]'); if (b && b.getAttribute('aria-selected') !== 'true') b.click(); return false; }, null, { timeout: 30000, polling: 1000 })
+    .catch(() => problems.push(tag + ': Ask at the block does not list the questions from the field there'));
+  /* one stage: the island, the data centre, the chip, the board and the line's machines all draw with one renderer */
+  for (const h of ['#/place/datacentre/1', '#/chip/0', '#/board', '#/line/print', '#/']) { await page.evaluate(x => { location.hash = x; }, h); await page.waitForTimeout(2500); }
+  const gl = await page.evaluate(() => window.GL);
+  if (gl > 1) problems.push(tag + ': ' + gl + ' WebGL contexts; every 3D view should share the one stage');
+  await page.close();
+};
+
+run['seams'] = async () => {
+  const tag = 'motion';
   /* the questions from the field (src/data/questions.js): crossing a seam raises the leak on it, and its card opens;
      under Ask at a level, the questions people were stuck on there come first */
   /* a fresh visitor (a new page, its own storage): earlier steps here crossed seams already, and a leak rises only
      the first time */
-  /* the motion page rests on a blank page while the 3D pages below run: on a CI machine's software renderer, a page
-     left drawing the island takes the time the pages below need, and their checks ran out of it */
-  await page.goto('about:blank');
-  { const fp = await browser3d.newPage({ viewport: { width: 1280, height: 800 } });
-    fp.on('pageerror', e => problems.push(tag + ' (seams): ' + e.message));
-    await fp.goto(base + 'index.html#/line/test'); await fp.waitForTimeout(9000);
-    await fp.evaluate(() => { location.hash = '#/line/pkg'; });
-    await fp.waitForFunction(() => { const s = document.querySelector('.seamnote'); return !!s && !s.hidden && !!s.querySelector('[data-field="package"]'); }, null, { timeout: 30000 }).catch(() => problems.push(tag + ': crossing a seam does not raise its leak'));
-    await fp.evaluate(() => { const b = document.querySelector('.seamnote [data-field]'); if (b) b.click(); });
-    await fp.waitForSelector('.fieldx', { timeout: 10000 }).catch(() => problems.push(tag + ': a question from the field does not open its card'));
-    /* the labs and bets are played on a flat page of their own: none needs the 3D world, and on a CI machine's software
-       renderer the flights between islands take long enough to redraw a card while it is played, which made these
-       checks pass or fail by chance. A fresh visitor again (its own storage). */
-    { const tag = 'labs', fp = await browser.newPage({ viewport: { width: 1280, height: 800 } });
-    fp.on('pageerror', e => problems.push(tag + ': ' + e.message));
-    /* a file the labs ask for and do not get is named, so a 404 never goes untraced */
-    fp.on('response', r => { if (r.status() >= 400) problems.push(tag + ': ' + r.status() + ' for ' + r.url()); });
-    await fp.addInitScript(() => { localStorage.setItem('osl-quality', 'flat'); localStorage.setItem('osl-hints-v1', JSON.stringify({ seen: {}, off: true })); });
-    /* a bet is played: guess first, then the two dials find the balance (src/engines/bet.js) */
-    await fp.goto(base + 'index.html#/do/cheaper');
-    await fp.waitForSelector('[data-guess-size]', { timeout: 30000 }).catch(() => problems.push(tag + ': the bet does not ask for a guess first'));
-    await fp.evaluate(() => { const b = document.querySelector('[data-guess-size="6"]'); if (b) b.click(); });
-    await fp.waitForSelector('.betwafer', { timeout: 10000 }).catch(() => problems.push(tag + ': the bet does not show its wafer'));
-    await fp.evaluate(() => { for (const [k, v] of [['size', 6], ['clean', 2]]) { const r = document.querySelector('[data-bet="' + k + '"]'); if (r) { r.value = v; r.dispatchEvent(new Event('input', { bubbles: true })); } } });
-    await fp.waitForSelector('.player .won', { timeout: 10000 }).catch(() => problems.push(tag + ': the bet cannot be won with both dials'));
-    /* Cray's bet: the ox alone and the chickens alone fail; one chip with both wins */
-    await fp.goto(base + 'index.html#/do/oxen');
-    await fp.waitForSelector('[data-guess-ox]', { timeout: 30000 }).catch(() => problems.push(tag + ': the oxen bet does not ask for a guess first'));
-    await fp.evaluate(() => { const b = document.querySelector('[data-guess-ox="2"]'); if (b) b.click(); });
-    await fp.waitForSelector('.oxplan', { timeout: 10000 }).catch(() => problems.push(tag + ': the oxen bet does not draw its chip'));
-    await fp.evaluate(() => { for (const [k, v] of [['ox', 6], ['hens', 6]]) { const r = document.querySelector('[data-bet="' + k + '"]'); if (r) { r.value = v; r.dispatchEvent(new Event('input', { bubbles: true })); } } });
-    await fp.waitForSelector('.player .won', { timeout: 10000 }).catch(() => problems.push(tag + ': the oxen bet cannot be won with an ox and chickens'));
-    /* the pieces' bet: split and untested sinks packages; split and tested wins */
-    await fp.goto(base + 'index.html#/do/onebad');
-    await fp.waitForSelector('[data-guess-pc]', { timeout: 30000 }).catch(() => problems.push(tag + ': the pieces bet does not ask for a guess first'));
-    await fp.evaluate(() => { const b = document.querySelector('[data-guess-pc="1"]'); if (b) b.click(); });
-    await fp.waitForSelector('.packs', { timeout: 10000 }).catch(() => problems.push(tag + ': the pieces bet does not draw its packages'));
-    await fp.evaluate(() => { for (const [k, v] of [['k', 2], ['test', 2]]) { const r = document.querySelector('[data-bet="' + k + '"]'); if (r) { r.value = v; r.dispatchEvent(new Event('input', { bubbles: true })); } } });
-    await fp.waitForSelector('.player .won', { timeout: 10000 }).catch(() => problems.push(tag + ': the pieces bet cannot be won by splitting and testing'));
-    /* the proof's bet, at the bench: prove the arithmetic, test the rest */
-    await fp.goto(base + 'index.html#/do/prove');
-    await fp.waitForSelector('[data-guess-pv]', { timeout: 30000 }).catch(() => problems.push(tag + ': the proof bet does not ask for a guess first'));
-    await fp.evaluate(() => { const b = document.querySelector('[data-guess-pv="1"]'); if (b) b.click(); });
-    await fp.waitForSelector('.pblocks [data-prove]', { timeout: 10000 }).catch(() => problems.push(tag + ': the proof bet does not show its blocks'));
-    await fp.evaluate(() => { for (const i of [5, 6, 7]) { const b = document.querySelector('[data-prove="' + i + '"]'); if (b) b.click(); } const r = document.querySelector('[data-bet="tests"]'); if (r) { r.value = 5; r.dispatchEvent(new Event('input', { bubbles: true })); } });
-    await fp.waitForSelector('.player .won', { timeout: 10000 }).catch(() => problems.push(tag + ': the proof bet cannot be won by proving the arithmetic'));
-    /* Jevons' bet, on the power island: a better chip alone draws more turbines; under a limit on its power it holds. The
-       island is far, and the sheet may be drawn again when the flight lands: each poll guesses and turns the dials anew */
-    await fp.goto(base + 'index.html#/do/jevons');
-    await fp.waitForSelector('[data-guess-jv]', { timeout: 120000 }).catch(() => problems.push(tag + ': the Jevons bet does not ask for a guess first'));
-    const dials = (D, sel) => fp.waitForFunction(([D, sel]) => { const g = document.querySelector('[data-guess-jv="2"]'); if (g) g.click();
-      for (const [k, v] of D) { const r = document.querySelector('#sheet [data-bet="' + k + '"]'); if (r && r.value !== String(v)) { r.value = v; r.dispatchEvent(new Event('input', { bubbles: true })); } }
-      return !!document.querySelector(sel); }, [D, sel], { timeout: 30000, polling: 1000 });
-    await dials([['eff', 3], ['cap', 6]], '#sheet .turbines .tb.more').catch(() => problems.push(tag + ': a better chip alone does not draw turbines beyond the island'));
-    await dials([['eff', 4], ['cap', 1]], '#sheet .player .won').catch(() => problems.push(tag + ': the Jevons bet cannot be won with a better chip and a limit on power'));
-    /* the batch bet, at the data centre's chip: many people and fewer bits keep each fast and the chip busy */
-    await fp.goto(base + 'index.html#/do/batch');
-    await fp.waitForSelector('[data-guess-bt]', { timeout: 60000 }).catch(() => problems.push(tag + ': the batch bet does not ask for a guess first'));
-    await fp.waitForFunction(() => { const g = document.querySelector('[data-guess-bt="2"]'); if (g) g.click();
-      for (const [k, v] of [['batch', 9], ['format', 2]]) { const r = document.querySelector('[data-bet="' + k + '"]'); if (r && r.value !== String(v)) { r.value = v; r.dispatchEvent(new Event('input', { bubbles: true })); } }
-      return !!document.querySelector('.player .won'); }, null, { timeout: 30000, polling: 1000 }).catch(() => problems.push(tag + ': the batch bet cannot be won with many people and fewer bits'));
-    /* Look inside, at the phone's board: open five products, count the leading-edge kinds; the right chip for the job */
-    await fp.goto(base + 'index.html#/do/newest');
-    await fp.waitForSelector('[data-td-open]', { timeout: 60000 }).catch(() => problems.push(tag + ': Look inside does not offer its products'));
-    await fp.evaluate(() => { for (const id of ['phone', 'car', 'thermo', 'laptop', 'server']) { const b = document.querySelector('[data-td-open="' + id + '"]'); if (b) b.click(); } const i = document.querySelector('[data-td-count]'); if (i) i.value = 7; const c = document.querySelector('[data-td-check]'); if (c) c.click(); });
-    await fp.waitForSelector('.player .won', { timeout: 10000 }).catch(() => problems.push(tag + ': counting the leading-edge kinds right does not win Look inside'));
-    await fp.goto(base + 'index.html#/do/jobs');
-    await fp.waitForSelector('[data-fit-kind]', { timeout: 60000 }).catch(() => problems.push(tag + ': the right chip for the job does not show its chips'));
-    await fp.evaluate(() => { for (const [i, k] of [[0, 'cpu'], [1, 'mcu'], [2, 'gpu'], [3, 'asic'], [4, 'asic'], [5, 'fpga'], [6, 'dsp'], [7, 'power']]) { const j = document.querySelector('[data-fit-job="' + i + '"]'); if (j) j.click(); const b = document.querySelector('[data-fit-kind="' + k + '"]'); if (b) b.click(); } });
-    await fp.waitForSelector('.player .won', { timeout: 10000 }).catch(() => problems.push(tag + ': eight best fits do not win the right chip for the job'));
-    /* Evolve a circuit, at the studio's gates: evolution finds a voter smaller than the person's */
-    await fp.goto(base + 'index.html#/do/evolve');
-    await fp.waitForSelector('[data-ev-go]', { timeout: 60000 }).catch(() => problems.push(tag + ': Evolve a circuit does not offer to evolve'));
-    /* start it, and start it again if the sheet was drawn anew when the flight landed */
-    await fp.waitForFunction(() => { const b = document.querySelector('[data-ev-go]'); if (b && !b.dataset.ran) { b.dataset.ran = '1'; b.click(); } return !!document.querySelector('.player .won'); }, null, { timeout: 90000, polling: 2000 }).catch(() => problems.push(tag + ': evolution does not beat the person\'s voter'));
-    /* Grow a crystal, at the quarry's first step: the autopilot grows a dislocation-free ingot */
-    await fp.goto(base + 'index.html#/do/crystal');
-    await fp.waitForSelector('[data-cz-go]', { timeout: 60000 }).catch(() => problems.push(tag + ': Grow a crystal does not offer to start'));
-    await fp.evaluate(() => { for (const s of ['[data-cz-auto]', '[data-cz-fast]', '[data-cz-go]']) { const b = document.querySelector(s); if (b) b.click(); } });
-    await fp.waitForSelector('.player .won', { timeout: 120000 }).catch(() => problems.push(tag + ': the autopilot does not grow a perfect crystal'));
-    /* the factory's labs: each is played to its win; a poll does every move again, as the sheet may be drawn anew
-       when the flight lands. SET sets a dial the way a person drags it. */
-    const SET = "const SET = (q, v) => { const i = document.querySelector(q); if (i) { i.value = v; i.dispatchEvent(new Event('input', { bubbles: true })); } }, CL = q => { const b = document.querySelector(q); if (b) b.click(); };";
-    const playLab = async (id, moves, what, wait = 90000) => {
-      await fp.goto(base + 'index.html#/do/' + id);
-      /* this challenge's own card (data-ch): the card of the lab before stays up until the new one is drawn */
-      await fp.waitForSelector('.player[data-ch="' + id + '"]', { timeout: 60000 }).catch(() => problems.push(tag + ': ' + what + ' does not open'));
-      /* polled from here: waitForFunction does not wait for an async predicate (its promise counts as true at once),
-         so it would pass without a win; evaluate does wait */
-      const play = new Function('return (async () => { ' + SET + moves + '; return !!document.querySelector(\'.player[data-ch="' + id + '"] .won\'); })()'), until = Date.now() + wait;
-      let won = false;
-      while (!won && Date.now() < until) { won = await fp.evaluate(play).catch(() => false); if (!won) await fp.waitForTimeout(3000); }
-      if (!won) problems.push(tag + ': ' + what + ' is not won by the moves that win it');
-    };
-    /* serving a language model, at the data centre: four bits despite outliers, where an answer's energy goes, read fast and write slow */
-    await playLab('quantize', "CL('[data-sq-format=\"fp4\"]:not([aria-pressed=\"true\"])'); CL('[data-sq-scale=\"nv16\"]:not([aria-pressed=\"true\"])'); SET('#sq-outliers', 1)", 'Four bits, despite outliers');
-    await playLab('token-energy', "SET('#se-watts', 2300); SET('#se-tokExp', 3.9); SET('#se-pue', 1.05); SET('#se-overhead', 10); SET('#se-tokExp', 4.5)", 'Where an answer\'s energy goes');
-    await playLab('prefill', "CL('[data-sp-chip=\"rubin\"]:not([aria-pressed=\"true\"])'); CL('[data-sp-model=\"70\"]:not([aria-pressed=\"true\"])'); CL('[data-sp-answer=\"270\"]:not([aria-pressed=\"true\"])'); SET('#sp-prompt', 929)", 'Read fast, write slow');
-    await playLab('furnace', "CL('[data-im-ion=\"B\"]'); SET('#im-le', 0.3); CL('[data-im-anneal=\"furnace\"]'); CL('[data-im-anneal=\"laser\"]')", 'The furnace spreads it');
-    await playLab('shallow', "CL('[data-im-ion=\"As\"]'); SET('#im-le', 0.3); CL('[data-im-anneal=\"laser\"]')", 'Shallow and switched on');
-    await playLab('vias', "SET('#ov-shift', 0); SET('#ov-sigma', 0.65); SET('#ov-shift', 2)", 'Ten billion vias');
-    /* chips that touch the real world (#220): the heartbeat inside its budget, the edge where the bearing's tone is lost, and a regulator for each of four jobs (a wrong one first, then the best) */
-    await playLab('sig-heart', "SET('#ana-rate', 10)", 'A heartbeat on a coin cell');
-    await playLab('sig-bearing', "SET('#ana-rate', 14); SET('#ana-rate', 15)", 'Hear the failing bearing');
-    await playLab('reg-jobs', "for (const [j, a, b] of [['wearable', 'ldo', 'buck'], ['cpu', 'ldo', 'buck'], ['adc', 'buck', 'both'], ['nearly', 'buck', 'ldo']]) { CL('[data-reg-job=\"' + j + '\"]'); CL('[data-reg-type=\"' + a + '\"]'); CL('[data-reg-type=\"' + b + '\"]'); }", 'Four jobs, four regulators');
-    await playLab('euv-1000', "SET('#eu-power', 1000); SET('#eu-reflect', 0.72); SET('#eu-mirrors', 8); SET('#eu-dose', 15)", 'The 1,000-watt source');
-    /* every scanner at its finest: the engine finds the setting, the person's dials are set to it */
-    /* new ways to compute: the cheapest converter of a grid of memory cells, and a quantum search stepped past its peak */
-    await playLab('cim', "SET('#cim-w', 8); SET('#cim-n', 0.03); SET('#cim-adc', 7)", 'Fewest bits that still work');
-    await playLab('grover', "SET('#grv-noise', -4); const gk = document.querySelector('[data-grv-k]'); if (gk && +gk.dataset.grvK < 3) CL('[data-grv-step]')", 'One step too many');
-    await playLab('litho-finest', "const X = await import(new URL('src/engines/litho.js', location.href).href); for (const s of X.SOURCES) { const f = X.finestHalfPitch(s.id); let pick = null;"
-      + " for (const dp of [false, true]) for (const illum of ['dipole', 'conventional']) for (let v = 0; v <= 1000 && !pick; v++) { const r = X.litho({ src: s.id, na: X.naOf(s, 9), hp: X.hpOfSlider(v), dose: 0.86, illum, dp }); if (r.status !== 'bad' && r.hp <= f * 1.1) pick = { v, illum, dp }; }"
-      + " if (!pick) continue; CL('[data-lt-src=\"' + s.id + '\"]'); CL('[data-lt-illum=\"' + pick.illum + '\"]'); const d = document.querySelector('[data-lt-dp]'); if (d && (d.getAttribute('aria-pressed') === 'true') !== pick.dp) d.click();"
-      + " SET('#lt-na', 9); SET('#lt-hp', pick.v); }", 'Print the finest lines');
-    /* the films labs run in time: start a run, go on if it was paused, start again if it ended short of the goal */
-    const GO = "const g = document.querySelector('[data-fl-go]'), st = g ? g.dataset.flState : '';";
-    await playLab('etch', GO + " if (st === 'ready') { SET('#fl-ions', 100); SET('#fl-chem', 0); const f = document.querySelector('[data-fl-fast]'); if (f && f.getAttribute('aria-pressed') !== 'true') f.click(); CL('[data-fl-go]'); }"
-      + " else if (st === 'ended') CL('[data-fl-reset]'); else if (st === 'paused') CL('[data-fl-go]')", 'Etch straight down', 180000);
-    await playLab('bottom', GO + " const m = document.querySelector('[data-fl-mode].on'), mode = m ? m.dataset.flMode : 'cvd';"
-      + " if (st === 'ended') { if (mode === 'cvd') CL('[data-fl-mode=\"ald\"]'); else CL('[data-fl-reset]'); } else if (st === 'ready' || st === 'paused') CL('[data-fl-go]')", 'The bare bottom', 180000);
-    /* too hot for silicon, at the switch: the heater is set to 600 K and the silicon warms through the crossing */
-    await playLab('too-hot', "SET('#semi-T', 600)", 'Too hot for silicon');
-    /* Build your own AI chip: the data-centre brief, met by stacked memory on an interposer, 4-bit weights, more math and a faster clock, then taped out */
-    await playLab('ai-chip', "CL('[data-aib-brief=\"infer\"]'); CL('[data-aib-set=\"mem:h4\"]'); SET('#aib-memN', 6); CL('[data-aib-set=\"pkg:cs\"]'); CL('[data-aib-set=\"fp4:true\"]'); SET('#aib-area', 863); SET('#aib-f', 2); CL('[data-aib-tape]')", 'Build your own AI chip');
-    /* the clock and the power: the dials at a point the engine's check accepts; the counter is run at the same place on its
-       dial at one process after another, and a run in progress is left to finish */
-    await playLab('power-curve', "SET('#ckp-f', 2.25); SET('#ckp-v', 0.61)", 'Half the power');
-    await playLab('counter', "const n = ['130', '28'].find(k => !document.querySelector('[data-ckp-node=\"' + k + '\"][data-top]'));"
-      + " if (n && !document.querySelector('[data-ckp-run][aria-pressed=\"true\"]')) { CL('[data-ckp-node=\"' + n + '\"]'); SET('#ckp-hz', 61); CL('[data-ckp-run]'); }", 'The counter that fails', 180000);
-    /* Verify the agent, at the Lab: a tool checks a case, and eight right calls win */
-    await fp.goto(base + 'index.html#/do/agent');
-    await fp.waitForSelector('#sheet .agcases [data-ag-case]', { timeout: 60000 }).catch(() => problems.push(tag + ': Verify the agent does not show its cases'));
-    await fp.waitForFunction(() => { const b = document.querySelector('#sheet [data-ag-run]'); if (b) b.click(); return !!document.querySelector('#sheet .agtt tr.bad'); }, null, { timeout: 30000, polling: 1500 }).catch(() => problems.push(tag + ': checking every input does not find the equality checker\'s wrong rows'));
-    /* the sheet may be drawn again when the flight lands: each poll makes every call that is still missing */
-    await fp.waitForFunction(() => { const calls = [['eq', 0], ['maj'], ['sum', 0], ['mul'], ['yield', 0], ['roof', 0], ['fact', 0], ['cov', 0]], c = s => { const e = document.querySelector('#sheet ' + s); if (e) e.click(); };
-      for (const [id, r] of calls) { c('[data-ag-case="' + id + '"]'); if (document.querySelector('#sheet .agverdict.good')) continue; c('[data-ag-redo]'); if (r == null) c('[data-ag-trust]'); else { c('[data-ag-reject]'); c('[data-ag-reason="' + r + '"]'); } }
-      return !!document.querySelector('#sheet .player .won'); }, null, { timeout: 30000, polling: 1500 }).catch(() => problems.push(tag + ': eight right calls do not win Verify the agent'));
+{ const fp = await browser3d.newPage({ viewport: { width: 1280, height: 800 } });
+  fp.on('pageerror', e => problems.push(tag + ' (seams): ' + e.message));
+  await fp.goto(base + 'index.html#/line/test'); await fp.waitForTimeout(9000);
+  await fp.evaluate(() => { location.hash = '#/line/pkg'; });
+  await fp.waitForFunction(() => { const s = document.querySelector('.seamnote'); return !!s && !s.hidden && !!s.querySelector('[data-field="package"]'); }, null, { timeout: 30000 }).catch(() => problems.push(tag + ': crossing a seam does not raise its leak'));
+  await fp.evaluate(() => { const b = document.querySelector('.seamnote [data-field]'); if (b) b.click(); });
+  await fp.waitForSelector('.fieldx', { timeout: 10000 }).catch(() => problems.push(tag + ': a question from the field does not open its card'));
+  /* What if? between the islands: a scenario moves the levers, the change lands on other islands, and one of
+     them shows the chain back to the lever */
+  await fp.goto(base + 'index.html#/whatif');
+  await fp.waitForSelector('#sheet .wflevers [data-wf-lever]', { timeout: 120000 }).catch(() => problems.push(tag + ': What if? does not show its levers'));
+  await fp.evaluate(() => { const b = document.querySelector('[data-wf-preset="squeeze"]'); if (b) b.click(); });
+  await fp.waitForFunction(() => document.querySelectorAll('#sheet .wfland').length >= 5, null, { timeout: 15000 }).catch(() => problems.push(tag + ': the memory squeeze does not reach the other islands'));
+  await fp.evaluate(() => { const b = document.querySelector('#sheet [data-wf-pick="phones"]'); if (b) b.click(); });
+  await fp.evaluate(() => { const b = document.querySelector('#sheet [data-wf-ind="devprice"]'); if (b) b.click(); });
+  await fp.waitForFunction(() => document.querySelectorAll('#sheet .wfchain li').length >= 3, null, { timeout: 10000 }).catch(() => problems.push(tag + ': a change on the phones does not trace back to its lever'));
+  await fp.evaluate(() => { location.hash = '#/'; });
+  await fp.waitForFunction(() => !document.querySelector('#mapLabels .wf3') || [...document.querySelectorAll('#mapLabels .wf3')].every(e => e.style.opacity === '0'), null, { timeout: 10000 }).catch(() => problems.push(tag + ': What if? stays on the island after leaving it'));
     await fp.close(); }
-    /* What if? between the islands: a scenario moves the levers, the change lands on other islands, and one of
-       them shows the chain back to the lever */
-    await fp.goto(base + 'index.html#/whatif');
-    await fp.waitForSelector('#sheet .wflevers [data-wf-lever]', { timeout: 120000 }).catch(() => problems.push(tag + ': What if? does not show its levers'));
-    await fp.evaluate(() => { const b = document.querySelector('[data-wf-preset="squeeze"]'); if (b) b.click(); });
-    await fp.waitForFunction(() => document.querySelectorAll('#sheet .wfland').length >= 5, null, { timeout: 15000 }).catch(() => problems.push(tag + ': the memory squeeze does not reach the other islands'));
-    await fp.evaluate(() => { const b = document.querySelector('#sheet [data-wf-pick="phones"]'); if (b) b.click(); });
-    await fp.evaluate(() => { const b = document.querySelector('#sheet [data-wf-ind="devprice"]'); if (b) b.click(); });
-    await fp.waitForFunction(() => document.querySelectorAll('#sheet .wfchain li').length >= 3, null, { timeout: 10000 }).catch(() => problems.push(tag + ': a change on the phones does not trace back to its lever'));
-    await fp.evaluate(() => { location.hash = '#/'; });
-    await fp.waitForFunction(() => !document.querySelector('#mapLabels .wf3') || [...document.querySelectorAll('#mapLabels .wf3')].every(e => e.style.opacity === '0'), null, { timeout: 10000 }).catch(() => problems.push(tag + ': What if? stays on the island after leaving it'));
-    await fp.close(); }
+};
+
+run['labs'] = async () => {
+  /* the labs and bets are played on a flat page of their own: none needs the 3D world, and on a CI machine's software
+     renderer the flights between islands take long enough to redraw a card while it is played, which made these
+     checks pass or fail by chance. A fresh visitor again (its own storage). */
+  { const tag = 'labs', fp = await browser.newPage({ viewport: { width: 1280, height: 800 } });
+  fp.on('pageerror', e => problems.push(tag + ': ' + e.message));
+  /* a file the labs ask for and do not get is named, so a 404 never goes untraced */
+  fp.on('response', r => { if (r.status() >= 400) problems.push(tag + ': ' + r.status() + ' for ' + r.url()); });
+  await fp.addInitScript(() => { localStorage.setItem('osl-quality', 'flat'); localStorage.setItem('osl-hints-v1', JSON.stringify({ seen: {}, off: true })); });
+  /* a bet is played: guess first, then the two dials find the balance (src/engines/bet.js) */
+  await fp.goto(base + 'index.html#/do/cheaper');
+  await fp.waitForSelector('[data-guess-size]', { timeout: 30000 }).catch(() => problems.push(tag + ': the bet does not ask for a guess first'));
+  await fp.evaluate(() => { const b = document.querySelector('[data-guess-size="6"]'); if (b) b.click(); });
+  await fp.waitForSelector('.betwafer', { timeout: 10000 }).catch(() => problems.push(tag + ': the bet does not show its wafer'));
+  await fp.evaluate(() => { for (const [k, v] of [['size', 6], ['clean', 2]]) { const r = document.querySelector('[data-bet="' + k + '"]'); if (r) { r.value = v; r.dispatchEvent(new Event('input', { bubbles: true })); } } });
+  await fp.waitForSelector('.player .won', { timeout: 10000 }).catch(() => problems.push(tag + ': the bet cannot be won with both dials'));
+  /* Cray's bet: the ox alone and the chickens alone fail; one chip with both wins */
+  await fp.goto(base + 'index.html#/do/oxen');
+  await fp.waitForSelector('[data-guess-ox]', { timeout: 30000 }).catch(() => problems.push(tag + ': the oxen bet does not ask for a guess first'));
+  await fp.evaluate(() => { const b = document.querySelector('[data-guess-ox="2"]'); if (b) b.click(); });
+  await fp.waitForSelector('.oxplan', { timeout: 10000 }).catch(() => problems.push(tag + ': the oxen bet does not draw its chip'));
+  await fp.evaluate(() => { for (const [k, v] of [['ox', 6], ['hens', 6]]) { const r = document.querySelector('[data-bet="' + k + '"]'); if (r) { r.value = v; r.dispatchEvent(new Event('input', { bubbles: true })); } } });
+  await fp.waitForSelector('.player .won', { timeout: 10000 }).catch(() => problems.push(tag + ': the oxen bet cannot be won with an ox and chickens'));
+  /* the pieces' bet: split and untested sinks packages; split and tested wins */
+  await fp.goto(base + 'index.html#/do/onebad');
+  await fp.waitForSelector('[data-guess-pc]', { timeout: 30000 }).catch(() => problems.push(tag + ': the pieces bet does not ask for a guess first'));
+  await fp.evaluate(() => { const b = document.querySelector('[data-guess-pc="1"]'); if (b) b.click(); });
+  await fp.waitForSelector('.packs', { timeout: 10000 }).catch(() => problems.push(tag + ': the pieces bet does not draw its packages'));
+  await fp.evaluate(() => { for (const [k, v] of [['k', 2], ['test', 2]]) { const r = document.querySelector('[data-bet="' + k + '"]'); if (r) { r.value = v; r.dispatchEvent(new Event('input', { bubbles: true })); } } });
+  await fp.waitForSelector('.player .won', { timeout: 10000 }).catch(() => problems.push(tag + ': the pieces bet cannot be won by splitting and testing'));
+  /* the proof's bet, at the bench: prove the arithmetic, test the rest */
+  await fp.goto(base + 'index.html#/do/prove');
+  await fp.waitForSelector('[data-guess-pv]', { timeout: 30000 }).catch(() => problems.push(tag + ': the proof bet does not ask for a guess first'));
+  await fp.evaluate(() => { const b = document.querySelector('[data-guess-pv="1"]'); if (b) b.click(); });
+  await fp.waitForSelector('.pblocks [data-prove]', { timeout: 10000 }).catch(() => problems.push(tag + ': the proof bet does not show its blocks'));
+  await fp.evaluate(() => { for (const i of [5, 6, 7]) { const b = document.querySelector('[data-prove="' + i + '"]'); if (b) b.click(); } const r = document.querySelector('[data-bet="tests"]'); if (r) { r.value = 5; r.dispatchEvent(new Event('input', { bubbles: true })); } });
+  await fp.waitForSelector('.player .won', { timeout: 10000 }).catch(() => problems.push(tag + ': the proof bet cannot be won by proving the arithmetic'));
+  /* Jevons' bet, on the power island: a better chip alone draws more turbines; under a limit on its power it holds. The
+     island is far, and the sheet may be drawn again when the flight lands: each poll guesses and turns the dials anew */
+  await fp.goto(base + 'index.html#/do/jevons');
+  await fp.waitForSelector('[data-guess-jv]', { timeout: 120000 }).catch(() => problems.push(tag + ': the Jevons bet does not ask for a guess first'));
+  const dials = (D, sel) => fp.waitForFunction(([D, sel]) => { const g = document.querySelector('[data-guess-jv="2"]'); if (g) g.click();
+    for (const [k, v] of D) { const r = document.querySelector('#sheet [data-bet="' + k + '"]'); if (r && r.value !== String(v)) { r.value = v; r.dispatchEvent(new Event('input', { bubbles: true })); } }
+    return !!document.querySelector(sel); }, [D, sel], { timeout: 30000, polling: 1000 });
+  await dials([['eff', 3], ['cap', 6]], '#sheet .turbines .tb.more').catch(() => problems.push(tag + ': a better chip alone does not draw turbines beyond the island'));
+  await dials([['eff', 4], ['cap', 1]], '#sheet .player .won').catch(() => problems.push(tag + ': the Jevons bet cannot be won with a better chip and a limit on power'));
+  /* the batch bet, at the data centre's chip: many people and fewer bits keep each fast and the chip busy */
+  await fp.goto(base + 'index.html#/do/batch');
+  await fp.waitForSelector('[data-guess-bt]', { timeout: 60000 }).catch(() => problems.push(tag + ': the batch bet does not ask for a guess first'));
+  await fp.waitForFunction(() => { const g = document.querySelector('[data-guess-bt="2"]'); if (g) g.click();
+    for (const [k, v] of [['batch', 9], ['format', 2]]) { const r = document.querySelector('[data-bet="' + k + '"]'); if (r && r.value !== String(v)) { r.value = v; r.dispatchEvent(new Event('input', { bubbles: true })); } }
+    return !!document.querySelector('.player .won'); }, null, { timeout: 30000, polling: 1000 }).catch(() => problems.push(tag + ': the batch bet cannot be won with many people and fewer bits'));
+  /* Look inside, at the phone's board: open five products, count the leading-edge kinds; the right chip for the job */
+  await fp.goto(base + 'index.html#/do/newest');
+  await fp.waitForSelector('[data-td-open]', { timeout: 60000 }).catch(() => problems.push(tag + ': Look inside does not offer its products'));
+  await fp.evaluate(() => { for (const id of ['phone', 'car', 'thermo', 'laptop', 'server']) { const b = document.querySelector('[data-td-open="' + id + '"]'); if (b) b.click(); } const i = document.querySelector('[data-td-count]'); if (i) i.value = 7; const c = document.querySelector('[data-td-check]'); if (c) c.click(); });
+  await fp.waitForSelector('.player .won', { timeout: 10000 }).catch(() => problems.push(tag + ': counting the leading-edge kinds right does not win Look inside'));
+  await fp.goto(base + 'index.html#/do/jobs');
+  await fp.waitForSelector('[data-fit-kind]', { timeout: 60000 }).catch(() => problems.push(tag + ': the right chip for the job does not show its chips'));
+  await fp.evaluate(() => { for (const [i, k] of [[0, 'cpu'], [1, 'mcu'], [2, 'gpu'], [3, 'asic'], [4, 'asic'], [5, 'fpga'], [6, 'dsp'], [7, 'power']]) { const j = document.querySelector('[data-fit-job="' + i + '"]'); if (j) j.click(); const b = document.querySelector('[data-fit-kind="' + k + '"]'); if (b) b.click(); } });
+  await fp.waitForSelector('.player .won', { timeout: 10000 }).catch(() => problems.push(tag + ': eight best fits do not win the right chip for the job'));
+  /* Evolve a circuit, at the studio's gates: evolution finds a voter smaller than the person's */
+  await fp.goto(base + 'index.html#/do/evolve');
+  await fp.waitForSelector('[data-ev-go]', { timeout: 60000 }).catch(() => problems.push(tag + ': Evolve a circuit does not offer to evolve'));
+  /* start it, and start it again if the sheet was drawn anew when the flight landed */
+  await fp.waitForFunction(() => { const b = document.querySelector('[data-ev-go]'); if (b && !b.dataset.ran) { b.dataset.ran = '1'; b.click(); } return !!document.querySelector('.player .won'); }, null, { timeout: 90000, polling: 2000 }).catch(() => problems.push(tag + ': evolution does not beat the person\'s voter'));
+  /* Grow a crystal, at the quarry's first step: the autopilot grows a dislocation-free ingot */
+  await fp.goto(base + 'index.html#/do/crystal');
+  await fp.waitForSelector('[data-cz-go]', { timeout: 60000 }).catch(() => problems.push(tag + ': Grow a crystal does not offer to start'));
+  await fp.evaluate(() => { for (const s of ['[data-cz-auto]', '[data-cz-fast]', '[data-cz-go]']) { const b = document.querySelector(s); if (b) b.click(); } });
+  await fp.waitForSelector('.player .won', { timeout: 120000 }).catch(() => problems.push(tag + ': the autopilot does not grow a perfect crystal'));
+  /* the factory's labs: each is played to its win; a poll does every move again, as the sheet may be drawn anew
+     when the flight lands. SET sets a dial the way a person drags it. */
+  const SET = "const SET = (q, v) => { const i = document.querySelector(q); if (i) { i.value = v; i.dispatchEvent(new Event('input', { bubbles: true })); } }, CL = q => { const b = document.querySelector(q); if (b) b.click(); };";
+  const playLab = async (id, moves, what, wait = 90000) => {
+    await fp.goto(base + 'index.html#/do/' + id);
+    /* this challenge's own card (data-ch): the card of the lab before stays up until the new one is drawn */
+    await fp.waitForSelector('.player[data-ch="' + id + '"]', { timeout: 60000 }).catch(() => problems.push(tag + ': ' + what + ' does not open'));
+    /* polled from here: waitForFunction does not wait for an async predicate (its promise counts as true at once),
+       so it would pass without a win; evaluate does wait */
+    const play = new Function('return (async () => { ' + SET + moves + '; return !!document.querySelector(\'.player[data-ch="' + id + '"] .won\'); })()'), until = Date.now() + wait;
+    let won = false;
+    while (!won && Date.now() < until) { won = await fp.evaluate(play).catch(() => false); if (!won) await fp.waitForTimeout(3000); }
+    if (!won) problems.push(tag + ': ' + what + ' is not won by the moves that win it');
+  };
+  /* serving a language model, at the data centre: four bits despite outliers, where an answer's energy goes, read fast and write slow */
+  await playLab('quantize', "CL('[data-sq-format=\"fp4\"]:not([aria-pressed=\"true\"])'); CL('[data-sq-scale=\"nv16\"]:not([aria-pressed=\"true\"])'); SET('#sq-outliers', 1)", 'Four bits, despite outliers');
+  await playLab('token-energy', "SET('#se-watts', 2300); SET('#se-tokExp', 3.9); SET('#se-pue', 1.05); SET('#se-overhead', 10); SET('#se-tokExp', 4.5)", 'Where an answer\'s energy goes');
+  await playLab('prefill', "CL('[data-sp-chip=\"rubin\"]:not([aria-pressed=\"true\"])'); CL('[data-sp-model=\"70\"]:not([aria-pressed=\"true\"])'); CL('[data-sp-answer=\"270\"]:not([aria-pressed=\"true\"])'); SET('#sp-prompt', 929)", 'Read fast, write slow');
+  await playLab('furnace', "CL('[data-im-ion=\"B\"]'); SET('#im-le', 0.3); CL('[data-im-anneal=\"furnace\"]'); CL('[data-im-anneal=\"laser\"]')", 'The furnace spreads it');
+  await playLab('shallow', "CL('[data-im-ion=\"As\"]'); SET('#im-le', 0.3); CL('[data-im-anneal=\"laser\"]')", 'Shallow and switched on');
+  await playLab('vias', "SET('#ov-shift', 0); SET('#ov-sigma', 0.65); SET('#ov-shift', 2)", 'Ten billion vias');
+  /* chips that touch the real world (#220): the heartbeat inside its budget, the edge where the bearing's tone is lost, and a regulator for each of four jobs (a wrong one first, then the best) */
+  await playLab('sig-heart', "SET('#ana-rate', 10)", 'A heartbeat on a coin cell');
+  await playLab('sig-bearing', "SET('#ana-rate', 14); SET('#ana-rate', 15)", 'Hear the failing bearing');
+  await playLab('reg-jobs', "for (const [j, a, b] of [['wearable', 'ldo', 'buck'], ['cpu', 'ldo', 'buck'], ['adc', 'buck', 'both'], ['nearly', 'buck', 'ldo']]) { CL('[data-reg-job=\"' + j + '\"]'); CL('[data-reg-type=\"' + a + '\"]'); CL('[data-reg-type=\"' + b + '\"]'); }", 'Four jobs, four regulators');
+  await playLab('euv-1000', "SET('#eu-power', 1000); SET('#eu-reflect', 0.72); SET('#eu-mirrors', 8); SET('#eu-dose', 15)", 'The 1,000-watt source');
+  /* every scanner at its finest: the engine finds the setting, the person's dials are set to it */
+  /* new ways to compute: the cheapest converter of a grid of memory cells, and a quantum search stepped past its peak */
+  await playLab('cim', "SET('#cim-w', 8); SET('#cim-n', 0.03); SET('#cim-adc', 7)", 'Fewest bits that still work');
+  await playLab('grover', "SET('#grv-noise', -4); const gk = document.querySelector('[data-grv-k]'); if (gk && +gk.dataset.grvK < 3) CL('[data-grv-step]')", 'One step too many');
+  await playLab('litho-finest', "const X = await import(new URL('src/engines/litho.js', location.href).href); for (const s of X.SOURCES) { const f = X.finestHalfPitch(s.id); let pick = null;"
+    + " for (const dp of [false, true]) for (const illum of ['dipole', 'conventional']) for (let v = 0; v <= 1000 && !pick; v++) { const r = X.litho({ src: s.id, na: X.naOf(s, 9), hp: X.hpOfSlider(v), dose: 0.86, illum, dp }); if (r.status !== 'bad' && r.hp <= f * 1.1) pick = { v, illum, dp }; }"
+    + " if (!pick) continue; CL('[data-lt-src=\"' + s.id + '\"]'); CL('[data-lt-illum=\"' + pick.illum + '\"]'); const d = document.querySelector('[data-lt-dp]'); if (d && (d.getAttribute('aria-pressed') === 'true') !== pick.dp) d.click();"
+    + " SET('#lt-na', 9); SET('#lt-hp', pick.v); }", 'Print the finest lines');
+  /* the films labs run in time: start a run, go on if it was paused, start again if it ended short of the goal */
+  const GO = "const g = document.querySelector('[data-fl-go]'), st = g ? g.dataset.flState : '';";
+  await playLab('etch', GO + " if (st === 'ready') { SET('#fl-ions', 100); SET('#fl-chem', 0); const f = document.querySelector('[data-fl-fast]'); if (f && f.getAttribute('aria-pressed') !== 'true') f.click(); CL('[data-fl-go]'); }"
+    + " else if (st === 'ended') CL('[data-fl-reset]'); else if (st === 'paused') CL('[data-fl-go]')", 'Etch straight down', 180000);
+  await playLab('bottom', GO + " const m = document.querySelector('[data-fl-mode].on'), mode = m ? m.dataset.flMode : 'cvd';"
+    + " if (st === 'ended') { if (mode === 'cvd') CL('[data-fl-mode=\"ald\"]'); else CL('[data-fl-reset]'); } else if (st === 'ready' || st === 'paused') CL('[data-fl-go]')", 'The bare bottom', 180000);
+  /* too hot for silicon, at the switch: the heater is set to 600 K and the silicon warms through the crossing */
+  await playLab('too-hot', "SET('#semi-T', 600)", 'Too hot for silicon');
+  /* Build your own AI chip: the data-centre brief, met by stacked memory on an interposer, 4-bit weights, more math and a faster clock, then taped out */
+  await playLab('ai-chip', "CL('[data-aib-brief=\"infer\"]'); CL('[data-aib-set=\"mem:h4\"]'); SET('#aib-memN', 6); CL('[data-aib-set=\"pkg:cs\"]'); CL('[data-aib-set=\"fp4:true\"]'); SET('#aib-area', 863); SET('#aib-f', 2); CL('[data-aib-tape]')", 'Build your own AI chip');
+  /* the clock and the power: the dials at a point the engine's check accepts; the counter is run at the same place on its
+     dial at one process after another, and a run in progress is left to finish */
+  await playLab('power-curve', "SET('#ckp-f', 2.25); SET('#ckp-v', 0.61)", 'Half the power');
+  await playLab('counter', "const n = ['130', '28'].find(k => !document.querySelector('[data-ckp-node=\"' + k + '\"][data-top]'));"
+    + " if (n && !document.querySelector('[data-ckp-run][aria-pressed=\"true\"]')) { CL('[data-ckp-node=\"' + n + '\"]'); SET('#ckp-hz', 61); CL('[data-ckp-run]'); }", 'The counter that fails', 180000);
+  /* Verify the agent, at the Lab: a tool checks a case, and eight right calls win */
+  await fp.goto(base + 'index.html#/do/agent');
+  await fp.waitForSelector('#sheet .agcases [data-ag-case]', { timeout: 60000 }).catch(() => problems.push(tag + ': Verify the agent does not show its cases'));
+  await fp.waitForFunction(() => { const b = document.querySelector('#sheet [data-ag-run]'); if (b) b.click(); return !!document.querySelector('#sheet .agtt tr.bad'); }, null, { timeout: 30000, polling: 1500 }).catch(() => problems.push(tag + ': checking every input does not find the equality checker\'s wrong rows'));
+  /* the sheet may be drawn again when the flight lands: each poll makes every call that is still missing */
+  await fp.waitForFunction(() => { const calls = [['eq', 0], ['maj'], ['sum', 0], ['mul'], ['yield', 0], ['roof', 0], ['fact', 0], ['cov', 0]], c = s => { const e = document.querySelector('#sheet ' + s); if (e) e.click(); };
+    for (const [id, r] of calls) { c('[data-ag-case="' + id + '"]'); if (document.querySelector('#sheet .agverdict.good')) continue; c('[data-ag-redo]'); if (r == null) c('[data-ag-trust]'); else { c('[data-ag-reject]'); c('[data-ag-reason="' + r + '"]'); } }
+    return !!document.querySelector('#sheet .player .won'); }, null, { timeout: 30000, polling: 1500 }).catch(() => problems.push(tag + ': eight right calls do not win Verify the agent'));
+  await fp.close(); }
+};
+
+run['search'] = async () => {
   /* something to do at a level (src/data/seek.js): the card says what to look for, a part tapped gives something to
      notice, the part that leads in lights the question, and finding it is kept in your log. A page of its own (a
      fresh visitor), since it moves between views; each tap is done again inside the poll, as the view may still be
@@ -583,6 +643,9 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
     await sp.waitForFunction(() => document.querySelectorAll('#page .seeklog .strand').length === 2, null, { timeout: 20000, polling: 1000 })
       .catch(() => problems.push(tag + ': your log does not keep what you found'));
     await sp.close(); }
+};
+
+run['ways'] = async () => {
   /* the ways on the picture (src/v2/frame.js): on the island, pointing at a building with an inside says so (a ring
      round it, Go inside over it); on the line, the next station is a button along the line (→), and a station with an
      inside has its way in (↓) with the machine ringed; each is the card's own control, mirrored */
@@ -624,26 +687,10 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
     for (let i = 0; i < 4 && !deeper; i++) { await swipe(); deeper = await pp.waitForFunction(() => location.hash === '#/dive/block', null, { timeout: 15000, polling: 500 }).then(() => true, () => false); }
     if (!deeper) problems.push(tag + ': a swipe up on the picture does not go a level in');
     await pp.close(); }
-  at = 'motion';
-  /* a page of its own, so its moves do not mix with the zooms counted below */
-  { const page = await browser3d.newPage({ viewport: { width: 1280, height: 800 } });
-    page.on('pageerror', e => problems.push(tag + ' (way in): ' + e.message));
-  /* the way in is on the picture (src/v2/frame.js): inside the data centre, the button over the scene goes one level
-     deeper, and at the chip, scrolling on carries the flight into it */
-    await page.goto(base + 'index.html#/place/datacentre/2');
-  await page.waitForFunction(() => { const b = document.querySelector('#placeui .wayin:not([hidden]) .wigo'); if (b && location.hash === '#/place/datacentre/2') b.click(); return location.hash === '#/place/datacentre/3'; }, null, { timeout: 150000, polling: 3000 }).catch(() => problems.push(tag + ': the way in on the picture does not go deeper in the data centre'));
-  await page.evaluate(() => { location.hash = '#/place/datacentre/5'; });
-  /* every arrival the page announces is kept, so a quick one is not missed between two polls */
-  await page.evaluate(() => { window.arrivals = []; new MutationObserver(() => { const a = document.documentElement.dataset.arrive; if (a) window.arrivals.push(a); }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-arrive'] }); });
-  await page.waitForFunction(() => { const c = document.getElementById('placeCanvas'); if (c && location.hash === '#/place/datacentre/5') { c.focus(); c.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true })); } return location.hash === '#/dive/chip'; }, null, { timeout: 90000, polling: 3000 }).catch(() => problems.push(tag + ': going on past the chip does not carry the flight into it'));
-  /* the chip you land on is the chip you saw: the dive's chip comes down from where the flight ended (data-arrive while
-     the camera moves), then rests with its names, the memory stacked beside it among them (a slow software renderer
-     may then keep the flat drawing: the names are shown in 3D on the page above) */
-  await page.waitForFunction(() => window.arrivals.includes('chip'), null, { timeout: 60000, polling: 500 })
-    .catch(() => problems.push(tag + ': the dive\'s chip does not come down from where the flight ended'));
-  await page.waitForFunction(() => !document.documentElement.dataset.arrive && !!document.querySelector('#l3-chip [data-part3="hbm"]'), null, { timeout: 60000, polling: 500 })
-    .catch(() => problems.push(tag + ': the dive\'s chip does not come to rest with the memory beside it'));
-    await page.close(); }
+};
+
+run['frame'] = async () => {
+  const tag = 'motion';
   /* how big it is here, and the ring on the way in, in every view (#231, #232, #234): a page of its own, as it moves
      between views. The layers of a chip stand in the free part of the picture, their names inside it and never under
      the card; each level on the rail says its size; the way in stands beside the next layer, the dive's next level and
@@ -676,6 +723,29 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
     await page.waitForFunction(() => { if (/#\/dive\/block$/.test(location.hash)) { const b = document.querySelector('#diveui .wayin:not([hidden]) .wigo'); if (b) b.click(); } return window.zooms.some(z => /times closer/.test(z)); }, null, { timeout: 90000, polling: 2000 })
       .catch(() => problems.push(tg + ': going deeper, the card does not say how many times closer'));
     await page.close(); }
+};
+
+run['flights'] = async () => {
+  const tag = 'motion';
+  /* a page of its own, so its moves do not mix with the zooms counted below */
+  { const page = await browser3d.newPage({ viewport: { width: 1280, height: 800 } });
+    page.on('pageerror', e => problems.push(tag + ' (way in): ' + e.message));
+  /* the way in is on the picture (src/v2/frame.js): inside the data centre, the button over the scene goes one level
+     deeper, and at the chip, scrolling on carries the flight into it */
+    await page.goto(base + 'index.html#/place/datacentre/2');
+  await page.waitForFunction(() => { const b = document.querySelector('#placeui .wayin:not([hidden]) .wigo'); if (b && location.hash === '#/place/datacentre/2') b.click(); return location.hash === '#/place/datacentre/3'; }, null, { timeout: 150000, polling: 3000 }).catch(() => problems.push(tag + ': the way in on the picture does not go deeper in the data centre'));
+  await page.evaluate(() => { location.hash = '#/place/datacentre/5'; });
+  /* every arrival the page announces is kept, so a quick one is not missed between two polls */
+  await page.evaluate(() => { window.arrivals = []; new MutationObserver(() => { const a = document.documentElement.dataset.arrive; if (a) window.arrivals.push(a); }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-arrive'] }); });
+  await page.waitForFunction(() => { const c = document.getElementById('placeCanvas'); if (c && location.hash === '#/place/datacentre/5') { c.focus(); c.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true })); } return location.hash === '#/dive/chip'; }, null, { timeout: 90000, polling: 3000 }).catch(() => problems.push(tag + ': going on past the chip does not carry the flight into it'));
+  /* the chip you land on is the chip you saw: the dive's chip comes down from where the flight ended (data-arrive while
+     the camera moves), then rests with its names, the memory stacked beside it among them (a slow software renderer
+     may then keep the flat drawing: the names are shown in 3D on the page above) */
+  await page.waitForFunction(() => window.arrivals.includes('chip'), null, { timeout: 60000, polling: 500 })
+    .catch(() => problems.push(tag + ': the dive\'s chip does not come down from where the flight ended'));
+  await page.waitForFunction(() => !document.documentElement.dataset.arrive && !!document.querySelector('#l3-chip [data-part3="hbm"]'), null, { timeout: 60000, polling: 500 })
+    .catch(() => problems.push(tag + ': the dive\'s chip does not come to rest with the memory beside it'));
+    await page.close(); }
   /* a phone is flown through like the data centre (src/v2/phone3d-flight.js): going inside the phone island opens the
      flight, the way in on the picture goes deeper, and going on past the chip carries the flight into the dive's phone
      chip, which comes down from where the flight ended */
@@ -690,16 +760,17 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
     await page.waitForFunction(() => { const c = document.getElementById('flyCanvas'); if (c && location.hash === '#/place/phones/3') { c.focus(); c.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true })); } return location.hash === '#/dive/soc/phone'; }, null, { timeout: 90000, polling: 3000 }).catch(() => problems.push(tag + ': going on past the phone\'s chip does not carry the flight into it'));
     await page.waitForFunction(() => window.arrivals.includes('soc'), null, { timeout: 60000, polling: 500 }).catch(() => problems.push(tag + ': the dive\'s phone chip does not come down from where the flight ended'));
     await page.close(); }
-  await page.goto(base + 'index.html#/dive/block');
-  /* the dive may still be making its view: Ask is chosen again until the block's questions show */
-  await page.waitForFunction(() => { if (document.querySelector('#diveui .fieldline[data-field="fetch"]')) return true; const b = document.querySelector('#diveui .modes3 [data-mode="ask"]'); if (b && b.getAttribute('aria-selected') !== 'true') b.click(); return false; }, null, { timeout: 30000, polling: 1000 })
-    .catch(() => problems.push(tag + ': Ask at the block does not list the questions from the field there'));
-  /* one stage: the island, the data centre, the chip, the board and the line's machines all draw with one renderer */
-  for (const h of ['#/place/datacentre/1', '#/chip/0', '#/board', '#/line/print', '#/']) { await page.evaluate(x => { location.hash = x; }, h); await page.waitForTimeout(2500); }
-  const gl = await page.evaluate(() => window.GL);
-  if (gl > 1) problems.push(tag + ': ' + gl + ' WebGL contexts; every 3D view should share the one stage');
-  await page.close();
+};
+
+/* the sections asked for, in order; each says how long it took, so the groups in CI can be balanced */
+const times = [];
+for (const [name] of SECTIONS) {
+  if (only && !only.includes(name)) continue;
+  at = name; const t0 = Date.now(), n0 = problems.length;
+  try { await run[name](); } catch (e) { problems.push(name + ': the section stopped: ' + (e.stack || e.message).split('\n').slice(0, 3).join(' | ')); }
+  const s = Math.round((Date.now() - t0) / 1000); times.push(name + ' ' + s + ' s');
+  console.log('Section ' + name + ': ' + s + ' s' + (problems.length > n0 ? ', ' + (problems.length - n0) + ' problem(s)' : ''));
 }
 await browser.close(); await browser3d.close(); server.close();
-if (problems.length) { console.error('Smoke test found problems:\n' + problems.join('\n')); process.exit(1); }
-console.log('Smoke test passed: the dive works in every world, and the redesign\'s island plays, on desktop and phone, in dark and light.');
+if (problems.length) { console.error('Smoke test found problems (' + times.join(', ') + '):\n' + problems.join('\n')); process.exit(1); }
+console.log((only ? 'Smoke test passed (' + only.join(', ') + '): ' : 'Smoke test passed: ') + 'the dive works in every world, and the redesign\'s island plays, on desktop and phone, in dark and light.');
