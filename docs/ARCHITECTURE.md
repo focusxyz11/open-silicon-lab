@@ -5,6 +5,18 @@ A static site: plain ES modules, one stylesheet and one file of words. No framew
 ```
 index.html              the site: the chip world (src/main2.js, src/v2/)
 classic.html            the earlier site's address, now leading to the chip world (the earlier site: branch claude/before-retire-2026-11)
+src/v2/app.js           the shell: routes in the address, the bar with the loop, the card, the views put in the frame
+src/v2/frame.js         the one frame on every view below the island: the rails, the levels, the card's Look · Do · Ask
+src/v2/game.js          the game as data and logic: the loop, the challenges, each place's doors, your state (tested)
+src/v2/map3d.js         the island: the loop road, the places, what grew, the islands across the sea
+src/v2/dc3d.js, phone3d-flight.js   the flights: the data centre and the phone, flown through to the chip
+src/v2/chip3d.js        inside a chip, layer by layer: the dive and the factory line as one stack
+src/v2/play.js, labs/   the challenge player, and the labs, one file each (docs/LABS.md)
+src/v2/kit3d.js         the one 3D stage, light, the two palettes, HTML labels at 3D points
+src/data/atlas.js       one home for every thing: each part, question, challenge and story by place and level (tested)
+src/data/places.js      the places and the levels inside each
+src/engines/way.js      the grid and the two moves: in and out, and along the loop (tested)
+src/engines/ledger.js   the community's ledger, replayed in order through the engines (tested)
 src/app/world.js        the zoom: draws the current, previous and next depths, highlights, dots, tether, input
 src/app/scenes.js       one scene per depth, drawn in a 1000 x 1000 space, with its named parts
 src/app/journey.js      the journey's stations as machines, the steps each plays with your wafer, your pod, the caption and slice
@@ -38,9 +50,13 @@ src/data/facts.json     sourced figures, loaded when a question's stop first sho
 src/core/i18n.js        words: t('name'), plurals, numbers, dates
 src/i18n/en.json        every word on screen
 src/styles/site.css     the styles, dark and light
-tests/                  node:test: the weave and the words
-scripts/                serve.mjs, smoke.mjs (browser test), i18n-check.mjs
+tests/                  node:test: the engines, the game, the atlas, the ledger, the weave and the words
+scripts/                serve.mjs, smoke.mjs (browser test, in sections), i18n-check.mjs, mcp.mjs (the open port), agent.mjs (an agent of your own)
+content/                the lab written from first principles, one document per open question, and the puzzles
+community/ledger/       the community's entries, one file each, never edited afterwards
 ```
+
+The tree above names the main files; every engine in `src/engines/` and lab in `src/v2/labs/` has a line of its own at the top of its file.
 
 ## The zoom
 
@@ -66,8 +82,8 @@ Every word on screen lives in `src/i18n/en.json` and is read with `t('name')`, i
 
 ## Checks
 
-- `npm test`: your chip's model (`tests/chip.test.mjs`), the chip world's game (`tests/game.test.mjs`), the weave (continuity of the zoom, parts, threads, the core-question rule, figures and cases with sources) and the words.
-- `npm run test:browser`: Playwright opens the site on desktop and phone, in dark and light, dives, follows a question and lets it go, opens a real case and the companion, finds the invitation in a gap, and changes world.
+- `npm test`: every engine, the chip world's game (`tests/game.test.mjs`), the atlas, the ledger replayed in order, the weave (continuity of the zoom, parts, threads, the core-question rule, figures and cases with sources) and the words (no visible English in code, no missing or unused text).
+- `npm run test:browser`: Playwright opens the site on desktop and phone, in sections that each open their own pages (`-- --list` names them, `-- --only <a,b>` runs some), and plays every lab to its win. CI runs every section, in groups side by side ([WORKFLOW.md](WORKFLOW.md)).
 
 ## The journey: lens, names, ways down and back
 

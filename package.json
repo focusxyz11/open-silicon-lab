@@ -1,7 +1,7 @@
 {
   "name": "open-silicon-lab",
   "version": "0.1.0",
-  "description": "An open-source lab for chips: one continuous dive from a data centre down to silicon atoms, with open questions running through every depth.",
+  "description": "An open-source lab for chips: follow one chip round its life, from design to use, and dive from a data centre, a phone or a car down to silicon atoms, with open questions all the way through.",
   "private": true,
   "type": "module",
   "license": "MIT",
