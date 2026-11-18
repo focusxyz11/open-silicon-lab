@@ -28,7 +28,7 @@ const SECTIONS = [
   ['ways', 'the ways on the picture: Go inside on the island, along and in on the line, the phone\'s peek and swipe'],
   ['frame', 'the size at every level and the ring on the way in, desktop and phone'],
   ['flights', 'the data centre\'s way in and its flight into the chip; the phone\'s flight into its chip'],
-  ['machines', 'machines from shared blocks: a form changed, an agent\'s pick used, desktop and phone'],
+  ['machines', 'machines from shared blocks: a form changed, an agent\'s pick used, new matter\'s claims and the guesses switch, desktop and phone'],
 ];
 const argv = process.argv.slice(2);
 if (argv.includes('--list')) { for (const [n, about] of SECTIONS) console.log(n.padEnd(16) + about); process.exit(0); }
@@ -789,6 +789,11 @@ run['machines'] = async () => {
     /* the agent offers a real choice, and a pick is used */
     await fp.waitForFunction(() => { const a = document.querySelector('[data-magent]'); if (a) a.click(); return document.querySelectorAll('.mach .mpick').length >= 2; }, null, { timeout: 15000, polling: 300 }).catch(() => problems.push(tag + ': the agent does not offer a choice'));
     await fp.waitForFunction(() => { const u = document.querySelector('[data-muse="0"]'); if (u) u.click(); return !!document.querySelector('.mach .mpick.on'); }, null, { timeout: 15000, polling: 300 }).catch(() => problems.push(tag + ': a pick is not put to use'));
+    /* beyond today's chip: a part made of living neurons shows its claims, guesses labelled, and a range */
+    await fp.evaluate(() => { location.hash = '#/machines/wildfire'; });
+    await fp.waitForFunction(() => { const b = document.querySelector('[data-mform="detect:matter:living"]'); if (b && b.getAttribute('aria-pressed') !== 'true') b.click(); else if (!b) { const m = document.querySelector('[data-mform^="detect:matter"]'); if (m) m.click(); } return document.querySelectorAll('.mach .mclaims .mst.s-guess').length >= 2 && /–/.test((document.querySelector('.mach .mread b') || {}).textContent || ''); }, null, { timeout: 15000, polling: 300 }).catch(() => problems.push(tag + ': new matter does not show its claims and its range'));
+    /* the agent told to count guesses */
+    await fp.waitForFunction(() => { const g = document.querySelector('[data-mguess]'); if (g && !g.checked) g.click(); const a = document.querySelector('[data-magent]'); if (a) a.click(); return !!g && g.checked && document.querySelectorAll('.mach .mpick').length >= 2; }, null, { timeout: 15000, polling: 300 }).catch(() => problems.push(tag + ': the agent cannot be told to count guesses'));
     /* another need, its own machine; nothing scrolls sideways */
     await fp.evaluate(() => { location.hash = '#/machines/rover'; });
     await fp.waitForFunction(() => document.querySelectorAll('.mach .mpart').length === 5, null, { timeout: 15000, polling: 300 }).catch(() => problems.push(tag + ': the rover\'s machine does not open'));

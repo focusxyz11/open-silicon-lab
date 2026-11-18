@@ -52,6 +52,32 @@ exact.
 **The agent** tries every plan, keeps those that follow the grammar and meet the need, and offers the ones no other
 beats on energy, change and exactness at once. It decides nothing.
 
+## Beyond today's chip (Invent)
+
+The core idea *Invent* (simulate machines and kinds of matter that don't exist yet, and see where they break) starts
+here, at the middle of three scales: a new switch, a new block, a new machine. A part's third form, new matter, is now
+a choice of kinds (`src/data/inventions.js`):
+
+| Kind | Can be made into | Changes | Exact | Rests on |
+| --- | --- | --- | --- | --- |
+| In memory | a learner | yes | no | the compute-in-memory engine (shown in a lab) |
+| Light | a learner | yes | no | processors in use (in products), phase noise (engine), two guesses |
+| Spikes | a learner | yes | no | spiking systems built (shown in a lab), cost with activity, one guess |
+| Reversible | adder, counter, voter, parity | no | yes | a test chip's recovered energy (shown in a lab), one guess |
+| Living | a learner | yes | no | a living-neuron computer on sale (in products), two guesses |
+
+**The honesty rule.** Every claim says how sure it is: in products, shown in a lab, or a guess, with its source (an
+entry of `facts.json`) or the engine that computes it. A claim is a gain, a catch or a note. The energy is a range: if
+the guesses hold (every gain, only the shown catches) and if they fail (only the shown gains, every catch). No claim
+goes below the floor: erasing a bit costs at least kT ln 2 (`src/engines/floor.js`); reversible logic counts only its
+answer's bits. The agent counts only what is shown unless the person tells it to count guesses, and the page shows why
+that matters: counting guesses, a hearing aid's filter becomes living neurons at 0.18× to 82× the energy.
+
+**Next in Invent:** the switch (invent a transistor: material properties to a switch, with the gain-and-threshold
+test of the `strange` world) and the machine (a new machine and its code invented together, against the hardware
+lottery). Anyone can raise a claim with a source or lower it with a break; keeping those in the ledger comes with
+machine attempts.
+
 ## Not yet
 
 - The agent chooses forms only; choosing the blocks themselves, and the wires, comes next.

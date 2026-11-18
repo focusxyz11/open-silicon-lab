@@ -1106,7 +1106,9 @@ export function start() {
   function showMachines(need) {
     page.innerHTML = '<div class="inner"><a class="x pagex" href="#/" aria-label="' + esc(t('sheet.close')) + '">×</a><div data-machines></div></div>';
     page.hidden = false; page.scrollTop = 0;
-    machinesView(page.querySelector('[data-machines]'), { need, go: id => { location.hash = '#/machines/' + id; } });
+    /* the claims behind new matter link to their sources in facts.json: drawn at once, and again when the facts arrive */
+    const draw = () => { const el = page.querySelector('[data-machines]'); if (el && partsOf(location.hash)[0] === 'machines') machinesView(el, { need, FACT, go: id => { location.hash = '#/machines/' + id; } }); };
+    draw(); if (!FACT) facts().then(draw);
   }
   /* a world (src/v2/worlds.js): one core question, its page made from its document; #/w/<id>/q<n> opens a question inside */
   function showWorlds() {
