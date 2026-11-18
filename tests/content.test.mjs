@@ -20,12 +20,12 @@ test('one document for each core question, titled with the question itself, in t
 });
 
 test('every link to another document or picture resolves, and every web link is https', () => {
-  for (const f of ['README.md', 'STRUCTURE.md', ...THREADS.map(t => t.id + '.md')]) {
-    const md = read(f);
+  for (const f of ['README.md', 'STRUCTURE.md', ...THREADS.map(t => t.id + '.md'), 'puzzles/README.md', 'puzzles/energy.md']) {
+    const md = read(f), dir = f.includes('/') ? f.slice(0, f.lastIndexOf('/') + 1) : '';
     for (const [, href] of md.matchAll(/\]\(([^)]+)\)/g)) {
       if (/^https:\/\//.test(href)) continue;
       assert.ok(!/^http:/.test(href), f + ': ' + href + ' is not https');
-      assert.ok(existsSync(new URL('../content/' + href, import.meta.url)), f + ': ' + href + ' does not exist');
+      assert.ok(existsSync(new URL('../content/' + dir + href, import.meta.url)), f + ': ' + href + ' does not exist');
     }
   }
 });

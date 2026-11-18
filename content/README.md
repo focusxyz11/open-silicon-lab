@@ -81,6 +81,12 @@ After all eleven were filled, reading across them showed a structure nobody put 
 truths as the only connections, two halves (what a chip is, how a chip comes to be), and challenges as four verbs
 (make, find, predict, pass on) that are also the community's verbs. See [STRUCTURE.md](STRUCTURE.md).
 
+## Puzzles
+
+Beside the eleven, a **puzzle** is one real problem that runs through every level and stage, so no single world or
+level can solve it; people and AI attack it together, and one engine scores every attempt. See
+[puzzles/README.md](puzzles/README.md). The first: [where does the energy go?](puzzles/energy.md)
+
 ## Status
 
 | World | Written | Visual system | Engine |
