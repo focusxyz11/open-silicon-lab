@@ -565,7 +565,7 @@ for (const [tag, viewport, scheme] of [['explore desktop', { width: 1280, height
      notice, the part that leads in lights the question, and finding it is kept in your log. A page of its own (a
      fresh visitor), since it moves between views; each tap is done again inside the poll, as the view may still be
      making its card */
-  { const sp = await browser3d.newPage({ viewport }); sp.on('pageerror', e => problems.push(tag + ' (search): ' + e.message));
+  for (const viewport of [{ width: 1280, height: 800 }, { width: 390, height: 844 }]) { const sp = await browser3d.newPage({ viewport }), tag = 'search ' + viewport.width; sp.on('pageerror', e => problems.push(tag + ': ' + e.message));
     await sp.addInitScript(() => { try { localStorage.setItem('osl-hints-v1', JSON.stringify({ seen: {}, off: true })); } catch (e) { /* no storage */ } });
     await sp.goto(base + 'index.html#/dive/gate');
     await sp.waitForFunction(() => { const b = document.querySelector('#diveui .seek [data-seek="diff"]'); if (b && !b.classList.contains('looked')) b.click(); return !!document.querySelector('#diveui .seek .seeknote b') && !!document.querySelector('#diveui .seek:not(.found)'); }, null, { timeout: 90000, polling: 2000 })
