@@ -14,6 +14,7 @@ Where the lab stands, and what is ready to be built next. Read this first when s
 - **The chip's layers are framed beside the card** (#231): each row and what is under it fit the part of the picture the frame leaves free, names inside it (`inset` in `src/v2/chip3d.js`; the board does the same).
 - **Size at every level** (#234): the rail says each level's rough size (`sizeOf` in `src/data/atlas.js`), and while moving the card says how many times closer the next one is (`src/v2/frame.js`).
 - **From the flight into the dive, one chip.** The die the flight lands on and the dive's chip level are drawn from one plan (`src/data/die.js`, in the tones of `CHIP_TONES` in `src/v2/kit3d.js`): the same tiles, memory band, links, clock wires and pads, with four stacks of memory beside the die on one base, at the dive's own scale. The dive's chip starts where the flight ended (its angle, the point it looked at, as close; `HANDOFF` in `src/v2/dc3d.js`, `arrive` in `src/v2/level3d.js`, marked `data-arrive` on the page while it lasts), the package fading as it rises to the plan; going on comes down into one tile (the block). The stacks are named by their home (`VIEW_PARTS.dive` and `diveWord` in `src/data/atlas.js`).
+- **A phone is flown through too** (`src/v2/phone3d-flight.js`, `#/place/phones/<level>`): from the phone on a desk, its screen opened like a book, into the frame where the battery fills most of it, onto the board as its shields lift, to the chip as the memory on top lifts off; past the chip it carries on into the dive's phone chip, which starts where the flight ended (`HANDOFF`, as the data centre's does). The flat dive keeps its phone and board levels, where their challenges are played.
 - **Challenges:** 42 in all, listed in `CHALLENGES` in `src/v2/game.js`, each played in the card where it lives. The newer labs are one file each in `src/v2/labs/` (how to build one: [LABS.md](LABS.md)).
   - **Design:** the half adder, the majority voter and the full adder; the proof's bet; Verify the agent (at the Lab); the right chip for the job; Evolve a circuit; Build your own AI chip (the capstone, at the studio's need).
   - **Make:** Grow a perfect crystal (at the quarry); through the factory in time; a chip that is quick to make; Moore's bet; the pieces' bet. Then the factory line, one lab per step: print the finest lines, the 1,000-watt source, ten billion vias, etch straight down, the bare bottom, the furnace spreads it, shallow and switched on.
@@ -59,7 +60,7 @@ Each is an issue labelled `task`; #230 waits for a decision (`blocked`). #229 (t
 - #230 One way down through a chip, not two side by side (the dive and the layer stack).
 - #233 The factory line: the way along and the way in, on the picture.
 - #235 Something to do at every level of the dive.
-- #236 The phone and the car, flown through like the data centre.
+- #236 The phone and the car, flown through like the data centre: the phone is built (below); the car waits.
 - #237 On the island, buildings invite you in.
 - #238 The dive on a phone: a card that steps aside.
 
