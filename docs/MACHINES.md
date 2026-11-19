@@ -78,6 +78,28 @@ test of the `strange` world) and the machine (a new machine and its code invente
 lottery). Anyone can raise a claim with a source or lower it with a break; machine attempts are kept in the ledger now
 (see Moore's law for ideas), claims are next.
 
+## Liquid hardware
+
+Hardware is fixed and only software changes: that is the line this part of the lab melts. A block can now be a
+**liquid fabric** (`src/data/liquid.js`), rewired after it is made: exact like a circuit, changeable like software.
+It is bought ready-made and configured, so it never waits on a fab: a try is a new configuration, a day.
+
+| Fabric | Energy against a circuit | Rewires in | Rests on |
+| --- | --- | --- | --- |
+| Rewired by bits (FPGA) | about 14× (in products) | 324 µs – 209 ms (in products) | Kuon and Rose 2007; a measured partial rewiring |
+| Rewired by words (coarse-grained array) | 3× (a guess) | every clock tick, 1 ns (shown in a lab) | the HyCUBE test chip |
+| Rewired on the fly | 1.5× (a guess) | 50 ns (a guess) | DARPA PROWESS's goal |
+
+A guessed fabric that fails is no better than an FPGA. The engine adds a need rule, **keep**: a need whose job
+changes every so often (`every`, in seconds) needs its changing parts to reshape that fast (software switches
+programs in about a microsecond, changeable new matter rewrites in about a millisecond: choices of the model). A new
+need, **a radio that listens everywhere**, changes every 100 ns: software and FPGAs miss it, an array rewired every
+tick keeps up (shown in a lab), the goal keeps up only if the guesses hold. The page draws a map of how fast each
+part can reshape against what it costs, with the empty corner (fast to reshape, costs like a circuit) and the line
+the need draws; and it links to the Evolve lab, after Thompson's 1996 circuit evolved on an FPGA that nobody could
+fully explain. Because a fabric is exact, changeable and a try a day, it now beats plain software on energy wherever
+speed of switching is not asked: on the hearing aid the agent offers an FPGA beside memory that computes.
+
 ## Fab on a desk
 
 A try that runs as software can change the same day. Anything else has to be made first, and *where* it is made sets
@@ -123,6 +145,7 @@ curve counts **attempts**.
 - The agent chooses forms only; choosing the blocks themselves, and the wires, comes next.
 - The open port lists machine attempts with the ledger, but has no tool to score or submit one yet.
 - Energy does not yet depend on where a part is made (coarser lines cost more per step).
+- A fabric's rewiring time is not yet spent: a part that reshapes does no work while it rewires, and the score does not count that.
 - The energy and errors puzzles (`src/engines/budget.js`, `src/engines/errors.js`) do not score machines yet: each
   need already names its place among the errors engine's environments.
 - New blocks and needs from the community, through the forms on GitHub.
