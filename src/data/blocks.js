@@ -4,8 +4,9 @@
 
    There is no standard computer here. A machine is a few blocks joined for one need, and each block takes the form
    that need calls for: as software (run on a core, it can change at any time), as a circuit (far cheaper to run,
-   fixed once made) or as new matter: a kind of matter beyond today's chip (src/data/inventions.js), each resting on
-   claims that say how sure they are. Where the line between hardware and software falls is chosen per need, by people or by
+   fixed once made), as new matter: a kind of matter beyond today's chip (src/data/inventions.js), each resting on
+   claims that say how sure they are, or as liquid hardware: a fabric rewired after it is made, exact like a circuit
+   and changeable like software (src/data/liquid.js). Where the line between hardware and software falls is chosen per need, by people or by
    an agent, and the engine shows what every choice gains and fixes in place.
 
    PORTS: the kinds of thing that flow between blocks. A port joins only a port of the same kind.
@@ -18,10 +19,12 @@
    choice of the model, never shown as a figure), the wires between them (from 'part.out<i>' to 'part.in<i>', or
    from 'world' for what comes in from outside), and the need's rules: parts that must stay changeable after the
    machine is made (change), parts that must be exact (exact), the place it lives (env, an environment of
-   src/engines/errors.js), and how much of the time it has something to do (activity, src/data/inventions.js ACTIVITY). */
+   src/engines/errors.js), how much of the time it has something to do (activity, src/data/inventions.js ACTIVITY),
+   and, for a need whose job keeps changing, how often it changes (every, in seconds): a part that must change has to
+   be able to reshape that fast (src/data/liquid.js RESHAPE). */
 
 export const PORTS = ['signal', 'word', 'bit'];
-export const FORMS = ['software', 'circuit', 'matter'];   /* the three families; new matter is matter:<kind> */
+export const FORMS = ['software', 'circuit', 'matter', 'liquid'];   /* the families; new matter is matter:<kind>, a liquid fabric liquid:<kind> */
 
 export const BLOCKS = [
   { id: 'sensor', in: ['signal'], out: ['word'], forms: ['circuit'], lab: 'analog', stock: true },
@@ -48,7 +51,13 @@ export const NEEDS = [
   { id: 'rover', env: 'space', activity: 'steady',
     parts: [{ id: 'cam', block: 'sensor', work: 2 }, { id: 'nav', block: 'learner', work: 60 }, { id: 'vote', block: 'voter', work: 2 }, { id: 'clock', block: 'counter', work: 1 }, { id: 'ctl', block: 'core', work: 10 }],
     wires: [['world', 'cam.in0'], ['world', 'vote.in0'], ['world', 'vote.in1'], ['world', 'vote.in2'], ['vote.out0', 'clock.in0'], ['cam.out0', 'nav.in0'], ['nav.out0', 'ctl.in0']],
-    change: ['nav'], exact: ['vote', 'ctl'] }
+    change: ['nav'], exact: ['vote', 'ctl'] },
+  /* a radio that listens everywhere: the signals around it change in nanoseconds (facts.json prowess), so the parts
+     that find and pull out a signal must reshape as fast, and pulling it out must be exact */
+  { id: 'radio', env: 'phone', activity: 'steady', every: 1e-7,
+    parts: [{ id: 'ant', block: 'sensor', work: 2 }, { id: 'find', block: 'learner', work: 20 }, { id: 'mix', block: 'adder', work: 10 }, { id: 'clock', block: 'counter', work: 1 }, { id: 'ctl', block: 'core', work: 3 }],
+    wires: [['world', 'ant.in0'], ['world', 'clock.in0'], ['ant.out0', 'find.in0'], ['ant.out0', 'mix.in0'], ['find.out0', 'mix.in1'], ['mix.out0', 'ctl.in0']],
+    change: ['find', 'mix'], exact: ['mix'] }
 ];
 export const NEED_IDS = NEEDS.map(n => n.id);
 export const needOf = id => NEEDS.find(n => n.id === id) || null;

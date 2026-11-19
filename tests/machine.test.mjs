@@ -7,6 +7,7 @@ import { readFileSync, existsSync } from 'node:fs';
 import { BLOCKS, NEEDS, PORTS, FORMS, blockOf, needOf } from '../src/data/blocks.js';
 import { MATTERS, STATUS, KINDS, ACTIVITY } from '../src/data/inventions.js';
 import { FABS, TRY_DAYS, YEAR, fabOf } from '../src/data/fabs.js';
+import { LIQUIDS, ON as LIQUID_ON, RESHAPE, FALLBACK } from '../src/data/liquid.js';
 import * as M from '../src/engines/machine.js';
 import { E16 } from '../src/engines/paradigms.js';
 import { landauer, bitsErased, T_ROOM } from '../src/engines/floor.js';
@@ -131,13 +132,14 @@ test('the agent tries every plan and offers only machines that pass and that not
     assert.equal(A.tried, every, n.id + ' tried every plan in every fab');
     assert.ok(A.picks.length >= 2, n.id + ' offers a real choice');
     assert.equal(A.picks.length, A.front);
-    A.picks.forEach(p => assert.ok(M.machine(n.id, p.plan).ok, n.id + ' pick passes'));
+    A.picks.forEach(p => assert.ok(M.machine(n.id, p.plan, guesses).ok, n.id + ' pick passes'));
     A.picks.forEach(a => A.picks.forEach(b => assert.ok(a === b || !M.beats(a.score, b.score), n.id + ' no pick beats another')));
     for (let i = 1; i < A.picks.length; i++) assert.ok(A.picks[i - 1].score.energy <= A.picks[i].score.energy);
   }
-  /* the hearing aid's filter must change: counting only what is shown, exact and costly or in memory and approximate;
+  /* the hearing aid's filter must change: counting only what is shown, a fabric rewired after it is made (exact, about
+     14 times a circuit, a try a day) or in memory and approximate (cheap, but months a try);
      counting guesses, living neurons come first, with a range that shows the gamble */
-  assert.deepEqual(M.assemble('hearing').picks.map(p => p.plan.filter).sort(), ['matter:cim', 'software']);
+  assert.deepEqual(M.assemble('hearing').picks.map(p => p.plan.filter).sort(), ['liquid:fpga', 'matter:cim']);
   const g = M.assemble('hearing', 4, true).picks[0];
   assert.equal(g.plan.filter, 'matter:living');
   assert.ok(g.score.high > 1);
@@ -194,6 +196,52 @@ test('the agent weighs days too: a fast fab stays on the frontier beside the che
   assert.ok(picks.some(p => p.score.fab === 'flexible'), 'a flexible line, fast and shown in products');
   assert.ok(!picks.some(p => p.score.fab === 'desk' || p.score.fab === 'small'), 'days that are only guessed count as never unless guesses count');
   assert.ok(M.assemble('wildfire', 99, true).picks.some(p => p.score.fab === 'desk'));
+});
+
+test('liquid fabrics: real blocks, every number says how sure it is, and a shown number rests on a source', () => {
+  LIQUID_ON.forEach(id => { assert.ok(blockOf(id), id); assert.ok(!blockOf(id).stock, id + ' is logic, not a bought part'); });
+  for (const L of LIQUIDS) {
+    for (const k of ['energy', 'reshape']) {
+      const c = L[k];
+      assert.ok(STATUS.includes(c.status), L.id + '.' + k);
+      if (c.status !== 'guess') assert.ok(c.fact && factOf(c.fact) && factOf(c.fact).url, L.id + '.' + k + ' rests on a source');
+    }
+    assert.ok(L.energy.value >= 1, L.id + ': no fabric beats a circuit made for the job');
+    assert.ok(L.reshape.value[0] > 0 && L.reshape.value[0] <= L.reshape.value[1]);
+    L.notes.forEach(n => { assert.ok(STATUS.includes(n.status)); if (n.fact) assert.ok(factOf(n.fact), n.id); });
+  }
+  assert.equal(LIQUIDS.find(l => l.id === FALLBACK).energy.status, 'product', 'a failed guess falls back to what is in products');
+});
+
+test('a liquid part: exact like a circuit, changes like software, bought and configured, not made in a fab', () => {
+  const H = needOf('hearing'), f = 'liquid:fpga';
+  assert.ok(M.formsOf('learner').includes(f) && !M.formsOf('sensor').includes(f));
+  assert.equal(M.changes(f), true); assert.equal(M.exact(f), true);
+  assert.deepEqual(M.costOf(f, H), { low: 14, high: 14, wall: false });
+  assert.equal(M.machine('hearing', { filter: f }).ok, true);
+  assert.deepEqual(M.made(H, Object.assign(M.startPlan('hearing'), { filter: f })), []);
+  assert.equal(M.machine('hearing', { filter: f }).score.days, TRY_DAYS, 'a try is a new configuration, a day');
+  /* a guessed fabric: as hoped if the guesses hold, no better than an FPGA if they fail */
+  const g = M.costOf('liquid:goal', H);
+  assert.ok(g.low < 2 && g.high === 14);
+  assert.ok(M.reshapeOf('liquid:goal').high > M.reshapeOf('liquid:goal').low);
+  assert.equal(M.reshapeOf('circuit').high, Infinity);
+  assert.equal(M.reshapeOf('software').low, RESHAPE.software);
+});
+
+test('keep up: when a need\'s job changes every 100 ns, only what reshapes that fast meets it', () => {
+  const R = needOf('radio');
+  assert.ok(R.every > 0 && M.MISSES.includes('keep'));
+  const miss = plan => M.machine('radio', plan).meets.misses.filter(m => m.rule === 'keep').map(m => m.part);
+  assert.deepEqual(miss({ find: 'software', mix: 'software' }), ['find', 'mix'], 'software switches programs in about a microsecond');
+  assert.deepEqual(miss({ find: 'liquid:fpga', mix: 'liquid:fpga' }), ['find', 'mix'], 'an FPGA rewires in microseconds at best');
+  assert.equal(M.machine('radio', { find: 'liquid:cgra', mix: 'liquid:cgra' }).ok, true, 'an array rewired every tick, shown in a lab');
+  assert.equal(M.machine('radio', { find: 'liquid:goal', mix: 'liquid:goal' }).ok, false, 'the 50 ns goal is a guess');
+  assert.equal(M.machine('radio', { find: 'liquid:goal', mix: 'liquid:goal' }, true).ok, true, 'it holds if the guesses hold');
+  assert.ok(M.machine('radio', { find: 'matter:cim', mix: 'liquid:cgra' }).meets.misses.some(m => m.part === 'find' && m.rule === 'keep'));
+  /* needs with no changing job have no such rule */
+  assert.ok(!M.machine('hearing', { filter: 'software' }).meets.misses.length);
+  assert.ok(M.assemble('radio').picks.every(p => p.plan.find === 'liquid:cgra'));
 });
 
 test('a block is checked by its piece of the plan, or by a lab', () => {

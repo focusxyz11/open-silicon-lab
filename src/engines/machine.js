@@ -2,12 +2,14 @@
    need (docs/MACHINES.md; the blocks, the grammar and the needs: src/data/blocks.js; the kinds of new matter, beyond
    today's chip: src/data/inventions.js). Pure logic, no DOM, no words (ids only); tests in tests/machine.test.mjs.
 
-   A plan gives each part of a need's machine a form: 'software', 'circuit', or a kind of new matter, 'matter:<kind>'
-   ('matter' alone is read as 'matter:cim'). The engine says:
+   A plan gives each part of a need's machine a form: 'software', 'circuit', a kind of new matter, 'matter:<kind>'
+   ('matter' alone is read as 'matter:cim'), or a liquid fabric, 'liquid:<kind>' (src/data/liquid.js). The engine says:
    - whether the machine follows the grammar (check): every form is one its block can take, every wire joins ports of
      the same kind, every input is fed, and a block run as software has a core, made as a circuit, to run on;
    - whether it meets its need's rules (meets): parts that must stay changeable after the machine is made can change in
-     their form; parts that must be exact are in a form that is exact;
+     their form; parts that must be exact are in a form that is exact; and where the need's job changes every so often
+     (need.every), the parts that must change can reshape that fast (keep): how long each form takes is in
+     src/data/liquid.js (RESHAPE, and each fabric's reshape claim);
    - whether its made parts can be made where the plan says (the rule fab): a plan also names a fab (plan.fab, a place
      of src/data/fabs.js, 'giant' if none), and every part that is neither software, bought (a stock block) nor grown
      must be a form that place makes;
@@ -23,6 +25,8 @@
    - software: about 500 times, a general-purpose chip against a custom one for the same job (Hameed et al., ISCA
      2010; facts.json asic-vs-cpu). That figure is for video encoding; adding custom instructions closed it to about
      3 times, so it is the cost of plain software, never of the best a core could do;
+   - a liquid fabric: its energy claim (an FPGA about 14 times, facts.json fpga-asic-gap); a guessed fabric that
+     fails is no better than an FPGA;
    - new matter: the product of its claims (src/data/inventions.js). If the guesses hold, every gain counts and only
      the catches shown in a lab or in products; if they fail, only the gains shown in a lab or in products count and
      every catch does. Neither can go below the floor: erasing a bit costs at least kT ln 2 (src/engines/floor.js,
@@ -36,6 +40,7 @@ import { cimEnergy, E16 } from './paradigms.js';
 import { CIM_ARRAY, CIM_ADC } from './budget.js';
 import { landauer, bitsErased, T_ROOM } from './floor.js';
 import { FABS, TRY_DAYS, YEAR, fabOf } from '../data/fabs.js';
+import { LIQUIDS, RESHAPE, FALLBACK, liquidOf, liquidsFor } from '../data/liquid.js';
 
 export const SOFTWARE_COST = 500;                                   // facts.json asic-vs-cpu
 const CIM = cimEnergy(CIM_ARRAY, CIM_ARRAY, CIM_ADC);
@@ -44,23 +49,34 @@ export const MATTER_COST = CIM.analog / CIM.digital;                 // compute 
 const OP_PJ = E16.add + E16.mul, BIT_PJ = landauer(T_ROOM) * 1e12;
 export const floorOf = m => (m.floor === 'op' ? bitsErased(16) : m.floor) * BIT_PJ / OP_PJ;
 export const RULES = ['form', 'kind', 'fed', 'core', 'fab'];
-export { FORMS, PORTS, MATTERS, FABS };
+export { FORMS, PORTS, MATTERS, FABS, LIQUIDS };
+export const MISSES = ['change', 'exact', 'keep'];
 export const START_FAB = 'giant';
 
 /* the forms a block can take: its own, then every kind of new matter that can be made into it */
-export const formsOf = blockId => { const b = blockOf(blockId); return b ? b.forms.concat(mattersFor(blockId).map(m => 'matter:' + m.id)) : []; };
+export const formsOf = blockId => { const b = blockOf(blockId); return b ? b.forms.concat(mattersFor(blockId).map(m => 'matter:' + m.id), liquidsFor(blockId).map(l => 'liquid:' + l.id)) : []; };
 export const familyOf = f => String(f || '').split(':')[0];
 export const matterIn = f => (familyOf(f) === 'matter' ? matterOf(String(f).split(':')[1] || 'cim') : null);
-const norm = f => (f === 'matter' ? 'matter:cim' : f);
+export const liquidIn = f => (familyOf(f) === 'liquid' ? liquidOf(String(f).split(':')[1] || FALLBACK) : null);
+const norm = f => (f === 'matter' ? 'matter:cim' : f === 'liquid' ? 'liquid:' + FALLBACK : f);
 
 /* what a form keeps: can it change after the machine is made, and is it exact */
-export const changes = f => (f === 'software' ? true : f === 'circuit' ? false : !!(matterIn(f) || {}).changes);
-export const exact = f => (f === 'software' || f === 'circuit' ? true : !!(matterIn(f) || {}).exact);
+export const changes = f => (f === 'software' || liquidIn(f) ? true : f === 'circuit' ? false : !!(matterIn(f) || {}).changes);
+export const exact = f => (f === 'software' || f === 'circuit' || liquidIn(f) ? true : !!(matterIn(f) || {}).exact);
+/* how long a form takes to change, in seconds, as a range { low: if the guesses hold, high: if they fail } */
+export function reshapeOf(f) {
+  if (f === 'software') return { low: RESHAPE.software, high: RESHAPE.software };
+  const L = liquidIn(f);
+  if (L) { const r = L.reshape, fb = liquidOf(FALLBACK).reshape.value; return r.status === 'guess' ? { low: r.value[0], high: fb[1] } : { low: r.value[0], high: r.value[1] }; }
+  return changes(f) ? { low: RESHAPE.matter, high: RESHAPE.matter } : { low: Infinity, high: Infinity };
+}
 
 /* the energy of a form against a circuit, as a range: { low: if the guesses hold, high: if they fail, wall } */
 export function costOf(f, need) {
   if (f === 'software') return { low: SOFTWARE_COST, high: SOFTWARE_COST, wall: false };
   if (f === 'circuit') return { low: 1, high: 1, wall: false };
+  const L = liquidIn(f);
+  if (L) { const e = L.energy; return { low: e.value, high: e.status === 'guess' ? liquidOf(FALLBACK).energy.value : e.value, wall: false }; }
   const m = matterIn(f); if (!m) return { low: Infinity, high: Infinity, wall: false };
   const value = c => (c.energy === 'cim' ? MATTER_COST : c.energy === 'activity' ? ACTIVITY[(need && need.activity) || 'steady'] : c.energy);
   let low = 1, high = 1;
@@ -83,9 +99,10 @@ export function setupOf(fabId) {
   const F = fabOf(fabId), c = F && F.claims.find(k => k.kind === 'cost');
   return c ? { value: [].concat(c.value), status: c.status } : null;
 }
-/* the parts of a machine a fab has to make: not software, not bought ready-made, not grown */
+/* the parts of a machine a fab has to make: not software, not bought ready-made, not grown, not a fabric that is
+   bought and configured */
 export function made(need, plan) {
-  return need.parts.filter(p => { const f = norm(plan[p.id]), b = blockOf(p.block); return f !== 'software' && !(b && b.stock) && !(matterIn(f) || {}).grown; }).map(p => p.id);
+  return need.parts.filter(p => { const f = norm(plan[p.id]), b = blockOf(p.block); return f !== 'software' && !(b && b.stock) && !(matterIn(f) || {}).grown && !liquidIn(f); }).map(p => p.id);
 }
 const grownIn = (need, plan) => need.parts.some(p => (matterIn(norm(plan[p.id])) || {}).grown);
 /* how long one try of the machine takes, as a range in days */
@@ -133,10 +150,15 @@ export function check(need, plan) {
   return { ok: breaks.length === 0, breaks };
 }
 
-/* does it meet its need's rules? misses: { rule: 'change' | 'exact', part } */
-export function meets(need, plan) {
+/* does it meet its need's rules? misses: { rule: 'change' | 'exact' | 'keep', part }. Keeping up counts the slowest
+   a form may be (if the guesses fail), unless told to count guesses */
+export function meets(need, plan, guesses = false) {
   const misses = [];
-  (need.change || []).forEach(id => { if (!changes(norm(plan[id]))) misses.push({ rule: 'change', part: id }); });
+  (need.change || []).forEach(id => {
+    const f = norm(plan[id]);
+    if (!changes(f)) misses.push({ rule: 'change', part: id });
+    else if (need.every) { const r = reshapeOf(f); if ((guesses ? r.low : r.high) > need.every) misses.push({ rule: 'keep', part: id }); }
+  });
   (need.exact || []).forEach(id => { if (!exact(norm(plan[id]))) misses.push({ rule: 'exact', part: id }); });
   return { ok: misses.length === 0, misses };
 }
@@ -161,7 +183,7 @@ export function score(need, plan, guesses = false) {
 export function machine(id, plan, guesses = false) {
   const need = needOf(id); plan = Object.assign(startPlan(id), plan || {});
   Object.keys(plan).forEach(k => { plan[k] = norm(plan[k]); });
-  const C = check(need, plan), M = meets(need, plan);
+  const C = check(need, plan), M = meets(need, plan, guesses);
   return { id, plan, check: C, meets: M, score: score(need, plan, guesses), ok: C.ok && M.ok };
 }
 
@@ -180,14 +202,16 @@ export function assemble(id, max = 4, guesses = false) {
       FABS.forEach((F, k) => {
         tried++; plan.fab = F.id;
         if (k > 0 && !made(need, plan).length) return;
-        if (check(need, plan).ok && meets(need, plan).ok) valid.push({ plan: Object.assign({}, plan), score: score(need, plan, guesses) });
+        if (check(need, plan).ok && meets(need, plan, guesses).ok) valid.push({ plan: Object.assign({}, plan), score: score(need, plan, guesses) });
       });
       return;
     }
     choices[i].forEach(f => { plan[parts[i].id] = f; walk(i + 1, plan); });
   };
   walk(0, {});
-  const front = valid.filter(v => !valid.some(w => w !== v && beats(w.score, v.score)));
+  /* a plan that scores exactly like one found before it is the same choice, as far as the score can tell: kept once */
+  const same = (a, b) => a.energy === b.energy && a.changes === b.changes && a.exact === b.exact && a.days === b.days;
+  const front = valid.filter((v, i) => !valid.some((w, j) => w !== v && (beats(w.score, v.score) || (j < i && same(w.score, v.score)))));
   front.sort((a, b) => a.score.energy - b.score.energy || b.score.changes - a.score.changes || a.score.days - b.score.days);
   return { tried, valid: valid.length, front: front.length, picks: front.slice(0, max), guesses };
 }

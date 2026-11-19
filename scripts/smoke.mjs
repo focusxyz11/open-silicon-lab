@@ -28,7 +28,7 @@ const SECTIONS = [
   ['ways', 'the ways on the picture: Go inside on the island, along and in on the line, the phone\'s peek and swipe'],
   ['frame', 'the size at every level and the ring on the way in, desktop and phone'],
   ['flights', 'the data centre\'s way in and its flight into the chip; the phone\'s flight into its chip'],
-  ['machines', 'machines from shared blocks: a form changed, an agent\'s pick used, where it is made, the lab\'s curve and an attempt kept, new matter\'s claims and the guesses switch, desktop and phone'],
+  ['machines', 'machines from shared blocks: a form changed, an agent\'s pick used, where it is made, liquid hardware keeping up with a radio, the lab\'s curve and an attempt kept, new matter\'s claims and the guesses switch, desktop and phone'],
 ];
 const argv = process.argv.slice(2);
 if (argv.includes('--list')) { for (const [n, about] of SECTIONS) console.log(n.padEnd(16) + about); process.exit(0); }
@@ -801,6 +801,14 @@ run['machines'] = async () => {
     await fp.waitForFunction(() => { const b = document.querySelector('[data-mform="detect:matter:living"]'); if (b && b.getAttribute('aria-pressed') !== 'true') b.click(); else if (!b) { const m = document.querySelector('[data-mform^="detect:matter"]'); if (m) m.click(); } return document.querySelectorAll('.mach .mclaims .mst.s-guess').length >= 2 && /–/.test((document.querySelector('.mach .mread b') || {}).textContent || ''); }, null, { timeout: 15000, polling: 300 }).catch(() => problems.push(tag + ': new matter does not show its claims and its range'));
     /* the agent told to count guesses */
     await fp.waitForFunction(() => { const g = document.querySelector('[data-mguess]'); if (g && !g.checked) g.click(); const a = document.querySelector('[data-magent]'); if (a) a.click(); return !!g && g.checked && document.querySelectorAll('.mach .mpick').length >= 2; }, null, { timeout: 15000, polling: 300 }).catch(() => problems.push(tag + ': the agent cannot be told to count guesses'));
+    /* liquid hardware: a radio whose job changes every 100 ns; an FPGA rewires too slowly, an array rewired every tick keeps up,
+       and the map draws the line the parts must beat */
+    await fp.evaluate(() => { location.hash = '#/machines/radio'; });
+    await fp.waitForFunction(() => { const pick = s => { const b = document.querySelector('[data-mform="' + s + '"]'); if (b && b.getAttribute('aria-pressed') !== 'true') b.click(); };
+      if (!document.querySelector('[data-mform="find:liquid:fpga"]')) pick('find:liquid:fpga'); pick('find:liquid:fpga'); pick('mix:liquid:fpga');
+      return [...document.querySelectorAll('.mach .mchecks li.bad')].length >= 2 && !!document.querySelector('.mach .lmap .every') && !!document.querySelector('.mach .mliquid .mclaims'); }, null, { timeout: 15000, polling: 300 }).catch(() => problems.push(tag + ': an FPGA does not miss a job that changes every 100 ns'));
+    await fp.waitForFunction(() => { ['find:liquid:cgra', 'mix:liquid:cgra'].forEach(s => { const b = document.querySelector('[data-mform="' + s + '"]'); if (b && b.getAttribute('aria-pressed') !== 'true') b.click(); });
+      return !document.querySelector('.mach .mchecks li.bad') && document.querySelectorAll('.mach .lmap .pt.f-liquid').length >= 1; }, null, { timeout: 15000, polling: 300 }).catch(() => problems.push(tag + ': an array rewired every tick does not keep up'));
     /* another need, its own machine; nothing scrolls sideways */
     await fp.evaluate(() => { location.hash = '#/machines/rover'; });
     await fp.waitForFunction(() => document.querySelectorAll('.mach .mpart').length === 5, null, { timeout: 15000, polling: 300 }).catch(() => problems.push(tag + ': the rover\'s machine does not open'));

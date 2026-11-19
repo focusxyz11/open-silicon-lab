@@ -1615,6 +1615,66 @@
    "url": "https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0052669",
    "value": "Cost falling as a power of how much has been made (Wright, 1936) forecast best; Moore's law came close",
    "verified": "2026-11-18"
+  },
+  {
+   "id": "fpga-asic-gap",
+   "topic": "liquid",
+   "detail": "Kuon and Rose, IEEE Transactions on CAD 26(2), 2007, at 90 nm, for logic-only circuits; hard memories and multipliers narrow the area and power gaps.",
+   "kind": "reported",
+   "label": "The gap between an FPGA and a custom chip",
+   "source": "IEEE Transactions on CAD",
+   "status": "current",
+   "url": "https://www.eecg.utoronto.ca/~jayar/pubs/kuon/kuontcad06.pdf",
+   "value": "About 14× the dynamic power, 3.4 to 4.6× slower, about 35× the area",
+   "verified": "2026-11-19"
+  },
+  {
+   "id": "fpga-reconfig-time",
+   "topic": "liquid",
+   "detail": "Measured on one board: the whole chip through JTAG, part of it through JTAG, and the same part through the chip's internal port with DMA.",
+   "kind": "reported",
+   "label": "How long an FPGA takes to rewire",
+   "source": "arXiv",
+   "status": "current",
+   "url": "https://arxiv.org/pdf/1701.08849",
+   "value": "Whole chip 3.8 s; part of it 209 ms, or 324 µs through the internal port",
+   "verified": "2026-11-19"
+  },
+  {
+   "id": "cgra-hycube",
+   "topic": "liquid",
+   "detail": "A 40 nm test chip from the National University of Singapore, rewired word by word on every clock cycle.",
+   "kind": "reported",
+   "label": "A coarse-grained array (HyCUBE)",
+   "source": "NUS",
+   "status": "current",
+   "url": "https://www.comp.nus.edu.sg/~tulika/ASSCC19.pdf",
+   "value": "28.6× the power efficiency of an FPGA platform, 26.5× an ARM core",
+   "verified": "2026-11-19"
+  },
+  {
+   "id": "prowess",
+   "topic": "liquid",
+   "detail": "DARPA's program for radios whose signals change faster than an FPGA can be rewired.",
+   "kind": "projection",
+   "label": "DARPA PROWESS",
+   "source": "DARPA",
+   "status": "current",
+   "url": "https://www.darpa.mil/research/programs/processor-reconfiguration-for-wideband-spectrum-sensing",
+   "value": "Processors that reconfigure themselves within 50 nanoseconds (a goal)",
+   "verified": "2026-11-19"
+  },
+  {
+   "id": "thompson-evolved",
+   "topic": "liquid",
+   "detail": "Adrian Thompson, University of Sussex, 1996: evolution configured 100 cells of an FPGA to tell two tones apart; the circuit used the chip's own physics.",
+   "kind": "reported",
+   "label": "A circuit evolved on an FPGA",
+   "source": "Thompson, ICES 1996",
+   "status": "current",
+   "url": "https://cgi.cse.unsw.edu.au/~cs4601/refs/papers/es97thompson.pdf",
+   "value": "It worked, and depended on cells with no connection to the output",
+   "verified": "2026-11-19"
   }
  ],
  "changes": [
