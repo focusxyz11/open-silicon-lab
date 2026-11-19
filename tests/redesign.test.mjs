@@ -89,7 +89,8 @@ test('inside a chip: each row is a depth of the dive and the factory steps that 
     assert.equal(r.made[r.made.length - 1], MADE[r.dive], r.dive + ' is made at ' + MADE[r.dive]);
     for (const d of [r.dive, ...r.made]) assert.ok(EN['depth.' + d + '.name'] && EN['depth.' + d + '.see'], d);
   }
-  const asks = src('chip3d.js').match(/export const ASK = \{([^}]+)\}/)[1].match(/'([a-z]+\.[a-z]+)'/g).map(x => x.slice(1, -1));
-  assert.equal(asks.length, 10);
+  /* one question at each row, about how it is made (the dive asks its own) */
+  const asks = src('chip3d.js').match(/export const ASK = \[([^\]]+)\]/)[1].match(/'([a-z]+\.[a-z]+)'/g).map(x => x.slice(1, -1));
+  assert.equal(asks.length, rows.length);
   for (const k of asks) assert.ok(STOPS[k] && EN['stop.' + k + '.q'], k);
 });

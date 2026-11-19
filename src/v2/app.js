@@ -7,7 +7,7 @@
    and Ask (its questions, and what people and agents have asked). There is no menu: the commons is the need, the
    place where the loop starts and comes back (the Lab, and its record, #/build); what you met and did is your log
    (#/log); the world around the island is the way out from it (#/ecosystem).
-   Routes: #/, #/place/<id>, #/place/datacentre/<level>, #/chip/<row>[/build] (inside a chip, layer by layer),
+   Routes: #/, #/place/<id>, #/place/datacentre/<level>, #/chip/<row>/build (inside a chip, layer by layer: the dive's levels as made),
    #/board (one board, with a story that drives it), #/dive/<depth>[/<world>] (the dive), #/line/<step> (the factory),
    #/bench/<level>[/<challenge>] (the studio), #/do/<challenge>, #/ask/<thread>/<depth>, #/supply, #/log, #/build,
    #/ecosystem. Words are read with t(). */
@@ -153,7 +153,7 @@ export function start() {
   const hudEl = $('loop');
   /* the address of what is in view now: moving inside a view (deeper, along the line) changes it too */
   const liveHash = () => !vui.hidden && flatKind !== 'supply' && WE && diveD >= 0 && diveId() ? (flatKind === 'dive' ? '#/dive/' + diveId() + (diveWorld !== 'datacentre' ? '/' + diveWorld : '') : '#/' + flatKind + '/' + diveId())
-    : !cui.hidden ? '#/chip/' + chipRow + (chipMode === 'build' ? '/build' : '') : !pui.hidden ? '#/place/datacentre/' + dcLv : !fui.hidden ? '#/place/phones/' + phLv : !kui.hidden ? '#/place/cars/' + caLv : location.hash;
+    : !cui.hidden ? '#/chip/' + chipRow + '/build' : !pui.hidden ? '#/place/datacentre/' + dcLv : !fui.hidden ? '#/place/phones/' + phLv : !kui.hidden ? '#/place/cars/' + caLv : location.hash;
   const whereNow = () => { const k = partsOf(location.hash)[0], W = Way.whereOf(k === 'ask' || k === 'do' || k === 'supply' ? location.hash : liveHash()); return W.view === 'island' && cur && !sheet.hidden ? Way.whereOf('#/place/' + cur.place) : W; };
   /* the address always says where you are (so it can be shared, and a reload comes back here), and the loop in the
      bar follows: walking the line from the wires to the test house to the port, the stage lit moves with you */
@@ -302,17 +302,17 @@ export function start() {
     return '<div class="wmeet"><p class="kicker">' + esc(t('world.here')) + '</p>' + ids.map(id => '<a class="wchip" href="#/w/' + id + '" data-wt="' + id + '" style="--qc:' + Worlds.colorOf(id) + '"' + (WT ? '' : ' hidden') + '><span class="wq"></span><span class="wl small"></span></a>').join('') + '</div>'; };
   const askLink = k => '<a class="askq" href="' + esc(followW(k)) + '" style="--qc:' + qColor(k) + '"><span class="q">' + esc(t('stop.' + k + '.q')) + '</span><span class="small muted">' + esc(t('sheet.follow')) + '</span></a>';
   /* Inside: the place's levels, one inside the next, with what waits at each; then any other way in */
-  /* a level opens where it is drawn best: the flight through the data centre, the chip's layers (a depth of the
-     dive, or the factory step that makes it), or else the current site */
-  const rowOf = d => { const i = ROWS.findIndex(r => r.dive === d || r.made.includes(d)); return i < 0 ? null : { row: i, build: !ROWS.some(r => r.dive === d) }; };
+  /* a level opens where it is drawn best: the flight through the data centre, the dive (the one way down through a
+     chip), the line, the bench, or the chip's layers for a factory step that makes one of them */
+  const rowOf = d => { const i = ROWS.findIndex(r => r.made.includes(d)); return i < 0 ? null : { row: i }; };
   /* the flat dive's levels (the earlier site's zoom, in the frame): from the chip down to the atom */
   const DIVE_LEVELS = Game.DIVE_LEVELS;
   const levelHref = (place, l) => { if (place === 'datacentre' && l.depth === 'board') return '#/board'; const f = (Game.FLOWN[place] || {})[l.depth]; if (f != null) return '#/place/' + place + '/' + f;
     if (FLAT_WORLDS.includes(l.world)) return '#/dive/' + l.depth + '/' + l.world;
-    if (DIVE_LEVELS.includes(l.depth) && l.depth !== 'chip') return '#/dive/' + l.depth;
+    if (DIVE_LEVELS.includes(l.depth)) return '#/dive/' + l.depth;
     if (l.world === 'design') return '#/bench/' + l.depth;
     if (l.world === 'journey') return '#/line/' + l.depth;
-    const c = rowOf(l.depth); return c ? '#/chip/' + c.row + (c.build ? '/build' : '') : Game.viewOfDepth(l.depth); };
+    const c = rowOf(l.depth); return c ? '#/chip/' + c.row + '/build' : Game.viewOfDepth(l.depth); };
   /* the worlds with a flat dive of their own, besides the data centre's */
   const FLAT_WORLDS = ['phone', 'car', 'made'];
   /* where going inside a place leads: its first level, drawn in the frame */
@@ -651,51 +651,58 @@ export function start() {
   }
   const hideCa = () => { $('carCanvas').hidden = $('carLabels').hidden = true; kui.hidden = true; if (ca) ca.pause(); };
 
-  /* ---- inside a chip, layer by layer: the dive (used) and the line (made) as one picture, turned by the Turn ---- */
+  /* ---- inside a chip, layer by layer: the levels of the dive as they are made (the lower half of the Make column).
+     The dive is the only way down through a chip; this is the same level as made, reached along the loop (← →, or
+     Make in the bar) and left the same way, back to the dive at the level you are at. In · out (↑ ↓, the rail, the
+     wheel, the way in on the picture) moves through the rows, each a level as made; going up a row is the next
+     step the factory does, so the stack is built as you climb it ---- */
   const cui = $('chipui');
-  let chipMode = 'dive', chipRow = 0, chipFrame = null;
+  let chipRow = 0, chipFrame = null;
   const ensureChip = () => chipP || (chipP = import('./chip3d.js').then(m => { chip = m.createChip($('chipCanvas'), $('chipLabels'), { row: r => { chipRow = r; chipPanel(); },
-    depth: z => { if (chipFrame) chipFrame.rail(ROWS[Math.round(z)].dive, chipMode === 'build' ? 1 - z / (ROWS.length - 1) : z / (ROWS.length - 1), z); },
+    depth: z => { if (chipFrame) chipFrame.rail(ROWS[Math.round(z)].dive, z / (ROWS.length - 1), z); },
     /* the picture is framed in what the frame leaves free, and the way in stands beside the next layer, with its ring */
-    inset: () => frameInset(chipFrame), portal: p => chipFrame && chipFrame.inwardAt(chipMode === 'dive' ? p : null) }); return chip; }));
+    inset: () => frameInset(chipFrame), portal: p => chipFrame && chipFrame.inwardAt(p) }); return chip; }));
   /* the part of the picture the frame leaves free, in pixels from each edge: the rail at the left, the bar and the way
      out at the top, and the card below where it is not a bench at the right (the canvas already ends at the bench) */
   const frameInset = fr => { const wide = innerWidth > 720, bench = innerWidth >= 1100, dw = fr && fr.dock.parentNode;
     return { l: wide ? 100 : 10, r: wide ? 24 : 10, t: wide ? 128 : 112, b: bench ? 24 : (dw && dw.offsetHeight ? (fr.restH ? fr.restH() : dw.offsetHeight) + (wide ? 30 : 22) : 260) }; };
   const stepNames = r => ROWS[r].made.map(d => t('depth.' + d + '.name')).join(' → ');
+  /* the factory step that makes a row: Do and Ask at a row are about making it, and the line is where it is walked */
+  const rowStep = r => ROWS[r].made[ROWS[r].made.length - 1];
   function chipPanel() {
     if (!chipFrame) return;
-    chipFrame.level(ROWS[chipRow].dive); here();
+    chipFrame.level(rowStep(chipRow)); here();
     if (chipFrame.mode() === 'look') drawChip();
   }
   function drawChip() {
-    const r = chipRow, R = ROWS[r], build = chipMode === 'build', n = build ? ROWS.length - r : r + 1, key = CHIP_ASK[chipMode][r];
-    const kicker = t(build ? 'chipx.stepN' : 'chipx.levelN', { n, total: ROWS.length }) + ' · ' + (build ? stepNames(r) : t('depth.' + R.dive + '.name'));
-    const line = build ? R.made.map(d => t('depth.' + d + '.see')).join(' ') : t('depth.' + R.dive + '.see');
-    const nextR = build ? r - 1 : r + 1, done = build ? r === 0 : r === ROWS.length - 1;
+    const r = chipRow, R = ROWS[r], nm = d => t('depth.' + d + '.name'), last = r === ROWS.length - 1;
+    /* the level, as made, and the step that makes it: the factory makes them from the bottom up */
+    const kicker = t('chipx.madeAs', { level: nm(R.dive) });
+    const line = t('chipx.order', { steps: stepNames(r), n: ROWS.length - r, total: ROWS.length }) + ' ' + R.made.map(d => t('depth.' + d + '.see')).join(' ');
     /* your own design, where the chip carries it: the gates you wrote are printed, etched and wired here */
-    const Y = Game.yourDesign(S), yk = Y && (build ? ({ 1: 'wires', 2: 'print', 3: 'etch' })[r] : r === 2 ? 'gate' : null);
+    const Y = Game.yourDesign(S), yk = Y && ({ 1: 'wires', 2: 'print', 3: 'etch' })[r];
     const yours = yk ? '<div class="yours"><span class="kicker">' + esc(t('chipx.yours')) + '</span>' + esc(t('chipx.yours.' + yk, { name: t('design.proj.' + Y.p + '.t'), gates: Y.B.M.cells.length, transistors: Y.B.transistors, masks: Y.B.masks, wire: Math.round(Y.B.RT ? Y.B.RT.wl : 0) })) + '</div>'
       : !Y && r === 2 ? '<a class="yours none" href="#/place/studio">' + esc(t('chipx.yoursNone')) + '</a>' : '';
-    chipFrame.dock.innerHTML = lineHtml(kicker, line, key,
-      /* the same order on every dock: back and the other views on the left, the next step on the right */
-      '<span class="navl">' + ((build ? r < ROWS.length - 1 : r > 0) ? '<button type="button" class="btn ghost" data-key="back" data-rowgo="' + (build ? r + 1 : r - 1) + '">' + esc(t('story.back')) + '</button>' : '') +
-      '<a class="btn" href="' + esc(build ? '#/place/fab/inside' : '#/dive/' + R.dive) + '">' + esc(t(build ? 'chipx.atFab' : 'dive.flat')) + '</a></span>' +
-      (done ? '<a class="btn primary" data-key="next" href="' + (build ? '#/place/port' : '#/') + '">' + esc(t(build ? 'chipx.ship' : 'chipx.back')) + '</a>' : '<button type="button" class="btn primary" data-key="next"' + (build ? ' data-along data-alongname="' + esc(stepNames(nextR)) + '"' : ' data-in data-inname="' + esc(t('depth.' + ROWS[nextR].dive + '.name')) + '"') + ' data-rowgo="' + nextR + '">' + esc(t(build ? 'chipx.next' : 'chipx.deeper')) + '</button>')).replace('<div class="nav">', yours + '<div class="nav">');
+    /* the same card as the dive's: up and deeper (↑ ↓), the step on the factory's line, and the level at the other
+       stages of the loop (In use is the dive, at this level) */
+    chipFrame.dock.innerHTML = lineHtml(kicker, line, CHIP_ASK[r], aroundRow(
+      r ? '<button type="button" class="chipb" data-key="back" data-rowgo="' + (r - 1) + '">↑ ' + esc(nm(ROWS[r - 1].dive)) + '</button>' : '',
+      last ? '<a class="chipb" href="#/">' + esc(t('chipx.back')) + '</a>' : '<button type="button" class="chipb" data-key="next" data-in data-inname="' + esc(nm(ROWS[r + 1].dive)) + '" data-rowgo="' + (r + 1) + '">↓ ' + esc(nm(ROWS[r + 1].dive)) + '</button>',
+      '<a class="chipb" href="#/line/' + rowStep(r) + '">' + esc(t('chipx.onLine', { steps: nm(rowStep(r)) })) + '</a>')).replace('<div class="nav">', yours + '<div class="nav">');
   }
-  function showChip(row, mode) {
+  function showChip(row) {
     hideAll();
     $('chipCanvas').hidden = $('chipLabels').hidden = false; cui.hidden = false; showStage(true); document.body.classList.add('immersive');
-    chipMode = mode === 'build' ? 'build' : 'dive'; chipRow = row != null && row >= 0 && row < ROWS.length ? row : chipMode === 'build' ? ROWS.length - 1 : 0;
+    chipRow = row != null && row >= 0 && row < ROWS.length ? row : 0;
     loading(true);
     const want = chipRow;   /* the chip may report its first row before the frame is ready */
-    lastPlace = 'datacentre';
+    lastPlace = 'fab';
     return Promise.all([withFrame(), ensureChip()]).then(([, c]) => {
-      chipFrame = frameOf(cui, { up: { href: '#/place/datacentre/5', label: t('board.up') }, path: [{ href: '#/', label: t('place.back') }, { href: '#/place/datacentre/5', label: t('map.datacentre.t') }, { label: t('chipx.title') }],
+      chipFrame = frameOf(cui, { up: { href: '#/place/fab', label: t('map.fab.t') }, path: [{ href: '#/', label: t('place.back') }, { href: '#/place/fab', label: t('map.fab.t') }, { label: t('chipx.title') }],
         rail: { label: t('place.levels'), items: ROWS.map(x => ({ id: x.dive, label: t('depth.' + x.dive + '.name'), size: sizeOf(x.dive) })) },
         onRail: d => c.go(ROWS.findIndex(x => x.dive === d)), onLook: drawChip });
       cui.onclick = e => { const b = e.target.closest('[data-rowgo]'); if (b) c.go(+b.dataset.rowgo); };
-      loading(false); chipRow = want; c.mode(chipMode); c.set(want); c.resume(); chipPanel(); $('chipCanvas').focus({ preventScroll: true });
+      loading(false); chipRow = want; c.set(want); c.resume(); chipPanel(); $('chipCanvas').focus({ preventScroll: true });
     });
   }
 
@@ -1023,7 +1030,7 @@ export function start() {
   /* ---- one board, no side panel: words on the parts, a story docked below that drives the camera ---- */
   const bui = $('boardui');
   const hideBoard = () => { $('boardCanvas').hidden = $('boardLabels').hidden = true; bui.hidden = true; board && board.pause(); };
-  const ensureBoard = () => boardP || (boardP = import('./board3d.js').then(m => (board = m.createBoard($('boardCanvas'), $('boardLabels'), { part: id => story && story.part(id), dive: () => { location.hash = '#/chip/0'; },
+  const ensureBoard = () => boardP || (boardP = import('./board3d.js').then(m => (board = m.createBoard($('boardCanvas'), $('boardLabels'), { part: id => story && story.part(id), dive: () => { location.hash = '#/dive/chip'; },
     inset: () => frameInset(boardFrame), portal: p => boardFrame && boardFrame.inwardAt(p) }))));
   function showBoard() {
     hideAll(); document.body.classList.add('immersive');
@@ -1033,7 +1040,7 @@ export function start() {
       loading(false); b.resume(); const data = Sd.boardStory();
       const fr = boardFrame = frameOf(bui, { up: { href: '#/place/datacentre/4', label: t('board.up') }, path: [{ href: '#/', label: t('place.back') }, { href: '#/place/datacentre/4', label: t('map.datacentre.t') }, { label: t('place.dc.board.t') }],
         rail: { label: t('place.levels'), items: LEVELS.map(k => ({ id: k, label: t('place.dc.' + k + '.t'), size: sizeOf(k) })) },
-        onRail: k => { location.hash = k === 'chip' ? '#/chip/0' : k === 'board' ? '#/board' : '#/place/datacentre/' + LEVELS.indexOf(k); }, onLook: () => story && story.go(story.at) });
+        onRail: k => { location.hash = k === 'chip' ? '#/dive/chip' : k === 'board' ? '#/board' : '#/place/datacentre/' + LEVELS.indexOf(k); }, onLook: () => story && story.go(story.at) });
       fr.rail('board', LEVELS.indexOf('board') / (LEVELS.length - 1)); fr.level('board');
       story = St.createStory(fr.dock, b, data, { follow, step: st => wayToChip(fr, st) || fr.goal(st.live ? '<p class="kicker">' + esc(t('board.goal')) + '</p>' + data.gauges(data.state).map(x => '<div class="gauge' + (x.warm ? ' warmg' : ' ok') + '"><span class="gl">' + esc(t('board.gauge.' + x.id)) + '</span><span class="gv">' + esc(x.text) + '</span><span class="gbar"><span style="width:' + Math.round(x.v * 100) + '%"></span></span></div>').join('') : null) });
       $('boardCanvas').focus({ preventScroll: true });
@@ -1041,7 +1048,7 @@ export function start() {
   }
   let story = null, boardFrame = null;
   /* the board's way in, into its chip, on every step of its story (the last step's own way on is that way) */
-  const wayToChip = (fr, st) => { if (!st.end) { const nav = fr.dock.querySelector('.nav'); if (nav) nav.insertAdjacentHTML('beforebegin', '<p class="wayrow"><a class="chipb" data-in data-inname="' + esc(t('depth.chip.name')) + '" href="#/chip/0">↓ ' + esc(t('board.end.dive')) + '</a></p>'); } return false; };
+  const wayToChip = (fr, st) => { if (!st.end) { const nav = fr.dock.querySelector('.nav'); if (nav) nav.insertAdjacentHTML('beforebegin', '<p class="wayrow"><a class="chipb" data-in data-inname="' + esc(t('depth.chip.name')) + '" href="#/dive/chip">↓ ' + esc(t('board.end.dive')) + '</a></p>'); } return false; };
   /* every view hides the others first */
   function hideAll() {
     $('diveCanvas').hidden = true; vui.hidden = true; dive && dive.stop(); hide3d(); $('flatLabels').hidden = true; if (flatWords) flatWords.clear();
@@ -1396,7 +1403,7 @@ export function start() {
     if (k === 'do' && parts[1]) { const ch = chOf(decodeURIComponent(parts[1])), home = doPlace(ch);
       if (home) return show(partsOf(home), from).then(() => { shownAt = '#/' + parts.join('/'); openBench(ch); });
       return showMap(from).then(() => openChallenge(ch)); }
-    if (k === 'chip') return showChip(parts[1] != null ? +parts[1] : null, parts[2]);
+    if (k === 'chip') return showChip(parts[1] != null ? +parts[1] : null);
     /* the data centre's flight is entered at one of its levels (#/place/datacentre/2); the place itself opens on the island */
     if (k === 'place' && parts[1] === 'datacentre' && /^\d+$/.test(parts[2] || '')) return showPlace('datacentre', +parts[2]);
     /* and a phone's, the same way (#/place/phones/2) */

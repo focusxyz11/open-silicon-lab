@@ -130,7 +130,7 @@ nothing else. A visitor never has to know a view's name.
 | Map | places and how they connect | the island, the ecosystem |
 | Flight | moving into a place, continuously, in 3D | the data centre (then the phone, the car) |
 | Dive | the depths inside a chip, as a flat, continuous zoom | block, gate, switch, atom |
-| Stack | where the dive meets the line | inside a chip, read top down or built bottom up |
+| Stack | a chip's levels as made, the lower half of the Make column | inside a chip, built bottom up; reached along from the dive, never a second way down |
 | Line | the factory, step by step, following a wafer | crystal to package |
 | Bench | doing: describe, code, simulate, check | the studio, and every challenge |
 
@@ -299,7 +299,7 @@ where it is richer).
 | Frame: scene, ornaments, docked story, Look · Do · Ask | `src/v2/frame.js`, worn by the flight, the stack and the board |
 | Map | the island |
 | Flight | the data centre |
-| Stack | inside a chip (`#/chip`) |
+| Stack | inside a chip, as made (`#/chip/<row>/build`) |
 | Dive | the earlier site's flat zoom in the frame (`#/dive/<depth>`), chip to atom; the flight goes on into it |
 | Line | the earlier site's factory in the frame (`#/line/<step>`): a wafer travelling between the machines, step by step; your design at printing, etching and wiring |
 | Bench | the studio in the frame (`#/bench/<level>[/<challenge>]`): its drawings show your design; a design challenge is played in the dock and the drawings follow it; masks lead to the line |
