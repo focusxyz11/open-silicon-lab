@@ -25,7 +25,7 @@ const SECTIONS = [
   ['seams', 'a fresh visitor crosses a seam and its leak rises; What if? between the islands'],
   ['labs', 'every lab and bet played to its win on a flat page'],
   ['search', 'something to look for at a level, kept in your log'],
-  ['ways', 'the ways on the picture: Go inside on the island, along and in on the line, the phone\'s peek and swipe'],
+  ['ways', 'the ways on the picture: Go inside on the island, along and in on the line, one way down through a chip (the stack is Make, along from the dive), the phone\'s peek and swipe'],
   ['frame', 'the size at every level and the ring on the way in, desktop and phone'],
   ['flights', 'the data centre\'s way in and its flight into the chip; the phone\'s and the car\'s flights into their chips'],
   ['machines', 'machines from shared blocks: a form changed, an agent\'s pick used, where it is made, liquid hardware keeping up with a radio, the lab\'s curve and an attempt kept, new matter\'s claims and the guesses switch, desktop and phone'],
@@ -283,16 +283,17 @@ const explore = async (tag, viewport, scheme) => {
   if (await page.$('#diveui .dock .player')) problems.push(tag + ': Look does not lead back from a challenge to the story');
   at = tag + ' ' + '#/build'; await page.evaluate(() => { location.hash = '#/build'; });
   await page.waitForSelector('#sheet .tree [data-piece]', { timeout: 10000 }).catch(() => problems.push(tag + ': the build page has no plan'));
-  /* inside a chip: dive down the layers, then switch to building them and step up */
-  at = tag + ' ' + '#/chip/0'; await page.evaluate(() => { location.hash = '#/chip/0'; });
-  /* the frame: the rail, Look · Do · Ask from the atlas, and the Turn between used and made */
-  await page.waitForSelector('#chipui .dock .line', { timeout: 15000 }).catch(() => problems.push(tag + ': the chip view did not open in its frame'));
-  await page.click('#chipui [data-rowgo="1"]').catch(() => problems.push(tag + ': no way deeper in the chip'));
-  await page.waitForFunction(() => { const c = document.querySelector('#chipui .rail2 [aria-current]'); return c && c.dataset.rail === 'block'; }, null, { timeout: 15000 }).catch(() => problems.push(tag + ': going deeper did not reach the blocks'));
-  /* along: the loop in the bar turns the stack to the same layer as it is made, in place */
-  await page.click('#loop [data-stage="make"]').catch(() => problems.push(tag + ': no way along the loop from the chip'));
-  await page.waitForFunction(() => location.hash === '#/chip/1/build' && /Wires/.test((document.querySelector('#chipui .dock .kicker') || {}).textContent || ''), null, { timeout: 15000 }).catch(() => {});
-  if (!/Wires/.test(await page.textContent('#chipui .dock .kicker').catch(() => ''))) problems.push(tag + ': turning to made does not name the step that made this layer');
+  /* inside a chip there is one way down, the dive; the layers of the chip as made are the same levels, along the loop */
+  at = tag + ' ' + '#/dive/block'; await page.evaluate(() => { location.hash = '#/dive/block'; });
+  await page.waitForFunction(() => { const c = document.querySelector('#diveui .rail2 [aria-current]'); return c && c.dataset.rail === 'block'; }, null, { timeout: 15000 }).catch(() => problems.push(tag + ': the dive did not open at the block'));
+  /* along: Make in the bar turns the block to the same level as made, the stack's row of wires */
+  await page.click('#loop [data-stage="make"]').catch(() => problems.push(tag + ': no way along the loop from the block'));
+  await page.waitForFunction(() => location.hash === '#/chip/1/build' && /Wires/.test((document.querySelector('#chipui .dock') || {}).textContent || ''), null, { timeout: 15000 }).catch(() => {});
+  /* the frame: the rail, Look · Do · Ask from the atlas */
+  if (!/Wires/.test(await page.textContent('#chipui .dock').catch(() => ''))) problems.push(tag + ': turning to made does not name the step that made this layer');
+  await page.waitForFunction(() => !!document.querySelector('#chipui .rail2 [aria-current][data-rail="block"]'), null, { timeout: 15000 }).catch(() => problems.push(tag + ': the layers as made are not at the level the dive was at'));
+  await page.click('#chipui [data-rowgo="2"]').catch(() => problems.push(tag + ': no way deeper in the layers as made'));
+  await page.waitForFunction(() => { const c = document.querySelector('#chipui .rail2 [aria-current]'); return c && c.dataset.rail === 'gate' && location.hash === '#/chip/2/build'; }, null, { timeout: 15000 }).catch(() => problems.push(tag + ': going deeper in the layers as made did not reach the gates'));
   await page.click('#chipui .modes3 [data-mode="ask"]').catch(() => {});
   if (!(await page.$('#chipui .dock .askline'))) problems.push(tag + ': Ask shows no questions at this level');
   await page.click('#chipui .dock [data-mode="look"]').catch(() => {});
@@ -303,7 +304,10 @@ const explore = async (tag, viewport, scheme) => {
   await page.waitForFunction(() => { const c = document.querySelector('#diveui .rail2 [aria-current]'); return c && c.dataset.rail === 'switch'; }, null, { timeout: 15000 }).catch(() => problems.push(tag + ': going deeper in the dive did not reach the switch'));
   if (!(await page.$('#loop [data-stage="make"].holds'))) problems.push(tag + ': the loop does not say that Make holds the level in view');
   await page.click('#loop [data-stage="make"]').catch(() => problems.push(tag + ': no way along the loop from the dive'));
-  await page.waitForFunction(() => location.hash === '#/line/etch', null, { timeout: 8000 }).catch(() => problems.push(tag + ': turning the switch to made did not open its factory step'));
+  await page.waitForFunction(() => location.hash === '#/chip/3/build' && /Etch/.test((document.querySelector('#chipui .dock') || {}).textContent || ''), null, { timeout: 15000 }).catch(() => problems.push(tag + ': turning the switch to made did not open its layer as made'));
+  /* and from the layer as made, its step on the factory's line */
+  await page.click('#chipui .dock a[href="#/line/etch"]').catch(() => problems.push(tag + ': the switch as made does not lead to its step on the line'));
+  await page.waitForFunction(() => location.hash === '#/line/etch', null, { timeout: 8000 }).catch(() => problems.push(tag + ': the layer as made did not open its factory step'));
   /* the line: the factory step by step, in the frame */
   await page.waitForFunction(() => { const c = document.querySelector('#diveui .rail2 [aria-current]'); return c && c.dataset.rail === 'etch'; }, null, { timeout: 15000 }).catch(() => problems.push(tag + ': the line did not open at etching'));
   await page.click('#diveui [data-divego][data-key="next"]').catch(() => problems.push(tag + ': no next step on the line'));
@@ -691,6 +695,35 @@ run['ways'] = async () => {
     await wp.waitForFunction(() => { const b = document.querySelector('#diveui .wayin:not([hidden]) .wigo'); if (b && location.hash === '#/line/etch' && /switch/.test(b.getAttribute('href') || '')) b.click(); return location.hash.startsWith('#/dive/switch'); }, null, { timeout: 60000, polling: 3000 })
       .catch(() => problems.push(tag + ': the way in on the line does not go inside what the station makes'));
     await wp.close(); }
+  /* one way down through a chip (#230): the dive is the way down; the stack is the same level as made, reached along
+     the loop (Make in the bar, underlined beforehand), with the address and the bar saying Make, and along back
+     returns to the dive at the same level. Neither card offers a second way down, and an old address of the stack
+     is the same place. A page of its own, as it moves between views */
+  at = 'ways stack'; { const tag = 'ways stack', sp = await browser3d.newPage({ viewport: { width: 1280, height: 800 } });
+    sp.on('pageerror', e => problems.push(tag + ': ' + e.message));
+    await sp.goto(base + 'index.html#/dive/gate');
+    const ways = ui => [...document.querySelectorAll(ui + ' .dock [data-in], ' + ui + ' .wayin:not([hidden]) .wigo')].map(e => e.getAttribute('href') || 'row ' + e.dataset.rowgo);
+    await sp.waitForFunction(() => location.hash === '#/dive/gate' && !!document.querySelector('#loop [data-stage="make"].holds') && !!document.querySelector('#diveui .rail2 [aria-current][data-rail="gate"]'), null, { timeout: 90000, polling: 1000 })
+      .catch(() => problems.push(tag + ': at the dive\'s gate, the bar does not underline Make'));
+    if ((await sp.evaluate(ways, '#diveui')).some(h => /^#\/chip\//.test(h))) problems.push(tag + ': the dive offers the stack as a way down');
+    await sp.waitForFunction(() => { if (location.hash === '#/dive/gate') { const b = document.querySelector('#loop [data-stage="make"]'); if (b) b.click(); }
+      const c = document.querySelector('#chipui .rail2 [aria-current]'), s = document.querySelector('#loop [aria-current]');
+      return location.hash === '#/chip/2/build' && !document.getElementById('chipui').hidden && !!c && c.dataset.rail === 'gate' && !!s && s.dataset.stage === 'make' && /Print/.test(document.querySelector('#chipui .dock').textContent); }, null, { timeout: 90000, polling: 2000 })
+      .catch(() => problems.push(tag + ': along to Make from the dive\'s gate does not land on the gate as made, with the address and the bar saying Make'));
+    /* the stack's only way down is its own next level; no flat dive beside it */
+    const inStack = await sp.evaluate(ways, '#chipui');
+    if (!inStack.length || inStack.some(h => !/^row /.test(h))) problems.push(tag + ': the gate as made offers another way down: ' + inStack.join(', '));
+    if (/flat dive/i.test(await sp.textContent('#chipui').catch(() => ''))) problems.push(tag + ': the stack still offers the flat dive');
+    if (!(await sp.$('#loop [data-stage="use"].holds'))) problems.push(tag + ': in the stack, the bar does not underline Use');
+    await sp.waitForFunction(() => { if (location.hash === '#/chip/2/build') { const b = document.querySelector('#loop [data-stage="use"]'); if (b) b.click(); }
+      const c = document.querySelector('#diveui .rail2 [aria-current]'), s = document.querySelector('#loop [aria-current]');
+      return location.hash === '#/dive/gate' && !document.getElementById('diveui').hidden && !!c && c.dataset.rail === 'gate' && !!s && s.dataset.stage === 'use'; }, null, { timeout: 90000, polling: 2000 })
+      .catch(() => problems.push(tag + ': along back to Use from the gate as made does not return to the dive\'s gate'));
+    /* an old address of the stack still opens it, and the address then says where you are */
+    await sp.evaluate(() => { location.hash = '#/chip/1'; });
+    await sp.waitForFunction(() => location.hash === '#/chip/1/build' && !!document.querySelector('#chipui .rail2 [aria-current][data-rail="block"]') && ((document.querySelector('#loop [aria-current]') || {}).dataset || {}).stage === 'make', null, { timeout: 90000, polling: 1000 })
+      .catch(() => problems.push(tag + ': an old address of the stack does not open the block as made, saying Make'));
+    await sp.close(); }
   /* the dive on a phone: the card rests as a peek, opens when touched and steps aside when the picture is touched; a
      swipe up on the picture goes one level in */
   at = 'ways phone'; { const tag = 'ways phone', pp = await browser3d.newPage({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });

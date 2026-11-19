@@ -61,7 +61,10 @@ export function whereOf(hash) {
   if (k === 'dive') { const world = p[2] || DIVE_WORLD[p[1]] || 'datacentre'; return cell('dive', DIVE_PLACE[world] || 'datacentre', p[1] || 'chip', world === 'made' ? 'make' : 'use', { world }); }
   if (k === 'line') { const level = p[1] || 'crystal'; return cell('line', placeOf('journey', level) || 'fab', level); }
   if (k === 'bench') return cell('bench', 'studio', p[1] || 'need');
-  if (k === 'chip') { const row = Math.min(DIVE_LEVELS.length - 1, Math.max(0, +p[1] || 0)), build = p[2] === 'build'; return cell('chip', build ? 'fab' : 'datacentre', DIVE_LEVELS[row], build ? 'make' : 'use', { row, build }); }
+  /* inside a chip, layer by layer: the stack is the lower half of the Make column, each row a level of the dive as it is
+     made (the block as wired, the gate as printed). An old address without /build is the same place */
+  if (k === 'chip') { const row = Math.min(DIVE_LEVELS.length - 1, Math.max(0, +p[1] || 0)), level = DIVE_LEVELS[row], made = twinOf(level).made;
+    return cell('chip', 'fab', level, 'make', { row, build: true, step: made[made.length - 1] }); }
   if (k === 'board') return cell('board', 'datacentre', 'board');
   if (k === 'supply') return cell('supply', 'port', 'ship');
   if (k === 'build') return cell('page', 'lab');
@@ -74,19 +77,22 @@ export function whereOf(hash) {
 
 /* along: the address of another stage of the loop, from where you are. The depth is held where the level has a
    twin there (the atlas's Turn), the factory's line is walked where you are already on it, and otherwise the move
-   lands at that stage's place on the island. Null when you are already at that stage, inside a place. */
+   lands at that stage's place on the island. Null when you are already at that stage, inside a place.
+   Inside a chip there is one way down, the dive (Use); a level of it seen as made is the same row of the stack
+   (Make), so along turns between the two at the level you are at, and in · out moves through the levels of
+   whichever you are in. */
 export function alongTo(where, stage) {
   if (!STAGES.includes(stage)) return null;
   const W = where || cell('island'), home = '#/place/' + STAGE_PLACE[stage];
   if (W.stage === stage && W.view !== 'island' && W.view !== 'page') return null;
   if (stage === 'open') return home;
-  if (W.view === 'chip' && (stage === 'make' || stage === 'use')) return '#/chip/' + W.row + (stage === 'make' ? '/build' : '');
   if (W.view === 'line' && (stage === 'make' || stage === 'test' || stage === 'ship')) return '#/line/' + ({ make: 'wires', test: 'test', ship: 'pkg' })[stage];
   const tw = W.level && W.view !== 'island' ? twinOf(W.level === 'die' ? 'chip' : W.level) : null;
   if (tw) {
     if (stage === 'design' && tw.designed) return '#/bench/' + tw.designed;
-    /* a whole chip is made as a die on its wafer, and closed in its package on the way out */
-    if (stage === 'make') return tw.used === 'chip' ? '#/dive/die/made' : '#/line/' + tw.made[tw.made.length - 1];
+    /* a whole chip is made as a die on its wafer, and closed in its package on the way out; the levels inside it are
+       made layer by layer, and the stack shows each as made, in the same row (the dive is the only way down) */
+    if (stage === 'make') return tw.used === 'chip' ? '#/dive/die/made' : '#/chip/' + DIVE_LEVELS.indexOf(tw.used) + '/build';
     if (stage === 'ship' && tw.used === 'chip') return '#/line/pkg';
     if (stage === 'use') return '#/dive/' + tw.used;
   }

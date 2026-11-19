@@ -1,9 +1,10 @@
-/* Inside a chip, layer by layer: the dive and the factory line as one picture. A cut through a chip shows its
-   layers stacked as they are, the package on top, then the wires, the gates, the switches, and the silicon at the
-   bottom. Read from the top down it is the dive (what each depth is); read from the bottom up it is the line (how
-   each was made, in the order the factory makes them). One position z (0 = the top row, 4 = the bottom row) and
-   one mode: diving, the rows above you lift away; building, the rows above you are not made yet, and the row at
-   z is the factory step at work. Words: chipx.* and the depths' own (src/i18n/en.json). */
+/* Inside a chip, layer by layer: the levels of the dive as they are made (the lower half of the Make column,
+   docs/reviews/structure.md). A cut through a chip shows its layers stacked as they are, the package on top, then
+   the wires, the gates, the switches, and the silicon at the bottom. The dive is the only way down through a chip;
+   along from one of its levels turns to the same row here, as made. One position z (0 = the top row, 4 = the
+   bottom row): the rows above you are not made yet, and the row at z is the factory step at work; going up a row,
+   it comes down into place as its step runs, so the stack is built bottom up. Words: chipx.* and the depths' own
+   (src/i18n/en.json). */
 import { THREE, PALETTES, theme, stage, light, group, labels, clamp, smooth, reduced, rnd } from './kit3d.js';
 import { t } from '../core/i18n.js';
 import { VIEW_PARTS } from '../data/atlas.js';
@@ -16,8 +17,8 @@ export const ROWS = [
   { dive: 'switch', made: ['etch'] },
   { dive: 'atom', made: ['crystal', 'implant'] }
 ];
-/* the question at each row, one for diving and one for building (stops: stop.<key>.q) */
-export const ASK = { dive: ['think.chip', 'divide.block', 'think.gate', 'scale.switch', 'limit.atom'], build: ['make.pkg', 'make.wires', 'scale.print', 'make.etch', 'make.implant'] };
+/* the question at each row, about how it is made (stops: stop.<key>.q); the dive asks its own */
+export const ASK = ['make.pkg', 'make.wires', 'scale.print', 'make.etch', 'make.implant'];
 /* each row's top and half width: at a row the picture is framed on it and everything under it */
 const TOP = [8.95, 7.25, 3.98, 3.2, 2.3], HALF = [7, 6, 6, 6, 6];
 /* the way in at each row: a point on the next row, where it shows under this one (in that row's own space) */
@@ -86,18 +87,17 @@ export function createChip(canvas, host, on = {}) {
     [2, [5.8, 3.4, 0.0], 'gates'], [2, [-4.5, 3.98, -3.3], 'contacts'], [3, [-5, 3.2, 5], 'sheets'], [4, [-4.5, 2.3, 5.6], 'wells'], [4, [5.8, 1.1, 5.8], 'silicon']
   ].map(([r, p, id]) => { const lb = L.add(rows[r].g, new THREE.Vector3(...p), t('part.' + VIEW_PARTS.chip[id]), { cls: 'part3' }); lb.row = r; return lb; });
 
-  /* ---- the position and the mode, and what each row does at them ---- */
-  let z = 0, goal = 0, mode = 'dive', W = 1, Hh = 1, running = true, raf = 0, last = performance.now(), work = 0;
+  /* ---- the position, and what each row does at it ---- */
+  let z = 0, goal = 0, W = 1, Hh = 1, running = true, raf = 0, last = performance.now(), work = 0;
   const states = () => {
     rows.forEach((R, r) => {
-      let lift = 0, op = 1;
-      if (mode === 'dive') { const k = smooth(r + 0.15, r + 0.9, z); lift = k * (4 + (4 - r) * 0.6); op = 1 - 0.88 * k; }
-      else { const k = smooth(r + 0.1, r + 0.9, z); lift = k * 3.5; op = 1 - k; }   /* not made yet: it comes down into place as its step runs */
+      /* not made yet: it comes down into place as its step runs */
+      const k = smooth(r + 0.1, r + 0.9, z), lift = k * 3.5, op = 1 - k;
       R.g.position.y = lift; R.g.visible = op > 0.02;
       R.mats.forEach(m => { if (m.userData.base == null) m.userData.base = m.opacity; m.opacity = m.userData.base * op; m.depthWrite = op > 0.9 && m.userData.base > 0.5; });
     });
-    /* building: the row at work glows a little while its step runs */
-    const r = Math.round(z); rows.forEach((R, i) => R.mats.forEach(m => { if (m.emissive && m.userData.e == null) m.userData.e = m.emissiveIntensity; if (m.emissive) m.emissiveIntensity = (m.userData.e || 0) + (mode === 'build' && i === r ? 0.25 * work : 0); }));
+    /* the row at work glows a little while its step runs */
+    const r = Math.round(z); rows.forEach((R, i) => R.mats.forEach(m => { if (m.emissive && m.userData.e == null) m.userData.e = m.emissiveIntensity; if (m.emissive) m.emissiveIntensity = (m.userData.e || 0) + (i === r ? 0.25 * work : 0); }));
     named.forEach(lb => { lb.show = Math.abs(lb.row - z) < 0.6; });
   };
   /* framed in the part of the picture the frame leaves free (on.inset: pixels from each edge): the row in view and
@@ -119,11 +119,11 @@ export function createChip(canvas, host, on = {}) {
     let lo = 4, hi = 400; for (let k = 0; k < 16; k++) { const mid = Math.sqrt(lo * hi); if (fits(mid)) hi = mid; else lo = mid; }
     aimAt(hi, ty, yaw, pitch);
   };
-  /* the way in: beside the next row, at rest, diving */
+  /* the way in (a level deeper, as made): beside the next row, at rest */
   const pv = new THREE.Vector3();
   const portal = () => {
     const r = Math.round(z); if (!on.portal) return;
-    if (mode !== 'dive' || drag || Math.abs(z - r) > 0.02 || Math.abs(goal - z) > 0.02 || !INTO[r]) return on.portal(null);
+    if (drag || Math.abs(z - r) > 0.02 || Math.abs(goal - z) > 0.02 || !INTO[r]) return on.portal(null);
     rows[r + 1].g.updateWorldMatrix(true, false); pv.set(...INTO[r]).applyMatrix4(rows[r + 1].g.matrixWorld).project(camera);
     on.portal(pv.z < 1 ? { x: (pv.x + 1) / 2, y: (1 - pv.y) / 2 } : null);
   };
@@ -148,7 +148,7 @@ export function createChip(canvas, host, on = {}) {
     work = reduced() ? 0 : Math.max(0, work - dt * 0.6);
     pose(); states();
     sun.position.set(-14, 30, 18); sun.target.position.set(0, 3, 0);
-    const row = Math.round(z); if (row !== lastRow) { lastRow = row; if (mode === 'build') work = 1; on.row && on.row(row); }
+    const row = Math.round(z); if (row !== lastRow) { lastRow = row; work = 1; on.row && on.row(row); }
     on.depth && on.depth(z);
     st.draw(scene, camera);
     L.update(camera, W, Hh); portal();
@@ -157,7 +157,6 @@ export function createChip(canvas, host, on = {}) {
   return {
     go(v) { go(v); },
     set(v) { goal = z = clamp(v, 0, ROWS.length - 1); },
-    mode(m) { if (m) { mode = m; if (m === 'build') work = 1; } return mode; },
     get z() { return z; },
     pause() { running = false; cancelAnimationFrame(raf); },
     warm: () => st.warm(scene, camera),

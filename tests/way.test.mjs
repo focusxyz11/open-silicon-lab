@@ -45,8 +45,32 @@ test('along holds the depth: a level seen as used, made and designed is the same
   /* on the line, testing and shipping are stations of the same walk */
   assert.equal(alongTo(whereOf('#/line/print'), 'test'), '#/line/test');
   assert.equal(alongTo(whereOf('#/line/test'), 'ship'), '#/line/pkg');
-  /* the stack turns in place */
-  assert.equal(alongTo(whereOf('#/chip/2'), 'make'), '#/chip/2/build');
+});
+
+test('one way down through a chip: the dive is Use, the stack is the same levels as made, and along turns between them', () => {
+  const ROWS = ['chip', 'block', 'gate', 'switch', 'atom'];
+  /* the stack is the Make column, whatever the address says: an old link without /build is the same place */
+  ROWS.forEach((lv, r) => ['#/chip/' + r, '#/chip/' + r + '/build'].forEach(h => {
+    const W = whereOf(h); assert.equal(W.view, 'chip'); assert.equal(W.stage, 'make', h); assert.equal(W.level, lv, h); assert.equal(W.place, 'fab', h);
+    /* along back to Use lands on the dive at the same level, and nowhere in the stack offers it as a second way down */
+    assert.equal(alongTo(W, 'use'), '#/dive/' + lv, h + ' → use'); assert.ok(holds(W, 'use'));
+    assert.equal(alongTo(W, 'make'), null, h + ' is already Make');
+  }));
+  /* every level of the dive below the chip: along to Make lands on the stack's row of that level, the bar underlines
+     Make beforehand, and along back to Use returns to the same level of the dive */
+  for (const lv of ROWS.slice(1)) {
+    const used = whereOf('#/dive/' + lv), made = alongTo(used, 'make'), r = ROWS.indexOf(lv);
+    assert.equal(made, '#/chip/' + r + '/build', lv + ' as made'); assert.ok(holds(used, 'make'), lv + ': Make is not underlined');
+    const M = whereOf(made); assert.equal(M.level, lv); assert.equal(M.stage, 'make');
+    assert.equal(alongTo(M, 'use'), '#/dive/' + lv, lv + ' made → used');
+    /* and the whole round of the loop from there keeps the level wherever it exists */
+    for (const s of STAGES.filter(x => x !== 'use')) { const to = alongTo(M, s); if (to && holds(M, s)) assert.equal(whereOf(alongTo(whereOf(to), 'use')).level, lv, lv + ' → ' + s + ' → use'); }
+  }
+  /* the whole chip as made is the die on its wafer (the grid's Chip × Make), and back */
+  assert.equal(alongTo(whereOf('#/dive/chip'), 'make'), '#/dive/die/made'); assert.equal(alongTo(whereOf('#/chip/0/build'), 'use'), '#/dive/chip');
+  /* designed → made holds the level too: the gates you wrote, as printed */
+  assert.equal(alongTo(whereOf('#/bench/gates'), 'make'), '#/chip/2/build'); assert.equal(alongTo(whereOf('#/bench/layout'), 'make'), '#/chip/1/build');
+  assert.equal(alongTo(whereOf('#/chip/2/build'), 'design'), '#/bench/gates');
 });
 
 test('a challenge is played where its level is shown, or met at its place', () => {

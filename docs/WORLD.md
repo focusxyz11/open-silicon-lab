@@ -70,17 +70,18 @@ Where content meets the picture, three layers, each with one job, wired both way
 A story is data (`src/v2/stories.js`, played by `src/v2/story.js`); its numbers come from the engines, never from
 the words. Long reading belongs in a reading view opened on purpose, never beside the picture.
 
-## Inside a chip: the dive and the line as one picture
+## Inside a chip: the dive's levels as made
 
-The dive and the factory line meet in one view, `#/chip` (`src/v2/chip3d.js`): a cut through a chip, its layers
-stacked as they are. Read from the top down it is the dive: the package, the wires of a block, the gates, the
-switches, the silicon. Read from the bottom up it is the line: crystal and implant make the silicon, etch makes
-the switches, print makes the gates, wires join them, packaging closes it (`MADE` in `src/data/weave.js`). One
-position and two modes: diving, the layers above you lift away; building, they are not made yet, and come down
-into place step by step. The panel is an instrument, not a column of text: the two modes, the stack of rows (each
-a depth and the steps that make it), and what this row is or how it is made, with its question. Once you have won a design at the studio, your design is in these layers
-too: its gates printed at Print, its transistors etched at Etch, its wires laid at Wires (`yourDesign`). The data
-centre's flight ends by going into it; the levels block to atom, and the factory steps that make them, open it.
+The dive is the one way down through a chip (`#/dive/<level>`, the chip as used). The same levels as made are
+`#/chip/<row>/build` (`src/v2/chip3d.js`), the lower half of the Make column: a cut through a chip, its layers
+stacked as they are, the package, the wires of a block, the gates, the switches, the silicon. Each row is a level
+of the dive and the factory steps that make it: crystal and implant make the silicon, etch makes the switches,
+print makes the gates, wires join them, packaging closes it (`MADE` in `src/data/weave.js`). You reach it along
+the loop from the dive (Make in the bar), at the level you are at, and go back the same way (#230); in · out moves
+through its rows, the layers above you not made yet, so climbing it builds it, one step at a time. Its card is
+the dive's: up, deeper, the step on the factory's line, and the level at the other stages. Once you have won a
+design at the studio, your design is in these layers too: its gates printed at Print, its transistors etched at
+Etch, its wires laid at Wires (`yourDesign`).
 
 ## Every place has one card, with three faces
 

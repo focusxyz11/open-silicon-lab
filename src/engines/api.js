@@ -122,7 +122,7 @@ export function look({ at } = {}) {
   /* the steps of a line (the factory, the studio) follow each other; the levels of a dive are one inside the next */
   const steps = ['journey', 'design'].includes(L[i].world) && (!L[i + 1] || L[i + 1].world === L[i].world), prev = i ? L[i - 1].depth : W.place, next = L[i + 1] ? L[i + 1].depth : null;
   const parts = [...new Set(stopsAt(at).flatMap(k => STOPS[k]))].map(k => partWord(at, k)).filter(w => has('part.' + w)).map(w => ({ name: t('part.' + w), what: t('what.' + w) }));
-  const along = {}; STAGES.filter(s => s !== W.stage).forEach(s => { const w = whereOf(alongTo(W, s)); along[s] = w.view === 'island' ? w.place : w.level; });
+  const along = {}; STAGES.filter(s => s !== W.stage).forEach(s => { const w = whereOf(alongTo(W, s)); along[s] = w.view === 'island' ? w.place : w.step || w.level; });   /* a level as made is named by the step that makes it */
   return Object.assign(levelOut(at, { where: at, place: W.place, stage: W.stage, what: t('depth.' + at + '.see'), moves }), steps ? { back: prev, on: next } : { out: prev, in: next }, { along, parts,
     field: fieldOut(fieldAtLevel(at)),
     questions: stopsAt(at).map(k => ({ id: k, question: t('stop.' + k + '.q'), noticed: t('stop.' + k + '.note') })),
