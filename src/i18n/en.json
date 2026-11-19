@@ -2964,6 +2964,16 @@
  "frame.along.k": "Next",
  "frame.peek.open": "Show the whole card",
  "frame.peek.fold": "Fold the card down",
+ "frame2.across": "{size} across",
+ "frame2.more": "Read more",
+ "frame2.less": "Back to the picture",
+ "frame2.doOne": "Do · {what}",
+ "frame2.doN": {
+  "one": "Do · {n} challenge",
+  "other": "Do · {n} challenges"
+ },
+ "frame2.where": "Where you are",
+ "frame2.whereBack": "Back to the {level}, where you are",
  "place.here": "What you see here",
  "insp.inHint": "or double-click it, or scroll in",
  "insp.more": "More",

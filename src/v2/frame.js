@@ -21,6 +21,7 @@
 import { t, fmtNum } from '../core/i18n.js';
 import { TWINS } from '../data/atlas.js';
 import { fieldLine } from './field.js';
+import { ON as FRAME2, attach as frame2 } from './frame2.js';
 
 /* a size in metres, in words: 500 m, 80 cm, 1 mm, 1 µm, 50 nm, 0.5 nm */
 export function sizeWords(m) {
@@ -38,7 +39,7 @@ export const MODES = ['look', 'do', 'ask'];
 export const FACES = ['designed', 'made', 'used'];
 
 export function createFrame(host, o) {
-  let mode = 'look', depth = null, pinned = false;
+  let mode = 'look', depth = null, pinned = false, railAt = null;
   const path = o.path.slice(1);
   host.innerHTML =
     '<a class="homebtn" href="' + esc(o.up.href) + '" aria-label="' + esc(o.up.label) + '">↑</a>' +
@@ -166,13 +167,13 @@ export function createFrame(host, o) {
     const m = e.target.closest('[data-mode]'); if (m) { mode = m.dataset.mode; pinned = false; return fill(); }
     const r = e.target.closest('[data-rail]'); if (r) return o.onRail && o.onRail(r.dataset.rail);
   });
-  return {
+  const api = {
     dock,
     /* the level in view: Do and Ask follow it, and so does the Turn */
     level(d) { depth = d; counts(); if (mode !== 'look' && !pinned) fill(); },
     /* the rail: which item is here, and how far along (0..1) */
     /* pos: where the view is along the items, continuously (0 = the first); else read from f */
-    rail(at, f, pos) { host.querySelectorAll('[data-rail]').forEach(b => { if (b.dataset.rail === at) b.setAttribute('aria-current', 'step'); else b.removeAttribute('aria-current'); }); if (f != null) { const el = $('.rfill'); if (el) el.style.height = (f * 100).toFixed(1) + '%'; }
+    rail(at, f, pos) { railAt = at; host.querySelectorAll('[data-rail]').forEach(b => { if (b.dataset.rail === at) b.setAttribute('aria-current', 'step'); else b.removeAttribute('aria-current'); }); if (f != null) { const el = $('.rfill'); if (el) el.style.height = (f * 100).toFixed(1) + '%'; }
       scale(at, pos != null ? pos : f != null && o.rail ? f * (o.rail.items.length - 1) : null); },
     /* the stage of the loop a view shows is the shell's to say (the bar); kept so views need not know */
     face() {},
@@ -189,5 +190,9 @@ export function createFrame(host, o) {
     /* a question being followed: shown under Ask, and kept while the level changes beneath it */
     stop(html) { mode = 'ask'; pinned = true; host.querySelectorAll('[data-mode]').forEach(b => b.setAttribute('aria-selected', String(b.dataset.mode === 'ask'))); dock.innerHTML = html; dock.classList.remove('locked'); }
   };
+  /* the new frame, only behind ?frame=2 (src/v2/frame2.js, #271): the same frame worn as a caption, a side panel and a stage */
+  if (FRAME2) frame2(host, api, o, { wrap, items, at: () => railAt, doList: () => (depth && o.doAt ? o.doAt(depth) : []),
+    here: () => { const it = items.find(i => i.id === railAt); return it ? { label: it.label, size: it.size ? sizeWords(it.size) : '' } : null; } });
+  return api;
 }
 export { TWINS };

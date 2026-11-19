@@ -29,6 +29,7 @@ const SECTIONS = [
   ['frame', 'the size at every level and the ring on the way in, desktop and phone'],
   ['flights', 'the data centre\'s way in and its flight into the chip; the phone\'s and the car\'s flights into their chips'],
   ['machines', 'machines from shared blocks: a form changed, an agent\'s pick used, where it is made, liquid hardware keeping up with a radio, the lab\'s curve and an attempt kept, new matter\'s claims and the guesses switch, desktop and phone'],
+  ['frame2', 'the new frame behind ?frame=2 (#271): the caption at a dive level with its question in full, desktop and phone; Half the power won in Do mode, its instrument on the stage beside the panel that holds its controls'],
 ];
 const argv = process.argv.slice(2);
 if (argv.includes('--list')) { for (const [n, about] of SECTIONS) console.log(n.padEnd(16) + about); process.exit(0); }
@@ -874,6 +875,51 @@ run['machines'] = async () => {
     if (side > 1) problems.push(tag + ': the page scrolls sideways by ' + side + ' px');
     await fp.close();
   }
+};
+
+run['frame2'] = async () => {
+  /* the new frame, only behind ?frame=2 (src/v2/frame2.js, #271): Look is a caption on the picture with the level's
+     name and its whole question; Do gives a lab's instrument the stage, its controls in the side panel beside it. A
+     flat page of its own (a fresh visitor), as the labs' are; every move is done again inside the poll */
+  { const tag = 'frame2', fp = await browser.newPage({ viewport: { width: 1280, height: 800 } }); fp.on('pageerror', e => problems.push(tag + ': ' + e.message));
+    await fp.addInitScript(() => { try { localStorage.setItem('osl-quality', 'flat'); localStorage.setItem('osl-hints-v1', JSON.stringify({ seen: {}, off: true })); } catch (e) { /* no storage */ } });
+    await fp.goto(base + 'index.html?frame=2#/dive/block');
+    /* the caption: bottom left on the picture, the level's name as its title, the question whole (never cut), Read more and Do */
+    await fp.waitForFunction(() => { const w = document.querySelector('#diveui.f2cap > .dockwrap'), q = w && w.querySelector('.dock > .askline'), h = w && w.querySelector('.f2head .f2t');
+      if (!w || !q || !h || !h.textContent.trim() || !w.querySelector('[data-f2open]') || !w.querySelector('.f2do')) return false;
+      const r = w.getBoundingClientRect(), qr = q.getBoundingClientRect(), fs = parseFloat(getComputedStyle(q).fontSize);
+      return r.left < innerWidth / 2 && r.bottom <= innerHeight && r.top > 0 && qr.top >= r.top && qr.bottom <= r.bottom && q.scrollHeight <= q.clientHeight + 1 && fs >= 15; }, null, { timeout: 90000, polling: 1000 })
+      .catch(() => problems.push(tag + ': at the block, the caption does not show the level\'s name and its whole question on the picture'));
+    /* Read more: the whole card in the side panel, and back to the caption */
+    await fp.waitForFunction(() => { const b = document.querySelector('#diveui.f2cap [data-f2open]'); if (b) b.click(); return !!document.querySelector('#diveui.f2side.f2open .f2more .nav'); }, null, { timeout: 20000, polling: 1000 })
+      .catch(() => problems.push(tag + ': Read more does not open the whole card in the side panel'));
+    /* Do: Half the power, its chart on the stage left of the panel, its dials in the panel and in sight; won by the dials */
+    await fp.evaluate(() => { location.hash = '#/do/power-curve'; });
+    await fp.waitForFunction(() => { const set = (q, v) => { const i = document.querySelector(q); if (i && i.value !== String(v)) { i.value = v; i.dispatchEvent(new Event('input', { bubbles: true })); } };
+      const host = document.querySelector('#diveui.f2stage'), panel = host && host.querySelector('.dockwrap'), inst = host && host.querySelector('.player[data-ch="power-curve"] [data-f2="instrument"]'), goal = host && host.querySelector('[data-f2="goal"]');
+      if (!panel || !inst || !goal) return false;
+      set('#ckp-f', 2.25); set('#ckp-v', 0.61);
+      const P = panel.getBoundingClientRect(), I = inst.getBoundingClientRect(), G = goal.getBoundingClientRect(), dials = [...panel.querySelectorAll('#ckp-f, #ckp-v')].map(d => d.getBoundingClientRect());
+      return I.right <= P.left && I.width > 500 && I.height > 300 && G.bottom <= I.top && G.right <= P.left && dials.length === 2 && dials.every(d => d.left >= P.left && d.right <= P.right && d.top >= P.top && d.bottom <= innerHeight)
+        && !!host.querySelector('.f2where:not([hidden])') && !!host.querySelector('.player .won'); }, null, { timeout: 90000, polling: 1000 })
+      .catch(() => problems.push(tag + ': Half the power is not won in Do mode with its chart on the stage and its dials in the panel beside it'));
+    /* where you are leads back to the picture, and its caption */
+    await fp.waitForFunction(() => { const w = document.querySelector('#diveui .f2where:not([hidden])'); if (w) w.click(); return !!document.querySelector('#diveui.f2cap .f2head'); }, null, { timeout: 20000, polling: 1000 })
+      .catch(() => problems.push(tag + ': where you are does not lead back to the caption'));
+    const side = await fp.evaluate(() => document.documentElement.scrollWidth - innerWidth);
+    if (side > 1) problems.push(tag + ': the page scrolls sideways by ' + side + ' px');
+    await fp.close(); }
+  /* a phone: the caption is the sheet, and at rest it shows the level's name and the whole question */
+  { const tag = 'frame2 phone', pp = await browser.newPage({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true }); pp.on('pageerror', e => problems.push(tag + ': ' + e.message));
+    await pp.addInitScript(() => { try { localStorage.setItem('osl-quality', 'flat'); localStorage.setItem('osl-hints-v1', JSON.stringify({ seen: {}, off: true })); } catch (e) { /* no storage */ } });
+    await pp.goto(base + 'index.html?frame=2#/dive/gate');
+    await pp.waitForFunction(() => { const w = document.querySelector('#diveui.f2cap > .dockwrap.peek'), q = w && w.querySelector('.dock > .askline'), h = w && w.querySelector('.f2head .f2t');
+      if (!q || !h) return false; const r = w.getBoundingClientRect(), qr = q.getBoundingClientRect(), hr = h.getBoundingClientRect();
+      return hr.top >= r.top && qr.bottom <= r.bottom + 1 && q.scrollHeight <= q.clientHeight + 1 && w.scrollHeight <= w.clientHeight + 1 && r.bottom <= innerHeight; }, null, { timeout: 90000, polling: 1000 })
+      .catch(() => problems.push(tag + ': at rest, the sheet does not show the level\'s name and the whole question'));
+    const side = await pp.evaluate(() => document.documentElement.scrollWidth - innerWidth);
+    if (side > 1) problems.push(tag + ': the page scrolls sideways by ' + side + ' px');
+    await pp.close(); }
 };
 
 /* the sections asked for, in order; each says how long it took, so the groups in CI can be balanced */
