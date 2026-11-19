@@ -9,7 +9,7 @@ src/v2/app.js           the shell: routes in the address, the bar with the loop,
 src/v2/frame.js         the one frame on every view below the island: the rails, the levels, the card's Look · Do · Ask
 src/v2/game.js          the game as data and logic: the loop, the challenges, each place's doors, your state (tested)
 src/v2/map3d.js         the island: the loop road, the places, what grew, the islands across the sea
-src/v2/dc3d.js, phone3d-flight.js   the flights: the data centre and the phone, flown through to the chip
+src/v2/dc3d.js, phone3d-flight.js, car3d-flight.js   the flights: the data centre, the phone and the car, flown through to the chip
 src/v2/chip3d.js        inside a chip, layer by layer: the dive and the factory line as one stack
 src/v2/play.js, labs/   the challenge player, and the labs, one file each (docs/LABS.md)
 src/v2/kit3d.js         the one 3D stage, light, the two palettes, HTML labels at 3D points
