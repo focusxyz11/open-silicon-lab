@@ -35,9 +35,9 @@ export const VIEW_PARTS = {
   /* the flight through the data centre (src/v2/dc3d.js) */
   flight: { halls: 'building.halls', cooling: 'building.cooling', substation: 'building.substation', racks: 'building.racks', hotaisle: 'building.hotaisle', trays: 'building.trays', coldair: 'building.coldair',
     switch: 'rack.switch', servers: 'rack.servers', power: 'rack.power', fans: 'rack.fans', accelerator: 'board.bigchip', memory: 'board.memory', network: 'board.connectors',
-    package: 'chip.package', powerstages: 'board.power', die: 'pkg.die', hbm: 'pkg.memory' },
+    package: 'chip.package', powerstages: 'board.power', lid: 'pkg.lid', die: 'pkg.die', hbm: 'pkg.memory', base: 'pkg.substrate' },
   /* the flight through a phone (src/v2/phone3d-flight.js) */
-  phone: { screen: 'phone.screen', antenna: 'phone.antenna', battery: 'phone.battery', board: 'phone.board', camera: 'phone.camera', shield: 'phoneboard.shield',
+  phone: { screen: 'phone.screen', antenna: 'phone.antenna', cable: 'phone.cable', battery: 'phone.battery', board: 'phone.board', camera: 'phone.camera', shield: 'phoneboard.shield',
     soc: 'phoneboard.soc', dram: 'phoneboard.dram', pmic: 'phoneboard.pmic', modem: 'phoneboard.modem', storage: 'phoneboard.storage',
     cpu: 'soc.cpu', gpu: 'soc.gpu', npu: 'soc.npu', isp: 'soc.isp', cache: 'soc.cache' },
   board: { chip: 'board.bigchip', die: 'pkg.die', hbm: 'pkg.memory', vrm: 'board.power', links: 'board.connectors' },

@@ -200,8 +200,8 @@ export function createDataCentre(canvas, host, on = {}) {
     ['racks', scene, W3(-3.5, 2.4, -6.2), [0.6, 1.6]], ['hotaisle', scene, W3(3.5, 2.3, -7.7), [0.6, 1.6]], ['trays', scene, W3(-3.6, 3.05, -12.6), [0.6, 1.5]], ['coldair', scene, W3(-3, 0.4, 1.6), [1.3, 2.3]],
     ['switch', rack, W3(0.3, 1.98, 0.5), [1.6, 2.5]], ['servers', rack, W3(0.32, 1.3, 0.5), [1.6, 2.4]], ['power', rack, W3(0.3, 0.3, 0.5), [1.6, 2.5]],
     ['fans', tray, W3(0.21, 0.09, 0.42), [2.6, 3.5]], ['accelerator', tray, W3(0.0, 0.08, 0.02), [2.7, 3.4]], ['memory', tray, W3(-0.17, 0.06, 0.1), [2.7, 3.5]], ['network', tray, W3(0.12, 0.05, -0.44), [2.7, 3.4]],
-    ['package', pkg, W3(0.028, 0.012, 0.022), [3.7, 4.5]], ['powerstages', tray, W3(0.06, 0.03, 0.11), [3.7, 4.4]],
-    ['die', pkg, W3(...onTop(300, 60, 0.006)), [4.6, 5.1]], ['hbm', pkg, W3(...onTop(1125, 820, 0.0065)), [4.6, 5.1]]
+    ['package', pkg, W3(0.028, 0.012, 0.022), [3.7, 4.5]], ['powerstages', tray, W3(-0.011, 0.024, -0.07), [3.7, 4.4]], ['lid', pkg, W3(-0.01, 0.0076, -0.01), [3.7, 4.4]],
+    ['die', pkg, W3(...onTop(300, 60, 0.006)), [4.6, 5.1]], ['hbm', pkg, W3(...onTop(1125, 820, 0.0065)), [4.6, 5.1]], ['base', pkg, W3(...onTop(60, 985, 0.0043)), [4.6, 5.1]]
   ];
   const named = NAMES.map(([id, obj, at, lv]) => { const lb = L.add(obj, at, t('part.' + VIEW_PARTS.flight[id]), { cls: 'part3' }); lb.lv = lv; return lb; });
   named.forEach((lb, i) => { lb.id = lb.el.dataset.hl = NAMES[i][0]; });
