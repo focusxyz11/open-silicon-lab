@@ -44,6 +44,33 @@ test('a phone is flown through like the data centre: every level has its words a
   for (const p of named) assert.ok(VIEW_PARTS.phone[p] && EN['part.' + VIEW_PARTS.phone[p]], p + ' is named by no part of the atlas');
 });
 
+test('a car is flown through like the data centre and the phone: every level has its words, a real question and a size, every part its name', async () => {
+  const f = src('car3d-flight.js');
+  const levels = f.match(/LEVELS = \[([^\]]+)\]/)[1].match(/'([a-z]+)'/g).map(s => s.slice(1, -1));
+  const pairs = name => Object.fromEntries([...f.match(new RegExp(name + ' = \\{([^}]+)\\}'))[1].matchAll(/([a-z]+): '([a-z.]+)'/g)].map(m => [m[1], m[2]]));
+  const asks = pairs('ASKS'), depth = pairs('DEPTH'), size = pairs('SIZE');
+  assert.deepEqual(levels, ['car', 'inside', 'unit', 'chip']);
+  const { STOPS, WORLDS } = await import('../src/data/weave.js');
+  const { VIEW_PARTS, sizeOf } = await import('../src/data/atlas.js');
+  const car = WORLDS.find(w => w.id === 'car').depths;
+  for (const lv of levels) {
+    assert.ok(EN['place.car.' + lv + '.t'] && EN['place.car.' + lv + '.d'], lv);
+    assert.ok(STOPS[asks[lv]] && EN['stop.' + asks[lv] + '.q'], lv + ': ' + asks[lv]);
+    assert.ok(car.includes(depth[lv]), lv + ' shows ' + depth[lv]);
+    assert.ok(sizeOf(size[lv]) > 0, lv + ' has no size');
+  }
+  /* it ends where the dive's car chip begins, and the dive starts from where it ended */
+  assert.equal(depth.chip, 'mcu'); assert.match(f, /BEYOND = '#\/dive\/mcu\/car'/);
+  assert.match(src('relief3d.js'), /mcu: CAR_HANDOFF/);
+  const named = [...f.matchAll(/\['([a-z]+)', scene, W3\(/g)].map(m => m[1]).concat(['cores', 'flash', 'sram', 'periph']);
+  assert.ok(named.length >= 14);
+  for (const p of named) assert.ok(VIEW_PARTS.car[p] && EN['part.' + VIEW_PARTS.car[p]], p + ' is named by no part of the atlas');
+  /* the island goes inside into the flight, and the dive's car chip goes back up to its last level */
+  const { FLOWN } = await import('../src/v2/game.js');
+  assert.deepEqual(FLOWN.cars, { car: 0, ecu: 2, mcu: 3 });
+  assert.match(src('app.js'), /up: '#\/place\/cars\/3'/);
+});
+
 test('there is no menu: the bar holds the loop, six stages each with its words, and the shell says so', async () => {
   const { STAGES, STAGE_PLACE } = await import('../src/engines/way.js');
   /* a menu of sections is off unless a visitor asks for it (?menu=1): the choice is the owner's, and easy to reverse */
