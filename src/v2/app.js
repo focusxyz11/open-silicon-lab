@@ -702,7 +702,8 @@ export function start() {
         rail: { label: t('place.levels'), items: ROWS.map(x => ({ id: x.dive, label: t('depth.' + x.dive + '.name'), size: sizeOf(x.dive) })) },
         onRail: d => c.go(ROWS.findIndex(x => x.dive === d)), onLook: drawChip });
       cui.onclick = e => { const b = e.target.closest('[data-rowgo]'); if (b) c.go(+b.dataset.rowgo); };
-      loading(false); chipRow = want; c.set(want); c.resume(); chipPanel(); $('chipCanvas').focus({ preventScroll: true });
+      /* the rail says the level at once, before the picture's first frame */
+      loading(false); chipRow = want; c.set(want); chipFrame.rail(ROWS[want].dive, want / (ROWS.length - 1), want); c.resume(); chipPanel(); $('chipCanvas').focus({ preventScroll: true });
     });
   }
 

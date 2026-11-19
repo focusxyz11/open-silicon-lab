@@ -291,7 +291,7 @@ const explore = async (tag, viewport, scheme) => {
   await page.waitForFunction(() => location.hash === '#/chip/1/build' && /Wires/.test((document.querySelector('#chipui .dock') || {}).textContent || ''), null, { timeout: 15000 }).catch(() => {});
   /* the frame: the rail, Look · Do · Ask from the atlas */
   if (!/Wires/.test(await page.textContent('#chipui .dock').catch(() => ''))) problems.push(tag + ': turning to made does not name the step that made this layer');
-  if (!(await page.$('#chipui .rail2 [aria-current][data-rail="block"]'))) problems.push(tag + ': the layers as made are not at the level the dive was at');
+  await page.waitForFunction(() => !!document.querySelector('#chipui .rail2 [aria-current][data-rail="block"]'), null, { timeout: 15000 }).catch(() => problems.push(tag + ': the layers as made are not at the level the dive was at'));
   await page.click('#chipui [data-rowgo="2"]').catch(() => problems.push(tag + ': no way deeper in the layers as made'));
   await page.waitForFunction(() => { const c = document.querySelector('#chipui .rail2 [aria-current]'); return c && c.dataset.rail === 'gate' && location.hash === '#/chip/2/build'; }, null, { timeout: 15000 }).catch(() => problems.push(tag + ': going deeper in the layers as made did not reach the gates'));
   await page.click('#chipui .modes3 [data-mode="ask"]').catch(() => {});
