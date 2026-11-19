@@ -699,7 +699,9 @@ run['ways'] = async () => {
     await pp.waitForSelector('#diveui .dockwrap.peek .dock .kicker', { timeout: 90000 }).catch(() => problems.push(tag + ': the dive\'s card does not rest as a peek on a phone'));
     await pp.waitForFunction(() => { const w = document.querySelector('#diveui .dockwrap'); if (w && w.classList.contains('peek')) w.click(); return !!w && !w.classList.contains('peek'); }, null, { timeout: 30000, polling: 1000 })
       .catch(() => problems.push(tag + ': touching the peek does not open the card'));
-    { const c = await pp.context().newCDPSession(pp); await c.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: 200, y: 300 }] }); await c.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] }); await c.detach(); }
+    /* on the picture, above the open card (a level with a search has a taller card) */
+    { const y = await pp.evaluate(() => Math.min(300, Math.round(document.querySelector('#diveui .dockwrap').getBoundingClientRect().top) - 60)), c = await pp.context().newCDPSession(pp);
+      await c.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: 200, y }] }); await c.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] }); await c.detach(); }
     await pp.waitForSelector('#diveui .dockwrap.peek', { timeout: 15000 }).catch(() => problems.push(tag + ': touching the picture does not let the card down'));
     const swipe = async () => { const c = await pp.context().newCDPSession(pp);
       await c.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: 200, y: 420 }] });
