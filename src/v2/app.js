@@ -21,7 +21,7 @@ import * as Way from '../engines/way.js';
 import { play, titleOf, goalOf } from './play.js';
 import { PLACES } from './map3d.js';
 import { LEVELS, ASKS } from './dc3d.js';
-import { stopsAt } from '../data/places.js';
+import { stopsAt, SHARED } from '../data/places.js';
 import { showStage, stage } from './kit3d.js';
 import { rootShown } from '../engines/weave.js';
 import { FIGURES, CASES } from '../data/weave.js';
@@ -49,7 +49,7 @@ import { sideInput } from './side.js';
 import { swarmInput, swarmStart } from './swarm.js';
 import { tuneInput, tuneType } from './tunebox.js';
 import { WORLD_IDS } from '../data/worlds.js';
-import { SEEK, foundAt } from '../data/seek.js';
+import { SEEK, foundAt, seekAt, seekLevel } from '../data/seek.js';
 
 const $ = id => document.getElementById(id);
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
@@ -502,14 +502,16 @@ export function start() {
   /* ---- something to do at a level (src/data/seek.js): its question turned into a small search on the picture. The card
      says what to look for; a part tapped, on the picture or here, gives something true to notice; the part that leads
      into the question lights the question (the card's line, and its parts on the picture); finding it is kept in your
-     log. The search leads to the question and never answers it. One design in the flight and in the dive ---- */
-  const seekName = (lv, p) => t('part.' + (SEEK[lv].view === 'flight' ? VIEW_PARTS.flight[p] : DiveData.partWord(lv, p)));
-  function seekHtml(lv, picked) {
+     log. The search leads to the question and never answers it. One design in the flights and in the dive; lv is the
+     search's key (src/data/seek.js seekAt finds it from a view's level), fly that it is shown in a flight, whose names
+     on the picture light as the card's buttons are pointed at ---- */
+  const seekName = (lv, p) => { const Q = SEEK[lv]; return t('part.' + (Q.view === 'dive' ? diveWord(seekLevel(lv), p) : VIEW_PARTS[Q.view][p])); };
+  function seekHtml(lv, picked, fly) {
     const Q = SEEK[lv], seen = (S.looked && S.looked[lv]) || [], found = foundAt(S.looked, lv), last = Q.parts.includes(picked) ? picked : null;
     return '<div class="seek' + (found ? ' found' : '') + '" data-seekat="' + esc(lv) + '" style="--qc:' + qColor(Q.ask) + '">' +
       '<p class="kicker seekk"><span>' + esc(t(found ? 'seek.foundK' : 'seek.k')) + '</span><span class="seekn" aria-label="' + esc(t('seek.n', { n: seen.length, total: Q.parts.length })) + '">' + Q.parts.map(p => '<i' + (seen.includes(p) ? ' class="on"' : '') + '></i>').join('') + '</span></p>' +
       '<p class="seekq">' + esc(t('seek.' + lv + '.find')) + '</p>' +
-      '<div class="seekparts">' + Q.parts.map(p => '<button type="button" class="seekp' + (seen.includes(p) ? ' looked' : '') + (p === last ? ' on' : '') + (found && p === Q.leads ? ' seeklead' : '') + '" data-seek="' + esc(p) + '"' + (Q.view === 'flight' ? ' data-hl="' + esc(p) + '"' : '') + '>' + esc(seekName(lv, p)) + '</button>').join('') + '</div>' +
+      '<div class="seekparts">' + Q.parts.map(p => '<button type="button" class="seekp' + (seen.includes(p) ? ' looked' : '') + (p === last ? ' on' : '') + (found && p === Q.leads ? ' seeklead' : '') + '" data-seek="' + esc(p) + '"' + (fly ? ' data-hl="' + esc(p) + '"' : '') + '>' + esc(seekName(lv, p)) + '</button>').join('') + '</div>' +
       (last ? '<p class="seeknote"><b>' + esc(seekName(lv, last)) + '</b> ' + esc(t('seek.' + lv + '.' + last)) + '</p>' : '<p class="small muted seeknote">' + esc(t('seek.tap')) + '</p>') +
       (found ? '<p class="seekfound">' + esc(t('seek.found')) + '</p>' : '') + '</div>';
   }
@@ -521,6 +523,11 @@ export function start() {
     if (!was && foundAt(S.looked, lv)) toast(t('seek.kept'));
     return true;
   }
+  /* where a search is, for your log: the level, and the place it is in (a level every world shares is in all of them) */
+  const seekWhere = lv => { const Q = SEEK[lv], L = seekLevel(lv);
+    if (Q.view !== 'dive') return t((Q.view === 'flight' ? 'place.dc.' : 'place.phone.') + L + '.t') + ' · ' + t(Q.view === 'flight' ? 'map.datacentre.t' : 'map.phones.t');
+    const w = SHARED.includes(L) ? null : Q.at.split('/')[3] || 'datacentre';
+    return t('depth.' + L + '.name') + (w && DIVES[w] ? ' · ' + t('map.' + DIVES[w].place + '.t') : ''); };
   /* the card's question, lit once its search is found */
   const seekLit = (html, lv) => { const Q = SEEK[lv], at = Q && '<a class="askline" href="' + esc(follow(Q.ask)) + '"'; return Q && foundAt(S.looked, lv) && html.includes(at) ? html.replace(at, '<a class="askline seeklit" style="--qc:' + qColor(Q.ask) + '" href="' + esc(follow(Q.ask)) + '"') : html; };
 
@@ -531,7 +538,7 @@ export function start() {
   function placeUI(lv) {
     if (lv !== dcLv) dcPick = null;
     dcLv = lv; const id = LEVELS[lv];
-    $('placeLabels').classList.toggle('seeking', !!SEEK[id]);
+    $('placeLabels').classList.toggle('seeking', !!seekAt('flight', id));
     if (dc) dc.mark(dcHold());
     if (!dcFrame) return;
     dcFrame.rail(id, lv / (LEVELS.length - 1)); dcFrame.level(DC_DEPTH[id]); here();
@@ -541,16 +548,17 @@ export function start() {
     const id = LEVELS[dcLv], last = dcLv === LEVELS.length - 1;
     /* what you see here: every part named on the picture at this level, and what it does; pointing at one lights it */
     const here = dc ? dc.parts(dcLv) : [], PF = VIEW_PARTS.flight;
-    const hereHtml = SEEK[id] ? seekHtml(id, dcPick) : here.length ? '<div class="herebox"><p class="kicker">' + esc(t('place.here')) + '</p><ul class="here2">' + here.map(k => '<li><button type="button" data-hl="' + k + '"><b>' + esc(t('part.' + PF[k])) + '</b><span>' + esc(t('what.' + PF[k])) + '</span></button></li>').join('') + '</ul></div>' : '';
+    const sk = seekAt('flight', id);
+    const hereHtml = sk ? seekHtml(sk, dcPick, true) : here.length ? '<div class="herebox"><p class="kicker">' + esc(t('place.here')) + '</p><ul class="here2">' + here.map(k => '<li><button type="button" data-hl="' + k + '"><b>' + esc(t('part.' + PF[k])) + '</b><span>' + esc(t('what.' + PF[k])) + '</span></button></li>').join('') + '</ul></div>' : '';
     dcFrame.dock.innerHTML = lineHtml(t('place.dc.' + id + '.t'), t('place.dc.' + id + '.d'), ASKS[id], aroundRow(
       dcLv ? '<button type="button" class="chipb" data-key="back" data-lvgo="' + (dcLv - 1) + '">↑ ' + esc(t('place.dc.' + LEVELS[dcLv - 1] + '.t')) + '</button>' : '',
       last ? '<a class="chipb" data-key="next" data-in href="#/dive/chip">↓ ' + esc(t('place.next')) + '</a>' : '<button type="button" class="chipb" data-key="next" data-in data-lvgo="' + (dcLv + 1) + '">↓ ' + esc(t('place.dc.' + LEVELS[dcLv + 1] + '.t')) + '</button>',
       id === 'board' ? '<a class="chipb" href="#/board">' + esc(t('board.enter')) + '</a>' : ''));
-    dcFrame.dock.innerHTML = seekLit(dcFrame.dock.innerHTML, id).replace('<div class="nav">', hereHtml + '<div class="nav">');
+    dcFrame.dock.innerHTML = (sk ? seekLit(dcFrame.dock.innerHTML, sk) : dcFrame.dock.innerHTML).replace('<div class="nav">', hereHtml + '<div class="nav">');
   }
   /* in the flight, the part kept lit on the picture: the one you tapped, else, once found, the one that leads in */
-  const dcHold = () => { const Q = SEEK[LEVELS[dcLv]]; return dcPick || (Q && foundAt(S.looked, LEVELS[dcLv]) ? Q.leads : null); };
-  const dcSeek = id => { const lv = LEVELS[dcLv]; if (!SEEK[lv] || !SEEK[lv].parts.includes(id)) return false; dcPick = id; seekTap(lv, id); if (dc) dc.mark(id); if (dcFrame && dcFrame.mode() === 'look') drawDc(); return true; };
+  const dcHold = () => { const k = seekAt('flight', LEVELS[dcLv]); return dcPick || (k && foundAt(S.looked, k) ? SEEK[k].leads : null); };
+  const dcSeek = id => { const lv = seekAt('flight', LEVELS[dcLv]); if (!lv || !SEEK[lv].parts.includes(id)) return false; dcPick = id; seekTap(lv, id); if (dc) dc.mark(id); if (dcFrame && dcFrame.mode() === 'look') drawDc(); return true; };
   function showPlace(id, lv) {
     hideAll();
     $('placeCanvas').hidden = $('placeLabels').hidden = false; pui.hidden = false; showStage(true); document.body.classList.add('immersive');
@@ -570,22 +578,31 @@ export function start() {
   /* ---- a place flown through: a phone (src/v2/phone3d-flight.js), as the data centre is: its own canvas, card and
      levels, and past the chip the flight carries on into the dive's phone chip ---- */
   const fui = $('flyui');
-  let ph = null, phP = null, PH = null, phFrame = null, phLv = 0;
+  let ph = null, phP = null, PH = null, phFrame = null, phLv = 0, phPick = null;
   const ensurePh = () => phP || (phP = import('./phone3d-flight.js').then(m => { PH = m; ph = m.createPhoneFlight($('flyCanvas'), $('flyLabels'), { level: lv => phUI(lv),
     depth: z => { if (phFrame) phFrame.rail(PH.LEVELS[Math.round(z)], z / (PH.LEVELS.length - 1)); },
     portal: p => phFrame && phFrame.inwardAt(p), beyond: () => { if (!fui.hidden) location.hash = PH.BEYOND; } }); return ph; }));
   function phUI(lv) {
-    phLv = lv; if (!phFrame) return; const id = PH.LEVELS[lv];
+    if (lv !== phLv) phPick = null;
+    phLv = lv; const id = PH.LEVELS[lv];
+    /* at a level with a search (src/data/seek.js), the names on the picture are the parts to tap, as in the data centre */
+    $('flyLabels').classList.toggle('seeking', !!seekAt('phone', id));
+    if (ph) ph.mark(phHold());
+    if (!phFrame) return;
     phFrame.rail(id, lv / (PH.LEVELS.length - 1)); phFrame.level(PH.DEPTH[id]); here();
     if (phFrame.mode() === 'look') drawPh();
   }
   function drawPh() {
-    const LV = PH.LEVELS, id = LV[phLv], last = phLv === LV.length - 1, PP = VIEW_PARTS.phone, seen = ph ? ph.parts(phLv) : [];
-    const hereHtml = seen.length ? '<div class="herebox"><p class="kicker">' + esc(t('place.here')) + '</p><ul class="here2">' + seen.map(k => '<li><button type="button" data-hl="' + k + '"><b>' + esc(t('part.' + PP[k])) + '</b><span>' + esc(t('what.' + PP[k])) + '</span></button></li>').join('') + '</ul></div>' : '';
+    const LV = PH.LEVELS, id = LV[phLv], last = phLv === LV.length - 1, PP = VIEW_PARTS.phone, seen = ph ? ph.parts(phLv) : [], sk = seekAt('phone', id);
+    const hereHtml = sk ? seekHtml(sk, phPick, true) : seen.length ? '<div class="herebox"><p class="kicker">' + esc(t('place.here')) + '</p><ul class="here2">' + seen.map(k => '<li><button type="button" data-hl="' + k + '"><b>' + esc(t('part.' + PP[k])) + '</b><span>' + esc(t('what.' + PP[k])) + '</span></button></li>').join('') + '</ul></div>' : '';
     phFrame.dock.innerHTML = lineHtml(t('place.phone.' + id + '.t'), t('place.phone.' + id + '.d'), PH.ASKS[id], aroundRow(
       phLv ? '<button type="button" class="chipb" data-key="back" data-lvgo="' + (phLv - 1) + '">↑ ' + esc(t('place.phone.' + LV[phLv - 1] + '.t')) + '</button>' : '',
-      last ? '<a class="chipb" data-key="next" data-in href="' + PH.BEYOND + '">↓ ' + esc(t('place.next')) + '</a>' : '<button type="button" class="chipb" data-key="next" data-in data-lvgo="' + (phLv + 1) + '">↓ ' + esc(t('place.phone.' + LV[phLv + 1] + '.t')) + '</button>')).replace('<div class="nav">', hereHtml + '<div class="nav">');
+      last ? '<a class="chipb" data-key="next" data-in href="' + PH.BEYOND + '">↓ ' + esc(t('place.next')) + '</a>' : '<button type="button" class="chipb" data-key="next" data-in data-lvgo="' + (phLv + 1) + '">↓ ' + esc(t('place.phone.' + LV[phLv + 1] + '.t')) + '</button>'));
+    phFrame.dock.innerHTML = (sk ? seekLit(phFrame.dock.innerHTML, sk) : phFrame.dock.innerHTML).replace('<div class="nav">', hereHtml + '<div class="nav">');
   }
+  /* the part kept lit on the picture, and a part tapped, as in the data centre's flight */
+  const phHold = () => { const k = PH && seekAt('phone', PH.LEVELS[phLv]); return phPick || (k && foundAt(S.looked, k) ? SEEK[k].leads : null); };
+  const phSeek = id => { const lv = seekAt('phone', PH.LEVELS[phLv]); if (!lv || !SEEK[lv].parts.includes(id)) return false; phPick = id; seekTap(lv, id); if (ph) ph.mark(id); if (phFrame && phFrame.mode() === 'look') drawPh(); return true; };
   function showPhone(lv) {
     hideAll();
     $('flyCanvas').hidden = $('flyLabels').hidden = false; fui.hidden = false; showStage(true); document.body.classList.add('immersive');
@@ -593,8 +610,9 @@ export function start() {
     return Promise.all([withFrame(), ensurePh()]).then(([, d]) => {
       phFrame = frameOf(fui, { up: { href: '#/', label: t('place.back') }, path: [{ href: '#/', label: t('place.back') }, { label: t('map.phones.t') }],
         rail: { label: t('place.levels'), items: PH.LEVELS.map(k => ({ id: k, label: t('place.phone.' + k + '.t'), size: sizeOf(PH.DEPTH[k] === 'phone' ? 'handset' : PH.DEPTH[k]) })) }, onRail: k => d.go(PH.LEVELS.indexOf(k)), onLook: drawPh, scroll: true });
-      fui.onclick = e => { const b = e.target.closest('[data-lvgo]'); if (b) d.go(+b.dataset.lvgo); const h = e.target.closest('[data-hl]'); if (h) d.mark(h.dataset.hl); };
-      fui.onpointerover = e => { const h = e.target.closest('[data-hl]'); d.mark(h ? h.dataset.hl : null); };
+      fui.onclick = e => { const b = e.target.closest('[data-lvgo]'); if (b) d.go(+b.dataset.lvgo); const sk = e.target.closest('[data-seek]'); if (sk) return phSeek(sk.dataset.seek); const h = e.target.closest('[data-hl]'); if (h) d.mark(h.dataset.hl); };
+      fui.onpointerover = e => { const h = e.target.closest('[data-hl]'); d.mark(h ? h.dataset.hl : phHold()); };
+      $('flyLabels').onclick = e => { const h = e.target.closest('[data-hl]'); if (h) phSeek(h.dataset.hl); };
       loading(false); d.resume(); if (lv != null && lv >= 0 && lv < PH.LEVELS.length) d.go(lv); phUI(Math.round(d.z)); $('flyCanvas').focus({ preventScroll: true });
     });
   }
@@ -723,7 +741,7 @@ export function start() {
   let flatWords = null;
   function pickPart(key) { divePart = key || null; dive.select(divePart); diveNotes();
     /* at a level with a search, a part picked is a part looked at */
-    const lv = diveId(); if (divePart && flatKind === 'dive' && !benchCh && SEEK[lv] && SEEK[lv].view === 'dive' && seekTap(lv, divePart)) { seekLight(lv); if (diveFrame && diveFrame.mode() === 'look') drawDive(); } }
+    const lv = seekAt('dive', diveId()); if (divePart && flatKind === 'dive' && !benchCh && lv && seekTap(lv, divePart)) { seekLight(lv); if (diveFrame && diveFrame.mode() === 'look') drawDive(); } }
   /* found: the question's parts light on the flat picture, as when you follow it */
   const seekLight = lv => { if (!foundAt(S.looked, lv) || diveThread) return; const th = SEEK[lv].ask.split('.')[0]; dive.setThread(th); };
   /* a mark standing for several questions: those lines light up in the dock's list */
@@ -873,12 +891,13 @@ export function start() {
       inHtml = dv ? '<a class="chipb" data-in data-inname="' + esc(inName) + '" href="' + esc(lineIn(id)) + '">↓ ' + esc(inName) + '</a>' : '';
     /* what you see here: the parts the level draws, each with what it does; choosing one picks it on the picture */
     const pk = flatKind === 'dive' && partsAt ? Object.keys(partsAt(id) || {}).filter(k => EN_HAS(DiveData.partWord(id, k)) && t('what.' + DiveData.partWord(id, k)) !== 'what.' + DiveData.partWord(id, k)) : [];
-    const hereHtml = flatKind === 'dive' && SEEK[id] && SEEK[id].view === 'dive' ? seekHtml(id, divePart) : pk.length ? '<div class="herebox"><p class="kicker">' + esc(t('place.here')) + '</p><ul class="here2">' + pk.map(k => { const w = DiveData.partWord(id, k); return '<li><button type="button" data-pick="' + esc(k) + '"' + (k === divePart ? ' class="on"' : '') + '><b>' + esc(t('part.' + w)) + '</b><span>' + esc(t('what.' + w)) + '</span></button></li>'; }).join('') + '</ul></div>' : '';
+    const sk = flatKind === 'dive' ? seekAt('dive', id) : null;
+    const hereHtml = sk ? seekHtml(sk, divePart) : pk.length ? '<div class="herebox"><p class="kicker">' + esc(t('place.here')) + '</p><ul class="here2">' + pk.map(k => { const w = DiveData.partWord(id, k); return '<li><button type="button" data-pick="' + esc(k) + '"' + (k === divePart ? ' class="on"' : '') + '><b>' + esc(t('part.' + w)) + '</b><span>' + esc(t('what.' + w)) + '</span></button></li>'; }).join('') + '</ul></div>' : '';
     diveFrame.dock.innerHTML = lineHtml(t('around.view.' + flatKind) + ' · ' + t('depth.' + id + '.name'), t('depth.' + id + '.see'), key, aroundRow(
       i ? '<button type="button" class="chipb" data-key="back" data-divego="' + (diveD - 1) + '">' + ar0 + esc(nm(L[i - 1])) + '</button>' : flatKind === 'dive' && diveWorld === 'datacentre' ? '<button type="button" class="chipb" data-key="back" data-divego="' + (diveD - 1) + '">' + esc(t('dive.up')) + '</button>' : '',
       last ? end : '<button type="button" class="chipb" data-key="next"' + (flatKind === 'dive' ? ' data-in' : al) + ' data-divego="' + (diveD + 1) + '">' + ar1 + esc(nm(L[i + 1])) + '</button>', inHtml));
-    diveFrame.dock.innerHTML = (flatKind === 'dive' ? seekLit(diveFrame.dock.innerHTML, id) : diveFrame.dock.innerHTML).replace('<div class="nav">', yours + (hereHtml.startsWith('<div class="seek') ? '' : '<p class="small muted hintline">' + esc(t(F.hint)) + '</p>') + hereHtml + '<div class="nav">');
-    if (flatKind === 'dive' && SEEK[id]) seekLight(id);
+    diveFrame.dock.innerHTML = (sk ? seekLit(diveFrame.dock.innerHTML, sk) : diveFrame.dock.innerHTML).replace('<div class="nav">', yours + (hereHtml.startsWith('<div class="seek') ? '' : '<p class="small muted hintline">' + esc(t(F.hint)) + '</p>') + hereHtml + '<div class="nav">');
+    if (sk) seekLight(sk);
     requestAnimationFrame(diveInset);
   }
   /* the way into a station of the line (src/data/weave.js DIVES): the machine that prints with light, or what the step makes */
@@ -1115,7 +1134,7 @@ export function start() {
       /* what you looked for and found at a level: where, what you looked for, and the question it led into */
       const found = Object.keys(SEEK).filter(lv => foundAt(S.looked, lv));
       if (found.length) h += '<section class="stepsec"><h2>' + esc(t('seek.log')) + '</h2><div class="seeklog">' + found.map(lv => { const Q = SEEK[lv];
-        return '<div class="strand" style="--qc:' + qColor(Q.ask) + '"><a class="kicker" href="' + esc(Q.at) + '">' + esc(Q.view === 'flight' ? t('place.dc.' + lv + '.t') : t('depth.' + lv + '.name')) + '</a><p class="small muted">' + esc(t('seek.' + lv + '.find')) + '</p><a class="q" href="' + esc(follow(Q.ask)) + '">' + esc(t('stop.' + Q.ask + '.q')) + '</a></div>'; }).join('') + '</div></section>';
+        return '<div class="strand" style="--qc:' + qColor(Q.ask) + '"><a class="kicker" href="' + esc(Q.at) + '">' + esc(seekWhere(lv)) + '</a><p class="small muted">' + esc(t('seek.' + lv + '.find')) + '</p><a class="q" href="' + esc(follow(Q.ask)) + '">' + esc(t('stop.' + Q.ask + '.q')) + '</a></div>'; }).join('') + '</div></section>';
       const bk = Game.BEACON[Game.STATION[Game.chipAt(S)]];
       h += '<section class="stepsec"><h2>' + esc(t(strands.length ? 'page.questions.next' : 'page.questions.first')) + '</h2><p class="small muted">' + esc(t('page.questions.where')) + '</p><div class="qgrid">' +
         '<a class="qcard" href="' + esc(followW(bk)) + '" style="--qc:' + qColor(bk) + '"><span class="kicker">' + esc(t('map.' + Game.STATION[Game.chipAt(S)] + '.t')) + '</span><span class="q">' + esc(t('stop.' + bk + '.q')) + '</span><span class="small muted">' + esc(t('sheet.follow')) + '</span></a></div></section>';
