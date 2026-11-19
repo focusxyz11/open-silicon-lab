@@ -27,7 +27,7 @@ const SECTIONS = [
   ['search', 'something to look for at a level, kept in your log'],
   ['ways', 'the ways on the picture: Go inside on the island, along and in on the line, the phone\'s peek and swipe'],
   ['frame', 'the size at every level and the ring on the way in, desktop and phone'],
-  ['flights', 'the data centre\'s way in and its flight into the chip; the phone\'s flight into its chip'],
+  ['flights', 'the data centre\'s way in and its flight into the chip; the phone\'s and the car\'s flights into their chips'],
   ['machines', 'machines from shared blocks: a form changed, an agent\'s pick used, where it is made, the lab\'s curve and an attempt kept, new matter\'s claims and the guesses switch, desktop and phone'],
 ];
 const argv = process.argv.slice(2);
@@ -783,6 +783,21 @@ run['flights'] = async () => {
     await page.evaluate(() => { location.hash = '#/place/phones/3'; window.arrivals = []; new MutationObserver(() => { const a = document.documentElement.dataset.arrive; if (a) window.arrivals.push(a); }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-arrive'] }); });
     await page.waitForFunction(() => { const c = document.getElementById('flyCanvas'); if (c && location.hash === '#/place/phones/3') { c.focus(); c.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true })); } return location.hash === '#/dive/soc/phone'; }, null, { timeout: 90000, polling: 3000 }).catch(() => problems.push(tag + ': going on past the phone\'s chip does not carry the flight into it'));
     await page.waitForFunction(() => window.arrivals.includes('soc'), null, { timeout: 60000, polling: 500 }).catch(() => problems.push(tag + ': the dive\'s phone chip does not come down from where the flight ended'));
+    await page.close(); }
+  /* and so is a car (src/v2/car3d-flight.js): going inside the car island opens its flight, the way in on the picture
+     goes deeper (the cabin cut away, its card naming the battery), the control unit's card names its chip, and going on
+     past the chip carries the flight into the dive's car chip, which comes down from where the flight ended */
+  { const page = await browser3d.newPage({ viewport: { width: 1280, height: 800 } });
+    page.on('pageerror', e => problems.push(tag + ' (car flight): ' + e.message));
+    await page.goto(base + 'index.html#/place/cars');
+    await page.waitForFunction(() => { if (location.hash === '#/place/cars') { const b = document.querySelector('.insp:not([hidden]) [data-iact="deeper"]') || document.querySelector('#sheet:not([hidden]) a[href="#/place/cars/0"]'); if (b) b.click(); }
+      return location.hash === '#/place/cars/0' && !document.getElementById('carui').hidden; }, null, { timeout: 150000, polling: 3000 }).catch(() => problems.push(tag + ': going inside the car island does not open its flight'));
+    await page.waitForFunction(() => { const b = document.querySelector('#carui .wayin:not([hidden]) .wigo'); if (b && location.hash === '#/place/cars/0') b.click(); return location.hash === '#/place/cars/1'; }, null, { timeout: 90000, polling: 3000 }).catch(() => problems.push(tag + ': the way in on the picture does not go deeper in the car'));
+    await page.waitForFunction(() => !!document.querySelector('#carui .here2 [data-hl="battery"]'), null, { timeout: 90000, polling: 1000 }).catch(() => problems.push(tag + ': inside the car, the card does not name the battery'));
+    await page.waitForFunction(() => { const b = document.querySelector('#carui [data-lvgo="2"]'); if (b && location.hash === '#/place/cars/1') b.click(); return location.hash === '#/place/cars/2' && !!document.querySelector('#carui .here2 [data-hl="mcu"]'); }, null, { timeout: 90000, polling: 3000 }).catch(() => problems.push(tag + ': the car\'s control unit does not open with its chip named'));
+    await page.evaluate(() => { location.hash = '#/place/cars/3'; window.arrivals = []; new MutationObserver(() => { const a = document.documentElement.dataset.arrive; if (a) window.arrivals.push(a); }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-arrive'] }); });
+    await page.waitForFunction(() => { const c = document.getElementById('carCanvas'); if (c && location.hash === '#/place/cars/3') { c.focus(); c.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true })); } return location.hash === '#/dive/mcu/car'; }, null, { timeout: 90000, polling: 3000 }).catch(() => problems.push(tag + ': going on past the car\'s chip does not carry the flight into it'));
+    await page.waitForFunction(() => window.arrivals.includes('mcu'), null, { timeout: 60000, polling: 500 }).catch(() => problems.push(tag + ': the dive\'s car chip does not come down from where the flight ended'));
     await page.close(); }
 };
 
