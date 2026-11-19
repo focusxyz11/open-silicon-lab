@@ -8,6 +8,9 @@
    checks, the scores and the agent: src/engines/machine.js; how each block is checked: the community's plan
    (src/engines/build.js).
 
+   Liquid hardware: a block can also be a fabric rewired after it is made (src/data/liquid.js), exact like a circuit and
+   changeable like software; a map shows how fast each part can reshape against what it costs, and a need whose job
+   keeps changing draws the line its parts must beat.
    Fab on a desk: where the made parts are made (src/data/fabs.js) sets how many days one try takes. Moore's law for
    ideas: every attempt kept for a need joins the lab's curve (src/engines/ledger.js labCurve), the best so far against
    the attempts so far; an attempt of yours is kept as a draft with its slip (src/v2/commons.js), like any entry.
@@ -18,6 +21,7 @@
 import { t, fmtNum } from '../core/i18n.js';
 import { BLOCKS, NEEDS, FORMS, blockOf, needOf } from '../data/blocks.js';
 import { mattersFor } from '../data/inventions.js';
+import { liquidsFor, liquidOf, FALLBACK } from '../data/liquid.js';
 import * as M from '../engines/machine.js';
 import { plan as buildPlan } from '../engines/build.js';
 import { FABS, fabOf } from '../data/fabs.js';
@@ -29,8 +33,12 @@ const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&a
 const MARK = {
   circuit: '<svg class="mmark" viewBox="0 0 18 18" aria-hidden="true"><rect x="1" y="1" width="16" height="16" rx="3"/></svg>',
   software: '<svg class="mmark" viewBox="0 0 18 18" aria-hidden="true"><rect x="1.75" y="1.75" width="14.5" height="14.5" rx="3"/></svg>',
-  matter: '<svg class="mmark" viewBox="0 0 18 18" aria-hidden="true"><polygon points="1,9 5,2 13,2 17,9 13,16 5,16"/></svg>'
+  matter: '<svg class="mmark" viewBox="0 0 18 18" aria-hidden="true"><polygon points="1,9 5,2 13,2 17,9 13,16 5,16"/></svg>',
+  liquid: '<svg class="mmark" viewBox="0 0 18 18" aria-hidden="true"><path d="M9 1.5C9 1.5 3 8.2 3 11.6a6 6 0 0 0 12 0C15 8.2 9 1.5 9 1.5z"/></svg>'
 };
+/* the kinds a family offers a block: kinds of new matter, or liquid fabrics */
+const kindsOf = (k, blockId) => (k === 'matter' ? mattersFor(blockId) : k === 'liquid' ? liquidsFor(blockId) : []);
+const kindName = (k, id) => t((k === 'matter' ? 'invent.matter.' : 'liquid.kind.') + id + '.t');
 const markOf = f => MARK[M.familyOf(f)] || '';
 const fam = f => 'f-' + M.familyOf(f);
 const times = x => (x >= 10 ? fmtNum(Math.round(x)) : fmtNum(x, x < 0.01 ? { maximumSignificantDigits: 1 } : { maximumFractionDigits: x < 1 ? 2 : 1 })) + '×';
@@ -44,7 +52,9 @@ const FABMARK = {
   flexible: '<svg class="fmark" viewBox="0 0 32 24" aria-hidden="true"><path d="M3 15c5-9 9 9 14 0s9-9 12 0"/><path d="M3 20c5-9 9 9 14 0s9-9 12 0"/></svg>',
   desk: '<svg class="fmark" viewBox="0 0 32 24" aria-hidden="true"><path d="M3 13h26M6 13v9M26 13v9"/><rect x="11" y="5" width="10" height="8" rx="1.5"/></svg>'
 };
-const formName = f => (M.matterIn(f) ? t('invent.matter.' + M.matterIn(f).id + '.t') : t('machines.form.' + f));
+const formName = f => (M.matterIn(f) ? t('invent.matter.' + M.matterIn(f).id + '.t') : M.liquidIn(f) ? t('liquid.kind.' + M.liquidIn(f).id + '.t') : t('machines.form.' + f));
+/* a time in seconds, in words */
+const secs = x => (!isFinite(x) ? t('liquid.tick.never') : x < 1e-6 ? t('liquid.time.ns', { n: fmtNum(+(x * 1e9).toPrecision(2)) }) : x < 1e-3 ? t('liquid.time.us', { n: fmtNum(+(x * 1e6).toPrecision(3)) }) : x < 1 ? t('liquid.time.ms', { n: fmtNum(+(x * 1e3).toPrecision(3)) }) : t('liquid.time.s', { n: fmtNum(+x.toPrecision(2)) }));
 
 export function machines(el, ctx) {
   const id = needOf(ctx.need) ? ctx.need : NEEDS[0].id, need = needOf(id);
@@ -57,13 +67,13 @@ export function machines(el, ctx) {
       '<p class="small mwhy">' + esc(t('machines.need.' + id + '.why')) + '</p>';
   }
   function partHtml(p, m) {
-    const b = blockOf(p.block), f = view.plan[p.id], forms = M.formsOf(b.id), kinds = mattersFor(b.id);
+    const b = blockOf(p.block), f = view.plan[p.id], forms = M.formsOf(b.id), fm = M.familyOf(f), kinds = kindsOf(fm, b.id);
     const bad = m.check.breaks.some(x => x.part === p.id) || m.meets.misses.some(x => x.part === p.id);
-    const famBtn = k => { const on = M.familyOf(f) === k, has = k === 'matter' ? kinds.length > 0 : forms.includes(k), to = k === 'matter' ? (on ? f : 'matter:' + (kinds[0] || {}).id) : k;
+    const famBtn = k => { const ks = kindsOf(k, b.id), multi = k === 'matter' || k === 'liquid', on = fm === k, has = multi ? ks.length > 0 : forms.includes(k), to = multi ? (on ? f : k + ':' + (ks[0] || {}).id) : k;
       return '<button type="button" class="f-' + k + '" data-mform="' + p.id + ':' + to + '" aria-pressed="' + on + '"' + (has ? '' : ' disabled') + ' title="' + esc(t('machines.form.' + k)) + '">' + MARK[k] + '<span class="sr">' + esc(t('machines.form.' + k)) + '</span></button>'; };
     let h = '<div class="mpart' + (bad ? ' bad' : '') + '"><div class="mtile ' + fam(f) + '">' + markOf(f) + '<span><b>' + esc(partName(p.id)) + '</b><span class="small muted">' + esc(t('machines.block.' + b.id + '.t')) + ' · ' + esc(formName(f)) + '</span></span></div>' +
       '<div class="mforms" role="group" aria-label="' + esc(partName(p.id)) + '">' + FORMS.map(famBtn).join('') + '</div>';
-    if (M.familyOf(f) === 'matter' && kinds.length > 1) h += '<div class="mkinds" role="group" aria-label="' + esc(t('machines.form.matter')) + '">' + kinds.map(k => '<button type="button" data-mform="' + p.id + ':matter:' + k.id + '" aria-pressed="' + (f === 'matter:' + k.id) + '">' + esc(t('invent.matter.' + k.id + '.t')) + '</button>').join('') + '</div>';
+    if (kinds.length > 1) h += '<div class="mkinds k-' + fm + '" role="group" aria-label="' + esc(t('machines.form.' + fm)) + '">' + kinds.map(k => '<button type="button" data-mform="' + p.id + ':' + fm + ':' + k.id + '" aria-pressed="' + (f === fm + ':' + k.id) + '">' + esc(kindName(fm, k.id)) + '</button>').join('') + '</div>';
     return h + '</div>';
   }
   /* a machine its fab cannot make has no days a try */
@@ -113,6 +123,47 @@ export function machines(el, ctx) {
       return '<li class="k-note"><span class="mst s-' + cl.status + '">' + esc(t('invent.status.' + cl.status)) + '</span><span>' + esc(t('fab.claim.' + cl.id)) + src + '</span></li>';
     }).join('') + '</ul>' + (cur !== 'giant' ? '<p class="small muted">' + esc(t('fab.ui.note')) + '</p>' : '') + '</div></section>';
     return h;
+  }
+  /* liquid hardware: how fast each part can reshape against what it costs, the line a changing job draws, and the
+     claims behind every fabric in use */
+  function liquidMap(m) {
+    const W = 600, H = 210, L = 46, R = 12, T = 14, B = 34, G = view.guesses;
+    const X = s => (!isFinite(s) ? L + 10 : L + 40 + (W - L - R - 50) * (8 - Math.log10(s)) / 17), Y = e => T + (H - T - B) * (1 - Math.log10(Math.max(1, Math.min(1000, e))) / 3);
+    let g = '';
+    [1, 10, 100, 1000].forEach(e => { g += '<line class="grid" x1="' + L + '" x2="' + (W - R) + '" y1="' + Y(e).toFixed(1) + '" y2="' + Y(e).toFixed(1) + '"/><text class="tick" x="' + (L - 6) + '" y="' + (Y(e) + 4).toFixed(1) + '" text-anchor="end">' + esc(times(e)) + '</text>'; });
+    [[Infinity, 'never'], [1e7, 'months'], [1e5, 'days'], [1, 's'], [1e-3, 'ms'], [1e-6, 'us'], [1e-9, 'ns']].forEach(([s, k]) => { g += '<text class="tick tk-' + k + '" x="' + X(s).toFixed(1) + '" y="' + (H - B + 16) + '" text-anchor="middle">' + esc(t('liquid.tick.' + k)) + '</text>'; });
+    const cx = X(1e-7), cy = Y(4);
+    g += '<rect class="lcorner" x="' + cx.toFixed(1) + '" y="' + cy.toFixed(1) + '" width="' + (W - R - cx).toFixed(1) + '" height="' + (Y(1) - cy + 6).toFixed(1) + '" rx="8"/>';
+    if (need.every) { const ex = X(need.every); g += '<line class="every" x1="' + ex.toFixed(1) + '" x2="' + ex.toFixed(1) + '" y1="' + T + '" y2="' + (H - B) + '"/><text class="evt" x="' + (ex - 6).toFixed(1) + '" y="' + (T + 10) + '" text-anchor="end">' + esc(t('liquid.ui.every', { t: secs(need.every) })) + '</text>'; }
+    /* the reference points: a circuit, an FPGA rewired, software */
+    const fp = liquidOf(FALLBACK);
+    g += '<circle class="ref" cx="' + X(Infinity) + '" cy="' + Y(1) + '" r="5"/><line class="refl" x1="' + X(fp.reshape.value[1]).toFixed(1) + '" x2="' + X(fp.reshape.value[0]).toFixed(1) + '" y1="' + Y(fp.energy.value).toFixed(1) + '" y2="' + Y(fp.energy.value).toFixed(1) + '"/><circle class="ref" cx="' + X(1e-6).toFixed(1) + '" cy="' + Y(500).toFixed(1) + '" r="5"/>';
+    /* this machine's parts, one dot per form, every part with that form named beside it */
+    const at = {};
+    need.parts.forEach(p => { const f = view.plan[p.id], r = M.reshapeOf(f), c = M.costOf(f, need), s = G ? r.low : r.high, e = G ? c.low : c.high, k = f + '|' + s + '|' + e;
+      (at[k] = at[k] || { f, s, e, names: [] }).names.push(partName(p.id)); });
+    Object.values(at).forEach((a, i) => { const x = X(a.s), y = Y(a.e);
+      g += '<g class="pt ' + fam(a.f) + '"><circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="7"/><text x="' + (x + (x > W - 150 ? -11 : 11)).toFixed(1) + '" y="' + (y - 9 - (i % 2) * 12).toFixed(1) + '" text-anchor="' + (x > W - 150 ? 'end' : 'start') + '">' + esc(a.names.join(', ')) + '</text></g>'; });
+    return '<svg class="lmap" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="' + esc(t('liquid.ui.mapAria')) + '">' + g + '</svg>';
+  }
+  function liquidHtml(m) {
+    const parts = need.parts.filter(p => M.liquidIn(view.plan[p.id]));
+    let h = '<section class="mliquid"><p class="kicker">' + esc(t('liquid.ui.kicker')) + '</p><p class="small muted">' + esc(t('liquid.ui.lead')) + '</p>' +
+      '<div class="lmapbox"><span class="small muted">' + esc(t('liquid.ui.axisY')) + '</span>' + liquidMap(m) + '<span class="small muted lax">' + esc(t('liquid.ui.axisX')) + '</span><p class="small lkey"><span class="lk lk-corner"></span> ' + esc(t('liquid.ui.corner')) + (need.every ? ' · <span class="lk lk-every"></span> ' + esc(t('liquid.ui.everyKey')) : '') + ' · <span class="lk lk-ref"></span> ' + esc(t('liquid.ui.refs')) + '</p></div>';
+    const src = fact => { const f = fact && ctx.FACT && ctx.FACT[fact]; return f && f.url ? ' <span class="small"><a href="' + esc(f.url) + '" target="_blank" rel="noopener">' + esc(t('invent.ui.source')) + '</a></span>' : ''; };
+    const li = (status, words, fact) => '<li class="k-note"><span class="mst s-' + status + '">' + esc(t('invent.status.' + status)) + '</span><span>' + esc(words) + src(fact) + '</span></li>';
+    if (!parts.length) h += '<p class="small">' + esc(t('liquid.ui.none')) + '</p>';
+    const shown = new Set();
+    parts.forEach(p => { const L = M.liquidIn(view.plan[p.id]); if (shown.has(L.id)) return; shown.add(L.id);
+      const names = parts.filter(q => M.liquidIn(view.plan[q.id]).id === L.id).map(q => partName(q.id)).join(', '), r = L.reshape.value;
+      h += '<div class="mclaims"><p><b>' + esc(names) + ' · ' + esc(t('liquid.kind.' + L.id + '.t')) + '</b> <span class="small muted">' + esc(t('liquid.kind.' + L.id + '.d')) + '</span></p><ul>' +
+        li(L.energy.status, t('liquid.ui.energy', { x: times(L.energy.value) }), L.energy.fact) +
+        li(L.reshape.status, t('liquid.ui.reshape', { range: r[0] === r[1] ? secs(r[0]) : secs(r[0]) + ' – ' + secs(r[1]) }), L.reshape.fact) +
+        L.notes.map(n => li(n.status, t('liquid.note.' + n.id), n.fact)).join('') + '</ul>' +
+        (L.energy.status === 'guess' || L.reshape.status === 'guess' ? '<p class="small muted">' + esc(t('liquid.ui.fallback')) + '</p>' : '') + '</div>'; });
+    const ev = ctx.FACT && ctx.FACT['thompson-evolved'];
+    h += '<p class="small levolve">' + esc(t('liquid.ui.evolve')) + (ev && ev.url ? ' <a href="' + esc(ev.url) + '" target="_blank" rel="noopener">' + esc(t('invent.ui.source')) + '</a>' : '') + ' <a href="#/do/evolve">' + esc(t('liquid.ui.evolveGo')) + '</a></p>';
+    return h + '</section>';
   }
   /* Moore's law for ideas: the attempts kept for this need, the best so far, and where yours would land */
   const LAWS = [['moore', 'ideas-harder'], ['wright', 'wright-law'], ['lab', null]];
@@ -181,7 +232,7 @@ export function machines(el, ctx) {
   function blocksHtml() {
     return '<details class="mblocks"><summary><b>' + esc(t('machines.ui.blocks')) + '</b> <span class="small muted">' + esc(t('machines.ui.blocksLead')) + '</span></summary><div class="grid">' + BLOCKS.map(b => {
       const c = M.checkOf(b.id, P), ports = k => b[k].map(x => t('machines.port.' + x)).join(', '), kinds = mattersFor(b.id);
-      return '<div class="chcard mblock"><span class="st">' + b.forms.concat(kinds.length ? ['matter'] : []).map(f => '<span class="f-' + f + '">' + MARK[f] + '</span>').join('') + '</span><span><b>' + esc(t('machines.block.' + b.id + '.t')) + '</b><span class="small">' + esc(t('machines.block.' + b.id + '.d')) + '</span>' +
+      return '<div class="chcard mblock"><span class="st">' + b.forms.concat(kinds.length ? ['matter'] : [], liquidsFor(b.id).length ? ['liquid'] : []).map(f => '<span class="f-' + f + '">' + MARK[f] + '</span>').join('') + '</span><span><b>' + esc(t('machines.block.' + b.id + '.t')) + '</b><span class="small">' + esc(t('machines.block.' + b.id + '.d')) + '</span>' +
         '<span class="small muted">' + esc(t('machines.ui.ports', { ins: ports('in'), outs: ports('out') })) + '</span>' +
         (kinds.length ? '<span class="small muted">' + esc(t('invent.ui.matters', { list: kinds.map(k => t('invent.matter.' + k.id + '.t')).join(', ') })) + '</span>' : '') +
         '<span class="small muted">' + esc(t('machines.check.' + c.state)) + '</span></span></div>';
@@ -193,7 +244,7 @@ export function machines(el, ctx) {
       needsHtml() +
       '<section class="mmachine"><p class="kicker">' + esc(t('machines.ui.machine')) + '</p><div class="mrail">' + need.parts.map(p => partHtml(p, m)).join('') + '</div>' +
       '<button type="button" class="link small" data-mreset>' + esc(t('machines.ui.reset')) + '</button></section>' +
-      '<div class="mbody"><div class="mresult">' + scoreHtml(m) + fabHtml(m) + inventHtml(m) + '</div>' + agentHtml() + '</div>' +
+      '<div class="mbody"><div class="mresult">' + scoreHtml(m) + fabHtml(m) + liquidHtml(m) + inventHtml(m) + '</div>' + agentHtml() + '</div>' +
       curveHtml(m) + blocksHtml() + '<p class="small muted mnote">' + t('machines.ui.note') + '</p></article>';
   }
   el.onclick = e => {
