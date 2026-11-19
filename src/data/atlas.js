@@ -35,11 +35,14 @@ export const VIEW_PARTS = {
   /* the flight through the data centre (src/v2/dc3d.js) */
   flight: { halls: 'building.halls', cooling: 'building.cooling', substation: 'building.substation', racks: 'building.racks', hotaisle: 'building.hotaisle', trays: 'building.trays', coldair: 'building.coldair',
     switch: 'rack.switch', servers: 'rack.servers', power: 'rack.power', fans: 'rack.fans', accelerator: 'board.bigchip', memory: 'board.memory', network: 'board.connectors',
-    package: 'chip.package', powerstages: 'board.power', die: 'pkg.die', hbm: 'pkg.memory' },
+    package: 'chip.package', powerstages: 'board.power', lid: 'pkg.lid', die: 'pkg.die', hbm: 'pkg.memory', base: 'pkg.substrate' },
   /* the flight through a phone (src/v2/phone3d-flight.js) */
-  phone: { screen: 'phone.screen', antenna: 'phone.antenna', battery: 'phone.battery', board: 'phone.board', camera: 'phone.camera', shield: 'phoneboard.shield',
+  phone: { screen: 'phone.screen', antenna: 'phone.antenna', cable: 'phone.cable', battery: 'phone.battery', board: 'phone.board', camera: 'phone.camera', shield: 'phoneboard.shield',
     soc: 'phoneboard.soc', dram: 'phoneboard.dram', pmic: 'phoneboard.pmic', modem: 'phoneboard.modem', storage: 'phoneboard.storage',
     cpu: 'soc.cpu', gpu: 'soc.gpu', npu: 'soc.npu', isp: 'soc.isp', cache: 'soc.cache' },
+  /* the flight through a car (src/v2/car3d-flight.js) */
+  car: { sensors: 'car.sensors', wheels: 'car.wheels', battery: 'car.battery', motor: 'car.motor', controllers: 'car.controllers', wiring: 'car.wiring',
+    case: 'ecu.case', connector: 'ecu.connector', mcu: 'ecu.mcu', drivers: 'ecu.drivers', cores: 'mcu.cores', flash: 'mcu.flash', sram: 'mcu.sram', periph: 'mcu.periph' },
   board: { chip: 'board.bigchip', die: 'pkg.die', hbm: 'pkg.memory', vrm: 'board.power', links: 'board.connectors' },
   chip: { lid: 'pkg.lid', bumps: 'pkg.bumps', wires: 'block.wires', contacts: 'gate.metal', gates: 'gate.gates', sheets: 'switch.channel', wells: 'atom.dopant', silicon: 'atom.lattice' },
   /* the dive's levels in 3D, the parts they draw besides their own scene's, by 'level.key' (src/v2/relief3d.js): the
@@ -54,7 +57,8 @@ export const diveWord = (level, key) => VIEW_PARTS.dive[level + '.' + key] || pa
    does not have, have theirs here. Physical sizes rounded to a figure, not industry figures; they agree with the
    levels' own words (depth.*.see, place.dc.*.d). The frame's rail says them, and how many times closer the next level
    is (src/v2/frame.js). Steps of a line (the factory's, the studio's) are steps, not sizes, and have none */
-const FLIGHT_SIZES = { campus: 500, hall: 100, server: 0.8, handset: 0.15 };   /* handset: the phone flown through, closed or opened like a book */
+/* handset: the phone flown through, closed or opened like a book; cabin: the car cut away round its footwell */
+const FLIGHT_SIZES = { campus: 500, hall: 100, server: 0.8, handset: 0.15, cabin: 2 };
 export const sizeOf = level => (DEPTHS[level] && DEPTHS[level].m) || FLIGHT_SIZES[level] || null;
 
 /* the stories that drive scenes (src/v2/stories.js), each at home at one level */

@@ -27,7 +27,7 @@ const SECTIONS = [
   ['search', 'something to look for at a level, kept in your log'],
   ['ways', 'the ways on the picture: Go inside on the island, along and in on the line, the phone\'s peek and swipe'],
   ['frame', 'the size at every level and the ring on the way in, desktop and phone'],
-  ['flights', 'the data centre\'s way in and its flight into the chip; the phone\'s flight into its chip'],
+  ['flights', 'the data centre\'s way in and its flight into the chip; the phone\'s and the car\'s flights into their chips'],
   ['machines', 'machines from shared blocks: a form changed, an agent\'s pick used, where it is made, liquid hardware keeping up with a radio, the lab\'s curve and an attempt kept, new matter\'s claims and the guesses switch, desktop and phone'],
 ];
 const argv = process.argv.slice(2);
@@ -653,8 +653,16 @@ run['search'] = async () => {
     await sp.evaluate(() => { location.hash = '#/place/datacentre/3'; });
     await sp.waitForFunction(() => { const b = document.querySelector('#placeui .seek [data-seek="accelerator"]'); if (b && !b.classList.contains('looked')) b.click(); return !!document.querySelector('#placeui .seek.found') && !!document.querySelector('#placeui .askline.seeklit'); }, null, { timeout: 120000, polling: 3000 })
       .catch(() => problems.push(tag + ': in the data centre\'s server, finding the part that does the sums does not light the question'));
+    /* every level has its search (#246): at the switch, the part that turns it on and off lights the switch's question */
+    await sp.evaluate(() => { location.hash = '#/dive/switch'; });
+    await sp.waitForFunction(() => { const b = document.querySelector('#diveui .seek[data-seekat="switch"] [data-seek="gate"]'); if (b && !b.classList.contains('looked')) b.click(); return !!document.querySelector('#diveui .seek[data-seekat="switch"].found') && !!document.querySelector('#diveui .askline.seeklit'); }, null, { timeout: 90000, polling: 2000 })
+      .catch(() => problems.push(tag + ': at the switch, finding what turns it on and off does not light the question'));
+    /* and in the phone's flight (#247): the names on the picture are the parts to tap, and the cable leads into the closed phone's question */
+    await sp.evaluate(() => { location.hash = '#/place/phones/0'; });
+    await sp.waitForFunction(() => { const n = document.querySelector('#flyLabels.seeking [data-hl="cable"]'); if (n && !document.querySelector('#flyui .seek [data-seek="cable"].looked')) n.click(); return !!document.querySelector('#flyui .seek[data-seekat="handset"].found') && !!document.querySelector('#flyui .askline.seeklit'); }, null, { timeout: 120000, polling: 3000 })
+      .catch(() => problems.push(tag + ': in the phone\'s flight, tapping the cable\'s name on the picture does not find where the energy comes in'));
     await sp.evaluate(() => { location.hash = '#/log'; });
-    await sp.waitForFunction(() => document.querySelectorAll('#page .seeklog .strand').length === 2, null, { timeout: 20000, polling: 1000 })
+    await sp.waitForFunction(() => document.querySelectorAll('#page .seeklog .strand').length === 4, null, { timeout: 20000, polling: 1000 })
       .catch(() => problems.push(tag + ': your log does not keep what you found'));
     await sp.close(); }
 };
@@ -691,7 +699,9 @@ run['ways'] = async () => {
     await pp.waitForSelector('#diveui .dockwrap.peek .dock .kicker', { timeout: 90000 }).catch(() => problems.push(tag + ': the dive\'s card does not rest as a peek on a phone'));
     await pp.waitForFunction(() => { const w = document.querySelector('#diveui .dockwrap'); if (w && w.classList.contains('peek')) w.click(); return !!w && !w.classList.contains('peek'); }, null, { timeout: 30000, polling: 1000 })
       .catch(() => problems.push(tag + ': touching the peek does not open the card'));
-    { const c = await pp.context().newCDPSession(pp); await c.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: 200, y: 300 }] }); await c.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] }); await c.detach(); }
+    /* on the picture, above the open card (a level with a search has a taller card) */
+    { const y = await pp.evaluate(() => Math.min(300, Math.round(document.querySelector('#diveui .dockwrap').getBoundingClientRect().top) - 60)), c = await pp.context().newCDPSession(pp);
+      await c.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: 200, y }] }); await c.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] }); await c.detach(); }
     await pp.waitForSelector('#diveui .dockwrap.peek', { timeout: 15000 }).catch(() => problems.push(tag + ': touching the picture does not let the card down'));
     const swipe = async () => { const c = await pp.context().newCDPSession(pp);
       await c.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: 200, y: 420 }] });
@@ -769,10 +779,25 @@ run['flights'] = async () => {
     await page.waitForFunction(() => { if (location.hash === '#/place/phones') { const b = document.querySelector('.insp:not([hidden]) [data-iact="deeper"]') || document.querySelector('#sheet:not([hidden]) a[href="#/place/phones/0"]'); if (b) b.click(); }
       return location.hash === '#/place/phones/0' && !document.getElementById('flyui').hidden; }, null, { timeout: 150000, polling: 3000 }).catch(() => problems.push(tag + ': going inside the phone island does not open its flight'));
     await page.waitForFunction(() => { const b = document.querySelector('#flyui .wayin:not([hidden]) .wigo'); if (b && location.hash === '#/place/phones/0') b.click(); return location.hash === '#/place/phones/1'; }, null, { timeout: 90000, polling: 3000 }).catch(() => problems.push(tag + ': the way in on the picture does not go deeper in the phone'));
-    await page.waitForFunction(() => !!document.querySelector('#flyui .here2 [data-hl="battery"]'), null, { timeout: 90000, polling: 1000 }).catch(() => problems.push(tag + ': inside the phone, the card does not name the battery'));
+    await page.waitForFunction(() => !!document.querySelector('#flyui .seek [data-seek="battery"][data-hl="battery"]'), null, { timeout: 90000, polling: 1000 }).catch(() => problems.push(tag + ': inside the phone, the card does not name the battery among the parts to look at'));
     await page.evaluate(() => { location.hash = '#/place/phones/3'; window.arrivals = []; new MutationObserver(() => { const a = document.documentElement.dataset.arrive; if (a) window.arrivals.push(a); }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-arrive'] }); });
     await page.waitForFunction(() => { const c = document.getElementById('flyCanvas'); if (c && location.hash === '#/place/phones/3') { c.focus(); c.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true })); } return location.hash === '#/dive/soc/phone'; }, null, { timeout: 90000, polling: 3000 }).catch(() => problems.push(tag + ': going on past the phone\'s chip does not carry the flight into it'));
     await page.waitForFunction(() => window.arrivals.includes('soc'), null, { timeout: 60000, polling: 500 }).catch(() => problems.push(tag + ': the dive\'s phone chip does not come down from where the flight ended'));
+    await page.close(); }
+  /* and so is a car (src/v2/car3d-flight.js): going inside the car island opens its flight, the way in on the picture
+     goes deeper (the cabin cut away, its card naming the battery), the control unit's card names its chip, and going on
+     past the chip carries the flight into the dive's car chip, which comes down from where the flight ended */
+  { const page = await browser3d.newPage({ viewport: { width: 1280, height: 800 } });
+    page.on('pageerror', e => problems.push(tag + ' (car flight): ' + e.message));
+    await page.goto(base + 'index.html#/place/cars');
+    await page.waitForFunction(() => { if (location.hash === '#/place/cars') { const b = document.querySelector('.insp:not([hidden]) [data-iact="deeper"]') || document.querySelector('#sheet:not([hidden]) a[href="#/place/cars/0"]'); if (b) b.click(); }
+      return location.hash === '#/place/cars/0' && !document.getElementById('carui').hidden; }, null, { timeout: 150000, polling: 3000 }).catch(() => problems.push(tag + ': going inside the car island does not open its flight'));
+    await page.waitForFunction(() => { const b = document.querySelector('#carui .wayin:not([hidden]) .wigo'); if (b && location.hash === '#/place/cars/0') b.click(); return location.hash === '#/place/cars/1'; }, null, { timeout: 90000, polling: 3000 }).catch(() => problems.push(tag + ': the way in on the picture does not go deeper in the car'));
+    await page.waitForFunction(() => !!document.querySelector('#carui .here2 [data-hl="battery"]'), null, { timeout: 90000, polling: 1000 }).catch(() => problems.push(tag + ': inside the car, the card does not name the battery'));
+    await page.waitForFunction(() => { const b = document.querySelector('#carui [data-lvgo="2"]'); if (b && location.hash === '#/place/cars/1') b.click(); return location.hash === '#/place/cars/2' && !!document.querySelector('#carui .here2 [data-hl="mcu"]'); }, null, { timeout: 90000, polling: 3000 }).catch(() => problems.push(tag + ': the car\'s control unit does not open with its chip named'));
+    await page.evaluate(() => { location.hash = '#/place/cars/3'; window.arrivals = []; new MutationObserver(() => { const a = document.documentElement.dataset.arrive; if (a) window.arrivals.push(a); }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-arrive'] }); });
+    await page.waitForFunction(() => { const c = document.getElementById('carCanvas'); if (c && location.hash === '#/place/cars/3') { c.focus(); c.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true })); } return location.hash === '#/dive/mcu/car'; }, null, { timeout: 90000, polling: 3000 }).catch(() => problems.push(tag + ': going on past the car\'s chip does not carry the flight into it'));
+    await page.waitForFunction(() => window.arrivals.includes('mcu'), null, { timeout: 60000, polling: 500 }).catch(() => problems.push(tag + ': the dive\'s car chip does not come down from where the flight ended'));
     await page.close(); }
 };
 
