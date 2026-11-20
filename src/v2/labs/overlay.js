@@ -30,7 +30,7 @@ export default function lab(L) {
       '<line class="m1" x1="' + x(1) + '" x2="' + x(1) + '" y1="' + (my - 5) + '" y2="' + (my + 13) + '"/><text class="ax" x="' + x(1) + '" y="' + (my + 25) + '" text-anchor="middle">' + esc(t('ovl.one')) + '</text><text class="ax" x="' + b + '" y="' + (my + 25) + '" text-anchor="end">' + esc(t('ovl.all')) + '</text></svg>';
     /* 40 vias cannot show a miss that happens once in millions: say what the sample shows, and how rare a miss is on the chip */
     const every = r.p > 1e-11 ? t('ovl.rate', { n: count(1 / r.p) }) : t('ovl.rate.none');
-    return '<figure class="ovfig">' + s + '<p class="ovrate"><span class="' + (miss ? 'bad' : 'muted') + '">' + esc(t('ovl.sample', { k: miss })) + '</span> <b>' + esc(every) + '</b></p><figcaption class="small muted">' + esc(t('ovl.legend')) + '</figcaption></figure>';
+    return '<figure class="ovfig" data-f2="instrument">' + s + '<p class="ovrate"><span class="' + (miss ? 'bad' : 'muted') + '">' + esc(t('ovl.sample', { k: miss })) + '</span> <b>' + esc(every) + '</b></p><figcaption class="small muted">' + esc(t('ovl.legend')) + '</figcaption></figure>';
   }
   function goalbox() {
     const ok = met(ch.id, seen()), A = group(0), B = group(1);

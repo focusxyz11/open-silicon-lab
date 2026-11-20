@@ -70,7 +70,7 @@ export default function lab(L) {
     }
     s += '<text class="ax" x="50" y="158.5" text-anchor="end">' + esc(t('cim.fig.conv')) + '</text><text class="ax" x="50" y="' + (Z + 3.5) + '" text-anchor="end">' + esc(t('cim.fig.sum')) + '</text>' +
       '<text class="ax" x="50" y="248" text-anchor="end">' + esc(t('cim.fig.read')) + '</text><text class="ax" x="50" y="259" text-anchor="end">' + esc(t('cim.fig.exact')) + '</text></svg>';
-    return '<figure class="cimfig">' + s + '<figcaption class="small muted">' + esc(t('cim.legend')) + '</figcaption></figure>';
+    return '<figure class="cimfig" data-f2="instrument">' + s + '<figcaption class="small muted">' + esc(t('cim.legend')) + '</figcaption></figure>';
   }
   /* the energy of one pass, two ways: fetch every number and compute, or compute where the numbers are */
   function bars(E) {

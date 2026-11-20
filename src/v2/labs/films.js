@@ -40,7 +40,7 @@ export default function lab(L) {
     const tr = s.traces.map(r => '<polyline class="' + (r.ion ? 'fl-ion' : 'fl-rad') + '" points="' + r.tr.map(p => (p[0] * c).toFixed(1) + ',' + (p[1] * c).toFixed(1)).join(' ') + '"/>').join('');
     const uc = s.undercutNm, ucOk = uc < 5, y3 = (G.filmTop + 1) * c, xl = G.openFrom * c, xr = G.openTo * c;
     const mark = uc > 0 ? '<g class="fl-uc ' + (ucOk ? 'good' : 'bad') + '"><path d="M' + (xl - uc / G.cellNm * c) + ' ' + y3 + 'H' + xl + 'M' + (xr + uc / G.cellNm * c) + ' ' + y3 + 'H' + xr + '"/><text x="' + (xl - uc / G.cellNm * c - 3) + '" y="' + (y3 + 4) + '" text-anchor="end">' + esc(t('fl.nm', { v: uc })) + '</text></g>' : '';
-    return '<figure class="flfig"><svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="' + esc(t('fl.etch.aria', { d: s.depthNm, u: uc, m: s.maskPct })) + '" shape-rendering="crispEdges">' +
+    return '<figure class="flfig" data-f2="instrument"><svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="' + esc(t('fl.etch.aria', { d: s.depthNm, u: uc, m: s.maskPct })) + '" shape-rendering="crispEdges">' +
       '<defs><linearGradient id="fl-pl" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--accent);stop-opacity:.34"/><stop offset="1" style="stop-color:var(--accent);stop-opacity:.04"/></linearGradient></defs>' +
       '<rect class="fl-air" x="0" y="0" width="' + W + '" height="' + H + '"/><rect x="0" y="0" width="' + W + '" height="' + G.maskTop * c + '" fill="url(#fl-pl)"/>' +
       '<rect class="fl-was" x="0" y="' + G.maskTop * c + '" width="' + W + '" height="' + (G.filmTop - G.maskTop) * c + '"/>' +
@@ -90,7 +90,7 @@ export default function lab(L) {
     const tt = s.top * sc;
     const film = s.top > 0 ? '<g class="fl-dfilm"><rect x="0" y="' + f(top0 - tt) + '" width="' + f(s.closed ? W : xl) + '" height="' + f(tt) + '"/>' + (s.closed ? '' : '<rect x="' + f(xr) + '" y="' + f(top0 - tt) + '" width="' + f(W - xr) + '" height="' + f(tt) + '"/>') + '<path d="' + wall(-1) + wall(1) + '"/><rect x="' + f(xl) + '" y="' + f(yb - s.bot * sc) + '" width="' + f(xr - xl) + '" height="' + f(s.bot * sc) + '"/></g>' : '';
     const cav = s.voided ? '<text class="fl-t mid" x="' + (W / 2) + '" y="' + f(Math.min(yb - 8, top0 + 22)) + '" text-anchor="middle">' + esc(t('fl.void')) + '</text>' : '';
-    return '<figure class="flfig"><svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="' + esc(t('fl.dep.aria', { w: w0, d: d, p: s.coveragePct == null ? 0 : s.coveragePct })) + '">' +
+    return '<figure class="flfig" data-f2="instrument"><svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="' + esc(t('fl.dep.aria', { w: w0, d: d, p: s.coveragePct == null ? 0 : s.coveragePct })) + '">' +
       '<rect class="fl-air" x="0" y="0" width="' + W + '" height="' + H + '"/>' +
       '<path class="fl-sub" d="M0 ' + f(top0) + 'H' + f(xl) + 'V' + f(yb) + 'H' + f(xr) + 'V' + f(top0) + 'H' + W + 'V' + H + 'H0z"/>' + film + cav +
       '<text class="fl-t" x="6" y="14">' + esc(t('fl.gas')) + '</text><text class="fl-t" x="6" y="' + (H - 6) + '">' + esc(t('fl.silicon')) + '</text>' +

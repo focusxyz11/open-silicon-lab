@@ -13,6 +13,7 @@ const { chromium } = require('playwright');
      node scripts/smoke.mjs                 every section
      node scripts/smoke.mjs --only a,b      only the sections named
      node scripts/smoke.mjs --list          the sections and what each covers
+     node scripts/smoke.mjs --only labs --frame2   every challenge played in the new frame, each in Do mode
    (npm run test:browser -- --only a,b does the same). CI runs them in groups, side by side (.github/workflows/ci.yml). */
 const SECTIONS = [
   ['old', 'the old address (classic.html) leads to the chip world'],
@@ -24,18 +25,20 @@ const SECTIONS = [
   ['slow', 'a device too slow for 3D gets the flat drawing back'],
   ['motion', 'one stage and no cuts: the factory opens, zooms in and out, the island answers a tap, lenses and dials, the test house square, the islands around, Ask at the block, one WebGL context'],
   ['seams', 'a fresh visitor crosses a seam and its leak rises; What if? between the islands'],
-  ['labs', 'every lab and bet played to its win on a flat page'],
+  ['labs', 'every lab and bet played to its win on a flat page (with --frame2, in the new frame, each in Do mode)'],
   ['search', 'something to look for at a level, kept in your log'],
   ['ways', 'the ways on the picture: Go inside on the island, along and in on the line, one way down through a chip (the stack is Make, along from the dive), the phone\'s peek and swipe'],
   ['frame', 'the size at every level and the ring on the way in, desktop and phone'],
   ['flights', 'the data centre\'s way in and its flight into the chip; the studio walked inside, with a handoff to a bench; the phone\'s and the car\'s flights into their chips'],
   ['machines', 'machines from shared blocks: a form changed, an agent\'s pick used, where it is made, liquid hardware keeping up with a radio, the lab\'s curve and an attempt kept, new matter\'s claims and the guesses switch, desktop and phone'],
-  ['frame2', 'the new frame behind ?frame=2 (#271): the caption at a dive level with its question in full, desktop and phone; Half the power won in Do mode, its instrument on the stage beside the panel that holds its controls; a question\'s page in Read mode, its column, its picture and the bar'],
+  ['frame2', 'the new frame behind ?frame=2 (#271): the caption at a dive level with its question in full, desktop and phone; Half the power won in Do mode, its instrument on the stage beside the panel that holds its controls; a chip\'s settings played on the line, Jevons\' bet in the island\'s sheet; a question\'s page in Read mode, its column, its picture and the bar'],
 ];
 const argv = process.argv.slice(2);
 if (argv.includes('--list')) { for (const [n, about] of SECTIONS) console.log(n.padEnd(16) + about); process.exit(0); }
 const oi = argv.indexOf('--only'), onlyArg = oi >= 0 ? argv[oi + 1] || '' : (argv.find(a => a.startsWith('--only=')) || '').slice(7);
 const only = oi >= 0 || argv.some(a => a.startsWith('--only=')) ? onlyArg.split(',').map(s => s.trim()).filter(Boolean) : null;
+/* --frame2: the labs section plays every challenge in the new frame (?frame=2, #271), each in Do mode (#274) */
+const F2RUN = argv.includes('--frame2');
 if (only) { const unknown = only.filter(n => !SECTIONS.some(([s]) => s === n)); if (unknown.length || !only.length) { console.error('Unknown section: ' + (unknown.join(', ') || '(none given)') + '\nThe sections: ' + SECTIONS.map(([s]) => s).join(', ')); process.exit(2); } }
 
 const server = await serve(0), base = 'http://localhost:' + server.address().port + '/';
@@ -606,76 +609,99 @@ run['labs'] = async () => {
      checks pass or fail by chance. A fresh visitor again (its own storage). */
   { const tag = 'labs', fp = await browser.newPage({ viewport: { width: 1280, height: 800 } });
   fp.on('pageerror', e => problems.push(tag + ': ' + e.message));
+  /* with --frame2, every challenge is played in the new frame (?frame=2): each, once won, must be in Do mode, its
+     instrument on the stage left of the panel that holds its controls, or its place kept as the picture with the goal
+     across it (src/v2/frame2.js, Do) */
+  const adr = h => base + 'index.html' + (F2RUN ? '?frame=2' : '') + h;
+  const inDo = async (id, what) => { if (!F2RUN) return;
+    await fp.waitForFunction(id => { const p = document.querySelector('.player[data-ch="' + id + '"]'), host = p && p.closest('.f2stage'); if (!host || !p.querySelector('.won')) return false;
+      const panel = host.id === 'sheet' ? host : host.querySelector(':scope > .dockwrap'), P = panel.getBoundingClientRect(), i = p.querySelector('[data-f2="instrument"]'), g = p.querySelector('[data-f2="goal"]');
+      const where = [...document.querySelectorAll('.f2where:not([hidden])')].some(w => w.getBoundingClientRect().width > 0);
+      if (!where || P.left < innerWidth / 2 || (g && g.getBoundingClientRect().right > P.left + 1)) return false;
+      if (!i) return host.classList.contains('f2place');
+      const I = i.getBoundingClientRect(); return I.width > 300 && I.height > 120 && I.left >= 0 && I.right <= P.left + 1 && I.top >= 60 && I.bottom <= innerHeight + 1; }, id, { timeout: 30000, polling: 1000 })
+      .catch(() => problems.push(tag + ': ' + what + ' is not played in Do mode in the new frame (its instrument on the stage beside the panel, or the place with its goal)')); };
   /* a file the labs ask for and do not get is named, so a 404 never goes untraced */
   fp.on('response', r => { if (r.status() >= 400) problems.push(tag + ': ' + r.status() + ' for ' + r.url()); });
   await fp.addInitScript(() => { localStorage.setItem('osl-quality', 'flat'); localStorage.setItem('osl-hints-v1', JSON.stringify({ seen: {}, off: true })); });
   /* a bet is played: guess first, then the two dials find the balance (src/engines/bet.js) */
-  await fp.goto(base + 'index.html#/do/cheaper');
+  await fp.goto(adr('#/do/cheaper'));
   await fp.waitForSelector('[data-guess-size]', { timeout: 30000 }).catch(() => problems.push(tag + ': the bet does not ask for a guess first'));
   await fp.evaluate(() => { const b = document.querySelector('[data-guess-size="6"]'); if (b) b.click(); });
   await fp.waitForSelector('.betwafer', { timeout: 10000 }).catch(() => problems.push(tag + ': the bet does not show its wafer'));
   await fp.evaluate(() => { for (const [k, v] of [['size', 6], ['clean', 2]]) { const r = document.querySelector('[data-bet="' + k + '"]'); if (r) { r.value = v; r.dispatchEvent(new Event('input', { bubbles: true })); } } });
   await fp.waitForSelector('.player .won', { timeout: 10000 }).catch(() => problems.push(tag + ': the bet cannot be won with both dials'));
+  await inDo('cheaper', 'cheaper');
   /* Cray's bet: the ox alone and the chickens alone fail; one chip with both wins */
-  await fp.goto(base + 'index.html#/do/oxen');
+  await fp.goto(adr('#/do/oxen'));
   await fp.waitForSelector('[data-guess-ox]', { timeout: 30000 }).catch(() => problems.push(tag + ': the oxen bet does not ask for a guess first'));
   await fp.evaluate(() => { const b = document.querySelector('[data-guess-ox="2"]'); if (b) b.click(); });
   await fp.waitForSelector('.oxplan', { timeout: 10000 }).catch(() => problems.push(tag + ': the oxen bet does not draw its chip'));
   await fp.evaluate(() => { for (const [k, v] of [['ox', 6], ['hens', 6]]) { const r = document.querySelector('[data-bet="' + k + '"]'); if (r) { r.value = v; r.dispatchEvent(new Event('input', { bubbles: true })); } } });
   await fp.waitForSelector('.player .won', { timeout: 10000 }).catch(() => problems.push(tag + ': the oxen bet cannot be won with an ox and chickens'));
+  await inDo('oxen', 'oxen');
   /* the pieces' bet: split and untested sinks packages; split and tested wins */
-  await fp.goto(base + 'index.html#/do/onebad');
+  await fp.goto(adr('#/do/onebad'));
   await fp.waitForSelector('[data-guess-pc]', { timeout: 30000 }).catch(() => problems.push(tag + ': the pieces bet does not ask for a guess first'));
   await fp.evaluate(() => { const b = document.querySelector('[data-guess-pc="1"]'); if (b) b.click(); });
   await fp.waitForSelector('.packs', { timeout: 10000 }).catch(() => problems.push(tag + ': the pieces bet does not draw its packages'));
   await fp.evaluate(() => { for (const [k, v] of [['k', 2], ['test', 2]]) { const r = document.querySelector('[data-bet="' + k + '"]'); if (r) { r.value = v; r.dispatchEvent(new Event('input', { bubbles: true })); } } });
   await fp.waitForSelector('.player .won', { timeout: 10000 }).catch(() => problems.push(tag + ': the pieces bet cannot be won by splitting and testing'));
+  await inDo('onebad', 'onebad');
   /* the proof's bet, at the bench: prove the arithmetic, test the rest */
-  await fp.goto(base + 'index.html#/do/prove');
+  await fp.goto(adr('#/do/prove'));
   await fp.waitForSelector('[data-guess-pv]', { timeout: 30000 }).catch(() => problems.push(tag + ': the proof bet does not ask for a guess first'));
   await fp.evaluate(() => { const b = document.querySelector('[data-guess-pv="1"]'); if (b) b.click(); });
   await fp.waitForSelector('.pblocks [data-prove]', { timeout: 10000 }).catch(() => problems.push(tag + ': the proof bet does not show its blocks'));
   await fp.evaluate(() => { for (const i of [5, 6, 7]) { const b = document.querySelector('[data-prove="' + i + '"]'); if (b) b.click(); } const r = document.querySelector('[data-bet="tests"]'); if (r) { r.value = 5; r.dispatchEvent(new Event('input', { bubbles: true })); } });
   await fp.waitForSelector('.player .won', { timeout: 10000 }).catch(() => problems.push(tag + ': the proof bet cannot be won by proving the arithmetic'));
+  await inDo('prove', 'prove');
   /* Jevons' bet, on the power island: a better chip alone draws more turbines; under a limit on its power it holds. The
      island is far, and the sheet may be drawn again when the flight lands: each poll guesses and turns the dials anew */
-  await fp.goto(base + 'index.html#/do/jevons');
+  await fp.goto(adr('#/do/jevons'));
   await fp.waitForSelector('[data-guess-jv]', { timeout: 120000 }).catch(() => problems.push(tag + ': the Jevons bet does not ask for a guess first'));
   const dials = (D, sel) => fp.waitForFunction(([D, sel]) => { const g = document.querySelector('[data-guess-jv="2"]'); if (g) g.click();
     for (const [k, v] of D) { const r = document.querySelector('#sheet [data-bet="' + k + '"]'); if (r && r.value !== String(v)) { r.value = v; r.dispatchEvent(new Event('input', { bubbles: true })); } }
     return !!document.querySelector(sel); }, [D, sel], { timeout: 30000, polling: 1000 });
   await dials([['eff', 3], ['cap', 6]], '#sheet .turbines .tb.more').catch(() => problems.push(tag + ': a better chip alone does not draw turbines beyond the island'));
   await dials([['eff', 4], ['cap', 1]], '#sheet .player .won').catch(() => problems.push(tag + ': the Jevons bet cannot be won with a better chip and a limit on power'));
+  await inDo('jevons', 'jevons');
   /* the batch bet, at the data centre's chip: many people and fewer bits keep each fast and the chip busy */
-  await fp.goto(base + 'index.html#/do/batch');
+  await fp.goto(adr('#/do/batch'));
   await fp.waitForSelector('[data-guess-bt]', { timeout: 60000 }).catch(() => problems.push(tag + ': the batch bet does not ask for a guess first'));
   await fp.waitForFunction(() => { const g = document.querySelector('[data-guess-bt="2"]'); if (g) g.click();
     for (const [k, v] of [['batch', 9], ['format', 2]]) { const r = document.querySelector('[data-bet="' + k + '"]'); if (r && r.value !== String(v)) { r.value = v; r.dispatchEvent(new Event('input', { bubbles: true })); } }
     return !!document.querySelector('.player .won'); }, null, { timeout: 30000, polling: 1000 }).catch(() => problems.push(tag + ': the batch bet cannot be won with many people and fewer bits'));
+  await inDo('batch', 'batch');
   /* Look inside, at the phone's board: open five products, count the leading-edge kinds; the right chip for the job */
-  await fp.goto(base + 'index.html#/do/newest');
+  await fp.goto(adr('#/do/newest'));
   await fp.waitForSelector('[data-td-open]', { timeout: 60000 }).catch(() => problems.push(tag + ': Look inside does not offer its products'));
   await fp.evaluate(() => { for (const id of ['phone', 'car', 'thermo', 'laptop', 'server']) { const b = document.querySelector('[data-td-open="' + id + '"]'); if (b) b.click(); } const i = document.querySelector('[data-td-count]'); if (i) i.value = 7; const c = document.querySelector('[data-td-check]'); if (c) c.click(); });
   await fp.waitForSelector('.player .won', { timeout: 10000 }).catch(() => problems.push(tag + ': counting the leading-edge kinds right does not win Look inside'));
-  await fp.goto(base + 'index.html#/do/jobs');
+  await inDo('newest', 'newest');
+  await fp.goto(adr('#/do/jobs'));
   await fp.waitForSelector('[data-fit-kind]', { timeout: 60000 }).catch(() => problems.push(tag + ': the right chip for the job does not show its chips'));
   await fp.evaluate(() => { for (const [i, k] of [[0, 'cpu'], [1, 'mcu'], [2, 'gpu'], [3, 'asic'], [4, 'asic'], [5, 'fpga'], [6, 'dsp'], [7, 'power']]) { const j = document.querySelector('[data-fit-job="' + i + '"]'); if (j) j.click(); const b = document.querySelector('[data-fit-kind="' + k + '"]'); if (b) b.click(); } });
   await fp.waitForSelector('.player .won', { timeout: 10000 }).catch(() => problems.push(tag + ': eight best fits do not win the right chip for the job'));
+  await inDo('jobs', 'jobs');
   /* Evolve a circuit, at the studio's gates: evolution finds a voter smaller than the person's */
-  await fp.goto(base + 'index.html#/do/evolve');
+  await fp.goto(adr('#/do/evolve'));
   await fp.waitForSelector('[data-ev-go]', { timeout: 60000 }).catch(() => problems.push(tag + ': Evolve a circuit does not offer to evolve'));
   /* start it, and start it again if the sheet was drawn anew when the flight landed */
   await fp.waitForFunction(() => { const b = document.querySelector('[data-ev-go]'); if (b && !b.dataset.ran) { b.dataset.ran = '1'; b.click(); } return !!document.querySelector('.player .won'); }, null, { timeout: 90000, polling: 2000 }).catch(() => problems.push(tag + ': evolution does not beat the person\'s voter'));
+  await inDo('evolve', 'evolve');
   /* Grow a crystal, at the quarry's first step: the autopilot grows a dislocation-free ingot */
-  await fp.goto(base + 'index.html#/do/crystal');
+  await fp.goto(adr('#/do/crystal'));
   await fp.waitForSelector('[data-cz-go]', { timeout: 60000 }).catch(() => problems.push(tag + ': Grow a crystal does not offer to start'));
   await fp.evaluate(() => { for (const s of ['[data-cz-auto]', '[data-cz-fast]', '[data-cz-go]']) { const b = document.querySelector(s); if (b) b.click(); } });
   await fp.waitForSelector('.player .won', { timeout: 120000 }).catch(() => problems.push(tag + ': the autopilot does not grow a perfect crystal'));
+  await inDo('crystal', 'crystal');
   /* the factory's labs: each is played to its win; a poll does every move again, as the sheet may be drawn anew
      when the flight lands. SET sets a dial the way a person drags it. */
   const SET = "const SET = (q, v) => { const i = document.querySelector(q); if (i) { i.value = v; i.dispatchEvent(new Event('input', { bubbles: true })); } }, CL = q => { const b = document.querySelector(q); if (b) b.click(); };";
-  const playLab = async (id, moves, what, wait = 90000) => {
-    await fp.goto(base + 'index.html#/do/' + id);
+  const playLab = async (id, moves, what, wait = 90000, addr = null) => {
+    at = 'labs: ' + id;
+    await fp.goto(adr(addr || '#/do/' + id));
     /* this challenge's own card (data-ch): the card of the lab before stays up until the new one is drawn */
     await fp.waitForSelector('.player[data-ch="' + id + '"]', { timeout: 60000 }).catch(() => problems.push(tag + ': ' + what + ' does not open'));
     /* polled from here: waitForFunction does not wait for an async predicate (its promise counts as true at once),
@@ -684,6 +710,7 @@ run['labs'] = async () => {
     let won = false;
     while (!won && Date.now() < until) { won = await fp.evaluate(play).catch(() => false); if (!won) await fp.waitForTimeout(3000); }
     if (!won) problems.push(tag + ': ' + what + ' is not won by the moves that win it');
+    else await inDo(id, what);
   };
   /* the two thinnest core questions: a reliable whole from flaky parts (vote.js), a mind that cannot be copied (mortal.js) */
   await playLab('flaky', "['mul', 'mem', 'add'].forEach(b => CL('[data-rd=\"' + b + ':3\"]:not([aria-pressed=\"true\"])'))", 'Six flaky parts, one reliable chip');
@@ -745,14 +772,34 @@ run['labs'] = async () => {
   await fp.waitForFunction(() => { const P = '.player[data-ch="chef"] ', c = q => { const b = document.querySelector(q); if (b) b.click(); }, e = () => { const f = document.querySelector(P + '[data-mb-e]'); return f ? { mbTrip: f.dataset.mbTrip, mbE: f.dataset.mbE } : null; };
     c(P + '[data-mb-tab="trip"]'); c(P + 'button[data-mb-at="near"]'); const a = e(); c(P + 'button[data-mb-at="rack"]'); const b = e();
     return !!(a && b && a.mbTrip === 'near' && b.mbTrip === 'rack' && +b.mbE > 10 * +a.mbE); }, null, { timeout: 30000, polling: 1500 }).catch(() => problems.push(tag + ': moving the memory does not change one bit\'s trip'));
+  /* the player's own kinds (src/v2/play.js), each found by its engine in the page and set as a person would: a design
+     written right on the bench, your chip's settings for each goal (the chip carries from one to the next: where the
+     two dials cannot reach a goal from where the last one left it, the chip is reset and tried again), a life
+     each place's chip lives through, and the broken copy caught by a pattern that makes it answer wrong */
+  const ENG = "const Gm = await import(new URL('src/v2/game.js', location.href).href), S = Gm.load(localStorage);";
+  const DESIGN = id => ENG + " const Dz = await import(new URL('src/engines/design.js', location.href).href), P = '.player[data-ch=\"" + id + "\"] ';"
+    + " CL(P + '[data-write]'); const ta = document.querySelector(P + '#chCode'); if (ta) { ta.value = Dz.solutionOf(Gm.challengeOf('" + id + "').p); CL(P + '[data-check]'); }";
+  for (const [id, at, what] of [['half', 'logic', 'Half adder'], ['vote', 'check', 'A smaller majority voter'], ['full', 'check', 'Full adder']]) await playLab(id, DESIGN(id), what, 90000, '#/bench/' + at + '/' + id);
+  const CHIP = id => ENG + " const Ch = await import(new URL('src/engines/chip.js', location.href).href), P = '.player[data-ch=\"" + id + "\"] ', ds = [...document.querySelectorAll(P + 'input[data-set]')];"
+    + " const val = (k, v) => k === 'clock' ? Ch.CLOCKS[v] : v; let pick = null; const walk = (i, c) => { if (pick) return; if (i === ds.length) { if (Gm.checkChip('" + id + "', Object.assign({}, S.chip, c)).ok) pick = c; return; }"
+    + " for (let v = +ds[i].min; v <= +ds[i].max; v++) walk(i + 1, Object.assign({}, c, { [ds[i].dataset.set]: val(ds[i].dataset.set, v) })); }; walk(0, {});"
+    + " if (pick) ds.forEach(d => { const v = pick[d.dataset.set], i = d.dataset.set === 'clock' ? Ch.CLOCKS.indexOf(v) : v; if (+d.value !== i) SET(P + '#' + d.id, i); }); else CL(P + '[data-reset]');";
+  for (const [id, what] of [['months', 'Through the factory in time'], ['quick', 'A chip that is quick to make'], ['cores', 'More cores, still cheap'], ['fed', 'Feed the cores'], ['fast', 'Half as fast again']]) await playLab(id, CHIP(id), what);
+  const LIFE = id => ENG + " const Lf = await import(new URL('src/engines/life.js', location.href).href), m = Gm.challengeOf('" + id + "').mission, P = '.player[data-ch=\"" + id + "\"] '; let pick = null;"
+    + " for (let margin = 0; margin < Lf.MARGINS.length && !pick; margin++) for (const protect of Lf.PROTECT) for (const grid of [false, true]) for (const hot of [false, true]) for (const burn of [false, true]) { const c = { margin, protect, grid, hot, burn }; if (!pick && Gm.checkLife(m, c).pass) pick = c; }"
+    + " if (pick) { SET(P + '#lifeM', pick.margin); CL(P + '[data-prot=\"' + pick.protect + '\"]:not([aria-pressed=\"true\"])'); for (const k of ['grid', 'hot', 'burn']) { const b = document.querySelector(P + '[data-life=\"' + k + '\"]'); if (b && (b.getAttribute('aria-pressed') === 'true') !== pick[k]) b.click(); } }";
+  for (const [id, what] of [['phone', 'Through a phone\'s life'], ['car', 'Through a car\'s life'], ['dclife', 'Through a data centre\'s life']]) await playLab(id, LIFE(id), what);
+  await playLab('spot', ENG + " const C = Gm.spotCase(Gm.spotCode(S)), P = '.player[data-ch=\"spot\"] ', run = [...document.querySelectorAll(P + '.tt tbody tr:not(.spotwait)')].length;"
+    + " if (!document.querySelector(P + '[data-guess]')) { const i = C.bad.findIndex(r => r.mis.length); CL(P + '[data-pat=\"' + i + '\"]'); } CL(P + '[data-guess=\"' + C.broken + '\"]'); if (run >= 3 && !document.querySelector(P + '.won')) CL(P + '[data-again]');", 'Find the broken copy');
   /* Verify the agent, at the Lab: a tool checks a case, and eight right calls win */
-  await fp.goto(base + 'index.html#/do/agent');
+  await fp.goto(adr('#/do/agent'));
   await fp.waitForSelector('#sheet .agcases [data-ag-case]', { timeout: 60000 }).catch(() => problems.push(tag + ': Verify the agent does not show its cases'));
   await fp.waitForFunction(() => { const b = document.querySelector('#sheet [data-ag-run]'); if (b) b.click(); return !!document.querySelector('#sheet .agtt tr.bad'); }, null, { timeout: 30000, polling: 1500 }).catch(() => problems.push(tag + ': checking every input does not find the equality checker\'s wrong rows'));
   /* the sheet may be drawn again when the flight lands: each poll makes every call that is still missing */
   await fp.waitForFunction(() => { const calls = [['eq', 0], ['maj'], ['sum', 0], ['mul'], ['yield', 0], ['roof', 0], ['fact', 0], ['cov', 0]], c = s => { const e = document.querySelector('#sheet ' + s); if (e) e.click(); };
     for (const [id, r] of calls) { c('[data-ag-case="' + id + '"]'); if (document.querySelector('#sheet .agverdict.good')) continue; c('[data-ag-redo]'); if (r == null) c('[data-ag-trust]'); else { c('[data-ag-reject]'); c('[data-ag-reason="' + r + '"]'); } }
     return !!document.querySelector('#sheet .player .won'); }, null, { timeout: 30000, polling: 1500 }).catch(() => problems.push(tag + ': eight right calls do not win Verify the agent'));
+  await inDo('agent', 'agent');
   await fp.close(); }
 };
 
@@ -1082,6 +1129,20 @@ run['frame2'] = async () => {
       if (!panel || !inst || !goal) return false; const P = panel.getBoundingClientRect(), I = inst.getBoundingClientRect(), sf = document.querySelector('.bsurf');
       return I.right <= P.left && I.width > 400 && I.height > 300 && !!inst.querySelector('[data-bk-cell]') && (!sf || getComputedStyle(sf).visibility === 'hidden' || sf.hidden); }, null, { timeout: 60000, polling: 1000 })
       .catch(() => problems.push(tag + ': the shortest wire does not put the bench on the stage in Do mode'));
+    /* every challenge in Do mode (#274; all of them: --only labs --frame2): your chip's settings on the factory's line keep
+       the line as the picture, the goal across it and the dials in the panel; a challenge met in the island's sheet
+       (Jevons' bet) has its instrument on the stage beside the sheet, which holds the dials */
+    await fp.evaluate(() => { location.hash = '#/do/months'; });
+    await fp.waitForFunction(() => { const host = document.querySelector('.f2stage.f2place:not([hidden])'), p = host && host.querySelector('.player[data-ch="months"]'), panel = host && host.querySelector(':scope > .dockwrap'), g = p && p.querySelector('[data-f2="goal"]');
+      if (!g || !panel) return false; const P = panel.getBoundingClientRect(), G = g.getBoundingClientRect(), cv = [...document.querySelectorAll('#stage > .c3:not([hidden])')];
+      return G.right <= P.left && G.top >= 100 && cv.some(c => getComputedStyle(c).visibility === 'visible') && panel.querySelectorAll('input[data-set]').length >= 2 && !!host.querySelector('.f2where:not([hidden])'); }, null, { timeout: 60000, polling: 1000 })
+      .catch(() => problems.push(tag + ': through the factory in time is not played on the line in Do mode, its goal across the picture and its dials in the panel'));
+    await fp.evaluate(() => { location.hash = '#/do/jevons'; });
+    await fp.waitForFunction(() => { const g = document.querySelector('#sheet [data-guess-jv="2"]'); if (g) g.click();
+      const sh = document.querySelector('#sheet.f2do.f2stage:not([hidden])'), i = sh && sh.querySelector('.player[data-ch="jevons"] [data-f2="instrument"]'); if (!i) return false;
+      const S = sh.getBoundingClientRect(), I = i.getBoundingClientRect(), ds = [...sh.querySelectorAll('input[data-bet]')];
+      return I.right <= S.left && I.width > 400 && I.height > 250 && ds.length === 2 && ds.every(d => { const r = d.getBoundingClientRect(); return r.left >= S.left && r.right <= S.right; }) && !!document.querySelector('#stage > .f2where.f2isle:not([hidden])'); }, null, { timeout: 120000, polling: 1000 })
+      .catch(() => problems.push(tag + ': Jevons\' bet, met in the island\'s sheet, does not put its turbines and curve on the stage beside the sheet that holds its dials'));
     const side = await fp.evaluate(() => document.documentElement.scrollWidth - innerWidth);
     if (side > 1) problems.push(tag + ': the page scrolls sideways by ' + side + ' px');
     await fp.close(); }

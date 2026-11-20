@@ -76,7 +76,7 @@ export default function lab(L) {
     if (ok) s += '<circle class="cr" cx="' + cx.toFixed(1) + '" cy="' + yN.toFixed(1) + '" r="6"/>';
     s += '<line class="now" x1="' + x + '" x2="' + x + '" y1="' + Y0 + '" y2="' + Y1 + '"/><circle class="dd" cx="' + x + '" cy="' + py(doped(T)).toFixed(1) + '" r="3.5"/><circle class="pd" cx="' + x + '" cy="' + py(r.n).toFixed(1) + '" r="4"/>' +
       '<text class="ax" x="' + X1 + '" y="' + (Y1 + 27) + '" text-anchor="end">' + esc(t('semi.x')) + '</text><text class="ax" x="' + X0 + '" y="' + (Y0 - 4) + '">' + esc(t('semi.y')) + '</text></svg>';
-    return '<figure class="semifig">' + s + '</figure>';
+    return '<figure class="semifig" data-f2="instrument">' + s + '</figure>';
   }
   /* the same number as a thing to see: a cube of each piece half a micrometre across, every free electron in it a dot */
   function cubes(T, r) {
