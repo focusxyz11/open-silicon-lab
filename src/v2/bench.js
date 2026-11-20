@@ -290,7 +290,7 @@ export function createBench(o) {
         tags += narrow ? tag(ox + ph * 0.55, oy - (lift ? 40 : 0) - 14, W, H, esc(t('design.layer.' + m)), 'l mk-t-' + m) : tag(ox + pw + 30, oy - (lift ? 40 : 0) + ph * 0.21, W, H, esc(t('design.layer.' + m)), 'l mk-t-' + m);
       });
     }
-    const side = '<p class="bk-k">' + esc(t('bench.masks.k')) + '</p><p class="bk-set">' + esc(t('bench.masks.set', { drawn: X.MASKS.length, n: B.masks, rest: B.masks - X.MASKS.length })) + '</p>' +
+    const side = '<p class="bk-k">' + esc(t('bench.masks.k')) + '</p><p class="bk-set">' + esc(t('bench.masks.set', { drawn: X.MASKS.length, n: SKY130_TOTAL, rest: SKY130_TOTAL - X.MASKS.length })) + '</p>' +
       (B.ok ? '' : '<p class="bk-say bad">' + esc(t('bench.masks.bad', { bad: B.bad, total: B.total })) + '</p>') +
       '<p class="bk-set muted">' + esc(t('bench.masks.next')) + '</p>';
     const ctl = quiz ? '' : '<label class="bk-scrub bk-peel"><span>' + esc(t('bench.masks.peel')) + '</span><input type="range" data-bk-peel min="0" max="100" step="1" value="' + Math.round(peel * 100) + '"></label>';

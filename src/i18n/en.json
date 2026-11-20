@@ -2134,7 +2134,7 @@
  "bench.layout.again": "Scramble again",
  "bench.layout.shared": "A shared chip: one tile each",
  "bench.masks.k": "Masks",
- "bench.masks.set": "{drawn} plates are drawn here: where the cells sit, the metal up and down, the vias, the metal across. A real set for a chip like yours has about {n}: the other {rest} print the transistors inside the cells (wells, gates, implants, contacts) and more metal above.",
+ "bench.masks.set": "{drawn} plates are drawn here: where the cells sit, the metal up and down, the vias, the metal across. On SKY130 a chip like yours is made with {n}: the other {rest} print the transistors inside the cells (wells, gates, implants, contacts), more metal above and the pads.",
  "bench.masks.bad": "This design still gives {bad} of {total} answers wrong, and nothing stops it here: the masks are made from whatever the description says. Found now, a mistake costs an edit; found in the factory, a new set of masks and months.",
  "bench.masks.next": "Next, the factory prints these onto a wafer, at the Print station.",
  "bench.masks.peel": "Spread the layers apart",
