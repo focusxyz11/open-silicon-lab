@@ -86,6 +86,7 @@ what space; what splitting into several chips costs in links and gains in good c
 | A chip is a city of districts. What should be general, and what special? | A general block can do any job passably; a special one does one job far better. |
 | When does a job earn its own district? | A special district costs space and pays it back by doing its one job with far less energy. |
 | Faster cores only wait faster. Where should the memory sit? | Placing memory close shortens the wires data has to travel. |
+| If information weighs nothing, why does moving it cost so much? | In a chip, fetching two numbers costs far more than adding them. |
 | Most of this rack moves data and removes heat. Overhead, or the real work? | Only a small part of the rack does the arithmetic. |
 | Thousands of machines act as one computer. Where does one end and the next begin? | A large AI model is trained across many racks at once. |
 | Should one big chip be split into several small ones? | Small chips come out good more often; joining them costs a little speed. |
@@ -100,11 +101,12 @@ what space; what splitting into several chips costs in links and gains in good c
 | --- | --- | --- |
 | **Feed the cores.** Get two and a half times the work done, with every signal on time. | reuse, memory, clock | work done; nothing late |
 | **More cores, still cheap.** | the chip's size and process | cores; cost per good chip |
+| **Keep the chef busy.** The processor is a chef who gets faster every round; memory is the pantry. Keep the chef cooking at every level, from one wire to a data centre. | the pantry closer, a wider door, a shelf, the pantry stacked on top, light, cooking inside the pantry | time waiting; energy per answer; money, wires and errors within bounds |
 | **Read the die.** From a chip's photo, say what it is for. | your reading of its districts | the share of area each district takes |
 | **Earn a district.** A job is 30% video. Is a video district worth its space? | the district's size, the job mix | time and energy against space |
 | **Split or not.** One big chip or four small ones in a package? | the split | good chips per wafer against time lost in links |
 
-The first two exist today; the die photos came from the first version of the lab.
+The first two and *Keep the chef busy* exist today; the die photos came from the first version of the lab.
 
 ## Innovation direction: special chips, chiplets, memory beside the logic
 

@@ -61,6 +61,20 @@ export const diveWord = (level, key) => VIEW_PARTS.dive[level + '.' + key] || pa
 const FLIGHT_SIZES = { campus: 500, hall: 100, server: 0.8, handset: 0.15, cabin: 2 };
 export const sizeOf = level => (DEPTHS[level] && DEPTHS[level].m) || FLIGHT_SIZES[level] || null;
 
+/* Questions to build: an open question with an engine and a game of its own (#263). Its home is here and only here: the
+   place and level where it lives (its challenge is played there: CHALLENGES in src/v2/game.js reads its address from
+   this), the world of the core question it sits inside (content/<world>.md), the questions from the field whose cards
+   and seams offer it, and its ladder: which rung of the question each level of its game stands on (look, deeper,
+   deeper still, the age of AI, beyond chips), with one bit's trip as the measure. The engine, the game, the ledger's
+   attempts and the figures do not depend on where it is shown, so when the lab is restructured round the new core
+   questions the question moves by changing its address here, not what it is. */
+export const QUESTIONS = {
+  bits: { home: { place: 'datacentre', level: 'block' }, world: 'divide', field: ['fetch', 'wait'], challenge: 'chef', engine: 'src/engines/bits.js',
+    ladder: { trip: 'measure', wire: 'look', chip: 'deeper', stacked: 'still', light: 'still', dc: 'ai', brain: 'beyond', team: 'beyond' } }
+};
+/* the question to build a question of the field offers, if any */
+export const questionOfField = id => Object.keys(QUESTIONS).find(k => QUESTIONS[k].field.includes(id)) || null;
+
 /* the stories that drive scenes (src/v2/stories.js), each at home at one level */
 export const STORIES = { board: { place: 'datacentre', level: 'board', view: 'board' } };
 

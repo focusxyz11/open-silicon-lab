@@ -828,6 +828,10 @@ export function createMap(canvas, host, on = {}) {
     /* serving a language model: the weights kept in fewer bits (stacks of 8, 4 and 2 slabs), a meter yard where each answer's energy is read, and a hall that reads at once (one bar) and writes word by word (a row of lamps) */
     'dc-quant': g => { box(g, 5.4, 0.3, 3.4, mat(P.wall), 0, 0, 0, 0.1); [8, 4, 2].forEach((n, i) => { const x = -1.7 + i * 1.7; for (let k = 0; k < n; k++) box(g, 1.2, 0.17, 2.2, k === n - 1 ? metal(P.slate) : metal(P.dark), x, 0.3 + k * 0.27, 0, 0.03); pulses.push(box(g, 1.0, 0.05, 2.0, glow(P.accent, night ? 1.3 : 0.7), x, 0.3 + n * 0.27 - 0.09, 0, 0.01, { cast: false })); }); },
     'dc-token': g => { box(g, 5.4, 0.3, 3.4, mat(P.wall), 0, 0, 0, 0.1); box(g, 2, 1.7, 1.6, mat(P.white), -1.3, 0.3, 0, 0.12); for (let k = 0; k < 6; k++) box(g, 0.08, 1.2, 0.5, metal(P.slate), -2.05 + k * 0.3, 0.5, 1.02, 0.01, { cast: false }); for (let k = 0; k < 3; k++) cyl(g, 0.1, 0.16, 0.6, mat(P.wall), -1.9 + k * 0.6, 2, 0, 10); box(g, 0.14, 2.3, 0.14, metal(P.slate), 1.5, 0.3, 0, 0.02); box(g, 1.3, 1.0, 0.3, metal(P.dark), 1.5, 1.7, 0, 0.06); pulses.push(box(g, 1.0, 0.2, 0.05, glow(P.warm, night ? 1.3 : 0.7), 1.5, 1.85, 0.17, 0.01, { cast: false })); pulses.push(box(g, 0.6, 0.2, 0.05, glow(P.accent, night ? 1.3 : 0.7), 1.3, 2.25, 0.17, 0.01, { cast: false })); },
+    /* keep the chef busy: a low kitchen with its pantry stacked on top, warm with the heat it cannot shed, its door lit */
+    'dc-pantry': g => { box(g, 4.6, 0.3, 3.2, mat(P.wall), 0, 0, 0, 0.1); box(g, 3.2, 1.3, 2.4, mat(P.white), -0.4, 0.3, 0, 0.12); box(g, 3.4, 0.16, 2.6, mat(A.roof, { roughness: 0.7 }), -0.4, 1.6, 0, 0.04);
+      box(g, 2.6, 0.9, 1.9, metal(P.slate), -0.4, 1.76, 0, 0.08); for (let k = 0; k < 3; k++) pulses.push(box(g, 2.0, 0.08, 0.05, glow(P.warm, night ? 1.2 : 0.6), -0.4, 1.98 + k * 0.24, 0.97, 0.01, { cast: false }));
+      box(g, 0.9, 1.0, 0.9, mat(P.white), 1.75, 0.3, 0, 0.08); pulses.push(box(g, 0.9, 0.12, 0.12, glow(P.accent, night ? 1.4 : 0.8), 1.3, 0.85, 0, 0.02, { cast: false })); },
     'dc-prefill': g => { box(g, 5.4, 0.3, 3.4, mat(P.wall), 0, 0, 0, 0.1); box(g, 4.6, 0.7, 0.9, mat(P.white), 0, 0.3, -0.85, 0.08); pulses.push(box(g, 4.2, 0.12, 0.5, glow(P.accent, night ? 1.3 : 0.7), 0, 1.0, -0.85, 0.02, { cast: false })); for (let k = 0; k < 7; k++) { box(g, 0.44, 0.7, 0.9, mat(P.white), -2.08 + k * 0.693, 0.3, 0.85, 0.06); pulses.push(box(g, 0.26, 0.12, 0.5, glow(P.good, night ? 1.3 : 0.7), -2.08 + k * 0.693, 1.0, 0.85, 0.02, { cast: false })); } },
     'clock-tower': g => { box(g, 2.4, 9, 2.4, mat(P.white), 0, 0, 0, 0.2); const face = cyl(g, 1, 1, 0.2, mat(P.wall), 0, 7, 1.25, 24); face.rotation.x = Math.PI / 2; const hand = box(g, 0.12, 0.9, 0.08, mat(P.dark), 0, 6.95, 1.42, 0.02, { cast: false }); hand.geometry = hand.geometry.clone().translate(0, 0.4, 0); spinning.push({ hand }); }
   };
@@ -837,7 +841,9 @@ export function createMap(canvas, host, on = {}) {
     'way-cim': [13, 3], 'way-quantum': [13, -5], 'dc-heat': [20.5, -15], 'studio-aichip': [-21, 3], 'blk-power': [-20.5, 8.5], 'gate-counter': [5, 6],
     'island-adc': [11.5, 18.5], 'island-reg': [5.5, 24], 'island-sensor': [-11.5, 3],
     /* serving a language model: together, east of the halls and north of the solar field */
-    'dc-quant': [22.5, -4], 'dc-token': [20.5, -9.5], 'dc-prefill': [16.5, -4] };
+    'dc-quant': [22.5, -4], 'dc-token': [20.5, -9.5], 'dc-prefill': [16.5, -4],
+    /* keep the chef busy: east of the hall that keeps numbers small */
+    'dc-pantry': [28.5, -2.5] };
   GROWTH.forEach(gw => { const [x, z, y] = GROW_SPOT[gw.id] || [0, 0], g = group(G[gw.at], x, y || 0, z); g.visible = false; g.scale.setScalar(0.001); growing.push({ id: gw.id, g, built: false, t0: 0 }); });
 
   /* No question floats over a place any more (docs/framework/rebuild.md, section 3): a question shown as a dot on a
