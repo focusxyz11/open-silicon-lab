@@ -9,6 +9,10 @@
    createFrame(host, o): o.up { href, label }, o.path [{ href, label }], o.rail { label, items: [{ id, label, size }] } (size: metres across, sizeOf in the atlas),
    o.follow(key) → address of a question, o.askAt(depth) → stop keys, o.askedAt(depth) → html of what people asked, o.fieldAt(depth) → ids of the questions from the field there,
    o.doAt(depth) → [{ id, title, where, href, open }], o.onRail(id), o.onLook().
+   The questions under Ask are lenses (src/engines/frame.js): o.lensesAt(depth) → [{ id, label, hint, icon }] (the ones
+   that live at the level, by short name only), o.lensCard(id, depth) → html of the one chosen (the question alone, its
+   form here, what to play here, the question it meets, the way on), o.onLens(id | null, depth) → the view lights on
+   its picture what the lens is about. Without lenses at a level, Ask lists the level's questions as before.
    Returns { dock, level(depth), rail(at, fill, pos), goal(html), mode(), look(), stop(html), inwardAt(p) }: stop() pins a
    question you are following in the card, under Ask, until you choose a face again.
    The way in is on the picture, never only in the card: whatever way deeper the view writes in its card (an element
@@ -39,7 +43,7 @@ export const MODES = ['look', 'do', 'ask'];
 export const FACES = ['designed', 'made', 'used'];
 
 export function createFrame(host, o) {
-  let mode = 'look', depth = null, pinned = false, railAt = null;
+  let mode = 'look', depth = null, pinned = false, railAt = null, lens = null;
   const path = o.path.slice(1);
   host.innerHTML =
     '<a class="homebtn" href="' + esc(o.up.href) + '" aria-label="' + esc(o.up.label) + '">↑</a>' +
@@ -147,24 +151,31 @@ export function createFrame(host, o) {
 
   /* Do and Ask, from the atlas, for the level in view */
   const fields = () => (depth && o.fieldAt ? o.fieldAt(depth) : []);
-  const counts = () => { const q = depth ? o.askAt(depth).length + fields().length : 0, c = depth ? o.doAt(depth).length : 0;
+  const lenses = () => (depth && o.lensesAt ? o.lensesAt(depth) : []);
+  const counts = () => { const q = depth ? (lenses().length || o.askAt(depth).length) + fields().length : 0, c = depth ? o.doAt(depth).length : 0;
     host.querySelectorAll('.modes3 [data-mode]').forEach(b => { const n = b.dataset.mode === 'ask' ? q : b.dataset.mode === 'do' ? c : 0; b.querySelector('.mc').textContent = n ? String(n) : ''; }); };
   const fill = () => {
     host.querySelectorAll('[data-mode]').forEach(b => b.setAttribute('aria-selected', String(b.dataset.mode === mode)));
+    if (mode !== 'ask' && o.onLens) o.onLens(null, depth);
     if (mode === 'look') return o.onLook && o.onLook();
     let h = '<p class="kicker">' + esc(t('frame.' + mode + 'At', { level: depth ? t('depth.' + depth + '.name') : '' })) + '</p>';
-    if (mode === 'ask') { const ks = depth ? o.askAt(depth) : [], fs = fields();
-      /* first the questions people were stuck on here, each with its shape (src/v2/field.js) */
+    if (mode === 'ask') { const ks = depth ? o.askAt(depth) : [], fs = fields(), L = lenses();
+      /* the core questions that live here, as lenses: only their short names, and the one chosen shown alone */
+      if (L.length) { if (!L.some(l => l.id === lens)) lens = L[0].id;
+        h += '<div class="qlbar" role="group" aria-label="' + esc(t('frame.lens.k')) + '">' + L.map(l => '<button type="button" class="qlb" data-lens="' + esc(l.id) + '" aria-pressed="' + (l.id === lens) + '" title="' + esc(l.hint) + '"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="' + esc(l.icon) + '"/></svg>' + esc(l.label) + '</button>').join('') + '</div>' + o.lensCard(lens, depth); }
+      /* then the questions people were stuck on here, each with its shape (src/v2/field.js) */
       if (fs.length) h += '<p class="kicker">' + esc(t('field.ui.k')) + '</p><div class="fieldlist">' + fs.map(fieldLine).join('') + '</div>';
-      h += ks.length ? '<div class="asklist">' + ks.map(k => '<a class="askline" href="' + esc(o.follow(k)) + '"><span class="q">' + esc(t('stop.' + k + '.q')) + '</span></a>').join('') + '</div>' : fs.length ? '' : '<p class="small muted">' + esc(t('frame.noAsk')) + '</p>';
+      if (!L.length) h += ks.length ? '<div class="asklist">' + ks.map(k => '<a class="askline" href="' + esc(o.follow(k)) + '"><span class="q">' + esc(t('stop.' + k + '.q')) + '</span></a>').join('') + '</div>' : fs.length ? '' : '<p class="small muted">' + esc(t('frame.noAsk')) + '</p>';
       /* what people and agents have asked at this level: the commons' trace, on the thing itself */
       h += depth && o.askedAt ? o.askedAt(depth) : ''; }
     else { const cs = depth ? o.doAt(depth) : []; h += cs.length ? '<div class="dolist">' + cs.map(c => '<a class="dochip' + (c.open ? ' open' : '') + '" href="' + esc(c.href || '#/do/' + c.id) + '">' + (c.open ? '<span class="kicker">' + esc(t('trail.open')) + '</span>' : '') + '<b>' + esc(c.title) + '</b><span class="small muted">' + esc(c.where) + '</span></a>').join('') + '</div>' : '<p class="small muted">' + esc(t('frame.noDo')) + '</p>'; }
     h += '<div class="nav"><button type="button" class="btn ghost" data-mode="look">' + esc(t('frame.backToLook')) + '</button></div>';
     dock.innerHTML = h; dock.classList.remove('locked');
+    if (mode === 'ask' && o.onLens) o.onLens(lenses().length ? lens : null, depth);
   };
   host.addEventListener('click', e => {
     const m = e.target.closest('[data-mode]'); if (m) { mode = m.dataset.mode; pinned = false; return fill(); }
+    const ln = e.target.closest('[data-lens]'); if (ln) { lens = ln.dataset.lens; mode = 'ask'; pinned = false; return fill(); }
     const r = e.target.closest('[data-rail]'); if (r) return o.onRail && o.onRail(r.dataset.rail);
   });
   const api = {
@@ -182,6 +193,8 @@ export function createFrame(host, o) {
       if (q && at && Math.abs(q.x - at.x) < 0.002 && Math.abs(q.y - at.y) < 0.002) return; at = q; place(); },
     goal(html) { const g = $('.goal2'); g.hidden = !html; if (html) g.innerHTML = html; },
     mode() { return mode; },
+    /* the lens chosen under Ask, or null */
+    lens() { return mode === 'ask' ? lens : null; },
     look() { mode = 'look'; pinned = false; fill(); },
     /* a challenge being played in the card: its face is Do, and it stays while the level changes beneath it */
     /* the height of the card at rest (on a phone, the peek): what the picture is framed above */

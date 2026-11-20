@@ -13,7 +13,7 @@
      (where its name sits: l, r, rc, b), href (its view), name and see (word keys), also (more views whose challenges
      belong here), places (island places whose challenges with no view of their own belong here), pages (other
      things to try there: [href, word key]) and links (stations it is joined to across the map).
-   - THREADS: the twelve core questions (words home.q.<id>), each starting at one station (home) and running through
+   - THREADS: the thirteen core questions (words home.q.<id>), each starting at one station (home) and running through
      a few others (path). Only one is shown at a time, never a list of them (CLAUDE.md).
    - WAYS: five ways in, each lighting the lines and stations it is about. */
 
@@ -73,7 +73,7 @@ export const ARROWS = [[D, 68, 'down', 'design'], [D, 535, 'down', 'design'], [3
 export const LOOP_PATH = 'M' + D + ' 40 V590 H' + M + ' V40 Z';
 export const SCALE_PATH = 'M' + S + ' 100 V520';
 
-/* the twelve core questions, each a thread through the map. One at a time. Words home.q.<id>, or the question's
+/* the thirteen core questions, each a thread through the map. One at a time. Words home.q.<id>, or the question's
    own home where it already has one (word) */
 export const THREADS = [
   { id: 'perfect', word: 'field.perfect.q', home: 'layout', path: ['layout', 'etch', 'test', 'use'] },
@@ -87,7 +87,8 @@ export const THREADS = [
   { id: 'eff', home: 'use', path: ['use', 'rack', 'building', 'need'] },
   { id: 'copy', home: 'arch', path: ['arch', 'block', 'pkg', 'lab'] },
   { id: 'nat', home: 'atom', path: ['atom', 'crystal', 'lab'] },
-  { id: 'human', home: 'lab', path: ['lab', 'need', 'arch', 'ship'] }
+  { id: 'human', home: 'lab', path: ['lab', 'need', 'arch', 'ship'] },
+  { id: 'physics', home: 'block', path: ['block', 'gate', 'switch', 'atom'] }
 ].map(x => Object.assign({ word: 'home.q.' + x.id }, x));
 
 /* five ways in, each a route on the map */

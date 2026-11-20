@@ -1,6 +1,6 @@
 /* The map: the first page (#/). A wafer coming out of the fab, four toys played in seconds, the first things to try,
    and the map of everything visual and interactive in the lab: design coming down, the factory building back up,
-   scale in the middle, and one of the twelve questions at a time drawn as a thread through the stations it touches.
+   scale in the middle, and one of the thirteen questions at a time drawn as a thread through the stations it touches.
    Every station opens its own view of the chip world; the island is one way in (#/island). Data: src/data/home.js;
    logic: src/engines/home.js. Words are read with t(); the map's own are home.* */
 import { t, fmtNum, fmtWords } from '../core/i18n.js';

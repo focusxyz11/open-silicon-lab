@@ -5,6 +5,7 @@ Where the lab stands, and what is ready to be built next. Read this first when s
 ## Where it stands
 
 - **The first page is the map** (`#/`, `src/v2/home.js`, data `src/data/home.js`, engine `src/engines/home.js`): a wafer leaving the fab, tested chip by chip (the same dust kills more of it when the chips are bigger); four toys played in seconds (a gate, the shrinking switch from the trend data, cores packed close or apart, a zoom from a hall to an atom with each level's designed and made twins); the first things to try; and every station of the lab round one loop, drawn like a metro map: design down the left (the job, architecture, the RISC-V core, describe, check, gates, layout, masks), tape-out, the factory up the right (crystal to out), use, back to the Lab, with scale down the middle. A station's card lists every challenge whose home view it is (read from `doHome`, never written twice) and leads into its view. The twelve core questions are threads through the map, one shown at a time. Nothing 3D is drawn on the map; the island is one way in (`#/island`). The front page before it is kept on the branch `claude/before-map-2026-11`.
+- **The thirteen core questions are lenses** (`docs/FRAME13.md`; `src/data/frame.js`, `src/engines/frame.js`): every experiment and challenge is filed under them. Under Ask, every card offers the ones that live at its level (two to six) by their short names; the one chosen is shown alone, with its form at that level, something true there, the challenges to play there, the question it meets there and the nearest level where it lives too. The lens lights its parts on the flat pictures and keeps only its marks on a 3D level. Fight physics is the thirteenth, also a thread on the map. Next: a visual language of its own for each lens, and playable models for the thinnest questions.
 - **The site** is the chip world (`index.html`), live at https://focusxyz11.github.io/open-silicon-lab/. Its island (`#/island`):
   - The places sit round a chip's life: the Lab (Open), the studio (Design), the quarry and the factory (Make), the test house (Test), the port (Ship), and the data centre (Use).
   - Phones and cars are islands of their own.
@@ -41,7 +42,7 @@ Where the lab stands, and what is ready to be built next. Read this first when s
 
 ## Decisions to keep
 
-- Never list the eleven core questions together.
+- Never list the thirteen core questions together; they are lenses, one shown at a time (`docs/FRAME13.md`).
 - No linear path.
 - Visuals over words.
 - Nothing cartoonish.

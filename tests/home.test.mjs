@@ -1,5 +1,5 @@
 // The map, the first page (src/data/home.js, src/engines/home.js, src/v2/home.js): every station is an address of the
-// chip world with words that exist, every challenge is at one station, the twelve questions are threads through real
+// chip world with words that exist, every challenge is at one station, the thirteen questions are threads through real
 // stations (one starting at each station at most), and the toys behave as they say.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -31,8 +31,8 @@ test('every challenge is at exactly one station', () => {
   assert.deepEqual(missing, [], 'these challenges are on no station of the map (give their view or place to one): ' + missing.join(', '));
 });
 
-test('the twelve questions are threads through the map, one starting at a station at most', () => {
-  assert.equal(THREADS.length, 12);
+test('the thirteen questions are threads through the map, one starting at a station at most', () => {
+  assert.equal(THREADS.length, 13);
   const homes = THREADS.map(x => x.home);
   assert.equal(new Set(homes).size, homes.length, 'two questions start at one station');
   for (const T of THREADS) {
@@ -41,7 +41,7 @@ test('the twelve questions are threads through the map, one starting at a statio
     for (const s of T.path) assert.ok(H.byId[s], T.id + ' runs through ' + s + ', which is not a station');
     assert.ok(H.threadRuns(T.id).length > 0);
   }
-  assert.equal(H.nextThread(THREADS[11].id), THREADS[0].id, 'the next question comes round again');
+  assert.equal(H.nextThread(THREADS[THREADS.length - 1].id), THREADS[0].id, 'the next question comes round again');
 });
 
 test('ways in and first things to try name real things', () => {
