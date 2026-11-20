@@ -192,7 +192,7 @@ not show, a fault the plan does not see); predict which lever pays next in a pla
 the escapes still come from). When the engine cannot express an idea (a new code, a new kind of copy), the attempt is a
 question to the engine: which new lever, at which level, with which source.
 
-**On the site:** not yet. Part 2 gives it a lens and attempts, as the energy puzzle has, once that lens has been tried.
+**On the site:** *Catch the silent errors* at the port (`#/do/silent`, `src/v2/labs/errors.js`): the stack of levels with each protection set on its row, and a goal for each place. Attempts kept in the ledger come next.
 
 ## Where it meets other questions
 
