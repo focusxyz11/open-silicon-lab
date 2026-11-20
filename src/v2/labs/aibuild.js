@@ -50,7 +50,7 @@ export default function lab(L) {
       return '<div class="gauge aibgauge' + (r.ok ? ' ok' : '') + '"><span class="gl">' + esc(r.key === 'tps' ? t('aib.req.tps.' + A.brief) : t('aib.req.' + r.key)) + ' <span class="muted">' + esc(t(fit ? 'aib.needs' : r.op === '>=' ? 'aib.atLeast' : 'aib.atMost', { v: fig(key, lim) })) +
         '</span></span><span class="gv">' + esc(val(key, r.value)) + '</span><span class="gbar"><span style="width:' + Math.min(100, r.value / lim * 80).toFixed(0) + '%"></span><i class="aibtick"></i></span></div>'; };
     const G = d.goal, stars = [1, 2, 3].map(k => '<i class="' + (d.stars >= k ? 'on' : '') + '">★</i>').join('');
-    return '<div class="goalbox' + (d.all ? ' ok' : '') + '"><p class="kicker">' + esc(t(done ? 'aib.shipped' : d.all ? 'aib.ready' : 'aib.brief')) + '</p>' + d.rows.map(g).join('') +
+    return '<div class="goalbox' + (d.all ? ' ok' : '') + '" data-f2="goal"><p class="kicker">' + esc(t(done ? 'aib.shipped' : d.all ? 'aib.ready' : 'aib.brief')) + '</p>' + d.rows.map(g).join('') +
       '<p class="small aibscore' + (d.all ? '' : ' muted') + '"><span class="aibstars" aria-hidden="true">' + stars + '</span> ' + esc(t('aib.goal.' + G.key)) + ' <b class="mono">' + esc(d.all ? score(G.key, G.value) : t('aib.none')) + '</b> <span class="muted">' +
       esc(t(G.higher ? 'aib.starsUp' : 'aib.starsDown', { a: score(G.key, G.stars[0]), b: score(G.key, G.stars[1]) })) + '</span></p></div>';
   }
@@ -145,7 +145,7 @@ export default function lab(L) {
       '<p class="small aibstory">' + esc(t('aib.mission.' + A.brief + '.story')) + '</p></div>';
     /* a phone keeps the brief in sight as a thin strip while the choices scroll under it */
     h += '<div class="aibstrip" aria-hidden="true">' + d.rows.map(r => '<span class="' + (r.ok ? 'ok' : '') + '"><span>' + esc(t('aib.s.' + r.key)) + '</span><span class="gbar"><span style="width:' + Math.min(100, r.value / (r.op === 'fit' ? r.need : r.limit) * 80).toFixed(0) + '%"></span><i class="aibtick"></i></span></span>').join('') + '</div>';
-    h += '<div class="aibL">' + goalbox(A, d) + figure(c, d, W) + reads(c, d, W) + balance(c, d) + schedule(c, d) +
+    h += '<div class="aibL" data-f2="instrument">' + goalbox(A, d) + figure(c, d, W) + reads(c, d, W) + balance(c, d) + schedule(c, d) +
       '<div class="aibgo"><button type="button" class="btn primary" data-aib-tape' + (view.aibRun ? ' disabled' : '') + '>' + esc(t('aib.tape')) + '</button><span class="small muted">' + esc(t(A.tapes ? 'aib.tapes' : 'aib.tape.d', { n: A.tapes })) + '</span></div>' + verdict(A) + review(c, d);
     if (!won && !A.met[A.brief]) h += view.hint ? '<p class="small hint">' + esc(t('aib.hint.' + A.brief)) + '</p>' : '<button type="button" class="link" data-hint>' + esc(t('game.hint')) + '</button>';
     h += '<p class="small muted aibnote">' + esc(t('aib.note')) + '</p>' + doneNote() + reward() + '</div>';

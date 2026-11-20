@@ -24,6 +24,14 @@ On a desktop (1100 px and wider), the card is a bench at the right, about 420 px
 
 Figures are SVG (a viewBox of about 300 × 200, `width: 100%`) drawn from the engine's numbers. Colours come only from the CSS variables (`--ink`, `--muted`, `--line`, `--good`, `--bad`, `--warm`, `--accent`, `--panel-solid`), so the figures read in dark and in light. Explain every term in a few plain words the first time it appears.
 
+## Do mode (the new frame, behind `?frame=2`)
+
+In the new frame (#271, `src/v2/frame2.js`), a lab played in Do mode gets the stage: its instrument takes the picture area, its goal stands across the top of it as meters, and everything else (the brief, the dials, what happened, the hint) stays in the side panel beside it. A lab says which is which with two attributes in the HTML its `draw()` returns; its logic does not change:
+- `data-f2="instrument"` on the one element that is the lab's picture: the chart, the wafer, the chip (in `clockpower.js` the power curve's `<figure>`, in the batch bet the `.betview`, in `aibuild.js` the `.aibL` column).
+- `data-f2="goal"` on the goal box (`.goalbox` with its `.gauge`s): each gauge becomes one meter; four or more become tiles.
+
+A drawing on the stage keeps its words at a steady size on the screen (`--f2-k`), so draw it with a viewBox and let it scale. Without `data-f2="instrument"` the challenge is played in the side panel beside the picture, as before. Add the lab's own layout rules for the stage, if it needs any, to `src/styles/frame2.css`. Check it at 1280 × 800: the instrument and the controls are both in sight.
+
 ## Wiring a challenge
 
 1. **`src/v2/game.js`:**

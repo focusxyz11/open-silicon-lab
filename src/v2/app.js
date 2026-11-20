@@ -52,6 +52,7 @@ import { WORLD_IDS } from '../data/worlds.js';
 import { SEEK, foundAt, seekAt, seekLevel } from '../data/seek.js';
 import { createHome } from './home.js';
 import { sizeWords } from './frame.js';
+import { ON as FRAME2, boot as frame2Boot } from './frame2.js';
 
 const $ = id => document.getElementById(id);
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
@@ -85,6 +86,8 @@ export function start() {
   if (SECTIONS_ON) { const m = document.createElement('details'); m.className = 'sections'; m.id = 'sections';
     m.innerHTML = '<summary aria-label="' + esc(t('nav.aria')) + '">☰</summary><nav>' + [['', 'nav.explore'], ['challenges', 'nav.challenges'], ['questions', 'nav.questions'], ['build', 'nav.build'], ['ecosystem', 'nav.ecosystem']].map(([h, k]) => '<a href="#/' + h + '">' + esc(t(k)) + '</a>').join('') + '</nav>';
     $('logbtn').before(m); m.addEventListener('click', e => { if (e.target.closest('a')) m.open = false; }); }
+  /* ---- the new frame, only if asked for: ?frame=2 turns it on for this browser, ?frame=1 off (src/v2/frame2.js, #271) ---- */
+  frame2Boot();
   /* ---- the theme ---- */
   const theme = () => document.documentElement.getAttribute('data-theme') || (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
   const tb = $('theme'), k0 = theme() === 'dark' ? 'ui.toLight' : 'ui.toDark'; tb.setAttribute('aria-label', t(k0)); tb.title = t(k0);
@@ -567,7 +570,7 @@ export function start() {
     loading(true); lastPlace = id;
     return Promise.all([withFrame(), ensureDc()]).then(([, d]) => {
       dcFrame = frameOf(pui, { up: { href: '#/island', label: t('place.back') }, path: [{ href: '#/island', label: t('place.back') }, { label: t('map.' + id + '.t') }],
-        rail: { label: t('place.levels'), items: LEVELS.map(k => ({ id: k, label: t('place.dc.' + k + '.t'), size: sizeOf(k) })) }, onRail: k => d.go(LEVELS.indexOf(k)), onLook: drawDc, scroll: true });
+        rail: { label: t('place.levels'), items: LEVELS.map(k => ({ id: k, label: t('place.dc.' + k + '.t'), size: sizeOf(k) })) }, onRail: k => d.go(LEVELS.indexOf(k)), onLook: drawDc, scroll: true, caption: true });
       pui.onclick = e => { const b = e.target.closest('[data-lvgo]'); if (b) d.go(+b.dataset.lvgo); const sk = e.target.closest('[data-seek]'); if (sk) return dcSeek(sk.dataset.seek); const h = e.target.closest('[data-hl]'); if (h) d.mark(h.dataset.hl); };
       pui.onpointerover = e => { const h = e.target.closest('[data-hl]'); d.mark(h ? h.dataset.hl : dcHold()); };
       /* at a level with a search, the names on the picture are the parts to tap */
@@ -611,7 +614,7 @@ export function start() {
     loading(true); lastPlace = 'phones';
     return Promise.all([withFrame(), ensurePh()]).then(([, d]) => {
       phFrame = frameOf(fui, { up: { href: '#/island', label: t('place.back') }, path: [{ href: '#/island', label: t('place.back') }, { label: t('map.phones.t') }],
-        rail: { label: t('place.levels'), items: PH.LEVELS.map(k => ({ id: k, label: t('place.phone.' + k + '.t'), size: sizeOf(PH.DEPTH[k] === 'phone' ? 'handset' : PH.DEPTH[k]) })) }, onRail: k => d.go(PH.LEVELS.indexOf(k)), onLook: drawPh, scroll: true });
+        rail: { label: t('place.levels'), items: PH.LEVELS.map(k => ({ id: k, label: t('place.phone.' + k + '.t'), size: sizeOf(PH.DEPTH[k] === 'phone' ? 'handset' : PH.DEPTH[k]) })) }, onRail: k => d.go(PH.LEVELS.indexOf(k)), onLook: drawPh, scroll: true, caption: true });
       fui.onclick = e => { const b = e.target.closest('[data-lvgo]'); if (b) d.go(+b.dataset.lvgo); const sk = e.target.closest('[data-seek]'); if (sk) return phSeek(sk.dataset.seek); const h = e.target.closest('[data-hl]'); if (h) d.mark(h.dataset.hl); };
       fui.onpointerover = e => { const h = e.target.closest('[data-hl]'); d.mark(h ? h.dataset.hl : phHold()); };
       $('flyLabels').onclick = e => { const h = e.target.closest('[data-hl]'); if (h) phSeek(h.dataset.hl); };
@@ -645,7 +648,7 @@ export function start() {
     loading(true); lastPlace = 'cars';
     return Promise.all([withFrame(), ensureCa()]).then(([, d]) => {
       caFrame = frameOf(kui, { up: { href: '#/island', label: t('place.back') }, path: [{ href: '#/island', label: t('place.back') }, { label: t('map.cars.t') }],
-        rail: { label: t('place.levels'), items: CA.LEVELS.map(k => ({ id: k, label: t('place.car.' + k + '.t'), size: sizeOf(CA.SIZE[k]) })) }, onRail: k => d.go(CA.LEVELS.indexOf(k)), onLook: drawCa, scroll: true });
+        rail: { label: t('place.levels'), items: CA.LEVELS.map(k => ({ id: k, label: t('place.car.' + k + '.t'), size: sizeOf(CA.SIZE[k]) })) }, onRail: k => d.go(CA.LEVELS.indexOf(k)), onLook: drawCa, scroll: true, caption: true });
       kui.onclick = e => { const b = e.target.closest('[data-lvgo]'); if (b) d.go(+b.dataset.lvgo); const h = e.target.closest('[data-hl]'); if (h) d.mark(h.dataset.hl); };
       kui.onpointerover = e => { const h = e.target.closest('[data-hl]'); d.mark(h ? h.dataset.hl : null); };
       loading(false); d.resume(); if (lv != null && lv >= 0 && lv < CA.LEVELS.length) d.go(lv); caUI(Math.round(d.z)); $('carCanvas').focus({ preventScroll: true });
@@ -925,7 +928,10 @@ export function start() {
   /* keep the picture clear of the frame: the rail on the left, the corner, the dock below (on a phone, the card at rest) */
   /* the lens of the energy puzzle is part of the frame: on a desktop at the picture's right edge, on a phone (folded) at its
      top, and the picture keeps clear of it */
-  const diveInset = () => { if (!dive || !diveFrame) return; const wide = innerWidth > 720, b = innerWidth >= 1100 ? 24 : (diveFrame.restH ? diveFrame.restH() : diveFrame.dock.parentNode.offsetHeight) + (wide ? 24 : 18), lens = Joule && S.joule.on && innerWidth >= 1100 ? 356 : 0, top = Joule ? Joule.bottom() : 0; dive.setInset({ l: wide ? 90 : 8, r: (wide ? 20 : 8) + lens, t: top ? top + 8 : wide ? 122 : 116, b });
+  const diveInset = () => { if (!dive || !diveFrame) return; const wide = innerWidth > 720, b = innerWidth >= 1100 ? 24 : (diveFrame.restH ? diveFrame.restH() : diveFrame.dock.parentNode.offsetHeight) + (wide ? 24 : 18), lens = Joule && S.joule.on && innerWidth >= 1100 ? 356 : 0, top = Joule ? Joule.bottom() : 0;
+    /* the new frame (?frame=2): the picture stands right of the caption at rest, and left of the side panel */
+    const f2 = FRAME2 && innerWidth >= 1100 && vui.classList.contains('f2') ? diveFrame.dock.parentNode.getBoundingClientRect() : null, f2cap = f2 && vui.classList.contains('f2cap');
+    dive.setInset({ l: f2cap ? Math.max(90, Math.round(f2.right - 120)) : wide ? 90 : 8, r: (f2 && !f2cap ? Math.round(f2.width) + 32 : wide ? 20 : 8) + lens, t: top ? top + 8 : wide ? 122 : 116, b });
     /* a level drawn in 3D takes its square when the zoom moves; it is told now, so it moves with the frame */
     if (flatKind === 'dive' && WE) levelZoom(dive.z); };
   /* the bench: a design challenge played in the dock; the drawings above follow your description */
@@ -953,7 +959,7 @@ export function start() {
       const L = levelsOf(kind);
       diveFrame = frameOf(vui, { up: { href: F.up, label: t(F.upWord) }, path: [{ href: '#/island', label: t('place.back') }, { href: F.up, label: t(F.upWord) }, { label: t(F.title) }],
         rail: { label: t('place.levels'), items: L.map(k => ({ id: k, label: t('depth.' + k + '.name'), size: kind === 'dive' ? sizeOf(k) : null })) },
-        onRail: k => w.flyTo(WE.IDS.indexOf(k)), onLook: () => { if (benchCh) { benchCh = null; const dk = diveFrame.dock; dk.classList.remove('benchdock'); dk.onclick = null; dk.oninput = null; } drawDive(); } }); watchDock();
+        onRail: k => w.flyTo(WE.IDS.indexOf(k)), onLook: () => { if (benchCh) { benchCh = null; const dk = diveFrame.dock; dk.classList.remove('benchdock'); dk.onclick = null; dk.oninput = null; } drawDive(); }, caption: kind === 'dive' }); watchDock();
       /* the data centre's dive wears the lens of the energy puzzle: Follow the joule */
       vui.classList.remove('jouling');
       Joule = kind === 'dive' && diveWorld === 'datacentre' ? createJoule(vui, { S, save,
