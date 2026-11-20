@@ -181,6 +181,9 @@ export function ribbon(parent, path, width, material, y = 0.02, closed = false) 
 export function labels(host) {
   const list = [];
   const v = new THREE.Vector3();
+  /* a name's size changes only with its words or its style: measured again when it does */
+  const ro = typeof ResizeObserver === 'function' ? new ResizeObserver(es => es.forEach(e => { if (e.target.f2L) e.target.f2L.w = 0; })) : null;
+  let keep = null, keepAt = 0;
   return {
     add(obj, offset, text, o = {}) {
       const el = document.createElement(o.button ? 'button' : 'span');
@@ -188,6 +191,7 @@ export function labels(host) {
       if (o.data) Object.entries(o.data).forEach(([k, val]) => { el.dataset[k] = val; });
       host.appendChild(el);
       const L = { obj, offset: offset || new THREE.Vector3(), el, min: o.min || 0, max: o.max || Infinity, show: true, need: o.need || null };
+      el.f2L = L; if (ro) ro.observe(el);
       list.push(L); return L;
     },
     update(camera, w, h) {
@@ -197,14 +201,78 @@ export function labels(host) {
         const dist = v.distanceTo(camera.position);
         v.project(camera);
         const on = L.show && (!L.need || L.need.visible) && v.z < 1 && v.z > -1 && Math.abs(v.x) < 1.1 && Math.abs(v.y) < 1.1 && dist >= L.min && dist <= L.max;
+        L.on = on; L.px = (v.x + 1) / 2 * w; L.py = (1 - v.y) / 2 * h; L.dx = 0; L.dy = 0;
+      }
+      if (APART()) { const t = performance.now(); if (!keep || t - keepAt > 300) { keep = keepOut(host); keepAt = t; } apart(list, w, keep); }
+      for (const L of list) {
+        const on = L.on && !L.folded;
         L.el.style.opacity = on ? '' : '0'; L.el.style.pointerEvents = on ? '' : 'none';
-        if (on) L.el.style.transform = 'translate(' + ((v.x + 1) / 2 * w).toFixed(1) + 'px,' + ((1 - v.y) / 2 * h).toFixed(1) + 'px) translate(-50%,-100%)';
+        if (on) L.el.style.transform = 'translate(' + (L.px + L.dx).toFixed(1) + 'px,' + (L.py + L.dy).toFixed(1) + 'px) translate(-50%,-100%)';
       }
     },
-    clear() { list.splice(0).forEach(L => L.el.remove()); },
+    clear() { list.splice(0).forEach(L => { if (ro) ro.unobserve(L.el); L.el.remove(); }); },
     list
   };
 }
+/* names that never cover each other (#275). Only in the new frame for now (?frame=2, src/v2/frame2.js), where the
+   names on the picture are larger; the frame it replaces keeps its names as they were. Each name in turn, the lit one
+   first and then in the order the view gave them, takes the first place where it covers no name already placed, nor
+   the frame's own things on the picture (keepOut), and stays on the picture: over its point, else slid sideways (its
+   stem still under it), else lifted a row or two (its stem longer), else under its point; the place it had last time
+   is tried first, so names do not hop as the view moves. A name with no such place is left out until there is room
+   again: the least important folds first. Only the parts' names (part3) move; others are left where they are */
+const APART = () => document.documentElement.classList.contains('frame2');
+const GAP = 4, STEM = 6, EDGE = 6;
+/* what the frame keeps on the picture, which the names keep clear of too: the bar, the way out, the lens's button,
+   the levels at the side, the card or sheet, the ways in and along. Read a few times a second, in the names' own
+   coordinates */
+const KEEP = ':scope > section:not([hidden]) > :is(.homebtn, .joulebtn, .rail2, .dockwrap, .f2where), :scope > section:not([hidden]) > .crumbs2 > *, :scope > section:not([hidden]) > :is(.wayin, .wayon):not([hidden]) :is(.wigo, .wogo)';   /* i18n-ok: a selector */
+function keepOut(host) {
+  const st = host.closest('.stage'), H = host.getBoundingClientRect(), out = [];
+  for (const e of [...(st ? st.querySelectorAll(KEEP) : []), document.querySelector('.bar')]) {
+    if (!e) continue; const r = e.getBoundingClientRect();
+    if (r.width && r.height) out.push([r.left - H.left, r.top - H.top, r.right - H.left, r.bottom - H.top]);
+  }
+  return out;
+}
+function apart(list, W, keep) {
+  const names = [], placed = keep ? keep.slice() : [];
+  for (const L of list) {
+    L.folded = false; const el = L.el;
+    if (!L.on || !el.classList.contains('part3')) { if (L.moved) unmove(L); continue; }
+    if (!L.w) { L.w = el.offsetWidth; L.h = el.offsetHeight; }
+    if (!L.w) continue;
+    names.push(L);
+  }
+  const lit = L => L.el.classList.contains('hl') || L.el.classList.contains('on') || L.el.classList.contains('loud');
+  names.sort((a, b) => (lit(b) ? 1 : 0) - (lit(a) ? 1 : 0));
+  const hits = (b) => placed.filter(p => b[0] < p[2] + GAP && p[0] < b[2] + GAP && b[1] < p[3] + GAP && p[1] < b[3] + GAP);
+  for (const L of names) {
+    const w = L.w, h = L.h, row = h + GAP, reach = Math.max(0, w / 2 - 12);
+    /* the box at a shift, kept inside the picture's sides */
+    const boxAt = (dx, dy) => { let x = L.px + dx; x = Math.min(Math.max(x, EDGE + w / 2), W - EDGE - w / 2); return [x - w / 2, L.py + dy - h, x + w / 2, L.py + dy, x - L.px]; };
+    const tries = [], seen = new Set(), add = (dx, dy) => { const k = Math.round(dx) + ',' + Math.round(dy); if (!seen.has(k)) { seen.add(k); tries.push([dx, dy]); } };
+    if (L.was) add(L.was[0], L.was[1]);
+    for (const dy of [0, -row, -2 * row, h + 2 * STEM]) {
+      add(0, dy);
+      const b = boxAt(0, dy); for (const p of hits(b)) { add(b[4] + p[2] + GAP + 1 - b[0], dy); add(b[4] + p[0] - GAP - 1 - b[2], dy); }
+    }
+    let got = null;
+    /* slid no farther than keeps its stem under it (from where the picture's side already put it) */
+    for (const [dx, dy] of tries) { const b = boxAt(dx, dy); if (Math.abs(b[4] - boxAt(0, dy)[4]) > reach) continue; if (!hits(b).length) { got = b; L.was = [dx, dy]; break; } }
+    if (!got) { L.folded = true; L.was = null; if (L.moved) unmove(L); continue; }
+    placed.push(got);
+    L.dx = got[4]; L.dy = L.was[1];
+    if (Math.abs(L.dx) < 0.5 && Math.abs(L.dy) < 0.5) { if (L.moved) unmove(L); continue; }
+    /* the stem from the name to its point: longer when lifted, above it when the name is under its point, and kept
+       inside the name when it slid */
+    const s = L.el.style, below = L.dy > 0;
+    s.setProperty('--f2sx', Math.min(Math.max(w / 2 - L.dx, 10), w - 10).toFixed(1) + 'px');
+    s.setProperty('--f2sh', (below ? L.dy - h - STEM : STEM - L.dy).toFixed(1) + 'px');
+    L.el.classList.add('f2apart'); L.el.classList.toggle('f2below', below); L.moved = true;
+  }
+}
+function unmove(L) { L.moved = false; L.el.classList.remove('f2apart', 'f2below'); L.el.style.removeProperty('--f2sx'); L.el.style.removeProperty('--f2sh'); }
 
 /* easing and blends */
 export const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
