@@ -11,7 +11,7 @@ export default [
   { id: 'fail-heat', strand: 1, stops: ['fail.board', 'fail.phoneboard', 'fail.pkg'], ch: ['sig-heart', 'reg-jobs'], engine: null, lens: 'plan', trade: ['energy', 'life'] },
   { id: 'fail-spot', strand: 2, stops: ['fail.test'], ch: ['spot'], engine: 'logic', lens: 'probe', trade: ['sure', 'time'], given: ['tried'] },
   { id: 'fail-counter', strand: 2, stops: ['fail.check'], engine: 'logic', lens: 'probe', trade: ['sure'], given: ['tried'], open: ['proof'] },
-  { id: 'fail-enough', strand: 2, stops: ['fail.ship', 'fail.etch'], engine: null, lens: 'copies', trade: ['yield', 'cost', 'time'] },
+  { id: 'fail-enough', strand: 2, stops: ['fail.ship', 'fail.etch'], ch: ['silent'], engine: null, lens: 'copies', trade: ['yield', 'cost', 'time'] },
   { id: 'fail-cases', strand: 3, at: ['chip'], engine: null, lens: 'clock', cases: ['sdc', 'raptor', 'p3', 'spectre', 'fdiv', 'cougar', 'vote'] },
   { id: 'fail-leak', strand: 3, at: ['chip'], engine: null, lens: 'probe', cases: ['spectre'] },
   { id: 'fail-dc', strand: 4, stops: ['fail.building'], ch: ['dclife'], engine: 'stress', lens: 'copies', trade: ['sure', 'life'], open: ['selfcheck'] },
