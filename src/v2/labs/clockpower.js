@@ -17,7 +17,7 @@ const f1 = v => v.toFixed(1), n0 = v => Math.round(v).toLocaleString('en');
 export default function lab(L) {
   const { S, ch, el, esc, t, head, reward, doneNote, win, draw, fx } = L, view = L.view;
   const hintLine = (key, met) => met ? '' : view.hint ? '<p class="small hint">' + esc(t(key)) + '</p>' : '<button type="button" class="link" data-hint>' + esc(t('game.hint')) + '</button>';
-  const gauges = (ok, gs) => '<div class="goalbox' + (ok ? ' ok' : '') + '"><p class="kicker">' + esc(t(ok ? 'game.reached' : 'game.goalNow')) + '</p>' + gs.map(g => '<div class="gauge' + (g.ok ? ' ok' : '') + (g.c ? ' ' + g.c : '') + '"><span class="gl">' + esc(g.l) + '</span><span class="gv">' + esc(g.v) + (g.target ? ' <span class="muted">' + esc(g.target) + '</span>' : '') + '</span><span class="gbar"><span style="width:' + (g.f * 100).toFixed(0) + '%"></span></span></div>').join('') + '</div>';
+  const gauges = (ok, gs) => '<div class="goalbox' + (ok ? ' ok' : '') + '" data-f2="goal"><p class="kicker">' + esc(t(ok ? 'game.reached' : 'game.goalNow')) + '</p>' + gs.map(g => '<div class="gauge' + (g.ok ? ' ok' : '') + (g.c ? ' ' + g.c : '') + '"><span class="gl">' + esc(g.l) + '</span><span class="gv">' + esc(g.v) + (g.target ? ' <span class="muted">' + esc(g.target) + '</span>' : '') + '</span><span class="gbar"><span style="width:' + (g.f * 100).toFixed(0) + '%"></span></span></div>').join('') + '</div>';
   const dial = (id, label, value, R, val) => '<div class="ckpdial"><label class="lab" for="ckp-' + id + '"><b>' + esc(label) + '</b> <output>' + esc(value) + '</output></label><div class="ckpstep"><button type="button" class="chipb" data-ckp-nudge="' + id + ':-1" aria-label="' + esc(t('ckp.less')) + '">−</button><input type="range" id="ckp-' + id + '" data-ckp="' + id + '" min="' + R.min + '" max="' + R.max + '" step="' + R.step + '" value="' + val + '"><button type="button" class="chipb" data-ckp-nudge="' + id + ':1" aria-label="' + esc(t('ckp.more')) + '">+</button></div></div>';
   const reads = rows => '<div class="ckpread">' + rows.map(([k, v, c]) => '<span><span class="small muted">' + esc(t('ckp.r.' + k)) + '</span><b class="mono' + (c ? ' ' + c : '') + '">' + esc(v) + '</b></span>').join('') + '</div>';
 
@@ -56,7 +56,7 @@ export default function lab(L) {
       '<circle class="dot ' + cls + '" cx="' + px(o.f).toFixed(1) + '" cy="' + py(p.total).toFixed(1) + '" r="5.5"/>' +
       (p.ok ? '' : '<path class="xx" d="M' + (px(o.f) - 2.6).toFixed(1) + ' ' + (py(p.total) - 2.6).toFixed(1) + 'l5.2 5.2m0 -5.2l-5.2 5.2"/>');
     s += '<text class="ax" x="' + ((X0 + X1) / 2) + '" y="' + (Y1 + 28) + '" text-anchor="middle">' + esc(t('ckp.p.x')) + '</text><text class="ax" x="' + (X0 - 26) + '" y="' + (Y0 - 3) + '">' + esc(t('ckp.p.y')) + '</text></svg>';
-    return '<figure class="ckpfig">' + s + '<figcaption class="small muted">' + esc(t('ckp.p.legend')) + '</figcaption></figure>';
+    return '<figure class="ckpfig" data-f2="instrument">' + s + '<figcaption class="small muted">' + esc(t('ckp.p.legend')) + '</figcaption></figure>';
   }
   /* one tick against the slowest path at this voltage: why a voltage runs a clock or not */
   function ptick(o, p) {
