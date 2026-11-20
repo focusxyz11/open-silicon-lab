@@ -42,6 +42,26 @@ const STARTERS = { half: 'sum = a | b;\ncarry = a & b;' };
 export const starter = p => STARTERS[p] || projectOf(p).starter;
 export const ownStarter = p => p in STARTERS;   /* its words: game.own.<p> */
 
+/* ---- the bench: one design of your own, carried from the job to the masks ----
+   The pieces of the community's computer a design engine can check (src/data/build.js, engine 'logic'), by their job.
+   Your design starts as the lab's working example for the piece you pick (the job's solution); changing it makes it
+   yours. bench: { p, code (null: the lab's example), rows (your order of the cells on the tile, or null) }. */
+export const BENCH_PIECES = NEEDS.filter(n => n.engine === 'logic' && n.project && projectOf(n.project).id === n.project && solutionOf(n.project)).map(n => ({ need: n.id, p: n.project }));
+export const benchPieceOf = p => BENCH_PIECES.find(x => x.p === p) || null;
+export function normalBench(b) {
+  const o = b && typeof b === 'object' ? b : {}, p = benchPieceOf(o.p) ? o.p : 'half';
+  const code = typeof o.code === 'string' && o.p === p ? o.code.slice(0, 4000) : null;
+  const rows = Array.isArray(o.rows) && o.rows.length <= 12 && o.rows.every(r => Array.isArray(r) && r.length <= 60 && r.every(Number.isInteger)) ? o.rows.map(r => r.slice()) : null;
+  const floor = Array.isArray(o.floor) && o.floor.length <= 12 && o.floor.every(r => Array.isArray(r) && r.every(Number.isInteger)) ? o.floor.map(r => r.slice()) : null;
+  const q = x => ({ k: Number.isInteger(x && x.k) ? x.k : 0, run: Number.isInteger(x && x.run) ? Math.max(0, x.run) : 0 });
+  return { p, code: code === solutionOf(p) ? null : code, rows, floor, mq: q(o.mq), jq: Object.assign(q(o.jq), { ans: o.jq && o.jq.ans && typeof o.jq.ans === 'object' ? Object.fromEntries(Object.entries(o.jq.ans).filter(([k, v]) => typeof k === 'string' && (v === 0 || v === 1))) : {} }) };
+}
+/* your design on the bench now: its job, its text, who wrote it (the lab's example until you change it), built */
+export function benchDesign(s) {
+  const b = normalBench(s && s.bench), code = b.code != null ? b.code : solutionOf(b.p);
+  return { p: b.p, code, by: b.code != null ? 'you' : 'example', B: build({ p: b.p, code }) };
+}
+
 /* The design challenges are fixed by tapping, not typing (src/v2/play.js). Every gate in a description is a button
    that turns into the next kind (AND → OR → XOR); where the fix needs more than a gate, a tray holds pieces that
    can be added to one line and taken off again. Exactly one way leads to a right design, and the engine checks it
@@ -89,7 +109,12 @@ export const CHALLENGES = [
   { id: 'sig-bearing', step: 'ship', place: 'cars', at: 'ecu', kind: 'capture', grows: 'island-sensor' },
   { id: 'reg-jobs', step: 'ship', place: 'phones', at: 'phoneboard', kind: 'regulate', grows: 'island-reg' },
   { id: 'jobs', step: 'design', place: 'studio', at: 'need', kind: 'fit', grows: 'studio-fit' },
+  /* the bench's own challenges (src/v2/labs/bench.js, src/engines/bench.js): what the piece you pick must answer, at
+     the job; the shortest wire, at the layout; which mask each shape is printed from, at the masks */
+  { id: 'piece', step: 'design', place: 'studio', at: 'need', kind: 'piece', grows: 'studio-piece' },
   { id: 'evolve', step: 'design', place: 'studio', at: 'gates', kind: 'evolve', grows: 'studio-evolve' },
+  { id: 'floor', step: 'design', place: 'studio', at: 'layout', kind: 'floor', grows: 'studio-floor' },
+  { id: 'maskof', step: 'design', place: 'studio', at: 'masks', kind: 'maskof', grows: 'studio-masks' },
   { id: 'crystal', step: 'make', place: 'quarry', at: 'crystal', kind: 'pull', grows: 'quarry-ingot' },
   { id: 'furnace', step: 'make', place: 'fab', at: 'implant', kind: 'implant', grows: 'fab-implanter' },
   { id: 'shallow', step: 'make', place: 'fab', at: 'implant', kind: 'implant', grows: 'fab-anneal' },
@@ -102,7 +127,8 @@ export const CHALLENGES = [
   { id: 'grover', step: 'use', place: 'datacentre', at: 'atom', kind: 'grover', grows: 'way-quantum' },
   { id: 'euv-1000', step: 'make', place: 'fab', at: 'print', kind: 'euv', grows: 'fab-euv' },
   { id: 'too-hot', step: 'use', place: 'datacentre', at: 'switch', kind: 'semiconductor', grows: 'dc-heat' },
-  { id: 'ai-chip', step: 'design', place: 'studio', at: 'need', kind: 'aibuild', grows: 'studio-aichip' },
+  /* the capstone, at the end of the design line: everything it asks for has been met on the way */
+  { id: 'ai-chip', step: 'design', place: 'studio', at: 'masks', kind: 'aibuild', grows: 'studio-aichip' },
   { id: 'power-curve', step: 'use', place: 'datacentre', at: 'block', kind: 'powercurve', grows: 'blk-power' },
   { id: 'counter', step: 'use', place: 'datacentre', at: 'gate', kind: 'counter', grows: 'gate-counter' },
   /* serving a language model (src/v2/labs/serve.js, src/engines/aiserve.js) */
@@ -127,6 +153,8 @@ export function gauge(g, m) {
 }
 /* your design, as the chip carries it: the last design challenge you finished, built by the design engine */
 export function yourDesign(s) {
+  /* the design you made your own on the bench, while it is right */
+  const b = s.bench && s.bench.code != null ? benchDesign(s) : null; if (b && b.B.ok) return { p: b.p, B: b.B };
   const c = ['full', 'vote', 'half'].map(challengeOf).find(x => x && isDone(s, x.id)); if (!c) return null;
   const B = checkDesign(c.p, s.codes[c.p] || starter(c.p)); return B.ok ? { p: c.p, B } : null;
 }
@@ -188,7 +216,7 @@ export const askHref = key => { const [th, d] = key.split('.'); return '#/ask/' 
 
 /* ---- your state: what you have done, and what you were working on ---- */
 export const KEY = 'osl-world-v1';
-export function fresh() { return { done: {}, codes: {}, chip: Object.assign({}, START), life: {}, seen: false, drafts: [], sent: {}, met: {}, crossed: {}, bets: {}, whatif: { levers: {}, solved: {} }, agent: {}, teardown: {}, fit: {}, evolve: {}, litho: { best: {} }, aibuild: {}, looked: {}, joule: { on: false, plan: {} }, name: '' }; }
+export function fresh() { return { done: {}, codes: {}, chip: Object.assign({}, START), life: {}, seen: false, drafts: [], sent: {}, met: {}, crossed: {}, bets: {}, whatif: { levers: {}, solved: {} }, agent: {}, teardown: {}, fit: {}, evolve: {}, litho: { best: {} }, aibuild: {}, looked: {}, joule: { on: false, plan: {} }, name: '', bench: normalBench(null) }; }
 export function normalState(s) {
   const f = fresh();
   if (!s || typeof s !== 'object') return f;
@@ -208,10 +236,10 @@ export function normalState(s) {
   const w = s.whatif || {}, whatif = { levers: normalLevers(w.levers), solved: {} }; Object.keys(w.solved || {}).forEach(k => { if (PUZZLES.some(p => p.id === k)) whatif.solved[k] = true; });
   /* Print the finest lines: the setting that printed each scanner's finest lines (src/v2/labs/litho.js prints them again) */
   const litho = { best: {} }; Object.entries((s.litho && s.litho.best) || {}).slice(0, 12).forEach(([k, v]) => { if (v && typeof v === 'object' && [v.na, v.v, v.dose].every(Number.isFinite)) litho.best[k] = { na: v.na, v: v.v, dose: v.dose, illum: v.illum === 'dipole' ? 'dipole' : 'conventional', dp: !!v.dp }; });
-  return { done, codes, chip: normal(s.chip || START), life: lifeC, seen: !!s.seen, drafts, sent, met, crossed, bets, whatif, agent: normalAgent(s.agent), teardown: s.teardown && typeof s.teardown === 'object' ? s.teardown : {}, fit: s.fit && typeof s.fit === 'object' ? s.fit : {}, evolve: s.evolve && typeof s.evolve === 'object' ? s.evolve : {}, litho, aibuild: s.aibuild && typeof s.aibuild === 'object' ? s.aibuild : {}, looked: normalLooked(s.looked), joule: normalJoule(s.joule), name: typeof s.name === 'string' ? s.name.slice(0, 40) : '' };
+  return { done, codes, chip: normal(s.chip || START), life: lifeC, seen: !!s.seen, drafts, sent, met, crossed, bets, whatif, agent: normalAgent(s.agent), teardown: s.teardown && typeof s.teardown === 'object' ? s.teardown : {}, fit: s.fit && typeof s.fit === 'object' ? s.fit : {}, evolve: s.evolve && typeof s.evolve === 'object' ? s.evolve : {}, litho, aibuild: s.aibuild && typeof s.aibuild === 'object' ? s.aibuild : {}, looked: normalLooked(s.looked), joule: normalJoule(s.joule), name: typeof s.name === 'string' ? s.name.slice(0, 40) : '', bench: normalBench(s.bench) };
 }
 export function load(store) { try { return normalState(JSON.parse(store.getItem(KEY) || 'null')); } catch (e) { return fresh(); } }
-export function save(store, s) { try { store.setItem(KEY, JSON.stringify({ done: s.done, codes: s.codes, chip: s.chip, life: s.life, seen: s.seen, drafts: s.drafts, sent: s.sent, met: s.met, crossed: s.crossed, bets: s.bets, whatif: s.whatif, agent: s.agent, teardown: s.teardown, fit: s.fit, evolve: s.evolve, litho: s.litho, aibuild: s.aibuild, looked: s.looked, joule: s.joule, name: s.name })); } catch (e) { /* storage unavailable */ } }
+export function save(store, s) { try { store.setItem(KEY, JSON.stringify({ done: s.done, codes: s.codes, chip: s.chip, life: s.life, seen: s.seen, drafts: s.drafts, sent: s.sent, met: s.met, crossed: s.crossed, bets: s.bets, whatif: s.whatif, agent: s.agent, teardown: s.teardown, fit: s.fit, evolve: s.evolve, litho: s.litho, aibuild: s.aibuild, looked: s.looked, joule: s.joule, name: s.name, bench: s.bench })); } catch (e) { /* storage unavailable */ } }
 
 /* ---- checks: each challenge asks its engine ---- */
 export function checkDesign(p, code) { return build({ p, code }); }
@@ -292,7 +320,7 @@ export function community(s) {
 /* the question a challenge opens once you have won it: a stop, at its own level or the one beside it */
 export const OPENS = { 'too-hot': 'fail.switch', 'litho-finest': 'scale.print', 'euv-1000': 'fail.print', etch: 'make.etch', bottom: 'idea.deposit', crystal: 'make.crystal', furnace: 'make.implant', shallow: 'fail.implant', vias: 'fail.print', evolve: 'idea.block', newest: 'open.phoneboard', jobs: 'divide.need', agent: 'idea.check', half: 'fail.check', vote: 'idea.check', full: 'make.gates', months: 'make.clean', quick: 'scale.clean', spot: 'fail.test', cores: 'divide.test',
   phone: 'life.phone', car: 'fail.car', dclife: 'fail.ship', fed: 'divide.board', fast: 'fail.chip',
-  cim: 'divide.block', grover: 'strange.atom', 'ai-chip': 'divide.need', 'power-curve': 'life.block', counter: 'fail.gate',
+  cim: 'divide.block', grover: 'strange.atom', 'ai-chip': 'scale.masks', piece: 'open.need', floor: 'divide.layout', maskof: 'make.masks', 'power-curve': 'life.block', counter: 'fail.gate',
   'sig-heart': 'fail.phoneboard', 'sig-bearing': 'fail.ecu', 'reg-jobs': 'fail.phoneboard', quantize: 'think.chip', 'token-energy': 'divide.rack', prefill: 'think.board' };
 /* and where the open things of the ledger sit: a break under "is the design right?", a piece to build under
    "could anyone design a chip?", a missing check under "who checks, and with what?" */

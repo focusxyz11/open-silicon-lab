@@ -77,7 +77,7 @@ export const FILED = {
   'reg-jobs': ['human', 'eff'], 'jobs': ['line', 'human'], 'evolve': ['sutton', 'nat', 'human'], 'crystal': ['perfect', 'physics'],
   'furnace': ['physics', 'perfect'], 'shallow': ['moore', 'physics'], 'vias': ['perfect', 'moore'], 'etch': ['perfect', 'moore'],
   'bottom': ['perfect', 'moore'], 'litho-finest': ['moore', 'physics'], 'cim': ['copy', 'geo', 'physics'], 'grover': ['nat', 'physics'],
-  'euv-1000': ['moore', 'eff'], 'too-hot': ['physics', 'perfect', 'dig'], 'ai-chip': ['sutton', 'line'], 'power-curve': ['eff', 'physics'],
+  'euv-1000': ['moore', 'eff'], 'too-hot': ['physics', 'perfect', 'dig'], 'ai-chip': ['moore', 'line'], piece: ['human', 'line'], floor: ['geo', 'line'], maskof: ['line', 'moore'], 'power-curve': ['eff', 'physics'],
   'counter': ['perfect', 'vn', 'dig'], 'quantize': ['eff', 'sutton', 'physics'], 'token-energy': ['eff', 'geo'], 'prefill': ['geo', 'eff']
   }
 };
