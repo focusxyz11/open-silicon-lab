@@ -1,0 +1,11 @@
+{
+  "kind": "try",
+  "by": "Open Silicon Lab",
+  "made": "example",
+  "ai": "",
+  "words": "A shelf by the stove that holds a quarter of what the job keeps using: most fetches never leave the chip, but the chef still waits for the rest.",
+  "chef": "chip",
+  "plan": {
+    "shelf": 0.25
+  }
+}

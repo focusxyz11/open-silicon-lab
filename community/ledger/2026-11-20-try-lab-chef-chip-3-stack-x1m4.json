@@ -1,0 +1,12 @@
+{
+  "kind": "try",
+  "by": "Open Silicon Lab",
+  "made": "example",
+  "ai": "",
+  "words": "The shelf, and the pantry stacked on the kitchen: the trip is a hop up through thousands of wires, and the chef, slowed by the heat, is kept busy.",
+  "chef": "chip",
+  "plan": {
+    "shelf": 0.25,
+    "stack": true
+  }
+}

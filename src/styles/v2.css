@@ -2472,3 +2472,229 @@ a.hm-start:hover { border-color: var(--muted); transform: translateY(-2px); }
 /* the studio walked inside (src/v2/studio3d.js, #267): while the camera settles on a corner's screen, the ways on the
    picture step aside for it; the corners' names on the picture are the parts' own */
 #studioui[data-handoff] :is(.wayin, .wayon) { display: none; }
+/* ---- the bench (#268, src/v2/bench.js): your design, live, on a surface laid over the studio's square. Each region is
+   a part of the step (src/app/design.js), a lit panel; drawings fill their region exactly and words sit on them in HTML ---- */
+.bsurf { position: absolute; left: 0; top: 0; width: 600px; height: 600px; container-type: size; transition: opacity .12s linear;
+  --bk-cu: #d88b4c; --bk-cu2: #f0bf8c; --bk-via: #cdd5e1; --bk-lit: linear-gradient(180deg, rgba(255, 255, 255, .05), rgba(255, 255, 255, 0) 45%); }
+:root[data-theme=light] .bsurf, :root[data-theme=light] .benchinst { --bk-cu: #b5642a; --bk-cu2: #d6955c; --bk-via: #6c7a8f; --bk-lit: linear-gradient(180deg, rgba(255, 255, 255, .6), rgba(255, 255, 255, 0) 45%); }
+.benchinst { container-type: inline-size; --bk-cu: #d88b4c; --bk-cu2: #f0bf8c; --bk-via: #cdd5e1; }
+html:not(.frame2) .benchinst { display: none; }
+html.frame2 .stage:has(> section.f2stage:not([hidden])) .bsurf { visibility: hidden; }
+html.frame2 .f2stage .benchinst .bk { aspect-ratio: 1; height: 100%; max-width: 100%; margin: 0 auto; }
+.bk { position: relative; width: 100%; height: 100%; font: 13px/1.35 var(--sans); color: var(--ink); }
+.bk-r { position: absolute; display: flex; flex-direction: column; min-width: 0; min-height: 0; padding: 10px 12px; border-radius: 16px; border: 1px solid var(--line);
+  background: var(--bk-lit), var(--panel); box-shadow: 0 10px 28px rgba(0, 0, 0, .18); }
+.bk-r.bk-pins, .bk-r.bk-gpins, .bk-r.bk-user { background: none; border-color: transparent; box-shadow: none; }
+.bk-r.bk-wv, .bk-r.bk-gt, .bk-r.bk-lt, .bk-r.bk-mk, .bk-r.bk-sh { padding: 0; overflow: hidden; }
+.bk-svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; overflow: visible; }
+.bk-svg * { vector-effect: non-scaling-stroke; }
+.bk-k { margin: 0 0 6px; font: 600 10.5px/1.3 var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.bk-sh > .bk-k { position: absolute; left: 12px; right: 8px; top: 10px; z-index: 1; }
+.bk-tag { position: absolute; transform: translate(-50%, -50%); font: 600 12px/1 var(--mono); color: var(--ink); white-space: nowrap; pointer-events: none; }
+.bk-tag.r { transform: translate(-100%, -50%); } .bk-tag.o { color: var(--warm); }
+.bk-tag.g, .bk-tag.c { font-size: 10px; color: var(--muted); } .bk-tag.l { transform: translate(0, -50%); font-size: 11.5px; color: var(--muted); }
+.bk-note { margin: auto; padding: 14px; text-align: center; font-size: 13px; color: var(--muted); } .bk-note.bad { color: var(--bad); }
+.bk-hint { position: absolute; left: 12px; right: 12px; bottom: 10px; margin: 0; font-size: 12px; color: var(--muted); }
+.bk-tools { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.bk-lt .bk-tools { position: absolute; right: 10px; top: 40px; margin: 0; }
+.bk-cost { position: absolute; z-index: 1; left: 12px; right: 12px; top: 10px; display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 12px; color: var(--muted); }
+.bk-cost b { color: var(--ink); font: 700 15px var(--mono); margin-right: 2px; } .bk-cost .good b { color: var(--good); } .bk-cost .warm b { color: var(--warm); }
+.bk .warm { color: var(--warm); }
+/* the job: the community's computer as a tree, your piece lit; the pins and the box */
+.bk-tree { flex: 1; min-height: 0; margin: 0; padding: 0; list-style: none; columns: 2; column-gap: 18px; overflow: auto; }
+.bk-tree li { break-inside: avoid; padding-left: calc(var(--d) * 13px); }
+.bk-node { display: flex; align-items: center; gap: 7px; width: 100%; min-height: 26px; padding: 2px 7px; border: 1px solid transparent; border-radius: 8px; background: none; color: var(--ink); text-align: left; font: 600 12.5px/1.2 var(--sans); }
+button.bk-node { cursor: pointer; } button.bk-node:hover { background: color-mix(in srgb, var(--ink) 7%, transparent); }
+.bk-node.fixed { color: var(--muted); font-weight: 500; }
+.bk-node.on { border-color: var(--warm); background: color-mix(in srgb, var(--warm) 14%, transparent); }
+.bk-nm { flex: 1; min-width: 0; } .bk-st { font: 500 10px var(--mono); color: var(--muted); white-space: nowrap; }
+.bk-dot { flex: none; width: 9px; height: 9px; border-radius: 50%; border: 2px solid var(--muted); }
+.bk-dot.st-built { background: var(--good); border-color: var(--good); } .bk-dot.st-open { border-color: var(--warm); border-style: dashed; } .bk-dot.st-partly { border-color: var(--ink); } .bk-dot.st-engine { border-style: dotted; }
+.bk-pins { justify-content: center; gap: 7px; } .bk-pins.outs { align-items: stretch; }
+.bk-pin { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 10px; border-radius: 10px; border: 1px solid var(--line); background: var(--panel-solid); color: var(--ink); font: 600 13px var(--mono); }
+button.bk-pin { cursor: pointer; } button.bk-pin:disabled { cursor: default; color: var(--ink); opacity: 1; }
+.bk-pin .bk-v { font-weight: 800; color: var(--muted); } .bk-pin.hi { border-color: var(--warm); } .bk-pin.hi .bk-v { color: var(--warm); }
+.bk-pin.ask { border-style: dashed; border-color: var(--accent); } .bk-pin.ask.hi { border-style: solid; border-color: var(--warm); }
+.bk-boxr { padding: 6px; background: none; border-color: transparent; box-shadow: none; }
+.bk-box { flex: 1; max-height: 260px; margin: auto 0; display: grid; place-items: center; align-content: center; gap: 4px; border-radius: 18px; border: 1.5px solid var(--warm); background: var(--bk-lit), var(--panel-solid); box-shadow: inset 0 0 0 8px color-mix(in srgb, var(--ink) 4%, transparent), 0 14px 30px rgba(0, 0, 0, .22); }
+.bk-q { font: 300 48px/1 var(--sans); color: var(--muted); } .bk-boxt { padding: 0 8px; text-align: center; font: 600 11px var(--mono); color: var(--muted); }
+.bk-user { align-items: center; justify-content: center; gap: 8px; text-align: center; }
+.bk-big { font: 600 30px/1.1 var(--mono); color: var(--warm); white-space: nowrap; } .bk-big.sm { font-size: 19px; } .bk-mid { font: 600 15px var(--mono); color: var(--ink); }
+.bk-lamp { width: 58px; height: 58px; border-radius: 50%; border: 2px solid var(--line); background: var(--panel-solid); }
+.bk-lamp.on { background: var(--warm); border-color: var(--warm); box-shadow: 0 0 26px color-mix(in srgb, var(--warm) 70%, transparent); }
+.bk-seg { width: 64px; } .bk-seg path { fill: none; stroke: color-mix(in srgb, var(--ink) 14%, transparent); stroke-width: 8; stroke-linecap: round; } .bk-seg path.on { stroke: var(--warm); }
+/* describe: the text with its line numbers and errors, beside the table */
+.bk-by { text-transform: none; letter-spacing: 0; } .bk-by.you { color: var(--warm); } .bk-by.example { color: var(--good); }
+.bk-code { position: relative; flex: 1; min-height: 60px; border-radius: 12px; border: 1px solid var(--line); background: var(--panel-solid); overflow: hidden; }
+.bk-hl, .bk-code textarea { position: absolute; inset: 0; margin: 0; padding: 10px 10px 10px 38px; border: 0; font: 500 13px/1.75 var(--mono); letter-spacing: 0; white-space: pre; overflow: auto; tab-size: 2; }
+.bk-hl { color: var(--ink); pointer-events: none; scrollbar-width: none; } .bk-hl::-webkit-scrollbar { display: none; }
+.bk-ln { position: relative; display: block; min-height: calc(13px * 1.75); }
+.bk-ln i { position: absolute; left: -32px; width: 22px; text-align: right; font-style: normal; color: var(--muted); }
+.bk-ln.err { background: color-mix(in srgb, var(--bad) 22%, transparent); border-radius: 3px; }
+.bk-code textarea { width: 100%; height: 100%; resize: none; background: transparent; color: transparent; caret-color: var(--ink); outline: none; }
+.bk-code textarea::selection { background: color-mix(in srgb, var(--accent) 35%, transparent); color: transparent; }
+.bk-code:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent); }
+.bk-errs { margin: 6px 0 0; padding: 0; list-style: none; } .bk-errs button { padding: 2px 0; border: 0; background: none; color: var(--bad); text-align: left; font-size: 12px; cursor: pointer; }
+.bk-tt { flex: 1; min-height: 0; overflow: auto; }
+.bk-tt table { width: 100%; border-collapse: collapse; font: 500 12px var(--mono); }
+.bk-tt th { position: sticky; top: 0; z-index: 1; padding: 3px 4px; background: var(--panel-solid); color: var(--muted); font-weight: 600; }
+.bk-tt th.o { color: var(--warm); } .bk-tt td { padding: 3px 4px; text-align: center; border-top: 1px solid color-mix(in srgb, var(--ink) 6%, transparent); }
+.bk-tt .sep { width: 6px; padding: 0; border-left: 1px solid var(--line); }
+.bk-tt tr.good .mk { color: var(--good); } .bk-tt tr.bad { background: color-mix(in srgb, var(--bad) 14%, transparent); } .bk-tt tr.bad .mk { color: var(--bad); } .bk-tt td s { margin-right: 4px; color: var(--bad); }
+.bk-tt tr { transition: background .5s; }
+/* check: waves, the cursor, wrong answers to tap, the patterns a test skips */
+.bk-wave { fill: none; stroke: var(--ink); stroke-width: 1.5px; } .bk-wave.o { stroke: var(--warm); stroke-width: 2.2px; }
+.bk-grid { stroke: color-mix(in srgb, var(--ink) 8%, transparent); stroke-width: 1px; }
+.bk-cur { fill: color-mix(in srgb, var(--accent) 16%, transparent); }
+.bk-wrong { fill: color-mix(in srgb, var(--bad) 30%, transparent); cursor: pointer; } .bk-wrong:hover, .bk-wrong.on { fill: color-mix(in srgb, var(--bad) 50%, transparent); stroke: var(--bad); stroke-width: 1.5px; }
+.bk-skip { fill: color-mix(in srgb, var(--bg) 62%, transparent); pointer-events: none; }
+.bk-vd { gap: 6px; justify-content: center; }
+.bk-scrub { display: flex; flex-direction: column; gap: 3px; font: 500 12px var(--mono); color: var(--ink); } .bk-scrub input { width: 100%; accent-color: var(--accent); }
+.bk-subs { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; } .bk-subs .bk-k { margin: 0 4px 0 0; }
+.bk-subs .chipb { padding: 4px 10px; font-size: 12px; }
+.bk-say { margin: 0; font-size: 13px; } .bk-why { margin: 0; font-size: 12.5px; color: var(--ink); }
+/* gates: the cells, the values travelling level by level, a cell's transistors */
+.bk-gpins { padding: 0; } .bk-gpins .bk-pin { position: absolute; left: 4px; right: 4px; transform: translateY(-50%); padding: 5px 8px; }
+.bk-gpins .bk-tick { position: absolute; left: 4px; right: 4px; bottom: 6px; padding: 5px 6px; font-size: 11.5px; }
+.bk-w { fill: none; stroke: color-mix(in srgb, var(--muted) 60%, transparent); stroke-width: 1.4px; transition: stroke .22s, stroke-width .22s; }
+.bk-w.on { stroke: var(--warm); stroke-width: 2.4px; }
+.bk-g .body { fill: var(--panel-solid); stroke: var(--ink); stroke-width: 1.6px; transition: stroke .22s; } .bk-g .body2 { fill: none; stroke: var(--ink); stroke-width: 1.6px; transition: stroke .22s; }
+.bk-g.on .body, .bk-g.on .body2 { stroke: var(--warm); } .bk-g.sel .body, .bk-g.sel .body2 { stroke: var(--accent); stroke-width: 2.6px; }
+.bk-g .hit { fill: transparent; cursor: pointer; }
+.bk-cell { position: absolute; left: 12px; right: 12px; bottom: 10px; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; padding: 8px 12px; border-radius: 12px; border: 1px solid var(--accent); background: var(--panel-solid); font-size: 12.5px; }
+.bk-cell b { font: 700 13px var(--mono); } .bk-tr { height: 30px; width: auto; } .bk-tr .tp { fill: color-mix(in srgb, var(--accent) 75%, transparent); } .bk-tr .tn { fill: color-mix(in srgb, var(--ink) 55%, transparent); }
+/* layout: your tile, the cells to drag, two metals and their vias; the shared chip beside it */
+.bk-tile { fill: color-mix(in srgb, var(--panel-solid) 85%, transparent); stroke: var(--line); }
+.bk-row { fill: color-mix(in srgb, var(--ink) 5%, transparent); }
+.bk-c { fill: color-mix(in srgb, var(--muted) 28%, var(--panel-solid)); stroke: color-mix(in srgb, var(--muted) 80%, transparent); stroke-width: 1px; cursor: grab; touch-action: none; transition: fill .3s; }
+.bk-c:hover { stroke: var(--ink); } .bk-c.sel { stroke: var(--accent); stroke-width: 2.6px; } .bk-c.just { fill: color-mix(in srgb, var(--warm) 34%, var(--panel-solid)); }
+.bk-c.drag { opacity: .85; cursor: grabbing; stroke: var(--accent); }
+.bk-m1 { fill: none; stroke: var(--bk-cu); stroke-linecap: square; pointer-events: none; } .bk-m2 { fill: none; stroke: var(--bk-cu2); stroke-linecap: square; opacity: .92; pointer-events: none; }
+.bk-via, .bk-io { fill: var(--bk-via); pointer-events: none; }
+.bk-other { fill: color-mix(in srgb, var(--ink) 10%, transparent); stroke: var(--line); } .bk-mine { fill: color-mix(in srgb, var(--warm) 60%, transparent); stroke: var(--warm); stroke-width: 1.5px; }
+.bk-free { fill: none; stroke: var(--line); stroke-dasharray: 3 3; }
+/* masks: one glass plate per layer, peeled apart; the shape asked about lit */
+.mk-plate { fill: color-mix(in srgb, var(--accent) 8%, var(--panel-solid)); stroke: color-mix(in srgb, var(--ink) 22%, transparent); stroke-width: 1px; opacity: .94; }
+.mk-c { fill: color-mix(in srgb, var(--muted) 45%, transparent); } .mk-m1 { stroke: var(--bk-cu); stroke-linecap: square; } .mk-m2 { stroke: var(--bk-cu2); stroke-linecap: square; } .mk-v { fill: var(--bk-via); }
+.mk-layer { cursor: pointer; transition: opacity .25s; } .mk-layer.dim { opacity: .22; }
+.mk-faint { opacity: .25; } .mk-ask .mk-c, .mk-ask .mk-v { stroke: var(--accent); stroke-width: 3px; } .mk-ask line { stroke: var(--accent); stroke-width: 6px !important; }
+.mk-ask { animation: bkpulse 1.3s ease-in-out infinite; } @keyframes bkpulse { 50% { opacity: .45; } }
+.mk-t-m1 { color: var(--bk-cu); } .mk-t-m2 { color: var(--bk-cu2); } .mk-t-via, .mk-t-cells { color: var(--ink); }
+.bk-mk .bk-peel { position: absolute; left: 14px; right: 14px; bottom: 12px; }
+.bk-top { position: absolute; left: 14px; right: 14px; top: 12px; }
+.bk-rt { overflow: auto; } .bk-set { margin: 0 0 10px; font-size: 12.5px; line-height: 1.45; } .bk-rt .bk-say { margin-bottom: 10px; font-size: 12.5px; line-height: 1.45; }
+.bk.ro .bk-code { opacity: .85; }
+@media (prefers-reduced-motion: reduce) { .mk-ask { animation: none; } .bk-w, .bk-g .body, .bk-tt tr, .bsurf { transition: none !important; } }
+/* a small bench (a phone): fewer words on it, the same picture */
+@container (max-width: 480px) {
+  .bk { font-size: 11.5px; } .bk-r { padding: 7px 8px; border-radius: 12px; }
+  .bk-st, .bk-boxt, .bk-cost span:not(:first-child) .bk-hide { display: none; }
+  .bk-node { min-height: 0; padding: 1px 4px; gap: 5px; font-size: 11px; } .bk-tree { column-gap: 8px; } .bk-tree li { padding-left: calc(var(--d) * 8px); }
+  .bk-pin { padding: 3px 6px; font-size: 11.5px; gap: 4px; } .bk-q { font-size: 32px; } .bk-big { font-size: 22px; } .bk-big.sm { font-size: 12.5px; }
+  .bk-lamp { width: 40px; height: 40px; } .bk-seg { width: 44px; }
+  .bk-hl, .bk-code textarea { font-size: 11.5px; padding-left: 30px; } .bk-ln { min-height: calc(11.5px * 1.75); } .bk-ln i { left: -26px; width: 18px; }
+  .bk-tt table { font-size: 10.5px; } .bk-tt td, .bk-tt th { padding: 2px 2px; }
+  .bk-tag { font-size: 10.5px; } .bk-tag.g, .bk-tag.c { font-size: 9px; }
+  .bk-cost { gap: 2px 10px; font-size: 10.5px; } .bk-cost b { font-size: 13px; }
+  .bk-subs .bk-k, .bk-why .link { display: none; } .bk-say, .bk-why { font-size: 11.5px; } .bk-scrub { font-size: 10.5px; }
+  .bk-set { font-size: 11px; } .bk-k { font-size: 9.5px; margin-bottom: 4px; }
+  .bk-hint { font-size: 10.5px; bottom: 6px; } .bk-cell { font-size: 11px; padding: 6px 8px; } .bk-tr { height: 22px; }
+  .bk-gpins .bk-pin { padding: 3px 4px; gap: 3px; font-size: 10.5px; }
+}
+/* the phone's bar: the loop keeps every stage in sight beside Your log */
+@media (max-width: 720px) {
+  .loop li + li::before { width: 3px; }
+  .loop button { padding: 12px 5px; }
+  .loop [aria-current] { padding: 7px 9px; }
+  .logbtn { padding: 7px 9px; }
+}
+/* moving bits (src/v2/labs/bits.js): one bit's trip, and Keep the chef busy */
+.mbtabs { grid-template-columns: 1fr 1fr; margin: 10px 0 8px; }
+.mbtabs button { text-align: center; font-weight: 600; font-size: 13px; color: var(--ink); }
+.mbtabs button[aria-selected=true] { background: var(--ink); color: var(--bg); }
+.mbintro .kicker { margin-right: 4px; }
+.mbgoal.mbsix { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px 12px; }
+.mbgoal.mbsix > .kicker { grid-column: 1 / -1; }
+.mbgoal.mbsix .gauge { grid-template-columns: minmax(0, 1fr); }
+.mbgoal.mbsix .gv { text-align: left; font-size: 12px; }
+.mbgoal .gauge.bad .gv { color: var(--bad); } .mbgoal .gauge.bad .gbar span { background: var(--bad); }
+.mbgoal .gauge.mbm .gbar span { background: var(--accent); }
+.mbgoal .gauge.mbsm { font-size: 12px; }
+.mbfig { margin: 8px 0; } .mbfig svg { display: block; width: 100%; height: auto; overflow: visible; }
+.mbfig .ax { font: 9px var(--sans); fill: var(--muted); } .mbfig .ax.in { fill: var(--accent-ink, var(--bg)); font-weight: 700; } .mbfig .ax.onT { fill: var(--ink); font-weight: 700; }
+.mblook { margin: 2px 0 4px; font-weight: 600; font-size: 13px; }
+.mbfig .ax0, .mbfig .tk { stroke: var(--muted); stroke-width: 1; }
+.mbfig .wall { stroke: var(--warm); stroke-width: 1.2; stroke-dasharray: 4 3; } .mbfig .wallt { fill: var(--warm); font-weight: 600; }
+.mbfig .die { fill: color-mix(in srgb, var(--ink) 8%, var(--panel-solid)); stroke: var(--ink); stroke-width: 1.2; }
+.mbfig .alu { fill: var(--accent); }
+.mbfig .mem rect { fill: var(--panel-solid); stroke: var(--muted); stroke-width: 1; opacity: .55; cursor: pointer; }
+.mbfig .mem line { stroke: var(--muted); stroke-width: .8; opacity: .55; }
+.mbfig .mem.on rect { fill: color-mix(in srgb, var(--warm) 30%, var(--panel-solid)); stroke: var(--warm); stroke-width: 1.6; opacity: 1; } .mbfig .mem.on line { stroke: var(--warm); opacity: 1; }
+.mbfig .path { stroke: var(--ink); stroke-width: 2; stroke-linecap: round; }
+.mbfig .path.interposer { stroke-width: 3; } .mbfig .path.bond { stroke-width: 4; stroke: var(--warm); }
+.mbfig .path.board { stroke: color-mix(in srgb, var(--ink) 70%, var(--warm)); }
+.mbfig .path.light, .mbfig .door.light, .mbfig .door.call, .mbfig .door.myelin { stroke: var(--accent); stroke-width: 2.4; stroke-dasharray: 6 3; filter: drop-shadow(0 0 3px var(--accent)); }
+.mbfig .bit { fill: var(--warm); stroke: var(--panel-solid); stroke-width: 1.2; }
+.mbfig .core { fill: color-mix(in srgb, var(--ink) 14%, transparent); transition: fill .25s; } .mbfig .core.on { fill: var(--good); }
+.mbfig .onchip { fill: color-mix(in srgb, var(--warm) 32%, transparent); stroke: var(--warm); stroke-width: 1; }
+.mbfig .shelf { fill: color-mix(in srgb, var(--accent) 35%, transparent); stroke: var(--accent); stroke-width: 1; }
+.mbfig .pantry { fill: color-mix(in srgb, var(--warm) 18%, var(--panel-solid)); stroke: var(--warm); stroke-width: 1.4; }
+.mbfig .pantry.stacked { fill: color-mix(in srgb, var(--warm) 34%, var(--panel-solid)); }
+.mbfig .jar { stroke: color-mix(in srgb, var(--warm) 60%, transparent); stroke-width: 2; stroke-linecap: round; }
+.mbfig .faint { opacity: .3; }
+.mbfig .heat { fill: none; stroke: var(--bad); stroke-width: 1.2; opacity: .7; stroke-linecap: round; }
+.mbfig .cook { fill: var(--accent); opacity: .85; }
+.mbfig .door { stroke: color-mix(in srgb, var(--ink) 55%, transparent); stroke-width: 1.2; }
+.mbfig .door.interposer, .mbfig .door.bond { stroke: var(--ink); } .mbfig .door.nerve, .mbfig .door.talk { stroke: var(--warm); stroke-dasharray: 2 3; }
+.mbfig .rb.busy { fill: var(--good); } .mbfig .rb.wait { fill: color-mix(in srgb, var(--bad) 70%, transparent); }
+.mbfig .rb.off { opacity: .22; } .mbfig .rb.wait.now { stroke: var(--ink); stroke-width: 1; }
+.mbfig .goal { stroke: var(--ink); stroke-width: 1.2; stroke-dasharray: 5 3; } .mbfig .goalt { fill: var(--ink); font-weight: 600; }
+.mbq { margin: 0 0 6px; font-weight: 600; font-size: 14px; line-height: 1.35; } .mbq .kicker { display: block; margin-bottom: 2px; }
+.mbats { margin: 4px 0 8px; } .mbats .chipb, .mblevels .chipb { font-size: 12px; padding: 5px 10px; }
+.mblevels { display: flex; flex-wrap: wrap; gap: 5px; margin: 8px 0 4px; }
+.mblevels .mbn { display: inline-grid; place-items: center; width: 16px; height: 16px; margin-right: 5px; border-radius: 50%; background: color-mix(in srgb, var(--ink) 10%, transparent); font-size: 10px; }
+.mblevels .chipb[data-cleared] { border-color: var(--good); }
+.mbsay { margin: 6px 0; font-weight: 600; } .mbsay.good { color: var(--good); } .mbsay.bad { color: var(--bad); }
+.mbacts { align-items: center; }
+.mblevers { display: grid; gap: 10px; margin: 10px 0 4px; }
+.mblever .mblt { margin: 0 0 4px; font-size: 13px; line-height: 1.3; } .mblever .mblt .small { display: block; }
+.mbseg { display: flex; flex-wrap: wrap; gap: 3px; }
+.mbseg button { padding: 4px 11px; border-radius: 999px; border: 1px solid var(--line); background: none; color: var(--ink); font: 600 12px var(--sans); cursor: pointer; }
+.mbseg button[aria-pressed=true] { background: var(--warm); border-color: var(--warm); color: #1a1004; }
+.mball { display: none; }
+.mbwalls { list-style: none; margin: 10px 0; padding: 0; display: grid; gap: 4px; font-size: 12px; line-height: 1.4; }
+.mbwalls li { padding: 6px 9px; border-radius: 10px; border: 1px solid var(--line); } .mbwalls b { color: var(--warm); }
+.mbsrc { font-size: 11px; }
+.mbprog { margin: 8px 0; }
+.mbcurve { margin: 12px 0; } .mbcurve svg { display: block; width: 100%; height: auto; }
+.mbcurve .ax { font: 9px var(--sans); fill: var(--muted); } .mbcurve .grid { stroke: var(--line); stroke-width: 1; }
+.mbcurve .goal { stroke: var(--good); stroke-width: 1; stroke-dasharray: 4 3; }
+.mbcurve .best { fill: none; stroke: var(--warm); stroke-width: 2; stroke-linejoin: round; }
+.mbcurve .dot { fill: var(--accent); stroke: var(--panel-solid); stroke-width: 1.2; } .mbcurve .dot.c-person { fill: var(--ink); } .mbcurve .dot.c-ai { fill: var(--warm); } .mbcurve .dot.c-example { fill: var(--muted); }
+.mbcurve .dot.mine { stroke: var(--accent); stroke-width: 2; } .mbcurve .dot.you { fill: none; stroke: var(--accent); stroke-width: 2; stroke-dasharray: 3 2; }
+/* the phone: one picture, the levers the level needs most (the rest behind More levers), no curve */
+@media (max-width: 720px) {
+  .mbgoal.mbsix { grid-template-columns: repeat(2, minmax(0, 1fr)); position: static; box-shadow: none; }
+  .mblevers:not(.all) .mbx { display: none; }
+  .mball { display: inline-block; margin-bottom: 6px; }
+  .mbcurve, .mbwalls li:nth-child(n+2) { display: none; }
+  .mbfig .ax { font-size: 10px; }
+}
+/* in the new frame (Do mode): the kitchen or the trip fills the stage and keeps its words at a steady size */
+html.frame2 .f2stage .mbfig[data-f2] { display: flex; flex-direction: column; gap: 8px; }
+html.frame2 .f2stage .mbfig[data-f2] svg { flex: 1 1 0; min-height: 0; width: 100%; height: 100%; }
+html.frame2 .f2stage .mbfig svg text { font-size: calc(15px * var(--f2-k, .6)); }
+html.frame2 .f2stage .mbfig svg :is(line, path, rect) { vector-effect: non-scaling-stroke; }
+html.frame2 .f2stage .mbfig .mbq { font: var(--f2-label, 600 18px/1.3 var(--sans)); }
+html.frame2 .f2stage .mbfig figcaption { font: var(--f2-small); } html.frame2 .f2stage .mbfig .mblook { font: var(--f2-label, 600 17px/1.3 var(--sans)); }
+html.frame2 .f2stage [data-f2="goal"].mbsix:has(> .gauge ~ .gauge ~ .gauge ~ .gauge) .gauge { flex-basis: 96px; }
+html.frame2 .f2stage [data-f2="goal"].mbsix .gv { font-size: 17px; }
+@media (prefers-reduced-motion: reduce) { .mbfig .core { transition: none; } }
+.mbgoal:not(.mbsix) { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px 12px; }
+.mbgoal:not(.mbsix) > .kicker, .mbgoal:not(.mbsix) > .gauge:not(.mbsm) { grid-column: 1 / -1; }
+.mbgoal .gauge.mbsm { grid-template-columns: minmax(0, 1fr); } .mbgoal .gauge.mbsm .gv { text-align: left; }
+@media (max-width: 720px) {
+  .mbgoal:not(.mbsix) { grid-template-columns: repeat(2, minmax(0, 1fr)); } .mbgoal:not(.mbsix) > .gauge:not(.mbsm) { grid-column: auto; }
+  .mbgoal:not(.mbsix) > .kicker, .mbgoal .gauge.mbsm:not(.bad) { display: none; } .mbgoal .gauge.mbsm.bad { grid-column: 1 / -1; }
+  .mbgoal:not(.mbsix) .gauge .gv { text-align: left; } .mbgoal:not(.mbsix) .gauge { grid-template-columns: minmax(0, 1fr); }
+}

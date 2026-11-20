@@ -491,13 +491,15 @@ export function start() {
   /* ---- the frame: every view below the island wears it (src/v2/frame.js, docs/SYSTEM.md) ---- */
   /* the open things of the ledger that sit at a level: a design nobody has broken where designs are checked, a
      piece nobody has built where the job is chosen. The commons is on the thing itself, not on a page of its own */
-  const openAt = d => { const C = Game.community(S); return (d === 'check' ? C.breaks.map(b => chOf('break:' + b.of)) : d === 'need' ? C.jobs.map(j => Game.jobOf(j.need)) : []).filter(Boolean); };
+  const openAt = d => { const C = Game.community(S); return (d === 'check' ? C.breaks.map(b => chOf('break:' + b.of)) : []).filter(Boolean); };
+  /* the pieces nobody has built yet are played at the Lab, not here: at the job, one way there that says so */
+  const labWay = d => { if (d !== 'need') return []; const n = Game.community(S).jobs.length; return n ? [{ id: 'lab-pieces', title: t('bench.labPieces', { n }), where: t('bench.labWhere'), href: '#/build', open: true }] : []; };
   const frameOf = (host, o) => FrameM.createFrame(host, Object.assign({ follow, askAt: d => stopsAt(d), fieldAt: d => fieldAtLevel(d).map(q => q.id),
     lensesAt: d => Lenses.lensesAt(LENS_AT[d] || d).map(id => ({ id, label: t('frame.q.' + id), hint: t('frame.q.' + id + '.hint'), icon: frameQ(id).icon })),
     lensCard: (q, d) => lensCard(q, LENS_AT[d] || d), onLens: (q, d) => lightLens(q, LENS_AT[d] || d),
     askedAt: d => { const A = Game.askedAtLevel(d, S); return A.length ? '<p class="kicker">' + esc(t('page.questions.asked')) + '</p>' + A.map(askedHtml).join('') : ''; },
     doAt: d => Game.CHALLENGES.filter(c => c.at === d).map(c => ({ id: c.id, title: titleOf(c), where: whereOf(c), href: doHref(c) }))
-      .concat(openAt(d).map(c => ({ id: c.id, title: titleOf(c), where: whereOf(c), href: '#/do/' + encodeURIComponent(c.id), open: true }))) }, o));
+      .concat(openAt(d).map(c => ({ id: c.id, title: titleOf(c), where: whereOf(c), href: '#/do/' + encodeURIComponent(c.id), open: true })), labWay(d)) }, o));
   let FrameM = null;
   /* ---- the thirteen as lenses (src/data/frame.js, src/engines/frame.js): under Ask, the core questions that live at
      the level in view, one at a time, each lighting on the picture what it is about ---- */
@@ -831,7 +833,7 @@ export function start() {
   const FL = k => k === 'dive' ? Object.assign({}, FLAT.dive, { world: diveWorld }, DIVES[diveWorld]) : FLAT[k];
   let partsAt = null;   /* the parts each level's scene draws (src/app/scenes.js), for what you see here */
   let Joule = null;   /* the lens of the energy puzzle on the data centre's dive (src/v2/joule.js) */
-  let flatKind = 'dive', diveFrame = null, diveD = -1, divePart = null, diveThread = null, benchCh = null, WE = null, DiveData = null, DS = null;
+  let flatKind = 'dive', diveFrame = null, diveD = -1, divePart = null, diveThread = null, benchCh = null, WE = null, DiveData = null, DS = null, Bench = null;
   const levelsOf = k => FL(k).levels || DiveData.WORLDS.find(w => w.id === FL(k).world).depths;
   /* the views that are a row of steps walked along, not a column of levels */
   const rowsOf = k => k === 'line' || k === 'bench';
@@ -847,7 +849,7 @@ export function start() {
     Wm.setChrome({ dots: false, dive: false, lit: true, keys: () => (flatKind === 'dive' ? 'scale' : 'steps'), stage: () => stage($('diveCanvas')), overlay: flatWords,
       look: () => !!diveFrame && diveFrame.mode() === 'look' && !benchCh, ask: () => !!diveFrame && diveFrame.mode() === 'ask',
       askOnly: id => (lensNow && lensNow.d === (LENS_AT[id] || id) ? lensNow.stops.map(k => k.split('.')[0]) : null) }); Jm.setBand(false);
-    dive = Wm.createWorld($('diveCanvas'), { depth: d => diveAt(d), arrive: d => diveAt(d), zoom: z => { diveRail(z); levelZoom(z); }, part: (d, key) => { const a = l3Active(); pickPart(a ? a.obj.hit(lastTap.x, lastTap.y) : key); }, pick: th => { diveThread = th; dive.setThread(th); if (!benchCh && flatKind !== 'supply') drawDive(); },
+    dive = Wm.createWorld($('diveCanvas'), { depth: d => diveAt(d), arrive: d => diveAt(d), zoom: z => { diveRail(z); levelZoom(z); benchZoom(z); }, part: (d, key) => { const a = l3Active(); pickPart(a ? a.obj.hit(lastTap.x, lastTap.y) : key); }, pick: th => { diveThread = th; dive.setThread(th); if (!benchCh && flatKind !== 'supply') drawDive(); },
       site: id => supplySite(id), mapStep: i => supplyStep(i) });
     return dive;
   });
@@ -871,7 +873,7 @@ export function start() {
     const id = WE.IDS[d];
     if (!levelsOf(flatKind).includes(id)) { if (flatKind === 'dive' && diveWorld === 'datacentre') location.hash = '#/place/datacentre/' + (id === 'board' ? 4 : 2); return; }   /* above the chip, the flight takes over */
     if (d !== diveD) { divePart = null; diveThread = null; dive.setThread(null); dive.select(null); }
-    diveD = d; if (Joule && flatKind === 'dive') Joule.level(id); if (!diveFrame) return;
+    diveD = d; if (Joule && flatKind === 'dive') Joule.level(id); if (Bench && flatKind === 'bench') Bench.step(id); if (!diveFrame) return;
     const L = levelsOf(flatKind);
     /* a row of steps (the line, the bench): the step is lit on the line of steps, and the rail shows only the level the
        step shows, if any (src/engines/way.js, steps and levels) */
@@ -999,8 +1001,7 @@ export function start() {
     const Y = flatKind === 'line' && Game.yourDesign(S), yk = Y && ({ print: 'print', etch: 'etch', wires: 'wires' })[id];
     /* on the bench, what this station did with your design (the studio's caption, moved off the picture) */
     /* on the bench, your design's state (right or not, who wrote it, which job) is words, so it is here, not drawn */
-    const BS = flatKind === 'bench' ? DS.bandState() : null;
-    const benchYours = BS ? '<div class="yours"><span class="kicker">' + esc(t('chipx.yours')) + ' · ' + esc(BS.job) + '</span><p class="verdict ' + (BS.right ? 'good' : 'bad') + '">' + esc(BS.said) + '</p>' + esc(t('design.cap.' + id + '.d', DS.numbers())) + '</div>' : '';
+    const benchYours = flatKind === 'bench' && Bench ? '<div class="yours benchy">' + benchWords(id) + '</div>' : '';
     const yours = benchYours + (yk ? '<div class="yours"><span class="kicker">' + esc(t('chipx.yours')) + '</span>' + esc(t('chipx.yours.' + yk, { name: t('design.proj.' + Y.p + '.t'), gates: Y.B.M.cells.length, transistors: Y.B.transistors, masks: Y.B.masks, wire: Math.round(Y.B.RT ? Y.B.RT.wl : 0) })) + '</div>' : '');
     /* a dive goes up and down; the line and the studio go earlier and later in the work */
     const [ar0, ar1] = flatKind === 'dive' ? ['↑ ', '↓ '] : ['← ', '→ '], nm = d => t('depth.' + d + '.name');
@@ -1017,7 +1018,7 @@ export function start() {
     diveFrame.dock.innerHTML = lineHtml(t('around.view.' + flatKind) + ' · ' + t('depth.' + id + '.name'), t('depth.' + id + '.see'), key, aroundRow(
       i ? '<button type="button" class="chipb" data-key="back" data-divego="' + (diveD - 1) + '">' + ar0 + esc(nm(L[i - 1])) + '</button>' : flatKind === 'dive' && diveWorld === 'datacentre' ? '<button type="button" class="chipb" data-key="back" data-divego="' + (diveD - 1) + '">' + esc(t('dive.up')) + '</button>' : '',
       last ? end : '<button type="button" class="chipb" data-key="next"' + (flatKind === 'dive' ? ' data-in' : al) + ' data-divego="' + (diveD + 1) + '">' + ar1 + esc(nm(L[i + 1])) + '</button>', inHtml || benchIn(id, 1), benchIn(id, -1)));
-    diveFrame.dock.innerHTML = (sk ? seekLit(diveFrame.dock.innerHTML, sk) : diveFrame.dock.innerHTML).replace('<div class="nav">', yours + (hereHtml.startsWith('<div class="seek') ? '' : '<p class="small muted hintline">' + esc(t(F.hint)) + '</p>') + hereHtml + '<div class="nav">');
+    diveFrame.dock.innerHTML = (sk ? seekLit(diveFrame.dock.innerHTML, sk) : diveFrame.dock.innerHTML).replace('<div class="nav">', yours + (hereHtml.startsWith('<div class="seek') ? '' : '<p class="small muted hintline">' + esc(flatKind === 'bench' ? t('bench.do.' + id) : t(F.hint)) + '</p>') + hereHtml + '<div class="nav">');
     if (sk) seekLight(sk);
     requestAnimationFrame(diveInset);
   }
@@ -1045,31 +1046,55 @@ export function start() {
     /* the new frame (?frame=2): the picture stands right of the caption at rest, and left of the side panel */
     const f2 = FRAME2 && innerWidth >= 1100 && vui.classList.contains('f2') ? diveFrame.dock.parentNode.getBoundingClientRect() : null, f2cap = f2 && vui.classList.contains('f2cap');
     const st = rowsOf(flatKind) ? (wide ? 70 : 40) : 0;   /* the line of steps across the top of the picture */
-    dive.setInset({ l: f2cap ? Math.max(90, Math.round(f2.right - 120)) : wide ? 90 : 8, r: (f2 && !f2cap ? Math.round(f2.width) + 32 : wide ? 20 : 8) + lens, t: (top ? top + 8 : wide ? 122 : 116) + st, b });
+    /* the bench keeps clear of the way along at the picture's foot; on a phone it stands above the card at rest and may
+       be taller than wide (src/v2/bench.js) */
+    const bench = Bench && flatKind === 'bench', phoneB = bench && !wide, bb = !bench ? b : innerWidth >= 1100 ? b + 62 : phoneB ? 190 : b + 56, tt = (top ? top + 8 : wide ? 122 : 116) + st;
+    dive.setInset({ l: f2cap ? Math.max(90, Math.round(f2.right - 120)) : wide ? 90 : 8, r: (f2 && !f2cap ? Math.round(f2.width) + 32 : wide ? 20 : 8) + lens, t: tt, b: bb });
+    if (bench) { const f = dive.frame, ah = $('diveCanvas').clientHeight - tt - bb; Bench.place(Object.assign({}, f, phoneB ? { h: Math.min(ah - 8, f.B * 1.5), top: tt + 4 } : { h: f.B })); }
     /* a level drawn in 3D takes its square when the zoom moves; it is told now, so it moves with the frame */
     if (flatKind === 'dive' && WE) levelZoom(dive.z); };
   /* the bench: a design challenge played in the dock; the drawings above follow your description */
-  const syncDesign = ch => { if (DS && ch && ch.kind === 'design') DS.setDesign(Game.checkDesign(ch.p, S.codes[ch.p] || Game.starter(ch.p)));
-    /* an evolved circuit for a job the studio knows is drawn there too, gate by gate and wave by wave */
-    else if (DS && ch && ch.kind === 'evolve' && S.evolve && S.evolve.code && Game.hasProject(S.evolve.job)) DS.setDesign(Game.checkDesign(S.evolve.job, S.evolve.code)); };
+  /* the bench shows the design a challenge played there is about (a design to fix, an evolved circuit, a scrambled
+     layout), and follows it after every tap; else your own (src/v2/bench.js) */
+  const syncDesign = () => { if (Bench && flatKind === 'bench') Bench.changed(); };
+  /* your design's state in the card, in words: right or not, who wrote it, which job, and what this step did with it */
+  function benchWords(id) {
+    const D = Bench.now(), B = D.B, st = B.errs.length ? 'errs' : B.spec ? (B.bad ? 'wrong' : 'right') : 'free', vars = { bad: B.bad || 0, total: B.total || 0, errs: B.errs.length };
+    return '<span class="kicker">' + esc(t('chipx.yours')) + ' · ' + esc(t('design.proj.' + D.p + '.t')) + '</span><p class="verdict ' + (st === 'right' || st === 'free' ? 'good' : 'bad') + '" data-by="' + D.by + '">' + esc(t('design.state.' + st, vars) + ' · ' + t('build.by.' + D.by)) + '</p>' + esc(Bench.caption(id));
+  }
+  const benchRefresh = () => { if (flatKind !== 'bench' || !Bench || !diveFrame) return; const y = diveFrame.dock.querySelector('.benchy'); if (y) y.innerHTML = benchWords(diveId()); };
   function openBench(ch) {
-    benchCh = ch; const dock = diveFrame.dock; dock.classList.add('benchdock'); syncDesign(ch); diveFrame.doing();
-    play(dock, ch, { state: S, startChip: () => Object.assign({}, Game.START),
-      save: () => { save(); syncDesign(ch); }, kept,
+    benchCh = ch; const dock = diveFrame.dock; dock.classList.add('benchdock'); if (Bench && flatKind === 'bench') Bench.challenge(ch); diveFrame.doing();
+    play(dock, ch, { state: S, startChip: () => Object.assign({}, Game.START), bench: flatKind === 'bench' ? Bench : null,
+      save: () => { save(); syncDesign(); }, kept,
       open: c => { location.hash = doHref(c); },
       back: () => diveFrame.look(),
-      /* won: the island grows, and the drawings fly to your gates */
-      done: c => { won(c); if (flatKind === 'bench') dive.flyTo(WE.IDS.indexOf('gates')); } });
+      /* won: the island grows, and a design's drawings fly to your gates */
+      done: c => { won(c); if (flatKind === 'bench' && c.kind === 'design') dive.flyTo(WE.IDS.indexOf('gates')); } });
     requestAnimationFrame(diveInset);
+  }
+  /* while the step line moves, the bench slides with it: the step nearest is drawn, offset by how far the line is from it */
+  function benchZoom(z) {
+    if (!Bench || flatKind !== 'bench' || !WE) return;
+    const d = Math.round(z), id = WE.IDS[d];
+    if (levelsOf('bench').includes(id)) Bench.step(id);
+    Bench.slide(Math.abs(z - d) < 0.002 ? 0 : z - d);
   }
   function showFlat(kind, depth, chId, world) {
     hideAll(); document.body.classList.add('immersive'); flatKind = kind; benchCh = null; if (kind === 'dive') diveWorld = DIVES[world] ? world : 'datacentre';
     $('diveCanvas').hidden = false; vui.hidden = false; $('flatLabels').hidden = false;
     loading(true); lastPlace = kind === 'dive' ? DIVES[diveWorld].place : { line: 'fab', bench: 'studio' }[kind];
-    return Promise.all([withFrame(), ensureDive()]).then(([, w]) => {
+    return Promise.all([withFrame(), ensureDive(), kind === 'bench' ? import('./bench.js') : null]).then(([, w, BkM]) => {
       const F = FL(kind); WE.setWorld(F.world); w.setMap(null); diveFrame && diveFrame.dock.classList.remove('supdock'); if (kind !== 'line') hide3d(); DS.setBandCaption(false);
-      /* the bench draws your design: the last you won, else the first job's */
-      if (kind === 'bench') { const Y = Game.yourDesign(S); DS.setDesign(Y ? Y.B : Game.checkDesign('half', S.codes.half || Game.starter('half'))); }
+      /* the bench: your design, live, on a surface over the studio's picture (src/v2/bench.js); a first visit opens on
+         the lab's working example for the first piece, the half adder */
+      DS.setSurface(kind === 'bench');
+      if (kind === 'bench') {
+        if (!Bench) { Bench = BkM.createBench({ state: S, save, before: $('flatLabels'), go: (st, line) => { dive.flyTo(WE.IDS.indexOf(st)); setTimeout(() => Bench.focusLine(line), 1200); } }); Bench.listen(benchRefresh);
+          /* on a phone, working on the bench lets the card down, as a touch on any picture does */
+          Bench.el.addEventListener('pointerdown', () => { if (innerWidth <= 720 && vui.peekDown) vui.peekDown(); }, true); }
+        Bench.challenge(null); Bench.show(true); const D = Bench.now(); DS.setDesign(D.B, D.by);
+      }
       const L = levelsOf(kind);
       diveFrame = frameOf(vui, { up: { href: F.up, label: t(F.upWord) }, path: [{ href: '#/island', label: t('place.back') }, { href: F.up, label: t(F.upWord) }, { label: t(F.title) }],
         rail: rowsOf(kind) ? { label: t('frame.levels.' + kind), optional: true, items: Way.levelsOfSteps(kind).map(k => ({ id: k, label: t('depth.' + k + '.name'), size: sizeOf(k) })) }
@@ -1077,7 +1102,7 @@ export function start() {
         /* in a row of steps the rail's levels lead to the step that shows them; the steps are walked along their own line */
         steps: rowsOf(kind) ? { label: t('frame.steps.' + kind), items: L.map(k => ({ id: k, label: t('depth.' + k + '.name') })) } : null,
         onStep: k => w.flyTo(WE.IDS.indexOf(k)),
-        onRail: k => { const s = rowsOf(kind) ? Way.stepOfLevel(kind, k, diveId()) : k; if (s) w.flyTo(WE.IDS.indexOf(s)); }, onLook: () => { if (benchCh) { benchCh = null; const dk = diveFrame.dock; dk.classList.remove('benchdock'); dk.onclick = null; dk.oninput = null; } drawDive(); }, caption: kind === 'dive' }); watchDock();
+        onRail: k => { const s = rowsOf(kind) ? Way.stepOfLevel(kind, k, diveId()) : k; if (s) w.flyTo(WE.IDS.indexOf(s)); }, onLook: () => { if (benchCh) { benchCh = null; const dk = diveFrame.dock; dk.classList.remove('benchdock'); dk.onclick = null; dk.oninput = null; dk.onpointerdown = dk.onpointermove = dk.onpointerup = null; if (Bench && flatKind === 'bench') Bench.challenge(null); } drawDive(); }, caption: kind === 'dive' }); watchDock();
       /* the data centre's dive wears the lens of the energy puzzle: Follow the joule */
       vui.classList.remove('jouling');
       Joule = kind === 'dive' && diveWorld === 'datacentre' ? createJoule(vui, { S, save,
@@ -1178,7 +1203,7 @@ export function start() {
   const wayToChip = (fr, st) => { if (!st.end) { const nav = fr.dock.querySelector('.nav'); if (nav) nav.insertAdjacentHTML('beforebegin', '<p class="wayrow"><a class="chipb" data-in data-inname="' + esc(t('depth.chip.name')) + '" href="#/dive/chip">↓ ' + esc(t('board.end.dive')) + '</a></p>'); } return false; };
   /* every view hides the others first */
   function hideAll() {
-    $('diveCanvas').hidden = true; vui.hidden = true; dive && dive.stop(); hide3d(); $('flatLabels').hidden = true; if (flatWords) flatWords.clear();
+    $('diveCanvas').hidden = true; vui.hidden = true; dive && dive.stop(); hide3d(); $('flatLabels').hidden = true; if (flatWords) flatWords.clear(); if (Bench) Bench.show(false);
     hideBoard(); $('hero').hidden = true; $('outbtn').hidden = true; lensbar.hidden = true; closeSheet(); pui.hidden = true; cui.hidden = true; dc && dc.pause(); map && map.pause(); chip && chip.pause();
     ['mapCanvas', 'mapLabels', 'placeCanvas', 'placeLabels', 'chipCanvas', 'chipLabels'].forEach(k => { $(k).hidden = true; });
     hidePh(); hideCa(); hideSw();
@@ -1190,7 +1215,7 @@ export function start() {
   const homeEl = $('home');
   let home = null;
   function showHome() {
-    $('diveCanvas').hidden = true; vui.hidden = true; dive && dive.stop(); hide3d(); $('flatLabels').hidden = true; if (flatWords) flatWords.clear();
+    $('diveCanvas').hidden = true; vui.hidden = true; dive && dive.stop(); hide3d(); $('flatLabels').hidden = true; if (flatWords) flatWords.clear(); if (Bench) Bench.show(false);
     hideBoard(); document.body.classList.remove('immersive');
     $('chipCanvas').hidden = $('chipLabels').hidden = true; cui.hidden = true; chip && chip.pause();
     $('placeCanvas').hidden = $('placeLabels').hidden = true; pui.hidden = true; dc && dc.pause(); hidePh(); hideCa(); hideSw();
@@ -1200,7 +1225,7 @@ export function start() {
     home.show(); return Promise.resolve();
   }
   function showMap(from) {
-    $('diveCanvas').hidden = true; vui.hidden = true; dive && dive.stop(); hide3d(); $('flatLabels').hidden = true; if (flatWords) flatWords.clear();
+    $('diveCanvas').hidden = true; vui.hidden = true; dive && dive.stop(); hide3d(); $('flatLabels').hidden = true; if (flatWords) flatWords.clear(); if (Bench) Bench.show(false);
     hideBoard(); document.body.classList.remove('immersive');
     $('chipCanvas').hidden = $('chipLabels').hidden = true; cui.hidden = true; chip && chip.pause();
     $('placeCanvas').hidden = $('placeLabels').hidden = true; pui.hidden = true; dc && dc.pause(); hidePh(); hideCa(); hideSw();
@@ -1228,7 +1253,7 @@ export function start() {
       const reps = Game.frontierOf(S).filter(f => f.kind === 'report');
       if (reps.length) P.open += '<h2>' + esc(t('lab.reports')) + '</h2><p class="small muted">' + esc(t('lab.reportsD')) + '</p><div class="grid">' + reps.map(f => { const e = W.byId[f.of]; return '<a class="chcard report' + (e.draft ? ' draft' : '') + '" href="' + esc(e.at) + '"><span class="st">⚑</span><span><span class="kicker">' + esc(t('report.say.' + e.say)) + ' · ' + esc(e.at) + '</span><b>' + esc(e.words) + '</b><span class="small muted">' + byLine(e) + '</span></span></a>'; }).join('') + '</div>';
       /* the record: every entry, the newest first, each with who made it and where it stands now */
-      const line = e => { const T = e.kind === 'break' ? W.byId[e.of] : null, T2 = e.kind === 'try' && !e.puzzle && !e.machine ? W.byId[e.of] : null, what = e.kind === 'design' ? t('ledger.rec.design', { title: e.title, piece: t('build.need.' + e.piece + '.t') }) : e.kind === 'break' ? t('ledger.rec.break', { title: T.title }) : T2 ? t('ledger.rec.try', { title: T2.title, n: e.facts.cases }) : e.kind === 'report' || e.kind === 'fix' || e.puzzle || e.machine ? Game.entryWords(e, S) : e.q,
+      const line = e => { const T = e.kind === 'break' ? W.byId[e.of] : null, T2 = e.kind === 'try' && !e.puzzle && !e.machine && !e.chef ? W.byId[e.of] : null, what = e.kind === 'design' ? t('ledger.rec.design', { title: e.title, piece: t('build.need.' + e.piece + '.t') }) : e.kind === 'break' ? t('ledger.rec.break', { title: T.title }) : T2 ? t('ledger.rec.try', { title: T2.title, n: e.facts.cases }) : e.kind === 'report' || e.kind === 'fix' || e.puzzle || e.machine || e.chef ? Game.entryWords(e, S) : e.q,
           links = (e.from ? ' · ' + esc(t('ledger.rec.from', { who: W.byId[e.from].by })) + ' ' + esc(W.byId[e.from].title) : '') + (e.tries && e.tries.length ? ' · ' + esc(t('ledger.tries', { n: e.tries.length })) : '') + (e.about ? ' · ' + esc(t('ledger.rec.about', { q: Game.aboutWords(e.about, W) })) : '');
         return '<li class="rec ' + e.kind + (e.draft ? ' draft' : '') + ' ' + e.state + '"><span class="made ' + esc(e.made) + '"></span><span><b>' + esc(what) + '</b><span class="small muted"> · ' + byLine(e) + ' · ' + esc(e.id.slice(0, 10)) + ' · ' + esc(t('ledger.state.' + (e.draft ? 'draft' : e.state))) + (e.brokenBy ? ' · ' + esc(t('ledger.brokenBy', { who: W.byId[e.brokenBy].by })) : '') + links + '</span>' + (e.draft ? slipHtml(S, e.id) : '') + '</span></li>'; };
       P.record = '<h2>' + esc(t('page.build.record')) + '</h2><p class="small muted">' + esc(t('page.build.recordD')) + '</p><ol class="record">' + W.entries.slice().reverse().map(line).join('') + '</ol>';

@@ -318,7 +318,7 @@ where it is richer).
 | Stack | inside a chip, as made (`#/chip/<row>/build`) |
 | Dive | the earlier site's flat zoom in the frame (`#/dive/<depth>`), chip to atom; the flight goes on into it |
 | Line | the earlier site's factory in the frame (`#/line/<step>`): a wafer travelling between the machines, step by step; your design at printing, etching and wiring |
-| Bench | the studio in the frame (`#/bench/<level>[/<challenge>]`): its drawings show your design; a design challenge is played in the dock and the drawings follow it; masks lead to the line |
+| Bench | the studio in the frame (`#/bench/<level>[/<challenge>]`): one design of your own, live on a surface laid over the step's square (`src/v2/bench.js`): pick a piece at the job, write it at describe, scrub the waves at check, flip inputs at gates, drag cells at layout, peel the masks; a challenge played there uses the same surface (as its instrument in Do mode); masks lead to the line |
 | Along | `src/engines/way.js`: from the loop in the bar and the ← → keys; holds the level through used, made and designed |
 | One look | the flat views and the line's machines in the 3D views' palette and light |
 | Everything inside | every place's levels, every question and the supply map open in the chip world's own views |
