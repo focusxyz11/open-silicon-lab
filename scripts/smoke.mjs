@@ -506,15 +506,15 @@ run['motion'] = async () => {
   await page.evaluate(() => { const b = document.querySelector('.insp [data-iact="more"]'); if (b) b.click(); });
   await page.waitForFunction(() => !document.getElementById('sheet').hidden && document.querySelector('.insp').hidden, null, { timeout: 10000 }).catch(() => problems.push(tag + ': More does not open the full card'));
   await page.evaluate(() => { const b = document.querySelector('#sheet [data-close]'); if (b) b.click(); });
-  await page.evaluate(() => { const b = document.querySelector('.qlbar [data-lens="fail"]'); if (b) b.click(); });
-  await page.waitForSelector('.qlbar .lensnote a[href="#/w/fail"]', { timeout: 10000 }).catch(() => problems.push(tag + ': a lens does not say what it shows'));
-  await page.evaluate(() => { const b = document.querySelector('.qlbar [data-lens="look"]'); if (b) b.click(); });
+  await page.evaluate(() => { const b = document.querySelector('.lensbar [data-lens="fail"]'); if (b) b.click(); });
+  await page.waitForSelector('.lensbar .lensnote a[href="#/w/fail"]', { timeout: 10000 }).catch(() => problems.push(tag + ': a lens does not say what it shows'));
+  await page.evaluate(() => { const b = document.querySelector('.lensbar [data-lens="look"]'); if (b) b.click(); });
   /* a dial turned where it is decided: the numbers that moved are said, and the lens that shows them comes on */
   await page.evaluate(() => { const b = document.querySelector('#mapLabels .place3[data-place="studio"]'); if (b) b.click(); });
   await page.waitForSelector('.insp [data-dial="clock"][data-d="1"]', { timeout: 15000 }).catch(() => problems.push(tag + ': the studio has no dial for your chip'));
   await page.evaluate(() => { const b = document.querySelector('.insp [data-dial="clock"][data-d="1"]'); if (b) b.click(); });
-  await page.waitForFunction(() => !!document.querySelector('.insp .dread') && !!document.querySelector('.qlbar [data-lens="fail"][aria-pressed="true"]'), null, { timeout: 10000 }).catch(() => problems.push(tag + ': turning a dial does not show what it changed'));
-  await page.evaluate(() => { const b = document.querySelector('.insp [data-dial="clock"][data-d="-1"]'); if (b) b.click(); const l = document.querySelector('.qlbar [data-lens="look"]'); if (l) l.click(); const x = document.querySelector('.insp [data-iact="close"]'); if (x) x.click(); });
+  await page.waitForFunction(() => !!document.querySelector('.insp .dread') && !!document.querySelector('.lensbar [data-lens="fail"][aria-pressed="true"]'), null, { timeout: 10000 }).catch(() => problems.push(tag + ': turning a dial does not show what it changed'));
+  await page.evaluate(() => { const b = document.querySelector('.insp [data-dial="clock"][data-d="-1"]'); if (b) b.click(); const l = document.querySelector('.lensbar [data-lens="look"]'); if (l) l.click(); const x = document.querySelector('.insp [data-iact="close"]'); if (x) x.click(); });
   /* what calls stands in the world (docs/INTERACTION.md): by the test house, a square with a board of its questions and
      a bench for each challenge played there; the board opens what is asked there, a bench plays its challenge */
   await page.evaluate(() => { location.hash = '#/place/test'; });
