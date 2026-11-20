@@ -7,7 +7,7 @@
    and Ask (its questions, and what people and agents have asked). There is no menu: the commons is the need, the
    place where the loop starts and comes back (the Lab, and its record, #/build); what you met and did is your log
    (#/log); the world around the island is the way out from it (#/ecosystem).
-   Routes: #/, #/place/<id>, #/place/datacentre/<level>, #/chip/<row>/build (inside a chip, layer by layer: the dive's levels as made),
+   Routes: #/ (the map, the first page: src/v2/home.js), #/island (the island), #/place/<id>, #/place/datacentre/<level>, #/chip/<row>/build (inside a chip, layer by layer: the dive's levels as made),
    #/board (one board, with a story that drives it), #/dive/<depth>[/<world>] (the dive), #/line/<step> (the factory),
    #/bench/<level>[/<challenge>] (the studio), #/do/<challenge>, #/ask/<thread>/<depth>, #/supply, #/log, #/build,
    #/ecosystem. Words are read with t(). */
@@ -50,6 +50,8 @@ import { swarmInput, swarmStart } from './swarm.js';
 import { tuneInput, tuneType } from './tunebox.js';
 import { WORLD_IDS } from '../data/worlds.js';
 import { SEEK, foundAt, seekAt, seekLevel } from '../data/seek.js';
+import { createHome } from './home.js';
+import { sizeWords } from './frame.js';
 
 const $ = id => document.getElementById(id);
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
@@ -134,11 +136,11 @@ export function start() {
       carry: id => { carryNote = carryAt(id); quickNext = true; openPlace(id); },
       deeper: (place, part) => { const to = deeperOf(place, part); if (to) enter(to); },
       inside: (place, part) => !!deeperOf(place, part),
-      leave: id => { if (cur && cur.place === id) { closeSheet(); if (location.hash.startsWith('#/place/')) history.replaceState(null, '', '#/'); hud(); } },
+      leave: id => { if (cur && cur.place === id) { closeSheet(); if (location.hash.startsWith('#/place/')) history.replaceState(null, '', '#/island'); hud(); } },
       question: key => openQuestion(key), mover: info => openMover(info), unfollow: () => { if (sheet.classList.contains('mover')) closeSheet(); }, challenge: id => { const ch = chOf(id); if (ch) location.hash = doHref(ch); }, report: at => { if (location.hash !== at) location.hash = at; setTimeout(() => openBreak(true), 0); }, ask: id => openPlace(id, 'ask'), job: need => openJob(need), entry: id => openEntry(id), interact: () => foldHero() });
     loading(false); map.setState(islandState(), false); idle(preload);
     /* the first minute: a first visit to the island opens on a wide shot and comes down to it, and the hero rises after */
-    if (!S.seen && (!location.hash || location.hash === '#/') && !still()) { map.intro(); $('hero').classList.add('intro'); }
+    if (!S.seen && location.hash === '#/island' && !still()) { map.intro(); $('hero').classList.add('intro'); }
     if (!S.seen) { S.seen = true; save(); }
     return map;
   }));
@@ -380,7 +382,7 @@ export function start() {
     if (map) { if (!part) map.focus(id, { center: quick }); map.select(id, part); }
     /* the address says where you are: a place picked on the island is written into it (without going anywhere) */
     const at = '#/place/' + id + (part ? '/' + part : '');
-    if (!step && /^#?\/?$|^#\/(place|explore)/.test(location.hash) && location.hash !== at && !location.hash.startsWith(at + '/')) history.pushState(null, '', at);
+    if (!step && /^#\/(place|explore|island)/.test(location.hash) && location.hash !== at && !location.hash.startsWith(at + '/')) history.pushState(null, '', at);
     $('hero').classList.add('away'); drawPlace(); if (quick) drawInsp(); hud(); if (map) map.setState(islandState(), false);
   }
   function drawPlace() {
@@ -466,7 +468,7 @@ export function start() {
     if (e.target.closest('.player')) return;   /* the player handles its own clicks */
     const fg = e.target.closest('[data-fgo]'); if (fg) { sheet.classList.remove('mover'); map && map.unfollow(); const [k, v] = [fg.dataset.fgo, fg.dataset.v];
       if (k === 'open') openChallenge(chOf(v)); else if (k === 'job') openJob(v); else if (k === 'q') openQuestion(v); else if (k === 'report') { location.hash = v; setTimeout(() => openBreak(true), 0); } else openPlace(v); return; }
-    if (e.target.closest('[data-close]')) { closeSheet(); if (location.hash !== '#/ecosystem') { map && map.overview(); if (location.hash.startsWith('#/place/')) history.replaceState(null, '', '#/'); } return; }
+    if (e.target.closest('[data-close]')) { closeSheet(); if (location.hash !== '#/ecosystem') { map && map.overview(); if (location.hash.startsWith('#/place/')) history.replaceState(null, '', '#/island'); } return; }
     const d = e.target.closest('[data-door]'); if (d) { cur.tab = d.dataset.door; drawPlace(); return; }
     /* going closer from the card is the same move as zooming in; a tool of the open factory is selected in place */
     if (e.target.closest('[data-deeper]')) { const to = deeperOf(cur.place, cur.part); if (to) enter(to); return; }
@@ -564,7 +566,7 @@ export function start() {
     $('placeCanvas').hidden = $('placeLabels').hidden = false; pui.hidden = false; showStage(true); document.body.classList.add('immersive');
     loading(true); lastPlace = id;
     return Promise.all([withFrame(), ensureDc()]).then(([, d]) => {
-      dcFrame = frameOf(pui, { up: { href: '#/', label: t('place.back') }, path: [{ href: '#/', label: t('place.back') }, { label: t('map.' + id + '.t') }],
+      dcFrame = frameOf(pui, { up: { href: '#/island', label: t('place.back') }, path: [{ href: '#/island', label: t('place.back') }, { label: t('map.' + id + '.t') }],
         rail: { label: t('place.levels'), items: LEVELS.map(k => ({ id: k, label: t('place.dc.' + k + '.t'), size: sizeOf(k) })) }, onRail: k => d.go(LEVELS.indexOf(k)), onLook: drawDc, scroll: true });
       pui.onclick = e => { const b = e.target.closest('[data-lvgo]'); if (b) d.go(+b.dataset.lvgo); const sk = e.target.closest('[data-seek]'); if (sk) return dcSeek(sk.dataset.seek); const h = e.target.closest('[data-hl]'); if (h) d.mark(h.dataset.hl); };
       pui.onpointerover = e => { const h = e.target.closest('[data-hl]'); d.mark(h ? h.dataset.hl : dcHold()); };
@@ -608,7 +610,7 @@ export function start() {
     $('flyCanvas').hidden = $('flyLabels').hidden = false; fui.hidden = false; showStage(true); document.body.classList.add('immersive');
     loading(true); lastPlace = 'phones';
     return Promise.all([withFrame(), ensurePh()]).then(([, d]) => {
-      phFrame = frameOf(fui, { up: { href: '#/', label: t('place.back') }, path: [{ href: '#/', label: t('place.back') }, { label: t('map.phones.t') }],
+      phFrame = frameOf(fui, { up: { href: '#/island', label: t('place.back') }, path: [{ href: '#/island', label: t('place.back') }, { label: t('map.phones.t') }],
         rail: { label: t('place.levels'), items: PH.LEVELS.map(k => ({ id: k, label: t('place.phone.' + k + '.t'), size: sizeOf(PH.DEPTH[k] === 'phone' ? 'handset' : PH.DEPTH[k]) })) }, onRail: k => d.go(PH.LEVELS.indexOf(k)), onLook: drawPh, scroll: true });
       fui.onclick = e => { const b = e.target.closest('[data-lvgo]'); if (b) d.go(+b.dataset.lvgo); const sk = e.target.closest('[data-seek]'); if (sk) return phSeek(sk.dataset.seek); const h = e.target.closest('[data-hl]'); if (h) d.mark(h.dataset.hl); };
       fui.onpointerover = e => { const h = e.target.closest('[data-hl]'); d.mark(h ? h.dataset.hl : phHold()); };
@@ -642,7 +644,7 @@ export function start() {
     $('carCanvas').hidden = $('carLabels').hidden = false; kui.hidden = false; showStage(true); document.body.classList.add('immersive');
     loading(true); lastPlace = 'cars';
     return Promise.all([withFrame(), ensureCa()]).then(([, d]) => {
-      caFrame = frameOf(kui, { up: { href: '#/', label: t('place.back') }, path: [{ href: '#/', label: t('place.back') }, { label: t('map.cars.t') }],
+      caFrame = frameOf(kui, { up: { href: '#/island', label: t('place.back') }, path: [{ href: '#/island', label: t('place.back') }, { label: t('map.cars.t') }],
         rail: { label: t('place.levels'), items: CA.LEVELS.map(k => ({ id: k, label: t('place.car.' + k + '.t'), size: sizeOf(CA.SIZE[k]) })) }, onRail: k => d.go(CA.LEVELS.indexOf(k)), onLook: drawCa, scroll: true });
       kui.onclick = e => { const b = e.target.closest('[data-lvgo]'); if (b) d.go(+b.dataset.lvgo); const h = e.target.closest('[data-hl]'); if (h) d.mark(h.dataset.hl); };
       kui.onpointerover = e => { const h = e.target.closest('[data-hl]'); d.mark(h ? h.dataset.hl : null); };
@@ -687,7 +689,7 @@ export function start() {
        stages of the loop (In use is the dive, at this level) */
     chipFrame.dock.innerHTML = lineHtml(kicker, line, CHIP_ASK[r], aroundRow(
       r ? '<button type="button" class="chipb" data-key="back" data-rowgo="' + (r - 1) + '">↑ ' + esc(nm(ROWS[r - 1].dive)) + '</button>' : '',
-      last ? '<a class="chipb" href="#/">' + esc(t('chipx.back')) + '</a>' : '<button type="button" class="chipb" data-key="next" data-in data-inname="' + esc(nm(ROWS[r + 1].dive)) + '" data-rowgo="' + (r + 1) + '">↓ ' + esc(nm(ROWS[r + 1].dive)) + '</button>',
+      last ? '<a class="chipb" href="#/island">' + esc(t('chipx.back')) + '</a>' : '<button type="button" class="chipb" data-key="next" data-in data-inname="' + esc(nm(ROWS[r + 1].dive)) + '" data-rowgo="' + (r + 1) + '">↓ ' + esc(nm(ROWS[r + 1].dive)) + '</button>',
       '<a class="chipb" href="#/line/' + rowStep(r) + '">' + esc(t('chipx.onLine', { steps: nm(rowStep(r)) })) + '</a>')).replace('<div class="nav">', yours + '<div class="nav">');
   }
   function showChip(row) {
@@ -698,7 +700,7 @@ export function start() {
     const want = chipRow;   /* the chip may report its first row before the frame is ready */
     lastPlace = 'fab';
     return Promise.all([withFrame(), ensureChip()]).then(([, c]) => {
-      chipFrame = frameOf(cui, { up: { href: '#/place/fab', label: t('map.fab.t') }, path: [{ href: '#/', label: t('place.back') }, { href: '#/place/fab', label: t('map.fab.t') }, { label: t('chipx.title') }],
+      chipFrame = frameOf(cui, { up: { href: '#/place/fab', label: t('map.fab.t') }, path: [{ href: '#/island', label: t('place.back') }, { href: '#/place/fab', label: t('map.fab.t') }, { label: t('chipx.title') }],
         rail: { label: t('place.levels'), items: ROWS.map(x => ({ id: x.dive, label: t('depth.' + x.dive + '.name'), size: sizeOf(x.dive) })) },
         onRail: d => c.go(ROWS.findIndex(x => x.dive === d)), onLook: drawChip });
       cui.onclick = e => { const b = e.target.closest('[data-rowgo]'); if (b) c.go(+b.dataset.rowgo); };
@@ -893,7 +895,7 @@ export function start() {
     const [ar0, ar1] = flatKind === 'dive' ? ['↑ ', '↓ '] : ['← ', '→ '], nm = d => t('depth.' + d + '.name');
     /* along (the line, the studio): the next step is marked data-along, and the frame shows it on the picture too */
     const al = flatKind === 'dive' ? '' : ' data-along';
-    const end = { dive: '<a class="chipb" href="#/">' + esc(t('chipx.back')) + '</a>', line: '<a class="chipb" data-along href="#/place/port">' + esc(t('line.end')) + '</a>', bench: '<a class="chipb" data-along href="#/line/print">' + esc(t('bench.toFab')) + '</a>' }[flatKind];
+    const end = { dive: '<a class="chipb" href="#/island">' + esc(t('chipx.back')) + '</a>', line: '<a class="chipb" data-along href="#/place/port">' + esc(t('line.end')) + '</a>', bench: '<a class="chipb" data-along href="#/line/print">' + esc(t('bench.toFab')) + '</a>' }[flatKind];
     /* on the line, a station with an inside: the way into it (the machine, or what it makes), on the picture as Go inside */
     const dv = flatKind === 'line' && (DiveData.DIVES[id] || [])[0], inName = dv && (dv[1] === 'scanner' ? cap1(t('part.' + DiveData.partWord(id, DiveData.DIVE_PART[id]))) : nm(dv[1])),
       inHtml = dv ? '<a class="chipb" data-in data-inname="' + esc(inName) + '" href="' + esc(lineIn(id)) + '">↓ ' + esc(inName) + '</a>' : '';
@@ -949,7 +951,7 @@ export function start() {
       /* the bench draws your design: the last you won, else the first job's */
       if (kind === 'bench') { const Y = Game.yourDesign(S); DS.setDesign(Y ? Y.B : Game.checkDesign('half', S.codes.half || Game.starter('half'))); }
       const L = levelsOf(kind);
-      diveFrame = frameOf(vui, { up: { href: F.up, label: t(F.upWord) }, path: [{ href: '#/', label: t('place.back') }, { href: F.up, label: t(F.upWord) }, { label: t(F.title) }],
+      diveFrame = frameOf(vui, { up: { href: F.up, label: t(F.upWord) }, path: [{ href: '#/island', label: t('place.back') }, { href: F.up, label: t(F.upWord) }, { label: t(F.title) }],
         rail: { label: t('place.levels'), items: L.map(k => ({ id: k, label: t('depth.' + k + '.name'), size: kind === 'dive' ? sizeOf(k) : null })) },
         onRail: k => w.flyTo(WE.IDS.indexOf(k)), onLook: () => { if (benchCh) { benchCh = null; const dk = diveFrame.dock; dk.classList.remove('benchdock'); dk.onclick = null; dk.oninput = null; } drawDive(); } }); watchDock();
       /* the data centre's dive wears the lens of the energy puzzle: Follow the joule */
@@ -1008,7 +1010,7 @@ export function start() {
       const wd = Wdata.ROUTES[world] ? world : (SUP && SUP.world) || 'datacentre';
       SUP = { world: wd, step: 0, site: null, closed: [], back };
       const r = Wdata.ROUTES[wd];
-      diveFrame = frameOf(vui, { up: { href: '#/place/' + back, label: t('map.' + back + '.t') }, path: [{ href: '#/', label: t('place.back') }, { href: '#/place/' + back, label: t('map.' + back + '.t') }, { label: t('page.ecosystem.map') }],
+      diveFrame = frameOf(vui, { up: { href: '#/place/' + back, label: t('map.' + back + '.t') }, path: [{ href: '#/island', label: t('place.back') }, { href: '#/place/' + back, label: t('map.' + back + '.t') }, { label: t('page.ecosystem.map') }],
         rail: { label: t('map.routes'), items: r.map(st => ({ id: st.id, label: t('route.step.' + st.id) })) },
         onRail: id => supplyStep(Wdata.ROUTES[SUP.world].findIndex(st => st.id === id)), onLook: drawSupply }); watchDock();
       vui.onclick = e => {
@@ -1039,7 +1041,7 @@ export function start() {
     loading(true); lastPlace = 'datacentre';
     return Promise.all([withFrame(), ensureBoard(), import('./story.js'), import('./stories.js')]).then(([, b, St, Sd]) => {
       loading(false); b.resume(); const data = Sd.boardStory();
-      const fr = boardFrame = frameOf(bui, { up: { href: '#/place/datacentre/4', label: t('board.up') }, path: [{ href: '#/', label: t('place.back') }, { href: '#/place/datacentre/4', label: t('map.datacentre.t') }, { label: t('place.dc.board.t') }],
+      const fr = boardFrame = frameOf(bui, { up: { href: '#/place/datacentre/4', label: t('board.up') }, path: [{ href: '#/island', label: t('place.back') }, { href: '#/place/datacentre/4', label: t('map.datacentre.t') }, { label: t('place.dc.board.t') }],
         rail: { label: t('place.levels'), items: LEVELS.map(k => ({ id: k, label: t('place.dc.' + k + '.t'), size: sizeOf(k) })) },
         onRail: k => { location.hash = k === 'chip' ? '#/dive/chip' : k === 'board' ? '#/board' : '#/place/datacentre/' + LEVELS.indexOf(k); }, onLook: () => story && story.go(story.at) });
       fr.rail('board', LEVELS.indexOf('board') / (LEVELS.length - 1)); fr.level('board');
@@ -1057,6 +1059,21 @@ export function start() {
     ['mapCanvas', 'mapLabels', 'placeCanvas', 'placeLabels', 'chipCanvas', 'chipLabels'].forEach(k => { $(k).hidden = true; });
     hidePh(); hideCa();
     document.body.classList.remove('immersive'); page.hidden = true; hideL3(); showStage(false);
+  }
+  /* ---- the map, the first page (#/, src/v2/home.js): a wafer leaving the fab, toys, the first things to try, and every
+     station of the lab joined round a chip's life. Nothing 3D is made or drawn here: the island (#/island) is one way in,
+     made when it is first visited ---- */
+  const homeEl = $('home');
+  let home = null;
+  function showHome() {
+    $('diveCanvas').hidden = true; vui.hidden = true; dive && dive.stop(); hide3d(); $('flatLabels').hidden = true; if (flatWords) flatWords.clear();
+    hideBoard(); document.body.classList.remove('immersive');
+    $('chipCanvas').hidden = $('chipLabels').hidden = true; cui.hidden = true; chip && chip.pause();
+    $('placeCanvas').hidden = $('placeLabels').hidden = true; pui.hidden = true; dc && dc.pause(); hidePh(); hideCa();
+    $('mapCanvas').hidden = $('mapLabels').hidden = true; $('hero').hidden = true; $('outbtn').hidden = true; lensbar.hidden = true; showStage(false); if (map) map.pause();
+    if (!sheet.hidden) closeSheet(); loading(false);
+    if (!home) home = createHome(homeEl, { challenges: Game.CHALLENGES, chOf, titleOf, doHref, doHome: Way.doHome, sizeOf, sizeWords, still });
+    home.show(); return Promise.resolve();
   }
   function showMap(from) {
     $('diveCanvas').hidden = true; vui.hidden = true; dive && dive.stop(); hide3d(); $('flatLabels').hidden = true; if (flatWords) flatWords.clear();
@@ -1368,7 +1385,7 @@ export function start() {
      Going between views is never a cut: deeper zooms in, higher zooms out, the Turn turns, along slides. */
   const partsOf = h => (h.replace(/^#\/?/, '') || '').split('/').filter(Boolean);
   const doPlace = ch => (ch && !ch.need && ch.kind !== 'break' && ch.kind !== 'design' ? Way.doHome(ch) : null);
-  const viewOf = p => { const k = p[0]; if (k === 'ask') return viewOf(partsOf(Game.viewOfDepth(p[2] || 'chip')));
+  const viewOf = p => { const k = p[0]; if (!k || k === 'home') return ['home', -1]; if (k === 'ask') return viewOf(partsOf(Game.viewOfDepth(p[2] || 'chip')));
     if (k === 'do') { const h = doPlace(chOf(decodeURIComponent(p[1] || ''))); return h ? viewOf(partsOf(h)) : ['map', 0]; }
     if (k === 'dive') { const w = p[2] || Game.DIVE_WORLD[p[1]] || 'datacentre'; if (w === 'datacentre') return ['dive', 4]; const i = Math.max(0, ['phone', 'phoneboard', 'soc', 'car', 'ecu', 'mcu', 'scanner', 'wafer', 'die'].indexOf(p[1]) % 3); return ['dive:' + w, Game.DIVE_WORLD[p[1]] ? 1 + i : 4]; }
     if (k === 'supply') return ['supply', 0];
@@ -1390,10 +1407,11 @@ export function start() {
   const portalAt = p => { const r = document.documentElement.style; if (p && p.x > 0 && p.x < 1 && p.y > 0 && p.y < 1) { r.setProperty('--vx', (p.x * 100).toFixed(1) + '%'); r.setProperty('--vy', (p.y * 100).toFixed(1) + '%'); } else { r.removeProperty('--vx'); r.removeProperty('--vy'); } };
   sheet.addEventListener('click', e => { const a = e.target.closest('a[href^="#/"]'); if (!a || viewOf(partsOf(a.getAttribute('href')))[0] === 'map') return; e.preventDefault(); e.stopPropagation(); enter(a.getAttribute('href')); }, true);
   function show(parts, from) {
-    const k = parts[0] || 'explore';
+    const k = parts[0] || 'home';
     /* a question at a level already in view: no need to make the view again, only the dock changes */
     if (k === 'ask' && parts[1] && parts[2]) { const at = Game.viewOfDepth(parts[2]); if (at === shownAt && !from) { askStop(parts[1], parts[2]); return Promise.resolve(); } return show(partsOf(at), from).then(() => askStop(parts[1], parts[2])); }
     shownAt = '#/' + parts.join('/');
+    if (k === 'home') return showHome();
     if (k === 'board') return showBoard();
     if (k === 'dive') return showDive(parts[1], parts[2]);
     if (k === 'supply') return showSupply(parts[1]);
@@ -1419,10 +1437,11 @@ export function start() {
     if (k === 'w') { if (parts[1]) showWorld(parts[1], parts[2], parts[3]); else showWorlds(); }
     if (k === 'whatif') return showMap(from).then(() => showWhatif(parts[1]));
     if (k === 'machines') showMachines(parts[1]);
-    return showMap(from).then(() => { if (k === 'ecosystem') showEcosystem(); else if (k === 'explore' && cur && !sheet.hidden) { closeSheet(); map && map.overview(); } });
+    return showMap(from).then(() => { if (k === 'ecosystem') showEcosystem(); else if ((k === 'island' || k === 'explore') && cur && !sheet.hidden) { closeSheet(); map && map.overview(); } });
   }
   function route() {
-    const parts = partsOf(location.hash), k = parts[0] || 'explore';
+    const parts = partsOf(location.hash), k = parts[0] || 'home';
+    if (k !== 'home' && home) home.hide();
     /* the cell you came from and the one you are in: a seam between them may raise its leak */
     { const to = Way.whereOf(location.hash); hideSeam(); crossed(seamFrom, to); seamFrom = to; }
     /* a bet's wafer or chip stands in the scene only while its challenge is open */
