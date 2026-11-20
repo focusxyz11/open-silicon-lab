@@ -1226,7 +1226,8 @@ export function start() {
     $('placeCanvas').hidden = $('placeLabels').hidden = true; pui.hidden = true; dc && dc.pause(); hidePh(); hideCa(); hideSw();
     $('mapCanvas').hidden = $('mapLabels').hidden = true; $('hero').hidden = true; $('outbtn').hidden = true; lensbar.hidden = true; showStage(false); if (map) map.pause();
     if (!sheet.hidden) closeSheet(); loading(false);
-    if (!home) home = createHome(homeEl, { challenges: Game.CHALLENGES, chOf, titleOf, doHref, doHome: Way.doHome, sizeOf, sizeWords, still });
+    if (!home) home = createHome(homeEl, { challenges: Game.CHALLENGES, chOf, titleOf, doHref, doHome: Way.doHome, sizeOf, sizeWords, still,
+      done: () => S.done, exps: Exp.EXPERIMENTS.map(x => ({ id: x.id, world: x.world, ask: Read.askOf(x) })) });
     home.show(); return Promise.resolve();
   }
   function showMap(from) {

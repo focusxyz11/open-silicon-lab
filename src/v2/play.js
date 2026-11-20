@@ -8,7 +8,10 @@
      bet     say where you think the balance is, then turn two dials until three primitives meet (src/engines/bet.js).
    A win says which question it opens (a challenge is where a question starts), and where the work could join the
    community's ledger, a slip gives the way in (src/v2/commons.js).
-   play(el, ch, ctx) draws into el; ctx: { state, save(), done(ch), back(), open(challenge), startChip() }. */
+   play(el, ch, ctx) draws into el; ctx: { state, save(), done(ch), back(), open(challenge), startChip() }.
+   Do mode, in the new frame (?frame=2, src/v2/frame2.js, docs/LABS.md): the player says what the stage shows. A lab
+   declares its own instrument and goal in its HTML (data-f2); for one that declares no goal, its first goal box is the
+   goal; the kinds with no picture of their own (PLACE) are played on the place, which stays the picture. */
 import { t } from '../core/i18n.js';
 import { CLOCKS, SIDES, LOADS, REUSES, MEMS, GENS, x2 } from '../engines/chip.js';
 import { MISSIONS, MARGINS, PROTECT, normalLife } from '../engines/life.js';
@@ -23,10 +26,14 @@ import { WAFER as SCENE_WAFER } from '../engines/chip.js';
 import { glyph } from './field.js';
 import { LABS } from './labs/index.js';
 import { patch } from './patch.js';
+import { ON as F2 } from './frame2.js';
 
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 /* the gates a description can use, and the one a tap turns each into */
 const OPS = { '&': 'and', '|': 'or', '^': 'xor' };
+/* the kinds whose picture is the place they are played in (Do mode): your chip's settings and its life change what the
+   place holds, and a design's drawings, written or evolved, are the bench's */
+const PLACE = ['chip', 'life', 'design', 'evolve'];
 const MAX = { clock: CLOCKS.length - 1, gen: GENS - 1, size: SIDES.length - 1, load: LOADS.length - 1, reuse: REUSES.length - 1, mem: MEMS.length - 1 };
 const pctShare = v => v >= 0.01 ? t('life.share.pct', { v: (v * 100).toFixed(v >= 0.1 ? 0 : 1) }) : t('life.share.ppm', { v: v * 1e6 >= 10 ? Math.round(v * 1e6) : (v * 1e6).toPrecision(2) });
 /* a gauge's value in words */
@@ -90,6 +97,8 @@ export function play(el, ch, ctx) {
     h += '<div class="row"><button type="button" class="btn primary" data-check>' + esc(t('game.check')) + '</button>' + (aiProposal(ch.p) ? '<button type="button" class="btn" data-ai>' + esc(t('game.askAi')) + '</button>' : '') + '<button type="button" class="btn ghost" data-restart>' + esc(t('game.restart')) + '</button></div>';
     }
     if (view.ai) h += '<blockquote class="aiq"><span class="kicker">' + esc(t('game.aiSays')) + '</span>' + esc(t('build.agent.' + ch.p)) + '<span class="small muted">' + esc(t('game.aiNote')) + '</span></blockquote>';
+    /* in Do mode the table's rows right are the goal, a meter across the picture (the bench draws the design) */
+    if (F2 && B && !B.errs.length && B.total) h += '<div class="goalbox' + (B.ok ? ' ok' : '') + '" data-f2="goal"><div class="gauge' + (B.ok ? ' ok' : '') + '"><span class="gl">' + esc(t('frame2.do.rows')) + '</span><span class="gv">' + esc(t('evolve.ui.ofV', { a: B.total - B.bad, b: B.total })) + '</span><span class="gbar"><span style="width:' + Math.round((B.total - B.bad) / B.total * 100) + '%"></span></span></div></div>';
     if (B) {
       if (B.errs.length) h += '<ul class="errs">' + B.errs.map(e => '<li>' + esc(t('design.err.' + e.k, { l: e.l, n: e.n || '' })) + '</li>').join('') + '</ul>';
       else {
@@ -153,9 +162,11 @@ export function play(el, ch, ctx) {
     const C = spotCase(spotCode(S)), letters = ['A', 'B', 'C', 'D'], pat = v => C.ins.map(i => v[i]).join(''); /* i18n-ok: the copies' letters */
     let h = head() + '<p class="small">' + esc(t('game.spot.d', { tests: SPOT.tests })) + '</p><p class="yours"><span class="kicker">' + esc(t(C.yours ? 'game.spot.yours' : 'game.spot.lab')) + '</span>' + esc(t(C.yours ? 'game.spot.yoursD' : 'game.spot.labD')) + '</p>';
     h += '<p class="kicker">' + esc(t('game.spot.run', { left: SPOT.tests - view.tests.length })) + '</p><div class="chips pats">' + C.rows.map((r, i) => '<button type="button" class="chipb mono" data-pat="' + i + '"' + (view.tests.includes(i) || view.tests.length >= SPOT.tests ? ' disabled' : '') + ' title="' + esc(C.ins.join(' ')) + '">' + esc(pat(r.v)) + '</button>').join('') + '</div>';
+    /* in Do mode the four copies' answers are the instrument, there from the start: a row for each pattern you may run */
+    const wait = F2 ? Array.from({ length: SPOT.tests - view.tests.length }, () => '<tr class="spotwait"><td class="mono">' + C.ins.map(() => '·').join('') + '</td><td></td>' + letters.map(() => '<td></td>').join('') + '</tr>').join('') : '';
+    if (view.tests.length || F2) h += '<div class="tt' + (F2 ? ' spotinst" data-f2="instrument' : '') + '"><table><thead><tr><th>' + esc(C.ins.join(' ')) + '</th><th>' + esc(t('game.spot.should')) + '</th>' + letters.map(l => '<th>' + l + '</th>').join('') + '</tr></thead><tbody>' +
+        view.tests.map(i => '<tr><td class="mono">' + esc(pat(C.rows[i].v)) + '</td><td class="mono">' + esc(C.outs.map(o => C.rows[i].e[o]).join('')) + '</td>' + letters.map((l, k) => '<td class="mono">' + esc(C.outs.map(o => spotAnswer(C, k, i)[o]).join('')) + '</td>').join('') + '</tr>').join('') + wait + '</tbody></table><p class="small muted">' + esc(t('game.spot.cols', { outs: C.outs.join(' ') })) + '</p></div>';
     if (view.tests.length) {
-      h += '<div class="tt"><table><thead><tr><th>' + esc(C.ins.join(' ')) + '</th><th>' + esc(t('game.spot.should')) + '</th>' + letters.map(l => '<th>' + l + '</th>').join('') + '</tr></thead><tbody>' +
-        view.tests.map(i => '<tr><td class="mono">' + esc(pat(C.rows[i].v)) + '</td><td class="mono">' + esc(C.outs.map(o => C.rows[i].e[o]).join('')) + '</td>' + letters.map((l, k) => '<td class="mono">' + esc(C.outs.map(o => spotAnswer(C, k, i)[o]).join('')) + '</td>').join('') + '</tr>').join('') + '</tbody></table><p class="small muted">' + esc(t('game.spot.cols', { outs: C.outs.join(' ') })) + '</p></div>';
       h += '<p class="kicker">' + esc(t('game.spot.which')) + '</p><div class="chips">' + letters.map((l, k) => '<button type="button" class="chipb" data-guess="' + k + '">' + l + '</button>').join('') + '</div>';
     }
     if (view.wrong != null) h += '<p class="small bad">' + esc(t('game.spot.fine', { chip: letters[view.wrong] })) + '</p>';
@@ -208,7 +219,7 @@ export function play(el, ch, ctx) {
       { k: 'cost', ok: C.close, v: times(C.rel), target: t('bet.gCost', { v: Bet.GOAL.maxRel }), f: C.ok || C.close ? 1 : Math.min(1, Bet.GOAL.maxRel / C.rel) }];
     h += '<div class="goalbox' + (C.ok ? ' ok' : '') + '"><p class="kicker">' + esc(t(C.ok ? 'game.reached' : 'game.goalNow')) + '</p>' + gs.map(g => '<div class="gauge' + (g.ok ? ' ok' : '') + '"><span class="gl">' + esc(t('bet.g.' + g.k)) + '</span><span class="gv">' + esc(g.v) + ' <span class="muted">' + esc(g.target) + '</span></span><span class="gbar"><span style="width:' + (g.f * 100).toFixed(0) + '%"></span></span></div>').join('') + '</div>';
     /* the wafer and the curve, side by side where there is room */
-    h += '<div class="betview"><figure class="wafer"><canvas class="betwafer" width="320" height="320" role="img" aria-label="' + esc(t('bet.waferAria', { chips: M.chips, good: M.good })) + '"></canvas><figcaption class="small muted">' + esc(t('bet.counts', { chips: M.chips, good: M.good })) + '</figcaption></figure>' + curveSvg(cur, low, b) + '</div>';
+    h += '<div class="betview" data-f2="instrument"><figure class="wafer"><canvas class="betwafer" width="320" height="320" role="img" aria-label="' + esc(t('bet.waferAria', { chips: M.chips, good: M.good })) + '"></canvas><figcaption class="small muted">' + esc(t('bet.counts', { chips: M.chips, good: M.good })) + '</figcaption></figure>' + curveSvg(cur, low, b) + '</div>';
     h += '<label class="lab" for="bet-size"><b>' + esc(t('bet.size')) + '</b> <output>' + esc(million(b.size)) + '</output></label><input type="range" id="bet-size" data-bet="size" min="0" max="' + (Bet.SIZES.length - 1) + '" step="1" value="' + b.size + '">';
     h += '<label class="lab" for="bet-clean"><b>' + esc(t('bet.clean')) + '</b> <output>' + esc(t('bet.cleanV', { d: Bet.CLEAN[b.clean] })) + '</output></label><input type="range" id="bet-clean" data-bet="clean" min="0" max="' + (Bet.CLEAN.length - 1) + '" step="1" value="' + b.clean + '">';
     h += '<p class="readout small">' + esc(t('bet.readout', { wafer: times(M.wafer), cost: times(C.rel) })) + '</p>';
@@ -232,7 +243,7 @@ export function play(el, ch, ctx) {
       { k: 'ai', ok: C.ai, v: times(M.ai), target: t('bet.ox.gApp', { v: X.ai }), f: Math.min(1, M.ai / X.ai) },
       { k: 'size', ok: C.size, v: t('bet.ox.sizeV', { v: M.size }), target: t('bet.ox.gSize', { v: X.size }), f: C.size ? 1 : X.size / M.size }];
     h += '<div class="goalbox' + (C.ok ? ' ok' : '') + '"><p class="kicker">' + esc(t(C.ok ? 'game.reached' : 'game.goalNow')) + '</p>' + gs.map(g => '<div class="gauge' + (g.ok ? ' ok' : '') + '"><span class="gl">' + esc(t('bet.ox.g.' + g.k)) + '</span><span class="gv">' + esc(g.v) + ' <span class="muted">' + esc(g.target) + '</span></span><span class="gbar"><span style="width:' + (g.f * 100).toFixed(0) + '%"></span></span></div>').join('') + '</div>';
-    h += '<div class="betview">' + planSvg(M) + '<div class="races">' + ['app', 'ai'].map(k => race(k, M[k], X[k])).join('') + '<p class="small muted">' + esc(t('bet.ox.raceNote')) + '</p></div></div>';
+    h += '<div class="betview" data-f2="instrument">' + planSvg(M) + '<div class="races">' + ['app', 'ai'].map(k => race(k, M[k], X[k])).join('') + '<p class="small muted">' + esc(t('bet.ox.raceNote')) + '</p></div></div>';
     h += '<label class="lab" for="bet-ox"><b>' + esc(t('bet.ox.ox')) + '</b> <output>' + esc(M.r > 1 ? t('bet.ox.units', { n: M.r }) : t('bet.ox.noOx')) + '</output></label><input type="range" id="bet-ox" data-bet="ox" min="0" max="' + (Bet.OX.length - 1) + '" step="1" value="' + b.ox + '">';
     h += '<label class="lab" for="bet-hens"><b>' + esc(t('bet.ox.hens')) + '</b> <output>' + esc(t('bet.ox.hensV', { n: M.m })) + '</output></label><input type="range" id="bet-hens" data-bet="hens" min="0" max="' + (Bet.HENS.length - 1) + '" step="1" value="' + b.hens + '">';
     h += '<p class="small ' + (G[b.guess] === 'both' ? 'good' : 'hint') + '">' + esc(t(G[b.guess] === 'both' ? 'bet.ox.right' : 'bet.ox.off', { g: t('bet.ox.g.' + G[b.guess]) })) + '</p>';
@@ -331,7 +342,7 @@ export function play(el, ch, ctx) {
       { k: 'cost', ok: C.cheap, v: t('bet.pv.costV', { v: R.cost < 10 ? R.cost.toFixed(1) : Math.round(R.cost) }), target: t('bet.pv.gCost', { v: X.maxCost }), f: C.cheap ? 1 : X.maxCost / R.cost }];
     h += '<div class="goalbox' + (C.ok ? ' ok' : '') + '"><p class="kicker">' + esc(t(C.ok ? 'game.reached' : 'game.goalNow')) + '</p>' + gs.map(g => '<div class="gauge' + (g.ok ? ' ok' : '') + '"><span class="gl">' + esc(t('bet.pv.g.' + g.k)) + '</span><span class="gv">' + esc(g.v) + ' <span class="muted">' + esc(g.target) + '</span></span><span class="gbar"><span style="width:' + (g.f * 100).toFixed(0) + '%"></span></span></div>').join('') + '</div>';
     /* the chip, block by block: how rare its bug is, the chance it is still hidden, and the proof's price */
-    h += '<p class="kicker">' + esc(t('bet.pv.blocksK')) + '</p><div class="pblocks">' + R.blocks.map((B, i) => {
+    h += '<p class="kicker">' + esc(t('bet.pv.blocksK')) + '</p><div class="pblocks" data-f2="instrument">' + R.blocks.map((B, i) => {
       const st = B.proved ? 'proved' : B.hidden > 0.01 ? 'hidden' : 'found';
       return '<button type="button" class="pblock ' + st + '" data-prove="' + i + '" aria-pressed="' + B.proved + '"><span class="pn">' + (B.proved ? glyph('limit') : '') + esc(t('bet.pv.b.' + B.id)) + '</span>' +
         '<span class="pr small muted">' + esc(t('bet.pv.rare', { n: sup(Math.round(-Math.log10(B.p))) })) + '</span>' +
@@ -361,7 +372,7 @@ export function play(el, ch, ctx) {
     const gs = [{ k: 'answers', ok: C.many, v: xTimes(J.answers), target: t('bet.jv.gAnswers', { v: X.minAnswers }), f: Math.min(1, J.answers / X.minAnswers) },
       { k: 'energy', ok: C.held, v: xTimes(J.energy), target: t('bet.jv.gEnergy', { v: Math.round(X.maxEnergy * 100) }), f: C.held ? 1 : X.maxEnergy / J.energy }];
     h += '<div class="goalbox' + (C.ok ? ' ok' : '') + '"><p class="kicker">' + esc(t(C.ok ? 'game.reached' : 'game.goalNow')) + '</p>' + gs.map(g => '<div class="gauge' + (g.ok ? ' ok' : '') + '"><span class="gl">' + esc(t('bet.jv.g.' + g.k)) + '</span><span class="gv">' + esc(g.v) + ' <span class="muted">' + esc(g.target) + '</span></span><span class="gbar"><span style="width:' + (g.f * 100).toFixed(0) + '%"></span></span></div>').join('') + '</div>';
-    h += '<div class="betview">' + turbinesSvg(J) + pathSvg(b) + '</div>';
+    h += '<div class="betview" data-f2="instrument">' + turbinesSvg(J) + pathSvg(b) + '</div>';
     h += '<label class="lab" for="bet-eff"><b>' + esc(t('bet.jv.eff')) + '</b> <output>' + esc(t(b.eff ? 'bet.jv.effV' : 'bet.jv.eff0', { v: frac(J.e) })) + '</output></label><input type="range" id="bet-eff" data-bet="eff" min="0" max="' + (Bet.EFF.length - 1) + '" step="1" value="' + b.eff + '">';
     h += '<label class="lab" for="bet-cap"><b>' + esc(t('bet.jv.cap')) + '</b> <output>' + esc(isFinite(J.cap) ? t('bet.jv.capV', { v: J.cap }) : t('bet.jv.capNone')) + '</output></label><input type="range" id="bet-cap" data-bet="cap" min="0" max="' + (Bet.CAP.length - 1) + '" step="1" value="' + b.cap + '">';
     const J8 = Bet.jevons(3, Bet.CAP.length - 1);
@@ -469,7 +480,7 @@ export function play(el, ch, ctx) {
       { k: 'share', ok: C.works, v: t('gauge.pct', { v: Math.round(P.share * 100) }), target: t('bet.pc.gShare', { v: Math.round(X.minShare * 100) }), f: Math.min(1, P.share / X.minShare) }];
     h += '<div class="goalbox' + (C.ok ? ' ok' : '') + '"><p class="kicker">' + esc(t(C.ok ? 'game.reached' : 'game.goalNow')) + '</p>' + gs.map(g => '<div class="gauge' + (g.ok ? ' ok' : '') + '"><span class="gl">' + esc(t('bet.pc.g.' + g.k)) + '</span><span class="gv">' + esc(g.v) + ' <span class="muted">' + esc(g.target) + '</span></span><span class="gbar"><span style="width:' + (g.f * 100).toFixed(0) + '%"></span></span></div>').join('') + '</div>';
     const caught = P.state.filter(x => x === 'caught').length, missed = P.state.filter(x => x === 'missed').length;
-    h += '<div class="betview"><figure class="wafer"><canvas class="betwafer" width="320" height="320" role="img" aria-label="' + esc(t('bet.pc.waferAria', { n: P.cells.length, good: P.good, caught, missed })) + '"></canvas><figcaption class="small muted">' + esc(t('bet.pc.counts', { n: P.cells.length, good: P.good, caught, missed })) + '</figcaption></figure>' + packsSvg(P) + '</div>';
+    h += '<div class="betview" data-f2="instrument"><figure class="wafer"><canvas class="betwafer" width="320" height="320" role="img" aria-label="' + esc(t('bet.pc.waferAria', { n: P.cells.length, good: P.good, caught, missed })) + '"></canvas><figcaption class="small muted">' + esc(t('bet.pc.counts', { n: P.cells.length, good: P.good, caught, missed })) + '</figcaption></figure>' + packsSvg(P) + '</div>';
     h += '<label class="lab" for="bet-k"><b>' + esc(t('bet.pc.k')) + '</b> <output>' + esc(t(P.k === 1 ? 'bet.pc.one' : 'bet.pc.kV', { n: P.k, a: Math.round(Bet.LOGIC / P.k + (P.k > 1 ? Bet.LINK : 0)) })) + '</output></label><input type="range" id="bet-k" data-bet="k" min="0" max="' + (Bet.PIECES.length - 1) + '" step="1" value="' + b.k + '">';
     h += '<label class="lab" for="bet-test"><b>' + esc(t('bet.pc.test')) + '</b> <output>' + esc(t('bet.pc.t.' + Bet.TESTS[b.test])) + '</output></label><input type="range" id="bet-test" data-bet="test" min="0" max="' + (Bet.TESTS.length - 1) + '" step="1" value="' + b.test + '">';
     h += '<p class="small ' + (G[b.guess] === right ? 'good' : 'hint') + '">' + esc(t(G[b.guess] === right ? 'bet.pc.right' : 'bet.pc.off', { g: t('bet.pc.g.' + G[b.guess]), r: t('bet.pc.g.' + right) })) + '</p>';
@@ -493,9 +504,19 @@ export function play(el, ch, ctx) {
     const f = ch.kind === 'design' ? design : ch.kind === 'chip' ? chip : ch.kind === 'life' ? life : ch.kind === 'break' ? brk : ch.kind === 'bet' ? bet : lab ? lab.draw : spot;
     /* the card says which challenge it holds (data-ch), so whatever drives it never reads the card before it */
     const html = '<div class="player" data-ch="' + esc(ch.id) + '">' + f() + '</div>', old = el.firstElementChild;
-    if (!old || !old.classList.contains('player')) el.innerHTML = html;
+    if (F2) { const tpl = document.createElement('template'); tpl.innerHTML = html; const p = declare(tpl.content.firstElementChild);
+      if (!old || !old.classList.contains('player')) el.replaceChildren(p); else { old.dataset.ch = ch.id; patch(old, p); } }
+    else if (!old || !old.classList.contains('player')) el.innerHTML = html;
     else { old.dataset.ch = ch.id; const tpl = document.createElement('template'); tpl.innerHTML = html; patch(old, tpl.content.firstElementChild); }
     paintWafer(); betScene();
+  }
+  /* Do mode: what the stage shows, for what the HTML does not declare itself. A lab without a goal of its own has its
+     first goal box as the goal; a kind with no picture of its own is played on the place (data-f2="place" on the
+     player), and a lab can say so too, on any element of its HTML */
+  function declare(p) {
+    if (!p.querySelector('[data-f2="goal"]')) { const g = p.querySelector(':scope > .goalbox'); if (g) g.dataset.f2 = 'goal'; }
+    if (PLACE.includes(ch.kind) && !p.querySelector('[data-f2="instrument"]')) p.dataset.f2 = 'place';
+    return p;
   }
   /* feedback: what changed moves. A wrong answer shakes, a row that turned right flashes, a gauge that reached its
      target pops, a tapped gate bounces. Nothing moves with reduced motion. */

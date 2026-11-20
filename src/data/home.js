@@ -15,7 +15,9 @@
      things to try there: [href, word key]) and links (stations it is joined to across the map).
    - THREADS: the thirteen core questions (words home.q.<id>), each starting at one station (home) and running through
      a few others (path). Only one is shown at a time, never a list of them (CLAUDE.md).
-   - WAYS: five ways in, each lighting the lines and stations it is about. */
+   - WAYS: five ways in, each lighting the lines and stations it is about.
+   - PATHS: six ways through the lab by subject, each a few stops in order; NEW: what was added lately; INDEX: every
+     part of the lab by kind, so the first page leads to all of it, not only to the map. */
 
 export const MAP = { w: 1000, h: 650 };
 
@@ -74,21 +76,21 @@ export const LOOP_PATH = 'M' + D + ' 40 V590 H' + M + ' V40 Z';
 export const SCALE_PATH = 'M' + S + ' 100 V520';
 
 /* the thirteen core questions, each a thread through the map. One at a time. Words home.q.<id>, or the question's
-   own home where it already has one (word) */
+   own home where it already has one (word); world: its page (#/w/<world>, src/data/worlds.js), where it has one */
 export const THREADS = [
-  { id: 'perfect', word: 'field.perfect.q', home: 'layout', path: ['layout', 'etch', 'test', 'use'] },
-  { id: 'line', home: 'riscv', path: ['riscv', 'arch', 'lab', 'logic'] },
-  { id: 'moore', home: 'print', path: ['print', 'switch', 'pkg', 'lab'] },
+  { id: 'perfect', world: 'fail', word: 'field.perfect.q', home: 'layout', path: ['layout', 'etch', 'test', 'use'] },
+  { id: 'line', world: 'divide', home: 'riscv', path: ['riscv', 'arch', 'lab', 'logic'] },
+  { id: 'moore', world: 'scale', home: 'print', path: ['print', 'switch', 'pkg', 'lab'] },
   { id: 'geo', home: 'pkg', path: ['pkg', 'block', 'rack', 'building'] },
   { id: 'vn', home: 'check', path: ['check', 'test', 'switch', 'rack'] },
   { id: 'sutton', home: 'need', path: ['need', 'arch', 'chip', 'use'] },
-  { id: 'dig', home: 'switch', path: ['switch', 'atom', 'masks', 'tape'] },
+  { id: 'dig', world: 'think', home: 'switch', path: ['switch', 'atom', 'masks', 'tape'] },
   { id: 'trust', home: 'ship', path: ['ship', 'test', 'riscv', 'masks'] },
   { id: 'eff', home: 'use', path: ['use', 'rack', 'building', 'need'] },
-  { id: 'copy', home: 'arch', path: ['arch', 'block', 'pkg', 'lab'] },
-  { id: 'nat', home: 'atom', path: ['atom', 'crystal', 'lab'] },
-  { id: 'human', home: 'lab', path: ['lab', 'need', 'arch', 'ship'] },
-  { id: 'physics', home: 'block', path: ['block', 'gate', 'switch', 'atom'] }
+  { id: 'copy', world: 'life', home: 'arch', path: ['arch', 'block', 'pkg', 'lab'] },
+  { id: 'nat', world: 'limit', home: 'atom', path: ['atom', 'crystal', 'lab'] },
+  { id: 'human', world: 'know', home: 'lab', path: ['lab', 'need', 'arch', 'ship'] },
+  { id: 'physics', world: 'strange', home: 'block', path: ['block', 'gate', 'switch', 'atom'] }
 ].map(x => Object.assign({ word: 'home.q.' + x.id }, x));
 
 /* five ways in, each a route on the map */
@@ -123,3 +125,37 @@ export const TOYS = {
   /* zooming from a hall to an atom, with the sizes the atlas keeps */
   zoom: { start: 'chip' }
 };
+
+/* six paths through the lab by subject, for a visitor who knows what they came for. Each stop is a station (st: its
+   view and its name), a challenge (ch: its title, played where it lives) or a page ([href, word]). The icon is a 24 x 24
+   stroke drawing. A path's progress is the challenges on it the visitor has finished */
+export const PATHS = [
+  { id: 'design', line: 'design', icon: 'M4 4h16v16H4zM8 8h3v3H8zM13 13h3v3h-3zM11 9.5h4v3.5M9.5 11v4h3.5',
+    stops: [{ page: ['#/place/studio/1', 'home.path.studio'] }, { ch: 'jobs' }, { ch: 'floor' }, { ch: 'maskof' }, { ch: 'ai-chip' }] },
+  { id: 'logic', line: 'design', icon: 'M3 8h5M3 16h5M8 4v16h4a8 8 0 0 0 0-16zM20 12h2',
+    stops: [{ st: 'gates' }, { ch: 'half' }, { ch: 'evolve' }, { ch: 'counter' }] },
+  { id: 'cpu', line: 'design', icon: 'M7 7h10v10H7zM10 3v4M14 3v4M10 17v4M14 17v4M3 10h4M3 14h4M17 10h4M17 14h4',
+    stops: [{ page: ['#/build/computer/core', 'build.need.core.t'] }, { page: ['#/build/computer/alu', 'build.need.alu.t'] }, { st: 'arch' }, { ch: 'oxen' }, { ch: 'fast' }] },
+  { id: 'ai', line: 'loop', icon: 'M5 6a2 2 0 1 0 0 .1M5 18a2 2 0 1 0 0 .1M12 12a2 2 0 1 0 0 .1M19 6a2 2 0 1 0 0 .1M19 18a2 2 0 1 0 0 .1M7 7l3.5 3.5M7 17l3.5-3.5M13.5 10.5L17 7M13.5 13.5L17 17',
+    stops: [{ page: ['#/place/datacentre/0', 'map.datacentre.t'] }, { ch: 'batch' }, { ch: 'prefill' }, { ch: 'chef' }, { ch: 'quantize' }] },
+  { id: 'fab', line: 'make', icon: 'M12 3a9 9 0 1 0 0 18a9 9 0 1 0 0-18M7 9h10M6 12h12M7 15h10M9 6v12M12 4v16M15 6v12',
+    stops: [{ st: 'crystal' }, { ch: 'crystal' }, { ch: 'litho-finest' }, { ch: 'etch' }, { ch: 'spot' }] },
+  { id: 'atom', line: 'scale', icon: 'M6 6a2 2 0 1 0 0 .1M18 6a2 2 0 1 0 0 .1M6 18a2 2 0 1 0 0 .1M18 18a2 2 0 1 0 0 .1M12 12a2.5 2.5 0 1 0 0 .1M8 6h8M6 8v8M18 8v8M8 18h8M8 8l2.3 2.3M16 16l-2.3-2.3',
+    stops: [{ st: 'chip' }, { st: 'switch' }, { ch: 'too-hot' }, { ch: 'grover' }] }
+];
+
+/* what was added to the lab lately, newest first: each leads to it (href, or ch: a challenge). Words home.new.<id>.t/.d */
+export const NEW = [
+  { id: 'studio', href: '#/place/studio/1' },
+  { id: 'bench', href: '#/bench/logic' },
+  { id: 'lenses', href: '#/dive/chip' },
+  { id: 'chef', ch: 'chef' }
+];
+
+/* every part of the lab by kind: the places on the island, the ways of looking, and the collections. Words
+   home.ix.<id>.t/.d, or the place's own name (map.<id>.t); count: what the entry says it holds, read when drawn */
+export const INDEX = [
+  { id: 'places', items: [['lab', '#/place/lab'], ['studio', '#/place/studio'], ['quarry', '#/place/quarry'], ['fab', '#/place/fab'], ['test', '#/place/test'], ['port', '#/place/port'], ['datacentre', '#/place/datacentre/0'], ['phones', '#/place/phones/0'], ['cars', '#/place/cars/0']].map(([id, href]) => ({ id, href, word: 'map.' + id + '.t' })) },
+  { id: 'views', items: [['island', '#/island'], ['dive', '#/dive/chip'], ['line', '#/line/crystal'], ['bench', '#/bench/need'], ['board', '#/board'], ['whatif', '#/whatif']].map(([id, href]) => ({ id, href })) },
+  { id: 'more', items: [['challenges', '#/challenges', 'challenges'], ['read', '#/read', 'experiments'], ['worlds', '#/w'], ['machines', '#/machines'], ['build', '#/build'], ['supply', '#/supply'], ['ecosystem', '#/ecosystem'], ['log', '#/log']].map(([id, href, count]) => ({ id, href, count })) }
+];

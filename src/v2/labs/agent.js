@@ -56,13 +56,13 @@ export default function lab(L) {
   function agentDesk() {
     const A = agentOf(), C = Agent.checkAgent(A), id = view.agc || (Agent.CASES.find(c => !A[c.id] || !Agent.score(c, A[c.id].decision, A[c.id].reason).ok) || Agent.CASES[0]).id, c = Agent.caseOf(id);
     view.agc = id; view.ag = view.ag || {};
-    let h = head() + '<div class="agprog"><p class="kicker">' + esc(t('agent.progress', { n: C.done, total: C.total })) + '</p><div class="agcases">' + Agent.CASES.map((x, i) => { const d = A[x.id], st = d ? (Agent.score(x, d.decision, d.reason).ok ? 'ok' : 'no') : '';
+    let h = head() + '<div class="agprog" data-f2="goal"><p class="kicker">' + esc(t('agent.progress', { n: C.done, total: C.total })) + '</p><div class="agcases">' + Agent.CASES.map((x, i) => { const d = A[x.id], st = d ? (Agent.score(x, d.decision, d.reason).ok ? 'ok' : 'no') : '';
       return '<button type="button" class="agcase ' + st + (x.id === id ? ' on' : '') + '" data-ag-case="' + x.id + '" aria-pressed="' + (x.id === id) + '"><span class="n">' + (i + 1) + '</span><span class="small">' + esc(t('agent.case.' + x.id + '.t')) + '</span></button>'; }).join('') + '</div></div>';
     const a = c.art, d = A[id];
     h += '<p class="kicker">' + esc(t('agent.caseN', { n: Agent.CASES.indexOf(c) + 1, area: t('agent.area.' + c.area) })) + '</p><h4 class="agt">' + esc(t('agent.case.' + id + '.t')) + '</h4>' +
       '<div class="say you"><span class="who small">' + esc(t('agent.you')) + '</span>' + esc(t('agent.case.' + id + '.ask')) + '</div>' +
       '<div class="say ai"><span class="who small">' + esc(t('agent.ai')) + '</span>' + esc(t('agent.case.' + id + '.says')) + (a.kind === 'tiny' || a.kind === 'cov' ? '<pre class="agcode mono">' + esc(a.code) + '</pre>' : '') + '</div>' +
-      '<div class="agtool">' + agentTool(c) + '</div>';
+      '<div class="agtool" data-f2="instrument">' + agentTool(c) + '</div>';
     if (!d || view.agRedo === id) {
       h += '<p class="kicker">' + esc(t('agent.decide')) + '</p><div class="chips"><button type="button" class="btn" data-ag-trust>' + esc(t('agent.trust')) + '</button><button type="button" class="btn" data-ag-reject aria-pressed="' + (view.agReject === id) + '">' + esc(t('agent.reject')) + '</button></div>';
       if (view.agReject === id) h += '<p class="small">' + esc(t('agent.why')) + '</p><div class="agreasons">' + [0, 1, 2, 3].map(i => '<button type="button" class="agr" data-ag-reason="' + i + '">' + esc(t('agent.case.' + id + '.r' + i)) + '</button>').join('') + '</div>';

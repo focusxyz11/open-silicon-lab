@@ -33,7 +33,7 @@ export default function lab(L) {
     const set = czSet(); if (!view.czS) { view.czS = CZ.pullStart(); view.czSeen = [view.czS]; }
     const st = view.czS, ph = st.phase || 'dip';
     let h = head() + '<ol class="czph">' + CZ.PULL_PHASES.map(p => '<li class="' + (p === ph ? 'on' : CZ.PULL_PHASES.indexOf(p) < CZ.PULL_PHASES.indexOf(ph) ? 'past' : '') + '">' + esc(t('cz.phase.' + p)) + '</li>').join('') + '</ol>';
-    h += '<div class="betview">' + czSvg(st) + '<div class="czread">' +
+    h += '<div class="betview" data-f2="instrument">' + czSvg(st) + '<div class="czread">' +
       [['d', t('cz.mm', { v: st.D < 20 ? st.D.toFixed(1) : Math.round(st.D) })], ['l', t('cz.mm', { v: Math.round(st.L) })], ['melt', t('cz.kg', { v: Math.round(st.melt) })], ['wafers', String(st.wafers || 0)]].map(([k2, v]) => '<span><span class="small muted">' + esc(t('cz.r.' + k2)) + '</span><b class="mono">' + esc(v) + '</b></span>').join('') +
       '<span class="wide"><span class="small muted">' + esc(t('cz.r.target')) + '</span><b class="mono">' + esc(t('cz.mm', { v: Math.round(st.target || CZ.pullTarget(set.pull, set.temp)) })) + '</b></span>' +
       '<span class="wide ' + (st.dislocations === 'none' ? 'good' : 'bad') + '"><b class="small">' + esc(t('cz.disl.' + (st.dislocations || 'none'))) + '</b></span></div></div>';

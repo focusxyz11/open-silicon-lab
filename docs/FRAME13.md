@@ -68,8 +68,8 @@ The first page (`src/data/home.js`) draws the thirteen as threads through its st
 
 - A visual language of its own for each lens, beyond lighting a thread: what *Geometry* or *Efficiency fuels use*
   repaints on a picture.
-- Playable models for the thinnest questions: *Beyond computation*, *Brain or copy*, *Whole beats parts*,
-  *Compute beats cleverness*, *Efficiency fuels use*, *Fight or use physics*, *Only humans*, *Trust without
+- Playable models for the thinnest questions (done: *Whole beats parts*, `flaky`; *Brain or copy*, `mortal`):
+  *Beyond computation*, *Compute beats cleverness*, *Efficiency fuels use*, *Fight or use physics*, *Only humans*, *Trust without
   inspection*.
 - Lenses in the factory line's and the studio's own pictures, and on the island.
 - The worlds made from the documents in `content/` (`#/w`), filed the old way, refiled under the thirteen.

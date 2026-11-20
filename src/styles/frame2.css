@@ -106,7 +106,10 @@ html.frame2 .f2open .f2more .nav { margin-top: 10px; }
 
 /* ---- the stage (Do, with a lab that declares its instrument): the instrument on the picture area, the goal across
    its top, the controls in the panel, the place hidden behind; where the address was, where you are ---- */
-html.frame2 .stage:has(> section.f2stage:not([hidden])) :is(.c3, .stage3d, .labels) { visibility: hidden !important; }
+/* the place behind is covered, not hidden: a 3D place that is not drawn on the screen while it still moves (a flight to
+   the next level) holds a slow screen's frames back for seconds; a cover under the panel lets it draw unseen */
+html.frame2 section.f2stage:not(.f2place)::before { content: ""; position: fixed; inset: 0; z-index: 1; background: var(--bg); pointer-events: auto; }
+html.frame2 .f2stage > .dockwrap { z-index: 2; }
 html.frame2 .f2stage > :is(.wayin, .wayon, .rail2, .crumbs2, .homebtn, .scale2, .joulebtn, .joule) { display: none !important; }
 /* nothing in the panel may hold the stage's fixed boxes inside it (a transform, a filter or a backdrop would) */
 html.frame2 .f2stage > .dockwrap { backdrop-filter: none; -webkit-backdrop-filter: none; background: var(--panel-solid); view-transition-name: none; animation: none; }
@@ -412,3 +415,83 @@ html.frame2 .page.f2rd .mach .f2rhead h1 { font-size: clamp(28px, calc(1.2vw + 1
 /* a name lifted or slid to keep clear of another: its stem still reaches its point */
 html.frame2 .lbl3.part3.f2apart::after { left: var(--f2sx) !important; bottom: calc(-1 * var(--f2sh)) !important; height: var(--f2sh) !important; }
 html.frame2 .lbl3.part3.f2apart.f2below::after { top: calc(-1 * var(--f2sh)) !important; bottom: auto !important; }
+/* ---- Do for every challenge (#274): the player says what the stage shows (src/v2/play.js, src/v2/frame2.js Do).
+   A lab's instrument on the stage, drawn to fill it; a challenge whose picture is the place keeps the place, its goal
+   across the top; a challenge met in the island's sheet is worn the same way. Kept apart from the rules above. ---- */
+/* the place as the picture (.f2stage.f2place): the stage keeps it, lit and moving, with its names (the stage's rule
+   above that hides the place leaves it be); the ways off it wait until Look */
+html.frame2 .f2stage > :is(.steps2, .corner) { display: none !important; }
+/* the bench as the place (a design, an evolving circuit): it keeps its square, moved down clear of the goal into the
+   room the steps leave (they wait until Look) */
+html.frame2 .stage:has(> section.f2stage.f2place:not([hidden])) .bsurf { visibility: visible; translate: 0 max(0px, calc(var(--f2-bgoal, 0px) - 44px)); }
+/* an instrument that is a drawing fills the stage, its words at a steady size */
+html.frame2 .f2stage figure[data-f2="instrument"] { display: flex; flex-direction: column; gap: 10px; }
+html.frame2 .f2stage figure[data-f2="instrument"] > svg { flex: 1 1 0; min-height: 0; width: 100%; height: 100%; max-height: none; }
+html.frame2 .f2stage [data-f2="instrument"] figcaption { font: var(--f2-small); }
+html.frame2 .f2stage .betview[data-f2="instrument"] { display: flex; flex-direction: row; align-items: stretch; gap: 18px; }
+html.frame2 .f2stage .betview[data-f2="instrument"] > * { flex: 1 1 0; min-width: 0; min-height: 0; margin: 0; display: flex; flex-direction: column; justify-content: center; }
+html.frame2 .f2stage .betview[data-f2="instrument"] > figure > :is(svg, canvas) { flex: 1 1 0; min-height: 0; width: 100%; height: 100%; max-height: none; object-fit: contain; }
+/* Jevons' bet: the island's turbines as a strip over the path the world takes */
+html.frame2 .f2stage .betview[data-f2="instrument"]:has(> .turbines) { flex-direction: column; }
+html.frame2 .f2stage .betview[data-f2="instrument"] > .turbines { flex: none; }
+html.frame2 .f2stage .betview[data-f2="instrument"] > .turbines > svg { flex: none; height: auto; max-height: 140px; }
+/* the goal across the top: a list of what must hold, a row of cases, readouts, each a tile like a meter */
+html.frame2 .f2stage [data-f2="goal"] .reqs { display: flex; flex-wrap: wrap; gap: 10px; flex: 1 1 100%; margin: 0; padding: 0; list-style: none; background: none; border: 0; }
+html.frame2 .f2stage [data-f2="goal"] > .reqs { padding: 0; }
+html.frame2 .f2stage [data-f2="goal"] .reqs li { flex: 1 1 200px; margin: 0; padding: 10px 14px; border-radius: 16px; background: var(--panel); border: 1px solid var(--line); box-shadow: var(--shadow); font: var(--f2-small); }
+html.frame2 .f2stage [data-f2="goal"] .reqs li.good { border-color: color-mix(in srgb, var(--good) 55%, var(--line)); }
+/* the goal as a row of tiles: the agent's cases, the jobs to fit (by number: the job itself is in the panel), the
+   readouts of an evolving circuit */
+html.frame2 .f2stage [data-f2="goal"]:is(.agprog, .fitjobs, .evread) { display: grid; gap: 8px; }
+html.frame2 .f2stage .agprog[data-f2="goal"] > .agcases { margin: 0; gap: 8px; }
+html.frame2 .f2stage .agprog[data-f2="goal"] > .kicker { display: none; }
+html.frame2 .f2stage [data-f2="goal"] .agcase, html.frame2 .f2stage .evread[data-f2="goal"] > span { margin: 0; padding: 8px 12px; border-radius: 14px; background: var(--panel); border: 1px solid var(--line); box-shadow: var(--shadow); font: var(--f2-small); }
+html.frame2 .f2stage [data-f2="goal"] .agcase .small { font-size: 15px; line-height: 1.3; }
+html.frame2 .f2stage [data-f2="goal"] .agcase.on { border-color: var(--ink); }
+html.frame2 .f2stage .fitjobs[data-f2="goal"] { grid-template-columns: repeat(8, minmax(0, 1fr)); }
+html.frame2 .f2stage .fitjobs[data-f2="goal"] .agcase { min-height: 0; place-items: center; font: var(--f2-fig); }
+html.frame2 .f2stage .fitjobs[data-f2="goal"] .agcase .small { display: none; }
+html.frame2 .f2stage .evread[data-f2="goal"] { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+html.frame2 .f2stage .evread[data-f2="goal"] > span { flex: none; display: grid; gap: 2px; }
+html.frame2 .f2stage .evread[data-f2="goal"] b { font: var(--f2-fig); }
+/* the regulators' four jobs and the converters' three meters: tiles, the figure over its name */
+html.frame2 .f2stage .anagoal[data-f2] > .anajobs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; padding: 0; background: none; border: 0; }
+html.frame2 .f2stage .anagoal[data-f2] .gauge { grid-template-columns: minmax(0, 1fr); padding: 10px 14px 12px; }
+html.frame2 .f2stage .anagoal[data-f2] .gv { order: -1; text-align: left; font-size: 19px; overflow-wrap: anywhere; }
+/* instruments that are not drawings: the copies' answers, the board's chips, the agent's tool, the line of chips */
+html.frame2 .f2stage .spotinst[data-f2] { display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 14px; }
+html.frame2 .f2stage .spotinst[data-f2] table { width: min(100%, 620px); font: 500 22px/1.3 var(--mono); }
+html.frame2 .f2stage .spotinst[data-f2] :is(th, td) { padding: 10px 14px; text-align: center; border-bottom: 1px solid var(--line); }
+html.frame2 .f2stage .spotinst[data-f2] th { font: var(--f2-label); color: var(--muted); }
+html.frame2 .f2stage .spotinst[data-f2] th:nth-child(n+3) { font: 700 26px/1.2 var(--serif); color: var(--ink); }
+html.frame2 .f2stage .spotinst[data-f2] .spotwait td { color: var(--muted); }
+html.frame2 .f2stage .spotinst[data-f2] p { margin: 0; font: var(--f2-small); }
+html.frame2 .f2stage .tdboard[data-f2] { grid-auto-rows: minmax(54px, 1fr); align-content: stretch; gap: 10px; padding: 16px; background: color-mix(in srgb, #1f4a37 70%, var(--panel-solid)); }
+html.frame2 .f2stage .tdboard[data-f2] .tdchip { font-size: 15px; }
+html.frame2 .f2stage .agtool[data-f2] { bottom: auto; max-height: calc(100% - var(--f2-top) - var(--f2-goalh, 0px) - 38px); }
+html.frame2 .f2stage .agtool[data-f2] .agtt { font-size: 15px; }
+html.frame2 .f2stage .fitline[data-f2] { bottom: auto; height: 250px; }
+html.frame2 .f2stage .fitline[data-f2] .fitk { bottom: 70px; padding: 10px 16px; font: 600 16px var(--sans); }
+html.frame2 .f2stage .fitline[data-f2] .fitk:nth-of-type(even) { bottom: 136px; }
+html.frame2 .f2stage .fitline[data-f2] .end { bottom: 20px; left: 22px; font: var(--f2-small); }
+html.frame2 .f2stage .fitline[data-f2] .end.r { left: auto; right: 22px; }
+html.frame2 .f2stage .fitline[data-f2]::after { content: ""; position: absolute; left: 22px; right: 22px; bottom: 56px; height: 2px; background: var(--line); }
+/* the island's sheet in Do: the side panel, the instrument on the stage beside it, the island hidden behind it */
+html.frame2 #sheet.f2do { left: auto; right: 16px; top: 84px; bottom: 16px; transform: none; translate: none; width: var(--f2-pw); max-height: none; overflow: auto;
+  padding: 18px 26px 22px; border-radius: 22px; background: var(--panel-solid); backdrop-filter: none; -webkit-backdrop-filter: none; view-transition-name: none; animation: none; font: var(--f2-small); }
+html.frame2 .f2cover { position: absolute; inset: 0; z-index: 9; background: var(--bg); }
+html.frame2 .f2cover[hidden] { display: none; }
+html.frame2 .f2where.f2isle { z-index: 11; }
+html.frame2 .stage:has(> #sheet.f2do:not([hidden])) > :is(.hero, .homebtn) { display: none; }
+html.frame2 #sheet.f2do .player h3 { margin: 2px 0 8px; font: var(--f2-title); }
+html.frame2 #sheet.f2do .player .goal { font: 700 17.5px/1.5 var(--sans); }
+html.frame2 #sheet.f2do .player p { line-height: 1.5; }
+html.frame2 #sheet.f2do :is(.kicker, .small, .chipb, .btn, .lab) { font-size: 15px; }
+html.frame2 #sheet.f2do .kicker { font: var(--f2-label); letter-spacing: 0; text-transform: none; color: var(--muted); }
+html.frame2 .stage:has(> #sheet.f2do:not([hidden])) > .toast { top: auto; bottom: 40px; left: calc((100% - var(--f2-sr)) / 2 + 12px); max-width: calc(100% - var(--f2-sr) - 48px); }
+@media (max-width: 720px) {
+  html.frame2 #sheet.f2do { left: 10px; right: 10px; top: var(--f2-sheet, 60%); bottom: 10px; width: auto; padding: 12px 16px 16px; }
+  html.frame2 #sheet.f2do .player h3 { font: 700 23px/1.15 var(--serif); }
+  html.frame2 #sheet.f2do .player .goal { font: 700 15px/1.45 var(--sans); }
+  html.frame2 .f2stage .betview[data-f2="instrument"] > figure > figcaption { display: none; }
+}
