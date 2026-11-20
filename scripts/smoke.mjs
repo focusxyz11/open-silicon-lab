@@ -374,6 +374,14 @@ const explore = async (tag, viewport, scheme) => {
   await page.fill('#diveui .dock #chCode', 'sum = a ^ b;\ncarry = a & b;').catch(() => {});
   await page.click('#diveui .dock [data-check]').catch(() => {});
   await page.waitForSelector('#diveui .dock .won', { timeout: 10000 }).catch(() => problems.push(tag + ': a right design on the bench did not win'));
+  /* what design really is, in each step's card (src/v2/studio-look.js): timing at the gates, the factory's rules on the tile,
+     the masks against the process's own; each poll goes to the step again, in case the card was drawn anew */
+  for (const [step, sel, n] of [['gates', '.sl-bar', 1], ['layout', '.sl-rules li', 7], ['masks', '.sl-masks .sl-m', 34]]) {
+    at = tag + ' ' + '#/bench/' + step;
+    await page.waitForFunction(([s, q, k]) => { if (location.hash !== '#/bench/' + s) location.hash = '#/bench/' + s;
+      const c = document.querySelector('#diveui .dock .sl[data-studio="' + s + '"]'); return !!c && c.querySelectorAll(q).length >= k; }, [step, sel, n], { timeout: 20000, polling: 500 })
+      .catch(() => problems.push(tag + ': the ' + step + ' card does not show what its engine says of your design'));
+  }
   /* the board: a story drives the scene; a prediction comes before the live number moves */
   at = tag + ' ' + '#/board'; await page.evaluate(() => { location.hash = '#/board'; });
   await page.waitForSelector('#boardui .dock .line', { timeout: 15000 }).catch(() => problems.push(tag + ': the board did not open'));

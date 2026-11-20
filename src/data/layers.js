@@ -21,9 +21,9 @@ export const LENSES = [
   {"id":"swarm","home":"life","state":"partly"},
   {"id":"probe","home":"know","state":"partly"}];
 export const ENGINES = [
-  {"id":"logic","state":"exists","files":["src/engines/tinychip.js","src/engines/design.js"],"gives":["sure","area","work"]},
+  {"id":"logic","state":"exists","files":["src/engines/tinychip.js","src/engines/design.js","src/engines/rules.js","src/engines/verilog.js"],"gives":["sure","area","work"]},
   {"id":"core","state":"exists","files":["src/engines/core.js","src/engines/riscv.js","src/engines/alu.js"],"gives":["sure","work"]},
-  {"id":"timing","state":"exists","files":["src/engines/chip.js"],"gives":["work","energy","area"]},
+  {"id":"timing","state":"exists","files":["src/engines/chip.js","src/engines/timing.js"],"gives":["work","energy","area"]},
   {"id":"stress","state":"exists","files":["src/engines/life.js"],"gives":["life","yield","sure"]},
   {"id":"floor","state":"exists","files":["src/engines/floor.js"],"gives":["energy","work"]},
   {"id":"factory","state":"exists","files":["src/engines/fab.js"],"gives":["time","cost"]},
