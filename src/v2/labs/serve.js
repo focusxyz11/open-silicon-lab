@@ -78,7 +78,7 @@ export default function lab(L) {
       '<text class="ax" x="' + (W / 2) + '" y="' + (H - 3) + '" text-anchor="middle">' + esc(t('srv.q.x')) + '</text>';
     /* the outliers lie far outside the picture: how far, from the scale one tensor-wide scale has to take */
     if (o.outliers > 0) s += '<text class="ot" x="' + (X1 - 1) + '" y="' + (Y0 - 6) + '" text-anchor="end">' + esc(t('srv.q.far', { v: Math.round(A.quantize({ format: 'fp4', scaling: 'tensor', outliers: o.outliers }).scale * A.QUANT_FORMATS.fp4.max) })) + ' →</text>';
-    return '<figure class="srvfig srvq">' + s + '</svg><figcaption class="small muted">' + esc(t(fine ? 'srv.q.legendFine' : r.mode === 'tensor' ? 'srv.q.legend' : 'srv.q.legendBlock')) + '</figcaption></figure>';
+    return '<figure class="srvfig srvq" data-f2="instrument">' + s + '</svg><figcaption class="small muted">' + esc(t(fine ? 'srv.q.legendFine' : r.mode === 'tensor' ? 'srv.q.legend' : 'srv.q.legendBlock')) + '</figcaption></figure>';
   }
   /* everything tried so far: memory across, signal over rounding error up, the goal a green corner */
   function qMap(o, r) {
@@ -127,7 +127,7 @@ export default function lab(L) {
     const turn = (y1, th, xr) => { const R = th + rad; return 'M' + x0 + ' ' + y1.toFixed(1) + 'H' + (xr - R).toFixed(1) + 'A' + R.toFixed(1) + ' ' + R.toFixed(1) + ' 0 0 1 ' + xr + ' ' + (y1 + R).toFixed(1) + 'V' + yb + 'H' + (xr - th).toFixed(1) + 'V' + (y1 + R).toFixed(1) + 'A' + rad + ' ' + rad + ' 0 0 0 ' + (xr - R).toFixed(1) + ' ' + (y1 + th).toFixed(1) + 'H' + x0 + 'Z'; };
     const xC = Math.max(92, x0 + tC + rad + 30), xS = Math.max(212, xC + tS + rad + 30), xA = 262, sh = r.shares;
     const lab = (x, y, a, name, v, cls) => '<text class="nm ' + cls + '" x="' + x + '" y="' + y + '" text-anchor="' + a + '">' + esc(name) + '</text><text class="pv" x="' + x + '" y="' + (y + 12) + '" text-anchor="' + a + '">' + esc(v) + '</text>';
-    return '<figure class="srvfig srve"><svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="' + esc(t('srv.e.aria', { a: pct(sh[0]), s: pct(sh[1]), c: pct(sh[2]) })) + '">' +
+    return '<figure class="srvfig srve" data-f2="instrument"><svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="' + esc(t('srv.e.aria', { a: pct(sh[0]), s: pct(sh[1]), c: pct(sh[2]) })) + '">' +
       '<path class="fc" d="' + turn(yC, tC, Math.min(xC, 150)) + '"/><path class="fs" d="' + turn(yS, tS, Math.min(xS, 240)) + '"/>' +
       '<path class="fa" d="M' + x0 + ' ' + yA + 'H' + xA + 'l10 ' + (tA / 2).toFixed(1) + 'l-10 ' + (tA / 2).toFixed(1) + 'H' + x0 + 'Z"/>' +
       '<rect class="was" x="' + (x0 - 9) + '" y="' + top + '" width="5" height="' + (M.start * k).toFixed(1) + '" rx="2.5"/><rect class="now" x="' + (x0 - 9) + '" y="' + top + '" width="5" height="' + (J * k).toFixed(1) + '" rx="2.5"/>' +
@@ -161,7 +161,7 @@ export default function lab(L) {
   /* the time of one request: the prompt read in one block, then the answer, a stripe for every token (or every few) */
   function pFigure(r) {
     const W = 300, H = 150, X0 = 8, X1 = 292, xr = X0 + (X1 - X0) * r.prefillS / r.totalS, wd = X1 - xr, n = Math.max(1, Math.min(r.answerTokens, Math.floor(wd / 3))), u = wd / n, flip = xr > 190;
-    return '<figure class="srvfig srvp"><svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="' + esc(t('srv.p.aria', { read: secs(r.prefillS), write: secs(r.decodeS) })) + '">' +
+    return '<figure class="srvfig srvp" data-f2="instrument"><svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="' + esc(t('srv.p.aria', { read: secs(r.prefillS), write: secs(r.decodeS) })) + '">' +
       '<rect class="rd" x="' + X0 + '" y="22" width="' + Math.max(1.5, xr - X0).toFixed(1) + '" height="28" rx="3"/>' +
       '<text class="nm tr" x="' + X0 + '" y="63">' + esc(t('srv.p.read', { n: fmtWords(r.promptTokens), v: secs(r.prefillS) })) + '</text>' +
       '<line class="wr" x1="' + xr.toFixed(1) + '" x2="' + X1 + '" y1="86" y2="86" stroke-dasharray="' + (u * 0.62).toFixed(2) + ' ' + (u * 0.38).toFixed(2) + '"/>' +

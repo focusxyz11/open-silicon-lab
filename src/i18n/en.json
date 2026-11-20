@@ -3180,6 +3180,8 @@
   "one": "Do · {n} challenge",
   "other": "Do · {n} challenges"
  },
+ "frame2.do.rows": "Rows of the table right",
+ "frame2.do.island": "Back to {place}, where you are",
  "frame2.where": "Where you are",
  "frame2.whereBack": "Back to the {level}, where you are",
  "frame2.reading": "Reading",

@@ -43,7 +43,7 @@ export default function lab(L) {
     s += '<text class="ax" x="' + X0 + '" y="' + (Y1 + 14) + '">0</text><text class="ax" x="' + X1 + '" y="' + (Y1 + 14) + '" text-anchor="end">' + esc(nm(xmax)) + '</text>' +
       '<text class="ax" x="' + ((X0 + X1) / 2) + '" y="' + (Y1 + 28) + '" text-anchor="middle">' + esc(t('imp.x')) + '</text>' +
       '<text class="ax" x="' + X0 + '" y="' + (Y0 - 3) + '">' + esc(t('imp.y')) + '</text></svg>';
-    return '<figure class="imfig">' + s + '<figcaption class="small muted">' + esc(t('imp.legend')) + '</figcaption></figure>';
+    return '<figure class="imfig" data-f2="instrument">' + s + '<figcaption class="small muted">' + esc(t('imp.legend')) + '</figcaption></figure>';
   }
   /* the goal as gauges: each a thing to see, with how near it is */
   function goalbox(r) {

@@ -81,7 +81,7 @@ function capture(L) {
       '<text class="ax" x="' + (X0 - 4) + '" y="' + (mid + 3.5) + '" text-anchor="end">' + esc(t('ana.gap')) + '</text>' +
       '<text class="ax" x="' + X0 + '" y="' + (E1 + 14) + '">0</text><text class="ax" x="' + X1 + '" y="' + (E1 + 14) + '" text-anchor="end">' + esc(t('ana.x.' + kind)) + '</text></svg>';
     start();
-    return '<figure class="anafig">' + s + '<figcaption class="small muted">' + esc(t('ana.legend', { v: Math.round(ESPAN * 100) })) + '</figcaption></figure>';
+    return '<figure class="anafig" data-f2="instrument">' + s + '<figcaption class="small muted">' + esc(t('ana.legend', { v: Math.round(ESPAN * 100) })) + '</figcaption></figure>';
   }
   /* the bearing's tones on a line of frequencies: what lies past half the sampling rate cannot be told apart, and
      shows up folded back as a slower tone that is not there */
@@ -189,7 +189,7 @@ function regulate(L) {
     else { let pts = ''; for (let x = RX0 - PERIOD; x <= RX1 + PERIOD; x += PERIOD) pts += x + ',' + (cy + amp).toFixed(1) + ' ' + (x + PERIOD * 0.75).toFixed(1) + ',' + (cy - amp).toFixed(1) + ' ';
       s += '<clipPath id="anaclip"><rect x="' + RX0 + '" y="' + (cy - 34) + '" width="' + (RX1 - RX0) + '" height="68"/></clipPath><g clip-path="url(#anaclip)"><polyline class="outl' + (bad ? ' bad' : '') + (amp > 0.6 ? ' run' : '') + '" points="' + pts.trim() + '"/></g>'; }
     s += '<line class="jump" x1="' + JUMP + '" x2="' + JUMP + '" y1="62" y2="176"/><text class="ax" x="' + (JUMP + 4) + '" y="184">' + esc(t('ana.reg.jump')) + '</text></svg>';
-    return '<figure class="anafig anareg">' + s + '</figure>';
+    return '<figure class="anafig anareg" data-f2="instrument">' + s + '</figure>';
   }
   function goalbox() {
     const ok = metNow();

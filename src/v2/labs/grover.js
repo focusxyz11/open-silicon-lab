@@ -56,7 +56,7 @@ export default function lab(L) {
       s += '<rect class="bx' + (i === o.prize ? ' pz' : '') + (o.last === i ? ' open' : '') + '" x="' + (x - 9) + '" y="144" width="18" height="18" rx="4"/>';
       if (i === o.prize) { let d = ''; for (let j = 0; j < 10; j++) { const r = j % 2 ? 2.6 : 6, an = -Math.PI / 2 + j * Math.PI / 5; d += (j ? 'L' : 'M') + f(x + Math.cos(an) * r) + ' ' + f(153 + Math.sin(an) * r); } s += '<path class="star" d="' + d + 'Z"/>'; }
       if (o.looks && o.looks[i]) s += '<rect class="hit' + (i === o.prize ? ' pz' : '') + '" x="' + (x - 9) + '" y="166" width="' + f(18 * o.looks[i] / top) + '" height="3" rx="1.5"/><text class="ax mono" x="' + x + '" y="179" text-anchor="middle">' + o.looks[i] + '</text>'; }
-    return '<figure class="grvfig">' + s + '</svg><figcaption class="small muted">' + esc(t('grv.legend')) + '</figcaption></figure>';
+    return '<figure class="grvfig" data-f2="instrument">' + s + '</svg><figcaption class="small muted">' + esc(t('grv.legend')) + '</figcaption></figure>';
   }
   /* the chance of the prize after each step taken so far, against opening boxes one by one */
   function curve(o) {

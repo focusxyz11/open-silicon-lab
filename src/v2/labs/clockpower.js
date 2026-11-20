@@ -154,7 +154,7 @@ export default function lab(L) {
     run.edges.forEach((e, k) => { const cx = wx(e + per / 2).toFixed(1), shown = on && upto >= Math.min(sim.tEnd, e + per * 0.9);
       if (shown) s += '<text class="num' + (run.wrong[k] ? ' bad' : '') + '" x="' + cx + '" y="' + cy0 + '" text-anchor="middle">' + (run.values[k] == null ? '?' : run.values[k]) + '</text>';
       s += '<text class="num want" x="' + cx + '" y="' + (cy0 + 12) + '" text-anchor="middle">' + run.expected[k] + '</text>'; });
-    return '<figure class="ckpfig ckpc">' + s + '</svg><figcaption class="small muted">' + esc(t('ckp.c.legend')) + '</figcaption></figure>';
+    return '<figure class="ckpfig ckpc" data-f2="instrument">' + s + '</svg><figcaption class="small muted">' + esc(t('ckp.c.legend')) + '</figcaption></figure>';
   }
   function cbench() {
     const o = cset(), R = crun(o), TM = R.timing, per = R.run.per, top = tops(o), got = Object.values(top), ok = got.length >= 2 || !!S.done[ch.id], end = o.T != null && !o.running;
