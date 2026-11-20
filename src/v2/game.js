@@ -142,7 +142,9 @@ export const CHALLENGES = [
   { id: 'chef', step: 'use', place: QUESTIONS.bits.home.place, at: QUESTIONS.bits.home.level, kind: 'chef', grows: 'dc-pantry' },
   /* a reliable whole from flaky parts, and a mind that cannot be copied (src/v2/labs/vote.js, mortal.js) */
   { id: 'flaky', step: 'design', place: 'studio', at: 'gates', kind: 'redund', grows: 'studio-vote' },
-  { id: 'mortal', step: 'use', place: 'datacentre', at: 'switch', kind: 'mortal', grows: 'way-mortal' }
+  { id: 'mortal', step: 'use', place: 'datacentre', at: 'switch', kind: 'mortal', grows: 'way-mortal' },
+  /* read the die: the first site's chip X-ray, at the test house (src/v2/labs/dies.js, src/engines/dies.js) */
+  { id: 'dieread', step: 'test', place: 'test', at: 'test', kind: 'xray', grows: 'test-xray' }
 ];
 /* the goal of a chip challenge as gauges: each a value of your chip's model and the bound it must reach
    (ge: at least, le: at most). Together they say the same as the goal's met() in src/engines/chip.js. */
@@ -331,7 +333,7 @@ export function community(s) {
 export const OPENS = { 'too-hot': 'fail.switch', 'litho-finest': 'scale.print', 'euv-1000': 'fail.print', etch: 'make.etch', bottom: 'idea.deposit', crystal: 'make.crystal', furnace: 'make.implant', shallow: 'fail.implant', vias: 'fail.print', evolve: 'idea.block', newest: 'open.phoneboard', jobs: 'divide.need', agent: 'idea.check', half: 'fail.check', vote: 'idea.check', full: 'make.gates', months: 'make.clean', quick: 'scale.clean', spot: 'fail.test', cores: 'divide.test',
   phone: 'life.phone', car: 'fail.car', dclife: 'fail.ship', fed: 'divide.board', fast: 'fail.chip',
   cim: 'divide.block', grover: 'strange.atom', 'ai-chip': 'scale.masks', piece: 'open.need', floor: 'divide.layout', maskof: 'make.masks', 'power-curve': 'life.block', counter: 'fail.gate',
-  'sig-heart': 'fail.phoneboard', 'sig-bearing': 'fail.ecu', 'reg-jobs': 'fail.phoneboard', quantize: 'think.chip', 'token-energy': 'divide.rack', prefill: 'think.board', chef: 'divide.block', flaky: 'fail.gates', mortal: 'life.switch' };
+  'sig-heart': 'fail.phoneboard', 'sig-bearing': 'fail.ecu', 'reg-jobs': 'fail.phoneboard', quantize: 'think.chip', 'token-energy': 'divide.rack', prefill: 'think.board', chef: 'divide.block', flaky: 'fail.gates', mortal: 'life.switch', dieread: 'divide.test' };
 /* and where the open things of the ledger sit: a break under "is the design right?", a piece to build under
    "could anyone design a chip?", a missing check under "who checks, and with what?" */
 export const FRONT_ASK = { break: 'fail.check', build: 'open.need', engine: 'idea.check' };
