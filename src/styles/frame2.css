@@ -119,11 +119,11 @@ html.frame2 .f2stage [data-f2="instrument"] {
 }
 html.frame2 .f2stage [data-f2="goal"] {
   position: fixed; z-index: 3; left: 24px; right: var(--f2-sr); top: var(--f2-top); margin: 0; padding: 0; border: 0; background: none; box-shadow: none;
-  display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; align-items: stretch;
+  display: flex; flex-wrap: wrap; gap: 12px; align-items: stretch;
 }
 html.frame2 .f2stage [data-f2="goal"] > .kicker { display: none; }
-html.frame2 .f2stage [data-f2="goal"] > :not(.gauge, .kicker) { grid-column: 1 / -1; margin: 0; padding: 8px 16px; border-radius: 14px; background: var(--panel); border: 1px solid var(--line); font: var(--f2-small); }
-html.frame2 .f2stage [data-f2="goal"] .gauge { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-content: start; gap: 4px 12px; padding: 12px 16px 14px; border-radius: 16px; background: var(--panel); border: 1px solid var(--line); box-shadow: var(--shadow); }
+html.frame2 .f2stage [data-f2="goal"] > :not(.gauge, .kicker) { flex: 1 1 100%; margin: 0; padding: 8px 16px; border-radius: 14px; background: var(--panel); border: 1px solid var(--line); font: var(--f2-small); }
+html.frame2 .f2stage [data-f2="goal"] .gauge { flex: 1 1 190px; min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-content: start; gap: 4px 12px; padding: 12px 16px 14px; border-radius: 16px; background: var(--panel); border: 1px solid var(--line); box-shadow: var(--shadow); }
 html.frame2 .f2stage [data-f2="goal"] .gauge.ok { border-color: color-mix(in srgb, var(--good) 55%, var(--line)); }
 html.frame2 .f2stage [data-f2="goal"] .gl { font: var(--f2-label); color: var(--ink); }
 html.frame2 .f2stage [data-f2="goal"] .gl .muted { display: block; font: var(--f2-small); }
@@ -132,8 +132,8 @@ html.frame2 .f2stage [data-f2="goal"] .gv .muted { display: block; margin-top: 2
 html.frame2 .f2stage [data-f2="goal"] .gbar { grid-column: 1 / -1; height: 8px; margin-top: 6px; border-radius: 4px; }
 @media (min-width: 721px) { html.frame2 .f2stage [data-f2="goal"] .gauge.ckpwide { display: grid; } }
 /* four meters or more: each a tile, its figure over its name */
-html.frame2 .f2stage [data-f2="goal"]:has(> .gauge ~ .gauge ~ .gauge ~ .gauge) { grid-template-columns: repeat(auto-fit, minmax(128px, 1fr)); gap: 10px; }
-html.frame2 .f2stage [data-f2="goal"]:has(> .gauge ~ .gauge ~ .gauge ~ .gauge) .gauge { grid-template-columns: minmax(0, 1fr); padding: 10px 14px 12px; }
+html.frame2 .f2stage [data-f2="goal"]:has(> .gauge ~ .gauge ~ .gauge ~ .gauge) { gap: 10px; }
+html.frame2 .f2stage [data-f2="goal"]:has(> .gauge ~ .gauge ~ .gauge ~ .gauge) .gauge { flex-basis: 124px; grid-template-columns: minmax(0, 1fr); padding: 10px 14px 12px; }
 html.frame2 .f2stage [data-f2="goal"]:has(> .gauge ~ .gauge ~ .gauge ~ .gauge) .gl { order: 0; }
 html.frame2 .f2stage [data-f2="goal"]:has(> .gauge ~ .gauge ~ .gauge ~ .gauge) .gv { order: -1; text-align: left; font-size: 20px; }
 /* where you are: the level on the way down, lit; a tap goes back to the picture */
@@ -165,15 +165,17 @@ html.frame2 .f2stage .betview[data-f2] .agrace { font-size: 15px; }
 html.frame2 .f2stage .aib { display: block; }
 html.frame2 .f2stage .aib > .aibR { display: block; margin-top: 14px; }
 html.frame2 .f2stage .aibstrip { display: none !important; }
-html.frame2 .f2stage .aibL[data-f2] { display: grid !important; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 12px 20px; align-content: start; }
+html.frame2 .f2stage .aibL[data-f2] { display: grid !important; grid-template-columns: min(55%, 540px) minmax(0, 1fr); gap: 12px 20px; align-content: start; }
 html.frame2 .f2stage .aibL[data-f2] > * { grid-column: 1 / -1; min-width: 0; }
 html.frame2 .f2stage .aibL[data-f2] > .aibfig { grid-column: 1; grid-row: 1 / span 4; margin: 0; align-self: start; }
 html.frame2 .f2stage .aibL[data-f2] > .aibgo { grid-column: 2; grid-row: 1; margin: 0; }
 html.frame2 .f2stage .aibL[data-f2] > .aibverdict { grid-column: 2; grid-row: 2; margin: 0; }
 html.frame2 .f2stage .aibL[data-f2] > .aibread { grid-column: 2; grid-row: 3; margin: 0; }
-html.frame2 .f2stage .aibL[data-f2] > .aibbal { grid-column: 2; grid-row: 4; margin: 0; }
+html.frame2 .f2stage .aibL[data-f2] > .aibbal { grid-column: 2; grid-row: 4; margin: 0; align-self: start; }
 html.frame2 .f2stage .aibL[data-f2] > .aibread { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 html.frame2 .f2stage .aibfig .ax { font-size: 8px; }
+/* a word that something grew: at the foot of the stage, not over the goal */
+html.frame2 .stage:has(> section.f2stage:not([hidden])) > .toast { top: auto; bottom: 40px; left: calc((100% - var(--f2-sr)) / 2 + 12px); max-width: calc(100% - var(--f2-sr) - 48px); }
 @keyframes f2in { from { opacity: 0; } }
 
 /* ---- a phone: the caption is the sheet, at rest the level's name and the whole question; in Do the instrument is
@@ -208,18 +210,23 @@ html.frame2 .f2stage .aibfig .ax { font-size: 8px; }
   html.frame2 .f2where .f2wk { display: none; }
   html.frame2 .f2where .f2wt { white-space: nowrap; }
   html.frame2 .f2stage { --f2-top: 112px; --f2-sr: 10px; }
-  html.frame2 .f2stage [data-f2="goal"] { left: 10px; gap: 6px; grid-template-columns: repeat(auto-fit, minmax(96px, 1fr)); }
+  html.frame2 .f2stage [data-f2="goal"], html.frame2 .f2stage [data-f2="goal"]:has(> .gauge ~ .gauge ~ .gauge ~ .gauge) { left: 10px; gap: 6px; }
+  html.frame2 .f2stage [data-f2="goal"] .gauge, html.frame2 .f2stage [data-f2="goal"]:has(> .gauge ~ .gauge ~ .gauge ~ .gauge) .gauge { flex-basis: 100px; }
+  html.frame2 .f2stage [data-f2="goal"]:has(> .gauge ~ .gauge ~ .gauge ~ .gauge) .gl { font-size: 14px; }
+  html.frame2 .f2stage [data-f2="goal"]:has(> .gauge ~ .gauge ~ .gauge ~ .gauge) .gv { font-size: 15px; }
   html.frame2 .f2stage [data-f2="goal"] .gauge { grid-template-columns: minmax(0, 1fr); padding: 8px 10px 10px; gap: 2px; box-shadow: none; }
   html.frame2 .f2stage [data-f2="goal"] .gl .muted, html.frame2 .f2stage [data-f2="goal"] .gv .muted { display: none; }
   html.frame2 .f2stage [data-f2="goal"] .gv { text-align: left; font-size: 16px; }
   html.frame2 .f2stage [data-f2="goal"] > :not(.gauge, .kicker) { display: none; }
   html.frame2 .f2stage [data-f2="instrument"] { left: 10px; bottom: auto; height: min(36vh, 300px); padding: 10px 12px; }
   html.frame2 .f2stage .aibL[data-f2] { grid-template-columns: minmax(0, 1fr); }
-  html.frame2 .f2stage .aibL[data-f2] > * { grid-column: 1; grid-row: auto; }
+  html.frame2 .f2stage .aibL[data-f2] > :is(*, .aibfig, .aibgo, .aibverdict, .aibread, .aibbal) { grid-column: 1; grid-row: auto; }
   html.frame2 .f2stage .aibL[data-f2] { height: auto; max-height: 46vh; }
   html.frame2 .f2stage .aibL[data-f2] > :not(.aibfig, .goalbox, .aibgo, .aibverdict, .won) { display: none; }
   html.frame2 .f2stage .aibL[data-f2] .aibkey { display: none; }
   html.frame2 .f2stage .aibfig .ax { font-size: 9px; }
   html.frame2 .f2stage .betview[data-f2] .btstep { display: none; }
+  html.frame2 .f2stage .betview[data-f2] { grid-template-rows: minmax(0, 1fr); }
 }
 @media (max-width: 720px) { html.frame2 .f2cap > .dockwrap > .scale2:not(.moving) { display: none; } }
+@media (max-width: 720px) { html.frame2 .stage:has(> section.f2stage:not([hidden])) > .toast { left: 50%; bottom: 24px; max-width: calc(100% - 28px); } }

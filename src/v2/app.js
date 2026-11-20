@@ -929,7 +929,7 @@ export function start() {
   const diveInset = () => { if (!dive || !diveFrame) return; const wide = innerWidth > 720, b = innerWidth >= 1100 ? 24 : (diveFrame.restH ? diveFrame.restH() : diveFrame.dock.parentNode.offsetHeight) + (wide ? 24 : 18), lens = Joule && S.joule.on && innerWidth >= 1100 ? 356 : 0, top = Joule ? Joule.bottom() : 0;
     /* the new frame (?frame=2): the picture stands right of the caption at rest, and left of the side panel */
     const f2 = FRAME2 && innerWidth >= 1100 && vui.classList.contains('f2') ? diveFrame.dock.parentNode.getBoundingClientRect() : null, f2cap = f2 && vui.classList.contains('f2cap');
-    dive.setInset({ l: f2cap ? Math.max(90, Math.round(f2.right - 180)) : wide ? 90 : 8, r: (f2 && !f2cap ? Math.round(f2.width) + 32 : wide ? 20 : 8) + lens, t: top ? top + 8 : wide ? 122 : 116, b });
+    dive.setInset({ l: f2cap ? Math.max(90, Math.round(f2.right - 120)) : wide ? 90 : 8, r: (f2 && !f2cap ? Math.round(f2.width) + 32 : wide ? 20 : 8) + lens, t: top ? top + 8 : wide ? 122 : 116, b });
     /* a level drawn in 3D takes its square when the zoom moves; it is told now, so it moves with the frame */
     if (flatKind === 'dive' && WE) levelZoom(dive.z); };
   /* the bench: a design challenge played in the dock; the drawings above follow your description */
