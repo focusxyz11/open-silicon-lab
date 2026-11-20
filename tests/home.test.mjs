@@ -4,7 +4,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { STATIONS, THREADS, WAYS, STARTS, TOYS, LINES } from '../src/data/home.js';
+import { STATIONS, THREADS, WAYS, STARTS, TOYS, LINES, PATHS, NEW, INDEX } from '../src/data/home.js';
+import { WORLDS } from '../src/data/worlds.js';
 import * as H from '../src/engines/home.js';
 import { CHALLENGES, viewOfDepth } from '../src/v2/game.js';
 import { doHome } from '../src/engines/way.js';
@@ -90,4 +91,24 @@ test('every word the map\'s view asks for exists', () => {
   for (const k of ['design', 'make', 'scale', 'loop']) ['home.line.', 'home.read.'].forEach(p => assert.ok((p + k) in EN, p + k));
   for (const k of ['design', 'make', 'scale']) assert.ok(('home.col.' + k + '.d') in EN && ('home.twin.' + k) in EN);
   for (const k of ['play', 'puzzle', 'build', 'lab', 'see', 'page', 'q']) assert.ok(('home.tag.' + k) in EN, k);
+});
+
+test('the paths, what is new and the whole lab lead to real things, with words of their own', () => {
+  const chs = new Set(CHALLENGES.map(c => c.id));
+  assert.equal(PATHS.length, 6);
+  for (const P of PATHS) {
+    for (const k of ['.t', '.d']) assert.ok(('home.path.' + P.id + k) in EN, 'home.path.' + P.id + k);
+    assert.ok(['design', 'make', 'scale', 'loop'].includes(P.line), P.id);
+    assert.ok(P.stops.length >= 4 && P.stops.length <= 5, P.id + ' has ' + P.stops.length + ' stops');
+    assert.ok(P.stops.some(x => x.ch), P.id + ' has nothing to play');
+    for (const x of P.stops) {
+      if (x.ch) assert.ok(chs.has(x.ch), P.id + ': no challenge ' + x.ch);
+      else if (x.st) assert.ok(H.byId[x.st], P.id + ': no station ' + x.st);
+      else { assert.match(x.page[0], /^#\//); assert.ok(x.page[1] in EN, x.page[1]); }
+    }
+  }
+  for (const x of NEW) { assert.ok(('home.new.' + x.id + '.t') in EN && ('home.new.' + x.id + '.d') in EN, x.id); if (x.ch) assert.ok(chs.has(x.ch), x.ch); else assert.match(x.href, /^#\//); }
+  for (const G of INDEX) { assert.ok(('home.ix.' + G.id) in EN, G.id);
+    for (const x of G.items) { assert.match(x.href, /^#\//); assert.ok(x.word ? x.word in EN : ('home.ix.' + x.id + '.t') in EN && ('home.ix.' + x.id + '.d') in EN, x.id); } }
+  for (const T of THREADS) if (T.world) assert.ok(WORLDS[T.world], T.id + ': no page ' + T.world);
 });

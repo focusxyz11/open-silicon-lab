@@ -781,6 +781,15 @@ export function createMap(canvas, host, on = {}) {
       box(g, 2.6, 0.9, 1.9, metal(P.slate), -0.4, 1.76, 0, 0.08); for (let k = 0; k < 3; k++) pulses.push(box(g, 2.0, 0.08, 0.05, glow(P.warm, night ? 1.2 : 0.6), -0.4, 1.98 + k * 0.24, 0.97, 0.01, { cast: false }));
       box(g, 0.9, 1.0, 0.9, mat(P.white), 1.75, 0.3, 0, 0.08); pulses.push(box(g, 0.9, 0.12, 0.12, glow(P.accent, night ? 1.4 : 0.8), 1.3, 0.85, 0, 0.02, { cast: false })); },
     'dc-prefill': g => { box(g, 5.4, 0.3, 3.4, mat(P.wall), 0, 0, 0, 0.1); box(g, 4.6, 0.7, 0.9, mat(P.white), 0, 0.3, -0.85, 0.08); pulses.push(box(g, 4.2, 0.12, 0.5, glow(P.accent, night ? 1.3 : 0.7), 0, 1.0, -0.85, 0.02, { cast: false })); for (let k = 0; k < 7; k++) { box(g, 0.44, 0.7, 0.9, mat(P.white), -2.08 + k * 0.693, 0.3, 0.85, 0.06); pulses.push(box(g, 0.26, 0.12, 0.5, glow(P.good, night ? 1.3 : 0.7), -2.08 + k * 0.693, 1.0, 0.85, 0.02, { cast: false })); } },
+    /* a reliable whole from flaky parts (src/v2/labs/vote.js): three copies of one block on a slab, one of them lit red, and the voter between them and the way out, lit green */
+    'studio-vote': g => { box(g, 5, 0.3, 3.2, mat(P.wall), 0, 0, 0, 0.1); [-1, 0, 1].forEach((z, i) => { box(g, 1.3, 1.1, 0.8, mat(P.white), -1.4, 0.3, z * 1.0, 0.1); pulses.push(box(g, 0.08, 0.5, 0.5, glow(i === 1 ? P.bad : P.good, night ? 1.3 : 0.7), -0.73, 0.6, z * 1.0, 0.01, { cast: false })); box(g, 1.1, 0.08, 0.08, metal(P.slate), -0.2, 0.7, z * 1.0, 0.01, { cast: false }); });
+      box(g, 1.1, 1.6, 2.6, mat(P.white), 0.9, 0.3, 0, 0.14); pulses.push(box(g, 0.06, 0.7, 1.6, glow(P.good, night ? 1.4 : 0.8), 1.47, 0.75, 0, 0.01, { cast: false })); box(g, 0.9, 0.1, 0.1, metal(P.slate), 1.95, 1.0, 0, 0.01, { cast: false }); },
+    /* a mind that cannot be copied (src/v2/labs/mortal.js): the chip that learned, warm on its plinth, and a row of its copies, each lit a little differently */
+    'way-mortal': g => { box(g, 5.6, 0.3, 3, mat(P.wall), 0, 0, 0, 0.1); box(g, 1.4, 1.2, 1.4, mat(P.white), -1.9, 0.3, 0, 0.12); pulses.push(box(g, 1, 0.12, 1, glow(P.warm, night ? 1.4 : 0.8), -1.9, 1.5, 0, 0.03, { cast: false }));
+      for (let i = 0; i < 4; i++) for (let j = 0; j < 2; j++) { box(g, 0.6, 0.5, 0.6, mat(P.white), -0.3 + i * 0.85, 0.3, -0.5 + j * 1.0, 0.06); const c = box(g, 0.42, 0.06, 0.42, glow([P.good, P.warm, P.good, P.bad, P.good, P.good, P.warm, P.good][i * 2 + j], night ? 1.2 : 0.6), -0.3 + i * 0.85, 0.83, -0.5 + j * 1.0, 0.01, { cast: false }); if ((i + j) % 2) pulses.push(c); } },
+    /* read the die (src/v2/labs/dies.js): a microscope over a die on its stage, the die's districts lit in the colours of a photo */
+    'test-xray': g => { box(g, 3.6, 0.9, 2.6, mat(P.white), 0, 0, 0, 0.12); box(g, 1.5, 0.1, 1.5, mat(P.dark), -0.5, 0.9, 0, 0.02); [[P.accent, -0.85, -0.35], [P.warm, -0.15, -0.35], [P.good, -0.85, 0.35], [P.accent, -0.15, 0.35]].forEach(([c, x, z]) => pulses.push(box(g, 0.6, 0.05, 0.6, glow(c, night ? 1.2 : 0.6), x, 1.0, z, 0.01, { cast: false })));
+      box(g, 0.35, 2.6, 0.35, metal(P.slate), 1.2, 0.9, 0, 0.04); box(g, 1.6, 0.35, 0.4, metal(P.slate), 0.5, 3.1, 0, 0.04); cyl(g, 0.22, 0.3, 0.9, metal(P.dark), -0.5, 2.25, 0, 16); },
     'clock-tower': g => { box(g, 2.4, 9, 2.4, mat(P.white), 0, 0, 0, 0.2); const face = cyl(g, 1, 1, 0.2, mat(P.wall), 0, 7, 1.25, 24); face.rotation.x = Math.PI / 2; const hand = box(g, 0.12, 0.9, 0.08, mat(P.dark), 0, 6.95, 1.42, 0.02, { cast: false }); hand.geometry = hand.geometry.clone().translate(0, 0.4, 0); spinning.push({ hand }); }
   };
   /* where each growth stands, relative to its place: [x, z, y] */
@@ -791,7 +800,11 @@ export function createMap(canvas, host, on = {}) {
     /* serving a language model: together, east of the halls and north of the solar field */
     'dc-quant': [22.5, -4], 'dc-token': [20.5, -9.5], 'dc-prefill': [16.5, -4],
     /* keep the chef busy: east of the hall that keeps numbers small */
-    'dc-pantry': [28.5, -2.5] };
+    'dc-pantry': [28.5, -2.5],
+    /* a reliable whole, east of the studio; a mind that cannot be copied, at the Lab beside the other ways to compute */
+    'studio-vote': [17, -6], 'way-mortal': [13, -12],
+    /* read the die: in front of the test house, west of its hall */
+    'test-xray': [-6, -9] };
   GROWTH.forEach(gw => { const [x, z, y] = GROW_SPOT[gw.id] || [0, 0], g = group(G[gw.at], x, y || 0, z); g.visible = false; g.scale.setScalar(0.001); growing.push({ id: gw.id, g, built: false, t0: 0 }); });
 
   /* No question floats over a place any more (docs/framework/rebuild.md, section 3): a question shown as a dot on a

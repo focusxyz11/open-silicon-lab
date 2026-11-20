@@ -76,6 +76,15 @@ run['home'] = async () => {
       if (!(n1 < n0)) problems.push(tag + ': bigger chips do not fit fewer to a wafer (' + n0 + ' then ' + n1 + ')'); }
     /* the gate answers its switches */
     await hp.waitForFunction(() => { const b = document.querySelector('#home [data-gin="b"]'); if (b && !b.classList.contains('on')) b.click(); const l = document.querySelector('#home .hm-bulb'); return !!l && l.textContent.trim() === '0'; }, null, { timeout: 10000 }).catch(() => problems.push(tag + ': a NAND with both switches on does not go dark'));
+    /* the page leads on to the rest of the lab: six paths by subject, each a line of stops that open where they live
+       and a way to start; one question with what is filed under it; what is new; every part of the lab by kind */
+    await hp.waitForFunction(() => { const P = [...document.querySelectorAll('#home .hm-path')];
+      return P.length === 6 && P.every(p => p.querySelectorAll('.hm-psteps a[href^="#/"]').length >= 4 && !!p.querySelector('a.hm-pgo[href^="#/"]')); }, null, { timeout: 10000 })
+      .catch(() => problems.push(tag + ': the first page has no paths by subject, each with its stops and a way to start'));
+    if (!(await hp.$('#home .hm-qcard a.hm-qitem[href^="#/"]'))) problems.push(tag + ': the question on the first page shows nothing behind it');
+    if ((await hp.$$('#home .hm-nitem[href^="#/"]')).length < 3) problems.push(tag + ': the first page does not say what is new');
+    { const ix = await hp.evaluate(() => [...document.querySelectorAll('#home .hm-index a.hm-ilink')].map(a => a.getAttribute('href')));
+      for (const h of ['#/challenges', '#/read', '#/w', '#/island', '#/dive/chip', '#/line/crystal', '#/log']) if (!ix.includes(h)) problems.push(tag + ': the whole lab on the first page has no way to ' + h); }
     /* a scale picked on the ruler opens its level on the map, with how it is designed and made */
     await hp.waitForFunction(() => { const b = document.querySelector('#home [data-zat="5"]'); if (b && b.getAttribute('aria-pressed') !== 'true') b.click(); return document.querySelectorAll('#home .hm-twins button').length === 2 && /Gate/.test((document.querySelector('#home [data-side] h2') || {}).textContent || ''); }, null, { timeout: 10000 }).catch(() => problems.push(tag + ': the ruler does not open the gate with its designed and made twins'));
     /* a station: what can be played there, and the view it leads to */
@@ -141,7 +150,7 @@ const explore = async (tag, viewport, scheme) => {
   await page.waitForSelector('#sheet .won', { timeout: 10000 }).catch(() => problems.push(tag + ': a right design did not win the challenge'));
   if (!/grew/i.test(await page.textContent('#toast').catch(() => ''))) problems.push(tag + ': winning did not say what grew');
   if (!(await page.$('#sheet .opens[href^="#/ask/"]'))) problems.push(tag + ': the first win opens no question');
-  if (!/1 of 11/.test(await page.getAttribute('#loop [data-stage="design"]', 'aria-label').catch(() => ''))) problems.push(tag + ': the tracker did not count the win');
+  if (!/1 of 12/.test(await page.getAttribute('#loop [data-stage="design"]', 'aria-label').catch(() => ''))) problems.push(tag + ': the tracker did not count the win');
   await page.click('#sheet [data-next]').catch(() => problems.push(tag + ': no way on to the next challenge'));
   if (!/voter/i.test(await page.textContent('#sheet .player h3').catch(() => ''))) problems.push(tag + ': the next challenge is not the majority voter');
   await page.click('#sheet [data-back]');
@@ -703,6 +712,11 @@ run['labs'] = async () => {
     if (!won) problems.push(tag + ': ' + what + ' is not won by the moves that win it');
     else await inDo(id, what);
   };
+  /* the two thinnest core questions: a reliable whole from flaky parts (vote.js), a mind that cannot be copied (mortal.js) */
+  await playLab('flaky', "['mul', 'mem', 'add'].forEach(b => CL('[data-rd=\"' + b + ':3\"]:not([aria-pressed=\"true\"])'))", 'Six flaky parts, one reliable chip');
+  await playLab('mortal', "SET('#mo-share', 9); CL('[data-mo-learn=\"chip\"]:not([aria-pressed=\"true\"])'); CL('[data-mo-cal]:not([aria-pressed=\"true\"])')", 'Learn on one chip, copy to a thousand');
+  /* read the die, at the test house: name each chip from its die photo, find every block on one */
+  await playLab('dieread', "const P = '.player[data-ch=\"dieread\"] ', ty = new Set([...document.querySelectorAll(P + '[data-xr-type]')].map(g => g.dataset.xrType)), k = ty.has('dram') ? 'dram' : ty.has('pixels') ? 'camera' : ty.has('flash') ? 'mcu' : ty.has('npu') ? 'phone' : 'gpu'; CL(P + '[data-xr-kind=\"' + k + '\"]'); for (let n = 0; n < 60 && document.querySelector(P + '.xrfind'); n++) for (const t of [...ty]) { const g = document.querySelector(P + '[data-xr-type=\"' + t + '\"]'); if (g) g.dispatchEvent(new MouseEvent('click', { bubbles: true })); if (!document.querySelector(P + '.xrfind')) break; } CL(P + '[data-xr-next]')", 'Read the die');
   /* serving a language model, at the data centre: four bits despite outliers, where an answer's energy goes, read fast and write slow */
   await playLab('quantize', "CL('[data-sq-format=\"fp4\"]:not([aria-pressed=\"true\"])'); CL('[data-sq-scale=\"nv16\"]:not([aria-pressed=\"true\"])'); SET('#sq-outliers', 1)", 'Four bits, despite outliers');
   await playLab('token-energy', "SET('#se-watts', 2300); SET('#se-tokExp', 3.9); SET('#se-pue', 1.05); SET('#se-overhead', 10); SET('#se-tokExp', 4.5)", 'Where an answer\'s energy goes');

@@ -4,7 +4,8 @@
    Every station opens its own view of the chip world; the island is one way in (#/island). Data: src/data/home.js;
    logic: src/engines/home.js. Words are read with t(); the map's own are home.* */
 import { t, fmtNum, fmtWords } from '../core/i18n.js';
-import { MAP, STATIONS, LINES, ARROWS, LOOP_PATH, SCALE_PATH, THREADS, WAYS, STARTS, TOYS, SCALE } from '../data/home.js';
+import { MAP, STATIONS, LINES, ARROWS, LOOP_PATH, SCALE_PATH, THREADS, WAYS, STARTS, TOYS, SCALE, PATHS, NEW, INDEX } from '../data/home.js';
+import { FILED } from '../data/frame.js';
 import * as H from '../engines/home.js';
 
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
@@ -14,7 +15,8 @@ const ARROW = { down: '▼', up: '▲', left: '◀', right: '▶' };
 const KIND = { design: 'build', fit: 'build', evolve: 'build', aibuild: 'build', bet: 'puzzle', agent: 'puzzle', spot: 'puzzle', teardown: 'see' };
 const kindOf = c => KIND[c.kind] || 'play';
 
-/* ctx: challenges, chOf(id), titleOf(c), doHref(c), doHome(c), sizeOf(level), sizeWords(m), still() */
+/* ctx: challenges, chOf(id), titleOf(c), doHref(c), doHome(c), sizeOf(level), sizeWords(m), still(), done() (the ids of
+   the challenges finished), exps (the experiments: id, world and the question each asks) */
 export function createHome(host, ctx) {
   const at = H.challengesAt(ctx.challenges, ctx.doHome);
   const S = { way: null, sel: null, thread: null, zoom: SCALE.indexOf(TOYS.zoom.start), q: 0, a: 1, b: 0, gate: 'NAND', year: 0, pack: 1, size: 1, seed: 7, rev: 0 };
@@ -25,10 +27,10 @@ export function createHome(host, ctx) {
 
   /* ---- the page ---- */
   function draw() {
-    host.innerHTML = '<div class="hm">' + heroHtml() + '<div class="hm-toys">' + ['gate', 'shrink', 'pack', 'zoom'].map(k => '<section class="hm-toy hm-' + k + '" data-toy="' + k + '"></section>').join('') + '</div>' +
-      '<div class="hm-starts" data-starts></div>' + waysHtml() + '<div class="hm-stage" data-mapat><div class="hm-mapcard"><div class="hm-thread" data-threadbar></div><div class="hm-fit" data-fit><div class="hm-map" data-map style="width:' + MAP.w + 'px;height:' + MAP.h + 'px"></div></div><div class="hm-strips" data-strips></div></div><aside class="hm-side" data-side aria-live="polite"></aside></div>' +
-      legendHtml() + '</div>';
-    ['gate', 'shrink', 'pack', 'zoom'].forEach(toy); starts(); newWafer(); paint();
+    host.innerHTML = '<div class="hm">' + heroHtml() + '<section class="hm-paths" data-paths></section><div class="hm-toys">' + ['gate', 'shrink', 'pack', 'zoom'].map(k => '<section class="hm-toy hm-' + k + '" data-toy="' + k + '"></section>').join('') + '</div>' +
+      '<div class="hm-starts" data-starts></div>' + newHtml() + waysHtml() + '<div class="hm-stage" data-mapat><div class="hm-mapcard"><div class="hm-thread" data-threadbar></div><div class="hm-fit" data-fit><div class="hm-map" data-map style="width:' + MAP.w + 'px;height:' + MAP.h + 'px"></div></div><div class="hm-strips" data-strips></div></div><aside class="hm-side" data-side aria-live="polite"></aside></div>' +
+      legendHtml() + indexHtml() + '</div>';
+    ['gate', 'shrink', 'pack', 'zoom'].forEach(toy); paths(); starts(); newWafer(); paint();
   }
   /* the map keeps its drawing and is scaled down to the card when the card is narrower */
   function fit() {
@@ -45,7 +47,8 @@ export function createHome(host, ctx) {
     const m = STATIONS.filter(s => s.line === 'scale').map(s => ctx.sizeOf(s.id)).filter(Boolean), powers = Math.round(Math.log10(Math.max(...m) / Math.min(...m)));
     return '<section class="hm-hero"><div class="hm-herotext"><p class="kicker">' + esc(w('kicker')) + '</p><h1>' + esc(w('title')) + '</h1><p class="hm-lead">' + esc(w('lead')) + '</p>' +
       '<div class="hm-ctas"><button type="button" class="btn primary" data-tomap>' + esc(w('toMap')) + '</button><a class="btn ghost" href="#/island">' + esc(w('toIsland')) + '</a></div>' +
-      '<div class="hm-stats">' + [[STATIONS.length, 'stations'], [ctx.challenges.length, 'plays'], [powers, 'powers'], [1, 'loop']].map(([n, k]) => '<div><b>' + esc(fmtNum(n)) + '</b><span>' + esc(w('stat.' + k)) + '</span></div>').join('') + '</div></div>' +
+      '<div class="hm-stats">' + [[STATIONS.length, 'stations', null], [ctx.challenges.length, 'plays', '#/challenges'], [powers, 'powers', '#/dive/chip'], [ctx.exps.length, 'reads', '#/read']].map(([n, k, href]) =>
+        (href ? '<a href="' + href + '">' : '<button type="button" data-tomap>') + '<b>' + esc(fmtNum(n)) + '</b><span>' + esc(w('stat.' + k)) + ' →</span>' + (href ? '</a>' : '</button>')).join('') + '</div></div>' +
       '<div class="hm-wafercard"><div class="hm-wafer" data-wafer></div><div class="hm-winfo" data-winfo></div></div></section>';
   }
   function newWafer() {
@@ -121,10 +124,52 @@ export function createHome(host, ctx) {
     el.innerHTML = '<p class="kicker hm-full">' + esc(w('start.k')) + '</p>' + STARTS.map(x => { const c = x.ch && ctx.chOf(x.ch); if (x.ch && !c) return '';
       const href = c ? ctx.doHref(c) : x.href, title = c ? ctx.titleOf(c) : w('start.' + x.word + '.t'), line = w('start.' + (x.ch || x.word) + '.l');
       return '<a class="hm-start" href="' + esc(href) + '"><span class="hm-tag t-' + x.kind + '">' + esc(w('tag.' + x.kind)) + '</span><b>' + esc(title) + '</b><span class="small muted">' + esc(line) + '</span><span class="hm-at hm-c-' + H.byId[x.at].line + '">' + esc(nameOf(x.at)) + ' →</span></a>'; }).join('') +
-      '<div class="hm-start hm-qcard"><span class="hm-tag t-q">' + esc(w('tag.q')) + '</span><p class="hm-q">' + esc(t(T.word)) + '</p><div class="hm-pills"><button type="button" class="hm-pill hm-pink" data-follow="' + T.id + '">✦ ' + esc(w('start.follow')) + '</button><button type="button" class="hm-pill" data-nextq aria-label="' + esc(w('start.another')) + '">↻</button></div></div>';
+      qcardHtml(T);
+  }
+  /* one question at a time, and everything behind it: what is filed under it to play and to read, and its page */
+  function qcardHtml(T) {
+    const D = ctx.done(), home = (f, id) => f[id] && f[id][0] === T.id;
+    const C = ctx.challenges.filter(c => home(FILED.challenges, c.id)), X = ctx.exps.filter(x => home(FILED.experiments, x.id));
+    const item = (href, kind, title, done) => '<a class="hm-qitem" href="' + esc(href) + '"><span class="hm-tag t-' + kind + '">' + esc(w('tag.' + kind)) + '</span><span>' + esc(title) + '</span>' + (done ? '<span class="hm-ok">✓</span>' : '') + '</a>';
+    return '<div class="hm-start hm-qcard"><div class="hm-qtop"><span class="hm-tag t-q">' + esc(w('tag.q')) + '</span><span class="small muted">' + esc(w('qx.behind', { plays: C.length, reads: X.length, stops: T.path.length })) + '</span></div><p class="hm-q">' + esc(t(T.word)) + '</p>' +
+      '<div class="hm-qitems">' + C.slice(0, 2).map(c => item(ctx.doHref(c), kindOf(c), ctx.titleOf(c), D[c.id])).join('') + X.slice(0, 2).map(x => item('#/read/' + x.id, 'read', x.ask)).join('') + '</div>' +
+      '<div class="hm-pills">' + (T.world ? '<a class="hm-pill hm-pagego" href="#/w/' + T.world + '">' + esc(w('qx.page')) + ' →</a>' : '') + '<button type="button" class="hm-pill hm-pink" data-follow="' + T.id + '">✦ ' + esc(w('start.follow')) + '</button><button type="button" class="hm-pill" data-nextq aria-label="' + esc(w('start.another')) + '">↻</button></div></div>';
   }
 
   /* ---- ways in ---- */
+  /* ---- paths: by subject, a few stops in order, with what the visitor has finished on each ---- */
+  const stopOf = x => {
+    if (x.ch) { const c = ctx.chOf(x.ch); return c && { href: ctx.doHref(c), title: ctx.titleOf(c), kind: kindOf(c), done: !!ctx.done()[c.id] }; }
+    if (x.st) return { href: H.byId[x.st].href, title: nameOf(x.st), kind: 'see' };
+    return { href: x.page[0], title: t(x.page[1]), kind: 'page' };
+  };
+  function paths() {
+    const el = host.querySelector('[data-paths]'); if (!el) return;
+    const D = ctx.done(), nDone = ctx.challenges.filter(c => D[c.id]).length;
+    el.innerHTML = '<div class="hm-shead"><div><p class="kicker">' + esc(w('path.k')) + '</p><h2>' + esc(w('path.h')) + '</h2></div>' +
+      (nDone ? '<a class="hm-mine" href="#/log"><b>' + esc(fmtNum(nDone)) + '</b> ' + esc(w('path.mine', { total: fmtNum(ctx.challenges.length) })) + ' →</a>' : '<p class="small muted">' + esc(w('path.d')) + '</p>') + '</div><div class="hm-pgrid">' +
+      PATHS.map(P => {
+        const L = P.stops.map(stopOf).filter(Boolean), chs = L.filter(x => 'done' in x), got = chs.filter(x => x.done).length, next = L.find(x => !x.done && 'done' in x) || L[0];
+        return '<article class="hm-path hm-c-' + P.line + '"><header><span class="hm-picon hm-bg-' + P.line + '"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="' + P.icon + '"/></svg></span><div><h3>' + esc(w('path.' + P.id + '.t')) + '</h3><p class="small muted">' + esc(w('path.' + P.id + '.d')) + '</p></div></header>' +
+          '<ol class="hm-psteps">' + L.map(x => '<li' + (x.done ? ' class="done"' : '') + '><a href="' + esc(x.href) + '"><i class="hm-pdot"></i><span class="hm-tag t-' + x.kind + '">' + esc(w('tag.' + x.kind)) + '</span><span class="hm-pt">' + esc(x.title) + '</span>' + (x.done ? '<span class="hm-ok" aria-label="' + esc(w('path.ok')) + '">✓</span>' : '') + '</a></li>').join('') + '</ol>' +
+          '<footer><span class="hm-pbar" title="' + esc(w('path.got', { n: got, total: chs.length })) + '"><i style="width:' + Math.round(100 * got / Math.max(1, chs.length)) + '%"></i></span><span class="small muted">' + esc(w('path.got', { n: got, total: chs.length })) + '</span>' +
+          '<a class="hm-pgo" href="' + esc(next.href) + '">' + esc(w(got ? 'path.next' : 'path.start')) + ' →</a></footer></article>';
+      }).join('') + '</div>';
+  }
+
+  /* ---- what was added lately ---- */
+  const newHtml = () => '<section class="hm-new"><p class="kicker"><span class="hm-live"></span>' + esc(w('new.k')) + '</p><div class="hm-nrow">' + NEW.map(x => {
+    const c = x.ch && ctx.chOf(x.ch), href = c ? ctx.doHref(c) : x.href; if (x.ch && !c) return '';
+    return '<a class="hm-nitem" href="' + esc(href) + '"><span class="hm-nbadge">' + esc(w('new.badge')) + '</span><b>' + esc(w('new.' + x.id + '.t')) + '</b><span class="small muted">' + esc(w('new.' + x.id + '.d')) + '</span></a>'; }).join('') + '</div></section>';
+
+  /* ---- every part of the lab, by kind ---- */
+  const indexHtml = () => {
+    const count = { challenges: ctx.challenges.length, experiments: ctx.exps.length };
+    return '<section class="hm-index"><div class="hm-shead"><div><p class="kicker">' + esc(w('ix.k')) + '</p><h2>' + esc(w('ix.h')) + '</h2></div></div><div class="hm-igrid">' + INDEX.map(G =>
+      '<div class="hm-igroup"><p class="kicker">' + esc(w('ix.' + G.id)) + '</p><div class="hm-ilist">' + G.items.map(x =>
+        '<a class="hm-ilink" href="' + esc(x.href) + '"><b>' + esc(x.word ? t(x.word) : w('ix.' + x.id + '.t')) + (x.count ? ' <em>' + esc(fmtNum(count[x.count])) + '</em>' : '') + '</b>' + (x.word ? '' : '<span class="small muted">' + esc(w('ix.' + x.id + '.d')) + '</span>') + '</a>').join('') + '</div></div>').join('') + '</div></section>';
+  };
+
   const waysHtml = () => '<nav class="hm-ways" data-ways></nav>';
   function ways() {
     const el = host.querySelector('[data-ways]'); if (!el) return;
@@ -209,7 +254,7 @@ export function createHome(host, ctx) {
   });
 
   return {
-    show() { if (!host.firstChild) draw(); host.hidden = false; fit(); clearInterval(timer); if (!ctx.still()) timer = setInterval(tick, 70); },
+    show() { if (!host.firstChild) draw(); else { paths(); starts(); } host.hidden = false; fit(); clearInterval(timer); if (!ctx.still()) timer = setInterval(tick, 70); },
     hide() { host.hidden = true; clearInterval(timer); timer = 0; }
   };
 }
