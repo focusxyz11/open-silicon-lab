@@ -73,6 +73,15 @@ run['home'] = async () => {
       if (!(n1 < n0)) problems.push(tag + ': bigger chips do not fit fewer to a wafer (' + n0 + ' then ' + n1 + ')'); }
     /* the gate answers its switches */
     await hp.waitForFunction(() => { const b = document.querySelector('#home [data-gin="b"]'); if (b && !b.classList.contains('on')) b.click(); const l = document.querySelector('#home .hm-bulb'); return !!l && l.textContent.trim() === '0'; }, null, { timeout: 10000 }).catch(() => problems.push(tag + ': a NAND with both switches on does not go dark'));
+    /* the page leads on to the rest of the lab: six paths by subject, each a line of stops that open where they live
+       and a way to start; one question with what is filed under it; what is new; every part of the lab by kind */
+    await hp.waitForFunction(() => { const P = [...document.querySelectorAll('#home .hm-path')];
+      return P.length === 6 && P.every(p => p.querySelectorAll('.hm-psteps a[href^="#/"]').length >= 4 && !!p.querySelector('a.hm-pgo[href^="#/"]')); }, null, { timeout: 10000 })
+      .catch(() => problems.push(tag + ': the first page has no paths by subject, each with its stops and a way to start'));
+    if (!(await hp.$('#home .hm-qcard a.hm-qitem[href^="#/"]'))) problems.push(tag + ': the question on the first page shows nothing behind it');
+    if ((await hp.$$('#home .hm-nitem[href^="#/"]')).length < 3) problems.push(tag + ': the first page does not say what is new');
+    { const ix = await hp.evaluate(() => [...document.querySelectorAll('#home .hm-index a.hm-ilink')].map(a => a.getAttribute('href')));
+      for (const h of ['#/challenges', '#/read', '#/w', '#/island', '#/dive/chip', '#/line/crystal', '#/log']) if (!ix.includes(h)) problems.push(tag + ': the whole lab on the first page has no way to ' + h); }
     /* a scale picked on the ruler opens its level on the map, with how it is designed and made */
     await hp.waitForFunction(() => { const b = document.querySelector('#home [data-zat="5"]'); if (b && b.getAttribute('aria-pressed') !== 'true') b.click(); return document.querySelectorAll('#home .hm-twins button').length === 2 && /Gate/.test((document.querySelector('#home [data-side] h2') || {}).textContent || ''); }, null, { timeout: 10000 }).catch(() => problems.push(tag + ': the ruler does not open the gate with its designed and made twins'));
     /* a station: what can be played there, and the view it leads to */
