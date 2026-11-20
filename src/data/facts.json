@@ -1675,6 +1675,102 @@
    "url": "https://cgi.cse.unsw.edu.au/~cs4601/refs/papers/es97thompson.pdf",
    "value": "It worked, and depended on cells with no connection to the output",
    "verified": "2026-11-19"
+  },
+  {
+   "id": "light-per-tick",
+   "topic": "floor",
+   "detail": "Light travels 299,792,458 metres a second, exactly (the SI definition); one tick of a 3 GHz clock lasts a third of a nanosecond, in which light covers 9.99 cm. A signal in a copper wire on a board travels at about half that speed.",
+   "kind": "reported",
+   "label": "How far light goes in one tick of a 3 GHz clock",
+   "source": "NIST (speed of light in vacuum)",
+   "status": "current",
+   "url": "https://physics.nist.gov/cgi-bin/cuu/Value?c",
+   "value": "About 10 cm",
+   "verified": "2026-11-20"
+  },
+  {
+   "id": "shannon-1948",
+   "topic": "floor",
+   "detail": "Shannon, A Mathematical Theory of Communication (Bell System Technical Journal, 1948): a channel of bandwidth B and signal-to-noise ratio S/N carries at most B log2(1 + S/N) bits a second without error; more noise or more distance means fewer bits through the same wire.",
+   "kind": "reported",
+   "label": "Shannon's limit on a noisy channel",
+   "source": "Bell System Technical Journal (Shannon)",
+   "status": "current",
+   "url": "https://doi.org/10.1002/j.1538-7305.1948.tb01338.x",
+   "value": "At most B log2(1 + S/N) bits a second (1948)",
+   "verified": "2026-11-20"
+  },
+  {
+   "id": "landauer-1991",
+   "topic": "floor",
+   "detail": "Landauer, Information is Physical (Physics Today, 1991): information is always carried by something physical (a charge, a spin, a hole in a card), so its handling obeys physics; erasing a bit costs at least kT ln 2 of heat.",
+   "kind": "reported",
+   "label": "Information is physical",
+   "source": "Physics Today (Landauer)",
+   "status": "current",
+   "url": "https://doi.org/10.1063/1.881299",
+   "value": "Every bit rides on something physical (1991)",
+   "verified": "2026-11-20"
+  },
+  {
+   "id": "memory-wall",
+   "topic": "memory",
+   "detail": "Wulf and McKee, Hitting the Memory Wall: Implications of the Obvious (Computer Architecture News, 1995), citing microprocessor performance growing about 80% a year and DRAM speed about 7% a year: if the gap kept growing, a processor would soon spend most of its time waiting for memory.",
+   "kind": "reported",
+   "label": "The memory wall",
+   "source": "University of Virginia (Wulf and McKee)",
+   "status": "current",
+   "url": "https://libraopen.lib.virginia.edu/public_view/k35694375",
+   "value": "Processors about 80% faster a year, memory about 7% (1995)",
+   "verified": "2026-11-20"
+  },
+  {
+   "id": "hbm2-energy",
+   "topic": "memory",
+   "detail": "O'Connor et al., Fine-Grained DRAM: Energy-Efficient DRAM for Extreme Bandwidth Systems (MICRO 2017, NVIDIA Research): accessing a bit in an HBM2 stack costs about 3.97 pJ, most of it moving the bit inside the DRAM and across to the processor.",
+   "kind": "reported",
+   "label": "Energy to read one bit from stacked memory (HBM2)",
+   "source": "NVIDIA Research (O'Connor et al.)",
+   "status": "current",
+   "url": "https://research.nvidia.com/publication/2017-10_fine-grained-dram-energy-efficient-dram-extreme-bandwidth-systems",
+   "value": "About 4 pJ a bit",
+   "verified": "2026-11-20"
+  },
+  {
+   "id": "optics-power",
+   "topic": "package",
+   "detail": "The Register, 22 November 2025: a pluggable optical transceiver draws 9 to 15 W depending on its speed (about 11 to 19 pJ a bit at 800 Gb/s); Nvidia says its co-packaged optics switches are up to 3.5 times more energy efficient, and Broadcom that they could cut optics power by 65%. Light's energy per bit hardly grows with distance.",
+   "kind": "claim",
+   "label": "Power of optical links between chips",
+   "source": "The Register",
+   "status": "current",
+   "url": "https://www.theregister.com/2025/11/22/cpo_ai_nvidia_broadcom/",
+   "value": "Pluggable optics 9–15 W each; co-packaged up to 3.5× more efficient",
+   "verified": "2026-11-20"
+  },
+  {
+   "id": "nerve-speed",
+   "topic": "neuro",
+   "detail": "BioNumbers 108982, from Zalc, Goujet and Colman (Current Biology, 2008): an action potential travels 50 to 100 m/s along a myelinated axon of a vertebrate; a bare fibre is far slower.",
+   "kind": "reported",
+   "label": "Speed of a signal along a myelinated nerve",
+   "source": "BioNumbers (Harvard)",
+   "status": "current",
+   "url": "https://bionumbers.hms.harvard.edu/bionumber.aspx?id=108982",
+   "value": "50 to 100 m/s",
+   "verified": "2026-11-20"
+  },
+  {
+   "id": "llama3-mfu",
+   "topic": "accelerators",
+   "detail": "The Llama 3 Herd of Models (Meta, 2024), Table 4: training the 405-billion-parameter model used 38% to 43% of the GPUs' peak arithmetic (BF16 model FLOPs utilization) on 8,192 to 16,384 H100s; the rest of the time went to waiting for data, communication and other overheads.",
+   "kind": "reported",
+   "label": "How much of an AI cluster's arithmetic is used",
+   "source": "arXiv (Meta, Llama 3)",
+   "status": "current",
+   "url": "https://arxiv.org/abs/2407.21783",
+   "value": "38–43% of peak while training Llama 3 405B",
+   "verified": "2026-11-20"
   }
  ],
  "changes": [
