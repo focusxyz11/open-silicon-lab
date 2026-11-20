@@ -95,3 +95,40 @@ test('the port shows agents the same world: from the island, every name look giv
   assert.equal(look({ at: 'gate' }).along.make, 'print'); assert.equal(look({ at: 'print' }).along.use, 'gate');
   assert.equal(look({ at: 'nowhere' }).ok, false);
 });
+
+test('steps are along, levels are in · out: the studio and the line are rows of steps, and only some steps show a level', async () => {
+  const { stepsOf, levelOfStep, levelsOfSteps, stepOfLevel, inOutOfStep } = await import('../src/engines/way.js');
+  /* the studio's steps, in order, and the levels three of them show (the grid's Design column) */
+  assert.deepEqual(stepsOf('bench'), ['need', 'logic', 'check', 'gates', 'layout', 'masks']);
+  assert.deepEqual(stepsOf('bench').map(s => levelOfStep('bench', s)), ['chip', null, null, 'gate', 'block', null]);
+  assert.deepEqual(levelsOfSteps('bench'), ['chip', 'block', 'gate']);
+  /* the line's steps are the journey, and its levels the whole Make column, biggest first */
+  assert.equal(stepsOf('line')[0], 'crystal'); assert.equal(stepsOf('line').at(-1), 'ship');
+  assert.deepEqual(levelsOfSteps('line'), ['chip', 'block', 'gate', 'switch', 'atom']);
+  for (const s of ['slice', 'clean', 'deposit', 'test', 'ship']) assert.equal(levelOfStep('line', s), null, s + ' shows no level');
+  assert.equal(stepOfLevel('line', 'atom', 'crystal'), 'crystal'); assert.equal(stepOfLevel('line', 'atom', 'print'), 'implant');
+  /* every level on a rail is shown by some step, and the step it leads to shows it */
+  for (const v of ['bench', 'line']) for (const lv of levelsOfSteps(v)) assert.equal(levelOfStep(v, stepOfLevel(v, lv, null)), lv, v + '/' + lv);
+  /* in · out in the studio: the job (the chip) → layout (its blocks) → gates, and back; nothing at a step without a level */
+  assert.equal(inOutOfStep('bench', 'need', 1), 'layout'); assert.equal(inOutOfStep('bench', 'layout', 1), 'gates'); assert.equal(inOutOfStep('bench', 'gates', 1), null);
+  assert.equal(inOutOfStep('bench', 'gates', -1), 'layout'); assert.equal(inOutOfStep('bench', 'layout', -1), 'need'); assert.equal(inOutOfStep('bench', 'need', -1), null);
+  for (const s of ['logic', 'check', 'masks']) for (const d of [1, -1]) assert.equal(inOutOfStep('bench', s, d), null, s);
+  /* in · out always goes to a smaller level going in, a bigger one going out */
+  for (const v of ['bench', 'line']) for (const s of stepsOf(v)) for (const d of [1, -1]) { const to = inOutOfStep(v, s, d); if (!to) continue;
+    const L = levelsOfSteps(v); assert.equal(Math.sign(L.indexOf(levelOfStep(v, to)) - L.indexOf(levelOfStep(v, s))), d, v + ' ' + s + ' ' + d); }
+  /* the address of a step says its step and the level it shows */
+  assert.equal(whereOf('#/bench/layout').size, 'block'); assert.equal(whereOf('#/bench/check').size, null); assert.equal(whereOf('#/line/print').step, 'print');
+});
+
+test('Around here offers a level at another stage only where the step shows one', () => {
+  /* describe, check and masks show no level: no stage holds anything from there, and along lands at that stage's place */
+  for (const s of ['logic', 'check', 'masks']) { const W = whereOf('#/bench/' + s);
+    for (const st of STAGES) { assert.ok(!holds(W, st), s + ' holds a level at ' + st); const to = alongTo(W, st); if (to) assert.match(to, /^#\/place\//, s + ' → ' + st); } }
+  /* the job, gates and layout hold their level as made and in use */
+  assert.equal(alongTo(whereOf('#/bench/gates'), 'use'), '#/dive/gate'); assert.ok(holds(whereOf('#/bench/gates'), 'use'));
+  assert.ok(holds(whereOf('#/bench/need'), 'make')); assert.ok(holds(whereOf('#/bench/layout'), 'make'));
+  /* on the line, walking the same row to the test house or the packing is a step along, not the same level at another stage */
+  const pr = whereOf('#/line/print');
+  assert.ok(!holds(pr, 'test')); assert.ok(!holds(pr, 'ship')); assert.ok(holds(pr, 'design')); assert.ok(holds(pr, 'use'));
+  for (const s of ['slice', 'clean', 'deposit', 'test', 'ship']) for (const st of STAGES) assert.ok(!holds(whereOf('#/line/' + s), st), s + ' → ' + st);
+});

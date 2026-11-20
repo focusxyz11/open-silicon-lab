@@ -781,6 +781,8 @@ export function start() {
   let Joule = null;   /* the lens of the energy puzzle on the data centre's dive (src/v2/joule.js) */
   let flatKind = 'dive', diveFrame = null, diveD = -1, divePart = null, diveThread = null, benchCh = null, WE = null, DiveData = null, DS = null;
   const levelsOf = k => FL(k).levels || DiveData.WORLDS.find(w => w.id === FL(k).world).depths;
+  /* the views that are a row of steps walked along, not a column of levels */
+  const rowsOf = k => k === 'line' || k === 'bench';
   const diveId = () => WE.IDS[diveD];
   const ensureDive = () => dive ? Promise.resolve(dive) : Promise.all([import('../engines/weave.js'), import('../app/world.js'), import('../data/weave.js'), import('../app/design.js'), import('../app/journey.js'), import('./overlay.js'), import('../app/scenes.js')]).then(([E, Wm, Wd, Ds, Jm, Om, Sc]) => {
     WE = E; DiveData = Wd; DS = Ds; threadColorOf = Wm.threadColor; partsAt = Sc.partsOf;
@@ -818,7 +820,12 @@ export function start() {
     if (!levelsOf(flatKind).includes(id)) { if (flatKind === 'dive' && diveWorld === 'datacentre') location.hash = '#/place/datacentre/' + (id === 'board' ? 4 : 2); return; }   /* above the chip, the flight takes over */
     if (d !== diveD) { divePart = null; diveThread = null; dive.setThread(null); dive.select(null); }
     diveD = d; if (Joule && flatKind === 'dive') Joule.level(id); if (!diveFrame) return;
-    const L = levelsOf(flatKind); diveFrame.rail(id, L.indexOf(id) / (L.length - 1)); diveFrame.level(id); diveNotes(); here();
+    const L = levelsOf(flatKind);
+    /* a row of steps (the line, the bench): the step is lit on the line of steps, and the rail shows only the level the
+       step shows, if any (src/engines/way.js, steps and levels) */
+    if (rowsOf(flatKind)) { const lv = Way.levelOfStep(flatKind, id), R = Way.levelsOfSteps(flatKind); diveFrame.steps(id); diveFrame.rail(lv, lv ? R.indexOf(lv) / (R.length - 1) : 0); }
+    else diveFrame.rail(id, L.indexOf(id) / (L.length - 1));
+    diveFrame.level(id); diveNotes(); here();
     if (diveFrame.mode() === 'look' && !benchCh) drawDive();
   }
   /* words on the picture: the note on the part you picked, from its one home in the atlas. A note opens only on a
@@ -955,11 +962,16 @@ export function start() {
     const hereHtml = sk ? seekHtml(sk, divePart) : pk.length ? '<div class="herebox"><p class="kicker">' + esc(t('place.here')) + '</p><ul class="here2">' + pk.map(k => { const w = DiveData.partWord(id, k); return '<li><button type="button" data-pick="' + esc(k) + '"' + (k === divePart ? ' class="on"' : '') + '><b>' + esc(t('part.' + w)) + '</b><span>' + esc(t('what.' + w)) + '</span></button></li>'; }).join('') + '</ul></div>' : '';
     diveFrame.dock.innerHTML = lineHtml(t('around.view.' + flatKind) + ' · ' + t('depth.' + id + '.name'), t('depth.' + id + '.see'), key, aroundRow(
       i ? '<button type="button" class="chipb" data-key="back" data-divego="' + (diveD - 1) + '">' + ar0 + esc(nm(L[i - 1])) + '</button>' : flatKind === 'dive' && diveWorld === 'datacentre' ? '<button type="button" class="chipb" data-key="back" data-divego="' + (diveD - 1) + '">' + esc(t('dive.up')) + '</button>' : '',
-      last ? end : '<button type="button" class="chipb" data-key="next"' + (flatKind === 'dive' ? ' data-in' : al) + ' data-divego="' + (diveD + 1) + '">' + ar1 + esc(nm(L[i + 1])) + '</button>', inHtml));
+      last ? end : '<button type="button" class="chipb" data-key="next"' + (flatKind === 'dive' ? ' data-in' : al) + ' data-divego="' + (diveD + 1) + '">' + ar1 + esc(nm(L[i + 1])) + '</button>', inHtml || benchIn(id, 1), benchIn(id, -1)));
     diveFrame.dock.innerHTML = (sk ? seekLit(diveFrame.dock.innerHTML, sk) : diveFrame.dock.innerHTML).replace('<div class="nav">', yours + (hereHtml.startsWith('<div class="seek') ? '' : '<p class="small muted hintline">' + esc(t(F.hint)) + '</p>') + hereHtml + '<div class="nav">');
     if (sk) seekLight(sk);
     requestAnimationFrame(diveInset);
   }
+  /* in · out at the bench: from a step that shows a level of the chip, to the step that shows the level inside it (the
+     job's chip → layout's blocks → the gates) or around it. ↓ and ↑ take them; nothing at describe, check or masks */
+  const benchIn = (id, dir) => { const to = flatKind === 'bench' && Way.inOutOfStep('bench', id, dir); if (!to) return '';
+    const lv = Way.levelOfStep('bench', to), name = t('depth.' + to + '.name');
+    return '<button type="button" class="chipb" ' + (dir > 0 ? 'data-in data-inname="' + esc(t('depth.' + lv + '.name') + ' · ' + name) + '"' : 'data-out') + ' data-divego="' + WE.IDS.indexOf(to) + '">' + (dir > 0 ? '↓ ' : '↑ ') + esc(name) + '</button>'; };
   /* the way into a station of the line (src/data/weave.js DIVES): the machine that prints with light, or what the step makes */
   const cap1 = w => w.charAt(0).toUpperCase() + w.slice(1);
   const lineIn = id => { const dv = DiveData && (DiveData.DIVES[id] || [])[0]; return dv ? '#/dive/' + dv[1] + '/' + dv[0] : null; };
@@ -978,7 +990,8 @@ export function start() {
   const diveInset = () => { if (!dive || !diveFrame) return; const wide = innerWidth > 720, b = innerWidth >= 1100 ? 24 : (diveFrame.restH ? diveFrame.restH() : diveFrame.dock.parentNode.offsetHeight) + (wide ? 24 : 18), lens = Joule && S.joule.on && innerWidth >= 1100 ? 356 : 0, top = Joule ? Joule.bottom() : 0;
     /* the new frame (?frame=2): the picture stands right of the caption at rest, and left of the side panel */
     const f2 = FRAME2 && innerWidth >= 1100 && vui.classList.contains('f2') ? diveFrame.dock.parentNode.getBoundingClientRect() : null, f2cap = f2 && vui.classList.contains('f2cap');
-    dive.setInset({ l: f2cap ? Math.max(90, Math.round(f2.right - 120)) : wide ? 90 : 8, r: (f2 && !f2cap ? Math.round(f2.width) + 32 : wide ? 20 : 8) + lens, t: top ? top + 8 : wide ? 122 : 116, b });
+    const st = rowsOf(flatKind) ? (wide ? 70 : 40) : 0;   /* the line of steps across the top of the picture */
+    dive.setInset({ l: f2cap ? Math.max(90, Math.round(f2.right - 120)) : wide ? 90 : 8, r: (f2 && !f2cap ? Math.round(f2.width) + 32 : wide ? 20 : 8) + lens, t: (top ? top + 8 : wide ? 122 : 116) + st, b });
     /* a level drawn in 3D takes its square when the zoom moves; it is told now, so it moves with the frame */
     if (flatKind === 'dive' && WE) levelZoom(dive.z); };
   /* the bench: a design challenge played in the dock; the drawings above follow your description */
@@ -1005,8 +1018,12 @@ export function start() {
       if (kind === 'bench') { const Y = Game.yourDesign(S); DS.setDesign(Y ? Y.B : Game.checkDesign('half', S.codes.half || Game.starter('half'))); }
       const L = levelsOf(kind);
       diveFrame = frameOf(vui, { up: { href: F.up, label: t(F.upWord) }, path: [{ href: '#/island', label: t('place.back') }, { href: F.up, label: t(F.upWord) }, { label: t(F.title) }],
-        rail: { label: t('place.levels'), items: L.map(k => ({ id: k, label: t('depth.' + k + '.name'), size: kind === 'dive' ? sizeOf(k) : null })) },
-        onRail: k => w.flyTo(WE.IDS.indexOf(k)), onLook: () => { if (benchCh) { benchCh = null; const dk = diveFrame.dock; dk.classList.remove('benchdock'); dk.onclick = null; dk.oninput = null; } drawDive(); }, caption: kind === 'dive' }); watchDock();
+        rail: rowsOf(kind) ? { label: t('frame.levels.' + kind), optional: true, items: Way.levelsOfSteps(kind).map(k => ({ id: k, label: t('depth.' + k + '.name'), size: sizeOf(k) })) }
+          : { label: t('place.levels'), items: L.map(k => ({ id: k, label: t('depth.' + k + '.name'), size: kind === 'dive' ? sizeOf(k) : null })) },
+        /* in a row of steps the rail's levels lead to the step that shows them; the steps are walked along their own line */
+        steps: rowsOf(kind) ? { label: t('frame.steps.' + kind), items: L.map(k => ({ id: k, label: t('depth.' + k + '.name') })) } : null,
+        onStep: k => w.flyTo(WE.IDS.indexOf(k)),
+        onRail: k => { const s = rowsOf(kind) ? Way.stepOfLevel(kind, k, diveId()) : k; if (s) w.flyTo(WE.IDS.indexOf(s)); }, onLook: () => { if (benchCh) { benchCh = null; const dk = diveFrame.dock; dk.classList.remove('benchdock'); dk.onclick = null; dk.oninput = null; } drawDive(); }, caption: kind === 'dive' }); watchDock();
       /* the data centre's dive wears the lens of the energy puzzle: Follow the joule */
       vui.classList.remove('jouling');
       Joule = kind === 'dive' && diveWorld === 'datacentre' ? createJoule(vui, { S, save,
@@ -1530,6 +1547,7 @@ export function start() {
       if (column) { const b = host.querySelector('.dock [data-key="' + (down ? 'next' : 'back') + '"]'); if (b) { b.click(); e.preventDefault(); } else if (!down) { const up = host.querySelector('.homebtn'); if (up) { location.hash = up.getAttribute('href'); e.preventDefault(); } } return; }
       if (host === sheet) { const a = down && sheet.querySelector('.nav a.btn.primary'); if (a) { a.click(); e.preventDefault(); } return; }
       if (down) { const a = host.querySelector('.dock [data-in]'); if (a) { a.click(); e.preventDefault(); } return; }
+      const out = host.querySelector('.dock [data-out]'); if (out) { out.click(); e.preventDefault(); return; }
       const up = host.querySelector('.homebtn'); if (up) { location.hash = up.getAttribute('href'); e.preventDefault(); } return; }
     if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
     if (column) { const i = Way.STAGES.indexOf(W.stage), n = Way.STAGES.length; along(Way.STAGES[(i + (e.key === 'ArrowRight' ? 1 : n - 1)) % n]); e.preventDefault(); return; }
