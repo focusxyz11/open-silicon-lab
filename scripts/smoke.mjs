@@ -30,7 +30,7 @@ const SECTIONS = [
   ['frame', 'the size at every level and the ring on the way in, desktop and phone'],
   ['flights', 'the data centre\'s way in and its flight into the chip; the studio walked inside, with a handoff to a bench; the phone\'s and the car\'s flights into their chips'],
   ['machines', 'machines from shared blocks: a form changed, an agent\'s pick used, where it is made, liquid hardware keeping up with a radio, the lab\'s curve and an attempt kept, new matter\'s claims and the guesses switch, desktop and phone'],
-  ['frame2', 'the new frame behind ?frame=2 (#271): the caption at a dive level with its question in full, desktop and phone; Half the power won in Do mode, its instrument on the stage beside the panel that holds its controls; a question\'s page in Read mode, its column, its picture and the bar'],
+  ['frame2', 'the new frame behind ?frame=2 (#271): the caption at a dive level with its question in full, desktop and phone; on a phone the sheet at three heights, the seam note in it, the names at the gate apart and Your log clear of the loop; Half the power won in Do mode, its instrument on the stage beside the panel that holds its controls; a question\'s page in Read mode, its column, its picture and the bar'],
 ];
 const argv = process.argv.slice(2);
 if (argv.includes('--list')) { for (const [n, about] of SECTIONS) console.log(n.padEnd(16) + about); process.exit(0); }
@@ -1079,9 +1079,43 @@ run['frame2'] = async () => {
       if (!q || !h) return false; const r = w.getBoundingClientRect(), qr = q.getBoundingClientRect(), hr = h.getBoundingClientRect();
       return hr.top >= r.top && qr.bottom <= r.bottom + 1 && q.scrollHeight <= q.clientHeight + 1 && w.scrollHeight <= w.clientHeight + 1 && r.bottom <= innerHeight; }, null, { timeout: 90000, polling: 1000 })
       .catch(() => problems.push(tag + ': at rest, the sheet does not show the level\'s name and the whole question'));
+    /* the sheet's three heights (#275): a tap on the handle goes up from the peek to half, then to the whole, then back
+       to the peek; each poll taps again only from the height before */
+    const peekH = await pp.evaluate(() => { const w = document.querySelector('#diveui > .dockwrap'); return w ? w.getBoundingClientRect().height : 0; });
+    for (const [from, to] of [['peek', 'f2half'], ['f2half', 'f2full'], ['f2full', 'peek']]) {
+      await pp.waitForFunction(([from, to, peekH]) => { const w = document.querySelector('#diveui.f2 > .dockwrap'), hd = w && w.querySelector(':scope > .peekbar'); if (!hd) return false;
+        if (w.classList.contains(from) && !w.classList.contains(to)) hd.click();
+        const r = w.getBoundingClientRect(); if (!w.classList.contains(to) || w.style.top) return false;
+        return to === 'peek' ? Math.abs(r.height - peekH) < 2 && hd.getAttribute('aria-expanded') === 'false'
+          : to === 'f2half' ? r.height > peekH + 40 && r.top >= innerHeight * 0.45 && hd.getAttribute('aria-expanded') === 'true'
+          : r.top <= 120 && r.bottom <= innerHeight; }, [from, to, peekH], { timeout: 20000, polling: 500 })
+        .catch(() => problems.push(tag + ': a tap on the handle does not move the sheet from ' + from + ' to ' + to));
+    }
+    /* a notice goes into the sheet, never over the picture: the seam crossed from the gate up to the block */
+    await pp.waitForFunction(() => { if (location.hash !== '#/dive/block') location.hash = '#/dive/block';
+      const n = document.querySelector('.seamnote'), w = document.querySelector('#diveui.f2 > .dockwrap'); if (!n || n.hidden || !w || !w.contains(n)) return false;
+      const N = n.getBoundingClientRect(), W = w.getBoundingClientRect(); return N.top >= W.top && N.bottom <= W.bottom && !!w.querySelector('.f2head .f2t'); }, null, { timeout: 30000, polling: 500 })
+      .catch(() => problems.push(tag + ': the seam note does not sit in the sheet on a phone'));
     const side = await pp.evaluate(() => document.documentElement.scrollWidth - innerWidth);
     if (side > 1) problems.push(tag + ': the page scrolls sideways by ' + side + ' px');
     await pp.close(); }
+  /* a narrow phone in 3D (#275): the names on the gate keep apart (src/v2/kit3d.js), none covering another nor the
+     frame's own things; on a reading page Your log does not cover the loop's dots */
+  { const tag = 'frame2 phone names', np = await browser3d.newPage({ viewport: { width: 360, height: 780 }, hasTouch: true, isMobile: true, reducedMotion: 'reduce' }); np.on('pageerror', e => problems.push(tag + ': ' + e.message));
+    await np.addInitScript(() => { try { localStorage.setItem('osl-quality', 'keep'); localStorage.setItem('osl-hints-v1', JSON.stringify({ seen: {}, off: true })); } catch (e) { /* no storage */ } });
+    await np.goto(base + 'index.html?frame=2#/dive/gate');
+    await np.waitForFunction(() => { if (location.hash !== '#/dive/gate') location.hash = '#/dive/gate';
+      const host = document.getElementById('l3-gate'); if (!host || host.hidden || document.documentElement.dataset.join) return false;
+      const box = e => { const r = e.getBoundingClientRect(); return [r.left, r.top, r.right, r.bottom]; }, cross = (a, b) => a[0] < b[2] && b[0] < a[2] && a[1] < b[3] && b[1] < a[3];
+      const N = [...host.querySelectorAll('.lbl3.part3')].filter(e => e.style.opacity !== '0' && e.offsetParent).map(box);
+      const K = [...document.querySelectorAll('#diveui > :is(.homebtn, .joulebtn, .dockwrap), #diveui > .crumbs2 > a, .bar')].filter(e => e.offsetParent || e.matches('.bar')).map(box);
+      return N.length >= 3 && N.every((a, i) => N.every((b, j) => i === j || !cross(a, b)) && K.every(k => !cross(a, k))); }, null, { timeout: 90000, polling: 1000 })
+      .catch(() => problems.push(tag + ': on a phone, names on the gate cover each other or the frame'));
+    await np.waitForFunction(() => { if (location.hash !== '#/w/fail') location.hash = '#/w/fail';
+      const bar = document.querySelector('.bar.f2reading'), ol = bar && bar.querySelector('.loop ol'), log = document.getElementById('logbtn'); if (!ol || !log) return false;
+      const L = ol.getBoundingClientRect(), G = log.getBoundingClientRect(), loop = bar.querySelector('.loop'); return L.right <= G.left && loop.scrollWidth <= loop.clientWidth + 1; }, null, { timeout: 30000, polling: 1000 })
+      .catch(() => problems.push(tag + ': on a reading page, Your log covers the loop\'s dots'));
+    await np.close(); }
   /* Read (#273): a question's page is a reading page in the frame, a column of about 70 characters at 18 to 18.5 px
      with its picture pinned beside it (first on a phone, under the title); the bar says Reading and lights no stage;
      the way back leads to where you came from (here, your log) */

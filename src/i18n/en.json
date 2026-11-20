@@ -3183,6 +3183,7 @@
  "frame2.where": "Where you are",
  "frame2.whereBack": "Back to the {level}, where you are",
  "frame2.reading": "Reading",
+ "frame2.sheetFull": "Open the card to the top",
  "frame2.backK": "Back to",
  "frame2.back": "Back to {where}, where you came from",
  "frame2.backMap": "The map",

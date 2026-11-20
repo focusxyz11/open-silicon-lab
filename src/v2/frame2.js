@@ -47,6 +47,10 @@ export function boot() {
   const page = document.getElementById('page'), loop = document.getElementById('loop');
   if (page && typeof MutationObserver === 'function') new MutationObserver(() => readPage(page)).observe(page, { childList: true, subtree: true });
   if (loop && typeof MutationObserver === 'function') new MutationObserver(() => bar(loop)).observe(loop, { childList: true });
+  /* a phone (#275): the bar's log beside the loop, the notices in the sheet */
+  const log = document.getElementById('logbtn'), fit = () => fitBar();
+  if (typeof MutationObserver === 'function') [loop, log].forEach(n => { if (n) new MutationObserver(fit).observe(n, { childList: true, subtree: true, attributes: true }); });
+  addEventListener('resize', () => { fit(); notices(); }); fit();
 }
 
 /* ---- Read ---- */
@@ -159,6 +163,7 @@ export function attach(host, api, o, x) {
     host.classList.toggle('f2', on); host.classList.toggle('f2cap', on && cap); host.classList.toggle('f2side', on && !cap); host.classList.toggle('f2stage', inst);
     host.classList.toggle('f2open', look && open);
     where.hidden = !inst; if (inst) drawWhere();
+    fold(); notices();
     const els = inst ? [player.querySelector('[data-f2="goal"]'), player.querySelector('[data-f2="instrument"]')].filter(Boolean) : cap ? [wrap] : [];
     if (ro && (els.length !== watched.length || els.some((e, i) => e !== watched[i]))) { ro.disconnect(); els.forEach(e => ro.observe(e)); watched = els; }
     measure();
@@ -182,6 +187,8 @@ export function attach(host, api, o, x) {
   };
   const ro = typeof ResizeObserver === 'function' ? new ResizeObserver(measure) : null;
   let watched = [];
+  const fold = sheet(host, wrap, now);
+  if (!host.f2notes && typeof MutationObserver === 'function') { host.f2notes = true; new MutationObserver(notices).observe(host, { childList: true }); }
   new MutationObserver(update).observe(dock, { childList: true, subtree: true, characterData: true });
   addEventListener('resize', () => { if (!host.hidden) update(); });
   host.addEventListener('click', e => {
@@ -191,4 +198,110 @@ export function attach(host, api, o, x) {
     if (e.target.closest('[data-mode]')) { open = false; update(); }
   });
   update();
+}
+
+/* ---- a phone (#275): the sheet at three heights, the notices in it, and the bar's log beside the loop ----
+   The frame's card on a phone is a sheet (src/v2/frame.js gives it its peek and its handle). In the new frame it
+   rests at three heights: the peek (the level's name and its whole question), half the screen, and the whole of it
+   under the way out. A tap on the handle goes up a height (from the top, back to the peek); a drag on the handle or the
+   sheet's head (or anywhere on the peek) moves it with the finger and lets it settle at the nearest height, or the
+   next one the way it was flicked. A touch on the picture lets it down to the peek, as before. While a challenge is
+   played it never folds to the peek; while a lab's instrument has the stage the sheet stays under it, so the
+   instrument is always in sight above the controls. sheet(): one per frame, called by attach. */
+const STATES = ['peek', 'half', 'full'];
+const still = () => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+function sheet(host, wrap, now) {
+  const dock = wrap.querySelector('.dock'), handle = wrap.querySelector('.peekbar');
+  if (!dock || !handle) return () => {};
+  let at = wrap.classList.contains('peek') ? 'peek' : 'half', drag = null, tm = 0, hold = false;
+  const on = () => now() && phone() && host.classList.contains('f2') && !host.hidden;
+  const busy = () => !!dock.querySelector('.player, .stopx') || dock.classList.contains('benchdock');
+  const states = () => host.classList.contains('f2stage') ? ['half'] : busy() ? ['half', 'full'] : STATES;
+  const classes = s => { wrap.classList.toggle('peek', s === 'peek'); host.classList.toggle('peeked', s === 'peek'); wrap.classList.toggle('f2half', s === 'half'); wrap.classList.toggle('f2full', s === 'full'); };
+  const label = () => { const S = states(), up = S[(S.indexOf(at) + 1) % S.length];
+    handle.setAttribute('aria-expanded', String(at !== 'peek')); handle.setAttribute('aria-label', t(up === 'full' ? 'frame2.sheetFull' : up === 'half' ? 'frame.peek.open' : 'frame.peek.fold')); handle.hidden = S.length < 2; };
+  const settle = () => { clearTimeout(tm); wrap.style.transition = ''; wrap.style.top = ''; };
+  /* to a height; from: where its top was, so it glides there */
+  const set = (s, from) => {
+    const S = states(); if (!S.includes(s)) s = S.includes('half') ? 'half' : S[0];
+    if (from == null) from = wrap.offsetTop;
+    settle(); at = s; if (s === 'peek') dock.scrollTop = 0; classes(s); label();
+    const to = wrap.offsetTop; if (still() || Math.abs(to - from) < 2) return;
+    wrap.style.transition = 'none'; wrap.style.top = from + 'px'; void wrap.offsetHeight;
+    wrap.style.transition = 'top .26s cubic-bezier(.2, .8, .2, 1)'; wrap.style.top = to + 'px';
+    tm = setTimeout(settle, 300);
+  };
+  /* the frame folds or opens the card itself (a touch on the picture, on the peek, a challenge begun): follow it */
+  new MutationObserver(() => {
+    if (!on() || drag) return; const p = wrap.classList.contains('peek');
+    if (p && at !== 'peek') { at = 'peek'; classes('peek'); label(); }
+    else if (!p && at === 'peek') { if (hold) { hold = false; classes('peek'); label(); } else set('half', host.clientHeight - 10 - wrap.offsetHeight); }
+    else if (!p && !wrap.classList.contains('f2' + at)) classes(at);
+  }).observe(wrap, { attributes: true, attributeFilter: ['class'] });
+  /* a tap on the handle: up a height, and from the top back down. Heard before the frame's own (two heights) */
+  host.addEventListener('click', e => {
+    if (!on()) return;
+    if (e.target.closest('.dockwrap > .peekbar')) { e.preventDefault(); e.stopPropagation(); const S = states(); return set(S[(S.indexOf(at) + 1) % S.length]); }
+    /* closing a notice on the peek leaves it a peek */
+    if (at === 'peek' && e.target.closest('.dockwrap > .toast, .dockwrap > .seamnote [data-seamx]')) hold = true;
+  }, true);
+  /* a drag: on the handle, the sheet's head, or anywhere on the peek but its controls */
+  const grip = e => e.target === wrap || !!e.target.closest('.peekbar, .f2head, .dock > .kicker:first-child') || (at === 'peek' && !e.target.closest('button, a, input, select, textarea'));   /* i18n-ok: selectors */
+  wrap.addEventListener('pointerdown', e => {
+    if (!on() || e.button > 0 || !grip(e) || states().length < 2) return;
+    drag = { id: e.pointerId, y0: e.clientY, top: wrap.offsetTop, moved: false, last: [[e.clientY, e.timeStamp]] };
+  });
+  wrap.addEventListener('pointermove', e => {
+    if (!drag || e.pointerId !== drag.id) return;
+    const dy = e.clientY - drag.y0;
+    if (!drag.moved) {
+      if (Math.abs(dy) < 8) return;
+      /* where each height puts the top, then the sheet follows the finger with all its words shown */
+      settle(); const was = at, tops = {};
+      for (const s of states()) { classes(s); tops[s] = wrap.offsetTop; }
+      classes(was === 'peek' ? 'half' : was); drag.tops = tops; drag.moved = true; wrap.classList.add('f2drag');
+      try { wrap.setPointerCapture(e.pointerId); } catch (x) { /* the drag still follows while over the sheet */ }
+    }
+    const T = drag.tops, lo = Math.min(...Object.values(T)), hi = Math.max(...Object.values(T)) + 24;
+    wrap.style.top = Math.min(Math.max(drag.top + dy, lo - 12), hi) + 'px';
+    drag.last.push([e.clientY, e.timeStamp]); if (drag.last.length > 5) drag.last.shift();
+  });
+  const end = e => {
+    if (!drag || e.pointerId !== drag.id) return; const d = drag; drag = null; wrap.classList.remove('f2drag');
+    if (!d.moved) return;
+    /* the click that ends a drag is not a tap */
+    const eat = ev => { ev.stopPropagation(); ev.preventDefault(); }; addEventListener('click', eat, { capture: true, once: true }); setTimeout(() => removeEventListener('click', eat, true), 350);
+    const top = wrap.offsetTop, [a, b] = [d.last[0], d.last[d.last.length - 1]], v = b && a && b[1] > a[1] ? (b[0] - a[0]) / (b[1] - a[1]) : 0;
+    const S = states().slice().sort((x, y) => d.tops[x] - d.tops[y]);   /* the tallest first */
+    let to = S.reduce((m, s) => Math.abs(d.tops[s] - top) < Math.abs(d.tops[m] - top) ? s : m, S[0]);
+    /* a flick goes on to the next height the way it went */
+    if (v < -0.5) { const up = S.filter(s => d.tops[s] < top - 4); if (up.length) to = up[up.length - 1]; }
+    else if (v > 0.5) { const down = S.find(s => d.tops[s] > top + 4); if (down) to = down; }
+    set(to, top);
+  };
+  wrap.addEventListener('pointerup', end); wrap.addEventListener('pointercancel', end);
+  return () => { if (!on()) return; if (!states().includes(at)) set(at); else { classes(at); label(); } };
+}
+
+/* the notices (the seam note, the word that something grew) go into the sheet on a phone, at its top, and never
+   over the picture; elsewhere, or with no sheet in sight, they stay where the shell put them */
+const NOTES = ['.seamnote', '#toast'], NOTE = {};
+export function notices() {
+  const W = phone() ? [...document.querySelectorAll('.stage > section.f2:not([hidden]) > .dockwrap')].find(w => w.offsetParent) : null;
+  for (const q of NOTES) {
+    const n = NOTE[q] || (NOTE[q] = document.querySelector(q)); if (!n) continue;
+    /* a frame made anew takes its old sheet away, and the notice in it: it goes back where the shell put it first */
+    if (n.f2home && !n.isConnected) n.f2home.appendChild(n);
+    if (!n.f2home) { n.f2home = n.parentNode; if (typeof MutationObserver === 'function') new MutationObserver(notices).observe(n, { attributes: true, attributeFilter: ['hidden'] }); }
+    const to = W && !n.hidden ? W : n.f2home, bar = W && W.querySelector(':scope > .peekbar');
+    if (to === W && W) { if (n.parentNode !== W) (bar ? bar.after(n) : W.prepend(n)); }
+    else if (n.parentNode !== to) to.appendChild(n);
+  }
+}
+/* the bar on a phone: Your log never covers the loop's dots; where there is no room for its words it is a mark */
+export function fitBar() {
+  const b = document.querySelector('.bar'), log = document.getElementById('logbtn'), loop = document.getElementById('loop'); if (!b || !log || !loop) return;
+  b.classList.remove('f2logmark'); if (!phone()) return;
+  const ol = loop.querySelector('ol'), L = (ol || loop).getBoundingClientRect(), G = log.getBoundingClientRect();
+  if (L.right > G.left - 2 || loop.scrollWidth > loop.clientWidth + 1) b.classList.add('f2logmark');
 }

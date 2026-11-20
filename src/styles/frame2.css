@@ -366,3 +366,49 @@ html.frame2 .page.f2rd .mach .f2rhead h1 { font-size: clamp(28px, calc(1.2vw + 1
   html.frame2 .bar.f2reading .loop .ln { display: none; }
   html.frame2 .bar.f2reading .loop button { padding: 12px 5px; }
 }
+
+/* ---- a phone (#275): the sheet at three heights (src/v2/frame2.js, sheet()): the peek, the level's name and its
+   whole question; half the screen; the whole of it under the way out. The sheet's words scroll inside it and its handle
+   stays at its top. While a lab's instrument has the stage the sheet stays under it. The notices sit at the top of
+   the sheet, never over the picture; the names on the picture keep apart (src/v2/kit3d.js), a lifted name's stem
+   reaching down to its point; the bar's log becomes a mark when the loop needs its room ---- */
+@media (max-width: 720px) {
+  html.frame2 .f2 > .dockwrap { overflow: visible; max-height: none; }
+  html.frame2 .f2 > .dockwrap > .dock { flex: 0 1 auto; min-height: 0; overflow: hidden auto; overscroll-behavior: contain; margin: 0 -6px; padding: 0 6px 2px; }
+  html.frame2 .f2 > .dockwrap.f2half { max-height: 50%; }
+  html.frame2 .f2 > .dockwrap.f2full { top: 110px; max-height: none; }
+  /* the whole sheet leaves the way out and Break it in sight, and the lens on the picture steps aside */
+  html.frame2 .f2:has(> .dockwrap.f2full) > :is(.joulebtn, .joule) { display: none; }
+  html.frame2 .f2 > .dockwrap.f2full > .dock { flex: 1 1 auto; }
+  html.frame2 .f2stage > .dockwrap.f2half, html.frame2 .f2stage > .dockwrap.f2full { top: var(--f2-sheet, 60%); max-height: none; }
+  html.frame2 .f2 > .dockwrap.f2drag { max-height: none !important; user-select: none; -webkit-user-select: none; }
+  html.frame2 .f2 > .dockwrap.peek { touch-action: none; }
+  html.frame2 .f2 > .dockwrap.peek > .dock { overflow: hidden; }
+  /* the handle: wide enough for a thumb, dragged rather than scrolled */
+  html.frame2 .f2 > .dockwrap > .peekbar { flex: none; width: 112px; height: 24px; margin: -8px auto -6px; touch-action: none; cursor: grab; }
+  html.frame2 .f2 > .dockwrap > .peekbar[hidden] { display: none; }
+  html.frame2 .f2 > .dockwrap > .peekbar span { width: 44px; height: 5px; border-radius: 3px; background: color-mix(in srgb, var(--ink) 28%, transparent); }
+  html.frame2 .f2 > .dockwrap.f2drag > .peekbar { cursor: grabbing; }
+  html.frame2 .f2 .dock > .f2head { touch-action: none; }
+  /* Do and Ask at rest: what they are, and the faces */
+  html.frame2 .f2side > .dockwrap.peek { -webkit-mask-image: none; mask-image: none; }
+  html.frame2 .f2side > .dockwrap.peek .dock > :not(.kicker:first-child) { display: none; }
+  html.frame2 .f2side > .dockwrap.peek .dock > .kicker:first-child { margin: 0; }
+  html.frame2 .f2 .dock > .askline.seeklit { margin-left: 0; }
+  /* the notices, at the top of the sheet */
+  html.frame2 .f2 > .dockwrap > .seamnote { position: static; inset: auto; z-index: auto; width: auto; flex: none; margin: 2px 0 6px; padding: 10px 10px 10px 14px; gap: 6px; border-radius: 14px;
+    border: 1px solid var(--line); border-left: 3px solid var(--ink); background: color-mix(in srgb, var(--ink) 5%, transparent); box-shadow: none; backdrop-filter: none; -webkit-backdrop-filter: none; animation: f2in .3s ease; }
+  html.frame2 .f2 > .dockwrap > .seamnote .kicker { font: var(--f2-label); letter-spacing: 0; text-transform: none; color: var(--muted); }
+  html.frame2 .f2 > .dockwrap > .seamnote .sq { font: italic 400 17px/1.4 var(--serif); }
+  /* on a phone the notice offers the one way on, and the way to close it; the other offers wait where the question is */
+  html.frame2 .f2 > .dockwrap > .seamnote .acts > :not(.primary, .seamx) { display: none; }
+  html.frame2 .f2 > .dockwrap > .seamnote .btn { padding: 7px 14px; font-size: 15px; }
+  html.frame2 .f2 > .dockwrap > .toast { position: static; inset: auto; z-index: auto; transform: none; flex: none; align-self: stretch; max-width: none; margin: 2px 0 6px; padding: 9px 14px; border-radius: 14px; text-align: center; font: 700 15px/1.35 var(--sans); box-shadow: none; }
+  /* the bar: Your log as a mark, its words kept for a screen reader */
+  html.frame2 .bar.f2logmark .logbtn { padding: 8px 10px; }
+  html.frame2 .bar.f2logmark .logbtn .lg { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  html.frame2 .bar.f2logmark .logbtn::before { content: ''; width: 16px; height: 13px; background: linear-gradient(currentColor 0 0) 0 0 / 100% 2px no-repeat, linear-gradient(currentColor 0 0) 0 50% / 100% 2px no-repeat, linear-gradient(currentColor 0 0) 0 100% / 62% 2px no-repeat; }
+}
+/* a name lifted or slid to keep clear of another: its stem still reaches its point */
+html.frame2 .lbl3.part3.f2apart::after { left: var(--f2sx) !important; bottom: calc(-1 * var(--f2sh)) !important; height: var(--f2sh) !important; }
+html.frame2 .lbl3.part3.f2apart.f2below::after { top: calc(-1 * var(--f2sh)) !important; bottom: auto !important; }
