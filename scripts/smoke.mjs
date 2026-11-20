@@ -28,7 +28,7 @@ const SECTIONS = [
   ['search', 'something to look for at a level, kept in your log'],
   ['ways', 'the ways on the picture: Go inside on the island, along and in on the line, one way down through a chip (the stack is Make, along from the dive), the phone\'s peek and swipe'],
   ['frame', 'the size at every level and the ring on the way in, desktop and phone'],
-  ['flights', 'the data centre\'s way in and its flight into the chip; the phone\'s and the car\'s flights into their chips'],
+  ['flights', 'the data centre\'s way in and its flight into the chip; the studio walked inside, with a handoff to a bench; the phone\'s and the car\'s flights into their chips'],
   ['machines', 'machines from shared blocks: a form changed, an agent\'s pick used, where it is made, liquid hardware keeping up with a radio, the lab\'s curve and an attempt kept, new matter\'s claims and the guesses switch, desktop and phone'],
   ['frame2', 'the new frame behind ?frame=2 (#271): the caption at a dive level with its question in full, desktop and phone; Half the power won in Do mode, its instrument on the stage beside the panel that holds its controls; a question\'s page in Read mode, its column, its picture and the bar'],
 ];
@@ -138,7 +138,7 @@ const explore = async (tag, viewport, scheme) => {
   await page.waitForSelector('#sheet .won', { timeout: 10000 }).catch(() => problems.push(tag + ': a right design did not win the challenge'));
   if (!/grew/i.test(await page.textContent('#toast').catch(() => ''))) problems.push(tag + ': winning did not say what grew');
   if (!(await page.$('#sheet .opens[href^="#/ask/"]'))) problems.push(tag + ': the first win opens no question');
-  if (!/1 of 8/.test(await page.getAttribute('#loop [data-stage="design"]', 'aria-label').catch(() => ''))) problems.push(tag + ': the tracker did not count the win');
+  if (!/1 of 11/.test(await page.getAttribute('#loop [data-stage="design"]', 'aria-label').catch(() => ''))) problems.push(tag + ': the tracker did not count the win');
   await page.click('#sheet [data-next]').catch(() => problems.push(tag + ': no way on to the next challenge'));
   if (!/voter/i.test(await page.textContent('#sheet .player h3').catch(() => ''))) problems.push(tag + ': the next challenge is not the majority voter');
   await page.click('#sheet [data-back]');
@@ -325,7 +325,7 @@ const explore = async (tag, viewport, scheme) => {
   /* a challenge is played where its level is shown: the card of the factory's line, with the machines behind it */
   at = tag + ' do in place'; await page.evaluate(() => { location.hash = '#/do/quick'; });
   await page.waitForSelector('#diveui .dock .player', { timeout: 20000 }).catch(() => problems.push(tag + ': a factory challenge is not played in the line\'s card'));
-  if (!(await page.evaluate(() => { const c = document.querySelector('#diveui .rail2 [aria-current]'); return c && c.dataset.rail === 'deposit'; }))) problems.push(tag + ': the challenge is not played at its own level');
+  if (!(await page.evaluate(() => { const c = document.querySelector('#diveui .steps2 [aria-current]'); return c && c.dataset.step === 'deposit'; }))) problems.push(tag + ': the challenge is not played at its own level');
   if ((await page.getAttribute('#diveui .modes3 [aria-selected="true"]', 'data-mode').catch(() => '')) !== 'do') problems.push(tag + ': a challenge in the card is not under Do');
   await page.click('#diveui .modes3 [data-mode="look"]').catch(() => {});
   if (await page.$('#diveui .dock .player')) problems.push(tag + ': Look does not lead back from a challenge to the story');
@@ -364,9 +364,9 @@ const explore = async (tag, viewport, scheme) => {
   await page.click('#chipui .dock a[href="#/line/etch"]').catch(() => problems.push(tag + ': the switch as made does not lead to its step on the line'));
   await page.waitForFunction(() => location.hash === '#/line/etch', null, { timeout: 8000 }).catch(() => problems.push(tag + ': the layer as made did not open its factory step'));
   /* the line: the factory step by step, in the frame */
-  await page.waitForFunction(() => { const c = document.querySelector('#diveui .rail2 [aria-current]'); return c && c.dataset.rail === 'etch'; }, null, { timeout: 15000 }).catch(() => problems.push(tag + ': the line did not open at etching'));
+  await page.waitForFunction(() => { const c = document.querySelector('#diveui .steps2 [aria-current]'); return c && c.dataset.step === 'etch'; }, null, { timeout: 15000 }).catch(() => problems.push(tag + ': the line did not open at etching'));
   await page.click('#diveui [data-divego][data-key="next"]').catch(() => problems.push(tag + ': no next step on the line'));
-  await page.waitForFunction(() => { const c = document.querySelector('#diveui .rail2 [aria-current]'); return c && c.dataset.rail === 'implant'; }, null, { timeout: 20000 }).catch(() => problems.push(tag + ': the next step on the line is not implanting'));
+  await page.waitForFunction(() => { const c = document.querySelector('#diveui .steps2 [aria-current]'); return c && c.dataset.step === 'implant'; }, null, { timeout: 20000 }).catch(() => problems.push(tag + ': the next step on the line is not implanting'));
   /* the bench: a design written in the dock, checked, won */
   at = tag + ' ' + '#/bench/logic/half'; await page.evaluate(() => { location.hash = '#/bench/logic/half'; });
   await page.waitForSelector('#diveui .dock .player [data-write], #diveui .dock #chCode', { timeout: 15000 }).catch(() => problems.push(tag + ': the bench did not open the design'));
@@ -374,6 +374,32 @@ const explore = async (tag, viewport, scheme) => {
   await page.fill('#diveui .dock #chCode', 'sum = a ^ b;\ncarry = a & b;').catch(() => {});
   await page.click('#diveui .dock [data-check]').catch(() => {});
   await page.waitForSelector('#diveui .dock .won', { timeout: 10000 }).catch(() => problems.push(tag + ': a right design on the bench did not win'));
+  /* what design really is, in each step's card (src/v2/studio-look.js): timing at the gates, the factory's rules on the tile,
+     the masks against the process's own; each poll goes to the step again, in case the card was drawn anew */
+  for (const [step, sel, n] of [['gates', '.sl-bar', 1], ['layout', '.sl-rules li', 7], ['masks', '.sl-masks .sl-m', 34]]) {
+    at = tag + ' ' + '#/bench/' + step;
+    await page.waitForFunction(([s, q, k]) => { if (location.hash !== '#/bench/' + s) location.hash = '#/bench/' + s;
+      const c = document.querySelector('#diveui .dock .sl[data-studio="' + s + '"]'); return !!c && c.querySelectorAll(q).length >= k; }, [step, sel, n], { timeout: 20000, polling: 500 })
+      .catch(() => problems.push(tag + ': the ' + step + ' card does not show what its engine says of your design'));
+  }
+  /* the bench as a live design (#265, #268): a first visit names every piece of the computer readably and says the design is
+     the lab's example; a design changed at describe is followed by the check, the gates and the layout */
+  { const btag = tag + ' bench', bp = await browser3d.newPage({ viewport, colorScheme: scheme, reducedMotion: 'reduce' }); bp.on('pageerror', e => problems.push(btag + ': ' + e.message));
+    at = btag; await bp.goto(base + 'index.html#/bench/need');
+    await bp.waitForFunction(() => document.querySelectorAll('.bsurf .bk-tree .bk-node').length >= 17, null, { timeout: 60000 }).catch(() => problems.push(btag + ': the job does not show the community\'s computer'));
+    const small = await bp.evaluate(() => [...document.querySelectorAll('.bsurf .bk-nm')].filter(n => parseFloat(getComputedStyle(n).fontSize) < 10 || !n.textContent.trim() || n.getBoundingClientRect().width < 8).length);
+    if (small) problems.push(btag + ': ' + small + ' names in the job\'s tree are not readable');
+    await bp.waitForSelector('#diveui .dock .benchy .verdict[data-by="example"]', { timeout: 15000 }).catch(() => problems.push(btag + ': a first visit does not open on the lab\'s example (or says it was written by you)'));
+    const MINE = 'sum = (a | b) & ~(a & b);\ncarry = a & b;';
+    const follows = (hash, sel, what) => bp.waitForFunction(([hash, sel, MINE]) => {
+      if (location.hash !== hash) location.hash = hash;
+      const ta = document.querySelector('.bsurf [data-bk-code]'); if (ta && ta.value !== MINE) { ta.value = MINE; ta.dispatchEvent(new Event('input', { bubbles: true })); }
+      return !!document.querySelector(sel); }, [hash, sel, MINE], { timeout: 30000, polling: 1000 }).catch(() => problems.push(btag + ': ' + what));
+    await follows('#/bench/logic', '#diveui .dock .benchy .verdict.good[data-by="you"]', 'a design written at describe is not yours');
+    await follows('#/bench/check', '.bsurf .bk-check .bk-say.good', 'the check does not follow the design written at describe');
+    await follows('#/bench/gates', '.bsurf .bk-gates .bk-g:nth-of-type(4)', 'the gates do not follow the design written at describe');
+    await follows('#/bench/layout', '.bsurf .bk-layout [data-bk-cell="3"]', 'the layout does not follow the design written at describe');
+    await bp.close(); }
   /* the board: a story drives the scene; a prediction comes before the live number moves */
   at = tag + ' ' + '#/board'; await page.evaluate(() => { location.hash = '#/board'; });
   await page.waitForSelector('#boardui .dock .line', { timeout: 15000 }).catch(() => problems.push(tag + ': the board did not open'));
@@ -678,6 +704,16 @@ run['labs'] = async () => {
     + " if (st === 'ended') { if (mode === 'cvd') CL('[data-fl-mode=\"ald\"]'); else CL('[data-fl-reset]'); } else if (st === 'ready' || st === 'paused') CL('[data-fl-go]')", 'The bare bottom', 180000);
   /* too hot for silicon, at the switch: the heater is set to 600 K and the silicon warms through the crossing */
   await playLab('too-hot', "SET('#semi-T', 600)", 'Too hot for silicon');
+  /* the bench's own challenges (#269), played on the bench over the studio's picture: say what your piece must answer,
+     swap the 2-bit adder's cells until the wire is short, say which mask each shape is printed from */
+  const BENCH = "const st = () => JSON.parse(localStorage.getItem('osl-world-v1') || '{}').bench || {}, X = await import(new URL('src/engines/bench.js', location.href).href), Dz = await import(new URL('src/engines/design.js', location.href).href), Gm = await import(new URL('src/v2/game.js', location.href).href), CLK = n => n && n.dispatchEvent(new MouseEvent('click', { bubbles: true }));";
+  await playLab('piece', BENCH + " const bk = document.querySelector('.bsurf .bk-need'); if (bk) { const p = bk.dataset.bkP, v = {}; bk.querySelectorAll('[data-bk-in]').forEach(b => { v[b.dataset.bkIn] = +b.querySelector('.bk-v').textContent; });"
+    + " const pr = Dz.projectOf(p), w = pr.seq ? null : pr.f(v); if (w) { bk.querySelectorAll('[data-bk-ans]').forEach(b => { if ((b.getAttribute('aria-pressed') === 'true') !== !!w[b.dataset.bkAns]) CLK(b); }); CL('[data-jq-check]'); } }", 'Your piece of the computer');
+  await playLab('floor', BENCH + " const B = X.floorDesign(), s = st(); let rows = s.floor && X.validRows(B.M, s.floor, B.PL) ? s.floor : X.floorStart(B), cur = X.floorCheck(B, rows).wl, best = null;"
+    + " for (let a = 0; a < B.M.cells.length; a++) for (let b = a + 1; b < B.M.cells.length; b++) { const R = X.swapCells(B.M, rows, a, b, B.PL.W); if (!R) continue; const c = X.floorCheck(B, R); if (!c.failed && c.wl < cur && (!best || c.wl < best.wl)) best = { a, b, wl: c.wl }; }"
+    + " if (best) { CLK(document.querySelector('.bsurf [data-bk-cell=\"' + best.a + '\"]')); CLK(document.querySelector('.bsurf [data-bk-cell=\"' + best.b + '\"]')); }", 'The shortest wire');
+  await playLab('maskof', BENCH + " const s = st(), D = Gm.benchDesign({ bench: s }), rows = s.rows && X.validRows(D.B.M, s.rows, D.B.PL) ? s.rows : X.rowsOf(D.B.PL), m = X.measure(D.B.M, rows, D.B.PL), sh = X.maskAsk(X.maskShapes(m.PL, m.RT), (s.mq || {}).k || 0);"
+    + " if (sh) CL('[data-mq=\"' + sh.mask + '\"]')", 'Which mask?');
   /* Build your own AI chip: the data-centre brief, met by stacked memory on an interposer, 4-bit weights, more math and a faster clock, then taped out */
   await playLab('ai-chip', "CL('[data-aib-brief=\"infer\"]'); CL('[data-aib-set=\"mem:h4\"]'); SET('#aib-memN', 6); CL('[data-aib-set=\"pkg:cs\"]'); CL('[data-aib-set=\"fp4:true\"]'); SET('#aib-area', 863); SET('#aib-f', 2); CL('[data-aib-tape]')", 'Build your own AI chip');
   /* the clock and the power: the dials at a point the engine's check accepts; the counter is run at the same place on its
@@ -685,6 +721,16 @@ run['labs'] = async () => {
   await playLab('power-curve', "SET('#ckp-f', 2.25); SET('#ckp-v', 0.61)", 'Half the power');
   await playLab('counter', "const n = ['130', '28'].find(k => !document.querySelector('[data-ckp-node=\"' + k + '\"][data-top]'));"
     + " if (n && !document.querySelector('[data-ckp-run][aria-pressed=\"true\"]')) { CL('[data-ckp-node=\"' + n + '\"]'); SET('#ckp-hz', 61); CL('[data-ckp-run]'); }", 'The counter that fails', 180000);
+  /* Keep the chef busy (src/v2/labs/bits.js): one bit's trip answers a move of the memory; then each poll clears the first
+     level of chips not yet cleared (a winning plan, served), and leaves a serve in progress to finish */
+  await playLab('chef', "const P = '.player[data-ch=\"chef\"] ', W = { wire: ['closer:2', 'shelf:2'], chip: ['shelf:2', 'stack:1'], stacked: ['shelf:3', 'stack:1'], light: ['stack:1', 'light:1'], dc: ['closer:1', 'shelf:1', 'stack:1', 'cim:1'] };"
+    + " if (!document.querySelector(P + '[data-mb-serve][disabled]')) { CL(P + '[data-mb-tab=\"chef\"]:not([aria-pressed=\"true\"])');"
+    + " const lv = Object.keys(W).find(k => { const b = document.querySelector(P + '[data-mb-level=\"' + k + '\"]'); return b && !b.dataset.cleared; });"
+    + " if (lv) { CL(P + '[data-mb-level=\"' + lv + '\"]'); CL(P + '[data-mb-start]'); for (const m of W[lv]) CL(P + '[data-mb-lever=\"' + m + '\"]'); CL(P + '[data-mb-serve]'); } }", 'Keep the chef busy', 180000);
+  /* one bit's trip: moving the memory from the chip to another machine reached by light changes what the bit costs */
+  await fp.waitForFunction(() => { const P = '.player[data-ch="chef"] ', c = q => { const b = document.querySelector(q); if (b) b.click(); }, e = () => { const f = document.querySelector(P + '[data-mb-e]'); return f ? { mbTrip: f.dataset.mbTrip, mbE: f.dataset.mbE } : null; };
+    c(P + '[data-mb-tab="trip"]'); c(P + 'button[data-mb-at="near"]'); const a = e(); c(P + 'button[data-mb-at="rack"]'); const b = e();
+    return !!(a && b && a.mbTrip === 'near' && b.mbTrip === 'rack' && +b.mbE > 10 * +a.mbE); }, null, { timeout: 30000, polling: 1500 }).catch(() => problems.push(tag + ': moving the memory does not change one bit\'s trip'));
   /* Verify the agent, at the Lab: a tool checks a case, and eight right calls win */
   await fp.goto(base + 'index.html#/do/agent');
   await fp.waitForSelector('#sheet .agcases [data-ag-case]', { timeout: 60000 }).catch(() => problems.push(tag + ': Verify the agent does not show its cases'));
@@ -750,6 +796,42 @@ run['ways'] = async () => {
     await wp.waitForFunction(() => { const b = document.querySelector('#diveui .wayin:not([hidden]) .wigo'); if (b && location.hash === '#/line/etch' && /switch/.test(b.getAttribute('href') || '')) b.click(); return location.hash.startsWith('#/dive/switch'); }, null, { timeout: 60000, polling: 3000 })
       .catch(() => problems.push(tag + ': the way in on the line does not go inside what the station makes'));
     await wp.close(); }
+  /* steps are along, levels are in · out (#266): on the line and in the studio the steps are one line from left to right,
+     walked with → and Next; the rail at the side holds only the level a step shows, and is absent where it shows none.
+     ↓ at the job goes in to the blocks as laid out. On a phone the steps are a strip with ← → and a count. Each page its own */
+  for (const [vt, viewport] of [['desktop', { width: 1280, height: 800 }], ['phone', { width: 390, height: 844 }]]) {
+    at = 'ways steps ' + vt; const tag = 'ways steps ' + vt, tp = await browser3d.newPage({ viewport });
+    tp.on('pageerror', e => problems.push(tag + ': ' + e.message));
+    await tp.goto(base + 'index.html#/line/print');
+    /* where the frame says you are: the step lit, the level on the rail (if a rail is drawn), the strip on a phone */
+    await tp.evaluate(() => { window.smokeSteps = () => { const c = document.querySelector('#diveui .steps2 [aria-current]'), r = document.querySelector('#diveui .rail2'), l = r && !r.hidden && r.querySelector('[aria-current]'), stl = document.querySelector('#diveui .steps2 .stl');
+      return { n: document.querySelectorAll('#diveui .steps2 [data-step]').length, step: c && c.dataset.step, level: l ? l.dataset.rail : null, rail: !!r && !r.hidden,
+        levels: (r ? [...r.querySelectorAll('[data-rail]')].map(b => b.dataset.rail) : []).join(','), line: !!stl && getComputedStyle(stl).display !== 'none',
+        strip: (document.querySelector('#diveui .steps2 .stk') || {}).textContent || '', hash: location.hash }; }; });
+    const fail = say => () => problems.push(tag + ': ' + say), wait = { timeout: 90000, polling: 1500 };
+    await tp.waitForFunction(() => { const h = window.smokeSteps(); return h.n === 11 && h.step === 'print' && h.level === 'gate' && h.levels === 'chip,block,gate,switch,atom'; }, null, wait)
+      .catch(fail('the line does not show its eleven steps with print lit, and the gate on a rail of levels only'));
+    if (vt === 'phone') await tp.waitForFunction(() => { const h = window.smokeSteps(); return !h.line && /5/.test(h.strip) && /11/.test(h.strip); }, null, wait).catch(fail('on a phone the steps are not a strip with a count'));
+    else await tp.waitForFunction(() => window.smokeSteps().line, null, wait).catch(fail('on a desktop the steps are not drawn as a line'));
+    /* → walks along to the next step, and the rail follows to the switch */
+    await tp.waitForFunction(() => { if (location.hash === '#/line/print') { const c = document.getElementById('diveCanvas'); c.focus(); c.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true })); }
+      const h = window.smokeSteps(); return h.step === 'etch' && h.level === 'switch' && h.hash === '#/line/etch'; }, null, wait).catch(fail('→ does not walk the line to etching, with the switch on the rail'));
+    /* a step that shows no level has no rail */
+    await tp.evaluate(() => { location.hash = '#/line/test'; });
+    await tp.waitForFunction(() => { const h = window.smokeSteps(); return h.step === 'test' && !h.rail; }, null, wait).catch(fail('at the test step, which shows no level, a rail of levels is still drawn'));
+    /* the studio: the same line of steps; check shows no level; Next walks along to the gates */
+    await tp.evaluate(() => { location.hash = '#/bench/check'; });
+    await tp.waitForFunction(() => { const h = window.smokeSteps(); return h.n === 6 && h.step === 'check' && !h.rail; }, null, wait).catch(fail('the studio does not show its six steps with check lit and no rail'));
+    await tp.waitForFunction(() => { const b = document.querySelector('#diveui .dock [data-along][data-key="next"]'); if (b && location.hash === '#/bench/check') b.click();
+      const h = window.smokeSteps(); return h.step === 'gates' && h.level === 'gate' && h.levels === 'chip,block,gate'; }, null, wait).catch(fail('Next in the studio does not walk along to the gates, with the gate on the rail'));
+    /* ↓ at the job goes in, to the blocks as laid out */
+    await tp.evaluate(() => { location.hash = '#/bench/need'; });
+    await tp.waitForFunction(() => { const h = window.smokeSteps(); return h.step === 'need' && h.level === 'chip'; }, null, wait).catch(fail('the job does not show the chip on the rail'));
+    await tp.waitForFunction(() => { if (location.hash === '#/bench/need' && document.querySelector('#diveui .dock [data-in]')) document.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+      const h = window.smokeSteps(); return h.step === 'layout' && h.level === 'block'; }, null, wait).catch(fail('↓ at the job does not go in to the blocks as laid out'));
+    if (vt === 'desktop' && (await tp.evaluate(() => document.documentElement.scrollWidth - innerWidth)) > 0) problems.push(tag + ': the page scrolls sideways');
+    await tp.close();
+  }
   /* one way down through a chip (#230): the dive is the way down; the stack is the same level as made, reached along
      the loop (Make in the bar, underlined beforehand), with the address and the bar saying Make, and along back
      returns to the dive at the same level. Neither card offers a second way down, and an old address of the stack
@@ -858,6 +940,26 @@ run['flights'] = async () => {
   await page.waitForFunction(() => !document.documentElement.dataset.arrive && !!document.querySelector('#l3-chip [data-part3="hbm"]'), null, { timeout: 60000, polling: 500 })
     .catch(() => problems.push(tag + ': the dive\'s chip does not come to rest with the memory beside it'));
     await page.close(); }
+  /* one studio (#267): Go inside the studio on the island flies down through its opened floor into the room (the walk
+     passes between outside and the first corner, never jumping), the way in by the job's wall of notes settles on it and
+     hands over to the job's bench, and the bench's way up comes back to the same corner of the room. A page of its own */
+  { const page = await browser3d.newPage({ viewport: { width: 1280, height: 800 } }), tg = 'studio';
+    page.on('pageerror', e => problems.push(tg + ': ' + e.message));
+    await page.goto(base + 'index.html#/place/studio');
+    await page.evaluate(() => { window.walk = []; new MutationObserver(() => { const s = document.getElementById('studioui'), a = s && s.dataset.at; if (a != null && window.walk[window.walk.length - 1] !== a) window.walk.push(a); if (s && s.dataset.handoff) window.handed = s.dataset.handoff; })
+      .observe(document.getElementById('studioui'), { attributes: true, attributeFilter: ['data-at', 'data-handoff'] }); });
+    await page.waitForFunction(() => { if (location.hash === '#/place/studio') { const b = document.querySelector('#sheet:not([hidden]) [data-deeper]'); if (b) b.click(); }
+      return location.hash === '#/place/studio/1' && !document.getElementById('studioui').hidden; }, null, { timeout: 150000, polling: 3000 }).catch(() => problems.push(tg + ': going inside the studio on the island does not open the room'));
+    await page.waitForFunction(() => document.getElementById('studioui').dataset.at === '1.0', null, { timeout: 90000, polling: 500 }).catch(() => problems.push(tg + ': the flight into the studio does not come to rest at the first corner'));
+    if (!(await page.evaluate(() => window.walk.length > 2 && window.walk.some(a => +a > 0 && +a < 1)))) problems.push(tg + ': the studio is entered with a cut, not a flight down into the room (' + (await page.evaluate(() => window.walk.join(' '))) + ')');
+    if (!(await page.evaluate(() => { const c = document.querySelector('#studioui .steps2 [aria-current]'), r = document.querySelector('#studioui .rail2 [aria-current]'); return !!c && c.dataset.step === 'need' && !!r && r.dataset.rail === 'chip'; }))) problems.push(tg + ': at the first corner the frame does not say the job, and the chip on the rail');
+    /* the handoff: the way in stands by the screen; taken, the camera settles on it and the job's bench takes over */
+    await page.waitForFunction(() => { const b = document.querySelector('#studioui .wayin:not([hidden]) .wigo'); if (b && location.hash === '#/place/studio/1' && !window.handed) b.click(); return location.hash === '#/bench/need' && !document.getElementById('diveui').hidden; }, null, { timeout: 90000, polling: 2000 })
+      .catch(() => problems.push(tg + ': the way in at the job\'s corner does not hand over to its bench'));
+    if (!(await page.evaluate(() => window.handed === 'need'))) problems.push(tg + ': the bench opened without the camera settling on the corner\'s screen first');
+    await page.waitForFunction(() => { const u = document.querySelector('#diveui .homebtn'); if (u && location.hash === '#/bench/need' && u.getAttribute('href') === '#/place/studio/1') u.click(); return location.hash === '#/place/studio/1' && !document.getElementById('studioui').hidden; }, null, { timeout: 60000, polling: 2000 })
+      .catch(() => problems.push(tg + ': stepping out of the bench does not return to its corner of the room'));
+    await page.close(); }
   /* a phone is flown through like the data centre (src/v2/phone3d-flight.js): going inside the phone island opens the
      flight, the way in on the picture goes deeper, and going on past the chip carries the flight into the dive's phone
      chip, which comes down from where the flight ended */
@@ -960,6 +1062,12 @@ run['frame2'] = async () => {
     /* where you are leads back to the picture, and its caption */
     await fp.waitForFunction(() => { const w = document.querySelector('#diveui .f2where:not([hidden])'); if (w) w.click(); return !!document.querySelector('#diveui.f2cap .f2head'); }, null, { timeout: 20000, polling: 1000 })
       .catch(() => problems.push(tag + ': where you are does not lead back to the caption'));
+    /* the bench in Do mode (#268): a bench challenge's layout takes the stage, the bench over the picture steps aside */
+    await fp.evaluate(() => { location.hash = '#/do/floor'; });
+    await fp.waitForFunction(() => { const host = document.querySelector('#diveui.f2stage'), panel = host && host.querySelector('.dockwrap'), inst = host && host.querySelector('.player[data-ch="floor"] .benchinst[data-f2="instrument"]'), goal = host && host.querySelector('.player[data-ch="floor"] [data-f2="goal"]');
+      if (!panel || !inst || !goal) return false; const P = panel.getBoundingClientRect(), I = inst.getBoundingClientRect(), sf = document.querySelector('.bsurf');
+      return I.right <= P.left && I.width > 400 && I.height > 300 && !!inst.querySelector('[data-bk-cell]') && (!sf || getComputedStyle(sf).visibility === 'hidden' || sf.hidden); }, null, { timeout: 60000, polling: 1000 })
+      .catch(() => problems.push(tag + ': the shortest wire does not put the bench on the stage in Do mode'));
     const side = await fp.evaluate(() => document.documentElement.scrollWidth - innerWidth);
     if (side > 1) problems.push(tag + ': the page scrolls sideways by ' + side + ' px');
     await fp.close(); }

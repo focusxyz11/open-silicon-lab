@@ -119,6 +119,9 @@ export const STOPS = {
   'make.gates': ['cells'], 'scale.gates': ['cells', 'pins'],
   'divide.layout': ['tile'], 'open.layout': ['shared'],
   'scale.masks': ['masks', 'reticle'], 'make.masks': ['reticle'],
+  /* what design really is (content/design.md): timing at the gates, the factory's rules at the layout, tapeout and the
+     open path at the masks; each the first question of its step's card, with an engine behind it */
+  'fail.gates': ['cells', 'outs'], 'fail.layout': ['tile'], 'idea.masks': ['masks', 'reticle'],
   /* the journey's own stations */
   'make.crystal': ['ingot'], 'know.crystal': ['furnace'], 'strange.crystal': ['melt'],
   'make.slice': ['saw'], 'scale.slice': ['wafers'],
@@ -135,7 +138,8 @@ export const STOPS = {
 /* Stops whose words list real directions people are exploring (stop.<key>.tried, a list). */
 export const TRIED = ['strange.chip', 'strange.gate', 'strange.switch', 'strange.atom', 'limit.chip', 'limit.gate', 'limit.atom', 'fail.building', 'fail.board', 'fail.gate',
   'idea.block', 'idea.gate', 'make.chip', 'make.switch', 'make.atom', 'know.switch', 'open.chip', 'open.block', 'divide.chip', 'divide.block', 'life.block', 'life.switch', 'scale.switch',
-  'life.phone', 'divide.phone', 'idea.soc', 'life.car', 'fail.ecu', 'make.clean', 'scale.scanner', 'divide.test', 'make.die', 'divide.pkg', 'idea.check', 'open.layout'];
+  'life.phone', 'divide.phone', 'idea.soc', 'life.car', 'fail.ecu', 'make.clean', 'scale.scanner', 'divide.test', 'make.die', 'divide.pkg', 'idea.check', 'open.layout',
+  'idea.need', 'think.logic', 'fail.check', 'fail.gates', 'fail.layout', 'idea.masks'];
 
 /* Real chips that passed their checks and still failed, from the earlier site. stop: where it shows. */
 export const CASES = [
@@ -155,7 +159,10 @@ export const FIGURES = {
   'idea.soc': ['riscv-rva23'], 'fail.car': ['car-life'], 'divide.car': ['chips-per-car'], 'know.car': ['car-shortage-2021'],
   'fail.ecu': ['car-ppm'], 'scale.mcu': ['legacy-auto'], 'scale.switch': ['node-n2', 'wafer-price'], 'make.mcu': ['chip-units'],
   'make.clean': ['fab-build-time'], 'scale.clean': ['fab-module-cost'], 'open.clean': ['wafer-space-run'], 'know.etch': ['workforce'], 'divide.wires': ['fab-cycle-time'],
-  'make.wires': ['fab-cycle-time'], 'make.scanner': ['euv-wavelength', 'euv-source'], 'scale.scanner': ['high-na-hvm', 'high-na-price'], 'idea.die': ['design-cost-2nm']
+  'make.wires': ['fab-cycle-time'], 'make.scanner': ['euv-wavelength', 'euv-source'], 'scale.scanner': ['high-na-hvm', 'high-na-price'], 'idea.die': ['design-cost-2nm'],
+  /* the studio's steps (content/design.md) */
+  'think.logic': ['verilog-ieee'], 'fail.check': ['first-silicon'], 'fail.gates': ['tt-clock'],
+  'fail.layout': ['sky130-rules', 'sky130-pdk'], 'idea.masks': ['sky130-masks', 'tt-sky26b', 'open-flow', 'wafer-space-run', 'efabless-close', 'gf180-pdk']
 };
 
 /* Your chip (src/engines/chip.js): a few settings that every "Try it" changes and every depth shows.

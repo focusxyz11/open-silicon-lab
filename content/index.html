@@ -38,7 +38,7 @@
 <main id="doc"><p class="muted">Loading…</p></main>
 <script type="module">
   import { render as renderMd } from '../src/v2/md.js';
-  const DOCS = [['README', 'The eleven'], ['think'], ['strange'], ['limit'], ['fail'], ['idea'], ['make'], ['know'], ['open'], ['divide'], ['life'], ['scale'], ['STRUCTURE', 'What came out']];
+  const DOCS = [['README', 'The eleven'], ['think'], ['strange'], ['limit'], ['fail'], ['idea'], ['design', 'design, step by step'], ['make'], ['know'], ['open'], ['divide'], ['life'], ['scale'], ['STRUCTURE', 'What came out']];
   const want = new URLSearchParams(location.search).get('d') || 'README', name = DOCS.some(d => d[0] === want) ? want : 'README';
   document.getElementById('nav').innerHTML = '<b>Open Silicon Lab</b>' + DOCS.map(([d, label]) => '<a href="?d=' + d + '"' + (d === name ? ' aria-current="page"' : '') + '>' + (label || d) + '</a>').join('');
   const render = md => renderMd(md, { link: h => { const m = /^([A-Za-z]+)\.md$/.exec(h); return m ? '?d=' + m[1] : h; } });

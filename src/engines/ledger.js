@@ -13,7 +13,9 @@
                plan (a form for each part, and a fab) the machine engine checks and scores (src/engines/machine.js); a plan
                with nothing to make is the same in every fab.
                Every attempt kept, in order, draws the lab's curve: the best so far against the attempts so far
-               (labCurve below, "Moore's law for ideas").
+               (labCurve below, "Moore's law for ideas"); or an attempt at Keep the chef busy, the game of moving bits
+               (src/engines/bits.js): a plan of its six levers at one of its levels, scored by the time the chef waits
+               and the energy of one answer; each level has its own curve of the best time waiting (chefCurve below).
      question  a question with a home: a level, perhaps a part of it and the question it sits under.
      report    the lab itself broken, by anyone, at any time: where (the site's address, perhaps a part), what kind
                (wrong, confusing, does not work, could be better) and the words. Feedback is not a stage of a plan:
@@ -36,6 +38,7 @@ import { DEPTHS, STOPS, REPO } from '../data/weave.js';
 import { budget, problem, PLAN, JOB } from './budget.js';
 import { machine as runMachine, beats as machineBeats } from './machine.js';
 import { needOf as machineNeed } from '../data/blocks.js';
+import { kitchen, levelOf as chefLevel, problem as chefProblem, normalPlan as chefPlan, LEVER_IDS as CHEF_LEVERS } from './bits.js';
 
 export const KINDS = ['design', 'break', 'try', 'question', 'report', 'fix'];
 /* what a report says about the lab */
@@ -49,7 +52,7 @@ const FIELDS = {
   break: ['kind', 'of', 'by', 'made', 'ai', 'words', 'case', 'about'],
   /* a try: cases that were meant to break a design and did not. The trace of an attack that failed: what a
      design has survived is why it can be trusted, and where the next attacker need not look */
-  try: ['kind', 'of', 'by', 'made', 'ai', 'words', 'cases', 'puzzle', 'machine', 'plan', 'about'],
+  try: ['kind', 'of', 'by', 'made', 'ai', 'words', 'cases', 'puzzle', 'machine', 'chef', 'plan', 'about'],
   question: ['kind', 'at', 'part', 'under', 'q', 'noticed', 'by', 'made', 'ai', 'about'],
   report: ['kind', 'at', 'part', 'say', 'words', 'by', 'made', 'ai'],
   fix: ['kind', 'of', 'words', 'pr', 'by', 'made', 'ai']
@@ -66,6 +69,11 @@ const planOk = p => p && typeof p === 'object' && !Array.isArray(p) && Object.ke
    engine checks the forms and the fab); the key of a machine is its whole plan, with the start filled in */
 const machinePlanOk = (n, p) => p && typeof p === 'object' && !Array.isArray(p) && Object.keys(p).length <= n.parts.length + 1 &&
   Object.entries(p).every(([k, v]) => (k === 'fab' || n.parts.some(q => q.id === k)) && typeof v === 'string' && v.length <= 40);
+/* a plan for the chef's kitchen as an entry holds it: some of the six levers, each a number or a yes or no (the engine
+   checks the values); its key is the plan with the start left out, so the same plan written two ways is the same */
+const chefPlanOk = p => p && typeof p === 'object' && !Array.isArray(p) && Object.keys(p).length <= CHEF_LEVERS.length &&
+  Object.entries(p).every(([k, v]) => CHEF_LEVERS.includes(k) && ['number', 'boolean'].includes(typeof v));
+const chefKey = p => JSON.stringify(Object.entries(chefPlan(p)).sort());
 const machineKey = (need, plan) => { const R = runMachine(need, plan), P = R.plan; return JSON.stringify(Object.keys(P).filter(k => k !== 'fab' || R.score.fab).sort().map(k => [k, P[k]])); };
 /* a report's place: the site's own address, as the bar shows it (#/line/print, #/dive/gate, #/build/record) */
 export const PLACE = /^#\/[a-z0-9._\/-]{0,80}$/;
@@ -118,6 +126,17 @@ export function checkEntry(e, W) {
     if (failed) return no('case', { by: failed.by });
     if ((W.pieces[e.piece] || []).some(id => norm(W.byId[id].code) === norm(e.code))) return no('same');
     return { ok: true, facts: { transistors: B.transistors, ps: Math.round(B.st.crit), caught: Math.round(B.coverage * 100) } };
+  }
+  /* an attempt at Keep the chef busy: a plan the kitchen can run at one of its levels, new among the attempts there; its
+     facts are the engine's score (the share of time waiting and the energy of one answer, at the last round) */
+  if (e.kind === 'try' && e.chef != null) {
+    const L = typeof e.chef === 'string' ? chefLevel(e.chef) : null; if (!L) return no('chef');
+    if (e.of != null || e.cases != null || e.puzzle != null || e.machine != null) return no('fields');
+    if (!plain(e.words || '', 0, 300)) return no('words');
+    if (!chefPlanOk(e.plan) || chefProblem(e.plan)) return no('plan');
+    if ((W.chef[L.id] || []).some(id => chefKey(W.byId[id].plan) === chefKey(e.plan))) return no('same');
+    const K = kitchen(L.id, e.plan);
+    return { ok: true, facts: { wait: K.wait, energy: K.energy, cleared: K.cleared } };
   }
   /* an attempt at a machine: a plan that follows the grammar and meets the need, new among the attempts so far; its
      facts are the engine's score, counting only what is shown (the energy and days if the guesses fail) */
@@ -196,7 +215,7 @@ export function checkEntry(e, W) {
 /* ---- the whole ledger, replayed in order (ids sort by date, then name). Returns the world it makes. ---- */
 const beats = (a, b) => a.facts.transistors <= b.facts.transistors && a.facts.ps <= b.facts.ps && (a.facts.transistors < b.facts.transistors || a.facts.ps < b.facts.ps);
 export function settle(list) {
-  const W = { entries: [], byId: {}, pieces: {}, cases: {}, puzzles: {}, machines: {}, refused: [], feed: [] };
+  const W = { entries: [], byId: {}, pieces: {}, cases: {}, puzzles: {}, machines: {}, chef: {}, refused: [], feed: [] };
   list.slice().sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0)).forEach(raw => {
     const r = checkEntry(raw, W), e = Object.assign({}, raw, { ok: r.ok, reason: r.reason || null, facts: r.facts || null, state: null, brokenBy: null, breaks: [], tries: [] });
     if (!r.ok) { W.refused.push(e); if (!W.byId[e.id]) W.byId[e.id] = e; return; }
@@ -208,7 +227,8 @@ export function settle(list) {
       /* the case joins the check: every right design of the piece meets it now */
       W.pieces[T.piece].map(id => W.byId[id]).filter(d => d.state === 'right').forEach(d => { const x = runCase(p, d.code, e.case); if (x && x.first >= 0) { d.state = 'broken'; d.brokenBy = e.id; e.breaks.push(d.id); } });
       e.state = 'stands'; W.feed.push({ type: 'broke', id: e.id });
-    } else if (e.kind === 'try' && e.machine != null) { (W.machines[e.machine] = W.machines[e.machine] || []).push(e.id); e.state = 'front'; W.feed.push({ type: 'attempted', id: e.id }); }
+    } else if (e.kind === 'try' && e.chef != null) { (W.chef[e.chef] = W.chef[e.chef] || []).push(e.id); e.state = 'front'; W.feed.push({ type: 'attempted', id: e.id }); }
+    else if (e.kind === 'try' && e.machine != null) { (W.machines[e.machine] = W.machines[e.machine] || []).push(e.id); e.state = 'front'; W.feed.push({ type: 'attempted', id: e.id }); }
     else if (e.kind === 'try' && e.puzzle != null) { (W.puzzles[e.puzzle] = W.puzzles[e.puzzle] || []).push(e.id); e.state = 'front'; W.feed.push({ type: 'attempted', id: e.id }); }
     else if (e.kind === 'try') { W.byId[e.of].tries.push(e.id); e.state = 'stands'; W.feed.push({ type: 'tried', id: e.id }); }
     else if (e.kind === 'report') { e.state = 'open'; W.feed.push({ type: 'reported', id: e.id }); }
@@ -245,6 +265,17 @@ export function settle(list) {
     A.forEach((a, i) => { a.state = A.some((o, j) => o !== a && (machineBeats(f(o), f(a)) || (j < i && same(o, a)))) ? 'beaten' : 'front'; });
     const H = A.filter(a => a.state === 'front').sort((a, b) => f(a).energy - f(b).energy);
     if (H.length) W.bestMachine[n] = H[0].id;
+  });
+  /* the kitchen's standings at each level, the same way: on the frontier while no other attempt there waits less and
+     spends less energy (at least as good on both, better on one); the best is the one on the frontier that waits least */
+  W.bestChef = {};
+  Object.entries(W.chef).forEach(([lv, ids]) => {
+    const A = ids.map(id => W.byId[id]), f = a => a.facts;
+    const better = (o, a) => f(o).wait <= f(a).wait && f(o).energy <= f(a).energy && (f(o).wait < f(a).wait || f(o).energy < f(a).energy);
+    const same = (o, a) => f(o).wait === f(a).wait && f(o).energy === f(a).energy;
+    A.forEach((a, i) => { a.state = A.some((o, j) => o !== a && (better(o, a) || (j < i && same(o, a)))) ? 'beaten' : 'front'; });
+    const H = A.filter(a => a.state === 'front').sort((a, b) => f(a).wait - f(b).wait || f(a).energy - f(b).energy);
+    if (H.length) W.bestChef[lv] = H[0].id;
   });
   /* who checks whom: for every break, who made the design and who made the break */
   W.cross = {}; W.entries.filter(e => (e.kind === 'break' || e.kind === 'try') && e.of).forEach(e => { const k = W.byId[e.of].made + '>' + e.made; W.cross[k] = (W.cross[k] || 0) + 1; });
@@ -310,6 +341,13 @@ export function labCurve(W, need) {
   const X = points.map(p => Math.log(p.n)), Y = points.map(p => Math.log(p.best)), mx = X.reduce((a, b) => a + b) / X.length, my = Y.reduce((a, b) => a + b) / Y.length;
   const slope = X.reduce((a, x, i) => a + (x - mx) * (Y[i] - my), 0) / X.reduce((a, x) => a + (x - mx) ** 2, 0);
   return { points, slope, perDoubling: 1 - Math.pow(2, slope) };
+}
+/* the attempts at a level of the chef's kitchen, in the order they were kept, and the level's curve: for each, its
+   time waiting and the best time waiting so far (each level has its own; nobody votes, the engine scores) */
+export const chefAttemptsAt = (W, level) => ((W.chef || {})[level] || []).map(id => W.byId[id]);
+export function chefCurve(W, level) {
+  let best = Infinity;
+  return chefAttemptsAt(W, level).map((e, i) => { best = Math.min(best, e.facts.wait); return { n: i + 1, id: e.id, by: e.by, made: e.made, wait: e.facts.wait, energy: e.facts.energy, cleared: e.facts.cleared, best, draft: !!e.draft }; });
 }
 /* the attempts at a puzzle, the best first, then those on the frontier, then the newest */
 export const attemptsAt = (W, z) => (W.puzzles[z] || []).map(id => W.byId[id]).sort((a, b) => (W.best[z] === b.id) - (W.best[z] === a.id) || (a.state === 'front' ? 0 : 1) - (b.state === 'front' ? 0 : 1) || (a.id < b.id ? 1 : -1));

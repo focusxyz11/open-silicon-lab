@@ -85,6 +85,22 @@ along lands at that stage's place on the island. `TWINS` in the atlas says which
 
 Your own design rides through all three: its masks drive printing, its copies are tested.
 
+### Steps and levels, drawn
+
+Steps follow each other in time, levels sit inside each other, and they are never drawn as one list (#266). In the
+studio (`#/bench/<step>`) and on the factory's line (`#/line/<step>`) the steps are **one line from left to right**
+across the top of the picture (`o.steps` in `src/v2/frame.js`, the same component in both): the step you are at lit,
+the ones before it done, the line filled up to it; ← →, *Next →* and a tap on a step walk along it. On a phone it is a
+strip: the step, ← → and how far along (*5 of 11*). The **rail at the side holds only levels**: a step that shows a
+level of the chip lights it there (the job is the chip, layout its blocks, gates its gates; the line packs the chip,
+wires the blocks, prints the gates, etches the switches, grows and implants the atoms), and the rail is absent at a
+step that shows none (describe, check, masks; slicing, cleaning, depositing, testing, shipping). A tap on a level
+goes to the step that shows it; in the studio ↓ ↑ move in · out through them (the job → layout → gates), and on
+the line ↓ goes into the station's machine. *Around here* offers the level at another stage (*As it is made*, *In
+use*) only where the step shows one, and walking the line to the test house or the packing is a step along, not the
+same level at another stage. The logic is `stepsOf`, `levelOfStep`, `levelsOfSteps`, `stepOfLevel`, `inOutOfStep`
+and `holds` in `src/engines/way.js`, tested in `tests/way.test.mjs`.
+
 ### Questions from the field, and the seams
 
 The deepest questions in the lab are the ones the field itself was stuck on (`src/data/questions.js`; the framework
@@ -302,7 +318,7 @@ where it is richer).
 | Stack | inside a chip, as made (`#/chip/<row>/build`) |
 | Dive | the earlier site's flat zoom in the frame (`#/dive/<depth>`), chip to atom; the flight goes on into it |
 | Line | the earlier site's factory in the frame (`#/line/<step>`): a wafer travelling between the machines, step by step; your design at printing, etching and wiring |
-| Bench | the studio in the frame (`#/bench/<level>[/<challenge>]`): its drawings show your design; a design challenge is played in the dock and the drawings follow it; masks lead to the line |
+| Bench | the studio in the frame (`#/bench/<level>[/<challenge>]`): one design of your own, live on a surface laid over the step's square (`src/v2/bench.js`): pick a piece at the job, write it at describe, scrub the waves at check, flip inputs at gates, drag cells at layout, peel the masks; a challenge played there uses the same surface (as its instrument in Do mode); masks lead to the line |
 | Along | `src/engines/way.js`: from the loop in the bar and the ← → keys; holds the level through used, made and designed |
 | One look | the flat views and the line's machines in the 3D views' palette and light |
 | Everything inside | every place's levels, every question and the supply map open in the chip world's own views |
