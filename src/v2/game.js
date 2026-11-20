@@ -139,7 +139,10 @@ export const CHALLENGES = [
   { id: 'prefill', step: 'use', place: 'datacentre', at: 'chip', kind: 'prefill', grows: 'dc-prefill' },
   /* if information weighs nothing, why does moving it cost so much? One bit's trip, and Keep the chef busy
      (src/v2/labs/bits.js, src/engines/bits.js); its home in the atlas is QUESTIONS.bits */
-  { id: 'chef', step: 'use', place: QUESTIONS.bits.home.place, at: QUESTIONS.bits.home.level, kind: 'chef', grows: 'dc-pantry' }
+  { id: 'chef', step: 'use', place: QUESTIONS.bits.home.place, at: QUESTIONS.bits.home.level, kind: 'chef', grows: 'dc-pantry' },
+  /* a reliable whole from flaky parts, and a mind that cannot be copied (src/v2/labs/vote.js, mortal.js) */
+  { id: 'flaky', step: 'design', place: 'studio', at: 'gates', kind: 'redund', grows: 'studio-vote' },
+  { id: 'mortal', step: 'use', place: 'datacentre', at: 'switch', kind: 'mortal', grows: 'way-mortal' }
 ];
 /* the goal of a chip challenge as gauges: each a value of your chip's model and the bound it must reach
    (ge: at least, le: at most). Together they say the same as the goal's met() in src/engines/chip.js. */
@@ -169,7 +172,7 @@ export const placeChallenges = place => CHALLENGES.filter(c => c.place === place
 /* what grows, and where (the island draws each one: src/v2/map3d.js GROWERS) */
 /* where a growth stands when it is not at its challenge's place: the other ways to compute grow at the Lab (WAYS_AT), and the
    clock and the power budget, design decisions, at the studio */
-const GROW_AT = { onebad: 'test', half: 'studio', phone: 'phones', car: 'cars', dclife: 'datacentre', fast: 'lab', cim: 'lab', grover: 'lab', 'power-curve': 'studio', counter: 'studio' };
+const GROW_AT = { onebad: 'test', half: 'studio', phone: 'phones', car: 'cars', dclife: 'datacentre', fast: 'lab', cim: 'lab', grover: 'lab', 'power-curve': 'studio', counter: 'studio', mortal: 'lab' };
 export const GROWTH = CHALLENGES.map(c => ({ id: c.grows, by: c.id, at: GROW_AT[c.id] || c.place }));
 
 /* Inside: every place's levels, one inside the next (src/data/places.js). These hold the earlier site's
@@ -328,7 +331,7 @@ export function community(s) {
 export const OPENS = { 'too-hot': 'fail.switch', 'litho-finest': 'scale.print', 'euv-1000': 'fail.print', etch: 'make.etch', bottom: 'idea.deposit', crystal: 'make.crystal', furnace: 'make.implant', shallow: 'fail.implant', vias: 'fail.print', evolve: 'idea.block', newest: 'open.phoneboard', jobs: 'divide.need', agent: 'idea.check', half: 'fail.check', vote: 'idea.check', full: 'make.gates', months: 'make.clean', quick: 'scale.clean', spot: 'fail.test', cores: 'divide.test',
   phone: 'life.phone', car: 'fail.car', dclife: 'fail.ship', fed: 'divide.board', fast: 'fail.chip',
   cim: 'divide.block', grover: 'strange.atom', 'ai-chip': 'scale.masks', piece: 'open.need', floor: 'divide.layout', maskof: 'make.masks', 'power-curve': 'life.block', counter: 'fail.gate',
-  'sig-heart': 'fail.phoneboard', 'sig-bearing': 'fail.ecu', 'reg-jobs': 'fail.phoneboard', quantize: 'think.chip', 'token-energy': 'divide.rack', prefill: 'think.board', chef: 'divide.block' };
+  'sig-heart': 'fail.phoneboard', 'sig-bearing': 'fail.ecu', 'reg-jobs': 'fail.phoneboard', quantize: 'think.chip', 'token-energy': 'divide.rack', prefill: 'think.board', chef: 'divide.block', flaky: 'fail.gates', mortal: 'life.switch' };
 /* and where the open things of the ledger sit: a break under "is the design right?", a piece to build under
    "could anyone design a chip?", a missing check under "who checks, and with what?" */
 export const FRONT_ASK = { break: 'fail.check', build: 'open.need', engine: 'idea.check' };

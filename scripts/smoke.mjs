@@ -147,7 +147,7 @@ const explore = async (tag, viewport, scheme) => {
   await page.waitForSelector('#sheet .won', { timeout: 10000 }).catch(() => problems.push(tag + ': a right design did not win the challenge'));
   if (!/grew/i.test(await page.textContent('#toast').catch(() => ''))) problems.push(tag + ': winning did not say what grew');
   if (!(await page.$('#sheet .opens[href^="#/ask/"]'))) problems.push(tag + ': the first win opens no question');
-  if (!/1 of 11/.test(await page.getAttribute('#loop [data-stage="design"]', 'aria-label').catch(() => ''))) problems.push(tag + ': the tracker did not count the win');
+  if (!/1 of 12/.test(await page.getAttribute('#loop [data-stage="design"]', 'aria-label').catch(() => ''))) problems.push(tag + ': the tracker did not count the win');
   await page.click('#sheet [data-next]').catch(() => problems.push(tag + ': no way on to the next challenge'));
   if (!/voter/i.test(await page.textContent('#sheet .player h3').catch(() => ''))) problems.push(tag + ': the next challenge is not the majority voter');
   await page.click('#sheet [data-back]');
@@ -685,6 +685,9 @@ run['labs'] = async () => {
     while (!won && Date.now() < until) { won = await fp.evaluate(play).catch(() => false); if (!won) await fp.waitForTimeout(3000); }
     if (!won) problems.push(tag + ': ' + what + ' is not won by the moves that win it');
   };
+  /* the two thinnest core questions: a reliable whole from flaky parts (vote.js), a mind that cannot be copied (mortal.js) */
+  await playLab('flaky', "['mul', 'mem', 'add'].forEach(b => CL('[data-rd=\"' + b + ':3\"]:not([aria-pressed=\"true\"])'))", 'Six flaky parts, one reliable chip');
+  await playLab('mortal', "SET('#mo-share', 9); CL('[data-mo-learn=\"chip\"]:not([aria-pressed=\"true\"])'); CL('[data-mo-cal]:not([aria-pressed=\"true\"])')", 'Learn on one chip, copy to a thousand');
   /* serving a language model, at the data centre: four bits despite outliers, where an answer's energy goes, read fast and write slow */
   await playLab('quantize', "CL('[data-sq-format=\"fp4\"]:not([aria-pressed=\"true\"])'); CL('[data-sq-scale=\"nv16\"]:not([aria-pressed=\"true\"])'); SET('#sq-outliers', 1)", 'Four bits, despite outliers');
   await playLab('token-energy', "SET('#se-watts', 2300); SET('#se-tokExp', 3.9); SET('#se-pue', 1.05); SET('#se-overhead', 10); SET('#se-tokExp', 4.5)", 'Where an answer\'s energy goes');
