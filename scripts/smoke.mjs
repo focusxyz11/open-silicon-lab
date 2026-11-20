@@ -342,8 +342,15 @@ const explore = async (tag, viewport, scheme) => {
   await page.waitForFunction(() => !!document.querySelector('#chipui .rail2 [aria-current][data-rail="block"]'), null, { timeout: 15000 }).catch(() => problems.push(tag + ': the layers as made are not at the level the dive was at'));
   await page.click('#chipui [data-rowgo="2"]').catch(() => problems.push(tag + ': no way deeper in the layers as made'));
   await page.waitForFunction(() => { const c = document.querySelector('#chipui .rail2 [aria-current]'); return c && c.dataset.rail === 'gate' && location.hash === '#/chip/2/build'; }, null, { timeout: 15000 }).catch(() => problems.push(tag + ': going deeper in the layers as made did not reach the gates'));
-  await page.click('#chipui .modes3 [data-mode="ask"]').catch(() => {});
-  if (!(await page.$('#chipui .dock .askline'))) problems.push(tag + ': Ask shows no questions at this level');
+  /* Ask: the core questions that live at the level, as lenses (src/engines/frame.js); one chosen is shown alone, and
+     choosing another shows that one instead */
+  await page.waitForFunction(() => { const b = document.querySelector('#chipui .modes3 [data-mode="ask"]'); if (b && b.getAttribute('aria-selected') !== 'true') b.click();
+    return document.querySelectorAll('#chipui .dock .qlbar .qlb').length >= 2 && document.querySelectorAll('#chipui .dock .qlb[aria-pressed="true"]').length === 1 && !!document.querySelector('#chipui .dock .qlcard .qlq'); }, null, { timeout: 15000, polling: 500 })
+    .catch(() => problems.push(tag + ': Ask shows no lenses at this level, or not one chosen'));
+  { const q0 = await page.textContent('#chipui .dock .qlcard .qlq').catch(() => '');
+    await page.waitForFunction(q => { const L = [...document.querySelectorAll('#chipui .dock .qlb')], on = L.find(b => b.getAttribute('aria-pressed') === 'true'), q1 = document.querySelector('#chipui .dock .qlcard .qlq');
+      if (q1 && q1.textContent !== q && document.querySelectorAll('#chipui .dock .qlcard').length === 1) return true; const other = L.find(b => b !== on); if (other) other.click(); return false; }, q0, { timeout: 15000, polling: 500 })
+      .catch(() => problems.push(tag + ': choosing another lens does not show its question alone')); }
   await page.click('#chipui .dock [data-mode="look"]').catch(() => {});
   /* the flat dive in the frame: the rail follows it down, and the Turn leads to the same level as made */
   at = tag + ' ' + '#/dive/gate'; await page.evaluate(() => { location.hash = '#/dive/gate'; });

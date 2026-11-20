@@ -12,7 +12,8 @@
    #/bench/<level>[/<challenge>] (the studio), #/do/<challenge>, #/ask/<thread>/<depth>, #/supply, #/log, #/build,
    #/ecosystem. Words are read with t(). */
 import { t } from '../core/i18n.js';
-import { REPO, THREADS } from '../data/weave.js';
+import { REPO, THREADS, STOPS } from '../data/weave.js';
+import { createLenses, questionOf as frameQ } from '../engines/frame.js';
 import { NEEDS } from '../data/build.js';
 import { childrenOf } from '../engines/build.js';
 import { WAYS } from '../data/ways.js';
@@ -491,10 +492,55 @@ export function start() {
      piece nobody has built where the job is chosen. The commons is on the thing itself, not on a page of its own */
   const openAt = d => { const C = Game.community(S); return (d === 'check' ? C.breaks.map(b => chOf('break:' + b.of)) : d === 'need' ? C.jobs.map(j => Game.jobOf(j.need)) : []).filter(Boolean); };
   const frameOf = (host, o) => FrameM.createFrame(host, Object.assign({ follow, askAt: d => stopsAt(d), fieldAt: d => fieldAtLevel(d).map(q => q.id),
+    lensesAt: d => Lenses.lensesAt(LENS_AT[d] || d).map(id => ({ id, label: t('frame.q.' + id), hint: t('frame.q.' + id + '.hint'), icon: frameQ(id).icon })),
+    lensCard: (q, d) => lensCard(q, LENS_AT[d] || d), onLens: (q, d) => lightLens(q, LENS_AT[d] || d),
     askedAt: d => { const A = Game.askedAtLevel(d, S); return A.length ? '<p class="kicker">' + esc(t('page.questions.asked')) + '</p>' + A.map(askedHtml).join('') : ''; },
     doAt: d => Game.CHALLENGES.filter(c => c.at === d).map(c => ({ id: c.id, title: titleOf(c), where: whereOf(c), href: doHref(c) }))
       .concat(openAt(d).map(c => ({ id: c.id, title: titleOf(c), where: whereOf(c), href: '#/do/' + encodeURIComponent(c.id), open: true }))) }, o));
   let FrameM = null;
+  /* ---- the thirteen as lenses (src/data/frame.js, src/engines/frame.js): under Ask, the core questions that live at
+     the level in view, one at a time, each lighting on the picture what it is about ---- */
+  const Lenses = createLenses({ experiments: Exp.EXPERIMENTS, stops: STOPS, challenges: Game.CHALLENGES, doHome: Way.doHome });
+  /* the flights' levels that are a level of the dive by another name */
+  const LENS_AT = { campus: 'building', hall: 'building', server: 'rack', handset: 'phone', cabin: 'car' };
+  const hasWord = k => t(k) !== k;
+  /* each lens at a level shows a form of its own: the level's stops shared out in the lenses' order, unless the lens
+     has words written for this level */
+  const formsAt = d => { const used = new Set(), out = {};
+    Lenses.lensesAt(d).forEach(q => { const own = hasWord('frame.at.' + q + '.' + d + '.q'), x = Lenses.lensAt(q, d), st = own ? null : x.stops.find(k => !used.has(k)) || x.stops[0] || null; if (st) used.add(st); out[q] = { own, stop: st }; });
+    return out; };
+  const lensLevels = () => (!vui.hidden && ['dive', 'line', 'bench'].includes(flatKind) ? levelsOf(flatKind) : null);
+  function lensCard(q, d) {
+    const raw = lensLevels(), L = raw && raw.map(l => LENS_AT[l] || l), x = Lenses.lensAt(q, d, L), f = formsAt(d)[q] || {}, here = Lenses.lensesAt(d);
+    /* no stop and no words of its own here: the first experiment that runs through the level gives the form */
+    const xs = x.experiments.map(id => Exp.experimentOf(id)).filter(Boolean), x0 = !f.own && !f.stop ? xs[0] : null;
+    const form = f.own ? t('frame.at.' + q + '.' + d + '.q') : f.stop ? t('stop.' + f.stop + '.q') : x0 ? Read.askOf(x0) : '', note = f.own ? t('frame.at.' + q + '.' + d + '.note') : f.stop ? t('stop.' + f.stop + '.note') : '';
+    let h = '<div class="qlcard"><p class="qlq">' + esc(t(frameQ(q).word)) + '</p>';
+    if (form) h += f.stop || x0 ? '<a class="qlform" href="' + esc(f.stop ? follow(f.stop) : '#/read/' + x0.id) + '">' + esc(form) + '</a>' : '<p class="qlform">' + esc(form) + '</p>';
+    if (note && note !== 'stop.' + f.stop + '.note') h += '<p class="qltrue"><b>' + esc(t('frame.lens.true')) + '</b> ' + esc(note) + '</p>';
+    const chs = x.challenges.map(chOf).filter(Boolean);
+    if (chs.length) h += '<p class="kicker">' + esc(t('frame.lens.play')) + '</p><div class="dolist">' + chs.map(c => '<a class="dochip" href="' + esc(doHref(c)) + '"><b>' + esc(titleOf(c)) + '</b><span class="small muted">' + esc(whereOf(c)) + '</span></a>').join('') + '</div>';
+    if (x.meets) { const inner = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="' + esc(frameQ(x.meets).icon) + '"/></svg><span>' + esc(t('frame.lens.meets', { q: t('frame.q.' + x.meets) })) + (x.seam ? '<small>' + esc(t('frame.seam.' + x.seam)) + '</small>' : '') + '</span>';
+      h += here.includes(x.meets) ? '<button type="button" class="qlmeet" data-lens="' + esc(x.meets) + '">' + inner + '</button>' : '<p class="qlmeet">' + inner + '</p>'; }
+    if (x.next) { const w = '→ ' + esc(t('frame.lens.next', { level: t('depth.' + x.next + '.name') }));
+      h += L && WE && WE.IDS.includes(raw[L.indexOf(x.next)]) ? '<button type="button" class="chipb qlnext" data-divego="' + WE.IDS.indexOf(raw[L.indexOf(x.next)]) + '">' + w + '</button>' : '<a class="chipb qlnext" href="' + esc(Game.viewOfDepth(x.next)) + '">' + w + '</a>'; }
+    /* more of it here: its other stops, then the experiments it has at this level that no stop already shows */
+    const shown = new Set([f.stop].concat(x.stops)), more = x.stops.filter(k => k !== f.stop).map(k => ({ href: follow(k), q: t('stop.' + k + '.q') }))
+      .concat(xs.filter(e => e !== x0 && !(e.stops || []).some(k => shown.has(k))).map(e => ({ href: '#/read/' + e.id, q: Read.askOf(e) }))).slice(0, 2);
+    if (more.length) h += '<p class="kicker">' + esc(t('frame.lens.more')) + '</p><div class="asklist">' + more.map(m => '<a class="askline" href="' + esc(m.href) + '"><span class="q">' + esc(m.q) + '</span></a>').join('') + '</div>';
+    return h + '</div>';
+  }
+  /* the lens chosen lights its parts on the flat picture (the stop it shows, through the dive's own threads) and keeps
+     only its marks on a level drawn in 3D */
+  let lensNow = null;
+  function lightLens(q, d) {
+    if (!q && !lensNow) return;   /* no lens before or now: the picture is left as it is */
+    if (q && lensNow && lensNow.q === q && lensNow.d === d) return;
+    lensNow = q ? { q, d, stops: Lenses.lensAt(q, d).stops } : null;
+    if (!dive || vui.hidden || !['dive', 'line', 'bench'].includes(flatKind)) return;
+    const f = q ? formsAt(d)[q] : null, st = q ? (f && f.stop) || lensNow.stops[0] : null;
+    diveThread = st ? st.split('.')[0] : null; dive.setThread(diveThread);
+  }
   const withFrame = () => FrameM ? Promise.resolve(FrameM) : import('./frame.js').then(m => (FrameM = m));
   let turnT = 0;   /* a move along is spent by the next route, or forgotten when it changed nothing */
   /* around a level (docs/INTERACTION.md, "An open world"): the levels on either side, and the same level seen at
@@ -745,7 +791,8 @@ export function start() {
     /* one HUD: the earlier site's own marks, dive label and band give way to the frame */
     /* one stage: the line's machines draw on the shared renderer too */
     Wm.setChrome({ dots: false, dive: false, lit: true, keys: () => (flatKind === 'dive' ? 'scale' : 'steps'), stage: () => stage($('diveCanvas')), overlay: flatWords,
-      look: () => !!diveFrame && diveFrame.mode() === 'look' && !benchCh, ask: () => !!diveFrame && diveFrame.mode() === 'ask' }); Jm.setBand(false);
+      look: () => !!diveFrame && diveFrame.mode() === 'look' && !benchCh, ask: () => !!diveFrame && diveFrame.mode() === 'ask',
+      askOnly: id => (lensNow && lensNow.d === (LENS_AT[id] || id) ? lensNow.stops.map(k => k.split('.')[0]) : null) }); Jm.setBand(false);
     dive = Wm.createWorld($('diveCanvas'), { depth: d => diveAt(d), arrive: d => diveAt(d), zoom: z => { diveRail(z); levelZoom(z); }, part: (d, key) => { const a = l3Active(); pickPart(a ? a.obj.hit(lastTap.x, lastTap.y) : key); }, pick: th => { diveThread = th; dive.setThread(th); if (!benchCh && flatKind !== 'supply') drawDive(); },
       site: id => supplySite(id), mapStep: i => supplyStep(i) });
     return dive;
@@ -800,7 +847,7 @@ export function start() {
     /* too slow even at low settings: this level is drawn flat for the rest of the visit */
     failed: () => { if (dive) levelZoom(dive.z); } }))).catch(() => null)); };
   /* the questions at a level, grouped by the part each is about (the first of its parts): the marks under Ask */
-  const askMarks = id => { const by = new Map(); DiveData.THREADS.forEach(th => { const nm = DiveData.STOPS[th.id + '.' + id], key = nm && nm[0]; if (!key) return; if (!by.has(key)) by.set(key, []); by.get(key).push({ id: th.id, color: threadColorOf(th.id) }); }); return [...by].map(([part, threads]) => ({ part, threads })); };
+  const askMarks = id => { const by = new Map(), only = lensNow && lensNow.d === id ? lensNow.stops : null; DiveData.THREADS.forEach(th => { if (only && !only.includes(th.id + '.' + id)) return; const nm = DiveData.STOPS[th.id + '.' + id], key = nm && nm[0]; if (!key) return; if (!by.has(key)) by.set(key, []); by.get(key).push({ id: th.id, color: threadColorOf(th.id) }); }); return [...by].map(([part, threads]) => ({ part, threads })); };
   let threadColorOf = () => '';
   const hideL3 = () => { Object.values(L3).forEach(l => { if (l.obj) l.obj.show(0); }); $('diveCanvas').style.opacity = ''; $('flatLabels').style.visibility = ''; if (dive) dive.setCovered(false); };
   /* a join (docs/reviews/transitions.md): between two neighbouring levels in 3D, both drawn in one frame on one camera

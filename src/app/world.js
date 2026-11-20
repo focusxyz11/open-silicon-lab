@@ -344,8 +344,8 @@ export function createWorld(cv, on) {
     const note = n0 && nc ? { key: n0.part, title: n0.title, text: n0.text, x: nc[0], y: nc[1] } : null;
     let marks = [];
     if (CHROME.ask && CHROME.ask()) {
-      const by = new Map();
-      THREADS.forEach(th => { const nm = stop(th.id, pi), key = nm && nm.find(n => P[n] && P[n].length); if (!key) return; if (!by.has(key)) by.set(key, []); by.get(key).push({ id: th.id, color: threadColor(th.id) }); });
+      const by = new Map(), only = CHROME.askOnly ? CHROME.askOnly(id) : null;   /* a lens chosen: only its questions */
+      THREADS.forEach(th => { if (only && !only.includes(th.id)) return; const nm = stop(th.id, pi), key = nm && nm.find(n => P[n] && P[n].length); if (!key) return; if (!by.has(key)) by.set(key, []); by.get(key).push({ id: th.id, color: threadColor(th.id) }); });
       marks = [...by].map(([key, threads]) => { const c = centreOf(key); return { part: key, x: c[0], y: c[1] - 14, threads }; });
     }
     const door = settled && F.next && now - restT > 3000 && CHROME.look && CHROME.look() ? [F.next.tx, F.next.ty, F.next.s * 1000] : null;
