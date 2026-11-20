@@ -55,6 +55,8 @@ import { cornerOf as studioCorner } from '../data/studio.js';
 import { createHome } from './home.js';
 import { sizeWords } from './frame.js';
 import { ON as FRAME2, boot as frame2Boot } from './frame2.js';
+/* what design really is, in each studio step's card (content/design.md) */
+import { studioLook } from './studio-look.js';
 
 const $ = id => document.getElementById(id);
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
@@ -1018,7 +1020,9 @@ export function start() {
     diveFrame.dock.innerHTML = lineHtml(t('around.view.' + flatKind) + ' · ' + t('depth.' + id + '.name'), t('depth.' + id + '.see'), key, aroundRow(
       i ? '<button type="button" class="chipb" data-key="back" data-divego="' + (diveD - 1) + '">' + ar0 + esc(nm(L[i - 1])) + '</button>' : flatKind === 'dive' && diveWorld === 'datacentre' ? '<button type="button" class="chipb" data-key="back" data-divego="' + (diveD - 1) + '">' + esc(t('dive.up')) + '</button>' : '',
       last ? end : '<button type="button" class="chipb" data-key="next"' + (flatKind === 'dive' ? ' data-in' : al) + ' data-divego="' + (diveD + 1) + '">' + ar1 + esc(nm(L[i + 1])) + '</button>', inHtml || benchIn(id, 1), benchIn(id, -1)));
-    diveFrame.dock.innerHTML = (sk ? seekLit(diveFrame.dock.innerHTML, sk) : diveFrame.dock.innerHTML).replace('<div class="nav">', yours + (hereHtml.startsWith('<div class="seek') ? '' : '<p class="small muted hintline">' + esc(flatKind === 'bench' ? t('bench.do.' + id) : t(F.hint)) + '</p>') + hereHtml + '<div class="nav">');
+    /* the studio's step: what is true, the practice and its open tools, what the engines say of your design, what people try */
+    const studioHtml = flatKind === 'bench' && DS ? studioLook(id, DS.designNow(), key) : '';
+    diveFrame.dock.innerHTML = (sk ? seekLit(diveFrame.dock.innerHTML, sk) : diveFrame.dock.innerHTML).replace('<div class="nav">', studioHtml + yours + (hereHtml.startsWith('<div class="seek') ? '' : '<p class="small muted hintline">' + esc(flatKind === 'bench' ? t('bench.do.' + id) : t(F.hint)) + '</p>') + hereHtml + '<div class="nav">');
     if (sk) seekLight(sk);
     requestAnimationFrame(diveInset);
   }

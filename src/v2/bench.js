@@ -18,6 +18,7 @@
 import { t } from '../core/i18n.js';
 import * as G from './game.js';
 import * as X from '../engines/bench.js';
+import { SKY130_TOTAL } from '../engines/rules.js';
 import { simulate, cellSize } from '../engines/design.js';
 import { plan, allDesigns } from '../engines/build.js';
 import { NEEDS } from '../data/build.js';
@@ -45,8 +46,8 @@ const num = bits => bits.reduce((a, b) => a * 2 + (b | 0), 0);
 export function caption(step, D, L) {
   const B = D.B, ok = !B.errs.length;
   if (!ok && step !== 'need' && step !== 'logic') return t('bench.cap.unread');
-  const n = { cells: B.M ? B.M.cells.length : 0, transistors: B.transistors || 0, n: B.st ? B.st.depth : 0, total: B.total || 0, bad: B.bad || 0, masks: B.masks || 0,
-    wire: L ? L.wl : B.RT ? B.RT.wl : 0, vias: L ? L.vias : B.RT ? B.RT.vias : 0, drawn: X.MASKS.length, rest: (B.masks || 0) - X.MASKS.length };
+  const n = { cells: B.M ? B.M.cells.length : 0, transistors: B.transistors || 0, n: B.st ? B.st.depth : 0, total: B.total || 0, bad: B.bad || 0, masks: SKY130_TOTAL,
+    wire: L ? L.wl : B.RT ? B.RT.wl : 0, vias: L ? L.vias : B.RT ? B.RT.vias : 0, drawn: X.MASKS.length, rest: SKY130_TOTAL - X.MASKS.length };
   if (step === 'check') return t(B.bad ? 'design.cap.check.d' : 'design.cap.check.ok', Object.assign(n, { n: B.bad || 0 }));
   return t('design.cap.' + step + '.d', n);
 }
@@ -289,7 +290,7 @@ export function createBench(o) {
         tags += narrow ? tag(ox + ph * 0.55, oy - (lift ? 40 : 0) - 14, W, H, esc(t('design.layer.' + m)), 'l mk-t-' + m) : tag(ox + pw + 30, oy - (lift ? 40 : 0) + ph * 0.21, W, H, esc(t('design.layer.' + m)), 'l mk-t-' + m);
       });
     }
-    const side = '<p class="bk-k">' + esc(t('bench.masks.k')) + '</p><p class="bk-set">' + esc(t('bench.masks.set', { drawn: X.MASKS.length, n: B.masks, rest: B.masks - X.MASKS.length })) + '</p>' +
+    const side = '<p class="bk-k">' + esc(t('bench.masks.k')) + '</p><p class="bk-set">' + esc(t('bench.masks.set', { drawn: X.MASKS.length, n: SKY130_TOTAL, rest: SKY130_TOTAL - X.MASKS.length })) + '</p>' +
       (B.ok ? '' : '<p class="bk-say bad">' + esc(t('bench.masks.bad', { bad: B.bad, total: B.total })) + '</p>') +
       '<p class="bk-set muted">' + esc(t('bench.masks.next')) + '</p>';
     const ctl = quiz ? '' : '<label class="bk-scrub bk-peel"><span>' + esc(t('bench.masks.peel')) + '</span><input type="range" data-bk-peel min="0" max="100" step="1" value="' + Math.round(peel * 100) + '"></label>';

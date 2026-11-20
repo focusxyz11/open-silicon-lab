@@ -374,6 +374,14 @@ const explore = async (tag, viewport, scheme) => {
   await page.fill('#diveui .dock #chCode', 'sum = a ^ b;\ncarry = a & b;').catch(() => {});
   await page.click('#diveui .dock [data-check]').catch(() => {});
   await page.waitForSelector('#diveui .dock .won', { timeout: 10000 }).catch(() => problems.push(tag + ': a right design on the bench did not win'));
+  /* what design really is, in each step's card (src/v2/studio-look.js): timing at the gates, the factory's rules on the tile,
+     the masks against the process's own; each poll goes to the step again, in case the card was drawn anew */
+  for (const [step, sel, n] of [['gates', '.sl-bar', 1], ['layout', '.sl-rules li', 7], ['masks', '.sl-masks .sl-m', 34]]) {
+    at = tag + ' ' + '#/bench/' + step;
+    await page.waitForFunction(([s, q, k]) => { if (location.hash !== '#/bench/' + s) location.hash = '#/bench/' + s;
+      const c = document.querySelector('#diveui .dock .sl[data-studio="' + s + '"]'); return !!c && c.querySelectorAll(q).length >= k; }, [step, sel, n], { timeout: 20000, polling: 500 })
+      .catch(() => problems.push(tag + ': the ' + step + ' card does not show what its engine says of your design'));
+  }
   /* the bench as a live design (#265, #268): a first visit names every piece of the computer readably and says the design is
      the lab's example; a design changed at describe is followed by the check, the gates and the layout */
   { const btag = tag + ' bench', bp = await browser3d.newPage({ viewport, colorScheme: scheme, reducedMotion: 'reduce' }); bp.on('pageerror', e => problems.push(btag + ': ' + e.message));

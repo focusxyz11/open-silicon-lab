@@ -82,8 +82,13 @@ delay along paths; fault models.
 
 **What it decides:** whether a design does its job; how big, how fast, how testable it is.
 
-**Today:** `src/engines/tinychip.js` and `src/engines/design.js`, tested; it builds for four processes. Missing: a
-link from the lab's language to real ones (Verilog), and a way to send a design to a real shared run from the record.
+**Today:** `src/engines/tinychip.js` and `src/engines/design.js`, tested; it builds for four processes. The lab's
+language is written out as Verilog (`src/engines/verilog.js`), the longest chain is timed against a clock
+(`src/engines/timing.js`), and the tile is checked against design rules and its masks counted against the process's
+own (`src/engines/rules.js`). Missing: a way to send a design to a real shared run from the record.
+
+Each step, as it is done in practice and with its open tools, from the job to the masks and the open path to a real
+chip: [what design really is](design.md).
 
 ## Questions inside
 

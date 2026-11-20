@@ -2436,6 +2436,60 @@ a.hm-start:hover { border-color: var(--muted); transform: translateY(-2px); }
 }
 @media (prefers-reduced-motion: reduce) { .hm-pkt, .hm-bus b, .hm-leak, .hm-sheen, .hm-live, .hm-st.sel .hm-o::before { animation: none; } .hm-pkt { display: none; } }
 
+/* ---- what design really is, in each studio step's card (src/v2/studio-look.js) ---- */
+.sl { margin: 0 0 14px; }
+.sl > .kicker { margin: 12px 0 4px; }
+.sl > .kicker:first-child { margin-top: 0; }
+.sl :where(p:not(.kicker)) { margin: 0 0 6px; font-size: 14px; line-height: 1.5; }
+.sl .sl-true { font-size: 15px; }
+.sl .sl-prac { color: var(--ink); }
+.sl-eng { margin: 12px 0 4px; padding: 10px 12px 6px; border: 1px solid var(--line); border-radius: 12px; background: color-mix(in srgb, var(--panel-solid) 60%, transparent); }
+.sl-eng > .kicker { margin: 0 0 6px; color: var(--ink); }
+.sl-code pre { margin: 0 0 8px; padding: 8px 10px; border-radius: 8px; background: color-mix(in srgb, var(--ink) 6%, transparent); font: 400 11.5px/1.5 var(--mono); white-space: pre-wrap; overflow-wrap: anywhere; color: var(--ink); }
+.sl .sl-codek { margin: 4px 0 3px; font: 600 10px/1.4 var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.sl-bar { display: grid; grid-template-columns: 84px 1fr; align-items: center; gap: 8px; margin: 4px 0; }
+.sl-barl { font: 600 10.5px/1.2 var(--mono); color: var(--muted); }
+.sl-bar svg { width: 100%; height: 22px; display: block; }
+.sl-track { fill: color-mix(in srgb, var(--good) 14%, transparent); }
+.sl-ff { fill: color-mix(in srgb, var(--muted) 55%, transparent); }
+.sl-gate { fill: var(--accent); }
+.sl-gate.late { fill: var(--bad); }
+.sl-tick { stroke: var(--ink); stroke-width: 2; }
+.sl .sl-legend { display: flex; flex-wrap: wrap; gap: 4px 14px; margin: 2px 0 8px 92px; font-size: 11.5px; color: var(--muted); }
+.sl-legend span { display: inline-flex; align-items: center; gap: 5px; }
+.sl-sw { display: inline-block; width: 10px; height: 10px; border-radius: 2px; }
+.sl-sw.sl-ff { background: color-mix(in srgb, var(--muted) 55%, transparent); }
+.sl-sw.sl-gate { background: var(--accent); }
+.sl-sw.sl-tk { width: 2px; height: 12px; border-radius: 0; background: var(--ink); }
+.sl .sl-verdict { font-weight: 600; }
+.sl .sl-verdict.good { color: var(--good); }
+.sl .sl-verdict.bad { color: var(--bad); }
+:root[data-theme=light] .sl .sl-verdict.good { color: #17804b; }
+:root[data-theme=light] .sl .sl-verdict.bad { color: #c2332b; }
+.sl-rules { list-style: none; margin: 0 0 8px; padding: 0; display: grid; gap: 3px; }
+.sl-rules li { display: grid; grid-template-columns: 18px 1fr auto; gap: 6px; align-items: baseline; font-size: 13.5px; }
+.sl-rules em { font: 600 10.5px/1.3 var(--mono); font-style: normal; color: var(--muted); text-align: right; }
+.sl-rules .ok .sl-mark { color: var(--good); }
+.sl-rules .bad .sl-mark, .sl-rules .bad em { color: var(--bad); }
+.sl-masks { display: grid; grid-template-columns: repeat(17, 1fr); gap: 3px; margin: 2px 0 8px; }
+.sl-m { display: inline-block; aspect-ratio: 1; min-width: 10px; border-radius: 2px; border: 1px solid transparent; }
+.sl-masks .sl-m { width: 100%; }
+.sl-transistors { background: color-mix(in srgb, var(--accent) 72%, transparent); }
+.sl-cellwires { background: color-mix(in srgb, var(--accent) 36%, transparent); }
+.sl-yours { background: color-mix(in srgb, var(--warm) 25%, transparent); border-color: var(--warm); }
+.sl-yours.drawn { background: var(--warm); }
+.sl-upper { background: color-mix(in srgb, var(--muted) 50%, transparent); }
+.sl-outside { background: color-mix(in srgb, var(--muted) 24%, transparent); }
+.sl-others { background: transparent; border: 1px dashed var(--muted); }
+.sl-mkey { list-style: none; margin: 0 0 8px; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 3px 12px; font-size: 12.5px; }
+.sl-mkey li { display: flex; align-items: center; gap: 6px; }
+.sl-mkey .sl-m { width: 11px; flex: none; }
+.sl-mkey b { margin-left: auto; font: 600 11px/1 var(--mono); }
+.sl-tried { margin: 0; padding-left: 18px; font-size: 13.5px; display: grid; gap: 4px; }
+@media (max-width: 719px) { .sl-mkey { grid-template-columns: 1fr; } .sl .sl-true { font-size: 14px; } }
+@media (prefers-color-scheme: light) { :root:not([data-theme]) .sl .sl-verdict.good { color: #17804b; } :root:not([data-theme]) .sl .sl-verdict.bad { color: #c2332b; } }
+/* below the desktop bench the card is anchored at the bottom: a studio step's card is long, so it scrolls in itself */
+@media (max-width: 1099px) { .dockwrap:not(.peek):has(.sl) { max-height: calc(100% - 124px); overflow-y: auto; overscroll-behavior: contain; } }
 /* ---- the row of steps (src/v2/frame.js, #266): the studio and the factory's line are steps that follow each other in
    time, walked along. One line from left to right across the top of the picture: the step you are at lit, the ones
    before it done, the line filled up to it. The rail at the side holds only levels, and is absent at a step that shows

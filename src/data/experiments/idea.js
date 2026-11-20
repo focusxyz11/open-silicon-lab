@@ -6,7 +6,7 @@ export default [
   { id: 'idea-one-char', strand: 1, at: ['logic', 'check'], ch: ['half', 'vote', 'full'], engine: 'logic', lens: 'forms', trade: ['sure'] },
   { id: 'idea-two-ways', strand: 1, at: ['logic', 'gates'], engine: 'logic', probe: 1, lens: 'forms', trade: ['area', 'work'] },
   { id: 'idea-placed', strand: 1, stops: ['idea.block'], ch: ['evolve'], engine: 'logic', lens: 'forms', trade: ['area'], given: ['closed', 'hands'], open: ['aidesign'] },
-  { id: 'idea-masks', strand: 1, at: ['need', 'logic', 'check', 'gates', 'layout', 'masks'], ch: ['maskof'], engine: 'logic', lens: 'forms' },
+  { id: 'idea-masks', strand: 1, stops: ['idea.masks'], at: ['need', 'logic', 'check', 'gates', 'layout', 'masks'], ch: ['maskof'], engine: 'logic', lens: 'forms' },
   { id: 'idea-sure', strand: 2, stops: ['idea.gate'], engine: null, lens: 'probe', trade: ['sure'], given: ['frozen', 'tried'], open: ['proof'] },
   { id: 'idea-coverage', strand: 2, at: ['check'], ch: ['prove'], engine: 'logic', lens: 'probe', trade: ['sure'], given: ['tried'] },
   { id: 'idea-ai', strand: 3, stops: ['idea.check'], ch: ['agent'], engine: 'logic', lens: 'side', go: '#/build', trade: ['sure'], open: ['aidesign'], debate: 'signoff' },
