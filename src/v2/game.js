@@ -18,12 +18,14 @@ import { plan, progress, needOf, childrenOf, designsFor, allDesigns } from '../e
 import { ledger, settle, frontier, questionsAt, society, workFor, KINDS as ENTRY_KINDS } from '../engines/ledger.js';
 import { t, fmtNum } from '../core/i18n.js';
 import { normalJoule } from './joule.js';
+import { normalState as normalChef } from '../engines/bits.js';
 import { NEEDS, AGENT } from '../data/build.js';
 import { DEBATES } from '../data/debates.js';
 import { WAYS } from '../data/ways.js';
 import { STOPS, WORLDS } from '../data/weave.js';
 import { INSIDE, placeOf, SHARED, askAt as levelStops } from '../data/places.js';
 import { fieldOf, fieldAtLevel, fieldAtPlace } from '../data/questions.js';
+import { QUESTIONS } from '../data/atlas.js';
 import { normalBetOf } from '../engines/bet.js';
 import { normalLevers, PUZZLES } from '../engines/ripple.js';
 import { normalAgent } from '../data/agent.js';
@@ -108,7 +110,10 @@ export const CHALLENGES = [
   /* serving a language model (src/v2/labs/serve.js, src/engines/aiserve.js) */
   { id: 'quantize', step: 'use', place: 'datacentre', at: 'chip', kind: 'quantize', grows: 'dc-quant' },
   { id: 'token-energy', step: 'use', place: 'datacentre', at: 'rack', kind: 'tokenenergy', grows: 'dc-token' },
-  { id: 'prefill', step: 'use', place: 'datacentre', at: 'chip', kind: 'prefill', grows: 'dc-prefill' }
+  { id: 'prefill', step: 'use', place: 'datacentre', at: 'chip', kind: 'prefill', grows: 'dc-prefill' },
+  /* if information weighs nothing, why does moving it cost so much? One bit's trip, and Keep the chef busy
+     (src/v2/labs/bits.js, src/engines/bits.js); its home in the atlas is QUESTIONS.bits */
+  { id: 'chef', step: 'use', place: QUESTIONS.bits.home.place, at: QUESTIONS.bits.home.level, kind: 'chef', grows: 'dc-pantry' }
 ];
 /* the goal of a chip challenge as gauges: each a value of your chip's model and the bound it must reach
    (ge: at least, le: at most). Together they say the same as the goal's met() in src/engines/chip.js. */
@@ -188,7 +193,7 @@ export const askHref = key => { const [th, d] = key.split('.'); return '#/ask/' 
 
 /* ---- your state: what you have done, and what you were working on ---- */
 export const KEY = 'osl-world-v1';
-export function fresh() { return { done: {}, codes: {}, chip: Object.assign({}, START), life: {}, seen: false, drafts: [], sent: {}, met: {}, crossed: {}, bets: {}, whatif: { levers: {}, solved: {} }, agent: {}, teardown: {}, fit: {}, evolve: {}, litho: { best: {} }, aibuild: {}, looked: {}, joule: { on: false, plan: {} }, name: '' }; }
+export function fresh() { return { done: {}, codes: {}, chip: Object.assign({}, START), life: {}, seen: false, drafts: [], sent: {}, met: {}, crossed: {}, bets: {}, whatif: { levers: {}, solved: {} }, agent: {}, teardown: {}, fit: {}, evolve: {}, litho: { best: {} }, aibuild: {}, looked: {}, joule: { on: false, plan: {} }, chef: normalChef(null), name: '' }; }
 export function normalState(s) {
   const f = fresh();
   if (!s || typeof s !== 'object') return f;
@@ -208,10 +213,10 @@ export function normalState(s) {
   const w = s.whatif || {}, whatif = { levers: normalLevers(w.levers), solved: {} }; Object.keys(w.solved || {}).forEach(k => { if (PUZZLES.some(p => p.id === k)) whatif.solved[k] = true; });
   /* Print the finest lines: the setting that printed each scanner's finest lines (src/v2/labs/litho.js prints them again) */
   const litho = { best: {} }; Object.entries((s.litho && s.litho.best) || {}).slice(0, 12).forEach(([k, v]) => { if (v && typeof v === 'object' && [v.na, v.v, v.dose].every(Number.isFinite)) litho.best[k] = { na: v.na, v: v.v, dose: v.dose, illum: v.illum === 'dipole' ? 'dipole' : 'conventional', dp: !!v.dp }; });
-  return { done, codes, chip: normal(s.chip || START), life: lifeC, seen: !!s.seen, drafts, sent, met, crossed, bets, whatif, agent: normalAgent(s.agent), teardown: s.teardown && typeof s.teardown === 'object' ? s.teardown : {}, fit: s.fit && typeof s.fit === 'object' ? s.fit : {}, evolve: s.evolve && typeof s.evolve === 'object' ? s.evolve : {}, litho, aibuild: s.aibuild && typeof s.aibuild === 'object' ? s.aibuild : {}, looked: normalLooked(s.looked), joule: normalJoule(s.joule), name: typeof s.name === 'string' ? s.name.slice(0, 40) : '' };
+  return { done, codes, chip: normal(s.chip || START), life: lifeC, seen: !!s.seen, drafts, sent, met, crossed, bets, whatif, agent: normalAgent(s.agent), teardown: s.teardown && typeof s.teardown === 'object' ? s.teardown : {}, fit: s.fit && typeof s.fit === 'object' ? s.fit : {}, evolve: s.evolve && typeof s.evolve === 'object' ? s.evolve : {}, litho, aibuild: s.aibuild && typeof s.aibuild === 'object' ? s.aibuild : {}, looked: normalLooked(s.looked), joule: normalJoule(s.joule), chef: normalChef(s.chef), name: typeof s.name === 'string' ? s.name.slice(0, 40) : '' };
 }
 export function load(store) { try { return normalState(JSON.parse(store.getItem(KEY) || 'null')); } catch (e) { return fresh(); } }
-export function save(store, s) { try { store.setItem(KEY, JSON.stringify({ done: s.done, codes: s.codes, chip: s.chip, life: s.life, seen: s.seen, drafts: s.drafts, sent: s.sent, met: s.met, crossed: s.crossed, bets: s.bets, whatif: s.whatif, agent: s.agent, teardown: s.teardown, fit: s.fit, evolve: s.evolve, litho: s.litho, aibuild: s.aibuild, looked: s.looked, joule: s.joule, name: s.name })); } catch (e) { /* storage unavailable */ } }
+export function save(store, s) { try { store.setItem(KEY, JSON.stringify({ done: s.done, codes: s.codes, chip: s.chip, life: s.life, seen: s.seen, drafts: s.drafts, sent: s.sent, met: s.met, crossed: s.crossed, bets: s.bets, whatif: s.whatif, agent: s.agent, teardown: s.teardown, fit: s.fit, evolve: s.evolve, litho: s.litho, aibuild: s.aibuild, looked: s.looked, joule: s.joule, chef: s.chef, name: s.name })); } catch (e) { /* storage unavailable */ } }
 
 /* ---- checks: each challenge asks its engine ---- */
 export function checkDesign(p, code) { return build({ p, code }); }
@@ -293,7 +298,7 @@ export function community(s) {
 export const OPENS = { 'too-hot': 'fail.switch', 'litho-finest': 'scale.print', 'euv-1000': 'fail.print', etch: 'make.etch', bottom: 'idea.deposit', crystal: 'make.crystal', furnace: 'make.implant', shallow: 'fail.implant', vias: 'fail.print', evolve: 'idea.block', newest: 'open.phoneboard', jobs: 'divide.need', agent: 'idea.check', half: 'fail.check', vote: 'idea.check', full: 'make.gates', months: 'make.clean', quick: 'scale.clean', spot: 'fail.test', cores: 'divide.test',
   phone: 'life.phone', car: 'fail.car', dclife: 'fail.ship', fed: 'divide.board', fast: 'fail.chip',
   cim: 'divide.block', grover: 'strange.atom', 'ai-chip': 'divide.need', 'power-curve': 'life.block', counter: 'fail.gate',
-  'sig-heart': 'fail.phoneboard', 'sig-bearing': 'fail.ecu', 'reg-jobs': 'fail.phoneboard', quantize: 'think.chip', 'token-energy': 'divide.rack', prefill: 'think.board' };
+  'sig-heart': 'fail.phoneboard', 'sig-bearing': 'fail.ecu', 'reg-jobs': 'fail.phoneboard', quantize: 'think.chip', 'token-energy': 'divide.rack', prefill: 'think.board', chef: 'divide.block' };
 /* and where the open things of the ledger sit: a break under "is the design right?", a piece to build under
    "could anyone design a chip?", a missing check under "who checks, and with what?" */
 export const FRONT_ASK = { break: 'fail.check', build: 'open.need', engine: 'idea.check' };
@@ -322,6 +327,7 @@ export const aboutWords = (about, W) => (STOPS[about] ? t('stop.' + about + '.q'
 export const frontierOf = s => frontier(world(s));
 export function entryWords(e, s) { const W = world(s), T = W.byId[e.of];
   return e.kind === 'design' ? t('ledger.rec.design', { title: e.title, piece: t('build.need.' + e.piece + '.t') }) : e.kind === 'break' ? t('ledger.rec.break', { title: T.title }) : e.kind === 'try' && e.puzzle ? t('ledger.rec.attempt', { wh: fmtNum(+(e.facts.joules / 3600).toPrecision(2)) })
+    : e.kind === 'try' && e.chef ? t('ledger.rec.chef', { level: t('mb.lv.' + e.chef + '.t'), wait: fmtNum(Math.round(e.facts.wait * 100)), e: fmtNum(+e.facts.energy.toPrecision(2)) })
     : e.kind === 'try' && e.machine ? t('ledger.rec.machine', { need: t('machines.need.' + e.machine + '.t'), x: fmtNum(+e.facts.energy.toPrecision(2)), days: isFinite(e.facts.days) ? fmtNum(e.facts.days) : '?', n: isFinite(e.facts.days) ? e.facts.days : 2 })
     : e.kind === 'try' ? t('ledger.rec.try', { title: T.title, n: e.facts.cases })
     : e.kind === 'report' ? t('ledger.rec.report', { say: t('report.say.' + e.say), at: e.at, words: e.words }) : e.kind === 'fix' ? t('ledger.rec.fix', { words: e.words }) : e.q; }

@@ -3,7 +3,7 @@
    meeting, on a seam), a triangle for a bet (three pulling at once). Its card says who was stuck on it, what it opened,
    what is still open, and how to try it here; the asker's own words are one tap away. */
 import { t } from '../core/i18n.js';
-import { fieldOf, fieldHome } from '../data/atlas.js';
+import { fieldOf, fieldHome, QUESTIONS, questionOfField } from '../data/atlas.js';
 import { CHALLENGES } from './game.js';
 
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
@@ -40,18 +40,24 @@ export function fieldHtml(id) {
     /* a bet you can play: its challenge, one tap away */
     (play ? '<a class="btn primary" href="#/do/' + esc(play.id) + '">' + esc(t('field.ui.play')) + '</a>' : '') +
     /* a question the energy puzzle runs through: the puzzle, offered here (content/puzzles/energy.md) */
-    (JOULE_AT[id] ? jouleOffer(id) : '') +
+    (JOULE_AT[id] ? jouleOffer(id) : '') + buildOffer(id, true) +
     '<div class="nav"><button type="button" class="btn ghost" data-fieldleave>' + esc(t('field.ui.leave')) + '</button></div></div>';
 }
 
 /* the questions of the field the energy puzzle runs through, and the level of the dive where its lens opens */
 export const JOULE_AT = { fetch: 'block', wait: 'chip', dark: 'chip', brain: 'gate', heat: 'switch' };
 const jouleOffer = id => '<p class="small jofferd">' + esc(t('joule.offer.d')) + '</p><button type="button" class="btn" data-joule="' + esc(JOULE_AT[id]) + '">' + esc(t('joule.offer')) + '</button>';
+/* a question to build that this question of the field leads to (QUESTIONS in the atlas): its game, one tap away */
+function buildOffer(id, long) {
+  const k = questionOfField(id); if (!k) return '';
+  const Q = QUESTIONS[k];
+  return (long ? '<p class="small jofferd">' + esc(t('q.' + k + '.q')) + '</p>' : '') + '<a class="btn" href="#/do/' + esc(Q.challenge) + '" data-qoffer="' + esc(k) + '">' + esc(t('game.ch.' + Q.challenge + '.t')) + '</a>';
+}
 /* the note a crossed seam raises: the leak on it, with a way to follow it */
 export function seamNote(id) {
   const q = fieldOf(id); if (!q) return '';
   return '<p class="kicker">' + glyph('leak') + esc(t('field.ui.seam')) + '</p><p class="sq">' + esc(t('field.' + id + '.q')) + '</p>' +
     '<div class="acts"><button type="button" class="btn primary" data-field="' + esc(id) + '">' + esc(t('field.ui.go')) + '</button>' +
-    (JOULE_AT[id] ? '<button type="button" class="btn" data-joule="' + esc(JOULE_AT[id]) + '">' + esc(t('joule.offer')) + '</button>' : '') +
+    (JOULE_AT[id] ? '<button type="button" class="btn" data-joule="' + esc(JOULE_AT[id]) + '">' + esc(t('joule.offer')) + '</button>' : '') + buildOffer(id, false) +
     '<button type="button" class="seamx" data-seamx aria-label="' + esc(t('field.ui.hide')) + '">×</button></div>';
 }
