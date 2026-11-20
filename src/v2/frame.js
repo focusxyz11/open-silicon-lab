@@ -6,14 +6,17 @@
    there; in Do and Ask the frame fills it itself from the atlas, with the challenges and the questions that live at
    the level in view and what the community has left there, so every view has them for free.
 
-   createFrame(host, o): o.up { href, label }, o.path [{ href, label }], o.rail { label, items: [{ id, label, size }] } (size: metres across, sizeOf in the atlas),
+   createFrame(host, o): o.up { href, label }, o.path [{ href, label }], o.rail { label, items: [{ id, label, size }], optional } (size: metres across, sizeOf in the atlas;
+   optional: the rail is absent while the view is at none of its items),
+   o.steps { label, items: [{ id, label }] } with o.onStep(id): a row of steps, walked along (the studio, the factory's line),
+   drawn as one line from left to right across the top of the picture (on a phone, a strip: the step, ← → and a count),
    o.follow(key) → address of a question, o.askAt(depth) → stop keys, o.askedAt(depth) → html of what people asked, o.fieldAt(depth) → ids of the questions from the field there,
    o.doAt(depth) → [{ id, title, where, href, open }], o.onRail(id), o.onLook().
    The questions under Ask are lenses (src/engines/frame.js): o.lensesAt(depth) → [{ id, label, hint, icon }] (the ones
    that live at the level, by short name only), o.lensCard(id, depth) → html of the one chosen (the question alone, its
    form here, what to play here, the question it meets, the way on), o.onLens(id | null, depth) → the view lights on
    its picture what the lens is about. Without lenses at a level, Ask lists the level's questions as before.
-   Returns { dock, level(depth), rail(at, fill, pos), goal(html), mode(), look(), stop(html), inwardAt(p) }: stop() pins a
+   Returns { dock, level(depth), rail(at, fill, pos), steps(at), goal(html), mode(), look(), stop(html), inwardAt(p) }: stop() pins a
    question you are following in the card, under Ask, until you choose a face again.
    The way in is on the picture, never only in the card: whatever way deeper the view writes in its card (an element
    with data-in) is shown again as one large button over the scene, by the frame, in every view the same. A view that
@@ -40,6 +43,14 @@ export function timesWords(from, to) {
 }
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 export const MODES = ['look', 'do', 'ask'];
+/* the row of steps: one component in every row of steps. On a wide screen every step is named, left to right, joined
+   by one line; on a phone only the step you are at shows, between ← and →, with how far along it is */
+function stepsHtml(st) {
+  return '<nav class="steps2" style="--stn:' + st.items.length + '" aria-label="' + esc(st.label) + '"><button type="button" class="stgo" data-stepgo="-1" aria-label="' + esc(t('frame.steps.prev')) + '">←</button>' +
+    '<ol class="stl"><span class="stfill" aria-hidden="true"></span>' + st.items.map(x => '<li><button type="button" data-step="' + esc(x.id) + '"><span class="sd" aria-hidden="true"></span><span class="sn">' + esc(x.label) + '</span></button></li>').join('') + '</ol>' +
+    '<span class="stc" aria-hidden="true"><b class="stn"></b><span class="stk"></span></span>' +
+    '<button type="button" class="stgo" data-stepgo="1" aria-label="' + esc(t('frame.steps.next')) + '">→</button></nav>';
+}
 export const FACES = ['designed', 'made', 'used'];
 
 export function createFrame(host, o) {
@@ -49,6 +60,7 @@ export function createFrame(host, o) {
     '<a class="homebtn" href="' + esc(o.up.href) + '" aria-label="' + esc(o.up.label) + '">↑</a>' +
     '<nav class="crumbs2">' + path.map((p, i) => (i ? '<span aria-hidden="true">›</span>' : '') + (p.href ? '<a href="' + esc(p.href) + '">' + esc(p.label) + '</a>' : '<b>' + esc(p.label) + '</b>')).join('') + '</nav>' +
     (o.rail ? '<ol class="rail2" aria-label="' + esc(o.rail.label) + '"><span class="rfill"></span>' + o.rail.items.map(x => '<li><button type="button" data-rail="' + esc(x.id) + '"><span class="dot"></span><span class="nm">' + esc(x.label) + (x.size ? '<span class="sz">' + esc(sizeWords(x.size)) + '</span>' : '') + '</span></button></li>').join('') + '</ol>' : '') +
+    (o.steps ? stepsHtml(o.steps) : '') +
     '<div class="corner"><aside class="goal2" hidden></aside></div>' +
     '<div class="wayin" hidden><span class="wiring" aria-hidden="true"></span><div class="wibox"></div></div>' +
     '<div class="wayon" hidden><div class="wobox"></div></div>' +
@@ -177,15 +189,26 @@ export function createFrame(host, o) {
     const m = e.target.closest('[data-mode]'); if (m) { mode = m.dataset.mode; pinned = false; return fill(); }
     const ln = e.target.closest('[data-lens]'); if (ln) { lens = ln.dataset.lens; mode = 'ask'; pinned = false; return fill(); }
     const r = e.target.closest('[data-rail]'); if (r) return o.onRail && o.onRail(r.dataset.rail);
+    const st = e.target.closest('[data-step]'); if (st) return o.onStep && o.onStep(st.dataset.step);
+    const sg = e.target.closest('[data-stepgo]'); if (sg && o.steps) { const S = o.steps.items, i = S.findIndex(x => x.id === stepAt) + +sg.dataset.stepgo; if (S[i] && o.onStep) o.onStep(S[i].id); }
   });
+  /* the row of steps: the one you are at lit, the ones before it marked done, the line filled up to it */
+  let stepAt = null;
+  const markSteps = at => { if (!o.steps) return; stepAt = at; const S = o.steps.items, i = S.findIndex(x => x.id === at), nav = $('.steps2');
+    nav.querySelectorAll('[data-step]').forEach((b, k) => { if (k === i) b.setAttribute('aria-current', 'step'); else b.removeAttribute('aria-current'); b.classList.toggle('done', i >= 0 && k < i); });
+    nav.style.setProperty('--stf', i >= 0 && S.length > 1 ? (i / (S.length - 1)).toFixed(4) : '0');
+    nav.querySelector('.stn').textContent = i >= 0 ? S[i].label : ''; nav.querySelector('.stk').textContent = i >= 0 ? t('frame.steps.of', { n: i + 1, total: S.length }) : '';
+    nav.querySelector('[data-stepgo="-1"]').disabled = i <= 0; nav.querySelector('[data-stepgo="1"]').disabled = i < 0 || i >= S.length - 1; };
   const api = {
     dock,
     /* the level in view: Do and Ask follow it, and so does the Turn */
     level(d) { depth = d; counts(); if (mode !== 'look' && !pinned) fill(); },
     /* the rail: which item is here, and how far along (0..1) */
     /* pos: where the view is along the items, continuously (0 = the first); else read from f */
-    rail(at, f, pos) { railAt = at; host.querySelectorAll('[data-rail]').forEach(b => { if (b.dataset.rail === at) b.setAttribute('aria-current', 'step'); else b.removeAttribute('aria-current'); }); if (f != null) { const el = $('.rfill'); if (el) el.style.height = (f * 100).toFixed(1) + '%'; }
+    rail(at, f, pos) { railAt = at; if (o.rail && o.rail.optional) { const el = $('.rail2'); if (el) el.hidden = !items.some(x => x.id === at); } host.querySelectorAll('[data-rail]').forEach(b => { if (b.dataset.rail === at) b.setAttribute('aria-current', 'step'); else b.removeAttribute('aria-current'); }); if (f != null) { const el = $('.rfill'); if (el) el.style.height = (f * 100).toFixed(1) + '%'; }
       scale(at, pos != null ? pos : f != null && o.rail ? f * (o.rail.items.length - 1) : null); },
+    /* the step you are at, in a row of steps */
+    steps(at) { markSteps(at); },
     /* the stage of the loop a view shows is the shell's to say (the bar); kept so views need not know */
     face() {},
     /* where the thing the way in leads into stands on the picture now (0..1 across and down), or null */

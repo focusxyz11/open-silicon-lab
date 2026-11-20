@@ -43,6 +43,8 @@ export const VIEW_PARTS = {
   /* the flight through a car (src/v2/car3d-flight.js) */
   car: { sensors: 'car.sensors', wheels: 'car.wheels', battery: 'car.battery', motor: 'car.motor', controllers: 'car.controllers', wiring: 'car.wiring',
     case: 'ecu.case', connector: 'ecu.connector', mcu: 'ecu.mcu', drivers: 'ecu.drivers', cores: 'mcu.cores', flash: 'mcu.flash', sram: 'mcu.sram', periph: 'mcu.periph' },
+  /* the studio walked inside (src/v2/studio3d.js): the screen at each corner, where its bench opens (src/data/studio.js) */
+  studio: { notes: 'need.notes', code: 'logic.desk', results: 'check.wall', gates: 'gates.drawing', screentable: 'layout.screentable', lighttable: 'masks.lighttable' },
   board: { chip: 'board.bigchip', die: 'pkg.die', hbm: 'pkg.memory', vrm: 'board.power', links: 'board.connectors' },
   chip: { lid: 'pkg.lid', bumps: 'pkg.bumps', wires: 'block.wires', contacts: 'gate.metal', gates: 'gate.gates', sheets: 'switch.channel', wells: 'atom.dopant', silicon: 'atom.lattice' },
   /* the dive's levels in 3D, the parts they draw besides their own scene's, by 'level.key' (src/v2/relief3d.js): the
@@ -60,6 +62,20 @@ export const diveWord = (level, key) => VIEW_PARTS.dive[level + '.' + key] || pa
 /* handset: the phone flown through, closed or opened like a book; cabin: the car cut away round its footwell */
 const FLIGHT_SIZES = { campus: 500, hall: 100, server: 0.8, handset: 0.15, cabin: 2 };
 export const sizeOf = level => (DEPTHS[level] && DEPTHS[level].m) || FLIGHT_SIZES[level] || null;
+
+/* Questions to build: an open question with an engine and a game of its own (#263). Its home is here and only here: the
+   place and level where it lives (its challenge is played there: CHALLENGES in src/v2/game.js reads its address from
+   this), the world of the core question it sits inside (content/<world>.md), the questions from the field whose cards
+   and seams offer it, and its ladder: which rung of the question each level of its game stands on (look, deeper,
+   deeper still, the age of AI, beyond chips), with one bit's trip as the measure. The engine, the game, the ledger's
+   attempts and the figures do not depend on where it is shown, so when the lab is restructured round the new core
+   questions the question moves by changing its address here, not what it is. */
+export const QUESTIONS = {
+  bits: { home: { place: 'datacentre', level: 'block' }, world: 'divide', field: ['fetch', 'wait'], challenge: 'chef', engine: 'src/engines/bits.js',
+    ladder: { trip: 'measure', wire: 'look', chip: 'deeper', stacked: 'still', light: 'still', dc: 'ai', brain: 'beyond', team: 'beyond' } }
+};
+/* the question to build a question of the field offers, if any */
+export const questionOfField = id => Object.keys(QUESTIONS).find(k => QUESTIONS[k].field.includes(id)) || null;
 
 /* the stories that drive scenes (src/v2/stories.js), each at home at one level */
 export const STORIES = { board: { place: 'datacentre', level: 'board', view: 'board' } };

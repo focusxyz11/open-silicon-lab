@@ -28,7 +28,7 @@ export const WORLDS = {
   make: { lens: 'view', href: '#/line/crystal', sketch: 'line', play: { 'Through in time.': '#/do/months', 'Fewer layers.': '#/do/quick' } },
   know: { lens: 'tune', sketch: 'probe', play: { 'Three dials.': 'here', 'The note.': 'here', 'The twin.': 'here', 'You or the program.': 'here' } },
   open: { lens: 'view', href: '#/supply', sketch: 'map', play: { 'Close one place.': '#/supply' } },
-  divide: { lens: 'plan', sketch: 'plan', play: { 'Feed the cores.': '#/do/fed', 'More cores, still cheap.': '#/do/cores' } },
+  divide: { lens: 'plan', sketch: 'plan', play: { 'Feed the cores.': '#/do/fed', 'More cores, still cheap.': '#/do/cores', 'Keep the chef busy.': '#/do/chef' } },
   life: { lens: 'swarm', sketch: 'swarm', play: { 'Quiet costs nothing.': 'here', 'Survive the damage.': 'here' } },
   scale: { lens: 'clock', sketch: 'clock', play: { 'One generation smaller.': '#/ask/scale/switch', 'Half as fast again': '#/do/fast' } }
 };
