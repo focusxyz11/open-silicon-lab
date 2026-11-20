@@ -9,7 +9,7 @@ export default [
   { id: 'divide-xray', strand: 1, at: ['chip'], ch: ['oxen'], engine: 'work', lens: 'plan', trade: ['area'] },
   { id: 'divide-one', strand: 2, stops: ['divide.building', 'divide.rack'], ch: ['token-energy'], engine: null, lens: 'plan', trade: ['work', 'energy'], open: ['light-links'] },
   { id: 'divide-split', strand: 2, stops: ['divide.test'], engine: 'money', lens: 'copies', trade: ['yield', 'cost'], given: ['onepiece'], open: ['chiplets'], debate: 'bigdie' },
-  { id: 'divide-cores', strand: 2, at: ['test'], ch: ['cores'], engine: 'money', lens: 'copies', trade: ['yield', 'cost'] },
+  { id: 'divide-cores', strand: 2, at: ['test'], ch: ['cores', 'dieread'], engine: 'money', lens: 'copies', trade: ['yield', 'cost'] },
   { id: 'divide-place', strand: 2, stops: ['divide.layout'], ch: ['floor'], also: ['idea'], engine: 'logic', lens: 'forms', trade: ['area'] },
   { id: 'divide-industry', strand: 2, at: ['ship'], engine: 'supply', lens: 'map', trade: ['reach'] },
   { id: 'divide-hand', strand: 3, stops: ['divide.phone'], engine: null, lens: 'map', trade: ['energy', 'reach'] },

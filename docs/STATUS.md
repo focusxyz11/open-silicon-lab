@@ -87,7 +87,7 @@ Each is an issue labelled `task`. #229 (the chip you land on is the chip you saw
 
 ## Ideas still to bring over
 
-- From the first version of the site (the branch `before`, which has more content as documents): the economics of a chip, the memory wall at Use, the X-ray at Test, die photos, and the energy floor. The words already brought over wait in `src/data/waiting-words.json`.
+- From the first version of the site (the branch `before`, which has more content as documents): the economics of a chip, the memory wall at Use, die photos at the dives' own chips (the words `xray.title` and `xray.read.*` wait), and the energy floor. The X-ray came over as *Read the die* at the test house (`src/engines/dies.js`, `src/v2/labs/dies.js`): five kinds of die photo, each named from where its area goes, every kind of block found by its texture. The words already brought over wait in `src/data/waiting-words.json`.
 - From the brainstorm ([IDEAS.md](IDEAS.md)), ideas in the bank and not yet built, for example Invent a transistor, Attack your own chip, Read a real open chip, Root cause across the stack, Number sense, and This month, playable.
 
 ## Know before you start
