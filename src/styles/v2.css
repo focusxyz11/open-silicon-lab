@@ -2436,6 +2436,42 @@ a.hm-start:hover { border-color: var(--muted); transform: translateY(-2px); }
 }
 @media (prefers-reduced-motion: reduce) { .hm-pkt, .hm-bus b, .hm-leak, .hm-sheen, .hm-live, .hm-st.sel .hm-o::before { animation: none; } .hm-pkt { display: none; } }
 
+/* ---- the row of steps (src/v2/frame.js, #266): the studio and the factory's line are steps that follow each other in
+   time, walked along. One line from left to right across the top of the picture: the step you are at lit, the ones
+   before it done, the line filled up to it. The rail at the side holds only levels, and is absent at a step that shows
+   none. On a phone, a strip: the step, ← → and how far along ---- */
+.steps2 { position: absolute; top: 136px; left: 16px; right: 16px; z-index: 3; display: flex; align-items: center; pointer-events: none; }
+.steps2 > * { pointer-events: auto; }
+.steps2 .stgo, .steps2 .stc { display: none; }
+.stl { position: relative; flex: 1; display: flex; list-style: none; margin: 0; padding: 0; min-width: 0; }
+.stl::before, .stl .stfill { content: ''; position: absolute; top: 6px; height: 2px; left: calc(50% / var(--stn)); border-radius: 1px; }
+.stl::before { right: calc(50% / var(--stn)); background: var(--line); }
+.stl .stfill { width: calc((100% - 100% / var(--stn)) * var(--stf, 0)); background: var(--accent); transition: width .3s; }
+.stl li { position: relative; flex: 1 1 0; min-width: 0; display: flex; justify-content: center; }
+.stl button { display: grid; justify-items: center; gap: 6px; padding: 0; border: 0; background: none; cursor: pointer; color: var(--muted); font: 500 12px var(--sans); max-width: 100%; }
+.stl .sd { width: 14px; height: 14px; border-radius: 50%; background: var(--panel-solid); border: 2px solid var(--line); box-sizing: border-box; transition: background .2s, border-color .2s, box-shadow .2s; }
+.stl .sn { padding: 1px 7px; border-radius: 999px; background: color-mix(in srgb, var(--panel-solid) 72%, transparent); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.stl button:hover .sd, .stl button:focus-visible .sd { border-color: var(--accent); }
+.stl button:hover, .stl button:focus-visible { color: var(--ink); }
+.stl button:focus-visible { outline: none; } .stl button:focus-visible .sn { outline: 2px solid var(--ink); outline-offset: 1px; }
+.stl button.done .sd { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 35%, var(--panel-solid)); }
+.stl button[aria-current] { color: var(--ink); font-weight: 700; }
+.stl button[aria-current] .sd { background: var(--accent); border-color: var(--accent); box-shadow: 0 0 0 5px color-mix(in srgb, var(--accent) 25%, transparent); }
+.stl button[aria-current] .sn { background: var(--panel-solid); }
+.rail2[hidden] { display: none; }
+@media (min-width: 1100px) { .steps2 { right: calc(var(--bench) + 8px); } }
+@media (max-width: 720px) {
+  .steps2 { top: 114px; left: 10px; right: auto; gap: 2px; padding: 3px; border-radius: 999px; background: var(--panel); border: 1px solid var(--line); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); box-shadow: var(--shadow); }
+  .steps2 .stl { display: none; }
+  .steps2 .stgo { display: grid; place-items: center; width: 32px; height: 32px; padding: 0; border: 0; border-radius: 50%; background: none; color: var(--ink); font: 700 15px var(--sans); cursor: pointer; }
+  .steps2 .stgo:disabled { opacity: .3; cursor: default; }
+  .steps2 .stc { display: grid; justify-items: center; line-height: 1.15; padding: 0 4px; min-width: 76px; }
+  .steps2 .stn { font-size: 13.5px; color: var(--ink); }
+  .steps2 .stk { font: 500 10.5px var(--mono); color: var(--muted); }
+}
+/* the studio walked inside (src/v2/studio3d.js, #267): while the camera settles on a corner's screen, the ways on the
+   picture step aside for it; the corners' names on the picture are the parts' own */
+#studioui[data-handoff] :is(.wayin, .wayon) { display: none; }
 /* ---- the bench (#268, src/v2/bench.js): your design, live, on a surface laid over the studio's square. Each region is
    a part of the step (src/app/design.js), a lit panel; drawings fill their region exactly and words sit on them in HTML ---- */
 .bsurf { position: absolute; left: 0; top: 0; width: 600px; height: 600px; container-type: size; transition: opacity .12s linear;

@@ -85,6 +85,22 @@ along lands at that stage's place on the island. `TWINS` in the atlas says which
 
 Your own design rides through all three: its masks drive printing, its copies are tested.
 
+### Steps and levels, drawn
+
+Steps follow each other in time, levels sit inside each other, and they are never drawn as one list (#266). In the
+studio (`#/bench/<step>`) and on the factory's line (`#/line/<step>`) the steps are **one line from left to right**
+across the top of the picture (`o.steps` in `src/v2/frame.js`, the same component in both): the step you are at lit,
+the ones before it done, the line filled up to it; ← →, *Next →* and a tap on a step walk along it. On a phone it is a
+strip: the step, ← → and how far along (*5 of 11*). The **rail at the side holds only levels**: a step that shows a
+level of the chip lights it there (the job is the chip, layout its blocks, gates its gates; the line packs the chip,
+wires the blocks, prints the gates, etches the switches, grows and implants the atoms), and the rail is absent at a
+step that shows none (describe, check, masks; slicing, cleaning, depositing, testing, shipping). A tap on a level
+goes to the step that shows it; in the studio ↓ ↑ move in · out through them (the job → layout → gates), and on
+the line ↓ goes into the station's machine. *Around here* offers the level at another stage (*As it is made*, *In
+use*) only where the step shows one, and walking the line to the test house or the packing is a step along, not the
+same level at another stage. The logic is `stepsOf`, `levelOfStep`, `levelsOfSteps`, `stepOfLevel`, `inOutOfStep`
+and `holds` in `src/engines/way.js`, tested in `tests/way.test.mjs`.
+
 ### Questions from the field, and the seams
 
 The deepest questions in the lab are the ones the field itself was stuck on (`src/data/questions.js`; the framework

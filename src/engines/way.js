@@ -9,7 +9,8 @@
                 (a gate as it is used, the same gate as it is printed, the same gate as you designed it).
    Everything else is a tap. The shell (src/v2/app.js) shows the two axes as two rails, the loop in the bar and the
    levels at the side, and the open port gives the same graph to AI agents (look, in src/engines/api.js). */
-import { twinOf } from '../data/atlas.js';
+import { twinOf, TWINS } from '../data/atlas.js';
+import { WORLDS } from '../data/weave.js';
 import { placeOf } from '../data/places.js';
 import { SEAMS } from '../data/questions.js';
 import { viewOfDepth, challengeOf, DIVE_WORLD, DIVE_LEVELS, PLACES } from '../v2/game.js';
@@ -59,8 +60,8 @@ export function whereOf(hash) {
   if (k === 'ask') return Object.assign(whereOf(viewOfDepth(p[2] || 'chip')), { ask: p[1] || null });
   if (k === 'do') { const ch = challengeOf(decodeURIComponent(p[1] || '')), h = doHome(ch); return h ? whereOf(h) : ch ? cell('island', ch.place) : cell('island'); }
   if (k === 'dive') { const world = p[2] || DIVE_WORLD[p[1]] || 'datacentre'; return cell('dive', DIVE_PLACE[world] || 'datacentre', p[1] || 'chip', world === 'made' ? 'make' : 'use', { world }); }
-  if (k === 'line') { const level = p[1] || 'crystal'; return cell('line', placeOf('journey', level) || 'fab', level); }
-  if (k === 'bench') return cell('bench', 'studio', p[1] || 'need');
+  if (k === 'line') { const level = p[1] || 'crystal'; return cell('line', placeOf('journey', level) || 'fab', level, null, { step: level, size: levelOfStep('line', level) }); }
+  if (k === 'bench') { const step = p[1] || 'need'; return cell('bench', 'studio', step, null, { step, size: levelOfStep('bench', step) }); }
   /* inside a chip, layer by layer: the stack is the lower half of the Make column, each row a level of the dive as it is
      made (the block as wired, the gate as printed). An old address without /build is the same place */
   if (k === 'chip') { const row = Math.min(DIVE_LEVELS.length - 1, Math.max(0, +p[1] || 0)), level = DIVE_LEVELS[row], made = twinOf(level).made;
@@ -69,10 +70,44 @@ export function whereOf(hash) {
   if (k === 'supply') return cell('supply', 'port', 'ship');
   if (k === 'build') return cell('page', 'lab');
   if (k === 'place' && p[1] === 'datacentre' && p[2] != null && p[2] !== 'inside') return cell('flight', 'datacentre', FLIGHT[+p[2]] || 'building');
+  /* the studio walked inside (src/v2/studio3d.js): 0 is outside over the opened floor, then the corners, one per step */
+  if (k === 'place' && p[1] === 'studio' && /^\d+$/.test(p[2] || '')) { const step = stepsOf('bench')[+p[2] - 1] || null; return cell('room', 'studio', step, null, { step, size: levelOfStep('bench', step) }); }
   if (k === 'place' && p[1] === 'phones' && /^\d+$/.test(p[2] || '')) return cell('flight', 'phones', PHONE_FLIGHT[+p[2]] || 'phone');
   if (k === 'place' && p[1] === 'cars' && /^\d+$/.test(p[2] || '')) return cell('flight', 'cars', CAR_FLIGHT[+p[2]] || 'car');
   if (k === 'place' && PLACES.includes(p[1])) return cell('island', p[1]);
   return cell(k === 'ecosystem' || k === 'whatif' ? 'out' : ['log', 'challenges', 'questions', 'read', 'w', 'machines'].includes(k) ? 'log' : 'island');
+}
+
+/* Steps and levels (docs/SYSTEM.md, "Steps and levels"). Inside the studio and on the factory's line the things follow
+   each other in time: they are steps, walked along (← →, Next →) and drawn as a line from left to right. A step may
+   show a level of the chip (the job is the whole chip, layout its blocks, gates its gates; the line prints the gates,
+   etches the switches, wires the blocks, packs the chip), and only those are levels, drawn on the rail at the side
+   and moved through in · out (↑ ↓). Describe, check and masks, and the line's slicing, cleaning, depositing, testing
+   and shipping, show no level: there the rail is absent and in · out leads nowhere inside the view. */
+const STEP_WORLD = { bench: 'design', line: 'journey' };
+const DESIGN_STAGE = { bench: 'designed', line: 'made' };
+/* the steps of a view, in order (the depths of its world in the weave), or [] for a view that is not a row of steps */
+export const stepsOf = view => (STEP_WORLD[view] ? WORLDS.find(w => w.id === STEP_WORLD[view]).depths.slice() : []);
+/* the level a step shows, or null: the Turn's twin whose designed (studio) or made (line) form is that step */
+export function levelOfStep(view, step) {
+  const f = DESIGN_STAGE[view]; if (!f || !step) return null;
+  const tw = TWINS.find(x => (f === 'designed' ? x.designed === step : x.made.includes(step)));
+  return tw ? tw.used : null;
+}
+/* the levels a row of steps shows, biggest first: the rail's items (the studio: chip, block, gate; the line: all five) */
+export const levelsOfSteps = view => TWINS.map(x => x.used).filter(lv => stepsOf(view).some(s => levelOfStep(view, s) === lv));
+/* the step that shows a level: the step you are at if it does, else the last that does (the atom is implanted after it
+   is grown, and the implant is where the line's atoms are looked at) */
+export function stepOfLevel(view, level, at) {
+  if (levelOfStep(view, at) === level) return at;
+  const S = stepsOf(view).filter(s => levelOfStep(view, s) === level); return S.length ? S[S.length - 1] : null;
+}
+/* in · out inside a row of steps: the step that shows the next level in (dir 1) or out (dir -1), or null where the
+   step shows no level, or there is nothing further that way in this view */
+export function inOutOfStep(view, step, dir) {
+  const lv = levelOfStep(view, step); if (!lv) return null;
+  const L = levelsOfSteps(view), n = L[L.indexOf(lv) + (dir > 0 ? 1 : -1)];
+  return n ? stepOfLevel(view, n, step) : null;
 }
 
 /* along: the address of another stage of the loop, from where you are. The depth is held where the level has a
@@ -87,7 +122,8 @@ export function alongTo(where, stage) {
   if (W.stage === stage && W.view !== 'island' && W.view !== 'page') return null;
   if (stage === 'open') return home;
   if (W.view === 'line' && (stage === 'make' || stage === 'test' || stage === 'ship')) return '#/line/' + ({ make: 'wires', test: 'test', ship: 'pkg' })[stage];
-  const tw = W.level && W.view !== 'island' ? twinOf(W.level === 'die' ? 'chip' : W.level) : null;
+  /* in a row of steps, only the level the step shows is held: describe, check and masks hold none */
+  const rows = ROWS.includes(W.view), tw = rows ? (W.size ? twinOf(W.size) : null) : W.level && W.view !== 'island' ? twinOf(W.level === 'die' ? 'chip' : W.level) : null;
   if (tw) {
     if (stage === 'design' && tw.designed) return '#/bench/' + tw.designed;
     /* a whole chip is made as a die on its wafer, and closed in its package on the way out; the levels inside it are
@@ -115,4 +151,10 @@ export function seamOf(from, to) {
   return null;
 }
 /* whether that move holds the depth you are at (the bar says so before you take it) */
-export const holds = (where, stage) => { const h = alongTo(where, stage); return !!h && !h.startsWith('#/place/'); };
+/* From a row of steps, a move that walks the same row to another step (print → test on the line) holds no level, unless
+   the step it lands on shows the same one: Around here offers a level at another stage only where it exists there. */
+const ROWS = ['bench', 'line', 'room'];
+const sizeOfCell = W => (ROWS.includes(W.view) ? W.size : W.level === 'die' ? 'chip' : W.level);
+export const holds = (where, stage) => { const h = alongTo(where, stage); if (!h || h.startsWith('#/place/')) return false;
+  if (!where || !ROWS.includes(where.view)) return true;
+  return !!where.size && sizeOfCell(whereOf(h)) === where.size; };

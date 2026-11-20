@@ -12,6 +12,8 @@ import { THREE, PALETTES, theme, stage, light, mat, metal, glow, glass, box, cyl
 import { t } from '../core/i18n.js';
 import { STEPS, STATION, GROWTH } from './game.js';
 import { betPowerNow } from '../app/betscene.js';
+import { furnisher, lump } from './furnish.js';
+import { CORNERS, HOUSE } from '../data/studio.js';
 
 /* where every place stands, and how close the camera comes */
 export const PLACES = [
@@ -47,13 +49,7 @@ const ARCH = {
 /* a slow value noise, smooth, from 0 to 1 */
 const hash2 = (x, y) => { const s = Math.sin(x * 127.1 + y * 311.7) * 43758.5453; return s - Math.floor(s); };
 const smooth = t => t * t * (3 - 2 * t);
-/* three overlapping faceted balls in one geometry: a tree crown with an outline */
-function lump() {
-  const parts = [[0, 0, 0, 1], [0.55, -0.15, 0.25, 0.72], [-0.5, -0.2, -0.3, 0.68]].map(([x, y, z, r]) => { const g = new THREE.IcosahedronGeometry(r, 1); g.translate(x, y, z); return g.toNonIndexed(); });
-  const n = parts.reduce((a, g) => a + g.attributes.position.count, 0), pos = new Float32Array(n * 3);
-  let o = 0; parts.forEach(g => { pos.set(g.attributes.position.array, o); o += g.attributes.position.array.length; });
-  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); g.computeVertexNormals(); return g;
-}
+/* lump (a tree crown with an outline) is shared with the studio's furnishing (src/v2/furnish.js) */
 export function noise2(x, y) {
   const xi = Math.floor(x), yi = Math.floor(y), u = smooth(x - xi), v = smooth(y - yi);
   const a = hash2(xi, yi), b = hash2(xi + 1, yi), c = hash2(xi, yi + 1), d = hash2(xi + 1, yi + 1);
@@ -215,43 +211,9 @@ export function createMap(canvas, host, on = {}) {
   const route = pts => new THREE.CatmullRomCurve3(pts.map(([x, z]) => new THREE.Vector3(x, 0, z)));
 
   /* ---- the stations of the loop ---- */
-  /* ---- furnishing, drawn small but whole ---- */
-  /* screens show the work in shapes, never words (words are HTML over the scene): code as indented lines, a
-     simulation as waveforms, the circuit as gates, the layout as its two metals, a rack's front as its servers */
-  const TEX = {};
-  const screenTex = kind => {
-    if (TEX[kind]) return TEX[kind];
-    const c = document.createElement('canvas'); c.width = 256; c.height = 160; const x = c.getContext('2d'), R = (i, k) => rnd(i * 7 + kind.length, k);
-    x.fillStyle = kind === 'rack' ? '#1a1f28' : '#0d1522'; x.fillRect(0, 0, 256, 160);
-    if (kind === 'code') for (let i = 0; i < 14; i++) { const ind = [0, 1, 2, 2, 1, 2, 3, 3, 2, 1, 0, 1, 2, 1][i] * 14; x.fillStyle = ['#7fb6ff', '#e8c56a', '#8fd6b0', '#c9d3e6'][i % 4]; x.fillRect(14 + ind, 10 + i * 10.5, 30 + R(i, 1) * 120, 5); }
-    if (kind === 'wave') { x.lineWidth = 2; for (let r = 0; r < 6; r++) { x.strokeStyle = r % 2 ? '#5ee0a0' : '#7fb6ff'; x.beginPath(); let hi = R(r, 2) > 0.5; x.moveTo(8, 18 + r * 24 + (hi ? 0 : 12)); for (let k = 1; k < 16; k++) { const nx = 8 + k * 15.5; x.lineTo(nx, 18 + r * 24 + (hi ? 0 : 12)); if (R(r * 20 + k, 3) > 0.55) { hi = !hi; x.lineTo(nx, 18 + r * 24 + (hi ? 0 : 12)); } } x.stroke(); } }
-    if (kind === 'gates') { x.strokeStyle = '#66d0e0'; x.lineWidth = 2; for (let i = 0; i < 6; i++) { const gx = 30 + (i % 3) * 76, gy = 30 + Math.floor(i / 3) * 70; x.beginPath(); x.moveTo(gx, gy); x.lineTo(gx + 18, gy); x.arc(gx + 18, gy + 16, 16, -Math.PI / 2, Math.PI / 2); x.lineTo(gx, gy + 32); x.closePath(); x.stroke(); x.beginPath(); x.moveTo(gx - 16, gy + 8); x.lineTo(gx, gy + 8); x.moveTo(gx - 16, gy + 24); x.lineTo(gx, gy + 24); x.moveTo(gx + 34, gy + 16); x.lineTo(gx + 58, gy + 16); x.stroke(); } }
-    if (kind === 'layout') { for (let i = 0; i < 12; i++) { x.fillStyle = 'rgba(90,169,255,.85)'; x.fillRect(0, 8 + i * 13, 256, 5); } for (let i = 0; i < 18; i++) { x.fillStyle = 'rgba(224,136,79,.8)'; x.fillRect(6 + i * 14, 0, 5, 160); } for (let i = 0; i < 30; i++) { x.fillStyle = 'rgba(94,224,160,.7)'; x.fillRect(R(i, 4) * 240, R(i, 5) * 150, 10, 6); } }
-    if (kind === 'rack') for (let u = 0; u < 20; u++) { x.fillStyle = u % 5 === 4 ? '#11151c' : '#2a313d'; x.fillRect(6, 4 + u * 7.6, 244, 6.4); for (let k = 0; k < 3; k++) { x.fillStyle = R(u * 3 + k, 6) > 0.3 ? (k === 0 ? '#45d08a' : '#5aa9ff') : '#333'; x.fillRect(224 + k * 8, 5.5 + u * 7.6, 4, 3); } x.fillStyle = '#151a22'; for (let h = 0; h < 22; h++) x.fillRect(14 + h * 9, 5 + u * 7.6, 5, 4.4); }
-    if (kind === 'back') { x.fillStyle = '#161a21'; x.fillRect(0, 0, 256, 160); for (let i = 0; i < 4; i++) { x.fillStyle = '#232934'; x.beginPath(); x.arc(40 + i * 58, 40, 20, 0, 7); x.fill(); x.beginPath(); x.arc(40 + i * 58, 112, 20, 0, 7); x.fill(); }
-      for (let k = 0; k < 16; k++) { x.strokeStyle = ['#3b8ad9', '#e0b43c', '#45d08a', '#c9d3e6'][k % 4]; x.lineWidth = 1.5; x.beginPath(); x.moveTo(228 + (k % 4) * 6, 0); x.lineTo(228 + (k % 4) * 6, 10 + k * 9); x.lineTo(8 + R(k, 7) * 200, 10 + k * 9); x.stroke(); } }
-    const tx = new THREE.CanvasTexture(c); tx.colorSpace = THREE.SRGBColorSpace; tx.anisotropy = 4; return (TEX[kind] = tx);
-  };
-  const scrM = kind => new THREE.MeshBasicMaterial({ map: screenTex(kind), color: night ? 0xffffff : 0xd8dde6, toneMapped: false });
-  const sheet = (g, w, h, kind, x, y, z, ry = 0, rx = 0) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), scrM(kind)); m.position.set(x, y, z); m.rotation.set(rx, ry, 0); g.add(m); return m; };
-  const CLOTHES = [0x3d5a80, 0x7a5c61, 0x4f6d5a, 0x8a7a5c, 0x5b5f73], SKIN = [0xc99a7a, 0x8d5f45, 0xe2bfa2, 0xa8745a];
-  const headG = new THREE.SphereGeometry(0.11, 14, 10);
-  const figure = (g, x, z, ry, k, seated) => { const f = group(g, x, 0, z, ry), cl = mat(CLOTHES[k % 5], { roughness: 0.8 });
-    if (seated) { box(f, 0.34, 0.12, 0.42, mat(0x2b2f38, { roughness: 0.8 }), 0, 0.46, -0.12, 0.04); box(f, 0.36, 0.52, 0.22, cl, 0, 0.56, 0.08, 0.08); [-0.1, 0.1].forEach(a => box(f, 0.1, 0.46, 0.12, mat(0x2b2f38), a, 0, -0.3, 0.03, { cast: false })); box(f, 0.44, 0.1, 0.3, cl, 0, 0.82, -0.12, 0.04); }
-    else { [-0.08, 0.08].forEach(a => box(f, 0.12, 0.8, 0.14, mat(0x2b2f38, { roughness: 0.8 }), a, 0, 0, 0.04)); box(f, 0.38, 0.58, 0.22, cl, 0, 0.8, 0, 0.08); [-0.24, 0.24].forEach(a => box(f, 0.09, 0.52, 0.1, cl, a, 0.84, 0, 0.03)); }
-    const hd = new THREE.Mesh(headG, mat(SKIN[k % 4], { roughness: 0.7 })); hd.position.set(0, seated ? 1.22 : 1.52, seated ? 0.06 : 0); hd.castShadow = true; f.add(hd); return f; };
-  const chair = (g, x, z, ry) => { const ch = group(g, x, 0, z, ry), dk = mat(P.dark, { roughness: 0.6 }), leg = metal(P.slate);
-    cyl(ch, 0.24, 0.24, 0.07, dk, 0, 0.44, 0, 16); box(ch, 0.42, 0.48, 0.06, dk, 0, 0.5, 0.22, 0.03); cyl(ch, 0.03, 0.03, 0.42, leg, 0, 0.02, 0, 8);
-    for (let k = 0; k < 5; k++) { const a = k * 1.2566; box(ch, 0.05, 0.03, 0.3, leg, Math.sin(a) * 0.14, 0, Math.cos(a) * 0.14, 0.01, { cast: false }).rotation.y = a; } return ch; };
-  /* a workplace: a desk on panel legs, two screens on one stand, a keyboard, a chair, and often someone at it */
-  let who = 0;
-  const workdesk = (g, x, z, ry, kind, seated = true) => { const d = group(g, x, 0, z, ry), top = mat(night ? 0x8f8270 : 0xd2bf9f, { roughness: 0.55 }), leg = metal(P.slate);
-    box(d, 1.6, 0.05, 0.8, top, 0, 0.72, 0, 0.02); [-0.74, 0.74].forEach(a => box(d, 0.05, 0.72, 0.7, leg, a, 0, 0, 0.01, { cast: false }));
-    box(d, 0.3, 0.02, 0.18, leg, 0, 0.77, -0.25, 0.01, { cast: false }); box(d, 0.04, 0.2, 0.04, leg, 0, 0.77, -0.3, 0.005, { cast: false });
-    [-0.33, 0.33].forEach((mx, i) => { const mon = group(d, mx, 0.94, -0.28, i ? -0.2 : 0.2); box(mon, 0.64, 0.4, 0.03, mat(P.dark, { roughness: 0.4 }), 0, 0, 0, 0.01, { cast: false }); sheet(mon, 0.6, 0.36, kind, 0, 0.2, 0.017); });
-    box(d, 0.46, 0.015, 0.15, mat(P.dark), 0, 0.77, 0.12, 0.004, { cast: false });
-    chair(d, 0, 0.62, Math.PI); if (seated) figure(d, 0, 0.62, Math.PI, who++, true); return d; };
-  const plant = (g, x, z, s = 1) => { cyl(g, 0.22 * s, 0.17 * s, 0.4 * s, mat(night ? 0x6b5f52 : 0xb7a48d, { roughness: 0.8 }), x, 0, z, 12); const c = new THREE.Mesh(lump(), mat(T.leaf, { roughness: 0.8 })); c.scale.setScalar(0.42 * s); c.position.set(x, 0.75 * s, z); c.castShadow = true; g.add(c); };
+  /* ---- furnishing, drawn small but whole: one set shared with the studio walked inside (src/v2/furnish.js), so the
+     rooms seen from here are the rooms walked there ---- */
+  const { sheet, plant, corner, CLOTHES, SKIN, headG } = furnisher(P, night, T.leaf);
 
   /* ---- fronts (the art pass): what makes a box read as a building from above. Windows in bands with frames, a sill
      and a head; a parapet round the roof; plant on the roof; a canopy and glass doors at the way in; a darker plinth
@@ -293,7 +255,9 @@ export function createMap(canvas, host, on = {}) {
   /* 1 design: the studio, a campus at the start of the loop. Its ground floor opens: where a job is written down,
      described, checked, turned into gates and laid out. On the road, the mask house, where a finished design leaves
      as masks for the factory (the mask truck grows from it) */
-  const STUDIO_PARTS = [['need', -12, -3.6], ['logic', -6.4, -3.6], ['check', -0.6, -3.8], ['gates', -0.6, 1.8], ['layout', -6.4, 1.8]];
+  /* the corners in the room, in the order of the design's steps along it, from the studio's one plan (src/data/studio.js);
+     the last, the masks, is the mask house beside it */
+  const STUDIO_PARTS = CORNERS.filter(c => !c.house).map(c => [c.id, c.at[0], c.at[1]]);
   { const g = place('studio'), O = opening('studio', { lidUp: 14 });
     flat(g, [[-20, 5], [12, 5], [14, 13], [-18, 13]], mat(P.wall, { roughness: 0.9 }), 0.03);
     /* the ground floor: a floor, the far walls, glass on the near side */
@@ -318,26 +282,10 @@ export function createMap(canvas, host, on = {}) {
     /* inside: one corner for each step of the design */
     const IN = O.inside = group(g, 0, 0, 0); IN.visible = false;
     const st = {}; STUDIO_PARTS.forEach(([id, x, z]) => { st[id] = group(IN, x, 0.1, z); });
-    /* the job: a wall of notes, two people at it, and a table to talk round */
-    box(st.need, 4, 2, 0.08, mat(0xf4f3ee, { roughness: 0.5 }), 0, 0.7, -2.6, 0.02);
-    for (let i = 0; i < 14; i++) box(st.need, 0.34, 0.34, 0.03, mat([0xe8c86a, 0x9cc7e0, 0xe9a38c, 0xa8d4a0][i % 4]), -1.6 + (i % 7) * 0.52, 1.05 + Math.floor(i / 7) * 0.62 + rnd(i, 9) * 0.1, -2.54, 0.01, { cast: false });
-    figure(st.need, -0.9, -1.9, Math.PI, 1, false); figure(st.need, 0.5, -1.7, Math.PI + 0.4, 2, false);
-    cyl(st.need, 0.85, 0.85, 0.05, mat(night ? 0x8f8270 : 0xd2bf9f, { roughness: 0.55 }), 0, 0.72, 0.1, 28); cyl(st.need, 0.06, 0.1, 0.72, metal(P.slate), 0, 0, 0.1, 8);
-    [0.4, 2.5, 4.6].forEach((a, i) => { chair(st.need, Math.cos(a) * 1.25, 0.1 + Math.sin(a) * 1.25, -a - Math.PI / 2); if (i === 1) figure(st.need, Math.cos(a) * 1.25, 0.1 + Math.sin(a) * 1.25, -a - Math.PI / 2, 3, true); });
-    plant(st.need, 1.9, -2.2, 1.2);
-    /* describe: four desks of people writing the circuit as text */
-    [[-0.9, -0.9], [0.9, -0.9], [-0.9, 0.8], [0.9, 0.8]].forEach(([dx, dz], i) => workdesk(st.logic, dx, dz, i < 2 ? 0 : Math.PI, 'code', i !== 3));
-    /* check: the machines that run every case, a wall of results, and someone watching them */
-    [-1.2, 0, 1.2].forEach(dx => { box(st.check, 1, 2.2, 1, mat(P.rack, { roughness: 0.5 }), dx, 0, -1.6, 0.04); sheet(st.check, 0.9, 2, 'rack', dx, 1.1, -1.09); });
-    box(st.check, 3.5, 1.5, 0.06, mat(P.dark), 0, 0.85, -2.6, 0.02); sheet(st.check, 3.36, 1.36, 'wave', 0, 1.6, -2.56); workdesk(st.check, 0, 0.7, Math.PI, 'wave');
-    /* gates: the program's drawing of the circuit, on every screen */
-    [[-0.9, -0.4], [0.9, -0.4], [0, 1.2]].forEach(([dx, dz], i) => workdesk(st.gates, dx, dz, i < 2 ? 0 : Math.PI, 'gates', i !== 1));
-    /* layout: a table that is a screen, the tile's two metals on it, and two people leaning over it */
-    box(st.layout, 3.2, 0.86, 1.8, mat(P.dark, { roughness: 0.4 }), 0, 0, 0, 0.06); sheet(st.layout, 3, 1.6, 'layout', 0, 0.87, 0, 0, -Math.PI / 2);
-    figure(st.layout, -0.6, 1.25, Math.PI, 0, false); figure(st.layout, 1.0, -1.2, 0, 4, false); plant(st.layout, -2.2, -0.9);
+    STUDIO_PARTS.forEach(([id]) => corner(st[id], id));
     STUDIO_PARTS.forEach(([id]) => tagParts(O, id, st[id]));
     /* the mask house: a loading bay facing the road to the factory; once the studio is open it is the last step */
-    const mh = group(g, 13, 0, 3);
+    const mh = group(g, HOUSE.at[0], 0, HOUSE.at[1]);
     box(mh, 8, 4, 7, mat(P.white), 0, 0, 0, 0.3); box(mh, 8.1, 0.7, 7.1, mat(A.roof, { roughness: 0.7 }), 0, 3.45, 0, 0.1);
     box(mh, 0.12, 2.6, 3.6, mat(P.dark), 4.06, 0, 0, 0.02, { cast: false }); box(mh, 1.3, 0.12, 4.4, frameM, 4.65, 2.8, 0, 0.02);
     for (let i = 0; i < 9; i++) box(mh, 0.14, 0.05, 3.5, trimM, 4.13, 0.2 + i * 0.27, 0, 0.005, { cast: false });

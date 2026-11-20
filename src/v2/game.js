@@ -177,7 +177,9 @@ export const GROWTH = CHALLENGES.map(c => ({ id: c.grows, by: c.id, at: GROW_AT[
    (src/v2/dc3d.js; FLOWN: a depth and its level in the flight), and so are a phone's (src/v2/phone3d-flight.js) and a car's
    (src/v2/car3d-flight.js). */
 export { INSIDE, placeOf, SHARED };
-export const FLOWN = { datacentre: { building: 0, rack: 2, board: 4, chip: 5 }, phones: { phone: 0, phoneboard: 2, soc: 3 }, cars: { car: 0, ecu: 2, mcu: 3 } };
+export const FLOWN = { datacentre: { building: 0, rack: 2, board: 4, chip: 5 }, phones: { phone: 0, phoneboard: 2, soc: 3 }, cars: { car: 0, ecu: 2, mcu: 3 },
+  /* the studio is walked: each step is a corner of the room (src/v2/studio3d.js), whose screen opens into its bench */
+  studio: { need: 1, logic: 2, check: 3, gates: 4, layout: 5, masks: 6 } };
 /* Ask: the questions at each level of a place; the Lab holds the open thread's questions, where the
    community asks them. BEACON: the one question glowing above a place. */
 export function askAt(place) { return place === 'lab' ? [{ level: null, stops: Object.keys(STOPS).filter(k => k.startsWith('open.')) }] : levelStops(place); }

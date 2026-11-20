@@ -28,7 +28,7 @@ const SECTIONS = [
   ['search', 'something to look for at a level, kept in your log'],
   ['ways', 'the ways on the picture: Go inside on the island, along and in on the line, one way down through a chip (the stack is Make, along from the dive), the phone\'s peek and swipe'],
   ['frame', 'the size at every level and the ring on the way in, desktop and phone'],
-  ['flights', 'the data centre\'s way in and its flight into the chip; the phone\'s and the car\'s flights into their chips'],
+  ['flights', 'the data centre\'s way in and its flight into the chip; the studio walked inside, with a handoff to a bench; the phone\'s and the car\'s flights into their chips'],
   ['machines', 'machines from shared blocks: a form changed, an agent\'s pick used, where it is made, liquid hardware keeping up with a radio, the lab\'s curve and an attempt kept, new matter\'s claims and the guesses switch, desktop and phone'],
   ['frame2', 'the new frame behind ?frame=2 (#271): the caption at a dive level with its question in full, desktop and phone; Half the power won in Do mode, its instrument on the stage beside the panel that holds its controls'],
 ];
@@ -325,7 +325,7 @@ const explore = async (tag, viewport, scheme) => {
   /* a challenge is played where its level is shown: the card of the factory's line, with the machines behind it */
   at = tag + ' do in place'; await page.evaluate(() => { location.hash = '#/do/quick'; });
   await page.waitForSelector('#diveui .dock .player', { timeout: 20000 }).catch(() => problems.push(tag + ': a factory challenge is not played in the line\'s card'));
-  if (!(await page.evaluate(() => { const c = document.querySelector('#diveui .rail2 [aria-current]'); return c && c.dataset.rail === 'deposit'; }))) problems.push(tag + ': the challenge is not played at its own level');
+  if (!(await page.evaluate(() => { const c = document.querySelector('#diveui .steps2 [aria-current]'); return c && c.dataset.step === 'deposit'; }))) problems.push(tag + ': the challenge is not played at its own level');
   if ((await page.getAttribute('#diveui .modes3 [aria-selected="true"]', 'data-mode').catch(() => '')) !== 'do') problems.push(tag + ': a challenge in the card is not under Do');
   await page.click('#diveui .modes3 [data-mode="look"]').catch(() => {});
   if (await page.$('#diveui .dock .player')) problems.push(tag + ': Look does not lead back from a challenge to the story');
@@ -364,9 +364,9 @@ const explore = async (tag, viewport, scheme) => {
   await page.click('#chipui .dock a[href="#/line/etch"]').catch(() => problems.push(tag + ': the switch as made does not lead to its step on the line'));
   await page.waitForFunction(() => location.hash === '#/line/etch', null, { timeout: 8000 }).catch(() => problems.push(tag + ': the layer as made did not open its factory step'));
   /* the line: the factory step by step, in the frame */
-  await page.waitForFunction(() => { const c = document.querySelector('#diveui .rail2 [aria-current]'); return c && c.dataset.rail === 'etch'; }, null, { timeout: 15000 }).catch(() => problems.push(tag + ': the line did not open at etching'));
+  await page.waitForFunction(() => { const c = document.querySelector('#diveui .steps2 [aria-current]'); return c && c.dataset.step === 'etch'; }, null, { timeout: 15000 }).catch(() => problems.push(tag + ': the line did not open at etching'));
   await page.click('#diveui [data-divego][data-key="next"]').catch(() => problems.push(tag + ': no next step on the line'));
-  await page.waitForFunction(() => { const c = document.querySelector('#diveui .rail2 [aria-current]'); return c && c.dataset.rail === 'implant'; }, null, { timeout: 20000 }).catch(() => problems.push(tag + ': the next step on the line is not implanting'));
+  await page.waitForFunction(() => { const c = document.querySelector('#diveui .steps2 [aria-current]'); return c && c.dataset.step === 'implant'; }, null, { timeout: 20000 }).catch(() => problems.push(tag + ': the next step on the line is not implanting'));
   /* the bench: a design written in the dock, checked, won */
   at = tag + ' ' + '#/bench/logic/half'; await page.evaluate(() => { location.hash = '#/bench/logic/half'; });
   await page.waitForSelector('#diveui .dock .player [data-write], #diveui .dock #chCode', { timeout: 15000 }).catch(() => problems.push(tag + ': the bench did not open the design'));
@@ -788,6 +788,42 @@ run['ways'] = async () => {
     await wp.waitForFunction(() => { const b = document.querySelector('#diveui .wayin:not([hidden]) .wigo'); if (b && location.hash === '#/line/etch' && /switch/.test(b.getAttribute('href') || '')) b.click(); return location.hash.startsWith('#/dive/switch'); }, null, { timeout: 60000, polling: 3000 })
       .catch(() => problems.push(tag + ': the way in on the line does not go inside what the station makes'));
     await wp.close(); }
+  /* steps are along, levels are in · out (#266): on the line and in the studio the steps are one line from left to right,
+     walked with → and Next; the rail at the side holds only the level a step shows, and is absent where it shows none.
+     ↓ at the job goes in to the blocks as laid out. On a phone the steps are a strip with ← → and a count. Each page its own */
+  for (const [vt, viewport] of [['desktop', { width: 1280, height: 800 }], ['phone', { width: 390, height: 844 }]]) {
+    at = 'ways steps ' + vt; const tag = 'ways steps ' + vt, tp = await browser3d.newPage({ viewport });
+    tp.on('pageerror', e => problems.push(tag + ': ' + e.message));
+    await tp.goto(base + 'index.html#/line/print');
+    /* where the frame says you are: the step lit, the level on the rail (if a rail is drawn), the strip on a phone */
+    await tp.evaluate(() => { window.smokeSteps = () => { const c = document.querySelector('#diveui .steps2 [aria-current]'), r = document.querySelector('#diveui .rail2'), l = r && !r.hidden && r.querySelector('[aria-current]'), stl = document.querySelector('#diveui .steps2 .stl');
+      return { n: document.querySelectorAll('#diveui .steps2 [data-step]').length, step: c && c.dataset.step, level: l ? l.dataset.rail : null, rail: !!r && !r.hidden,
+        levels: (r ? [...r.querySelectorAll('[data-rail]')].map(b => b.dataset.rail) : []).join(','), line: !!stl && getComputedStyle(stl).display !== 'none',
+        strip: (document.querySelector('#diveui .steps2 .stk') || {}).textContent || '', hash: location.hash }; }; });
+    const fail = say => () => problems.push(tag + ': ' + say), wait = { timeout: 90000, polling: 1500 };
+    await tp.waitForFunction(() => { const h = window.smokeSteps(); return h.n === 11 && h.step === 'print' && h.level === 'gate' && h.levels === 'chip,block,gate,switch,atom'; }, null, wait)
+      .catch(fail('the line does not show its eleven steps with print lit, and the gate on a rail of levels only'));
+    if (vt === 'phone') await tp.waitForFunction(() => { const h = window.smokeSteps(); return !h.line && /5/.test(h.strip) && /11/.test(h.strip); }, null, wait).catch(fail('on a phone the steps are not a strip with a count'));
+    else await tp.waitForFunction(() => window.smokeSteps().line, null, wait).catch(fail('on a desktop the steps are not drawn as a line'));
+    /* → walks along to the next step, and the rail follows to the switch */
+    await tp.waitForFunction(() => { if (location.hash === '#/line/print') { const c = document.getElementById('diveCanvas'); c.focus(); c.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true })); }
+      const h = window.smokeSteps(); return h.step === 'etch' && h.level === 'switch' && h.hash === '#/line/etch'; }, null, wait).catch(fail('→ does not walk the line to etching, with the switch on the rail'));
+    /* a step that shows no level has no rail */
+    await tp.evaluate(() => { location.hash = '#/line/test'; });
+    await tp.waitForFunction(() => { const h = window.smokeSteps(); return h.step === 'test' && !h.rail; }, null, wait).catch(fail('at the test step, which shows no level, a rail of levels is still drawn'));
+    /* the studio: the same line of steps; check shows no level; Next walks along to the gates */
+    await tp.evaluate(() => { location.hash = '#/bench/check'; });
+    await tp.waitForFunction(() => { const h = window.smokeSteps(); return h.n === 6 && h.step === 'check' && !h.rail; }, null, wait).catch(fail('the studio does not show its six steps with check lit and no rail'));
+    await tp.waitForFunction(() => { const b = document.querySelector('#diveui .dock [data-along][data-key="next"]'); if (b && location.hash === '#/bench/check') b.click();
+      const h = window.smokeSteps(); return h.step === 'gates' && h.level === 'gate' && h.levels === 'chip,block,gate'; }, null, wait).catch(fail('Next in the studio does not walk along to the gates, with the gate on the rail'));
+    /* ↓ at the job goes in, to the blocks as laid out */
+    await tp.evaluate(() => { location.hash = '#/bench/need'; });
+    await tp.waitForFunction(() => { const h = window.smokeSteps(); return h.step === 'need' && h.level === 'chip'; }, null, wait).catch(fail('the job does not show the chip on the rail'));
+    await tp.waitForFunction(() => { if (location.hash === '#/bench/need' && document.querySelector('#diveui .dock [data-in]')) document.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+      const h = window.smokeSteps(); return h.step === 'layout' && h.level === 'block'; }, null, wait).catch(fail('↓ at the job does not go in to the blocks as laid out'));
+    if (vt === 'desktop' && (await tp.evaluate(() => document.documentElement.scrollWidth - innerWidth)) > 0) problems.push(tag + ': the page scrolls sideways');
+    await tp.close();
+  }
   /* one way down through a chip (#230): the dive is the way down; the stack is the same level as made, reached along
      the loop (Make in the bar, underlined beforehand), with the address and the bar saying Make, and along back
      returns to the dive at the same level. Neither card offers a second way down, and an old address of the stack
@@ -895,6 +931,26 @@ run['flights'] = async () => {
     .catch(() => problems.push(tag + ': the dive\'s chip does not come down from where the flight ended'));
   await page.waitForFunction(() => !document.documentElement.dataset.arrive && !!document.querySelector('#l3-chip [data-part3="hbm"]'), null, { timeout: 60000, polling: 500 })
     .catch(() => problems.push(tag + ': the dive\'s chip does not come to rest with the memory beside it'));
+    await page.close(); }
+  /* one studio (#267): Go inside the studio on the island flies down through its opened floor into the room (the walk
+     passes between outside and the first corner, never jumping), the way in by the job's wall of notes settles on it and
+     hands over to the job's bench, and the bench's way up comes back to the same corner of the room. A page of its own */
+  { const page = await browser3d.newPage({ viewport: { width: 1280, height: 800 } }), tg = 'studio';
+    page.on('pageerror', e => problems.push(tg + ': ' + e.message));
+    await page.goto(base + 'index.html#/place/studio');
+    await page.evaluate(() => { window.walk = []; new MutationObserver(() => { const s = document.getElementById('studioui'), a = s && s.dataset.at; if (a != null && window.walk[window.walk.length - 1] !== a) window.walk.push(a); if (s && s.dataset.handoff) window.handed = s.dataset.handoff; })
+      .observe(document.getElementById('studioui'), { attributes: true, attributeFilter: ['data-at', 'data-handoff'] }); });
+    await page.waitForFunction(() => { if (location.hash === '#/place/studio') { const b = document.querySelector('#sheet:not([hidden]) [data-deeper]'); if (b) b.click(); }
+      return location.hash === '#/place/studio/1' && !document.getElementById('studioui').hidden; }, null, { timeout: 150000, polling: 3000 }).catch(() => problems.push(tg + ': going inside the studio on the island does not open the room'));
+    await page.waitForFunction(() => document.getElementById('studioui').dataset.at === '1.0', null, { timeout: 90000, polling: 500 }).catch(() => problems.push(tg + ': the flight into the studio does not come to rest at the first corner'));
+    if (!(await page.evaluate(() => window.walk.length > 2 && window.walk.some(a => +a > 0 && +a < 1)))) problems.push(tg + ': the studio is entered with a cut, not a flight down into the room (' + (await page.evaluate(() => window.walk.join(' '))) + ')');
+    if (!(await page.evaluate(() => { const c = document.querySelector('#studioui .steps2 [aria-current]'), r = document.querySelector('#studioui .rail2 [aria-current]'); return !!c && c.dataset.step === 'need' && !!r && r.dataset.rail === 'chip'; }))) problems.push(tg + ': at the first corner the frame does not say the job, and the chip on the rail');
+    /* the handoff: the way in stands by the screen; taken, the camera settles on it and the job's bench takes over */
+    await page.waitForFunction(() => { const b = document.querySelector('#studioui .wayin:not([hidden]) .wigo'); if (b && location.hash === '#/place/studio/1' && !window.handed) b.click(); return location.hash === '#/bench/need' && !document.getElementById('diveui').hidden; }, null, { timeout: 90000, polling: 2000 })
+      .catch(() => problems.push(tg + ': the way in at the job\'s corner does not hand over to its bench'));
+    if (!(await page.evaluate(() => window.handed === 'need'))) problems.push(tg + ': the bench opened without the camera settling on the corner\'s screen first');
+    await page.waitForFunction(() => { const u = document.querySelector('#diveui .homebtn'); if (u && location.hash === '#/bench/need' && u.getAttribute('href') === '#/place/studio/1') u.click(); return location.hash === '#/place/studio/1' && !document.getElementById('studioui').hidden; }, null, { timeout: 60000, polling: 2000 })
+      .catch(() => problems.push(tg + ': stepping out of the bench does not return to its corner of the room'));
     await page.close(); }
   /* a phone is flown through like the data centre (src/v2/phone3d-flight.js): going inside the phone island opens the
      flight, the way in on the picture goes deeper, and going on past the chip carries the flight into the dive's phone
