@@ -2836,3 +2836,35 @@ html.frame2 .f2stage [data-f2="goal"].mbsix .gv { font-size: 17px; }
   .mbgoal:not(.mbsix) > .kicker, .mbgoal .gauge.mbsm:not(.bad) { display: none; } .mbgoal .gauge.mbsm.bad { grid-column: 1 / -1; }
   .mbgoal:not(.mbsix) .gauge .gv { text-align: left; } .mbgoal:not(.mbsix) .gauge { grid-template-columns: minmax(0, 1fr); }
 }
+
+/* Six flaky parts, one reliable chip (src/v2/labs/vote.js) */
+.rdfig { margin: 8px 0; } .rdfig svg { display: block; width: 100%; height: auto; }
+.rdfig .ax { font: 10px var(--sans); fill: var(--muted); }
+.rdfig .rdcopy { fill: color-mix(in srgb, var(--accent) 22%, var(--panel-solid)); stroke: var(--accent); stroke-width: 1; }
+.rdfig .rdcopy.ok { fill: color-mix(in srgb, var(--good) 30%, var(--panel-solid)); stroke: var(--good); }
+.rdfig .rdcopy.bad { fill: var(--bad); stroke: var(--bad); }
+.rdfig .rdvote { fill: var(--panel-solid); stroke: var(--ink); stroke-width: 1.2; stroke-linejoin: round; }
+.rdfig .rdvote.ok { fill: color-mix(in srgb, var(--good) 45%, var(--panel-solid)); stroke: var(--good); } .rdfig .rdvote.bad { fill: var(--bad); stroke: var(--bad); }
+.rdfig .rdwire { stroke: var(--muted); stroke-width: 1.2; stroke-dasharray: 2 3; }
+.rdfig .rdx { stroke: var(--bad); stroke-width: 2; stroke-linecap: round; }
+.rdfig .rdp { font: 600 10.5px var(--mono); fill: var(--ink); } .rdfig .rdp.good { fill: var(--good); } .rdfig .rdp.bad { fill: var(--bad); }
+.rdrun { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin: 4px 0 12px; }
+.rdrun .bad { color: var(--bad); } .rdrun .good { color: var(--good); }
+.rdpick { display: grid; gap: 6px; margin: 0 0 10px; }
+.rdrow { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 10px; padding: 6px 0; border-bottom: 1px solid var(--line); }
+.rdseg { display: inline-flex; gap: 4px; } .rdseg .chipb { padding: 4px 9px; font-size: 12px; }
+.rdmsg.good, .momsg.good { color: var(--good); } .rdmsg.bad, .momsg.bad { color: var(--bad); }
+
+/* Learn on one chip, copy to a thousand (src/v2/labs/mortal.js) */
+.mofig { margin: 8px 0; } .mofig svg { display: block; width: 100%; height: auto; }
+.mofig .ax { font: 10px var(--sans); fill: var(--muted); }
+.mofig .mol { stroke-width: 1; } .mofig .mol.dg { fill: color-mix(in srgb, var(--accent) 16%, var(--panel-solid)); stroke: var(--accent); } .mofig .mol.an { fill: color-mix(in srgb, var(--warm) 18%, var(--panel-solid)); stroke: var(--warm); }
+.mofig .mogrid { stroke: var(--accent); stroke-width: 1; fill: none; opacity: .8; } .mofig .mowave { stroke: var(--warm); stroke-width: 1.6; fill: none; stroke-linecap: round; }
+.mofig .mochip, .mofig .mocopy { stroke-width: 1.2; }
+.mofig .ok { fill: color-mix(in srgb, var(--good) 28%, var(--panel-solid)); stroke: var(--good); }
+.mofig .mid { fill: color-mix(in srgb, var(--warm) 30%, var(--panel-solid)); stroke: var(--warm); }
+.mofig .bad { fill: color-mix(in srgb, var(--bad) 32%, var(--panel-solid)); stroke: var(--bad); }
+.mofig .monum { font: 700 15px var(--mono); fill: var(--ink); }
+.mofig .moarrow { stroke: var(--muted); stroke-width: 1.5; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.mofig .mobar { stroke: none; } .mofig .mobar.dg { fill: var(--accent); opacity: .55; } .mofig .mobar.an { fill: var(--warm); } .mofig .mobar.ok { fill: var(--good); }
+.mofig .mogoal { stroke: var(--ink); stroke-width: 1.2; stroke-dasharray: 3 2; }
