@@ -124,13 +124,9 @@ function phone() { return typeof matchMedia === 'function' && matchMedia('(max-w
    its place where it has no levels (the test house) */
 const levelOf = dock => { const l = dock.querySelector('.player .levels .on'), p = dock.querySelector('.player'), ch = p && challengeOf(p.dataset.ch);
   return l ? l.textContent.trim() : ch && has('map.' + ch.place + '.t') ? t('map.' + ch.place + '.t') : ''; };
-const onPlace = p => !!p && (p.dataset.f2 === 'place' || !!p.querySelector('[data-f2="place"]'));
-/* on a phone, where the panel begins when the place is the picture: under the goal, with the place in sight between */
-function placeSheet(host, g) {
-  if (!phone()) return;
-  const top = g ? g.getBoundingClientRect().bottom : 112;
-  host.style.setProperty('--f2-sheet', Math.round(top + Math.min(innerHeight * 0.3, 260)) + 'px');
-}
+/* the place as the picture is a desktop's: on a phone the place is too small to play on beside the sheet, so such a
+   challenge is played in the sheet under the picture, as before */
+const onPlace = p => !!p && !phone() && (p.dataset.f2 === 'place' || !!p.querySelector('[data-f2="place"]'));
 /* the island's sheet in Do mode: the same stage, its own "where you are" (the island's place), the same measures */
 function doSheet(sheet) {
   const stage = sheet.parentNode, player = sheet.hidden ? null : sheet.querySelector(':scope > .player'), inst = !!(player && player.querySelector('[data-f2="instrument"]')), place = !inst && onPlace(player), on = inst || place;
@@ -152,7 +148,7 @@ function doSheet(sheet) {
   sheet.style.setProperty('--f2-goalh', (g ? Math.round(g.getBoundingClientRect().height) : 0) + 'px');
   const sv = i && i.querySelector('svg[viewBox]'), vb = sv && sv.viewBox.baseVal, r = sv && sv.getBoundingClientRect();
   if (vb && vb.width && r.width && r.height) sheet.style.setProperty('--f2-k', (1 / Math.min(r.width / vb.width, r.height / vb.height)).toFixed(4));
-  if (phone()) { if (i) sheet.style.setProperty('--f2-sheet', Math.round(i.getBoundingClientRect().bottom + 10) + 'px'); else placeSheet(sheet, g); }
+  if (phone() && i) sheet.style.setProperty('--f2-sheet', Math.round(i.getBoundingClientRect().bottom + 10) + 'px');
 }
 
 export function attach(host, api, o, x) {
@@ -221,7 +217,7 @@ export function attach(host, api, o, x) {
     const gh = g ? Math.round(g.getBoundingClientRect().height) : 0;
     host.style.setProperty('--f2-goalh', gh + 'px');
     const bg = (i ? 0 : gh) + 'px', st = host.parentNode; if (st && st.style.getPropertyValue('--f2-bgoal') !== bg) st.style.setProperty('--f2-bgoal', bg);
-    if (!i) return placeSheet(host, g);
+    if (!i) return;
     /* a drawing made for the card, now the size of the stage: its words keep their size on the screen */
     const sv = i.querySelector('svg[viewBox]'), vb = sv && sv.viewBox.baseVal, r = sv && sv.getBoundingClientRect();
     if (vb && vb.width && r.width && r.height) host.style.setProperty('--f2-k', (1 / Math.min(r.width / vb.width, r.height / vb.height)).toFixed(4));
