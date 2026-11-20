@@ -138,7 +138,7 @@ const explore = async (tag, viewport, scheme) => {
   await page.waitForSelector('#sheet .won', { timeout: 10000 }).catch(() => problems.push(tag + ': a right design did not win the challenge'));
   if (!/grew/i.test(await page.textContent('#toast').catch(() => ''))) problems.push(tag + ': winning did not say what grew');
   if (!(await page.$('#sheet .opens[href^="#/ask/"]'))) problems.push(tag + ': the first win opens no question');
-  if (!/1 of 8/.test(await page.getAttribute('#loop [data-stage="design"]', 'aria-label').catch(() => ''))) problems.push(tag + ': the tracker did not count the win');
+  if (!/1 of 11/.test(await page.getAttribute('#loop [data-stage="design"]', 'aria-label').catch(() => ''))) problems.push(tag + ': the tracker did not count the win');
   await page.click('#sheet [data-next]').catch(() => problems.push(tag + ': no way on to the next challenge'));
   if (!/voter/i.test(await page.textContent('#sheet .player h3').catch(() => ''))) problems.push(tag + ': the next challenge is not the majority voter');
   await page.click('#sheet [data-back]');
@@ -374,6 +374,24 @@ const explore = async (tag, viewport, scheme) => {
   await page.fill('#diveui .dock #chCode', 'sum = a ^ b;\ncarry = a & b;').catch(() => {});
   await page.click('#diveui .dock [data-check]').catch(() => {});
   await page.waitForSelector('#diveui .dock .won', { timeout: 10000 }).catch(() => problems.push(tag + ': a right design on the bench did not win'));
+  /* the bench as a live design (#265, #268): a first visit names every piece of the computer readably and says the design is
+     the lab's example; a design changed at describe is followed by the check, the gates and the layout */
+  { const btag = tag + ' bench', bp = await browser3d.newPage({ viewport, colorScheme: scheme, reducedMotion: 'reduce' }); bp.on('pageerror', e => problems.push(btag + ': ' + e.message));
+    at = btag; await bp.goto(base + 'index.html#/bench/need');
+    await bp.waitForFunction(() => document.querySelectorAll('.bsurf .bk-tree .bk-node').length >= 17, null, { timeout: 60000 }).catch(() => problems.push(btag + ': the job does not show the community\'s computer'));
+    const small = await bp.evaluate(() => [...document.querySelectorAll('.bsurf .bk-nm')].filter(n => parseFloat(getComputedStyle(n).fontSize) < 10 || !n.textContent.trim() || n.getBoundingClientRect().width < 8).length);
+    if (small) problems.push(btag + ': ' + small + ' names in the job\'s tree are not readable');
+    await bp.waitForSelector('#diveui .dock .benchy .verdict[data-by="example"]', { timeout: 15000 }).catch(() => problems.push(btag + ': a first visit does not open on the lab\'s example (or says it was written by you)'));
+    const MINE = 'sum = (a | b) & ~(a & b);\ncarry = a & b;';
+    const follows = (hash, sel, what) => bp.waitForFunction(([hash, sel, MINE]) => {
+      if (location.hash !== hash) location.hash = hash;
+      const ta = document.querySelector('.bsurf [data-bk-code]'); if (ta && ta.value !== MINE) { ta.value = MINE; ta.dispatchEvent(new Event('input', { bubbles: true })); }
+      return !!document.querySelector(sel); }, [hash, sel, MINE], { timeout: 30000, polling: 1000 }).catch(() => problems.push(btag + ': ' + what));
+    await follows('#/bench/logic', '#diveui .dock .benchy .verdict.good[data-by="you"]', 'a design written at describe is not yours');
+    await follows('#/bench/check', '.bsurf .bk-check .bk-say.good', 'the check does not follow the design written at describe');
+    await follows('#/bench/gates', '.bsurf .bk-gates .bk-g:nth-of-type(4)', 'the gates do not follow the design written at describe');
+    await follows('#/bench/layout', '.bsurf .bk-layout [data-bk-cell="3"]', 'the layout does not follow the design written at describe');
+    await bp.close(); }
   /* the board: a story drives the scene; a prediction comes before the live number moves */
   at = tag + ' ' + '#/board'; await page.evaluate(() => { location.hash = '#/board'; });
   await page.waitForSelector('#boardui .dock .line', { timeout: 15000 }).catch(() => problems.push(tag + ': the board did not open'));
@@ -678,6 +696,16 @@ run['labs'] = async () => {
     + " if (st === 'ended') { if (mode === 'cvd') CL('[data-fl-mode=\"ald\"]'); else CL('[data-fl-reset]'); } else if (st === 'ready' || st === 'paused') CL('[data-fl-go]')", 'The bare bottom', 180000);
   /* too hot for silicon, at the switch: the heater is set to 600 K and the silicon warms through the crossing */
   await playLab('too-hot', "SET('#semi-T', 600)", 'Too hot for silicon');
+  /* the bench's own challenges (#269), played on the bench over the studio's picture: say what your piece must answer,
+     swap the 2-bit adder's cells until the wire is short, say which mask each shape is printed from */
+  const BENCH = "const st = () => JSON.parse(localStorage.getItem('osl-world-v1') || '{}').bench || {}, X = await import(new URL('src/engines/bench.js', location.href).href), Dz = await import(new URL('src/engines/design.js', location.href).href), Gm = await import(new URL('src/v2/game.js', location.href).href), CLK = n => n && n.dispatchEvent(new MouseEvent('click', { bubbles: true }));";
+  await playLab('piece', BENCH + " const bk = document.querySelector('.bsurf .bk-need'); if (bk) { const p = bk.dataset.bkP, v = {}; bk.querySelectorAll('[data-bk-in]').forEach(b => { v[b.dataset.bkIn] = +b.querySelector('.bk-v').textContent; });"
+    + " const pr = Dz.projectOf(p), w = pr.seq ? null : pr.f(v); if (w) { bk.querySelectorAll('[data-bk-ans]').forEach(b => { if ((b.getAttribute('aria-pressed') === 'true') !== !!w[b.dataset.bkAns]) CLK(b); }); CL('[data-jq-check]'); } }", 'Your piece of the computer');
+  await playLab('floor', BENCH + " const B = X.floorDesign(), s = st(); let rows = s.floor && X.validRows(B.M, s.floor, B.PL) ? s.floor : X.floorStart(B), cur = X.floorCheck(B, rows).wl, best = null;"
+    + " for (let a = 0; a < B.M.cells.length; a++) for (let b = a + 1; b < B.M.cells.length; b++) { const R = X.swapCells(B.M, rows, a, b, B.PL.W); if (!R) continue; const c = X.floorCheck(B, R); if (!c.failed && c.wl < cur && (!best || c.wl < best.wl)) best = { a, b, wl: c.wl }; }"
+    + " if (best) { CLK(document.querySelector('.bsurf [data-bk-cell=\"' + best.a + '\"]')); CLK(document.querySelector('.bsurf [data-bk-cell=\"' + best.b + '\"]')); }", 'The shortest wire');
+  await playLab('maskof', BENCH + " const s = st(), D = Gm.benchDesign({ bench: s }), rows = s.rows && X.validRows(D.B.M, s.rows, D.B.PL) ? s.rows : X.rowsOf(D.B.PL), m = X.measure(D.B.M, rows, D.B.PL), sh = X.maskAsk(X.maskShapes(m.PL, m.RT), (s.mq || {}).k || 0);"
+    + " if (sh) CL('[data-mq=\"' + sh.mask + '\"]')", 'Which mask?');
   /* Build your own AI chip: the data-centre brief, met by stacked memory on an interposer, 4-bit weights, more math and a faster clock, then taped out */
   await playLab('ai-chip', "CL('[data-aib-brief=\"infer\"]'); CL('[data-aib-set=\"mem:h4\"]'); SET('#aib-memN', 6); CL('[data-aib-set=\"pkg:cs\"]'); CL('[data-aib-set=\"fp4:true\"]'); SET('#aib-area', 863); SET('#aib-f', 2); CL('[data-aib-tape]')", 'Build your own AI chip');
   /* the clock and the power: the dials at a point the engine's check accepts; the counter is run at the same place on its
@@ -970,6 +998,12 @@ run['frame2'] = async () => {
     /* where you are leads back to the picture, and its caption */
     await fp.waitForFunction(() => { const w = document.querySelector('#diveui .f2where:not([hidden])'); if (w) w.click(); return !!document.querySelector('#diveui.f2cap .f2head'); }, null, { timeout: 20000, polling: 1000 })
       .catch(() => problems.push(tag + ': where you are does not lead back to the caption'));
+    /* the bench in Do mode (#268): a bench challenge's layout takes the stage, the bench over the picture steps aside */
+    await fp.evaluate(() => { location.hash = '#/do/floor'; });
+    await fp.waitForFunction(() => { const host = document.querySelector('#diveui.f2stage'), panel = host && host.querySelector('.dockwrap'), inst = host && host.querySelector('.player[data-ch="floor"] .benchinst[data-f2="instrument"]'), goal = host && host.querySelector('.player[data-ch="floor"] [data-f2="goal"]');
+      if (!panel || !inst || !goal) return false; const P = panel.getBoundingClientRect(), I = inst.getBoundingClientRect(), sf = document.querySelector('.bsurf');
+      return I.right <= P.left && I.width > 400 && I.height > 300 && !!inst.querySelector('[data-bk-cell]') && (!sf || getComputedStyle(sf).visibility === 'hidden' || sf.hidden); }, null, { timeout: 60000, polling: 1000 })
+      .catch(() => problems.push(tag + ': the shortest wire does not put the bench on the stage in Do mode'));
     const side = await fp.evaluate(() => document.documentElement.scrollWidth - innerWidth);
     if (side > 1) problems.push(tag + ': the page scrolls sideways by ' + side + ' px');
     await fp.close(); }

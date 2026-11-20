@@ -13,14 +13,19 @@ import { plan, levels, needForProject } from '../engines/build.js';
 import { NEEDS } from '../data/build.js';
 
 const MONO = '"Martian Mono", ui-monospace, Menlo, monospace'; /* i18n-ok: a font name */
-let B = build(START_DESIGN), MINE = [], BY = 'you';
-export const setDesign = b => { B = b; };
+let B = build(START_DESIGN), MINE = [], BY = 'example';
+/* by: who wrote the design shown (the lab's example until someone changes it: src/v2/game.js benchDesign) */
+export const setDesign = (b, by) => { B = b; if (by) BY = by; };
 /* the jobs you have finished here (they show in the plan as yours), and who wrote the description now */
-export const setMine = (list, by) => { MINE = list || []; BY = by || 'you'; };
+export const setMine = (list, by) => { MINE = list || []; BY = by || 'example'; };
 export const designNow = () => B;
 /* the band's caption under the drawings; the redesign's bench shows it in its dock instead */
 let CAPTION = true;
 export const setBandCaption = v => { CAPTION = v; };
+/* the chip world lays its live bench over these drawings (src/v2/bench.js), in the square each is drawn in: the scenes
+   then draw nothing, so only the step in view is seen, and the parts below are the bench's regions */
+let SURFACE = false;
+export const setSurface = v => { SURFACE = !!v; };
 
 const R = (x, y, w, h) => ({ r: [x, y, w, h] });
 const sm = u => { u = Math.max(0, Math.min(1, u)); return u * u * (3 - 2 * u); };
@@ -154,7 +159,8 @@ function planView(G, x0, y0, w, h) {
     if (s.yours) { G.a(0.22); G.r(x, y, bw, bh, c.warm); G.a(1); }
     const col = st === 'built' ? c.grn : st === 'open' ? c.warm : st === 'partly' ? c.hi : c.line;
     G.ctx.setLineDash(st === 'open' ? [5, 4] : st === 'engine' ? [2, 4] : []); G.r(x, y, bw, bh, s.yours ? null : c.lo, col, mineHere ? 2.6 : 1.2); G.ctx.setLineDash([]);
-    const nm = t('build.need.' + id + '.t'); text(G, nm, x + 7, y + bh * 0.36, Math.min(13, (bw - 22) / (nm.length * 0.62)), c.hi, 'left', 600);
+    /* a name never shrinks below a readable size: it is cut short instead (the bench names every piece in full) */
+    const nm0 = t('build.need.' + id + '.t'), fit = Math.max(3, Math.floor((bw - 22) / (11 * 0.62))), nm = nm0.length > fit ? nm0.slice(0, fit - 1) + '…' : nm0; text(G, nm, x + 7, y + bh * 0.36, 11, c.hi, 'left', 600);
     text(G, t('build.short.' + st, { built: s.built || 0, of: s.of || 0 }), x + 7, y + bh * 0.74, Math.min(10.5, bw / 11), col, 'left');
     (s.kinds || []).slice(0, 2).forEach((k, q) => who(G, k, x + bw - 14 - q * 26, y + bh * 0.4, 6));
     if (s.yours) who(G, BY === 'ai' ? 'ai' : BY === 'both' ? 'both' : 'person', x + bw - 14, y + bh * 0.4 + (s.kinds && s.kinds.length ? 0 : 0), 6);
@@ -162,8 +168,9 @@ function planView(G, x0, y0, w, h) {
 }
 const NEEDS_PARENT = Object.fromEntries(NEEDS.map(n => [n.id, n.parent]));
 const need = {
-  parts: { plan: [R(20, 50, 960, 400)], box: [R(400, 520, 200, 230)], ins: [R(260, 510, 140, 250)], outs: [R(600, 510, 140, 250)], use: [R(770, 540, 200, 160)] },
+  parts: { plan: [R(0, 0, 1000, 470)], ins: [R(0, 500, 230, 500)], box: [R(250, 500, 260, 500)], outs: [R(530, 500, 220, 500)], use: [R(770, 500, 230, 500)] },
   draw(G) {
+    if (SURFACE) return;
     const c = G.col; room(G);
     planView(G, 20, 60, 960, 400);
     const core = B.p === 'core', vs = core ? [{}] : patterns(B), k = nowK(G, vs.length, 0.7), v = vs[k];
@@ -205,8 +212,9 @@ function useView(G, x, y, w, h, v, o) {
 
 /* ---- 2. the description: a few lines of text, and the table of what it must answer ---- */
 const logic = {
-  parts: { code: [R(60, 100, 520, 640)], table: [R(620, 100, 320, 640)] },
+  parts: { code: [R(0, 0, 590, 1000)], table: [R(610, 0, 390, 1000)] },
   draw(G) {
+    if (SURFACE) return;
     const c = G.col; room(G);
     if (B.p === 'core') { if (B.core) coreDatapath(G, false); return; }
     panel(G, 60, 100, 520, 640, c.lo);
@@ -243,8 +251,9 @@ const logic = {
 
 /* ---- 3. the check: every pattern run through your design, its answers against the job's ---- */
 const check = {
-  parts: { waves: [R(60, 120, 880, 520)], verdict: [R(60, 670, 880, 110)] },
+  parts: { waves: [R(0, 0, 1000, 720)], verdict: [R(0, 740, 1000, 260)] },
   draw(G) {
+    if (SURFACE) return;
     const c = G.col; room(G);
     if (B.p === 'core') { if (B.core) coreDatapath(G, true); return; }
     panel(G, 60, 120, 880, 520, c.lo);
@@ -293,8 +302,9 @@ function gatesLayout() {
   return { pos, gw, gh, cols };
 }
 const gates = {
-  parts: { cells: [R(160, 110, 700, 600)], pins: [R(50, 110, 110, 600)], outs: [R(860, 110, 110, 600)] },
+  parts: { cells: [R(140, 0, 700, 1000)], pins: [R(0, 0, 140, 1000)], outs: [R(840, 0, 160, 1000)] },
   draw(G) {
+    if (SURFACE) return;
     const c = G.col; room(G);
     if (B.p === 'core') { if (B.core) coreGates(G); return; }
     if (bad() || !B.M) { text(G, '—', 500, 380, 60, c.red, 'center'); return; }
@@ -339,8 +349,9 @@ function drawTile(G, x0, y0, w, h, layers) {
   return { s, X, Y };
 }
 const layout = {
-  parts: { tile: [R(40, 120, 600, 560)], shared: [R(690, 160, 270, 400)] },
+  parts: { tile: [R(0, 0, 740, 1000)], shared: [R(760, 0, 240, 1000)] },
   draw(G) {
+    if (SURFACE) return;
     const c = G.col; room(G);
     if (B.p === 'core') { if (B.core) coreLayout(G); return; }
     if (bad() || !B.PL) { text(G, '—', 500, 380, 60, c.red, 'center'); return; }
@@ -365,8 +376,9 @@ const layout = {
 /* ---- 6. the masks: the layout split into one stencil per layer, to be printed at the factory ---- */
 const LAYERS = ['cells', 'm1', 'via', 'm2'];
 const masks = {
-  parts: { masks: [R(80, 90, 620, 640)], reticle: [R(790, 600, 160, 160)] },
+  parts: { masks: [R(0, 0, 690, 1000)], reticle: [R(710, 0, 290, 1000)] },
   draw(G) {
+    if (SURFACE) return;
     const c = G.col; room(G);
     if (bad() || !B.PL) { text(G, '—', 500, 380, 60, c.red, 'center'); return; }
     /* each layer on its own glass plate, stacked apart; the plates drift together and apart */
