@@ -54,6 +54,7 @@ import { SEEK, foundAt, seekAt, seekLevel } from '../data/seek.js';
 import { createHome } from './home.js';
 import { sizeWords } from './frame.js';
 import { ON as FRAME2, boot as frame2Boot } from './frame2.js';
+import { reading as frame2Reading } from './frame2.js';
 
 const $ = id => document.getElementById(id);
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
@@ -1490,6 +1491,8 @@ export function start() {
     if (k === 'w') { if (parts[1]) showWorld(parts[1], parts[2], parts[3]); else showWorlds(); }
     if (k === 'whatif') return showMap(from).then(() => showWhatif(parts[1]));
     if (k === 'machines') showMachines(parts[1]);
+    /* the new frame reads a page on its own: the island waits behind it, paused (src/v2/frame2.js, Read) */
+    if (frame2Reading()) return showMap(from).then(m => { if (frame2Reading()) m.pause(); });
     return showMap(from).then(() => { if (k === 'ecosystem') showEcosystem(); else if ((k === 'island' || k === 'explore') && cur && !sheet.hidden) { closeSheet(); map && map.overview(); } });
   }
   function route() {

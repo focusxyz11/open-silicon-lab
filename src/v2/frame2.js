@@ -15,8 +15,17 @@
      that declares nothing is played in the side panel beside the picture.
    ON: is the flag on. boot(): the class on <html> (every rule of src/styles/frame2.css hangs from it) and the
    stylesheet. attach(host, api, o, x): one frame (createFrame) worn the new way; o.caption: the view's card is a
-   level's (the dive and the flights), so Look is a caption; x: { wrap, items, at(), here(), doList() } from the frame. */
-import { t } from '../core/i18n.js';
+   level's (the dive and the flights), so Look is a caption; x: { wrap, items, at(), here(), doList() } from the frame.
+   - Read (#273): a question's page (#/w/<id>), the questions (#/read, #/read/<id>, #/w) and machines (#/machines)
+     are a reading page in the frame, not a window over the island: a column of about 70 characters at 18.25 px,
+     its picture pinned beside it on a desktop (at the left, where the stage is in Do) and first on a phone, under
+     the title. The words can try the picture: a button marked data-f2try brings it into view and to the hand, and
+     a part marked data-f2x="<id>" in the words lights the same mark in the picture, and back. The bar says you are
+     reading and lights no stage; a way back leads to where you came from. A page says what its picture is with
+     readHtml({ head, picture, text }); the shell needs no hook: each time it draws the page or the bar, boot()'s
+     watchers wear them the new way (readPage, bar). */
+import { t, has } from '../core/i18n.js';
+import { whereOf } from '../engines/way.js';
 
 export const ON = (() => { try { const q = new URLSearchParams(location.search).get('frame'); if (q === '1' || q === '2') localStorage.setItem('osl-frame', q); return localStorage.getItem('osl-frame') === '2'; } catch (e) { return false; } })();
 
@@ -26,12 +35,80 @@ export function boot() {
   document.documentElement.classList.add('frame2');
   /* the question is set in Besley's italic, which today's frame does not load */
   for (const href of ['https://fonts.googleapis.com/css2?family=Besley:ital,wght@0,400;1,400&display=swap', 'src/styles/frame2.css']) { const l = document.createElement('link'); l.rel = 'stylesheet'; l.href = href; document.head.appendChild(l); }
+  /* the address you were at before you began reading: the way back. Heard before the shell's own route */
+  addEventListener('hashchange', e => { const was = '#' + ((e.oldURL || '').split('#')[1] || '/'); if (READING.includes(routeOf(location.hash)) && !READING.includes(routeOf(was))) readFrom = was; });
+  /* the words try the picture: a button brings it into view and to the hand */
+  document.addEventListener('click', e => { const b = e.target.closest('.f2read [data-f2try]'); if (b) tryPicture(b); });
+  /* a mark in the words and the same mark in the picture light together */
+  const link = (e, on) => { const m = e.target.closest && e.target.closest('.f2read [data-f2x]'); if (m) lightMark(m, on); };
+  document.addEventListener('pointerover', e => link(e, true)); document.addEventListener('pointerout', e => link(e, false));
+  document.addEventListener('focusin', e => link(e, true)); document.addEventListener('focusout', e => link(e, false));
+  /* the shell draws the page and the bar; each time it does, they are worn the new way (no hook in the shell) */
+  const page = document.getElementById('page'), loop = document.getElementById('loop');
+  if (page && typeof MutationObserver === 'function') new MutationObserver(() => readPage(page)).observe(page, { childList: true, subtree: true });
+  if (loop && typeof MutationObserver === 'function') new MutationObserver(() => bar(loop)).observe(loop, { childList: true });
 }
 
-const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+/* ---- Read ---- */
+const READING = ['read', 'w', 'machines'];
+const routeOf = h => String(h || '').replace(/^#\/?/, '').split('/')[0] || '';
+let readFrom = null;
+/* is the address a reading page, in the new frame */
+export const reading = (h = location.hash) => ON && READING.includes(routeOf(h));
+/* the name of where an address is: its level, else its place, else the map */
+const nameOf = h => { const k = routeOf(h); if (!k || k === 'home') return t('frame2.backMap');
+  let W = null; try { W = whereOf(h); } catch (e) { W = null; }
+  return W && W.level && has('depth.' + W.level + '.name') ? t('depth.' + W.level + '.name') : W && W.place && has('map.' + W.place + '.t') ? t('map.' + W.place + '.t') : k === 'island' ? t('map.home') : k === 'log' ? t('loop.log') : t('frame2.backMap'); };
+/* a reading page: its head (kicker, title, the line under it), its picture and its words. Without a picture the
+   column stands alone, in the middle */
+export function readHtml(o) {
+  return '<article class="f2read' + (o.picture ? '' : ' f2nopic') + (o.cls ? ' ' + o.cls : '') + '"' + (o.style ? ' style="' + esc(o.style) + '"' : '') + '>' +
+    '<header class="f2rhead">' + o.head + '</header>' +
+    (o.picture ? '<div class="f2pic" data-f2="picture" tabindex="-1">' + o.picture + '</div>' : '') +
+    '<div class="f2col">' + o.text + '</div></article>';
+}
+/* a button in the words that tries the picture */
+export const tryHtml = (key = 'frame2.tryHere') => '<button type="button" class="btn f2try" data-f2try><span class="f2ta" aria-hidden="true"></span>' + esc(t(key)) + '</button>';
+function tryPicture(b) {
+  const pic = b.closest('.f2read').querySelector('.f2pic'); if (!pic) return;
+  if (phone()) pic.scrollIntoView({ block: 'start', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+  pic.classList.remove('f2lit'); void pic.offsetWidth; pic.classList.add('f2lit');
+  const c = pic.querySelector('button:not([disabled]), input, select, a[href]:not([tabindex="-1"])'); (c || pic).focus({ preventScroll: true });   /* i18n-ok: a selector */
+}
+function lightMark(m, on) {
+  const art = m.closest('.f2read'), id = m.dataset.f2x;
+  art.querySelectorAll('[data-f2x="' + CSS.escape(id) + '"]').forEach(n => n.classList.toggle('f2on', on));
+  /* the picture says which one: what the mark names */
+  const cap = art.querySelector('[data-f2say]'); if (!cap) return;
+  if (!cap.dataset.rest) cap.dataset.rest = cap.innerHTML;
+  const say = on && (m.getAttribute('aria-label') || (m.querySelector('.q') || m).textContent.trim());
+  cap.innerHTML = say ? esc(say) : cap.dataset.rest; cap.classList.toggle('f2said', !!say);
+}
+/* the page made a reading page: the way back to where you came from, and the frame's class on the page */
+export function readPage(page) {
+  if (!reading()) { page.classList.remove('f2rd'); return; }
+  page.classList.add('f2rd');
+  const inner = page.querySelector(':scope > .inner'); if (!inner) return;
+  /* at the top of the words, so the picture beside them starts where it stays (a page drawn in parts gets it moved there) */
+  const at = inner.querySelector('.f2rhead') || inner, was = inner.querySelector('.f2back');
+  if (was) { if (was.parentNode !== at) at.prepend(was); return; }
+  const to = readFrom || '#/', a = document.createElement('a'); a.className = 'f2back'; a.href = to;
+  a.innerHTML = '<span class="f2wa" aria-hidden="true">←</span><span class="f2wk">' + esc(t('frame2.backK')) + '</span><b>' + esc(nameOf(to)) + '</b>';
+  a.setAttribute('aria-label', t('frame2.back', { where: nameOf(to) }));
+  at.prepend(a);
+}
+/* the bar while you read: it says so, and lights no stage (the loop still leads out to any stage) */
+export function bar(loop) {
+  if (!loop) return; const on = reading(), b = loop.closest('.bar'); if (b) b.classList.toggle('f2reading', on);
+  if (!on || loop.querySelector(':scope > .f2rk')) return;
+  loop.querySelectorAll('[aria-current]').forEach(n => n.removeAttribute('aria-current'));
+  const k = document.createElement('p'); k.className = 'f2rk'; k.innerHTML = '<span class="f2ri" aria-hidden="true"></span>' + esc(t('frame2.reading')); loop.prepend(k);
+}
+
+function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]); }
 /* the first sentence of a card's words, and the rest */
 const firstSentence = s => { const m = /^([\s\S]+?[.?!])\s+(?=[A-Z0-9“‘\x22\x27(])/.exec(s); return m ? [m[1], s.slice(m[0].length)] : [s, '']; };
-const phone = () => matchMedia('(max-width: 720px)').matches;
+function phone() { return typeof matchMedia === 'function' && matchMedia('(max-width: 720px)').matches; }
 
 export function attach(host, api, o, x) {
   boot();

@@ -30,7 +30,7 @@ const SECTIONS = [
   ['frame', 'the size at every level and the ring on the way in, desktop and phone'],
   ['flights', 'the data centre\'s way in and its flight into the chip; the phone\'s and the car\'s flights into their chips'],
   ['machines', 'machines from shared blocks: a form changed, an agent\'s pick used, where it is made, liquid hardware keeping up with a radio, the lab\'s curve and an attempt kept, new matter\'s claims and the guesses switch, desktop and phone'],
-  ['frame2', 'the new frame behind ?frame=2 (#271): the caption at a dive level with its question in full, desktop and phone; Half the power won in Do mode, its instrument on the stage beside the panel that holds its controls'],
+  ['frame2', 'the new frame behind ?frame=2 (#271): the caption at a dive level with its question in full, desktop and phone; Half the power won in Do mode, its instrument on the stage beside the panel that holds its controls; a question\'s page in Read mode, its column, its picture and the bar'],
 ];
 const argv = process.argv.slice(2);
 if (argv.includes('--list')) { for (const [n, about] of SECTIONS) console.log(n.padEnd(16) + about); process.exit(0); }
@@ -974,6 +974,24 @@ run['frame2'] = async () => {
     const side = await pp.evaluate(() => document.documentElement.scrollWidth - innerWidth);
     if (side > 1) problems.push(tag + ': the page scrolls sideways by ' + side + ' px');
     await pp.close(); }
+  /* Read (#273): a question's page is a reading page in the frame, a column of about 70 characters at 18 to 18.5 px
+     with its picture pinned beside it (first on a phone, under the title); the bar says Reading and lights no stage;
+     the way back leads to where you came from (here, your log) */
+  for (const [w, h] of [[1280, 800], [390, 844]]) {
+    const tag = 'frame2 read ' + w, rp = await browser.newPage({ viewport: { width: w, height: h } }); rp.on('pageerror', e => problems.push(tag + ': ' + e.message));
+    await rp.addInitScript(() => { try { localStorage.setItem('osl-quality', 'flat'); localStorage.setItem('osl-hints-v1', JSON.stringify({ seen: {}, off: true })); } catch (e) { /* no storage */ } });
+    await rp.goto(base + 'index.html?frame=2#/log');
+    await rp.waitForFunction(() => { if (location.hash !== '#/w/fail' && document.querySelector('#page:not([hidden]) [data-jump]')) location.hash = '#/w/fail';
+      const page = document.querySelector('#page.f2rd:not([hidden])'), art = page && page.querySelector('.f2read.world'), col = art && art.querySelector('.f2col'), pic = art && art.querySelector('.f2pic'), head = art && art.querySelector('.f2rhead'), p = col && col.querySelector('p');
+      const bar = document.querySelector('.bar.f2reading'), rk = bar && bar.querySelector('.loop .f2rk'), back = page && page.querySelector('.f2back');
+      if (!col || !pic || !head || !p || !rk || !back) return false;
+      const fs = parseFloat(getComputedStyle(p).fontSize), C = col.getBoundingClientRect(), P = pic.getBoundingClientRect(), H = head.getBoundingClientRect(), ch = C.width / (fs * 0.5);
+      const placed = innerWidth > 720 ? P.right <= C.left && getComputedStyle(pic).position === 'sticky' && P.top >= 60 && P.bottom <= innerHeight + 1 : P.top >= H.bottom - 1 && C.top >= P.bottom - 1;
+      return fs >= 18 && fs <= 18.5 && (innerWidth <= 720 || (ch >= 60 && ch <= 80)) && placed && !!rk.textContent.trim() && !bar.querySelector('.loop [aria-current]') && back.getAttribute('href') === '#/log'; }, null, { timeout: 60000, polling: 1000 })
+      .catch(() => problems.push(tag + ': a question\'s page is not a reading column of about 70 characters at 18 to 18.5 px with its picture beside it (first on a phone), the bar saying Reading with no stage lit and a way back to the log'));
+    const side = await rp.evaluate(() => Math.max(document.documentElement.scrollWidth - innerWidth, (() => { const p = document.querySelector('#page'); return p ? p.scrollWidth - p.clientWidth : 0; })()));
+    if (side > 1) problems.push(tag + ': the page scrolls sideways by ' + side + ' px');
+    await rp.close(); }
 };
 
 /* the sections asked for, in order; each says how long it took, so the groups in CI can be balanced */

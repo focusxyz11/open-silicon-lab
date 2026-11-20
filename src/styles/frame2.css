@@ -230,3 +230,139 @@ html.frame2 .stage:has(> section.f2stage:not([hidden])) > .toast { top: auto; bo
 }
 @media (max-width: 720px) { html.frame2 .f2cap > .dockwrap > .scale2:not(.moving) { display: none; } }
 @media (max-width: 720px) { html.frame2 .stage:has(> section.f2stage:not([hidden])) > .toast { left: 50%; bottom: 24px; max-width: calc(100% - 28px); } }
+
+/* ---- Read (#273): a question's page, the questions and machines, as a reading page in the frame. The page is the
+   stage (no window over the island); a column of about 70 characters at 18.25 px; its picture pinned beside it at
+   the left, where Do puts the instrument, and on a phone under the title, before the words. The bar says you are
+   reading and lights no stage; a way back leads to where you came from ---- */
+html.frame2 .page.f2rd { inset: 0; z-index: 12; border: 0; border-radius: 0; background: var(--bg); backdrop-filter: none; -webkit-backdrop-filter: none; box-shadow: none; scroll-padding-top: 96px; }
+html.frame2 .page.f2rd > .inner { max-width: 1800px; padding: 90px clamp(16px, 2.2vw, 44px) 88px; }
+/* the words fade out above the bar as they scroll up, never showing round it */
+html.frame2 .page.f2rd { -webkit-mask-image: linear-gradient(to bottom, transparent 52px, #000 82px); mask-image: linear-gradient(to bottom, transparent 52px, #000 82px); }
+html.frame2 .page.f2rd .pagex { display: none; }
+html.frame2 .stage:has(> .page.f2rd:not([hidden])) > :is(.c3, .labels, .hero, .homebtn, .sheet) { visibility: hidden; }
+/* the way back: where you came from, by its name */
+html.frame2 .f2back { display: inline-flex; align-items: center; gap: 10px; margin: 0 0 18px; padding: 4px 16px 4px 4px; border-radius: 999px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); text-decoration: none; font: var(--f2-small); box-shadow: var(--shadow); }
+html.frame2 .f2back:hover, html.frame2 .f2back:focus-visible { border-color: var(--accent); }
+html.frame2 .f2back .f2wa { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; background: color-mix(in srgb, var(--ink) 8%, transparent); font-weight: 700; }
+html.frame2 .f2back .f2wk { color: var(--muted); }
+/* the bar while reading: Reading where the stage would be lit, the stages quieter, still a way out to any of them */
+html.frame2 .bar.f2reading .loop { display: flex; align-items: center; gap: 12px; }
+html.frame2 .bar.f2reading .loop .f2rk { flex: none; display: inline-flex; align-items: center; gap: 8px; margin: 0; padding: 7px 14px; border-radius: 999px; background: var(--ink); color: var(--bg); font: 700 15px var(--sans); }
+html.frame2 .bar.f2reading .loop .f2ri { width: 14px; height: 11px; border: 2px solid currentColor; border-top: 0; border-radius: 0 0 3px 3px; background: linear-gradient(currentColor, currentColor) 50% 0 / 2px 100% no-repeat; }
+html.frame2 .bar.f2reading .loop ol { opacity: .72; }
+html.frame2 .bar.f2reading .loop ol:hover, html.frame2 .bar.f2reading .loop ol:focus-within { opacity: 1; }
+
+/* the reading page: the picture at the left, the head and the column at the right */
+html.frame2 .f2read { --f2-rw: 36em; display: grid; grid-template-columns: minmax(0, 1fr) min(var(--f2-rw), 56%); grid-template-rows: auto 1fr; grid-template-areas: "pic head" "pic col"; column-gap: clamp(32px, 3.4vw, 72px); align-items: start; font-size: 18.25px; }
+html.frame2 .f2read.f2nopic { grid-template-columns: min(var(--f2-rw), 100%); grid-template-areas: "head" "col"; justify-content: center; }
+html.frame2 .f2rhead { grid-area: head; }
+html.frame2 .f2col { grid-area: col; min-width: 0; font: 400 1em/1.62 var(--sans); }
+html.frame2 .page.f2rd :is(.f2rhead, .f2col) .kicker { margin: 0 0 6px; font: var(--f2-label); letter-spacing: 0; text-transform: none; color: var(--muted); }
+html.frame2 .page.f2rd .f2read > .f2rhead .kicker, html.frame2 .page.f2rd :is(.world, .readx) .f2rhead .kicker { color: var(--qc, var(--muted)); }
+html.frame2 .page.f2rd .f2rhead h1 { margin: 0 0 10px; font: 700 clamp(30px, calc(1.5vw + 18px), 46px)/1.12 var(--serif); text-wrap: balance; }
+html.frame2 .page.f2rd .f2rhead :is(.wq, .readq) { margin: 4px 0 10px; padding-left: 16px; border-left: 4px solid var(--qc); }
+html.frame2 .page.f2rd .f2rhead .lead { max-width: none; margin: 0 0 24px; font: 400 19px/1.55 var(--sans); color: var(--muted); }
+html.frame2 .page.f2rd .f2rhead .wbehind { margin: 0 0 6px; font: var(--f2-q); font-size: 20px; color: var(--muted); }
+html.frame2 .page.f2rd .f2col h2 { margin: 36px 0 12px; font: 700 26px/1.2 var(--serif); }
+html.frame2 .page.f2rd .f2col h3 { font: 700 20px/1.25 var(--serif); }
+html.frame2 .page.f2rd .f2col :is(p, li, summary, td, th, blockquote) { font-size: 1em; line-height: 1.62; }
+html.frame2 .page.f2rd .f2col :is(.small, .muted.small, .kicker + .small, .chipb, .btn, input, table) { font-size: 15px; }
+html.frame2 .page.f2rd .f2col .small { line-height: 1.5; }
+html.frame2 .page.f2rd .f2col .tw { overflow-x: auto; }
+html.frame2 .page.f2rd .f2col details > summary { cursor: pointer; }
+html.frame2 .page.f2rd .f2col .qgrid { grid-template-columns: repeat(auto-fill, minmax(min(250px, 100%), 1fr)); }
+html.frame2 .page.f2rd .f2col .qcard .q { font: 600 18px/1.35 var(--serif); }
+html.frame2 .page.f2rd .f2col .qcard .small { font-size: 15px; }
+html.frame2 .page.f2rd .f2col .qcard.f2on { transform: translateY(-3px); border-color: var(--qc); box-shadow: 0 0 0 2px color-mix(in srgb, var(--qc) 45%, transparent); }
+html.frame2 .page.f2rd .f2col .jump input { font-size: 17px; }
+
+/* the picture: pinned beside the words, the stage's panel; never taller than the screen */
+html.frame2 .f2pic { grid-area: pic; position: sticky; top: 90px; min-width: 0; max-height: calc(100vh - 106px); overflow: auto; overscroll-behavior: contain; margin: 0; padding: 22px 24px 24px; border-radius: 22px;
+  border: 1px solid color-mix(in srgb, var(--qc, var(--accent)) 30%, var(--line)); background: var(--panel); box-shadow: var(--shadow); font: var(--f2-small); }
+html.frame2 .f2pic:focus { outline: none; }
+html.frame2 .f2pic.f2lit { animation: f2lit 1.3s ease; }
+@keyframes f2lit { 30% { box-shadow: 0 0 0 4px color-mix(in srgb, var(--qc, var(--accent)) 60%, transparent), var(--shadow); } }
+@media (prefers-reduced-motion: reduce) { html.frame2 .f2pic.f2lit { animation: none; outline: 3px solid var(--qc, var(--accent)); } }
+html.frame2 .f2pic > :is(.wlens, .probe) { margin: 0; padding: 0; border: 0; border-radius: 0; background: none; }
+html.frame2 .f2pic .kicker { margin: 0 0 8px; font: var(--f2-label); letter-spacing: 0; text-transform: none; color: var(--qc, var(--muted)); }
+html.frame2 .f2pic .wlays { font: var(--f2-small); margin: 0 0 14px; color: var(--muted); }
+html.frame2 .f2pic .wlays b { color: var(--ink); }
+html.frame2 .f2pic :is(.small, .chipb, .btn, button, label, figcaption) { font-size: 15px; }
+html.frame2 .f2pic svg, html.frame2 .f2pic .wsketch { max-height: calc(100vh - 300px); }
+html.frame2 .f2pic .wsketch { width: 100%; object-fit: contain; }
+/* the words try the picture */
+html.frame2 .f2try { display: inline-flex; align-items: center; gap: 8px; padding: 9px 16px; border-radius: 999px; border-color: color-mix(in srgb, var(--qc, var(--accent)) 60%, var(--line)); font: 700 15px var(--sans); color: var(--ink); }
+html.frame2 .f2try .f2ta::before { content: '←'; }
+html.frame2 .f2try:hover, html.frame2 .f2try:focus-visible { background: color-mix(in srgb, var(--qc, var(--accent)) 16%, transparent); }
+
+/* the questions as one picture: a dot each, in the row of the stage where it is met */
+html.frame2 .f2qmap { --d: clamp(14px, calc(.55vw + 7px), 19px); }
+html.frame2 .f2qrow { display: grid; grid-template-columns: 6.6em minmax(0, 1fr); gap: 4px 14px; padding: 12px 0; border-top: 1px solid var(--line); }
+html.frame2 .f2qst { display: flex; flex-direction: column; gap: 2px; margin: 0; }
+html.frame2 .f2qst b { font: var(--f2-label); }
+html.frame2 .f2qst .f2fig { font: 500 15px var(--mono); color: var(--muted); }
+html.frame2 .f2qdots { display: flex; flex-wrap: wrap; align-content: start; gap: calc(var(--d) * .42); padding-top: 3px; }
+html.frame2 .f2dot { position: relative; display: inline-block; flex: none; width: var(--d, 14px); height: var(--d, 14px); box-sizing: border-box; border-radius: 50%; border: 2px solid var(--qc, var(--muted)); background: transparent; transition: transform .15s ease, opacity .2s ease; }
+html.frame2 .f2dot.f2live { background: var(--qc, var(--muted)); }
+html.frame2 a.f2dot:hover, html.frame2 .f2dot.f2on { z-index: 1; transform: scale(1.55); box-shadow: 0 0 0 3px color-mix(in srgb, var(--qc) 40%, transparent); }
+html.frame2 .f2dot.f2me { box-shadow: 0 0 0 3px var(--panel-solid), 0 0 0 5px var(--ink); }
+html.frame2 .f2dot.f2way { box-shadow: 0 0 0 2px var(--panel-solid), 0 0 0 4px color-mix(in srgb, var(--ink) 45%, transparent); }
+html.frame2 .f2dot.f2off { opacity: .14; }
+html.frame2 .f2qkey { display: flex; flex-wrap: wrap; gap: 6px 18px; margin: 4px 0 0; padding-top: 12px; border-top: 1px solid var(--line); color: var(--muted); }
+html.frame2 .f2qkey i.f2dot { --d: 13px; --qc: var(--muted); margin-right: 7px; vertical-align: -1px; }
+html.frame2 .f2qsay { min-height: 4.2em; margin: 14px 0 0; font: var(--f2-q); font-size: 19px; color: var(--muted); }
+html.frame2 .f2qsay.f2said { color: var(--ink); }
+
+/* a question's page: its visual system is the picture */
+html.frame2 .page.f2rd .world .f2col .wsec { margin: 34px 0; }
+html.frame2 .page.f2rd .world .f2col > .wopen { margin-top: 18px; }
+html.frame2 .page.f2rd .world .f2col .truths li { margin-bottom: 10px; }
+html.frame2 .page.f2rd .world .f2col .wch .f2try { margin-top: 6px; }
+html.frame2 .page.f2rd .world .f2col .wmore > summary h2 { display: inline; }
+/* an experiment's page: its try, or where it sits among the others */
+html.frame2 .page.f2rd .f2rhead .rstate { padding: 3px 12px; font: 600 15px var(--sans); }
+html.frame2 .f2pic .pbar { font-size: 15px; }
+html.frame2 .f2pic .pbar .pv { font-size: 15px; }
+html.frame2 .f2pic .probe .plead { font: 600 19px/1.4 var(--serif); }
+html.frame2 .page.f2rd .readx .f2col > .readplay { margin: 0 0 8px; }
+
+/* machines: the machine and what it scores are the picture; the words change it */
+html.frame2 .f2pic .mmachine > .kicker { color: var(--muted); }
+html.frame2 .f2pic .mrail { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr)); gap: 10px; padding-bottom: 0; border-bottom: 0; }
+html.frame2 .f2pic .mpart::after { display: none; }
+html.frame2 .f2pic .mtile b { font-size: 16px; }
+html.frame2 .f2pic .mscore { grid-template-columns: repeat(auto-fit, minmax(min(190px, 100%), 1fr)); margin-top: 16px; }
+html.frame2 .f2pic .mread b { font: 600 20px/1.2 var(--mono); }
+html.frame2 .f2pic .mchecks { font-size: 15px; }
+html.frame2 .f2pic .mkinds button { font-size: 15px; padding: 5px 11px; }
+html.frame2 .page.f2rd .mach .f2col .mneeds { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+html.frame2 .page.f2rd .mach .f2col .mneeds button b { font-size: 17px; }
+html.frame2 .page.f2rd .mach .f2col .mbody { grid-template-columns: minmax(0, 1fr); }
+html.frame2 .page.f2rd .mach .f2col .mfabs { grid-template-columns: repeat(auto-fill, minmax(min(150px, 100%), 1fr)); }
+html.frame2 .page.f2rd .mach .f2col .mcurvebox, html.frame2 .page.f2rd .mach .f2col .mlaws { grid-template-columns: minmax(0, 1fr); }
+html.frame2 .page.f2rd .mach .f2col :is(.mclaims li, .mfabs button b, .mst, .mkinds button) { font-size: 15px; }
+html.frame2 .page.f2rd .mach .f2col .mclaims li { grid-template-columns: 8.4em 1fr; }
+html.frame2 .page.f2rd .mach .f2rhead h1 { font-size: clamp(28px, calc(1.2vw + 16px), 40px); max-width: none; }
+
+/* a phone: the title, then the picture, then the words; the picture is not pinned */
+@media (max-width: 720px) {
+  html.frame2 .page.f2rd > .inner { padding: 70px 14px 56px; }
+  html.frame2 .page.f2rd { -webkit-mask-image: linear-gradient(to bottom, transparent 40px, #000 64px); mask-image: linear-gradient(to bottom, transparent 40px, #000 64px); }
+  html.frame2 .f2back { margin-bottom: 14px; }
+  html.frame2 .f2read, html.frame2 .f2read.f2nopic { grid-template-columns: minmax(0, 1fr); grid-template-rows: none; grid-template-areas: "head" "pic" "col"; font-size: 18px; }
+  html.frame2 .f2pic { position: relative; top: auto; max-height: none; overflow: visible; margin: 0 0 26px; padding: 16px; border-radius: 18px; }
+  html.frame2 .f2pic svg, html.frame2 .f2pic .wsketch { max-height: 60vh; }
+  html.frame2 .page.f2rd .f2rhead h1 { font-size: 28px; }
+  html.frame2 .page.f2rd .f2rhead .lead, html.frame2 .page.f2rd .f2rhead .wbehind { font-size: 18px; margin-bottom: 18px; }
+  html.frame2 .f2try .f2ta::before { content: '↑'; }
+  html.frame2 .f2qrow { grid-template-columns: minmax(0, 1fr); }
+  html.frame2 .f2qst { flex-direction: row; gap: 10px; align-items: baseline; }
+  html.frame2 .f2qsay { min-height: 0; font-size: 17px; }
+  /* the bar: Reading takes the place of the stages' names */
+  html.frame2 .bar.f2reading .loop { gap: 4px; }
+  html.frame2 .bar.f2reading .loop .f2rk { padding: 6px 11px; font-size: 13px; }
+  html.frame2 .bar.f2reading .loop .f2ri, html.frame2 .bar.f2reading .loop li + li::before { display: none; }
+  html.frame2 .bar.f2reading .loop .ln { display: none; }
+  html.frame2 .bar.f2reading .loop button { padding: 12px 5px; }
+}
