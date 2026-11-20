@@ -6,7 +6,7 @@ export default [
   { id: 'think-text', strand: 1, stops: ['think.logic'], also: ['idea'], engine: 'logic', lens: 'forms', trade: ['sure'] },
   { id: 'think-mcu', strand: 1, stops: ['think.mcu'], engine: null, lens: 'clock', given: ['program'] },
   { id: 'think-loop', strand: 2, stops: ['think.block'], engine: 'logic', lens: 'dive', go: '#/build/computer/regbit', given: ['apart'], open: ['cim', 'remember'] },
-  { id: 'think-slice', strand: 3, at: ['chip', 'block'], engine: 'core', lens: 'dive', go: '#/build/computer/slice', trade: ['work'] },
+  { id: 'think-slice', strand: 3, at: ['chip', 'block'], ch: ['rvrun'], engine: 'core', lens: 'dive', go: '#/build/computer/slice', trade: ['work'] },
   { id: 'think-adding', strand: 3, stops: ['think.board'], ch: ['prefill'], also: ['divide'], engine: 'timing', lens: 'plan', trade: ['work', 'energy'], open: ['spatial'] },
   { id: 'think-face', strand: 3, stops: ['think.soc'], also: ['divide'], engine: null, lens: 'plan', open: ['neuro'] },
   { id: 'think-seven', strand: 3, at: ['chip'], engine: 'core', lens: 'plan', trade: ['work'] },

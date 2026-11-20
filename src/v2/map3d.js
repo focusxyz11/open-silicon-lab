@@ -793,6 +793,9 @@ export function createMap(canvas, host, on = {}) {
     /* catch the silent errors (src/v2/labs/errors.js): a rack of returned boards on the quay, most lit green, one lit red where a wrong answer was caught */
     'port-errors': g => { box(g, 4.4, 0.3, 2.2, mat(P.wall), 0, 0, 0, 0.1); box(g, 1.6, 2.6, 1.4, mat(P.white), -1.1, 0.3, 0, 0.1); for (let k = 0; k < 5; k++) pulses.push(box(g, 1.1, 0.12, 0.06, glow(k === 2 ? P.bad : P.good, night ? 1.2 : 0.6), -1.1, 0.7 + k * 0.42, 0.72, 0.01, { cast: false }));
       box(g, 1.6, 1.4, 1.4, mat(P.white), 1.0, 0.3, 0, 0.1); pulses.push(box(g, 0.9, 0.5, 0.06, glow(P.accent, night ? 1.2 : 0.6), 1.0, 1.0, 0.72, 0.01, { cast: false })); },
+    /* run your core (src/v2/labs/rv.js): a small board on a stand at the Lab, its core lit, a row of register lamps counting */
+    'lab-cpu': g => { box(g, 3.4, 0.3, 2.2, mat(P.wall), 0, 0, 0, 0.1); box(g, 2.6, 1.6, 0.2, mat(P.dark), 0, 0.3, -0.4, 0.04); box(g, 0.9, 0.9, 0.08, metal(P.slate), -0.5, 0.65, -0.26, 0.02, { cast: false }); pulses.push(box(g, 0.5, 0.5, 0.04, glow(P.accent, night ? 1.3 : 0.7), -0.5, 0.85, -0.2, 0.01, { cast: false }));
+      for (let k = 0; k < 4; k++) { const l = box(g, 0.18, 0.18, 0.04, glow(k % 2 ? P.warm : P.good, night ? 1.2 : 0.6), 0.45 + k * 0.24, 1.3, -0.28, 0.01, { cast: false }); if (k !== 1) pulses.push(l); } },
     'clock-tower': g => { box(g, 2.4, 9, 2.4, mat(P.white), 0, 0, 0, 0.2); const face = cyl(g, 1, 1, 0.2, mat(P.wall), 0, 7, 1.25, 24); face.rotation.x = Math.PI / 2; const hand = box(g, 0.12, 0.9, 0.08, mat(P.dark), 0, 6.95, 1.42, 0.02, { cast: false }); hand.geometry = hand.geometry.clone().translate(0, 0.4, 0); spinning.push({ hand }); }
   };
   /* where each growth stands, relative to its place: [x, z, y] */
@@ -809,7 +812,9 @@ export function createMap(canvas, host, on = {}) {
     /* read the die: in front of the test house, west of its hall */
     'test-xray': [-6, -9],
     /* catch the silent errors: on the quay east of the port's hall, before the cranes */
-    'port-errors': [6, 9] };
+    'port-errors': [6, 9],
+    /* run your core: at the Lab, south of the new ways to compute */
+    'lab-cpu': [13, 10] };
   GROWTH.forEach(gw => { const [x, z, y] = GROW_SPOT[gw.id] || [0, 0], g = group(G[gw.at], x, y || 0, z); g.visible = false; g.scale.setScalar(0.001); growing.push({ id: gw.id, g, built: false, t0: 0 }); });
 
   /* No question floats over a place any more (docs/framework/rebuild.md, section 3): a question shown as a dot on a

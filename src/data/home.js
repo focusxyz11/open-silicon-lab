@@ -135,7 +135,7 @@ export const PATHS = [
   { id: 'logic', line: 'design', icon: 'M3 8h5M3 16h5M8 4v16h4a8 8 0 0 0 0-16zM20 12h2',
     stops: [{ st: 'gates' }, { ch: 'half' }, { ch: 'evolve' }, { ch: 'counter' }] },
   { id: 'cpu', line: 'design', icon: 'M7 7h10v10H7zM10 3v4M14 3v4M10 17v4M14 17v4M3 10h4M3 14h4M17 10h4M17 14h4',
-    stops: [{ page: ['#/build/computer/core', 'build.need.core.t'] }, { page: ['#/build/computer/alu', 'build.need.alu.t'] }, { st: 'arch' }, { ch: 'oxen' }, { ch: 'fast' }] },
+    stops: [{ page: ['#/build/computer/core', 'build.need.core.t'] }, { ch: 'rvrun' }, { st: 'arch' }, { ch: 'oxen' }, { ch: 'fast' }] },
   { id: 'ai', line: 'loop', icon: 'M5 6a2 2 0 1 0 0 .1M5 18a2 2 0 1 0 0 .1M12 12a2 2 0 1 0 0 .1M19 6a2 2 0 1 0 0 .1M19 18a2 2 0 1 0 0 .1M7 7l3.5 3.5M7 17l3.5-3.5M13.5 10.5L17 7M13.5 13.5L17 17',
     stops: [{ page: ['#/place/datacentre/0', 'map.datacentre.t'] }, { ch: 'batch' }, { ch: 'prefill' }, { ch: 'chef' }, { ch: 'quantize' }] },
   { id: 'fab', line: 'make', icon: 'M12 3a9 9 0 1 0 0 18a9 9 0 1 0 0-18M7 9h10M6 12h12M7 15h10M9 6v12M12 4v16M15 6v12',
