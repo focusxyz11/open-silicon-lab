@@ -1165,7 +1165,7 @@
  "design.cap.logic.t": "Describe it",
  "design.cap.logic.d": "Each line of the description is a wire. Change it on the bench and every answer is checked again at once.",
  "design.cap.check.t": "Check it",
- "design.cap.check.d": "All {total} patterns run through your description; {bad} give the wrong answer. Tap a red one to see which pattern and which line.",
+ "design.cap.check.d": {"one": "All {total} patterns run through your description; {n} gives the wrong answer. Tap the red one to see which pattern and which line.", "other": "All {total} patterns run through your description; {n} give the wrong answer. Tap a red one to see which pattern and which line."},
  "design.cap.gates.t": "Gates",
  "design.cap.gates.d": {"one": "Your design became {cells} cells, about {transistors} transistors. Its longest chain from an input to an output is {n} gate.", "other": "Your design became {cells} cells, about {transistors} transistors. Its longest chain from an input to an output is {n} gates."},
  "design.cap.layout.t": "Layout",

@@ -1023,7 +1023,9 @@ export function start() {
          the lab's working example for the first piece, the half adder */
       DS.setSurface(kind === 'bench');
       if (kind === 'bench') {
-        if (!Bench) { Bench = BkM.createBench({ state: S, save, before: $('flatLabels'), go: (st, line) => { dive.flyTo(WE.IDS.indexOf(st)); setTimeout(() => Bench.focusLine(line), 1200); } }); Bench.listen(benchRefresh); }
+        if (!Bench) { Bench = BkM.createBench({ state: S, save, before: $('flatLabels'), go: (st, line) => { dive.flyTo(WE.IDS.indexOf(st)); setTimeout(() => Bench.focusLine(line), 1200); } }); Bench.listen(benchRefresh);
+          /* on a phone, working on the bench lets the card down, as a touch on any picture does */
+          Bench.el.addEventListener('pointerdown', () => { if (innerWidth <= 720 && vui.peekDown) vui.peekDown(); }, true); }
         Bench.challenge(null); Bench.show(true); const D = Bench.now(); DS.setDesign(D.B, D.by);
       }
       const L = levelsOf(kind);

@@ -47,7 +47,7 @@ export function caption(step, D, L) {
   if (!ok && step !== 'need' && step !== 'logic') return t('bench.cap.unread');
   const n = { cells: B.M ? B.M.cells.length : 0, transistors: B.transistors || 0, n: B.st ? B.st.depth : 0, total: B.total || 0, bad: B.bad || 0, masks: B.masks || 0,
     wire: L ? L.wl : B.RT ? B.RT.wl : 0, vias: L ? L.vias : B.RT ? B.RT.vias : 0, drawn: X.MASKS.length, rest: (B.masks || 0) - X.MASKS.length };
-  if (step === 'check') return t(B.bad ? 'design.cap.check.d' : 'design.cap.check.ok', n);
+  if (step === 'check') return t(B.bad ? 'design.cap.check.d' : 'design.cap.check.ok', Object.assign(n, { n: B.bad || 0 }));
   return t('design.cap.' + step + '.d', n);
 }
 
@@ -229,7 +229,7 @@ export function createBench(o) {
   function layoutView(D) {
     const B = D.B, Lo = layoutOf(D);
     if (!Lo) return box('layout', 'tile', 'bk-lt', '<p class="bk-note bad">' + esc(t('bench.cap.unread')) + '</p>');
-    const P = Lo.PL, RT = Lo.RT, [W, H] = dim('layout', 'tile'), top = 110, s = Math.min((W - 20) / P.GW, (H - top - 10) / P.H), ox = (W - P.GW * s) / 2, oy = top + (H - top - 10 - P.H * s) / 2;
+    const P = Lo.PL, RT = Lo.RT, [W, H] = dim('layout', 'tile'), top = 110, s = Math.min((W - 20) / P.GW, (H - top - 10) / P.H), ox = (W - P.GW * s) / 2, oy = top + Math.min(40, (H - top - 10 - P.H * s) / 2);
     const Xp = x => ox + x * s, Yp = y => oy + y * s;
     let g = '<rect class="bk-tile" x="' + Xp(0) + '" y="' + Yp(0) + '" width="' + P.GW * s + '" height="' + P.H * s + '" rx="6"/>', tags = '';
     for (let r = 0; r < P.rows; r++) g += '<rect class="bk-row" data-bk-row="' + r + '" x="' + Xp(2) + '" y="' + Yp(r * P.TR + 1) + '" width="' + (P.GW - 4) * s + '" height="' + 3 * s + '" rx="3"/>';
