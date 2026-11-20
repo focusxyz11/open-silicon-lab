@@ -790,6 +790,9 @@ export function createMap(canvas, host, on = {}) {
     /* read the die (src/v2/labs/dies.js): a microscope over a die on its stage, the die's districts lit in the colours of a photo */
     'test-xray': g => { box(g, 3.6, 0.9, 2.6, mat(P.white), 0, 0, 0, 0.12); box(g, 1.5, 0.1, 1.5, mat(P.dark), -0.5, 0.9, 0, 0.02); [[P.accent, -0.85, -0.35], [P.warm, -0.15, -0.35], [P.good, -0.85, 0.35], [P.accent, -0.15, 0.35]].forEach(([c, x, z]) => pulses.push(box(g, 0.6, 0.05, 0.6, glow(c, night ? 1.2 : 0.6), x, 1.0, z, 0.01, { cast: false })));
       box(g, 0.35, 2.6, 0.35, metal(P.slate), 1.2, 0.9, 0, 0.04); box(g, 1.6, 0.35, 0.4, metal(P.slate), 0.5, 3.1, 0, 0.04); cyl(g, 0.22, 0.3, 0.9, metal(P.dark), -0.5, 2.25, 0, 16); },
+    /* catch the silent errors (src/v2/labs/errors.js): a rack of returned boards on the quay, most lit green, one lit red where a wrong answer was caught */
+    'port-errors': g => { box(g, 4.4, 0.3, 2.2, mat(P.wall), 0, 0, 0, 0.1); box(g, 1.6, 2.6, 1.4, mat(P.white), -1.1, 0.3, 0, 0.1); for (let k = 0; k < 5; k++) pulses.push(box(g, 1.1, 0.12, 0.06, glow(k === 2 ? P.bad : P.good, night ? 1.2 : 0.6), -1.1, 0.7 + k * 0.42, 0.72, 0.01, { cast: false }));
+      box(g, 1.6, 1.4, 1.4, mat(P.white), 1.0, 0.3, 0, 0.1); pulses.push(box(g, 0.9, 0.5, 0.06, glow(P.accent, night ? 1.2 : 0.6), 1.0, 1.0, 0.72, 0.01, { cast: false })); },
     'clock-tower': g => { box(g, 2.4, 9, 2.4, mat(P.white), 0, 0, 0, 0.2); const face = cyl(g, 1, 1, 0.2, mat(P.wall), 0, 7, 1.25, 24); face.rotation.x = Math.PI / 2; const hand = box(g, 0.12, 0.9, 0.08, mat(P.dark), 0, 6.95, 1.42, 0.02, { cast: false }); hand.geometry = hand.geometry.clone().translate(0, 0.4, 0); spinning.push({ hand }); }
   };
   /* where each growth stands, relative to its place: [x, z, y] */
@@ -804,7 +807,9 @@ export function createMap(canvas, host, on = {}) {
     /* a reliable whole, east of the studio; a mind that cannot be copied, at the Lab beside the other ways to compute */
     'studio-vote': [17, -6], 'way-mortal': [13, -12],
     /* read the die: in front of the test house, west of its hall */
-    'test-xray': [-6, -9] };
+    'test-xray': [-6, -9],
+    /* catch the silent errors: on the quay east of the port's hall, before the cranes */
+    'port-errors': [6, 9] };
   GROWTH.forEach(gw => { const [x, z, y] = GROW_SPOT[gw.id] || [0, 0], g = group(G[gw.at], x, y || 0, z); g.visible = false; g.scale.setScalar(0.001); growing.push({ id: gw.id, g, built: false, t0: 0 }); });
 
   /* No question floats over a place any more (docs/framework/rebuild.md, section 3): a question shown as a dot on a
