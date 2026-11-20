@@ -122,8 +122,8 @@ export function createStudio(canvas, host, on = {}) {
 
   /* ---- input: a push of the wheel at a corner goes in; a swipe sideways on a touch screen walks along ---- */
   /* the move to or from a screen is timed on the clock, not counted in frames, so a slow machine takes as long */
-  const HAND_MS = 700;
-  const go = v => { const g = clamp(Math.round(v), 0, STOPS.length - 1); if (g !== goal || Math.abs(z - g) > 1e-3) { goal = g; walk = { from: z, t0: null }; } if (k > 0) hand = { t0: null, from: k, to: 0 }; };
+  const HAND_MS = 700, STEP_MAX = 120;
+  const go = v => { const g = clamp(Math.round(v), 0, STOPS.length - 1); if (g !== goal || Math.abs(z - g) > 1e-3) { goal = g; walk = { from: z, e: 0 }; } if (k > 0) hand = { e: 0, from: k, to: 0 }; };
   canvas.addEventListener('wheel', e => { e.preventDefault(); const lv = Math.round(z);
     if (e.deltaY > 0 && lv >= 1 && Math.abs(z - lv) < 0.06 && k < 0.05) { push += e.deltaY; if (push > 240) { push = 0; on.beyond && on.beyond(); } } else push = 0; }, { passive: false });
   let drag = null;
@@ -136,12 +136,14 @@ export function createStudio(canvas, host, on = {}) {
   new ResizeObserver(resize).observe(canvas); resize();
   const frame = now => {
     if (!running) return; raf = requestAnimationFrame(frame);
-    last = now;
+    /* the time this frame moves the walk on: the clock's, but never more than a long frame's, so a frame that stalls (the
+       room's first draw on a slow machine) cannot carry the whole flight past unseen; on a quick machine nothing changes */
+    const dt = Math.min(Math.max(0, now - last), STEP_MAX); last = now;
     const still = reduced();
     /* the walk is timed on the clock too: longer for a longer way, the same on any machine */
-    if (walk) { if (walk.t0 == null) walk.t0 = now; const u = still ? 1 : Math.min(1, (now - walk.t0) / Math.min(2600, 900 + 500 * Math.abs(goal - walk.from))); z = walk.from + (goal - walk.from) * u; if (u >= 1) { z = goal; walk = null; } }
+    if (walk) { walk.e += dt; const u = still ? 1 : Math.min(1, walk.e / Math.min(2600, 900 + 500 * Math.abs(goal - walk.from))); z = walk.from + (goal - walk.from) * u; if (u >= 1) { z = goal; walk = null; } }
     /* to or from the screen, once the walk has come to rest at the corner */
-    if (hand && !walk) { if (hand.t0 == null) hand.t0 = now; const u = still ? 1 : Math.min(1, (now - hand.t0) / HAND_MS); k = hand.from + (hand.to - hand.from) * u;
+    if (hand && !walk) { hand.e += dt; const u = still ? 1 : Math.min(1, hand.e / HAND_MS); k = hand.from + (hand.to - hand.from) * u;
       if (u >= 1) { const h = hand; hand = null; if (h.done) { pose(); h.done(screenNow()); } } }
     pose(); states();
     const lv = Math.round(z); if (lv !== lastLevel) { lastLevel = lv; on.level && on.level(lv); }
@@ -157,9 +159,9 @@ export function createStudio(canvas, host, on = {}) {
     jump(v) { z = goal = clamp(Math.round(v), 0, STOPS.length - 1); k = 0; hand = walk = null; lastLevel = -1; },
     get z() { return z; },
     /* the way in at a corner: the camera settles on the screen until it fills the picture; resolves once it does */
-    handoff() { const lv = Math.round(goal); if (lv < 1) return Promise.resolve(null); goal = lv; return new Promise(r => { hand = { t0: null, from: k, to: 1, done: r }; }); },
+    handoff() { const lv = Math.round(goal); if (lv < 1) return Promise.resolve(null); goal = lv; return new Promise(r => { hand = { e: 0, from: k, to: 1, done: r }; }); },
     /* the way back out of a bench: start on its screen and pull back into the room */
-    back(i) { z = goal = clamp(i, 1, STOPS.length - 1); walk = null; k = 1; hand = { t0: null, from: 1, to: 0 }; lastLevel = -1; },
+    back(i) { z = goal = clamp(i, 1, STOPS.length - 1); walk = null; k = 1; hand = { e: 0, from: 1, to: 0 }; lastLevel = -1; },
     /* where the screen at this corner stands on the picture now, or null */
     screen: () => screenNow(),
     pause() { running = false; cancelAnimationFrame(raf); },
