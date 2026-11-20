@@ -876,9 +876,9 @@ export function start() {
     /* a row of steps (the line, the bench): the step is lit on the line of steps, and the rail shows only the level the
        step shows, if any (src/engines/way.js, steps and levels) */
     if (rowsOf(flatKind)) { const lv = Way.levelOfStep(flatKind, id), R = Way.levelsOfSteps(flatKind); diveFrame.steps(id); diveFrame.rail(lv, lv ? R.indexOf(lv) / (R.length - 1) : 0); }
+    else diveFrame.rail(id, L.indexOf(id) / (L.length - 1));
     /* the bench's way up goes back to its corner of the studio, out of its screen */
     if (flatKind === 'bench') { const up = vui.querySelector('.homebtn'), n = Way.stepsOf('bench').indexOf(id) + 1; if (up && n > 0) up.setAttribute('href', '#/place/studio/' + n); }
-    else diveFrame.rail(id, L.indexOf(id) / (L.length - 1));
     diveFrame.level(id); diveNotes(); here();
     if (diveFrame.mode() === 'look' && !benchCh) drawDive();
   }

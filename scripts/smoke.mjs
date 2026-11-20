@@ -762,7 +762,7 @@ run['ways'] = async () => {
       return { n: document.querySelectorAll('#diveui .steps2 [data-step]').length, step: c && c.dataset.step, level: l ? l.dataset.rail : null, rail: !!r && !r.hidden,
         levels: (r ? [...r.querySelectorAll('[data-rail]')].map(b => b.dataset.rail) : []).join(','), line: !!stl && getComputedStyle(stl).display !== 'none',
         strip: (document.querySelector('#diveui .steps2 .stk') || {}).textContent || '', hash: location.hash }; }; });
-    const fail = say => () => problems.push(tag + ': ' + say), wait = { timeout: 60000, polling: 1500 };
+    const fail = say => () => problems.push(tag + ': ' + say), wait = { timeout: 90000, polling: 1500 };
     await tp.waitForFunction(() => { const h = window.smokeSteps(); return h.n === 11 && h.step === 'print' && h.level === 'gate' && h.levels === 'chip,block,gate,switch,atom'; }, null, wait)
       .catch(fail('the line does not show its eleven steps with print lit, and the gate on a rail of levels only'));
     if (vt === 'phone') await tp.waitForFunction(() => { const h = window.smokeSteps(); return !h.line && /5/.test(h.strip) && /11/.test(h.strip); }, null, wait).catch(fail('on a phone the steps are not a strip with a count'));

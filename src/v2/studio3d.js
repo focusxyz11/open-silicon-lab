@@ -15,7 +15,6 @@
 import { THREE, PALETTES, theme, stage, light, mat, glass, box, cyl, group, flat, labels, clamp, smooth, ease, reduced, rnd } from './kit3d.js';
 import { furnisher, lump } from './furnish.js';
 import { FLOOR, AISLE, HOUSE, CORNERS, screenAt } from '../data/studio.js';
-import { VIEW_PARTS } from '../data/atlas.js';
 import { t } from '../core/i18n.js';
 
 /* the stops of the walk: outside, over the opened floor, then the corners in order */
@@ -26,8 +25,8 @@ const V3 = (x, y, z) => new THREE.Vector3(x, y, z);
    as the island looks at it. At a corner: in the walk, a little raised, looking at the corner; at the mask house, from
    its open south side, down on the light table */
 const POSES = [{ from: V3(-22, 25, 27), look: V3(-1, 0, -1) }].concat(CORNERS.map(c => c.house
-  ? { from: V3(c.at[0] - 0.8, 4.6, c.at[1] + 7.6), look: V3(c.at[0], 0.6, c.at[1] - 0.6) }
-  : { from: V3(c.at[0] + 0.6, AISLE.eye + 1.1, AISLE.z + 4.2), look: V3(c.at[0], 0.8, c.at[1] - 0.3) }));
+  ? { from: V3(c.at[0] - 0.8, 4.6, c.at[1] + 7.6), look: V3(c.at[0], 1.1, c.at[1] - 0.6) }
+  : { from: V3(c.at[0] + 0.6, AISLE.eye + 0.8, AISLE.z + 4.2), look: V3(c.at[0], 1.35, c.at[1] - 0.3) }));
 
 export function createStudio(canvas, host, on = {}) {
   const P = PALETTES[theme()], night = P.emissive > 0;
@@ -83,16 +82,23 @@ export function createStudio(canvas, host, on = {}) {
   { const tr = group(scene, hx + H.w / 2 + 3.2, 0, hz, Math.PI / 2); box(tr, 1.6, 1.4, 1.5, mat(P.white), 1.6, 0.3, 0, 0.15); box(tr, 3.2, 1.8, 1.6, mat(P.accent, { roughness: 0.5 }), -0.9, 0.3, 0, 0.12);
     [[-1.6, -0.8], [-1.6, 0.8], [1.6, -0.8], [1.6, 0.8]].forEach(([x, z]) => { const w = cyl(tr, 0.38, 0.38, 0.25, mat(0x15181d), x, 0, z, 12); w.rotation.x = Math.PI / 2; w.position.y = 0.38; }); }
 
-  /* ---- names on the picture: each corner, and at a corner the screen its bench opens on ---- */
+  /* ---- names on the picture: each corner (at a corner, the way in on the picture names its screen) ---- */
   const corners = CORNERS.map((c, i) => { const lb = L.add(G[c.id], V3(c.house ? -0.6 : 0, c.house ? 2.6 : 2.9, c.house ? -2 : -1.2), t('depth.' + c.id + '.name'), { cls: 'part3 corner3' }); lb.i = i + 1; return lb; });
-  const screens = CORNERS.map((c, i) => { const s = c.screen, lb = L.add(G[c.id], V3(s.at[0], s.at[1] + (s.up ? 0.25 : s.h / 2 + 0.12), s.at[2]), t('part.' + VIEW_PARTS.studio[s.part]), { cls: 'part3' }); lb.i = i + 1; return lb; });
 
   /* ---- the camera: along the stops, and at a corner as close to its screen as fills the picture (k) ---- */
   let z = 0, goal = 0, k = 0, hand = null, walk = null, raf = 0, running = true, W = 1, H2 = 1, last = performance.now(), lastLevel = -1, push = 0;
   const from = new THREE.Vector3(), look = new THREE.Vector3(), a = new THREE.Vector3(), b = new THREE.Vector3();
   /* the screen pose: along the screen's face, far enough that it fills most of the picture */
-  const screenPose = i => { const c = CORNERS[i - 1]; if (!c) return null; const s = screenAt(c), n = s.n[1] ? V3(0, 1, 0.16).normalize() : V3(0, 0, 1), th = Math.tan(FOV * Math.PI / 360);
-    const d = Math.max(s.h / 2 / th, s.w / 2 / (th * camera.aspect)) / 0.9; const at = V3(s.x, s.y, s.z); return { from: at.clone().addScaledVector(n, d), look: at }; };
+  /* the part of the picture the frame leaves free (the bar and the line of steps above, the card below on a phone), as
+     shares of its height: the screen is fitted into it, and centred in it */
+  const free = () => { const wide = innerWidth > 720; return { t: Math.min(0.4, (wide ? 196 : 164) / H2), b: Math.min(0.4, (wide ? 40 : 150) / H2) }; };
+  const screenPose = i => { const c = CORNERS[i - 1]; if (!c) return null; const s = screenAt(c), th = Math.tan(FOV * Math.PI / 360), fr = free(), fh = 1 - fr.t - fr.b;
+    /* from a little above, looking a little down: over a chair, or over the edge of a table */
+    const n = (s.n[1] ? V3(0, 1, 0.16) : V3(0, 0.22, 1)).normalize(), up = V3(0, 1, 0).addScaledVector(n, -n.y).normalize();
+    const d = Math.max(s.h / 2 / (th * fh), s.w / 2 / (th * camera.aspect * 0.92)) / 0.94, at = V3(s.x, s.y, s.z);
+    /* the free part's middle is below the picture's: the camera rises by as much, so the screen sits in it */
+    const off = up.multiplyScalar((fr.t - fr.b) * d * th);
+    return { from: at.clone().addScaledVector(n, d).add(off), look: at.clone().add(off) }; };
   const pose = () => {
     const i = Math.max(0, Math.min(POSES.length - 2, Math.floor(z))), f = ease(clamp(z - i)), A = POSES[i], B = POSES[i + 1];
     from.lerpVectors(A.from, B.from, f); look.lerpVectors(A.look, B.look, f);
@@ -110,7 +116,6 @@ export function createStudio(canvas, host, on = {}) {
     const lv = Math.round(z), near = Math.abs(z - lv) < 0.35;
     /* the corners are named from outside, and while walking past them; at a corner the line of steps says where you are */
     corners.forEach(lb => { lb.show = k < 0.2 && (z < 0.5 || (!near || Math.abs(z - lv) > 0.04) && Math.abs(lb.i - z) < 1.4 && z >= 0.5); });
-    screens.forEach(lb => { lb.show = lb.i === lv && Math.abs(z - lv) < 0.06 && k < 0.05; });
   };
   const pv = new THREE.Vector3();
   const screenNow = () => { const lv = Math.round(z), c = CORNERS[lv - 1]; if (!c || Math.abs(z - lv) > 0.06) return null; const s = screenAt(c); pv.set(s.x, s.y, s.z).project(camera); return pv.z < 1 ? { x: (pv.x + 1) / 2, y: (1 - pv.y) / 2 } : null; };

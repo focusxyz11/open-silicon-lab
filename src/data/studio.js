@@ -22,7 +22,7 @@ export const HOUSE = { at: [13, 3], w: 8, d: 7, h: 4 };
 export const CORNERS = [
   { id: 'need', at: [-12.4, -2.6], screen: { part: 'notes', at: [0, 1.7, -2.54], w: 4, h: 2 } },
   { id: 'logic', at: [-8, -2.4], screen: { part: 'code', at: [-0.9, 1.2, 0.637], w: 0.9, h: 0.52 } },
-  { id: 'check', at: [-3.6, -2.4], screen: { part: 'results', at: [0, 1.6, -2.56], w: 3.36, h: 1.36 } },
+  { id: 'check', at: [-3.6, -2.4], screen: { part: 'results', at: [0, 1.6, -2.56], w: 2.86, h: 1.3 } },
   { id: 'gates', at: [0.8, -2.4], screen: { part: 'gates', at: [0.9, 1.2, -0.663], w: 0.9, h: 0.52 } },
   { id: 'layout', at: [4.8, -2], screen: { part: 'screentable', at: [0, 0.87, 0], w: 3, h: 1.6, up: true } },
   { id: 'masks', at: [HOUSE.at[0] + 0.6, HOUSE.at[1]], house: true, screen: { part: 'lighttable', at: [0, 0.92, 0], w: 1.6, h: 1, up: true } }

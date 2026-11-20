@@ -2469,3 +2469,6 @@ a.hm-start:hover { border-color: var(--muted); transform: translateY(-2px); }
   .steps2 .stn { font-size: 13.5px; color: var(--ink); }
   .steps2 .stk { font: 500 10.5px var(--mono); color: var(--muted); }
 }
+/* the studio walked inside (src/v2/studio3d.js, #267): while the camera settles on a corner's screen, the ways on the
+   picture step aside for it; the corners' names on the picture are the parts' own */
+#studioui[data-handoff] :is(.wayin, .wayon) { display: none; }

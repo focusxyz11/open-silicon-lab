@@ -78,10 +78,10 @@ export function furnisher(P, night, leaf) {
       [[-0.9, -0.9], [0.9, -0.9], [-0.9, 0.9], [0.9, 0.9]].forEach(([dx, dz], i) => workdesk(g, dx, dz, 0, 'code', i !== 2, i === 2));
     } else if (id === 'check') {
       /* check: the machines that run every case, a wall of results, and someone watching them */
-      [-1.2, 0, 1.2].forEach(dx => { box(g, 1, 2.2, 1, mat(P.rack, { roughness: 0.5 }), dx, 0, -1.6, 0.04); sheet(g, 0.9, 2, 'rack', dx, 1.1, -1.09); });
-      box(g, 3.5, 1.5, 0.06, mat(P.dark), 0, 0.85, -2.6, 0.02); sheet(g, 3.36, 1.36, 'wave', 0, 1.6, -2.56);
-      /* the runners stand to the sides of the wall, so the walk sees the results over them */
-      workdesk(g, 1.6, 0.7, Math.PI, 'wave');
+      /* the machines stand in a row at the side, their fronts to the room, so nothing hides the wall from the walk */
+      [-2.0, -1.0, 0].forEach(dz => { box(g, 0.7, 2.2, 0.9, mat(P.rack, { roughness: 0.5 }), -2.05, 0, dz, 0.04); sheet(g, 0.8, 2, 'rack', -1.69, 1.1, dz, Math.PI / 2); });
+      box(g, 3, 1.44, 0.06, mat(P.dark), 0, 0.88, -2.6, 0.02); sheet(g, S.w, S.h, 'wave', 0, S.at[1], S.at[2]);
+      workdesk(g, 1.2, 0.7, Math.PI, 'wave');
     } else if (id === 'gates') {
       /* gates: the program's drawing of the circuit, on every screen; the free desk on the right is yours */
       [[-0.9, -0.4], [0.9, -0.4], [-0.9, 1.3]].forEach(([dx, dz], i) => workdesk(g, dx, dz, i < 2 ? 0 : Math.PI, 'gates', i !== 1, i === 1));
