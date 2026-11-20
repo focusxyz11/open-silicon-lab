@@ -1285,6 +1285,7 @@ export function start() {
     if (cur.piece && C.state[cur.piece]) { const id = cur.piece, st = C.state[id], ds = C.designs.filter(d => d.need === id), job = C.jobs.find(j => j.need === id), kids = childrenOf(id);
       return head + '<p class="kicker">' + esc(t('lab.pieceK', { state: t('lab.state.' + st.state) })) + '</p><h3>' + esc(t('build.need.' + id + '.t')) + (st.n ? ' ×' + st.n : '') + '</h3><p class="small">' + esc(t('build.need.' + id + '.d')) + '</p>' +
         (kids.length ? '<p class="kicker">' + esc(t('lab.madeOf')) + '</p><div class="chips">' + kids.map(c => '<button type="button" class="chipb" data-piece="' + c.id + '">' + esc(t('build.need.' + c.id + '.t')) + '</button>').join('') + '</div>' : '') +
+        Game.CHALLENGES.filter(c => c.piece === id).map(c => '<a class="chcard" href="' + esc(doHref(c)) + '"><span class="st">' + (S.done[c.id] ? '✓' : '▶') + '</span><span><b>' + esc(titleOf(c)) + '</b><span class="small">' + esc(t('game.ch.' + c.id + '.goal')) + '</span></span></a>').join('') +
         (ds.length ? '<p class="kicker">' + esc(t('lab.designs', { n: ds.length })) + '</p>' + ds.map(designCard).join('') : '') + (job ? jobCard(job) : '') +
         '<div class="nav"><button type="button" class="btn ghost" data-key="back" data-labstep="computer">' + esc(t('lab.step.computer')) + '</button><span></span></div>'; }
     const P = labParts();
