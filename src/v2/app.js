@@ -51,6 +51,7 @@ import { swarmInput, swarmStart } from './swarm.js';
 import { tuneInput, tuneType } from './tunebox.js';
 import { WORLD_IDS } from '../data/worlds.js';
 import { SEEK, foundAt, seekAt, seekLevel } from '../data/seek.js';
+import { cornerOf as studioCorner } from '../data/studio.js';
 import { createHome } from './home.js';
 import { sizeWords } from './frame.js';
 import { ON as FRAME2, boot as frame2Boot } from './frame2.js';
@@ -159,12 +160,12 @@ export function start() {
   const hudEl = $('loop');
   /* the address of what is in view now: moving inside a view (deeper, along the line) changes it too */
   const liveHash = () => !vui.hidden && flatKind !== 'supply' && WE && diveD >= 0 && diveId() ? (flatKind === 'dive' ? '#/dive/' + diveId() + (diveWorld !== 'datacentre' ? '/' + diveWorld : '') : '#/' + flatKind + '/' + diveId())
-    : !cui.hidden ? '#/chip/' + chipRow + '/build' : !pui.hidden ? '#/place/datacentre/' + dcLv : !fui.hidden ? '#/place/phones/' + phLv : !kui.hidden ? '#/place/cars/' + caLv : location.hash;
+    : !cui.hidden ? '#/chip/' + chipRow + '/build' : !pui.hidden ? '#/place/datacentre/' + dcLv : !fui.hidden ? '#/place/phones/' + phLv : !kui.hidden ? '#/place/cars/' + caLv : !sui.hidden ? '#/place/studio/' + swLv : location.hash;
   const whereNow = () => { const k = partsOf(location.hash)[0], W = Way.whereOf(k === 'ask' || k === 'do' || k === 'supply' ? location.hash : liveHash()); return W.view === 'island' && cur && !sheet.hidden ? Way.whereOf('#/place/' + cur.place) : W; };
   /* the address always says where you are (so it can be shared, and a reload comes back here), and the loop in the
      bar follows: walking the line from the wires to the test house to the port, the stage lit moves with you */
   const here = () => { const h = liveHash(), p = partsOf(location.hash), k = p[0];
-    if (h !== location.hash && (['dive', 'line', 'chip'].includes(k) || (k === 'bench' && !p[2]) || (k === 'place' && (!pui.hidden || !fui.hidden || !kui.hidden)))) { history.replaceState(null, '', h); shownAt = h; }
+    if (h !== location.hash && (['dive', 'line', 'chip'].includes(k) || (k === 'bench' && !p[2]) || (k === 'place' && (!pui.hidden || !fui.hidden || !kui.hidden || !sui.hidden)))) { history.replaceState(null, '', h); shownAt = h; }
     hud(); };
   function hud() {
     const W = whereNow(), chipS = Game.chipAt(S);
@@ -702,6 +703,57 @@ export function start() {
   }
   const hideCa = () => { $('carCanvas').hidden = $('carLabels').hidden = true; kui.hidden = true; if (ca) ca.pause(); };
 
+  /* ---- the studio, walked inside (src/v2/studio3d.js, #267): the building seen on the island, entered without a cut.
+     Its corners are the design's steps in order along the room, walked along on the line of steps (← →, Next →); the
+     rail holds only the level a step shows. At a corner, the way in (↓, the button by the screen, a push of the wheel)
+     settles the camera on the corner's screen and the step's bench takes over there; the bench's way up comes back
+     to the same corner, starting on its screen ---- */
+  const sui = $('studioui');
+  let sw = null, swP = null, SW = null, swFrame = null, swLv = 0, swGoing = false;
+  const ensureSw = () => swP || (swP = import('./studio3d.js').then(m => { SW = m; sw = m.createStudio($('studioCanvas'), $('studioLabels'), { level: lv => swUI(lv),
+    portal: p => { if (swFrame && !sui.hidden) swFrame.inwardAt(p); }, beyond: () => swIn(), swipe: d => { if (!sui.hidden && sw) sw.go(swLv + d); },
+    /* where the walk is, on the section, to a tenth of a stop (what the smoke test reads to see the flight come in) */
+    depth: z => { const v = z.toFixed(1); if (sui.dataset.at !== v) sui.dataset.at = v; } }); return sw; }));
+  function swUI(lv) {
+    swLv = lv; if (!swFrame) return; const step = lv ? SW.STOPS[lv] : null, lvl = step && Way.levelOfStep('bench', step), R = Way.levelsOfSteps('bench');
+    swFrame.steps(step); swFrame.rail(lvl, lvl ? R.indexOf(lvl) / (R.length - 1) : 0); swFrame.level(step); here();
+    if (swFrame.mode() === 'look') drawRoom();
+  }
+  function drawRoom() {
+    const lv = swLv, id = SW.STOPS[lv], last = lv === SW.STOPS.length - 1, nm = d => t('depth.' + d + '.name');
+    const sp = lv ? studioCorner(id).screen.part : null, pw = sp ? t('part.' + VIEW_PARTS.studio[sp]) : '';
+    swFrame.dock.innerHTML = lineHtml(t('room.title') + (lv ? ' · ' + nm(id) : ''), t('room.' + id + '.d'), lv ? stopsAt(id)[0] : null, aroundRow(
+      lv > 1 ? '<button type="button" class="chipb" data-key="back" data-swgo="' + (lv - 1) + '">← ' + esc(nm(SW.STOPS[lv - 1])) + '</button>' : '',
+      last ? '<a class="chipb" data-along href="#/line/print">' + esc(t('bench.toFab')) + '</a>' : '<button type="button" class="chipb" data-key="next" data-along data-swgo="' + (lv + 1) + '">→ ' + esc(nm(SW.STOPS[lv + 1])) + '</button>',
+      lv ? '<a class="chipb" data-in data-swin data-inname="' + esc(pw) + '" href="#/bench/' + id + '">↓ ' + esc(pw) + '</a>' : ''));
+    /* what this corner's screen is, from its one home in the atlas */
+    if (sp) swFrame.dock.querySelector('.nav').insertAdjacentHTML('beforebegin', '<div class="herebox"><p class="kicker">' + esc(t('place.here')) + '</p><ul class="here2"><li><button type="button" data-swin><b>' + esc(pw) + '</b><span>' + esc(t('what.' + VIEW_PARTS.studio[sp])) + '</span></button></li></ul></div>');
+  }
+  /* the handoff: the camera settles on the screen until it fills the picture, and the bench opens from there */
+  function swIn() {
+    if (swGoing || sui.hidden || !sw) return; const lv = Math.round(sw.z); if (lv < 1) return; swGoing = true; sui.dataset.handoff = SW.STOPS[lv];
+    sw.handoff().then(p => { swGoing = false; delete sui.dataset.handoff; if (sui.hidden) return; portalAt(p); nextMove = 'in'; location.hash = '#/bench/' + SW.STOPS[lv]; });
+  }
+  function showStudio(lv, from) {
+    hideAll();
+    $('studioCanvas').hidden = $('studioLabels').hidden = false; sui.hidden = false; showStage(true); document.body.classList.add('immersive');
+    loading(true); lastPlace = 'studio';
+    const fromIsland = arriving; arriving = false;
+    return Promise.all([withFrame(), ensureSw()]).then(([, d]) => {
+      const n = Math.max(0, Math.min(SW.STOPS.length - 1, lv || 0));
+      swFrame = frameOf(sui, { up: { href: '#/place/studio', label: t('place.back') }, path: [{ href: '#/island', label: t('place.back') }, { href: '#/place/studio', label: t('map.studio.t') }, { label: t('room.title') }],
+        rail: { label: t('frame.levels.bench'), optional: true, items: Way.levelsOfSteps('bench').map(k => ({ id: k, label: t('depth.' + k + '.name'), size: sizeOf(k) })) },
+        steps: { label: t('frame.steps.bench'), items: Way.stepsOf('bench').map(k => ({ id: k, label: t('depth.' + k + '.name') })) },
+        onStep: k => d.go(SW.STOPS.indexOf(k)), onRail: k => { const s = Way.stepOfLevel('bench', k, SW.STOPS[swLv]); if (s) d.go(SW.STOPS.indexOf(s)); }, onLook: drawRoom, scroll: true });
+      sui.onclick = e => { const g = e.target.closest('[data-swgo]'); if (g) d.go(+g.dataset.swgo); const a = e.target.closest('[data-swin]'); if (a) { e.preventDefault(); swIn(); } };
+      loading(false); d.resume();
+      /* from the island the flight comes down through the opened floor; back from a bench, it starts on that corner's screen */
+      if (from === 'bench' && n >= 1) d.back(n); else if (fromIsland) { d.jump(0); d.go(n || 1); } else d.jump(n);
+      swUI(Math.round(d.z)); $('studioCanvas').focus({ preventScroll: true });
+    });
+  }
+  const hideSw = () => { $('studioCanvas').hidden = $('studioLabels').hidden = true; sui.hidden = true; if (sw) sw.pause(); };
+
   /* ---- inside a chip, layer by layer: the levels of the dive as they are made (the lower half of the Make column).
      The dive is the only way down through a chip; this is the same level as made, reached along the loop (← →, or
      Make in the bar) and left the same way, back to the dive at the level you are at. In · out (↑ ↓, the rail, the
@@ -824,6 +876,8 @@ export function start() {
     /* a row of steps (the line, the bench): the step is lit on the line of steps, and the rail shows only the level the
        step shows, if any (src/engines/way.js, steps and levels) */
     if (rowsOf(flatKind)) { const lv = Way.levelOfStep(flatKind, id), R = Way.levelsOfSteps(flatKind); diveFrame.steps(id); diveFrame.rail(lv, lv ? R.indexOf(lv) / (R.length - 1) : 0); }
+    /* the bench's way up goes back to its corner of the studio, out of its screen */
+    if (flatKind === 'bench') { const up = vui.querySelector('.homebtn'), n = Way.stepsOf('bench').indexOf(id) + 1; if (up && n > 0) up.setAttribute('href', '#/place/studio/' + n); }
     else diveFrame.rail(id, L.indexOf(id) / (L.length - 1));
     diveFrame.level(id); diveNotes(); here();
     if (diveFrame.mode() === 'look' && !benchCh) drawDive();
@@ -1127,7 +1181,7 @@ export function start() {
     $('diveCanvas').hidden = true; vui.hidden = true; dive && dive.stop(); hide3d(); $('flatLabels').hidden = true; if (flatWords) flatWords.clear();
     hideBoard(); $('hero').hidden = true; $('outbtn').hidden = true; lensbar.hidden = true; closeSheet(); pui.hidden = true; cui.hidden = true; dc && dc.pause(); map && map.pause(); chip && chip.pause();
     ['mapCanvas', 'mapLabels', 'placeCanvas', 'placeLabels', 'chipCanvas', 'chipLabels'].forEach(k => { $(k).hidden = true; });
-    hidePh(); hideCa();
+    hidePh(); hideCa(); hideSw();
     document.body.classList.remove('immersive'); page.hidden = true; hideL3(); showStage(false);
   }
   /* ---- the map, the first page (#/, src/v2/home.js): a wafer leaving the fab, toys, the first things to try, and every
@@ -1139,7 +1193,7 @@ export function start() {
     $('diveCanvas').hidden = true; vui.hidden = true; dive && dive.stop(); hide3d(); $('flatLabels').hidden = true; if (flatWords) flatWords.clear();
     hideBoard(); document.body.classList.remove('immersive');
     $('chipCanvas').hidden = $('chipLabels').hidden = true; cui.hidden = true; chip && chip.pause();
-    $('placeCanvas').hidden = $('placeLabels').hidden = true; pui.hidden = true; dc && dc.pause(); hidePh(); hideCa();
+    $('placeCanvas').hidden = $('placeLabels').hidden = true; pui.hidden = true; dc && dc.pause(); hidePh(); hideCa(); hideSw();
     $('mapCanvas').hidden = $('mapLabels').hidden = true; $('hero').hidden = true; $('outbtn').hidden = true; lensbar.hidden = true; showStage(false); if (map) map.pause();
     if (!sheet.hidden) closeSheet(); loading(false);
     if (!home) home = createHome(homeEl, { challenges: Game.CHALLENGES, chOf, titleOf, doHref, doHome: Way.doHome, sizeOf, sizeWords, still });
@@ -1149,7 +1203,7 @@ export function start() {
     $('diveCanvas').hidden = true; vui.hidden = true; dive && dive.stop(); hide3d(); $('flatLabels').hidden = true; if (flatWords) flatWords.clear();
     hideBoard(); document.body.classList.remove('immersive');
     $('chipCanvas').hidden = $('chipLabels').hidden = true; cui.hidden = true; chip && chip.pause();
-    $('placeCanvas').hidden = $('placeLabels').hidden = true; pui.hidden = true; dc && dc.pause(); hidePh(); hideCa();
+    $('placeCanvas').hidden = $('placeLabels').hidden = true; pui.hidden = true; dc && dc.pause(); hidePh(); hideCa(); hideSw();
     $('mapCanvas').hidden = $('mapLabels').hidden = false; $('hero').hidden = false; $('outbtn').hidden = false; lensbar.hidden = false; showStage(true);
     const part = from && ['line', 'bench'].includes(flatKind) && WE && isPart(lastPlace, diveId()) ? diveId() : null;
     loading(!map); return ensureMap().then(m => { if (from && lastPlace) { m.from(lastPlace, part); if (!part) m.focus(lastPlace); } m.resume(); return m; });
@@ -1390,7 +1444,7 @@ export function start() {
     const arrive = !page.hidden && page.querySelector('[data-arrive]');
     if (arrive && location.hash === '#/w/' + th + '/at/' + d) { arrive.innerHTML = arriveHtml(th, d); return; }
     const html = stopHtml(th, d);
-    const fr = !vui.hidden ? diveFrame : !cui.hidden ? chipFrame : !pui.hidden ? dcFrame : !fui.hidden ? phFrame : !kui.hidden ? caFrame : !bui.hidden ? boardFrame : null;
+    const fr = !vui.hidden ? diveFrame : !cui.hidden ? chipFrame : !pui.hidden ? dcFrame : !fui.hidden ? phFrame : !kui.hidden ? caFrame : !sui.hidden ? swFrame : !bui.hidden ? boardFrame : null;
     if (fr) {
       fr.stop(html);
       /* on the flat dive, the question's parts light up on the picture */
@@ -1420,7 +1474,7 @@ export function start() {
   /* ---- the questions from the field (src/data/questions.js, src/v2/field.js): one opens in the card of the view
      you are in, or in the island's dock; a leak is raised when you cross its seam, the first time, and then waits
      under Ask at its home ---- */
-  const frameNow = () => (!vui.hidden ? diveFrame : !cui.hidden ? chipFrame : !pui.hidden ? dcFrame : !fui.hidden ? phFrame : !kui.hidden ? caFrame : !bui.hidden ? boardFrame : null);
+  const frameNow = () => (!vui.hidden ? diveFrame : !cui.hidden ? chipFrame : !pui.hidden ? dcFrame : !fui.hidden ? phFrame : !kui.hidden ? caFrame : !sui.hidden ? swFrame : !bui.hidden ? boardFrame : null);
   function openField(id) {
     hideSeam(); const html = Field.fieldHtml(id); if (!html) return;
     if (!S.crossed[id]) { S.crossed[id] = true; save(); }
@@ -1447,7 +1501,7 @@ export function start() {
   document.addEventListener('click', e => { const l = e.target.closest('[data-leave]'); if (!l) return;
     /* in a world's page, leaving the question goes on to the world it belongs to */
     if (l.closest('[data-arrive]')) { const w = page.querySelector('.warrnext'); if (w) w.scrollIntoView({ behavior: 'smooth', block: 'start' }); return; }
-    const fr = !vui.hidden ? diveFrame : !cui.hidden ? chipFrame : !pui.hidden ? dcFrame : !fui.hidden ? phFrame : !kui.hidden ? caFrame : !bui.hidden ? boardFrame : null;
+    const fr = !vui.hidden ? diveFrame : !cui.hidden ? chipFrame : !pui.hidden ? dcFrame : !fui.hidden ? phFrame : !kui.hidden ? caFrame : !sui.hidden ? swFrame : !bui.hidden ? boardFrame : null;
     if (fr) { if (fr === diveFrame && dive) { diveThread = null; dive.setThread(null); } fr.look(); } else closeSheet(); });
 
   /* ---- routes ---- */
@@ -1460,7 +1514,7 @@ export function start() {
     if (k === 'dive') { const w = p[2] || Game.DIVE_WORLD[p[1]] || 'datacentre'; if (w === 'datacentre') return ['dive', 4]; const i = Math.max(0, ['phone', 'phoneboard', 'soc', 'car', 'ecu', 'mcu', 'scanner', 'wafer', 'die'].indexOf(p[1]) % 3); return ['dive:' + w, Game.DIVE_WORLD[p[1]] ? 1 + i : 4]; }
     if (k === 'supply') return ['supply', 0];
     return k === 'board' ? ['board', 2] : k === 'line' ? ['line', 1] : k === 'bench' ? ['bench', 1] : k === 'chip' ? ['chip', 3]
-      : k === 'place' && p[1] === 'datacentre' && /^\d+$/.test(p[2] || '') ? ['dc', 1] : k === 'place' && p[1] === 'phones' && /^\d+$/.test(p[2] || '') ? ['fly', 1] : k === 'place' && p[1] === 'cars' && /^\d+$/.test(p[2] || '') ? ['carfly', 1] : ['map', 0]; };
+      : k === 'place' && p[1] === 'datacentre' && /^\d+$/.test(p[2] || '') ? ['dc', 1] : k === 'place' && p[1] === 'phones' && /^\d+$/.test(p[2] || '') ? ['fly', 1] : k === 'place' && p[1] === 'cars' && /^\d+$/.test(p[2] || '') ? ['carfly', 1] : k === 'place' && p[1] === 'studio' && /^\d+$/.test(p[2] || '') ? ['studio', 1] : ['map', 0]; };
   let shownAt = null;   /* the address of the view now made, so a question at the same level only changes the dock */
   let viewNow = null, rankNow = 0, nextMove = null, lastPlace = null, entering = false, enteredFrom = null;
   /* going inside from the island: the camera dives into the place first, then the view zooms in from it */
@@ -1499,6 +1553,8 @@ export function start() {
     if (k === 'place' && parts[1] === 'phones' && /^\d+$/.test(parts[2] || '')) return showPhone(+parts[2]);
     /* and a car's (#/place/cars/2) */
     if (k === 'place' && parts[1] === 'cars' && /^\d+$/.test(parts[2] || '')) return showCar(+parts[2]);
+    /* and the studio, walked inside (#/place/studio/3: the third corner) */
+    if (k === 'place' && parts[1] === 'studio' && /^\d+$/.test(parts[2] || '')) return showStudio(+parts[2], from);
     if (k === 'place' && isPart(parts[1], parts[2])) return showMap(from).then(() => openPlace(parts[1], 'look', null, null, parts[2]));
     if (k === 'place' && Game.PLACES.includes(parts[1])) return showMap(from).then(() => openPlace(parts[1], parts[2] === 'inside' ? 'look' : null));
     if (k === 'build') return showMap(from).then(() => openPlace('lab', 'look', parts[1] || 'computer', parts[2]));
@@ -1520,7 +1576,7 @@ export function start() {
     if (k !== 'whatif') leaveWhatif();
     page.hidden = true; page.classList.remove('reading'); $('logbtn').setAttribute('aria-current', ['log', 'challenges', 'questions'].includes(k) ? 'page' : 'false'); $('logbtn').classList.remove('glow');
     const after = pr => { hud(); return Promise.resolve(pr).then(hud); };
-    const [view, rank] = viewOf(parts), from = viewNow, move = nextMove || (rank > rankNow ? 'in' : rank < rankNow ? 'out' : 'along');
+    const [view, rank] = viewOf(parts), from = viewNow, move = nextMove || (from === 'bench' && view === 'studio' ? 'out' : rank > rankNow ? 'in' : rank < rankNow ? 'out' : 'along');
     nextMove = null; viewNow = view; rankNow = rank;
     if (!from || from === view || still() || !document.startViewTransition) return after(show(parts, from && from !== view ? from : null));
     /* the old picture holds while the new view is made (at most a moment), then one zooms into the other */
@@ -1540,7 +1596,7 @@ export function start() {
     if (e.defaultPrevented || (e.target.closest && e.target.closest('input, textarea, select, [data-live]'))) return; /* i18n-ok */
     /* / jumps: the log opens with its box ready */
     if (e.key === '/') { e.preventDefault(); if (partsOf(location.hash)[0] !== 'log') location.hash = '#/log'; setTimeout(() => { const f = page.querySelector('[data-jump]'); if (f) f.focus(); }, 60); return; }
-    const host = [vui, cui, pui, bui].find(h => h && !h.hidden) || (!sheet.hidden && !sheet.querySelector('.player') ? sheet : null); if (!host) return;
+    const host = [vui, cui, pui, bui, sui].find(h => h && !h.hidden) || (!sheet.hidden && !sheet.querySelector('.player') ? sheet : null); if (!host) return;
     if (e.key === 'Escape') { const up = host.querySelector('.homebtn'); if (up) { location.hash = up.getAttribute('href'); e.preventDefault(); } return; }
     const W = whereNow(), column = ['dive', 'flight', 'chip'].includes(W.view) && !host.querySelector('.dock .player, .dock .stopx');
     if (e.key === 'ArrowUp' || e.key === 'ArrowDown') { const down = e.key === 'ArrowDown';

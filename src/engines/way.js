@@ -70,6 +70,8 @@ export function whereOf(hash) {
   if (k === 'supply') return cell('supply', 'port', 'ship');
   if (k === 'build') return cell('page', 'lab');
   if (k === 'place' && p[1] === 'datacentre' && p[2] != null && p[2] !== 'inside') return cell('flight', 'datacentre', FLIGHT[+p[2]] || 'building');
+  /* the studio walked inside (src/v2/studio3d.js): 0 is outside over the opened floor, then the corners, one per step */
+  if (k === 'place' && p[1] === 'studio' && /^\d+$/.test(p[2] || '')) { const step = stepsOf('bench')[+p[2] - 1] || null; return cell('room', 'studio', step, null, { step, size: levelOfStep('bench', step) }); }
   if (k === 'place' && p[1] === 'phones' && /^\d+$/.test(p[2] || '')) return cell('flight', 'phones', PHONE_FLIGHT[+p[2]] || 'phone');
   if (k === 'place' && p[1] === 'cars' && /^\d+$/.test(p[2] || '')) return cell('flight', 'cars', CAR_FLIGHT[+p[2]] || 'car');
   if (k === 'place' && PLACES.includes(p[1])) return cell('island', p[1]);
@@ -88,7 +90,7 @@ const DESIGN_STAGE = { bench: 'designed', line: 'made' };
 export const stepsOf = view => (STEP_WORLD[view] ? WORLDS.find(w => w.id === STEP_WORLD[view]).depths.slice() : []);
 /* the level a step shows, or null: the Turn's twin whose designed (studio) or made (line) form is that step */
 export function levelOfStep(view, step) {
-  const f = DESIGN_STAGE[view]; if (!f) return null;
+  const f = DESIGN_STAGE[view]; if (!f || !step) return null;
   const tw = TWINS.find(x => (f === 'designed' ? x.designed === step : x.made.includes(step)));
   return tw ? tw.used : null;
 }
@@ -121,7 +123,7 @@ export function alongTo(where, stage) {
   if (stage === 'open') return home;
   if (W.view === 'line' && (stage === 'make' || stage === 'test' || stage === 'ship')) return '#/line/' + ({ make: 'wires', test: 'test', ship: 'pkg' })[stage];
   /* in a row of steps, only the level the step shows is held: describe, check and masks hold none */
-  const rows = W.view === 'bench' || W.view === 'line', tw = rows ? (W.size ? twinOf(W.size) : null) : W.level && W.view !== 'island' ? twinOf(W.level === 'die' ? 'chip' : W.level) : null;
+  const rows = ROWS.includes(W.view), tw = rows ? (W.size ? twinOf(W.size) : null) : W.level && W.view !== 'island' ? twinOf(W.level === 'die' ? 'chip' : W.level) : null;
   if (tw) {
     if (stage === 'design' && tw.designed) return '#/bench/' + tw.designed;
     /* a whole chip is made as a die on its wafer, and closed in its package on the way out; the levels inside it are
@@ -151,7 +153,8 @@ export function seamOf(from, to) {
 /* whether that move holds the depth you are at (the bar says so before you take it) */
 /* From a row of steps, a move that walks the same row to another step (print → test on the line) holds no level, unless
    the step it lands on shows the same one: Around here offers a level at another stage only where it exists there. */
-const sizeOfCell = W => (W.view === 'bench' || W.view === 'line' ? W.size : W.level === 'die' ? 'chip' : W.level);
+const ROWS = ['bench', 'line', 'room'];
+const sizeOfCell = W => (ROWS.includes(W.view) ? W.size : W.level === 'die' ? 'chip' : W.level);
 export const holds = (where, stage) => { const h = alongTo(where, stage); if (!h || h.startsWith('#/place/')) return false;
-  if (!where || (where.view !== 'bench' && where.view !== 'line')) return true;
+  if (!where || !ROWS.includes(where.view)) return true;
   return !!where.size && sizeOfCell(whereOf(h)) === where.size; };

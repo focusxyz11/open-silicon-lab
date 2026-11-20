@@ -132,3 +132,16 @@ test('Around here offers a level at another stage only where the step shows one'
   assert.ok(!holds(pr, 'test')); assert.ok(!holds(pr, 'ship')); assert.ok(holds(pr, 'design')); assert.ok(holds(pr, 'use'));
   for (const s of ['slice', 'clean', 'deposit', 'test', 'ship']) for (const st of STAGES) assert.ok(!holds(whereOf('#/line/' + s), st), s + ' → ' + st);
 });
+
+test('the studio walked inside is the same row of steps: outside holds nothing, each corner holds what its step holds', async () => {
+  const { stepsOf, levelOfStep } = await import('../src/engines/way.js');
+  const out = whereOf('#/place/studio/0');
+  assert.equal(out.view, 'room'); assert.equal(out.stage, 'design'); assert.equal(out.step, null); assert.equal(out.size, null);
+  for (const st of STAGES) assert.ok(!holds(out, st), 'outside the studio holds a level at ' + st);
+  assert.equal(levelOfStep('bench', null), null); assert.equal(levelOfStep('bench', undefined), null);
+  stepsOf('bench').forEach((s, i) => { const W = whereOf('#/place/studio/' + (i + 1)), B = whereOf('#/bench/' + s);
+    assert.equal(W.step, s); assert.equal(W.size, B.size, s);
+    for (const st of STAGES) { assert.equal(holds(W, st), holds(B, st), s + ' → ' + st); if (holds(W, st)) assert.equal(alongTo(W, st), alongTo(B, st)); } });
+  /* and along from any corner lands in the stage asked */
+  for (let i = 0; i <= 6; i++) for (const s of STAGES) { const W = whereOf('#/place/studio/' + i), to = alongTo(W, s); if (to) assert.equal(whereOf(to).stage, s, i + ' → ' + s); }
+});
