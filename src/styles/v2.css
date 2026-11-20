@@ -2918,3 +2918,21 @@ i.ersil { background: var(--bad); }
 .erkey span { display: inline-flex; align-items: center; gap: 5px; } .erkey i { width: 14px; height: 6px; border-radius: 3px; display: inline-block; }
 .ermsg.good { color: var(--good); } .ermsg.bad { color: var(--bad); }
 .erplaces { margin-bottom: 4px; }
+
+/* Run your core (src/v2/labs/rv.js): the core at work, and the program to write */
+.rvfig { margin: 8px 0; } .rvfig svg { display: block; width: 100%; height: auto; }
+.rvfig .ax { font: 9.5px var(--sans); fill: var(--muted); }
+.rvfig .rvpanel { fill: color-mix(in srgb, var(--ink) 4%, transparent); stroke: var(--line); }
+.rvfig .rvon { fill: color-mix(in srgb, var(--warm) 28%, transparent); }
+.rvfig .rvcode { font: 9.5px var(--mono); fill: var(--ink); white-space: pre; } .rvfig .rvcode.on { fill: var(--warm); font-weight: 700; }
+.rvfig .rvbox, .rvfig .rvreg { fill: var(--panel-solid); stroke: var(--line); }
+.rvfig .rvreg.on { stroke: var(--warm); stroke-width: 1.6; fill: color-mix(in srgb, var(--warm) 14%, var(--panel-solid)); }
+.rvfig .rvalu { fill: var(--panel-solid); stroke: var(--accent); stroke-width: 1.2; } .rvfig .rvalu.on { fill: color-mix(in srgb, var(--accent) 16%, var(--panel-solid)); }
+.rvfig .rvnum { font: 600 11px var(--mono); fill: var(--ink); } .rvfig .rvnum.s { font-size: 10px; }
+.rvfig .rvop { font: 700 14px var(--mono); fill: var(--warm); }
+.rvfig .rvbig { font: 700 22px var(--mono); fill: var(--warm); }
+.rvedit { width: 100%; box-sizing: border-box; min-height: 150px; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--panel-solid); color: var(--ink); font-size: 13px; line-height: 1.5; resize: vertical; tab-size: 2; }
+.rvedit:focus { outline: 2px solid color-mix(in srgb, var(--accent) 50%, transparent); outline-offset: 1px; }
+.rvcases { list-style: none; margin: 6px 0; padding: 0; display: grid; gap: 3px; font-size: 13px; }
+.rvcases .good { color: var(--good); } .rvcases .bad { color: var(--bad); } .rvcases .mono { color: var(--ink); }
+.rvtask { margin: 6px 0; }
