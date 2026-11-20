@@ -692,7 +692,7 @@ run['labs'] = async () => {
     + " const lv = Object.keys(W).find(k => { const b = document.querySelector(P + '[data-mb-level=\"' + k + '\"]'); return b && !b.dataset.cleared; });"
     + " if (lv) { CL(P + '[data-mb-level=\"' + lv + '\"]'); CL(P + '[data-mb-start]'); for (const m of W[lv]) CL(P + '[data-mb-lever=\"' + m + '\"]'); CL(P + '[data-mb-serve]'); } }", 'Keep the chef busy', 180000);
   /* one bit's trip: moving the memory from the chip to another machine reached by light changes what the bit costs */
-  await fp.waitForFunction(() => { const P = '.player[data-ch="chef"] ', c = q => { const b = document.querySelector(q); if (b) b.click(); }, e = () => (document.querySelector(P + '[data-mb-e]') || {}).dataset;
+  await fp.waitForFunction(() => { const P = '.player[data-ch="chef"] ', c = q => { const b = document.querySelector(q); if (b) b.click(); }, e = () => { const f = document.querySelector(P + '[data-mb-e]'); return f ? { mbTrip: f.dataset.mbTrip, mbE: f.dataset.mbE } : null; };
     c(P + '[data-mb-tab="trip"]'); c(P + 'button[data-mb-at="near"]'); const a = e(); c(P + 'button[data-mb-at="rack"]'); const b = e();
     return !!(a && b && a.mbTrip === 'near' && b.mbTrip === 'rack' && +b.mbE > 10 * +a.mbE); }, null, { timeout: 30000, polling: 1500 }).catch(() => problems.push(tag + ': moving the memory does not change one bit\'s trip'));
   /* Verify the agent, at the Lab: a tool checks a case, and eight right calls win */

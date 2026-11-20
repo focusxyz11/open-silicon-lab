@@ -58,7 +58,7 @@ export default function lab(L) {
   const share = (k, v) => { const [a, b] = RANGE[k]; return b <= a ? 1 : 0.12 + 0.88 * (Math.log10(Math.max(v, 1e-30)) - Math.log10(a)) / (Math.log10(b) - Math.log10(a)); };
   const meterWords = (k, v) => k === 'energy' ? E(v) : k === 'time' ? T(v) : k === 'capacity' ? R(v) : k === 'space' ? t('mb.trip.wiresShort', { n: fmtNum(v) }) : k === 'errors' ? errW(v) : t('mb.trip.price', { v: n2(v) });
   function tripFigure(at, Tr, p) {
-    const W = 320, H = 200, YD = 86, here = MB.TRIP[at];
+    const W = 320, H = 200, YD = 96, here = MB.TRIP[at];
     let s = '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="' + esc(t('mb.trip.aria', { at: t('mb.at.' + at + '.t'), e: E(Tr.meters.energy), s: T(Tr.meters.time) })) + '">';
     /* the distance axis: a tenth of a millimetre to a metre and more */
     s += '<line class="ax0" x1="' + X0 + '" x2="' + X1 + '" y1="170" y2="170"/>';
@@ -85,8 +85,8 @@ export default function lab(L) {
     const bx = pts[0][0] + (pts[1][0] - pts[0][0]) * p, by = pts[0][1] + (pts[1][1] - pts[0][1]) * p;
     s += '<circle class="bit" cx="' + bx.toFixed(1) + '" cy="' + by.toFixed(1) + '" r="4"/>';
     /* the Look under it: two numbers fetched against the two added */
-    s += '<text class="ax look" x="14" y="140">' + esc(t('mb.trip.look', { f: E(Tr.fetchTwoJ), a: E(Tr.addJ), k: fmtNum(Math.round(Tr.fetchTwoJ / Tr.addJ)) })) + '</text>';
-    return '<figure class="mbfig mbtrip" data-f2="instrument" data-mb-trip="' + at + '" data-mb-e="' + Tr.meters.energy.toExponential(3) + '">' + s + '</svg><figcaption class="small muted">' + esc(t('mb.at.' + at + '.d')) + '</figcaption></figure>';
+    return '<figure class="mbfig mbtrip" data-f2="instrument" data-mb-trip="' + at + '" data-mb-e="' + Tr.meters.energy.toExponential(3) + '">' + s + '</svg>' +
+      '<p class="mblook">' + esc(t('mb.trip.look', { f: E(Tr.fetchTwoJ), a: E(Tr.addJ), k: fmtNum(Math.round(Tr.fetchTwoJ / Tr.addJ)) })) + '</p><figcaption class="small muted">' + esc(t('mb.at.' + at + '.d')) + '</figcaption></figure>';
   }
   function tripBench() {
     const at = C.trip, Tr = MB.trip(at, GHZ), p = view.tp == null ? 1 : view.tp, W = Tr.walls;
@@ -123,13 +123,14 @@ export default function lab(L) {
     let s = '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="' + esc(t('mb.k.aria', { level: t('mb.lv.' + Lv.id + '.t'), r: r + 1, wait: pct(R0.wait), e: E(R0.energy) })) + '">';
     /* the chef: a die of cores, lit as busy as this round lets them be; room given to a pantry or a shelf on the chip is
        taken from it */
-    const dx = 18, dy = 34, ds = 86, roomW = ds * (P.closer + P.shelf * MB.SHELF_ROOM);
+    const dx = 18, dy = 34, ds = 86, roomW = ds * P.closer;
     s += '<rect class="die" x="' + dx + '" y="' + dy + '" width="' + ds + '" height="' + ds + '" rx="6"/>';
     const cw = (ds - roomW - 14) / 4;
     for (let i = 0; i < cores; i++) { const cx = dx + 7 + (i % 4) * cw, cy = dy + 7 + Math.floor(i / 4) * ((ds - 14) / 4);
       s += '<rect class="core' + (i < lit ? ' on' : '') + '" x="' + cx.toFixed(1) + '" y="' + cy.toFixed(1) + '" width="' + Math.max(2, cw - 3).toFixed(1) + '" height="' + ((ds - 14) / 4 - 3).toFixed(1) + '" rx="1.5"/>'; }
     if (P.closer) s += '<rect class="onchip" x="' + (dx + ds - 7 - ds * P.closer).toFixed(1) + '" y="' + (dy + 7) + '" width="' + (ds * P.closer - 2).toFixed(1) + '" height="' + (ds - 14) + '" rx="2"/>';
-    if (P.shelf) { const sw = Math.max(6, ds * P.shelf * MB.SHELF_ROOM); s += '<rect class="shelf" x="' + (dx + ds - 7 - ds * P.closer - sw - 2).toFixed(1) + '" y="' + (dy + ds - 22) + '" width="' + sw.toFixed(1) + '" height="14" rx="2"/>'; }
+    /* the shelf by the stove: just outside the chef's die, under the door, as big as it is */
+    if (P.shelf) { const sh = 8 + 22 * Math.sqrt(P.shelf); s += '<rect class="shelf" x="' + (dx + ds + 4) + '" y="' + (dy + ds - sh - 4).toFixed(1) + '" width="12" height="' + sh.toFixed(1) + '" rx="2"/>'; }
     s += '<text class="ax" x="' + (dx + ds / 2) + '" y="' + (dy + ds + 13) + '" text-anchor="middle">' + esc(t('mb.k.chef.' + (Lv.id === 'brain' || Lv.id === 'team' ? Lv.id : 'chip'))) + '</text>';
     /* the stack: the pantry on top of the chef, the heat rising off it */
     if (P.stack) {

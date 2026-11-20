@@ -838,8 +838,8 @@ export function createMap(canvas, host, on = {}) {
     'island-adc': [11.5, 18.5], 'island-reg': [5.5, 24], 'island-sensor': [-11.5, 3],
     /* serving a language model: together, east of the halls and north of the solar field */
     'dc-quant': [22.5, -4], 'dc-token': [20.5, -9.5], 'dc-prefill': [16.5, -4],
-    /* keep the chef busy: beside the hall that reads and writes */
-    'dc-pantry': [15.5, -10] };
+    /* keep the chef busy: east of the hall that keeps numbers small */
+    'dc-pantry': [28.5, -2.5] };
   GROWTH.forEach(gw => { const [x, z, y] = GROW_SPOT[gw.id] || [0, 0], g = group(G[gw.at], x, y || 0, z); g.visible = false; g.scale.setScalar(0.001); growing.push({ id: gw.id, g, built: false, t0: 0 }); });
 
   /* No question floats over a place any more (docs/framework/rebuild.md, section 3): a question shown as a dot on a
