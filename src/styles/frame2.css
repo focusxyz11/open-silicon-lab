@@ -1,9 +1,12 @@
-/* Frame 2 (#271, part 1 #272): one frame, three modes, loaded only with ?frame=2 (src/v2/frame2.js), every rule hung
-   from html.frame2. Three components on the frame's own elements: the caption (Look: the card on the picture,
-   bottom left), the side panel (Do, Ask, Read more: full height at the right, growing with the screen) and, on a
-   phone, the sheet; and the stage (Do: a lab's instrument takes the picture area, its goal as meters across the
-   top). One type scale: titles and the question in Besley, everything read in Atkinson Hyperlegible Next and never
-   below 15 px, names on the picture 14 px, figures in Martian Mono. The palette is the site's (src/styles/v2.css). */
+/* The frame (#271): one frame, three modes, and the thing you are working on always gets the stage. The site's only
+   frame since #276 (the one before it is kept on the branch claude/before-frame2-2026-11); index.html loads this
+   after src/styles/v2.css and sets html.frame2, from which every rule hangs (src/v2/frame2.js wears the elements).
+   Three components on the frame's own elements: the caption (Look: the card on the picture, bottom left), the side
+   panel (Do, Ask, Read more, a card that is not a level's: full height at the right, growing with the screen; the
+   island's sheet and Break it are the same panel) and, on a phone, the sheet; the stage (Do: a lab's instrument
+   takes the picture area, its goal as meters across the top); and Read, a reading page in the frame. One type
+   scale: titles and the question in Besley, everything read in Atkinson Hyperlegible Next and never below 15 px,
+   names on the picture 14 px, figures in Martian Mono. The palette is the site's (src/styles/v2.css). */
 html.frame2 {
   --f2-title: 700 30px/1.12 var(--serif);
   --f2-q: italic 400 20px/1.4 var(--serif);
@@ -41,6 +44,9 @@ html.frame2 .f2 .f2k { display: flex; align-items: center; min-height: 40px; mar
 html.frame2 .f2 .f2t { margin: 2px 0 8px; font: var(--f2-title); text-wrap: balance; }
 html.frame2 .f2 .dock > .line { margin: 0 0 12px; font: var(--f2-read); }
 html.frame2 .f2cap .f2rest, html.frame2 .f2cap .f2more, html.frame2 .f2cap .f2close { display: none; }
+/* a caption that is a story told step by step (the board): its words as they are, at the caption's size */
+html.frame2 .f2cap .dock.f2plain { font: var(--f2-read); }
+html.frame2 .f2cap > .dockwrap:has(> .dock.f2plain) > .modes3 { position: static; margin-bottom: 4px; }
 html.frame2 .f2 .dock > .askline { margin: 0 0 16px; padding: 0; border: 0; background: none; box-shadow: none; font: var(--f2-q); color: var(--ink); }
 html.frame2 .f2 .dock > .askline .q { font: inherit; }
 html.frame2 .f2 .dock > .askline:hover .q { text-decoration: underline; text-decoration-color: var(--warm); text-underline-offset: 4px; }
@@ -196,7 +202,7 @@ html.frame2 .stage:has(> section.f2stage:not([hidden])) > .toast { top: auto; bo
   html.frame2 .f2cap > .dockwrap > .modes3 { position: static; order: 3; margin-top: 14px; }
   html.frame2 .f2cap > .dockwrap.peek { max-height: none; overflow: hidden; -webkit-mask-image: none; mask-image: none; }
   html.frame2 .f2cap > .dockwrap.peek > .modes3 { display: none; }
-  html.frame2 .f2cap .dockwrap.peek .dock > :not(.f2head, .askline) { display: none; }
+  html.frame2 .f2cap .dockwrap.peek .dock:not(.f2plain) > :not(.f2head, .askline) { display: none; }
   html.frame2 .f2cap .dockwrap.peek .dock > .askline { order: 0; margin: 0; padding: 0; font: italic 400 18px/1.4 var(--serif); display: block; -webkit-line-clamp: none; overflow: visible; }
   html.frame2 .f2 .f2k { min-height: 0; padding-right: 0; }
   html.frame2 .f2 .f2t { margin: 2px 0 6px; font: 700 23px/1.15 var(--serif); }
@@ -242,7 +248,6 @@ html.frame2 .page.f2rd { inset: 0; z-index: 12; border: 0; border-radius: 0; bac
 html.frame2 .page.f2rd > .inner { max-width: 1800px; padding: 90px clamp(16px, 2.2vw, 44px) 88px; }
 /* the words fade out above the bar as they scroll up, never showing round it */
 html.frame2 .page.f2rd { -webkit-mask-image: linear-gradient(to bottom, transparent 52px, #000 82px); mask-image: linear-gradient(to bottom, transparent 52px, #000 82px); }
-html.frame2 .page.f2rd .pagex { display: none; }
 html.frame2 .stage:has(> .page.f2rd:not([hidden])) > :is(.c3, .labels, .hero, .homebtn, .sheet) { visibility: hidden; }
 /* the way back: where you came from, by its name */
 html.frame2 .f2back { display: inline-flex; align-items: center; gap: 10px; margin: 0 0 18px; padding: 4px 16px 4px 4px; border-radius: 999px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); text-decoration: none; font: var(--f2-small); box-shadow: var(--shadow); }
@@ -398,19 +403,28 @@ html.frame2 .page.f2rd .mach .f2rhead h1 { font-size: clamp(28px, calc(1.2vw + 1
   html.frame2 .f2side > .dockwrap.peek .dock > :not(.kicker:first-child) { display: none; }
   html.frame2 .f2side > .dockwrap.peek .dock > .kicker:first-child { margin: 0; }
   html.frame2 .f2 .dock > .askline.seeklit { margin-left: 0; }
-  /* the notices, at the top of the sheet */
-  html.frame2 .f2 > .dockwrap > .seamnote { position: static; inset: auto; z-index: auto; width: auto; flex: none; margin: 2px 0 6px; padding: 10px 10px 10px 14px; gap: 6px; border-radius: 14px;
-    border: 1px solid var(--line); border-left: 3px solid var(--ink); background: color-mix(in srgb, var(--ink) 5%, transparent); box-shadow: none; backdrop-filter: none; -webkit-backdrop-filter: none; animation: f2in .3s ease; }
-  html.frame2 .f2 > .dockwrap > .seamnote .kicker { font: var(--f2-label); letter-spacing: 0; text-transform: none; color: var(--muted); }
-  html.frame2 .f2 > .dockwrap > .seamnote .sq { font: italic 400 17px/1.4 var(--serif); }
-  /* on a phone the notice offers the one way on, and the way to close it; the other offers wait where the question is */
-  html.frame2 .f2 > .dockwrap > .seamnote .acts > :not(.primary, .seamx) { display: none; }
-  html.frame2 .f2 > .dockwrap > .seamnote .btn { padding: 7px 14px; font-size: 15px; }
   html.frame2 .f2 > .dockwrap > .toast { position: static; inset: auto; z-index: auto; transform: none; flex: none; align-self: stretch; max-width: none; margin: 2px 0 6px; padding: 9px 14px; border-radius: 14px; text-align: center; font: 700 15px/1.35 var(--sans); box-shadow: none; }
   /* the bar: Your log as a mark, its words kept for a screen reader */
   html.frame2 .bar.f2logmark .logbtn { padding: 8px 10px; }
   html.frame2 .bar.f2logmark .logbtn .lg { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
   html.frame2 .bar.f2logmark .logbtn::before { content: ''; width: 16px; height: 13px; background: linear-gradient(currentColor 0 0) 0 0 / 100% 2px no-repeat, linear-gradient(currentColor 0 0) 0 50% / 100% 2px no-repeat, linear-gradient(currentColor 0 0) 0 100% / 62% 2px no-repeat; }
+}
+/* ---- the seam note in the card in sight, at its top, on every screen (src/v2/frame2.js, notices); in the caption
+   the faces step into the flow under it, so neither covers the other. With no frame in sight (the island) it stands
+   at the top right, left of the island's sheet when the sheet is open ---- */
+html.frame2 .f2 > .dockwrap > .seamnote { position: static; inset: auto; z-index: auto; width: auto; flex: none; margin: 2px 0 6px; padding: 10px 10px 10px 14px; gap: 6px; border-radius: 14px;
+  border: 1px solid var(--line); border-left: 3px solid var(--ink); background: color-mix(in srgb, var(--ink) 5%, transparent); box-shadow: none; backdrop-filter: none; -webkit-backdrop-filter: none; animation: f2in .3s ease; }
+html.frame2 .f2 > .dockwrap > .seamnote .kicker { font: var(--f2-label); letter-spacing: 0; text-transform: none; color: var(--muted); }
+html.frame2 .f2 > .dockwrap > .seamnote .sq { font: italic 400 18px/1.4 var(--serif); }
+html.frame2 .f2 > .dockwrap > .seamnote .btn { padding: 7px 14px; font-size: 15px; }
+html.frame2 .f2cap > .dockwrap:has(> .seamnote:not([hidden])) > .modes3 { position: static; margin-top: 6px; }
+html.frame2 .seamnote .kicker { font: var(--f2-label); letter-spacing: 0; text-transform: none; color: var(--muted); }
+html.frame2 .seamnote .sq { font: italic 400 18px/1.4 var(--serif); }
+@media (min-width: 1100px) { html.frame2 body:has(#sheet:not([hidden])) > .seamnote { right: calc(var(--bench) + 4px); } }
+@media (max-width: 720px) {
+  html.frame2 .f2 > .dockwrap > .seamnote .sq { font-size: 17px; }
+  /* on a phone the notice offers the one way on, and the way to close it; the other offers wait where the question is */
+  html.frame2 .f2 > .dockwrap > .seamnote .acts > :not(.primary, .seamx) { display: none; }
 }
 /* a name lifted or slid to keep clear of another: its stem still reaches its point */
 html.frame2 .lbl3.part3.f2apart::after { left: var(--f2sx) !important; bottom: calc(-1 * var(--f2sh)) !important; height: var(--f2sh) !important; }
@@ -495,3 +509,38 @@ html.frame2 .stage:has(> #sheet.f2do:not([hidden])) > .toast { top: auto; bottom
   html.frame2 #sheet.f2do .player .goal { font: 700 15px/1.45 var(--sans); }
   html.frame2 .f2stage .betview[data-f2="instrument"] > figure > figcaption { display: none; }
 }
+
+/* ---- the island (#276): its sheet (a place's card, What if?, the Lab's record) is the side panel, in the frame's type
+   (where it stands: src/styles/v2.css, the side panel on a desktop); the first card over it speaks in the caption's
+   type, at the foot of the picture, clear of the lenses at the left and the small map at the right ---- */
+html.frame2 #sheet { padding: 18px 26px 22px; border-radius: 22px; font: var(--f2-small); }
+html.frame2 #sheet h2 { margin: 2px 0 8px; font: var(--f2-title); text-wrap: balance; }
+html.frame2 #sheet .line { font: var(--f2-read); }
+html.frame2 #sheet :is(.kicker, .seekk) { font: var(--f2-label); letter-spacing: 0; text-transform: none; color: var(--muted); }
+html.frame2 #sheet :is(.small, .chipb, .btn, .lab, .doors button) { font-size: 15px; }
+html.frame2 #sheet .ask .q, html.frame2 #sheet .askline .q { font: italic 400 19px/1.4 var(--serif); }
+html.frame2 #sheet .doors { margin-right: 48px; }
+html.frame2 #sheet > .x { top: 16px; right: 18px; width: 36px; height: 36px; }
+html.frame2 .hero { border-radius: 22px; padding: 20px 24px 18px; }
+html.frame2 .hero .kicker { font: var(--f2-label); letter-spacing: 0; text-transform: none; color: var(--muted); }
+html.frame2 .hero h1 { margin: 2px 0 12px; font: var(--f2-title); }
+html.frame2 .hero .heroq .qcard .q { font: italic 400 17px/1.35 var(--serif); }
+html.frame2 .hero .herok { font: var(--f2-label); letter-spacing: 0; text-transform: none; color: var(--muted); }
+html.frame2 .hero .heroc .chipb, html.frame2 .hero .btn { font-size: 15px; }
+@media (max-width: 720px) {
+  html.frame2 #sheet { padding: 12px 16px 16px; }
+  html.frame2 #sheet h2, html.frame2 .hero h1 { font: 700 23px/1.15 var(--serif); }
+  html.frame2 #sheet .line { font-size: 16px; }
+  html.frame2 .hero { padding: 14px 16px; }
+  html.frame2 .hero .heroq .qcard .q { font-size: 16px; }
+}
+/* on a phone the lenses wait while the first card is open over the island (it covered its last row), and come back
+   when it folds; the card that is not a level's caption (the board's story) shows whole in the peek, its way on with it */
+@media (max-width: 720px) {
+  html.frame2 .stage:has(> .hero:not([hidden]):not(.folded):not(.away)) > .lensbar { opacity: 0; pointer-events: none; }
+}
+/* a live goal at the top right of the picture (the board's story): the frame's type */
+html.frame2 .f2 .goal2 { width: 280px; padding: 14px 16px; border-radius: 18px; font: var(--f2-small); }
+html.frame2 .f2 .goal2 .kicker { font: var(--f2-label); letter-spacing: 0; text-transform: none; color: var(--muted); }
+html.frame2 .f2 .goal2 :is(.gl, .gv) { font-size: 15px; }
+@media (max-width: 720px) { html.frame2 .f2 .goal2 { width: auto; padding: 10px 12px; } }

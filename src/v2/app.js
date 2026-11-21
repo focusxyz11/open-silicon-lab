@@ -54,8 +54,7 @@ import { SEEK, foundAt, seekAt, seekLevel } from '../data/seek.js';
 import { cornerOf as studioCorner } from '../data/studio.js';
 import { createHome } from './home.js';
 import { sizeWords } from './frame.js';
-import { ON as FRAME2, boot as frame2Boot } from './frame2.js';
-import { reading as frame2Reading } from './frame2.js';
+import { boot as frame2Boot, reading as frame2Reading, readHtml } from './frame2.js';
 /* what design really is, in each studio step's card (content/design.md) */
 import { studioLook } from './studio-look.js';
 
@@ -91,7 +90,7 @@ export function start() {
   if (SECTIONS_ON) { const m = document.createElement('details'); m.className = 'sections'; m.id = 'sections';
     m.innerHTML = '<summary aria-label="' + esc(t('nav.aria')) + '">☰</summary><nav>' + [['', 'nav.explore'], ['challenges', 'nav.challenges'], ['questions', 'nav.questions'], ['build', 'nav.build'], ['ecosystem', 'nav.ecosystem']].map(([h, k]) => '<a href="#/' + h + '">' + esc(t(k)) + '</a>').join('') + '</nav>';
     $('logbtn').before(m); m.addEventListener('click', e => { if (e.target.closest('a')) m.open = false; }); }
-  /* ---- the new frame, only if asked for: ?frame=2 turns it on for this browser, ?frame=1 off (src/v2/frame2.js, #271) ---- */
+  /* ---- the frame: one frame, three modes (src/v2/frame2.js, #271) ---- */
   frame2Boot();
   /* ---- the theme ---- */
   const theme = () => document.documentElement.getAttribute('data-theme') || (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
@@ -749,7 +748,7 @@ export function start() {
       swFrame = frameOf(sui, { up: { href: '#/place/studio', label: t('place.back') }, path: [{ href: '#/island', label: t('place.back') }, { href: '#/place/studio', label: t('map.studio.t') }, { label: t('room.title') }],
         rail: { label: t('frame.levels.bench'), optional: true, items: Way.levelsOfSteps('bench').map(k => ({ id: k, label: t('depth.' + k + '.name'), size: sizeOf(k) })) },
         steps: { label: t('frame.steps.bench'), items: Way.stepsOf('bench').map(k => ({ id: k, label: t('depth.' + k + '.name') })) },
-        onStep: k => d.go(SW.STOPS.indexOf(k)), onRail: k => { const s = Way.stepOfLevel('bench', k, SW.STOPS[swLv]); if (s) d.go(SW.STOPS.indexOf(s)); }, onLook: drawRoom, scroll: true });
+        onStep: k => d.go(SW.STOPS.indexOf(k)), onRail: k => { const s = Way.stepOfLevel('bench', k, SW.STOPS[swLv]); if (s) d.go(SW.STOPS.indexOf(s)); }, onLook: drawRoom, scroll: true, caption: true });
       sui.onclick = e => { const g = e.target.closest('[data-swgo]'); if (g) d.go(+g.dataset.swgo); const a = e.target.closest('[data-swin]'); if (a) { e.preventDefault(); swIn(); } };
       loading(false); d.resume();
       /* from the island the flight comes down through the opened floor; back from a bench, it starts on that corner's screen */
@@ -772,8 +771,10 @@ export function start() {
     inset: () => frameInset(chipFrame), portal: p => chipFrame && chipFrame.inwardAt(p) }); return chip; }));
   /* the part of the picture the frame leaves free, in pixels from each edge: the rail at the left, the bar and the way
      out at the top, and the card below where it is not a bench at the right (the canvas already ends at the bench) */
-  const frameInset = fr => { const wide = innerWidth > 720, bench = innerWidth >= 1100, dw = fr && fr.dock.parentNode;
-    return { l: wide ? 100 : 10, r: wide ? 24 : 10, t: wide ? 128 : 112, b: bench ? 24 : (dw && dw.offsetHeight ? (fr.restH ? fr.restH() : dw.offsetHeight) + (wide ? 30 : 22) : 260) }; };
+  const frameInset = fr => { const wide = innerWidth > 720, bench = innerWidth >= 1100, dw = fr && fr.dock.parentNode, host = dw && dw.parentNode;
+    /* on a desktop the picture stands right of the caption at rest, and left of the side panel */
+    const f2 = bench && host && host.classList.contains('f2') ? dw.getBoundingClientRect() : null, cap = !!f2 && host.classList.contains('f2cap');
+    return { l: cap ? Math.max(100, Math.round(f2.right - 120)) : wide ? 100 : 10, r: f2 && !cap ? Math.round(f2.width) + 32 : wide ? 24 : 10, t: wide ? 128 : 112, b: bench ? 24 : (dw && dw.offsetHeight ? (fr.restH ? fr.restH() : dw.offsetHeight) + (wide ? 30 : 22) : 260) }; };
   const stepNames = r => ROWS[r].made.map(d => t('depth.' + d + '.name')).join(' → ');
   /* the factory step that makes a row: Do and Ask at a row are about making it, and the line is where it is walked */
   const rowStep = r => ROWS[r].made[ROWS[r].made.length - 1];
@@ -808,7 +809,7 @@ export function start() {
     return Promise.all([withFrame(), ensureChip()]).then(([, c]) => {
       chipFrame = frameOf(cui, { up: { href: '#/place/fab', label: t('map.fab.t') }, path: [{ href: '#/island', label: t('place.back') }, { href: '#/place/fab', label: t('map.fab.t') }, { label: t('chipx.title') }],
         rail: { label: t('place.levels'), items: ROWS.map(x => ({ id: x.dive, label: t('depth.' + x.dive + '.name'), size: sizeOf(x.dive) })) },
-        onRail: d => c.go(ROWS.findIndex(x => x.dive === d)), onLook: drawChip });
+        onRail: d => c.go(ROWS.findIndex(x => x.dive === d)), onLook: drawChip, caption: true });
       cui.onclick = e => { const b = e.target.closest('[data-rowgo]'); if (b) c.go(+b.dataset.rowgo); };
       /* the rail says the level at once, before the picture's first frame */
       loading(false); chipRow = want; c.set(want); chipFrame.rail(ROWS[want].dive, want / (ROWS.length - 1), want); c.resume(); chipPanel(); $('chipCanvas').focus({ preventScroll: true });
@@ -1048,8 +1049,8 @@ export function start() {
   /* the lens of the energy puzzle is part of the frame: on a desktop at the picture's right edge, on a phone (folded) at its
      top, and the picture keeps clear of it */
   const diveInset = () => { if (!dive || !diveFrame) return; const wide = innerWidth > 720, b = innerWidth >= 1100 ? 24 : (diveFrame.restH ? diveFrame.restH() : diveFrame.dock.parentNode.offsetHeight) + (wide ? 24 : 18), lens = Joule && S.joule.on && innerWidth >= 1100 ? 356 : 0, top = Joule ? Joule.bottom() : 0;
-    /* the new frame (?frame=2): the picture stands right of the caption at rest, and left of the side panel */
-    const f2 = FRAME2 && innerWidth >= 1100 && vui.classList.contains('f2') ? diveFrame.dock.parentNode.getBoundingClientRect() : null, f2cap = f2 && vui.classList.contains('f2cap');
+    /* the picture stands right of the caption at rest, and left of the side panel */
+    const f2 = innerWidth >= 1100 && vui.classList.contains('f2') ? diveFrame.dock.parentNode.getBoundingClientRect() : null, f2cap = f2 && vui.classList.contains('f2cap');
     const st = rowsOf(flatKind) ? (wide ? 70 : 40) : 0;   /* the line of steps across the top of the picture */
     /* the bench keeps clear of the way along at the picture's foot; on a phone it stands above the card at rest and may
        be taller than wide (src/v2/bench.js) */
@@ -1107,7 +1108,7 @@ export function start() {
         /* in a row of steps the rail's levels lead to the step that shows them; the steps are walked along their own line */
         steps: rowsOf(kind) ? { label: t('frame.steps.' + kind), items: L.map(k => ({ id: k, label: t('depth.' + k + '.name') })) } : null,
         onStep: k => w.flyTo(WE.IDS.indexOf(k)),
-        onRail: k => { const s = rowsOf(kind) ? Way.stepOfLevel(kind, k, diveId()) : k; if (s) w.flyTo(WE.IDS.indexOf(s)); }, onLook: () => { if (benchCh) { benchCh = null; const dk = diveFrame.dock; dk.classList.remove('benchdock'); dk.onclick = null; dk.oninput = null; dk.onpointerdown = dk.onpointermove = dk.onpointerup = null; if (Bench && flatKind === 'bench') Bench.challenge(null); } drawDive(); }, caption: kind === 'dive' }); watchDock();
+        onRail: k => { const s = rowsOf(kind) ? Way.stepOfLevel(kind, k, diveId()) : k; if (s) w.flyTo(WE.IDS.indexOf(s)); }, onLook: () => { if (benchCh) { benchCh = null; const dk = diveFrame.dock; dk.classList.remove('benchdock'); dk.onclick = null; dk.oninput = null; dk.onpointerdown = dk.onpointermove = dk.onpointerup = null; if (Bench && flatKind === 'bench') Bench.challenge(null); } drawDive(); }, caption: true }); watchDock();
       /* the data centre's dive wears the lens of the energy puzzle: Follow the joule */
       vui.classList.remove('jouling');
       Joule = kind === 'dive' && diveWorld === 'datacentre' ? createJoule(vui, { S, save,
@@ -1197,7 +1198,7 @@ export function start() {
       loading(false); b.resume(); const data = Sd.boardStory();
       const fr = boardFrame = frameOf(bui, { up: { href: '#/place/datacentre/4', label: t('board.up') }, path: [{ href: '#/island', label: t('place.back') }, { href: '#/place/datacentre/4', label: t('map.datacentre.t') }, { label: t('place.dc.board.t') }],
         rail: { label: t('place.levels'), items: LEVELS.map(k => ({ id: k, label: t('place.dc.' + k + '.t'), size: sizeOf(k) })) },
-        onRail: k => { location.hash = k === 'chip' ? '#/dive/chip' : k === 'board' ? '#/board' : '#/place/datacentre/' + LEVELS.indexOf(k); }, onLook: () => story && story.go(story.at) });
+        onRail: k => { location.hash = k === 'chip' ? '#/dive/chip' : k === 'board' ? '#/board' : '#/place/datacentre/' + LEVELS.indexOf(k); }, onLook: () => story && story.go(story.at), caption: 'plain' });
       fr.rail('board', LEVELS.indexOf('board') / (LEVELS.length - 1)); fr.level('board');
       story = St.createStory(fr.dock, b, data, { follow, step: st => wayToChip(fr, st) || fr.goal(st.live ? '<p class="kicker">' + esc(t('board.goal')) + '</p>' + data.gauges(data.state).map(x => '<div class="gauge' + (x.warm ? ' warmg' : ' ok') + '"><span class="gl">' + esc(t('board.gauge.' + x.id)) + '</span><span class="gv">' + esc(x.text) + '</span><span class="gbar"><span style="width:' + Math.round(x.v * 100) + '%"></span></span></div>').join('') : null) });
       $('boardCanvas').focus({ preventScroll: true });
@@ -1298,7 +1299,9 @@ export function start() {
      the loop starts and comes back) */
   function showPage(k0) {
     const k = 'log'; pageNow = k0;
-    let h = '<div class="inner"><a class="x pagex" href="' + '#/' + '" aria-label="' + esc(t('sheet.close')) + '">×</a><p class="kicker">' + esc(t('loop.logK')) + '</p><h1>' + esc(t('loop.log')) + '</h1><p class="lead">' + esc(t('page.' + k + '.lead')) + '</p>', hc = '';
+    /* a reading page (Read, src/v2/frame2.js): the column alone, its way back to where you came from */
+    const head = '<p class="kicker">' + esc(t('loop.logK')) + '</p><h1>' + esc(t('loop.log')) + '</h1><p class="lead">' + esc(t('page.' + k + '.lead')) + '</p>';
+    let h = '', hc = '';
     const C = Game.community(S);
     if (k === 'log') {
       const nx = Game.next(S);
@@ -1322,22 +1325,22 @@ export function start() {
       const asked = C.W.entries.filter(e => e.kind === 'question');
       h += '<section class="stepsec"><h2>' + esc(t('page.questions.asked')) + '</h2>' + (asked.length ? asked.slice().reverse().map(askedHtml).join('') : '<p class="small muted">' + esc(t('page.questions.none')) + '</p>') + '</section>' + hc;
     }
-    page.innerHTML = h + '<p class="small muted">' + esc(t('page.preview')) + '</p></div>'; page.hidden = false; page.scrollTop = 0;
-    if (k0 === 'challenges') { const el = $('log-challenges'); if (el) page.scrollTop = el.offsetTop - 16; }
+    page.innerHTML = '<div class="inner">' + readHtml({ cls: 'logpage', head, text: h + '<p class="small muted">' + esc(t('page.preview')) + '</p>' }) + '</div>'; page.hidden = false; page.scrollTop = 0;
+    if (k0 === 'challenges') { const el = $('log-challenges'); if (el) page.scrollTop = el.offsetTop - 96; }
   }
   /* reading: every experiment as a document (src/v2/read.js), over the island; the index is the questions and
      challenges there are, by what can be done with them now */
   function showRead(id) {
     if (!FACT) { facts().then(() => { if (partsOf(location.hash)[0] === 'read') showRead(id); }); return; }
     const ctx = { S, FACT, titleOf, chOf, didOn: Game.didOn };
-    page.innerHTML = '<div class="inner"><a class="x pagex" href="#/" aria-label="' + esc(t('sheet.close')) + '">×</a>' + (id ? Read.experimentHtml(id, ctx) : Read.indexHtml()) + '</div>';
+    page.innerHTML = '<div class="inner">' + (id ? Read.experimentHtml(id, ctx) : Read.indexHtml()) + '</div>';
     page.classList.add('reading'); page.hidden = false; page.scrollTop = 0;
   }
   page.addEventListener('input', e => { const f = e.target.closest('[data-readfind]'); if (f) Read.filterIndex(page, f.value); if (e.target.matches('[data-cyear]')) copiesInput(e.target); if (e.target.matches('[data-forms] [data-fcode]')) formsInput(e.target); if (e.target.matches('[data-tune] [data-tin]')) tuneType(e.target); });   /* i18n-ok: selectors */
   page.addEventListener('click', e => { const b = e.target.closest('[data-copies] [data-cp]'); if (b) copiesInput(b); const w = e.target.closest('[data-walls] [data-wk], [data-walls] [data-wrow]'); if (w) wallsInput(w, S.chip); const f = e.target.closest('[data-forms] [data-fjob], [data-forms] [data-fver], [data-forms] [data-fedit], [data-forms] [data-fsig]'); if (f) formsInput(f); const pl = e.target.closest('[data-plan] [data-pk2]'); if (pl) planInput(pl, S.chip); const ck = e.target.closest('[data-clock] [data-clk], [data-clock] [data-clkref]'); if (ck) clockInput(ck, S.chip); const sb = e.target.closest('[data-side] [data-sbk]'); if (sb) sideInput(sb); const sw = e.target.closest('[data-swarm] [data-swk]'); if (sw) swarmInput(sw); const tn = e.target.closest('[data-tune] [data-tk], [data-tune] [data-tplane]'); if (tn) tuneInput(tn, e); });   /* i18n-ok: a selector */
   /* machines from shared blocks (src/v2/machines.js): a need, its machine, an agent that assembles it */
   function showMachines(need) {
-    page.innerHTML = '<div class="inner"><a class="x pagex" href="#/" aria-label="' + esc(t('sheet.close')) + '">×</a><div data-machines></div></div>';
+    page.innerHTML = '<div class="inner"><div data-machines></div></div>';
     page.hidden = false; page.scrollTop = 0;
     /* the claims behind new matter link to their sources in facts.json: drawn at once, and again when the facts arrive */
     const draw = () => { const el = page.querySelector('[data-machines]'); if (el && partsOf(location.hash)[0] === 'machines') machinesView(el, { need, FACT, go: id => { location.hash = '#/machines/' + id; },
@@ -1349,9 +1352,9 @@ export function start() {
   /* a world (src/v2/worlds.js): one core question, its page made from its document; #/w/<id>/q<n> opens a question inside */
   function showWorlds() {
     const shown = location.hash;
-    page.innerHTML = '<div class="inner"><a class="x pagex" href="#/" aria-label="' + esc(t('sheet.close')) + '">×</a><p class="muted">' + esc(t('world.loading')) + '</p></div>';
+    page.innerHTML = '<div class="inner"><p class="muted">' + esc(t('world.loading')) + '</p></div>';
     page.classList.add('reading'); page.hidden = false; page.scrollTop = 0;
-    Worlds.loadAll().then(all => { if (location.hash === shown) page.innerHTML = '<div class="inner"><a class="x pagex" href="#/" aria-label="' + esc(t('sheet.close')) + '">×</a>' + Worlds.indexHtml(all) + '</div>'; });
+    Worlds.loadAll().then(all => { if (location.hash === shown) page.innerHTML = '<div class="inner">' + Worlds.indexHtml(all) + '</div>'; });
   }
   /* where a world's questions are asked on the island: each part or level whose question belongs to it, as an address */
   const ISLE_OF = { test: ['test', null], pkg: ['port', null], ship: ['port', null] };
@@ -1377,10 +1380,10 @@ export function start() {
     const atStop = at === 'at' && d && Game.trail(id).includes(d) ? d : null;
     if (atStop) { nowStop = { th: id, d: atStop }; askOpen = false; askNo = null; askVals = { q: '', noticed: '' }; const was = S.met[id] || []; delete S.met[id]; S.met[id] = [...new Set([...was, atStop])]; save(); }
     const q = /^q(\d+)$/.exec(at || ''), shown = location.hash;
-    page.innerHTML = '<div class="inner"><a class="x pagex" href="#/" aria-label="' + esc(t('sheet.close')) + '">×</a><p class="muted">' + esc(t('world.loading')) + '</p></div>';
+    page.innerHTML = '<div class="inner"><p class="muted">' + esc(t('world.loading')) + '</p></div>';
     page.classList.add('reading'); page.hidden = false; page.scrollTop = 0;
     const draw = P => { if (location.hash !== shown) return;
-      page.innerHTML = '<div class="inner"><a class="x pagex" href="#/" aria-label="' + esc(t('sheet.close')) + '">×</a>' + Worlds.worldHtml(id, P, { chip: S.chip, q: q ? +q[1] : null, island: islandOf(id), arrive: atStop ? arriveHtml(id, atStop) : null }) + '</div>';
+      page.innerHTML = '<div class="inner">' + Worlds.worldHtml(id, P, { chip: S.chip, q: q ? +q[1] : null, island: islandOf(id), arrive: atStop ? arriveHtml(id, atStop) : null }) + '</div>';
       swarmStart(page);
       const el = q && page.querySelector('#q' + q[1]); if (el) el.scrollIntoView({ block: 'center' }); };
     const go = () => Worlds.loadWorld(id).then(draw, () => { page.querySelector('.inner').innerHTML += '<p>' + esc(t('world.missing')) + '</p>'; });
@@ -1595,7 +1598,7 @@ export function start() {
     if (k === 'w') { if (parts[1]) showWorld(parts[1], parts[2], parts[3]); else showWorlds(); }
     if (k === 'whatif') return showMap(from).then(() => showWhatif(parts[1]));
     if (k === 'machines') showMachines(parts[1]);
-    /* the new frame reads a page on its own: the island waits behind it, paused (src/v2/frame2.js, Read) */
+    /* a reading page stands on its own: the island waits behind it, paused (src/v2/frame2.js, Read) */
     if (frame2Reading()) return showMap(from).then(m => { if (frame2Reading()) m.pause(); });
     return showMap(from).then(() => { if (k === 'ecosystem') showEcosystem(); else if ((k === 'island' || k === 'explore') && cur && !sheet.hidden) { closeSheet(); map && map.overview(); } });
   }

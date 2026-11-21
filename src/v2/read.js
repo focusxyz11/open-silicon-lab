@@ -18,7 +18,7 @@ import { YEAR } from '../engines/floor.js';
 import { levelAt } from '../data/atlas.js';
 import { DEPTHS } from '../data/weave.js';
 import { STAGES, stageOfPlace } from '../engines/way.js';
-import { ON as F2, readHtml, tryHtml } from './frame2.js';
+import { readHtml, tryHtml } from './frame2.js';
 
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 const ext = (href, html) => '<a href="' + esc(href) + '" target="_blank" rel="noopener">' + html + '</a>';
@@ -33,7 +33,7 @@ const stageName = n => { const L = t('way.stages'); return (Array.isArray(L) ? L
 const noteOf = x => { const p = X.playOf(x), at = X.levelsOf(x).slice(0, 2).map(level).join(' · ');
   return (p ? t('read.kind.' + p.kind) + ' · ' : '') + at; };
 export function card(x, note) {
-  return '<a class="qcard" href="#/read/' + esc(x.id) + '" style="--qc:' + colorOf(x) + '"' + (F2 ? ' data-f2x="' + esc(x.id) + '"' : '') + ' data-q="' + esc(askOf(x).toLowerCase()) + '">' +
+  return '<a class="qcard" href="#/read/' + esc(x.id) + '" style="--qc:' + colorOf(x) + '"' + ' data-f2x="' + esc(x.id) + '"' + ' data-q="' + esc(askOf(x).toLowerCase()) + '">' +
     '<span class="q">' + esc(askOf(x)) + '</span><span class="small muted">' + esc(note || noteOf(x)) + '</span></a>';
 }
 
@@ -99,11 +99,10 @@ export function experimentHtml(id, ctx) {
   if (!x) return '<p class="kicker">' + esc(t('read.k')) + '</p><h1>' + esc(t('read.missing')) + '</h1><p><a class="btn" href="#/read">' + esc(t('read.all')) + '</a></p>';
   const st = X.stateOf(x), ask = askOf(x), e = x.engine && engineOf(x.engine), FACT = ctx.FACT || {};
   const head = '<p class="kicker"><span class="rstate rs-' + st + '">' + esc(t('read.state.' + st)) + '</span></p><h1 class="readq">' + esc(ask) + '</h1>';
-  /* in the new frame (Read, src/v2/frame2.js) the try on the page is the picture pinned beside the words, and the
+  /* a reading page (Read, src/v2/frame2.js): the try on the page is the picture pinned beside the words, and the
      words try it; a question with no try of its own is seen where it sits among the others, with the ways on */
   const p = X.playOf(x), probe = p && p.kind === 'probe', chip = ctx.S && ctx.S.chip;
-  let h = F2 ? (probe ? '<div class="readplay">' + tryHtml() + '</div>' : playHtml(x, ctx.titleOf, ctx.chOf, chip))
-    : '<article class="readx" style="--qc:' + colorOf(x) + '">' + head + playHtml(x, ctx.titleOf, ctx.chOf, chip);
+  let h = probe ? '<div class="readplay">' + tryHtml() + '</div>' : playHtml(x, ctx.titleOf, ctx.chOf, chip);
 
   /* what is true: where it is seen, each with its note; the engine; the figures and the real cases */
   let tr = '';
@@ -150,8 +149,7 @@ export function experimentHtml(id, ctx) {
   const S = ctx.S;
   if (S && rootShown(S.met[x.world], ctx.didOn(S, x.world))) h += '<div class="root2"><p class="small muted">' + esc(t('ui.rootOf')) + '</p><p class="rootq">' + esc(t('thread.' + x.world + '.root')) + '</p></div>';
   h += '<p class="small muted readback"><a href="#/read">' + esc(t('read.all')) + '</a></p>';
-  if (F2) return readHtml({ cls: 'readx', style: '--qc:' + colorOf(x), head, picture: probe ? probeHtml(x, chip) : mapHtml(x, W.map(w => w.id)), text: h });
-  return h + '</article>';
+  return readHtml({ cls: 'readx', style: '--qc:' + colorOf(x), head, picture: probe ? probeHtml(x, chip) : mapHtml(x, W.map(w => w.id)), text: h });
 }
 function waysBy(w) {
   const what = !w.what ? '' : w.by === 'engine' ? t('layer.engine.' + w.what) : w.by === 'dir' ? dirName(w.what) : w.by === 'given' ? t('layer.given.' + w.what) : w.by === 'level' ? level(w.what) : w.by === 'lens' ? t('layer.lens.' + w.what) : w.by === 'measure' ? t('layer.measure.' + w.what) : '';
@@ -165,7 +163,7 @@ export function mixed(L) {
   for (let i = 0; out.length < L.length; i++) keys.forEach(k => { if (by[k][i]) out.push(by[k][i]); });
   return out;
 }
-/* ---- the questions as one picture (the new frame's Read): every question a dot, in the row of the stage of a chip's
+/* ---- the questions as one picture (Read, src/v2/frame2.js): every question a dot, in the row of the stage of a chip's
    life where it is met and in the order of its level, filled when it can be tried now. A dot opens its question; a
    card in the words and its dot light together, and the finder dims the dots it leaves out. me: the question on
    this page, ringed; ways: the ways on from it, circled ---- */
@@ -185,13 +183,12 @@ export function mapHtml(me, ways = []) {
 /* the index: questions and challenges, by what can be done with them now */
 export function indexHtml() {
   const head = '<p class="kicker">' + esc(t('read.k')) + '</p><h1>' + esc(t('read.title')) + '</h1><p class="lead">' + esc(t('read.lead', { n: X.EXPERIMENTS.length })) + '</p>';
-  let h = F2 ? '' : head;
-  h += '<div class="jump"><input type="search" data-readfind autocomplete="off" placeholder="' + esc(t('read.find')) + '" aria-label="' + esc(t('read.find')) + '"></div><p class="small muted" data-readnone hidden>' + esc(t('read.none')) + '</p>';
+  let h = '<div class="jump"><input type="search" data-readfind autocomplete="off" placeholder="' + esc(t('read.find')) + '" aria-label="' + esc(t('read.find')) + '"></div><p class="small muted" data-readnone hidden>' + esc(t('read.none')) + '</p>';
   for (const st of X.STATES) {
     const L = mixed(X.EXPERIMENTS.filter(x => X.stateOf(x) === st));
     h += '<section class="stepsec" data-readsec><h2>' + esc(t('read.sec.' + st)) + ' <span class="small muted">' + L.length + '</span></h2><p class="small muted">' + esc(t('read.secd.' + st)) + '</p><div class="qgrid">' + L.map(x => card(x)).join('') + '</div></section>';
   }
-  return F2 ? readHtml({ head, picture: mapHtml(null), text: h }) : h;
+  return readHtml({ head, picture: mapHtml(null), text: h });
 }
 /* filter the index as someone types: a section with nothing left hides */
 export function filterIndex(root, q) {

@@ -26,7 +26,7 @@ import * as M from '../engines/machine.js';
 import { plan as buildPlan } from '../engines/build.js';
 import { FABS, fabOf } from '../data/fabs.js';
 import { labCurve } from '../engines/ledger.js';
-import { ON as F2, readHtml } from './frame2.js';
+import { readHtml } from './frame2.js';
 
 const REPO = 'https://github.com/focusxyz11/open-silicon-lab/blob/main/';
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
@@ -241,18 +241,12 @@ export function machines(el, ctx) {
   }
   function draw() {
     const m = M.machine(id, view.plan, view.guesses);
-    /* in the new frame (Read, src/v2/frame2.js) the machine and what it scores are the picture pinned beside the
+    /* a reading page (Read, src/v2/frame2.js): the machine and what it scores are the picture pinned beside the
        words; the words (where it is made, the fabrics, the new matter, the agent, the curve) change it */
-    if (F2) { el.innerHTML = readHtml({ cls: 'mach', head: '<p class="kicker">' + esc(t('machines.ui.kicker')) + '</p><h1>' + esc(t('machines.ui.title')) + '</h1><p class="lead">' + esc(t('machines.ui.lead')) + '</p>',
+    el.innerHTML = readHtml({ cls: 'mach', head: '<p class="kicker">' + esc(t('machines.ui.kicker')) + '</p><h1>' + esc(t('machines.ui.title')) + '</h1><p class="lead">' + esc(t('machines.ui.lead')) + '</p>',
       picture: '<section class="mmachine"><p class="kicker">' + esc(t('machines.ui.machine')) + ' · ' + esc(t('machines.need.' + id + '.t')) + '</p><div class="mrail">' + need.parts.map(p => partHtml(p, m)).join('') + '</div>' +
         '<button type="button" class="link small" data-mreset>' + esc(t('machines.ui.reset')) + '</button></section>' + scoreHtml(m),
-      text: needsHtml() + '<div class="mbody"><div class="mresult">' + fabHtml(m) + liquidHtml(m) + inventHtml(m) + '</div>' + agentHtml() + '</div>' + curveHtml(m) + blocksHtml() + '<p class="small muted mnote">' + t('machines.ui.note') + '</p>' }); return; }
-    el.innerHTML = '<article class="mach"><p class="kicker">' + esc(t('machines.ui.kicker')) + '</p><h1>' + esc(t('machines.ui.title')) + '</h1><p class="lead">' + esc(t('machines.ui.lead')) + '</p>' +
-      needsHtml() +
-      '<section class="mmachine"><p class="kicker">' + esc(t('machines.ui.machine')) + '</p><div class="mrail">' + need.parts.map(p => partHtml(p, m)).join('') + '</div>' +
-      '<button type="button" class="link small" data-mreset>' + esc(t('machines.ui.reset')) + '</button></section>' +
-      '<div class="mbody"><div class="mresult">' + scoreHtml(m) + fabHtml(m) + liquidHtml(m) + inventHtml(m) + '</div>' + agentHtml() + '</div>' +
-      curveHtml(m) + blocksHtml() + '<p class="small muted mnote">' + t('machines.ui.note') + '</p></article>';
+      text: needsHtml() + '<div class="mbody"><div class="mresult">' + fabHtml(m) + liquidHtml(m) + inventHtml(m) + '</div>' + agentHtml() + '</div>' + curveHtml(m) + blocksHtml() + '<p class="small muted mnote">' + t('machines.ui.note') + '</p>' });
   }
   el.onclick = e => {
     const q = s => e.target.closest(s);
