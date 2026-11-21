@@ -18,7 +18,7 @@ import { swarmHtml } from './swarm.js';
 import { tuneHtml } from './tunebox.js';
 import { probeHtml } from './read.js';
 import { experimentOf } from '../engines/experiments.js';
-import { ON as F2, readHtml, tryHtml } from './frame2.js';
+import { readHtml, tryHtml } from './frame2.js';
 
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 const hue = id => (THREADS.find(x => x.id === id) || { hue: 200 }).hue;
@@ -55,11 +55,10 @@ export const WORLD_OF = id => WORLDS[id];
 export function worldHtml(id, P, ctx = {}) {
   const W = WORLDS[id] || { play: {} }, S = P.sections;
   const head = '<p class="kicker">' + esc(t('world.k')) + '</p><h1 class="wq">' + esc(P.title) + '</h1>' + (P.behind ? '<p class="wbehind">' + il(P.behind) + '</p>' : '');
-  /* in the new frame (Read, src/v2/frame2.js) the visual system is the picture pinned beside the words */
-  let h = F2 ? '' : '<article class="world" style="--qc:' + colorOf(id) + '">' + head;
+  /* a reading page (Read, src/v2/frame2.js): the visual system is the picture pinned beside the words */
+  let h = '';
   /* arrived by a question met on the island: that question first, as it was met there */
   if (ctx.arrive) h += '<section class="warrive" data-arrive>' + ctx.arrive + '</section><p class="kicker warrnext">' + esc(t('world.arriveNext')) + '</p>';
-  if (!F2) h += lensHtml(id, P, ctx.chip);
   if (S.open) h += '<section class="wsec wopen">' + md(S.open.body) + '</section>';
   /* the truths: the unit of every world */
   h += '<section class="wsec"><h2>' + esc(t('world.true')) + '</h2><ol class="truths">' + P.truths.map(x => '<li id="t' + x.n + '"><b>' + il(x.title) + '</b> ' + il(x.text) + '</li>').join('') + '</ol></section>';
@@ -70,7 +69,7 @@ export function worldHtml(id, P, ctx = {}) {
   /* challenges: where each is played, or that it is not playable yet */
   const after = S.challenges ? S.challenges.body.split('\n').filter(l => l.trim() && !l.startsWith('|')).join('\n') : '';
   h += '<section class="wsec"><h2>' + esc(t('world.challenges')) + '</h2><div class="wchs">' + P.challenges.map(([name, change, judge]) => {
-    const where = W.play[challengeName(name)], go = where === 'here' ? (F2 ? tryHtml() : '<span class="chere">' + esc(t('world.here')) + '</span>') : where ? '<a class="btn primary" href="' + esc(where) + '">' + esc(t('world.play')) + '</a>' : '<span class="small muted">' + esc(t('world.later')) + '</span>';
+    const where = W.play[challengeName(name)], go = where === 'here' ? tryHtml() : where ? '<a class="btn primary" href="' + esc(where) + '">' + esc(t('world.play')) + '</a>' : '<span class="small muted">' + esc(t('world.later')) + '</span>';
     return '<div class="wch' + (where ? ' on' : '') + '"><p class="wchn">' + il(name) + '</p><p class="small"><b>' + esc(t('world.change')) + '</b> ' + il(change) + '</p><p class="small"><b>' + esc(t('world.judge')) + '</b> ' + il(judge) + '</p>' + go + '</div>';
   }).join('') + '</div>' + (after ? '<div class="small muted">' + md(after) + '</div>' : '') + '</section>';
   /* the rest of the document, as written: the engine, the frontier, the community, cases, the joints */
@@ -79,8 +78,7 @@ export function worldHtml(id, P, ctx = {}) {
   if (S.meets) h += '<section class="wsec wmeets"><h2>' + esc(t('world.meets')) + '</h2>' + md(S.meets.body) + '</section>';
   h += part('earlier');
   h += '<p class="small muted wsrc">' + esc(t('world.source')) + ' <a href="content/?d=' + esc(id) + '">content/' + esc(id) + '.md</a></p>';
-  if (F2) return readHtml({ cls: 'world', style: '--qc:' + colorOf(id), head, picture: lensHtml(id, P, ctx.chip), text: h });
-  return h + '</article>';
+  return readHtml({ cls: 'world', style: '--qc:' + colorOf(id), head, picture: lensHtml(id, P, ctx.chip), text: h });
 }
 
 /* every question inside, from every world, mixed so no world gathers: the way in that never lists the eleven.
@@ -95,9 +93,8 @@ const plain = s => s.replace(/\*\*|\*|`/g, '').replace(/\[([^\]]+)\]\([^)]+\)/g,
 export const qCard = x => '<a class="qcard" href="#/w/' + esc(x.id) + '/q' + x.i + '" style="--qc:' + colorOf(x.id) + '" data-q="' + esc(plain(x.q).toLowerCase()) + '"><span class="q">' + esc(plain(x.q)) + '</span></a>';
 export function indexHtml(all) {
   const Q = allQuestions(all), head = '<p class="kicker">' + esc(t('world.indexK')) + '</p><h1>' + esc(t('world.indexT')) + '</h1><p class="lead">' + esc(t('world.indexLead', { n: Q.length })) + '</p>';
-  /* in the new frame, a list to read: the column alone */
-  if (F2) return readHtml({ head, text: listHtml(Q) });
-  return head + listHtml(Q);
+  /* a list to read: the column alone */
+  return readHtml({ head, text: listHtml(Q) });
 }
 const listHtml = Q => '<div class="jump"><input type="search" data-readfind autocomplete="off" placeholder="' + esc(t('read.find')) + '" aria-label="' + esc(t('read.find')) + '"></div><p class="small muted" data-readnone hidden>' + esc(t('read.none')) + '</p>' +
     '<section class="stepsec" data-readsec><div class="qgrid">' + Q.map(qCard).join('') + '</div></section>';

@@ -1,43 +1,47 @@
-/* Frame 2 (#271; part 1 is #272): one frame, three modes, and one rule: whatever you are working on gets the stage.
-   Behind ?frame=2, as ?menu=1 is for the menu (?frame=2 turns it on for this browser, ?frame=1 off again), so the
-   two frames can be compared on the live site; without the flag nothing here runs and today's frame
-   (src/v2/frame.js) is as it was. It wears the frame's own elements in a new way, so the views and the labs need
-   not know:
-   - the caption (Look): the card on the picture, bottom left: the place and the size, the level's name, one
-     sentence, its question, the level's search (src/data/seek.js), and Read more and Do. The rest of the card (the
-     rest of the words, what is here, the ways around) waits under Read more, in the side panel. On a phone the
-     caption is the sheet: at rest the level's name and the whole question, a tap opens it.
-   - the side panel (Do, Ask, Read more): the card at the right, full height, its width growing with the screen.
+/* The frame (#271): one frame, three modes, and one rule: whatever you are working on gets the stage. It is the
+   site's only frame since #276 (the frame before it is kept on the branch claude/before-frame2-2026-11). It wears
+   the frame's own elements (src/v2/frame.js) in its own way, so the views and the labs need not know:
+   - the caption (Look): the card on the picture, bottom left: the place and the size, the level's name (or the step's,
+     in a row of steps), one sentence, its question, the level's search (src/data/seek.js), and Read more and Do. The
+     rest of the card (the rest of the words, what is here, the ways around) waits under Read more, in the side panel.
+     On a phone the caption is the sheet: at rest the level's name and the whole question, a tap opens it.
+   - the side panel (Do, Ask, Read more, a card that is not a level's): the card at the right, full height, its width
+     growing with the screen. The island's sheet and Break it are worn as the same panel (src/styles/frame2.css).
    - the stage (Do, with a lab that declares its instrument): the lab's instrument takes the picture area and its
      goal stands across the top of it as meters; the controls stay in the side panel; the place behind is hidden,
      and a small "where you are" where the address was leads back to Look. A lab declares the two in its own HTML,
      data-f2="instrument" and data-f2="goal" (docs/LABS.md, "Do mode"); its logic is untouched, and a challenge
      that declares nothing is played in the side panel beside the picture.
-   ON: is the flag on. boot(): the class on <html> (every rule of src/styles/frame2.css hangs from it) and the
-   stylesheet. attach(host, api, o, x): one frame (createFrame) worn the new way; o.caption: the view's card is a
-   level's (the dive and the flights), so Look is a caption; x: { wrap, items, at(), here(), doList() } from the frame.
-   - Read (#273): a question's page (#/w/<id>), the questions (#/read, #/read/<id>, #/w) and machines (#/machines)
-     are a reading page in the frame, not a window over the island: a column of about 70 characters at 18.25 px,
-     its picture pinned beside it on a desktop (at the left, where the stage is in Do) and first on a phone, under
-     the title. The words can try the picture: a button marked data-f2try brings it into view and to the hand, and
-     a part marked data-f2x="<id>" in the words lights the same mark in the picture, and back. The bar says you are
-     reading and lights no stage; a way back leads to where you came from. A page says what its picture is with
+   ?frame=1 and ?frame=2 (when the two frames were compared on the live site) change nothing now, and the choice an
+   earlier visit kept is forgotten. boot(): the class on <html> (the rules of src/styles/frame2.css hang from it;
+   index.html sets it and loads the stylesheet before the first paint) and the watchers. attach(host, api, o, x): one
+   frame (createFrame) worn this way; o.caption: the view's card is a level's or a step's, so Look is a caption
+   ('plain': a story told step by step, the caption as it is, with its own way on); x: { wrap, items, at(), here(),
+   step(), doList() } from the frame.
+   - Read (#273): a question's page (#/w/<id>), the questions (#/read, #/read/<id>, #/w), machines (#/machines) and
+     your log (#/log) are a reading page in the frame, not a window over the island: a column of about 70 characters
+     at 18.25 px, its picture pinned beside it on a desktop (at the left, where the stage is in Do) and first on a
+     phone, under the title. The words can try the picture: a button marked data-f2try brings it into view and to the
+     hand, and a part marked data-f2x="<id>" in the words lights the same mark in the picture, and back. The bar says
+     you are reading and lights no stage; a way back leads to where you came from. A page says what its picture is with
      readHtml({ head, picture, text }); the shell needs no hook: each time it draws the page or the bar, boot()'s
      watchers wear them the new way (readPage, bar). */
 import { t, has } from '../core/i18n.js';
 import { whereOf } from '../engines/way.js';
 import { challengeOf } from './game.js';
 
-export const ON = (() => { try { const q = new URLSearchParams(location.search).get('frame'); if (q === '1' || q === '2') localStorage.setItem('osl-frame', q); return localStorage.getItem('osl-frame') === '2'; } catch (e) { return false; } })();
+/* the choice an earlier visit kept (?frame=1 or 2, when the two frames were compared) means nothing now */
+try { localStorage.removeItem('osl-frame'); } catch (e) { /* no storage */ }
 
 let booted = false;
 export function boot() {
-  if (!ON || booted) return; booted = true;
+  if (booted) return; booted = true;
   document.documentElement.classList.add('frame2');
-  /* the question is set in Besley's italic, which today's frame does not load */
-  for (const href of ['https://fonts.googleapis.com/css2?family=Besley:ital,wght@0,400;1,400&display=swap', 'src/styles/frame2.css']) { const l = document.createElement('link'); l.rel = 'stylesheet'; l.href = href; document.head.appendChild(l); }
-  /* the address you were at before you began reading: the way back. Heard before the shell's own route */
-  addEventListener('hashchange', e => { const was = '#' + ((e.oldURL || '').split('#')[1] || '/'); if (READING.includes(routeOf(location.hash)) && !READING.includes(routeOf(was))) readFrom = was; });
+  /* the address you were at before you began reading: the way back; a page opened from your log leads back to it.
+     Heard before the shell's own route */
+  addEventListener('hashchange', e => { const was = '#' + ((e.oldURL || '').split('#')[1] || '/'), r = routeOf(location.hash), w = routeOf(was);
+    if (READING.includes(r) && !READING.includes(w)) readFrom = was;
+    logBack = READING.includes(r) && !LOGS.includes(r) && LOGS.includes(w); });
   /* the words try the picture: a button brings it into view and to the hand */
   document.addEventListener('click', e => { const b = e.target.closest('.f2read [data-f2try]'); if (b) tryPicture(b); });
   /* a mark in the words and the same mark in the picture light together */
@@ -58,11 +62,11 @@ export function boot() {
 }
 
 /* ---- Read ---- */
-const READING = ['read', 'w', 'machines'];
+const LOGS = ['log', 'challenges', 'questions'], READING = ['read', 'w', 'machines', ...LOGS];
 const routeOf = h => String(h || '').replace(/^#\/?/, '').split('/')[0] || '';
-let readFrom = null;
-/* is the address a reading page, in the new frame */
-export const reading = (h = location.hash) => ON && READING.includes(routeOf(h));
+let readFrom = null, logBack = false;
+/* is the address a reading page */
+export const reading = (h = location.hash) => READING.includes(routeOf(h));
 /* the name of where an address is: its level, else its place, else the map */
 const nameOf = h => { const k = routeOf(h); if (!k || k === 'home') return t('frame2.backMap');
   let W = null; try { W = whereOf(h); } catch (e) { W = null; }
@@ -100,7 +104,7 @@ export function readPage(page) {
   /* at the top of the words, so the picture beside them starts where it stays (a page drawn in parts gets it moved there) */
   const at = inner.querySelector('.f2rhead') || inner, was = inner.querySelector('.f2back');
   if (was) { if (was.parentNode !== at) at.prepend(was); return; }
-  const to = readFrom || '#/', a = document.createElement('a'); a.className = 'f2back'; a.href = to;
+  const to = logBack ? '#/log' : readFrom || '#/', a = document.createElement('a'); a.className = 'f2back'; a.href = to;
   a.innerHTML = '<span class="f2wa" aria-hidden="true">←</span><span class="f2wk">' + esc(t('frame2.backK')) + '</span><b>' + esc(nameOf(to)) + '</b>';
   a.setAttribute('aria-label', t('frame2.back', { where: nameOf(to) }));
   at.prepend(a);
@@ -172,15 +176,17 @@ export function attach(host, api, o, x) {
     where.setAttribute('aria-label', t('frame2.whereBack', { level: lv }));
   };
 
-  /* a level's card made a caption: its name and size first, one sentence, the question, the search, Read more and
-     Do; the rest of the card is kept, under Read more. Done once each time the view writes its card */
+  /* a level's card made a caption: its name (in a row of steps, the step's) and size first, one sentence, the
+     question, the search, Read more and Do; the rest of the card is kept, under Read more. Done once each time the
+     view writes its card */
   const caption = () => {
     if (dock.querySelector(':scope > .f2head')) return;
-    const line = dock.querySelector(':scope > .line'), k = dock.firstElementChild; if (!line || !k) return;
-    const h = x.here(), place = o.path && o.path[1] ? o.path[1].label : '';
+    /* a card that is not a level's (a story told step by step, the board's) is the caption as it is */
+    const line = dock.querySelector(':scope > .line'), k = dock.firstElementChild, plain = o.caption === 'plain' || !line || !k; dock.classList.toggle('f2plain', plain); if (plain) return;
+    const h = x.here(), st = x.step ? x.step() : '', place = o.path && o.path[1] ? o.path[1].label : '';
     const head = document.createElement('div'); head.className = 'f2head';
     const size = h && h.size ? esc(t('frame2.across', { size: '\u0001' })).replace('\u0001', '<span class="f2fig">' + esc(h.size) + '</span>') : '';
-    head.innerHTML = '<p class="f2k"><span>' + esc(place) + (size ? ' · ' + size : '') + '</span></p><h2 class="f2t">' + esc(h ? h.label : k.textContent) + '</h2>';
+    head.innerHTML = '<p class="f2k"><span>' + esc(place) + (size ? ' · ' + size : '') + '</span></p><h2 class="f2t">' + esc(st || (h ? h.label : k.textContent)) + '</h2>';
     k.classList.add('f2was'); k.after(head);
     const [one, rest] = firstSentence(line.textContent.trim());
     if (rest) { line.textContent = ''; const a = document.createElement('span'); a.className = 'f2s1'; a.textContent = one; const b = document.createElement('span'); b.className = 'f2rest'; b.textContent = ' ' + rest; line.append(a, b); }
@@ -194,14 +200,16 @@ export function attach(host, api, o, x) {
   };
 
   /* the mode, read from what the card holds: a lab with an instrument has the stage; any other challenge, a question
-     followed, Do and Ask, and Read more are the side panel; a level's card at rest is the caption */
+     followed, Do and Ask, Read more and a card that is not a level's are the side panel; a level's card at rest is the
+     caption */
   const update = () => {
     if (!now()) return;
     const player = dock.querySelector('.player'), inst = !!(player && player.querySelector('[data-f2="instrument"]')), place = !inst && onPlace(player);
     const look = !!o.caption && api.mode() === 'look' && !player && !dock.querySelector('.stopx');
     if (look) caption();
-    const cap = look && !open && !!dock.querySelector(':scope > .f2head'), on = !!o.caption || inst || place;
-    host.classList.toggle('f2', on); host.classList.toggle('f2cap', on && cap); host.classList.toggle('f2side', on && !cap); host.classList.toggle('f2stage', inst || place); host.classList.toggle('f2place', place);
+    if (!look) dock.classList.remove('f2plain');
+    const cap = look && !open && (!!dock.querySelector(':scope > .f2head') || dock.classList.contains('f2plain'));
+    host.classList.add('f2'); host.classList.toggle('f2cap', cap); host.classList.toggle('f2side', !cap); host.classList.toggle('f2stage', inst || place); host.classList.toggle('f2place', place);
     host.classList.toggle('f2open', look && open);
     where.hidden = !inst && !place; if (inst || place) drawWhere();
     fold(); notices();
@@ -244,7 +252,7 @@ export function attach(host, api, o, x) {
 }
 
 /* ---- a phone (#275): the sheet at three heights, the notices in it, and the bar's log beside the loop ----
-   The frame's card on a phone is a sheet (src/v2/frame.js gives it its peek and its handle). In the new frame it
+   The frame's card on a phone is a sheet (src/v2/frame.js gives it its peek and its handle). It
    rests at three heights: the peek (the level's name and its whole question), half the screen, and the whole of it
    under the way out. A tap on the handle goes up a height (from the top, back to the peek); a drag on the handle or the
    sheet's head (or anywhere on the peek) moves it with the finger and lets it settle at the nearest height, or the
@@ -256,7 +264,9 @@ const still = () => typeof matchMedia === 'function' && matchMedia('(prefers-red
 function sheet(host, wrap, now) {
   const dock = wrap.querySelector('.dock'), handle = wrap.querySelector('.peekbar');
   if (!dock || !handle) return () => {};
-  let at = wrap.classList.contains('peek') ? 'peek' : 'half', drag = null, tm = 0, hold = false;
+  let at = wrap.classList.contains('peek') ? 'peek' : 'half', drag = null, tm = 0, hold = false, peekTop = null;
+  /* where the peek's top was, so a sheet the frame opens glides up from there (by then it is no longer a peek) */
+  if (typeof ResizeObserver === 'function') new ResizeObserver(() => { if (on() && wrap.classList.contains('peek') && !wrap.style.top) peekTop = wrap.offsetTop; }).observe(wrap);
   const on = () => now() && phone() && host.classList.contains('f2') && !host.hidden;
   const busy = () => !!dock.querySelector('.player, .stopx') || dock.classList.contains('benchdock');
   const states = () => host.classList.contains('f2stage') ? ['half'] : busy() ? ['half', 'full'] : STATES;
@@ -278,7 +288,7 @@ function sheet(host, wrap, now) {
   new MutationObserver(() => {
     if (!on() || drag) return; const p = wrap.classList.contains('peek');
     if (p && at !== 'peek') { at = 'peek'; classes('peek'); label(); }
-    else if (!p && at === 'peek') { if (hold) { hold = false; classes('peek'); label(); } else set('half', host.clientHeight - 10 - wrap.offsetHeight); }
+    else if (!p && at === 'peek') { if (hold) { hold = false; classes('peek'); label(); } else set('half', peekTop != null ? peekTop : host.clientHeight - 10 - wrap.offsetHeight); }
     else if (!p && !wrap.classList.contains('f2' + at)) classes(at);
   }).observe(wrap, { attributes: true, attributeFilter: ['class'] });
   /* a tap on the handle: up a height, and from the top back down. Heard before the frame's own (two heights) */
@@ -326,14 +336,17 @@ function sheet(host, wrap, now) {
   return () => { if (!on()) return; if (!states().includes(at)) set(at); else { classes(at); label(); } };
 }
 
-/* the notices (the seam note, the word that something grew) go into the sheet on a phone, at its top, and never
-   over the picture; elsewhere, or with no sheet in sight, they stay where the shell put them */
+/* the notices: the seam note goes into the card in sight (the caption, the side panel, the phone sheet), at its top,
+   on every screen, and never over the picture; the word that something grew does so on a phone (on a desktop it is a
+   moment at the foot of the picture). With no frame in sight (the island), they stay where the shell put them, and
+   on a desktop the seam note stands left of the island's sheet (src/styles/frame2.css) */
 const NOTES = ['.seamnote', '#toast'], NOTE = {};
 export function notices() {
-  const W = phone() ? [...document.querySelectorAll('.stage > section.f2:not([hidden]) > .dockwrap')].find(w => w.offsetParent) : null;
+  const vis = [...document.querySelectorAll('.stage > section.f2:not([hidden]) > .dockwrap')].find(w => w.offsetParent) || null;
   for (const q of NOTES) {
     const n = NOTE[q] || (NOTE[q] = document.querySelector(q)); if (!n) continue;
-    /* a frame made anew takes its old sheet away, and the notice in it: it goes back where the shell put it first */
+    const W = q === '.seamnote' || phone() ? vis : null;
+    /* a frame made anew takes its old card away, and the notice in it: it goes back where the shell put it first */
     if (n.f2home && !n.isConnected) n.f2home.appendChild(n);
     if (!n.f2home) { n.f2home = n.parentNode; if (typeof MutationObserver === 'function') new MutationObserver(notices).observe(n, { attributes: true, attributeFilter: ['hidden'] }); }
     const to = W && !n.hidden ? W : n.f2home, bar = W && W.querySelector(':scope > .peekbar');

@@ -9,7 +9,7 @@
    A win says which question it opens (a challenge is where a question starts), and where the work could join the
    community's ledger, a slip gives the way in (src/v2/commons.js).
    play(el, ch, ctx) draws into el; ctx: { state, save(), done(ch), back(), open(challenge), startChip() }.
-   Do mode, in the new frame (?frame=2, src/v2/frame2.js, docs/LABS.md): the player says what the stage shows. A lab
+   Do mode (src/v2/frame2.js, docs/LABS.md): the player says what the stage shows. A lab
    declares its own instrument and goal in its HTML (data-f2); for one that declares no goal, its first goal box is the
    goal; the kinds with no picture of their own (PLACE) are played on the place, which stays the picture. */
 import { t } from '../core/i18n.js';
@@ -26,7 +26,6 @@ import { WAFER as SCENE_WAFER } from '../engines/chip.js';
 import { glyph } from './field.js';
 import { LABS } from './labs/index.js';
 import { patch } from './patch.js';
-import { ON as F2 } from './frame2.js';
 
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 /* the gates a description can use, and the one a tap turns each into */
@@ -98,7 +97,7 @@ export function play(el, ch, ctx) {
     }
     if (view.ai) h += '<blockquote class="aiq"><span class="kicker">' + esc(t('game.aiSays')) + '</span>' + esc(t('build.agent.' + ch.p)) + '<span class="small muted">' + esc(t('game.aiNote')) + '</span></blockquote>';
     /* in Do mode the table's rows right are the goal, a meter across the picture (the bench draws the design) */
-    if (F2 && B && !B.errs.length && B.total) h += '<div class="goalbox' + (B.ok ? ' ok' : '') + '" data-f2="goal"><div class="gauge' + (B.ok ? ' ok' : '') + '"><span class="gl">' + esc(t('frame2.do.rows')) + '</span><span class="gv">' + esc(t('evolve.ui.ofV', { a: B.total - B.bad, b: B.total })) + '</span><span class="gbar"><span style="width:' + Math.round((B.total - B.bad) / B.total * 100) + '%"></span></span></div></div>';
+    if (B && !B.errs.length && B.total) h += '<div class="goalbox' + (B.ok ? ' ok' : '') + '" data-f2="goal"><div class="gauge' + (B.ok ? ' ok' : '') + '"><span class="gl">' + esc(t('frame2.do.rows')) + '</span><span class="gv">' + esc(t('evolve.ui.ofV', { a: B.total - B.bad, b: B.total })) + '</span><span class="gbar"><span style="width:' + Math.round((B.total - B.bad) / B.total * 100) + '%"></span></span></div></div>';
     if (B) {
       if (B.errs.length) h += '<ul class="errs">' + B.errs.map(e => '<li>' + esc(t('design.err.' + e.k, { l: e.l, n: e.n || '' })) + '</li>').join('') + '</ul>';
       else {
@@ -163,8 +162,8 @@ export function play(el, ch, ctx) {
     let h = head() + '<p class="small">' + esc(t('game.spot.d', { tests: SPOT.tests })) + '</p><p class="yours"><span class="kicker">' + esc(t(C.yours ? 'game.spot.yours' : 'game.spot.lab')) + '</span>' + esc(t(C.yours ? 'game.spot.yoursD' : 'game.spot.labD')) + '</p>';
     h += '<p class="kicker">' + esc(t('game.spot.run', { left: SPOT.tests - view.tests.length })) + '</p><div class="chips pats">' + C.rows.map((r, i) => '<button type="button" class="chipb mono" data-pat="' + i + '"' + (view.tests.includes(i) || view.tests.length >= SPOT.tests ? ' disabled' : '') + ' title="' + esc(C.ins.join(' ')) + '">' + esc(pat(r.v)) + '</button>').join('') + '</div>';
     /* in Do mode the four copies' answers are the instrument, there from the start: a row for each pattern you may run */
-    const wait = F2 ? Array.from({ length: SPOT.tests - view.tests.length }, () => '<tr class="spotwait"><td class="mono">' + C.ins.map(() => '·').join('') + '</td><td></td>' + letters.map(() => '<td></td>').join('') + '</tr>').join('') : '';
-    if (view.tests.length || F2) h += '<div class="tt' + (F2 ? ' spotinst" data-f2="instrument' : '') + '"><table><thead><tr><th>' + esc(C.ins.join(' ')) + '</th><th>' + esc(t('game.spot.should')) + '</th>' + letters.map(l => '<th>' + l + '</th>').join('') + '</tr></thead><tbody>' +
+    const wait = Array.from({ length: SPOT.tests - view.tests.length }, () => '<tr class="spotwait"><td class="mono">' + C.ins.map(() => '·').join('') + '</td><td></td>' + letters.map(() => '<td></td>').join('') + '</tr>').join('');
+    h += '<div class="tt spotinst" data-f2="instrument"><table><thead><tr><th>' + esc(C.ins.join(' ')) + '</th><th>' + esc(t('game.spot.should')) + '</th>' + letters.map(l => '<th>' + l + '</th>').join('') + '</tr></thead><tbody>' +
         view.tests.map(i => '<tr><td class="mono">' + esc(pat(C.rows[i].v)) + '</td><td class="mono">' + esc(C.outs.map(o => C.rows[i].e[o]).join('')) + '</td>' + letters.map((l, k) => '<td class="mono">' + esc(C.outs.map(o => spotAnswer(C, k, i)[o]).join('')) + '</td>').join('') + '</tr>').join('') + wait + '</tbody></table><p class="small muted">' + esc(t('game.spot.cols', { outs: C.outs.join(' ') })) + '</p></div>';
     if (view.tests.length) {
       h += '<p class="kicker">' + esc(t('game.spot.which')) + '</p><div class="chips">' + letters.map((l, k) => '<button type="button" class="chipb" data-guess="' + k + '">' + l + '</button>').join('') + '</div>';
@@ -504,10 +503,8 @@ export function play(el, ch, ctx) {
     const f = ch.kind === 'design' ? design : ch.kind === 'chip' ? chip : ch.kind === 'life' ? life : ch.kind === 'break' ? brk : ch.kind === 'bet' ? bet : lab ? lab.draw : spot;
     /* the card says which challenge it holds (data-ch), so whatever drives it never reads the card before it */
     const html = '<div class="player" data-ch="' + esc(ch.id) + '">' + f() + '</div>', old = el.firstElementChild;
-    if (F2) { const tpl = document.createElement('template'); tpl.innerHTML = html; const p = declare(tpl.content.firstElementChild);
-      if (!old || !old.classList.contains('player')) el.replaceChildren(p); else { old.dataset.ch = ch.id; patch(old, p); } }
-    else if (!old || !old.classList.contains('player')) el.innerHTML = html;
-    else { old.dataset.ch = ch.id; const tpl = document.createElement('template'); tpl.innerHTML = html; patch(old, tpl.content.firstElementChild); }
+    const tpl = document.createElement('template'); tpl.innerHTML = html; const p = declare(tpl.content.firstElementChild);
+    if (!old || !old.classList.contains('player')) el.replaceChildren(p); else { old.dataset.ch = ch.id; patch(old, p); }
     paintWafer(); betScene();
   }
   /* Do mode: what the stage shows, for what the HTML does not declare itself. A lab without a goal of its own has its

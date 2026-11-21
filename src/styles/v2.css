@@ -80,16 +80,11 @@ button { font: inherit; color: inherit; }
 .ladder .fill { position: absolute; left: 0; top: 0; width: 100%; border-radius: 3px; background: var(--accent); transition: height .1s linear; }
 .ladder button { display: block; width: 100%; text-align: left; padding: 7px 14px; border-radius: 10px; border: 1px solid transparent; background: var(--panel); color: var(--muted); font-weight: 600; font-size: 14px; cursor: pointer; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
 .ladder button[aria-current=step] { color: var(--ink); border-color: var(--accent); }
-.caption { position: absolute; left: 28px; bottom: 28px; width: min(440px, calc(100% - 56px)); padding: 20px 22px; background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); box-shadow: var(--shadow); }
-.caption h2 { margin: 2px 0 6px; font: 700 26px/1.15 var(--serif); }
-.caption p { margin: 0 0 8px; }
-.caption .ask { margin: 10px 0 4px; }
-.caption .btn { margin-top: 8px; }
 .placeui .hint { position: absolute; left: 50%; bottom: 24px; transform: translateX(-50%); margin: 0; padding: 6px 14px; border-radius: 999px; background: var(--panel); border: 1px solid var(--line); font-size: 13px; color: var(--muted); white-space: nowrap; }
 
-/* the pages over the map */
-.page { position: absolute; z-index: 12; inset: 84px 14px 14px; overflow: auto; background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); backdrop-filter: blur(22px); -webkit-backdrop-filter: blur(22px); box-shadow: var(--shadow); animation: rise .35s ease; }
-.page .inner { max-width: 1040px; margin: 0 auto; padding: 36px 28px 48px; }
+/* the reading pages (Read: src/styles/frame2.css) */
+.page { position: absolute; z-index: 12; inset: 0; overflow: auto; background: var(--bg); animation: rise .35s ease; }
+.page .inner { margin: 0 auto; }
 .page h1 { margin: 0 0 8px; font: 700 clamp(30px, 4vw, 46px)/1.1 var(--serif); }
 .page .lead { max-width: 640px; color: var(--muted); font-size: 18px; margin: 0 0 26px; }
 .qgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; margin-bottom: 24px; }
@@ -262,40 +257,18 @@ button.link { padding: 0; margin: 2px 14px 8px 0; border: 0; background: none; c
 .node.engine { color: var(--muted); }
 .node.yours { box-shadow: 0 0 0 2px var(--accent); }
 
-/* inside a chip: the stack panel, an instrument rather than a column of text */
+/* inside a chip, layer by layer (the frame is worn as every view's); the segmented control (the joule's levers, the bits) */
 .chipui { position: absolute; inset: 0; pointer-events: none; z-index: 6; }
 .chipui > * { pointer-events: auto; }
-.stackpanel { position: absolute; top: 84px; right: 14px; bottom: 14px; width: min(400px, calc(100% - 28px)); display: grid; grid-template-rows: auto auto 1fr; gap: 12px; padding: 14px; overflow: auto; background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); box-shadow: var(--shadow); }
 .seg { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; border-radius: 14px; background: color-mix(in srgb, var(--ink) 6%, transparent); }
 .seg button { display: grid; gap: 1px; text-align: left; padding: 8px 10px; border: 0; border-radius: 10px; background: transparent; cursor: pointer; }
 .seg button b { font-size: 15px; }
 .seg button .small { font-size: 11px; color: var(--muted); line-height: 1.3; }
 .seg button[aria-selected=true] { background: var(--ink); color: var(--bg); }
 .seg button[aria-selected=true] .small { color: color-mix(in srgb, var(--bg) 70%, transparent); }
-.stack { position: relative; padding-left: 14px; }
-.stack .track { position: absolute; left: 3px; top: 10px; bottom: 10px; width: 3px; border-radius: 3px; background: var(--line); }
-.stack .fill { position: absolute; left: 0; top: 0; width: 100%; border-radius: 3px; background: var(--accent); }
-.stack ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
-.stack button { display: grid; grid-template-columns: 24px 1fr auto; align-items: center; gap: 10px; width: 100%; padding: 8px 10px; border-radius: 10px; border: 1px solid var(--line); background: transparent; text-align: left; cursor: pointer; transition: border-color .2s, background .2s; }
-.stack button:hover { border-color: var(--accent); }
-.stack .n { display: grid; place-items: center; width: 24px; height: 24px; border-radius: 7px; background: color-mix(in srgb, var(--ink) 8%, transparent); font: 700 12px var(--mono); }
-.stack .lv { font-weight: 700; font-size: 14px; }
-.stack .mk { font: 600 11px var(--mono); color: var(--warm); text-align: right; }
-.stack button.on { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 14%, transparent); }
-.stack button.on .n { background: var(--accent); color: var(--accent-ink); }
-.stack button.passed { opacity: .55; }
-.stack button.made .mk::after { content: ' ✓'; color: var(--good); }
-.now h2 { margin: 2px 0 8px; font: 700 24px/1.2 var(--serif); }
-.now p { margin: 0 0 10px; font-size: 15px; }
-.now .row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
-.now .btn { padding: 9px 14px; }
-.swap { display: block; margin: 0 0 12px; padding: 0; border: 0; background: none; color: var(--accent); font-weight: 700; font-size: 14px; text-align: left; cursor: pointer; }
 .chipui .crumbs { top: 84px; left: 14px; }
 .chipui .hint { position: absolute; left: 14px; bottom: 14px; margin: 0; padding: 6px 14px; border-radius: 999px; background: var(--panel); border: 1px solid var(--line); font-size: 13px; color: var(--muted); }
-.inlink { color: var(--accent); text-decoration: none; letter-spacing: .04em; }
-.inlink::after { content: ' →'; }
 @media (max-width: 720px) {
-  .stackpanel { top: auto; left: 8px; right: 8px; bottom: 8px; width: auto; max-height: 58%; padding: 10px; gap: 8px; }
   .seg button .small { display: none; }
   .stack button { padding: 6px 8px; }
   .now h2 { font-size: 20px; }
@@ -395,8 +368,6 @@ button.qlmeet:hover { border-style: solid; background: color-mix(in srgb, var(--
 
 /* the factory's 3D machines, under the flat world on the line */
 #world3d { position: absolute; inset: 0; width: 100%; height: 100%; display: block; pointer-events: none; }
-/* the bench: a challenge played in the dock, taller, scrolling inside */
-.dock.benchdock { width: min(860px, calc(100% - 32px)); max-height: 46vh; overflow: auto; }
 /* on the bench the rail already says where you are, and the dock keeps to the work */
 .dock.benchdock .levels, .dock.benchdock .why { display: none; }
 .dock.benchdock .player h3 { font-size: 20px; }
@@ -538,11 +509,7 @@ html[data-move=turn]::view-transition-new(root) { animation-name: vt-turn-in; }
   .crumbs { top: 116px; left: 8px; }
   .ladder { top: auto; bottom: auto; right: 8px; transform: none; top: 160px; }
   .ladder button { padding: 5px 10px; font-size: 12px; }
-  .caption { left: 8px; right: 8px; bottom: 8px; width: auto; padding: 14px 16px; }
-  .caption h2 { font-size: 21px; }
-  .caption p { font-size: 14px; }
   .placeui .hint { display: none; }
-  .page { inset: 112px 8px 8px; }
   .toast { bottom: auto; top: 120px; border-radius: 16px; text-align: center; }
   .doors button { padding: 8px; }
   .doors button .small { display: none; }
@@ -675,9 +642,9 @@ pre.code { margin: 4px 0; white-space: pre-wrap; overflow-wrap: anywhere; }
 /* the way out, on the island too */
 #outbtn { z-index: 6; width: auto; padding: 0 14px 0 12px; gap: 7px; grid-auto-flow: column; border-radius: 999px; text-decoration: none; font: 600 13px var(--sans); color: var(--muted); }
 #outbtn:hover { color: var(--ink); }
-/* one card: its faces at the top, its words below. The island's card and every view's are the same */
-.dockwrap { position: absolute; left: 50%; bottom: 20px; transform: translateX(-50%); width: min(760px, calc(100% - 32px)); display: flex; flex-direction: column; gap: 10px; padding: 12px 20px 14px; border-radius: 22px; background: var(--panel); border: 1px solid var(--line); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); box-shadow: var(--shadow); view-transition-name: dock; }
-.dockwrap:has(.benchdock) { width: min(860px, calc(100% - 32px)); }
+/* one card: its faces at the top, its words below. Where it stands and how wide it is are the frame's: the caption,
+   the side panel or the phone sheet (src/styles/frame2.css) */
+.dockwrap { position: absolute; display: flex; flex-direction: column; gap: 10px; padding: 12px 20px 14px; border-radius: 22px; background: var(--panel); border: 1px solid var(--line); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); box-shadow: var(--shadow); view-transition-name: dock; }
 .dockwrap .dock { position: static; transform: none; width: auto; padding: 0; border: 0; border-radius: 0; background: none; backdrop-filter: none; -webkit-backdrop-filter: none; box-shadow: none; view-transition-name: none; }
 .dockwrap .modes3, .sheet .doors { align-self: flex-start; display: inline-flex; gap: 2px; padding: 3px; margin: 0; border-radius: 999px; border: 1px solid var(--line); background: none; backdrop-filter: none; -webkit-backdrop-filter: none; }
 .sheet .doors { margin: 0 44px 10px 0; }
@@ -687,7 +654,6 @@ pre.code { margin: 4px 0; white-space: pre-wrap; overflow-wrap: anywhere; }
 .dochip.open { border-style: dashed; }
 .dock .asked1 { margin: 6px 0; }
 .corner { top: 84px; }
-.pagex { position: sticky; float: right; top: 0; display: grid; place-items: center; text-decoration: none; color: var(--ink); background: var(--panel-solid); z-index: 2; }
 @media (max-width: 720px) {
   .bar { flex-wrap: nowrap; gap: 6px; padding: 6px 6px 6px 10px; border-radius: 999px; }
   .loop { margin: 0 auto; }
@@ -701,14 +667,11 @@ pre.code { margin: 4px 0; white-space: pre-wrap; overflow-wrap: anywhere; }
   .crumbs2 { display: flex; top: 77px; left: 60px; right: 10px; overflow: hidden; white-space: nowrap; }
   .crumbs2 b, .crumbs2 span { display: none; }
   .corner { top: 66px; right: 10px; left: auto; }
-  .page { inset: 64px 8px 8px; }
   .toast { top: 70px; }
   body.immersive .toast { top: 112px; }
   .hero { bottom: 8px; width: calc(100% - 16px); padding: 14px 16px; }
   .hero h1 { font-size: 21px; }
   .hero .lead { font-size: 14px; }
-  .dockwrap { bottom: 10px; width: calc(100% - 20px); padding: 10px 14px 12px; gap: 8px; }
-  .dockwrap:has(.benchdock) { width: calc(100% - 20px); }
   .dockwrap .dock { padding: 0; width: auto; bottom: auto; }
   .sheet .doors button, .dockwrap .modes3 button { padding: 6px 12px; }
   .dock:has(.stopx) { max-height: 50vh; }
@@ -758,22 +721,25 @@ button.node:hover { border-color: var(--accent); }
 .sheet .grid .chcard { margin: 0; }
 @media (max-width: 720px) { .sheet.inside { max-height: 62%; } }
 
-/* Break it: the lab itself, broken by anyone, from anywhere (app.js; a report in the ledger). Under the bar, at its
-   right, over whatever is open; on a phone, the width of the screen */
+/* Break it: the lab itself, broken by anyone, from anywhere (app.js; a report in the ledger). The frame's side panel
+   (#271), opened over whatever is open: under the bar at the right, as wide as the panel, solid so nothing shows
+   through; on a phone, the width of the screen */
 .breakbtn { flex: none; color: var(--ink); }
 .breakbtn[aria-expanded=true] { background: color-mix(in srgb, var(--ink) 10%, transparent); }
-.breakp { position: absolute; z-index: 25; top: 76px; right: 14px; width: min(420px, calc(100% - 28px)); max-height: calc(100% - 96px); overflow: auto; padding: 16px 18px 14px; background: var(--panel); border: 1px solid var(--line); border-radius: 22px; backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); box-shadow: var(--shadow); animation: rise .25s ease; }
-.breakp h2 { margin: 2px 32px 6px 0; font: 600 20px/1.2 var(--serif); }
-.breakp .x { position: absolute; top: 10px; right: 10px; }
+.breakp { position: absolute; z-index: 25; top: 84px; right: 16px; width: min(var(--f2-pw, 440px), calc(100% - 32px)); max-height: calc(100% - 100px); overflow: auto; padding: 18px 26px 22px; background: var(--panel-solid); border: 1px solid var(--line); border-radius: 22px; box-shadow: var(--shadow); animation: rise .25s ease; font: 400 15px/1.45 var(--sans); }
+.breakp h2 { margin: 2px 40px 8px 0; font: 700 30px/1.12 var(--serif); }
+.breakp .kicker { font: 700 15px/1.35 var(--sans); letter-spacing: 0; text-transform: none; color: var(--muted); }
+.breakp .small { font-size: 15px; }
+.breakp .x { position: absolute; top: 14px; right: 14px; }
 .breakp .reports { list-style: none; margin: 0 0 12px; padding: 0; display: grid; gap: 8px; }
-.breakp .reports li { display: grid; grid-template-columns: 10px 1fr; gap: 8px; align-items: start; padding: 8px 10px; border: 1px solid var(--line); border-radius: 12px; font-size: 14px; }
+.breakp .reports li { display: grid; grid-template-columns: 10px 1fr; gap: 8px; align-items: start; padding: 8px 10px; border: 1px solid var(--line); border-radius: 12px; font-size: 15px; }
 .breakp .reports li .made { margin-top: 6px; }
 .breakp .reports li.fixed { opacity: .7; }
 .breakp .breakform { display: grid; gap: 10px; }
 .breakp .breakform .chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .breakp .breakform label { display: grid; gap: 4px; }
 .breakp .breakform .kicker { margin: 0; }
-.breakp textarea { width: 100%; min-width: 0; resize: vertical; padding: 8px 10px; border-radius: 10px; border: 1px solid var(--line); background: var(--panel-solid); color: var(--ink); font: 14px/1.4 var(--sans); }
+.breakp textarea { width: 100%; min-width: 0; resize: vertical; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--line); background: var(--panel-solid); color: var(--ink); font: 16px/1.45 var(--sans); }
 .breakp .err { color: var(--bad, #c0392b); margin: 0; }
 .breakp .acts { display: flex; gap: 8px; }
 .chcard.report .st { color: var(--warm); }
@@ -781,7 +747,8 @@ button.node:hover { border-color: var(--accent); }
    stands at the left, and the panel opens below it */
 @media (max-width: 560px) {
   .breakbtn { position: absolute; top: calc(100% + 10px); right: 4px; background: var(--panel); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); box-shadow: var(--shadow); }
-  .breakp { top: 124px; right: 8px; width: calc(100% - 16px); max-height: calc(100% - 136px); padding: 14px 14px 12px; }
+  .breakp { top: 124px; right: 10px; width: calc(100% - 20px); max-height: calc(100% - 136px); padding: 14px 16px 16px; }
+  .breakp h2 { font-size: 23px; }
 }
 
 /* ---- the first page: questions to start with and challenges (src/v2/app.js drawHero) ---- */
@@ -803,7 +770,6 @@ button.node:hover { border-color: var(--accent); }
 }
 
 /* ---- reading: an experiment as a document (src/v2/read.js) ---- */
-.page.reading .inner { max-width: 820px; }
 .readx { --qc: var(--accent); }
 .readx > .kicker { color: var(--qc); }
 .rstate { display: inline-block; padding: 2px 10px; border-radius: 999px; border: 1px solid currentColor; font-size: 12px; }
@@ -858,7 +824,7 @@ button.node:hover { border-color: var(--accent); }
 .ptab th { font: 600 11px var(--mono); text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
 .ptab code { font: 12px/1.45 var(--mono); white-space: pre; }
 @media (max-width: 720px) { .ptab thead { display: none; } .ptab tr { display: grid; grid-template-columns: repeat(4, auto); gap: 2px 10px; padding: 8px 0; border-bottom: 1px solid var(--line); } .ptab td { border: 0; padding: 0; } .ptab td:first-child { grid-column: 1 / -1; padding-bottom: 6px; } .ptab td:not(:first-child)::before { content: attr(data-h); display: block; font: 600 10px var(--mono); text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
-  .page .pagex { top: 44px; } .pbar { grid-template-columns: 1fr auto; } .pbar .pt { grid-column: 1 / -1; grid-row: 2; } .probe { padding: 14px; } }
+  .pbar { grid-template-columns: 1fr auto; } .pbar .pt { grid-column: 1 / -1; grid-row: 2; } .probe { padding: 14px; } }
 
 /* ---- a world's page (src/v2/worlds.js), made from its document ---- */
 .world { --qc: var(--accent); }
@@ -891,7 +857,6 @@ button.node:hover { border-color: var(--accent); }
 .wch.on { border-color: color-mix(in srgb, var(--qc) 45%, var(--line)); }
 .wch p { margin: 0; } .wchn { font: 600 16px/1.3 var(--serif); }
 .wch .btn { justify-self: start; margin-top: 6px; padding: 7px 14px; }
-.chere { font-size: 13px; color: var(--qc); font-weight: 600; margin-top: 6px; }
 .wmeets a { font-weight: 600; }
 .wsrc { margin-top: 30px; }
 /* Copies: the crowd of chips */
@@ -1372,22 +1337,20 @@ button.opens { width: 100%; text-align: left; border: 0; border-left: 3px solid 
 .lbl3.wf3:hover, .lbl3.wf3:focus-visible { border-color: var(--ink); }
 @media (max-width: 720px) { .lbl3.wf3 { display: none; } .wfd { display: none; } }
 
-/* ---- The bench on a desktop (CLAUDE.md, desktop first where it is richer) ----
-   On a wide screen the one card of a view (the island's sheet, a level's dock) stands as a bench at the right, as
-   tall as it needs to be, and the world takes the rest: the canvases, the shared stage and the labels end where the
-   bench begins, so every view frames its picture in the space that is left (each watches its canvas's size). Below
-   1100 px the card stays below the picture, as before. */
+/* ---- The side panel on a desktop (CLAUDE.md, desktop first where it is richer; #271, one frame, three modes) ----
+   On a wide screen a card that is not a caption on the picture stands as the side panel at the right, full height,
+   its width growing with the screen (--f2-pw, src/styles/frame2.css): a view's card in Do, Ask and Read more, and the
+   island's sheet. A view frames its picture left of it (its canvas runs under it); the island's canvas ends where the
+   panel begins. Below 1100 px the card is below the picture (on a phone, the sheet). --bench is the room the panel
+   takes from the right edge, for the things on the picture that keep clear of it. */
 @media (min-width: 1100px) {
-  :root { --bench: 452px; }
-  /* the bench is tall: the goal scrolls with the lab, so it never covers the picture being watched */
+  :root { --bench: calc(var(--f2-pw) + 32px); }
+  /* the goal scrolls with the lab, so it never covers the picture being watched */
   .goalbox { position: static; box-shadow: none; }
-  .sheet, .dockwrap { left: auto; right: 16px; top: 84px; bottom: auto; transform: none; width: calc(var(--bench) - 32px); max-height: calc(100% - 100px); overflow: auto; animation: benchin .35s ease; }
-  .sheet:has(.ticks), .sheet.inside, .sheet.whatif { max-height: calc(100% - 100px); }
-  .dockwrap:has(.benchdock) { width: calc(var(--bench) - 32px); }
   .dockwrap .dock, .dockwrap .dock.benchdock, .dockwrap .dock.supdock, .dockwrap .dock:has(.stopx) { width: auto; max-height: none; overflow: visible; }
+  .sheet, .sheet:has(.ticks), .sheet.inside, .sheet.whatif, .sheet.part { left: auto; right: 16px; top: 84px; bottom: 16px; transform: none; width: var(--f2-pw); max-height: none; overflow: auto; animation: benchin .35s ease; }
   @keyframes benchin { from { opacity: 0; translate: 18px 0; } }
-  .stage:has(> .sheet:not([hidden])) :is(.c3, .stage3d, .labels),
-  .stage:has(> section:not([hidden]) .dockwrap) :is(.c3, .stage3d, .labels) { right: var(--bench); width: calc(100% - var(--bench)); }
+  .stage:has(> .sheet:not([hidden])) :is(.c3, .stage3d, .labels) { right: var(--bench); width: calc(100% - var(--bench)); }
   .sheet .grid { grid-template-columns: 1fr; }
 }
 /* ---- Verify the agent (src/v2/play.js agentDesk, src/data/agent.js) ---- */

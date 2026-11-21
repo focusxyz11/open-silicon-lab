@@ -8,7 +8,7 @@
            each with its catch, keep the chef cooking at seven levels, from one wire to a team passing messages. Each
            level shows its question on the picture. Serving runs the five rounds; an attempt can be kept in the ledger,
            and each level has its curve of the best time waiting so far. Won when every level of chips is cleared.
-   In the new frame (?frame=2) the picture is the instrument and the meters the goal (docs/LABS.md, Do mode). On a phone
+   In Do mode the picture is the instrument and the meters the goal (docs/LABS.md, Do mode). On a phone
    the kitchen keeps one picture and the levers the level needs most; the rest wait behind More levers.
    lab(L) gets the player's pieces and returns { draw, click, input }. What the player tried is kept in the view and in
    S.chef (the game's state). */

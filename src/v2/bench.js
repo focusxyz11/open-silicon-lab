@@ -14,7 +14,7 @@
 
    The design engine decides everything (src/engines/design.js, src/engines/bench.js); this file draws and listens.
    The same drawing serves a challenge played at the bench, as its instrument in the card (data-f2="instrument"),
-   so in Do mode (?frame=2) it takes the stage. Words: bench.*, design.*. */
+   so in Do mode it takes the stage. Words: bench.*, design.*. */
 import { t } from '../core/i18n.js';
 import * as G from './game.js';
 import * as X from '../engines/bench.js';

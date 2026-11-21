@@ -3,6 +3,11 @@
 How the dive, the journey and the threads of questions were first put together (November 2026), and the data behind them. **The structure of the lab is now the grid in `docs/SYSTEM.md` §2**: this note's "one world, seen two ways" (scale and process) became its two axes and two moves, and "the build" became the stage where the loop starts, Open. What follows is kept for the data model (worlds, depths, threads, stops), the table of where each core question has a form, and the history; where it speaks of a top bar with Journey and Design in it, or of a card with tabs, it describes the earlier site.
 Data: `src/data/weave.js`. Logic: `src/engines/weave.js`. Tests: `tests/weave.test.mjs`.
 
+**On the screen, the rule is one frame, three modes** (SYSTEM.md §4, #271): Look: the picture is the stage and its
+words are a caption on it. Do: the lab's instrument is the stage and its controls are beside it. Read: a reading page
+with its picture pinned beside it. The thing you are working on always gets the stage. Where this note speaks of a
+card under the picture or a panel beside it, read the caption (Look) and the side panel (Do, Ask).
+
 ## The idea
 
 The lab is one world, seen two ways. Diving is about scale: a continuous zoom from a data centre, a phone or a car down to silicon atoms. The journey is about process: a line along which a chip is made, from crystal to a chip shipped into the world. Open questions run through it as threads. A visitor meets a question on the part of a scene it is about; once picked, the question stays with them as they go deeper or higher, and takes a new form at every depth it reaches. The question behind the question matters more than any answer.
@@ -74,6 +79,7 @@ This table is for people building the lab. Visitors never see the questions toge
 - **The journey (November 2026):** the factory stopped being a way down and became a line, because making a chip is a process in time, not a place inside another: the dive shows scale, the journey shows process. Then the line became one panorama travelled with one wafer, so each handoff from one process to the next can be seen (the stations-side-by-side version is kept on `claude/journey-stations-2026-11`). Then each station became a real machine with its wafer handling (pod, robots, airlock, chambers) drawn and played step by step, because how a wafer is moved is part of how it is made and was too abstract to imagine from a single box (the first panorama is kept on `claude/journey-panorama-2026-11`).
 - **From the earlier site and Fable's build (November 2026):** the real cases and the sourced figures came from the earlier site; the companion and the open places came from Fable's world build (its companion could also talk live when the page can reach Claude; its open places kept questions on one device; here they go to GitHub instead).
 - **Fable's world build** (an artifact, November 2026) is the reference for the zoom, the scenes, the threads and their words.
+- **One frame, three modes (November 2026, #271 to #276):** every word, lab and document had gone into one card about 420 px wide at the right of the picture, labs were played in its corner and documents opened as windows over a blurred island. The frame became three modes, by one rule (the thing you are working on gets the stage): the words of a level a caption on the picture, a lab's instrument on the stage with its controls beside it, and a reading page with its picture pinned beside it. The frame before it is kept on `claude/before-frame2-2026-11`.
 
 ## Open
 

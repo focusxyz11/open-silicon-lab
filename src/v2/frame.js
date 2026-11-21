@@ -28,7 +28,7 @@
 import { t, fmtNum } from '../core/i18n.js';
 import { TWINS } from '../data/atlas.js';
 import { fieldLine } from './field.js';
-import { ON as FRAME2, attach as frame2 } from './frame2.js';
+import { attach as frame2 } from './frame2.js';
 
 /* a size in metres, in words: 500 m, 80 cm, 1 mm, 1 µm, 50 nm, 0.5 nm */
 export function sizeWords(m) {
@@ -226,8 +226,8 @@ export function createFrame(host, o) {
     /* a question being followed: shown under Ask, and kept while the level changes beneath it */
     stop(html) { mode = 'ask'; pinned = true; host.querySelectorAll('[data-mode]').forEach(b => b.setAttribute('aria-selected', String(b.dataset.mode === 'ask'))); dock.innerHTML = html; dock.classList.remove('locked'); }
   };
-  /* the new frame, only behind ?frame=2 (src/v2/frame2.js, #271): the same frame worn as a caption, a side panel and a stage */
-  if (FRAME2) frame2(host, api, o, { wrap, items, at: () => railAt, doList: () => (depth && o.doAt ? o.doAt(depth) : []),
+  /* the frame worn as a caption, a side panel and a stage (src/v2/frame2.js, #271) */
+  frame2(host, api, o, { wrap, items, at: () => railAt, step: () => (o.steps && stepAt ? (o.steps.items.find(x => x.id === stepAt) || {}).label || '' : ''), doList: () => (depth && o.doAt ? o.doAt(depth) : []),
     here: () => { const it = items.find(i => i.id === railAt); return it ? { label: it.label, size: it.size ? sizeWords(it.size) : '' } : null; } });
   return api;
 }

@@ -203,7 +203,7 @@ export function labels(host) {
         const on = L.show && (!L.need || L.need.visible) && v.z < 1 && v.z > -1 && Math.abs(v.x) < 1.1 && Math.abs(v.y) < 1.1 && dist >= L.min && dist <= L.max;
         L.on = on; L.px = (v.x + 1) / 2 * w; L.py = (1 - v.y) / 2 * h; L.dx = 0; L.dy = 0;
       }
-      if (APART()) { const t = performance.now(); if (!keep || t - keepAt > 300) { keep = keepOut(host); keepAt = t; } apart(list, w, keep); }
+      { const t = performance.now(); if (!keep || t - keepAt > 300) { keep = keepOut(host); keepAt = t; } apart(list, w, keep); }
       for (const L of list) {
         const on = L.on && !L.folded;
         L.el.style.opacity = on ? '' : '0'; L.el.style.pointerEvents = on ? '' : 'none';
@@ -214,14 +214,12 @@ export function labels(host) {
     list
   };
 }
-/* names that never cover each other (#275). Only in the new frame for now (?frame=2, src/v2/frame2.js), where the
-   names on the picture are larger; the frame it replaces keeps its names as they were. Each name in turn, the lit one
+/* names that never cover each other (#275), now that the names on the picture are larger (src/styles/frame2.css). Each name in turn, the lit one
    first and then in the order the view gave them, takes the first place where it covers no name already placed, nor
    the frame's own things on the picture (keepOut), and stays on the picture: over its point, else slid sideways (its
    stem still under it), else lifted a row or two (its stem longer), else under its point; the place it had last time
    is tried first, so names do not hop as the view moves. A name with no such place is left out until there is room
    again: the least important folds first. Only the parts' names (part3) move; others are left where they are */
-const APART = () => document.documentElement.classList.contains('frame2');
 const GAP = 4, STEM = 6, EDGE = 6;
 /* what the frame keeps on the picture, which the names keep clear of too: the bar, the way out, the lens's button,
    the levels at the side, the card or sheet, the ways in and along. Read a few times a second, in the names' own

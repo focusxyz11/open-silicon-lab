@@ -153,9 +153,33 @@ nothing else. A visitor never has to know a view's name.
 The flat dive stays: below the chip a blueprint zoom reads better than 3D. The earlier site's dive moves into the
 frame below for exactly those levels.
 
-## 4. One frame
+## 4. One frame, three modes
 
-Every view wears the same frame. There is no column of text beside the picture.
+One frame, three modes. Look: the picture is the stage and its words are a caption on it. Do: the lab's instrument
+is the stage and its controls are beside it. Read: a reading page with its picture pinned beside it. The thing you
+are working on always gets the stage.
+
+Every view wears the same frame (`src/v2/frame.js`), worn in the three modes by `src/v2/frame2.js` with
+`src/styles/frame2.css` (#271; the frame before it, one card at the right of every view and documents as windows over
+the island, is kept on the branch `claude/before-frame2-2026-11`). It has three components, and no other floating
+window of text:
+
+- **The caption** (Look): the card on the picture, bottom left: the place and the size, the level's name (in a row of
+  steps, the step's), one sentence, its whole question, the level's search, *Read more* and *Do*. A story told step by
+  step (the board's) is the caption as it is. The rest of a level's card waits under *Read more*.
+- **The side panel** (Do, Ask, Read more, and a card that is not a level's: the supply map, the island's sheet, Break
+  it): at the right, full height, its width growing with the screen (about 460 px at 1280, 600 at 1920), never a box
+  scrolling inside a box. In Do, a lab that declares its instrument (`data-f2="instrument"`, `docs/LABS.md`) puts it on
+  the stage, the picture area, with its goal as meters across the top, and keeps its controls in the panel beside it; a
+  small *Where you are* leads back to Look.
+- **The phone sheet**: on a phone the card is a sheet at three heights (a peek that shows the whole question, half,
+  full); in Do the controls stay in it under the instrument; notices go into it and never cover the picture.
+- **Read**: a question's page, the questions, machines and your log are a reading page in the frame, a column of about
+  70 characters at 18 to 18.5 px with its picture pinned beside it (first on a phone); the bar says *Reading* and
+  lights no stage, and a way back leads to where you came from.
+
+One type scale: titles and the question in Besley, everything read in Atkinson Hyperlegible Next and never below
+15 px, names on the picture 14 px, figures in Martian Mono. The parts of the frame:
 
 - **The scene** fills the screen. A part's name sits on the part; a figure is a reading on the part; a question is a
   mark on the part. Words are HTML over projected points, never drawn into the scene.
@@ -167,20 +191,22 @@ Every view wears the same frame. There is no column of text beside the picture.
 - **The way in** is on the picture: the card's way deeper again as one button, beside the thing it enters with a ring
   on it, in every view that knows where that is (the flight, the dive's next square or a 3D level's door, the chip's
   next layer, the board's chip). A 3D view frames its picture in the part the frame leaves free (`inset`).
-- **One card** at the bottom, the same on the island and in every view (`src/v2/frame.js`; the island's is drawn
-  by `drawPlace` in `src/v2/app.js`). Its three faces are at its top, with how much waits behind each:
+- **One card**, the same on the island and in every view (`src/v2/frame.js`; the island's is drawn by `drawPlace` in
+  `src/v2/app.js`), worn as the caption, the side panel or the phone sheet. Its three faces are at its top, with how
+  much waits behind each:
   **Look** is what this is, one step at a time (steps, not scrolling), with the moves from here: on the island,
   *Go inside* and *Next* round the loop. Each step of a story moves the camera and lights a part; its words are
   touchable (`[[part|words]]` lights the part) and live (`[[#name]]` is a number you drag); a step can ask for a
   prediction. Stories are data (`src/v2/stories.js`, played by `src/v2/story.js`).
   **Do** lists the challenges at the level in view and the open things of the ledger that sit there, and a
-  challenge is played in the card, in the view that shows its level, with the picture behind it (`doHome`).
+  challenge is played in Do mode, in the view that shows its level (`doHome`): its instrument on the stage, or the
+  place itself as the picture, and its controls in the side panel.
   **Ask** lists the questions at the level, what people and agents asked there, and shows the questions as marks
   on their parts. Do and Ask are filled from the atlas, so a view gets them by saying which level it shows.
 
 **The bar.** It never hides: the lab's mark (home), the loop, *Your log*, the theme. There is no menu of sections
 by default; `?menu=1` adds one for that browser, to compare (not decided: `docs/reviews/structure.md`, Status).
-One reading view is opened on purpose: **your log** (`#/log`: a jump to any place, level or challenge by name,
+One reading page is opened on purpose: **your log** (`#/log`: a jump to any place, level or challenge by name,
 also on the `/` key; what is next for your chip; the questions you met; the challenges by step). The commons has no page: **the Lab's inside**
 (`#/build[/<step>[/<piece>]]`) is in the Lab's own card, with the island behind it: the computer, then a piece of it,
 then the designs for that piece, each an entry of the ledger; and beside the computer, the record, who is here, and
@@ -291,10 +317,10 @@ looking at, and its pin pulses. With reduced motion none of it moves.
 Text has a budget: about one sentence per story step, one line per card. Longer reading (notes, sources, the full
 explanation) goes into a reading view, opened on purpose, at a reading width.
 
-On a desktop (1100 px and wider) the one card stands as a bench at the right, as tall as it needs to be, and the
-picture takes the rest: the canvases, the shared stage and the labels end where the bench begins, and each view
-frames its picture in that space. Below that width the card stays below the picture (CLAUDE.md, desktop first
-where it is richer).
+On a desktop the picture takes the whole screen: in Look the caption stands on it at the bottom left and each view
+frames its picture right of it; in Do and Ask the side panel stands at the right and the picture is framed left of it
+(`inset`), and a lab's instrument takes the stage there. The island's canvas ends where its sheet begins. On a phone
+the card is the sheet under the picture (CLAUDE.md, desktop first where it is richer).
 
 ## 5. Adding something
 
@@ -326,4 +352,4 @@ where it is richer).
 | First minute | the intro shot, one sentence, a glowing start; the first win in one tap; feedback for wrong, right, reached and won |
 | One stage | one renderer and one GL canvas for the island, the data centre, the chip, the board and the line's machines; the views made and compiled ahead while the island is shown |
 | No cuts | the camera dives into a place and rises out of it; views zoom in, out, turn or slide into each other; the bar, the dock and the ornaments stay; code preloaded, spinner only when slow |
-| The bar and the card | the bar never hides and carries the loop; one card with Look · Do · Ask on the island and in every view; challenges played in place; the address follows you; ↑ ↓ ← → and Escape everywhere |
+| The bar and the card | the bar never hides and carries the loop; one card with Look · Do · Ask on the island and in every view, worn in three modes (a caption, the side panel with a stage, a reading page); challenges played in place; the address follows you; ↑ ↓ ← → and Escape everywhere |
