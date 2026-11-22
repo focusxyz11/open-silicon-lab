@@ -1186,15 +1186,17 @@ run['frame'] = async () => {
       return v.textContent !== r.dataset.was; }, null, { timeout: 30000, polling: 500 })
       .catch(() => problems.push(tag + ': moving Geometry\'s control does not change what it measures'));
     /* down to the gate: Fight or use physics lives there too and stays on; Geometry does not, and is put down, saying so */
+    /* one flight down at a time: a click restarts the flight (src/app/world.js flyTo), so clicking on every poll would
+       keep a slow machine from arriving; it clicks again only if no flight has landed after 8 s */
     await lp.waitForFunction(() => { const f = document.querySelector('#diveui'); if (!f) return false;
       if (location.hash === '#/dive/block') { const m = f.querySelector('.mark3[data-lens="physics"]'); if (m && m.getAttribute('aria-pressed') !== 'true') { m.click(); return false; }
-        const d = [...f.querySelectorAll('.dock .qlsteps [data-divego]')].find(b => /↓/.test(b.textContent)); if (d) d.click(); return false; }
+        const d = [...f.querySelectorAll('.dock .qlsteps [data-divego]')].find(b => /↓/.test(b.textContent)); if (d && !(+f.dataset.downAt > Date.now() - 8000)) { f.dataset.downAt = Date.now(); d.click(); } return false; }
       return location.hash === '#/dive/gate' && !!f.querySelector('.mark3[data-lens="physics"][aria-pressed="true"]') && !!f.querySelector('.dock .qlcard'); }, null, { timeout: 60000, polling: 500 })
       .catch(() => problems.push(tag + ': going down a level does not keep a lens that lives there too'));
-    await lp.evaluate(() => { location.hash = '#/dive/block'; });
+    await lp.evaluate(() => { location.hash = '#/dive/block'; const f = document.querySelector('#diveui'); if (f) delete f.dataset.downAt; });
     await lp.waitForFunction(() => { const f = document.querySelector('#diveui'); if (!f) return false;
       if (location.hash === '#/dive/block') { const m = f.querySelector('.mark3[data-lens="geo"]'); if (m && m.getAttribute('aria-pressed') !== 'true') { m.click(); return false; }
-        const d = [...f.querySelectorAll('.dock .qlsteps [data-divego]')].find(b => /↓/.test(b.textContent)); if (d && f.querySelector('.dock .lpinst[data-lpinst="geo"]')) d.click(); return false; }
+        const d = [...f.querySelectorAll('.dock .qlsteps [data-divego]')].find(b => /↓/.test(b.textContent)); if (d && f.querySelector('.dock .lpinst[data-lpinst="geo"]') && !(+f.dataset.downAt > Date.now() - 8000)) { f.dataset.downAt = Date.now(); d.click(); } return false; }
       return location.hash === '#/dive/gate' && !!f.querySelector('.dock .qldown') && !f.querySelector('.mark3[aria-pressed="true"]'); }, null, { timeout: 60000, polling: 500 })
       .catch(() => problems.push(tag + ': going down to where a lens does not live does not put it down, saying so'));
     await lp.close(); }
