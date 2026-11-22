@@ -17,7 +17,8 @@
        experiments  the experiments (src/data/experiments/)
        challenges   the challenges (src/v2/game.js)
    - MARKS: at each level, the part each lens that lives there is about, where its mark stands on the picture.
-   - SEAMS: the pairs of questions that share content, each named for what joins them (frame.seam.<a>.<b>). */
+   - MEETS: the pairs of questions that share content, each named for what joins them (frame.meet.<a>.<b>), with the
+     shape they are drawn in when both are held. */
 
 export const QUESTIONS = [
   { id: 'perfect', word: 'field.perfect.q', icon: 'M5 8l0 0M9 15l0 0M13 6l0 0M17 12l0 0M7 19l0 0M15 18l0 0M19 6l0 0' },
@@ -183,37 +184,48 @@ export const MARKS = {
   ship: { perfect: 'trays', vn: 'tray', trust: 'boxes', human: 'datacentre', line: 'phone', moore: 'car' }
 };
 
-export const SEAMS = [
-  ['moore', 'perfect'],
-  ['eff', 'geo'],
-  ['moore', 'physics'],
-  ['geo', 'line'],
-  ['human', 'sutton'],
-  ['human', 'moore'],
-  ['dig', 'line'],
-  ['perfect', 'vn'],
-  ['human', 'line'],
-  ['geo', 'moore'],
-  ['human', 'trust'],
-  ['dig', 'physics'],
-  ['eff', 'line'],
-  ['nat', 'physics'],
-  ['geo', 'perfect'],
-  ['copy', 'physics'],
-  ['nat', 'sutton'],
-  ['sutton', 'trust'],
-  ['perfect', 'trust'],
-  ['trust', 'vn'],
-  ['line', 'moore'],
-  ['line', 'sutton'],
-  ['copy', 'geo'],
-  ['eff', 'moore'],
-  ['eff', 'physics'],
-  ['copy', 'dig'],
-  ['eff', 'sutton'],
-  ['copy', 'eff'],
-  ['perfect', 'physics'],
-  ['dig', 'vn'],
-  ['copy', 'vn'],
-  ['copy', 'nat']
+/* where two lenses meet (#315): the pairs of questions that share content, each named for what joins them
+   (frame.meet.<a>.<b>), with a question neither asks alone (.q) and what is still open there (.open). Held together, a
+   pair is drawn in one of three shapes, as the field questions have theirs:
+     front  the two measures against each other, today's best compromises as a line, your design a dot on it, and an
+            innovation that moves the whole line; only where one engine computes both measures at once (front: the
+            function of src/engines/lens.js that does), never faked
+     fork   the same level built two ways, split by a line you drag across the picture (fork: an engine that measures
+            both ways; without one, each side shows its own lens's measures)
+     chain  one level's problem becoming the next, step by step, each lighting as its threshold is passed (chain: the
+            engine of the steps; a chain is drawn only where there is one)
+   (`seam` is the line between two cells of the grid where a field question rises: src/engines/way.js) */
+export const MEETS = [
+  { a: 'moore', b: 'perfect', shape: 'chain' },
+  { a: 'eff', b: 'geo', shape: 'front', front: 'geoEffFront' },
+  { a: 'moore', b: 'physics', shape: 'chain' },
+  { a: 'geo', b: 'line', shape: 'fork' },
+  { a: 'human', b: 'sutton', shape: 'fork' },
+  { a: 'human', b: 'moore', shape: 'chain' },
+  { a: 'dig', b: 'line', shape: 'fork' },
+  { a: 'perfect', b: 'vn', shape: 'fork' },
+  { a: 'human', b: 'line', shape: 'fork' },
+  { a: 'geo', b: 'moore', shape: 'fork' },
+  { a: 'human', b: 'trust', shape: 'fork' },
+  { a: 'dig', b: 'physics', shape: 'chain', chain: 'cleanOne' },
+  { a: 'eff', b: 'line', shape: 'fork' },
+  { a: 'nat', b: 'physics', shape: 'fork' },
+  { a: 'geo', b: 'perfect', shape: 'chain' },
+  { a: 'copy', b: 'physics', shape: 'fork', fork: 'memoryFork' },
+  { a: 'nat', b: 'sutton', shape: 'fork' },
+  { a: 'sutton', b: 'trust', shape: 'chain' },
+  { a: 'perfect', b: 'trust', shape: 'chain' },
+  { a: 'trust', b: 'vn', shape: 'fork' },
+  { a: 'line', b: 'moore', shape: 'fork' },
+  { a: 'line', b: 'sutton', shape: 'fork' },
+  { a: 'copy', b: 'geo', shape: 'fork' },
+  { a: 'eff', b: 'moore', shape: 'chain' },
+  { a: 'eff', b: 'physics', shape: 'fork' },
+  { a: 'copy', b: 'dig', shape: 'fork' },
+  { a: 'eff', b: 'sutton', shape: 'chain' },
+  { a: 'copy', b: 'eff', shape: 'fork' },
+  { a: 'perfect', b: 'physics', shape: 'chain' },
+  { a: 'dig', b: 'vn', shape: 'fork' },
+  { a: 'copy', b: 'vn', shape: 'fork' },
+  { a: 'copy', b: 'nat', shape: 'fork' }
 ];

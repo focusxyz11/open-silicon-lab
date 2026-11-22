@@ -9,7 +9,8 @@
    Motion only where it carries meaning (energy travelling, currents adding), and none with reduced motion. */
 import { t, fmtNum, fmtWords } from '../core/i18n.js';
 import { factsOf } from '../data/partfacts.js';
-import { MODELS } from '../engines/lens.js';
+import { MODELS, geometry, efficiency, brainCopy, physics as physicsModel, digital, geoEffFront, memoryFork, cleanOne, HOT, SWING } from '../engines/lens.js';
+import { pairOf } from '../engines/frame.js';
 
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 const still = () => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -70,9 +71,9 @@ export const PAINT = {
      the memory array's columns add with currents, flowing down them; the hotter, the more of them stray */
   physics: (F, m) => {
     const mem = F.parts.find(p => p.kind === 'memory').rects[0], rows = F.parts.filter(p => p.kind === 'logic' && p.by === 'program').flatMap(p => p.rects), move = !still(), cols = 12;
-    let h = rows.map(r => '<rect x="' + (r[0] - 6) + '" y="' + (r[1] - 6) + '" width="' + (r[2] + 12) + '" height="' + (r[3] + 12) + '" rx="8" fill="none" stroke="var(--good)" stroke-width="3" stroke-dasharray="10 8"/>').join('');
-    h += '<rect x="' + (mem[0] + mem[2] * 0.89) + '" y="' + mem[1] + '" width="' + (mem[2] * 0.11) + '" height="' + mem[3] + '" fill="var(--good)" fill-opacity=".35"/>';
-    for (let c = 0; c < cols; c++) { const x = mem[0] + mem[2] * 0.89 * (c + 0.5) / cols, stray = (c * 7 % 10) / 10 < m.measures.off;
+    let h = m.part === 'use' ? '' : rows.map(r => '<rect x="' + (r[0] - 6) + '" y="' + (r[1] - 6) + '" width="' + (r[2] + 12) + '" height="' + (r[3] + 12) + '" rx="8" fill="none" stroke="var(--good)" stroke-width="3" stroke-dasharray="10 8"/>').join('') +
+      '<rect x="' + (mem[0] + mem[2] * 0.89) + '" y="' + mem[1] + '" width="' + (mem[2] * 0.11) + '" height="' + mem[3] + '" fill="var(--good)" fill-opacity=".35"/>';
+    if (m.part !== 'fight') for (let c = 0; c < cols; c++) { const x = mem[0] + mem[2] * 0.89 * (c + 0.5) / cols, stray = (c * 7 % 10) / 10 < m.measures.off;
       h += '<line x1="' + x.toFixed(0) + '" y1="' + mem[1] + '" x2="' + x.toFixed(0) + '" y2="' + (mem[1] + mem[3]) + '" stroke="' + (stray ? 'var(--bad)' : 'var(--warm)') + '" stroke-width="6" stroke-dasharray="18 14"' + (move ? '><animate attributeName="stroke-dashoffset" from="64" to="0" dur="' + (1.2 + c % 3 * 0.3).toFixed(1) + 's" repeatCount="indefinite"/></line>' : '/>'); }
     return h;
   },
@@ -141,36 +142,175 @@ export function squareTo(pts) {
   return [a / S, d / S, 0, g / S, b / S, e / S, 0, h / S, 0, 0, 1, 0, x0, y0, 0, 1];
 }
 
-/* createLensPaint(where) -> { show(q, level), hide(), update() }. where() -> { host, corners } or null: the element the
-   layer stands in (under the picture's names) and the plan's four corners on the screen, null while the picture moves
-   between levels or the level is not in view */
+/* ---- two lenses held at once (#315): where they meet, drawn as a front, a fork or a chain (MEETS in
+   src/data/frame.js). The picture is the two lenses' own paints and the shape's layer over them; the card holds the
+   pair's instrument. Each pair's state, for the visit ---- */
+const PAIR = {};
+const keyOf = (a, b) => { const p = pairOf(a, b); return p ? p.a + '.' + p.b : null; };
+const pairState = k => PAIR[k] || (PAIR[k] = { p: 0, n: 0, celsius: 45, swing: 1, split: 0.5 });
+/* a pair can be drawn at a level where both lenses paint it and its shape has what it needs */
+export function paintsPair(a, b, level) {
+  const P = pairOf(a, b); if (!P || !paints(a, level) || !paints(b, level)) return false;
+  return P.shape === 'fork' || (P.shape === 'front' && !!P.front) || (P.shape === 'chain' && !!P.chain);
+}
+const PLAN_W = 1000;
+/* where a chain's steps stand on the plan: the logic that heats, the wire that shakes, the gate at its end, the memory
+   that keeps the word */
+function chainPoints(F) {
+  const d = digital(F, 0), w = d.wire || [[300, 500], [500, 500]], mid = w[Math.floor(w.length / 2)], start = w[0], mem = F.parts.find(p => p.kind === 'memory').rects[0];
+  return [[430, 150], mid, start, [mem[0] + mem[2] / 2, mem[1] + mem[3] / 2]];
+}
+function pairSvg(a, b, level) {
+  const P = pairOf(a, b), k = P.a + '.' + P.b, S = pairState(k), F = factsOf(level);
+  if (P.shape === 'front') {
+    /* Geometry's paint with the logic where the control puts it, Efficiency's pulses, and the memory moved into the
+       rows in slices as the innovation grows; the array it left fades */
+    const g = geometry(F, S.p), mem = g.mem; let h = PAINT.geo(F, g) + PAINT.eff(F, efficiency(F, valueOf('eff')));
+    if (S.n > 0) { h += '<rect ' + R(mem) + ' rx="8" fill="var(--bg)" fill-opacity="' + (0.55 * S.n).toFixed(2) + '"/>';
+      g.placed.forEach(r => { for (let i = 0; i < 4; i++) { const w = r[2] / 4 * 0.22 * S.n, x = r[0] + r[2] * (i + 0.5) / 4 - w / 2; h += '<rect x="' + x.toFixed(0) + '" y="' + (r[1] + 4) + '" width="' + w.toFixed(1) + '" height="' + (r[3] - 8) + '" rx="3" fill="var(--good)" fill-opacity=".85"/>'; } }); }
+    return h;
+  }
+  if (P.shape === 'fork') {
+    /* the same block two ways, the line between them where you drag it: Brain or copy and Fight or use physics as
+       exact bits (memory in its array, margins and check bits) against memory that computes (the numbers in the cells,
+       currents adding); any other fork, each lens's own paint on its side */
+    const X = (S.split * PLAN_W).toFixed(1), clip = (id, x, w) => '<clipPath id="' + id + '"><rect x="' + x + '" y="-200" width="' + w + '" height="1400"/></clipPath>';
+    const mem = k === 'copy.physics';
+    const left = mem ? PAINT.copy(F, brainCopy(F, 0)) + PAINT.physics(F, Object.assign(physicsModel(F, S.celsius), { part: 'fight' })) : PAINT[P.a](F, run(P.a, level));
+    const right = mem ? PAINT.copy(F, brainCopy(F, 1)) + PAINT.physics(F, Object.assign(physicsModel(F, S.celsius), { part: 'use' })) : PAINT[P.b](F, run(P.b, level));
+    return '<defs>' + clip('lpL', -200, +X + 200) + clip('lpR', X, 1400) + '</defs><g clip-path="url(#lpL)">' + left + '</g><g clip-path="url(#lpR)">' + right + '</g>' +
+      '<line x1="' + X + '" y1="-10" x2="' + X + '" y2="1010" stroke="var(--ink)" stroke-width="6" stroke-dasharray="18 10"/>';
+  }
+  /* a chain: the logic warming with the temperature, the wire's bits read with the noise the heat makes, and the steps
+     joined in order (their numbers are pins over the picture) */
+  const C = cleanOne(F, S.celsius, S.swing), pts = chainPoints(F), rows = F.parts.filter(p => p.kind === 'logic' && p.by === 'program').flatMap(p => p.rects);
+  const hot = (S.celsius - HOT[0]) / (HOT[HOT.length - 1] - HOT[0]);
+  return rows.map(r => '<rect ' + R(r) + ' rx="6" fill="var(--bad)" fill-opacity="' + (0.06 + 0.4 * hot).toFixed(2) + '"/>').join('') + PAINT.dig(F, digital(F, C.noise)) +
+    '<path d="' + path(pts) + '" fill="none" stroke="var(--warm)" stroke-width="6" stroke-dasharray="4 14" stroke-linecap="round"/>';
+}
+/* the pins over the picture, in plan coordinates: a chain's numbered steps, lit once past their threshold; a fork's
+   handle on its line */
+function pairPins(a, b, level) {
+  const P = pairOf(a, b), k = P.a + '.' + P.b, S = pairState(k), F = factsOf(level);
+  if (P.shape === 'chain') { const C = cleanOne(F, S.celsius, S.swing); return chainPoints(F).map((pt, i) => ({ at: pt, cls: 'lppin' + (C.steps[i].lit ? ' lit' : ''), html: String(i + 1), label: t('lp.chain.step.' + C.steps[i].id) })); }
+  if (P.shape === 'fork') return [{ at: [S.split * PLAN_W, 300], cls: 'lppin lphandle', html: '⇔', label: t('lp.fork.drag'), drag: k }];
+  return [];
+}
+
+/* the projective map, and its inverse: a point of the plan onto the screen, and back */
+const fwd = (m, x, y) => { const w = m[3] * x + m[7] * y + m[15]; return [(m[0] * x + m[4] * y + m[12]) / w, (m[1] * x + m[5] * y + m[13]) / w]; };
+function back(m, sx, sy) {
+  const A = m[0], B = m[4], C = m[12], D = m[1], E = m[5], Fm = m[13], G = m[3], H = m[7], I = m[15];
+  const a = E * I - Fm * H, b = C * H - B * I, c = B * Fm - C * E, d = Fm * G - D * I, e = A * I - C * G, f = C * D - A * Fm, g = D * H - E * G, h = B * G - A * H, i = A * E - B * D;
+  const w = g * sx + h * sy + i; return [(a * sx + b * sy + c) / w, (d * sx + e * sy + f) / w];
+}
+
+/* createLensPaint(where) -> { show(q, level, q2), hide(), update() }. where() -> { host, before, corners } or null: the
+   element the layer stands in (under the picture's names, before `before`) and the plan's four corners on the screen,
+   null while the picture moves between levels or the level is not in view */
 export function createLensPaint(where) {
-  let layer = null, now = null, raf = 0;
-  const draw = () => { if (!now || !layer) return; layer.innerHTML = '<svg viewBox="0 0 1000 1000" width="1000" height="1000" data-lens="' + now.q + '">' + PAINT[now.q](factsOf(now.level), run(now.q, now.level)) + '</svg>'; };
+  let layer = null, pinsEl = null, now = null, raf = 0, M = null, drag = null;
+  const draw = () => {
+    if (!now || !layer) return;
+    const svg = now.q2 ? pairSvg(now.q, now.q2, now.level) : PAINT[now.q](factsOf(now.level), run(now.q, now.level));
+    layer.innerHTML = '<svg viewBox="0 0 1000 1000" width="1000" height="1000" data-lens="' + now.q + '"' + (now.q2 ? ' data-pair="' + keyOf(now.q, now.q2) + '"' : '') + '>' + svg + '</svg>';
+    const pins = now.q2 ? pairPins(now.q, now.q2, now.level) : [];
+    pinsEl.innerHTML = pins.map((p, i) => '<button type="button" class="' + p.cls + '" data-pin="' + i + '"' + (p.drag ? ' data-pindrag="' + p.drag + '"' : ' tabindex="-1"') + ' aria-label="' + esc(p.label) + '" title="' + esc(p.label) + '">' + esc(p.html) + '</button>').join('');
+    pinsEl._at = pins.map(p => p.at); place();
+  };
+  const place = () => { if (!M || !pinsEl) return; [...pinsEl.children].forEach((el, i) => { const [x, y] = fwd(M, ...pinsEl._at[i]); el.style.transform = 'translate(' + x.toFixed(1) + 'px,' + y.toFixed(1) + 'px) translate(-50%,-50%)'; }); };
   function follow() {
     raf = requestAnimationFrame(follow);
-    const W = now && where(); if (!W || !W.corners) { if (layer) layer.hidden = true; return; }
-    if (!layer || layer.parentNode !== W.host) { if (layer) layer.remove(); layer = document.createElement('div'); layer.className = 'lenspaint'; W.host.insertBefore(layer, W.before || null); draw(); }
+    const W = now && where(); if (!W || !W.corners) { if (layer) layer.hidden = pinsEl.hidden = true; return; }
+    if (!layer || layer.parentNode !== W.host) {
+      if (layer) { layer.remove(); pinsEl.remove(); }
+      layer = document.createElement('div'); layer.className = 'lenspaint'; pinsEl = document.createElement('div'); pinsEl.className = 'lenspins';
+      W.host.insertBefore(layer, W.before || null); W.host.insertBefore(pinsEl, W.before || null); draw();
+    }
     const o = W.host.getBoundingClientRect();
-    layer.hidden = false; layer.style.transform = 'matrix3d(' + squareTo(W.corners.map(([x, y]) => [x - o.left, y - o.top])).map(v => +v.toFixed(6)).join(',') + ')';
+    M = squareTo(W.corners.map(([x, y]) => [x - o.left, y - o.top]));
+    layer.hidden = pinsEl.hidden = false; layer.style.transform = 'matrix3d(' + M.map(v => +v.toFixed(6)).join(',') + ')'; place();
   }
+  /* the fork's line, dragged across the picture: the pointer, taken back onto the plan, sets where it falls */
+  document.addEventListener('pointerdown', e => { const h = e.target.closest('[data-pindrag]'); if (!h || !M) return; e.preventDefault(); drag = h.dataset.pindrag; h.setPointerCapture && h.setPointerCapture(e.pointerId); });
+  document.addEventListener('pointermove', e => {
+    if (!drag || !M || !pinsEl) return; const o = pinsEl.parentNode.getBoundingClientRect(), [x] = back(M, e.clientX - o.left, e.clientY - o.top);
+    pairState(drag).split = Math.max(0.05, Math.min(0.95, x / PLAN_W)); draw();
+    const r = document.querySelector('[data-lppc="' + drag + ':split"]'); if (r) r.value = Math.round(pairState(drag).split * 20);
+  });
+  document.addEventListener('pointerup', () => { drag = null; });
   return {
-    show(q, level) {
-      if (!paints(q, level)) return this.hide();
-      if (now && now.q === q && now.level === level) return;
-      now = { q, level }; if (layer) draw(); cancelAnimationFrame(raf); follow();
+    show(q, level, q2) {
+      if (q2 ? !paintsPair(q, q2, level) : !paints(q, level)) return this.hide();
+      if (now && now.q === q && now.q2 === q2 && now.level === level) return;
+      now = { q, level, q2: q2 || null }; if (layer) draw(); cancelAnimationFrame(raf); follow();
     },
-    hide() { now = null; cancelAnimationFrame(raf); if (layer) { layer.remove(); layer = null; } },
-    /* a control moved: the layer and the card's measures follow it */
+    hide() { now = null; cancelAnimationFrame(raf); if (layer) { layer.remove(); pinsEl.remove(); layer = pinsEl = null; } },
+    /* a control moved: the layer, and the card's measures, follow it */
     update() { draw(); },
     lens: () => (now ? now.q : null)
   };
 }
 
-/* the instrument's controls, wherever its card is: a control moved re-runs the lens's model, redraws its measures (and
-   scope or layouts) in the card, and tells the layer (onChange) */
+/* ---- the pair's instrument in its card ---- */
+const meter = (label, value) => '<div class="lpm"><span class="lpml">' + esc(label) + '</span><b>' + esc(value) + '</b></div>';
+const range = (key, prop, values, at, lo, hi, label, text) => '<label class="lpc"><span class="lpcl">' + esc(label) + '</span><input type="range" min="0" max="' + (values.length - 1) + '" step="1" value="' + at + '" data-lppc="' + key + ':' + prop + '" aria-valuetext="' + esc(text) + '">' +
+  '<span class="lpends" aria-hidden="true"><span>' + esc(lo) + '</span><span>' + esc(hi) + '</span></span></label>';
+const STEPS = { p: [0, 0.25, 0.5, 0.75, 1], n: [0, 0.25, 0.5, 0.75, 1], celsius: HOT, swing: SWING, split: Array.from({ length: 21 }, (_, i) => i / 20) };
+const pct = v => fmtNum(Math.round(v * 100));
+/* the front's chart: energy per answer across, the hottest patch up; today's front dashed, the front moved solid, the
+   corner nobody has reached shaded, your design a dot */
+function frontChart(F, S) {
+  const E = geoEffFront(F), l0 = E.line(0), l1 = S.n > 0 ? E.line(S.n) : null, me = E.at(S.p, S.n), all = l0.concat(E.line(1));
+  const xs = all.map(p => p.x), ys = all.map(p => p.y), x0 = 0, x1 = Math.max(...xs) * 1.05, y0 = Math.min(...ys) * 0.9, y1 = Math.max(...ys) * 1.05, W = 360, H = 200;
+  const px = x => 24 + (x - x0) / (x1 - x0) * (W - 34), py = y => H - 22 - (y - y0) / (y1 - y0) * (H - 34), poly = L => L.map(p => px(p.x).toFixed(1) + ',' + py(p.y).toFixed(1)).join(' ');
+  return '<figure class="lpfront"><svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="' + esc(t('lp.front.aria')) + '">' +
+    '<rect x="24" y="12" width="' + (W - 34) + '" height="' + (H - 34) + '" fill="none" stroke="var(--line)"/>' +
+    /* nobody here yet: everything beyond today's front, less energy and less heat than any compromise of today */
+    '<path d="M24 ' + (H - 22) + 'L' + px(l0[0].x).toFixed(1) + ' ' + (H - 22) + 'L' + l0.map(p => px(p.x).toFixed(1) + ' ' + Math.min(H - 22, py(p.y)).toFixed(1)).join('L') + 'L24 ' + py(l0[l0.length - 1].y).toFixed(1) + 'Z" class="lpnobody"/>' +
+    '<polyline points="' + poly(l0) + '" class="lpline0"/>' + (l1 ? '<polyline points="' + poly(l1) + '" class="lpline1"/>' : '') +
+    '<circle cx="' + px(me.energy).toFixed(1) + '" cy="' + py(me.heat).toFixed(1) + '" r="7" class="lpdot"/></svg>' +
+    '<figcaption class="lpkey"><span>' + esc(t('lp.front.x')) + '</span><span>' + esc(t('lp.front.y')) + '</span><span class="k0">' + esc(t('lp.front.today')) + '</span>' + (l1 ? '<span class="k1">' + esc(t('lp.front.moved')) + '</span>' : '') +
+    '<span class="kd">' + esc(t('lp.front.dot')) + '</span><span class="kn">' + esc(t('lp.front.nobody')) + '</span></figcaption></figure>' +
+    '<div class="lpms">' + meter(t('lp.front.energy'), t('lp.joules', { v: fmtWords(me.energy) })) + meter(t('lp.front.heat'), t('lp.times', { v: fmtNum(+me.heat.toPrecision(2)) })) + meter(t('lp.geo.m.trip'), t('lp.um', { v: fmtNum(+me.trip.toPrecision(2)) })) + '</div>';
+}
+function pairBody(a, b, level) {
+  const P = pairOf(a, b), k = P.a + '.' + P.b, S = pairState(k), F = factsOf(level), at = (prop, v) => STEPS[prop].indexOf(v) < 0 ? 0 : STEPS[prop].indexOf(v);
+  if (P.shape === 'front') return frontChart(F, S) +
+    range(k, 'p', STEPS.p, at('p', S.p), t('lp.geo.lo'), t('lp.geo.hi'), t('lp.geo.ctl'), t('lp.geo.at', { v: pct(S.p) })) +
+    range(k, 'n', STEPS.n, at('n', S.n), t('lp.front.nlo'), t('lp.front.nhi'), t('lp.front.n'), t('lp.front.nat', { v: pct(S.n) }));
+  const hot = range(k, 'celsius', HOT, at('celsius', S.celsius), t('lp.physics.lo'), t('lp.physics.hi'), t('lp.physics.ctl'), t('lp.physics.at', { v: fmtNum(S.celsius) }));
+  if (P.shape === 'chain') {
+    const C = cleanOne(F, S.celsius, S.swing), sci = v => (v < 1e-30 ? t('lp.none') : t('lp.oneIn', { v: fmtWords(Math.round(1 / v)) }));
+    return '<ol class="lpchain">' + C.steps.map((s, i) => '<li class="' + (s.lit ? 'lit' : '') + '"><b>' + (i + 1) + '</b><span>' + esc(t('lp.chain.step.' + s.id)) + '</span><em>' + esc(t(s.lit ? 'lp.chain.lit' : 'lp.chain.unlit')) + '</em></li>').join('') + '</ol>' +
+      hot + range(k, 'swing', SWING, at('swing', S.swing), t('lp.chain.lo'), t('lp.chain.hi'), t('lp.chain.swing'), t('lp.chain.at', { v: fmtNum(S.swing) })) +
+      '<div class="lpms">' + meter(t('lp.chain.noise'), t('lp.pct', { v: fmtNum(+(C.noise * 100).toPrecision(2)) })) + meter(t('lp.chain.misread'), sci(C.measures.misread)) + meter(t('lp.chain.kept'), sci(C.measures.kept)) + meter(t('lp.chain.energy'), t('lp.times', { v: fmtNum(+C.measures.energy.toPrecision(3)) })) + '</div>';
+  }
+  /* a fork: the two ways side by side; where an engine measures both (memory that computes), its measures; any other,
+     each lens's own */
+  const split = range(k, 'split', STEPS.split, Math.round(S.split * 20), t('lp.fork.slo'), t('lp.fork.shi'), t('lp.fork.split'), t('lp.fork.at', { v: pct(S.split) }));
+  if (k === 'copy.physics') { const Fk = memoryFork(F, S.celsius), row = (id, f) => '<span>' + esc(t('lp.fork.' + id)) + '</span><span class="n">' + esc(f(Fk.exact[id])) + '</span><span class="n">' + esc(f(Fk.computes[id])) + '</span>';
+    return '<div class="lptwo"><span></span><span class="hd">' + esc(t('lp.fork.exact')) + '</span><span class="hd">' + esc(t('lp.fork.computes')) + '</span>' +
+      row('energy', v => t('lp.pj', { v: fmtNum(v) })) + row('off', v => t('lp.pct', { v: pct(v) })) + row('copied', v => t('lp.pct', { v: fmtNum(v) })) + '</div>' + split + hot; }
+  const side = q => { const m = run(q, level); return '<div class="lpside"><p class="kicker">' + esc(t('frame.q.' + q)) + '</p>' + MODELS[q].measures.map(id => meter(t('lp.' + q + '.m.' + id), unit[id](m.measures[id], q))).join('') + '</div>'; };
+  return '<div class="lpsides">' + side(P.a) + side(P.b) + '</div>' + split;
+}
+export function pairInstrument(a, b, level) {
+  if (!paintsPair(a, b, level)) return '';
+  return '<div class="lpinst" data-lppair="' + keyOf(a, b) + '" data-lpa="' + a + '" data-lpb="' + b + '" data-lplevel="' + esc(level) + '">' + pairBody(a, b, level) + '</div>';
+}
+function refreshPair(box) {
+  if (!box) return; const focus = document.activeElement && document.activeElement.dataset.lppc;
+  box.innerHTML = pairBody(box.dataset.lpa, box.dataset.lpb, box.dataset.lplevel);
+  if (focus) { const r = box.querySelector('[data-lppc="' + focus + '"]'); if (r) r.focus(); }
+}
+
+/* the instruments' controls, wherever their card is: a control moved re-runs its model, redraws its measures in the
+   card, and tells the layer (onChange) */
 export function wire(onChange) {
   document.addEventListener('input', e => {
+    const pc = e.target.closest('[data-lppc]');
+    if (pc) { const [k, prop] = pc.dataset.lppc.split(':'), v = STEPS[prop][+pc.value]; pairState(k)[prop] = v; refreshPair(pc.closest('[data-lppair]')); return onChange(k); }
     const c = e.target.closest('[data-lpctl]'); if (!c) return;
     const q = c.dataset.lpctl, box = c.closest('[data-lpinst]'), C = MODELS[q].control, v = C.values[+c.value];
     STATE[q] = v; c.setAttribute('aria-valuetext', atText(q, v));

@@ -7,8 +7,9 @@ import { readFileSync } from 'node:fs';
 import * as FrameData from '../src/data/frame.js';
 import { FIELD } from '../src/data/questions.js';
 import { partsOf } from '../src/app/scenes.js';
-const { QUESTIONS, FILED, SEAMS, MARKS } = FrameData;
-import { IDS, MAX_AT, createLenses, seamOf, questionOf } from '../src/engines/frame.js';
+const { QUESTIONS, FILED, MEETS, MARKS } = FrameData;
+import { IDS, MAX_AT, createLenses, meetOf, pairOf, questionOf } from '../src/engines/frame.js';
+import * as LensEngine from '../src/engines/lens.js';
 import { EXPERIMENTS } from '../src/engines/experiments.js';
 import { STOPS, THREADS } from '../src/data/weave.js';
 import { CHALLENGES } from '../src/v2/game.js';
@@ -97,12 +98,26 @@ test('every lens that lives at a level has its mark there, on a part the level n
   for (const d of Object.keys(MARKS)) assert.ok(levels.includes(d), 'marks at ' + d + ', which is no level with lenses');
 });
 
-test('every seam is named', () => {
-  for (const [a, b] of SEAMS) {
-    assert.ok(IDS.includes(a) && IDS.includes(b) && a < b, a + '.' + b);
-    assert.ok(('frame.seam.' + a + '.' + b) in EN, 'frame.seam.' + a + '.' + b);
-    assert.equal(seamOf(b, a), a + '.' + b);
+test('where two lenses meet: every pair named, with its shape and its question; every front computed by one engine', () => {
+  assert.equal(new Set(MEETS.map(m => m.a + '.' + m.b)).size, MEETS.length, 'a pair is written twice');
+  for (const m of MEETS) {
+    const k = m.a + '.' + m.b;
+    assert.ok(IDS.includes(m.a) && IDS.includes(m.b) && m.a < m.b, k);
+    for (const w of ['', '.q', '.open']) assert.ok(('frame.meet.' + k + w) in EN, 'frame.meet.' + k + w);
+    assert.ok(['front', 'fork', 'chain'].includes(m.shape), k + ' has no shape');
+    assert.equal(meetOf(m.b, m.a), k); assert.equal(pairOf(m.b, m.a), m);
+    /* a front is never faked: it names the engine function that gives both its measures, from the same model */
+    if (m.shape === 'front') {
+      assert.equal(typeof LensEngine[m.front], 'function', k + ': the front names no engine function');
+      const F = LensEngine[m.front](), pts = F.line(0);
+      assert.ok(pts.length >= 5 && pts.every(p => Number.isFinite(p.x) && Number.isFinite(p.y)), k + ': the front does not give both measures');
+    } else assert.equal(m.front, undefined, k + ': only a front names a front engine');
+    if (m.fork) { assert.equal(m.shape, 'fork'); const r = LensEngine[m.fork](); assert.ok(r.exact && r.computes, k + ': the fork does not measure both ways'); }
+    if (m.chain) { assert.equal(m.shape, 'chain'); const r = LensEngine[m.chain](); assert.ok(r.steps.length >= 3 && r.steps.every(s => typeof s.lit === 'boolean'), k + ': the chain has no steps'); }
   }
+  /* the old name is gone for the pairs (seam is the grid's line where a field question rises) */
+  assert.ok(!('SEAMS' in FrameData));
+  assert.ok(!Object.keys(EN).some(k => k.startsWith('frame.seam.')));
 });
 
 test('every level with questions offers a handful of lenses, each holding what it says', () => {
@@ -117,7 +132,7 @@ test('every level with questions offers a handful of lenses, each holding what i
       for (const id of x.challenges) assert.ok(CHALLENGES.some(c => c.id === id), id);
       assert.ok(x.field.length || x.stops.length || x.experiments.length || ('frame.at.' + q + '.' + d + '.q') in EN, q + ' at ' + d + ' has no form to show');
       for (const id of x.experiments) assert.ok(EXPERIMENTS.some(e => e.id === id), id);
-      if (x.meets) { assert.notEqual(x.meets, q); if (x.seam) assert.ok(('frame.seam.' + x.seam) in EN); }
+      if (x.meets) { assert.notEqual(x.meets, q); if (x.meet) assert.ok(('frame.meet.' + x.meet) in EN); }
       if (x.next) { assert.notEqual(x.next, d); assert.ok(L.lensesAt(x.next).includes(q)); }
     }
   }

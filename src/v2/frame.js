@@ -54,7 +54,7 @@ function stepsHtml(st) {
 export const FACES = ['designed', 'made', 'used'];
 
 export function createFrame(host, o) {
-  let mode = 'look', depth = null, pinned = false, railAt = null, lens = null, down = null;
+  let mode = 'look', depth = null, pinned = false, railAt = null, lens = null, down = null, pair = null;
   const path = o.path.slice(1);
   host.innerHTML =
     '<a class="homebtn" href="' + esc(o.up.href) + '" aria-label="' + esc(o.up.label) + '">↑</a>' +
@@ -175,9 +175,9 @@ export function createFrame(host, o) {
   const marksEl = $('.marks3'); let markKey = '', markRaf = 0;
   const markList = () => (!depth || !o.marksAt || mode === 'do' ? [] : o.marksAt(depth).slice(0, mode === 'ask' ? 6 : 3));
   const drawMarks = () => {
-    const M = markList(), open = mode === 'ask' ? lens : null, key = M.map(m => m.id + ':' + m.word).join() + '|' + open;
+    const M = markList(), open = mode === 'ask' ? lens : null, held = id => id === open || (!!open && id === pair), key = M.map(m => m.id + ':' + m.word).join() + '|' + open + '|' + pair;
     if (key !== markKey) { markKey = key;
-      marksEl.innerHTML = M.map(m => '<button type="button" class="mark3' + (open ? (m.id === open ? ' on' : ' dim') : '') + '" data-lens="' + esc(m.id) + '" data-mword="' + esc(m.word || '') + '" aria-pressed="' + (m.id === open) + '" aria-label="' + esc(t('frame.mark.aria', { q: m.label })) + '" hidden>' +
+      marksEl.innerHTML = M.map(m => '<button type="button" class="mark3' + (open ? (held(m.id) ? ' on' : ' dim') : '') + '" data-lens="' + esc(m.id) + '" data-mword="' + esc(m.word || '') + '" aria-pressed="' + held(m.id) + '" aria-label="' + esc(t('frame.mark.aria', { q: m.label })) + '" hidden>' +
         '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="' + esc(m.icon) + '"/></svg><span class="tip">' + esc(m.label) + '</span></button>').join(''); }
     cancelAnimationFrame(markRaf); if (M.length) markRaf = requestAnimationFrame(trackMarks);
   };
@@ -226,11 +226,15 @@ export function createFrame(host, o) {
       /* the core questions that live here are met on the picture, by their marks (docs/FRAME13.md): never a row of their
          names. A lens opened from its mark is shown alone, with the way to put it down */
       /* a lens kept on while moving level stays where it lives there too; where it does not, it is put down, saying so */
-      if (lens && !L.some(l => l.id === lens)) { down = { q: lens, at: depth }; lens = null; }
+      if (lens && !L.some(l => l.id === lens)) { down = { q: lens, at: depth }; lens = pair && L.some(l => l.id === pair) ? pair : null; pair = null; }
+      if (pair && !L.some(l => l.id === pair)) { down = { q: pair, at: depth }; pair = null; }
       if (down && down.at === depth && !lens) h += '<p class="qldown">' + esc(t('frame.lens.down', { q: t('frame.q.' + down.q), level: t('depth.' + depth + '.name') })) + '</p>';
       if (L.length) {
-        const l = lens && L.find(x => x.id === lens);
-        h += l ? '<p class="kicker qlk"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="' + esc(l.icon) + '"/></svg>' + esc(l.label) + '</p>' + o.lensCard(lens, depth) +
+        const l = lens && L.find(x => x.id === lens), l2 = pair && L.find(x => x.id === pair);
+        /* two held: where they meet, in its own card, with the way to put either down (#315) */
+        if (l && l2 && o.pairCard) h += '<p class="kicker qlk">' + [l, l2].map(x => '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="' + esc(x.icon) + '"/></svg>' + esc(x.label)).join(' <span aria-hidden="true">×</span> ') + '</p>' + o.pairCard(lens, pair, depth) +
+          '<div class="qlputs">' + [l, l2].map(x => '<button type="button" class="btn ghost qloff" data-putdown="' + esc(x.id) + '">' + esc(t('frame.pair.putdown', { q: x.label })) + '</button>').join('') + '</div>';
+        else h += l ? '<p class="kicker qlk"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="' + esc(l.icon) + '"/></svg>' + esc(l.label) + '</p>' + o.lensCard(lens, depth) +
           '<button type="button" class="btn ghost qloff" data-lensoff>' + esc(t('frame.lens.off')) + '</button>'
           : '<p class="qlsay">' + esc(t('frame.marks.say')) + '</p>'; }
       /* then the questions people were stuck on here, each with its shape (src/v2/field.js) */
@@ -241,12 +245,15 @@ export function createFrame(host, o) {
     else { const cs = depth ? o.doAt(depth) : []; h += cs.length ? '<div class="dolist">' + cs.map(c => '<a class="dochip' + (c.open ? ' open' : '') + '" href="' + esc(c.href || '#/do/' + c.id) + '">' + (c.open ? '<span class="kicker">' + esc(t('trail.open')) + '</span>' : '') + '<b>' + esc(c.title) + '</b><span class="small muted">' + esc(c.where) + '</span></a>').join('') + '</div>' : '<p class="small muted">' + esc(t('frame.noDo')) + '</p>'; }
     h += '<div class="nav"><button type="button" class="btn ghost" data-mode="look">' + esc(t('frame.backToLook')) + '</button></div>';
     dock.innerHTML = h; dock.classList.remove('locked');
-    if (mode === 'ask' && o.onLens) o.onLens(lenses().length ? lens : null, depth);
+    if (mode === 'ask' && o.onLens) o.onLens(lenses().length ? lens : null, depth, lenses().length && lens ? pair : null);
   };
   host.addEventListener('click', e => {
     const m = e.target.closest('[data-mode]'); if (m) { mode = m.dataset.mode; pinned = false; return fill(); }
-    const ln = e.target.closest('[data-lens]'); if (ln) { lens = ln.dataset.lens; mode = 'ask'; pinned = false; return fill(); }
-    if (e.target.closest('[data-lensoff]')) { lens = null; pinned = false; return fill(); }
+    const ln = e.target.closest('[data-lens]'); if (ln) { lens = ln.dataset.lens; pair = null; mode = 'ask'; pinned = false; return fill(); }
+    if (e.target.closest('[data-lensoff]')) { lens = null; pair = null; pinned = false; return fill(); }
+    /* hold a second lens with the one open, or put either down */
+    const hd = e.target.closest('[data-hold]'); if (hd && lens && hd.dataset.hold !== lens) { pair = hd.dataset.hold; mode = 'ask'; pinned = false; return fill(); }
+    const pd = e.target.closest('[data-putdown]'); if (pd) { if (pd.dataset.putdown === lens) lens = pair; pair = null; pinned = false; return fill(); }
     const r = e.target.closest('[data-rail]'); if (r) return o.onRail && o.onRail(r.dataset.rail);
     const st = e.target.closest('[data-step]'); if (st) return o.onStep && o.onStep(st.dataset.step);
     const sg = e.target.closest('[data-stepgo]'); if (sg && o.steps) { const S = o.steps.items, i = S.findIndex(x => x.id === stepAt) + +sg.dataset.stepgo; if (S[i] && o.onStep) o.onStep(S[i].id); }

@@ -1192,6 +1192,42 @@ run['frame'] = async () => {
       return location.hash === '#/dive/gate' && !!f.querySelector('.dock .qldown') && !f.querySelector('.mark3[aria-pressed="true"]'); }, null, { timeout: 60000, polling: 500 })
       .catch(() => problems.push(tag + ': going down to where a lens does not live does not put it down, saying so'));
     await lp.close(); }
+  /* two lenses held (#315): at the block, Geometry with Efficiency fuels use draws a front, its dot moving with where
+     the logic sits and the front moving with the innovation; Fight or use physics with Brain or copy a fork, whose line
+     drags across the picture; with Digital meets physical a chain, whose steps light as it heats */
+  { const tag = 'frame meets', mp = await browser3d.newPage({ viewport: { width: 1280, height: 800 }, colorScheme: 'dark' }); mp.on('pageerror', e => problems.push(tag + ': ' + e.message));
+    await mp.addInitScript(() => { try { localStorage.setItem('osl-quality', 'keep'); localStorage.setItem('osl-hints-v1', JSON.stringify({ seen: {}, off: true })); } catch (e) { /* no storage */ } });
+    await mp.goto(base + 'index.html#/dive/block');
+    /* hold a with b: open a's mark, then its Hold both (or Hold with) for b; true once the pair's layer is on the picture */
+    const hold = ([a, b, key]) => { const f = document.querySelector('#diveui'); if (!f || f.hidden) return false;
+      const ask = f.querySelector('.modes3 [data-mode="ask"]'); if (ask && ask.getAttribute('aria-selected') !== 'true') { ask.click(); return false; }
+      if (document.querySelector('.lenspaint:not([hidden]) svg[data-pair="' + key + '"]') && f.querySelector('.dock .qlpair .lpinst')) return true;
+      const h = f.querySelector('.dock [data-hold="' + b + '"]'); if (h && f.querySelector('.mark3[data-lens="' + a + '"][aria-pressed="true"]')) { h.click(); return false; }
+      const m = f.querySelector('.mark3[data-lens="' + a + '"]'); if (m) m.click(); return false; };
+    await mp.waitForFunction(hold, ['geo', 'eff', 'eff.geo'], { timeout: 90000, polling: 500 }).catch(() => problems.push(tag + ': holding Geometry and Efficiency fuels use draws no front'));
+    await mp.waitForFunction(() => { const dot = document.querySelector('#diveui .dock .lpfront .lpdot'), r = document.querySelector('[data-lppc="eff.geo:p"]'), n = document.querySelector('[data-lppc="eff.geo:n"]'); if (!dot || !r || !n) return false;
+      if (!window.__dot) { window.__dot = dot.getAttribute('cx'); r.value = 4; r.dispatchEvent(new Event('input', { bubbles: true })); return false; }
+      /* the card is drawn again after each move: the innovation's control is the new one */
+      if (n.value !== '3') { n.value = 3; n.dispatchEvent(new Event('input', { bubbles: true })); return false; }
+      const d2 = document.querySelector('#diveui .dock .lpfront .lpdot'); return d2 && d2.getAttribute('cx') !== window.__dot && !!document.querySelector('#diveui .dock .lpfront .lpline1'); }, null, { timeout: 20000, polling: 500 })
+      .catch(() => problems.push(tag + ': the front\'s dot does not move with the logic, or the innovation does not move the front'));
+    await mp.evaluate(() => { const p = document.querySelector('#diveui .dock [data-putdown="eff"]'); if (p) p.click(); });
+    await mp.waitForFunction(hold, ['physics', 'copy', 'copy.physics'], { timeout: 30000, polling: 500 }).catch(() => problems.push(tag + ': holding Fight or use physics and Brain or copy draws no fork'));
+    { let moved = false;
+      for (let i = 0; i < 4 && !moved; i++) {
+        const box = await mp.evaluate(() => { const h = document.querySelector('.lenspins [data-pindrag]'), l = document.querySelector('.lenspaint svg[data-pair="copy.physics"] > line'); if (!h || !l) return null; window.__x = l.getAttribute('x1'); const r = h.getBoundingClientRect(); return [r.x + r.width / 2, r.y + r.height / 2]; });
+        if (!box) { await mp.waitForFunction(() => !!document.querySelector('.lenspins [data-pindrag]'), null, { timeout: 5000 }).catch(() => {}); continue; }
+        await mp.mouse.move(box[0], box[1]); await mp.mouse.down(); await mp.mouse.move(box[0] - 120, box[1], { steps: 6 }); await mp.mouse.up();
+        moved = await mp.waitForFunction(() => { const l = document.querySelector('.lenspaint svg[data-pair="copy.physics"] > line'); return !!l && l.getAttribute('x1') !== window.__x; }, null, { timeout: 5000 }).then(() => true, () => false);
+      }
+      if (!moved) problems.push(tag + ': the fork\'s line does not drag across the picture'); }
+    await mp.evaluate(() => { const p = document.querySelector('#diveui .dock [data-putdown="copy"]'); if (p) p.click(); });
+    await mp.waitForFunction(hold, ['physics', 'dig', 'dig.physics'], { timeout: 30000, polling: 500 }).catch(() => problems.push(tag + ': holding Fight or use physics and Digital meets physical draws no chain'));
+    await mp.waitForFunction(() => { const r = document.querySelector('[data-lppc="dig.physics:celsius"]'); if (!r) return false;
+      if (r.value !== r.max) { r.value = r.max; r.dispatchEvent(new Event('input', { bubbles: true })); return false; }
+      return document.querySelectorAll('.lenspins .lppin.lit').length === 4 && document.querySelectorAll('#diveui .dock .lpchain li.lit').length === 4; }, null, { timeout: 20000, polling: 500 })
+      .catch(() => problems.push(tag + ': heating the block does not light the chain\'s steps'));
+    await mp.close(); }
 };
 
 run['flights'] = async () => {

@@ -8,12 +8,14 @@
    createLenses({ experiments, stops, challenges, doHome }) → { lensesAt(depth), lensAt(q, depth, levels), questionsOfStop(key) }
    Pure: the shell passes the lab's data in, so the tests can build it the same way; the field questions are plain
    data (src/data/questions.js). */
-import { QUESTIONS, FILED, SEAMS } from '../data/frame.js';
+import { QUESTIONS, FILED, MEETS } from '../data/frame.js';
 import { FIELD } from '../data/questions.js';
 
 export const IDS = QUESTIONS.map(q => q.id);
 export const questionOf = id => QUESTIONS.find(q => q.id === id) || null;
-export const seamOf = (a, b) => { const [x, y] = [a, b].sort(); return SEAMS.some(s => s[0] === x && s[1] === y) ? x + '.' + y : null; };
+/* where two questions meet (MEETS): its key 'a.b' (in order), or null; and the pair itself, with its shape */
+export const meetOf = (a, b) => { const [x, y] = [a, b].sort(); return MEETS.some(m => m.a === x && m.b === y) ? x + '.' + y : null; };
+export const pairOf = (a, b) => { const [x, y] = [a, b].sort(); return MEETS.find(m => m.a === x && m.b === y) || null; };
 /* the most a level offers, so a lens bar stays a handful */
 export const MAX_AT = 6;
 
@@ -68,14 +70,14 @@ export function createLenses({ experiments, stops, challenges, doHome }) {
     st.forEach(k => meet(questionsOfStop(k)));
     xs.forEach(id => meet(filedX[id]));
     chs.forEach(id => meet(filedC[id] || []));
-    const meets = Object.keys(share).sort((a, b) => (seamOf(q, b) ? 1 : 0) - (seamOf(q, a) ? 1 : 0) || share[b] - share[a])[0] || null;
+    const meets = Object.keys(share).sort((a, b) => (meetOf(q, b) ? 1 : 0) - (meetOf(q, a) ? 1 : 0) || share[b] - share[a])[0] || null;
     /* the way on: the nearest level after this one in the view's order where the question lives, else before it */
     let next = null;
     if (levels && levels.includes(d)) {
       const i = levels.indexOf(d), lives = l => lensesAt(l).includes(q);
       next = levels.slice(i + 1).find(lives) || levels.slice(0, i).reverse().find(lives) || null;
     }
-    return { q, field, stops: st, experiments: xs, challenges: chs, meets, seam: meets ? seamOf(q, meets) : null, next };
+    return { q, field, stops: st, experiments: xs, challenges: chs, meets, meet: meets ? meetOf(q, meets) : null, next };
   }
   return { lensesAt, lensAt, questionsOfStop };
 }
