@@ -351,6 +351,34 @@ button.link { padding: 0; margin: 2px 14px 8px 0; border: 0; background: none; c
 .qlk { display: flex; align-items: center; gap: 6px; color: var(--warm); }
 .qlsay { margin: 0 0 12px; color: var(--muted); }
 .qloff { margin: 0 0 14px; }
+.qldown { margin: 0 0 12px; color: var(--muted); font-style: italic; }
+.qlsteps { display: flex; gap: 8px; flex-wrap: wrap; }
+button.qlform { all: unset; cursor: pointer; display: block; }
+/* a lens repaints the picture (#304, src/v2/lenspaint.js): a layer in the level's plan, pinned onto the picture by its
+   corners, under the picture's names */
+.lenspaint { position: absolute; left: 0; top: 0; width: 1000px; height: 1000px; transform-origin: 0 0; pointer-events: none; }
+.lenspaint[hidden] { display: none; }
+.lenspaint svg { display: block; overflow: visible; animation: fadein .35s both; }
+@media (prefers-reduced-motion: reduce) { .lenspaint svg { animation: none; } }
+/* the lens's instrument in its card: one control, then what it moves */
+.lpinst { display: grid; gap: 10px; padding: 12px 0 2px; border-top: 1px solid var(--line); }
+.lpc { display: grid; gap: 4px; }
+.lpcl { font: 600 13px/1.3 var(--sans); }
+.lpc input[type=range] { width: 100%; accent-color: var(--warm); }
+.lpends { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); }
+.lpms { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 8px; }
+.lpm { display: grid; gap: 2px; padding: 8px 10px; border-radius: 10px; background: color-mix(in srgb, var(--warm) 8%, transparent); }
+.lpml { font-size: 12px; line-height: 1.3; color: var(--muted); }
+.lpm b { font: 600 17px/1.2 var(--mono, var(--sans)); }
+.lpscope { width: 100%; height: auto; border-radius: 10px; background: color-mix(in srgb, var(--ink) 5%, transparent); }
+.lpscope .lpline { stroke: var(--muted); stroke-dasharray: 5 5; }
+.lpscope .lptrace { fill: none; stroke: var(--accent); stroke-width: 2; }
+.lpscope .lpok { fill: var(--accent); } .lpscope .lpbad { fill: var(--bad); }
+.lplays { display: flex; flex-wrap: wrap; gap: 6px; }
+.lplay { display: inline-flex; align-items: center; gap: 4px; padding: 4px 9px; border-radius: 999px; border: 1px solid var(--line); background: transparent; color: var(--ink); font: 500 13px/1.3 var(--sans); cursor: pointer; }
+.lplay .lpok2 { color: var(--good); }
+.lplay.on { border-color: var(--warm); background: color-mix(in srgb, var(--warm) 22%, transparent); }
+.lpyours { margin: 0; color: var(--warm); }
 .qlcard { display: grid; gap: 10px; margin: 0 0 14px; padding: 14px 16px; border-radius: 16px; border: 1px solid color-mix(in srgb, var(--warm) 35%, var(--line)); background: color-mix(in srgb, var(--warm) 6%, transparent); animation: qlin .25s ease-out; }
 @keyframes qlin { from { opacity: 0; transform: translateY(4px); } }
 @media (prefers-reduced-motion: reduce) { .qlcard { animation: none; } }

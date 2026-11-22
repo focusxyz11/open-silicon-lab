@@ -213,6 +213,8 @@ export const create = level => (canvas, host, on = {}) => createLevel3D(canvas, 
       : { r: 5.6, at: [0, 0.1, 0.25], arrive: (A => A ? { tilt: A.tilt, turn: A.turn, span: A.span / 100, fit: A.fit, at: [X(A.at[0]), 0.1, Z(A.at[1])], ms: 1800 } : null)({ soc: PHONE_HANDOFF, mcu: CAR_HANDOFF }[level]) }),
       door: (([px, py, side]) => ({ at: [X(px + side / 2), 0, Z(py + side / 2)], side: side / 100 }))(DEPTHS[level].portal), foot: [0, 0, 0] },
     has: key => key !== 'yours' || mine > 0,
+    /* a point of the plan at the height the districts stand to: where a lens's paint lies on the relief */
+    plan: (x, y) => [X(x), H.row, Z(y)],
     version: () => sceneVersion(),
     update(dt, k, dist, arrived = 1, picked) {
       if (sceneVersion() !== betBuilt) { buildBet(); tick = -1; }

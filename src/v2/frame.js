@@ -54,7 +54,7 @@ function stepsHtml(st) {
 export const FACES = ['designed', 'made', 'used'];
 
 export function createFrame(host, o) {
-  let mode = 'look', depth = null, pinned = false, railAt = null, lens = null;
+  let mode = 'look', depth = null, pinned = false, railAt = null, lens = null, down = null;
   const path = o.path.slice(1);
   host.innerHTML =
     '<a class="homebtn" href="' + esc(o.up.href) + '" aria-label="' + esc(o.up.label) + '">↑</a>' +
@@ -225,7 +225,10 @@ export function createFrame(host, o) {
     if (mode === 'ask') { const ks = depth ? o.askAt(depth) : [], fs = fields(), L = lenses();
       /* the core questions that live here are met on the picture, by their marks (docs/FRAME13.md): never a row of their
          names. A lens opened from its mark is shown alone, with the way to put it down */
-      if (L.length) { if (lens && !L.some(l => l.id === lens)) lens = null;
+      /* a lens kept on while moving level stays where it lives there too; where it does not, it is put down, saying so */
+      if (lens && !L.some(l => l.id === lens)) { down = { q: lens, at: depth }; lens = null; }
+      if (down && down.at === depth && !lens) h += '<p class="qldown">' + esc(t('frame.lens.down', { q: t('frame.q.' + down.q), level: t('depth.' + depth + '.name') })) + '</p>';
+      if (L.length) {
         const l = lens && L.find(x => x.id === lens);
         h += l ? '<p class="kicker qlk"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="' + esc(l.icon) + '"/></svg>' + esc(l.label) + '</p>' + o.lensCard(lens, depth) +
           '<button type="button" class="btn ghost qloff" data-lensoff>' + esc(t('frame.lens.off')) + '</button>'

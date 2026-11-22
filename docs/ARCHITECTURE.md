@@ -21,6 +21,9 @@ src/v2/frame.js         the one frame on every view below the island: the rails,
 src/v2/frame2.js        the frame's three modes (#271): the card worn as a caption (Look), a side panel with a stage (Do) or a phone sheet; reading pages (Read); styles in src/styles/frame2.css
 src/v2/game.js          the game as data and logic: the loop, the challenges, each place's doors, your state (tested)
 src/v2/map3d.js         the island: the loop road, the places, what grew, the islands across the sea
+src/v2/lenspaint.js     lenses repaint the picture: one paint per core question, an SVG layer in the level's plan pinned onto the picture, and its instrument in the card
+src/engines/lens.js     each lens at a level as a model over its parts' facts, its control and measures from the lab's engines (tested)
+src/data/partfacts.js   what each part of a level is (its kind, and who decided it), for the lenses to paint from
 src/data/views3d.js     the 3D views' plain data the shell reads before a view opens (the island's places, the data centre's levels, the chip's layers), with no three.js
 src/v2/dc3d.js, phone3d-flight.js, car3d-flight.js   the flights: the data centre, the phone and the car, flown through to the chip
 src/v2/studio3d.js            the design studio walked inside: its corners are the design's steps, each screen opening into its bench

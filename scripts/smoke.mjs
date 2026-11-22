@@ -1159,6 +1159,39 @@ run['frame'] = async () => {
         .catch(() => problems.push(tag + ' ' + hash + ': Put it down does not close the lens'));
     }
     await mp.close(); }
+  /* lenses repaint the picture (#304): at the block, each lens that lives there paints the level from its parts, a
+     layer pinned onto the picture, with its control and measures in its card; a control moved changes what it
+     measures; going down a level keeps a lens that lives there too, and puts one down, saying so, that does not */
+  { const tag = 'frame lenses', lp = await browser3d.newPage({ viewport: { width: 1280, height: 800 }, colorScheme: 'dark' }); lp.on('pageerror', e => problems.push(tag + ': ' + e.message));
+    await lp.addInitScript(() => { try { localStorage.setItem('osl-quality', 'keep'); localStorage.setItem('osl-hints-v1', JSON.stringify({ seen: {}, off: true })); } catch (e) { /* no storage */ } });
+    await lp.goto(base + 'index.html#/dive/block');
+    for (const q of ['geo', 'copy', 'physics', 'eff', 'dig', 'perfect']) {
+      await lp.waitForFunction(q => { const f = document.querySelector('#diveui'); if (!f || f.hidden) return false;
+        const b = f.querySelector('.modes3 [data-mode="ask"]'); if (b && b.getAttribute('aria-selected') !== 'true') { b.click(); return false; }
+        const m = f.querySelector('.mark3[data-lens="' + q + '"]'); if (m && m.getAttribute('aria-pressed') !== 'true') { m.click(); return false; }
+        const svg = document.querySelector('.lenspaint:not([hidden]) svg[data-lens="' + q + '"]'), box = svg && svg.getBoundingClientRect();
+        return !!svg && svg.querySelectorAll('rect, path, circle, line').length > 0 && box.width > 200 && !!f.querySelector('.dock .lpinst[data-lpinst="' + q + '"] .lpm b'); }, q, { timeout: 90000, polling: 500 })
+        .catch(() => problems.push(tag + ': the ' + q + ' lens does not repaint the block, or has no instrument'));
+    }
+    /* a control moved: what it measures moves (Geometry: packing the logic beside the memory shortens the trip) */
+    await lp.waitForFunction(() => { const f = document.querySelector('#diveui'), m = f && f.querySelector('.mark3[data-lens="geo"]'); if (m && m.getAttribute('aria-pressed') !== 'true') { m.click(); return false; }
+      const r = f && f.querySelector('.dock [data-lpctl="geo"]'), v = f && f.querySelector('.dock [data-lpm="trip"]'); if (!r || !v) return false;
+      if (!r.dataset.was) { r.dataset.was = v.textContent; r.value = r.max; r.dispatchEvent(new Event('input', { bubbles: true })); return false; }
+      return v.textContent !== r.dataset.was; }, null, { timeout: 30000, polling: 500 })
+      .catch(() => problems.push(tag + ': moving Geometry\'s control does not change what it measures'));
+    /* down to the gate: Fight or use physics lives there too and stays on; Geometry does not, and is put down, saying so */
+    await lp.waitForFunction(() => { const f = document.querySelector('#diveui'); if (!f) return false;
+      if (location.hash === '#/dive/block') { const m = f.querySelector('.mark3[data-lens="physics"]'); if (m && m.getAttribute('aria-pressed') !== 'true') { m.click(); return false; }
+        const d = [...f.querySelectorAll('.dock .qlsteps [data-divego]')].find(b => /↓/.test(b.textContent)); if (d) d.click(); return false; }
+      return location.hash === '#/dive/gate' && !!f.querySelector('.mark3[data-lens="physics"][aria-pressed="true"]') && !!f.querySelector('.dock .qlcard'); }, null, { timeout: 60000, polling: 500 })
+      .catch(() => problems.push(tag + ': going down a level does not keep a lens that lives there too'));
+    await lp.evaluate(() => { location.hash = '#/dive/block'; });
+    await lp.waitForFunction(() => { const f = document.querySelector('#diveui'); if (!f) return false;
+      if (location.hash === '#/dive/block') { const m = f.querySelector('.mark3[data-lens="geo"]'); if (m && m.getAttribute('aria-pressed') !== 'true') { m.click(); return false; }
+        const d = [...f.querySelectorAll('.dock .qlsteps [data-divego]')].find(b => /↓/.test(b.textContent)); if (d && f.querySelector('.dock .lpinst[data-lpinst="geo"]')) d.click(); return false; }
+      return location.hash === '#/dive/gate' && !!f.querySelector('.dock .qldown') && !f.querySelector('.mark3[aria-pressed="true"]'); }, null, { timeout: 60000, polling: 500 })
+      .catch(() => problems.push(tag + ': going down to where a lens does not live does not put it down, saying so'));
+    await lp.close(); }
 };
 
 run['flights'] = async () => {

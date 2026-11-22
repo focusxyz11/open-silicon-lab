@@ -32,7 +32,7 @@ export const AREAS = {
     'place.aria'],
   atlas: ['what', 'part', 'field', 'frame', 'seek', 'debate', 'case', 'thread', 'fact', 'proc', 'handle', 'slice',
     'station', 'plant', 'prim', 'q', 'here', 'zoom', 'dive', 'line', 'ask', 'trail', 'way', 'route', 'lens', 'layer',
-    'joule', 'curve', 'world', 'chal', 'mini'],
+    'joule', 'curve', 'world', 'chal', 'mini', 'lp'],
   place: ['place', 'game', 'grow', 'look', 'dial', 'insp', 'carry', 'door', 'around', 'follow', 'room', 'studio',
     'board', 'story', 'chipx', 'lab', 'society', 'fab', 'whatif'],
   design: ['design', 'bench', 'build', 'ledger', 'api', 'core'],
