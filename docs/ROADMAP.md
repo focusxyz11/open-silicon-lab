@@ -2,6 +2,22 @@
 
 Where Open Silicon Lab is heading. This is the one place for what happens next. Nothing here is a promise or a date. Ideas not yet picked are kept in the [idea bank](IDEAS.md). Where things stand today, and the tasks ready to build, are in [STATUS.md](STATUS.md).
 
+## What the lab is
+
+A new form, not a format: not a course, a wiki or a game. Innovation is the center, so the lab is challenge-based and visual-first; it is AI-native and sets out to reinvent the engine of computing (the owner, 22 November 2026).
+
+## First: the next generation of computer architecture
+
+The highest priority. Its home is *Machines from shared blocks* ([MACHINES.md](MACHINES.md)): no standard computer, a machine of shared blocks for each need, each block software, a circuit, liquid hardware or new matter, an agent that assembles and a person who decides. Tasks, labelled `priority`:
+
+- Machines becomes a place: the machine drawn as a live block diagram, its trade-offs as a front, a challenge per need (#320);
+- from gates to a computer: your programs run on the core made of your own slice, with its datapath drawn (#321);
+- the four new ways to compute still waiting, as labs and as matter for machines: spiking neurons and light (#322), reversible logic and dataflow (#323).
+
+## Polishing the core
+
+One finished slice, so there is one great room to invite people into: is it true (an audit of every claim at the block and in Machines, #324), how true is each thing (one mark for an idea drawn, real numbers, computed, checked against real chips, #325), and the block level taken to the lab's standard, with the bar written down (#326).
+
 ## Now: the thirteen questions as the lab's spine
 
 The owner decided on 20 November that the whole site is restructured on the thirteen core questions ([FRAME13.md](FRAME13.md)): everything filed under them, met on the picture where it lives, one question at a time. The plan is [reviews/spine.md](reviews/spine.md), tasks #302 to #309:
