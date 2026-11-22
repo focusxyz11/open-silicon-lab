@@ -4,9 +4,10 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, existsSync } from 'node:fs';
 import { THREADS } from '../src/data/weave.js';
+import { readWords } from '../scripts/words.mjs';
 
 const read = p => readFileSync(new URL('../content/' + p, import.meta.url), 'utf8');
-const EN = JSON.parse(readFileSync(new URL('../src/i18n/en.json', import.meta.url), 'utf8'));
+const EN = readWords();
 const SECTIONS = ['Why it is open', 'What is true', 'The visual system', 'The engine', 'Questions inside', 'Challenges', 'Innovation direction', 'Community topic', 'Real cases', 'Where it meets other questions', 'From earlier work'];
 
 test('one document for each core question, titled with the question itself, in the same sections', () => {

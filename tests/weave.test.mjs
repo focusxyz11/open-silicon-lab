@@ -6,8 +6,9 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { DEPTHS, WORLDS, SHARED, THREADS, STOPS, TRIED, CASES, FIGURES, REPO, DIVES, EXITS, MADE, partWord } from '../src/data/weave.js';
 import * as E from '../src/engines/weave.js';
+import { readWords } from '../scripts/words.mjs';
 
-const EN = JSON.parse(readFileSync(new URL('../src/i18n/en.json', import.meta.url), 'utf8'));
+const EN = readWords();
 const FACTS = JSON.parse(readFileSync(new URL('../src/data/facts.json', import.meta.url), 'utf8'));
 const FACT = Object.fromEntries(FACTS.facts.map(f => [f.id, f]));
 /* The scenes need a browser to draw, but their parts are plain data: read them without one. */

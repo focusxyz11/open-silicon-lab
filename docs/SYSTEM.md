@@ -192,7 +192,7 @@ One type scale: titles and the question in Besley, everything read in Atkinson H
   on it, in every view that knows where that is (the flight, the dive's next square or a 3D level's door, the chip's
   next layer, the board's chip). A 3D view frames its picture in the part the frame leaves free (`inset`).
 - **One card**, the same on the island and in every view (`src/v2/frame.js`; the island's is drawn by `drawPlace` in
-  `src/v2/app.js`), worn as the caption, the side panel or the phone sheet. Its three faces are at its top, with how
+  `src/v2/glue/island.js`), worn as the caption, the side panel or the phone sheet. Its three faces are at its top, with how
   much waits behind each:
   **Look** is what this is, one step at a time (steps, not scrolling), with the moves from here: on the island,
   *Go inside* and *Next* round the loop. Each step of a story moves the camera and lights a part; its words are
@@ -210,7 +210,7 @@ One reading page is opened on purpose: **your log** (`#/log`: a jump to any plac
 also on the `/` key; what is next for your chip; the questions you met; the challenges by step). The commons has no page: **the Lab's inside**
 (`#/build[/<step>[/<piece>]]`) is in the Lab's own card, with the island behind it: the computer, then a piece of it,
 then the designs for that piece, each an entry of the ledger; and beside the computer, the record, who is here, and
-who makes what (`labInside` in `src/v2/app.js`). Inside the frame the earlier site's
+who makes what (`labInside` in `src/v2/glue/island.js`). Inside the frame the earlier site's
 own marks are switched off (`setChrome` in `src/app/world.js`, `setBand` in `src/app/journey.js`). Inside a view,
 back is on the card's left and the next step on its right (`data-key="back"`, `data-key="next"`).
 

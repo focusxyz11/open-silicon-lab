@@ -1,10 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-const EN = JSON.parse(readFileSync(new URL('../src/i18n/en.json', import.meta.url), 'utf8'));
+const EN = readWords();
 import TC from '../src/engines/tinychip.js';
 import * as EV from '../src/engines/evolve.js';
 import { target, evolution, fitness, toCode, measure, run, randomGenome, rng } from '../src/engines/evolve.js';
+import { readWords } from '../scripts/words.mjs';
 
 const P = id => TC.PROJ.find(p => p.id === id);
 

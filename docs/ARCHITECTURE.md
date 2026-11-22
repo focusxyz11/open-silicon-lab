@@ -1,15 +1,27 @@
 # Architecture
 
-A static site: plain ES modules, one stylesheet and one file of words. No framework, no build step for development.
+A static site: plain ES modules, one stylesheet and one folder of words, split by area. No framework, no build step for development.
 
 ```
 index.html              the site: the chip world (src/main2.js, src/v2/)
 classic.html            the earlier site's address, now leading to the chip world (the earlier site: branch claude/before-retire-2026-11)
-src/v2/app.js           the shell: routes in the address, the bar with the loop, the card, the views put in the frame
+src/v2/app.js           the shell: routes in the address, the bar with the loop, the frame's modes, the island's sheet, Your log's way in, Break it; each view's glue loads when it opens
+src/v2/shell.js         what the shell and its glue share: V (the shared state, and the functions one part lends another), $, esc, follow
+src/v2/glue/            one module per view's glue, each create()d once when its view first opens, after the glue it builds on (GLUE in app.js):
+  island.js             the island's cards: the inspector, the lenses over the island, the dials, a place's card and its inside, the Lab's inside
+  frame.js              what every framed view shares: the frame made for a view, the thirteen as lenses under Ask, the search at a level
+  flights.js            the data centre's, the phone's and the car's flights
+  studio.js             the studio, walked inside
+  chip.js               inside a chip, layer by layer
+  flat.js               the dive, the line and the bench (the earlier site's 2D world in the frame), and the levels drawn in 3D
+  supply.js             the supply map
+  board.js              one board and its story
+  pages.js              the reading pages: your log, the commons, #/read, #/w, machines, What if?, a question's trail and world, the field questions
 src/v2/frame.js         the one frame on every view below the island: the rails, the levels, the card's Look · Do · Ask
 src/v2/frame2.js        the frame's three modes (#271): the card worn as a caption (Look), a side panel with a stage (Do) or a phone sheet; reading pages (Read); styles in src/styles/frame2.css
 src/v2/game.js          the game as data and logic: the loop, the challenges, each place's doors, your state (tested)
 src/v2/map3d.js         the island: the loop road, the places, what grew, the islands across the sea
+src/data/views3d.js     the 3D views' plain data the shell reads before a view opens (the island's places, the data centre's levels, the chip's layers), with no three.js
 src/v2/dc3d.js, phone3d-flight.js, car3d-flight.js   the flights: the data centre, the phone and the car, flown through to the chip
 src/v2/studio3d.js            the design studio walked inside: its corners are the design's steps, each screen opening into its bench
 src/v2/furnish.js             desks, screens, chairs, plants and people, shared by the island and the studio inside
@@ -30,7 +42,7 @@ src/app/journey3d.js    the journey in 3D (three.js): the plants and the factory
 src/app/design.js       the design studio: six stations showing your design from the job to the masks, and their band
 src/app/map.js          the world around the line: a chip's whole trip on a map, from design to where it is used
 src/app/lens3d.js       the lens: while a machine works, your wafer's surface magnified beside it, showing what the machine does
-src/vendor/three.min.js three.js, loaded only when the journey is first opened
+src/vendor/three.min.js three.js, loaded only when a view that draws in 3D is first opened (never by the first page)
 src/engines/chip.js     your chip: its settings (clock, switch size, chip size, how full the fab runs, reuse, where its memory sits) and what follows from them, the memory wall included, relative to a starting chip (tested)
 src/engines/api.js      the open port: the engines as tools for AI agents (list the plan, take a job, check, at the factory, its life, propose)
 src/engines/build.js    where the goal stands: each need's state, and the engines that check needs (tested)
@@ -50,9 +62,10 @@ src/data/ways.js        other ways to compute, each at the depth where the probl
 src/data/debates.js     where informed people disagree: the earlier site's debates, each placed at the depths and stations it is about
 src/data/build.js       the build: the community's goal as a plan of needs, the designs people and AI proposed, AI agents' proposals
 src/data/world.js       the map: places, and each kind of chip's trip through them, joined to the line's stations
-src/data/facts.json     sourced figures, loaded when a question's stop first shows (src/v2/app.js); FIGURES and CASES in weave.js point to them
+src/data/facts.json     sourced figures, loaded when a question's stop first shows (src/v2/glue/pages.js); FIGURES and CASES in weave.js point to them
 src/core/i18n.js        words: t('name'), plurals, numbers, dates
-src/i18n/en.json        every word on screen
+src/i18n/en/            every word on screen, one file per area (AREAS in src/core/i18n.js): core.json for the first page, the others loaded with the views that show them
+scripts/words.mjs       every word of a language in one set, for node (the tests, the open port)
 src/styles/site.css     the styles, dark and light
 tests/                  node:test: the engines, the game, the atlas, the ledger, the weave and the words
 scripts/                serve.mjs, smoke.mjs (browser test, in sections), i18n-check.mjs, mcp.mjs (the open port), agent.mjs (an agent of your own)
@@ -61,6 +74,10 @@ community/ledger/       the community's entries, one file each, never edited aft
 ```
 
 The tree above names the main files; every engine in `src/engines/` and lab in `src/v2/labs/` has a line of its own at the top of its file.
+
+## What loads when
+
+Each part of the lab loads when it is opened. The rule for the 3D views: **the shell imports no 3D module.** `src/v2/app.js` (and everything it imports statically) never imports `kit3d.js`, three.js or a 3D view; the plain data it needs from them lives in `src/data/views3d.js`, and a view's 3D, three.js with it, loads when that view is first opened (the `ensure…` functions in `app.js`). Each view's glue (`src/v2/glue/`) loads when its view first opens: until then the shell holds stand-ins that load it and then run (`waits` in `app.js`), and hiding a view that never opened does nothing. The labs (`src/v2/labs/`) load with the first challenge played (`labsReady` in `src/v2/play.js`), and the worlds' documents (`content/*.md`) when a page or the island's first card shows them. The idle preload (the island's views, warmed while the island shows; the labs, on the first page) runs only after the page has painted, and never when the connection asks to save data or is slow (2g, 3g); it marks the page with the moment it starts (`data-preload`). `tests/load.test.mjs` walks the static imports from `src/main2.js`, and the smoke test's `explore-desktop` section checks what the first page fetches before its preload.
 
 ## The zoom
 
@@ -82,7 +99,7 @@ Words that belong to a part sit on the picture; the card keeps only what does no
 
 ## Words and languages
 
-Every word on screen lives in `src/i18n/en.json` and is read with `t('name')`, including the words drawn on the picture. Those are measured, never assumed to be English-sized: `wrap()` in `src/app/draw.js` breaks lines where the language allows (`Intl.Segmenter`, so text without spaces wraps too) and breaks an overlong word between characters (tested). `npm test` fails if code holds visible English, if a text is missing or unused, or if a translation's `{names}` differ. To add a language, copy `en.json` to `<lang>.json`, translate the values, and add it to `LANGS` in `src/core/i18n.js`.
+Every word on screen lives in `src/i18n/en/` and is read with `t('name')`, including the words drawn on the picture. Those are measured, never assumed to be English-sized: `wrap()` in `src/app/draw.js` breaks lines where the language allows (`Intl.Segmenter`, so text without spaces wraps too) and breaks an overlong word between characters (tested). `npm test` fails if code holds visible English, if a text is missing or unused, or if a translation's `{names}` differ. The words are split by area: each text is in the file of its prefix's area (`AREAS`, `areaOf` in `src/core/i18n.js`). `loadLang` loads `core.json`, which holds what shows before any view opens (the bar, the loop, the frame, the map page, Your log, Break it); each view's glue awaits its areas (`needWords`, `WORDS` beside `GLUE` in `app.js`) before it draws, the labs await `labs`, and the rest load in an idle moment once a view has opened. `t()` stays synchronous; a text asked for before its area loaded warns `Missing text:`, and the smoke test fails on it. To add a language, area by area, make `src/i18n/<lang>/`, translate any of the files of `src/i18n/en/` into it, and add the language to `LANGS`; an area not yet translated shows in English.
 
 ## Checks
 

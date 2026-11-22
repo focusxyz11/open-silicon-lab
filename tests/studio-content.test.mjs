@@ -6,8 +6,9 @@ import assert from 'node:assert/strict';
 import { readFileSync, existsSync } from 'node:fs';
 import { stopsAt } from '../src/data/places.js';
 import { FIGURES } from '../src/data/weave.js';
+import { readWords } from '../scripts/words.mjs';
 
-const EN = JSON.parse(readFileSync(new URL('../src/i18n/en.json', import.meta.url), 'utf8'));
+const EN = readWords();
 const FACT = Object.fromEntries(JSON.parse(readFileSync(new URL('../src/data/facts.json', import.meta.url), 'utf8')).facts.map(f => [f.id, f]));
 const STEPS = ['need', 'logic', 'check', 'gates', 'layout', 'masks'];
 const MD = readFileSync(new URL('../content/design.md', import.meta.url), 'utf8');

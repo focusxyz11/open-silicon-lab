@@ -7,8 +7,9 @@ import { FIELD, PRIMS, SHAPES, SIZE, SEAMS } from '../src/data/questions.js';
 import { fieldHome, levelAt } from '../src/data/atlas.js';
 import { PLACES } from '../src/v2/game.js';
 import { STAGES, seamOf, whereOf } from '../src/engines/way.js';
+import { readWords } from '../scripts/words.mjs';
 
-const EN = JSON.parse(readFileSync(new URL('../src/i18n/en.json', import.meta.url), 'utf8'));
+const EN = readWords();
 
 test('every question has its words, a shape and the primitives that make that shape', () => {
   const ids = new Set();

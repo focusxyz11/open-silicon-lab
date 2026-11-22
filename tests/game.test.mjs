@@ -12,8 +12,10 @@ import { MARGINS, PROTECT } from '../src/engines/life.js';
 import { NEEDS } from '../src/data/build.js';
 import { DEBATES } from '../src/data/debates.js';
 import { WORLDS, STOPS } from '../src/data/weave.js';
+import { PLACES as MAP_PLACES } from '../src/data/views3d.js';
+import { readWords } from '../scripts/words.mjs';
 
-const EN = JSON.parse(readFileSync(new URL('../src/i18n/en.json', import.meta.url), 'utf8'));
+const EN = readWords();
 const MAP = readFileSync(new URL('../src/v2/map3d.js', import.meta.url), 'utf8');
 const RANGE = { clock: CLOCKS.map((_, i) => i), gen: [...Array(GENS).keys()], size: SIDES.map((_, i) => i), load: LOADS.map((_, i) => i), reuse: REUSES.map((_, i) => i), mem: MEMS.map((_, i) => i) };
 /* every combination of the settings a goal needs, the rest as the starting chip */
@@ -122,7 +124,7 @@ test('everything that grows is drawn on the island, named, and stands at a real 
 });
 
 test('every place has its words, and its doors lead somewhere real', () => {
-  const places = [...MAP.matchAll(/\{ id: '([a-z]+)', at: \[/g)].map(m => m[1]);
+  const places = MAP_PLACES.map(p => p.id);
   assert.deepEqual(places.slice().sort(), G.PLACES.slice().sort(), 'the island draws every place of the game');
   for (const id of G.PLACES) for (const k of ['t', 'd']) assert.ok(EN['map.' + id + '.' + k], id + ' ' + k);
   for (const id of G.PLACES.filter(p => !G.STEP_OF[p] && !G.STEP_PLACE[p])) assert.ok(EN['map.' + id + '.kind'], id + ' kind');

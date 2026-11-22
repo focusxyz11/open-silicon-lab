@@ -6,8 +6,9 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { CLOCKS, GENS, SIDES, START, SETTINGS, normal, changed, model, dies, dieSquare, WAFER } from '../src/engines/chip.js';
 import { DEPTHS, STOPS, TRIES, SHOWS } from '../src/data/weave.js';
+import { readWords } from '../scripts/words.mjs';
 
-const EN = JSON.parse(readFileSync(new URL('../src/i18n/en.json', import.meta.url), 'utf8'));
+const EN = readWords();
 
 test('the starting chip is the baseline: power 1, every signal on time', () => {
   const m = model(START);

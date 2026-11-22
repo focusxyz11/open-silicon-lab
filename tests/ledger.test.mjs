@@ -13,8 +13,9 @@ import { plan } from '../src/engines/build.js';
 import * as Game from '../src/v2/game.js';
 import { fieldOf } from '../src/data/questions.js';
 import { STOPS } from '../src/data/weave.js';
+import { readWords } from '../scripts/words.mjs';
 
-const EN = JSON.parse(readFileSync(new URL('../src/i18n/en.json', import.meta.url), 'utf8'));
+const EN = readWords();
 const AGENT = '2026-11-12-design-studio-agent-counter', LAB = '2026-11-12-design-counter-3bit';
 const CASE = [{ en: 1 }, { en: 1 }, { en: 1 }, { en: 0 }, { en: 0 }];
 const brk = (o = {}) => draft(Object.assign({ kind: 'break', of: AGENT, by: 'Ada', made: 'person', case: CASE }, o), 'ada agent counter', '2026-11-20');

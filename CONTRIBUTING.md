@@ -8,11 +8,11 @@ Thanks for helping. You do not need to be a chip expert: a good question and a s
 
 ## Ways to help
 
-**Add a question.** A question is a stop in `src/data/weave.js`: a thread, a depth, and the parts of that depth's scene it is about. Its words go in `src/i18n/en.json`: `stop.<thread>.<depth>.q` (the question), `.note` (something true to notice, never the answer) and optionally `.tried` (real directions people are exploring). `npm test` checks the parts exist and the words are there.
+**Add a question.** A question is a stop in `src/data/weave.js`: a thread, a depth, and the parts of that depth's scene it is about. Its words go in `src/i18n/en/atlas.json` (every word is in the file of its prefix's area, `AREAS` in `src/core/i18n.js`): `stop.<thread>.<depth>.q` (the question), `.note` (something true to notice, never the answer) and optionally `.tried` (real directions people are exploring). `npm test` checks the parts exist and the words are there.
 
 **Propose a question without code.** On the site, follow any question, open what was asked here, and choose *Ask your own here*. It needs a home (it has one: where you stand), the form of a question, and what you noticed. Or use the question form on GitHub (`question.yml`).
 
-**Back a stop with a figure or a case.** A figure is an entry in `src/data/facts.json` (value, label, source, link, kind, date checked), named for a stop in `FIGURES` in `src/data/weave.js`. Any number in a stop's words needs one. A case is a real event in `CASES`, with its words `case.<id>.*` in `src/i18n/en.json`.
+**Back a stop with a figure or a case.** A figure is an entry in `src/data/facts.json` (value, label, source, link, kind, date checked), named for a stop in `FIGURES` in `src/data/weave.js`. Any number in a stop's words needs one. A case is a real event in `CASES`, with its words `case.<id>.*` in `src/i18n/en/atlas.json`.
 
 **Build a piece of the community's computer, or break one.** Everything the community adds is an entry of the ledger: one small file in `community/ledger/` (see `community/README.md`). On the site, win an open job at the Lab or break a design in the Makers' village, sign it, and *Add it to the ledger* opens GitHub with the file filled in, as a pull request. Or add the file yourself. `npm test` replays the whole ledger through the lab's engines: a design must read, do its job and pass every case a break has added; a break must make its design answer wrong, and come from someone else. Entries made with AI are welcome: say how it was used. Nothing is voted on.
 
@@ -26,6 +26,6 @@ Thanks for helping. You do not need to be a chip expert: a good question and a s
 
 **Fix a fact.** Edit `src/data/facts.json`: update `value`, `source`, `url` and `verified`, and move the old value into `previous`.
 
-**Translate.** Copy `src/i18n/en.json` to `src/i18n/<lang>.json` and translate the values, never the names.
+**Translate.** Area by area: make `src/i18n/<lang>/`, copy any file of `src/i18n/en/` into it and translate the values, never the names; add the language to `LANGS` in `src/core/i18n.js`. An area not yet translated shows in English. `core.json` is the first page, so it is a good first file.
 
 Before adding anything, read [docs/SYSTEM.md](docs/SYSTEM.md) (one home for every thing, and how every view shows it). See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for how the code fits together, and [docs/STATUS.md](docs/STATUS.md) for the tasks ready to build.

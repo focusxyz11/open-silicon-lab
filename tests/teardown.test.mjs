@@ -2,10 +2,11 @@
 // and used, the leading-edge counts are the first version's, and each challenge check passes only for its answer.
 import { test } from 'node:test';
 import { readFileSync } from 'node:fs';
-const EN = JSON.parse(readFileSync(new URL('../src/i18n/en.json', import.meta.url), 'utf8'));
+const EN = readWords();
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import * as T from '../src/data/teardown.js';
+import { readWords } from '../scripts/words.mjs';
 
 const FACTS = JSON.parse(fs.readFileSync(new URL('../src/data/facts.json', import.meta.url), 'utf8')).facts.map(f => f.id);
 

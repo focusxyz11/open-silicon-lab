@@ -125,7 +125,7 @@ export function experimentHtml(id, ctx) {
   let op = '';
   if (x.wants) { const w = engineOf(x.wants);
     op += '<p class="readwant">' + esc(w ? t('read.wants.engine', { name: t('layer.engine.' + w.id) }) + ' ' + t('layer.engine.' + w.id + '.does') : x.wants === 'part' && e ? t('read.wants.part', { name: t('layer.engine.' + e.id) }) : t('read.wants.outside')) + '</p>'; }
-  const tried = X.triedOf(x).flatMap(s => { const L = t('stop.' + s + '.tried'); return Array.isArray(L) ? L : []; });
+  const tried = X.triedOf(x).flatMap(s => { const L = has('stop.' + s + '.tried') ? t('stop.' + s + '.tried') : null; return Array.isArray(L) ? L : []; });
   if (tried.length) op += '<p class="kicker">' + esc(t('trail.tried')) + '</p><ul class="tried2">' + tried.map(v => '<li>' + esc(v) + '</li>').join('') + '</ul>';
   const dirs = (x.open || []).map(directionOf).filter(Boolean);
   if (dirs.length) op += '<p class="kicker">' + esc(t('read.dirs')) + '</p><ul class="readdirs">' + dirs.map(d => '<li><b>' + esc(dirName(d.id)) + '</b> <span class="small muted">· ' + esc(stageName(d.stage)) + ' · ' + esc(t('read.drops', { givens: d.drops.map(g => t('layer.given.' + g)).join(', ') })) + '</span>' +

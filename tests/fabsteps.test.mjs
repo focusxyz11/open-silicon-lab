@@ -3,11 +3,12 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync as readEN } from 'node:fs';
-const EN = JSON.parse(readEN(new URL('../src/i18n/en.json', import.meta.url), 'utf8'));
+const EN = readWords();
 /* a word: still in an engine's WORDS, or moved into en.json once its view was built (the puller's are cz.*) */
 const has = k => F.WORDS[k] || EN[k] || EN[k.replace('fab.puller.dislocations.', 'cz.disl.').replace('fab.puller.', 'cz.')] || EN[k.replace(/^fab\.ch\.(\w+)\.(t|goal)$/, 'game.ch.$1.$2')];
 import { readFileSync } from 'node:fs';
 import * as F from '../src/engines/fabsteps.js';
+import { readWords } from '../scripts/words.mjs';
 
 const near = (a, b, tol, msg) => assert.ok(Math.abs(a - b) <= tol, (msg || '') + ' ' + a + ' vs ' + b);
 const facts = JSON.parse(readFileSync(new URL('../src/data/facts.json', import.meta.url), 'utf8')).facts.map(f => f.id);

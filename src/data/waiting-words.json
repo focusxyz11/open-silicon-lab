@@ -1,5 +1,5 @@
 {
- "why": "Words from the earlier site (retired 2026-11, kept on the branch claude/before-retire-2026-11) whose content the chip world does not show yet. They wait here for a view, so nothing is lost; tests/i18n.test.mjs does not count them as unused. Move a word out of this list when a view shows it; delete it if it will never be shown.",
+ "why": "Words whose content the chip world does not show yet: from the earlier site (retired 2026-11, kept on the branch claude/before-retire-2026-11), and a lens's own form at a level where that lens no longer lives. They wait here for a view, so nothing is lost; tests/i18n.test.mjs does not count them as unused. Move a word out of this list when a view shows it; delete it if it will never be shown.",
  "groups": {
   "build": "the community plan's panel words",
   "core": "a tiny core running its program",
@@ -9,7 +9,8 @@
   "here": "what changed at a level when your chip changed",
   "plant": "which building of the factory a station is in",
   "station": "when each station of the line happens",
-  "xray": "die photos: the blocks of a real chip on its die (the earlier site's x-ray)"
+  "xray": "die photos: the blocks of a real chip on its die (the earlier site's x-ray)",
+  "frame": "a lens's own form at a level where it no longer lives, since the field questions lead (#302): Perfect fails at the data centre's building, where Compute beats cleverness now lives through the field question 'scale'"
  },
  "keys": [
   "xray.title",
@@ -106,6 +107,8 @@
   "floor.coldTitle",
   "floor.speedTitle",
   "floor.speed",
-  "floor.aim"
+  "floor.aim",
+  "frame.at.perfect.building.q",
+  "frame.at.perfect.building.note"
  ]
 }

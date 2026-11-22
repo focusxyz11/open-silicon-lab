@@ -8,11 +8,46 @@
    <br> and <a href="…">; nothing else (tests/i18n.test.mjs checks). Numbers and dates go through
    fmtNum and fmtDate so each language writes them its own way.
 
-   Today only English exists. To add a language: copy src/i18n/en.json to src/i18n/<lang>.json,
-   translate the values (never the names), and add the language to LANGS below. */
+   The words are split by area, so a view's words load with the view and a language can be translated area by area:
+   src/i18n/<lang>/<area>.json, one file per area of AREAS below, each holding the texts whose name starts with one of
+   its prefixes (the part before the first dot). core holds what shows before any view opens (the bar, the loop, the
+   frame, the map page, Your log, Break it); loadLang loads it, and needWords(area, …) loads an area's file once, before
+   a view that shows it draws. A new word goes in the file of its prefix's area; a new prefix gets an area here first
+   (tests/i18n.test.mjs checks both).
+
+   Today only English exists. To add a language, area by area: make src/i18n/<lang>/, copy any of src/i18n/en/*.json
+   into it and translate the values (never the names), and add the language to LANGS below. An area not yet translated
+   shows in English. */
 export const LANGS = { en: 'English' };   // i18n-ok: each language is named in its own words
 const KEY = 'osl-lang';
 let LANG = 'en', MSG = {}, EN = {};
+
+/* every area and the prefixes of the texts it holds. A prefix is the start of a name, whole parts only: 'stop' holds
+   every stop.*, 'game.ch' only the challenges' names among game.*; the longest prefix that fits decides. A prefix is in
+   one area only */
+export const AREAS = {
+  core: ['ui', 'loop', 'hero', 'break', 'report', 'sheet', 'nav', 'jump', 'frame2', 'home', 'exp', 'stop', 'depth',
+    'map', 'game.ch', 'game.stepAria', 'design.proj', 'build.aiUse', 'build.need', 'ledger.sign',
+    'machines.ui.kicker', 'field.perfect.q', 'frame.size', 'board.aria', 'chipx.aria', 'dive.aria', 'lens.aria',
+    'place.aria'],
+  atlas: ['what', 'part', 'field', 'frame', 'seek', 'debate', 'case', 'thread', 'fact', 'proc', 'handle', 'slice',
+    'station', 'plant', 'prim', 'q', 'here', 'zoom', 'dive', 'line', 'ask', 'trail', 'way', 'route', 'lens', 'layer',
+    'joule', 'curve', 'world', 'chal', 'mini'],
+  place: ['place', 'game', 'grow', 'look', 'dial', 'insp', 'carry', 'door', 'around', 'follow', 'room', 'studio',
+    'board', 'story', 'chipx', 'lab', 'society', 'fab', 'whatif'],
+  design: ['design', 'bench', 'build', 'ledger', 'api', 'core'],
+  labs: ['td', 'bet', 'aib', 'agent', 'srv', 'ana', 'ckp', 'rv', 'er', 'cim', 'grv', 'semi', 'imp', 'ovl', 'eu',
+    'lt', 'cz', 'fl', 'mo', 'rd', 'evolve', 'clk', 'floor', 'xray', 'xr', 'chip', 'life', 'gauge', ],
+  pages: ['machines', 'mb', 'invent', 'liquid', 'read', 'page', 'site', 'tune', 'swm', 'side', 'walls',
+    'forms', 'copies', 'probe', 'plan']
+};
+const AREA_OF = Object.fromEntries(Object.entries(AREAS).flatMap(([a, ps]) => ps.map(p => [p, a])));
+/* the area a text is in, by its name */
+export function areaOf(key) {
+  const s = String(key).split('.');
+  for (let i = s.length; i > 0; i--) { const a = AREA_OF[s.slice(0, i).join('.')]; if (a) return a; }
+  return null;
+}
 
 export const lang = () => LANG;
 /* The locale used for formatting. English follows the site's style: 30 Oct 2026, "x86, Arm and RISC-V". */
@@ -34,17 +69,30 @@ const ACC = { a: 'á', e: 'é', i: 'í', o: 'ó', u: 'ú', c: 'ç', n: 'ñ', s: 
 const pseudo = v => Array.isArray(v) ? v.map(pseudo) : typeof v === 'object' ? Object.fromEntries(Object.entries(v).map(([k, x]) => [k, pseudo(x)]))
   : '[' + v.split(/(\{\w+\}|<[^>]+>|&\w+;)/).map((p, i) => i % 2 ? p : p.replace(/[a-zA-Z]/g, c => ACC[c] || c)).join('') + ']';
 
-/* Load the texts once, at start-up. text(path) fetches a file (or reads it from the single-file build). */
+/* Load the core texts once, at start-up; the other areas when a view needs them (needWords). text(path) fetches a file
+   (or reads it from the single-file build). */
+let TEXT = null;
+const loaded = {};
+async function loadArea(area) {
+  const en = JSON.parse(await TEXT('src/i18n/en/' + area + '.json'));
+  Object.assign(EN, en);
+  if (LANG === PSEUDO) { Object.assign(MSG, Object.fromEntries(Object.entries(en).map(([k, v]) => [k, pseudo(v)]))); return; }
+  if (LANG !== 'en') { try { Object.assign(MSG, JSON.parse(await TEXT('src/i18n/' + LANG + '/' + area + '.json'))); } catch (e) { /* this area is not translated yet: it shows in English */ } }
+}
 export async function loadLang(text, chosen) {
-  LANG = chosen || pick();
-  EN = JSON.parse(await text('src/i18n/en.json'));
-  MSG = EN;
-  if (LANG === PSEUDO) { MSG = Object.fromEntries(Object.entries(EN).map(([k, v]) => [k, pseudo(v)])); return; }
-  if (LANG !== 'en') { try { MSG = Object.assign({}, EN, JSON.parse(await text('src/i18n/' + LANG + '.json'))); } catch (e) { console.error('Language file missing for', LANG, e); LANG = 'en'; } }
+  LANG = chosen || pick(); TEXT = text;
+  EN = {}; MSG = LANG === 'en' ? EN : {};
+  await needWords('core');
   try { document.documentElement.lang = LANG; } catch (e) { /* no document (tests) */ }
 }
+/* the words of one or more areas, each loaded once; resolves when all are in */
+export function needWords(...areas) {
+  return Promise.all(areas.map(a => loaded[a] || (loaded[a] = TEXT ? loadArea(a).catch(e => { delete loaded[a]; console.error('Words missing for', a, e); }) : Promise.resolve())));
+}
+/* every area not loaded yet, for an idle moment */
+export const needAllWords = () => needWords(...Object.keys(AREAS));
 /* For tests and tools: use a set of texts directly. */
-export function useTexts(texts, language = 'en') { EN = texts; MSG = texts; LANG = language; }
+export function useTexts(texts, language = 'en') { EN = texts; MSG = texts; LANG = language; TEXT = null; }
 
 const missing = new Set();
 const rules = new Map();

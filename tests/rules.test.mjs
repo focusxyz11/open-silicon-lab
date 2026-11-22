@@ -5,8 +5,9 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { build, solutionOf, starterOf, PROJECTS } from '../src/engines/design.js';
 import { RULES, checkRules, rulesOf, allKept, maskSet, SKY130_MASKS, SKY130_TOTAL, ANTENNA_TRACKS } from '../src/engines/rules.js';
+import { readWords } from '../scripts/words.mjs';
 
-const EN = JSON.parse(readFileSync(new URL('../src/i18n/en.json', import.meta.url), 'utf8'));
+const EN = readWords();
 const FACTS = Object.fromEntries(JSON.parse(readFileSync(new URL('../src/data/facts.json', import.meta.url), 'utf8')).facts.map(f => [f.id, f]));
 const B = p => build({ p, code: solutionOf(p) || starterOf(p), slice: solutionOf('alu') });
 const byId = (R, id) => R.find(r => r.id === id);
