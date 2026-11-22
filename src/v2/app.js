@@ -43,7 +43,7 @@ export function start() {
   const waits = (k, names) => names.forEach(n => { V[n] = (...a) => glue(k).then(() => V[n](...a)); });
   /* a question from the field, the joule's way in and the ways out of a question are offered on every view and on the
      seam's note, and answered by the reading pages' glue: the first such click loads it, then is made again */
-  document.addEventListener('click', e => { const el = !glueP.pages && e.target.closest('[data-field], [data-fieldleave], [data-joule], [data-leave], [data-seamx]'); if (!el) return;
+  document.addEventListener('click', e => { const el = !glueP.pages && e.target.closest('[data-field],[data-fieldleave],[data-joule],[data-leave],[data-seamx]'); if (!el) return;
     e.preventDefault(); e.stopPropagation(); glue('pages').then(() => el.click()); }, true);
   waits('flights', ['ensureDc', 'showPlace', 'showPhone', 'showCar']);
   V.hidePh = V.hideCa = () => {};
