@@ -2,33 +2,25 @@
 
 Where Open Silicon Lab is heading. This is the one place for what happens next. Nothing here is a promise or a date. Ideas not yet picked are kept in the [idea bank](IDEAS.md). Where things stand today, and the tasks ready to build, are in [STATUS.md](STATUS.md).
 
-## Now: the framework
+## Now: the thirteen questions as the lab's spine
 
-The lab is being rebuilt on one skeleton ([framework/](framework/README.md), 15 November 2026): it is made of experiments, each one small question put to an engine and seen through one lens, and the questions, engines, lenses, measures and the record are layers the experiments share. The plan is in six stages ([framework/rebuild.md](framework/rebuild.md), section 4): experiments as data; every world as a document; the design studio as Forms; one frame with no tabs; the worlds one at a time; growth. Nothing on the site has changed yet. The structure below describes the site as it stands until then.
+The owner decided on 20 November that the whole site is restructured on the thirteen core questions ([FRAME13.md](FRAME13.md)): everything filed under them, met on the picture where it lives, one question at a time. The plan is [reviews/spine.md](reviews/spine.md), tasks #302 to #309:
 
-## Before that: the structure
+- every question filed under the thirteen, with the questions from the field leading (#302);
+- marks on the picture open a lens, and the row of question names under Ask goes (#303);
+- lenses repaint the picture, starting with the block level's six (#304);
+- the eleven worlds become reading pages, opened from a lens, no longer a structure a visitor meets (#305);
+- labs for the thinnest questions: design it or search for it, the program nobody can judge, let the noise compute, a thousand that pass (#306 to #309).
 
-The lab is one grid, a chip's life across and scale down, with two moves (`docs/SYSTEM.md` §2). The plan in stages, and where it stands, is in `docs/reviews/structure.md` (Status, and section 9): stage 1 makes the structure true everywhere, stage 2 leaves one picture per cell, stage 3 puts the commons in the grid, stage 4 is growth. The numbered list below is how the site got here.
+Before them, the foundation pass (#298 to #301), because the spine's tasks touch the files it splits: the first page loads no 3D, the shell is split by view, the words are split by area, and the documents say what is true.
 
-## Before: the dive
+## Next: the core visual systems
 
-The site is one thing: a continuous dive from a data centre, a phone or a car down to silicon atoms, and the journey a chip makes from crystal to the world, with open questions running through it as threads ([FRAME.md](FRAME.md)). The earlier site is kept on the branch `claude/before-dive-2026-11`.
+A few worlds drawn as strongly as the dive: each core question with a picture of its own that you move through and change, fed by the lenses' visual languages (the block level's six first, then the other seven, [reviews/spine.md](reviews/spine.md), "The design").
 
-1. **Done:** the dive with threads, in Fable's style, as the whole site.
-2. **Done:** different types of chips: dive into a data centre, a phone or a car; all three meet in the lower depths.
-3. **Done:** the journey, a line from crystal to shipped chip; every part explains itself; challenges on your chip.
-4. **Your chip** (in progress): one chip whose settings every *Try it* changes and every depth shows. Done: clock speed, switch size, chip size, and the factory as a way down, in 2.5D (its line, one layer's loop with a slice through the wafer, yield from your chip's size, laps from its switches, Build it at the switch). Next: the challenges grow with each new try; then the open chip as a way down (your square of a shared chip, with a RISC-V core that runs a real program), then the other settings, with the earlier site's simulations as their models.
-5. **The build** (in progress): the community's computer as one open plan of needs, built in the design studio by people and AI together ([FRAME.md](FRAME.md), "The build"). Done: the plan, the studio's six stations, the shared chip, AI proposals to check and prompts for any assistant, who wrote what, forms for needs and designs. Done: the RISC-V core as an engine (your ALU slice inside it runs real test programs), and the factory at every station (what the line does to the design, and a copy it spoils). Done: an open port for AI agents (an MCP server over the same engines, [MCP.md](MCP.md)), so agents design with people instead of the lab running its own AI. Next: engines for registers and the serial port; then the core as a way down from the dives' block depth.
-6. **The second wave from the earlier site** (in progress): debates placed where they arise (done); your chip's life, the stress model for why perfect designs fail (done: variation, heat, supply dips, ageing, missed defects, weak spots, wear and radiation, acting on your design over years in a phone, a car or a data centre; at the Ship station, at each dive's chip, and through the open port); chip X-ray at the chip of each dive (done: the chip seen as a die photo, every district with the texture it has under a microscope, where the area goes, and a block of each kind to find). The memory wall (done: two new settings of your chip, how often each number fetched is used and where its memory sits; faster cores only wait faster unless memory keeps up, and moving numbers costs more energy than computing with them; tried at the board, the block and the package, shown at the board, chip, phone chip and block). New ways to compute and the physics floor (done: at the atom, how far your chip is from what physics allows, with energy, cold and light's speed from first principles; ten other ways to compute, each at the depth where the problem it attacks is met). Next: the economics.
-7. **The redesign** (now the site, `index.html`; the earlier site was retired in 2026-11, branch `claude/before-retire-2026-11`): a chip world as the first page, and the data centre as one continuous 3D flight from the campus to the die (done). The chip world as a game that grows (done, [WORLD.md](WORLD.md)): one main thread, your chip's life (Design → Make → Test → Ship → Use, and back to design) as a ring road with numbered stops and a HUD; every place with three doors, Do (twelve challenges, each checked by an engine), Look and Ask; finishing a challenge grows the island; the shared computer rises at the Lab one floor per piece, community designs stand as houses in the makers' village and open jobs as plots anyone, person or AI, can take; phones and cars as islands of their own; a menu of Explore · Challenges · Questions · Build · Ecosystem. Every place has an inside (done): the earlier site's pages as its levels, every question at its level, every challenge at a place and a level, and a link back from every page; the studio a campus whose mask house sends your design to the factory, the challenge going on from the check to what the factory does to it (done). Inside a chip, layer by layer (done): the dive and the factory line as one 3D picture, read top down or built bottom up, with an instrument panel instead of text. Next: more challenges at every step (the economics, the memory wall at Use, the X-ray at Test), the phone, the car, the factory and the studio flown through like the data centre, then `explore.html` becomes the site.
-8. **The card and the picture, redesigned** (in progress): words on the picture (notes pinned to parts, the square you dive into marked), and a short card with tabs (done). The car redrawn from higher up, its control unit on a bracket in the footwell so the zoom grows out of it; the building and the phone name their parts (done). Next: the server tray in the rack, opened, so the board does not appear as a window in its front.
-9. **More questions,** first where few threads stop, then from the community. More ways down when they bring new questions.
+## Then: the community's open goal
 
-## Next
-
-- **Bring back what fits.** The earlier site's simulations become the models behind your chip's settings and tries, never separate pages.
-- **The companion, live.** It now hands the visitor a prompt for any AI assistant; next, a conversation inside the lab where the page can reach an AI.
-- **Other strong visual views** that connect with the dive.
+The lab as a community building one open goal (`src/data/build.js`), people and AI together: needs taken and designs checked by engines, entries kept in the ledger (`community/ledger/`, [reviews/community.md](reviews/community.md)), and anyone's agent joining through the open port ([MCP.md](MCP.md)).
 
 ## Long term
 
@@ -40,3 +32,11 @@ The site is one thing: a continuous dive from a data centre, a phone or a car do
 ## Waiting for a view (from the earlier site)
 
 The earlier site showed some things the chip world does not yet; their words wait in `src/data/waiting-words.json`, so nothing is lost: die photos (a real chip's blocks on its die), the energy floor (how little energy a step can take), when each station of the line happens, a tiny core running its program, what changed at a level when your chip changed, and the panel words of the studio, the factory and the community plan. Each moves into a view of the chip world, or is deleted once it is decided it will not be shown.
+
+## How we got here
+
+- **The dive** (to early November 2026): one continuous dive from a data centre, a phone or a car down to silicon atoms, the journey a chip makes from crystal to the world, and open questions as threads through both ([FRAME.md](FRAME.md); branch `claude/before-dive-2026-11` holds the site before it). Then your chip, whose settings every try changes; the build, the community's computer as one open plan, with the RISC-V core as an engine and the open port for AI agents; and the second wave from the earlier site (debates, your chip's life, the X-ray, the memory wall, new ways to compute).
+- **The chip world** (November 2026): the island as a game round a chip's life, every place with Look, Do and Ask, the data centre, the phone and the car flown through, inside a chip layer by layer; the earlier site retired (branch `claude/before-retire-2026-11`).
+- **The structure** ([reviews/structure.md](reviews/structure.md), history): one grid, a chip's life across and scale down, two moves, one card; then the map as the first page (branch `claude/before-map-2026-11`).
+- **The framework of 15 November** ([framework/](framework/README.md), history): the lab as experiments sharing layers; its experiments and every-world-as-a-document are built (`#/read`, `#/w`).
+- **The lenses and the new frame** (from 20 November): the thirteen core questions as lenses under Ask (branch `claude/before-lenses-2026-11`), and one frame worn in three modes, Look, Do and Read (#271; branch `claude/before-frame2-2026-11`).

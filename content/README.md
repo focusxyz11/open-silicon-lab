@@ -1,5 +1,10 @@
 # The lab, written from first principles
 
+> **Written under the earlier eleven questions.** This folder was written as eleven worlds, each with its own visual system. The lab is being refiled under the thirteen core
+> questions ([docs/FRAME13.md](../docs/FRAME13.md), the plan in [docs/reviews/spine.md](../docs/reviews/spine.md)):
+> every question here is filed under the thirteen (#302), and the eleven worlds become reading pages opened from a
+> lens, no longer a structure a visitor meets (#305). The documents are kept as they were written, as the source the lab draws on.
+
 This folder is the content of Open Silicon Lab as documents: eleven questions, and for each one the way of seeing
 it, the engine behind it, where its frontier is and what the community does there. It is written from first
 principles: each document starts from what is true about chips and physics, not from what the site happened to
