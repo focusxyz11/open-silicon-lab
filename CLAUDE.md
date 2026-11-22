@@ -30,7 +30,7 @@ Learners new to chips with basic hardware knowledge, up to engineers. Plain word
 
 ## Before you push
 - `npm test`.
-- `node --check` on every changed `.js`/`.mjs` file (the tests do not load `src/v2/app.js`).
+- `node --check` on every changed `.js`/`.mjs` file (the tests do not load `src/v2/app.js` or `src/v2/glue/`).
 - `npm run test:browser -- --only <the sections your change touches>` (`npm run test:browser -- --list` shows them).
 - A new smoke check goes in the section of its view, uses only variables defined in its own block, polls with `waitForFunction` redoing the move, and never uses fixed waits.
 - Push only when these pass.
@@ -42,10 +42,10 @@ Start with `docs/STATUS.md` (where things stand, and the tasks ready to build) a
 - **The journey:** `src/app/journey.js` (steps, captions, slice) and `src/app/journey3d.js` (the 3D view, three.js in `src/vendor/`; the lens over a machine at work: `src/app/lens3d.js`).
 - **The design studio and the build:** `src/app/design.js`, `src/engines/design.js` (the tiny-chip engine: `src/engines/tinychip.js`), the community's plan `src/data/build.js` and its engines `src/engines/build.js`.
 - **The world around the line:** `src/app/map.js`, `src/data/world.js`, `src/engines/supply.js`.
-- **The chip world (the redesign):** `docs/WORLD.md`, `src/v2/`: the game `game.js`; the island `map3d.js`; inside a chip, the dive and the line as one stack, `chip3d.js`; the challenge player `play.js`; the shell `app.js`; the frame and its card `frame.js`, worn in its three modes by `frame2.js` with `src/styles/frame2.css`. The 3D views' plain data the shell reads: `src/data/views3d.js` (the shell imports no 3D module, `docs/ARCHITECTURE.md`, "What loads when").
+- **The chip world (the redesign):** `docs/WORLD.md`, `src/v2/`: the game `game.js`; the island `map3d.js`; inside a chip, the dive and the line as one stack, `chip3d.js`; the challenge player `play.js`; the shell `app.js` (the router, the loop, the frame's modes, Break it), with what it shares in `shell.js` and each view's glue in `src/v2/glue/` (the island's cards `island.js`, the frame's lenses and searches `frame.js`, the flights `flights.js`, the studio `studio.js`, the chip's layers `chip.js`, the dive, the line and the bench `flat.js`, the supply map `supply.js`, the board `board.js`, the reading pages `pages.js`), each loaded when its view opens; the frame and its card `frame.js`, worn in its three modes by `frame2.js` with `src/styles/frame2.css`. The 3D views' plain data the shell reads: `src/data/views3d.js` (the shell imports no 3D module, `docs/ARCHITECTURE.md`, "What loads when").
 - **The map, the first page:** `src/data/home.js` (stations on the chip world's addresses, the thirteen questions as threads, the ways in, the toys), `src/engines/home.js` (what is joined to what, the wafer and the toys), `src/v2/home.js`.
 - **The grid and the moves:** `src/engines/way.js`.
-- **The thirteen as lenses:** `src/data/frame.js` (what is filed under each), `src/engines/frame.js` (which live at a level, and what each lens holds there), drawn under Ask by `src/v2/frame.js` with the card from `lensCard` in `src/v2/app.js`.
+- **The thirteen as lenses:** `src/data/frame.js` (what is filed under each), `src/engines/frame.js` (which live at a level, and what each lens holds there), drawn under Ask by `src/v2/frame.js` with the card from `lensCard` in `src/v2/glue/frame.js`.
 - **The questions from the field** (limits, leaks, bets; a leak sits on a seam and rises when you cross it): `src/data/questions.js`, shown by `src/v2/field.js`.
 - **What if? between the islands** (levers on islands, effects that cross the sea): `src/data/ripple.js`, `src/engines/ripple.js`, `src/v2/whatif.js` (`#/whatif`).
 - **Labs brought over from the first version** (the branch `before`), each a challenge played where it lives (kinds in `src/v2/play.js`): Verify the agent at the Lab (`src/data/agent.js`), the batch bet at the data centre's chip (`src/engines/aichip.js`), Look inside at the phone's board and the right chip for the job at the studio's need (`src/data/teardown.js`), Evolve a circuit at the studio's gates (`src/engines/evolve.js`), Grow a crystal at the quarry (`src/engines/crystal.js`).

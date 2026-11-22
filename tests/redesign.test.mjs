@@ -68,7 +68,8 @@ test('a car is flown through like the data centre and the phone: every level has
   /* the island goes inside into the flight, and the dive's car chip goes back up to its last level */
   const { FLOWN } = await import('../src/v2/game.js');
   assert.deepEqual(FLOWN.cars, { car: 0, ecu: 2, mcu: 3 });
-  assert.match(src('app.js'), /up: '#\/place\/cars\/3'/);
+  /* the dives' worlds (DIVES in src/v2/glue/frame.js): the car's leads up to its flight */
+  assert.match(src('glue/frame.js'), /up: '#\/place\/cars\/3'/);
 });
 
 test('there is no menu: the bar holds the loop, six stages each with its words, and the shell says so', async () => {

@@ -59,7 +59,7 @@ lens holds there:
 ## On the picture
 
 The card's Ask face (`src/v2/frame.js`) is the lens bar, then the chosen lens's card (made by `lensCard` in
-`src/v2/app.js`), then the questions people were stuck on and what they asked. The lens lights its parts:
+`src/v2/glue/frame.js`), then the questions people were stuck on and what they asked. The lens lights its parts:
 
 - in the dive, the line and the studio (flat pictures), the stop it shows lights its thread's parts, and the Ask
   marks on the picture are only the lens's own;

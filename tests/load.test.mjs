@@ -31,3 +31,14 @@ test('the labs load with the first challenge played, not with the first page', (
   const R = reach('src/main2.js');
   assert.deepEqual([...R.keys()].filter(f => /\/v2\/labs\//.test(f)).map(rel), []);
 });
+
+test('the shell stays small, and each view\'s glue loads when its view opens', () => {
+  const lines = readFileSync(resolve(ROOT, 'src/v2/app.js'), 'utf8').split('\n').length;
+  assert.ok(lines < 600, 'src/v2/app.js has ' + lines + ' lines');
+  const R = reach('src/main2.js');
+  assert.deepEqual([...R.keys()].filter(f => /\/v2\/glue\//.test(f)).map(rel), []);
+  /* every glue module named in the shell's GLUE exists and makes itself once */
+  const app = readFileSync(resolve(ROOT, 'src/v2/app.js'), 'utf8'), names = [...app.match(/const GLUE = \{([^}]+)\}/)[1].matchAll(/'([a-z]+)':/g)].map(m => m[1]);
+  assert.ok(names.length >= 8);
+  for (const k of names) assert.match(readFileSync(resolve(ROOT, 'src/v2/glue/' + k + '.js'), 'utf8'), /export function create\(\)/, k);
+});

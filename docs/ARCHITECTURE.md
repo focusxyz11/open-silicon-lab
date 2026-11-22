@@ -5,7 +5,18 @@ A static site: plain ES modules, one stylesheet and one file of words. No framew
 ```
 index.html              the site: the chip world (src/main2.js, src/v2/)
 classic.html            the earlier site's address, now leading to the chip world (the earlier site: branch claude/before-retire-2026-11)
-src/v2/app.js           the shell: routes in the address, the bar with the loop, the card, the views put in the frame
+src/v2/app.js           the shell: routes in the address, the bar with the loop, the frame's modes, the island's sheet, Your log's way in, Break it; each view's glue loads when it opens
+src/v2/shell.js         what the shell and its glue share: V (the shared state, and the functions one part lends another), $, esc, follow
+src/v2/glue/            one module per view's glue, each create()d once when its view first opens, after the glue it builds on (GLUE in app.js):
+  island.js             the island's cards: the inspector, the lenses over the island, the dials, a place's card and its inside, the Lab's inside
+  frame.js              what every framed view shares: the frame made for a view, the thirteen as lenses under Ask, the search at a level
+  flights.js            the data centre's, the phone's and the car's flights
+  studio.js             the studio, walked inside
+  chip.js               inside a chip, layer by layer
+  flat.js               the dive, the line and the bench (the earlier site's 2D world in the frame), and the levels drawn in 3D
+  supply.js             the supply map
+  board.js              one board and its story
+  pages.js              the reading pages: your log, the commons, #/read, #/w, machines, What if?, a question's trail and world, the field questions
 src/v2/frame.js         the one frame on every view below the island: the rails, the levels, the card's Look · Do · Ask
 src/v2/frame2.js        the frame's three modes (#271): the card worn as a caption (Look), a side panel with a stage (Do) or a phone sheet; reading pages (Read); styles in src/styles/frame2.css
 src/v2/game.js          the game as data and logic: the loop, the challenges, each place's doors, your state (tested)
@@ -51,7 +62,7 @@ src/data/ways.js        other ways to compute, each at the depth where the probl
 src/data/debates.js     where informed people disagree: the earlier site's debates, each placed at the depths and stations it is about
 src/data/build.js       the build: the community's goal as a plan of needs, the designs people and AI proposed, AI agents' proposals
 src/data/world.js       the map: places, and each kind of chip's trip through them, joined to the line's stations
-src/data/facts.json     sourced figures, loaded when a question's stop first shows (src/v2/app.js); FIGURES and CASES in weave.js point to them
+src/data/facts.json     sourced figures, loaded when a question's stop first shows (src/v2/glue/pages.js); FIGURES and CASES in weave.js point to them
 src/core/i18n.js        words: t('name'), plurals, numbers, dates
 src/i18n/en.json        every word on screen
 src/styles/site.css     the styles, dark and light
@@ -65,7 +76,7 @@ The tree above names the main files; every engine in `src/engines/` and lab in `
 
 ## What loads when
 
-Each part of the lab loads when it is opened. The rule for the 3D views: **the shell imports no 3D module.** `src/v2/app.js` (and everything it imports statically) never imports `kit3d.js`, three.js or a 3D view; the plain data it needs from them lives in `src/data/views3d.js`, and a view's 3D, three.js with it, loads when that view is first opened (the `ensure…` functions in `app.js`). The labs (`src/v2/labs/`) load with the first challenge played (`labsReady` in `src/v2/play.js`), and the worlds' documents (`content/*.md`) when a page or the island's first card shows them. The idle preload (the island's views, warmed while the island shows; the labs, on the first page) runs only after the page has painted, and never when the connection asks to save data or is slow (2g, 3g); it marks the page with the moment it starts (`data-preload`). `tests/load.test.mjs` walks the static imports from `src/main2.js`, and the smoke test's `explore-desktop` section checks what the first page fetches before its preload.
+Each part of the lab loads when it is opened. The rule for the 3D views: **the shell imports no 3D module.** `src/v2/app.js` (and everything it imports statically) never imports `kit3d.js`, three.js or a 3D view; the plain data it needs from them lives in `src/data/views3d.js`, and a view's 3D, three.js with it, loads when that view is first opened (the `ensure…` functions in `app.js`). Each view's glue (`src/v2/glue/`) loads when its view first opens: until then the shell holds stand-ins that load it and then run (`waits` in `app.js`), and hiding a view that never opened does nothing. The labs (`src/v2/labs/`) load with the first challenge played (`labsReady` in `src/v2/play.js`), and the worlds' documents (`content/*.md`) when a page or the island's first card shows them. The idle preload (the island's views, warmed while the island shows; the labs, on the first page) runs only after the page has painted, and never when the connection asks to save data or is slow (2g, 3g); it marks the page with the moment it starts (`data-preload`). `tests/load.test.mjs` walks the static imports from `src/main2.js`, and the smoke test's `explore-desktop` section checks what the first page fetches before its preload.
 
 ## The zoom
 
