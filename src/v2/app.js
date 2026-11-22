@@ -7,7 +7,7 @@
    and Ask (its questions, and what people and agents have asked). There is no menu: the commons is the need, the
    place where the loop starts and comes back (the Lab, and its record, #/build); what you met and did is your log
    (#/log); the world around the island is the way out from it (#/ecosystem).
-   Routes: #/ (the map, the first page: src/v2/home.js), #/island (the island), #/place/<id>, #/place/datacentre/<level>, #/chip/<row>/build (inside a chip, layer by layer: the dive's levels as made),
+   Routes: #/ (the blueprint, the first page: src/v2/home.js), #/stations (the station map: src/v2/stations.js), #/island (the island), #/place/<id>, #/place/datacentre/<level>, #/chip/<row>/build (inside a chip, layer by layer: the dive's levels as made),
    #/board (one board, with a story that drives it), #/dive/<depth>[/<world>] (the dive), #/line/<step> (the factory),
    #/bench/<level>[/<challenge>] (the studio), #/do/<challenge>, #/ask/<thread>/<depth>, #/supply, #/log, #/build,
    #/ecosystem. Words are read with t(). */
@@ -363,21 +363,35 @@ export function start() {
     V.hidePh(); V.hideCa(); V.hideSw();
     document.body.classList.remove('immersive'); page.hidden = true; V.hideL3(); showStage(false);
   }
-  /* ---- the map, the first page (#/, src/v2/home.js): a wafer leaving the fab, toys, the first things to try, and every
-     station of the lab joined round a chip's life. Nothing 3D is made or drawn here: the island (#/island) is one way in,
-     made when it is first visited ---- */
+  /* ---- the blueprint, the first page (#/, src/v2/home.js): the whole chip innovation ecosystem as one wheel, a chip's
+     life around it and its scale inward, with a story beside it. Nothing 3D is made or drawn here: the island (#/island)
+     is one way in, made when it is first visited ---- */
   const homeEl = $('home');
   let home = null;
-  function showHome() {
+  function showHome() { showHome0(); return showBlueprint(); }
+  function showHome0() {
     $('diveCanvas').hidden = true; vui.hidden = true; V.dive && V.dive.stop(); V.hide3d(); $('flatLabels').hidden = true; if (V.flatWords) V.flatWords.clear(); if (V.Bench) V.Bench.show(false);
     V.hideBoard(); document.body.classList.remove('immersive');
     $('chipCanvas').hidden = $('chipLabels').hidden = true; cui.hidden = true; V.chip && V.chip.pause();
     $('placeCanvas').hidden = $('placeLabels').hidden = true; pui.hidden = true; V.dc && V.dc.pause(); V.hidePh(); V.hideCa(); V.hideSw();
     $('mapCanvas').hidden = $('mapLabels').hidden = true; $('hero').hidden = true; $('outbtn').hidden = true; lensbar.hidden = true; showStage(false); if (V.map) V.map.pause();
     if (!sheet.hidden) closeSheet(); loading(false);
-    if (!home) home = createHome(homeEl, { challenges: Game.CHALLENGES, chOf, titleOf, doHref, doHome: Way.doHome, sizeOf, sizeWords, still,
-      done: () => S.done, exps: Exp.EXPERIMENTS.map(x => ({ id: x.id, world: x.world, ask: Read.askOf(x) })) });
-    home.show(); afterPaint(preloadHome); return Promise.resolve();
+  }
+  function showBlueprint() {
+    if (stations) stations.hide();
+    return needWords('blueprint').then(() => { if (!home) home = createHome(homeEl, { still }); home.show(); afterPaint(preloadHome); });
+  }
+  /* ---- the station map (#/stations, src/v2/stations.js): the first page before the blueprint, every station of the lab
+     joined round a chip's life, with its toys and paths by subject; loaded when it is first opened ---- */
+  const stationsEl = $('stations');
+  let stations = null;
+  function showStations() {
+    showHome0(); if (home) home.hide();
+    return import('./stations.js').then(m => {
+      if (!stations) stations = m.createStations(stationsEl, { challenges: Game.CHALLENGES, chOf, titleOf, doHref, doHome: Way.doHome, sizeOf, sizeWords, still,
+        done: () => S.done, exps: Exp.EXPERIMENTS.map(x => ({ id: x.id, world: x.world, ask: Read.askOf(x) })) });
+      stations.show();
+    });
   }
   function showMap(from) {
     $('diveCanvas').hidden = true; vui.hidden = true; V.dive && V.dive.stop(); V.hide3d(); $('flatLabels').hidden = true; if (V.flatWords) V.flatWords.clear(); if (V.Bench) V.Bench.show(false);
@@ -398,7 +412,7 @@ export function start() {
      Going between views is never a cut: deeper zooms in, higher zooms out, the Turn turns, along slides. */
   const partsOf = h => (h.replace(/^#\/?/, '') || '').split('/').filter(Boolean);
   const doPlace = ch => (ch && !ch.need && ch.kind !== 'break' && ch.kind !== 'design' ? Way.doHome(ch) : null);
-  const viewOf = p => { const k = p[0]; if (!k || k === 'home') return ['home', -1]; if (k === 'ask') return viewOf(partsOf(Game.viewOfDepth(p[2] || 'chip')));
+  const viewOf = p => { const k = p[0]; if (!k || k === 'home' || k === 'stations') return ['home', -1]; if (k === 'ask') return viewOf(partsOf(Game.viewOfDepth(p[2] || 'chip')));
     if (k === 'do') { const h = doPlace(chOf(decodeURIComponent(p[1] || ''))); return h ? viewOf(partsOf(h)) : ['map', 0]; }
     if (k === 'dive') { const w = p[2] || Game.DIVE_WORLD[p[1]] || 'datacentre'; if (w === 'datacentre') return ['dive', 4]; const i = Math.max(0, ['phone', 'phoneboard', 'soc', 'car', 'ecu', 'mcu', 'scanner', 'wafer', 'die'].indexOf(p[1]) % 3); return ['dive:' + w, Game.DIVE_WORLD[p[1]] ? 1 + i : 4]; }
     if (k === 'supply') return ['supply', 0];
@@ -425,6 +439,7 @@ export function start() {
     if (k === 'ask' && parts[1] && parts[2]) { const at = Game.viewOfDepth(parts[2]); if (at === shownAt && !from) { V.askStop(parts[1], parts[2]); return Promise.resolve(); } return show(partsOf(at), from).then(() => V.askStop(parts[1], parts[2])); }
     shownAt = '#/' + parts.join('/');
     if (k === 'home') return showHome();
+    if (k === 'stations') return showStations();
     if (k === 'board') return V.showBoard();
     if (k === 'dive') return V.showDive(parts[1], parts[2]);
     if (k === 'supply') return V.showSupply(parts[1]);
@@ -461,6 +476,7 @@ export function start() {
     if (/^#\/?w\/?$/.test(location.hash)) history.replaceState(null, '', '#/');
     const parts = partsOf(location.hash), k = parts[0] || 'home';
     if (k !== 'home' && home) home.hide();
+    if (k !== 'stations' && stations) stations.hide();
     /* the cell you came from and the one you are in: a seam between them may raise its leak */
     { const to = Way.whereOf(location.hash); hideSeam(); crossed(V.seamFrom, to); V.seamFrom = to; }
     /* a bet's wafer or chip stands in the scene only while its challenge is open */

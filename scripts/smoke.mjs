@@ -16,7 +16,8 @@ const { chromium } = require('playwright');
    (npm run test:browser -- --only a,b does the same). CI runs them in groups, side by side (.github/workflows/ci.yml). */
 const SECTIONS = [
   ['old', 'the old address (classic.html) leads to the chip world'],
-  ['home', 'the map, the first page: the wafer, the toys, a station and its card, a question as a thread, the ways in, the island one tap away, desktop and phone'],
+  ['home', 'the blueprint, the first page: the wheel of stations, six chapters repainting it, a wall with its question and source, people and AI, four languages, the island one tap away, desktop and phone'],
+  ['stations', 'the map of stations (#/stations): the wafer, the toys, a station and its card, a question as a thread, the ways in, the island one tap away, desktop and phone'],
   ['explore-desktop', 'the chip world at 1280 px, light: the loop, the first challenge, the worlds and their tries, every 3D level, the dives, the commons, the frame, the bench, the board'],
   ['explore-phone', 'the same walk at 390 px, dark'],
   ['joins', 'every pair of neighbouring 3D levels drawn together half way, and back'],
@@ -57,59 +58,107 @@ run['old'] = async () => {
   at = 'old address'; { const page = await browser.newPage(); await page.goto(base + 'classic.html#/questions'); await page.waitForFunction(() => /index\.html/.test(location.pathname) || location.pathname.endsWith('/'), null, { timeout: 15000 }).catch(() => problems.push('the old address does not lead to the chip world')); await page.close(); }
 };
 
-/* the map, the first page (#/, src/v2/home.js): nothing 3D is drawn there; the wafer tests its chips, the toys answer,
-   a station opens its card with what can be played there and the view it leads to, a question runs through the map as
-   a thread, a way in dims what it is not about, and the island and the brand lead out and back */
+/* the blueprint, the first page (#/, src/v2/home.js): nothing 3D is drawn there. One wheel, a chip's life round it and
+   its scale inward, with every station on it leading to its view; six chapters, each repainting the wheel as it is
+   read (the world's two ends, four walls each with its question and source, ten ways past them, people and AI, open
+   work); the first page in four languages, and the island and the brand lead out and back */
 run['home'] = async () => {
   for (const [w, h, scheme] of [[1280, 800, 'dark'], [390, 844, 'light']]) {
     const tag = 'home ' + w, hp = await browser3d.newPage({ viewport: { width: w, height: h }, colorScheme: scheme, reducedMotion: 'reduce' });
     hp.on('pageerror', e => problems.push(tag + ': ' + e.message));
     hp.on('console', m => { if (m.type() === 'error' && !/fonts\.g|net::ERR|WebGL|GPU/.test(m.text())) problems.push(tag + ': console: ' + m.text()); });
-    await hp.addInitScript(() => { try { localStorage.setItem('osl-quality', 'keep'); } catch (e) { /* no storage */ } });
+    await hp.addInitScript(() => { try { localStorage.setItem('osl-quality', 'keep'); localStorage.removeItem('osl-lang'); } catch (e) { /* no storage */ } });
     await hp.goto(base + 'index.html');
-    await hp.waitForFunction(() => !document.getElementById('home').hidden && document.querySelectorAll('#home .hm-die.ok, #home .hm-die.bad').length > 20, null, { timeout: 20000 }).catch(() => problems.push(tag + ': the first page is not the map, with a wafer tested'));
+    await hp.waitForFunction(() => !document.getElementById('home').hidden && document.querySelectorAll('#home .bp-wheel .bp-st[href^="#/"]').length >= 30 && document.querySelectorAll('#home .bp-ch').length === 6, null, { timeout: 20000 }).catch(() => problems.push(tag + ': the first page is not the blueprint, with its wheel of stations and six chapters'));
+    if (await hp.evaluate(() => !document.getElementById('mapCanvas').hidden)) problems.push(tag + ': the island is drawn behind the blueprint');
+    if (!(await hp.evaluate(() => [...document.querySelectorAll('#home .bp-stagename')].map(e => e.textContent).join() === 'Open,Design,Make,Test,Ship,Use'))) problems.push(tag + ': the wheel does not name the six stages of a chip\'s life');
+    /* a stage picked: its sector lit, and a card with the stations in it */
+    await hp.waitForFunction(() => { const b = document.querySelector('#home [data-stagepick="make"]'); if (b && b.getAttribute('aria-pressed') !== 'true') b.click(); return document.querySelectorAll('#home [data-card] .bp-cardlinks a[href^="#/"]').length >= 4; }, null, { timeout: 10000 }).catch(() => problems.push(tag + ': a stage picked shows no card with its stations'));
+    /* each chapter, read, repaints the wheel */
+    const chapter = async (id, what) => hp.waitForFunction(id => { const c = document.querySelector('#home .bp-ch[data-ch="' + id + '"]'); if (c) c.scrollIntoView({ block: 'center' }); return document.querySelector('#home .bp').dataset.mode === id; }, id, { timeout: 10000 }).catch(() => problems.push(tag + ': reading ' + what + ' does not change the wheel'));
+    await chapter('world', 'the world it takes');
+    await hp.waitForFunction(() => { const b = document.querySelector('#home button[data-side="open"]'); if (b && b.getAttribute('aria-pressed') !== 'true') b.click(); return document.querySelector('#home .bp').dataset.side === 'open'; }, null, { timeout: 10000 }).catch(() => problems.push(tag + ': the open end cannot be shown'));
+    await chapter('walls', 'the walls');
+    await hp.waitForFunction(() => { const b = document.querySelector('#home [data-wallpick="memory"]'); if (b && !document.querySelector('#home [data-card] .bp-q')) b.click(); const c = document.querySelector('#home [data-card]'); return !!c && !c.hidden && !!c.querySelector('.bp-q') && /3,500/.test(c.textContent); }, null, { timeout: 10000 }).catch(() => problems.push(tag + ': a wall shows no card with its question'));
+    await hp.waitForFunction(() => /^Source:/.test((document.querySelector('#home [data-card] [data-src]') || {}).textContent || '') && !!document.querySelector('#home [data-card] [data-src] a[href^="http"]'), null, { timeout: 10000 }).catch(() => problems.push(tag + ': a wall\'s figure shows no source'));
+    await chapter('next', 'what comes next');
+    await hp.waitForFunction(() => { const b = document.querySelector('#home [data-nextpick="cim"]'); if (b && !/Attacks/.test((document.querySelector('#home [data-card]') || {}).textContent || '')) b.click(); return /Attacks: The memory wall/.test((document.querySelector('#home [data-card]') || {}).textContent || ''); }, null, { timeout: 10000 }).catch(() => problems.push(tag + ': a way past the walls does not say which wall it attacks'));
+    await chapter('people', 'people and AI');
+    { const n0 = await hp.textContent('#home [data-stepnote]').catch(() => '');
+      await hp.waitForFunction(n0 => { const r = document.querySelector('#home [data-step]'); if (r && r.value !== '2') { r.value = '2'; r.dispatchEvent(new Event('input', { bubbles: true })); } const n = document.querySelector('#home [data-stepnote]'); return !!n && n.textContent !== n0 && /not a forecast/.test(n.textContent); }, n0, { timeout: 10000 }).catch(() => problems.push(tag + ': moving the AI share does not change what people and AI each do')); }
+    await chapter('you', 'your move');
+    const side = await hp.evaluate(() => { const p = document.getElementById('home'); return p.scrollWidth - p.clientWidth; });
+    if (side > 1) problems.push(tag + ': the blueprint scrolls sideways by ' + side + ' px');
+    /* the first page in another language: its words, the bar's stages, and a way back */
+    await hp.goto(base + 'index.html?lang=zh#/');
+    await hp.waitForFunction(() => document.documentElement.lang === 'zh' && /蓝图/.test((document.querySelector('#home .bp-hero h1') || {}).textContent || '') && [...document.querySelectorAll('#home .bp-stagename')].some(e => e.textContent === '设计'), null, { timeout: 20000 }).catch(() => problems.push(tag + ': the first page does not show in Chinese'));
+    await hp.click('#home [data-lang="en"]').catch(() => problems.push(tag + ': the first page offers no way back to English'));
+    await hp.waitForFunction(() => document.documentElement.lang === 'en' && /blueprint/.test((document.querySelector('#home .bp-hero h1') || {}).textContent || ''), null, { timeout: 20000 }).catch(() => problems.push(tag + ': the first page does not come back to English'));
+    /* the island is one tap away, the brand comes back, a station on the wheel leads into its view */
+    await hp.click('#home .bp-hero a[href="#/island"]').catch(() => problems.push(tag + ': the blueprint offers no way to the island'));
+    await hp.waitForFunction(() => location.hash === '#/island' && document.getElementById('home').hidden && !document.getElementById('mapCanvas').hidden, null, { timeout: 30000 }).catch(() => problems.push(tag + ': the island does not open from the blueprint'));
+    await hp.click('.bar .brand').catch(() => problems.push(tag + ': no brand in the bar'));
+    await hp.waitForFunction(() => !document.getElementById('home').hidden && document.getElementById('mapCanvas').hidden, null, { timeout: 15000 }).catch(() => problems.push(tag + ': the brand does not lead back to the blueprint'));
+    await hp.waitForFunction(() => { const a = document.querySelector('#home .bp-st[data-st="print"]'); if (a && location.hash !== '#/line/print') a.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true })); return location.hash === '#/line/print' && document.getElementById('home').hidden; }, null, { timeout: 20000 }).catch(() => problems.push(tag + ': a station on the wheel does not lead into its view'));
+    await hp.close();
+  }
+};
+
+/* the map of stations (#/stations, src/v2/stations.js), the first page before the blueprint: nothing 3D is drawn there; the wafer tests its chips, the toys answer,
+   a station opens its card with what can be played there and the view it leads to, a question runs through the map as
+   a thread, a way in dims what it is not about, and the island and the brand lead out and back */
+run['stations'] = async () => {
+  for (const [w, h, scheme] of [[1280, 800, 'dark'], [390, 844, 'light']]) {
+    const tag = 'stations ' + w, hp = await browser3d.newPage({ viewport: { width: w, height: h }, colorScheme: scheme, reducedMotion: 'reduce' });
+    hp.on('pageerror', e => problems.push(tag + ': ' + e.message));
+    hp.on('console', m => { if (m.type() === 'error' && !/fonts\.g|net::ERR|WebGL|GPU/.test(m.text())) problems.push(tag + ': console: ' + m.text()); });
+    await hp.addInitScript(() => { try { localStorage.setItem('osl-quality', 'keep'); } catch (e) { /* no storage */ } });
+    await hp.goto(base + 'index.html#/stations');
+    await hp.waitForFunction(() => !document.getElementById('stations').hidden && document.querySelectorAll('#stations .hm-die.ok, #stations .hm-die.bad').length > 20, null, { timeout: 20000 }).catch(() => problems.push(tag + ': the stations are not a map, with a wafer tested'));
     if (await hp.evaluate(() => !document.getElementById('mapCanvas').hidden)) problems.push(tag + ': the island is drawn behind the map');
     /* the same dust, bigger chips: fewer of them on the wafer */
-    { const n0 = await hp.evaluate(() => document.querySelectorAll('#home .hm-die').length);
-      await hp.waitForFunction(() => { const b = document.querySelector('#home [data-wsize="2"]'); if (b && b.getAttribute('aria-pressed') !== 'true') b.click(); return document.querySelectorAll('#home .hm-die').length > 0 && document.querySelector('#home [data-wsize="2"]').getAttribute('aria-pressed') === 'true'; }, null, { timeout: 10000 }).catch(() => problems.push(tag + ': the chip size cannot be changed'));
-      const n1 = await hp.evaluate(() => document.querySelectorAll('#home .hm-die').length);
+    { const n0 = await hp.evaluate(() => document.querySelectorAll('#stations .hm-die').length);
+      await hp.waitForFunction(() => { const b = document.querySelector('#stations [data-wsize="2"]'); if (b && b.getAttribute('aria-pressed') !== 'true') b.click(); return document.querySelectorAll('#stations .hm-die').length > 0 && document.querySelector('#stations [data-wsize="2"]').getAttribute('aria-pressed') === 'true'; }, null, { timeout: 10000 }).catch(() => problems.push(tag + ': the chip size cannot be changed'));
+      const n1 = await hp.evaluate(() => document.querySelectorAll('#stations .hm-die').length);
       if (!(n1 < n0)) problems.push(tag + ': bigger chips do not fit fewer to a wafer (' + n0 + ' then ' + n1 + ')'); }
     /* the gate answers its switches */
-    await hp.waitForFunction(() => { const b = document.querySelector('#home [data-gin="b"]'); if (b && !b.classList.contains('on')) b.click(); const l = document.querySelector('#home .hm-bulb'); return !!l && l.textContent.trim() === '0'; }, null, { timeout: 10000 }).catch(() => problems.push(tag + ': a NAND with both switches on does not go dark'));
+    await hp.waitForFunction(() => { const b = document.querySelector('#stations [data-gin="b"]'); if (b && !b.classList.contains('on')) b.click(); const l = document.querySelector('#stations .hm-bulb'); return !!l && l.textContent.trim() === '0'; }, null, { timeout: 10000 }).catch(() => problems.push(tag + ': a NAND with both switches on does not go dark'));
     /* the page leads on to the rest of the lab: six paths by subject, each a line of stops that open where they live
        and a way to start; one question with what is filed under it; what is new; every part of the lab by kind */
-    await hp.waitForFunction(() => { const P = [...document.querySelectorAll('#home .hm-path')];
+    await hp.waitForFunction(() => { const P = [...document.querySelectorAll('#stations .hm-path')];
       return P.length === 6 && P.every(p => p.querySelectorAll('.hm-psteps a[href^="#/"]').length >= 4 && !!p.querySelector('a.hm-pgo[href^="#/"]')); }, null, { timeout: 10000 })
       .catch(() => problems.push(tag + ': the first page has no paths by subject, each with its stops and a way to start'));
-    if (!(await hp.$('#home .hm-qcard a.hm-qitem[href^="#/"]'))) problems.push(tag + ': the question on the first page shows nothing behind it');
-    if ((await hp.$$('#home .hm-nitem[href^="#/"]')).length < 3) problems.push(tag + ': the first page does not say what is new');
-    { const ix = await hp.evaluate(() => [...document.querySelectorAll('#home .hm-index a.hm-ilink')].map(a => a.getAttribute('href')));
+    if (!(await hp.$('#stations .hm-qcard a.hm-qitem[href^="#/"]'))) problems.push(tag + ': the question on the first page shows nothing behind it');
+    if ((await hp.$$('#stations .hm-nitem[href^="#/"]')).length < 3) problems.push(tag + ': the first page does not say what is new');
+    { const ix = await hp.evaluate(() => [...document.querySelectorAll('#stations .hm-index a.hm-ilink')].map(a => a.getAttribute('href')));
       for (const h of ['#/challenges', '#/read', '#/island', '#/dive/chip', '#/line/crystal', '#/log']) if (!ix.includes(h)) problems.push(tag + ': the whole lab on the first page has no way to ' + h);
       /* the eleven worlds are reading pages, opened from a lens, never a list (#305) */
       if (ix.includes('#/w')) problems.push(tag + ': the whole lab on the first page still lists the worlds'); }
     /* a scale picked on the ruler opens its level on the map, with how it is designed and made */
-    await hp.waitForFunction(() => { const b = document.querySelector('#home [data-zat="5"]'); if (b && b.getAttribute('aria-pressed') !== 'true') b.click(); return document.querySelectorAll('#home .hm-twins button').length === 2 && /Gate/.test((document.querySelector('#home [data-side] h2') || {}).textContent || ''); }, null, { timeout: 10000 }).catch(() => problems.push(tag + ': the ruler does not open the gate with its designed and made twins'));
+    await hp.waitForFunction(() => { const b = document.querySelector('#stations [data-zat="5"]'); if (b && b.getAttribute('aria-pressed') !== 'true') b.click(); return document.querySelectorAll('#stations .hm-twins button').length === 2 && /Gate/.test((document.querySelector('#stations [data-side] h2') || {}).textContent || ''); }, null, { timeout: 10000 }).catch(() => problems.push(tag + ': the ruler does not open the gate with its designed and made twins'));
     /* a station: what can be played there, and the view it leads to */
-    const st = w > 760 ? '#home .hm-st[data-st="print"]' : '#home .hm-strip [data-st="print"]';
-    if (w <= 760 && await hp.evaluate(() => !!document.querySelector('#home .hm-fit') && getComputedStyle(document.querySelector('#home .hm-fit')).display !== 'none')) problems.push(tag + ': the phone gets the wide map');
+    const st = w > 760 ? '#stations .hm-st[data-st="print"]' : '#stations .hm-strip [data-st="print"]';
+    if (w <= 760 && await hp.evaluate(() => !!document.querySelector('#stations .hm-fit') && getComputedStyle(document.querySelector('#stations .hm-fit')).display !== 'none')) problems.push(tag + ': the phone gets the wide map');
     await hp.click(st).catch(() => problems.push(tag + ': the station cannot be picked'));
-    await hp.waitForFunction(() => document.querySelectorAll('#home [data-side] a.hm-item').length >= 2 && !!document.querySelector('#home [data-side] a.hm-enter[href="#/line/print"]'), null, { timeout: 10000 }).catch(() => problems.push(tag + ': a station shows nothing to play, or no way into its view'));
+    await hp.waitForFunction(() => document.querySelectorAll('#stations [data-side] a.hm-item').length >= 2 && !!document.querySelector('#stations [data-side] a.hm-enter[href="#/line/print"]'), null, { timeout: 10000 }).catch(() => problems.push(tag + ': a station shows nothing to play, or no way into its view'));
     /* its question, followed: a thread through the map, one question in the bar */
-    await hp.click('#home [data-side] [data-follow]').catch(() => problems.push(tag + ': the station offers no question to follow'));
-    await hp.waitForFunction(w > 760 ? () => document.querySelectorAll('#home .hm-trun').length >= 2 && !!document.querySelector('#home [data-threadbar] .hm-q') : () => document.querySelectorAll('#home .hm-strip .onq').length >= 3, null, { timeout: 10000 }).catch(() => problems.push(tag + ': the question is not drawn as a thread through the map'));
-    if ((await hp.$$('#home .hm-q')).length > 3) problems.push(tag + ': too many questions on the page at once');
+    await hp.click('#stations [data-side] [data-follow]').catch(() => problems.push(tag + ': the station offers no question to follow'));
+    await hp.waitForFunction(w > 760 ? () => document.querySelectorAll('#stations .hm-trun').length >= 2 && !!document.querySelector('#stations [data-threadbar] .hm-q') : () => document.querySelectorAll('#stations .hm-strip .onq').length >= 3, null, { timeout: 10000 }).catch(() => problems.push(tag + ': the question is not drawn as a thread through the map'));
+    if ((await hp.$$('#stations .hm-q')).length > 3) problems.push(tag + ': too many questions on the page at once');
     /* a way in dims the stations it is not about */
-    await hp.click('#home [data-way="fly"]').catch(() => problems.push(tag + ': no way in called Fly'));
-    if (!(await hp.$('#home .hm-st.dim, #home .hm-strip .dim'))) problems.push(tag + ': a way in does not dim what it is not about');
-    const side = await hp.evaluate(() => { const p = document.getElementById('home'); return p.scrollWidth - p.clientWidth; });
+    await hp.click('#stations [data-way="fly"]').catch(() => problems.push(tag + ': no way in called Fly'));
+    if (!(await hp.$('#stations .hm-st.dim, #stations .hm-strip .dim'))) problems.push(tag + ': a way in does not dim what it is not about');
+    const side = await hp.evaluate(() => { const p = document.getElementById('stations'); return p.scrollWidth - p.clientWidth; });
     if (side > 1) problems.push(tag + ': the map scrolls sideways by ' + side + ' px');
     /* the island is one tap away, the brand comes back, a station leads into its view */
-    await hp.click('#home a[href="#/island"]').catch(() => problems.push(tag + ': the map offers no way to the island'));
-    await hp.waitForFunction(() => location.hash === '#/island' && document.getElementById('home').hidden && !document.getElementById('mapCanvas').hidden, null, { timeout: 30000 }).catch(() => problems.push(tag + ': the island does not open from the map'));
+    await hp.click('#stations a[href="#/island"]').catch(() => problems.push(tag + ': the map offers no way to the island'));
+    await hp.waitForFunction(() => location.hash === '#/island' && document.getElementById('stations').hidden && !document.getElementById('mapCanvas').hidden, null, { timeout: 30000 }).catch(() => problems.push(tag + ': the island does not open from the map'));
     await hp.click('.bar .brand').catch(() => problems.push(tag + ': no brand in the bar'));
-    await hp.waitForFunction(() => !document.getElementById('home').hidden && document.getElementById('mapCanvas').hidden, null, { timeout: 15000 }).catch(() => problems.push(tag + ': the brand does not lead back to the map'));
+    await hp.waitForFunction(() => !document.getElementById('home').hidden && document.getElementById('stations').hidden && document.getElementById('mapCanvas').hidden, null, { timeout: 15000 }).catch(() => problems.push(tag + ': the brand does not lead back to the first page'));
+    await hp.evaluate(() => { location.hash = '#/stations'; });
+    await hp.waitForFunction(() => !document.getElementById('stations').hidden, null, { timeout: 15000 }).catch(() => problems.push(tag + ': the stations do not open again'));
     await hp.evaluate(() => { location.hash = '#/line/print'; });
-    await hp.waitForFunction(() => document.getElementById('home').hidden, null, { timeout: 20000 }).catch(() => problems.push(tag + ': the map stays over a station\'s view'));
+    await hp.waitForFunction(() => document.getElementById('stations').hidden, null, { timeout: 20000 }).catch(() => problems.push(tag + ': the map stays over a station\'s view'));
     await hp.close();
   }
 };
@@ -140,9 +189,9 @@ const explore = async (tag, viewport, scheme) => {
     if (heavy.length) problems.push(tag + ': the first page fetches 3D before its preload: ' + heavy.join(', '));
     const bytes = early.reduce((a, e) => a + e.b, 0);
     if (!(bytes < FIRST_PAGE_BYTES)) problems.push(tag + ': the first page fetches ' + Math.round(bytes / 1024) + ' KB before its preload (budget ' + Math.round(FIRST_PAGE_BYTES / 1024) + ' KB)');
-    /* of the words, only the core area's */
+    /* of the words, only the core area's and the first page's own */
     const words = early.filter(e => /\/src\/i18n\//.test(e.u)).map(e => e.u.split('/src/i18n/')[1]);
-    if (words.join() !== 'en/core.json') problems.push(tag + ': the first page fetches words beyond core.json: ' + words.join(', '));
+    if (words.sort().join() !== 'en/blueprint.json,en/core.json') problems.push(tag + ': the first page fetches words beyond core.json and its own (blueprint.json): ' + words.join(', '));
     await fp.close();
   }
   await page.goto(base + 'index.html#/island');

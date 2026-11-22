@@ -15,10 +15,14 @@
    a view that shows it draws. A new word goes in the file of its prefix's area; a new prefix gets an area here first
    (tests/i18n.test.mjs checks both).
 
-   Today only English exists. To add a language, area by area: make src/i18n/<lang>/, copy any of src/i18n/en/*.json
-   into it and translate the values (never the names), and add the language to LANGS below. An area not yet translated
-   shows in English. */
-export const LANGS = { en: 'English' };   // i18n-ok: each language is named in its own words
+   English is whole; Chinese, French and Spanish have the first page (the blueprint area) and the bar so far. To add a
+   language, area by area: make src/i18n/<lang>/, copy any of src/i18n/en/*.json
+   into it, translate the values (never the names), and add the language to LANGS and the area to TRANSLATED below. An
+   area not yet translated shows in English, and is never fetched (tests/i18n.test.mjs keeps TRANSLATED and the files
+   in step). */
+export const LANGS = { en: 'English', zh: '中文', fr: 'Français', es: 'Español' };   // i18n-ok: each language is named in its own words
+/* the areas each language other than English has a file for */
+export const TRANSLATED = { zh: ['core', 'blueprint'], fr: ['core', 'blueprint'], es: ['core', 'blueprint'] };
 const KEY = 'osl-lang';
 let LANG = 'en', MSG = {}, EN = {};
 
@@ -38,6 +42,7 @@ export const AREAS = {
   design: ['design', 'bench', 'build', 'ledger', 'api', 'core'],
   labs: ['td', 'bet', 'aib', 'agent', 'srv', 'ana', 'ckp', 'rv', 'er', 'cim', 'grv', 'semi', 'imp', 'ovl', 'eu',
     'lt', 'cz', 'fl', 'mo', 'rd', 'evolve', 'clk', 'floor', 'xray', 'xr', 'chip', 'life', 'gauge', ],
+  blueprint: ['bp'],
   pages: ['machines', 'mb', 'invent', 'liquid', 'read', 'page', 'site', 'tune', 'swm', 'side', 'walls',
     'forms', 'copies', 'probe', 'plan']
 };
@@ -51,7 +56,7 @@ export function areaOf(key) {
 
 export const lang = () => LANG;
 /* The locale used for formatting. English follows the site's style: 30 Oct 2026, "x86, Arm and RISC-V". */
-const LOCALE = { en: 'en-GB' };
+const LOCALE = { en: 'en-GB', zh: 'zh-CN', fr: 'fr-FR', es: 'es-ES' };
 export const locale = () => LOCALE[LANG] || (LANG === 'qps' ? 'en-GB' : LANG);
 export const langName = () => LANGS[LANG] || LANG;
 
@@ -77,7 +82,7 @@ async function loadArea(area) {
   const en = JSON.parse(await TEXT('src/i18n/en/' + area + '.json'));
   Object.assign(EN, en);
   if (LANG === PSEUDO) { Object.assign(MSG, Object.fromEntries(Object.entries(en).map(([k, v]) => [k, pseudo(v)]))); return; }
-  if (LANG !== 'en') { try { Object.assign(MSG, JSON.parse(await TEXT('src/i18n/' + LANG + '/' + area + '.json'))); } catch (e) { /* this area is not translated yet: it shows in English */ } }
+  if (LANG !== 'en' && (TRANSLATED[LANG] || []).includes(area)) { try { Object.assign(MSG, JSON.parse(await TEXT('src/i18n/' + LANG + '/' + area + '.json'))); } catch (e) { /* this area is not translated yet: it shows in English */ } }
 }
 export async function loadLang(text, chosen) {
   LANG = chosen || pick(); TEXT = text;

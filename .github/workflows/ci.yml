@@ -41,7 +41,7 @@ jobs:
           - group: explore desktop
             sections: explore-desktop,frame,search,old,home
           - group: explore phone
-            sections: explore-phone,flights,break,slow
+            sections: explore-phone,flights,break,slow,stations
           - group: motion
             sections: motion,joins,seams
           - group: labs and ways
