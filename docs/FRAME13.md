@@ -27,19 +27,26 @@ This table is for people building the lab. The site never shows it.
 
 ## How a question lives at a level
 
-`src/data/frame.js` files everything once:
+`src/data/frame.js` files everything once, in `FILED`: its home question first, then the one or two it joins. A test
+fails if anything is left out, filed twice, or filed under a question that does not exist.
 
-- every experiment (`src/data/experiments/`) and every challenge (`src/v2/game.js`): its home question first, then
-  the one or two it joins (`FILED`). A test fails if anything is left out or filed under a question that does not exist;
-- the earlier threads' stops (`src/data/weave.js`, `stop.<thread>.<level>`): through the experiments that name them,
-  or, for a stop no experiment names, through its thread's question (`THREAD_HOME`);
-- the pairs of questions that share content, each named for what joins them (`SEAMS`, words `frame.seam.<a>.<b>`).
+- **The questions from the field lead** (`FILED.field`, the 40 of `src/data/questions.js`): real people stuck at a
+  turning point, with sources. Each is filed by what it asks and where its source leads: *Why does fetching a number
+  cost far more than using it?* is Geometry first, and joins Efficiency fuels use and Brain or copy. Where one has its
+  home at a level, it is the first form its home question takes there.
+- **The earlier threads' stops** (`FILED.stops`, `stop.<thread>.<level>` in `src/data/weave.js`): each filed by what
+  it asks. The eleven threads are the earlier framework: their words stay, and nothing new is filed by thread.
+- **Every experiment** (`FILED.experiments`, `src/data/experiments/`) and **every challenge** (`FILED.challenges`,
+  `src/v2/game.js`).
+- The pairs of questions that share content, each named for what joins them (`SEAMS`, words `frame.seam.<a>.<b>`).
 
-`src/engines/frame.js` weighs it (`createLenses`): a question lives at a level through the stops there (an
-experiment's home counts twice its joins), the challenges played there, and the experiments that run through it.
-`lensesAt(level)` gives the ones that live there, most at home first, at most six. `lensAt(q, level, levels)` gives
-what one lens holds there:
+`src/engines/frame.js` weighs it (`createLenses`): a question lives at a level through the field questions whose home
+is there (its home ones weigh 3, a join 1), the stops there (home 2, join 1), the challenges played there, and the
+experiments that run through it. `lensesAt(level)` gives the ones that live there, most at home first, at most six; a
+question that is home to a field question at a level always lives there. `lensAt(q, level, levels)` gives what one
+lens holds there:
 
+- **its field questions** (`field`): those filed under it with their home here, its home ones first;
 - **its form here**: the stop it is most about at this level, shared out so that no two lenses at a level show the
   same one, or words written for it at this level (`frame.at.<q>.<level>.q` and `.note`) where no stop fits;
 - **true here**: the stop's note;
