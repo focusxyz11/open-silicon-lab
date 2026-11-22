@@ -1,260 +1,233 @@
-/* The map: the first page (#/). A wafer coming out of the fab, four toys played in seconds, the first things to try,
-   and the map of everything visual and interactive in the lab: design coming down, the factory building back up,
-   scale in the middle, and one of the thirteen questions at a time drawn as a thread through the stations it touches.
-   Every station opens its own view of the chip world; the island is one way in (#/island). Data: src/data/home.js;
-   logic: src/engines/home.js. Words are read with t(); the map's own are home.* */
-import { t, fmtNum, fmtWords } from '../core/i18n.js';
-import { MAP, STATIONS, LINES, ARROWS, LOOP_PATH, SCALE_PATH, THREADS, WAYS, STARTS, TOYS, SCALE, PATHS, NEW, INDEX } from '../data/home.js';
-import { FILED } from '../data/frame.js';
-import * as H from '../engines/home.js';
+/* The blueprint: the first page (#/). One wheel holds the whole chip innovation ecosystem: around it a chip's life (the
+   loop: Open, Design, Make, Test, Ship, Use), inward its scale (the world at the rim, the atom at the centre). A story
+   in six chapters scrolls beside it and changes what the wheel shows: the whole of it, the world it takes, where it is
+   stuck, what comes next, people and AI, and your move. Every dot on the wheel is a place in the lab and opens it.
+   Nothing 3D is drawn here. The first page is the one page translated so far (bp.* in src/i18n/<lang>/blueprint.json);
+   its language picker sets the reader's language for the whole lab, where the rest falls back to English.
+   Data: src/data/blueprint.js; geometry: src/engines/blueprint.js. The station map that was the first page before is
+   src/v2/stations.js (#/stations). */
+import { t, fmtNum, lang, LANGS } from '../core/i18n.js';
+import { STAGES, RINGS, STATIONS, FLOWS, ACTORS, WALLS, NEXT, ROLES, TRIAD, CHAPTERS, OPEN_AT, DOORS, WAYS } from '../data/blueprint.js';
+import * as B from '../engines/blueprint.js';
+import { ledger, settled, frontier } from '../engines/ledger.js';
 
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
-const w = (k, o) => t('home.' + k, o);
-const ARROW = { down: '▼', up: '▲', left: '◀', right: '▶' };
-/* the kind of thing a challenge is, for its tag */
-const KIND = { design: 'build', fit: 'build', evolve: 'build', aibuild: 'build', bet: 'puzzle', agent: 'puzzle', spot: 'puzzle', teardown: 'see' };
-const kindOf = c => KIND[c.kind] || 'play';
+const w = (k, o) => t('bp.' + k, o);
+const QWORD = q => (q === 'perfect' ? 'field.perfect.q' : 'home.q.' + q);
+const byId = Object.fromEntries(STATIONS.map(s => [s.id, s]));
+const STATUS = ['product', 'lab', 'guess'];
+const KEY = 'osl-lang';
 
-/* ctx: challenges, chOf(id), titleOf(c), doHref(c), doHome(c), sizeOf(level), sizeWords(m), still(), done() (the ids of
-   the challenges finished), exps (the experiments: id, world and the question each asks) */
+/* ctx: still() (reduced motion) */
 export function createHome(host, ctx) {
-  const at = H.challengesAt(ctx.challenges, ctx.doHome);
-  const S = { way: null, sel: null, thread: null, zoom: SCALE.indexOf(TOYS.zoom.start), q: 0, a: 1, b: 0, gate: 'NAND', year: 0, pack: 1, size: 1, seed: 7, rev: 0 };
-  let timer = 0, idle = 0, W = null, dieEls = [];
-  const nameOf = id => t(H.byId[id].name);
-  const chs = id => at[id].map(ctx.chOf).filter(Boolean);
-  const nPlay = id => at[id].length + H.byId[id].pages.length;
+  const S = { mode: 'whole', side: 'giant', step: 0, show: { product: true, lab: true, guess: true }, sel: null, stage: null };
+  let facts = null, io = null, drawn = false;
+  const reduced = () => (ctx && ctx.still ? ctx.still() : false);
+  const pos = Object.fromEntries(STATIONS.map(s => [s.id, B.placeOf(s)]));
 
-  /* ---- the page ---- */
+  /* ---- the wheel ---- */
+  const lbl = (x, y, text, cls, anchor) => '<text class="' + cls + '" x="' + x + '" y="' + y + '"' + (anchor ? ' text-anchor="' + anchor + '"' : '') + '>' + esc(text) + '</text>';
+  function grid() {
+    let h = '<g class="g-grid">';
+    /* the stages: six sectors, with their names along the rim, upright all round */
+    STAGES.forEach(st => {
+      const a = B.angleOf(st), id = 'bp-arc-' + st;
+      h += '<path class="bp-sec" data-stage="' + st + '" d="' + B.sector(st, 40, 450, 0.6) + '"/>';
+      h += '<path id="' + id + '" d="' + B.arc(B.lower(a) ? 520 : 498, a - 26, a + 26, B.lower(a)) + '" fill="none"/>';
+      h += '<text class="bp-stagename" data-stage="' + st + '"><textPath href="#' + id + '" startOffset="50%" text-anchor="middle">' + esc(t('loop.stage.' + st)) + '</textPath></text>';
+    });
+    RINGS.forEach((r, i) => { h += '<circle class="bp-ring' + (r.id === 'world' ? ' rim' : '') + '" r="' + r.r + '"/>'; });
+    STAGES.forEach(st => { const [x, y] = B.pol(450, B.angleOf(st) - B.SPAN / 2); h += '<line class="bp-spoke" x1="0" y1="0" x2="' + x + '" y2="' + y + '"/>'; });
+    /* the scale, written down the gap between Use and Open */
+    RINGS.forEach(r => { const [x, y] = B.pol(r.r, -120); h += lbl(x - 8, y - 6, w('ring.' + r.id), 'bp-ringname', 'end'); });
+    return h + '</g>';
+  }
+  function flows() {
+    let h = '<g class="g-flows">';
+    h += '<path id="bp-loop" class="bp-loop" d="' + B.arc(462, -90, 269.9) + '"/>';
+    for (let i = 0; i < 6; i++) { const a = -90 + 60 * i + 30, [x, y] = B.pol(462, a); h += '<path class="bp-loopdir" d="M-7 -7L5 0L-7 7" transform="translate(' + x + ' ' + y + ') rotate(' + (a + 90) + ')"/>'; }
+    for (const [k, ids] of Object.entries(FLOWS)) h += '<path class="bp-flow f-' + k + '" d="' + B.through(ids.map(id => pos[id])) + '"/>';
+    if (!reduced()) h += '<circle class="bp-pulse" r="7"><animateMotion dur="14s" repeatCount="indefinite" rotate="auto"><mpath href="#bp-loop"/></animateMotion></circle>';
+    return h + '</g>';
+  }
+  /* where a name goes beside its dot: outward, or across the line it sits on (clockwise or not) */
+  function nameAt(p, side) {
+    const a = p.deg * Math.PI / 180, c = Math.cos(a), sn = Math.sin(a);
+    const [dx, dy] = side === 'cw' ? [-sn, c] : side === 'ccw' ? [sn, -c] : [c, sn];
+    const x = +(p.x + dx * 17).toFixed(1), y = +(p.y + dy * 17).toFixed(1);
+    const anchor = dx > 0.35 ? 'start' : dx < -0.35 ? 'end' : 'middle';
+    return { x, y: anchor === 'middle' ? (dy > 0 ? y + 14 : y - 4) : y + 7, anchor };
+  }
+  function stations() {
+    return '<g class="g-stations">' + STATIONS.map((s, i) => {
+      const p = pos[s.id], n = nameAt(p, s.side), name = w('st.' + s.id);
+      return '<a class="bp-st" href="' + s.href + '" data-st="' + s.id + '" data-stage="' + s.stage + '" style="--i:' + i + '" aria-label="' + esc(name + ', ' + t('loop.stage.' + s.stage) + ', ' + w('ring.' + s.ring)) + '">' +
+        '<circle class="bp-dot" cx="' + p.x + '" cy="' + p.y + '" r="9"/>' + lbl(n.x, n.y, name, 'bp-stname', n.anchor) + '</a>';
+    }).join('') + '</g>';
+  }
+  function world() {
+    const at = {};
+    return '<g class="g-world">' + ACTORS.map(a => {
+      const n = at[a.stage + a.side] = (at[a.stage + a.side] || 0) + 1, many = ACTORS.filter(x => x.stage === a.stage && x.side === a.side).length;
+      const deg = B.angleOf(a.stage) + (many > 1 ? (n === 1 ? -12 : 12) : 0), [x, y] = B.pol(410, deg);
+      return '<g class="bp-actor" data-actor="' + a.id + '" data-side="' + a.side + '" tabindex="0" role="button" aria-label="' + esc(w('actor.' + a.id + '.t')) + '">' +
+        '<circle cx="' + x + '" cy="' + y + '" r="16"/>' + lbl(x, y + 42 * (y > 0 ? 1 : -1) + (y > 0 ? 0 : 12), w('actor.' + a.id + '.t'), 'bp-actname', 'middle') + '</g>';
+    }).join('') + '</g>';
+  }
+  function walls() {
+    return '<g class="g-walls">' + WALLS.map(wl => {
+      const mid = (wl.from + wl.to) / 2, [x, y] = B.pol(wl.r, wl.id === 'switch' ? 30 : mid);
+      return '<g class="bp-wall" data-wall="' + wl.id + '" tabindex="0" role="button" aria-label="' + esc(w('wall.' + wl.id + '.t')) + '">' +
+        (wl.to - wl.from >= 359 ? '<circle class="bp-wallarc" r="' + wl.r + '"/><circle class="bp-wallhit" r="' + wl.r + '"/>' : '<path class="bp-wallarc" d="' + B.arc(wl.r, wl.from, wl.to) + '"/><path class="bp-wallhit" d="' + B.arc(wl.r, wl.from, wl.to) + '"/>') +
+        '<g class="bp-wallmark" transform="translate(' + x + ' ' + y + ')"><rect x="-15" y="-15" width="30" height="30" rx="8"/><path d="M-6 -6L6 6M6 -6L-6 6"/></g>' +
+        lbl(x + (x >= 0 ? 24 : -24), y + 7, w('wall.' + wl.id + '.t'), 'bp-wallname', x >= 0 ? 'start' : 'end') + '</g>';
+    }).join('') + '</g>';
+  }
+  function next() {
+    const wall = Object.fromEntries(WALLS.map(x => [x.id, x]));
+    return '<g class="g-next">' + NEXT.map(n => {
+      const p = B.placeOf(n), q = B.onWall(wall[n.attacks], p);
+      return '<g class="bp-next s-' + n.status + '" data-next="' + n.id + '" data-status="' + n.status + '" tabindex="0" role="button" aria-label="' + esc(w('next.' + n.id + '.t')) + '">' +
+        '<line class="bp-attack" x1="' + p.x + '" y1="' + p.y + '" x2="' + q.x + '" y2="' + q.y + '"/>' +
+        '<rect class="bp-nextdot" x="' + (p.x - 13) + '" y="' + (p.y - 13) + '" width="26" height="26" rx="4" transform="rotate(45 ' + p.x + ' ' + p.y + ')"/>' +
+        (r => lbl(p.x + (r ? 22 : -22), p.y + 7, w('next.' + n.id + '.t'), 'bp-nextname', r ? 'start' : 'end'))(n.side ? n.side === 'r' : p.x >= 0) + '</g>';
+    }).join('') + '</g>';
+  }
+  function people() {
+    let h = '<g class="g-people">';
+    ROLES.forEach(r => { h += '<path class="bp-ai" data-role="' + r.stage + '"/><path class="bp-pp" data-role="' + r.stage + '"/>'; });
+    /* the heart: AI generates, engines check, people decide */
+    const T = TRIAD.map((k, i) => ({ k, p: B.pol(118, -90 + 120 * i) }));
+    h += '<circle class="bp-heart" r="190"/>';
+    T.forEach(({ k, p }, i) => { const q = T[(i + 1) % 3].p; h += '<path class="bp-triadarc" d="M' + p[0] + ' ' + p[1] + 'Q0 0 ' + q[0] + ' ' + q[1] + '"/>'; });
+    T.forEach(({ k, p }) => { h += '<g class="bp-triad t-' + k + '"><circle cx="' + p[0] + '" cy="' + p[1] + '" r="44"/>' + lbl(p[0], p[1] - 2, w('triad.' + k), 'bp-triadname', 'middle') + lbl(p[0], p[1] + 70, w('triad.' + k + '.who'), 'bp-triadwho', 'middle') + '</g>'; });
+    return h + '</g>';
+  }
+  function you() {
+    let h = '<g class="g-you">';
+    const F = openWork();
+    Object.entries(F.at).forEach(([kind, n]) => { const o = OPEN_AT[kind]; if (!o) return; const p = B.placeOf(o);
+      h += '<a class="bp-beacon" href="' + o.href + '" data-open="' + kind + '" aria-label="' + esc(w('open.' + kind)) + '"><circle class="bp-bring" cx="' + p.x + '" cy="' + p.y + '" r="30"/><circle class="bp-bdot" cx="' + p.x + '" cy="' + p.y + '" r="12"/>' +
+        lbl(p.x, p.y - 40, w('open.' + kind) + ' · ' + fmtNum(n), 'bp-beaconname', 'middle') + '</a>'; });
+    return h + '</g>';
+  }
+  function wheel() {
+    return '<svg class="bp-wheel" viewBox="-548 -548 1096 1096" role="img" aria-labelledby="bp-wtitle"><title id="bp-wtitle">' + esc(w('wheel.aria')) + '</title>' +
+      grid() + flows() + people() + walls() + next() + world() + stations() + you() + '</svg>';
+  }
+
+  /* ---- the open work, from the community's ledger: what is open of each kind, and who has added what ---- */
+  function openWork() {
+    let at = {}, entries = [], people = 0;
+    try { const W = settled(); frontier(W).forEach(f => { at[f.kind] = (at[f.kind] || 0) + 1; }); entries = ledger(); people = entries.filter(e => e.made === 'person').length; } catch (e) { /* no ledger: nothing open is shown */ }
+    return { at, n: entries.length, people };
+  }
+
+  /* ---- the story ---- */
+  function langs() {
+    return '<nav class="bp-langs" aria-label="' + esc(w('lang.aria')) + '">' + Object.entries(LANGS).map(([k, name]) =>
+      '<button type="button" data-lang="' + k + '" lang="' + k + '" aria-pressed="' + (lang() === k) + '">' + esc(name) + '</button>').join('') + '</nav>' +
+      (lang() !== 'en' ? '<p class="bp-langnote">' + esc(w('lang.note')) + '</p>' : '');
+  }
+  function hero() {
+    return '<header class="bp-hero" data-ch="whole">' + langs() + '<p class="bp-kicker">' + esc(w('hero.k')) + '</p><h1>' + w('hero.h') + '</h1><p class="bp-lead">' + esc(w('hero.p')) + '</p>' +
+      '<div class="bp-ctas"><a class="bp-cta primary" href="#/" data-scroll>' + esc(w('hero.read')) + ' ↓</a><a class="bp-cta" href="#/island">' + esc(w('hero.enter')) + '</a></div></header>';
+  }
+  const chip = (attrs, text, on) => '<button type="button" class="bp-chip" ' + attrs + ' aria-pressed="' + !!on + '">' + text + '</button>';
+  function chapter(id, i) {
+    let body = '';
+    if (id === 'whole') body = '<div class="bp-chips" role="group" aria-label="' + esc(w('stages.aria')) + '">' + STAGES.map(st => chip('data-stagepick="' + st + '"', esc(t('loop.stage.' + st)), S.stage === st)).join('') + '</div><p class="bp-hint">' + esc(w('ch.whole.hint')) + '</p>';
+    if (id === 'world') body = '<div class="bp-chips bp-toggle" role="group">' + chip('data-side="giant"', esc(w('side.giant')), S.side === 'giant') + chip('data-side="open"', esc(w('side.open')), S.side === 'open') + '</div><p class="bp-hint">' + esc(w('ch.world.hint')) + '</p>';
+    if (id === 'walls') body = '<ul class="bp-list">' + WALLS.map(x => '<li><button type="button" data-wallpick="' + x.id + '"><span class="bp-sw wall"></span>' + esc(w('wall.' + x.id + '.t')) + '</button></li>').join('') + '</ul>';
+    if (id === 'next') body = '<div class="bp-chips" role="group" aria-label="' + esc(w('status.aria')) + '">' + STATUS.map(s => chip('data-status="' + s + '"', '<span class="bp-sw s-' + s + '"></span>' + esc(w('status.' + s)), S.show[s])).join('') + '</div><ul class="bp-list">' + NEXT.map(n => '<li><button type="button" data-nextpick="' + n.id + '"><span class="bp-sw s-' + n.status + '"></span>' + esc(w('next.' + n.id + '.t')) + '</button></li>').join('') + '</ul>';
+    if (id === 'people') body = '<label class="bp-slider"><span>' + esc(w('ai.label')) + '</span><input type="range" min="0" max="2" step="1" value="' + S.step + '" data-step aria-valuetext="' + esc(w('ai.step' + S.step)) + '"><span class="bp-ends"><span>' + esc(w('ai.step0')) + '</span><span>' + esc(w('ai.step2')) + '</span></span></label>' +
+      '<table class="bp-roles"><thead><tr><th></th><th>' + esc(w('ai.col')) + '</th><th>' + esc(w('people.col')) + '</th></tr></thead><tbody>' + ROLES.map(r => '<tr data-rolerow="' + r.stage + '"><th>' + esc(t('loop.stage.' + r.stage)) + '</th><td>' + esc(w('role.' + r.stage + '.ai')) + '</td><td>' + esc(w('role.' + r.stage + '.people')) + '</td></tr>').join('') + '</tbody></table>' +
+      '<p class="bp-hint" data-stepnote>' + esc(w('ai.note' + S.step)) + '</p>';
+    if (id === 'you') { const F = openWork(); body = '<div class="bp-record"><b>' + fmtNum(F.n) + '</b><span>' + esc(w('you.entries')) + '</span><b class="' + (F.people ? '' : 'zero') + '">' + fmtNum(F.people) + '</b><span>' + esc(w('you.people')) + '</span></div>'; }
+    return '<section class="bp-ch" data-ch="' + id + '" aria-labelledby="bp-h-' + id + '"><p class="bp-kicker"><span class="bp-num">' + fmtNum(i + 1) + '</span>' + esc(w('ch.' + id + '.k')) + '</p><h2 id="bp-h-' + id + '">' + esc(w('ch.' + id + '.h')) + '</h2><p>' + esc(w('ch.' + id + '.p')) + '</p>' + body + '</section>';
+  }
+  function doors() {
+    return '<section class="bp-doors" aria-labelledby="bp-doors-h"><h2 id="bp-doors-h">' + esc(w('doors.h')) + '</h2><div class="bp-doorgrid">' + DOORS.map(d =>
+      '<a class="bp-door" href="' + d.href + '"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="' + d.icon + '"/></svg><b>' + esc(w('door.' + d.id + '.t')) + '</b><span>' + esc(w('door.' + d.id + '.d')) + '</span></a>').join('') +
+      '</div><nav class="bp-ways" aria-label="' + esc(w('ways.aria')) + '">' + WAYS.map(([h, k]) => '<a href="' + h + '">' + esc(w('ways.' + k)) + ' →</a>').join('') + '</nav>' + langs() + '</section>';
+  }
   function draw() {
-    host.innerHTML = '<div class="hm">' + heroHtml() + '<section class="hm-paths" data-paths></section><div class="hm-toys">' + ['gate', 'shrink', 'pack', 'zoom'].map(k => '<section class="hm-toy hm-' + k + '" data-toy="' + k + '"></section>').join('') + '</div>' +
-      '<div class="hm-starts" data-starts></div>' + newHtml() + waysHtml() + '<div class="hm-stage" data-mapat><div class="hm-mapcard"><div class="hm-thread" data-threadbar></div><div class="hm-fit" data-fit><div class="hm-map" data-map style="width:' + MAP.w + 'px;height:' + MAP.h + 'px"></div></div><div class="hm-strips" data-strips></div></div><aside class="hm-side" data-side aria-live="polite"></aside></div>' +
-      legendHtml() + indexHtml() + '</div>';
-    ['gate', 'shrink', 'pack', 'zoom'].forEach(toy); paths(); starts(); newWafer(); paint();
+    host.innerHTML = '<div class="bp" data-mode="' + S.mode + '" data-side="' + S.side + '"><div class="bp-grid"><div class="bp-story">' + hero() + CHAPTERS.map(chapter).join('') + '</div>' +
+      '<div class="bp-stage"><div class="bp-sticky">' + wheel() + '<div class="bp-legend" aria-hidden="true">' + legend() + '</div><aside class="bp-card" data-card hidden aria-live="polite"></aside></div></div></div>' + doors() + '</div>';
+    drawn = true; paint(); watch();
   }
-  /* the map keeps its drawing and is scaled down to the card when the card is narrower */
-  function fit() {
-    const f = host.querySelector('[data-fit]'), m = host.querySelector('[data-map]'); if (!f || !m || !f.clientWidth) return;
-    const s = Math.min(1, f.clientWidth / MAP.w);
-    m.style.transform = s < 1 ? 'scale(' + s.toFixed(4) + ')' : ''; m.style.margin = s < 1 ? '0' : '0 auto'; f.style.height = Math.round(MAP.h * s) + 'px';
-  }
-  addEventListener('resize', () => { if (!host.hidden) fit(); });
-  /* what changes when the visitor picks something on the map */
-  function paint() { mapDraw(); strips(); side(); threadBar(); ways(); }
-
-  /* ---- the hero: what this is, two ways on, and a wafer leaving the fab ---- */
-  function heroHtml() {
-    const m = STATIONS.filter(s => s.line === 'scale').map(s => ctx.sizeOf(s.id)).filter(Boolean), powers = Math.round(Math.log10(Math.max(...m) / Math.min(...m)));
-    return '<section class="hm-hero"><div class="hm-herotext"><p class="kicker">' + esc(w('kicker')) + '</p><h1>' + esc(w('title')) + '</h1><p class="hm-lead">' + esc(w('lead')) + '</p>' +
-      '<div class="hm-ctas"><button type="button" class="btn primary" data-tomap>' + esc(w('toMap')) + '</button><a class="btn ghost" href="#/island">' + esc(w('toIsland')) + '</a></div>' +
-      '<div class="hm-stats">' + [[STATIONS.length, 'stations', null], [ctx.challenges.length, 'plays', '#/challenges'], [powers, 'powers', '#/dive/chip'], [ctx.exps.length, 'reads', '#/read']].map(([n, k, href]) =>
-        (href ? '<a href="' + href + '">' : '<button type="button" data-tomap>') + '<b>' + esc(fmtNum(n)) + '</b><span>' + esc(w('stat.' + k)) + ' →</span>' + (href ? '</a>' : '</button>')).join('') + '</div></div>' +
-      '<div class="hm-wafercard"><div class="hm-wafer" data-wafer></div><div class="hm-winfo" data-winfo></div></div></section>';
-  }
-  function newWafer() {
-    W = H.wafer(S.size, S.seed); S.rev = ctx.still() ? W.dies.length : 0; idle = 0;
-    const box = host.querySelector('[data-wafer]'); if (!box) return;
-    box.style.setProperty('--side', W.side + 'px');
-    box.innerHTML = '<span class="hm-sheen"></span>' + W.dies.map(d => '<i class="hm-die" style="left:' + d.x + 'px;top:' + d.y + 'px;width:' + d.s + 'px;height:' + d.s + 'px"></i>').join('') +
-      W.dust.map(p => '<b class="hm-dust" style="left:' + p.x + 'px;top:' + p.y + 'px"></b>').join('') + '<span class="hm-notch"></span>';
-    dieEls = [...box.querySelectorAll('.hm-die')]; dieEls.forEach((el, i) => { if (i < S.rev) el.classList.add(W.dies[i].bad ? 'bad' : 'ok'); });
-    winfo();
-  }
-  /* the wafer's card is made once; while chips are tested only its count changes, so a control in it keeps focus */
-  function winfo() {
-    const y = H.yieldOf(W.dies, S.rev), el = host.querySelector('[data-winfo]'); if (!el) return;
-    const pct = el.querySelector('[data-wpct]');
-    if (pct) { pct.textContent = y.pct == null ? '–' : fmtNum(y.pct); el.querySelector('[data-wtested]').textContent = w('wafer.tested', { good: fmtNum(y.good), done: fmtNum(y.done) });
-      el.querySelectorAll('[data-wsize]').forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.wsize === S.size))); return; }
-    const bet = ctx.chOf(TOYS.wafer.ch);
-    el.innerHTML = '<p class="kicker"><span class="hm-live"></span>' + esc(w('wafer.k')) + '</p><p class="hm-pct"><b data-wpct>' + (y.pct == null ? '–' : esc(fmtNum(y.pct))) + '</b><span>' + esc(w('wafer.pct')) + '</span></p>' +
-      '<p class="small muted" data-wtested>' + esc(w('wafer.tested', { good: fmtNum(y.good), done: fmtNum(y.done) })) + '</p><p class="kicker">' + esc(w('wafer.size')) + '</p><div class="hm-pills">' +
-      TOYS.wafer.sizes.map((_, i) => '<button type="button" class="hm-pill" data-wsize="' + i + '" aria-pressed="' + (i === S.size) + '">' + esc(w('wafer.s' + i)) + '</button>').join('') + '</div>' +
-      '<p class="small">' + esc(w('wafer.note')) + '</p><div class="hm-pills"><button type="button" class="hm-pill" data-rerun>↻ ' + esc(w('wafer.again')) + '</button>' + (bet ? '<a class="hm-pill hm-go" href="' + esc(ctx.doHref(bet)) + '">' + esc(w('wafer.bet')) + ' →</a>' : '') + '</div>' +
-      '<button type="button" class="hm-wq" data-follow="' + TOYS.wafer.thread + '"><span class="hm-spark"></span>' + esc(t(H.threadOf(TOYS.wafer.thread).word)) + '</button>';
-  }
-  function tick() {
-    if (!W || host.hidden) return;
-    if (S.rev < W.dies.length) {
-      const to = Math.min(W.dies.length, S.rev + Math.ceil(W.dies.length / 22));
-      for (let i = S.rev; i < to; i++) if (dieEls[i]) dieEls[i].classList.add(W.dies[i].bad ? 'bad' : 'ok');
-      S.rev = to; winfo(); return;
-    }
-    if (++idle > 45) { S.seed++; newWafer(); }
+  function legend() {
+    return '<span><i class="lg-flow f-design"></i>' + esc(w('legend.design')) + '</span><span><i class="lg-flow f-make"></i>' + esc(w('legend.make')) + '</span><span><i class="lg-flow f-dive"></i>' + esc(w('legend.dive')) + '</span><span><i class="lg-loop"></i>' + esc(w('legend.loop')) + '</span>';
   }
 
-  /* ---- the toys ---- */
-  function toy(k) {
-    const el = host.querySelector('[data-toy="' + k + '"]'); if (!el) return;
-    const head = (ttl, kick) => '<p class="kicker">' + esc(w('toy.' + kick)) + '</p><h2>' + esc(w(ttl)) + '</h2>';
-    const foot = (id, thread) => '<div class="hm-tfoot">' + (id ? '<button type="button" data-st="' + id + '" data-showmap>' + esc(w('toy.onMap', { at: nameOf(id) })) + ' →</button>' : '') + (thread ? '<button type="button" data-follow="' + thread + '"><span class="hm-spark"></span>' + esc(w('toy.follow')) + '</button>' : '') + '</div>';
-    if (k === 'gate') {
-      const o = H.gate(S.gate, S.a, S.b), on = v => (v ? ' on' : ''), half = ctx.chOf(TOYS.gate.ch);
-      el.innerHTML = head('gate.t', 'logic') + '<div class="hm-gstage"><button type="button" class="hm-sw' + on(S.a) + '" data-gin="a" style="top:10px"><span>A</span><b>' + S.a + '</b></button><button type="button" class="hm-sw' + on(S.b) + '" data-gin="b" style="top:70px"><span>B</span><b>' + S.b + '</b></button>' +
-        '<i class="hm-wire' + on(S.a) + '" style="left:62px;top:27px;width:52px"></i><i class="hm-wire' + on(S.b) + '" style="left:62px;top:87px;width:52px"></i><span class="hm-gbox">' + esc(S.gate) + '</span><i class="hm-wire' + on(o) + '" style="left:184px;top:57px;width:40px"></i><span class="hm-bulb' + on(o) + '">' + o + '</span></div>' +
-        '<div class="hm-pills">' + TOYS.gate.gates.map(g => '<button type="button" class="hm-pill" data-gate="' + g + '" aria-pressed="' + (g === S.gate) + '">' + g + '</button>').join('') + '</div>' +
-        '<p class="small muted">' + esc(w('gate.d')) + '</p>' + '<div class="hm-tfoot">' + (half ? '<a href="' + esc(ctx.doHref(half)) + '">' + esc(w('gate.play')) + ' →</a>' : '') + '<button type="button" data-st="' + TOYS.gate.at + '" data-showmap>' + esc(w('toy.onMap', { at: nameOf(TOYS.gate.at) })) + ' →</button></div>';
-    }
-    if (k === 'shrink') {
-      const yr = TOYS.shrink.years[S.year], n = H.shrinkAt(yr), cell = [30, 16, 9, 5, 3][S.year], leak = [0, 5, 25, 55, 90][S.year];
-      el.innerHTML = head('shrink.t', 'fab') + '<div class="hm-row"><div class="hm-shchip" style="background-size:' + cell + 'px ' + cell + 'px">' + Array.from({ length: Math.round(leak / 9) }, (_, i) => '<i class="hm-leak" style="left:' + ((i * 37) % 104 + 4) + 'px;top:' + ((i * 23) % 90 + 4) + 'px;animation-delay:' + ((i * 0.37) % 1.8).toFixed(2) + 's"></i>').join('') + '</div>' +
-        '<div class="hm-read"><p class="hm-big">' + esc(String(yr)) + '</p><p class="small muted">' + esc(w('shrink.n', { n: fmtWords(n) })) + '</p><div class="hm-meter"><span class="kicker">' + esc(w('shrink.leak')) + '</span><span class="hm-bar"><i style="width:' + leak + '%;background:var(--hm-thread)"></i></span></div></div></div>' +
-        '<div class="hm-pills">' + TOYS.shrink.years.map((y, i) => '<button type="button" class="hm-pill" data-year="' + i + '" aria-pressed="' + (i === S.year) + '">' + y + '</button>').join('') + '</div>' +
-        '<p class="small muted">' + esc(w('shrink.src')) + '</p>' + foot(TOYS.shrink.at, TOYS.shrink.thread);
-    }
-    if (k === 'pack') {
-      const p = H.packAt(S.pack), side = 90 + 2 * p.gap, hot = ['hot', 'warm', 'cool'][S.pack];
-      el.innerHTML = head('pack.t', 'energy') + '<div class="hm-row"><div class="hm-pkgrid ' + hot + '" style="width:' + side + 'px;height:' + side + 'px;gap:' + p.gap + 'px">' + '<i></i>'.repeat(9) + '<span class="hm-bus"><b style="animation-duration:' + (0.5 + side / 90).toFixed(2) + 's"></b></span></div>' +
-        '<div class="hm-read"><div class="hm-meter"><span class="kicker">' + esc(w('pack.talk')) + '</span><span class="hm-bar"><i style="width:' + p.talk + '%;background:var(--accent)"></i></span></div><div class="hm-meter"><span class="kicker">' + esc(w('pack.heat')) + '</span><span class="hm-bar"><i style="width:' + p.heat + '%;background:var(--bad)"></i></span></div><p class="small muted">' + esc(w('pack.n' + S.pack)) + '</p></div></div>' +
-        '<div class="hm-pills">' + [0, 1, 2].map(i => '<button type="button" class="hm-pill" data-pack="' + i + '" aria-pressed="' + (i === S.pack) + '">' + esc(w('pack.p' + i)) + '</button>').join('') + '</div>' + foot(TOYS.pack.at, TOYS.pack.thread);
-    }
-    if (k === 'zoom') {
-      const id = SCALE[S.zoom], T = H.twinsOf(id), m = ctx.sizeOf(id), sq = 60, next = SCALE[S.zoom + 1], inner = next ? Math.max(4, Math.round(sq * ctx.sizeOf(next) / m)) : 0;
-      el.innerHTML = '<div class="hm-zhead"><div>' + head('zoom.t', 'scale') + '</div><span class="hm-pills"><button type="button" class="hm-pill" data-zoom="-1" aria-label="' + esc(w('zoom.out')) + '">−</button><button type="button" class="hm-pill" data-zoom="1" aria-label="' + esc(w('zoom.in')) + '">+</button></span></div>' +
-        '<div class="hm-zread"><span class="hm-zbox"><i style="width:' + sq + 'px;height:' + sq + 'px"></i>' + (inner ? '<b style="width:' + inner + 'px;height:' + inner + 'px"></b>' : '') + '</span><div><p class="hm-zname">' + esc(nameOf(id)) + ' <span>' + esc(ctx.sizeWords(m)) + '</span></p><p class="small muted">' + esc(t(H.byId[id].see)) + '</p></div></div>' +
-        '<ol class="hm-ruler">' + SCALE.map((s, i) => '<li><button type="button" data-zat="' + i + '" aria-pressed="' + (i === S.zoom) + '"><i></i><span>' + esc(nameOf(s)) + '</span><small>' + esc(ctx.sizeWords(ctx.sizeOf(s))) + '</small></button></li>').join('') + '</ol>' +
-        (T ? '<div class="hm-twins">' + T.ids.map(x => '<button type="button" data-st="' + x + '" data-showmap><span class="kicker hm-c-' + H.byId[x].line + '">' + esc(w('twin.' + H.byId[x].line)) + '</span><b>' + esc(nameOf(x)) + '</b></button>').join('') + '</div>' : '<p class="small muted">' + esc(w('zoom.flown')) + '</p>');
-    }
+  /* ---- what the wheel shows now ---- */
+  function paint() {
+    const root = host.querySelector('.bp'); if (!root) return;
+    root.dataset.mode = S.mode; root.dataset.side = S.side;
+    host.querySelectorAll('.bp-sec').forEach(el => el.classList.toggle('on', el.dataset.stage === S.stage));
+    host.querySelectorAll('.bp-st').forEach(el => el.classList.toggle('off', !!S.stage && el.dataset.stage !== S.stage));
+    host.querySelectorAll('.bp-next').forEach(el => el.classList.toggle('off', !S.show[el.dataset.status]));
+    /* the people and AI band, from the slider: AI's share inside, people's outside, per stage */
+    ROLES.forEach(r => {
+      const { ai } = B.shares(r, S.step), a = B.angleOf(r.stage), a0 = a - B.SPAN / 2 + 1.5, a1 = a + B.SPAN / 2 - 1.5, cut = a0 + (a1 - a0) * ai;
+      const A = host.querySelector('.bp-ai[data-role="' + r.stage + '"]'), P = host.querySelector('.bp-pp[data-role="' + r.stage + '"]');
+      if (A) A.setAttribute('d', B.band(446, 478, a0, cut)); if (P) P.setAttribute('d', B.band(446, 478, cut, a1));
+    });
+    host.querySelectorAll('[data-rolerow]').forEach(tr => { const r = ROLES.find(x => x.stage === tr.dataset.rolerow), s = B.shares(r, S.step); tr.style.setProperty('--ai', (s.ai * 100).toFixed(0) + '%'); });
+    const note = host.querySelector('[data-stepnote]'); if (note) note.textContent = w('ai.note' + S.step);
+    host.querySelectorAll('[data-stagepick]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.stagepick === S.stage)));
+    host.querySelectorAll('[data-side]').forEach(b => { if (b.tagName === 'BUTTON') b.setAttribute('aria-pressed', String(b.dataset.side === S.side)); });
+    host.querySelectorAll('button[data-status]').forEach(b => b.setAttribute('aria-pressed', String(S.show[b.dataset.status])));
   }
 
-  /* ---- the first things to try, of different kinds, and one question ---- */
-  function starts() {
-    const el = host.querySelector('[data-starts]'); if (!el) return;
-    const T = THREADS[S.q % THREADS.length];
-    el.innerHTML = '<p class="kicker hm-full">' + esc(w('start.k')) + '</p>' + STARTS.map(x => { const c = x.ch && ctx.chOf(x.ch); if (x.ch && !c) return '';
-      const href = c ? ctx.doHref(c) : x.href, title = c ? ctx.titleOf(c) : w('start.' + x.word + '.t'), line = w('start.' + (x.ch || x.word) + '.l');
-      return '<a class="hm-start" href="' + esc(href) + '"><span class="hm-tag t-' + x.kind + '">' + esc(w('tag.' + x.kind)) + '</span><b>' + esc(title) + '</b><span class="small muted">' + esc(line) + '</span><span class="hm-at hm-c-' + H.byId[x.at].line + '">' + esc(nameOf(x.at)) + ' →</span></a>'; }).join('') +
-      qcardHtml(T);
+  /* ---- the card: what one thing on the wheel is, its source and where it leads ---- */
+  function factOf(id) {
+    if (!id) return Promise.resolve(null);
+    const get = facts ? Promise.resolve(facts) : fetch('src/data/facts.json').then(r => r.json()).then(j => (facts = j.facts)).catch(() => (facts = []));
+    return get.then(L => L.find(f => f.id === id) || null);
   }
-  /* one question at a time, and everything behind it: what is filed under it to play and to read, and its page */
-  function qcardHtml(T) {
-    const D = ctx.done(), home = (f, id) => f[id] && f[id][0] === T.id;
-    const C = ctx.challenges.filter(c => home(FILED.challenges, c.id)), X = ctx.exps.filter(x => home(FILED.experiments, x.id));
-    const item = (href, kind, title, done) => '<a class="hm-qitem" href="' + esc(href) + '"><span class="hm-tag t-' + kind + '">' + esc(w('tag.' + kind)) + '</span><span>' + esc(title) + '</span>' + (done ? '<span class="hm-ok">✓</span>' : '') + '</a>';
-    return '<div class="hm-start hm-qcard"><div class="hm-qtop"><span class="hm-tag t-q">' + esc(w('tag.q')) + '</span><span class="small muted">' + esc(w('qx.behind', { plays: C.length, reads: X.length, stops: T.path.length })) + '</span></div><p class="hm-q">' + esc(t(T.word)) + '</p>' +
-      '<div class="hm-qitems">' + C.slice(0, 2).map(c => item(ctx.doHref(c), kindOf(c), ctx.titleOf(c), D[c.id])).join('') + X.slice(0, 2).map(x => item('#/read/' + x.id, 'read', x.ask)).join('') + '</div>' +
-      '<div class="hm-pills">' + (T.world ? '<a class="hm-pill hm-pagego" href="#/w/' + T.world + '">' + esc(w('qx.page')) + ' →</a>' : '') + '<button type="button" class="hm-pill hm-pink" data-follow="' + T.id + '">✦ ' + esc(w('start.follow')) + '</button><button type="button" class="hm-pill" data-nextq aria-label="' + esc(w('start.another')) + '">↻</button></div></div>';
+  function card(kind, id) {
+    const el = host.querySelector('[data-card]'); if (!el) return;
+    S.sel = kind + ':' + id;
+    let title = '', meta = '', body = '', href = null, fact = null, extra = '';
+    if (kind === 'stage') { title = t('loop.stage.' + id); body = w('stage.' + id + '.d'); extra = '<div class="bp-cardlinks">' + STATIONS.filter(s => s.stage === id).map(s => '<a href="' + s.href + '">' + esc(w('st.' + s.id)) + '</a>').join('') + '</div>'; }
+    if (kind === 'actor') { const a = ACTORS.find(x => x.id === id); title = w('actor.' + id + '.t'); meta = t('loop.stage.' + a.stage) + ' · ' + w('side.' + a.side); body = w('actor.' + id + '.d'); fact = a.fact; }
+    if (kind === 'wall') { const x = WALLS.find(v => v.id === id); title = w('wall.' + id + '.t'); body = w('wall.' + id + '.d'); fact = x.fact; href = x.href; extra = '<p class="bp-q"><span>' + esc(w('card.question')) + '</span>' + esc(t(QWORD(x.q))) + '</p>'; }
+    if (kind === 'next') { const n = NEXT.find(v => v.id === id); title = w('next.' + id + '.t'); meta = '<span class="bp-mark s-' + n.status + '">' + esc(w('status.' + n.status)) + '</span> · ' + esc(w('card.attacks', { wall: w('wall.' + n.attacks + '.t') })); body = w('next.' + id + '.d'); fact = n.fact; href = n.href; }
+    el.innerHTML = '<button type="button" class="bp-close" data-close aria-label="' + esc(w('card.close')) + '">×</button><p class="bp-cardmeta">' + (kind === 'next' ? meta : esc(meta)) + '</p><h3>' + esc(title) + '</h3><p>' + esc(body) + '</p>' + extra +
+      '<p class="bp-src" data-src></p>' + (href ? '<a class="bp-go" href="' + href + '">' + esc(w('card.go')) + ' →</a>' : '');
+    el.hidden = false;
+    factOf(fact).then(f => { const s = el.querySelector('[data-src]'); if (s && f && S.sel === kind + ':' + id) s.innerHTML = esc(w('card.source')) + ' <a href="' + esc(f.url) + '" target="_blank" rel="noopener">' + esc(f.source) + '</a> · ' + esc(f.verified); });
+  }
+  const closeCard = () => { const el = host.querySelector('[data-card]'); if (el) el.hidden = true; S.sel = null; };
+
+  /* ---- moving through the story: the chapter in the middle of the screen sets the wheel's mode ---- */
+  function watch() {
+    if (io) io.disconnect();
+    if (!('IntersectionObserver' in window)) return;
+    io = new IntersectionObserver(es => { es.forEach(e => { if (e.isIntersecting) { const m = e.target.dataset.ch; if (m !== S.mode) { S.mode = m; if (m !== 'whole') S.stage = null; closeCard(); paint(); } } }); }, { root: host, rootMargin: '-45% 0px -45% 0px', threshold: 0 });
+    host.querySelectorAll('[data-ch]').forEach(el => io.observe(el));
   }
 
-  /* ---- ways in ---- */
-  /* ---- paths: by subject, a few stops in order, with what the visitor has finished on each ---- */
-  const stopOf = x => {
-    if (x.ch) { const c = ctx.chOf(x.ch); return c && { href: ctx.doHref(c), title: ctx.titleOf(c), kind: kindOf(c), done: !!ctx.done()[c.id] }; }
-    if (x.st) return { href: H.byId[x.st].href, title: nameOf(x.st), kind: 'see' };
-    return { href: x.page[0], title: t(x.page[1]), kind: 'page' };
-  };
-  function paths() {
-    const el = host.querySelector('[data-paths]'); if (!el) return;
-    const D = ctx.done(), nDone = ctx.challenges.filter(c => D[c.id]).length;
-    el.innerHTML = '<div class="hm-shead"><div><p class="kicker">' + esc(w('path.k')) + '</p><h2>' + esc(w('path.h')) + '</h2></div>' +
-      (nDone ? '<a class="hm-mine" href="#/log"><b>' + esc(fmtNum(nDone)) + '</b> ' + esc(w('path.mine', { total: fmtNum(ctx.challenges.length) })) + ' →</a>' : '<p class="small muted">' + esc(w('path.d')) + '</p>') + '</div><div class="hm-pgrid">' +
-      PATHS.map(P => {
-        const L = P.stops.map(stopOf).filter(Boolean), chs = L.filter(x => 'done' in x), got = chs.filter(x => x.done).length, next = L.find(x => !x.done && 'done' in x) || L[0];
-        return '<article class="hm-path hm-c-' + P.line + '"><header><span class="hm-picon hm-bg-' + P.line + '"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="' + P.icon + '"/></svg></span><div><h3>' + esc(w('path.' + P.id + '.t')) + '</h3><p class="small muted">' + esc(w('path.' + P.id + '.d')) + '</p></div></header>' +
-          '<ol class="hm-psteps">' + L.map(x => '<li' + (x.done ? ' class="done"' : '') + '><a href="' + esc(x.href) + '"><i class="hm-pdot"></i><span class="hm-tag t-' + x.kind + '">' + esc(w('tag.' + x.kind)) + '</span><span class="hm-pt">' + esc(x.title) + '</span>' + (x.done ? '<span class="hm-ok" aria-label="' + esc(w('path.ok')) + '">✓</span>' : '') + '</a></li>').join('') + '</ol>' +
-          '<footer><span class="hm-pbar" title="' + esc(w('path.got', { n: got, total: chs.length })) + '"><i style="width:' + Math.round(100 * got / Math.max(1, chs.length)) + '%"></i></span><span class="small muted">' + esc(w('path.got', { n: got, total: chs.length })) + '</span>' +
-          '<a class="hm-pgo" href="' + esc(next.href) + '">' + esc(w(got ? 'path.next' : 'path.start')) + ' →</a></footer></article>';
-      }).join('') + '</div>';
-  }
-
-  /* ---- what was added lately ---- */
-  const newHtml = () => '<section class="hm-new"><p class="kicker"><span class="hm-live"></span>' + esc(w('new.k')) + '</p><div class="hm-nrow">' + NEW.map(x => {
-    const c = x.ch && ctx.chOf(x.ch), href = c ? ctx.doHref(c) : x.href; if (x.ch && !c) return '';
-    return '<a class="hm-nitem" href="' + esc(href) + '"><span class="hm-nbadge">' + esc(w('new.badge')) + '</span><b>' + esc(w('new.' + x.id + '.t')) + '</b><span class="small muted">' + esc(w('new.' + x.id + '.d')) + '</span></a>'; }).join('') + '</div></section>';
-
-  /* ---- every part of the lab, by kind ---- */
-  const indexHtml = () => {
-    const count = { challenges: ctx.challenges.length, experiments: ctx.exps.length };
-    return '<section class="hm-index"><div class="hm-shead"><div><p class="kicker">' + esc(w('ix.k')) + '</p><h2>' + esc(w('ix.h')) + '</h2></div></div><div class="hm-igrid">' + INDEX.map(G =>
-      '<div class="hm-igroup"><p class="kicker">' + esc(w('ix.' + G.id)) + '</p><div class="hm-ilist">' + G.items.map(x =>
-        '<a class="hm-ilink" href="' + esc(x.href) + '"><b>' + esc(x.word ? t(x.word) : w('ix.' + x.id + '.t')) + (x.count ? ' <em>' + esc(fmtNum(count[x.count])) + '</em>' : '') + '</b>' + (x.word ? '' : '<span class="small muted">' + esc(w('ix.' + x.id + '.d')) + '</span>') + '</a>').join('') + '</div></div>').join('') + '</div></section>';
-  };
-
-  const waysHtml = () => '<nav class="hm-ways" data-ways></nav>';
-  function ways() {
-    const el = host.querySelector('[data-ways]'); if (!el) return;
-    el.innerHTML = '<span class="kicker">' + esc(w('way.k')) + '</span>' + WAYS.map(x => '<button type="button" class="hm-way" data-way="' + x.id + '" aria-pressed="' + (S.way === x.id) + '"><span class="g">' + esc(w('way.' + x.id + '.g')) + '</span><span><b>' + esc(w('way.' + x.id + '.t')) + '</b><small>' + esc(w('way.' + x.id + '.l')) + '</small></span></button>').join('') +
-      '<button type="button" class="hm-all" data-way="" aria-pressed="' + (!S.way && !S.thread) + '">' + esc(w('way.all')) + '</button>';
-  }
-
-  /* ---- the map ---- */
-  function mapDraw() {
-    const el = host.querySelector('[data-map]'); if (!el) return;
-    const L = H.lit(S.way, S.thread), sel = S.sel, linked = sel ? H.linksOf(sel) : [], tw = sel && H.twinsOf(sel), twins = tw ? tw.ids : [], T = H.threadOf(S.thread);
-    const box = (b, cls, style) => '<i class="' + cls + '" style="left:' + b.x + 'px;top:' + b.y + 'px;width:' + b.w + 'px;height:' + b.h + 'px' + (style || '') + '"></i>';
-    let h = H.wires().map(b => box(b, 'hm-ln ' + 'hm-bg-' + b.line + (L.line(b.line) ? '' : ' dim'))).join('');
-    if (T) h += H.threadRuns(T.id).map(b => box(b, 'hm-trun' + (b.across ? ' across' : ''))).join('');
-    h += ARROWS.map(([x, y, d, line]) => '<span class="hm-arw hm-c-' + line + (L.line(line) ? '' : ' dim') + '" style="left:' + x + 'px;top:' + y + 'px" aria-hidden="true">' + ARROW[d] + '</span>').join('');
-    h += '<span class="hm-pkt" style="offset-path:path(\'' + LOOP_PATH + '\')"></span><span class="hm-pkt" style="offset-path:path(\'' + LOOP_PATH + '\');animation-delay:-4.6s"></span><span class="hm-pkt" style="offset-path:path(\'' + LOOP_PATH + '\');animation-delay:-9.3s"></span><span class="hm-pkt s" style="offset-path:path(\'' + SCALE_PATH + '\')"></span>';
-    h += [['design', 200, 604], ['scale', 500, 54], ['make', 800, 604]].map(([k, x, y]) => '<p class="hm-colhead" style="left:' + x + 'px;top:' + y + 'px"><b class="hm-c-' + k + '">' + esc(w('col.' + k)) + '</b><span>' + esc(w('col.' + k + '.d')) + '</span></p>').join('');
-    h += '<p class="hm-looptag hm-c-loop">' + esc(w('col.loop')) + '</p>';
-    h += STATIONS.map(s => { const n = nPlay(s.id), q = H.threadAt(s.id), on = T && T.path.includes(s.id);
-      return '<button type="button" class="hm-st k-' + s.kind + ' hm-c-' + s.line + (L.station(s.id) ? '' : ' dim') + (sel === s.id ? ' sel' : '') + (linked.includes(s.id) ? ' linked' : '') + (twins.includes(s.id) ? ' twin' : '') + (on ? ' onq' : '') + '" data-st="' + s.id + '" style="left:' + s.x + 'px;top:' + s.y + 'px" aria-pressed="' + (sel === s.id) + '">' +
-        '<span class="hm-o"><i class="dot"></i>' + (n ? '<span class="hm-badge">' + n + '</span>' : '') + (q ? '<span class="hm-qdot" title="' + esc(w('q.has')) + '"></span>' : '') +
-        '<span class="lbl s-' + s.side + '">' + esc(nameOf(s.id)) + (s.sub ? '<small>' + esc(w('sub.' + s.id)) + '</small>' : '') + '</span></span></button>'; }).join('');
-    el.innerHTML = h;
-  }
-  /* the phone's map: the three lines as strips, the same stations, the same card */
-  function strips() {
-    const el = host.querySelector('[data-strips]'); if (!el) return;
-    const L = H.lit(S.way, S.thread), T = H.threadOf(S.thread);
-    el.innerHTML = [['design', ['lab', ...STATIONS.filter(s => s.line === 'design').map(s => s.id)]], ['make', STATIONS.filter(s => s.line === 'make').map(s => s.id).concat('use')], ['scale', SCALE]].map(([k, ids]) =>
-      '<section class="hm-strip hm-c-' + k + '"><p class="kicker">' + esc(w('col.' + k)) + ' · ' + esc(w('col.' + k + '.d')) + '</p><ol>' + ids.map(id => '<li><button type="button" data-st="' + id + '" class="' + (L.station(id) ? '' : 'dim') + (S.sel === id ? ' sel' : '') + (T && T.path.includes(id) ? ' onq' : '') + '"><i></i>' + esc(nameOf(id)) + (nPlay(id) ? '<span class="hm-badge">' + nPlay(id) + '</span>' : '') + '</button></li>').join('') + '</ol></section>').join('');
-  }
-  function threadBar() {
-    const el = host.querySelector('[data-threadbar]'); if (!el) return;
-    const T = H.threadOf(S.thread);
-    el.innerHTML = '<span class="hm-spark"></span>' + (T ? '<p class="hm-q">' + esc(t(T.word)) + '</p><span class="kicker">' + esc(w('q.stops', { n: T.path.length })) + '</span><button type="button" class="hm-pill" data-nextthread>↻ ' + esc(w('q.another')) + '</button><button type="button" class="hm-pill" data-unthread aria-label="' + esc(t('sheet.close')) + '">×</button>'
-      : '<p class="small muted">' + esc(w('q.hint')) + '</p><button type="button" class="hm-pill hm-pink" data-nextthread>✦ ' + esc(w('q.follow')) + '</button>');
-  }
-  /* the card beside the map: a station, or how to read the map */
-  function side() {
-    const el = host.querySelector('[data-side]'); if (!el) return;
-    const s = S.sel && H.byId[S.sel];
-    if (!s) {
-      el.innerHTML = '<p class="kicker">' + esc(w('read.k')) + '</p><h2>' + esc(w('read.t')) + '</h2>' + ['design', 'make', 'scale', 'loop'].map(k => '<div class="hm-how"><i class="hm-bg-' + k + '"></i><div><b>' + esc(w('read.' + k)) + '</b><span class="small muted">' + esc(w('read.' + k + '.d')) + '</span></div></div>').join('') +
-        '<div class="hm-glint"><p class="kicker"><span class="hm-spark"></span>' + esc(w('read.q')) + '</p><p class="small">' + esc(w('read.q.d')) + '</p></div><p class="kicker hm-end">' + esc(w('read.tap')) + '</p>';
-      return;
-    }
-    const C = chs(s.id), tw = H.twinsOf(s.id), twins = tw ? tw.ids : [], links = H.linksOf(s.id).filter(x => !twins.includes(x)), q = H.threadAt(s.id);
-    const chip = id => '<button type="button" class="hm-chip" data-st="' + id + '"><i class="hm-bg-' + H.byId[id].line + '"></i>' + esc(nameOf(id)) + '</button>';
-    el.innerHTML = '<div class="hm-dk"><i class="hm-swatch hm-bg-' + s.line + '"></i><span class="kicker">' + esc(w('line.' + s.line)) + '</span><button type="button" class="x" data-unsel aria-label="' + esc(t('sheet.close')) + '">×</button></div>' +
-      '<h2>' + esc(nameOf(s.id)) + '</h2><p class="hm-see">' + esc(t(s.see)) + '</p>' +
-      (C.length || s.pages.length ? '<p class="kicker">' + esc(w('side.try')) + '</p><div class="hm-items">' + C.map(c => '<a class="hm-item" href="' + esc(ctx.doHref(c)) + '"><span class="hm-tag t-' + kindOf(c) + '">' + esc(w('tag.' + kindOf(c))) + '</span><span>' + esc(ctx.titleOf(c)) + '</span></a>').join('') +
-        s.pages.map(([href, k]) => '<a class="hm-item" href="' + esc(href) + '"><span class="hm-tag t-page">' + esc(w('tag.page')) + '</span><span>' + esc(t(k)) + '</span></a>').join('') + '</div>' : '') +
-      (tw ? '<p class="kicker">' + esc(w('side.level', { level: nameOf(tw.level) })) + '</p><div class="hm-chips">' + twins.map(chip).join('') + '</div>' : '') +
-      (links.length ? '<p class="kicker">' + esc(w('side.joined')) + '</p><div class="hm-chips">' + links.map(chip).join('') + '</div>' : '') +
-      (q ? '<div class="hm-glint"><p class="kicker"><span class="hm-spark"></span>' + esc(w('side.q')) + '</p><p class="hm-q">' + esc(t(q.word)) + '</p><button type="button" class="hm-pill hm-pink" data-follow="' + q.id + '">✦ ' + esc(w('side.follow')) + '</button></div>' : '') +
-      '<a class="btn primary hm-enter" href="' + esc(s.href) + '">' + esc(w('side.go', { at: nameOf(s.id) })) + ' →</a>';
-  }
-  const legendHtml = () => '<footer class="hm-legend">' + [['dot', 'stop'], ['hub', 'hub'], ['lvl', 'level']].map(([k, x]) => '<span><i class="hm-lg ' + k + '"></i>' + esc(w('legend.' + x)) + '</span>').join('') +
-    '<span><i class="hm-badge hm-lgb">3</i>' + esc(w('legend.plays')) + '</span><span><i class="hm-spark"></i>' + esc(w('legend.q')) + '</span><span class="hm-tags">' + ['play', 'puzzle', 'build', 'lab', 'see', 'page'].map(k => '<i class="hm-tag t-' + k + '">' + esc(w('tag.' + k)) + '</i>').join('') + '</span></footer>';
-
-  /* ---- moves ---- */
-  const toMap = () => { const m = host.querySelector('[data-mapat]'); if (m) m.scrollIntoView({ behavior: ctx.still() ? 'auto' : 'smooth', block: 'start' }); };
+  /* ---- what a reader does ---- */
   host.addEventListener('click', e => {
-    const g = sel => e.target.closest(sel);
-    let b;
-    if (g('[data-tomap]')) { toMap(); return; }
-    if ((b = g('[data-wsize]'))) { S.size = +b.dataset.wsize; newWafer(); return; }
-    if (g('[data-rerun]')) { S.seed++; newWafer(); return; }
-    if ((b = g('[data-gin]'))) { S[b.dataset.gin] = 1 - S[b.dataset.gin]; toy('gate'); return; }
-    if ((b = g('[data-gate]'))) { S.gate = b.dataset.gate; toy('gate'); return; }
-    if ((b = g('[data-year]'))) { S.year = +b.dataset.year; toy('shrink'); return; }
-    if ((b = g('[data-pack]'))) { S.pack = +b.dataset.pack; toy('pack'); return; }
-    if ((b = g('[data-zoom]'))) { S.zoom = Math.max(0, Math.min(SCALE.length - 1, S.zoom + +b.dataset.zoom)); S.sel = SCALE[S.zoom]; toy('zoom'); paint(); return; }
-    if ((b = g('[data-zat]'))) { S.zoom = +b.dataset.zat; S.sel = SCALE[S.zoom]; toy('zoom'); paint(); return; }
-    if ((b = g('[data-follow]'))) { S.thread = b.dataset.follow; S.way = null; paint(); toMap(); return; }
-    if (g('[data-nextq]')) { S.q++; starts(); return; }
-    if (g('[data-nextthread]')) { S.thread = H.nextThread(S.thread); S.way = null; paint(); return; }
-    if (g('[data-unthread]')) { S.thread = null; paint(); return; }
-    if ((b = g('[data-way]'))) { S.way = b.dataset.way && S.way !== b.dataset.way ? b.dataset.way : null; S.thread = null; paint(); return; }
-    if (g('[data-unsel]')) { S.sel = null; paint(); return; }
-    if ((b = g('[data-st]'))) { S.sel = b.dataset.st; const i = SCALE.indexOf(S.sel); if (i >= 0 && i !== S.zoom) { S.zoom = i; toy('zoom'); } paint(); if (b.hasAttribute('data-showmap')) toMap(); }
+    const L = e.target.closest('[data-lang]');
+    if (L) { try { localStorage.setItem(KEY, L.dataset.lang); } catch (x) { /* no storage: the address carries it */ } const u = new URL(location.href); u.searchParams.set('lang', L.dataset.lang); location.replace(u.toString()); return; }
+    if (e.target.closest('[data-scroll]')) { e.preventDefault(); const c = host.querySelector('.bp-ch'); if (c) c.scrollIntoView({ behavior: reduced() ? 'auto' : 'smooth', block: 'center' }); return; }
+    if (e.target.closest('[data-close]')) return closeCard();
+    const sp = e.target.closest('[data-stagepick]'); if (sp) { S.stage = S.stage === sp.dataset.stagepick ? null : sp.dataset.stagepick; paint(); return S.stage ? card('stage', S.stage) : closeCard(); }
+    const sd = e.target.closest('button[data-side]'); if (sd) { S.side = sd.dataset.side; paint(); return; }
+    const ss = e.target.closest('button[data-status]'); if (ss) { S.show[ss.dataset.status] = !S.show[ss.dataset.status]; paint(); return; }
+    const a = e.target.closest('[data-actor]'); if (a) return card('actor', a.dataset.actor);
+    const wl = e.target.closest('[data-wall]') || e.target.closest('[data-wallpick]'); if (wl) return card('wall', wl.dataset.wall || wl.dataset.wallpick);
+    const n = e.target.closest('[data-next]') || e.target.closest('[data-nextpick]'); if (n) return card('next', n.dataset.next || n.dataset.nextpick);
+    const sec = e.target.closest('.bp-sec'); if (sec && S.mode === 'whole') { S.stage = S.stage === sec.dataset.stage ? null : sec.dataset.stage; paint(); return S.stage ? card('stage', S.stage) : closeCard(); }
   });
+  host.addEventListener('keydown', e => { if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('[role="button"]')) { e.preventDefault(); e.target.dispatchEvent(new MouseEvent('click', { bubbles: true })); } if (e.key === 'Escape') closeCard(); });
+  host.addEventListener('input', e => { if (e.target.matches('[data-step]')) { S.step = +e.target.value; e.target.setAttribute('aria-valuetext', w('ai.step' + S.step)); paint(); } });
 
   return {
-    show() { if (!host.firstChild) draw(); else { paths(); starts(); } host.hidden = false; fit(); clearInterval(timer); if (!ctx.still()) timer = setInterval(tick, 70); },
-    hide() { host.hidden = true; clearInterval(timer); timer = 0; }
+    show() { if (!drawn) draw(); host.hidden = false; host.classList.toggle('still', reduced()); },
+    hide() { host.hidden = true; closeCard(); }
   };
 }
