@@ -2573,6 +2573,9 @@ a.hm-start:hover { border-color: var(--muted); transform: translateY(-2px); }
 /* the studio walked inside (src/v2/studio3d.js, #267): while the camera settles on a corner's screen, the ways on the
    picture step aside for it; the corners' names on the picture are the parts' own */
 #studioui[data-handoff] :is(.wayin, .wayon) { display: none; }
+/* on a phone the bench's strip of steps (← →) is its way along: the button would only cover the design. At the last
+   step the strip's → ends, and the button (on to the factory) stays */
+@media (max-width: 720px) { #diveui[data-flat="bench"]:has(> .steps2 [data-stepgo="1"]:not([disabled])) > .wayon { display: none; } }
 /* ---- the bench (#268, src/v2/bench.js): your design, live, on a surface laid over the studio's square. Each region is
    a part of the step (src/app/design.js), a lit panel; drawings fill their region exactly and words sit on them in HTML ---- */
 .bsurf { position: absolute; left: 0; top: 0; width: 600px; height: 600px; container-type: size; transition: opacity .12s linear;
@@ -2590,7 +2593,8 @@ html.frame2 .f2stage .benchinst .bk { aspect-ratio: 1; height: 100%; max-width: 
 .bk-svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; overflow: visible; }
 .bk-svg * { vector-effect: non-scaling-stroke; }
 .bk-k { margin: 0 0 6px; font: 600 10.5px/1.3 var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
-.bk-sh > .bk-k { position: absolute; left: 12px; right: 8px; top: 10px; z-index: 1; }
+.bk-sh > .bk-k { margin: 10px 12px 8px; }
+.bk-tiles { flex: 1; min-height: 0; width: calc(100% - 24px); margin: 0 12px 12px; display: block; }
 .bk-tag { position: absolute; transform: translate(-50%, -50%); font: 600 12px/1 var(--mono); color: var(--ink); white-space: nowrap; pointer-events: none; }
 .bk-tag.r { transform: translate(-100%, -50%); } .bk-tag.o { color: var(--warm); }
 .bk-tag.g, .bk-tag.c { font-size: 10px; color: var(--muted); } .bk-tag.l { transform: translate(0, -50%); font-size: 11.5px; color: var(--muted); }
