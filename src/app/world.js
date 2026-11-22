@@ -580,6 +580,9 @@ export function createWorld(cv, on) {
     setZ(z) { setZ(z); },
     flyTo(d) {
       d = clampZ(d);
+      /* already on the way there: a second tap goes on with the flight instead of starting it again from where it is
+         (taps closer together than a flight is long, on a slow device, would otherwise never arrive) */
+      if (fly && fly.to === d) return;
       if (reduced()) { fly = null; Z = d; on.arrive && on.arrive(Math.round(Z)); return; }
       /* on the line, a hop to the next station is slow enough to watch the pod travel */
       fly = { from: Z, to: d, t0: performance.now(), ms: Math.min(5200, isLine() ? 1000 + Math.abs(d - Z) * 1300 : 500 + Math.abs(d - Z) * 1150) };
