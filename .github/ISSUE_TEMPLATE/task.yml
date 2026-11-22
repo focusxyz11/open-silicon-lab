@@ -20,6 +20,11 @@ body:
     attributes:
       label: What to build on
       description: Engines, data, documents or earlier versions to read first (for example src/engines/aiserve.js, the branch before).
+  - type: input
+    id: waits
+    attributes:
+      label: Waits for
+      description: The issues that must be merged before this one can start, for example "#299, #302". Leave empty if none. The nightly build starts it as soon as they are closed.
   - type: textarea
     id: done
     attributes:
