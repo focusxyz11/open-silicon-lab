@@ -254,11 +254,13 @@ export function createBench(o) {
     return box('layout', 'tile', 'bk-lt', cost + svgOf(W, H, g, 'bk-svg') + tags + foot) + box('layout', 'shared', 'bk-sh', shared());
   }
   /* the shared chip: many small designs side by side, each on its own tile (as Tiny Tapeout does), yours lit */
+  /* the shared chip: one tile each, square, in their own drawing under the heading, so a heading that wraps in a narrow
+     region never runs into them */
   function shared() {
-    const [W, H] = dim('layout', 'shared'), D = allDesigns().filter(d => d.state !== 'broken').length, cols = 3, rows = 8, tw = (W - 30) / cols, th = Math.min(tw, (H - 120) / rows);
-    let g = ''; for (let j = 0; j < rows; j++) for (let i = 0; i < cols; i++) { const n = j * cols + i, x = 15 + i * tw, y = 80 + j * th;
-      g += '<rect class="' + (n === D ? 'bk-mine' : n < D ? 'bk-other' : 'bk-free') + '" x="' + (x + 3) + '" y="' + (y + 3) + '" width="' + (tw - 6) + '" height="' + (th - 6) + '" rx="3"' + LINE + '/>'; }
-    return '<p class="bk-k">' + esc(t('bench.layout.shared')) + '</p>' + svgOf(W, H, g, 'bk-svg');
+    const D = allDesigns().filter(d => d.state !== 'broken').length, cols = 3, rows = 8;
+    let g = ''; for (let j = 0; j < rows; j++) for (let i = 0; i < cols; i++) { const n = j * cols + i;
+      g += '<rect class="' + (n === D ? 'bk-mine' : n < D ? 'bk-other' : 'bk-free') + '" x="' + (i * 10 + 1) + '" y="' + (j * 10 + 1) + '" width="8" height="8" rx="1"' + LINE + '/>'; }
+    return '<p class="bk-k">' + esc(t('bench.layout.shared')) + '</p><svg class="bk-tiles" viewBox="-1 -1 32 82" preserveAspectRatio="xMidYMin meet" aria-hidden="true">' + g + '</svg>';
   }
 
   /* ---- 6. masks: the layout peeled into its layers ---- */
@@ -281,13 +283,14 @@ export function createBench(o) {
       if (ask) g += '<g class="mk-ask">' + shapeSvg(ask, ox, oy, k) + '</g>';
       tags += '<p class="bk-k bk-top">' + esc(t('bench.masks.which')) + '</p>';
     } else {
-      /* one glass plate per layer, stacked and slanted; the slider spreads them apart */
+      /* one glass plate per layer, stacked and slanted; the slider spreads them apart. Each name stands past its plate's
+         right edge at mid-height (the plate leans right by 0.55 of its depth, so half of that at the middle) */
       X.MASKS.forEach((m, i) => {
-        const z = (X.MASKS.length - 1 - i), gap = 70 + peel * 150, oy = H - 170 - z * gap - ph * 0.42, ox = 60 + i * 18, lift = plate === m;
+        const z = (X.MASKS.length - 1 - i), gap = 70 + peel * 150, oy = H - 170 - z * gap - ph * 0.42, ox = 24 + i * 18, lift = plate === m;
         const tf = 'matrix(1 0 -0.55 0.42 ' + (ox + ph * 0.55) + ' ' + (oy - (lift ? 40 : 0)) + ')';
         g += '<g class="mk-layer' + (plate && !lift ? ' dim' : '') + (lift ? ' lift' : '') + '" data-bk-plate="' + m + '"><g transform="' + tf + '"><rect class="mk-plate" x="0" y="0" width="' + pw + '" height="' + ph + '" rx="4"/>' +
           shapes.filter(sh => sh.mask === m).map(sh => shapeSvg(sh, 0, 0, s)).join('') + '</g></g>';
-        tags += narrow ? tag(ox + ph * 0.55, oy - (lift ? 40 : 0) - 14, W, H, esc(t('design.layer.' + m)), 'l mk-t-' + m) : tag(ox + pw + 30, oy - (lift ? 40 : 0) + ph * 0.21, W, H, esc(t('design.layer.' + m)), 'l mk-t-' + m);
+        tags += narrow ? tag(ox + ph * 0.55, oy - (lift ? 40 : 0) - 14, W, H, esc(t('design.layer.' + m)), 'l mk-t-' + m) : tag(ox + pw + ph * 0.275 + 14, oy - (lift ? 40 : 0) + ph * 0.21, W, H, esc(t('design.layer.' + m)), 'l mk-t-' + m);
       });
     }
     const side = '<p class="bk-k">' + esc(t('bench.masks.k')) + '</p><p class="bk-set">' + esc(t('bench.masks.set', { drawn: X.MASKS.length, n: SKY130_TOTAL, rest: SKY130_TOTAL - X.MASKS.length })) + '</p>' +

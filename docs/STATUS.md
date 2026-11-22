@@ -1,6 +1,6 @@
 # Status
 
-Where the lab stands, and what is ready to be built next. Read this first when starting a new session. The direction is in [ROADMAP.md](ROADMAP.md), ideas not yet picked are in [IDEAS.md](IDEAS.md), and how we work is in [WORKFLOW.md](WORKFLOW.md). Last updated 21 November 2026 (after the new frame became the default, #276, with Do mode for every challenge, #274, and the phone sheet, #275; before that, the night of #280 to #284: the studio as one place with a live bench, what design really is, Keep the chef busy, and Read mode).
+Where the lab stands, and what is ready to be built next. Read this first when starting a new session. The direction is in [ROADMAP.md](ROADMAP.md), ideas not yet picked are in [IDEAS.md](IDEAS.md), and how we work is in [WORKFLOW.md](WORKFLOW.md). Last updated 22 November 2026 (the two plans closed: the new frame, #271, and the studio, #264, with the bench's last visible faults fixed; before that, the new frame became the default, #276, with Do mode for every challenge, #274, and the phone sheet, #275; before that, the night of #280 to #284: the studio as one place with a live bench, what design really is, Keep the chef busy, and Read mode).
 
 ## Where it stands
 
@@ -72,9 +72,11 @@ The labs of #216 to #221 and the fixes of #222 are built. What they left open:
 
 ### The new frame (#271)
 
-Built: #272 to #276; the new frame is the default. Left: the island's place card is still the side panel, not yet a caption with *Read more*; the island's first card (*Start with a question*) stays at the foot of the picture, because the bottom left meets the lenses; a lab's second picture (the tones under a signal, Grover's curve) stays in the side panel, and a few instruments appear only after a first move (Look inside's board, the regulator's figure).
+Built: #272 to #276; the new frame is the default, and the plan is closed. Left: the island's place card is still the side panel, not yet a caption with *Read more*; the island's first card (*Start with a question*) stays at the foot of the picture, because the bottom left meets the lenses; a lab's second picture (the tones under a signal, Grover's curve) stays in the side panel, and a few instruments appear only after a first move (Look inside's board, the regulator's figure).
 
 ### Left open by the night of 20 November
+
+The studio's plan (#264) is closed: its six tasks (#265 to #270) are built, and on the bench the way in stands above the way along instead of on it (on a phone the strip of steps is the way along, until the last step), the shared chip's tiles sit under their heading, and each mask's name stands past its plate. What it leaves:
 
 - The new engines (`timing`, `rules`, `verilog`, `bits`) are not yet in the open port (`src/engines/api.js`, `scripts/mcp.mjs`); the kitchen is not on the frontier list.
 - The bench's drawings do not yet show timing and the design rules; the studio room on a phone is the desktop room (in portrait the upper half is the back wall), and up close its figures look blocky.

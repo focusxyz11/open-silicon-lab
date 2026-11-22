@@ -72,6 +72,8 @@ html.frame2 .f2 .f2acts .btn:focus-visible { outline: 2px solid var(--accent); o
    the thing it enters is, unless that is under the caption */
 @media (min-width: 1100px) {
   html.frame2 .f2cap > .wayin:not(.at) .wibox, html.frame2 .f2cap > .wayin.under .wibox { left: auto; right: 32px; top: auto; bottom: 32px; transform: none; justify-items: end; }
+  /* with the way along at the foot too, the way in stands above it, both at the right edge (the bench keeps clear of both) */
+  html.frame2 .f2cap:has(> .wayon:not([hidden])) > .wayin:is(:not(.at), .under) .wibox { right: 16px; bottom: 90px; }
 }
 html.frame2 .f2 .wit b { font-size: 16px; } html.frame2 .f2 .wik { font-size: 12px; }
 /* the levels at the side: above the caption */

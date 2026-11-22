@@ -1054,7 +1054,11 @@ export function start() {
     const st = rowsOf(flatKind) ? (wide ? 70 : 40) : 0;   /* the line of steps across the top of the picture */
     /* the bench keeps clear of the way along at the picture's foot; on a phone it stands above the card at rest and may
        be taller than wide (src/v2/bench.js) */
-    const bench = Bench && flatKind === 'bench', phoneB = bench && !wide, bb = !bench ? b : innerWidth >= 1100 ? b + 62 : phoneB ? 190 : b + 56, tt = (top ? top + 8 : wide ? 122 : 116) + st;
+    /* where the way in shows too, it stands above the way along (src/styles/frame2.css), and the bench keeps clear of both;
+       on a phone the strip of steps is the way along, so only the way in waits above the card at rest */
+    const bench = Bench && flatKind === 'bench', phoneB = bench && !wide, wi = vui.querySelector(':scope > .wayin'), inV = bench && !!wi && !wi.hidden,
+      last = phoneB && !!vui.querySelector(':scope > .steps2 [data-stepgo="1"][disabled]'),
+      bb = !bench ? b : innerWidth >= 1100 ? b + 62 + (inV ? 62 : 0) : phoneB ? b + (inV || last ? 64 : 8) + (inV && last ? 52 : 0) : b + 56 + (inV ? 56 : 0), tt = (top ? top + 8 : wide ? 122 : 116) + st;
     dive.setInset({ l: f2cap ? Math.max(90, Math.round(f2.right - 120)) : wide ? 90 : 8, r: (f2 && !f2cap ? Math.round(f2.width) + 32 : wide ? 20 : 8) + lens, t: tt, b: bb });
     if (bench) { const f = dive.frame, ah = $('diveCanvas').clientHeight - tt - bb; Bench.place(Object.assign({}, f, phoneB ? { h: Math.min(ah - 8, f.B * 1.5), top: tt + 4 } : { h: f.B })); }
     /* a level drawn in 3D takes its square when the zoom moves; it is told now, so it moves with the frame */
@@ -1087,7 +1091,7 @@ export function start() {
     Bench.slide(Math.abs(z - d) < 0.002 ? 0 : z - d);
   }
   function showFlat(kind, depth, chId, world) {
-    hideAll(); document.body.classList.add('immersive'); flatKind = kind; benchCh = null; if (kind === 'dive') diveWorld = DIVES[world] ? world : 'datacentre';
+    hideAll(); document.body.classList.add('immersive'); flatKind = kind; vui.dataset.flat = kind; benchCh = null; if (kind === 'dive') diveWorld = DIVES[world] ? world : 'datacentre';
     $('diveCanvas').hidden = false; vui.hidden = false; $('flatLabels').hidden = false;
     loading(true); lastPlace = kind === 'dive' ? DIVES[diveWorld].place : { line: 'fab', bench: 'studio' }[kind];
     return Promise.all([withFrame(), ensureDive(), kind === 'bench' ? import('./bench.js') : null]).then(([, w, BkM]) => {
@@ -1183,7 +1187,12 @@ export function start() {
   addEventListener('resize', () => { if (!vui.hidden) diveInset(); });
   /* the picture keeps clear of the dock as it grows or shrinks (Ask's list, a challenge, a note) */
   const dockObs = typeof ResizeObserver === 'function' ? new ResizeObserver(() => { if (!vui.hidden) diveInset(); }) : null;
-  const watchDock = () => { if (dockObs && diveFrame) { dockObs.disconnect(); dockObs.observe(diveFrame.dock); } };
+  /* and, on the bench, of the way in as it comes and goes, and of the last step, where the way along stays on a phone */
+  const inObs = typeof MutationObserver === 'function' ? new MutationObserver(() => { if (!vui.hidden && flatKind === 'bench') diveInset(); }) : null;
+  const watchDock = () => { if (dockObs && diveFrame) { dockObs.disconnect(); dockObs.observe(diveFrame.dock); }
+    if (!inObs) return; inObs.disconnect();
+    const wi = vui.querySelector(':scope > .wayin'), nx = vui.querySelector(':scope > .steps2 [data-stepgo="1"]');
+    if (wi) inObs.observe(wi, { attributes: true, attributeFilter: ['hidden'] }); if (nx) inObs.observe(nx, { attributes: true, attributeFilter: ['disabled'] }); };
 
   /* ---- one board, no side panel: words on the parts, a story docked below that drives the camera ---- */
   const bui = $('boardui');
