@@ -533,7 +533,7 @@ html.frame2 #sheet > .x { top: 16px; right: 18px; width: 36px; height: 36px; }
 html.frame2 .hero { border-radius: 22px; padding: 20px 24px 18px; }
 html.frame2 .hero .kicker { font: var(--f2-label); letter-spacing: 0; text-transform: none; color: var(--muted); }
 html.frame2 .hero h1 { margin: 2px 0 12px; font: var(--f2-title); }
-html.frame2 .hero .heroq .qcard .q { font: italic 400 17px/1.35 var(--serif); }
+html.frame2 .hero .heroq { font: italic 400 17px/1.45 var(--serif); }
 html.frame2 .hero .herok { font: var(--f2-label); letter-spacing: 0; text-transform: none; color: var(--muted); }
 html.frame2 .hero .heroc .chipb, html.frame2 .hero .btn { font-size: 15px; }
 @media (max-width: 720px) {
@@ -541,7 +541,7 @@ html.frame2 .hero .heroc .chipb, html.frame2 .hero .btn { font-size: 15px; }
   html.frame2 #sheet h2, html.frame2 .hero h1 { font: 700 23px/1.15 var(--serif); }
   html.frame2 #sheet .line { font-size: 16px; }
   html.frame2 .hero { padding: 14px 16px; }
-  html.frame2 .hero .heroq .qcard .q { font-size: 16px; }
+  html.frame2 .hero .heroq { font-size: 15px; }
 }
 /* on a phone the lenses wait while the first card is open over the island (it covered its last row), and come back
    when it folds; the card that is not a level's caption (the board's story) shows whole in the peek, its way on with it */

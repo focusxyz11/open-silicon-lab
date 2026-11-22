@@ -148,3 +148,25 @@ test('the words written for a question at a level are for a lens that lives ther
     assert.ok(('frame.at.' + q + '.' + d + '.note') in EN, k + ' has no note');
   }
 });
+
+/* the eleven worlds are reading pages, not a structure (#305): each opens from at least one lens whose form at a level
+   is one of its stops (Read more, src/v2/glue/frame.js lensCard, with the stops shared out as formsAt does), and the
+   map lists none of them */
+test('every world opens from a lens, and nothing lists the eleven', async () => {
+  const { WORLD_IDS } = await import('../src/data/worlds.js');
+  const { INDEX } = await import('../src/data/home.js');
+  const reached = new Set();
+  for (const d of DEPTHS) {
+    const used = new Set();
+    for (const q of L.lensesAt(d)) {
+      const own = ('frame.at.' + q + '.' + d + '.q') in EN, x = L.lensAt(q, d), st = own ? null : x.stops.find(k => !used.has(k)) || x.stops[0] || null;
+      if (st) used.add(st);
+      if (st && !(x.field && x.field[0])) reached.add(st.split('.')[0]);
+    }
+  }
+  for (const w of WORLD_IDS) assert.ok(reached.has(w), 'no lens reads more in the world ' + w);
+  const links = INDEX.flatMap(g => g.items.map(i => i.href));
+  assert.ok(!links.includes('#/w'), 'the map still lists the worlds');
+  const app = readFileSync(new URL('../src/v2/app.js', import.meta.url), 'utf8');
+  assert.ok(!/href="#\/w"/.test(app), 'the first card still links to a list of the worlds');
+});

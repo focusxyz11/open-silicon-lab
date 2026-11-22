@@ -3,10 +3,11 @@
    sketch. Then why it is open, what is true (the truths are the unit of the lab: content/STRUCTURE.md), the
    questions that lead in, the challenges with where each is played, the engine, the frontier, what the community
    does here, real cases, and the other worlds it really meets. The page shows this one core question on its own;
-   the eleven are never listed together. #/w/<id>/q<n> opens it at a question inside. */
+   the eleven are never listed together (#305): a world is opened from a lens whose form at a level is one of its
+   stops (Read more, src/v2/glue/frame.js) or by name from Your log. #/w/<id>/q<n> opens it at a question inside. */
 import { t } from '../core/i18n.js';
 import { THREADS } from '../data/weave.js';
-import { WORLDS, WORLD_IDS, challengeName } from '../data/worlds.js';
+import { WORLDS, challengeName } from '../data/worlds.js';
 import { parseWorld, render, inline } from './md.js';
 import { copiesHtml } from './copies.js';
 import { wallsHtml } from './walls.js';
@@ -79,26 +80,4 @@ export function worldHtml(id, P, ctx = {}) {
   h += part('earlier');
   h += '<p class="small muted wsrc">' + esc(t('world.source')) + ' <a href="content/?d=' + esc(id) + '">content/' + esc(id) + '.md</a></p>';
   return readHtml({ cls: 'world', style: '--qc:' + colorOf(id), head, picture: lensHtml(id, P, ctx.chip), text: h });
-}
-
-/* every question inside, from every world, mixed so no world gathers: the way in that never lists the eleven.
-   Each card opens its world at that question. */
-export const loadAll = () => Promise.all(WORLD_IDS.map(id => loadWorld(id).then(P => [id, P])));
-export function allQuestions(all) {
-  const L = all.map(([id, P]) => P.questions.map(([q, n], i) => ({ id, i: i + 1, q, n }))), out = [];
-  for (let k = 0; out.length < L.reduce((a, x) => a + x.length, 0); k++) L.forEach(x => { if (x[k]) out.push(x[k]); });
-  return out;
-}
-const plain = s => s.replace(/\*\*|\*|`/g, '').replace(/\[([^\]]+)\]\([^)]+\)/g, '$1');
-export const qCard = x => '<a class="qcard" href="#/w/' + esc(x.id) + '/q' + x.i + '" style="--qc:' + colorOf(x.id) + '" data-q="' + esc(plain(x.q).toLowerCase()) + '"><span class="q">' + esc(plain(x.q)) + '</span></a>';
-export function indexHtml(all) {
-  const Q = allQuestions(all), head = '<p class="kicker">' + esc(t('world.indexK')) + '</p><h1>' + esc(t('world.indexT')) + '</h1><p class="lead">' + esc(t('world.indexLead', { n: Q.length })) + '</p>';
-  /* a list to read: the column alone */
-  return readHtml({ head, text: listHtml(Q) });
-}
-const listHtml = Q => '<div class="jump"><input type="search" data-readfind autocomplete="off" placeholder="' + esc(t('read.find')) + '" aria-label="' + esc(t('read.find')) + '"></div><p class="small muted" data-readnone hidden>' + esc(t('read.none')) + '</p>' +
-    '<section class="stepsec" data-readsec><div class="qgrid">' + Q.map(qCard).join('') + '</div></section>';
-/* a few questions for the first page, from different worlds, changing day by day */
-export function starters(all, n = 3, day = Math.floor(Date.now() / 864e5)) {
-  const Q = allQuestions(all); return Array.from({ length: n }, (_, k) => Q[(day * 7 + k * 13) % Q.length]);
 }

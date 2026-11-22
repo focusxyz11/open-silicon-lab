@@ -151,7 +151,6 @@ export function create() {
       const nx = Way.stageOfPlace(id) ? Way.nextPlace(id) : null;
       h += '<p class="line">' + esc(t('map.' + id + '.d')) + '</p>' +
         (enter ? '<div class="zoomhint"><button type="button" class="igo" data-deeper><span class="wia" aria-hidden="true">↓</span><span class="wit"><span class="wik">' + esc(t('frame.in.k')) + '</span><b>' + esc(t('map.' + id + '.t')) + '</b></span></button><span class="small muted">' + esc(t(V.PARTS[id] ? 'zoom.open' : 'zoom.place')) + '</span></div>' : '') +
-        V.worldsRow((Game.INSIDE[id] || []).flatMap(l => stopsAt(l.depth))) +
         V.aroundHtml(id, nx) +
         /* What if?: the levers that sit on this island, each a way to see the change it makes cross the sea */
         WF_LEVERS.filter(l => l.place === id).map(l => '<a class="look wfgo" href="#/whatif/' + l.id + '"><b>' + esc(t('whatif.ui.go', { lever: t('whatif.lever.' + l.id + '.t') })) + '</b><span class="small">' + esc(t('whatif.lever.' + l.id + '.d')) + '</span></a>').join('') +

@@ -84,7 +84,9 @@ run['home'] = async () => {
     if (!(await hp.$('#home .hm-qcard a.hm-qitem[href^="#/"]'))) problems.push(tag + ': the question on the first page shows nothing behind it');
     if ((await hp.$$('#home .hm-nitem[href^="#/"]')).length < 3) problems.push(tag + ': the first page does not say what is new');
     { const ix = await hp.evaluate(() => [...document.querySelectorAll('#home .hm-index a.hm-ilink')].map(a => a.getAttribute('href')));
-      for (const h of ['#/challenges', '#/read', '#/w', '#/island', '#/dive/chip', '#/line/crystal', '#/log']) if (!ix.includes(h)) problems.push(tag + ': the whole lab on the first page has no way to ' + h); }
+      for (const h of ['#/challenges', '#/read', '#/island', '#/dive/chip', '#/line/crystal', '#/log']) if (!ix.includes(h)) problems.push(tag + ': the whole lab on the first page has no way to ' + h);
+      /* the eleven worlds are reading pages, opened from a lens, never a list (#305) */
+      if (ix.includes('#/w')) problems.push(tag + ': the whole lab on the first page still lists the worlds'); }
     /* a scale picked on the ruler opens its level on the map, with how it is designed and made */
     await hp.waitForFunction(() => { const b = document.querySelector('#home [data-zat="5"]'); if (b && b.getAttribute('aria-pressed') !== 'true') b.click(); return document.querySelectorAll('#home .hm-twins button').length === 2 && /Gate/.test((document.querySelector('#home [data-side] h2') || {}).textContent || ''); }, null, { timeout: 10000 }).catch(() => problems.push(tag + ': the ruler does not open the gate with its designed and made twins'));
     /* a station: what can be played there, and the view it leads to */
@@ -150,8 +152,10 @@ const explore = async (tag, viewport, scheme) => {
   await page.waitForSelector('#loop [data-stage]', { timeout: 15000 }).catch(() => problems.push(tag + ': the bar does not hold the loop'));
   if ((await page.$$('#loop [data-stage]')).length !== 6) problems.push(tag + ': the loop does not show its six stages');
   if (await page.$('#sections')) problems.push(tag + ': the menu of sections shows without being asked for');
-  /* the first page: questions to start with and the next challenges (never the core questions together) */
-  if ((await page.$$('#hero .heroq .qcard')).length < 2) problems.push(tag + ': the first page offers no questions to start with');
+  /* the first card over the island: where the questions are (marks on the pictures, a way to the first ones) and the
+     next challenges; never a list of questions from the worlds (#305) */
+  if (!(await page.$('#hero p.heroq')) || !(await page.$('#hero a[href="#/dive/block"]'))) problems.push(tag + ': the first card does not offer the marks on the pictures');
+  if (await page.$('#hero .qcard, #hero a[href="#/w"]')) problems.push(tag + ': the first card still lists the worlds\' questions');
   if (!(await page.$('#hero .heroc a'))) problems.push(tag + ': the first page offers no challenge');
   /* exploring folds the questions into a button in the corner, which opens them again */
   await page.evaluate(() => document.getElementById('mapCanvas').dispatchEvent(new WheelEvent('wheel', { deltaY: -60, bubbles: true, cancelable: true })));
@@ -240,8 +244,9 @@ const explore = async (tag, viewport, scheme) => {
   if ((await page.$$('#page [data-tune] .tdot')).length !== 2) problems.push(tag + ': a tap on the box did not leave a try');
   await page.click('#page [data-tune] [data-tk="hand"]').catch(() => problems.push(tag + ': the note cannot be handed on'));
   await page.waitForSelector('#page [data-tune] .thand .tfig', { timeout: 15000 }).catch(() => problems.push(tag + ': the note came back with no traces'));
+  /* there is no list of the worlds: the old address opens the map (#305) */
   await page.evaluate(() => { location.hash = '#/w'; });
-  await page.waitForFunction(() => document.querySelectorAll('#page .qgrid .qcard').length > 90, null, { timeout: 15000 }).catch(() => problems.push(tag + ': the questions that lead in are not there'));
+  await page.waitForFunction(() => location.hash === '#/' && !!document.querySelector('#home:not([hidden])') && !document.querySelector('#page:not([hidden]) .qgrid'), null, { timeout: 15000 }).catch(() => problems.push(tag + ': #/w does not land on the map'));
   /* a try on the page: change a choice, and the engine answers again */
   await page.evaluate(() => { location.hash = '#/read/strange-chain'; });
   await page.waitForSelector('#page .probe [data-pk]', { timeout: 10000 }).catch(() => problems.push(tag + ': the chain has no try on its page'));
@@ -558,8 +563,9 @@ run['motion'] = async () => {
     await page.waitForSelector('#sheet.part [data-deeper]', { timeout: 15000 }).catch(() => problems.push(tag + ': ' + pl + ' does not open with its parts'));
   }
   await page.evaluate(() => { location.hash = '#/place/fab/etch'; });
-  /* a part leads into the worlds its questions belong to, and a world says where it is met on the island */
-  await page.waitForFunction(() => [...document.querySelectorAll('#sheet .wchip')].some(a => !a.hidden && a.getAttribute('href') === '#/w/fail'), null, { timeout: 15000 }).catch(() => problems.push(tag + ': the etch tool does not lead to the world of its questions'));
+  /* a part's card lists no worlds: a world opens from a lens (#305) */
+  await page.waitForSelector('#sheet.part', { timeout: 15000 }).catch(() => {});
+  if (await page.$('#sheet .wchip, #sheet .wmeet')) problems.push(tag + ': a part\'s card still lists the worlds it meets');
   await page.waitForSelector('#sheet.part [data-deeper]', { timeout: 15000 }).catch(() => problems.push(tag + ': a tool of the factory cannot be selected'));
   await page.click('#sheet [data-deeper]');
   await page.waitForFunction(() => location.hash.startsWith('#/line/'), null, { timeout: 15000 }).catch(() => problems.push(tag + ': going inside did not reach the line'));
@@ -1192,6 +1198,19 @@ run['frame'] = async () => {
       return location.hash === '#/dive/gate' && !!f.querySelector('.dock .qldown') && !f.querySelector('.mark3[aria-pressed="true"]'); }, null, { timeout: 60000, polling: 500 })
       .catch(() => problems.push(tag + ': going down to where a lens does not live does not put it down, saying so'));
     await lp.close(); }
+  /* a world is a reading page opened from a lens (#305): at the block, the lens whose form is a stop of a world reads
+     more in it, and Read more opens that world's page at the block */
+  { const tag = 'frame read more', rp = await browser3d.newPage({ viewport: { width: 1280, height: 800 }, colorScheme: 'dark' }); rp.on('pageerror', e => problems.push(tag + ': ' + e.message));
+    await rp.addInitScript(() => { try { localStorage.setItem('osl-quality', 'keep'); localStorage.setItem('osl-hints-v1', JSON.stringify({ seen: {}, off: true })); } catch (e) { /* no storage */ } });
+    await rp.goto(base + 'index.html#/dive/block');
+    await rp.waitForFunction(() => { if (location.hash.startsWith('#/w/')) return !!document.querySelector('#page:not([hidden]) .f2read.world') && location.hash.endsWith('/at/block');
+      const f = document.querySelector('#diveui'); if (!f || f.hidden) return false;
+      const b = f.querySelector('.modes3 [data-mode="ask"]'); if (b && b.getAttribute('aria-selected') !== 'true') { b.click(); return false; }
+      const r = f.querySelector('.dock .qlcard a.qlread[href^="#/w/"]'); if (r) { r.click(); return false; }
+      const M = [...f.querySelectorAll('.mark3')].filter(m => !m.hidden), on = M.findIndex(m => m.getAttribute('aria-pressed') === 'true'), m = M[(on + 1) % M.length]; if (m) m.click();
+      return false; }, null, { timeout: 90000, polling: 700 })
+      .catch(() => problems.push(tag + ': no lens at the block reads more in its world, or Read more does not open its page'));
+    await rp.close(); }
   /* two lenses held (#315): at the block, Geometry with Efficiency fuels use draws a front, its dot moving with where
      the logic sits and the front moving with the innovation; Fight or use physics with Brain or copy a fork, whose line
      drags across the picture; with Digital meets physical a chain, whose steps light as it heats */
