@@ -6,7 +6,7 @@
 import { t, has } from '../../core/i18n.js';
 import { STOPS, partWord } from '../../data/weave.js';
 import { MARKS } from '../../data/frame.js';
-import { createLenses, questionOf as frameQ } from '../../engines/frame.js';
+import { createLenses, questionOf as frameQ, meetOf, pairOf } from '../../engines/frame.js';
 import * as Game from '../game.js';
 import * as Way from '../../engines/way.js';
 import { titleOf } from '../play.js';
@@ -32,7 +32,7 @@ export function create() {
     /* the marks on the picture: every lens that lives here, strongest first, with the part it is about by its one name */
     marksAt: d => { const D = LENS_AT[d] || d, M = MARKS[D] || {}; return Lenses.lensesAt(D).map(id => ({ id, label: t('frame.q.' + id), icon: frameQ(id).icon, word: M[id] ? partWord(D, M[id]) : null })); },
     lensesAt: d => Lenses.lensesAt(LENS_AT[d] || d).map(id => ({ id, label: t('frame.q.' + id), hint: t('frame.q.' + id + '.hint'), icon: frameQ(id).icon })),
-    lensCard: (q, d) => lensCard(q, LENS_AT[d] || d), onLens: (q, d) => lightLens(q, LENS_AT[d] || d),
+    lensCard: (q, d) => lensCard(q, LENS_AT[d] || d), onLens: (q, d, q2) => lightLens(q, LENS_AT[d] || d, q2), pairCard: (a, b, d) => pairCard(a, b, LENS_AT[d] || d),
     askedAt: d => { const A = Game.askedAtLevel(d, V.S); return A.length ? '<p class="kicker">' + esc(t('page.questions.asked')) + '</p>' + A.map(askedHtml).join('') : ''; },
     doAt: d => Game.CHALLENGES.filter(c => c.at === d).map(c => ({ id: c.id, title: titleOf(c), where: V.whereOf(c), href: V.doHref(c) }))
       .concat(openAt(d).map(c => ({ id: c.id, title: titleOf(c), where: V.whereOf(c), href: '#/do/' + encodeURIComponent(c.id), open: true })), labWay(d)) }, o));
@@ -65,8 +65,12 @@ export function create() {
     h += '<p class="qlq">' + esc(t(frameQ(q).word)) + '</p>';
     const chs = x.challenges.map(V.chOf).filter(Boolean);
     if (chs.length) h += '<p class="kicker">' + esc(t('frame.lens.play')) + '</p><div class="dolist">' + chs.map(c => '<a class="dochip" href="' + esc(V.doHref(c)) + '"><b>' + esc(titleOf(c)) + '</b><span class="small muted">' + esc(V.whereOf(c)) + '</span></a>').join('') + '</div>';
-    if (x.meets) { const inner = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="' + esc(frameQ(x.meets).icon) + '"/></svg><span>' + esc(t('frame.lens.meets', { q: t('frame.q.' + x.meets) })) + (x.seam ? '<small>' + esc(t('frame.seam.' + x.seam)) + '</small>' : '') + '</span>';
-      h += here.includes(x.meets) ? '<button type="button" class="qlmeet" data-lens="' + esc(x.meets) + '">' + inner + '</button>' : '<p class="qlmeet">' + inner + '</p>'; }
+    if (x.meets) { const inner = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="' + esc(frameQ(x.meets).icon) + '"/></svg><span>' + esc(t('frame.lens.meets', { q: t('frame.q.' + x.meets) })) + (x.meet ? '<small>' + esc(t('frame.meet.' + x.meet)) + '</small>' : '') + '</span>';
+      h += here.includes(x.meets) ? '<div class="qlmeets"><button type="button" class="qlmeet" data-lens="' + esc(x.meets) + '">' + inner + '</button>' +
+        (x.meet ? '<button type="button" class="chipb qlhold" data-hold="' + esc(x.meets) + '">' + esc(t('frame.lens.hold')) + '</button>' : '') + '</div>' : '<p class="qlmeet">' + inner + '</p>'; }
+    /* the other lenses living here that it meets: each can be held with it too (#315) */
+    const also = here.filter(o => o !== q && o !== x.meets && meetOf(q, o));
+    if (also.length) h += '<p class="kicker">' + esc(t('frame.lens.also')) + '</p><div class="chips qlalso">' + also.map(o => '<button type="button" class="chipb" data-hold="' + esc(o) + '">' + esc(t('frame.lens.holdWith', { q: t('frame.q.' + o) })) + '</button>').join('') + '</div>';
     /* up and down with the lens kept on: it stays where it lives at the next level, and is put down, saying so, where not */
     if (L && V.WE && raw) { const i = L.indexOf(d), go = (k, a) => raw[k] && V.WE.IDS.includes(raw[k]) ? '<button type="button" class="chipb qlstep" data-divego="' + V.WE.IDS.indexOf(raw[k]) + '">' + a + ' ' + esc(t('depth.' + L[k] + '.name')) + '</button>' : '';
       if (i >= 0) h += '<div class="qlsteps">' + go(i - 1, '↑') + go(i + 1, '↓') + '</div>'; }
@@ -78,6 +82,17 @@ export function create() {
     if (more.length) h += '<p class="kicker">' + esc(t('frame.lens.more')) + '</p><div class="asklist">' + more.map(m => '<a class="askline" href="' + esc(m.href) + '"><span class="q">' + esc(m.q) + '</span></a>').join('') + '</div>';
     return h + '</div>';
   }
+  /* two lenses held (#315): where they meet, the shape it is drawn in, the pair's own question (one neither asks alone),
+     what is true there, the pair's instrument, and what is still open */
+  function pairCard(a, b, d) {
+    const P = pairOf(a, b); if (!P) return lensCard(a, d);
+    const k = P.a + '.' + P.b, w = s => 'frame.meet.' + k + s;
+    let h = '<div class="qlcard qlpair" data-shape="' + P.shape + '"><p class="kicker">' + esc(t('frame.pair.where', { meet: t(w('')) })) + '</p><p class="small qlshape">' + esc(t('frame.shape.' + P.shape)) + '</p>';
+    h += '<p class="qlform">' + esc(t(w('.q'))) + '</p>';
+    if (has(w('.true'))) h += '<p class="qltrue"><b>' + esc(t('frame.lens.true')) + '</b> ' + esc(t(w('.true'))) + '</p>';
+    h += Paint.pairInstrument(a, b, d);
+    return h + '<p class="qlopen"><b>' + esc(t('frame.pair.open')) + '</b> ' + esc(t(w('.open'))) + '</p></div>';
+  }
   /* the lens chosen lights its parts on the flat picture (the stop it shows, through the dive's own threads) and keeps
      only its marks on a level drawn in 3D */
   
@@ -85,8 +100,8 @@ export function create() {
      dive's level in view, and a control moved in its card repaints it */
   const paint = Paint.createLensPaint(() => V.lensWhere && V.lensWhere());
   Paint.wire(() => paint.update());
-  function lightLens(q, d) {
-    if (q && Paint.paints(q, d)) paint.show(q, d); else paint.hide();
+  function lightLens(q, d, q2) {
+    if (q && q2 && Paint.paintsPair(q, q2, d)) paint.show(q, d, q2); else if (q && Paint.paints(q, d)) paint.show(q, d); else paint.hide();
     if (!q && !V.lensNow) return;   /* no lens before or now: the picture is left as it is */
     if (q && V.lensNow && V.lensNow.q === q && V.lensNow.d === d) return;
     V.lensNow = q ? { q, d, stops: Lenses.lensAt(q, d).stops } : null;

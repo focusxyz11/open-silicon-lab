@@ -17,6 +17,7 @@ import { ni } from './dope.js';
 import * as Bench from './bench.js';
 import { model as chipModel, START as CHIP, CLOCKS } from './chip.js';
 import { build, solutionOf } from './design.js';
+import { factsOf } from '../data/partfacts.js';
 
 const parts = (F, kind) => F.parts.filter(p => p.kind === kind);
 const rectsOf = (F, kind) => parts(F, kind).flatMap(p => p.rects);
@@ -31,7 +32,8 @@ export const PACK_SQUEEZE = 0.6;   /* packed, the logic keeps 40% of its room: i
 export function geometry(F, pack = 0) {
   const mem = rectsOf(F, 'memory')[0], logic = parts(F, 'logic').filter(p => p.by === 'program').flatMap(p => p.rects);
   const right = mem[0] - 36, keep = 1 - PACK_SQUEEZE * pack;
-  const placed = logic.map(([x, y, w, h]) => { const w2 = w * keep, x2 = x + (right - (x + w)) * pack + (w - w2) * pack; return [x2, y, w2, h]; });
+  /* packed, each row shrinks to the room it keeps from its far end, its near end sliding up to the memory's edge */
+  const placed = logic.map(([x, y, w, h]) => { const end = x + w + (right - (x + w)) * pack, w2 = w * keep; return [end - w2, y, w2, h]; });
   /* every trip: from points along each row of logic to the nearest edge of the memory, along the wires */
   const trips = placed.flatMap(([x, y, w, h]) => Array.from({ length: 8 }, (_, i) => { const p = [x + w * (i + 0.5) / 8, y + h / 2]; return { from: p, len: toRect(p, mem) }; }));
   const avg = trips.reduce((s, t) => s + t.len, 0) / trips.length;
@@ -122,3 +124,50 @@ export const MODELS = {
   physics: { run: physics, control: { values: HOT, start: 25 }, measures: ['fight', 'use', 'off'] },
   human: { run: humans, control: { values: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], start: 1 }, measures: ['drawn', 'pass', 'shortest', 'longest'] }
 };
+
+/* ---- where two lenses meet (#315, MEETS in src/data/frame.js): the engines of the pairs held at a level ---- */
+
+/* A front: Geometry and Efficiency fuels use at the block, "moving data costs the energy". Both measures from one
+   model: energy per answer (the budget engine's answer, its moving share at the block scaled by the length of the
+   trips) and the hottest patch (the same work in the room the logic keeps). p: where the logic sits (0 spread out, 1
+   packed beside the memory); n: an innovation, the memory moved into the rows of logic in slices (0 today, 1 all of
+   it), so a fetch goes to the slice beside it. line(n) is today's best compromises for that n, at(p, n) your design. */
+export const SLICES = 4;   /* slices of memory in each row of logic, when it moves in */
+export function geoEffFront(F = defaultFacts()) {
+  const base = budget(JOB, PLAN), blk = base.levels.block || { move: 0, compute: 1 }, m = blk.move / Math.max(1e-30, blk.move + blk.compute);
+  const mem = rectsOf(F, 'memory')[0], area = r => r[2] * r[3], logic0 = parts(F, 'logic').filter(p => p.by === 'program').flatMap(p => p.rects).reduce((s, r) => s + area(r), 0);
+  const t0 = geometry(F, 0).measures.trip / F.um;
+  const at = (p, n) => {
+    const g = geometry(F, p), w = g.placed[0][2], toSlice = w / (4 * SLICES);
+    const trip = (1 - n) * g.measures.trip / F.um + n * toSlice;
+    const room = g.placed.reduce((s, r) => s + area(r), 0) + n * area(mem);
+    return { p, n, energy: base.total * ((1 - m) + m * trip / t0), heat: logic0 / room, trip: trip * F.um };
+  };
+  const line = n => Array.from({ length: 21 }, (_, i) => { const r = at(i / 20, n); return { p: r.p, x: r.energy, y: r.heat }; });
+  return { at, line, moving: m, today: at(0, 0) };
+}
+function defaultFacts() { return factsOf('block'); }
+
+/* A fork: Brain or copy and Fight or use physics at the block, "memory that computes". The same block built two
+   ways: exact bits in an array, sums done by gates with check bits; or the numbers kept in the cells themselves,
+   sums made by currents meeting on a wire. Both from the engines: energy per sum and answers off (physics), and how
+   well a copy on a new chip answers (Brain or copy, all of the memory in the cells). Control: how hot it runs. */
+export function memoryFork(F = defaultFacts(), celsius = 25) {
+  const P = physics(F, celsius), C0 = brainCopy(F, 0), C1 = brainCopy(F, 1);
+  return { celsius, exact: { energy: P.measures.fight, off: 0, copied: C0.measures.copied }, computes: { energy: P.measures.use, off: P.measures.off, copied: C1.measures.copied } };
+}
+
+/* A chain: Fight or use physics and Digital meets physical, "making a clean 1". Heat makes the silicon leak (its own
+   carriers, dope.js), the leak shakes the wire (the noise of a current, as its square root), the shaking carries a
+   bit over the line where 1 begins (the noise's tail), and a word with two bits wrong gets past its check bits (72
+   kept for 64 correct one). A bigger swing on the wire buys margin, at the square of its voltage in energy. Controls:
+   how hot it runs, and the swing against today's. Each step lights once it is past its threshold. */
+export const SWING = [1, 1.25, 1.5, 1.75, 2];
+export const CHAIN_LIT = { heat: 25, shake: 0.05, misread: 1e-15, kept: 1e-12 };
+export function cleanOne(F = defaultFacts(), celsius = 25, swing = 1) {
+  const T = celsius + 273.15, noise = CIM_ERR * Math.sqrt(ni(T) / ni(298.15)) / swing;
+  const misread = 0.5 * erfc(0.5 / (noise * Math.SQRT2)), q = 1 - misread;
+  const kept = Math.max(0, 1 - Math.pow(q, 72) - 72 * misread * Math.pow(q, 71));
+  const steps = [['heat', celsius > CHAIN_LIT.heat], ['shake', noise > CHAIN_LIT.shake], ['misread', misread > CHAIN_LIT.misread], ['kept', kept > CHAIN_LIT.kept]].map(([id, lit]) => ({ id, lit }));
+  return { celsius, swing, noise, steps, measures: { noise, misread, kept, energy: swing * swing } };
+}

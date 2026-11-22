@@ -379,6 +379,39 @@ button.qlform { all: unset; cursor: pointer; display: block; }
 .lplay .lpok2 { color: var(--good); }
 .lplay.on { border-color: var(--warm); background: color-mix(in srgb, var(--warm) 22%, transparent); }
 .lpyours { margin: 0; color: var(--warm); }
+/* two lenses held (#315): the pair's card, its shapes' instruments, and the pins over the picture */
+.qlmeets { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.qlhold { border-color: var(--warm); }
+.qlputs { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 14px; }
+.qlshape { margin: 0; color: var(--muted); }
+.qlopen { margin: 0; font-size: 14px; color: var(--muted); }
+.qlopen b { color: var(--ink); }
+.lpfront { margin: 0; display: grid; gap: 6px; }
+.lpfront svg { width: 100%; height: auto; border-radius: 10px; background: color-mix(in srgb, var(--ink) 4%, transparent); }
+.lpline0 { fill: none; stroke: var(--muted); stroke-width: 2; stroke-dasharray: 5 4; }
+.lpline1 { fill: none; stroke: var(--good); stroke-width: 2.5; }
+.lpdot { fill: var(--warm); stroke: var(--panel-solid); stroke-width: 2; }
+.lpnobody { fill: var(--accent); fill-opacity: .12; }
+.lpkey { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 12px; color: var(--muted); }
+.lpkey .k1 { color: var(--good); } .lpkey .kd { color: var(--warm); } .lpkey .kn { color: var(--accent); }
+.lptwo { display: grid; grid-template-columns: 1.3fr 1fr 1fr; gap: 6px 10px; align-items: baseline; font-size: 14px; }
+.lptwo .hd { font: 600 13px/1.3 var(--sans); color: var(--muted); }
+.lptwo .n { font: 600 16px/1.2 var(--mono, var(--sans)); }
+.lpsides { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.lpside { display: grid; gap: 6px; align-content: start; }
+.lpside .kicker { margin: 0; }
+.lpchain { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.lpchain li { display: grid; grid-template-columns: 26px 1fr auto; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 10px; color: var(--muted); }
+.lpchain li b { display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; border: 1.5px solid currentColor; font-size: 13px; }
+.lpchain li em { font-style: normal; font-size: 12px; }
+.lpchain li.lit { color: var(--ink); background: color-mix(in srgb, var(--bad) 14%, transparent); }
+.lpchain li.lit b { background: var(--bad); border-color: var(--bad); color: #fff; }
+.lenspins { position: absolute; inset: 0; pointer-events: none; }
+.lenspins[hidden] { display: none; }
+.lppin { position: absolute; left: 0; top: 0; width: 30px; height: 30px; padding: 0; display: grid; place-items: center; border-radius: 50%; border: 2px solid var(--muted); background: var(--panel-solid); color: var(--muted); font: 700 14px/1 var(--sans); pointer-events: none; }
+.lppin.lit { border-color: var(--bad); background: var(--bad); color: #fff; box-shadow: 0 0 0 6px color-mix(in srgb, var(--bad) 25%, transparent); }
+.lppin.lphandle { width: 40px; height: 40px; border-color: var(--ink); color: var(--ink); pointer-events: auto; cursor: ew-resize; touch-action: none; font-size: 18px; }
+@media (max-width: 720px) { .lpsides { grid-template-columns: 1fr; } }
 .qlcard { display: grid; gap: 10px; margin: 0 0 14px; padding: 14px 16px; border-radius: 16px; border: 1px solid color-mix(in srgb, var(--warm) 35%, var(--line)); background: color-mix(in srgb, var(--warm) 6%, transparent); animation: qlin .25s ease-out; }
 @keyframes qlin { from { opacity: 0; transform: translateY(4px); } }
 @media (prefers-reduced-motion: reduce) { .qlcard { animation: none; } }
