@@ -608,6 +608,13 @@ export function createWorld(cv, on) {
       const xs = o.map(p => p[0]), ys = o.map(p => p[1]), x = (Math.min(...xs) + Math.max(...xs)) / 2, y = (Math.min(...ys) + Math.max(...ys)) / 2;
       return { x: (view.ptr.tx + x * view.ptr.s) / W, y: (view.ptr.ty + y * view.ptr.s) / H };
     },
+    /* where the plan of the level you stand at (its scene's 1000 by 1000) is on the screen now: its four corners in the
+       page's pixels (top left, top right, bottom right, bottom left), or null while moving (a lens's paint) */
+    planCorners() {
+      if (!view || !view.ptr || fly || drag || Math.abs(Z - Math.round(Z)) > 0.04) return null;
+      const r = cv.getBoundingClientRect(), p = view.ptr, k = r.width / W, at = (x, y) => [r.left + (p.tx + x * p.s) * k, r.top + (p.ty + y * p.s) * k];
+      return [at(0, 0), at(1000, 0), at(1000, 1000), at(0, 1000)];
+    },
     retheme() { col = palette(); },
     stop() { running = false; },
     /* start again after stop (the redesign hides and shows this view) */

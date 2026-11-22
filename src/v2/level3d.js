@@ -234,6 +234,13 @@ export function createLevel3D(canvas, host, on, model) {
       if (k > 0 && !raf) raf = requestAnimationFrame(tick);
     },
     active: () => k > 0.5,
+    /* a point of the level's plan (the flat scene's 1000 by 1000, model.plan) on the screen now, in the page's pixels;
+       null where the model has no plan or the level is not in view or still arriving (a lens's paint, src/v2/lenspaint.js) */
+    toScreen(x, y) {
+      if (!M.plan || k <= 0.5 || arrived < 1 || link) return null;
+      mv.set(...M.plan(x, y)).applyMatrix4(root.matrixWorld).project(camera);
+      const r = canvas.getBoundingClientRect(); return [r.left + (mv.x + 1) / 2 * W, r.top + (1 - mv.y) / 2 * H];
+    },
     /* the middle of the door into the next level on the picture (0..1 across and down), at rest; null while it moves
        or arrives; undefined when the level has no door (the shell then reads the flat picture's portal) */
     portal() {

@@ -96,6 +96,14 @@ export function create() {
   /* each level writes its names in a layer of its own over the stage */
   const l3Host = lv => { let h = $('l3-' + lv); if (!h) { h = document.createElement('div'); h.className = 'labels'; h.id = 'l3-' + lv; h.hidden = true; $('flatLabels').after(h); } return h; };
   const l3Active = () => Object.values(L3).find(l => l.obj && l.obj.active());
+  /* where a lens's paint stands (src/v2/lenspaint.js): under the picture's names, the plan of the dive's level in view
+     pinned by its corners, on its 3D level or on the flat picture; nowhere while the dive moves or out of the dive */
+  const lensWhere = () => {
+    if (V.vui.hidden || V.flatKind !== 'dive' || !V.dive) return null;
+    const a = l3Active(), host = $('diveCanvas').parentNode, before = $('flatLabels');
+    if (a) { const c = [[0, 0], [1000, 0], [1000, 1000], [0, 1000]].map(([x, y]) => a.obj.toScreen && a.obj.toScreen(x, y)); return { host, before, corners: c.every(Boolean) ? c : null }; }
+    return { host, before, corners: V.dive.planCorners ? V.dive.planCorners() : null };
+  };
   const lastTap = { x: 0, y: 0 };
   $('diveCanvas').addEventListener('pointerup', e => { lastTap.x = e.clientX; lastTap.y = e.clientY; }, true);
   /* the join's windows and switch, loaded with the first level in 3D */
@@ -318,5 +326,5 @@ export function create() {
       const ch = chId && Game.challengeOf(chId); if (ch) openBench(ch);
     });
   }
-  Object.assign(V, { levelsOf, ensureDive, hide3d, hideL3, diveInset });
+  Object.assign(V, { levelsOf, ensureDive, hide3d, hideL3, diveInset, lensWhere });
 }

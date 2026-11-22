@@ -17,6 +17,7 @@ import * as Exp from '../../engines/experiments.js';
 import { fieldAtLevel, VIEW_PARTS, diveWord } from '../../data/atlas.js';
 import { SEEK, foundAt, seekLevel } from '../../data/seek.js';
 import { V, esc, qColor, follow } from '../shell.js';
+import * as Paint from '../lenspaint.js';
 
 export function create() {
   Object.assign(V, { seekHtml, seekTap });
@@ -52,14 +53,23 @@ export function create() {
     const raw = lensLevels(), L = raw && raw.map(l => LENS_AT[l] || l), x = Lenses.lensAt(q, d, L), f = formsAt(d)[q] || {}, here = Lenses.lensesAt(d);
     /* no stop and no words of its own here: the first experiment that runs through the level gives the form */
     const xs = x.experiments.map(id => Exp.experimentOf(id)).filter(Boolean), x0 = !f.own && !f.stop ? xs[0] : null;
-    const form = f.own ? t('frame.at.' + q + '.' + d + '.q') : f.stop ? t('stop.' + f.stop + '.q') : x0 ? Read.askOf(x0) : '', note = f.own ? t('frame.at.' + q + '.' + d + '.note') : f.stop ? t('stop.' + f.stop + '.note') : '';
-    let h = '<div class="qlcard"><p class="qlq">' + esc(t(frameQ(q).word)) + '</p>';
-    if (form) h += f.stop || x0 ? '<a class="qlform" href="' + esc(f.stop ? follow(f.stop) : '#/read/' + x0.id) + '">' + esc(form) + '</a>' : '<p class="qlform">' + esc(form) + '</p>';
+    /* its form here: the question from the field that lives here first (it leads), then words of its own, a stop, or an experiment */
+    const fq = x.field && x.field[0];
+    const form = fq ? t('field.' + fq + '.q') : f.own ? t('frame.at.' + q + '.' + d + '.q') : f.stop ? t('stop.' + f.stop + '.q') : x0 ? Read.askOf(x0) : '', note = f.own ? t('frame.at.' + q + '.' + d + '.note') : f.stop ? t('stop.' + f.stop + '.note') : '';
+    let h = '<div class="qlcard">';
+    if (form) h += fq ? '<button type="button" class="qlform" data-field="' + esc(fq) + '">' + esc(form) + '</button>' : f.stop || x0 ? '<a class="qlform" href="' + esc(f.stop ? follow(f.stop) : '#/read/' + x0.id) + '">' + esc(form) + '</a>' : '<p class="qlform">' + esc(form) + '</p>';
     if (note && note !== 'stop.' + f.stop + '.note') h += '<p class="qltrue"><b>' + esc(t('frame.lens.true')) + '</b> ' + esc(note) + '</p>';
+    /* what it repaints, with one control and what it moves, from an engine (src/v2/lenspaint.js) */
+    h += Paint.instrument(q, d);
+    /* the question behind it, small */
+    h += '<p class="qlq">' + esc(t(frameQ(q).word)) + '</p>';
     const chs = x.challenges.map(V.chOf).filter(Boolean);
     if (chs.length) h += '<p class="kicker">' + esc(t('frame.lens.play')) + '</p><div class="dolist">' + chs.map(c => '<a class="dochip" href="' + esc(V.doHref(c)) + '"><b>' + esc(titleOf(c)) + '</b><span class="small muted">' + esc(V.whereOf(c)) + '</span></a>').join('') + '</div>';
     if (x.meets) { const inner = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="' + esc(frameQ(x.meets).icon) + '"/></svg><span>' + esc(t('frame.lens.meets', { q: t('frame.q.' + x.meets) })) + (x.seam ? '<small>' + esc(t('frame.seam.' + x.seam)) + '</small>' : '') + '</span>';
       h += here.includes(x.meets) ? '<button type="button" class="qlmeet" data-lens="' + esc(x.meets) + '">' + inner + '</button>' : '<p class="qlmeet">' + inner + '</p>'; }
+    /* up and down with the lens kept on: it stays where it lives at the next level, and is put down, saying so, where not */
+    if (L && V.WE && raw) { const i = L.indexOf(d), go = (k, a) => raw[k] && V.WE.IDS.includes(raw[k]) ? '<button type="button" class="chipb qlstep" data-divego="' + V.WE.IDS.indexOf(raw[k]) + '">' + a + ' ' + esc(t('depth.' + L[k] + '.name')) + '</button>' : '';
+      if (i >= 0) h += '<div class="qlsteps">' + go(i - 1, '↑') + go(i + 1, '↓') + '</div>'; }
     if (x.next) { const w = '→ ' + esc(t('frame.lens.next', { level: t('depth.' + x.next + '.name') }));
       h += L && V.WE && V.WE.IDS.includes(raw[L.indexOf(x.next)]) ? '<button type="button" class="chipb qlnext" data-divego="' + V.WE.IDS.indexOf(raw[L.indexOf(x.next)]) + '">' + w + '</button>' : '<a class="chipb qlnext" href="' + esc(Game.viewOfDepth(x.next)) + '">' + w + '</a>'; }
     /* more of it here: its other stops, then the experiments it has at this level that no stop already shows */
@@ -71,7 +81,12 @@ export function create() {
   /* the lens chosen lights its parts on the flat picture (the stop it shows, through the dive's own threads) and keeps
      only its marks on a level drawn in 3D */
   
+  /* a lens repaints the picture where its paint has the level's facts (src/v2/lenspaint.js): its layer is pinned to the
+     dive's level in view, and a control moved in its card repaints it */
+  const paint = Paint.createLensPaint(() => V.lensWhere && V.lensWhere());
+  Paint.wire(() => paint.update());
   function lightLens(q, d) {
+    if (q && Paint.paints(q, d)) paint.show(q, d); else paint.hide();
     if (!q && !V.lensNow) return;   /* no lens before or now: the picture is left as it is */
     if (q && V.lensNow && V.lensNow.q === q && V.lensNow.d === d) return;
     V.lensNow = q ? { q, d, stops: Lenses.lensAt(q, d).stops } : null;

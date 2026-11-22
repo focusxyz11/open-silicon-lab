@@ -80,14 +80,76 @@ to it. On a phone the sheet's peek keeps the open lens's question. The lens ligh
 - the flights' levels that are a dive level by another name (the hall and the campus are the building, the server
   is the rack, the handset is the phone, the cabin is the car) offer that level's lenses.
 
+## Each lens repaints the picture
+
+A lens, when on, changes the picture itself, not only the card (#304). Each core question has a visual language of
+its own, meant to work at every level, and the card holds the rest of its anatomy:
+
+1. **The repaint:** what it paints on the picture.
+2. **Its form here:** the question from the field that lives here, else words of its own or its strongest stop, in
+   large type.
+3. **True here:** one sentence.
+4. **One control and its measures,** from an engine: no number is written by hand.
+5. **The question behind:** the core question, small, under it.
+6. **Meets** the lens it shares most with here, and **↑ ↓**, which keep the lens on where it lives at the next level and
+   put it down, saying so, where it does not.
+
+**Painted from the parts, not by hand.** A lens is a rule over facts the level's parts carry, written once per level
+(`FACTS` in `src/data/partfacts.js`: each part's kind, logic, memory, wire or input and output, and who decided it, a
+program, a person, or nobody yet; where each part is comes from the level's scene). Its model (`src/engines/lens.js`)
+turns the facts and the control into its measures, through the lab's engines, and its paint (`src/v2/lenspaint.js`,
+one registry, `PAINT`) draws them in the level's plan, the scene's 1000 by 1000, as an SVG layer of its own. The layer
+is pinned onto the picture by where the plan's four corners are on the screen (`toScreen` on a 3D level, `planCorners`
+on the flat dive): a plane seen in perspective is one projective map, so the same paint serves a 3D level and a flat
+scene, and each lens's layer can be drawn beside another's. A new level needs its parts' facts, not new drawing code.
+No words are painted on the picture; motion only where it carries meaning (energy travelling, currents adding), and
+none with reduced motion.
+
+**Built, at the block** (the six that live there):
+
+| Lens | The repaint | Control | Measures, and their engine |
+| --- | --- | --- | --- |
+| *Geometry* | every wire coloured by its length; every trip from the logic to the memory; the logic where the control puts it, its heat as it packs | where the logic sits, spread out to packed beside memory | average trip to memory, the hottest patch (the parts' geometry) |
+| *Efficiency fuels use* | a fetch from memory a big pulse travelling to the logic, a sum a small spark where it lands, as many as there are answers | each answer made cheaper again | energy per answer (`budget.js`), answers asked and the power of them all (Jevons' bet, `bet.js`) |
+| *Brain or copy* | the memory array fading as the numbers move into the logic, each cell there tinted by how well its copy answers | memory kept inside the logic | energy per answer, right answers on this chip and on a copy (`mortal.js`) |
+| *Digital meets physical* | one wire's bits, filled for 1 and open for 0, the ones read wrong ringed; a scope in the card | noise on the wire | bits read wrong (the noise's tail past the line where 1 begins) |
+| *Fight or use physics* | margins round the logic and check bits beside the memory (fight); currents adding down the memory's columns, straying as it heats (use) | how hot it runs | energy per sum each way (`paradigms.js`), answers off as hot silicon leaks (`dope.js`) |
+| *Perfect fails* | every copy of a cell its own speed, the late ones red | the clock | signals that arrive late (your chip's model, `chip.js`) |
+
+*Only humans* is built too (each part tinted by who decided it; a program draws many layouts of your design, every one
+right, from the bench's place-and-route, and the choice among them is a person's), and paints wherever it lives at a
+level with facts; since the field questions lead (#302) it is the seventh at the block, so it shows there only once it
+lives there again.
+
+**The other six, to build once these are approved:**
+
+- *Whole beats parts:* spares and votes. Each block drawn with its copies beside it and a voter where they meet; a part
+  that fails greys out, and the vote that still comes out right lights. Control: how many copies; measures: wrong
+  answers per billion, and what the copies cost in area and energy (`redundancy.js`, `errors.js`).
+- *Compute beats cleverness:* search against design. The person's design and the layouts a search tries, drawn in
+  turn as the search runs longer, the best so far held; control: how much computing the search gets; measures: how
+  close it comes to the design, and what it spent (`evolve.js`).
+- *The next Moore's law:* the same part a generation on. A ghost of each part at its next node's size laid over it,
+  shrinking or not; control: the generation; measures: parts in the same area, cost per part (`chip.js`, `facts.json`
+  node figures).
+- *Fixed or fluid:* what is fixed and what can change. Fixed parts drawn solid, the ones software or a fabric can
+  rewire drawn as outlines that move; control: how much of the level is made to change; measures: what changing costs
+  in speed and energy, and how fast it reshapes (`machine.js`, liquid hardware).
+- *Trust without inspection:* what is checked and what nobody checked. Every part shaded by how it was checked, by a
+  test, a proof or nothing, and the unchecked left bare; control: how many tests run; measures: faults caught and the
+  share nobody looked at (`design.js` coverage).
+- *Beyond computation:* what computes here and what nothing can. The parts that do the work lit, the rest of the
+  picture dimmed to what no chip could compute however big; control: the size of the problem; measures: the steps it
+  takes and the floor physics sets (`floor.js`, `paradigms.js`).
+
 ## On the map
 
 The first page (`src/data/home.js`) draws the thirteen as threads through its stations, one at a time.
 
 ## Next
 
-- A visual language of its own for each lens, beyond lighting a thread: what *Geometry* or *Efficiency fuels use*
-  repaints on a picture.
+- The repaint at more levels: each needs its parts' facts (`src/data/partfacts.js`), and the six lenses above, then
+  the other six, paint them.
 - Playable models for the thinnest questions (done: *Whole beats parts*, `flaky`; *Brain or copy*, `mortal`):
   *Beyond computation*, *Compute beats cleverness*, *Efficiency fuels use*, *Fight or use physics*, *Only humans*, *Trust without
   inspection*.
