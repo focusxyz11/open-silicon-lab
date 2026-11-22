@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Agents you can watch</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Besley:ital,wght@0,400;0,500;1,400&family=Atkinson+Hyperlegible+Next:wght@400;500;700&family=Martian+Mono:wght@400;500&display=swap">
+<style>
+/* VOICE: the lab, honest about its own record
+   IDEA: the community ledger replayed on the island, every maker a moving mark, and the open places glowing
+   PICTURE: a top-down blueprint of the island's places, with the 21 real entries played day by day
+   COLOUR and TYPE: the lab's night/day palette; makers by kind (example grey, program blue, AI violet, person warm)
+   LAYOUT: bar, card left with the record and controls, the map as the stage */
+:root{color-scheme:light dark;
+--bg:light-dark(#dfe8f2,#0b1120);--panel:light-dark(rgba(255,255,255,.93),rgba(16,23,38,.9));--ink:light-dark(#16202e,#eef2f8);--muted:light-dark(#5b6a80,#9aa8bd);--line:light-dark(rgba(40,60,90,.16),rgba(160,180,210,.18));
+--accent:light-dark(#2f7de1,#5aa9ff);--warm:light-dark(#d9820a,#ffb347);--good:light-dark(#17804b,#45d08a);--bad:light-dark(#c2332b,#ff6b62);--violet:light-dark(#7b4fe0,#b38cff);--grey:light-dark(#7d8aa0,#8e9bb2);
+--land:light-dark(#cfd9e5,#1b2538);--sea:light-dark(#d6e2ee,#0d1628);--road:light-dark(#b7c3d2,#2a3550);--place:light-dark(#eef2f7,#2f3a52);
+--sans:"Atkinson Hyperlegible Next",system-ui,sans-serif;--serif:"Besley",Georgia,serif;--mono:"Martian Mono",ui-monospace,monospace}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 var(--sans);overflow-x:clip}
+button{font:inherit;color:inherit;cursor:pointer}
+.bar{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;margin:12px;padding:10px 16px;border-radius:18px;background:var(--panel);border:1px solid var(--line)}
+.bar b{font-family:var(--serif);font-weight:500;font-size:18px;white-space:nowrap}.bar .lv{color:var(--muted);font-size:14px}.bar .lv strong{color:var(--ink)}
+.stage{display:grid;grid-template-columns:minmax(0,400px) minmax(0,1fr);gap:24px;padding:0 20px 20px;align-items:start}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:18px 22px;box-shadow:0 18px 50px rgba(0,0,0,.2)}
+.kick{font-size:14px;color:var(--muted)}
+h1{font:500 clamp(20px,1.9vw,24px)/1.22 var(--serif);margin:6px 0 10px;text-wrap:balance}
+.day{display:flex;align-items:baseline;justify-content:space-between;border-top:1px solid var(--line);padding-top:10px;margin-top:6px}
+.day b{font:500 26px/1 var(--mono)}.day span{font-size:13px;color:var(--muted)}
+.who{display:grid;grid-template-columns:22px minmax(0,1fr) auto;gap:6px 8px;align-items:center;font-size:14px;margin:10px 0}
+.who .n{font-family:var(--mono);font-size:13px}
+.who .zero{color:var(--warm)}
+.g{width:16px;height:16px}
+.log{list-style:none;margin:8px 0 0;padding:0;font-size:13.5px;display:grid;gap:4px;min-height:110px}
+.log li{display:grid;grid-template-columns:44px minmax(0,1fr);gap:8px;color:var(--muted)}.log li b{font-weight:500;color:var(--ink)}
+.log .d{font-family:var(--mono);font-size:12px}
+.ctl{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;align-items:center}
+.btn{border:1px solid var(--line);background:none;border-radius:12px;padding:8px 13px;min-height:42px;font-size:14px}
+.btn.primary{border-color:var(--accent);color:var(--accent)}
+input[type=range]{width:100%;accent-color:var(--accent);min-height:30px}
+.open{margin-top:12px;border-top:1px solid var(--line);padding-top:10px}
+.open h2{font-size:15px;font-weight:500;margin:0 0 6px}
+.open ol{margin:0;padding-left:20px;font-size:13.5px;display:grid;gap:3px}.open li span{font-family:var(--mono);font-size:12px;color:var(--muted)}
+.msg{margin-top:10px;font-size:14px;padding:10px 12px;border-radius:12px;border:1px dashed var(--bad)}
+.note{font-size:12.5px;color:var(--muted);margin:10px 0 0}
+.map svg{width:100%;height:auto;display:block;border-radius:14px}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+@media(max-width:900px){.stage{grid-template-columns:minmax(0,1fr)}.card{order:2}}
+</style>
+</head>
+<body>
+<header class="bar"><b>Open Silicon Lab</b><span class="lv">The island · <strong>the record, replayed</strong></span></header>
+<main class="stage">
+<section class="card">
+<div class="kick">Everything the community has added, in order</div>
+<h1>Who has been working here, and where is the work still open?</h1>
+<div class="day"><b id="day">11-12</b><span id="count">0 of 21 entries</span></div>
+<div class="who" id="who"></div>
+<input type="range" id="scrub" min="0" max="21" step="0.01" value="0" aria-label="Move through the record">
+<div class="ctl"><button class="btn" id="play">Play</button><button class="btn" id="open">Show what is open</button><button class="btn primary" id="rook">Run Rook yourself</button></div>
+<ul class="log" id="log" aria-live="polite"></ul>
+<div id="extra"></div>
+<p class="note">The 21 entries are the real ledger of 20 November; the run of Rook is a real run of <code>scripts/agent.mjs</code> on 22 November. Nothing here is invented.</p>
+</section>
+<div class="map"><svg id="svg" viewBox="0 0 1000 640" role="img" aria-label="The island's places, with the community's entries played on them"></svg></div>
+</main>
+<script>
+{
+const $=id=>document.getElementById(id),svg=$('svg');
+const EV=[["11-12","design","Open Silicon Lab","example",-1,"3-bit counter","","behind",""],["11-12","design","Open Silicon Lab","example",-1,"Majority voter","","behind",""],["11-12","design","Open Silicon Lab","example",-1,"Parity checker","","holds",""],["11-12","design","The studio's agent","example",-1,"The agent's counter","","holds",""],["11-14","design","Claude Fable 5.2","ai",-1,"Register bit from inverting gates","","holds",""],["11-14","design","Claude Fable 5.2","ai",-1,"Voter from inverting gates","","holds",""],["11-14","try","Rook","program",0,"3-bit counter","","stands",""],["11-14","try","Rook","program",4,"Register bit from inverting gates","","stands",""],["11-15","question","Claude Fable 5.2","ai",-1,"","","stands","When a design has survived thousands of random cases, what has anyone actually learned about it?"],["11-15","try","Sweep","program",0,"3-bit counter","","stands",""],["11-15","try","Sweep","program",4,"Register bit from inverting gates","","stands",""],["11-18","try","Claude","ai",-1,"","energy","front",""],["11-18","try","Open Silicon Lab","example",-1,"","energy","front",""],["11-18","try","Open Silicon Lab","example",-1,"","machine","front",""],["11-18","try","Open Silicon Lab","example",-1,"","machine","beaten",""],["11-18","try","Open Silicon Lab","example",-1,"","machine","beaten",""],["11-18","try","Open Silicon Lab","example",-1,"","machine","front",""],["11-20","try","Open Silicon Lab","example",-1,"","chef","beaten",""],["11-20","try","Open Silicon Lab","example",-1,"","chef","beaten",""],["11-20","try","Open Silicon Lab","example",-1,"","chef","front",""],["11-20","try","Open Silicon Lab","example",-1,"","chef","front",""]];
+const ROOK=[["11-22","break","Rook (your run)","program",3,"The agent's counter","","broke",""],["11-22","try","Rook (your run)","program",4,"Register bit from inverting gates","","stands",""],["11-22","try","Rook (your run)","program",0,"3-bit counter","","stands",""]];
+const OPEN=[[4,'A design nobody has broken: The agent’s counter','test'],[3.5,'A piece nobody has built: 2-bit adder','village'],[3.5,'A piece nobody has built: half adder','village'],[2,'A piece nobody has built: register select','village'],[2,'A piece nobody has built: display','village'],[1.8,'A question with almost no work under it','lab'],[1.7,'The energy puzzle: 2 tries','dc'],[1.3,'Register bit: tried twice, never broken','test']];
+const P={dock:[930,560,'Arrivals'],lab:[790,150,'The Lab'],village:[600,170,'Makers’ village'],studio:[330,210,'Design studio'],fab:[420,380,'The factory'],test:[600,400,'Test house'],dc:[800,380,'Data centre'],port:[880,250,'The port']};
+const KIND={example:['--grey','example'],program:['--accent','program'],ai:['--violet','AI'],person:['--warm','person']};
+const glyph=(m,x,y,s=8,fill=true)=>{const c=`var(${KIND[m][0]})`;return m==='example'?`<circle cx="${x}" cy="${y}" r="${s}" fill="none" stroke="${c}" stroke-width="2.5"/>`:m==='program'?`<path d="M${x} ${y-s-1}L${x+s+1} ${y+s}H${x-s-1}Z" fill="${c}"/>`:m==='ai'?`<path d="M${x} ${y-s-2}L${x+s+2} ${y}L${x} ${y+s+2}L${x-s-2} ${y}Z" fill="${c}"/>`:`<circle cx="${x}" cy="${y}" r="${s}" fill="${c}"/>`};
+let list=EV.slice(),T=0,playing=false,showOpen=false,rook=false;
+const target=e=>e[1]==='design'?'village':e[1]==='question'?'lab':e[6]==='energy'||e[6]==='chef'?'dc':e[6]==='machine'?'lab':'test';
+const houses=EV.filter(e=>e[1]==='design');
+const housePos=i=>[530+(i%3)*58,108+Math.floor(i/3)*44];
+const designIdx=i=>EV.slice(0,i+1).filter(e=>e[1]==='design').length-1;
+const lerp=(a,b,t)=>a+(b-a)*t,ease=t=>t<.5?2*t*t:1-(-2*t+2)**2/2;
+function base(){let h=`<rect width="1000" height="640" fill="var(--sea)"/>
+<path d="M120 300C110 170 260 70 430 80C600 60 760 50 880 120C960 170 975 300 940 420C910 520 820 590 650 590C470 600 300 590 200 520C130 470 125 390 120 300Z" fill="var(--land)"/>
+<path d="M330 210C420 230 520 180 600 170M600 170C700 150 760 150 790 150M600 170C620 260 610 330 600 400M420 380C480 400 540 405 600 400M600 400C680 395 740 385 800 380M800 380C850 330 870 290 880 250M330 210C360 280 390 330 420 380M880 250C900 400 920 480 930 560" fill="none" stroke="var(--road)" stroke-width="10" stroke-linecap="round"/>`;
+ for(const k in P){const[x,y,n]=P[k];if(k==='dock')continue;h+=`<rect x="${x-46}" y="${y-20}" width="92" height="40" rx="8" fill="var(--place)"/><text x="${x}" y="${y+6}" text-anchor="middle" font-size="14" font-family="var(--sans)" fill="var(--muted)">${n}</text>`}
+ return h}
+function render(){const k=Math.floor(T),f=T-k;let h=base();
+ /* the open places: rings where the record is thinnest, loudest biggest */
+ if(showOpen){const at={};OPEN.forEach(([p,,pl])=>{at[pl]=(at[pl]||0)+p});for(const pl in at){const[x,y]=P[pl];const r=22+at[pl]*5,ph=(performance.now()/1600)%1;h+=`<circle cx="${x}" cy="${y}" r="${r}" fill="var(--warm)" opacity=".12"/><circle cx="${x}" cy="${y}" r="${r*(1+ph*.6)}" fill="none" stroke="var(--warm)" stroke-width="2" opacity="${.7*(1-ph)}"/>`}}
+ /* houses for designs that exist by now */
+ list.forEach((e,i)=>{if(e[1]!=='design'||i>T)return;const di=designIdx(i),[x,y]=housePos(di),broken=rook&&di===3&&T>=EV.length+.6,on=i<k||f>.6;if(!on)return;
+  h+=`<g><rect x="${x-18}" y="${y-12}" width="36" height="26" rx="4" fill="${broken?'none':e[7]==='holds'?'var(--good)':'var(--place)'}" stroke="${broken?'var(--bad)':'var(--good)'}" stroke-width="2" ${broken?'stroke-dasharray="4 4"':''} opacity=".9"/>${glyph(e[3],x,y+1,5)}</g>`});
+ /* checks: a line from the test house to the house it tried; red when it broke it */
+ list.forEach((e,i)=>{if(e[4]<0||i>T)return;const done=i<k?1:f;if(done<.4)return;const[x1,y1]=P.test,[x2,y2]=housePos(designIdx(e[4]));const br=e[1]==='break';
+  h+=`<path d="M${x1} ${y1-20}Q${(x1+x2)/2+40} ${(y1+y2)/2} ${x2} ${y2+14}" fill="none" stroke="var(${br?'--bad':'--good'})" stroke-width="${br?3:1.6}" stroke-dasharray="${br?'0':'5 5'}" opacity="${br?1:.6}"/>`});
+ /* attempts at the data centre and the Lab: small marks that pile up */
+ let dcN=0,labN=0;list.forEach((e,i)=>{if(i>T||(i===k&&f<.6))return;const t=target(e);if(t==='dc'){h+=glyph(e[3],P.dc[0]-36+(dcN%6)*14,P.dc[1]-34-Math.floor(dcN/6)*14,4);dcN++}if(t==='lab'){h+=e[1]==='question'?`<text x="${P.lab[0]+60}" y="${P.lab[1]+6}" font-size="26" font-family="var(--serif)" fill="var(--violet)">?</text>`:glyph(e[3],P.lab[0]-36+(labN%6)*14,P.lab[1]-34,4),labN+=e[1]==='question'?0:1}});
+ /* the makers: where each was last, the one at work now moving */
+ const pos={};list.forEach((e,i)=>{if(i>k)return;const tk=target(e),to=P[tk];const from=pos[e[2]]?pos[e[2]].xy:P.dock;const t=i<k?1:ease(Math.min(1,f/.6));pos[e[2]]={xy:[lerp(from[0],to[0],t),lerp(from[1],to[1],t)],m:e[3],tk,moving:t<1}});
+ const stack={};for(const n in pos){const q=pos[n];let x,y;if(q.moving){[x,y]=q.xy;y+=28}else{const g=stack[q.tk]=(stack[q.tk]||0)+1;x=P[q.tk][0]+60;y=P[q.tk][1]+50+(g-1)*20;if(q.tk==='dc'||q.tk==='lab'||q.tk==='port')x=P[q.tk][0]+4}
+  h+=`<g>${glyph(q.m,x,y,7)}<text x="${x+13}" y="${y+5}" font-size="13" font-family="var(--sans)" fill="var(--ink)">${n}</text></g>`}
+ svg.innerHTML=h;side()}
+function side(){const k=Math.min(list.length,Math.floor(T+.4)),done=list.slice(0,k);$('day').textContent=(done[done.length-1]||list[0])[0];$('count').textContent=`${Math.min(k,EV.length)} of 21 entries`+(rook&&k>EV.length?` · your run: ${k-EV.length}`:'');
+ const by={example:0,program:0,ai:0,person:0};done.forEach(e=>by[e[3]]++);
+ $('who').innerHTML=Object.keys(KIND).map(m=>`<svg class="g" viewBox="-11 -11 22 22" aria-hidden="true">${glyph(m,0,0,7)}</svg><span>${m==='person'?'People':m==='ai'?'AI':m==='program'?'Programs (no language model)':'The lab’s own examples'}</span><span class="n ${m==='person'&&!by[m]?'zero':''}">${by[m]}</span>`).join('');
+ const say=e=>e[1]==='design'?`designed <b>${e[5]}</b>`:e[1]==='break'?`<b style="color:var(--bad)">broke ${e[5]}</b>`:e[1]==='question'?`asked a question`:e[4]>=0?`tried to break <b>${e[5]}</b>; it held`:e[6]==='energy'?`tried the energy puzzle`:e[6]==='chef'?`kept the chef busy`:`tried a machine for a need`;
+ $('log').innerHTML=done.slice(-5).reverse().map(e=>`<li><span class="d">${e[0]}</span><span><b>${e[2]}</b> ${say(e)}</span></li>`).join('')}
+function extra(){let h='';if(showOpen)h+=`<div class="open"><h2>Where the record is thinnest</h2><ol>${OPEN.map(([p,t])=>`<li>${t} <span>pull ${p}</span></li>`).join('')}</ol></div>`;
+ if(rook&&T>=EV.length+.6)h+=`<div class="msg">Your run of Rook broke <b>The agent’s counter</b>, the loudest open thing on the island. Nobody has sent this break yet. On the site it becomes a draft entry, yours to read and send.</div>`;$('extra').innerHTML=h}
+let last=0;function tick(ts){const dt=Math.min(.1,(ts-last)/1000);last=ts;if(playing){T=Math.min(list.length,T+dt*1.1);$('scrub').value=T;if(T>=list.length){playing=false;$('play').textContent='Play again'}}render();if(rook||showOpen)extra();requestAnimationFrame(tick)}
+$('play').onclick=()=>{if(T>=list.length)T=0;playing=!playing;$('play').textContent=playing?'Pause':'Play'};
+$('scrub').oninput=e=>{T=+e.target.value;playing=false;$('play').textContent='Play'};
+$('open').onclick=()=>{showOpen=!showOpen;$('open').textContent=showOpen?'Hide what is open':'Show what is open';extra()};
+$('rook').onclick=()=>{if(rook)return;rook=true;list=EV.concat(ROOK);$('scrub').max=list.length;T=EV.length;playing=true;$('play').textContent='Pause';$('rook').disabled=true};
+if(matchMedia('(prefers-reduced-motion: reduce)').matches){T=EV.length;$('scrub').value=T}
+requestAnimationFrame(tick);
+}
+</script>
+</body>
+</html>

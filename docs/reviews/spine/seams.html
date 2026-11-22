@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Seams you can see</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Besley:ital,wght@0,400;0,500;1,400&family=Atkinson+Hyperlegible+Next:wght@400;500;700&family=Martian+Mono:wght@400;500&display=swap">
+<style>
+/* VOICE: the lab itself, a prototype for the owner
+   IDEA: two lenses held at once, the picture showing where they meet
+   PICTURE: the block level, painted as a front, a fork or a chain
+   COLOUR and TYPE: the lab's night/day palette; Besley questions, Atkinson body, Martian Mono numbers
+   LAYOUT: bar, card left, picture as the stage */
+:root{color-scheme:light dark;
+--bg:light-dark(#dfe8f2,#0b1120);--panel:light-dark(rgba(255,255,255,.92),rgba(16,23,38,.9));--ink:light-dark(#16202e,#eef2f8);--muted:light-dark(#5b6a80,#9aa8bd);--line:light-dark(rgba(40,60,90,.16),rgba(160,180,210,.18));
+--accent:light-dark(#2f7de1,#5aa9ff);--warm:light-dark(#d9820a,#ffb347);--good:light-dark(#17804b,#45d08a);--bad:light-dark(#c2332b,#ff6b62);--pink:light-dark(#d63a77,#ff7eb6);--violet:light-dark(#7b4fe0,#b38cff);
+--die:light-dark(#b9c4d2,#27324a);--cell:light-dark(#eef2f7,#3a465e);--cell2:light-dark(#dfe5ee,#323d54);--cu:light-dark(#b5642a,#d88b4c);--arr:light-dark(#c9d4e3,#2c3850);--arrc:light-dark(#f4f7fb,#475472);
+--sans:"Atkinson Hyperlegible Next",system-ui,sans-serif;--serif:"Besley",Georgia,serif;--mono:"Martian Mono",ui-monospace,monospace}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 var(--sans);overflow-x:clip}
+button{font:inherit;color:inherit;cursor:pointer}
+.bar{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;margin:12px;padding:10px 16px;border-radius:18px;background:var(--panel);border:1px solid var(--line)}
+.bar b{font-family:var(--serif);font-weight:500;font-size:18px;white-space:nowrap}
+.bar .lv{color:var(--muted);font-size:14px}.bar .lv strong{color:var(--ink)}
+.rev{margin-left:auto;display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:13px;color:var(--muted)}
+.rev button{border:1px dashed var(--line);background:none;border-radius:999px;padding:5px 11px;font-size:13px;min-height:34px}
+.rev button[aria-pressed=true]{border-style:solid;border-color:var(--accent);color:var(--accent)}
+.stage{display:grid;grid-template-columns:minmax(0,410px) minmax(0,1fr);gap:24px;padding:0 20px 20px;align-items:center;min-height:calc(100vh - 90px)}
+.pic{position:relative;overflow:clip;border-radius:8px}
+.pic svg{width:100%;height:auto;display:block}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:18px 22px;box-shadow:0 18px 50px rgba(0,0,0,.22)}
+.pair{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:14px}
+.pair .ln{display:inline-flex;align-items:center;gap:5px;font-weight:700}
+.pair svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.pair .x{color:var(--muted)}
+.meet{font-size:14px;color:var(--muted);margin:4px 0 0}
+.shape{display:inline-block;margin-top:10px;font-size:12px;border:1px solid var(--line);border-radius:999px;padding:2px 10px;color:var(--muted)}
+h1{font:500 clamp(20px,1.9vw,24px)/1.22 var(--serif);margin:8px 0 10px;text-wrap:balance}
+.true{font-size:15px;color:var(--muted);margin:0 0 12px}.true b{color:var(--good);font-weight:500}
+.inst{border-top:1px solid var(--line);padding-top:12px;display:grid;gap:10px}
+.meter{display:grid;gap:3px}.meter .row{display:flex;justify-content:space-between;gap:10px;font-size:14px}.meter .v{font-family:var(--mono);font-size:12.5px;white-space:nowrap}
+.track{height:7px;border-radius:4px;background:var(--line);overflow:hidden}.track i{display:block;height:100%;border-radius:4px;transition:width .35s}
+.ctl{display:grid;gap:4px;font-size:14px}.ctl .ends{display:flex;justify-content:space-between;color:var(--muted);font-size:13px}
+input[type=range]{width:100%;min-height:30px;accent-color:var(--accent)}
+.front{width:100%;height:auto;display:block;border-radius:10px;background:light-dark(#f2f5f9,#0e1626)}
+.two{display:grid;grid-template-columns:auto minmax(0,1fr) minmax(0,1fr);gap:4px 10px;font-size:13.5px;align-items:center}
+.two .hd{color:var(--muted);font-size:12.5px}.two .n{font-family:var(--mono);font-size:12.5px;text-align:right}
+.open{font-size:14px;margin:12px 0 0;padding:10px 12px;border-radius:12px;border:1px dashed var(--line)}
+.open b{font-weight:500}
+.lk{border:0;background:none;padding:8px 0;color:var(--accent);font-size:14px;min-height:36px}
+.foot{display:flex;flex-wrap:wrap;gap:4px 16px;margin-top:10px;border-top:1px solid var(--line);padding-top:6px}
+.note{font-size:12.5px;color:var(--muted);margin:8px 0 0}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+@media(max-width:900px){.stage{grid-template-columns:minmax(0,1fr)}.card{order:2}.rev{margin-left:0}}
+</style>
+</head>
+<body>
+<header class="bar"><b>Open Silicon Lab</b><span class="lv">Data centre › <strong>Block</strong> · two lenses held</span>
+<div class="rev" id="rev"><span>Prototype review:</span></div></header>
+<main class="stage"><section class="card" id="card" aria-live="polite"></section>
+<div class="pic"><svg id="svg" viewBox="56 36 888 548" role="img" aria-label="The block level painted where two questions meet"></svg></div></main>
+<script>
+{
+const $=id=>document.getElementById(id),svg=$('svg'),card=$('card'),rev=$('rev');
+let seed=7;const rnd=()=>{seed=(seed*16807)%2147483647;return (seed-1)/2147483646};
+const ICON={geo:'M4 4h16v16H4zM9 9h6v6H9z',eff:'M13 2L5 14h6l-1 8 8-12h-6z',copy:'M8 8h12v12H8zM4 16V4h12',dig:'M2 16h4V8h6v8h6V8h4',physics:'M2 12c2-5 4-5 6 0s4 5 6 0 4-5 6 0'};
+const NAME={geo:'Geometry',eff:'Efficiency fuels use',copy:'Brain or copy',dig:'Digital meets physical',physics:'Fight or use physics'};
+const COL={geo:'--warm',eff:'--good',copy:'--violet',dig:'--accent',physics:'--pink'};
+const ROWS=13,RY0=70,RH=36;
+const rows=[];for(let r=0;r<ROWS;r++){const c=[];let x=0;while(x<1){const w=.025+rnd()*.06;c.push([x,Math.min(w,1-x)]);x+=w+.004}rows.push(c)}
+const nets=[];for(let i=0;i<9;i++){nets.push({r:1+Math.floor(rnd()*(ROWS-2)),u:.05+rnd()*.85,ty:90+rnd()*290})}
+const hash=(a,b)=>{const s=Math.sin(a*12.9898+b*78.233)*43758.5453;return s-Math.floor(s)};
+const S={seam:'front',p:.3,n:0,w:.5,temp:.25,v:.5,t:0};
+const lerp=(a,b,t)=>a+(b-a)*t;
+const span=()=>S.seam==='front'?[110+170*S.p,610]:[144,610];
+const netPath=(n,toX=650)=>{const[a,b]=span(),x=a+n.u*(b-a),y=RY0+n.r*RH+RH/2,ch=620+((n.ty*7)%14);
+ if(S.seam==='front'&&S.n>0){const sx=a+(Math.round(n.u*3)/3)*(b-a)*.98+6;const len=Math.abs(sx-x)*(1-S.n)+(toX-x)*(1-S.n);return{d:S.n>.5?`M${x} ${y}H${lerp(x,sx,S.n)}`:`M${x} ${y}H${ch}V${n.ty}H${toX}`,len:(ch-x)*(1-.7*S.n)+Math.abs(n.ty-y)*(1-S.n)}}
+ return{d:`M${x} ${y}H${ch}V${n.ty}H${toX}`,len:(ch-x)+Math.abs(n.ty-y)+(toX-ch)}};
+function logic(opts={}){const[a,b]=span(),w=b-a;let h='';rows.forEach((c,r)=>{const y=RY0+r*RH;h+=`<rect x="${a-4}" y="${y-2}" width="${w+8}" height="2" fill="var(--cu)" opacity=".5"/>`;
+ c.forEach(([u,uw],i)=>{const x=a+u*w;
+  if(opts.slices&&i%5===2)h+=`<rect x="${x}" y="${y+3}" width="${uw*w}" height="${RH-8}" rx="2" fill="var(--arr)" stroke="var(--good)" stroke-width="${1.5*S.n}" opacity="${.4+.6*S.n}"/>`;
+  else if(opts.weights&&i%3===1){const v=hash(r,i),dr=(hash(i,r)-.5)*opts.drift,off=Math.abs(dr)>.12;h+=`<rect x="${x}" y="${y+3}" width="${uw*w}" height="${RH-8}" rx="2" fill="var(--violet)" opacity="${.25+Math.max(0,Math.min(1,v+dr))*.6}" ${off?'stroke="var(--bad)" stroke-width="2"':''}/>`}
+  else h+=`<rect x="${x}" y="${y+3}" width="${uw*w}" height="${RH-8}" rx="2" fill="${(r+i)%5?'var(--cell)':'var(--cell2)'}" ${opts.dim?'opacity=".45"':''}/>`})});return h}
+function array(op=1){let h=`<g opacity="${op}"><rect x="650" y="70" width="260" height="320" rx="4" fill="var(--arr)"/>`;for(let i=0;i<16;i++)for(let j=0;j<20;j++)h+=`<rect x="${658+i*15.6}" y="${78+j*15.4}" width="11" height="11" rx="1.5" fill="var(--arrc)"/>`;return h+'</g>'}
+const io=()=>{let h='';for(let i=0;i<4;i++)h+=`<rect x="${650+(i%2)*132}" y="${410+Math.floor(i/2)*82}" width="126" height="74" rx="4" fill="var(--arr)"/>`;return h};
+const die='<rect x="60" y="40" width="880" height="540" rx="6" fill="var(--die)"/>';
+const wires=(c='var(--cu)',w=2.4,op=.8)=>nets.map(n=>`<path d="${netPath(n).d}" fill="none" stroke="${c}" stroke-width="${w}" opacity="${op}"/>`).join('');
+const heat=k=>{const[a,b]=span();let h='<defs><radialGradient id="hg"><stop offset="0" stop-color="var(--bad)" stop-opacity=".75"/><stop offset="1" stop-color="var(--bad)" stop-opacity="0"/></radialGradient></defs>';for(let i=0;i<5;i++)h+=`<ellipse cx="${lerp(a,b,.15+i*.18)}" cy="${RY0+(2+i*2.2)*RH}" rx="${130-40*S.p}" ry="${90-25*S.p}" fill="url(#hg)" opacity="${Math.min(1,k*(.6+((i*37)%5)/10))}"/>`;return h};
+/* the front: energy per answer and the hottest patch, as the logic packs closer (p) and memory moves into it (n) */
+const E=(p,n)=>(1-.45*p)*(1-.5*n),H=(p,n)=>(6+16*p**1.4)*(1-.18*n)+3*n;
+const meter=(k,v,f,c)=>`<div class="meter"><div class="row"><span>${k}</span><span class="v">${v}</span></div><div class="track"><i style="width:${Math.round(Math.max(.02,Math.min(1,f))*100)}%;background:var(${c})"></i></div></div>`;
+const ico=id=>`<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${ICON[id]}"/></svg>`;
+const SEAMS={
+front:{a:'geo',b:'eff',meet:'Where they meet: moving data costs the energy',shape:'A front: you can’t have both, until something moves the front',
+ q:'If fetching a number costs more than using it, should the work move to the data, instead of the data to the work?',
+ tr:'Packing the logic beside the memory shortens every trip but piles up the heat. Every point on the line is a best compromise of today.',
+ open:'<b>Open:</b> what else would move the front? Each try people or agents send would be a point on this chart, kept in the ledger.',
+ draw(){const k=.35+S.p*.9;let h=die+logic({slices:S.n>0})+array(1-.5*S.n)+io()+heat(k*(1-.15*S.n));
+  nets.forEach((n,i)=>{const P=netPath(n),f=((S.t*.25+i*.13)%1);h+=`<path d="${P.d}" fill="none" stroke="var(--cu)" stroke-width="2.4" opacity=".8"/><path d="${P.d}" fill="none" stroke="var(--good)" stroke-width="9" stroke-linecap="round" stroke-dasharray="12 ${P.len+200}" stroke-dashoffset="${-f*(P.len+200)}" opacity=".85"/>`});return h},
+ inst(){const W=360,Hh=200,px=e=>30+(e-.2)/(1.05-.2)*(W-40),py=t=>Hh-26-(t-3)/(24-3)*(Hh-40);
+  const curve=n=>Array.from({length:21},(_,i)=>{const p=i/20;return`${px(E(p,n)).toFixed(1)},${py(H(p,n)).toFixed(1)}`}).join(' ');
+  const e=E(S.p,S.n),t=H(S.p,S.n);
+  let g=`<svg class="front" viewBox="0 0 ${W} ${Hh}" role="img" aria-label="Energy per answer against the hottest patch, with today's front and your design">
+  <rect x="30" y="${py(24)}" width="${W-40}" height="${py(3)-py(24)}" fill="none" stroke="var(--line)"/>
+  <path d="M30 ${py(3)}L30 ${py(10)}Q${px(.45)} ${py(6)} ${px(.6)} ${py(3)}Z" fill="var(--accent)" opacity=".1"/>
+  <text x="36" y="${py(3)-6}" font-size="11" fill="var(--muted)" font-family="var(--sans)">nobody here yet</text>
+  <polyline points="${curve(0)}" fill="none" stroke="var(--muted)" stroke-width="2" stroke-dasharray="5 4"/>
+  ${S.n>0?`<polyline points="${curve(S.n)}" fill="none" stroke="var(--good)" stroke-width="2.5"/>`:''}
+  <circle cx="${px(e)}" cy="${py(t)}" r="7" fill="var(--warm)" stroke="var(--panel)" stroke-width="2"/>
+  <text x="${W-12}" y="${Hh-8}" text-anchor="end" font-size="11" fill="var(--muted)" font-family="var(--sans)">energy per answer →</text>
+  <text x="14" y="${py(24)+4}" font-size="11" fill="var(--muted)" font-family="var(--sans)" transform="rotate(-90 14 ${py(24)+4})" text-anchor="end">heat →</text></svg>`;
+  return g+`<label class="ctl">Where the logic sits<input type="range" min="0" max="1" step=".01" value="${S.p}" data-k="p"><span class="ends"><span>spread out</span><span>packed beside memory</span></span></label>
+  <label class="ctl">Move memory into the logic, in slices<input type="range" min="0" max="1" step=".01" value="${S.n}" data-k="n"><span class="ends"><span>today</span><span>near-memory</span></span></label>`}},
+fork:{a:'physics',b:'copy',meet:'Where they meet: memory that computes',shape:'A fork: two ways to build the same block',
+ q:'If the memory itself does the computing, what is left to copy: the program, or the chip?',
+ tr:'Left of the line: exact bits in an array, sums done by gates. Right: weights kept as charge in each cell, sums made by currents meeting on a wire.',
+ open:'<b>Open:</b> where should the line between the two ways fall in a real chip, and who decides it?',
+ draw(){const X=60+880*S.w;let h=`<defs><clipPath id="L"><rect x="0" y="0" width="${X}" height="700"/></clipPath><clipPath id="R"><rect x="${X}" y="0" width="1000" height="700"/></clipPath></defs>`;
+  h+=`<g clip-path="url(#L)">${die}${logic()}${array()}${io()}${wires()}<rect x="644" y="64" width="272" height="332" rx="6" fill="none" stroke="var(--pink)" stroke-width="2" stroke-dasharray="6 5"/><rect x="650" y="360" width="260" height="30" fill="var(--pink)" opacity=".3"/></g>`;
+  let r=`${die}${logic({weights:true,drift:.2+S.temp*.6,dim:true})}${array(.85)}${io()}`;for(let i=0;i<16;i++)r+=`<line x1="${663.5+i*15.6}" y1="74" x2="${663.5+i*15.6}" y2="392" stroke="var(--pink)" stroke-width="3" stroke-dasharray="8 10" stroke-dashoffset="${-S.t*30}" opacity=".9"/>`;r+=`<rect x="650" y="392" width="260" height="10" rx="3" fill="var(--pink)"/>`;
+  h+=`<g clip-path="url(#R)">${r}</g><line x1="${X}" y1="40" x2="${X}" y2="580" stroke="var(--ink)" stroke-width="2"/><circle cx="${X}" cy="310" r="14" fill="var(--panel)" stroke="var(--ink)" stroke-width="2"/><path d="M${X-5} 305l-4 5 4 5M${X+5} 305l4 5-4 5" fill="none" stroke="var(--ink)" stroke-width="2"/>`;return h},
+ inst(){const err=(1+S.temp*7).toFixed(1),cp=Math.round(97-S.temp*12);
+  return `<div class="two"><span></span><span class="hd">Exact bits</span><span class="hd">Memory computes</span>
+  <span>Energy per sum</span><span class="n">100%</span><span class="n">12%</span>
+  <span>Answers off by >1%</span><span class="n">none</span><span class="n">${err}%</span>
+  <span>A copy matches</span><span class="n">100%</span><span class="n">${cp}%</span></div>
+  <label class="ctl">Slide between the two ways<input type="range" min="0.05" max="0.95" step=".01" value="${S.w}" data-k="w"><span class="ends"><span>exact</span><span>memory computes</span></span></label>
+  <label class="ctl">How hot the chip runs<input type="range" min="0" max="1" step=".01" value="${S.temp}" data-k="temp"><span class="ends"><span>cool</span><span>hot</span></span></label>`}},
+chain:{a:'physics',b:'dig',meet:'Where they meet: making a clean 1',shape:'A chain: one level’s problem becomes the next level’s',
+ q:'Every clean 1 is paid for in energy to beat the noise. How much noise could a computer live with, if it stopped insisting on clean?',
+ tr:'Heat shakes the voltage on a wire; a gate reads a 0 as a 1; the wrong bit is stored as if it were right. Raising the voltage buys margin, and costs energy.',
+ open:'<b>Open:</b> which answers could be a little wrong and still be useful? Pictures, sound and AI already are, sometimes.',
+ steps(){const m=.25+S.v*.5;return[S.temp>.15,S.temp>.15+m*.5,S.temp>.2+m*.8,S.temp>.25+m*.95]},
+ draw(){const st=this.steps(),n=nets[2],P=netPath(n);const y=RY0+n.r*RH+RH/2,[a]=span(),x0=a+n.u*(610-a);
+  let h=die+logic()+array()+io()+wires('var(--cu)',2.4,.5)+heat(st[0]?.3+S.temp:0);
+  const zig=st[1]?`M${x0} ${y}`+Array.from({length:24},(_,i)=>`L${x0+(i+1)*((630-x0)/24)} ${y+((i%2)?1:-1)*(3+S.temp*9)}`).join(''):`M${x0} ${y}H630`;
+  h+=`<path d="${zig}" fill="none" stroke="${st[1]?'var(--warm)':'var(--accent)'}" stroke-width="4"/>`;
+  if(st[2])h+=`<rect x="626" y="${y-16}" width="30" height="32" rx="4" fill="none" stroke="var(--bad)" stroke-width="3"/>`;
+  if(st[3])h+=`<rect x="${658+9*15.6}" y="${78+5*15.4}" width="11" height="11" rx="1.5" fill="var(--bad)"/><path d="M641 ${y}C700 ${y} 780 220 ${663+9*15.6} ${91+5*15.4}" fill="none" stroke="var(--bad)" stroke-width="2" stroke-dasharray="6 5" stroke-dashoffset="${-S.t*25}"/>`;
+  const pts=[[x0-60,y-70],[ (x0+630)/2,y-34],[641,y+40],[770,56]];const lab=['heat','the wire shakes','a gate misreads','a wrong bit is kept'];
+  pts.forEach(([px,py],i)=>{h+=`<g opacity="${st[i]?1:.35}"><circle cx="${px}" cy="${py}" r="14" fill="${st[i]?'var(--bad)':'var(--panel)'}" stroke="var(--bad)" stroke-width="2"/><text x="${px}" y="${py+5}" text-anchor="middle" font-size="14" font-family="var(--mono)" fill="${st[i]?'var(--panel)':'var(--bad)'}">${i+1}</text><text x="${px+20}" y="${py+5}" font-size="15" font-family="var(--sans)" fill="var(--ink)">${lab[i]}</text></g>`});return h},
+ inst(){const st=this.steps(),k=st.filter(Boolean).length,eb=Math.round(40+S.v*120);const wrong=['none','none','1 in 10⁹','1 in 10⁶','1 in 10⁴'][k];
+  return meter('Energy per bit',eb+'% of today',eb/160,'--good')+meter('Bits stored wrong',wrong,k/4,'--bad')+
+  `<label class="ctl">How hot the chip runs<input type="range" min="0" max="1" step=".01" value="${S.temp}" data-k="temp"><span class="ends"><span>cool</span><span>hot</span></span></label>
+  <label class="ctl">Voltage: margin you pay for<input type="range" min="0" max="1" step=".01" value="${S.v}" data-k="v"><span class="ends"><span>low, cheap</span><span>high, safe</span></span></label>`}}};
+function draw(){svg.innerHTML=SEAMS[S.seam].draw()}
+function fill(){const s=SEAMS[S.seam];card.innerHTML=`<div class="pair"><span class="ln" style="color:var(${COL[s.a]})">${ico(s.a)}${NAME[s.a]}</span><span class="x">×</span><span class="ln" style="color:var(${COL[s.b]})">${ico(s.b)}${NAME[s.b]}</span></div>
+ <p class="meet">${s.meet}</p><span class="shape">${s.shape}</span><h1>${s.q}</h1><p class="true"><b>True here:</b> ${s.tr}</p><div class="inst" id="inst">${s.inst()}</div><p class="open">${s.open}</p>
+ <div class="foot"><button class="lk" data-a="drop">Put down ${NAME[s.b]}</button><button class="lk" data-a="drop">Put down ${NAME[s.a]}</button></div><p class="note">Numbers in this prototype are illustrative.</p>`}
+function set(k){S.seam=k;rev.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.s===k)));draw();fill()}
+rev.insertAdjacentHTML('beforeend',[['front','A front'],['fork','A fork'],['chain','A chain']].map(([k,n])=>`<button data-s="${k}" aria-pressed="false">${n}</button>`).join(''));
+rev.addEventListener('click',e=>{const b=e.target.closest('[data-s]');if(b)set(b.dataset.s)});
+card.addEventListener('click',e=>{if(e.target.closest('[data-a=drop]')){card.querySelector('.note').textContent='On the site this keeps the other lens on, alone.'}});
+card.addEventListener('input',e=>{const k=e.target.dataset.k;if(!k)return;S[k]=+e.target.value;draw();const tmp=document.createElement('div');tmp.innerHTML=SEAMS[S.seam].inst();
+ const keep=[...$('inst').querySelectorAll('.meter,.two,.front')],fresh=[...tmp.querySelectorAll('.meter,.two,.front')];keep.forEach((x,i)=>fresh[i]&&x.replaceWith(fresh[i]))});
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;let last=0;
+function tick(ts){if(ts-last>70){S.t=ts/1000;draw();last=ts}requestAnimationFrame(tick)}
+if(!reduce)requestAnimationFrame(tick);
+set('front');
+}
+</script>
+</body>
+</html>
