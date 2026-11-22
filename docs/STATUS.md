@@ -61,6 +61,10 @@ Where the lab stands, and what is ready to be built next. Read this first when s
 
 Each task below is self-contained and can be handed to Claude Code on the web as written. Each is open as an issue labelled `task` (numbers below): one task, one branch, one pull request, and the PR says `Closes #<number>`.
 
+### The foundation pass and the spine (22 November)
+
+Two plans from the review of 22 November, in order. **The foundation** (#298 to #301): the first page loads no 3D, the shell split by view, the words split by area, the documents made true; nothing changes on screen. **The thirteen as the spine** ([reviews/spine.md](reviews/spine.md)): every question filed under the thirteen with the field questions leading (#302), marks on the picture open a lens (#303), lenses repaint the picture, starting with the block (#304), the eleven worlds as reading pages (#305), and labs for the thinnest questions (#306 to #309). The spine's tasks after #302 are `blocked` until the foundation's files have been split.
+
 The labs of #216 to #221 and the fixes of #222 are built. What they left open:
 
 1. **Serving a language model:** the cluster's network (`clusterNetwork` in `src/engines/aiserve.js`) has no lab yet.

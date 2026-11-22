@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Lenses that repaint</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Besley:ital,wght@0,400;0,500;0,600;1,400&family=Atkinson+Hyperlegible+Next:wght@400;500;700&family=Martian+Mono:wght@400;500&display=swap">
+<style>
+/* VOICE: the lab itself, a working prototype for the owner to judge
+   IDEA: one picture of the block level that changes when a question looks through it
+   PICTURE: the block drawn in the lab's blueprint style, repainted per lens
+   COLOUR and TYPE: the lab's own night/day palette, Besley questions, Atkinson body, Martian Mono numbers
+   LAYOUT: bar, the picture as the stage, the caption card bottom left over it */
+:root{color-scheme:light dark;
+--bg:light-dark(#dfe8f2,#0b1120);--panel:light-dark(rgba(255,255,255,.9),rgba(16,23,38,.88));--ink:light-dark(#16202e,#eef2f8);--muted:light-dark(#5b6a80,#9aa8bd);--line:light-dark(rgba(40,60,90,.16),rgba(160,180,210,.18));
+--accent:light-dark(#2f7de1,#5aa9ff);--warm:light-dark(#d9820a,#ffb347);--good:light-dark(#17804b,#45d08a);--bad:light-dark(#c2332b,#ff6b62);--pink:light-dark(#d63a77,#ff7eb6);--violet:light-dark(#7b4fe0,#b38cff);
+--die:light-dark(#b9c4d2,#27324a);--cell:light-dark(#eef2f7,#3a465e);--cell2:light-dark(#dfe5ee,#323d54);--cu:light-dark(#b5642a,#d88b4c);--arr:light-dark(#c9d4e3,#2c3850);--arrc:light-dark(#f4f7fb,#475472);
+--sans:"Atkinson Hyperlegible Next",system-ui,sans-serif;--serif:"Besley",Georgia,serif;--mono:"Martian Mono",ui-monospace,monospace}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 var(--sans);overflow-x:clip}
+button{font:inherit;color:inherit;cursor:pointer}
+.bar{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:14px;margin:12px;padding:10px 16px;border-radius:18px;background:var(--panel);border:1px solid var(--line);backdrop-filter:blur(10px)}
+.bar b{font-family:var(--serif);font-weight:500;font-size:18px;white-space:nowrap}
+.bar .lv{color:var(--muted);font-size:14px}.bar .lv strong{color:var(--ink)}
+.rev{margin-left:auto;display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:13px;color:var(--muted)}
+.rev span{margin-right:4px}
+.rev button{border:1px dashed var(--line);background:none;border-radius:999px;padding:5px 11px;font-size:13px;min-height:32px}
+.rev button[aria-pressed=true]{border-style:solid;border-color:var(--accent);color:var(--accent)}
+.stage{position:relative;display:grid;grid-template-columns:minmax(0,400px) minmax(0,1fr);gap:24px;padding:0 20px 20px;min-height:calc(100vh - 90px)}
+.pic{position:relative;grid-column:2;grid-row:1;align-self:center;overflow:clip}
+.pic svg{width:100%;height:auto;display:block}
+.card{grid-column:1;grid-row:1;align-self:end;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:20px 22px;backdrop-filter:blur(10px);box-shadow:0 18px 50px rgba(0,0,0,.25)}
+.kick{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--muted)}
+.kick svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.kick .nm{color:var(--lc,var(--accent));font-weight:700}
+h1{font:500 clamp(20px,1.9vw,24px)/1.22 var(--serif);margin:8px 0 10px;text-wrap:balance}
+.true{font-size:15px;color:var(--muted);margin:0 0 14px}.true b{color:var(--good);font-weight:500}
+.inst{border-top:1px solid var(--line);padding-top:14px;display:grid;gap:12px}
+.meter{display:grid;gap:4px}.meter .row{display:flex;justify-content:space-between;font-size:14px}.meter .v{font-family:var(--mono);font-size:13px;white-space:nowrap}
+.track{height:8px;border-radius:4px;background:var(--line);overflow:hidden}.track i{display:block;height:100%;border-radius:4px;background:var(--lc,var(--accent));transition:width .4s}
+.ctl{display:grid;gap:6px;font-size:14px}.ctl .ends{display:flex;justify-content:space-between;color:var(--muted);font-size:13px}
+input[type=range]{width:100%;accent-color:var(--lc,var(--accent));min-height:32px}
+.btns{display:flex;flex-wrap:wrap;gap:8px}
+.btn{border:1px solid var(--line);background:none;border-radius:12px;padding:8px 13px;min-height:40px;font-size:14px}
+.btn.on,.btn:hover{border-color:var(--lc,var(--accent));color:var(--lc,var(--accent))}
+.foot{display:flex;flex-wrap:wrap;gap:4px 16px;margin-top:12px;padding-top:10px;border-top:1px solid var(--line)}.foot .lk{border:0;background:none;padding:8px 0;min-height:36px;font-size:14px;color:var(--lc,var(--accent))}.foot .lk.q{color:var(--muted)}
+.behind{font:italic 14px/1.45 var(--serif);color:var(--muted);margin:12px 0 0}
+.note{font-size:13px;color:var(--muted);margin:10px 0 0}
+.mark{position:absolute;transform:translate(-50%,-50%);width:38px;height:38px;border-radius:50%;border:1.5px solid var(--lc);background:var(--panel);display:grid;place-items:center;padding:0;transition:transform .2s}
+.mark svg{width:18px;height:18px;fill:none;stroke:var(--lc);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.mark::after{content:"";position:absolute;inset:-6px;border-radius:50%;border:1.5px solid var(--lc);opacity:0;animation:p 2.6s infinite}
+@keyframes p{0%{opacity:.7;transform:scale(.8)}100%{opacity:0;transform:scale(1.5)}}
+.mark:hover,.mark:focus-visible{transform:translate(-50%,-50%) scale(1.12)}
+.mark .tip{position:absolute;left:46px;top:50%;transform:translateY(-50%);white-space:nowrap;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:5px 10px;font-size:13px;color:var(--ink);opacity:0;pointer-events:none;transition:opacity .2s}
+.mark.r .tip{left:auto;right:46px}.mark:hover .tip,.mark:focus-visible .tip{opacity:1}
+.mark.dim{opacity:.35}
+.scope{width:100%;height:110px;display:block;border-radius:10px;background:light-dark(#f2f5f9,#0e1626)}
+.thumbs{display:grid;grid-template-columns:repeat(10,1fr);gap:3px}.thumbs i{aspect-ratio:1;border-radius:3px;background:var(--line);position:relative;overflow:hidden}
+.thumbs i b{position:absolute;background:var(--accent);opacity:.7}
+.toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 16px;font-size:14px;opacity:0;transition:opacity .3s;pointer-events:none;max-width:90vw}
+.toast.on{opacity:1}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+@media(max-width:900px){.stage{grid-template-columns:minmax(0,1fr)}.pic{grid-column:1;grid-row:1}.card{grid-column:1;grid-row:2}.rev{margin-left:0}.bar{flex-wrap:wrap}}
+@media(prefers-reduced-motion:reduce){.mark::after{animation:none}}
+</style>
+</head>
+<body>
+<header class="bar"><b>Open Silicon Lab</b><span class="lv">Data centre › <strong>Block</strong> · 10 µm across</span>
+<div class="rev" id="rev"><span>Prototype review:</span></div></header>
+<main class="stage">
+<div class="pic" id="pic"><svg id="svg" viewBox="56 36 888 548" role="img" aria-label="The block level: rows of logic cells, a memory array and the wires between them"></svg></div>
+<section class="card" id="card" aria-live="polite"></section>
+</main>
+<div class="toast" id="toast" role="status"></div>
+<script>
+{
+const $=id=>document.getElementById(id);
+const svg=$('svg'),card=$('card'),pic=$('pic'),rev=$('rev'),toast=$('toast');
+let seed=7;const rnd=()=>{seed=(seed*16807)%2147483647;return (seed-1)/2147483646};
+const ICON={geo:'M4 4h16v16H4zM9 9h6v6H9z',eff:'M13 2L5 14h6l-1 8 8-12h-6z',copy:'M8 8h12v12H8zM4 16V4h12',dig:'M2 16h4V8h6v8h6V8h4',physics:'M2 12c2-5 4-5 6 0s4 5 6 0 4-5 6 0',human:'M7 11V6a1.5 1.5 0 0 1 3 0v5M10 10V4a1.5 1.5 0 0 1 3 0v6M13 10V5a1.5 1.5 0 0 1 3 0v8c0 4-3 7-6.5 7S5 17 5 14v-2a1.5 1.5 0 0 1 3 0'};
+const COL={geo:'--warm',eff:'--good',copy:'--violet',dig:'--accent',physics:'--pink',human:'--warm'};
+const ROWS=13,RY0=70,RH=36;
+const rows=[];for(let r=0;r<ROWS;r++){const c=[];let x=0;while(x<1){const w=.025+rnd()*.06;c.push([x,Math.min(w,1-x)]);x+=w+.004}rows.push(c)}
+const nets=[];for(let i=0;i<9;i++){const r=1+Math.floor(rnd()*(ROWS-2)),u=.05+rnd()*.85,ty=90+rnd()*290;nets.push({r,u,ty})}
+const weights=rows.map(c=>c.map(()=>rnd()));
+const S={lens:null,pack:.2,gen:0,grow:3,mem:'apart',copied:false,noise:.25,phys:'fight',temp:.3,drew:false,pick:null,t:0};
+const span=()=>{const x0=110+170*(S.lens==='geo'?S.pack:.2);return[x0,610]};
+const cx=(u)=>{const[a,b]=span();return a+u*(b-a)};
+function netPath(n){const x=cx(n.u),y=RY0+n.r*RH+RH/2,ch=620+((n.ty*7)%14);return{d:`M${x} ${y}H${ch}V${n.ty}H650`,len:(ch-x)+Math.abs(n.ty-y)+(650-ch)}}
+const avgLen=()=>nets.reduce((a,n)=>a+netPath(n).len,0)/nets.length;
+const um=l=>(l/84).toFixed(1);
+function base(){const[a,b]=span(),w=b-a;let h=`<rect x="60" y="40" width="880" height="540" rx="6" fill="var(--die)"/>`;
+ rows.forEach((c,r)=>{const y=RY0+r*RH;h+=`<rect x="${a-4}" y="${y-2}" width="${w+8}" height="2" fill="var(--cu)" opacity=".55"/>`;
+  c.forEach(([u,uw],i)=>{const inside=S.lens==='copy'&&S.mem==='inside'&&i%3===1;
+   if(inside){const v=weights[r][i]+(S.copied?((Math.sin(r*12.9898+i*78.233)*43758.5453)%1)*.5:0),off=S.copied&&Math.abs(v-weights[r][i])>.14;h+=`<rect x="${a+u*w}" y="${y+3}" width="${uw*w}" height="${RH-8}" rx="2" fill="var(--violet)" opacity="${.25+Math.max(0,Math.min(1,v))*.6}" ${off?'stroke="var(--bad)" stroke-width="2"':''}/>`}
+   else h+=`<rect x="${a+u*w}" y="${y+3}" width="${uw*w}" height="${RH-8}" rx="2" fill="${(r+i)%5?'var(--cell)':'var(--cell2)'}"/>`})});
+ const ad=S.lens==='copy'&&S.mem==='inside'?.3:1;
+ h+=`<g opacity="${ad}"><rect x="650" y="70" width="260" height="320" rx="4" fill="var(--arr)"/>`;for(let i=0;i<16;i++)for(let j=0;j<20;j++)h+=`<rect x="${658+i*15.6}" y="${78+j*15.4}" width="11" height="11" rx="1.5" fill="var(--arrc)"/>`;h+='</g>';
+ for(let i=0;i<4;i++)h+=`<rect x="${650+(i%2)*132}" y="${410+Math.floor(i/2)*82}" width="126" height="74" rx="4" fill="var(--arr)"/>`;
+ if(!(S.lens==='copy'&&S.mem==='inside'))nets.forEach(n=>h+=`<path d="${netPath(n).d}" fill="none" stroke="var(--cu)" stroke-width="2.4" opacity=".8"/>`);
+ return h}
+const lerp=(a,b,t)=>a+(b-a)*t;
+function heatCol(t){return t<.5?`color-mix(in srgb,var(--good) ${100-t*200}%,var(--warm))`:`color-mix(in srgb,var(--warm) ${200-t*200}%,var(--bad))`}
+const L={
+geo:{nm:'Geometry',q:'Pack the logic beside the memory and every trip gets shorter, but the heat piles up in one place. Where would you put it?',
+ tr:'Short wires save energy and time. Parts packed close share one patch of cooling.',
+ behind:'Is the ceiling of intelligence fundamentally a geometry problem: packing parts close to communicate, while spreading them apart to stay cool?',
+ meets:'eff',pos:[33,47],
+ over(){const[a,b]=span();let h='<defs><radialGradient id="hg"><stop offset="0" stop-color="var(--bad)" stop-opacity=".75"/><stop offset="1" stop-color="var(--bad)" stop-opacity="0"/></radialGradient></defs>';
+  const k=.35+S.pack*.9;for(let i=0;i<5;i++){const x=lerp(a,b,.15+i*.18),y=RY0+(2+i*2.2)*RH;h+=`<ellipse cx="${x}" cy="${y}" rx="${130-40*S.pack}" ry="${90-25*S.pack}" fill="url(#hg)" opacity="${Math.min(1,k*(.6+((i*37)%5)/10))}"/>`}
+  nets.forEach(n=>{const p=netPath(n),t=Math.min(1,(p.len-80)/700);h+=`<path d="${p.d}" fill="none" stroke="${heatCol(t)}" stroke-width="5" stroke-linecap="round"/>`});return h},
+ inst(){const tr=avgLen(),hot=Math.round(6+16*S.pack**1.4);return meter('Average trip to memory',um(tr)+' µm',tr/800)+meter('Hottest patch, above the rest','+'+hot+' °C',hot/22,'--bad')+
+  `<label class="ctl">Where the logic sits<input type="range" min="0" max="1" step=".01" value="${S.pack}" data-k="pack"><span class="ends"><span>spread out</span><span>packed beside memory</span></span></label>`}},
+eff:{nm:'Efficiency fuels use',q:'Each answer here takes half the energy it did last year. Will the building around this block use less power, or more?',
+ tr:'The big pulses are numbers fetched from memory. They cost far more than the small sparks, the sums themselves.',
+ behind:'Why does efficiency fuel consumption?',meets:'geo',pos:[63,25],
+ over(){let h='';const tt=S.t;nets.forEach((n,i)=>{const p=netPath(n);const f=((tt*.25+i*.13)%1);h+=`<path d="${p.d}" fill="none" stroke="var(--good)" stroke-width="10" stroke-linecap="round" stroke-dasharray="14 ${p.len}" stroke-dashoffset="${-f*p.len}" opacity=".85"/>`});
+  rows.forEach((c,r)=>c.forEach(([u,uw],i)=>{if((r*7+i*3+Math.floor(tt*4))%11===0){const[a,b]=span();h+=`<circle cx="${a+(u+uw/2)*(b-a)}" cy="${RY0+r*RH+RH/2}" r="3" fill="var(--good)"/>`}}));return h},
+ inst(){const per=1/2**S.gen,use=S.grow**S.gen,tot=per*use;return meter('Energy per answer',Math.round(per*100)+'% of last year',per)+meter('Answers asked',fmtX(use),Math.min(1,use/16),'--accent')+meter('Power of the whole building',fmtX(tot),Math.min(1,tot/8),tot>1?'--bad':'--good')+
+  `<div class="btns"><button class="btn" data-a="gen">Halve it again</button><button class="btn" data-a="reset">Start over</button></div>`+
+  `<label class="ctl">When answers get half as cheap, people ask<input type="range" min="1" max="4" step=".5" value="${S.grow}" data-k="grow"><span class="ends"><span>no more</span><span>4 times as many</span></span></label>`}},
+copy:{nm:'Brain or copy',q:'Put the memory inside the logic, like a brain, and the trips vanish. Can you still copy what it learned?',
+ tr:'Bits in the array copy exactly. Values kept as charge in each cell drift, a little different on every chip.',
+ behind:'To think efficiently as a brain, must a machine give up the power to copy its mind?',meets:'physics',pos:[78,30],
+ over(){if(S.mem==='apart'){return `<rect x="646" y="66" width="268" height="328" rx="6" fill="none" stroke="var(--violet)" stroke-width="3"/>`}return ''},
+ inst(){const ins=S.mem==='inside',e=ins?.25:1,m=ins?(S.copied?91:100):100;return `<div class="btns"><button class="btn ${!ins?'on':''}" data-a="apart">Memory apart</button><button class="btn ${ins?'on':''}" data-a="inside">Memory inside the logic</button></div>`+
+  meter('Energy per answer',Math.round(e*100)+'%',e)+meter('A copy on a new chip matches',S.copied||!ins?m+'%':'not copied yet',m/100,m<100?'--bad':'--good')+
+  `<div class="btns"><button class="btn" data-a="copyit">Copy it to a new chip</button></div>`}},
+dig:{nm:'Digital meets physical',q:'The voltage on this wire is never exactly 0 or 1. So where does the 1 come from?',
+ tr:'A gate reads anything above the line as 1. The gap between the two levels is the margin that keeps it digital.',
+ behind:'Where does the digital world end and the physical begin?',meets:'physics',pos:[44,22],
+ over(){const n=nets[2],p=netPath(n),flip=S.noise>.55;return `<path d="${p.d}" fill="none" stroke="var(--accent)" stroke-width="6" stroke-linecap="round"/>`+(flip?`<path d="${p.d}" fill="none" stroke="var(--bad)" stroke-width="6" stroke-dasharray="10 60" stroke-dashoffset="${-S.t*40}"/>`:'')},
+ inst(){const wrong=S.noise<.4?'0':S.noise<.55?'1 in 10⁹':S.noise<.7?'1 in 10⁴':'1 in 50';return `<canvas class="scope" id="scope" width="760" height="240" aria-label="The voltage on the wire over time, with the line where a 1 begins"></canvas>`+meter('Bits read wrong',wrong,Math.max(0,(S.noise-.4)*1.7),'--bad')+
+  `<label class="ctl">Noise on the wire<input type="range" min="0" max="1" step=".01" value="${S.noise}" data-k="noise"><span class="ends"><span>quiet</span><span>loud</span></span></label>`}},
+physics:{nm:'Fight or use physics',q:'The memory array could add numbers just by letting currents flow together. Is a small error worth a big saving?',
+ tr:'Currents that meet on one wire add up by themselves, with no gates at all. But heat nudges every one of them.',
+ behind:'Should we fight physics to keep logic exact, or let physical law do the computing?',meets:'copy',pos:[78,62],
+ over(){let h='';if(S.phys==='fight'){h+=`<rect x="650" y="360" width="260" height="30" fill="var(--pink)" opacity=".35"/><rect x="644" y="64" width="272" height="332" rx="6" fill="none" stroke="var(--pink)" stroke-width="2" stroke-dasharray="6 5"/>`;}
+  else{for(let i=0;i<16;i++)h+=`<line x1="${663.5+i*15.6}" y1="74" x2="${663.5+i*15.6}" y2="392" stroke="var(--pink)" stroke-width="3" stroke-dasharray="8 10" stroke-dashoffset="${-S.t*30}" opacity=".9"/>`;h+=`<rect x="650" y="392" width="260" height="10" rx="3" fill="var(--pink)"/>`}return h},
+ inst(){const f=S.phys==='fight',e=f?1:.12,err=f?0:+(1+S.temp*7).toFixed(1);return `<div class="btns"><button class="btn ${f?'on':''}" data-a="fight">Fight it: exact bits</button><button class="btn ${!f?'on':''}" data-a="use">Use it: add with currents</button></div>`+
+  meter('Energy per sum',Math.round(e*100)+'%',e)+meter('Answers off by more than 1%',f?'none':err+'%',err/10,'--bad')+
+  `<label class="ctl">How hot the chip runs<input type="range" min="0" max="1" step=".01" value="${S.temp}" data-k="temp"><span class="ends"><span>cool</span><span>hot</span></span></label>`}},
+human:{nm:'Only humans',q:'A program drew a thousand layouts of this block that all pass every check. What was still yours to decide?',
+ tr:'Placing the cells and drawing the wires is already done by programs. What the block is for, and what to give up, still comes from people.',
+ behind:'When AI makes generating options free and tools spread to everyone, what can only humans bring, alone and together?',meets:'geo',pos:[22,70],
+ over(){const[a,b]=span();let h=`<rect x="${a-8}" y="${RY0-6}" width="${b-a+16}" height="${ROWS*RH+4}" rx="6" fill="var(--accent)" opacity=".12"/>`;
+  h+=`<rect x="${a+20}" y="${RY0+9*RH}" width="${(b-a)*.28}" height="${3*RH}" rx="6" fill="none" stroke="var(--warm)" stroke-width="3"/>`;
+  h+=`<rect x="650" y="410" width="258" height="156" rx="6" fill="none" stroke="var(--ink)" stroke-width="2" stroke-dasharray="7 6" opacity="${.4+.4*Math.abs(Math.sin(S.t*1.5))}"/>`;return h},
+ inst(){let h=`<div class="meter"><div class="row"><span><b style="color:var(--accent)">■</b> drawn by programs</span><span><b style="color:var(--warm)">■</b> chosen by a person</span></div><div class="row"><span style="opacity:.8">┅ still open: what this corner is for</span></div></div>`;
+  h+=`<div class="btns"><button class="btn" data-a="draw">Let a program draw 1,000 layouts</button></div>`;
+  if(S.drew){h+='<div class="thumbs">'+Array.from({length:40},(_, i)=>{let s='';for(let k=0;k<3;k++)s+=`<b style="left:${(i*13+k*29)%70}%;top:${(i*7+k*31)%70}%;width:${20+(i+k)%3*8}%;height:${15+(i*k)%4*6}%"></b>`;return `<i>${s}</i>`}).join('')+'</div>'+
+   `<p class="note" style="margin:0">All 1,000 pass. Which one?</p><div class="btns">${['The smallest','The coolest','The easiest for the next person to change'].map((x,i)=>`<button class="btn ${S.pick===i?'on':''}" data-pick="${i}">${x}</button>`).join('')}</div>`;
+   if(S.pick!==null)h+=`<p class="note" style="margin:0">No check could choose that for you. It came from what you think this block is for.</p>`}return h}}};
+const ORDER=['geo','eff','copy','dig','physics','human'];
+const fmtX=v=>(v>=10?Math.round(v):v.toFixed(v<1?2:1))+'×';
+const meter=(k,v,f,c)=>`<div class="meter"><div class="row"><span>${k}</span><span class="v">${v}</span></div><div class="track"><i style="width:${Math.round(Math.max(.02,Math.min(1,f))*100)}%;${c?`background:var(${c})`:''}"></i></div></div>`;
+const ico=(id)=>`<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${ICON[id]}"/></svg>`;
+function draw(){svg.innerHTML=base()+(S.lens?L[S.lens].over():'')}
+function marks(){pic.querySelectorAll('.mark').forEach(m=>m.remove());ORDER.forEach(id=>{if(S.lens===id)return;const b=document.createElement('button');b.className='mark'+(S.lens?' dim':'')+(L[id].pos[0]>60?' r':'');b.style.setProperty('--lc',`var(${COL[id]})`);b.style.left=L[id].pos[0]+'%';b.style.top=L[id].pos[1]+'%';b.dataset.lens=id;b.setAttribute('aria-label','Look through: '+L[id].nm);b.innerHTML=ico(id)+`<span class="tip">${L[id].nm}</span>`;pic.appendChild(b)})}
+function fill(){card.style.setProperty('--lc',S.lens?`var(${COL[S.lens]})`:'var(--accent)');
+ if(!S.lens){card.innerHTML=`<div class="kick">Block · 10 µm across</div><h1>Rows of logic, a field of memory, and the wires between them.</h1><p class="true">Every mark on the picture is a question that lives here. Tap one to look through it: the picture changes to show what it is about.</p><p class="note">Numbers in this prototype are illustrative.</p>`;return}
+ const l=L[S.lens];card.innerHTML=`<div class="kick">${ico(S.lens)}<span class="nm">${l.nm}</span><span>· Block</span></div><h1>${l.q}</h1><p class="true"><b>True here:</b> ${l.tr}</p><div class="inst">${l.inst()}</div>
+ <p class="behind">${l.behind}</p>
+ <div class="foot"><button class="lk" data-lens="${l.meets}">Meets ${L[l.meets].nm} →</button><button class="lk" data-a="up">↑ Chip</button><button class="lk" data-a="down">↓ Gate</button><button class="lk q" data-a="off">Put it down</button></div>`;
+ if(S.lens==='dig')scope()}
+function scope(){const c=$('scope');if(!c)return;const x=c.getContext('2d'),W=c.width,H=c.height,col=v=>{c.style.color=`var(${v})`;return getComputedStyle(c).color},cs={getPropertyValue:col};x.clearRect(0,0,W,H);
+ const hi=H*.22,lo=H*.82,th=H*.52;x.globalAlpha=.18;x.fillStyle=cs.getPropertyValue('--accent');x.fillRect(0,th-H*.07,W,H*.14);x.globalAlpha=1;x.strokeStyle=cs.getPropertyValue('--muted');x.setLineDash([6,6]);x.beginPath();x.moveTo(0,th);x.lineTo(W,th);x.stroke();x.setLineDash([]);
+ const bits=[1,0,1,1,0,1,0,0,1,1,0,1];let s=11;const r=()=>{s=(s*16807)%2147483647;return s/2147483647-.5};x.lineWidth=3;x.strokeStyle=cs.getPropertyValue('--accent');x.beginPath();
+ for(let i=0;i<=W;i+=3){const k=Math.min(bits.length-1,Math.floor(i/W*bits.length)),f=(i/W*bits.length)%1,prev=bits[Math.max(0,k-1)],v=f<.15&&k>0?lerp(prev,bits[k],f/.15):bits[k];const y=lerp(lo,hi,v)+r()*S.noise*H*.42;i?x.lineTo(i,y):x.moveTo(i,y)}x.stroke();
+ x.fillStyle=cs.getPropertyValue('--muted');x.fillStyle=cs.getPropertyValue('--ink');x.font='22px Martian Mono, monospace';bits.forEach((b,i)=>x.fillText(b,(i+.4)*W/bits.length,26))}
+function set(id){S.lens=id;document.querySelectorAll('.rev button').forEach(b=>b.setAttribute('aria-pressed',String((b.dataset.lens||null)===id||(!id&&b.dataset.lens==='')) ));draw();marks();fill()}
+rev.insertAdjacentHTML('beforeend',[['','No lens'],...ORDER.map(id=>[id,L[id].nm])].map(([id,n])=>`<button data-lens="${id}" aria-pressed="false">${n}</button>`).join(''));
+let tt;const say=m=>{toast.textContent=m;toast.classList.add('on');clearTimeout(tt);tt=setTimeout(()=>toast.classList.remove('on'),2600)};
+document.addEventListener('click',e=>{const ln=e.target.closest('[data-lens]');if(ln){set(ln.dataset.lens||null);return}
+ const pk=e.target.closest('[data-pick]');if(pk){S.pick=+pk.dataset.pick;fill();return}
+ const a=e.target.closest('[data-a]');if(!a)return;const k=a.dataset.a;
+ if(k==='gen'){S.gen=Math.min(5,S.gen+1)}else if(k==='reset'){S.gen=0}else if(k==='apart'||k==='inside'){S.mem=k;S.copied=false}else if(k==='copyit'){S.copied=true}
+ else if(k==='fight'||k==='use'){S.phys=k}else if(k==='draw'){S.drew=true;S.pick=null}else if(k==='off'){return set(null)}
+ else if(k==='up'||k==='down'){return say('On the site this moves you '+(k==='up'?'up to the chip':'down to the gate')+' with the same lens still on.')}
+ draw();fill()});
+document.addEventListener('input',e=>{const k=e.target.dataset.k;if(!k)return;S[k]=+e.target.value;draw();
+ const m=card.querySelectorAll('.meter');const tmp=document.createElement('div');tmp.innerHTML=L[S.lens].inst();const nm=tmp.querySelectorAll('.meter');m.forEach((x,i)=>{if(nm[i])x.replaceWith(nm[i])});if(S.lens==='dig')scope()});
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+let last=0;function tick(ts){if(ts-last>60&&(S.lens==='eff'||S.lens==='physics'||S.lens==='human'||(S.lens==='dig'&&S.noise>.55))){S.t=ts/1000;svg.querySelectorAll('g.ov').forEach(g=>g.remove());draw();last=ts}requestAnimationFrame(tick)}
+if(!reduce)requestAnimationFrame(tick);
+set(null);
+}
+</script>
+</body>
+</html>
