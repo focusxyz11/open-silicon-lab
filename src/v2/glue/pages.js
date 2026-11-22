@@ -3,14 +3,13 @@
    from the field opened in a view's card.
    Glue of the shell (src/v2/app.js): create() runs once, when the view first opens; what it shares with the shell and
    the other views is on V (src/v2/shell.js). */
-import { t } from '../../core/i18n.js';
+import { t, has, fmtDate } from '../../core/i18n.js';
 import { REPO, THREADS } from '../../data/weave.js';
 import * as Game from '../game.js';
 import { titleOf } from '../play.js';
 import { stopsAt } from '../../data/places.js';
 import { rootShown } from '../../engines/weave.js';
 import { FIGURES, CASES } from '../../data/weave.js';
-import { fmtDate } from '../../core/i18n.js';
 import { signHtml, signOf, keep, refusal, slipHtml, slipClick, byLine } from '../commons.js';
 import * as Read from '../read.js';
 import * as Field from '../field.js';
@@ -176,7 +175,7 @@ export function create() {
     ['what', 'why', 'after'].map(k => '<p class="small">' + esc(t('case.' + c.id + '.' + k)) + '</p>').join('') + '<p class="small muted">' + ext(c.url, esc(t('case.' + c.id + '.src'))) + '</p></details>').join('');
   let nowStop = null, askOpen = false, askNo = null, askVals = { q: '', noticed: '' };
   function stopHtml(th, d, hrefOf = Game.askHref) {
-    const T = Game.trail(th), i = T.indexOf(d), key = th + '.' + d, tried = t('stop.' + key + '.tried');
+    const T = Game.trail(th), i = T.indexOf(d), key = th + '.' + d, tried = has('stop.' + key + '.tried') ? t('stop.' + key + '.tried') : null;
     const step = (j, k) => T[j] != null ? '<a class="btn' + (k === 'next' ? ' primary' : ' ghost') + '" data-key="' + k + '" href="' + esc(hrefOf(th + '.' + T[j])) + '">' + esc(t(k === 'next' ? 'trail.next' : 'trail.prev', { level: t('depth.' + T[j] + '.name') })) + '</a>' : '<span></span>';
     let h = '<div class="stopx"><p class="kicker trailk" style="--qc:' + qColor(key) + '"><span class="dotq"></span>' + esc(t('trail.k', { level: t('depth.' + d + '.name') })) + '</p>';
     h += '<p class="line trailq">' + esc(t('stop.' + key + '.q')) + '</p><p class="small">' + esc(t('stop.' + key + '.note')) + '</p>';

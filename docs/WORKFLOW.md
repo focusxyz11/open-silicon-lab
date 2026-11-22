@@ -11,7 +11,7 @@ How we work on Open Silicon Lab. One idea moves from talk to a picture to code, 
 7. **Keep what came before.** A version that is replaced is kept on a named branch first (for example `claude/before-dive-2026-11`).
 8. **Update [STATUS.md](STATUS.md)** when a task lands, so the next session starts from where things are.
 
-Sessions can run side by side when their tasks touch different files. Merge one pull request at a time, then update the other branches; they usually meet in `src/i18n/en.json`, `src/v2/game.js`, `src/v2/map3d.js`, `src/styles/v2.css` and the experiments count.
+Sessions can run side by side when their tasks touch different files. Merge one pull request at a time, then update the other branches; they usually meet in the files of `src/i18n/en/`, `src/v2/game.js`, `src/v2/map3d.js`, `src/styles/v2.css` and the experiments count.
 
 ## The browser smoke test, in sections
 

@@ -10,8 +10,9 @@ import { GOAL, NEEDS, AGENT } from '../src/data/build.js';
 import { allDesigns } from '../src/engines/build.js';
 import { ENGINES, plan, progress, levels } from '../src/engines/build.js';
 import TC from '../src/engines/tinychip.js';
+import { readWords } from '../scripts/words.mjs';
 
-const EN = JSON.parse(readFileSync(new URL('../src/i18n/en.json', import.meta.url), 'utf8'));
+const EN = readWords();
 
 test('every job can be done, and goes all the way from description to masks', () => {
   for (const p of PROJECTS) {

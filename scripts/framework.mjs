@@ -4,6 +4,7 @@
 //   node scripts/framework.mjs --check  only checks (tests/framework.test.mjs does the same)
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
+import { readWords } from './words.mjs';
 
 const ROOT = new URL('..', import.meta.url);
 const read = p => readFileSync(new URL(p, ROOT), 'utf8');
@@ -16,7 +17,7 @@ export const counts = S => Object.fromEntries(STATES.map(st => [st, S.worlds.fla
 
 /* everything that is wrong with the skeleton, as sentences; an empty list means it holds */
 export function problems(S = skeleton()) {
-  const out = [], ids = k => new Set(S[k].map(x => x.id)), EN = JSON.parse(read('src/i18n/en.json'));
+  const out = [], ids = k => new Set(S[k].map(x => x.id)), EN = readWords();
   const L = ids('lenses'), E = ids('engines'), M = ids('measures'), G = ids('givens'), W = ids('worlds');
   const engine = id => S.engines.find(e => e.id === id);
   for (const k of ['measures', 'lenses', 'engines', 'givens', 'directions', 'specimens', 'record', 'worlds']) if (ids(k).size !== S[k].length) out.push(k + ' has an id twice');

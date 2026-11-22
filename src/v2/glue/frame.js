@@ -3,7 +3,7 @@
    way a picture is fitted beside the card, and the dives' worlds.
    Glue of the shell (src/v2/app.js): create() runs once, when the view first opens; what it shares with the shell and
    the other views is on V (src/v2/shell.js). */
-import { t } from '../../core/i18n.js';
+import { t, has } from '../../core/i18n.js';
 import { STOPS } from '../../data/weave.js';
 import { createLenses, questionOf as frameQ } from '../../engines/frame.js';
 import * as Game from '../game.js';
@@ -38,7 +38,7 @@ export function create() {
   const Lenses = createLenses({ experiments: Exp.EXPERIMENTS, stops: STOPS, challenges: Game.CHALLENGES, doHome: Way.doHome });
   /* the flights' levels that are a level of the dive by another name */
   const LENS_AT = { campus: 'building', hall: 'building', server: 'rack', handset: 'phone', cabin: 'car' };
-  const hasWord = k => t(k) !== k;
+  const hasWord = k => has(k);
   /* each lens at a level shows a form of its own: the level's stops shared out in the lenses' order, unless the lens
      has words written for this level */
   const formsAt = d => { const used = new Set(), out = {};

@@ -1,7 +1,7 @@
 /* The supply map: a chip's whole trip across the world (src/app/map.js, src/engines/supply.js), in the frame.
    Glue of the shell (src/v2/app.js): create() runs once, when the view first opens; what it shares with the shell and
    the other views is on V (src/v2/shell.js). */
-import { t } from '../../core/i18n.js';
+import { t, has } from '../../core/i18n.js';
 import * as Game from '../game.js';
 import { V, $, esc } from '../shell.js';
 
@@ -27,7 +27,7 @@ export function create() {
       h += '<div class="mapstop2 ' + (bad ? (cap ? 'strained' : bad.state) : '') + '">' + (bad ? '<p><b>' + esc(t(cap ? 'map.capital' : bad.state === 'stopped' ? 'map.stops' : 'map.strained', { step: t('route.step.' + r[bad.i].id), places })) + '</b></p><p class="small">' + esc(t(bad.state === 'stopped' && !cap ? 'map.qStop' : 'map.qStrain')) + '</p>' : '') +
         '<button type="button" class="link" data-openall>' + esc(t('map.openAll')) + '</button></div>';
     }
-    h += '<p class="kicker">' + esc(t('map.step')) + ' · ' + esc(t('route.step.' + step.id)) + '</p>' + (SUP.site ? '' : '<p class="small">' + esc(t('route.' + (t('route.' + SUP.world + '.' + step.id) !== 'route.' + SUP.world + '.' + step.id ? SUP.world : 'any') + '.' + step.id)) + '</p>');
+    h += '<p class="kicker">' + esc(t('map.step')) + ' · ' + esc(t('route.step.' + step.id)) + '</p>' + (SUP.site ? '' : '<p class="small">' + esc(t('route.' + (has('route.' + SUP.world + '.' + step.id) ? SUP.world : 'any') + '.' + step.id)) + '</p>');
     if (step.at.length) h += '<p class="small muted">' + esc(t('map.places')) + '</p><div class="chips">' + step.at.map(siteBtn).join('') + '</div>';
     if (SUP.site) { const id = SUP.site, shut = SUP.closed.includes(id);
       h += '<div class="yours"><span class="kicker">' + esc(t('site.' + id + '.name')) + ' · ' + esc(t('site.' + id + '.where')) + '</span>' + esc(t('site.' + id + '.what')) + ' <span class="muted">' + esc(t('site.' + id + '.who')) + '</span></div>' +

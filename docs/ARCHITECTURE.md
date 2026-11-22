@@ -1,6 +1,6 @@
 # Architecture
 
-A static site: plain ES modules, one stylesheet and one file of words. No framework, no build step for development.
+A static site: plain ES modules, one stylesheet and one folder of words, split by area. No framework, no build step for development.
 
 ```
 index.html              the site: the chip world (src/main2.js, src/v2/)
@@ -64,7 +64,8 @@ src/data/build.js       the build: the community's goal as a plan of needs, the 
 src/data/world.js       the map: places, and each kind of chip's trip through them, joined to the line's stations
 src/data/facts.json     sourced figures, loaded when a question's stop first shows (src/v2/glue/pages.js); FIGURES and CASES in weave.js point to them
 src/core/i18n.js        words: t('name'), plurals, numbers, dates
-src/i18n/en.json        every word on screen
+src/i18n/en/            every word on screen, one file per area (AREAS in src/core/i18n.js): core.json for the first page, the others loaded with the views that show them
+scripts/words.mjs       every word of a language in one set, for node (the tests, the open port)
 src/styles/site.css     the styles, dark and light
 tests/                  node:test: the engines, the game, the atlas, the ledger, the weave and the words
 scripts/                serve.mjs, smoke.mjs (browser test, in sections), i18n-check.mjs, mcp.mjs (the open port), agent.mjs (an agent of your own)
@@ -98,7 +99,7 @@ Words that belong to a part sit on the picture; the card keeps only what does no
 
 ## Words and languages
 
-Every word on screen lives in `src/i18n/en.json` and is read with `t('name')`, including the words drawn on the picture. Those are measured, never assumed to be English-sized: `wrap()` in `src/app/draw.js` breaks lines where the language allows (`Intl.Segmenter`, so text without spaces wraps too) and breaks an overlong word between characters (tested). `npm test` fails if code holds visible English, if a text is missing or unused, or if a translation's `{names}` differ. To add a language, copy `en.json` to `<lang>.json`, translate the values, and add it to `LANGS` in `src/core/i18n.js`.
+Every word on screen lives in `src/i18n/en/` and is read with `t('name')`, including the words drawn on the picture. Those are measured, never assumed to be English-sized: `wrap()` in `src/app/draw.js` breaks lines where the language allows (`Intl.Segmenter`, so text without spaces wraps too) and breaks an overlong word between characters (tested). `npm test` fails if code holds visible English, if a text is missing or unused, or if a translation's `{names}` differ. The words are split by area: each text is in the file of its prefix's area (`AREAS`, `areaOf` in `src/core/i18n.js`). `loadLang` loads `core.json`, which holds what shows before any view opens (the bar, the loop, the frame, the map page, Your log, Break it); each view's glue awaits its areas (`needWords`, `WORDS` beside `GLUE` in `app.js`) before it draws, the labs await `labs`, and the rest load in an idle moment once a view has opened. `t()` stays synchronous; a text asked for before its area loaded warns `Missing text:`, and the smoke test fails on it. To add a language, area by area, make `src/i18n/<lang>/`, translate any of the files of `src/i18n/en/` into it, and add the language to `LANGS`; an area not yet translated shows in English.
 
 ## Checks
 

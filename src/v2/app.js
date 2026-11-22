@@ -11,7 +11,7 @@
    #/board (one board, with a story that drives it), #/dive/<depth>[/<world>] (the dive), #/line/<step> (the factory),
    #/bench/<level>[/<challenge>] (the studio), #/do/<challenge>, #/ask/<thread>/<depth>, #/supply, #/log, #/build,
    #/ecosystem. Words are read with t(). */
-import { t } from '../core/i18n.js';
+import { t, needWords, needAllWords } from '../core/i18n.js';
 import { THREADS } from '../data/weave.js';
 import { NEEDS } from '../data/build.js';
 import { childrenOf } from '../engines/build.js';
@@ -36,10 +36,13 @@ import { boot as frame2Boot, reading as frame2Reading } from './frame2.js';
 import { V, $, showStage, esc, hue, qColor, follow, followW } from './shell.js';
 
 export function start() {
-  /* each view's glue (src/v2/glue/) loads when its view first opens, after the glue it builds on; until then its moves wait
-     for it (they load it, then run), and hiding a view that never opened does nothing */
+  /* each view's glue (src/v2/glue/) loads when its view first opens, after the glue it builds on and with the words of its
+     areas (src/core/i18n.js: the first page needs only core); until then its moves wait for it (they load it, then run),
+     and hiding a view that never opened does nothing. Once a view has opened, the other areas' words load in an idle
+     moment */
   const GLUE = {'island': [], 'frame': [], 'flights': ['frame'], 'studio': ['frame'], 'chip': ['frame'], 'flat': ['frame'], 'supply': ['flat'], 'board': ['frame'], 'pages': ['frame']}, glueP = {};
-  const glue = k => glueP[k] || (glueP[k] = Promise.all(GLUE[k].map(glue)).then(() => import('./glue/' + k + '.js')).then(m => m.create()));
+  const WORDS = { island: ['atlas', 'place', 'design'], frame: ['atlas', 'place', 'design'], pages: ['pages'] };
+  const glue = k => glueP[k] || (glueP[k] = Promise.all(GLUE[k].map(glue).concat(needWords(...(WORDS[k] || [])))).then(() => import('./glue/' + k + '.js')).then(m => { m.create(); afterPaint(() => { if (preloadOk()) needAllWords(); }); }));
   const waits = (k, names) => names.forEach(n => { V[n] = (...a) => glue(k).then(() => V[n](...a)); });
   /* a question from the field, the joule's way in and the ways out of a question are offered on every view and on the
      seam's note, and answered by the reading pages' glue: the first such click loads it, then is made again */

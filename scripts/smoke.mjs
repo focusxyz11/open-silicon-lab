@@ -45,6 +45,10 @@ let at = 'start';
 setTimeout(() => { console.error('Smoke test stuck at: ' + at + (problems.length ? '\nProblems so far:\n' + problems.join('\n') : '')); process.exit(1); }, 28 * 60 * 1000).unref();
 /* its own browser, with software WebGL, so the 3D levels can draw on a machine without a GPU */
 const browser3d = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
+/* a text asked for and not found (src/core/i18n.js warns "Missing text:", as when a view draws before its words' area
+   has loaded) never reaches the screen silently: on any page of either browser it fails the run */
+for (const b of [browser, browser3d]) { const open = b.newPage.bind(b);
+  b.newPage = async (...a) => { const p = await open(...a); p.on('console', m => { if (/^Missing text:/.test(m.text())) problems.push(at + ': ' + m.text()); }); return p; }; }
 const run = {};
 
 run['old'] = async () => {
@@ -108,9 +112,9 @@ run['home'] = async () => {
   }
 };
 
-/* what the first page may fetch before its idle preload, in bytes (it was 3.4 MB with the island's 3D; the words split
-   by area, #300, bring it under 1.5 MB) */
-const FIRST_PAGE_BYTES = 2.0e6;
+/* what the first page may fetch before its idle preload, in bytes (it was 3.4 MB with the island's 3D and every word;
+   now no 3D, the shell's glue per view, and only the core words) */
+const FIRST_PAGE_BYTES = 1.5e6;
 
 /* the chip world (index.html): your chip's life on the island. The first challenge is played and won, the island
    grows and says so (the first fixed with one tap), the tracker in the bar moves on; a place opens its three doors in the dock, Look first with a way inside; the pages list every challenge and the plan. */
@@ -134,6 +138,9 @@ const explore = async (tag, viewport, scheme) => {
     if (heavy.length) problems.push(tag + ': the first page fetches 3D before its preload: ' + heavy.join(', '));
     const bytes = early.reduce((a, e) => a + e.b, 0);
     if (!(bytes < FIRST_PAGE_BYTES)) problems.push(tag + ': the first page fetches ' + Math.round(bytes / 1024) + ' KB before its preload (budget ' + Math.round(FIRST_PAGE_BYTES / 1024) + ' KB)');
+    /* of the words, only the core area's */
+    const words = early.filter(e => /\/src\/i18n\//.test(e.u)).map(e => e.u.split('/src/i18n/')[1]);
+    if (words.join() !== 'en/core.json') problems.push(tag + ': the first page fetches words beyond core.json: ' + words.join(', '));
     await fp.close();
   }
   await page.goto(base + 'index.html#/island');

@@ -5,12 +5,13 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
-const EN = JSON.parse(readFileSync(new URL('../src/i18n/en.json', import.meta.url), 'utf8'));
+const EN = readWords();
 const src = f => readFileSync(new URL('../src/v2/' + f, import.meta.url), 'utf8');
 
 /* the 3D views' plain data is its own module (src/data/views3d.js); the parts the modules draw with WebGL are read
    from their source rather than importing them */
 import { PLACES as MAP_PLACES, DC_LEVELS as LEVELS, DC_ASKS as ASKS, CHIP_ROWS, CHIP_ASK } from '../src/data/views3d.js';
+import { readWords } from '../scripts/words.mjs';
 const PLACES = MAP_PLACES.map(p => p.id);
 const PARTS = [...src('dc3d.js').matchAll(/\['([a-z]+)', (?:scene|rack|tray|pkg), W3\(/g)].map(m => m[1]);
 

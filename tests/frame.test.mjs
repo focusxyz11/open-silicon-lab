@@ -12,8 +12,9 @@ import { EXPERIMENTS } from '../src/engines/experiments.js';
 import { STOPS, THREADS } from '../src/data/weave.js';
 import { CHALLENGES } from '../src/v2/game.js';
 import { doHome } from '../src/engines/way.js';
+import { readWords } from '../scripts/words.mjs';
 
-const EN = JSON.parse(readFileSync(new URL('../src/i18n/en.json', import.meta.url), 'utf8'));
+const EN = readWords();
 const L = createLenses({ experiments: EXPERIMENTS, stops: STOPS, challenges: CHALLENGES, doHome });
 const DEPTHS = [...new Set(Object.keys(STOPS).map(k => k.split('.')[1]))];
 

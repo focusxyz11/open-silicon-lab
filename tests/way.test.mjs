@@ -6,6 +6,7 @@ import assert from 'node:assert/strict';
 import { STAGES, STAGE_PLACE, stageOfPlace, nextPlace, whereOf, alongTo, holds, doHome } from '../src/engines/way.js';
 import { PLACES, CHALLENGES, DEPTH_ORDER, viewOfDepth, INSIDE } from '../src/v2/game.js';
 import { TWINS } from '../src/data/atlas.js';
+import { readWords } from '../scripts/words.mjs';
 
 test('every place is at a stage of the loop, and the loop closes', () => {
   for (const p of PLACES) if (p !== 'idea') assert.ok(STAGES.includes(stageOfPlace(p)), p + ' is at no stage');
@@ -82,7 +83,7 @@ test('a challenge is played where its level is shown, or met at its place', () =
 
 test('the port shows agents the same world: from the island, every name look gives can be looked at again, and every level is reached', async () => {
   const { look } = await import('../src/engines/api.js'), { useTexts } = await import('../src/core/i18n.js'), { readFileSync } = await import('node:fs');
-  useTexts(JSON.parse(readFileSync(new URL('../src/i18n/en.json', import.meta.url), 'utf8')));
+  useTexts(readWords());
   const island = look({}); assert.equal(island.loop.length, STAGES.length);
   const seen = new Set(), todo = island.places.map(p => p.place);
   while (todo.length) {

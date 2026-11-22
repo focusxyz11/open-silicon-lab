@@ -26,9 +26,10 @@ test('trying every case: an adder of b bits has 2^(2b) pairs of inputs, and the 
 /* The second piece: lanes side by side, each with its own costs from src/data/media.js */
 import { lanes, lane, dominoStep, COOLING, LENGTHS } from '../src/engines/substrate.js';
 import { MEDIA } from '../src/data/media.js';
+import { readWords } from '../scripts/words.mjs';
 
 test('every medium has a curve, a source for its numbers, and words', () => {
-  const EN = JSON.parse(readFileSync(new URL('../src/i18n/en.json', import.meta.url), 'utf8'));
+  const EN = readWords();
   for (const m of MEDIA) {
     assert.ok(['restore', 'pass'].includes(m.curve), m.id);
     assert.ok(m.sources.length && m.sources.every(s => /^https:\/\//.test(s.url) && s.name), m.id + ' needs sources');

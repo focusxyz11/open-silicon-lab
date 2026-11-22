@@ -7,8 +7,9 @@ import { SLAB, METRES, coreGrid, CACHE, IO, STACKS, BASE, PACKAGE, padsOf, PADS 
 import { DEPTHS } from '../src/data/weave.js';
 import { model, START } from '../src/engines/chip.js';
 import { diveWord } from '../src/data/atlas.js';
+import { readWords } from '../scripts/words.mjs';
 
-const EN = JSON.parse(readFileSync(new URL('../src/i18n/en.json', import.meta.url), 'utf8'));
+const EN = readWords();
 const inside = (a, b) => a[0] >= b[0] && a[1] >= b[1] && a[0] + a[2] <= b[0] + b[2] && a[1] + a[3] <= b[1] + b[3];
 const apart = (a, b) => a[0] + a[2] <= b[0] || b[0] + b[2] <= a[0] || a[1] + a[3] <= b[1] || b[1] + b[3] <= a[1];
 

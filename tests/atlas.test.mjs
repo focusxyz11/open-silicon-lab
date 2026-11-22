@@ -7,8 +7,9 @@ import { readFileSync } from 'node:fs';
 import { partHome, stopHome, VIEW_PARTS, STORIES, TWINS, twinOf, levelAt } from '../src/data/atlas.js';
 import { INSIDE } from '../src/data/places.js';
 import { STOPS, MADE, WORLDS } from '../src/data/weave.js';
+import { readWords } from '../scripts/words.mjs';
 
-const EN = JSON.parse(readFileSync(new URL('../src/i18n/en.json', import.meta.url), 'utf8'));
+const EN = readWords();
 const inside = (place, depth) => (INSIDE[place] || []).some(l => l.depth === depth);
 
 test('every part has one home, a place and a level, and explains itself', () => {

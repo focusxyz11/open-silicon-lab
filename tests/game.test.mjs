@@ -13,8 +13,9 @@ import { NEEDS } from '../src/data/build.js';
 import { DEBATES } from '../src/data/debates.js';
 import { WORLDS, STOPS } from '../src/data/weave.js';
 import { PLACES as MAP_PLACES } from '../src/data/views3d.js';
+import { readWords } from '../scripts/words.mjs';
 
-const EN = JSON.parse(readFileSync(new URL('../src/i18n/en.json', import.meta.url), 'utf8'));
+const EN = readWords();
 const MAP = readFileSync(new URL('../src/v2/map3d.js', import.meta.url), 'utf8');
 const RANGE = { clock: CLOCKS.map((_, i) => i), gen: [...Array(GENS).keys()], size: SIDES.map((_, i) => i), load: LOADS.map((_, i) => i), reuse: REUSES.map((_, i) => i), mem: MEMS.map((_, i) => i) };
 /* every combination of the settings a goal needs, the rest as the starting chip */

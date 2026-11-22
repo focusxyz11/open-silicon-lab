@@ -5,8 +5,9 @@ import { readFileSync } from 'node:fs';
 import { TYPES, DIE, shares, askFor, hit, partsFor } from '../src/engines/xray.js';
 import { xrayOf, XRAY_AT, setXray, partsOf, SCENES } from '../src/app/scenes.js';
 import { DEPTHS } from '../src/data/weave.js';
+import { readWords } from '../scripts/words.mjs';
 
-const EN = JSON.parse(readFileSync(new URL('../src/i18n/en.json', import.meta.url), 'utf8'));
+const EN = readWords();
 const inside = (r, R) => r[0] >= R[0] - 1e-9 && r[1] >= R[1] - 1e-9 && r[0] + r[2] <= R[0] + R[2] + 1e-9 && r[1] + r[3] <= R[1] + R[3] + 1e-9;
 
 test('every chip at the bottom of a dive has a die photo, its blocks on the die, every kind with its words', () => {

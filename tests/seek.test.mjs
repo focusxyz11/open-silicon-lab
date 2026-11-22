@@ -12,8 +12,9 @@ import { stopsAt } from '../src/data/places.js';
 import { partsOf } from '../src/app/scenes.js';
 import { normalState, fresh, DIVE_LEVELS } from '../src/v2/game.js';
 import { DC_LEVELS, DC_ASKS } from '../src/data/views3d.js';
+import { readWords } from '../scripts/words.mjs';
 
-const EN = JSON.parse(readFileSync(new URL('../src/i18n/en.json', import.meta.url), 'utf8'));
+const EN = readWords();
 const src = f => readFileSync(new URL('../src/v2/' + f, import.meta.url), 'utf8');
 
 /* a flight's levels, the question each card shows, and the names on its picture with the stretch of the flight each

@@ -10,8 +10,9 @@ import { WAYS } from '../src/data/ways.js';
 import { LENSES, ENGINES, MEASURES, GIVENS, DIRECTIONS, engineOf } from '../src/data/layers.js';
 import { EXPERIMENTS, BY_WORLD } from '../src/data/experiments/index.js';
 import * as X from '../src/engines/experiments.js';
+import { readWords } from '../scripts/words.mjs';
 
-const EN = JSON.parse(readFileSync(new URL('../src/i18n/en.json', import.meta.url), 'utf8'));
+const EN = readWords();
 const FACT = Object.fromEntries(JSON.parse(readFileSync(new URL('../src/data/facts.json', import.meta.url), 'utf8')).facts.map(f => [f.id, f]));
 const SKELETON = JSON.parse(readFileSync(new URL('../docs/framework/skeleton.json', import.meta.url), 'utf8'));
 /* the challenges, read from the game's data without a browser */

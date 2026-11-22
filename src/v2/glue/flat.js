@@ -2,7 +2,7 @@
    studio, src/v2/bench.js), and the levels drawn in 3D as the dive reaches them (src/v2/level3d.js).
    Glue of the shell (src/v2/app.js): create() runs once, when the view first opens; what it shares with the shell and
    the other views is on V (src/v2/shell.js). */
-import { t } from '../../core/i18n.js';
+import { t, has } from '../../core/i18n.js';
 import * as Game from '../game.js';
 import * as Way from '../../engines/way.js';
 import { play } from '../play.js';
@@ -167,7 +167,7 @@ export function create() {
     $('flatLabels').style.visibility = top > 0.5 ? 'hidden' : '';
     showStage(top > 0);
   }
-  const EN_HAS = w => t('part.' + w) !== 'part.' + w;
+  const EN_HAS = w => has('part.' + w);
   /* the rail follows the zoom continuously, so the card can say how many times closer the next level is */
   function diveRail(z) {
     if (!V.diveFrame || !V.WE || V.flatKind !== 'dive') return;

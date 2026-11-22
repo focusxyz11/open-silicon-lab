@@ -6,8 +6,9 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { LEVERS, INDICATORS, RULES, PRESETS, PUZZLES, ripple, order, placeHeads, reach, chain, fmt, NEUTRAL, solved, normalLevers } from '../src/engines/ripple.js';
 import { PLACES } from '../src/v2/game.js';
+import { readWords } from '../scripts/words.mjs';
 
-const EN = JSON.parse(readFileSync(new URL('../src/i18n/en.json', import.meta.url), 'utf8'));
+const EN = readWords();
 const facts = JSON.parse(readFileSync(new URL('../src/data/facts.json', import.meta.url), 'utf8'));
 const ind = new Set(INDICATORS.map(i => i.id));
 
