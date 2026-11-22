@@ -331,15 +331,29 @@ button.link { padding: 0; margin: 2px 14px 8px 0; border: 0; background: none; c
 .modes3 button { display: flex; align-items: center; gap: 6px; padding: 6px 12px; border: 0; border-radius: 999px; background: transparent; font: 600 13px var(--sans); color: var(--muted); cursor: pointer; }
 .modes3 button[aria-selected=true] { background: var(--ink); color: var(--bg); }
 /* the thirteen as lenses under Ask (src/engines/frame.js): a row of short names, the one chosen shown alone */
-.qlbar { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 12px; }
-.qlb { display: inline-flex; align-items: center; gap: 6px; padding: 5px 11px 5px 7px; border-radius: 999px; border: 1px solid color-mix(in srgb, var(--warm) 45%, var(--line)); background: transparent; color: var(--ink); font: 600 13px var(--sans); cursor: pointer; transition: background .15s, transform .15s; }
-.qlb svg, .qlmeet svg { width: 18px; height: 18px; flex: none; fill: none; stroke: var(--warm); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
-.qlb:hover { transform: translateY(-1px); background: color-mix(in srgb, var(--warm) 12%, transparent); }
-.qlb[aria-pressed=true] { background: var(--warm); border-color: var(--warm); color: #1d1406; }
-.qlb[aria-pressed=true] svg { stroke: #1d1406; }
+/* the core questions met on the picture (#303): a mark beside the part each is about, its lens's icon, a slow pulse,
+   its short name only on hover or focus (src/v2/frame.js) */
+.marks3 { position: absolute; inset: 0; pointer-events: none; z-index: 2; }
+.mark3 { position: absolute; left: 0; top: 0; width: 34px; height: 34px; padding: 0; display: grid; place-items: center; border-radius: 50%; border: 1.5px solid var(--warm); background: var(--panel-solid); color: var(--ink); box-shadow: 0 4px 14px rgba(0, 0, 0, .22); pointer-events: auto; cursor: pointer; transition: opacity .25s; }
+.mark3[hidden] { display: none; }
+.mark3 svg, .qlk svg, .qlmeet svg { width: 18px; height: 18px; flex: none; fill: none; stroke: var(--warm); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.mark3::after { content: ""; position: absolute; inset: -6px; border-radius: 50%; border: 1.5px solid var(--warm); opacity: 0; animation: markpulse 2.6s infinite; pointer-events: none; }
+@keyframes markpulse { 0% { opacity: .7; transform: scale(.8); } 100% { opacity: 0; transform: scale(1.5); } }
+.mark3:hover, .mark3:focus-visible { z-index: 1; box-shadow: 0 0 0 3px color-mix(in srgb, var(--warm) 35%, transparent), 0 4px 14px rgba(0, 0, 0, .22); }
+.mark3 .tip { position: absolute; right: 42px; top: 50%; transform: translateY(-50%); white-space: nowrap; padding: 5px 10px; border-radius: 10px; border: 1px solid var(--line); background: var(--panel-solid); font: 500 13px/1.3 var(--sans); color: var(--ink); opacity: 0; pointer-events: none; transition: opacity .2s; }
+.mark3:hover .tip, .mark3:focus-visible .tip { opacity: 1; }
+.mark3.on { background: var(--warm); }
+.mark3.on svg { stroke: #1d1406; }
+.mark3.on::after { animation: none; }
+.mark3.dim { opacity: .4; }
+.mark3.dim:hover, .mark3.dim:focus-visible { opacity: 1; }
+@media (prefers-reduced-motion: reduce) { .mark3::after { animation: none; } }
+.qlk { display: flex; align-items: center; gap: 6px; color: var(--warm); }
+.qlsay { margin: 0 0 12px; color: var(--muted); }
+.qloff { margin: 0 0 14px; }
 .qlcard { display: grid; gap: 10px; margin: 0 0 14px; padding: 14px 16px; border-radius: 16px; border: 1px solid color-mix(in srgb, var(--warm) 35%, var(--line)); background: color-mix(in srgb, var(--warm) 6%, transparent); animation: qlin .25s ease-out; }
 @keyframes qlin { from { opacity: 0; transform: translateY(4px); } }
-@media (prefers-reduced-motion: reduce) { .qlcard { animation: none; } .qlb:hover { transform: none; } }
+@media (prefers-reduced-motion: reduce) { .qlcard { animation: none; } }
 .qlcard .kicker { margin: 4px 0 0; }
 .qlq { margin: 0; font: 600 13px/1.4 var(--sans); color: var(--warm); letter-spacing: .01em; }
 .qlform { display: block; margin: 0; font: 600 18px/1.35 var(--serif); color: var(--ink); text-decoration: none; }

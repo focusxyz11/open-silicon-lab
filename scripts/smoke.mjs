@@ -384,15 +384,17 @@ const explore = async (tag, viewport, scheme) => {
   await page.waitForFunction(() => !!document.querySelector('#chipui .rail2 [aria-current][data-rail="block"]'), null, { timeout: 15000 }).catch(() => problems.push(tag + ': the layers as made are not at the level the dive was at'));
   await page.click('#chipui [data-rowgo="2"]').catch(() => problems.push(tag + ': no way deeper in the layers as made'));
   await page.waitForFunction(() => { const c = document.querySelector('#chipui .rail2 [aria-current]'); return c && c.dataset.rail === 'gate' && location.hash === '#/chip/2/build'; }, null, { timeout: 15000 }).catch(() => problems.push(tag + ': going deeper in the layers as made did not reach the gates'));
-  /* Ask: the core questions that live at the level, as lenses (src/engines/frame.js); one chosen is shown alone, and
-     choosing another shows that one instead */
+  /* Ask: the core questions that live at the level are met on the picture, as marks (docs/FRAME13.md); one tapped is
+     shown alone, another tapped shows that one instead, and no row of their names is drawn */
   await page.waitForFunction(() => { const b = document.querySelector('#chipui .modes3 [data-mode="ask"]'); if (b && b.getAttribute('aria-selected') !== 'true') b.click();
-    return document.querySelectorAll('#chipui .dock .qlbar .qlb').length >= 2 && document.querySelectorAll('#chipui .dock .qlb[aria-pressed="true"]').length === 1 && !!document.querySelector('#chipui .dock .qlcard .qlq'); }, null, { timeout: 15000, polling: 500 })
-    .catch(() => problems.push(tag + ': Ask shows no lenses at this level, or not one chosen'));
+    const m = [...document.querySelectorAll('#chipui .mark3')].find(x => !x.hidden); if (m && !document.querySelector('#chipui .dock .qlcard')) m.click();
+    return !!document.querySelector('#chipui .dock .qlcard .qlq') && document.querySelectorAll('#chipui .mark3[aria-pressed="true"]').length === 1 && !document.querySelector('.qlbar'); }, null, { timeout: 15000, polling: 500 })
+    .catch(() => problems.push(tag + ': Ask shows no marks at this level, or a tapped one does not open its lens alone'));
   { const q0 = await page.textContent('#chipui .dock .qlcard .qlq').catch(() => '');
-    await page.waitForFunction(q => { const L = [...document.querySelectorAll('#chipui .dock .qlb')], on = L.find(b => b.getAttribute('aria-pressed') === 'true'), q1 = document.querySelector('#chipui .dock .qlcard .qlq');
-      if (q1 && q1.textContent !== q && document.querySelectorAll('#chipui .dock .qlcard').length === 1) return true; const other = L.find(b => b !== on); if (other) other.click(); return false; }, q0, { timeout: 15000, polling: 500 })
-      .catch(() => problems.push(tag + ': choosing another lens does not show its question alone')); }
+    await page.waitForFunction(q => { const q1 = document.querySelector('#chipui .dock .qlcard .qlq');
+      if (q1 && q1.textContent !== q && document.querySelectorAll('#chipui .dock .qlcard').length === 1) return true;
+      const other = [...document.querySelectorAll('#chipui .mark3:not([aria-pressed="true"])')].find(x => !x.hidden); if (other) other.click(); return false; }, q0, { timeout: 15000, polling: 500 })
+      .catch(() => problems.push(tag + ': tapping another mark does not show its question alone')); }
   await page.click('#chipui .dock [data-mode="look"]').catch(() => {});
   /* the flat dive in the frame: the rail follows it down, and the Turn leads to the same level as made */
   at = tag + ' ' + '#/dive/gate'; await page.evaluate(() => { location.hash = '#/dive/gate'; });
@@ -1132,6 +1134,31 @@ run['frame'] = async () => {
     const side = await rp.evaluate(() => Math.max(document.documentElement.scrollWidth - innerWidth, (() => { const p = document.querySelector('#page'); return p ? p.scrollWidth - p.clientWidth : 0; })()));
     if (side > 1) problems.push(tag + ': the page scrolls sideways by ' + side + ' px');
     await rp.close(); }
+  /* the core questions are met on the picture (#303, docs/FRAME13.md): at a level, at most three marks while you look,
+     one for every lens that lives there with Ask open, each beside its part; a mark tapped opens its lens alone and
+     Put it down closes it; no row of their names anywhere */
+  for (const [w, h, scheme] of [[1280, 800, 'dark'], [390, 844, 'light']]) {
+    const tag = 'frame marks ' + w, mp = await browser3d.newPage({ viewport: { width: w, height: h }, colorScheme: scheme }); mp.on('pageerror', e => problems.push(tag + ': ' + e.message));
+    await mp.addInitScript(() => { try { localStorage.setItem('osl-quality', 'keep'); localStorage.setItem('osl-hints-v1', JSON.stringify({ seen: {}, off: true })); } catch (e) { /* no storage */ } });
+    for (const hash of ['#/dive/block', '#/dive/gate', '#/place/datacentre/2']) {
+      await mp.goto(base + 'index.html' + hash);
+      await mp.waitForFunction(() => { const n = [...document.querySelectorAll('.mark3')].filter(m => !m.hidden && m.offsetParent).length; return n >= 1 && n <= 3; }, null, { timeout: 90000, polling: 500 })
+        .catch(() => problems.push(tag + ' ' + hash + ': looking, the picture shows no marks, or more than three'));
+      await mp.waitForFunction(() => { const f = [...document.querySelectorAll('section')].find(x => !x.hidden && x.querySelector(':scope > .marks3')); if (!f) return false;
+        const b = f.querySelector('.modes3 [data-mode="ask"]'); if (b && b.getAttribute('aria-selected') !== 'true') b.click();
+        const all = [...f.querySelectorAll('.mark3')], n = all.filter(m => !m.hidden && m.offsetParent).length;
+        return b && b.getAttribute('aria-selected') === 'true' && all.length >= 2 && all.length <= 6 && n === all.length && !!f.querySelector('.dock .qlsay'); }, null, { timeout: 30000, polling: 500 })
+        .catch(() => problems.push(tag + ' ' + hash + ': with Ask open, not one mark for every lens that lives here, or no word that the marks are its questions'));
+      await mp.waitForFunction(() => { const f = [...document.querySelectorAll('section')].find(x => !x.hidden && x.querySelector(':scope > .marks3')); if (!f) return false;
+        if (!f.querySelector('.dock .qlcard')) { const m = [...f.querySelectorAll('.mark3')].find(x => !x.hidden); if (m) m.click(); return false; }
+        return f.querySelectorAll('.dock .qlcard').length === 1 && f.querySelectorAll('.mark3[aria-pressed="true"]').length === 1 && f.querySelectorAll('.mark3.dim').length >= 1 && !document.querySelector('.qlbar'); }, null, { timeout: 30000, polling: 500 })
+        .catch(() => problems.push(tag + ' ' + hash + ': a mark tapped does not open its lens alone, the others dimmed'));
+      await mp.waitForFunction(() => { const f = [...document.querySelectorAll('section')].find(x => !x.hidden && x.querySelector(':scope > .marks3')); if (!f) return false;
+        const off = f.querySelector('.dock [data-lensoff]'); if (off) off.click();
+        return !f.querySelector('.dock .qlcard') && !!f.querySelector('.dock .qlsay') && !f.querySelector('.mark3.dim'); }, null, { timeout: 15000, polling: 500 })
+        .catch(() => problems.push(tag + ' ' + hash + ': Put it down does not close the lens'));
+    }
+    await mp.close(); }
 };
 
 run['flights'] = async () => {

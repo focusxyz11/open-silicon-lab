@@ -43,7 +43,7 @@ export function createLevel3D(canvas, host, on, model) {
 
   /* names on the parts, from the level's words; a tap picks the part */
   const L = labels(host);
-  const names = M.parts.map(k => { const lb = L.add(root, new THREE.Vector3(...M.anchors[k]), t('part.' + diveWord(M.level, k)), { cls: 'part3 pick', button: true, data: { part3: k } }); lb.key = k; return lb; });
+  const names = M.parts.map(k => { const lb = L.add(root, new THREE.Vector3(...M.anchors[k]), t('part.' + diveWord(M.level, k)), { cls: 'part3 pick', button: true, data: { part3: k, word: diveWord(M.level, k) } }); lb.key = k; return lb; });
   host.addEventListener('click', e => { const b = e.target.closest('[data-part3]'); if (b) { e.stopPropagation(); on.part && on.part(b.dataset.part3); } });
   /* a wheel over a name, a note or a mark still moves the dive: it is passed on to the picture beneath */
   host.addEventListener('wheel', e => {

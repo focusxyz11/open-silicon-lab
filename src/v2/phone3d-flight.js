@@ -189,7 +189,7 @@ export function createPhoneFlight(canvas, host, on = {}) {
     ['soc', soc, W3(-0.006, 0.0008, 0.006), [1.6, 2.4]], ['dram', dram, W3(0.004, 0.0011, -0.005), [1.6, 2.4]], ['pmic', parts, W3(0.0005, 0.0008, -0.0285), [1.6, 2.4]], ['modem', parts, W3(0.0265, 0.0009, -0.0315), [1.6, 2.4]], ['storage', parts, W3(0.0265, 0.0011, -0.054), [1.6, 2.4]],
     ...[['isp', 180, 170], ['gpu', 560, 170], ['npu', 560, 480], ['cpu', 190, 470], ['cache', 190, 780]].map(([id, x, y]) => [id, scene, W3(...onDie(x, y, BY + 0.0008)), [2.6, 3.05]])
   ];
-  const named = NAMES.map(([id, obj, at, lv]) => { const lb = L.add(obj, at, t('part.' + VIEW_PARTS.phone[id]), { cls: 'part3' }); lb.lv = lv; lb.id = lb.el.dataset.hl = id; return lb; });
+  const named = NAMES.map(([id, obj, at, lv]) => { const lb = L.add(obj, at, t('part.' + VIEW_PARTS.phone[id]), { cls: 'part3', data: { word: VIEW_PARTS.phone[id] } }); lb.lv = lv; lb.id = lb.el.dataset.hl = id; return lb; });
   /* the way in at each level: the thing you would enter next (at the chip, the dive's door into the block), where the shell's button stands with a ring on it */
   const INTO = [[phone, W3(0, PT, 0)], [phone, W3(0.0125, BY + 0.003, -0.045)], [soc, W3(0, 0.0022, 0)], [scene, W3(...onDie(DEPTHS.soc.portal[0] + DEPTHS.soc.portal[2] / 2, DEPTHS.soc.portal[1] + DEPTHS.soc.portal[2] / 2, BY + 0.0008))]];
   const pv = new THREE.Vector3();

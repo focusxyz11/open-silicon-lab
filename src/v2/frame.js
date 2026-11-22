@@ -64,6 +64,7 @@ export function createFrame(host, o) {
     '<div class="corner"><aside class="goal2" hidden></aside></div>' +
     '<div class="wayin" hidden><span class="wiring" aria-hidden="true"></span><div class="wibox"></div></div>' +
     '<div class="wayon" hidden><div class="wobox"></div></div>' +
+    '<div class="marks3"></div>' +
     '<div class="dockwrap"><p class="scale2" hidden></p><button type="button" class="peekbar" aria-expanded="true" aria-label="' + esc(t('frame.peek.fold')) + '"><span aria-hidden="true"></span></button><div class="modes3" role="tablist" aria-label="' + esc(t('frame.modes')) + '">' + MODES.map(m => '<button type="button" role="tab" data-mode="' + m + '" aria-selected="' + (m === mode) + '"><span class="mn">' + esc(t('frame.' + m)) + '</span><span class="mc"></span></button>').join('') + '</div>' +
     '<section class="dock" aria-live="polite"></section></div>';
   const $ = s => host.querySelector(s), dock = $('.dock');
@@ -166,15 +167,69 @@ export function createFrame(host, o) {
   const lenses = () => (depth && o.lensesAt ? o.lensesAt(depth) : []);
   const counts = () => { const q = depth ? (lenses().length || o.askAt(depth).length) + fields().length : 0, c = depth ? o.doAt(depth).length : 0;
     host.querySelectorAll('.modes3 [data-mode]').forEach(b => { const n = b.dataset.mode === 'ask' ? q : b.dataset.mode === 'do' ? c : 0; b.querySelector('.mc').textContent = n ? String(n) : ''; }); };
+  /* the marks: each core question that lives here, met beside the part of the picture it is about (MARKS in
+     src/data/frame.js, found by the part's one name, data-word, on the view's own labels). The three strongest while you
+     look, every one with Ask open, none while a challenge has the card; with a lens open the others dim, and a tap on
+     one opens it alone (or switches to it). They follow the picture as it moves, and stand aside from the way in and
+     the card */
+  const marksEl = $('.marks3'); let markKey = '', markRaf = 0;
+  const markList = () => (!depth || !o.marksAt || mode === 'do' ? [] : o.marksAt(depth).slice(0, mode === 'ask' ? 6 : 3));
+  const drawMarks = () => {
+    const M = markList(), open = mode === 'ask' ? lens : null, key = M.map(m => m.id + ':' + m.word).join() + '|' + open;
+    if (key !== markKey) { markKey = key;
+      marksEl.innerHTML = M.map(m => '<button type="button" class="mark3' + (open ? (m.id === open ? ' on' : ' dim') : '') + '" data-lens="' + esc(m.id) + '" data-mword="' + esc(m.word || '') + '" aria-pressed="' + (m.id === open) + '" aria-label="' + esc(t('frame.mark.aria', { q: m.label })) + '" hidden>' +
+        '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="' + esc(m.icon) + '"/></svg><span class="tip">' + esc(m.label) + '</span></button>').join(''); }
+    cancelAnimationFrame(markRaf); if (M.length) markRaf = requestAnimationFrame(trackMarks);
+  };
+  const shown = el => el.offsetParent && el.style.opacity !== '0' && !el.closest('[hidden]') && (el.parentNode.style || {}).visibility !== 'hidden';
+  const clash = (x, y, r) => r && x > r.left - 24 && x < r.right + 24 && y > r.top - 24 && y < r.bottom + 24;
+  function trackMarks() {
+    if (!host.isConnected || host.hidden || !host.offsetParent) return;   /* the view stepped aside: the marks wait for it */
+    markRaf = requestAnimationFrame(trackMarks);
+    const B = marksEl.getBoundingClientRect(), stage = host.parentNode;
+    const names = [...stage.querySelectorAll('[data-word]')].filter(el => !el.classList.contains('mark3') && shown(el));
+    /* the frame's own things stay clear: the way in, the card, the rails, the path and the goal */
+    const busy = [!wayin.hidden ? wibox.getBoundingClientRect() : null].concat([...host.querySelectorAll(':scope>:is(.dockwrap,.rail2,.steps2,.crumbs2,.homebtn),.goal2:not([hidden])')].map(el => el.getBoundingClientRect())), by = new Map();
+    const placed = [], lone = [];
+    for (const b of marksEl.children) {
+      /* beside its own part's name; where this view does not name that part, beside one it names that has no mark yet */
+      const el = names.find(n => n.dataset.word === b.dataset.mword) || names.find(n => !by.has(n));
+      if (!el) { lone.push(b); continue; }
+      by.set(el, (by.get(el) || 0) + 1);
+      /* around the name: before it, after it, above, below, then a step further out; the first spot clear of the frame,
+         the picture's edge and the other marks */
+      const r = el.getBoundingClientRect(), cx = (r.left + r.right) / 2, cy = (r.top + r.bottom) / 2;
+      const spot = [[r.left - 22, cy], [r.right + 22, cy], [cx, r.top - 22], [cx, r.bottom + 22], [r.left - 62, cy], [r.right + 62, cy]]
+        .find(([x, y]) => x > B.left + 18 && x < B.right - 18 && y > B.top + 18 && y < B.bottom - 18 && !busy.some(R => clash(x, y, R)) && !placed.some(([px, py]) => Math.abs(px - x) < 38 && Math.abs(py - y) < 38));
+      if (!spot) { b.hidden = true; continue; }
+      placed.push(spot);
+      b.hidden = false; b.style.transform = 'translate(' + (spot[0] - B.left).toFixed(1) + 'px,' + (spot[1] - B.top).toFixed(1) + 'px) translate(-50%,-50%)';
+    }
+    /* a view that names no part (a row of corners, a layer) still carries its marks: in a row across the top of the
+       picture, clear of the frame */
+    let k = 0;
+    for (const b of lone) {
+      let spot = null;
+      for (; !spot && k < 24; k++) { const x = B.left + B.width / 2 + (k % 2 ? 1 : -1) * Math.ceil(k / 2) * 44, y = B.top + 110;
+        if (x > B.left + 18 && x < B.right - 18 && !busy.some(R => clash(x, y, R)) && !placed.some(([px, py]) => Math.abs(px - x) < 38 && Math.abs(py - y) < 38)) spot = [x, y]; }
+      if (!spot) { b.hidden = true; continue; }
+      placed.push(spot); b.hidden = false; b.style.transform = 'translate(' + (spot[0] - B.left).toFixed(1) + 'px,' + (spot[1] - B.top).toFixed(1) + 'px) translate(-50%,-50%)';
+    }
+  }
   const fill = () => {
     host.querySelectorAll('[data-mode]').forEach(b => b.setAttribute('aria-selected', String(b.dataset.mode === mode)));
+    drawMarks();
     if (mode !== 'ask' && o.onLens) o.onLens(null, depth);
     if (mode === 'look') return o.onLook && o.onLook();
     let h = '<p class="kicker">' + esc(t('frame.' + mode + 'At', { level: depth ? t('depth.' + depth + '.name') : '' })) + '</p>';
     if (mode === 'ask') { const ks = depth ? o.askAt(depth) : [], fs = fields(), L = lenses();
-      /* the core questions that live here, as lenses: only their short names, and the one chosen shown alone */
-      if (L.length) { if (!L.some(l => l.id === lens)) lens = L[0].id;
-        h += '<div class="qlbar" role="group" aria-label="' + esc(t('frame.lens.k')) + '">' + L.map(l => '<button type="button" class="qlb" data-lens="' + esc(l.id) + '" aria-pressed="' + (l.id === lens) + '" title="' + esc(l.hint) + '"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="' + esc(l.icon) + '"/></svg>' + esc(l.label) + '</button>').join('') + '</div>' + o.lensCard(lens, depth); }
+      /* the core questions that live here are met on the picture, by their marks (docs/FRAME13.md): never a row of their
+         names. A lens opened from its mark is shown alone, with the way to put it down */
+      if (L.length) { if (lens && !L.some(l => l.id === lens)) lens = null;
+        const l = lens && L.find(x => x.id === lens);
+        h += l ? '<p class="kicker qlk"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="' + esc(l.icon) + '"/></svg>' + esc(l.label) + '</p>' + o.lensCard(lens, depth) +
+          '<button type="button" class="btn ghost qloff" data-lensoff>' + esc(t('frame.lens.off')) + '</button>'
+          : '<p class="qlsay">' + esc(t('frame.marks.say')) + '</p>'; }
       /* then the questions people were stuck on here, each with its shape (src/v2/field.js) */
       if (fs.length) h += '<p class="kicker">' + esc(t('field.ui.k')) + '</p><div class="fieldlist">' + fs.map(fieldLine).join('') + '</div>';
       if (!L.length) h += ks.length ? '<div class="asklist">' + ks.map(k => '<a class="askline" href="' + esc(o.follow(k)) + '"><span class="q">' + esc(t('stop.' + k + '.q')) + '</span></a>').join('') + '</div>' : fs.length ? '' : '<p class="small muted">' + esc(t('frame.noAsk')) + '</p>';
@@ -188,6 +243,7 @@ export function createFrame(host, o) {
   host.addEventListener('click', e => {
     const m = e.target.closest('[data-mode]'); if (m) { mode = m.dataset.mode; pinned = false; return fill(); }
     const ln = e.target.closest('[data-lens]'); if (ln) { lens = ln.dataset.lens; mode = 'ask'; pinned = false; return fill(); }
+    if (e.target.closest('[data-lensoff]')) { lens = null; pinned = false; return fill(); }
     const r = e.target.closest('[data-rail]'); if (r) return o.onRail && o.onRail(r.dataset.rail);
     const st = e.target.closest('[data-step]'); if (st) return o.onStep && o.onStep(st.dataset.step);
     const sg = e.target.closest('[data-stepgo]'); if (sg && o.steps) { const S = o.steps.items, i = S.findIndex(x => x.id === stepAt) + +sg.dataset.stepgo; if (S[i] && o.onStep) o.onStep(S[i].id); }
@@ -202,7 +258,7 @@ export function createFrame(host, o) {
   const api = {
     dock,
     /* the level in view: Do and Ask follow it, and so does the Turn */
-    level(d) { depth = d; counts(); if (mode !== 'look' && !pinned) fill(); },
+    level(d) { depth = d; counts(); if (mode !== 'look' && !pinned) fill(); else drawMarks(); },
     /* the rail: which item is here, and how far along (0..1) */
     /* pos: where the view is along the items, continuously (0 = the first); else read from f */
     rail(at, f, pos) { railAt = at; if (o.rail && o.rail.optional) { const el = $('.rail2'); if (el) el.hidden = !items.some(x => x.id === at); } host.querySelectorAll('[data-rail]').forEach(b => { if (b.dataset.rail === at) b.setAttribute('aria-current', 'step'); else b.removeAttribute('aria-current'); }); if (f != null) { const el = $('.rfill'); if (el) el.style.height = (f * 100).toFixed(1) + '%'; }
@@ -222,9 +278,9 @@ export function createFrame(host, o) {
     /* a challenge being played in the card: its face is Do, and it stays while the level changes beneath it */
     /* the height of the card at rest (on a phone, the peek): what the picture is framed above */
     restH() { return phone() && restH ? restH : wrap.offsetHeight; },
-    doing() { mode = 'do'; pinned = true; host.querySelectorAll('[data-mode]').forEach(b => b.setAttribute('aria-selected', String(b.dataset.mode === 'do'))); },
+    doing() { mode = 'do'; pinned = true; host.querySelectorAll('[data-mode]').forEach(b => b.setAttribute('aria-selected', String(b.dataset.mode === 'do'))); drawMarks(); },
     /* a question being followed: shown under Ask, and kept while the level changes beneath it */
-    stop(html) { mode = 'ask'; pinned = true; host.querySelectorAll('[data-mode]').forEach(b => b.setAttribute('aria-selected', String(b.dataset.mode === 'ask'))); dock.innerHTML = html; dock.classList.remove('locked'); }
+    stop(html) { mode = 'ask'; pinned = true; host.querySelectorAll('[data-mode]').forEach(b => b.setAttribute('aria-selected', String(b.dataset.mode === 'ask'))); dock.innerHTML = html; dock.classList.remove('locked'); drawMarks(); }
   };
   /* the frame worn as a caption, a side panel and a stage (src/v2/frame2.js, #271) */
   frame2(host, api, o, { wrap, items, at: () => railAt, step: () => (o.steps && stepAt ? (o.steps.items.find(x => x.id === stepAt) || {}).label || '' : ''), doList: () => (depth && o.doAt ? o.doAt(depth) : []),

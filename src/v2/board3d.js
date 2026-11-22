@@ -4,6 +4,7 @@
    between memory and the die as light; the die's cores light up as much as they are busy (src/engines/chip.js).
    Units: centimetres. Words: board.* (src/i18n/en.json). */
 import { THREE, PALETTES, theme, stage, light, group, labels, clamp, smooth, reduced, rnd, BOARD } from './kit3d.js';
+import { VIEW_PARTS } from '../data/atlas.js';
 
 /* the camera for each view of the story: where it looks, how far, the turn and the tilt */
 export const VIEWS = {
@@ -69,7 +70,7 @@ export function createBoard(canvas, host, on = {}) {
 
   /* names on the parts; figures on the parts (set by the story) */
   const NAMES = { chip: [0, 1.4, 4.9], die: [0, 0.9, -2.2], hbm: [2.9, 1.4, 2.6], vrm: [-10.4, 1.3, 7.2], links: [3, 1.8, -12.6] };
-  const names = Object.fromEntries(Object.entries(NAMES).map(([id, p]) => [id, L.add(scene, new THREE.Vector3(...p), '', { cls: 'part3 pick', button: true, data: { part: id } })]));
+  const names = Object.fromEntries(Object.entries(NAMES).map(([id, p]) => [id, L.add(scene, new THREE.Vector3(...p), '', { cls: 'part3 pick', button: true, data: { part: id, word: VIEW_PARTS.board[id] } })]));
   const figs = { die: L.add(scene, new THREE.Vector3(0, 0.9, 0.6), '', { cls: 'fig3' }), hbm: L.add(scene, new THREE.Vector3(-2.9, 1.4, -2.6), '', { cls: 'fig3 warm' }) };
 
   /* ---- state the story sets ---- */

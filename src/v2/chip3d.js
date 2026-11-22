@@ -78,7 +78,7 @@ export function createChip(canvas, host, on = {}) {
   const named = [
     [0, [5.5, 8.95, 5.5], 'lid'], [0, [-4.5, 7.75, 6.2], 'bumps'], [1, [5.6, 6.6, 3], 'wires'],
     [2, [5.8, 3.4, 0.0], 'gates'], [2, [-4.5, 3.98, -3.3], 'contacts'], [3, [-5, 3.2, 5], 'sheets'], [4, [-4.5, 2.3, 5.6], 'wells'], [4, [5.8, 1.1, 5.8], 'silicon']
-  ].map(([r, p, id]) => { const lb = L.add(rows[r].g, new THREE.Vector3(...p), t('part.' + VIEW_PARTS.chip[id]), { cls: 'part3' }); lb.row = r; return lb; });
+  ].map(([r, p, id]) => { const lb = L.add(rows[r].g, new THREE.Vector3(...p), t('part.' + VIEW_PARTS.chip[id]), { cls: 'part3', data: { word: VIEW_PARTS.chip[id] } }); lb.row = r; return lb; });
 
   /* ---- the position, and what each row does at it ---- */
   let z = 0, goal = 0, W = 1, Hh = 1, running = true, raf = 0, last = performance.now(), work = 0;

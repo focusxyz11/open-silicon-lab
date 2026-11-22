@@ -326,7 +326,7 @@ export function createCarFlight(canvas, host, on = {}) {
     ['case', scene, W3(...onUnit(180, 860, 0.03)), [1.6, 2.4]], ['connector', scene, W3(...onUnit(165, 190, BT + 0.012)), [1.6, 2.4]], ['mcu', scene, W3(...onUnit(475, 395, BT + 0.002)), [1.6, 2.4]], ['drivers', scene, W3(...onUnit(715, 210, BT + 0.005)), [1.6, 2.4]],
     ...[['cores', 180, 170], ['flash', 560, 170], ['sram', 190, 450], ['periph', 200, 620]].map(([id, x, y]) => [id, scene, W3(...onDie(x, y)), [2.6, 3.05]])
   ];
-  const named = NAMES.map(([id, obj, at, lv]) => { const lb = L.add(obj, at, t('part.' + VIEW_PARTS.car[id]), { cls: 'part3' }); lb.lv = lv; lb.id = id; return lb; });
+  const named = NAMES.map(([id, obj, at, lv]) => { const lb = L.add(obj, at, t('part.' + VIEW_PARTS.car[id]), { cls: 'part3', data: { word: VIEW_PARTS.car[id] } }); lb.lv = lv; lb.id = id; return lb; });
   /* the way in at each level: the thing you would enter next (at the chip, the dive's door into the block), where the shell's button stands with a ring on it */
   const portalAt = DEPTHS.mcu.portal;
   const INTO = [W3(0.62, 0.62, 0.9), W3(E[0], E[1] + 0.03, E[2]), W3(MCU[0], E[1] + BT + 0.0016, MCU[2]), W3(...onDie(portalAt[0] + portalAt[2] / 2, portalAt[1] + portalAt[2] / 2))];

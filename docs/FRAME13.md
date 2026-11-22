@@ -1,9 +1,10 @@
 # The thirteen as lenses
 
 The lab is framed by thirteen core questions. They are not a page and never a list: they are the way everything else
-is filed and the way it is seen. Each one is a **lens**. At any level of any view, the questions that live there are
-offered by their short names under Ask, and the one chosen is shown alone. Choosing it changes the picture to show
-what that question is about there.
+is filed and the way it is seen. Each one is a **lens**. A core question is met on the picture, where it lives, one
+at a time: at any level of any view, each question that lives there has a mark beside the part it is about, and the
+one tapped is shown alone. There is no row of their names anywhere. Opening one changes the picture to show what that
+question is about there.
 
 ## The thirteen
 
@@ -58,8 +59,20 @@ lens holds there:
 
 ## On the picture
 
-The card's Ask face (`src/v2/frame.js`) is the lens bar, then the chosen lens's card (made by `lensCard` in
-`src/v2/glue/frame.js`), then the questions people were stuck on and what they asked. The lens lights its parts:
+**Marks** (#303). At each level, the part each lens that lives there is about is in `MARKS` (`src/data/frame.js`, a
+part the level's scene names, from the lens's strongest stop; a test checks every living lens has one). The frame
+(`src/v2/frame.js`) draws a mark, the lens's icon in a ring with a slow pulse and its short name on hover or focus,
+beside that part's name on the picture: every view's part names carry the part's one name in the atlas (`data-word`),
+so the mark follows the picture as it moves, in 2D and 3D alike. While you look, the picture carries the three
+strongest marks (by the lens weights of `src/engines/frame.js`); with Ask open, one for every lens that lives there
+(at most six); while a challenge has the card, none. Marks stand clear of the frame's own things (the way in, the card,
+the rails, the path), and where a view does not name a mark's part, it stands beside a part the view does name, or in a
+row across the top of the picture where it names none. Marks are buttons: Tab reaches them and Enter opens one.
+
+The card's Ask face, with no lens open, says in one sentence that the marks are the questions that live here, then the
+questions people were stuck on and what they asked. A mark tapped opens its lens alone (its icon and short name, then
+its card, made by `lensCard` in `src/v2/glue/frame.js`, and *Put it down*); the other marks dim, and tapping one switches
+to it. On a phone the sheet's peek keeps the open lens's question. The lens lights its parts:
 
 - in the dive, the line and the studio (flat pictures), the stop it shows lights its thread's parts, and the Ask
   marks on the picture are only the lens's own;
