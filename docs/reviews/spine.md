@@ -19,9 +19,14 @@ About 370 texts on screen end in a question mark. Stops reach the thirteen only 
 
 ## Decided (22 November)
 
+The first three came with the plan; the last three were settled the same day, before their tasks were unblocked.
+
 1. **Marks on the picture replace the row of names.** A core question is met on the picture, where it lives, one at a time. Tapping its mark opens that lens alone.
 2. **The eleven worlds are refiled, their documents kept as source.** Every stop is filed under the thirteen; the eleven stop being a structure a visitor meets; `#/w/<id>` stays as a reading page opened from a lens.
 3. **The field questions lead.** Where one lives at a level, it is the first form its core question takes there: a real person, stuck, with a source.
+4. **At most three marks while looking.** In Look, only the three strongest lenses at a level have marks; with Ask open, every lens that lives there does (at most six) (#303).
+5. **The Beyond computation lab starts physical.** First a gate built from dominoes, water or light (anything can compute), then the program nobody can judge (#307).
+6. **People and AI choose side by side.** In *A thousand that pass*, agents can make the same choice through the open port, marked as AI, and the lab shows the two groups apart (#309).
 
 ## The design
 
