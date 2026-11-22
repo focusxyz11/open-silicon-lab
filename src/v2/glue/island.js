@@ -143,7 +143,7 @@ export function create() {
       /* a part of an open building: what it does, its question, and how to go closer (zoom in) */
       const P = V.cur.part, PP2 = V.PARTS[id], qs = PP2.qs(P);
       h += '<p class="line">' + esc(PP2.see(P)) + '</p>' +
-        '<div class="zoomhint"><button type="button" class="igo" data-deeper><span class="wia" aria-hidden="true">↓</span><span class="wit"><span class="wik">' + esc(t('frame.in.k')) + '</span><b>' + esc(PP2.name(P)) + '</b></span></button><span class="small muted">' + esc(t('zoom.tool.' + id)) + '</span></div>' + qs.slice(0, 1).map(V.askLink).join('') + V.worldsRow(qs) +
+        '<div class="zoomhint"><button type="button" class="igo" data-deeper><span class="wia" aria-hidden="true">↓</span><span class="wit"><span class="wik">' + esc(t('frame.in.k')) + '</span><b>' + esc(PP2.name(P)) + '</b></span></button><span class="small muted">' + esc(t('zoom.tool.' + id)) + '</span></div>' + qs.slice(0, 1).map(V.askLink).join('') +
         '<ol class="lvchips steps" aria-label="' + esc(t('zoom.tools')) + '">' + PP2.list.map((s2, i) => '<li><button type="button" data-part="' + s2 + '"' + (s2 === P ? ' aria-current="true"' : '') + '>' + esc(PP2.name(s2)) + '</button></li>').join('') + '</ol>';
     } else if (V.cur.tab === 'look') {
       /* one line; the way in is zooming in (docs/INTERACTION.md), the card only says so; the levels as small steps */
