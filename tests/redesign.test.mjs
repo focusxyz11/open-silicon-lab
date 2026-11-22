@@ -5,13 +5,14 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
-const EN = JSON.parse(readFileSync(new URL('../src/i18n/en.json', import.meta.url), 'utf8'));
+const EN = readWords();
 const src = f => readFileSync(new URL('../src/v2/' + f, import.meta.url), 'utf8');
 
-/* the modules draw with WebGL, so read their data from the source rather than importing them */
-const PLACES = [...src('map3d.js').matchAll(/\{ id: '([a-z]+)', at: \[/g)].map(m => m[1]);
-const LEVELS = src('dc3d.js').match(/LEVELS = \[([^\]]+)\]/)[1].match(/'([a-z]+)'/g).map(s => s.slice(1, -1));
-const ASKS = Object.fromEntries([...src('dc3d.js').match(/ASKS = \{([^}]+)\}/)[1].matchAll(/([a-z]+): '([a-z.]+)'/g)].map(m => [m[1], m[2]]));
+/* the 3D views' plain data is its own module (src/data/views3d.js); the parts the modules draw with WebGL are read
+   from their source rather than importing them */
+import { PLACES as MAP_PLACES, DC_LEVELS as LEVELS, DC_ASKS as ASKS, CHIP_ROWS, CHIP_ASK } from '../src/data/views3d.js';
+import { readWords } from '../scripts/words.mjs';
+const PLACES = MAP_PLACES.map(p => p.id);
 const PARTS = [...src('dc3d.js').matchAll(/\['([a-z]+)', (?:scene|rack|tray|pkg), W3\(/g)].map(m => m[1]);
 
 test('every place on the map has a name, a kind and a line', () => {
@@ -68,7 +69,8 @@ test('a car is flown through like the data centre and the phone: every level has
   /* the island goes inside into the flight, and the dive's car chip goes back up to its last level */
   const { FLOWN } = await import('../src/v2/game.js');
   assert.deepEqual(FLOWN.cars, { car: 0, ecu: 2, mcu: 3 });
-  assert.match(src('app.js'), /up: '#\/place\/cars\/3'/);
+  /* the dives' worlds (DIVES in src/v2/glue/frame.js): the car's leads up to its flight */
+  assert.match(src('glue/frame.js'), /up: '#\/place\/cars\/3'/);
 });
 
 test('there is no menu: the bar holds the loop, six stages each with its words, and the shell says so', async () => {
@@ -83,14 +85,14 @@ test('there is no menu: the bar holds the loop, six stages each with its words, 
 
 test('inside a chip: each row is a depth of the dive and the factory steps that make it, as the weave says', async () => {
   const { MADE, STOPS } = await import('../src/data/weave.js');
-  const rows = [...src('chip3d.js').matchAll(/\{ dive: '([a-z]+)', made: \[([^\]]+)\] \}/g)].map(m => ({ dive: m[1], made: m[2].match(/'([a-z]+)'/g).map(x => x.slice(1, -1)) }));
+  const rows = CHIP_ROWS;
   assert.deepEqual(rows.map(r => r.dive), ['chip', 'block', 'gate', 'switch', 'atom']);
   for (const r of rows) {
     assert.equal(r.made[r.made.length - 1], MADE[r.dive], r.dive + ' is made at ' + MADE[r.dive]);
     for (const d of [r.dive, ...r.made]) assert.ok(EN['depth.' + d + '.name'] && EN['depth.' + d + '.see'], d);
   }
   /* one question at each row, about how it is made (the dive asks its own) */
-  const asks = src('chip3d.js').match(/export const ASK = \[([^\]]+)\]/)[1].match(/'([a-z]+\.[a-z]+)'/g).map(x => x.slice(1, -1));
+  const asks = CHIP_ASK;
   assert.equal(asks.length, rows.length);
   for (const k of asks) assert.ok(STOPS[k] && EN['stop.' + k + '.q'], k);
 });

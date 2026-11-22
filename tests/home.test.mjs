@@ -9,8 +9,9 @@ import { WORLDS } from '../src/data/worlds.js';
 import * as H from '../src/engines/home.js';
 import { CHALLENGES, viewOfDepth } from '../src/v2/game.js';
 import { doHome } from '../src/engines/way.js';
+import { readWords } from '../scripts/words.mjs';
 
-const EN = JSON.parse(readFileSync(new URL('../src/i18n/en.json', import.meta.url), 'utf8'));
+const EN = readWords();
 
 test('every station has its own address and words that exist', () => {
   const hrefs = STATIONS.map(s => s.href);

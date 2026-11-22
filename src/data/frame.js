@@ -8,10 +8,14 @@
    Data only; every word is in src/i18n/en.json.
    - QUESTIONS: id, word (the question itself; where the lab already had it, its existing home), icon (a 24 x 24 stroke
      path for its lens). Its short name is frame.q.<id>, what its lens shows frame.q.<id>.hint.
-   - FILED: every experiment (src/data/experiments/) and every challenge (src/v2/game.js) filed once: its home question
-     first, then the one or two it joins. A test checks nothing is left out.
-   - THREAD_HOME: the earlier threads' stops (src/data/weave.js) belong to a question through the experiments filed
-     under it; a stop no experiment names belongs to its thread's question here.
+   - FILED: everything filed once, its home question first, then the one or two it joins. A test checks nothing is
+     left out, nothing is filed twice and every question is real.
+       field        the questions from the field (src/data/questions.js), which lead: where one has its home at a level,
+                    it is the first form its home question takes there (src/engines/frame.js weighs it most)
+       stops        the earlier threads' stops (STOPS in src/data/weave.js); the eleven threads are the earlier framework,
+                    their words stay, and nothing new is filed by thread
+       experiments  the experiments (src/data/experiments/)
+       challenges   the challenges (src/v2/game.js)
    - SEAMS: the pairs of questions that share content, each named for what joins them (frame.seam.<a>.<b>). */
 
 export const QUESTIONS = [
@@ -31,6 +35,60 @@ export const QUESTIONS = [
 ];
 
 export const FILED = {
+  field: {
+  pinhead: ['moore', 'physics'], heat: ['physics', 'eff'], nature: ['nat'], brain: ['copy', 'physics'], dark: ['geo', 'eff'],
+  wires: ['geo', 'moore'], wear: ['perfect', 'physics'], spare: ['vn'], palm: ['geo', 'eff'], life: ['trust', 'vn'],
+  fetch: ['geo', 'eff', 'copy'], wait: ['geo', 'copy'], secret: ['trust', 'dig'], lid: ['perfect', 'physics'], perfect: ['perfect'],
+  copy: ['trust', 'perfect', 'human'], pins: ['trust'], later: ['perfect', 'trust'], trust: ['trust'], package: ['geo', 'moore'],
+  purity: ['perfect', 'physics'], mask: ['physics', 'dig'], oxide: ['moore', 'physics'], batch: ['eff', 'line'], oxen: ['sutton', 'geo'],
+  fabless: ['human', 'line'], printer: ['human', 'trust'], anyone: ['human', 'line'], cheaper: ['moore'], general: ['line'],
+  lottery: ['sutton', 'line'], scale: ['sutton'], top: ['moore', 'sutton'], prove: ['trust'], onebad: ['perfect', 'geo'],
+  quartz: ['human', 'trust'], neon: ['human', 'trust'], station: ['eff', 'geo'], jevons: ['eff'], dollar: ['line', 'human']
+  },
+  stops: {
+  'think.rack': ['dig'], 'think.board': ['dig', 'line', 'eff'], 'think.chip': ['dig'], 'think.block': ['copy', 'dig'],
+  'think.gate': ['line', 'dig'], 'think.switch': ['physics', 'dig'], 'think.atom': ['dig'],
+  'think.soc': ['dig', 'copy'], 'think.mcu': ['dig', 'line'], 'think.logic': ['dig', 'trust'],
+  'strange.chip': ['physics', 'moore'], 'strange.gate': ['physics'], 'strange.switch': ['physics', 'geo', 'copy'],
+  'strange.atom': ['physics', 'nat'], 'strange.crystal': ['physics', 'perfect'],
+  'strange.deposit': ['physics', 'moore'],
+  'limit.rack': ['nat'], 'limit.chip': ['line', 'nat'], 'limit.gate': ['nat', 'sutton'],
+  'limit.atom': ['physics', 'nat', 'eff'],
+  'fail.building': ['vn', 'perfect', 'eff'], 'fail.board': ['geo', 'perfect', 'eff'],
+  'fail.chip': ['perfect', 'dig', 'line'], 'fail.gate': ['perfect', 'vn'],
+  'fail.switch': ['physics', 'perfect', 'moore'], 'fail.atom': ['physics', 'perfect', 'moore'],
+  'fail.phoneboard': ['geo', 'perfect', 'eff'], 'fail.car': ['perfect'], 'fail.ecu': ['vn', 'perfect', 'trust'],
+  'fail.wafer': ['perfect', 'moore', 'geo'], 'fail.check': ['trust', 'dig'], 'fail.gates': ['perfect', 'dig', 'line'],
+  'fail.layout': ['perfect'], 'fail.print': ['perfect'], 'fail.etch': ['perfect', 'moore'],
+  'fail.implant': ['perfect'], 'fail.test': ['trust', 'perfect', 'vn'], 'fail.pkg': ['geo', 'perfect', 'eff'],
+  'fail.ship': ['perfect', 'moore'],
+  'idea.chip': ['line', 'eff', 'geo'], 'idea.block': ['sutton', 'human'], 'idea.gate': ['trust', 'line'],
+  'idea.soc': ['line', 'human'], 'idea.die': ['human', 'line'], 'idea.need': ['human', 'line'],
+  'idea.check': ['sutton', 'human', 'trust'], 'idea.masks': ['line'], 'idea.deposit': ['line', 'moore', 'physics'],
+  'make.chip': ['moore', 'nat'], 'make.switch': ['moore', 'physics'], 'make.atom': ['moore', 'physics'],
+  'make.mcu': ['moore', 'human'], 'make.scanner': ['moore', 'nat'], 'make.wafer': ['moore', 'perfect'],
+  'make.die': ['moore', 'geo', 'perfect'], 'make.gates': ['moore', 'geo', 'line'], 'make.masks': ['moore', 'dig'],
+  'make.crystal': ['moore'], 'make.slice': ['moore'], 'make.clean': ['moore', 'human'], 'make.etch': ['moore'],
+  'make.implant': ['perfect', 'moore'], 'make.wires': ['moore', 'geo'], 'make.pkg': ['moore', 'geo', 'perfect'],
+  'know.chip': ['human'], 'know.switch': ['sutton', 'human'], 'know.phone': ['human'], 'know.car': ['human'],
+  'know.logic': ['human'], 'know.crystal': ['human', 'sutton'], 'know.etch': ['human', 'sutton'],
+  'open.chip': ['trust', 'human'], 'open.block': ['human'], 'open.gate': ['trust', 'human'],
+  'open.phoneboard': ['human'], 'open.ecu': ['human'], 'open.scanner': ['human'], 'open.need': ['human', 'line'],
+  'open.layout': ['human', 'moore'], 'open.clean': ['human'], 'open.ship': ['human'],
+  'divide.building': ['line', 'geo', 'eff'], 'divide.rack': ['line', 'geo', 'eff'], 'divide.board': ['line'],
+  'divide.chip': ['line', 'sutton'], 'divide.block': ['geo', 'copy', 'eff'], 'divide.phone': ['geo', 'eff'],
+  'divide.soc': ['line', 'geo', 'eff'], 'divide.car': ['line', 'sutton'], 'divide.ecu': ['line'],
+  'divide.need': ['line', 'moore', 'human'], 'divide.layout': ['line', 'geo'], 'divide.wires': ['moore', 'line'],
+  'divide.test': ['geo', 'perfect', 'line'], 'divide.pkg': ['geo', 'copy', 'eff'], 'divide.ship': ['line'],
+  'life.building': ['copy', 'eff', 'geo'], 'life.block': ['dig', 'copy', 'physics'],
+  'life.switch': ['copy', 'physics'], 'life.atom': ['nat', 'physics', 'moore'], 'life.phone': ['copy', 'eff', 'geo'],
+  'life.car': ['copy', 'physics', 'eff'],
+  'scale.building': ['eff', 'moore', 'geo'], 'scale.chip': ['moore'], 'scale.switch': ['moore', 'sutton'],
+  'scale.atom': ['moore', 'physics'], 'scale.phoneboard': ['moore', 'geo'], 'scale.soc': ['moore', 'sutton'],
+  'scale.mcu': ['moore', 'perfect'], 'scale.scanner': ['moore', 'physics'], 'scale.gates': ['trust', 'sutton'],
+  'scale.masks': ['moore'], 'scale.slice': ['moore', 'perfect'], 'scale.clean': ['moore'],
+  'scale.print': ['moore', 'physics']
+  },
   experiments: {
   'think-switch': ['physics', 'dig'], 'think-rewire': ['line', 'dig'], 'think-nand': ['dig', 'geo'], 'think-text': ['dig', 'trust'],
   'think-mcu': ['dig', 'line'], 'think-loop': ['copy', 'dig'], 'think-slice': ['dig', 'line'], 'think-adding': ['dig', 'line', 'eff'],
@@ -82,8 +140,6 @@ export const FILED = {
   'chef': ['geo', 'physics', 'eff']
   }
 };
-
-export const THREAD_HOME = { fail: 'perfect', scale: 'moore', divide: 'line', think: 'dig', strange: 'physics', limit: 'nat', life: 'copy', make: 'moore', know: 'human', open: 'human', idea: 'line' };
 
 export const SEAMS = [
   ['moore', 'perfect'],

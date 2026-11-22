@@ -14,15 +14,10 @@ import { STEPS, STATION, GROWTH } from './game.js';
 import { betPowerNow } from '../app/betscene.js';
 import { furnisher, lump } from './furnish.js';
 import { CORNERS, HOUSE } from '../data/studio.js';
+import { PLACES } from '../data/views3d.js';
 
-/* where every place stands, and how close the camera comes */
-export const PLACES = [
-  { id: 'studio', at: [-48, -30], d: 76, r: 26 }, { id: 'quarry', at: [-62, -4], d: 56 }, { id: 'fab', at: [-8, -16], d: 72 },
-  { id: 'test', at: [22, -2], d: 54 }, { id: 'port', at: [62, 6], d: 66 }, { id: 'datacentre', at: [36, -36], d: 64 },
-  { id: 'lab', at: [6, 26], d: 62 }, { id: 'village', at: [-34, 24], d: 60 },
-  { id: 'phones', at: [-62, -196], d: 110, far: true }, { id: 'cars', at: [228, -40], d: 110, far: true }, { id: 'idea', at: [180, -116], d: 90, far: true },
-  { id: 'tools', at: [-160, -138], d: 100, far: true }, { id: 'materials', at: [-232, -46], d: 100, far: true }, { id: 'power', at: [92, -178], d: 100, far: true }
-];
+/* where every place stands, and how close the camera comes: plain data, kept in src/data/views3d.js */
+export { PLACES };
 /* the loop road, closed, and the number pins along it (one per step) */
 /* the ring road passes the Lab's square: the loop starts and comes back where the community stands */
 const LOOP = [[-28, -14], [-12, 0], [-3, 9], [6, 15], [16, 13], [28, 10], [46, 12], [53, -6], [44, -20], [24, -22], [12, -32], [-8, -38], [-26, -38], [-29, -26]];

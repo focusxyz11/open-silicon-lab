@@ -6,8 +6,9 @@ import { landauer, bitsErased, perOp, cold, reach, TEMPS } from '../src/engines/
 import { model, START } from '../src/engines/chip.js';
 import { WAYS, SAVES } from '../src/data/ways.js';
 import { DEPTHS } from '../src/data/weave.js';
+import { readWords } from '../scripts/words.mjs';
 
-const EN = JSON.parse(readFileSync(new URL('../src/i18n/en.json', import.meta.url), 'utf8'));
+const EN = readWords();
 
 test('the Landauer limit at room temperature is about 2.9 zeptojoules per bit, and falls with temperature', () => {
   assert.ok(Math.abs(landauer(300) - 2.87e-21) < 0.01e-21);

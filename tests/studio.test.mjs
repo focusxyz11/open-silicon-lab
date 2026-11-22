@@ -8,7 +8,8 @@ import { FLOOR, AISLE, HOUSE, CORNERS, cornerOf, screenAt } from '../src/data/st
 import { stepsOf } from '../src/engines/way.js';
 import { VIEW_PARTS, partHome } from '../src/data/atlas.js';
 import { FLOWN, INSIDE } from '../src/v2/game.js';
-const EN = JSON.parse(readFileSync(new URL('../src/i18n/en.json', import.meta.url), 'utf8'));
+import { readWords } from '../scripts/words.mjs';
+const EN = readWords();
 
 test('the corners are the design\'s steps, one to one and in order, the last the mask house', () => {
   assert.deepEqual(CORNERS.map(c => c.id), stepsOf('bench'));

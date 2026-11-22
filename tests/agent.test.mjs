@@ -4,8 +4,9 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { CASES, SKILLS, tinyCheck, asmRun, sumRun, poissonYield, decodeTime, score, checkAgent, normalAgent, caseOf } from '../src/data/agent.js';
+import { readWords } from '../scripts/words.mjs';
 
-const EN = JSON.parse(readFileSync(new URL('../src/i18n/en.json', import.meta.url), 'utf8'));
+const EN = readWords();
 const facts = JSON.parse(readFileSync(new URL('../src/data/facts.json', import.meta.url), 'utf8'));
 const C = caseOf;
 

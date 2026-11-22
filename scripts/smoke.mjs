@@ -45,6 +45,10 @@ let at = 'start';
 setTimeout(() => { console.error('Smoke test stuck at: ' + at + (problems.length ? '\nProblems so far:\n' + problems.join('\n') : '')); process.exit(1); }, 28 * 60 * 1000).unref();
 /* its own browser, with software WebGL, so the 3D levels can draw on a machine without a GPU */
 const browser3d = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
+/* a text asked for and not found (src/core/i18n.js warns "Missing text:", as when a view draws before its words' area
+   has loaded) never reaches the screen silently: on any page of either browser it fails the run */
+for (const b of [browser, browser3d]) { const open = b.newPage.bind(b);
+  b.newPage = async (...a) => { const p = await open(...a); p.on('console', m => { if (/^Missing text:/.test(m.text())) problems.push(at + ': ' + m.text()); }); return p; }; }
 const run = {};
 
 run['old'] = async () => {
@@ -108,6 +112,10 @@ run['home'] = async () => {
   }
 };
 
+/* what the first page may fetch before its idle preload, in bytes (it was 3.4 MB with the island's 3D and every word;
+   now no 3D, the shell's glue per view, and only the core words) */
+const FIRST_PAGE_BYTES = 1.5e6;
+
 /* the chip world (index.html): your chip's life on the island. The first challenge is played and won, the island
    grows and says so (the first fixed with one tap), the tracker in the bar moves on; a place opens its three doors in the dock, Look first with a way inside; the pages list every challenge and the plan. */
 const explore = async (tag, viewport, scheme) => {
@@ -116,6 +124,25 @@ const explore = async (tag, viewport, scheme) => {
   await page.addInitScript(() => { try { localStorage.setItem('osl-quality', 'keep'); } catch (e) { /* no storage */ } });
   page.on('pageerror', e => problems.push(tag + ': ' + e.message));
   page.on('console', m => { if (m.type() === 'error' && !/fonts\.g|net::ERR|WebGL|GPU/.test(m.text())) problems.push(tag + ': console: ' + m.text()); });
+  /* the first page loads no 3D (docs/ARCHITECTURE.md): before its idle preload starts (data-preload, the moment it
+     started), nothing of three.js or the 3D views is fetched, and what is fetched stays under a budget */
+  if (viewport.width > 760) {
+    const fp = await browser3d.newPage({ viewport, colorScheme: scheme, reducedMotion: 'reduce' });
+    fp.on('pageerror', e => problems.push(tag + ': first page: ' + e.message));
+    await fp.goto(base + 'index.html#/');
+    await fp.waitForFunction(() => !!document.documentElement.dataset.preload, null, { timeout: 20000 }).catch(() => problems.push(tag + ': the first page never starts its idle preload'));
+    await fp.waitForLoadState('networkidle').catch(() => { /* measured as it stands */ });
+    const early = await fp.evaluate(origin => { const pre = +document.documentElement.dataset.preload || Infinity;
+      return performance.getEntriesByType('resource').filter(e => e.startTime < pre && e.name.startsWith(origin)).map(e => ({ u: e.name, b: e.decodedBodySize })); }, new URL(base).origin);
+    const heavy = early.filter(e => /\/(three\.min|three-extras|kit3d|map3d|dc3d|chip3d|level3d)\.js/.test(e.u)).map(e => e.u.split('/').pop());
+    if (heavy.length) problems.push(tag + ': the first page fetches 3D before its preload: ' + heavy.join(', '));
+    const bytes = early.reduce((a, e) => a + e.b, 0);
+    if (!(bytes < FIRST_PAGE_BYTES)) problems.push(tag + ': the first page fetches ' + Math.round(bytes / 1024) + ' KB before its preload (budget ' + Math.round(FIRST_PAGE_BYTES / 1024) + ' KB)');
+    /* of the words, only the core area's */
+    const words = early.filter(e => /\/src\/i18n\//.test(e.u)).map(e => e.u.split('/src/i18n/')[1]);
+    if (words.join() !== 'en/core.json') problems.push(tag + ': the first page fetches words beyond core.json: ' + words.join(', '));
+    await fp.close();
+  }
   await page.goto(base + 'index.html#/island');
   /* the structure (docs/reviews/structure.md): no menu; the bar holds the loop, six stages from the need round to use.
      Following the chip opens the place where the loop starts, the Lab, and every place's card offers the next: the

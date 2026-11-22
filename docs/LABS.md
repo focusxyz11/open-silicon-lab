@@ -42,9 +42,9 @@ A second picture (a curve beside the main drawing, the tones under a signal) sta
 1. **`src/v2/game.js`:**
    - Add the challenge to `CHALLENGES`: `{ id, step, place, at: '<level>', kind, grows: '<grow-id>' }`.
    - Add it to `OPENS`: `<id>: '<stop key>'`, a stop at that level (`src/data/weave.js`). Each grow id must be unique.
-2. **Words:** every visible word goes in `src/i18n/en.json` under the lab's own prefix, read with `t('key')`.
+2. **Words:** every visible word goes in `src/i18n/en/labs.json` under the lab's own prefix (a new prefix is added to the `labs` area in `AREAS`, `src/core/i18n.js`), read with `t('key')`.
    - A challenge needs `game.ch.<id>.t`, `.goal` and `.why`, plus `grow.<grow-id>`.
-   - Engines that still hold their English in a `WORDS` object: copy the texts the view shows into `en.json`, and do not edit the engine.
+   - Engines that still hold their English in a `WORDS` object: copy the texts the view shows into `labs.json`, and do not edit the engine.
    - `npm test` fails on a missing or an unused word.
 3. **Experiment:** add the challenge to exactly one experiment in `src/data/experiments/<world>.js` (`ch: [...]`), the one whose stops or levels match. Update the count in `tests/experiments.test.mjs`.
 4. **The grower:** a small, well-made model in `src/v2/map3d.js` (the growers table and `GROW_SPOT`). It appears on the island when the challenge is won.

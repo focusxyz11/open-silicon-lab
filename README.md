@@ -64,7 +64,7 @@ For the browser test, install Playwright locally with `npm install --no-save pla
 
 ## How it is made
 
-A static site: plain ES modules, one stylesheet, and one file of words. No framework, and no build step for development.
+A static site: plain ES modules, one stylesheet, and one folder of words split by area. No framework, and no build step for development.
 
 | Where | What |
 | --- | --- |
@@ -72,7 +72,7 @@ A static site: plain ES modules, one stylesheet, and one file of words. No frame
 | `src/app/` | The flat drawings the frame borrows: the dive's scenes, the factory line, the design studio |
 | `src/engines/` | The engines: pure, tested models that check challenges, designs and the ledger |
 | `src/data/atlas.js`, `src/data/places.js` | One home for every thing: each part, question, challenge and story has one place and level |
-| `src/i18n/en.json` | Every word on screen (code never holds visible English) |
+| `src/i18n/en/` | Every word on screen, one file per area (code never holds visible English) |
 | `src/data/facts.json` | Industry figures, each with its source and the date it was checked |
 | `content/` | The lab written from first principles, one document per open question |
 | `community/ledger/` | The community's entries |

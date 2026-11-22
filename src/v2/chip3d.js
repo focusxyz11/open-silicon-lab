@@ -8,17 +8,10 @@
 import { THREE, PALETTES, theme, stage, light, group, labels, clamp, smooth, reduced, rnd } from './kit3d.js';
 import { t } from '../core/i18n.js';
 import { VIEW_PARTS } from '../data/atlas.js';
+import { CHIP_ROWS as ROWS, CHIP_ASK as ASK } from '../data/views3d.js';
 
-/* each row: the depth you dive to, and the factory steps that make it (src/data/weave.js MADE) */
-export const ROWS = [
-  { dive: 'chip', made: ['pkg'] },
-  { dive: 'block', made: ['wires'] },
-  { dive: 'gate', made: ['print'] },
-  { dive: 'switch', made: ['etch'] },
-  { dive: 'atom', made: ['crystal', 'implant'] }
-];
-/* the question at each row, about how it is made (stops: stop.<key>.q); the dive asks its own */
-export const ASK = ['make.pkg', 'make.wires', 'scale.print', 'make.etch', 'make.implant'];
+/* each row (the depth you dive to, and the factory steps that make it) and its question: plain data, kept in src/data/views3d.js */
+export { ROWS, ASK };
 /* each row's top and half width: at a row the picture is framed on it and everything under it */
 const TOP = [8.95, 7.25, 3.98, 3.2, 2.3], HALF = [7, 6, 6, 6, 6];
 /* the way in at each row: a point on the next row, where it shows under this one (in that row's own space) */

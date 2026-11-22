@@ -4,8 +4,9 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import * as RP from '../src/engines/rvpuzzles.js';
+import { readWords } from '../scripts/words.mjs';
 
-const EN = JSON.parse(readFileSync(new URL('../src/i18n/en.json', import.meta.url), 'utf8'));
+const EN = readWords();
 const SOLVE = {
   sum: RP.puzzleOf('sum').start,
   max: 'mv a0, a1\nbge a1, a2, done\nmv a0, a2\ndone:',

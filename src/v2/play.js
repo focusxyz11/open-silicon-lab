@@ -12,7 +12,7 @@
    Do mode (src/v2/frame2.js, docs/LABS.md): the player says what the stage shows. A lab
    declares its own instrument and goal in its HTML (data-f2); for one that declares no goal, its first goal box is the
    goal; the kinds with no picture of their own (PLACE) are played on the place, which stays the picture. */
-import { t } from '../core/i18n.js';
+import { t, needWords } from '../core/i18n.js';
 import { CLOCKS, SIDES, LOADS, REUSES, MEMS, GENS, x2 } from '../engines/chip.js';
 import { MISSIONS, MARGINS, PROTECT, normalLife } from '../engines/life.js';
 import { TAPS, turnGate, hasPiece, togglePiece, checkDesign, checkChip, checkLife, chipGoal, starter, ownStarter, aiProposal, spotCase, spotCode, spotAnswer, SPOT, STEPS, next, INSIDE, challengeOf, GAUGES, gauge, world, opensOf, askHref } from './game.js';
@@ -24,7 +24,6 @@ import * as Bet from '../engines/bet.js';
 import { setBetScene } from '../app/betscene.js';
 import { WAFER as SCENE_WAFER } from '../engines/chip.js';
 import { glyph } from './field.js';
-import { LABS } from './labs/index.js';
 import { patch } from './patch.js';
 
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
@@ -48,6 +47,11 @@ export function goalOf(ch) {
   return t('game.ch.' + ch.id + '.goal');
 }
 
+/* the labs (src/v2/labs/) and their words (the labs area, src/core/i18n.js) load with the first challenge played, never
+   with the first page: the shell awaits labsReady() before it calls play() */
+let LABS = null;
+export const labsLoaded = () => !!LABS;
+export const labsReady = () => (LABS ? Promise.resolve(LABS) : Promise.all([import('./labs/index.js'), needWords('labs')]).then(([m]) => (LABS = m.LABS)));
 export function play(el, ch, ctx) {
   const S = ctx.state;
   let view = { msg: null, B: null, ai: false, hint: false, tests: [], guess: null, wrong: null, write: false, won: false, rows: null, okG: null, op: -1, seq: null, slip: null, no: null };

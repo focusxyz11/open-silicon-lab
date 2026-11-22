@@ -1,5 +1,10 @@
 # What came out of filling the eleven
 
+> **Written under the earlier eleven questions.** This page reads across the eleven worlds as they were written. The lab is being refiled under the thirteen core
+> questions ([docs/FRAME13.md](../docs/FRAME13.md), the plan in [docs/reviews/spine.md](../docs/reviews/spine.md)):
+> every question here is filed under the thirteen (#302), and the eleven worlds become reading pages opened from a
+> lens, no longer a structure a visitor meets (#305). The documents are kept as they were written, as the source the lab draws on.
+
 The eleven worlds were each written from first principles, in the same twelve sections, without deciding in
 advance how content or challenges should be organized. Reading across them afterwards, a structure is visible that
 nobody put there. This page writes it down. Nothing here is a rule yet; it is what the filled skeleton shows.

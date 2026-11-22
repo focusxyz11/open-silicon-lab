@@ -11,9 +11,10 @@ import { useTexts } from '../src/core/i18n.js';
 import * as API from '../src/engines/api.js';
 import { useLedger } from '../src/engines/ledger.js';
 import { collect } from './ledger.mjs';
+import { readWords } from './words.mjs';
 
 const root = new URL('..', import.meta.url);
-const EN = JSON.parse(readFileSync(new URL('src/i18n/en.json', root), 'utf8'));
+const EN = readWords();
 const PKG = JSON.parse(readFileSync(new URL('package.json', root), 'utf8'));
 useTexts(EN, 'en');
 useLedger(collect());
