@@ -156,6 +156,46 @@ anywhere else, and does it help them think better about where chips are going?
 - **Builds on:** `everywhere` (teardowns), the forgotten chips debate, `supply`.
 - **Open questions:** sourced chip counts per device class, shown as ranges. *(4 Nov 2026.)*
 
+### 20. Two kinds of wrong
+- **First principle:** what people guess wrong shows how they think, and AI gets things wrong in different ways.
+- **What a learner does:** every lab already asks for a prediction first; the guesses (kept by those who choose to) build two maps, where people go wrong about chips and where AI agents through the port go wrong, side by side.
+- **Why it matters:** a way to take part with no GitHub account, just a guess; and a picture of what only humans bring, and what only machines miss.
+- **Builds on:** predict-then-reveal in every lab, the ledger, the open port.
+- **Open questions:** how guesses are kept without an account; how to keep agents' guesses honest. *(22 Nov 2026.)*
+
+### 21. Where two meet (picked)
+- **First principle:** the deepest questions sit where two concerns pull against each other.
+- **What a learner does:** holds two lenses at once and sees where they meet, drawn as a front, a fork or a chain. Prototype: `docs/reviews/spine/seams.html`. Picked 22 November: task #315.
+- **Builds on:** the lenses (#304), the pairs of core questions in `src/data/frame.js`. *(22 Nov 2026.)*
+
+### 22. A chip that lives in your time
+- **First principle:** chips wear out, drift and fail over years, and a design is judged by how it ages.
+- **What a learner does:** their chip keeps running between visits; after a week it has aged (wires worn, some copies wrong) and they repair or redesign it.
+- **Why it matters:** makes "why does a perfect design fail in the real world?" happen to your own design, and gives a reason to come back.
+- **Builds on:** `src/engines/mortal.js`, `errors.js`, your chip's life (`src/engines/life.js`).
+- **Open questions:** a fair time scale; never punishing someone for being away. *(22 Nov 2026.)*
+
+### 23. Hear the hidden world (picked)
+- **First principle:** a sense is a mapping a person learns to use without thinking.
+- **What a learner does:** listens to a level slowed until it can be heard, and trains their ear in a test that hides the picture. Prototype: `docs/reviews/senses/hear.html`. Picked 22 November: task #316 (behind `?listen=1`), then #317.
+- **Builds on:** `src/engines/bits.js`, `budget.js`, `errors.js`, `clockpower.js`. *(22 Nov 2026.)*
+
+### 24. Agents you can watch
+- **First principle:** a self-organizing system is believed when its activity can be seen.
+- **What a learner does:** watches the community ledger replayed on the island, every maker a moving mark (examples, programs, AI, people), sees where the record is thinnest glow, and can run a search agent (Rook) in the browser and send what it found. Prototype: `docs/reviews/ideas/agents.html`, built on the 21 real entries; a real run of Rook on 22 November broke *The agent's counter*, a break nobody has sent.
+- **Builds on:** `src/engines/ledger.js` (`frontier`, `society`), `scripts/agent.mjs`, the Lab's inside as the record of the build.
+- **Open questions:** whether running Rook in a visitor's browser fits "the lab runs no AI"; weighting what changed the record over volume; the record is a replay, not live. *(22 Nov 2026.)*
+
+## Problems to solve (22 November 2026)
+
+Found in the review of 22 November; each needs a decision or a plan, not only a task.
+
+- **An empty room.** 21 ledger entries, 13 of them the lab's own examples and none from a person. Taking part needs GitHub, which a newcomer to chips will not open. A self-organizing system with nobody in it has nothing to organize.
+- **Never watched by a learner.** Every decision so far is the owner's and an AI's. Nobody new to chips has been watched using the lab.
+- **Truth at AI speed.** About 500 commits in 17 days, mostly by AI. The tests check that a number has a source, not that a sentence is true; no expert reviews the content.
+- **Rebuilt faster than it settles.** Seven `before-` branches in two weeks; the front page, the frame and the questions changed several times. Nothing holds still long enough to polish or to invite people into.
+- **Thirteen lenses at every level.** Hand-made marks and paints for 13 lenses at about 30 levels would not scale; #304 now asks lenses to paint from facts the parts carry.
+
 ## Removed, and where each went
 
 - **Built:** a fab you run (idea 20), the physics floor (first part), the first big question, a gentler first visit, flip-flops in the studio, the Counter.

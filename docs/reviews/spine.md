@@ -44,6 +44,10 @@ The prototype (`spine/lenses.html`, open it in a browser) shows the block level 
 
 The other seven lenses' visual languages, to build once the block is approved: Perfect fails, copies that differ; Whole beats parts, spares and votes; Compute beats cleverness, search against design; The next Moore's law, the same part a generation on; Fixed or fluid, what is fixed and what can change; Trust without inspection, what is checked and what nobody checked; Beyond computation, what computes here and what nothing can.
 
+## Where two meet (added 22 November)
+
+Holding two lenses at once shows where they meet, in one of three shapes: a **front** (two measures against each other, today's best compromises as a line, an innovation that moves it; only where one engine computes both), a **fork** (the same thing built two ways, split by a line you drag), a **chain** (one level's problem becoming the next). Each pair has a question neither lens asks alone. The pairs, today `SEAMS`, are renamed `MEETS`. Prototype: `spine/seams.html`; task #315, after #304, which now asks every lens to paint from facts the parts carry, so that two paints can be drawn together.
+
 ## Labs for the thinnest questions
 
 Counted by challenges filed under each as home: Compute beats cleverness 1, Beyond computation 1, Fight or use physics 2 (both about fighting it), Only humans 2. Each gets a lab that faces its question directly:
