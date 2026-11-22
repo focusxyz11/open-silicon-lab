@@ -1,4 +1,4 @@
-/* The map's engine (the first page, src/v2/home.js): what is joined to what, what a question runs through, and the
+/* The map's engine (the station map, src/v2/stations.js; the first page before the blueprint): what is joined to what, what a question runs through, and the
    small simulations at the top of the page. Pure functions over src/data/home.js, so the tests can check them and the
    view only draws. */
 import { STATIONS, LINES, THREADS, WAYS, TOYS } from '../data/home.js';

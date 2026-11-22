@@ -1,4 +1,4 @@
-// The map, the first page (src/data/home.js, src/engines/home.js, src/v2/home.js): every station is an address of the
+// The station map, the first page until 22 November 2026 (src/data/home.js, src/engines/home.js, src/v2/stations.js): every station is an address of the
 // chip world with words that exist, every challenge is at one station, the thirteen questions are threads through real
 // stations (one starting at each station at most), and the toys behave as they say.
 import { test } from 'node:test';
@@ -81,7 +81,7 @@ test('the gate, the shrinking switch and the packed cores', () => {
 });
 
 test('every word the map\'s view asks for exists', () => {
-  const src = readFileSync(new URL('../src/v2/home.js', import.meta.url), 'utf8');
+  const src = readFileSync(new URL('../src/v2/stations.js', import.meta.url), 'utf8');
   const keys = [...src.matchAll(/\bw\('([\w.-]+)'[,)]/g)].map(m => 'home.' + m[1]);
   assert.ok(keys.length > 40);
   const missing = [...new Set(keys)].filter(k => !(k in EN));

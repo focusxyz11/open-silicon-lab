@@ -6,7 +6,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
 import { englishIn } from '../scripts/i18n-check.mjs';
-import { t, useTexts, fmtWords, fmtList, fmtDate, AREAS, areaOf } from '../src/core/i18n.js';
+import { t, useTexts, fmtWords, fmtList, fmtDate, AREAS, areaOf, LANGS as NAMED, TRANSLATED } from '../src/core/i18n.js';
 import { readWords, readAreas } from '../scripts/words.mjs';
 
 const root = new URL('..', import.meta.url);
@@ -60,6 +60,12 @@ test('every translation has the same {names} as English and no texts English lac
   }
 });
 
+test('every language on disk is named in LANGS, and TRANSLATED lists exactly the areas it has a file for', () => {
+  assert.deepEqual([...LANGS].sort(), Object.keys(NAMED).sort(), 'src/i18n/ and LANGS (src/core/i18n.js) name the same languages');
+  for (const lang of LANGS.filter(l => l !== 'en'))
+    assert.deepEqual(Object.keys(readAreas(lang)).sort(), [...(TRANSLATED[lang] || [])].sort(), lang + ': TRANSLATED in src/core/i18n.js must list exactly the areas in src/i18n/' + lang + '/');
+});
+
 test('the words are split by area: every text is in the file of its prefix\'s area, and every area has its file', () => {
   const files = readAreas('en'), prefixes = Object.values(AREAS).flat();
   assert.equal(new Set(prefixes).size, prefixes.length, 'a prefix is in two areas');
@@ -68,7 +74,7 @@ test('the words are split by area: every text is in the file of its prefix\'s ar
     assert.ok(areaOf(k), k + ': its prefix has no area; add it to AREAS in src/core/i18n.js');
     assert.equal(areaOf(k), area, k + ' is in ' + area + '.json but belongs in ' + areaOf(k) + '.json');
   }
-  /* the first page fetches only core.json: it stays small */
+  /* the first page fetches core.json before anything: it stays small */
   assert.ok(read('src/i18n/en/core.json').length < 120 * 1024, 'core.json is over 120 KB');
 });
 
