@@ -6,7 +6,8 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import * as FrameData from '../src/data/frame.js';
 import { FIELD } from '../src/data/questions.js';
-const { QUESTIONS, FILED, SEAMS } = FrameData;
+import { partsOf } from '../src/app/scenes.js';
+const { QUESTIONS, FILED, SEAMS, MARKS } = FrameData;
 import { IDS, MAX_AT, createLenses, seamOf, questionOf } from '../src/engines/frame.js';
 import { EXPERIMENTS } from '../src/engines/experiments.js';
 import { STOPS, THREADS } from '../src/data/weave.js';
@@ -82,6 +83,18 @@ test('the field questions lead: at their home level, a lens gives its home ones 
     assert.deepEqual(homes, homes.slice().sort((a, b) => b - a), q + ' at ' + d + ': home field questions first');
     for (const id of f) assert.equal(FIELD.find(x => x.id === id).home.level, d);
   }
+});
+
+test('every lens that lives at a level has its mark there, on a part the level names', () => {
+  const levels = [...new Set(DEPTHS.concat(FIELD.filter(f => f.home.level).map(f => f.home.level)))];
+  for (const d of levels) {
+    const here = L.lensesAt(d); if (!here.length) continue;
+    const parts = Object.keys(partsOf(d) || {});
+    assert.ok(MARKS[d], d + ' has lenses but no marks');
+    for (const q of here) assert.ok(parts.includes(MARKS[d][q]), d + ': the ' + q + ' lens has no mark on a part of the level (' + MARKS[d][q] + ')');
+    for (const q of Object.keys(MARKS[d])) assert.ok(here.includes(q), d + ': a mark for ' + q + ', which does not live there');
+  }
+  for (const d of Object.keys(MARKS)) assert.ok(levels.includes(d), 'marks at ' + d + ', which is no level with lenses');
 });
 
 test('every seam is named', () => {

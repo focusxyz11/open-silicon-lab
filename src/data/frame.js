@@ -16,6 +16,7 @@
                     their words stay, and nothing new is filed by thread
        experiments  the experiments (src/data/experiments/)
        challenges   the challenges (src/v2/game.js)
+   - MARKS: at each level, the part each lens that lives there is about, where its mark stands on the picture.
    - SEAMS: the pairs of questions that share content, each named for what joins them (frame.seam.<a>.<b>). */
 
 export const QUESTIONS = [
@@ -139,6 +140,47 @@ export const FILED = {
   'counter': ['perfect', 'vn', 'dig'], 'flaky': ['vn', 'perfect', 'trust'], 'dieread': ['geo', 'trust', 'line'], 'silent': ['trust', 'vn', 'perfect'], 'rvrun': ['line', 'dig', 'human'], 'mortal': ['copy', 'physics', 'eff'], 'quantize': ['eff', 'sutton', 'physics'], 'token-energy': ['eff', 'geo'], 'prefill': ['geo', 'eff'],
   'chef': ['geo', 'physics', 'eff']
   }
+};
+
+/* where each lens is met on the picture: at every level, the part each question that lives there is about (a part the
+   level's scene names, src/app/scenes.js, from the lens's strongest stop there). Its mark stands beside that part's name
+   (src/v2/frame.js); two lenses may share a part where a level names fewer parts than lenses. A test checks every lens
+   that lives at a level has its mark there, on a part that exists */
+export const MARKS = {
+  rack: { dig: 'servers', line: 'switch', nat: 'power', eff: 'switch', geo: 'power' },
+  board: { geo: 'bigchip', line: 'memory', dig: 'power', eff: 'connectors', perfect: 'bigchip', copy: 'memory' },
+  chip: { line: 'cache', eff: 'cores', geo: 'io', sutton: 'clock', trust: 'cores', perfect: 'clock' },
+  block: { geo: 'sram', copy: 'wires', physics: 'cells', eff: 'yours', dig: 'cells', perfect: 'sram' },
+  gate: { vn: 'gates', physics: 'diff', perfect: 'metal', dig: 'gates', trust: 'metal', copy: 'diff' },
+  switch: { physics: 'gate', moore: 'source', copy: 'channel', dig: 'oxide', sutton: 'drain', perfect: 'channel' },
+  atom: { physics: 'dopant', moore: 'lattice', nat: 'electrons', dig: 'boundary', perfect: 'boundary', eff: 'lattice' },
+  building: { eff: 'racks', sutton: 'cooling', geo: 'racks', vn: 'racks', line: 'racks', copy: 'cooling' },
+  phone: { geo: 'board', eff: 'battery', copy: 'camera', human: 'antenna' },
+  phoneboard: { human: 'modem', moore: 'soc', geo: 'pmic', dig: 'storage', eff: 'soc', perfect: 'pmic' },
+  soc: { line: 'cpu', perfect: 'gpu', dig: 'npu', moore: 'isp', vn: 'cache', sutton: 'cpu' },
+  car: { line: 'controllers', human: 'wiring', perfect: 'sensors', copy: 'battery', sutton: 'motor', physics: 'wheels' },
+  ecu: { trust: 'mcu', vn: 'connector', dig: 'drivers', line: 'drivers', human: 'mcu', perfect: 'mcu' },
+  mcu: { moore: 'flash', perfect: 'cores', dig: 'sram', human: 'periph', vn: 'cores', line: 'cores' },
+  scanner: { human: 'source', moore: 'mirrors', trust: 'mask', physics: 'stage', nat: 'vacuum' },
+  wafer: { perfect: 'defects', moore: 'dies', geo: 'defects' },
+  die: { perfect: 'pads', moore: 'cores', geo: 'probes', human: 'scribe', line: 'cores' },
+  need: { line: 'ins', human: 'use', moore: 'outs' },
+  logic: { dig: 'code', line: 'table', human: 'code', trust: 'code' },
+  check: { trust: 'waves', dig: 'verdict', vn: 'waves', line: 'verdict', sutton: 'verdict', human: 'verdict' },
+  gates: { sutton: 'cells', line: 'outs', perfect: 'pins', vn: 'cells', trust: 'pins', dig: 'outs' },
+  layout: { line: 'tile', human: 'shared', geo: 'tile', perfect: 'tile', moore: 'shared' },
+  masks: { moore: 'masks', line: 'reticle', perfect: 'masks', dig: 'reticle' },
+  crystal: { perfect: 'melt', physics: 'sand', moore: 'ingot', human: 'furnace', sutton: 'furnace' },
+  slice: { moore: 'saw', perfect: 'wafers' },
+  clean: { moore: 'filters', human: 'track' },
+  deposit: { moore: 'gas', physics: 'tool', perfect: 'pod', line: 'efem', human: 'xfer' },
+  print: { moore: 'scanner', perfect: 'pod', physics: 'light', eff: 'efem' },
+  etch: { perfect: 'tool', moore: 'plasma', human: 'people', sutton: 'efem', trust: 'pod' },
+  implant: { perfect: 'beam', moore: 'pod', physics: 'efem' },
+  wires: { moore: 'loop', geo: 'polish', line: 'pod' },
+  test: { trust: 'needles', perfect: 'map', line: 'pod', geo: 'efem', vn: 'shelf' },
+  pkg: { geo: 'memory', perfect: 'lid', moore: 'substrate', eff: 'die', physics: 'substrate', copy: 'memory' },
+  ship: { perfect: 'trays', vn: 'tray', trust: 'boxes', human: 'datacentre', line: 'phone', moore: 'car' }
 };
 
 export const SEAMS = [

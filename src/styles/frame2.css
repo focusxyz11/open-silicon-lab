@@ -208,6 +208,9 @@ html.frame2 .stage:has(> section.f2stage:not([hidden])) > .toast { top: auto; bo
   html.frame2 .f2cap > .dockwrap.peek > .modes3 { display: none; }
   html.frame2 .f2cap .dockwrap.peek .dock:not(.f2plain) > :not(.f2head, .askline) { display: none; }
   html.frame2 .f2cap .dockwrap.peek .dock > .askline { order: 0; margin: -.2em 0; padding: .2em 0; font: italic 400 18px/1.4 var(--serif); display: block; -webkit-line-clamp: none; overflow: visible; }
+  /* a lens open from its mark: the peek keeps its question (#303) */
+  html.frame2 .f2cap .dockwrap.peek .dock:not(.f2plain) > .qlcard { display: block; margin: 0; padding: 0; border: 0; background: none; animation: none; }
+  html.frame2 .f2cap .dockwrap.peek .dock:not(.f2plain) > .qlcard > :not(.qlq) { display: none; }
   html.frame2 .f2 .f2k { min-height: 0; padding-right: 0; }
   html.frame2 .f2 .f2t { margin: 2px 0 6px; font: 700 23px/1.15 var(--serif); }
   html.frame2 .f2 .dock > .line { font-size: 16px; }
@@ -406,6 +409,8 @@ html.frame2 .page.f2rd .mach .f2rhead h1 { font-size: clamp(28px, calc(1.2vw + 1
   html.frame2 .f2side > .dockwrap.peek { -webkit-mask-image: none; mask-image: none; }
   html.frame2 .f2side > .dockwrap.peek .dock > :not(.kicker:first-child) { display: none; }
   html.frame2 .f2side > .dockwrap.peek .dock > .kicker:first-child { margin: 0; }
+  html.frame2 .f2side > .dockwrap.peek .dock > .qlcard:not(.f2x) { display: block; margin: 6px 0 0; padding: 0; border: 0; background: none; animation: none; }
+  html.frame2 .f2side > .dockwrap.peek .dock > .qlcard > :not(.qlq) { display: none; }
   html.frame2 .f2 .dock > .askline.seeklit { margin-left: 0; }
   html.frame2 .f2 > .dockwrap > .toast { position: static; inset: auto; z-index: auto; transform: none; flex: none; align-self: stretch; max-width: none; margin: 2px 0 6px; padding: 9px 14px; border-radius: 14px; text-align: center; font: 700 15px/1.35 var(--sans); box-shadow: none; }
   /* the bar: Your log as a mark, its words kept for a screen reader */

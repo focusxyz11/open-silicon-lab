@@ -34,6 +34,8 @@ export function createOverlay(host, on) {
     list.forEach(it => {
       const el = names.get(it.key);
       if (el.textContent !== it.text) { el.textContent = it.text; el._w = 0; }
+      /* the part's one name in the atlas, which the frame's marks find it by (src/v2/frame.js) */
+      if (it.word && el.dataset.word !== it.word) el.dataset.word = it.word;
       if (!el._w) el._w = el.offsetWidth || 80;
       el.classList.toggle('on', !!it.on);
       /* where the name stood when it was drawn: x is its start, middle or end, y its baseline */

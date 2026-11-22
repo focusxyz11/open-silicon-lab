@@ -4,7 +4,8 @@
    Glue of the shell (src/v2/app.js): create() runs once, when the view first opens; what it shares with the shell and
    the other views is on V (src/v2/shell.js). */
 import { t, has } from '../../core/i18n.js';
-import { STOPS } from '../../data/weave.js';
+import { STOPS, partWord } from '../../data/weave.js';
+import { MARKS } from '../../data/frame.js';
 import { createLenses, questionOf as frameQ } from '../../engines/frame.js';
 import * as Game from '../game.js';
 import * as Way from '../../engines/way.js';
@@ -27,6 +28,8 @@ export function create() {
   /* the pieces nobody has built yet are played at the Lab, not here: at the job, one way there that says so */
   const labWay = d => { if (d !== 'need') return []; const n = Game.community(V.S).jobs.length; return n ? [{ id: 'lab-pieces', title: t('bench.labPieces', { n }), where: t('bench.labWhere'), href: '#/build', open: true }] : []; };
   const frameOf = (host, o) => FrameM.createFrame(host, Object.assign({ follow, askAt: d => stopsAt(d), fieldAt: d => fieldAtLevel(d).map(q => q.id),
+    /* the marks on the picture: every lens that lives here, strongest first, with the part it is about by its one name */
+    marksAt: d => { const D = LENS_AT[d] || d, M = MARKS[D] || {}; return Lenses.lensesAt(D).map(id => ({ id, label: t('frame.q.' + id), icon: frameQ(id).icon, word: M[id] ? partWord(D, M[id]) : null })); },
     lensesAt: d => Lenses.lensesAt(LENS_AT[d] || d).map(id => ({ id, label: t('frame.q.' + id), hint: t('frame.q.' + id + '.hint'), icon: frameQ(id).icon })),
     lensCard: (q, d) => lensCard(q, LENS_AT[d] || d), onLens: (q, d) => lightLens(q, LENS_AT[d] || d),
     askedAt: d => { const A = Game.askedAtLevel(d, V.S); return A.length ? '<p class="kicker">' + esc(t('page.questions.asked')) + '</p>' + A.map(askedHtml).join('') : ''; },

@@ -203,7 +203,7 @@ export function createDataCentre(canvas, host, on = {}) {
     ['package', pkg, W3(0.028, 0.012, 0.022), [3.7, 4.5]], ['powerstages', tray, W3(-0.011, 0.024, -0.07), [3.7, 4.4]], ['lid', pkg, W3(-0.01, 0.0076, -0.01), [3.7, 4.4]],
     ['die', pkg, W3(...onTop(300, 60, 0.006)), [4.6, 5.1]], ['hbm', pkg, W3(...onTop(1125, 820, 0.0065)), [4.6, 5.1]], ['base', pkg, W3(...onTop(60, 985, 0.0043)), [4.6, 5.1]]
   ];
-  const named = NAMES.map(([id, obj, at, lv]) => { const lb = L.add(obj, at, t('part.' + VIEW_PARTS.flight[id]), { cls: 'part3' }); lb.lv = lv; return lb; });
+  const named = NAMES.map(([id, obj, at, lv]) => { const lb = L.add(obj, at, t('part.' + VIEW_PARTS.flight[id]), { cls: 'part3', data: { word: VIEW_PARTS.flight[id] } }); lb.lv = lv; return lb; });
   named.forEach((lb, i) => { lb.id = lb.el.dataset.hl = NAMES[i][0]; });
   /* the way in at each level: the thing you would enter next, where the shell's button stands with a ring on it */
   /* at the server, the ring stands on the board beside the accelerator, never on its name: finding that chip is the

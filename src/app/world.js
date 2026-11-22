@@ -338,7 +338,7 @@ export function createWorld(cv, on) {
     const rank = k => (k === picked ? -1 : lead.includes(k) ? lead.indexOf(k) : 50), seen = new Set();
     const labels = htmlNames.filter(n => !seen.has(n.key) && seen.add(n.key)).map((n, i) => ({ n, i }))
       .sort((a, z) => rank(a.n.key) - rank(z.n.key) || a.i - z.i).slice(0, W < 520 ? 3 : 5)
-      .map(({ n }) => { const p = at([n.x, n.y]); return { key: n.key, text: t('part.' + partWord(id, n.key)), x: p[0], y: p[1], align: n.align, on: n.key === picked }; });
+      .map(({ n }) => { const p = at([n.x, n.y]); return { key: n.key, word: partWord(id, n.key), text: t('part.' + partWord(id, n.key)), x: p[0], y: p[1], align: n.align, on: n.key === picked }; });
     const centreOf = key => { const sh = P[key] && P[key][0]; if (!sh) return null; const o = outline(sh), xs = o.map(p => p[0]), ys = o.map(p => p[1]); return at([(Math.min(...xs) + Math.max(...xs)) / 2, (Math.min(...ys) + Math.max(...ys)) / 2]); };
     const n0 = noNote ? null : notes[0], nc = n0 && centreOf(n0.part);
     const note = n0 && nc ? { key: n0.part, title: n0.title, text: n0.text, x: nc[0], y: nc[1] } : null;
