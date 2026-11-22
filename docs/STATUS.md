@@ -63,7 +63,7 @@ Each task below is self-contained and can be handed to Claude Code on the web as
 
 ### First: next-generation architecture, and polishing the core (22 November)
 
-The owner's highest priority is the next generation of computer architecture (`docs/ROADMAP.md`, "First"), labelled `priority` so the nightly build takes it first: Machines from shared blocks as a place (#320), your programs on the core made of your own slice (#321), the four waiting new ways to compute (#322, #323). Polishing the core: the truth audit at the block and in Machines (#324), one mark for how true each thing is (#325), and the block as one finished slice, with the bar in `docs/FINISHED.md` (#326, after the others).
+The owner's highest priority is the next generation of computer architecture (`docs/ROADMAP.md`, "First"), labelled `priority` so the nightly build takes it first: Machines from shared blocks as a place (#320), your programs on the core made of your own slice (#321), the four waiting new ways to compute (#322, #323), and Invent a transistor at the switch, the bottom of the three scales (#329). Polishing the core: the truth audit at the block and in Machines (#324), one mark for how true each thing is (#325), and the block as one finished slice, with the bar in `docs/FINISHED.md` (#326, after the others).
 
 ### The foundation pass and the spine (22 November)
 
@@ -74,7 +74,7 @@ The labs of #216 to #221 and the fixes of #222 are built. What they left open:
 1. **Serving a language model:** the cluster's network (`clusterNetwork` in `src/engines/aiserve.js`) has no lab yet.
 2. **New ways to compute:** spiking neurons, light (MZI), p-bits, reversible logic and dataflow (`src/engines/paradigms.js`) wait for their labs, each at the depth where the problem it attacks is met.
 3. **The clock and the power:** the pipeline and its stalls (`schedule` in `src/engines/clockpower.js`), at the block.
-4. **The semiconductor lab:** the junction and the transistor (`junction`, `mosfet` in `src/engines/dope.js`), after too hot for silicon.
+4. **The semiconductor lab:** the junction (`junction` in `src/engines/dope.js`); the transistor becomes *Invent a transistor* (#329).
 5. **Energy per token** is played in the island's place card, not at the rack in the flight (`doHome` in `src/engines/way.js` only knows the bench, the dive and the line), like feed the cores at the board.
 6. **Each engine's remaining `WORDS`** still sit beside their copies in `en.json` (`aiserve`, `analog`, `aibuild`, `clockpower`, `paradigms`, `fabline`, `etch`, `dope`, `litho`); remove them from the engines once nothing else reads them.
 
