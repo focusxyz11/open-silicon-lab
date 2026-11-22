@@ -19,15 +19,13 @@ import { childrenOf } from '../engines/build.js';
 import { WAYS } from '../data/ways.js';
 import * as Game from './game.js';
 import * as Way from '../engines/way.js';
-import { play, titleOf, goalOf } from './play.js';
-import { PLACES } from './map3d.js';
-import { LEVELS, ASKS } from './dc3d.js';
+import { play, titleOf, goalOf, labsLoaded, labsReady } from './play.js';
+/* the 3D views' plain data, never the 3D modules themselves: a view's 3D, and three.js with it, loads when it is opened */
+import { PLACES, DC_LEVELS as LEVELS, DC_ASKS as ASKS, CHIP_ROWS as ROWS, CHIP_ASK } from '../data/views3d.js';
 import { stopsAt, SHARED } from '../data/places.js';
-import { showStage, stage } from './kit3d.js';
 import { rootShown } from '../engines/weave.js';
 import { FIGURES, CASES } from '../data/weave.js';
 import { fmtDate } from '../core/i18n.js';
-import { ROWS, ASK as CHIP_ASK } from './chip3d.js';
 import { signHtml, signOf, keep, refusal, slipHtml, slipClick, byLine } from './commons.js';
 import { reportsAt, SAYS, attemptsAt } from '../engines/ledger.js';
 import { createJoule } from './joule.js';
@@ -59,6 +57,10 @@ import { boot as frame2Boot, reading as frame2Reading, readHtml } from './frame2
 import { studioLook } from './studio-look.js';
 
 const $ = id => document.getElementById(id);
+/* the one GL canvas of the 3D views (kit3d.js) shows while a 3D view is in front, and steps aside for the flat views
+   and the pages. Found by its class, so the shell never imports the 3D kit: before any 3D view has opened there is
+   no canvas, and nothing to hide */
+const showStage = on => { const c = document.querySelector('canvas.stage3d'); if (c) c.hidden = !on; };
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 const hue = th => (THREADS.find(x => x.id === th) || { hue: 200 }).hue;
 const qColor = key => 'hsl(' + hue(key.split('.')[0]) + ' 70% 55%)';
@@ -135,7 +137,16 @@ export function start() {
      their shaders compiled on the shared renderer, so going inside finds them ready */
   const ready = (make, view) => () => { if (viewNow !== 'map') return; make().then(v => { if (viewNow !== view) v.pause(); return v.warm(); }); };
   const prewarm = () => [ready(ensureDc, 'dc'), ready(ensureChip, 'chip'), ready(ensureBoard, 'board')].reduce((p, f) => p.then(() => new Promise(r => idle(() => { f(); r(); }))), Promise.resolve());
-  const preload = () => { prewarm(); ['./frame.js', './board3d.js', './story.js', './stories.js', '../engines/weave.js', '../app/world.js', '../data/weave.js', '../app/design.js', '../app/journey.js', './level3d.js', './relief3d.js', './wafer3d.js', './pcb3d.js', './phone3d.js', './gate3d.js', './switch3d.js', './atom3d.js', './overlay.js'].forEach(u => import(u).catch(() => { /* fetched again when needed */ })); };
+  /* the idle preload: never on a connection that asks to save data or is slow (2g, 3g), and never before the page has
+     painted (a frame, then an idle moment). The page is marked with the moment it starts (data-preload, in ms since
+     the page opened), so the smoke test can tell what was fetched before it */
+  const preloadOk = () => { const c = navigator.connection; return !(c && (c.saveData || /2g|3g/.test(c.effectiveType || ''))); };
+  const afterPaint = f => requestAnimationFrame(() => idle(f));
+  const preloadMark = () => { const h = document.documentElement; if (!h.dataset.preload) h.dataset.preload = String(Math.floor(performance.now())); };
+  /* on the first page: only the labs, so a challenge chosen there opens at once */
+  let homeLoaded = false;
+  const preloadHome = () => { if (homeLoaded || !preloadOk()) return; homeLoaded = true; preloadMark(); labsReady().catch(() => { /* fetched again when a challenge is played */ }); };
+  const preload = () => { if (!preloadOk()) return; preloadMark(); prewarm(); ['./frame.js', './board3d.js', './story.js', './stories.js', '../engines/weave.js', '../app/world.js', '../data/weave.js', '../app/design.js', '../app/journey.js', './level3d.js', './relief3d.js', './wafer3d.js', './pcb3d.js', './phone3d.js', './gate3d.js', './switch3d.js', './atom3d.js', './overlay.js'].forEach(u => import(u).catch(() => { /* fetched again when needed */ })); };
   const ensureMap = () => mapReady || (mapReady = import('./map3d.js').then(m => {
     /* tap selects, zoom goes in and out (docs/INTERACTION.md): a second tap on the same place selects it again, it
        does not go in */
@@ -145,7 +156,7 @@ export function start() {
       inside: (place, part) => !!deeperOf(place, part),
       leave: id => { if (cur && cur.place === id) { closeSheet(); if (location.hash.startsWith('#/place/')) history.replaceState(null, '', '#/island'); hud(); } },
       question: key => openQuestion(key), mover: info => openMover(info), unfollow: () => { if (sheet.classList.contains('mover')) closeSheet(); }, challenge: id => { const ch = chOf(id); if (ch) location.hash = doHref(ch); }, report: at => { if (location.hash !== at) location.hash = at; setTimeout(() => openBreak(true), 0); }, ask: id => openPlace(id, 'ask'), job: need => openJob(need), entry: id => openEntry(id), interact: () => foldHero() });
-    loading(false); map.setState(islandState(), false); idle(preload);
+    loading(false); map.setState(islandState(), false); afterPaint(preload);
     /* the first minute: a first visit to the island opens on a wide shot and comes down to it, and the hero rises after */
     if (!S.seen && location.hash === '#/island' && !still()) { map.intro(); $('hero').classList.add('intro'); }
     if (!S.seen) { S.seen = true; save(); }
@@ -194,9 +205,11 @@ export function start() {
       '<button type="button" class="x herox" data-fold aria-label="' + esc(t('hero.fold')) + '">–</button><p class="kicker">' + esc(t('hero.kicker')) + '</p><h1>' + esc(t('hero.start')) + '</h1><div class="heroq" data-heroq></div>' +
       '<div class="herofoot">' + (C.length ? '<p class="kicker herok">' + esc(t('hero.or')) + '</p><div class="chips heroc">' + C.map(c => '<a class="chipb" href="' + esc(doHref(c)) + '">' + esc(titleOf(c)) + '</a>').join('') + '</div>' : '') +
       '<div class="row"><a class="btn primary" href="#/w">' + esc(t('hero.all')) + '</a><button type="button" class="btn ghost" data-start>' + esc(t('hero.follow')) + '</button></div></div>';
-    /* the questions come from inside the worlds' documents */
-    Worlds.loadAll().then(all => { const box = $('hero').querySelector('[data-heroq]'); if (box) box.innerHTML = Worlds.starters(all).map(Worlds.qCard).join(''); }, () => {});
+    heroQs();
   }
+  /* the questions come from inside the worlds' documents, fetched only once the hero shows (over the island, never
+     on the first page) */
+  const heroQs = () => { if ($('hero').hidden) return; Worlds.loadAll().then(all => { const box = $('hero').querySelector('[data-heroq]'); if (box) box.innerHTML = Worlds.starters(all).map(Worlds.qCard).join(''); }, () => {}); };
   /* following the chip is no guide: it opens the place where the loop starts, and every place offers the next */
   /* the first page's questions and challenges never go away: exploring folds them into a small button in the corner,
      which opens them again (docs/INTERACTION.md: a heads-up layer that steps aside, not one that is gone) */
@@ -438,13 +451,16 @@ export function start() {
     }
     sheet.innerHTML = h + '</div>'; sheet.hidden = false; hideInsp(); sheet.scrollTop = 0; sheet.classList.toggle('inside', id === 'lab' && !!cur.step && cur.tab === 'look'); sheet.classList.toggle('part', !!cur.part);
   }
+  /* the labs load with the first challenge played (src/v2/play.js); a challenge asked for meanwhile replaces it */
+  let playTok = 0;
+  const withLabs = f => { const k = ++playTok; if (labsLoaded()) return f(); loading(true); return labsReady().then(() => { loading(false); if (k === playTok) f(); }); };
   /* a challenge, played in the sheet */
   function openChallenge(ch) {
     if (!ch) return;
     const placeId = ch.kind === 'break' ? 'village' : ch.need ? 'lab' : ch.place;
     if (!cur || cur.place !== placeId) { cur = { place: placeId, tab: 'do' }; map && map.focus(placeId); }
     $('hero').classList.add('away'); sheet.hidden = false; sheet.scrollTop = 0;
-    play(sheet, ch, { state: S, save, kept, startChip: () => Object.assign({}, Game.START), open: openChallenge, back: () => { sheet.onclick = null; sheet.oninput = null; drawPlace(); }, done: won });
+    withLabs(() => { if (!sheet.hidden) play(sheet, ch, { state: S, save, kept, startChip: () => Object.assign({}, Game.START), open: openChallenge, back: () => { sheet.onclick = null; sheet.oninput = null; drawPlace(); }, done: won }); });
   }
   const openJob = need => { const j = Game.jobOf(need); if (j) openChallenge(j); };
   /* a house of the village: a clocked design opens the try to break it; any other, the village's list */
@@ -842,7 +858,11 @@ export function start() {
   /* the views that are a row of steps walked along, not a column of levels */
   const rowsOf = k => k === 'line' || k === 'bench';
   const diveId = () => WE.IDS[diveD];
-  const ensureDive = () => dive ? Promise.resolve(dive) : Promise.all([import('../engines/weave.js'), import('../app/world.js'), import('../data/weave.js'), import('../app/design.js'), import('../app/journey.js'), import('./overlay.js'), import('../app/scenes.js')]).then(([E, Wm, Wd, Ds, Jm, Om, Sc]) => {
+  let L3M = null, JOIN = { from: 0.08, to: 0.92, lead: 0.5 };
+  /* the joins load with the dive (never on the first page: level3d.js brings three.js) */
+  let joinsP = null;
+  const ensureJoins = () => joinsP || (joinsP = Promise.all([import('./level3d.js'), import('../engines/join.js')]).then(([m, j]) => { L3M = m; JOIN = j.JOIN; }).catch(() => { /* no joins: the flat picture between levels, as before */ }));
+  const ensureDive = () => dive ? Promise.resolve(dive) : Promise.all([import('../engines/weave.js'), import('../app/world.js'), import('../data/weave.js'), import('../app/design.js'), import('../app/journey.js'), import('./overlay.js'), import('../app/scenes.js'), import('./kit3d.js'), ensureJoins()]).then(([E, Wm, Wd, Ds, Jm, Om, Sc, K3]) => {
     WE = E; DiveData = Wd; DS = Ds; threadColorOf = Wm.threadColor; partsAt = Sc.partsOf;
     /* the dive's words in HTML over the picture: names, the note on a picked part, the questions' marks under Ask */
     flatWords = Om.createOverlay($('flatLabels'), { part: key => pickPart(key), mark: th => { location.hash = follow(th + '.' + diveId()); }, marks: ths => markAsk(ths), door: () => dive.flyTo(diveD + 1) });
@@ -850,7 +870,7 @@ export function start() {
     $('flatLabels').addEventListener('wheel', e => { e.preventDefault(); $('diveCanvas').dispatchEvent(new WheelEvent('wheel', { deltaX: e.deltaX, deltaY: e.deltaY, deltaMode: e.deltaMode, clientX: e.clientX, clientY: e.clientY, bubbles: true, cancelable: true })); }, { passive: false });
     /* one HUD: the earlier site's own marks, dive label and band give way to the frame */
     /* one stage: the line's machines draw on the shared renderer too */
-    Wm.setChrome({ dots: false, dive: false, lit: true, keys: () => (flatKind === 'dive' ? 'scale' : 'steps'), stage: () => stage($('diveCanvas')), overlay: flatWords,
+    Wm.setChrome({ dots: false, dive: false, lit: true, keys: () => (flatKind === 'dive' ? 'scale' : 'steps'), stage: () => K3.stage($('diveCanvas')), overlay: flatWords,
       look: () => !!diveFrame && diveFrame.mode() === 'look' && !benchCh, ask: () => !!diveFrame && diveFrame.mode() === 'ask',
       askOnly: id => (lensNow && lensNow.d === (LENS_AT[id] || id) ? lensNow.stops.map(k => k.split('.')[0]) : null) }); Jm.setBand(false);
     dive = Wm.createWorld($('diveCanvas'), { depth: d => diveAt(d), arrive: d => diveAt(d), zoom: z => { diveRail(z); levelZoom(z); benchZoom(z); }, part: (d, key) => { const a = l3Active(); pickPart(a ? a.obj.hit(lastTap.x, lastTap.y) : key); }, pick: th => { diveThread = th; dive.setThread(th); if (!benchCh && flatKind !== 'supply') drawDive(); },
@@ -907,8 +927,6 @@ export function start() {
   const lastTap = { x: 0, y: 0 };
   $('diveCanvas').addEventListener('pointerup', e => { lastTap.x = e.clientX; lastTap.y = e.clientY; }, true);
   /* the join's windows and switch, loaded with the first level in 3D */
-  let L3M = null, JOIN = { from: 0.08, to: 0.92, lead: 0.5 };
-  Promise.all([import('./level3d.js'), import('../engines/join.js')]).then(([m, j]) => { L3M = m; JOIN = j.JOIN; }).catch(() => { /* no joins: the flat picture between levels, as before */ });
   const ensureL3 = lv => { const l = L3[lv]; return l.making || (l.making = import(l.mod).then(m => (l.obj = (l.arg ? m.create(l.arg) : m.create)($('diveCanvas'), l3Host(lv), { part: key => pickPart(key),
     marks: () => (diveFrame && diveFrame.mode() === 'ask' ? askMarks(lv) : null), mark: th => { location.hash = follow(th + '.' + lv); }, askMany: ths => markAsk(ths),
     /* too slow even at low settings: this level is drawn flat for the rest of the visit */
@@ -1075,13 +1093,14 @@ export function start() {
   const benchRefresh = () => { if (flatKind !== 'bench' || !Bench || !diveFrame) return; const y = diveFrame.dock.querySelector('.benchy'); if (y) y.innerHTML = benchWords(diveId()); };
   function openBench(ch) {
     benchCh = ch; const dock = diveFrame.dock; dock.classList.add('benchdock'); if (Bench && flatKind === 'bench') Bench.challenge(ch); diveFrame.doing();
-    play(dock, ch, { state: S, startChip: () => Object.assign({}, Game.START), bench: flatKind === 'bench' ? Bench : null,
-      save: () => { save(); syncDesign(); }, kept,
-      open: c => { location.hash = doHref(c); },
-      back: () => diveFrame.look(),
-      /* won: the island grows, and a design's drawings fly to your gates */
-      done: c => { won(c); if (flatKind === 'bench' && c.kind === 'design') dive.flyTo(WE.IDS.indexOf('gates')); } });
-    requestAnimationFrame(diveInset);
+    withLabs(() => { if (benchCh !== ch) return;
+      play(dock, ch, { state: S, startChip: () => Object.assign({}, Game.START), bench: flatKind === 'bench' ? Bench : null,
+        save: () => { save(); syncDesign(); }, kept,
+        open: c => { location.hash = doHref(c); },
+        back: () => diveFrame.look(),
+        /* won: the island grows, and a design's drawings fly to your gates */
+        done: c => { won(c); if (flatKind === 'bench' && c.kind === 'design') dive.flyTo(WE.IDS.indexOf('gates')); } });
+      requestAnimationFrame(diveInset); });
   }
   /* while the step line moves, the bench slides with it: the step nearest is drawn, offset by how far the line is from it */
   function benchZoom(z) {
@@ -1238,14 +1257,14 @@ export function start() {
     if (!sheet.hidden) closeSheet(); loading(false);
     if (!home) home = createHome(homeEl, { challenges: Game.CHALLENGES, chOf, titleOf, doHref, doHome: Way.doHome, sizeOf, sizeWords, still,
       done: () => S.done, exps: Exp.EXPERIMENTS.map(x => ({ id: x.id, world: x.world, ask: Read.askOf(x) })) });
-    home.show(); return Promise.resolve();
+    home.show(); afterPaint(preloadHome); return Promise.resolve();
   }
   function showMap(from) {
     $('diveCanvas').hidden = true; vui.hidden = true; dive && dive.stop(); hide3d(); $('flatLabels').hidden = true; if (flatWords) flatWords.clear(); if (Bench) Bench.show(false);
     hideBoard(); document.body.classList.remove('immersive');
     $('chipCanvas').hidden = $('chipLabels').hidden = true; cui.hidden = true; chip && chip.pause();
     $('placeCanvas').hidden = $('placeLabels').hidden = true; pui.hidden = true; dc && dc.pause(); hidePh(); hideCa(); hideSw();
-    $('mapCanvas').hidden = $('mapLabels').hidden = false; $('hero').hidden = false; $('outbtn').hidden = false; lensbar.hidden = false; showStage(true);
+    $('mapCanvas').hidden = $('mapLabels').hidden = false; $('hero').hidden = false; $('outbtn').hidden = false; lensbar.hidden = false; showStage(true); heroQs();
     const part = from && ['line', 'bench'].includes(flatKind) && WE && isPart(lastPlace, diveId()) ? diveId() : null;
     loading(!map); return ensureMap().then(m => { if (from && lastPlace) { m.from(lastPlace, part); if (!part) m.focus(lastPlace); } m.resume(); return m; });
   }

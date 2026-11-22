@@ -9,10 +9,10 @@ import { THREE, PALETTES, CHIP_TONES, theme, stage, light, mat, metal, glow, gla
 import { SLAB, METRES, PADS, padsOf, coreGrid, tileOf, CACHE, CACHE_FIELDS, CACHE_BITS, bitsOf, IO, IO_BLOCKS, CLOCK, split, STACKS, STACK_LAYERS, BASE, PACKAGE } from '../data/die.js';
 import { model, START } from '../engines/chip.js';
 import { t } from '../core/i18n.js';
+import { DC_LEVELS as LEVELS, DC_ASKS as ASKS } from '../data/views3d.js';
 
-export const LEVELS = ['campus', 'hall', 'rack', 'server', 'board', 'chip'];
-/* the question asked at each level: a stop of one thread (stop.<key>.q) */
-export const ASKS = { campus: 'life.building', hall: 'divide.building', rack: 'think.rack', server: 'divide.rack', board: 'think.board', chip: 'think.chip' };
+/* the levels, and the question asked at each: plain data, kept in src/data/views3d.js */
+export { LEVELS, ASKS };
 
 /* a point of the dive's plan of the chip (src/data/die.js), in metres on the package, and at a height */
 const onPkg = (x, y) => [(x - PACKAGE.at[0]) * METRES, (y - PACKAGE.at[1]) * METRES];

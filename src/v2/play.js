@@ -24,7 +24,6 @@ import * as Bet from '../engines/bet.js';
 import { setBetScene } from '../app/betscene.js';
 import { WAFER as SCENE_WAFER } from '../engines/chip.js';
 import { glyph } from './field.js';
-import { LABS } from './labs/index.js';
 import { patch } from './patch.js';
 
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
@@ -48,6 +47,11 @@ export function goalOf(ch) {
   return t('game.ch.' + ch.id + '.goal');
 }
 
+/* the labs (src/v2/labs/) load with the first challenge played, never with the first page: the shell awaits
+   labsReady() before it calls play() */
+let LABS = null;
+export const labsLoaded = () => !!LABS;
+export const labsReady = () => (LABS ? Promise.resolve(LABS) : import('./labs/index.js').then(m => (LABS = m.LABS)));
 export function play(el, ch, ctx) {
   const S = ctx.state;
   let view = { msg: null, B: null, ai: false, hint: false, tests: [], guess: null, wrong: null, write: false, won: false, rows: null, okG: null, op: -1, seq: null, slip: null, no: null };

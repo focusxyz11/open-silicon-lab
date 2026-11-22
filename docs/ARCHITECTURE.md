@@ -10,6 +10,7 @@ src/v2/frame.js         the one frame on every view below the island: the rails,
 src/v2/frame2.js        the frame's three modes (#271): the card worn as a caption (Look), a side panel with a stage (Do) or a phone sheet; reading pages (Read); styles in src/styles/frame2.css
 src/v2/game.js          the game as data and logic: the loop, the challenges, each place's doors, your state (tested)
 src/v2/map3d.js         the island: the loop road, the places, what grew, the islands across the sea
+src/data/views3d.js     the 3D views' plain data the shell reads before a view opens (the island's places, the data centre's levels, the chip's layers), with no three.js
 src/v2/dc3d.js, phone3d-flight.js, car3d-flight.js   the flights: the data centre, the phone and the car, flown through to the chip
 src/v2/studio3d.js            the design studio walked inside: its corners are the design's steps, each screen opening into its bench
 src/v2/furnish.js             desks, screens, chairs, plants and people, shared by the island and the studio inside
@@ -30,7 +31,7 @@ src/app/journey3d.js    the journey in 3D (three.js): the plants and the factory
 src/app/design.js       the design studio: six stations showing your design from the job to the masks, and their band
 src/app/map.js          the world around the line: a chip's whole trip on a map, from design to where it is used
 src/app/lens3d.js       the lens: while a machine works, your wafer's surface magnified beside it, showing what the machine does
-src/vendor/three.min.js three.js, loaded only when the journey is first opened
+src/vendor/three.min.js three.js, loaded only when a view that draws in 3D is first opened (never by the first page)
 src/engines/chip.js     your chip: its settings (clock, switch size, chip size, how full the fab runs, reuse, where its memory sits) and what follows from them, the memory wall included, relative to a starting chip (tested)
 src/engines/api.js      the open port: the engines as tools for AI agents (list the plan, take a job, check, at the factory, its life, propose)
 src/engines/build.js    where the goal stands: each need's state, and the engines that check needs (tested)
@@ -61,6 +62,10 @@ community/ledger/       the community's entries, one file each, never edited aft
 ```
 
 The tree above names the main files; every engine in `src/engines/` and lab in `src/v2/labs/` has a line of its own at the top of its file.
+
+## What loads when
+
+Each part of the lab loads when it is opened. The rule for the 3D views: **the shell imports no 3D module.** `src/v2/app.js` (and everything it imports statically) never imports `kit3d.js`, three.js or a 3D view; the plain data it needs from them lives in `src/data/views3d.js`, and a view's 3D, three.js with it, loads when that view is first opened (the `ensure…` functions in `app.js`). The labs (`src/v2/labs/`) load with the first challenge played (`labsReady` in `src/v2/play.js`), and the worlds' documents (`content/*.md`) when a page or the island's first card shows them. The idle preload (the island's views, warmed while the island shows; the labs, on the first page) runs only after the page has painted, and never when the connection asks to save data or is slow (2g, 3g); it marks the page with the moment it starts (`data-preload`). `tests/load.test.mjs` walks the static imports from `src/main2.js`, and the smoke test's `explore-desktop` section checks what the first page fetches before its preload.
 
 ## The zoom
 

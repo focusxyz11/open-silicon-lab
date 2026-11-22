@@ -11,22 +11,24 @@ import { STOPS, WORLDS, partWord } from '../src/data/weave.js';
 import { stopsAt } from '../src/data/places.js';
 import { partsOf } from '../src/app/scenes.js';
 import { normalState, fresh, DIVE_LEVELS } from '../src/v2/game.js';
+import { DC_LEVELS, DC_ASKS } from '../src/data/views3d.js';
 
 const EN = JSON.parse(readFileSync(new URL('../src/i18n/en.json', import.meta.url), 'utf8'));
 const src = f => readFileSync(new URL('../src/v2/' + f, import.meta.url), 'utf8');
 
 /* a flight's levels, the question each card shows, and the names on its picture with the stretch of the flight each
    is shown on (read from the source, as tests/redesign.test.mjs reads them: the flights load three.js) */
-const flight = (file, objs, extra = []) => {
+const flight = (file, objs, extra = [], data = null) => {
   const f = src(file);
-  const levels = f.match(/LEVELS = \[([^\]]+)\]/)[1].match(/'([a-z]+)'/g).map(s => s.slice(1, -1));
-  const asks = Object.fromEntries([...f.match(/ASKS = \{([^}]+)\}/)[1].matchAll(/([a-z]+): '([a-z.]+)'/g)].map(m => [m[1], m[2]]));
+  const levels = data ? data.levels : f.match(/LEVELS = \[([^\]]+)\]/)[1].match(/'([a-z]+)'/g).map(s => s.slice(1, -1));
+  const asks = data ? data.asks : Object.fromEntries([...f.match(/ASKS = \{([^}]+)\}/)[1].matchAll(/([a-z]+): '([a-z.]+)'/g)].map(m => [m[1], m[2]]));
   const names = [...f.matchAll(new RegExp("\\['([a-z]+)', (?:" + objs + "), W3\\(.*?\\), \\[([\\d.]+), ([\\d.]+)\\]\\]", 'g'))].map(m => [m[1], +m[2], +m[3]]).concat(extra);
   /* named at a level as the flight's parts(lv) has it */
   const at = lv => names.filter(([, a, b]) => lv >= a - 0.01 && lv <= b + 0.01).map(n => n[0]);
   return { levels, asks, at };
 };
-const DC = flight('dc3d.js', 'scene|rack|tray|pkg');
+/* the data centre's levels and questions are plain data (src/data/views3d.js) */
+const DC = flight('dc3d.js', 'scene|rack|tray|pkg', [], { levels: DC_LEVELS, asks: DC_ASKS });
 const PH = flight('phone3d-flight.js', 'hinge|phone|parts|soc|dram|scene', ['isp', 'gpu', 'npu', 'cpu', 'cache'].map(id => [id, 2.6, 3.05]));
 
 test('every search looks at parts its view draws at that level, with words for each', () => {
