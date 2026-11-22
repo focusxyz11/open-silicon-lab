@@ -2,6 +2,9 @@
 
 An open-source lab for chips. The site is one grid (`docs/SYSTEM.md`): across it a chip's life, the loop (Open → Design → Make → Test → Ship → Use, and back to what is open); down it scale, from a place through its levels to the atom. In more words: a continuous dive from a data centre, a phone or a car down to silicon atoms (scale), meeting in four shared depths, and a journey along the line a chip is made on, from crystal to the world (process), with open questions running through both as threads. Static site: plain ES modules, one stylesheet, one folder of words split by area. No framework, no build step for development.
 
+## What it is (from the owner, 22 November 2026)
+A new form, not a format: not a course, a wiki or a game, because falling into a format constrains it. **Innovation is the center**, which is why the lab is challenge-based and visual-first. It is AI-native and sets out to reinvent the engine of computing. **The next generation of computer architecture is the highest priority** (`docs/ROADMAP.md`, "First"): when choosing between pieces of work, the one that moves it comes first (issues labelled `priority`).
+
 ## Who it is for
 Learners new to chips with basic hardware knowledge, up to engineers. Plain words first; explain any term the first time.
 

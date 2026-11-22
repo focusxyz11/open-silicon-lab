@@ -14,7 +14,7 @@ If `main`'s latest CI run failed, fix the root cause in a PR of your own first, 
 - An issue **waits for** the issue numbers on its `Waits for:` line (or under its `### Waits for` heading, as the Task form writes it). Read them from the issue's body.
 - An issue is **ready** when it is open, labelled `task`, not labelled `needs-owner`, has no open PR saying `Closes #<n>`, and every issue it waits for is closed, or is in the same group and comes earlier in it.
 - Issues sharing a `group:<name>` label form one group. Give ungrouped issues a group label (same files or view, at most 3 per group). A group is ready when its first issue is; its helper builds the issues in order on one branch, and stops before an issue whose waits are not met.
-- Wave 1: at most 5 ready groups, lowest issue numbers first.
+- Wave 1: at most 5 ready groups: groups holding an issue labelled `priority` first, then lowest issue numbers first.
 
 ## Phase 2: build every group in parallel
 Per group, a worktree from `origin/main` and one background helper (Agent tool) with a self-contained brief:
@@ -38,7 +38,7 @@ Take the PRs in order of lowest issue number. For each:
 4. After three failed tries, make it a draft with a comment saying what fails, and go on.
 
 ## Phase 3b: the second wave
-After Phase 3, read the issues again: merging closed some, so others are ready now. Build the newly ready groups as Phase 2 and merge them as Phase 3, at most 3 groups, lowest issue numbers first. No third wave.
+After Phase 3, read the issues again: merging closed some, so others are ready now. Build the newly ready groups as Phase 2 and merge them as Phase 3, at most 3 groups, `priority` groups first, then lowest issue numbers first. No third wave.
 
 ## Phase 4: close the night
 - One small PR updating `docs/STATUS.md`, merged when green.
