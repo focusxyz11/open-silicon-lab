@@ -12,7 +12,8 @@ The highest priority. Its home is *Machines from shared blocks* ([MACHINES.md](M
 
 - Machines becomes a place: the machine drawn as a live block diagram, its trade-offs as a front, a challenge per need (#320);
 - from gates to a computer: your programs run on the core made of your own slice, with its datapath drawn (#321);
-- the four new ways to compute still waiting, as labs and as matter for machines: spiking neurons and light (#322), reversible logic and dataflow (#323).
+- the four new ways to compute still waiting, as labs and as matter for machines: spiking neurons and light (#322), reversible logic and dataflow (#323);
+- invent a transistor: a switch of your own against silicon and the 60 mV per tenfold line, carried up into machines (#329).
 
 ## Polishing the core
 

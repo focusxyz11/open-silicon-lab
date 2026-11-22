@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Invent a transistor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Besley:ital,wght@0,400;0,500;1,400&family=Atkinson+Hyperlegible+Next:wght@400;500;700&family=Martian+Mono:wght@400;500&display=swap">
+<style>
+/* VOICE: the lab, a prototype of inventing at the smallest scale
+   IDEA: choose a material, a shape and a way to switch, and see your switch's curve against silicon and the 60 mV wall
+   PICTURE: the switching curve (current against gate voltage, log scale) with the wall shaded, and the device in cross-section
+   COLOUR and TYPE: the lab's night/day palette; your switch accent blue, silicon grey, the wall warm; Martian Mono numbers
+   LAYOUT: bar, card left with the choices and the goals, the curve as the stage with the device beneath it */
+:root{color-scheme:light dark;
+--bg:light-dark(#dfe8f2,#0b1120);--panel:light-dark(rgba(255,255,255,.93),rgba(16,23,38,.9));--ink:light-dark(#16202e,#eef2f8);--muted:light-dark(#5b6a80,#9aa8bd);--line:light-dark(rgba(40,60,90,.16),rgba(160,180,210,.18));
+--accent:light-dark(#2f7de1,#5aa9ff);--warm:light-dark(#d9820a,#ffb347);--good:light-dark(#17804b,#45d08a);--bad:light-dark(#c2332b,#ff6b62);--violet:light-dark(#7b4fe0,#b38cff);--grey:light-dark(#7d8aa0,#8e9bb2);
+--plot:light-dark(#f4f7fb,#0e1626);
+--sans:"Atkinson Hyperlegible Next",system-ui,sans-serif;--serif:"Besley",Georgia,serif;--mono:"Martian Mono",ui-monospace,monospace}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 var(--sans);overflow-x:clip}
+button{font:inherit;color:inherit;cursor:pointer}
+.bar{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;margin:12px;padding:10px 16px;border-radius:18px;background:var(--panel);border:1px solid var(--line)}
+.bar b{font-family:var(--serif);font-weight:500;font-size:18px;white-space:nowrap}.bar .lv{color:var(--muted);font-size:14px}.bar .lv strong{color:var(--ink)}
+.stage{display:grid;grid-template-columns:minmax(0,410px) minmax(0,1fr);gap:24px;padding:0 20px 20px;align-items:start}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:18px 22px;box-shadow:0 18px 50px rgba(0,0,0,.2)}
+.kick{font-size:14px;color:var(--muted)}
+h1{font:500 clamp(20px,1.9vw,24px)/1.22 var(--serif);margin:6px 0 10px;text-wrap:balance}
+.grp{margin:10px 0 0}.grp>span{font-size:13px;color:var(--muted)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.chip{border:1px solid var(--line);background:none;border-radius:999px;padding:6px 12px;font-size:14px;min-height:38px}
+.chip[aria-pressed=true]{border-color:var(--accent);color:var(--accent);background:color-mix(in srgb,var(--accent) 10%,transparent)}
+.chip:disabled{opacity:.35;cursor:not-allowed}
+.goals{list-style:none;padding:0;margin:14px 0 0;display:grid;gap:6px;border-top:1px solid var(--line);padding-top:12px}
+.goals li{display:grid;grid-template-columns:22px minmax(0,1fr);gap:8px;font-size:14px;align-items:start}
+.goals li i{width:18px;height:18px;border-radius:50%;border:2px solid var(--line);margin-top:2px}
+.goals li.ok i{background:var(--good);border-color:var(--good)}
+.goals small{display:block;color:var(--muted);font-size:12.5px}
+.pic{display:grid;gap:14px}
+.box{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:14px 16px}
+.box svg{width:100%;height:auto;display:block}
+.read{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.m{display:grid;gap:2px}.m b{font:500 20px/1.1 var(--mono)}.m span{font-size:12.5px;color:var(--muted)}
+.lower{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:14px}
+.props{display:grid;gap:7px;font-size:13.5px}
+.props .r{display:grid;grid-template-columns:110px minmax(0,1fr) minmax(64px,auto);gap:8px;align-items:center}
+.props .tr{height:7px;border-radius:4px;background:var(--line);overflow:hidden}.props .tr i{display:block;height:100%;background:var(--accent);border-radius:4px}
+.props .v{font-family:var(--mono);font-size:12px;text-align:right;white-space:nowrap}
+.say{font-size:14px;margin:10px 0 0;padding:10px 12px;border-radius:12px;border:1px dashed var(--line)}
+.mark{display:inline-block;font-size:12px;border-radius:999px;padding:1px 8px;margin-left:4px;border:1px solid var(--line)}
+.mark.product{color:var(--good);border-color:var(--good)}.mark.lab{color:var(--warm);border-color:var(--warm)}.mark.guess{color:var(--violet);border-color:var(--violet)}
+.note{font-size:12.5px;color:var(--muted);margin:10px 0 0}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+@media(max-width:960px){.stage{grid-template-columns:minmax(0,1fr)}.card{order:2}.lower{grid-template-columns:minmax(0,1fr)}.read{grid-template-columns:repeat(2,minmax(0,1fr))}}
+</style>
+</head>
+<body>
+<header class="bar"><b>Open Silicon Lab</b><span class="lv">The dive › <strong>Switch</strong> · invent one</span></header>
+<main class="stage">
+<section class="card">
+<div class="kick">Every chip is built from one kind of switch</div>
+<h1>Silicon has won for sixty years. Could you invent a better switch?</h1>
+<div class="grp"><span>What it is made of</span><div class="chips" id="mat"></div></div>
+<div class="grp"><span>Its shape</span><div class="chips" id="shape"></div></div>
+<div class="grp"><span>How it switches</span><div class="chips" id="mech"></div></div>
+<ul class="goals" id="goals"></ul>
+<p class="note">A prototype. Material values are rounded textbook figures; the switch is a simple model that keeps the real trade-offs, not a device simulator.</p>
+</section>
+<div class="pic">
+<div class="box"><svg id="curve" viewBox="0 0 760 380" role="img" aria-label="Current against gate voltage on a log scale: your switch, silicon's, and the 60 millivolts per decade wall"></svg>
+<div class="read" id="read"></div></div>
+<div class="lower"><div class="box"><svg id="dev" viewBox="0 0 360 200" role="img" aria-label="Your switch in cross-section"></svg></div>
+<div class="box"><div class="props" id="props"></div><p class="say" id="say"></p></div></div>
+</div>
+</main>
+<script>
+{
+const $=id=>document.getElementById(id);
+/* rounded textbook values at room temperature: band gap (eV), electron and hole mobility (cm2/Vs), how clean its insulator interface is (0 to 1), how it comes, how ready */
+const MAT={
+ si:{n:'Silicon',eg:1.12,me:1400,mh:450,ox:1,form:'bulk',ready:'product',c:'#8fa3bf',why:'Its own oxide makes an almost perfect insulator. That, more than speed, is why it won.'},
+ ge:{n:'Germanium',eg:.66,me:3900,mh:1900,ox:.4,form:'bulk',ready:'product',c:'#b9a27a',why:'Fast for both kinds of carrier, but its small gap leaks and its oxide is poor. Used today mixed into silicon.'},
+ ingaas:{n:'Indium gallium arsenide',eg:.75,me:10000,mh:300,ox:.35,form:'bulk',ready:'lab',c:'#c48bb0',why:'Electrons race through it; holes do not, so it is hard to make both halves of a CMOS pair.'},
+ gan:{n:'Gallium nitride',eg:3.4,me:1500,mh:30,ox:.5,form:'bulk',ready:'product',c:'#7fb0a8',why:'A huge gap: it hardly leaks and stands high voltage. In every fast phone charger, but with almost no useful holes for logic.'},
+ mos2:{n:'Molybdenum disulfide (2D)',eg:1.8,me:150,mh:50,ox:.5,form:'sheet',ready:'lab',c:'#9a8fd6',why:'Three atoms thick, so the gate controls it well even when tiny; its carriers are slow.'},
+ cnt:{n:'Carbon nanotube',eg:.8,me:10000,mh:8000,ox:.6,form:'tube',ready:'lab',c:'#5e6b7f',why:'Superb for both carriers. Placing billions of identical tubes, with no metallic ones, is the unsolved part.'},
+ gr:{n:'Graphene',eg:0,me:20000,mh:20000,ox:.5,form:'sheet',ready:'lab',c:'#4f5b6b',why:'The fastest of all, and no band gap: it never fully turns off.'}};
+const SHAPE={planar:{n:'Flat (planar)',k:1.5,for:['bulk']},fin:{n:'Fin',k:1.15,for:['bulk']},gaa:{n:'Gate all around',k:1.06,for:['bulk','tube']},sheet:{n:'One-atom-thin sheet',k:1.04,for:['sheet']}};
+const MECH={therm:{n:'Over a barrier (today)',ready:'product'},tunnel:{n:'Tunnel through it',ready:'lab'},nc:{n:'Negative capacitance',ready:'guess'}};
+const S={mat:'si',shape:'fin',mech:'therm'};
+const KT=25.85,DEC=4; /* mV of kT/q at 300 K; decades of on/off a logic switch needs */
+function model(s){const m=MAT[s.mat],k=SHAPE[s.shape].k;let ss=60*k,ionF=1;
+ if(s.mech==='tunnel'){ss=Math.max(28,40*k);ionF=Math.min(.12,.04*(1.2/Math.max(.3,m.eg)))}
+ if(s.mech==='nc'){ss=48*k/1.15;ionF=.85}
+ const maxDec=Math.min(9.5,1+m.eg/.12);
+ const clean=maxDec>=DEC+.5;
+ const vdd=clean?ss*DEC/1000+.1+.22*(2-m.ox):NaN;
+ const mu=m.me/(1+m.me/2500)*(m.form==='sheet'?1.4:1);
+ const ref=1400/(1+1400/2500);
+ const ion=ionF*mu/ref*Math.pow(Math.max(.05,(vdd||.6)-ss*DEC/1000),1.3);
+ const R=REF||{vdd,ion};const energy=clean?(vdd/R.vdd)**2:NaN;const speed=clean?(ion/R.ion)/(vdd/R.vdd):NaN;
+ const pair=m.mh/m.me;const ready=[m.ready,MECH[s.mech].ready].includes('guess')?'guess':[m.ready,MECH[s.mech].ready].includes('lab')?'lab':'product';
+ return{ss,maxDec,clean,vdd,energy,speed,pair,ready,raw:ion,ion:REF?ion/REF.ion:1}}
+let REF=null;const SI=model({mat:'si',shape:'fin',mech:'therm'});REF={vdd:SI.vdd,ion:SI.raw};
+const W=760,H=380,X0=64,X1=W-24,Y0=20,Y1=H-48,vx=v=>X0+v/1*(X1-X0),ly=l=>Y1-(l+12)/9*(Y1-Y0);
+function curvePts(r,on){const pts=[],vt=r.ss*DEC/1000,floor=on-r.maxDec;for(let i=0;i<=120;i++){const v=i/120;let l=on-Math.log10(1+Math.pow(10,(vt-v)*1000/r.ss));l=Math.max(floor,l);pts.push(`${vx(v).toFixed(1)},${ly(l).toFixed(1)}`)}return pts.join(' ')}
+function draw(){const r=model(S),on=-4+Math.log10(Math.max(.02,r.ion)),onSi=-4;
+ let h=`<rect x="${X0}" y="${Y0}" width="${X1-X0}" height="${Y1-Y0}" fill="var(--plot)" rx="6"/>`;
+ for(let d=-12;d<=-3;d+=1){h+=`<line x1="${X0}" x2="${X1}" y1="${ly(d)}" y2="${ly(d)}" stroke="var(--line)"/>`;if(d%2===0)h+=`<text x="${X0-8}" y="${ly(d)+4}" text-anchor="end" font-size="11" fill="var(--muted)" font-family="var(--mono)">10${String(d).replace('-','⁻').replace(/\d/g,c=>'⁰¹²³⁴⁵⁶⁷⁸⁹'[c])}</text>`}
+ for(let v=0;v<=1.001;v+=.2)h+=`<text x="${vx(v)}" y="${Y1+18}" text-anchor="middle" font-size="11" fill="var(--muted)" font-family="var(--mono)">${v.toFixed(1)}</text>`;
+ h+=`<text x="${(X0+X1)/2}" y="${H-8}" text-anchor="middle" font-size="12.5" fill="var(--muted)" font-family="var(--sans)">voltage on the gate (volts) →</text><text x="16" y="${(Y0+Y1)/2}" text-anchor="middle" font-size="12.5" fill="var(--muted)" font-family="var(--sans)" transform="rotate(-90 16 ${(Y0+Y1)/2})">current that flows →</text>`;
+ /* the wall: through the middle of your switch's turn-on, a line rising one tenfold every 60 mV; a curve steeper than it is where no ordinary switch can go at room temperature */
+ {const vt=r.ss*DEC/1000,vm=Math.max(.05,vt-.5*DEC*r.ss/1000),lm=on-Math.log10(1+Math.pow(10,(vt-vm)*1000/r.ss));const d=2.2,dv=d*.06;
+  const x1=vx(vm-dv),y1=ly(lm-d),x2=vx(vm+dv),y2=ly(lm+d);
+  h+=`<defs><clipPath id="pc"><rect x="${X0}" y="${Y0}" width="${X1-X0}" height="${Y1-Y0}"/></clipPath></defs><g clip-path="url(#pc)"><path d="M${x1} ${y1}L${x2} ${y2}L${vx(vm-dv)} ${y2}Z" fill="var(--warm)" opacity=".14"/><line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="var(--warm)" stroke-width="2" stroke-dasharray="6 5"/></g>`;
+  h+=`<text x="${Math.max(x1,X0)+40}" y="${y1+4}" font-size="12" fill="var(--warm)" font-family="var(--sans)">the dashed line: 60 mV per tenfold. Steeper, on its shaded side,</text><text x="${Math.max(x1,X0)+40}" y="${y1+20}" font-size="12" fill="var(--warm)" font-family="var(--sans)">is where no ordinary switch can go at room temperature</text>`}
+ h+=`<polyline points="${curvePts(SI,onSi)}" fill="none" stroke="var(--grey)" stroke-width="2.5" stroke-dasharray="4 4"/><text x="${vx(.9)}" y="${ly(onSi)-8}" font-size="12" fill="var(--grey)" font-family="var(--sans)" text-anchor="end">silicon fin, today</text>`;
+ if(!(S.mat==='si'&&S.shape==='fin'&&S.mech==='therm'))h+=`<polyline points="${curvePts(r,on)}" fill="none" stroke="var(--accent)" stroke-width="3.5"/><text x="${vx(.9)}" y="${ly(Math.min(-3.4,on))-10}" font-size="12.5" fill="var(--accent)" font-family="var(--sans)" text-anchor="end">your switch</text>`;
+ if(r.clean){h+=`<line x1="${vx(r.vdd)}" x2="${vx(r.vdd)}" y1="${Y0}" y2="${Y1}" stroke="var(--accent)" stroke-width="1.5" opacity=".6"/><text x="${vx(r.vdd)+6}" y="${Y0+14}" font-size="11.5" fill="var(--accent)" font-family="var(--mono)">${r.vdd.toFixed(2)} V</text>`}
+ $('curve').innerHTML=h;
+ const f=x=>isFinite(x)?x:null;
+ $('read').innerHTML=[[r.clean?r.vdd.toFixed(2)+' V':'—','lowest voltage for a clean switch'],[f(r.energy)?Math.round(r.energy*100)+'%':'—','energy per switch, against silicon'],[f(r.speed)?r.speed.toFixed(1)+'×':'—','speed, against silicon'],[Math.round(r.ss)+' mV','to turn on tenfold more']].map(([b,s])=>`<div class="m"><b>${b}</b><span>${s}</span></div>`).join('');
+ const m=MAT[S.mat];$('props').innerHTML=[['Band gap',m.eg/3.4,m.eg.toFixed(2)+' eV'],['Electrons',Math.log10(m.me)/4.4,m.me.toLocaleString()],['Holes',Math.log10(Math.max(10,m.mh))/4.4,m.mh.toLocaleString()],['Its insulator',m.ox,m.ox>=1?'excellent':m.ox>=.5?'fair':'poor']].map(([k,v,t])=>`<div class="r"><span>${k}</span><span class="tr"><i style="width:${Math.max(2,Math.min(100,v*100))}%"></i></span><span class="v">${t}</span></div>`).join('')+`<div class="r"><span>How ready</span><span></span><span class="v"><span class="mark ${r.ready}">${{product:'in products',lab:'in a lab',guess:'a guess'}[r.ready]}</span></span></div>`;
+ $('say').textContent=m.why+(r.pair<.15?' Without good holes, a CMOS pair needs a second material beside it.':'');
+ drawDev(m);goals(r)}
+function drawDev(m){const sh=S.shape,c=m.c;let h=`<rect x="0" y="0" width="360" height="200" fill="none"/>`;
+ h+=`<rect x="20" y="150" width="320" height="30" rx="4" fill="var(--line)"/>`;
+ if(sh==='planar')h+=`<rect x="40" y="110" width="280" height="40" rx="3" fill="${c}"/><rect x="130" y="86" width="100" height="18" rx="3" fill="var(--warm)" opacity=".85"/><rect x="130" y="104" width="100" height="6" fill="var(--grey)"/>`;
+ if(sh==='fin')h+=`<rect x="40" y="130" width="280" height="20" rx="3" fill="${c}" opacity=".7"/><rect x="160" y="60" width="40" height="70" rx="4" fill="${c}"/><path d="M140 52H220V130H210V62H150V130H140Z" fill="var(--warm)" opacity=".85"/>`;
+ if(sh==='gaa'){h+=`<path d="M120 40H240V140H120Z" fill="var(--warm)" opacity=".85"/>`;for(let i=0;i<3;i++)h+=m.form==='tube'?`<circle cx="180" cy="${66+i*28}" r="10" fill="${c}" stroke="var(--grey)" stroke-width="3"/>`:`<rect x="140" y="${58+i*28}" width="80" height="14" rx="4" fill="${c}" stroke="var(--grey)" stroke-width="3"/>`}
+ if(sh==='sheet')h+=`<rect x="40" y="128" width="280" height="6" rx="2" fill="${c}"/><rect x="130" y="100" width="100" height="22" rx="3" fill="var(--warm)" opacity=".85"/><rect x="130" y="122" width="100" height="5" fill="var(--grey)"/>`;
+ h+=`<text x="180" y="196" text-anchor="middle" font-size="12" fill="var(--muted)" font-family="var(--sans)">${SHAPE[sh].n} · gate in orange · channel in ${m.n.toLowerCase()}</text>`;$('dev').innerHTML=h}
+function goals(r){const g=[[r.clean,'A switch that really turns off','ten thousand times less current when off than on'],[r.clean&&r.energy<.98,'Less energy per switch than silicon','at the same clean switching'],[r.ss<59.9&&r.clean,'Steeper than the 60 mV wall','only a new way of switching gets there'],[r.clean&&r.energy<.98&&r.pair>=.15&&r.ready!=='guess','Something a factory could make','both carriers usable, and not only a guess']];
+ $('goals').innerHTML=g.map(([ok,t,s])=>`<li class="${ok?'ok':''}"><i aria-hidden="true"></i><span>${t}<small>${s}</small></span></li>`).join('')}
+function chips(){$('mat').innerHTML=Object.entries(MAT).map(([k,v])=>`<button class="chip" data-g="mat" data-k="${k}" aria-pressed="${S.mat===k}">${v.n}</button>`).join('');
+ const form=MAT[S.mat].form;$('shape').innerHTML=Object.entries(SHAPE).map(([k,v])=>`<button class="chip" data-g="shape" data-k="${k}" aria-pressed="${S.shape===k}" ${v.for.includes(form)?'':'disabled'}>${v.n}</button>`).join('');
+ $('mech').innerHTML=Object.entries(MECH).map(([k,v])=>`<button class="chip" data-g="mech" data-k="${k}" aria-pressed="${S.mech===k}">${v.n}</button>`).join('')}
+document.addEventListener('click',e=>{const b=e.target.closest('[data-g]');if(!b||b.disabled)return;S[b.dataset.g]=b.dataset.k;
+ if(b.dataset.g==='mat'){const f=MAT[S.mat].form;if(!SHAPE[S.shape].for.includes(f))S.shape=f==='sheet'?'sheet':f==='tube'?'gaa':'fin'}chips();draw()});
+chips();draw();
+}
+</script>
+</body>
+</html>

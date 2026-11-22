@@ -31,12 +31,13 @@ anywhere else, and does it help them think better about where chips are going?
 - **Builds on:** the tiny-chip engine (parse, synthesize, verify), the `agent` topic.
 - **Open questions:** a search small enough to run in a browser. *(Added 2 Nov 2026.)*
 
-### 2. Invent a transistor
+### 2. Invent a transistor (picked)
 - **First principle:** a transistor is a material whose conductivity a voltage can switch.
 - **What a learner does:** chooses material properties (energy gap, how fast charges move, layer thickness) and sees what switch results: leaky, slow or excellent; then tries research families such as atom-thin 2D materials, oxide semiconductors and ferroelectrics.
 - **Why it matters:** explains from the bottom why silicon has been so hard to replace, and what a replacement must beat.
 - **Builds on:** `physics`, `transistor`, the zoom's transistor level, the physics floor.
 - **Open questions:** a simple but honest device model; sourced material values. *(2 Nov 2026.)*
+- **Picked 22 November:** task #329, at the switch level, with the 60 mV per tenfold line as its open front and your switch going up into Machines. Prototype: `docs/reviews/ideas/transistor.html`.
 
 ### 3. Invent the next machine
 - **First principle:** an idea wins when it fits the hardware of its time (the "hardware lottery": neural networks waited decades for GPUs), and moving data costs more than computing.
