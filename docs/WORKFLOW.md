@@ -19,7 +19,9 @@ Sessions can run side by side when their tasks touch different files. Merge one 
 
 ## The nightly build
 
-Each night open task issues (label `task`) are built in groups, in parallel, and the green pull requests are merged one by one, leaving `main` green. The procedure is the repository skill `.claude/skills/nightly/SKILL.md` (`/nightly` in Claude Code).
+Each night open task issues (label `task`) are built in groups, in parallel, and the green pull requests are merged one by one, leaving `main` green. Then a second wave builds what those merges made ready, the same night.
+
+**Dependencies are written, not labelled.** A task that needs another one merged first says so in a line of its own: `Waits for: #299, #302` (the Task form has a field for it). The nightly build reads it and starts the task as soon as every issue named is closed, with no one to unblock it. Tasks that follow each other in the same files go in one group (`group:<name>`), built in order on one branch. The label `needs-owner` is the only hold: the task waits for the owner's decision or review, and only the owner removes it. Write a task when what it builds on is merged or due that night; later parts stay as a list in their plan. The procedure is the repository skill `.claude/skills/nightly/SKILL.md` (`/nightly` in Claude Code).
 
 ## Conventions
 

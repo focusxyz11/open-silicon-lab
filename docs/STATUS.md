@@ -63,7 +63,7 @@ Each task below is self-contained and can be handed to Claude Code on the web as
 
 ### The foundation pass and the spine (22 November)
 
-Two plans from the review of 22 November, in order. **The foundation** (#298 to #301): the first page loads no 3D, the shell split by view, the words split by area, the documents made true; nothing changes on screen. **The thirteen as the spine** ([reviews/spine.md](reviews/spine.md)): every question filed under the thirteen with the field questions leading (#302), marks on the picture open a lens (#303), lenses repaint the picture, starting with the block (#304), the eleven worlds as reading pages (#305), and labs for the thinnest questions (#306 to #309). The spine's tasks after #302 are `blocked` until the foundation's files have been split.
+Two plans from the review of 22 November, in order. **The foundation** (#298 to #301): the first page loads no 3D, the shell split by view, the words split by area, the documents made true, then fewer shared files (#312: challenges per lab, styles per view, smoke checks per section); nothing changes on screen. **The thirteen as the spine** ([reviews/spine.md](reviews/spine.md)): every question filed under the thirteen with the field questions leading (#302), marks on the picture open a lens (#303), lenses repaint the picture, starting with the block (#304), the eleven worlds as reading pages (#305), and labs for the thinnest questions (#306 to #309). The spine's tasks after #302 say what they wait for (`Waits for:`), and the nightly build starts each as soon as those are merged, in a second wave the same night where it can (`docs/WORKFLOW.md`).
 
 The labs of #216 to #221 and the fixes of #222 are built. What they left open:
 
