@@ -17,9 +17,10 @@ import { CORNERS, HOUSE } from '../data/studio.js';
 import { PLACES } from '../data/views3d.js';
 import { LABS } from '../data/labs/index.js';
 
-/* what each lab grows, from its own file (src/v2/growers/<lab>.js): { <growth>: { at, grow } }, all loaded before the
-   island is made */
-const LAB_GROWERS = Object.assign({}, ...(await Promise.all(LABS.map(l => import('./growers/' + l.name + '.js').then(m => m.default)))));
+/* what each lab grows, from its own file (src/v2/growers/<lab>.js): { <growth>: { at, grow } }, fetched beside the island;
+   a lab's growth won before they are in is built the moment they are */
+let LAB_GROWERS = {};
+const labGrowers = Promise.all(LABS.map(l => import('./growers/' + l.name + '.js').then(m => m.default))).then(L => (LAB_GROWERS = Object.assign({}, ...L)));
 
 /* where every place stands, and how close the camera comes: plain data, kept in src/data/views3d.js */
 export { PLACES };
@@ -707,7 +708,7 @@ export function createMap(canvas, host, on = {}) {
   /* ---- what grows: one builder per growth (src/v2/game.js GROWTH); each starts hidden and grows in. The loop's own are
      here; a lab's are in its own file (LAB_GROWERS), built with the island's palette and lists ---- */
   const AROUND = { P, A, night, pulses, spinning, bobbing };
-  const GROWERS = Object.assign({
+  const GROWERS = {
     'studio-screen': g => { const s = box(g, 5, 2.8, 0.25, glow(P.accent, night ? 1.3 : 0.7), 0, 0.5, 0, 0.1); s.rotation.y = 0.5; box(g, 0.25, 0.6, 0.25, metal(P.slate), 0, 0, 0, 0.05); pulses.push(s); },
     /* your first masks leave the studio: a truck goes back and forth on the road between the mask house and the factory */
     'masks': () => { const tr = truck(A.truck); box(tr, 2.6, 0.12, 1.2, glow(P.accent, 1.2), -0.9, 2.15, 0, 0.03, { cast: false }); scene.add(tr); moving.push({ obj: tr, path: route([[-31, -27], [-29, -20], [-27.5, -13], [-22, -6], [-14, -2], [-8, -6]]), speed: 0.05, ship: true, bounce: true }); },
@@ -731,12 +732,20 @@ export function createMap(canvas, host, on = {}) {
     'dc-hall': g => { box(g, 24, 4, 6, mat(P.wall), 0, 0, 0, 0.3); for (let i = 0; i < 7; i++) { box(g, 2.4, 0.8, 2.4, mat(P.white), -9 + i * 3, 4, 0, 0.12); spinning.push(cyl(g, 0.9, 0.9, 0.15, metal(P.dark), -9 + i * 3, 4.8, 0, 18)); } for (let i = 0; i < 9; i++) box(g, 1.6, 0.5, 0.08, winCool, -9.6 + i * 2.4, 2.4, 3.02, 0.02, { cast: false }); },
     'dc-solar': g => { for (let i = 0; i < 4; i++) for (let j = 0; j < 3; j++) { const p = box(g, 2.6, 0.12, 1.6, metal(0x27406a, { roughness: 0.25 }), -4.5 + i * 3, 0.9, -3 + j * 3, 0.03); p.rotation.x = -0.4; } },
     'clock-tower': g => { box(g, 2.4, 9, 2.4, mat(P.white), 0, 0, 0, 0.2); const face = cyl(g, 1, 1, 0.2, mat(P.wall), 0, 7, 1.25, 24); face.rotation.x = Math.PI / 2; const hand = box(g, 0.12, 0.9, 0.08, mat(P.dark), 0, 6.95, 1.42, 0.02, { cast: false }); hand.geometry = hand.geometry.clone().translate(0, 0.4, 0); spinning.push({ hand }); }
-  }, Object.fromEntries(Object.entries(LAB_GROWERS).map(([id, x]) => [id, g => x.grow(g, AROUND)])));
+  };
+  const growerOf = id => GROWERS[id] || (LAB_GROWERS[id] && (g => LAB_GROWERS[id].grow(g, AROUND)));
   /* where each growth stands, relative to its place: [x, z, y] */
-  const GROW_SPOT = Object.assign({ 'studio-screen': [-4, 9], masks: [0, 0], 'studio-wing': [-4, -12], 'fab-trucks': [0, 0], 'fab-line': [2, -14], 'fab-wafers': [-13, 9], 'dc-cores': [-14, 6], 'test-dies': [-11, 9], 'studio-proof': [10, -10], 'power-store': [12, -3], 'dc-batch': [-14, -8], 'test-probe': [3, 0, 4], 'test-hall': [11, 0],
+  const GROW_SPOT = { 'studio-screen': [-4, 9], masks: [0, 0], 'studio-wing': [-4, -12], 'fab-trucks': [0, 0], 'fab-line': [2, -14], 'fab-wafers': [-13, 9], 'dc-cores': [-14, 6], 'test-dies': [-11, 9], 'studio-proof': [10, -10], 'power-store': [12, -3], 'dc-batch': [-14, -8], 'test-probe': [3, 0, 4], 'test-hall': [11, 0],
     'island-phones': [0, 0], 'island-cars': [0, 0], 'dc-hall': [0, 10], 'dc-solar': [21, 4], 'clock-tower': [-8, -2]
-  }, Object.fromEntries(Object.entries(LAB_GROWERS).map(([id, x]) => [id, x.at])));
-  GROWTH.forEach(gw => { const [x, z, y] = GROW_SPOT[gw.id] || [0, 0], g = group(G[gw.at], x, y || 0, z); g.visible = false; g.scale.setScalar(0.001); growing.push({ id: gw.id, g, built: false, t0: 0 }); });
+  };
+  const spotOf = id => GROW_SPOT[id] || (LAB_GROWERS[id] && LAB_GROWERS[id].at) || [0, 0];
+  GROWTH.forEach(gw => { const [x, z, y] = spotOf(gw.id), g = group(G[gw.at], x, y || 0, z); g.visible = false; g.scale.setScalar(0.001); growing.push({ id: gw.id, g, built: false, t0: 0 }); });
+  /* the labs' growers arrive: each growth stands at its place, and what was won before is built at once */
+  let lastGrown = null;
+  labGrowers.then(() => { let grew = false;
+    growing.forEach(gr => { const x = LAB_GROWERS[gr.id]; if (!x) return; const [px, pz, py] = x.at; gr.g.position.set(px, py || 0, pz);
+      if (lastGrown && lastGrown.has(gr.id) && !gr.built) { x.grow(gr.g, AROUND); gr.built = true; gr.g.visible = true; gr.t0 = -1; gr.g.scale.setScalar(1); grew = true; } });
+    if (grew) pickable(); });
 
   /* No question floats over a place any more (docs/framework/rebuild.md, section 3): a question shown as a dot on a
      map was rejected once already. The questions are on the first page and on every page of #/read. */
@@ -926,7 +935,8 @@ export function createMap(canvas, host, on = {}) {
       const pace = Math.max(0.35, Math.min(1.6, 68 / c.days)); moving.forEach(m => { if (m.car) { if (m.base == null) m.base = m.speed; m.speed = m.base * pace; } }); }
     /* growth */
     let grew = false;
-    growing.forEach(gr => { if (st.grown.has(gr.id) && !gr.built) { GROWERS[gr.id](gr.g); gr.built = true; gr.g.visible = true; grew = true; gr.t0 = animate && !reduced() ? performance.now() : -1; if (gr.t0 < 0) gr.g.scale.setScalar(1); if (animate) sparkle(gr.g); } });
+    lastGrown = st.grown;
+    growing.forEach(gr => { const make = growerOf(gr.id); if (st.grown.has(gr.id) && !gr.built && make) { make(gr.g); gr.built = true; gr.g.visible = true; grew = true; gr.t0 = animate && !reduced() ? performance.now() : -1; if (gr.t0 < 0) gr.g.scale.setScalar(1); if (animate) sparkle(gr.g); } });
     /* names, with a flag for what is left to do */
     PLACES.forEach(p => { const s = st.places[p.id];
       const flag = s && s.total ? (s.done === s.total ? '<span class="flag done">✓</span>' : '<span class="flag">' + (s.total - s.done) + '</span>') : p.id === 'village' && st.jobList.length ? '<span class="flag job">' + st.jobList.length + '</span>' : '';
