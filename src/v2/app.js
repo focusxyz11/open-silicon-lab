@@ -7,7 +7,7 @@
    and Ask (its questions, and what people and agents have asked). There is no menu: the commons is the need, the
    place where the loop starts and comes back (the Lab, and its record, #/build); what you met and did is your log
    (#/log); the world around the island is the way out from it (#/ecosystem).
-   Routes: #/ (the blueprint, the first page: src/v2/home.js), #/stations (the station map: src/v2/stations.js), #/island (the island), #/place/<id>, #/place/datacentre/<level>, #/chip/<row>/build (inside a chip, layer by layer: the dive's levels as made),
+   Routes: #/ (Hold, the first page: src/v2/hold.js), #/blueprint (the blueprint: src/v2/home.js), #/stations (the station map: src/v2/stations.js), #/island (the island), #/place/<id>, #/place/datacentre/<level>, #/chip/<row>/build (inside a chip, layer by layer: the dive's levels as made),
    #/board (one board, with a story that drives it), #/dive/<depth>[/<world>] (the dive), #/line/<step> (the factory),
    #/bench/<level>[/<challenge>] (the studio), #/do/<challenge>, #/ask/<thread>/<depth>, #/supply, #/log, #/build,
    #/ecosystem. Words are read with t(). */
@@ -22,14 +22,14 @@ import { play, titleOf, goalOf, labsLoaded, labsReady } from './play.js';
 import { PLACES, CHIP_ROWS as ROWS } from '../data/views3d.js';
 import { stopsAt } from '../data/places.js';
 import { signHtml, signOf, keep, refusal, slipHtml, slipClick, byLine } from './commons.js';
-import { reportsAt, SAYS } from '../engines/ledger.js';
+import { reportsAt, SAYS, ledger } from '../engines/ledger.js';
 import * as Read from './read.js';
 import * as Exp from '../engines/experiments.js';
 import * as Chip from '../engines/chip.js';
 import { levelAt, sizeOf } from '../data/atlas.js';
 import * as Field from './field.js';
 import { setBetScene } from '../app/betscene.js';
-import { createHome } from './home.js';
+import { createHold } from './hold.js';
 import { sizeWords } from './frame.js';
 import { boot as frame2Boot, reading as frame2Reading } from './frame2.js';
 import { V, $, showStage, esc, hue, qColor, follow, followW } from './shell.js';
@@ -366,12 +366,16 @@ export function start() {
     V.hidePh(); V.hideCa(); V.hideSw();
     document.body.classList.remove('immersive'); page.hidden = true; V.hideL3(); showStage(false);
   }
-  /* ---- the blueprint, the first page (#/, src/v2/home.js): the whole chip innovation ecosystem as one wheel, a chip's
-     life around it and its scale inward, with a story beside it. Nothing 3D is made or drawn here: the island (#/island)
-     is one way in, made when it is first visited ---- */
+  /* ---- Hold, the first page (#/, src/v2/hold.js): fifty years of computing under one finger, from one transistor to
+     the wall, then the four walls, the arrangement, your machine and the island. Nothing 3D is made or drawn here: the
+     island (#/island) is one way out of it, made when it is first visited ---- */
   const homeEl = $('home');
-  let home = null;
-  function showHome() { showHome0(); return showBlueprint(); }
+  let hold = null;
+  /* the record's entries by who made them, for the island at the end of the page ('both' counts with people) */
+  const record = () => { const E = ledger(), by = k => E.filter(e => (k === 'person' ? e.made === 'person' || e.made === 'both' : e.made === k)).length;
+    return { all: E.length, ai: by('ai'), program: by('program'), example: by('example'), person: by('person') }; };
+  function showHome() { showHome0(); if (stations) stations.hide(); if (blueprint) blueprint.hide();
+    return needWords('hold').then(() => { if (!hold) hold = createHold(homeEl, { still, record }); return hold.show(); }).then(() => afterPaint(preloadHome)); }
   function showHome0() {
     $('diveCanvas').hidden = true; vui.hidden = true; V.dive && V.dive.stop(); V.hide3d(); $('flatLabels').hidden = true; if (V.flatWords) V.flatWords.clear(); if (V.Bench) V.Bench.show(false);
     V.hideBoard(); document.body.classList.remove('immersive');
@@ -380,16 +384,20 @@ export function start() {
     $('mapCanvas').hidden = $('mapLabels').hidden = true; $('hero').hidden = true; $('outbtn').hidden = true; lensbar.hidden = true; showStage(false); if (V.map) V.map.pause();
     if (!sheet.hidden) closeSheet(); loading(false);
   }
+  /* ---- the blueprint (#/blueprint, src/v2/home.js): the first page before Hold, the whole chip innovation ecosystem as
+     one wheel, in four languages; loaded when it is first opened ---- */
+  const blueprintEl = $('blueprint');
+  let blueprint = null;
   function showBlueprint() {
-    if (stations) stations.hide();
-    return needWords('blueprint').then(() => { if (!home) home = createHome(homeEl, { still }); home.show(); afterPaint(preloadHome); });
+    showHome0(); if (hold) hold.hide(); if (stations) stations.hide();
+    return Promise.all([import('./home.js'), needWords('blueprint'), needStyles('blueprint')]).then(([m]) => { if (!blueprint) blueprint = m.createHome(blueprintEl, { still }); blueprint.show(); });
   }
   /* ---- the station map (#/stations, src/v2/stations.js): the first page before the blueprint, every station of the lab
      joined round a chip's life, with its toys and paths by subject; loaded when it is first opened ---- */
   const stationsEl = $('stations');
   let stations = null;
   function showStations() {
-    showHome0(); if (home) home.hide();
+    showHome0(); if (hold) hold.hide(); if (blueprint) blueprint.hide();
     return Promise.all([import('./stations.js'), needStyles('stations')]).then(([m]) => {
       if (!stations) stations = m.createStations(stationsEl, { challenges: Game.CHALLENGES, chOf, titleOf, doHref, doHome: Way.doHome, sizeOf, sizeWords, still,
         done: () => S.done, exps: Exp.EXPERIMENTS.map(x => ({ id: x.id, world: x.world, ask: Read.askOf(x) })) });
@@ -418,7 +426,7 @@ export function start() {
      Going between views is never a cut: deeper zooms in, higher zooms out, the Turn turns, along slides. */
   const partsOf = h => (h.replace(/^#\/?/, '') || '').split('/').filter(Boolean);
   const doPlace = ch => (ch && !ch.need && ch.kind !== 'break' && ch.kind !== 'design' ? Way.doHome(ch) : null);
-  const viewOf = p => { const k = p[0]; if (!k || k === 'home' || k === 'stations') return ['home', -1]; if (k === 'ask') return viewOf(partsOf(Game.viewOfDepth(p[2] || 'chip')));
+  const viewOf = p => { const k = p[0]; if (!k || k === 'home' || k === 'stations' || k === 'blueprint') return ['home', -1]; if (k === 'ask') return viewOf(partsOf(Game.viewOfDepth(p[2] || 'chip')));
     if (k === 'do') { const h = doPlace(chOf(decodeURIComponent(p[1] || ''))); return h ? viewOf(partsOf(h)) : ['map', 0]; }
     if (k === 'dive') { const w = p[2] || Game.DIVE_WORLD[p[1]] || 'datacentre'; if (w === 'datacentre') return ['dive', 4]; const i = Math.max(0, ['phone', 'phoneboard', 'soc', 'car', 'ecu', 'mcu', 'scanner', 'wafer', 'die'].indexOf(p[1]) % 3); return ['dive:' + w, Game.DIVE_WORLD[p[1]] ? 1 + i : 4]; }
     if (k === 'supply') return ['supply', 0];
@@ -446,6 +454,7 @@ export function start() {
     shownAt = '#/' + parts.join('/');
     if (k === 'home') return showHome();
     if (k === 'stations') return showStations();
+    if (k === 'blueprint') return showBlueprint();
     if (k === 'board') return V.showBoard();
     if (k === 'dive') return V.showDive(parts[1], parts[2]);
     if (k === 'supply') return V.showSupply(parts[1]);
@@ -482,7 +491,8 @@ export function start() {
     /* a world is a reading page, opened from a lens or by name; there is no list of them (#305): #/w alone is the map */
     if (/^#\/?w\/?$/.test(location.hash)) history.replaceState(null, '', '#/');
     const parts = partsOf(location.hash), k = parts[0] || 'home';
-    if (k !== 'home' && home) home.hide();
+    if (k !== 'home' && hold) hold.hide();
+    if (k !== 'blueprint' && blueprint) blueprint.hide();
     if (k !== 'stations' && stations) stations.hide();
     /* the cell you came from and the one you are in: a seam between them may raise its leak */
     { const to = Way.whereOf(location.hash); hideSeam(); crossed(V.seamFrom, to); V.seamFrom = to; }

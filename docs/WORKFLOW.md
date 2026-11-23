@@ -16,7 +16,7 @@ Sessions can run side by side when their tasks touch different files. Merge one 
 - **Words:** `src/i18n/en/<area>.json`, appended by area (a lab's in `labs.json`, its challenges' names in `core.json`, what it grows in `place.json`), and `AREAS` in `src/core/i18n.js` for a new prefix. Keep both sides' keys.
 - **The thirteen:** `src/data/frame.js` (`FILED`, `MARKS`), where everything is filed under the core questions.
 - **The labs' list:** `src/data/labs/index.js`, an import and a name at the end of `LABS` for each new lab (a browser cannot list a folder). Keep both lines.
-- **The shared sheets:** `src/styles/base.css` (what every screen shares, kept under 60 KB with `blueprint.css`) and `src/styles/frame.css` (the frame), when a change is the frame's or every view's rather than one view's.
+- **The shared sheets:** `src/styles/base.css` (what every screen shares, kept under 60 KB with `hold.css`, the first page's) and `src/styles/frame.css` (the frame), when a change is the frame's or every view's rather than one view's.
 - **The shell:** `src/v2/app.js` and `src/v2/game.js` (the loop's own challenges), when the change is to the shell or the loop itself.
 - **Rarely:** `src/core/styles.js` (`ORDER`, when a view gets a sheet of its own), and `scripts/smoke.mjs` (`NAMES`, when a section is added; CI's groups in `.github/workflows/ci.yml` name the sections, and only the owner edits them).
 

@@ -30,7 +30,7 @@ export const explore = async (tag, viewport, scheme) => {
     if (!(bytes < FIRST_PAGE_BYTES)) problems.push(tag + ': the first page fetches ' + Math.round(bytes / 1024) + ' KB before its preload (budget ' + Math.round(FIRST_PAGE_BYTES / 1024) + ' KB)');
     /* of the words, only the core area's and the first page's own */
     const words = early.filter(e => /\/src\/i18n\//.test(e.u)).map(e => e.u.split('/src/i18n/')[1]);
-    if (words.sort().join() !== 'en/blueprint.json,en/core.json') problems.push(tag + ': the first page fetches words beyond core.json and its own (blueprint.json): ' + words.join(', '));
+    if (words.sort().join() !== 'en/core.json,en/hold.json') problems.push(tag + ': the first page fetches words beyond core.json and its own (hold.json): ' + words.join(', '));
     await fp.close();
   }
   await page.goto(base + 'index.html#/island');
