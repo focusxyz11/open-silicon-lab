@@ -30,7 +30,9 @@ export default async function run() {
     if (!(await hp.$('#stations .hm-qcard a.hm-qitem[href^="#/"]'))) problems.push(tag + ': the question on the first page shows nothing behind it');
     if ((await hp.$$('#stations .hm-nitem[href^="#/"]')).length < 3) problems.push(tag + ': the first page does not say what is new');
     { const ix = await hp.evaluate(() => [...document.querySelectorAll('#stations .hm-index a.hm-ilink')].map(a => a.getAttribute('href')));
-      for (const h of ['#/challenges', '#/read', '#/w', '#/island', '#/dive/chip', '#/line/crystal', '#/log']) if (!ix.includes(h)) problems.push(tag + ': the whole lab on the first page has no way to ' + h); }
+      for (const h of ['#/challenges', '#/read', '#/island', '#/dive/chip', '#/line/crystal', '#/log']) if (!ix.includes(h)) problems.push(tag + ': the whole lab on the first page has no way to ' + h);
+      /* the eleven worlds are reading pages, opened from a lens, never a list (#305) */
+      if (ix.includes('#/w')) problems.push(tag + ': the whole lab on the first page still lists the worlds'); }
     /* a scale picked on the ruler opens its level on the map, with how it is designed and made */
     await hp.waitForFunction(() => { const b = document.querySelector('#stations [data-zat="5"]'); if (b && b.getAttribute('aria-pressed') !== 'true') b.click(); return document.querySelectorAll('#stations .hm-twins button').length === 2 && /Gate/.test((document.querySelector('#stations [data-side] h2') || {}).textContent || ''); }, null, { timeout: 10000 }).catch(() => problems.push(tag + ': the ruler does not open the gate with its designed and made twins'));
     /* a station: what can be played there, and the view it leads to */

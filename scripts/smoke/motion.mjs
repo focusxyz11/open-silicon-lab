@@ -20,8 +20,9 @@ export default async function run() {
     await page.waitForSelector('#sheet.part [data-deeper]', { timeout: 15000 }).catch(() => problems.push(tag + ': ' + pl + ' does not open with its parts'));
   }
   await page.evaluate(() => { location.hash = '#/place/fab/etch'; });
-  /* a part leads into the worlds its questions belong to, and a world says where it is met on the island */
-  await page.waitForFunction(() => [...document.querySelectorAll('#sheet .wchip')].some(a => !a.hidden && a.getAttribute('href') === '#/w/fail'), null, { timeout: 15000 }).catch(() => problems.push(tag + ': the etch tool does not lead to the world of its questions'));
+  /* a part's card lists no worlds: a world opens from a lens (#305) */
+  await page.waitForSelector('#sheet.part', { timeout: 15000 }).catch(() => {});
+  if (await page.$('#sheet .wchip, #sheet .wmeet')) problems.push(tag + ': a part\'s card still lists the worlds it meets');
   await page.waitForSelector('#sheet.part [data-deeper]', { timeout: 15000 }).catch(() => problems.push(tag + ': a tool of the factory cannot be selected'));
   await page.click('#sheet [data-deeper]');
   await page.waitForFunction(() => location.hash.startsWith('#/line/'), null, { timeout: 15000 }).catch(() => problems.push(tag + ': going inside did not reach the line'));

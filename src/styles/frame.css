@@ -352,6 +352,10 @@ button.qlmeet:hover { border-style: solid; background: color-mix(in srgb, var(--
 .qlmeet span { display: grid; gap: 2px; }
 .qlmeet small { font: 400 13px/1.45 var(--sans); color: var(--muted); }
 .qlnext { justify-self: start; }
+.qlread { display: grid; gap: 2px; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--line); color: var(--ink); text-decoration: none; }
+.qlread span { color: var(--muted); }
+.qlread b { font: 600 15px/1.35 var(--serif); }
+.qlread:hover { border-color: var(--warm); }
 .modes3 .mc:empty { display: none; }
 .modes3 .mc { min-width: 16px; padding: 0 5px; border-radius: 8px; background: var(--accent); color: var(--accent-ink); font: 700 10px var(--mono); }
 .rail2 .rfill { position: absolute; left: 5px; top: 6px; width: 2px; height: 0; background: var(--accent); transition: height .3s; z-index: 0; }
@@ -411,7 +415,7 @@ button.qlmeet:hover { border-style: solid; background: color-mix(in srgb, var(--
 @keyframes bump { 0% { transform: scale(1); } 35% { transform: scale(1.45); } 100% { transform: scale(1); } }
 @keyframes plus { 0% { opacity: 0; transform: translate(-50%, 6px); } 20% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, 34px); } }
 .won { position: relative; }
-@media (prefers-reduced-motion: reduce) { .hero.intro, .btn.pulse, .pin3.here::after, .logbtn.glow, .loop .bump { animation: none !important; }
+@media (prefers-reduced-motion: reduce) { .hero.intro, .btn.pulse, .pin3.here::after { animation: none !important; }
 }
 
 /* phones: the bar wraps, panels become bottom sheets */
@@ -615,7 +619,6 @@ pre.code { margin: 4px 0; white-space: pre-wrap; overflow-wrap: anywhere; }
 /* ---- a world's page (src/v2/worlds.js), made from its document ---- */
 .world { --qc: var(--accent); }
 .world > .kicker { color: var(--qc); }
-.page .wq { margin: 8px 0 6px; padding-left: 16px; border-left: 4px solid var(--qc); font: 700 clamp(28px, 3.8vw, 42px)/1.12 var(--serif); }
 .copies { width: 100%; height: auto; }
 .copies circle { transition: fill .25s; }
  .copies .cok { fill: #8fb3e6; }
@@ -632,14 +635,7 @@ pre.code { margin: 4px 0; white-space: pre-wrap; overflow-wrap: anywhere; }
 }
 
 .pin3.hush { opacity: 0 !important; pointer-events: none; }
-/* places lead into the worlds their questions belong to, and each world says where it is met on the island */
-.sheet .wmeet { display: flex; flex-wrap: wrap; gap: 8px; margin: 4px 0 12px; }
- .sheet .wmeet .kicker { margin: 0; width: 100%; }
-.sheet .wmeet .wchip { flex: 1 1 220px; }
-.wchip { display: grid; gap: 2px; padding: 9px 12px 9px 14px; border-radius: 12px; border: 1px solid var(--line); border-left: 3px solid var(--qc); text-decoration: none; color: var(--ink); background: color-mix(in srgb, var(--qc) 7%, transparent); }
-.wchip:hover { border-color: var(--qc); }
- .wchip .wq { font: 600 14px/1.3 var(--serif); }
- .wchip .wl { color: var(--muted); }
+/* each world says where it is met on the island */
 .wisle { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px; }
 .wisl { display: grid; gap: 4px; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--line); text-decoration: none; color: var(--ink); }
 .wisl:hover { border-color: var(--qc); }
@@ -1616,7 +1612,7 @@ html.frame2 #sheet > .x { top: 16px; right: 18px; width: 36px; height: 36px; }
 html.frame2 .hero { border-radius: 22px; padding: 20px 24px 18px; }
 html.frame2 .hero .kicker { font: var(--f2-label); letter-spacing: 0; text-transform: none; color: var(--muted); }
 html.frame2 .hero h1 { margin: 2px 0 12px; font: var(--f2-title); }
-html.frame2 .hero .heroq .qcard .q { font: italic 400 17px/1.35 var(--serif); }
+html.frame2 .hero .heroq { font: italic 400 17px/1.45 var(--serif); }
 html.frame2 .hero .herok { font: var(--f2-label); letter-spacing: 0; text-transform: none; color: var(--muted); }
 html.frame2 .hero .heroc .chipb, html.frame2 .hero .btn { font-size: 15px; }
 @media (max-width: 720px) {
@@ -1624,7 +1620,7 @@ html.frame2 .hero .heroc .chipb, html.frame2 .hero .btn { font-size: 15px; }
   html.frame2 #sheet h2, html.frame2 .hero h1 { font: 700 23px/1.15 var(--serif); }
   html.frame2 #sheet .line { font-size: 16px; }
   html.frame2 .hero { padding: 14px 16px; }
-  html.frame2 .hero .heroq .qcard .q { font-size: 16px; }
+  html.frame2 .hero .heroq { font-size: 15px; }
 }
 
 /* on a phone the lenses wait while the first card is open over the island (it covered its last row), and come back

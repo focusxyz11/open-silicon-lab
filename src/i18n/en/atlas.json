@@ -1540,6 +1540,7 @@
  "lp.perfect.m.late": "Signals that arrive late",
  "frame.lens.hold": "Hold both",
  "frame.lens.also": "It also meets here",
+ "frame.lens.read": "Read more",
  "frame.lens.holdWith": "Hold with {q}",
  "frame.pair.where": "Where they meet: {meet}",
  "frame.pair.putdown": "Put down {q}",

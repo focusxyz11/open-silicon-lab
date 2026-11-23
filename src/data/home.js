@@ -157,5 +157,5 @@ export const NEW = [
 export const INDEX = [
   { id: 'places', items: [['lab', '#/place/lab'], ['studio', '#/place/studio'], ['quarry', '#/place/quarry'], ['fab', '#/place/fab'], ['test', '#/place/test'], ['port', '#/place/port'], ['datacentre', '#/place/datacentre/0'], ['phones', '#/place/phones/0'], ['cars', '#/place/cars/0']].map(([id, href]) => ({ id, href, word: 'map.' + id + '.t' })) },
   { id: 'views', items: [['island', '#/island'], ['dive', '#/dive/chip'], ['line', '#/line/crystal'], ['bench', '#/bench/need'], ['board', '#/board'], ['whatif', '#/whatif']].map(([id, href]) => ({ id, href })) },
-  { id: 'more', items: [['challenges', '#/challenges', 'challenges'], ['read', '#/read', 'experiments'], ['worlds', '#/w'], ['machines', '#/machines'], ['build', '#/build'], ['supply', '#/supply'], ['ecosystem', '#/ecosystem'], ['log', '#/log']].map(([id, href, count]) => ({ id, href, count })) }
+  { id: 'more', items: [['challenges', '#/challenges', 'challenges'], ['read', '#/read', 'experiments'], ['machines', '#/machines'], ['build', '#/build'], ['supply', '#/supply'], ['ecosystem', '#/ecosystem'], ['log', '#/log']].map(([id, href, count]) => ({ id, href, count })) }
 ];

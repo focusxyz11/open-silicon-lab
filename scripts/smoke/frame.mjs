@@ -213,6 +213,19 @@ export default async function run() {
       return location.hash === '#/dive/gate' && !!f.querySelector('.dock .qldown') && !f.querySelector('.mark3[aria-pressed="true"]'); }, null, { timeout: 60000, polling: 500 })
       .catch(async () => problems.push(tag + ': going down to where a lens does not live does not put it down, saying so (' + await seen() + ')'));
     await lp.close(); }
+  /* a world is a reading page opened from a lens (#305): at the block, the lens whose form is a stop of a world reads
+     more in it, and Read more opens that world's page at the block */
+  { const tag = 'frame read more', rp = await browser3d.newPage({ viewport: { width: 1280, height: 800 }, colorScheme: 'dark' }); rp.on('pageerror', e => problems.push(tag + ': ' + e.message));
+    await rp.addInitScript(() => { try { localStorage.setItem('osl-quality', 'keep'); localStorage.setItem('osl-hints-v1', JSON.stringify({ seen: {}, off: true })); } catch (e) { /* no storage */ } });
+    await rp.goto(base + 'index.html#/dive/block');
+    await rp.waitForFunction(() => { if (location.hash.startsWith('#/w/')) return !!document.querySelector('#page:not([hidden]) .f2read.world') && location.hash.endsWith('/at/block');
+      const f = document.querySelector('#diveui'); if (!f || f.hidden) return false;
+      const b = f.querySelector('.modes3 [data-mode="ask"]'); if (b && b.getAttribute('aria-selected') !== 'true') { b.click(); return false; }
+      const r = f.querySelector('.dock .qlcard a.qlread[href^="#/w/"]'); if (r) { r.click(); return false; }
+      const M = [...f.querySelectorAll('.mark3')].filter(m => !m.hidden), on = M.findIndex(m => m.getAttribute('aria-pressed') === 'true'), m = M[(on + 1) % M.length]; if (m) m.click();
+      return false; }, null, { timeout: 90000, polling: 700 })
+      .catch(() => problems.push(tag + ': no lens at the block reads more in its world, or Read more does not open its page'));
+    await rp.close(); }
   /* two lenses held (#315): at the block, Geometry with Efficiency fuels use draws a front, its dot moving with where
      the logic sits and the front moving with the innovation; Fight or use physics with Brain or copy a fork, whose line
      drags across the picture; with Digital meets physical a chain, whose steps light as it heats */

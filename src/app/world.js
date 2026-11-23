@@ -500,6 +500,13 @@ export function createWorld(cv, on) {
     requestAnimationFrame(tick);
     if (!cv.isConnected) return;
     if (fly) {
+      /* the flight's clock starts at the first frame it is drawn, not when it was asked for: on a slow machine the work
+         a click does (the card, the address) can outlast a whole flight, and the move would be a jump. And no frame
+         moves it more than a third of the way: where frames come seconds apart (software drawing), the flight still
+         passes through the levels between instead of landing at once */
+      if (fly.t0 == null) fly.t0 = now;
+      else if (now - fly.last > fly.ms / 3) fly.t0 += now - fly.last - fly.ms / 3;
+      fly.last = now;
       const u = Math.max(0, Math.min(1, (now - fly.t0) / fly.ms)), e = u < 0.5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2;
       Z = clampZ(fly.from + (fly.to - fly.from) * e);
       if (u >= 1) { Z = fly.to; fly = null; on.arrive && on.arrive(Math.round(Z)); }
@@ -585,7 +592,7 @@ export function createWorld(cv, on) {
       if (fly && fly.to === d) return;
       if (reduced()) { fly = null; Z = d; on.arrive && on.arrive(Math.round(Z)); return; }
       /* on the line, a hop to the next station is slow enough to watch the pod travel */
-      fly = { from: Z, to: d, t0: performance.now(), ms: Math.min(5200, isLine() ? 1000 + Math.abs(d - Z) * 1300 : 500 + Math.abs(d - Z) * 1150) };
+      fly = { from: Z, to: d, t0: null, ms: Math.min(5200, isLine() ? 1000 + Math.abs(d - Z) * 1300 : 500 + Math.abs(d - Z) * 1150) };
     },
     setThread(th) { thread = th; },
     /* the part you picked (a ring on it, its name lit), and the parts the story in the dock is about (named first) */

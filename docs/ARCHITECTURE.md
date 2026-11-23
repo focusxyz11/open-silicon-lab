@@ -16,7 +16,7 @@ src/v2/glue/            one module per view's glue, each create()d once when its
   flat.js               the dive, the line and the bench (the earlier site's 2D world in the frame), and the levels drawn in 3D
   supply.js             the supply map
   board.js              one board and its story
-  pages.js              the reading pages: your log, the commons, #/read, #/w, machines, What if?, a question's trail and world, the field questions
+  pages.js              the reading pages: your log, the commons, #/read, a world (#/w/<id>), machines, What if?, a question's trail and world, the field questions
 src/v2/frame.js         the one frame on every view below the island: the rails, the levels, the card's Look · Do · Ask
 src/v2/frame2.js        the frame's three modes (#271): the card worn as a caption (Look), a side panel with a stage (Do) or a phone sheet; reading pages (Read); styles in src/styles/frame.css
 src/v2/game.js          the game as data and logic: the loop, the challenges, each place's doors, your state (tested)

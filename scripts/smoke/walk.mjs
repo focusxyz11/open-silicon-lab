@@ -40,8 +40,10 @@ export const explore = async (tag, viewport, scheme) => {
   await page.waitForSelector('#loop [data-stage]', { timeout: 15000 }).catch(() => problems.push(tag + ': the bar does not hold the loop'));
   if ((await page.$$('#loop [data-stage]')).length !== 6) problems.push(tag + ': the loop does not show its six stages');
   if (await page.$('#sections')) problems.push(tag + ': the menu of sections shows without being asked for');
-  /* the first page: questions to start with and the next challenges (never the core questions together) */
-  if ((await page.$$('#hero .heroq .qcard')).length < 2) problems.push(tag + ': the first page offers no questions to start with');
+  /* the first card over the island: where the questions are (marks on the pictures, a way to the first ones) and the
+     next challenges; never a list of questions from the worlds (#305) */
+  if (!(await page.$('#hero p.heroq')) || !(await page.$('#hero a[href="#/dive/block"]'))) problems.push(tag + ': the first card does not offer the marks on the pictures');
+  if (await page.$('#hero .qcard, #hero a[href="#/w"]')) problems.push(tag + ': the first card still lists the worlds\' questions');
   if (!(await page.$('#hero .heroc a'))) problems.push(tag + ': the first page offers no challenge');
   /* exploring folds the questions into a button in the corner, which opens them again */
   await page.evaluate(() => document.getElementById('mapCanvas').dispatchEvent(new WheelEvent('wheel', { deltaY: -60, bubbles: true, cancelable: true })));
@@ -132,8 +134,9 @@ export const explore = async (tag, viewport, scheme) => {
   if ((await page.$$('#page [data-tune] .tdot')).length !== 2) problems.push(tag + ': a tap on the box did not leave a try');
   await page.click('#page [data-tune] [data-tk="hand"]').catch(() => problems.push(tag + ': the note cannot be handed on'));
   await page.waitForSelector('#page [data-tune] .thand .tfig', { timeout: 15000 }).catch(() => problems.push(tag + ': the note came back with no traces'));
+  /* there is no list of the worlds: the old address opens the map (#305) */
   await page.evaluate(() => { location.hash = '#/w'; });
-  await page.waitForFunction(() => document.querySelectorAll('#page .qgrid .qcard').length > 90, null, { timeout: 15000 }).catch(() => problems.push(tag + ': the questions that lead in are not there'));
+  await page.waitForFunction(() => location.hash === '#/' && !!document.querySelector('#home:not([hidden])') && !document.querySelector('#page:not([hidden]) .qgrid'), null, { timeout: 15000 }).catch(() => problems.push(tag + ': #/w does not land on the map'));
   /* a try on the page: change a choice, and the engine answers again */
   await page.evaluate(() => { location.hash = '#/read/strange-chain'; });
   await page.waitForSelector('#page .probe [data-pk]', { timeout: 10000 }).catch(() => problems.push(tag + ': the chain has no try on its page'));

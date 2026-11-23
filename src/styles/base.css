@@ -62,6 +62,9 @@ button { font: inherit; color: inherit; }
 /* a press is felt (not on the 3D labels: their transform is their place on the screen) */
 .btn { transition: transform .15s ease, filter .2s; }
 .lvchips a:active, .btn:active:not([disabled]), .tapcode .op:active { transform: scale(.94); }
+@media (prefers-reduced-motion: reduce) { .hero.intro, .btn.pulse, .pin3.here::after, .logbtn.glow, .loop .bump, .burst { animation: none !important; } .burst { display: none; }
+}
+
 /* no cuts: going between views is a view transition. The bar, the dock and the frame's ornaments stay where they
    are (or move to their new place); the picture zooms in when you go deeper, out when you rise, turns with the
    Turn, slides along. Without motion (reduced motion, or no view transitions) the view simply changes. */

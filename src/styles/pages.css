@@ -59,6 +59,7 @@
   .pbar { grid-template-columns: 1fr auto; } .pbar .pt { grid-column: 1 / -1; grid-row: 2; } .probe { padding: 14px; }
 }
 
+.page .wq { margin: 8px 0 6px; padding-left: 16px; border-left: 4px solid var(--qc); font: 700 clamp(28px, 3.8vw, 42px)/1.12 var(--serif); }
 .wbehind { margin: 0 0 22px 20px; color: var(--muted); font-size: 17px; }
 .wlens { margin: 0 0 26px; padding: 16px 18px; border-radius: 18px; border: 1px solid color-mix(in srgb, var(--qc) 35%, var(--line)); background: color-mix(in srgb, var(--qc) 4%, var(--panel-solid)); }
 .wlens > .kicker { color: var(--qc); }

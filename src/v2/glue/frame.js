@@ -16,7 +16,8 @@ import * as Read from '../read.js';
 import * as Exp from '../../engines/experiments.js';
 import { fieldAtLevel, VIEW_PARTS, diveWord } from '../../data/atlas.js';
 import { SEEK, foundAt, seekLevel } from '../../data/seek.js';
-import { V, esc, qColor, follow } from '../shell.js';
+import { V, esc, qColor, follow, followW } from '../shell.js';
+import { WORLD_IDS } from '../../data/worlds.js';
 import * as Paint from '../lenspaint.js';
 
 export function create() {
@@ -59,6 +60,10 @@ export function create() {
     let h = '<div class="qlcard">';
     if (form) h += fq ? '<button type="button" class="qlform" data-field="' + esc(fq) + '">' + esc(form) + '</button>' : f.stop || x0 ? '<a class="qlform" href="' + esc(f.stop ? follow(f.stop) : '#/read/' + x0.id) + '">' + esc(form) + '</a>' : '<p class="qlform">' + esc(form) + '</p>';
     if (note && note !== 'stop.' + f.stop + '.note') h += '<p class="qltrue"><b>' + esc(t('frame.lens.true')) + '</b> ' + esc(note) + '</p>';
+    /* when its form here is a stop of one of the worlds, that world's reading page opens from here (#305): a world is
+       met through a lens, never from a list of them */
+    const wd = !fq && !f.own && f.stop ? f.stop.split('.')[0] : null;
+    if (wd && WORLD_IDS.includes(wd)) h += '<a class="qlread" href="' + esc(followW(f.stop)) + '"><span class="small">' + esc(t('frame.lens.read')) + '</span><b>' + esc(t('thread.' + wd + '.root')) + '</b></a>';
     /* what it repaints, with one control and what it moves, from an engine (src/v2/lenspaint.js) */
     h += Paint.instrument(q, d);
     /* the question behind it, small */

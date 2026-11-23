@@ -27,9 +27,6 @@
 .burst i:nth-child(3n) { background: var(--accent); }
  .burst i:nth-child(3n+1) { background: var(--warm); }
 @keyframes burst { from { opacity: 1; transform: rotate(var(--a)) translateY(0) scale(1); } to { opacity: 0; transform: rotate(var(--a)) translateY(-90px) scale(.4); } }
-@media (prefers-reduced-motion: reduce) { .burst { animation: none !important; } .burst { display: none; }
-}
-
 .slip .kicker { color: var(--accent); }
 .sign .kicker, .askform .kicker { margin: 0; }
 .opens .kicker { margin: 0; color: var(--warm); }
