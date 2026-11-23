@@ -11,6 +11,7 @@ import { t, fmtNum, fmtWords } from '../core/i18n.js';
 import { factsOf } from '../data/partfacts.js';
 import { MODELS, geometry, efficiency, brainCopy, physics as physicsModel, digital, geoEffFront, memoryFork, cleanOne, HOT, SWING } from '../engines/lens.js';
 import { pairOf } from '../engines/frame.js';
+import { frontFigure } from './front.js';
 
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 const still = () => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -263,15 +264,12 @@ const pct = v => fmtNum(Math.round(v * 100));
 function frontChart(F, S) {
   const E = geoEffFront(F), l0 = E.line(0), l1 = S.n > 0 ? E.line(S.n) : null, me = E.at(S.p, S.n), all = l0.concat(E.line(1));
   const xs = all.map(p => p.x), ys = all.map(p => p.y), x0 = 0, x1 = Math.max(...xs) * 1.05, y0 = Math.min(...ys) * 0.9, y1 = Math.max(...ys) * 1.05, W = 360, H = 200;
-  const px = x => 24 + (x - x0) / (x1 - x0) * (W - 34), py = y => H - 22 - (y - y0) / (y1 - y0) * (H - 34), poly = L => L.map(p => px(p.x).toFixed(1) + ',' + py(p.y).toFixed(1)).join(' ');
-  return '<figure class="lpfront"><svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="' + esc(t('lp.front.aria')) + '">' +
-    '<rect x="24" y="12" width="' + (W - 34) + '" height="' + (H - 34) + '" fill="none" stroke="var(--line)"/>' +
-    /* nobody here yet: everything beyond today's front, less energy and less heat than any compromise of today */
-    '<path d="M24 ' + (H - 22) + 'L' + px(l0[0].x).toFixed(1) + ' ' + (H - 22) + 'L' + l0.map(p => px(p.x).toFixed(1) + ' ' + Math.min(H - 22, py(p.y)).toFixed(1)).join('L') + 'L24 ' + py(l0[l0.length - 1].y).toFixed(1) + 'Z" class="lpnobody"/>' +
-    '<polyline points="' + poly(l0) + '" class="lpline0"/>' + (l1 ? '<polyline points="' + poly(l1) + '" class="lpline1"/>' : '') +
-    '<circle cx="' + px(me.energy).toFixed(1) + '" cy="' + py(me.heat).toFixed(1) + '" r="7" class="lpdot"/></svg>' +
-    '<figcaption class="lpkey"><span>' + esc(t('lp.front.x')) + '</span><span>' + esc(t('lp.front.y')) + '</span><span class="k0">' + esc(t('lp.front.today')) + '</span>' + (l1 ? '<span class="k1">' + esc(t('lp.front.moved')) + '</span>' : '') +
-    '<span class="kd">' + esc(t('lp.front.dot')) + '</span><span class="kn">' + esc(t('lp.front.nobody')) + '</span></figcaption></figure>' +
+  const px = x => 24 + (x - x0) / (x1 - x0) * (W - 34), py = y => H - 22 - (y - y0) / (y1 - y0) * (H - 34), pts = L => L.map(p => [px(p.x), py(p.y)]);
+  /* the lab's one front (src/v2/front.js): today's dashed, moved solid, nobody's corner shaded, your design a dot */
+  return frontFigure({ W, H, box: [24, 12, W - 10, H - 22], corner: 'bl', aria: t('lp.front.aria'),
+    lines: [{ pts: pts(l0), cls: 'lpline0' }, l1 ? { pts: pts(l1), cls: 'lpline1' } : null],
+    dots: [{ x: px(me.energy), y: py(me.heat), r: 7, cls: 'lpdot' }],
+    key: [['', t('lp.front.x')], ['', t('lp.front.y')], ['k0', t('lp.front.today')]].concat(l1 ? [['k1', t('lp.front.moved')]] : [], [['kd', t('lp.front.dot')], ['kn', t('lp.front.nobody')]]) }) +
     '<div class="lpms">' + meter(t('lp.front.energy'), t('lp.joules', { v: fmtWords(me.energy) })) + meter(t('lp.front.heat'), t('lp.times', { v: fmtNum(+me.heat.toPrecision(2)) })) + meter(t('lp.geo.m.trip'), t('lp.um', { v: fmtNum(+me.trip.toPrecision(2)) })) + '</div>';
 }
 function pairBody(a, b, level) {

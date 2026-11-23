@@ -2076,94 +2076,222 @@ button.opens { width: 100%; text-align: left; border: 0; border-left: 3px solid 
 }
 @media (prefers-reduced-motion: reduce) { .jfill { transition: none; } }
 
-/* Machines from shared blocks (#/machines, src/v2/machines.js): a need, its machine on the grammar's rail, an agent */
-.mach { --matter: #b49cff; }
-.page .mach h1 { font-size: clamp(26px, 3vw, 36px); max-width: 900px; }
-.page .mach .lead { max-width: 820px; font-size: 16px; margin-bottom: 18px; }
-:root[data-theme=light] .mach { --matter: #7a5fd6; }
-.mach .mneeds { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin: 8px 0 6px; }
-@media (max-width: 900px) { .mach .mneeds { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-.mach .mneeds button { display: grid; gap: 2px; text-align: left; padding: 12px 14px; border-radius: 14px; border: 1px solid var(--line); background: var(--panel-solid); color: var(--ink); font: inherit; cursor: pointer; }
-.mach .mneeds button b { font-size: 16px; }
-.mach .mneeds button .small { color: var(--muted); }
+/* ---- Machines from shared blocks (#/machines/<need>, src/v2/machines.js, #320): a place. The machine on the stage at
+   the left, from the top, pinned while the words beside it scroll: its blocks drawn in their forms, what flows along
+   its wires, its layers under it, and in Do the goal across its top. Beside it: the head (the need, Look and Do), the
+   layer's words, the parts and their forms, the score, and the agent's front. A phone: the head, the machine (top to
+   bottom), then one part at a time ---- */
+.mach { --matter: #b49cff; --fab: #5ec8d8; --liquid: #4fd18f; --sig: var(--accent); --word: var(--warm); --bit: var(--good);
+  display: grid; grid-template-columns: minmax(0, 1fr) clamp(380px, 31vw, 520px); grid-template-rows: auto 1fr; grid-template-areas: "stage head" "stage side"; column-gap: clamp(24px, 2.6vw, 48px); align-items: start; }
+:root[data-theme=light] .mach { --matter: #7a5fd6; --fab: #1f8292; --liquid: #178a52; }
+.mach .mhead { grid-area: head; min-width: 0; }
+html.frame2 .page.f2rd .mach .mhead h1 { margin: 0 0 14px; font: 700 clamp(21px, calc(.6vw + 14px), 26px)/1.25 var(--serif); }
+.mach .mhead .kicker { margin: 0 0 6px; }
+.mach .mmodes { display: inline-flex; gap: 2px; margin: 0 0 12px; padding: 3px; border-radius: 999px; background: color-mix(in srgb, var(--ink) 8%, transparent); }
+.mach .mmodes button { padding: 6px 20px; border: 0; border-radius: 999px; background: none; color: var(--ink); font: 700 14px var(--sans); cursor: pointer; }
+.mach .mmodes button[aria-selected=true] { background: var(--ink); color: var(--bg); }
+.mach .mneeds { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+.mach .mneeds button { position: relative; display: grid; gap: 1px; align-content: start; text-align: left; padding: 9px 12px; border-radius: 12px; border: 1px solid var(--line); background: var(--panel-solid); color: var(--ink); font: inherit; cursor: pointer; }
+.mach .mneeds button b { font-size: 15px; line-height: 1.25; padding-right: 14px; }
+.mach .mneeds button .small { font-size: 12.5px; line-height: 1.3; color: var(--muted); }
 .mach .mneeds button[aria-selected=true] { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
-.mach .mwhy { margin: 6px 0 18px; color: var(--muted); }
-.mach .mbody { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 18px; align-items: start; margin-top: 6px; }
-.mach .mresult .mscore { margin-top: 0; }
-.mach .mrail { display: flex; flex-wrap: nowrap; gap: 10px; margin: 8px 0 10px; padding-bottom: 14px; border-bottom: 3px solid color-mix(in srgb, var(--accent) 45%, transparent); }
-.mach .mpart { position: relative; flex: 1 1 0; min-width: 0; display: grid; gap: 10px; padding: 12px; border-radius: 14px; border: 1px solid var(--line); background: var(--panel-solid); }
-.mach .mpart::after { content: ''; position: absolute; left: 50%; bottom: -17px; width: 2px; height: 14px; background: color-mix(in srgb, var(--accent) 45%, transparent); }
-.mach .mpart.bad { border-color: var(--bad); }
-.mach .mtile { display: grid; grid-template-columns: 26px 1fr; gap: 10px; align-items: center; }
+.mach .mwonmark { color: var(--good); font-weight: 800; }
+.mach .mneeds .mwonmark { position: absolute; top: 7px; right: 10px; }
+.mach .mwhy { margin: 12px 0 4px; font-size: 15px; line-height: 1.5; color: var(--muted); }
+.mach .mside { grid-area: side; display: grid; gap: 16px; min-width: 0; padding-top: 14px; }
+.mach .mside > section, .mach .mside > .mlayer { min-width: 0; }
+.mach .mside .kicker { margin: 0 0 6px; }
+.mach .mside p { margin: 0; }
+
+/* the stage */
+.mach .mstage { grid-area: stage; position: sticky; top: 90px; display: flex; flex-direction: column; gap: 10px; min-width: 0; min-height: min(calc(100vh - 106px), 760px); max-height: calc(100vh - 106px); padding: 16px 20px 16px; border-radius: 22px;
+  border: 1px solid color-mix(in srgb, var(--accent) 24%, var(--line)); box-shadow: var(--shadow);
+  background: radial-gradient(color-mix(in srgb, var(--ink) 9%, transparent) 1px, transparent 1.4px) 0 0 / 22px 22px, radial-gradient(ellipse at 50% 45%, color-mix(in srgb, var(--accent) 7%, var(--panel-solid)), var(--panel-solid) 72%); }
+.mach .mcap { margin: 0; font-size: 13px; color: var(--muted); }
+.mach .mcap b { color: var(--ink); }
+.mach .mpic { position: relative; flex: none; width: min(100%, calc((100vh - 330px) * var(--ar))); aspect-ratio: var(--ar); margin: auto; }
+.mach .mstage.doing .mpic { width: min(100%, calc((100vh - 360px) * var(--ar))); }
+.mach .mwires { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.mach .mw { fill: none; stroke-width: 3; stroke-linecap: round; opacity: .5; transition: opacity .3s; }
+.mach .k-signal { --k: var(--sig); } .mach .k-word { --k: var(--word); } .mach .k-bit { --k: var(--bit); }
+.mach .mw { stroke: var(--k); }
+.mach .mp > * { fill: var(--panel-solid); stroke: var(--k); stroke-width: 2.5; }
+.mach .pk > * { fill: var(--k); filter: drop-shadow(0 0 4px var(--k)); }
+.mach .mpic:not(.l-flow) .mw { opacity: .22; }
+.mach .mrun { fill: none; stroke: var(--accent); stroke-width: 2.5; stroke-dasharray: 1 7; stroke-linecap: round; opacity: .9; }
+.mach .mworld { position: absolute; display: grid; justify-items: center; gap: 4px; color: var(--muted); pointer-events: none; }
+.mach .mworld svg { display: block; width: 100%; height: auto; overflow: visible; fill: none; stroke: var(--muted); stroke-width: 2.5; stroke-linecap: round; }
+.mach .mworld svg circle { fill: var(--muted); stroke: none; }
+.mach .mworld path { animation: mwave 2.8s ease-in-out infinite; }
+.mach .mworld span { font: 600 12.5px var(--sans); white-space: nowrap; }
+.mach .mpic.v .mworld span { position: absolute; left: calc(100% + 8px); top: 50%; transform: translateY(-50%); }
+@keyframes mwave { 50% { opacity: .35; } }
+/* a block: its shape says its form */
+.mach .mbk { position: absolute; padding: 0; border: 0; background: none; color: var(--ink); font: inherit; cursor: pointer; transition: transform .2s ease; }
+.mach .mbk:hover { transform: translateY(-2px); }
+.mach .mbk:focus-visible { outline: none; }
+.mach .mbk:focus-visible .mbks { filter: drop-shadow(0 0 0 var(--ink)) drop-shadow(0 0 3px var(--accent)); }
+.mach .mbks { display: block; width: 100%; height: auto; overflow: visible; transform-origin: 50% 50%; }
+.mach .mbks .body { stroke-width: 2.5; }
+.mach .mbk.f-circuit .body { fill: color-mix(in srgb, var(--accent) 20%, var(--panel-solid)); stroke: var(--accent); }
+.mach .mbk.f-circuit .pins path { stroke: var(--accent); stroke-width: 3.5; stroke-linecap: round; }
+.mach .mbk.f-circuit .p { fill: none; stroke: color-mix(in srgb, var(--accent) 50%, transparent); stroke-width: 2; stroke-linejoin: round; }
+.mach .mbk.f-software .body { fill: color-mix(in srgb, var(--accent) 5%, var(--panel-solid)); stroke: var(--accent); stroke-dasharray: 8 6; }
+.mach .mbk.f-software .p { fill: none; stroke: color-mix(in srgb, var(--accent) 45%, transparent); stroke-width: 3.5; stroke-linecap: round; }
+.mach .mbk.f-liquid .body { fill: color-mix(in srgb, var(--liquid) 16%, var(--panel-solid)); stroke: var(--liquid); }
+.mach .mbk.f-liquid .p { fill: none; stroke: color-mix(in srgb, var(--liquid) 60%, transparent); stroke-width: 1.5; }
+.mach .mbk.f-liquid .pf { fill: color-mix(in srgb, var(--liquid) 70%, transparent); animation: mshim 1.8s ease-in-out infinite alternate; }
+.mach .mbk.f-liquid rect.pf:nth-of-type(3n) { animation-delay: -.6s; } .mach .mbk.f-liquid rect.pf:nth-of-type(3n+1) { animation-delay: -1.2s; }
+@keyframes mshim { to { fill-opacity: .25; } }
+.mach .mbk.f-matter .body { fill: color-mix(in srgb, var(--matter) 16%, var(--panel-solid)); stroke: var(--matter); }
+.mach .mbk.f-matter .p { fill: none; stroke: color-mix(in srgb, var(--matter) 55%, transparent); stroke-width: 2; stroke-linecap: round; }
+.mach .mbk.f-matter .pf { fill: var(--matter); }
+.mach .glyph .g { fill: none; stroke: var(--ink); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+.mach .glyph .g.w { stroke-width: 4.5; }
+.mach .glyph .gf { fill: var(--ink); }
+.mach .mbk.bad .body { stroke: var(--bad); }
+.mach .mbk.on .mbks { filter: drop-shadow(0 8px 18px color-mix(in srgb, var(--accent) 38%, transparent)); }
+.mach .mbk.on .body { stroke-width: 4; }
+.mach .mbk.morph .mbks { animation: mmorph .55s cubic-bezier(.2, .8, .2, 1.15); }
+@keyframes mmorph { 0% { transform: scale(.72) rotate(-5deg); opacity: .25; } 60% { transform: scale(1.07); opacity: 1; } 100% { transform: none; } }
+.mach .mbkl { position: absolute; left: 50%; top: calc(100% + 7px); transform: translateX(-50%); display: grid; gap: 1px; width: max-content; max-width: 168px; text-align: center; pointer-events: none; }
+.mach .mbkl b { font: 700 14px/1.2 var(--sans); }
+.mach .mbkl span { font: 500 12.5px/1.25 var(--sans); color: var(--muted); }
+.mach .mbk.on .mbkl b { text-decoration: underline 2px var(--accent); text-underline-offset: 4px; }
+.mach .mbk.bad .mbkl b, .mach .mbkl .bad { color: var(--bad); }
+.mach .mbkl .good { color: var(--good); } .mach .mbkl .fab { color: var(--fab); }
+.mach .mbkl .s-product { color: var(--good); } .mach .mbkl .s-lab { color: var(--accent); }
+.mach .mbkt { position: absolute; left: -6px; top: -6px; display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: var(--panel-solid); box-shadow: 0 0 0 1px var(--line); }
+.mach .mbkt .mtr { width: 14px; height: 14px; }
+.mach .l-claims .mbkt { width: 32px; height: 32px; left: -10px; top: -10px; }
+.mach .l-claims .mbkt .mtr { width: 21px; height: 21px; }
+.mach .mbkr { position: absolute; right: -8px; top: -10px; display: flex; gap: 4px; }
+.mach .mrule { display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: var(--panel-solid); border: 1.5px solid var(--good); }
+.mach .mrule svg { width: 14px; height: 14px; fill: none; stroke: var(--good); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.mach .mrule.miss { border-color: var(--bad); background: color-mix(in srgb, var(--bad) 16%, var(--panel-solid)); }
+.mach .mrule.miss svg { stroke: var(--bad); }
+/* how sure: one mark, on the picture and in the words */
+.mach .mtr { display: inline-block; flex: none; width: 12px; height: 12px; vertical-align: -1px; overflow: visible; }
+.mach .mtr circle, .mach .mtr path { stroke-width: 1.6; }
+.mach .t-product circle { fill: var(--good); stroke: var(--good); }
+.mach .t-lab .o { fill: none; stroke: var(--accent); } .mach .t-lab path { fill: var(--accent); stroke: none; }
+.mach .t-guess circle { fill: none; stroke: var(--muted); stroke-dasharray: 2.4 1.8; }
+.mach .mrib { margin: 0; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 4px 16px; min-height: 22px; text-align: center; color: var(--muted); }
+.mach .mkey { display: inline-flex; align-items: center; gap: 6px; }
+.mach .mkey svg { width: 15px; height: 15px; }
+.mach .mkey.k-signal svg *, .mach .mkey.k-word svg *, .mach .mkey.k-bit svg * { fill: var(--k); }
+.mach .mkey .mtr { width: 14px; height: 14px; }
+.mach .krun svg { width: 22px; } .mach .krun path { fill: none; stroke: var(--accent); stroke-width: 2.5; stroke-dasharray: 1 5; stroke-linecap: round; }
+.mach .mlayers { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; }
+.mach .mlayers button { display: inline-flex; align-items: center; gap: 7px; padding: 7px 13px; border-radius: 999px; border: 1px solid var(--line); background: color-mix(in srgb, var(--ink) 4%, transparent); color: var(--ink); font: 600 13.5px var(--sans); cursor: pointer; }
+.mach .mlayers button:hover { border-color: var(--accent); }
+.mach .mlayers button[aria-pressed=true] { background: var(--ink); border-color: var(--ink); color: var(--bg); }
+.mach .mlayers svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.mach .mlayers svg .fl { fill: currentColor; stroke: none; }
+/* Do: the goal across the top of the stage, and the win */
+.mach .mgoal { display: grid; grid-template-columns: repeat(auto-fit, minmax(118px, 1fr)); gap: 8px; }
+.mach .mgm { display: grid; gap: 2px; padding: 8px 12px; border-radius: 12px; background: color-mix(in srgb, var(--ink) 6%, transparent); }
+.mach .mgm span { font-size: 12.5px; color: var(--muted); }
+.mach .mgm b { font: 600 19px/1.2 var(--mono); }
+.mach .mgm.good b { color: var(--good); } .mach .mgm.bad b { color: var(--bad); }
+.mach .mstage.mwin { border-color: var(--good); animation: mwin 1.2s ease; }
+@keyframes mwin { 30% { box-shadow: 0 0 0 6px color-mix(in srgb, var(--good) 40%, transparent), var(--shadow); } }
+.mach .mwon { margin: 0; text-align: center; color: var(--good); font-size: 16px; }
+.mach .mdo { display: grid; gap: 8px; padding: 16px; border-radius: 16px; border: 1px solid color-mix(in srgb, var(--warm) 55%, var(--line)); background: color-mix(in srgb, var(--warm) 6%, var(--panel-solid)); }
+.mach .mdo .kicker { color: var(--warm); }
+.mach .mdo h2 { margin: 0; font: 700 21px/1.25 var(--serif); }
+.mach .mgoals { display: flex; gap: 6px; }
+.mach .mgoals button { padding: 5px 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--panel-solid); color: var(--ink); font: 600 13px var(--sans); cursor: pointer; }
+.mach .mgoals button[aria-selected=true] { border-color: var(--warm); box-shadow: inset 0 0 0 1px var(--warm); }
+.mach .mdone { color: var(--good); }
+.mach .mdo .btn { justify-self: start; }
+.mach .mhint { padding-left: 10px; border-left: 3px solid var(--warm); }
+@media (prefers-reduced-motion: reduce) { .mach .mbk.morph .mbks, .mach .mstage.mwin, .mach .mworld path, .mach .mbk.f-liquid .pf { animation: none; } .mach .mbk { transition: none; } }
+
+/* beside the picture: the parts and their forms */
+.mach .mparts .mtap { margin: 0 0 8px; }
+.mach .mrow { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px 12px; align-items: center; padding: 10px 12px; border-radius: 14px; border: 1px solid var(--line); background: var(--panel-solid); }
+.mach .mrow + .mrow { margin-top: 6px; }
+.mach .mrow.on { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }
+.mach .mrow.bad { border-color: var(--bad); }
+.mach .mrow.on.bad { box-shadow: inset 0 0 0 1px var(--bad); }
+.mach .mrow > .mkinds, .mach .mrow > .mway { grid-column: 1 / -1; }
+.mach .mtile { display: grid; grid-template-columns: 22px 1fr; gap: 10px; align-items: center; min-width: 0; }
 .mach .mtile b { display: block; font-size: 15px; }
-.mach .mtile .small { display: block; }
-.mach .mmark { display: block; width: 22px; height: 22px; }
+.mach .mtile .small { display: block; font-size: 13px; }
+.mach .mmust { color: var(--warm); }
+.mach .mmark { display: block; width: 20px; height: 20px; }
 .mach .f-circuit .mmark * { fill: color-mix(in srgb, var(--accent) 70%, transparent); stroke: none; }
 .mach .f-software .mmark * { fill: none; stroke: var(--accent); stroke-width: 1.5; stroke-dasharray: 4 3; }
 .mach .f-matter .mmark * { fill: color-mix(in srgb, var(--matter) 75%, transparent); stroke: none; }
-.mach .mforms { display: flex; gap: 6px; }
-.mach .mforms button { position: relative; flex: 1; display: grid; place-items: center; min-height: 40px; border-radius: 10px; border: 1px solid var(--line); background: transparent; cursor: pointer; }
+.mach .f-liquid .mmark * { fill: color-mix(in srgb, var(--liquid) 70%, transparent); stroke: none; }
+.mach .mforms { display: flex; gap: 4px; }
+.mach .mforms button { position: relative; display: grid; place-items: center; width: 38px; height: 36px; border-radius: 10px; border: 1px solid var(--line); background: transparent; cursor: pointer; }
 .mach .mforms button[aria-pressed=true] { background: color-mix(in srgb, var(--ink) 10%, transparent); border-color: var(--ink); }
 .mach .mforms button:disabled { opacity: .22; cursor: not-allowed; }
 .mach .mforms .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-.mach .mscore { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 10px 0 8px; }
+.mach .mkinds { display: flex; flex-wrap: wrap; gap: 4px; }
+.mach .mkinds button { font: inherit; font-size: 13px; padding: 4px 10px; border-radius: 999px; border: 1px solid var(--line); background: transparent; color: var(--ink); cursor: pointer; }
+.mach .mkinds button[aria-pressed=true] { border-color: var(--matter); background: color-mix(in srgb, var(--matter) 18%, transparent); font-weight: 700; }
+.mach .mkinds.k-liquid button[aria-pressed=true] { border-color: var(--liquid); background: color-mix(in srgb, var(--liquid) 18%, transparent); }
+.mach .mway { font-size: 14px; }
+/* the score */
+.mach .mscore { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
 .mach .mread { display: grid; gap: 2px; align-content: start; padding: 10px 12px; border-radius: 12px; background: color-mix(in srgb, var(--ink) 6%, transparent); }
-.mach .mread b { font: 600 20px var(--mono); }
-.mach .mread .small { color: var(--muted); }
-.mach .mchecks { list-style: none; padding: 0; margin: 6px 0 0; display: grid; gap: 4px; font-size: 14px; }
+.mach .mread b { font: 600 18px var(--mono); }
+.mach .mread .small { font-size: 12.5px; line-height: 1.35; color: var(--muted); }
+.mach .mchecks { list-style: none; padding: 0; margin: 8px 0 0; display: grid; gap: 4px; font-size: 14px; }
 .mach .mchecks li.good { color: var(--good); }
 :root[data-theme=light] .mach .mchecks li.good { color: color-mix(in srgb, var(--good) 55%, var(--ink)); }
 .mach .mchecks li.bad { color: var(--bad); }
 .mach .mchecks li.good::before { content: '✓ '; }
 .mach .mchecks li.bad::before { content: '× '; }
-.mach .magent { display: grid; gap: 10px; padding: 16px; border-radius: 16px; border: 1px solid color-mix(in srgb, var(--warm) 55%, var(--line)); background: color-mix(in srgb, var(--warm) 6%, var(--panel-solid)); }
-.mach .magent > p { margin: 0; }
+/* the agent, and its front */
+.mach .magent { display: grid; gap: 10px; padding: 16px; border-radius: 16px; border: 1px solid color-mix(in srgb, var(--warm) 45%, var(--line)); background: color-mix(in srgb, var(--warm) 5%, var(--panel-solid)); }
 .mach .magent .kicker { color: var(--warm); }
+.mach .mfront { display: grid; gap: 6px; }
+.mach .mfrontfig svg { background: color-mix(in srgb, var(--ink) 4%, transparent); }
+.mach .mfgrid { stroke: var(--line); stroke-width: 1; }
+.mach .mftick { fill: var(--muted); font: 10px var(--mono); }
+.mach .mfo { fill: var(--panel-solid); stroke: var(--ink); stroke-width: 2; }
+.mach .mfo.full { fill: var(--ink); }
+.mach .mfo.pick { cursor: pointer; }
+.mach .mfo.pick:hover { stroke: var(--warm); stroke-width: 3; }
+.mach .lpdot.broken { fill: none; stroke: var(--bad); stroke-width: 2.5; stroke-dasharray: 3 2; }
+.mach .lpkey .ko { color: var(--ink); }
+.mach .mfwait { padding: 8px 10px; border-radius: 10px; border: 1px dashed var(--line); }
 .mach .mpicks { display: grid; gap: 8px; }
 .mach .mpick { display: grid; gap: 6px; padding: 12px; border-radius: 12px; border: 1px solid var(--line); background: var(--panel-solid); }
-.mach .mpick p { margin: 0; }
 .mach .mpick.on { border-color: var(--warm); }
 .mach .mpick .mon { color: var(--warm); font-weight: 700; }
+.mach .mpick .btn { justify-self: start; }
 .mach .mpickf { display: flex; gap: 4px; }
 .mach .mpickf .mmark { width: 18px; height: 18px; }
 .mach .mdecide { color: var(--ink); }
-.mach .mblocks { margin: 26px 0 8px; }
-.mach .mblocks summary { cursor: pointer; padding: 8px 0 12px; }
-.mach .mblock .st { display: flex; flex-direction: column; gap: 4px; }
-.mach .mblock .st .mmark { width: 16px; height: 16px; }
-.mach .mblock > span:last-child { display: grid; gap: 3px; }
-.mach .mnote { margin-top: 18px; max-width: 760px; }
-@media (max-width: 900px) { .mach .mbody { grid-template-columns: 1fr; } .mach .mrail { flex-wrap: wrap; } .mach .mpart { flex: 1 1 150px; } .mach .mpart::after { display: none; } .mach .mrail { border-bottom: 0; padding-bottom: 0; } }
-@media (max-width: 600px) { .mach .mneeds { grid-template-columns: 1fr; } .mach .mread b { font-size: 16px; } .mach .mpart { flex-basis: 100%; } }
+.mach .mguess { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+.mach .mguess input { width: 18px; height: 18px; accent-color: var(--warm); }
+.mach .magent > .btn { justify-self: start; }
+.mach .mabout { display: grid; gap: 10px; padding-top: 6px; border-top: 1px solid var(--line); }
+/* the layer's words: a frame of their own at the top of the side, the layer's colour at its edge */
+.mach .mlayer { padding: 16px; border-radius: 16px; border: 1px solid var(--line); background: var(--panel-solid); animation: fadein .3s both; }
+.mach .mlayer > section { display: grid; gap: 8px; }
+.mach .mlayer h2 { margin: 2px 0 0; font: 700 20px/1.25 var(--serif); }
 /* beyond today's chip: kinds of new matter, the claims behind them, how sure each is */
-.mach .mkinds { display: flex; flex-wrap: wrap; gap: 4px; }
-.mach .mkinds button { font: inherit; font-size: 12px; padding: 5px 9px; border-radius: 999px; border: 1px solid var(--line); background: transparent; color: var(--ink); cursor: pointer; }
-.mach .mkinds button[aria-pressed=true] { border-color: var(--matter); background: color-mix(in srgb, var(--matter) 18%, transparent); font-weight: 700; }
-.mach .minvent { margin-top: 14px; display: grid; gap: 8px; }
-.mach .minvent > p { margin: 0; }
 .mach .minvent .kicker { color: var(--matter); }
 .mach .mclaims { padding: 12px 14px; border-radius: 14px; border: 1px solid color-mix(in srgb, var(--matter) 45%, var(--line)); background: color-mix(in srgb, var(--matter) 5%, var(--panel-solid)); }
 .mach .mclaims p { margin: 0 0 6px; }
-.mach .mclaims ul { list-style: none; margin: 6px 0 0; padding: 0; display: grid; gap: 6px; }
-.mach .mclaims li { display: grid; grid-template-columns: 112px 1fr; gap: 10px; align-items: start; font-size: 14px; }
-.mach .mst { justify-self: start; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px; white-space: nowrap; }
-.mach .mst.s-product { background: color-mix(in srgb, var(--good) 20%, transparent); color: var(--good); }
-.mach .mst.s-lab { background: color-mix(in srgb, var(--accent) 18%, transparent); color: var(--accent); }
-.mach .mst.s-guess { background: color-mix(in srgb, var(--ink) 8%, transparent); color: var(--muted); border: 1px dashed var(--line); }
+.mach .mclaims ul { list-style: none; margin: 6px 0 0; padding: 0; display: grid; gap: 7px; }
+.mach .mclaims li { display: grid; grid-template-columns: 124px 1fr; gap: 10px; align-items: start; font-size: 14px; }
+.mach .mst { justify-self: start; display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; font-weight: 700; padding: 2px 8px 2px 5px; border-radius: 999px; white-space: nowrap; }
+.mach .mst.s-product { background: color-mix(in srgb, var(--good) 18%, transparent); color: var(--good); }
+.mach .mst.s-lab { background: color-mix(in srgb, var(--accent) 16%, transparent); color: var(--accent); }
+.mach .mst.s-guess { background: color-mix(in srgb, var(--ink) 7%, transparent); color: var(--muted); }
 :root[data-theme=light] .mach .mst.s-product { color: color-mix(in srgb, var(--good) 55%, var(--ink)); }
 .mach .mrange { color: var(--ink); font-weight: 600; }
 .mach .mwall { color: var(--warm); margin: 8px 0 0; }
-.mach .mguess { display: flex; align-items: center; gap: 8px; cursor: pointer; }
-.mach .mguess input { width: 18px; height: 18px; accent-color: var(--warm); }
-@media (max-width: 600px) { .mach .mclaims li { grid-template-columns: 1fr; gap: 2px; } }
 /* fab on a desk: where the made parts are made, and how long a try takes there */
-.mach { --fab: #5ec8d8; }
-:root[data-theme=light] .mach { --fab: #1f8292; }
-.mach .mscore { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-.mach .mfab { margin-top: 14px; display: grid; gap: 8px; }
-.mach .mfab > p { margin: 0; }
-.mach .mfab .kicker { color: var(--fab); }
-.mach .mfabs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+.mach .mfab .kicker, .mach .mfabsm .kicker { color: var(--fab); }
+.mach .mfabs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
 .mach .mfabs button { display: grid; gap: 4px; align-content: start; text-align: left; padding: 10px; border-radius: 12px; border: 1px solid var(--line); background: var(--panel-solid); color: var(--ink); font: inherit; cursor: pointer; }
 .mach .mfabs button b { font-size: 14px; }
 .mach .mfabs button .small { display: block; line-height: 1.35; }
@@ -2173,15 +2301,13 @@ button.opens { width: 100%; text-align: left; border: 0; border-left: 3px solid 
 .mach .mfab .mclaims { border-color: color-mix(in srgb, var(--fab) 45%, var(--line)); background: color-mix(in srgb, var(--fab) 5%, var(--panel-solid)); }
 .mach .mfabnone { margin: 0; padding: 8px 12px; border-radius: 10px; border: 1px dashed color-mix(in srgb, var(--fab) 60%, var(--line)); }
 /* Moore's law for ideas: the lab's curve, the best so far against the attempts so far */
-.mach .mlab { margin-top: 28px; padding-top: 20px; border-top: 1px solid var(--line); display: grid; gap: 10px; }
-.mach .mlab > p, .mach .mlab h2 { margin: 0; }
-.mach .mlab h2 { font-size: clamp(20px, 2.2vw, 26px); }
-.mach .mcurvebox { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: 18px; align-items: start; }
+.mach .mlab { display: grid; gap: 10px; }
+.mach .mcurvebox { display: grid; gap: 12px; }
 .mach .mplot { display: grid; gap: 4px; }
 .mach .maxis.ax { justify-self: end; }
 .mach .mcurve { width: 100%; height: auto; display: block; }
 .mach .mcurve .grid { stroke: var(--line); stroke-width: 1; }
-.mach .mcurve .tick { fill: var(--muted); font: 11px var(--mono); }
+.mach .mcurve .tick { fill: var(--muted); font: 13px var(--mono); }
 .mach .mcurve .best { fill: none; stroke: var(--warm); stroke-width: 2.5; stroke-linejoin: round; }
 .mach .dot { fill: var(--accent); stroke: var(--panel-solid); stroke-width: 1.5; }
 .mach .dot.c-person { fill: var(--ink); }
@@ -2192,57 +2318,70 @@ button.opens { width: 100%; text-align: left; border: 0; border-left: 3px solid 
 .mach .dot.you { fill: none; stroke: var(--fab); stroke-width: 2.5; stroke-dasharray: 3 2; }
 .mach .mlegend { margin: 0; display: flex; align-items: center; gap: 6px; color: var(--muted); }
 .mach .mlegend .dot.you { display: inline-block; width: 12px; height: 12px; border-radius: 50%; border: 2px dashed var(--fab); }
-.mach .mlawbox { display: grid; gap: 8px; padding: 14px 16px; border-radius: 14px; background: color-mix(in srgb, var(--ink) 6%, transparent); }
-.mach .mlawbox p { margin: 0; }
-.mach .mlaw b { font-size: 16px; }
-.mach .mlaws { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.mach .mlawbox { display: grid; gap: 8px; padding: 12px 14px; border-radius: 14px; background: color-mix(in srgb, var(--ink) 6%, transparent); }
+.mach .mlaw b { font-size: 15px; }
+.mach .mlaws { display: grid; gap: 8px; }
 .mach .mlaw1 { display: grid; grid-template-columns: 28px 1fr; gap: 10px; align-items: start; padding: 12px; border-radius: 12px; border: 1px solid var(--line); background: var(--panel-solid); }
-.mach .mlaw1 p { margin: 0; }
 .mach .lmark { width: 24px; height: 24px; fill: none; stroke: var(--muted); stroke-width: 1.6; }
 .mach .l-lab { border-color: color-mix(in srgb, var(--warm) 55%, var(--line)); }
 .mach .l-lab .lmark { stroke: var(--warm); fill: color-mix(in srgb, var(--warm) 25%, transparent); }
-.mach .mkeep { display: grid; gap: 8px; padding: 14px 16px; border-radius: 14px; border: 1px solid var(--line); background: var(--panel-solid); }
-.mach .mkeep > p { margin: 0; }
+.mach .mkeep { display: grid; gap: 8px; padding: 14px 16px; border-radius: 14px; border: 1px solid var(--line); background: color-mix(in srgb, var(--ink) 3%, var(--panel-solid)); }
 .mach .mkeep .acts { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
-@media (max-width: 900px) { .mach .mcurvebox { grid-template-columns: 1fr; } .mach .mfabs { grid-template-columns: repeat(2, minmax(0, 1fr)); } .mach .mlaws { grid-template-columns: 1fr; } }
-@media (max-width: 600px) { .mach .mscore { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .mach .mkeep .btn:disabled { opacity: .45; cursor: not-allowed; }
-@media (max-width: 600px) { .mach .mcurve .tick { font-size: 20px; } .mach .mcurve .dot { r: 9px; } .mach .mcurve .dot.you { r: 10px; } .mach .mcurve .best { stroke-width: 4; } }
 /* liquid hardware: a fabric rewired after it is made; how fast each part reshapes against what it costs */
-.mach { --liquid: #4fd18f; }
-:root[data-theme=light] .mach { --liquid: #178a52; }
-.mach .f-liquid .mmark * { fill: color-mix(in srgb, var(--liquid) 70%, transparent); stroke: none; }
-.mach .mkinds.k-liquid button[aria-pressed=true] { border-color: var(--liquid); background: color-mix(in srgb, var(--liquid) 18%, transparent); }
-.mach .mliquid { margin-top: 14px; display: grid; gap: 8px; }
-.mach .mliquid > p { margin: 0; }
 .mach .mliquid .kicker { color: var(--liquid); }
 .mach .mliquid .mclaims { border-color: color-mix(in srgb, var(--liquid) 45%, var(--line)); background: color-mix(in srgb, var(--liquid) 5%, var(--panel-solid)); }
 .mach .lmapbox { display: grid; gap: 2px; }
 .mach .lmapbox .lax { justify-self: end; }
 .mach .lmap { width: 100%; height: auto; display: block; }
 .mach .lmap .grid { stroke: var(--line); stroke-width: 1; }
-.mach .lmap .tick { fill: var(--muted); font: 11px var(--mono); }
+.mach .lmap .tick { fill: var(--muted); font: 14px var(--mono); }
+.mach .lmap .tk-months, .mach .lmap .tk-days, .mach .lmap .tk-ms { display: none; }
 .mach .lmap .lcorner { fill: color-mix(in srgb, var(--liquid) 12%, transparent); stroke: var(--liquid); stroke-dasharray: 4 3; }
 .mach .lmap .every { stroke: var(--warm); stroke-width: 2; stroke-dasharray: 5 4; }
-.mach .lmap .evt { fill: var(--warm); font-size: 12px; }
+.mach .lmap .evt { fill: var(--warm); font-size: 15px; }
 .mach .lmap .ref { fill: none; stroke: var(--muted); stroke-width: 1.5; }
 .mach .lmap .refl { stroke: var(--muted); stroke-width: 5; stroke-linecap: round; opacity: .5; }
-.mach .lmap .pt circle { stroke: var(--panel-solid); stroke-width: 2; }
-.mach .lmap .pt text { fill: var(--ink); font-size: 12px; }
+.mach .lmap .pt circle { stroke: var(--panel-solid); stroke-width: 2; r: 9px; }
+.mach .lmap .pt text { fill: var(--ink); font-size: 15px; }
 .mach .lmap .f-circuit circle { fill: var(--accent); }
 .mach .lmap .f-software circle { fill: var(--panel-solid); stroke: var(--accent); stroke-dasharray: 3 2; }
 .mach .lmap .f-matter circle { fill: var(--matter); }
 .mach .lmap .f-liquid circle { fill: var(--liquid); }
 .mach .lkey { margin: 0; color: var(--muted); display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
 .mach .lk { display: inline-block; width: 14px; height: 10px; border-radius: 3px; }
-.mach .lk-corner { background: color-mix(in srgb, var(--liquid) 25%, transparent); border: 1px dashed var(--liquid); }
+.mach .lk-corner { background: color-mix(in srgb, var(--liquid) 40%, transparent); border: 1px dashed var(--liquid); }
 .mach .lk-every { height: 0; border-top: 2px dashed var(--warm); border-radius: 0; }
 .mach .lk-ref { width: 10px; border: 1.5px solid var(--muted); border-radius: 50%; }
 .mach .levolve { margin: 0; padding: 10px 12px; border-radius: 12px; border: 1px dashed color-mix(in srgb, var(--liquid) 55%, var(--line)); }
-@media (max-width: 600px) { .mach .lmap .tick { font-size: 18px; } .mach .lmap .pt text, .mach .lmap .evt { font-size: 19px; } .mach .lmap .pt circle { r: 11px; } }
-.mach .mpart { align-content: start; }
-.mach .lk-corner { background: color-mix(in srgb, var(--liquid) 40%, transparent); }
-@media (max-width: 600px) { .mach .lmap .tick { font-size: 15px; } .mach .lmap .tk-months, .mach .lmap .tk-days, .mach .lmap .tk-ms { display: none; } }
+/* the shared blocks */
+.mach .mblocks .grid { display: grid; gap: 8px; }
+.mach .mblock .st { display: flex; flex-direction: column; gap: 4px; }
+.mach .mblock .st .mmark { width: 16px; height: 16px; }
+.mach .mblock > span:last-child { display: grid; gap: 3px; }
+
+/* a narrower desktop: the side a little narrower, the blocks' words a little smaller */
+@media (max-width: 1100px) and (min-width: 721px) { .mach { grid-template-columns: minmax(0, 1fr) 360px; } .mach .mbkl b { font-size: 13px; } .mach .mbkl span { font-size: 12px; } }
+/* a phone: the head, the machine top to bottom, its layers; then one part at a time, and the rest */
+@media (max-width: 720px) {
+  .mach { grid-template-columns: minmax(0, 1fr); grid-template-rows: none; grid-template-areas: "head" "stage" "side"; }
+  html.frame2 .page.f2rd .mach .mhead h1 { font-size: 20px; }
+  .mach .mneeds button { padding: 8px 10px; }
+  .mach .mneeds button b { font-size: 14px; }
+  .mach .mwhy { margin-bottom: 12px; }
+  .mach .mstage { position: static; max-height: none; padding: 12px 10px 14px; border-radius: 18px; }
+  .mach .mpic, .mach .mstage.doing .mpic { width: 100%; margin-bottom: 12px; }
+  .mach .mbkl { max-width: 132px; }
+  .mach .mbkl b { font-size: 13px; } .mach .mbkl span { font-size: 12px; }
+  .mach .mrule { width: 22px; height: 22px; }
+  .mach .mlayers button { padding: 6px 10px; font-size: 13px; }
+  .mach .mgoal { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .mach .mgm b { font-size: 17px; }
+  .mach .mrow:not(.on) { display: none; }
+  .mach .mrow + .mrow { margin-top: 0; }
+  .mach .mclaims li { grid-template-columns: 1fr; gap: 3px; }
+  .mach .mside { padding-top: 16px; }
+}
 
 /* ---- the map: the first page (#/, src/v2/home.js). A wafer leaving the fab, four toys, the first things to try, and
    the map of everything: design down the left, the factory up the right, scale in the middle, a question as a thread ---- */
