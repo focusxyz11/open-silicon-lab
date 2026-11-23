@@ -27,8 +27,8 @@ export default function lab(L) {
     let h = '';
     /* the outlines: the area allowed (the goal), and the plain core */
     const budget = side(base * CA.GOAL.area), plain = side(base);
-    h += '<rect class="cabudget" x="' + x0 + '" y="' + (y1 - budget).toFixed(1) + '" width="' + budget.toFixed(1) + '" height="' + budget.toFixed(1) + '" rx="4"/>' +
-      '<text class="cak" x="' + (x0 + budget - 4).toFixed(1) + '" y="' + (y1 - budget - 5).toFixed(1) + '" text-anchor="end">' + esc(t('carch.fig.allowed')) + '</text>';
+    const zone = cls => '<rect class="' + cls + '" x="' + x0 + '" y="' + (y1 - budget).toFixed(1) + '" width="' + budget.toFixed(1) + '" height="' + budget.toFixed(1) + '" rx="4"/>';
+    h += zone('cabudget') + '<text class="cak allowed" x="' + (x0 + budget - 4).toFixed(1) + '" y="' + (y1 - Math.max(budget, D) - 5).toFixed(1) + '" text-anchor="end">' + esc(t('carch.fig.allowed')) + '</text>';
     /* the die */
     const busy = { alu1: !!cur, alu2: !!(cur && cur.with), mul: !!(cur && cur.mul), regs: !!cur, rest: !!cur };
     const wl = D * P.regs / A.total, xr = x0 + wl, wr = D - wl, rest = A.total - P.regs;
@@ -36,7 +36,7 @@ export default function lab(L) {
     /* the registers: one row each */
     h += '<rect class="capart regs' + (busy.regs ? ' on' : '') + '" x="' + x0 + '" y="' + (y1 - D).toFixed(1) + '" width="' + wl.toFixed(1) + '" height="' + D.toFixed(1) + '"/>';
     for (let i = 1; i < c.regs; i++) { const yy = y1 - D + D * i / c.regs; h += '<path class="caline" d="M' + (x0 + 3) + ' ' + yy.toFixed(1) + 'h' + (wl - 6).toFixed(1) + '"/>'; }
-    const fits = (txt, w) => txt.length * 6.2 <= w - 8;
+    const fits = (txt, w) => txt.length * 5.6 <= w - 6;
     if (fits(t('carch.blk.regs', { n: c.regs }), wl)) h += '<text class="canm" x="' + (x0 + wl / 2).toFixed(1) + '" y="' + (y1 - D / 2).toFixed(1) + '" text-anchor="middle">' + esc(t('carch.blk.regs', { n: c.regs })) + '</text>';
     /* the rest stacked beside: the units, the multiplier, the control */
     const blocks = [['alu1', CA.PARTS.alu]].concat(c.alus > 1 ? [['alu2', CA.PARTS.alu]] : [], c.mul !== 'none' ? [['mul', P.mul]] : [], [['rest', P.rest]]);
@@ -50,6 +50,8 @@ export default function lab(L) {
       if (hh >= 13 && fits(nm, wr)) h += '<text class="canm" x="' + (xr + wr / 2).toFixed(1) + '" y="' + (yy + hh / 2 + 3.5).toFixed(1) + '" text-anchor="middle">' + esc(nm) + '</text>';
       yy += hh;
     }
+    /* the outlines again over the die: where it spills past what is allowed shows */
+    h += zone('caedge');
     h += '<rect class="caplain" x="' + x0 + '" y="' + (y1 - plain).toFixed(1) + '" width="' + plain.toFixed(1) + '" height="' + plain.toFixed(1) + '" rx="3"/>' +
       '<text class="cak plain" x="' + (x0 + 4) + '" y="' + (y1 + 13) + '">' + esc(t('carch.fig.plain')) + '</text>';
     return h;

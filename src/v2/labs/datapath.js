@@ -142,7 +142,10 @@ export function dpSvg(o, L) {
       h += '<rect class="dpsl' + (used && bit ? ' one ph2' : '') + (i === bad ? ' bad' : '') + '" x="' + (x0 + 2) + '" y="' + (yy - dy * 0.34).toFixed(2) + '" width="' + (x1 - x0 - 4) + '" height="' + (dy * 0.68).toFixed(2) + '"/>'; }
     h += '<rect class="dprip" x="' + x0 + '" y="' + (y1 + dy / 2).toFixed(1) + '" width="' + (x1 - x0) + '" height="0" data-span="' + (y1 - y0 + dy).toFixed(1) + '"/></g>';
     h += '<text class="dpk" x="' + ((x0 + x1) / 2) + '" y="' + (G.alu[0][1] - (o.narrow ? 5 : 8)) + '" text-anchor="middle">' + esc(t(mul ? 'rv.dp.mul' : 'rv.dp.alu')) + '</text>';
-    if (bad >= 0) { const yy = y1 - bad * dy, xl = x0 - 2; h += '<path class="dpbadmk" d="M' + xl + ' ' + yy.toFixed(1) + 'h-10"/><text class="dpbad" x="' + (xl - 13) + '" y="' + (yy + 3.5).toFixed(1) + '" text-anchor="end">' + esc(t('rv.dp.slice', { n: bad })) + '</text>'; }
+    /* the slice that answered wrong, named on a tag beside it (left of the unit, clear of the memory) */
+    if (bad >= 0) { const yy = y1 - bad * dy, xl = x0 - 2, nm = t('rv.dp.slice', { n: bad }), tw = nm.length * 5.8 + 10;
+      h += '<path class="dpbadmk" d="M' + xl + ' ' + yy.toFixed(1) + 'h-9"/><rect class="dpbadtag" x="' + (xl - 9 - tw).toFixed(1) + '" y="' + (yy - 7.5).toFixed(1) + '" width="' + tw.toFixed(1) + '" height="15" rx="7.5"/>' +
+        '<text class="dpbad" x="' + (xl - 9 - tw / 2).toFixed(1) + '" y="' + (yy + 3.5).toFixed(1) + '" text-anchor="middle">' + esc(nm) + '</text>'; }
     /* what went in and what came out */
     if (s && (used || mul)) {
       const ax = o.narrow ? 140 : 437, A = a ? a.p : s.a, B = a ? a.q : s.f === 'R' || s.f === 'B' ? s.b : s.imm;

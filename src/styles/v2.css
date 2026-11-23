@@ -3013,7 +3013,7 @@ i.ersil { background: var(--bad); }
 .dpsvg .dpsl.bad { fill: var(--bad); }
 .dpsvg .dprip { fill: color-mix(in srgb, var(--warm) 34%, transparent); }
 .dpsvg .dpbad { font: 700 10px var(--sans); fill: var(--bad); }
-.dpsvg .dpbadmk { stroke: var(--bad); stroke-width: 1.6; }
+.dpsvg .dpbadmk { stroke: var(--bad); stroke-width: 1.6; } .dpsvg .dpbadtag { fill: var(--panel-solid); stroke: var(--bad); stroke-width: 1.2; }
 .dpsvg .dpshould { font: 600 9px var(--sans); fill: var(--bad); }
 .dpsvg .dptok { opacity: 0; pointer-events: none; }
 .dpsvg .dphalo { fill: color-mix(in srgb, var(--warm) 30%, transparent); } .dpsvg .dpdot { fill: var(--warm); stroke: var(--panel-solid); stroke-width: 1.2; }
@@ -3046,7 +3046,7 @@ i.ersil { background: var(--bad); }
 /* Change your core (src/v2/labs/corearch.js): the core as a floor plan, its run cycle by cycle, the dials and the bars */
 .cafig { margin: 8px 0; } .casvg { display: block; width: 100%; height: auto; }
 .casvg .cak { font: 600 10px var(--sans); fill: var(--muted); } .casvg .cak.plain { fill: var(--ink); }
-.casvg .cabudget { fill: color-mix(in srgb, var(--good) 6%, transparent); stroke: var(--good); stroke-width: 1.2; stroke-dasharray: 2 4; }
+.casvg .cabudget { fill: color-mix(in srgb, var(--good) 7%, transparent); stroke: none; } .casvg .caedge { fill: none; stroke: var(--good); stroke-width: 1.6; stroke-dasharray: 2 4; } .casvg .cak.allowed { fill: var(--good); }
 .casvg .caplain { fill: none; stroke: var(--ink); stroke-width: 1.4; stroke-dasharray: 6 4; opacity: .55; }
 .casvg .cadie { fill: var(--panel-solid); stroke: var(--line); }
 .casvg .capart { stroke: var(--panel-solid); stroke-width: 1.5; transition: fill .25s; }
