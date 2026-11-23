@@ -421,10 +421,11 @@ export function start() {
     $('chipCanvas').hidden = $('chipLabels').hidden = true; cui.hidden = true; V.chip && V.chip.pause();
     $('placeCanvas').hidden = $('placeLabels').hidden = true; pui.hidden = true; V.dc && V.dc.pause(); V.hidePh(); V.hideCa(); V.hideSw();
     const part = from && ['line', 'bench'].includes(V.flatKind) && V.WE && isPart(V.lastPlace, diveId()) ? diveId() : null;
-    /* the island's styles are in before anything of it shows (src/core/styles.js) */
-    return needStyles('frame', 'island').then(() => {
+    /* the island is fetched while its styles load (src/core/styles.js); it shows once they are in, before it is made */
+    const shown = needStyles('frame', 'island').then(() => {
       $('mapCanvas').hidden = $('mapLabels').hidden = false; $('hero').hidden = false; $('outbtn').hidden = false; lensbar.hidden = false; showStage(true); heroQs();
-      loading(!V.map); return Promise.all([ensureMap(), glue('island')]); }).then(([m]) => { if (from && V.lastPlace) { m.from(V.lastPlace, part); if (!part) m.focus(V.lastPlace); } m.resume(); return m; });
+      loading(!V.map); });
+    return Promise.all([ensureMap(), glue('island'), shown]).then(([m]) => { if (from && V.lastPlace) { m.from(V.lastPlace, part); if (!part) m.focus(V.lastPlace); } m.resume(); return m; });
   }
 
   /* ---- the pages ---- */
