@@ -1,4 +1,4 @@
-/* The lab litho's own styles (src/data/labs/litho.js, css: true), loaded with the labs (src/core/styles.js). */
+/* The lab litho's own styles (src/data/labs/litho.js, css: true), loaded when one of its challenges is played (src/core/styles.js). */
 /* ---- Print the finest lines, The 1,000-watt source (src/v2/labs/litho.js, src/engines/litho.js) ---- */
 .ltsrcs { gap: 5px; margin: 4px 0 8px; }
 .ltsrc { display: grid; gap: 0; text-align: left; padding: 5px 10px; border-radius: 12px; line-height: 1.2; }
@@ -46,6 +46,12 @@
 }
 
 .joule p { margin: 0; }
+/* on a phone: the trace and the levers where you are; no map, no lever chips on the other levels */
+@media (max-width: 720px) { .jtot .small { display: none; }
+}
+
+.hm-nitem .small { line-height: 1.45; }
+.hm-ilink .small { line-height: 1.35; margin-top: 2px; }
 .hm-winfo p { margin: 0; }
 .hm-toy p { margin: 0; }
 .hm-thread p { margin: 0; flex: 1; min-width: 0; }

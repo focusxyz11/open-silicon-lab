@@ -14,7 +14,7 @@
    and the lab's other files are found by its name:
      src/v2/labs/<name>.js        the lab itself, lab(L) -> { draw, click, input }, playing every kind its challenges have
      src/v2/growers/<name>.js     what each of its challenges grows on the island, and where it stands
-     src/styles/labs/<name>.css   its styles, when it has any (css: true), loaded with the labs
+     src/styles/labs/<name>.css   its styles, when it has any (css: true), loaded when one of its challenges is played
      scripts/smoke/labs/<name>.mjs  its check in the browser smoke test, each challenge played to its win
    Data only; tests/labs.test.mjs checks every file here is listed and every file a lab names is there. */
 import agent from './agent.js';

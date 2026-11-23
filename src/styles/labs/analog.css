@@ -1,4 +1,4 @@
-/* The lab analog's own styles (src/data/labs/analog.js, css: true), loaded with the labs (src/core/styles.js). */
+/* The lab analog's own styles (src/data/labs/analog.js, css: true), loaded when one of its challenges is played (src/core/styles.js). */
 /* chips that touch the real world (src/v2/labs/analog.js): from a signal to bits, and the power chip */
 .anaintro { margin: 4px 0 10px; }
 .anafig { margin: 8px 0; }
@@ -83,10 +83,6 @@
  .anaflow .to { background: var(--good); transition: width .25s; }
  .anaflow .lost { flex: 1; background: var(--warm); }
 .anaflowt { margin: 5px 0 0; }
-/* the phone: the goal scrolls with the lab (it is tall, and the card is short), so it never covers the picture */
-@media (max-width: 1099px) { .goalbox.anagoal { position: static; box-shadow: none; }
-}
-
 @media (max-width: 720px) { .anarow { grid-template-columns: 1fr 44px 50px; gap: 8px; }
 }
 

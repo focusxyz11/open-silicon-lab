@@ -1,4 +1,4 @@
-/* The lab clockpower's own styles (src/data/labs/clockpower.js, css: true), loaded with the labs (src/core/styles.js). */
+/* The lab clockpower's own styles (src/data/labs/clockpower.js, css: true), loaded when one of its challenges is played (src/core/styles.js). */
 /* the clock and the power (src/v2/labs/clockpower.js): the power curve and the counter that fails */
 .ckpintro { margin: 4px 0 10px; }
  .ckpsub { margin: 4px 0 8px; }
@@ -72,7 +72,7 @@
 .ckpc .num { font: 600 8px var(--sans); font-variant-numeric: tabular-nums; letter-spacing: -.2px; fill: var(--good); }
  .ckpc .num.bad { fill: var(--bad); }
  .ckpc .num.want { fill: var(--muted); font-weight: 400; }
-@media (max-width: 720px) { .ckpread { grid-template-columns: 1fr 1fr; } .ckprow { grid-template-columns: 134px 1fr 58px; gap: 8px; } .goalbox .gauge.ckpwide { display: none; }
+@media (max-width: 720px) { .ckpread { grid-template-columns: 1fr 1fr; } .ckprow { grid-template-columns: 134px 1fr 58px; gap: 8px; }
 }
 
 .jmap .jdot.front { stroke: var(--panel-solid); stroke-width: 1.5; fill-opacity: 1; }

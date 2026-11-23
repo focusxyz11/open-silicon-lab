@@ -1,4 +1,4 @@
-/* The lab cim's own styles (src/data/labs/cim.js, css: true), loaded with the labs (src/core/styles.js). */
+/* The lab cim's own styles (src/data/labs/cim.js, css: true), loaded when one of its challenges is played (src/core/styles.js). */
 /* compute in memory (src/v2/labs/cim.js): the grid of cells, its converters and sums, and the energy two ways */
 .cimintro { margin: 4px 0 10px; }
 .cimfig { margin: 8px 0; }
@@ -51,8 +51,10 @@
 .hm-how > i { width: 40px; height: 6px; border-radius: 3px; flex: none; }
  .bk-note.bad { color: var(--bad); }
 .bk-ln i { position: absolute; left: -32px; width: 22px; text-align: right; font-style: normal; color: var(--muted); }
+.bk-subs .chipb { padding: 4px 10px; font-size: 12px; }
 /* a small bench (a phone): fewer words on it, the same picture */
 @container (max-width: 480px) { .bk-ln i { left: -26px; width: 18px; }
 }
-
+ .rvcases .bad { color: var(--bad); }
 .lsnwave i { display: block; width: 3px; border-radius: 2px; background: var(--accent); height: 6px; }
+.lsnstates .chipb { font-size: 15px; justify-content: flex-start; text-align: left; white-space: normal; min-height: 40px; }

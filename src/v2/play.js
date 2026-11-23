@@ -25,7 +25,7 @@ import { setBetScene } from '../app/betscene.js';
 import { WAFER as SCENE_WAFER } from '../engines/chip.js';
 import { glyph } from './field.js';
 import { patch } from './patch.js';
-import { LABS as LAB_LIST, kindsOf } from '../data/labs/index.js';
+import { LABS as LAB_LIST, kindsOf, labOfKind } from '../data/labs/index.js';
 import { needStyles } from '../core/styles.js';
 
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
@@ -49,18 +49,21 @@ export function goalOf(ch) {
   return t('game.ch.' + ch.id + '.goal');
 }
 
-/* the labs (src/v2/labs/, each declared in src/data/labs/), their words (the labs area, src/core/i18n.js) and their styles
-   (src/styles/labs.css and each lab's own, src/core/styles.js) load with the
-   first challenge played, never with the first page: the shell awaits labsReady() before it calls play(). LABS: the lab
-   that plays each kind, the kinds of its challenges */
-let LABS = null, labsP = null, stylesP = null, stylesIn = false;
+/* the labs (src/v2/labs/, each declared in src/data/labs/) and their words (the labs area, src/core/i18n.js) load with the
+   first challenge played, never with the first page, and their styles (src/styles/labs.css, and each lab's own with its
+   challenge, src/core/styles.js) too: the shell awaits labsReady(ch) before it calls play(). LABS: the lab that plays
+   each kind, the kinds of its challenges */
+let LABS = null, labsP = null;
 const labMods = () => labsP || (labsP = Promise.all([Promise.all(LAB_LIST.map(l => import('./labs/' + l.name + '.js').then(m => [l, m.default]))), needWords('labs')])
   .then(([mods]) => { const by = {}; mods.forEach(([l, lab]) => kindsOf(l).forEach(k => { by[k] = lab; })); return (LABS = by); }, e => { labsP = null; throw e; }));
-const labStyles = () => stylesP || (stylesP = needStyles('labs', ...LAB_LIST.filter(l => l.css).map(l => 'labs/' + l.name)).then(() => { stylesIn = true; }));
-export const labsLoaded = () => !!LABS && stylesIn;
-/* labsReady(false): the labs and their words only, as the first page fetches them in an idle moment (its styles wait for
-   the first challenge played) */
-export const labsReady = (styles = true) => Promise.all([labMods(), styles ? labStyles() : null]).then(() => LABS);
+/* the player's styles, and the lab's own when the challenge is a lab's (css: true in its file) */
+const sheetsOf = ch => { const l = ch && labOfKind(ch.kind); return ['labs'].concat(l && l.css ? ['labs/' + l.name] : []); };
+const stylesIn = new Set();
+const labStyles = ch => { const want = sheetsOf(ch); return needStyles(...want).then(() => want.forEach(n => stylesIn.add(n))); };
+export const labsLoaded = ch => !!LABS && sheetsOf(ch).every(n => stylesIn.has(n));
+/* labsReady(ch): the labs, their words, and the styles that challenge needs; labsReady(null, false): the labs and their
+   words only, as the first page fetches them in an idle moment (styles wait for a challenge played) */
+export const labsReady = (ch = null, styles = true) => Promise.all([labMods(), styles ? labStyles(ch) : null]).then(() => LABS);
 export function play(el, ch, ctx) {
   const S = ctx.state;
   let view = { msg: null, B: null, ai: false, hint: false, tests: [], guess: null, wrong: null, write: false, won: false, rows: null, okG: null, op: -1, seq: null, slip: null, no: null };

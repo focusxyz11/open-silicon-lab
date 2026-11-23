@@ -1,4 +1,4 @@
-/* The lab semiconductor's own styles (src/data/labs/semiconductor.js, css: true), loaded with the labs (src/core/styles.js). */
+/* The lab semiconductor's own styles (src/data/labs/semiconductor.js, css: true), loaded when one of its challenges is played (src/core/styles.js). */
 /* too hot for silicon (src/v2/labs/semiconductor.js): free electrons against temperature, and the same number as dots in two cubes */
 .semiintro { margin: 4px 0 10px; }
 .semifig { margin: 8px 0 6px; }

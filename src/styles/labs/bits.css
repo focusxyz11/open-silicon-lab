@@ -1,4 +1,4 @@
-/* The lab bits's own styles (src/data/labs/bits.js, css: true), loaded with the labs (src/core/styles.js). */
+/* The lab bits's own styles (src/data/labs/bits.js, css: true), loaded when one of its challenges is played (src/core/styles.js). */
 /* moving bits (src/v2/labs/bits.js): one bit's trip, and Keep the chef busy */
 .mbtabs { grid-template-columns: 1fr 1fr; margin: 10px 0 8px; }
 .mbtabs button { text-align: center; font-weight: 600; font-size: 13px; color: var(--ink); }

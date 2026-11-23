@@ -280,7 +280,7 @@ export function create() {
         back: () => V.diveFrame.look(),
         /* won: the island grows, and a design's drawings fly to your gates */
         done: c => { V.won(c); if (V.flatKind === 'bench' && c.kind === 'design') V.dive.flyTo(V.WE.IDS.indexOf('gates')); } });
-      requestAnimationFrame(diveInset); });
+      requestAnimationFrame(diveInset); }, ch);
   }
   /* while the step line moves, the bench slides with it: the step nearest is drawn, offset by how far the line is from it */
   function benchZoom(z) {

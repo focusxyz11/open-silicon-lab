@@ -1,4 +1,4 @@
-/* The lab listen's own styles (src/data/labs/listen.js, css: true), loaded with the labs (src/core/styles.js). */
+/* The lab listen's own styles (src/data/labs/listen.js, css: true), loaded when one of its challenges is played (src/core/styles.js). */
 /* the ear test: the picture hidden while you listen, the answers, the run of answers */
 .earfig { position: relative; margin: 6px 0; border-radius: 14px; overflow: hidden; }
 .earfig svg { display: block; width: 100%; height: auto; transition: filter .5s; }

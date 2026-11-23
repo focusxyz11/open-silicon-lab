@@ -1,4 +1,6 @@
-/* The lab mortal's own styles (src/data/labs/mortal.js, css: true), loaded with the labs (src/core/styles.js). */
+/* The lab mortal's own styles (src/data/labs/mortal.js, css: true), loaded when one of its challenges is played (src/core/styles.js). */
+.momsg.good { color: var(--good); }
+ .momsg.bad { color: var(--bad); }
 /* Learn on one chip, copy to a thousand (src/v2/labs/mortal.js) */
 .mofig { margin: 8px 0; }
  .mofig svg { display: block; width: 100%; height: auto; }

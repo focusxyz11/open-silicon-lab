@@ -140,7 +140,7 @@ export function start() {
   const preloadMark = () => { const h = document.documentElement; if (!h.dataset.preload) h.dataset.preload = String(Math.floor(performance.now())); };
   /* on the first page: only the labs, so a challenge chosen there opens at once */
   let homeLoaded = false;
-  const preloadHome = () => { if (homeLoaded || !preloadOk()) return; homeLoaded = true; preloadMark(); labsReady(false).catch(() => { /* fetched again when a challenge is played */ }); };
+  const preloadHome = () => { if (homeLoaded || !preloadOk()) return; homeLoaded = true; preloadMark(); labsReady(null, false).catch(() => { /* fetched again when a challenge is played */ }); };
   const preload = () => { if (!preloadOk()) return; preloadMark(); prewarm(); ['./frame.js', './board3d.js', './story.js', './stories.js', '../engines/weave.js', '../app/world.js', '../data/weave.js', '../app/design.js', '../app/journey.js', './level3d.js', './relief3d.js', './wafer3d.js', './pcb3d.js', './phone3d.js', './gate3d.js', './switch3d.js', './atom3d.js', './overlay.js'].forEach(u => import(u).catch(() => { /* fetched again when needed */ })); };
   const ensureMap = () => mapReady || (mapReady = Promise.all([import('./map3d.js'), needStyles('frame', 'island')]).then(([m]) => {
     /* tap selects, zoom goes in and out (docs/INTERACTION.md): a second tap on the same place selects it again, it
@@ -298,14 +298,14 @@ export function start() {
     return '<div class="around"><p class="kicker">' + esc(t('around.k')) + '</p><div class="chips">' + (nx ? chip(nx, true) : '') + near.map(p => chip(p)).join('') + '</div></div>'; };
   /* the labs load with the first challenge played (src/v2/play.js); a challenge asked for meanwhile replaces it */
   let playTok = 0;
-  const withLabs = f => { const k = ++playTok; if (labsLoaded()) return f(); loading(true); return labsReady().then(() => { loading(false); if (k === playTok) f(); }); };
+  const withLabs = (f, ch) => { const k = ++playTok; if (labsLoaded(ch)) return f(); loading(true); return labsReady(ch).then(() => { loading(false); if (k === playTok) f(); }); };
   /* a challenge, played in the sheet */
   function openChallenge(ch) {
     if (!ch) return;
     const placeId = ch.kind === 'break' ? 'village' : ch.need ? 'lab' : ch.place;
     if (!V.cur || V.cur.place !== placeId) { V.cur = { place: placeId, tab: 'do' }; V.map && V.map.focus(placeId); }
     $('hero').classList.add('away'); sheet.hidden = false; sheet.scrollTop = 0;
-    withLabs(() => { if (!sheet.hidden) play(sheet, ch, { state: S, save, kept, startChip: () => Object.assign({}, Game.START), open: openChallenge, back: () => { sheet.onclick = null; sheet.oninput = null; V.drawPlace(); }, done: won }); });
+    withLabs(() => { if (!sheet.hidden) play(sheet, ch, { state: S, save, kept, startChip: () => Object.assign({}, Game.START), open: openChallenge, back: () => { sheet.onclick = null; sheet.oninput = null; V.drawPlace(); }, done: won }); }, ch);
   }
   const openJob = need => { const j = Game.jobOf(need); if (j) openChallenge(j); };
   /* a house of the village: a clocked design opens the try to break it; any other, the village's list */

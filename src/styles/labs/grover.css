@@ -1,4 +1,4 @@
-/* The lab grover's own styles (src/data/labs/grover.js, css: true), loaded with the labs (src/core/styles.js). */
+/* The lab grover's own styles (src/data/labs/grover.js, css: true), loaded when one of its challenges is played (src/core/styles.js). */
 /* quantum search with noise (src/v2/labs/grover.js): the amplitudes as bars, the boxes, and the chance step by step */
 .grvintro { margin: 4px 0 10px; }
 .grvfig { margin: 8px 0; }

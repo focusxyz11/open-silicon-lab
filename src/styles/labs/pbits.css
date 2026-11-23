@@ -1,4 +1,4 @@
-/* The lab pbits's own styles (src/data/labs/pbits.js, css: true), loaded with the labs (src/core/styles.js). */
+/* The lab pbits's own styles (src/data/labs/pbits.js, css: true), loaded when one of its challenges is played (src/core/styles.js). */
 /* labs-b: Let the noise compute (src/v2/labs/pbits.js) */
 .pbfig { margin: 8px 0; }
  .pbfig svg { display: block; width: 100%; height: auto; }

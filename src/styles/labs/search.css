@@ -1,4 +1,4 @@
-/* The lab search's own styles (src/data/labs/search.js, css: true), loaded with the labs (src/core/styles.js). */
+/* The lab search's own styles (src/data/labs/search.js, css: true), loaded when one of its challenges is played (src/core/styles.js). */
 /* ---- labs-a: Design it, or search for it? (src/v2/labs/search.js) ---- */
 .srfig { margin: 8px 0; }
  .srfig svg { display: block; width: 100%; height: auto; }
@@ -24,3 +24,4 @@
 .srjobs .chipb .muted { font-size: 12px; }
 .srmsg { margin: 8px 0; }
 .srcode summary { cursor: pointer; color: var(--muted); }
+.srjobs .chipb[aria-pressed="true"] .muted { color: inherit; opacity: .75; }

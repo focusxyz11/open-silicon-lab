@@ -1,4 +1,5 @@
-/* The lab corearch's own styles (src/data/labs/corearch.js, css: true), loaded with the labs (src/core/styles.js). */
+/* The lab corearch's own styles (src/data/labs/corearch.js, css: true), loaded when one of its challenges is played (src/core/styles.js). */
+.cafig .dpwho { color: var(--ink); }
 /* Change your core (src/v2/labs/corearch.js): the core as a floor plan, its run cycle by cycle, the dials and the bars */
 .cafig { margin: 8px 0; }
  .casvg { display: block; width: 100%; height: auto; }
@@ -43,3 +44,5 @@
 .cabars figcaption i.k { display: inline-block; width: 12px; height: 8px; margin: 0 5px 0 8px; border-radius: 2px; vertical-align: middle; }
  .cabars i.k.plain { background: color-mix(in srgb, var(--ink) 26%, transparent); }
  .cabars i.k.you { background: var(--accent); }
+@media (max-width: 720px) { html.frame2 .f2stage .cafig[data-f2] .dphead { display: none; }
+}

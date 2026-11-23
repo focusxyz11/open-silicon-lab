@@ -1,4 +1,4 @@
-/* The lab films's own styles (src/data/labs/films.js, css: true), loaded with the labs (src/core/styles.js). */
+/* The lab films's own styles (src/data/labs/films.js, css: true), loaded when one of its challenges is played (src/core/styles.js). */
 /* Films labs: Etch straight down and The bare bottom (src/v2/labs/films.js) */
 .flfig { margin: 8px 0; }
 .flfig svg { display: block; width: 100%; height: auto; max-height: 250px; border-radius: 10px; border: 1px solid var(--line); }

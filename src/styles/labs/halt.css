@@ -1,4 +1,4 @@
-/* The lab halt's own styles (src/data/labs/halt.js, css: true), loaded with the labs (src/core/styles.js). */
+/* The lab halt's own styles (src/data/labs/halt.js, css: true), loaded when one of its challenges is played (src/core/styles.js). */
 /* ---- labs-a: The program nobody can judge (src/v2/labs/halt.js) ---- */
 .hlstages { margin: 4px 0 10px; }
 .hlfig { margin: 8px 0; }
@@ -89,5 +89,4 @@
 @media (max-width: 520px) { .hlany { grid-template-columns: repeat(3, 1fr); }
 }
 
-.srjobs .chipb[aria-pressed="true"] .muted { color: inherit; opacity: .75; }
 .hlfig .hlsay, .hlfig .hlk, .hlfig .ax { paint-order: stroke; stroke: var(--panel-solid); stroke-width: 3px; stroke-linejoin: round; }

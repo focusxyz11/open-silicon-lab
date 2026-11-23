@@ -1,4 +1,4 @@
-/* The lab errors's own styles (src/data/labs/errors.js, css: true), loaded with the labs (src/core/styles.js). */
+/* The lab errors's own styles (src/data/labs/errors.js, css: true), loaded when one of its challenges is played (src/core/styles.js). */
 /* Catch the silent errors (src/v2/labs/errors.js): the stack of levels, each with what is born there, what it stops,
    and its protection set on the row */
 .erstack { margin: 8px 0 10px; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }

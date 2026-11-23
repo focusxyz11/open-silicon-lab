@@ -1,4 +1,4 @@
-/* The lab serve's own styles (src/data/labs/serve.js, css: true), loaded with the labs (src/core/styles.js). */
+/* The lab serve's own styles (src/data/labs/serve.js, css: true), loaded when one of its challenges is played (src/core/styles.js). */
 /* serving a language model (src/v2/labs/serve.js): quantization, energy per token, prefill and decode */
 .srvintro { margin: 4px 0 10px; }
 .srvfig { margin: 8px 0; }

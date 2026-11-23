@@ -66,7 +66,7 @@ A second picture (a curve beside the main drawing, the tones under a signal) sta
 4. **The grower, `src/v2/growers/<name>.js`:** `export default { '<grow-id>': { at: [x, z], grow: (g, { P, A, night, pulses }) => { ... } } }`, a small, well-made model built into its group `g` from the island's palette and lists, with the geometry helpers imported from `src/v2/kit3d.js`, and where it stands relative to its place (`at: [x, z]`, or `[x, z, y]`). It appears on the island when the challenge is won.
    - Check its spot in a screenshot with the challenge won (set `localStorage['osl-world-v1']` to `{"done":{"<id>":1},"seen":true}`).
    - It must stand clear of buildings, walls and other growers. The factory is 26 × 16 around its centre, its gas annex is on the west side, and the test house is about 30 units east.
-5. **CSS, `src/styles/labs/<name>.css`:** classes prefixed by the lab's name, plus a phone rule if needed; it loads with the labs (`src/core/styles.js`), never with the first page.
+5. **CSS, `src/styles/labs/<name>.css`:** classes prefixed by the lab's name, plus a phone rule if needed; it loads when one of the lab's challenges is played (`labsReady` in `src/v2/play.js`, `src/core/styles.js`), never with the first page. Rules the player or several labs share go in `src/styles/labs.css`.
 6. **A lab at a bench level:** check that `doHome` in `src/engines/way.js` sends it there.
 
 ## Checking

@@ -1,4 +1,4 @@
-/* The lab thousand's own styles (src/data/labs/thousand.js, css: true), loaded with the labs (src/core/styles.js). */
+/* The lab thousand's own styles (src/data/labs/thousand.js, css: true), loaded when one of its challenges is played (src/core/styles.js). */
 /* labs-b: A thousand that pass (src/v2/labs/thousand.js) */
 .thfig { margin: 8px 0; }
  .thfig svg { display: block; width: 100%; height: auto; }

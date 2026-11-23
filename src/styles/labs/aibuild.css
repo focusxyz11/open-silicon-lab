@@ -1,4 +1,4 @@
-/* The lab aibuild's own styles (src/data/labs/aibuild.js, css: true), loaded with the labs (src/core/styles.js). */
+/* The lab aibuild's own styles (src/data/labs/aibuild.js, css: true), loaded when one of its challenges is played (src/core/styles.js). */
 /* ---- Build your own AI chip (src/v2/labs/aibuild.js): the capstone's bench. On a wide desktop the bench takes two
    columns (what you get at the left, what you choose at the right); a phone gets one column and fewer things. ---- */
 .aib { display: grid; gap: 4px 22px; min-width: 0; }
@@ -106,7 +106,6 @@
 @keyframes aibdies { from { opacity: 0; } to { opacity: 1; } }
 /* a wide desktop: the bench grows to hold the picture and the choices side by side */
 @media (min-width: 1240px) {
-  :root:has(.player .aib) { --bench: min(820px, 62vw); }
   .aib { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; }
   .aibtop { grid-column: 1 / -1; }
 }
@@ -127,6 +126,10 @@
   .aibd, .aibelse, .aibkey, .aibbal, .aibph, .aibnote { display: none; }
   .aibread { grid-template-columns: repeat(2, 1fr); }
   .aibrev li { grid-template-columns: 1fr; gap: 4px; } .aibat { justify-self: start; }
+}
+
+/* the phone: the goal scrolls with the lab (it is tall, and the card is short), so it never covers the picture */
+@media (max-width: 1099px) { .goalbox.anagoal { position: static; box-shadow: none; }
 }
 
 @media (max-width: 720px) { .wogo .wit b { font-size: 14px; }
@@ -171,4 +174,5 @@
 .sl > .kicker { margin: 12px 0 4px; }
 .sl-eng > .kicker { margin: 0 0 6px; color: var(--ink); }
 .sl-mkey li { display: flex; align-items: center; gap: 6px; }
+.rvcases .good { color: var(--good); }
 .lsnhead .kicker { font: var(--f2-label, 600 14px var(--sans)); letter-spacing: 0; text-transform: none; color: var(--muted); }
