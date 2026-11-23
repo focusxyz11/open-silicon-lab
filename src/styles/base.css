@@ -1,0 +1,232 @@
+/* base.css: what every screen shares, loaded by index.html with the first page (src/core/styles.js). The palette and the
+   type, dark (night) and light (day); the bar, its loop, Your log and Break it; the stage the views draw on; loading and the
+   toast; the moves between views (a view transition, the portal). Kept small: the first page's styles (this and
+   blueprint.css) stay under 60 KB (tests/styles.test.mjs). Each view's own styles are in its own sheet, loaded when it
+   first opens. */
+/* The redesign's look: the 3D world fills the screen; floating glass panels carry the words.
+   Two themes (night is the default on dark systems). Phone first: panels become bottom sheets. */
+:root {
+  --bg: #0b1120; --panel: rgba(16, 23, 38, .78); --panel-solid: #111a2b; --line: rgba(160, 180, 210, .18); --ink: #eef2f8; --muted: #9aa8bd;
+  --accent: #5aa9ff; --accent-ink: #06101f; --warm: #ffb347; --good: #45d08a; --bad: #ff6b62;
+  --shadow: 0 18px 50px rgba(0, 0, 0, .45); --r: 18px;
+  --sans: "Atkinson Hyperlegible Next", system-ui, sans-serif; --serif: "Besley", Georgia, serif; --mono: "Martian Mono", ui-monospace, monospace;
+  color-scheme: dark;
+}
+:root[data-theme=light] {
+  --bg: #dfe8f2; --panel: rgba(255, 255, 255, .82); --panel-solid: #fff; --line: rgba(40, 60, 90, .14); --ink: #16202e; --muted: #5b6a80;
+  --accent: #2f7de1; --accent-ink: #fff; --shadow: 0 18px 50px rgba(30, 50, 80, .18); color-scheme: light;
+}
+@media (prefers-color-scheme: light) { :root:not([data-theme]) { --bg: #dfe8f2; --panel: rgba(255, 255, 255, .82); --panel-solid: #fff; --line: rgba(40, 60, 90, .14); --ink: #16202e; --muted: #5b6a80; --accent: #2f7de1; --accent-ink: #fff; --shadow: 0 18px 50px rgba(30, 50, 80, .18); color-scheme: light; }
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; background: var(--bg); color: var(--ink); font: 16px/1.5 var(--sans); overflow: hidden; -webkit-font-smoothing: antialiased; }
+a { color: inherit; }
+button { font: inherit; color: inherit; }
+.v2 { position: fixed; inset: 0; }
+.small { font-size: 13px; }
+ .muted { color: var(--muted); }
+ .good { color: var(--good); }
+ .bad { color: var(--bad); }
+ .mono { font-family: var(--mono); }
+.kicker { margin: 0; font: 600 11px/1.4 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+/* the bar: brand, the five parts, the theme */
+.bar { position: absolute; z-index: 20; top: 14px; left: 14px; right: 14px; display: flex; align-items: center; gap: 12px; padding: 8px 8px 8px 16px; background: var(--panel); border: 1px solid var(--line); border-radius: 999px; backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); box-shadow: var(--shadow); }
+.brand { display: flex; align-items: center; gap: 10px; text-decoration: none; white-space: nowrap; }
+.brand b { font: 700 16px var(--serif); letter-spacing: .01em; }
+.mark { width: 22px; height: 22px; border-radius: 6px; background: conic-gradient(from 45deg, var(--accent), var(--good), var(--warm), var(--accent)); box-shadow: inset 0 0 0 5px var(--panel-solid); }
+.round { width: 38px; height: 38px; border-radius: 50%; border: 1px solid var(--line); background: transparent; cursor: pointer; font-size: 17px; }
+.round:hover { background: color-mix(in srgb, var(--ink) 8%, transparent); }
+/* the stage: the 3D world, and its labels */
+.stage { position: absolute; inset: 0; }
+.c3[hidden], .labels[hidden], [hidden] { display: none !important; }
+@keyframes rise { from { opacity: 0; transform: translateY(12px); } }
+.x { position: absolute; top: 12px; right: 12px; width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--line); background: transparent; cursor: pointer; font-size: 20px; line-height: 1; }
+.acts { display: grid; gap: 8px; margin-top: 16px; }
+.btn { display: inline-flex; justify-content: center; align-items: center; gap: 8px; padding: 11px 18px; border-radius: 12px; border: 1px solid var(--line); background: transparent; text-decoration: none; font-weight: 700; cursor: pointer; }
+.btn.primary { background: var(--accent); color: var(--accent-ink); border-color: transparent; }
+.btn:hover { filter: brightness(1.08); }
+/* the tracker: your chip's life, in the bar on every view */
+.hero .row { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 12px; }
+.hero .btn { padding: 10px 16px; }
+/* the toast: what just grew */
+.toast { position: absolute; z-index: 40; left: 50%; bottom: 28px; transform: translateX(-50%); max-width: calc(100% - 28px); padding: 10px 18px; border-radius: 999px; background: var(--good); color: #06101f; font-weight: 700; box-shadow: var(--shadow); }
+.toast.go { animation: pop .5s cubic-bezier(.2, 1.4, .4, 1); }
+@media (min-width: 901px) { .toast { left: calc(50% - 70px); }
+}
+
+@keyframes pop { from { opacity: 0; transform: translate(-50%, 20px) scale(.9); } }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 10px; }
+.chipb { padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line); background: transparent; font-size: 13px; font-weight: 600; cursor: pointer; }
+.chipb[aria-pressed=true] { background: var(--accent); color: var(--accent-ink); border-color: transparent; }
+/* a press is felt (not on the 3D labels: their transform is their place on the screen) */
+.btn { transition: transform .15s ease, filter .2s; }
+.lvchips a:active, .btn:active:not([disabled]), .tapcode .op:active { transform: scale(.94); }
+@media (prefers-reduced-motion: reduce) { .hero.intro, .btn.pulse, .pin3.here::after, .logbtn.glow, .loop .bump, .burst { animation: none !important; } .burst { display: none; }
+}
+
+/* no cuts: going between views is a view transition. The bar, the dock and the frame's ornaments stay where they
+   are (or move to their new place); the picture zooms in when you go deeper, out when you rise, turns with the
+   Turn, slides along. Without motion (reduced motion, or no view transitions) the view simply changes. */
+.bar { view-transition-name: bar; }
+.sheet, .dock { view-transition-name: dock; }
+.homebtn { view-transition-name: up; }
+.corner { view-transition-name: corner; }
+.rail2 { view-transition-name: rail; }
+::view-transition-group(*) { animation-duration: .55s; animation-timing-function: cubic-bezier(.2, .7, .2, 1); }
+::view-transition-old(root), ::view-transition-new(root) { animation-duration: .55s; animation-fill-mode: both; transform-origin: 50% 46%; }
+::view-transition-old(root) { animation-timing-function: cubic-bezier(.5, 0, .7, .4); }
+::view-transition-new(root) { animation-timing-function: cubic-bezier(.2, .7, .2, 1); }
+/* in and out go through a portal (docs/INTERACTION.md): going in, the scene swells round what you chose and the view
+   inside opens from that point; going out, the view inside closes back into it while the scene settles round it */
+html[data-move=in]::view-transition-old(root) { animation-name: vt-past; transform-origin: var(--vx, 50%) var(--vy, 46%); }
+html[data-move=in]::view-transition-new(root) { animation-name: vt-portal-in; animation-duration: .7s; }
+html[data-move=out]::view-transition-old(root) { animation-name: vt-portal-out; animation-duration: .7s; z-index: 2; }
+html[data-move=out]::view-transition-new(root) { animation-name: vt-from-near; transform-origin: var(--vx, 50%) var(--vy, 40%); }
+@keyframes vt-portal-in { from { clip-path: circle(0% at var(--vx, 50%) var(--vy, 46%)); } to { clip-path: circle(150% at var(--vx, 50%) var(--vy, 46%)); } }
+@keyframes vt-portal-out { from { clip-path: circle(150% at var(--vx, 50%) var(--vy, 40%)); } to { clip-path: circle(0% at var(--vx, 50%) var(--vy, 40%)); opacity: .6; } }
+html[data-move=along]::view-transition-old(root) { animation-name: vt-left; }
+html[data-move=along]::view-transition-new(root) { animation-name: vt-from-right; }
+html[data-move=turn]::view-transition-old(root) { animation-name: vt-turn-out; }
+html[data-move=turn]::view-transition-new(root) { animation-name: vt-turn-in; }
+@keyframes vt-past { to { opacity: 0; transform: scale(1.6); } }
+@keyframes vt-from-far { from { opacity: 0; transform: scale(.82); } }
+@keyframes vt-away { to { opacity: 0; transform: scale(.7); } }
+@keyframes vt-from-near { from { opacity: 0; transform: scale(1.3); } }
+@keyframes vt-left { to { opacity: 0; transform: translateX(-10%); } }
+@keyframes vt-from-right { from { opacity: 0; transform: translateX(10%); } }
+@keyframes vt-turn-out { to { opacity: 0; transform: perspective(1600px) rotateY(32deg) scale(.92); } }
+@keyframes vt-turn-in { from { opacity: 0; transform: perspective(1600px) rotateY(-32deg) scale(.92); } }
+/* loading */
+.loading { position: absolute; inset: 0; display: none; place-items: center; z-index: 30; pointer-events: none; }
+.loading.on { display: grid; }
+.loading span { width: 34px; height: 34px; border-radius: 50%; border: 3px solid var(--line); border-top-color: var(--accent); animation: spin 0.8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+/* phones: the bar wraps, panels become bottom sheets */
+@media (max-width: 720px) {
+  .bar { top: 8px; left: 8px; right: 8px; flex-wrap: wrap; border-radius: 18px; padding: 8px 8px 8px 12px; }
+  .brand b { font-size: 15px; }
+  .round { margin-left: auto; }
+  .brand b { display: none; }
+  .bar .round { order: 2; margin-left: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; }
+}
+
+.sign { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.sign label, .askform label { display: grid; gap: 4px; min-width: 0; }
+.sign .kicker, .askform .kicker { margin: 0; }
+.sign input, .sign select, .askform input { width: 100%; min-width: 0; padding: 8px 10px; border-radius: 10px; border: 1px solid var(--line); background: var(--panel-solid); color: var(--ink); font: 14px var(--sans); }
+@media (max-width: 520px) { .sign { grid-template-columns: 1fr; }
+}
+
+/* ---- the structure (docs/reviews/structure.md): one bar that is the loop, one card with three faces ---- */
+/* the loop in the bar: a chip's life, where you are in it, and the way along */
+.loop { margin: 0 auto; min-width: 0; }
+.loop ol { display: flex; align-items: center; list-style: none; margin: 0; padding: 0; }
+.loop li { position: relative; display: flex; align-items: center; }
+.loop li + li::before { content: ''; width: 16px; height: 2px; border-radius: 1px; background: var(--line); }
+.loop li:last-child::after { content: '↺'; margin-left: 4px; color: var(--muted); font-size: 15px; }
+.loop button { display: flex; align-items: center; gap: 7px; padding: 8px 13px; border: 0; border-radius: 999px; background: transparent; color: var(--muted); font: 600 15px var(--sans); cursor: pointer; transition: background .2s, color .2s; }
+.loop button:hover { color: var(--ink); background: color-mix(in srgb, var(--ink) 8%, transparent); }
+.loop .ld { display: grid; place-items: center; flex: none; width: 10px; height: 10px; border-radius: 50%; border: 2px solid currentColor; font: 800 8px var(--mono); }
+.loop .full .ld { width: 14px; height: 14px; border-color: var(--good); background: var(--good); color: #06101f; }
+.loop .chip .ld { border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 28%, transparent); }
+.loop button[aria-current] { background: var(--ink); color: var(--bg); }
+.logbtn { display: flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 999px; border: 1px solid var(--line); text-decoration: none; color: var(--ink); font: 600 14px var(--sans); white-space: nowrap; }
+.logbtn:hover, .logbtn[aria-current=page] { background: color-mix(in srgb, var(--ink) 10%, transparent); }
+@media (max-width: 1080px) { .loop .ln { display: none; } .loop button { padding: 8px 9px; } .brand b { display: none; }
+}
+
+@media (max-width: 720px) {
+  .bar { flex-wrap: nowrap; gap: 6px; padding: 6px 6px 6px 10px; border-radius: 999px; }
+  .loop { margin: 0 auto; }
+  .loop li + li::before { width: 6px; }
+  .loop li:last-child::after { display: none; }
+  .loop button { padding: 12px 7px; gap: 5px; font-size: 13px; }
+  .logbtn { padding: 7px 10px; font-size: 13px; }
+  .bar .round { width: 34px; height: 34px; margin-left: 0; order: 0; }
+}
+
+/* the menu of sections, when asked for */
+.sections { position: relative; }
+.sections summary { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 50%; border: 1px solid var(--line); cursor: pointer; list-style: none; }
+.sections summary::-webkit-details-marker { display: none; }
+.sections nav { position: absolute; right: 0; top: 46px; display: grid; min-width: 180px; padding: 6px; border-radius: 14px; background: var(--panel-solid); border: 1px solid var(--line); box-shadow: var(--shadow); }
+.sections nav a { padding: 9px 12px; border-radius: 9px; text-decoration: none; font-weight: 600; }
+.sections nav a:hover { background: color-mix(in srgb, var(--ink) 8%, transparent); }
+/* Break it: the lab itself, broken by anyone, from anywhere (app.js; a report in the ledger). The frame's side panel
+   (#271), opened over whatever is open: under the bar at the right, as wide as the panel, solid so nothing shows
+   through; on a phone, the width of the screen */
+.breakbtn { flex: none; color: var(--ink); }
+.breakbtn[aria-expanded=true] { background: color-mix(in srgb, var(--ink) 10%, transparent); }
+.breakp { position: absolute; z-index: 25; top: 84px; right: 16px; width: min(var(--f2-pw, 440px), calc(100% - 32px)); max-height: calc(100% - 100px); overflow: auto; padding: 18px 26px 22px; background: var(--panel-solid); border: 1px solid var(--line); border-radius: 22px; box-shadow: var(--shadow); animation: rise .25s ease; font: 400 15px/1.45 var(--sans); }
+.breakp h2 { margin: 2px 40px 8px 0; font: 700 30px/1.12 var(--serif); }
+.breakp .kicker { font: 700 15px/1.35 var(--sans); letter-spacing: 0; text-transform: none; color: var(--muted); }
+.breakp .small { font-size: 15px; }
+.breakp .x { position: absolute; top: 14px; right: 14px; }
+.breakp .reports { list-style: none; margin: 0 0 12px; padding: 0; display: grid; gap: 8px; }
+.breakp .reports li { display: grid; grid-template-columns: 10px 1fr; gap: 8px; align-items: start; padding: 8px 10px; border: 1px solid var(--line); border-radius: 12px; font-size: 15px; }
+.breakp .reports li .made { margin-top: 6px; }
+.breakp .reports li.fixed { opacity: .7; }
+.breakp .breakform { display: grid; gap: 10px; }
+.breakp .breakform .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.breakp .breakform label { display: grid; gap: 4px; }
+.breakp .breakform .kicker { margin: 0; }
+.breakp textarea { width: 100%; min-width: 0; resize: vertical; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--line); background: var(--panel-solid); color: var(--ink); font: 16px/1.45 var(--sans); }
+.breakp .err { color: var(--bad, #c0392b); margin: 0; }
+.breakp .acts { display: flex; gap: 8px; }
+.chcard.report .st { color: var(--warm); }
+/* on a phone the bar has no room for it: it stands just under the bar's right end, on the row where the way out
+   stands at the left, and the panel opens below it */
+@media (max-width: 560px) {
+  .breakbtn { position: absolute; top: calc(100% + 10px); right: 4px; background: var(--panel); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); box-shadow: var(--shadow); }
+  .breakp { top: 124px; right: 10px; width: calc(100% - 20px); max-height: calc(100% - 136px); padding: 14px 16px 16px; }
+  .breakp h2 { font-size: 23px; }
+}
+
+/* ---- The side panel on a desktop (CLAUDE.md, desktop first where it is richer; #271, one frame, three modes) ----
+   On a wide screen a card that is not a caption on the picture stands as the side panel at the right, full height,
+   its width growing with the screen (--f2-pw, src/styles/frame.css): a view's card in Do, Ask and Read more, and the
+   island's sheet. A view frames its picture left of it (its canvas runs under it); the island's canvas ends where the
+   panel begins. Below 1100 px the card is below the picture (on a phone, the sheet). --bench is the room the panel
+   takes from the right edge, for the things on the picture that keep clear of it. */
+@media (min-width: 1100px) {
+  :root { --bench: calc(var(--f2-pw) + 32px); }
+}
+
+/* ---- the map: the first page (#/, src/v2/home.js). A wafer leaving the fab, four toys, the first things to try, and
+   the map of everything: design down the left, the factory up the right, scale in the middle, a question as a thread ---- */
+:root { --hm-design: var(--accent); --hm-make: var(--warm); --hm-scale: #b38cff; --hm-loop: var(--good); --hm-thread: #ff7eb6; }
+:root[data-theme=light] { --hm-scale: #7b4fe0; --hm-thread: #d63a77; --hm-make: #d9820a; }
+.home { position: absolute; inset: 0; z-index: 11; overflow-x: hidden; overflow-y: auto; background: var(--bg); padding-top: 78px; }
+/* the phone's bar: the loop keeps every stage in sight beside Your log */
+@media (max-width: 720px) {
+  .loop li + li::before { width: 3px; }
+  .loop button { padding: 12px 5px; }
+  .loop [aria-current] { padding: 7px 9px; }
+  .logbtn { padding: 7px 9px; }
+}
+/* The frame (#271): one frame, three modes, and the thing you are working on always gets the stage. The site's only
+   frame since #276 (the one before it is kept on the branch claude/before-frame2-2026-11); src/core/styles.js loads
+   frame.css with the first view that wears it; index.html sets html.frame2, from which every rule hangs (src/v2/frame2.js wears the elements).
+   Three components on the frame's own elements: the caption (Look: the card on the picture, bottom left), the side
+   panel (Do, Ask, Read more, a card that is not a level's: full height at the right, growing with the screen; the
+   island's sheet and Break it are the same panel) and, on a phone, the sheet; the stage (Do: a lab's instrument
+   takes the picture area, its goal as meters across the top); and Read, a reading page in the frame. One type
+   scale: titles and the question in Besley, everything read in Atkinson Hyperlegible Next and never below 15 px,
+   names on the picture 14 px, figures in Martian Mono. The palette is the site's (src/styles/base.css). */
+html.frame2 {
+  --f2-title: 700 30px/1.12 var(--serif);
+  --f2-q: italic 400 20px/1.4 var(--serif);
+  --f2-read: 400 17.5px/1.5 var(--sans);
+  --f2-small: 400 15px/1.45 var(--sans);
+  --f2-label: 700 15px/1.35 var(--sans);
+  --f2-name: 700 14px/1.2 var(--sans);
+  --f2-fig: 500 18px/1.2 var(--mono);
+  --f2-pw: clamp(440px, 31vw, 620px);                     /* the side panel: about 460 px at 1280, 600 at 1920 */
+  --f2-cw: clamp(520px, calc(400px + 12.5vw), 660px);     /* the caption: about 560 px at 1280, 640 at 1920 */
+  --f2-top: 136px;                                        /* where the stage begins: under the bar and the address */
+  --f2-sr: calc(var(--f2-pw) + 32px);                     /* the stage's right edge: the panel's left, and a gap */
+}

@@ -11,11 +11,18 @@ How we work on Open Silicon Lab. One idea moves from talk to a picture to code, 
 7. **Keep what came before.** A version that is replaced is kept on a named branch first (for example `claude/before-dive-2026-11`).
 8. **Update [STATUS.md](STATUS.md)** when a task lands, so the next session starts from where things are.
 
-Sessions can run side by side when their tasks touch different files. Merge one pull request at a time, then update the other branches; they usually meet in the files of `src/i18n/en/`, `src/v2/game.js`, `src/v2/map3d.js`, `src/styles/v2.css` and the experiments count.
+Sessions can run side by side when their tasks touch different files. Merge one pull request at a time, then update the other branches. Most work now has files of its own: a lab is its declaration, its lab, its engine, its growers, its stylesheet and its smoke check, each a file named for it ([LABS.md](LABS.md)); a view's styles are its own sheet (`src/styles/<view>.css`, loaded with it by `src/core/styles.js`); a smoke check goes in its section's file (`scripts/smoke/<section>.mjs`). What is still shared, and where sessions meet:
+
+- **Words:** `src/i18n/en/<area>.json`, appended by area (a lab's in `labs.json`, its challenges' names in `core.json`, what it grows in `place.json`), and `AREAS` in `src/core/i18n.js` for a new prefix. Keep both sides' keys.
+- **The thirteen:** `src/data/frame.js` (`FILED`, `MARKS`), where everything is filed under the core questions.
+- **The labs' list:** `src/data/labs/index.js`, an import and a name at the end of `LABS` for each new lab (a browser cannot list a folder). Keep both lines.
+- **The shared sheets:** `src/styles/base.css` (what every screen shares, kept under 60 KB with `blueprint.css`) and `src/styles/frame.css` (the frame), when a change is the frame's or every view's rather than one view's.
+- **The shell:** `src/v2/app.js` and `src/v2/game.js` (the loop's own challenges), when the change is to the shell or the loop itself.
+- **Rarely:** `src/core/styles.js` (`ORDER`, when a view gets a sheet of its own), and `scripts/smoke.mjs` (`NAMES`, when a section is added; CI's groups in `.github/workflows/ci.yml` name the sections, and only the owner edits them).
 
 ## The browser smoke test, in sections
 
-`scripts/smoke.mjs` is made of sections, each opening its own pages and leaning on no other: `npm run test:browser` runs them all, `npm run test:browser -- --only labs,ways` runs the ones named, and `npm run test:browser -- --list` says what each covers. Every run prints how long each section took. Locally, run the sections your change touches; the whole run is too long for a laptop. CI runs every section, in groups side by side (`.github/workflows/ci.yml`), and the one check a pull request waits for, `test`, is green only when the logic and words tests and every group are green. A group that passes only on its second run leaves a warning: make that check steady.
+`scripts/smoke.mjs` runs the browser smoke test, made of sections, each a file of its own in `scripts/smoke/` that opens its own pages and leans on no other: its default export runs it and `about` says what it covers (what they share, the browsers, the address and the problems found, is `scripts/smoke/shared.mjs`). The labs section plays the loop's own challenges, then each lab's own check, `scripts/smoke/labs/<lab>.mjs`. `npm run test:browser` runs them all, `npm run test:browser -- --only labs,ways` runs the ones named, and `npm run test:browser -- --list` says what each covers. Every run prints how long each section took. Locally, run the sections your change touches; the whole run is too long for a laptop. CI runs every section, in groups side by side (`.github/workflows/ci.yml`), and the one check a pull request waits for, `test`, is green only when the logic and words tests and every group are green. A group that passes only on its second run leaves a warning: make that check steady.
 
 ## The nightly build
 

@@ -1,0 +1,12 @@
+/* What the lab serve grows on the island (src/data/labs/serve.js), drawn by src/v2/map3d.js when its challenge is won:
+   each growth's place beside its place on the island, at: [x, z, y], and its model, grow(g, island), built into its group g
+   from the island's palette and lists (the palette P, the roofs A, night, and what pulses or spins) */
+import { mat, metal, glow, box, cyl } from '../kit3d.js';
+
+export default {
+  /* serving a language model: the weights kept in fewer bits (stacks of 8, 4 and 2 slabs), a meter yard where each answer's energy is read, and a hall that reads at once (one bar) and writes word by word (a row of lamps) */
+  /* serving a language model: together, east of the halls and north of the solar field */
+  'dc-quant': { at: [22.5, -4], grow: (g, { P, night, pulses }) => { box(g, 5.4, 0.3, 3.4, mat(P.wall), 0, 0, 0, 0.1); [8, 4, 2].forEach((n, i) => { const x = -1.7 + i * 1.7; for (let k = 0; k < n; k++) box(g, 1.2, 0.17, 2.2, k === n - 1 ? metal(P.slate) : metal(P.dark), x, 0.3 + k * 0.27, 0, 0.03); pulses.push(box(g, 1.0, 0.05, 2.0, glow(P.accent, night ? 1.3 : 0.7), x, 0.3 + n * 0.27 - 0.09, 0, 0.01, { cast: false })); }); } },
+  'dc-token': { at: [20.5, -9.5], grow: (g, { P, night, pulses }) => { box(g, 5.4, 0.3, 3.4, mat(P.wall), 0, 0, 0, 0.1); box(g, 2, 1.7, 1.6, mat(P.white), -1.3, 0.3, 0, 0.12); for (let k = 0; k < 6; k++) box(g, 0.08, 1.2, 0.5, metal(P.slate), -2.05 + k * 0.3, 0.5, 1.02, 0.01, { cast: false }); for (let k = 0; k < 3; k++) cyl(g, 0.1, 0.16, 0.6, mat(P.wall), -1.9 + k * 0.6, 2, 0, 10); box(g, 0.14, 2.3, 0.14, metal(P.slate), 1.5, 0.3, 0, 0.02); box(g, 1.3, 1.0, 0.3, metal(P.dark), 1.5, 1.7, 0, 0.06); pulses.push(box(g, 1.0, 0.2, 0.05, glow(P.warm, night ? 1.3 : 0.7), 1.5, 1.85, 0.17, 0.01, { cast: false })); pulses.push(box(g, 0.6, 0.2, 0.05, glow(P.accent, night ? 1.3 : 0.7), 1.3, 2.25, 0.17, 0.01, { cast: false })); } },
+  'dc-prefill': { at: [16.5, -4], grow: (g, { P, night, pulses }) => { box(g, 5.4, 0.3, 3.4, mat(P.wall), 0, 0, 0, 0.1); box(g, 4.6, 0.7, 0.9, mat(P.white), 0, 0.3, -0.85, 0.08); pulses.push(box(g, 4.2, 0.12, 0.5, glow(P.accent, night ? 1.3 : 0.7), 0, 1.0, -0.85, 0.02, { cast: false })); for (let k = 0; k < 7; k++) { box(g, 0.44, 0.7, 0.9, mat(P.white), -2.08 + k * 0.693, 0.3, 0.85, 0.06); pulses.push(box(g, 0.26, 0.12, 0.5, glow(P.good, night ? 1.3 : 0.7), -2.08 + k * 0.693, 1.0, 0.85, 0.02, { cast: false })); } } }
+};

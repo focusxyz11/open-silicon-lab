@@ -18,7 +18,7 @@ src/v2/glue/            one module per view's glue, each create()d once when its
   board.js              one board and its story
   pages.js              the reading pages: your log, the commons, #/read, a world (#/w/<id>), machines, What if?, a question's trail and world, the field questions
 src/v2/frame.js         the one frame on every view below the island: the rails, the levels, the card's Look · Do · Ask
-src/v2/frame2.js        the frame's three modes (#271): the card worn as a caption (Look), a side panel with a stage (Do) or a phone sheet; reading pages (Read); styles in src/styles/frame2.css
+src/v2/frame2.js        the frame's three modes (#271): the card worn as a caption (Look), a side panel with a stage (Do) or a phone sheet; reading pages (Read); styles in src/styles/frame.css
 src/v2/game.js          the game as data and logic: the loop, the challenges, each place's doors, your state (tested)
 src/v2/map3d.js         the island: the loop road, the places, what grew, the islands across the sea
 src/v2/lenspaint.js     lenses repaint the picture: one paint per core question, an SVG layer in the level's plan pinned onto the picture, and its instrument in the card
@@ -70,7 +70,8 @@ src/core/i18n.js        words: t('name'), plurals, numbers, dates
 src/i18n/en/            every word on screen, one file per area (AREAS in src/core/i18n.js): core.json for the bar, blueprint.json for the first page, the others loaded with the views that show them
 src/i18n/<lang>/        the same, translated area by area (TRANSLATED in src/core/i18n.js): zh, fr and es have core (the bar) and blueprint
 scripts/words.mjs       every word of a language in one set, for node (the tests, the open port)
-src/styles/site.css     the styles, dark and light
+src/styles/             the styles, dark and light, one sheet per view (src/core/styles.js loads each with its view): base.css and
+                        blueprint.css for the first page, frame.css for the frame, one for each view, labs/<lab>.css for each lab
 tests/                  node:test: the engines, the game, the atlas, the ledger, the weave and the words
 scripts/                serve.mjs, smoke.mjs (browser test, in sections), i18n-check.mjs, mcp.mjs (the open port), agent.mjs (an agent of your own)
 content/                the lab written from first principles, one document per open question, and the puzzles
@@ -81,7 +82,7 @@ The tree above names the main files; every engine in `src/engines/` and lab in `
 
 ## What loads when
 
-Each part of the lab loads when it is opened. The rule for the 3D views: **the shell imports no 3D module.** `src/v2/app.js` (and everything it imports statically) never imports `kit3d.js`, three.js or a 3D view; the plain data it needs from them lives in `src/data/views3d.js`, and a view's 3D, three.js with it, loads when that view is first opened (the `ensure…` functions in `app.js`). Each view's glue (`src/v2/glue/`) loads when its view first opens: until then the shell holds stand-ins that load it and then run (`waits` in `app.js`), and hiding a view that never opened does nothing. The labs (`src/v2/labs/`) load with the first challenge played (`labsReady` in `src/v2/play.js`), and the worlds' documents (`content/*.md`) when a page or the island's first card shows them. The idle preload (the island's views, warmed while the island shows; the labs, on the first page) runs only after the page has painted, and never when the connection asks to save data or is slow (2g, 3g); it marks the page with the moment it starts (`data-preload`). `tests/load.test.mjs` walks the static imports from `src/main2.js`, and the smoke test's `explore-desktop` section checks what the first page fetches before its preload.
+Each part of the lab loads when it is opened. The rule for the 3D views: **the shell imports no 3D module.** `src/v2/app.js` (and everything it imports statically) never imports `kit3d.js`, three.js or a 3D view; the plain data it needs from them lives in `src/data/views3d.js`, and a view's 3D, three.js with it, loads when that view is first opened (the `ensure…` functions in `app.js`). Each view's glue (`src/v2/glue/`) loads when its view first opens: until then the shell holds stand-ins that load it and then run (`waits` in `app.js`), and hiding a view that never opened does nothing. The styles do the same: the first page loads `base.css` and `blueprint.css` (under 60 KB together, `tests/styles.test.mjs`), and each view's sheet loads with its glue (`needStyles`, `src/core/styles.js`, which keeps every sheet at its place in `ORDER` so the cascade is the same whatever order they load in). The labs (`src/v2/labs/`, each declared in `src/data/labs/`) load with the first challenge played (`labsReady` in `src/v2/play.js`), their styles with them, and the worlds' documents (`content/*.md`) when a page or the island's first card shows them. The idle preload (the island's views, warmed while the island shows; the labs, on the first page) runs only after the page has painted, and never when the connection asks to save data or is slow (2g, 3g); it marks the page with the moment it starts (`data-preload`). `tests/load.test.mjs` walks the static imports from `src/main2.js`, and the smoke test's `explore-desktop` section checks what the first page fetches before its preload.
 
 ## The zoom
 

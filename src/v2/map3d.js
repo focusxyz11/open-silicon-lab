@@ -15,6 +15,12 @@ import { betPowerNow } from '../app/betscene.js';
 import { furnisher, lump } from './furnish.js';
 import { CORNERS, HOUSE } from '../data/studio.js';
 import { PLACES } from '../data/views3d.js';
+import { LABS } from '../data/labs/index.js';
+
+/* what each lab grows, from its own file (src/v2/growers/<lab>.js): { <growth>: { at, grow } }, fetched beside the island;
+   a lab's growth won before they are in is built the moment they are */
+let LAB_GROWERS = {};
+const labGrowers = Promise.all(LABS.map(l => import('./growers/' + l.name + '.js').then(m => m.default))).then(L => (LAB_GROWERS = Object.assign({}, ...L)));
 
 /* where every place stands, and how close the camera comes: plain data, kept in src/data/views3d.js */
 export { PLACES };
@@ -699,46 +705,16 @@ export function createMap(canvas, host, on = {}) {
     return true;
   }
 
-  /* ---- what grows: one builder per growth (src/v2/game.js GROWTH); each starts hidden and grows in ---- */
+  /* ---- what grows: one builder per growth (src/v2/game.js GROWTH); each starts hidden and grows in. The loop's own are
+     here; a lab's are in its own file (LAB_GROWERS), built with the island's palette and lists ---- */
+  const AROUND = { P, A, night, pulses, spinning, bobbing };
   const GROWERS = {
     'studio-screen': g => { const s = box(g, 5, 2.8, 0.25, glow(P.accent, night ? 1.3 : 0.7), 0, 0.5, 0, 0.1); s.rotation.y = 0.5; box(g, 0.25, 0.6, 0.25, metal(P.slate), 0, 0, 0, 0.05); pulses.push(s); },
     /* your first masks leave the studio: a truck goes back and forth on the road between the mask house and the factory */
     'masks': () => { const tr = truck(A.truck); box(tr, 2.6, 0.12, 1.2, glow(P.accent, 1.2), -0.9, 2.15, 0, 0.03, { cast: false }); scene.add(tr); moving.push({ obj: tr, path: route([[-31, -27], [-29, -20], [-27.5, -13], [-22, -6], [-14, -2], [-8, -6]]), speed: 0.05, ship: true, bounce: true }); },
     'studio-wing': g => { box(g, 8, 4.5, 6, glass(P.glass, { opacity: 0.55, emissive: night ? P.glass : 0, emissiveIntensity: night ? 0.4 : 0 }), 0, 0, 0, 0.3); box(g, 8.2, 0.4, 6.2, mat(P.white), 0, 4.5, 0, 0.1); },
     'fab-trucks': () => { for (let i = 0; i < 4; i++) onLoop(truck(A.box[(i + 3) % 5]), 0.12 + i * 0.25, 0.012, -0.7); },
-    'island-teardown': g => { box(g, 6, 1.1, 3, mat(P.wall), 0, 0, 0, 0.2); for (let k = 0; k < 4; k++) box(g, 1, 0.12, 1.6, mat(k % 2 ? P.chip : P.board), -2.1 + k * 1.4, 1.1, 0, 0.04); box(g, 0.2, 2.6, 0.2, metal(P.metal), 2.6, 1.1, -1, 0.02); pulses.push(cyl(g, 0.5, 0.3, 0.4, glow(P.warm, 1.1), 2.6, 3.4, -1, 12)); },
-    /* chips that touch the real world (#220): a listening post whose roof is a converter's steps, a power house with its coils, and a stand where a sensor listens to a wheel */
-    'island-adc': g => { box(g, 4, 1.5, 2.6, mat(P.white), 0, 0, 0, 0.2); box(g, 4.2, 0.2, 2.8, mat(A.roof, { roughness: 0.7 }), 0, 1.5, 0, 0.06); for (let k = 0; k < 6; k++) pulses.push(box(g, 0.42, 0.3 + k * 0.3, 0.9, glow(P.accent, night ? 1.1 : 0.55), -1.5 + k * 0.6, 1.7, 0, 0.03, { cast: false })); box(g, 0.9, 1, 0.06, mat(P.slate), 0, 0.1, 1.31, 0.02, { cast: false }); },
-    'island-reg': g => { box(g, 4.4, 0.25, 3, mat(P.slate), 0, 0, 0, 0.06); box(g, 1.5, 2, 2.2, mat(P.wall), -1.2, 0.25, 0, 0.12); pulses.push(box(g, 0.9, 0.22, 0.06, glow(P.good, 1), -1.2, 1.6, 1.11, 0.02, { cast: false }));
-      [[0.5, -0.6], [1.5, -0.6], [1, 0.6]].forEach(([x, z]) => { cyl(g, 0.42, 0.42, 1.3, metal(0xb87333, { roughness: 0.35 }), x, 0.45, z, 18); cyl(g, 0.5, 0.5, 0.2, metal(P.dark), x, 0.25, z, 18); cyl(g, 0.16, 0.16, 0.3, metal(P.metal), x, 1.75, z, 10); }); },
-    'island-sensor': g => { box(g, 3.8, 0.25, 2.4, mat(P.slate), 0, 0, 0, 0.06); [-0.45, 0.45].forEach(z => box(g, 0.3, 1.5, 0.22, metal(P.metal), -0.6, 0.25, z, 0.04));
-      const w = cyl(g, 1, 1, 0.5, metal(P.dark, { roughness: 0.5 }), -0.6, 1.55, 0, 28); w.rotation.x = Math.PI / 2; const hub = cyl(g, 0.36, 0.36, 0.56, metal(P.metal), -0.6, 1.55, 0, 16); hub.rotation.x = Math.PI / 2;
-      box(g, 1, 1.5, 1.2, mat(P.white), 1.2, 0.25, 0, 0.1); pulses.push(box(g, 0.26, 0.26, 0.26, glow(P.warm, 1.2), -0.6, 1.42, 0.62, 0.05, { cast: false })); },
-    'studio-evolve': g => { box(g, 7, 0.4, 5, mat(P.wall), 0, 0, 0, 0.1); const d = new THREE.Mesh(new THREE.CylinderGeometry(2.6, 2.6, 7, 20, 1, false, 0, Math.PI), glass(P.glass, { opacity: 0.45 })); d.rotation.z = Math.PI / 2; d.position.y = 0.4; g.add(d); for (let k = 0; k < 6; k++) box(g, 0.5, 0.5 + rnd(k, 31) * 1.2, 0.5, mat(P.good), -2.5 + k, 0.4, (k % 2) - 0.5, 0.1); },
-    'studio-fit': g => { box(g, 9, 3, 0.6, mat(P.white), 0, 0, 0, 0.1); for (let k = 0; k < 6; k++) box(g, 1.1, 1.1, 0.12, mat(k < 2 ? P.accent : k < 4 ? P.good : P.warm), -3.4 + k * 1.36, 1, 0.36, 0.05, { cast: false }); },
-    /* the bench's own challenges: a board of jobs, a table where cells are set out in rows, a rack of glass masks */
-    'studio-piece': g => { [-1.8, 1.8].forEach(x => box(g, 0.18, 0.5, 0.18, metal(P.slate), x, 0, 0, 0.02)); box(g, 4.2, 2.4, 0.24, mat(P.white), 0, 0.5, 0, 0.06); for (let k = 0; k < 8; k++) box(g, 0.62, 0.62, 0.06, mat(k % 3 ? P.warm : P.accent), -1.5 + (k % 4), 1.05 + Math.floor(k / 4) * 0.9, 0.15, 0.02, { cast: false }); pulses.push(box(g, 0.62, 0.62, 0.06, glow(P.warm, night ? 1.2 : 0.6), 1.5, 1.95, 0.16, 0.02, { cast: false })); },
-    'studio-floor': g => { box(g, 5, 0.9, 3.4, mat(P.wall), 0, 0, 0, 0.1); for (let r = 0; r < 3; r++) for (let k = 0; k < 4; k++) box(g, 0.66 + (k + r) % 2 * 0.36, 0.18, 0.62, mat(P.slate), -1.65 + k * 1.1, 0.9, -1.05 + r * 1.05, 0.03, { cast: false }); pulses.push(box(g, 4.2, 0.05, 0.08, glow(P.warm, night ? 1.2 : 0.6), 0, 1.0, -0.52, 0.01, { cast: false })); },
-    'studio-masks': g => { box(g, 3.8, 0.3, 1.7, mat(P.slate), 0, 0, 0, 0.05); for (let k = 0; k < 5; k++) box(g, 0.08, 2.2, 1.4, glass(P.glass, { opacity: 0.5 }), -1.4 + k * 0.7, 0.3, 0, 0.02); pulses.push(box(g, 0.1, 2.2, 1.4, glow(P.accent, night ? 1.2 : 0.6), 1.4, 0.3, 0, 0.02, { cast: false })); },
-    /* your chip's first wafer on show: a wafer standing on a plinth, its dies good and dead, and the packaged chip in front of it */
-    'studio-aichip': g => { box(g, 5.4, 0.5, 2.8, mat(P.wall), 0, 0, 0, 0.1); const w = cyl(g, 2.1, 2.1, 0.14, metal(P.dark), 0, 0, -0.5, 40); w.rotation.x = Math.PI / 2; w.position.y = 3.1;
-      for (let i = -3; i <= 3; i++) for (let j = -3; j <= 3; j++) if (i * i + j * j < 11) box(g, 0.46, 0.46, 0.05, (i * 3 + j * 5 + 22) % 6 ? mat(P.good) : glow(P.warm, 1), i * 0.52, 2.87 + j * 0.52, -0.41, 0.01, { cast: false });
-      [-1.2, 1.2].forEach(x => box(g, 0.3, 1, 0.3, metal(P.slate), x, 0.5, -0.5, 0.03)); box(g, 1.7, 0.2, 1.7, mat(P.white), 0, 0.5, 0.75, 0.04); pulses.push(box(g, 0.8, 0.12, 0.8, glow(P.accent, night ? 1.3 : 0.7), 0, 0.7, 0.75, 0.02, { cast: false })); },
-    'fab-etch': g => { box(g, 11, 0.3, 4.4, mat(P.wall), 0, 0, 0, 0.1); for (let k = 0; k < 4; k++) { const x = -4.05 + k * 2.7; box(g, 2.1, 2.5, 2.6, mat(P.white), x, 0.3, 0, 0.2); cyl(g, 0.8, 0.8, 0.4, metal(P.dark), x, 2.8, 0, 20); pulses.push(box(g, 1.1, 0.3, 0.06, glow(P.accent, night ? 1.4 : 0.7), x, 1.5, 1.32, 0.02, { cast: false })); cyl(g, 0.12, 0.12, 1.2, metal(P.metal), x, 3.1, -0.9, 8); } box(g, 10.4, 0.14, 0.14, metal(P.metal), 0, 4.2, -0.9, 0.02); },
-    'fab-ald': g => { box(g, 9, 0.3, 9, mat(P.wall), 0, 0, 0, 0.1); cyl(g, 1.9, 1.9, 1.5, mat(P.white), 0, 0.3, 0, 6); cyl(g, 1.2, 1.2, 0.2, metal(P.dark), 0, 1.8, 0, 6); for (let k = 0; k < 4; k++) { const a = Math.PI + k * (Math.PI / 3), x = Math.cos(a) * 3.5, z = Math.sin(a) * 3.5; cyl(g, 1.05, 1.05, 1.9, mat(P.white), x, 0.3, z, 20); cyl(g, 0.8, 0.8, 0.2, metal(P.dark), x, 2.2, z, 20); pulses.push(box(g, 0.7, 0.25, 0.06, glow(P.accent, night ? 1.4 : 0.7), x * 1.0, 1.2, z + 1.07, 0.02, { cast: false })); } box(g, 2.2, 1.2, 1.6, mat(P.wall), 0, 0.3, 3.4, 0.15); },
-    'quarry-ingot': g => { box(g, 6, 0.4, 3, mat(P.wall), 0, 0, 0, 0.1); for (let k = 0; k < 4; k++) { const c = cyl(g, 0.5, 0.5, 4.6, metal(0x8e959e, { roughness: 0.22 }), -2.1 + k * 1.4, 0.4, 0, 24); c.rotation.x = Math.PI / 2; c.position.y = 1; } },
-    /* the implanter: an ion source, a long beam line and the chamber where the wafer waits */
-    'fab-implanter': g => { box(g, 9, 0.4, 3, mat(P.wall), 0, 0, 0, 0.1); box(g, 2, 2, 2, mat(P.white), -3.4, 0.4, 0, 0.2); const b = cyl(g, 0.3, 0.3, 4.2, metal(0x8e959e, { roughness: 0.25 }), -0.4, 1.4, 0, 16); b.rotation.z = Math.PI / 2; pulses.push(box(g, 3.4, 0.08, 0.08, glow(P.accent, night ? 1.5 : 0.8), -0.4, 1.4, 0, 0.02, { cast: false })); cyl(g, 1.2, 1.2, 1.8, metal(P.dark), 3, 0.4, 0, 28); },
-    /* the anneal tool: a lamp head over a wafer on a plinth */
-    'fab-anneal': g => { box(g, 3.4, 1.2, 3.4, mat(P.white), 0, 0, 0, 0.2); cyl(g, 1.2, 1.2, 0.12, metal(P.dark), 0, 1.2, 0, 28); box(g, 0.5, 3, 0.5, metal(P.slate), -1.2, 1.2, -1.2, 0.05); box(g, 3, 0.5, 0.5, metal(P.slate), 0, 4.2, -1.2, 0.05); pulses.push(cyl(g, 0.5, 0.2, 0.6, glow(P.warm, 1.4), 0.6, 3.6, -1.2, 16)); },
-    /* the overlay tool: two rings, one layer on the one below, a little out of line */
-    'fab-overlay': g => { box(g, 3.6, 1.4, 3.6, mat(P.white), 0, 0, 0, 0.2); for (let k = 0; k < 2; k++) { const r = new THREE.Mesh(new THREE.TorusGeometry(1.1, 0.1, 8, 40), k ? glow(P.accent, 1, { transparent: true, opacity: 0.7 }) : metal(P.dark)); r.rotation.x = Math.PI / 2; r.position.set(k ? 0.28 : 0, 1.8 + k * 0.5, 0); g.add(r); } },
-    /* a second scanner bay: the machine that prints with light, a white body on its slab, a dark head and a lit window */
-    'fab-scanner': g => { box(g, 7, 0.3, 5, mat(P.wall), 0, 0, 0, 0.1); box(g, 4.6, 2.4, 3.2, mat(P.white), -0.6, 0.3, 0, 0.2); box(g, 3.2, 0.9, 2.4, mat(P.dark), -0.6, 2.7, 0, 0.12); box(g, 1.2, 1.5, 3.2, mat(P.slate), 2.5, 0.3, 0, 0.1); pulses.push(box(g, 1.6, 0.5, 0.06, glow(P.accent, night ? 1.3 : 0.7), -0.6, 1.6, 1.62, 0.02, { cast: false })); },
-    /* the light source of an EUV scanner: a long vacuum vessel with a warm glow where the tin droplets are hit */
-    'fab-euv': g => { box(g, 7, 0.3, 3.4, mat(P.wall), 0, 0, 0, 0.1); const v = cyl(g, 0.95, 0.95, 5.2, metal(0x8e959e, { roughness: 0.22 }), 0, 0.3, 0, 28); v.rotation.z = Math.PI / 2; v.position.y = 1.35; const c = cyl(g, 0.4, 0.4, 0.5, metal(P.dark), -2.8, 0.3, 0, 20); c.rotation.z = Math.PI / 2; c.position.y = 1.35; pulses.push(cyl(g, 0.3, 0.3, 0.2, glow(P.warm, 1.2), 0.4, 2.3, 0, 14)); box(g, 0.5, 1.0, 0.5, mat(P.slate), -1.6, 0.3, 0, 0.05); box(g, 0.5, 1.0, 0.5, mat(P.slate), 1.6, 0.3, 0, 0.05); },
     'dc-batch': g => { box(g, 11, 3.2, 7, mat(P.white), 0, 0, 0, 0.3); box(g, 11.2, 0.3, 7.2, mat(A.roof, { roughness: 0.7 }), 0, 3.2, 0, 0.1); for (let i = 0; i < 5; i++) for (let j = 0; j < 2; j++) spinning.push(cyl(g, 0.7, 0.7, 0.2, metal(P.dark), -4 + i * 2, 3.5, -1.6 + j * 3.2, 16)); },
-    'lab-desk': g => { box(g, 7, 2.6, 4.5, mat(P.white), 0, 0, 0, 0.3); box(g, 7.2, 0.25, 4.7, mat(A.roof, { roughness: 0.7 }), 0, 2.6, 0, 0.1); for (let k = 0; k < 3; k++) pulses.push(box(g, 1.6, 0.9, 0.06, glow(k === 1 ? P.warm : P.accent, night ? 1.2 : 0.6), -2.2 + k * 2.2, 1.1, 2.27, 0.02, { cast: false })); },
     'power-store': g => { for (let k = 0; k < 4; k++) { box(g, 1.8, 2.2, 4.2, mat(P.white), -3.3 + k * 2.2, 0, 0, 0.15); box(g, 0.08, 0.3, 3.2, glow(P.good, night ? 1.2 : 0.5), -3.3 + k * 2.2 + 0.92, 1.5, 0, 0.02, { cast: false }); } },
     'studio-proof': g => { box(g, 6, 3, 6, mat(P.white), 0, 0, 0, 0.3); const d = new THREE.Mesh(new THREE.SphereGeometry(2.6, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2), glass(P.glass, { opacity: 0.6, emissive: night ? P.glass : 0, emissiveIntensity: night ? 0.4 : 0 })); d.position.y = 3; g.add(d); },
     'test-dies': g => { box(g, 10, 2.6, 6, mat(P.white), 0, 0, 0, 0.3); box(g, 10.2, 0.3, 6.2, mat(A.roof, { roughness: 0.7 }), 0, 2.6, 0, 0.1); for (let i = 0; i < 4; i++) { box(g, 1.1, 0.5, 1.1, mat(P.wall), -3.3 + i * 2.2, 2.9, 0, 0.1); cyl(g, 0.12, 0.12, 1.1, metal(P.dark), -3.3 + i * 2.2, 3.4, 0, 8); } },
@@ -754,95 +730,22 @@ export function createMap(canvas, host, on = {}) {
       for (let i = 0; i < 3; i++) pulses.push(box(g, 1.4, 0.5, 0.1, glow(P.good, 1.3), -4 + i * 4, 2.6, 4.6, 0.02, { cast: false }));
       const f = ship(9); scene.add(f); tagMover(f, { kind: 'ship', lane: 'cars' }); pickable(); moving.push({ obj: f, path: laneC.cars, speed: 0.03, ship: true, bounce: true, u: 0.9 }); },
     'dc-hall': g => { box(g, 24, 4, 6, mat(P.wall), 0, 0, 0, 0.3); for (let i = 0; i < 7; i++) { box(g, 2.4, 0.8, 2.4, mat(P.white), -9 + i * 3, 4, 0, 0.12); spinning.push(cyl(g, 0.9, 0.9, 0.15, metal(P.dark), -9 + i * 3, 4.8, 0, 18)); } for (let i = 0; i < 9; i++) box(g, 1.6, 0.5, 0.08, winCool, -9.6 + i * 2.4, 2.4, 3.02, 0.02, { cast: false }); },
-    /* a hot plate under test: a wafer on a glowing plate, and a thermometer beside it with its red top mark */
-    'dc-heat': g => { box(g, 5, 0.3, 4, mat(P.wall), 0, 0, 0, 0.1); box(g, 2.8, 1, 2.8, mat(P.white), -0.6, 0.3, 0, 0.15); pulses.push(cyl(g, 1.15, 1.15, 0.14, glow(P.warm, night ? 1.5 : 0.9), -0.6, 1.3, 0, 28)); cyl(g, 0.95, 0.95, 0.06, metal(P.dark, { roughness: 0.25 }), -0.6, 1.44, 0, 28);
-      box(g, 0.5, 3.2, 0.3, mat(P.white), 1.7, 0.3, 0.9, 0.06); box(g, 0.16, 1.9, 0.06, glow(P.warm, night ? 1.3 : 0.7), 1.7, 0.7, 1.06, 0.02, { cast: false }); box(g, 0.34, 0.08, 0.06, glow(P.bad, 1), 1.7, 2.95, 1.06, 0.01, { cast: false }); },
     'dc-solar': g => { for (let i = 0; i < 4; i++) for (let j = 0; j < 3; j++) { const p = box(g, 2.6, 0.12, 1.6, metal(0x27406a, { roughness: 0.25 }), -4.5 + i * 3, 0.9, -3 + j * 3, 0.03); p.rotation.x = -0.4; } },
-    /* new ways to compute, at the Lab: a grid of memory cells (rows under, columns over, a cell at every crossing), and a quantum machine's cold stage hanging in its frame */
-    'way-cim': g => { box(g, 5, 1, 5, mat(P.white), 0, 0, 0, 0.2); box(g, 5.2, 0.14, 5.2, mat(A.roof, { roughness: 0.7 }), 0, 1, 0, 0.05);
-      for (let i = 0; i < 4; i++) { box(g, 4.5, 0.14, 0.14, metal(P.dark), 0, 1.35, -1.5 + i, 0.03, { cast: false }); box(g, 0.14, 0.14, 4.5, metal(P.metal), -1.5 + i, 1.95, 0, 0.03, { cast: false });
-        for (let j = 0; j < 4; j++) { const c = box(g, 0.34, 0.46, 0.34, glow((i * 3 + j * 5) % 4 === 1 ? P.warm : P.accent, night ? 1.2 : 0.6), -1.5 + i, 1.49, -1.5 + j, 0.06, { cast: false }); if ((i + j) % 2 === 0) pulses.push(c); } } },
-    'way-quantum': g => { box(g, 3.6, 0.3, 3.6, mat(P.wall), 0, 0, 0, 0.08); [[-1.5, -1.5], [1.5, -1.5], [-1.5, 1.5], [1.5, 1.5]].forEach(([x, z]) => box(g, 0.2, 6.4, 0.2, metal(P.dark), x, 0.3, z, 0.04)); [-1.5, 1.5].forEach(v => { box(g, 3.2, 0.2, 0.2, metal(P.dark), 0, 6.5, v, 0.04); box(g, 0.2, 0.2, 3.2, metal(P.dark), v, 6.5, 0, 0.04); }); box(g, 3.2, 0.16, 0.16, metal(P.dark), 0, 6.52, 0, 0.03);
-      cyl(g, 0.07, 0.07, 4.1, metal(P.metal), 0, 2.4, 0, 8); [[1.3, 5.7], [1.05, 4.8], [0.8, 4], [0.58, 3.3]].forEach(([r, y]) => { cyl(g, r, r, 0.12, metal(P.gold, { roughness: 0.25 }), 0, y, 0, 32); for (let k = 0; k < 3; k++) cyl(g, 0.035, 0.035, 0.8, metal(P.gold), Math.cos(k * 2.094) * r * 0.75, y - 0.8, Math.sin(k * 2.094) * r * 0.75, 6, { cast: false }); });
-      pulses.push(box(g, 0.42, 0.14, 0.42, glow(P.accent, night ? 1.4 : 0.8), 0, 2.28, 0, 0.03, { cast: false })); },
-    /* the clock and the power (src/v2/labs/clockpower.js): a meter whose column climbs from green to red, and four lamps that count */
-    'blk-power': g => { box(g, 2.8, 1.3, 2.2, mat(P.white), 0, 0, 0, 0.12); box(g, 3, 0.2, 2.4, mat(A.roof, { roughness: 0.7 }), 0, 1.3, 0, 0.05); box(g, 1, 6, 0.8, metal(P.slate), 0, 1.5, -0.3, 0.08); [P.good, P.good, P.warm, P.warm, P.bad].forEach((c, i) => pulses.push(box(g, 0.62, 0.8, 0.1, glow(c, night ? 1.4 : 0.8), 0, 2.1 + i * 1.02, 0.12, 0.03, { cast: false }))); box(g, 1.3, 0.25, 1.1, metal(P.dark), 0, 7.5, -0.3, 0.05); },
-    'gate-counter': g => { box(g, 5.4, 0.45, 1.5, mat(P.wall), 0, 0, 0, 0.08); for (let i = 0; i < 4; i++) { cyl(g, 0.1, 0.14, 1.3, metal(P.slate), -1.8 + i * 1.2, 0.45, 0, 10); const l = box(g, 0.62, 0.62, 0.62, glow(i % 2 ? P.accent : P.warm, night ? 1.5 : 0.9), -1.8 + i * 1.2, 1.75, 0, 0.14, { cast: false }); if (i !== 2) pulses.push(l); } },
-    /* serving a language model: the weights kept in fewer bits (stacks of 8, 4 and 2 slabs), a meter yard where each answer's energy is read, and a hall that reads at once (one bar) and writes word by word (a row of lamps) */
-    'dc-quant': g => { box(g, 5.4, 0.3, 3.4, mat(P.wall), 0, 0, 0, 0.1); [8, 4, 2].forEach((n, i) => { const x = -1.7 + i * 1.7; for (let k = 0; k < n; k++) box(g, 1.2, 0.17, 2.2, k === n - 1 ? metal(P.slate) : metal(P.dark), x, 0.3 + k * 0.27, 0, 0.03); pulses.push(box(g, 1.0, 0.05, 2.0, glow(P.accent, night ? 1.3 : 0.7), x, 0.3 + n * 0.27 - 0.09, 0, 0.01, { cast: false })); }); },
-    'dc-token': g => { box(g, 5.4, 0.3, 3.4, mat(P.wall), 0, 0, 0, 0.1); box(g, 2, 1.7, 1.6, mat(P.white), -1.3, 0.3, 0, 0.12); for (let k = 0; k < 6; k++) box(g, 0.08, 1.2, 0.5, metal(P.slate), -2.05 + k * 0.3, 0.5, 1.02, 0.01, { cast: false }); for (let k = 0; k < 3; k++) cyl(g, 0.1, 0.16, 0.6, mat(P.wall), -1.9 + k * 0.6, 2, 0, 10); box(g, 0.14, 2.3, 0.14, metal(P.slate), 1.5, 0.3, 0, 0.02); box(g, 1.3, 1.0, 0.3, metal(P.dark), 1.5, 1.7, 0, 0.06); pulses.push(box(g, 1.0, 0.2, 0.05, glow(P.warm, night ? 1.3 : 0.7), 1.5, 1.85, 0.17, 0.01, { cast: false })); pulses.push(box(g, 0.6, 0.2, 0.05, glow(P.accent, night ? 1.3 : 0.7), 1.3, 2.25, 0.17, 0.01, { cast: false })); },
-    /* keep the chef busy: a low kitchen with its pantry stacked on top, warm with the heat it cannot shed, its door lit */
-    'dc-pantry': g => { box(g, 4.6, 0.3, 3.2, mat(P.wall), 0, 0, 0, 0.1); box(g, 3.2, 1.3, 2.4, mat(P.white), -0.4, 0.3, 0, 0.12); box(g, 3.4, 0.16, 2.6, mat(A.roof, { roughness: 0.7 }), -0.4, 1.6, 0, 0.04);
-      box(g, 2.6, 0.9, 1.9, metal(P.slate), -0.4, 1.76, 0, 0.08); for (let k = 0; k < 3; k++) pulses.push(box(g, 2.0, 0.08, 0.05, glow(P.warm, night ? 1.2 : 0.6), -0.4, 1.98 + k * 0.24, 0.97, 0.01, { cast: false }));
-      box(g, 0.9, 1.0, 0.9, mat(P.white), 1.75, 0.3, 0, 0.08); pulses.push(box(g, 0.9, 0.12, 0.12, glow(P.accent, night ? 1.4 : 0.8), 1.3, 0.85, 0, 0.02, { cast: false })); },
-    'dc-prefill': g => { box(g, 5.4, 0.3, 3.4, mat(P.wall), 0, 0, 0, 0.1); box(g, 4.6, 0.7, 0.9, mat(P.white), 0, 0.3, -0.85, 0.08); pulses.push(box(g, 4.2, 0.12, 0.5, glow(P.accent, night ? 1.3 : 0.7), 0, 1.0, -0.85, 0.02, { cast: false })); for (let k = 0; k < 7; k++) { box(g, 0.44, 0.7, 0.9, mat(P.white), -2.08 + k * 0.693, 0.3, 0.85, 0.06); pulses.push(box(g, 0.26, 0.12, 0.5, glow(P.good, night ? 1.3 : 0.7), -2.08 + k * 0.693, 1.0, 0.85, 0.02, { cast: false })); } },
-    /* a reliable whole from flaky parts (src/v2/labs/vote.js): three copies of one block on a slab, one of them lit red, and the voter between them and the way out, lit green */
-    'studio-vote': g => { box(g, 5, 0.3, 3.2, mat(P.wall), 0, 0, 0, 0.1); [-1, 0, 1].forEach((z, i) => { box(g, 1.3, 1.1, 0.8, mat(P.white), -1.4, 0.3, z * 1.0, 0.1); pulses.push(box(g, 0.08, 0.5, 0.5, glow(i === 1 ? P.bad : P.good, night ? 1.3 : 0.7), -0.73, 0.6, z * 1.0, 0.01, { cast: false })); box(g, 1.1, 0.08, 0.08, metal(P.slate), -0.2, 0.7, z * 1.0, 0.01, { cast: false }); });
-      box(g, 1.1, 1.6, 2.6, mat(P.white), 0.9, 0.3, 0, 0.14); pulses.push(box(g, 0.06, 0.7, 1.6, glow(P.good, night ? 1.4 : 0.8), 1.47, 0.75, 0, 0.01, { cast: false })); box(g, 0.9, 0.1, 0.1, metal(P.slate), 1.95, 1.0, 0, 0.01, { cast: false }); },
-    /* a mind that cannot be copied (src/v2/labs/mortal.js): the chip that learned, warm on its plinth, and a row of its copies, each lit a little differently */
-    'way-mortal': g => { box(g, 5.6, 0.3, 3, mat(P.wall), 0, 0, 0, 0.1); box(g, 1.4, 1.2, 1.4, mat(P.white), -1.9, 0.3, 0, 0.12); pulses.push(box(g, 1, 0.12, 1, glow(P.warm, night ? 1.4 : 0.8), -1.9, 1.5, 0, 0.03, { cast: false }));
-      for (let i = 0; i < 4; i++) for (let j = 0; j < 2; j++) { box(g, 0.6, 0.5, 0.6, mat(P.white), -0.3 + i * 0.85, 0.3, -0.5 + j * 1.0, 0.06); const c = box(g, 0.42, 0.06, 0.42, glow([P.good, P.warm, P.good, P.bad, P.good, P.good, P.warm, P.good][i * 2 + j], night ? 1.2 : 0.6), -0.3 + i * 0.85, 0.83, -0.5 + j * 1.0, 0.01, { cast: false }); if ((i + j) % 2) pulses.push(c); } },
-    /* Listen and tell (src/v2/labs/listen.js, #316): a listening post, a small block on a plinth, soft rings of light
-       spreading out from it as a sound does */
-    'dc-ear': g => { box(g, 3.4, 0.3, 3.4, mat(P.wall), 0, 0, 0, 0.1); box(g, 1.3, 0.9, 1.3, mat(P.white), 0, 0.3, 0, 0.12); box(g, 1, 0.18, 1, metal(P.dark), 0, 1.2, 0, 0.04);
-      pulses.push(box(g, 0.6, 0.06, 0.6, glow(P.accent, night ? 1.3 : 0.7), 0, 1.38, 0, 0.01, { cast: false }));
-      for (let k = 0; k < 3; k++) { const r = new THREE.Mesh(new THREE.TorusGeometry(0.4, 0.04, 6, 40), glow(P.accent, 1, { transparent: true, opacity: 0.6, depthWrite: false })); r.rotation.x = Math.PI / 2; r.position.set(0, 1.42, 0); g.add(r); bobbing.push({ obj: r, ring: k }); } },
-    /* read the die (src/v2/labs/dies.js): a microscope over a die on its stage, the die's districts lit in the colours of a photo */
-    'test-xray': g => { box(g, 3.6, 0.9, 2.6, mat(P.white), 0, 0, 0, 0.12); box(g, 1.5, 0.1, 1.5, mat(P.dark), -0.5, 0.9, 0, 0.02); [[P.accent, -0.85, -0.35], [P.warm, -0.15, -0.35], [P.good, -0.85, 0.35], [P.accent, -0.15, 0.35]].forEach(([c, x, z]) => pulses.push(box(g, 0.6, 0.05, 0.6, glow(c, night ? 1.2 : 0.6), x, 1.0, z, 0.01, { cast: false })));
-      box(g, 0.35, 2.6, 0.35, metal(P.slate), 1.2, 0.9, 0, 0.04); box(g, 1.6, 0.35, 0.4, metal(P.slate), 0.5, 3.1, 0, 0.04); cyl(g, 0.22, 0.3, 0.9, metal(P.dark), -0.5, 2.25, 0, 16); },
-    /* catch the silent errors (src/v2/labs/errors.js): a rack of returned boards on the quay, most lit green, one lit red where a wrong answer was caught */
-    'port-errors': g => { box(g, 4.4, 0.3, 2.2, mat(P.wall), 0, 0, 0, 0.1); box(g, 1.6, 2.6, 1.4, mat(P.white), -1.1, 0.3, 0, 0.1); for (let k = 0; k < 5; k++) pulses.push(box(g, 1.1, 0.12, 0.06, glow(k === 2 ? P.bad : P.good, night ? 1.2 : 0.6), -1.1, 0.7 + k * 0.42, 0.72, 0.01, { cast: false }));
-      box(g, 1.6, 1.4, 1.4, mat(P.white), 1.0, 0.3, 0, 0.1); pulses.push(box(g, 0.9, 0.5, 0.06, glow(P.accent, night ? 1.2 : 0.6), 1.0, 1.0, 0.72, 0.01, { cast: false })); },
-    /* run your core (src/v2/labs/rv.js): a small board on a stand at the Lab, its core lit, a row of register lamps counting */
-    'lab-cpu': g => { box(g, 3.4, 0.3, 2.2, mat(P.wall), 0, 0, 0, 0.1); box(g, 2.6, 1.6, 0.2, mat(P.dark), 0, 0.3, -0.4, 0.04); box(g, 0.9, 0.9, 0.08, metal(P.slate), -0.5, 0.65, -0.26, 0.02, { cast: false }); pulses.push(box(g, 0.5, 0.5, 0.04, glow(P.accent, night ? 1.3 : 0.7), -0.5, 0.85, -0.2, 0.01, { cast: false }));
-      for (let k = 0; k < 4; k++) { const l = box(g, 0.18, 0.18, 0.04, glow(k % 2 ? P.warm : P.good, night ? 1.2 : 0.6), 0.45 + k * 0.24, 1.3, -0.28, 0.01, { cast: false }); if (k !== 1) pulses.push(l); } },
-    /* labs-b: let the noise compute (src/v2/labs/pbits.js): a slab with six p-bits on posts, flickering on their own, and beside it a square of
-       every pair, dark but for the two answers lit steadily; a thousand that pass (src/v2/labs/thousand.js): a wide table of green tiles, one raised */
-    'way-pbits': g => { box(g, 4.6, 0.3, 2, mat(P.wall), 0, 0, 0, 0.1); for (let i = 0; i < 6; i++) { const x = -1.85 + i * 0.74; cyl(g, 0.12, 0.12, 0.9, metal(P.metal), x, 0.75, 0, 8); const c = box(g, 0.42, 0.42, 0.42, glow(i < 3 ? P.accent : P.warm, night ? 1.3 : 0.7), x, 1.2, 0, 0.08, { cast: false }); pulses.push(c); } },
-    'way-factor': g => { box(g, 3.8, 0.4, 3.8, mat(P.white), 0, 0, 0, 0.12); for (let i = 0; i < 8; i++) for (let j = 0; j < 8; j++) { const hit = (i === 3 && j === 5) || (i === 5 && j === 3);
-      const c = box(g, 0.34, hit ? 0.3 : 0.1, 0.34, hit ? glow(P.good, night ? 1.5 : 0.8) : (i * 7 + j * 3) % 9 === 0 ? glow(P.accent, night ? 0.9 : 0.45) : mat(P.slate), -1.47 + i * 0.42, 0.4, -1.47 + j * 0.42, 0.03, { cast: false }); if (!hit && (i * 7 + j * 3) % 9 === 0) pulses.push(c); } },
-    'studio-thousand': g => { box(g, 4.4, 0.9, 2.6, mat(P.white), 0, 0, 0, 0.12); box(g, 4.6, 0.12, 2.8, mat(A.roof, { roughness: 0.7 }), 0, 0.9, 0, 0.04);
-      for (let i = 0; i < 8; i++) for (let j = 0; j < 4; j++) { const up = i === 5 && j === 1; const c = box(g, 0.4, up ? 0.5 : 0.08, 0.4, glow(up ? P.accent : P.good, night ? (up ? 1.5 : 0.8) : (up ? 0.8 : 0.4)), -1.85 + i * 0.53, 1.02, -0.81 + j * 0.54, 0.03, { cast: false }); if (up) pulses.push(c); } },
-    /* labs-a: design it or search for it (src/v2/labs/search.js): a rack of search boards whose lights climb, beside one small
-       hand-made board lit warm; the program nobody can judge (src/v2/labs/halt.js): a core on a plinth, a ring of light round it */
-    'lab-search': g => { box(g, 4.6, 0.3, 2.6, mat(P.wall), 0, 0, 0, 0.1); box(g, 2.2, 2.8, 1.2, mat(P.white), -0.8, 0.3, 0, 0.1);
-      for (let k = 0; k < 5; k++) { const l = box(g, 0.5 + k * 0.32, 0.12, 0.06, glow(P.accent, night ? 1.2 : 0.6), -1.6 + (0.5 + k * 0.32) / 2, 0.7 + k * 0.44, 0.62, 0.01, { cast: false }); if (k % 2 === 0) pulses.push(l); }
-      box(g, 1.1, 0.9, 1.1, mat(P.white), 1.4, 0.3, 0.2, 0.1); pulses.push(box(g, 0.6, 0.12, 0.06, glow(P.warm, night ? 1.2 : 0.6), 1.4, 0.95, 0.77, 0.01, { cast: false })); },
-    'lab-halt': g => { cyl(g, 1.5, 1.7, 0.5, mat(P.wall), 0, 0, 0, 28); box(g, 1.1, 0.9, 1.1, mat(P.dark), 0, 0.5, 0, 0.08); pulses.push(box(g, 0.6, 0.06, 0.6, glow(P.accent, night ? 1.3 : 0.7), 0, 1.4, 0, 0.02, { cast: false }));
-      const r = new THREE.Mesh(new THREE.TorusGeometry(1.25, 0.06, 8, 48), glow(P.warm, night ? 1.2 : 0.7, { transparent: true, opacity: 0.85 })); r.rotation.x = Math.PI / 2; r.position.set(0, 1.0, 0); g.add(r); },
-    /* change your core (src/v2/labs/corearch.js): a core's floor plan as a model on a plinth, its registers a low block,
-       two arithmetic units and a small multiplier standing up from it, each lit */
-    'lab-arch': g => { box(g, 3.2, 0.3, 3.2, mat(P.wall), 0, 0, 0, 0.1); box(g, 2.6, 0.12, 2.6, mat(P.dark), 0, 0.3, 0, 0.03);
-      box(g, 1.1, 0.25, 2.3, metal(P.slate), -0.6, 0.42, 0, 0.02); pulses.push(box(g, 0.9, 0.36, 0.95, glow(P.accent, night ? 1.2 : 0.6), 0.65, 0.42, -0.55, 0.02, { cast: false }));
-      pulses.push(box(g, 0.9, 0.36, 0.95, glow(P.accent, night ? 1.2 : 0.6), 0.65, 0.42, 0.55, 0.02, { cast: false })); box(g, 0.5, 0.6, 0.5, mat(P.white), 0.65, 0.78, 0, 0.03); },
     'clock-tower': g => { box(g, 2.4, 9, 2.4, mat(P.white), 0, 0, 0, 0.2); const face = cyl(g, 1, 1, 0.2, mat(P.wall), 0, 7, 1.25, 24); face.rotation.x = Math.PI / 2; const hand = box(g, 0.12, 0.9, 0.08, mat(P.dark), 0, 6.95, 1.42, 0.02, { cast: false }); hand.geometry = hand.geometry.clone().translate(0, 0.4, 0); spinning.push({ hand }); }
   };
+  const growerOf = id => GROWERS[id] || (LAB_GROWERS[id] && (g => LAB_GROWERS[id].grow(g, AROUND)));
   /* where each growth stands, relative to its place: [x, z, y] */
-  const GROW_SPOT = { 'studio-screen': [-4, 9], masks: [0, 0], 'studio-wing': [-4, -12], 'fab-trucks': [0, 0], 'fab-line': [2, -14], 'fab-wafers': [-13, 9], 'dc-cores': [-14, 6], 'test-dies': [-11, 9], 'studio-proof': [10, -10], 'power-store': [12, -3], 'lab-desk': [-9, 9], 'dc-batch': [-14, -8], 'quarry-ingot': [10, 6], 'fab-scanner': [18.5, -5], 'fab-euv': [18.5, 0.5], 'fab-overlay': [16.5, 5.5], 'fab-anneal': [20.8, 5.5], 'fab-ald': [-4, -24], 'fab-etch': [8.5, -21], 'fab-implanter': [8, -26.5], 'island-teardown': [14, -4], 'studio-fit': [10, 10], 'studio-piece': [16, 2], 'studio-floor': [-12, -6], 'studio-masks': [3, 14], 'studio-evolve': [-14, 6], 'test-probe': [3, 0, 4], 'test-hall': [11, 0],
-    'island-phones': [0, 0], 'island-cars': [0, 0], 'dc-hall': [0, 10], 'dc-solar': [21, 4], 'clock-tower': [-8, -2],
-    'way-cim': [13, 3], 'way-quantum': [13, -5], 'dc-heat': [20.5, -15], 'studio-aichip': [-21, 3], 'blk-power': [-20.5, 8.5], 'gate-counter': [5, 6],
-    'island-adc': [11.5, 18.5], 'island-reg': [5.5, 24], 'island-sensor': [-11.5, 3],
-    /* serving a language model: together, east of the halls and north of the solar field */
-    'dc-quant': [22.5, -4], 'dc-token': [20.5, -9.5], 'dc-prefill': [16.5, -4],
-    /* keep the chef busy: east of the hall that keeps numbers small */
-    'dc-pantry': [28.5, -2.5],
-    /* a reliable whole, east of the studio; a mind that cannot be copied, at the Lab beside the other ways to compute */
-    'studio-vote': [17, -6], 'way-mortal': [13, -12],
-    /* read the die: in front of the test house, west of its hall */
-    'test-xray': [-6, -9],
-    /* catch the silent errors: on the quay east of the port's hall, before the cranes */
-    'port-errors': [6, 9],
-    /* run your core: at the Lab, south of the new ways to compute */
-    'lab-cpu': [13, 10],
-    /* labs-b: the p-bits at the Lab, west of its tower; a thousand that pass, in the studio's yard */
-    'way-pbits': [-12.5, -3.5], 'way-factor': [-11, -9.5], 'studio-thousand': [-12, 12.6],
-    /* labs-a: design it or search for it, at the Lab south of the core (the studio's ground is full); the program nobody can judge, at the Lab beside the core */
-    'lab-search': [15, 16], 'lab-halt': [18, 10],
-    /* Listen and tell: west of the data centre, between the two halls of cores */
-    'dc-ear': [-21, -1],
-    /* change your core: beside it, further east */
-    'lab-arch': [21, 14] };
-  GROWTH.forEach(gw => { const [x, z, y] = GROW_SPOT[gw.id] || [0, 0], g = group(G[gw.at], x, y || 0, z); g.visible = false; g.scale.setScalar(0.001); growing.push({ id: gw.id, g, built: false, t0: 0 }); });
+  const GROW_SPOT = { 'studio-screen': [-4, 9], masks: [0, 0], 'studio-wing': [-4, -12], 'fab-trucks': [0, 0], 'fab-line': [2, -14], 'fab-wafers': [-13, 9], 'dc-cores': [-14, 6], 'test-dies': [-11, 9], 'studio-proof': [10, -10], 'power-store': [12, -3], 'dc-batch': [-14, -8], 'test-probe': [3, 0, 4], 'test-hall': [11, 0],
+    'island-phones': [0, 0], 'island-cars': [0, 0], 'dc-hall': [0, 10], 'dc-solar': [21, 4], 'clock-tower': [-8, -2]
+  };
+  const spotOf = id => GROW_SPOT[id] || (LAB_GROWERS[id] && LAB_GROWERS[id].at) || [0, 0];
+  GROWTH.forEach(gw => { const [x, z, y] = spotOf(gw.id), g = group(G[gw.at], x, y || 0, z); g.visible = false; g.scale.setScalar(0.001); growing.push({ id: gw.id, g, built: false, t0: 0 }); });
+  /* the labs' growers arrive: each growth stands at its place, and what was won before is built at once */
+  let lastGrown = null;
+  labGrowers.then(() => { let grew = false;
+    growing.forEach(gr => { const x = LAB_GROWERS[gr.id]; if (!x) return; const [px, pz, py] = x.at; gr.g.position.set(px, py || 0, pz);
+      if (lastGrown && lastGrown.has(gr.id) && !gr.built) { x.grow(gr.g, AROUND); gr.built = true; gr.g.visible = true; gr.t0 = -1; gr.g.scale.setScalar(1); grew = true; } });
+    if (grew) pickable(); });
 
   /* No question floats over a place any more (docs/framework/rebuild.md, section 3): a question shown as a dot on a
      map was rejected once already. The questions are on the first page and on every page of #/read. */
@@ -1032,7 +935,8 @@ export function createMap(canvas, host, on = {}) {
       const pace = Math.max(0.35, Math.min(1.6, 68 / c.days)); moving.forEach(m => { if (m.car) { if (m.base == null) m.base = m.speed; m.speed = m.base * pace; } }); }
     /* growth */
     let grew = false;
-    growing.forEach(gr => { if (st.grown.has(gr.id) && !gr.built) { GROWERS[gr.id](gr.g); gr.built = true; gr.g.visible = true; grew = true; gr.t0 = animate && !reduced() ? performance.now() : -1; if (gr.t0 < 0) gr.g.scale.setScalar(1); if (animate) sparkle(gr.g); } });
+    lastGrown = st.grown;
+    growing.forEach(gr => { const make = growerOf(gr.id); if (st.grown.has(gr.id) && !gr.built && make) { make(gr.g); gr.built = true; gr.g.visible = true; grew = true; gr.t0 = animate && !reduced() ? performance.now() : -1; if (gr.t0 < 0) gr.g.scale.setScalar(1); if (animate) sparkle(gr.g); } });
     /* names, with a flag for what is left to do */
     PLACES.forEach(p => { const s = st.places[p.id];
       const flag = s && s.total ? (s.done === s.total ? '<span class="flag done">✓</span>' : '<span class="flag">' + (s.total - s.done) + '</span>') : p.id === 'village' && st.jobList.length ? '<span class="flag job">' + st.jobList.length + '</span>' : '';

@@ -214,7 +214,7 @@ export function labels(host) {
     list
   };
 }
-/* names that never cover each other (#275), now that the names on the picture are larger (src/styles/frame2.css). Each name in turn, the lit one
+/* names that never cover each other (#275), now that the names on the picture are larger (src/styles/frame.css). Each name in turn, the lit one
    first and then in the order the view gave them, takes the first place where it covers no name already placed, nor
    the frame's own things on the picture (keepOut), and stays on the picture: over its point, else slid sideways (its
    stem still under it), else lifted a row or two (its stem longer), else under its point; the place it had last time

@@ -1,0 +1,48 @@
+/* The lab corearch's own styles (src/data/labs/corearch.js, css: true), loaded when one of its challenges is played (src/core/styles.js). */
+.cafig .dpwho { color: var(--ink); }
+/* Change your core (src/v2/labs/corearch.js): the core as a floor plan, its run cycle by cycle, the dials and the bars */
+.cafig { margin: 8px 0; }
+ .casvg { display: block; width: 100%; height: auto; }
+.casvg .cak { font: 600 10px var(--sans); fill: var(--muted); }
+ .casvg .cak.plain { fill: var(--ink); }
+.casvg .cabudget { fill: color-mix(in srgb, var(--good) 7%, transparent); stroke: none; }
+ .casvg .caedge { fill: none; stroke: var(--good); stroke-width: 1.6; stroke-dasharray: 2 4; }
+ .casvg .cak.allowed { fill: var(--good); }
+.casvg .caplain { fill: none; stroke: var(--ink); stroke-width: 1.4; stroke-dasharray: 6 4; opacity: .55; }
+.casvg .cadie { fill: var(--panel-solid); stroke: var(--line); }
+.casvg .capart { stroke: var(--panel-solid); stroke-width: 1.5; transition: fill .25s; }
+.casvg .capart.regs { fill: color-mix(in srgb, var(--ink) 16%, var(--panel-solid)); }
+ .casvg .capart.regs.on { fill: color-mix(in srgb, var(--ink) 24%, var(--panel-solid)); }
+.casvg .capart.alu { fill: color-mix(in srgb, var(--accent) 22%, var(--panel-solid)); }
+ .casvg .capart.alu.on { fill: color-mix(in srgb, var(--accent) 58%, var(--panel-solid)); }
+.casvg .capart.mul { fill: color-mix(in srgb, var(--warm) 24%, var(--panel-solid)); }
+ .casvg .capart.mul.on { fill: color-mix(in srgb, var(--warm) 62%, var(--panel-solid)); }
+.casvg .capart.rest { fill: color-mix(in srgb, var(--ink) 8%, var(--panel-solid)); }
+.casvg .caline { stroke: color-mix(in srgb, var(--ink) 16%, transparent); stroke-width: .6; }
+.casvg .canm { font: 600 10.5px var(--sans); fill: var(--ink); paint-order: stroke; stroke: color-mix(in srgb, var(--panel-solid) 70%, transparent); stroke-width: 3px; }
+.casvg .caslot { fill: color-mix(in srgb, var(--accent) 12%, var(--panel-solid)); stroke: color-mix(in srgb, var(--accent) 40%, var(--line)); }
+.casvg .caslot.mem { fill: color-mix(in srgb, var(--ink) 8%, var(--panel-solid)); stroke: var(--line); }
+.casvg .caslot.mul { fill: color-mix(in srgb, var(--warm) 22%, var(--panel-solid)); stroke: var(--warm); }
+.casvg .caslot.on { stroke: var(--ink); stroke-width: 1.6; }
+.casvg .caop { font: 700 10.5px var(--mono); fill: var(--ink); }
+ .casvg .caln { font: 9.5px var(--sans); fill: var(--muted); }
+.casvg .cacyc { font: 10px var(--mono); fill: var(--muted); }
+ .casvg .cacyc.on { fill: var(--ink); font-weight: 700; }
+.casvg .cafut { opacity: .42; }
+.cadials { display: grid; gap: 10px; margin: 10px 0; }
+.caseg { display: grid; gap: 4px; }
+ .caseg .chips { margin: 0; }
+.camsg { margin: 6px 0 12px; }
+.cabars { margin: 8px 0; }
+ .cabars svg { display: block; width: 100%; height: auto; }
+.cabars .cak { font: 600 10.5px var(--sans); fill: var(--ink); }
+ .cabars .cav { font: 10px var(--mono); fill: var(--muted); }
+.cabars .cab.plain { fill: color-mix(in srgb, var(--ink) 26%, transparent); }
+ .cabars .cab.you { fill: var(--accent); }
+ .cabars .cab.you.good { fill: var(--good); }
+ .cabars .cab.you.bad { fill: var(--bad); }
+.cabars figcaption i.k { display: inline-block; width: 12px; height: 8px; margin: 0 5px 0 8px; border-radius: 2px; vertical-align: middle; }
+ .cabars i.k.plain { background: color-mix(in srgb, var(--ink) 26%, transparent); }
+ .cabars i.k.you { background: var(--accent); }
+@media (max-width: 720px) { html.frame2 .f2stage .cafig[data-f2] .dphead { display: none; }
+}

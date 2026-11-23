@@ -1,0 +1,162 @@
+/* The lab bits's own styles (src/data/labs/bits.js, css: true), loaded when one of its challenges is played (src/core/styles.js). */
+/* moving bits (src/v2/labs/bits.js): one bit's trip, and Keep the chef busy */
+.mbtabs { grid-template-columns: 1fr 1fr; margin: 10px 0 8px; }
+.mbtabs button { text-align: center; font-weight: 600; font-size: 13px; color: var(--ink); }
+.mbtabs button[aria-selected=true] { background: var(--ink); color: var(--bg); }
+.mbintro .kicker { margin-right: 4px; }
+.mbgoal.mbsix { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px 12px; }
+.mbgoal.mbsix > .kicker { grid-column: 1 / -1; }
+.mbgoal.mbsix .gauge { grid-template-columns: minmax(0, 1fr); }
+.mbgoal.mbsix .gv { text-align: left; font-size: 12px; }
+.mbgoal .gauge.bad .gv { color: var(--bad); }
+ .mbgoal .gauge.bad .gbar span { background: var(--bad); }
+.mbgoal .gauge.mbm .gbar span { background: var(--accent); }
+.mbgoal .gauge.mbsm { font-size: 12px; }
+.mbfig { margin: 8px 0; }
+ .mbfig svg { display: block; width: 100%; height: auto; overflow: visible; }
+.mbfig .ax { font: 9px var(--sans); fill: var(--muted); }
+ .mbfig .ax.in { fill: var(--accent-ink, var(--bg)); font-weight: 700; }
+ .mbfig .ax.onT { fill: var(--ink); font-weight: 700; }
+.mblook { margin: 2px 0 4px; font-weight: 600; font-size: 13px; }
+.mbfig .ax0, .mbfig .tk { stroke: var(--muted); stroke-width: 1; }
+.mbfig .wall { stroke: var(--warm); stroke-width: 1.2; stroke-dasharray: 4 3; }
+ .mbfig .wallt { fill: var(--warm); font-weight: 600; }
+.mbfig .die { fill: color-mix(in srgb, var(--ink) 8%, var(--panel-solid)); stroke: var(--ink); stroke-width: 1.2; }
+.mbfig .alu { fill: var(--accent); }
+.mbfig .mem rect { fill: var(--panel-solid); stroke: var(--muted); stroke-width: 1; opacity: .55; cursor: pointer; }
+.mbfig .mem line { stroke: var(--muted); stroke-width: .8; opacity: .55; }
+.mbfig .mem.on rect { fill: color-mix(in srgb, var(--warm) 30%, var(--panel-solid)); stroke: var(--warm); stroke-width: 1.6; opacity: 1; }
+ .mbfig .mem.on line { stroke: var(--warm); opacity: 1; }
+.mbfig .path { stroke: var(--ink); stroke-width: 2; stroke-linecap: round; }
+.mbfig .path.interposer { stroke-width: 3; }
+ .mbfig .path.bond { stroke-width: 4; stroke: var(--warm); }
+.mbfig .path.board { stroke: color-mix(in srgb, var(--ink) 70%, var(--warm)); }
+.mbfig .path.light, .mbfig .door.light, .mbfig .door.call, .mbfig .door.myelin { stroke: var(--accent); stroke-width: 2.4; stroke-dasharray: 6 3; filter: drop-shadow(0 0 3px var(--accent)); }
+.mbfig .bit { fill: var(--warm); stroke: var(--panel-solid); stroke-width: 1.2; }
+.mbfig .core { fill: color-mix(in srgb, var(--ink) 14%, transparent); transition: fill .25s; }
+ .mbfig .core.on { fill: var(--good); }
+.mbfig .onchip { fill: color-mix(in srgb, var(--warm) 32%, transparent); stroke: var(--warm); stroke-width: 1; }
+.mbfig .shelf { fill: color-mix(in srgb, var(--accent) 35%, transparent); stroke: var(--accent); stroke-width: 1; }
+.mbfig .pantry { fill: color-mix(in srgb, var(--warm) 18%, var(--panel-solid)); stroke: var(--warm); stroke-width: 1.4; }
+.mbfig .pantry.stacked { fill: color-mix(in srgb, var(--warm) 34%, var(--panel-solid)); }
+.mbfig .jar { stroke: color-mix(in srgb, var(--warm) 60%, transparent); stroke-width: 2; stroke-linecap: round; }
+.mbfig .faint { opacity: .3; }
+.mbfig .heat { fill: none; stroke: var(--bad); stroke-width: 1.2; opacity: .7; stroke-linecap: round; }
+.mbfig .cook { fill: var(--accent); opacity: .85; }
+.mbfig .door { stroke: color-mix(in srgb, var(--ink) 55%, transparent); stroke-width: 1.2; }
+.mbfig .door.interposer, .mbfig .door.bond { stroke: var(--ink); }
+ .mbfig .door.nerve, .mbfig .door.talk { stroke: var(--warm); stroke-dasharray: 2 3; }
+.mbfig .rb.busy { fill: var(--good); }
+ .mbfig .rb.wait { fill: color-mix(in srgb, var(--bad) 70%, transparent); }
+.mbfig .rb.off { opacity: .22; }
+ .mbfig .rb.wait.now { stroke: var(--ink); stroke-width: 1; }
+.mbfig .goal { stroke: var(--ink); stroke-width: 1.2; stroke-dasharray: 5 3; }
+ .mbfig .goalt { fill: var(--ink); font-weight: 600; }
+.mbq { margin: 0 0 6px; font-weight: 600; font-size: 14px; line-height: 1.35; }
+ .mbq .kicker { display: block; margin-bottom: 2px; }
+.mbats { margin: 4px 0 8px; }
+ .mbats .chipb, .mblevels .chipb { font-size: 12px; padding: 5px 10px; }
+.mblevels { display: flex; flex-wrap: wrap; gap: 5px; margin: 8px 0 4px; }
+.mblevels .mbn { display: inline-grid; place-items: center; width: 16px; height: 16px; margin-right: 5px; border-radius: 50%; background: color-mix(in srgb, var(--ink) 10%, transparent); font-size: 10px; }
+.mblevels .chipb[data-cleared] { border-color: var(--good); }
+.mbsay { margin: 6px 0; font-weight: 600; }
+ .mbsay.good { color: var(--good); }
+ .mbsay.bad { color: var(--bad); }
+.mbacts { align-items: center; }
+.mblevers { display: grid; gap: 10px; margin: 10px 0 4px; }
+.mblever .mblt { margin: 0 0 4px; font-size: 13px; line-height: 1.3; }
+ .mblever .mblt .small { display: block; }
+.mbseg { display: flex; flex-wrap: wrap; gap: 3px; }
+.mbseg button { padding: 4px 11px; border-radius: 999px; border: 1px solid var(--line); background: none; color: var(--ink); font: 600 12px var(--sans); cursor: pointer; }
+.mbseg button[aria-pressed=true] { background: var(--warm); border-color: var(--warm); color: #1a1004; }
+.mball { display: none; }
+.mbwalls { list-style: none; margin: 10px 0; padding: 0; display: grid; gap: 4px; font-size: 12px; line-height: 1.4; }
+.mbwalls li { padding: 6px 9px; border-radius: 10px; border: 1px solid var(--line); }
+ .mbwalls b { color: var(--warm); }
+.mbsrc { font-size: 11px; }
+.mbprog { margin: 8px 0; }
+.mbcurve { margin: 12px 0; }
+ .mbcurve svg { display: block; width: 100%; height: auto; }
+.mbcurve .ax { font: 9px var(--sans); fill: var(--muted); }
+ .mbcurve .grid { stroke: var(--line); stroke-width: 1; }
+.mbcurve .goal { stroke: var(--good); stroke-width: 1; stroke-dasharray: 4 3; }
+.mbcurve .best { fill: none; stroke: var(--warm); stroke-width: 2; stroke-linejoin: round; }
+.mbcurve .dot { fill: var(--accent); stroke: var(--panel-solid); stroke-width: 1.2; }
+ .mbcurve .dot.c-person { fill: var(--ink); }
+ .mbcurve .dot.c-ai { fill: var(--warm); }
+ .mbcurve .dot.c-example { fill: var(--muted); }
+.mbcurve .dot.mine { stroke: var(--accent); stroke-width: 2; }
+ .mbcurve .dot.you { fill: none; stroke: var(--accent); stroke-width: 2; stroke-dasharray: 3 2; }
+/* the phone: one picture, the levers the level needs most (the rest behind More levers), no curve */
+@media (max-width: 720px) {
+  .mbgoal.mbsix { grid-template-columns: repeat(2, minmax(0, 1fr)); position: static; box-shadow: none; }
+  .mblevers:not(.all) .mbx { display: none; }
+  .mball { display: inline-block; margin-bottom: 6px; }
+  .mbcurve, .mbwalls li:nth-child(n+2) { display: none; }
+  .mbfig .ax { font-size: 10px; }
+}
+
+/* in the new frame (Do mode): the kitchen or the trip fills the stage and keeps its words at a steady size */
+html.frame2 .f2stage .mbfig[data-f2] { display: flex; flex-direction: column; gap: 8px; }
+html.frame2 .f2stage .mbfig[data-f2] svg { flex: 1 1 0; min-height: 0; width: 100%; height: 100%; }
+html.frame2 .f2stage .mbfig svg text { font-size: calc(15px * var(--f2-k, .6)); }
+html.frame2 .f2stage .mbfig svg :is(line, path, rect) { vector-effect: non-scaling-stroke; }
+html.frame2 .f2stage .mbfig .mbq { font: var(--f2-label, 600 18px/1.3 var(--sans)); }
+html.frame2 .f2stage .mbfig figcaption { font: var(--f2-small); }
+ html.frame2 .f2stage .mbfig .mblook { font: var(--f2-label, 600 17px/1.3 var(--sans)); }
+html.frame2 .f2stage [data-f2="goal"].mbsix:has(> .gauge ~ .gauge ~ .gauge ~ .gauge) .gauge { flex-basis: 96px; }
+html.frame2 .f2stage [data-f2="goal"].mbsix .gv { font-size: 17px; }
+@media (prefers-reduced-motion: reduce) { .mbfig .core { transition: none; }
+}
+
+.mbgoal:not(.mbsix) { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px 12px; }
+.mbgoal:not(.mbsix) > .kicker, .mbgoal:not(.mbsix) > .gauge:not(.mbsm) { grid-column: 1 / -1; }
+.mbgoal .gauge.mbsm { grid-template-columns: minmax(0, 1fr); }
+ .mbgoal .gauge.mbsm .gv { text-align: left; }
+@media (max-width: 720px) {
+  .mbgoal:not(.mbsix) { grid-template-columns: repeat(2, minmax(0, 1fr)); } .mbgoal:not(.mbsix) > .gauge:not(.mbsm) { grid-column: auto; }
+  .mbgoal:not(.mbsix) > .kicker, .mbgoal .gauge.mbsm:not(.bad) { display: none; } .mbgoal .gauge.mbsm.bad { grid-column: 1 / -1; }
+  .mbgoal:not(.mbsix) .gauge .gv { text-align: left; } .mbgoal:not(.mbsix) .gauge { grid-template-columns: minmax(0, 1fr); }
+}
+
+.lsn .lsn-heat rect { fill: var(--warm); opacity: calc(var(--lsn-heat, 0) * .4); transition: opacity .6s; }
+.lsn .lsn-rails rect { fill: var(--ink); opacity: .1; transition: opacity .12s; }
+.lsn .lsn-rails.on rect { opacity: .55; }
+.lsn .lsn-sums rect { fill: var(--accent); opacity: 0; transition: opacity .22s ease-out; }
+.lsn .lsn-sums rect.on { opacity: .95; transition: none; }
+.lsn .lsn-ways path.on { opacity: .95; animation: lsnflow .9s linear infinite; }
+@keyframes lsnflow { to { stroke-dashoffset: -88; } }
+.lsn .lsn-wires path.on { opacity: 1; transition: none; }
+.lsn .lsn-rings circle.on { opacity: 1; transition: none; }
+@media (prefers-reduced-motion: reduce) { .lsn .lsn-ways path.on { animation: none; }
+}
+
+/* the instruments of the three labs, each drawn to fill the stage */
+html.frame2 .f2stage .ckpfig[data-f2] { display: flex; flex-direction: column; gap: 8px; }
+html.frame2 .f2stage .ckpfig[data-f2] svg { flex: 1 1 0; min-height: 0; width: 100%; height: 100%; }
+html.frame2 .f2stage :is(.ckpfig, .btcurve) svg text { font-size: calc(16px * var(--f2-k, .6)); }
+html.frame2 .f2stage .betview[data-f2] { align-items: stretch; display: grid; grid-template-rows: auto minmax(0, 1fr); grid-template-columns: minmax(0, 1fr); gap: 14px; }
+html.frame2 .f2stage .aibL[data-f2] { display: grid !important; grid-template-columns: min(55%, 540px) minmax(0, 1fr); gap: 12px 20px; align-content: start; }
+/* ---- a phone: the caption is the sheet, at rest the level's name and the whole question; in Do the instrument is
+   on top, full width, the controls in the sheet under it ---- */
+@media (max-width: 720px) {
+  html.frame2 .f2stage :is(.ckpfig, .btcurve) svg text { font-size: calc(13px * var(--f2-k, .9)); }
+  html.frame2 .f2stage .aibL[data-f2] { grid-template-columns: minmax(0, 1fr); }
+  html.frame2 .f2stage .betview[data-f2] { grid-template-rows: minmax(0, 1fr); }
+}
+
+html.frame2 .f2stage [data-f2="instrument"] figcaption { font: var(--f2-small); }
+html.frame2 .f2stage .betview[data-f2="instrument"] { display: flex; flex-direction: row; align-items: stretch; gap: 18px; }
+/* the goal as a row of tiles: the agent's cases, the jobs to fit (by number: the job itself is in the panel), the
+   readouts of an evolving circuit */
+html.frame2 .f2stage [data-f2="goal"]:is(.agprog, .fitjobs, .evread) { display: grid; gap: 8px; }
+html.frame2 .f2stage .fitjobs[data-f2="goal"] { grid-template-columns: repeat(8, minmax(0, 1fr)); }
+html.frame2 .f2stage .evread[data-f2="goal"] { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+html.frame2 .f2stage .anagoal[data-f2] .gv { order: -1; text-align: left; font-size: 19px; overflow-wrap: anywhere; }
+/* instruments that are not drawings: the copies' answers, the board's chips, the agent's tool, the line of chips */
+html.frame2 .f2stage .spotinst[data-f2] { display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 14px; }
+html.frame2 .f2stage .tdboard[data-f2] { grid-auto-rows: minmax(54px, 1fr); align-content: stretch; gap: 10px; padding: 16px; background: color-mix(in srgb, #1f4a37 70%, var(--panel-solid)); }
+/* a phone gets the simpler box: what the block is doing as one menu beside the button, the scale in short, the caption */
+@media (max-width: 720px) {
+  .lsnbox :is(.lsnhead .kicker, .lsnscale, .lsnstates, .lsnloud, .lsntest) { display: none; }
+}

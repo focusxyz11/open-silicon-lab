@@ -1,0 +1,24 @@
+/* The lab agent's own styles (src/data/labs/agent.js, css: true), loaded when one of its challenges is played (src/core/styles.js). */
+/* ---- Verify the agent (src/v2/play.js agentDesk, src/data/agent.js) ---- */
+.agcases { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin: 4px 0 12px; }
+.agtool { margin: 4px 0 12px; padding: 10px 12px; border-radius: 14px; border: 1px dashed var(--line); }
+.agtt { width: 100%; border-collapse: collapse; font-size: 12px; margin: 6px 0 0; }
+.agtt th, .agtt td { padding: 2px 6px; text-align: center; border-bottom: 1px solid var(--line); }
+.agtt tr.bad td { background: color-mix(in srgb, var(--bad) 18%, transparent); }
+.agtt tr.tried td:last-child { color: var(--accent); }
+.agrace { display: grid; grid-template-columns: auto 1fr auto; gap: 6px 10px; align-items: center; margin: 8px 0; }
+.agfact { display: grid; gap: 3px; margin: 6px 0; }
+.agreasons { display: grid; gap: 6px; margin: 4px 0 10px; }
+.agr { all: unset; cursor: pointer; padding: 8px 12px; border-radius: 12px; border: 1px solid var(--line); font-size: 14px; }
+.agr:hover, .agr:focus-visible { border-color: var(--accent); }
+.agverdict { margin: 4px 0 8px; padding: 10px 12px; border-radius: 12px; display: grid; gap: 3px; }
+.agverdict.good { background: color-mix(in srgb, var(--good) 14%, transparent); }
+.agverdict.bad { background: color-mix(in srgb, var(--bad) 14%, transparent); }
+@media (max-width: 720px) { .agcases { grid-template-columns: repeat(4, 1fr); }
+}
+
+.bk-tt th { position: sticky; top: 0; z-index: 1; padding: 3px 4px; background: var(--panel-solid); color: var(--muted); font-weight: 600; }
+ .bk-tt td { padding: 3px 4px; text-align: center; border-top: 1px solid color-mix(in srgb, var(--ink) 6%, transparent); }
+/* a small bench (a phone): fewer words on it, the same picture */
+@container (max-width: 480px) { .bk-tt td, .bk-tt th { padding: 2px 2px; }
+}

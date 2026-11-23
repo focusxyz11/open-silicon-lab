@@ -1,0 +1,24 @@
+/* The lab implant's own styles (src/data/labs/implant.js, css: true), loaded when one of its challenges is played (src/core/styles.js). */
+.imfig { margin: 8px 0; }
+ .imfig svg { display: block; width: 100%; height: auto; }
+.imfig .ax { font: 10px var(--sans); fill: var(--muted); }
+.imfig .gl { stroke: var(--line); stroke-width: 1; }
+.imfig .bg { stroke: var(--muted); stroke-width: 1; stroke-dasharray: 4 3; }
+.imfig .all { fill: color-mix(in srgb, var(--accent) 16%, transparent); }
+.imfig .on { fill: color-mix(in srgb, var(--accent) 55%, transparent); }
+.imfig .prof { fill: none; stroke: var(--accent); stroke-width: 2; stroke-linejoin: round; }
+.imfig .jn { stroke: var(--warm); stroke-width: 1.5; stroke-dasharray: 3 3; }
+ .imfig .jd { fill: var(--warm); }
+.imfig .jt { font: 600 11px var(--sans); fill: var(--warm); }
+.imann { display: grid; gap: 6px; margin: 4px 0 10px; }
+.imrow { display: grid; grid-template-columns: 110px 1fr 56px; align-items: center; gap: 10px; padding: 7px 10px; border-radius: 10px; border: 1px solid var(--line); background: transparent; color: var(--ink); font: inherit; text-align: left; cursor: pointer; }
+.imrow.on { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, transparent); }
+.imn { display: grid; line-height: 1.25; }
+ .imn b { font-size: 13px; }
+.imbar { height: 6px; border-radius: 3px; background: color-mix(in srgb, var(--ink) 10%, transparent); overflow: hidden; }
+ .imbar span { display: block; height: 100%; background: var(--warm); border-radius: 3px; }
+.imv { font-size: 12px; text-align: right; }
+@media (max-width: 720px) { .imrow { grid-template-columns: 90px 1fr 50px; gap: 8px; }
+}
+ .bk-wrong.on { fill: color-mix(in srgb, var(--bad) 50%, transparent); stroke: var(--bad); stroke-width: 1.5px; }
+.bk-w.on { stroke: var(--warm); stroke-width: 2.4px; }

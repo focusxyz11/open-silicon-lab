@@ -1,0 +1,46 @@
+/* The lab grover's own styles (src/data/labs/grover.js, css: true), loaded when one of its challenges is played (src/core/styles.js). */
+/* quantum search with noise (src/v2/labs/grover.js): the amplitudes as bars, the boxes, and the chance step by step */
+.grvintro { margin: 4px 0 10px; }
+.grvfig { margin: 8px 0; }
+ .grvfig svg { display: block; width: 100%; height: auto; }
+.grvfig .ax { font: 10px var(--sans); fill: var(--muted); }
+ .grvfig .ax.mono { font-family: var(--mono); font-size: 9.5px; }
+ .grvfig .ax.now { fill: var(--ink); font-weight: 700; }
+.grvfig .base { stroke: var(--muted); stroke-width: 1; }
+ .grvfig .avg { stroke: var(--warm); stroke-width: 1.4; stroke-dasharray: 5 4; }
+ .grvfig .avt { fill: var(--warm); }
+.grvfig .b { fill: color-mix(in srgb, var(--accent) 38%, transparent); }
+ .grvfig .b.pz { fill: var(--accent); }
+ .grvfig .b.dn { fill: color-mix(in srgb, var(--warm) 45%, transparent); }
+ .grvfig .b.pz.dn { fill: var(--warm); }
+.grvfig .pv { font: 700 11px var(--mono); fill: var(--ink); }
+.grvfig .bx { fill: var(--panel-solid); stroke: var(--line); stroke-width: 1; }
+ .grvfig .bx.pz { fill: color-mix(in srgb, var(--good) 22%, var(--panel-solid)); stroke: var(--good); }
+ .grvfig .bx.open { stroke: var(--ink); stroke-width: 2; }
+.grvfig .star { fill: var(--good); }
+ .grvfig .hit { fill: var(--muted); }
+ .grvfig .hit.pz { fill: var(--good); }
+.grvcurve .gl { stroke: var(--line); stroke-width: 1; }
+ .grvcurve .plain { fill: none; stroke: var(--muted); stroke-width: 1.4; stroke-dasharray: 2 4; stroke-linecap: round; }
+.grvcurve .tr { fill: none; stroke: var(--accent); stroke-width: 2; stroke-linejoin: round; }
+ .grvcurve .dot { fill: var(--accent); }
+ .grvcurve .dot.now { stroke: var(--panel-solid); stroke-width: 1.5; }
+.grvcurve figcaption { display: flex; flex-wrap: wrap; gap: 2px 14px; }
+ .grvcurve figcaption i { display: inline-block; width: 18px; height: 0; margin-right: 6px; vertical-align: middle; border-top: 2px solid var(--accent); }
+ .grvcurve figcaption i.k2 { border-top: 2px dotted var(--muted); }
+.grvacts { margin: 8px 0; align-items: center; }
+.grvdial { margin: 6px 0; }
+ .grvstep { display: flex; align-items: center; gap: 8px; }
+ .grvstep input { flex: 1; min-width: 0; }
+ .grvstep .chipb { min-width: 34px; padding: 4px 0; text-align: center; }
+.grvmsg { margin: 10px 0 4px; }
+ .grvlook { margin: 4px 0 10px; }
+ .grvlook.bad { color: var(--bad); }
+.mach .dot { fill: var(--accent); stroke: var(--panel-solid); stroke-width: 1.5; }
+.mach .dot.mine { stroke: var(--fab); stroke-width: 2.5; }
+.mach .dot.you { fill: none; stroke: var(--fab); stroke-width: 2.5; stroke-dasharray: 3 2; }
+@media (max-width: 760px) {
+  .hm-strip button i { width: 12px; height: 12px; border-radius: 50%; border: 3px solid currentColor; margin-left: -21px; background: var(--panel-solid); flex: none; }
+}
+
+.bk-g .hit { fill: transparent; cursor: pointer; }
