@@ -222,9 +222,9 @@ const explore = async (tag, viewport, scheme) => {
   await page.waitForSelector('#sheet .won', { timeout: 10000 }).catch(() => problems.push(tag + ': a right design did not win the challenge'));
   if (!/grew/i.test(await page.textContent('#toast').catch(() => ''))) problems.push(tag + ': winning did not say what grew');
   if (!(await page.$('#sheet .opens[href^="#/ask/"]'))) problems.push(tag + ': the first win opens no question');
-  /* one won of every design challenge there is (src/v2/game.js), however many the lab has */
-  const designN = await page.evaluate(async () => (await import(new URL('src/v2/game.js', location.href).href)).stepChallenges('design').length).catch(() => 0);
-  if (!(designN > 0) || !new RegExp('1 of ' + designN + '\\b').test(await page.getAttribute('#loop [data-stage="design"]', 'aria-label').catch(() => ''))) problems.push(tag + ': the tracker did not count the win');
+  /* the first win of the design stage, out of every challenge on that step (src/v2/game.js), so a new challenge there needs no edit here */
+  { const designs = (await import('../src/v2/game.js')).CHALLENGES.filter(c => c.step === 'design').length;
+    if (!new RegExp('\\b1 of ' + designs + '\\b').test(await page.getAttribute('#loop [data-stage="design"]', 'aria-label').catch(() => ''))) problems.push(tag + ': the tracker did not count the win (1 of ' + designs + ')'); }
   await page.click('#sheet [data-next]').catch(() => problems.push(tag + ': no way on to the next challenge'));
   if (!/voter/i.test(await page.textContent('#sheet .player h3').catch(() => ''))) problems.push(tag + ': the next challenge is not the majority voter');
   /* back to the studio's card: in Do mode on a desktop the way back is where you are, over the picture (the player's
@@ -803,17 +803,18 @@ run['labs'] = async () => {
   /* the two thinnest core questions: a reliable whole from flaky parts (vote.js), a mind that cannot be copied (mortal.js) */
   await playLab('flaky', "['mul', 'mem', 'add'].forEach(b => CL('[data-rd=\"' + b + ':3\"]:not([aria-pressed=\"true\"])'))", 'Six flaky parts, one reliable chip');
   await playLab('mortal', "SET('#mo-share', 9); CL('[data-mo-learn=\"chip\"]:not([aria-pressed=\"true\"])'); CL('[data-mo-cal]:not([aria-pressed=\"true\"])')", 'Learn on one chip, copy to a thousand');
-  /* labs-b: let the noise compute, p-bits factoring 15 and then 143 (pbits.js); a thousand that pass, one chosen with a reason
-     and kept as a ledger try the engine validates (thousand.js) */
-  await playLab('noise', "SET('#pb-b', 4); SET('#pb-w', 3)", 'Let the noise compute');
-  await playLab('noise-big', "SET('#pb-b', 4); SET('#pb-w', 3)", 'A bigger number, the same noise');
-  await playLab('thousand', "const P = '.player[data-ch=\"thousand\"] ', d = document.querySelector(P + '[data-th-pick=\"d0042\"]'); if (d && !document.querySelector(P + '.thcard')) d.dispatchEvent(new MouseEvent('click', { bubbles: true })); if (!document.querySelector(P + '.slip')) { SET(P + '[data-th-why]', 'What you say to it should never leave the phone'); SET(P + '.thkeep [data-sign]', 'Smoke'); CL(P + '[data-th-keep]'); }", 'A thousand that pass');
   /* read the die, at the test house: name each chip from its die photo, find every block on one */
   await playLab('dieread', "const P = '.player[data-ch=\"dieread\"] ', ty = new Set([...document.querySelectorAll(P + '[data-xr-type]')].map(g => g.dataset.xrType)), k = ty.has('dram') ? 'dram' : ty.has('pixels') ? 'camera' : ty.has('flash') ? 'mcu' : ty.has('npu') ? 'phone' : 'gpu'; CL(P + '[data-xr-kind=\"' + k + '\"]'); for (let n = 0; n < 60 && document.querySelector(P + '.xrfind'); n++) for (const t of [...ty]) { const g = document.querySelector(P + '[data-xr-type=\"' + t + '\"]'); if (g) g.dispatchEvent(new MouseEvent('click', { bubbles: true })); if (!document.querySelector(P + '.xrfind')) break; } CL(P + '[data-xr-next]')", 'Read the die');
   /* catch the silent errors, at the port: the errors puzzle's lens, each place protected at the levels that can see its faults */
   await playLab('silent', "const P = '.player[data-ch=\"silent\"] ', W = { phone: ['check:abft', 'selftest:true', 'memory:parity', 'margin:0.3', 'materials:lowAlpha'], car: ['logic:lockstep', 'selftest:true', 'memory:ecc', 'margin:0.3'], datacentre: ['check:abft', 'hunt:true', 'memory:ecc', 'margin:0.3'] }; for (const [env, L] of Object.entries(W)) { CL(P + '[data-er-env=\"' + env + '\"]'); for (const k of L) CL(P + '[data-er=\"' + k + '\"]:not([aria-pressed=\"true\"])'); }", 'Catch the silent errors');
   /* run your core, offered from the RISC-V core in the Lab: three programs, each checked by running it */
   await playLab('rvrun', "const P = '.player[data-ch=\"rvrun\"] ', W = { sum: null, max: 'mv a0, a1\\nbge a1, a2, done\\nmv a0, a2\\ndone:', fib: 'li a0, 0\\nli t1, 1\\nloop:\\n beq a1, x0, done\\n add t2, a0, t1\\n mv a0, t1\\n mv t1, t2\\n addi a1, a1, -1\\n j loop\\ndone:' }; for (const [p, src] of Object.entries(W)) { CL(P + '[data-rv-p=\"' + p + '\"]'); if (src) { const a = document.querySelector(P + '[data-rv-code]'); if (a) { a.value = src; a.dispatchEvent(new Event('input', { bubbles: true })); } } CL(P + '[data-rv-run]'); }", 'Run your core');
+  /* labs-a: design it or search for it, at the studio's gates: more computing passes the person's voter with every input
+     checked, then a checker that tries half the inputs is fooled; the program nobody can judge, at the Lab: a NAND gate and
+     a bit that remembers, then the agent fooled by a long count, again with more budget, and by the program that asks about itself */
+  await playLab('search', "const P = '.player[data-ch=\"search\"] '; if (document.querySelector(P + '[data-sr-next=\"beat\"]')) { CL(P + '[data-sr-job=\"vote\"]:not([aria-pressed=\"true\"])'); CL(P + '[data-sr-check=\"all\"]:not([aria-pressed=\"true\"])'); SET(P + '#sr-budget', 6); } else CL(P + '[data-sr-check=\"some\"]:not([aria-pressed=\"true\"])')", 'Design it, or search for it?');
+  await playLab('halt', "const P = '.player[data-ch=\"halt\"] '; CL(P + '[data-hl-join=\"series\"]:not([aria-pressed=\"true\"])'); CL(P + '[data-hl-out=\"invert\"]:not([aria-pressed=\"true\"])'); CL(P + '[data-hl-k=\"2\"]'); CL(P + '[data-hl-fed][aria-pressed=\"false\"]'); CL(P + '[data-hl-push=\"set\"]'); CL(P + '[data-hl-push=\"reset\"]'); CL(P + '[data-hl-deeper]');"
+    + " for (const [b, n] of [[1000, 1000], [10000, 10000]]) { CL(P + '[data-hl-budget=\"' + b + '\"]'); CL(P + '[data-hl-clear]'); CL(P + '[data-hl-add=\"count\"]'); SET(P + '[data-hl-n=\"0\"]', n); CL(P + '[data-hl-run]'); } CL(P + '[data-hl-clear]'); CL(P + '[data-hl-add=\"ask\"]'); CL(P + '[data-hl-run]')", 'The program nobody can judge');
   /* serving a language model, at the data centre: four bits despite outliers, where an answer's energy goes, read fast and write slow */
   await playLab('quantize', "CL('[data-sq-format=\"fp4\"]:not([aria-pressed=\"true\"])'); CL('[data-sq-scale=\"nv16\"]:not([aria-pressed=\"true\"])'); SET('#sq-outliers', 1)", 'Four bits, despite outliers');
   await playLab('token-energy', "SET('#se-watts', 2300); SET('#se-tokExp', 3.9); SET('#se-pue', 1.05); SET('#se-overhead', 10); SET('#se-tokExp', 4.5)", 'Where an answer\'s energy goes');

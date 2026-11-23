@@ -140,7 +140,8 @@ export const FILED = {
   'euv-1000': ['moore', 'eff'], 'too-hot': ['physics', 'perfect', 'dig'], 'ai-chip': ['moore', 'line'], piece: ['human', 'line'], floor: ['geo', 'line'], maskof: ['line', 'moore'], 'power-curve': ['eff', 'physics'],
   'counter': ['perfect', 'vn', 'dig'], 'flaky': ['vn', 'perfect', 'trust'], 'dieread': ['geo', 'trust', 'line'], 'silent': ['trust', 'vn', 'perfect'], 'rvrun': ['line', 'dig', 'human'], 'mortal': ['copy', 'physics', 'eff'], 'quantize': ['eff', 'sutton', 'physics'], 'token-energy': ['eff', 'geo'], 'prefill': ['geo', 'eff'],
   'chef': ['geo', 'physics', 'eff'],
-  'noise': ['physics', 'nat'], 'noise-big': ['physics', 'nat'], 'thousand': ['human', 'sutton']
+  'noise': ['physics', 'nat'], 'noise-big': ['physics', 'nat'], 'thousand': ['human', 'sutton'],
+  'search': ['sutton', 'human'], 'halt': ['nat', 'trust']
   }
 };
 
