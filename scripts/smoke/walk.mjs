@@ -46,8 +46,9 @@ export const explore = async (tag, viewport, scheme) => {
   if (await page.$('#hero .qcard, #hero a[href="#/w"]')) problems.push(tag + ': the first card still lists the worlds\' questions');
   if (!(await page.$('#hero .heroc a'))) problems.push(tag + ': the first page offers no challenge');
   /* exploring folds the questions into a button in the corner, which opens them again */
-  await page.evaluate(() => document.getElementById('mapCanvas').dispatchEvent(new WheelEvent('wheel', { deltaY: -60, bubbles: true, cancelable: true })));
-  if (!(await page.$('#hero.folded [data-unfold]'))) problems.push(tag + ': exploring does not fold the first page\'s questions away');
+  /* the island may still be in the making when the bar shows: the wheel is turned again on every poll until it answers */
+  await page.waitForFunction(() => { if (!document.querySelector('#hero.folded [data-unfold]')) document.getElementById('mapCanvas').dispatchEvent(new WheelEvent('wheel', { deltaY: -60, bubbles: true, cancelable: true }));
+    return !!document.querySelector('#hero.folded [data-unfold]'); }, null, { timeout: 30000, polling: 500 }).catch(() => problems.push(tag + ': exploring does not fold the first page\'s questions away'));
   await page.click('#hero [data-unfold]').catch(() => problems.push(tag + ': the folded questions cannot be opened again'));
   await page.click('#hero [data-start]');
   await page.waitForFunction(() => location.hash === '#/place/lab' && !!document.querySelector('#sheet [data-key="next"]'), null, { timeout: 15000 }).catch(() => problems.push(tag + ': following the chip did not open the Lab, where the loop starts'));
