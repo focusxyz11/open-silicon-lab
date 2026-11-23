@@ -12,6 +12,8 @@ import { factsOf } from '../data/partfacts.js';
 import { MODELS, geometry, efficiency, brainCopy, physics as physicsModel, digital, geoEffFront, memoryFork, cleanOne, HOT, SWING } from '../engines/lens.js';
 import { pairOf } from '../engines/frame.js';
 import { frontFigure } from './front.js';
+import { mark as fidMark } from './fid.js';
+import { LENSES, PAIRS } from '../data/fidelity.js';
 
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 const still = () => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -129,7 +131,8 @@ const run = (q, level) => MODELS[q].run(factsOf(level), valueOf(q));
 export function instrument(q, level) {
   if (!paints(q, level)) return '';
   const m = run(q, level);
-  return '<div class="lpinst" data-lpinst="' + q + '" data-lplevel="' + esc(level) + '">' + controlHtml(q) + '<div class="lpms">' + measuresHtml(q, m) + '</div>' +
+  /* how true its measures are: one mark, tapped for what it means here (#325) */
+  return '<div class="lpinst" data-lpinst="' + q + '" data-lplevel="' + esc(level) + '"><p class="fidrow">' + fidMark(LENSES[q]) + '</p>' + controlHtml(q) + '<div class="lpms">' + measuresHtml(q, m) + '</div>' +
     (q === 'dig' ? scopeHtml(m) : q === 'human' ? layoutsHtml(m) : '') + '</div>';
 }
 
@@ -290,16 +293,18 @@ function pairBody(a, b, level) {
   if (k === 'copy.physics') { const Fk = memoryFork(F, S.celsius), row = (id, f) => '<span>' + esc(t('lp.fork.' + id)) + '</span><span class="n">' + esc(f(Fk.exact[id])) + '</span><span class="n">' + esc(f(Fk.computes[id])) + '</span>';
     return '<div class="lptwo"><span></span><span class="hd">' + esc(t('lp.fork.exact')) + '</span><span class="hd">' + esc(t('lp.fork.computes')) + '</span>' +
       row('energy', v => t('lp.pj', { v: fmtNum(v) })) + row('off', v => t('lp.pct', { v: pct(v) })) + row('copied', v => t('lp.pct', { v: fmtNum(v) })) + '</div>' + split + hot; }
-  const side = q => { const m = run(q, level); return '<div class="lpside"><p class="kicker">' + esc(t('frame.q.' + q)) + '</p>' + MODELS[q].measures.map(id => meter(t('lp.' + q + '.m.' + id), unit[id](m.measures[id], q))).join('') + '</div>'; };
+  const side = q => { const m = run(q, level); return '<div class="lpside"><p class="kicker">' + esc(t('frame.q.' + q)) + '</p>' + (PAIRS[k] ? '' : '<p class="fidrow">' + fidMark(LENSES[q]) + '</p>') + MODELS[q].measures.map(id => meter(t('lp.' + q + '.m.' + id), unit[id](m.measures[id], q))).join('') + '</div>'; };
   return '<div class="lpsides">' + side(P.a) + side(P.b) + '</div>' + split;
 }
 export function pairInstrument(a, b, level) {
   if (!paintsPair(a, b, level)) return '';
-  return '<div class="lpinst" data-lppair="' + keyOf(a, b) + '" data-lpa="' + a + '" data-lpb="' + b + '" data-lplevel="' + esc(level) + '">' + pairBody(a, b, level) + '</div>';
+  /* a pair one model computes carries that model's mark; any other fork, each side its own lens's (pairBody) */
+  const k = keyOf(a, b);
+  return '<div class="lpinst" data-lppair="' + k + '" data-lpa="' + a + '" data-lpb="' + b + '" data-lplevel="' + esc(level) + '">' + (PAIRS[k] ? '<p class="fidrow">' + fidMark(PAIRS[k]) + '</p><div class="lppairb">' : '<div class="lppairb">') + pairBody(a, b, level) + '</div></div>';
 }
 function refreshPair(box) {
   if (!box) return; const focus = document.activeElement && document.activeElement.dataset.lppc;
-  box.innerHTML = pairBody(box.dataset.lpa, box.dataset.lpb, box.dataset.lplevel);
+  (box.querySelector(':scope > .lppairb') || box).innerHTML = pairBody(box.dataset.lpa, box.dataset.lpb, box.dataset.lplevel);
   if (focus) { const r = box.querySelector('[data-lppc="' + focus + '"]'); if (r) r.focus(); }
 }
 

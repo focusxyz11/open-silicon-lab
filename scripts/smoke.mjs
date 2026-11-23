@@ -921,6 +921,26 @@ run['labs'] = async () => {
       .catch(() => problems.push(tag + ': your slice is not put back to the lab\'s example'));
   }
   await fp.close(); }
+
+  /* how true each lab is (#325, src/data/fidelity.js): every challenge card shows its mark under its title, the same
+     pill whatever the mark; tapped, it says in one line what it means here, and Escape puts the note away; the RISC-V
+     datapath on the stage carries the lab's mark too */
+  { const tag = 'labs fidelity', fp = await browser.newPage({ viewport: { width: 1280, height: 800 } });
+    fp.on('pageerror', e => problems.push(tag + ': ' + e.message));
+    await fp.addInitScript(() => { localStorage.setItem('osl-quality', 'flat'); localStorage.setItem('osl-hints-v1', JSON.stringify({ seen: {}, off: true })); });
+    for (const [id, f] of [['months', 'checked'], ['cim', 'computed'], ['newest', 'figures'], ['dieread', 'idea']]) {
+      await fp.goto(base + 'index.html#/do/' + id);
+      await fp.waitForFunction(([id, f]) => { const m = document.querySelector('.player[data-ch="' + id + '"] .fidrow .fid[data-fid="' + f + '"]'); if (!m) return false;
+        if (m.getAttribute('aria-expanded') !== 'true') m.click();
+        const tip = document.querySelector('.fidtip p'); return m.getAttribute('aria-expanded') === 'true' && !!tip && tip.textContent.length > 30; }, [id, f], { timeout: 60000, polling: 1000 })
+        .catch(() => problems.push(tag + ': ' + id + ' does not show its mark (' + f + '), or tapping it says nothing'));
+    }
+    await fp.keyboard.press('Escape');
+    await fp.waitForFunction(() => !document.querySelector('.fidtip'), null, { timeout: 10000, polling: 500 }).catch(() => problems.push(tag + ': Escape does not put the mark\'s note away'));
+    await fp.goto(base + 'index.html#/do/rvrun');
+    await fp.waitForFunction(() => !!document.querySelector('.player[data-ch="rvrun"] .dpfig .dphead .fid[data-fid="computed"]'), null, { timeout: 90000, polling: 1000 })
+      .catch(() => problems.push(tag + ': the datapath does not carry the lab\'s mark'));
+    await fp.close(); }
 };
 
 run['search'] = async () => {
@@ -1329,6 +1349,23 @@ run['frame'] = async () => {
     await lp.waitForFunction(() => !!document.querySelector('#diveui .f2head') && !!document.querySelector('#diveui .joulebtn'), null, { timeout: 120000, polling: 1000 }).catch(() => problems.push(tg + ': the block does not open without the flag'));
     if (await lp.evaluate(() => !!document.querySelector('.lsnbtn, .lsnbox'))) problems.push(tg + ': without ?listen=1 the Listen switch shows');
     await lp.close(); }
+  /* how true a level's picture is (#325): the dive's caption carries its mark beside the level's name (the chip computed
+     from your chip, the block an idea drawn), tapped it says what it means here; a lens's measures at the block carry
+     theirs at the top of its instrument */
+  { const tag = 'frame fidelity', fp = await browser3d.newPage({ viewport: { width: 1280, height: 800 }, colorScheme: 'dark' }); fp.on('pageerror', e => problems.push(tag + ': ' + e.message));
+    await fp.addInitScript(() => { try { localStorage.setItem('osl-quality', 'keep'); localStorage.setItem('osl-hints-v1', JSON.stringify({ seen: {}, off: true })); } catch (e) { /* no storage */ } });
+    await fp.goto(base + 'index.html#/dive/chip');
+    await fp.waitForFunction(() => { const m = document.querySelector('#diveui .f2head .f2t .fid[data-fid="computed"]'); if (!m) return false; if (m.getAttribute('aria-expanded') !== 'true') m.click();
+      const tip = document.querySelector('.fidtip p'); return !!tip && tip.textContent.length > 30; }, null, { timeout: 120000, polling: 1000 })
+      .catch(() => problems.push(tag + ': the chip\'s caption does not carry its mark, or tapping it says nothing'));
+    await fp.goto(base + 'index.html#/dive/block');
+    await fp.waitForFunction(() => { const f = document.querySelector('#diveui'); if (!f || f.hidden) return false;
+      if (!f.querySelector('.f2head .f2t .fid[data-fid="idea"]') && !f.dataset.fidSeen) return false; f.dataset.fidSeen = '1';
+      const b = f.querySelector('.modes3 [data-mode="ask"]'); if (b && b.getAttribute('aria-selected') !== 'true') { b.click(); return false; }
+      const m = f.querySelector('.mark3[data-lens="geo"]'); if (m && m.getAttribute('aria-pressed') !== 'true') { m.click(); return false; }
+      return !!f.querySelector('.dock .lpinst[data-lpinst="geo"] .fidrow .fid[data-fid="computed"]'); }, null, { timeout: 120000, polling: 1000 })
+      .catch(() => problems.push(tag + ': the block\'s caption or its lens\'s measures do not carry their marks'));
+    await fp.close(); }
 };
 
 run['flights'] = async () => {
@@ -1462,6 +1499,26 @@ run['machines'] = async () => {
     if (side > 1) problems.push(tag + ': the page scrolls sideways by ' + side + ' px');
     await fp.close();
   }
+  /* how true each claim is (#325): a claim beyond today's chip carries two marks, one above the other, whether anyone
+     has built it (its status) and how the lab knows it (its mark), a guess never more than an idea drawn; each tapped
+     says in one line what it means */
+  { const tag = 'machines fidelity', fp = await browser.newPage({ viewport: { width: 1280, height: 800 } });
+    fp.on('pageerror', e => problems.push(tag + ': ' + e.message));
+    await fp.addInitScript(() => { localStorage.setItem('osl-quality', 'flat'); localStorage.setItem('osl-hints-v1', JSON.stringify({ seen: {}, off: true })); });
+    await fp.goto(base + 'index.html#/machines/wildfire');
+    await fp.waitForFunction(() => { const L = document.querySelector('[data-mlayer="claims"]'); if (L && L.getAttribute('aria-pressed') !== 'true') L.click();
+      const b = document.querySelector('[data-mform="detect:matter:living"]'); if (b && b.getAttribute('aria-pressed') !== 'true') b.click(); else if (!b) { const m = document.querySelector('[data-mform^="detect:matter"]'); if (m) m.click(); }
+      const rows = [...document.querySelectorAll('.mach .mclaims li')];
+      return rows.length >= 4 && rows.every(r => r.querySelector('.mmarks .mst[data-fidst]') && r.querySelector('.mmarks .fid[data-fid]')) &&
+        rows.filter(r => r.querySelector('.mst.s-guess')).every(r => r.querySelector('.fid[data-fid="idea"]')); }, null, { timeout: 20000, polling: 300 })
+      .catch(() => problems.push(tag + ': a claim does not carry both its marks, or a guess is marked more than an idea'));
+    for (const sel of ['.mach .mclaims .mst[data-fidst="guess"]', '.mach .mclaims .fid[data-fid="figures"]']) {
+      await fp.waitForFunction(sel => { const L = document.querySelector('[data-mlayer="claims"]'); if (L && L.getAttribute('aria-pressed') !== 'true') L.click();
+        const m = document.querySelector(sel); if (!m) return false; if (m.getAttribute('aria-expanded') !== 'true') m.click();
+        const tip = document.querySelector('.fidtip p'); return !!tip && tip.textContent.length > 30; }, sel, { timeout: 15000, polling: 500 })
+        .catch(() => problems.push(tag + ': tapping ' + sel + ' says nothing'));
+    }
+    await fp.close(); }
 };
 
 /* the sections asked for, in order; each says how long it took, so the groups in CI can be balanced */

@@ -14,6 +14,8 @@ import { diveWord, sizeOf } from '../../data/atlas.js';
 import { SEEK, foundAt, seekAt } from '../../data/seek.js';
 import { studioLook } from '../studio-look.js';
 import { V, $, showStage, esc, follow } from '../shell.js';
+import { mark as fidMark } from '../fid.js';
+import { LEVELS as FID_LEVELS } from '../../data/fidelity.js';
 
 export function create() {
   Object.assign(V, { openBench, showFlat });
@@ -311,6 +313,8 @@ export function create() {
         /* in a row of steps the rail's levels lead to the step that shows them; the steps are walked along their own line */
         steps: rowsOf(kind) ? { label: t('frame.steps.' + kind), items: L.map(k => ({ id: k, label: t('depth.' + k + '.name') })) } : null,
         onStep: k => w.flyTo(V.WE.IDS.indexOf(k)),
+        /* how true a level's picture of the dive is (#325, src/data/fidelity.js): its mark in the caption */
+        fidAt: kind === 'dive' ? d => fidMark(FID_LEVELS[d]) : null,
         onRail: k => { const s = rowsOf(kind) ? Way.stepOfLevel(kind, k, V.diveId()) : k; if (s) w.flyTo(V.WE.IDS.indexOf(s)); }, onLook: () => { if (V.benchCh) { V.benchCh = null; const dk = V.diveFrame.dock; dk.classList.remove('benchdock'); dk.onclick = null; dk.oninput = null; dk.onpointerdown = dk.onpointermove = dk.onpointerup = null; if (V.Bench && V.flatKind === 'bench') V.Bench.challenge(null); } drawDive(); }, caption: true }); V.watchDock();
       /* the data centre's dive wears the lens of the energy puzzle: Follow the joule */
       V.vui.classList.remove('jouling');

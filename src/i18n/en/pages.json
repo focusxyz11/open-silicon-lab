@@ -606,7 +606,7 @@
  "machines.role.rover.clock": "Clock",
  "machines.role.rover.ctl": "Core",
  "invent.ui.kicker": "Beyond today's chip",
- "invent.ui.lead": "New matter may not exist yet, so every kind rests on claims, and every claim says how sure it is: in products, shown in a lab, or a guess. Guesses are allowed and labelled; physics sets the floor.",
+ "invent.ui.lead": "New matter may not exist yet, so every kind rests on claims, and every claim says how sure it is twice: whether anyone has built it (in products, shown in a lab, a guess) and how the lab knows it (an idea drawn, real numbers, computed). Tap a mark for what it means. Guesses are allowed and labelled; physics sets the floor.",
  "invent.ui.none": "No part is made of new matter yet. Choose the hexagon on a part that can take it to see the claims behind each kind.",
  "invent.ui.range": "If the guesses hold: {low} the energy of a circuit. If they fail: {high}.",
  "invent.ui.guesses": "Let the agent count guesses",
@@ -981,5 +981,8 @@
  "mb.curve.x": "attempts kept, in order",
  "mb.curve.d": "{n} attempts kept here; the best so far waits {best} of the time.",
  "mb.curve.none": "Nobody has kept an attempt here yet.",
- "mb.curve.yours": "Your plan"
+ "mb.curve.yours": "Your plan",
+ "invent.status.product.line": "In products: something built this way can be bought or is in use today.",
+ "invent.status.lab.line": "Shown in a lab: someone has made it work, but nobody sells it yet.",
+ "invent.status.guess.line": "A guess: nobody has shown it yet. Its number is written down so it can be argued with."
 }

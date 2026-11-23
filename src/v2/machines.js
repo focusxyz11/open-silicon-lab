@@ -31,6 +31,8 @@ import { plan as buildPlan } from '../engines/build.js';
 import { FABS, fabOf } from '../data/fabs.js';
 import { labCurve } from '../engines/ledger.js';
 import { frontFigure } from './front.js';
+import { mark as fidMark, claimFid, glyph as fidGlyph } from './fid.js';
+import { FRONTS } from '../data/fidelity.js';
 
 const REPO = 'https://github.com/focusxyz11/open-silicon-lab/blob/main/';
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
@@ -64,7 +66,12 @@ const TRUTH = {
   lab: '<svg class="mtr t-lab" viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="4.6" class="o"/><path d="M6 1.4a4.6 4.6 0 0 0 0 9.2z"/></svg>',
   guess: '<svg class="mtr t-guess" viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="4.6"/></svg>'
 };
-const mst = s => '<span class="mst s-' + s + '">' + TRUTH[s] + esc(t('invent.status.' + s)) + '</span>';
+/* a claim's two marks, one system with every mark of the lab (#325, docs/SYSTEM.md "How true"): whether anyone has
+   built it (its status, a disc) and how the lab knows it (its fid, src/v2/fid.js), each tapped for what it means */
+const mst = s => '<button type="button" class="fid mst s-' + s + '" data-fidst="' + s + '" aria-expanded="false">' + TRUTH[s] + '<span>' + esc(t('invent.status.' + s)) + '</span></button>';
+/* inside a button (a place to make parts), the status is only shown: the claims below carry the marks to tap */
+const mdisc = s => '<span class="mst s-' + s + '">' + TRUTH[s] + '<span>' + esc(t('invent.status.' + s)) + '</span></span>';
+const marks = (status, cl) => '<span class="mmarks">' + mst(status) + fidMark(claimFid(cl)) + '</span>';
 const RANK = { product: 0, lab: 1, guess: 2 };
 const weakest = list => list.reduce((w, s) => (RANK[s] > RANK[w] ? s : w), 'product');
 /* how sure the energy of a form is: the weakest claim it rests on (new matter: its gains and catches; a fabric: its
@@ -280,7 +287,8 @@ export function machines(el, ctx) {
       return esc(t('machines.rib.try', { days: days(lo, hi) })) + (s.tries && !un ? ' · ' + esc(t('machines.ui.tries', { n: fmtNum(Math.round(s.tries)) })) : '');
     }
     if (L === 'reshape') return esc(need.every ? t('liquid.ui.every', { t: secs(need.every) }) + ' · ' + t('machines.rib.every') : t('machines.rib.reshape'));
-    if (L === 'claims') return STATUS.map(x => '<span class="mkey">' + TRUTH[x] + esc(t('invent.status.' + x)) + '</span>').join('');
+    if (L === 'claims') return STATUS.map(x => '<span class="mkey">' + TRUTH[x] + esc(t('invent.status.' + x)) + '</span>').join('') +
+      '<span class="mkeybr" aria-hidden="true"></span><span class="mkey mkeyk">' + esc(t('fid.key')) + '</span>' + ['idea', 'figures', 'computed'].map(f => '<span class="mkey mkeyf">' + fidGlyph(f) + esc(t('fid.' + f + '.t')) + '</span>').join('');
     if (L === 'blocks') return esc(t('machines.rib.blocks'));
     const ks = [...new Set(need.wires.map(([a, b]) => kindOf(need, a, b)))];
     return ks.map(k => '<span class="mkey k-' + k + '"><svg viewBox="0 0 16 16" aria-hidden="true">' + PORTMARK[k] + '</svg>' + esc(t('machines.port.' + k)) + '</span>').join('') +
@@ -362,7 +370,7 @@ export function machines(el, ctx) {
     const dots = all.map((p, i) => ({ x: px(p.score.energy), y: py(p.score.changes), r: i < 4 ? 7 : 5, cls: 'mfo' + (p.score.exact === N ? ' full' : '') + (i < 4 ? ' pick' : ''),
       attrs: i < 4 ? 'data-muse="' + i + '"' : '', title: span(p.score) + ' · ' + t('machines.ui.pickKeeps', { changes: p.score.changes, exact: p.score.exact, parts: N }) }));
     dots.push({ x: px(m.score.energy), y: py(m.score.changes), r: 8, cls: 'lpdot mme' + (m.ok ? '' : ' broken'), title: t('machines.front.yours') });
-    return '<div class="mfront">' + frontFigure({ W, H, box, corner: 'tl', cls: 'mfrontfig', aria: t('machines.front.aria'), lines: stair.length ? [{ pts: stair, cls: 'lpline0' }] : [], extra, dots,
+    return '<div class="mfront"><p class="fidrow">' + fidMark(FRONTS.machines) + '</p>' + frontFigure({ W, H, box, corner: 'tl', cls: 'mfrontfig', aria: t('machines.front.aria'), lines: stair.length ? [{ pts: stair, cls: 'lpline0' }] : [], extra, dots,
       key: [['', t('machines.front.x')], ['', t('machines.front.y')]].concat(all.length ? [['k0', t('machines.front.today')], ['ko', t('machines.front.offers')], ['kn', t('machines.front.nobody')]] : [], [['kd', t(m.ok ? 'machines.front.dot' : 'machines.front.broken')]]) }) +
       (all.length ? '' : '<p class="small muted mfwait">' + esc(t('machines.front.wait')) + '</p>') + '</div>';
   }
@@ -392,14 +400,14 @@ export function machines(el, ctx) {
       FABS.map(f => {
         const d = M.daysOf(f.id), dc = f.claims.find(c => c.kind === 'days'), su = M.setupOf(f.id);
         return '<button type="button" data-mfab="' + f.id + '" aria-pressed="' + (f.id === cur) + '">' + FABMARK[f.id] + '<b>' + esc(t('fab.name.' + f.id + '.t')) + '</b>' +
-          '<span class="small">' + mst(dc.status) + ' ' + esc(isFinite(d.high) ? t('fab.ui.days', { low: fmtNum(d.low), high: fmtNum(d.high) }) : t('fab.ui.guessDays', { low: fmtNum(d.low) + '–' + fmtNum(dc.value[1]) })) + '</span>' +
+          '<span class="small">' + mdisc(dc.status) + ' ' + esc(isFinite(d.high) ? t('fab.ui.days', { low: fmtNum(d.low), high: fmtNum(d.high) }) : t('fab.ui.guessDays', { low: fmtNum(d.low) + '–' + fmtNum(dc.value[1]) })) + '</span>' +
           (su ? '<span class="small muted">' + esc(t('fab.ui.setup', { x: su.value.map(frac).join('–') })) + '</span>' : '') + '</button>';
       }).join('') + '</div>';
     if (none) h += '<p class="small mfabnone">' + esc(t('fab.ui.none')) + '</p>';
     if (grown) h += '<p class="small mfabnone">' + esc(t('fab.ui.grown')) + '</p>';
     h += '<div class="mclaims"><p><b>' + esc(t('fab.name.' + cur + '.t')) + '</b> <span class="small muted">' + esc(t('fab.name.' + cur + '.d')) + ' ' + esc(t('fab.ui.makes', { list: F.makes.map(formName).join(', ') })) + '</span></p><ul>' + F.claims.map(cl => {
       const f = cl.fact && ctx.FACT && ctx.FACT[cl.fact], src = f && f.url ? ' <span class="small"><a href="' + esc(f.url) + '" target="_blank" rel="noopener">' + esc(t('invent.ui.source')) + '</a></span>' : '';
-      return '<li class="k-note">' + mst(cl.status) + '<span>' + esc(t('fab.claim.' + cl.id)) + src + '</span></li>';
+      return '<li class="k-note">' + marks(cl.status, cl) + '<span>' + esc(t('fab.claim.' + cl.id)) + src + '</span></li>';
     }).join('') + '</ul>' + (cur !== 'giant' ? '<p class="small muted">' + esc(t('fab.ui.note')) + '</p>' : '') + '</div></section>';
     return h;
   }
@@ -436,15 +444,15 @@ export function machines(el, ctx) {
     let h = '<section class="mliquid"><p class="kicker">' + esc(t('liquid.ui.kicker')) + '</p><p class="small muted">' + esc(t('liquid.ui.lead')) + '</p>' +
       '<div class="lmapbox"><span class="small muted">' + esc(t('liquid.ui.axisY')) + '</span>' + liquidMap() + '<span class="small muted lax">' + esc(t('liquid.ui.axisX')) + '</span><p class="small lkey"><span class="lk lk-corner"></span> ' + esc(t('liquid.ui.corner')) + (need.every ? ' · <span class="lk lk-every"></span> ' + esc(t('liquid.ui.everyKey')) : '') + ' · <span class="lk lk-ref"></span> ' + esc(t('liquid.ui.refs')) + '</p></div>';
     const src = fact => { const f = fact && ctx.FACT && ctx.FACT[fact]; return f && f.url ? ' <span class="small"><a href="' + esc(f.url) + '" target="_blank" rel="noopener">' + esc(t('invent.ui.source')) + '</a></span>' : ''; };
-    const li = (status, words, fact) => '<li class="k-note">' + mst(status) + '<span>' + esc(words) + src(fact) + '</span></li>';
+    const li = (c, words) => '<li class="k-note">' + marks(c.status, c) + '<span>' + esc(words) + src(c.fact) + '</span></li>';
     if (!parts.length) h += '<p class="small">' + esc(t('liquid.ui.none')) + '</p>';
     const shown = new Set();
     parts.forEach(p => { const L = M.liquidIn(view.plan[p.id]); if (shown.has(L.id)) return; shown.add(L.id);
       const names = parts.filter(q => M.liquidIn(view.plan[q.id]).id === L.id).map(q => partName(q.id)).join(', '), r = L.reshape.value;
       h += '<div class="mclaims"><p><b>' + esc(names) + ' · ' + esc(t('liquid.kind.' + L.id + '.t')) + '</b> <span class="small muted">' + esc(t('liquid.kind.' + L.id + '.d')) + '</span></p><ul>' +
-        li(L.energy.status, t('liquid.ui.energy', { x: times(L.energy.value) }), L.energy.fact) +
-        li(L.reshape.status, t('liquid.ui.reshape', { range: r[0] === r[1] ? secs(r[0]) : secs(r[0]) + ' – ' + secs(r[1]) }), L.reshape.fact) +
-        L.notes.map(n => li(n.status, t('liquid.note.' + n.id), n.fact)).join('') + '</ul>' +
+        li(L.energy, t('liquid.ui.energy', { x: times(L.energy.value) })) +
+        li(L.reshape, t('liquid.ui.reshape', { range: r[0] === r[1] ? secs(r[0]) : secs(r[0]) + ' – ' + secs(r[1]) })) +
+        L.notes.map(n => li(n, t('liquid.note.' + n.id))).join('') + '</ul>' +
         (L.energy.status === 'guess' || L.reshape.status === 'guess' ? '<p class="small muted">' + esc(t('liquid.ui.fallback')) + '</p>' : '') + '</div>'; });
     const ev = ctx.FACT && ctx.FACT['thompson-evolved'];
     h += '<p class="small levolve">' + esc(t('liquid.ui.evolve')) + (ev && ev.url ? ' <a href="' + esc(ev.url) + '" target="_blank" rel="noopener">' + esc(t('invent.ui.source')) + '</a>' : '') + ' <a href="#/do/evolve">' + esc(t('liquid.ui.evolveGo')) + '</a></p>';
@@ -460,7 +468,7 @@ export function machines(el, ctx) {
       h += '<div class="mclaims"><p><b>' + esc(partName(p.id)) + ' · ' + esc(t('invent.matter.' + k.id + '.t')) + '</b> <span class="small muted">' + esc(t('invent.matter.' + k.id + '.d')) + '</span></p>' +
         '<p class="small mrange">' + esc(t('invent.ui.range', { low: times(c.low), high: times(c.high) })) + '</p><ul>' + k.claims.map(cl => {
           const f = cl.fact && ctx.FACT && ctx.FACT[cl.fact], src = f && f.url ? '<a href="' + esc(f.url) + '" target="_blank" rel="noopener">' + esc(t('invent.ui.source')) + '</a>' : cl.engine ? '<a href="' + esc(REPO + cl.engine) + '" target="_blank" rel="noopener">' + esc(t('invent.ui.engine')) + '</a>' : '';
-          return '<li class="k-' + cl.kind + '">' + mst(cl.status) + '<span>' + esc(t('invent.claim.' + cl.id)) + (src ? ' <span class="small">' + src + '</span>' : '') + '</span></li>';
+          return '<li class="k-' + cl.kind + '">' + marks(cl.status, cl) + '<span>' + esc(t('invent.claim.' + cl.id)) + (src ? ' <span class="small">' + src + '</span>' : '') + '</span></li>';
         }).join('') + '</ul>' + (m.score.walls.includes(p.id) ? '<p class="small mwall">' + esc(t('invent.wall.floor')) + '</p>' : '') + '</div>';
     });
     return h + '</section>';
