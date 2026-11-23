@@ -1,0 +1,61 @@
+/* The lab dies's own styles (src/data/labs/dies.js, css: true), loaded when one of its challenges is played (src/core/styles.js). */
+/* Read the die (src/v2/labs/dies.js): a die photo's own colours, the same by day and by night */
+:root { --xr-die: #1f2326; --xr-cache: #3c3a6b; --xr-flash: #4a3d6e; --xr-dram: #352f5c; --xr-grid: rgba(200, 192, 255, .35); --xr-core: #5c4a2a; --xr-gpu: #244c56; --xr-logic: #4b4a42; --xr-npu: #5a2f45; --xr-analog: #2f4a33; --xr-io: #b8923e; --xr-phy: #2f5059; --xr-adc: #2d4734; }
+.xrfig { margin: 8px 0; }
+ .xrfig svg { display: block; width: 100%; height: auto; max-width: 420px; margin: 0 auto; border-radius: 6px; cursor: crosshair; }
+.xrfig .xrdie { fill: var(--xr-die); }
+.xrfig .xc { fill: var(--xr-cache); }
+ .xrfig .xf { fill: var(--xr-flash); }
+ .xrfig .xd { fill: var(--xr-dram); }
+ .xrfig .xcl { stroke: var(--xr-grid); stroke-width: .5; fill: none; }
+.xrfig .xk { fill: var(--xr-core); }
+ .xrfig .xks0 { fill: #8a6d3b; }
+ .xrfig .xks1 { fill: #3e3220; }
+ .xrfig .xks2 { fill: #a88a50; }
+.xrfig .xg { fill: var(--xr-gpu); }
+ .xrfig .xgs0 { fill: #3b7380; }
+ .xrfig .xgs1 { fill: #183840; }
+ .xrfig .xgs2 { fill: #5a98a5; }
+.xrfig .xl { fill: var(--xr-logic); }
+ .xrfig .xls0 { fill: #6d6b5f; }
+ .xrfig .xls1 { fill: #33322c; }
+ .xrfig .xls2 { fill: #85826f; }
+.xrfig .xp { fill: var(--xr-phy); }
+ .xrfig .xpl { stroke: rgba(150, 200, 210, .55); stroke-width: 1.2; }
+.xrfig .xa { fill: var(--xr-adc); }
+ .xrfig .xal { stroke: rgba(150, 210, 160, .55); stroke-width: .9; }
+.xrfig .xpg { fill: #2f6b3a; }
+ .xrfig .xpr { fill: #7a2e34; }
+ .xrfig .xpb { fill: #2f3f7a; }
+.xrfig .xr-npu { fill: var(--xr-npu); }
+ .xrfig .xn0 { fill: #7d4462; }
+ .xrfig .xn1 { fill: #6a3854; }
+.xrfig .xr-analog { fill: var(--xr-analog); }
+ .xrfig .xcoil { fill: none; stroke: rgba(160, 210, 160, .6); stroke-width: 1.2; }
+.xrfig .xr-io { fill: var(--xr-io); stroke: rgba(80, 60, 20, .7); stroke-width: .6; }
+.xrfig .xrb > rect:first-child { stroke: rgba(0, 0, 0, .55); stroke-width: .6; }
+.xrfig .xrb:hover > rect:first-child { stroke: #fff; stroke-width: 1.2; }
+.xrfig .xrb.found > rect:first-child { stroke: var(--good); stroke-width: 1.6; }
+.xrfig .xrb.ok > rect:first-child { stroke: var(--good); stroke-width: 2.6; }
+.xrfig .xrb.bad > rect:first-child { stroke: var(--bad); stroke-width: 2.6; }
+.xrkinds { margin-bottom: 8px; }
+.xrsay b { color: inherit; }
+ .xrsay.good { color: var(--good); }
+ .xrsay.bad { color: var(--bad); }
+.xrbar { display: flex; height: 12px; border-radius: 4px; overflow: hidden; gap: 1px; margin: 4px 0; }
+.xrkey { display: flex; flex-wrap: wrap; gap: 4px 12px; margin: 0 0 8px; }
+ .xrkey span { display: inline-flex; align-items: center; gap: 5px; }
+ .xrkey i { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+.xk-core { background: #a88a50; }
+ .xk-cache { background: #7a74c9; }
+ .xk-gpu { background: #4f9aa8; }
+ .xk-npu { background: #b06a8e; }
+ .xk-logic { background: #85826f; }
+ .xk-analog { background: #5f9b66; }
+.xk-io { background: var(--xr-io); }
+ .xk-phy { background: #5f97a4; }
+ .xk-flash { background: #9a7fd1; }
+ .xk-dram { background: #6c63b8; }
+ .xk-pixels { background: #c05a63; }
+ .xk-adc { background: #4f8a5c; }
+ .xk-other { background: var(--line); }

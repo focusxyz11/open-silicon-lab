@@ -38,7 +38,9 @@ export const AREAS = {
     'station', 'plant', 'prim', 'q', 'here', 'zoom', 'dive', 'line', 'ask', 'trail', 'way', 'route', 'lens', 'layer',
     'joule', 'curve', 'world', 'chal', 'mini', 'lp',
     /* Listen, the block slowed down until it can be heard (#316) */
-    'hear'],
+    'hear',
+    /* how true is each thing, one mark everywhere (#325, src/v2/fid.js) */
+    'fid'],
   place: ['place', 'game', 'grow', 'look', 'dial', 'insp', 'carry', 'door', 'around', 'follow', 'room', 'studio',
     'board', 'story', 'chipx', 'lab', 'society', 'fab', 'whatif'],
   design: ['design', 'bench', 'build', 'ledger', 'api', 'core'],

@@ -11,13 +11,13 @@ import { LENSES, ENGINES, MEASURES, GIVENS, DIRECTIONS, engineOf } from '../src/
 import { EXPERIMENTS, BY_WORLD } from '../src/data/experiments/index.js';
 import * as X from '../src/engines/experiments.js';
 import { readWords } from '../scripts/words.mjs';
+import { CHALLENGES as GAME_CHALLENGES } from '../src/v2/game.js';
 
 const EN = readWords();
 const FACT = Object.fromEntries(JSON.parse(readFileSync(new URL('../src/data/facts.json', import.meta.url), 'utf8')).facts.map(f => [f.id, f]));
 const SKELETON = JSON.parse(readFileSync(new URL('../docs/framework/skeleton.json', import.meta.url), 'utf8'));
-/* the challenges, read from the game's data without a browser */
-const GAME = readFileSync(new URL('../src/v2/game.js', import.meta.url), 'utf8');
-const CHALLENGES = [...GAME.slice(GAME.indexOf('export const CHALLENGES'), GAME.indexOf('];', GAME.indexOf('export const CHALLENGES'))).matchAll(/\{ id: '([a-z0-9-]+)'/g)].map(m => m[1]);
+/* the challenges: the loop's own and every lab's (src/data/labs/) */
+const CHALLENGES = GAME_CHALLENGES.map(c => c.id);
 const has = k => EN[k] !== undefined;
 
 test('one world for each core question, in the weave\'s order; ids are unique and named for their world', () => {
@@ -38,7 +38,9 @@ test('everything the lab had is part of exactly one experiment: every stop, ever
     assert.ok(!at[s], s + ' is in ' + at[s] + ' and ' + x.id); at[s] = x.id;
   }
   for (const s of Object.keys(STOPS)) assert.ok(at[s], 'the stop ' + s + ' is in no experiment');
-  assert.equal(CHALLENGES.length, 58);
+  /* none lost: the 58 there were when each lab came to declare its own (a lab added since adds to them) */
+  assert.ok(CHALLENGES.length >= 58, CHALLENGES.length + ' challenges');
+  assert.equal(new Set(CHALLENGES).size, CHALLENGES.length, 'each challenge once');
   for (const c of CHALLENGES) assert.equal(EXPERIMENTS.filter(x => (x.ch || []).includes(c)).length, 1, 'the challenge ' + c + ' is in exactly one experiment');
   for (const s of Object.keys(TRIES)) assert.equal(X.stateOf(X.experimentAtStop(s)), 'live', 'the try at ' + s + ' makes its experiment live');
   for (const c of CASES) assert.ok(EXPERIMENTS.some(x => X.casesOf(x).includes(c.id)), 'the case ' + c.id + ' is read somewhere');

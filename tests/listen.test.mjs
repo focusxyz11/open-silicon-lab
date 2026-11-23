@@ -15,6 +15,7 @@ import { cleanOne } from '../src/engines/lens.js';
 import { copies, PLAN as GUARD } from '../src/engines/errors.js';
 import { factsOf } from '../src/data/partfacts.js';
 import { CHALLENGES, OPENS, GROWTH, flagged } from '../src/v2/game.js';
+import { LABS, kindsOf } from '../src/data/labs/index.js';
 import { FILED } from '../src/data/frame.js';
 
 test('every level that shows the Listen switch says how much it is slowed', () => {
@@ -101,6 +102,7 @@ test('the ear test is a challenge at the block, filed under Digital meets physic
   assert.deepEqual(FILED.challenges.ear, ['dig', 'eff']);
   /* without the flag, a browser drops it before anything reads the list; with it, and in the tests, it stays */
   assert.equal(flagged(c, ''), false); assert.equal(flagged(c, '?listen=1'), true); assert.equal(flagged(c, '?menu=1&listen=1'), true); assert.equal(flagged({ id: 'x' }, ''), true);
-  const src = readFileSync(new URL('../src/v2/labs/index.js', import.meta.url), 'utf8');
-  assert.match(src, /listen\b/, 'the lab is registered by its kind');
+  const src = readFileSync(new URL('../src/data/labs/index.js', import.meta.url), 'utf8');
+  assert.match(src, /listen\b/, 'the lab is registered, and plays its kind');
+  assert.ok(LABS.some(l => l.name === 'listen' && kindsOf(l).includes('listen')), 'the lab is registered, and plays its kind');
 });

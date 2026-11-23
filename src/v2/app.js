@@ -12,6 +12,7 @@
    #/bench/<level>[/<challenge>] (the studio), #/do/<challenge>, #/ask/<thread>/<depth>, #/supply, #/log, #/build,
    #/ecosystem. Words are read with t(). */
 import { t, needWords, needAllWords } from '../core/i18n.js';
+import { needStyles } from '../core/styles.js';
 import { THREADS } from '../data/weave.js';
 import { NEEDS } from '../data/build.js';
 import { childrenOf } from '../engines/build.js';
@@ -40,7 +41,9 @@ export function start() {
      moment */
   const GLUE = {'island': [], 'frame': [], 'flights': ['frame'], 'studio': ['frame'], 'chip': ['frame'], 'flat': ['frame'], 'supply': ['flat'], 'board': ['frame'], 'pages': ['frame']}, glueP = {};
   const WORDS = { island: ['atlas', 'place', 'design'], frame: ['atlas', 'place', 'design'], pages: ['pages'] };
-  const glue = k => glueP[k] || (glueP[k] = Promise.all(GLUE[k].map(glue).concat(needWords(...(WORDS[k] || [])))).then(() => import('./glue/' + k + '.js')).then(m => { m.create(); afterPaint(() => { if (preloadOk()) needAllWords(); }); }));
+  /* and the styles of its view (src/core/styles.js): the frame's with the frame, each view's own with its glue */
+  const STYLES = { island: ['frame', 'island'], frame: ['frame'], studio: ['studio'], flat: ['flat'], supply: ['supply'], pages: ['pages'] };
+  const glue = k => glueP[k] || (glueP[k] = Promise.all(GLUE[k].map(glue).concat(needWords(...(WORDS[k] || [])), needStyles(...(STYLES[k] || [])))).then(() => import('./glue/' + k + '.js')).then(m => { m.create(); afterPaint(() => { if (preloadOk()) needAllWords(); }); }));
   const waits = (k, names) => names.forEach(n => { V[n] = (...a) => glue(k).then(() => V[n](...a)); });
   /* a question from the field, the joule's way in and the ways out of a question are offered on every view and on the
      seam's note, and answered by the reading pages' glue: the first such click loads it, then is made again */
@@ -135,9 +138,9 @@ export function start() {
   const preloadMark = () => { const h = document.documentElement; if (!h.dataset.preload) h.dataset.preload = String(Math.floor(performance.now())); };
   /* on the first page: only the labs, so a challenge chosen there opens at once */
   let homeLoaded = false;
-  const preloadHome = () => { if (homeLoaded || !preloadOk()) return; homeLoaded = true; preloadMark(); labsReady().catch(() => { /* fetched again when a challenge is played */ }); };
+  const preloadHome = () => { if (homeLoaded || !preloadOk()) return; homeLoaded = true; preloadMark(); labsReady(null, false).catch(() => { /* fetched again when a challenge is played */ }); };
   const preload = () => { if (!preloadOk()) return; preloadMark(); prewarm(); ['./frame.js', './board3d.js', './story.js', './stories.js', '../engines/weave.js', '../app/world.js', '../data/weave.js', '../app/design.js', '../app/journey.js', './level3d.js', './relief3d.js', './wafer3d.js', './pcb3d.js', './phone3d.js', './gate3d.js', './switch3d.js', './atom3d.js', './overlay.js'].forEach(u => import(u).catch(() => { /* fetched again when needed */ })); };
-  const ensureMap = () => mapReady || (mapReady = import('./map3d.js').then(m => {
+  const ensureMap = () => mapReady || (mapReady = Promise.all([import('./map3d.js'), needStyles('frame', 'island')]).then(([m]) => {
     /* tap selects, zoom goes in and out (docs/INTERACTION.md): a second tap on the same place selects it again, it
        does not go in */
     V.map = m.createMap($('mapCanvas'), $('mapLabels'), { whatif: id => V.wf && V.wf.pick(id), place: id => { if (V.wf) return V.wf.pick(id); if (V.cur && V.cur.place === id && !V.cur.part && (!sheet.hidden || !insp.hidden)) return; V.quickNext = true; V.openPlace(id); }, part: (place, part) => { V.quickNext = true; location.hash = '#/place/' + place + '/' + part; },
@@ -276,14 +279,14 @@ export function start() {
     return '<div class="around"><p class="kicker">' + esc(t('around.k')) + '</p><div class="chips">' + (nx ? chip(nx, true) : '') + near.map(p => chip(p)).join('') + '</div></div>'; };
   /* the labs load with the first challenge played (src/v2/play.js); a challenge asked for meanwhile replaces it */
   let playTok = 0;
-  const withLabs = f => { const k = ++playTok; if (labsLoaded()) return f(); loading(true); return labsReady().then(() => { loading(false); if (k === playTok) f(); }); };
+  const withLabs = (f, ch) => { const k = ++playTok; if (labsLoaded(ch)) return f(); loading(true); return labsReady(ch).then(() => { loading(false); if (k === playTok) f(); }); };
   /* a challenge, played in the sheet */
   function openChallenge(ch) {
     if (!ch) return;
     const placeId = ch.kind === 'break' ? 'village' : ch.need ? 'lab' : ch.place;
     if (!V.cur || V.cur.place !== placeId) { V.cur = { place: placeId, tab: 'do' }; V.map && V.map.focus(placeId); }
     $('hero').classList.add('away'); sheet.hidden = false; sheet.scrollTop = 0;
-    withLabs(() => { if (!sheet.hidden) play(sheet, ch, { state: S, save, kept, startChip: () => Object.assign({}, Game.START), open: openChallenge, back: () => { sheet.onclick = null; sheet.oninput = null; V.drawPlace(); }, done: won }); });
+    withLabs(() => { if (!sheet.hidden) play(sheet, ch, { state: S, save, kept, startChip: () => Object.assign({}, Game.START), open: openChallenge, back: () => { sheet.onclick = null; sheet.oninput = null; V.drawPlace(); }, done: won }); }, ch);
   }
   const openJob = need => { const j = Game.jobOf(need); if (j) openChallenge(j); };
   /* a house of the village: a clocked design opens the try to break it; any other, the village's list */
@@ -387,9 +390,7 @@ export function start() {
   let blueprint = null;
   function showBlueprint() {
     showHome0(); if (hold) hold.hide(); if (stations) stations.hide();
-    /* its look, once: the first page does not need it */
-    /* i18n-ok: a selector */ const css = document.querySelector('link[data-bp-css]') ? Promise.resolve() : new Promise(res => { const l = document.createElement('link'); l.rel = 'stylesheet'; l.href = 'src/styles/blueprint.css'; l.dataset.bpCss = '1'; l.onload = l.onerror = res; document.head.appendChild(l); });
-    return Promise.all([import('./home.js'), needWords('blueprint'), css]).then(([m]) => { if (!blueprint) blueprint = m.createHome(blueprintEl, { still }); blueprint.show(); });
+    return Promise.all([import('./home.js'), needWords('blueprint'), needStyles('blueprint')]).then(([m]) => { if (!blueprint) blueprint = m.createHome(blueprintEl, { still }); blueprint.show(); });
   }
   /* ---- the station map (#/stations, src/v2/stations.js): the first page before the blueprint, every station of the lab
      joined round a chip's life, with its toys and paths by subject; loaded when it is first opened ---- */
@@ -397,7 +398,7 @@ export function start() {
   let stations = null;
   function showStations() {
     showHome0(); if (hold) hold.hide(); if (blueprint) blueprint.hide();
-    return import('./stations.js').then(m => {
+    return Promise.all([import('./stations.js'), needStyles('stations')]).then(([m]) => {
       if (!stations) stations = m.createStations(stationsEl, { challenges: Game.CHALLENGES, chOf, titleOf, doHref, doHome: Way.doHome, sizeOf, sizeWords, still,
         done: () => S.done, exps: Exp.EXPERIMENTS.map(x => ({ id: x.id, world: x.world, ask: Read.askOf(x) })) });
       stations.show();
@@ -408,9 +409,12 @@ export function start() {
     V.hideBoard(); document.body.classList.remove('immersive');
     $('chipCanvas').hidden = $('chipLabels').hidden = true; cui.hidden = true; V.chip && V.chip.pause();
     $('placeCanvas').hidden = $('placeLabels').hidden = true; pui.hidden = true; V.dc && V.dc.pause(); V.hidePh(); V.hideCa(); V.hideSw();
-    $('mapCanvas').hidden = $('mapLabels').hidden = false; $('hero').hidden = false; $('outbtn').hidden = false; lensbar.hidden = false; showStage(true);
     const part = from && ['line', 'bench'].includes(V.flatKind) && V.WE && isPart(V.lastPlace, diveId()) ? diveId() : null;
-    loading(!V.map); return Promise.all([ensureMap(), glue('island')]).then(([m]) => { if (from && V.lastPlace) { m.from(V.lastPlace, part); if (!part) m.focus(V.lastPlace); } m.resume(); return m; });
+    /* the island is fetched while its styles load (src/core/styles.js); it shows once they are in, before it is made */
+    const shown = needStyles('frame', 'island').then(() => {
+      $('mapCanvas').hidden = $('mapLabels').hidden = false; $('hero').hidden = false; $('outbtn').hidden = false; lensbar.hidden = false; showStage(true);
+      loading(!V.map); });
+    return Promise.all([ensureMap(), glue('island'), shown]).then(([m]) => { if (from && V.lastPlace) { m.from(V.lastPlace, part); if (!part) m.focus(V.lastPlace); } m.resume(); return m; });
   }
 
   /* ---- the pages ---- */

@@ -1,0 +1,4 @@
+/* studio.css: the studio walked inside (src/v2/studio3d.js, src/v2/glue/studio.js), loaded with it (src/core/styles.js). */
+/* the studio walked inside (src/v2/studio3d.js, #267): while the camera settles on a corner's screen, the ways on the
+   picture step aside for it; the corners' names on the picture are the parts' own */
+#studioui[data-handoff] :is(.wayin, .wayon) { display: none; }

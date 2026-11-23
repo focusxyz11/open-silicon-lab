@@ -25,6 +25,10 @@ import { setBetScene } from '../app/betscene.js';
 import { WAFER as SCENE_WAFER } from '../engines/chip.js';
 import { glyph } from './field.js';
 import { patch } from './patch.js';
+import { LABS as LAB_LIST, kindsOf, labOfKind } from '../data/labs/index.js';
+import { needStyles } from '../core/styles.js';
+import { mark as fidMark } from './fid.js';
+import { labFid } from '../data/fidelity.js';
 
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 /* the gates a description can use, and the one a tap turns each into */
@@ -47,11 +51,22 @@ export function goalOf(ch) {
   return t('game.ch.' + ch.id + '.goal');
 }
 
-/* the labs (src/v2/labs/) and their words (the labs area, src/core/i18n.js) load with the first challenge played, never
-   with the first page: the shell awaits labsReady() before it calls play() */
-let LABS = null;
-export const labsLoaded = () => !!LABS;
-export const labsReady = () => (LABS ? Promise.resolve(LABS) : Promise.all([import('./labs/index.js'), needWords('labs')]).then(([m]) => (LABS = m.LABS)));
+/* the labs (src/v2/labs/, each declared in src/data/labs/) and their words (the labs area, src/core/i18n.js) load with the
+   first challenge played, never with the first page, and their styles (src/styles/labs.css, and each lab's own with its
+   challenge, src/core/styles.js) too: the shell awaits labsReady(ch) before it calls play(). LABS: the lab that plays
+   each kind, the kinds of its challenges */
+let LABS = null, labsP = null;
+/* the words are asked for first, so their one request is not queued behind the labs' modules */
+const labMods = () => labsP || (labsP = Promise.all([needWords('labs'), Promise.all(LAB_LIST.map(l => import('./labs/' + l.name + '.js').then(m => [l, m.default])))])
+  .then(([, mods]) => { const by = {}; mods.forEach(([l, lab]) => kindsOf(l).forEach(k => { by[k] = lab; })); return (LABS = by); }, e => { labsP = null; throw e; }));
+/* the player's styles, and the lab's own when the challenge is a lab's (css: true in its file) */
+const sheetsOf = ch => { const l = ch && labOfKind(ch.kind); return ['labs'].concat(l && l.css ? ['labs/' + l.name] : []); };
+const stylesIn = new Set();
+const labStyles = ch => { const want = sheetsOf(ch); return needStyles(...want).then(() => want.forEach(n => stylesIn.add(n))); };
+export const labsLoaded = ch => !!LABS && sheetsOf(ch).every(n => stylesIn.has(n));
+/* labsReady(ch): the labs, their words, and the styles that challenge needs; labsReady(null, false): the labs and their
+   words only, as the first page fetches them in an idle moment (styles wait for a challenge played) */
+export const labsReady = (ch = null, styles = true) => Promise.all([labMods(), styles ? labStyles(ch) : null]).then(() => LABS);
 export function play(el, ch, ctx) {
   const S = ctx.state;
   let view = { msg: null, B: null, ai: false, hint: false, tests: [], guess: null, wrong: null, write: false, won: false, rows: null, okG: null, op: -1, seq: null, slip: null, no: null };
@@ -62,7 +77,9 @@ export function play(el, ch, ctx) {
   if (TAP) view.B = checkDesign(ch.p, S.codes[ch.p] != null ? S.codes[ch.p] : starter(ch.p));
   const head = () => '<button type="button" class="back" data-back>' + esc(t('game.back')) + '</button>' +
     '<p class="kicker">' + esc(ch.step ? t('game.stepN', { n: STEPS.indexOf(ch.step) + 1, step: t('game.step.' + ch.step) }) + ' · ' + t('map.' + ch.place + '.t') : t(ch.kind === 'break' ? 'game.break.kicker' : 'game.jobKicker')) + '</p>' +
-    where() + '<h3 class="ch-t">' + esc(titleOf(ch)) + '</h3><p class="goal">' + esc(goalOf(ch)) + '</p>' +
+    where() + '<h3 class="ch-t">' + esc(titleOf(ch)) + '</h3>' +
+    /* how true the lab is: one mark, tapped for what it means here (#325, src/data/fidelity.js) */
+    '<p class="fidrow">' + fidMark(labFid(ch)) + '</p><p class="goal">' + esc(goalOf(ch)) + '</p>' +
     (ch.kind !== 'break' && (ch.kind !== 'design' || !ch.need) && !(ch.id === 'half' && !view.write) ? '<p class="small muted why">' + esc(t('game.ch.' + ch.id + '.why')) + '</p>' : '');
   /* where it happens: the place, and its levels with this one lit */
   const where = () => { const place = ch.need ? 'studio' : ch.place, at = ch.kind === 'break' ? 'check' : ch.need ? 'logic' : ch.at, L = INSIDE[place] || [];

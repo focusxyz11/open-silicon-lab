@@ -1,0 +1,13 @@
+/* The lab overlay's own styles (src/data/labs/overlay.js, css: true), loaded when one of its challenges is played (src/core/styles.js). */
+.ovfig { margin: 8px 0; }
+ .ovfig svg { display: block; width: 100%; height: auto; }
+.ovfig .ax { font: 10px var(--sans); fill: var(--muted); }
+.ovfig .wire { fill: color-mix(in srgb, var(--muted) 35%, transparent); }
+.ovfig .via.hit { fill: color-mix(in srgb, var(--good) 70%, transparent); stroke: var(--good); stroke-width: 1; }
+.ovfig .via.miss { fill: color-mix(in srgb, var(--bad) 35%, transparent); stroke: var(--bad); stroke-width: 1.5; stroke-dasharray: 3 2; }
+.ovfig .mtr { fill: color-mix(in srgb, var(--ink) 10%, transparent); }
+.ovfig .mfill { fill: var(--good); }
+ .ovfig .mfill.marginal { fill: var(--warm); }
+ .ovfig .mfill.fail { fill: var(--bad); }
+.ovfig .m1 { stroke: var(--ink); stroke-width: 1.5; }
+.ovfig .ovrate { margin: 6px 0 2px; font-size: 13px; }

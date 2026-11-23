@@ -1,0 +1,29 @@
+/* The lab errors's own styles (src/data/labs/errors.js, css: true), loaded when one of its challenges is played (src/core/styles.js). */
+/* Catch the silent errors (src/v2/labs/errors.js): the stack of levels, each with what is born there, what it stops,
+   and its protection set on the row */
+.erstack { margin: 8px 0 10px; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+.ertop, .errow { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 4px 10px; align-items: center; padding: 7px 10px; }
+.errow { border-top: 1px solid var(--line); }
+.ertop { grid-template-columns: 96px minmax(0, 1fr) auto; background: color-mix(in srgb, var(--bad) 8%, transparent); }
+.erlv { display: flex; flex-direction: column; gap: 1px; font-size: 13px; line-height: 1.25; }
+.erlv .small { font-size: 11px; }
+.erbars { position: relative; display: flex; flex-direction: column; gap: 2px; min-height: 12px; }
+.erbars i { display: block; height: 5px; border-radius: 3px; }
+.ertop .erbars i { height: 9px; }
+i.erborn { background: color-mix(in srgb, var(--warm) 75%, transparent); }
+i.erstop { background: var(--good); }
+i.ersil { background: var(--bad); }
+.ersilv { color: var(--bad); font-size: 13px; }
+.erlevers { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 6px 14px; }
+.erlevers:empty { display: none; }
+.erlever { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
+.erseg { display: inline-flex; flex-wrap: wrap; gap: 3px; }
+ .erseg .chipb { padding: 3px 8px; font-size: 11.5px; }
+.erkey { display: flex; flex-wrap: wrap; gap: 4px 14px; margin: 0; padding: 7px 10px; border-top: 1px solid var(--line); }
+.erkey span { display: inline-flex; align-items: center; gap: 5px; }
+ .erkey i { width: 14px; height: 6px; border-radius: 3px; display: inline-block; }
+.ermsg.good { color: var(--good); }
+ .ermsg.bad { color: var(--bad); }
+.erplaces { margin-bottom: 4px; }
+.lsnwave i:nth-child(2) { height: 13px; }
+ .lsnwave i:nth-child(3) { height: 9px; }

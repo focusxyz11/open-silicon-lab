@@ -95,14 +95,14 @@
   {
    "id": "asic-vs-cpu",
    "topic": "everywhere",
-   "detail": "Hameed et al., ISCA 2010. Adding custom instructions to the processor closed the gap to about 3×.",
+   "detail": "Hameed et al., ISCA 2010: a 720p HD H.264 encoder on a general-purpose four-processor chip against a custom chip doing the same job, 90 nm. Adding custom instructions to the processor closed the gap to about 3×. One study, one job: for other jobs the gap is often smaller.",
    "kind": "reported",
    "label": "Custom chip vs general processor",
    "source": "Communications of the ACM",
    "status": "current",
    "url": "https://cacm.acm.org/research/understanding-sources-of-ineffciency-in-general-purpose-chips",
    "value": "A general-purpose chip used about 500× the energy of a custom chip for HD video encoding",
-   "verified": "2026-10-29"
+   "verified": "2026-11-23"
   },
   {
    "id": "biomemory-dna",
@@ -223,6 +223,18 @@
    "url": "https://compoundsemiconductor.net/article/115795/Chips_per_car_to_rise_to_over_a_thousand",
    "value": "About 820 on average in 2022, about 1,100 by 2027",
    "verified": "2026-10-29"
+  },
+  {
+   "id": "clock-power-share",
+   "topic": "architecture",
+   "detail": "Semiconductor Engineering, The Problem With Clocks: a tool maker (Mentor, a Siemens business) says that at smaller nodes the clock network takes about half of a chip's power, most of it from the clock toggling; the article also gives 30% to 40% of a design's total power.",
+   "kind": "estimate",
+   "label": "Power taken by a chip's clock",
+   "source": "Semiconductor Engineering",
+   "status": "new",
+   "url": "https://semiengineering.com/the-problem-with-clocks",
+   "value": "The clock network takes 30% to 40% of a design's total power, and about half at smaller nodes",
+   "verified": "2026-11-23"
   },
   {
    "id": "copos",
@@ -1051,6 +1063,18 @@
    "url": "https://www.eetimes.com/vaire-demos-energy-recovery-with-reversible-computing-test-chip/",
    "value": "22 nm, 500 MHz: energy recovered by a factor of 1.77 in a capacitor array, 1.41 in a shift register",
    "verified": "2026-10-29"
+  },
+  {
+   "id": "vaire-thirty",
+   "topic": "reversible",
+   "detail": "Science News on the same test chip: it reused part of its electrical energy instead of losing it as heat. It agrees with the factor of 1.41 in the shift register (1/1.41 is about 0.71).",
+   "kind": "reported",
+   "label": "Reversible test chip against a regular one",
+   "source": "Science News",
+   "status": "new",
+   "url": "https://www.sciencenews.org/article/computer-chip-reuses-energy",
+   "value": "About 30% less energy than a regular chip doing the same computation",
+   "verified": "2026-11-23"
   },
   {
    "id": "vr-nvl72",
@@ -1894,6 +1918,12 @@
   }
  ],
  "changes": [
+  {
+   "date": "2026-11-23",
+   "title": "Is it true? The block and Machines audited",
+   "summary": "Every factual sentence at the block level and in Machines from shared blocks was checked against a source and given a verdict (docs/reviews/truth/block-and-machines.md). Two new figures: the share of power a chip's clock takes, and the reversible test chip against a regular one; the custom chip against a general processor rechecked.",
+   "url": ""
+  },
   {
    "date": "2026-10-31",
    "title": "The bench meets Why perfect designs fail",

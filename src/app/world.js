@@ -26,7 +26,7 @@ const MONO = '"Martian Mono", ui-monospace, Menlo, monospace'; /* i18n-ok: a fon
 const SANS = '"Atkinson Hyperlegible Next", system-ui, sans-serif'; /* i18n-ok: a font name */
 
 
-/* the chip world's look (CHROME.lit): the same palette as its 3D views and its pages (src/styles/v2.css), with the
+/* the chip world's look (CHROME.lit): the same palette as its 3D views and its pages (src/styles/base.css), with the
    same materials (si silicon, doped silicon, cu copper wires, au contact metal, glass insulator; the switch's gate is
    cool, the accent), and
    light from above: shapes are lit at the top and cast a soft shadow, as the lit 3D scenes do */

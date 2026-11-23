@@ -7,6 +7,11 @@ description: Runs the night's build of Open Silicon Lab - clears as many open ta
 
 Each night clear as many open task issues as possible: group them, build every group in parallel with helpers, merge the green PRs one by one, leave `main` green.
 
+## Working here
+- GitHub goes through the GitHub MCP tools (`mcp__github__*`, loaded with ToolSearch): the `gh` CLI is not authenticated in the cloud session. `git push` over https works. Helpers use the same tools.
+- A shell command in the foreground stops after 10 minutes. Run anything longer (several smoke sections, the whole smoke test) in the background with its output in a log, and poll the log.
+- If a PR's check runs come back empty, read the workflow runs for its branch instead (`actions_list`, `list_workflow_runs` filtered by branch) and match the run's `head_sha` to the PR's head.
+
 ## Phase 0: main is green
 If `main`'s latest CI run failed, fix the root cause in a PR of your own first, and merge it when green. Never skip or weaken a check. The failing part of CI names its sections (`browser (<group>)`); rerun those locally with `npm run test:browser -- --only <sections>`.
 
@@ -18,10 +23,10 @@ If `main`'s latest CI run failed, fix the root cause in a PR of your own first, 
 
 ## Phase 2: build every group in parallel
 Per group, a worktree from `origin/main` and one background helper (Agent tool) with a self-contained brief:
-- its worktree, its branch `claude/task-<group>`, its issues, its own server port (8041, 8042, ...);
+- its worktree, its branch `claude/task-<group>`, its issues, its own server port (8041, 8042, ...), and its own folder for scratch files (`<scratchpad>/<group>/`: helpers share the scratchpad, and a shared name gets overwritten);
 - the principles of `CLAUDE.md`;
 - build every issue as one coherent design; say in the PR what is left, with no `Closes` for it;
-- *Before you push* from `CLAUDE.md`: `npm test`, `node --check` on every changed `.js`/`.mjs` file, and `npm run test:browser -- --only <the sections the change touches>` (`npm run test:browser -- --list` shows them: `old`, `explore-desktop`, `explore-phone`, `joins`, `break`, `slow`, `motion`, `seams`, `labs`, `search`, `ways`, `frame`, `flights`); a new smoke check goes in the section of its view, uses only variables of its own block, polls with `waitForFunction` redoing the move, never fixed waits; push only when these pass;
+- *Before you push* from `CLAUDE.md`: `npm test`, `node --check` on every changed `.js`/`.mjs` file, and `npm run test:browser -- --only <the sections the change touches>` (`npm run test:browser -- --list` shows them: `old`, `home`, `stations`, `explore-desktop`, `explore-phone`, `joins`, `break`, `slow`, `motion`, `seams`, `labs`, `search`, `ways`, `frame`, `flights`, `machines`); the machine has 2 CPUs, so with five helpers local browser runs are slow: run only your sections, and a local timeout that an untouched `origin/main` shows too is load, with CI the judge; a new smoke check goes in the section of its view, uses only variables of its own block, polls with `waitForFunction` redoing the move, never fixed waits; push only when these pass;
 - check every change with Playwright: chromium args `['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader']`; localStorage `osl-quality` = `keep`, `osl-theme`, `osl-hints-v1` = `{"seen":{},"off":true}`; wait 10 to 15 s after moves;
 - screenshots at 1280 x 820 dark and 390 x 844 light, looked at and fixed;
 - do not edit `docs/STATUS.md`;
@@ -32,7 +37,8 @@ Per group, a worktree from `origin/main` and one background helper (Agent tool) 
 
 ## Phase 3: merge one by one
 Take the PRs in order of lowest issue number. For each:
-1. Merge `origin/main` into the branch, keeping both sides (they meet in `src/i18n/en.json`, `src/v2/app.js`, `src/v2/frame.js`, `src/styles/v2.css`, `scripts/smoke.mjs` and the experiments count; in `smoke.mjs` keep each check in its own section).
+1. Merge `origin/main` into the branch, keeping both sides. A lab, a view's styles and a smoke check are files of their own now (`docs/LABS.md`, `docs/WORKFLOW.md`), so branches meet only in the shared files: the words (`src/i18n/en/<area>.json`, and `AREAS` in `src/core/i18n.js`), `src/data/frame.js` (`FILED`, `MARKS`), the labs' list `src/data/labs/index.js` (an import and a name per lab: keep both), the shared sheets `src/styles/base.css` and `src/styles/frame.css`, and the shell (`src/v2/app.js`, `src/v2/game.js`); rarely `src/core/styles.js` (`ORDER`) and `scripts/smoke.mjs` (`NAMES`, a new section). Keep each smoke check in its section's file (`scripts/smoke/<section>.mjs`, a lab's in `scripts/smoke/labs/<lab>.mjs`).
+   Resolve a conflict hunk by hunk. Never take one side of a whole file (`git checkout --ours` or `--theirs`): that drops the other side's changes that merged cleanly too (on 23 November it dropped two labs' smoke checks, put back the same night). After resolving, read `git diff origin/main` on every file that conflicted and see both sides' additions there; and check that two island growths do not stand on the same spot (`src/v2/growers/`).
 2. `npm test`, `node --check` on the changed files, and `npm run test:browser -- --only <the sections it touches>`.
 3. Push, wait for CI, squash-merge when `test` is green.
 4. After three failed tries, make it a draft with a comment saying what fails, and go on.
