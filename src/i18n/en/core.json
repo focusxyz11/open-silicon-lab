@@ -1175,5 +1175,8 @@
  "game.ch.ear.t": "Listen and tell",
  "game.ch.ear.goal": "The picture is hidden. Listen to the block, slowed down a billion times, and say what it is doing: busy, waiting on memory, too hot, or saving power. Get eight right of your last ten.",
  "game.ch.ear.why": "A chip works far too fast to see or hear: billions of steps a second. Slowed down until each step is a sound, its state can be told by ear, the way a mechanic hears what is wrong with an engine. Training your ear for it is learning a new sense for a world too fast to see.",
+ "game.ch.corearch.t": "Change your core",
+ "game.ch.corearch.goal": "Make the core at least twice as fast on the puzzles' programs, in no more than 1.4 times its area, for no more energy.",
+ "game.ch.corearch.why": "Every core is a trade: a part that makes some programs faster costs area on the chip, and energy every cycle it is powered, whether it is used or not. Architects choose the parts that earn their place for the work the chip will do.",
  "ui.blueprint": "The blueprint: the chip innovation ecosystem as one wheel, a chip's life around it and its scale inward"
 }

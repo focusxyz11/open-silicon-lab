@@ -484,6 +484,10 @@ html.frame2 .f2stage .fitline[data-f2] .fitk:nth-of-type(even) { bottom: 136px; 
 html.frame2 .f2stage .fitline[data-f2] .end { bottom: 20px; left: 22px; font: var(--f2-small); }
 html.frame2 .f2stage .fitline[data-f2] .end.r { left: auto; right: 22px; }
 html.frame2 .f2stage .fitline[data-f2]::after { content: ""; position: absolute; left: 22px; right: 22px; bottom: 56px; height: 2px; background: var(--line); }
+/* your core's datapath (src/v2/labs/datapath.js): its head a line over the drawing, in the frame's type */
+html.frame2 .f2stage :is(.dpfig, .cafig)[data-f2] .dphead { flex: none; margin: 0; font: var(--f2-small); }
+html.frame2 .f2stage :is(.dpfig, .cafig)[data-f2] .dpwho { font: var(--f2-label); }
+@media (max-width: 720px) { html.frame2 .f2stage .dpfig[data-f2] .dphead > .small { display: none; } html.frame2 .f2stage .cafig[data-f2] .dphead { display: none; } }
 /* the island's sheet in Do: the side panel, the instrument on the stage beside it, the island hidden behind it */
 html.frame2 #sheet.f2do { left: auto; right: 16px; top: 84px; bottom: 16px; transform: none; translate: none; width: var(--f2-pw); max-height: none; overflow: auto;
   padding: 18px 26px 22px; border-radius: 22px; background: var(--panel-solid); backdrop-filter: none; -webkit-backdrop-filter: none; view-transition-name: none; animation: none; font: var(--f2-small); }

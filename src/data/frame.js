@@ -143,7 +143,8 @@ export const FILED = {
   'noise': ['physics', 'nat'], 'noise-big': ['physics', 'nat'], 'thousand': ['human', 'sutton'],
   'search': ['sutton', 'human'], 'halt': ['nat', 'trust'],
   /* Listen and tell, the ear test at the block (#316) */
-  'ear': ['dig', 'eff']
+  'ear': ['dig', 'eff'],
+  'corearch': ['line', 'eff', 'geo']
   }
 };
 

@@ -817,6 +817,8 @@ run['labs'] = async () => {
     + " for (const [b, n] of [[1000, 1000], [10000, 10000]]) { CL(P + '[data-hl-budget=\"' + b + '\"]'); CL(P + '[data-hl-clear]'); CL(P + '[data-hl-add=\"count\"]'); SET(P + '[data-hl-n=\"0\"]', n); CL(P + '[data-hl-run]'); } CL(P + '[data-hl-clear]'); CL(P + '[data-hl-add=\"ask\"]'); CL(P + '[data-hl-run]')", 'The program nobody can judge');
   /* Listen and tell (#316), only with ?listen=1: the state played is on the hidden picture, so it is answered without audio */
   await playLab('ear', "const P = '.player[data-ch=\"ear\"] '; for (let n = 0; n < 12 && !document.querySelector(P + '.won'); n++) { CL(P + '[data-ear-play]'); const f = document.querySelector(P + '.earfig'), s = f && f.dataset.earState; if (s) CL(P + '[data-ear-ans=\"' + s + '\"]'); }", 'Listen and tell', 90000, '?listen=1#/do/ear');
+  /* change your core (#321): a slow multiplier, a second unit and half the registers, together, reach the goal */
+  await playLab('corearch', "const P = '.player[data-ch=\"corearch\"] '; for (const [k, v] of [['mul', 'slow'], ['alus', '2'], ['regs', '16']]) CL(P + '[data-ca-' + k + '=\"' + v + '\"]:not([aria-pressed=\"true\"])')", 'Change your core');
   /* serving a language model, at the data centre: four bits despite outliers, where an answer's energy goes, read fast and write slow */
   await playLab('quantize', "CL('[data-sq-format=\"fp4\"]:not([aria-pressed=\"true\"])'); CL('[data-sq-scale=\"nv16\"]:not([aria-pressed=\"true\"])'); SET('#sq-outliers', 1)", 'Four bits, despite outliers');
   await playLab('token-energy', "SET('#se-watts', 2300); SET('#se-tokExp', 3.9); SET('#se-pue', 1.05); SET('#se-overhead', 10); SET('#se-tokExp', 4.5)", 'Where an answer\'s energy goes');
@@ -900,6 +902,24 @@ run['labs'] = async () => {
     for (const [id, r] of calls) { c('[data-ag-case="' + id + '"]'); if (document.querySelector('#sheet .agverdict.good')) continue; c('[data-ag-redo]'); if (r == null) c('[data-ag-trust]'); else { c('[data-ag-reject]'); c('[data-ag-reason="' + r + '"]'); } }
     return !!document.querySelector('#sheet .player .won'); }, null, { timeout: 30000, polling: 1500 }).catch(() => problems.push(tag + ': eight right calls do not win Verify the agent'));
   await inDo('agent', 'agent');
+  /* your own core (#321): a machine's core opens on that machine's job, its datapath drawn with the arithmetic unit as 32
+     slices; a wrong gate in your slice makes your core part from the reference core, and the picture shows the slice.
+     Last in the section: the slice is kept on your bench, and is put back before the page closes */
+  {
+    const P = '.player[data-ch="rvrun"] ';
+    await fp.goto(adr('#/do/rvrun/wildfire'));
+    await fp.waitForFunction(P => { const b = document.querySelector(P + '[data-rv-run]'); if (b && !document.querySelector(P + '.rvtwo')) b.click();
+      return !!document.querySelector(P + '[data-rv-p="wildfire"][aria-pressed="true"]') && document.querySelectorAll(P + '.dpfig .dpsl').length === 32 && !!document.querySelector(P + '.rvtwo') && !document.querySelector(P + '.rvfault'); }, P, { timeout: 90000, polling: 1500 })
+      .catch(() => problems.push(tag + ': a machine\'s core does not open on its job, run on your core with its datapath drawn'));
+    await fp.waitForFunction(P => { const c = q => { const b = document.querySelector(P + q); if (b) b.click(); };
+      if (!document.querySelector(P + '.rvtwo')) c('[data-rv-run]');
+      if (!document.querySelector(P + '[data-rv-slice0]')) c('[data-rv-gate="2"]');
+      if (document.querySelector(P + '.rvfault') && !document.querySelector(P + '.dpfig .dpsl.bad')) c('[data-rv-fault]');
+      return !!document.querySelector(P + '.rvfault') && !!document.querySelector(P + '.rvtwo .bad') && !!document.querySelector(P + '.dpfig .dpsl.bad') && !!document.querySelector(P + '.dpfig .dpon.bad'); }, P, { timeout: 60000, polling: 1500 })
+      .catch(() => problems.push(tag + ': a wrong gate in your slice does not show where your core went wrong'));
+    await fp.waitForFunction(P => { const b = document.querySelector(P + '[data-rv-slice0]'); if (b) b.click(); return !document.querySelector(P + '[data-rv-slice0]') && !document.querySelector(P + '.rvfault'); }, P, { timeout: 30000, polling: 1500 })
+      .catch(() => problems.push(tag + ': your slice is not put back to the lab\'s example'));
+  }
   await fp.close(); }
 };
 
@@ -1394,6 +1414,8 @@ run['machines'] = async () => {
     await fp.waitForFunction(() => document.querySelectorAll('.mach .mpart').length === 4 && !!document.querySelector('.mach .mchecks li.bad'), null, { timeout: 60000, polling: 500 }).catch(() => problems.push(tag + ': the hearing aid does not start as circuits that miss its need'));
     /* the machine is drawn: every block on the stage with its wires, the filter a circuit */
     await fp.waitForFunction(() => document.querySelectorAll('.mach .mstage .mpic .mbk').length === 4 && document.querySelectorAll('.mach .mwires .mw').length === 4 && !!document.querySelector('.mach .mbk[data-mpart="filter"].f-circuit .mbks .body'), null, { timeout: 15000, polling: 300 }).catch(() => problems.push(tag + ': the machine is not drawn as a block diagram'));
+    /* the core block leads into the core, at work on this machine's job (#321) */
+    await fp.waitForFunction(() => !!document.querySelector('a.mcoreway[href="#/do/rvrun/hearing"]'), null, { timeout: 15000, polling: 500 }).catch(() => problems.push(tag + ': the core block does not lead into the core'));
     /* the filter made software: the machine meets its need, and the diagram changes with the form */
     await fp.waitForFunction(() => { const b = document.querySelector('[data-mform="filter:software"]'); if (b && b.getAttribute('aria-pressed') !== 'true') b.click(); return !!b && !document.querySelector('.mach .mchecks li.bad'); }, null, { timeout: 15000, polling: 300 }).catch(() => problems.push(tag + ': a filter made software does not meet the need'));
     await fp.waitForFunction(() => !!document.querySelector('.mach .mbk[data-mpart="filter"].f-software') && !document.querySelector('.mach .mbk[data-mpart="filter"].f-circuit') && !!document.querySelector('.mach .mwires .mrun'), null, { timeout: 15000, polling: 300 }).catch(() => problems.push(tag + ': the filter made software does not change on the diagram (nor run on the core)'));

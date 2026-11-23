@@ -160,7 +160,9 @@ export const CHALLENGES = [
   { id: 'halt', step: 'design', place: 'lab', kind: 'halt', piece: 'core', grows: 'lab-halt' },
   /* Listen and tell, the ear test at the block (#316, src/v2/labs/listen.js, src/engines/listen.js): only with
      ?listen=1 until the owner has listened (flag, below) */
-  { id: 'ear', step: 'use', place: 'datacentre', at: 'block', kind: 'listen', flag: 'listen', grows: 'dc-ear' }
+  { id: 'ear', step: 'use', place: 'datacentre', at: 'block', kind: 'listen', flag: 'listen', grows: 'dc-ear' },
+  /* change your core: what a multiplier, a second unit or half the registers buy and cost (src/v2/labs/corearch.js, src/engines/corearch.js) */
+  { id: 'corearch', step: 'design', place: 'lab', kind: 'corearch', piece: 'core', grows: 'lab-arch' }
 ];
 /* A challenge behind a flag (flag: 'listen') shows only where the address asks for it (?listen=1): in a browser
    without the flag it is dropped from CHALLENGES here, before anything reads the list, so nothing else changes. With no
@@ -360,7 +362,8 @@ export const OPENS = { 'too-hot': 'fail.switch', 'litho-finest': 'scale.print', 
   noise: 'strange.switch', 'noise-big': 'think.switch', thousand: 'idea.need',
   search: 'idea.check', halt: 'limit.rack',
   /* the ear test hears the block live: a clock, sums, waits, heat */
-  ear: 'life.block' };
+  ear: 'life.block',
+  corearch: 'divide.chip' };
 /* and where the open things of the ledger sit: a break under "is the design right?", a piece to build under
    "could anyone design a chip?", a missing check under "who checks, and with what?" */
 export const FRONT_ASK = { break: 'fail.check', build: 'open.need', engine: 'idea.check' };

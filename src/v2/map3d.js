@@ -810,6 +810,11 @@ export function createMap(canvas, host, on = {}) {
       box(g, 1.1, 0.9, 1.1, mat(P.white), 1.4, 0.3, 0.2, 0.1); pulses.push(box(g, 0.6, 0.12, 0.06, glow(P.warm, night ? 1.2 : 0.6), 1.4, 0.95, 0.77, 0.01, { cast: false })); },
     'lab-halt': g => { cyl(g, 1.5, 1.7, 0.5, mat(P.wall), 0, 0, 0, 28); box(g, 1.1, 0.9, 1.1, mat(P.dark), 0, 0.5, 0, 0.08); pulses.push(box(g, 0.6, 0.06, 0.6, glow(P.accent, night ? 1.3 : 0.7), 0, 1.4, 0, 0.02, { cast: false }));
       const r = new THREE.Mesh(new THREE.TorusGeometry(1.25, 0.06, 8, 48), glow(P.warm, night ? 1.2 : 0.7, { transparent: true, opacity: 0.85 })); r.rotation.x = Math.PI / 2; r.position.set(0, 1.0, 0); g.add(r); },
+    /* change your core (src/v2/labs/corearch.js): a core's floor plan as a model on a plinth, its registers a low block,
+       two arithmetic units and a small multiplier standing up from it, each lit */
+    'lab-arch': g => { box(g, 3.2, 0.3, 3.2, mat(P.wall), 0, 0, 0, 0.1); box(g, 2.6, 0.12, 2.6, mat(P.dark), 0, 0.3, 0, 0.03);
+      box(g, 1.1, 0.25, 2.3, metal(P.slate), -0.6, 0.42, 0, 0.02); pulses.push(box(g, 0.9, 0.36, 0.95, glow(P.accent, night ? 1.2 : 0.6), 0.65, 0.42, -0.55, 0.02, { cast: false }));
+      pulses.push(box(g, 0.9, 0.36, 0.95, glow(P.accent, night ? 1.2 : 0.6), 0.65, 0.42, 0.55, 0.02, { cast: false })); box(g, 0.5, 0.6, 0.5, mat(P.white), 0.65, 0.78, 0, 0.03); },
     'clock-tower': g => { box(g, 2.4, 9, 2.4, mat(P.white), 0, 0, 0, 0.2); const face = cyl(g, 1, 1, 0.2, mat(P.wall), 0, 7, 1.25, 24); face.rotation.x = Math.PI / 2; const hand = box(g, 0.12, 0.9, 0.08, mat(P.dark), 0, 6.95, 1.42, 0.02, { cast: false }); hand.geometry = hand.geometry.clone().translate(0, 0.4, 0); spinning.push({ hand }); }
   };
   /* where each growth stands, relative to its place: [x, z, y] */
@@ -834,7 +839,9 @@ export function createMap(canvas, host, on = {}) {
     /* labs-a: design it or search for it, at the Lab south of the core (the studio's ground is full); the program nobody can judge, at the Lab beside the core */
     'lab-search': [15, 16], 'lab-halt': [18, 10],
     /* Listen and tell: west of the data centre, between the two halls of cores */
-    'dc-ear': [-21, -1] };
+    'dc-ear': [-21, -1],
+    /* change your core: beside it, further east */
+    'lab-arch': [21, 14] };
   GROWTH.forEach(gw => { const [x, z, y] = GROW_SPOT[gw.id] || [0, 0], g = group(G[gw.at], x, y || 0, z); g.visible = false; g.scale.setScalar(0.001); growing.push({ id: gw.id, g, built: false, t0: 0 }); });
 
   /* No question floats over a place any more (docs/framework/rebuild.md, section 3): a question shown as a dot on a

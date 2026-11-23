@@ -3327,3 +3327,94 @@ html.frame2 .f2stage .thfig svg text { font-size: calc(12.5px * var(--f2-k, .6))
 /* in Do mode the hidden block takes the stage: square, as large as the stage allows */
 html.frame2 .f2stage .earfig[data-f2="instrument"] { display: grid; place-items: center; background: none; }
 html.frame2 .f2stage .earfig[data-f2="instrument"] svg { width: auto; height: 100%; max-width: 100%; aspect-ratio: 1; }
+/* Your core (#321): the datapath of the core made of your slice (src/v2/labs/datapath.js), the two cores side by side,
+   and your slice to turn (src/v2/labs/rv.js) */
+:is(.dpfig, .cafig) .dphead { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 10px; margin: 0 0 6px; }
+:is(.dpfig, .cafig) .dpwho { font-weight: 700; color: var(--good); } .cafig .dpwho { color: var(--ink); } .dpfig .dpwho.bad { color: var(--bad); }
+.dpfig .dpstep { margin-left: auto; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.dpsvg { display: block; width: 100%; height: auto; }
+.dpsvg .dpk { font: 600 10px var(--sans); fill: var(--muted); letter-spacing: .02em; }
+.dpsvg .dpk.pc { fill: var(--accent); } .dpsvg .dpk.jump { fill: var(--warm); }
+.dpsvg .dpbox { fill: var(--panel-solid); stroke: var(--line); stroke-width: 1; }
+.dpsvg .dpbox.prog { fill: color-mix(in srgb, var(--ink) 3%, var(--panel-solid)); }
+.dpsvg .dpbox.on { stroke: color-mix(in srgb, var(--accent) 75%, var(--line)); stroke-width: 1.4; }
+.dpsvg .dpcode { font: 11px var(--mono); fill: var(--ink); white-space: pre; } .dpsvg .dpcode.cm { fill: var(--muted); } .dpsvg .dpcode.on { fill: var(--warm); font-weight: 700; }
+.dpsvg .dpon { fill: color-mix(in srgb, var(--warm) 20%, transparent); } .dpsvg .dpon.bad { fill: color-mix(in srgb, var(--bad) 24%, transparent); stroke: var(--bad); stroke-width: .8; }
+.dpsvg .dpop { font: 700 17px var(--mono); fill: var(--warm); }
+.dpsvg .dpf { font: 10px var(--mono); fill: var(--ink); }
+.dpsvg .dpw { fill: none; stroke: color-mix(in srgb, var(--ink) 20%, transparent); stroke-width: 1.6; stroke-linejoin: round; stroke-linecap: round; }
+.dpsvg .dpw.on { stroke: var(--accent); stroke-width: 2.4; }
+.dpsvg .dpw.w-br.on { stroke: var(--warm); }
+.dpsvg .dparrow { fill: color-mix(in srgb, var(--ink) 34%, transparent); }
+.dpsvg .dpreg { fill: color-mix(in srgb, var(--ink) 4%, transparent); stroke: transparent; stroke-width: 1.3; }
+.dpsvg .dpreg.rd { stroke: var(--accent); }
+.dpsvg .dpreg.wr { fill: color-mix(in srgb, var(--warm) 22%, transparent); stroke: var(--warm); }
+.dpsvg .dpreg.bad { fill: color-mix(in srgb, var(--bad) 16%, transparent); stroke: var(--bad); }
+.dpsvg .dpn { font: 10px var(--mono); fill: var(--muted); }
+.dpsvg :is(.dpv, .dpbad, .dpshould) { paint-order: stroke; stroke: var(--panel-solid); stroke-width: 3px; stroke-linejoin: round; }
+.dpsvg .dpv { font: 600 11px var(--mono); fill: var(--ink); }
+.dpsvg .dpv.big { font-size: 15px; fill: var(--warm); } .dpsvg .dpv.out { fill: var(--accent); } .dpsvg .dpv.bad { fill: var(--bad); }
+.dpsvg .dpalu { fill: color-mix(in srgb, var(--accent) 5%, var(--panel-solid)); stroke: color-mix(in srgb, var(--accent) 60%, var(--line)); stroke-width: 1.4; }
+.dpsvg .dpalu.on { stroke: var(--accent); }
+.dpsvg .dpsl { fill: color-mix(in srgb, var(--ink) 14%, transparent); }
+.dpsvg .dpsl.one { fill: color-mix(in srgb, var(--accent) 80%, var(--ink)); }
+.dpsvg .dpsl.bad { fill: var(--bad); }
+.dpsvg .dprip { fill: color-mix(in srgb, var(--warm) 34%, transparent); }
+.dpsvg .dpbad { font: 700 10px var(--sans); fill: var(--bad); }
+.dpsvg .dpbadmk { stroke: var(--bad); stroke-width: 1.6; } .dpsvg .dpbadtag { fill: var(--panel-solid); stroke: var(--bad); stroke-width: 1.2; }
+.dpsvg .dpshould { font: 600 9px var(--sans); fill: var(--bad); }
+.dpsvg .dptok { opacity: 0; pointer-events: none; }
+.dpsvg .dphalo { fill: color-mix(in srgb, var(--warm) 30%, transparent); } .dpsvg .dpdot { fill: var(--warm); stroke: var(--panel-solid); stroke-width: 1.2; }
+.dpsvg.narrow .dpk { font-size: 10.5px; } .dpsvg.narrow .dpcode { font-size: 11.5px; }
+/* while the light travels, what it has not reached yet waits: words hidden, wires and units unlit */
+.dpsvg[data-ph="0"] text:is(.ph1, .ph2, .ph3, .ph4), .dpsvg[data-ph="1"] text:is(.ph2, .ph3, .ph4), .dpsvg[data-ph="2"] text:is(.ph3, .ph4), .dpsvg[data-ph="3"] text.ph4 { opacity: 0; }
+.dpsvg[data-ph="0"] .dpw:is(.ph1, .ph2, .ph3, .ph4), .dpsvg[data-ph="1"] .dpw:is(.ph2, .ph3, .ph4), .dpsvg[data-ph="2"] .dpw:is(.ph3, .ph4), .dpsvg[data-ph="3"] .dpw.ph4 { stroke: color-mix(in srgb, var(--ink) 20%, transparent); stroke-width: 1.6; }
+.dpsvg[data-ph="0"] .dpbox:is(.ph1, .ph3), .dpsvg[data-ph="1"] .dpbox.ph3, .dpsvg[data-ph="2"] .dpbox.ph3 { stroke: var(--line); stroke-width: 1; }
+.dpsvg[data-ph="0"] .dpreg.ph4, .dpsvg[data-ph="1"] .dpreg.ph4, .dpsvg[data-ph="2"] .dpreg.ph4, .dpsvg[data-ph="3"] .dpreg.ph4 { fill: color-mix(in srgb, var(--ink) 4%, transparent); stroke: transparent; }
+.dpsvg[data-ph="0"] .dpsl.ph2, .dpsvg[data-ph="1"] .dpsl.ph2 { fill: color-mix(in srgb, var(--ink) 11%, transparent); }
+.rvacts { align-items: center; }
+.rvscrub { display: flex; align-items: center; gap: 10px; margin: 4px 0 10px; } .rvscrub input { flex: 1; min-width: 0; }
+.rvtwo { width: 100%; margin: 8px 0; border-collapse: collapse; font-size: 13px; }
+.rvtwo :is(th, td) { padding: 5px 6px; text-align: left; border-bottom: 1px solid var(--line); vertical-align: top; }
+.rvtwo th { font: 600 11.5px var(--sans); color: var(--muted); }
+.rvtwo td:first-child { color: var(--muted); font-size: 12px; overflow-wrap: anywhere; }
+.rvtwo .good { color: var(--good); } .rvtwo .bad { color: var(--bad); }
+.rvfault { margin: 8px 0; padding: 10px 12px; border-radius: 12px; border: 1px solid color-mix(in srgb, var(--bad) 55%, var(--line)); background: color-mix(in srgb, var(--bad) 7%, transparent); }
+.rvfault p { margin: 4px 0; } .rvfault .kicker { color: var(--bad); }
+.rvslice { margin: 10px 0; padding: 8px 12px; border-radius: 12px; border: 1px solid var(--line); }
+.rvslice > summary { cursor: pointer; padding: 4px 0; }
+.rvtap { font-size: 12px; line-height: 2.1; overflow-wrap: anywhere; }
+.rvtap .op { min-width: 30px; margin: 0 2px; padding: 0 6px; }
+.rvtap .op b { font-size: 13px; }
+.rvtap .op.just { border-color: var(--warm); background: color-mix(in srgb, var(--warm) 22%, transparent); }
+.rvjob { border-color: var(--warm); }
+/* the way from a machine's core block into the core at work (src/v2/machines.js, #321) */
+.mcoreway { display: inline-flex; align-items: center; gap: 6px; margin: 6px 0 0; font-size: 13px; font-weight: 600; color: var(--accent); text-decoration: none; }
+.mcoreway:hover, .mcoreway:focus-visible { text-decoration: underline; }
+/* Change your core (src/v2/labs/corearch.js): the core as a floor plan, its run cycle by cycle, the dials and the bars */
+.cafig { margin: 8px 0; } .casvg { display: block; width: 100%; height: auto; }
+.casvg .cak { font: 600 10px var(--sans); fill: var(--muted); } .casvg .cak.plain { fill: var(--ink); }
+.casvg .cabudget { fill: color-mix(in srgb, var(--good) 7%, transparent); stroke: none; } .casvg .caedge { fill: none; stroke: var(--good); stroke-width: 1.6; stroke-dasharray: 2 4; } .casvg .cak.allowed { fill: var(--good); }
+.casvg .caplain { fill: none; stroke: var(--ink); stroke-width: 1.4; stroke-dasharray: 6 4; opacity: .55; }
+.casvg .cadie { fill: var(--panel-solid); stroke: var(--line); }
+.casvg .capart { stroke: var(--panel-solid); stroke-width: 1.5; transition: fill .25s; }
+.casvg .capart.regs { fill: color-mix(in srgb, var(--ink) 16%, var(--panel-solid)); } .casvg .capart.regs.on { fill: color-mix(in srgb, var(--ink) 24%, var(--panel-solid)); }
+.casvg .capart.alu { fill: color-mix(in srgb, var(--accent) 22%, var(--panel-solid)); } .casvg .capart.alu.on { fill: color-mix(in srgb, var(--accent) 58%, var(--panel-solid)); }
+.casvg .capart.mul { fill: color-mix(in srgb, var(--warm) 24%, var(--panel-solid)); } .casvg .capart.mul.on { fill: color-mix(in srgb, var(--warm) 62%, var(--panel-solid)); }
+.casvg .capart.rest { fill: color-mix(in srgb, var(--ink) 8%, var(--panel-solid)); }
+.casvg .caline { stroke: color-mix(in srgb, var(--ink) 16%, transparent); stroke-width: .6; }
+.casvg .canm { font: 600 10.5px var(--sans); fill: var(--ink); paint-order: stroke; stroke: color-mix(in srgb, var(--panel-solid) 70%, transparent); stroke-width: 3px; }
+.casvg .caslot { fill: color-mix(in srgb, var(--accent) 12%, var(--panel-solid)); stroke: color-mix(in srgb, var(--accent) 40%, var(--line)); }
+.casvg .caslot.mem { fill: color-mix(in srgb, var(--ink) 8%, var(--panel-solid)); stroke: var(--line); }
+.casvg .caslot.mul { fill: color-mix(in srgb, var(--warm) 22%, var(--panel-solid)); stroke: var(--warm); }
+.casvg .caslot.on { stroke: var(--ink); stroke-width: 1.6; }
+.casvg .caop { font: 700 10.5px var(--mono); fill: var(--ink); } .casvg .caln { font: 9.5px var(--sans); fill: var(--muted); }
+.casvg .cacyc { font: 10px var(--mono); fill: var(--muted); } .casvg .cacyc.on { fill: var(--ink); font-weight: 700; }
+.casvg .cafut { opacity: .42; }
+.cadials { display: grid; gap: 10px; margin: 10px 0; }
+.caseg { display: grid; gap: 4px; } .caseg .chips { margin: 0; }
+.camsg { margin: 6px 0 12px; }
+.cabars { margin: 8px 0; } .cabars svg { display: block; width: 100%; height: auto; }
+.cabars .cak { font: 600 10.5px var(--sans); fill: var(--ink); } .cabars .cav { font: 10px var(--mono); fill: var(--muted); }
+.cabars .cab.plain { fill: color-mix(in srgb, var(--ink) 26%, transparent); } .cabars .cab.you { fill: var(--accent); } .cabars .cab.you.good { fill: var(--good); } .cabars .cab.you.bad { fill: var(--bad); }
+.cabars figcaption i.k { display: inline-block; width: 12px; height: 8px; margin: 0 5px 0 8px; border-radius: 2px; vertical-align: middle; } .cabars i.k.plain { background: color-mix(in srgb, var(--ink) 26%, transparent); } .cabars i.k.you { background: var(--accent); }

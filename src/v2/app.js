@@ -466,7 +466,8 @@ export function start() {
     if (k === 'bench') return V.showFlat('bench', parts[1], parts[2]);
     /* a challenge is played where its level is shown, in that view's card, with the picture behind it; a piece of
        the shared computer or a break is met at the Lab and the village, on the island */
-    if (k === 'do' && parts[1]) { const ch = chOf(decodeURIComponent(parts[1])), home = doPlace(ch);
+    /* #/do/<challenge>/<job>: a challenge opened for a job, such as a machine's core on that machine's work (#321) */
+    if (k === 'do' && parts[1]) { const c0 = chOf(decodeURIComponent(parts[1])), ch = c0 && parts[2] ? Object.assign({}, c0, { job: decodeURIComponent(parts[2]) }) : c0, home = doPlace(ch);
       if (home) return show(partsOf(home), from).then(() => { shownAt = '#/' + parts.join('/'); V.openBench(ch); });
       return showMap(from).then(() => openChallenge(ch)); }
     if (k === 'chip') return V.showChip(parts[1] != null ? +parts[1] : null);

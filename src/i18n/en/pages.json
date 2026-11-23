@@ -646,6 +646,7 @@
  "machines.ui.tries": "about {n} tries a year",
  "machines.ui.never": "not known",
  "machines.ui.daysShort": "days a try",
+ "machines.ui.intoCore": "Go into the core: watch it run this machine's job",
  "invent.claim.liveGrown": "Grown from cells, not made in a fab: how long a try takes is not known.",
  "machines.form.liquid": "Liquid hardware",
  "machines.miss.keep": "{part} must reshape as fast as its job changes, and this form is too slow",

@@ -316,6 +316,8 @@ export function machines(el, ctx) {
     let h = '<div class="mrow' + (bad ? ' bad' : '') + (view.sel === p.id ? ' on' : '') + '" data-mrow="' + p.id + '"><div class="mtile ' + fam(f) + '">' + markOf(f) + '<span><b>' + esc(partName(p.id)) + '</b><span class="small muted">' + esc(t('machines.block.' + b.id + '.t')) + ' · ' + esc(formName(f)) + '</span>' +
       (rules.length ? '<span class="small mmust">' + esc(rules.join(' · ')) + '</span>' : '') + '</span></div>' +
       '<div class="mforms" role="group" aria-label="' + esc(partName(p.id)) + '">' + FORMS.map(famBtn).join('') + '</div>';
+    /* the core runs: go into it, at work on this machine's job (#321, src/v2/labs/rv.js) */
+    if (b.runs) h += '<a class="mcoreway" href="#/do/rvrun/' + id + '"><span aria-hidden="true">↓</span> ' + esc(t('machines.ui.intoCore')) + '</a>';
     if (kinds.length > 1) h += '<div class="mkinds k-' + fm + '" role="group" aria-label="' + esc(t('machines.form.' + fm)) + '">' + kinds.map(k => '<button type="button" data-mform="' + p.id + ':' + fm + ':' + k.id + '" aria-pressed="' + (f === fm + ':' + k.id) + '">' + esc(kindName(fm, k.id)) + '</button>').join('') + '</div>';
     if (view.sel === p.id && WAYS[b.id]) h += '<a class="link mway" href="' + esc(WAYS[b.id]) + '" data-mway="' + b.id + '">' + esc(t('machines.way.' + b.id)) + '</a>';
     return h + '</div>';
