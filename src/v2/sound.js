@@ -6,7 +6,8 @@
    - Sounds are scheduled a little ahead on the audio clock; each event is also told back at its moment (onEvent), so
      the picture lights in time and the caption writes it. Where there is no audio (an old browser, a test without
      sound) the same events are told on the page's clock, silently.
-   - One player at a time: starting another stops the first (its onStop is told).
+   - One player at a time: starting another stops the first (its onStop is told); swap() changes the score of the one
+     playing, keeping who it tells.
    - A phone buzz on a wrong bit, where the browser allows it and only when the visitor asked for it (buzz). */
 const AHEAD = 0.15, EVERY = 25, MASTER = 0.5;
 let ctx = null, master = null, hum = null, humG = null, hissG = null, cur = null, timer = 0, buzz = false;
@@ -68,11 +69,11 @@ function pump() {
 }
 /* Play a score (from src/engines/listen.js's score()); loop it unless loop is false. Called from a tap. Returns
    whether sound is heard (false: the events still come, silently) */
-export function start(score, { onEvent, onStop, loop = true } = {}) {
+export function start(score, { onEvent, onStop, loop = true, tag = null } = {}) {
   stop();
   const heard = make();
   if (heard && !audioOn()) { try { const p = ctx.resume(); if (p && p.catch) p.catch(() => {}); } catch (e) { /* stays silent */ } }
-  cur = { score, onEvent, onStop, loop, i: 0, lap: 0, audio: audioOn() }; cur.t0 = clockOf(cur) + 0.05;
+  cur = { score, onEvent, onStop, loop, tag, i: 0, lap: 0, audio: audioOn() }; cur.t0 = clockOf(cur) + 0.05;
   steady(score.voices); timer = setInterval(pump, EVERY); pump();
   return audioOn();
 }
@@ -83,6 +84,9 @@ export function stop() {
   if (c && c.onStop) c.onStop();
 }
 export const playing = () => !!cur;
+/* who started what is playing (a tag given to start), and the voices of the score playing now */
+export const current = () => (cur ? cur.tag : null);
+export const voices = () => (cur ? cur.score.voices : null);
 /* is audio running now (it may wait for a tap, or be missing) */
 export const heard = audioOn;
 export const setBuzz = on => { buzz = !!on; };

@@ -45,8 +45,9 @@ export default function lab(L) {
   /* the sound of a state, lit on the picture once it shows; it stops when the card leaves */
   const fig = () => el.querySelector('.earfig:not(.hid) svg');
   function sound() {
-    const X = E(), sc = Ln.score(X.cur, CLIP, X.seed + X.hist.length, LEVEL), on = { onEvent: e => { if (E().answered) light(fig(), e, sc.voices); }, onStop: () => {} };
-    if (Sound.playing()) Sound.swap(sc); else X.heard = Sound.start(sc, on) || Sound.heard();
+    const X = E(), sc = Ln.score(X.cur, CLIP, X.seed + X.hist.length, LEVEL);
+    if (Sound.current() === 'ear') Sound.swap(sc);
+    else X.heard = Sound.start(sc, { tag: 'ear', onEvent: e => { if (E().answered) light(fig(), e, Sound.voices()); } }) || Sound.heard();
     if (!view.earWatch) { view.earWatch = setInterval(() => { if (!el.isConnected || !el.querySelector('.player[data-ch="' + ch.id + '"]')) { clearInterval(view.earWatch); view.earWatch = 0; Sound.stop(); } }, 300); }
   }
   return {

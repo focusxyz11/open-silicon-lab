@@ -3006,7 +3006,7 @@ i.ersil { background: var(--bad); }
 .lsn .lsn-rings circle.on { opacity: 1; transition: none; }
 /* while the work waits for its data, the logic dims */
 .lsn :is(.lsn-sums, .lsn-rails) { transition: opacity .3s; }
-.lsn.lsn-waiting .lsn-heat { opacity: .4; }
+.lsn.lsn-waiting :is(.lsn-heat, .lsn-cell) { opacity: .45; transition: opacity .3s; }
 @media (prefers-reduced-motion: reduce) { .lsn .lsn-ways path.on { animation: none; } .lsn * { transition: none !important; } }
 /* the ear test: the picture hidden while you listen, the answers, the run of answers */
 .earfig { position: relative; margin: 6px 0; border-radius: 14px; overflow: hidden; }

@@ -124,9 +124,11 @@ export function createListen(host, o) {
     if (!raf) follow();
   };
   function follow() {
+    /* a frame made anew leaves this switch behind: its layer goes with it */
+    if (!btn.isConnected) { raf = 0; if (layer) { layer.remove(); layer = null; } return; }
     raf = requestAnimationFrame(follow);
     const W = o.where && o.where();
-    if (!W || !W.corners || !level) { if (layer) layer.hidden = true; return; }
+    if (!W || !W.corners || !level || !box.offsetParent) { if (layer) layer.hidden = true; return; }
     if (!layer || layer.parentNode !== W.host) { if (layer) layer.remove(); layer = document.createElement('div'); layer.className = 'lsnlayer'; layer.innerHTML = svgOf(level, P.state, false, 'aria-hidden="true"'); W.host.insertBefore(layer, W.before || null); }
     const r = W.host.getBoundingClientRect(); M = squareTo(W.corners.map(([x, y]) => [x - r.left, y - r.top]));
     layer.hidden = false; layer.style.transform = 'matrix3d(' + M.map(v => +v.toFixed(6)).join(',') + ')';
@@ -134,7 +136,7 @@ export function createListen(host, o) {
   const svg = () => layer && layer.querySelector('svg');
   const play = () => {
     const S = L.score(P.state, 30, 1, level);
-    playing = true; Sound.start(S, { onEvent: e => { light(svg(), e, S.voices); cap(e); }, onStop: () => { playing = false; if (box.isConnected && !box.hidden) draw(); } });
+    playing = true; Sound.start(S, { tag: 'look', onEvent: e => { light(svg(), e, Sound.voices()); cap(e); }, onStop: () => { playing = false; if (box.isConnected && !box.hidden) draw(); } });
     draw(); watch();
   };
   const stop = () => { if (playing) Sound.stop(); playing = false; };
@@ -152,7 +154,7 @@ export function createListen(host, o) {
   /* what the block is doing, picked: the picture's heat and the sound follow at once */
   function pick(state) { P.state = state; keep(P); if (layer) { layer.remove(); layer = null; } if (playing) { const S = L.score(P.state, 30, 1, level); Sound.swap(S); } draw(); }
   /* the other lens opened: this one steps aside */
-  host.addEventListener('click', e => { if (P.open && e.target.closest('.joulebtn')) open(false); });
+  host.addEventListener('click', e => { if (btn.isConnected && P.open && e.target.closest('.joulebtn')) open(false); });
   return {
     level(id) {
       const ok = L.LEVELS.includes(id); if (ok === !!level && id === level) return;
