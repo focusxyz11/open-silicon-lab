@@ -501,8 +501,12 @@ export function createWorld(cv, on) {
     if (!cv.isConnected) return;
     if (fly) {
       /* the flight's clock starts at the first frame it is drawn, not when it was asked for: on a slow machine the work
-         a click does (the card, the address) can outlast a whole flight, and the move would be a jump */
+         a click does (the card, the address) can outlast a whole flight, and the move would be a jump. And no frame
+         moves it more than a third of the way: where frames come seconds apart (software drawing), the flight still
+         passes through the levels between instead of landing at once */
       if (fly.t0 == null) fly.t0 = now;
+      else if (now - fly.last > fly.ms / 3) fly.t0 += now - fly.last - fly.ms / 3;
+      fly.last = now;
       const u = Math.max(0, Math.min(1, (now - fly.t0) / fly.ms)), e = u < 0.5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2;
       Z = clampZ(fly.from + (fly.to - fly.from) * e);
       if (u >= 1) { Z = fly.to; fly = null; on.arrive && on.arrive(Math.round(Z)); }
