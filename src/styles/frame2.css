@@ -265,6 +265,7 @@ html.frame2 .f2back .f2wk { color: var(--muted); }
 html.frame2 .bar.f2reading .loop { display: flex; align-items: center; gap: 12px; }
 html.frame2 .bar.f2reading .loop .f2rk { flex: none; display: inline-flex; align-items: center; gap: 8px; margin: 0; padding: 7px 14px; border-radius: 999px; background: var(--ink); color: var(--bg); font: 700 15px var(--sans); }
 html.frame2 .bar.f2reading .loop .f2ri { width: 14px; height: 11px; border: 2px solid currentColor; border-top: 0; border-radius: 0 0 3px 3px; background: linear-gradient(currentColor, currentColor) 50% 0 / 2px 100% no-repeat; }
+html.frame2 .bar.f2reading .loop .f2rk.f2rplace .f2ri { width: 12px; height: 12px; border: 2px solid currentColor; border-radius: 3px; background: none; }
 html.frame2 .bar.f2reading .loop ol { opacity: .72; }
 html.frame2 .bar.f2reading .loop ol:hover, html.frame2 .bar.f2reading .loop ol:focus-within { opacity: 1; }
 
@@ -342,23 +343,7 @@ html.frame2 .f2pic .pbar .pv { font-size: 15px; }
 html.frame2 .f2pic .probe .plead { font: 600 19px/1.4 var(--serif); }
 html.frame2 .page.f2rd .readx .f2col > .readplay { margin: 0 0 8px; }
 
-/* machines: the machine and what it scores are the picture; the words change it */
-html.frame2 .f2pic .mmachine > .kicker { color: var(--muted); }
-html.frame2 .f2pic .mrail { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr)); gap: 10px; padding-bottom: 0; border-bottom: 0; }
-html.frame2 .f2pic .mpart::after { display: none; }
-html.frame2 .f2pic .mtile b { font-size: 16px; }
-html.frame2 .f2pic .mscore { grid-template-columns: repeat(auto-fit, minmax(min(190px, 100%), 1fr)); margin-top: 16px; }
-html.frame2 .f2pic .mread b { font: 600 20px/1.2 var(--mono); }
-html.frame2 .f2pic .mchecks { font-size: 15px; }
-html.frame2 .f2pic .mkinds button { font-size: 15px; padding: 5px 11px; }
-html.frame2 .page.f2rd .mach .f2col .mneeds { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-html.frame2 .page.f2rd .mach .f2col .mneeds button b { font-size: 17px; }
-html.frame2 .page.f2rd .mach .f2col .mbody { grid-template-columns: minmax(0, 1fr); }
-html.frame2 .page.f2rd .mach .f2col .mfabs { grid-template-columns: repeat(auto-fill, minmax(min(150px, 100%), 1fr)); }
-html.frame2 .page.f2rd .mach .f2col .mcurvebox, html.frame2 .page.f2rd .mach .f2col .mlaws { grid-template-columns: minmax(0, 1fr); }
-html.frame2 .page.f2rd .mach .f2col :is(.mclaims li, .mfabs button b, .mst, .mkinds button) { font-size: 15px; }
-html.frame2 .page.f2rd .mach .f2col .mclaims li { grid-template-columns: 8.4em 1fr; }
-html.frame2 .page.f2rd .mach .f2rhead h1 { font-size: clamp(28px, calc(1.2vw + 16px), 40px); max-width: none; }
+/* machines from shared blocks is a place of its own (#320): its stage and its side are in src/styles/v2.css (.mach) */
 
 /* a phone: the title, then the picture, then the words; the picture is not pinned */
 @media (max-width: 720px) {

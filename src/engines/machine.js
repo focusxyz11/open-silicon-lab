@@ -216,6 +216,48 @@ export function assemble(id, max = 4, guesses = false) {
   return { tried, valid: valid.length, front: front.length, picks: front.slice(0, max), guesses };
 }
 
+/* ---- a need's challenge (GOALS in src/data/blocks.js), played on the machine (src/v2/machines.js, Do) ----
+   A goal is met when the machine follows the grammar, meets its need, keeps the goal's own rules (goalMisses), and
+   spends no more energy than the least any machine that does all that can (bestFor). Energy is the score's own,
+   counting only what is shown (guesses never), so the scoring above is unchanged. */
+/* the goal's own rules a plan breaks: { rule: 'exact', part }, or { rule: 'days' }: a try longer than the goal allows,
+   if a guess fails */
+export function goalMisses(need, plan, goal) {
+  const out = [];
+  (goal.exact || []).forEach(id => { if (!exact(norm(plan[id]))) out.push({ rule: 'exact', part: id }); });
+  if (goal.days != null && !(tryDays(need, plan).high <= goal.days)) out.push({ rule: 'days' });
+  return out;
+}
+/* the least energy any machine for this need can spend while it keeps the goal: every plan in every fab, as the agent
+   tries them (a plan with nothing to make once); null if none can. Kept once worked out */
+const BEST = {};
+export function bestFor(id, goal) {
+  const key = id + '.' + goal.id; if (key in BEST) return BEST[key];
+  const need = needOf(id), parts = need.parts, choices = parts.map(p => formsOf(p.block));
+  let best = null;
+  const walk = (i, plan) => {
+    if (i === parts.length) {
+      FABS.forEach((F, k) => {
+        plan.fab = F.id;
+        if (k > 0 && !made(need, plan).length) return;
+        if (!check(need, plan).ok || !meets(need, plan).ok || goalMisses(need, plan, goal).length) return;
+        const e = score(need, plan).energy;
+        if (!best || e < best.energy) best = { energy: e, plan: Object.assign({}, plan) };
+      });
+      return;
+    }
+    choices[i].forEach(f => { plan[parts[i].id] = f; walk(i + 1, plan); });
+  };
+  walk(0, {});
+  return (BEST[key] = best);
+}
+/* a plan played against a goal: the machine, the goal's own misses, the least it can be, and whether it is won (within
+   a millionth of the least, so rounding never denies a win) */
+export function play(id, plan, goal) {
+  const m = machine(id, plan), extra = goalMisses(needOf(id), m.plan, goal), b = bestFor(id, goal), ok = m.ok && !extra.length;
+  return { m, extra, best: b ? b.energy : Infinity, ok, won: ok && !!b && m.score.energy <= b.energy * (1 + 1e-6) };
+}
+
 /* how a block is checked: by a piece of the community's plan (its state there: built, open, partly, engine) or by a
    lab's engine; P is the build's plan (src/engines/build.js plan()), optional */
 export function checkOf(blockId, P) {

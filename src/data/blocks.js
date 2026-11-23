@@ -61,3 +61,15 @@ export const NEEDS = [
 ];
 export const NEED_IDS = NEEDS.map(n => n.id);
 export const needOf = id => NEEDS.find(n => n.id === id) || null;
+
+/* GOALS: one challenge per need, played on the machine in Do mode (src/v2/machines.js) and checked by the engine
+   (src/engines/machine.js play, bestFor). Each has two goals: the first is always to meet the need's rules with the
+   least energy; the second adds a harder rule of its own: every try back within a week (days, the most days a try may
+   take if a guess fails), or more parts that must be exact (exact). Energy, as everywhere here, counts only what is in
+   products or shown in a lab. */
+export const GOALS = {
+  hearing: [{ id: 'least' }, { id: 'week', days: 7 }],
+  wildfire: [{ id: 'least' }, { id: 'week', days: 7 }],
+  rover: [{ id: 'least' }, { id: 'exact', exact: ['nav'] }],
+  radio: [{ id: 'least' }, { id: 'week', days: 7 }]
+};

@@ -38,8 +38,10 @@ means the community's record (the ledger), so it is not used here.
 | --- | --- |
 | The blocks, the grammar's port kinds, three needs (a hearing aid, a wildfire sensor, a Mars rover) | `src/data/blocks.js` |
 | The engine: the grammar's check, a need's rules, the score, the agent | `src/engines/machine.js`, `tests/machine.test.mjs` |
-| The page: pick a need, change each part's form, let an agent assemble it, use a pick | `src/v2/machines.js`, `#/machines`, `#/machines/<need>` |
-| The way in | the Lab's card, *Do* |
+| The place: the machine as a live block diagram, its layers, the agent's front, a challenge per need | `src/v2/machines.js`, `#/machines/<need>`, `#/machines/<need>/do`, `#/machines/<need>/<layer>` |
+| The front, one drawing shared with two lenses meeting (#315) | `src/v2/front.js` |
+| The challenges: two goals per need | `GOALS` in `src/data/blocks.js`; `play`, `bestFor`, `goalMisses` in `src/engines/machine.js` |
+| The ways in | the Lab's card on the island; the blueprint's stations (`src/data/blueprint.js`) and the map of stations (`src/data/home.js`) |
 | The browser check | `scripts/smoke.mjs`, section `machines` |
 
 **How it is scored.** For the same work, software costs about 500 times a circuit made for it (a general-purpose chip
@@ -51,6 +53,36 @@ exact.
 
 **The agent** tries every plan, keeps those that follow the grammar and meet the need, and offers the ones no other
 beats on energy, change and exactness at once. It decides nothing.
+
+## The place (#320)
+
+The machine is the picture. On the stage (at the left on a desktop, pinned while the words scroll; first on a phone,
+running top to bottom) the need's machine is drawn as a block diagram: each block's shape says its form (a circuit a
+solid die with pins, software dashed lines of code with a dotted line to the core it runs on, a liquid fabric a soft
+lattice of switches, new matter a hexagon with its kind's pattern), a glyph at its heart says what the block is, and
+what flows along each wire (a signal, a number, a bit) moves along it. The need's rules sit on the blocks as small
+marks (must still change, must be exact), red while broken. Changing a form changes the block on the picture with a
+short motion. How sure the claim behind a form is (in products, shown in a lab, a guess) is one mark, on the block and
+in every list of claims.
+
+Nothing the page said before is lost: each section is a **layer opened from the machine** (the row under the
+picture), and each repaints it: *What flows*; *Made in* (each block says where it is made, bought or configured, and
+the stage says the days a try; the places to make it beside); *Reshaping* (each block says how fast it can change,
+green or red against a job that changes every so often; the liquid map and the fabrics' claims beside); *How sure*
+(the marks large; the claims of new matter beside); *Attempts* (the lab's curve and *Keep this attempt*); *Shared
+blocks* (each block's ports; every shared block beside).
+
+**The front.** The agent's offers stand on a chart of today's best compromises: energy across (less to the left),
+parts that can still change up, filled when every part is exact; the line through them, the corner up and to the left
+where nobody has a machine yet shaded, your machine the warm dot (a dashed ring while it does not work). A tap on one
+of the four offers uses it. It is the same drawing as two lenses meeting at the block (`src/v2/front.js`).
+
+**Do.** Each need has a challenge, played on the picture: its goal across the top of the stage (energy now, the least
+it can be, the rules, the days a try), the parts and the places to make them beside, a hint, and why the winning
+machine wins. The first goal is always to keep the need's rules with the least energy; the second is harder (the
+hearing aid, the wildfire sensor and the radio: a try within a week; the rover: its guide exact too). The engine
+checks it (`play`): the least energy is worked out over every plan in every place, as the agent tries them, counting
+only what is shown, so the scoring is unchanged. Goals won are kept in this browser only.
 
 ## Beyond today's chip (Invent)
 
@@ -142,6 +174,8 @@ curve counts **attempts**.
 
 ## Not yet
 
+- The challenges are played at the place but are not yet in the game's list of challenges (`src/v2/game.js`), so a win
+  grows nothing on the island and is kept in this browser only.
 - The agent chooses forms only; choosing the blocks themselves, and the wires, comes next.
 - The open port lists machine attempts with the ledger, but has no tool to score or submit one yet.
 - Energy does not yet depend on where a part is made (coarser lines cost more per step).
