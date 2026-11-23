@@ -22,6 +22,10 @@ import mortal from './mortal.js';
 import dies from './dies.js';
 import errors from './errors.js';
 import rv from './rv.js';
+/* labs-a: design it or search for it (search.js), the program nobody can judge (halt.js) */
+import search from './search.js';
+import halt from './halt.js';
 export const LABS = { agent, teardown, fit: teardown, evolve, pull: crystal, implant, overlay, etch: films, deposit: films, litho, euv: litho,
   cim, grover, semiconductor, aibuild, powercurve: clockpower, counter: clockpower, capture: analog, regulate: analog, quantize: serve, tokenenergy: serve, prefill: serve,
-  piece: bench, floor: bench, maskof: bench, chef: bits, redund: vote, mortal, xray: dies, errors, rv };
+  piece: bench, floor: bench, maskof: bench, chef: bits, redund: vote, mortal, xray: dies, errors, rv,
+  search, halt };

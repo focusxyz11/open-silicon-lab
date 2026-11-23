@@ -4,8 +4,8 @@ export default [
   { id: 'limit-cold', strand: 0, at: ['atom'], engine: 'floor', probe: 1, lens: 'walls', trade: ['energy'] },
   { id: 'limit-hard', strand: 1, stops: ['limit.gate'], engine: null, lens: 'walls', open: ['quantum', 'pbits'] },
   { id: 'limit-fell', strand: 1, at: ['chip'], engine: null, wants: 'outside', lens: 'clock' },
-  { id: 'limit-never', strand: 2, stops: ['limit.rack'], engine: null, lens: 'walls' },
+  { id: 'limit-never', strand: 2, stops: ['limit.rack'], ch: ['halt'], engine: null, lens: 'walls' },
   { id: 'limit-all', strand: 2, at: ['block'], engine: 'floor', probe: 1, lens: 'clock', trade: ['sure', 'time'], given: ['tried'], open: ['proof'] },
   { id: 'limit-frozen', strand: 3, stops: ['limit.chip'], also: ['idea'], engine: null, lens: 'clock', given: ['frozen'], open: ['rewire', 'selfcheck'] },
-  { id: 'limit-evolve', strand: 4, at: ['gates'], engine: 'logic', lens: 'side', trade: ['sure'] }
+  { id: 'limit-evolve', strand: 4, at: ['gates'], ch: ['search'], engine: 'logic', lens: 'side', trade: ['sure'] }
 ];
