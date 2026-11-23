@@ -265,6 +265,7 @@ html.frame2 .f2back .f2wk { color: var(--muted); }
 html.frame2 .bar.f2reading .loop { display: flex; align-items: center; gap: 12px; }
 html.frame2 .bar.f2reading .loop .f2rk { flex: none; display: inline-flex; align-items: center; gap: 8px; margin: 0; padding: 7px 14px; border-radius: 999px; background: var(--ink); color: var(--bg); font: 700 15px var(--sans); }
 html.frame2 .bar.f2reading .loop .f2ri { width: 14px; height: 11px; border: 2px solid currentColor; border-top: 0; border-radius: 0 0 3px 3px; background: linear-gradient(currentColor, currentColor) 50% 0 / 2px 100% no-repeat; }
+html.frame2 .bar.f2reading .loop .f2rk.f2rplace .f2ri { width: 12px; height: 12px; border: 2px solid currentColor; border-radius: 3px; background: none; }
 html.frame2 .bar.f2reading .loop ol { opacity: .72; }
 html.frame2 .bar.f2reading .loop ol:hover, html.frame2 .bar.f2reading .loop ol:focus-within { opacity: 1; }
 
@@ -342,23 +343,7 @@ html.frame2 .f2pic .pbar .pv { font-size: 15px; }
 html.frame2 .f2pic .probe .plead { font: 600 19px/1.4 var(--serif); }
 html.frame2 .page.f2rd .readx .f2col > .readplay { margin: 0 0 8px; }
 
-/* machines: the machine and what it scores are the picture; the words change it */
-html.frame2 .f2pic .mmachine > .kicker { color: var(--muted); }
-html.frame2 .f2pic .mrail { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr)); gap: 10px; padding-bottom: 0; border-bottom: 0; }
-html.frame2 .f2pic .mpart::after { display: none; }
-html.frame2 .f2pic .mtile b { font-size: 16px; }
-html.frame2 .f2pic .mscore { grid-template-columns: repeat(auto-fit, minmax(min(190px, 100%), 1fr)); margin-top: 16px; }
-html.frame2 .f2pic .mread b { font: 600 20px/1.2 var(--mono); }
-html.frame2 .f2pic .mchecks { font-size: 15px; }
-html.frame2 .f2pic .mkinds button { font-size: 15px; padding: 5px 11px; }
-html.frame2 .page.f2rd .mach .f2col .mneeds { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-html.frame2 .page.f2rd .mach .f2col .mneeds button b { font-size: 17px; }
-html.frame2 .page.f2rd .mach .f2col .mbody { grid-template-columns: minmax(0, 1fr); }
-html.frame2 .page.f2rd .mach .f2col .mfabs { grid-template-columns: repeat(auto-fill, minmax(min(150px, 100%), 1fr)); }
-html.frame2 .page.f2rd .mach .f2col .mcurvebox, html.frame2 .page.f2rd .mach .f2col .mlaws { grid-template-columns: minmax(0, 1fr); }
-html.frame2 .page.f2rd .mach .f2col :is(.mclaims li, .mfabs button b, .mst, .mkinds button) { font-size: 15px; }
-html.frame2 .page.f2rd .mach .f2col .mclaims li { grid-template-columns: 8.4em 1fr; }
-html.frame2 .page.f2rd .mach .f2rhead h1 { font-size: clamp(28px, calc(1.2vw + 16px), 40px); max-width: none; }
+/* machines from shared blocks is a place of its own (#320): its stage and its side are in src/styles/v2.css (.mach) */
 
 /* a phone: the title, then the picture, then the words; the picture is not pinned */
 @media (max-width: 720px) {
@@ -499,6 +484,10 @@ html.frame2 .f2stage .fitline[data-f2] .fitk:nth-of-type(even) { bottom: 136px; 
 html.frame2 .f2stage .fitline[data-f2] .end { bottom: 20px; left: 22px; font: var(--f2-small); }
 html.frame2 .f2stage .fitline[data-f2] .end.r { left: auto; right: 22px; }
 html.frame2 .f2stage .fitline[data-f2]::after { content: ""; position: absolute; left: 22px; right: 22px; bottom: 56px; height: 2px; background: var(--line); }
+/* your core's datapath (src/v2/labs/datapath.js): its head a line over the drawing, in the frame's type */
+html.frame2 .f2stage :is(.dpfig, .cafig)[data-f2] .dphead { flex: none; margin: 0; font: var(--f2-small); }
+html.frame2 .f2stage :is(.dpfig, .cafig)[data-f2] .dpwho { font: var(--f2-label); }
+@media (max-width: 720px) { html.frame2 .f2stage .dpfig[data-f2] .dphead > .small { display: none; } html.frame2 .f2stage .cafig[data-f2] .dphead { display: none; } }
 /* the island's sheet in Do: the side panel, the instrument on the stage beside it, the island hidden behind it */
 html.frame2 #sheet.f2do { left: auto; right: 16px; top: 84px; bottom: 16px; transform: none; translate: none; width: var(--f2-pw); max-height: none; overflow: auto;
   padding: 18px 26px 22px; border-radius: 22px; background: var(--panel-solid); backdrop-filter: none; -webkit-backdrop-filter: none; view-transition-name: none; animation: none; font: var(--f2-small); }
@@ -553,3 +542,47 @@ html.frame2 .f2 .goal2 { width: 280px; padding: 14px 16px; border-radius: 18px; 
 html.frame2 .f2 .goal2 .kicker { font: var(--f2-label); letter-spacing: 0; text-transform: none; color: var(--muted); }
 html.frame2 .f2 .goal2 :is(.gl, .gv) { font-size: 15px; }
 @media (max-width: 720px) { html.frame2 .f2 .goal2 { width: auto; padding: 10px 12px; } }
+
+/* ---- Listen (#316, only with ?listen=1, src/v2/listen.js): a switch beside the joule's, and its box at the picture's
+   right (on a phone under the switches), the picture keeping clear of it. Hidden while a lab has the stage and in the
+   side panel, where the panel takes the right ---- */
+.lsnbtn { position: absolute; left: 172px; top: 136px; display: inline-flex; align-items: center; gap: 8px; padding: 7px 14px 7px 10px; border-radius: 999px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); font: 600 13px var(--sans); cursor: pointer; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); z-index: 4; }
+.lsnbtn[hidden] { display: none; }
+.lsnbtn:hover, .lsnbtn:focus-visible { border-color: var(--accent); }
+.lsnbtn.on { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 16%, var(--panel)); }
+.lsnwave { display: inline-flex; align-items: center; gap: 2px; height: 14px; }
+.lsnwave i { display: block; width: 3px; border-radius: 2px; background: var(--accent); height: 6px; }
+.lsnwave i:nth-child(2) { height: 13px; } .lsnwave i:nth-child(3) { height: 9px; }
+.lsnbox { position: absolute; right: 16px; top: 84px; width: 320px; max-height: calc(100% - 110px); overflow: auto; display: grid; gap: 10px; padding: 14px 16px 16px; border-radius: 22px; background: var(--panel); border: 1px solid var(--line); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); box-shadow: var(--shadow); z-index: 5; font: var(--f2-small, 15px/1.45 var(--sans)); }
+.lsnbox[hidden] { display: none; }
+.lsnbox p { margin: 0; }
+.lsnhead { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.lsnhead .kicker { font: var(--f2-label, 600 14px var(--sans)); letter-spacing: 0; text-transform: none; color: var(--muted); }
+.lsnx { width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--line); background: none; color: var(--ink); font: 400 20px/1 var(--sans); cursor: pointer; flex: none; }
+.lsnscale { font: 400 15px/1.45 var(--sans); }
+.lsnstates { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.lsnstates .chipb { font-size: 15px; justify-content: flex-start; text-align: left; white-space: normal; min-height: 40px; }
+.lsnstates .chipb[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); }
+.lsnrow { display: flex; gap: 8px; align-items: center; }
+.lsnsel, .lsnshort { display: none; }
+.lsncap { min-height: 2.9em; font: 400 15px/1.45 var(--sans); color: var(--ink); border-left: 3px solid var(--accent); padding-left: 10px; }
+.lsnloud, .lsnbuzz { font-size: 15px; }
+.lsntest { font-size: 15px; justify-self: start; }
+/* the picture's lit layer, pinned as a lens's paint is */
+.lsnlayer { position: absolute; left: 0; top: 0; width: 1000px; height: 1000px; transform-origin: 0 0; pointer-events: none; }
+.lsnlayer[hidden] { display: none; }
+.lsnlayer svg { display: block; width: 1000px; height: 1000px; overflow: visible; }
+html.frame2 .f2stage > :is(.lsnbtn, .lsnbox), html.frame2 .f2side > .lsnbox { display: none !important; }
+/* a phone gets the simpler box: what the block is doing as one menu beside the button, the scale in short, the caption */
+@media (max-width: 720px) {
+  .lsnbtn { top: 116px; padding: 6px 12px 6px 9px; }
+  .lsnbox { left: 10px; right: 10px; top: 158px; width: auto; max-height: 46%; padding: 10px 12px 12px; gap: 6px; border-radius: 18px; }
+  .lsnbox :is(.lsnhead .kicker, .lsnscale, .lsnstates, .lsnloud, .lsntest) { display: none; }
+  .lsnhead { position: absolute; right: 10px; top: 10px; }
+  .lsnrow { padding-right: 42px; }
+  .lsnsel { display: block; flex: 1 1 auto; min-width: 0; min-height: 40px; padding: 6px 10px; border-radius: 12px; border: 1px solid var(--line); background: var(--panel-solid); color: var(--ink); font: 600 15px var(--sans); }
+  .lsnshort { display: block; font: 400 15px/1.35 var(--sans); color: var(--muted); padding-right: 40px; }
+  .lsnplay { flex: none; padding-left: 14px; padding-right: 14px; }
+  .lsncap { min-height: 0; }
+  html.frame2 .f2:has(> .dockwrap.f2full) > :is(.lsnbtn, .lsnbox) { display: none; }
+}

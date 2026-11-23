@@ -41,7 +41,9 @@ const TOOLS = [
   { name: 'propose_report', fn: a => API.proposeReport(a), description: EN['api.tool.report'], inputSchema: { type: 'object', properties: { at: str(EN['api.arg.place']), say: { type: 'string', enum: ['wrong', 'confusing', 'broken', 'better'], description: EN['api.arg.say'] }, words: str(EN['api.arg.reportWords']), ...WHO }, required: ['at', 'say', 'words', 'kind'] } },
   { name: 'energy_budget', fn: a => API.energyBudget(a || {}), description: EN['api.tool.energy'], inputSchema: { type: 'object', properties: { plan: PLAN_ARG } } },
   { name: 'submit_attempt', fn: a => API.submitAttempt(a), description: EN['api.tool.attempt'], inputSchema: { type: 'object', properties: { plan: PLAN_ARG, words: str(EN['api.arg.words']), ...WHO }, required: ['plan', 'kind'] } },
-  { name: 'propose_question', fn: a => API.proposeQuestion(a), description: EN['api.tool.question'], inputSchema: { type: 'object', properties: { at: str(EN['api.arg.at']), under: str(EN['api.arg.under']), question: str(EN['api.arg.question']), noticed: str(EN['api.arg.noticed']), ...WHO }, required: ['at', 'question', 'kind'] } }
+  { name: 'propose_question', fn: a => API.proposeQuestion(a), description: EN['api.tool.question'], inputSchema: { type: 'object', properties: { at: str(EN['api.arg.at']), under: str(EN['api.arg.under']), question: str(EN['api.arg.question']), noticed: str(EN['api.arg.noticed']), ...WHO }, required: ['at', 'question', 'kind'] } },
+  { name: 'choose_design', fn: a => API.chooseDesign(a || {}), description: EN['api.tool.choose'], inputSchema: { type: 'object', properties: { need: { type: 'string', enum: ['phone'], description: EN['api.arg.chooseNeed'] }, pick: str(EN['api.arg.pick']), reason: str(EN['api.arg.reason']),
+    author: str(EN['api.arg.author']), kind: { type: 'string', enum: ['person', 'ai'], description: EN['api.arg.chooser'] }, ai: str(EN['api.arg.ai']), about: str(EN['api.arg.about']) } } }
 ];
 
 const send = m => process.stdout.write(JSON.stringify(m) + '\n');

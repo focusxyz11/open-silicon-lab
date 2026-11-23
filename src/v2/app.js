@@ -447,7 +447,8 @@ export function start() {
     if (k === 'bench') return V.showFlat('bench', parts[1], parts[2]);
     /* a challenge is played where its level is shown, in that view's card, with the picture behind it; a piece of
        the shared computer or a break is met at the Lab and the village, on the island */
-    if (k === 'do' && parts[1]) { const ch = chOf(decodeURIComponent(parts[1])), home = doPlace(ch);
+    /* #/do/<challenge>/<job>: a challenge opened for a job, such as a machine's core on that machine's work (#321) */
+    if (k === 'do' && parts[1]) { const c0 = chOf(decodeURIComponent(parts[1])), ch = c0 && parts[2] ? Object.assign({}, c0, { job: decodeURIComponent(parts[2]) }) : c0, home = doPlace(ch);
       if (home) return show(partsOf(home), from).then(() => { shownAt = '#/' + parts.join('/'); V.openBench(ch); });
       return showMap(from).then(() => openChallenge(ch)); }
     if (k === 'chip') return V.showChip(parts[1] != null ? +parts[1] : null);
@@ -466,7 +467,7 @@ export function start() {
     if (k === 'read') V.showRead(parts[1] ? decodeURIComponent(parts[1]) : null);
     if (k === 'w') V.showWorld(parts[1], parts[2], parts[3]);
     if (k === 'whatif') return showMap(from).then(() => V.showWhatif(parts[1]));
-    if (k === 'machines') V.showMachines(parts[1]);
+    if (k === 'machines') V.showMachines(parts[1], parts[2]);
     /* a reading page stands on its own: the island waits behind it, paused (src/v2/frame2.js, Read) */
     if (frame2Reading()) return showMap(from).then(m => { if (frame2Reading()) m.pause(); });
     return showMap(from).then(() => { if (k === 'ecosystem') V.showEcosystem(); else if ((k === 'island' || k === 'explore') && V.cur && !sheet.hidden) { closeSheet(); V.map && V.map.overview(); } });

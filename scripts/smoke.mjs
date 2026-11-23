@@ -30,7 +30,7 @@ const SECTIONS = [
   ['ways', 'the ways on the picture: Go inside on the island, along and in on the line, one way down through a chip (the stack is Make, along from the dive), the phone\'s peek and swipe'],
   ['frame', 'the frame (#271): the size at every level and the ring on the way in, desktop and phone; the caption at a dive level with its question in full, desktop and phone; on a phone the sheet at three heights, the seam note in it, the names at the gate apart and Your log clear of the loop; Half the power won in Do mode, its instrument on the stage beside the panel that holds its controls; a chip\'s settings played on the line, Jevons\' bet in the island\'s sheet; a question\'s page in Read mode, its column, its picture and the bar'],
   ['flights', 'the data centre\'s way in and its flight into the chip; the studio walked inside, with a handoff to a bench; the phone\'s and the car\'s flights into their chips'],
-  ['machines', 'machines from shared blocks: a form changed, an agent\'s pick used, where it is made, liquid hardware keeping up with a radio, the lab\'s curve and an attempt kept, new matter\'s claims and the guesses switch, desktop and phone'],
+  ['machines', 'machines from shared blocks, a place: the machine drawn as a block diagram that changes with a form, the agent\'s offers on the front and a pick used, where it is made, liquid hardware keeping up with a radio, the lab\'s curve and an attempt kept, new matter\'s claims and the guesses switch, two challenges won in Do, desktop and phone'],
 ];
 const argv = process.argv.slice(2);
 if (argv.includes('--list')) { for (const [n, about] of SECTIONS) console.log(n.padEnd(16) + about); process.exit(0); }
@@ -226,7 +226,9 @@ const explore = async (tag, viewport, scheme) => {
   await page.waitForSelector('#sheet .won', { timeout: 10000 }).catch(() => problems.push(tag + ': a right design did not win the challenge'));
   if (!/grew/i.test(await page.textContent('#toast').catch(() => ''))) problems.push(tag + ': winning did not say what grew');
   if (!(await page.$('#sheet .opens[href^="#/ask/"]'))) problems.push(tag + ': the first win opens no question');
-  if (!/1 of 13/.test(await page.getAttribute('#loop [data-stage="design"]', 'aria-label').catch(() => ''))) problems.push(tag + ': the tracker did not count the win');
+  /* the first win of the design stage, out of every challenge on that step (src/v2/game.js), so a new challenge there needs no edit here */
+  { const designs = (await import('../src/v2/game.js')).CHALLENGES.filter(c => c.step === 'design').length;
+    if (!new RegExp('\\b1 of ' + designs + '\\b').test(await page.getAttribute('#loop [data-stage="design"]', 'aria-label').catch(() => ''))) problems.push(tag + ': the tracker did not count the win (1 of ' + designs + ')'); }
   await page.click('#sheet [data-next]').catch(() => problems.push(tag + ': no way on to the next challenge'));
   if (!/voter/i.test(await page.textContent('#sheet .player h3').catch(() => ''))) problems.push(tag + ': the next challenge is not the majority voter');
   /* back to the studio's card: in Do mode on a desktop the way back is where you are, over the picture (the player's
@@ -813,6 +815,16 @@ run['labs'] = async () => {
   await playLab('silent', "const P = '.player[data-ch=\"silent\"] ', W = { phone: ['check:abft', 'selftest:true', 'memory:parity', 'margin:0.3', 'materials:lowAlpha'], car: ['logic:lockstep', 'selftest:true', 'memory:ecc', 'margin:0.3'], datacentre: ['check:abft', 'hunt:true', 'memory:ecc', 'margin:0.3'] }; for (const [env, L] of Object.entries(W)) { CL(P + '[data-er-env=\"' + env + '\"]'); for (const k of L) CL(P + '[data-er=\"' + k + '\"]:not([aria-pressed=\"true\"])'); }", 'Catch the silent errors');
   /* run your core, offered from the RISC-V core in the Lab: three programs, each checked by running it */
   await playLab('rvrun', "const P = '.player[data-ch=\"rvrun\"] ', W = { sum: null, max: 'mv a0, a1\\nbge a1, a2, done\\nmv a0, a2\\ndone:', fib: 'li a0, 0\\nli t1, 1\\nloop:\\n beq a1, x0, done\\n add t2, a0, t1\\n mv a0, t1\\n mv t1, t2\\n addi a1, a1, -1\\n j loop\\ndone:' }; for (const [p, src] of Object.entries(W)) { CL(P + '[data-rv-p=\"' + p + '\"]'); if (src) { const a = document.querySelector(P + '[data-rv-code]'); if (a) { a.value = src; a.dispatchEvent(new Event('input', { bubbles: true })); } } CL(P + '[data-rv-run]'); }", 'Run your core');
+  /* labs-a: design it or search for it, at the studio's gates: more computing passes the person's voter with every input
+     checked, then a checker that tries half the inputs is fooled; the program nobody can judge, at the Lab: a NAND gate and
+     a bit that remembers, then the agent fooled by a long count, again with more budget, and by the program that asks about itself */
+  await playLab('search', "const P = '.player[data-ch=\"search\"] '; if (document.querySelector(P + '[data-sr-next=\"beat\"]')) { CL(P + '[data-sr-job=\"vote\"]:not([aria-pressed=\"true\"])'); CL(P + '[data-sr-check=\"all\"]:not([aria-pressed=\"true\"])'); SET(P + '#sr-budget', 6); } else CL(P + '[data-sr-check=\"some\"]:not([aria-pressed=\"true\"])')", 'Design it, or search for it?');
+  await playLab('halt', "const P = '.player[data-ch=\"halt\"] '; CL(P + '[data-hl-join=\"series\"]:not([aria-pressed=\"true\"])'); CL(P + '[data-hl-out=\"invert\"]:not([aria-pressed=\"true\"])'); CL(P + '[data-hl-k=\"2\"]'); CL(P + '[data-hl-fed][aria-pressed=\"false\"]'); CL(P + '[data-hl-push=\"set\"]'); CL(P + '[data-hl-push=\"reset\"]'); CL(P + '[data-hl-deeper]');"
+    + " for (const [b, n] of [[1000, 1000], [10000, 10000]]) { CL(P + '[data-hl-budget=\"' + b + '\"]'); CL(P + '[data-hl-clear]'); CL(P + '[data-hl-add=\"count\"]'); SET(P + '[data-hl-n=\"0\"]', n); CL(P + '[data-hl-run]'); } CL(P + '[data-hl-clear]'); CL(P + '[data-hl-add=\"ask\"]'); CL(P + '[data-hl-run]')", 'The program nobody can judge');
+  /* Listen and tell (#316), only with ?listen=1: the state played is on the hidden picture, so it is answered without audio */
+  await playLab('ear', "const P = '.player[data-ch=\"ear\"] '; for (let n = 0; n < 12 && !document.querySelector(P + '.won'); n++) { CL(P + '[data-ear-play]'); const f = document.querySelector(P + '.earfig'), s = f && f.dataset.earState; if (s) CL(P + '[data-ear-ans=\"' + s + '\"]'); }", 'Listen and tell', 90000, '?listen=1#/do/ear');
+  /* change your core (#321): a slow multiplier, a second unit and half the registers, together, reach the goal */
+  await playLab('corearch', "const P = '.player[data-ch=\"corearch\"] '; for (const [k, v] of [['mul', 'slow'], ['alus', '2'], ['regs', '16']]) CL(P + '[data-ca-' + k + '=\"' + v + '\"]:not([aria-pressed=\"true\"])')", 'Change your core');
   /* serving a language model, at the data centre: four bits despite outliers, where an answer's energy goes, read fast and write slow */
   await playLab('quantize', "CL('[data-sq-format=\"fp4\"]:not([aria-pressed=\"true\"])'); CL('[data-sq-scale=\"nv16\"]:not([aria-pressed=\"true\"])'); SET('#sq-outliers', 1)", 'Four bits, despite outliers');
   await playLab('token-energy', "SET('#se-watts', 2300); SET('#se-tokExp', 3.9); SET('#se-pue', 1.05); SET('#se-overhead', 10); SET('#se-tokExp', 4.5)", 'Where an answer\'s energy goes');
@@ -896,6 +908,24 @@ run['labs'] = async () => {
     for (const [id, r] of calls) { c('[data-ag-case="' + id + '"]'); if (document.querySelector('#sheet .agverdict.good')) continue; c('[data-ag-redo]'); if (r == null) c('[data-ag-trust]'); else { c('[data-ag-reject]'); c('[data-ag-reason="' + r + '"]'); } }
     return !!document.querySelector('#sheet .player .won'); }, null, { timeout: 30000, polling: 1500 }).catch(() => problems.push(tag + ': eight right calls do not win Verify the agent'));
   await inDo('agent', 'agent');
+  /* your own core (#321): a machine's core opens on that machine's job, its datapath drawn with the arithmetic unit as 32
+     slices; a wrong gate in your slice makes your core part from the reference core, and the picture shows the slice.
+     Last in the section: the slice is kept on your bench, and is put back before the page closes */
+  {
+    const P = '.player[data-ch="rvrun"] ';
+    await fp.goto(adr('#/do/rvrun/wildfire'));
+    await fp.waitForFunction(P => { const b = document.querySelector(P + '[data-rv-run]'); if (b && !document.querySelector(P + '.rvtwo')) b.click();
+      return !!document.querySelector(P + '[data-rv-p="wildfire"][aria-pressed="true"]') && document.querySelectorAll(P + '.dpfig .dpsl').length === 32 && !!document.querySelector(P + '.rvtwo') && !document.querySelector(P + '.rvfault'); }, P, { timeout: 90000, polling: 1500 })
+      .catch(() => problems.push(tag + ': a machine\'s core does not open on its job, run on your core with its datapath drawn'));
+    await fp.waitForFunction(P => { const c = q => { const b = document.querySelector(P + q); if (b) b.click(); };
+      if (!document.querySelector(P + '.rvtwo')) c('[data-rv-run]');
+      if (!document.querySelector(P + '[data-rv-slice0]')) c('[data-rv-gate="2"]');
+      if (document.querySelector(P + '.rvfault') && !document.querySelector(P + '.dpfig .dpsl.bad')) c('[data-rv-fault]');
+      return !!document.querySelector(P + '.rvfault') && !!document.querySelector(P + '.rvtwo .bad') && !!document.querySelector(P + '.dpfig .dpsl.bad') && !!document.querySelector(P + '.dpfig .dpon.bad'); }, P, { timeout: 60000, polling: 1500 })
+      .catch(() => problems.push(tag + ': a wrong gate in your slice does not show where your core went wrong'));
+    await fp.waitForFunction(P => { const b = document.querySelector(P + '[data-rv-slice0]'); if (b) b.click(); return !document.querySelector(P + '[data-rv-slice0]') && !document.querySelector(P + '.rvfault'); }, P, { timeout: 30000, polling: 1500 })
+      .catch(() => problems.push(tag + ': your slice is not put back to the lab\'s example'));
+  }
   await fp.close(); }
 };
 
@@ -1300,6 +1330,24 @@ run['frame'] = async () => {
       return document.querySelectorAll('.lenspins .lppin.lit').length === 4 && document.querySelectorAll('#diveui .dock .lpchain li.lit').length === 4; }, null, { timeout: 20000, polling: 500 })
       .catch(() => problems.push(tag + ': heating the block does not light the chain\'s steps'));
     await mp.close(); }
+  /* Listen (#316): only with ?listen=1. At the block the switch beside the joule's starts the sound on a tap, the
+     caption writes what is heard and the parts light in time on the picture (where there is no audio, as here, the
+     events come on the page's clock, silently); without the flag there is no switch */
+  { const tg = 'frame (listen)', lp = await browser.newPage({ viewport: { width: 1280, height: 800 } });
+    lp.on('pageerror', e => problems.push(tg + ': ' + e.message));
+    await lp.addInitScript(() => { localStorage.setItem('osl-quality', 'flat'); localStorage.setItem('osl-hints-v1', JSON.stringify({ seen: {}, off: true })); });
+    await lp.goto(base + 'index.html?listen=1#/dive/block');
+    await lp.waitForFunction(() => { const b = document.querySelector('#diveui .lsnbtn:not([hidden])'); if (b && b.getAttribute('aria-pressed') !== 'true') b.click(); return !!document.querySelector('#diveui .lsnbox:not([hidden]) [data-lsnplay]'); }, null, { timeout: 120000, polling: 1000 })
+      .catch(() => problems.push(tg + ': the Listen switch does not open at the block'));
+    await lp.waitForFunction(() => { const c = document.querySelector('#diveui .lsncap'), s = document.querySelector('.lsnlayer svg'); return !!c && !!c.dataset.ev && !!s && +s.dataset.lit > 5; }, null, { timeout: 30000, polling: 500 })
+      .catch(() => problems.push(tg + ': listening, the caption does not write what is heard or the parts do not light in time'));
+    /* picking what the block does: too hot is heard as wrong bits, written in the caption */
+    await lp.waitForFunction(() => { const h = document.querySelector('#diveui [data-lsnstate="hot"]'); if (h && h.getAttribute('aria-pressed') !== 'true') h.click(); const c = document.querySelector('#diveui .lsncap'); return !!c && c.dataset.ev === 'wrong'; }, null, { timeout: 30000, polling: 300 })
+      .catch(() => problems.push(tg + ': the block too hot is not heard as wrong bits'));
+    await lp.goto(base + 'index.html#/dive/block');
+    await lp.waitForFunction(() => !!document.querySelector('#diveui .f2head') && !!document.querySelector('#diveui .joulebtn'), null, { timeout: 120000, polling: 1000 }).catch(() => problems.push(tg + ': the block does not open without the flag'));
+    if (await lp.evaluate(() => !!document.querySelector('.lsnbtn, .lsnbox'))) problems.push(tg + ': without ?listen=1 the Listen switch shows');
+    await lp.close(); }
 };
 
 run['flights'] = async () => {
@@ -1375,41 +1423,60 @@ run['flights'] = async () => {
 };
 
 run['machines'] = async () => {
-  /* machines from shared blocks (#/machines, src/v2/machines.js): a flat page of its own, a fresh visitor */
+  /* machines from shared blocks (#/machines, src/v2/machines.js): a place of its own (#320), a fresh visitor. The machine
+     is a block diagram on the stage; its layers (made in, reshaping, how sure, attempts) are opened from it */
   for (const [w, h] of [[1280, 800], [390, 844]]) {
     const tag = 'machines ' + w, fp = await browser.newPage({ viewport: { width: w, height: h } });
     fp.on('pageerror', e => problems.push(tag + ': ' + e.message));
     await fp.addInitScript(() => { localStorage.setItem('osl-quality', 'flat'); localStorage.setItem('osl-hints-v1', JSON.stringify({ seen: {}, off: true })); });
     await fp.goto(base + 'index.html#/machines/hearing');
     await fp.waitForFunction(() => document.querySelectorAll('.mach .mpart').length === 4 && !!document.querySelector('.mach .mchecks li.bad'), null, { timeout: 60000, polling: 500 }).catch(() => problems.push(tag + ': the hearing aid does not start as circuits that miss its need'));
-    /* the filter made software: the machine meets its need */
+    /* the machine is drawn: every block on the stage with its wires, the filter a circuit */
+    await fp.waitForFunction(() => document.querySelectorAll('.mach .mstage .mpic .mbk').length === 4 && document.querySelectorAll('.mach .mwires .mw').length === 4 && !!document.querySelector('.mach .mbk[data-mpart="filter"].f-circuit .mbks .body'), null, { timeout: 15000, polling: 300 }).catch(() => problems.push(tag + ': the machine is not drawn as a block diagram'));
+    /* the core block leads into the core, at work on this machine's job (#321) */
+    await fp.waitForFunction(() => !!document.querySelector('a.mcoreway[href="#/do/rvrun/hearing"]'), null, { timeout: 15000, polling: 500 }).catch(() => problems.push(tag + ': the core block does not lead into the core'));
+    /* the filter made software: the machine meets its need, and the diagram changes with the form */
     await fp.waitForFunction(() => { const b = document.querySelector('[data-mform="filter:software"]'); if (b && b.getAttribute('aria-pressed') !== 'true') b.click(); return !!b && !document.querySelector('.mach .mchecks li.bad'); }, null, { timeout: 15000, polling: 300 }).catch(() => problems.push(tag + ': a filter made software does not meet the need'));
-    /* the agent offers a real choice, and a pick is used */
+    await fp.waitForFunction(() => !!document.querySelector('.mach .mbk[data-mpart="filter"].f-software') && !document.querySelector('.mach .mbk[data-mpart="filter"].f-circuit') && !!document.querySelector('.mach .mwires .mrun'), null, { timeout: 15000, polling: 300 }).catch(() => problems.push(tag + ': the filter made software does not change on the diagram (nor run on the core)'));
+    /* the agent offers a real choice, its offers stand on the front with your machine, and a pick is used */
     await fp.waitForFunction(() => { const a = document.querySelector('[data-magent]'); if (a) a.click(); return document.querySelectorAll('.mach .mpick').length >= 2; }, null, { timeout: 15000, polling: 300 }).catch(() => problems.push(tag + ': the agent does not offer a choice'));
-    await fp.waitForFunction(() => { const u = document.querySelector('[data-muse="0"]'); if (u) u.click(); return !!document.querySelector('.mach .mpick.on'); }, null, { timeout: 15000, polling: 300 }).catch(() => problems.push(tag + ': a pick is not put to use'));
-    /* fab on a desk: memory that computes is made only in a giant fab; on a desk the grammar breaks, back in the giant
-       fab it holds, and a try there takes months */
-    await fp.waitForFunction(() => { const b = document.querySelector('[data-mform="filter:matter:cim"]'); if (b && b.getAttribute('aria-pressed') !== 'true') b.click(); const d = document.querySelector('[data-mfab="desk"]'); if (d && d.getAttribute('aria-pressed') !== 'true') d.click(); return !!document.querySelector('.mach .mchecks li.bad'); }, null, { timeout: 15000, polling: 300 }).catch(() => problems.push(tag + ': a fab on a desk does not refuse memory that computes'));
+    await fp.waitForFunction(() => document.querySelectorAll('.mach .mfront .mfo').length >= 2 && !!document.querySelector('.mach .mfront .lpline0') && !!document.querySelector('.mach .mfront .lpnobody') && !!document.querySelector('.mach .mfront .lpdot'), null, { timeout: 15000, polling: 300 }).catch(() => problems.push(tag + ': the front does not draw the agent\'s offers, today\'s compromises, nobody\'s corner and your machine'));
+    await fp.waitForFunction(() => { const u = document.querySelector('.mpick [data-muse="0"]'); if (u) u.click(); return !!document.querySelector('.mach .mpick.on'); }, null, { timeout: 15000, polling: 300 }).catch(() => problems.push(tag + ': a pick is not put to use'));
+    /* fab on a desk, a layer of the machine: memory that computes is made only in a giant fab; on a desk the grammar
+       breaks, back in the giant fab it holds, and a try there takes months */
+    await fp.waitForFunction(() => { const L = document.querySelector('[data-mlayer="made"]'); if (L && L.getAttribute('aria-pressed') !== 'true') L.click(); const b = document.querySelector('[data-mform="filter:matter:cim"]'); if (b && b.getAttribute('aria-pressed') !== 'true') b.click(); const d = document.querySelector('[data-mfab="desk"]'); if (d && d.getAttribute('aria-pressed') !== 'true') d.click(); return !!document.querySelector('.mach .mchecks li.bad') && location.hash === '#/machines/hearing/made' && !!document.querySelector('.mach .mbk[data-mpart="filter"].bad'); }, null, { timeout: 15000, polling: 300 }).catch(() => problems.push(tag + ': a fab on a desk does not refuse memory that computes'));
     await fp.waitForFunction(() => { const g = document.querySelector('[data-mfab="giant"]'); if (g && g.getAttribute('aria-pressed') !== 'true') g.click(); return !document.querySelector('.mach .mchecks li.bad') && /126/.test([...document.querySelectorAll('.mach .mread b')].map(b => b.textContent).join(' ')); }, null, { timeout: 15000, polling: 300 }).catch(() => problems.push(tag + ': the giant fab does not show months a try'));
-    /* Moore's law for ideas: the lab's curve draws the attempts kept, the best so far, and where yours would land; kept, yours joins it */
-    await fp.waitForFunction(() => document.querySelectorAll('.mach .mcurve .dot:not(.you)').length >= 4 && !!document.querySelector('.mach .mcurve .best') && !!document.querySelector('.mach .mcurve .dot.you'), null, { timeout: 15000, polling: 300 }).catch(() => problems.push(tag + ': the lab\'s curve does not draw'));
+    /* Moore's law for ideas, a layer: the lab's curve draws the attempts kept, the best so far, and where yours would land; kept, yours joins it */
+    await fp.waitForFunction(() => { const L = document.querySelector('[data-mlayer="tries"]'); if (L && L.getAttribute('aria-pressed') !== 'true') L.click(); return document.querySelectorAll('.mach .mcurve .dot:not(.you)').length >= 4 && !!document.querySelector('.mach .mcurve .best') && !!document.querySelector('.mach .mcurve .dot.you'); }, null, { timeout: 15000, polling: 300 }).catch(() => problems.push(tag + ': the lab\'s curve does not draw'));
     await fp.waitForFunction(() => { const b = document.querySelector('[data-mform="filter:matter:living"]'); if (b && b.getAttribute('aria-pressed') !== 'true') b.click(); const n = document.querySelector('.mach .mkeep [data-sign]'); if (n && !n.value) n.value = 'Smoke'; const k = document.querySelector('[data-mkeep]'); if (k && !document.querySelector('.mach .mkeep .slip')) k.click(); return !!document.querySelector('.mach .mkeep .slip') && !!document.querySelector('.mach .mcurve .dot.mine'); }, null, { timeout: 15000, polling: 300 }).catch(() => problems.push(tag + ': an attempt is not kept on the curve'));
-    /* beyond today's chip: a part made of living neurons shows its claims, guesses labelled, and a range */
+    /* beyond today's chip, the layer of how sure: a part made of living neurons shows its claims, guesses labelled, a
+       range, and its mark on the picture */
     await fp.evaluate(() => { location.hash = '#/machines/wildfire'; });
-    await fp.waitForFunction(() => { const b = document.querySelector('[data-mform="detect:matter:living"]'); if (b && b.getAttribute('aria-pressed') !== 'true') b.click(); else if (!b) { const m = document.querySelector('[data-mform^="detect:matter"]'); if (m) m.click(); } return document.querySelectorAll('.mach .mclaims .mst.s-guess').length >= 2 && /–/.test((document.querySelector('.mach .mread b') || {}).textContent || ''); }, null, { timeout: 15000, polling: 300 }).catch(() => problems.push(tag + ': new matter does not show its claims and its range'));
+    await fp.waitForFunction(() => { const L = document.querySelector('[data-mlayer="claims"]'); if (L && L.getAttribute('aria-pressed') !== 'true') L.click(); const b = document.querySelector('[data-mform="detect:matter:living"]'); if (b && b.getAttribute('aria-pressed') !== 'true') b.click(); else if (!b) { const m = document.querySelector('[data-mform^="detect:matter"]'); if (m) m.click(); } return document.querySelectorAll('.mach .mclaims .mst.s-guess').length >= 2 && /–/.test((document.querySelector('.mach .mread b') || {}).textContent || '') && !!document.querySelector('.mach .mbk[data-mpart="detect"].f-matter .mbkt .t-guess'); }, null, { timeout: 15000, polling: 300 }).catch(() => problems.push(tag + ': new matter does not show its claims, its range and its mark on the picture'));
     /* the agent told to count guesses */
     await fp.waitForFunction(() => { const g = document.querySelector('[data-mguess]'); if (g && !g.checked) g.click(); const a = document.querySelector('[data-magent]'); if (a) a.click(); return !!g && g.checked && document.querySelectorAll('.mach .mpick').length >= 2; }, null, { timeout: 15000, polling: 300 }).catch(() => problems.push(tag + ': the agent cannot be told to count guesses'));
-    /* liquid hardware: a radio whose job changes every 100 ns; an FPGA rewires too slowly, an array rewired every tick keeps up,
-       and the map draws the line the parts must beat */
+    /* liquid hardware, the layer of reshaping: a radio whose job changes every 100 ns; an FPGA rewires too slowly, an
+       array rewired every tick keeps up, and the map draws the line the parts must beat */
     await fp.evaluate(() => { location.hash = '#/machines/radio'; });
     await fp.waitForFunction(() => { const pick = s => { const b = document.querySelector('[data-mform="' + s + '"]'); if (b && b.getAttribute('aria-pressed') !== 'true') b.click(); };
+      const L = document.querySelector('[data-mlayer="reshape"]'); if (L && L.getAttribute('aria-pressed') !== 'true') L.click();
       if (!document.querySelector('[data-mform="find:liquid:fpga"]')) pick('find:liquid:fpga'); pick('find:liquid:fpga'); pick('mix:liquid:fpga');
-      return [...document.querySelectorAll('.mach .mchecks li.bad')].length >= 2 && !!document.querySelector('.mach .lmap .every') && !!document.querySelector('.mach .mliquid .mclaims'); }, null, { timeout: 15000, polling: 300 }).catch(() => problems.push(tag + ': an FPGA does not miss a job that changes every 100 ns'));
+      return [...document.querySelectorAll('.mach .mchecks li.bad')].length >= 2 && !!document.querySelector('.mach .lmap .every') && !!document.querySelector('.mach .mliquid .mclaims') && !!document.querySelector('.mach .mbk[data-mpart="find"] .mbkl .bad'); }, null, { timeout: 15000, polling: 300 }).catch(() => problems.push(tag + ': an FPGA does not miss a job that changes every 100 ns'));
     await fp.waitForFunction(() => { ['find:liquid:cgra', 'mix:liquid:cgra'].forEach(s => { const b = document.querySelector('[data-mform="' + s + '"]'); if (b && b.getAttribute('aria-pressed') !== 'true') b.click(); });
-      return !document.querySelector('.mach .mchecks li.bad') && document.querySelectorAll('.mach .lmap .pt.f-liquid').length >= 1; }, null, { timeout: 15000, polling: 300 }).catch(() => problems.push(tag + ': an array rewired every tick does not keep up'));
-    /* another need, its own machine; nothing scrolls sideways */
+      return !document.querySelector('.mach .mchecks li.bad') && document.querySelectorAll('.mach .lmap .pt.f-liquid').length >= 1 && !!document.querySelector('.mach .mbk[data-mpart="find"].f-liquid .mbkl .good'); }, null, { timeout: 15000, polling: 300 }).catch(() => problems.push(tag + ': an array rewired every tick does not keep up'));
+    /* Do: the radio's challenge played on the picture to its win (its rules kept with the least energy), the goal across the stage */
+    await fp.waitForFunction(() => { const d = document.querySelector('[data-mmode="do"]'); if (d && d.getAttribute('aria-selected') !== 'true') d.click();
+      ['find:liquid:cgra', 'mix:liquid:cgra', 'clock:matter:reversible'].forEach(s => { const b = document.querySelector('[data-mform="' + s + '"]'); if (b && b.getAttribute('aria-pressed') !== 'true') b.click(); else if (!b && s.startsWith('clock')) { const m = document.querySelector('[data-mform^="clock:matter"]'); if (m) m.click(); } });
+      const f = document.querySelector('[data-mfab="giant"]'); if (f && f.getAttribute('aria-pressed') !== 'true') f.click();
+      return location.hash === '#/machines/radio/do' && document.querySelectorAll('.mach .mgoal .mgm').length >= 3 && !!document.querySelector('.mach .mstage.mwin .mwon'); }, null, { timeout: 15000, polling: 300 }).catch(() => problems.push(tag + ': the radio\'s challenge does not play to its win in Do'));
+    /* another need, its own machine and its own challenge: the rover, whose guide must change and whose voter must be exact */
     await fp.evaluate(() => { location.hash = '#/machines/rover'; });
     await fp.waitForFunction(() => document.querySelectorAll('.mach .mpart').length === 5, null, { timeout: 15000, polling: 300 }).catch(() => problems.push(tag + ': the rover\'s machine does not open'));
+    await fp.waitForFunction(() => { const d = document.querySelector('[data-mmode="do"]'); if (d && d.getAttribute('aria-selected') !== 'true') d.click();
+      const pick = (s, fam) => { const b = document.querySelector('[data-mform="' + s + '"]'); if (b && b.getAttribute('aria-pressed') !== 'true') b.click(); else if (!b) { const m = document.querySelector('[data-mform^="' + fam + '"]'); if (m) m.click(); } };
+      const won = !!document.querySelector('.mach .mstage.mwin');
+      if (!won) { pick('nav:matter:cim', 'nav:matter'); pick('vote:matter:reversible', 'vote:matter'); pick('clock:matter:reversible', 'clock:matter'); }
+      return won && !!document.querySelector('.mach .mdo .mdone'); }, null, { timeout: 15000, polling: 300 }).catch(() => problems.push(tag + ': the rover\'s challenge does not play to its win in Do'));
     const side = await fp.evaluate(() => { const p = document.querySelector('.page'); return p ? p.scrollWidth - p.clientWidth : 0; });
     if (side > 1) problems.push(tag + ': the page scrolls sideways by ' + side + ' px');
     await fp.close();

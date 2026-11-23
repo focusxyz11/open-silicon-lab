@@ -112,10 +112,7 @@
  "core.needSlice": "Your ALU slice is not finished yet, so this core cannot add. Build the slice first: the core uses whatever you made.",
  "core.buildSlice": "Build the ALU slice",
  "core.ran": "Your program ran: a0 = {result}, in {cycles} cycles.",
- "core.case": "wanted {want}, got {got}",
- "core.caseStuck": "never finished",
  "core.run.loop": "The program never stopped. With a wrong ALU, a loop's comparison can fail forever.",
- "core.run.mem": "Line {l}: the program reached outside the memory.",
  "core.cap.need.d": "The core is the heart of the community's computer. It is checked by real programs, so every piece inside it must be right.",
  "core.cap.logic.d": "Your program runs on the core, one instruction at a time. Every add and comparison goes through the 32 copies of your slice.",
  "core.cap.check.d": "{passed} of {tests} test programs give the right answer on your core.",
@@ -333,6 +330,12 @@
  "api.tool.ledger": "The community's ledger as it settles: every design, break and question, who made it, where it stands (holds a record, beaten, broken), which design is inside the shared computer, and what is open now: pieces to build, designs to break, checks to write.",
  "api.tool.break": "Propose a break: a case, tick by tick, that makes a design of the ledger answer wrong. It is run first and every tick is shown; if it really fails the design, you get the entry's file and the link for a person to send.",
  "api.tool.question": "Propose a question at a level of the lab, perhaps under a question that is already there, with what you noticed that made you ask. Questions, not answers.",
+ "api.tool.choose": "A thousand that pass: for a need (a phone's AI chip), a program's thousand designs that all pass every check, with what a check measures (power, cost, speed, area), the people around the need that no check measures (who uses it, who repairs it, who pays, the planet, what it must never do), the four choices each design makes that no check scores and which people each is kinder or harder on, and how people and AI agents have chosen so far, as two groups never mixed. Give a design (pick) and a one-line reason to prepare a try entry with your choice, for a person to send.",
+ "api.arg.chooseNeed": "The need to choose for (today: phone).",
+ "api.arg.pick": "The id of the design you choose (d0001 to d1000), from designs.",
+ "api.arg.reason": "What you chose it for, in one line of 8 to 140 plain characters: a reason no check could give.",
+ "api.arg.chooser": "Who chose: a person or an AI (a choice is made by one or the other, so the two can be seen apart).",
+ "api.choose.how": "Every design here passes every check. Look at how each treats the people around the need (lean: -2 badly to 2 well, from the rules in choicesNoCheckScores), choose one, and give your reason. The entry comes back as a file and a link for a person to send; nothing is posted.",
  "api.arg.design": "The id of a design in the ledger (from list_ledger).",
  "api.arg.case": "The case: a list of ticks, each an object giving every input of the job as 0 or 1, for example [{\"en\":1},{\"en\":0}].",
  "api.arg.words": "A sentence about it, in plain words (no links).",
@@ -398,5 +401,9 @@
   "other": "An attempt at a machine: {need} · {x}× the energy of all circuits · {days} days a try"
  },
  "ledger.no.chef": "There is no such level in the kitchen.",
+ "ledger.no.choice": "There is no such need to choose a design for.",
+ "ledger.no.pick": "There is no such design among the thousand for this need.",
+ "ledger.no.reason": "Say what you chose it for in one line of 8 to 140 plain characters: no links, no markup.",
+ "ledger.no.chooser": "A choice is made by a person or by an AI, not both, so the two can be seen apart.",
  "ledger.rec.chef": "An attempt at Keep the chef busy: {level} · the chef waits {wait}% · {e} J an answer"
 }

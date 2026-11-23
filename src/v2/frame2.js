@@ -63,6 +63,8 @@ export function boot() {
 
 /* ---- Read ---- */
 const LOGS = ['log', 'challenges', 'questions'], READING = ['read', 'w', 'machines', ...LOGS];
+/* pages that are places of their own: read as a page (the whole screen, the way back), named in the bar by their place */
+const PLACE_PAGES = { machines: 'map.lab.t' };
 const routeOf = h => String(h || '').replace(/^#\/?/, '').split('/')[0] || '';
 let readFrom = null, logBack = false;
 /* is the address a reading page */
@@ -112,9 +114,12 @@ export function readPage(page) {
 /* the bar while you read: it says so, and lights no stage (the loop still leads out to any stage) */
 export function bar(loop) {
   if (!loop) return; const on = reading(), b = loop.closest('.bar'); if (b) b.classList.toggle('f2reading', on);
-  if (!on || loop.querySelector(':scope > .f2rk')) return;
+  if (!on) return;
+  /* a page that is a place of its own (machines from shared blocks, #320) names where you are, not Reading */
+  const at = PLACE_PAGES[routeOf(location.hash)], was = loop.querySelector(':scope > .f2rk');
+  if (was) { if (was.classList.contains('f2rplace') !== !!at) was.remove(); else return; }
   loop.querySelectorAll('[aria-current]').forEach(n => n.removeAttribute('aria-current'));
-  const k = document.createElement('p'); k.className = 'f2rk'; k.innerHTML = '<span class="f2ri" aria-hidden="true"></span>' + esc(t('frame2.reading')); loop.prepend(k);
+  const k = document.createElement('p'); k.className = 'f2rk' + (at ? ' f2rplace' : ''); k.innerHTML = '<span class="f2ri" aria-hidden="true"></span>' + esc(t(at || 'frame2.reading')); loop.prepend(k);
 }
 
 function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]); }

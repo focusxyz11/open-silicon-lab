@@ -143,3 +143,33 @@ test('every challenge check says no at the start and yes at its goal', () => {
   assert.equal(P.checkOf('qubit-odd', { circuit: [['H', null], ['CX']] }), false); assert.equal(P.checkOf('qubit-odd', { circuit: [['H', null], ['CX'], [null, 'X']] }), true);
   assert.equal(P.checkOf('nope', {}), false);
 });
+
+/* Let the noise compute (src/v2/labs/pbits.js): p-bits factor a number by running a multiplier backwards */
+test('p-bits factor 15 and 143: seeded, right at a good cold, wrong when too warm or too cold, cheaper than trying every pair as it grows', () => {
+  const ans = P.factorAnswers(15, 3).map(s => P.pqOf(s, 3).join('x')).sort();
+  assert.deepEqual(ans, ['3x5', '5x3']);
+  assert.deepEqual(P.factorAnswers(143, 4).map(s => P.pqOf(s, 4).join('x')).sort(), ['11x13', '13x11']);
+  assert.equal(P.exactSearch(15, 3).tries, 64); assert.equal(P.exactSearch(143, 4).tries, 256);
+  /* the same settings give the same answer: the engine is seeded */
+  const a = P.factorStats({ N: 15, bits: 3, beta: 1.25, wait: 30 }), b = P.factorStats({ N: 15, bits: 3, beta: 1.25, wait: 30 });
+  assert.equal(a.right, b.right); assert.deepEqual([...a.reads], [...b.reads]);
+  /* the p-bits spend most of their time on the answers at a good cold */
+  const w = P.factorWalker({ N: 15, bits: 3, beta: 1.25, seed: 5 }); w.walk(400);
+  const onAnswers = P.factorAnswers(15, 3).reduce((s, k) => s + w.counts[k], 0);
+  assert.ok(onAnswers / 400 > 0.3, 'share on the answers ' + onAnswers / 400);
+  assert.ok(P.factorAnswers(15, 3).includes(w.read()));
+  /* too warm: a coin toss; too cold: frozen on a near miss */
+  assert.ok(P.factorStats({ N: 15, bits: 3, beta: 0.25, wait: 60 }).right < 0.5);
+  assert.ok(P.factorStats({ N: 143, bits: 4, beta: 4, wait: 60 }).right < 0.5);
+  /* both goals, at the dials the smoke test uses (cold 1.25, a wait of 30 sweeps), and not at a lazy setting */
+  assert.ok(P.checkNoise({ beta: 1.25, wait: 30 })); assert.ok(P.checkNoiseBig({ beta: 1.25, wait: 30 }));
+  const g = P.factorGoal('small', { beta: 1.25, wait: 480 });
+  assert.ok(g.right && !g.least && !g.met, 'a long wait is right but not the least');
+  assert.ok(!P.checkNoiseBig({ beta: 0.5, wait: 120 }), 'a warm network needs too long a wait');
+  /* as the number grows, trying every pair costs four times as much; the p-bits' least energy at a good cold, far less */
+  const least = (F, beta) => { for (const wt of P.WAITS) { const s = P.factorStats({ N: F.N, bits: F.bits, beta, wait: wt }); if (s.right >= P.PBIT_RIGHT) return s.energy; } return Infinity; };
+  const small = least(P.FACTOR.small, 1.25), large = least(P.FACTOR.large, 1.25);
+  assert.equal(P.exactSearch(143, 4).energy / P.exactSearch(15, 3).energy, 4);
+  assert.ok(large / small < 2, 'the p-bits grow ' + large / small);
+  assert.ok(large < P.exactSearch(143, 4).energy / 3);
+});

@@ -69,7 +69,7 @@ export function create() {
     const id = V.WE.IDS[d];
     if (!levelsOf(V.flatKind).includes(id)) { if (V.flatKind === 'dive' && V.diveWorld === 'datacentre') location.hash = '#/place/datacentre/' + (id === 'board' ? 4 : 2); return; }   /* above the chip, the flight takes over */
     if (d !== V.diveD) { divePart = null; V.diveThread = null; V.dive.setThread(null); V.dive.select(null); }
-    V.diveD = d; if (V.Joule && V.flatKind === 'dive') V.Joule.level(id); if (V.Bench && V.flatKind === 'bench') V.Bench.step(id); if (!V.diveFrame) return;
+    V.diveD = d; if (V.Joule && V.flatKind === 'dive') V.Joule.level(id); if (V.Listen) V.Listen.level(V.flatKind === 'dive' ? id : null); if (V.Bench && V.flatKind === 'bench') V.Bench.step(id); if (!V.diveFrame) return;
     const L = levelsOf(V.flatKind);
     /* a row of steps (the line, the bench): the step is lit on the line of steps, and the rail shows only the level the
        step shows, if any (src/engines/way.js, steps and levels) */
@@ -246,7 +246,7 @@ export function create() {
   /* keep the picture clear of the frame: the rail on the left, the corner, the dock below (on a phone, the card at rest) */
   /* the lens of the energy puzzle is part of the frame: on a desktop at the picture's right edge, on a phone (folded) at its
      top, and the picture keeps clear of it */
-  const diveInset = () => { if (!V.dive || !V.diveFrame) return; const wide = innerWidth > 720, b = innerWidth >= 1100 ? 24 : (V.diveFrame.restH ? V.diveFrame.restH() : V.diveFrame.dock.parentNode.offsetHeight) + (wide ? 24 : 18), lens = V.Joule && V.S.joule.on && innerWidth >= 1100 ? 356 : 0, top = V.Joule ? V.Joule.bottom() : 0;
+  const diveInset = () => { if (!V.dive || !V.diveFrame) return; const wide = innerWidth > 720, b = innerWidth >= 1100 ? 24 : (V.diveFrame.restH ? V.diveFrame.restH() : V.diveFrame.dock.parentNode.offsetHeight) + (wide ? 24 : 18), lens = (V.Joule && V.S.joule.on && innerWidth >= 1100 ? 356 : 0) + (V.Listen ? V.Listen.width() : 0), top = Math.max(V.Joule ? V.Joule.bottom() : 0, V.Listen ? V.Listen.bottom() : 0);
     /* the picture stands right of the caption at rest, and left of the side panel */
     const f2 = innerWidth >= 1100 && V.vui.classList.contains('f2') ? V.diveFrame.dock.parentNode.getBoundingClientRect() : null, f2cap = f2 && V.vui.classList.contains('f2cap');
     const st = rowsOf(V.flatKind) ? (wide ? 70 : 40) : 0;   /* the line of steps across the top of the picture */
@@ -319,6 +319,11 @@ export function create() {
         slip: id => slipHtml(V.S, id), slipClick: (ev, done) => slipClick(ev, V.S, redraw => { V.save(); V.refresh(true); done(redraw); }),
         refusal, signHtml: () => signHtml(V.S), attempts: () => attemptsAt(Game.world(V.S), 'energy'), changed: () => requestAnimationFrame(diveInset) }) : null;
       if (V.Joule) V.Joule.redraw();
+      /* Listen (#316, only with ?listen=1): the block slowed down until it can be heard, a switch beside the joule's
+         (src/v2/listen.js); its code loads only with the flag */
+      V.Listen = null;
+      if (kind === 'dive' && /[?&]listen=1(&|$)/.test(location.search)) import('../listen.js').then(m => { if (V.flatKind !== 'dive' || V.vui.hidden) return;
+        V.Listen = m.createListen(V.vui, { where: lensWhere, joule: () => { if (V.Joule && V.S.joule.on) V.Joule.on(false); }, changed: () => requestAnimationFrame(diveInset) }); V.Listen.level(V.diveId()); });
       V.vui.onclick = e => { const b = e.target.closest('[data-divego]'); if (b) w.flyTo(+b.dataset.divego); const sk = e.target.closest('[data-seek]'); if (sk) return pickPart(sk.dataset.seek); const pk = e.target.closest('[data-pick]'); if (pk) { pickPart(pk.dataset.pick === divePart ? null : pk.dataset.pick); V.vui.querySelectorAll('[data-pick]').forEach(x => x.classList.toggle('on', x.dataset.pick === divePart)); } };
       const d = V.WE.IDS.indexOf(L.includes(depth) ? depth : L[0]);
       V.loading(false); w.start(); w.setZ(d); if (!ringRaf) ringRaf = requestAnimationFrame(diveRing); if (V.arriving && kind === 'line') w.arrive(); V.arriving = false; V.diveD = -1; diveAt(d); $('diveCanvas').focus({ preventScroll: true });

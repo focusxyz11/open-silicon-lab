@@ -75,12 +75,13 @@ export function create() {
   }
   V.page.addEventListener('input', e => { const f = e.target.closest('[data-readfind]'); if (f) Read.filterIndex(V.page, f.value); if (e.target.matches('[data-cyear]')) copiesInput(e.target); if (e.target.matches('[data-forms] [data-fcode]')) formsInput(e.target); if (e.target.matches('[data-tune] [data-tin]')) tuneType(e.target); });   /* i18n-ok: selectors */
   V.page.addEventListener('click', e => { const b = e.target.closest('[data-copies] [data-cp]'); if (b) copiesInput(b); const w = e.target.closest('[data-walls] [data-wk], [data-walls] [data-wrow]'); if (w) wallsInput(w, V.S.chip); const f = e.target.closest('[data-forms] [data-fjob], [data-forms] [data-fver], [data-forms] [data-fedit], [data-forms] [data-fsig]'); if (f) formsInput(f); const pl = e.target.closest('[data-plan] [data-pk2]'); if (pl) planInput(pl, V.S.chip); const ck = e.target.closest('[data-clock] [data-clk], [data-clock] [data-clkref]'); if (ck) clockInput(ck, V.S.chip); const sb = e.target.closest('[data-side] [data-sbk]'); if (sb) sideInput(sb); const sw = e.target.closest('[data-swarm] [data-swk]'); if (sw) swarmInput(sw); const tn = e.target.closest('[data-tune] [data-tk], [data-tune] [data-tplane]'); if (tn) tuneInput(tn, e); });   /* i18n-ok: a selector */
-  /* machines from shared blocks (src/v2/machines.js): a need, its machine, an agent that assembles it */
-  function showMachines(need) {
+  /* machines from shared blocks (src/v2/machines.js): a need, its machine on the stage, its layers, an agent that
+     assembles it, and its challenge in Do (sub: 'do' or a layer) */
+  function showMachines(need, sub) {
     V.page.innerHTML = '<div class="inner"><div data-machines></div></div>';
     V.page.hidden = false; V.page.scrollTop = 0;
     /* the claims behind new matter link to their sources in facts.json: drawn at once, and again when the facts arrive */
-    const draw = () => { const el = V.page.querySelector('[data-machines]'); if (el && V.partsOf(location.hash)[0] === 'machines') machinesView(el, { need, FACT, go: id => { location.hash = '#/machines/' + id; },
+    const draw = () => { const el = V.page.querySelector('[data-machines]'); if (el && V.partsOf(location.hash)[0] === 'machines') machinesView(el, { need, sub, FACT, go: (id, to) => { location.hash = '#/machines/' + id + (to ? '/' + to : ''); },
       /* an attempt of yours joins the lab's curve as a draft, with its slip into the ledger */
       world: () => Game.world(V.S), keep: (id, plan, box) => keep(V.S, { kind: 'try', machine: id, plan, words: '' }, 'machine ' + id, signOf(box)),
       slip: id => slipHtml(V.S, id), slipClick: (ev, done) => slipClick(ev, V.S, () => { V.save(); V.refresh(true); done(); }), refusal, signHtml: () => signHtml(V.S) }); };
