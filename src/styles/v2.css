@@ -2979,6 +2979,162 @@ i.ersil { background: var(--bad); }
 .rvcases .good { color: var(--good); } .rvcases .bad { color: var(--bad); } .rvcases .mono { color: var(--ink); }
 .rvtask { margin: 6px 0; }
 
+/* labs-b: Let the noise compute (src/v2/labs/pbits.js) */
+.pbfig { margin: 8px 0; } .pbfig svg { display: block; width: 100%; height: auto; }
+.pbfig .ax { font: 9.5px var(--sans); fill: var(--muted); }
+.pbfig .pbbit { fill: var(--panel-solid); stroke-width: 1.4; } .pbfig .pbbit.p { stroke: var(--accent); } .pbfig .pbbit.q { stroke: var(--warm); }
+.pbfig .pbbit.p.on { fill: var(--accent); } .pbfig .pbbit.q.on { fill: var(--warm); }
+.pbfig .pbop { font: 600 14px var(--sans); fill: var(--muted); }
+.pbfig .pbclamp { fill: var(--panel-solid); stroke: var(--ink); stroke-width: 1; } .pbfig .pbclamp.on { fill: var(--ink); }
+.pbfig .pbnow { font: 600 10.5px var(--mono); fill: var(--ink); } .pbfig .pbnow.good { fill: var(--good); }
+.pbfig .pbmap { fill: color-mix(in srgb, var(--ink) 5%, transparent); stroke: var(--line); stroke-width: 1; }
+.pbfig .pbheat { fill: var(--accent); }
+html.frame2 .f2stage .pbfig svg text { font-size: calc(13px * var(--f2-k, .6)); } html.frame2 .f2stage .pbfig svg text.pbnow { font-size: calc(15px * var(--f2-k, .6)); } html.frame2 .f2stage .pbfig svg text.pbop { font-size: calc(18px * var(--f2-k, .6)); }
+.pbfig .pbtry { fill: color-mix(in srgb, var(--muted) 45%, transparent); } .pbfig .pbtry.found { fill: var(--good); }
+.pbfig .pbans { fill: none; stroke: var(--good); stroke-width: 1.4; }
+.pbfig .pbcur { fill: none; stroke: var(--ink); stroke-width: 1.4; }
+.pbfig .pbread { fill: none; stroke: var(--bad); stroke-width: 2.2; } .pbfig .pbread.good { stroke: var(--good); }
+.pbfig .pbspent { font: 8.5px var(--mono); fill: var(--ink); }
+.pbdial { margin: 6px 0; } .pbstep { display: flex; align-items: center; gap: 8px; } .pbstep input { flex: 1; min-width: 0; } .pbstep .chipb { min-width: 34px; padding: 4px 0; text-align: center; }
+.pbmsg.good { color: var(--good); } .pbmsg.bad { color: var(--bad); }
+.pben, .pbgrow { margin: 10px 0; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--line); display: grid; gap: 6px; } .pben > p, .pbgrow > p { margin: 0; }
+.pbrow { display: grid; grid-template-columns: 130px 1fr 58px; align-items: center; gap: 10px; font-size: 12.5px; line-height: 1.25; } .pbrow b { font-size: 12px; text-align: right; }
+.pbbar { display: flex; height: 10px; border-radius: 5px; background: color-mix(in srgb, var(--ink) 8%, transparent); overflow: hidden; } .pbbar i { display: block; height: 100%; min-width: 1px; transition: width .3s; }
+.pben .pb, .pbgrow .pb { background: var(--accent); } .pben .ex, .pbgrow .ex { background: var(--muted); }
+.pbgr { display: grid; grid-template-columns: 112px 1fr 64px; align-items: center; gap: 10px; font-size: 12.5px; line-height: 1.25; } .pbgr.now .pbn { font-weight: 600; }
+.pbgr .pbbars { display: grid; gap: 4px; } .pbgr .pbv { text-align: right; line-height: 1.35; }
+.pbkey { display: flex; flex-wrap: wrap; gap: 2px 12px; margin: 0; } .pbkey i { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 5px; }
+@media (max-width: 720px) { .pbrow { grid-template-columns: 104px 1fr 54px; gap: 8px; } .pbgr { grid-template-columns: 92px 1fr 58px; gap: 8px; }
+  html.frame2 .f2stage .pbfig svg text { font-size: calc(10.5px * var(--f2-k, .9)); } html.frame2 .f2stage .pbfig svg text.pbnow { font-size: calc(12px * var(--f2-k, .9)); } html.frame2 .f2stage .pbfig svg text.pbop { font-size: calc(14px * var(--f2-k, .9)); } }
+
+/* labs-b: A thousand that pass (src/v2/labs/thousand.js) */
+.thfig { margin: 8px 0; } .thfig svg { display: block; width: 100%; height: auto; }
+.thfig .ax { font: 9.5px var(--sans); fill: var(--muted); }
+.thfig .thp { cursor: pointer; } .thfig .thpbg { fill: color-mix(in srgb, var(--ink) 5%, transparent); stroke: var(--line); stroke-width: 1; }
+.thfig .thp.on .thpbg { fill: color-mix(in srgb, var(--accent) 18%, var(--panel-solid)); stroke: var(--accent); }
+.thfig .thp:hover .thpbg, .thfig .thp:focus-visible .thpbg { stroke: var(--accent); } .thfig .thp:focus { outline: none; }
+.thfig .thglyph { fill: none; stroke: var(--ink); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.thfig .thpn { font: 600 8.6px var(--sans); fill: var(--ink); } .thfig .thok { fill: var(--good); }
+html.frame2 .f2stage .thfig svg text { font-size: calc(12.5px * var(--f2-k, .6)); } html.frame2 .f2stage .thfig svg text.thpn { font-size: calc(13px * var(--f2-k, .6)); }
+.thfig .thstep { fill: color-mix(in srgb, var(--ink) 12%, transparent); } .thfig .thstep.mid { fill: var(--muted); }
+.thfig .thstep.l { fill: var(--good); } .thfig .thstep.m { fill: var(--bad); }
+.thfig .thzone { fill: color-mix(in srgb, var(--good) 9%, transparent); stroke: color-mix(in srgb, var(--good) 55%, transparent); stroke-width: 1; stroke-dasharray: 3 2; }
+.thfig .thd { cursor: pointer; opacity: .85; } .thfig .thd.pass { fill: var(--good); opacity: .6; }
+.thfig .thd.l2 { fill: var(--good); } .thfig .thd.l1 { fill: color-mix(in srgb, var(--good) 55%, var(--muted)); }
+.thfig .thd.l0 { fill: var(--muted); opacity: .45; } .thfig .thd.m1 { fill: color-mix(in srgb, var(--bad) 55%, var(--muted)); } .thfig .thd.m2 { fill: var(--bad); }
+.thfig .thpick { fill: none; stroke: var(--ink); stroke-width: 1.8; } .thfig .thpickc { fill: var(--ink); }
+.thfig .thmk { fill: none; stroke-width: 1.6; } .thfig .thmk.people { stroke: var(--accent); } .thfig .thmk.agents { stroke: var(--warm); }
+.thact { margin: 2px 0 8px; }
+.thcard { margin: 8px 0 10px; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--line); } .thcard > p { margin: 0 0 6px; }
+.thm { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12.5px; margin-bottom: 8px; } .thm i { font-style: normal; }
+.thtraits { list-style: none; margin: 0 0 6px; padding: 0; display: grid; gap: 6px; font-size: 13px; line-height: 1.35; }
+.thtraits li > span { display: flex; flex-wrap: wrap; gap: 2px 10px; margin-top: 1px; } .thup { color: var(--good); } .thdn { color: var(--bad); }
+.thkeep input[type="text"]#th-why { width: 100%; box-sizing: border-box; }
+.thothers { margin: 12px 0; } .thothers > p { margin: 0 0 4px; }
+.thgroups { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 8px; }
+.thgroup { padding: 10px 12px; border-radius: 12px; border: 1px solid var(--line); min-width: 0; } .thgroup > p { margin: 0 0 6px; }
+.thmark { display: inline-block; width: 9px; height: 9px; margin-right: 6px; border: 1.6px solid var(--accent); border-radius: 50%; vertical-align: -1px; }
+.thmark.agents { border-color: var(--warm); border-radius: 1px; transform: rotate(45deg) scale(.85); }
+.thlean { display: grid; gap: 3px; margin-bottom: 8px; } .thlr { display: grid; grid-template-columns: 1fr 70px; gap: 6px; align-items: center; font-size: 11.5px; }
+.thlb { position: relative; height: 7px; border-radius: 4px; background: color-mix(in srgb, var(--ink) 8%, transparent); } .thlb i { position: absolute; top: 0; height: 100%; border-radius: 4px; }
+.thlb i.up { background: var(--good); } .thlb i.dn { background: var(--bad); }
+.threasons { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; font-size: 12.5px; } .threasons li { display: grid; gap: 1px; overflow-wrap: anywhere; }
+@media (max-width: 720px) { .thgroups { grid-template-columns: 1fr; }
+  html.frame2 .f2stage .thfig svg text, html.frame2 .f2stage .thfig svg text.thpn { font-size: calc(10px * var(--f2-k, .9)); } }
+/* ---- labs-a: Design it, or search for it? (src/v2/labs/search.js) ---- */
+.srfig { margin: 8px 0; } .srfig svg { display: block; width: 100%; height: auto; }
+.srfig .ax { font: 9.5px var(--sans); fill: var(--muted); }
+.srfig .srgrid { stroke: var(--line); stroke-width: 1; }
+.srfig .srbeyond { fill: color-mix(in srgb, var(--ink) 5%, transparent); }
+.srfig .srhand { stroke: var(--warm); stroke-width: 1.6; stroke-dasharray: 5 4; }
+.srfig .srhandt { font: 600 10px var(--sans); fill: color-mix(in srgb, var(--warm) 72%, var(--ink)); }
+.srfig .srcurve { fill: none; stroke: var(--accent); stroke-width: 2.4; stroke-linejoin: round; }
+.srfig .srcurve.some, .srfig .srdot.some { stroke: var(--bad); } .srfig .srdot { fill: var(--panel-solid); stroke: var(--accent); stroke-width: 1.4; }
+.srfig .srcross { fill: color-mix(in srgb, var(--good) 30%, transparent); stroke: var(--good); stroke-width: 1.8; }
+.srfig .srcross.some { fill: color-mix(in srgb, var(--bad) 25%, transparent); stroke: var(--bad); }
+.srfig .srcrosst { font: 600 10px var(--sans); fill: var(--ink); paint-order: stroke; stroke: var(--panel-solid); stroke-width: 3px; }
+.srfig .srnone { font: 11px var(--sans); fill: var(--muted); }
+.srfig .srbudget { stroke: var(--ink); stroke-width: 1.2; opacity: .55; }
+.srfig .srpat { fill: color-mix(in srgb, var(--ink) 6%, transparent); stroke: var(--line); stroke-width: 1; }
+.srfig .srpat.ok { fill: color-mix(in srgb, var(--good) 28%, transparent); stroke: var(--good); }
+.srfig .srpat.bad { fill: color-mix(in srgb, var(--bad) 32%, transparent); stroke: var(--bad); }
+.srfig .srpat.untested { stroke-dasharray: 3 2; }
+.srfig .srpatm { font: 700 11px var(--sans); fill: var(--ink); }
+.srfig .srsplit { stroke: var(--muted); stroke-width: 1; stroke-dasharray: 2 2; }
+.srjobs .chipb .muted { font-size: 12px; }
+.srmsg { margin: 8px 0; }
+.srcode summary { cursor: pointer; color: var(--muted); }
+
+/* ---- labs-a: The program nobody can judge (src/v2/labs/halt.js) ---- */
+.hlstages { margin: 4px 0 10px; }
+.hlfig { margin: 8px 0; } .hlfig svg { display: block; width: 100%; height: auto; }
+.hlfig .ax { font: 9.5px var(--sans); fill: var(--muted); }
+.hlfig .hlk { font: 600 10px var(--sans); fill: var(--ink); } .hlfig .hlk.out.on { fill: var(--good); } .hlfig .hlk.bad { fill: var(--bad); }
+/* the paths, one style per material: a pipe, a beam, a row of dominoes */
+.hlfig .hlw { fill: none; stroke-linejoin: round; }
+.hlfig .hlw.water { stroke: color-mix(in srgb, var(--ink) 16%, transparent); stroke-width: 7; stroke-linecap: round; }
+.hlfig .hlw.water.on { stroke: var(--accent); }
+.hlfig .hlw.light { stroke: color-mix(in srgb, var(--ink) 22%, transparent); stroke-width: 1.4; stroke-dasharray: 2 4; }
+.hlfig .hlw.light.on { stroke: var(--warm); stroke-width: 3.2; stroke-dasharray: none; filter: drop-shadow(0 0 3px var(--warm)); }
+.hlfig .hlw.domino { stroke: color-mix(in srgb, var(--ink) 30%, transparent); stroke-width: 10; stroke-dasharray: 2.5 5; }
+.hlfig .hlw.domino.on { stroke: var(--good); }
+.hlfig .hlw.thin.water { stroke-width: 4.5; } .hlfig .hlw.thin.domino { stroke-width: 8; }
+.hlfig .hlw.off { opacity: .35; stroke-dasharray: 3 4; }
+.hlfig .hlsrc { fill: var(--panel-solid); stroke: var(--muted); stroke-width: 1.2; }
+.hlfig .hlwater { fill: var(--accent); opacity: .85; }
+.hlfig .hllamp { fill: var(--warm); filter: drop-shadow(0 0 4px var(--warm)); }
+.hlfig .hlpush { fill: var(--good); }
+.hlfig .hlin { cursor: pointer; } .hlfig .hlhit { fill: transparent; }
+.hlfig .hlvalve { fill: var(--panel-solid); stroke: var(--muted); stroke-width: 1.4; stroke-linejoin: round; }
+.hlfig .hlin.on .hlvalve { stroke: var(--accent); fill: color-mix(in srgb, var(--accent) 22%, var(--panel-solid)); }
+.hlfig .hlshut { stroke: var(--bad); stroke-width: 2.4; stroke-linecap: round; }
+.hlfig .hlshutter { fill: var(--muted); } .hlfig .hlin.on .hlshutter { fill: color-mix(in srgb, var(--muted) 50%, transparent); }
+.hlfig .hldom { fill: var(--ink); } .hlfig .hldom.on { fill: var(--good); }
+.hlfig .hlgap { fill: none; stroke: var(--muted); stroke-width: 1.2; stroke-dasharray: 2 2; }
+.hlfig .hlblock { fill: var(--panel-solid); stroke: var(--muted); stroke-width: 1.4; } .hlfig .hlblock.on { fill: var(--bad); stroke: var(--bad); }
+.hlfig .hlcup { fill: none; stroke: var(--ink); stroke-width: 1.6; stroke-linejoin: round; }
+.hlfig .hlout { fill: var(--panel-solid); stroke: var(--muted); stroke-width: 1.4; } .hlfig .hlout.on { fill: var(--good); stroke: var(--good); filter: drop-shadow(0 0 5px var(--good)); }
+.hlfig .hlgate { fill: var(--panel-solid); stroke: var(--ink); stroke-width: 1.3; } .hlfig .hlgt { font: 700 11px var(--mono); fill: var(--ink); }
+.hlfig .hlbub { fill: var(--panel-solid); stroke: var(--ink); stroke-width: 1.2; }
+/* stage 2: the blocks, the core, the two lanes */
+.hlfig .hlblk { stroke-width: 1.2; } .hlfig .hlbt { font: 600 10px var(--sans); fill: var(--ink); }
+.hlfig .hlblk.hk-count { fill: color-mix(in srgb, var(--accent) 18%, var(--panel-solid)); stroke: var(--accent); }
+.hlfig .hlblk.hk-loop { fill: color-mix(in srgb, var(--warm) 18%, var(--panel-solid)); stroke: var(--warm); }
+.hlfig .hlblk.hk-stop { fill: color-mix(in srgb, var(--good) 18%, var(--panel-solid)); stroke: var(--good); }
+.hlfig .hlblk.hk-ask { fill: color-mix(in srgb, var(--bad) 16%, var(--panel-solid)); stroke: var(--bad); }
+.hlfig .hlblk.on { stroke-width: 2.6; filter: drop-shadow(0 0 4px var(--warm)); }
+.hlfig .hlcore { fill: var(--panel-solid); stroke: var(--line); }
+.hlfig .hlbig { font: 700 20px var(--mono); fill: var(--warm); } .hlfig .hlop { font: 700 14px var(--mono); fill: var(--accent); }
+.hlfig .hllane { fill: color-mix(in srgb, var(--ink) 7%, transparent); }
+.hlfig .hlrun.agent { fill: var(--accent); } .hlfig .hlrun.real { fill: var(--good); } .hlfig .hlrun.real.never { fill: var(--warm); }
+.hlfig .hlwall { stroke: var(--bad); stroke-width: 2; }
+.hlfig .hlflag { fill: var(--good); stroke: var(--good); stroke-width: 1.4; stroke-linejoin: round; }
+.hlfig .hlinf { font: 700 18px var(--sans); fill: var(--warm); }
+.hlfig .hlsay { font: 600 10.5px var(--sans); fill: var(--accent); } .hlfig .hlsay.real { fill: var(--good); }
+.hlfig .hlstamp rect { fill: color-mix(in srgb, var(--bad) 22%, var(--panel-solid)); stroke: var(--bad); stroke-width: 1.6; }
+.hlfig .hlstamp text { font: 800 12px var(--sans); fill: var(--bad); letter-spacing: .08em; text-transform: uppercase; }
+.hlfig .hlright { font: 600 10.5px var(--sans); fill: var(--muted); }
+.hlins { display: flex; gap: 8px; margin: 8px 0; }
+.hltt { border-collapse: collapse; margin: 10px 0 6px; font: 13px var(--mono); }
+.hltt th, .hltt td { padding: 3px 12px; text-align: center; border-bottom: 1px solid var(--line); }
+.hltt th { font: 600 11px var(--sans); color: var(--muted); }
+.hltt tr.good td:nth-child(3) { color: var(--good); } .hltt tr.bad td:nth-child(3) { color: var(--bad); }
+.hltt tr.now td { background: color-mix(in srgb, var(--accent) 12%, transparent); }
+.hlmsg { margin: 8px 0; }
+.hlany { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin: 4px 0 8px; }
+.hlany > span { display: grid; gap: 2px; padding: 6px 8px; border-radius: 10px; border: 1px solid var(--line); text-align: center; }
+.hlany b { font-size: 16px; color: var(--warm); }
+.hlprog { list-style: none; margin: 4px 0 8px; padding: 0; display: grid; gap: 5px; }
+.hlprog .hlb { display: flex; align-items: center; gap: 8px; padding: 6px 8px 6px 10px; border-radius: 10px; border: 1px solid var(--line); border-left-width: 4px; font-size: 13px; }
+.hlprog .hlb > span { flex: 1; } .hlprog .hlb.hk-count { border-left-color: var(--accent); } .hlprog .hlb.hk-loop { border-left-color: var(--warm); } .hlprog .hlb.hk-stop { border-left-color: var(--good); } .hlprog .hlb.hk-ask { border-left-color: var(--bad); }
+.hlprog select { font: 13px var(--mono); padding: 3px 6px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel-solid); color: var(--ink); }
+.hlprog .hlx { border: 0; background: transparent; color: var(--muted); font-size: 18px; line-height: 1; padding: 0 4px; cursor: pointer; }
+.hladd .chipb { font-size: 12.5px; }
+.hlopen { margin: 10px 0; padding: 10px 12px; border-radius: 12px; border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent); }
+.hlopen p { margin: 4px 0; }
+@media (max-width: 520px) { .hlany { grid-template-columns: repeat(3, 1fr); } }
+.srjobs .chipb[aria-pressed="true"] .muted { color: inherit; opacity: .75; }
+.hlfig .hlsay, .hlfig .hlk, .hlfig .ax { paint-order: stroke; stroke: var(--panel-solid); stroke-width: 3px; stroke-linejoin: round; }
 /* ---- Listen (#316, src/v2/listen.js): the block's picture lit in time with its sound, on the frame's layer and in the
    ear test; and Listen and tell, the ear test (src/v2/labs/listen.js). Sums light in the accent, a fetch warm along its
    way from the memory, heat as a warm haze over the logic, a wrong bit red on its wire (red means wrong, and nothing else) ---- */
