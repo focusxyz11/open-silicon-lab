@@ -62,6 +62,10 @@ export const diveWord = (level, key) => VIEW_PARTS.dive[level + '.' + key] || pa
 /* handset: the phone flown through, closed or opened like a book; cabin: the car cut away round its footwell */
 const FLIGHT_SIZES = { campus: 500, hall: 100, server: 0.8, handset: 0.15, cabin: 2 };
 export const sizeOf = level => (DEPTHS[level] && DEPTHS[level].m) || FLIGHT_SIZES[level] || null;
+/* how much a level is slowed when it is heard (Listen, #316, src/engines/listen.js): the seconds of the chip in one
+   second of sound. At the block one second of sound is one nanosecond of the chip, so a 3 GHz clock ticks three times
+   a second. Every level that shows the Listen switch has its line here (a test checks it) */
+export const TIME_SCALE = { block: 1e-9 };
 
 /* Questions to build: an open question with an engine and a game of its own (#263). Its home is here and only here: the
    place and level where it lives (its challenge is played there: CHALLENGES in src/v2/game.js reads its address from

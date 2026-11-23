@@ -4,7 +4,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, existsSync } from 'node:fs';
-import { BLOCKS, NEEDS, PORTS, FORMS, blockOf, needOf } from '../src/data/blocks.js';
+import { BLOCKS, NEEDS, PORTS, FORMS, GOALS, blockOf, needOf } from '../src/data/blocks.js';
 import { MATTERS, STATUS, KINDS, ACTIVITY } from '../src/data/inventions.js';
 import { FABS, TRY_DAYS, YEAR, fabOf } from '../src/data/fabs.js';
 import { LIQUIDS, ON as LIQUID_ON, RESHAPE, FALLBACK } from '../src/data/liquid.js';
@@ -248,4 +248,30 @@ test('a block is checked by its piece of the plan, or by a lab', () => {
   const P = buildPlan();
   BLOCKS.forEach(b => { const c = M.checkOf(b.id, P); assert.ok(c); if (b.need) assert.ok(['built', 'open', 'partly', 'engine'].includes(c.state), b.id); else assert.equal(c.state, 'lab'); });
   assert.equal(M.checkOf('nope'), null);
+});
+
+test('a challenge per need: two goals, each with a least energy some machine reaches, and the start never wins', () => {
+  for (const n of NEEDS) {
+    const G = GOALS[n.id];
+    assert.ok(G && G.length === 2 && G[0].id === 'least', n.id + ' has two goals, the first the least energy');
+    G.forEach(g => {
+      const b = M.bestFor(n.id, g);
+      assert.ok(b && isFinite(b.energy), n.id + '.' + g.id + ' can be met');
+      const P = M.play(n.id, b.plan, g);
+      assert.ok(P.ok && P.won, n.id + '.' + g.id + ': the best plan wins');
+      assert.equal(M.play(n.id, M.startPlan(n.id), g).won, false, n.id + '.' + g.id + ': every part a circuit in a giant fab is not the answer');
+      (g.exact || []).forEach(id => assert.ok(n.parts.some(p => p.id === id), n.id + ' goal names its own part ' + id));
+    });
+    /* the least energy is the agent's cheapest offer: the same engine, the same scoring */
+    assert.ok(Math.abs(M.bestFor(n.id, G[0]).energy - M.assemble(n.id, 1).picks[0].score.energy) < 1e-12, n.id + ': the least is the agent\'s cheapest');
+    /* a harder goal never costs less than the first */
+    assert.ok(M.bestFor(n.id, G[1]).energy >= M.bestFor(n.id, G[0]).energy - 1e-12, n.id + ': the second goal is harder');
+  }
+  /* the hearing aid within a week: memory that computes waits months on a giant fab, a fabric rewired is bought and
+     configured in a day */
+  const wk = GOALS.hearing[1];
+  assert.deepEqual(M.goalMisses(needOf('hearing'), M.machine('hearing', { filter: 'matter:cim' }).plan, wk), [{ rule: 'days' }]);
+  assert.equal(M.play('hearing', { filter: 'liquid:fpga' }, wk).won, true);
+  /* the rover's guide exact too: memory that computes misses it */
+  assert.ok(M.play('rover', { nav: 'matter:cim', vote: 'matter:reversible', clock: 'matter:reversible' }, GOALS.rover[1]).extra.some(x => x.rule === 'exact' && x.part === 'nav'));
 });

@@ -135,6 +135,68 @@ export function pSample({ beta = 1, clamp = {}, sweeps = 2000, seed = 11, J = AN
   return counts;
 }
 
+/* ---------- p-bits, a multiplier run backwards: let the noise factor a number ---------- */
+/* The lab 'Let the noise compute' (src/v2/labs/pbits.js). Two numbers p and q, each written in `bits` p-bits, and the
+   product clamped to N: the network's energy is how far p × q misses N, on a log scale (log2(1 + |N - p q|)), so every
+   miss of the same size costs the same whatever the number. Each p-bit flips at random, leaning toward the value that
+   lowers the energy, by beta (the cold: 0 is a fair coin, large follows its neighbours strictly). The p-bits are read by
+   the state they visited most during the wait; a read is right when that state is a pair whose product is N. Borders et
+   al. (Nature 573, 2019) factored numbers this way with magnetic p-bits; there too the inputs were worked out from the
+   miss by a conventional circuit beside them. The exact digital search tries every pair, counting every case, so it
+   is sure of every answer. Energies in pJ: one try is a multiply, a compare and two register reads (Table I above),
+   one p-bit update (its input worked out, then a random flip) is taken as 0.1 pJ, an illustrative figure. */
+export const FACTOR = { small: { N: 15, bits: 3 }, large: { N: 143, bits: 4 } };
+export const E_TRY = E16.mul + E16.add + 2 * E16.rf, E_UPDATE = 0.1;
+export const BETAS = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 2.5, 3, 4];
+export const WAITS = [10, 15, 20, 30, 40, 60, 80, 120, 160, 240, 320, 480];
+export const PBIT_RUNS = 200, PBIT_SEED = 7, PBIT_RIGHT = 0.9;
+/* a state is one number: its low `bits` bits are p, the next `bits` bits are q */
+export const pqOf = (s, bits) => [s & ((1 << bits) - 1), s >> bits];
+const ENERGIES = {};
+export function factorEnergies(N, bits) {
+  const k = N + ':' + bits; if (ENERGIES[k]) return ENERGIES[k];
+  const S = 1 << (2 * bits), E = new Float64Array(S);
+  for (let s = 0; s < S; s++) { const [p, q] = pqOf(s, bits); E[s] = Math.log2(1 + Math.abs(N - p * q)); }
+  return (ENERGIES[k] = E);
+}
+export const factorAnswers = (N, bits) => { const out = []; for (let s = 0; s < 1 << (2 * bits); s++) { const [p, q] = pqOf(s, bits); if (p * q === N) out.push(s); } return out; };
+/* one network of p-bits, walked a sweep at a time (every p-bit updated once per sweep, in order); counts: the sweeps
+   spent in each state so far. walk(n) returns the states it passed, one per sweep */
+export function factorWalker({ N, bits, beta, seed = 1 }) {
+  const E = factorEnergies(N, bits), n = 2 * bits, S = 1 << n, r = rng(seed), counts = new Uint32Array(S);
+  let s = Math.floor(r() * S), sweeps = 0;
+  function sweep() {
+    for (let i = 0; i < n; i++) { const a = s & ~(1 << i), b = s | (1 << i); s = r() < 1 / (1 + Math.exp(-beta * (E[a] - E[b]))) ? b : a; }
+    counts[s]++; sweeps++; return s;
+  }
+  return { counts, get state() { return s; }, get sweeps() { return sweeps; }, walk(k) { const path = []; for (let j = 0; j < k; j++) path.push(sweep()); return path; },
+    read() { let m = 0; for (let x = 1; x < S; x++) if (counts[x] > counts[m]) m = x; return m; } };
+}
+/* many reads, each a fresh network from its own random start: the share that are right, how often each state was read,
+   and the energy of one read against the exact search's */
+export function factorStats({ N, bits, beta, wait, runs = PBIT_RUNS, seed = PBIT_SEED }) {
+  const n = 2 * bits, reads = new Uint32Array(1 << n), r = rng(seed);
+  let right = 0;
+  for (let k = 0; k < runs; k++) {
+    const w = factorWalker({ N, bits, beta, seed: Math.floor(r() * 4294967296) || 1 }); w.walk(wait);
+    const s = w.read(), [p, q] = pqOf(s, bits); reads[s]++; if (p * q === N) right++;
+  }
+  return { right: right / runs, reads, energy: n * wait * E_UPDATE, exact: exactSearch(N, bits).energy };
+}
+/* the exact search: every pair tried in order, so all the answers are known for sure */
+export const exactSearch = (N, bits) => { const tries = 1 << (2 * bits); return { tries, energy: tries * E_TRY, answers: factorAnswers(N, bits) }; };
+/* the goal of each problem: right at least 90% of the time, with the least wait that does it at this cold (one step
+   shorter is not right often enough), and for less energy than the exact search (the large one: a third of it) */
+export const FACTOR_SHARE = { small: 1, large: 1 / 3 };
+export function factorGoal(size, { beta, wait }) {
+  const P = FACTOR[size], st = factorStats({ N: P.N, bits: P.bits, beta, wait }), i = WAITS.indexOf(wait);
+  const shorter = i > 0 ? factorStats({ N: P.N, bits: P.bits, beta, wait: WAITS[i - 1] }).right : null;
+  const right = st.right >= PBIT_RIGHT, least = right && (shorter == null || shorter < PBIT_RIGHT), cheap = st.energy <= st.exact * FACTOR_SHARE[size] + 1e-9;
+  return { st, shorter, right, least, cheap, met: right && least && cheap };
+}
+export const checkNoise = state => factorGoal('small', state || {}).met;
+export const checkNoiseBig = state => factorGoal('large', state || {}).met;
+
 /* ---------- reversible computing ---------- */
 export const K_B = 1.380649e-23;
 export const landauer = (tempK = 300) => K_B * tempK * Math.LN2;

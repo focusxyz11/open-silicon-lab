@@ -486,7 +486,7 @@ export function start() {
     if (k === 'read') V.showRead(parts[1] ? decodeURIComponent(parts[1]) : null);
     if (k === 'w') { if (parts[1]) V.showWorld(parts[1], parts[2], parts[3]); else V.showWorlds(); }
     if (k === 'whatif') return showMap(from).then(() => V.showWhatif(parts[1]));
-    if (k === 'machines') V.showMachines(parts[1]);
+    if (k === 'machines') V.showMachines(parts[1], parts[2]);
     /* a reading page stands on its own: the island waits behind it, paused (src/v2/frame2.js, Read) */
     if (frame2Reading()) return showMap(from).then(m => { if (frame2Reading()) m.pause(); });
     return showMap(from).then(() => { if (k === 'ecosystem') V.showEcosystem(); else if ((k === 'island' || k === 'explore') && V.cur && !sheet.hidden) { closeSheet(); V.map && V.map.overview(); } });
