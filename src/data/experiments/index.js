@@ -18,7 +18,8 @@
    - wants     what it waits for when it cannot be done yet: an engine id that is missing, 'part' (its engine
                exists but cannot work this out yet) or 'outside' (it needs real cases, sources or people)
    - lens      the way of seeing it is best shown through
-   - ch        the challenges that put a target on it (src/v2/game.js): then it is played
+   - ch        the challenges that put a target on it (src/v2/game.js): then it is played. A lab's challenges are not
+               listed here: each names its experiment in its lab's file (exp, src/data/labs/), and is added after these
    - probe     1 when a try of its engine sits on its own page (src/v2/probes.js)
    - go        an address where it can be done on the site today, besides a challenge or a try
    - trade     measures that move · given: what it stands on · open: directions being tried
@@ -37,6 +38,9 @@ import open from './open.js';
 import divide from './divide.js';
 import life from './life.js';
 import scale from './scale.js';
+import { LAB_CHALLENGES } from '../labs/index.js';
 
 export const BY_WORLD = { think, strange, limit, fail, idea, make, know, open, divide, life, scale };
+/* the labs' challenges join the experiments they name, after the experiment's own */
+for (const L of Object.values(BY_WORLD)) for (const x of L) { const more = LAB_CHALLENGES.filter(c => c.exp === x.id).map(c => c.id); if (more.length) x.ch = (x.ch || []).concat(more); }
 export const EXPERIMENTS = Object.entries(BY_WORLD).flatMap(([world, L]) => L.map(x => Object.assign({ world }, x)));

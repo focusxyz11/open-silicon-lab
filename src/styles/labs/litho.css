@@ -1,0 +1,59 @@
+/* The lab litho's own styles (src/data/labs/litho.js, css: true), loaded when one of its challenges is played (src/core/styles.js). */
+/* ---- Print the finest lines, The 1,000-watt source (src/v2/labs/litho.js, src/engines/litho.js) ---- */
+.ltsrcs { gap: 5px; margin: 4px 0 8px; }
+.ltsrc { display: grid; gap: 0; text-align: left; padding: 5px 10px; border-radius: 12px; line-height: 1.2; }
+.ltsrc .small { font-weight: 400; opacity: .75; }
+.ltsrc.done:not([aria-pressed=true]) { border-color: color-mix(in srgb, var(--good) 60%, transparent); }
+.ltfig svg, .eufig svg { display: block; width: 100%; height: auto; }
+.ltfig .ax, .eufig .ax { font: 10.5px var(--sans); fill: var(--muted); }
+ .ltfig .ax.r, .eufig .ax.r { text-anchor: end; }
+.ltfig .ltarea { fill: color-mix(in srgb, var(--accent) 16%, transparent); }
+.ltfig .ltcurve { fill: none; stroke: var(--accent); stroke-width: 2; stroke-linejoin: round; }
+.ltfig .ltthr { stroke: var(--warm); stroke-width: 1; stroke-dasharray: 4 3; }
+.ltfig .ltbase { stroke: var(--line); }
+.ltfig .ltwafer { fill: color-mix(in srgb, var(--ink) 30%, var(--panel-solid)); }
+.ltfig .ltline.ok { fill: var(--good); }
+ .ltfig .ltline.mid { fill: var(--warm); }
+ .ltfig .ltline.no { fill: var(--bad); opacity: .7; }
+.ltfig .ltrule { fill: color-mix(in srgb, var(--ink) 10%, transparent); }
+.ltfig .ltno { fill: color-mix(in srgb, var(--bad) 35%, transparent); }
+.ltfig .ltlim { stroke: var(--bad); stroke-width: 2; }
+.ltfig .ltdot { stroke: var(--panel-solid); stroke-width: 2; }
+ .ltfig .ltdot.ok { fill: var(--good); }
+ .ltfig .ltdot.mid { fill: var(--warm); }
+ .ltfig .ltdot.no { fill: var(--bad); }
+.ltread { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin: 4px 0 6px; }
+.ltread > span { display: grid; gap: 1px; align-content: start; padding: 6px 8px; border-radius: 10px; border: 1px solid var(--line); }
+.ltread b { font-size: 15px; }
+ .ltread .warn b { color: var(--warm); }
+ .ltread .small { font-size: 11px; line-height: 1.3; }
+.eufig .eubar { fill: color-mix(in srgb, var(--accent) 55%, transparent); }
+ .eufig .eubar.src { fill: var(--warm); }
+ .eufig .eubar.end { fill: var(--accent); }
+.eufig .eumove { fill: color-mix(in srgb, var(--ink) 70%, var(--panel-solid)); }
+ .eufig .euexp { fill: var(--warm); }
+.eufig .eumark { stroke: var(--good); stroke-width: 1.5; }
+.euholes { display: grid; grid-template-columns: 150px 1fr; gap: 14px; align-items: center; margin: 4px 0 8px; }
+.euhfig { margin: 0; }
+ .euhfig svg { display: block; width: 100%; height: auto; }
+.euholes p { margin: 0 0 4px; }
+.euhfig .eures { fill: color-mix(in srgb, var(--ink) 25%, var(--panel-solid)); }
+ .euhfig .euhole { fill: var(--accent); }
+.euhfig .euc { fill: none; stroke-width: 1.4; }
+ .euhfig .euc.ok { stroke: var(--good); }
+ .euhfig .euc.no { stroke: var(--bad); stroke-dasharray: 3 2; stroke-width: 2; }
+@media (max-width: 720px) { .ltread .small { display: none; } .euholes { grid-template-columns: 110px 1fr; }
+}
+
+.joule p { margin: 0; }
+/* on a phone: the trace and the levers where you are; no map, no lever chips on the other levels */
+@media (max-width: 720px) { .jtot .small { display: none; }
+}
+
+.hm-nitem .small { line-height: 1.45; }
+.hm-ilink .small { line-height: 1.35; margin-top: 2px; }
+.hm-winfo p { margin: 0; }
+.hm-toy p { margin: 0; }
+.hm-thread p { margin: 0; flex: 1; min-width: 0; }
+.hm-side p { margin: 0; }
+.lsnbox p { margin: 0; }

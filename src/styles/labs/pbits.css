@@ -1,0 +1,50 @@
+/* The lab pbits's own styles (src/data/labs/pbits.js, css: true), loaded when one of its challenges is played (src/core/styles.js). */
+/* labs-b: Let the noise compute (src/v2/labs/pbits.js) */
+.pbfig { margin: 8px 0; }
+ .pbfig svg { display: block; width: 100%; height: auto; }
+.pbfig .ax { font: 9.5px var(--sans); fill: var(--muted); }
+.pbfig .pbbit { fill: var(--panel-solid); stroke-width: 1.4; }
+ .pbfig .pbbit.p { stroke: var(--accent); }
+ .pbfig .pbbit.q { stroke: var(--warm); }
+.pbfig .pbbit.p.on { fill: var(--accent); }
+ .pbfig .pbbit.q.on { fill: var(--warm); }
+.pbfig .pbop { font: 600 14px var(--sans); fill: var(--muted); }
+.pbfig .pbclamp { fill: var(--panel-solid); stroke: var(--ink); stroke-width: 1; }
+ .pbfig .pbclamp.on { fill: var(--ink); }
+.pbfig .pbnow { font: 600 10.5px var(--mono); fill: var(--ink); }
+ .pbfig .pbnow.good { fill: var(--good); }
+.pbfig .pbmap { fill: color-mix(in srgb, var(--ink) 5%, transparent); stroke: var(--line); stroke-width: 1; }
+.pbfig .pbheat { fill: var(--accent); }
+html.frame2 .f2stage .pbfig svg text { font-size: calc(13px * var(--f2-k, .6)); }
+ html.frame2 .f2stage .pbfig svg text.pbnow { font-size: calc(15px * var(--f2-k, .6)); }
+ html.frame2 .f2stage .pbfig svg text.pbop { font-size: calc(18px * var(--f2-k, .6)); }
+.pbfig .pbtry { fill: color-mix(in srgb, var(--muted) 45%, transparent); }
+ .pbfig .pbtry.found { fill: var(--good); }
+.pbfig .pbans { fill: none; stroke: var(--good); stroke-width: 1.4; }
+.pbfig .pbcur { fill: none; stroke: var(--ink); stroke-width: 1.4; }
+.pbfig .pbread { fill: none; stroke: var(--bad); stroke-width: 2.2; }
+ .pbfig .pbread.good { stroke: var(--good); }
+.pbfig .pbspent { font: 8.5px var(--mono); fill: var(--ink); }
+.pbdial { margin: 6px 0; }
+ .pbstep { display: flex; align-items: center; gap: 8px; }
+ .pbstep input { flex: 1; min-width: 0; }
+ .pbstep .chipb { min-width: 34px; padding: 4px 0; text-align: center; }
+.pbmsg.good { color: var(--good); }
+ .pbmsg.bad { color: var(--bad); }
+.pben, .pbgrow { margin: 10px 0; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--line); display: grid; gap: 6px; }
+ .pben > p, .pbgrow > p { margin: 0; }
+.pbrow { display: grid; grid-template-columns: 130px 1fr 58px; align-items: center; gap: 10px; font-size: 12.5px; line-height: 1.25; }
+ .pbrow b { font-size: 12px; text-align: right; }
+.pbbar { display: flex; height: 10px; border-radius: 5px; background: color-mix(in srgb, var(--ink) 8%, transparent); overflow: hidden; }
+ .pbbar i { display: block; height: 100%; min-width: 1px; transition: width .3s; }
+.pben .pb, .pbgrow .pb { background: var(--accent); }
+ .pben .ex, .pbgrow .ex { background: var(--muted); }
+.pbgr { display: grid; grid-template-columns: 112px 1fr 64px; align-items: center; gap: 10px; font-size: 12.5px; line-height: 1.25; }
+ .pbgr.now .pbn { font-weight: 600; }
+.pbgr .pbbars { display: grid; gap: 4px; }
+ .pbgr .pbv { text-align: right; line-height: 1.35; }
+.pbkey { display: flex; flex-wrap: wrap; gap: 2px 12px; margin: 0; }
+ .pbkey i { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 5px; }
+@media (max-width: 720px) { .pbrow { grid-template-columns: 104px 1fr 54px; gap: 8px; } .pbgr { grid-template-columns: 92px 1fr 58px; gap: 8px; }
+  html.frame2 .f2stage .pbfig svg text { font-size: calc(10.5px * var(--f2-k, .9)); } html.frame2 .f2stage .pbfig svg text.pbnow { font-size: calc(12px * var(--f2-k, .9)); } html.frame2 .f2stage .pbfig svg text.pbop { font-size: calc(14px * var(--f2-k, .9)); }
+}

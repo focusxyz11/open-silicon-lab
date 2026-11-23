@@ -3,7 +3,7 @@
    draw it in their card (src/v2/lenspaint.js: energy per answer against the hottest patch), and a machine of shared
    blocks draws it beside the machine (src/v2/machines.js: energy against how much can still change). The caller maps
    its own measures to the chart's coordinates; this draws the frame, the shaded corner, the lines, the dots and the
-   key, with the classes of src/styles/v2.css (.lpfront and its parts).
+   key, with the classes of src/styles/frame.css (.lpfront and its parts).
 
    frontFigure(o) -> HTML. o: { W, H, box: [x0, y0, x1, y1] (the plot inside the viewBox), corner: 'bl' | 'tl' (where
    nobody is yet: down and left, or up and left), lines: [{ pts: [[x, y], ...], cls }] (the first is today's front; the

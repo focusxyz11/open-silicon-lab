@@ -14,6 +14,7 @@ import { DEBATES } from '../src/data/debates.js';
 import { WORLDS, STOPS } from '../src/data/weave.js';
 import { PLACES as MAP_PLACES } from '../src/data/views3d.js';
 import { readWords } from '../scripts/words.mjs';
+import { LABS } from '../src/data/labs/index.js';
 
 const EN = readWords();
 const MAP = readFileSync(new URL('../src/v2/map3d.js', import.meta.url), 'utf8');
@@ -118,7 +119,10 @@ test('everything that grows is drawn on the island, named, and stands at a real 
   assert.equal(new Set(ids).size, ids.length);
   for (const g of G.GROWTH) {
     assert.ok(G.PLACES.includes(g.at), g.id + ' at ' + g.at);
-    assert.ok(MAP.includes("'" + g.id + "': "), g.id + ' has no grower in map3d.js');
+    /* the loop's own growers are in map3d.js; a lab's in its own file, with the place it stands */
+    const lab = LABS.find(l => l.challenges.some(c => c.id === g.by));
+    if (lab) assert.match(readFileSync(new URL('../src/v2/growers/' + lab.name + '.js', import.meta.url), 'utf8'), new RegExp("'" + g.id + "': \\{ at: \\[-?[\\d.]+, -?[\\d.]+(, -?[\\d.]+)?\\], grow: \\(g, "), g.id + ' has no grower in src/v2/growers/' + lab.name + '.js');
+    else assert.ok(MAP.includes("'" + g.id + "': "), g.id + ' has no grower in map3d.js');
     assert.ok(EN['grow.' + g.id], g.id);
   }
 });

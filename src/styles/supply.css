@@ -1,0 +1,35 @@
+/* supply.css: the supply map (#/supply, src/v2/glue/supply.js), loaded with it (src/core/styles.js). */
+/* the supply map's dock: short, so the map keeps most of the screen; what stops when a place shuts */
+.dock.supdock { max-height: 40vh; overflow: auto; }
+.dock.supdock .yours { margin: 6px 0 8px; }
+.mapstop2 { margin: 8px 0 12px; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--warm); background: color-mix(in srgb, var(--warm) 10%, transparent); }
+.mapstop2.stopped { border-color: var(--bad); background: color-mix(in srgb, var(--bad) 10%, transparent); }
+.mapstop2 p { margin: 0 0 4px; }
+.case2 p { margin: 6px 0 0; }
+.root2 p { margin: 0; }
+.slip p { margin: 0; }
+.keep p { margin: 0; }
+.asked1 p { margin: 0 0 2px; }
+.strand p { margin: 8px 0 0; }
+/* a question's world and a break can be taller than a line of story: they scroll inside the dock, never over the bar */
+.dock:has(.stopx) { max-height: min(60vh, calc(100vh - 250px)); overflow-y: auto; }
+@media (max-width: 720px) { .dock:has(.stopx) { max-height: 54vh; }
+}
+
+@media (max-width: 720px) {
+  .dock:has(.stopx) { max-height: 50vh; }
+}
+
+.seen p { margin: 4px 0; }
+/* ---- The side panel on a desktop (CLAUDE.md, desktop first where it is richer; #271, one frame, three modes) ----
+   On a wide screen a card that is not a caption on the picture stands as the side panel at the right, full height,
+   its width growing with the screen (--f2-pw, src/styles/frame.css): a view's card in Do, Ask and Read more, and the
+   island's sheet. A view frames its picture left of it (its canvas runs under it); the island's canvas ends where the
+   panel begins. Below 1100 px the card is below the picture (on a phone, the sheet). --bench is the room the panel
+   takes from the right edge, for the things on the picture that keep clear of it. */
+@media (min-width: 1100px) {
+  .dockwrap .dock { width: auto; max-height: none; overflow: visible; }
+}
+
+.joule p { margin: 0; }
+.lsnbox p { margin: 0; }
