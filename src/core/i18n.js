@@ -41,7 +41,8 @@ export const AREAS = {
     'board', 'story', 'chipx', 'lab', 'society', 'fab', 'whatif'],
   design: ['design', 'bench', 'build', 'ledger', 'api', 'core'],
   labs: ['td', 'bet', 'aib', 'agent', 'srv', 'ana', 'ckp', 'rv', 'er', 'cim', 'grv', 'semi', 'imp', 'ovl', 'eu',
-    'lt', 'cz', 'fl', 'mo', 'rd', 'evolve', 'clk', 'floor', 'xray', 'xr', 'chip', 'life', 'gauge', ],
+    'lt', 'cz', 'fl', 'mo', 'rd', 'evolve', 'clk', 'floor', 'xray', 'xr', 'chip', 'life', 'gauge',
+    'pb', 'th'],
   blueprint: ['bp'],
   pages: ['machines', 'mb', 'invent', 'liquid', 'read', 'page', 'site', 'tune', 'swm', 'side', 'walls',
     'forms', 'copies', 'probe', 'plan']

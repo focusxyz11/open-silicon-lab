@@ -14,7 +14,8 @@ import { STAGES, STAGE_PLACE, stageOfPlace, nextPlace, whereOf, alongTo } from '
 import { viewOfDepth, CHALLENGES, PLACES } from '../v2/game.js';
 import { NEEDS, GOAL } from '../data/build.js';
 import { plan, progress, needOf, needForProject, childrenOf } from './build.js';
-import { settled, frontier, draft, tryEntry, fileOf, proposeUrl, runCase, caseOk, attemptsAt } from './ledger.js';
+import { settled, frontier, draft, tryEntry, fileOf, proposeUrl, runCase, caseOk, attemptsAt, choicesAt } from './ledger.js';
+import * as Thousand from './thousand.js';
 import { budget, where as whereEnergy, LEVELS as ENERGY_LEVELS, LEVERS, PLAN, JOB } from './budget.js';
 import { build, projectOf, PROJECTS, starterOf, patterns } from './design.js';
 import { TESTS, START_PROGRAM } from './core.js';
@@ -136,6 +137,7 @@ export function listLedger() {
     entries: W.entries.map(e => Object.assign({ id: e.id, kind: e.kind, by: e.by, made: e.made, state: e.state }, e.kind === 'design' ? { piece: e.piece, title: e.title, inside: W.inside[e.piece] === e.id, transistors: e.facts.transistors, longestPathPs: e.facts.ps, brokenBy: e.brokenBy, code: e.code }
       : e.kind === 'break' ? { of: e.of, case: e.case, wrongAtTick: e.facts.tick } : e.kind === 'try' && e.puzzle ? { puzzle: e.puzzle, plan: e.plan, ...attemptFacts(e), best: W.best[e.puzzle] === e.id }
       : e.kind === 'try' && e.chef ? { chef: e.chef, plan: e.plan, waiting: sig(e.facts.wait), joulesPerAnswer: sig(e.facts.energy), cleared: e.facts.cleared, best: (W.bestChef || {})[e.chef] === e.id }
+      : e.kind === 'try' && e.choice ? { choice: e.choice, pick: e.pick, reason: e.words }
       : e.kind === 'try' && e.machine ? { machine: e.machine, plan: e.plan, ...e.facts, best: (W.bestMachine || {})[e.machine] === e.id }
       : e.kind === 'try' ? { of: e.of, casesItHeldOn: e.facts.cases }
       : e.kind === 'report' ? { at: e.at, part: e.part || null, says: e.say, words: e.words, fixedBy: e.fixedBy || null } : e.kind === 'fix' ? { of: e.of, words: e.words, pullRequest: e.pr || null }
@@ -207,4 +209,31 @@ export function submitAttempt({ plan, words, author, kind, ai, about }) {
   if (!P) return { ok: false, reason: t('ledger.no.plan') };
   const b = budget(JOB, P);
   return entryOut(draft({ kind: 'try', puzzle: 'energy', plan: P, by: author || t('api.anon'), made: kind, ai: ai || '', words: words || '', about: about || null }, (author || '') + ' energy'), b.ok ? { joules: sig(b.total), wattHours: sig(b.total / 3600), secondsPerAnswer: sig(b.seconds), accuracyDb: sig(b.snrDb) } : {});
+}
+
+/* ---- A thousand that pass (src/engines/thousand.js): a program's thousand designs for a need, all passing every check;
+   the people around the need that no check measures; and a choice with its reason, prepared as a try entry for a person
+   to send. People's choices and agents' come back apart, never mixed, read from the entries alone ---- */
+const r3 = x => +x.toPrecision(3);
+export function chooseDesign({ need, pick, reason, author, kind, ai, about } = {}) {
+  const id = need || 'phone', N = Thousand.NEEDS[id];
+  if (!N) return { ok: false, reason: t('ledger.no.choice'), needs: Object.keys(Thousand.NEEDS) };
+  const D = Thousand.thousand(id), L = Thousand.limits(id), C = choicesAt(settled(), id);
+  const group = list => list.map(e => ({ id: e.id, by: e.by, pick: e.pick, reason: e.words }));
+  const out = {
+    need: id, what: t('th.intro', { n: D.length }), limits: L,
+    people: Thousand.PEOPLE.map(p => ({ id: p, name: t('th.person.' + p + '.s'), what: t('th.person.' + p + '.d') })),
+    choicesNoCheckScores: Thousand.TRAITS.map(T => ({ id: T.id, name: t('th.trait.' + T.id + '.t'), values: T.values.map(v => ({ id: v, what: t('th.trait.' + T.id + '.' + v), leans: Thousand.LEAN[T.id][v] })) })),
+    columns: ['id', 'powerW', 'costUsd', 'tokensPerSecond', 'areaMm2', ...Thousand.TRAITS.map(T => T.id), ...Thousand.PEOPLE.map(p => 'lean.' + p)],
+    designs: D.map(d => [d.id, r3(d.m.power), r3(d.m.cost), Math.round(d.m.tps), Math.round(d.m.area), ...Thousand.TRAITS.map(T => d.traits[T.id]), ...Thousand.PEOPLE.map(p => d.lean[p])]),
+    chosen: { people: group(C.people), agents: group(C.agents) },
+    how: t('api.choose.how'), note: t('api.untrusted')
+  };
+  if (pick == null && reason == null) return out;
+  const bad = whoOk(kind, ai); if (bad) return Object.assign(out, { ok: false, reason: bad });
+  if (kind !== 'person' && kind !== 'ai') return Object.assign(out, { ok: false, reason: t('ledger.no.chooser') });
+  const e = draft({ kind: 'try', choice: id, pick, words: typeof reason === 'string' ? reason.trim() : reason, by: author || t('api.anon'), made: kind, ai: ai || '', about: about || null }, (author || '') + ' choice ' + id);
+  const res = entryOut(e);
+  delete out.designs; delete out.columns;
+  return Object.assign(out, res, res.ok ? { picked: Thousand.designOf(id, pick) } : {});
 }

@@ -15,7 +15,10 @@
                Every attempt kept, in order, draws the lab's curve: the best so far against the attempts so far
                (labCurve below, "Moore's law for ideas"); or an attempt at Keep the chef busy, the game of moving bits
                (src/engines/bits.js): a plan of its six levers at one of its levels, scored by the time the chef waits
-               and the energy of one answer; each level has its own curve of the best time waiting (chefCurve below).
+               and the energy of one answer; each level has its own curve of the best time waiting (chefCurve below);
+               or a choice among a thousand designs that all pass (src/engines/thousand.js): the need, the design picked
+               and, in its words, the reason, one line no check could give. Only a person or an AI chooses (not both
+               at once, so the two can be told apart), and once per need under a name.
      question  a question with a home: a level, perhaps a part of it and the question it sits under.
      report    the lab itself broken, by anyone, at any time: where (the site's address, perhaps a part), what kind
                (wrong, confusing, does not work, could be better) and the words. Feedback is not a stage of a plan:
@@ -38,6 +41,7 @@ import { DEPTHS, STOPS, REPO } from '../data/weave.js';
 import { budget, problem, PLAN, JOB } from './budget.js';
 import { machine as runMachine, beats as machineBeats } from './machine.js';
 import { needOf as machineNeed } from '../data/blocks.js';
+import { NEEDS as CHOICE_NEEDS, designOf as choiceOf, reasonOk } from './thousand.js';
 import { kitchen, levelOf as chefLevel, problem as chefProblem, normalPlan as chefPlan, LEVER_IDS as CHEF_LEVERS } from './bits.js';
 
 export const KINDS = ['design', 'break', 'try', 'question', 'report', 'fix'];
@@ -52,7 +56,7 @@ const FIELDS = {
   break: ['kind', 'of', 'by', 'made', 'ai', 'words', 'case', 'about'],
   /* a try: cases that were meant to break a design and did not. The trace of an attack that failed: what a
      design has survived is why it can be trusted, and where the next attacker need not look */
-  try: ['kind', 'of', 'by', 'made', 'ai', 'words', 'cases', 'puzzle', 'machine', 'chef', 'plan', 'about'],
+  try: ['kind', 'of', 'by', 'made', 'ai', 'words', 'cases', 'puzzle', 'machine', 'chef', 'plan', 'choice', 'pick', 'about'],
   question: ['kind', 'at', 'part', 'under', 'q', 'noticed', 'by', 'made', 'ai', 'about'],
   report: ['kind', 'at', 'part', 'say', 'words', 'by', 'made', 'ai'],
   fix: ['kind', 'of', 'words', 'pr', 'by', 'made', 'ai']
@@ -127,6 +131,19 @@ export function checkEntry(e, W) {
     if ((W.pieces[e.piece] || []).some(id => norm(W.byId[id].code) === norm(e.code))) return no('same');
     return { ok: true, facts: { transistors: B.transistors, ps: Math.round(B.st.crit), caught: Math.round(B.coverage * 100) } };
   }
+  /* a choice among a thousand that pass: a need, one of its designs, and the reason in one line of the chooser's own
+     words; a person or an AI, once per need under a name. Its facts are how the design treats each person around the
+     need (src/engines/thousand.js LEAN): the ledger keeps the choice, and never ranks it */
+  if (e.kind === 'try' && e.choice != null) {
+    if (typeof e.choice !== 'string' || !Object.hasOwn(CHOICE_NEEDS, e.choice)) return no('choice');
+    if (e.of != null || e.cases != null || e.puzzle != null || e.machine != null || e.chef != null || e.plan != null) return no('fields');
+    if (e.made !== 'person' && e.made !== 'ai') return no('chooser');
+    const d = typeof e.pick === 'string' ? choiceOf(e.choice, e.pick) : null; if (!d) return no('pick');
+    if (!plain(e.words, 0, 300) || !reasonOk(e.words)) return no('reason');
+    if ((W.choices[e.choice] || []).some(id => norm(W.byId[id].by) === norm(e.by))) return no('same');
+    return { ok: true, facts: { lean: d.lean } };
+  }
+  if (e.kind === 'try' && e.pick != null) return no('fields');
   /* an attempt at Keep the chef busy: a plan the kitchen can run at one of its levels, new among the attempts there; its
      facts are the engine's score (the share of time waiting and the energy of one answer, at the last round) */
   if (e.kind === 'try' && e.chef != null) {
@@ -215,7 +232,7 @@ export function checkEntry(e, W) {
 /* ---- the whole ledger, replayed in order (ids sort by date, then name). Returns the world it makes. ---- */
 const beats = (a, b) => a.facts.transistors <= b.facts.transistors && a.facts.ps <= b.facts.ps && (a.facts.transistors < b.facts.transistors || a.facts.ps < b.facts.ps);
 export function settle(list) {
-  const W = { entries: [], byId: {}, pieces: {}, cases: {}, puzzles: {}, machines: {}, chef: {}, refused: [], feed: [] };
+  const W = { entries: [], byId: {}, pieces: {}, cases: {}, puzzles: {}, machines: {}, chef: {}, choices: {}, refused: [], feed: [] };
   list.slice().sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0)).forEach(raw => {
     const r = checkEntry(raw, W), e = Object.assign({}, raw, { ok: r.ok, reason: r.reason || null, facts: r.facts || null, state: null, brokenBy: null, breaks: [], tries: [] });
     if (!r.ok) { W.refused.push(e); if (!W.byId[e.id]) W.byId[e.id] = e; return; }
@@ -227,7 +244,8 @@ export function settle(list) {
       /* the case joins the check: every right design of the piece meets it now */
       W.pieces[T.piece].map(id => W.byId[id]).filter(d => d.state === 'right').forEach(d => { const x = runCase(p, d.code, e.case); if (x && x.first >= 0) { d.state = 'broken'; d.brokenBy = e.id; e.breaks.push(d.id); } });
       e.state = 'stands'; W.feed.push({ type: 'broke', id: e.id });
-    } else if (e.kind === 'try' && e.chef != null) { (W.chef[e.chef] = W.chef[e.chef] || []).push(e.id); e.state = 'front'; W.feed.push({ type: 'attempted', id: e.id }); }
+    } else if (e.kind === 'try' && e.choice != null) { (W.choices[e.choice] = W.choices[e.choice] || []).push(e.id); e.state = 'stands'; W.feed.push({ type: 'chose', id: e.id }); }
+    else if (e.kind === 'try' && e.chef != null) { (W.chef[e.chef] = W.chef[e.chef] || []).push(e.id); e.state = 'front'; W.feed.push({ type: 'attempted', id: e.id }); }
     else if (e.kind === 'try' && e.machine != null) { (W.machines[e.machine] = W.machines[e.machine] || []).push(e.id); e.state = 'front'; W.feed.push({ type: 'attempted', id: e.id }); }
     else if (e.kind === 'try' && e.puzzle != null) { (W.puzzles[e.puzzle] = W.puzzles[e.puzzle] || []).push(e.id); e.state = 'front'; W.feed.push({ type: 'attempted', id: e.id }); }
     else if (e.kind === 'try') { W.byId[e.of].tries.push(e.id); e.state = 'stands'; W.feed.push({ type: 'tried', id: e.id }); }
@@ -348,6 +366,12 @@ export const chefAttemptsAt = (W, level) => ((W.chef || {})[level] || []).map(id
 export function chefCurve(W, level) {
   let best = Infinity;
   return chefAttemptsAt(W, level).map((e, i) => { best = Math.min(best, e.facts.wait); return { n: i + 1, id: e.id, by: e.by, made: e.made, wait: e.facts.wait, energy: e.facts.energy, cleared: e.facts.cleared, best, draft: !!e.draft }; });
+}
+/* the choices kept for a need of A thousand that pass, as two groups that are never mixed: people's and AI agents',
+   each in the order kept. Read from the entries alone: nobody votes, nothing is counted as a score */
+export function choicesAt(W, need) {
+  const all = ((W.choices || {})[need] || []).map(id => W.byId[id]);
+  return { people: all.filter(e => e.made === 'person'), agents: all.filter(e => e.made === 'ai') };
 }
 /* the attempts at a puzzle, the best first, then those on the frontier, then the newest */
 export const attemptsAt = (W, z) => (W.puzzles[z] || []).map(id => W.byId[id]).sort((a, b) => (W.best[z] === b.id) - (W.best[z] === a.id) || (a.state === 'front' ? 0 : 1) - (b.state === 'front' ? 0 : 1) || (a.id < b.id ? 1 : -1));

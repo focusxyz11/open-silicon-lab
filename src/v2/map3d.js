@@ -791,6 +791,13 @@ export function createMap(canvas, host, on = {}) {
     /* run your core (src/v2/labs/rv.js): a small board on a stand at the Lab, its core lit, a row of register lamps counting */
     'lab-cpu': g => { box(g, 3.4, 0.3, 2.2, mat(P.wall), 0, 0, 0, 0.1); box(g, 2.6, 1.6, 0.2, mat(P.dark), 0, 0.3, -0.4, 0.04); box(g, 0.9, 0.9, 0.08, metal(P.slate), -0.5, 0.65, -0.26, 0.02, { cast: false }); pulses.push(box(g, 0.5, 0.5, 0.04, glow(P.accent, night ? 1.3 : 0.7), -0.5, 0.85, -0.2, 0.01, { cast: false }));
       for (let k = 0; k < 4; k++) { const l = box(g, 0.18, 0.18, 0.04, glow(k % 2 ? P.warm : P.good, night ? 1.2 : 0.6), 0.45 + k * 0.24, 1.3, -0.28, 0.01, { cast: false }); if (k !== 1) pulses.push(l); } },
+    /* labs-b: let the noise compute (src/v2/labs/pbits.js): a slab with six p-bits on posts, flickering on their own, and beside it a square of
+       every pair, dark but for the two answers lit steadily; a thousand that pass (src/v2/labs/thousand.js): a wide table of green tiles, one raised */
+    'way-pbits': g => { box(g, 4.6, 0.3, 2, mat(P.wall), 0, 0, 0, 0.1); for (let i = 0; i < 6; i++) { const x = -1.85 + i * 0.74; cyl(g, 0.12, 0.12, 0.9, metal(P.metal), x, 0.75, 0, 8); const c = box(g, 0.42, 0.42, 0.42, glow(i < 3 ? P.accent : P.warm, night ? 1.3 : 0.7), x, 1.2, 0, 0.08, { cast: false }); pulses.push(c); } },
+    'way-factor': g => { box(g, 3.8, 0.4, 3.8, mat(P.white), 0, 0, 0, 0.12); for (let i = 0; i < 8; i++) for (let j = 0; j < 8; j++) { const hit = (i === 3 && j === 5) || (i === 5 && j === 3);
+      const c = box(g, 0.34, hit ? 0.3 : 0.1, 0.34, hit ? glow(P.good, night ? 1.5 : 0.8) : (i * 7 + j * 3) % 9 === 0 ? glow(P.accent, night ? 0.9 : 0.45) : mat(P.slate), -1.47 + i * 0.42, 0.4, -1.47 + j * 0.42, 0.03, { cast: false }); if (!hit && (i * 7 + j * 3) % 9 === 0) pulses.push(c); } },
+    'studio-thousand': g => { box(g, 5.6, 0.9, 3.2, mat(P.white), 0, 0, 0, 0.12); box(g, 5.8, 0.12, 3.4, mat(A.roof, { roughness: 0.7 }), 0, 0.9, 0, 0.04);
+      for (let i = 0; i < 10; i++) for (let j = 0; j < 5; j++) { const up = i === 6 && j === 2; const c = box(g, 0.4, up ? 0.5 : 0.08, 0.4, glow(up ? P.accent : P.good, night ? (up ? 1.5 : 0.8) : (up ? 0.8 : 0.4)), -2.4 + i * 0.53, 1.02, -1.08 + j * 0.54, 0.03, { cast: false }); if (up) pulses.push(c); } },
     'clock-tower': g => { box(g, 2.4, 9, 2.4, mat(P.white), 0, 0, 0, 0.2); const face = cyl(g, 1, 1, 0.2, mat(P.wall), 0, 7, 1.25, 24); face.rotation.x = Math.PI / 2; const hand = box(g, 0.12, 0.9, 0.08, mat(P.dark), 0, 6.95, 1.42, 0.02, { cast: false }); hand.geometry = hand.geometry.clone().translate(0, 0.4, 0); spinning.push({ hand }); }
   };
   /* where each growth stands, relative to its place: [x, z, y] */
@@ -809,7 +816,9 @@ export function createMap(canvas, host, on = {}) {
     /* catch the silent errors: on the quay east of the port's hall, before the cranes */
     'port-errors': [6, 9],
     /* run your core: at the Lab, south of the new ways to compute */
-    'lab-cpu': [13, 10] };
+    'lab-cpu': [13, 10],
+    /* labs-b: the p-bits at the Lab, west of its tower; a thousand that pass, in the studio's yard */
+    'way-pbits': [-13, -4], 'way-factor': [-13, -10], 'studio-thousand': [-12, 12] };
   GROWTH.forEach(gw => { const [x, z, y] = GROW_SPOT[gw.id] || [0, 0], g = group(G[gw.at], x, y || 0, z); g.visible = false; g.scale.setScalar(0.001); growing.push({ id: gw.id, g, built: false, t0: 0 }); });
 
   /* No question floats over a place any more (docs/framework/rebuild.md, section 3): a question shown as a dot on a

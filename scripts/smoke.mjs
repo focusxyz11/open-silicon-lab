@@ -801,6 +801,11 @@ run['labs'] = async () => {
   /* the two thinnest core questions: a reliable whole from flaky parts (vote.js), a mind that cannot be copied (mortal.js) */
   await playLab('flaky', "['mul', 'mem', 'add'].forEach(b => CL('[data-rd=\"' + b + ':3\"]:not([aria-pressed=\"true\"])'))", 'Six flaky parts, one reliable chip');
   await playLab('mortal', "SET('#mo-share', 9); CL('[data-mo-learn=\"chip\"]:not([aria-pressed=\"true\"])'); CL('[data-mo-cal]:not([aria-pressed=\"true\"])')", 'Learn on one chip, copy to a thousand');
+  /* labs-b: let the noise compute, p-bits factoring 15 and then 143 (pbits.js); a thousand that pass, one chosen with a reason
+     and kept as a ledger try the engine validates (thousand.js) */
+  await playLab('noise', "SET('#pb-b', 4); SET('#pb-w', 3)", 'Let the noise compute');
+  await playLab('noise-big', "SET('#pb-b', 4); SET('#pb-w', 3)", 'A bigger number, the same noise');
+  await playLab('thousand', "const P = '.player[data-ch=\"thousand\"] ', d = document.querySelector(P + '[data-th-pick=\"d0042\"]'); if (d && !document.querySelector(P + '.thcard')) d.dispatchEvent(new MouseEvent('click', { bubbles: true })); if (!document.querySelector(P + '.slip')) { SET(P + '[data-th-why]', 'What you say to it should never leave the phone'); SET(P + '.thkeep [data-sign]', 'Smoke'); CL(P + '[data-th-keep]'); }", 'A thousand that pass');
   /* read the die, at the test house: name each chip from its die photo, find every block on one */
   await playLab('dieread', "const P = '.player[data-ch=\"dieread\"] ', ty = new Set([...document.querySelectorAll(P + '[data-xr-type]')].map(g => g.dataset.xrType)), k = ty.has('dram') ? 'dram' : ty.has('pixels') ? 'camera' : ty.has('flash') ? 'mcu' : ty.has('npu') ? 'phone' : 'gpu'; CL(P + '[data-xr-kind=\"' + k + '\"]'); for (let n = 0; n < 60 && document.querySelector(P + '.xrfind'); n++) for (const t of [...ty]) { const g = document.querySelector(P + '[data-xr-type=\"' + t + '\"]'); if (g) g.dispatchEvent(new MouseEvent('click', { bubbles: true })); if (!document.querySelector(P + '.xrfind')) break; } CL(P + '[data-xr-next]')", 'Read the die');
   /* catch the silent errors, at the port: the errors puzzle's lens, each place protected at the levels that can see its faults */
