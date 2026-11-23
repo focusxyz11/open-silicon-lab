@@ -459,6 +459,8 @@
  "grow.test-xray": "a microscope in front of the test house, a die lit on its stage",
  "grow.port-errors": "a rack of returned boards on the quay, most lit green and one red, a wrong answer caught",
  "grow.lab-cpu": "a small board on a stand at the Lab, its core lit and its register lamps counting",
+ "grow.studio-search": "a rack of search boards beside the studio, its rows of lights climbing past one small hand-made board",
+ "grow.lab-halt": "a core on a plinth at the Lab, a ring of light running round it with no way out",
  "whatif.lever.demand.t": "AI demand",
  "whatif.lever.demand.d": "How much AI computing the world wants to buy",
  "whatif.lever.hbm.t": "HBM supply",

@@ -791,6 +791,13 @@ export function createMap(canvas, host, on = {}) {
     /* run your core (src/v2/labs/rv.js): a small board on a stand at the Lab, its core lit, a row of register lamps counting */
     'lab-cpu': g => { box(g, 3.4, 0.3, 2.2, mat(P.wall), 0, 0, 0, 0.1); box(g, 2.6, 1.6, 0.2, mat(P.dark), 0, 0.3, -0.4, 0.04); box(g, 0.9, 0.9, 0.08, metal(P.slate), -0.5, 0.65, -0.26, 0.02, { cast: false }); pulses.push(box(g, 0.5, 0.5, 0.04, glow(P.accent, night ? 1.3 : 0.7), -0.5, 0.85, -0.2, 0.01, { cast: false }));
       for (let k = 0; k < 4; k++) { const l = box(g, 0.18, 0.18, 0.04, glow(k % 2 ? P.warm : P.good, night ? 1.2 : 0.6), 0.45 + k * 0.24, 1.3, -0.28, 0.01, { cast: false }); if (k !== 1) pulses.push(l); } },
+    /* labs-a: design it or search for it (src/v2/labs/search.js): a rack of search boards whose lights climb, beside one small
+       hand-made board lit warm; the program nobody can judge (src/v2/labs/halt.js): a core on a plinth, a ring of light round it */
+    'studio-search': g => { box(g, 4.6, 0.3, 2.6, mat(P.wall), 0, 0, 0, 0.1); box(g, 2.2, 2.8, 1.2, mat(P.white), -0.8, 0.3, 0, 0.1);
+      for (let k = 0; k < 5; k++) { const l = box(g, 0.5 + k * 0.32, 0.12, 0.06, glow(P.accent, night ? 1.2 : 0.6), -1.6 + (0.5 + k * 0.32) / 2, 0.7 + k * 0.44, 0.62, 0.01, { cast: false }); if (k % 2 === 0) pulses.push(l); }
+      box(g, 1.1, 0.9, 1.1, mat(P.white), 1.4, 0.3, 0.2, 0.1); pulses.push(box(g, 0.6, 0.12, 0.06, glow(P.warm, night ? 1.2 : 0.6), 1.4, 0.95, 0.77, 0.01, { cast: false })); },
+    'lab-halt': g => { cyl(g, 1.5, 1.7, 0.5, mat(P.wall), 0, 0, 0, 28); box(g, 1.1, 0.9, 1.1, mat(P.dark), 0, 0.5, 0, 0.08); pulses.push(box(g, 0.6, 0.06, 0.6, glow(P.accent, night ? 1.3 : 0.7), 0, 1.4, 0, 0.02, { cast: false }));
+      const r = new THREE.Mesh(new THREE.TorusGeometry(1.25, 0.06, 8, 48), glow(P.warm, night ? 1.2 : 0.7, { transparent: true, opacity: 0.85 })); r.rotation.x = Math.PI / 2; r.position.set(0, 1.0, 0); g.add(r); },
     'clock-tower': g => { box(g, 2.4, 9, 2.4, mat(P.white), 0, 0, 0, 0.2); const face = cyl(g, 1, 1, 0.2, mat(P.wall), 0, 7, 1.25, 24); face.rotation.x = Math.PI / 2; const hand = box(g, 0.12, 0.9, 0.08, mat(P.dark), 0, 6.95, 1.42, 0.02, { cast: false }); hand.geometry = hand.geometry.clone().translate(0, 0.4, 0); spinning.push({ hand }); }
   };
   /* where each growth stands, relative to its place: [x, z, y] */
@@ -809,7 +816,9 @@ export function createMap(canvas, host, on = {}) {
     /* catch the silent errors: on the quay east of the port's hall, before the cranes */
     'port-errors': [6, 9],
     /* run your core: at the Lab, south of the new ways to compute */
-    'lab-cpu': [13, 10] };
+    'lab-cpu': [13, 10],
+    /* labs-a: design it or search for it, north-east of the studio; the program nobody can judge, at the Lab beside the core */
+    'studio-search': [10, -16], 'lab-halt': [18, 10] };
   GROWTH.forEach(gw => { const [x, z, y] = GROW_SPOT[gw.id] || [0, 0], g = group(G[gw.at], x, y || 0, z); g.visible = false; g.scale.setScalar(0.001); growing.push({ id: gw.id, g, built: false, t0: 0 }); });
 
   /* No question floats over a place any more (docs/framework/rebuild.md, section 3): a question shown as a dot on a

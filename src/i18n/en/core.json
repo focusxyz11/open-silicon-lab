@@ -1157,5 +1157,11 @@
  "game.ch.rvrun.t": "Run your core",
  "game.ch.rvrun.goal": "Write three small programs for the community's RISC-V core, each checked by running it on every case.",
  "game.ch.rvrun.why": "A processor only ever does a few simple things: add two numbers, compare them, jump to another line, move a number in or out of memory. RISC-V is an open set of those instructions that anyone may build a processor for. Everything a computer does is a long list of such steps, run a few billion times a second.",
+ "game.ch.search.t": "Design it, or search for it?",
+ "game.ch.search.goal": "Find how much computing a blind search needs to beat a person's design. Then let the checker try only half the inputs, and see what the search finds.",
+ "game.ch.search.why": "In 2019 the AI researcher Rich Sutton called it the bitter lesson: again and again, methods that use more computing have beaten methods built on human cleverness. Here the cleverness is a person's circuit, and the computing is a search that tries circuit after circuit and keeps the best. It works only because every circuit can be checked.",
+ "game.ch.halt.t": "The program nobody can judge",
+ "game.ch.halt.goal": "Build one gate from dominoes, water or light, and a bit that remembers. Then fool an agent that claims it can tell whether any program will stop.",
+ "game.ch.halt.why": "A computer is a pattern, not a material: anything that can make one simple gate can, given enough of them, compute anything. Yet in 1936, before any computer was built, Alan Turing proved there is a question no computer can always answer: will this program ever stop?",
  "ui.blueprint": "The blueprint: the chip innovation ecosystem as one wheel, a chip's life around it and its scale inward"
 }
