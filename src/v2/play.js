@@ -54,8 +54,9 @@ export function goalOf(ch) {
    challenge, src/core/styles.js) too: the shell awaits labsReady(ch) before it calls play(). LABS: the lab that plays
    each kind, the kinds of its challenges */
 let LABS = null, labsP = null;
-const labMods = () => labsP || (labsP = Promise.all([Promise.all(LAB_LIST.map(l => import('./labs/' + l.name + '.js').then(m => [l, m.default]))), needWords('labs')])
-  .then(([mods]) => { const by = {}; mods.forEach(([l, lab]) => kindsOf(l).forEach(k => { by[k] = lab; })); return (LABS = by); }, e => { labsP = null; throw e; }));
+/* the words are asked for first, so their one request is not queued behind the labs' modules */
+const labMods = () => labsP || (labsP = Promise.all([needWords('labs'), Promise.all(LAB_LIST.map(l => import('./labs/' + l.name + '.js').then(m => [l, m.default])))])
+  .then(([, mods]) => { const by = {}; mods.forEach(([l, lab]) => kindsOf(l).forEach(k => { by[k] = lab; })); return (LABS = by); }, e => { labsP = null; throw e; }));
 /* the player's styles, and the lab's own when the challenge is a lab's (css: true in its file) */
 const sheetsOf = ch => { const l = ch && labOfKind(ch.kind); return ['labs'].concat(l && l.css ? ['labs/' + l.name] : []); };
 const stylesIn = new Set();
