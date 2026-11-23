@@ -148,8 +148,26 @@ export const CHALLENGES = [
   /* errors, from switch to fleet: the second system-problem question, after moving bits (src/v2/labs/errors.js, src/engines/errors.js) */
   { id: 'silent', step: 'ship', place: 'port', at: 'ship', kind: 'errors', grows: 'port-errors' },
   /* run your core: programs for the community's RISC-V core, offered from that piece in the Lab (src/v2/labs/rv.js, src/engines/rvpuzzles.js) */
-  { id: 'rvrun', step: 'design', place: 'lab', kind: 'rv', piece: 'core', grows: 'lab-cpu' }
+  { id: 'rvrun', step: 'design', place: 'lab', kind: 'rv', piece: 'core', grows: 'lab-cpu' },
+  /* labs-b: let the noise compute, p-bits at the switch (src/v2/labs/pbits.js, src/engines/paradigms.js), and a thousand
+     that pass, at the studio's job (src/v2/labs/thousand.js, src/engines/thousand.js) */
+  { id: 'noise', step: 'use', place: 'datacentre', at: 'switch', kind: 'pbits', grows: 'way-pbits' },
+  { id: 'noise-big', step: 'use', place: 'datacentre', at: 'switch', kind: 'pbits', grows: 'way-factor' },
+  { id: 'thousand', step: 'design', place: 'studio', at: 'need', kind: 'thousand', grows: 'studio-thousand' },
+  /* labs-a: design it, or search for it? at the studio's gates (src/v2/labs/search.js, src/engines/search.js); the program
+     nobody can judge, on the community's RISC-V core at the Lab (src/v2/labs/halt.js, src/engines/halt.js) */
+  { id: 'search', step: 'design', place: 'studio', at: 'gates', kind: 'search', grows: 'lab-search' },
+  { id: 'halt', step: 'design', place: 'lab', kind: 'halt', piece: 'core', grows: 'lab-halt' },
+  /* Listen and tell, the ear test at the block (#316, src/v2/labs/listen.js, src/engines/listen.js): only with
+     ?listen=1 until the owner has listened (flag, below) */
+  { id: 'ear', step: 'use', place: 'datacentre', at: 'block', kind: 'listen', flag: 'listen', grows: 'dc-ear' }
 ];
+/* A challenge behind a flag (flag: 'listen') shows only where the address asks for it (?listen=1): in a browser
+   without the flag it is dropped from CHALLENGES here, before anything reads the list, so nothing else changes. With no
+   address (the tests, the open port) everything stays. */
+export const flagged = (c, search) => !c.flag || new RegExp('[?&]' + c.flag + '=1(&|$)').test(search);
+{ let q = null; try { q = location.search; } catch (e) { q = null; }
+  if (typeof q === 'string') for (let i = CHALLENGES.length - 1; i >= 0; i--) if (!flagged(CHALLENGES[i], q)) CHALLENGES.splice(i, 1); }
 /* the goal of a chip challenge as gauges: each a value of your chip's model and the bound it must reach
    (ge: at least, le: at most). Together they say the same as the goal's met() in src/engines/chip.js. */
 export const GAUGES = {
@@ -178,7 +196,8 @@ export const placeChallenges = place => CHALLENGES.filter(c => c.place === place
 /* what grows, and where (the island draws each one: src/v2/map3d.js GROWERS) */
 /* where a growth stands when it is not at its challenge's place: the other ways to compute grow at the Lab (WAYS_AT), and the
    clock and the power budget, design decisions, at the studio */
-const GROW_AT = { onebad: 'test', half: 'studio', phone: 'phones', car: 'cars', dclife: 'datacentre', fast: 'lab', cim: 'lab', grover: 'lab', 'power-curve': 'studio', counter: 'studio', mortal: 'lab' };
+const GROW_AT = { onebad: 'test', half: 'studio', phone: 'phones', car: 'cars', dclife: 'datacentre', fast: 'lab', cim: 'lab', grover: 'lab', 'power-curve': 'studio', counter: 'studio', mortal: 'lab', noise: 'lab', 'noise-big': 'lab',
+  search: 'lab' };
 export const GROWTH = CHALLENGES.map(c => ({ id: c.grows, by: c.id, at: GROW_AT[c.id] || c.place }));
 
 /* Inside: every place's levels, one inside the next (src/data/places.js). These hold the earlier site's
@@ -337,7 +356,11 @@ export function community(s) {
 export const OPENS = { 'too-hot': 'fail.switch', 'litho-finest': 'scale.print', 'euv-1000': 'fail.print', etch: 'make.etch', bottom: 'idea.deposit', crystal: 'make.crystal', furnace: 'make.implant', shallow: 'fail.implant', vias: 'fail.print', evolve: 'idea.block', newest: 'open.phoneboard', jobs: 'divide.need', agent: 'idea.check', half: 'fail.check', vote: 'idea.check', full: 'make.gates', months: 'make.clean', quick: 'scale.clean', spot: 'fail.test', cores: 'divide.test',
   phone: 'life.phone', car: 'fail.car', dclife: 'fail.ship', fed: 'divide.board', fast: 'fail.chip',
   cim: 'divide.block', grover: 'strange.atom', 'ai-chip': 'scale.masks', piece: 'open.need', floor: 'divide.layout', maskof: 'make.masks', 'power-curve': 'life.block', counter: 'fail.gate',
-  'sig-heart': 'fail.phoneboard', 'sig-bearing': 'fail.ecu', 'reg-jobs': 'fail.phoneboard', quantize: 'think.chip', 'token-energy': 'divide.rack', prefill: 'think.board', chef: 'divide.block', flaky: 'fail.gates', mortal: 'life.switch', dieread: 'divide.test', silent: 'fail.ship', rvrun: 'think.chip' };
+  'sig-heart': 'fail.phoneboard', 'sig-bearing': 'fail.ecu', 'reg-jobs': 'fail.phoneboard', quantize: 'think.chip', 'token-energy': 'divide.rack', prefill: 'think.board', chef: 'divide.block', flaky: 'fail.gates', mortal: 'life.switch', dieread: 'divide.test', silent: 'fail.ship', rvrun: 'think.chip',
+  noise: 'strange.switch', 'noise-big': 'think.switch', thousand: 'idea.need',
+  search: 'idea.check', halt: 'limit.rack',
+  /* the ear test hears the block live: a clock, sums, waits, heat */
+  ear: 'life.block' };
 /* and where the open things of the ledger sit: a break under "is the design right?", a piece to build under
    "could anyone design a chip?", a missing check under "who checks, and with what?" */
 export const FRONT_ASK = { break: 'fail.check', build: 'open.need', engine: 'idea.check' };

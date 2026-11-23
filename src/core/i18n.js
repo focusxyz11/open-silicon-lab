@@ -36,12 +36,17 @@ export const AREAS = {
     'place.aria'],
   atlas: ['what', 'part', 'field', 'frame', 'seek', 'debate', 'case', 'thread', 'fact', 'proc', 'handle', 'slice',
     'station', 'plant', 'prim', 'q', 'here', 'zoom', 'dive', 'line', 'ask', 'trail', 'way', 'route', 'lens', 'layer',
-    'joule', 'curve', 'world', 'chal', 'mini', 'lp'],
+    'joule', 'curve', 'world', 'chal', 'mini', 'lp',
+    /* Listen, the block slowed down until it can be heard (#316) */
+    'hear'],
   place: ['place', 'game', 'grow', 'look', 'dial', 'insp', 'carry', 'door', 'around', 'follow', 'room', 'studio',
     'board', 'story', 'chipx', 'lab', 'society', 'fab', 'whatif'],
   design: ['design', 'bench', 'build', 'ledger', 'api', 'core'],
   labs: ['td', 'bet', 'aib', 'agent', 'srv', 'ana', 'ckp', 'rv', 'er', 'cim', 'grv', 'semi', 'imp', 'ovl', 'eu',
-    'lt', 'cz', 'fl', 'mo', 'rd', 'evolve', 'clk', 'floor', 'xray', 'xr', 'chip', 'life', 'gauge', ],
+    'lt', 'cz', 'fl', 'mo', 'rd', 'evolve', 'clk', 'floor', 'xray', 'xr', 'chip', 'life', 'gauge',
+    'pb', 'th', 'srch', 'halt',
+    /* Listen and tell, the ear test (#316) */
+    'ear'],
   blueprint: ['bp'],
   pages: ['machines', 'mb', 'invent', 'liquid', 'read', 'page', 'site', 'tune', 'swm', 'side', 'walls',
     'forms', 'copies', 'probe', 'plan']
