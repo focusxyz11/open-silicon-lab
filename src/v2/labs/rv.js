@@ -11,6 +11,8 @@
    A lab of the challenge player (src/v2/play.js): lab(L) -> { draw, click, input }. */
 import * as RP from '../../engines/rvpuzzles.js';
 import { dpSvg, dpAnimate } from './datapath.js';
+import { mark as fidMark } from '../fid.js';
+import { labFid } from '../../data/fidelity.js';
 
 const DUR = 1150;            /* one instruction's way through the datapath, in ms */
 const FAST = 110;            /* the same, when the run is fast-forwarded */
@@ -53,7 +55,9 @@ export default function lab(L) {
       show: regsOf(r, s.src[s.p]), narrow: phone(), abi: RP.ABI, uid: 'rvdp', aria: t('rv.aria', { op: cur ? cur.op : '' }) }, L).replace('data-ph="9"', 'data-ph="' + (s.anim ? 0 : 9) + '"');
     const who = !y ? 'rv.fig.ref' : y.right ? 'rv.fig.right' : 'rv.fig.wrong';
     return '<figure class="rvfig dpfig" data-f2="instrument"><div class="dphead"><span class="dpwho' + (y && !y.right ? ' bad' : '') + '">' + esc(t('rv.fig.yours')) + '</span><span class="small muted">' + esc(t(who, { n: y ? y.wrongRows : 0 })) + '</span>' +
-      '<span class="dpstep mono">' + esc(t('rv.step', { n: tr.length ? k + 1 : 0, total: tr.length })) + '</span></div>' + svg +
+      '<span class="dpstep mono">' + esc(t('rv.step', { n: tr.length ? k + 1 : 0, total: tr.length })) + '</span>' +
+      /* the datapath is the simulator's own step, so it carries the lab's mark on the stage too (#325) */
+      fidMark(labFid(L.ch), { cls: 'dpfid' }) + '</div>' + svg +
       '<figcaption class="small muted">' + esc(t('rv.fig.cap')) + '</figcaption></figure>';
   }
   function goalbox(s, r) {

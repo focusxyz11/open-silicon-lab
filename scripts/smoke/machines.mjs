@@ -62,4 +62,24 @@ export default async function run() {
     if (side > 1) problems.push(tag + ': the page scrolls sideways by ' + side + ' px');
     await fp.close();
   }
+  /* how true each claim is (#325): a claim beyond today's chip carries two marks, one above the other, whether anyone
+     has built it (its status) and how the lab knows it (its mark), a guess never more than an idea drawn; each tapped
+     says in one line what it means */
+  { const tag = 'machines fidelity', fp = await browser.newPage({ viewport: { width: 1280, height: 800 } });
+    fp.on('pageerror', e => problems.push(tag + ': ' + e.message));
+    await fp.addInitScript(() => { localStorage.setItem('osl-quality', 'flat'); localStorage.setItem('osl-hints-v1', JSON.stringify({ seen: {}, off: true })); });
+    await fp.goto(base + 'index.html#/machines/wildfire');
+    await fp.waitForFunction(() => { const L = document.querySelector('[data-mlayer="claims"]'); if (L && L.getAttribute('aria-pressed') !== 'true') L.click();
+      const b = document.querySelector('[data-mform="detect:matter:living"]'); if (b && b.getAttribute('aria-pressed') !== 'true') b.click(); else if (!b) { const m = document.querySelector('[data-mform^="detect:matter"]'); if (m) m.click(); }
+      const rows = [...document.querySelectorAll('.mach .mclaims li')];
+      return rows.length >= 4 && rows.every(r => r.querySelector('.mmarks .mst[data-fidst]') && r.querySelector('.mmarks .fid[data-fid]')) &&
+        rows.filter(r => r.querySelector('.mst.s-guess')).every(r => r.querySelector('.fid[data-fid="idea"]')); }, null, { timeout: 20000, polling: 300 })
+      .catch(() => problems.push(tag + ': a claim does not carry both its marks, or a guess is marked more than an idea'));
+    for (const sel of ['.mach .mclaims .mst[data-fidst="guess"]', '.mach .mclaims .fid[data-fid="figures"]']) {
+      await fp.waitForFunction(sel => { const L = document.querySelector('[data-mlayer="claims"]'); if (L && L.getAttribute('aria-pressed') !== 'true') L.click();
+        const m = document.querySelector(sel); if (!m) return false; if (m.getAttribute('aria-expanded') !== 'true') m.click();
+        const tip = document.querySelector('.fidtip p'); return !!tip && tip.textContent.length > 30; }, sel, { timeout: 15000, polling: 500 })
+        .catch(() => problems.push(tag + ': tapping ' + sel + ' says nothing'));
+    }
+    await fp.close(); }
 }

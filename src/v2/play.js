@@ -27,6 +27,8 @@ import { glyph } from './field.js';
 import { patch } from './patch.js';
 import { LABS as LAB_LIST, kindsOf, labOfKind } from '../data/labs/index.js';
 import { needStyles } from '../core/styles.js';
+import { mark as fidMark } from './fid.js';
+import { labFid } from '../data/fidelity.js';
 
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 /* the gates a description can use, and the one a tap turns each into */
@@ -75,7 +77,9 @@ export function play(el, ch, ctx) {
   if (TAP) view.B = checkDesign(ch.p, S.codes[ch.p] != null ? S.codes[ch.p] : starter(ch.p));
   const head = () => '<button type="button" class="back" data-back>' + esc(t('game.back')) + '</button>' +
     '<p class="kicker">' + esc(ch.step ? t('game.stepN', { n: STEPS.indexOf(ch.step) + 1, step: t('game.step.' + ch.step) }) + ' · ' + t('map.' + ch.place + '.t') : t(ch.kind === 'break' ? 'game.break.kicker' : 'game.jobKicker')) + '</p>' +
-    where() + '<h3 class="ch-t">' + esc(titleOf(ch)) + '</h3><p class="goal">' + esc(goalOf(ch)) + '</p>' +
+    where() + '<h3 class="ch-t">' + esc(titleOf(ch)) + '</h3>' +
+    /* how true the lab is: one mark, tapped for what it means here (#325, src/data/fidelity.js) */
+    '<p class="fidrow">' + fidMark(labFid(ch)) + '</p><p class="goal">' + esc(goalOf(ch)) + '</p>' +
     (ch.kind !== 'break' && (ch.kind !== 'design' || !ch.need) && !(ch.id === 'half' && !view.write) ? '<p class="small muted why">' + esc(t('game.ch.' + ch.id + '.why')) + '</p>' : '');
   /* where it happens: the place, and its levels with this one lit */
   const where = () => { const place = ch.need ? 'studio' : ch.place, at = ch.kind === 'break' ? 'check' : ch.need ? 'logic' : ch.at, L = INSIDE[place] || [];

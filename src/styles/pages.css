@@ -783,3 +783,20 @@ html.frame2 .hero .btn { font-size: 15px; }
  .lsnwave i:nth-child(3) { height: 9px; }
 .lsnbox p { margin: 0; }
 .lsnstates .chipb[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); }
+
+/* ==== How true on the machines page (#325, src/v2/fid.js; the mark itself: src/styles/base.css) ====
+   a machine's claims: whether anyone has built it, and how the lab knows it, one above the other */
+.mach .mclaims li { grid-template-columns: 136px 1fr; }
+.mach .mmarks { display: grid; gap: 4px; justify-items: start; }
+.mach .mmarks .mst { padding: 3px 10px 3px 7px; border: 1px solid transparent; font: 600 12.5px/1.2 var(--sans); }
+.mach button.mst { cursor: pointer; }
+.mach button.mst:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.mach .mfront .fidrow { margin: 0 0 6px; }
+.mach .mkeybr { flex-basis: 100%; height: 0; }
+.mach .mkeyk { color: var(--muted); font-weight: 700; }
+.mach .mkeyf .fidg { width: 16px; height: 14px; }
+@media (max-width: 720px) {
+  .mach .mclaims li { grid-template-columns: 1fr; gap: 4px; }
+  .mach .mmarks { display: flex; flex-wrap: wrap; gap: 4px; }
+}
+/* ==== end of How true on the machines page ==== */

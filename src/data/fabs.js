@@ -9,6 +9,7 @@
    Each place says how sure its numbers are, on the same ladder as new matter (src/data/inventions.js STATUS):
      makes    the forms it can make: 'circuit' and kinds of new matter, 'matter:<kind>';
      claims   status product | lab | guess;
+              fid    how the lab knows it, on the lab's ladder (src/data/fidelity.js): idea, figures (it rests on fact);
               kind   days (one try: from a finished design to a part to test, as a range [fewest, most]),
                      cost (what a line costs to set up, against a giant fab: a number or a range), or note;
               fact   the entry of src/data/facts.json it rests on.
@@ -24,27 +25,27 @@ export const FABS = [
   /* the giant fab: every form but living matter; months a try (Pragmatic's comparison: 18 to 26 weeks from tape-out
      to tested wafers) */
   { id: 'giant', makes: ['circuit', 'matter:cim', 'matter:light', 'matter:spikes', 'matter:reversible'], claims: [
-    { id: 'giantDays', status: 'product', kind: 'days', value: [126, 182], fact: 'silicon-turnaround' },
-    { id: 'giantCost', status: 'product', kind: 'cost', value: 1 }] },
+    { id: 'giantDays', status: 'product', fid: 'figures', kind: 'days', value: [126, 182], fact: 'silicon-turnaround' },
+    { id: 'giantCost', status: 'product', fid: 'figures', kind: 'cost', value: 1, fact: 'fab-module-cost' }] },
   /* Minimal Fab (AIST, sold by Yokogawa): no cleanroom, half-inch wafers, a hundredth to a thousandth of the cost.
      Its days a try are not in a source we found: a guess */
   { id: 'small', makes: ['circuit'], claims: [
-    { id: 'smallReal', status: 'product', kind: 'note', fact: 'minimal-fab' },
-    { id: 'smallCost', status: 'product', kind: 'cost', value: [0.001, 0.01], fact: 'minimal-fab' },
-    { id: 'smallDays', status: 'guess', kind: 'days', value: [3, 14] }] },
+    { id: 'smallReal', status: 'product', fid: 'figures', kind: 'note', fact: 'minimal-fab' },
+    { id: 'smallCost', status: 'product', fid: 'figures', kind: 'cost', value: [0.001, 0.01], fact: 'minimal-fab' },
+    { id: 'smallDays', status: 'guess', fid: 'idea', kind: 'days', value: [3, 14] }] },
   /* a flexible line (Pragmatic's FlexLogic): thin-film circuits on plastic; under 48 hours a run, under a week to
      tested wafers; a hundredth of the cost of a standard fab */
   { id: 'flexible', makes: ['circuit'], claims: [
-    { id: 'flexDays', status: 'product', kind: 'days', value: [2, 7], fact: 'pragmatic-flexic' },
-    { id: 'flexWeek', status: 'product', kind: 'note', fact: 'silicon-turnaround' },
-    { id: 'flexCost', status: 'product', kind: 'cost', value: 0.01, fact: 'flexlogic-cost' }] },
+    { id: 'flexDays', status: 'product', fid: 'figures', kind: 'days', value: [2, 7], fact: 'pragmatic-flexic' },
+    { id: 'flexWeek', status: 'product', fid: 'figures', kind: 'note', fact: 'silicon-turnaround' },
+    { id: 'flexCost', status: 'product', fid: 'figures', kind: 'cost', value: 0.01, fact: 'flexlogic-cost' }] },
   /* a fab on a desk: one person made 1,200 transistors at home (10 µm); a company is building factories that make
      small fabs. A day to a week a try, and its cost, are guesses */
   { id: 'desk', makes: ['circuit'], claims: [
-    { id: 'deskReal', status: 'lab', kind: 'note', fact: 'zeloof-garage' },
-    { id: 'deskFab2', status: 'guess', kind: 'note', fact: 'fab2' },
-    { id: 'deskDays', status: 'guess', kind: 'days', value: [1, 7] },
-    { id: 'deskCost', status: 'guess', kind: 'cost', value: 0.0001 }] }
+    { id: 'deskReal', status: 'lab', fid: 'figures', kind: 'note', fact: 'zeloof-garage' },
+    { id: 'deskFab2', status: 'guess', fid: 'idea', kind: 'note', fact: 'fab2' },
+    { id: 'deskDays', status: 'guess', fid: 'idea', kind: 'days', value: [1, 7] },
+    { id: 'deskCost', status: 'guess', fid: 'idea', kind: 'cost', value: 0.0001 }] }
 ];
 export const FAB_IDS = FABS.map(f => f.id);
 export const fabOf = id => FABS.find(f => f.id === id) || null;

@@ -119,4 +119,24 @@ export default async function run() {
     await check({ fp, adr, inDo, playLab, problems, tag });
   }
   await fp.close(); }
+
+  /* how true each lab is (#325, src/data/fidelity.js): every challenge card shows its mark under its title, the same
+     pill whatever the mark; tapped, it says in one line what it means here, and Escape puts the note away; the RISC-V
+     datapath on the stage carries the lab's mark too */
+  { const tag = 'labs fidelity', fp = await browser.newPage({ viewport: { width: 1280, height: 800 } });
+    fp.on('pageerror', e => problems.push(tag + ': ' + e.message));
+    await fp.addInitScript(() => { localStorage.setItem('osl-quality', 'flat'); localStorage.setItem('osl-hints-v1', JSON.stringify({ seen: {}, off: true })); });
+    for (const [id, f] of [['months', 'checked'], ['cim', 'computed'], ['newest', 'figures'], ['dieread', 'idea']]) {
+      await fp.goto(base + 'index.html#/do/' + id);
+      await fp.waitForFunction(([id, f]) => { const m = document.querySelector('.player[data-ch="' + id + '"] .fidrow .fid[data-fid="' + f + '"]'); if (!m) return false;
+        if (m.getAttribute('aria-expanded') !== 'true') m.click();
+        const tip = document.querySelector('.fidtip p'); return m.getAttribute('aria-expanded') === 'true' && !!tip && tip.textContent.length > 30; }, [id, f], { timeout: 60000, polling: 1000 })
+        .catch(() => problems.push(tag + ': ' + id + ' does not show its mark (' + f + '), or tapping it says nothing'));
+    }
+    await fp.keyboard.press('Escape');
+    await fp.waitForFunction(() => !document.querySelector('.fidtip'), null, { timeout: 10000, polling: 500 }).catch(() => problems.push(tag + ': Escape does not put the mark\'s note away'));
+    await fp.goto(base + 'index.html#/do/rvrun');
+    await fp.waitForFunction(() => !!document.querySelector('.player[data-ch="rvrun"] .dpfig .dphead .fid[data-fid="computed"]'), null, { timeout: 90000, polling: 1000 })
+      .catch(() => problems.push(tag + ': the datapath does not carry the lab\'s mark'));
+    await fp.close(); }
 }

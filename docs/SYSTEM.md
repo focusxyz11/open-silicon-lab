@@ -324,6 +324,47 @@ frames its picture right of it; in Do and Ask the side panel stands at the right
 (`inset`), and a lab's instrument takes the stage there. The island's canvas ends where its sheet begins. On a phone
 the card is the sheet under the picture (CLAUDE.md, desktop first where it is richer).
 
+## 4b. How true: one mark for how far a picture goes
+
+The lab mixes sketches and engines, and a learner must always know which one is in front of them (#325). So every
+thing shown says how true it is, the same way everywhere, with one mark (`src/v2/fid.js`): a small pill with four
+rising steps, filled up to how true the thing is, and its word. The marks are data, one table per kind of thing in
+`src/data/fidelity.js`, and `tests/fidelity.test.mjs` fails if anything shown goes without.
+
+| Mark | Means | Rests on |
+| --- | --- | --- |
+| **Idea drawn** (one step) | a sketch of how it works; shapes and sizes chosen to be read, not measured | nothing measured |
+| **Real numbers** (two) | drawn to sourced figures; nothing on it is computed as you move it | a figure of `facts.json` |
+| **Computed** (three) | an engine's model runs it; the numbers are the lab's model, not one real chip | an engine (`ENGINES`) |
+| **Checked** (four) | the model's results match a published measurement of the real thing | an engine and a figure, compared in the test (`CHECKS`) |
+
+Where it is shown: every lab in its card under its title (and on its instrument where the picture is the engine's own
+step, the RISC-V datapath), every level of the dive in its caption beside its name, every lens's measure at the block
+at the top of its instrument (a pair one model computes carries that model's mark; any other pair, its two lenses'),
+the front beside a machine, and every claim of a machine. Tapping a mark says in one line what it means here: the
+engine that computes it, or the source and value its figures come from.
+
+**Two questions, one system.** A claim about something beyond today's chips (new matter, liquid fabrics, a fab on a
+desk: `src/data/inventions.js`, `liquid.js`, `fabs.js`) answers two questions, and Machines shows both, one above the
+other, as the same kind of pill tapped the same way: *has anyone built it?* (its status: in products a full disc,
+shown in a lab half of one, a guess a dashed ring) and *how does the lab know it?* (its mark). They are different
+things (a product can be drawn as an idea; a lab demonstration can be computed by the lab's engine), but they bound
+each other: a guess is never more than an idea drawn (`STATUS_MAX`). The status is about the world; the mark is about
+the lab's model. Only claims beyond today's chips carry a status, because everything else in the lab exists.
+
+**The rule for choosing.** A model is as true as the surprise its question needs, no more. Two examples:
+
+- *The memory wall* needs the ratio of fetching a number to computing with it (about 3,500 to 1 at 45 nm, facts.json
+  energy-moving-data), so the lab computes that ratio; it does not need cache coherence, so the lab draws none.
+- *A front* (today's best compromises between two measures) needs one engine computing both measures, or it is not
+  drawn as a front: two lenses held whose measures come from different models are drawn as a fork, side by side, each
+  with its own mark.
+
+A thing is marked for what it is, never lifted to look better: a picture whose lesson is a shape (the phone is mostly
+battery and screen) is an idea drawn even when an engine sets one of its numbers; it rises to real numbers when it is
+drawn to a sourced figure. Most pictures of the dive are ideas drawn today; the chip, the gate and the wafer are
+computed from your chip. Something marked checked has its comparison run in the test, so it cannot quietly drift.
+
 ## 5. Adding something
 
 - **A part:** words `part.<depth>.<id>` and `what.<depth>.<id>` at the depth that is its home; a view that draws it
@@ -334,6 +375,8 @@ the card is the sheet under the picture (CLAUDE.md, desktop first where it is ri
 - **A place or an island:** give it a stage of the loop (`PLACE_STAGE` in `src/engines/way.js`); the bar and the
   cards need nothing else.
 - **A view:** only one of the six kinds, wearing the frame. A new kind needs a reason this document can take.
+- **Its mark:** a new challenge, level of the dive, lens or machine claim gets its mark of how true it is in
+  `src/data/fidelity.js` (a claim, as `fid` beside its status), chosen by the rule in 4b.
 
 ## 6. Where it stands
 

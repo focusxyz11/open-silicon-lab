@@ -230,3 +230,29 @@ html.frame2 {
   --f2-top: 136px;                                        /* where the stage begins: under the bar and the address */
   --f2-sr: calc(var(--f2-pw) + 32px);                     /* the stage's right edge: the panel's left, and a gap */
 }
+
+/* ==== How true: the fidelity marks (#325, src/v2/fid.js, src/data/fidelity.js) ====
+   One mark everywhere: a small pill with four rising steps filled up to how true the thing is, and its word; tapped, a
+   note of one line says what it means here. A machine's claim also carries its status (a disc) in the same pill. */
+.fid { display: inline-flex; align-items: center; gap: 6px; flex: none; margin: 0; padding: 3px 10px 3px 7px; border: 1px solid var(--line); border-radius: 999px;
+  background: color-mix(in srgb, var(--ink) 5%, var(--panel-solid)); color: var(--ink); font: 600 12.5px/1.2 var(--sans); white-space: nowrap; cursor: pointer; vertical-align: middle; }
+.fid:hover, .fid.on { border-color: color-mix(in srgb, var(--accent) 60%, var(--line)); }
+.fid:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.fid.f-idea, .fid.f-figures { color: var(--muted); }
+/* the glyph keeps its size inside any figure (a lab's figure sizes its own svg to its width) */
+svg.fidg, .fid > svg.fidg { display: inline-block; width: 16px; height: 14px; max-width: none; flex: none; margin: 0; fill: currentColor; }
+.fidg .o { fill: none; stroke: currentColor; stroke-width: .9; opacity: .45; }
+.fidrow { margin: 2px 0 0; }
+.fidtip { position: fixed; z-index: 90; display: flex; gap: 10px; align-items: flex-start; max-width: min(340px, calc(100vw - 16px)); padding: 10px 14px; border: 1px solid var(--line); border-radius: 12px;
+  background: var(--panel-solid); color: var(--ink); box-shadow: 0 12px 32px rgba(0, 0, 0, .28); font: 15px/1.45 var(--sans); animation: fadein .18s both; }
+.fidtip p { margin: 0; }
+.fidtip > svg.fidg { width: 20px; height: 18px; margin-top: 2px; color: var(--accent); }
+@media (prefers-reduced-motion: reduce) { .fidtip { animation: none; } }
+/* in the caption, beside the level's name */
+html.frame2 .f2 .f2t .fid { margin-left: 12px; vertical-align: .32em; }
+/* a lens's instrument, two lenses held */
+.lppairb { display: grid; gap: 10px; }
+.lpside .fidrow { margin: 0 0 6px; }
+/* the datapath on the stage */
+:is(.dpfig, .cafig) .dphead .dpfid { margin-left: auto; align-self: center; }
+/* ==== end of How true (its machines part: src/styles/pages.css) ==== */

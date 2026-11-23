@@ -11,7 +11,8 @@
    o.steps { label, items: [{ id, label }] } with o.onStep(id): a row of steps, walked along (the studio, the factory's line),
    drawn as one line from left to right across the top of the picture (on a phone, a strip: the step, ← → and a count),
    o.follow(key) → address of a question, o.askAt(depth) → stop keys, o.askedAt(depth) → html of what people asked, o.fieldAt(depth) → ids of the questions from the field there,
-   o.doAt(depth) → [{ id, title, where, href, open }], o.onRail(id), o.onLook().
+   o.doAt(depth) → [{ id, title, where, href, open }], o.onRail(id), o.onLook(), o.fidAt(level) → html of the mark of how true the
+   level's picture is (src/v2/fid.js), shown in the caption beside its name.
    The questions under Ask are lenses (src/engines/frame.js): o.lensesAt(depth) → [{ id, label, hint, icon }] (the ones
    that live at the level, by short name only), o.lensCard(id, depth) → html of the one chosen (the question alone, its
    form here, what to play here, the question it meets, the way on), o.onLens(id | null, depth) → the view lights on
@@ -294,7 +295,7 @@ export function createFrame(host, o) {
   };
   /* the frame worn as a caption, a side panel and a stage (src/v2/frame2.js, #271) */
   frame2(host, api, o, { wrap, items, at: () => railAt, step: () => (o.steps && stepAt ? (o.steps.items.find(x => x.id === stepAt) || {}).label || '' : ''), doList: () => (depth && o.doAt ? o.doAt(depth) : []),
-    here: () => { const it = items.find(i => i.id === railAt); return it ? { label: it.label, size: it.size ? sizeWords(it.size) : '' } : null; } });
+    here: () => { const it = items.find(i => i.id === railAt); return it ? { label: it.label, size: it.size ? sizeWords(it.size) : '', fid: o.fidAt ? o.fidAt(it.id) : '' } : null; } });
   return api;
 }
 export { TWINS };

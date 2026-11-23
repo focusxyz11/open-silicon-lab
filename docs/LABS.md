@@ -68,6 +68,7 @@ A second picture (a curve beside the main drawing, the tones under a signal) sta
    - It must stand clear of buildings, walls and other growers. The factory is 26 × 16 around its centre, its gas annex is on the west side, and the test house is about 30 units east.
 5. **CSS, `src/styles/labs/<name>.css`:** classes prefixed by the lab's name, plus a phone rule if needed; it loads when one of the lab's challenges is played (`labsReady` in `src/v2/play.js`, `src/core/styles.js`), never with the first page. Rules the player or several labs share go in `src/styles/labs.css`.
 6. **A lab at a bench level:** check that `doHome` in `src/engines/way.js` sends it there.
+7. **How true it is:** give the challenge its mark in `LABS` of `src/data/fidelity.js` (`docs/SYSTEM.md`, 4b): an idea drawn, real numbers (with its `fact`), computed (with the engine, `by`), or checked (an engine and the measurement it matches, compared in `CHECKS` of `tests/fidelity.test.mjs`). The player shows it under the title; `npm test` fails without it.
 
 ## Checking
 

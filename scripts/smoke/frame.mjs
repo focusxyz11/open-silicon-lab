@@ -280,4 +280,21 @@ export default async function run() {
     await lp.waitForFunction(() => !!document.querySelector('#diveui .f2head') && !!document.querySelector('#diveui .joulebtn'), null, { timeout: 120000, polling: 1000 }).catch(() => problems.push(tg + ': the block does not open without the flag'));
     if (await lp.evaluate(() => !!document.querySelector('.lsnbtn, .lsnbox'))) problems.push(tg + ': without ?listen=1 the Listen switch shows');
     await lp.close(); }
+  /* how true a level's picture is (#325): the dive's caption carries its mark beside the level's name (the chip computed
+     from your chip, the block an idea drawn), tapped it says what it means here; a lens's measures at the block carry
+     theirs at the top of its instrument */
+  { const tag = 'frame fidelity', fp = await browser3d.newPage({ viewport: { width: 1280, height: 800 }, colorScheme: 'dark' }); fp.on('pageerror', e => problems.push(tag + ': ' + e.message));
+    await fp.addInitScript(() => { try { localStorage.setItem('osl-quality', 'keep'); localStorage.setItem('osl-hints-v1', JSON.stringify({ seen: {}, off: true })); } catch (e) { /* no storage */ } });
+    await fp.goto(base + 'index.html#/dive/chip');
+    await fp.waitForFunction(() => { const m = document.querySelector('#diveui .f2head .f2t .fid[data-fid="computed"]'); if (!m) return false; if (m.getAttribute('aria-expanded') !== 'true') m.click();
+      const tip = document.querySelector('.fidtip p'); return !!tip && tip.textContent.length > 30; }, null, { timeout: 120000, polling: 1000 })
+      .catch(() => problems.push(tag + ': the chip\'s caption does not carry its mark, or tapping it says nothing'));
+    await fp.goto(base + 'index.html#/dive/block');
+    await fp.waitForFunction(() => { const f = document.querySelector('#diveui'); if (!f || f.hidden) return false;
+      if (!f.querySelector('.f2head .f2t .fid[data-fid="idea"]') && !f.dataset.fidSeen) return false; f.dataset.fidSeen = '1';
+      const b = f.querySelector('.modes3 [data-mode="ask"]'); if (b && b.getAttribute('aria-selected') !== 'true') { b.click(); return false; }
+      const m = f.querySelector('.mark3[data-lens="geo"]'); if (m && m.getAttribute('aria-pressed') !== 'true') { m.click(); return false; }
+      return !!f.querySelector('.dock .lpinst[data-lpinst="geo"] .fidrow .fid[data-fid="computed"]'); }, null, { timeout: 120000, polling: 1000 })
+      .catch(() => problems.push(tag + ': the block\'s caption or its lens\'s measures do not carry their marks'));
+    await fp.close(); }
 }
