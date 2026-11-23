@@ -1157,5 +1157,8 @@
  "game.ch.rvrun.t": "Run your core",
  "game.ch.rvrun.goal": "Write three small programs for the community's RISC-V core, each checked by running it on every case.",
  "game.ch.rvrun.why": "A processor only ever does a few simple things: add two numbers, compare them, jump to another line, move a number in or out of memory. RISC-V is an open set of those instructions that anyone may build a processor for. Everything a computer does is a long list of such steps, run a few billion times a second.",
+ "game.ch.ear.t": "Listen and tell",
+ "game.ch.ear.goal": "The picture is hidden. Listen to the block, slowed down a billion times, and say what it is doing: busy, waiting on memory, too hot, or saving power. Get eight right of your last ten.",
+ "game.ch.ear.why": "A chip works far too fast to see or hear: billions of steps a second. Slowed down until each step is a sound, its state can be told by ear, the way a mechanic hears what is wrong with an engine. Training your ear for it is learning a new sense for a world too fast to see.",
  "ui.blueprint": "The blueprint: the chip innovation ecosystem as one wheel, a chip's life around it and its scale inward"
 }

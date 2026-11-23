@@ -807,6 +807,8 @@ run['labs'] = async () => {
   await playLab('silent', "const P = '.player[data-ch=\"silent\"] ', W = { phone: ['check:abft', 'selftest:true', 'memory:parity', 'margin:0.3', 'materials:lowAlpha'], car: ['logic:lockstep', 'selftest:true', 'memory:ecc', 'margin:0.3'], datacentre: ['check:abft', 'hunt:true', 'memory:ecc', 'margin:0.3'] }; for (const [env, L] of Object.entries(W)) { CL(P + '[data-er-env=\"' + env + '\"]'); for (const k of L) CL(P + '[data-er=\"' + k + '\"]:not([aria-pressed=\"true\"])'); }", 'Catch the silent errors');
   /* run your core, offered from the RISC-V core in the Lab: three programs, each checked by running it */
   await playLab('rvrun', "const P = '.player[data-ch=\"rvrun\"] ', W = { sum: null, max: 'mv a0, a1\\nbge a1, a2, done\\nmv a0, a2\\ndone:', fib: 'li a0, 0\\nli t1, 1\\nloop:\\n beq a1, x0, done\\n add t2, a0, t1\\n mv a0, t1\\n mv t1, t2\\n addi a1, a1, -1\\n j loop\\ndone:' }; for (const [p, src] of Object.entries(W)) { CL(P + '[data-rv-p=\"' + p + '\"]'); if (src) { const a = document.querySelector(P + '[data-rv-code]'); if (a) { a.value = src; a.dispatchEvent(new Event('input', { bubbles: true })); } } CL(P + '[data-rv-run]'); }", 'Run your core');
+  /* Listen and tell (#316), only with ?listen=1: the state played is on the hidden picture, so it is answered without audio */
+  await playLab('ear', "const P = '.player[data-ch=\"ear\"] '; for (let n = 0; n < 12 && !document.querySelector(P + '.won'); n++) { CL(P + '[data-ear-play]'); const f = document.querySelector(P + '.earfig'), s = f && f.dataset.earState; if (s) CL(P + '[data-ear-ans=\"' + s + '\"]'); }", 'Listen and tell', 90000, '?listen=1#/do/ear');
   /* serving a language model, at the data centre: four bits despite outliers, where an answer's energy goes, read fast and write slow */
   await playLab('quantize', "CL('[data-sq-format=\"fp4\"]:not([aria-pressed=\"true\"])'); CL('[data-sq-scale=\"nv16\"]:not([aria-pressed=\"true\"])'); SET('#sq-outliers', 1)", 'Four bits, despite outliers');
   await playLab('token-energy', "SET('#se-watts', 2300); SET('#se-tokExp', 3.9); SET('#se-pue', 1.05); SET('#se-overhead', 10); SET('#se-tokExp', 4.5)", 'Where an answer\'s energy goes');
@@ -1281,6 +1283,24 @@ run['frame'] = async () => {
       return document.querySelectorAll('.lenspins .lppin.lit').length === 4 && document.querySelectorAll('#diveui .dock .lpchain li.lit').length === 4; }, null, { timeout: 20000, polling: 500 })
       .catch(() => problems.push(tag + ': heating the block does not light the chain\'s steps'));
     await mp.close(); }
+  /* Listen (#316): only with ?listen=1. At the block the switch beside the joule's starts the sound on a tap, the
+     caption writes what is heard and the parts light in time on the picture (where there is no audio, as here, the
+     events come on the page's clock, silently); without the flag there is no switch */
+  { const tg = 'frame (listen)', lp = await browser.newPage({ viewport: { width: 1280, height: 800 } });
+    lp.on('pageerror', e => problems.push(tg + ': ' + e.message));
+    await lp.addInitScript(() => { localStorage.setItem('osl-quality', 'flat'); localStorage.setItem('osl-hints-v1', JSON.stringify({ seen: {}, off: true })); });
+    await lp.goto(base + 'index.html?listen=1#/dive/block');
+    await lp.waitForFunction(() => { const b = document.querySelector('#diveui .lsnbtn:not([hidden])'); if (b && b.getAttribute('aria-pressed') !== 'true') b.click(); return !!document.querySelector('#diveui .lsnbox:not([hidden]) [data-lsnplay]'); }, null, { timeout: 120000, polling: 1000 })
+      .catch(() => problems.push(tg + ': the Listen switch does not open at the block'));
+    await lp.waitForFunction(() => { const c = document.querySelector('#diveui .lsncap'), s = document.querySelector('.lsnlayer svg'); return !!c && !!c.dataset.ev && !!s && +s.dataset.lit > 5; }, null, { timeout: 30000, polling: 500 })
+      .catch(() => problems.push(tg + ': listening, the caption does not write what is heard or the parts do not light in time'));
+    /* picking what the block does: too hot is heard as wrong bits, written in the caption */
+    await lp.waitForFunction(() => { const h = document.querySelector('#diveui [data-lsnstate="hot"]'); if (h && h.getAttribute('aria-pressed') !== 'true') h.click(); const c = document.querySelector('#diveui .lsncap'); return !!c && c.dataset.ev === 'wrong'; }, null, { timeout: 30000, polling: 300 })
+      .catch(() => problems.push(tg + ': the block too hot is not heard as wrong bits'));
+    await lp.goto(base + 'index.html#/dive/block');
+    await lp.waitForFunction(() => !!document.querySelector('#diveui .f2head') && !!document.querySelector('#diveui .joulebtn'), null, { timeout: 120000, polling: 1000 }).catch(() => problems.push(tg + ': the block does not open without the flag'));
+    if (await lp.evaluate(() => !!document.querySelector('.lsnbtn, .lsnbox'))) problems.push(tg + ': without ?listen=1 the Listen switch shows');
+    await lp.close(); }
 };
 
 run['flights'] = async () => {

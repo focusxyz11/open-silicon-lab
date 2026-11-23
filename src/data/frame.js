@@ -139,7 +139,9 @@ export const FILED = {
   'bottom': ['perfect', 'moore'], 'litho-finest': ['moore', 'physics'], 'cim': ['copy', 'geo', 'physics'], 'grover': ['nat', 'physics'],
   'euv-1000': ['moore', 'eff'], 'too-hot': ['physics', 'perfect', 'dig'], 'ai-chip': ['moore', 'line'], piece: ['human', 'line'], floor: ['geo', 'line'], maskof: ['line', 'moore'], 'power-curve': ['eff', 'physics'],
   'counter': ['perfect', 'vn', 'dig'], 'flaky': ['vn', 'perfect', 'trust'], 'dieread': ['geo', 'trust', 'line'], 'silent': ['trust', 'vn', 'perfect'], 'rvrun': ['line', 'dig', 'human'], 'mortal': ['copy', 'physics', 'eff'], 'quantize': ['eff', 'sutton', 'physics'], 'token-energy': ['eff', 'geo'], 'prefill': ['geo', 'eff'],
-  'chef': ['geo', 'physics', 'eff']
+  'chef': ['geo', 'physics', 'eff'],
+  /* Listen and tell, the ear test at the block (#316) */
+  'ear': ['dig', 'eff']
   }
 };
 
