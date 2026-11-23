@@ -140,6 +140,7 @@ export const FILED = {
   'euv-1000': ['moore', 'eff'], 'too-hot': ['physics', 'perfect', 'dig'], 'ai-chip': ['moore', 'line'], piece: ['human', 'line'], floor: ['geo', 'line'], maskof: ['line', 'moore'], 'power-curve': ['eff', 'physics'],
   'counter': ['perfect', 'vn', 'dig'], 'flaky': ['vn', 'perfect', 'trust'], 'dieread': ['geo', 'trust', 'line'], 'silent': ['trust', 'vn', 'perfect'], 'rvrun': ['line', 'dig', 'human'], 'mortal': ['copy', 'physics', 'eff'], 'quantize': ['eff', 'sutton', 'physics'], 'token-energy': ['eff', 'geo'], 'prefill': ['geo', 'eff'],
   'chef': ['geo', 'physics', 'eff'],
+  'noise': ['physics', 'nat'], 'noise-big': ['physics', 'nat'], 'thousand': ['human', 'sutton'],
   'search': ['sutton', 'human'], 'halt': ['nat', 'trust']
   }
 };
@@ -154,7 +155,7 @@ export const MARKS = {
   chip: { line: 'cache', eff: 'cores', geo: 'io', sutton: 'clock', trust: 'cores', perfect: 'clock' },
   block: { geo: 'sram', copy: 'wires', physics: 'cells', eff: 'yours', dig: 'cells', perfect: 'sram' },
   gate: { vn: 'gates', physics: 'diff', perfect: 'metal', dig: 'gates', trust: 'metal', copy: 'diff' },
-  switch: { physics: 'gate', moore: 'source', copy: 'channel', dig: 'oxide', sutton: 'drain', perfect: 'channel' },
+  switch: { physics: 'gate', moore: 'source', copy: 'channel', dig: 'oxide', sutton: 'drain', nat: 'channel' },
   atom: { physics: 'dopant', moore: 'lattice', nat: 'electrons', dig: 'boundary', perfect: 'boundary', eff: 'lattice' },
   building: { eff: 'racks', sutton: 'cooling', geo: 'racks', vn: 'racks', line: 'racks', copy: 'cooling' },
   phone: { geo: 'board', eff: 'battery', copy: 'camera', human: 'antenna' },
@@ -166,7 +167,7 @@ export const MARKS = {
   scanner: { human: 'source', moore: 'mirrors', trust: 'mask', physics: 'stage', nat: 'vacuum' },
   wafer: { perfect: 'defects', moore: 'dies', geo: 'defects' },
   die: { perfect: 'pads', moore: 'cores', geo: 'probes', human: 'scribe', line: 'cores' },
-  need: { line: 'ins', human: 'use', moore: 'outs' },
+  need: { line: 'ins', human: 'use', moore: 'outs', sutton: 'use' },
   logic: { dig: 'code', line: 'table', human: 'code', trust: 'code' },
   check: { trust: 'waves', dig: 'verdict', vn: 'waves', line: 'verdict', sutton: 'verdict', human: 'verdict' },
   gates: { sutton: 'cells', line: 'outs', perfect: 'pins', vn: 'cells', trust: 'pins', dig: 'outs' },

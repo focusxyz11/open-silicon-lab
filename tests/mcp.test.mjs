@@ -21,7 +21,7 @@ test('an agent connects, lists the tools, reads the plan and takes a job', async
     assert.equal(init.result.serverInfo.name, 'open-silicon-lab');
     assert.ok(init.result.capabilities.tools && init.result.instructions);
     const tools = (await S.call('tools/list', {})).result.tools.map(t => t.name);
-    assert.deepEqual(tools, ['look', 'list_plan', 'get_job', 'check_design', 'at_factory', 'life_of', 'propose_design', 'list_ledger', 'propose_break', 'propose_try', 'propose_report', 'energy_budget', 'submit_attempt', 'propose_question']);
+    assert.deepEqual(tools, ['look', 'list_plan', 'get_job', 'check_design', 'at_factory', 'life_of', 'propose_design', 'list_ledger', 'propose_break', 'propose_try', 'propose_report', 'energy_budget', 'submit_attempt', 'propose_question', 'choose_design']);
     const plan = (await S.tool('list_plan', {})).structuredContent;
     assert.ok(plan.pieces.some(p => p.id === 'core' && p.engine === 'riscv'));
     const job = (await S.tool('get_job', { job: 'vote' })).structuredContent;
@@ -88,5 +88,25 @@ test('an agent reads the energy budget, pulls a lever, and submits an attempt th
     assert.equal(JSON.parse(yes.entry.file).puzzle, 'energy');
     assert.equal((await S.tool('submit_attempt', { plan: { batch: 256 }, kind: 'ai' })).structuredContent.ok, false, 'say how AI was used');
     assert.equal((await S.tool('submit_attempt', { plan: { home: 'cloud' }, kind: 'person' })).structuredContent.ok, false);
+  } finally { S.stop(); }
+});
+
+test('an agent reads a thousand designs that pass and the people around the need, and prepares its choice with a reason', async () => {
+  const S = server();
+  try {
+    const A = (await S.tool('choose_design', {})).structuredContent;
+    assert.equal(A.need, 'phone'); assert.equal(A.designs.length, 1000); assert.equal(A.columns.length, A.designs[0].length);
+    assert.deepEqual(A.people.map(p => p.id), ['user', 'repair', 'payer', 'planet', 'never']);
+    assert.ok(A.choicesNoCheckScores.length === 4 && A.limits.power.value === 6 && A.note && A.how);
+    /* people's choices and agents' come back apart, read from the ledger alone */
+    assert.ok(Array.isArray(A.chosen.people) && Array.isArray(A.chosen.agents));
+    const no = (await S.tool('choose_design', { pick: 'd0001', reason: 'short', kind: 'ai', ai: 'an agent chose' })).structuredContent;
+    assert.equal(no.ok, false);
+    const both = (await S.tool('choose_design', { pick: 'd0001', reason: 'A reason long enough to keep', kind: 'both', ai: 'together' })).structuredContent;
+    assert.equal(both.ok, false);
+    const yes = (await S.tool('choose_design', { pick: 'd0042', reason: 'It never sends what you say to a data centre', author: 'An agent', kind: 'ai', ai: 'Chosen by an AI agent through the open port.' })).structuredContent;
+    assert.equal(yes.ok, true, yes.reason); assert.match(yes.entry.id, /-try-/);
+    const f = JSON.parse(yes.entry.file); assert.equal(f.choice, 'phone'); assert.equal(f.pick, 'd0042'); assert.equal(f.made, 'ai'); assert.equal(f.words, 'It never sends what you say to a data centre');
+    assert.match(yes.link, /new\/main\/community\/ledger/); assert.equal(yes.picked.id, 'd0042');
   } finally { S.stop(); }
 });

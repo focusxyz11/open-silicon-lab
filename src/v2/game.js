@@ -149,6 +149,11 @@ export const CHALLENGES = [
   { id: 'silent', step: 'ship', place: 'port', at: 'ship', kind: 'errors', grows: 'port-errors' },
   /* run your core: programs for the community's RISC-V core, offered from that piece in the Lab (src/v2/labs/rv.js, src/engines/rvpuzzles.js) */
   { id: 'rvrun', step: 'design', place: 'lab', kind: 'rv', piece: 'core', grows: 'lab-cpu' },
+  /* labs-b: let the noise compute, p-bits at the switch (src/v2/labs/pbits.js, src/engines/paradigms.js), and a thousand
+     that pass, at the studio's job (src/v2/labs/thousand.js, src/engines/thousand.js) */
+  { id: 'noise', step: 'use', place: 'datacentre', at: 'switch', kind: 'pbits', grows: 'way-pbits' },
+  { id: 'noise-big', step: 'use', place: 'datacentre', at: 'switch', kind: 'pbits', grows: 'way-factor' },
+  { id: 'thousand', step: 'design', place: 'studio', at: 'need', kind: 'thousand', grows: 'studio-thousand' },
   /* labs-a: design it, or search for it? at the studio's gates (src/v2/labs/search.js, src/engines/search.js); the program
      nobody can judge, on the community's RISC-V core at the Lab (src/v2/labs/halt.js, src/engines/halt.js) */
   { id: 'search', step: 'design', place: 'studio', at: 'gates', kind: 'search', grows: 'lab-search' },
@@ -182,7 +187,7 @@ export const placeChallenges = place => CHALLENGES.filter(c => c.place === place
 /* what grows, and where (the island draws each one: src/v2/map3d.js GROWERS) */
 /* where a growth stands when it is not at its challenge's place: the other ways to compute grow at the Lab (WAYS_AT), and the
    clock and the power budget, design decisions, at the studio */
-const GROW_AT = { onebad: 'test', half: 'studio', phone: 'phones', car: 'cars', dclife: 'datacentre', fast: 'lab', cim: 'lab', grover: 'lab', 'power-curve': 'studio', counter: 'studio', mortal: 'lab',
+const GROW_AT = { onebad: 'test', half: 'studio', phone: 'phones', car: 'cars', dclife: 'datacentre', fast: 'lab', cim: 'lab', grover: 'lab', 'power-curve': 'studio', counter: 'studio', mortal: 'lab', noise: 'lab', 'noise-big': 'lab',
   search: 'lab' };
 export const GROWTH = CHALLENGES.map(c => ({ id: c.grows, by: c.id, at: GROW_AT[c.id] || c.place }));
 
@@ -343,6 +348,7 @@ export const OPENS = { 'too-hot': 'fail.switch', 'litho-finest': 'scale.print', 
   phone: 'life.phone', car: 'fail.car', dclife: 'fail.ship', fed: 'divide.board', fast: 'fail.chip',
   cim: 'divide.block', grover: 'strange.atom', 'ai-chip': 'scale.masks', piece: 'open.need', floor: 'divide.layout', maskof: 'make.masks', 'power-curve': 'life.block', counter: 'fail.gate',
   'sig-heart': 'fail.phoneboard', 'sig-bearing': 'fail.ecu', 'reg-jobs': 'fail.phoneboard', quantize: 'think.chip', 'token-energy': 'divide.rack', prefill: 'think.board', chef: 'divide.block', flaky: 'fail.gates', mortal: 'life.switch', dieread: 'divide.test', silent: 'fail.ship', rvrun: 'think.chip',
+  noise: 'strange.switch', 'noise-big': 'think.switch', thousand: 'idea.need',
   search: 'idea.check', halt: 'limit.rack' };
 /* and where the open things of the ledger sit: a break under "is the design right?", a piece to build under
    "could anyone design a chip?", a missing check under "who checks, and with what?" */

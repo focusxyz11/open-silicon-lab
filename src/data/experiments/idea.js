@@ -1,6 +1,6 @@
 /* The experiments at home in the world of thread.idea.root (a core question, never shown with the others). See index.js. */
 export default [
-  { id: 'idea-job', strand: 0, stops: ['idea.need'], engine: null, lens: 'forms', cases: ['fdiv'] },
+  { id: 'idea-job', strand: 0, stops: ['idea.need'], ch: ['thousand'], engine: null, lens: 'forms', cases: ['fdiv'] },
   { id: 'idea-tradeoff', strand: 0, stops: ['idea.chip'], engine: null, lens: 'plan', trade: ['work', 'energy', 'area', 'cost'] },
   { id: 'idea-journey', strand: 0, stops: ['idea.die'], engine: null, lens: 'line' },
   { id: 'idea-one-char', strand: 1, at: ['logic', 'check'], ch: ['half', 'vote', 'full'], engine: 'logic', lens: 'forms', trade: ['sure'] },

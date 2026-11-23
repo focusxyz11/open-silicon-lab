@@ -25,7 +25,11 @@ import rv from './rv.js';
 /* labs-a: design it or search for it (search.js), the program nobody can judge (halt.js) */
 import search from './search.js';
 import halt from './halt.js';
+/* labs-b: let the noise compute (pbits.js), a thousand that pass (thousand.js) */
+import pbits from './pbits.js';
+import thousand from './thousand.js';
 export const LABS = { agent, teardown, fit: teardown, evolve, pull: crystal, implant, overlay, etch: films, deposit: films, litho, euv: litho,
   cim, grover, semiconductor, aibuild, powercurve: clockpower, counter: clockpower, capture: analog, regulate: analog, quantize: serve, tokenenergy: serve, prefill: serve,
   piece: bench, floor: bench, maskof: bench, chef: bits, redund: vote, mortal, xray: dies, errors, rv,
-  search, halt };
+  search, halt,
+  pbits, thousand };
