@@ -49,8 +49,10 @@ export const DEPTHS = {
   scanner: { m: 4, portal: [642, 672, 176] },
   wafer: { m: 0.32, portal: [478, 478, 44] },
   die: { m: 0.015, portal: [190, 190, 70] },
-  /* shared by every chip */
-  block: { m: 1e-5, portal: [300, 438, 44] },
+  /* shared by every chip. A block is a fifth of a millimetre across: room for the hundreds of thousands of standard
+     cells here.block says it holds (about a tenth of a square micrometre each, packed to 70%), and for the studio's
+     larger cells in what.block.yours. It was 10 µm, which holds under a thousand (docs/reviews/truth/block-and-machines.md) */
+  block: { m: 2e-4, portal: [300, 438, 44] },
   gate: { m: 3e-7, portal: [365, 660, 90] },
   switch: { m: 5e-8, portal: [475, 520, 50] },
   atom: { m: 2e-9 }
@@ -155,7 +157,7 @@ export const CASES = [
 /* The figures behind a stop: ids in src/data/facts.json. */
 export const FIGURES = {
   'life.building': ['dc-electricity', 'brain-power'], 'limit.rack': ['turing-1936'], 'make.chip': ['euv-wavelength'],
-  'fail.building': ['sdc-rate'], 'divide.block': ['energy-moving-data'], 'make.switch': ['fab-steps', 'transistor-trend'],
+  'fail.building': ['sdc-rate'], 'divide.block': ['energy-moving-data'], 'life.block': ['clock-power-share'], 'make.switch': ['fab-steps', 'transistor-trend'],
   'idea.soc': ['riscv-rva23'], 'fail.car': ['car-life'], 'divide.car': ['chips-per-car'], 'know.car': ['car-shortage-2021'],
   'fail.ecu': ['car-ppm'], 'scale.mcu': ['legacy-auto'], 'scale.switch': ['node-n2', 'wafer-price'], 'make.mcu': ['chip-units'],
   'make.clean': ['fab-build-time'], 'scale.clean': ['fab-module-cost'], 'open.clean': ['wafer-space-run'], 'know.etch': ['workforce'], 'divide.wires': ['fab-cycle-time'],
