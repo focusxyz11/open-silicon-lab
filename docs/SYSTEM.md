@@ -22,7 +22,9 @@ of this document describes the views as they stand.
 Each core question is a world with a page of its own (`#/w/<id>`, `src/v2/worlds.js`), made at the moment it opens from
 its document in `content/`, which is the one home of its words. Its visual system sits at the top: live where an
 engine draws it (the crowd of copies; the tries), a view of the site where one exists (the dive, the line, the map),
-else its sketch. `#/w` lists every question that leads in, mixed, never the eleven themselves.
+else its sketch. A world is a reading page, not a structure a visitor meets (#305): it opens from a lens whose form at
+a level is one of its stops (*Read more* in the lens's card, at `#/w/<id>/at/<level>`) or by name from *Your log*'s
+jump; nothing lists the eleven, and `#/w` alone opens the map.
 
 ## 1. The atlas: one home for every thing
 

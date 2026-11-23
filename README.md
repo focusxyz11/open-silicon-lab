@@ -31,7 +31,7 @@ The Lab stands at Open, the design studio at Design, the quarry and the factory 
 
 **Questions, not answers.** Pick a question and it stays with you as you go deeper or higher, changing form at each level. Two puzzles run through every level: where an AI answer's energy goes (*Follow the joule*, in the data centre), and how a chip can be right when its parts are not.
 
-**Elsewhere:** *What if?* between the islands (`#/whatif`); machines made from shared blocks for one need (`#/machines`); worlds made from the documents in [`content/`](content/README.md) (`#/w`); and *Your log*, which holds what you met and did, with a jump to anything by name.
+**Elsewhere:** *What if?* between the islands (`#/whatif`); machines made from shared blocks for one need (`#/machines`); a world made from its document in [`content/`](content/README.md), read from a lens (`#/w/<id>`); and *Your log*, which holds what you met and did, with a jump to anything by name.
 
 ## Building it together
 

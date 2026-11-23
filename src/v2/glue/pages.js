@@ -1,5 +1,5 @@
-/* The reading pages: your log, the commons' pages, every experiment (#/read), the worlds made from their documents
-   (#/w), machines from shared blocks, What if?, following a question's trail, a question's world, and the questions
+/* The reading pages: your log, the commons' pages, every experiment (#/read), a world made from its document
+   (#/w/<id>, opened from a lens or by name; never listed, #305), machines from shared blocks, What if?, following a question's trail, a question's world, and the questions
    from the field opened in a view's card.
    Glue of the shell (src/v2/app.js): create() runs once, when the view first opens; what it shares with the shell and
    the other views is on V (src/v2/shell.js). */
@@ -30,7 +30,7 @@ import { readHtml } from '../frame2.js';
 import { V, $, esc, qColor, follow, followW } from '../shell.js';
 
 export function create() {
-  Object.assign(V, { showPage, showRead, showMachines, showWorlds, showWorld, showEcosystem, showWhatif, leaveWhatif, askStop });
+  Object.assign(V, { showPage, showRead, showMachines, showWorld, showEcosystem, showWhatif, leaveWhatif, askStop });
   /* two reading views, opened on purpose: your log (the questions you met, what you did, what waits: the loop's
      challenges are kept here, never as a menu of their own) and the Lab's record (the commons, at the place where
      the loop starts and comes back) */
@@ -87,13 +87,8 @@ export function create() {
       slip: id => slipHtml(V.S, id), slipClick: (ev, done) => slipClick(ev, V.S, () => { V.save(); V.refresh(true); done(); }), refusal, signHtml: () => signHtml(V.S) }); };
     draw(); if (!FACT) facts().then(draw);
   }
-  /* a world (src/v2/worlds.js): one core question, its page made from its document; #/w/<id>/q<n> opens a question inside */
-  function showWorlds() {
-    const shown = location.hash;
-    V.page.innerHTML = '<div class="inner"><p class="muted">' + esc(t('world.loading')) + '</p></div>';
-    V.page.classList.add('reading'); V.page.hidden = false; V.page.scrollTop = 0;
-    Worlds.loadAll().then(all => { if (location.hash === shown) V.page.innerHTML = '<div class="inner">' + Worlds.indexHtml(all) + '</div>'; });
-  }
+  /* a world (src/v2/worlds.js): one core question, a reading page made from its document, opened from a lens's Read more or
+     by name from Your log (there is no list of the worlds); #/w/<id>/q<n> opens a question inside */
   /* where a world's questions are asked on the island: each part or level whose question belongs to it, as an address */
   const ISLE_OF = { test: ['test', null], pkg: ['port', null], ship: ['port', null] };
   function islandOf(id) {
@@ -133,6 +128,8 @@ export function create() {
   const jumpIndex = () => Game.PLACES.map(p => ({ name: t('map.' + p + '.t'), kind: V.kickerOf(p), href: '#/place/' + p }))
     .concat(Object.entries(Game.INSIDE).flatMap(([p, L]) => L.filter(l => p === 'datacentre' || !Game.SHARED.includes(l.depth)).map(l => ({ name: t('depth.' + l.depth + '.name'), kind: t('map.' + p + '.t'), href: V.levelHref(p, l) }))),
       Game.CHALLENGES.map(c => ({ name: titleOf(c), kind: V.whereOf(c), href: V.doHref(c) })),
+      /* each world, a reading page, by its question (#305) */
+      WORLD_IDS.map(id => ({ name: t('thread.' + id + '.root'), kind: t('jump.world'), href: '#/w/' + id })),
       [{ name: t('look.plan.t'), kind: t('map.lab.t'), href: '#/build' }, { name: t('nav.challenges'), kind: t('loop.log'), href: '#/challenges' }, { name: t('loop.outShort'), kind: t('nav.ecosystem'), href: '#/ecosystem' }]);
   V.page.addEventListener('input', e => { const f = e.target.closest('[data-jump]'); if (!f) return; const q = f.value.trim().toLowerCase(), R = q ? jumpIndex().filter(x => x.name.toLowerCase().includes(q)).slice(0, 8) : [];
     V.page.querySelector('[data-jumpres]').innerHTML = R.map(x => '<a class="jumpto" href="' + esc(x.href) + '"><b>' + esc(x.name) + '</b><span class="small muted">' + esc(x.kind) + '</span></a>').join('') || (q ? '<p class="small muted">' + esc(t('jump.none')) + '</p>' : ''); });

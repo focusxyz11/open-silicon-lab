@@ -28,8 +28,6 @@ import * as Chip from '../engines/chip.js';
 import { levelAt, sizeOf } from '../data/atlas.js';
 import * as Field from './field.js';
 import { setBetScene } from '../app/betscene.js';
-import * as Worlds from './worlds.js';
-import { WORLD_IDS } from '../data/worlds.js';
 import { createHome } from './home.js';
 import { sizeWords } from './frame.js';
 import { boot as frame2Boot, reading as frame2Reading } from './frame2.js';
@@ -60,7 +58,7 @@ export function start() {
   waits('supply', ['supplySite', 'supplyStep', 'showSupply', 'showDive', 'watchDock']);
   waits('board', ['ensureBoard', 'showBoard']);
   V.hideBoard = () => {};
-  waits('pages', ['showPage', 'showRead', 'showMachines', 'showWorlds', 'showWorld', 'showEcosystem', 'showWhatif', 'askStop']);
+  waits('pages', ['showPage', 'showRead', 'showMachines', 'showWorld', 'showEcosystem', 'showWhatif', 'askStop']);
   V.leaveWhatif = () => {};
   Object.assign(V, { hideSeam, crossed, islandState, hud, foldHero, chCard, designCard, kept, won, toast, hideAll, enter });
   V.quickNext = false; V.carryNote = null; V.inspRaf = 0; V.lensNow = null; V.turnT = 0; V.dcFrame = null; V.dcLv = 0; V.phFrame = null; V.phLv = 0; V.caFrame = null; V.caLv = 0; V.swFrame = null; V.swLv = 0; V.chipRow = 0; V.chipFrame = null; V.diveWorld = 'datacentre'; V.Joule = null; V.flatKind = 'dive'; V.diveFrame = null; V.diveD = -1; V.diveThread = null; V.benchCh = null; V.WE = null; V.DS = null; V.Bench = null; V.flatWords = null; V.boardFrame = null; V.wf = null;
@@ -186,20 +184,16 @@ export function start() {
   hudEl.addEventListener('click', e => { const s = e.target.closest('[data-stage]'); if (s) along(s.dataset.stage); });
 
   /* ---- the hero: what this is, and where to start ---- */
-  /* the first page: questions to start with and challenges to take, over the island. Questions you can try now,
-     a few at a time and changing day by day (never the core questions, which stay hidden); the next challenges you
-     have not done; every question and challenge on one page; and a chip's life round the loop for whoever wants it */
+  /* the first card over the island: where the questions are (on the pictures, as marks beside their parts; the
+     worlds are never listed, #305), a way to the first marks, the next challenges you have not done, and a chip's
+     life round the loop for whoever wants it */
   function drawHero() {
     const C = Game.CHALLENGES.filter(c => !S.done[c.id]).slice(0, 3);
     $('hero').innerHTML = '<button type="button" class="herofold" data-unfold aria-label="' + esc(t('hero.unfold')) + '"><span class="q" aria-hidden="true">?</span><span><b>' + esc(t('hero.start')) + '</b><span class="small">' + esc(t('hero.pill')) + '</span></span></button>' +
-      '<button type="button" class="x herox" data-fold aria-label="' + esc(t('hero.fold')) + '">–</button><p class="kicker">' + esc(t('hero.kicker')) + '</p><h1>' + esc(t('hero.start')) + '</h1><div class="heroq" data-heroq></div>' +
+      '<button type="button" class="x herox" data-fold aria-label="' + esc(t('hero.fold')) + '">–</button><p class="kicker">' + esc(t('hero.kicker')) + '</p><h1>' + esc(t('hero.start')) + '</h1><p class="heroq">' + esc(t('hero.marks')) + '</p>' +
       '<div class="herofoot">' + (C.length ? '<p class="kicker herok">' + esc(t('hero.or')) + '</p><div class="chips heroc">' + C.map(c => '<a class="chipb" href="' + esc(doHref(c)) + '">' + esc(titleOf(c)) + '</a>').join('') + '</div>' : '') +
-      '<div class="row"><a class="btn primary" href="#/w">' + esc(t('hero.all')) + '</a><button type="button" class="btn ghost" data-start>' + esc(t('hero.follow')) + '</button></div></div>';
-    heroQs();
+      '<div class="row"><a class="btn primary" href="#/dive/block">' + esc(t('hero.meet')) + '</a><button type="button" class="btn ghost" data-start>' + esc(t('hero.follow')) + '</button></div></div>';
   }
-  /* the questions come from inside the worlds' documents, fetched only once the hero shows (over the island, never
-     on the first page) */
-  const heroQs = () => { if ($('hero').hidden) return; Worlds.loadAll().then(all => { const box = $('hero').querySelector('[data-heroq]'); if (box) box.innerHTML = Worlds.starters(all).map(Worlds.qCard).join(''); }, () => {}); };
   /* following the chip is no guide: it opens the place where the loop starts, and every place offers the next */
   /* the first page's questions and challenges never go away: exploring folds them into a small button in the corner,
      which opens them again (docs/INTERACTION.md: a heads-up layer that steps aside, not one that is gone) */
@@ -241,19 +235,6 @@ export function start() {
     return ch ? '<button type="button" class="chcard entry ' + st + '" data-open="' + esc(ch.id) + '">' + body + '</button>' : '<div class="chcard entry ' + st + '">' + body + '</div>';
   }
   const jobCard = j => '<button type="button" class="chcard job" data-job="' + j.need + '"><span class="st">?</span><span><b>' + esc(t('design.proj.' + j.p + '.t')) + '</b><span class="small">' + esc(t('build.need.' + j.need + '.d')) + '</span></span></button>';
-  /* the worlds a place meets (docs/INTERACTION.md, content/): every question asked at a place belongs to one of the
-     eleven core questions (its thread is the world, stop.<world>.<depth>), so the link from a place to a world is the
-     questions already there, never one drawn for the purpose. Each world's own words come from its document, loaded
-     once; until then the chip waits for them. */
-  let WT = null;
-  const LIVE = ['copies', 'walls', 'forms', 'plan', 'clock', 'side', 'swarm', 'tune', 'probes'];
-  const fillWorlds = root => { if (!WT) return; root.querySelectorAll('[data-wt]').forEach(a => { const P = WT[a.dataset.wt]; if (!P) return; const live = LIVE.includes((Worlds.WORLD_OF(a.dataset.wt) || {}).lens);
-    a.querySelector('.wq').textContent = P.title.replace(/\*\*|\*/g, ''); a.querySelector('.wl').textContent = live ? t('world.tryIt', { name: P.lens }) : t('world.seeIt', { name: P.lens }); a.hidden = false; }); };
-  const loadWT = () => (WT ? Promise.resolve() : Worlds.loadAll().then(all => { WT = Object.fromEntries(all); }));
-  const worldsOf = keys => [...new Set(keys.map(k => k.split('.')[0]).filter(id => WORLD_IDS.includes(id)))];
-  const worldsRow = keys => { const ids = worldsOf(keys).slice(0, 3); if (!ids.length) return '';
-    loadWT().then(() => fillWorlds(sheet));
-    return '<div class="wmeet"><p class="kicker">' + esc(t('world.here')) + '</p>' + ids.map(id => '<a class="wchip" href="#/w/' + id + '" data-wt="' + id + '" style="--qc:' + Worlds.colorOf(id) + '"' + (WT ? '' : ' hidden') + '><span class="wq"></span><span class="wl small"></span></a>').join('') + '</div>'; };
   const askLink = k => '<a class="askq" href="' + esc(followW(k)) + '" style="--qc:' + qColor(k) + '"><span class="q">' + esc(t('stop.' + k + '.q')) + '</span><span class="small muted">' + esc(t('sheet.follow')) + '</span></a>';
   /* Inside: the place's levels, one inside the next, with what waits at each; then any other way in */
   /* a level opens where it is drawn best: the flight through the data centre, the dive (the one way down through a
@@ -417,7 +398,7 @@ export function start() {
     V.hideBoard(); document.body.classList.remove('immersive');
     $('chipCanvas').hidden = $('chipLabels').hidden = true; cui.hidden = true; V.chip && V.chip.pause();
     $('placeCanvas').hidden = $('placeLabels').hidden = true; pui.hidden = true; V.dc && V.dc.pause(); V.hidePh(); V.hideCa(); V.hideSw();
-    $('mapCanvas').hidden = $('mapLabels').hidden = false; $('hero').hidden = false; $('outbtn').hidden = false; lensbar.hidden = false; showStage(true); heroQs();
+    $('mapCanvas').hidden = $('mapLabels').hidden = false; $('hero').hidden = false; $('outbtn').hidden = false; lensbar.hidden = false; showStage(true);
     const part = from && ['line', 'bench'].includes(V.flatKind) && V.WE && isPart(V.lastPlace, diveId()) ? diveId() : null;
     loading(!V.map); return Promise.all([ensureMap(), glue('island')]).then(([m]) => { if (from && V.lastPlace) { m.from(V.lastPlace, part); if (!part) m.focus(V.lastPlace); } m.resume(); return m; });
   }
@@ -484,7 +465,7 @@ export function start() {
     if (k === 'build') return showMap(from).then(() => V.openPlace('lab', 'look', parts[1] || 'computer', parts[2]));
     if (['log', 'challenges', 'questions'].includes(k)) V.showPage(k);
     if (k === 'read') V.showRead(parts[1] ? decodeURIComponent(parts[1]) : null);
-    if (k === 'w') { if (parts[1]) V.showWorld(parts[1], parts[2], parts[3]); else V.showWorlds(); }
+    if (k === 'w') V.showWorld(parts[1], parts[2], parts[3]);
     if (k === 'whatif') return showMap(from).then(() => V.showWhatif(parts[1]));
     if (k === 'machines') V.showMachines(parts[1], parts[2]);
     /* a reading page stands on its own: the island waits behind it, paused (src/v2/frame2.js, Read) */
@@ -492,6 +473,8 @@ export function start() {
     return showMap(from).then(() => { if (k === 'ecosystem') V.showEcosystem(); else if ((k === 'island' || k === 'explore') && V.cur && !sheet.hidden) { closeSheet(); V.map && V.map.overview(); } });
   }
   function route() {
+    /* a world is a reading page, opened from a lens or by name; there is no list of them (#305): #/w alone is the map */
+    if (/^#\/?w\/?$/.test(location.hash)) history.replaceState(null, '', '#/');
     const parts = partsOf(location.hash), k = parts[0] || 'home';
     if (k !== 'home' && home) home.hide();
     if (k !== 'stations' && stations) stations.hide();
@@ -575,5 +558,5 @@ export function start() {
   window.addEventListener('hashchange', route);
   hud(); drawHero(); firstGo();
   route();
-  Object.assign(V, { S, save, refresh, loading, here, sheet, insp, hideInsp, lensbar, closeSheet, kickerOf, doList, whereOf, chOf, doHref, jobCard, worldsRow, askLink, DIVE_LEVELS, levelHref, enterOf, PARTS, isPart, deeperOf, aroundHtml, withLabs, pui, fui, kui, sui, cui, vui, diveId, bui, page, partsOf, portalAt });
+  Object.assign(V, { S, save, refresh, loading, here, sheet, insp, hideInsp, lensbar, closeSheet, kickerOf, doList, whereOf, chOf, doHref, jobCard, askLink, DIVE_LEVELS, levelHref, enterOf, PARTS, isPart, deeperOf, aroundHtml, withLabs, pui, fui, kui, sui, cui, vui, diveId, bui, page, partsOf, portalAt });
 }
