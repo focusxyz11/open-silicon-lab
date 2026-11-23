@@ -148,7 +148,9 @@ export const CHALLENGES = [
   /* errors, from switch to fleet: the second system-problem question, after moving bits (src/v2/labs/errors.js, src/engines/errors.js) */
   { id: 'silent', step: 'ship', place: 'port', at: 'ship', kind: 'errors', grows: 'port-errors' },
   /* run your core: programs for the community's RISC-V core, offered from that piece in the Lab (src/v2/labs/rv.js, src/engines/rvpuzzles.js) */
-  { id: 'rvrun', step: 'design', place: 'lab', kind: 'rv', piece: 'core', grows: 'lab-cpu' }
+  { id: 'rvrun', step: 'design', place: 'lab', kind: 'rv', piece: 'core', grows: 'lab-cpu' },
+  /* change your core: what a multiplier, a second unit or half the registers buy and cost (src/v2/labs/corearch.js, src/engines/corearch.js) */
+  { id: 'corearch', step: 'design', place: 'lab', kind: 'corearch', piece: 'core', grows: 'lab-arch' }
 ];
 /* the goal of a chip challenge as gauges: each a value of your chip's model and the bound it must reach
    (ge: at least, le: at most). Together they say the same as the goal's met() in src/engines/chip.js. */
@@ -337,7 +339,8 @@ export function community(s) {
 export const OPENS = { 'too-hot': 'fail.switch', 'litho-finest': 'scale.print', 'euv-1000': 'fail.print', etch: 'make.etch', bottom: 'idea.deposit', crystal: 'make.crystal', furnace: 'make.implant', shallow: 'fail.implant', vias: 'fail.print', evolve: 'idea.block', newest: 'open.phoneboard', jobs: 'divide.need', agent: 'idea.check', half: 'fail.check', vote: 'idea.check', full: 'make.gates', months: 'make.clean', quick: 'scale.clean', spot: 'fail.test', cores: 'divide.test',
   phone: 'life.phone', car: 'fail.car', dclife: 'fail.ship', fed: 'divide.board', fast: 'fail.chip',
   cim: 'divide.block', grover: 'strange.atom', 'ai-chip': 'scale.masks', piece: 'open.need', floor: 'divide.layout', maskof: 'make.masks', 'power-curve': 'life.block', counter: 'fail.gate',
-  'sig-heart': 'fail.phoneboard', 'sig-bearing': 'fail.ecu', 'reg-jobs': 'fail.phoneboard', quantize: 'think.chip', 'token-energy': 'divide.rack', prefill: 'think.board', chef: 'divide.block', flaky: 'fail.gates', mortal: 'life.switch', dieread: 'divide.test', silent: 'fail.ship', rvrun: 'think.chip' };
+  'sig-heart': 'fail.phoneboard', 'sig-bearing': 'fail.ecu', 'reg-jobs': 'fail.phoneboard', quantize: 'think.chip', 'token-energy': 'divide.rack', prefill: 'think.board', chef: 'divide.block', flaky: 'fail.gates', mortal: 'life.switch', dieread: 'divide.test', silent: 'fail.ship', rvrun: 'think.chip',
+  corearch: 'divide.chip' };
 /* and where the open things of the ledger sit: a break under "is the design right?", a piece to build under
    "could anyone design a chip?", a missing check under "who checks, and with what?" */
 export const FRONT_ASK = { break: 'fail.check', build: 'open.need', engine: 'idea.check' };

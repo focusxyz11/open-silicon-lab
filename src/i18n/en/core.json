@@ -1157,5 +1157,8 @@
  "game.ch.rvrun.t": "Run your core",
  "game.ch.rvrun.goal": "Write three small programs for the community's RISC-V core, each checked by running it on every case.",
  "game.ch.rvrun.why": "A processor only ever does a few simple things: add two numbers, compare them, jump to another line, move a number in or out of memory. RISC-V is an open set of those instructions that anyone may build a processor for. Everything a computer does is a long list of such steps, run a few billion times a second.",
+ "game.ch.corearch.t": "Change your core",
+ "game.ch.corearch.goal": "Make the core at least twice as fast on the puzzles' programs, in no more than 1.4 times its area, for no more energy.",
+ "game.ch.corearch.why": "Every core is a trade: a part that makes some programs faster costs area on the chip, and energy every cycle it is powered, whether it is used or not. Architects choose the parts that earn their place for the work the chip will do.",
  "ui.blueprint": "The blueprint: the chip innovation ecosystem as one wheel, a chip's life around it and its scale inward"
 }

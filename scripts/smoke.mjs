@@ -807,6 +807,8 @@ run['labs'] = async () => {
   await playLab('silent', "const P = '.player[data-ch=\"silent\"] ', W = { phone: ['check:abft', 'selftest:true', 'memory:parity', 'margin:0.3', 'materials:lowAlpha'], car: ['logic:lockstep', 'selftest:true', 'memory:ecc', 'margin:0.3'], datacentre: ['check:abft', 'hunt:true', 'memory:ecc', 'margin:0.3'] }; for (const [env, L] of Object.entries(W)) { CL(P + '[data-er-env=\"' + env + '\"]'); for (const k of L) CL(P + '[data-er=\"' + k + '\"]:not([aria-pressed=\"true\"])'); }", 'Catch the silent errors');
   /* run your core, offered from the RISC-V core in the Lab: three programs, each checked by running it */
   await playLab('rvrun', "const P = '.player[data-ch=\"rvrun\"] ', W = { sum: null, max: 'mv a0, a1\\nbge a1, a2, done\\nmv a0, a2\\ndone:', fib: 'li a0, 0\\nli t1, 1\\nloop:\\n beq a1, x0, done\\n add t2, a0, t1\\n mv a0, t1\\n mv t1, t2\\n addi a1, a1, -1\\n j loop\\ndone:' }; for (const [p, src] of Object.entries(W)) { CL(P + '[data-rv-p=\"' + p + '\"]'); if (src) { const a = document.querySelector(P + '[data-rv-code]'); if (a) { a.value = src; a.dispatchEvent(new Event('input', { bubbles: true })); } } CL(P + '[data-rv-run]'); }", 'Run your core');
+  /* change your core (#321): a slow multiplier, a second unit and half the registers, together, reach the goal */
+  await playLab('corearch', "const P = '.player[data-ch=\"corearch\"] '; for (const [k, v] of [['mul', 'slow'], ['alus', '2'], ['regs', '16']]) CL(P + '[data-ca-' + k + '=\"' + v + '\"]:not([aria-pressed=\"true\"])')", 'Change your core');
   /* serving a language model, at the data centre: four bits despite outliers, where an answer's energy goes, read fast and write slow */
   await playLab('quantize', "CL('[data-sq-format=\"fp4\"]:not([aria-pressed=\"true\"])'); CL('[data-sq-scale=\"nv16\"]:not([aria-pressed=\"true\"])'); SET('#sq-outliers', 1)", 'Four bits, despite outliers');
   await playLab('token-energy', "SET('#se-watts', 2300); SET('#se-tokExp', 3.9); SET('#se-pue', 1.05); SET('#se-overhead', 10); SET('#se-tokExp', 4.5)", 'Where an answer\'s energy goes');
@@ -890,6 +892,24 @@ run['labs'] = async () => {
     for (const [id, r] of calls) { c('[data-ag-case="' + id + '"]'); if (document.querySelector('#sheet .agverdict.good')) continue; c('[data-ag-redo]'); if (r == null) c('[data-ag-trust]'); else { c('[data-ag-reject]'); c('[data-ag-reason="' + r + '"]'); } }
     return !!document.querySelector('#sheet .player .won'); }, null, { timeout: 30000, polling: 1500 }).catch(() => problems.push(tag + ': eight right calls do not win Verify the agent'));
   await inDo('agent', 'agent');
+  /* your own core (#321): a machine's core opens on that machine's job, its datapath drawn with the arithmetic unit as 32
+     slices; a wrong gate in your slice makes your core part from the reference core, and the picture shows the slice.
+     Last in the section: the slice is kept on your bench, and is put back before the page closes */
+  {
+    const P = '.player[data-ch="rvrun"] ';
+    await fp.goto(adr('#/do/rvrun/wildfire'));
+    await fp.waitForFunction(P => { const b = document.querySelector(P + '[data-rv-run]'); if (b && !document.querySelector(P + '.rvtwo')) b.click();
+      return !!document.querySelector(P + '[data-rv-p="wildfire"][aria-pressed="true"]') && document.querySelectorAll(P + '.dpfig .dpsl').length === 32 && !!document.querySelector(P + '.rvtwo') && !document.querySelector(P + '.rvfault'); }, P, { timeout: 90000, polling: 1500 })
+      .catch(() => problems.push(tag + ': a machine\'s core does not open on its job, run on your core with its datapath drawn'));
+    await fp.waitForFunction(P => { const c = q => { const b = document.querySelector(P + q); if (b) b.click(); };
+      if (!document.querySelector(P + '.rvtwo')) c('[data-rv-run]');
+      if (!document.querySelector(P + '[data-rv-slice0]')) c('[data-rv-gate="2"]');
+      if (document.querySelector(P + '.rvfault') && !document.querySelector(P + '.dpfig .dpsl.bad')) c('[data-rv-fault]');
+      return !!document.querySelector(P + '.rvfault') && !!document.querySelector(P + '.rvtwo .bad') && !!document.querySelector(P + '.dpfig .dpsl.bad') && !!document.querySelector(P + '.dpfig .dpon.bad'); }, P, { timeout: 60000, polling: 1500 })
+      .catch(() => problems.push(tag + ': a wrong gate in your slice does not show where your core went wrong'));
+    await fp.waitForFunction(P => { const b = document.querySelector(P + '[data-rv-slice0]'); if (b) b.click(); return !document.querySelector(P + '[data-rv-slice0]') && !document.querySelector(P + '.rvfault'); }, P, { timeout: 30000, polling: 1500 })
+      .catch(() => problems.push(tag + ': your slice is not put back to the lab\'s example'));
+  }
   await fp.close(); }
 };
 
@@ -1363,6 +1383,8 @@ run['machines'] = async () => {
     await fp.addInitScript(() => { localStorage.setItem('osl-quality', 'flat'); localStorage.setItem('osl-hints-v1', JSON.stringify({ seen: {}, off: true })); });
     await fp.goto(base + 'index.html#/machines/hearing');
     await fp.waitForFunction(() => document.querySelectorAll('.mach .mpart').length === 4 && !!document.querySelector('.mach .mchecks li.bad'), null, { timeout: 60000, polling: 500 }).catch(() => problems.push(tag + ': the hearing aid does not start as circuits that miss its need'));
+    /* the core block leads into the core, at work on this machine's job (#321) */
+    await fp.waitForFunction(() => !!document.querySelector('a.mcoreway[href="#/do/rvrun/hearing"]'), null, { timeout: 15000, polling: 500 }).catch(() => problems.push(tag + ': the core block does not lead into the core'));
     /* the filter made software: the machine meets its need */
     await fp.waitForFunction(() => { const b = document.querySelector('[data-mform="filter:software"]'); if (b && b.getAttribute('aria-pressed') !== 'true') b.click(); return !!b && !document.querySelector('.mach .mchecks li.bad'); }, null, { timeout: 15000, polling: 300 }).catch(() => problems.push(tag + ': a filter made software does not meet the need'));
     /* the agent offers a real choice, and a pick is used */
