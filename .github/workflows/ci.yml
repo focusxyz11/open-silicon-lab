@@ -43,7 +43,7 @@ jobs:
           - group: explore phone
             sections: explore-phone,flights,break,slow,stations
           - group: motion
-            sections: motion,joins,seams
+            sections: motion,joins,seams,blueprint
           - group: labs and ways
             sections: labs,ways,machines
     steps:

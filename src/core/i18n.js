@@ -15,14 +15,14 @@
    a view that shows it draws. A new word goes in the file of its prefix's area; a new prefix gets an area here first
    (tests/i18n.test.mjs checks both).
 
-   English is whole; Chinese, French and Spanish have the first page (the blueprint area) and the bar so far. To add a
+   English is whole; Chinese, French and Spanish have the first page (the hold area), the blueprint and the bar so far. To add a
    language, area by area: make src/i18n/<lang>/, copy any of src/i18n/en/*.json
    into it, translate the values (never the names), and add the language to LANGS and the area to TRANSLATED below. An
    area not yet translated shows in English, and is never fetched (tests/i18n.test.mjs keeps TRANSLATED and the files
    in step). */
 export const LANGS = { en: 'English', zh: '中文', fr: 'Français', es: 'Español' };   // i18n-ok: each language is named in its own words
 /* the areas each language other than English has a file for */
-export const TRANSLATED = { zh: ['core', 'blueprint'], fr: ['core', 'blueprint'], es: ['core', 'blueprint'] };
+export const TRANSLATED = { zh: ['core', 'blueprint', 'hold'], fr: ['core', 'blueprint', 'hold'], es: ['core', 'blueprint', 'hold'] };
 const KEY = 'osl-lang';
 let LANG = 'en', MSG = {}, EN = {};
 
@@ -48,6 +48,8 @@ export const AREAS = {
     /* Listen and tell, the ear test (#316) */
     'ear'],
   blueprint: ['bp'],
+  /* Hold, the first page (src/v2/hold.js) */
+  hold: ['hd'],
   pages: ['machines', 'mb', 'invent', 'liquid', 'read', 'page', 'site', 'tune', 'swm', 'side', 'walls',
     'forms', 'copies', 'probe', 'plan']
 };

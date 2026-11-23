@@ -1181,5 +1181,6 @@
  "game.ch.corearch.t": "Change your core",
  "game.ch.corearch.goal": "Make the core at least twice as fast on the puzzles' programs, in no more than 1.4 times its area, for no more energy.",
  "game.ch.corearch.why": "Every core is a trade: a part that makes some programs faster costs area on the chip, and energy every cycle it is powered, whether it is used or not. Architects choose the parts that earn their place for the work the chip will do.",
- "ui.blueprint": "The blueprint: the chip innovation ecosystem as one wheel, a chip's life around it and its scale inward"
+ "ui.blueprint": "The blueprint: the chip innovation ecosystem as one wheel, a chip's life around it and its scale inward",
+ "ui.hold": "Hold: fifty years of computing under one finger, from one transistor to the wall, and what people are trying next"
 }

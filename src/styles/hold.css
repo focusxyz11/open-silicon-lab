@@ -1,0 +1,293 @@
+/* Hold, the first page (src/v2/hold.js). Its own paper, ink and one red, and its own type (Anton, DM Sans, Anonymous
+   Pro, Gelasio; loaded when the page opens), as designed with Claude Fable 5.2; it turns dark at the wall. Everything is
+   scoped to .hold and every class starts h-, so nothing here touches the rest of the lab. The site's bar floats over it;
+   the page's five parts are tabs under the bar. */
+.home.holdhome { padding-top: 0; background: #efece3; overscroll-behavior: contain; }
+.hold { --paper: #efece3; --ink: #131210; --red: #e5401a; --mid: #6b675d; --hair: rgba(19,18,16,.16); --soft: rgba(19,18,16,.05);
+  --barH: 72px; --tabH: 40px; --H: calc(100svh - var(--barH) - var(--tabH)); --S: min(calc(var(--H) - 166px), 50vw); --timeH: 84px;
+  min-height: 100%; background: var(--paper); color: var(--ink); font-family: 'DM Sans', system-ui, sans-serif; font-size: 16px; line-height: 1.45;
+  -webkit-font-smoothing: antialiased; overflow-x: clip; transition: background .7s, color .7s; }
+.hold.is-wall { --paper: #131210; --ink: #efece3; --mid: #aca89d; --hair: rgba(239,236,227,.2); --soft: rgba(239,236,227,.06); }
+.hold *, .hold *::before, .hold *::after { box-sizing: border-box; }
+.hold a { color: inherit; }
+.hold button { font: inherit; color: inherit; }
+.hold .h-mono { font-family: 'Anonymous Pro', ui-monospace, Menlo, monospace; font-size: 12px; letter-spacing: .09em; text-transform: uppercase; }
+.hold .h-anton { font-family: Anton, 'Archivo Black', Impact, sans-serif; text-transform: uppercase; font-weight: 400; line-height: .92; letter-spacing: .005em; }
+.hold .h-src { font-family: 'Anonymous Pro', ui-monospace, monospace; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--mid); text-decoration: none; white-space: nowrap; border-bottom: 1px solid transparent; }
+.hold .h-src:hover { color: var(--red); border-color: var(--red); }
+.hold .h-src::before { content: "↗ "; }
+.hold .h-lnk { font-weight: 600; text-decoration: none; border-bottom: 1.5px solid var(--red); padding-bottom: 1px; }
+.hold .h-lnk:hover { color: var(--red); }
+.hold .h-lnk::after { content: " →"; color: var(--red); }
+.hold .h-st0 { color: var(--mid); }
+
+/* ---- the page's five parts: always under the bar, any of them a tap away ---- */
+.hold .h-tabs { position: sticky; top: 0; z-index: 6; height: calc(var(--barH) + var(--tabH)); display: flex; align-items: stretch; gap: 0; padding: var(--barH) 44px 0; background: var(--paper); border-bottom: 1px solid var(--hair); transition: background .7s; }
+.hold .h-tabs button { display: flex; align-items: center; gap: 9px; background: none; border: 0; border-bottom: 2px solid transparent; margin-bottom: -1px; padding: 0 18px 0 0; margin-right: 18px; cursor: pointer; color: var(--mid); white-space: nowrap; font: inherit; letter-spacing: inherit; text-transform: inherit; }
+.hold .h-tabs button i { font-style: normal; width: 19px; height: 19px; display: grid; place-items: center; border: 1.5px solid var(--mid); font-size: 11px; letter-spacing: 0; }
+.hold .h-tabs button:hover { color: var(--ink); }
+.hold .h-tabs button.on { color: var(--ink); border-bottom-color: var(--red); }
+.hold .h-tabs button.on i { background: var(--red); border-color: var(--red); color: #fff; }
+.hold .h-langs { display: flex; gap: 12px; align-items: center; }
+.hold .h-langs button { background: none; border: 0; border-bottom: 1.5px solid transparent; padding: 2px 0 1px; cursor: pointer; color: var(--mid); font: inherit; letter-spacing: inherit; text-transform: none; }
+.hold .h-langs button[aria-pressed=true] { color: var(--ink); border-bottom-color: currentColor; }
+.hold .h-langs button:hover { color: var(--red); }
+.hold .h-tabs .h-langs { margin-left: auto; }
+.hold .h-count .h-langs { display: none; margin-top: 14px; }
+
+/* ---- one world: the words on the left, the same square of silicon pinned on the right, all the way down ---- */
+.hold .h-world { display: grid; grid-template-columns: minmax(0, 1fr) var(--S); grid-template-rows: auto var(--timeH) auto auto; column-gap: 56px; padding: 0 44px; }
+.hold .h-count { grid-column: 1; grid-row: 1; min-height: calc(var(--H) - var(--timeH)); min-width: 0; display: flex; flex-direction: column; justify-content: center; align-items: flex-start; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; padding: 10px 0 6px; }
+.hold .h-kick { color: var(--mid); margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
+.hold .h-kick i { width: 26px; height: 1px; background: var(--mid); display: block; }
+.hold .h-num { font-size: clamp(100px, min(15vw, 26svh), 250px); margin-left: -.035em; white-space: nowrap; font-variant-numeric: tabular-nums; line-height: .86; padding-bottom: .07em; cursor: default; }
+.hold .h-unit { font-size: clamp(26px, min(3.6vw, 6.4svh), 56px); margin-top: .3em; white-space: nowrap; }
+.hold .h-unit em { font-style: normal; color: var(--red); }
+.hold .h-meta { display: flex; align-items: baseline; gap: 14px; margin-top: 14px; min-height: 22px; }
+.hold .h-year { font-family: 'Anonymous Pro', monospace; font-weight: 700; font-size: 19px; letter-spacing: .06em; }
+.hold .h-year small { font-weight: 400; font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: var(--mid); margin-left: 8px; }
+.hold .h-say { margin-top: 10px; max-width: 30em; font-size: clamp(15.5px, 1.22vw, 18px); line-height: 1.38; min-height: 6.9em; }
+.hold .h-say .h-price { display: block; font-family: Anton, sans-serif; text-transform: uppercase; color: var(--red); font-size: clamp(28px, 3vw, 46px); line-height: 1; margin: 8px 0 2px; }
+.hold .h-say .h-price small { font-family: 'Anonymous Pro', monospace; font-size: 12px; letter-spacing: .1em; color: var(--ink); margin-left: 10px; }
+.hold .h-go, .hold .h-next { background: none; border: 0; border-bottom: 2px solid var(--red); padding: 0 0 2px; cursor: pointer; }
+.hold .h-say .h-go { display: inline-block; margin-top: 12px; font-weight: 600; font-size: 1.12em; }
+.hold .h-go::after, .hold .h-next::after { content: " ↓"; color: var(--red); }
+.hold .h-next { display: inline-block; margin-top: 46px; color: var(--ink); }
+.hold .h-next:hover { color: var(--red); }
+
+/* ---- a moment: the hold slows, the count steps back, and something waits to be tried ---- */
+.hold .h-num, .hold .h-unit { transition: font-size .45s cubic-bezier(.2,.7,.2,1); }
+.hold.is-moment .h-num { font-size: clamp(56px, min(7vw, 11svh), 112px); }
+.hold.is-moment .h-count { justify-content: flex-start; padding-top: 18px; }
+.hold.is-moment .h-unit { font-size: clamp(20px, min(2.4vw, 4.4svh), 36px); }
+.hold.is-moment .h-kick { display: none; }
+.hold .h-moment { animation: h-in .4s both; font-size: .92em; }
+@keyframes h-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+.hold .h-mk2 { color: var(--red); display: flex; gap: 8px; align-items: center; margin-bottom: 6px; }
+.hold .h-mk2 i { width: 8px; height: 8px; background: var(--red); display: block; animation: h-blip 1s steps(2) infinite; }
+@keyframes h-blip { 50% { opacity: .2; } }
+.hold .h-mq { font-weight: 600; margin: 0 0 8px; }
+.hold .h-moment .h-out { margin: 8px 0 0; min-height: 2.8em; }
+.hold .h-moment .h-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.hold .h-mqq { margin: 10px 0 0; }
+.hold .h-mqq em { font-family: Gelasio, Georgia, serif; font-size: 1.08em; display: block; margin-bottom: 4px; }
+.hold .h-calc { display: grid; gap: 2px; margin: 8px 0; font-family: 'Anonymous Pro', monospace; font-size: 15px; letter-spacing: .04em; }
+.hold .h-calc em { font-style: normal; color: var(--red); font-weight: 700; }
+
+.hold .h-act { display: flex; align-items: center; gap: 18px; margin-top: 14px; }
+.hold .h-holdbtn { position: relative; width: 92px; height: 92px; border-radius: 50%; border: 1.5px solid var(--ink); background: var(--ink); color: var(--paper); cursor: pointer; touch-action: none; flex: none; padding: 0; transition: background .2s, transform .2s, opacity .3s; }
+.hold .h-holdbtn span { font-family: Anton, sans-serif; font-size: 20px; letter-spacing: .06em; text-transform: uppercase; }
+.hold .h-holdbtn svg { position: absolute; inset: -9px; width: 110px; height: 110px; transform: rotate(-90deg); pointer-events: none; }
+.hold .h-holdbtn circle { fill: none; stroke: var(--red); stroke-width: 3; stroke-dasharray: 1; stroke-dashoffset: 1; }
+.hold .h-holdbtn::after { content: ""; position: absolute; inset: -9px; border-radius: 50%; border: 1px solid var(--hair); }
+.hold.is-holding .h-holdbtn { background: var(--red); border-color: var(--red); color: #fff; transform: scale(.93); }
+.hold:not(.is-touched) .h-holdbtn { animation: h-nudge 2.4s ease-in-out infinite; }
+@keyframes h-nudge { 0%, 70%, 100% { box-shadow: 0 0 0 0 rgba(229,64,26,0); } 82% { box-shadow: 0 0 0 14px rgba(229,64,26,.14); } }
+.hold .h-hint { color: var(--mid); max-width: 25em; line-height: 1.5; }
+.hold .h-hint b { color: var(--ink); font-weight: 700; display: block; }
+.hold .h-skipl { color: var(--mid); background: none; border: 0; border-bottom: 1px solid var(--hair); padding: 0; margin-top: 14px; display: inline-block; cursor: pointer; }
+.hold .h-skipl:hover { color: var(--red); }
+.hold.is-wall .h-skipl { display: none; }
+.hold .h-again { background: none; border: 0; border-bottom: 1px solid var(--mid); color: var(--mid); cursor: pointer; padding: 0 0 2px; display: none; }
+.hold.is-wall .h-again { display: inline-block; }
+.hold.is-wall .h-hint { display: none; }
+/* how far a push gets, against twice */
+.hold .h-gauge { display: none; width: 100%; max-width: 29em; margin-top: 12px; }
+.hold.is-pushing .h-gauge { display: block; }
+.hold .h-gbar { position: relative; height: 10px; border: 1.5px solid var(--ink); }
+.hold .h-fill { position: absolute; left: 0; top: 0; bottom: 0; background: var(--red); width: 0; }
+.hold .h-mk { position: absolute; top: -5px; bottom: -5px; width: 1.5px; background: var(--ink); }
+.hold .h-lb { display: flex; justify-content: space-between; color: var(--mid); margin-top: 6px; }
+
+.hold .h-diewrap { grid-column: 2; grid-row: 1 / 4; position: sticky; top: calc(var(--barH) + var(--tabH) + (var(--H) - var(--S)) / 2 - 7px); align-self: start; margin-top: calc((var(--H) - var(--timeH) - var(--S)) / 2); width: var(--S); height: var(--S); touch-action: none; cursor: crosshair; z-index: 2; user-select: none; -webkit-user-select: none; }
+.hold .h-die { position: absolute; inset: 0; width: 100%; height: 100%; display: block; outline: 1.5px solid var(--ink); }
+.hold.is-wall .h-die { outline-color: var(--red); outline-width: 2px; }
+.hold .h-crop { position: absolute; width: 14px; height: 14px; pointer-events: none; }
+.hold .h-crop::before, .hold .h-crop::after { content: ""; position: absolute; background: var(--ink); }
+.hold .h-crop::before { width: 14px; height: 1px; top: 50%; }
+.hold .h-crop::after { height: 14px; width: 1px; left: 50%; }
+.hold .h-crop.h-a { left: -24px; top: -24px; } .hold .h-crop.h-b { right: -24px; top: -24px; } .hold .h-crop.h-c { left: -24px; bottom: -24px; } .hold .h-crop.h-d { right: -24px; bottom: -24px; }
+.hold .h-dielab { position: absolute; left: 0; right: 0; top: -24px; display: flex; justify-content: space-between; color: var(--mid); padding: 0 2px; pointer-events: none; }
+.hold .h-dielab.h-bot { top: auto; bottom: -26px; gap: 16px; white-space: nowrap; }
+.hold .h-dielab.h-bot #hd-dreg { color: var(--ink); overflow: hidden; text-overflow: ellipsis; }
+.hold .h-loupe { position: absolute; width: 232px; height: 232px; border-radius: 50%; left: 0; top: 0; pointer-events: none; opacity: 0; will-change: transform, opacity; }
+.hold .h-loupe canvas { width: 100%; height: 100%; border-radius: 50%; display: block; box-shadow: 0 0 0 1.5px #131210, 0 0 0 7px #efece3, 0 0 0 8px #131210, 0 22px 50px rgba(0,0,0,.4); }
+.hold .h-mag { position: absolute; left: 50%; top: calc(100% + 14px); transform: translateX(-50%); background: #131210; color: #efece3; padding: 5px 10px 4px; white-space: nowrap; text-align: center; line-height: 1.35; }
+.hold .h-mag b { display: block; font-weight: 700; }
+.hold .h-mag.h-up { top: auto; bottom: calc(100% + 14px); }
+.hold.is-wall .h-mag { background: #efece3; color: #131210; }
+/* words over the square, never in it */
+.hold .h-dl { position: absolute; inset: 0; pointer-events: none; }
+.hold .h-dl > * { position: absolute; white-space: nowrap; transition: opacity .45s; opacity: 0; }
+.hold .h-dl .h-tl { transform: translate(-50%, -100%); color: #131210; }
+.hold .h-diewrap[data-scene=gate] .h-dl .h-tl { opacity: 1; }
+/* the bit the transistor holds: 0, or 1 while you press */
+.hold .h-dl .h-bit { left: 50%; top: 95%; display: flex; align-items: baseline; gap: 12px; }
+.hold .h-bit b { font-family: Anton, sans-serif; font-weight: 400; font-size: calc(var(--S) * .13); line-height: 1; transition: color .15s; }
+.hold .h-bit[data-b="1"] b { color: var(--red); }
+.hold .h-bit small { font-size: 12px; color: var(--mid); }
+.hold .h-dl .h-sl { color: #efece3; text-shadow: 0 0 6px #000, 0 0 2px #000; }
+.hold .h-dl .h-sl.h-r { color: var(--red); }
+.hold .h-dl .h-sl.h-dk { color: #131210; text-shadow: none; }
+.hold .h-diewrap[data-scene=memory] .h-dl .h-s-memory, .hold .h-diewrap[data-scene=power] .h-dl .h-s-power, .hold .h-diewrap[data-scene=cost] .h-dl .h-s-cost, .hold .h-diewrap[data-scene=machine] .h-dl .h-s-machine, .hold .h-diewrap[data-scene=island] .h-dl .h-s-island { opacity: 1; }
+.hold .h-dl .h-pl { line-height: 1.3; font-size: 12px; color: #efece3; }
+.hold .h-dl .h-pl b { display: block; font-weight: 700; }
+.hold .h-dl .h-pl small { display: block; color: var(--red); font-size: 12px; }
+.hold .h-dl .h-pl.h-m { transform: translate(-50%, 0); text-align: center; } .hold .h-dl .h-pl.h-m.h-up { transform: translate(-50%, -100%); }
+.hold .h-dl .h-pl.h-r { transform: translate(-100%, -50%); text-align: right; } .hold .h-dl .h-pl.h-l { transform: translate(0, -50%); }
+.hold .h-dl .h-ml { line-height: 1.25; font-size: 12px; white-space: normal; }
+.hold .h-dl .h-ml small { display: block; opacity: .75; font-size: 12px; }
+.hold .h-time { grid-column: 1 / 3; grid-row: 2; height: 58px; align-self: start; margin-top: 8px; position: relative; user-select: none; }
+.hold .h-time canvas { width: 100%; height: 100%; display: block; }
+
+/* ---- after the hold stops: the same story goes on ---- */
+.hold .h-steps { grid-column: 1; grid-row: 3; display: none; min-width: 0; padding-bottom: 40px; }
+.hold.is-wall .h-steps { display: block; }
+.hold .h-step { min-height: var(--H); padding: 11svh 0 9svh; border-top: 1px solid var(--hair); max-width: 640px; scroll-margin-top: calc(var(--barH) + var(--tabH)); }
+.hold .h-n { color: var(--mid); display: flex; gap: 10px; align-items: center; }
+.hold .h-n i { width: 26px; height: 1px; background: var(--mid); display: block; }
+.hold .h-step h2 { font-size: clamp(48px, 6.4vw, 104px); margin: 14px 0 0 -.02em; }
+.hold .h-step h2 em { font-style: normal; color: var(--red); }
+.hold .h-d { font-size: 18px; margin: 20px 0 0; max-width: 32em; }
+.hold .h-box { margin-top: 30px; border: 1px solid var(--hair); padding: 16px 18px 18px; background: var(--soft); }
+.hold .h-bk { color: var(--red); display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
+.hold .h-bk i { width: 8px; height: 8px; background: var(--red); display: block; }
+.hold .h-bq { font-weight: 600; margin: 0 0 12px; font-size: 17px; }
+.hold .h-src.h-phys { display: block; white-space: normal; margin-top: 8px; }
+.hold .h-src.h-phys::before { content: ''; }
+.hold .h-box > .h-lnk { display: inline-block; margin-top: 10px; }
+.hold .h-out { margin: 12px 0 0; min-height: 3em; font-size: 15.5px; }
+.hold .h-out b { font-weight: 600; }
+/* the figure an answer leads with */
+.hold .h-out > b:first-child { font-family: Anton, sans-serif; font-weight: 400; color: var(--red); font-size: 26px; letter-spacing: .02em; margin-right: 8px; text-transform: uppercase; }
+.hold .h-trip b { color: var(--red); }
+.hold .h-chal .h-out > b:first-child { font-size: 21px; }
+.hold .h-seg { display: flex; flex-wrap: wrap; gap: 0; border: 1.5px solid var(--ink); width: max-content; max-width: 100%; }
+.hold .h-seg button { background: none; border: 0; border-right: 1px solid var(--hair); padding: 8px 13px 7px; cursor: pointer; font-size: 14px; line-height: 1.2; touch-action: manipulation; }
+.hold .h-seg button:last-child { border-right: 0; }
+.hold .h-asel { width: 100%; }
+.hold .h-asel button { flex: 1 1 auto; border-bottom: 1px solid var(--hair); margin-bottom: -1px; }
+.hold .h-seg button.on { background: var(--ink); color: var(--paper); }
+.hold input[type=range] { -webkit-appearance: none; appearance: none; width: 100%; height: 28px; background: none; margin: 0; cursor: ew-resize; touch-action: pan-y; }
+.hold input[type=range]::-webkit-slider-runnable-track { height: 2px; background: var(--ink); }
+.hold input[type=range]::-moz-range-track { height: 2px; background: var(--ink); }
+.hold input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 22px; height: 22px; border-radius: 50%; background: var(--red); border: 2px solid var(--paper); margin-top: -10px; }
+.hold input[type=range]::-moz-range-thumb { width: 20px; height: 20px; border-radius: 50%; background: var(--red); border: 2px solid var(--paper); }
+.hold .h-ticks { display: flex; justify-content: space-between; gap: 8px; color: var(--mid); margin-top: 2px; }
+.hold .h-btn { display: inline-flex; align-items: center; gap: 9px; border: 1.5px solid var(--ink); background: var(--ink); color: var(--paper); padding: 10px 16px 9px; cursor: pointer; font-weight: 600; font-size: 14.5px; text-decoration: none; touch-action: manipulation; }
+.hold .h-btn.h-ghost { background: none; color: var(--ink); }
+.hold .h-btn.h-red { background: var(--red); border-color: var(--red); color: #fff; }
+.hold .h-btn:disabled { opacity: .35; cursor: default; }
+/* the question a section belongs to: one, beside it */
+.hold .h-cq { margin: 34px 0 0; padding-left: 20px; border-left: 3px solid var(--red); }
+.hold .h-cq[hidden] { display: none; }
+.hold .h-cq .h-mono { color: var(--mid); display: block; margin-bottom: 8px; }
+.hold .h-cq p { font-family: Gelasio, Georgia, serif; font-style: italic; font-size: clamp(23px, 2.3vw, 31px); line-height: 1.2; margin: 0 0 12px; }
+.hold .h-ways { margin-top: 34px; }
+.hold .h-ways > .h-mono { color: var(--mid); display: block; margin-bottom: 10px; }
+.hold .h-way { display: grid; grid-template-columns: 84px 1fr; gap: 16px; align-items: start; padding: 14px 0; border-top: 1px solid var(--hair); cursor: default; }
+.hold .h-way canvas { width: 84px; height: 84px; display: block; background: #efece3; }
+.hold .h-way h3 { font-family: Anton, sans-serif; font-weight: 400; text-transform: uppercase; font-size: 21px; line-height: 1.05; margin: 0 0 4px; display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: baseline; }
+.hold .h-st { font-family: 'Anonymous Pro', monospace; font-size: 12px; letter-spacing: .1em; color: var(--mid); display: inline-flex; gap: 6px; align-items: center; }
+.hold .h-st i { width: 16px; border-top: 2px solid var(--mid); display: block; }
+.hold .h-st.h-lab i { border-top-style: dashed; } .hold .h-st.h-guess i { border-top-style: dotted; }
+.hold .h-way p { margin: 0 0 6px; font-size: 14.5px; line-height: 1.42; }
+.hold .h-ft { display: flex; flex-wrap: wrap; gap: 4px 14px; align-items: baseline; font-size: 13.5px; }
+/* the next machine */
+.hold .h-needs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 26px; }
+.hold .h-need { border: 1.5px solid var(--hair); background: none; text-align: left; padding: 11px 12px 10px; cursor: pointer; line-height: 1.25; touch-action: manipulation; }
+.hold .h-need b { display: block; font-family: Anton, sans-serif; font-weight: 400; text-transform: uppercase; font-size: 19px; margin-bottom: 3px; }
+.hold .h-need span { font-size: 13px; color: var(--mid); }
+.hold .h-need.on { border-color: var(--red); background: var(--soft); }
+.hold .h-why { margin: 14px 0 0; font-size: 15.5px; }
+.hold .h-parts { margin-top: 16px; border-top: 1px solid var(--hair); }
+.hold .h-part { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--hair); }
+.hold .h-pn { font-weight: 600; font-size: 15px; }
+.hold .h-pn small { display: block; font-weight: 400; color: var(--mid); font-size: 12.5px; }
+.hold .h-must { color: var(--red); }
+.hold .h-stock { color: var(--mid); }
+.hold .h-read { display: grid; grid-template-columns: auto 1fr; gap: 6px 18px; margin-top: 16px; align-items: baseline; }
+.hold .h-read .h-big { font-family: Anton, sans-serif; font-size: 44px; line-height: 1; color: var(--red); }
+.hold .h-read .h-big i { font-style: normal; font-family: 'DM Sans', sans-serif; font-weight: 500; font-size: .62em; margin-right: 2px; }
+.hold .h-ok { font-size: 15px; } .hold .h-ok.h-bad { color: var(--red); font-weight: 600; }
+.hold .h-tri { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; margin-top: 22px; border: 1px solid var(--hair); }
+.hold .h-tri > div { padding: 12px 14px 14px; border-right: 1px solid var(--hair); display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
+.hold .h-tri > div:last-child { border-right: 0; }
+.hold .h-w { font-family: Anton, sans-serif; text-transform: uppercase; font-size: 24px; line-height: 1; }
+.hold .h-redw { color: var(--red); }
+.hold .h-who { color: var(--mid); }
+.hold .h-tri p { margin: 0; font-size: 13.5px; line-height: 1.35; min-height: 2.7em; }
+.hold .h-fine { margin-top: 14px; font-size: 13.5px; color: var(--mid); line-height: 1.5; }
+.hold .h-fine .h-src { margin-right: 8px; }
+/* the island: everything above, as places */
+.hold .h-trail { margin-top: 26px; border-top: 1px solid var(--hair); }
+.hold .h-trail a { display: grid; grid-template-columns: 22px 150px minmax(0, 1fr); gap: 10px; align-items: baseline; padding: 11px 0 10px; border-bottom: 1px solid var(--hair); text-decoration: none; transition: background .2s; }
+.hold .h-trail a:hover { background: var(--soft); }
+.hold .h-tk { width: 12px; height: 12px; border: 1.5px solid var(--mid); display: block; transform: translateY(1px); }
+.hold .h-trail a.h-done .h-tk { background: var(--red); border-color: var(--red); }
+.hold .h-tp { font-family: Anton, sans-serif; text-transform: uppercase; font-size: 19px; line-height: 1.1; }
+.hold .h-tp small { display: block; font-family: 'Anonymous Pro', monospace; font-size: 12px; letter-spacing: .1em; color: var(--red); margin-top: 2px; }
+.hold .h-tw { font-size: 14.5px; line-height: 1.35; }
+.hold .h-tw b { display: block; font-weight: 600; margin-top: 2px; }
+.hold .h-tw b::after { content: " →"; color: var(--red); }
+.hold .h-record { display: flex; flex-wrap: wrap; gap: 6px 26px; margin-top: 22px; align-items: baseline; color: var(--mid); }
+.hold .h-record b { font-family: Anton, sans-serif; font-weight: 400; font-size: 26px; margin-right: 7px; color: var(--ink); }
+.hold .h-record .h-zero b { color: var(--red); }
+.hold .h-enter { display: inline-flex; align-items: center; gap: 16px; margin-top: 28px; background: var(--red); color: #fff; text-decoration: none; padding: 17px 24px 15px; font-family: Anton, sans-serif; text-transform: uppercase; font-size: 23px; letter-spacing: .03em; transition: transform .2s; }
+.hold .h-enter:hover { transform: translateX(4px); }
+.hold .h-enter::after { content: "→"; }
+.hold .h-doors { display: flex; flex-wrap: wrap; gap: 8px 22px; margin-top: 20px; }
+.hold .h-egg { position: fixed; right: 44px; bottom: 26px; transform: translateY(30px); background: var(--red); color: #fff; padding: 11px 16px 10px; width: var(--S); max-width: calc(100vw - 40px); font-size: 14.5px; line-height: 1.35; opacity: 0; pointer-events: none; transition: opacity .35s, transform .35s; z-index: 9; box-shadow: 0 14px 40px rgba(0,0,0,.35); }
+.hold .h-egg.on { opacity: 1; transform: none; pointer-events: auto; }
+.hold .h-egg .h-mono { display: block; opacity: .85; margin-bottom: 3px; }
+.hold .h-egg a { color: #fff; font-weight: 600; }
+.hold .h-foot { grid-column: 1 / 3; grid-row: 4; padding: 22px 0 36px; border-top: 1px solid var(--hair); color: var(--mid); display: none; flex-wrap: wrap; gap: 8px 20px; align-items: baseline; }
+.hold.is-wall .h-foot { display: flex; }
+
+.hold:lang(zh) .h-anton, .hold:lang(zh) .h-way h3, .hold:lang(zh) .h-need b, .hold:lang(zh) .h-w, .hold:lang(zh) .h-tp, .hold:lang(zh) .h-enter, .hold:lang(zh) .h-holdbtn span, .hold:lang(zh) .h-say .h-price, .hold:lang(zh) .h-record b, .hold:lang(zh) .h-out > b:first-child { font-family: Anton, 'Noto Sans SC', 'Noto Sans CJK SC', 'PingFang SC', 'Microsoft YaHei', sans-serif; font-weight: 900; letter-spacing: 0; }
+.hold:lang(zh) .h-step h2, .hold:lang(zh) .h-unit { line-height: 1.08; }
+.hold:lang(zh) .h-mono, .hold:lang(zh) .h-src { letter-spacing: .06em; }
+.hold:lang(zh) { font-family: 'DM Sans', 'Noto Sans SC', 'Noto Sans CJK SC', 'PingFang SC', sans-serif; }
+.hold:lang(zh) .h-cq p, .hold:lang(zh) .h-mqq em { font-style: normal; font-family: 'Noto Serif SC', 'Noto Serif CJK SC', 'Songti SC', serif; }
+
+@media (max-width: 1100px) and (min-width: 761px) {
+  .hold .h-needs { grid-template-columns: 1fr; } .hold .h-tri { grid-template-columns: 1fr; } .hold .h-tri > div { border-right: 0; border-bottom: 1px solid var(--hair); }
+  .hold .h-tabs button { margin-right: 10px; padding-right: 8px; }
+  .hold .h-tabs button span { max-width: 7em; overflow: hidden; text-overflow: ellipsis; }
+}
+/* the phone: one column, the square pinned under the tabs, the words under it */
+@media (max-width: 760px) {
+  .hold { --barH: 62px; --tabH: 38px; --S: min(calc(100vw - 40px), 40svh); }
+  .hold .h-tabs { padding: var(--barH) 12px 0; justify-content: space-between; }
+  .hold .h-tabs button { margin-right: 0; padding: 0 2px; gap: 5px; font-size: 10.5px; letter-spacing: .04em; }
+  .hold .h-tabs button span { display: none; }
+  .hold .h-tabs button.on span { display: inline; }
+  .hold .h-tabs .h-langs { display: none; } .hold .h-count .h-langs { display: flex; }
+  .hold .h-world { display: flex; flex-direction: column; padding: 0 20px; }
+  .hold .h-time, .hold .h-crop, .hold .h-dielab { display: none; }
+  .hold .h-diewrap { order: 1; top: calc(var(--barH) + var(--tabH) + 10px); margin: 14px auto 0; flex: none; }
+  .hold .h-diewrap::before { content: ""; position: absolute; inset: -10px -20px -10px; background: var(--paper); transition: background .7s; }
+  .hold .h-count { order: 2; min-height: 0; display: block; padding: 16px 0 22px; }
+  .hold .h-steps { order: 3; } .hold .h-foot { order: 4; }
+  .hold .h-kick { display: none; }
+  .hold .h-num, .hold.is-moment .h-num { font-size: clamp(56px, 18vw, 76px); }
+  .hold.is-moment .h-num { font-size: 44px; } .hold.is-moment .h-unit { font-size: 18px; } .hold .h-unit { font-size: 22px; margin-top: .2em; }
+  .hold .h-meta { margin-top: 6px; min-height: 20px; } .hold .h-say { min-height: 8.2em; font-size: 15px; margin-top: 4px; }
+  .hold .h-act { margin-top: 8px; }
+  .hold .h-holdbtn { width: 64px; height: 64px; } .hold .h-holdbtn svg { width: 82px; height: 82px; } .hold .h-holdbtn span { font-size: 17px; }
+  .hold .h-loupe { width: 128px; height: 128px; }
+  .hold .h-step { min-height: 0; padding: 48px 0 54px; max-width: none; scroll-margin-top: calc(var(--barH) + var(--tabH) + var(--S) + 30px); }
+  .hold .h-step h2 { font-size: 44px; } .hold .h-d { font-size: 16.5px; }
+  .hold .h-seg { width: 100%; } .hold .h-seg button { flex: 1 1 auto; }
+  .hold .h-needs { grid-template-columns: 1fr; gap: 6px; } .hold .h-need { display: flex; gap: 10px; align-items: baseline; } .hold .h-need b { margin: 0; }
+  .hold .h-tri { grid-template-columns: 1fr; } .hold .h-tri > div { border-right: 0; border-bottom: 1px solid var(--hair); } .hold .h-tri p { min-height: 0; }
+  .hold .h-trail a { grid-template-columns: 18px 104px minmax(0, 1fr); } .hold .h-tp { font-size: 16px; }
+  .hold .h-dl .h-pl b, .hold .h-dl .h-ml small, .hold .h-dl .h-pl.h-yours { display: none; }
+  .hold .h-dl .h-pl small { color: #efece3; }
+  .hold .h-bit small { display: none; }
+  .hold .h-egg { right: 20px; left: 20px; bottom: 14px; width: auto; }
+  .hold .h-foot { padding: 20px 0 30px; }
+}
+/* the bar's Break it stands just under its right end on a narrow phone */
+@media (max-width: 560px) { .hold .h-tabs { padding-right: 58px; } }
+@media (prefers-reduced-motion: reduce) { .hold .h-holdbtn, .hold .h-mk2 i { animation: none !important; } .hold .h-moment { animation: none; } }
