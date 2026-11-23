@@ -1,0 +1,21 @@
+/* The lab mortal's own styles (src/data/labs/mortal.js, css: true), loaded with the labs (src/core/styles.js). */
+/* Learn on one chip, copy to a thousand (src/v2/labs/mortal.js) */
+.mofig { margin: 8px 0; }
+ .mofig svg { display: block; width: 100%; height: auto; }
+.mofig .ax { font: 10px var(--sans); fill: var(--muted); }
+.mofig .mol { stroke-width: 1; }
+ .mofig .mol.dg { fill: color-mix(in srgb, var(--accent) 16%, var(--panel-solid)); stroke: var(--accent); }
+ .mofig .mol.an { fill: color-mix(in srgb, var(--warm) 18%, var(--panel-solid)); stroke: var(--warm); }
+.mofig .mogrid { stroke: var(--accent); stroke-width: 1; fill: none; opacity: .8; }
+ .mofig .mowave { stroke: var(--warm); stroke-width: 1.6; fill: none; stroke-linecap: round; }
+.mofig .mochip, .mofig .mocopy { stroke-width: 1.2; }
+.mofig .ok { fill: color-mix(in srgb, var(--good) 28%, var(--panel-solid)); stroke: var(--good); }
+.mofig .mid { fill: color-mix(in srgb, var(--warm) 30%, var(--panel-solid)); stroke: var(--warm); }
+.mofig .bad { fill: color-mix(in srgb, var(--bad) 32%, var(--panel-solid)); stroke: var(--bad); }
+.mofig .monum { font: 700 15px var(--mono); fill: var(--ink); }
+.mofig .moarrow { stroke: var(--muted); stroke-width: 1.5; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.mofig .mobar { stroke: none; }
+ .mofig .mobar.dg { fill: var(--accent); opacity: .55; }
+ .mofig .mobar.an { fill: var(--warm); }
+ .mofig .mobar.ok { fill: var(--good); }
+.mofig .mogoal { stroke: var(--ink); stroke-width: 1.2; stroke-dasharray: 3 2; }

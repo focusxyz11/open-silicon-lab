@@ -252,7 +252,7 @@ export function create() {
     const st = rowsOf(V.flatKind) ? (wide ? 70 : 40) : 0;   /* the line of steps across the top of the picture */
     /* the bench keeps clear of the way along at the picture's foot; on a phone it stands above the card at rest and may
        be taller than wide (src/v2/bench.js) */
-    /* where the way in shows too, it stands above the way along (src/styles/frame2.css), and the bench keeps clear of both;
+    /* where the way in shows too, it stands above the way along (src/styles/frame.css), and the bench keeps clear of both;
        on a phone the strip of steps is the way along, so only the way in waits above the card at rest */
     const bench = V.Bench && V.flatKind === 'bench', phoneB = bench && !wide, wi = V.vui.querySelector(':scope > .wayin'), inV = bench && !!wi && !wi.hidden,
       last = phoneB && !!V.vui.querySelector(':scope > .steps2 [data-stepgo="1"][disabled]'),

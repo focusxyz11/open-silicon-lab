@@ -1,0 +1,33 @@
+/* The lab listen's own styles (src/data/labs/listen.js, css: true), loaded with the labs (src/core/styles.js). */
+/* the ear test: the picture hidden while you listen, the answers, the run of answers */
+.earfig { position: relative; margin: 6px 0; border-radius: 14px; overflow: hidden; }
+.earfig svg { display: block; width: 100%; height: auto; transition: filter .5s; }
+.earfig.hid svg { filter: blur(14px) saturate(.2); opacity: .55; }
+.earcover { position: absolute; inset: 0; display: grid; place-content: center; justify-items: center; gap: 14px; padding: 16px; text-align: center; }
+.earcover b { font: 500 21px/1.3 var(--serif); color: var(--ink); max-width: 18em; }
+.lsnwave.big { height: 34px; gap: 5px; }
+ .lsnwave.big i { width: 6px; height: 14px; }
+ .lsnwave.big i:nth-child(2) { height: 32px; }
+ .lsnwave.big i:nth-child(3) { height: 22px; }
+.earfig.hid .lsnwave.big i { animation: earwave 1.2s ease-in-out infinite; }
+ .earfig.hid .lsnwave.big i:nth-child(2) { animation-delay: .2s; }
+ .earfig.hid .lsnwave.big i:nth-child(3) { animation-delay: .4s; }
+@keyframes earwave { 50% { transform: scaleY(.45); } }
+@media (prefers-reduced-motion: reduce) { .earfig.hid .lsnwave.big i { animation: none; }
+}
+
+.earplay { margin: 4px 0 2px; }
+.earans { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 8px 0; }
+.earans .chipb { justify-content: flex-start; text-align: left; min-height: 44px; font-size: 15px; white-space: normal; }
+.earans .chipb.right { border-color: var(--good); color: var(--good); }
+.earans .chipb.wrong { border-color: var(--bad); color: var(--bad); }
+.earans .chipb:disabled:not(.right):not(.wrong) { opacity: .55; }
+.earsay { margin: 4px 0 8px; }
+.earrun { margin: 8px 0 4px; }
+.earrun svg { display: block; width: 100%; height: auto; }
+.earrun rect.ok { fill: var(--good); }
+ .earrun rect.no { fill: var(--bad); }
+.earrun line.goal { stroke: var(--muted); stroke-width: 1; stroke-dasharray: 4 4; }
+/* in Do mode the hidden block takes the stage: square, as large as the stage allows */
+html.frame2 .f2stage .earfig[data-f2="instrument"] { display: grid; place-items: center; background: none; }
+html.frame2 .f2stage .earfig[data-f2="instrument"] svg { width: auto; height: 100%; max-width: 100%; aspect-ratio: 1; }

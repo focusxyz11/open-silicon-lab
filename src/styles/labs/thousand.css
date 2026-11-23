@@ -1,0 +1,60 @@
+/* The lab thousand's own styles (src/data/labs/thousand.js, css: true), loaded with the labs (src/core/styles.js). */
+/* labs-b: A thousand that pass (src/v2/labs/thousand.js) */
+.thfig { margin: 8px 0; }
+ .thfig svg { display: block; width: 100%; height: auto; }
+.thfig .ax { font: 9.5px var(--sans); fill: var(--muted); }
+.thfig .thp { cursor: pointer; }
+ .thfig .thpbg { fill: color-mix(in srgb, var(--ink) 5%, transparent); stroke: var(--line); stroke-width: 1; }
+.thfig .thp.on .thpbg { fill: color-mix(in srgb, var(--accent) 18%, var(--panel-solid)); stroke: var(--accent); }
+.thfig .thp:hover .thpbg, .thfig .thp:focus-visible .thpbg { stroke: var(--accent); }
+ .thfig .thp:focus { outline: none; }
+.thfig .thglyph { fill: none; stroke: var(--ink); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.thfig .thpn { font: 600 8.6px var(--sans); fill: var(--ink); }
+ .thfig .thok { fill: var(--good); }
+html.frame2 .f2stage .thfig svg text { font-size: calc(12.5px * var(--f2-k, .6)); }
+ html.frame2 .f2stage .thfig svg text.thpn { font-size: calc(13px * var(--f2-k, .6)); }
+.thfig .thstep { fill: color-mix(in srgb, var(--ink) 12%, transparent); }
+ .thfig .thstep.mid { fill: var(--muted); }
+.thfig .thstep.l { fill: var(--good); }
+ .thfig .thstep.m { fill: var(--bad); }
+.thfig .thzone { fill: color-mix(in srgb, var(--good) 9%, transparent); stroke: color-mix(in srgb, var(--good) 55%, transparent); stroke-width: 1; stroke-dasharray: 3 2; }
+.thfig .thd { cursor: pointer; opacity: .85; }
+ .thfig .thd.pass { fill: var(--good); opacity: .6; }
+.thfig .thd.l2 { fill: var(--good); }
+ .thfig .thd.l1 { fill: color-mix(in srgb, var(--good) 55%, var(--muted)); }
+.thfig .thd.l0 { fill: var(--muted); opacity: .45; }
+ .thfig .thd.m1 { fill: color-mix(in srgb, var(--bad) 55%, var(--muted)); }
+ .thfig .thd.m2 { fill: var(--bad); }
+.thfig .thpick { fill: none; stroke: var(--ink); stroke-width: 1.8; }
+ .thfig .thpickc { fill: var(--ink); }
+.thfig .thmk { fill: none; stroke-width: 1.6; }
+ .thfig .thmk.people { stroke: var(--accent); }
+ .thfig .thmk.agents { stroke: var(--warm); }
+.thact { margin: 2px 0 8px; }
+.thcard { margin: 8px 0 10px; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--line); }
+ .thcard > p { margin: 0 0 6px; }
+.thm { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12.5px; margin-bottom: 8px; }
+ .thm i { font-style: normal; }
+.thtraits { list-style: none; margin: 0 0 6px; padding: 0; display: grid; gap: 6px; font-size: 13px; line-height: 1.35; }
+.thtraits li > span { display: flex; flex-wrap: wrap; gap: 2px 10px; margin-top: 1px; }
+ .thup { color: var(--good); }
+ .thdn { color: var(--bad); }
+.thkeep input[type="text"]#th-why { width: 100%; box-sizing: border-box; }
+.thothers { margin: 12px 0; }
+ .thothers > p { margin: 0 0 4px; }
+.thgroups { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 8px; }
+.thgroup { padding: 10px 12px; border-radius: 12px; border: 1px solid var(--line); min-width: 0; }
+ .thgroup > p { margin: 0 0 6px; }
+.thmark { display: inline-block; width: 9px; height: 9px; margin-right: 6px; border: 1.6px solid var(--accent); border-radius: 50%; vertical-align: -1px; }
+.thmark.agents { border-color: var(--warm); border-radius: 1px; transform: rotate(45deg) scale(.85); }
+.thlean { display: grid; gap: 3px; margin-bottom: 8px; }
+ .thlr { display: grid; grid-template-columns: 1fr 70px; gap: 6px; align-items: center; font-size: 11.5px; }
+.thlb { position: relative; height: 7px; border-radius: 4px; background: color-mix(in srgb, var(--ink) 8%, transparent); }
+ .thlb i { position: absolute; top: 0; height: 100%; border-radius: 4px; }
+.thlb i.up { background: var(--good); }
+ .thlb i.dn { background: var(--bad); }
+.threasons { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; font-size: 12.5px; }
+ .threasons li { display: grid; gap: 1px; overflow-wrap: anywhere; }
+@media (max-width: 720px) { .thgroups { grid-template-columns: 1fr; }
+  html.frame2 .f2stage .thfig svg text, html.frame2 .f2stage .thfig svg text.thpn { font-size: calc(10px * var(--f2-k, .9)); }
+}

@@ -1,0 +1,45 @@
+/* The lab serve's own styles (src/data/labs/serve.js, css: true), loaded with the labs (src/core/styles.js). */
+/* serving a language model (src/v2/labs/serve.js): quantization, energy per token, prefill and decode */
+.srvintro { margin: 4px 0 10px; }
+.srvfig { margin: 8px 0; }
+ .srvfig svg { display: block; width: 100%; height: auto; }
+.srvfig .ax { font: 10px var(--sans); fill: var(--muted); }
+.srvfig .base { stroke: var(--muted); stroke-width: 1; }
+.srvfig .nm { font: 600 10.5px var(--sans); fill: var(--ink); }
+ .srvfig .pv { font: 600 11px var(--mono); fill: var(--muted); }
+.srvq .bell { fill: color-mix(in srgb, var(--ink) 13%, transparent); }
+.srvq .stair { fill: color-mix(in srgb, var(--accent) 16%, transparent); stroke: var(--accent); stroke-width: 1.6; stroke-linejoin: round; }
+.srvq polyline.stair { fill: none; }
+.srvq .zero { fill: color-mix(in srgb, var(--bad) 42%, transparent); stroke: var(--bad); stroke-width: 1.2; }
+.srvq .zt { font: 600 11px var(--sans); fill: var(--bad); }
+ .srvq .ot { font: 600 10px var(--sans); fill: var(--warm); }
+.srvq .lv { stroke: var(--accent); stroke-width: 1.4; }
+ .srvq .lvband { fill: var(--accent); }
+.srvmap .tried { fill: var(--ink); fill-opacity: .38; }
+ .srvmap .you { fill: var(--accent); stroke: var(--panel-solid); stroke-width: 1.5; }
+.srve .fa { fill: var(--accent); }
+ .srve .fs { fill: color-mix(in srgb, var(--ink) 34%, transparent); }
+ .srve .fc { fill: var(--warm); }
+.srve .now { fill: var(--ink); }
+ .srve .was { fill: none; stroke: var(--muted); stroke-width: 1; stroke-dasharray: 3 2; }
+.srve .ta { fill: var(--accent); }
+ .srve .tc { fill: var(--warm); }
+.srvp .rd { fill: var(--accent); }
+ .srvp .wr { stroke: var(--warm); stroke-width: 28; }
+.srvp .ft { stroke: var(--ink); stroke-width: 1.2; stroke-dasharray: 3 3; }
+ .srvp .tr { fill: var(--accent); }
+ .srvp .tw { fill: var(--warm); }
+.srvread { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin: 8px 0 10px; }
+.srvread > span { display: grid; gap: 1px; padding: 6px 8px; border-radius: 10px; border: 1px solid var(--line); align-content: start; min-width: 0; }
+.srvread b { font-size: 13px; overflow-wrap: anywhere; }
+ .srvread .bad b { color: var(--bad); }
+.srvdial { margin: 6px 0; }
+ .srvstep { display: flex; align-items: center; gap: 8px; }
+ .srvstep input { flex: 1; min-width: 0; }
+ .srvstep .chipb { min-width: 34px; padding: 4px 0; text-align: center; }
+.srvpick { display: inline-grid; justify-items: start; gap: 0; padding: 5px 12px; border-radius: 12px; text-align: left; line-height: 1.25; }
+.srvpick span { font-size: 11px; font-weight: 400; opacity: .75; }
+.srvsay { margin: 8px 0; padding: 8px 10px; border-radius: 10px; background: color-mix(in srgb, var(--ink) 6%, transparent); }
+.srvsay.bad { color: var(--ink); background: color-mix(in srgb, var(--bad) 12%, transparent); }
+@media (max-width: 720px) { .srvread { grid-template-columns: 1fr 1fr; } .srvmap { display: none; }
+}

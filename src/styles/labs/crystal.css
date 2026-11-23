@@ -1,0 +1,57 @@
+/* The lab crystal's own styles (src/data/labs/crystal.js, css: true), loaded with the labs (src/core/styles.js). */
+/* ---- Grow a crystal (src/v2/play.js puller, src/engines/crystal.js) ---- */
+.czph { display: flex; gap: 4px; list-style: none; padding: 0; margin: 4px 0 10px; }
+.czph li { flex: 1; padding: 5px 6px; border-radius: 8px; border: 1px solid var(--line); font-size: 11.5px; line-height: 1.2; color: var(--muted); }
+.czph li.on { border-color: var(--warm); color: var(--ink); background: color-mix(in srgb, var(--warm) 12%, transparent); }
+.czph li.past { color: var(--good); }
+.czfig svg { display: block; width: 100%; height: auto; }
+.czfig .ingot { fill: color-mix(in srgb, #b8c2cc 70%, var(--panel-solid)); stroke: var(--ink); stroke-opacity: .5; stroke-width: 1; }
+.czfig .melt { fill: #ff8a3a; opacity: .85; }
+.czfig .crucible { fill: none; stroke: var(--muted); stroke-width: 2; }
+.czfig .band { stroke: var(--good); stroke-dasharray: 3 3; stroke-width: 1; }
+.czfig .ax { font: 11px var(--sans); fill: var(--muted); }
+.czread { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; align-content: start; }
+.czread > span { display: grid; gap: 1px; padding: 6px 8px; border-radius: 10px; border: 1px solid var(--line); }
+.czread > span.wide { grid-column: 1 / -1; }
+ .czread .good b { color: var(--good); }
+ .czread .bad b { color: var(--bad); }
+.czread b { font-size: 14px; }
+.here2 button.on { border-color: var(--line); background: color-mix(in srgb, var(--accent) 8%, transparent); }
+.seekn i.on { background: var(--qc); border-color: var(--qc); }
+.jseg button[aria-pressed=true] { background: var(--warm); border-color: var(--warm); color: #1a1004; }
+.mach .mmodes button { padding: 6px 20px; border: 0; border-radius: 999px; background: none; color: var(--ink); font: 700 14px var(--sans); cursor: pointer; }
+.mach .mneeds button { position: relative; display: grid; gap: 1px; align-content: start; text-align: left; padding: 9px 12px; border-radius: 12px; border: 1px solid var(--line); background: var(--panel-solid); color: var(--ink); font: inherit; cursor: pointer; }
+.mach .mlayers button { display: inline-flex; align-items: center; gap: 7px; padding: 7px 13px; border-radius: 999px; border: 1px solid var(--line); background: color-mix(in srgb, var(--ink) 4%, transparent); color: var(--ink); font: 600 13.5px var(--sans); cursor: pointer; }
+.mach .mgoals button { padding: 5px 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--panel-solid); color: var(--ink); font: 600 13px var(--sans); cursor: pointer; }
+.mach .mforms button { position: relative; display: grid; place-items: center; width: 38px; height: 36px; border-radius: 10px; border: 1px solid var(--line); background: transparent; cursor: pointer; }
+.mach .mkinds button { font: inherit; font-size: 13px; padding: 4px 10px; border-radius: 999px; border: 1px solid var(--line); background: transparent; color: var(--ink); cursor: pointer; }
+.mach .mfabs button { display: grid; gap: 4px; align-content: start; text-align: left; padding: 10px; border-radius: 12px; border: 1px solid var(--line); background: var(--panel-solid); color: var(--ink); font: inherit; cursor: pointer; }
+/* a phone: the head, the machine top to bottom, its layers; then one part at a time, and the rest */
+@media (max-width: 720px) {
+  .mach .mneeds button { padding: 8px 10px; }
+  .mach .mlayers button { padding: 6px 10px; font-size: 13px; }
+}
+
+.hm .hm-stats > button { display: block; color: var(--ink); text-decoration: none; padding: 6px 10px; margin: -6px -10px; border-radius: 10px; transition: background .15s; }
+.hm-picon svg { width: 24px; height: 24px; fill: none; stroke: var(--bg); stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.hm .hm-tfoot button { color: var(--muted); text-decoration: none; display: inline-flex; align-items: center; }
+.hm .hm-twins button { flex: 1; display: flex; flex-direction: column; gap: 3px; padding: 8px 12px; border-radius: 10px; border: 1px solid var(--line); }
+@media (max-width: 760px) {
+  .hm .hm-strip button { display: flex; align-items: center; gap: 8px; padding: 6px 0; color: var(--ink); font-weight: 700; font-size: 14px; width: 100%; }
+  .hm-strip.hm-c-design i { border-color: var(--hm-design); } .hm-strip.hm-c-make i { border-color: var(--hm-make); } .hm-strip.hm-c-scale i { border-color: var(--hm-scale); border-radius: 3px; }
+  .hm-strip button.sel { color: var(--accent); }
+}
+
+.sl-bar svg { width: 100%; height: 22px; display: block; }
+.sl-rules li { display: grid; grid-template-columns: 18px 1fr auto; gap: 6px; align-items: baseline; font-size: 13.5px; }
+.stl li { position: relative; flex: 1 1 0; min-width: 0; display: flex; justify-content: center; }
+.stl button:hover, .stl button:focus-visible { color: var(--ink); }
+.stl button[aria-current] { color: var(--ink); font-weight: 700; }
+.bk-tree li { break-inside: avoid; padding-left: calc(var(--d) * 13px); }
+ button.bk-node:hover { background: color-mix(in srgb, var(--ink) 7%, transparent); }
+ button.bk-pin:disabled { cursor: default; color: var(--ink); opacity: 1; }
+/* a small bench (a phone): fewer words on it, the same picture */
+@container (max-width: 480px) { .bk-tree li { padding-left: calc(var(--d) * 8px); }
+}
+
+.lsnlayer svg { display: block; width: 1000px; height: 1000px; overflow: visible; }

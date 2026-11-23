@@ -160,7 +160,7 @@ is the stage and its controls are beside it. Read: a reading page with its pictu
 are working on always gets the stage.
 
 Every view wears the same frame (`src/v2/frame.js`), worn in the three modes by `src/v2/frame2.js` with
-`src/styles/frame2.css` (#271; the frame before it, one card at the right of every view and documents as windows over
+`src/styles/frame.css` (#271; the frame before it, one card at the right of every view and documents as windows over
 the island, is kept on the branch `claude/before-frame2-2026-11`). It has three components, and no other floating
 window of text:
 
@@ -218,7 +218,7 @@ back is on the card's left and the next step on its right (`data-key="back"`, `d
 first (`map.dive`), then the view zooms in from it; rising, the view zooms out and the island starts close to the
 place you left and pulls back (`map.from`). Between views the picture moves the way you did: deeper zooms in,
 higher zooms out, along slides or turns it (a view transition in `route()`, the move on
-`<html data-move>`, the styles in `v2.css`). The bar, the dock, the way up, the corner and the rail keep their
+`<html data-move>`, the styles in `base.css`). The bar, the dock, the way up, the corner and the rail keep their
 place, or glide to their new one. The views' code is fetched while the island is shown, and the spinner appears
 only if a view takes longer than a moment. With reduced motion, or where view transitions are missing, the view
 simply changes.

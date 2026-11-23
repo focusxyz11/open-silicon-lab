@@ -1,0 +1,37 @@
+/* The lab implant's own styles (src/data/labs/implant.js, css: true), loaded with the labs (src/core/styles.js). */
+/* ---- Implant and anneal, and Ten billion vias (src/v2/labs/implant.js, overlay.js) ---- */
+.imintro { margin: 4px 0 10px; }
+.imfig .gl { stroke: var(--line); stroke-width: 1; }
+.imfig .bg { stroke: var(--muted); stroke-width: 1; stroke-dasharray: 4 3; }
+.imfig .all { fill: color-mix(in srgb, var(--accent) 16%, transparent); }
+.imfig .on { fill: color-mix(in srgb, var(--accent) 55%, transparent); }
+.imfig .prof { fill: none; stroke: var(--accent); stroke-width: 2; stroke-linejoin: round; }
+.imfig .jn { stroke: var(--warm); stroke-width: 1.5; stroke-dasharray: 3 3; }
+ .imfig .jd { fill: var(--warm); }
+.imfig .jt { font: 600 11px var(--sans); fill: var(--warm); }
+.imread { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin: 8px 0 10px; }
+.imread > span { display: grid; gap: 1px; padding: 6px 8px; border-radius: 10px; border: 1px solid var(--line); align-content: start; min-width: 0; }
+.imread > span.wide { grid-column: 1 / -1; }
+ .imread b { font-size: 14px; }
+.imread b.fail { color: var(--bad); }
+ .imread b.marginal { color: var(--warm); }
+ .imread b.ok { color: var(--good); }
+.imdial { margin: 6px 0; }
+ .imstep { display: flex; align-items: center; gap: 8px; }
+ .imstep input { flex: 1; min-width: 0; }
+ .imstep .chipb { min-width: 34px; padding: 4px 0; text-align: center; }
+.imann { display: grid; gap: 6px; margin: 4px 0 10px; }
+.imrow { display: grid; grid-template-columns: 110px 1fr 56px; align-items: center; gap: 10px; padding: 7px 10px; border-radius: 10px; border: 1px solid var(--line); background: transparent; color: var(--ink); font: inherit; text-align: left; cursor: pointer; }
+.imrow.on { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, transparent); }
+.imn { display: grid; line-height: 1.25; }
+ .imn b { font-size: 13px; }
+.imbar { height: 6px; border-radius: 3px; background: color-mix(in srgb, var(--ink) 10%, transparent); overflow: hidden; }
+ .imbar span { display: block; height: 100%; background: var(--warm); border-radius: 3px; }
+.imv { font-size: 12px; text-align: right; }
+.goalbox .gauge .small { grid-column: 1 / -1; }
+@media (max-width: 720px) { .imrow { grid-template-columns: 90px 1fr 50px; gap: 8px; } .imread { grid-template-columns: 1fr 1fr; }
+}
+ .bk-wrong.on { fill: color-mix(in srgb, var(--bad) 50%, transparent); stroke: var(--bad); stroke-width: 1.5px; }
+.bk-subs .chipb { padding: 4px 10px; font-size: 12px; }
+.bk-w.on { stroke: var(--warm); stroke-width: 2.4px; }
+.lsnstates .chipb { font-size: 15px; justify-content: flex-start; text-align: left; white-space: normal; min-height: 40px; }

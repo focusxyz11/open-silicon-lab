@@ -3,7 +3,7 @@
 import { QUESTIONS } from '../atlas.js';
 
 export default {
-  name: 'bits',
+  name: 'bits', css: true,
   challenges: [
     { id: 'chef', step: 'use', place: QUESTIONS.bits.home.place, at: QUESTIONS.bits.home.level, kind: 'chef', grows: 'dc-pantry', opens: 'divide.block', exp: 'divide-wall' }
   ]

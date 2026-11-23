@@ -1,0 +1,26 @@
+/* The lab search's own styles (src/data/labs/search.js, css: true), loaded with the labs (src/core/styles.js). */
+/* ---- labs-a: Design it, or search for it? (src/v2/labs/search.js) ---- */
+.srfig { margin: 8px 0; }
+ .srfig svg { display: block; width: 100%; height: auto; }
+.srfig .ax { font: 9.5px var(--sans); fill: var(--muted); }
+.srfig .srgrid { stroke: var(--line); stroke-width: 1; }
+.srfig .srbeyond { fill: color-mix(in srgb, var(--ink) 5%, transparent); }
+.srfig .srhand { stroke: var(--warm); stroke-width: 1.6; stroke-dasharray: 5 4; }
+.srfig .srhandt { font: 600 10px var(--sans); fill: color-mix(in srgb, var(--warm) 72%, var(--ink)); }
+.srfig .srcurve { fill: none; stroke: var(--accent); stroke-width: 2.4; stroke-linejoin: round; }
+.srfig .srcurve.some, .srfig .srdot.some { stroke: var(--bad); }
+ .srfig .srdot { fill: var(--panel-solid); stroke: var(--accent); stroke-width: 1.4; }
+.srfig .srcross { fill: color-mix(in srgb, var(--good) 30%, transparent); stroke: var(--good); stroke-width: 1.8; }
+.srfig .srcross.some { fill: color-mix(in srgb, var(--bad) 25%, transparent); stroke: var(--bad); }
+.srfig .srcrosst { font: 600 10px var(--sans); fill: var(--ink); paint-order: stroke; stroke: var(--panel-solid); stroke-width: 3px; }
+.srfig .srnone { font: 11px var(--sans); fill: var(--muted); }
+.srfig .srbudget { stroke: var(--ink); stroke-width: 1.2; opacity: .55; }
+.srfig .srpat { fill: color-mix(in srgb, var(--ink) 6%, transparent); stroke: var(--line); stroke-width: 1; }
+.srfig .srpat.ok { fill: color-mix(in srgb, var(--good) 28%, transparent); stroke: var(--good); }
+.srfig .srpat.bad { fill: color-mix(in srgb, var(--bad) 32%, transparent); stroke: var(--bad); }
+.srfig .srpat.untested { stroke-dasharray: 3 2; }
+.srfig .srpatm { font: 700 11px var(--sans); fill: var(--ink); }
+.srfig .srsplit { stroke: var(--muted); stroke-width: 1; stroke-dasharray: 2 2; }
+.srjobs .chipb .muted { font-size: 12px; }
+.srmsg { margin: 8px 0; }
+.srcode summary { cursor: pointer; color: var(--muted); }

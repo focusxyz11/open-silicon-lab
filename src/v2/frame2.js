@@ -6,14 +6,14 @@
      rest of the card (the rest of the words, what is here, the ways around) waits under Read more, in the side panel.
      On a phone the caption is the sheet: at rest the level's name and the whole question, a tap opens it.
    - the side panel (Do, Ask, Read more, a card that is not a level's): the card at the right, full height, its width
-     growing with the screen. The island's sheet and Break it are worn as the same panel (src/styles/frame2.css).
+     growing with the screen. The island's sheet and Break it are worn as the same panel (src/styles/frame.css).
    - the stage (Do, with a lab that declares its instrument): the lab's instrument takes the picture area and its
      goal stands across the top of it as meters; the controls stay in the side panel; the place behind is hidden,
      and a small "where you are" where the address was leads back to Look. A lab declares the two in its own HTML,
      data-f2="instrument" and data-f2="goal" (docs/LABS.md, "Do mode"); its logic is untouched, and a challenge
      that declares nothing is played in the side panel beside the picture.
    ?frame=1 and ?frame=2 (when the two frames were compared on the live site) change nothing now, and the choice an
-   earlier visit kept is forgotten. boot(): the class on <html> (the rules of src/styles/frame2.css hang from it;
+   earlier visit kept is forgotten. boot(): the class on <html> (the rules of src/styles/frame.css hang from it;
    index.html sets it and loads the stylesheet before the first paint) and the watchers. attach(host, api, o, x): one
    frame (createFrame) worn this way; o.caption: the view's card is a level's or a step's, so Look is a caption
    ('plain': a story told step by step, the caption as it is, with its own way on); x: { wrap, items, at(), here(),
@@ -144,7 +144,7 @@ const onPlace = p => !!p && !phone() && (p.dataset.f2 === 'place' || !!p.querySe
 function doSheet(sheet) {
   const stage = sheet.parentNode, player = sheet.hidden ? null : sheet.querySelector(':scope > .player'), inst = !!(player && player.querySelector('[data-f2="instrument"]')), place = !inst && onPlace(player), on = inst || place;
   sheet.classList.toggle('f2do', on); sheet.classList.toggle('f2stage', on); sheet.classList.toggle('f2place', place);
-  /* the island behind an instrument is covered (never hidden: it may still be moving, see frame2.css) */
+  /* the island behind an instrument is covered (never hidden: it may still be moving, see frame.css) */
   let cover = stage.querySelector(':scope > .f2cover');
   if (!cover && inst) { cover = document.createElement('div'); cover.className = 'f2cover'; cover.setAttribute('aria-hidden', 'true'); stage.insertBefore(cover, sheet); }
   if (cover) cover.hidden = !inst;
@@ -344,7 +344,7 @@ function sheet(host, wrap, now) {
 /* the notices: the seam note goes into the card in sight (the caption, the side panel, the phone sheet), at its top,
    on every screen, and never over the picture; the word that something grew does so on a phone (on a desktop it is a
    moment at the foot of the picture). With no frame in sight (the island), they stay where the shell put them, and
-   on a desktop the seam note stands left of the island's sheet (src/styles/frame2.css) */
+   on a desktop the seam note stands left of the island's sheet (src/styles/frame.css) */
 const NOTES = ['.seamnote', '#toast'], NOTE = {};
 export function notices() {
   const vis = [...document.querySelectorAll('.stage > section.f2:not([hidden]) > .dockwrap')].find(w => w.offsetParent) || null;
