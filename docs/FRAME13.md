@@ -189,4 +189,4 @@ The first page (`src/data/home.js`) draws the thirteen as threads through its st
   *Beyond computation*, *Compute beats cleverness*, *Efficiency fuels use*, *Fight or use physics*, *Only humans*, *Trust without
   inspection*.
 - Lenses in the factory line's and the studio's own pictures, and on the island.
-- The worlds made from the documents in `content/` (`#/w`), filed the old way, refiled under the thirteen.
+- The worlds made from the documents in `content/` (`#/w/<id>`), filed the old way, refiled under the thirteen. Since #305 they are reading pages only: a lens whose form at a level is one of a world's stops offers *Read more* there, and nothing lists the eleven.

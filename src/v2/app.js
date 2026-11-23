@@ -12,6 +12,7 @@
    #/bench/<level>[/<challenge>] (the studio), #/do/<challenge>, #/ask/<thread>/<depth>, #/supply, #/log, #/build,
    #/ecosystem. Words are read with t(). */
 import { t, needWords, needAllWords } from '../core/i18n.js';
+import { needStyles } from '../core/styles.js';
 import { THREADS } from '../data/weave.js';
 import { NEEDS } from '../data/build.js';
 import { childrenOf } from '../engines/build.js';
@@ -28,8 +29,6 @@ import * as Chip from '../engines/chip.js';
 import { levelAt, sizeOf } from '../data/atlas.js';
 import * as Field from './field.js';
 import { setBetScene } from '../app/betscene.js';
-import * as Worlds from './worlds.js';
-import { WORLD_IDS } from '../data/worlds.js';
 import { createHome } from './home.js';
 import { sizeWords } from './frame.js';
 import { boot as frame2Boot, reading as frame2Reading } from './frame2.js';
@@ -42,7 +41,9 @@ export function start() {
      moment */
   const GLUE = {'island': [], 'frame': [], 'flights': ['frame'], 'studio': ['frame'], 'chip': ['frame'], 'flat': ['frame'], 'supply': ['flat'], 'board': ['frame'], 'pages': ['frame']}, glueP = {};
   const WORDS = { island: ['atlas', 'place', 'design'], frame: ['atlas', 'place', 'design'], pages: ['pages'] };
-  const glue = k => glueP[k] || (glueP[k] = Promise.all(GLUE[k].map(glue).concat(needWords(...(WORDS[k] || [])))).then(() => import('./glue/' + k + '.js')).then(m => { m.create(); afterPaint(() => { if (preloadOk()) needAllWords(); }); }));
+  /* and the styles of its view (src/core/styles.js): the frame's with the frame, each view's own with its glue */
+  const STYLES = { island: ['frame', 'island'], frame: ['frame'], studio: ['studio'], flat: ['flat'], supply: ['supply'], pages: ['pages'] };
+  const glue = k => glueP[k] || (glueP[k] = Promise.all(GLUE[k].map(glue).concat(needWords(...(WORDS[k] || [])), needStyles(...(STYLES[k] || [])))).then(() => import('./glue/' + k + '.js')).then(m => { m.create(); afterPaint(() => { if (preloadOk()) needAllWords(); }); }));
   const waits = (k, names) => names.forEach(n => { V[n] = (...a) => glue(k).then(() => V[n](...a)); });
   /* a question from the field, the joule's way in and the ways out of a question are offered on every view and on the
      seam's note, and answered by the reading pages' glue: the first such click loads it, then is made again */
@@ -60,7 +61,7 @@ export function start() {
   waits('supply', ['supplySite', 'supplyStep', 'showSupply', 'showDive', 'watchDock']);
   waits('board', ['ensureBoard', 'showBoard']);
   V.hideBoard = () => {};
-  waits('pages', ['showPage', 'showRead', 'showMachines', 'showWorlds', 'showWorld', 'showEcosystem', 'showWhatif', 'askStop']);
+  waits('pages', ['showPage', 'showRead', 'showMachines', 'showWorld', 'showEcosystem', 'showWhatif', 'askStop']);
   V.leaveWhatif = () => {};
   Object.assign(V, { hideSeam, crossed, islandState, hud, foldHero, chCard, designCard, kept, won, toast, hideAll, enter });
   V.quickNext = false; V.carryNote = null; V.inspRaf = 0; V.lensNow = null; V.turnT = 0; V.dcFrame = null; V.dcLv = 0; V.phFrame = null; V.phLv = 0; V.caFrame = null; V.caLv = 0; V.swFrame = null; V.swLv = 0; V.chipRow = 0; V.chipFrame = null; V.diveWorld = 'datacentre'; V.Joule = null; V.flatKind = 'dive'; V.diveFrame = null; V.diveD = -1; V.diveThread = null; V.benchCh = null; V.WE = null; V.DS = null; V.Bench = null; V.flatWords = null; V.boardFrame = null; V.wf = null;
@@ -137,9 +138,9 @@ export function start() {
   const preloadMark = () => { const h = document.documentElement; if (!h.dataset.preload) h.dataset.preload = String(Math.floor(performance.now())); };
   /* on the first page: only the labs, so a challenge chosen there opens at once */
   let homeLoaded = false;
-  const preloadHome = () => { if (homeLoaded || !preloadOk()) return; homeLoaded = true; preloadMark(); labsReady().catch(() => { /* fetched again when a challenge is played */ }); };
+  const preloadHome = () => { if (homeLoaded || !preloadOk()) return; homeLoaded = true; preloadMark(); labsReady(null, false).catch(() => { /* fetched again when a challenge is played */ }); };
   const preload = () => { if (!preloadOk()) return; preloadMark(); prewarm(); ['./frame.js', './board3d.js', './story.js', './stories.js', '../engines/weave.js', '../app/world.js', '../data/weave.js', '../app/design.js', '../app/journey.js', './level3d.js', './relief3d.js', './wafer3d.js', './pcb3d.js', './phone3d.js', './gate3d.js', './switch3d.js', './atom3d.js', './overlay.js'].forEach(u => import(u).catch(() => { /* fetched again when needed */ })); };
-  const ensureMap = () => mapReady || (mapReady = import('./map3d.js').then(m => {
+  const ensureMap = () => mapReady || (mapReady = Promise.all([import('./map3d.js'), needStyles('frame', 'island')]).then(([m]) => {
     /* tap selects, zoom goes in and out (docs/INTERACTION.md): a second tap on the same place selects it again, it
        does not go in */
     V.map = m.createMap($('mapCanvas'), $('mapLabels'), { whatif: id => V.wf && V.wf.pick(id), place: id => { if (V.wf) return V.wf.pick(id); if (V.cur && V.cur.place === id && !V.cur.part && (!sheet.hidden || !insp.hidden)) return; V.quickNext = true; V.openPlace(id); }, part: (place, part) => { V.quickNext = true; location.hash = '#/place/' + place + '/' + part; },
@@ -186,20 +187,16 @@ export function start() {
   hudEl.addEventListener('click', e => { const s = e.target.closest('[data-stage]'); if (s) along(s.dataset.stage); });
 
   /* ---- the hero: what this is, and where to start ---- */
-  /* the first page: questions to start with and challenges to take, over the island. Questions you can try now,
-     a few at a time and changing day by day (never the core questions, which stay hidden); the next challenges you
-     have not done; every question and challenge on one page; and a chip's life round the loop for whoever wants it */
+  /* the first card over the island: where the questions are (on the pictures, as marks beside their parts; the
+     worlds are never listed, #305), a way to the first marks, the next challenges you have not done, and a chip's
+     life round the loop for whoever wants it */
   function drawHero() {
     const C = Game.CHALLENGES.filter(c => !S.done[c.id]).slice(0, 3);
     $('hero').innerHTML = '<button type="button" class="herofold" data-unfold aria-label="' + esc(t('hero.unfold')) + '"><span class="q" aria-hidden="true">?</span><span><b>' + esc(t('hero.start')) + '</b><span class="small">' + esc(t('hero.pill')) + '</span></span></button>' +
-      '<button type="button" class="x herox" data-fold aria-label="' + esc(t('hero.fold')) + '">–</button><p class="kicker">' + esc(t('hero.kicker')) + '</p><h1>' + esc(t('hero.start')) + '</h1><div class="heroq" data-heroq></div>' +
+      '<button type="button" class="x herox" data-fold aria-label="' + esc(t('hero.fold')) + '">–</button><p class="kicker">' + esc(t('hero.kicker')) + '</p><h1>' + esc(t('hero.start')) + '</h1><p class="heroq">' + esc(t('hero.marks')) + '</p>' +
       '<div class="herofoot">' + (C.length ? '<p class="kicker herok">' + esc(t('hero.or')) + '</p><div class="chips heroc">' + C.map(c => '<a class="chipb" href="' + esc(doHref(c)) + '">' + esc(titleOf(c)) + '</a>').join('') + '</div>' : '') +
-      '<div class="row"><a class="btn primary" href="#/w">' + esc(t('hero.all')) + '</a><button type="button" class="btn ghost" data-start>' + esc(t('hero.follow')) + '</button></div></div>';
-    heroQs();
+      '<div class="row"><a class="btn primary" href="#/dive/block">' + esc(t('hero.meet')) + '</a><button type="button" class="btn ghost" data-start>' + esc(t('hero.follow')) + '</button></div></div>';
   }
-  /* the questions come from inside the worlds' documents, fetched only once the hero shows (over the island, never
-     on the first page) */
-  const heroQs = () => { if ($('hero').hidden) return; Worlds.loadAll().then(all => { const box = $('hero').querySelector('[data-heroq]'); if (box) box.innerHTML = Worlds.starters(all).map(Worlds.qCard).join(''); }, () => {}); };
   /* following the chip is no guide: it opens the place where the loop starts, and every place offers the next */
   /* the first page's questions and challenges never go away: exploring folds them into a small button in the corner,
      which opens them again (docs/INTERACTION.md: a heads-up layer that steps aside, not one that is gone) */
@@ -241,19 +238,6 @@ export function start() {
     return ch ? '<button type="button" class="chcard entry ' + st + '" data-open="' + esc(ch.id) + '">' + body + '</button>' : '<div class="chcard entry ' + st + '">' + body + '</div>';
   }
   const jobCard = j => '<button type="button" class="chcard job" data-job="' + j.need + '"><span class="st">?</span><span><b>' + esc(t('design.proj.' + j.p + '.t')) + '</b><span class="small">' + esc(t('build.need.' + j.need + '.d')) + '</span></span></button>';
-  /* the worlds a place meets (docs/INTERACTION.md, content/): every question asked at a place belongs to one of the
-     eleven core questions (its thread is the world, stop.<world>.<depth>), so the link from a place to a world is the
-     questions already there, never one drawn for the purpose. Each world's own words come from its document, loaded
-     once; until then the chip waits for them. */
-  let WT = null;
-  const LIVE = ['copies', 'walls', 'forms', 'plan', 'clock', 'side', 'swarm', 'tune', 'probes'];
-  const fillWorlds = root => { if (!WT) return; root.querySelectorAll('[data-wt]').forEach(a => { const P = WT[a.dataset.wt]; if (!P) return; const live = LIVE.includes((Worlds.WORLD_OF(a.dataset.wt) || {}).lens);
-    a.querySelector('.wq').textContent = P.title.replace(/\*\*|\*/g, ''); a.querySelector('.wl').textContent = live ? t('world.tryIt', { name: P.lens }) : t('world.seeIt', { name: P.lens }); a.hidden = false; }); };
-  const loadWT = () => (WT ? Promise.resolve() : Worlds.loadAll().then(all => { WT = Object.fromEntries(all); }));
-  const worldsOf = keys => [...new Set(keys.map(k => k.split('.')[0]).filter(id => WORLD_IDS.includes(id)))];
-  const worldsRow = keys => { const ids = worldsOf(keys).slice(0, 3); if (!ids.length) return '';
-    loadWT().then(() => fillWorlds(sheet));
-    return '<div class="wmeet"><p class="kicker">' + esc(t('world.here')) + '</p>' + ids.map(id => '<a class="wchip" href="#/w/' + id + '" data-wt="' + id + '" style="--qc:' + Worlds.colorOf(id) + '"' + (WT ? '' : ' hidden') + '><span class="wq"></span><span class="wl small"></span></a>').join('') + '</div>'; };
   const askLink = k => '<a class="askq" href="' + esc(followW(k)) + '" style="--qc:' + qColor(k) + '"><span class="q">' + esc(t('stop.' + k + '.q')) + '</span><span class="small muted">' + esc(t('sheet.follow')) + '</span></a>';
   /* Inside: the place's levels, one inside the next, with what waits at each; then any other way in */
   /* a level opens where it is drawn best: the flight through the data centre, the dive (the one way down through a
@@ -295,14 +279,14 @@ export function start() {
     return '<div class="around"><p class="kicker">' + esc(t('around.k')) + '</p><div class="chips">' + (nx ? chip(nx, true) : '') + near.map(p => chip(p)).join('') + '</div></div>'; };
   /* the labs load with the first challenge played (src/v2/play.js); a challenge asked for meanwhile replaces it */
   let playTok = 0;
-  const withLabs = f => { const k = ++playTok; if (labsLoaded()) return f(); loading(true); return labsReady().then(() => { loading(false); if (k === playTok) f(); }); };
+  const withLabs = (f, ch) => { const k = ++playTok; if (labsLoaded(ch)) return f(); loading(true); return labsReady(ch).then(() => { loading(false); if (k === playTok) f(); }); };
   /* a challenge, played in the sheet */
   function openChallenge(ch) {
     if (!ch) return;
     const placeId = ch.kind === 'break' ? 'village' : ch.need ? 'lab' : ch.place;
     if (!V.cur || V.cur.place !== placeId) { V.cur = { place: placeId, tab: 'do' }; V.map && V.map.focus(placeId); }
     $('hero').classList.add('away'); sheet.hidden = false; sheet.scrollTop = 0;
-    withLabs(() => { if (!sheet.hidden) play(sheet, ch, { state: S, save, kept, startChip: () => Object.assign({}, Game.START), open: openChallenge, back: () => { sheet.onclick = null; sheet.oninput = null; V.drawPlace(); }, done: won }); });
+    withLabs(() => { if (!sheet.hidden) play(sheet, ch, { state: S, save, kept, startChip: () => Object.assign({}, Game.START), open: openChallenge, back: () => { sheet.onclick = null; sheet.oninput = null; V.drawPlace(); }, done: won }); }, ch);
   }
   const openJob = need => { const j = Game.jobOf(need); if (j) openChallenge(j); };
   /* a house of the village: a clocked design opens the try to break it; any other, the village's list */
@@ -406,7 +390,7 @@ export function start() {
   let stations = null;
   function showStations() {
     showHome0(); if (home) home.hide();
-    return import('./stations.js').then(m => {
+    return Promise.all([import('./stations.js'), needStyles('stations')]).then(([m]) => {
       if (!stations) stations = m.createStations(stationsEl, { challenges: Game.CHALLENGES, chOf, titleOf, doHref, doHome: Way.doHome, sizeOf, sizeWords, still,
         done: () => S.done, exps: Exp.EXPERIMENTS.map(x => ({ id: x.id, world: x.world, ask: Read.askOf(x) })) });
       stations.show();
@@ -417,9 +401,12 @@ export function start() {
     V.hideBoard(); document.body.classList.remove('immersive');
     $('chipCanvas').hidden = $('chipLabels').hidden = true; cui.hidden = true; V.chip && V.chip.pause();
     $('placeCanvas').hidden = $('placeLabels').hidden = true; pui.hidden = true; V.dc && V.dc.pause(); V.hidePh(); V.hideCa(); V.hideSw();
-    $('mapCanvas').hidden = $('mapLabels').hidden = false; $('hero').hidden = false; $('outbtn').hidden = false; lensbar.hidden = false; showStage(true); heroQs();
     const part = from && ['line', 'bench'].includes(V.flatKind) && V.WE && isPart(V.lastPlace, diveId()) ? diveId() : null;
-    loading(!V.map); return Promise.all([ensureMap(), glue('island')]).then(([m]) => { if (from && V.lastPlace) { m.from(V.lastPlace, part); if (!part) m.focus(V.lastPlace); } m.resume(); return m; });
+    /* the island is fetched while its styles load (src/core/styles.js); it shows once they are in, before it is made */
+    const shown = needStyles('frame', 'island').then(() => {
+      $('mapCanvas').hidden = $('mapLabels').hidden = false; $('hero').hidden = false; $('outbtn').hidden = false; lensbar.hidden = false; showStage(true);
+      loading(!V.map); });
+    return Promise.all([ensureMap(), glue('island'), shown]).then(([m]) => { if (from && V.lastPlace) { m.from(V.lastPlace, part); if (!part) m.focus(V.lastPlace); } m.resume(); return m; });
   }
 
   /* ---- the pages ---- */
@@ -484,7 +471,7 @@ export function start() {
     if (k === 'build') return showMap(from).then(() => V.openPlace('lab', 'look', parts[1] || 'computer', parts[2]));
     if (['log', 'challenges', 'questions'].includes(k)) V.showPage(k);
     if (k === 'read') V.showRead(parts[1] ? decodeURIComponent(parts[1]) : null);
-    if (k === 'w') { if (parts[1]) V.showWorld(parts[1], parts[2], parts[3]); else V.showWorlds(); }
+    if (k === 'w') V.showWorld(parts[1], parts[2], parts[3]);
     if (k === 'whatif') return showMap(from).then(() => V.showWhatif(parts[1]));
     if (k === 'machines') V.showMachines(parts[1], parts[2]);
     /* a reading page stands on its own: the island waits behind it, paused (src/v2/frame2.js, Read) */
@@ -492,6 +479,8 @@ export function start() {
     return showMap(from).then(() => { if (k === 'ecosystem') V.showEcosystem(); else if ((k === 'island' || k === 'explore') && V.cur && !sheet.hidden) { closeSheet(); V.map && V.map.overview(); } });
   }
   function route() {
+    /* a world is a reading page, opened from a lens or by name; there is no list of them (#305): #/w alone is the map */
+    if (/^#\/?w\/?$/.test(location.hash)) history.replaceState(null, '', '#/');
     const parts = partsOf(location.hash), k = parts[0] || 'home';
     if (k !== 'home' && home) home.hide();
     if (k !== 'stations' && stations) stations.hide();
@@ -575,5 +564,5 @@ export function start() {
   window.addEventListener('hashchange', route);
   hud(); drawHero(); firstGo();
   route();
-  Object.assign(V, { S, save, refresh, loading, here, sheet, insp, hideInsp, lensbar, closeSheet, kickerOf, doList, whereOf, chOf, doHref, jobCard, worldsRow, askLink, DIVE_LEVELS, levelHref, enterOf, PARTS, isPart, deeperOf, aroundHtml, withLabs, pui, fui, kui, sui, cui, vui, diveId, bui, page, partsOf, portalAt });
+  Object.assign(V, { S, save, refresh, loading, here, sheet, insp, hideInsp, lensbar, closeSheet, kickerOf, doList, whereOf, chOf, doHref, jobCard, askLink, DIVE_LEVELS, levelHref, enterOf, PARTS, isPart, deeperOf, aroundHtml, withLabs, pui, fui, kui, sui, cui, vui, diveId, bui, page, partsOf, portalAt });
 }

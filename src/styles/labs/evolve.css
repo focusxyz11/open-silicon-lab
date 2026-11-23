@@ -1,0 +1,52 @@
+/* The lab evolve's own styles (src/data/labs/evolve.js, css: true), loaded when one of its challenges is played (src/core/styles.js). */
+/* ---- Evolve a circuit (src/v2/play.js evolve) ---- */
+.evread { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin: 10px 0 6px; }
+.evread > span { display: grid; gap: 1px; padding: 6px 8px; border-radius: 10px; border: 1px solid var(--line); }
+.evread b { font-size: 15px; }
+ .evread b.good { color: var(--good); }
+.evbar { margin: 0 0 4px; }
+ .evbar > span { background: var(--good); transition: width .2s; }
+.imread > span { display: grid; gap: 1px; padding: 6px 8px; border-radius: 10px; border: 1px solid var(--line); align-content: start; min-width: 0; }
+ .imread b { font-size: 14px; }
+.imread b.fail { color: var(--bad); }
+ .imread b.marginal { color: var(--warm); }
+ .imread b.ok { color: var(--good); }
+ .wit b { font-size: 15px; }
+@media (max-width: 720px) { .wit b { font-size: 14px; }
+}
+
+.here2 b { font-size: 14px; }
+@media (max-width: 720px) {
+  .peekbar span { display: block; width: 40px; height: 4px; margin: 0 auto; border-radius: 2px; background: var(--line); }
+}
+
+.jtot b { font: 700 20px var(--sans); }
+.jline b { font: 700 15px var(--sans); }
+/* on a phone: the trace and the levers where you are; no map, no lever chips on the other levels */
+@media (max-width: 720px) {
+  .jtot b { font-size: 17px; }
+}
+
+.mach .mcap b { color: var(--ink); }
+.hm-stats b { display: block; font: 600 24px var(--mono); }
+.hm-mine b { color: var(--good); font-size: 14px; }
+.hm-nitem b { font-size: 15px; line-height: 1.25; }
+.hm-ilink b { font-size: 14px; }
+.hm-ilink:hover b { color: var(--accent); }
+.hm-pct b { font-weight: 600; }
+.hm-sw b { font-size: 16px; }
+.hm-twins b { font-size: 14px; }
+.hm-start b { font-size: 15px; line-height: 1.25; }
+.hm-way b { display: block; font-size: 14px; line-height: 1.2; }
+.hm-colhead b { display: block; font: 600 11px var(--mono); letter-spacing: .1em; text-transform: uppercase; }
+.hm-how b { display: block; font-size: 15px; }
+.hm-legend > span { display: inline-flex; align-items: center; gap: 8px; }
+.sl-legend span { display: inline-flex; align-items: center; gap: 5px; }
+.sl-mkey b { margin-left: auto; font: 600 11px/1 var(--mono); }
+.bk-cost b { color: var(--ink); font: 700 15px var(--mono); margin-right: 2px; }
+ .bk-cost .good b { color: var(--good); }
+ .bk-cost .warm b { color: var(--warm); }
+.bk-cell b { font: 700 13px var(--mono); }
+/* a small bench (a phone): fewer words on it, the same picture */
+@container (max-width: 480px) { .bk-cost b { font-size: 13px; }
+}

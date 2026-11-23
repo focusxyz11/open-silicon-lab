@@ -10,7 +10,8 @@
   "plant": "which building of the factory a station is in",
   "station": "when each station of the line happens",
   "xray": "die photos: the blocks of a real chip on its die (the earlier site's x-ray)",
-  "frame": "a lens's own form at a level where it no longer lives, since the field questions lead (#302): Perfect fails at the data centre's building, where Compute beats cleverness now lives through the field question 'scale'"
+  "frame": "a lens's own form at a level where it no longer lives, since the field questions lead (#302): Perfect fails at the data centre's building, where Compute beats cleverness now lives through the field question 'scale'",
+  "worlds": "the eleven worlds as a structure a visitor meets (#305): their index at #/w, the questions from inside them on the first page, a place card's row of the worlds it meets, the map's entry for them; each world is now a reading page opened from a lens"
  },
  "keys": [
   "xray.title",
@@ -109,6 +110,15 @@
   "floor.speed",
   "floor.aim",
   "frame.at.perfect.building.q",
-  "frame.at.perfect.building.note"
+  "frame.at.perfect.building.note",
+  "hero.all",
+  "world.here",
+  "world.tryIt",
+  "world.seeIt",
+  "world.indexK",
+  "world.indexT",
+  "world.indexLead",
+  "home.ix.worlds.t",
+  "home.ix.worlds.d"
  ]
 }

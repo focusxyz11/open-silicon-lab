@@ -22,7 +22,9 @@ of this document describes the views as they stand.
 Each core question is a world with a page of its own (`#/w/<id>`, `src/v2/worlds.js`), made at the moment it opens from
 its document in `content/`, which is the one home of its words. Its visual system sits at the top: live where an
 engine draws it (the crowd of copies; the tries), a view of the site where one exists (the dive, the line, the map),
-else its sketch. `#/w` lists every question that leads in, mixed, never the eleven themselves.
+else its sketch. A world is a reading page, not a structure a visitor meets (#305): it opens from a lens whose form at
+a level is one of its stops (*Read more* in the lens's card, at `#/w/<id>/at/<level>`) or by name from *Your log*'s
+jump; nothing lists the eleven, and `#/w` alone opens the map.
 
 ## 1. The atlas: one home for every thing
 
@@ -160,7 +162,7 @@ is the stage and its controls are beside it. Read: a reading page with its pictu
 are working on always gets the stage.
 
 Every view wears the same frame (`src/v2/frame.js`), worn in the three modes by `src/v2/frame2.js` with
-`src/styles/frame2.css` (#271; the frame before it, one card at the right of every view and documents as windows over
+`src/styles/frame.css` (#271; the frame before it, one card at the right of every view and documents as windows over
 the island, is kept on the branch `claude/before-frame2-2026-11`). It has three components, and no other floating
 window of text:
 
@@ -218,7 +220,7 @@ back is on the card's left and the next step on its right (`data-key="back"`, `d
 first (`map.dive`), then the view zooms in from it; rising, the view zooms out and the island starts close to the
 place you left and pulls back (`map.from`). Between views the picture moves the way you did: deeper zooms in,
 higher zooms out, along slides or turns it (a view transition in `route()`, the move on
-`<html data-move>`, the styles in `v2.css`). The bar, the dock, the way up, the corner and the rail keep their
+`<html data-move>`, the styles in `base.css`). The bar, the dock, the way up, the corner and the rail keep their
 place, or glide to their new one. The views' code is fetched while the island is shown, and the spinner appears
 only if a view takes longer than a moment. With reduced motion, or where view transitions are missing, the view
 simply changes.

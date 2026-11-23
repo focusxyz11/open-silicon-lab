@@ -30,6 +30,7 @@ import { normalBetOf } from '../engines/bet.js';
 import { normalLevers, PUZZLES } from '../engines/ripple.js';
 import { normalAgent } from '../data/agent.js';
 import { normalLooked } from '../data/seek.js';
+import { LAB_CHALLENGES, challengeOnly } from '../data/labs/index.js';
 
 /* the loop, in order, and the station of each step on the island */
 export const STEPS = ['design', 'make', 'test', 'ship', 'use'];
@@ -85,8 +86,10 @@ export const togglePiece = (code, n, piece) => code.split('\n').map((l, i) => i 
    and engine, src/engines/bet.js), 'design' (write a circuit; p: its job), 'chip' (reach a goal of chip.js with
    your chip's settings; goal: its id), 'life' (ship a chip that lives through a place's life; mission),
    'spot' (find the broken chip with a few test patterns). Each happens at a place and a level inside it
-   (place, at: a depth of src/data/places.js), on the step of the loop it belongs to. grows: what appears. */
-export const CHALLENGES = [
+   (place, at: a depth of src/data/places.js), on the step of the loop it belongs to. grows: what appears.
+   These are the loop's own, played by the player itself (src/v2/play.js); every other kind is a lab's, and each lab
+   declares its challenges in a file of its own (src/data/labs/), gathered below. */
+const LOOP_CHALLENGES = [
   { id: 'half', step: 'design', place: 'studio', at: 'logic', kind: 'design', p: 'half', grows: 'masks' },
   { id: 'vote', step: 'design', place: 'studio', at: 'check', kind: 'design', p: 'vote', grows: 'studio-screen' },
   { id: 'full', step: 'design', place: 'studio', at: 'check', kind: 'design', p: 'full', grows: 'studio-wing' },
@@ -104,66 +107,16 @@ export const CHALLENGES = [
   { id: 'fast', step: 'use', place: 'datacentre', at: 'chip', kind: 'chip', goal: 'fast', grows: 'clock-tower' },
   { id: 'oxen', step: 'use', place: 'datacentre', at: 'chip', kind: 'bet', bet: 'oxen', grows: 'dc-cores' },
   { id: 'jevons', step: 'use', place: 'power', kind: 'bet', bet: 'jevons', grows: 'power-store' },
-  { id: 'agent', step: 'design', place: 'lab', kind: 'agent', grows: 'lab-desk' },
-  { id: 'batch', step: 'use', place: 'datacentre', at: 'chip', kind: 'bet', bet: 'batch', grows: 'dc-batch' },
-  { id: 'newest', step: 'ship', place: 'phones', at: 'phoneboard', kind: 'teardown', grows: 'island-teardown' },
-  { id: 'sig-heart', step: 'ship', place: 'phones', at: 'phoneboard', kind: 'capture', grows: 'island-adc' },
-  { id: 'sig-bearing', step: 'ship', place: 'cars', at: 'ecu', kind: 'capture', grows: 'island-sensor' },
-  { id: 'reg-jobs', step: 'ship', place: 'phones', at: 'phoneboard', kind: 'regulate', grows: 'island-reg' },
-  { id: 'jobs', step: 'design', place: 'studio', at: 'need', kind: 'fit', grows: 'studio-fit' },
-  /* the bench's own challenges (src/v2/labs/bench.js, src/engines/bench.js): what the piece you pick must answer, at
-     the job; the shortest wire, at the layout; which mask each shape is printed from, at the masks */
-  { id: 'piece', step: 'design', place: 'studio', at: 'need', kind: 'piece', grows: 'studio-piece' },
-  { id: 'evolve', step: 'design', place: 'studio', at: 'gates', kind: 'evolve', grows: 'studio-evolve' },
-  { id: 'floor', step: 'design', place: 'studio', at: 'layout', kind: 'floor', grows: 'studio-floor' },
-  { id: 'maskof', step: 'design', place: 'studio', at: 'masks', kind: 'maskof', grows: 'studio-masks' },
-  { id: 'crystal', step: 'make', place: 'quarry', at: 'crystal', kind: 'pull', grows: 'quarry-ingot' },
-  { id: 'furnace', step: 'make', place: 'fab', at: 'implant', kind: 'implant', grows: 'fab-implanter' },
-  { id: 'shallow', step: 'make', place: 'fab', at: 'implant', kind: 'implant', grows: 'fab-anneal' },
-  { id: 'vias', step: 'make', place: 'fab', at: 'print', kind: 'overlay', grows: 'fab-overlay' },
-  { id: 'etch', step: 'make', place: 'fab', at: 'etch', kind: 'etch', grows: 'fab-etch' },
-  { id: 'bottom', step: 'make', place: 'fab', at: 'deposit', kind: 'deposit', grows: 'fab-ald' },
-  { id: 'litho-finest', step: 'make', place: 'fab', at: 'print', kind: 'litho', grows: 'fab-scanner' },
-  /* new ways to compute, each at the depth where the problem it attacks is met (src/v2/labs/cim.js, grover.js) */
-  { id: 'cim', step: 'use', place: 'datacentre', at: 'block', kind: 'cim', grows: 'way-cim' },
-  { id: 'grover', step: 'use', place: 'datacentre', at: 'atom', kind: 'grover', grows: 'way-quantum' },
-  { id: 'euv-1000', step: 'make', place: 'fab', at: 'print', kind: 'euv', grows: 'fab-euv' },
-  { id: 'too-hot', step: 'use', place: 'datacentre', at: 'switch', kind: 'semiconductor', grows: 'dc-heat' },
-  /* the capstone, at the end of the design line: everything it asks for has been met on the way */
-  { id: 'ai-chip', step: 'design', place: 'studio', at: 'masks', kind: 'aibuild', grows: 'studio-aichip' },
-  { id: 'power-curve', step: 'use', place: 'datacentre', at: 'block', kind: 'powercurve', grows: 'blk-power' },
-  { id: 'counter', step: 'use', place: 'datacentre', at: 'gate', kind: 'counter', grows: 'gate-counter' },
-  /* serving a language model (src/v2/labs/serve.js, src/engines/aiserve.js) */
-  { id: 'quantize', step: 'use', place: 'datacentre', at: 'chip', kind: 'quantize', grows: 'dc-quant' },
-  { id: 'token-energy', step: 'use', place: 'datacentre', at: 'rack', kind: 'tokenenergy', grows: 'dc-token' },
-  { id: 'prefill', step: 'use', place: 'datacentre', at: 'chip', kind: 'prefill', grows: 'dc-prefill' },
-  /* if information weighs nothing, why does moving it cost so much? One bit's trip, and Keep the chef busy
-     (src/v2/labs/bits.js, src/engines/bits.js); its home in the atlas is QUESTIONS.bits */
-  { id: 'chef', step: 'use', place: QUESTIONS.bits.home.place, at: QUESTIONS.bits.home.level, kind: 'chef', grows: 'dc-pantry' },
-  /* a reliable whole from flaky parts, and a mind that cannot be copied (src/v2/labs/vote.js, mortal.js) */
-  { id: 'flaky', step: 'design', place: 'studio', at: 'gates', kind: 'redund', grows: 'studio-vote' },
-  { id: 'mortal', step: 'use', place: 'datacentre', at: 'switch', kind: 'mortal', grows: 'way-mortal' },
-  /* read the die: the first site's chip X-ray, at the test house (src/v2/labs/dies.js, src/engines/dies.js) */
-  { id: 'dieread', step: 'test', place: 'test', at: 'test', kind: 'xray', grows: 'test-xray' },
-  /* errors, from switch to fleet: the second system-problem question, after moving bits (src/v2/labs/errors.js, src/engines/errors.js) */
-  { id: 'silent', step: 'ship', place: 'port', at: 'ship', kind: 'errors', grows: 'port-errors' },
-  /* run your core: programs for the community's RISC-V core, offered from that piece in the Lab (src/v2/labs/rv.js, src/engines/rvpuzzles.js) */
-  { id: 'rvrun', step: 'design', place: 'lab', kind: 'rv', piece: 'core', grows: 'lab-cpu' },
-  /* labs-b: let the noise compute, p-bits at the switch (src/v2/labs/pbits.js, src/engines/paradigms.js), and a thousand
-     that pass, at the studio's job (src/v2/labs/thousand.js, src/engines/thousand.js) */
-  { id: 'noise', step: 'use', place: 'datacentre', at: 'switch', kind: 'pbits', grows: 'way-pbits' },
-  { id: 'noise-big', step: 'use', place: 'datacentre', at: 'switch', kind: 'pbits', grows: 'way-factor' },
-  { id: 'thousand', step: 'design', place: 'studio', at: 'need', kind: 'thousand', grows: 'studio-thousand' },
-  /* labs-a: design it, or search for it? at the studio's gates (src/v2/labs/search.js, src/engines/search.js); the program
-     nobody can judge, on the community's RISC-V core at the Lab (src/v2/labs/halt.js, src/engines/halt.js) */
-  { id: 'search', step: 'design', place: 'studio', at: 'gates', kind: 'search', grows: 'lab-search' },
-  { id: 'halt', step: 'design', place: 'lab', kind: 'halt', piece: 'core', grows: 'lab-halt' },
-  /* Listen and tell, the ear test at the block (#316, src/v2/labs/listen.js, src/engines/listen.js): only with
-     ?listen=1 until the owner has listened (flag, below) */
-  { id: 'ear', step: 'use', place: 'datacentre', at: 'block', kind: 'listen', flag: 'listen', grows: 'dc-ear' },
-  /* change your core: what a multiplier, a second unit or half the registers buy and cost (src/v2/labs/corearch.js, src/engines/corearch.js) */
-  { id: 'corearch', step: 'design', place: 'lab', kind: 'corearch', piece: 'core', grows: 'lab-arch' }
+  { id: 'batch', step: 'use', place: 'datacentre', at: 'chip', kind: 'bet', bet: 'batch', grows: 'dc-batch' }
 ];
+/* every challenge: the loop's own, then each lab's in the order of src/data/labs/index.js, a challenge with an `after`
+   placed right after the challenge it names (the order the next thing to do and the lists by step follow) */
+export const CHALLENGES = (() => {
+  const L = LOOP_CHALLENGES.slice(), later = [];
+  LAB_CHALLENGES.forEach(c => (c.after ? later : L).push(c));
+  later.forEach(c => { const i = L.findIndex(x => x.id === c.after); L.splice(i < 0 ? L.length : i + 1, 0, c); });
+  return L.map(challengeOnly);
+})();
 /* A challenge behind a flag (flag: 'listen') shows only where the address asks for it (?listen=1): in a browser
    without the flag it is dropped from CHALLENGES here, before anything reads the list, so nothing else changes. With no
    address (the tests, the open port) everything stays. */
@@ -195,11 +148,11 @@ export function yourDesign(s) {
 export const challengeOf = id => CHALLENGES.find(c => c.id === id) || null;
 export const chipGoal = id => CHIP.find(c => c.id === id);
 export const placeChallenges = place => CHALLENGES.filter(c => c.place === place);
-/* what grows, and where (the island draws each one: src/v2/map3d.js GROWERS) */
-/* where a growth stands when it is not at its challenge's place: the other ways to compute grow at the Lab (WAYS_AT), and the
-   clock and the power budget, design decisions, at the studio */
-const GROW_AT = { onebad: 'test', half: 'studio', phone: 'phones', car: 'cars', dclife: 'datacentre', fast: 'lab', cim: 'lab', grover: 'lab', 'power-curve': 'studio', counter: 'studio', mortal: 'lab', noise: 'lab', 'noise-big': 'lab',
-  search: 'lab' };
+/* what grows, and where (the island draws each one: src/v2/map3d.js GROWERS, and each lab's in src/v2/growers/) */
+/* where a growth stands when it is not at its challenge's place; a lab's say so themselves (growAt in src/data/labs/):
+   the other ways to compute grow at the Lab (WAYS_AT), and the clock and the power budget, design decisions, at the studio */
+const GROW_AT = Object.assign({ onebad: 'test', half: 'studio', phone: 'phones', car: 'cars', dclife: 'datacentre', fast: 'lab' },
+  Object.fromEntries(LAB_CHALLENGES.filter(c => c.growAt).map(c => [c.id, c.growAt])));
 export const GROWTH = CHALLENGES.map(c => ({ id: c.grows, by: c.id, at: GROW_AT[c.id] || c.place }));
 
 /* Inside: every place's levels, one inside the next (src/data/places.js). These hold the earlier site's
@@ -355,15 +308,10 @@ export function community(s) {
 }
 /* ---- challenges and questions are two faces of one thing ---- */
 /* the question a challenge opens once you have won it: a stop, at its own level or the one beside it */
-export const OPENS = { 'too-hot': 'fail.switch', 'litho-finest': 'scale.print', 'euv-1000': 'fail.print', etch: 'make.etch', bottom: 'idea.deposit', crystal: 'make.crystal', furnace: 'make.implant', shallow: 'fail.implant', vias: 'fail.print', evolve: 'idea.block', newest: 'open.phoneboard', jobs: 'divide.need', agent: 'idea.check', half: 'fail.check', vote: 'idea.check', full: 'make.gates', months: 'make.clean', quick: 'scale.clean', spot: 'fail.test', cores: 'divide.test',
-  phone: 'life.phone', car: 'fail.car', dclife: 'fail.ship', fed: 'divide.board', fast: 'fail.chip',
-  cim: 'divide.block', grover: 'strange.atom', 'ai-chip': 'scale.masks', piece: 'open.need', floor: 'divide.layout', maskof: 'make.masks', 'power-curve': 'life.block', counter: 'fail.gate',
-  'sig-heart': 'fail.phoneboard', 'sig-bearing': 'fail.ecu', 'reg-jobs': 'fail.phoneboard', quantize: 'think.chip', 'token-energy': 'divide.rack', prefill: 'think.board', chef: 'divide.block', flaky: 'fail.gates', mortal: 'life.switch', dieread: 'divide.test', silent: 'fail.ship', rvrun: 'think.chip',
-  noise: 'strange.switch', 'noise-big': 'think.switch', thousand: 'idea.need',
-  search: 'idea.check', halt: 'limit.rack',
-  /* the ear test hears the block live: a clock, sums, waits, heat */
-  ear: 'life.block',
-  corearch: 'divide.chip' };
+export const OPENS = Object.assign({ half: 'fail.check', vote: 'idea.check', full: 'make.gates', months: 'make.clean', quick: 'scale.clean', spot: 'fail.test', cores: 'divide.test',
+  phone: 'life.phone', car: 'fail.car', dclife: 'fail.ship', fed: 'divide.board', fast: 'fail.chip' },
+  /* each lab's challenges say what they open (src/data/labs/) */
+  Object.fromEntries(LAB_CHALLENGES.filter(c => c.opens).map(c => [c.id, c.opens])));
 /* and where the open things of the ledger sit: a break under "is the design right?", a piece to build under
    "could anyone design a chip?", a missing check under "who checks, and with what?" */
 export const FRONT_ASK = { break: 'fail.check', build: 'open.need', engine: 'idea.check' };

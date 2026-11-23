@@ -4,7 +4,20 @@ How to add a lab: a challenge played in Do mode at the place and level where it 
 
 ## What a lab is
 
-A lab is one module in `src/v2/labs/`, registered by its kind in `src/v2/labs/index.js`. Follow `src/v2/labs/crystal.js` closely; `films.js`, `litho.js`, `implant.js` and `overlay.js` are newer examples.
+A lab is a few files of its own, all named for it (say `<name>`), and nothing in the files every lab shares except its words and its filing under the core questions:
+
+| File | What it holds |
+| --- | --- |
+| `src/data/labs/<name>.js` | its declaration: its challenges, what each opens, its experiment, where it stands and grows |
+| `src/v2/labs/<name>.js` | the lab itself, `lab(L)`, playing every kind its challenges have |
+| `src/engines/<engine>.js` and `tests/<engine>.test.mjs` | the engine that checks it, and its tests |
+| `src/v2/growers/<name>.js` | what each of its challenges grows on the island, and where it stands |
+| `src/styles/labs/<name>.css` | its styles, when it has any |
+| `scripts/smoke/labs/<name>.mjs` | its check in the browser smoke test |
+| `src/i18n/en/labs.json` (and `core.json`, `place.json`) | its words (below) |
+| `src/data/frame.js` | its challenges filed under the core questions (`FILED.challenges`) |
+
+and its name in the list of labs, `src/data/labs/index.js` (an import and an entry in `LABS`, both at the end: there is no build step, so a browser cannot list a folder). `tests/labs.test.mjs` checks every lab file is listed and every file a lab names is there. Follow `src/v2/labs/crystal.js` closely; `films.js`, `litho.js`, `implant.js` and `overlay.js` are newer examples.
 
 `export default function lab(L)` returns `{ draw, click(e) -> bool, input(e) -> bool }`.
 - `L` holds `S, view, ch, ctx, el, esc, t, head, reward, doneNote, win, draw, fx, show`; see how `src/v2/play.js` calls it.
@@ -35,22 +48,25 @@ Every challenge is played this way (#274), wherever it is met: in a view's frame
 - **The instrument:** one element, the lab's own picture: the figure (`figure.imfig`, `.cimfig`, `.srvfig`), the `.betview` that holds a wafer and a curve, the board of a teardown, the copies' answers in Find the broken copy. Draw it so it can fill the stage: an SVG with a viewBox (the stage gives it `width` and `height` of 100%), a canvas inside a figure. A picture that appears only after a first move (the board once a product is opened) is the instrument from then on; until then the challenge is played in the side panel.
 - **The place as the picture:** a challenge with no picture of its own is played on the place, which stays the picture (lit, moving, its names on it), with the goal across the top and the controls in the panel; "where you are" leads back to Look. The player declares it (`data-f2="place"` on the card) for the kinds whose picture is the place: your chip's settings (`chip`), its life (`life`), a design and an evolving circuit (on the bench, which keeps its square, moved clear of the goal). A lab can say so too, with `data-f2="place"` on any element of its HTML. This is a desktop's: on a phone such a challenge is played in the sheet under the picture, as before.
 
-A second picture (a curve beside the main drawing, the tones under a signal) stays in the side panel, beside the controls. A drawing on the stage keeps its words at a steady size on the screen (`--f2-k`), so draw it with a viewBox and let it scale. Without any of these the challenge is played in the side panel beside the picture, as before. Add the lab's own layout rules for the stage, if it needs any, to the Do block at the end of `src/styles/frame2.css`. Check it at 1280 × 800: the instrument and the controls are both in sight. `npm run test:browser -- --only labs` plays every challenge and checks each is won in Do mode.
+A second picture (a curve beside the main drawing, the tones under a signal) stays in the side panel, beside the controls. A drawing on the stage keeps its words at a steady size on the screen (`--f2-k`), so draw it with a viewBox and let it scale. Without any of these the challenge is played in the side panel beside the picture, as before. Add the lab's own layout rules for the stage, if it needs any, to its own stylesheet (`src/styles/labs/<name>.css`), hung from `html.frame2 .f2stage` as the frame's Do rules are (`src/styles/frame.css`). Check it at 1280 × 800: the instrument and the controls are both in sight. `npm run test:browser -- --only labs` plays every challenge and checks each is won in Do mode.
 
 ## Wiring a challenge
 
-1. **`src/v2/game.js`:**
-   - Add the challenge to `CHALLENGES`: `{ id, step, place, at: '<level>', kind, grows: '<grow-id>' }`.
-   - Add it to `OPENS`: `<id>: '<stop key>'`, a stop at that level (`src/data/weave.js`). Each grow id must be unique.
+1. **The declaration, `src/data/labs/<name>.js`:** `export default { name: '<name>', css: true, challenges: [...] }` (`css: true` only when the lab has a stylesheet). Each challenge is `{ id, step, place, at: '<level>', kind, grows: '<grow-id>', opens: '<stop key>', exp: '<experiment id>' }`:
+   - `kind` is the lab's own (the player sends every challenge of that kind to `src/v2/labs/<name>.js`); two labs never share a kind, and the player's own kinds (`design`, `bet`, `chip`, `life`, `spot`) are not a lab's.
+   - `opens` is a stop at that level or the one beside it (`src/data/weave.js`), the question the challenge opens once won.
+   - `exp` is the one experiment it puts a target on (`src/data/experiments/`), the one whose stops or levels match; the experiment's files are not touched.
+   - `growAt` (when its growth stands at another place than the challenge's), `after` (where it stands in the loop's order, when not at the end) and `flag` (shown only with `?<flag>=1`) are there when needed. Each grow id must be unique.
+   - Then add the lab to `src/data/labs/index.js`: an import and its name at the end of `LABS`.
 2. **Words:** every visible word goes in `src/i18n/en/labs.json` under the lab's own prefix (a new prefix is added to the `labs` area in `AREAS`, `src/core/i18n.js`), read with `t('key')`.
-   - A challenge needs `game.ch.<id>.t`, `.goal` and `.why`, plus `grow.<grow-id>`.
+   - A challenge needs `game.ch.<id>.t`, `.goal` and `.why` (in `core.json`: the bar and Your log name challenges before any view opens), plus `grow.<grow-id>` (in `place.json`).
    - Engines that still hold their English in a `WORDS` object: copy the texts the view shows into `labs.json`, and do not edit the engine.
    - `npm test` fails on a missing or an unused word.
-3. **Experiment:** add the challenge to exactly one experiment in `src/data/experiments/<world>.js` (`ch: [...]`), the one whose stops or levels match. Update the count in `tests/experiments.test.mjs`.
-4. **The grower:** a small, well-made model in `src/v2/map3d.js` (the growers table and `GROW_SPOT`). It appears on the island when the challenge is won.
+3. **Filing:** each challenge under its core questions in `src/data/frame.js` (`FILED.challenges`, its home question first).
+4. **The grower, `src/v2/growers/<name>.js`:** `export default { '<grow-id>': { at: [x, z], grow: (g, { P, A, night, pulses }) => { ... } } }`, a small, well-made model built into its group `g` from the island's palette and lists, with the geometry helpers imported from `src/v2/kit3d.js`, and where it stands relative to its place (`at: [x, z]`, or `[x, z, y]`). It appears on the island when the challenge is won.
    - Check its spot in a screenshot with the challenge won (set `localStorage['osl-world-v1']` to `{"done":{"<id>":1},"seen":true}`).
    - It must stand clear of buildings, walls and other growers. The factory is 26 × 16 around its centre, its gas annex is on the west side, and the test house is about 30 units east.
-5. **CSS:** a block at the end of `src/styles/v2.css`, with classes prefixed by the lab's name, plus a phone rule if needed.
+5. **CSS, `src/styles/labs/<name>.css`:** classes prefixed by the lab's name, plus a phone rule if needed; it loads when one of the lab's challenges is played (`labsReady` in `src/v2/play.js`, `src/core/styles.js`), never with the first page. Rules the player or several labs share go in `src/styles/labs.css`.
 6. **A lab at a bench level:** check that `doHome` in `src/engines/way.js` sends it there.
 7. **How true it is:** give the challenge its mark in `LABS` of `src/data/fidelity.js` (`docs/SYSTEM.md`, 4b): an idea drawn, real numbers (with its `fact`), computed (with the engine, `by`), or checked (an engine and the measurement it matches, compared in `CHECKS` of `tests/fidelity.test.mjs`). The player shows it under the title; `npm test` fails without it.
 
@@ -62,7 +78,7 @@ A second picture (a curve beside the main drawing, the tones under a signal) sta
   - Take screenshots at 1280 × 820 in dark (`localStorage['osl-theme'] = 'dark'`) and 390 × 844 in light, plus one desktop shot mid-play.
   - Look at them and fix overflow, clipped or overlapping words, unreadable colours and sideways scroll.
   - A full-page shot does not show the card's inner scroll, so scroll the card on the phone too.
-- Add the lab to the `labs` section of `scripts/smoke.mjs` with `playLab(id, moves, name)`. The moves are done again on every poll, because the card may be drawn anew when the flight lands.
+- Add the lab's check as `scripts/smoke/labs/<name>.mjs`: `export default async ({ fp, adr, inDo, playLab, problems, tag }) => { await playLab(id, moves, name); }`, one `playLab` for each of its challenges. The labs section runs it after the loop's own challenges, in the order of the labs' list. The moves are done again on every poll, because the card may be drawn anew when the flight lands.
 - Run that section: `npm run test:browser -- --only labs` (about 2 minutes on a laptop), plus the section of any view the lab touches (`npm run test:browser -- --list` names them).
   - Select controls by data attributes, never by words.
   - The fab labs' player sits outside `#sheet`, so use plain `.player`.

@@ -32,7 +32,7 @@ Per group, a worktree from `origin/main` and one background helper (Agent tool) 
 
 ## Phase 3: merge one by one
 Take the PRs in order of lowest issue number. For each:
-1. Merge `origin/main` into the branch, keeping both sides (they meet in `src/i18n/en.json`, `src/v2/app.js`, `src/v2/frame.js`, `src/styles/v2.css`, `scripts/smoke.mjs` and the experiments count; in `smoke.mjs` keep each check in its own section).
+1. Merge `origin/main` into the branch, keeping both sides. A lab, a view's styles and a smoke check are files of their own now (`docs/LABS.md`, `docs/WORKFLOW.md`), so branches meet only in the shared files: the words (`src/i18n/en/<area>.json`, and `AREAS` in `src/core/i18n.js`), `src/data/frame.js` (`FILED`, `MARKS`), the labs' list `src/data/labs/index.js` (an import and a name per lab: keep both), the shared sheets `src/styles/base.css` and `src/styles/frame.css`, and the shell (`src/v2/app.js`, `src/v2/game.js`); rarely `src/core/styles.js` (`ORDER`) and `scripts/smoke.mjs` (`NAMES`, a new section). Keep each smoke check in its section's file (`scripts/smoke/<section>.mjs`, a lab's in `scripts/smoke/labs/<lab>.mjs`).
 2. `npm test`, `node --check` on the changed files, and `npm run test:browser -- --only <the sections it touches>`.
 3. Push, wait for CI, squash-merge when `test` is green.
 4. After three failed tries, make it a draft with a comment saying what fails, and go on.
