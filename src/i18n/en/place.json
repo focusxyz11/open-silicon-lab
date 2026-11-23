@@ -439,7 +439,7 @@
  "fab.name.small.t": "A small fab",
  "fab.name.small.d": "Minimal Fab: a line of small tools on half-inch wafers, with no cleanroom.",
  "fab.name.flexible.t": "A flexible line",
- "fab.name.flexible.d": "Thin-film circuits printed on plastic: slower and larger than silicon, made in days.",
+ "fab.name.flexible.d": "Thin-film circuits on plastic, patterned like silicon chips but slower and larger, made in days.",
  "fab.name.desk.t": "A fab on a desk",
  "fab.name.desk.d": "Chips made at home, or by machines a factory of fabs turns out: a try a day, perhaps.",
  "fab.claim.giantDays": "18 to 26 weeks from a finished design to tested wafers.",

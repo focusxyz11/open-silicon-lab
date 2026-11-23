@@ -319,3 +319,13 @@ test('debates sit where they arise: at least two views each, every view with a c
   }
 });
 
+
+test('a block is big enough for what its words say it holds (docs/reviews/truth/block-and-machines.md)', () => {
+  /* here.block says a block holds hundreds of thousands of standard cells; at about 0.1 µm² a cell, packed to 70%,
+     that takes a square at least 0.15 mm across. A real block is from about a tenth of a millimetre to a few */
+  const side = DEPTHS.block.m, cells = 0.7 * (side * 1e6) ** 2 / 0.1;
+  assert.match(EN['here.block'], /hundreds of thousands/);
+  assert.ok(cells >= 2e5, 'a block ' + side + ' m across holds only ' + Math.round(cells) + ' cells');
+  assert.ok(side <= 3e-3, 'a block is smaller than a few millimetres');
+  assert.ok(DEPTHS.gate.m < side && side < DEPTHS.chip.m, 'the block sits between the chip and the gate');
+});
