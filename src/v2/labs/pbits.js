@@ -74,7 +74,7 @@ export default function lab(L) {
     g += '<rect class="pbmap" x="' + L0 + '" y="' + Y0 + '" width="' + G0 + '" height="' + G0 + '"/><rect class="pbmap" x="' + R0 + '" y="' + Y0 + '" width="' + G0 + '" height="' + G0 + '"/>';
     for (let k = 0; k < V.w.counts.length; k++) {
       const v = V.w.counts[k]; if (!v) continue; const [x, y] = cell(L0, k);
-      g += '<rect class="pbheat" x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" width="' + c.toFixed(1) + '" height="' + c.toFixed(1) + '" opacity="' + (0.18 + 0.82 * Math.pow(v / max, 0.7)).toFixed(2) + '"/>';
+      g += '<rect class="pbheat" x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" width="' + c.toFixed(1) + '" height="' + c.toFixed(1) + '" opacity="' + (0.06 + 0.94 * v / max).toFixed(2) + '"/>';
     }
     for (let k = 0; k < tried; k++) { const [x, y] = cell(R0, k); g += '<rect class="pbtry' + (answers.has(k) ? ' found' : '') + '" x="' + (x + 0.5).toFixed(1) + '" y="' + (y + 0.5).toFixed(1) + '" width="' + (c - 1).toFixed(1) + '" height="' + (c - 1).toFixed(1) + '"/>'; }
     answers.forEach(k => { [L0, R0].forEach(x0 => { const [x, y] = cell(x0, k); g += '<rect class="pbans" x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" width="' + c.toFixed(1) + '" height="' + c.toFixed(1) + '"/>'; }); });
