@@ -28,8 +28,11 @@ import halt from './halt.js';
 /* labs-b: let the noise compute (pbits.js), a thousand that pass (thousand.js) */
 import pbits from './pbits.js';
 import thousand from './thousand.js';
+/* Listen and tell, the ear test (#316, behind ?listen=1) */
+import listen from './listen.js';
 export const LABS = { agent, teardown, fit: teardown, evolve, pull: crystal, implant, overlay, etch: films, deposit: films, litho, euv: litho,
   cim, grover, semiconductor, aibuild, powercurve: clockpower, counter: clockpower, capture: analog, regulate: analog, quantize: serve, tokenenergy: serve, prefill: serve,
   piece: bench, floor: bench, maskof: bench, chef: bits, redund: vote, mortal, xray: dies, errors, rv,
   search, halt,
-  pbits, thousand };
+  pbits, thousand,
+  listen };

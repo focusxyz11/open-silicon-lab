@@ -3135,3 +3135,56 @@ html.frame2 .f2stage .thfig svg text { font-size: calc(12.5px * var(--f2-k, .6))
 @media (max-width: 520px) { .hlany { grid-template-columns: repeat(3, 1fr); } }
 .srjobs .chipb[aria-pressed="true"] .muted { color: inherit; opacity: .75; }
 .hlfig .hlsay, .hlfig .hlk, .hlfig .ax { paint-order: stroke; stroke: var(--panel-solid); stroke-width: 3px; stroke-linejoin: round; }
+/* ---- Listen (#316, src/v2/listen.js): the block's picture lit in time with its sound, on the frame's layer and in the
+   ear test; and Listen and tell, the ear test (src/v2/labs/listen.js). Sums light in the accent, a fetch warm along its
+   way from the memory, heat as a warm haze over the logic, a wrong bit red on its wire (red means wrong, and nothing else) ---- */
+.lsn { --lsn-cu: #d88b4c; }
+:root[data-theme="light"] .lsn { --lsn-cu: #b5642a; }
+@media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) .lsn { --lsn-cu: #b5642a; } }
+.lsn .lsn-die { fill: color-mix(in srgb, var(--ink) 7%, var(--panel-solid)); }
+.lsn .lsn-cell { fill: color-mix(in srgb, var(--ink) 15%, var(--panel-solid)); }
+.lsn .lsn-arr { fill: color-mix(in srgb, var(--ink) 11%, var(--panel-solid)); }
+.lsn .lsn-bit { fill: color-mix(in srgb, var(--accent) 22%, var(--panel-solid)); }
+.lsn .lsn-cu path { fill: none; stroke: var(--lsn-cu); stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; opacity: .4; }
+.lsn .lsn-heat rect { fill: var(--warm); opacity: calc(var(--lsn-heat, 0) * .4); transition: opacity .6s; }
+.lsn .lsn-rails rect { fill: var(--ink); opacity: .1; transition: opacity .12s; }
+.lsn .lsn-rails.on rect { opacity: .55; }
+.lsn .lsn-sums rect { fill: var(--accent); opacity: 0; transition: opacity .22s ease-out; }
+.lsn .lsn-sums rect.on { opacity: .95; transition: none; }
+.lsn .lsn-ways path { fill: none; stroke: var(--warm); stroke-width: 9; stroke-linecap: round; stroke-linejoin: round; opacity: 0; stroke-dasharray: 26 18; transition: opacity .3s; }
+.lsn .lsn-ways path.on { opacity: .95; animation: lsnflow .9s linear infinite; }
+@keyframes lsnflow { to { stroke-dashoffset: -88; } }
+.lsn .lsn-mem { fill: var(--warm); fill-opacity: 0; stroke: var(--warm); stroke-width: 8; stroke-opacity: 0; transition: fill-opacity .3s, stroke-opacity .3s; }
+.lsn .lsn-mem.on { fill-opacity: .16; stroke-opacity: .9; }
+.lsn .lsn-wires path { fill: none; stroke: var(--bad); stroke-width: 12; stroke-linecap: round; stroke-linejoin: round; opacity: 0; transition: opacity .35s; }
+.lsn .lsn-wires path.on { opacity: 1; transition: none; }
+.lsn .lsn-rings circle { fill: none; stroke: var(--bad); stroke-width: 7; opacity: 0; transition: opacity .35s; }
+.lsn .lsn-rings circle.on { opacity: 1; transition: none; }
+/* while the work waits for its data, the logic dims */
+.lsn :is(.lsn-sums, .lsn-rails) { transition: opacity .3s; }
+.lsn.lsn-waiting :is(.lsn-heat, .lsn-cell) { opacity: .45; transition: opacity .3s; }
+@media (prefers-reduced-motion: reduce) { .lsn .lsn-ways path.on { animation: none; } .lsn * { transition: none !important; } }
+/* the ear test: the picture hidden while you listen, the answers, the run of answers */
+.earfig { position: relative; margin: 6px 0; border-radius: 14px; overflow: hidden; }
+.earfig svg { display: block; width: 100%; height: auto; transition: filter .5s; }
+.earfig.hid svg { filter: blur(14px) saturate(.2); opacity: .55; }
+.earcover { position: absolute; inset: 0; display: grid; place-content: center; justify-items: center; gap: 14px; padding: 16px; text-align: center; }
+.earcover b { font: 500 21px/1.3 var(--serif); color: var(--ink); max-width: 18em; }
+.lsnwave.big { height: 34px; gap: 5px; } .lsnwave.big i { width: 6px; height: 14px; } .lsnwave.big i:nth-child(2) { height: 32px; } .lsnwave.big i:nth-child(3) { height: 22px; }
+.earfig.hid .lsnwave.big i { animation: earwave 1.2s ease-in-out infinite; } .earfig.hid .lsnwave.big i:nth-child(2) { animation-delay: .2s; } .earfig.hid .lsnwave.big i:nth-child(3) { animation-delay: .4s; }
+@keyframes earwave { 50% { transform: scaleY(.45); } }
+@media (prefers-reduced-motion: reduce) { .earfig.hid .lsnwave.big i { animation: none; } }
+.earplay { margin: 4px 0 2px; }
+.earans { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 8px 0; }
+.earans .chipb { justify-content: flex-start; text-align: left; min-height: 44px; font-size: 15px; white-space: normal; }
+.earans .chipb.right { border-color: var(--good); color: var(--good); }
+.earans .chipb.wrong { border-color: var(--bad); color: var(--bad); }
+.earans .chipb:disabled:not(.right):not(.wrong) { opacity: .55; }
+.earsay { margin: 4px 0 8px; }
+.earrun { margin: 8px 0 4px; }
+.earrun svg { display: block; width: 100%; height: auto; }
+.earrun rect.ok { fill: var(--good); } .earrun rect.no { fill: var(--bad); }
+.earrun line.goal { stroke: var(--muted); stroke-width: 1; stroke-dasharray: 4 4; }
+/* in Do mode the hidden block takes the stage: square, as large as the stage allows */
+html.frame2 .f2stage .earfig[data-f2="instrument"] { display: grid; place-items: center; background: none; }
+html.frame2 .f2stage .earfig[data-f2="instrument"] svg { width: auto; height: 100%; max-width: 100%; aspect-ratio: 1; }

@@ -1172,5 +1172,8 @@
  "game.ch.halt.t": "The program nobody can judge",
  "game.ch.halt.goal": "Build one gate from dominoes, water or light, and a bit that remembers. Then fool an agent that claims it can tell whether any program will stop.",
  "game.ch.halt.why": "A computer is a pattern, not a material: anything that can make one simple gate can, given enough of them, compute anything. Yet in 1936, before any computer was built, Alan Turing proved there is a question no computer can always answer: will this program ever stop?",
+ "game.ch.ear.t": "Listen and tell",
+ "game.ch.ear.goal": "The picture is hidden. Listen to the block, slowed down a billion times, and say what it is doing: busy, waiting on memory, too hot, or saving power. Get eight right of your last ten.",
+ "game.ch.ear.why": "A chip works far too fast to see or hear: billions of steps a second. Slowed down until each step is a sound, its state can be told by ear, the way a mechanic hears what is wrong with an engine. Training your ear for it is learning a new sense for a world too fast to see.",
  "ui.blueprint": "The blueprint: the chip innovation ecosystem as one wheel, a chip's life around it and its scale inward"
 }

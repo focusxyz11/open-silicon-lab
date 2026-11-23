@@ -464,6 +464,7 @@
  "grow.lab-cpu": "a small board on a stand at the Lab, its core lit and its register lamps counting",
  "grow.lab-search": "a rack of search boards at the Lab, its rows of lights climbing past one small hand-made board",
  "grow.lab-halt": "a core on a plinth at the Lab, a ring of light running round it with no way out",
+ "grow.dc-ear": "a listening post by the data centre: a small block on a plinth, rings of light pulsing out from it",
  "whatif.lever.demand.t": "AI demand",
  "whatif.lever.demand.d": "How much AI computing the world wants to buy",
  "whatif.lever.hbm.t": "HBM supply",

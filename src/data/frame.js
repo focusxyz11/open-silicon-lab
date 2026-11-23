@@ -141,7 +141,9 @@ export const FILED = {
   'counter': ['perfect', 'vn', 'dig'], 'flaky': ['vn', 'perfect', 'trust'], 'dieread': ['geo', 'trust', 'line'], 'silent': ['trust', 'vn', 'perfect'], 'rvrun': ['line', 'dig', 'human'], 'mortal': ['copy', 'physics', 'eff'], 'quantize': ['eff', 'sutton', 'physics'], 'token-energy': ['eff', 'geo'], 'prefill': ['geo', 'eff'],
   'chef': ['geo', 'physics', 'eff'],
   'noise': ['physics', 'nat'], 'noise-big': ['physics', 'nat'], 'thousand': ['human', 'sutton'],
-  'search': ['sutton', 'human'], 'halt': ['nat', 'trust']
+  'search': ['sutton', 'human'], 'halt': ['nat', 'trust'],
+  /* Listen and tell, the ear test at the block (#316) */
+  'ear': ['dig', 'eff']
   }
 };
 
