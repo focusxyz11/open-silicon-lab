@@ -25,6 +25,7 @@ import { setBetScene } from '../app/betscene.js';
 import { WAFER as SCENE_WAFER } from '../engines/chip.js';
 import { glyph } from './field.js';
 import { patch } from './patch.js';
+import { LABS as LAB_LIST, kindsOf } from '../data/labs/index.js';
 
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 /* the gates a description can use, and the one a tap turns each into */
@@ -47,11 +48,13 @@ export function goalOf(ch) {
   return t('game.ch.' + ch.id + '.goal');
 }
 
-/* the labs (src/v2/labs/) and their words (the labs area, src/core/i18n.js) load with the first challenge played, never
-   with the first page: the shell awaits labsReady() before it calls play() */
+/* the labs (src/v2/labs/, each declared in src/data/labs/) and their words (the labs area, src/core/i18n.js) load with the
+   first challenge played, never with the first page: the shell awaits labsReady() before it calls play(). LABS: the lab
+   that plays each kind, the kinds of its challenges */
 let LABS = null;
 export const labsLoaded = () => !!LABS;
-export const labsReady = () => (LABS ? Promise.resolve(LABS) : Promise.all([import('./labs/index.js'), needWords('labs')]).then(([m]) => (LABS = m.LABS)));
+export const labsReady = () => (LABS ? Promise.resolve(LABS) : Promise.all([Promise.all(LAB_LIST.map(l => import('./labs/' + l.name + '.js').then(m => [l, m.default]))), needWords('labs')])
+  .then(([mods]) => { const by = {}; mods.forEach(([l, lab]) => kindsOf(l).forEach(k => { by[k] = lab; })); return (LABS = by); }));
 export function play(el, ch, ctx) {
   const S = ctx.state;
   let view = { msg: null, B: null, ai: false, hint: false, tests: [], guess: null, wrong: null, write: false, won: false, rows: null, okG: null, op: -1, seq: null, slip: null, no: null };
