@@ -78,13 +78,16 @@ jobs:
           echo "logic and words: ${{ needs.logic.result }}, browser: ${{ needs.browser.result }}"
           test "${{ needs.logic.result }}" = success && test "${{ needs.browser.result }}" = success
 
-  # the site is collected and uploaded in one job and published in the next: on 24 November deploy-pages, run in the same
-  # job a second after the upload, found no artifact three pushes in a row (all tests green). A job of its own starts
-  # later, and if publishing still finds nothing it waits and tries once more (beside the move to v5 of both actions, #351).
+  # the site is collected and uploaded in one job and deployed in the next: deploy-pages run in the same job, a
+  # moment after the upload, finds no artifact (actions/deploy-pages#451; every deploy failed so from 23 November)
+  # if deploying still finds nothing, it waits 30 s and tries once more
   site:
     if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
     needs: [logic, browser, test]
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: read
     steps:
       - uses: actions/checkout@v4
       - name: Collect the site
@@ -98,7 +101,7 @@ jobs:
 
   deploy:
     if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
-    needs: [site]
+    needs: site
     runs-on: ubuntu-latest
     permissions:
       pages: write
