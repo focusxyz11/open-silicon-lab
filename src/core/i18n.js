@@ -48,7 +48,9 @@ export const AREAS = {
     'lt', 'cz', 'fl', 'mo', 'rd', 'evolve', 'clk', 'floor', 'xray', 'xr', 'chip', 'life', 'gauge', 'carch',
     'pb', 'th', 'srch', 'halt',
     /* Listen and tell, the ear test (#316) */
-    'ear'],
+    'ear',
+    /* new ways to compute: reversible logic and dataflow (#323) */
+    'rev', 'dfl'],
   blueprint: ['bp'],
   /* Hold, the first page (src/v2/hold.js) */
   hold: ['hd'],

@@ -16,7 +16,8 @@
      energy   the factor against a circuit made for the same work: a number, 'cim' (the compute-in-memory engine's
               crossbar against a digital array, src/engines/paradigms.js) or 'activity' (the share of time the need is
               busy, ACTIVITY below);
-     fact     the entry of src/data/facts.json it rests on, or engine, the file of the lab that computes it.
+     fact     the entry of src/data/facts.json it rests on, or engine, the file of the lab that computes it;
+   and lab, when a lab models it: the challenge it opens from Machines (src/data/labs/).
    A guess's number is the guess itself, written down so it can be argued with; it is never shown as a figure.
    ACTIVITY: how much of the time a need has something to do (a choice of the model). */
 
@@ -39,7 +40,7 @@ export const MATTERS = [
     { id: 'spikesCost', status: 'guess', fid: 'idea', kind: 'catch', energy: 3 }] },
   /* reversible logic erases nothing on the way, so its floor is the answer's 16 bits alone; the test chip recovered
      energy by 1.41 in a shift register and 1.77 in a capacitor array (facts.json vaire-ice-river): the lower is used */
-  { id: 'reversible', on: ['adder', 'counter', 'voter', 'parity'], changes: false, exact: true, floor: 16, claims: [
+  { id: 'reversible', on: ['adder', 'counter', 'voter', 'parity'], changes: false, exact: true, floor: 16, lab: 'reversible', claims: [
     { id: 'revChip', status: 'lab', fid: 'figures', kind: 'gain', energy: 1 / 1.41, fact: 'vaire-ice-river' },
     { id: 'revFree', status: 'guess', fid: 'idea', kind: 'gain', energy: 0 }] },
   /* living matter is grown from cells, not made in a fab (src/data/fabs.js): how long a try takes is not known */

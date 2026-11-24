@@ -217,6 +217,70 @@ export function dataflowEnergy({ layers, mbPerLayer, tiles, mbPerTile, mode }) {
   return { uj: pj / 1e6, fit };
 }
 
+/* ---------- reversible logic: an adder of Toffoli gates (the lab 'Compute without erasing', src/v2/labs/reversible.js) ----------
+   Wires carry bits from left to right; a gate is { t, c }: its target wire t is flipped when every control wire in c
+   (none, one or two) is 1. That is a Toffoli gate, with a missing control held at 1 (one control: the CNOT; none: NOT).
+   Every such gate is its own inverse, so a circuit of them erases nothing: run backwards, it gives its inputs back.
+   The adder: four wires, a, b, the carry in, and a spare wire that starts at 0; it adds when, for all eight inputs,
+   one wire ends with the sum (a xor b xor carry in) and another with the carry out (at least two of the three). */
+export const REV_WIRES = 4;
+export const gateOk = g => !!g && Number.isInteger(g.t) && g.t >= 0 && g.t < REV_WIRES && Array.isArray(g.c) && g.c.length <= 2 &&
+  new Set(g.c).size === g.c.length && g.c.every(i => Number.isInteger(i) && i >= 0 && i < REV_WIRES && i !== g.t);
+export function revStep(bits, g) {
+  if (!gateOk(g)) return bits.slice();
+  const out = bits.slice(), x = g.c.length > 0 ? bits[g.c[0]] : 1, y = g.c.length > 1 ? bits[g.c[1]] : 1;
+  out[g.t] = toffoli(x, y, bits[g.t])[2]; return out;
+}
+export const revRun = (gates, bits) => (gates || []).reduce(revStep, bits.slice());
+/* the eight inputs (a, b, carry in, spare 0), what each should give, and what the circuit gives; the pair of distinct
+   wires (sum, carry) right on the most rows, and how many rows that is */
+export function revAdder(gates) {
+  const rows = Array.from({ length: 8 }, (_, k) => { const a = k >> 2 & 1, b = k >> 1 & 1, c = k & 1, inp = [a, b, c, 0];
+    return { in: inp, sum: a ^ b ^ c, carry: (a & b) | (a & c) | (b & c), out: revRun(gates, inp) }; });
+  /* the usual places first (the sum on the carry in's wire, the carry on the spare), so a tie keeps them */
+  const rightOn = (s, k) => rows.filter(r => r.out[s] === r.sum && r.out[k] === r.carry).length;
+  let best = { s: 2, k: 3, right: rightOn(2, 3) };
+  for (let s = 0; s < REV_WIRES; s++) for (let k = 0; k < REV_WIRES; k++) if (s !== k) {
+    const right = rightOn(s, k);
+    if (right > best.right) best = { s, k, right };
+  }
+  return { rows, sumWire: best.s, carryWire: best.k, right: best.right, ok: best.right === 8 };
+}
+/* the times a step may take, one ramp of a wire (seconds); about half a decade apart */
+export const RAMPS = [1e-12, 3e-12, 1e-11, 3e-11, 1e-10, 3e-10, 1e-9, 3e-9, 1e-8, 3e-8, 1e-7, 3e-7, 1e-6, 3e-6];
+export const REV_V = 0.7;
+/* an ordinary full adder takes three bits and gives two: at least one bit is erased each time it adds */
+export const ADDER_ERASES = 1;
+/* the energy of one addition of `steps` gates, each one wire of the lab's (WIRE) charged in time T: switched at once,
+   ramped slowly, and the floor under an ordinary adder (kT ln 2 for each bit it erases), in joules; and its time */
+export function revEnergy(steps, T, { V = REV_V, tempK = 300 } = {}) {
+  const abrupt = steps * switchLoss(WIRE.C, V), slow = steps * adiabaticLoss(WIRE.C, V, WIRE.R, T);
+  return { abrupt, slow, floor: ADDER_ERASES * landauer(tempK), saved: abrupt / slow, time: steps * T };
+}
+/* the lab's goal: the gates add, each step slow enough to lose 100 times less than switching at once (the engine's
+   own check, checkReversibleLimit), and no faster ramp would do it: the least time that pays */
+export function checkReversibleAdder({ gates = [], ramp = 0 } = {}) {
+  const lim = i => i >= 0 && i < RAMPS.length && checkReversibleLimit({ log10Time: Math.log10(RAMPS[i]), V: REV_V });
+  return revAdder(gates).ok && lim(ramp) && !lim(ramp - 1);
+}
+
+/* ---------- dataflow: a model's layers laid across a chip's tiles (the lab 'Keep the numbers on the chip',
+   src/v2/labs/dataflow.js) ----------
+   The parts of dataflowEnergy below: the energy of the weights read from the tiles' own memory, and of those fetched
+   from memory off the chip, against fetching every weight; the goal is the largest model the chip holds whole, the
+   layer beyond it tried and seen not to fit (checkSpatialFit). */
+export const FLOW = { mbPerLayer: 4, mbPerTile: 2 };
+export function dataflowParts({ layers, tiles, mbPerLayer = FLOW.mbPerLayer, mbPerTile = FLOW.mbPerTile }) {
+  const c = { layers, mbPerLayer, tiles, mbPerTile }, s = dataflowEnergy({ ...c, mode: 'spatial' }), v = dataflowEnergy({ ...c, mode: 'vn' });
+  const on = layers * mbPerLayer * 8e6 * s.fit * (E16.sram32k / 16) / 1e6;
+  return { fit: s.fit, uj: s.uj, on, off: s.uj - on, vn: v.uj, saves: v.uj / s.uj, offShare: (s.uj - on) / s.uj };
+}
+export function checkDataflowEdge({ layers, tiles, mbPerLayer = FLOW.mbPerLayer, mbPerTile = FLOW.mbPerTile, tried = [] } = {}) {
+  const all = (tried || []).map(c => ({ mbPerLayer, mbPerTile, ...c })), fit = c => dataflowEnergy({ ...c, mode: 'spatial' }).fit;
+  const more = all.find(c => c.layers === layers + 1 && c.tiles === tiles && c.mbPerLayer === mbPerLayer && c.mbPerTile === mbPerTile);
+  return fit({ layers, tiles, mbPerLayer, mbPerTile }) >= 1 && !!more && fit(more) < 1 && checkSpatialFit(all);
+}
+
 /* ---------- challenges: one check per goal, by id ---------- */
 /* Same job, ten machines: the player picked a job, and it has a best machine to be shown. */
 function checkJobs({ job } = {}, jobs) {
