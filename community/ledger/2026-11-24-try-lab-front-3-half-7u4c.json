@@ -1,0 +1,12 @@
+{
+  "kind": "try",
+  "by": "Open Silicon Lab",
+  "made": "example",
+  "ai": "",
+  "words": "Half the memory moved into the rows in slices, and the logic half packed.",
+  "front": "eff.geo",
+  "plan": {
+    "p": 0.5,
+    "n": 0.5
+  }
+}

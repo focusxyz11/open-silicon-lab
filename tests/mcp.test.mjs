@@ -21,7 +21,7 @@ test('an agent connects, lists the tools, reads the plan and takes a job', async
     assert.equal(init.result.serverInfo.name, 'open-silicon-lab');
     assert.ok(init.result.capabilities.tools && init.result.instructions);
     const tools = (await S.call('tools/list', {})).result.tools.map(t => t.name);
-    assert.deepEqual(tools, ['look', 'list_plan', 'get_job', 'check_design', 'at_factory', 'life_of', 'propose_design', 'list_ledger', 'propose_break', 'propose_try', 'propose_report', 'energy_budget', 'submit_attempt', 'propose_question', 'choose_design']);
+    assert.deepEqual(tools, ['look', 'list_plan', 'get_job', 'check_design', 'at_factory', 'life_of', 'propose_design', 'list_ledger', 'propose_break', 'propose_try', 'propose_report', 'energy_budget', 'submit_attempt', 'block_front', 'submit_front', 'propose_question', 'choose_design']);
     const plan = (await S.tool('list_plan', {})).structuredContent;
     assert.ok(plan.pieces.some(p => p.id === 'core' && p.engine === 'riscv'));
     const job = (await S.tool('get_job', { job: 'vote' })).structuredContent;
@@ -88,6 +88,20 @@ test('an agent reads the energy budget, pulls a lever, and submits an attempt th
     assert.equal(JSON.parse(yes.entry.file).puzzle, 'energy');
     assert.equal((await S.tool('submit_attempt', { plan: { batch: 256 }, kind: 'ai' })).structuredContent.ok, false, 'say how AI was used');
     assert.equal((await S.tool('submit_attempt', { plan: { home: 'cloud' }, kind: 'person' })).structuredContent.ok, false);
+  } finally { S.stop(); }
+});
+
+test('an agent reads the block\'s front and submits a point the model places, checked by the ledger (#326)', async () => {
+  const S = server();
+  try {
+    const F = (await S.tool('block_front', { plan: { p: 0.3, n: 0.7 } })).structuredContent;
+    assert.equal(F.front, 'eff.geo'); assert.ok(F.today.length >= 5 && F.allMovedIn.length === F.today.length && F.question && F.note);
+    assert.ok(F.attempts.length >= 4 && F.attempts.every(a => a.blockJoulesPerAnswer > 0 && ['front', 'beaten'].includes(a.state)));
+    assert.ok(F.yours.blockJoulesPerAnswer < F.today[0].blockJoulesPerAnswer, 'moving memory in cuts the block\'s energy');
+    const yes = (await S.tool('submit_front', { plan: { p: 0.3, n: 0.7 }, kind: 'ai', ai: 'An agent read the front and chose the point.' })).structuredContent;
+    assert.equal(yes.ok, true); assert.equal(JSON.parse(yes.entry.file).front, 'eff.geo'); assert.ok(yes.placed.hottestPatch > 0);
+    assert.equal((await S.tool('submit_front', { plan: { p: 0, n: 0 }, kind: 'person' })).structuredContent.ok, false, 'a point kept already');
+    assert.equal((await S.tool('submit_front', { plan: { p: 0.25, n: 0 }, kind: 'person' })).structuredContent.ok, false, 'tenths only');
   } finally { S.stop(); }
 });
 

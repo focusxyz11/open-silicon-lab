@@ -872,7 +872,7 @@
  "mb.k.dist": "{d} away",
  "mb.k.waits": "waits",
  "mb.k.cooks": "cooks",
- "mb.k.round": "round {n}",
+ "mb.k.rounds": "round",
  "mb.k.goal": "goal",
  "mb.k.note": "A small model, fair enough to compare plans and made to be right in direction: the chef grows faster as processors did against memory (Wulf and McKee, 1995); prices and sizes are the model's own. Every lever's catch is in the engine, src/engines/bits.js.",
  "mb.levels": "Levels",

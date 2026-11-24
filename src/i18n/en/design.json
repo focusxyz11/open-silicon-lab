@@ -405,5 +405,10 @@
  "ledger.no.pick": "There is no such design among the thousand for this need.",
  "ledger.no.reason": "Say what you chose it for in one line of 8 to 140 plain characters: no links, no markup.",
  "ledger.no.chooser": "A choice is made by a person or by an AI, not both, so the two can be seen apart.",
- "ledger.rec.chef": "An attempt at Keep the chef busy: {level} · the chef waits {wait}% · {e} J an answer"
+ "ledger.rec.chef": "An attempt at Keep the chef busy: {level} · the chef waits {wait}% · {e} J an answer",
+ "ledger.no.front": "There is no such front where two lenses meet.",
+ "api.tool.blockFront": "The block's open problem: the front where Geometry and Efficiency fuels use meet. For a plan (where the logic sits, p; how much of the memory moves into the rows of logic, n), the energy the block spends on one answer and its hottest patch, placed by one model; today's front, the front with all the memory moved in, and the attempts kept in the ledger, each placed by the same model.",
+ "api.tool.submitFront": "Submit an attempt at the block's front: a plan (p and n, each 0 to 1 in tenths), placed by the model and checked by the ledger (new among the attempts there). It comes back as the entry's file and the link that opens it in a pull request; nothing is posted.",
+ "api.arg.front": "The plan: p, where the logic sits (0 spread out, 1 packed beside the memory), and n, how much of the memory moves into the rows of logic in slices (0 none, 1 all of it); each from 0 to 1 in tenths.",
+ "api.front.values": "Each from 0 to 1 in tenths."
 }

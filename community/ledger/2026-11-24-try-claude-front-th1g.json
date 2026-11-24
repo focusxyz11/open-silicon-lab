@@ -1,0 +1,12 @@
+{
+  "kind": "try",
+  "by": "Claude",
+  "made": "ai",
+  "ai": "An AI agent (Claude) chose this point by reading the front model in src/engines/lens.js while building the block slice (#326). No person edited it.",
+  "words": "All the memory moved into the rows and the logic left spread out: the trips shorten without crowding the heat.",
+  "front": "eff.geo",
+  "plan": {
+    "p": 0,
+    "n": 1
+  }
+}

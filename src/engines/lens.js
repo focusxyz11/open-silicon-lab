@@ -128,23 +128,27 @@ export const MODELS = {
 /* ---- where two lenses meet (#315, MEETS in src/data/frame.js): the engines of the pairs held at a level ---- */
 
 /* A front: Geometry and Efficiency fuels use at the block, "moving data costs the energy". Both measures from one
-   model: energy per answer (the budget engine's answer, its moving share at the block scaled by the length of the
-   trips) and the hottest patch (the same work in the room the logic keeps). p: where the logic sits (0 spread out, 1
-   packed beside the memory); n: an innovation, the memory moved into the rows of logic in slices (0 today, 1 all of
-   it), so a fetch goes to the slice beside it. line(n) is today's best compromises for that n, at(p, n) your design. */
+   model: the energy the block spends on one answer (the budget engine's answer at the block: its sums, and its fetches
+   from the block's memory, each fetch's energy scaled by the length of its trip) and the hottest patch (the same work
+   in the room the logic keeps). Only the block's own share moves: the rest of the answer (the far memory, the board,
+   the building) is the same whatever the block does, so the front is drawn in the block's joules, and `whole` is the
+   answer's (#326: it once scaled the whole answer by the block's trips, a thousand times the block's share).
+   p: where the logic sits (0 spread out, 1 packed beside the memory); n: an innovation, the memory moved into the rows
+   of logic in slices (0 today, 1 all of it), so a fetch goes to the slice beside it. line(n) is today's best
+   compromises for that n, at(p, n) your design. */
 export const SLICES = 4;   /* slices of memory in each row of logic, when it moves in */
 export function geoEffFront(F = defaultFacts()) {
-  const base = budget(JOB, PLAN), blk = base.levels.block || { move: 0, compute: 1 }, m = blk.move / Math.max(1e-30, blk.move + blk.compute);
+  const base = budget(JOB, PLAN), blk = base.levels.block || { move: 0, compute: 1 }, m = blk.move / Math.max(1e-30, blk.move + blk.compute), here = blk.move + blk.compute;
   const mem = rectsOf(F, 'memory')[0], area = r => r[2] * r[3], logic0 = parts(F, 'logic').filter(p => p.by === 'program').flatMap(p => p.rects).reduce((s, r) => s + area(r), 0);
   const t0 = geometry(F, 0).measures.trip / F.um;
   const at = (p, n) => {
     const g = geometry(F, p), w = g.placed[0][2], toSlice = w / (4 * SLICES);
     const trip = (1 - n) * g.measures.trip / F.um + n * toSlice;
     const room = g.placed.reduce((s, r) => s + area(r), 0) + n * area(mem);
-    return { p, n, energy: base.total * ((1 - m) + m * trip / t0), heat: logic0 / room, trip: trip * F.um };
+    return { p, n, energy: here * ((1 - m) + m * trip / t0), heat: logic0 / room, trip: trip * F.um };
   };
   const line = n => Array.from({ length: 21 }, (_, i) => { const r = at(i / 20, n); return { p: r.p, x: r.energy, y: r.heat }; });
-  return { at, line, moving: m, today: at(0, 0) };
+  return { at, line, moving: m, today: at(0, 0), whole: base.total };
 }
 function defaultFacts() { return factsOf('block'); }
 
