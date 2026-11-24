@@ -93,15 +93,17 @@ test('the ear test: one state at a time, never three alike in a row, won by eigh
   assert.equal(L.rightOfLast([false, true, true]), 2);
 });
 
-test('the ear test is a challenge at the block, filed under Digital meets physical with Efficiency, behind its flag', () => {
+test('the ear test is a challenge at the block, filed under Digital meets physical with Efficiency, for everyone', () => {
   const c = CHALLENGES.find(x => x.id === 'ear');
   assert.ok(c, 'the ear test is a challenge');
-  assert.equal(c.place, 'datacentre'); assert.equal(c.at, 'block'); assert.equal(c.kind, 'listen'); assert.equal(c.flag, 'listen');
+  assert.equal(c.place, 'datacentre'); assert.equal(c.at, 'block'); assert.equal(c.kind, 'listen'); assert.equal(c.flag, undefined, 'no flag since #317');
   assert.ok(OPENS.ear, 'it opens a question at the block');
   assert.ok(GROWTH.some(g => g.by === 'ear'), 'it grows the island');
   assert.deepEqual(FILED.challenges.ear, ['dig', 'eff']);
-  /* without the flag, a browser drops it before anything reads the list; with it, and in the tests, it stays */
-  assert.equal(flagged(c, ''), false); assert.equal(flagged(c, '?listen=1'), true); assert.equal(flagged(c, '?menu=1&listen=1'), true); assert.equal(flagged({ id: 'x' }, ''), true);
+  /* it shows in a browser without any flag; a challenge that has one still waits for it in the address */
+  assert.equal(flagged(c, ''), true); assert.equal(flagged(c, '?menu=1'), true);
+  const f = { id: 'x', flag: 'listen' };
+  assert.equal(flagged(f, ''), false); assert.equal(flagged(f, '?listen=1'), true); assert.equal(flagged(f, '?menu=1&listen=1'), true); assert.equal(flagged({ id: 'x' }, ''), true);
   const src = readFileSync(new URL('../src/data/labs/index.js', import.meta.url), 'utf8');
   assert.match(src, /listen\b/, 'the lab is registered, and plays its kind');
   assert.ok(LABS.some(l => l.name === 'listen' && kindsOf(l).includes('listen')), 'the lab is registered, and plays its kind');

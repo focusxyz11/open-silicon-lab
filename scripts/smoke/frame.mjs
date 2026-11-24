@@ -271,13 +271,16 @@ export default async function run() {
       return document.querySelectorAll('.lenspins .lppin.lit').length === 4 && document.querySelectorAll('#diveui .dock .lpchain li.lit').length === 4; }, null, { timeout: 20000, polling: 500 })
       .catch(() => problems.push(tag + ': heating the block does not light the chain\'s steps'));
     await mp.close(); }
-  /* Listen (#316): only with ?listen=1. At the block the switch beside the joule's starts the sound on a tap, the
-     caption writes what is heard and the parts light in time on the picture (where there is no audio, as here, the
-     events come on the page's clock, silently); without the flag there is no switch */
+  /* Listen (#316, for everyone since #317): at the block the switch beside the joule's shows, off until tapped (no box,
+     nothing sounding); a tap starts the sound, the caption writes what is heard and the parts light in time on the
+     picture (where there is no audio, as here, the events come on the page's clock, silently) */
   { const tg = 'frame (listen)', lp = await browser.newPage({ viewport: { width: 1280, height: 800 } });
     lp.on('pageerror', e => problems.push(tg + ': ' + e.message));
     await lp.addInitScript(() => { localStorage.setItem('osl-quality', 'flat'); localStorage.setItem('osl-hints-v1', JSON.stringify({ seen: {}, off: true })); });
-    await lp.goto(base + 'index.html?listen=1#/dive/block');
+    await lp.goto(base + 'index.html#/dive/block');
+    await lp.waitForFunction(() => { const b = document.querySelector('#diveui .lsnbtn:not([hidden])'), x = document.querySelector('#diveui .lsnbox');
+      return !!b && b.getAttribute('aria-pressed') === 'false' && (!x || x.hidden); }, null, { timeout: 120000, polling: 1000 })
+      .catch(() => problems.push(tg + ': at the block the Listen switch does not show, or it is not off before a tap'));
     await lp.waitForFunction(() => { const b = document.querySelector('#diveui .lsnbtn:not([hidden])'); if (b && b.getAttribute('aria-pressed') !== 'true') b.click(); return !!document.querySelector('#diveui .lsnbox:not([hidden]) [data-lsnplay]'); }, null, { timeout: 120000, polling: 1000 })
       .catch(() => problems.push(tg + ': the Listen switch does not open at the block'));
     await lp.waitForFunction(() => { const c = document.querySelector('#diveui .lsncap'), s = document.querySelector('.lsnlayer svg'); return !!c && !!c.dataset.ev && !!s && +s.dataset.lit > 5; }, null, { timeout: 30000, polling: 500 })
@@ -285,9 +288,10 @@ export default async function run() {
     /* picking what the block does: too hot is heard as wrong bits, written in the caption */
     await lp.waitForFunction(() => { const h = document.querySelector('#diveui [data-lsnstate="hot"]'); if (h && h.getAttribute('aria-pressed') !== 'true') h.click(); const c = document.querySelector('#diveui .lsncap'); return !!c && c.dataset.ev === 'wrong'; }, null, { timeout: 30000, polling: 300 })
       .catch(() => problems.push(tg + ': the block too hot is not heard as wrong bits'));
-    await lp.goto(base + 'index.html#/dive/block');
-    await lp.waitForFunction(() => !!document.querySelector('#diveui .f2head') && !!document.querySelector('#diveui .joulebtn'), null, { timeout: 120000, polling: 1000 }).catch(() => problems.push(tg + ': the block does not open without the flag'));
-    if (await lp.evaluate(() => !!document.querySelector('.lsnbtn, .lsnbox'))) problems.push(tg + ': without ?listen=1 the Listen switch shows');
+    /* a level that cannot sound shows no switch */
+    await lp.goto(base + 'index.html#/dive/chip');
+    await lp.waitForFunction(() => { const h = document.querySelector('#diveui .f2head'), b = document.querySelector('#diveui .lsnbtn'); return !!h && /chip/i.test(location.hash) && (!b || b.hidden); }, null, { timeout: 120000, polling: 1000 })
+      .catch(() => problems.push(tg + ': the Listen switch shows at the chip, which cannot sound yet'));
     await lp.close(); }
   /* how true a level's picture is (#325): the dive's caption carries its mark beside the level's name (the chip computed
      from your chip, the block an idea drawn), tapped it says what it means here; a lens's measures at the block carry

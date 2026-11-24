@@ -1,4 +1,4 @@
-/* Listen and tell, the ear test at the block (kind 'listen', challenge 'ear', #316, behind ?listen=1). The picture is
+/* Listen and tell, the ear test at the block (kind 'listen', challenge 'ear', #316; on for everyone since #317). The picture is
    hidden; the lab plays the block in one of four states made from the engines (src/engines/listen.js: busy and
    healthy, waiting on memory, too hot with bits going wrong, saving power) and asks which. Once answered, the picture
    shows and lights in time with the same sound, so the ear learns what it heard. Won by eight right of the last ten;

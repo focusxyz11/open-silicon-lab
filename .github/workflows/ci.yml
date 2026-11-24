@@ -80,6 +80,7 @@ jobs:
 
   # the site is collected and uploaded in one job and deployed in the next: deploy-pages run in the same job, a
   # moment after the upload, finds no artifact (actions/deploy-pages#451; every deploy failed so from 23 November)
+  # if deploying still finds nothing, it waits 30 s and tries once more
   site:
     if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
     needs: [logic, browser, test]
@@ -107,7 +108,16 @@ jobs:
       id-token: write
     environment:
       name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+      url: ${{ steps.deployment.outputs.page_url || steps.again.outputs.page_url }}
     steps:
       - id: deployment
+        uses: actions/deploy-pages@v5
+        continue-on-error: true
+      - name: Wait before trying once more
+        if: steps.deployment.outcome == 'failure'
+        run: |
+          echo "::warning title=Pages::Publishing found no artifact on the first try; trying once more in 30 s."
+          sleep 30
+      - id: again
+        if: steps.deployment.outcome == 'failure'
         uses: actions/deploy-pages@v5

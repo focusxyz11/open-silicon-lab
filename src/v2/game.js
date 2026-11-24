@@ -117,9 +117,9 @@ export const CHALLENGES = (() => {
   later.forEach(c => { const i = L.findIndex(x => x.id === c.after); L.splice(i < 0 ? L.length : i + 1, 0, c); });
   return L.map(challengeOnly);
 })();
-/* A challenge behind a flag (flag: 'listen') shows only where the address asks for it (?listen=1): in a browser
-   without the flag it is dropped from CHALLENGES here, before anything reads the list, so nothing else changes. With no
-   address (the tests, the open port) everything stays. */
+/* A challenge behind a flag (flag: 'x', as the ear test was behind ?listen=1 until #317) shows only where the address
+   asks for it (?x=1): in a browser without the flag it is dropped from CHALLENGES here, before anything reads the list, so nothing else changes.
+   With no address (the tests, the open port) everything stays. */
 export const flagged = (c, search) => !c.flag || new RegExp('[?&]' + c.flag + '=1(&|$)').test(search);
 { let q = null; try { q = location.search; } catch (e) { q = null; }
   if (typeof q === 'string') for (let i = CHALLENGES.length - 1; i >= 0; i--) if (!flagged(CHALLENGES[i], q)) CHALLENGES.splice(i, 1); }
