@@ -78,16 +78,15 @@ jobs:
           echo "logic and words: ${{ needs.logic.result }}, browser: ${{ needs.browser.result }}"
           test "${{ needs.logic.result }}" = success && test "${{ needs.browser.result }}" = success
 
-  deploy:
+  # the site is collected and uploaded in one job and deployed in the next: deploy-pages run in the same job, a
+  # moment after the upload, finds no artifact (actions/deploy-pages#451; every deploy failed so from 23 November)
+  site:
     if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
     needs: [logic, browser, test]
     runs-on: ubuntu-latest
     permissions:
-      pages: write
-      id-token: write
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+      contents: read
+      pages: read
     steps:
       - uses: actions/checkout@v4
       - name: Collect the site
@@ -98,5 +97,17 @@ jobs:
       - uses: actions/upload-pages-artifact@v5
         with:
           path: _site
+
+  deploy:
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    needs: site
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
       - id: deployment
         uses: actions/deploy-pages@v5
