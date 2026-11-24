@@ -1149,6 +1149,30 @@
    "verified": "2026-10-27"
   },
   {
+   "id": "chm-x86",
+   "topic": "reality",
+   "detail": "The 80286 (1982) had 134,000 transistors, the 80386 (1985) 275,000, the 80486 (1989) 1.2 million, the Pentium (1993) 3.1 million and the Pentium 4 (2000) 42 million.",
+   "kind": "reported",
+   "label": "Transistors in Intel's x86 processors, generation by generation",
+   "source": "Computer History Museum",
+   "status": "new",
+   "url": "https://www.computerhistory.org/revolution/digital-logic/12/330",
+   "value": "From 134,000 (80286, 1982) to 42 million (Pentium 4, 2000)",
+   "verified": "2026-11-24"
+  },
+  {
+   "id": "core2-410m",
+   "topic": "reality",
+   "detail": "Putting several cores on one chip let transistor counts keep growing without the power growing with them.",
+   "kind": "reported",
+   "label": "Transistors in Intel's Core 2 Duo of 2007",
+   "source": "MIT Technology Review",
+   "status": "new",
+   "url": "https://cdn.technologyreview.com/s/411485/moores-law",
+   "value": "410 million transistors (2007)",
+   "verified": "2026-11-24"
+  },
+  {
    "id": "fdiv-rate",
    "topic": "reality",
    "detail": "Byte magazine's estimate for divisions with random operands; the worst case found, 4,195,835 ÷ 3,145,727, came out as 1.333739 instead of 1.333820.",

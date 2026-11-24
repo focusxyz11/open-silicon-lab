@@ -24,6 +24,8 @@ export const formAt = v => v < GEN(1) ? 'planar' : v < GEN(5) ? 'fin' : 'gaa';
    to try that shows the reason, the core question it belongs to (home.q.*, met alone, beside its moment) and where in
    the lab it is played for real. `span`: how many doublings the moment stays after it is reached ---- */
 export const MOMENTS = [
+  /* four transistors: wired up, a gate. What hides behind 0 and 1 */
+  { id: 'gate', at: 2, span: 1.3, q: 'nat', facts: [], lab: '#/dive/gate' },
   { id: 'job', at: D71, span: 2.2, q: 'line', facts: ['asic-vs-cpu'], lab: '#/bench/need' },
   { id: 'bug', at: D95, span: 2.4, q: 'trust', facts: ['fdiv-rate', 'fdiv-charge'], lab: '#/line/test' },
   { id: 'light', at: GEN(3), span: 1.05, q: 'dig', facts: ['euv-wavelength', 'high-na-price'], lab: '#/line/print' }
@@ -34,6 +36,27 @@ export const JOB_GAP = 500;
 export const FDIV = { rate: 9e9, a: 4195835, b: 3145727, wrong: 4195579 / 3145727 };
 /* the light: three ways to print lines finer than 193 nm light (euv-wavelength, high-na-price) */
 export const LIGHTS = ['one', 'passes', 'euv'];
+
+/* ---- the curve: fifty years on one chart, real chips against the two-year rule (chm-x86, core2-410m, northpole,
+   rubin-gpu, transistor-trend). [year, transistors, word key, fact] ---- */
+export const CHIPS = [[1971, 2300, '4004', 'transistor-trend'], [1982, 134e3, '286', 'chm-x86'], [1985, 275e3, '386', 'chm-x86'],
+  [1989, 1.2e6, '486', 'chm-x86'], [1993, 3.1e6, 'pentium', 'chm-x86'], [2000, 42e6, 'p4', 'chm-x86'], [2007, 410e6, 'core2', 'core2-410m'],
+  [2023, 22e9, 'northpole', 'northpole'], [2026, 336e9, 'rubin', 'rubin-gpu']];
+export const rule = y => 2300 * Math.pow(2, (y - 1971) / 2);
+
+/* ---- the next fifty years: energy per bit, from a bit fetched off another chip down to the physical floor for
+   handling one bit. Fifty years of shrinking gave BEHIND times more transistors; the floor leaves AHEAD times less
+   energy per bit. Each rung: [id, joules per bit, facts, where it is tried] (energy-moving-data: 640 pJ per 16 bits
+   from DRAM, 8–11 pJ per 16 bits from on-chip SRAM, 0.18 pJ for a 16-bit sum; landauer-measured: kT ln 2) ---- */
+export const BEHIND = 336e9 / 2300;
+export const RUNGS = [['far', 640e-12 / 16, ['energy-moving-data'], '#/dive/block'], ['near', 9.5e-12 / 16, ['energy-moving-data', 'hbm4'], '#/dive/chip'],
+  ['inside', 0.18e-12 / 16, ['energy-moving-data', 'encharge-en100'], '#/dive/block'], ['new', null, ['northpole', 'hala-point'], '#/machines'],
+  ['floor', 1.380649e-23 * 300 * Math.LN2, ['landauer-measured'], '#/dive/switch']];
+/* between the sum and the floor no one has a number yet: the bets aim there (new switches, spikes, light), drawn as a
+   band, not a point, half way down on the log scale */
+RUNGS[3][1] = Math.sqrt(RUNGS[2][1] * RUNGS[4][1]);
+export const ZONE_RUNG = 'new';
+export const AHEAD = RUNGS[0][1] / RUNGS[RUNGS.length - 1][1];
 
 /* ---- the four walls, each beside its core question ---- */
 export const WALLS = [
@@ -66,8 +89,9 @@ export const STOCK = ['sensor', 'memory', 'core'], FORMS = ['software', 'circuit
 export const LOOP = [['open', 'lab', 500, 150], ['design', 'studio', 850, 310], ['make', 'fab', 850, 690], ['test', 'test', 500, 850], ['ship', 'port', 150, 690], ['use', 'datacentre', 150, 310]];
 
 /* ---- the page's five parts, in order: the tabs under the bar ---- */
-export const PARTS = [['hero', null], ['walls', 'hd-s-switch'], ['arch', 'hd-s-arch'], ['machine', 'hd-s-machine'], ['island', 'hd-s-island']];
+export const PARTS = [['hero', null], ['curve', 'hd-s-curve'], ['walls', 'hd-s-switch'], ['next', 'hd-s-next'], ['arch', 'hd-s-arch'], ['machine', 'hd-s-machine'], ['island', 'hd-s-island']];
 
 /* every fact the page names (tests/hold.test.mjs checks each is in src/data/facts.json) */
-export const FACT_IDS = [...new Set(['transistor-trend', 'zeloof-garage', 'rubin-gpu', 'node-n2', 'tsmc-n2', 'wafer-space-run', 'fpga-asic-gap',
+export const FACT_IDS = [...new Set(['transistor-trend', 'zeloof-garage', 'rubin-gpu', 'node-n2', 'tsmc-n2', 'wafer-space-run', 'fpga-asic-gap', 'brain-power',
+  ...CHIPS.map(c => c[3]), ...RUNGS.flatMap(r => r[2]),
   ...COSTSRC, ...MOMENTS.flatMap(m => m.facts), ...WALLS.flatMap(w => [...w.facts, ...w.ways.flatMap(x => x[3])]), ...ARR.flatMap(a => a[2])])];
