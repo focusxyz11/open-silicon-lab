@@ -47,10 +47,14 @@ export const AREAS = {
   labs: ['td', 'bet', 'aib', 'agent', 'srv', 'ana', 'ckp', 'rv', 'er', 'cim', 'grv', 'semi', 'imp', 'ovl', 'eu',
     'lt', 'cz', 'fl', 'mo', 'rd', 'evolve', 'clk', 'floor', 'xray', 'xr', 'chip', 'life', 'gauge', 'carch',
     'pb', 'th', 'srch', 'halt',
+    /* spiking neurons and light (#322) */
+    'spk', 'lgt',
     /* Listen and tell, the ear test (#316) */
     'ear',
     /* Invent a transistor, at the switch (#329) */
-    'sw'],
+    'sw',
+    /* new ways to compute: reversible logic and dataflow (#323) */
+    'rev', 'dfl'],
   blueprint: ['bp'],
   /* Hold, the first page (src/v2/hold.js) */
   hold: ['hd'],

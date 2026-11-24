@@ -146,7 +146,11 @@ export const FILED = {
   'ear': ['dig', 'eff'],
   'corearch': ['line', 'eff', 'geo'],
   /* Invent a transistor, at the switch (#329) */
-  'transistor': ['physics', 'moore', 'nat']
+  'transistor': ['physics', 'moore', 'nat'],
+  /* new ways to compute: reversible logic at the switch, dataflow at the chip (#323) */
+  'reversible': ['physics', 'nat'], 'dataflow': ['geo', 'eff'],
+  /* spiking neurons and light, new ways to compute (#322) */
+  'spikes': ['physics', 'copy'], 'light': ['physics', 'geo']
   }
 };
 

@@ -73,7 +73,10 @@ export const LABS = {
   ear: C('listen'), corearch: C('corearch'),
   /* invent a transistor: the switching curve, its voltage, energy and speed are the switch engine's compact model;
      its parts carry their own marks in the lab (material values shaped by real numbers, the traps an idea) */
-  transistor: C('switch')
+  transistor: C('switch'),
+  /* new ways to compute (#323): an adder of Toffoli gates ramped slowly, a model's layers laid across tiles */
+  reversible: C('paradigms'), dataflow: C('paradigms'),
+  spikes: C('paradigms'), light: C('paradigms')
 };
 /* the challenges the ledger makes: a design someone kept, to be broken */
 export const KINDS = { break: C('design'), design: C('design') };
