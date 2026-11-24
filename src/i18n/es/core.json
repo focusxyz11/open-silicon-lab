@@ -4,6 +4,8 @@
  "ui.toLight": "Cambiar a modo claro",
  "ui.blueprint": "El plano: el ecosistema de innovación de chips como una rueda, la vida de un chip alrededor y su escala hacia dentro",
  "ui.hold": "Mantén: cincuenta años de computación bajo un dedo, de un transistor hasta el muro, y lo que se intenta después",
+ "ui.lang": "Idioma",
+ "ui.langNote": "La primera página está traducida; el resto del laboratorio está en inglés por ahora.",
  "loop.aria": "La vida de un chip, en el ciclo",
  "loop.stage.open": "Abierto",
  "loop.stage.design": "Diseñar",

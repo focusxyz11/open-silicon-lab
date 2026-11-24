@@ -17,10 +17,6 @@
 .bp-cta { display: inline-flex; align-items: center; min-height: 50px; padding: 0 22px; border-radius: 14px; border: 1px solid var(--line); color: var(--ink); text-decoration: none; font-weight: 500; background: var(--panel); transition: transform .2s, border-color .2s; }
 .bp-cta.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
 .bp-cta:hover { transform: translateY(-1px); border-color: var(--accent); }
-.bp-langs { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 26px; }
-.bp-langs button { border: 1px solid var(--line); background: none; color: var(--muted); border-radius: 999px; padding: 6px 14px; min-height: 36px; font: 14px var(--sans); cursor: pointer; }
-.bp-langs button[aria-pressed="true"] { color: var(--ink); border-color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); }
-.bp-langnote { font-size: 13px; color: var(--muted); margin: -16px 0 22px; }
 
 /* the chapters */
 .bp-ch { min-height: 96vh; display: flex; flex-direction: column; justify-content: center; padding: 8vh 0; }
@@ -165,8 +161,6 @@
 .bp-door span { color: var(--muted); font-size: 15px; line-height: 1.5; }
 .bp-ways { display: flex; flex-wrap: wrap; gap: 10px 24px; margin: 28px 0 22px; }
 .bp-ways a { color: var(--accent); text-decoration: none; font-weight: 500; }
-.bp-doors .bp-langs { margin: 0; }
-.bp-doors .bp-langnote { margin: 10px 0 0; }
 
 /* coming in: the wheel draws itself, then its places appear */
 .bp-ring { stroke-dasharray: 2800; animation: bp-draw 1.6s ease both; }
@@ -204,3 +198,4 @@
   .bp-doorgrid { grid-template-columns: minmax(0, 1fr); }
   .bp-roles { font-size: 13.5px; }
 }
+

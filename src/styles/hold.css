@@ -28,12 +28,6 @@
 .hold .h-tabs button:hover { color: var(--ink); }
 .hold .h-tabs button.on { color: var(--ink); border-bottom-color: var(--red); }
 .hold .h-tabs button.on i { background: var(--red); border-color: var(--red); color: #fff; }
-.hold .h-langs { display: flex; gap: 12px; align-items: center; }
-.hold .h-langs button { background: none; border: 0; border-bottom: 1.5px solid transparent; padding: 2px 0 1px; cursor: pointer; color: var(--mid); font: inherit; letter-spacing: inherit; text-transform: none; }
-.hold .h-langs button[aria-pressed=true] { color: var(--ink); border-bottom-color: currentColor; }
-.hold .h-langs button:hover { color: var(--red); }
-.hold .h-tabs .h-langs { margin-left: auto; }
-.hold .h-count .h-langs { display: none; margin-top: 14px; }
 
 /* ---- one world: the words on the left, the same square of silicon pinned on the right, all the way down ---- */
 .hold .h-world { display: grid; grid-template-columns: minmax(0, 1fr) var(--S); grid-template-rows: auto var(--timeH) auto auto; column-gap: 56px; padding: 0 44px; }
@@ -262,7 +256,6 @@
   .hold .h-tabs button { margin-right: 0; padding: 0 2px; gap: 5px; font-size: 10.5px; letter-spacing: .04em; }
   .hold .h-tabs button span { display: none; }
   .hold .h-tabs button.on span { display: inline; }
-  .hold .h-tabs .h-langs { display: none; } .hold .h-count .h-langs { display: flex; }
   .hold .h-world { display: flex; flex-direction: column; padding: 0 20px; }
   .hold .h-time, .hold .h-crop, .hold .h-dielab { display: none; }
   .hold .h-diewrap { order: 1; top: calc(var(--barH) + var(--tabH) + 10px); margin: 14px auto 0; flex: none; }
@@ -291,3 +284,4 @@
 /* the bar's Break it stands just under its right end on a narrow phone */
 @media (max-width: 560px) { .hold .h-tabs { padding-right: 58px; } }
 @media (prefers-reduced-motion: reduce) { .hold .h-holdbtn, .hold .h-mk2 i { animation: none !important; } .hold .h-moment { animation: none; } }
+

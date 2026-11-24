@@ -112,8 +112,6 @@
   "bp.open.puzzle": "Try a puzzle",
   "bp.open.ask": "Answer a question",
   "bp.open.report": "Fix a report",
-  "bp.lang.aria": "Language",
-  "bp.lang.note": "Only this first page is translated so far; the rest of the lab is in English.",
   "bp.hero.k": "Open Silicon Lab · a blueprint for what comes next",
   "bp.hero.h": "The blueprint of the <em>next machine</em>",
   "bp.hero.p": "Every chip ever made has gone round one loop, from something open to something used, and has been built from the world down to the atom. Here is all of it on one sheet: who makes chips, the walls they have hit, what is being tried next, and how people and AI will build the next machine together.",

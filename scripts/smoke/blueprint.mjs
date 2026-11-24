@@ -37,7 +37,7 @@ export default async function run() {
     /* the first page in another language: its words, the bar's stages, and a way back */
     await hp.goto(base + 'index.html?lang=zh#/blueprint');
     await hp.waitForFunction(() => document.documentElement.lang === 'zh' && /蓝图/.test((document.querySelector('#blueprint .bp-hero h1') || {}).textContent || '') && [...document.querySelectorAll('#blueprint .bp-stagename')].some(e => e.textContent === '设计'), null, { timeout: 20000 }).catch(() => problems.push(tag + ': the first page does not show in Chinese'));
-    await hp.click('#blueprint [data-lang="en"]').catch(() => problems.push(tag + ': the first page offers no way back to English'));
+    await hp.click('#langbtn').then(() => hp.click('#langmenu [data-lang="en"]')).catch(() => problems.push(tag + ': the bar offers no way back to English'));
     await hp.waitForFunction(() => document.documentElement.lang === 'en' && /blueprint/.test((document.querySelector('#blueprint .bp-hero h1') || {}).textContent || ''), null, { timeout: 20000 }).catch(() => problems.push(tag + ': the first page does not come back to English'));
     /* the island is one tap away, the brand comes back, a station on the wheel leads into its view */
     await hp.click('#blueprint .bp-hero a[href="#/island"]').catch(() => problems.push(tag + ': the blueprint offers no way to the island'));

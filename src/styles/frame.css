@@ -561,8 +561,6 @@ pre.code { margin: 4px 0; white-space: pre-wrap; overflow-wrap: anywhere; }
 .loop button { display: flex; align-items: center; gap: 7px; padding: 8px 13px; border: 0; border-radius: 999px; background: transparent; color: var(--muted); font: 600 15px var(--sans); cursor: pointer; transition: background .2s, color .2s; }
 .loop button:hover { color: var(--ink); background: color-mix(in srgb, var(--ink) 8%, transparent); }
 .loop button[aria-current] { background: var(--ink); color: var(--bg); }
-/* a stage that shows the level you are at: the move holds your depth */
-.loop .holds .ln { text-decoration: underline dotted; text-decoration-thickness: 2px; text-underline-offset: 5px; text-decoration-color: var(--accent); }
 .loop .bump { animation: bump .7s cubic-bezier(.2, 1.6, .4, 1); }
 .loop .plus { position: absolute; left: 50%; top: -4px; transform: translateX(-50%); font: 800 12px var(--mono); color: var(--good); pointer-events: none; animation: plus 1.4s ease-out forwards; }
 .logbtn.glow { animation: pulse 1.6s ease-in-out 3; }

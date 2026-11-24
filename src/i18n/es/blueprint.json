@@ -112,8 +112,6 @@
   "bp.open.puzzle": "Probar un acertijo",
   "bp.open.ask": "Responder una pregunta",
   "bp.open.report": "Arreglar un aviso",
-  "bp.lang.aria": "Idioma",
-  "bp.lang.note": "De momento solo está traducida esta primera página; el resto del lab está en inglés.",
   "bp.hero.k": "Open Silicon Lab · un plano de lo que viene",
   "bp.hero.h": "El plano de la <em>próxima máquina</em>",
   "bp.hero.p": "Cada chip fabricado ha dado la misma vuelta, de algo abierto a algo usado, y se ha construido desde el mundo hasta el átomo. Aquí está todo en una sola hoja: quién hace los chips, los muros con los que han chocado, lo que se está probando ahora, y cómo personas e IA construirán juntas la próxima máquina.",
