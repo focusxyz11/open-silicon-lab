@@ -401,6 +401,8 @@
  "grow.power-store": "a row of batteries that keeps the island's power steady",
  "grow.lab-desk": "a desk at the Lab where people check what agents propose",
  "grow.way-cim": "a grid of memory cells at the Lab that multiplies where its numbers are stored",
+ "grow.way-spikes": "a low post at the Lab whose lights stay dark until a pattern passes, then flash once",
+ "grow.way-light": "two glass guides at the Lab that part and meet again, one glowing brighter than the other",
  "grow.way-quantum": "a quantum machine's cold stage at the Lab, hanging in its frame",
  "grow.dc-batch": "a second hall that answers many people at once",
  "grow.island-teardown": "a repair bench on the phone island where products are opened up",
@@ -628,5 +630,7 @@
  "whatif.ui.tapTag": "Tap a tag over an island, or one below, to see why it changes.",
  "whatif.ui.puzzles": "Puzzles · {n} of {total} solved",
  "whatif.ui.note": "A small model of how a change spreads, not a forecast: the directions follow what happened from 2021 to 2026; the sizes are round numbers chosen to sit sensibly beside one another.",
- "whatif.ui.go": "What if? {lever}"
+ "whatif.ui.go": "What if? {lever}",
+ "grow.way-reversible": "four rails on a low slab at the Lab, crossed by gates whose rings glow slowly",
+ "grow.way-dataflow": "a flat chip at the Lab, its tiles lit in pairs like the layers of a model, a block of memory idle beside it"
 }

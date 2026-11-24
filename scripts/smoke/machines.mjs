@@ -1,6 +1,6 @@
 import { S } from './shared.mjs';
 
-export const about = 'machines from shared blocks, a place: the machine drawn as a block diagram that changes with a form, the agent\'s offers on the front and a pick used, where it is made, liquid hardware keeping up with a radio, the lab\'s curve and an attempt kept, new matter\'s claims and the guesses switch, two challenges won in Do, desktop and phone';
+export const about = 'machines from shared blocks, a place: the machine drawn as a block diagram that changes with a form, the agent\'s offers on the front and a pick used, where it is made, liquid hardware keeping up with a radio, the lab\'s curve and an attempt kept, new matter\'s claims and the guesses switch, two challenges won in Do, a kind of new matter leading into its lab, desktop and phone';
 
 export default async function run() {
   const { browser, browser3d, base, problems } = S;
@@ -34,6 +34,11 @@ export default async function run() {
        range, and its mark on the picture */
     await fp.evaluate(() => { location.hash = '#/machines/wildfire'; });
     await fp.waitForFunction(() => { const L = document.querySelector('[data-mlayer="claims"]'); if (L && L.getAttribute('aria-pressed') !== 'true') L.click(); const b = document.querySelector('[data-mform="detect:matter:living"]'); if (b && b.getAttribute('aria-pressed') !== 'true') b.click(); else if (!b) { const m = document.querySelector('[data-mform^="detect:matter"]'); if (m) m.click(); } return document.querySelectorAll('.mach .mclaims .mst.s-guess').length >= 2 && /–/.test((document.querySelector('.mach .mread b') || {}).textContent || '') && !!document.querySelector('.mach .mbk[data-mpart="detect"].f-matter .mbkt .t-guess'); }, null, { timeout: 15000, polling: 300 }).catch(() => problems.push(tag + ': new matter does not show its claims, its range and its mark on the picture'));
+    /* a kind of new matter a lab models opens its lab (#323): the parity check made reversible leads into the reversible
+       adder; the learner, chosen, leads into the dataflow lab. The check is a circuit again after */
+    await fp.waitForFunction(() => { const b = document.querySelector('[data-mform="check:matter:reversible"]'); if (b && b.getAttribute('aria-pressed') !== 'true') b.click(); const d = document.querySelector('.mach .mbk[data-mpart="detect"]'); if (d && d.getAttribute('aria-pressed') !== 'true') d.click();
+      return !!document.querySelector('.mach a.mlabway[href="#/do/reversible"]') && !!document.querySelector('.mach a.mway[href="#/do/dataflow"]'); }, null, { timeout: 15000, polling: 300 }).catch(() => problems.push(tag + ': reversible matter does not open its lab, or the learner the dataflow lab'));
+    await fp.waitForFunction(() => { const b = document.querySelector('[data-mform="check:circuit"]'); if (b && b.getAttribute('aria-pressed') !== 'true') b.click(); return !!b && b.getAttribute('aria-pressed') === 'true'; }, null, { timeout: 15000, polling: 300 }).catch(() => problems.push(tag + ': the parity check is not a circuit again'));
     /* the agent told to count guesses */
     await fp.waitForFunction(() => { const g = document.querySelector('[data-mguess]'); if (g && !g.checked) g.click(); const a = document.querySelector('[data-magent]'); if (a) a.click(); return !!g && g.checked && document.querySelectorAll('.mach .mpick').length >= 2; }, null, { timeout: 15000, polling: 300 }).catch(() => problems.push(tag + ': the agent cannot be told to count guesses'));
     /* liquid hardware, the layer of reshaping: a radio whose job changes every 100 ns; an FPGA rewires too slowly, an
@@ -81,5 +86,19 @@ export default async function run() {
         const tip = document.querySelector('.fidtip p'); return !!tip && tip.textContent.length > 30; }, sel, { timeout: 15000, polling: 500 })
         .catch(() => problems.push(tag + ': tapping ' + sel + ' says nothing'));
     }
+    await fp.close(); }
+  /* the kind of new matter a lab models leads into that lab (#322, src/data/inventions.js lab): a part made of spikes into
+     the detector made of spikes, one made of light into multiplying as it travels, which opens from there */
+  { const tag = 'machines labs', fp = await browser.newPage({ viewport: { width: 1280, height: 800 } });
+    fp.on('pageerror', e => problems.push(tag + ': ' + e.message));
+    await fp.addInitScript(() => { localStorage.setItem('osl-quality', 'flat'); localStorage.setItem('osl-hints-v1', JSON.stringify({ seen: {}, off: true })); });
+    await fp.goto(base + 'index.html#/machines/wildfire');
+    for (const k of ['spikes', 'light']) {
+      await fp.waitForFunction(k => { const b = document.querySelector('[data-mform="detect:matter:' + k + '"]'); if (b && b.getAttribute('aria-pressed') !== 'true') b.click(); else if (!b) { const m = document.querySelector('[data-mform^="detect:matter"]'); if (m) m.click(); }
+        return !!document.querySelector('.mach a.mlabway[href="#/do/' + k + '"]'); }, k, { timeout: 20000, polling: 300 })
+        .catch(() => problems.push(tag + ': a part made of ' + k + ' does not lead into its lab'));
+    }
+    await fp.waitForFunction(() => { const a = document.querySelector('.mach a.mlabway[href="#/do/light"]'); if (a) a.click(); return !!document.querySelector('.player[data-ch="light"]'); }, null, { timeout: 60000, polling: 1000 })
+      .catch(() => problems.push(tag + ': the lab of light does not open from its matter'));
     await fp.close(); }
 }

@@ -1,0 +1,54 @@
+/* The lab reversible's own styles (src/data/labs/reversible.js, css: true), loaded when its challenge is played (src/core/styles.js). */
+/* compute without erasing (src/v2/labs/reversible.js): four wires and their gates, the table of inputs, the energy against time */
+.revintro, .revreveal { margin: 4px 0 10px; }
+ .revreveal.good { color: var(--good); }
+.revfig, .revchart { margin: 8px 0; }
+ .revfig svg, .revchart svg { display: block; width: 100%; height: auto; }
+.revfig .ax, .revchart .ax { font: 10px var(--sans); fill: var(--muted); }
+.revfig .w { stroke: var(--line); stroke-width: 2; stroke-linecap: round; }
+ .revfig .w.on { stroke: var(--accent); stroke-width: 3.2; }
+.revfig .bit { fill: var(--panel-solid); stroke: var(--line); stroke-width: 1; }
+ .revfig .bit.on { fill: var(--accent); stroke: var(--accent); }
+.revfig .bv { font: 600 10px var(--mono); fill: var(--ink); }
+ .revfig .bv.on { fill: var(--panel-solid); }
+.revfig .tag { font: 600 10px var(--sans); fill: var(--muted); }
+ .revfig .tag.ok { fill: var(--good); }
+.revfig .gl { stroke: var(--ink); stroke-width: 1.6; }
+ .revfig .gl.bad { stroke: var(--bad); stroke-dasharray: 3 3; }
+.revfig .ctl { fill: var(--ink); }
+ .revfig .ctl.bad { fill: var(--bad); }
+.revfig .tgt { fill: var(--panel-solid); stroke: var(--ink); stroke-width: 1.6; }
+ .revfig .tgt.fire { fill: color-mix(in srgb, var(--warm) 55%, var(--panel-solid)); stroke: var(--warm); }
+ .revfig .tgt.bad { stroke: var(--bad); }
+.revfig .tp { stroke: var(--ink); stroke-width: 1.6; fill: none; }
+ .revfig .tp.bad { stroke: var(--bad); }
+.revfig .slot { fill: var(--muted); opacity: .45; }
+.revfig .gn { font: 9px var(--sans); fill: var(--muted); }
+ .revfig .gn.bad { fill: var(--bad); }
+.revfig .hit { fill: transparent; cursor: pointer; }
+ .revfig .hit:hover { fill: color-mix(in srgb, var(--accent) 12%, transparent); }
+.revtap { margin: 10px 0 4px; }
+.revtt table { font-size: 12.5px; }
+ .revtt tbody tr { cursor: pointer; }
+ .revtt tbody tr.on td { background: color-mix(in srgb, var(--accent) 16%, transparent); }
+ .revtt tbody tr.bad td:last-child { color: var(--bad); }
+.revmsg { margin: 10px 0; }
+ .revmsg.good { color: var(--good); }
+ .revmsg.bad { color: var(--bad); }
+.revdial { margin: 6px 0; }
+ .revstep { display: flex; align-items: center; gap: 8px; }
+ .revstep input { flex: 1; min-width: 0; }
+ .revstep .chipb { min-width: 34px; padding: 4px 0; text-align: center; }
+.revchart .grid { stroke: var(--line); stroke-width: .6; }
+.revchart .under { fill: color-mix(in srgb, var(--good) 10%, transparent); }
+.revchart .floor { stroke: var(--bad); stroke-width: 1.4; stroke-dasharray: 5 3; }
+.revchart .abrupt { stroke: var(--muted); stroke-width: 1.8; }
+.revchart .ramp { fill: none; stroke: var(--accent); stroke-width: 2.4; stroke-linejoin: round; }
+.revchart .drop { stroke: var(--ink); stroke-width: .8; stroke-dasharray: 2 2; }
+.revchart .now { fill: var(--ink); stroke: var(--panel-solid); stroke-width: 1.5; }
+ .revchart .now.under { fill: var(--good); }
+.revchart .lbl { font: 600 9.5px var(--sans); fill: var(--muted); }
+ .revchart .lbl.fl { fill: var(--bad); }
+.revsum { margin: 4px 0; }
+html.frame2 .f2stage .revfig svg text { font-size: calc(13px * var(--f2-k, .6)); }
+@media (max-width: 720px) { html.frame2 .f2stage .revfig svg text { font-size: calc(10.5px * var(--f2-k, .9)); } }

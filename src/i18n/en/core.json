@@ -851,6 +851,12 @@
  "game.ch.cim.t": "Fewest bits that still work",
  "game.ch.cim.goal": "Let a grid of memory cells do the multiplying, and find the cheapest converter that keeps its sums within 5% of exact.",
  "game.ch.cim.why": "Fetching a number from memory can cost more energy than computing with it. Computing where the numbers are stored saves the trip, but the sums are analog: currents that vary, read by converters that cost more with every bit.",
+ "game.ch.spikes.t": "A detector made of spikes",
+ "game.ch.spikes.goal": "Tune a spiking neuron so it fires on its own pattern at least 3 times and never on anything else, then count its work against a clocked circuit's.",
+ "game.ch.spikes.why": "A brain spends energy mostly when something happens: a neuron that hears nothing sends nothing. Most chips march to a clock and work out every input on every tick, news or not. Spiking chips copy the brain's habit, and the question is when it pays.",
+ "game.ch.light.t": "Multiply as it travels",
+ "game.ch.light.goal": "Steer light through an interferometer so it multiplies by a quarter, then add phase noise until it stops being exact: exact on 90% of passes, and not at one step more.",
+ "game.ch.light.why": "Moving numbers between chips already goes by light. Light can also compute on the way: split, delayed and joined again, it multiplies as it passes, with no clock. But a phase is a tiny delay, and heat moves it.",
  "game.ch.grover.t": "One step too many",
  "game.ch.grover.goal": "A prize hides in one of eight boxes. Grow the chance of finding it as far as it goes, then take one more step. What happens?",
  "game.ch.grover.why": "A quantum search finds one thing among many in far fewer steps than opening the boxes one by one. But every step has to be clean, and the search has to stop at the right moment.",
@@ -1182,5 +1188,11 @@
  "game.ch.corearch.goal": "Make the core at least twice as fast on the puzzles' programs, in no more than 1.4 times its area, for no more energy.",
  "game.ch.corearch.why": "Every core is a trade: a part that makes some programs faster costs area on the chip, and energy every cycle it is powered, whether it is used or not. Architects choose the parts that earn their place for the work the chip will do.",
  "ui.blueprint": "The blueprint: the chip innovation ecosystem as one wheel, a chip's life around it and its scale inward",
- "ui.hold": "Hold: fifty years of computing under one finger, from one transistor to the wall, and what people are trying next"
+ "ui.hold": "Hold: fifty years of computing under one finger, from one transistor to the wall, and what people are trying next",
+ "game.ch.reversible.t": "Compute without erasing",
+ "game.ch.reversible.goal": "Build an adder from Toffoli gates, then find the fastest steps at which it loses 100 times less energy than switching at once.",
+ "game.ch.reversible.why": "Ordinary logic throws bits away at every gate, and physics charges heat for every bit erased. Logic that can run backwards erases nothing, so in principle it can compute for almost no energy, if it is willing to go slowly. As switches near their limits, some people are building chips this way.",
+ "game.ch.dataflow.t": "Keep the numbers on the chip",
+ "game.ch.dataflow.goal": "Lay a model's layers across a chip's tiles, and find the largest model the chip holds whole: one layer more must not fit.",
+ "game.ch.dataflow.why": "Moving a number costs far more energy than computing with it. A processor fetches a model's weights from memory again for every answer; a dataflow chip keeps them in its tiles, where the work happens. It saves the most, until the model no longer fits."
 }
