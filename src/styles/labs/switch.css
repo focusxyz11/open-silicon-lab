@@ -32,7 +32,7 @@
  .tswkey .k.mh { width: 8px; height: 8px; border-radius: 50%; background: var(--panel-solid); border: 2px solid var(--accent); }
  .tswkey .k.kn { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); }
 /* the goals: four meters, each lit once some switch you tried met it */
-.tswgoal .gauge .gl { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tswgoal .gauge .gl { overflow-wrap: anywhere; }
 /* the choices */
 .tswset { margin: 10px 0 4px; }
 .tswset .kicker { margin: 10px 0 4px; }

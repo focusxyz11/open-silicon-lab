@@ -40,6 +40,8 @@ export default function lab(L) {
   const nf = (v, d = 0) => (+v).toLocaleString('en-US', { maximumFractionDigits: d, minimumFractionDigits: d });
   const mob = v => nf(+v.toPrecision(2));
   const matName = id => t('sw.mat.' + id);
+  /* a material's name inside a sentence */
+  const inName = r => (r.own ? t('sw.dev.own') : matName(r.spec.mat).toLowerCase());
   const sci = v => { const e = Math.floor(Math.log10(v) + 1e-9), m = v / Math.pow(10, e); return t('sw.sci', { m: nf(m, 1), e: sup(e) }); };
 
   /* ---- the switching curve ---- */
@@ -88,7 +90,7 @@ export default function lab(L) {
     const sh = r.spec.shape, form = r.mat.form, ins = (x, y, w, h, rx = 3) => '<rect class="ins" x="' + (x - 2.5) + '" y="' + (y - 2.5) + '" width="' + (w + 5) + '" height="' + (h + 5) + '" rx="' + (rx + 2) + '"/>';
     const chan = (x, y, w, h, rx = 3) => '<rect class="ch" x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" rx="' + rx + '"/>';
     const tube = (x, y, rr) => '<circle class="ins" cx="' + x + '" cy="' + y + '" r="' + (rr + 2.5) + '"/><circle class="ch" cx="' + x + '" cy="' + y + '" r="' + rr + '"/>';
-    let s = '<svg viewBox="0 0 240 132" role="img" aria-label="' + esc(t('sw.dev.aria', { shape: t('sw.shape.' + sh), mat: matName(r.spec.mat) })) + '">';
+    let s = '<svg viewBox="0 0 240 132" role="img" aria-label="' + esc(t('sw.dev.aria', { shape: t('sw.shape.' + sh), mat: inName(r) })) + '">';
     s += '<rect class="sub" x="8" y="104" width="224" height="22" rx="4"/>';
     let gate = '', body = '';
     if (sh === 'planar' && form === 'tube') { body = '<rect class="ins" x="28" y="96" width="184" height="8" rx="2"/>' + [84, 108, 132, 156].map(x => tube(x, 88, 5)).join(''); gate = '<rect class="ins" x="66" y="74" width="108" height="5" rx="1"/><rect class="gate" x="66" y="44" width="108" height="30" rx="4"/>'; }
@@ -107,7 +109,7 @@ export default function lab(L) {
     s += sh === 'gaa' ? '<path class="lead" d="M172 60h14"/><text class="lb lch" x="190" y="63">' + esc(t('sw.dev.channel')) + '</text>'
       : '<text class="lb lch" x="28" y="' + (sh === 'fin' ? 91 : sh === 'sheet' ? 89 : 82) + '">' + esc(t('sw.dev.channel')) + '</text>';
     s += '<text class="lb lsub" x="120" y="119" text-anchor="middle">' + esc(t('sw.dev.sub')) + '</text>';
-    return '<figure class="tswdev">' + s + '</svg><figcaption class="small muted">' + esc(t('sw.dev.cap', { shape: t('sw.shape.' + sh), mat: matName(r.spec.mat) })) + '</figcaption></figure>';
+    return '<figure class="tswdev">' + s + '</svg><figcaption class="small muted">' + esc(t('sw.dev.cap', { shape: t('sw.shape.' + sh), mat: inName(r) })) + '</figcaption></figure>';
   }
 
   /* ---- the band the known materials make, and your material in it ---- */

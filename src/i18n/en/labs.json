@@ -1264,6 +1264,7 @@
  "sw.key.si": "silicon fin",
  "sw.key.line": "60 mV per tenfold: nothing over a barrier is steeper (shaded)",
  "sw.dev.aria": "A {shape} switch cut across its channel, the channel made of {mat}.",
+ "sw.dev.own": "your own material",
  "sw.dev.gate": "gate",
  "sw.dev.channel": "channel",
  "sw.dev.sub": "base · current flows into the page",
