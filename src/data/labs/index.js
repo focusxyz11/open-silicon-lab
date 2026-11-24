@@ -47,9 +47,11 @@ import listen from './listen.js';
 import corearch from './corearch.js';
 import reversible from './reversible.js';
 import dataflow from './dataflow.js';
+import spikes from './spikes.js';
+import light from './light.js';
 
 export const LABS = [agent, teardown, analog, bench, evolve, crystal, implant, overlay, films, litho, cim, grover, semiconductor,
-  aibuild, clockpower, serve, bits, vote, mortal, dies, errors, rv, pbits, thousand, search, halt, listen, corearch,
+  aibuild, clockpower, serve, bits, vote, mortal, dies, errors, rv, pbits, thousand, search, halt, listen, corearch, spikes, light,
   reversible, dataflow];
 
 /* a challenge as the loop reads it (src/v2/game.js CHALLENGES): the rest of a lab's challenge is gathered from it

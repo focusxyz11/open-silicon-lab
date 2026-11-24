@@ -8,7 +8,8 @@
    STATUS: how sure a claim is, from most to least: in products, shown in a lab, a guess.
    MATTERS: each kind of new matter, the blocks it can be a form of (on), whether it can still change after it is made,
    whether its answers are exact, whether it is grown rather than made in a fab (grown), the bits its floor counts (floor: 'op', every bit a multiply-add erases; or a number,
-   the bits of the answer alone, for logic that erases nothing on the way), and its claims:
+   the bits of the answer alone, for logic that erases nothing on the way), the challenge of the lab that models it
+   (lab, src/data/labs/: a part made of it leads there, src/v2/machines.js), and its claims:
      status   product | lab | guess;
      fid      how the lab knows it, on the lab's ladder (src/data/fidelity.js): idea (a guess, or a note drawn), figures
               (it rests on fact), computed (an engine runs it: engine); a guess is never more than an idea;
@@ -26,15 +27,15 @@ export const KINDS = ['gain', 'catch', 'note'];
 export const ACTIVITY = { rare: 0.02, steady: 0.5 };
 
 export const MATTERS = [
-  { id: 'cim', on: ['learner'], changes: true, exact: false, floor: 'op', claims: [
+  { id: 'cim', on: ['learner'], changes: true, exact: false, floor: 'op', lab: 'cim', claims: [
     { id: 'cimArray', status: 'lab', fid: 'computed', kind: 'gain', energy: 'cim', engine: 'src/engines/paradigms.js' },
     { id: 'cimNoise', status: 'lab', fid: 'computed', kind: 'note', engine: 'src/engines/paradigms.js' }] },
-  { id: 'light', on: ['learner'], changes: true, exact: false, floor: 'op', claims: [
+  { id: 'light', on: ['learner'], changes: true, exact: false, floor: 'op', lab: 'light', claims: [
     { id: 'lightReal', status: 'product', fid: 'figures', kind: 'note', fact: 'qant-photonic' },
     { id: 'lightNoise', status: 'lab', fid: 'computed', kind: 'note', engine: 'src/engines/paradigms.js' },
     { id: 'lightCheap', status: 'guess', fid: 'idea', kind: 'gain', energy: 0.1 },
     { id: 'lightConvert', status: 'guess', fid: 'idea', kind: 'catch', energy: 2 }] },
-  { id: 'spikes', on: ['learner'], changes: true, exact: false, floor: 'op', claims: [
+  { id: 'spikes', on: ['learner'], changes: true, exact: false, floor: 'op', lab: 'spikes', claims: [
     { id: 'spikesReal', status: 'lab', fid: 'figures', kind: 'note', fact: 'hala-point' },
     { id: 'spikesEvents', status: 'lab', fid: 'computed', kind: 'gain', energy: 'activity', engine: 'src/engines/paradigms.js' },
     { id: 'spikesCost', status: 'guess', fid: 'idea', kind: 'catch', energy: 3 }] },

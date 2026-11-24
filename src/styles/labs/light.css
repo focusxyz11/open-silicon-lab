@@ -1,0 +1,41 @@
+/* The lab light's own styles (src/data/labs/light.js, css: true), loaded when one of its challenges is played (src/core/styles.js). */
+/* multiply as it travels (src/v2/labs/light.js): the interferometer, the numbers multiplied, and the passes at a noise */
+.lgtintro { margin: 4px 0 10px; }
+.lgtfig { margin: 8px 0; }
+ .lgtfig svg { display: block; width: 100%; height: auto; }
+.lgtfig .ax { font: 9.5px var(--sans); fill: var(--muted); }
+ .lgtfig .ax.lv { fill: var(--ink); font-weight: 600; }
+ .lgtfig .ax.lv.hid { fill: var(--muted); }
+.lgtfig .guide { fill: none; stroke: color-mix(in srgb, var(--ink) 16%, transparent); stroke-width: 6; stroke-linecap: round; }
+.lgtfig .beam { fill: none; stroke: var(--warm); stroke-linecap: round; }
+.lgtfig .split { fill: var(--panel-solid); stroke: var(--line); stroke-width: 1; opacity: .9; }
+.lgtfig .heat { fill: var(--bad); }
+.lgtfig .pulse { fill: var(--warm); }
+.lgtfig .num { font: 600 8.5px var(--mono); fill: var(--ink); }
+.lgtfig .times { font: 600 12px var(--mono); fill: var(--ink); }
+.lgtfig .arrow { fill: none; stroke: var(--muted); stroke-width: 1.2; stroke-linecap: round; stroke-linejoin: round; }
+.lgtfig .band { fill: color-mix(in srgb, var(--good) 18%, transparent); }
+ .lgtfig .aim { stroke: var(--good); stroke-width: 1.2; }
+.lgtfig .axis { stroke: var(--line); stroke-width: 1; }
+.lgtfig .pass { fill: var(--bad); opacity: .8; }
+ .lgtfig .pass.ok { fill: var(--accent); }
+.lgtfig .exact { font: 600 9.5px var(--mono); }
+ .lgtfig .exact.good { fill: var(--good); }
+ .lgtfig .exact.bad { fill: var(--bad); }
+html.frame2 .f2stage .lgtfig svg text { font-size: calc(13px * var(--f2-k, .6)); }
+ html.frame2 .f2stage .lgtfig svg text.times { font-size: calc(17px * var(--f2-k, .6)); }
+/* a phone: its words smaller */
+@media (max-width: 720px) {
+  html.frame2 .f2stage .lgtfig svg text { font-size: calc(10px * var(--f2-k, 1)); }
+  html.frame2 .f2stage .lgtfig svg text.times { font-size: calc(13px * var(--f2-k, 1)); }
+}
+.lgtguess { margin: 10px 0; padding: 10px 12px; border-radius: 12px; border: 1px dashed var(--warm); background: color-mix(in srgb, var(--warm) 7%, transparent); }
+ .lgtguess .kicker { margin-top: 0; }
+.lgtdial { margin: 6px 0; }
+ .lgtstep { display: flex; align-items: center; gap: 8px; }
+ .lgtstep input { flex: 1; min-width: 0; }
+ .lgtstep .chipb { min-width: 34px; padding: 4px 0; text-align: center; }
+.lgtmsg.good { color: var(--good); }
+ .lgtmsg.bad { color: var(--bad); }
+.lgtclaims { margin: 10px 0; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--line); display: grid; gap: 6px; }
+ .lgtclaims > .kicker { margin: 0; }
