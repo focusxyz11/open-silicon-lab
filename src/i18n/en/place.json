@@ -418,6 +418,7 @@
  "grow.fab-scanner": "a second scanner bay in the factory, where wafers are printed with light",
  "grow.fab-euv": "a tin-droplet light source beside the scanner, making the extreme ultraviolet light",
  "grow.dc-heat": "a hot plate that finds how much heat a chip can stand",
+ "grow.dc-switch": "an invented switch, wrapped by its gate",
  "grow.studio-aichip": "the first wafer of your chip, on show in front of the studio",
  "grow.blk-power": "a power meter beside the studio, where the clock and the voltage are chosen",
  "grow.gate-counter": "four lamps in front of the studio that count in step with a clock",

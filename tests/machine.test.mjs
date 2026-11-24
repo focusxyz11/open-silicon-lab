@@ -49,7 +49,7 @@ test('kinds of new matter: real blocks, and every claim says how sure it is and 
     for (const c of m.claims) {
       assert.ok(STATUS.includes(c.status) && KINDS.includes(c.kind), c.id);
       if (c.kind === 'note') assert.equal(c.energy, undefined, c.id + ': a note changes no number');
-      else assert.ok(typeof c.energy === 'number' ? c.energy >= 0 : ['cim', 'activity'].includes(c.energy), c.id + ' energy');
+      else assert.ok(typeof c.energy === 'number' ? c.energy >= 0 : ['cim', 'activity', 'switch'].includes(c.energy), c.id + ' energy');
       if (c.status !== 'guess') assert.ok(c.fact || c.engine, c.id + ': what is not a guess rests on a source or an engine');
       if (c.fact) assert.ok(factOf(c.fact), c.id + ' names a fact facts.json does not have: ' + c.fact);
       if (c.engine) assert.ok(existsSync(new URL(c.engine, root)), c.id + ' names a file that does not exist: ' + c.engine);

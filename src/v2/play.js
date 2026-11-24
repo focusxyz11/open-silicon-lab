@@ -12,7 +12,7 @@
    Do mode (src/v2/frame2.js, docs/LABS.md): the player says what the stage shows. A lab
    declares its own instrument and goal in its HTML (data-f2); for one that declares no goal, its first goal box is the
    goal; the kinds with no picture of their own (PLACE) are played on the place, which stays the picture. */
-import { t, needWords } from '../core/i18n.js';
+import { t, needWords, preloadWords, hasWords } from '../core/i18n.js';
 import { CLOCKS, SIDES, LOADS, REUSES, MEMS, GENS, x2 } from '../engines/chip.js';
 import { MISSIONS, MARGINS, PROTECT, normalLife } from '../engines/life.js';
 import { TAPS, turnGate, hasPiece, togglePiece, checkDesign, checkChip, checkLife, chipGoal, starter, ownStarter, aiProposal, spotCase, spotCode, spotAnswer, SPOT, STEPS, next, INSIDE, challengeOf, GAUGES, gauge, world, opensOf, askHref } from './game.js';
@@ -56,17 +56,18 @@ export function goalOf(ch) {
    challenge, src/core/styles.js) too: the shell awaits labsReady(ch) before it calls play(). LABS: the lab that plays
    each kind, the kinds of its challenges */
 let LABS = null, labsP = null;
-/* the words are asked for first, so their one request is not queued behind the labs' modules */
-const labMods = () => labsP || (labsP = Promise.all([needWords('labs'), Promise.all(LAB_LIST.map(l => import('./labs/' + l.name + '.js').then(m => [l, m.default])))])
-  .then(([, mods]) => { const by = {}; mods.forEach(([l, lab]) => kindsOf(l).forEach(k => { by[k] = lab; })); return (LABS = by); }, e => { labsP = null; throw e; }));
+const labMods = () => labsP || (labsP = Promise.all(LAB_LIST.map(l => import('./labs/' + l.name + '.js').then(m => [l, m.default])))
+  .then(mods => { const by = {}; mods.forEach(([l, lab]) => kindsOf(l).forEach(k => { by[k] = lab; })); return (LABS = by); }, e => { labsP = null; throw e; }));
 /* the player's styles, and the lab's own when the challenge is a lab's (css: true in its file) */
 const sheetsOf = ch => { const l = ch && labOfKind(ch.kind); return ['labs'].concat(l && l.css ? ['labs/' + l.name] : []); };
 const stylesIn = new Set();
 const labStyles = ch => { const want = sheetsOf(ch); return needStyles(...want).then(() => want.forEach(n => stylesIn.add(n))); };
-export const labsLoaded = ch => !!LABS && sheetsOf(ch).every(n => stylesIn.has(n));
+export const labsLoaded = ch => !!LABS && hasWords('labs') && sheetsOf(ch).every(n => stylesIn.has(n));
 /* labsReady(ch): the labs, their words, and the styles that challenge needs; labsReady(null, false): the labs and their
-   words only, as the first page fetches them in an idle moment (styles wait for a challenge played) */
-export const labsReady = (ch = null, styles = true) => Promise.all([labMods(), styles ? labStyles(ch) : null]).then(() => LABS);
+   words only, as the first page fetches them in an idle moment (styles wait for a challenge played; a failure there says
+   nothing, and the words are asked for again, and missed aloud, when a challenge is played). The words are asked for
+   first, so their one request is not queued behind the labs' modules */
+export const labsReady = (ch = null, styles = true) => Promise.all([styles ? needWords('labs') : preloadWords('labs'), labMods(), styles ? labStyles(ch) : null]).then(() => LABS);
 export function play(el, ch, ctx) {
   const S = ctx.state;
   let view = { msg: null, B: null, ai: false, hint: false, tests: [], guess: null, wrong: null, write: false, won: false, rows: null, okG: null, op: -1, seq: null, slip: null, no: null };

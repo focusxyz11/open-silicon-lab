@@ -15,8 +15,9 @@
               (it rests on fact), computed (an engine runs it: engine); a guess is never more than an idea;
      kind     gain (lowers the energy), catch (raises it) or note (says something true, changes no number);
      energy   the factor against a circuit made for the same work: a number, 'cim' (the compute-in-memory engine's
-              crossbar against a digital array, src/engines/paradigms.js) or 'activity' (the share of time the need is
-              busy, ACTIVITY below);
+              crossbar against a digital array, src/engines/paradigms.js), 'activity' (the share of time the need is
+              busy, ACTIVITY below) or 'switch' (your switch's energy per switch against silicon, and its status, from
+              the machine's plan: src/engines/machine.js claimsOf);
      fact     the entry of src/data/facts.json it rests on, or engine, the file of the lab that computes it;
    and lab, when a lab models it: the challenge it opens from Machines (src/data/labs/).
    A guess's number is the guess itself, written down so it can be argued with; it is never shown as a figure.
@@ -49,7 +50,13 @@ export const MATTERS = [
     { id: 'liveReal', status: 'product', fid: 'figures', kind: 'note', fact: 'cortical-cl1' },
     { id: 'liveBrain', status: 'guess', fid: 'idea', kind: 'gain', energy: 0.001, fact: 'brain-power' },
     { id: 'liveSupport', status: 'guess', fid: 'idea', kind: 'catch', energy: 100 },
-    { id: 'liveGrown', status: 'lab', fid: 'figures', kind: 'note', fact: 'cortical-cl1' }] }
+    { id: 'liveGrown', status: 'lab', fid: 'figures', kind: 'note', fact: 'cortical-cl1' }] },
+  /* your switch (#329): a circuit made of the switch you invented at the switch level (src/v2/labs/switch.js). Its one
+     claim is filled in from the machine's plan (energy 'switch', src/engines/machine.js claimsOf): its energy per switch
+     against today's silicon fin and its status (in products, shown in a lab, or a guess for an invented material),
+     computed by the switch engine */
+  { id: 'switch', on: ['learner', 'adder', 'counter', 'voter', 'parity'], changes: false, exact: true, floor: 'op', claims: [
+    { id: 'switchYours', status: 'product', fid: 'computed', kind: 'gain', energy: 'switch', engine: 'src/engines/switch.js' }] }
 ];
 export const MATTER_IDS = MATTERS.map(m => m.id);
 export const matterOf = id => MATTERS.find(m => m.id === id) || null;

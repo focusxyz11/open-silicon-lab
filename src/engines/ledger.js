@@ -71,16 +71,18 @@ const planKey = p => JSON.stringify(Object.keys(PLAN).map(k => [k, p[k] === unde
 /* a plan as an entry holds it: only the plan's own keys, each a plain value (the engine checks the values) */
 const planOk = p => p && typeof p === 'object' && !Array.isArray(p) && Object.keys(p).length <= Object.keys(PLAN).length &&
   Object.entries(p).every(([k, v]) => Object.hasOwn(PLAN, k) && (v === null || ['number', 'string', 'boolean'].includes(typeof v)));
-/* a machine's plan as an entry holds it: a form for some of the need's parts, and perhaps a fab, each a short word (the
+/* a machine's plan as an entry holds it: a form for some of the need's parts, and perhaps a fab and a switch (sw), each a short word (the
    engine checks the forms and the fab); the key of a machine is its whole plan, with the start filled in */
-const machinePlanOk = (n, p) => p && typeof p === 'object' && !Array.isArray(p) && Object.keys(p).length <= n.parts.length + 1 &&
-  Object.entries(p).every(([k, v]) => (k === 'fab' || n.parts.some(q => q.id === k)) && typeof v === 'string' && v.length <= 40);
+const machinePlanOk = (n, p) => p && typeof p === 'object' && !Array.isArray(p) && Object.keys(p).length <= n.parts.length + 2 &&
+  Object.entries(p).every(([k, v]) => (k === 'fab' || k === 'sw' || n.parts.some(q => q.id === k)) && typeof v === 'string' && v.length <= 40);
 /* a plan for the chef's kitchen as an entry holds it: some of the six levers, each a number or a yes or no (the engine
    checks the values); its key is the plan with the start left out, so the same plan written two ways is the same */
 const chefPlanOk = p => p && typeof p === 'object' && !Array.isArray(p) && Object.keys(p).length <= CHEF_LEVERS.length &&
   Object.entries(p).every(([k, v]) => CHEF_LEVERS.includes(k) && ['number', 'boolean'].includes(typeof v));
 const chefKey = p => JSON.stringify(Object.entries(chefPlan(p)).sort());
-const machineKey = (need, plan) => { const R = runMachine(need, plan), P = R.plan; return JSON.stringify(Object.keys(P).filter(k => k !== 'fab' || R.score.fab).sort().map(k => [k, P[k]])); };
+/* a plan's switch (sw, src/engines/switch.js specKey) is part of its key only when a part is made of it */
+const machineKey = (need, plan) => { const R = runMachine(need, plan), P = R.plan, sw = Object.values(P).includes('matter:switch');
+  return JSON.stringify(Object.keys(P).filter(k => (k !== 'fab' || R.score.fab) && (k !== 'sw' || sw) && P[k] !== undefined).sort().map(k => [k, P[k]])); };
 /* the fronts where two lenses meet (#315, #326): a front is today's best compromises between two measures, drawn where
    both come from one model (src/engines/lens.js, MEETS in src/data/frame.js). An attempt at one is a try with the
    front's key and a plan: the values of its two controls, each from 0 to 1 in tenths. Here the ledger checks the plan's

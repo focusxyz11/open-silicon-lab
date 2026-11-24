@@ -38,7 +38,8 @@ export const ENGINES = {
   redundancy: 'src/engines/redundancy.js', mortal: 'src/engines/mortal.js', errors: 'src/engines/errors.js', riscv: 'src/engines/riscv.js',
   halt: 'src/engines/halt.js', thousand: 'src/engines/thousand.js', search: 'src/engines/search.js', listen: 'src/engines/listen.js',
   corearch: 'src/engines/corearch.js', machine: 'src/engines/machine.js', budget: 'src/engines/budget.js', plan: 'src/data/partfacts.js',
-  noise: 'src/engines/lens.js', lens: 'src/engines/lens.js'
+  noise: 'src/engines/lens.js', lens: 'src/engines/lens.js',
+  switch: 'src/engines/switch.js'
 };
 
 const C = by => ({ f: 'computed', by });
@@ -70,6 +71,9 @@ export const LABS = {
   silent: { f: 'checked', by: 'errors', fact: 'llama3-interruptions' },
   rvrun: C('riscv'), noise: C('paradigms'), 'noise-big': C('paradigms'), thousand: C('thousand'), search: C('search'), halt: C('halt'),
   ear: C('listen'), corearch: C('corearch'),
+  /* invent a transistor: the switching curve, its voltage, energy and speed are the switch engine's compact model;
+     its parts carry their own marks in the lab (material values shaped by real numbers, the traps an idea) */
+  transistor: C('switch'),
   /* new ways to compute (#323): an adder of Toffoli gates ramped slowly, a model's layers laid across tiles */
   reversible: C('paradigms'), dataflow: C('paradigms'),
   spikes: C('paradigms'), light: C('paradigms')
