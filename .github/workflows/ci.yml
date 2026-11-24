@@ -78,16 +78,13 @@ jobs:
           echo "logic and words: ${{ needs.logic.result }}, browser: ${{ needs.browser.result }}"
           test "${{ needs.logic.result }}" = success && test "${{ needs.browser.result }}" = success
 
-  deploy:
+  # the site is collected and uploaded in one job and published in the next: on 24 November deploy-pages, run in the same
+  # job a second after the upload, found no artifact three pushes in a row (all tests green). A job of its own starts
+  # later, and if publishing still finds nothing it waits and tries once more.
+  site:
     if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
     needs: [logic, browser, test]
     runs-on: ubuntu-latest
-    permissions:
-      pages: write
-      id-token: write
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
       - name: Collect the site
@@ -98,5 +95,26 @@ jobs:
       - uses: actions/upload-pages-artifact@v3
         with:
           path: _site
+
+  deploy:
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    needs: [site]
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url || steps.again.outputs.page_url }}
+    steps:
       - id: deployment
+        uses: actions/deploy-pages@v4
+        continue-on-error: true
+      - name: Wait before trying once more
+        if: steps.deployment.outcome == 'failure'
+        run: |
+          echo "::warning title=Pages::Publishing found no artifact on the first try; trying once more in 30 s."
+          sleep 30
+      - id: again
+        if: steps.deployment.outcome == 'failure'
         uses: actions/deploy-pages@v4
