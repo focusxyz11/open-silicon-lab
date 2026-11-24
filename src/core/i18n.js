@@ -93,9 +93,10 @@ const pseudo = v => Array.isArray(v) ? v.map(pseudo) : typeof v === 'object' ? O
    (or reads it from the single-file build). */
 let TEXT = null;
 const loaded = {};
+const have = {};
 async function loadArea(area) {
   const en = JSON.parse(await TEXT('src/i18n/en/' + area + '.json'));
-  Object.assign(EN, en);
+  Object.assign(EN, en); have[area] = true;
   if (LANG === PSEUDO) { Object.assign(MSG, Object.fromEntries(Object.entries(en).map(([k, v]) => [k, pseudo(v)]))); return; }
   if (LANG !== 'en' && (TRANSLATED[LANG] || []).includes(area)) { try { Object.assign(MSG, JSON.parse(await TEXT('src/i18n/' + LANG + '/' + area + '.json'))); } catch (e) { /* this area is not translated yet: it shows in English */ } }
 }
@@ -105,10 +106,20 @@ export async function loadLang(text, chosen) {
   await needWords('core');
   try { document.documentElement.lang = LANG; } catch (e) { /* no document (tests) */ }
 }
+/* a page being left cancels what it was still fetching (an idle preload, say): that is not a missing word */
+let leaving = false;
+try { addEventListener('pagehide', () => { leaving = true; }); addEventListener('pageshow', () => { leaving = false; }); } catch (e) { /* no window (tests) */ }
 /* the words of one or more areas, each loaded once; resolves when all are in */
 export function needWords(...areas) {
-  return Promise.all(areas.map(a => loaded[a] || (loaded[a] = TEXT ? loadArea(a).catch(e => { delete loaded[a]; console.error('Words missing for', a, e); }) : Promise.resolve())));
+  return Promise.all(areas.map(a => loaded[a] || (loaded[a] = TEXT ? loadArea(a).catch(e => { delete loaded[a]; if (!leaving) console.error('Words missing for', a, e); }) : Promise.resolve())));
 }
+/* the same, fetched ahead in an idle moment: a failure says nothing, and the words are asked for again when a view
+   needs them (needWords, which says so if they are still missing) */
+export function preloadWords(...areas) {
+  return Promise.all(areas.map(a => loaded[a] || (loaded[a] = TEXT ? loadArea(a).catch(() => { delete loaded[a]; }) : Promise.resolve())));
+}
+/* whether an area's words are in (or no files are used: tests and tools) */
+export const hasWords = area => !TEXT || !!have[area];
 /* every area not loaded yet, for an idle moment */
 export const needAllWords = () => needWords(...Object.keys(AREAS));
 /* For tests and tools: use a set of texts directly. */
