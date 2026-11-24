@@ -191,7 +191,7 @@ export function createFrame(host, o) {
     const names = [...stage.querySelectorAll('[data-word]')].filter(el => !el.classList.contains('mark3') && shown(el));
     /* the frame's own things stay clear: the way in, the card, the rails, the path and the goal */
     const busy = [!wayin.hidden ? wibox.getBoundingClientRect() : null].concat([...host.querySelectorAll(':scope>:is(.dockwrap,.rail2,.steps2,.crumbs2,.homebtn),.goal2:not([hidden])')].map(el => el.getBoundingClientRect())), by = new Map();
-    const placed = [], lone = [];
+    const placed = [], lone = [], nameR = names.map(n => n.getBoundingClientRect()), onName = ([x, y]) => nameR.some(R => x > R.left - 15 && x < R.right + 15 && y > R.top - 15 && y < R.bottom + 15);
     for (const b of marksEl.children) {
       /* beside its own part's name; where this view does not name that part, beside one it names that has no mark yet */
       const el = names.find(n => n.dataset.word === b.dataset.mword) || names.find(n => !by.has(n));
@@ -200,8 +200,10 @@ export function createFrame(host, o) {
       /* around the name: before it, after it, above, below, then a step further out; the first spot clear of the frame,
          the picture's edge and the other marks */
       const r = el.getBoundingClientRect(), cx = (r.left + r.right) / 2, cy = (r.top + r.bottom) / 2;
-      const spot = [[r.left - 22, cy], [r.right + 22, cy], [cx, r.top - 22], [cx, r.bottom + 22], [r.left - 62, cy], [r.right + 62, cy]]
-        .find(([x, y]) => x > B.left + 18 && x < B.right - 18 && y > B.top + 18 && y < B.bottom - 18 && !busy.some(R => clash(x, y, R)) && !placed.some(([px, py]) => Math.abs(px - x) < 38 && Math.abs(py - y) < 38));
+      const spots = [[r.left - 22, cy], [r.right + 22, cy], [cx, r.top - 22], [cx, r.bottom + 22], [r.left - 62, cy], [r.right + 62, cy]],
+        free = ([x, y]) => x > B.left + 18 && x < B.right - 18 && y > B.top + 18 && y < B.bottom - 18 && !busy.some(R => clash(x, y, R)) && !placed.some(([px, py]) => Math.abs(px - x) < 38 && Math.abs(py - y) < 38);
+      /* clear of every name on the picture too where it can be (#326: a mark sat on the end of a name), else as before */
+      const spot = spots.find(p => free(p) && !onName(p)) || spots.find(free);
       if (!spot) { b.hidden = true; continue; }
       placed.push(spot);
       b.hidden = false; b.style.transform = 'translate(' + (spot[0] - B.left).toFixed(1) + 'px,' + (spot[1] - B.top).toFixed(1) + 'px) translate(-50%,-50%)';
@@ -219,6 +221,8 @@ export function createFrame(host, o) {
   }
   const fill = () => {
     host.querySelectorAll('[data-mode]').forEach(b => b.setAttribute('aria-selected', String(b.dataset.mode === mode)));
+    /* a lens held repaints the picture: the way in steps aside so it covers none of the paint (its card has ↓ and ↑) */
+    host.classList.toggle('lensing', mode === 'ask' && !!lens);
     drawMarks();
     if (mode !== 'ask' && o.onLens) o.onLens(null, depth);
     if (mode === 'look') return o.onLook && o.onLook();
@@ -229,6 +233,7 @@ export function createFrame(host, o) {
       /* a lens kept on while moving level stays where it lives there too; where it does not, it is put down, saying so */
       if (lens && !L.some(l => l.id === lens)) { down = { q: lens, at: depth }; lens = pair && L.some(l => l.id === pair) ? pair : null; pair = null; }
       if (pair && !L.some(l => l.id === pair)) { down = { q: pair, at: depth }; pair = null; }
+      host.classList.toggle('lensing', !!lens);
       if (down && down.at === depth && !lens) h += '<p class="qldown">' + esc(t('frame.lens.down', { q: t('frame.q.' + down.q), level: t('depth.' + depth + '.name') })) + '</p>';
       if (L.length) {
         const l = lens && L.find(x => x.id === lens), l2 = pair && L.find(x => x.id === pair);

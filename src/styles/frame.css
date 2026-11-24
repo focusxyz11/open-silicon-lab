@@ -278,6 +278,8 @@ button.qlform { all: unset; cursor: pointer; display: block; }
 @media (prefers-reduced-motion: reduce) { .lenspaint svg { animation: none; }
 }
 
+/* a lens held (#326): the way in steps aside, so nothing covers the paint; the lens's card has ↓ and ↑ */
+.lensing > .wayin { display: none; }
 /* the lens's instrument in its card: one control, then what it moves */
 .lpinst { display: grid; gap: 10px; padding: 12px 0 2px; border-top: 1px solid var(--line); }
 .lpc { display: grid; gap: 4px; }
@@ -298,6 +300,13 @@ button.qlform { all: unset; cursor: pointer; display: block; }
 .lplay .lpok2 { color: var(--good); }
 .lplay.on { border-color: var(--warm); background: color-mix(in srgb, var(--warm) 22%, transparent); }
 .lpyours { margin: 0; color: var(--warm); }
+/* what the paint's marks say (#326): each drawn as the paint draws it, named in a few words */
+.lpkeys { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.lpkeys li { display: grid; grid-template-columns: 28px 1fr; align-items: center; gap: 8px; font-size: 14px; line-height: 1.3; color: var(--muted); }
+.lpsw { width: 28px; height: 16px; display: block; }
+/* the instruments' labels are names (14 px), never smaller (docs/FINISHED.md, plain words) */
+html.frame2 .f2side .dock :is(.lpml, .lpends, .lpkey) { font-size: 14px; }
+html.frame2 .f2side .dock .lpcl { font-size: 15px; }
 /* two lenses held (#315): the pair's card, its shapes' instruments, and the pins over the picture */
 .qlmeets { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .qlhold { border-color: var(--warm); }
@@ -315,6 +324,22 @@ button.qlform { all: unset; cursor: pointer; display: block; }
 .lpkey .k1 { color: var(--good); }
  .lpkey .kd { color: var(--warm); }
  .lpkey .kn { color: var(--accent); }
+/* the attempts kept in the ledger at a front (#326): each a small dot placed by the model, the ones nothing beats
+   joined; yours ringed; under the chart, who kept them and a way to keep yours */
+.lpatt { fill: var(--ink); fill-opacity: .55; stroke: var(--panel-solid); stroke-width: 1.5; }
+.lpatt.front { fill-opacity: .95; }
+.lpatt.mine { fill: none; stroke: var(--warm); stroke-width: 2; }
+.lpledger { fill: none; stroke: var(--ink); stroke-opacity: .55; stroke-width: 1.5; }
+.lpkey .ka { color: var(--ink); }
+.lpwhole { margin: 0; }
+.lptries { display: grid; gap: 8px; padding-top: 10px; border-top: 1px solid var(--line); }
+.lptries > p { margin: 0; }
+.lptry { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.lptry li { display: grid; gap: 2px; font-size: 15px; line-height: 1.35; }
+.lptry .lptw { color: var(--muted); }
+.lpkeep { display: grid; gap: 8px; }
+.lpkw { display: grid; gap: 4px; }
+.lpkw input { font: inherit; font-size: 15px; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--line); background: transparent; color: var(--ink); }
 .lptwo { display: grid; grid-template-columns: 1.3fr 1fr 1fr; gap: 6px 10px; align-items: baseline; font-size: 14px; }
 .lptwo .hd { font: 600 13px/1.3 var(--sans); color: var(--muted); }
 .lptwo .n { font: 600 16px/1.2 var(--mono, var(--sans)); }

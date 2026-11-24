@@ -249,7 +249,8 @@ export function create() {
   /* the lens of the energy puzzle is part of the frame: on a desktop at the picture's right edge, on a phone (folded) at its
      top, and the picture keeps clear of it */
   const diveInset = () => { if (!V.dive || !V.diveFrame) return; const wide = innerWidth > 720, b = innerWidth >= 1100 ? 24 : (V.diveFrame.restH ? V.diveFrame.restH() : V.diveFrame.dock.parentNode.offsetHeight) + (wide ? 24 : 18), lens = (V.Joule && V.S.joule.on && innerWidth >= 1100 ? 356 : 0) + (V.Listen ? V.Listen.width() : 0), top = Math.max(V.Joule ? V.Joule.bottom() : 0, V.Listen ? V.Listen.bottom() : 0);
-    /* the picture stands right of the caption at rest, and left of the side panel */
+    /* the picture stands right of the caption at rest (a little under it; clear of it when a box beside it, the joule's or
+       Listen, makes the picture smaller, #326), and left of the side panel */
     const f2 = innerWidth >= 1100 && V.vui.classList.contains('f2') ? V.diveFrame.dock.parentNode.getBoundingClientRect() : null, f2cap = f2 && V.vui.classList.contains('f2cap');
     const st = rowsOf(V.flatKind) ? (wide ? 70 : 40) : 0;   /* the line of steps across the top of the picture */
     /* the bench keeps clear of the way along at the picture's foot; on a phone it stands above the card at rest and may
@@ -259,7 +260,7 @@ export function create() {
     const bench = V.Bench && V.flatKind === 'bench', phoneB = bench && !wide, wi = V.vui.querySelector(':scope > .wayin'), inV = bench && !!wi && !wi.hidden,
       last = phoneB && !!V.vui.querySelector(':scope > .steps2 [data-stepgo="1"][disabled]'),
       bb = !bench ? b : innerWidth >= 1100 ? b + 62 + (inV ? 62 : 0) : phoneB ? b + (inV || last ? 64 : 8) + (inV && last ? 52 : 0) : b + 56 + (inV ? 56 : 0), tt = (top ? top + 8 : wide ? 122 : 116) + st;
-    V.dive.setInset({ l: f2cap ? Math.max(90, Math.round(f2.right - 120)) : wide ? 90 : 8, r: (f2 && !f2cap ? Math.round(f2.width) + 32 : wide ? 20 : 8) + lens, t: tt, b: bb });
+    V.dive.setInset({ l: f2cap ? Math.max(90, Math.round(f2.right - (lens ? 16 : 120))) : wide ? 90 : 8, r: (f2 && !f2cap ? Math.round(f2.width) + 32 : wide ? 20 : 8) + lens, t: tt, b: bb });
     if (bench) { const f = V.dive.frame, ah = $('diveCanvas').clientHeight - tt - bb; V.Bench.place(Object.assign({}, f, phoneB ? { h: Math.min(ah - 8, f.B * 1.5), top: tt + 4 } : { h: f.B })); }
     /* a level drawn in 3D takes its square when the zoom moves; it is told now, so it moves with the frame */
     if (V.flatKind === 'dive' && V.WE) levelZoom(V.dive.z); };

@@ -5,13 +5,14 @@
    the other views is on V (src/v2/shell.js). */
 import { t, has } from '../../core/i18n.js';
 import { STOPS, partWord } from '../../data/weave.js';
-import { MARKS } from '../../data/frame.js';
+import { MARKS, FILED } from '../../data/frame.js';
 import { createLenses, questionOf as frameQ, meetOf, pairOf } from '../../engines/frame.js';
 import * as Game from '../game.js';
 import * as Way from '../../engines/way.js';
 import { titleOf } from '../play.js';
 import { stopsAt, SHARED } from '../../data/places.js';
-import { slipHtml, byLine } from '../commons.js';
+import { slipHtml, slipClick, signHtml, signOf, keep, refusal, byLine } from '../commons.js';
+import { frontAttemptsAt } from '../../engines/ledger.js';
 import * as Read from '../read.js';
 import * as Exp from '../../engines/experiments.js';
 import { fieldAtLevel, VIEW_PARTS, diveWord } from '../../data/atlas.js';
@@ -54,8 +55,10 @@ export function create() {
     const raw = lensLevels(), L = raw && raw.map(l => LENS_AT[l] || l), x = Lenses.lensAt(q, d, L), f = formsAt(d)[q] || {}, here = Lenses.lensesAt(d);
     /* no stop and no words of its own here: the first experiment that runs through the level gives the form */
     const xs = x.experiments.map(id => Exp.experimentOf(id)).filter(Boolean), x0 = !f.own && !f.stop ? xs[0] : null;
-    /* its form here: the question from the field that lives here first (it leads), then words of its own, a stop, or an experiment */
-    const fq = x.field && x.field[0];
+    /* its form here: the question from the field that lives here first (it leads), then words of its own, a stop, or an experiment.
+       A field question leads only in the lens that is its home (the first it is filed under), so two lenses never ask
+       the same question with different notes under it (#326); the others keep their own form and its note */
+    const fq = (x.field || []).find(id => (FILED.field[id] || [])[0] === q);
     const form = fq ? t('field.' + fq + '.q') : f.own ? t('frame.at.' + q + '.' + d + '.q') : f.stop ? t('stop.' + f.stop + '.q') : x0 ? Read.askOf(x0) : '', note = f.own ? t('frame.at.' + q + '.' + d + '.note') : f.stop ? t('stop.' + f.stop + '.note') : '';
     let h = '<div class="qlcard">';
     if (form) h += fq ? '<button type="button" class="qlform" data-field="' + esc(fq) + '">' + esc(form) + '</button>' : f.stop || x0 ? '<a class="qlform" href="' + esc(f.stop ? follow(f.stop) : '#/read/' + x0.id) + '">' + esc(form) + '</a>' : '<p class="qlform">' + esc(form) + '</p>';
@@ -105,6 +108,10 @@ export function create() {
      dive's level in view, and a control moved in its card repaints it */
   const paint = Paint.createLensPaint(() => V.lensWhere && V.lensWhere());
   Paint.wire(() => paint.update());
+  /* a front's attempts are the ledger's (#326): read from the world (yours too, as drafts) and kept like every entry */
+  Paint.useLedger({ attempts: (k, score) => frontAttemptsAt(Game.world(V.S), k, score),
+    keep: (k, plan, box, words) => { const r = keep(V.S, { kind: 'try', front: k, plan, words }, 'front ' + k, signOf(box)); if (r.ok) V.save(); return r; },
+    slip: id => slipHtml(V.S, id), slipClick: (ev, done) => slipClick(ev, V.S, redraw => { V.save(); done(redraw); }), refusal, signHtml: () => signHtml(V.S) });
   function lightLens(q, d, q2) {
     if (q && q2 && Paint.paintsPair(q, q2, d)) paint.show(q, d, q2); else if (q && Paint.paints(q, d)) paint.show(q, d); else paint.hide();
     if (!q && !V.lensNow) return;   /* no lens before or now: the picture is left as it is */

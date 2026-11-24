@@ -18,7 +18,9 @@
                and the energy of one answer; each level has its own curve of the best time waiting (chefCurve below);
                or a choice among a thousand designs that all pass (src/engines/thousand.js): the need, the design picked
                and, in its words, the reason, one line no check could give. Only a person or an AI chooses (not both
-               at once, so the two can be told apart), and once per need under a name.
+               at once, so the two can be told apart), and once per need under a name;
+               or an attempt at a front where two lenses meet (#326, FRONTS below): the values of the front's two
+               controls, a point the front's model places on its chart; new among the attempts there.
      question  a question with a home: a level, perhaps a part of it and the question it sits under.
      report    the lab itself broken, by anyone, at any time: where (the site's address, perhaps a part), what kind
                (wrong, confusing, does not work, could be better) and the words. Feedback is not a stage of a plan:
@@ -56,7 +58,7 @@ const FIELDS = {
   break: ['kind', 'of', 'by', 'made', 'ai', 'words', 'case', 'about'],
   /* a try: cases that were meant to break a design and did not. The trace of an attack that failed: what a
      design has survived is why it can be trusted, and where the next attacker need not look */
-  try: ['kind', 'of', 'by', 'made', 'ai', 'words', 'cases', 'puzzle', 'machine', 'chef', 'plan', 'choice', 'pick', 'about'],
+  try: ['kind', 'of', 'by', 'made', 'ai', 'words', 'cases', 'puzzle', 'machine', 'chef', 'front', 'plan', 'choice', 'pick', 'about'],
   question: ['kind', 'at', 'part', 'under', 'q', 'noticed', 'by', 'made', 'ai', 'about'],
   report: ['kind', 'at', 'part', 'say', 'words', 'by', 'made', 'ai'],
   fix: ['kind', 'of', 'words', 'pr', 'by', 'made', 'ai']
@@ -81,6 +83,16 @@ const chefKey = p => JSON.stringify(Object.entries(chefPlan(p)).sort());
 /* a plan's switch (sw, src/engines/switch.js specKey) is part of its key only when a part is made of it */
 const machineKey = (need, plan) => { const R = runMachine(need, plan), P = R.plan, sw = Object.values(P).includes('matter:switch');
   return JSON.stringify(Object.keys(P).filter(k => (k !== 'fab' || R.score.fab) && (k !== 'sw' || sw) && P[k] !== undefined).sort().map(k => [k, P[k]])); };
+/* the fronts where two lenses meet (#315, #326): a front is today's best compromises between two measures, drawn where
+   both come from one model (src/engines/lens.js, MEETS in src/data/frame.js). An attempt at one is a try with the
+   front's key and a plan: the values of its two controls, each from 0 to 1 in tenths. Here the ledger checks the plan's
+   form and keeps the attempts in order; where each one lands (its two measures) is the front's model's, computed where
+   the front is drawn and in the tests (frontAttemptsAt takes the model), so the ledger loads without the level's
+   drawing. Its key is the plan in tenths, so the same point written two ways is the same. */
+export const FRONTS = { 'eff.geo': { level: 'block', plan: ['p', 'n'] } };
+const tenth = v => typeof v === 'number' && v >= 0 && v <= 1 && Math.abs(v * 10 - Math.round(v * 10)) < 1e-9;
+const frontPlanOk = (F, p) => p && typeof p === 'object' && !Array.isArray(p) && Object.keys(p).length === F.plan.length && F.plan.every(k => tenth(p[k]));
+const frontKey = (F, p) => F.plan.map(k => Math.round(p[k] * 10)).join(',');
 /* a report's place: the site's own address, as the bar shows it (#/line/print, #/dive/gate, #/build/record) */
 export const PLACE = /^#\/[a-z0-9._\/-]{0,80}$/;
 /* plain words: no markup, no links (a link in free text is how spam pays), nothing a page or an agent could run */
@@ -138,7 +150,7 @@ export function checkEntry(e, W) {
      need (src/engines/thousand.js LEAN): the ledger keeps the choice, and never ranks it */
   if (e.kind === 'try' && e.choice != null) {
     if (typeof e.choice !== 'string' || !Object.hasOwn(CHOICE_NEEDS, e.choice)) return no('choice');
-    if (e.of != null || e.cases != null || e.puzzle != null || e.machine != null || e.chef != null || e.plan != null) return no('fields');
+    if (e.of != null || e.cases != null || e.puzzle != null || e.machine != null || e.chef != null || e.front != null || e.plan != null) return no('fields');
     if (e.made !== 'person' && e.made !== 'ai') return no('chooser');
     const d = typeof e.pick === 'string' ? choiceOf(e.choice, e.pick) : null; if (!d) return no('pick');
     if (!plain(e.words, 0, 300) || !reasonOk(e.words)) return no('reason');
@@ -146,6 +158,15 @@ export function checkEntry(e, W) {
     return { ok: true, facts: { lean: d.lean } };
   }
   if (e.kind === 'try' && e.pick != null) return no('fields');
+  /* an attempt at a front: its two controls' values, new among the attempts there; where it lands is the front's model's */
+  if (e.kind === 'try' && e.front != null) {
+    const F = typeof e.front === 'string' && Object.hasOwn(FRONTS, e.front) ? FRONTS[e.front] : null; if (!F) return no('front');
+    if (e.of != null || e.cases != null || e.puzzle != null || e.machine != null || e.chef != null) return no('fields');
+    if (!plain(e.words || '', 0, 300)) return no('words');
+    if (!frontPlanOk(F, e.plan)) return no('plan');
+    if ((W.fronts[e.front] || []).some(id => frontKey(F, W.byId[id].plan) === frontKey(F, e.plan))) return no('same');
+    return { ok: true, facts: { plan: F.plan.map(k => e.plan[k]) } };
+  }
   /* an attempt at Keep the chef busy: a plan the kitchen can run at one of its levels, new among the attempts there; its
      facts are the engine's score (the share of time waiting and the energy of one answer, at the last round) */
   if (e.kind === 'try' && e.chef != null) {
@@ -234,7 +255,7 @@ export function checkEntry(e, W) {
 /* ---- the whole ledger, replayed in order (ids sort by date, then name). Returns the world it makes. ---- */
 const beats = (a, b) => a.facts.transistors <= b.facts.transistors && a.facts.ps <= b.facts.ps && (a.facts.transistors < b.facts.transistors || a.facts.ps < b.facts.ps);
 export function settle(list) {
-  const W = { entries: [], byId: {}, pieces: {}, cases: {}, puzzles: {}, machines: {}, chef: {}, choices: {}, refused: [], feed: [] };
+  const W = { entries: [], byId: {}, pieces: {}, cases: {}, puzzles: {}, machines: {}, chef: {}, fronts: {}, choices: {}, refused: [], feed: [] };
   list.slice().sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0)).forEach(raw => {
     const r = checkEntry(raw, W), e = Object.assign({}, raw, { ok: r.ok, reason: r.reason || null, facts: r.facts || null, state: null, brokenBy: null, breaks: [], tries: [] });
     if (!r.ok) { W.refused.push(e); if (!W.byId[e.id]) W.byId[e.id] = e; return; }
@@ -247,6 +268,7 @@ export function settle(list) {
       W.pieces[T.piece].map(id => W.byId[id]).filter(d => d.state === 'right').forEach(d => { const x = runCase(p, d.code, e.case); if (x && x.first >= 0) { d.state = 'broken'; d.brokenBy = e.id; e.breaks.push(d.id); } });
       e.state = 'stands'; W.feed.push({ type: 'broke', id: e.id });
     } else if (e.kind === 'try' && e.choice != null) { (W.choices[e.choice] = W.choices[e.choice] || []).push(e.id); e.state = 'stands'; W.feed.push({ type: 'chose', id: e.id }); }
+    else if (e.kind === 'try' && e.front != null) { (W.fronts[e.front] = W.fronts[e.front] || []).push(e.id); e.state = 'stands'; W.feed.push({ type: 'attempted', id: e.id }); }
     else if (e.kind === 'try' && e.chef != null) { (W.chef[e.chef] = W.chef[e.chef] || []).push(e.id); e.state = 'front'; W.feed.push({ type: 'attempted', id: e.id }); }
     else if (e.kind === 'try' && e.machine != null) { (W.machines[e.machine] = W.machines[e.machine] || []).push(e.id); e.state = 'front'; W.feed.push({ type: 'attempted', id: e.id }); }
     else if (e.kind === 'try' && e.puzzle != null) { (W.puzzles[e.puzzle] = W.puzzles[e.puzzle] || []).push(e.id); e.state = 'front'; W.feed.push({ type: 'attempted', id: e.id }); }
@@ -368,6 +390,16 @@ export const chefAttemptsAt = (W, level) => ((W.chef || {})[level] || []).map(id
 export function chefCurve(W, level) {
   let best = Infinity;
   return chefAttemptsAt(W, level).map((e, i) => { best = Math.min(best, e.facts.wait); return { n: i + 1, id: e.id, by: e.by, made: e.made, wait: e.facts.wait, energy: e.facts.energy, cleared: e.facts.cleared, best, draft: !!e.draft }; });
+}
+/* the attempts at a front, in the order they were kept, each placed by the front's model: score(plan) -> { x, y }, both
+   lower is better (the block's front: the block's energy per answer, and its hottest patch). An attempt is on the
+   ledger's front while no other is at least as good on both and better on one (an equal one that came later is behind);
+   nobody votes, the model places every point */
+export function frontAttemptsAt(W, key, score) {
+  const A = ((W.fronts || {})[key] || []).map(id => W.byId[id]).map((e, i) => { const r = score(e.plan); return { n: i + 1, id: e.id, by: e.by, made: e.made, words: e.words || '', plan: e.plan, draft: !!e.draft, x: r.x, y: r.y }; });
+  const better = (o, a) => o.x <= a.x && o.y <= a.y && (o.x < a.x || o.y < a.y);
+  A.forEach((a, i) => { a.state = A.some((o, j) => o !== a && (better(o, a) || (j < i && o.x === a.x && o.y === a.y))) ? 'beaten' : 'front'; });
+  return A;
 }
 /* the choices kept for a need of A thousand that pass, as two groups that are never mixed: people's and AI agents',
    each in the order kept. Read from the entries alone: nobody votes, nothing is counted as a score */

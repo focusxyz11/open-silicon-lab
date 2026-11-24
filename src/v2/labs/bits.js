@@ -119,7 +119,7 @@ export default function lab(L) {
   /* the kitchen: the chef's die with its pantry on the chip and its shelf, the pantry away along its door (or stacked on
      top), the bits coming in, and below it five rounds of the chef busy and waiting */
   function kitchenFigure(Lv, K, r, frac) {
-    const P = K.plan, W = 320, H = 216, R0 = K.rounds[r], busy = 1 - R0.wait, cores = 16, lit = Math.round(busy * cores);
+    const P = K.plan, W = 320, H = 224, R0 = K.rounds[r], busy = 1 - R0.wait, cores = 16, lit = Math.round(busy * cores);
     let s = '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="' + esc(t('mb.k.aria', { level: t('mb.lv.' + Lv.id + '.t'), r: r + 1, wait: pct(R0.wait), e: E(R0.energy) })) + '">';
     /* the chef: a die of cores, lit as busy as this round lets them be; room given to a pantry or a shelf on the chip is
        taken from it */
@@ -151,13 +151,15 @@ export default function lab(L) {
     /* the bits on their way in: more of them the more the door carries this round */
     const nb = Math.max(1, Math.min(7, Math.round(R0.far / (Lv.job.bits / 6)))), off = frac == null ? 0.5 : frac;
     for (let i = 0; i < nb; i++) { const q = ((i + off * 2) / nb) % 1, bx = x1 - (x1 - x0) * q; s += '<circle class="bit' + faint + '" cx="' + bx.toFixed(1) + '" cy="' + yc + '" r="2.6"/>'; }
-    /* five rounds: the chef busy (below) and waiting (above), against the goal */
+    /* five rounds: the chef busy (below) and waiting (above), against the goal; the rounds numbered under their bars
+       and named once at the side, like waits and cooks, so the names keep apart at a phone's size (#326) */
     const by = 150, bh = 52, bw = 34, bx0 = 70;
-    s += '<text class="ax" x="' + (bx0 - 8) + '" y="' + (by + 4) + '" text-anchor="end">' + esc(t('mb.k.waits')) + '</text><text class="ax" x="' + (bx0 - 8) + '" y="' + (by + bh) + '" text-anchor="end">' + esc(t('mb.k.cooks')) + '</text>';
+    s += '<text class="ax" x="' + (bx0 - 8) + '" y="' + (by + 4) + '" text-anchor="end">' + esc(t('mb.k.waits')) + '</text><text class="ax" x="' + (bx0 - 8) + '" y="' + (by + bh - 3) + '" text-anchor="end">' + esc(t('mb.k.cooks')) + '</text>';
     K.rounds.forEach((q, i) => { const x = bx0 + i * (bw + 12), wh = bh * q.wait, shown = i <= r;
       s += '<rect class="rb busy' + (shown ? '' : ' off') + '" x="' + x + '" y="' + (by + wh).toFixed(1) + '" width="' + bw + '" height="' + (bh - wh).toFixed(1) + '" rx="2"/>' +
         '<rect class="rb wait' + (shown ? '' : ' off') + (i === r ? ' now' : '') + '" x="' + x + '" y="' + by + '" width="' + bw + '" height="' + wh.toFixed(1) + '" rx="2"/>' +
-        '<text class="ax" x="' + (x + bw / 2) + '" y="' + (by + bh + 12) + '" text-anchor="middle">' + esc(t('mb.k.round', { n: i + 1 })) + '</text>'; });
+        '<text class="ax" x="' + (x + bw / 2) + '" y="' + (by + bh + 17) + '" text-anchor="middle">' + String(i + 1) + '</text>'; });
+    s += '<text class="ax" x="' + (bx0 - 8) + '" y="' + (by + bh + 17) + '" text-anchor="end">' + esc(t('mb.k.rounds')) + '</text>';
     const gy = by + bh * Lv.goal.wait;
     s += '<line class="goal" x1="' + (bx0 - 4) + '" x2="' + (bx0 + 5 * (bw + 12) - 8) + '" y1="' + gy.toFixed(1) + '" y2="' + gy.toFixed(1) + '"/><text class="ax goalt" x="' + (bx0 + 5 * (bw + 12) - 6) + '" y="' + (gy + 3).toFixed(1) + '">' + esc(t('mb.k.goal')) + '</text>';
     return '<figure class="mbfig mbkitchen" data-f2="instrument"><p class="mbq"><span class="kicker">' + esc(t('mb.rung.' + LADDER[Lv.id])) + ' · ' + esc(t('mb.lv.' + Lv.id + '.t')) + '</span>' + esc(t('mb.lv.' + Lv.id + '.q')) + '</p>' + s + '</svg>' +
