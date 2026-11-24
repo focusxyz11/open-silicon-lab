@@ -80,7 +80,7 @@ jobs:
 
   # the site is collected and uploaded in one job and published in the next: on 24 November deploy-pages, run in the same
   # job a second after the upload, found no artifact three pushes in a row (all tests green). A job of its own starts
-  # later, and if publishing still finds nothing it waits and tries once more.
+  # later, and if publishing still finds nothing it waits and tries once more (beside the move to v5 of both actions, #351).
   site:
     if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
     needs: [logic, browser, test]
@@ -92,7 +92,7 @@ jobs:
         # and the framework's own pages (docs/framework: its map and its sketch), which no page of the site links to
         run: mkdir _site && cp -r index.html classic.html explore.html src assets _site/ && cp -r docs/framework _site/framework && cp -r content _site/content && node scripts/ledger.mjs _site/community/ledger.json
       - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: _site
 
@@ -108,7 +108,7 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url || steps.again.outputs.page_url }}
     steps:
       - id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
         continue-on-error: true
       - name: Wait before trying once more
         if: steps.deployment.outcome == 'failure'
@@ -117,4 +117,4 @@ jobs:
           sleep 30
       - id: again
         if: steps.deployment.outcome == 'failure'
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
