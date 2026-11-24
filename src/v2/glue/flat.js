@@ -324,10 +324,10 @@ export function create() {
         slip: id => slipHtml(V.S, id), slipClick: (ev, done) => slipClick(ev, V.S, redraw => { V.save(); V.refresh(true); done(redraw); }),
         refusal, signHtml: () => signHtml(V.S), attempts: () => attemptsAt(Game.world(V.S), 'energy'), changed: () => requestAnimationFrame(diveInset) }) : null;
       if (V.Joule) V.Joule.redraw();
-      /* Listen (#316, only with ?listen=1): the block slowed down until it can be heard, a switch beside the joule's
-         (src/v2/listen.js); its code loads only with the flag */
+      /* Listen (#316, on for everyone since #317): the block slowed down until it can be heard, a switch beside the
+         joule's (src/v2/listen.js), shown at the levels that can sound, off until tapped; its code loads with the dive */
       V.Listen = null;
-      if (kind === 'dive' && /[?&]listen=1(&|$)/.test(location.search)) import('../listen.js').then(m => { if (V.flatKind !== 'dive' || V.vui.hidden) return;
+      if (kind === 'dive') import('../listen.js').then(m => { if (V.flatKind !== 'dive' || V.vui.hidden) return;
         V.Listen = m.createListen(V.vui, { where: lensWhere, joule: () => { if (V.Joule && V.S.joule.on) V.Joule.on(false); }, changed: () => requestAnimationFrame(diveInset) }); V.Listen.level(V.diveId()); });
       V.vui.onclick = e => { const b = e.target.closest('[data-divego]'); if (b) w.flyTo(+b.dataset.divego); const sk = e.target.closest('[data-seek]'); if (sk) return pickPart(sk.dataset.seek); const pk = e.target.closest('[data-pick]'); if (pk) { pickPart(pk.dataset.pick === divePart ? null : pk.dataset.pick); V.vui.querySelectorAll('[data-pick]').forEach(x => x.classList.toggle('on', x.dataset.pick === divePart)); } };
       const d = V.WE.IDS.indexOf(L.includes(depth) ? depth : L[0]);

@@ -1,4 +1,4 @@
-/* The sound of a level slowed until it can be heard (Listen, #316, behind ?listen=1), with Web Audio. It plays a score
+/* The sound of a level slowed until it can be heard (Listen, #316, on for everyone since #317), with Web Audio. It plays a score
    of src/engines/listen.js: what each voice plays comes from the lab's engines, never from here. Few voices, soft, no
    music: a tick, a blip, a thump, a click, a hum and a hiss.
    - The audio is made only on a visitor's tap (start() is called from a click), never by itself, and it stops when the

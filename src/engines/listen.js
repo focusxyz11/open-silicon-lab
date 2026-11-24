@@ -1,4 +1,4 @@
-/* Listen: a level slowed until it can be heard (#316, behind ?listen=1). Pure logic, no DOM, no words (ids only); the
+/* Listen: a level slowed until it can be heard (#316, on for everyone since #317). Pure logic, no DOM, no words (ids only); the
    sound is played by src/v2/sound.js and lit on the picture by src/v2/listen.js; tests in tests/listen.test.mjs.
 
    At the block, one second of sound is one nanosecond of the chip (TIME_SCALE in src/data/atlas.js): everything is

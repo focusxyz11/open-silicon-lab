@@ -1,11 +1,10 @@
-/* Listen (#316, behind ?listen=1): a level slowed until it can be heard, on the frame. A switch beside the picture's
+/* Listen (#316, on for everyone since #317): a level slowed until it can be heard, on the frame. A switch beside the picture's
    other lens (Follow the joule), at the levels whose engines can feed it (LEVELS in src/engines/listen.js: the block
    first); off by default, never starting by itself (the sound begins on a tap), quiet, and remembered for the visitor.
    Open, it says how much the level is slowed and how loudness is mapped, lets you pick what the block is doing, writes
    what is heard in a quiet live caption, and lights each part on the picture in time with its sound: a layer in the
    level's plan (src/data/partfacts.js), pinned onto the picture as a lens's paint is (src/v2/lenspaint.js). The ear test
    (src/v2/labs/listen.js) draws the same picture, on its own base.
-   - listenOn(): the flag (?listen=1); without it nothing here is made.
    - paint(F, base): the picture's SVG, in the plan (1000 by 1000); light(svg, e, V): one event lit on it.
    - createListen(host, o): the switch and its box on a view's frame. o: { where() (as a lens's paint), joule (the other
      lens, closed while this one is open), changed() (the picture keeps clear of the box) }. Returns { level(id),
@@ -17,7 +16,6 @@ import { squareTo } from './lenspaint.js';
 import * as Sound from './sound.js';
 
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
-export const listenOn = () => { try { return /[?&]listen=1(&|$)/.test(location.search); } catch (e) { return false; } };
 
 /* ---- the picture: the block's parts in its plan, each with what lights in time ---- */
 const R = r => 'x="' + r[0] + '" y="' + r[1] + '" width="' + r[2] + '" height="' + r[3] + '"';
