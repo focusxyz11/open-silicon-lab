@@ -69,7 +69,8 @@ export const LABS = {
   /* the errors engine's stops in a training run match Llama 3's (facts.json llama3-interruptions) */
   silent: { f: 'checked', by: 'errors', fact: 'llama3-interruptions' },
   rvrun: C('riscv'), noise: C('paradigms'), 'noise-big': C('paradigms'), thousand: C('thousand'), search: C('search'), halt: C('halt'),
-  ear: C('listen'), corearch: C('corearch')
+  ear: C('listen'), corearch: C('corearch'),
+  spikes: C('paradigms'), light: C('paradigms')
 };
 /* the challenges the ledger makes: a design someone kept, to be broken */
 export const KINDS = { break: C('design'), design: C('design') };

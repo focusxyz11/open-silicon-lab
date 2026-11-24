@@ -29,6 +29,18 @@ export function mark(rec, o = {}) {
   return '<button type="button" class="fid f-' + rec.f + (o.cls ? ' ' + o.cls : '') + '" data-fid="' + rec.f + '"' + (rec.by ? ' data-fidby="' + esc(rec.by) + '"' : '') +
     (rec.fact ? ' data-fidfact="' + esc(rec.fact) + '"' : '') + ' aria-expanded="false" aria-label="' + esc(t('fid.aria', { what: w })) + '">' + glyph(rec.f) + '<span>' + esc(w) + '</span></button>';
 }
+/* whether anyone has built a claim, one mark everywhere (in machines, in the labs that model new matter): in products a
+   full disc, shown in a lab half of one, a guess a dashed ring; its pill is tapped like a mark (its words invent.status.*,
+   in the pages' area) */
+export const TRUTH = {
+  product: '<svg class="mtr t-product" viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="4.6"/></svg>',
+  lab: '<svg class="mtr t-lab" viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="4.6" class="o"/><path d="M6 1.4a4.6 4.6 0 0 0 0 9.2z"/></svg>',
+  guess: '<svg class="mtr t-guess" viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="4.6"/></svg>'
+};
+export const statusMark = s => '<button type="button" class="fid mst s-' + s + '" data-fidst="' + s + '" aria-expanded="false">' + TRUTH[s] + '<span>' + esc(t('invent.status.' + s)) + '</span></button>';
+/* the claims a kind of new matter rests on (src/data/inventions.js), each with its two marks and its words: the list a
+   lab that models the matter shows (src/v2/labs/spikes.js, light.js) */
+export const claimList = matter => '<ul class="fidclaims">' + matter.claims.map(cl => '<li class="k-' + cl.kind + '"><span class="fidmarks">' + statusMark(cl.status) + mark(claimFid(cl)) + '</span><span>' + esc(t('invent.claim.' + cl.id)) + '</span></li>').join('') + '</ul>';
 
 /* ---- the tap: one line of what the mark means here, in a small note beside it ---- */
 let FACT = null, asked = null, tip = null, from = null;
