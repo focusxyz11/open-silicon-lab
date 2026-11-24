@@ -42,7 +42,7 @@ const narrow = () => typeof matchMedia === 'function' && matchMedia('(max-width:
 export const LAYERS = ['flow', 'made', 'reshape', 'claims', 'tries', 'blocks'];
 /* a block's way into a view of its own, from its row beside the machine: { blockId: '#/address' }, its words
    machines.way.<blockId> (the core's view, #321, joins here) */
-export const WAYS = {};
+export const WAYS = { learner: '#/do/dataflow' };
 /* each need's state, for the visit: the plan, the agent, the layer, the mode, the goal */
 const KEEP = {};
 /* the goals won, in this browser only (a convenience: the challenge can be played again at will) */
@@ -456,6 +456,8 @@ export function machines(el, ctx) {
     h += '<p class="small levolve">' + esc(t('liquid.ui.evolve')) + (ev && ev.url ? ' <a href="' + esc(ev.url) + '" target="_blank" rel="noopener">' + esc(t('invent.ui.source')) + '</a>' : '') + ' <a href="#/do/evolve">' + esc(t('liquid.ui.evolveGo')) + '</a></p>';
     return h + '</section>';
   }
+  /* the way into the lab that models a kind of new matter */
+  function labWay(k) { return '<a class="mcoreway mlabway" href="#/do/' + esc(k.lab) + '"><span aria-hidden="true">↓</span> ' + esc(t('invent.ui.lab', { kind: t('invent.matter.' + k.id + '.t') })) + '</a>'; }
   /* beyond today's chip: the claims behind every part made of new matter */
   function inventHtml(m) {
     const parts = need.parts.filter(p => M.matterIn(view.plan[p.id]));
@@ -467,7 +469,7 @@ export function machines(el, ctx) {
         '<p class="small mrange">' + esc(t('invent.ui.range', { low: times(c.low), high: times(c.high) })) + '</p><ul>' + k.claims.map(cl => {
           const f = cl.fact && ctx.FACT && ctx.FACT[cl.fact], src = f && f.url ? '<a href="' + esc(f.url) + '" target="_blank" rel="noopener">' + esc(t('invent.ui.source')) + '</a>' : cl.engine ? '<a href="' + esc(REPO + cl.engine) + '" target="_blank" rel="noopener">' + esc(t('invent.ui.engine')) + '</a>' : '';
           return '<li class="k-' + cl.kind + '">' + marks(cl.status, cl) + '<span>' + esc(t('invent.claim.' + cl.id)) + (src ? ' <span class="small">' + src + '</span>' : '') + '</span></li>';
-        }).join('') + '</ul>' + (m.score.walls.includes(p.id) ? '<p class="small mwall">' + esc(t('invent.wall.floor')) + '</p>' : '') + '</div>';
+        }).join('') + '</ul>' + (m.score.walls.includes(p.id) ? '<p class="small mwall">' + esc(t('invent.wall.floor')) + '</p>' : '') + (k.lab ? labWay(k) : '') + '</div>';
     });
     return h + '</section>';
   }

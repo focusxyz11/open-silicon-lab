@@ -985,5 +985,7 @@
  "mb.curve.yours": "Your plan",
  "invent.status.product.line": "In products: something built this way can be bought or is in use today.",
  "invent.status.lab.line": "Shown in a lab: someone has made it work, but nobody sells it yet.",
- "invent.status.guess.line": "A guess: nobody has shown it yet. Its number is written down so it can be argued with."
+ "invent.status.guess.line": "A guess: nobody has shown it yet. Its number is written down so it can be argued with.",
+ "invent.ui.lab": "Go into its lab: {kind}",
+ "machines.way.learner": "Lay a learner's layers across a chip's tiles: the dataflow lab"
 }

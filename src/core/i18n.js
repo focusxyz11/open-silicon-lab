@@ -50,7 +50,9 @@ export const AREAS = {
     /* spiking neurons and light (#322) */
     'spk', 'lgt',
     /* Listen and tell, the ear test (#316) */
-    'ear'],
+    'ear',
+    /* new ways to compute: reversible logic and dataflow (#323) */
+    'rev', 'dfl'],
   blueprint: ['bp'],
   /* Hold, the first page (src/v2/hold.js) */
   hold: ['hd'],

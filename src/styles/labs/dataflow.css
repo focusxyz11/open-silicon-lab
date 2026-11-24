@@ -1,0 +1,46 @@
+/* The lab dataflow's own styles (src/data/labs/dataflow.js, css: true), loaded when its challenge is played (src/core/styles.js). */
+/* keep the numbers on the chip (src/v2/labs/dataflow.js): the chip's tiles and the layers on them, memory off the chip, the energy two ways */
+.dflintro, .dflreveal { margin: 4px 0 10px; }
+ .dflreveal.good { color: var(--good); }
+.dflfig { margin: 8px 0; }
+ .dflfig svg { display: block; width: 100%; height: auto; }
+.dflfig .ax { font: 10px var(--sans); fill: var(--muted); }
+.dflfig .die { fill: color-mix(in srgb, var(--ink) 6%, transparent); stroke: var(--line); stroke-width: 1.2; }
+.dflfig .tl { stroke-width: 1; }
+ .dflfig .tl.free { fill: var(--panel-solid); stroke: var(--line); }
+ .dflfig .tl.l0 { fill: color-mix(in srgb, var(--accent) 78%, var(--panel-solid)); stroke: var(--accent); }
+ .dflfig .tl.l1 { fill: color-mix(in srgb, var(--accent) 42%, var(--panel-solid)); stroke: var(--accent); }
+.dflfig .ln { font: 600 8px var(--mono); fill: var(--ink); pointer-events: none; }
+.dflfig .way { fill: none; stroke: var(--ink); stroke-width: 1; opacity: .4; stroke-linejoin: round; }
+.dflfig .act { fill: var(--ink); }
+.dflfig .mem { fill: var(--panel-solid); stroke: var(--line); stroke-width: 1.2; }
+ .dflfig .mem.busy { stroke: var(--warm); }
+.dflfig .slab.l0 { fill: color-mix(in srgb, var(--warm) 80%, var(--panel-solid)); }
+ .dflfig .slab.l1 { fill: color-mix(in srgb, var(--warm) 45%, var(--panel-solid)); }
+.dflfig .fetch { fill: none; stroke: var(--warm); stroke-width: 5; stroke-linecap: round; opacity: .8; }
+ .dflfig .tip { fill: var(--warm); }
+ .dflfig .wt { fill: var(--panel-solid); stroke: var(--warm); stroke-width: 1.4; }
+.dflfig .lbl { font: 600 9px var(--sans); }
+ .dflfig .lbl.warm { fill: var(--warm); }
+.dfldial { margin: 6px 0; }
+ .dflstep { display: flex; align-items: center; gap: 8px; }
+ .dflstep input { flex: 1; min-width: 0; }
+ .dflstep .chipb { min-width: 34px; padding: 4px 0; text-align: center; }
+.dflmsg { margin: 10px 0; }
+ .dflmsg.good { color: var(--good); }
+ .dflmsg.bad { color: var(--bad); }
+.dflen { margin: 10px 0; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--line); display: grid; gap: 6px; }
+ .dflen > p { margin: 0; }
+.dflrow { display: grid; grid-template-columns: 130px 1fr 64px; align-items: center; gap: 10px; font-size: 12.5px; line-height: 1.25; }
+ .dflrow b { font-size: 12px; text-align: right; }
+.dflbar { display: flex; height: 10px; border-radius: 5px; background: color-mix(in srgb, var(--ink) 8%, transparent); overflow: hidden; }
+ .dflbar i { display: block; height: 100%; min-width: 2px; transition: width .3s; }
+.dflen .on { background: var(--accent); }
+ .dflen .off { background: var(--warm); }
+.dflkey { display: flex; flex-wrap: wrap; gap: 2px 12px; }
+ .dflkey i { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 5px; }
+html.frame2 .f2stage .dflfig svg text { font-size: calc(12px * var(--f2-k, .6)); }
+ html.frame2 .f2stage .dflfig svg text.ln { font-size: calc(10px * var(--f2-k, .6)); }
+@media (max-width: 720px) { .dflrow { grid-template-columns: 104px 1fr 58px; gap: 8px; }
+  html.frame2 .f2stage .dflfig svg text { font-size: calc(10px * var(--f2-k, .9)); } html.frame2 .f2stage .dflfig svg text.ln { font-size: calc(8px * var(--f2-k, .9)); }
+}
