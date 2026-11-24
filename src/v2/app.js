@@ -11,7 +11,7 @@
    #/board (one board, with a story that drives it), #/dive/<depth>[/<world>] (the dive), #/line/<step> (the factory),
    #/bench/<level>[/<challenge>] (the studio), #/do/<challenge>, #/ask/<thread>/<depth>, #/supply, #/log, #/build,
    #/ecosystem. Words are read with t(). */
-import { t, needWords, needAllWords } from '../core/i18n.js';
+import { t, needWords, needAllWords, lang, LANGS } from '../core/i18n.js';
 import { needStyles } from '../core/styles.js';
 import { THREADS } from '../data/weave.js';
 import { NEEDS } from '../data/build.js';
@@ -91,6 +91,19 @@ export function start() {
   const theme = () => document.documentElement.getAttribute('data-theme') || (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
   const tb = $('theme'), k0 = theme() === 'dark' ? 'ui.toLight' : 'ui.toDark'; tb.setAttribute('aria-label', t(k0)); tb.title = t(k0);
   tb.addEventListener('click', () => { const n = theme() === 'dark' ? 'light' : 'dark'; document.documentElement.setAttribute('data-theme', n); try { localStorage.setItem('osl-theme', n); } catch (e) { /* storage unavailable */ } location.reload(); });
+  /* ---- the language: one small menu in the bar on every page. A choice is kept for the whole lab; the pages not
+     translated yet stay in English, and the menu says so ---- */
+  { const lb = $('langbtn'), lm = $('langmenu'), short = k => (k === 'zh' ? LANGS.zh.slice(0, 1) : k.toUpperCase());
+    lb.textContent = short(lang()); lb.setAttribute('aria-label', t('ui.lang') + ': ' + LANGS[lang()]); lb.title = t('ui.lang');
+    lm.setAttribute('role', 'menu'); lm.setAttribute('aria-label', t('ui.lang'));
+    lm.innerHTML = Object.entries(LANGS).map(([k, name]) => '<button type="button" role="menuitemradio" data-lang="' + k + '" lang="' + k + '" aria-checked="' + (lang() === k) + '">' + esc(name) + '</button>').join('') + '<p>' + esc(t('ui.langNote')) + '</p>';
+    const open = on => { lm.hidden = !on; lb.setAttribute('aria-expanded', String(on)); if (on) (lm.querySelector('[aria-checked=true]') || lm.querySelector('button')).focus(); };
+    lb.addEventListener('click', e => { e.stopPropagation(); open(lm.hidden); });
+    document.addEventListener('click', e => { if (!lm.hidden && !e.target.closest('.langm')) open(false); });
+    lm.addEventListener('keydown', e => { if (e.key === 'Escape') { open(false); lb.focus(); } });
+    lm.addEventListener('click', e => { const b = e.target.closest('[data-lang]'); if (!b) return; if (b.dataset.lang === lang()) { open(false); return; }
+      try { localStorage.setItem('osl-lang', b.dataset.lang); } catch (x) { /* no storage: the address carries it */ }
+      const u = new URL(location.href); u.searchParams.set('lang', b.dataset.lang); location.replace(u.toString()); }); }
 
   /* ---- what the island shows: growth, steps, your chip, the community's pieces ---- */
   function islandState() {
@@ -491,6 +504,7 @@ export function start() {
     /* a world is a reading page, opened from a lens or by name; there is no list of them (#305): #/w alone is the map */
     if (/^#\/?w\/?$/.test(location.hash)) history.replaceState(null, '', '#/');
     const parts = partsOf(location.hash), k = parts[0] || 'home';
+    document.body.classList.toggle('firstpage', k === 'home');
     if (k !== 'home' && hold) hold.hide();
     if (k !== 'blueprint' && blueprint) blueprint.hide();
     if (k !== 'stations' && stations) stations.hide();

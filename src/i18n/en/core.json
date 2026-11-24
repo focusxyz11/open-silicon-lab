@@ -1192,6 +1192,8 @@
  "game.ch.corearch.why": "Every core is a trade: a part that makes some programs faster costs area on the chip, and energy every cycle it is powered, whether it is used or not. Architects choose the parts that earn their place for the work the chip will do.",
  "ui.blueprint": "The blueprint: the chip innovation ecosystem as one wheel, a chip's life around it and its scale inward",
  "ui.hold": "Hold: fifty years of computing under one finger, from one transistor to the wall, and what people are trying next",
+ "ui.lang": "Language",
+ "ui.langNote": "The first page is translated; the rest of the lab is in English for now.",
  "game.ch.reversible.t": "Compute without erasing",
  "game.ch.reversible.goal": "Build an adder from Toffoli gates, then find the fastest steps at which it loses 100 times less energy than switching at once.",
  "game.ch.reversible.why": "Ordinary logic throws bits away at every gate, and physics charges heat for every bit erased. Logic that can run backwards erases nothing, so in principle it can compute for almost no energy, if it is willing to go slowly. As switches near their limits, some people are building chips this way.",

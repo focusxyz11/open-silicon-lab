@@ -50,7 +50,9 @@ export default async function run() {
     /* the first page in another language, and back */
     await hp.goto(base + 'index.html?lang=zh#/');
     await hp.waitForFunction(() => document.documentElement.lang === 'zh' && /晶体管/.test((document.getElementById('hd-unit') || {}).textContent || ''), null, { timeout: 20000 }).catch(() => problems.push(tag + ': the first page does not show in Chinese'));
-    await hp.evaluate(() => { const b = document.querySelector('#home .h-langs:not([hidden]) [data-lang="en"]'); if (b) b.click(); });
+    /* the language is a small menu in the bar, on every page; on the first page the loop waits */
+    if (!(await hp.evaluate(() => document.body.classList.contains('firstpage') && getComputedStyle(document.getElementById('loop')).visibility === 'hidden'))) problems.push(tag + ': the loop shows on the first page');
+    await hp.click('#langbtn').then(() => hp.waitForFunction(() => !document.getElementById('langmenu').hidden && document.querySelectorAll('#langmenu [data-lang]').length === 4, null, { timeout: 5000 })).then(() => hp.click('#langmenu [data-lang="en"]')).catch(() => problems.push(tag + ': the bar has no language menu'));
     await hp.waitForFunction(() => document.documentElement.lang === 'en' && /transistor/.test((document.getElementById('hd-unit') || {}).textContent || ''), null, { timeout: 20000 }).catch(() => problems.push(tag + ': the first page does not come back to English'));
     /* the island is one tap away at the end, and the brand comes back */
     await hp.waitForFunction(() => window.__hold, null, { timeout: 20000 });

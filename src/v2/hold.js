@@ -647,13 +647,7 @@ export function createHold(host, ctx = {}) {
 
   /* ============ the page's five parts, in order: always there, any of them a tap away ============ */
   el('tabs').setAttribute('aria-label', w('tabs.aria'));
-  /* the page in another language: the reader's choice, kept for the whole lab, where the rest falls back to English */
-  const langs = where => '<nav class="h-langs h-mono h-langs-' + where + '" aria-label="' + esc(w('lang.aria')) + '">' + Object.entries(LANGS).map(([k, name]) =>
-    '<button type="button" data-lang="' + k + '" lang="' + k + '" aria-pressed="' + (lang() === k) + '">' + esc(name) + '</button>').join('') + '</nav>';
-  el('tabs').innerHTML = PARTS.map(([k], i) => '<button type="button" data-k="' + k + '"><i>' + (i + 1) + '</i><span>' + w('tab.' + k) + '</span></button>').join('') + langs('top');
-  el('hero').insertAdjacentHTML('beforeend', langs('hero'));
-  root.addEventListener('click', ev => { const L = ev.target.closest('[data-lang]'); if (!L) return; try { localStorage.setItem('osl-lang', L.dataset.lang); } catch (x) { /* no storage: the address carries it */ }
-    const u = new URL(location.href); u.searchParams.set('lang', L.dataset.lang); location.replace(u.toString()); });
+  el('tabs').innerHTML = PARTS.map(([k], i) => '<button type="button" data-k="' + k + '"><i>' + (i + 1) + '</i><span>' + w('tab.' + k) + '</span></button>').join('');
   const goTo = id => { if (!id) { host.scrollTo({ top: 0, behavior: reduce() ? 'auto' : 'smooth' }); return; } if (!atWall) set(99); steps().then(() => requestAnimationFrame(() => { const e = host.querySelector('#' + id); if (e) e.scrollIntoView({ behavior: reduce() ? 'auto' : 'smooth', block: 'start' }); })); };
   el('tabs').addEventListener('click', ev => { const b = ev.target.closest('button[data-k]'); if (!b) return; goTo(PARTS.find(r => r[0] === b.dataset.k)[1]); });
   root.addEventListener('click', ev => { const b = ev.target.closest('[data-go]'); if (b) goTo(b.dataset.go); });

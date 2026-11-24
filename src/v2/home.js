@@ -16,7 +16,6 @@ const w = (k, o) => t('bp.' + k, o);
 const QWORD = q => (q === 'perfect' ? 'field.perfect.q' : 'home.q.' + q);
 const byId = Object.fromEntries(STATIONS.map(s => [s.id, s]));
 const STATUS = ['product', 'lab', 'guess'];
-const KEY = 'osl-lang';
 
 /* ctx: still() (reduced motion) */
 export function createHome(host, ctx) {
@@ -124,13 +123,8 @@ export function createHome(host, ctx) {
   }
 
   /* ---- the story ---- */
-  function langs() {
-    return '<nav class="bp-langs" aria-label="' + esc(w('lang.aria')) + '">' + Object.entries(LANGS).map(([k, name]) =>
-      '<button type="button" data-lang="' + k + '" lang="' + k + '" aria-pressed="' + (lang() === k) + '">' + esc(name) + '</button>').join('') + '</nav>' +
-      (lang() !== 'en' ? '<p class="bp-langnote">' + esc(w('lang.note')) + '</p>' : '');
-  }
   function hero() {
-    return '<header class="bp-hero" data-ch="whole">' + langs() + '<p class="bp-kicker">' + esc(w('hero.k')) + '</p><h1>' + w('hero.h') + '</h1><p class="bp-lead">' + esc(w('hero.p')) + '</p>' +
+    return '<header class="bp-hero" data-ch="whole"><p class="bp-kicker">' + esc(w('hero.k')) + '</p><h1>' + w('hero.h') + '</h1><p class="bp-lead">' + esc(w('hero.p')) + '</p>' +
       '<div class="bp-ctas"><a class="bp-cta primary" href="#/" data-scroll>' + esc(w('hero.read')) + ' ↓</a><a class="bp-cta" href="#/island">' + esc(w('hero.enter')) + '</a></div></header>';
   }
   const chip = (attrs, text, on) => '<button type="button" class="bp-chip" ' + attrs + ' aria-pressed="' + !!on + '">' + text + '</button>';
@@ -149,7 +143,7 @@ export function createHome(host, ctx) {
   function doors() {
     return '<section class="bp-doors" aria-labelledby="bp-doors-h"><h2 id="bp-doors-h">' + esc(w('doors.h')) + '</h2><div class="bp-doorgrid">' + DOORS.map(d =>
       '<a class="bp-door" href="' + d.href + '"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="' + d.icon + '"/></svg><b>' + esc(w('door.' + d.id + '.t')) + '</b><span>' + esc(w('door.' + d.id + '.d')) + '</span></a>').join('') +
-      '</div><nav class="bp-ways" aria-label="' + esc(w('ways.aria')) + '">' + WAYS.map(([h, k]) => '<a href="' + h + '">' + esc(w('ways.' + k)) + ' →</a>').join('') + '</nav>' + langs() + '</section>';
+      '</div><nav class="bp-ways" aria-label="' + esc(w('ways.aria')) + '">' + WAYS.map(([h, k]) => '<a href="' + h + '">' + esc(w('ways.' + k)) + ' →</a>').join('') + '</nav></section>';
   }
   function draw() {
     host.innerHTML = '<div class="bp" data-mode="' + S.mode + '" data-side="' + S.side + '"><div class="bp-grid"><div class="bp-story">' + hero() + CHAPTERS.map(chapter).join('') + '</div>' +
@@ -211,8 +205,6 @@ export function createHome(host, ctx) {
 
   /* ---- what a reader does ---- */
   host.addEventListener('click', e => {
-    const L = e.target.closest('[data-lang]');
-    if (L) { try { localStorage.setItem(KEY, L.dataset.lang); } catch (x) { /* no storage: the address carries it */ } const u = new URL(location.href); u.searchParams.set('lang', L.dataset.lang); location.replace(u.toString()); return; }
     if (e.target.closest('[data-scroll]')) { e.preventDefault(); const c = host.querySelector('.bp-ch'); if (c) c.scrollIntoView({ behavior: reduced() ? 'auto' : 'smooth', block: 'center' }); return; }
     if (e.target.closest('[data-close]')) return closeCard();
     const sp = e.target.closest('[data-stagepick]'); if (sp) { S.stage = S.stage === sp.dataset.stagepick ? null : sp.dataset.stagepick; paint(); return S.stage ? card('stage', S.stage) : closeCard(); }
