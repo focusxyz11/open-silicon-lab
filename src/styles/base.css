@@ -53,8 +53,8 @@ button { font: inherit; color: inherit; }
 .langmenu p { margin: 6px 12px 6px; font: 400 12.5px/1.4 var(--sans); color: var(--muted); }
 /* the first page is its own story: the loop waits until you enter the world */
 body.firstpage .bar .loop { visibility: hidden; }
-/* a narrow phone keeps the loop whole: the language waits on the first page, the one translated so far */
-@media (max-width: 560px) { body:not(.firstpage) .langm { display: none; } }
+/* a narrow phone keeps the loop whole: the language waits on the pages translated so far (the first page, the blueprint) */
+@media (max-width: 560px) { body:not(.langpage) .langm { display: none; } }
 .round { width: 38px; height: 38px; border-radius: 50%; border: 1px solid var(--line); background: transparent; cursor: pointer; font-size: 17px; }
 .round:hover { background: color-mix(in srgb, var(--ink) 8%, transparent); }
 /* the stage: the 3D world, and its labels */

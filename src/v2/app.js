@@ -505,6 +505,7 @@ export function start() {
     if (/^#\/?w\/?$/.test(location.hash)) history.replaceState(null, '', '#/');
     const parts = partsOf(location.hash), k = parts[0] || 'home';
     document.body.classList.toggle('firstpage', k === 'home');
+    document.body.classList.toggle('langpage', k === 'home' || k === 'blueprint');
     if (k !== 'home' && hold) hold.hide();
     if (k !== 'blueprint' && blueprint) blueprint.hide();
     if (k !== 'stations' && stations) stations.hide();
