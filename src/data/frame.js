@@ -144,7 +144,9 @@ export const FILED = {
   'search': ['sutton', 'human'], 'halt': ['nat', 'trust'],
   /* Listen and tell, the ear test at the block (#316) */
   'ear': ['dig', 'eff'],
-  'corearch': ['line', 'eff', 'geo']
+  'corearch': ['line', 'eff', 'geo'],
+  /* Invent a transistor, at the switch (#329) */
+  'transistor': ['physics', 'moore', 'nat']
   }
 };
 

@@ -24,7 +24,7 @@ export const YEAR = 365;
 export const FABS = [
   /* the giant fab: every form but living matter; months a try (Pragmatic's comparison: 18 to 26 weeks from tape-out
      to tested wafers) */
-  { id: 'giant', makes: ['circuit', 'matter:cim', 'matter:light', 'matter:spikes', 'matter:reversible'], claims: [
+  { id: 'giant', makes: ['circuit', 'matter:cim', 'matter:light', 'matter:spikes', 'matter:reversible', 'matter:switch'], claims: [
     { id: 'giantDays', status: 'product', fid: 'figures', kind: 'days', value: [126, 182], fact: 'silicon-turnaround' },
     { id: 'giantCost', status: 'product', fid: 'figures', kind: 'cost', value: 1, fact: 'fab-module-cost' }] },
   /* Minimal Fab (AIST, sold by Yokogawa): no cleanroom, half-inch wafers, a hundredth to a thousandth of the cost.

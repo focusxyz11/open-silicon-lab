@@ -32,7 +32,14 @@
      every catch does. Neither can go below the floor: erasing a bit costs at least kT ln 2 (src/engines/floor.js,
      facts.json landauer-measured), against a 16-bit multiply-add's energy in the 45 nm table (E16).
    A part's work (its share of the work per answer) is a choice of the model in src/data/blocks.js, so the engine
-   only ever speaks of a machine against itself, never in joules. */
+   only ever speaks of a machine against itself, never in joules.
+
+   Your switch (#329): a block can be a circuit made of the switch you invented at the switch level, new matter of the
+   kind 'switch' (src/data/inventions.js). The plan says which switch (plan.sw, a short word of src/engines/switch.js
+   specKey; none: today's silicon fin), so a machine and a ledger entry are scored the same everywhere. Its claim takes
+   the switch's energy per switch against silicon and its status (an invented material is a guess); a switch that
+   never turns off cleanly, or a known material the line melts or that has no holes for a pair, cannot be made, so the
+   fab's rule breaks (claimsOf, yours). */
 
 import { BLOCKS, NEEDS, FORMS, PORTS, blockOf, needOf } from '../data/blocks.js';
 import { MATTERS, ACTIVITY, matterOf, mattersFor } from '../data/inventions.js';
@@ -41,6 +48,7 @@ import { CIM_ARRAY, CIM_ADC } from './budget.js';
 import { landauer, bitsErased, T_ROOM } from './floor.js';
 import { FABS, TRY_DAYS, YEAR, fabOf } from '../data/fabs.js';
 import { LIQUIDS, RESHAPE, FALLBACK, liquidOf, liquidsFor } from '../data/liquid.js';
+import { forMachines, specOf } from './switch.js';
 
 export const SOFTWARE_COST = 500;                                   // facts.json asic-vs-cpu
 const CIM = cimEnergy(CIM_ARRAY, CIM_ARRAY, CIM_ADC);
@@ -71,16 +79,28 @@ export function reshapeOf(f) {
   return changes(f) ? { low: RESHAPE.matter, high: RESHAPE.matter } : { low: Infinity, high: Infinity };
 }
 
+/* your switch, as a machine takes it: { energy, status, makeable } (sw: a plan's switch word; none: the silicon fin) */
+const SW = {};
+export const yours = sw => SW[sw || ''] || (SW[sw || ''] = forMachines(specOf(sw)));
+/* a kind's claims, with your switch's filled in from the plan's switch */
+export function claimsOf(m, sw) {
+  if (!m) return [];
+  return m.claims.map(c => {
+    if (c.energy !== 'switch') return c;
+    const Y = yours(sw), e = isFinite(Y.energy) ? Y.energy : 1;
+    return Object.assign({}, c, { status: Y.status, fid: Y.status === 'guess' ? 'idea' : c.fid, kind: e <= 1 ? 'gain' : 'catch', value: e });
+  });
+}
 /* the energy of a form against a circuit, as a range: { low: if the guesses hold, high: if they fail, wall } */
-export function costOf(f, need) {
+export function costOf(f, need, sw) {
   if (f === 'software') return { low: SOFTWARE_COST, high: SOFTWARE_COST, wall: false };
   if (f === 'circuit') return { low: 1, high: 1, wall: false };
   const L = liquidIn(f);
   if (L) { const e = L.energy; return { low: e.value, high: e.status === 'guess' ? liquidOf(FALLBACK).energy.value : e.value, wall: false }; }
   const m = matterIn(f); if (!m) return { low: Infinity, high: Infinity, wall: false };
-  const value = c => (c.energy === 'cim' ? MATTER_COST : c.energy === 'activity' ? ACTIVITY[(need && need.activity) || 'steady'] : c.energy);
+  const value = c => (c.energy === 'cim' ? MATTER_COST : c.energy === 'activity' ? ACTIVITY[(need && need.activity) || 'steady'] : c.energy === 'switch' ? c.value : c.energy);
   let low = 1, high = 1;
-  m.claims.forEach(c => {
+  claimsOf(m, sw).forEach(c => {
     if (c.kind === 'gain') { low *= value(c); if (c.status !== 'guess') high *= value(c); }
     if (c.kind === 'catch') { high *= value(c); if (c.status !== 'guess') low *= value(c); }
   });
@@ -146,7 +166,7 @@ export function check(need, plan) {
   const core = need.parts.some(p => { const b = blockOf(p.block); return b && b.runs && plan[p.id] === 'circuit'; });
   need.parts.forEach(p => { if (plan[p.id] === 'software' && !core) breaks.push({ rule: 'core', part: p.id }); });
   const F = fabOf(plan.fab || START_FAB);
-  made(need, plan).forEach(id => { if (!F || !F.makes.includes(norm(plan[id]))) breaks.push({ rule: 'fab', part: id }); });
+  made(need, plan).forEach(id => { if (!F || !F.makes.includes(norm(plan[id])) || (norm(plan[id]) === 'matter:switch' && !yours(plan.sw).makeable)) breaks.push({ rule: 'fab', part: id }); });
   return { ok: breaks.length === 0, breaks };
 }
 
@@ -168,7 +188,7 @@ export function score(need, plan, guesses = false) {
   let low = 0, high = 0, base = 0, kept = 0, sure = 0;
   const walls = [];
   need.parts.forEach(p => {
-    const f = norm(plan[p.id]), c = costOf(f, need);
+    const f = norm(plan[p.id]), c = costOf(f, need, plan.sw);
     low += p.work * c.low; high += p.work * c.high; base += p.work;
     if (c.wall) walls.push(p.id);
     if (changes(f)) kept++;
@@ -193,14 +213,14 @@ export const beats = (a, b) => a.energy <= b.energy && a.changes >= b.changes &&
 
 /* an agent: try every plan in every fab, keep those that pass, offer the ones nothing beats, cheapest first. A plan
    with nothing to make is the same in every fab, so it is kept once */
-export function assemble(id, max = 4, guesses = false) {
+export function assemble(id, max = 4, guesses = false, sw) {
   const need = needOf(id), parts = need.parts, choices = parts.map(p => formsOf(p.block));
   const valid = [];
   let tried = 0;
   const walk = (i, plan) => {
     if (i === parts.length) {
       FABS.forEach((F, k) => {
-        tried++; plan.fab = F.id;
+        tried++; plan.fab = F.id; if (sw) plan.sw = sw;
         if (k > 0 && !made(need, plan).length) return;
         if (check(need, plan).ok && meets(need, plan, guesses).ok) valid.push({ plan: Object.assign({}, plan), score: score(need, plan, guesses) });
       });
@@ -231,14 +251,14 @@ export function goalMisses(need, plan, goal) {
 /* the least energy any machine for this need can spend while it keeps the goal: every plan in every fab, as the agent
    tries them (a plan with nothing to make once); null if none can. Kept once worked out */
 const BEST = {};
-export function bestFor(id, goal) {
-  const key = id + '.' + goal.id; if (key in BEST) return BEST[key];
+export function bestFor(id, goal, sw) {
+  const key = id + '.' + goal.id + (sw ? '.' + sw : ''); if (key in BEST) return BEST[key];
   const need = needOf(id), parts = need.parts, choices = parts.map(p => formsOf(p.block));
   let best = null;
   const walk = (i, plan) => {
     if (i === parts.length) {
       FABS.forEach((F, k) => {
-        plan.fab = F.id;
+        plan.fab = F.id; if (sw) plan.sw = sw;
         if (k > 0 && !made(need, plan).length) return;
         if (!check(need, plan).ok || !meets(need, plan).ok || goalMisses(need, plan, goal).length) return;
         const e = score(need, plan).energy;
@@ -254,7 +274,7 @@ export function bestFor(id, goal) {
 /* a plan played against a goal: the machine, the goal's own misses, the least it can be, and whether it is won (within
    a millionth of the least, so rounding never denies a win) */
 export function play(id, plan, goal) {
-  const m = machine(id, plan), extra = goalMisses(needOf(id), m.plan, goal), b = bestFor(id, goal), ok = m.ok && !extra.length;
+  const m = machine(id, plan), extra = goalMisses(needOf(id), m.plan, goal), b = bestFor(id, goal, m.plan.sw), ok = m.ok && !extra.length;
   return { m, extra, best: b ? b.energy : Infinity, ok, won: ok && !!b && m.score.energy <= b.energy * (1 + 1e-6) };
 }
 

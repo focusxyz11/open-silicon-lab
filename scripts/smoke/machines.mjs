@@ -1,6 +1,6 @@
 import { S } from './shared.mjs';
 
-export const about = 'machines from shared blocks, a place: the machine drawn as a block diagram that changes with a form, the agent\'s offers on the front and a pick used, where it is made, liquid hardware keeping up with a radio, the lab\'s curve and an attempt kept, new matter\'s claims and the guesses switch, two challenges won in Do, desktop and phone';
+export const about = 'machines from shared blocks, a place: the machine drawn as a block diagram that changes with a form, the agent\'s offers on the front and a pick used, where it is made, liquid hardware keeping up with a radio, the lab\'s curve and an attempt kept, new matter\'s claims and the guesses switch, a block made of your switch, two challenges won in Do, desktop and phone';
 
 export default async function run() {
   const { browser, browser3d, base, problems } = S;
@@ -81,5 +81,16 @@ export default async function run() {
         const tip = document.querySelector('.fidtip p'); return !!tip && tip.textContent.length > 30; }, sel, { timeout: 15000, polling: 500 })
         .catch(() => problems.push(tag + ': tapping ' + sel + ' says nothing'));
     }
+    await fp.close(); }
+  /* your switch up the scales (#329): a switch kept at the switch level (src/v2/labs/switch.js) is a kind of new matter;
+     the wildfire sensor's detector made of it spends less than a circuit of silicon fins, and its claim says whose switch */
+  { const tag = 'machines switch', fp = await browser.newPage({ viewport: { width: 1280, height: 800 } });
+    fp.on('pageerror', e => problems.push(tag + ': ' + e.message));
+    await fp.addInitScript(() => { localStorage.setItem('osl-quality', 'flat'); localStorage.setItem('osl-hints-v1', JSON.stringify({ seen: {}, off: true })); localStorage.setItem('osl-switch-v1', JSON.stringify({ sw: 'si/gaa/therm' })); });
+    await fp.goto(base + 'index.html#/machines/wildfire/claims');
+    await fp.waitForFunction(() => { const b = document.querySelector('[data-mform="detect:matter:switch"]'); if (b && b.getAttribute('aria-pressed') !== 'true') b.click(); else if (!b) { const m = document.querySelector('[data-mform^="detect:matter"]'); if (m) m.click(); }
+      const e = (document.querySelector('.mach .mread b') || {}).textContent || '', v = parseFloat(e);
+      return !!document.querySelector('.mach .mbk[data-mpart="detect"].f-matter') && !!document.querySelector('.mach .mclaims .mswitch a[href="#/do/transistor"]') && v > 0 && v < 1 && !document.querySelector('.mach .mchecks li.bad'); }, null, { timeout: 20000, polling: 300 })
+      .catch(() => problems.push(tag + ': a block made of your switch does not lower the machine\'s energy'));
     await fp.close(); }
 }

@@ -97,6 +97,7 @@ a choice of kinds (`src/data/inventions.js`):
 | Spikes | a learner | yes | no | spiking systems built (shown in a lab), cost with activity, one guess |
 | Reversible | adder, counter, voter, parity | no | yes | a test chip's recovered energy (shown in a lab), one guess |
 | Living | a learner | yes | no | a living-neuron computer on sale (in products), two guesses |
+| Your switch | a learner, adder, counter, voter, parity | no | yes | the switch you invented at the switch level (the switch engine): its energy per switch against today's silicon fin, in products, shown in a lab or a guess |
 
 **The honesty rule.** Every claim says how sure it is: in products, shown in a lab, or a guess, with its source (an
 entry of `facts.json`) or the engine that computes it. A claim is a gain, a catch or a note. The energy is a range: if
@@ -105,9 +106,19 @@ goes below the floor: erasing a bit costs at least kT ln 2 (`src/engines/floor.j
 answer's bits. The agent counts only what is shown unless the person tells it to count guesses, and the page shows why
 that matters: counting guesses, a hearing aid's filter becomes living neurons at 0.18× to 82× the energy.
 
-**Next in Invent:** the switch (invent a transistor: material properties to a switch, with the gain-and-threshold
-test of the `strange` world) and the machine (a new machine and its code invented together, against the hardware
-lottery). Anyone can raise a claim with a source or lower it with a break; machine attempts are kept in the ledger now
+**The switch (#329).** *Invent a transistor* (`#/do/transistor`, at the switch level; `src/engines/switch.js`,
+`src/v2/labs/switch.js`): choose a material (silicon, germanium, indium gallium arsenide, gallium nitride, molybdenum
+disulfide, carbon nanotubes, graphene, or one you invent within the band the known materials make), a shape (flat, fin,
+gate all around, a one-atom-thin sheet) and a way to switch (over a barrier, tunnelling, negative capacitance), and see
+its switching curve against today's silicon fin and the 60 mV line. *Build machines from this switch* keeps it in this
+browser; a machine's block can then be new matter of the kind *Your switch*. The plan carries the switch as a short word
+(`plan.sw`, `specKey`), so the score, the agent, the goals' least energy and an attempt kept in the ledger all count the
+same switch: a circuit of silicon with its gate all around spends about 84% of a fin's energy per switch, and the
+machine's energy falls with it. A switch that never turns off, or a known material the line melts (germanium in the
+1,050 °C anneal) or that has no holes for a pair, cannot be made: the fab's rule breaks. An invented material is a guess
+to a machine, whatever its band: its gain counts only if the guesses hold.
+
+**Next in Invent:** the machine (a new machine and its code invented together, against the hardware lottery). Anyone can raise a claim with a source or lower it with a break; machine attempts are kept in the ledger now
 (see Moore's law for ideas), claims are next.
 
 ## Liquid hardware

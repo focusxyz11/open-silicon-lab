@@ -1646,6 +1646,7 @@
  "fid.by.search": "the circuit search engine",
  "fid.by.listen": "the listening engine, made from the block's own engines",
  "fid.by.corearch": "the core's engine (the area, energy and cycles of each choice)",
+ "fid.by.switch": "the switch engine, a compact model of a switch from its material, shape and way of switching",
  "fid.by.machine": "the machine engine, which scores every machine of shared blocks",
  "fid.by.budget": "the energy budget engine, on a 45 nm table of energies",
  "fid.by.plan": "the block's own plan (where its parts sit and how long its wires run)",

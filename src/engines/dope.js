@@ -5,13 +5,15 @@
    Silicon (the playground): free carriers from the band gap (1.12 eV): ni(T) = 1e10 (T/300)^1.5 exp(-Eg/2k (1/T - 1/300))
    per cm3; mobility from the Caughey-Thomas fit; doped silicon from charge balance; a p-n junction by the abrupt
    depletion approximation and the ideal diode equation (I0 = 1e-14 A); a field-effect switch with a threshold of
-   0.45 V and 75 mV per decade below it. Silicon has 5e22 atoms per cm3.
+   0.45 V and 75 mV per decade below it: the flat silicon switch of the switch engine (src/engines/switch.js), whose
+   swing is the 60 mV limit times its gate's imperfect grip. Silicon has 5e22 atoms per cm3.
    Implant and anneal: a dopant ion lands at a depth Rp = a E^b nm with spread dRp = c E^d nm (E in keV; the
    constants are the first version's fits to published range tables), the profile is a Gaussian of the dose, the
    anneal broadens it by sqrt(2 D t) (diffusion, not counting transient enhanced diffusion), and a junction is where
    the profile falls to the background doping of 1e17 per cm3. How many dopants switch on depends on the anneal and on
    solid solubility: a dose above it leaves some inactive. Energy is in keV, dose in ions per cm2, depth in nm. */
 import { clamp, metBy } from './fabkit.js';
+import { switchOf } from './switch.js';
 
 /* ---- silicon ---- */
 const K_B = 8.617e-5, EG = 1.12, Q = 1.602e-19, N_SI = 5e22, VT = 0.02585;
@@ -46,8 +48,9 @@ export function junction(logNa = SEMI_DEFAULTS.logNa, logNd = SEMI_DEFAULTS.logN
 }
 
 /* a field-effect switch at gate voltage Vg and drain voltage Vd: drain current per micrometre of width (amps), channel strength 0 to 1 */
+export const SI_FLAT_SWING = switchOf({ mat: 'si', shape: 'planar', mech: 'therm' }).swing / 1000;   // volts per tenfold, about 0.075
 export function mosfet(Vg = SEMI_DEFAULTS.Vg, Vd = SEMI_DEFAULTS.Vd) {
-  const Vt = 0.45, ss = 0.075;
+  const Vt = 0.45, ss = SI_FLAT_SWING;
   let Id = Vg < Vt ? 1e-7 * Math.pow(10, (Vg - Vt) / ss) : 1e-7 + 6e-4 * Math.pow(Vg - Vt, 1.3);
   Id *= Math.tanh(Vd / 0.15) * (1 + 0.1 * Vd);
   return { Vg, Vd, Vt, Id, channel: clamp((Vg - Vt + 0.15) / 0.8, 0, 1), state: Vg < Vt - 0.1 ? 'off' : Vg < Vt + 0.05 ? 'turning' : 'on' };

@@ -33,6 +33,7 @@ import { labCurve } from '../engines/ledger.js';
 import { frontFigure } from './front.js';
 import { mark as fidMark, claimFid, glyph as fidGlyph } from './fid.js';
 import { FRONTS } from '../data/fidelity.js';
+import { keptSwitch } from './labs/switch.js';
 
 const REPO = 'https://github.com/focusxyz11/open-silicon-lab/blob/main/';
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
@@ -76,8 +77,8 @@ const RANK = { product: 0, lab: 1, guess: 2 };
 const weakest = list => list.reduce((w, s) => (RANK[s] > RANK[w] ? s : w), 'product');
 /* how sure the energy of a form is: the weakest claim it rests on (new matter: its gains and catches; a fabric: its
    energy and its time to rewire); a circuit and software are the yardsticks, and carry no mark */
-function truthOf(f) {
-  const k = M.matterIn(f); if (k) { const c = k.claims.filter(x => x.kind !== 'note'); return weakest((c.length ? c : k.claims).map(x => x.status)); }
+function truthOf(f, sw) {
+  const k = M.matterIn(f); if (k) { const cl = M.claimsOf(k, sw), c = cl.filter(x => x.kind !== 'note'); return weakest((c.length ? c : cl).map(x => x.status)); }
   const L = M.liquidIn(f); return L ? weakest([L.energy.status, L.reshape.status]) : null;
 }
 /* the kinds a family offers a block: kinds of new matter, or liquid fabrics */
@@ -176,6 +177,8 @@ const PATTERN = {
   light: '<path d="M28 30c8-6 12 6 20 0s12 6 20 0 12 6 20 0 12 6 20 0M28 70c8-6 12 6 20 0s12 6 20 0 12 6 20 0 12 6 20 0" class="p"/>',
   spikes: '<path d="M26 72h14l4-12 4 12h22l4-14 4 14h20l4-10 4 10h14" class="p"/>',
   reversible: '<path d="M34 34a40 30 0 0 1 72 0M106 66a40 30 0 0 1-72 0" class="p"/><path d="M102 26l4 8-9 1M38 74l-4-8 9-1" class="p"/>',
+  /* your switch: a channel under its gate, the way the dive draws one, at either side of the glyph */
+  switch: '<path d="M24 70h22M94 70h22M24 30h22M94 30h22" class="p"/><path d="M30 64h10M100 64h10M30 36h10M100 36h10" class="p"/><g class="pf"><rect x="30" y="66" width="10" height="3" rx="1"/><rect x="100" y="66" width="10" height="3" rx="1"/><rect x="30" y="31" width="10" height="3" rx="1"/><rect x="100" y="31" width="10" height="3" rx="1"/></g>',
   living: '<path d="M30 36c10 8 14-4 22 4M110 64c-10-8-14 4-22-4M34 70c8-6 4-14 14-12M106 30c-8 6-4 14-14 12" class="p"/><g class="pf"><circle cx="30" cy="36" r="3"/><circle cx="110" cy="64" r="3"/><circle cx="34" cy="70" r="2.6"/><circle cx="106" cy="30" r="2.6"/></g>'
 };
 function shapeSvg(f, blockId) {
@@ -209,6 +212,10 @@ export function machines(el, ctx) {
   /* the address is where you are: a mode, a layer, or the machine as it flows */
   if (ctx.sub === 'do') view.mode = 'do'; else { view.mode = 'look'; view.layer = LAYERS.includes(ctx.sub) ? ctx.sub : 'flow'; }
   if (!view.sel) view.sel = (need.change && need.change[0]) || (need.parts.find(p => M.formsOf(p.block).length > 1) || need.parts[0]).id;
+  /* your switch, kept at the switch level (src/v2/labs/switch.js): a block of new matter of the kind 'switch' is made
+     of it, and the plan carries it so the score, the agent and an attempt kept all count the same switch */
+  const SWK = keptSwitch(), withSwitch = p => { if (SWK) p.sw = SWK; else delete p.sw; return p; };
+  withSwitch(view.plan);
   let P = null; try { P = buildPlan(); } catch (e) { P = null; }
   const partName = p => t('machines.role.' + id + '.' + p);
   const goalKey = i => id + '.' + goals[i].id;
@@ -240,12 +247,12 @@ export function machines(el, ctx) {
       const r = M.reshapeOf(f), s = view.guesses ? r.low : r.high, must = (need.change || []).includes(p.id);
       return [must && need.every ? (s <= need.every ? 'good' : 'bad') : must && !isFinite(s) ? 'bad' : '', secs(s)];
     }
-    if (L === 'claims') { const tr = truthOf(f); return tr ? ['tr s-' + tr, t('invent.status.' + tr)] : ['', t(f === 'software' ? 'machines.badge.measured' : 'machines.badge.yardstick')]; }
+    if (L === 'claims') { const tr = truthOf(f, view.plan.sw); return tr ? ['tr s-' + tr, t('invent.status.' + tr)] : ['', t(f === 'software' ? 'machines.badge.measured' : 'machines.badge.yardstick')]; }
     if (L === 'blocks') return ['', t('machines.badge.ports', { ins: b.in.map(x => t('machines.port.' + x)).join(', '), outs: b.out.map(x => t('machines.port.' + x)).join(', ') })];
     return ['', formName(f)];
   }
   function blockHtml(L, p, m) {
-    const c = L.at[p.id], f = view.plan[p.id], b = blockOf(p.block), tr = truthOf(f), doing = view.mode === 'do';
+    const c = L.at[p.id], f = view.plan[p.id], b = blockOf(p.block), tr = truthOf(f, view.plan.sw), doing = view.mode === 'do';
     const bad = m.check.breaks.some(x => x.part === p.id) || m.meets.misses.some(x => x.part === p.id) || (doing && playNow().extra.some(x => x.part === p.id));
     const rules = [];
     if ((need.change || []).includes(p.id)) rules.push(['change', m.meets.misses.some(x => x.part === p.id && (x.rule === 'change' || x.rule === 'keep'))]);
@@ -433,7 +440,7 @@ export function machines(el, ctx) {
     g += '<circle class="ref" cx="' + X(Infinity) + '" cy="' + Y(1) + '" r="5"/><line class="refl" x1="' + X(fp.reshape.value[1]).toFixed(1) + '" x2="' + X(fp.reshape.value[0]).toFixed(1) + '" y1="' + Y(fp.energy.value).toFixed(1) + '" y2="' + Y(fp.energy.value).toFixed(1) + '"/><circle class="ref" cx="' + X(1e-6).toFixed(1) + '" cy="' + Y(500).toFixed(1) + '" r="5"/>';
     /* this machine's parts, one dot per form, every part with that form named beside it */
     const at = {};
-    need.parts.forEach(p => { const f = view.plan[p.id], r = M.reshapeOf(f), c = M.costOf(f, need), s = G ? r.low : r.high, e = G ? c.low : c.high, k = f + '|' + s + '|' + e;
+    need.parts.forEach(p => { const f = view.plan[p.id], r = M.reshapeOf(f), c = M.costOf(f, need, view.plan.sw), s = G ? r.low : r.high, e = G ? c.low : c.high, k = f + '|' + s + '|' + e;
       (at[k] = at[k] || { f, s, e, names: [] }).names.push(partName(p.id)); });
     Object.values(at).forEach((a, i) => { const x = X(a.s), y = Y(a.e);
       g += '<g class="pt ' + fam(a.f) + '"><circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="7"/><text x="' + (x + (x > W - 150 ? -11 : 11)).toFixed(1) + '" y="' + (y - 9 - (i % 2) * 12).toFixed(1) + '" text-anchor="' + (x > W - 150 ? 'end' : 'start') + '">' + esc(a.names.join(', ')) + '</text></g>'; });
@@ -458,17 +465,19 @@ export function machines(el, ctx) {
     h += '<p class="small levolve">' + esc(t('liquid.ui.evolve')) + (ev && ev.url ? ' <a href="' + esc(ev.url) + '" target="_blank" rel="noopener">' + esc(t('invent.ui.source')) + '</a>' : '') + ' <a href="#/do/evolve">' + esc(t('liquid.ui.evolveGo')) + '</a></p>';
     return h + '</section>';
   }
+  /* your switch (#329): which switch a block of it is made of, and the way to invent one */
+  const switchLine = () => '<p class="small mswitch">' + esc(view.plan.sw ? t('invent.ui.switchKept') : t('invent.ui.switchNone')) + ' <a href="#/do/transistor">' + esc(t('invent.ui.switchGo')) + '</a></p>';
   /* beyond today's chip: the claims behind every part made of new matter */
   function inventHtml(m) {
     const parts = need.parts.filter(p => M.matterIn(view.plan[p.id]));
     let h = '<section class="minvent"><p class="kicker">' + esc(t('invent.ui.kicker')) + '</p><p class="small muted">' + esc(t('invent.ui.lead')) + '</p>';
     if (!parts.length) return h + '<p class="small">' + esc(t('invent.ui.none')) + '</p></section>';
     parts.forEach(p => {
-      const k = M.matterIn(view.plan[p.id]), c = M.costOf(view.plan[p.id], need);
+      const k = M.matterIn(view.plan[p.id]), c = M.costOf(view.plan[p.id], need, view.plan.sw);
       h += '<div class="mclaims"><p><b>' + esc(partName(p.id)) + ' · ' + esc(t('invent.matter.' + k.id + '.t')) + '</b> <span class="small muted">' + esc(t('invent.matter.' + k.id + '.d')) + '</span></p>' +
-        '<p class="small mrange">' + esc(t('invent.ui.range', { low: times(c.low), high: times(c.high) })) + '</p><ul>' + k.claims.map(cl => {
+        '<p class="small mrange">' + esc(t('invent.ui.range', { low: times(c.low), high: times(c.high) })) + '</p>' + (k.id === 'switch' ? switchLine() : '') + '<ul>' + M.claimsOf(k, view.plan.sw).map(cl => {
           const f = cl.fact && ctx.FACT && ctx.FACT[cl.fact], src = f && f.url ? '<a href="' + esc(f.url) + '" target="_blank" rel="noopener">' + esc(t('invent.ui.source')) + '</a>' : cl.engine ? '<a href="' + esc(REPO + cl.engine) + '" target="_blank" rel="noopener">' + esc(t('invent.ui.engine')) + '</a>' : '';
-          return '<li class="k-' + cl.kind + '">' + marks(cl.status, cl) + '<span>' + esc(t('invent.claim.' + cl.id)) + (src ? ' <span class="small">' + src + '</span>' : '') + '</span></li>';
+          return '<li class="k-' + cl.kind + '">' + marks(cl.status, cl) + '<span>' + esc(t('invent.claim.' + cl.id, { pct: cl.value != null ? fmtNum(Math.round(cl.value * 100)) + '%' : '' })) + (src ? ' <span class="small">' + src + '</span>' : '') + '</span></li>';
         }).join('') + '</ul>' + (m.score.walls.includes(p.id) ? '<p class="small mwall">' + esc(t('invent.wall.floor')) + '</p>' : '') + '</div>';
     });
     return h + '</section>';
@@ -562,7 +571,7 @@ export function machines(el, ctx) {
   /* a layer opened: its words come into view beside the picture (on a phone, under it) */
   const showLayer = () => { const box = el.querySelector('.mlayer'); if (box && box.getBoundingClientRect().top > innerHeight * 0.6) box.scrollIntoView({ block: 'start', behavior: still() ? 'auto' : 'smooth' }); };
   /* the agent: every machine nobody beats, for the front, and the four cheapest as offers */
-  function agent() { const A = M.assemble(id, Infinity, view.guesses); view.front = A.picks; view.agent = Object.assign({}, A, { picks: A.picks.slice(0, 4) }); }
+  function agent() { const A = M.assemble(id, Infinity, view.guesses, view.plan.sw); view.front = A.picks; view.agent = Object.assign({}, A, { picks: A.picks.slice(0, 4) }); }
   el.onclick = e => {
     const q = s => e.target.closest(s);
     const n = q('[data-mneed]'); if (n) { if (n.dataset.mneed !== id) ctx.go(n.dataset.mneed, view.mode === 'do' ? 'do' : view.layer !== 'flow' ? view.layer : ''); return; }
@@ -580,7 +589,7 @@ export function machines(el, ctx) {
     const f = q('[data-mform]'); if (f && !f.disabled) { const s = f.dataset.mform, i = s.indexOf(':'), part = s.slice(0, i); if (view.plan[part] !== s.slice(i + 1)) view.changed = part; view.plan = Object.assign({}, view.plan, { [part]: s.slice(i + 1) }); view.sel = part; return draw(); }
     if (q('[data-magent]')) { agent(); return draw(); }
     const u = q('[data-muse]'); if (u && view.agent) { const p = view.agent.picks[+u.dataset.muse]; if (p) { need.parts.forEach(x => { if (view.plan[x.id] !== p.plan[x.id]) view.changed = x.id; }); view.plan = Object.assign({}, p.plan); return draw(); } }
-    if (q('[data-mreset]')) { view.plan = M.startPlan(id); return draw(); }
+    if (q('[data-mreset]')) { view.plan = withSwitch(M.startPlan(id)); return draw(); }
   };
   el.onchange = e => { const g = e.target.closest('[data-mguess]'); if (!g) return; view.guesses = g.checked; if (view.agent) agent(); draw(); };
   /* a screen turned or resized across a phone's width: the machine runs the other way */

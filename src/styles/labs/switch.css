@@ -1,0 +1,93 @@
+/* The lab switch's own styles (src/data/labs/switch.js, css: true), loaded when its challenge is played (src/core/styles.js). */
+/* invent a transistor (src/v2/labs/switch.js): the switching curve, the device across its channel, the band, the readings */
+.tswintro { margin: 4px 0 10px; }
+.tswfig { margin: 8px 0 6px; }
+ .tswfig svg { display: block; width: 100%; height: auto; }
+.tswfig .plot { fill: color-mix(in srgb, var(--ink) 3%, var(--panel-solid)); }
+.tswfig .ax { font: 9.5px var(--mono); fill: var(--muted); }
+.tswfig .cap { font: 10px var(--sans); fill: var(--muted); }
+.tswfig .gl { stroke: var(--line); stroke-width: 1; }
+.tswfig .wall { fill: color-mix(in srgb, var(--warm) 15%, transparent); }
+.tswfig .line60 { stroke: var(--warm); stroke-width: 1.8; stroke-dasharray: 5 4; }
+.tswfig .si { fill: none; stroke: var(--muted); stroke-width: 2; stroke-dasharray: 4 3; stroke-linejoin: round; }
+.tswfig .spread { fill: color-mix(in srgb, var(--accent) 16%, transparent); stroke: none; }
+.tswfig .you { fill: none; stroke: var(--accent); stroke-width: 3; stroke-linejoin: round; stroke-linecap: round; }
+ .tswfig .you.guess { stroke-dasharray: 2 4; }
+.tswfig .floor { stroke: var(--bad); stroke-width: 1.4; stroke-dasharray: 2 3; }
+.tswfig .vmin { stroke: var(--accent); stroke-width: 1.2; opacity: .7; }
+.tswfig .lt { font: 600 10.5px var(--sans); }
+ .tswfig .t60 { fill: color-mix(in srgb, var(--warm) 80%, var(--ink)); }
+ .tswfig .tsi { fill: var(--muted); }
+ .tswfig .tyou, .tswfig .tv { fill: var(--accent); }
+ .tswfig .tv { font-family: var(--mono); font-weight: 500; }
+ .tswfig .tbad { fill: var(--bad); }
+.tswkey { margin: 4px 0 0; line-height: 1.6; }
+ .tswkey .k { display: inline-block; width: 14px; height: 3px; border-radius: 2px; vertical-align: middle; margin: 0 4px 0 8px; }
+ .tswkey .k:first-child { margin-left: 0; }
+ .tswkey .k.you { background: var(--accent); height: 4px; }
+ .tswkey .k.band { background: color-mix(in srgb, var(--accent) 22%, transparent); height: 9px; }
+ .tswkey .k.si { background: repeating-linear-gradient(90deg, var(--muted) 0 4px, transparent 4px 7px); }
+ .tswkey .k.l60 { background: repeating-linear-gradient(90deg, var(--warm) 0 5px, transparent 5px 9px); }
+ .tswkey .k.me { width: 9px; height: 9px; border-radius: 50%; background: var(--accent); }
+ .tswkey .k.mh { width: 8px; height: 8px; border-radius: 50%; background: var(--panel-solid); border: 2px solid var(--accent); }
+ .tswkey .k.kn { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); }
+/* the goals: four meters, each lit once some switch you tried met it */
+.tswgoal .gauge .gl { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* the choices */
+.tswset { margin: 10px 0 4px; }
+.tswset .kicker { margin: 10px 0 4px; }
+.tswset .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.tswset .chipb { min-height: 34px; }
+.tswown { margin: 10px 0 2px; padding: 10px 12px; border-radius: 12px; border: 1px dashed var(--line); }
+.tswdial { display: grid; gap: 2px; margin: 8px 0; }
+ .tswdial input { width: 100%; }
+ .tswdial output { font: 500 12px var(--mono); }
+.tswbandsay { margin: 4px 0 0; }
+.tswband { margin: 6px 0 0; }
+ .tswband svg { display: block; width: 100%; height: auto; }
+.tswband .ax { font: 9px var(--mono); fill: var(--muted); }
+.tswband .cap { font: 9.5px var(--sans); fill: var(--muted); }
+.tswband .gl { stroke: var(--line); stroke-width: 1; }
+.tswband .beyond { fill: color-mix(in srgb, var(--warm) 12%, transparent); }
+.tswband .edge { fill: none; stroke: var(--warm); stroke-width: 1.6; }
+ .tswband .edge.h { stroke-dasharray: 3 3; opacity: .8; }
+.tswband .known { fill: var(--muted); }
+.tswband .tie { stroke: var(--accent); stroke-width: 1.2; opacity: .6; }
+.tswband .me { fill: var(--accent); stroke: var(--panel-solid); stroke-width: 1.5; }
+.tswband .mh { fill: var(--panel-solid); stroke: var(--accent); stroke-width: 2; }
+ .tswband .me.out { fill: var(--bad); } .tswband .mh.out { stroke: var(--bad); }
+/* the device across its channel */
+.tswdev { margin: 12px 0 6px; }
+ .tswdev svg { display: block; width: 100%; max-width: 360px; height: auto; margin: 0 auto; }
+.tswdev .sub { fill: color-mix(in srgb, var(--ink) 9%, var(--panel-solid)); stroke: var(--line); }
+.tswdev .ins { fill: color-mix(in srgb, var(--muted) 45%, var(--panel-solid)); }
+.tswdev .ch { fill: var(--accent); }
+.tswdev .gate { fill: color-mix(in srgb, var(--warm) 80%, var(--panel-solid)); }
+.tswdev .lb { font: 600 10px var(--sans); fill: var(--ink); }
+ .tswdev .lch { fill: var(--accent); }
+ .tswdev .lsub { font-weight: 400; fill: var(--muted); }
+.tswdev figcaption { margin-top: 4px; }
+/* what it reads */
+.tswread { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin: 8px 0 10px; }
+.tswread > span { display: grid; gap: 1px; padding: 7px 10px; border-radius: 10px; border: 1px solid var(--line); align-content: start; min-width: 0; }
+ .tswread b { font-size: 14px; }
+ .tswread .small { line-height: 1.3; }
+.tswsay { min-height: 3.9em; }
+/* how true each part is */
+.tswtrue { margin: 12px 0 8px; display: grid; gap: 5px; }
+.tswtr { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 10px; font-size: 13px; }
+.tswtm { display: inline-flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.tswst { display: inline-block; font-size: 12px; border-radius: 999px; padding: 1px 9px; border: 1px solid var(--line); white-space: nowrap; }
+ .tswst.s-product { color: var(--good); border-color: color-mix(in srgb, var(--good) 60%, transparent); }
+ .tswst.s-lab { color: color-mix(in srgb, var(--warm) 80%, var(--ink)); border-color: color-mix(in srgb, var(--warm) 60%, transparent); }
+ .tswst.s-band { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 60%, transparent); }
+ .tswst.s-guess { color: var(--muted); border-style: dashed; }
+.tswup { margin: 10px 0; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--line); }
+ .tswup .kicker { margin: 0 0 2px; }
+.tswnote { margin-top: 10px; }
+@media (max-width: 720px) {
+  .tswread b { font-size: 13px; }
+}
+.tswfig .zero { stroke: var(--muted); stroke-width: 1; stroke-dasharray: 1 3; }
+.tswdev .lead { stroke: var(--accent); stroke-width: 1; }
+.tswgo { display: block; margin-top: 6px; }

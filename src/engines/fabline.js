@@ -137,6 +137,16 @@ export function inspectCompare(w, k) {
   return out;
 }
 
+/* ---- the line's heat (its thermal budget): how hot the steps after a stage get ----
+   A channel has to survive every step that comes after it goes in. The front end makes the transistors: after the
+   channel is in, its hottest step is the anneal that switches the dopants on, a spike of about 1,050 °C for about a
+   second (dope.js, the anneal 'spike'). The back end builds the wiring above the transistors and must stay below
+   400 °C (facts.json beol-heat), so a channel put in there (a sheet or tubes laid on a finished chip) meets only that.
+   heatAfter(stage) -> the hottest step, in °C, from that stage on. Read by the switch engine (src/engines/switch.js). */
+export const LINE_STAGES = ['front', 'back'];
+export const LINE_HEAT = [{ id: 'activate', stage: 'front', c: 1050 }, { id: 'wires', stage: 'back', c: 400 }];
+export const heatAfter = stage => Math.max(...LINE_HEAT.filter(s => LINE_STAGES.indexOf(s.stage) >= Math.max(0, LINE_STAGES.indexOf(stage))).map(s => s.c));
+
 export const FABLINE_WORDS = {
   'fab.loop.clean.t': 'Clean', 'fab.loop.clean.text': 'Wet chemistry and scrubbing remove particles and residue. One stray particle can kill a die, so the air in a fab is thousands of times cleaner than a hospital operating room.', 'fab.loop.clean.gear': 'Wet benches and scrubbers (SCREEN, Lam Research)',
   'fab.loop.deposit.t': 'Deposit film', 'fab.loop.deposit.text': 'Grow or deposit an insulating film. Atomic layer deposition (ALD) can build it one atomic layer at a time.', 'fab.loop.deposit.gear': 'CVD and ALD tools (Applied Materials, Lam Research, Tokyo Electron, ASM)',
