@@ -1,0 +1,12 @@
+{
+  "kind": "try",
+  "by": "Open Silicon Lab",
+  "made": "example",
+  "ai": "",
+  "words": "The block as it is: the logic spread out over its rows, the memory in an array of its own.",
+  "front": "eff.geo",
+  "plan": {
+    "p": 0,
+    "n": 0
+  }
+}

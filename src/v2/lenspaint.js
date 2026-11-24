@@ -126,13 +126,28 @@ let chosen = null;
 const layoutsHtml = m => '<div class="lplays">' + m.layouts.map((l, i) => '<button type="button" class="lplay' + (i === chosen ? ' on' : '') + '" data-lppick="' + i + '" aria-pressed="' + (i === chosen) + '" aria-label="' + esc(t('lp.human.pick', { n: i + 1, v: l.wire })) + '">' +
   '<span class="lpok2" aria-hidden="true">✓</span>' + fmtNum(l.wire) + '</button>').join('') + '</div>' + (chosen != null ? '<p class="small lpyours">' + esc(t('lp.human.yours', { n: chosen + 1 })) + '</p>' : '');
 
+/* what the paint's colours and shapes say, beside the control (#326): every mark the paint draws, named once, drawn
+   the way the paint draws it, so the picture reads without guessing */
+const sw = inner => '<svg class="lpsw" viewBox="0 0 28 16" aria-hidden="true">' + inner + '</svg>';
+const RAMP = '<defs><linearGradient id="lpramp"><stop offset="0" stop-color="' + ramp(0) + '"/><stop offset=".5" stop-color="' + ramp(0.5) + '"/><stop offset="1" stop-color="' + ramp(1) + '"/></linearGradient></defs><rect x="1" y="5" width="26" height="6" rx="3" fill="url(#lpramp)"/>';
+const KEYS = {
+  geo: [[RAMP, 'ramp'], ['<rect x="2" y="2" width="24" height="12" rx="3" fill="var(--bad)" fill-opacity=".4"/>', 'heat'], ['<rect x="2" y="2" width="24" height="12" rx="3" fill="none" stroke="var(--accent)" stroke-width="2"/>', 'mem']],
+  eff: [['<circle cx="14" cy="8" r="6" fill="var(--warm)"/>', 'fetch'], ['<circle cx="14" cy="8" r="3" fill="var(--accent)"/>', 'sum']],
+  copy: [['<rect x="2" y="2" width="24" height="12" rx="3" fill="var(--accent)" fill-opacity=".35" stroke="var(--accent)" stroke-width="1.5"/>', 'bits'], ['<rect x="4" y="3" width="9" height="9" rx="2" fill="' + ramp(0) + '"/><rect x="16" y="3" width="9" height="9" rx="2" fill="' + ramp(1) + '"/>', 'cells']],
+  dig: [['<circle cx="8" cy="8" r="5" fill="var(--ink)"/><circle cx="21" cy="8" r="5" fill="var(--panel-solid)" stroke="var(--ink)" stroke-width="1.5"/>', 'bits'], ['<circle cx="14" cy="8" r="4" fill="var(--ink)"/><circle cx="14" cy="8" r="7" fill="none" stroke="var(--bad)" stroke-width="2"/>', 'wrong']],
+  physics: [['<rect x="2" y="3" width="24" height="10" rx="3" fill="none" stroke="var(--good)" stroke-width="2" stroke-dasharray="4 3"/>', 'fight'], ['<line x1="14" y1="1" x2="14" y2="15" stroke="var(--warm)" stroke-width="3" stroke-dasharray="4 3"/>', 'use'], ['<line x1="14" y1="1" x2="14" y2="15" stroke="var(--bad)" stroke-width="3" stroke-dasharray="4 3"/>', 'stray']],
+  perfect: [['<rect x="2" y="4" width="11" height="8" rx="2" fill="' + ramp(0) + '" fill-opacity=".6"/><rect x="15" y="4" width="11" height="8" rx="2" fill="' + ramp(0.6) + '" fill-opacity=".6"/>', 'speed'], ['<rect x="8" y="4" width="12" height="8" rx="2" fill="var(--bad)" fill-opacity=".85"/>', 'late']],
+  human: [['<rect x="2" y="3" width="24" height="10" rx="3" fill="var(--accent)" fill-opacity=".25" stroke="var(--accent)" stroke-width="1.5"/>', 'program'], ['<rect x="2" y="3" width="24" height="10" rx="3" fill="var(--warm)" fill-opacity=".45" stroke="var(--warm)" stroke-width="1.5"/>', 'person'], ['<rect x="2" y="3" width="24" height="10" rx="3" fill="none" stroke="var(--muted)" stroke-width="1.5" stroke-dasharray="4 3"/>', 'open']]
+};
+export const keyHtml = q => KEYS[q] ? '<ul class="lpkeys" aria-label="' + esc(t('lp.key')) + '">' + KEYS[q].map(([g, id]) => '<li>' + sw(g) + '<span>' + esc(t('lp.' + q + '.key.' + id)) + '</span></li>').join('') + '</ul>' : '';
+
 const run = (q, level) => MODELS[q].run(factsOf(level), valueOf(q));
 /* the instrument a lens puts in its card at a level: its control, then its measures (and the scope, the layouts) */
 export function instrument(q, level) {
   if (!paints(q, level)) return '';
   const m = run(q, level);
   /* how true its measures are: one mark, tapped for what it means here (#325) */
-  return '<div class="lpinst" data-lpinst="' + q + '" data-lplevel="' + esc(level) + '"><p class="fidrow">' + fidMark(LENSES[q]) + '</p>' + controlHtml(q) + '<div class="lpms">' + measuresHtml(q, m) + '</div>' +
+  return '<div class="lpinst" data-lpinst="' + q + '" data-lplevel="' + esc(level) + '"><p class="fidrow">' + fidMark(LENSES[q]) + '</p>' + keyHtml(q) + controlHtml(q) + '<div class="lpms">' + measuresHtml(q, m) + '</div>' +
     (q === 'dig' ? scopeHtml(m) : q === 'human' ? layoutsHtml(m) : '') + '</div>';
 }
 
@@ -260,26 +275,52 @@ export function createLensPaint(where) {
 const meter = (label, value) => '<div class="lpm"><span class="lpml">' + esc(label) + '</span><b>' + esc(value) + '</b></div>';
 const range = (key, prop, values, at, lo, hi, label, text) => '<label class="lpc"><span class="lpcl">' + esc(label) + '</span><input type="range" min="0" max="' + (values.length - 1) + '" step="1" value="' + at + '" data-lppc="' + key + ':' + prop + '" aria-valuetext="' + esc(text) + '">' +
   '<span class="lpends" aria-hidden="true"><span>' + esc(lo) + '</span><span>' + esc(hi) + '</span></span></label>';
-const STEPS = { p: [0, 0.25, 0.5, 0.75, 1], n: [0, 0.25, 0.5, 0.75, 1], celsius: HOT, swing: SWING, split: Array.from({ length: 21 }, (_, i) => i / 20) };
+/* the front's two controls go in tenths: an attempt kept in the ledger is one of these points (FRONTS in
+   src/engines/ledger.js) */
+const TENTHS = Array.from({ length: 11 }, (_, i) => i / 10);
+const STEPS = { p: TENTHS, n: TENTHS, celsius: HOT, swing: SWING, split: Array.from({ length: 21 }, (_, i) => i / 20) };
+/* the ledger, for a front's attempts (#326): given by the shell (src/v2/glue/frame.js), so this file stays free of the
+   game's state. o: { attempts(key, score) -> frontAttemptsAt's list (yours too, marked draft), keep(key, plan, box) ->
+   { ok, e, r }, slip(id) -> html, slipClick(ev, done(redraw)) -> handled, refusal(r), signHtml() } */
+let LEDGER = null, KEPT = {}, NO = {};
+export function useLedger(o) { LEDGER = o; }
 const pct = v => fmtNum(Math.round(v * 100));
 /* the front's chart: energy per answer across, the hottest patch up; today's front dashed, the front moved solid, the
    corner nobody has reached shaded, your design a dot */
-function frontChart(F, S) {
+function frontChart(F, S, k) {
   const E = geoEffFront(F), l0 = E.line(0), l1 = S.n > 0 ? E.line(S.n) : null, me = E.at(S.p, S.n), all = l0.concat(E.line(1));
+  /* the attempts kept in the ledger, each placed by this model; the ones nothing beats joined, the ledger's front */
+  const A = LEDGER ? LEDGER.attempts(k, pl => { const r = E.at(pl.p, pl.n); return { x: r.energy, y: r.heat }; }) : [], best = A.filter(a => a.state === 'front').sort((a, b) => a.x - b.x);
   const xs = all.map(p => p.x), ys = all.map(p => p.y), x0 = 0, x1 = Math.max(...xs) * 1.05, y0 = Math.min(...ys) * 0.9, y1 = Math.max(...ys) * 1.05, W = 360, H = 200;
   const px = x => 24 + (x - x0) / (x1 - x0) * (W - 34), py = y => H - 22 - (y - y0) / (y1 - y0) * (H - 34), pts = L => L.map(p => [px(p.x), py(p.y)]);
   /* the lab's one front (src/v2/front.js): today's dashed, moved solid, nobody's corner shaded, your design a dot */
   return frontFigure({ W, H, box: [24, 12, W - 10, H - 22], corner: 'bl', aria: t('lp.front.aria'),
-    lines: [{ pts: pts(l0), cls: 'lpline0' }, l1 ? { pts: pts(l1), cls: 'lpline1' } : null],
-    dots: [{ x: px(me.energy), y: py(me.heat), r: 7, cls: 'lpdot' }],
-    key: [['', t('lp.front.x')], ['', t('lp.front.y')], ['k0', t('lp.front.today')]].concat(l1 ? [['k1', t('lp.front.moved')]] : [], [['kd', t('lp.front.dot')], ['kn', t('lp.front.nobody')]]) }) +
-    '<div class="lpms">' + meter(t('lp.front.energy'), t('lp.joules', { v: fmtWords(me.energy) })) + meter(t('lp.front.heat'), t('lp.times', { v: fmtNum(+me.heat.toPrecision(2)) })) + meter(t('lp.geo.m.trip'), t('lp.um', { v: fmtNum(+me.trip.toPrecision(2)) })) + '</div>';
+    lines: [{ pts: pts(l0), cls: 'lpline0' }, l1 ? { pts: pts(l1), cls: 'lpline1' } : null, best.length > 1 ? { pts: best.map(a => [px(a.x), py(a.y)]), cls: 'lpledger' } : null],
+    dots: A.map(a => ({ x: px(a.x), y: py(a.y), r: 4.5, cls: 'lpatt ' + a.state + (a.draft ? ' mine' : ''), attrs: 'data-lpatt="' + esc(a.id) + '"', title: a.by + ' · ' + t('build.kind.' + a.made) })).concat([{ x: px(me.energy), y: py(me.heat), r: 7, cls: 'lpdot' }]),
+    key: [['', t('lp.front.x')], ['', t('lp.front.y')], ['k0', t('lp.front.today')]].concat(l1 ? [['k1', t('lp.front.moved')]] : [], [['kd', t('lp.front.dot')]], A.length ? [['ka', t('lp.front.tries')]] : [], [['kn', t('lp.front.nobody')]]) }) +
+    '<div class="lpms">' + meter(t('lp.front.energy'), t('lp.joules', { v: fmtNum(+me.energy.toPrecision(2)) })) + meter(t('lp.front.heat'), t('lp.times', { v: fmtNum(+me.heat.toPrecision(2)) })) + meter(t('lp.geo.m.trip'), t('lp.um', { v: fmtNum(+me.trip.toPrecision(2)) })) + '</div>' +
+    '<p class="small muted lpwhole">' + esc(t('lp.front.whole', { v: fmtWords(Math.round(E.whole)), share: fmtNum(+(100 * E.today.energy / E.whole).toPrecision(1)) })) + '</p>';
+}
+/* the open problem, live (#326): the attempts kept at this front, the ledger's best first, and yours to keep */
+function frontTries(k, S) {
+  if (!LEDGER) return '';
+  const F = geoEffFront(), A = LEDGER.attempts(k, pl => { const r = F.at(pl.p, pl.n); return { x: r.energy, y: r.heat }; });
+  const on = A.filter(a => a.state === 'front').sort((a, b) => a.x - b.x), plan = { p: S.p, n: S.n };
+  const same = A.find(a => a.plan.p === plan.p && a.plan.n === plan.n);
+  let h = '<section class="lptries"><p class="kicker">' + esc(t('lp.front.triesK')) + '</p><p class="small">' + esc(A.length ? t('lp.front.triesN', { n: A.length, front: on.length }) : t('lp.front.triesNone')) + '</p>';
+  if (on.length) h += '<ul class="lptry">' + on.slice(0, 4).map(a => '<li><b>' + esc(a.by) + '</b> <span class="muted">' + esc(t('build.kind.' + a.made)) + ' · ' + esc(t('lp.front.at', { p: pct(a.plan.p), n: pct(a.plan.n) })) + '</span>' + (a.words ? '<span class="lptw">' + esc(a.words) + '</span>' : '') + '</li>').join('') + '</ul>';
+  const mine = KEPT[k] && A.find(a => a.id === KEPT[k]) ? KEPT[k] : null;
+  if (mine) h += LEDGER.slip(mine);
+  else if (same) h += '<p class="small muted">' + esc(t('lp.front.taken', { by: same.by })) + '</p>';
+  else h += '<div class="lpkeep">' + LEDGER.signHtml() + '<label class="lpkw"><span class="kicker">' + esc(t('lp.front.why')) + '</span><input type="text" maxlength="300" data-lpwords placeholder="' + esc(t('lp.front.whyPh')) + '"></label>' +
+    (NO[k] ? '<p class="small bad">' + esc(NO[k]) + '</p>' : '') + '<button type="button" class="btn primary" data-lpkeep="' + esc(k) + '">' + esc(t('lp.front.keep')) + '</button></div>';
+  return h + '</section>';
 }
 function pairBody(a, b, level) {
   const P = pairOf(a, b), k = P.a + '.' + P.b, S = pairState(k), F = factsOf(level), at = (prop, v) => STEPS[prop].indexOf(v) < 0 ? 0 : STEPS[prop].indexOf(v);
-  if (P.shape === 'front') return frontChart(F, S) +
+  if (P.shape === 'front') return frontChart(F, S, k) +
     range(k, 'p', STEPS.p, at('p', S.p), t('lp.geo.lo'), t('lp.geo.hi'), t('lp.geo.ctl'), t('lp.geo.at', { v: pct(S.p) })) +
-    range(k, 'n', STEPS.n, at('n', S.n), t('lp.front.nlo'), t('lp.front.nhi'), t('lp.front.n'), t('lp.front.nat', { v: pct(S.n) }));
+    range(k, 'n', STEPS.n, at('n', S.n), t('lp.front.nlo'), t('lp.front.nhi'), t('lp.front.n'), t('lp.front.nat', { v: pct(S.n) })) + frontTries(k, S);
   const hot = range(k, 'celsius', HOT, at('celsius', S.celsius), t('lp.physics.lo'), t('lp.physics.hi'), t('lp.physics.ctl'), t('lp.physics.at', { v: fmtNum(S.celsius) }));
   if (P.shape === 'chain') {
     const C = cleanOne(F, S.celsius, S.swing), sci = v => (v < 1e-30 ? t('lp.none') : t('lp.oneIn', { v: fmtWords(Math.round(1 / v)) }));
@@ -320,6 +361,11 @@ export function wire(onChange) {
     refresh(box); onChange(q);
   });
   document.addEventListener('click', e => {
+    /* a front's point kept in the ledger: signed, checked, then its slip (src/v2/commons.js) */
+    const kp = e.target.closest('[data-lpkeep]'), box0 = e.target.closest('[data-lppair]');
+    if (kp && LEDGER && box0) { const k = kp.dataset.lpkeep, S = pairState(k), w = box0.querySelector('[data-lpwords]'), r = LEDGER.keep(k, { p: S.p, n: S.n }, box0.querySelector('.lpkeep') || box0, w ? w.value.trim() : '');
+      if (r.ok) { KEPT[k] = r.e.id; NO[k] = ''; } else NO[k] = LEDGER.refusal(r.r); refreshPair(box0); return onChange(k); }
+    if (box0 && LEDGER && box0.querySelector('.lptries') && LEDGER.slipClick(e, redraw => { if (redraw) KEPT[keyOf(box0.dataset.lpa, box0.dataset.lpb)] = null; refreshPair(box0); onChange(); })) return;
     const d = e.target.closest('[data-lpdraw]'), p = e.target.closest('[data-lppick]'); if (!d && !p) return;
     const box = e.target.closest('[data-lpinst]'), C = MODELS.human.control;
     if (d) STATE.human = Math.min(C.values[C.values.length - 1], valueOf('human') + 1); else chosen = +p.dataset.lppick;

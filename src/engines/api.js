@@ -14,7 +14,8 @@ import { STAGES, STAGE_PLACE, stageOfPlace, nextPlace, whereOf, alongTo } from '
 import { viewOfDepth, CHALLENGES, PLACES } from '../v2/game.js';
 import { NEEDS, GOAL } from '../data/build.js';
 import { plan, progress, needOf, needForProject, childrenOf } from './build.js';
-import { settled, frontier, draft, tryEntry, fileOf, proposeUrl, runCase, caseOk, attemptsAt, choicesAt } from './ledger.js';
+import { settled, frontier, draft, tryEntry, fileOf, proposeUrl, runCase, caseOk, attemptsAt, choicesAt, frontAttemptsAt } from './ledger.js';
+import { geoEffFront } from './lens.js';
 import * as Thousand from './thousand.js';
 import { budget, where as whereEnergy, LEVELS as ENERGY_LEVELS, LEVERS, PLAN, JOB } from './budget.js';
 import { build, projectOf, PROJECTS, starterOf, patterns } from './design.js';
@@ -137,6 +138,7 @@ export function listLedger() {
     entries: W.entries.map(e => Object.assign({ id: e.id, kind: e.kind, by: e.by, made: e.made, state: e.state }, e.kind === 'design' ? { piece: e.piece, title: e.title, inside: W.inside[e.piece] === e.id, transistors: e.facts.transistors, longestPathPs: e.facts.ps, brokenBy: e.brokenBy, code: e.code }
       : e.kind === 'break' ? { of: e.of, case: e.case, wrongAtTick: e.facts.tick } : e.kind === 'try' && e.puzzle ? { puzzle: e.puzzle, plan: e.plan, ...attemptFacts(e), best: W.best[e.puzzle] === e.id }
       : e.kind === 'try' && e.chef ? { chef: e.chef, plan: e.plan, waiting: sig(e.facts.wait), joulesPerAnswer: sig(e.facts.energy), cleared: e.facts.cleared, best: (W.bestChef || {})[e.chef] === e.id }
+      : e.kind === 'try' && e.front ? { front: e.front, plan: e.plan, words: e.words || '' }
       : e.kind === 'try' && e.choice ? { choice: e.choice, pick: e.pick, reason: e.words }
       : e.kind === 'try' && e.machine ? { machine: e.machine, plan: e.plan, ...e.facts, best: (W.bestMachine || {})[e.machine] === e.id }
       : e.kind === 'try' ? { of: e.of, casesItHeldOn: e.facts.cases }
@@ -209,6 +211,31 @@ export function submitAttempt({ plan, words, author, kind, ai, about }) {
   if (!P) return { ok: false, reason: t('ledger.no.plan') };
   const b = budget(JOB, P);
   return entryOut(draft({ kind: 'try', puzzle: 'energy', plan: P, by: author || t('api.anon'), made: kind, ai: ai || '', words: words || '', about: about || null }, (author || '') + ' energy'), b.ok ? { joules: sig(b.total), wattHours: sig(b.total / 3600), secondsPerAnswer: sig(b.seconds), accuracyDb: sig(b.snrDb) } : {});
+}
+
+/* ---- the block's front (#315, #326): where Geometry and Efficiency fuels use meet. Two controls (where the logic sits,
+   p; how much of the memory moves into the rows of logic, n; each 0 to 1 in tenths), and one model (geoEffFront in
+   src/engines/lens.js) that places a plan on the chart: the energy the block spends on one answer, and its hottest patch
+   against today's. Today's front, the front with all the memory moved in, the attempts kept in the ledger (each placed by
+   the model, on the ledger's front while nothing kept beats it on both), and the plan asked for ---- */
+const FRONT = 'eff.geo';
+const frontScore = E => p => { const r = E.at(p.p, p.n); return { x: r.energy, y: r.heat }; };
+const pointOut = r => ({ p: r.p, n: r.n, blockJoulesPerAnswer: sig(r.energy), hottestPatch: sig(r.heat), averageTripUm: sig(r.trip) });
+export function blockFront({ plan } = {}) {
+  const E = geoEffFront(), P = plan && typeof plan === 'object' ? plan : { p: 0, n: 0 }, ok = [P.p, P.n].every(v => typeof v === 'number' && v >= 0 && v <= 1);
+  const line = n => E.line(n).filter((x, i) => i % 2 === 0).map(x => pointOut(E.at(x.p, n)));
+  return { front: FRONT, question: t('frame.meet.eff.geo.q'), model: t('frame.meet.eff.geo.true'), whole: t('lp.front.whole', { v: Math.round(E.whole), share: +(100 * E.today.energy / E.whole).toPrecision(1) }),
+    controls: { p: t('lp.geo.ctl'), n: t('lp.front.n'), values: t('api.front.values') }, today: line(0), allMovedIn: line(1),
+    attempts: frontAttemptsAt(settled(), FRONT, frontScore(E)).map(a => ({ id: a.id, by: a.by, made: a.made, words: a.words, state: a.state, ...pointOut(E.at(a.plan.p, a.plan.n)) })),
+    ...(ok ? { yours: pointOut(E.at(P.p, P.n)) } : { ok: false, reason: t('ledger.no.plan') }), note: t('api.untrusted') };
+}
+/* submit an attempt at the block's front: a plan, placed by the model and checked by the ledger (two values in tenths,
+   new among the attempts there). Comes back as the entry's file and the link, like every proposal */
+export function submitFront({ plan, words, author, kind, ai, about }) {
+  const bad = whoOk(kind, ai); if (bad) return { ok: false, reason: bad };
+  const P = plan && typeof plan === 'object' && !Array.isArray(plan) ? plan : null; if (!P) return { ok: false, reason: t('ledger.no.plan') };
+  const E = geoEffFront(), placed = [P.p, P.n].every(v => typeof v === 'number' && v >= 0 && v <= 1) ? pointOut(E.at(P.p, P.n)) : null;
+  return entryOut(draft({ kind: 'try', front: FRONT, plan: P, by: author || t('api.anon'), made: kind, ai: ai || '', words: words || '', about: about || null }, (author || '') + ' front'), placed ? { placed } : {});
 }
 
 /* ---- A thousand that pass (src/engines/thousand.js): a program's thousand designs for a need, all passing every check;

@@ -227,7 +227,8 @@ export default async function run() {
       .catch(() => problems.push(tag + ': no lens at the block reads more in its world, or Read more does not open its page'));
     await rp.close(); }
   /* two lenses held (#315): at the block, Geometry with Efficiency fuels use draws a front, its dot moving with where
-     the logic sits and the front moving with the innovation; Fight or use physics with Brain or copy a fork, whose line
+     the logic sits and the front moving with the innovation, the ledger's attempts on it and yours kept there (#326);
+     Fight or use physics with Brain or copy a fork, whose line
      drags across the picture; with Digital meets physical a chain, whose steps light as it heats */
   { const tag = 'frame meets', mp = await browser3d.newPage({ viewport: { width: 1280, height: 800 }, colorScheme: 'dark' }); mp.on('pageerror', e => problems.push(tag + ': ' + e.message));
     await mp.addInitScript(() => { try { localStorage.setItem('osl-quality', 'keep'); localStorage.setItem('osl-hints-v1', JSON.stringify({ seen: {}, off: true })); } catch (e) { /* no storage */ } });
@@ -245,6 +246,14 @@ export default async function run() {
       if (n.value !== '3') { n.value = 3; n.dispatchEvent(new Event('input', { bubbles: true })); return false; }
       const d2 = document.querySelector('#diveui .dock .lpfront .lpdot'); return d2 && d2.getAttribute('cx') !== window.__dot && !!document.querySelector('#diveui .dock .lpfront .lpline1'); }, null, { timeout: 20000, polling: 500 })
       .catch(() => problems.push(tag + ': the front\'s dot does not move with the logic, or the innovation does not move the front'));
+    /* the block's open problem, live (#326): the attempts kept in the ledger are points on the front, and a point of
+       yours is kept there too, signed, its slip under the chart and its dot ringed */
+    await mp.waitForFunction(() => { const box = document.querySelector('#diveui .dock [data-lppair="eff.geo"]'); if (!box) return false;
+      if (box.querySelector('.lptries .slip') && box.querySelector('.lpfront .lpatt.mine')) return true;
+      if (box.querySelectorAll('.lpfront .lpatt').length < 4) return false;
+      const n = box.querySelector('.lpkeep [data-sign]'), k = box.querySelector('[data-lpkeep]'); if (n && !n.value) n.value = 'Smoke';
+      if (k) k.click(); return false; }, null, { timeout: 30000, polling: 1000 })
+      .catch(() => problems.push(tag + ': the front shows no attempts from the ledger, or a point cannot be kept there'));
     await mp.evaluate(() => { const p = document.querySelector('#diveui .dock [data-putdown="eff"]'); if (p) p.click(); });
     await mp.waitForFunction(hold, ['physics', 'copy', 'copy.physics'], { timeout: 30000, polling: 500 }).catch(() => problems.push(tag + ': holding Fight or use physics and Brain or copy draws no fork'));
     { let moved = false;
