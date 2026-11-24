@@ -144,7 +144,9 @@ export const FILED = {
   'search': ['sutton', 'human'], 'halt': ['nat', 'trust'],
   /* Listen and tell, the ear test at the block (#316) */
   'ear': ['dig', 'eff'],
-  'corearch': ['line', 'eff', 'geo']
+  'corearch': ['line', 'eff', 'geo'],
+  /* spiking neurons and light, new ways to compute (#322) */
+  'spikes': ['physics', 'copy'], 'light': ['physics', 'geo']
   }
 };
 

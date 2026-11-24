@@ -31,7 +31,7 @@ import { plan as buildPlan } from '../engines/build.js';
 import { FABS, fabOf } from '../data/fabs.js';
 import { labCurve } from '../engines/ledger.js';
 import { frontFigure } from './front.js';
-import { mark as fidMark, claimFid, glyph as fidGlyph } from './fid.js';
+import { mark as fidMark, claimFid, glyph as fidGlyph, TRUTH, statusMark } from './fid.js';
 import { FRONTS } from '../data/fidelity.js';
 
 const REPO = 'https://github.com/focusxyz11/open-silicon-lab/blob/main/';
@@ -59,16 +59,11 @@ const MARK = {
   matter: '<svg class="mmark" viewBox="0 0 18 18" aria-hidden="true"><polygon points="1,9 5,2 13,2 17,9 13,16 5,16"/></svg>',
   liquid: '<svg class="mmark" viewBox="0 0 18 18" aria-hidden="true"><path d="M9 1.5C9 1.5 3 8.2 3 11.6a6 6 0 0 0 12 0C15 8.2 9 1.5 9 1.5z"/></svg>'
 };
-/* how sure a claim is, one mark everywhere (on the picture and in the words): in products a full disc, shown in a lab
-   half of one, a guess a dashed ring */
-const TRUTH = {
-  product: '<svg class="mtr t-product" viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="4.6"/></svg>',
-  lab: '<svg class="mtr t-lab" viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="4.6" class="o"/><path d="M6 1.4a4.6 4.6 0 0 0 0 9.2z"/></svg>',
-  guess: '<svg class="mtr t-guess" viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="4.6"/></svg>'
-};
-/* a claim's two marks, one system with every mark of the lab (#325, docs/SYSTEM.md "How true"): whether anyone has
-   built it (its status, a disc) and how the lab knows it (its fid, src/v2/fid.js), each tapped for what it means */
-const mst = s => '<button type="button" class="fid mst s-' + s + '" data-fidst="' + s + '" aria-expanded="false">' + TRUTH[s] + '<span>' + esc(t('invent.status.' + s)) + '</span></button>';
+/* how sure a claim is, one mark everywhere (on the picture and in the words, and in the labs that model new matter):
+   in products a full disc, shown in a lab half of one, a guess a dashed ring (TRUTH, src/v2/fid.js). A claim's two
+   marks, one system with every mark of the lab (#325, docs/SYSTEM.md "How true"): whether anyone has built it (its
+   status, a disc) and how the lab knows it (its fid), each tapped for what it means */
+const mst = statusMark;
 /* inside a button (a place to make parts), the status is only shown: the claims below carry the marks to tap */
 const mdisc = s => '<span class="mst s-' + s + '">' + TRUTH[s] + '<span>' + esc(t('invent.status.' + s)) + '</span></span>';
 const marks = (status, cl) => '<span class="mmarks">' + mst(status) + fidMark(claimFid(cl)) + '</span>';
@@ -326,6 +321,9 @@ export function machines(el, ctx) {
       '<div class="mforms" role="group" aria-label="' + esc(partName(p.id)) + '">' + FORMS.map(famBtn).join('') + '</div>';
     /* the core runs: go into it, at work on this machine's job (#321, src/v2/labs/rv.js) */
     if (b.runs) h += '<a class="mcoreway" href="#/do/rvrun/' + id + '"><span aria-hidden="true">↓</span> ' + esc(t('machines.ui.intoCore')) + '</a>';
+    /* a part made of new matter that a lab models leads into that lab (#322, inventions.js lab) */
+    const lab = (M.matterIn(f) || {}).lab;
+    if (lab) h += '<a class="mcoreway mlabway" href="#/do/' + lab + '"><span aria-hidden="true">↓</span> ' + esc(t('machines.ui.intoLab', { lab: t('game.ch.' + lab + '.t') })) + '</a>';
     if (kinds.length > 1) h += '<div class="mkinds k-' + fm + '" role="group" aria-label="' + esc(t('machines.form.' + fm)) + '">' + kinds.map(k => '<button type="button" data-mform="' + p.id + ':' + fm + ':' + k.id + '" aria-pressed="' + (f === fm + ':' + k.id) + '">' + esc(kindName(fm, k.id)) + '</button>').join('') + '</div>';
     if (view.sel === p.id && WAYS[b.id]) h += '<a class="link mway" href="' + esc(WAYS[b.id]) + '" data-mway="' + b.id + '">' + esc(t('machines.way.' + b.id)) + '</a>';
     return h + '</div>';

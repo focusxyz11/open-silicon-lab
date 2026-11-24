@@ -244,6 +244,43 @@ export function checkPhotonicSteer({ goal = 'bottom', theta: th = 0, phi = 0, to
   const p = mzi([Math.sqrt(top), Math.sqrt(1 - top)], th, phi, { phaseNoise, seed }).power;
   return Math.abs(p[0] - PHOTONIC_TARGETS[goal]) < 0.03;
 }
+/* ---------- the labs of spikes and of light (src/v2/labs/spikes.js, light.js) ---------- */
+/* A detector that fires only on its pattern (kind 'spikes', at the block): detector A of SNN_W, one neuron with four
+   inputs, on each of the four patterns. Its work two ways: a clocked circuit works out every input on every tick
+   (dense: inputs × ticks), a spiking one only when a spike arrives, plus one event for each spike it sends (events).
+   Steps of work, not joules: what a step costs is the catch the lab lets you change (inventions.js spikesCost). */
+export const SPIKE_PATTERNS = ['A', 'B', 'noise', 'quiet'];
+export function spikeWork({ threshold = 1, leak = 0.2 } = {}) {
+  return SPIKE_PATTERNS.map(p => { const r = lif(spikeTrains(p), [SNN_W[0]], { threshold, leak }); return { p, fired: r.counts[0], events: r.events, dense: r.dense, share: r.events / r.dense }; });
+}
+/* Multiply as it travels (kind 'light', at the chip's links): all the light in the top input, the share that leaves the
+   top is the weight one interferometer multiplies by. Phase noise (its spread in degrees, LIGHT_NOISES) shifts both
+   phases at random on every pass; a pass is exact when checkPhotonicSteer holds (within 3 points of the target). The
+   goal: the weight on target, exact at least 90% of LIGHT_RUNS passes at this noise, and no longer at one step more:
+   the noise where it stops being exact. */
+export const LIGHT_NOISES = [0, 0.5, 1, 1.5, 2, 2.5, 3, 4, 5, 7, 10];
+export const LIGHT_RUNS = 200, LIGHT_EXACT = 0.9, LIGHT_SEED = 17;
+export const rad = deg => deg * Math.PI / 180;
+/* the seed of each pass: spread out, so consecutive passes are independent */
+const passSeed = (seed, k) => (Math.imul(seed * 977 + k + 1, 2654435761) >>> 0) || 1;
+/* the share of the top output on each of `runs` passes at a phase noise (radians) */
+export function lightPasses({ theta = 0, noise = 0, runs = LIGHT_RUNS, seed = LIGHT_SEED } = {}) {
+  return Array.from({ length: runs }, (_, k) => mzi([1, 0], theta, 0, { phaseNoise: noise, seed: passSeed(seed, k) }).power[0]);
+}
+/* the share of passes still exact (checkPhotonicSteer) at a phase noise (radians) */
+export function lightExact({ goal = 'quarter', theta = 0, noise = 0, runs = LIGHT_RUNS, seed = LIGHT_SEED } = {}) {
+  let ok = 0; for (let k = 0; k < runs; k++) if (checkPhotonicSteer({ goal, theta, phaseNoise: noise, seed: passSeed(seed, k) })) ok++;
+  return ok / runs;
+}
+/* theta in radians; noise: an index of LIGHT_NOISES */
+export function lightGoal({ goal = 'quarter', theta = 0, noise = 0 } = {}) {
+  const i = Math.max(0, Math.min(LIGHT_NOISES.length - 1, noise | 0)), steer = checkPhotonicSteer({ goal, theta });
+  const exact = lightExact({ goal, theta, noise: rad(LIGHT_NOISES[i]) }), more = i < LIGHT_NOISES.length - 1 ? lightExact({ goal, theta, noise: rad(LIGHT_NOISES[i + 1]) }) : null;
+  const holds = exact >= LIGHT_EXACT, edge = more == null || more < LIGHT_EXACT;
+  return { steer, exact, more, holds, edge, met: steer && holds && edge };
+}
+export const checkLightEdge = state => lightGoal(state || {}).met;
+
 /* Run logic backwards: the output clamped to 1, the inputs free, steered enough: the network sits in 111 most of the time. */
 export function checkPbitsBackwards({ beta = 2, clamp = { 2: 1 }, sweeps = 2000, seed = 11 } = {}) {
   if (clamp[2] !== 1 || clamp[0] !== undefined || clamp[1] !== undefined || beta < 0.3) return false;

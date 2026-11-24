@@ -268,3 +268,21 @@ html.frame2 .f2stage .betview[data-f2="instrument"] > .turbines > svg { flex: no
 .lsnhead .kicker { font: var(--f2-label, 600 14px var(--sans)); letter-spacing: 0; text-transform: none; color: var(--muted); }
 .lsnstates .chipb { font-size: 15px; justify-content: flex-start; text-align: left; white-space: normal; min-height: 40px; }
 .lsnlayer svg { display: block; width: 1000px; height: 1000px; overflow: visible; }
+/* how sure each claim is, in a lab that models a kind of new matter (claimList, src/v2/fid.js; the same two marks as on
+   the machines page): whether anyone has built it, and how the lab knows it, beside the claim */
+.fidclaims { list-style: none; margin: 6px 0 0; padding: 0; display: grid; gap: 8px; }
+ .fidclaims li { display: grid; grid-template-columns: 132px 1fr; gap: 10px; align-items: start; font-size: 13.5px; line-height: 1.35; }
+.fidclaims .fidmarks { display: grid; gap: 4px; justify-items: start; }
+.fidclaims .mst { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px 3px 7px; border: 1px solid transparent; border-radius: 999px; font: 600 12.5px/1.2 var(--sans); white-space: nowrap; cursor: pointer; }
+ .fidclaims .mst.s-product { background: color-mix(in srgb, var(--good) 18%, transparent); color: var(--good); }
+ .fidclaims .mst.s-lab { background: color-mix(in srgb, var(--accent) 16%, transparent); color: var(--accent); }
+ .fidclaims .mst.s-guess { background: color-mix(in srgb, var(--ink) 7%, transparent); color: var(--muted); }
+:root[data-theme=light] .fidclaims .mst.s-product { color: color-mix(in srgb, var(--good) 55%, var(--ink)); }
+.fidclaims .mtr { display: inline-block; flex: none; width: 12px; height: 12px; overflow: visible; }
+ .fidclaims .mtr circle, .fidclaims .mtr path { stroke-width: 1.6; }
+ .fidclaims .t-product circle { fill: var(--good); stroke: var(--good); }
+ .fidclaims .t-lab .o { fill: none; stroke: var(--accent); }
+ .fidclaims .t-lab path { fill: var(--accent); stroke: none; }
+ .fidclaims .t-guess circle { fill: none; stroke: var(--muted); stroke-dasharray: 2.4 1.8; }
+@container (max-width: 420px) { .fidclaims li { grid-template-columns: 1fr; gap: 4px; } .fidclaims .fidmarks { display: flex; flex-wrap: wrap; } }
+@media (max-width: 520px) { .fidclaims li { grid-template-columns: 1fr; gap: 4px; } .fidclaims .fidmarks { display: flex; flex-wrap: wrap; } }
