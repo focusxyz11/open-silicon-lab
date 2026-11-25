@@ -45,9 +45,9 @@ export function create() {
     V.loading(true);
     const want = V.chipRow;   /* the chip may report its first row before the frame is ready */
     V.lastPlace = 'fab';
-    const n = V.routeN;
+    const rn = V.routeN;
     /* made while the visitor moved on (#365): left paused, and its frame not drawn */
-    return Promise.all([V.withFrame(), ensureChip()]).then(([, c]) => { if (n !== V.routeN) { if (V.cui.hidden) c.pause(); return; }
+    return Promise.all([V.withFrame(), ensureChip()]).then(([, c]) => { if (rn !== V.routeN) { if (V.cui.hidden) c.pause(); return; }
       V.chipFrame = V.frameOf(V.cui, { up: { href: '#/place/fab', label: t('map.fab.t') }, path: [{ href: '#/island', label: t('place.back') }, { href: '#/place/fab', label: t('map.fab.t') }, { label: t('chipx.title') }],
         rail: { label: t('place.levels'), items: ROWS.map(x => ({ id: x.dive, label: t('depth.' + x.dive + '.name'), size: sizeOf(x.dive) })) },
         onRail: d => c.go(ROWS.findIndex(x => x.dive === d)), onLook: drawChip, caption: true });
