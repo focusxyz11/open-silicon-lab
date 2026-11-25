@@ -3,7 +3,7 @@
    Moore's law, live, along the bottom of the fifty years (mkChart, mkCQ). Designed with Claude Fable 5.2 and brought
    into the lab with Claude Opus 5.5. */
 import { t } from '../core/i18n.js';
-import { w, Q, $, h, clamp, lerp, ss, mix, rnd, nf, sig, xOf, S, done, tried, setOut, K, fg, rd, src, lab, viewAt, momOut, Yr, bindHold, ROOT, TICK, changed, onChange } from './holdkit.js';
+import { w, sw, Q, $, h, clamp, lerp, ss, mix, rnd, nf, sig, xOf, S, done, tried, setOut, K, fg, rd, src, lab, viewAt, momOut, Yr, bindHold, ROOT, TICK, changed, onChange } from './holdkit.js';
 import { money } from './figures.js';
 import { FIG } from '../data/figures.js';
 import { AHEAD, ARR, BEHIND, CHIPS, COST, DWALL, ERAS, FCOST, FDIV, FORMS, KNEE, LIGHTS, LOOP, MOORE65, NEEDS, RUNGS, SERIES, STOCK, TRIP, dAt, formAt, rule, trend, yearAt } from '../data/hold.js';
@@ -259,7 +259,7 @@ export const OUTS = {
   arr: () => { const a = ARR[S.arr], id = a[0], n = ['cim', 'spikes'].filter(k => S.arrSeen[k]).length;
     return '<b>' + (id === 'classic' ? w('arr.classic.t') : t('bp.next.' + id + '.t')) + '</b> ' + (id === 'classic' ? w('arr.classic.d') : t('bp.next.' + id + '.d')) + ' ' + src(...a[2]) + '<br><span class="mono dim">' + w('arr.trip') + '</span> ' + w('trip.' + TRIP[id]) + (a[1] ? ' · <span class="mono dim">' + w('status.' + a[1]) + '</span>' : '') +
       '<br><span class="ok">' + (n >= 2 ? w('arch.ch.done') + ' ' + w('arch.ch.why') : w('arr.found', { n, of: 2 })) + '</span>'; },
-  machine: () => { const m = machNow(); return t('machines.need.' + m.need.id + '.why') + (m.ok ? '' : '<br><span class="ok">' + w('mach.bad', { part: w('piece.' + m.bad).toLowerCase() }) + '</span>') + (S.agent ? '<br>' + w('tri.gen.done', S.agent) : '') + (S.kept ? ' <b class="ok">' + w('tri.dec.done') + '</b>' : ''); },
+  machine: () => { const m = machNow(); return sw('machines.need.' + m.need.id + '.why') + (m.ok ? '' : '<br><span class="ok">' + w('mach.bad', { part: w('piece.' + m.bad).toLowerCase() }) + '</span>') + (S.agent ? '<br>' + w('tri.gen.done', S.agent) : '') + (S.kept ? ' <b class="ok">' + w('tri.dec.done') + '</b>' : ''); },
   island: () => { const p = S.place; if (!p) return w('isle.out0'); const lit = LIT[p](); return '<b>' + w('place.' + p) + '</b> ' + w('tr.' + p + (lit || p === 'port' ? '' : '.0')) + '<br>' + lab(w('tr.' + p + '.go'), '#/place/' + p); }
 };
 export const out = id => setOut(id, OUTS[id]());
@@ -418,7 +418,7 @@ export function agent() { const need = NEEDS[S.need], free = need.parts.filter(p
   for (const id in best.pick) S.forms[need.id + '.' + id] = best.pick[id]; S.agent = { n, ok }; }
 export const tilePos = (need, i) => { const n = need.parts.length, sp = n > 4 ? 172 : 205, x0 = 500 - (n - 1) * sp / 2; return [x0 + i * sp, 400 + (i % 2 ? 62 : -62)]; };
 PL.machine = {
-  frame: () => [w('s.yours'), t('machines.need.' + NEEDS[S.need].id + '.t')],
+  frame: () => [w('s.yours'), sw('machines.need.' + NEEDS[S.need].id + '.t')],
   paint(c, T) { const need = NEEDS[S.need], ts = need.parts.length > 4 ? 138 : 158;
     for (const [a, b] of need.wires) { const p = tilePos(need, a), q = tilePos(need, b), pp = [p, [q[0], p[1]], q]; path(c, pp, K.ink, 3.5); c.fillStyle = K.red; const pt = along(pp, (T * .5 + a * .3) % 1); c.fillRect(pt[0] - 7, pt[1] - 7, 14, 14); }
     need.parts.forEach((p, i) => { const [cx, cy] = tilePos(need, i), x = cx - ts / 2, y = cy - ts / 2, f = formOf(need, p), bad = need.change.includes(p[0]) && f === 'circuit';
@@ -429,7 +429,7 @@ PL.machine = {
       else { c.strokeStyle = K.ink; c.lineWidth = 3; c.beginPath(); for (let a = 0; a < 5; a++) { const yy = y + 22 + a * (ts - 44) / 4; for (let xx = 0; xx <= ts - 24; xx += 4) { const py = yy + 7 * Math.sin(xx / 13 + T * 2.2 + a); if (!xx) c.moveTo(x + 12, py); else c.lineTo(x + 12 + xx, py); } } c.stroke(); }
       c.strokeStyle = bad ? K.red : K.ink; c.lineWidth = bad ? 6 : 3.5; c.strokeRect(x, y, ts, ts);
       if (need.change.includes(p[0])) { c.fillStyle = K.red; c.beginPath(); c.moveTo(x + ts, y); c.lineTo(x + ts - 34, y); c.lineTo(x + ts, y + 34); c.fill(); } }); },
-  ui(host, pl) { const s = seg(host, NEEDS.map(n => t('machines.need.' + n.id + '.t')), () => S.need, i => { S.need = i; S.agent = null; S.kept = false; pl.fade = 1; out('machine'); build(); }, [6, 4, 88]);
+  ui(host, pl) { const s = seg(host, NEEDS.map(n => sw('machines.need.' + n.id + '.t')), () => S.need, i => { S.need = i; S.agent = null; S.kept = false; pl.fade = 1; out('machine'); build(); }, [6, 4, 88]);
     const sub = lbl(host, '', 6, 12.5), tiles = h('div', 'layer on'); host.appendChild(tiles); let tb = [];
     const build = () => { tiles.innerHTML = ''; tb = []; const need = NEEDS[S.need], ts = need.parts.length > 4 ? 13.8 : 15.8;
       /* i18n-ok: styles */ need.parts.forEach((p, i) => { const [cx, cy] = tilePos(need, i), b = h('button', 'mtile'); b.type = 'button'; at(b, cx / 10 - ts / 2 - 3, cy / 10 - ts / 2, ts + 6, ts + 6.4); b.style.cssText += ';display:flex;flex-direction:column;justify-content:flex-end;align-items:center;text-align:center;line-height:1.1';
@@ -442,7 +442,8 @@ PL.machine = {
     const gb = h('button', 'pbtn ghost', w('tri.gen.b')); gb.type = 'button'; gb.style.position = 'static'; gb.onclick = () => { agent(); out('machine'); }; g.appendChild(gb);
     /* i18n-ok: styles */ const en = h('div', 'big'); en.style.cssText = 'position:static;font-size:calc(var(--p)*76)'; ck.appendChild(en);
     /* i18n-ok: styles */ const kb = h('button', 'pbtn', w('tri.dec.b')); kb.type = 'button'; kb.style.cssText = 'position:static;white-space:normal'; kb.onclick = () => { S.kept = true; done('keep'); out('machine'); out('island'); }; dc.appendChild(kb);
-    pl.sync = () => { s(); const m = machNow(); put(sub, t('machines.need.' + m.need.id + '.d')); if (tb.length !== m.need.parts.length || tb[0][1] !== m.need.parts[0]) build();
+    const sg = host.querySelector('.seg');
+    pl.sync = () => { s(); const m = machNow(); put(sub, sw('machines.need.' + m.need.id + '.d')); [...sg.children].forEach((b, i) => put(b, sw('machines.need.' + NEEDS[i].id + '.t'))); if (tb.length !== m.need.parts.length || tb[0][1] !== m.need.parts[0]) build();
       tb.forEach(([b, p]) => { const f = formOf(m.need, p); put(b.children[0], w('piece.' + p[0])); put(b.children[1], f === 'stock' ? w('form.stock') : w('form.' + f)); b.children[1].classList.toggle('hot', m.bad === p[0]); });
       put(en, '×' + (m.e >= 10 ? Math.round(m.e) : m.e.toFixed(1)) + '<small style="font-size:max(11px,calc(var(--p)*15.5))">' + (m.ok ? w('mach.ok') : w('mach.no')) + '</small>'); en.style.color = m.ok ? '' : 'var(--mid)'; kb.disabled = !m.ok || S.kept; put(kb, S.kept ? w('tri.dec.done') : w('tri.dec.b')); }; }
 };

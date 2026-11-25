@@ -388,7 +388,7 @@ export function start() {
   const record = () => { const E = ledger(), by = k => E.filter(e => (k === 'person' ? e.made === 'person' || e.made === 'both' : e.made === k)).length;
     return { all: E.length, ai: by('ai'), program: by('program'), example: by('example'), person: by('person') }; };
   function showHome() { showHome0(); if (stations) stations.hide(); if (blueprint) blueprint.hide();
-    return needWords('hold', 'shared').then(() => { if (!hold) hold = createHold(homeEl, { still, record }); return hold.show(); }).then(() => afterPaint(preloadHome)); }
+    return needWords('hold').then(() => { if (!hold) hold = createHold(homeEl, { still, record }); return hold.show(); }).then(() => afterPaint(preloadHome)); }
   function showHome0() {
     $('diveCanvas').hidden = true; vui.hidden = true; V.dive && V.dive.stop(); V.hide3d(); $('flatLabels').hidden = true; if (V.flatWords) V.flatWords.clear(); if (V.Bench) V.Bench.show(false);
     V.hideBoard(); document.body.classList.remove('immersive');

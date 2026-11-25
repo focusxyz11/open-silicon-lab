@@ -1,6 +1,4 @@
 {
- "fig.money": "{n} dólares",
- "fig.money.big": "{n} de dólares",
  "wall.switch.d": "Un transistor nunca se apaga del todo: incluso en 0, se escapa un poco de corriente. A temperatura ambiente hacen falta unos 60 milivoltios más en su puerta para dejar pasar diez veces más corriente, así que bajar 60 milivoltios el punto en que se enciende deja escapar diez veces más. Por eso los voltajes de los chips dejaron de bajar.",
  "wall.memory.d": "Casi toda la energía se va en mover números, no en calcular con ellos. Traer 16 bits de la memoria de otro chip cuesta unas 3.500 veces la energía de sumar dos números de 16 bits.",
  "wall.power.d": "Cada respuesta es cada vez más barata de calcular. Los centros de datos consumieron unos {dc} TWh (teravatios hora) de electricidad.",

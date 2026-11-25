@@ -14,7 +14,7 @@
    v doublings (99: the wall), .go(id) to a block, .ch(id) to where a challenge is played, .state(). */
 import { lang, needWords } from '../core/i18n.js';
 import { w, $, $$, h, clamp, ss, PHONE, S, LIVE, setRoot, fitU, CHAPS, mkTop, CH_AT, ORDER, WALL_OF, WID, PW, lab, words, fillWays, loadFacts,
-  momAt, viewAt, countParts, statsHTML, momOut, yearsWordsHTML, Yr, movesEl, TICK, loop, bindHold, setHolding, onChange, Q, src, sheet, fitHead } from './holdkit.js';
+  momAt, viewAt, countParts, statsHTML, momOut, yearsWordsHTML, Yr, movesEl, TICK, loop, bindHold, setHolding, onChange, Q, src, sheet, fitHead, fillShared } from './holdkit.js';
 import { mkPlate, put, out, LIT, mkChart, mkCQ, initOuts } from './holdplates.js';
 import { D2011, DWALL, LOOP, MOMENTS, WALLS, yearShown } from '../data/hold.js';
 
@@ -211,9 +211,10 @@ export function createHold(host, ctx = {}) {
   });
 
   /* the first touch (a scroll, a hold, a tap; or an idle moment once the page's own preload has started): the facts
-     behind the marks, and the blueprint's words for what people are trying */
+     behind the marks, the blueprint's words for what people are trying, and the words Hold shares with other pages (the
+     walls, the needs: shared.json) */
   let touched = false;
-  function touch() { if (touched || !document.documentElement.dataset.preload) return; touched = true; loadFacts(); needWords('blueprint').then(fillWays, () => { touched = false; }); }
+  function touch() { if (touched || !document.documentElement.dataset.preload) return; touched = true; loadFacts(); needWords('blueprint', 'shared').then(() => { fillWays(); fillShared(); out('machine'); }, () => { touched = false; }); }
   const idleTouch = () => { if (touched || !LIVE.on) return; if (document.documentElement.dataset.preload) (window.requestIdleCallback ? requestIdleCallback(touch, { timeout: 1500 }) : setTimeout(touch, 1500)); else setTimeout(idleTouch, 600); };
 
   /* for checks */

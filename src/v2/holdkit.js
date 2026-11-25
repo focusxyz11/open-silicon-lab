@@ -2,7 +2,7 @@
    challenges and where each is played, and the words that go with each picture. Every picture of the page is a plate,
    one square drawn in 1000 units with its own controls on it (src/v2/holdplates.js). Designed with Claude Fable 5.2
    (prototype D: B's story on A's chip) and brought into the lab with Claude Opus 5.5. */
-import { t, locale } from '../core/i18n.js';
+import { t, locale, hasWords } from '../core/i18n.js';
 import { CHALS, COST, COSTSRC, D2011, D71, D94, DGAR, DWALL, FDIV, GEN, LIGHTS, MOMENTS, NAMED_ONLY, WALLS, costAt, dAt, nodeAt, upTo, yearAt, yearShown } from '../data/hold.js';
 import { figVars, money } from './figures.js';
 
@@ -116,6 +116,9 @@ export const PW = {
 /* what people are trying: told once, in the blueprint's words (bp.next.*, loaded when the page is first touched),
    except where this page says it its own way */
 export const wayW = (id, k) => (id === 'switches' || id === 'spikes' ? w('bet.' + id + '.' + k) : t('bp.next.' + id + '.' + k));
+/* the words Hold shares with other pages (src/i18n/<lang>/shared.json): '' until they are in, then filled where they show */
+export const sw = (k, v) => (hasWords('shared') ? t(k, v ? { ...figVars(), ...v } : figVars()) : '');
+export function fillShared() { $$('[data-sw]').forEach(e => { e.innerHTML = sw(e.dataset.sw); }); changed('words'); }
 export function fillWays() { $$('.w-ways button[data-way]').forEach(b => { b.querySelector('b').innerHTML = wayW(b.dataset.way, 't'); b.querySelector('span').innerHTML = wayW(b.dataset.way, 'd'); b.hidden = false; }); }
 /* a way into the lab: the place where it is played for real */
 export const lab = (key, href, cls) => '<a class="' + (cls || 'lnk') + '" href="' + href + '">' + key + '</a>';
@@ -125,7 +128,7 @@ export function words(id) {
   const p = PW[id], o = {};
   o.head = h('div', 'w-head', '<div class="w-k mono' + (p.viol ? ' viol' : '') + '">' + (p.viol ? '✕ 0' + p.viol + ' · ' : '') + p.k() + '</div><h2 class="w-h anton">' + w(p.h || p.hx) + '</h2>');
   /* a wall says what it is in the words the blueprint uses too (wall.*, shared.json): told once */
-  o.cap = h('div', 'w-cap', '<p class="w-d">' + (p.sd ? t(p.sd, figVars()) : w(p.d || p.dx)) + ' ' + src(...(p.facts || [])) + '</p>' + (p.note ? '<p class="w-note mono">' + w(p.note) + '</p>' : ''));
+  o.cap = h('div', 'w-cap', '<p class="w-d">' + (p.sd ? '<span data-sw="' + p.sd + '">' + sw(p.sd) + '</span>' : w(p.d || p.dx)) + ' ' + src(...(p.facts || [])) + '</p>' + (p.note ? '<p class="w-note mono">' + w(p.note) + '</p>' : ''));
   o.try = h('div', 'w-try', '<div class="w-k mono"><i></i>' + w('try.k') + '</div><p class="w-p">' + w(p.tryq) + '</p><div class="w-out" data-out="' + id + '">' + (S.out[id] || '') + '</div>' + (p.lab ? lab(w('play') + ': ' + w(p.lab[0]), p.lab[1]) : ''));
   if (p.q) o.q = h('div', 'w-q', '<span class="mono">' + w('q.label') + '</span><p>' + Q(p.q) + '</p>' + lab(w('q.meet'), (p.lab && p.lab[1]) || '#/log'));
   if (p.ways && p.ways.length) { o.ways = h('div', 'w-ways', '<span class="mono">' + w('ways.k') + '</span>' + p.ways.map(([wid, st]) => '<button type="button" data-way="' + wid + '" hidden><small class="' + st + '">' + w('status.' + st) + '</small><b></b><span></span></button>').join(''));
