@@ -53,18 +53,22 @@ const send = m => process.stdout.write(JSON.stringify(m) + '\n');
 const reply = (id, result) => send({ jsonrpc: '2.0', id, result });
 const fail = (id, code, message) => send({ jsonrpc: '2.0', id, error: { code, message } });
 
+/* anything may arrive on the line: a message that is not a request is answered with an error, never thrown on (a throw
+   here would stop the port for every agent connected), and a tool's arguments are a plain record or nothing */
+const record = x => (x !== null && typeof x === 'object' && !Array.isArray(x) ? x : null);
 function handle(msg) {
-  const { id, method, params } = msg;
+  if (!record(msg)) return fail(null, -32600, 'Invalid Request'); /* i18n-ok: protocol message */
+  const { id, method } = msg, params = record(msg.params);
   if (method === 'initialize') return reply(id, { protocolVersion: (params && params.protocolVersion) || '2025-06-18', capabilities: { tools: {} }, serverInfo: { name: 'open-silicon-lab', version: PKG.version }, instructions: EN['api.instructions'] });
   if (method === 'ping') return reply(id, {});
   if (method === 'tools/list') return reply(id, { tools: TOOLS.map(({ name, description, inputSchema }) => ({ name, description, inputSchema })) });
   if (method === 'tools/call') {
     const tool = TOOLS.find(x => x.name === (params && params.name));
-    if (!tool) return fail(id, -32602, 'Unknown tool: ' + (params && params.name)); /* i18n-ok: protocol message */
-    try { const out = tool.fn((params && params.arguments) || {}); return reply(id, { content: [{ type: 'text', text: JSON.stringify(out, null, 2) }], structuredContent: out, isError: !!(out && (out.error || out.ok === false)) }); }
+    if (!tool) return fail(id, -32602, 'Unknown tool: ' + (params && typeof params.name === 'string' ? params.name : '')); /* i18n-ok: protocol message */
+    try { const out = tool.fn(record(params.arguments) || {}); return reply(id, { content: [{ type: 'text', text: JSON.stringify(out, null, 2) }], structuredContent: out, isError: !!(out && (out.error || out.ok === false)) }); }
     catch (e) { return reply(id, { content: [{ type: 'text', text: String(e && e.message || e) }], isError: true }); }
   }
-  if (id !== undefined && id !== null) fail(id, -32601, 'Method not found: ' + method); /* i18n-ok: protocol message */
+  if (id !== undefined && id !== null) fail(id, -32601, 'Method not found: ' + (typeof method === 'string' ? method : '')); /* i18n-ok: protocol message */
 }
 
 createInterface({ input: process.stdin }).on('line', line => {

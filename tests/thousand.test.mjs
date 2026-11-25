@@ -57,3 +57,10 @@ test('a choice is a ledger try with its reason: people and agents apart, once pe
   assert.equal(no(mk({ pick: 'd0007', words: 'A reason long enough', by: 'Bo', made: 'person', ai: '', plan: {} }, 'x')), 'fields');
   assert.equal(no(draft({ kind: 'try', pick: 'd0007', words: 'A reason long enough', by: 'Bo', made: 'person', ai: '' }, 'x', '2026-11-23')), 'fields');
 });
+test('a need is one of the table\'s own: an inherited name such as constructor is no need, and nothing throws on it (#372)', () => {
+  for (const k of ['constructor', 'toString', '__proto__', 'hasOwnProperty', ['phone'], null, 7]) {
+    assert.equal(T.needOf(k), null, String(k)); assert.equal(T.limits(k), null, String(k));
+    assert.deepEqual(T.thousand(k), [], String(k)); assert.equal(T.designOf(k, 'd0001'), null, String(k));
+  }
+  assert.ok(T.needOf('phone') && T.limits('phone') && T.thousand('phone').length === 1000);
+});
