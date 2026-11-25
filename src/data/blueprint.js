@@ -85,7 +85,8 @@ export const ACTORS = [
 ];
 
 /* where it is stuck: four walls, each an arc where it bites (radius r, from and to in degrees, clockwise), each with
-   the core question it belongs to (q, src/data/frame.js), its fact and a place to see it. Words bp.wall.<id>.t, .d */
+   the core question it belongs to (q, src/data/frame.js), its fact and a place to see it. Words bp.wall.<id>.t, and
+   wall.<id>.d (src/i18n/<lang>/shared.json, told once for Hold and the blueprint) */
 export const WALLS = [
   { id: 'switch', q: 'physics', r: 163, from: -120, to: 240, href: '#/dive/switch' },
   { id: 'memory', q: 'geo', r: 239, from: 182, to: 238, fact: 'energy-moving-data', href: '#/dive/block' },

@@ -22,7 +22,7 @@
    in step). */
 export const LANGS = { en: 'English', zh: '中文', fr: 'Français', es: 'Español' };   // i18n-ok: each language is named in its own words
 /* the areas each language other than English has a file for */
-export const TRANSLATED = { zh: ['core', 'blueprint', 'hold'], fr: ['core', 'blueprint', 'hold'], es: ['core', 'blueprint', 'hold'] };
+export const TRANSLATED = { zh: ['core', 'blueprint', 'hold', 'shared'], fr: ['core', 'blueprint', 'hold', 'shared'], es: ['core', 'blueprint', 'hold', 'shared'] };
 const KEY = 'osl-lang';
 let LANG = 'en', MSG = {}, EN = {};
 
@@ -58,6 +58,9 @@ export const AREAS = {
   blueprint: ['bp'],
   /* Hold, the first page (src/v2/hold.js) */
   hold: ['hd'],
+  /* what more than one page says, written once: the four walls (Hold and the blueprint), the figures' money words, the
+     needs a machine is made for (Hold and the machines page) */
+  shared: ['wall', 'fig', 'machines.need'],
   pages: ['machines', 'mb', 'invent', 'liquid', 'read', 'page', 'site', 'tune', 'swm', 'side', 'walls',
     'forms', 'copies', 'probe', 'plan']
 };

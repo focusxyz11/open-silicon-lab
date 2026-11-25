@@ -40,9 +40,9 @@ export function start() {
      and hiding a view that never opened does nothing. Once a view has opened, the other areas' words load in an idle
      moment */
   const GLUE = {'island': [], 'frame': [], 'flights': ['frame'], 'studio': ['frame'], 'chip': ['frame'], 'flat': ['frame'], 'supply': ['flat'], 'board': ['frame'], 'pages': ['frame']}, glueP = {};
-  const WORDS = { island: ['atlas', 'place', 'design'], frame: ['atlas', 'place', 'design'], pages: ['pages'] };
+  const WORDS = { island: ['atlas', 'place', 'design'], frame: ['atlas', 'place', 'design'], pages: ['pages', 'shared'] };
   /* and the styles of its view (src/core/styles.js): the frame's with the frame, each view's own with its glue */
-  const STYLES = { island: ['frame', 'island'], frame: ['frame'], studio: ['studio'], flat: ['flat'], supply: ['supply'], pages: ['pages'] };
+  const STYLES = { island: ['frame', 'island'], frame: ['frame'], studio: ['studio'], flat: ['flat'], supply: ['supply'], pages: ['pages', 'shared'] };
   const glue = k => glueP[k] || (glueP[k] = Promise.all(GLUE[k].map(glue).concat(needWords(...(WORDS[k] || [])), needStyles(...(STYLES[k] || [])))).then(() => import('./glue/' + k + '.js')).then(m => { m.create(); afterPaint(() => { if (preloadOk()) needAllWords(); }); }));
   const waits = (k, names) => names.forEach(n => { V[n] = (...a) => glue(k).then(() => V[n](...a)); });
   /* a question from the field, the joule's way in and the ways out of a question are offered on every view and on the
@@ -388,7 +388,7 @@ export function start() {
   const record = () => { const E = ledger(), by = k => E.filter(e => (k === 'person' ? e.made === 'person' || e.made === 'both' : e.made === k)).length;
     return { all: E.length, ai: by('ai'), program: by('program'), example: by('example'), person: by('person') }; };
   function showHome() { showHome0(); if (stations) stations.hide(); if (blueprint) blueprint.hide();
-    return needWords('hold').then(() => { if (!hold) hold = createHold(homeEl, { still, record }); return hold.show(); }).then(() => afterPaint(preloadHome)); }
+    return needWords('hold', 'shared').then(() => { if (!hold) hold = createHold(homeEl, { still, record }); return hold.show(); }).then(() => afterPaint(preloadHome)); }
   function showHome0() {
     $('diveCanvas').hidden = true; vui.hidden = true; V.dive && V.dive.stop(); V.hide3d(); $('flatLabels').hidden = true; if (V.flatWords) V.flatWords.clear(); if (V.Bench) V.Bench.show(false);
     V.hideBoard(); document.body.classList.remove('immersive');
@@ -403,7 +403,7 @@ export function start() {
   let blueprint = null;
   function showBlueprint() {
     showHome0(); if (hold) hold.hide(); if (stations) stations.hide();
-    return Promise.all([import('./home.js'), needWords('blueprint'), needStyles('blueprint')]).then(([m]) => { if (!blueprint) blueprint = m.createHome(blueprintEl, { still }); blueprint.show(); });
+    return Promise.all([import('./home.js'), needWords('blueprint', 'shared'), needStyles('blueprint')]).then(([m]) => { if (!blueprint) blueprint = m.createHome(blueprintEl, { still }); blueprint.show(); });
   }
   /* ---- the station map (#/stations, src/v2/stations.js): the first page before the blueprint, every station of the lab
      joined round a chip's life, with its toys and paths by subject; loaded when it is first opened ---- */

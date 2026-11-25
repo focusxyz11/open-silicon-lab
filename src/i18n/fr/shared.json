@@ -1,0 +1,21 @@
+{
+ "fig.money": "{n} dollars",
+ "fig.money.big": "{n} de dollars",
+ "wall.switch.d": "Un transistor ne s’éteint jamais proprement : même à 0, un peu de courant fuit. À température ambiante, il faut environ 60 millivolts de plus sur sa grille pour laisser passer dix fois plus de courant ; abaisser de 60 millivolts le point où il s’allume laisse donc fuir dix fois plus. Voilà pourquoi les tensions des puces ont cessé de baisser.",
+ "wall.memory.d": "L’essentiel de l’énergie sert à déplacer les nombres, pas à calculer avec. Aller chercher 16 bits dans la mémoire d’une autre puce coûte environ 3 500 fois l’énergie d’une addition de deux nombres de 16 bits.",
+ "wall.power.d": "Chaque réponse coûte de moins en moins à calculer. Les centres de données ont consommé environ {dc} TWh (térawattheures) d’électricité.",
+ "wall.power.more": "Ils se dirigent vers environ {dc2030} TWh en 2030 : chaque réponse coûte moins cher, et le monde en demande bien plus.",
+ "wall.cost.d": "Concevoir une puce de pointe est passé d’environ {design28} en 28 nm à environ {design} en 2 nm, et un module d’usine pour la fabriquer coûte environ {module}. De moins en moins de monde peut s’offrir un essai.",
+ "machines.need.hearing.t": "Aide auditive",
+ "machines.need.hearing.d": "Minuscule, toute la journée sur une petite pile",
+ "machines.need.hearing.why": "Son filtre doit être réglé sur l’audition de chacun, donc il doit encore pouvoir changer après la fabrication.",
+ "machines.need.wildfire.t": "Capteur de feux de forêt",
+ "machines.need.wildfire.d": "Dix ans en forêt, sans réseau",
+ "machines.need.wildfire.why": "Rien ne doit changer une fois sur place : ce qui compte le plus, c’est la pile.",
+ "machines.need.rover.t": "Rover martien",
+ "machines.need.rover.d": "Loin, froid, frappé par les radiations",
+ "machines.need.rover.why": "Son guidage doit recevoir des mises à jour depuis la Terre, et son voteur et son cœur doivent être exacts, car les radiations font basculer des bits là-bas.",
+ "machines.need.radio.t": "Radio qui écoute partout",
+ "machines.need.radio.d": "Les signaux autour d’elle changent en quelques nanosecondes",
+ "machines.need.radio.why": "Les signaux qu’elle traque changent plus vite que la plupart des circuits ne se recâblent : les trouver et les extraire doit se remodeler toutes les 100 nanosecondes, et l’extraction doit être exacte."
+}

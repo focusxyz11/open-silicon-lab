@@ -14,9 +14,9 @@
    v doublings (99: the wall), .go(id) to a block, .ch(id) to where a challenge is played, .state(). */
 import { lang, needWords } from '../core/i18n.js';
 import { w, $, $$, h, clamp, ss, PHONE, S, LIVE, setRoot, fitU, CHAPS, mkTop, CH_AT, ORDER, WALL_OF, WID, PW, lab, words, fillWays, loadFacts,
-  momAt, viewAt, countParts, statsHTML, momOut, yearsWordsHTML, Yr, movesEl, TICK, loop, bindHold, setHolding, onChange, Q, src, sheet } from './holdkit.js';
+  momAt, viewAt, countParts, statsHTML, momOut, yearsWordsHTML, Yr, movesEl, TICK, loop, bindHold, setHolding, onChange, Q, src, sheet, fitHead } from './holdkit.js';
 import { mkPlate, put, out, LIT, mkChart, mkCQ, initOuts } from './holdplates.js';
-import { D2011, DWALL, LOOP, MOMENTS, WALLS, yearAt } from '../data/hold.js';
+import { D2011, DWALL, LOOP, MOMENTS, WALLS, yearShown } from '../data/hold.js';
 
 const FONTS = 'https://fonts.googleapis.com/css2?family=Anonymous+Pro:wght@400;700&family=Anton&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=Gelasio:ital,wght@1,400;1,500&display=swap';
 const FONTS_ZH = 'https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;900&family=Noto+Serif+SC:wght@500&display=swap';
@@ -33,7 +33,7 @@ export function createHold(host, ctx = {}) {
   const top = mkTop(mid, goChallenge);
   const stage = h('div', 'b-stage'), world = h('div', 'd-world'), slot = h('div', 'b-slot'), hud = h('div', 'b-hud'), band = h('div', 'b-band'), story = h('div', 'b-story'), rail = h('nav', 'b-rail'), holdBox = h('div', 'b-hold'), ycard = h('div', 'd-ycard', '<div class="say"></div>');
   rail.setAttribute('aria-label', w('rail.open'));
-  stage.append(world, slot, hud); root.append(stage, h('div', 'd-cover'), story, band, rail, holdBox, ycard);
+  stage.append(world, slot, hud); root.append(stage, h('div', 'd-cover'), story, band, h('div', 'b-railbg'), rail, holdBox, ycard);
   /* ---- the chip: twelve cells, the path through them a snake ---- */
   const CELLS = ['title', ...ORDER].map(id => [id, 0, 0]);
   const NUM = { years: '01', walls: '02', next: '03', arch: '04', machine: '05', island: '06' }, DPR = Math.min(2, devicePixelRatio || 1);
@@ -52,7 +52,7 @@ export function createHold(host, ctx = {}) {
   const hb = h('button', 'holdbtn', w('btn')), hint = h('div', 'hint mono'); hb.type = 'button'; holdBox.append(hb, hint);
   const holdOn = () => { touch(); setHolding(true); }, holdOff = () => setHolding(false);
   bindHold(hb, holdOn, holdOff); bindHold(plates.years.el, holdOn, holdOff);
-  let cur = 'years', vh = 800, VW = 1280, S1 = 500, Sy = 500, u = 1, WW = 1, WH = 1, F = {}, O = null, KF = [], p0 = 0, flying = 0, C = null, yrs = true, fr = 0, top1 = 0, sized = false;
+  let cur = 'years', vh = 800, VW = 1280, S1 = 500, Sy = 500, u = 1, WW = 1, WH = 1, F = {}, O = null, KF = [], p0 = 0, flying = 0, C = null, yrs = true, fr = 0, top1 = 0, sized = false, BH = 150;
 
   /* ---- scroll and time: a doubling is a length of page, three times longer inside a moment ---- */
   const BR = [0]; MOMENTS.forEach(m => BR.push(m.at, m.at + m.span)); BR.push(DWALL);
@@ -61,7 +61,7 @@ export function createHold(host, ctx = {}) {
   function dOfY(y) { let d = 0; for (let i = 0; i < BR.length - 1; i++) { const len = (BR[i + 1] - BR[i]) * wt(i) * base(); if (y <= len) return d + y / (wt(i) * base()); y -= len; d = BR[i + 1]; } return DWALL; }
 
   /* ---- the cards: short words passing over the picture, each beside the part it is about, with its number on it ---- */
-  const secs = {}, AT = { leak: [[50, 47], [50, 8.5]], distance: [[58, 47], [50, 7.5]], power: [[25.5, 58], [50, 50]], price: [[84, 16], [50, 7.5]], next: [[62, 88], [84, 56]], levels: [[50, 45], [50, 92.5]], eras: [[50, 50], [50, 92.5]], arr: [[50, 55], [50, 90]], machine: [[50, 40], [50, 83]], island: [[50, 47], [50, 16]] },
+  const secs = {}, AT = { leak: [[50, 47], [50, 8.5]], distance: [[58, 47], [50, 7.5]], power: [[25.5, 58], [50, 50]], price: [[60, 24.5], [50, 7.5]], next: [[62, 88], [93, 47]], levels: [[50, 45], [50, 92.5]], eras: [[50, 50], [50, 92.5]], arr: [[50, 55], [50, 90]], machine: [[50, 40], [50, 83]], island: [[50, 47], [50, 16]] },
     MAT = { gate: [14, 58], job: [50, 20.5], bug: [30, 79.5], light: [50, 7.5] };
   const card = (side, n, cls) => { const c = h('div', 'card ' + side + (cls ? ' ' + cls : '')); if (n) c.appendChild(h('span', 'n mono', n)); return c; };
   { const sec = h('section', 'sec years'); sec.dataset.id = 'years'; secs.years = sec; story.appendChild(sec);
@@ -69,7 +69,7 @@ export function createHold(host, ctx = {}) {
       c.innerHTML += '<div class="w-try"><div class="w-k mono"><i></i>' + w('mo.' + m.id + '.k') + ' · ' + w('mo.try') + '</div><p class="w-p">' + w('mo.' + m.id + '.q') + '</p><div class="w-out" data-out="m-' + m.id + '">' + momOut(m.id) + '</div></div><p class="mq">' + Q(m.q) + '</p>' + lab(w('mo.' + m.id + '.lab'), m.lab);
       box.appendChild(c); sec.appendChild(box); m._box = box; });
     /* the wall: on the right, where the moments were, so the count stays readable beside it */
-    const wc = card('r', 0, 'wall'); wc.innerHTML = '<div class="w-k mono viol">' + Math.round(yearAt(DWALL)) + ' · ' + w('rail.wall') + '</div><h2 class="w-h anton">' + w('m.wall.h') + '</h2><p class="w-d">' + w('m.wall.p') + ' ' + src('node-n2', 'design-cost-2nm') + '</p>'; const wb = h('div', 'mom'); wb.appendChild(wc); sec.appendChild(wb); sec._wall = wb; }
+    const wc = card('r', 0, 'wall'); wc.innerHTML = '<div class="w-k mono viol">' + yearShown(DWALL) + ' · ' + w('rail.wall') + '</div><h2 class="w-h anton">' + w('m.wall.h') + '</h2><p class="w-d">' + w('m.wall.p') + ' ' + src('node-n2', 'design-cost-2nm') + '</p>'; const wb = h('div', 'mom'); wb.appendChild(wc); sec.appendChild(wb); sec._wall = wb; }
   /* the pull back: no card on a desktop (the chip says it itself, in its first cell); on a phone, one */
   const pull = h('section', 'sec pull'), pc = card('l', 0, 'pullc'); pc.innerHTML = '<h2 class="w-h anton">' + w('a.title') + '</h2><p class="w-d">' + w('d.lede') + '</p>'; pull.appendChild(pc); story.appendChild(pull);
   ORDER.slice(1).forEach(id => { const sec = h('section', 'sec'), W = words(id); sec.dataset.id = id; secs[id] = sec; story.appendChild(sec);
@@ -82,13 +82,22 @@ export function createHold(host, ctx = {}) {
   const px = (e, x, y, ww, hh) => { e.style.left = x + 'px'; e.style.top = y + 'px'; if (ww != null) { e.style.width = ww + 'px'; e.style.height = hh + 'px'; } };
   function fit() {
     if (!host.clientHeight) return;
+    /* where the visitor is, before the new layout: kept through a resize or a phone turned sideways */
+    const keep = sized && !flying ? here.a : null;
     u = fitU(); vh = host.clientHeight; VW = host.clientWidth; const W = VW, R = root.style, ph = PHONE(), barH = ph ? 62 : 72; let rw = 0, topY, bandH, cxs, SH;
     R.setProperty('--barH', barH + 'px');
     if (ph) { S1 = Sy = W - 28; bandH = 84; top1 = topY = 66; SH = 44 + S1 + bandH + 12; cxs = W / 2; R.setProperty('--stageH', SH + 'px'); R.setProperty('--ctop', barH + SH + 10 + 'px'); R.setProperty('--cw', W - 28 + 'px'); R.setProperty('--ov', '0px');
       if (cq.parentNode !== ycard) ycard.appendChild(cq); }
-    else { rw = W >= 1600 ? 170 * u : 0; const Wc = W - rw; bandH = Math.max(150 * u, vh * .2); S1 = Math.floor(Math.min(vh - barH - 84 * u, Wc * .44)); Sy = Math.floor(Math.min(vh - barH - bandH - 64 * u, Wc * .44)); top1 = barH + (vh - barH - S1) / 2 + 8 * u; topY = barH + (vh - barH - bandH - Sy) / 2 + 8 * u; SH = vh; cxs = W / 2 + rw / 2;
-      R.setProperty('--cw', Math.min((Wc - S1) / 2 - (rw ? 56 : 84) * u, 400 * u) + 'px'); R.setProperty('--ov', S1 * .05 + 'px'); R.setProperty('--ctop', vh * .2 + 'px'); rail.classList.toggle('wide', rw > 0);
-      if (cq.parentNode !== band) band.insertBefore(cq, band.firstChild); }
+    else { /* the chapters keep a strip of their own at the left, so they never sit over the chip: wide enough for their
+        names on a wide screen, for their marks on any other */
+      const wide = W >= 1600; rw = (wide ? 170 : 44) * u; const Wc = W - rw; S1 = Math.floor(Math.min(vh - barH - 84 * u, Wc * .44));
+      const cw = Math.min((Wc - S1) / 2 - (wide ? 56 : 70) * u, 400 * u), cqw = cw + S1 * .32; R.setProperty('--cw', cw + 'px'); R.setProperty('--cqw', cqw + 'px'); R.setProperty('--ov', S1 * .05 + 'px'); R.setProperty('--ctop', vh * .2 + 'px'); rail.classList.toggle('wide', wide);
+      if (cq.parentNode !== band) band.insertBefore(cq, band.firstChild);
+      /* the band under the fifty years: its question wider than the column above it, and the band as tall as the longest
+         of its questions needs, so none is ever cut off (on a very short window, a phone on its side, it scrolls) */
+      bandH = Math.min(Math.max(150 * u, vh * .2, cq.need(cqw) + 24 * u), Math.max(150 * u, vh * .36));
+      Sy = Math.floor(Math.min(vh - barH - bandH - 64 * u, Wc * .44)); top1 = barH + (vh - barH - S1) / 2 + 8 * u; topY = barH + (vh - barH - bandH - Sy) / 2 + 8 * u; SH = vh; cxs = W / 2 + rw / 2; }
+    BH = ph ? 0 : bandH;
     R.setProperty('--rw', rw + 'px'); R.setProperty('--S', S1 + 'px'); R.setProperty('--top', top1 + 'px'); R.setProperty('--band', bandH + 'px');
     R.setProperty('--hbB', Math.max(10, (vh - top1 - S1) / 2 - 27 * u) + 'px');
     for (const e of [hud, band, secs.years]) { e.style.setProperty('--S', Sy + 'px'); e.style.setProperty('--top', topY + 'px'); }
@@ -106,8 +115,25 @@ export function createHold(host, ctx = {}) {
     O = { x: WW / 2, y: WH / 2, k: Math.min(uw / WW, uh / WH), sx: cxs, sy: ot + uh / 2 };
     const sy = secs.years; sy.style.height = yOfD(DWALL) + vh * 1.25 + 'px'; MOMENTS.forEach(m => { m._box.style.top = yOfD(m.at) + (ph ? 48 + SH + 4 : vh * .2) + 'px'; m._box.style.height = yOfD(m.at + m.span) - yOfD(m.at) + 'px'; });
     sy._wall.style.top = yOfD(DWALL) + (ph ? 48 + SH + 4 : vh * .2) + 'px'; sy._wall.style.height = vh * .75 + 'px';
+    /* a headline as large as its card allows, never wider than it ("L’électricité" is longer than "The power") */
+    $$('.card .w-h', story).forEach(e => { e.style.fontSize = ''; fitHead(e, parseFloat(getComputedStyle(e).fontSize), 1e9); });
     sized = true; slot._s = 0; plan(); chart.fit(); for (const id in plates) plates[id].paint(S.T, 0);
+    if (keep) restore(keep);
   }
+  /* where the visitor is, said so that any layout can find it again: in the fifty years, the count (so the year); after
+     them, the part of the story (the pull back, a block's section, the end) and how far through it */
+  const here = { a: null, y: -1, until: 0 };
+  function anchor() {
+    const y = host.scrollTop, sy = secs.years, wy = yOfD(DWALL);
+    if (y < pull.offsetTop) { const yy = y - sy.offsetTop; return yy <= wy ? { d: dOfY(Math.max(0, yy)) } : { el: sy, past: (yy - wy) / Math.max(1, sy.offsetHeight - wy) }; }
+    let el = pull; for (const k of ORDER.slice(1)) if (secs[k].offsetTop <= y + 1) el = secs[k]; if (end.offsetTop <= y + 1) el = end;
+    return { el, f: (y - el.offsetTop) / Math.max(1, el.offsetHeight) };
+  }
+  function yOf(a) { const sy = secs.years, wy = yOfD(DWALL);
+    if (a.d != null) return sy.offsetTop + yOfD(a.d);
+    if (a.past != null) return sy.offsetTop + wy + a.past * (sy.offsetHeight - wy);
+    return a.el.offsetTop + Math.min(a.el.offsetHeight - 2, Math.max(2, a.f * a.el.offsetHeight)); }
+  function restore(a) { const y = Math.round(yOf(a)); here.a = a; here.y = y; here.until = performance.now() + 1200; host.scrollTo({ top: y, behavior: 'instant' }); onScroll(); }
   /* the camera's path, from where the story's sections are now (again whenever a card grows or shrinks):
      [where on the page, what the camera frames there, whether it pulls back a little on the way in] */
   function plan() {
@@ -115,6 +141,7 @@ export function createHold(host, ctx = {}) {
     ORDER.slice(1).forEach(id => { const [a, , c] = secs[id]._c; if (c) c.style.top = ph ? '' : vh * .17 + a.offsetHeight + 14 * u + 'px'; });
     const T = vh * .75; p0 = pull.offsetTop - vh * .2; KF = [[0, F.years, 0], [p0, F.years, 0], [p0 + vh * .85, O, 0], [p0 + vh * 1.15, O, 0]];
     ORDER.slice(1).forEach(id => { const s = secs[id]; s._out = s.offsetTop + s.offsetHeight - T; KF.push([s.offsetTop, F[id], id === 'leak' ? 0 : 1], [s._out, F[id], 0]); }); KF.push([end.offsetTop, O, 0], [1e9, O, 0]);
+    if (here.a && performance.now() < here.until && Math.abs(host.scrollTop - here.y) < 2) { const y = Math.round(yOf(here.a)); if (Math.abs(y - here.y) > 1) { here.y = y; host.scrollTo({ top: y, behavior: 'instant' }); } }
     onScroll();
   }
   let planF = 0; new ResizeObserver(() => { if (!planF) planF = requestAnimationFrame(() => { planF = 0; if (LIVE.on) plan(); }); }).observe(story);
@@ -136,7 +163,8 @@ export function createHold(host, ctx = {}) {
 
   function onScroll() {
     if (!sized) return;
-    const y = host.scrollTop; let id = 'years'; for (const k of ORDER) if (secs[k].offsetTop <= y + 1) id = k;
+    const y = host.scrollTop; let id = 'years';
+    if (host.clientHeight === vh && host.clientWidth === VW && !flying && !(here.a && performance.now() < here.until && Math.abs(y - here.y) < 2)) { here.a = anchor(); here.y = y; here.until = 0; } for (const k of ORDER) if (secs[k].offsetTop <= y + 1) id = k;
     if (y > 40) touch();
     if (y < pull.offsetTop) { if (!flying) { const yy = y - secs.years.offsetTop; Yr.set(yy >= yOfD(DWALL) - 2 ? DWALL : dOfY(yy)); } } else if (!flying && S.d < DWALL) Yr.set(DWALL);
     if (id !== cur) { cur = id; setHolding(false); }
@@ -149,7 +177,7 @@ export function createHold(host, ctx = {}) {
     const settled = C.a === C.b;
     ORDER.forEach(k => { const b = blks[k], f = F[k]; b.classList.toggle('cur', f === C.a || f === C.b || (k === 'years' && yrs)); b.classList.toggle('live', settled && C.a === f); if (k in WALL_OF) { b.classList.toggle('found', y >= secs.leak.offsetTop || sxw > POS[k][0] + S1 / 2); b.classList.toggle('tried', !!S.tried[WID[WALL_OF[k]]]); } });
     ORDER.slice(1).forEach(k => { const s = secs[k], o = 1 - ss(0, .3, (y - s._out) / (vh * .75)); s.style.opacity = o; s.style.pointerEvents = o < .5 ? 'none' : ''; s.style.visibility = o < .01 ? 'hidden' : ''; });
-    if (was !== yrs || !slot._s) { slot._s = 1; slot.style.setProperty('--S', (yrs ? Sy : S1) + 'px'); slot.style.setProperty('--top', (yrs ? F.years.sy - Sy / 2 : F.leak.sy - S1 / 2) + 'px'); holdBox.style.setProperty('--S', (yrs ? Sy : S1) + 'px'); holdBox.style.setProperty('--hb', (yrs && !PHONE() ? Math.max(150 * u, vh * .2) : 0) + (PHONE() ? 14 : 22 * u) + 'px'); }
+    if (was !== yrs || !slot._s) { slot._s = 1; slot.style.setProperty('--S', (yrs ? Sy : S1) + 'px'); slot.style.setProperty('--top', (yrs ? F.years.sy - Sy / 2 : F.leak.sy - S1 / 2) + 'px'); holdBox.style.setProperty('--S', (yrs ? Sy : S1) + 'px'); holdBox.style.setProperty('--hb', (yrs && !PHONE() ? BH : 0) + (PHONE() ? 14 : 22 * u) + 'px'); }
     hud.classList.toggle('off', !yrs); band.classList.toggle('off', !yrs); holdBox.classList.toggle('chip', !yrs); holdBox.classList.toggle('off', !yrs && over);
     const inChip = !yrs && over, ch = PW[cur].ch, n = CHAPS.indexOf(ch) + 1; put(chapL, inChip ? '<b>' + w('a.chip') + '</b>' : w('b.chap', { n }) + '<b>' + w('tab.' + ch) + '</b>');
     [...rail.children].forEach(b => b.classList.toggle('on', !inChip && b.dataset.ch === ch)); [...map.children].forEach(b => b.classList.toggle('on', inChip ? b.dataset.id === 'title' : b.dataset.id === cur));
@@ -189,7 +217,7 @@ export function createHold(host, ctx = {}) {
   const idleTouch = () => { if (touched || !LIVE.on) return; if (document.documentElement.dataset.preload) (window.requestIdleCallback ? requestIdleCallback(touch, { timeout: 1500 }) : setTimeout(touch, 1500)); else setTimeout(idleTouch, 600); };
 
   /* for checks */
-  window.__hold = { set: v => goPlate('years', v === 99 ? DWALL : v, false, false), go: (id, d) => goPlate(id, d === 99 ? DWALL : d, true), ch: goChallenge, at: id => (id === 'pull' ? p0 + vh : secs[id].offsetTop),
+  window.__hold = { set: v => goPlate('years', v === 99 ? DWALL : v, false, false), go: (id, d) => goPlate(id, d === 99 ? DWALL : d, true), ch: goChallenge, at: id => (id === 'pull' ? p0 + vh : secs[id].offsetTop), chartX: y => chart.el.getBoundingClientRect().left + chart.X(y),
     state: () => ({ d: S.d, cur, chip: !yrs, holding: S.holding, done: Object.keys(S.done), tried: Object.keys(S.tried), place: S.place, kept: S.kept, ways: !!$('.w-ways button[data-way]:not([hidden])', story) }), S };
 
   /* the page's type, once */

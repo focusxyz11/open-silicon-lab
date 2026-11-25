@@ -3,7 +3,9 @@
    Moore's law, live, along the bottom of the fifty years (mkChart, mkCQ). Designed with Claude Fable 5.2 and brought
    into the lab with Claude Opus 5.5. */
 import { t } from '../core/i18n.js';
-import { w, Q, $, h, clamp, lerp, ss, mix, rnd, nf, sig, S, done, tried, setOut, K, fg, rd, src, lab, viewAt, momOut, Yr, bindHold, ROOT, TICK, changed, onChange } from './holdkit.js';
+import { w, Q, $, h, clamp, lerp, ss, mix, rnd, nf, sig, xOf, S, done, tried, setOut, K, fg, rd, src, lab, viewAt, momOut, Yr, bindHold, ROOT, TICK, changed, onChange } from './holdkit.js';
+import { money } from './figures.js';
+import { FIG } from '../data/figures.js';
 import { AHEAD, ARR, BEHIND, CHIPS, COST, DWALL, ERAS, FCOST, FDIV, FORMS, KNEE, LIGHTS, LOOP, MOORE65, NEEDS, RUNGS, SERIES, STOCK, TRIP, dAt, formAt, rule, trend, yearAt } from '../data/hold.js';
 
 /* ================= the plates =================
@@ -233,7 +235,7 @@ PL.years = {
     const ls = seg(L.light, LIGHTS.map(l => w('mo.light.' + l)), () => S.light, i => { S.light = i; if (i) done('light'); setOut('m-light', momOut('light')); }, [6, 4, 88]);
     const lam = lbl(L.light, '', 10, 36.5); lbl(L.light, w('light.lines'), 10, 86.5);
     /* the wall */
-    lbl(L.wall, w('g.now'), 39.5, 62.5, 'hot'); lbl(L.wall, w('g.gets'), 39, 33.5, 'hot'); lbl(L.wall, w('g.twice'), 62, 27.6);
+    lbl(L.wall, w('g.now'), 39.5, 62.5, 'hot'); lbl(L.wall, w('g.gets'), 39.5, 66.8, 'hot wrap').style.maxWidth = '36%'; lbl(L.wall, w('g.twice'), 62, 30.2, 'up');
     btn(L.wall, w('m.wall.go') + ' →', [27, 82, 46], () => S.onWallGo && S.onWallGo());
     pl.sync = () => { const v = viewAt(S.d); for (const k in L) L[k].classList.toggle('on', k === v);
       if (v === 'one') put(bitE, (S.press > .5 ? '1' : '0') + '<small>' + (S.press > .5 ? w('bit.1') : w('bit.0')) + '</small>');
@@ -257,7 +259,7 @@ export const OUTS = {
   arr: () => { const a = ARR[S.arr], id = a[0], n = ['cim', 'spikes'].filter(k => S.arrSeen[k]).length;
     return '<b>' + (id === 'classic' ? w('arr.classic.t') : t('bp.next.' + id + '.t')) + '</b> ' + (id === 'classic' ? w('arr.classic.d') : t('bp.next.' + id + '.d')) + ' ' + src(...a[2]) + '<br><span class="mono dim">' + w('arr.trip') + '</span> ' + w('trip.' + TRIP[id]) + (a[1] ? ' · <span class="mono dim">' + w('status.' + a[1]) + '</span>' : '') +
       '<br><span class="ok">' + (n >= 2 ? w('arch.ch.done') + ' ' + w('arch.ch.why') : w('arr.found', { n, of: 2 })) + '</span>'; },
-  machine: () => { const m = machNow(); return w('need.' + m.need.id + '.why') + (m.ok ? '' : '<br><span class="ok">' + w('mach.bad', { part: w('piece.' + m.bad).toLowerCase() }) + '</span>') + (S.agent ? '<br>' + w('tri.gen.done', S.agent) : '') + (S.kept ? ' <b class="ok">' + w('tri.dec.done') + '</b>' : ''); },
+  machine: () => { const m = machNow(); return t('machines.need.' + m.need.id + '.why') + (m.ok ? '' : '<br><span class="ok">' + w('mach.bad', { part: w('piece.' + m.bad).toLowerCase() }) + '</span>') + (S.agent ? '<br>' + w('tri.gen.done', S.agent) : '') + (S.kept ? ' <b class="ok">' + w('tri.dec.done') + '</b>' : ''); },
   island: () => { const p = S.place; if (!p) return w('isle.out0'); const lit = LIT[p](); return '<b>' + w('place.' + p) + '</b> ' + w('tr.' + p + (lit || p === 'port' ? '' : '.0')) + '<br>' + lab(w('tr.' + p + '.go'), '#/place/' + p); }
 };
 export const out = id => setOut(id, OUTS[id]());
@@ -300,20 +302,21 @@ PL.distance = {
 };
 PL.power = {
   frame: () => [w('pl.power'), 'TWh'],
-  paint(c) { const yb = 830, sc = .43, k = S.power.k || 0;
+  paint(c) { const yb = 830, sc = .43, k = S.power.k || 0, now = FIG.dc.v, y30 = FIG.dc2030.v;
     c.fillStyle = fg(.5); for (const v of [500, 1000, 1500]) { c.fillStyle = fg(.14); c.fillRect(120, yb - v * sc, 780, 2); }
     c.fillStyle = K.ink; c.fillRect(120, yb, 780, 3);
-    c.fillStyle = K.ink; c.fillRect(170, yb - 485 * sc, 170, 485 * sc);
+    c.fillStyle = K.ink; c.fillRect(170, yb - now * sc, 170, now * sc);
     const gh = S.power.g * sc; hatch(c, 415, yb - gh, 170, gh, 13, K.ink, 2); c.strokeStyle = K.ink; c.lineWidth = 3; c.strokeRect(415, yb - gh, 170, gh);
-    if (k > .01) { c.fillStyle = K.red; c.fillRect(660, yb - 950 * sc * k, 170, 950 * sc * k); } else { c.strokeStyle = fg(.4); c.lineWidth = 2; c.setLineDash([8, 8]); c.strokeRect(660, yb - 200, 170, 200); c.setLineDash([]); } },
-  ui(host, pl) { const yb = 83, sc = .043; lbl(host, w('s.pnow'), 25.5, 85.5, 'c').style.transform = 'translate(-50%,0)'; const gl = lbl(host, '', 50, 85.5, 'c hot'); gl.style.transform = 'translate(-50%,0)'; const fl = lbl(host, '', 74.5, 85.5, 'c'); fl.style.transform = 'translate(-50%,0)';
+    if (k > .01) { c.fillStyle = K.red; c.fillRect(660, yb - y30 * sc * k, 170, y30 * sc * k); } else { c.strokeStyle = fg(.4); c.lineWidth = 2; c.setLineDash([8, 8]); c.strokeRect(660, yb - 200, 170, 200); c.setLineDash([]); } },
+  ui(host, pl) { const yb = 83, sc = .043, twh = v => '<b>' + nf(v) + ' TWh</b>', tag = (html, x, cls) => { const e = lbl(host, html, x, 85.5, 'c col' + (cls ? ' ' + cls : '')); e.style.transform = 'translate(-50%,0)'; return e; };
+    tag(w('s.pnow') + twh(FIG.dc.v), 25.5); const gl = tag('', 50, 'hot'), fl = tag('', 74.5);
     for (const v of [500, 1000, 1500]) lbl(host, nf(v), 11.5, yb - v * sc - 1.2, 'r');
     /* i18n-ok: styles */ const hd = h('div', 'pw-h'); hd.style.cssText = 'width:21%;height:5%;background:var(--red);cursor:ns-resize;transform:translate(0,-50%);touch-action:none;display:grid;place-items:center;color:#fff'; hd.innerHTML = '<span class="lb" style="position:static">↕ ' + w('power.drag') + '</span>'; hd.classList.add('nohold'); host.appendChild(hd);
     /* i18n-ok: styles */ const col = h('div', 'nohold'); at(col, 39.5, 14, 21, 69); col.style.cssText += ';cursor:ns-resize;touch-action:none'; host.insertBefore(col, hd);
     const drag = e => { const r = host.getBoundingClientRect(), y = (e.clientY - r.top) / r.height * 100; S.power.g = Math.round(clamp((yb - y) / sc, 100, 1550) / 10) * 10; tried('power'); out('power'); };
     for (const el of [hd, col]) { el.addEventListener('pointerdown', e => { el.setPointerCapture(e.pointerId); el._d = 1; drag(e); e.preventDefault(); }); el.addEventListener('pointermove', e => { if (el._d) drag(e); }); el.addEventListener('pointerup', () => { el._d = 0; }); el.addEventListener('pointercancel', () => { el._d = 0; }); }
     const b = btn(host, w('w.power.reveal'), [66, 5, 25], () => { S.power.shown = 1; tried('power'); out('power'); });
-    pl.sync = () => { at(hd, 39.5, yb - S.power.g * sc); put(gl, w('s.pguess') + ' · ' + nf(S.power.g) + ' TWh'); put(fl, S.power.shown ? w('s.p2030') : '2030 · ?'); fl.classList.toggle('hot', !!S.power.shown); b.style.display = S.power.shown ? 'none' : ''; }; }
+    pl.sync = () => { at(hd, 39.5, yb - S.power.g * sc); put(gl, w('s.pguess') + twh(S.power.g)); put(fl, w('s.p2030') + (S.power.shown ? twh(FIG.dc2030.v) : '<b>?</b>')); fl.classList.toggle('hot', !!S.power.shown); b.style.display = S.power.shown ? 'none' : ''; }; }
 };
 export let dotPat = null, dotKey = '';
 PL.price = {
@@ -326,9 +329,12 @@ PL.price = {
     COST.forEach(([node, v], i) => { const s = sd(v), last = i === COST.length - 1; if (last) hatch(c, x0, yb - s, s, s, 16, rd(.3), 2); c.strokeStyle = last ? K.red : K.ink; c.lineWidth = last ? 4.5 : 2.6; c.strokeRect(x0, yb - s, s, s); }); },
   ui(host, pl) { const s = seg(host, [w('w.cost.a'), w('w.cost.b')], () => S.price, i => { S.price = i; tried('cost'); out('price'); }, [6, 4, 88]);
     const A = h('div', 'layer'), B = h('div', 'layer'); host.append(A, B); const sd = v => 77 * Math.sqrt(v / 725);
-    COST.forEach(([node, v], i) => { const e = lbl(A, node + ' · ' + w('money', { n: sig(v * 1e6, 3) }), 11 + sd(v) - .8, 90.5 - sd(v) + .8, 'r' + (i === COST.length - 1 ? ' hot' : '')); if (i === 4) e.style.display = 'none'; });
-    lbl(B, w('s.c2'), 64, 53.5, 'c hot').style.transform = 'translate(-50%,0)';
-    pl.sync = () => { s(); A.classList.toggle('on', !S.price); B.classList.toggle('on', !!S.price); }; }
+    /* each price in its square's corner, the node above it; a price too long for a small square on a small plate is
+       left to the words beside the picture rather than cut off */
+    const cl = COST.map(([node, v], i) => { const e = lbl(A, node + '<b>' + money(v * 1e6) + '</b>', 11 + sd(v) - .8, 90.5 - sd(v) + .8, 'r' + (i === COST.length - 1 ? ' hot' : '')); if (i === 4) e.style.display = 'none'; return e; });
+    lbl(B, w('s.c2'), 64, 53.5, 'c hot').style.transform = 'translate(-50%,0)'; let cw = 0;
+    pl.sync = () => { s(); A.classList.toggle('on', !S.price); B.classList.toggle('on', !!S.price);
+      const ck = host.clientWidth + (document.fonts ? document.fonts.status : ''); if (ck !== cw) { cw = ck; const pw = host.clientWidth; cl.forEach((e, i) => { if (i !== 4) e.style.visibility = e.offsetWidth > (11 + sd(COST[i][1]) - .8) / 100 * pw ? 'hidden' : ''; }); } }; }
 };
 
 /* ---------------- the next fifty years: down the ladder of energy per bit, to the floor ---------------- */
@@ -344,11 +350,14 @@ PL.next = {
     RUNGS.forEach((r, i) => { if (i === 3) return; const y = Y(RP[i]), hit = S.next.at >= i; c.fillStyle = i === 4 ? K.red : hit ? K.red : K.ink; c.fillRect(ax - 34, y - (i === 4 ? 5 : 2.5), i === 4 ? 440 : 68, i === 4 ? 10 : 5); });
     const my = Y(pos); c.fillStyle = K.red; c.fillRect(ax - 17, my - 17, 34, 34); if (S.next.hold && pos < 1) { c.globalAlpha = .4; c.fillRect(ax - 3, my - 60, 6, 44); c.globalAlpha = 1; } },
   ui(host, pl) { const Y = p => 24 + p * 64;
-    const ls = RUNGS.map((r, i) => lbl(host, '<b>' + w('rung.' + r[0] + '.t') + '</b>' + (i === 3 ? w('nx.zone') : fmtE(r[1]) + ' ' + w('next.abit')), 53, Y(RP[i]) - (i === 4 ? 6.6 : 1.6)));
-    lbl(host, w('nx.behind') + '<b>×' + sig(BEHIND, 3) + '</b>', 18.2, 30.2, 'r'); const ah = lbl(host, '', 21.5, 17.8);
-    const b = big(host, 53, 3.5); const hb = h('button', 'holdbtn', w('btn')); hb.type = 'button'; at(hb, 77, 49); host.appendChild(hb);
+    const ls = RUNGS.map((r, i) => lbl(host, '<b>' + w('rung.' + r[0] + '.t') + '</b>' + (i === 3 ? w('nx.zone') : fmtE(r[1]) + ' ' + w('next.abit')), 53, Y(RP[i]) - (i === 4 ? 6.6 : 1.6), 'wrap'));
+    /* each bar's name ends just above its bar, however many lines it takes */
+    lbl(host, w('nx.behind') + '<b>×' + sig(BEHIND, 3) + '</b>', 18.2, 35.5, 'r up wrap side'); const ah = lbl(host, '', 21.5, 23, 'up wrap');
+    /* its own hold button: beside the ladder on a wide plate; on a phone, in the empty corner above the bars */
+    const b = big(host, 53, 3.5); const hb = h('button', 'holdbtn', w('btn')); hb.type = 'button'; host.appendChild(hb); let hbAt = '';
     bindHold(host, () => { S.next.hold = true; }, () => { S.next.hold = false; });
-    pl.sync = () => { const x = Math.pow(10, (NX0 - NX1) * S.next.pos); put(b, '×' + (x < 1e4 ? nf(x) : sig(x, 2)) + '<small>' + w('nx.unit') + '</small>'); put(ah, w('nx.ahead') + '<b>×' + sig(AHEAD, 2) + '</b>');
+    pl.sync = () => { const x = Math.pow(10, (NX0 - NX1) * S.next.pos), ph = innerWidth <= 760 ? 'p' : 'd'; if (hbAt !== ph) { hbAt = ph; at(hb, ...(ph === 'p' ? [3, 2] : [77, 49])); }
+      put(b, (x < 1.5 ? '×1' : w('nx.x', { x: x < 1e4 ? nf(x) : xOf(x) })) + '<small>' + w('nx.unit') + '</small>'); put(ah, w('nx.ahead') + '<b>×' + sig(AHEAD, 2) + '</b>');
       ls.forEach((e, i) => e.classList.toggle('hot', S.next.at === i)); hb.style.opacity = S.next.pos >= 1 ? .25 : 1; hb.classList.toggle('down', !!S.next.hold); }; }
 };
 
@@ -409,7 +418,7 @@ export function agent() { const need = NEEDS[S.need], free = need.parts.filter(p
   for (const id in best.pick) S.forms[need.id + '.' + id] = best.pick[id]; S.agent = { n, ok }; }
 export const tilePos = (need, i) => { const n = need.parts.length, sp = n > 4 ? 172 : 205, x0 = 500 - (n - 1) * sp / 2; return [x0 + i * sp, 400 + (i % 2 ? 62 : -62)]; };
 PL.machine = {
-  frame: () => [w('s.yours'), w('need.' + NEEDS[S.need].id + '.t')],
+  frame: () => [w('s.yours'), t('machines.need.' + NEEDS[S.need].id + '.t')],
   paint(c, T) { const need = NEEDS[S.need], ts = need.parts.length > 4 ? 138 : 158;
     for (const [a, b] of need.wires) { const p = tilePos(need, a), q = tilePos(need, b), pp = [p, [q[0], p[1]], q]; path(c, pp, K.ink, 3.5); c.fillStyle = K.red; const pt = along(pp, (T * .5 + a * .3) % 1); c.fillRect(pt[0] - 7, pt[1] - 7, 14, 14); }
     need.parts.forEach((p, i) => { const [cx, cy] = tilePos(need, i), x = cx - ts / 2, y = cy - ts / 2, f = formOf(need, p), bad = need.change.includes(p[0]) && f === 'circuit';
@@ -420,11 +429,11 @@ PL.machine = {
       else { c.strokeStyle = K.ink; c.lineWidth = 3; c.beginPath(); for (let a = 0; a < 5; a++) { const yy = y + 22 + a * (ts - 44) / 4; for (let xx = 0; xx <= ts - 24; xx += 4) { const py = yy + 7 * Math.sin(xx / 13 + T * 2.2 + a); if (!xx) c.moveTo(x + 12, py); else c.lineTo(x + 12 + xx, py); } } c.stroke(); }
       c.strokeStyle = bad ? K.red : K.ink; c.lineWidth = bad ? 6 : 3.5; c.strokeRect(x, y, ts, ts);
       if (need.change.includes(p[0])) { c.fillStyle = K.red; c.beginPath(); c.moveTo(x + ts, y); c.lineTo(x + ts - 34, y); c.lineTo(x + ts, y + 34); c.fill(); } }); },
-  ui(host, pl) { const s = seg(host, NEEDS.map(n => w('need.' + n.id + '.t')), () => S.need, i => { S.need = i; S.agent = null; S.kept = false; pl.fade = 1; out('machine'); build(); }, [6, 4, 88]);
+  ui(host, pl) { const s = seg(host, NEEDS.map(n => t('machines.need.' + n.id + '.t')), () => S.need, i => { S.need = i; S.agent = null; S.kept = false; pl.fade = 1; out('machine'); build(); }, [6, 4, 88]);
     const sub = lbl(host, '', 6, 12.5), tiles = h('div', 'layer on'); host.appendChild(tiles); let tb = [];
     const build = () => { tiles.innerHTML = ''; tb = []; const need = NEEDS[S.need], ts = need.parts.length > 4 ? 13.8 : 15.8;
       /* i18n-ok: styles */ need.parts.forEach((p, i) => { const [cx, cy] = tilePos(need, i), b = h('button', 'mtile'); b.type = 'button'; at(b, cx / 10 - ts / 2 - 3, cy / 10 - ts / 2, ts + 6, ts + 6.4); b.style.cssText += ';display:flex;flex-direction:column;justify-content:flex-end;align-items:center;text-align:center;line-height:1.1';
-        b.innerHTML = '<b style="font-weight:600;font-size:.92em;white-space:nowrap"></b><span class="lb" style="position:static;font-size:max(9px,calc(var(--p)*16))"></span>'; if (STOCK.includes(p[1])) b.disabled = true;
+        b.innerHTML = '<b style="font-weight:600;font-size:.92em;white-space:nowrap"></b><span class="lb" style="position:static;font-size:max(11px,calc(var(--p)*16))"></span>'; if (STOCK.includes(p[1])) b.disabled = true;
         b.onclick = () => { const k = need.id + '.' + p[0], f = S.forms[k] || 'software'; S.forms[k] = FORMS[(FORMS.indexOf(f) + 1) % FORMS.length]; S.kept = false; out('machine'); }; tiles.appendChild(b); tb.push([b, p]); }); };
     build();
     /* i18n-ok: styles */ const tri = h('div', 'tri'); at(tri, 6, 70.5, 88, 25); tri.style.cssText += ';display:grid;grid-template-columns:1fr 1.15fr 1fr;border:1.5px solid var(--ink);background:var(--plate)'; host.appendChild(tri);
@@ -433,9 +442,9 @@ PL.machine = {
     const gb = h('button', 'pbtn ghost', w('tri.gen.b')); gb.type = 'button'; gb.style.position = 'static'; gb.onclick = () => { agent(); out('machine'); }; g.appendChild(gb);
     /* i18n-ok: styles */ const en = h('div', 'big'); en.style.cssText = 'position:static;font-size:calc(var(--p)*76)'; ck.appendChild(en);
     /* i18n-ok: styles */ const kb = h('button', 'pbtn', w('tri.dec.b')); kb.type = 'button'; kb.style.cssText = 'position:static;white-space:normal'; kb.onclick = () => { S.kept = true; done('keep'); out('machine'); out('island'); }; dc.appendChild(kb);
-    pl.sync = () => { s(); const m = machNow(); put(sub, w('need.' + m.need.id + '.d')); if (tb.length !== m.need.parts.length || tb[0][1] !== m.need.parts[0]) build();
+    pl.sync = () => { s(); const m = machNow(); put(sub, t('machines.need.' + m.need.id + '.d')); if (tb.length !== m.need.parts.length || tb[0][1] !== m.need.parts[0]) build();
       tb.forEach(([b, p]) => { const f = formOf(m.need, p); put(b.children[0], w('piece.' + p[0])); put(b.children[1], f === 'stock' ? w('form.stock') : w('form.' + f)); b.children[1].classList.toggle('hot', m.bad === p[0]); });
-      put(en, '×' + (m.e >= 10 ? Math.round(m.e) : m.e.toFixed(1)) + '<small style="font-size:max(9px,calc(var(--p)*15.5))">' + (m.ok ? w('mach.ok') : w('mach.no')) + '</small>'); en.style.color = m.ok ? '' : 'var(--mid)'; kb.disabled = !m.ok || S.kept; put(kb, S.kept ? w('tri.dec.done') : w('tri.dec.b')); }; }
+      put(en, '×' + (m.e >= 10 ? Math.round(m.e) : m.e.toFixed(1)) + '<small style="font-size:max(11px,calc(var(--p)*15.5))">' + (m.ok ? w('mach.ok') : w('mach.no')) + '</small>'); en.style.color = m.ok ? '' : 'var(--mid)'; kb.disabled = !m.ok || S.kept; put(kb, S.kept ? w('tri.dec.done') : w('tri.dec.b')); }; }
 };
 
 /* ---------------- the island: a chip's life round the loop ---------------- */
@@ -473,16 +482,24 @@ export function mkChart(o = {}) {
   const c = cv.getContext('2d'), Y0 = 1957, Y1 = 2030; let W = 0, H = 0, g = { l: 36, r: 10, t: 10, b: 40 }, ph = 1, dpr = 1;
   const mk = (cls, html) => { const s = h('span', cls, html); lab.appendChild(s); return s; };
   const yl = [[1e3, 'k'], [1e6, 'm'], [1e9, 'bn'], [1e12, 'tn']].map(([v, k]) => [v, mk('yl', w('ax.' + k))]), xl = [1960, 1971, 1990, 2010, 2026].map(y => [y, mk('xl', y)]);
-  const eraL = ERAS.map(e => mk('era', w('era.' + e[0] + '.b'))), chip = mk('chip', ''), serL = mk('ser', ''), gsL = mk('gs', w('chart.guess'));
-  const serT = h('div', 'ser-t mono'); SERIES.forEach(s => { const b = h('button', '', '+ ' + w('ser.' + s)); b.type = 'button'; b.dataset.s = s; b.onclick = e => { e.stopPropagation(); S.cq[s] = !S.cq[s]; changed('cq'); }; serT.appendChild(b); }); el.appendChild(serT);
+  const eraL = ERAS.map(e => mk('era', w('era.' + e[0] + '.b'))), chip = mk('chip', ''), gsL = mk('gs', w('chart.guess'));
+  /* the series beside the transistors: their switches are their legend, in the corner the data never reaches (early
+     years, high counts); nothing is drawn under them */
+  const serT = h('div', 'ser-t mono'); SERIES.forEach(s => { const b = h('button', ''); b.type = 'button'; b.dataset.s = s; b.onclick = e => { e.stopPropagation(); S.cq[s] = !S.cq[s]; changed('cq'); }; serT.appendChild(b); }); el.appendChild(serT);
+  let serK = null, serR = null;
+  const serSync = () => { const k = SERIES.map(s => (S.cq[s] ? 1 : 0)).join(''); if (k === serK) return; serK = k;
+    [...serT.children].forEach(b => { const on = !!S.cq[b.dataset.s]; b.classList.toggle('on', on); b.innerHTML = on ? '<i class="g ' + b.dataset.s + '"></i>' + w('ser.' + b.dataset.s + '.u') : '+ ' + w('ser.' + b.dataset.s); });
+    serR = serT.offsetWidth && serT.offsetHeight ? [serT.offsetLeft - 4, serT.offsetTop - 3, serT.offsetWidth + 8, serT.offsetHeight + 6] : null; };
   const X = y => g.l + (y - Y0) / (Y1 - Y0) * (W - g.l - g.r), Y = v => g.t + (1 - Math.log10(Math.max(v, 1)) / 12) * ph;
   const yearOfX = x => Y0 + (x - g.l) / (W - g.l - g.r) * (Y1 - Y0), valOfY = y => Math.pow(10, clamp((1 - (y - g.t) / ph) * 12, 0, 12));
   const pos = (e, x, y) => { const k = Math.round(x) + ',' + Math.round(y); if (e._k !== k) { e._k = k; e.style.left = x + 'px'; e.style.top = y + 'px'; } };
   function fit() { const r = el.getBoundingClientRect(); if (!r.width || !r.height) return; dpr = Math.min(2, devicePixelRatio || 1); W = r.width; H = r.height;
-    const u = parseFloat(getComputedStyle(ROOT || document.documentElement).getPropertyValue('--u')) || 1, low = H < 150 * u; g = { l: 34 * u, r: 12 * u, t: 10 * u, b: (low ? 30 : 40) * u, u, low }; ph = H - g.t - g.b;
+    /* the axis's own words decide how much room it keeps at the left ("1 000 Md" is wider than "1tn") */
+    const u = parseFloat(getComputedStyle(ROOT || document.documentElement).getPropertyValue('--u')) || 1, low = H < 150 * u, yw = H < 84 ? 0 : Math.max(...yl.map(([, e]) => e.offsetWidth));
+    g = { l: Math.max(34 * u, yw + 10 * u), r: 12 * u, t: 10 * u, b: (low ? 30 : 40) * u, u, low }; ph = H - g.t - g.b;
     cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
-    yl.forEach(([v, e]) => { pos(e, g.l - 6, Y(v)); e.style.display = H < 84 ? 'none' : ''; }); xl.forEach(([y, e]) => { pos(e, X(y), g.t + ph + 5 * u); e.style.display = W < 300 && y !== 1971 && y !== 2026 ? 'none' : ''; });
-    ERAS.forEach(([id, y0], i) => { pos(eraL[i], X(y0) + 3, g.t + ph + 17 * u); eraL[i].style.display = low || W < 420 ? 'none' : ''; eraL[i]._fits = eraL[i].offsetWidth < X(i < ERAS.length - 1 ? ERAS[i + 1][1] : 2026) - X(y0) - 4; }); serT.style.bottom = g.b + 6 + 'px'; serT.style.right = g.r + 'px'; }
+    yl.forEach(([v, e]) => { pos(e, g.l - 6 * u, Y(v)); e.style.display = H < 84 ? 'none' : ''; }); xl.forEach(([y, e]) => { pos(e, X(y), g.t + ph + 5 * u); e.style.display = W < 300 && y !== 1971 && y !== 2026 ? 'none' : ''; });
+    ERAS.forEach(([id, y0], i) => { pos(eraL[i], X(y0) + 3, g.t + ph + 17 * u); eraL[i].style.display = low || W < 420 ? 'none' : ''; eraL[i]._fits = eraL[i].offsetWidth < X(i < ERAS.length - 1 ? ERAS[i + 1][1] : 2026) - X(y0) - 4; }); serT.style.left = g.l + 8 * u + 'px'; serT.style.top = g.t + 3 * u + 'px'; serK = null; serSync(); }
   function paint(T) {
     if (!W) fit(); if (!W) return; const d = Math.min(S.d, DWALL), yNow = yearAt(d), u = g.u;
     c.setTransform(dpr, 0, 0, dpr, 0, 0); c.clearRect(0, 0, W, H); c.lineWidth = 1;
@@ -490,23 +507,21 @@ export function mkChart(o = {}) {
     c.strokeStyle = fg(.5); c.beginPath(); c.moveTo(g.l, g.t + ph + .5); c.lineTo(W - g.r, g.t + ph + .5); c.stroke();
     c.fillStyle = fg(.6); for (const [y] of xl) c.fillRect(X(y) - .5, g.t + ph, 1, 4);
     ERAS.forEach(([id, y0], i) => { const x0 = X(y0), x1 = X(i < ERAS.length - 1 ? ERAS[i + 1][1] : 2026), on = yNow >= y0 && (i === ERAS.length - 1 || yNow < ERAS[i + 1][1]); c.fillStyle = on ? K.red : fg(.18); c.fillRect(x0 + 1, H - 4 * u, x1 - x0 - 2, 3 * u); eraL[i].classList.toggle('on', on); eraL[i].style.visibility = eraL[i]._fits || on ? '' : 'hidden'; if (on && !eraL[i]._fits) eraL[i].style.transform = 'translate(-100%,0)', pos(eraL[i], x1 - 2, g.t + ph + 17 * u); });
-    c.save(); c.beginPath(); c.rect(g.l, g.t - 2, W - g.l - g.r, ph + 2); c.clip();
+    serSync(); c.save(); c.beginPath(); c.rect(g.l, g.t - 2, W - g.l - g.r, ph + 2); if (serR) c.rect(serR[0] + serR[2], serR[1], -serR[2], serR[3]); c.clip('evenodd');
     c.strokeStyle = fg(.4); c.setLineDash([3, 4]); c.beginPath(); MOORE65.forEach(([y, v], i) => (i ? c.lineTo(X(y), Y(v)) : c.moveTo(X(y), Y(v)))); c.stroke(); c.setLineDash([]);
     const ds = Math.max(1.3, 1.25 * u); c.fillStyle = fg(.32); for (const [y, v] of trend('tr')) { if (y > yNow + .05) break; c.fillRect(X(y) - ds, Y(v) - ds, ds * 2, ds * 2); }
-    let serP = null, serN = '';
     for (const s of SERIES) { if (!S.cq[s]) continue; c.strokeStyle = s === 'hz' ? K.red : K.ink; c.fillStyle = K.ink; c.lineWidth = 1.3 * u;
-      for (const [y, v] of trend(s)) { if (y > yNow + .05) break; const x = X(y), yy = Y(v); if (s === 'hz') { serP = [x, yy]; serN = s; }
+      for (const [y, v] of trend(s)) { if (y > yNow + .05) break; const x = X(y), yy = Y(v);
         if (s === 'hz') { c.beginPath(); c.arc(x, yy, 2.7 * u, 0, 7); c.stroke(); } else if (s === 'cores') c.fillRect(x - 2 * u, yy - 2 * u, 4 * u, 4 * u); else { c.beginPath(); c.moveTo(x, yy - 3 * u); c.lineTo(x + 3 * u, yy + 2.4 * u); c.lineTo(x - 3 * u, yy + 2.4 * u); c.closePath(); c.stroke(); } } }
     if (!S.done.fit || S.cq.every !== 2) { c.strokeStyle = K.red; c.lineWidth = 1.7 * u; c.setLineDash([6 * u, 4 * u]); c.beginPath(); for (let y = 1971; y <= Y1; y += .5) { const p = [X(y), Y(rule(y, S.cq.every))]; if (y === 1971) c.moveTo(...p); else c.lineTo(...p); } c.stroke(); c.setLineDash([]); }
     c.strokeStyle = K.ink; c.lineWidth = 2.7 * u; c.lineJoin = 'round'; c.beginPath(); for (let dd = 0; dd <= d; dd += .1) { const p = [X(yearAt(dd)), Y(Math.pow(2, dd))]; if (!dd) c.moveTo(...p); else c.lineTo(...p); } c.lineTo(X(yNow), Y(Math.pow(2, d))); c.stroke();
     let lastC = null; CHIPS.forEach(ch => { if (ch[0] > yNow + .3) return; lastC = ch; c.fillStyle = K.paper; c.strokeStyle = K.ink; c.lineWidth = 1.5 * u; c.beginPath(); c.arc(X(ch[0]), Y(ch[1]), 3.6 * u, 0, 7); c.fill(); c.stroke(); });
     if (S.cq.guess) { const gx = X(2026), gy = Y(S.cq.guess); c.fillStyle = K.red; c.save(); c.translate(gx, gy); c.rotate(Math.PI / 4); c.fillRect(-4.5 * u, -4.5 * u, 9 * u, 9 * u); c.restore(); pos(gsL, gx, gy); }
-    c.restore(); gsL.style.display = S.cq.guess ? '' : 'none';
     const cx = X(yNow), cy = Y(Math.pow(2, d)); c.strokeStyle = fg(.28); c.lineWidth = 1; c.beginPath(); c.moveTo(Math.round(cx) + .5, g.t); c.lineTo(Math.round(cx) + .5, g.t + ph); c.stroke();
+    c.restore(); gsL.style.display = S.cq.guess ? '' : 'none';
     c.fillStyle = K.red; c.beginPath(); c.arc(cx, cy, (S.holding ? 6.5 + Math.sin(T * 11) : 5.5) * u, 0, 7); c.fill();
     if (lastC && H >= 84) { put(chip, w('chip.' + lastC[2])); pos(chip, Math.max(X(lastC[0]), g.l + 80 * u), Y(lastC[1])); chip.style.display = ''; } else chip.style.display = 'none';
-    if (serP) { put(serL, w('ser.' + serN + '.u')); pos(serL, Math.min(serP[0] + 8, W - 150 * u), serP[1] - 16 * u); serL.style.display = ''; } else serL.style.display = 'none';
-    [...serT.children].forEach(b => b.classList.toggle('on', !!S.cq[b.dataset.s])); el.classList.toggle('pick', !!S.cq.pick);
+    el.classList.toggle('pick', !!S.cq.pick);
   }
   const scrub = x => { const y = clamp(yearOfX(x), 1959.9, 2026), d = y >= 2025.6 ? DWALL : Math.min(DWALL - .02, dAt(y)); if (o.onScrub) o.onScrub(d); else Yr.set(d); };
   let down = null;
@@ -522,22 +537,35 @@ export function mkChart(o = {}) {
 }
 /* the chart's questions, one at a time: the first not yet answered, and what the last answer gave */
 export const cqStage = () => (S.cq.stage && !S.done[S.cq.stage] ? S.cq.stage : ['fit', 'knee', 'guess'].find(id => !S.done[id]) || 'done');
-export function guessOut() { const real = 336e9, gv = S.cq.guess || 1, f = gv > real ? gv / real : real / gv, xx = f < 1000 ? nf(f) : sig(f, 2);
-  return { n: sig(gv, 2), x: xx, verdict: w(f <= 2 ? 'cq.guess.v1' : f <= 10 ? 'cq.guess.v2' : gv < real ? 'cq.guess.v3' : 'cq.guess.v4', { x: xx }) }; }
+export function guessOut(q = S.cq) { const real = 336e9, gv = q.guess || 1, f = gv > real ? gv / real : real / gv, xx = xOf(f), hi = f > 10 && gv > real;
+  return { n: sig(gv, 2), x: xx, verdict: w(f <= 2 ? 'cq.guess.v1' : f <= 10 ? 'cq.guess.v2' : hi ? 'cq.guess.v4' : 'cq.guess.v3', { x: xx }) + (hi ? ' ' + src('cerebras-cs4') : '') }; }
+const everyW = e => (e === 1 ? w('cq.every1') : w('cq.every', { n: e }));
+const fitO = e => { const miss = rule(2026, e) / 336e9, far = miss >= 1 ? miss : 1 / miss; return Math.abs(e - 2) < .2 ? '' : w(miss >= 1 ? 'cq.fit.over' : 'cq.fit.under', { x: xOf(far) }); };
+/* what the band says for a question (st), with what the last answer gave: from the state, or from a state made up to
+   measure how much room the longest of them needs */
+function cqBody(st, q, dn) {
+  const seen = q.maxD >= DWALL - 1e-4, lead = '<div class="mono"><span>■ ' + w('cq.k') + '</span>' + (st !== 'done' && ['fit', 'knee', 'guess'].filter(id => !dn[id]).length > 1 ? '<button type="button" data-a="skip">' + w('cq.skip') + '</button>' : '') + '</div>';
+  let s = '';
+  if (st === 'fit') s = lead + '<p>' + w('cq.fit') + ' ' + src('moore-1965') + '</p><div class="row"><input type="range" class="rng" data-a="every" min="0.5" max="4" step="0.25" value="' + q.every + '" aria-label="' + w('cq.fit.aria') + '"><b>' + everyW(q.every) + '</b></div><p class="o">' + fitO(q.every) + '</p>';
+  else if (st === 'knee') s = lead + '<p>' + w('cq.knee') + '</p>' + (q.hz ? '' : '<button type="button" class="pbtn ghost" data-a="hz">' + w('cq.knee.b') + '</button>') + (q.msg === 'knee.no' ? '<p class="o">' + w('cq.knee.no') + '</p>' : '');
+  else if (st === 'guess') s = lead + '<p>' + w(seen && !q.guess ? 'cq.guess.seen' : 'cq.guess') + '</p>' + (q.guess ? '<p class="o">' + w('cq.guess.yours', { n: sig(q.guess, 2) }) + '</p>' : seen ? '' : '<button type="button" class="pbtn ghost" data-a="guess">' + w(q.pick === 'guess' ? 'cq.guess.tap' : 'cq.guess.b') + '</button>');
+  else s = '<div class="mono"><span>■ ' + w('cq.done.k') + '</span></div><p>' + w('cq.done') + '</p><p class="cqq">' + Q('moore') + '</p>';
+  const res = { fit: '<b>' + w('cq.fit.yes.v') + '</b> ' + w('cq.fit.yes'), 'knee.yes': '<b>' + w('cq.knee.yes.v') + '</b> ' + w('cq.knee.yes') + ' ' + src('clock-stall', 'dual-core-2005'), guess: q.guess ? w('cq.guess.out', guessOut(q)) : '' }[q.msg];
+  return { s: res && (st !== 'done' || q.msg === 'guess') ? '<p class="res">' + res + '</p>' + s : s, res };
+}
+/* every state the band can be in, at its longest */
+const CQ_ALL = [['fit', { every: .5 }, {}], ['fit', { every: 4 }, {}], ['fit', { every: 1 }, {}], ['knee', { msg: 'fit' }, { fit: 1 }], ['knee', { msg: 'knee.no', hz: true }, { fit: 1 }],
+  ['guess', { msg: 'knee.yes' }, { fit: 1, knee: 1 }], ['guess', { msg: 'knee.yes', guess: 3.3e9 }, { fit: 1, knee: 1 }], ['guess', { maxD: 99 }, {}], ['guess', { msg: 'fit', pick: 'guess' }, { fit: 1 }],
+  ['done', { msg: 'guess', guess: 3.3e9, maxD: 99 }, { fit: 1, knee: 1, guess: 1 }], ['done', { msg: 'guess', guess: 3.3e14, maxD: 99 }, { fit: 1, knee: 1, guess: 1 }]];
 export function mkCQ() {
   const el = h('div', 'cq nohold');
-  const draw = () => { const st = cqStage(), q = S.cq, seen = q.maxD >= DWALL - 1e-4, lead = '<div class="mono"><span>■ ' + w('cq.k') + '</span>' + (st !== 'done' && ['fit', 'knee', 'guess'].filter(id => !S.done[id]).length > 1 ? '<button type="button" data-a="skip">' + w('cq.skip') + '</button>' : '') + '</div>';
-    let s = '';
-    if (st === 'fit') { const miss = rule(2026, q.every) / 336e9, far = miss >= 1 ? miss : 1 / miss;
-      s = lead + '<p>' + w('cq.fit') + ' ' + src('moore-1965') + '</p><div class="row"><input type="range" class="rng" data-a="every" min="0.5" max="4" step="0.25" value="' + q.every + '" aria-label="' + w('cq.fit.aria') + '"><b>' + (q.every === 1 ? w('cq.every1') : w('cq.every', { n: q.every })) + '</b></div><p class="o">' + (Math.abs(q.every - 2) < .2 ? '' : w(miss >= 1 ? 'cq.fit.over' : 'cq.fit.under', { x: far < 1000 ? nf(far) : sig(far, 2) })) + '</p>'; }
-    else if (st === 'knee') s = lead + '<p>' + w('cq.knee') + '</p>' + (q.hz ? '' : '<button type="button" class="pbtn ghost" data-a="hz">' + w('cq.knee.b') + '</button>') + (q.msg === 'knee.no' ? '<p class="o">' + w('cq.knee.no') + '</p>' : '');
-    else if (st === 'guess') s = lead + '<p>' + w(seen && !q.guess ? 'cq.guess.seen' : 'cq.guess') + '</p>' + (q.guess ? '<p class="o">' + w('cq.guess.yours', { n: sig(q.guess, 2) }) + '</p>' : seen ? '' : '<button type="button" class="pbtn ghost" data-a="guess">' + w(q.pick === 'guess' ? 'cq.guess.tap' : 'cq.guess.b') + '</button>');
-    else s = '<div class="mono"><span>■ ' + w('cq.done.k') + '</span></div><p>' + w('cq.done') + '</p><p class="cqq">' + Q('moore') + '</p>';
-    const res = { fit: '<b>' + w('cq.fit.yes.v') + '</b> ' + w('cq.fit.yes'), 'knee.yes': '<b>' + w('cq.knee.yes.v') + '</b> ' + w('cq.knee.yes') + ' ' + src('clock-stall', 'dual-core-2005'), guess: q.guess ? w('cq.guess.out', guessOut()) : '' }[q.msg];
-    if (res && st !== 'done') s = '<p class="res">' + res + '</p>' + s; else if (res && q.msg === 'guess') s = '<p class="res">' + res + '</p>' + s;
+  const draw = () => { const st = cqStage(), q = S.cq, { s, res } = cqBody(st, q, S.done);
     const key = s; if (el._k === key) return; const act = el._st === 'fit' && $('.row input', el) && !res;
-    el._st = st; if (act && st === 'fit') { el._k = key; $('.row b', el).innerHTML = q.every === 1 ? w('cq.every1') : w('cq.every', { n: q.every }); const miss = rule(2026, q.every) / 336e9, far = miss >= 1 ? miss : 1 / miss; $('.o', el).innerHTML = Math.abs(q.every - 2) < .2 ? '' : w(miss >= 1 ? 'cq.fit.over' : 'cq.fit.under', { x: far < 1000 ? nf(far) : sig(far, 2) }); return; }
+    el._st = st; if (act && st === 'fit') { el._k = key; $('.row b', el).innerHTML = everyW(q.every); $('.o', el).innerHTML = fitO(q.every); return; }
     el._k = key; el.innerHTML = s; };
+  /* the most room any question needs at this width (the band is made that tall) */
+  /* i18n-ok: styles */ el.need = wd => { if (!el.parentNode || !wd) return 0; const m = el.cloneNode(false); m.style.cssText = 'position:absolute;visibility:hidden;pointer-events:none;left:0;top:0;height:auto;overflow:visible;width:' + wd + 'px';
+    el.parentNode.appendChild(m); let mx = 0; el._hs = []; for (const [st, q, dn] of CQ_ALL) { m.innerHTML = cqBody(st, { every: 1, hz: false, guess: null, msg: '', pick: null, maxD: 0, ...q }, dn).s; el._hs.push(m.offsetHeight); mx = Math.max(mx, m.offsetHeight); } m.remove(); return mx; };
   let ftm = 0; const fitYes = () => { if (S.done.fit || Math.abs(S.cq.every - 2) >= .2) return; S.cq.every = 2; S.cq.msg = 'fit'; el._st = ''; done('fit'); changed('cq'); };
   el.addEventListener('input', e => { if (e.target.dataset.a !== 'every') return; S.cq.every = +e.target.value; clearTimeout(ftm); ftm = setTimeout(fitYes, 650); changed('cq'); });
   el.addEventListener('change', e => { if (e.target.dataset.a !== 'every') return; clearTimeout(ftm); fitYes(); });

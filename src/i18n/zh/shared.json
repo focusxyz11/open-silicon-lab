@@ -1,0 +1,21 @@
+{
+ "fig.money": "{n} 美元",
+ "fig.money.big": "{n}美元",
+ "wall.switch.d": "晶体管永远关不干净：即使是 0，也有一点电流漏过去。在室温下，栅极电压要多约 60 毫伏，电流才增加十倍；所以把它开启的电压点降低 60 毫伏，漏电就多十倍。这就是芯片电压不再下降的原因。",
+ "wall.memory.d": "大部分能量花在搬运数字上，而不是用它们计算。从另一颗芯片上的内存读出 16 位，耗能约是把两个 16 位数相加的 3,500 倍。",
+ "wall.power.d": "每个回答的计算成本都在不断下降。数据中心的用电量约为 {dc} 太瓦时。",
+ "wall.power.more": "到 2030 年将达到约 {dc2030} 太瓦时：每个回答越来越便宜，世界要的回答却多得多。",
+ "wall.cost.d": "设计一颗顶尖芯片，从 28 纳米时的约 {design28}涨到 2 纳米时的约 {design}；造它的一个工厂模块约需 {module}。试得起一次的人越来越少。",
+ "machines.need.hearing.t": "助听器",
+ "machines.need.hearing.d": "极小，一颗小电池用一整天",
+ "machines.need.hearing.why": "它的滤波器要按每个人的听力来调，所以机器造好之后还必须能改。",
+ "machines.need.wildfire.t": "野火传感器",
+ "machines.need.wildfire.d": "在森林里待十年，无人维护",
+ "machines.need.wildfire.why": "放出去之后什么都不用改：最要紧的是电池。",
+ "machines.need.rover.t": "火星车",
+ "machines.need.rover.d": "遥远、寒冷、受辐射轰击",
+ "machines.need.rover.why": "它的导航要接收来自地球的更新，而它的表决器和核心必须精确，因为那里的辐射会翻转比特。",
+ "machines.need.radio.t": "无处不听的无线电",
+ "machines.need.radio.d": "它周围的信号以纳秒为单位变化",
+ "machines.need.radio.why": "它追踪的信号变化得比大多数硬件重新布线还快：找到并提取信号的部分必须每 100 纳秒重塑一次，而且提取必须精确。"
+}

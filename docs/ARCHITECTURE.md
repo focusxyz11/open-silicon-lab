@@ -70,7 +70,7 @@ src/data/build.js       the build: the community's goal as a plan of needs, the 
 src/data/world.js       the map: places, and each kind of chip's trip through them, joined to the line's stations
 src/data/facts.json     sourced figures, loaded when a question's stop first shows (src/v2/glue/pages.js); FIGURES and CASES in weave.js point to them
 src/core/i18n.js        words: t('name'), plurals, numbers, dates
-src/i18n/en/            every word on screen, one file per area (AREAS in src/core/i18n.js): core.json for the bar, hold.json for the first page, blueprint.json for the blueprint, the others loaded with the views that show them
+src/i18n/en/            every word on screen, one file per area (AREAS in src/core/i18n.js): core.json for the bar, hold.json for the first page, blueprint.json for the blueprint, shared.json for what more than one page says (the four walls, the money words of the figures in src/data/figures.js, the needs a machine is made for), the others loaded with the views that show them
 src/i18n/<lang>/        the same, translated area by area (TRANSLATED in src/core/i18n.js): zh, fr and es have core (the bar), hold (the first page) and blueprint
 scripts/words.mjs       every word of a language in one set, for node (the tests, the open port)
 src/styles/             the styles, dark and light, one sheet per view (src/core/styles.js loads each with its view): base.css and

@@ -3,10 +3,14 @@
    one square drawn in 1000 units with its own controls on it (src/v2/holdplates.js). Designed with Claude Fable 5.2
    (prototype D: B's story on A's chip) and brought into the lab with Claude Opus 5.5. */
 import { t, locale } from '../core/i18n.js';
-import { CHALS, COST, COSTSRC, D2011, D71, D95, DGAR, DWALL, FDIV, GEN, LIGHTS, MOMENTS, NAMED_ONLY, WALLS, dAt, nodeAt, upTo, yearAt } from '../data/hold.js';
+import { CHALS, COST, COSTSRC, D2011, D71, D94, DGAR, DWALL, FDIV, GEN, LIGHTS, MOMENTS, NAMED_ONLY, WALLS, costAt, dAt, nodeAt, upTo, yearAt, yearShown } from '../data/hold.js';
+import { figVars, money } from './figures.js';
 
-/* the page's words (hd.*, src/i18n/<lang>/hold.json) and the core questions (home.q.*, one at a time) */
-export const w = (k, v) => t('hd.' + k, v), Q = id => t('home.q.' + id);
+/* the page's words (hd.*, src/i18n/<lang>/hold.json, with the figures it shares with the blueprint, src/v2/figures.js)
+   and the core questions (home.q.*, one at a time) */
+export const w = (k, v) => t('hd.' + k, v ? { ...figVars(), ...v } : figVars()), Q = id => t('home.q.' + id);
+/* "247 million" times: in French and Spanish a number in words takes "de" before what it counts */
+export const xOf = f => (f < 1000 ? nf(f) : f >= 1e6 ? w('cq.xof', { x: sig(f, 2) }) : sig(f, 2));
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
 export const $ = (s, r = ROOT || document) => r.querySelector(s), $$ = (s, r = ROOT || document) => [...r.querySelectorAll(s)];
@@ -46,7 +50,7 @@ export const FACTS = {};
 let factsP = null;
 export const loadFacts = () => factsP || (factsP = fetch('src/data/facts.json').then(r => r.json()).then(j => { for (const f of (j.facts || j)) FACTS[f.id] = [f.source, f.url, f.value, f.verified]; }, () => { factsP = null; }));
 export const src = (...ids) => ids.map(id => '<button type="button" class="src" data-f="' + id + '" aria-label="' + esc(w('src.k')) + '">↗</button>').join('');
-export const CH_FACTS = { years: ['moore-1965', 'transistor-trend', 'zeloof-garage', 'chm-x86', 'core2-410m', 'northpole', 'rubin-gpu', 'node-years', 'node-names', 'clock-stall', 'dual-core-2005', 'asic-vs-cpu', 'fdiv-rate', 'fdiv-charge', 'euv-wavelength', 'high-na-price', 'tsmc-n2', 'node-n2'],
+export const CH_FACTS = { years: ['moore-1965', 'transistor-trend', 'zeloof-garage', 'chm-x86', 'core2-410m', 'northpole', 'rubin-gpu', 'cerebras-cs4', 'node-years', 'node-names', 'clock-stall', 'dual-core-2005', 'asic-vs-cpu', 'fdiv-rate', 'fdiv-charge', 'euv-wavelength', 'high-na-price', 'tsmc-n2', 'node-n2'],
   walls: ['energy-moving-data', 'dc-electricity', 'design-cost-older', 'design-cost-recent', 'design-cost-2nm', 'fab-module-cost', 'wafer-space-run', 'cortical-cl1', 'brain-power', 'minimal-fab'],
   next: ['energy-moving-data', 'hbm4', 'encharge-en100', 'landauer-measured'],
   arch: ['alexnet-gpu', 'epyc-chiplets', 'hbm4', 'encharge-en100', 'cpo-production', 'hala-point'],
@@ -91,17 +95,17 @@ export function mkTop(mid, goChallenge) {
   return bar;
 }
 /* where each challenge is played: a plate, and for the fifty years the count it waits at */
-export const CH_AT = { gate: ['years', 2.4], fit: ['years', 6], job: ['years', D71 + .6], knee: ['years', dAt(2006)], bug: ['years', D95 + .6], light: ['years', GEN(3) + .3], guess: ['years', dAt(2012)], walls: ['leak'], floor: ['next'], eras: ['eras'], arr: ['arr'], keep: ['machine'] };
+export const CH_AT = { gate: ['years', 2.4], fit: ['years', 6], job: ['years', D71 + .6], knee: ['years', dAt(2006)], bug: ['years', D94 + .6], light: ['years', GEN(3) + .3], guess: ['years', dAt(2012)], walls: ['leak'], floor: ['next'], eras: ['eras'], arr: ['arr'], keep: ['machine'] };
 
 /* ---- the plates after the wall, in order, and the words that go with each ---- */
 export const ORDER = ['years', 'leak', 'distance', 'power', 'price', 'next', 'levels', 'eras', 'arr', 'machine', 'island'];
 export const WALL_OF = { leak: 0, distance: 1, power: 2, price: 3 }, WID = ['switch', 'memory', 'power', 'cost'];
 export const PW = {
   years: { ch: 'years', name: () => w('tab.years') },
-  leak: { ch: 'walls', name: () => w('wall.switch.s'), k: () => w('walls.n', { n: 1 }), viol: 1, h: 'wall.switch.t', d: 'wall.switch.d', note: 'wall.switch.phys', tryq: 'w.switch.q', q: 'physics', facts: [], ways: [['switches', 'lab', '#/dive/switch'], ['pbits', 'lab', '#/dive/switch']], lab: ['w.switch.lab', '#/dive/switch'] },
-  distance: { ch: 'walls', name: () => w('wall.memory.s'), k: () => w('walls.n', { n: 2 }), viol: 2, h: 'wall.memory.t', d: 'wall.memory.d', tryq: 'w.memory.q', q: 'geo', facts: ['energy-moving-data'], ways: [['stack', 'product', '#/dive/chip'], ['cim', 'product', '#/dive/block']], lab: ['w.memory.lab', '#/dive/block'] },
-  power: { ch: 'walls', name: () => w('wall.power.s'), k: () => w('walls.n', { n: 3 }), viol: 3, h: 'wall.power.t', d: 'wall.power.d', tryq: 'w.power.q', q: 'eff', facts: ['dc-electricity'], ways: [['living', 'product', '#/machines']], lab: ['w.power.lab', '#/place/power'] },
-  price: { ch: 'walls', name: () => w('wall.cost.s'), k: () => w('walls.n', { n: 4 }), viol: 4, h: 'wall.cost.t', d: 'wall.cost.d', tryq: 'w.cost.q', q: 'moore', facts: ['design-cost-older', 'design-cost-2nm', 'fab-module-cost'], ways: [['smallfab', 'lab', '#/machines'], ['liquid', 'product', '#/machines']], lab: ['w.cost.lab', '#/dive/wafer/made'] },
+  leak: { ch: 'walls', name: () => w('wall.switch.s'), k: () => w('walls.n', { n: 1 }), viol: 1, h: 'wall.switch.t', sd: 'wall.switch.d', note: 'wall.switch.phys', tryq: 'w.switch.q', q: 'physics', facts: [], ways: [['switches', 'lab', '#/dive/switch'], ['pbits', 'lab', '#/dive/switch']], lab: ['w.switch.lab', '#/dive/switch'] },
+  distance: { ch: 'walls', name: () => w('wall.memory.s'), k: () => w('walls.n', { n: 2 }), viol: 2, h: 'wall.memory.t', sd: 'wall.memory.d', tryq: 'w.memory.q', q: 'geo', facts: ['energy-moving-data'], ways: [['stack', 'product', '#/dive/chip'], ['cim', 'product', '#/dive/block']], lab: ['w.memory.lab', '#/dive/block'] },
+  power: { ch: 'walls', name: () => w('wall.power.s'), k: () => w('walls.n', { n: 3 }), viol: 3, h: 'wall.power.t', sd: 'wall.power.d', tryq: 'w.power.q', q: 'eff', facts: ['dc-electricity'], ways: [['living', 'product', '#/machines']], lab: ['w.power.lab', '#/place/power'] },
+  price: { ch: 'walls', name: () => w('wall.cost.s'), k: () => w('walls.n', { n: 4 }), viol: 4, h: 'wall.cost.t', sd: 'wall.cost.d', tryq: 'w.cost.q', q: 'moore', facts: ['design-cost-older', 'design-cost-2nm', 'fab-module-cost'], ways: [['smallfab', 'lab', '#/machines'], ['liquid', 'product', '#/machines']], lab: ['w.cost.lab', '#/dive/wafer/made'] },
   next: { ch: 'next', name: () => w('tab.next'), k: () => w('next.n'), h: 'next.h', d: 'next.d', tryq: 'next.q', q: 'sutton', facts: ['energy-moving-data', 'landauer-measured'] },
   levels: { ch: 'arch', name: () => w('pl.levels'), k: () => w('arch.n'), h: 'arch.h', d: 'arch.d', tryq: 'arch.q1' },
   eras: { ch: 'arch', name: () => w('era.k'), k: () => w('era.k'), hx: 'eras.h', dx: 'eras.d', tryq: 'arch.q3' },
@@ -120,7 +124,8 @@ export const lab = (key, href, cls) => '<a class="' + (cls || 'lnk') + '" href="
 export function words(id) {
   const p = PW[id], o = {};
   o.head = h('div', 'w-head', '<div class="w-k mono' + (p.viol ? ' viol' : '') + '">' + (p.viol ? '✕ 0' + p.viol + ' · ' : '') + p.k() + '</div><h2 class="w-h anton">' + w(p.h || p.hx) + '</h2>');
-  o.cap = h('div', 'w-cap', '<p class="w-d">' + w(p.d || p.dx) + ' ' + src(...(p.facts || [])) + '</p>' + (p.note ? '<p class="w-note mono">' + w(p.note) + '</p>' : ''));
+  /* a wall says what it is in the words the blueprint uses too (wall.*, shared.json): told once */
+  o.cap = h('div', 'w-cap', '<p class="w-d">' + (p.sd ? t(p.sd, figVars()) : w(p.d || p.dx)) + ' ' + src(...(p.facts || [])) + '</p>' + (p.note ? '<p class="w-note mono">' + w(p.note) + '</p>' : ''));
   o.try = h('div', 'w-try', '<div class="w-k mono"><i></i>' + w('try.k') + '</div><p class="w-p">' + w(p.tryq) + '</p><div class="w-out" data-out="' + id + '">' + (S.out[id] || '') + '</div>' + (p.lab ? lab(w('play') + ': ' + w(p.lab[0]), p.lab[1]) : ''));
   if (p.q) o.q = h('div', 'w-q', '<span class="mono">' + w('q.label') + '</span><p>' + Q(p.q) + '</p>' + lab(w('q.meet'), (p.lab && p.lab[1]) || '#/log'));
   if (p.ways && p.ways.length) { o.ways = h('div', 'w-ways', '<span class="mono">' + w('ways.k') + '</span>' + p.ways.map(([wid, st]) => '<button type="button" data-way="' + wid + '" hidden><small class="' + st + '">' + w('status.' + st) + '</small><b></b><span></span></button>').join(''));
@@ -129,14 +134,14 @@ export function words(id) {
 }
 
 /* ---- the fifty years: the count, the year, and what is said ---- */
-export const NARR = [[0, 'one'], [.9, 'not'], [3.4, 'double'], [DGAR - .7, 'garage'], [D71 + 2.3, 'rule'], [16.5, 'coast'], [20.5, 'invisible'], [D95 + 2.5, 'coast'], [D2011, 'pay'], [GEN(5), 'gaa'], [DWALL - .9, 'push']];
+export const NARR = [[0, 'one'], [.9, 'not'], [3.4, 'double'], [DGAR - .7, 'garage'], [D71 + 2.3, 'rule'], [16.5, 'coast'], [20.5, 'invisible'], [D94 + 2.5, 'named'], [D2011, 'pay'], [GEN(5), 'gaa'], [DWALL - .9, 'push']];
 export const momAt = d => MOMENTS.find(m => d >= m.at && d < m.at + m.span) || null;
 export const viewAt = d => { if (d >= DWALL - 1e-4) return 'wall'; const m = momAt(d); return m ? m.id : d < .5 ? 'one' : 'die'; };
 export function countParts(d) { const n = d >= DWALL - 1e-4 ? 336e9 : Math.pow(2, d);
   if (n < 1e6) return [nf(n), w(Math.round(n) === 1 ? 'unit.one' : 'unit.many'), ''];
   const big = n >= 1e9, v = n / (big ? 1e9 : 1e6); return [v >= 100 ? Math.round(v) : v.toFixed(1), w('unit.many'), w(big ? 'billion' : 'million')]; }
 export function hzW(v) { return v >= 1e9 ? w('st.ghz', { n: (v / 1e9).toFixed(1) }) : v >= 1e6 ? w('st.mhz', { n: Math.round(v / 1e6) }) : w('st.khz', { n: Math.round(v / 1e3) }); }
-export function statsHTML(d) { const y = Math.round(yearAt(d)), n = nodeAt(y), hz = upTo('hz', y), co = upTo('cores', y);
+export function statsHTML(d) { const y = yearShown(d), n = nodeAt(y), hz = upTo('hz', y), co = upTo('cores', y);
   return '<div><span class="mono">' + w('st.year') + '</span><b>' + y + '</b></div><div><span class="mono">' + w('st.node') + '</span><b>' + (n ? (y >= NAMED_ONLY ? w('st.named', { n }) : n) : '–') + '</b></div><div><span class="mono">' + w('st.clock') + '</span><b>' + (hz ? hzW(hz) : '–') + '</b></div><div><span class="mono">' + w('st.cores') + '</span><b>' + (co || (y >= 1971 ? 1 : '–')) + '</b></div>'; }
 export function momOut(id) {
   if (id === 'gate') { const o = S.gate.a && S.gate.b; return o ? '<b>' + w('mo.gate.yes.v') + '</b> ' + w('mo.gate.yes') : S.tried.mgate ? w('mo.gate.no') : w('mo.gate.lead'); }
@@ -152,8 +157,10 @@ export function yearsWordsHTML(d) {
   if (m) return '<div class="w-try"><div class="w-k mono"><i></i>' + w('mo.' + m.id + '.k') + ' · ' + w('mo.try') + '</div><p class="w-p">' + w('mo.' + m.id + '.q') + '</p><div class="w-out" data-out="m-' + m.id + '">' + momOut(m.id) + '</div></div>';
   let k = 'one'; for (const [at, key] of NARR) if (d >= at) k = key;
   if (k === 'one' && S.press > .5) k = 'on';
-  let s = '<p class="say">' + w('m.' + k) + ' ' + ({ garage: src('zeloof-garage'), rule: src('moore-1965', 'transistor-trend'), gaa: src('tsmc-n2'), push: src('rubin-gpu') }[k] || '') + '</p>';
-  if (k === 'pay' || k === 'gaa') { const i = clamp(Math.floor((d - D2011) / (DWALL - D2011) * COST.length), 0, COST.length - 1); s += '<div class="cost"><b>' + w('money', { n: sig(COST[i][1] * 1e6, 3) }) + '</b><span class="mono dim">' + w('m.cost.at', { node: COST[i][0] }) + '</span>' + src(COSTSRC[i]) + '</div>'; }
+  let s = '<p class="say">' + w('m.' + k) + ' ' + ({ garage: src('zeloof-garage'), rule: src('moore-1965', 'transistor-trend'), named: src('node-names'), gaa: src('tsmc-n2'), push: src('rubin-gpu') }[k] || '') + '</p>';
+  /* the price of a design: the one for the newest node in production in the year beside the count */
+  const c = (k === 'pay' || k === 'gaa') && costAt(yearShown(d));
+  if (c) { const i = COST.indexOf(c); s += '<div class="cost"><b>' + money(c[1] * 1e6) + '</b><span class="mono dim">' + w('m.cost.at', { node: c[0] }) + '</span>' + src(COSTSRC[i]) + '</div>'; }
   return s;
 }
 /* beside a moment: the core question it belongs to, alone, and where it is played for real */
