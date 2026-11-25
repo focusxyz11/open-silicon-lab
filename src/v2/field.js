@@ -2,11 +2,11 @@
    wears its shape as a small mark: a point for a limit (one primitive at its edge), a diamond on a line for a leak (two
    meeting, on a seam), a triangle for a bet (three pulling at once). Its card says who was stuck on it, what it opened,
    what is still open, and how to try it here; the asker's own words are one tap away. */
+import { esc } from '../core/esc.js';
 import { t } from '../core/i18n.js';
 import { fieldOf, fieldHome, QUESTIONS, questionOfField } from '../data/atlas.js';
 import { CHALLENGES } from './loop.js';
 
-const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 const GLYPH = {
   limit: '<circle cx="8" cy="8" r="4.2"/>',
   leak: '<path d="M1 8h14" fill="none" stroke="currentColor" stroke-width="1.4"/><rect x="5" y="5" width="6" height="6" transform="rotate(45 8 8)"/>',

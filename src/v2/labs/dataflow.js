@@ -6,6 +6,7 @@
    chips of different sizes, and finds the largest model a chip holds whole. The goal is the engine's own check
    (checkDataflowEdge, with checkSpatialFit): the model fits whole, and one layer more was tried and does not.
    A lab of the challenge player (src/v2/play.js): lab(L) -> { draw, click, input }. */
+import { still } from '../../core/ui.js';
 import * as P from '../../engines/paradigms.js';
 
 export const RIGHT = 2, PER_ROW = 8, SAVES = 50;
@@ -26,7 +27,6 @@ export function layout(layers, tiles) {
 export default function lab(L) {
   const { S, ch, esc, t, head, reward, doneNote, win, draw, fx } = L, view = L.view;
   const set = () => view.dfl || (view.dfl = Object.assign({ guess: null, tried: [] }, START));
-  const still = () => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
   const num = (v, d = 0) => v.toLocaleString('en', { maximumFractionDigits: d });
   const pct = v => t('dfl.pct', { v: v > 0.99 && v < 1 ? num(v * 100, 1) : Math.round(v * 100) });
   const uj = v => (v >= 1000 ? t('dfl.mj', { v: num(v / 1000, v >= 10000 ? 0 : 1) }) : t('dfl.uj', { v: num(v) }));

@@ -4,11 +4,11 @@
    chip, placed by the Floor engine (src/engines/floor.js) at how many tenfold steps it stands from that wall. The
    last rows have no dot: a wall of mathematics nobody can approach, and a soft wall that fell. Words: walls.*,
    floor.* and chip.* (the engine's own). */
+import { esc } from '../core/esc.js';
 import { t, fmtNum, fmtWords } from '../core/i18n.js';
 import { model, CLOCKS, SIDES, REUSES } from '../engines/chip.js';
 import { perOp, reach, exhaust, WIDTHS, YEAR } from '../engines/floor.js';
 
-const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
 const SPEEDUPS = [10, 1000, 1e6];
 const S = { gen: 2, reuse: 2, clock: 1, size: 2, bits: 2, speed: 1, row: 0 };
 const sig = v => fmtNum(Number(v.toPrecision(2)));

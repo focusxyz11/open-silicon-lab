@@ -6,6 +6,7 @@
      signal racing the next tick, and twenty ticks of waveforms in slow motion that go wrong when the tick comes
      before the slowest path ends; won by the engine's speedLimit, from the runs the player made.
    lab(L) gets the player's pieces and returns { draw, click, input }. What the player tried is kept in the view. */
+import { still } from '../../core/ui.js';
 import * as CP from '../../engines/clockpower.js';
 
 const A = 0.15;                                                       // the share of the switches that flip each tick (the challenge's)
@@ -100,7 +101,7 @@ export default function lab(L) {
     draw(); fx(); if (o.running) requestAnimationFrame(cloop); };
   function cstart(o) {
     o.T = 0; view.ckT = null;
-    if (matchMedia('(prefers-reduced-motion: reduce)').matches) { cend(o); draw(); fx(); return; }
+    if (still()) { cend(o); draw(); fx(); return; }
     o.running = true; draw(); requestAnimationFrame(cloop);
   }
   const clear = o => { o.running = false; o.T = null; };

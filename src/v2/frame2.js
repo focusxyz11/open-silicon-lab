@@ -26,6 +26,8 @@
      you are reading and lights no stage; a way back leads to where you came from. A page says what its picture is with
      readHtml({ head, picture, text }); the shell needs no hook: each time it draws the page or the bar, boot()'s
      watchers wear them the new way (readPage, bar). */
+import { still, phone } from '../core/ui.js';
+import { esc } from '../core/esc.js';
 import { t, has } from '../core/i18n.js';
 import { whereOf } from '../engines/way.js';
 import { challengeOf } from './loop.js';
@@ -88,7 +90,7 @@ export function readHtml(o) {
 export const tryHtml = (key = 'frame2.tryHere') => '<button type="button" class="btn f2try" data-f2try><span class="f2ta" aria-hidden="true"></span>' + esc(t(key)) + '</button>';
 function tryPicture(b) {
   const pic = b.closest('.f2read').querySelector('.f2pic'); if (!pic) return;
-  if (phone()) pic.scrollIntoView({ block: 'start', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+  if (phone()) pic.scrollIntoView({ block: 'start', behavior: still() ? 'auto' : 'smooth' });
   pic.classList.remove('f2lit'); void pic.offsetWidth; pic.classList.add('f2lit');
   const c = pic.querySelector('button:not([disabled]), input, select, a[href]:not([tabindex="-1"])'); (c || pic).focus({ preventScroll: true });   /* i18n-ok: a selector */
 }
@@ -125,10 +127,8 @@ export function bar(loop) {
   const k = document.createElement('p'); k.className = 'f2rk' + (at ? ' f2rplace' : ''); k.innerHTML = '<span class="f2ri" aria-hidden="true"></span>' + esc(t(at || 'frame2.reading')); loop.prepend(k);
 }
 
-function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]); }
 /* the first sentence of a card's words, and the rest */
 const firstSentence = s => { const m = /^([\s\S]+?[.?!])\s+(?=[A-Z0-9“‘\x22\x27(])/.exec(s); return m ? [m[1], s.slice(m[0].length)] : [s, '']; };
-function phone() { return typeof matchMedia === 'function' && matchMedia('(max-width: 720px)').matches; }
 
 /* ---- Do (#274): every challenge in Do mode ----
    The player (src/v2/play.js) says what the stage shows: a lab's instrument (data-f2="instrument") takes the picture
@@ -272,7 +272,6 @@ export function attach(host, api, o, x) {
    played it never folds to the peek; while a lab's instrument has the stage the sheet stays under it, so the
    instrument is always in sight above the controls. sheet(): one per frame, called by attach, living as long as it. */
 const STATES = ['peek', 'half', 'full'];
-const still = () => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 function sheet(host, wrap, now, life) {
   const dock = wrap.querySelector('.dock'), handle = wrap.querySelector('.peekbar');
   if (!dock || !handle) return () => {};

@@ -9,14 +9,13 @@
    - createListen(host, o): the switch and its box on a view's frame. o: { where() (as a lens's paint), joule (the other
      lens, closed while this one is open), changed() (the picture keeps clear of the box) }. Returns { level(id),
      width(), bottom() }, one per frame (lifeOf, src/v2/frame.js). */
+import { esc } from '../core/esc.js';
 import { t, fmtNum } from '../core/i18n.js';
 import * as L from '../engines/listen.js';
 import { factsOf } from '../data/partfacts.js';
 import { squareTo } from './lenspaint.js';
 import * as Sound from './sound.js';
 import { lifeOf } from './frame.js';
-
-const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 
 /* ---- the picture: the block's parts in its plan, each with what lights in time ---- */
 const R = r => 'x="' + r[0] + '" y="' + r[1] + '" width="' + r[2] + '" height="' + r[3] + '"';

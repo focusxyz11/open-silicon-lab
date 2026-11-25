@@ -4,11 +4,11 @@
    from memory is drawn twice: what the cores ask for, and what arrives. Give part of the floor to a special district
    and say how much of the job is its kind of work: Amdahl's law decides whether it pays. Numbers from your chip's
    model (src/engines/chip.js) and the Work engine (src/engines/work.js). Words: plan.*, and chip.* (the model's own). */
+import { esc } from '../core/esc.js';
 import { t, fmtNum } from '../core/i18n.js';
 import { model, REUSES } from '../engines/chip.js';
 import { withDistrict, AREAS, SHARES, SPECIAL_K } from '../engines/work.js';
 
-const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
 const S = { reuse: 2, mem: 0, clock: 1, area: 0, share: 1 };
 const sig = v => fmtNum(Number(v.toPrecision(2)));
 const SHOWN_CLOCK = [0.5, 1, 2, 3];

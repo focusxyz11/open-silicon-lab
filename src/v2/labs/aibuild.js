@@ -7,6 +7,7 @@
    check: the engine's own (B.CHALLENGES[brief].check) decides.
    A lab of the challenge player (src/v2/play.js): lab(L) gets the player's pieces and returns { draw, click, input }.
    The choices are kept in the save (S.aibuild), one design per brief. */
+import { still } from '../../core/ui.js';
 import * as B from '../../engines/aibuild.js';
 import { fmtNum } from '../../core/i18n.js';
 
@@ -34,7 +35,6 @@ export default function lab(L) {
       pkg: pick(o.pkg, B.PKG, s.pkg), f: +num(o.f, B.LIMITS.f[0], B.LIMITS.f[1], s.f).toFixed(1), agents: typeof o.agents === 'boolean' ? o.agents : s.agents }); };
   const state = () => { const o = S.aibuild && typeof S.aibuild === 'object' ? S.aibuild : {}, met = {}; BRIEFS.forEach(id => { if (o.met && o.met[id]) met[id] = true; });
     return (S.aibuild = { brief: BRIEFS.includes(o.brief) ? o.brief : BRIEFS[0], c: Object.fromEntries(BRIEFS.map(id => [id, normal((o.c || {})[id], id)])), met, tapes: Number.isInteger(o.tapes) && o.tapes > 0 ? o.tapes : 0 }); };
-  const still = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   /* ---- numbers as words ---- */
   const n0 = v => fmtNum(Math.round(v)), n1 = v => fmtNum(+v.toFixed(1), { minimumFractionDigits: 1 });

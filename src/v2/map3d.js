@@ -10,11 +10,12 @@
    World units: 1 = 10 metres. x east, z south, y up. Words: map.<place>.t / .d / .kind. */
 import { THREE, PALETTES, theme, stage, light, mat, metal, glow, glass, box, cyl, group, flat, blob, ribbon, labels, clamp, ease, reduced, rnd, shared } from './kit3d.js';
 import { t } from '../core/i18n.js';
+import { esc } from '../core/esc.js';
 import { STEPS, STATION, GROWTH } from './game.js';
 import { betPowerNow } from '../app/betscene.js';
 import { furnisher, lump } from './furnish.js';
 import { CORNERS, HOUSE } from '../data/studio.js';
-import { PLACES } from '../data/views3d.js';
+import { PLACES, partName } from '../data/views3d.js';
 import { LABS } from '../data/labs/index.js';
 
 /* what each lab grows, from its own file (src/v2/growers/<lab>.js): { <growth>: { at, grow } }, fetched beside the island;
@@ -792,9 +793,9 @@ export function createMap(canvas, host, on = {}) {
   const ring = new THREE.Mesh(new THREE.RingGeometry(0.92, 1, 48), new THREE.MeshBasicMaterial({ color: P.accent, transparent: true, opacity: 0.85, depthWrite: false }));
   ring.rotation.x = -Math.PI / 2; ring.visible = false; scene.add(ring);
   /* inside an open building, every part's name over it (shown only while the inside is) */
-  const cap = w => w.charAt(0).toUpperCase() + w.slice(1), PART_WORD = { test: id => cap(t('part.test.' + id)), port: id => cap(t('part.' + (['trays', 'boxes'].includes(id) ? 'ship' : 'pkg') + '.' + id)) }, PART_UP = { print: 4.2, masks: 5.4, need: 3.2, check: 3, prober: 2.4, needles: 3, map: 3.2, rack: 3.2, board: 1.8 };
+  const PART_UP = { print: 4.2, masks: 5.4, need: 3.2, check: 3, prober: 2.4, needles: 3, map: 3.2, rack: 3.2, board: 1.8 };
   const RING_R = { studio: 2.6, test: 1.9, masks: 5.4, port: 1.5, rack: 2.4, board: 1.6 };
-  const toolNames = {}; Object.entries(OPEN).forEach(([pl, O]) => Object.entries(O.tools).forEach(([id, g]) => { toolNames[pl + ':' + id] = L.add(g, new THREE.Vector3(0, PART_UP[id] || (pl === 'fab' ? 3.8 : 2.6), 0), (PART_WORD[pl] || (x => t('depth.' + x + '.name')))(id), { cls: 'tool3', button: true, data: { place: pl, part: id }, need: O.inside, max: 340 }); }));
+  const toolNames = {}; Object.entries(OPEN).forEach(([pl, O]) => Object.entries(O.tools).forEach(([id, g]) => { toolNames[pl + ':' + id] = L.add(g, new THREE.Vector3(0, PART_UP[id] || (pl === 'fab' ? 3.8 : 2.6), 0), partName(pl, id), { cls: 'tool3', button: true, data: { place: pl, part: id }, need: O.inside, max: 340 }); }));
   /* a building with an inside (or a machine in an open one) says so when the mouse points at it: a ring of light round
      it on the ground, and Go inside over it, like the parts' names. A click still selects it, a double click goes in;
      a phone has the card's button */
@@ -842,7 +843,7 @@ export function createMap(canvas, host, on = {}) {
   /* ---- the minimap (docs/INTERACTION.md: an overview kept in step with the view): the island, its road, every
      place, and what the camera sees now; a place on it is picked as on the island, anywhere else flies there ---- */
   const mini = document.createElement('div'); mini.className = 'mini3'; mini.setAttribute('aria-label', t('mini.aria')); host.appendChild(mini);
-  { const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]), M0 = { x0: -90, z0: -60, w: 180, h: 112 }, pt = ([x, z]) => (x - M0.x0).toFixed(1) + ',' + (z - M0.z0).toFixed(1);
+  { const M0 = { x0: -90, z0: -60, w: 180, h: 112 }, pt = ([x, z]) => (x - M0.x0).toFixed(1) + ',' + (z - M0.z0).toFixed(1);
     let h = '<svg viewBox="0 0 ' + M0.w + ' ' + M0.h + '" role="img" aria-hidden="true"><polygon class="isle" points="' + coast.filter((_, i) => i % 4 === 0).map(pt).join(' ') + '"/>';
     h += '<polyline class="road" points="' + loopPts.filter((_, i) => i % 3 === 0).concat([loopPts[0]]).map(pt).join(' ') + '"/><polygon class="view" points=""/></svg>';
     h += PLACES.filter(p => !p.far).map(p => '<button type="button" class="mdot" data-place="' + p.id + '" style="left:' + ((p.at[0] - M0.x0) / M0.w * 100).toFixed(1) + '%;top:' + ((p.at[1] - M0.z0) / M0.h * 100).toFixed(1) + '%" title="' + esc(t('map.' + p.id + '.t')) + '" aria-label="' + esc(t('map.' + p.id + '.t')) + '"></button>').join('');
@@ -930,7 +931,6 @@ export function createMap(canvas, host, on = {}) {
   host.addEventListener('click', e => { if (e.detail && e.target.closest('.pin3.here')) return; const b = e.target.closest('[data-wf],[data-poi],[data-place],[data-q],[data-step],[data-job],[data-entry]'); if (!b) return; if (b.dataset.wf) on.whatif && on.whatif(b.dataset.wf); else if (b.dataset.poi) poiGo(b.dataset.poi); else if (b.dataset.part) on.part && on.part(b.dataset.place, b.dataset.part); else if (b.dataset.entry) on.entry && on.entry(b.dataset.entry); else if (b.dataset.place) on.place && on.place(b.dataset.place); else if (b.dataset.step) on.place && on.place(STATION[b.dataset.step]); else if (b.dataset.job) on.job && on.job(b.dataset.job); else on.question && on.question(b.dataset.q); });
 
   /* ---- the state: what has grown, the community's pieces, where your chip is ---- */
-  const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
   let slotLabels = [], villageSeen = null;
   /* what is built again (the computer's floors, the village, the squares) lets go of what it was: its shapes and
      materials leave the graphics card, unless something still standing uses them or kit3d's caches share them */

@@ -9,6 +9,7 @@
    picture shows the instruction, the wrong value against the right one, and the slice that answered wrong. A machine's
    core (src/v2/machines.js, #/do/rvrun/<need>) opens here on that machine's job (JOBS), a program to watch on it.
    A lab of the challenge player (src/v2/play.js): lab(L) -> { draw, click, input }. */
+import { still, phone } from '../../core/ui.js';
 import * as RP from '../../engines/rvpuzzles.js';
 import { dpSvg, dpAnimate } from './datapath.js';
 import { mark as fidMark } from '../fid.js';
@@ -19,8 +20,6 @@ const FAST = 110;            /* the same, when the run is fast-forwarded */
 const OPS = { '&': 'and', '|': 'or', '^': 'xor' };
 const TURN = { '&': '|', '|': '^', '^': '&' };
 const turnGate = (code, k) => { let i = -1; return code.replace(/[&|^]/g, m => (++i === k ? TURN[m] : m)); };
-const phone = () => typeof matchMedia === 'function' && matchMedia('(max-width: 720px)').matches;
-const still = () => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 export default function lab(L) {
   const { S, ch, el, esc, t, head, reward, doneNote, win, draw, fx } = L, view = L.view;

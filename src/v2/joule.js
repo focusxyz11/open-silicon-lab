@@ -10,10 +10,11 @@
    createJoule(host, o): o.S (the state: S.joule { on, plan }), o.save(), o.keep(plan, el) → { ok, e, r }, o.slip(id) → html,
    o.slipClick(ev, done(redraw)) → handled, o.refusal(r), o.signHtml(), o.attempts() → entries of the puzzle (yours too, marked draft), o.changed(on) when the lens opens or closes.
    Returns { level(id), on(v), bottom(), redraw() }. */
+import { phone } from '../core/ui.js';
+import { esc } from '../core/esc.js';
 import { t, fmtNum } from '../core/i18n.js';
 import { budget, LEVELS, PARTS, LEVERS, PLAN, JOB, problem } from '../engines/budget.js';
 
-const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 const n2 = v => fmtNum(+v.toPrecision(2));
 /* joules in words: kJ, J, mJ, µJ, nJ */
 export function joules(j) {
@@ -128,7 +129,7 @@ export function createJoule(host, o) {
     level(id) { if (LEVELS.includes(id) && id !== at) { at = id; draw(); } },
     on(v) { S.joule.on = !!v; o.save(); draw(); },
     /* where the folded lens ends on a phone (px from the top of the view), for the picture to keep below it; 0 otherwise */
-    bottom() { return S.joule.on && !more && !box.hidden && matchMedia('(max-width: 720px)').matches ? box.offsetTop + box.offsetHeight : 0; },
+    bottom() { return S.joule.on && !more && !box.hidden && phone() ? box.offsetTop + box.offsetHeight : 0; },
     redraw: draw
   };
 }

@@ -7,6 +7,7 @@
    them (the state they visited most). Two challenges: 'noise' factors 15, 'noise-big' factors 143, where trying every
    pair costs four times as much and the p-bits hardly more. The goal is the engine's own check (factorGoal).
    A lab of the challenge player (src/v2/play.js): lab(L) -> { draw, click, input }. */
+import { still } from '../../core/ui.js';
 import * as P from '../../engines/paradigms.js';
 
 export const START = { b: 1, w: 2, seed: 3 };
@@ -26,7 +27,6 @@ export default function lab(L) {
   const { S, ch, el, esc, t, head, reward, doneNote, win, draw, fx } = L, view = L.view;
   const size = SIZES[ch.id] || 'small', F = P.FACTOR[size], bits = F.bits, side = 1 << bits, n = 2 * bits, X = P.exactSearch(F.N, bits);
   const set = () => view.pb || (view.pb = Object.assign({}, START));
-  const still = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
   const pj = v => t('pb.pj', { v: v >= 100 ? Math.round(v) : v >= 10 ? v.toFixed(0) : v.toFixed(1) });
   const pct = v => t('pb.pct', { v: Math.round(v * 100) });
 

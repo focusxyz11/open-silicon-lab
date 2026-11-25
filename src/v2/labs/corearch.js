@@ -8,11 +8,10 @@
    cycles, plain against yours, stand in the side panel. Won when the core is at least twice as fast in at most 1.4
    times the area, for no more energy: no single change reaches it.
    A lab of the challenge player (src/v2/play.js): lab(L) -> { draw, click, input }. */
+import { still, phone } from '../../core/ui.js';
 import * as CA from '../../engines/corearch.js';
 
 const STEP_MS = 420;          /* one cycle of the picture's run */
-const phone = () => typeof matchMedia === 'function' && matchMedia('(max-width: 720px)').matches;
-const still = () => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 const MAXA = CA.measure({ mul: 'fast', alus: 2, regs: 32 }).area;
 const fx2 = v => (v >= 10 ? v.toFixed(0) : v.toFixed(2)) + '×';
 

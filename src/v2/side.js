@@ -5,11 +5,11 @@
    On screen each lane's chain lights at a pace set by its time for one step, a tenfold longer step adding a fixed
    stretch, so the fast lanes finish at once and the slow ones make you wait. Under every lane, the same measures.
    Words: side.*. */
+import { esc } from '../core/esc.js';
 import { t, fmtNum } from '../core/i18n.js';
 import { MEDIA } from '../data/media.js';
 import { lanes, LENGTHS, COOLING, NOISES } from '../engines/substrate.js';
 
-const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
 const S = { len: 1, noise: 1, cool: 0, run: 0 };
 const CELLS = 100, PER_TEN = 0.3;
 const sig = v => fmtNum(Number(v.toPrecision(2)));

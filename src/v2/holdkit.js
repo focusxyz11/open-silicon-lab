@@ -2,6 +2,8 @@
    challenges and where each is played, and the words that go with each picture. Every picture of the page is a plate,
    one square drawn in 1000 units with its own controls on it (src/v2/holdplates.js). Designed with Claude Fable 5.2
    (prototype D: B's story on A's chip) and brought into the lab with Claude Opus 5.5. */
+import { esc } from '../core/esc.js';
+import { facts } from '../core/facts.js';
 import { t, locale, hasWords } from '../core/i18n.js';
 import { CHALS, COST, COSTSRC, D2011, D71, D94, DGAR, DWALL, FDIV, GEN, LIGHTS, MOMENTS, NAMED_ONLY, WALLS, costAt, dAt, nodeAt, upTo, yearAt, yearShown } from '../data/hold.js';
 import { figVars, money } from './figures.js';
@@ -11,8 +13,6 @@ import { figVars, money } from './figures.js';
 export const w = (k, v) => t('hd.' + k, v ? { ...figVars(), ...v } : figVars()), Q = id => t('home.q.' + id);
 /* "247 million" times: in French and Spanish a number in words takes "de" before what it counts */
 export const xOf = f => (f < 1000 ? nf(f) : f >= 1e6 ? w('cq.xof', { x: sig(f, 2) }) : sig(f, 2));
-const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-
 export const $ = (s, r = ROOT || document) => r.querySelector(s), $$ = (s, r = ROOT || document) => [...r.querySelectorAll(s)];
 export const h = (tag, cls, html) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; };
 export const clamp = (v, a, b) => Math.max(a, Math.min(b, v)), lerp = (a, b, f) => a + (b - a) * f, ss = (a, b, v) => { v = clamp((v - a) / (b - a), 0, 1); return v * v * (3 - 2 * v); };
@@ -47,8 +47,7 @@ export function fitU(...also) { const W = innerWidth, H = innerHeight, u = PHONE
 /* ---- sources: a small mark beside the number; one sheet for all of them, by chapter ---- */
 /* the lab's facts (src/data/facts.json), loaded when the page is first touched; a mark asks for them if it needs them */
 export const FACTS = {};
-let factsP = null;
-export const loadFacts = () => factsP || (factsP = fetch('src/data/facts.json').then(r => r.json()).then(j => { for (const f of (j.facts || j)) FACTS[f.id] = [f.source, f.url, f.value, f.verified]; }, () => { factsP = null; }));
+export const loadFacts = () => facts().then(F => { for (const f of Object.values(F)) FACTS[f.id] = [f.source, f.url, f.value, f.verified]; });
 export const src = (...ids) => ids.map(id => '<button type="button" class="src" data-f="' + id + '" aria-label="' + esc(w('src.k')) + '">↗</button>').join('');
 export const CH_FACTS = { years: ['moore-1965', 'transistor-trend', 'zeloof-garage', 'chm-x86', 'core2-410m', 'northpole', 'rubin-gpu', 'cerebras-cs4', 'node-years', 'node-names', 'clock-stall', 'dual-core-2005', 'asic-vs-cpu', 'fdiv-rate', 'fdiv-charge', 'euv-wavelength', 'high-na-price', 'tsmc-n2', 'node-n2'],
   walls: ['energy-moving-data', 'dc-electricity', 'design-cost-older', 'design-cost-recent', 'design-cost-2nm', 'fab-module-cost', 'wafer-space-run', 'cortical-cl1', 'brain-power', 'minimal-fab'],

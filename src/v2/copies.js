@@ -4,10 +4,10 @@
    supply dips and age push more of them past the edge, and hidden flaws break others. Every count comes from the
    Stress engine (src/engines/life.js) at that moment: the dots are a sample of the crowd, the numbers are the
    engine's. Words: life.* (the engine's own) and copies.*. */
+import { esc } from '../core/esc.js';
 import { t, fmtNum } from '../core/i18n.js';
 import { live, MISSION_IDS, MARGINS, PROTECT, SIGMA, normalLife } from '../engines/life.js';
 
-const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
 const rnd = (i, k) => { const s = Math.sin(i * 127.1 + k * 311.7) * 43758.5453; return s - Math.floor(s); };
 const gauss = (i, k) => Math.sqrt(-2 * Math.log(Math.max(1e-6, rnd(i, k)))) * Math.cos(2 * Math.PI * rnd(i, k + 7));
 const N = 360;

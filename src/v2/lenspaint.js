@@ -7,6 +7,8 @@
    serves a flat scene and a 3D level alike, and each lens's layer can be drawn beside another's. Words are never in
    the paint: only shapes, colours and motion; what they mean is said in the card.
    Motion only where it carries meaning (energy travelling, currents adding), and none with reduced motion. */
+import { still } from '../core/ui.js';
+import { esc } from '../core/esc.js';
 import { t, fmtNum, fmtWords } from '../core/i18n.js';
 import { factsOf } from '../data/partfacts.js';
 import { MODELS, geometry, efficiency, brainCopy, physics as physicsModel, digital, geoEffFront, memoryFork, cleanOne, HOT, SWING } from '../engines/lens.js';
@@ -15,8 +17,6 @@ import { frontFigure } from './front.js';
 import { mark as fidMark } from './fid.js';
 import { LENSES, PAIRS } from '../data/fidelity.js';
 
-const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
-const still = () => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 const R = r => 'x="' + r[0] + '" y="' + r[1] + '" width="' + r[2] + '" height="' + r[3] + '"';
 const path = p => 'M' + p.map(q => q[0].toFixed(1) + ' ' + q[1].toFixed(1)).join('L');
 /* a colour along short (cool) to long or hot (warm), for 0..1 */

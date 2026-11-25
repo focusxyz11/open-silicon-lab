@@ -4,6 +4,7 @@
    wipes the state back toward a guess. The player steps, sets how clean a step is, and looks. The goal is the engine's
    own check (checkSearchStep): the chance seen at its peak, and then lower after one step more.
    A lab of the challenge player (src/v2/play.js): lab(L) -> { draw, click, input }. */
+import { still } from '../../core/ui.js';
 import * as G from '../../engines/grover.js';
 
 export const N = 8, MAX = 6, START = { k: 0, ln: -1.3, seed: 11 };
@@ -31,7 +32,6 @@ export default function lab(L) {
   const seen = () => view.gvSeen || (view.gvSeen = []);
   const pct = v => t('grv.pct', { v: v > 0.995 && v < 1 ? (v * 100).toFixed(1) : Math.round(v * 100) });
   const noiseText = e => t('grv.v.noise', { n: Math.round(1 / e).toLocaleString('en') });
-  const still = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
   /* what the player has seen is kept (the steps taken and the chance shown); the engine's check decides */
   function see() { const o = set(), s = seen(); s.push({ k: o.k, p: chanceAt(o.k, noiseOf(o.ln)) }); if (s.length > 400) s.shift(); if (met(s)) win(); }
   /* a step in two beats: the prize's bar turns over, then every bar is mirrored about the average */

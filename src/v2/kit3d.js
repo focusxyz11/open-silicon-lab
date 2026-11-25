@@ -4,6 +4,7 @@
    HTML elements placed over projected points (label()), so any language and any length works. */
 import * as THREE from '../vendor/three.min.js';
 import { RoomEnvironment, RoundedBoxGeometry } from '../vendor/three-extras.js';
+import { theme, still as reduced } from '../core/ui.js';
 
 export { THREE };
 
@@ -19,7 +20,7 @@ export const CHIP_TONES = {
   light: { slab: 0x7f8da2, tile: 0xc9d4e2, top: 0xe8edf4, idle: 0xa9b6c8, field: 0xaebdd0, bit: 0x6a809f, cu: 0xb5683a, pad: 0xe0b070, base: 0x55606e, stack: [0x3a4250, 0x6b7586], pkg: 0x2b3a2f },
   dark: { slab: 0x1f2a3e, tile: 0x2f3d58, top: 0x3d4f70, idle: 0x1c2638, field: 0x222e47, bit: 0x56709a, cu: 0xc77b45, pad: 0xc9a14a, base: 0x55606e, stack: [0x3a4250, 0x6b7586], pkg: 0x2b3a2f }
 };
-export const theme = () => (document.documentElement.getAttribute('data-theme') || (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'));
+export { theme };
 
 /* one stage: a single renderer and one GL canvas, shared by every 3D view (the island, the data centre, the chip,
    the board). Each view keeps its own canvas as the surface you touch and focus; the pictures are all drawn on
@@ -278,6 +279,6 @@ function unmove(L) { L.moved = false; L.el.classList.remove('f2apart', 'f2below'
 export const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
 export const smooth = (a, b, v) => { const t = clamp((v - a) / (b - a)); return t * t * (3 - 2 * t); };
 export const ease = t => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
-export const reduced = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+export { reduced };
 /* a seeded random number in [0, 1) */
 export const rnd = (i, s = 1) => { const x = Math.sin(i * 127.1 + s * 311.7) * 43758.5453; return x - Math.floor(x); };

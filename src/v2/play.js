@@ -12,6 +12,8 @@
    Do mode (src/v2/frame2.js, docs/LABS.md): the player says what the stage shows. A lab
    declares its own instrument and goal in its HTML (data-f2); for one that declares no goal, its first goal box is the
    goal; the kinds with no picture of their own (PLACE) are played on the place, which stays the picture. */
+import { still } from '../core/ui.js';
+import { esc } from '../core/esc.js';
 import { t, needWords, preloadWords, hasWords } from '../core/i18n.js';
 import { CLOCKS, SIDES, LOADS, REUSES, MEMS, GENS, x2 } from '../engines/chip.js';
 import { MISSIONS, MARGINS, PROTECT, normalLife } from '../engines/life.js';
@@ -32,7 +34,6 @@ import { needStyles } from '../core/styles.js';
 import { mark as fidMark } from './fid.js';
 import { labFid } from '../data/fidelity.js';
 
-const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 /* the gates a description can use, and the one a tap turns each into */
 const OPS = { '&': 'and', '|': 'or', '^': 'xor' };
 /* the kinds whose picture is the place they are played in (Do mode): your chip's settings and its life change what the
@@ -548,7 +549,6 @@ export function play(el, ch, ctx) {
   }
   /* feedback: what changed moves. A wrong answer shakes, a row that turned right flashes, a gauge that reached its
      target pops, a tapped gate bounces. Nothing moves with reduced motion. */
-  const still = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
   const anim = (n, k, o) => { if (n && n.animate && !still()) n.animate(k, Object.assign({ duration: 420, easing: 'cubic-bezier(.2, 1.3, .4, 1)' }, o)); };
   function fx(after) {
     const B = view.B;

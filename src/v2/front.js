@@ -9,7 +9,7 @@
    nobody is yet: down and left, or up and left), lines: [{ pts: [[x, y], ...], cls }] (the first is today's front; the
    corner is cut off by it), dots: [{ x, y, r, cls, attrs }] (attrs: extra attributes, already escaped), extra (SVG
    under the dots), aria, key: [[cls, words], ...], cls (on the figure) }. */
-const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+import { esc } from '../core/esc.js';
 const f1 = v => (+v).toFixed(1);
 
 /* the corner cut off by the front: from the corner, along one edge to the line's first end, along the line, and back

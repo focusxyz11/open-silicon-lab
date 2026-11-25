@@ -17,6 +17,8 @@
      view.enter, the parent's leave (0 at rest) says how far the child has come into its view.door)
    on.part(key), on.marks() -> [{ part, threads }] under Ask, else null, on.mark(threadId), on.askMany([threadId]),
    on.failed(). */
+import { still } from '../core/ui.js';
+import { esc } from '../core/esc.js';
 import * as THREE from '../vendor/three.min.js';
 import { PALETTES, theme, stage, light, labels, showStage, clamp, ease, QUALITY, lowQuality } from './kit3d.js';
 import { diveWord } from '../data/atlas.js';
@@ -24,13 +26,11 @@ import { t } from '../core/i18n.js';
 import { createOverlay } from './overlay.js';
 import { pose, childPose, eye, smooth as sm, JOIN } from '../engines/join.js';
 
-export const still = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+export { still };
 /* joins, for the visit: off once joined frames have come too slowly (or osl-quality = slow) */
 export const JOINS = { off: false };
 const V_rise = V => !!V.fixed && !V.enter;
 const JP = { skip: 4, times: [], done: false };
-const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
-
 export function createLevel3D(canvas, host, on, model) {
   const P = PALETTES[theme()], night = P.emissive > 0;
   const st = stage(canvas);

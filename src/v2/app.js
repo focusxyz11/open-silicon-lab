@@ -11,6 +11,7 @@
    #/board (one board, with a story that drives it), #/dive/<depth>[/<world>] (the dive), #/line/<step> (the factory),
    #/bench/<level>[/<challenge>] (the studio), #/do/<challenge>, #/ask/<thread>/<depth>, #/supply, #/log, #/build,
    #/ecosystem. Words are read with t(). */
+import { still, theme } from '../core/ui.js';
 import { t, needWords, needAllWords, lang, langName, LANGS } from '../core/i18n.js';
 import { needStyles } from '../core/styles.js';
 import { THREADS } from '../data/weave.js';
@@ -18,7 +19,7 @@ import { NEEDS } from '../data/build.js';
 import * as Game from './loop.js';
 import { titleOf, goalOf } from './loop.js';
 import * as Way from '../engines/way.js';
-import { PLACES, CHIP_ROWS as ROWS } from '../data/views3d.js';
+import { PLACES, CHIP_ROWS as ROWS, partName, shipOrPkg } from '../data/views3d.js';
 import { stopsAt } from '../data/places.js';
 import { levelAt, sizeOf } from '../data/atlas.js';
 import * as Field from './field.js';
@@ -90,7 +91,6 @@ export function start() {
   /* ---- the frame: one frame, three modes (src/v2/frame2.js, #271) ---- */
   frame2Boot();
   /* ---- the theme ---- */
-  const theme = () => document.documentElement.getAttribute('data-theme') || (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
   const tb = $('theme'), k0 = theme() === 'dark' ? 'ui.toLight' : 'ui.toDark'; tb.setAttribute('aria-label', t(k0)); tb.title = t(k0);
   tb.addEventListener('click', () => { const n = theme() === 'dark' ? 'light' : 'dark'; document.documentElement.setAttribute('data-theme', n); try { localStorage.setItem('osl-theme', n); } catch (e) { /* storage unavailable */ } location.reload(); });
   /* ---- the language: one small menu in the bar on every page. A choice is kept for the whole lab; the pages not
@@ -137,7 +137,6 @@ export function start() {
   /* the spinner shows only when a view takes long to make: a quick view comes in without one */
   let loadT = 0;
   const loading = on => { clearTimeout(loadT); if (on) loadT = setTimeout(() => $('loading').classList.add('on'), 400); else $('loading').classList.remove('on'); };
-  const still = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
   /* the views' code, fetched while the visitor looks at the island, so going inside does not wait for the network */
   const idle = f => (window.requestIdleCallback ? requestIdleCallback(f, { timeout: 2000 }) : setTimeout(f, 1200));
   /* one stage: while the island is shown, the data centre, the chip and the board are made one by one, paused, and
@@ -277,13 +276,12 @@ export function start() {
   /* the buildings that open where they stand, and their parts, each selected as itself (#/place/fab/etch): what it is
      called, the sentence that says what it does, its questions, and where going closer leads */
   const FAB_PARTS = ['clean', 'deposit', 'print', 'etch', 'implant', 'wires'];
-  const shipOrPkg = p => (['trays', 'boxes'].includes(p) ? 'ship' : 'pkg');
   const PARTS = {
-    fab: { list: FAB_PARTS, name: p => t('depth.' + p + '.name'), see: p => t('depth.' + p + '.see'), qs: p => stopsAt(p), deeper: p => '#/line/' + p },
-    studio: { list: ['need', 'logic', 'check', 'gates', 'layout', 'masks'], name: p => t('depth.' + p + '.name'), see: p => t('depth.' + p + '.see'), qs: p => stopsAt(p), deeper: p => levelHref('studio', { world: 'design', depth: p }) },
-    port: { list: ['saw', 'bumps', 'lid', 'trays', 'boxes'], name: p => { const w = t('part.' + shipOrPkg(p) + '.' + p); return w.charAt(0).toUpperCase() + w.slice(1); }, see: p => t('what.' + shipOrPkg(p) + '.' + p), qs: p => stopsAt(shipOrPkg(p)), deeper: p => '#/line/' + shipOrPkg(p) },
-    datacentre: { list: ['rack', 'board'], name: p => t('depth.' + p + '.name'), see: p => t('depth.' + p + '.see'), qs: p => stopsAt(p), deeper: p => levelHref('datacentre', { world: 'datacentre', depth: p }) },
-    test: { list: ['prober', 'needles', 'map'], name: p => { const w = t('part.test.' + p); return w.charAt(0).toUpperCase() + w.slice(1); }, see: p => t('what.test.' + p), qs: () => stopsAt('test'), deeper: () => '#/line/test' }
+    fab: { list: FAB_PARTS, name: p => partName('fab', p), see: p => t('depth.' + p + '.see'), qs: p => stopsAt(p), deeper: p => '#/line/' + p },
+    studio: { list: ['need', 'logic', 'check', 'gates', 'layout', 'masks'], name: p => partName('studio', p), see: p => t('depth.' + p + '.see'), qs: p => stopsAt(p), deeper: p => levelHref('studio', { world: 'design', depth: p }) },
+    port: { list: ['saw', 'bumps', 'lid', 'trays', 'boxes'], name: p => partName('port', p), see: p => t('what.' + shipOrPkg(p) + '.' + p), qs: p => stopsAt(shipOrPkg(p)), deeper: p => '#/line/' + shipOrPkg(p) },
+    datacentre: { list: ['rack', 'board'], name: p => partName('datacentre', p), see: p => t('depth.' + p + '.see'), qs: p => stopsAt(p), deeper: p => levelHref('datacentre', { world: 'datacentre', depth: p }) },
+    test: { list: ['prober', 'needles', 'map'], name: p => partName('test', p), see: p => t('what.test.' + p), qs: () => stopsAt('test'), deeper: () => '#/line/test' }
   };
   const isPart = (place, p) => !!PARTS[place] && PARTS[place].list.includes(p);
   const deeperOf = (place, p) => (p && PARTS[place] ? PARTS[place].deeper(p) : enterOf(place));
