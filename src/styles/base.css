@@ -155,6 +155,7 @@ html[data-move=turn]::view-transition-new(root) { animation-name: vt-turn-in; }
 .loop button[aria-current] { background: var(--ink); color: var(--bg); }
 .logbtn { display: flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 999px; border: 1px solid var(--line); text-decoration: none; color: var(--ink); font: 600 14px var(--sans); white-space: nowrap; }
 .logbtn:hover, .logbtn[aria-current=page] { background: color-mix(in srgb, var(--ink) 10%, transparent); }
+.logbtn .lgm { display: inline-block; width: 11px; height: 11px; margin-right: 6px; vertical-align: -1px; background: linear-gradient(var(--ink) 0 0) 0 0 / 3px 3px no-repeat, linear-gradient(var(--ink) 0 0) 4px 0 / 3px 3px no-repeat, linear-gradient(var(--ink) 0 0) 8px 0 / 3px 3px no-repeat, linear-gradient(var(--ink) 0 0) 0 4px / 3px 7px no-repeat, linear-gradient(var(--accent) 0 0) 4px 4px / 3px 3px no-repeat, linear-gradient(var(--ink) 0 0) 8px 4px / 3px 7px no-repeat, linear-gradient(var(--ink) 0 0) 4px 8px / 3px 3px no-repeat; opacity: .85; }
 @media (max-width: 1080px) { .loop .ln { display: none; } .loop button { padding: 8px 9px; } .brand b { display: none; }
 }
 

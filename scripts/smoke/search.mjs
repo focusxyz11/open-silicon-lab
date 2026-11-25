@@ -1,6 +1,6 @@
 import { S } from './shared.mjs';
 
-export const about = 'something to look for at a level, kept in your log';
+export const about = 'something to look for at a level, kept in your log; the map of the chip world above it';
 
 export default async function run() {
   const { browser, browser3d, base, problems } = S;
@@ -30,5 +30,10 @@ export default async function run() {
     await sp.evaluate(() => { location.hash = '#/log'; });
     await sp.waitForFunction(() => document.querySelectorAll('#page .seeklog .strand').length === 4, null, { timeout: 20000, polling: 1000 })
       .catch(() => problems.push(tag + ': your log does not keep what you found'));
+    /* the bar's Map: the chip world on one page, six stages across, every place and level a link, challenges as dots, the
+       places you have been marked */
+    await sp.waitForFunction(() => document.querySelectorAll('#page .cwmap .wm-col').length === 6 && document.querySelectorAll('#page .cwmap .wm-pl a.wm-pn[href^="#/place/"]').length >= 10 &&
+      document.querySelectorAll('#page .cwmap .wm-dots a[href^="#/"]').length >= 40 && document.querySelectorAll('#page .cwmap .been').length >= 1 && document.querySelectorAll('#page .cwmap .wm-every li').length === 4, null, { timeout: 15000, polling: 500 })
+      .catch(() => problems.push(tag + ': the map of the chip world does not show every stage, place and challenge, or where you have been'));
     await sp.close(); }
 }

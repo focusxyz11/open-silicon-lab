@@ -1,6 +1,7 @@
 /* pages.css: the reading pages (src/v2/glue/pages.js), loaded with them (src/core/styles.js): Read (#273), your log and
    the challenges by step, an experiment as a document, a world's page, the tries and drawings on a page (copies, walls,
-   forms, plan, clock, side by side, swarm, probe), and machines from shared blocks (#320). */
+   forms, plan, clock, side by side, swarm, probe), machines from shared blocks (#320), and the map of the chip world at
+   the top of your log. */
 @keyframes fadein { from { opacity: 0; } }
 .jumpres { display: grid; gap: 4px; margin-top: 6px; }
 .jumpto { display: flex; justify-content: space-between; gap: 12px; padding: 9px 14px; border-radius: 12px; border: 1px solid var(--line); text-decoration: none; }
@@ -800,3 +801,41 @@ html.frame2 .hero .btn { font-size: 15px; }
   .mach .mmarks { display: flex; flex-wrap: wrap; gap: 4px; }
 }
 /* ==== end of How true on the machines page ==== */
+
+/* ---- the map of the chip world (the bar's Map, #/log): across, a chip's life; down, each place into its levels; under
+   them the four depths every chip shares. Dots are challenges (filled once done); a marked cell is one you opened ---- */
+.cwmap { --wm-hot: var(--warm); max-width: 1240px; margin: 0 auto 56px; }
+.cwmap .wm-head { max-width: 46em; margin-bottom: 18px; }
+.cwmap .wm-head h1 { margin: 4px 0 8px; font: 700 clamp(32px, 4vw, 48px)/1.1 var(--serif, Georgia, serif); }
+.cwmap .wm-head .lead { margin: 0 0 12px; color: var(--muted); }
+.wm-key { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; color: var(--muted); margin: 0; }
+.wm-key b { color: var(--ink); margin-left: 8px; font-weight: 600; }
+.wm-k1, .wm-k2, .wm-k3 { display: inline-block; width: 10px; height: 10px; margin-left: 6px; }
+.wm-k1 { border-left: 3px solid var(--wm-hot); height: 14px; width: 0; }
+.wm-k2 { border: 1.5px solid var(--muted); border-radius: 50%; }
+.wm-k3 { background: var(--wm-hot); border-radius: 50%; }
+.wm-axis { color: var(--muted); margin: 10px 0 6px; letter-spacing: .02em; }
+.wm-grid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 10px; align-items: start; }
+.wm-col { display: grid; gap: 8px; min-width: 0; }
+.wm-st { display: flex; align-items: baseline; gap: 8px; font: 700 15px var(--sans); padding: 8px 2px 6px; border-bottom: 2px solid var(--ink); }
+.wm-st span { font: 500 11px ui-monospace, Menlo, monospace; color: var(--muted); }
+.wm-pl { padding: 9px 10px 10px; border: 1px solid var(--line); border-radius: 12px; background: var(--panel); min-width: 0; }
+.wm-pl.been { box-shadow: inset 3px 0 0 var(--wm-hot); }
+.wm-pn { display: block; font: 650 14.5px/1.25 var(--sans); color: var(--ink); text-decoration: none; }
+.wm-pn:hover, .wm-pl li a:hover, .wm-every li a:hover { color: var(--accent); }
+.wm-pl ol, .wm-every ol { list-style: none; margin: 6px 0 0; padding: 0; }
+.wm-pl li { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 6px; padding: 3px 0 3px 8px; border-left: 1px solid var(--line); font-size: 13px; line-height: 1.3; }
+.wm-pl li.been, .wm-every li.been { border-left: 3px solid var(--wm-hot); padding-left: 6px; }
+.wm-pl li a, .wm-every li a { color: var(--ink); text-decoration: none; }
+.wm-dots { display: inline-flex; flex-wrap: wrap; gap: 3px; vertical-align: middle; margin: 2px 0 0; }
+.wm-pn + .wm-dots { margin-top: 5px; }
+.wm-dots a { width: 9px; height: 9px; border-radius: 50%; border: 1.5px solid var(--muted); display: block; }
+.wm-dots a.on { background: var(--wm-hot); border-color: var(--wm-hot); }
+.wm-dots a:hover { border-color: var(--accent); }
+.wm-every { margin-top: 14px; padding: 10px 12px 12px; border: 1px dashed var(--line); border-radius: 12px; }
+.wm-every .wm-axis { margin-top: 0; }
+.wm-every ol { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin: 0; }
+.wm-every li { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; padding: 6px 10px; border-left: 1px solid var(--line); font: 600 14px var(--sans); }
+.logpage .wm-logh { margin: 0 0 8px; font: 700 30px/1.15 var(--serif, Georgia, serif); }
+@media (max-width: 980px) { .wm-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); row-gap: 18px; } }
+@media (max-width: 560px) { .wm-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .wm-every ol { grid-template-columns: repeat(2, minmax(0, 1fr)); } .wm-pl { padding: 8px; } }
