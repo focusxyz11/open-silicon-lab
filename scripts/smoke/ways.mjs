@@ -105,7 +105,7 @@ export default async function run() {
       return location.hash === '#/bench/gates'; }, null, wait)
       .catch(() => problems.push(tag + ': → → from the dive\'s gate does not reach the gates as designed (#/bench/gates)'));
     for (const [from, to] of [['#/line/ship', '#/place/port'], ['#/bench/masks', '#/line/print']]) {
-      await rp.evaluate(h => { location.hash = h; }, from);
+      await rp.goto('about:blank'); await rp.goto(base + 'index.html' + from);
       await rp.waitForFunction(([f, d]) => { const a = document.querySelector('#diveui .dock [data-key="next"]'); if (location.hash === f && a && a.getAttribute('href') === d) document.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
         return location.hash === d; }, [from, to], wait)
         .catch(() => problems.push(tag + ': → at the end of ' + from + ' does not go where Next says, ' + to));
