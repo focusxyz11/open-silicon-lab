@@ -18,8 +18,10 @@ import { t } from '../core/i18n.js';
 export const LEVELS = ['phone', 'inside', 'board', 'chip'];
 /* the question asked at each level: a stop of one thread (stop.<key>.q) */
 export const ASKS = { phone: 'life.phone', inside: 'know.phone', board: 'fail.phoneboard', chip: 'think.soc' };
-/* the depth of the dive each level shows (its card's Do and Ask), and where the flight carries on: the dive's phone chip */
+/* the depth of the dive each level shows (its card's Do and Ask), how big each is (src/data/atlas.js sizeOf: the phone
+   opened like a book is still the phone), and where the flight carries on: the dive's phone chip */
 export const DEPTH = { phone: 'phone', inside: 'phone', board: 'phoneboard', chip: 'soc' };
+export const SIZE = { phone: 'phone', inside: 'phone', board: 'phoneboard', chip: 'soc' };
 export const BEYOND = '#/dive/soc/phone';
 
 /* the phone, in metres: across, long, thick, the corners' radius; the board's top; the chip's middle on it */

@@ -9,7 +9,7 @@
 import { esc } from '../core/esc.js';
 import { facts as loadFacts } from '../core/facts.js';
 import { t, fmtNum, lang, LANGS } from '../core/i18n.js';
-import { STAGES, RINGS, STATIONS, FLOWS, ACTORS, WALLS, NEXT, ROLES, TRIAD, CHAPTERS, OPEN_AT, DOORS, WAYS } from '../data/blueprint.js';
+import { STAGES, RINGS, SCALE_AT, STATIONS, FLOWS, ACTORS, WALLS, NEXT, ROLES, TRIAD, CHAPTERS, OPEN_AT, DOORS, WAYS } from '../data/blueprint.js';
 import * as B from '../engines/blueprint.js';
 import { figVars } from './figures.js';
 import { ledger, settled, frontier } from '../engines/ledger.js';
@@ -39,8 +39,8 @@ export function createHome(host, ctx) {
     });
     RINGS.forEach((r, i) => { h += '<circle class="bp-ring' + (r.id === 'world' ? ' rim' : '') + '" r="' + r.r + '"/>'; });
     STAGES.forEach(st => { const [x, y] = B.pol(450, B.angleOf(st) - B.SPAN / 2); h += '<line class="bp-spoke" x1="0" y1="0" x2="' + x + '" y2="' + y + '"/>'; });
-    /* the scale, written down the gap between Use and Open */
-    RINGS.forEach(r => { const [x, y] = B.pol(r.r, -120); h += lbl(x - 8, y - 6, w('ring.' + r.id), 'bp-ringname', 'end'); });
+    /* the scale, written down the gap between Test and Ship (SCALE_AT), clear of every station's name */
+    RINGS.forEach(r => { const [x, y] = B.pol(r.r, SCALE_AT); h += lbl(x - 8, y - 6, w('ring.' + r.id), 'bp-ringname', 'end'); });
     return h + '</g>';
   }
   function flows() {
@@ -51,10 +51,10 @@ export function createHome(host, ctx) {
     if (!reduced()) h += '<circle class="bp-pulse" r="7"><animateMotion dur="14s" repeatCount="indefinite" rotate="auto"><mpath href="#bp-loop"/></animateMotion></circle>';
     return h + '</g>';
   }
-  /* where a name goes beside its dot: outward, or across the line it sits on (clockwise or not) */
+  /* where a name goes beside its dot: outward, inward, or across the line it sits on (clockwise or not) */
   function nameAt(p, side) {
     const a = p.deg * Math.PI / 180, c = Math.cos(a), sn = Math.sin(a);
-    const [dx, dy] = side === 'cw' ? [-sn, c] : side === 'ccw' ? [sn, -c] : [c, sn];
+    const [dx, dy] = side === 'cw' ? [-sn, c] : side === 'ccw' ? [sn, -c] : side === 'in' ? [-c, -sn] : [c, sn];
     const x = +(p.x + dx * 17).toFixed(1), y = +(p.y + dy * 17).toFixed(1);
     const anchor = dx > 0.35 ? 'start' : dx < -0.35 ? 'end' : 'middle';
     return { x, y: anchor === 'middle' ? (dy > 0 ? y + 14 : y - 4) : y + 7, anchor };

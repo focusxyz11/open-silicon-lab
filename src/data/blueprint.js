@@ -8,14 +8,18 @@
 
 export const STAGES = ['open', 'design', 'make', 'test', 'ship', 'use'];
 
-/* the rings, outside in: words bp.ring.<id> */
+/* the rings, outside in: words bp.ring.<id>; their names, the scale, are written down the spoke at SCALE_AT degrees, the
+   gap between Test and Ship, where the wheel's inner rings are empty (between Use and Open the dive's own names and the
+   new matter crowd them) */
+export const SCALE_AT = 120;
 export const RINGS = [
   { id: 'world', r: 420 }, { id: 'dc', r: 378 }, { id: 'machine', r: 336 }, { id: 'board', r: 296 }, { id: 'chip', r: 258 },
   { id: 'block', r: 220 }, { id: 'gate', r: 182 }, { id: 'switch', r: 144 }, { id: 'atom', r: 104 }
 ];
 
 /* every place of the lab on the wheel: its stage, its ring, where in the sector (off, -1 to 1), and the view it opens.
-   side: where its name goes (out: outward; cw, ccw: beside it, clockwise or not). Words bp.st.<id> (a short name). */
+   side: where its name goes (out: outward; in: toward the centre, the masks' name, clear of the line to the print; cw,
+   ccw: beside it, clockwise or not). Words bp.st.<id> (a short name). */
 export const STATIONS = [
   { id: 'lab', stage: 'open', ring: 'world', off: 0, side: 'out', href: '#/place/lab' },
   { id: 'questions', stage: 'open', ring: 'dc', off: -0.45, side: 'out', href: '#/read' },
@@ -28,7 +32,7 @@ export const STATIONS = [
   { id: 'check', stage: 'design', ring: 'block', off: 0, side: 'ccw', href: '#/bench/check' },
   { id: 'gates', stage: 'design', ring: 'gate', off: 0, side: 'cw', href: '#/bench/gates' },
   { id: 'layout', stage: 'design', ring: 'switch', off: 0, side: 'ccw', href: '#/bench/layout' },
-  { id: 'masks', stage: 'design', ring: 'atom', off: 0, side: 'cw', href: '#/bench/masks' },
+  { id: 'masks', stage: 'design', ring: 'atom', off: 0, side: 'in', href: '#/bench/masks' },
   /* the factory builds back up the middle of its sector, from a crystal to the wires */
   { id: 'crystal', stage: 'make', ring: 'atom', off: 0, side: 'cw', href: '#/line/crystal' },
   { id: 'print', stage: 'make', ring: 'switch', off: 0, side: 'ccw', href: '#/line/print' },

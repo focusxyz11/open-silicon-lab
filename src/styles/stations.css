@@ -68,7 +68,8 @@
 .hm-psteps a > * { color: var(--ink); }
 .hm-psteps a > .hm-pdot { color: inherit; }
 .hm-psteps a { color: inherit; }
-.hm-psteps .hm-tag { width: 52px; text-align: center; }
+/* wide enough for the longest kind (Explore), so the names line up; a longer word widens its own pill */
+.hm-psteps .hm-tag { min-width: 64px; box-sizing: border-box; text-align: center; }
 .hm-psteps .hm-tag.t-play, .hm-psteps .hm-tag.t-lab { color: var(--accent); }
  .hm-psteps .hm-tag.t-build { color: var(--hm-make); }
  .hm-psteps .hm-tag.t-puzzle { color: var(--good); }
@@ -87,7 +88,7 @@
 .hm-qitem { display: flex; align-items: center; gap: 8px; min-width: 0; font-size: 13.5px; line-height: 1.3; color: var(--ink); text-decoration: none; padding: 5px 0; }
 .hm-qitem > span:nth-child(2) { overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
 .hm-qitem:hover > span:nth-child(2) { text-decoration: underline; text-underline-offset: 3px; }
-.hm-qitem .hm-tag { width: 52px; text-align: center; }
+.hm-qitem .hm-tag { min-width: 64px; box-sizing: border-box; text-align: center; }
 .hm .hm-pill.hm-pagego { color: var(--ink); border-color: var(--muted); }
 /* new in the lab */
 .hm-new { padding: 0 0 24px; }

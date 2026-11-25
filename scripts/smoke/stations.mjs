@@ -27,6 +27,9 @@ export default async function run() {
     await hp.waitForFunction(() => { const P = [...document.querySelectorAll('#stations .hm-path')];
       return P.length === 6 && P.every(p => p.querySelectorAll('.hm-psteps a[href^="#/"]').length >= 4 && !!p.querySelector('a.hm-pgo[href^="#/"]')); }, null, { timeout: 10000 })
       .catch(() => problems.push(tag + ': the first page has no paths by subject, each with its stops and a way to start'));
+    /* each kind's pill holds its word (Explore was wider than its pill) */
+    await hp.waitForFunction(() => [...document.querySelectorAll('#stations .hm-psteps .hm-tag, #stations .hm-qitem .hm-tag')].every(e => e.scrollWidth <= e.clientWidth + 1), null, { timeout: 10000 })
+      .catch(() => problems.push(tag + ': a stop\'s kind runs out of its pill'));
     if (!(await hp.$('#stations .hm-qcard a.hm-qitem[href^="#/"]'))) problems.push(tag + ': the question on the first page shows nothing behind it');
     if ((await hp.$$('#stations .hm-nitem[href^="#/"]')).length < 3) problems.push(tag + ': the first page does not say what is new');
     { const ix = await hp.evaluate(() => [...document.querySelectorAll('#stations .hm-index a.hm-ilink')].map(a => a.getAttribute('href')));

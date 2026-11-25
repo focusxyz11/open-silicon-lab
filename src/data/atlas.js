@@ -59,8 +59,9 @@ export const diveWord = (level, key) => VIEW_PARTS.dive[level + '.' + key] || pa
    does not have, have theirs here. Physical sizes rounded to a figure, not industry figures; they agree with the
    levels' own words (depth.*.see, place.dc.*.d). The frame's rail says them, and how many times closer the next level
    is (src/v2/frame.js). Steps of a line (the factory's, the studio's) are steps, not sizes, and have none */
-/* handset: the phone flown through, closed or opened like a book; cabin: the car cut away round its footwell */
-const FLIGHT_SIZES = { campus: 500, hall: 100, server: 0.8, handset: 0.15, cabin: 2 };
+/* cabin: the car cut away round its footwell. A level the dive has too (the phone, the car) has its one size there, so
+   a flight and the dive never give it two (a test checks it) */
+const FLIGHT_SIZES = { campus: 500, hall: 100, server: 0.8, cabin: 2 };
 export const sizeOf = level => (DEPTHS[level] && DEPTHS[level].m) || FLIGHT_SIZES[level] || null;
 /* how much a level is slowed when it is heard (Listen, #316, src/engines/listen.js): the seconds of the chip in one
    second of sound. At the block one second of sound is one nanosecond of the chip, so a 3 GHz clock ticks three times

@@ -17,6 +17,16 @@ export default async function run() {
     await hp.waitForFunction(() => !document.getElementById('blueprint').hidden && document.querySelectorAll('#blueprint .bp-wheel .bp-st[href^="#/"]').length >= 30 && document.querySelectorAll('#blueprint .bp-ch').length === 6, null, { timeout: 20000 }).catch(() => problems.push(tag + ': the first page is not the blueprint, with its wheel of stations and six chapters'));
     if (await hp.evaluate(() => !document.getElementById('mapCanvas').hidden)) problems.push(tag + ': the island is drawn behind the blueprint');
     if (!(await hp.evaluate(() => [...document.querySelectorAll('#blueprint .bp-stagename')].map(e => e.textContent).join() === 'Open,Design,Make,Test,Ship,Use'))) problems.push(tag + ': the wheel does not name the six stages of a chip\'s life');
+    /* the scale's names (the rings) clear of every station's name and dot, where the names are shown */
+    if (w > 800) {
+      const hits = () => {
+        const box = el => el.getBoundingClientRect(), over = (a, b) => Math.min(a.right, b.right) - Math.max(a.left, b.left) > 1 && Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top) > 2;
+        const st = [...document.querySelectorAll('#blueprint .bp-stname, #blueprint .bp-dot')];
+        return [...document.querySelectorAll('#blueprint .bp-ringname')].flatMap(r => st.filter(s => over(box(r), box(s))).map(s => r.textContent + ' / ' + (s.textContent || s.closest('[data-st]').dataset.st)));
+      };
+      await hp.waitForFunction(hits => !new Function('return (' + hits + ')()')().length, hits.toString(), { timeout: 10000 })
+        .catch(async () => problems.push(tag + ': the scale\'s names run into the stations\' names: ' + (await hp.evaluate(hits)).join(', ')));
+    }
     /* a stage picked: its sector lit, and a card with the stations in it */
     await hp.waitForFunction(() => { const b = document.querySelector('#blueprint [data-stagepick="make"]'); if (b && b.getAttribute('aria-pressed') !== 'true') b.click(); return document.querySelectorAll('#blueprint [data-card] .bp-cardlinks a[href^="#/"]').length >= 4; }, null, { timeout: 10000 }).catch(() => problems.push(tag + ': a stage picked shows no card with its stations'));
     /* each chapter, read, repaints the wheel */

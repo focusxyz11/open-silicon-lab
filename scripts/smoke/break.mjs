@@ -13,6 +13,8 @@ export default async function run() {
     await page.addInitScript(() => { localStorage.setItem('osl-quality', 'keep'); localStorage.setItem('osl-hints-v1', JSON.stringify({ seen: {}, off: true })); });
     await page.goto(base + 'index.html#/line/print');
     await page.waitForSelector('#breakbtn', { timeout: 30000 }).catch(() => problems.push(tag + ': no Break it button'));
+    /* on every screen the flag stands in the bar, never floating over what is under it */
+    await page.waitForFunction(() => { const f = document.getElementById('breakbtn').getBoundingClientRect(), b = document.querySelector('.bar').getBoundingClientRect(); return f.width > 0 && f.top >= b.top && f.bottom <= b.bottom && f.left >= b.left && f.right <= b.right; }, null, { timeout: 10000 }).catch(() => problems.push(tag + ': the Break it flag is not in the bar'));
     await page.waitForTimeout(1500);
     await page.click('#breakbtn').catch(() => problems.push(tag + ': Break it cannot be tapped'));
     await page.waitForSelector('#breakp:not([hidden]) [data-breakwords]', { timeout: 5000 }).catch(() => problems.push(tag + ': the panel did not open'));

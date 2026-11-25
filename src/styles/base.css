@@ -188,11 +188,12 @@ html[data-move=turn]::view-transition-new(root) { animation-name: vt-turn-in; }
 .breakp .err { color: var(--bad, #c0392b); margin: 0; }
 .breakp .acts { display: flex; gap: 8px; }
 .chcard.report .st { color: var(--warm); }
-/* on a phone the bar has no room for it: it stands just under the bar's right end, on the row where the way out
-   stands at the left, and the panel opens below it */
+/* on a phone it stays in the bar, never over what is under it, and the panel opens just below the bar; on the first
+   page, whose bar also holds the small chip and the challenges, Your log is its mark alone to make room */
 @media (max-width: 560px) {
-  .breakbtn { position: absolute; top: calc(100% + 10px); right: 4px; background: var(--panel); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); box-shadow: var(--shadow); }
-  .breakp { top: 124px; right: 10px; width: calc(100% - 20px); max-height: calc(100% - 136px); padding: 14px 16px 16px; }
+  .bar:has(.hbar) .logbtn { padding: 7px 10px; font-size: 0; }
+  .bar:has(.hbar) .logbtn .lgm { margin-right: 0; }
+  .breakp { top: 64px; right: 10px; width: calc(100% - 20px); max-height: calc(100% - 76px); padding: 14px 16px 16px; }
   .breakp h2 { font-size: 23px; }
 }
 
