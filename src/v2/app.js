@@ -11,7 +11,7 @@
    #/board (one board, with a story that drives it), #/dive/<depth>[/<world>] (the dive), #/line/<step> (the factory),
    #/bench/<level>[/<challenge>] (the studio), #/do/<challenge>, #/ask/<thread>/<depth>, #/supply, #/log, #/build,
    #/ecosystem. Words are read with t(). */
-import { t, needWords, needAllWords, lang, LANGS } from '../core/i18n.js';
+import { t, needWords, needAllWords, lang, langName, LANGS } from '../core/i18n.js';
 import { needStyles } from '../core/styles.js';
 import { THREADS } from '../data/weave.js';
 import { NEEDS } from '../data/build.js';
@@ -22,7 +22,7 @@ import { play, titleOf, goalOf, labsLoaded, labsReady } from './play.js';
 import { PLACES, CHIP_ROWS as ROWS } from '../data/views3d.js';
 import { stopsAt } from '../data/places.js';
 import { signHtml, signOf, keep, refusal, slipHtml, slipClick, byLine } from './commons.js';
-import { reportsAt, SAYS, ledger } from '../engines/ledger.js';
+import { reportsAt, SAYS, ledger, PLACE } from '../engines/ledger.js';
 import * as Read from './read.js';
 import * as Exp from '../engines/experiments.js';
 import * as Chip from '../engines/chip.js';
@@ -32,7 +32,7 @@ import { setBetScene } from '../app/betscene.js';
 import { createHold } from './hold.js';
 import { sizeWords } from './frame.js';
 import { boot as frame2Boot, reading as frame2Reading } from './frame2.js';
-import { V, $, showStage, esc, hue, qColor, follow, followW } from './shell.js';
+import { V, $, showStage, esc, hue, qColor, follow, followW, been } from './shell.js';
 
 export function start() {
   /* each view's glue (src/v2/glue/) loads when its view first opens, after the glue it builds on and with the words of its
@@ -40,30 +40,31 @@ export function start() {
      and hiding a view that never opened does nothing. Once a view has opened, the other areas' words load in an idle
      moment */
   const GLUE = {'island': [], 'frame': [], 'flights': ['frame'], 'studio': ['frame'], 'chip': ['frame'], 'flat': ['frame'], 'supply': ['flat'], 'board': ['frame'], 'pages': ['frame']}, glueP = {};
-  const WORDS = { island: ['atlas', 'place', 'design', 'pages'], frame: ['atlas', 'place', 'design', 'pages'], pages: ['pages'] };
+  const WORDS = { island: ['atlas', 'place', 'design', 'pages'], frame: ['atlas', 'place', 'design', 'pages'], pages: ['pages', 'shared'] };
   /* and the styles of its view (src/core/styles.js): the frame's with the frame, each view's own with its glue */
   const STYLES = { island: ['frame', 'island'], frame: ['frame'], studio: ['studio'], flat: ['flat'], supply: ['supply'], pages: ['pages'] };
   const glue = k => glueP[k] || (glueP[k] = Promise.all(GLUE[k].map(glue).concat(needWords(...(WORDS[k] || [])), needStyles(...(STYLES[k] || [])))).then(() => import('./glue/' + k + '.js')).then(m => { m.create(); afterPaint(() => { if (preloadOk()) needAllWords(); }); }));
-  const waits = (k, names) => names.forEach(n => { V[n] = (...a) => glue(k).then(() => V[n](...a)); });
+  /* every route has a number (route): a view's move or tail that waited for its code stands aside if it changed (#365) */
+  V.routeN = 0; const waits = (k, names, view) => names.forEach(n => { V[n] = (...a) => { const r = V.routeN; return glue(k).then(() => (view && r !== V.routeN ? null : V[n](...a))); }; });
   /* a question from the field, the joule's way in and the ways out of a question are offered on every view and on the
      seam's note, and answered by the reading pages' glue: the first such click loads it, then is made again */
   document.addEventListener('click', e => { const el = !glueP.pages && e.target.closest('[data-field],[data-fieldleave],[data-joule],[data-leave],[data-seamx]'); if (!el) return;
     e.preventDefault(); e.stopPropagation(); glue('pages').then(() => el.click()); }, true);
-  waits('flights', ['ensureDc', 'showPlace', 'showPhone', 'showCar']);
+  waits('flights', ['ensureDc']); waits('flights', ['showPlace', 'showPhone', 'showCar'], true);
   V.hidePh = V.hideCa = () => {};
   waits('island', ['openMover', 'openPlace', 'drawPlace', 'openQuestion']);
   waits('frame', ['frameOf', 'withFrame', 'aroundRow', 'lineHtml', 'seekHtml', 'seekTap', 'seekWhere', 'seekLit', 'frameInset', 'askedHtml']);
-  waits('studio', ['showStudio']);
+  waits('studio', ['showStudio'], true);
   V.hideSw = () => {};
-  waits('chip', ['ensureChip', 'showChip']);
-  waits('flat', ['levelsOf', 'ensureDive', 'diveInset', 'openBench', 'showFlat']);
+  waits('chip', ['ensureChip']); waits('chip', ['showChip'], true);
+  waits('flat', ['levelsOf', 'ensureDive', 'diveInset']); waits('flat', ['openBench', 'showFlat'], true);
   V.hide3d = V.hideL3 = () => {};
-  waits('supply', ['supplySite', 'supplyStep', 'showSupply', 'showDive', 'watchDock']);
-  waits('board', ['ensureBoard', 'showBoard']);
+  waits('supply', ['supplySite', 'supplyStep', 'watchDock']); waits('supply', ['showSupply', 'showDive'], true);
+  waits('board', ['ensureBoard']); waits('board', ['showBoard'], true);
   V.hideBoard = () => {};
-  waits('pages', ['showPage', 'showRead', 'showMachines', 'showWorld', 'showEcosystem', 'showWhatif', 'askStop']);
+  waits('pages', ['showPage', 'showRead', 'showMachines', 'showWorld', 'showEcosystem', 'showWhatif', 'askStop'], true);
   V.leaveWhatif = () => {};
-  Object.assign(V, { hideSeam, crossed, islandState, hud, foldHero, chCard, designCard, kept, won, toast, hideAll, enter });
+  Object.assign(V, { hideSeam, crossed, arrive, islandState, hud, foldHero, chCard, designCard, kept, won, toast, hideAll, enter });
   V.quickNext = false; V.carryNote = null; V.inspRaf = 0; V.lensNow = null; V.turnT = 0; V.dcFrame = null; V.dcLv = 0; V.phFrame = null; V.phLv = 0; V.caFrame = null; V.caLv = 0; V.swFrame = null; V.swLv = 0; V.chipRow = 0; V.chipFrame = null; V.diveWorld = 'datacentre'; V.Joule = null; V.flatKind = 'dive'; V.diveFrame = null; V.diveD = -1; V.diveThread = null; V.benchCh = null; V.WE = null; V.DS = null; V.Bench = null; V.flatWords = null; V.boardFrame = null; V.wf = null;
   let mapReady = null; V.map = null; V.dc = null; V.chip = null; V.board = null; V.dive = null;
   const S = Game.load(localStorage);
@@ -78,7 +79,6 @@ export function start() {
     S.crossed[id] = true; save();
     seamEl.innerHTML = Field.seamNote(id); seamEl.hidden = false; clearTimeout(seamTimer); seamTimer = setTimeout(hideSeam, 14000);
   }
-
   /* ---- a menu of sections, only if asked for: ?menu=1 turns it on for this browser, ?menu=0 off. Whether the lab
      needs one is not decided (docs/reviews/structure.md, "The menu"); this keeps the choice one line to reverse ---- */
   const SECTIONS_ON = (() => { try { const q = new URLSearchParams(location.search).get('menu'); if (q === '1' || q === '0') localStorage.setItem('osl-menu', q === '1' ? 'on' : 'off'); return localStorage.getItem('osl-menu') === 'on'; } catch (e) { return false; } })();
@@ -94,13 +94,13 @@ export function start() {
   /* ---- the language: one small menu in the bar on every page. A choice is kept for the whole lab; the pages not
      translated yet stay in English, and the menu says so ---- */
   { const lb = $('langbtn'), lm = $('langmenu'), short = k => (k === 'zh' ? LANGS.zh.slice(0, 1) : k.toUpperCase());
-    lb.textContent = short(lang()); lb.setAttribute('aria-label', t('ui.lang') + ': ' + LANGS[lang()]); lb.title = t('ui.lang');
+    lb.textContent = short(lang()); lb.setAttribute('aria-label', t('ui.lang') + ': ' + langName()); lb.title = t('ui.lang');
     lm.setAttribute('role', 'menu'); lm.setAttribute('aria-label', t('ui.lang'));
     lm.innerHTML = Object.entries(LANGS).map(([k, name]) => '<button type="button" role="menuitemradio" data-lang="' + k + '" lang="' + k + '" aria-checked="' + (lang() === k) + '">' + esc(name) + '</button>').join('') + '<p>' + esc(t('ui.langNote')) + '</p>';
     const open = on => { lm.hidden = !on; lb.setAttribute('aria-expanded', String(on)); if (on) (lm.querySelector('[aria-checked=true]') || lm.querySelector('button')).focus(); };
     lb.addEventListener('click', e => { e.stopPropagation(); open(lm.hidden); });
     document.addEventListener('click', e => { if (!lm.hidden && !e.target.closest('.langm')) open(false); });
-    lm.addEventListener('keydown', e => { if (e.key === 'Escape') { open(false); lb.focus(); } });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && !lm.hidden) { e.preventDefault(); e.stopPropagation(); open(false); lb.focus(); } }, true);   /* Escape closes the topmost only: this menu, Break it, the sheet, then up (#369) */
     lm.addEventListener('click', e => { const b = e.target.closest('[data-lang]'); if (!b) return; if (b.dataset.lang === lang()) { open(false); return; }
       try { localStorage.setItem('osl-lang', b.dataset.lang); } catch (x) { /* no storage: the address carries it */ }
       const u = new URL(location.href); u.searchParams.set('lang', b.dataset.lang); location.replace(u.toString()); }); }
@@ -131,7 +131,6 @@ export function start() {
   const refresh = animate => { if (V.map) V.map.setState(islandState(), animate); hud(); drawHero(); firstGo(); };
   /* until the first win, the way to start glows */
   const firstGo = () => { const b = $('hero').querySelector('.row .btn.primary'); if (b) b.classList.toggle('pulse', !Object.keys(S.done).length); };
-
   /* ---- the 3D views, made when first needed ---- */
   /* the spinner shows only when a view takes long to make: a quick view comes in without one */
   let loadT = 0;
@@ -179,21 +178,24 @@ export function start() {
   /* the address of what is in view now: moving inside a view (deeper, along the line) changes it too */
   const liveHash = () => !vui.hidden && V.flatKind !== 'supply' && V.WE && V.diveD >= 0 && diveId() ? (V.flatKind === 'dive' ? '#/dive/' + diveId() + (V.diveWorld !== 'datacentre' ? '/' + V.diveWorld : '') : '#/' + V.flatKind + '/' + diveId())
     : !cui.hidden ? '#/chip/' + V.chipRow + '/build' : !pui.hidden ? '#/place/datacentre/' + V.dcLv : !fui.hidden ? '#/place/phones/' + V.phLv : !kui.hidden ? '#/place/cars/' + V.caLv : !sui.hidden ? '#/place/studio/' + V.swLv : location.hash;
-  const whereNow = () => { const k = partsOf(location.hash)[0], W = Way.whereOf(k === 'ask' || k === 'do' || k === 'supply' ? location.hash : liveHash()); return W.view === 'island' && V.cur && !sheet.hidden ? Way.whereOf('#/place/' + V.cur.place) : W; };
+  /* a level dropped along at a stage where it does not exist (no gate at the Lab) is carried while you stay there (Way.carryOf) */
+  const whereNow = () => { const k = partsOf(location.hash)[0], W0 = Way.whereOf(k === 'ask' || k === 'do' || k === 'supply' ? location.hash : liveHash()), W = W0.view === 'island' && V.cur && !sheet.hidden ? Way.whereOf('#/place/' + V.cur.place) : W0; if (V.alongCarry && V.alongCarry.at !== location.hash) V.alongCarry = null; return Way.carried(W, V.alongCarry); };
   /* the address always says where you are (so it can be shared, and a reload comes back here), and the loop in the
      bar follows: walking the line from the wires to the test house to the port, the stage lit moves with you */
   const here = () => { const h = liveHash(), p = partsOf(location.hash), k = p[0];
-    if (h !== location.hash && (['dive', 'line', 'chip'].includes(k) || (k === 'bench' && !p[2]) || (k === 'place' && (!pui.hidden || !fui.hidden || !kui.hidden || !sui.hidden)))) { history.replaceState(null, '', h); shownAt = h; }
+    if (h !== location.hash && (['dive', 'line', 'chip'].includes(k) || (k === 'bench' && !p[2]) || (k === 'place' && (!pui.hidden || !fui.hidden || !kui.hidden || !sui.hidden)))) { arrive(h, 'replace'); shownAt = h; }
     hud(); };
+  let hudKey = '', logKey = '';   /* the bar is rewritten only when what it says (with the address) changes: each rewrite sets off frame2's watchers (#366) */
   function hud() {
     const W = whereNow(), chipS = Game.chipAt(S);
-    hudEl.innerHTML = '<ol>' + Way.STAGES.map((s, i) => { const st = s === 'open' ? null : Game.stepState(S, s), full = !!st && st.done === st.total, name = t('loop.stage.' + s), held = W.stage !== s && Way.holds(W, s);
+    const loopHtml = '<ol>' + Way.STAGES.map((s, i) => { const st = s === 'open' ? null : Game.stepState(S, s), full = !!st && st.done === st.total, name = t('loop.stage.' + s), held = W.stage !== s && Way.holds(W, s);
       return '<li><button type="button" data-stage="' + s + '"' + (s === W.stage ? ' aria-current="step"' : '') + ' class="' + (full ? 'full' : '') + (s === chipS ? ' chip' : '') + (held ? ' holds' : '') + '" title="' + esc(held ? t('loop.same', { as: t('loop.as.' + s) }) : t('loop.at.' + s)) + '" aria-label="' + esc(st ? t('game.stepAria', { n: i, step: name, done: st.done, total: st.total }) : t('loop.at.open')) + '"><span class="ld">' + (full ? '✓' : '') + '</span><span class="ln">' + esc(name) + '</span></button></li>'; }).join('') + '</ol>';
-    $('logbtn').innerHTML = '<span class="lg"><i class="lgm" aria-hidden="true"></i>' + esc(t('loop.map')) + '</span>'; $('logbtn').title = t('loop.logK');
+    if (loopHtml + location.hash !== hudKey || !hudEl.querySelector(':scope > ol')) { hudKey = loopHtml + location.hash; hudEl.innerHTML = loopHtml; }
+    const lb = $('logbtn'), logHtml = '<span class="lg"><i class="lgm" aria-hidden="true"></i>' + esc(t('loop.map')) + '</span>', logTitle = t('loop.mapK'); if (logHtml + logTitle !== logKey) { logKey = logHtml + logTitle; lb.innerHTML = logHtml; lb.title = logTitle; }
     $('breakbtn').setAttribute('aria-label', t('break.btn')); $('breakbtn').title = t('break.btn');
   }
   function along(stage) {
-    const W = whereNow(), to = Way.alongTo(W, stage); if (!to) return;
+    const W = whereNow(), to = Way.alongTo(W, stage), c = to && Way.carryOf(W, to); if (!to) return; V.alongCarry = c ? { at: to, level: c } : null;
     V.nextMove = 'along'; clearTimeout(V.turnT); V.turnT = setTimeout(() => { V.nextMove = null; }, 400);
     if (!to.startsWith('#/place/')) toast(t('loop.same', { as: t('loop.as.' + stage) }));
     if (location.hash === to) route(); else location.hash = to;
@@ -336,7 +338,7 @@ export function start() {
     const j = e.target.closest('[data-job]'); if (j) { openJob(j.dataset.job); return; }
     const p = e.target.closest('[data-place]'); if (p) V.openPlace(p.dataset.place);
   });
-  document.addEventListener('keydown', e => { if (e.key === 'Escape' && !sheet.hidden) { closeSheet(); if (location.hash !== '#/ecosystem') V.map && V.map.overview(); } });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && !sheet.hidden && !e.defaultPrevented) { e.preventDefault(); closeSheet(); if (location.hash !== '#/ecosystem') V.map && V.map.overview(); } });
 
   /* ---- a place flown through: the data centre ---- */
   const pui = $('placeui');
@@ -388,8 +390,8 @@ export function start() {
   /* the record's entries by who made them, for the island at the end of the page ('both' counts with people) */
   const record = () => { const E = ledger(), by = k => E.filter(e => (k === 'person' ? e.made === 'person' || e.made === 'both' : e.made === k)).length;
     return { all: E.length, ai: by('ai'), program: by('program'), example: by('example'), person: by('person') }; };
-  function showHome() { showHome0(); if (stations) stations.hide(); if (blueprint) blueprint.hide();
-    return needWords('hold').then(() => { if (!hold) hold = createHold(homeEl, { still, record }); return hold.show(); }).then(() => afterPaint(preloadHome)); }
+  function showHome() { showHome0(); if (stations) stations.hide(); if (blueprint) blueprint.hide(); const n = V.routeN;
+    return needWords('hold').then(() => { if (n !== V.routeN) return; if (!hold) hold = createHold(homeEl, { still, record }); return Promise.resolve(hold.show()).then(() => afterPaint(preloadHome)); }); }
   function showHome0() {
     $('diveCanvas').hidden = true; vui.hidden = true; V.dive && V.dive.stop(); V.hide3d(); $('flatLabels').hidden = true; if (V.flatWords) V.flatWords.clear(); if (V.Bench) V.Bench.show(false);
     V.hideBoard(); document.body.classList.remove('immersive');
@@ -403,16 +405,16 @@ export function start() {
   const blueprintEl = $('blueprint');
   let blueprint = null;
   function showBlueprint() {
-    showHome0(); if (hold) hold.hide(); if (stations) stations.hide();
-    return Promise.all([import('./home.js'), needWords('blueprint'), needStyles('blueprint')]).then(([m]) => { if (!blueprint) blueprint = m.createHome(blueprintEl, { still }); blueprint.show(); });
+    showHome0(); if (hold) hold.hide(); if (stations) stations.hide(); const n = V.routeN;
+    return Promise.all([import('./home.js'), needWords('blueprint', 'shared'), needStyles('blueprint')]).then(([m]) => { if (n !== V.routeN) return; if (!blueprint) blueprint = m.createHome(blueprintEl, { still }); blueprint.show(); });
   }
   /* ---- the station map (#/stations, src/v2/stations.js): the first page before the blueprint, every station of the lab
      joined round a chip's life, with its toys and paths by subject; loaded when it is first opened ---- */
   const stationsEl = $('stations');
   let stations = null;
   function showStations() {
-    showHome0(); if (hold) hold.hide(); if (blueprint) blueprint.hide();
-    return Promise.all([import('./stations.js'), needWords('pages'), needStyles('stations')]).then(([m]) => {
+    showHome0(); if (hold) hold.hide(); if (blueprint) blueprint.hide(); const n = V.routeN;
+    return Promise.all([import('./stations.js'), needWords('pages'), needStyles('stations')]).then(([m]) => { if (n !== V.routeN) return;
       if (!stations) stations = m.createStations(stationsEl, { challenges: Game.CHALLENGES, chOf, titleOf, doHref, doHome: Way.doHome, sizeOf, sizeWords, still,
         done: () => S.done, exps: Exp.EXPERIMENTS.map(x => ({ id: x.id, world: x.world, ask: Read.askOf(x) })) });
       stations.show();
@@ -425,10 +427,10 @@ export function start() {
     $('placeCanvas').hidden = $('placeLabels').hidden = true; pui.hidden = true; V.dc && V.dc.pause(); V.hidePh(); V.hideCa(); V.hideSw();
     const part = from && ['line', 'bench'].includes(V.flatKind) && V.WE && isPart(V.lastPlace, diveId()) ? diveId() : null;
     /* the island is fetched while its styles load (src/core/styles.js); it shows once they are in, before it is made */
-    const shown = needStyles('frame', 'island').then(() => {
+    const n = V.routeN, shown = needStyles('frame', 'island').then(() => { if (n !== V.routeN) return;
       $('mapCanvas').hidden = $('mapLabels').hidden = false; $('hero').hidden = false; $('outbtn').hidden = false; lensbar.hidden = false; showStage(true);
       loading(!V.map); });
-    return Promise.all([ensureMap(), glue('island'), shown]).then(([m]) => { if (from && V.lastPlace) { m.from(V.lastPlace, part); if (!part) m.focus(V.lastPlace); } m.resume(); return m; });
+    return Promise.all([ensureMap(), glue('island'), shown]).then(([m]) => { if (n !== V.routeN) { if (viewNow !== 'map') m.pause(); return null; } if (from && V.lastPlace) { m.from(V.lastPlace, part); if (!part) m.focus(V.lastPlace); } m.resume(); return m; });
   }
 
   /* ---- the pages ---- */
@@ -454,7 +456,8 @@ export function start() {
     if (still() || !V.map || $('mapCanvas').hidden || !lastFocus()) { location.hash = href; return; }
     /* the camera dives at what is selected, and the view inside opens from that point on the screen, as through a
        portal (docs/INTERACTION.md) */
-    V.enteredFrom = lastFocus(); entering = true; V.map.dive(lastFocus(), V.cur && V.cur.part).then(() => { entering = false; portalAt(V.map.screenOf(lastFocus(), V.cur && V.cur.part)); V.arriving = true; location.hash = href; });
+    /* a move made while the camera dives wins: the dive does not then take you inside (#365) */
+    const n = V.routeN, at = location.hash; V.enteredFrom = lastFocus(); entering = true; V.map.dive(lastFocus(), V.cur && V.cur.part).then(() => { entering = false; if (n !== V.routeN || location.hash !== at) return; portalAt(V.map.screenOf(lastFocus(), V.cur && V.cur.part)); V.arriving = true; location.hash = href; });
   }
   const lastFocus = () => (V.cur && V.cur.place) || null;
   V.arriving = false;   /* the next view was entered from the island: it starts from above, coming down */
@@ -462,9 +465,9 @@ export function start() {
   const portalAt = p => { const r = document.documentElement.style; if (p && p.x > 0 && p.x < 1 && p.y > 0 && p.y < 1) { r.setProperty('--vx', (p.x * 100).toFixed(1) + '%'); r.setProperty('--vy', (p.y * 100).toFixed(1) + '%'); } else { r.removeProperty('--vx'); r.removeProperty('--vy'); } };
   sheet.addEventListener('click', e => { const a = e.target.closest('a[href^="#/"]'); if (!a || viewOf(partsOf(a.getAttribute('href')))[0] === 'map') return; e.preventDefault(); e.stopPropagation(); enter(a.getAttribute('href')); }, true);
   function show(parts, from) {
-    const k = parts[0] || 'home';
+    const k = parts[0] || 'home', live = (n => () => n === V.routeN)(V.routeN);   /* what follows a view is done only while its route is the one now */
     /* a question at a level already in view: no need to make the view again, only the dock changes */
-    if (k === 'ask' && parts[1] && parts[2]) { const at = Game.viewOfDepth(parts[2]); if (at === shownAt && !from) { V.askStop(parts[1], parts[2]); return Promise.resolve(); } return show(partsOf(at), from).then(() => V.askStop(parts[1], parts[2])); }
+    if (k === 'ask' && parts[1] && parts[2]) { const at = Game.viewOfDepth(parts[2]); if (at === shownAt && !from) { V.askStop(parts[1], parts[2]); return Promise.resolve(); } return show(partsOf(at), from).then(() => live() && V.askStop(parts[1], parts[2])); }
     shownAt = '#/' + parts.join('/');
     if (k === 'home') return showHome();
     if (k === 'stations') return showStations();
@@ -478,8 +481,8 @@ export function start() {
        the shared computer or a break is met at the Lab and the village, on the island */
     /* #/do/<challenge>/<job>: a challenge opened for a job, such as a machine's core on that machine's work (#321) */
     if (k === 'do' && parts[1]) { const c0 = chOf(decodeURIComponent(parts[1])), ch = c0 && parts[2] ? Object.assign({}, c0, { job: decodeURIComponent(parts[2]) }) : c0, home = doPlace(ch);
-      if (home) return show(partsOf(home), from).then(() => { shownAt = '#/' + parts.join('/'); V.openBench(ch); });
-      return showMap(from).then(() => openChallenge(ch)); }
+      if (home) return show(partsOf(home), from).then(() => { if (live()) { shownAt = '#/' + parts.join('/'); V.openBench(ch); } });
+      return showMap(from).then(m => m && openChallenge(ch)); }
     if (k === 'chip') return V.showChip(parts[1] != null ? +parts[1] : null);
     /* the data centre's flight is entered at one of its levels (#/place/datacentre/2); the place itself opens on the island */
     if (k === 'place' && parts[1] === 'datacentre' && /^\d+$/.test(parts[2] || '')) return V.showPlace('datacentre', +parts[2]);
@@ -489,31 +492,29 @@ export function start() {
     if (k === 'place' && parts[1] === 'cars' && /^\d+$/.test(parts[2] || '')) return V.showCar(+parts[2]);
     /* and the studio, walked inside (#/place/studio/3: the third corner) */
     if (k === 'place' && parts[1] === 'studio' && /^\d+$/.test(parts[2] || '')) return V.showStudio(+parts[2], from);
-    if (k === 'place' && isPart(parts[1], parts[2])) return showMap(from).then(() => V.openPlace(parts[1], 'look', null, null, parts[2]));
-    if (k === 'place' && Game.PLACES.includes(parts[1])) return showMap(from).then(() => V.openPlace(parts[1], parts[2] === 'inside' ? 'look' : null));
-    if (k === 'build') return showMap(from).then(() => V.openPlace('lab', 'look', parts[1] || 'computer', parts[2]));
+    if (k === 'place' && isPart(parts[1], parts[2])) return showMap(from).then(m => m && V.openPlace(parts[1], 'look', null, null, parts[2]));
+    if (k === 'place' && Game.PLACES.includes(parts[1])) return showMap(from).then(m => m && V.openPlace(parts[1], parts[2] === 'inside' ? 'look' : null));
+    if (k === 'build') return showMap(from).then(m => m && V.openPlace('lab', 'look', parts[1] || 'computer', parts[2]));
     if (['log', 'challenges', 'questions'].includes(k)) V.showPage(k);
     if (k === 'read') V.showRead(parts[1] ? decodeURIComponent(parts[1]) : null);
     if (k === 'w') V.showWorld(parts[1], parts[2], parts[3]);
-    if (k === 'whatif') return showMap(from).then(() => V.showWhatif(parts[1]));
+    if (k === 'whatif') { /* over the island, without its welcome card first (#365) */ $('hero').classList.add('away'); return showMap(from).then(m => m && V.showWhatif(parts[1])); }
     if (k === 'machines') V.showMachines(parts[1], parts[2]);
     /* a reading page stands on its own: the island waits behind it, paused (src/v2/frame2.js, Read) */
-    if (frame2Reading()) return showMap(from).then(m => { if (frame2Reading()) m.pause(); });
-    return showMap(from).then(() => { if (k === 'ecosystem') V.showEcosystem(); else if ((k === 'island' || k === 'explore') && V.cur && !sheet.hidden) { closeSheet(); V.map && V.map.overview(); } });
+    if (frame2Reading()) return showMap(from).then(m => { if (m && frame2Reading()) m.pause(); });
+    return showMap(from).then(m => { if (!m) return; if (k === 'ecosystem') V.showEcosystem(); else if ((k === 'island' || k === 'explore') && V.cur && !sheet.hidden) { closeSheet(); V.map && V.map.overview(); } });
   }
+  /* an arrival (by address, a move in a view, a place picked; #367): the address says it, the Map marks it, a seam raises its leak */
+  function arrive(h, how) { if (how === 'push') history.pushState(null, '', h); else if (how) history.replaceState(null, '', h); been(h); const to = Way.whereOf(h); crossed(V.seamFrom, to); V.seamFrom = to; }
   function route() {
     /* a world is a reading page, opened from a lens or by name; there is no list of them (#305): #/w alone is the map */
     if (/^#\/?w\/?$/.test(location.hash)) history.replaceState(null, '', '#/');
-    const parts = partsOf(location.hash), k = parts[0] || 'home';
-    /* where you have been, for the map of the chip world (src/v2/glue/pages.js): the addresses opened, in this browser */
-    try { const B = JSON.parse(localStorage.getItem('osl-been') || '{}'); if (!B[location.hash] && Object.keys(B).length < 400) { B[location.hash] = 1; localStorage.setItem('osl-been', JSON.stringify(B)); } } catch (e) { /* no storage */ }
+    const parts = partsOf(location.hash), k = parts[0] || 'home', n = ++V.routeN;
     document.body.classList.toggle('firstpage', k === 'home');
     document.body.classList.toggle('langpage', k === 'home' || k === 'blueprint');
     if (k !== 'home' && hold) hold.hide();
     if (k !== 'blueprint' && blueprint) blueprint.hide();
-    if (k !== 'stations' && stations) stations.hide();
-    /* the cell you came from and the one you are in: a seam between them may raise its leak */
-    { const to = Way.whereOf(location.hash); hideSeam(); crossed(V.seamFrom, to); V.seamFrom = to; }
+    if (k !== 'stations' && stations) stations.hide(); hideSeam(); arrive(location.hash);
     /* a bet's wafer or chip stands in the scene only while its challenge is open */
     if (!/^#\/do\/(cheaper|onebad|oxen|jevons)$/.test(location.hash)) setBetScene(null, null, '');
     /* What if? holds the world grey with its columns only while it is open */
@@ -523,9 +524,9 @@ export function start() {
     const [view, rank] = viewOf(parts), from = viewNow, move = V.nextMove || (from === 'bench' && view === 'studio' ? 'out' : rank > rankNow ? 'in' : rank < rankNow ? 'out' : 'along');
     V.nextMove = null; viewNow = view; rankNow = rank;
     if (!from || from === view || still() || !document.startViewTransition) return after(show(parts, from && from !== view ? from : null));
-    /* the old picture holds while the new view is made (at most a moment), then one zooms into the other */
+    /* the old picture holds while the new view is made (at most a moment), then one zooms into the other (not if moved on) */
     const root = document.documentElement; root.dataset.move = move; if (move !== 'in') portalAt(null);
-    const tr = document.startViewTransition(() => Promise.race([after(show(parts, from)), new Promise(r => setTimeout(r, 1500))]));
+    const tr = document.startViewTransition(() => (n !== V.routeN ? null : Promise.race([after(show(parts, from)), new Promise(r => setTimeout(r, 1500))])));
     /* a transition the browser skips (a newer one began, or the view took too long) rejects its promises: the view still
        changes, plainly, so the rejections are expected and caught here */
     const quiet = () => {}; tr.ready.catch(quiet); tr.updateCallbackDone.catch(quiet);
@@ -539,7 +540,8 @@ export function start() {
     /* a picture that steps along by itself (the flat world) has already taken the key */
     if (e.defaultPrevented || (e.target.closest && e.target.closest('input, textarea, select, [data-live]'))) return; /* i18n-ok */
     /* / jumps: the log opens with its box ready */
-    if (e.key === '/') { e.preventDefault(); if (partsOf(location.hash)[0] !== 'log') location.hash = '#/log'; setTimeout(() => { const f = page.querySelector('[data-jump]'); if (f) f.focus(); }, 60); return; }
+    if (e.key === '/') { e.preventDefault(); if (partsOf(location.hash)[0] !== 'log') location.hash = '#/log'; const t0 = performance.now();   /* the box may still be loading: waited for */
+      const go = () => { const f = !page.hidden && page.querySelector('[data-jump]'); if (f) f.focus(); else if (partsOf(location.hash)[0] === 'log' && performance.now() - t0 < 30000) requestAnimationFrame(go); }; requestAnimationFrame(go); return; }
     const host = [vui, cui, pui, bui, sui].find(h => h && !h.hidden) || (!sheet.hidden && !sheet.querySelector('.player') ? sheet : null); if (!host) return;
     if (e.key === 'Escape') { const up = host.querySelector('.homebtn'); if (up) { location.hash = up.getAttribute('href'); e.preventDefault(); } return; }
     const W = whereNow(), column = ['dive', 'flight', 'chip'].includes(W.view) && !host.querySelector('.dock .player, .dock .stopx');
@@ -550,7 +552,7 @@ export function start() {
       const out = host.querySelector('.dock [data-out]'); if (out) { out.click(); e.preventDefault(); return; }
       const up = host.querySelector('.homebtn'); if (up) { location.hash = up.getAttribute('href'); e.preventDefault(); } return; }
     if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
-    if (column) { const i = Way.STAGES.indexOf(W.stage), n = Way.STAGES.length; along(Way.STAGES[(i + (e.key === 'ArrowRight' ? 1 : n - 1)) % n]); e.preventDefault(); return; }
+    if (column || W.carry) { along(Way.alongStep(W, e.key === 'ArrowRight' ? 1 : -1).stage); e.preventDefault(); return; }
     if (host === sheet && e.key === 'ArrowLeft' && V.cur) { const st = Way.stageOfPlace(V.cur.place), prev = st && Object.values(Way.STAGE_PLACE).find(p => Way.nextPlace(p) === Way.STAGE_PLACE[st]); if (prev) { location.hash = '#/place/' + prev; e.preventDefault(); } return; }
     const b = host.querySelector((host === sheet ? '' : '.dock ') + '[data-key="' + (e.key === 'ArrowRight' ? 'next' : 'back') + '"]');
     if (b) { b.click(); e.preventDefault(); }
@@ -561,7 +563,7 @@ export function start() {
      until someone makes one. What was reported here already is shown first, so it is said once and seen by all. ---- */
   const breakp = $('breakp');
   let breakSay = 'confusing', breakMine = null, breakErr = '';
-  const breakAt = () => (/^#\/[a-z0-9._\/-]{0,80}$/.test(location.hash) ? location.hash : '#/');
+  const breakAt = /* where a report is filed: the address as read (#/do/break%3A… is #/do/break:…), else the first page */ () => { let h = location.hash; try { h = decodeURIComponent(h); } catch (e) { /* not encoded as an address is */ } return PLACE.test(h) ? h : '#/'; };
   function drawBreak() {
     const at = breakAt(), here = reportsAt(Game.world(S), at);
     let h = '<button type="button" class="x" data-breakx aria-label="' + esc(t('sheet.close')) + '">×</button><p class="kicker">' + esc(t('break.k')) + '</p><h2>' + esc(t('break.t')) + '</h2>' +
@@ -586,7 +588,7 @@ export function start() {
       const keepWords = words; drawBreak(); const f = breakp.querySelector('[data-breakwords]'); if (f && !r.ok) f.value = keepWords;
     }
   });
-  document.addEventListener('keydown', e => { if (e.key === 'Escape' && !breakp.hidden) { openBreak(false); $('breakbtn').focus(); } });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && !breakp.hidden && $('langmenu').hidden) { e.preventDefault(); e.stopPropagation(); openBreak(false); $('breakbtn').focus(); } }, true);
   /* the place changes under an open panel: it follows, and shows what was reported there */
   window.addEventListener('hashchange', () => { if (!breakp.hidden) { breakMine = null; breakErr = ''; drawBreak(); } });
   window.addEventListener('hashchange', route);

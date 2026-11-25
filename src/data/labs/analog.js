@@ -3,8 +3,8 @@
 export default {
   name: 'analog', css: true,
   challenges: [
-    { id: 'sig-heart', step: 'ship', place: 'phones', at: 'phoneboard', kind: 'capture', grows: 'island-adc', opens: 'fail.phoneboard', exp: 'fail-heat' },
-    { id: 'sig-bearing', step: 'ship', place: 'cars', at: 'ecu', kind: 'capture', grows: 'island-sensor', opens: 'fail.ecu', exp: 'fail-life' },
-    { id: 'reg-jobs', step: 'ship', place: 'phones', at: 'phoneboard', kind: 'regulate', grows: 'island-reg', opens: 'fail.phoneboard', exp: 'fail-heat' }
+    { id: 'sig-heart', step: 'use', place: 'phones', at: 'phoneboard', kind: 'capture', grows: 'island-adc', opens: 'fail.phoneboard', exp: 'fail-heat' },
+    { id: 'sig-bearing', step: 'use', place: 'cars', at: 'ecu', kind: 'capture', grows: 'island-sensor', opens: 'fail.ecu', exp: 'fail-life' },
+    { id: 'reg-jobs', step: 'use', place: 'phones', at: 'phoneboard', kind: 'regulate', grows: 'island-reg', opens: 'fail.phoneboard', exp: 'fail-heat' }
   ]
 };

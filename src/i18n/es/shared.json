@@ -1,0 +1,19 @@
+{
+ "wall.switch.d": "Un transistor nunca se apaga del todo: incluso en 0, se escapa un poco de corriente. A temperatura ambiente hacen falta unos 60 milivoltios más en su puerta para dejar pasar diez veces más corriente, así que bajar 60 milivoltios el punto en que se enciende deja escapar diez veces más. Por eso los voltajes de los chips dejaron de bajar.",
+ "wall.memory.d": "Casi toda la energía se va en mover números, no en calcular con ellos. Traer 16 bits de la memoria de otro chip cuesta unas 3.500 veces la energía de sumar dos números de 16 bits.",
+ "wall.power.d": "Cada respuesta es cada vez más barata de calcular. Los centros de datos consumieron unos {dc} TWh (teravatios hora) de electricidad.",
+ "wall.power.more": "Van camino de unos {dc2030} TWh en 2030: cada respuesta sale más barata, y el mundo pide muchas más.",
+ "wall.cost.d": "Diseñar un chip de vanguardia pasó de unos {design28} a 28 nm a unos {design} a 2 nm, y un módulo de fábrica para hacerlo cuesta unos {module}. Cada vez menos pueden permitirse un intento.",
+ "machines.need.hearing.t": "Audífono",
+ "machines.need.hearing.d": "Diminuto, todo el día con una pila pequeña",
+ "machines.need.hearing.why": "Su filtro hay que ajustarlo al oído de cada persona, así que debe poder cambiar después de fabricada la máquina.",
+ "machines.need.wildfire.t": "Sensor de incendios",
+ "machines.need.wildfire.d": "Diez años en un bosque, sin cobertura",
+ "machines.need.wildfire.why": "Nada tiene que cambiar una vez allí: lo que más importa es la pila.",
+ "machines.need.rover.t": "Rover marciano",
+ "machines.need.rover.d": "Lejos, frío, golpeado por la radiación",
+ "machines.need.rover.why": "Su guía tiene que recibir actualizaciones desde la Tierra, y su votador y su núcleo deben ser exactos, porque allí la radiación cambia bits.",
+ "machines.need.radio.t": "Radio que escucha en todas partes",
+ "machines.need.radio.d": "Las señales a su alrededor cambian en nanosegundos",
+ "machines.need.radio.why": "Las señales que busca cambian más deprisa de lo que la mayoría del hardware puede recablearse: encontrarlas y extraerlas debe reconfigurarse cada 100 nanosegundos, y extraerlas debe ser exacto."
+}

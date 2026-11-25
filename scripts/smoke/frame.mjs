@@ -1,6 +1,6 @@
 import { S } from './shared.mjs';
 
-export const about = 'the frame (#271): the size at every level and the ring on the way in, desktop and phone; the caption at a dive level with its question in full, desktop and phone; on a phone the sheet at three heights, the seam note in it, the names at the gate apart and Your log clear of the loop; Half the power won in Do mode, its instrument on the stage beside the panel that holds its controls; a chip\'s settings played on the line, Jevons\' bet in the island\'s sheet; a question\'s page in Read mode, its column, its picture and the bar';
+export const about = 'the frame (#271): the size at every level and the ring on the way in, desktop and phone; the caption at a dive level with its question in full, desktop and phone; on a phone the sheet at three heights, the seam note in it, the names at the gate apart and Your log clear of the loop; Half the power won in Do mode, its instrument on the stage beside the panel that holds its controls; a chip\'s settings played on the line, Jevons\' bet in the island\'s sheet; a question\'s page in Read mode, its column, its picture and the bar; one set of listeners on the dive\'s host, however often its views are visited';
 
 export default async function run() {
   const { browser, browser3d, base, problems } = S;
@@ -151,6 +151,18 @@ export default async function run() {
     const side = await rp.evaluate(() => Math.max(document.documentElement.scrollWidth - innerWidth, (() => { const p = document.querySelector('#page'); return p ? p.scrollWidth - p.clientWidth : 0; })()));
     if (side > 1) problems.push(tag + ': the page scrolls sideways by ' + side + ' px');
     await rp.close(); }
+  /* the way back leads to the page it names (#368): a reading page opened from its address goes back to the map, and
+     the map, opened from there, back to the first page; the map's way back never names the map */
+  { const tag = 'frame back', bp = await browser.newPage({ viewport: { width: 1280, height: 800 } }); bp.on('pageerror', e => problems.push(tag + ': ' + e.message));
+    await bp.addInitScript(() => { try { localStorage.setItem('osl-quality', 'flat'); localStorage.setItem('osl-hints-v1', JSON.stringify({ seen: {}, off: true })); } catch (e) { /* no storage */ } });
+    await bp.goto(base + 'index.html#/w/fail');
+    const first = await bp.waitForFunction(() => { const a = document.querySelector('#page:not([hidden]) .f2back'); return a && location.hash === '#/w/fail' && a.getAttribute('href') === '#/log' ? a.textContent : null; }, null, { timeout: 60000, polling: 1000 })
+      .then(h => h.jsonValue(), () => { problems.push(tag + ': a reading page opened from its address does not lead back to the map'); return null; });
+    const back = await bp.waitForFunction(() => { const a = document.querySelector('#page:not([hidden]) .f2back'); if (a && location.hash === '#/w/fail') a.click();
+      const b = location.hash === '#/log' && document.querySelector('#page:not([hidden]) .f2back'); return b && b.getAttribute('href') === '#/' ? b.textContent : null; }, null, { timeout: 60000, polling: 1000 })
+      .then(h => h.jsonValue(), () => { problems.push(tag + ': the way back does not lead to the map, or the map\'s way back does not lead to the first page'); return null; });
+    if (first && back && first === back) problems.push(tag + ': the map\'s way back names the map: ' + back);
+    await bp.close(); }
   /* the core questions are met on the picture (#303, docs/FRAME13.md): at a level, at most three marks while you look,
      one for every lens that lives there with Ask open, each beside its part; a mark tapped opens its lens alone and
      Put it down closes it; no row of their names anywhere */
@@ -310,4 +322,33 @@ export default async function run() {
       return !!f.querySelector('.dock .lpinst[data-lpinst="geo"] .fidrow .fid[data-fid="computed"]'); }, null, { timeout: 120000, polling: 1000 })
       .catch(() => problems.push(tag + ': the block\'s caption or its lens\'s measures do not carry their marks'));
     await fp.close(); }
+  /* one set of listeners on a host (#366): the dive, the line, the bench and the supply map are shown in one host
+     (#diveui), and each time a view opens there its frame is made anew. What the frame, its modes and the Listen switch
+     listen to ends with the frame before, so after the line, the dive, the bench, the supply map and the dive again the
+     host carries as many as after one dive (counted through a wrapped addEventListener), and a tap on the rail goes
+     where it says, not where an old view's handler would fly (after the line, "gate" landed in the data centre) */
+  { const tag = 'frame one set of listeners', hp = await browser3d.newPage({ viewport: { width: 1280, height: 800 }, colorScheme: 'dark', reducedMotion: 'reduce' }); hp.on('pageerror', e => problems.push(tag + ': ' + e.message));
+    await hp.addInitScript(() => { try { localStorage.setItem('osl-quality', 'keep'); localStorage.setItem('osl-hints-v1', JSON.stringify({ seen: {}, off: true })); } catch (e) { /* no storage */ }
+      const add = EventTarget.prototype.addEventListener;
+      EventTarget.prototype.addEventListener = function (type, fn, opt) { if (this instanceof Element && this.id === 'diveui') (this.oslHeard || (this.oslHeard = [])).push(opt && typeof opt === 'object' ? opt.signal : null); return add.call(this, type, fn, opt); };
+      window.oslHeard = () => { const f = document.getElementById('diveui'); return (f && f.oslHeard || []).filter(s => !s || !s.aborted).length; }; });
+    /* a view is open in the host once its frame is new (a card not seen before) and, in the dive, the Listen switch is on it */
+    const visit = (hp2, h, dive) => hp2.waitForFunction(([h, dive]) => { const f = document.getElementById('diveui'), d = f && f.querySelector(':scope > .dockwrap > .dock');
+      if (location.hash.split('/')[1] !== h.split('/')[1]) { location.hash = h; return false; }
+      if (!f || f.hidden || !d || d === window.oslDock || !d.firstElementChild || (dive && !f.querySelector(':scope > .lsnbtn'))) return false;
+      window.oslDock = d; return true; }, [h, dive], { timeout: 120000, polling: 500 });
+    let one = -1;
+    try {
+      await hp.goto(base + 'index.html#/dive/chip'); await visit(hp, '#/dive/chip', true); one = await hp.evaluate(() => window.oslHeard());
+      await visit(hp, '#/line/print', false); await visit(hp, '#/dive/chip', true);
+      /* the rail's "gate", tapped at the chip: the dive goes down to the gate (reduced motion: no flight to wait for) */
+      const to = await hp.waitForFunction(() => { const h = location.hash; if (/^#\/dive\/gate$/.test(h)) return h; if (!/^#\/dive\//.test(h)) return h;
+        const b = document.querySelector('#diveui .rail2 [data-rail="gate"]'); if (b && h === '#/dive/chip') b.click(); return false; }, null, { timeout: 60000, polling: 1000 }).then(r => r.jsonValue()).catch(() => 'nowhere');
+      if (to !== '#/dive/gate') problems.push(tag + ': after the line, tapping "gate" on the dive\'s rail lands at ' + to + ', not at the gate');
+      await visit(hp, '#/bench', false); await visit(hp, '#/supply', false); await visit(hp, '#/dive/chip', true);
+      /* polled: a frame made twice in a row settles on its second; listeners piled up never go away */
+      const again = await hp.waitForFunction(n => window.oslHeard() === n && n, one, { timeout: 20000, polling: 500 }).then(() => one).catch(() => hp.evaluate(() => window.oslHeard()));
+      if (again !== one) problems.push(tag + ': #diveui carries ' + again + ' listeners after the line, the dive, the bench, the supply map and the dive again, ' + one + ' after one dive');
+    } catch (e) { problems.push(tag + ': the host\'s views did not open in turn (' + e.message.split('\n')[0] + ')'); }
+    await hp.close(); }
 }

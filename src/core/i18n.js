@@ -22,7 +22,7 @@
    in step). */
 export const LANGS = { en: 'English', zh: '中文', fr: 'Français', es: 'Español' };   // i18n-ok: each language is named in its own words
 /* the areas each language other than English has a file for */
-export const TRANSLATED = { zh: ['core', 'blueprint', 'hold'], fr: ['core', 'blueprint', 'hold'], es: ['core', 'blueprint', 'hold'] };
+export const TRANSLATED = { zh: ['core', 'blueprint', 'hold', 'shared'], fr: ['core', 'blueprint', 'hold', 'shared'], es: ['core', 'blueprint', 'hold', 'shared'] };
 const KEY = 'osl-lang';
 let LANG = 'en', MSG = {}, EN = {};
 
@@ -33,7 +33,9 @@ export const AREAS = {
   core: ['ui', 'loop', 'hero', 'break', 'report', 'sheet', 'nav', 'jump', 'frame2', 'home', 'exp', 'stop', 'depth',
     'map', 'game.ch', 'game.stepAria', 'design.proj', 'build.aiUse', 'build.need', 'ledger.sign',
     'machines.ui.kicker', 'field.perfect.q', 'frame.size', 'board.aria', 'chipx.aria', 'dive.aria', 'lens.aria',
-    'place.aria'],
+    'place.aria',
+    /* the money words of the figures more than one page names (src/v2/figures.js), which the first page needs at once */
+    'fig'],
   atlas: ['what', 'part', 'field', 'frame', 'seek', 'debate', 'case', 'thread', 'fact', 'proc', 'handle', 'slice',
     'station', 'plant', 'prim', 'q', 'here', 'zoom', 'dive', 'line', 'ask', 'trail', 'way', 'route', 'lens', 'layer',
     'joule', 'curve', 'world', 'chal', 'mini', 'lp',
@@ -60,6 +62,9 @@ export const AREAS = {
   blueprint: ['bp'],
   /* Hold, the first page (src/v2/hold.js) */
   hold: ['hd'],
+  /* what more than one page says, written once: the four walls (Hold and the blueprint) and the needs a machine is made
+     for (Hold and the machines page); the first page loads it when it is first touched, as it does the blueprint's */
+  shared: ['wall', 'machines.need'],
   pages: ['machines', 'mb', 'invent', 'liquid', 'read', 'page', 'site', 'tune', 'swm', 'side', 'walls',
     'forms', 'copies', 'probe', 'plan',
     /* the clock's toy and the energy floor on the reading pages */

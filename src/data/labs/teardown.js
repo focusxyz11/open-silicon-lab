@@ -3,7 +3,7 @@
 export default {
   name: 'teardown', css: true,
   challenges: [
-    { id: 'newest', step: 'ship', place: 'phones', at: 'phoneboard', kind: 'teardown', grows: 'island-teardown', opens: 'open.phoneboard', exp: 'open-modem' },
+    { id: 'newest', step: 'use', place: 'phones', at: 'phoneboard', kind: 'teardown', grows: 'island-teardown', opens: 'open.phoneboard', exp: 'open-modem' },
     { id: 'jobs', step: 'design', place: 'studio', at: 'need', kind: 'fit', grows: 'studio-fit', opens: 'divide.need', exp: 'divide-need', after: 'reg-jobs' }
   ]
 };

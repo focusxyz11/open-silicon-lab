@@ -211,7 +211,7 @@ export function create() {
     const [ar0, ar1] = V.flatKind === 'dive' ? ['↑ ', '↓ '] : ['← ', '→ '], nm = d => t('depth.' + d + '.name');
     /* along (the line, the studio): the next step is marked data-along, and the frame shows it on the picture too */
     const al = V.flatKind === 'dive' ? '' : ' data-along';
-    const end = { dive: '<a class="chipb" href="#/island">' + esc(t('chipx.back')) + '</a>', line: '<a class="chipb" data-along href="#/place/port">' + esc(t('line.end')) + '</a>', bench: '<a class="chipb" data-along href="#/line/print">' + esc(t('bench.toFab')) + '</a>' }[V.flatKind];
+    const end = { dive: '<a class="chipb" href="#/island">' + esc(t('chipx.back')) + '</a>', line: '<a class="chipb" data-key="next" data-along href="#/place/port">' + esc(t('line.end')) + '</a>', bench: '<a class="chipb" data-key="next" data-along href="#/line/print">' + esc(t('bench.toFab')) + '</a>' }[V.flatKind];
     /* on the line, a station with an inside: the way into it (the machine, or what it makes), on the picture as Go inside */
     const dv = V.flatKind === 'line' && (DiveData.DIVES[id] || [])[0], inName = dv && (dv[1] === 'scanner' ? cap1(t('part.' + DiveData.partWord(id, DiveData.DIVE_PART[id]))) : nm(dv[1])),
       inHtml = dv ? '<a class="chipb" data-in data-inname="' + esc(inName) + '" href="' + esc(lineIn(id)) + '">↓ ' + esc(inName) + '</a>' : '';
@@ -295,8 +295,9 @@ export function create() {
   function showFlat(kind, depth, chId, world) {
     V.hideAll(); document.body.classList.add('immersive'); V.flatKind = kind; V.vui.dataset.flat = kind; V.benchCh = null; if (kind === 'dive') V.diveWorld = V.DIVES[world] ? world : 'datacentre';
     $('diveCanvas').hidden = false; V.vui.hidden = false; $('flatLabels').hidden = false;
-    V.loading(true); V.lastPlace = kind === 'dive' ? V.DIVES[V.diveWorld].place : { line: 'fab', bench: 'studio' }[kind];
-    return Promise.all([V.withFrame(), ensureDive(), kind === 'bench' ? import('../bench.js') : null]).then(([, w, BkM]) => {
+    V.loading(true); V.lastPlace = kind === 'dive' ? V.DIVES[V.diveWorld].place : { line: 'fab', bench: 'studio' }[kind]; const rn = V.routeN;
+    /* made while the visitor moved on (#365): the picture is not started, and its frame not drawn */
+    return Promise.all([V.withFrame(), ensureDive(), kind === 'bench' ? import('../bench.js') : null]).then(([, w, BkM]) => { if (rn !== V.routeN) { if (V.vui.hidden) { w.stop(); hide3d(); } return; }
       const F = FL(kind); V.WE.setWorld(F.world); w.setMap(null); V.diveFrame && V.diveFrame.dock.classList.remove('supdock'); if (kind !== 'line') hide3d(); V.DS.setBandCaption(false);
       /* the bench: your design, live, on a surface over the studio's picture (src/v2/bench.js); a first visit opens on
          the lab's working example for the first piece, the half adder */
@@ -326,8 +327,9 @@ export function create() {
       if (V.Joule) V.Joule.redraw();
       /* Listen (#316, on for everyone since #317): the block slowed down until it can be heard, a switch beside the
          joule's (src/v2/listen.js), shown at the levels that can sound, off until tapped; its code loads with the dive */
-      V.Listen = null;
-      if (kind === 'dive') import('../listen.js').then(m => { if (V.flatKind !== 'dive' || V.vui.hidden) return;
+      /* one switch, on the frame made now: a frame made again while its code loaded has its own (#365) */
+      V.Listen = null; const fr = V.diveFrame;
+      if (kind === 'dive') import('../listen.js').then(m => { if (V.flatKind !== 'dive' || V.vui.hidden || V.diveFrame !== fr || rn !== V.routeN) return;
         V.Listen = m.createListen(V.vui, { where: lensWhere, joule: () => { if (V.Joule && V.S.joule.on) V.Joule.on(false); }, changed: () => requestAnimationFrame(diveInset) }); V.Listen.level(V.diveId()); });
       V.vui.onclick = e => { const b = e.target.closest('[data-divego]'); if (b) w.flyTo(+b.dataset.divego); const sk = e.target.closest('[data-seek]'); if (sk) return pickPart(sk.dataset.seek); const pk = e.target.closest('[data-pick]'); if (pk) { pickPart(pk.dataset.pick === divePart ? null : pk.dataset.pick); V.vui.querySelectorAll('[data-pick]').forEach(x => x.classList.toggle('on', x.dataset.pick === divePart)); } };
       const d = V.WE.IDS.indexOf(L.includes(depth) ? depth : L[0]);

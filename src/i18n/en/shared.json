@@ -1,0 +1,19 @@
+{
+ "wall.switch.d": "A transistor never turns off cleanly: even at 0, a little current leaks through. At room temperature it takes about 60 millivolts more on its gate to let ten times more current through, so lowering the point where it turns on by 60 millivolts lets ten times more leak. That is why chip voltages stopped falling.",
+ "wall.memory.d": "Most of the energy goes on moving numbers, not on computing with them. Fetching 16 bits from memory on another chip costs about 3,500 times the energy of adding two 16-bit numbers.",
+ "wall.power.d": "Every answer keeps getting cheaper to compute. Data centres used about {dc} TWh (terawatt-hours) of electricity.",
+ "wall.power.more": "They are heading for about {dc2030} TWh by 2030: each answer gets cheaper, and the world asks for far more of them.",
+ "wall.cost.d": "Designing one leading chip went from about {design28} at 28 nm to about {design} at 2 nm, and one factory module to make it costs about {module}. Fewer and fewer can afford a try.",
+ "machines.need.hearing.t": "Hearing aid",
+ "machines.need.hearing.d": "Tiny, all day on one small battery",
+ "machines.need.hearing.why": "Its filter has to be tuned to each person's hearing, so it must still change after the machine is made.",
+ "machines.need.wildfire.t": "Wildfire sensor",
+ "machines.need.wildfire.d": "Ten years in a forest, no service",
+ "machines.need.wildfire.why": "Nothing has to change once it is out there: what matters most is the battery.",
+ "machines.need.rover.t": "Mars rover",
+ "machines.need.rover.d": "Far away, cold, hit by radiation",
+ "machines.need.rover.why": "Its guide has to take updates from Earth, and its voter and core must be exact, because radiation flips bits out there.",
+ "machines.need.radio.t": "Radio that listens everywhere",
+ "machines.need.radio.d": "The signals around it change in nanoseconds",
+ "machines.need.radio.why": "The signals it hunts change faster than most hardware can be rewired: finding them and pulling them out must reshape every 100 nanoseconds, and pulling them out must be exact."
+}

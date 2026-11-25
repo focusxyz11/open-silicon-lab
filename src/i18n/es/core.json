@@ -21,6 +21,14 @@
  "loop.at.use": "Uso: el centro de datos",
  "loop.log": "Tu registro",
  "loop.map": "Mapa",
+ "loop.same": "El mismo nivel, {as}",
+ "loop.as.design": "tal como se diseña",
+ "loop.as.make": "tal como se fabrica",
+ "loop.as.test": "tal como se prueba",
+ "loop.as.ship": "tal como se envía",
+ "loop.as.use": "tal como se usa",
+ "game.stepAria": "Paso {n}, {step}: {done} de {total} retos hechos",
+ "loop.mapK": "El mundo de los chips en una página: cada lugar y nivel, dónde has estado y tu registro",
  "loop.out": "Fuera: el mundo alrededor de la isla",
  "loop.outShort": "El mundo alrededor",
  "break.btn": "Rómpelo: ¿algo va mal aquí?",
@@ -36,5 +44,7 @@
  "home.q.copy": "Para pensar con la eficiencia de un cerebro, ¿debe una máquina renunciar al poder de copiar su mente?",
  "home.q.nat": "Si casi cualquier cosa en la naturaleza puede calcular, ¿qué queda, si queda algo, más allá del cálculo?",
  "home.q.human": "Cuando la IA hace gratis generar opciones y las herramientas llegan a todos, ¿qué solo pueden aportar los humanos, solos y juntos?",
- "home.q.physics": "¿Debemos luchar contra la física para mantener exacta la lógica, o dejar que las leyes físicas hagan el cálculo?"
+ "home.q.physics": "¿Debemos luchar contra la física para mantener exacta la lógica, o dejar que las leyes físicas hagan el cálculo?",
+ "fig.money": "{n} dólares",
+ "fig.money.big": "{n} de dólares"
 }

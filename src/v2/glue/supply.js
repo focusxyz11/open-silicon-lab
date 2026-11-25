@@ -43,8 +43,9 @@ export function create() {
     /* the world map is entered from the port, or from the island whose machines or materials it follows: going out
        comes back to where you came in */
     const back = ['tools', 'materials'].includes(V.enteredFrom) ? V.enteredFrom : 'port'; V.enteredFrom = null;
-    $('diveCanvas').hidden = false; V.vui.hidden = false; V.loading(true); V.lastPlace = back;
-    return Promise.all([V.withFrame(), V.ensureDive(), import('../../data/world.js'), import('../../engines/supply.js')]).then(([, w, Wd, Sp]) => {
+    $('diveCanvas').hidden = false; V.vui.hidden = false; V.loading(true); V.lastPlace = back; const rn = V.routeN;
+    /* made while the visitor moved on (#365): the picture is not started, and its frame not drawn */
+    return Promise.all([V.withFrame(), V.ensureDive(), import('../../data/world.js'), import('../../engines/supply.js')]).then(([, w, Wd, Sp]) => { if (rn !== V.routeN) { if (V.vui.hidden) w.stop(); return; }
       Wdata = Wd; Sup = Sp; V.WE.setWorld('journey'); V.DS.setBandCaption(false);
       const wd = Wdata.ROUTES[world] ? world : (SUP && SUP.world) || 'datacentre';
       SUP = { world: wd, step: 0, site: null, closed: [], back };

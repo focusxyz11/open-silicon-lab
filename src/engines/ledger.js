@@ -93,8 +93,9 @@ export const FRONTS = { 'eff.geo': { level: 'block', plan: ['p', 'n'] } };
 const tenth = v => typeof v === 'number' && v >= 0 && v <= 1 && Math.abs(v * 10 - Math.round(v * 10)) < 1e-9;
 const frontPlanOk = (F, p) => p && typeof p === 'object' && !Array.isArray(p) && Object.keys(p).length === F.plan.length && F.plan.every(k => tenth(p[k]));
 const frontKey = (F, p) => F.plan.map(k => Math.round(p[k] * 10)).join(',');
-/* a report's place: the site's own address, as the bar shows it (#/line/print, #/dive/gate, #/build/record) */
-export const PLACE = /^#\/[a-z0-9._\/-]{0,80}$/;
+/* a report's place: the site's own address, as the bar shows it (#/line/print, #/dive/gate, #/build/record), read
+   plainly (a challenge of the community's is #/do/break:<entry> or #/do/job:<piece>) */
+export const PLACE = /^#\/[a-z0-9._:\/-]{0,80}$/;
 /* plain words: no markup, no links (a link in free text is how spam pays), nothing a page or an agent could run */
 const plain = (s, min, max) => typeof s === 'string' && s.length >= min && s.length <= max && !/[<>\u0000-\u0008\u000b-\u001f]|https?:|www\./i.test(s);
 const norm = s => String(s || '').replace(/\s+/g, '').toLowerCase();

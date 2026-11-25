@@ -21,6 +21,14 @@
  "loop.at.use": "使用：数据中心",
  "loop.log": "你的日志",
  "loop.map": "地图",
+ "loop.same": "同一层级，{as}",
+ "loop.as.design": "设计时的样子",
+ "loop.as.make": "制造时的样子",
+ "loop.as.test": "测试时的样子",
+ "loop.as.ship": "出货时的样子",
+ "loop.as.use": "使用时的样子",
+ "game.stepAria": "第 {n} 步，{step}：已完成 {done} / {total} 个挑战",
+ "loop.mapK": "一页上的芯片世界：每个地方和层级、你去过哪里，以及你的日志",
  "loop.out": "向外：岛屿周围的世界",
  "loop.outShort": "周围的世界",
  "break.btn": "攻破它：这里有什么不对吗？",
@@ -36,5 +44,7 @@
  "home.q.copy": "要像大脑一样高效地思考，机器是否必须放弃复制自己心智的能力？",
  "home.q.nat": "如果自然界几乎什么都能计算，那么还有什么在计算之外？",
  "home.q.human": "当 AI 让生成选项变得免费、工具普及到每个人，什么是只有人类，独自或一起，才能带来的？",
- "home.q.physics": "我们应该对抗物理来保持逻辑精确，还是让物理定律来做计算？"
+ "home.q.physics": "我们应该对抗物理来保持逻辑精确，还是让物理定律来做计算？",
+ "fig.money": "{n} 美元",
+ "fig.money.big": "{n}美元"
 }
