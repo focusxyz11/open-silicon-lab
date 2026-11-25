@@ -15,8 +15,9 @@ export function create() {
   function showBoard() {
     V.hideAll(); document.body.classList.add('immersive');
     $('boardCanvas').hidden = $('boardLabels').hidden = false; V.bui.hidden = false; showStage(true);
-    V.loading(true); V.lastPlace = 'datacentre';
-    return Promise.all([V.withFrame(), ensureBoard(), import('../story.js'), import('../stories.js')]).then(([, b, St, Sd]) => {
+    V.loading(true); V.lastPlace = 'datacentre'; const n = V.routeN;
+    /* made while the visitor moved on (#365): left paused, and its story not told */
+    return Promise.all([V.withFrame(), ensureBoard(), import('../story.js'), import('../stories.js')]).then(([, b, St, Sd]) => { if (n !== V.routeN) { if (V.bui.hidden) b.pause(); return; }
       V.loading(false); b.resume(); const data = Sd.boardStory();
       const fr = V.boardFrame = V.frameOf(V.bui, { up: { href: '#/place/datacentre/4', label: t('board.up') }, path: [{ href: '#/island', label: t('place.back') }, { href: '#/place/datacentre/4', label: t('map.datacentre.t') }, { label: t('place.dc.board.t') }],
         rail: { label: t('place.levels'), items: LEVELS.map(k => ({ id: k, label: t('place.dc.' + k + '.t'), size: sizeOf(k) })) },

@@ -41,8 +41,9 @@ export function create() {
   function showPlace(id, lv) {
     V.hideAll();
     $('placeCanvas').hidden = $('placeLabels').hidden = false; V.pui.hidden = false; showStage(true); document.body.classList.add('immersive');
-    V.loading(true); V.lastPlace = id;
-    return Promise.all([V.withFrame(), ensureDc()]).then(([, d]) => {
+    V.loading(true); V.lastPlace = id; const n = V.routeN;
+    /* made while the visitor moved on (#365): left paused, and its frame not drawn */
+    return Promise.all([V.withFrame(), ensureDc()]).then(([, d]) => { if (n !== V.routeN) { if (V.pui.hidden) d.pause(); return; }
       V.dcFrame = V.frameOf(V.pui, { up: { href: '#/island', label: t('place.back') }, path: [{ href: '#/island', label: t('place.back') }, { label: t('map.' + id + '.t') }],
         rail: { label: t('place.levels'), items: LEVELS.map(k => ({ id: k, label: t('place.dc.' + k + '.t'), size: sizeOf(k) })) }, onRail: k => d.go(LEVELS.indexOf(k)), onLook: drawDc, scroll: true, caption: true });
       V.pui.onclick = e => { const b = e.target.closest('[data-lvgo]'); if (b) d.go(+b.dataset.lvgo); const sk = e.target.closest('[data-seek]'); if (sk) return dcSeek(sk.dataset.seek); const h = e.target.closest('[data-hl]'); if (h) d.mark(h.dataset.hl); };
@@ -81,8 +82,8 @@ export function create() {
   function showPhone(lv) {
     V.hideAll();
     $('flyCanvas').hidden = $('flyLabels').hidden = false; V.fui.hidden = false; showStage(true); document.body.classList.add('immersive');
-    V.loading(true); V.lastPlace = 'phones';
-    return Promise.all([V.withFrame(), ensurePh()]).then(([, d]) => {
+    V.loading(true); V.lastPlace = 'phones'; const n = V.routeN;
+    return Promise.all([V.withFrame(), ensurePh()]).then(([, d]) => { if (n !== V.routeN) { if (V.fui.hidden) d.pause(); return; }
       V.phFrame = V.frameOf(V.fui, { up: { href: '#/island', label: t('place.back') }, path: [{ href: '#/island', label: t('place.back') }, { label: t('map.phones.t') }],
         rail: { label: t('place.levels'), items: PH.LEVELS.map(k => ({ id: k, label: t('place.phone.' + k + '.t'), size: sizeOf(PH.DEPTH[k] === 'phone' ? 'handset' : PH.DEPTH[k]) })) }, onRail: k => d.go(PH.LEVELS.indexOf(k)), onLook: drawPh, scroll: true, caption: true });
       V.fui.onclick = e => { const b = e.target.closest('[data-lvgo]'); if (b) d.go(+b.dataset.lvgo); const sk = e.target.closest('[data-seek]'); if (sk) return phSeek(sk.dataset.seek); const h = e.target.closest('[data-hl]'); if (h) d.mark(h.dataset.hl); };
@@ -111,8 +112,8 @@ export function create() {
   function showCar(lv) {
     V.hideAll();
     $('carCanvas').hidden = $('carLabels').hidden = false; V.kui.hidden = false; showStage(true); document.body.classList.add('immersive');
-    V.loading(true); V.lastPlace = 'cars';
-    return Promise.all([V.withFrame(), ensureCa()]).then(([, d]) => {
+    V.loading(true); V.lastPlace = 'cars'; const n = V.routeN;
+    return Promise.all([V.withFrame(), ensureCa()]).then(([, d]) => { if (n !== V.routeN) { if (V.kui.hidden) d.pause(); return; }
       V.caFrame = V.frameOf(V.kui, { up: { href: '#/island', label: t('place.back') }, path: [{ href: '#/island', label: t('place.back') }, { label: t('map.cars.t') }],
         rail: { label: t('place.levels'), items: CA.LEVELS.map(k => ({ id: k, label: t('place.car.' + k + '.t'), size: sizeOf(CA.SIZE[k]) })) }, onRail: k => d.go(CA.LEVELS.indexOf(k)), onLook: drawCa, scroll: true, caption: true });
       V.kui.onclick = e => { const b = e.target.closest('[data-lvgo]'); if (b) d.go(+b.dataset.lvgo); const h = e.target.closest('[data-hl]'); if (h) d.mark(h.dataset.hl); };

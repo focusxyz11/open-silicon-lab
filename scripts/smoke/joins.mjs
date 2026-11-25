@@ -33,4 +33,17 @@ export default async function run() {
     });
     await page.close();
   }
+  /* a view that loads late never opens after you have left it (#365): on a fresh page, a place is opened from the island
+     and left again 150 ms later, before its code is in; once that code has arrived, the island is still the view shown */
+  { const tag = 'late view'; S.at = tag; const lp = await browser3d.newPage({ viewport: { width: 1280, height: 800 } });
+    lp.on('pageerror', e => problems.push(tag + ': ' + e.message));
+    await lp.addInitScript(() => { localStorage.setItem('osl-quality', 'keep'); localStorage.setItem('osl-hints-v1', JSON.stringify({ seen: {}, off: true })); });
+    await lp.goto(base + 'index.html#/island');
+    await lp.waitForFunction(() => !document.getElementById('mapCanvas').hidden, null, { timeout: 60000 }).catch(() => problems.push(tag + ': the island did not open'));
+    await lp.evaluate(() => { location.hash = '#/place/datacentre/0'; setTimeout(() => { location.hash = '#/island'; }, 150); });
+    /* the data centre's code in, and the island alone in view for six polls in a row after that */
+    await lp.waitForFunction(() => { const got = performance.getEntriesByType('resource').some(r => /\/v2\/dc3d\.js/.test(r.name)), island = location.hash === '#/island' && !document.getElementById('mapCanvas').hidden && document.getElementById('placeui').hidden && document.getElementById('placeCanvas').hidden;
+      window.__lateOk = got && island ? (window.__lateOk || 0) + 1 : 0; return window.__lateOk >= 6; }, null, { timeout: 90000, polling: 500 })
+      .catch(async () => problems.push(tag + ': leaving a place before it loaded still opened it ' + await lp.evaluate(() => JSON.stringify({ hash: location.hash, place: !document.getElementById('placeui').hidden, island: !document.getElementById('mapCanvas').hidden })).catch(e => e.message)));
+    await lp.close(); }
 }
