@@ -28,7 +28,7 @@
      watchers wear them the new way (readPage, bar). */
 import { t, has } from '../core/i18n.js';
 import { whereOf } from '../engines/way.js';
-import { challengeOf } from './game.js';
+import { challengeOf } from './loop.js';
 
 /* the choice an earlier visit kept (?frame=1 or 2, when the two frames were compared) means nothing now */
 try { localStorage.removeItem('osl-frame'); } catch (e) { /* no storage */ }
