@@ -26,7 +26,7 @@ More fits than not. The lab's parts are good; it is their arrangement that chang
 | The open port (`src/engines/api.js`, `scripts/mcp.mjs`) and `look` | Agents and people walk the same graph. `look` will return experiments |
 | One home for every thing (the atlas) | The rule was right. The home is now an experiment; where on the chip it is about becomes one of its sides |
 | Figures with source, date and kind, re-checked monthly (`src/data/facts.json`); the real cases | They are what "true" rests on when no engine can say. Each figure becomes a reading of a measure |
-| Words in `src/i18n/en.json`, never in code | Unchanged. Later the file splits by world |
+| Words in `src/i18n/en.json`, never in code | Unchanged. Later the file splits by world (it has since split by area: `src/i18n/en/<area>.json`) |
 | The dive and its joined levels in 3D; the factory line; the island; the supply map | Four lenses already drawn well: Dive, Line, Map twice |
 | One renderer, no cuts between views, feedback for wrong and right, reduced motion | Craft that every lens inherits |
 | Tap a gate to fix a design; typing for whoever wants it | The right way to change a description. It moves into Forms |
@@ -81,7 +81,7 @@ stack on a phone; an experiment's question, its control, what is true and what i
 the picture; five other questions fit as ways on, without a menu.
 
 What it does not prove: it is not on the site. It has no 3D and does not join the shared stage. It does not
-carry your design on to the factory or the dive. Its words are in the file and not in `en.json`. It holds a
+carry your design on to the factory or the dive. Its words are in the file and not in `src/i18n/en/`. It holds a
 copy of the engine so that it opens from disk. It covers four small jobs, none with a clock. Nobody but me has
 tried it.
 
@@ -170,7 +170,7 @@ comes first and that a document is enough; this stage is that, built so nothing 
 its gaps are named on the page.
 
 **Stage 3. The studio as Forms.**
-From the sketch to the site: in the frame, on the shared stage where it needs one, words in `en.json`, the six
+From the sketch to the site: in the frame, on the shared stage where it needs one, words in `src/i18n/en/`, the six
 experiments live, your design still riding on to the factory. It can start as soon as stage 1's shape is
 settled; it does not wait for stage 2. The site before it: `claude/before-forms-2026-11`.
 *Done when* no screen says "step" or "next step", every sentence that states a number reads it from the

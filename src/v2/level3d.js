@@ -197,7 +197,8 @@ export function createLevel3D(canvas, host, on, model) {
       shown = key;
       M.update(quiet ? 0 : dt, k, camera.position.distanceTo(at), arrived, picked, 0);
       /* names hide while the camera moves in (the arrival) and show once it rests */
-      names.forEach(n => { n.show = k > 0.85 && arrived >= 1 && (!M.has || M.has(n.key)); n.el.classList.toggle('on', n.key === picked); });
+      /* a name follows its part when the part moves with your chip (the gate's tick, the wafer's chips): anchors read each draw */
+      names.forEach(n => { n.show = k > 0.85 && arrived >= 1 && (!M.has || M.has(n.key)); n.el.classList.toggle('on', n.key === picked); const a = M.anchors[n.key]; if (a) n.offset.set(a[0], a[1], a[2]); });
       L.update(camera, W, H);
       if (picked && k > 0.85 && arrived >= 1) placeCard(); else card.hidden = true;
       placeMarks();

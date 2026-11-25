@@ -1,5 +1,6 @@
 /* The chip-making steps, as small models (the step labs of the earlier site, ported as engines; the views are somewhere else).
-   Pure logic, no DOM, no English (ids only; every word is in WORDS, to be merged into src/i18n/en.json by the owner).
+   Pure logic, no DOM, no English (ids only; every word is in WORDS, read by its tests; the views show their own, in
+   src/i18n/en/).
    Ported from the earlier site (the branch 'before'), from the labs of its physics, fab and litho topics, with
    the same formulas, constants and seeds, so the same settings show the same numbers; added here: stepping, seeded
    random draws, challenge checks and WORDS. One file per step, gathered here:

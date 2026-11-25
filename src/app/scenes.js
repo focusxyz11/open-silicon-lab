@@ -2,7 +2,7 @@
    space by draw(G), where G is the drawing helper from src/app/world.js. parts: the named shapes a
    question can light up ({ r: [x, y, w, h] } | { c: [x, y, r] } | { p: [[x, y], ...] }, with closed: true
    for an outline such as a box drawn in 2.5D). Labels are text
-   names: part.<depth>.<key> in src/i18n/en.json. No words in this file.
+   names: part.<depth>.<key> in src/i18n/en/. No words in this file.
    A data centre: building, rack, board, chip. A phone: phone, phoneboard, soc. A car: car, ecu, mcu.
    The journey's stations (crystal .. ship) are drawn in src/app/journey.js; inside the factory, a dive from
    the machine that prints with light: scanner, wafer, die.
@@ -17,7 +17,8 @@ import { STATIONS, setJourneyChip } from './journey.js';
 import { DESIGN_SCENES, designNow } from './design.js';
 import { proj, kit, tones, mix } from './solid.js';
 import { DIE, partsFor } from '../engines/xray.js';
-import { betWaferNow } from './betscene.js';
+import { betWaferNow, followChip } from './betscene.js';
+import { reshape } from '../engines/weave.js';
 import { coreGrid, CLOCK, CACHE, IO } from '../data/die.js';
 
 /* Your chip (src/engines/chip.js): the scenes that show it read its settings from here. */
@@ -28,8 +29,15 @@ export const chipNow = () => M;
 /* your wafer as the scenes draw it: its chips, which a speck touched, the specks, and the chip the dive follows */
 /* (while a bet on the wafer is open, its wafer: src/app/betscene.js) */
 export const waferNow = () => betWaferNow() || ({ dies: DIES, hits: HITS, specks: SPECKS, R: WAFER.R, follow: dieSquare(M.size) });
-export const setChip = c => { M = model(c); HITS = hits(M.size, M.gen); DIES = dies(M.size); SPECKS = defects(M.gen); setJourneyChip(M, HITS, DIES); };
+/* setChip draws your chip from now on: its model, its wafer (the chips that fit, the specks, which they kill), the
+   chip the dive follows into the die (reshape), and the journey's wafer. The shell never calls it itself (it does not
+   load the scenes): it hands your chip to src/app/betscene.js, which calls this once the scenes have loaded and every
+   time your chip changes after. */
+export const setChip = c => { M = model(c); HITS = hits(M.size, M.gen); DIES = dies(M.size); SPECKS = defects(M.gen); reshape('wafer', { portal: dieSquare(M.size) }); setJourneyChip(M, HITS, DIES); };
 setJourneyChip(M, HITS, DIES);
+followChip(setChip);
+/* for checks (the smoke test): what your wafer holds as the pictures draw it, and your chip's model */
+if (typeof window !== 'undefined') window.__chip = { wafer: () => { const W = waferNow(); return { dies: W.dies.length, good: W.dies.filter((_, i) => !W.hits[i]).length, side: W.follow[2] }; }, model: () => M };
 /* "Build it": how far the switch has been made (null: finished) */
 let BUILD = null;
 export const BUILD_STEPS = 8;

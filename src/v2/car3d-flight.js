@@ -377,7 +377,10 @@ export function createCarFlight(canvas, host, on = {}) {
   };
 
   /* ---- input: scroll, drag or keys move along the path; on.level tells the shell where you are ---- */
-  const go = v => { goal = clamp(v, 0, END); };
+  /* aim: the level asked for by address, said (on.level) from the start of the move there, not the ones passed on the
+     way; any move of your own drops it */
+  let aim = null;
+  const go = v => { aim = null; goal = clamp(v, 0, END); };
   /* past the chip, the flight carries on into it: a scroll that keeps pushing at the last level, or ↓ there, goes inside */
   let push = 0;
   const atEnd = () => goal >= END - 1e-6 && Math.abs(z - END) < 0.06;
@@ -398,12 +401,14 @@ export function createCarFlight(canvas, host, on = {}) {
   new ResizeObserver(resize).observe(canvas); resize();
   const frame = now => {
     if (!running) return; raf = requestAnimationFrame(frame);
-    const dt = Math.min(0.05, Math.max(0, now - last) / 1000); last = now;
+    const real = Math.max(0, now - last) / 1000, dt = Math.min(0.05, real); last = now;
     /* after a pause in scrolling, come to rest at the nearest level */
     if (!drag && Math.abs(goal - z) < 0.002) { settle += dt; if (settle > 0.6 && Math.abs(goal - Math.round(goal)) > 0.001) goal = Math.round(goal); } else settle = 0;
-    z += (goal - z) * (reduced() ? 1 : Math.min(1, dt * 4.5));
+    /* eased in time, not in frames: on a slow device each frame goes further, so a move takes as long */
+    z += (goal - z) * (reduced() ? 1 : 1 - Math.exp(-Math.min(0.5, real) * 4.5));
     pose(); states(); live(dt);
-    const lv = Math.round(z); if (lv !== lastLevel) { lastLevel = lv; on.level && on.level(lv); }
+    if (aim != null && Math.abs(z - aim) < 0.5) aim = null;
+    const lv = aim != null ? aim : Math.round(z); if (lv !== lastLevel) { lastLevel = lv; on.level && on.level(lv); }
     on.depth && on.depth(z);
     st.draw(scene, camera);
     L.update(camera, Wd, Ht);
@@ -411,7 +416,10 @@ export function createCarFlight(canvas, host, on = {}) {
   };
   raf = requestAnimationFrame(frame);
   return {
-    go(v) { go(v); },
+    /* asked: the move is to a level asked for by address, which is said from the start */
+    go(v, asked) { go(v); if (asked) aim = Math.round(goal); },
+    /* a level arrived at from elsewhere (a link, a reload): the flight starts there, with nothing passed on the way */
+    jump(v) { go(v); z = goal; },
     get z() { return z; },
     /* the parts named at a level (ids of src/data/atlas.js VIEW_PARTS.car), and one of them lit on the picture */
     parts: lv => named.filter(lb => lv >= lb.lv[0] - 0.01 && lv <= lb.lv[1] + 0.01).map(lb => lb.id),

@@ -5,7 +5,7 @@
    something true there, what can be played there, the question it meets there, and the way on (src/engines/frame.js,
    drawn by the card's Ask face in src/v2/frame.js).
 
-   Data only; every word is in src/i18n/en.json.
+   Data only; every word is in src/i18n/en/.
    - QUESTIONS: id, word (the question itself; where the lab already had it, its existing home), icon (a 24 x 24 stroke
      path for its lens). Its short name is frame.q.<id>, what its lens shows frame.q.<id>.hint.
    - FILED: everything filed once, its home question first, then the one or two it joins. A test checks nothing is

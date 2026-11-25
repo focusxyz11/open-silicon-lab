@@ -1,6 +1,6 @@
 /* Build your own AI chip, as an engine: the choices of a chip architect and what each does to speed, power, cost,
-   yield and schedule. Pure logic, no DOM, no English (ids only; the words are in WORDS, to be merged into
-   src/i18n/en.json by the owner).
+   yield and schedule. Pure logic, no DOM, no English (ids only; the words its results are named by are in
+   WORDS, read by its tests; its lab shows its own, in src/i18n/en/labs.json).
    Brought over from the first version of the site (the branch 'before': topics/build/labs/build-your-own-ai-chip.js,
    with its content.html and topic.json) with the same tables, the same formulas and the same numbers. Added here:
    ids instead of sentences (problems, reviewer notes and requirement rows are ids with their numbers, and the words
@@ -216,7 +216,8 @@ export const CHALLENGES = {
   train: { id: 'train', mission: 'train', check: c => design({ ...c, mission: 'train' }).all }
 };
 
-/* Words for the owner to merge into en.json (the engine itself holds none). Placeholders in {braces} are the numbers
+/* The words this engine's results are named by, kept beside it and read by its tests; the lab (src/v2/labs/aibuild.js)
+   shows its own, aib.* in src/i18n/en/labs.json. Placeholders in {braces} are the numbers
    of the id's object (problems, notes) or of the thing named. */
 export const WORDS = {
   'aibuild.mission.phone': 'Phone AI chip', 'aibuild.mission.phone.story': 'Run an 8-billion-parameter assistant on a phone: quick replies, cool to the touch, cheap enough for a mass-market handset.',

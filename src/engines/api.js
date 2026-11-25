@@ -1,6 +1,6 @@
 /* The open port: the lab's engines as tools any AI agent (or person, or program) can call, so agents
    design with the community instead of the lab running an AI of its own. Pure logic, no DOM. The MCP
-   server (scripts/mcp.mjs) wraps these functions; so could anything else. Words come from en.json
+   server (scripts/mcp.mjs) wraps these functions; so could anything else. Words come from src/i18n/en/
    through t(), so an agent reads the same job and the same verdicts a visitor does.
 
    Every tool returns plain data. Nothing here posts anywhere: a proposal is checked against the ledger

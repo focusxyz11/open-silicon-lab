@@ -1,7 +1,7 @@
 /* The lanes of Side by side (content/strange.md): kinds of matter that can pass a 1 to the next part, each with
    the numbers the Substrate engine needs and where every number comes from. A number nobody has given a source
    for yet is null: the lane shows it as missing, a place on the strange shelf for someone to fill. Words for each
-   medium are in src/i18n/en.json (side.m.<id>.*). The domino's figures are worked out by the engine. */
+   medium are in src/i18n/en/ (side.m.<id>.*). The domino's figures are worked out by the engine. */
 import { dominoStep } from '../engines/substrate.js';
 
 const D = dominoStep();

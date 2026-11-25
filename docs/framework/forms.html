@@ -7,7 +7,7 @@
 <!-- A working sketch for the framework (docs/framework/README.md, rebuild.md): the design studio as the lens
      "Forms". It is a document, not a page of the site: its words are here and it opens from disk.
      The engine below is the lab's own tiny-chip engine, src/engines/tinychip.js, copied in whole (as it stood at
-     commit 7b060cd) so the file needs nothing else. On the site this would import the engine and keep its words in src/i18n/en.json. -->
+     commit 7b060cd) so the file needs nothing else. On the site this would import the engine and keep its words in src/i18n/en/. -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Besley:wght@500;600;700&family=Atkinson+Hyperlegible+Next:wght@400;500;700&family=Martian+Mono:wdth,wght@75..112.5,400..600&display=swap">
@@ -168,7 +168,7 @@
 </div>
 
 <script>/* Tiny chip engine: parse, simulate, synthesize, place, route and fault-test small logic designs.
-   From the earlier site's tiny-chip studio. Pure logic, no DOM. The projects' words are in en.json
+   From the earlier site's tiny-chip studio. Pure logic, no DOM. The projects' words are in src/i18n/en/
    (design.proj.<id>.*); errors carry a key (k) and a name (n) for their words (design.err.<k>), the
    English m is only for tests and tools. */
 /* ---- tiny chip engine: parse, simulate, synthesize, place, route, fault-test ---- */

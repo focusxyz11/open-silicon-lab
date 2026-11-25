@@ -1,5 +1,5 @@
 /* Beyond today's chip: kinds of new matter a block of a machine can be made of (docs/MACHINES.md, "Invent"). Data only,
-   no words: the words are invent.* in src/i18n/en.json; the engine is src/engines/machine.js.
+   no words: the words are invent.* in src/i18n/en/; the engine is src/engines/machine.js.
 
    Inventing is open, so a kind of matter may rest on guesses; but every claim it rests on says how sure it is, and the
    machine's energy is shown as a range: what it would be if the guesses hold, and if they fail. Physics sets a wall no

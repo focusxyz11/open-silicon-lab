@@ -10,10 +10,10 @@ import { V, $, showStage, esc } from '../shell.js';
 
 export function create() {
   Object.assign(V, { showPlace, showPhone, showCar });
-  const ensureDc = () => V.dcP || (V.dcP = import('../dc3d.js').then(m => { V.dc = m.createDataCentre($('placeCanvas'), $('placeLabels'), { level: lv => placeUI(lv), depth: z => depthBar(z),
+  const ensureDc = () => V.dcP || (V.dcP = import('../dc3d.js').then(m => { V.dc = m.createDataCentre($('placeCanvas'), $('placeLabels'), { level: lv => { if (!dcWait) placeUI(lv); }, depth: z => depthBar(z),
     portal: p => V.dcFrame && V.dcFrame.inwardAt(p), beyond: () => { if (!V.pui.hidden) location.hash = '#/dive/chip'; } }); return V.dc; }));
   const DC_DEPTH = { campus: 'building', hall: 'building', rack: 'rack', server: 'rack', board: 'board', chip: 'chip' };
-  let dcPick = null;
+  let dcPick = null, dcWait = false;
   function placeUI(lv) {
     if (lv !== V.dcLv) dcPick = null;
     V.dcLv = lv; const id = LEVELS[lv];
@@ -38,8 +38,14 @@ export function create() {
   /* in the flight, the part kept lit on the picture: the one you tapped, else, once found, the one that leads in */
   const dcHold = () => { const k = seekAt('flight', LEVELS[V.dcLv]); return dcPick || (k && foundAt(V.S.looked, k) ? SEEK[k].leads : null); };
   const dcSeek = id => { const lv = seekAt('flight', LEVELS[V.dcLv]); if (!lv || !SEEK[lv].parts.includes(id)) return false; dcPick = id; V.seekTap(lv, id); if (V.dc) V.dc.mark(id); if (V.dcFrame && V.dcFrame.mode() === 'look') drawDc(); return true; };
+  /* a level asked for by address (#375): said by the address and the card from the start. Arriving from elsewhere (a
+     link, a reload, another view) the flight starts at it; asked while the flight is open, it flies there. Until the
+     view is ready, the levels the flight passes are not said */
+  const askedOf = (lv, n) => (lv != null && lv >= 0 && lv < n ? lv : null);
+  const toAsked = (d, ask, open) => { if (ask == null) return; if (open) d.go(ask, true); else d.jump(ask); };
   function showPlace(id, lv) {
-    V.hideAll();
+    const open = !V.pui.hidden, ask = askedOf(lv, LEVELS.length); if (ask != null && ask !== V.dcLv) { V.dcLv = ask; dcPick = null; }
+    V.hideAll(); dcWait = true;
     $('placeCanvas').hidden = $('placeLabels').hidden = false; V.pui.hidden = false; showStage(true); document.body.classList.add('immersive');
     V.loading(true); V.lastPlace = id; const rn = V.routeN;
     /* made while the visitor moved on (#365): left paused, and its frame not drawn */
@@ -50,13 +56,14 @@ export function create() {
       V.pui.onpointerover = e => { const h = e.target.closest('[data-hl]'); d.mark(h ? h.dataset.hl : dcHold()); };
       /* at a level with a search, the names on the picture are the parts to tap */
       $('placeLabels').onclick = e => { const h = e.target.closest('[data-hl]'); if (h) dcSeek(h.dataset.hl); };
-      V.loading(false); d.resume(); if (lv != null && lv >= 0 && lv < LEVELS.length) d.go(lv); placeUI(Math.round(d.z)); $('placeCanvas').focus({ preventScroll: true });
+      dcWait = false; V.loading(false); d.resume(); toAsked(d, ask, open); placeUI(ask != null ? ask : Math.round(d.z)); $('placeCanvas').focus({ preventScroll: true });
     });
   }
-  const depthBar = z => { if (V.dcFrame) V.dcFrame.rail(LEVELS[Math.round(z)], z / (LEVELS.length - 1)); };
-  let ph = null, phP = null, PH = null, phPick = null;
-  const ensurePh = () => phP || (phP = import('../phone3d-flight.js').then(m => { PH = m; ph = m.createPhoneFlight($('flyCanvas'), $('flyLabels'), { level: lv => phUI(lv),
-    depth: z => { if (V.phFrame) V.phFrame.rail(PH.LEVELS[Math.round(z)], z / (PH.LEVELS.length - 1)); },
+  /* the rail fills with the flight and marks the level the card says */
+  const depthBar = z => { if (V.dcFrame) V.dcFrame.rail(LEVELS[V.dcLv], z / (LEVELS.length - 1)); };
+  let ph = null, phP = null, PH = null, phPick = null, phWait = false;
+  const ensurePh = () => phP || (phP = import('../phone3d-flight.js').then(m => { PH = m; ph = m.createPhoneFlight($('flyCanvas'), $('flyLabels'), { level: lv => { if (!phWait) phUI(lv); },
+    depth: z => { if (V.phFrame) V.phFrame.rail(PH.LEVELS[V.phLv], z / (PH.LEVELS.length - 1)); },
     portal: p => V.phFrame && V.phFrame.inwardAt(p), beyond: () => { if (!V.fui.hidden) location.hash = PH.BEYOND; } }); return ph; }));
   function phUI(lv) {
     if (lv !== V.phLv) phPick = null;
@@ -80,7 +87,9 @@ export function create() {
   const phHold = () => { const k = PH && seekAt('phone', PH.LEVELS[V.phLv]); return phPick || (k && foundAt(V.S.looked, k) ? SEEK[k].leads : null); };
   const phSeek = id => { const lv = seekAt('phone', PH.LEVELS[V.phLv]); if (!lv || !SEEK[lv].parts.includes(id)) return false; phPick = id; V.seekTap(lv, id); if (ph) ph.mark(id); if (V.phFrame && V.phFrame.mode() === 'look') drawPh(); return true; };
   function showPhone(lv) {
-    V.hideAll();
+    /* the phone's levels are known once its flight is loaded: until then, the level asked is taken as it is */
+    const open = !V.fui.hidden; let ask = askedOf(lv, PH ? PH.LEVELS.length : Infinity); if (ask != null && ask !== V.phLv) { V.phLv = ask; phPick = null; }
+    V.hideAll(); phWait = true;
     $('flyCanvas').hidden = $('flyLabels').hidden = false; V.fui.hidden = false; showStage(true); document.body.classList.add('immersive');
     V.loading(true); V.lastPlace = 'phones'; const rn = V.routeN;
     return Promise.all([V.withFrame(), ensurePh()]).then(([, d]) => { if (rn !== V.routeN) { if (V.fui.hidden) d.pause(); return; }
@@ -89,13 +98,14 @@ export function create() {
       V.fui.onclick = e => { const b = e.target.closest('[data-lvgo]'); if (b) d.go(+b.dataset.lvgo); const sk = e.target.closest('[data-seek]'); if (sk) return phSeek(sk.dataset.seek); const h = e.target.closest('[data-hl]'); if (h) d.mark(h.dataset.hl); };
       V.fui.onpointerover = e => { const h = e.target.closest('[data-hl]'); d.mark(h ? h.dataset.hl : phHold()); };
       $('flyLabels').onclick = e => { const h = e.target.closest('[data-hl]'); if (h) phSeek(h.dataset.hl); };
-      V.loading(false); d.resume(); if (lv != null && lv >= 0 && lv < PH.LEVELS.length) d.go(lv); phUI(Math.round(d.z)); $('flyCanvas').focus({ preventScroll: true });
+      ask = askedOf(lv, PH.LEVELS.length);
+      phWait = false; V.loading(false); d.resume(); toAsked(d, ask, open); phUI(ask != null ? ask : Math.round(d.z)); $('flyCanvas').focus({ preventScroll: true });
     });
   }
   const hidePh = () => { $('flyCanvas').hidden = $('flyLabels').hidden = true; V.fui.hidden = true; if (ph) ph.pause(); };
-  let ca = null, caP = null, CA = null;
-  const ensureCa = () => caP || (caP = import('../car3d-flight.js').then(m => { CA = m; ca = m.createCarFlight($('carCanvas'), $('carLabels'), { level: lv => caUI(lv),
-    depth: z => { if (V.caFrame) V.caFrame.rail(CA.LEVELS[Math.round(z)], z / (CA.LEVELS.length - 1)); },
+  let ca = null, caP = null, CA = null, caWait = false;
+  const ensureCa = () => caP || (caP = import('../car3d-flight.js').then(m => { CA = m; ca = m.createCarFlight($('carCanvas'), $('carLabels'), { level: lv => { if (!caWait) caUI(lv); },
+    depth: z => { if (V.caFrame) V.caFrame.rail(CA.LEVELS[V.caLv], z / (CA.LEVELS.length - 1)); },
     portal: p => V.caFrame && V.caFrame.inwardAt(p), beyond: () => { if (!V.kui.hidden) location.hash = CA.BEYOND; } }); return ca; }));
   function caUI(lv) {
     V.caLv = lv; if (!V.caFrame) return; const id = CA.LEVELS[lv];
@@ -110,7 +120,8 @@ export function create() {
       last ? '<a class="chipb" data-key="next" data-in href="' + CA.BEYOND + '">↓ ' + esc(t('place.next')) + '</a>' : '<button type="button" class="chipb" data-key="next" data-in data-lvgo="' + (V.caLv + 1) + '">↓ ' + esc(t('place.car.' + LV[V.caLv + 1] + '.t')) + '</button>')).replace('<div class="nav">', hereHtml + '<div class="nav">');
   }
   function showCar(lv) {
-    V.hideAll();
+    const open = !V.kui.hidden; if (askedOf(lv, CA ? CA.LEVELS.length : Infinity) != null) V.caLv = lv;
+    V.hideAll(); caWait = true;
     $('carCanvas').hidden = $('carLabels').hidden = false; V.kui.hidden = false; showStage(true); document.body.classList.add('immersive');
     V.loading(true); V.lastPlace = 'cars'; const rn = V.routeN;
     return Promise.all([V.withFrame(), ensureCa()]).then(([, d]) => { if (rn !== V.routeN) { if (V.kui.hidden) d.pause(); return; }
@@ -118,7 +129,8 @@ export function create() {
         rail: { label: t('place.levels'), items: CA.LEVELS.map(k => ({ id: k, label: t('place.car.' + k + '.t'), size: sizeOf(CA.SIZE[k]) })) }, onRail: k => d.go(CA.LEVELS.indexOf(k)), onLook: drawCa, scroll: true, caption: true });
       V.kui.onclick = e => { const b = e.target.closest('[data-lvgo]'); if (b) d.go(+b.dataset.lvgo); const h = e.target.closest('[data-hl]'); if (h) d.mark(h.dataset.hl); };
       V.kui.onpointerover = e => { const h = e.target.closest('[data-hl]'); d.mark(h ? h.dataset.hl : null); };
-      V.loading(false); d.resume(); if (lv != null && lv >= 0 && lv < CA.LEVELS.length) d.go(lv); caUI(Math.round(d.z)); $('carCanvas').focus({ preventScroll: true });
+      const ask = askedOf(lv, CA.LEVELS.length);
+      caWait = false; V.loading(false); d.resume(); toAsked(d, ask, open); caUI(ask != null ? ask : Math.round(d.z)); $('carCanvas').focus({ preventScroll: true });
     });
   }
   const hideCa = () => { $('carCanvas').hidden = $('carLabels').hidden = true; V.kui.hidden = true; if (ca) ca.pause(); };

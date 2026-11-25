@@ -1,5 +1,6 @@
 /* Chips that touch the real world, as an engine: the path from a physical signal to bits, and the chip that powers it.
-   Pure logic, no DOM, no English (ids only; the words are in WORDS, to be merged into src/i18n/en.json by the owner).
+   Pure logic, no DOM, no English (ids only; the words its results are named by are in WORDS, read by its tests; its
+   lab shows its own, in src/i18n/en/labs.json).
    Brought over from the first version of the site (the branch 'before': src/engines/analog.js, its test, and the lab
    topics/analog/labs/analog-lab.js with its content.html and topic.json) with the same model and the same numbers.
    Added here: ids instead of the missions' and jobs' sentences, hintOf() and hintOfReg() (which hint the lab showed, as
@@ -183,7 +184,8 @@ export const CHALLENGES = {
   regulators: { id: 'regulators', check: picks => JOBS.every(j => { const b = bestReg(j); return !!b && picks && picks[j.id] === b.type; }) }
 };
 
-/* Words for the owner to merge into en.json (the engine itself holds none). */
+/* The words this engine's results are named by, kept beside it and read by its tests; the lab (src/v2/labs/analog.js)
+   shows its own, ana.* in src/i18n/en/labs.json. */
 export const WORDS = {
   'analog.mission.heart': 'Heartbeat patch', 'analog.mission.heart.why': 'a patch that runs a year on a coin cell',
   'analog.mission.temp': 'Thermostat', 'analog.mission.temp.why': 'a thermostat sensor that runs ten years on two AA cells',

@@ -2,7 +2,7 @@
    die, the power stages that feed it, the links to other boards. No side panel: the parts carry their own names
    and figures, a story docked below moves the camera, and the scene answers what you do. The numbers stream
    between memory and the die as light; the die's cores light up as much as they are busy (src/engines/chip.js).
-   Units: centimetres. Words: board.* (src/i18n/en.json). */
+   Units: centimetres. Words: board.* (src/i18n/en/). */
 import { THREE, PALETTES, theme, stage, light, group, labels, clamp, smooth, reduced, rnd, BOARD } from './kit3d.js';
 import { VIEW_PARTS } from '../data/atlas.js';
 
