@@ -54,6 +54,14 @@ export default async function run() {
     await at('job', 'the right chip for one job cannot be chosen', () => { const r = window.__p('years').querySelector('.layer.on input[type=range]'); if (r && r.value !== '0') { r.value = '0'; r.dispatchEvent(new Event('input', { bubbles: true })); } return !!window.__hold.S.done.job; });
     await at('bug', 'the divider\'s wrong answer cannot be found', () => { const S = window.__hold.S, b = window.__p('years').querySelectorAll('.layer.on .pbtn'); if (b.length > 1) (S.bug.n ? b[1] : b[0]).click(); return !!S.done.bug; });
     await at('light', 'the new light cannot be chosen', () => { const b = window.__p('years').querySelectorAll('.layer.on .seg button'); if (b[2] && !b[2].classList.contains('on')) b[2].click(); return !!window.__hold.S.done.light; });
+    /* the glass follows the pointer (or the finger that holds) and names the part of the chip it is over; the chart names the year under the pointer */
+    await hp.evaluate(() => window.__hold.set(20));
+    await play('the glass does not follow the pointer over the square', () => { const p = window.__p('years'), r = p.getBoundingClientRect(), g = p.querySelector('.layer.on .lb.c');
+      p.dispatchEvent(new PointerEvent('pointermove', { bubbles: true, pointerType: 'mouse', clientX: r.left + r.width * .25, clientY: r.top + r.height * .75 }));
+      return !!g && parseFloat(g.style.left) < 40 && +getComputedStyle(g).opacity > .5 && !!g.querySelector('b').textContent; });
+    if (!phone) await play('the chart does not name the year under the pointer', () => { const c = document.querySelector('#hd-root .b-band .chart'), r = c.getBoundingClientRect(), v = c.querySelector('.lab .hv');
+      c.dispatchEvent(new PointerEvent('pointermove', { bubbles: true, pointerType: 'mouse', clientX: r.left + r.width * .5, clientY: r.top + r.height * .5 }));
+      return !!v && v.style.display !== 'none' && /\d{4}/.test(v.textContent); });
     /* Moore's law, live: the pace that fits the chips, the year the clock stopped, and a guess for 2026 */
     const tapChart = (year, f) => { const c = document.querySelector('#hd-root .b-band .chart'), r = c.getBoundingClientRect(), u = parseFloat(getComputedStyle(document.getElementById('hd-root')).getPropertyValue('--u')) || 1;
       const x = window.__hold.chartX ? window.__hold.chartX(year) : r.left + 34 * u + (year - 1957) / 73 * (r.width - 46 * u), y = r.top + r.height * f; for (const t of ['pointerdown', 'pointerup']) c.dispatchEvent(new PointerEvent(t, { bubbles: true, clientX: x, clientY: y, pointerId: 1 })); };

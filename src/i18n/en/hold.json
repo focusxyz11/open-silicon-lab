@@ -414,5 +414,10 @@
  "hd.d.lede": "Fifty years of holding ended at a wall. What comes after is laid out as one chip, and the square you held is one block of it. Keep holding, or scroll: the camera goes from block to block. Or tap any block. Four of them fail a check. The pads on the edge lead out, to the island.",
  "hd.m.named": "Since about 1997 a line width is only the name of a generation of factory: nothing on the chip measures it any more, so it is in quotes.",
  "hd.cq.xof": "{x}",
- "hd.nx.x": "×{x}"
+ "hd.nx.x": "×{x}",
+ "hd.reg.core": "Logic",
+ "hd.reg.ctrl": "Control",
+ "hd.reg.memory": "Memory",
+ "hd.reg.io": "In and out",
+ "hd.reg.clock": "Clock"
 }
