@@ -1,6 +1,6 @@
 import { S } from './shared.mjs';
 
-export const about = 'the data centre\'s way in and its flight into the chip; the studio walked inside, with a handoff to a bench; the phone\'s and the car\'s flights into their chips';
+export const about = 'the data centre\'s way in and its flight into the chip; a link to a level landing on it, and a challenge\'s card shown at once; the studio walked inside, with a handoff to a bench; the phone\'s and the car\'s flights into their chips';
 
 export default async function run() {
   const { browser, browser3d, base, problems } = S;
@@ -23,6 +23,35 @@ export default async function run() {
     .catch(() => problems.push(tag + ': the dive\'s chip does not come down from where the flight ended'));
   await page.waitForFunction(() => !document.documentElement.dataset.arrive && !!document.querySelector('#l3-chip [data-part3="hbm"]'), null, { timeout: 60000, polling: 500 })
     .catch(() => problems.push(tag + ': the dive\'s chip does not come to rest with the memory beside it'));
+    await page.close(); }
+  /* a link to a level lands on it (#375): opened fresh at the chip, the flight starts there, and the address says the
+     chip from the start, never a level passed on the way (each address the page takes is kept, so none is missed
+     between two polls); the chip's own names come up on the picture */
+  { const page = await browser3d.newPage({ viewport: { width: 1280, height: 800 } }), tg = 'deep link';
+    page.on('pageerror', e => problems.push(tg + ': ' + e.message));
+    await page.addInitScript(() => { const seen = window.addresses = []; const keep = () => { if (seen[seen.length - 1] !== location.hash) seen.push(location.hash); };
+      ['pushState', 'replaceState'].forEach(k => { const f = history[k]; history[k] = function (...a) { const r = f.apply(this, a); keep(); return r; }; });
+      addEventListener('hashchange', keep); keep(); });
+    await page.goto(base + 'index.html#/place/datacentre/5');
+    await page.waitForFunction(() => { const l = document.querySelector('#placeLabels [data-hl="hbm"]'); return location.hash === '#/place/datacentre/5' && !!l && l.style.opacity !== '0' && !!document.querySelector('#placeui [data-rail="chip"][aria-current]'); }, null, { timeout: 150000, polling: 500 })
+      .catch(() => problems.push(tg + ': opened at the data centre\'s chip, the flight does not come to the chip with its names'));
+    const seen = await page.evaluate(() => window.addresses.filter(h => h !== '#/place/datacentre/5'));
+    if (seen.length) problems.push(tg + ': opened at the data centre\'s chip, the address passes other levels on the way (' + seen.join(' ') + ')');
+    await page.close(); }
+  /* a challenge played on the island shows its card at once (#375): while its lab is still on the way (held back
+     here), the panel already says the challenge, its title and its goal, with the island behind; once the lab comes,
+     the challenge is played in the same panel */
+  { const page = await browser.newPage({ viewport: { width: 1280, height: 800 } }), tg = 'challenge card';
+    page.on('pageerror', e => problems.push(tg + ': ' + e.message));
+    await page.addInitScript(() => { localStorage.setItem('osl-quality', 'flat'); localStorage.setItem('osl-hints-v1', JSON.stringify({ seen: {}, off: true })); });
+    let release = null; const held = new Promise(r => { release = r; });
+    await page.route(/\/src\/v2\/labs\/[a-z0-9-]+\.js/, r => held.then(() => r.continue()));
+    await page.goto(base + 'index.html#/do/halt');
+    await page.waitForFunction(() => { const s = document.getElementById('sheet'), w = s && !s.hidden && s.querySelector('.chwait[data-wait="halt"]'); return !!w && !!w.querySelector('.ch-t') && w.querySelector('.ch-t').textContent.trim().length > 0 && !!w.querySelector('.goal'); }, null, { timeout: 120000, polling: 500 })
+      .catch(() => problems.push(tg + ': while its lab loads, the panel of a challenge on the island does not say the challenge'));
+    release();
+    await page.waitForFunction(() => !!document.querySelector('#sheet:not([hidden]) .player[data-ch="halt"]'), null, { timeout: 120000, polling: 500 })
+      .catch(() => problems.push(tg + ': once its lab has come, the challenge on the island is not played in its panel'));
     await page.close(); }
   /* one studio (#267): Go inside the studio on the island flies down through its opened floor into the room (the walk
      passes between outside and the first corner, never jumping), the way in by the job's wall of notes settles on it and

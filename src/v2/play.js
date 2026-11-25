@@ -52,6 +52,24 @@ export function goalOf(ch) {
   return t('game.ch.' + ch.id + '.goal');
 }
 
+/* the head of a challenge's card: the stage and place it is played at, the place's levels with its own lit, its title,
+   how true the lab is, and its goal. It needs only the island's words, so the card can say it at once, while the lab
+   itself still loads (#375) */
+function headOf(ch) {
+  /* the stage it is played at, named as the bar names the stage it lights (the Lab's challenges are at Open) */
+  const stageK = () => { const st = stageOfChallenge(ch) || ch.step; return t('game.stepN', { n: STAGES.indexOf(st), step: t('loop.stage.' + st) }); };
+  /* where it happens: the place, and its levels with this one lit */
+  const place = ch.need ? 'studio' : ch.place, at = ch.kind === 'break' ? 'check' : ch.need ? 'logic' : ch.at, L = INSIDE[place] || [];
+  const where = L.length > 1 ? '<ol class="levels" aria-label="' + esc(t('map.' + place + '.t')) + '">' + L.map(l => '<li' + (l.depth === at ? ' class="on" aria-current="step"' : '') + '>' + esc(t('depth.' + l.depth + '.name')) + '</li>').join('') + '</ol>' : '';
+  return '<p class="kicker">' + esc(ch.step ? stageK() + ' · ' + t('map.' + ch.place + '.t') : t(ch.kind === 'break' ? 'game.break.kicker' : 'game.jobKicker')) + '</p>' +
+    where + '<h3 class="ch-t">' + esc(titleOf(ch)) + '</h3>' +
+    /* how true the lab is: one mark, tapped for what it means here (#325, src/data/fidelity.js) */
+    '<p class="fidrow">' + fidMark(labFid(ch)) + '</p><p class="goal">' + esc(goalOf(ch)) + '</p>';
+}
+/* the card while its lab loads: the head, and a back to the place's challenges (data-door, the shell's), as the player's
+   own back does */
+export const waitHtml = ch => '<div class="chwait" data-wait="' + esc(ch.id) + '"><button type="button" class="back" data-door="do">' + esc(t('game.back')) + '</button>' + headOf(ch) + '</div>';
+
 /* the labs (src/v2/labs/, each declared in src/data/labs/) and their words (the labs area, src/core/i18n.js) load with the
    first challenge played, never with the first page, and their styles (src/styles/labs.css, and each lab's own with its
    challenge, src/core/styles.js) too: the shell awaits labsReady(ch) before it calls play(). LABS: the lab that plays
@@ -77,17 +95,8 @@ export function play(el, ch, ctx) {
      decides). "Write it yourself" opens the text. */
   const TC = ch.kind === 'design' && TAPS[ch.id], TAP = !!TC;
   if (TAP) view.B = checkDesign(ch.p, S.codes[ch.p] != null ? S.codes[ch.p] : starter(ch.p));
-  const head = () => '<button type="button" class="back" data-back>' + esc(t('game.back')) + '</button>' +
-    '<p class="kicker">' + esc(ch.step ? stageK() + ' · ' + t('map.' + ch.place + '.t') : t(ch.kind === 'break' ? 'game.break.kicker' : 'game.jobKicker')) + '</p>' +
-    where() + '<h3 class="ch-t">' + esc(titleOf(ch)) + '</h3>' +
-    /* how true the lab is: one mark, tapped for what it means here (#325, src/data/fidelity.js) */
-    '<p class="fidrow">' + fidMark(labFid(ch)) + '</p><p class="goal">' + esc(goalOf(ch)) + '</p>' +
+  const head = () => '<button type="button" class="back" data-back>' + esc(t('game.back')) + '</button>' + headOf(ch) +
     (ch.kind !== 'break' && (ch.kind !== 'design' || !ch.need) && !(ch.id === 'half' && !view.write) ? '<p class="small muted why">' + esc(t('game.ch.' + ch.id + '.why')) + '</p>' : '');
-  /* the stage it is played at, named as the bar names the stage it lights (the Lab's challenges are at Open) */
-  const stageK = () => { const st = stageOfChallenge(ch) || ch.step; return t('game.stepN', { n: STAGES.indexOf(st), step: t('loop.stage.' + st) }); };
-  /* where it happens: the place, and its levels with this one lit */
-  const where = () => { const place = ch.need ? 'studio' : ch.place, at = ch.kind === 'break' ? 'check' : ch.need ? 'logic' : ch.at, L = INSIDE[place] || [];
-    return L.length > 1 ? '<ol class="levels" aria-label="' + esc(t('map.' + place + '.t')) + '">' + L.map(l => '<li' + (l.depth === at ? ' class="on" aria-current="step"' : '') + '>' + esc(t('depth.' + l.depth + '.name')) + '</li>').join('') + '</ol>' : ''; };
   const reward = () => ch.grows && !S.done[ch.id] ? '<p class="grows small">' + esc(t('game.grows', { what: t('grow.' + ch.grows) })) + '</p>' : '';
   const doneNote = () => { if (!S.done[ch.id]) return ''; const n = next(S);
     return '<div class="won"><b>' + esc(t('game.won')) + '</b>' + (ch.grows ? ' ' + esc(t('game.grew', { what: t('grow.' + ch.grows) })) : '') +

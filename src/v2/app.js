@@ -18,7 +18,7 @@ import { NEEDS } from '../data/build.js';
 import { childrenOf } from '../engines/build.js';
 import * as Game from './game.js';
 import * as Way from '../engines/way.js';
-import { play, titleOf, goalOf, labsLoaded, labsReady } from './play.js';
+import { play, titleOf, goalOf, waitHtml, labsLoaded, labsReady } from './play.js';
 import { PLACES, CHIP_ROWS as ROWS } from '../data/views3d.js';
 import { stopsAt } from '../data/places.js';
 import { signHtml, signOf, keep, refusal, slipHtml, slipClick, byLine } from './commons.js';
@@ -296,13 +296,13 @@ export function start() {
   /* the labs load with the first challenge played (src/v2/play.js); a challenge asked for meanwhile replaces it */
   let playTok = 0;
   const withLabs = (f, ch) => { const k = ++playTok; if (labsLoaded(ch)) return f(); loading(true); return labsReady(ch).then(() => { loading(false); if (k === playTok) f(); }); };
-  /* a challenge, played in the sheet */
+  /* a challenge, played in the sheet: its card says it at once, while the camera flies behind it and its lab loads (#375) */
   function openChallenge(ch) {
     if (!ch) return;
     const placeId = ch.kind === 'break' ? 'village' : ch.need ? 'lab' : ch.place;
     if (!V.cur || V.cur.place !== placeId) { V.cur = { place: placeId, tab: 'do' }; V.map && V.map.focus(placeId); }
-    $('hero').classList.add('away'); sheet.hidden = false; sheet.scrollTop = 0;
-    withLabs(() => { if (!sheet.hidden) play(sheet, ch, { state: S, save, kept, startChip: () => Object.assign({}, Game.START), open: openChallenge, back: () => { sheet.onclick = null; sheet.oninput = null; V.drawPlace(); }, done: won }); }, ch);
+    $('hero').classList.add('away'); sheet.hidden = false; sheet.scrollTop = 0; const wait = !labsLoaded(ch) && waitHtml(ch); if (wait) sheet.innerHTML = wait;
+    withLabs(() => { if (!sheet.hidden && (!wait || sheet.querySelector('.chwait[data-wait="' + CSS.escape(ch.id) + '"]'))) play(sheet, ch, { state: S, save, kept, startChip: () => Object.assign({}, Game.START), open: openChallenge, back: () => { sheet.onclick = null; sheet.oninput = null; V.drawPlace(); }, done: won }); }, ch);
   }
   const openJob = need => { const j = Game.jobOf(need); if (j) openChallenge(j); };
   /* a house of the village: a clocked design opens the try to break it; any other, the village's list */
@@ -479,8 +479,8 @@ export function start() {
     if (k === 'bench') return V.showFlat('bench', parts[1], parts[2]);
     /* a challenge is played where its level is shown, in that view's card, with the picture behind it; a piece of
        the shared computer or a break is met at the Lab and the village, on the island */
-    /* #/do/<challenge>/<job>: a challenge opened for a job, such as a machine's core on that machine's work (#321) */
-    if (k === 'do' && parts[1]) { const c0 = chOf(decodeURIComponent(parts[1])), ch = c0 && parts[2] ? Object.assign({}, c0, { job: decodeURIComponent(parts[2]) }) : c0, home = doPlace(ch);
+    /* #/do/<challenge>/<job>: a challenge opened for a job, such as a machine's core on that machine's work (#321); its lab loads beside its view, not after it (#375) */
+    if (k === 'do' && parts[1]) { const c0 = chOf(decodeURIComponent(parts[1])), ch = c0 && parts[2] ? Object.assign({}, c0, { job: decodeURIComponent(parts[2]) }) : c0, home = doPlace(ch); if (ch && !labsLoaded(ch)) labsReady(ch).catch(() => { /* asked again when played */ });
       if (home) return show(partsOf(home), from).then(() => { if (live()) { shownAt = '#/' + parts.join('/'); V.openBench(ch); } });
       return showMap(from).then(m => m && openChallenge(ch)); }
     if (k === 'chip') return V.showChip(parts[1] != null ? +parts[1] : null);
