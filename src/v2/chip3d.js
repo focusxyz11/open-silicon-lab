@@ -89,8 +89,10 @@ export function createChip(canvas, host, on = {}) {
       R.g.position.y = lift; R.g.visible = op > 0.02;
       R.mats.forEach(m => { if (m.userData.base == null) m.userData.base = m.opacity; m.opacity = m.userData.base * op; m.depthWrite = op > 0.9 && m.userData.base > 0.5; });
     });
-    /* the row at work glows a little while its step runs */
-    const r = Math.round(z); rows.forEach((R, i) => R.mats.forEach(m => { if (m.emissive && m.userData.e == null) m.userData.e = m.emissiveIntensity; if (m.emissive) m.emissiveIntensity = (m.userData.e || 0) + (i === r ? 0.25 * work : 0); }));
+    /* the row at work glows a little while its step runs: a material that glows already glows more, one that does not
+       glows in its own colour (a black glow would show nothing) */
+    const r = Math.round(z); rows.forEach((R, i) => R.mats.forEach(m => { const u = m.userData; if (u.e == null) { u.e = m.emissiveIntensity; if (!m.emissive.getHex()) { m.emissive.copy(m.color); u.e = 0; } }
+      m.emissiveIntensity = u.e + (i === r ? 0.25 * work : 0); }));
     named.forEach(lb => { lb.show = Math.abs(lb.row - z) < 0.6; });
   };
   /* framed in the part of the picture the frame leaves free (on.inset: pixels from each edge): the row in view and

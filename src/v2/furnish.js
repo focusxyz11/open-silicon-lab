@@ -10,7 +10,7 @@ import { cornerOf } from '../data/studio.js';
 
 /* three overlapping faceted balls in one geometry: a tree crown, or a plant's leaves, with an outline */
 export function lump() {
-  const parts = [[0, 0, 0, 1], [0.55, -0.15, 0.25, 0.72], [-0.5, -0.2, -0.3, 0.68]].map(([x, y, z, r]) => { const g = new THREE.IcosahedronGeometry(r, 1); g.translate(x, y, z); return g.toNonIndexed(); });
+  const parts = [[0, 0, 0, 1], [0.55, -0.15, 0.25, 0.72], [-0.5, -0.2, -0.3, 0.68]].map(([x, y, z, r]) => { const g = new THREE.IcosahedronGeometry(r, 1); g.translate(x, y, z); return g.index ? g.toNonIndexed() : g; });
   const n = parts.reduce((a, g) => a + g.attributes.position.count, 0), pos = new Float32Array(n * 3);
   let o = 0; parts.forEach(g => { pos.set(g.attributes.position.array, o); o += g.attributes.position.array.length; });
   const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); g.computeVertexNormals(); return g;

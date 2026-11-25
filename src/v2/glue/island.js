@@ -57,9 +57,12 @@ export function create() {
      time, never as a list ---- */
   const LENSES = [['look', '○'], ['heat', '≋'], ['flow', '⇄'], ['fail', '✕'], ['time', '◷']], LENS_WORLD = { heat: 'limit', fail: 'fail', time: 'make', flow: 'open' };
   const drawLens = k => { V.lensbar.innerHTML = '<div class="lb">' + LENSES.map(([id, g]) => '<button type="button" data-lens="' + id + '" aria-pressed="' + (id === k) + '" title="' + esc(t('lens.' + id + '.t')) + '"><span class="g" aria-hidden="true">' + g + '</span><span class="nm">' + esc(t('lens.' + id + '.t')) + '</span></button>').join('') + '</div>' +
-    (k !== 'look' ? '<div class="lensnote"><p>' + esc(t('lens.' + k + '.d')) + '</p><a href="#/w/' + LENS_WORLD[k] + '">' + esc(t('lens.follow')) + ' →</a></div>' : ''); };
+    (LENS_WORLD[k] ? '<div class="lensnote"><p>' + esc(t('lens.' + k + '.d')) + '</p><a href="#/w/' + LENS_WORLD[k] + '">' + esc(t('lens.follow')) + ' →</a></div>' : ''); };
   drawLens('look');
-  V.lensbar.addEventListener('click', e => { const b = e.target.closest('[data-lens]'); if (!b || !V.map) return; const k = V.map.lens() === b.dataset.lens ? 'look' : b.dataset.lens; V.map.setLens(k); drawLens(k); V.foldHero(); });
+  /* the bar shows the lens the island has on, whoever turned it (a button here, a dial, What if? lending its own and
+     giving yours back); What if?'s own is none of these */
+  $('mapLabels').addEventListener('lens', e => drawLens(e.detail));
+  V.lensbar.addEventListener('click', e => { const b = e.target.closest('[data-lens]'); if (!b || !V.map) return; const k = V.map.lens() === b.dataset.lens ? 'look' : b.dataset.lens; V.map.setLens(k); V.foldHero(); });
   const lensQ = id => { const k = V.map && V.map.lens(), w = k && LENS_WORLD[k]; if (!w) return null; const P = V.cur && V.cur.part && V.PARTS[id], L = P ? P.qs(V.cur.part) : (Game.ASK[id] || []); return L.find(q => q.startsWith(w + '.')) || null; };
   V.lensbar.addEventListener('click', () => { if (!V.insp.hidden) drawInsp(); });
   /* ---- change it where it is decided (docs/INTERACTION.md, "Change it in place"): your chip's settings are dials
@@ -78,7 +81,7 @@ export function create() {
   const dialsHtml = id => (DIALS[id] || []).map(k => '<div class="dial"><span class="dl">' + esc(t('chip.' + k + '.label')) + '</span><span class="dv"><button type="button" class="db" data-dial="' + k + '" data-d="-1"' + (dialIdx(k) <= 0 ? ' disabled' : '') + ' aria-label="−">−</button><output>' + esc(dialText(k)) + '</output><button type="button" class="db" data-dial="' + k + '" data-d="1"' + (dialIdx(k) >= dialMax[k] ? ' disabled' : '') + ' aria-label="+">+</button></span></div>' +
     (dialLast === k ? '<p class="dread">' + esc(dialRead(k)) + '</p>' : '')).join('');
   function turnDial(k, d) { const i = Math.max(0, Math.min(dialMax[k], dialIdx(k) + d)); V.S.chip[k] = k === 'clock' ? Chip.CLOCKS[i] : i; V.S.chip = Chip.normal(V.S.chip); V.save(); dialLast = k;
-    const [to, lk] = DIAL_FX[k]; if (V.map) { V.map.frame([V.cur.place].concat(to)); V.map.ripple(V.cur.place, to); if (V.map.lens() !== lk) { V.map.setLens(lk); drawLens(lk); } V.map.setState(V.islandState(), false); } drawInsp(); }
+    const [to, lk] = DIAL_FX[k]; if (V.map) { V.map.frame([V.cur.place].concat(to)); V.map.ripple(V.cur.place, to); if (V.map.lens() !== lk) V.map.setLens(lk); V.map.setState(V.islandState(), false); } drawInsp(); }
   function insideHtml(id) {
     /* where a place has no levels, its first other way in is what Go inside opens: it is not offered twice */
     const L = Game.INSIDE[id] || [], extra = (Game.LOOK[id] || []).slice(L.length ? 0 : 1);
