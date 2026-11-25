@@ -122,8 +122,9 @@ export function alongTo(where, stage) {
   if (W.stage === stage && W.view !== 'island' && W.view !== 'page') return null;
   if (stage === 'open') return home;
   if (W.view === 'line' && (stage === 'make' || stage === 'test' || stage === 'ship')) return '#/line/' + ({ make: 'wires', test: 'test', ship: 'pkg' })[stage];
-  /* in a row of steps, only the level the step shows is held: describe, check and masks hold none */
-  const rows = ROWS.includes(W.view), tw = rows ? (W.size ? twinOf(W.size) : null) : W.level && W.view !== 'island' ? twinOf(W.level === 'die' ? 'chip' : W.level) : null;
+  /* in a row of steps, only the level the step shows is held: describe, check and masks hold none. On the island, a
+     level carried past a stage where it does not exist (below, carryOf) is picked up again at the next stage that has it */
+  const rows = ROWS.includes(W.view), tw = rows ? (W.size ? twinOf(W.size) : null) : W.level && W.view !== 'island' ? twinOf(W.level === 'die' ? 'chip' : W.level) : W.view === 'island' && W.carry ? twinOf(W.carry) : null;
   if (tw) {
     if (stage === 'design' && tw.designed) return '#/bench/' + tw.designed;
     /* a whole chip is made as a die on its wafer, and closed in its package on the way out; the levels inside it are
@@ -158,3 +159,22 @@ const sizeOfCell = W => (ROWS.includes(W.view) ? W.size : W.level === 'die' ? 'c
 export const holds = (where, stage) => { const h = alongTo(where, stage); if (!h || h.startsWith('#/place/')) return false;
   if (!where || !ROWS.includes(where.view)) return true;
   return !!where.size && sizeOfCell(whereOf(h)) === where.size; };
+/* the level an along move carries. A move that drops the level you were at, landing at a stage's place on the island
+   because the level does not exist there (a gate at the Lab, where what is open is decided), carries it: from that place,
+   along picks it up again at the next stage that has it (a cell with carry set, alongTo above). Null when the move lands
+   on a level (the address says it), or there was none to carry. */
+export function carryOf(from, to) {
+  if (!from || !to || !/^#\/place\//.test(to)) return null;
+  const lv = ROWS.includes(from.view) ? from.size : from.view === 'island' ? from.carry : from.level === 'die' ? 'chip' : from.level;
+  const tw = lv ? twinOf(lv) : null; return tw ? tw.used : null;
+}
+/* a cell with the level an along move carried there (the shell keeps it while you stay where the move landed) */
+export const carried = (W, c) => (c && c.level && W && W.view === 'island' ? Object.assign(W, { carry: c.level }) : W);
+/* along one stage on (dir 1) or back (dir -1) round the loop, as the keys take it: the stage, the address, and the
+   level carried (Use → Open wraps round to what is open, and the next → picks the level up again) */
+export function alongStep(where, dir) {
+  const W = where || cell('island'), n = STAGES.length, i = STAGES.indexOf(W.stage), stage = STAGES[(i + (dir > 0 ? 1 : n - 1) + n) % n];
+  const to = alongTo(W, stage); return { stage, to, carry: carryOf(W, to) };
+}
+/* the stage a challenge is played at: the one the bar lights while you play it (its card names the same) */
+export const stageOfChallenge = ch => (ch ? whereOf('#/do/' + encodeURIComponent(ch.id)).stage : null);

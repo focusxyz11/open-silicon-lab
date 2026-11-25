@@ -69,8 +69,11 @@ const routeOf = h => String(h || '').replace(/^#\/?/, '').split('/')[0] || '';
 let readFrom = null, logBack = false;
 /* is the address a reading page */
 export const reading = (h = location.hash) => READING.includes(routeOf(h));
+/* where the way back from a reading page leads: where you were before you began reading, the map (#/log) for a page
+   opened from it or from the address, and the first page for the map itself, so it never names the page you are on */
+export const backOf = (h, from, fromLog) => (fromLog ? '#/log' : from || (LOGS.includes(routeOf(h)) ? '#/' : '#/log'));
 /* the name of where an address is: its level, else its place, else the map */
-const nameOf = h => { const k = routeOf(h); if (!k || k === 'home') return t('frame2.backMap');
+export const nameOf = h => { const k = routeOf(h); if (!k || k === 'home') return t('frame2.backFirst'); if (k === 'log') return t('frame2.backMap');
   let W = null; try { W = whereOf(h); } catch (e) { W = null; }
   return W && W.level && has('depth.' + W.level + '.name') ? t('depth.' + W.level + '.name') : W && W.place && has('map.' + W.place + '.t') ? t('map.' + W.place + '.t') : k === 'island' ? t('map.home') : k === 'log' ? t('loop.log') : t('frame2.backMap'); };
 /* a reading page: its head (kicker, title, the line under it), its picture and its words. Without a picture the
@@ -106,7 +109,7 @@ export function readPage(page) {
   /* at the top of the words, so the picture beside them starts where it stays (a page drawn in parts gets it moved there) */
   const at = inner.querySelector('.f2rhead') || inner, was = inner.querySelector('.f2back');
   if (was) { if (was.parentNode !== at) at.prepend(was); return; }
-  const to = logBack ? '#/log' : readFrom || '#/', a = document.createElement('a'); a.className = 'f2back'; a.href = to;
+  const to = backOf(location.hash, readFrom, logBack), a = document.createElement('a'); a.className = 'f2back'; a.href = to;
   a.innerHTML = '<span class="f2wa" aria-hidden="true">←</span><span class="f2wk">' + esc(t('frame2.backK')) + '</span><b>' + esc(nameOf(to)) + '</b>';
   a.setAttribute('aria-label', t('frame2.back', { where: nameOf(to) }));
   at.prepend(a);
