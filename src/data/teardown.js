@@ -14,7 +14,7 @@
    The right chip for the job: kinds of chip on a line from flexible to specialized (pos, 0 to 1; the power chip is
    not on the line), and eight real jobs with the best kind and the kinds that are also sensible.
 
-   The words are td.* in src/i18n/en.json (a word with braces is filled by the view, src/v2/play.js kinds
+   The words are td.* in src/i18n/en/ (a word with braces is filled by the view, src/v2/play.js kinds
    'teardown' and 'fit'); nothing here is English. */
 
 /* what a chip does */

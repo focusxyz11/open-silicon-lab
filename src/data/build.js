@@ -1,4 +1,4 @@
-/* The build: one big goal, built by many, people and AI together. Data only; words are in en.json
+/* The build: one big goal, built by many, people and AI together. Data only; words are in src/i18n/en/
    (build.need.<id>.*). Contributions are open: a need or an engine in a pull request or through the forms on GitHub
    (.github/ISSUE_TEMPLATE/need.yml), a design as an entry of the ledger.
 

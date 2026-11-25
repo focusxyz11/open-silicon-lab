@@ -106,5 +106,5 @@ export const PULL_CHALLENGES = [
 ];
 export const pullMet = seen => metBy(PULL_CHALLENGES[0], seen);
 
-/* the words: cz.* in src/i18n/en.json (the challenge's: game.ch.crystal.*, fab.ch.crystal.done) */
+/* the words: cz.* in src/i18n/en/ (the challenge's: game.ch.crystal.*, fab.ch.crystal.done) */
 export const PULL_WORDS = {};

@@ -1,7 +1,7 @@
 /* The clock and the power, as an engine: timing and pipeline stages, the voltage-and-clock power curve, a five-stage
    pipeline with its stalls, and the gate-level clock lab (a bit of memory, a flip-flop, a counter that fails when the
-   clock outruns its slowest path). Pure logic, no DOM, no English (ids only; the words are in WORDS, to be merged
-   into src/i18n/en.json by the owner).
+   clock outruns its slowest path). Pure logic, no DOM, no English (ids only; the words its results are named by are
+   in WORDS, read by its tests; its lab shows its own, in src/i18n/en/labs.json).
    Brought over from the first version of the site (the branch 'before'): the labs topics/design/labs/timing.js and
    power.js, topics/architecture/labs/pipeline.js and topics/clock/labs/clock-lab.js (with each topic's content.html
    and topic.json), and the gate simulator that the clock lab calls, src/engines/seq.js with its tests (it was not
@@ -334,7 +334,8 @@ export const CHALLENGES = {
   speedLimit: { id: 'speedLimit', check: runs => new Set(runs.filter(r => counterStatus(r.node, r.hz).top).map(r => r.node)).size >= 2 }
 };
 
-/* Words for the owner to merge into en.json (the engine itself holds none). */
+/* The words this engine's results are named by, kept beside it and read by its tests; the lab (src/v2/labs/clockpower.js)
+   shows its own, ckp.* in src/i18n/en/labs.json. */
 export const WORDS = {
   'clock.corner.fast': 'Fast: cold, high V', 'clock.corner.typical': 'Typical', 'clock.corner.slow': 'Slow: hot, low V',
   'clock.timing.meets': 'Meets timing', 'clock.timing.fails': 'Fails timing',

@@ -1,5 +1,5 @@
 /* Fab on a desk: where the made parts of a machine are made, and how long one try takes (docs/MACHINES.md, "Fab on a
-   desk"). Data only, no words: the words are fab.* in src/i18n/en.json; the engine is src/engines/machine.js.
+   desk"). Data only, no words: the words are fab.* in src/i18n/en/; the engine is src/engines/machine.js.
 
    A try that runs as software can be changed and run again the same day. A part made as a circuit, or of new matter,
    has to be made first, and the place that makes it sets how many tries fit in a year: a giant fab takes months, a

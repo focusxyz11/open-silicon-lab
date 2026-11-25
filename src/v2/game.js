@@ -10,7 +10,7 @@
    the Lab rises with every piece of the plan that is built (src/data/build.js), community designs stand as
    workshops in the makers' village, and every open job is an empty plot anyone, person or AI, can take.
    To add content, add data here (a challenge, a door, a growth) or in src/data/build.js; the island and the
-   pages are drawn from it. Words: game.*, look.*, grow.* (src/i18n/en.json). */
+   pages are drawn from it. Words: game.*, look.*, grow.* (src/i18n/en/). */
 import { build, projectOf, solutionOf } from '../engines/design.js';
 import { model, CHALLENGES as CHIP, START, normal, SETTINGS } from '../engines/chip.js';
 import { live, PERFECT, normalLife } from '../engines/life.js';
