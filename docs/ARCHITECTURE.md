@@ -17,6 +17,9 @@ src/v2/glue/            one module per view's glue, each create()d once when its
   supply.js             the supply map
   board.js              one board and its story
   pages.js              the reading pages: your log, the commons, #/read, a world (#/w/<id>), machines, What if?, a question's trail and world, the field questions
+src/v2/hold.js          Hold, the first page (#/): one story on one chip, the scroll a camera over it (the only view the shell imports statically; nothing 3D)
+src/v2/holdkit.js       its words, what the visitor has set and done, the sources (src/data/facts.json, loaded on the first touch), the challenges and where each is played
+src/v2/holdplates.js    its pictures: every block of the chip a square drawn in 1000 units with its controls on it, and Moore's law live along the bottom
 src/v2/frame.js         the one frame on every view below the island: the rails, the levels, the card's Look · Do · Ask
 src/v2/frame2.js        the frame's three modes (#271): the card worn as a caption (Look), a side panel with a stage (Do) or a phone sheet; reading pages (Read); styles in src/styles/frame.css
 src/v2/game.js          the game as data and logic: the loop, the challenges, each place's doors, your state (tested)

@@ -54,7 +54,7 @@ test('every wall, arrangement, need and part has its words, and its question is 
   assert.ok(Object.values(TRIP).filter(v => !v).length >= 1, 'the arrangement challenge needs an arrangement with no trip');
   for (const n of NEEDS) {
     for (const k of ['t', 'd', 'why']) assert.ok(EN['hd.need.' + n.id + '.' + k], n.id + '.' + k);
-    for (const [p, blk] of n.parts) { assert.ok(EN['hd.piece.' + p], p); assert.ok(EN['hd.blk.' + blk], blk); }
+    for (const [p] of n.parts) assert.ok(EN['hd.piece.' + p], p);
     assert.ok(n.parts.some(p => !STOCK.includes(p[1])), n.id + ' has nothing to choose');
   }
   for (const [k] of PARTS) assert.ok(EN['hd.tab.' + k], 'tab ' + k);
@@ -89,5 +89,13 @@ test('every era, challenge and chapter has its words; every era its facts', () =
   for (const id of CHALS) assert.ok(EN['hd.ch.' + id], 'hd.ch.' + id);
   assert.equal(new Set(CHALS).size, CHALS.length);
   for (const s of SERIES) assert.ok(EN['hd.ser.' + s] && EN['hd.ser.' + s + '.u'], s);
-  for (const m of MOMENTS) assert.ok(EN['hd.rail.' + m.id], 'hd.rail.' + m.id);
+});
+
+test('every word the page asks for by name exists, and every source it marks is a fact', () => {
+  const code = ['src/v2/hold.js', 'src/v2/holdkit.js', 'src/v2/holdplates.js'].map(f => readFileSync(new URL('../' + f, import.meta.url), 'utf8')).join('\n');
+  const named = [...code.matchAll(/\bw\(\s*'([\w.-]+)'\s*[,)]/g)].map(m => 'hd.' + m[1]);
+  assert.deepEqual([...new Set(named)].filter(k => !(k in EN)), [], 'words missing from src/i18n/en/hold.json');
+  const marked = [...code.matchAll(/\bsrc\(([^)]*)\)/g)].flatMap(m => [...m[1].matchAll(/'([a-z0-9-]+)'/g)].map(q => q[1]));
+  const listed = [...code.matchAll(/CH_FACTS = \{([\s\S]*?)\};/g)].flatMap(m => [...m[1].matchAll(/'([a-z0-9-]+)'/g)].map(q => q[1]));
+  assert.deepEqual([...new Set([...marked, ...listed])].filter(id => !FACTS.has(id)), [], 'sources the page marks that src/data/facts.json does not have');
 });
