@@ -9,7 +9,6 @@ import { STOPS, WORLDS } from '../data/weave.js';
 import { INSIDE, placeOf, SHARED, askAt as levelStops } from '../data/places.js';
 import { fieldOf, fieldAtLevel, fieldAtPlace } from '../data/questions.js';
 import { DEBATES } from '../data/debates.js';
-import { WAYS } from '../data/ways.js';
 import { normalLooked } from '../data/seek.js';
 import { LAB_CHALLENGES, challengeOnly } from '../data/labs/index.js';
 
@@ -66,7 +65,7 @@ export const challengeOf = id => CHALLENGES.find(c => c.id === id) || null;
 export const placeChallenges = place => CHALLENGES.filter(c => c.place === place);
 /* what grows, and where (the island draws each one: src/v2/map3d.js GROWERS, and each lab's in src/v2/growers/) */
 /* where a growth stands when it is not at its challenge's place; a lab's say so themselves (growAt in src/data/labs/):
-   the other ways to compute grow at the Lab (WAYS_AT), and the clock and the power budget, design decisions, at the studio */
+   the other ways to compute grow at the Lab, and the clock and the power budget, design decisions, at the studio */
 const GROW_AT = Object.assign({ onebad: 'test', half: 'studio', phone: 'phones', car: 'cars', dclife: 'datacentre', fast: 'lab' },
   Object.fromEntries(LAB_CHALLENGES.filter(c => c.growAt).map(c => [c.id, c.growAt])));
 export const GROWTH = CHALLENGES.map(c => ({ id: c.grows, by: c.id, at: GROW_AT[c.id] || c.place }));
@@ -88,8 +87,6 @@ export const DEBATES_AT = {
   studio: ['designcost', 'signoff', 'skills'], fab: ['shrink'], test: ['bigdie'], port: ['supply'], datacentre: ['memory', 'power', 'paradigm', 'quantum'],
   lab: ['open'], cars: ['mature'], phones: [], quarry: [], village: [], idea: [], tools: ['shrink', 'supply'], materials: ['supply'], power: ['power']
 };
-/* the other ways to compute belong where people imagine what comes next: the Lab */
-export const WAYS_AT = { lab: WAYS.map(w => w.id) };
 /* more ways inside, besides the levels. to: a place of the redesign (#/place/<id>), page: a page, or the
    current site (world, depth, map). Words: look.<id>.t / .d */
 export const LOOK = {

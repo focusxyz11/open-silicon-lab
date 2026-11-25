@@ -1,6 +1,6 @@
 /* Quantum search with noise and error correction, as an engine (the model of the first version's quantum-search lab,
    topics/quantum/labs/quantum-search.js there; ported unchanged, plus the checks of its challenges). Pure logic, no
-   DOM, no words (words: para.ch.search-*, in src/data/paradigms.js).
+   DOM, no words (the lab shows its own, grv.* in src/i18n/en/labs.json).
 
    One real amplitude per box: the search only ever needs up and down, so a list of numbers is an exact state.
    Flip marks the prize, mirror turns the mark into a difference, chance(N, k) = sin²((2k + 1)θ). Noise wipes the

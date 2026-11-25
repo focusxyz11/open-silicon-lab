@@ -78,5 +78,3 @@ export function makeALU(table, defect) {
   return fn;
 }
 
-export const SLICE_VECTORS = VECS;
-export const sliceIndex = idx;

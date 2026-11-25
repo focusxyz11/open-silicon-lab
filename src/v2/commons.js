@@ -48,6 +48,4 @@ export function slipClick(ev, S, changed) {
   return false;
 }
 
-/* who made an entry, as a small mark and words */
-export const madeHtml = e => '<span class="made ' + esc(e.made) + '" title="' + esc(t('build.kind.' + e.made)) + '"></span>';
 export const byLine = e => esc(e.by) + ' · ' + esc(t('build.kind.' + e.made));

@@ -59,7 +59,6 @@ export const MEDIA = {
   talk: { pjMm: 0, sMm: 1 / 1.4 / 1000, edgePj: 3e15, edgeS: 30, rate: 40, hz: 3000, snr0: 20, lossMm: 0, err: 1e-3, wire: 0.1 },
   call: { pjMm: 0, sMm: GLASS / C / 1000, edgePj: 1.2e16, edgeS: 120, rate: 40, hz: 3000, snr0: 14, lossMm: 0, err: 3e-3, wire: 0.1 }
 };
-export const MEDIUM_IDS = Object.keys(MEDIA);
 
 /* what a bit is read out of: pj a bit (the cell and its own short wires), seconds to start, and what it costs to keep
    a gigabyte there, relative to memory chips on the board (the model's own: on-chip memory takes costly chip area,

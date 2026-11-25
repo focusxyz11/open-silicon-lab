@@ -28,6 +28,3 @@ export const askFor = blocks => { const s = shares(blocks); return Object.keys(s
 export const hit = (blocks, x, y) => { for (let i = blocks.length - 1; i >= 0; i--) { const r = blocks[i].r; if (x >= r[0] && x <= r[0] + r[2] && y >= r[1] && y <= r[1] + r[3]) return blocks[i]; } return null; };
 /* the blocks as parts a visitor can tap, one part per type */
 export const partsFor = blocks => { const P = {}; for (const b of blocks) (P[b.type] = P[b.type] || []).push({ r: b.r }); return P; };
-/* memory of every kind: what fills a chip that waits on data */
-export const MEMORY = ['cache', 'flash'];
-export const memoryShare = blocks => { const s = shares(blocks); return MEMORY.reduce((a, k) => a + (s[k] || 0), 0); };

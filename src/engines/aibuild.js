@@ -1,11 +1,10 @@
 /* Build your own AI chip, as an engine: the choices of a chip architect and what each does to speed, power, cost,
-   yield and schedule. Pure logic, no DOM, no English (ids only; the words its results are named by are in
-   WORDS, read by its tests; its lab shows its own, in src/i18n/en/labs.json).
+   yield and schedule. Pure logic, no DOM, no English (ids only; the lab names them in its own words, aib.* in
+   src/i18n/en/labs.json, which its tests check).
    Brought over from the first version of the site (the branch 'before': topics/build/labs/build-your-own-ai-chip.js,
    with its content.html and topic.json) with the same tables, the same formulas and the same numbers. Added here:
-   ids instead of sentences (problems, reviewer notes and requirement rows are ids with their numbers, and the words
-   are in WORDS), design(choices) as one function that returns everything the lab showed, the tape-out timeline and
-   first wafer as functions, PRESETS, solve(mission) (a search over the dials), CHALLENGES and WORDS.
+   ids instead of sentences (problems, reviewer notes and requirement rows are ids with their numbers), design(choices) as one function that returns everything the lab showed, the tape-out timeline and
+   first wafer as functions, PRESETS, solve(mission) (a search over the dials) and CHALLENGES.
 
    The model, as the lab's page put it: compute = dies x compute area x math per mm2 (by architecture and node) x
    clock. Power adds compute energy (scaled by voltage squared), memory traffic energy and the on-chip memory's
@@ -174,7 +173,7 @@ export function firstWafer(R, seed = 1) {
   }
   return { dies, total: dies.length, good: dies.filter(d => d.ok).length };
 }
-/* The reviewer's notes after a tape-out, as ids with numbers (words: WORDS 'aibuild.note.<id>'). */
+/* The reviewer's notes after a tape-out, as ids with numbers (words: aib.note.<id>). */
 export function notes(c, R = design(c)) {
   const m = MISSIONS[c.mission], out = [];
   if (m.P) { if (R.memT > 1.5 * R.compT) out.push({ id: 'memory-bound' }); else if (R.compT > 1.5 * R.memT) out.push({ id: 'compute-bound' }); else out.push({ id: 'balanced' }); }
@@ -216,63 +215,3 @@ export const CHALLENGES = {
   train: { id: 'train', mission: 'train', check: c => design({ ...c, mission: 'train' }).all }
 };
 
-/* The words this engine's results are named by, kept beside it and read by its tests; the lab (src/v2/labs/aibuild.js)
-   shows its own, aib.* in src/i18n/en/labs.json. Placeholders in {braces} are the numbers
-   of the id's object (problems, notes) or of the thing named. */
-export const WORDS = {
-  'aibuild.mission.phone': 'Phone AI chip', 'aibuild.mission.phone.story': 'Run an 8-billion-parameter assistant on a phone: quick replies, cool to the touch, cheap enough for a mass-market handset.',
-  'aibuild.mission.infer': 'Inference accelerator', 'aibuild.mission.infer.story': 'Serve a 70-billion-parameter model to 64 users at once in a data center, at the lowest cost per token.',
-  'aibuild.mission.train': 'Training flagship', 'aibuild.mission.train.story': 'Build the chip frontier labs will train their next models on: maximum FP8 compute, huge memory, high bandwidth.',
-  'aibuild.req.tps': 'Throughput', 'aibuild.req.tps.phone': 'Reply speed (one user)', 'aibuild.req.tps.infer': 'Throughput, 64 users',
-  'aibuild.req.power': 'Power', 'aibuild.req.cost': 'Build cost', 'aibuild.req.cost.phone': 'Build cost, chip + memory',
-  'aibuild.req.fit': 'Model fits in memory', 'aibuild.req.months': 'Ready in',
-  'aibuild.req.pf8': 'FP8 compute', 'aibuild.req.cap': 'Memory', 'aibuild.req.bw': 'Bandwidth',
-  'aibuild.goal.tpj': 'Tokens per joule', 'aibuild.goal.cpm': 'Cost per million tokens', 'aibuild.goal.pfkw': 'PFLOPS per kilowatt',
-  'aibuild.unit.tps': 'tok/s', 'aibuild.unit.w': 'W', 'aibuild.unit.usd': '$', 'aibuild.unit.months': 'months', 'aibuild.unit.pf': 'PFLOPS', 'aibuild.unit.gb': 'GB', 'aibuild.unit.tbs': 'TB/s',
-  'aibuild.arch.gpu': 'GPU-style', 'aibuild.arch.gpu.d': 'Programmable cores plus tensor units. Runs anything; biggest software ecosystem.',
-  'aibuild.arch.sys': 'Matrix engine', 'aibuild.arch.sys.d': 'Big systolic arrays, TPU-style. More math per mm² and per watt, less flexible.',
-  'aibuild.arch.cpu': 'Many CPU cores', 'aibuild.arch.cpu.d': 'General-purpose cores with vector units. Flexible, but far less math per mm².',
-  'aibuild.node.n5': 'N5', 'aibuild.node.n5.d': 'Mature since 2020: cheap wafers, high yield.',
-  'aibuild.node.n3': 'N3', 'aibuild.node.n3.d': 'Workhorse of 2024–26 AI chips.',
-  'aibuild.node.n2': 'N2', 'aibuild.node.n2.d': 'Gate-all-around, volume since Q4 2025. Less power, pricier wafers.',
-  'aibuild.node.a16': 'A16', 'aibuild.node.a16.d': 'Backside power, ramping 2H 2026. Best efficiency, newest and riskiest.',
-  'aibuild.mem.lp': 'LPDDR5X', 'aibuild.mem.lp.d': 'Phone and laptop memory: cheap, low power, modest bandwidth.',
-  'aibuild.mem.gd': 'GDDR7', 'aibuild.mem.gd.d': 'Graphics memory chips on the board around the package.',
-  'aibuild.mem.h3': 'HBM3E', 'aibuild.mem.h3.d': 'Stacked memory beside the die. Needs CoWoS.',
-  'aibuild.mem.h4': 'HBM4', 'aibuild.mem.h4.d': '2,048-bit stacks, new in 2026. Needs CoWoS.',
-  'aibuild.pkg.org': 'Standard', 'aibuild.pkg.org.d': 'Cheap phone-style package, one die.',
-  'aibuild.pkg.fc': 'Large organic', 'aibuild.pkg.fc.d': 'Big FCBGA package for up to two dies, no HBM.',
-  'aibuild.pkg.cs': 'CoWoS-S', 'aibuild.pkg.cs.d': 'Silicon interposer: up to 2 dies and 6 HBM stacks.',
-  'aibuild.pkg.cl': 'CoWoS-L', 'aibuild.pkg.cl.d': 'Bridged interposer beyond reticle size: up to 4 dies and 12 stacks.',
-  'aibuild.dial.dies': 'Number of compute dies (chiplets)', 'aibuild.dial.area': 'Compute area per die', 'aibuild.dial.sram': 'On-chip SRAM per die',
-  'aibuild.dial.memN': 'How many memory devices', 'aibuild.dial.f': 'Clock frequency',
-  'aibuild.dial.fp4': 'Support FP4 math (+4% compute area, 2× throughput in FP4)',
-  'aibuild.dial.agents': 'Use 2026 AI design agents for RTL, verification and layout (about 25% faster design)',
-  'aibuild.phase.design': 'Design & verification', 'aibuild.phase.masks': 'Masks', 'aibuild.phase.fab': 'Wafer fab', 'aibuild.phase.packaging': 'Packaging', 'aibuild.phase.bringup': 'Bring-up',
-  'aibuild.problem.reticle': 'Each die is {area} mm², larger than the {max} mm² reticle limit. Shrink compute or SRAM, or split into more dies.',
-  'aibuild.problem.needs-interposer': 'HBM must sit on a silicon interposer: choose CoWoS-S or CoWoS-L packaging.',
-  'aibuild.problem.stacks': 'This package fits at most {max} HBM stacks.',
-  'aibuild.problem.dies': 'This package holds at most {max} die(s).',
-  'aibuild.problem.silicon': 'Dies plus memory need about {need} mm² of package area; this package allows {max} mm².',
-  'aibuild.problem.clock': 'No safe voltage reaches {f} GHz. Lower the clock.',
-  'aibuild.problem.no-memory': 'The chip has no external memory. Add at least one memory device.',
-  'aibuild.note.memory-bound': 'Memory-bound: the math units wait on memory most of the time. More or faster memory, or FP4 weights, would raise speed more than extra compute.',
-  'aibuild.note.compute-bound': 'Compute-bound: memory keeps up easily. More compute area or a higher clock would help.',
-  'aibuild.note.balanced': 'Well balanced: compute and memory finish each step at about the same time.',
-  'aibuild.note.low-yield': 'Only {percent}% of dies work. Chiplets or a more mature node would cut the cost per chip.',
-  'aibuild.note.power-close': 'Power is close to the limit; cooling will be tight.',
-  'aibuild.note.newest-node': 'A16 only entered production in late 2026: the newest node costs more and adds schedule risk.',
-  'aibuild.note.compiler': 'Matrix engines need a strong compiler team. Budget for software, as Google does for TPUs.',
-  'aibuild.note.cpu-math': 'CPU cores deliver far less math per mm² than tensor or matrix units, which is why AI chips spend their area on matrix math.',
-  'aibuild.note.agents': 'Turning on AI design agents would pull the schedule in by several months.',
-  'aibuild.note.fp4': 'Supporting FP4 halves the bytes per weight, which roughly doubles speed on a memory-bound workload.',
-  'aibuild.note.hbm-share': 'HBM is {percent}% of the build cost. Memory, not logic, dominates the bill of materials of AI chips.',
-  'aibuild.verdict.ready': 'Launch review: ready to ship', 'aibuild.verdict.back': 'Launch review: back to the drawing board',
-  'aibuild.verdict.unbuildable': 'Not buildable', 'aibuild.verdict.unmet': 'Requirements not met',
-  'aibuild.ch.phone.t': 'Phone AI chip', 'aibuild.ch.phone.goal': 'Run an 8B assistant on a phone: fast, cool and cheap.',
-  'aibuild.ch.phone.done': 'An 8B assistant on a phone: quick enough, cool enough, cheap enough, and ready in time.',
-  'aibuild.ch.infer.t': 'Inference accelerator', 'aibuild.ch.infer.goal': 'Serve a 70B model to 64 users at the lowest cost per token.',
-  'aibuild.ch.infer.done': 'A 70B model served to 64 users within the power and cost limits. Compare the cost per token with another design.',
-  'aibuild.ch.train.t': 'Training flagship', 'aibuild.ch.train.goal': 'Maximum FP8 compute, memory and bandwidth.',
-  'aibuild.ch.train.done': 'Compute, memory and bandwidth all at flagship level, within the power and schedule limits.'
-};

@@ -65,7 +65,6 @@ export const PRINT = {
 const kindOf = layers => layers >= 95 ? 'ai' : layers >= 70 ? 'phone' : 'mature';
 /* Layers that need a second pass: the finest ones, at the bottom of the stack. */
 export const extraLayers = (L, layers) => Math.round(PRINT[L.print || 'euv'].extra[kindOf(layers)] * layers);
-export const isCritical = (L, i, layers) => i < extraLayers(L, layers);
 const REPEAT = ['depo', 'litho', 'etch'];   /* what a second pattern repeats */
 /* Hours per layer that are neither waiting at a tool nor processing: moving between bays, holds,
    waiting for a measurement result. */

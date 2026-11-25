@@ -52,7 +52,6 @@ function lensHtml(id, P, chip) {
   return h + '</section>';
 }
 
-export const WORLD_OF = id => WORLDS[id];
 export function worldHtml(id, P, ctx = {}) {
   const W = WORLDS[id] || { play: {} }, S = P.sections;
   const head = '<p class="kicker">' + esc(t('world.k')) + '</p><h1 class="wq">' + esc(P.title) + '</h1>' + (P.behind ? '<p class="wbehind">' + il(P.behind) + '</p>' : '');

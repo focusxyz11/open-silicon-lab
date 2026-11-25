@@ -130,7 +130,6 @@ export function mat(color, o = {}) {
 export const metal = (color, o = {}) => mat(color, Object.assign({ roughness: 0.32, metalness: 0.75 }, o));
 export const glow = (color, intensity = 1, o = {}) => mat(color, Object.assign({ emissive: color, emissiveIntensity: intensity, roughness: 0.4 }, o));
 export const glass = (color, o = {}) => mat(color, Object.assign({ roughness: 0.08, metalness: 0.1, transparent: true, opacity: 0.45 }, o));
-export const clearMats = () => MATS.clear();
 /* one table for every circuit board, so a board is a board wherever it is seen (the data centre's, a phone's, a car's
    control unit): the board, its traces and pins in contact metal (the art direction's table), the plastic of
    packages and connectors, power parts, coils, the substrate under a chip, bright metal for lids and cases */

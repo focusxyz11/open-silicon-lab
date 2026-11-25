@@ -98,10 +98,3 @@ export const ETCH_CHALLENGES = [
   { id: 'etch', lab: 'etch', groups: [r => r.undercutNm < 5 && r.maskPct >= 70 && r.depthNm > 100] }
 ];
 
-export const ETCH_WORDS = {
-  'fab.etch.status.ready': 'Ready', 'fab.etch.status.running': 'Etching…', 'fab.etch.status.straight': 'Straight walls', 'fab.etch.status.undercut': 'Undercut',
-  'fab.etch.ions': 'Ion directionality (bias power)', 'fab.etch.chem': 'Share of chemical radicals',
-  'fab.ch.etch.t': 'Etch straight down',
-  'fab.ch.etch.goal': 'Etch a hole with less than 5 nm of undercut while keeping at least 70% of the mask.',
-  'fab.ch.etch.done': 'Strong ion directionality with very few radicals etches straight down with about 2 nm of undercut. Radicals etch in every direction, so they widen the hole under the mask. Real etches mix both, because radicals also make the chemistry faster.'
-};

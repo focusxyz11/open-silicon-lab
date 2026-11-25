@@ -5,6 +5,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import * as C from '../src/engines/clockpower.js';
+import { readWords } from '../scripts/words.mjs';
 
 const close = (a, b, e = 1e-9) => assert.ok(Math.abs(a - b) <= e, `${a} vs ${b}`);
 
@@ -180,13 +181,18 @@ test('the clock challenges: one bit of memory, one slot, different endings, the 
 });
 
 test('every challenge has its words, and every hint and stall id has words', () => {
-  const W = C.WORDS;
-  for (const id of Object.keys(C.CHALLENGES)) { assert.equal(C.CHALLENGES[id].id, id); for (const p of ['t', 'goal', 'done']) assert.ok(W[`clock.ch.${id}.${p}`], id + p); }
-  for (const k of Object.keys(C.CORNERS)) assert.ok(W['clock.corner.' + k]);
-  for (const k of ['load', 'forward', 'nofwd']) assert.ok(W['clock.stall.' + k]);
-  for (const k of ['oscillate', 'both', 'setting', 'resetting', 'unknown', 'memory', 'holds1', 'holds0']) assert.ok(W['clock.hint.latch.' + k], k);
-  for (const k of ['none', 'many', 'one-done', 'late', 'before', 'differ-done', 'differ', 'free']) assert.ok(W['clock.hint.flop.' + k], k);
-  for (const k of ['errors', 'top', 'above', 'counting']) assert.ok(W['clock.hint.counter.' + k], k);
-  for (const k of Object.keys(C.FLOP_GOALS)) assert.ok(W['clock.goal.' + k] && W['clock.goal.' + k + '.why']);
-  for (const k of ['runs', 'fails', 'beyond']) assert.ok(W['clock.power.' + k]);
+  /* the words: ckp.* in src/i18n/en/labs.json, those the lab does not show yet waiting in src/data/waiting-words.json;
+     the two challenges the lab plays have its words (power-curve, counter), the others their own */
+  const W = readWords(), LAB = { halfPower: ['power-curve', 'ckp.p.done'], speedLimit: ['counter', 'ckp.c.done'] };
+  for (const id of Object.keys(C.CHALLENGES)) { assert.equal(C.CHALLENGES[id].id, id);
+    const ks = LAB[id] ? ['game.ch.' + LAB[id][0] + '.t', 'game.ch.' + LAB[id][0] + '.goal', LAB[id][1]] : ['t', 'goal', 'done'].map(p => `ckp.ch.${id}.${p}`);
+    for (const k of ks) assert.ok(W[k], k); }
+  for (const k of Object.keys(C.CORNERS)) assert.ok(W['ckp.corner.' + k]);
+  for (const k of ['load', 'forward', 'nofwd']) assert.ok(W['ckp.stall.' + k]);
+  for (const k of ['oscillate', 'both', 'setting', 'resetting', 'unknown', 'memory', 'holds1', 'holds0']) assert.ok(W['ckp.hint.latch.' + k], k);
+  for (const k of ['none', 'many', 'one-done', 'late', 'before', 'differ-done', 'differ', 'free']) assert.ok(W['ckp.hint.flop.' + k], k);
+  for (const k of ['errors', 'top', 'above', 'counting']) assert.ok(W['ckp.c.say.' + k], k);
+  /* a goal of the flip-flop's says why in its own words, or in its challenge's when they are the same */
+  for (const k of Object.keys(C.FLOP_GOALS)) assert.ok(W['ckp.goal.' + k] && (W['ckp.goal.' + k + '.why'] || W['ckp.ch.' + k + '.goal']), k);
+  for (const k of ['runs', 'fails', 'beyond']) assert.ok(W['ckp.power.' + k]);
 });

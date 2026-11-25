@@ -200,8 +200,3 @@ export function filterIndex(root, q) {
   root.querySelectorAll('.f2qmap .f2dot[data-q]').forEach(d => d.classList.toggle('f2off', !!q && !d.dataset.q.includes(q)));
 }
 
-/* the first page: a few questions to start with, changing day by day, all of them things you can do now */
-export function starters(n = 3, day = Math.floor(Date.now() / 864e5)) {
-  const L = mixed(X.EXPERIMENTS.filter(x => X.stateOf(x) === 'live' && !(x.ch || []).length));
-  return Array.from({ length: Math.min(n, L.length) }, (_, i) => L[(day * n + i) % L.length]);
-}

@@ -106,7 +106,6 @@ export const FIT_JOBS = [
 ];
 
 export const productById = id => PRODUCTS.find(p => p.id === id) || null;
-export const chipById = id => { for (const p of PRODUCTS) { const c = p.chips.find(x => x.id === id); if (c) return c; } return null; };
 export const leadingCount = id => (productById(id) ? productById(id).chips.filter(c => c.leading).length : 0);
 export const totalLeading = () => PRODUCTS.reduce((n, p) => n + leadingCount(p.id), 0);
 

@@ -25,7 +25,6 @@ export const PUZZLES = [
   { id: 'fib', start: '# a0 = the a1-th Fibonacci number: 0, 1, 1, 2, 3, 5 ...\n', cases: [{ a1: 1 }, { a1: 2 }, { a1: 10 }, { a1: 20 }], want: c => { let a = 0, b = 1; for (let i = 0; i < c.a1; i++) [a, b] = [b, a + b]; return a; } },
   { id: 'fast', start: 'li a0, 0\nli t2, 1\nloop:\n  add a0, a0, t2\n  addi t2, t2, 1\n  ble t2, a1, loop', cases: [{ a1: 100 }, { a1: 1000 }, { a1: 7 }], maxCycles: 12, ext: { M: true }, want: c => (c.a1 * (c.a1 + 1)) / 2 }
 ];
-export const PUZZLE_IDS = PUZZLES.map(p => p.id);
 /* the jobs of a machine's core (src/data/blocks.js NEEDS, by the need's id): a program that already works, watched on
    your core. a3 and the words of memory from address 4096 (mem) are inputs too. Words: rv.job.<id>.t, .d */
 export const MEM0 = 4096;

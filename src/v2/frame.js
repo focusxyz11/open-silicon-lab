@@ -53,7 +53,6 @@ function stepsHtml(st) {
     '<span class="stc" aria-hidden="true"><b class="stn"></b><span class="stk"></span></span>' +
     '<button type="button" class="stgo" data-stepgo="1" aria-label="' + esc(t('frame.steps.next')) + '">→</button></nav>';
 }
-export const FACES = ['designed', 'made', 'used'];
 /* one life per host (#366): a view makes its frame anew in the same host each time it is shown, so whatever the frame,
    its modes (frame2.js) and the switches on it (listen.js) listen to or watch lives as long as that frame and ends
    when the next one is made: one set of listeners on a host, however often it is visited. lifeOf(host) is the life of

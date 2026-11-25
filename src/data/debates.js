@@ -20,4 +20,3 @@ export const DEBATES = [
   { id: 'bigdie', views: 2, at: ['test', 'wafer', 'chip'] },
   { id: 'skills', views: 2, at: ['gates'] }
 ];
-export const debateAt = id => DEBATES.find(d => d.at.includes(id)) || null;

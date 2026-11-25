@@ -1,14 +1,14 @@
 /* New ways to compute, as engines: small, honest models of each paradigm, and the checks of their challenges.
    Ported unchanged from the first version of the site (src/engines/paradigms.js there; the labs that used it were
    topics/{beyond,cim,neuro,photonic,pbits,reversible,spatial,quantum}/labs). Pure logic, no DOM, no words: the
-   data and every visible word are in src/data/paradigms.js (WORDS). Quantum search is its own engine, grover.js.
+   labs that play them show their own (src/i18n/en/labs.json). Quantum search is its own engine, grover.js.
 
    Each model keeps only the idea that makes its paradigm different, and what is left out is said by the pages:
    energy of math against moving data (45 nm, Table I of arXiv:1602.04183), a compute-in-memory crossbar (noise
    and converters), a spiking neuron, a Mach-Zehnder mesh, two qubits, p-bits (an AND gate run backwards),
    reversible logic (Landauer limit, adiabatic ramp, Toffoli) and dataflow (weights kept on chip).
 
-   CHECKS: one pure function per challenge id (words: para.ch.<id>.t / .goal / .done). Each takes the state a
+   CHECKS: one pure function per challenge id (the labs show the challenges' words, game.ch.* and their own). Each takes the state a
    player has reached and says whether the goal is met; the lab's own thresholds are kept. checkOf(id, state). */
 
 /* New ways to compute: small, honest models of each paradigm. Pure logic, no DOM.

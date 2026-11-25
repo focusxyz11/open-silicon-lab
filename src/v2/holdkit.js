@@ -165,8 +165,6 @@ export function yearsWordsHTML(d) {
   if (c) { const i = COST.indexOf(c); s += '<div class="cost"><b>' + money(c[1] * 1e6) + '</b><span class="mono dim">' + w('m.cost.at', { node: c[0] }) + '</span>' + src(COSTSRC[i]) + '</div>'; }
   return s;
 }
-/* beside a moment: the core question it belongs to, alone, and where it is played for real */
-export function yearsSideHTML(d) { const m = momAt(d); return m && d < DWALL - 1e-4 ? '<div class="w-q"><span class="mono">' + w('q.label') + '</span><p>' + Q(m.q) + '</p>' + lab(w('mo.' + m.id + '.lab'), m.lab) + '</div>' : ''; }
 /* the hold: how fast the count moves. Quick while a smaller transistor was a cheaper one, slower as each design costs
    more, slow at a moment (let go and it waits), and at the wall it stops */
 export const Yr = { wallPush: 0, lead: 0,

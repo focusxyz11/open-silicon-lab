@@ -83,5 +83,3 @@ export function waysOn(x, n = 4) {
 
 /* how many are in each state, overall or in one world */
 export const counts = (L = EXPERIMENTS) => Object.fromEntries(STATES.map(st => [st, L.filter(x => stateOf(x) === st).length]));
-/* the experiments a challenge belongs to */
-export const experimentOfChallenge = ch => EXPERIMENTS.find(x => (x.ch || []).includes(ch)) || null;

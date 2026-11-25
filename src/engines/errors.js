@@ -46,8 +46,6 @@ export const SOURCES = ['neutron', 'alpha', 'timing', 'wear', 'defect', 'crash']
 export const SOURCE_LEVEL = { neutron: 'switch', alpha: 'pkg', timing: 'gate', wear: 'block', defect: 'chip', crash: 'rack' };
 export const SITES = ['memory', 'logic', 'machine'];
 export const LASTING = ['timing', 'wear', 'defect'];
-/* what happens to a wrong value: fixed in place, caught (seen, not fixed), tolerated by the job, or silent */
-export const OUTCOMES = ['fixed', 'caught', 'masked', 'silent'];
 
 /* ---- the numbers of the model, each with its source or said to be a choice ---- */
 export const ALPHA_SHARE = 0.5;          // at sea level, alpha and neutrons flip about as many bits each (facts.json alpha-share)

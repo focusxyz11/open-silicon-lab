@@ -41,6 +41,5 @@ export const LIQUIDS = [
     reshape: { value: [50e-9, 50e-9], status: 'guess', fid: 'idea', fact: 'prowess' },
     notes: [{ id: 'goalAim', status: 'guess', fid: 'idea', fact: 'prowess' }] }
 ];
-export const LIQUID_IDS = LIQUIDS.map(l => l.id);
 export const liquidOf = id => LIQUIDS.find(l => l.id === id) || null;
 export const liquidsFor = blockId => (ON.includes(blockId) ? LIQUIDS : []);

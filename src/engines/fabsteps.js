@@ -1,9 +1,9 @@
 /* The chip-making steps, as small models (the step labs of the earlier site, ported as engines; the views are somewhere else).
-   Pure logic, no DOM, no English (ids only; every word is in WORDS, read by its tests; the views show their own, in
-   src/i18n/en/).
+   Pure logic, no DOM, no English (ids only; the views show their own words, in src/i18n/en/, and those no view
+   shows yet, fab.loop.*, fab.clean.* and fab.inspect.*, wait in src/data/waiting-words.json; its tests check them).
    Ported from the earlier site (the branch 'before'), from the labs of its physics, fab and litho topics, with
    the same formulas, constants and seeds, so the same settings show the same numbers; added here: stepping, seeded
-   random draws, challenge checks and WORDS. One file per step, gathered here:
+   random draws and challenge checks. One file per step, gathered here:
      crystal.js  growing the crystal: the Czochralski puller (pullStart, pullStep, pullAuto, pullRun)
      dope.js     silicon as a semiconductor (siliconPure, siliconDoped, junction, mosfet) and implant then anneal (implant)
      fabline.js  the patterning loop (layerAt), cleanroom, CVD against ALD (depoStart, depoStep), overlay, inspection
@@ -18,11 +18,11 @@
    Facts: ids of src/data/facts.json that these models' words rest on, by lab (FACT_IDS). Figures with no id there are
    in the comments of the file that uses them. */
 import { metBy } from './fabkit.js';
-import { PULL_CHALLENGES, PULL_WORDS } from './crystal.js';
-import { DOPE_CHALLENGES, DOPE_WORDS } from './dope.js';
-import { FABLINE_CHALLENGES, FABLINE_WORDS } from './fabline.js';
-import { ETCH_CHALLENGES, ETCH_WORDS } from './etch.js';
-import { LITHO_CHALLENGES, LITHO_WORDS } from './litho.js';
+import { PULL_CHALLENGES } from './crystal.js';
+import { DOPE_CHALLENGES } from './dope.js';
+import { FABLINE_CHALLENGES } from './fabline.js';
+import { ETCH_CHALLENGES } from './etch.js';
+import { LITHO_CHALLENGES } from './litho.js';
 
 export * from './crystal.js';
 export * from './dope.js';
@@ -41,5 +41,3 @@ export const FACT_IDS = {
   euv: ['euv-source', 'euv-throughput', 'euv-wavelength']
 };
 
-/* the visible words of all the models: fab.<lab>.<...>, challenges fab.ch.<id>.t / .goal / .done */
-export const WORDS = { ...PULL_WORDS, ...DOPE_WORDS, ...FABLINE_WORDS, ...ETCH_WORDS, ...LITHO_WORDS };

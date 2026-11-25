@@ -22,7 +22,6 @@ export const mobilityN = N => 68.5 + 1345 / (1 + Math.pow(N / 9.2e16, 0.711));
 export const mobilityP = N => 44.9 + 425 / (1 + Math.pow(N / 2.23e17, 0.719));
 export const SEMI_DEFAULTS = { T: 300, type: 'n', logN: 16, logNa: 17, logNd: 17, V: 0, Vg: 0.2, Vd: 0.5 };
 export const SEMI_RANGE = { T: [150, 650], logN: [13, 20], logNa: [14, 19], logNd: [14, 19], V: [-3, 0.8], Vg: [0, 1.2], Vd: [0, 1] };
-export const SEMI_MODES = ['pure', 'dope', 'pn', 'mos'];
 
 /* pure silicon at temperature T (kelvin): free electrons per cm3, how many bonds per free electron, resistivity (ohm cm), against copper */
 export function siliconPure(T = SEMI_DEFAULTS.T) {
@@ -70,7 +69,6 @@ const ANNEAL_SOL = { none: 1, furnace: 1, spike: 1, laser: 3 };                 
 export const BACKGROUND = 1e17;
 export const IMPLANT_DEFAULTS = { ion: 'As', anneal: 'spike', energy: 0.5 * Math.pow(1000, 0.45), dose: 1e15 };
 export const IMPLANT_RANGE = { energy: [0.5, 500], logDose: [12, 16] };
-export const energyOfSlider = v => 0.5 * Math.pow(1000, v);                      // the first version's slider: 0 to 1 over 0.5 to 500 keV
 
 export function implant(settings = {}) {
   const { ion, anneal, energy: e, dose } = { ...IMPLANT_DEFAULTS, ...settings }, I = IONS[ion];
@@ -99,28 +97,3 @@ export const DOPE_CHALLENGES = [
   { id: 'shallow', lab: 'implant', groups: [r => r.type === 'n' && r.xj !== null && r.xj !== undefined && r.xj < 15 && r.activePct > 95] }
 ];
 
-export const DOPE_WORDS = {
-  'fab.semi.mode.pure': 'Pure silicon', 'fab.semi.mode.dope': 'Doping', 'fab.semi.mode.pn': 'p-n junction', 'fab.semi.mode.mos': 'Field-effect switch',
-  'fab.semi.type.n': 'Phosphorus (n-type)', 'fab.semi.type.p': 'Boron (p-type)',
-  'fab.semi.state.forward': 'Forward bias: conducting', 'fab.semi.state.reverse': 'Reverse bias: blocking', 'fab.semi.state.near': 'Near zero bias',
-  'fab.semi.state.off': 'Off', 'fab.semi.state.turning': 'Turning on', 'fab.semi.state.on': 'On',
-  'fab.implant.ion.B': 'Boron (p-type)', 'fab.implant.ion.P': 'Phosphorus (n-type)', 'fab.implant.ion.As': 'Arsenic (n-type)',
-  'fab.implant.anneal.none': 'None', 'fab.implant.anneal.furnace': 'Furnace, 900 °C, 30 min', 'fab.implant.anneal.spike': 'Spike, 1,050 °C, ~1 s', 'fab.implant.anneal.laser': 'Laser, ~1,300 °C, 1 ms',
-  'fab.implant.note.amorphous': 'This dose turns the surface layer amorphous: the crystal is shattered. Annealing regrows it from the perfect crystal below.',
-  'fab.implant.note.none': 'Without an anneal, most dopants sit between lattice sites and do nothing, and the damage scatters electrons.',
-  'fab.implant.note.furnace': 'A long furnace anneal repairs the crystal fully but lets dopants diffuse, deepening the junction. Fine for old nodes, too blurry for 2 nm transistors.',
-  'fab.implant.note.spike': 'A spike anneal heats the wafer for about a second, enough to activate dopants while limiting diffusion.',
-  'fab.implant.note.laser': 'Laser or flash annealing heats only the top micrometer for a millisecond, so dopants barely move and can exceed their normal solubility.',
-  'fab.implant.note.oversoluble': 'The peak is above what silicon can dissolve at this temperature, so some dopants stay inactive.',
-  'fab.implant.note.shallow': 'A junction this shallow suits the source and drain extensions of a modern transistor.',
-  'fab.implant.note.deep': 'A deep profile like this suits wells, the large doped regions that transistors sit in.',
-  'fab.ch.too-hot.t': 'Too hot for silicon',
-  'fab.ch.too-hot.goal': 'Heat pure silicon until its own free electrons reach 10^15 per cm3, as many as lightly doped silicon has. At what temperature does the doping stop deciding how a chip behaves?',
-  'fab.ch.too-hot.done': 'At about 600 K (327 °C), heat alone frees about 10^15 electrons per cm3, as many as light doping adds. Above that, the chip\'s doped regions stop behaving as designed, which is one reason chips are kept well below about 125 °C.',
-  'fab.ch.furnace.t': 'The furnace spreads it',
-  'fab.ch.furnace.goal': 'Implant boron at 2 keV, then compare a furnace anneal with a laser anneal. How much deeper does the furnace drive the junction?',
-  'fab.ch.furnace.done': 'The furnace drives the junction to about 101 nm, the laser leaves it at 36 nm: about 3 times deeper. Thirty minutes at 900 °C gives atoms time to wander; a millisecond at 1,300 °C switches them on before they move.',
-  'fab.ch.shallow.t': 'Shallow and switched on',
-  'fab.ch.shallow.goal': 'The next transistors need junctions only a few nanometers deep. Make an n-type junction shallower than 15 nm with more than 95% of its dopants switched on.',
-  'fab.ch.shallow.done': 'Only the laser anneal works: arsenic gives about 9 nm with 99% of dopants switched on. A spike anneal gets to 13 nm but switches on only 92%, and a furnace spreads the junction far too deep. The hotter and shorter the anneal, the less the atoms move.'
-};

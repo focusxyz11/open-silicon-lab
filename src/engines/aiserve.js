@@ -1,6 +1,6 @@
-/* Serving a language model, four small models and two data tables, as engines (the words its results are named
-   by: WORDS below, read by its tests; the lab that plays them, src/v2/labs/serve.js, shows its own, srv.* in
-   src/i18n/en/labs.json). Brought over from the first version of the site, with the same numbers (the branch
+/* Serving a language model, four small models and two data tables, as engines (the lab that plays them,
+   src/v2/labs/serve.js, names their results in its own words, srv.* in src/i18n/en/labs.json, which its tests check;
+   the network's and the architectures' words wait in src/data/waiting-words.json). Brought over from the first version of the site, with the same numbers (the branch
    'before'): topics/accelerators/labs/quantization-lab.js,
    prefill-vs-decode.js, architecture-explorer.js, real-chip-comparison.js and topics/datacenter/labs/energy-per-token.js,
    cluster-network.js, with the challenges in the topics' topic.json. Pure functions, no DOM, ids only; the same style
@@ -20,35 +20,6 @@
 
 import { CHIPS as AI_CHIPS } from './aichip.js';
 
-/* ---------- words (ids only elsewhere) ---------- */
-export const WORDS = {
-  'ai.quant.format.fp16': 'FP16', 'ai.quant.format.bf16': 'BF16', 'ai.quant.format.e4m3': 'FP8 E4M3',
-  'ai.quant.format.e5m2': 'FP8 E5M2', 'ai.quant.format.fp4': 'FP4 E2M1',
-  'ai.quant.scale.tensor': 'One scale per tensor', 'ai.quant.scale.nv16': 'Per block of 16 (NVFP4-style)',
-  'ai.quant.scale.mx32': 'Per block of 32, power of two (MXFP4-style)',
-  'ai.quant.tag.tensor': 'per-tensor scale', 'ai.quant.tag.nv16': '16-value blocks', 'ai.quant.tag.mx32': '32-value blocks',
-  'ai.quant.verdict.lossless': 'Practically lossless: the rounding error is far below the noise in training.',
-  'ai.quant.verdict.small': 'Small error. With careful calibration, models usually keep their accuracy.',
-  'ai.quant.verdict.noticeable': 'Noticeable error. Models need fine-tuning or finer-grained scaling to cope.',
-  'ai.quant.verdict.coarse': 'Too coarse.',
-  'ai.quant.zeros': 'of the weights collapsed to zero, because the outliers stretched the scale.',
-  'ai.quant.hint': 'Switch on block scaling to see how much it helps.',
-  'ai.prefill.dominates': 'Prefill dominates (compute-bound)', 'ai.prefill.decodeDominates': 'Decode dominates (bandwidth-bound)',
-  'ai.energy.part.accel': 'Accelerator', 'ai.energy.part.server': 'Rest of server & network', 'ai.energy.part.cooling': 'Cooling & power losses',
-  'ai.net.layer.1': 'Leaf switches', 'ai.net.layer.2': 'Spine switches', 'ai.net.layer.3': 'Core switches', 'ai.net.layer.4': 'Super-spine',
-  'ai.net.opt.plug': 'Pluggable transceivers', 'ai.net.opt.cpo': 'Co-packaged optics',
-  'ai.arch.gpu.t': 'GPU', 'ai.arch.gpu.tag': 'Flexible, with the biggest software ecosystem',
-  'ai.arch.tpu.t': 'TPU (systolic)', 'ai.arch.tpu.tag': 'Matrix engines scheduled by a compiler',
-  'ai.arch.asic.t': 'Custom cloud chip', 'ai.arch.asic.tag': 'Built by a cloud for its own models',
-  'ai.arch.wafer.t': 'Wafer-scale', 'ai.arch.wafer.tag': 'One chip the size of a whole wafer',
-  'ai.arch.lpu.t': 'SRAM dataflow (LPU)', 'ai.arch.lpu.tag': 'The model spread across many chips',
-  'ai.ch.fourBits.t': 'Four bits, despite outliers',
-  'ai.ch.fourBits.goal': 'With 1% outliers in the weights, fit a 70B model in under 40 GB and keep the signal-to-noise above 20 dB.',
-  'ai.ch.fourBits.done': 'Only FP4 with one scale per block of 16 weights works: 39.4 GB and about 20.5 dB. One scale for the whole tensor lets a few large outliers crush every small weight to zero. Small blocks keep each scale local, at the cost of half a bit per weight.',
-  'ai.ch.readFastWriteSlow.t': 'Read fast, write slow',
-  'ai.ch.readFastWriteSlow.goal': 'On Rubin with a 70B model, find how long a prompt must be before reading it takes as long as writing a 270-token answer.',
-  'ai.ch.readFastWriteSlow.done': 'It takes a prompt of about 77,000 tokens. Reading the prompt works on all its tokens at once, so the chip computes at full speed; writing produces one token at a time and waits for memory each time. Per token, reading is about 280 times faster.'
-};
 
 /* ---------- quantization ---------- */
 /* E exponent bits, M mantissa bits, the largest value, bits per weight, and speed (the first version's column: 1, 2 or 4 times) */
@@ -131,7 +102,6 @@ export const SERVE_CHIPS = [
 ];
 export const serveChipOf = id => SERVE_CHIPS.find(c => c.id === id);
 export const PREFILL_MODELS = [8, 70, 405];          // billions of parameters
-export const PREFILL_FILL = 1 / 1.2;                 // the model (in FP8, a byte a weight) takes 1.2 times its size in memory
 export const PREFILL_USE = 0.5;                      // the share of peak FP8 a prefill pass reaches
 export const PREFILL_DEFAULTS = { chipId: 'rubin', paramsB: 70, promptSlider: 600, answerSlider: 550 };
 /* the first version's sliders, 0..1000: prompt 100 to 128,000 tokens, answer 10 to 4,000 */

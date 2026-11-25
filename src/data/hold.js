@@ -37,9 +37,6 @@ export const MOMENTS = [
   { id: 'bug', at: D94, span: 2.4, q: 'trust', facts: ['fdiv-rate', 'fdiv-charge'], lab: '#/line/test' },
   { id: 'light', at: GEN(3), span: 1.05, q: 'dig', facts: ['euv-wavelength', 'high-na-price'], lab: '#/line/print' }
 ];
-/* 1971: from one job to any program, the energy for the same work (asic-vs-cpu: about 500× for video; the machines'
-   engine counts software at the same cost, src/data/blocks.js) */
-export const JOB_GAP = SOFTWARE_COST;
 /* 1994: about one random division in nine billion went wrong (fdiv-rate); the worst case anyone found */
 export const FDIV = { rate: 9e9, a: 4195835, b: 3145727, wrong: 4195579 / 3145727 };
 /* the light: three ways to print lines finer than 193 nm light (euv-wavelength, high-na-price) */
@@ -100,7 +97,6 @@ export const RUNGS = [['far', 640e-12 / 16, ['energy-moving-data'], '#/dive/bloc
 /* between the sum and the floor no one has a number yet: the bets aim there (new switches, spikes, light), drawn as a
    band, not a point, half way down on the log scale */
 RUNGS[3][1] = Math.sqrt(RUNGS[2][1] * RUNGS[4][1]);
-export const ZONE_RUNG = 'new';
 export const AHEAD = RUNGS[0][1] / RUNGS[RUNGS.length - 1][1];
 
 /* ---- the four walls, each beside its core question ---- */

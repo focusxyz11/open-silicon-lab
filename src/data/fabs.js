@@ -47,5 +47,4 @@ export const FABS = [
     { id: 'deskDays', status: 'guess', fid: 'idea', kind: 'days', value: [1, 7] },
     { id: 'deskCost', status: 'guess', fid: 'idea', kind: 'cost', value: 0.0001 }] }
 ];
-export const FAB_IDS = FABS.map(f => f.id);
 export const fabOf = id => FABS.find(f => f.id === id) || null;

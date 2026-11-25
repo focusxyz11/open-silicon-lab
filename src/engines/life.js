@@ -77,7 +77,6 @@ export const LIVES_AT = { chip: 'datacentre', soc: 'phone', mcu: 'car' };
 export const MARGINS = [0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3];
 export const PROTECT = ['none', 'memory', 'logic'];
 export const PERFECT = { margin: 0, grid: false, hot: false, burn: false, protect: 'none' };
-export const CHOICES = { design: ['margin', 'grid', 'protect'], factory: ['hot', 'burn'] };
 export const normalLife = c => ({
   margin: Math.max(0, Math.min(MARGINS.length - 1, Math.round(+(c && c.margin) || 0))),
   grid: !!(c && c.grid), hot: !!(c && c.hot), burn: !!(c && c.burn), protect: PROTECT.includes(c && c.protect) ? c.protect : 'none'

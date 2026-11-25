@@ -4,6 +4,9 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import * as B from '../src/engines/aibuild.js';
+import { readWords } from '../scripts/words.mjs';
+/* the lab's words (aib.* in src/i18n/en/labs.json) name what the engine returns */
+const EN = readWords();
 
 const close = (a, b, msg) => assert.ok(Math.abs(a - b) <= 1e-9 * Math.max(1, Math.abs(b)), `${msg}: ${a} vs ${b}`);
 
@@ -37,10 +40,10 @@ test('the tables are complete, and every mission names real keys', () => {
   for (const [id, m] of Object.entries(B.MISSIONS)) {
     const d = B.design(B.preset(id)); assert.equal(d.rows.length, m.reqs.length);
     assert.ok(m.goal.key in d, 'goal key'); assert.equal(m.goal.stars.length, 2);
-    for (const r of m.reqs) { assert.ok(r.op === 'fit' || r.key in d); if (r.op !== 'fit') assert.ok(B.WORDS['aibuild.unit.' + r.unit], 'unit word'); }
+    for (const r of m.reqs) { assert.ok(r.op === 'fit' || r.key in d); if (r.op !== 'fit') assert.ok(EN['aib.v.' + r.unit], 'unit word'); }
   }
-  for (const [k, t] of [['arch', B.ARCH], ['node', B.NODE], ['mem', B.MEM], ['pkg', B.PKG]]) for (const id of Object.keys(t)) assert.ok(B.WORDS[`aibuild.${k}.${id}`] && B.WORDS[`aibuild.${k}.${id}.d`], k + id);
-  for (const id of Object.keys(B.MISSIONS)) assert.ok(B.WORDS['aibuild.mission.' + id] && B.WORDS['aibuild.mission.' + id + '.story']);
+  for (const [k, t] of [['arch', B.ARCH], ['node', B.NODE], ['mem', B.MEM], ['pkg', B.PKG]]) for (const id of Object.keys(t)) assert.ok(EN[`aib.${k}.${id}`] && EN[`aib.${k}.${id}.d`], k + id);
+  for (const id of Object.keys(B.MISSIONS)) assert.ok(EN['aib.mission.' + id] && EN['aib.mission.' + id + '.story']);
 });
 
 test('each mission can be met by some choice and is missed by another', () => {
@@ -63,7 +66,7 @@ test('each mission can be met by some choice and is missed by another', () => {
   assert.equal(B.design({ ...B.preset('phone'), fp4: true, memN: 3 }).rows.find(r => r.key === 'power').ok, false, 'a third memory chip breaks the phone\'s power budget');
   assert.equal(B.design({ ...B.preset('infer'), mem: 'lp', memN: 4, pkg: 'org' }).all, false);
   assert.equal(B.design({ ...B.preset('train'), node: 'a16', area: 700, dies: 4 }).all, false);
-  for (const id of Object.keys(B.CHALLENGES)) { assert.equal(B.CHALLENGES[id].id, id); for (const p of ['t', 'goal', 'done']) assert.ok(B.WORDS['aibuild.ch.' + id + '.' + p]); }
+  for (const id of Object.keys(B.CHALLENGES)) { assert.equal(B.CHALLENGES[id].id, id); for (const k of ['aib.mission.' + id, 'aib.mission.' + id + '.story', 'aib.done.' + id]) assert.ok(EN[k], k); }
 });
 
 test('a search over the dials finds a meeting design (a small grid, to keep it fast)', () => {
@@ -86,7 +89,7 @@ test('what cannot be built is named, with its numbers', () => {
   assert.ok(ids({ ...B.preset('infer'), f: 3 }).includes('clock'));   // the lab's slider stops at 2.6 GHz, which 0.97 V still reaches;
   assert.ok(ids({ ...B.preset('phone'), memN: 0 }).includes('no-memory'));
   assert.equal(B.tidy({ ...B.preset('phone'), mem: 'lp', memN: 9 }).memN, 4);
-  for (const id of ['reticle', 'needs-interposer', 'stacks', 'dies', 'silicon', 'clock', 'no-memory']) assert.ok(B.WORDS['aibuild.problem.' + id]);
+  for (const id of ['reticle', 'needs-interposer', 'stacks', 'dies', 'silicon', 'clock', 'no-memory']) assert.ok(EN['aib.problem.' + id]);
   assert.equal(B.design({ ...B.preset('infer'), area: 800 }).all, false, 'an unbuildable chip never meets a mission');
 });
 
@@ -114,11 +117,11 @@ test('the tape-out: the months add up, the first wafer is counted, and the revie
   for (const id of Object.keys(B.MISSIONS)) {
     const c = B.preset(id), d = B.design(c), tl = B.timeline(c, d);
     close(tl.reduce((s, p) => s + p.months, 0), d.months, id + ' months');
-    for (const p of tl) assert.ok(B.WORDS['aibuild.phase.' + p.id]);
+    for (const p of tl) assert.ok(EN['aib.phase.' + p.id]);
     const w = B.firstWafer(d, 5), w2 = B.firstWafer(d, 5);
     assert.deepEqual(w, w2, 'deterministic'); assert.equal(w.total, w.dies.length); assert.equal(w.good, w.dies.filter(x => x.ok).length);
     assert.ok(w.total > 0 && w.good <= w.total);
-    for (const n of B.notes(c, d)) assert.ok(B.WORDS['aibuild.note.' + n.id], n.id);
+    for (const n of B.notes(c, d)) assert.ok(EN['aib.note.' + n.id], n.id);
   }
   const n = B.notes(B.preset('infer')).map(x => x.id);
   assert.ok(n.includes('memory-bound') && n.includes('fp4') && n.includes('agents') && n.includes('hbm-share'));

@@ -40,7 +40,6 @@ export const BLOCKS = [
   { id: 'parity', in: ['word'], out: ['bit'], forms: ['software', 'circuit'], need: 'check' },
   { id: 'core', in: ['word'], out: ['word'], forms: ['circuit'], need: 'core', runs: true, stock: true }
 ];
-export const BLOCK_IDS = BLOCKS.map(b => b.id);
 export const blockOf = id => BLOCKS.find(b => b.id === id) || null;
 
 export const NEEDS = [
@@ -63,7 +62,6 @@ export const NEEDS = [
     wires: [['world', 'ant.in0'], ['world', 'clock.in0'], ['ant.out0', 'find.in0'], ['ant.out0', 'mix.in0'], ['find.out0', 'mix.in1'], ['mix.out0', 'ctl.in0']],
     change: ['find', 'mix'], exact: ['mix'] }
 ];
-export const NEED_IDS = NEEDS.map(n => n.id);
 export const needOf = id => NEEDS.find(n => n.id === id) || null;
 
 /* GOALS: one challenge per need, played on the machine in Do mode (src/v2/machines.js) and checked by the engine
