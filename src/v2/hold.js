@@ -9,7 +9,8 @@
    them). For checks: window.__hold.set(v) jumps to v doublings (99: the wall), window.__hold.state(). */
 import { t, lang, locale, LANGS, needWords } from '../core/i18n.js';
 import { D71, DGAR, DWALL, D95, D2011, COST, COSTSRC, GEN, yearOf, formAt, MOMENTS, FDIV, LIGHTS, WALLS, ARR, TRIP,
-  NEEDS, STOCK, FORMS, FCOST, LOOP, PARTS, FACT_IDS, CHIPS, rule, BEHIND, AHEAD, RUNGS, ZONE_RUNG } from '../data/hold.js';
+  NEEDS, STOCK, FORMS, FCOST, LOOP, PARTS, FACT_IDS, CHIPS, BEHIND, AHEAD, RUNGS, ZONE_RUNG, yearAt, dAt, nodeAt, trend,
+  SERIES, KNEE, ERAS, CHALS, MOORE65, upTo, rule } from '../data/hold.js';
 import { INK, PAPER, RED, mix, rnd, ss, lerp, SPEC } from './holdspec.js';
 
 const FONTS = 'https://fonts.googleapis.com/css2?family=Anonymous+Pro:wght@400;700&family=Anton&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=Gelasio:ital,wght@1,400;1,500&display=swap';
@@ -31,24 +32,36 @@ export function createHold(host, ctx = {}) {
      the wall; by night it is paper on ink from the start ---- */
   const night = (document.documentElement.getAttribute('data-theme') || (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark')) === 'dark';
   const ink = night ? PAPER : INK, paper = night ? '#131210' : PAPER;
+  /* the square's ground after the hold, a colour over it (fg) and under it (bg), and a number on its way (HI): by day
+     ink on paper all the way down, by night paper on ink; the page never changes its colours by itself */
+  const BG = night ? '#0d0c0a' : '#e8e4d8', RGB_FG = night ? '239,236,227' : '19,18,16', RGB_BG = night ? '13,12,10' : '239,236,227';
+  const fg = a => 'rgba(' + RGB_FG + ',' + a + ')', bg = a => 'rgba(' + RGB_BG + ',' + a + ')', HI = night ? '#fff' : INK;
   /* ---- the page ---- */
   host.classList.add('holdhome'); host.classList.toggle('hold-night', night);
   host.innerHTML = '<div class="hold' + (night ? ' is-night' : '') + '" id="hd-root">' +
-    '<div class="h-guide" id="hd-guide"><canvas id="hd-gcv" aria-hidden="true"></canvas><nav class="h-gnav" id="hd-tabs"></nav></div>' +
+    /* the rail: the page's chapters down the left, the one you are in lit, and the challenges done so far */
+    '<nav class="h-rail" id="hd-rail"><button type="button" class="h-railbtn" id="hd-railbtn" aria-expanded="false"><i></i><i></i><i></i><span>' + w('rail.open') + '</span></button><ol class="h-chap" id="hd-chap"></ol>' +
+    '<div class="h-tally"><span class="h-mono" id="hd-tallyn"></span><div class="h-tsq" id="hd-tsq"></div></div></nav>' +
     '<div class="h-world">' +
-    '<div class="h-count" id="hd-hero"><div class="h-kick h-mono"><i></i><span>' + w('hero.k') + '</span></div>' +
-    '<div class="h-num h-anton" id="hd-num">1</div><div class="h-unit h-anton" id="hd-unit"></div>' +
-    '<div class="h-meta"><span class="h-year" id="hd-year"></span></div>' +
+    /* the fifty years: scrolling is time. Holding scrolls for you, slower at each moment; nothing waits for the hold */
+    '<section class="h-years" id="hd-years"><div class="h-panel" id="hd-hero">' +
+    '<div class="h-kick h-mono"><i></i><span>' + w('hero.k') + '</span></div>' +
+    '<div class="h-countrow"><div class="h-num h-anton" id="hd-num">1</div><div class="h-unit h-anton" id="hd-unit"></div></div>' +
+    '<div class="h-stats h-mono" id="hd-stats"><span><small>' + w('st.year') + '</small><b id="hd-year"></b></span><span><small>' + w('st.node') + '</small><b id="hd-node"></b></span><span><small>' + w('st.clock') + '</small><b id="hd-clock"></b></span><span><small>' + w('st.cores') + '</small><b id="hd-cores"></b></span></div>' +
+    '<div class="h-chart" id="hd-chart"><canvas id="hd-cv" aria-label="' + esc(w('cv.aria')) + '"></canvas><div class="h-ctag h-mono" id="hd-ctag"></div></div>' +
+    '<div class="h-cctl"><div class="h-seg h-sm" id="hd-c-sc">' + ['log', 'lin'].map((k, i) => '<button type="button" data-i="' + i + '" class="' + (i ? '' : 'on') + '">' + w('curve.' + k) + '</button>').join('') + '</div>' +
+    '<div class="h-chips" id="hd-c-ser">' + SERIES.map(k => '<button type="button" class="h-chipb" data-s="' + k + '" aria-pressed="false"><i class="h-sw h-sw-' + k + '"></i>' + w('ser.' + k) + '</button>').join('') + '</div></div>' +
+    '<div class="h-cq2" id="hd-cq2"></div>' +
     '<div class="h-say" id="hd-say" aria-live="polite"></div>' +
     '<div class="h-gauge" id="hd-gauge"><div class="h-gbar"><div class="h-fill" id="hd-gfill"></div><i class="h-mk" style="left:57.5%"></i><i class="h-mk" style="left:100%"></i></div>' +
     '<div class="h-lb h-mono"><span>' + w('g.now') + '</span><span style="margin-left:22%">' + w('g.gets') + '</span><span>' + w('g.twice') + '</span></div></div>' +
     '<div class="h-act"><button type="button" class="h-holdbtn" id="hd-hold" aria-describedby="hd-hint"><span>' + w('btn') + '</span>' +
     '<svg viewBox="0 0 110 110" aria-hidden="true"><circle id="hd-ring" cx="55" cy="55" r="52" pathLength="1"/></svg></button>' +
-    '<div class="h-hint h-mono" id="hd-hint"></div><button type="button" class="h-again h-mono" id="hd-again">' + w('again') + '</button></div>' +
-    '<button type="button" class="h-skipl h-mono" id="hd-skip">' + w('skip') + '</button></div>' +
+    '<div class="h-hint h-mono" id="hd-hint"></div><button type="button" class="h-again h-mono" id="hd-again">' + w('again') + '</button><button type="button" class="h-skipl h-mono" id="hd-skip">' + w('skip') + '</button></div>' +
+    '</div></section>' +
     '<div class="h-diewrap" id="hd-diewrap" data-scene="gate"><i class="h-crop h-a"></i><i class="h-crop h-b"></i><i class="h-crop h-c"></i><i class="h-crop h-d"></i>' +
     '<div class="h-dielab h-mono"><span id="hd-dtop"></span><span id="hd-dens"></span></div><canvas class="h-die" id="hd-die"></canvas>' +
-    '<div class="h-dl h-mono" id="hd-dl"></div>' +
+    '<div class="h-dl" id="hd-dl"></div>' +
     '<div class="h-loupe" id="hd-loupe"><canvas id="hd-lcv" width="464" height="464"></canvas><div class="h-mag h-mono" id="hd-mag"></div></div>' +
     '<div class="h-dielab h-bot h-mono"><span id="hd-dreg"></span><span id="hd-dfound"></span></div></div>' +
     '<div class="h-steps" id="hd-steps"></div><footer class="h-foot h-mono" id="hd-foot"></footer></div></div>';
@@ -85,7 +98,7 @@ export function createHold(host, ctx = {}) {
   let d = 0, holding = false, press = 0, atWall = false, now = 0, focus = [0.69, 0.3], focusTo = [0.69, 0.3];
   let lastMoveT = -1e9, lastTap = 0, touchedWalls = false, capK = '';
   const found = {};
-  let started = false, gateT = 0, vel = 0, push = 0, pushT = 0, bits = null, pow = false, live = false, raf = 0;
+  let vel = 0, push = 0, pushT = 0, bits = null, pow = false, live = false, raf = 0;
   /* the moments: which one is showing, what was tried there, and what it left behind */
   let mom = null; const tried = {}; const T1 = { gate: { a: 0, b: 0 }, job: 2, bug: { n: 0, worst: false }, light: 0 };
   let heavy = false;
@@ -96,27 +109,27 @@ export function createHold(host, ctx = {}) {
     die.width = die.height = Math.round(S * DPR);
     floor = document.createElement('canvas'); floor.width = floor.height = die.width;
     const f = floor.getContext('2d'), P = die.width;
-    f.fillStyle = '#100f0d'; f.fillRect(0, 0, P, P);
+    f.fillStyle = night ? '#100f0d' : '#e2ddd0'; f.fillRect(0, 0, P, P);
     /* what fifty years of splitting leaves behind: every region its own texture, as on a real die */
     const TONE = { core: 30, ctrl: 20, memory: 50, io: 15, clock: 11 };
     walk(9, [0, 0, 1, 1], () => {}, (x, y, ww, h, hash, vert, r, type) => {
       const k = rnd(hash), g = Math.round(type === 'memory' ? 44 + 12 * ((Math.round(x * 64) + Math.round(y * 64)) % 2) : TONE[type] * (0.45 + k * k * 1.35));
-      f.fillStyle = 'rgb(' + (g + 4) + ',' + (g + 2) + ',' + Math.max(0, g - 2) + ')'; f.fillRect(x * P, y * P, ww * P + 1, h * P + 1);
-      if (type === 'memory') { f.fillStyle = 'rgba(239,236,227,.1)'; const st = 2 * DPR; for (let i = 0; i < h * P; i += st * 2) f.fillRect(x * P, y * P + i, ww * P, st * .5); }
-      else if (type === 'io') { const m = 5 * DPR; f.strokeStyle = 'rgba(239,236,227,.55)'; f.lineWidth = DPR; f.strokeRect(x * P + m, y * P + m, ww * P - 2 * m, h * P - 2 * m); f.fillStyle = 'rgba(239,236,227,.12)'; f.fillRect(x * P + m * 2.2, y * P + m * 2.2, ww * P - m * 4.4, h * P - m * 4.4); }
-      else if (type === 'clock') { f.strokeStyle = 'rgba(239,236,227,.5)'; f.lineWidth = DPR; f.beginPath(); htree(f, x * P, y * P, ww * P, h * P, 5, 3 * DPR); f.stroke(); }
-      else if (rnd(hash >>> 3) > 0.8) { f.fillStyle = 'rgba(0,0,0,.35)'; f.fillRect(x * P, y * P, ww * P + 1, h * P + 1); }
+      f.fillStyle = night ? 'rgb(' + (g + 4) + ',' + (g + 2) + ',' + Math.max(0, g - 2) + ')' : 'rgb(' + (240 - g * 1.25) + ',' + (237 - g * 1.25) + ',' + (228 - g * 1.25) + ')'; f.fillRect(x * P, y * P, ww * P + 1, h * P + 1);
+      if (type === 'memory') { f.fillStyle = fg(.1); const st = 2 * DPR; for (let i = 0; i < h * P; i += st * 2) f.fillRect(x * P, y * P + i, ww * P, st * .5); }
+      else if (type === 'io') { const m = 5 * DPR; f.strokeStyle = fg(.55); f.lineWidth = DPR; f.strokeRect(x * P + m, y * P + m, ww * P - 2 * m, h * P - 2 * m); f.fillStyle = fg(.12); f.fillRect(x * P + m * 2.2, y * P + m * 2.2, ww * P - m * 4.4, h * P - m * 4.4); }
+      else if (type === 'clock') { f.strokeStyle = fg(.5); f.lineWidth = DPR; f.beginPath(); htree(f, x * P, y * P, ww * P, h * P, 5, 3 * DPR); f.stroke(); }
+      else if (rnd(hash >>> 3) > 0.8) { f.fillStyle = night ? 'rgba(0,0,0,.35)' : 'rgba(19,18,16,.1)'; f.fillRect(x * P, y * P, ww * P + 1, h * P + 1); }
     });
-    f.strokeStyle = 'rgba(239,236,227,.55)'; f.lineWidth = 1.5 * DPR; f.beginPath();
+    f.strokeStyle = fg(.55); f.lineWidth = 1.5 * DPR; f.beginPath();
     walk(3, [0, 0, 1, 1], (x, y, ww, h, vert, r) => { if (vert) { f.moveTo((x + ww * r) * P, y * P); f.lineTo((x + ww * r) * P, (y + h) * P); } else { f.moveTo(x * P, (y + h * r) * P); f.lineTo((x + ww) * P, (y + h * r) * P); } }, () => {});
     f.stroke();
-    f.strokeStyle = 'rgba(239,236,227,.2)'; f.lineWidth = DPR; f.beginPath();
+    f.strokeStyle = fg(.2); f.lineWidth = DPR; f.beginPath();
     walk(5, [0, 0, 1, 1], (x, y, ww, h, vert, r) => { if (vert) { f.moveTo((x + ww * r) * P, y * P); f.lineTo((x + ww * r) * P, (y + h) * P); } else { f.moveTo(x * P, (y + h * r) * P); f.lineTo((x + ww) * P, (y + h * r) * P); } }, () => {});
     f.stroke();
     /* chip art: a speck, for whoever brings the glass */
-    f.fillStyle = 'rgba(239,236,227,.55)'; f.fillRect(ART[0] * P - DPR, ART[1] * P - DPR, 2 * DPR, 2 * DPR);
+    f.fillStyle = fg(.55); f.fillRect(ART[0] * P - DPR, ART[1] * P - DPR, 2 * DPR, 2 * DPR);
     /* about 100,000 dots: 322 a side (wafer-space-run against design-cost-2nm) */
-    const pt = P * .94 / 322, pc = document.createElement('canvas'); pc.width = pc.height = Math.max(2, Math.round(pt * 4)); const pg = pc.getContext('2d'), q = pc.width / 4; pg.fillStyle = PAPER;
+    const pt = P * .94 / 322, pc = document.createElement('canvas'); pc.width = pc.height = Math.max(2, Math.round(pt * 4)); const pg = pc.getContext('2d'), q = pc.width / 4; pg.fillStyle = ink;
     for (let i = 0; i < 4; i++) for (let j = 0; j < 4; j++) pg.fillRect(i * q + q * .22, j * q + q * .22, q * .56, q * .56);
     dots = { pat: dc.createPattern(pc, 'repeat'), k: (pt * 4) / pc.width };
   }
@@ -128,7 +141,7 @@ export function createHold(host, ctx = {}) {
     const sx = x0 + ww * .15, dx = x0 + ww * .85, on = press, idle = !root.classList.contains('is-touched') && !reduce() ? .5 + .5 * Math.sin(T * 3) : 0;
     c.save(); c.globalAlpha = a; c.lineJoin = 'round'; c.lineCap = 'round';
     /* the silicon it is made in */
-    c.save(); c.beginPath(); c.rect(x0, cy, ww, bh); c.clip(); c.strokeStyle = 'rgba(19,18,16,.16)'; c.lineWidth = lw * .5; c.beginPath(); for (let q = -bh; q < ww; q += P * .016) { c.moveTo(x0 + q, cy + bh); c.lineTo(x0 + q + bh, cy); } c.stroke(); c.restore();
+    c.save(); c.beginPath(); c.rect(x0, cy, ww, bh); c.clip(); c.strokeStyle = fg(.16); c.lineWidth = lw * .5; c.beginPath(); for (let q = -bh; q < ww; q += P * .016) { c.moveTo(x0 + q, cy + bh); c.lineTo(x0 + q + bh, cy); } c.stroke(); c.restore();
     c.strokeStyle = ink; c.lineWidth = lw; c.strokeRect(x0, cy, ww, bh);
     /* source and drain: two wells in it */
     c.fillStyle = ink; for (const wx of [x0 + ww * .02, x0 + ww * .98 - wl]) { c.beginPath(); if (c.roundRect) c.roundRect(wx, cy, wl, wh, [0, 0, wh * .5, wh * .5]); else c.rect(wx, cy, wl, wh); c.fill(); }
@@ -180,7 +193,7 @@ export function createHold(host, ctx = {}) {
     walk(L, view, (x, y, ww, h, vert, r, depth, type) => {
       const p = depth < 3 || depth < L - 9 ? thick : thin;
       if (vert) { p.moveTo(X(x + ww * r), Y(y)); p.lineTo(X(x + ww * r), Y(y + h)); } else { p.moveTo(X(x), Y(y + h * r)); p.lineTo(X(x + ww), Y(y + h * r)); }
-      if (depth === 3 && type === 'memory' && L > 5) { c.fillStyle = 'rgba(19,18,16,.06)'; c.fillRect(X(x), Y(y), ww * scale, h * scale); }
+      if (depth === 3 && type === 'memory' && L > 5) { c.fillStyle = fg(.06); c.fillRect(X(x), Y(y), ww * scale, h * scale); }
       if (o.jobs && depth === 3 && type === 'core') { c.fillStyle = 'rgba(229,64,26,' + (.1 * o.jobs) + ')'; c.fillRect(X(x), Y(y), ww * scale, h * scale); }
     }, (x, y, ww, h, hash, vert, r, type) => {
       if (type === 'clock') { htree({ moveTo: (a, b) => tree.moveTo(X(a), Y(b)), lineTo: (a, b) => tree.lineTo(X(a), Y(b)) }, x, y, ww, h, 1 + Math.floor(L / 2), 7 / scale, view); return; }
@@ -265,8 +278,8 @@ export function createHold(host, ctx = {}) {
   function drawLoupe(show, o = {}) {
     loupe.style.opacity = show;
     if (o.dots && show > 0) { const R = loupe.clientWidth / 2, P = lcv.width, g = P / 5.2; focus[0] += (focusTo[0] - focus[0]) * 0.18; focus[1] += (focusTo[1] - focus[1]) * 0.18;
-      lc.setTransform(1, 0, 0, 1, 0, 0); lc.fillStyle = '#0d0c0a'; lc.fillRect(0, 0, P, P); const ox = (focus[0] * 322) % 1, oy = (focus[1] * 322) % 1;
-      for (let i = -1; i < 7; i++) for (let j = -1; j < 7; j++) { const x = (i - ox) * g, y = (j - oy) * g, id = mix(Math.floor(focus[0] * 322) + i, Math.floor(focus[1] * 322) + j); lc.fillStyle = PAPER; lc.fillRect(x + g * .14, y + g * .14, g * .72, g * .72); lc.fillStyle = INK; for (let q = 0; q < 3; q++) lc.fillRect(x + g * .26, y + g * (.3 + q * .16), g * (.2 + .28 * rnd(id + q)), g * .06); }
+      lc.setTransform(1, 0, 0, 1, 0, 0); lc.fillStyle = BG; lc.fillRect(0, 0, P, P); const ox = (focus[0] * 322) % 1, oy = (focus[1] * 322) % 1;
+      for (let i = -1; i < 7; i++) for (let j = -1; j < 7; j++) { const x = (i - ox) * g, y = (j - oy) * g, id = mix(Math.floor(focus[0] * 322) + i, Math.floor(focus[1] * 322) + j); lc.fillStyle = ink; lc.fillRect(x + g * .14, y + g * .14, g * .72, g * .72); lc.fillStyle = paper; for (let q = 0; q < 3; q++) lc.fillRect(x + g * .26, y + g * (.3 + q * .16), g * (.2 + .28 * rnd(id + q)), g * .06); }
       loupe.style.transform = 'translate(' + (focus[0] * S - R) + 'px,' + (focus[1] * S - R) + 'px)'; setMag(w('s.c2')); setCap('', ''); return; } if (show <= .5) setCap('', '');
     if (show <= 0) return;
     const R = loupe.clientWidth / 2, P = lcv.width, dd = Math.min(d, DWALL);
@@ -291,8 +304,9 @@ export function createHold(host, ctx = {}) {
       setCap(w('r.' + reg.key + '.d'), n >= 6 ? w('found.all') : w('found', { n })); }
   }
 
-  /* ============ one gesture, all the way: hold. What changes over fifty years is how it answers ============ */
-  const phase = () => atWall || d >= DWALL - 1e-6 ? 'wall' : !started ? 'gate' : d < D95 ? 'run' : d < D2011 ? 'coast' : 'pay';
+  /* ============ one gesture, all the way: hold. Scrolling is time: the fifty years are a length of page, and holding
+     scrolls it for you, slower near each moment. Nothing waits for the hold ============ */
+  const phase = () => d >= DWALL - 1e-6 ? 'wall' : d < 0.05 ? 'gate' : d < D95 ? 'run' : d < D2011 ? 'coast' : 'pay';
   const genIdx = () => Math.max(0, Math.min(COST.length - 1, Math.floor((d - D2011) / (DWALL - D2011) * COST.length + 1e-6)));
   const momentAt = v => MOMENTS.find(m => v >= m.at - 1e-9 && v < m.at + m.span) || null;
   const VMAX = 3.6, SLOW = 0.24, ZONE = 0.75;
@@ -304,34 +318,61 @@ export function createHold(host, ctx = {}) {
     if (heavy && d >= GEN(3)) v *= 0.5;
     return v;
   }
+  /* the page's length for the fifty years: a run of scroll for each doubling, and a stretch at the start, at each moment
+     and at the wall where the count stays put while you look. SEG: [from, to (px), d from, d to] */
+  const years = el('years'), panel = el('hero');
+  let SEG = [], YLEN = 1, WALL_S = 1, K = 100, y0 = 0, pos = 0;
+  function layoutYears() {
+    const vh = host.clientHeight || innerHeight; K = Math.max(64, vh * .13); const stay0 = vh * .3, plat = vh * .5;
+    SEG = []; let s = 0, dd = 0;
+    const lin = to => { const len = (to - dd) * K; SEG.push([s, s + len, dd, to]); s += len; dd = to; };
+    const stay = len => { SEG.push([s, s + len, dd, dd]); s += len; };
+    stay(stay0); for (const m of MOMENTS) { lin(m.at); stay(plat); } lin(DWALL); WALL_S = s; stay(vh * .8); YLEN = s;
+    years.style.height = Math.round(YLEN + panel.offsetHeight) + 'px';
+    const top = parseFloat(getComputedStyle(panel).top) || 0;
+    /* the panel is pinned once the years' top passes its sticky line: from there on, scroll is time */
+    y0 = Math.max(0, years.getBoundingClientRect().top - host.getBoundingClientRect().top + host.scrollTop - top);
+    pos = sOfD(d);
+  }
+  const segAt = s => SEG.find(g => s < g[1]) || SEG[SEG.length - 1];
+  const dOfS = s => { const g = segAt(Math.max(0, s)); return g[2] === g[3] ? g[2] : g[2] + (g[3] - g[2]) * Math.min(1, Math.max(0, (s - g[0]) / (g[1] - g[0]))); };
+  const sOfD = v => { if (v >= DWALL - 1e-6) return WALL_S; if (v <= 0) return 0; const g = SEG.find(x => x[2] !== x[3] && v >= x[2] && v <= x[3]); return g ? g[0] + (v - g[2]) / (g[3] - g[2]) * (g[1] - g[0]) : 0; };
+  /* go to a count: smoothly when asked by a tap, at once for checks */
+  const goD = (v, now) => { const sv = sOfD(Math.min(DWALL, Math.max(0, v))), top = Math.round(y0 + sv); vel = 0; if (now) { pos = sv; host.scrollTop = top; } else host.scrollTo({ top, behavior: reduce() ? 'auto' : 'smooth' }); touch(); };
   let lastGen = 0, thudT = 0;
   function advance(dt) {
-    const ph = phase();
-    if (ph === 'gate') { gateT = holding ? gateT + dt : Math.max(0, gateT - dt * 2); if (gateT > 0.75) { started = true; loadFacts(); } return; }
-    if (ph === 'wall') { vel = 0; push = holding ? Math.min(1, push + dt * 1.4) : Math.max(0, push - dt * 4);
-      if (!atWall) { if (holding) pushT += dt; if (pushT > 1.7 || (pushT > 0.7 && !holding)) hitWall(); }
-      else { pushT = holding ? pushT + dt : 0; if (pushT > 6 && pushT - dt <= 6) egg('push', '#/build'); }
-      return; }
-    /* near a moment the hold slows, and stays slow for a while past it: the hold never stops */
+    const sNow = host.scrollTop - y0;
+    /* the visitor scrolled: the count follows, and nothing rolls on */
+    if (Math.abs(sNow - pos) > 2) { pos = sNow; if (!holding) vel = 0; if (sNow > 10) touch(); }
+    if (pos > YLEN + 2) { push = 0; pushT = 0; return; }
+    if (pos >= WALL_S - 1 && holding) {
+      /* the wall: holding stops working */
+      vel = 0; push = Math.min(1, push + dt * 1.4); pushT += dt; if (pushT > 6 && pushT - dt <= 6) egg('push', '#/build'); return; }
+    push = Math.max(0, push - dt * 4); pushT = 0;
+    const g = segAt(pos), still = g[2] === g[3];
+    /* near a moment the hold slows, and stays slow for a while past it */
     const nx = MOMENTS.find(m => d < m.at + ZONE);
-    let lim = nx ? SLOW + Math.max(0, nx.at - d) * 2.4 : 99;
-    lim = Math.max(SLOW, lim);
-    /* let go, and it stops; except in the easy years, when it rolls on by itself. At a moment it waits for you */
-    let fr = lerp(7, 0.75, ss(D95 - 1, D95 + 1.5, d)) + 6.5 * ss(D2011 - 2, D2011 - 0.3, d);
-    if (mom) fr = Math.max(fr, 8);
+    const lim = Math.max(SLOW, nx ? SLOW + Math.max(0, nx.at - d) * 2.4 : 99);
+    /* let go, and it stops; except in the easy years, when it rolls on by itself */
+    const fr = lerp(7, 0.75, ss(D95 - 1, D95 + 1.5, d)) + 6.5 * ss(D2011 - 2, D2011 - 0.3, d) + (still ? 30 : 0) + (mom ? 8 : 0);
     if (holding) vel += (Math.min(vstar(), lim) - vel) * Math.min(1, dt * 3.2); else vel *= Math.exp(-fr * dt);
     vel = Math.min(vel, lim);
-    d = Math.min(DWALL, d + vel * dt);
-    if (d >= D2011) { const g = genIdx(); if (g > lastGen) thudT = 1; lastGen = g; }
+    const px = still ? (holding ? (g[1] - g[0]) / (g[2] < .01 ? 1.1 : 2.4) : 0) : vel * K;
+    if (px > .5) { pos = Math.min(WALL_S, pos + px * dt); host.scrollTop = Math.round(y0 + pos); }
+    if (d >= D2011) { const i = genIdx(); if (i > lastGen) thudT = 1; lastGen = i; }
   }
-  function hitWall() { atWall = true; d = DWALL; mom = null; cls('moment', false); cls('wall', true); cls('pushing', false); said = ''; steps(); tabsNow(); }
   /* what comes after the wall, with the facts behind it and the blueprint's words for what people are trying: fetched
-     once the hold has begun, so the first page asks for nothing more than its own words before it paints */
-  let factsP = null, stepsP = null;
-  const loadFacts = () => factsP || (factsP = fetch('src/data/facts.json').then(r => r.json()).then(j => { FACT = Object.fromEntries((j.facts || []).map(f => [f.id, f])); said = ''; }, () => {}));
+     once the visitor moves or the lab starts its idle preload, so the first page asks for nothing more than its own
+     words before it paints */
+  let factsP = null, stepsP = null, touched = false;
+  const loadFacts = () => factsP || (factsP = fetch('src/data/facts.json').then(r => r.json()).then(j => { FACT = Object.fromEntries((j.facts || []).map(f => [f.id, f])); said = ''; cqK = ''; }, () => {}));
   const steps = () => stepsP || (stepsP = Promise.all([loadFacts(), needWords('blueprint')]).then(buildSteps));
+  function touch() { if (touched) return; touched = true; cls('touched', true); steps(); }
 
   /* ============ the count, the year and what is said ============ */
+  const curYear = () => (d >= DWALL - 1e-6 ? 2026 : yearAt(d));
+  const hz = v => (v >= 1e9 ? w('st.ghz', { n: (v / 1e9).toLocaleString(locale(), { maximumFractionDigits: 1 }) }) : v >= 1e6 ? w('st.mhz', { n: nf(Math.round(v / 1e6)) }) : w('st.khz', { n: nf(Math.round(v / 1e3)) }));
+  const setT = (id, v) => { const e = el(id); if (e.innerHTML !== v) e.innerHTML = v; };
   function count() {
     const n = Math.pow(2, d);
     let num, unit;
@@ -343,11 +384,12 @@ export function createHold(host, ctx = {}) {
       num = parts.filter(p => p.type !== 'compact' && p.type !== 'literal').map(p => p.value).join('');
       const c = parts.filter(p => p.type === 'compact').map(p => p.value).join(' ');
       unit = c ? w(n < 1e6 ? 'unit.k' : 'unit.big', { c }) : w('unit.many'); }
-    if (el('num').textContent !== num) el('num').textContent = num;
-    if (el('unit').innerHTML !== unit) el('unit').innerHTML = unit;
-    const y = atWall || d >= DWALL - 1e-6 ? 2026 : d >= D71 - 0.02 ? Math.min(2025, Math.round(yearOf(d))) : 0;
-    const ys = y ? y + '<small>' + (y === 2026 ? '' : w('year.rule')) + '</small>' : '';
-    if (el('year').innerHTML !== ys) el('year').innerHTML = ys;
+    setT('num', num); setT('unit', unit);
+    /* the year, the generation's name, the fastest clock and the most cores so far */
+    const y = curYear(), yr = Math.round(y), late = y >= 1971.9;
+    setT('year', d < .05 ? '—' : (y < 1971 ? w('st.about', { y: yr }) : String(yr)));
+    const nd = nodeAt(y); setT('node', nd ? (y >= 1997 ? w('st.named', { n: nd }) : nd) : '—');
+    setT('clock', late ? hz(upTo('hz', y)) : '—'); setT('cores', late ? nf(upTo('cores', y)) : '—');
     const side = Math.pow(2, d / 2);
     const dens = d < 1 || scene !== 'hero' ? '' : w('dens', { n: side < 1000 ? nf(Math.round(side)) : new Intl.NumberFormat(locale(), { notation: 'compact', maximumSignificantDigits: 2 }).format(side) });
     if (el('dens').textContent !== dens) el('dens').textContent = dens;
@@ -361,23 +403,22 @@ export function createHold(host, ctx = {}) {
   let said = '';
   function say() {
     const ph = phase(); let k;
-    if (atWall) k = 'wall';
+    if (ph === 'wall') k = 'wall';
     else if (mom) k = 'mo.' + mom.id;
     else if (ph === 'gate') k = press > .5 ? 'on' : 'one';
     else if (ph === 'run') k = d >= .85 && d < 1.8 ? 'not' : d < DGAR - 0.4 ? 'double' : d < D71 ? 'garage' : 'rule';
     else if (ph === 'coast') k = d < D95 + 4.6 ? 'coast' : 'invisible';
-    else if (ph === 'pay') k = 'pay' + genIdx();
-    else k = 'push';
+    else k = 'pay' + genIdx();
     if (k !== said) { said = k; let html;
       if (mom) html = momentCard(mom);
-      else if (k === 'wall') html = '<b class="h-price">' + w('m.wall.h') + '</b>' + w('m.wall.p') + ' ' + src('rubin-gpu', 'node-n2', 'design-cost-2nm') + '<br><button type="button" class="h-go" data-go="hd-s-curve">' + w('m.wall.go') + '</button>';
+      else if (k === 'wall') html = (CV.guess ? '<p class="h-cqr">' + w('cq.guess.out', guessOut()) + '</p>' : '') + '<b class="h-price">' + w('m.wall.h') + '</b>' + w('m.wall.p') + ' ' + src('rubin-gpu', 'node-n2', 'design-cost-2nm') + '<br><button type="button" class="h-go" data-go="hd-s-switch">' + w('m.wall.go') + '</button>';
       else if (ph === 'pay') { const i = genIdx(), c = COST[i]; html = (i === 5 ? w('m.gaa') + ' ' + src('tsmc-n2') + ' ' : heavy && i >= 3 ? w('m.old') + ' ' : '') + w('m.pay') + '<span class="h-price">' + money(c[1]) + '<small>' + w('m.cost.at', { node: c[0] }) + '</small></span>' + src(COSTSRC[i]); }
-      else html = w('m.' + k) + ' ' + ({ garage: src('zeloof-garage'), rule: src('transistor-trend'), push: src('rubin-gpu') }[k] || '');
+      else html = w('m.' + k) + ' ' + ({ garage: src('zeloof-garage'), rule: src('moore-1965', 'transistor-trend') }[k] || '');
       el('say').innerHTML = html; if (mom) wireMoment(mom); }
     /* the line beside the button says how the hold feels now */
     const hk = mom ? 'moment' : ph === 'run' && d > 9.4 ? 'look' : ph;
     if (el('hint').dataset.k !== hk) { el('hint').dataset.k = hk; el('hint').innerHTML = coarse && TOUCH.includes(hk) ? w('hint.' + hk + '.t') : w('hint.' + hk); }
-    cls('pushing', ph === 'wall' && !atWall);
+    cls('pushing', ph === 'wall' && holding); cls('sayon', !!mom || ph === 'gate' || ph === 'wall');
     const tk = scene === 'hero' ? w('die.same') : '';
     if (el('dtop').textContent !== tk) el('dtop').textContent = tk;
   }
@@ -398,7 +439,7 @@ export function createHold(host, ctx = {}) {
     const o = el('mo'); if (!o) return; const id = m.id;
     if (id === 'gate') { const g = T1.gate, out = g.a && g.b ? 0 : 1; el('gout').textContent = out; el('gout').classList.toggle('h-one', !!out);
       el('ga').textContent = g.a; el('gb').textContent = g.b; el('ga').classList.toggle('h-one', !!g.a); el('gb').classList.toggle('h-one', !!g.b);
-      o.innerHTML = out ? w(tried.gate ? 'mo.gate.no' : 'mo.gate.lead') : '<b>' + w('mo.gate.yes.v') + '</b>' + w('mo.gate.yes'); }
+      o.innerHTML = out ? w(tried.gate ? 'mo.gate.no' : 'mo.gate.lead') : '<b>' + w('mo.gate.yes.v') + '</b>' + w('mo.gate.yes'); if (!out) done('gate'); }
     else if (id === 'job') { const v = T1.job; o.innerHTML = '<b>' + w('mo.job.' + v + '.v') + '</b>' + w('mo.job.' + v + '.d') + ' ' + src('asic-vs-cpu') + (tried.job ? ' ' + w('mo.job.after') : ''); }
     else if (id === 'bug') { const b = T1.bug;
       let h = b.n && !b.worst ? '<b>' + w('mo.bug.wrong0') + '</b>' + w('mo.bug.ran', { n: compact({ maximumSignificantDigits: 3 }).format(b.n), left: compact({ maximumSignificantDigits: 2 }).format(Math.max(1, FDIV.rate / 1e6 - b.n / 1e6)) }) + ' ' + src('fdiv-rate') : b.worst ? '' : w('mo.bug.lead');
@@ -408,77 +449,152 @@ export function createHold(host, ctx = {}) {
     else { const k = LIGHTS[T1.light]; o.innerHTML = '<b>' + w('mo.light.' + k + '.v') + '</b>' + w('mo.light.' + k + '.d') + ' ' + src(k === 'euv' ? 'high-na-price' : 'euv-wavelength') + (tried.light ? ' ' + w('mo.light.after') : ''); }
   }
   function wireMoment(m) {
-    const id = m.id, mark = () => { if (!tried[id]) { tried[id] = 1; } };
+    const id = m.id, mark = () => { if (!tried[id]) { tried[id] = 1; } if (id === 'job' || id === 'light') done(id); };
     if (id === 'gate') ['a', 'b'].forEach(k => { el('g' + k).onclick = () => { T1.gate[k] ^= 1; mark(); momentOut(m); }; });
     else if (id === 'job') el('mj').oninput = e => { T1.job = +e.target.value; mark(); momentOut(m); };
-    else if (id === 'bug') { el('mb1').onclick = () => { T1.bug.n += 1e6; mark(); momentOut(m); }; el('mb2').onclick = () => { T1.bug.worst = true; mark(); momentOut(m); }; }
+    else if (id === 'bug') { el('mb1').onclick = () => { T1.bug.n += 1e6; mark(); momentOut(m); }; el('mb2').onclick = () => { T1.bug.worst = true; mark(); done('bug'); momentOut(m); }; }
     else el('ml').onclick = e => { const b = e.target.closest('button'); if (!b) return; T1.light = +b.dataset.i; heavy = T1.light === 1; mark(); el('ml').querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); momentOut(m); };
     momentOut(m);
   }
 
-  /* ============ the guide: the whole page as one line under the bar. The fifty years first, on the scale you held
-     them (a doubling a step, the three moments as diamonds, the price of one design as squares), then the parts after
-     the wall. Tap a point of the fifty years to go there, a part to go to it ============ */
-  const gcv = el('gcv'), gc = gcv.getContext('2d'), HERO_W = .5;
-  const gxOf = (W, v) => 8 + (W * HERO_W - 16) * Math.min(v, DWALL) / DWALL;
-  const partX = (W, i) => W * HERO_W + (W * (1 - HERO_W)) * (i - 1) / (PARTS.length - 1);
-  const partNow = () => !atWall ? 'hero' : ['switch', 'memory', 'power', 'cost'].includes(scene) ? 'walls' : scene;
-  function drawGuide() {
-    const r = gcv.getBoundingClientRect(); if (!r.width) return;
-    if (gcv.width !== Math.round(r.width * DPR) || gcv.height !== Math.round(r.height * DPR)) { gcv.width = Math.round(r.width * DPR); gcv.height = Math.round(r.height * DPR); }
-    const W = r.width, H = r.height, y0 = Math.round(H * .62) + .5, FG = atWall || night ? PAPER : INK, now0 = partNow(), small = W < 600;
-    gc.setTransform(DPR, 0, 0, DPR, 0, 0); gc.clearRect(0, 0, W, H); gc.strokeStyle = FG; gc.fillStyle = FG; gc.lineWidth = 1;
-    gc.globalAlpha = .45; gc.beginPath(); gc.moveTo(0, y0); gc.lineTo(W, y0);
-    for (let i = 0; i <= Math.floor(DWALL); i++) { const x = Math.round(gxOf(W, i)) + .5; gc.moveTo(x, y0); gc.lineTo(x, y0 + (i % 5 ? 3 : 6)); }
-    gc.stroke(); gc.globalAlpha = 1;
-    gc.font = "11px 'Anonymous Pro', 'Noto Sans SC', monospace"; gc.textBaseline = 'alphabetic';   // i18n-ok: a canvas font
-    if (!small) for (let y = 1971; y <= 2011; y += 20) { const x = gxOf(W, D71 + (y - 1971) / 2); gc.textAlign = 'center'; gc.globalAlpha = .7; gc.fillText(y, x, y0 + 17); gc.globalAlpha = 1; }
-    /* the price of one design, squares to scale */
-    gc.fillStyle = RED; COST.forEach((c, i) => { const sz = Math.max(2, Math.sqrt(c[1]) * .45), x = gxOf(W, GEN(i + 1)); gc.globalAlpha = atWall || d >= GEN(i) - 1e-6 ? 1 : .3; gc.fillRect(x - sz - 2, y0 - 4 - sz, sz, sz); });
-    gc.globalAlpha = 1;
-    /* the moments */
-    for (const m of MOMENTS) { const x = gxOf(W, m.at); gc.save(); gc.translate(x, y0); gc.rotate(Math.PI / 4); gc.fillStyle = tried[m.id] ? RED : (atWall || night ? '#131210' : PAPER); gc.strokeStyle = RED; gc.lineWidth = 1.5; gc.fillRect(-4, -4, 8, 8); gc.strokeRect(-4, -4, 8, 8); gc.restore(); }
-    /* the wall, and the parts after it */
-    const xw = W * HERO_W; gc.fillStyle = RED; gc.fillRect(Math.round(xw) - 1, y0 - 12, 3, 18);
-    PARTS.slice(1).forEach(([k], j) => { const i = j + 1, x = partX(W, i), x1 = i < PARTS.length - 1 ? partX(W, i + 1) : W, on = k === now0;
-      gc.fillStyle = on ? RED : FG; gc.globalAlpha = on ? 1 : .7; gc.fillRect(Math.round(x), y0 - 5, 1.5, 10);
-      if (on) gc.fillRect(x, y0 - 1.5, x1 - x - 4, 3);
-      if (!small) { gc.textAlign = 'left'; const t0 = w('tab.' + k).toUpperCase(); let tx = t0; while (tx.length > 2 && gc.measureText(tx).width > x1 - x - 10) tx = tx.slice(0, -1); gc.fillText(tx === t0 ? tx : tx.slice(0, -1) + '…', x + 5, y0 - 8); }
-      gc.globalAlpha = 1; });
-    /* on a phone, the part you are in is named at the left */
-    if (small && atWall) { gc.fillStyle = RED; gc.textAlign = 'left'; gc.fillText(w('tab.' + now0).toUpperCase(), 8, y0 - 9); }
-    /* where you are */
-    const px = !atWall ? gxOf(W, d) : xw; gc.fillStyle = RED; gc.fillRect(0, y0 - 1.5, px, 3);
-    if (!atWall) { gc.beginPath(); gc.moveTo(px, y0 - 3); gc.lineTo(px - 5, y0 - 11); gc.lineTo(px + 5, y0 - 11); gc.closePath(); gc.fill(); }
+  /* ============ the rail: the page's chapters down the left (on a phone, a strip that opens), the one you are in lit;
+     under them the challenges of this page, each a square filled once it is done and a tap away ============ */
+  const DONE = {};
+  const SUBS = { years: [...MOMENTS.map(m => [m.id, m.at + .05]), ['wall', DWALL]], walls: WALLS.map(wl => [wl.id, 'hd-s-' + wl.id]) };
+  el('chap').innerHTML = PARTS.map(([k, to]) => '<li data-k="' + k + '"><button type="button" class="h-ch" data-go="' + to + '"><i></i><span>' + w('tab.' + k) + '</span></button>' +
+    (SUBS[k] ? '<ol>' + SUBS[k].map(([id, at]) => '<li><button type="button" data-sub="' + id + '" ' + (typeof at === 'number' ? 'data-d="' + at + '"' : 'data-go="' + at + '"') + '>' + w(k === 'years' ? 'rail.' + id : 'wall.' + id + '.s') + '</button></li>').join('') + '</ol>' : '') + '</li>').join('');
+  el('tsq').innerHTML = CHALS.map(id => '<button type="button" data-ch="' + id + '" title="' + esc(w('ch.' + id)) + '" aria-label="' + esc(w('ch.' + id)) + '"></button>').join('');
+  el('chap').setAttribute('aria-label', w('tabs.aria'));
+  const CH_GO = { gate: 2.05, job: D71 + .05, bug: D95 + .05, light: GEN(3) + .05, walls: 'hd-s-switch', floor: 'hd-s-next', eras: 'hd-s-arch', arr: 'hd-s-arch', keep: 'hd-s-machine' };
+  function tally() {
+    const n = CHALS.filter(id => DONE[id]).length;
+    el('tallyn').innerHTML = w('rail.chals', { n, of: CHALS.length });
+    el('tsq').querySelectorAll('button').forEach(b => b.classList.toggle('on', !!DONE[b.dataset.ch]));
   }
+  function done(id) { if (DONE[id]) return; DONE[id] = 1; tally(); cqK = ''; }
+  let railK = '';
+  function railNow() {
+    const part = scene === 'hero' ? 'years' : ['switch', 'memory', 'power', 'cost'].includes(scene) ? 'walls' : scene;
+    let sub = '';
+    if (part === 'years') { sub = d >= DWALL - 1e-6 ? 'wall' : ''; for (const m of MOMENTS) if (d >= m.at - 1e-6 && d < DWALL - 1e-6) sub = m.id; }
+    else if (part === 'walls') sub = scene;
+    const k = part + '/' + sub; if (k === railK) return; railK = k;
+    el('chap').querySelectorAll(':scope > li').forEach(li => { const on = li.dataset.k === part; li.classList.toggle('on', on); li.querySelector('.h-ch').setAttribute('aria-current', on ? 'true' : 'false'); });
+    el('chap').querySelectorAll('[data-sub]').forEach(b => b.classList.toggle('on', b.dataset.sub === sub && b.closest('li[data-k]').dataset.k === part));
+  }
+  const railOpen = v => { const r = el('rail'); r.classList.toggle('is-open', v); el('railbtn').setAttribute('aria-expanded', v ? 'true' : 'false'); };
+  el('railbtn').addEventListener('click', () => railOpen(!el('rail').classList.contains('is-open')));
+  el('rail').addEventListener('click', ev => {
+    const b = ev.target.closest('[data-d],[data-ch]'); if (!b) return;
+    if (b.dataset.d) goD(+b.dataset.d);
+    else { const to = CH_GO[b.dataset.ch]; if (typeof to === 'number') goD(to); else if (to) goTo(to); else { CV.stage = b.dataset.ch; cqK = ''; if (pos > YLEN) goD(Math.min(d, DWALL - 1.5)); } }
+    railOpen(false); });
 
   /* ============ after the hold stops: the same square, scene by scene ============ */
   let scene = 'hero';
-  const A = { hero: 1, curve: 0, switch: 0, memory: 0, power: 0, cost: 0, next: 0, arch: 0, machine: 0, island: 0 };
+  const A = { hero: 1, switch: 0, memory: 0, power: 0, cost: 0, next: 0, arch: 0, machine: 0, island: 0 };
 
-  /* ============ the curve: fifty years on one chart. On steps of ten the two-year rule is a straight line and real chips
-     sit on it, then fall below; on a plain scale fifty years lie flat and nearly everything happens at the end ============ */
-  const CV = { lin: 0, to: 0 };
-  function paintCurve(c, T, dt, a) {
+  /* ============ Moore's law, live: the chart beside the count. Up the side, steps of ten (or plain); along the bottom,
+     the years. Your count draws its own line as you go; real chips appear as you reach their year; a red line is a
+     pace you choose, to fit them. Add the clock, the cores or the power to see what else changed. Drag to go to a year.
+     Three challenges ask about it: find the pace, find the year the clock stopped, guess 2026 before you get there ============ */
+  const cv = el('cv'), cc = cv.getContext('2d'), Y0 = 1957, Y1 = 2031, CAP = 4e11;
+  const CV = { lin: 0, to: 0, every: 1, on: { hz: 0, cores: 0, w: 0 }, k: { hz: 0, cores: 0, w: 0 }, guess: null, guessing: false, maxD: 0, hover: null, g: null, stage: null, msg: '' };
+  const MARK = { hz: 'o', cores: 's', w: 't' };
+  function paintChart(dt) {
+    const r = cv.getBoundingClientRect(); if (!r.width || !r.height) return;
+    if (cv.width !== Math.round(r.width * DPR) || cv.height !== Math.round(r.height * DPR)) { cv.width = Math.round(r.width * DPR); cv.height = Math.round(r.height * DPR); }
+    const W = r.width, H = r.height, small = W < 420, L = small ? 34 : 44, R = 8, T = 8, B = small ? 18 : 34;
     CV.lin += (CV.to - CV.lin) * Math.min(1, dt * 2.6); const k = CV.lin * CV.lin * (3 - 2 * CV.lin);
-    const X = y => 150 + (y - 1966) / (2032 - 1966) * 790, YL = n => 870 - (Math.log10(Math.max(n, 1e3)) - 3) / 9 * 730, YP = n => 870 - n / 4e11 * 730, Y = n => lerp(YL(n), YP(n), k);
-    const num = v => new Intl.NumberFormat(locale(), { notation: 'compact', maximumSignificantDigits: 2 }).format(v);
-    c.globalAlpha = a; c.lineWidth = 1.5; c.font = "22px 'Anonymous Pro', monospace"; c.textBaseline = 'middle';   // i18n-ok: a canvas font
-    for (const [vals, al, Yf] of [[[1e3, 1e6, 1e9, 1e12], 1 - k, YL], [[1e11, 2e11, 3e11, 4e11], k, YP]]) { if (al < .02) continue;
-      for (const v of vals) { const y = Yf(v); c.globalAlpha = a * al; c.strokeStyle = 'rgba(239,236,227,.22)'; c.beginPath(); c.moveTo(150, y); c.lineTo(940, y); c.stroke(); c.fillStyle = 'rgba(239,236,227,.7)'; c.textAlign = 'right'; c.fillText(num(v), 136, y); } }
-    c.globalAlpha = a; c.strokeStyle = 'rgba(239,236,227,.6)'; c.beginPath(); c.moveTo(150, 870); c.lineTo(940, 870); c.stroke(); c.fillStyle = 'rgba(239,236,227,.7)'; c.textAlign = 'center';
-    for (const y of [1971, 1991, 2011, 2026]) { c.fillText(y, X(y), 900); c.fillRect(X(y) - 1, 870, 2, 8); }
-    /* the two-year rule from 2,300 in 1971, on past 2026 */
-    c.save(); c.beginPath(); c.rect(150, 120, 790, 750); c.clip(); c.strokeStyle = RED; c.lineWidth = 3;
-    for (const [y0, y1, dash] of [[1971, 2026, []], [2026, 2032, [10, 9]]]) { c.setLineDash(dash); c.beginPath(); for (let y = y0; y <= y1 + 1e-9; y += .25) { const p = [X(y), Y(rule(y))]; if (y === y0) c.moveTo(...p); else c.lineTo(...p); } c.stroke(); }
-    c.setLineDash([]); c.restore();
-    { const y = 2003, p = [X(y), Y(rule(y))]; if (k < .5) { c.globalAlpha = a * (1 - 2 * k); c.fillStyle = RED; c.textAlign = 'right'; c.font = "22px 'Anonymous Pro', monospace"; c.fillText(w('curve.rule').toUpperCase(), p[0] - 18, p[1] - 18); c.globalAlpha = a; } }   // i18n-ok: a canvas font
-    /* the chips */
-    c.font = "500 24px 'DM Sans', sans-serif";   // i18n-ok: a canvas font
-    CHIPS.forEach(([y, n, key], i) => { const x = X(y), yy = Y(n), last = i === CHIPS.length - 1; c.globalAlpha = a; c.fillStyle = last ? RED : PAPER; c.beginPath(); c.arc(x, yy, last ? 12 : 8, 0, 7); c.fill();
-      if (k < .5 || n > 5e9) { const right = x > 760; c.textAlign = right ? 'right' : 'left'; c.globalAlpha = a * (n > 5e9 ? 1 : 1 - 2 * k); c.fillStyle = PAPER; c.fillText(w('chip.' + key), x + (right ? -18 : 16), yy - 20); } });
-    c.globalAlpha = 1;
+    for (const s of SERIES) CV.k[s] += ((CV.on[s] ? 1 : 0) - CV.k[s]) * Math.min(1, dt * 5);
+    const X = y => L + (y - Y0) / (Y1 - Y0) * (W - L - R), ph = H - T - B;
+    const YL = v => T + (1 - Math.log10(Math.max(v, 1)) / 12) * ph, YP = v => T + (1 - v / CAP) * ph, Y = v => lerp(YL(v), YP(v), k);
+    CV.g = { L, R, T, B, W, H, ph, k };
+    const c = cc, yNow = curYear(), num = v => new Intl.NumberFormat(locale(), { notation: 'compact', maximumSignificantDigits: 2 }).format(v);
+    c.setTransform(DPR, 0, 0, DPR, 0, 0); c.clearRect(0, 0, W, H);
+    c.font = (small ? 10 : 11) + "px 'Anonymous Pro', 'Noto Sans SC', monospace"; c.textBaseline = 'middle'; c.lineWidth = 1;   // i18n-ok: a canvas font
+    /* steps of ten, or plain */
+    for (const [vals, al, Yf] of [[[1, 1e3, 1e6, 1e9, 1e12], 1 - k, YL], [[1e11, 2e11, 3e11, 4e11], k, YP]]) { if (al < .02) continue;
+      for (const v of vals) { const y = Yf(v); c.globalAlpha = al; c.strokeStyle = fg(.12); c.beginPath(); c.moveTo(L, Math.round(y) + .5); c.lineTo(W - R, Math.round(y) + .5); c.stroke(); c.fillStyle = fg(.6); c.textAlign = 'right'; c.fillText(num(v), L - 6, y); } }
+    c.globalAlpha = 1; c.strokeStyle = fg(.5); c.beginPath(); c.moveTo(L, T + ph + .5); c.lineTo(W - R, T + ph + .5); c.stroke();
+    c.fillStyle = fg(.6); c.textAlign = 'center';
+    for (const y of small ? [1971, 2000, 2026] : [1960, 1971, 1990, 2010, 2026]) { c.fillText(y, X(y), T + ph + 9); c.fillRect(X(y) - .5, T + ph, 1, 4); }
+    /* how the machine grew, along the bottom: one era after another */
+    if (!small) ERAS.forEach(([id, y0e], i) => { const x0 = X(y0e), x1 = X(i < ERAS.length - 1 ? ERAS[i + 1][1] : 2026), on = yNow >= y0e && (i === ERAS.length - 1 || yNow < ERAS[i + 1][1]), yb = H - 9;
+      c.fillStyle = on ? RED : fg(.16); c.fillRect(x0 + 1, yb - 1.5, x1 - x0 - 2, 3); c.fillStyle = on ? RED : fg(.55); c.textAlign = 'left';
+      const tx = w('era.' + id + '.b'); if (c.measureText(tx).width < x1 - x0 - 6) c.fillText(tx, x0 + 3, yb - 8); });
+    c.save(); c.beginPath(); c.rect(L, T - 2, W - L - R, ph + 2); c.clip();
+    /* Moore's line of 1965: twice every year */
+    if (k < .98) { c.globalAlpha = 1 - k; c.strokeStyle = fg(.4); c.setLineDash([3, 4]); c.beginPath(); MOORE65.forEach(([y, v], i) => (i ? c.lineTo(X(y), Y(v)) : c.moveTo(X(y), Y(v)))); c.stroke(); c.setLineDash([]); c.globalAlpha = 1; }
+    /* every microprocessor, as you reach its year */
+    c.fillStyle = fg(.28); for (const [y, v] of trend('tr')) { if (y > yNow + .05) break; c.fillRect(X(y) - 1.2, Y(v) - 1.2, 2.4, 2.4); }
+    /* what else changed: the clock (ticks a second), the cores, the power (watts) */
+    for (const s of SERIES) { const a = CV.k[s]; if (a < .02) continue; c.globalAlpha = a; c.strokeStyle = s === 'hz' ? RED : ink; c.fillStyle = ink; c.lineWidth = 1.2; let lastP = null;
+      for (const [y, v] of trend(s)) { if (y > yNow + .05) break; const x = X(y), yy = Y(v); lastP = [x, yy];
+        if (MARK[s] === 'o') { c.beginPath(); c.arc(x, yy, 2.6, 0, 7); c.stroke(); } else if (MARK[s] === 's') c.fillRect(x - 2, yy - 2, 4, 4); else { c.beginPath(); c.moveTo(x, yy - 3); c.lineTo(x + 3, yy + 2.4); c.lineTo(x - 3, yy + 2.4); c.closePath(); c.stroke(); } }
+      if (lastP) { c.fillStyle = s === 'hz' ? RED : ink; c.textAlign = 'left'; c.fillText(w('ser.' + s + '.u'), Math.min(lastP[0] + 6, W - R - 70), lastP[1] - 8); }
+      c.globalAlpha = 1; c.lineWidth = 1; }
+    /* the pace you chose, from 2,300 in 1971 */
+    c.strokeStyle = RED; c.lineWidth = 1.6; c.setLineDash([6, 4]); c.beginPath(); for (let y = 1971; y <= Y1; y += .25) { const p = [X(y), Y(rule(y, CV.every))]; if (y === 1971) c.moveTo(...p); else c.lineTo(...p); } c.stroke(); c.setLineDash([]);
+    /* your count's own line, so far */
+    c.strokeStyle = ink; c.lineWidth = 2.6; c.beginPath(); const dn = Math.min(d, DWALL); for (let dd = 0; dd <= dn; dd += .1) { const p = [X(yearAt(dd)), Y(Math.pow(2, dd))]; if (!dd) c.moveTo(...p); else c.lineTo(...p); } c.lineTo(X(yNow), Y(Math.pow(2, dn))); c.stroke();
+    /* the chips, as you reach them */
+    let lastC = null; CHIPS.forEach(([y, v, key]) => { if (y > yNow + .3) return; lastC = [y, v, key]; c.fillStyle = paper; c.strokeStyle = ink; c.lineWidth = 1.5; c.beginPath(); c.arc(X(y), Y(v), 3.6, 0, 7); c.fill(); c.stroke(); });
+    /* your guess for 2026, and how it came out */
+    if (CV.guess) { const gx = X(2026), gy = Y(CV.guess); c.fillStyle = RED; c.save(); c.translate(gx, gy); c.rotate(Math.PI / 4); c.fillRect(-4.5, -4.5, 9, 9); c.restore();
+      if (CV.maxD >= DWALL - 1e-6) { const ay = Y(CHIPS[CHIPS.length - 1][1]); c.strokeStyle = RED; c.lineWidth = 1; c.beginPath(); c.moveTo(gx - 10, gy); c.lineTo(gx - 10, ay); c.stroke(); } }
+    c.restore();
+    /* where you are: a line down the year, the dot on your count */
+    const cx = X(yNow), cy = Y(Math.pow(2, dn)); c.strokeStyle = fg(.25); c.lineWidth = 1; c.beginPath(); c.moveTo(Math.round(cx) + .5, T); c.lineTo(Math.round(cx) + .5, T + ph); c.stroke();
+    c.fillStyle = RED; c.beginPath(); c.arc(cx, cy, holding ? 6 + Math.sin(now / 90) : 5.5, 0, 7); c.fill();
+    if (lastC) { const lx = X(lastC[0]), ly = Y(lastC[1]), right = lx > W * .6; c.fillStyle = ink; c.textAlign = right ? 'right' : 'left'; c.font = "600 " + (small ? 10 : 11.5) + "px 'DM Sans', 'Noto Sans SC', sans-serif"; c.fillText(w('chip.' + lastC[2]), lx + (right ? -8 : 8), Math.max(T + 8, ly - 10)); }   // i18n-ok: a canvas font
+    /* a hand over the chart: the year under it */
+    if (CV.hover !== null && !CV.drag) { const hx = X(CV.hover); c.strokeStyle = fg(.4); c.setLineDash([2, 3]); c.beginPath(); c.moveTo(hx, T); c.lineTo(hx, T + ph); c.stroke(); c.setLineDash([]); c.fillStyle = fg(.8); c.textAlign = 'center'; c.font = (small ? 10 : 11) + "px 'Anonymous Pro', monospace"; c.fillText(Math.round(CV.hover), hx, T + 4); }   // i18n-ok: a canvas font
   }
+  const yearOfX = x => { const g = CV.g; return Y0 + (x - g.L) / (g.W - g.L - g.R) * (Y1 - Y0); };
+  const valOfY = y => { const g = CV.g, f = 1 - (y - g.T) / g.ph; return g.k < .5 ? Math.pow(10, Math.max(0, Math.min(12, f * 12))) : Math.max(1, f * CAP); };
+  const scrub = x => { const y = Math.min(2026, Math.max(1959.9, yearOfX(x))); goD(y >= 2025.6 ? DWALL : Math.min(DWALL - .02, dAt(y)), true); };
+  let cvDown = null;
+  cv.addEventListener('pointerdown', e => { const r = cv.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top; e.preventDefault(); touch();
+    if (CV.guessing) { CV.guess = valOfY(y); CV.guessing = false; cls('guessing', false); cqK = ''; return; }
+    cvDown = { x, y, moved: false }; try { cv.setPointerCapture(e.pointerId); } catch (er) { /* no capture */ } CV.drag = true; scrub(x); });
+  cv.addEventListener('pointermove', e => { const r = cv.getBoundingClientRect(), x = e.clientX - r.left; if (!CV.g) return; CV.hover = Math.min(2026, Math.max(Y0, yearOfX(x)));
+    if (cvDown) { if (Math.abs(x - cvDown.x) > 5) cvDown.moved = true; scrub(x); } });
+  cv.addEventListener('pointerup', e => { if (!cvDown) return; const r = cv.getBoundingClientRect(), y = yearOfX(e.clientX - r.left);
+    if (!cvDown.moved && CV.on.hz) { if (y >= KNEE[0] && y <= KNEE[1]) { done('knee'); CV.msg = 'knee.yes'; } else CV.msg = 'knee.no'; cqK = ''; }
+    cvDown = null; CV.drag = false; });
+  cv.addEventListener('pointercancel', () => { cvDown = null; CV.drag = false; });
+  cv.addEventListener('pointerleave', () => { CV.hover = null; });
+  /* the chart's controls: steps of ten or plain, and what else to show */
+  el('c-sc').onclick = e => { const b = e.target.closest('button'); if (!b) return; el('c-sc').querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); CV.to = +b.dataset.i; touch(); };
+  const setSer = (s, v) => { CV.on[s] = v ? 1 : 0; const b = el('c-ser').querySelector('[data-s="' + s + '"]'); b.classList.toggle('on', !!v); b.setAttribute('aria-pressed', v ? 'true' : 'false'); cqK = ''; };
+  el('c-ser').onclick = e => { const b = e.target.closest('[data-s]'); if (b) { setSer(b.dataset.s, !CV.on[b.dataset.s]); touch(); } };
+  /* the chart's questions, one at a time: the first not yet answered, and what it gives when it is */
+  let cqK = '';
+  const stageNow = () => CV.stage && !DONE[CV.stage] ? CV.stage : ['fit', 'knee', 'guess'].find(id => !DONE[id]) || 'done';
+  function chartQ() {
+    const st = stageNow(), key = st + '|' + CV.every + '|' + CV.on.hz + '|' + (CV.guess ? 1 : 0) + '|' + (CV.maxD >= DWALL - 1e-6 ? 1 : 0) + '|' + CV.guessing + '|' + CV.msg + '|' + (FACT['moore-1965'] ? 1 : 0);
+    if (key === cqK) return; cqK = key;
+    const last = CHIPS[CHIPS.length - 1], skip = st !== 'done' ? '<button type="button" class="h-cqs h-mono" id="hd-cqs">' + w('cq.skip') + '</button>' : '', lead = '<div class="h-cqh"><span class="h-cqk h-mono"><i></i>' + w('cq.k') + '</span>' + skip + '</div>';
+    let h = '';
+    if (st === 'fit') { const miss = rule(2026, CV.every) / last[1], far = miss >= 1 ? miss : 1 / miss;
+      h = lead + '<p>' + w('cq.fit') + ' ' + src('moore-1965') + '</p><div class="h-every"><input type="range" id="hd-c-ev" min="0.5" max="4" step="0.1" value="' + CV.every + '" aria-label="' + esc(w('cq.fit.aria')) + '"><b>' + (CV.every === 1 ? w('cq.every1') : w('cq.every', { n: CV.every.toLocaleString(locale(), { maximumFractionDigits: 1 }) })) + '</b></div>' +
+        '<p class="h-cqo">' + (Math.abs(CV.every - 2) <= .25 ? '' : w(miss >= 1 ? 'cq.fit.over' : 'cq.fit.under', { x: far < 1000 ? nf(Math.round(far)) : compact({ maximumSignificantDigits: 2 }).format(far) })) + '</p>'; }
+    else if (st === 'knee') h = lead + '<p>' + w('cq.knee') + '</p>' + (CV.on.hz ? '' : '<button type="button" class="h-btn h-ghost h-smb" id="hd-c-hz">' + w('cq.knee.b') + '</button>') + (CV.msg === 'knee.no' ? '<p class="h-cqo">' + w('cq.knee.no') + '</p>' : '');
+    else if (st === 'guess') { const seen = CV.maxD >= DWALL - 1e-6;
+      h = lead + '<p>' + w(seen && !CV.guess ? 'cq.guess.seen' : 'cq.guess') + '</p>' + (CV.guess ? '<p class="h-cqo">' + w('cq.guess.yours', { n: compact({ maximumSignificantDigits: 2 }).format(CV.guess) }) + '</p>' : seen ? '' : '<button type="button" class="h-btn h-ghost h-smb" id="hd-c-gs">' + w(CV.guessing ? 'cq.guess.tap' : 'cq.guess.b') + '</button>'); }
+    else h = '<div class="h-cqh"><span class="h-cqk h-mono h-ok2"><i></i>' + w('cq.done.k') + '</span></div><p>' + w('cq.done') + '</p><p class="h-cqq"><em>' + Q('moore') + '</em></p>';
+    /* what the last answer gave, above the next question */
+    const res = { fit: '<b>' + w('cq.fit.yes.v') + '</b> ' + w('cq.fit.yes'), 'knee.yes': '<b>' + w('cq.knee.yes.v') + '</b> ' + w('cq.knee.yes') + ' ' + src('clock-stall', 'dual-core-2005'), guess: w('cq.guess.out', guessOut()) }[CV.msg];
+    if (res) h = '<p class="h-cqr">' + res + '</p>' + h;
+    el('cq2').innerHTML = h;
+    const ev = el('c-ev'); if (ev) ev.oninput = () => { CV.every = Math.round(+ev.value * 10) / 10; if (Math.abs(CV.every - 2) <= .25) { done('fit'); CV.msg = 'fit'; } touch(); };
+    const hb = el('c-hz'); if (hb) hb.onclick = () => setSer('hz', true);
+    const gs = el('c-gs'); if (gs) gs.onclick = () => { CV.guessing = !CV.guessing; cls('guessing', CV.guessing); cqK = ''; };
+    const sk = el('cqs'); if (sk) sk.onclick = () => { const order = ['fit', 'knee', 'guess'].filter(id => !DONE[id]), i = order.indexOf(st); CV.stage = order[(i + 1) % order.length] || null; CV.msg = ''; cqK = ''; };
+  }
+  function guessOut() { const real = CHIPS[CHIPS.length - 1][1], g = CV.guess || 1, f = g > real ? g / real : real / g, x = f < 1000 ? nf(Math.round(f)) : compact({ maximumSignificantDigits: 2 }).format(f);
+    return { n: compact({ maximumSignificantDigits: 2 }).format(g), x, verdict: w(f <= 2 ? 'cq.guess.v1' : f <= 10 ? 'cq.guess.v2' : g < real ? 'cq.guess.v3' : 'cq.guess.v4', { x }) }; }
 
   /* ============ the next fifty years: hold again, and go down, from the energy of a bit fetched off another chip to
      the floor physics sets for one bit. Beside it, as long as the room the last fifty years used: how much is left ============ */
@@ -496,14 +612,14 @@ export function createHold(host, ctx = {}) {
   function nextOut() { const o = el('nout'); if (!o) { NX.at = -1; return; } if (NX.at < 0) return; const [id, , facts, href] = RUNGS[NX.at];
     el('nunit').textContent = id === ZONE_RUNG ? w('nx.zone') : w('nx.unit');
     o.innerHTML = '<b>' + w('rung.' + id + '.t') + '</b>' + w('rung.' + id + '.d') + ' ' + src(...facts) + '<br><a class="h-lnk" href="' + href + '">' + w('way.try') + '</a>';
-    el('ncq').hidden = NX.at < RUNGS.length - 1; }
+    el('ncq').hidden = NX.at < RUNGS.length - 1; if (NX.at >= RUNGS.length - 1) done('floor'); }
   function paintNext(c, T, dt, a) {
     const top = 120, bot = 860, dec = (bot - top) / (LT - LB), yB = top + Math.log10(BEHIND) * dec, yP = top + NX.p * (bot - top);
     c.globalAlpha = a; c.font = "22px 'Anonymous Pro', monospace"; c.textBaseline = 'alphabetic'; c.textAlign = 'left';   // i18n-ok: a canvas font
     /* behind: the room fifty years of shrinking used */
-    c.fillStyle = 'rgba(239,236,227,.85)'; c.fillRect(130, top, 110, yB - top);
-    c.fillStyle = 'rgba(239,236,227,.75)'; c.fillText(w('nx.behind').toUpperCase(), 130, top - 22);
-    c.font = "400 34px Anton, Impact, sans-serif"; c.fillStyle = PAPER; c.fillText('×' + compact({ maximumSignificantDigits: 3 }).format(BEHIND), 130, yB + 44);   // i18n-ok: a canvas font
+    c.fillStyle = fg(.85); c.fillRect(130, top, 110, yB - top);
+    c.fillStyle = fg(.75); c.fillText(w('nx.behind').toUpperCase(), 130, top - 22);
+    c.font = "400 34px Anton, Impact, sans-serif"; c.fillStyle = ink; c.fillText('×' + compact({ maximumSignificantDigits: 3 }).format(BEHIND), 130, yB + 44);   // i18n-ok: a canvas font
     /* ahead: the room left in energy */
     c.strokeStyle = RED; c.lineWidth = 3; c.strokeRect(330, top, 110, bot - top);
     c.fillStyle = 'rgba(229,64,26,.35)'; c.fillRect(330, top, 110, yP - top);
@@ -512,36 +628,56 @@ export function createHold(host, ctx = {}) {
     /* the rungs, and the band where the bets aim */
     c.font = "500 23px 'DM Sans', sans-serif"; c.textBaseline = 'middle';   // i18n-ok: a canvas font
     RUNGS.forEach(([id], i) => { const y = top + RP[i] * (bot - top), on = i <= NX.at; c.globalAlpha = a * (on ? 1 : .45);
-      if (id === ZONE_RUNG) { const y0 = top + RP[i - 1] * (bot - top) + 30, y1 = top + RP[i + 1] * (bot - top) - 30; c.setLineDash([6, 6]); c.strokeStyle = PAPER; c.lineWidth = 2; c.beginPath(); c.moveTo(466, y0); c.lineTo(476, y0); c.lineTo(476, y1); c.lineTo(466, y1); c.stroke(); c.setLineDash([]); }
-      else { c.fillStyle = PAPER; c.fillRect(440, y - 1.5, 30, 3); }
-      c.fillStyle = on ? PAPER : 'rgba(239,236,227,.8)'; c.textAlign = 'left'; c.fillText(w('rung.' + id + '.t'), 494, y); });
+      if (id === ZONE_RUNG) { const y0 = top + RP[i - 1] * (bot - top) + 30, y1 = top + RP[i + 1] * (bot - top) - 30; c.setLineDash([6, 6]); c.strokeStyle = ink; c.lineWidth = 2; c.beginPath(); c.moveTo(466, y0); c.lineTo(476, y0); c.lineTo(476, y1); c.lineTo(466, y1); c.stroke(); c.setLineDash([]); }
+      else { c.fillStyle = ink; c.fillRect(440, y - 1.5, 30, 3); }
+      c.fillStyle = on ? ink : fg(.8); c.textAlign = 'left'; c.fillText(w('rung.' + id + '.t'), 494, y); });
     /* the bit on its way down */
     c.globalAlpha = a; c.fillStyle = RED; const s0 = 26 + (NX.hold && !reduce() ? 4 * Math.sin(T * 20) : 0); c.fillRect(385 - s0 / 2, yP - s0 / 2, s0, s0);
     c.globalAlpha = 1; c.textBaseline = 'alphabetic';
   }
   const W4 = { switch: { n: 0 }, memory: { sel: 0, pos: 0 }, power: { guess: 485, shown: false, rv: 0 }, cost: { open: 0, f: 0 } };
   /* ============ how a computer is arranged: rise from the transistor to the machine, then try another arrangement ============ */
-  const AR = { z: 3, zTo: 3, sel: 0, f: [1, 0, 0, 0, 0], seen: {} };
+  const AR = { z: 3, zTo: 3, sel: 0, f: [1, 0, 0, 0, 0], seen: {}, era: -1, ef: [0, 0, 0, 0], eras: {} };
   function archOut() { if (!el('o-arch')) return; const lv = Math.round(AR.zTo), r = ARR[AR.sel], id = r[0];
-    el('a-z').value = 3 - AR.zTo; el('a-sel').querySelectorAll('button').forEach((b, i) => b.classList.toggle('on', i === AR.sel && lv === 0));
+    el('a-z').value = 3 - AR.zTo; el('a-sel').querySelectorAll('button').forEach((b, i) => b.classList.toggle('on', i === AR.sel && lv === 0 && AR.era < 0));
+    el('a-era').querySelectorAll('button').forEach((b, i) => b.classList.toggle('on', i === AR.era && lv === 0));
+    /* how the machine grew: an era, drawn on the square, and where it shows on the chart of the fifty years */
+    if (AR.era >= 0 && lv === 0) { const [eid, , ef, ehref] = ERAS[AR.era]; AR.eras[eid] = 1; if (ERAS.every(e => AR.eras[e[0]])) done('eras');
+      el('o-era').innerHTML = '<b>' + w('era.' + eid + '.t') + '</b>' + w('era.' + eid + '.d') + ' ' + src(...ef) + '<br><button type="button" class="h-go h-up" data-era="' + AR.era + '">' + w('era.see') + '</button> <a class="h-lnk" href="' + ehref + '">' + w('way.try') + '</a>';
+      return; }
+    if (AR.era < 0 && el('o-era').innerHTML) el('o-era').innerHTML = '';
     if (lv === 0) AR.seen[id] = 1;
     el('o-arch').innerHTML = lv > 0 ? w('lv.' + lv + '.d') : '<b>' + (id === 'classic' ? w('arr.classic.t') : bet(id, 't')) + '</b>' + (r[1] ? '<span class="h-mono h-st0">' + w('status.' + r[1]) + '</span> ' : '') + (id === 'classic' ? w('arr.classic.d') : bet(id, 'd')) + ' ' + src(...r[2]) +
       '<br><span class="h-trip h-mono">' + w('arr.trip') + ' <b>' + w('trip.' + TRIP[id]) + '</b></span><br><span class="h-mono h-st0">' + w('arr.legend') + '</span><br><a class="h-lnk" href="' + r[3] + '">' + w('way.try') + '</a>';
     const zero = Object.keys(TRIP).filter(k => !TRIP[k]), got = zero.filter(k => AR.seen[k]).length;
     el('a-ch').innerHTML = got >= zero.length ? '<b>' + w('arch.ch.done') + '</b> ' + w('arch.ch.why') : w('arch.ch', { n: got, of: zero.length });
     el('a-cq').hidden = got < zero.length; }
-  const bx = (c, r, m) => { c.fillStyle = 'rgba(13,12,10,.92)'; c.fillRect(r[0], r[1], r[2], r[3]); c.strokeStyle = PAPER; c.lineWidth = 2.5; c.strokeRect(r[0], r[1], r[2], r[3]);
+  const bx = (c, r, m) => { c.fillStyle = bg(.92); c.fillRect(r[0], r[1], r[2], r[3]); c.strokeStyle = ink; c.lineWidth = 2.5; c.strokeRect(r[0], r[1], r[2], r[3]);
     const nx = m ? Math.max(3, Math.round(r[2] / 38)) : Math.max(2, Math.round(r[2] / 90)), ny = m ? Math.max(2, Math.round(r[3] / 38)) : Math.max(1, Math.round(r[3] / 100)), gw = (r[2] - 20) / nx, gh = (r[3] - 20) / ny;
-    c.fillStyle = m ? 'rgba(239,236,227,.34)' : 'rgba(239,236,227,.15)'; for (let i = 0; i < nx; i++) for (let j = 0; j < ny; j++) c.fillRect(r[0] + 10 + i * gw + 3, r[1] + 10 + j * gh + 3, gw - 6, gh - 6); };
+    c.fillStyle = m ? fg(.34) : fg(.15); for (let i = 0; i < nx; i++) for (let j = 0; j < ny; j++) c.fillRect(r[0] + 10 + i * gw + 3, r[1] + 10 + j * gh + 3, gw - 6, gh - 6); };
   const run = (c, pts, T, sp, col, gap, sz) => { let len = 0; const sg = pts.slice(1).map((q, i) => { const l = Math.abs(q[0] - pts[i][0]) + Math.abs(q[1] - pts[i][1]); len += l; return l; });
     c.strokeStyle = col; c.lineWidth = 3; c.beginPath(); pts.forEach((p, i) => (i ? c.lineTo(p[0], p[1]) : c.moveTo(p[0], p[1]))); c.stroke(); if (reduce()) return;
-    c.fillStyle = '#fff'; for (let k = 0; k < Math.max(1, Math.round(len / gap)); k++) { let s = (T * sp + k * gap) % len, i = 0; while (i < sg.length - 1 && s > sg[i]) { s -= sg[i]; i++; } const p = pts[i], q = pts[i + 1], f = s / sg[i]; c.fillRect(p[0] + (q[0] - p[0]) * f - sz / 2, p[1] + (q[1] - p[1]) * f - sz / 2, sz, sz); } };
+    c.fillStyle = HI; for (let k = 0; k < Math.max(1, Math.round(len / gap)); k++) { let s = (T * sp + k * gap) % len, i = 0; while (i < sg.length - 1 && s > sg[i]) { s -= sg[i]; i++; } const p = pts[i], q = pts[i + 1], f = s / sg[i]; c.fillRect(p[0] + (q[0] - p[0]) * f - sz / 2, p[1] + (q[1] - p[1]) * f - sz / 2, sz, sz); } };
   const ARRDRAW = {
-    classic(c, T) { c.setLineDash([8, 8]); c.strokeStyle = 'rgba(239,236,227,.45)'; c.lineWidth = 1.5; c.strokeRect(50, 60, 390, 310); c.setLineDash([]); bx(c, [80, 90, 330, 250], 1); bx(c, [560, 560, 360, 340], 0); run(c, [[245, 340], [245, 730], [560, 730]], T, 260, RED, 150, 14); },
+    classic(c, T) { c.setLineDash([8, 8]); c.strokeStyle = fg(.45); c.lineWidth = 1.5; c.strokeRect(50, 60, 390, 310); c.setLineDash([]); bx(c, [80, 90, 330, 250], 1); bx(c, [560, 560, 360, 340], 0); run(c, [[245, 340], [245, 730], [560, 730]], T, 260, RED, 150, 14); },
     stack(c, T) { bx(c, [280, 560, 440, 320], 0); for (let i = 0; i < 4; i++) bx(c, [280 + i * 14, 470 - i * 84 - 14, 440 - i * 28, 62], 1); for (const x of [380, 500, 620]) run(c, [[x, 560], [x, 532]], T + x, 60, RED, 40, 10); },
     cim(c, T) { for (let i = 0; i < 3; i++) for (let j = 0; j < 3; j++) { const x = 100 + i * 280, y = 100 + j * 280; bx(c, [x, y, 240, 130], 0); bx(c, [x, y + 130, 240, 110], 1); if (!reduce() && (Math.floor(T * 3) + i * 2 + j * 5) % 4 === 0) { c.fillStyle = RED; c.fillRect(x + 80 + ((i + j) % 3) * 30, y + 122, 16, 16); } } },
-    light(c, T) { bx(c, [90, 110, 300, 200], 0); bx(c, [90, 310, 300, 110], 1); bx(c, [610, 560, 300, 200], 0); bx(c, [610, 760, 300, 110], 1); c.setLineDash([16, 10]); run(c, [[390, 210], [760, 210], [760, 560]], T, 950, PAPER, 120, 0); c.setLineDash([]); if (!reduce()) { c.strokeStyle = '#fff'; c.lineWidth = 6; for (let k = 0; k < 4; k++) { const s = (T * 950 + k * 180) % 720, p = s < 370 ? [390 + s, 210] : [760, 210 + s - 370]; c.beginPath(); c.moveTo(p[0], p[1]); c.lineTo(p[0] - (s < 370 ? 46 : 0), p[1] - (s < 370 ? 0 : 46)); c.stroke(); } } },
-    spikes(c, T) { for (let i = 0; i < 8; i++) for (let j = 0; j < 8; j++) { const x = 150 + i * 100, y = 150 + j * 100, k = rnd(mix(i * 8 + j, Math.floor(T * 2.5))) < 0.07 && !reduce(); if (k) { c.fillStyle = RED; c.beginPath(); c.arc(x, y, 20, 0, 7); c.fill(); c.strokeStyle = RED; c.lineWidth = 2; c.beginPath(); c.arc(x, y, 20 + ((T * 2.5) % 1) * 46, 0, 7); c.stroke(); } else { c.fillStyle = 'rgba(239,236,227,.6)'; c.beginPath(); c.arc(x, y, 6, 0, 7); c.fill(); } } }
+    light(c, T) { bx(c, [90, 110, 300, 200], 0); bx(c, [90, 310, 300, 110], 1); bx(c, [610, 560, 300, 200], 0); bx(c, [610, 760, 300, 110], 1); c.setLineDash([16, 10]); run(c, [[390, 210], [760, 210], [760, 560]], T, 950, ink, 120, 0); c.setLineDash([]); if (!reduce()) { c.strokeStyle = HI; c.lineWidth = 6; for (let k = 0; k < 4; k++) { const s = (T * 950 + k * 180) % 720, p = s < 370 ? [390 + s, 210] : [760, 210 + s - 370]; c.beginPath(); c.moveTo(p[0], p[1]); c.lineTo(p[0] - (s < 370 ? 46 : 0), p[1] - (s < 370 ? 0 : 46)); c.stroke(); } } },
+    spikes(c, T) { for (let i = 0; i < 8; i++) for (let j = 0; j < 8; j++) { const x = 150 + i * 100, y = 150 + j * 100, k = rnd(mix(i * 8 + j, Math.floor(T * 2.5))) < 0.07 && !reduce(); if (k) { c.fillStyle = RED; c.beginPath(); c.arc(x, y, 20, 0, 7); c.fill(); c.strokeStyle = RED; c.lineWidth = 2; c.beginPath(); c.arc(x, y, 20 + ((T * 2.5) % 1) * 46, 0, 7); c.stroke(); } else { c.fillStyle = fg(.6); c.beginPath(); c.arc(x, y, 6, 0, 7); c.fill(); } } }
+  };
+  /* how the machine grew: one core with a faster and faster clock; then several cores sharing one memory; then a chip made
+     for one kind of work beside the general one; then one package of small chips around a hub */
+  const wave = (c, x0, x1, y, per, T, hgt) => { c.strokeStyle = RED; c.lineWidth = 3; c.beginPath(); const o = reduce() ? 0 : (T * per * 1.5) % (2 * per); for (let x = x0; x <= x1; x += 2) { const up = Math.floor((x - x0 + o) / per) % 2; const yy = y - (up ? hgt : 0); if (x === x0) c.moveTo(x, yy); else c.lineTo(x, yy); } c.stroke(); };
+  const ERADRAW = {
+    clock(c, T) { bx(c, [260, 220, 480, 330], 0); bx(c, [260, 650, 480, 190], 1); wave(c, 260, 740, 180, 34 - 22 * ((T * .25) % 1), T, 34); run(c, [[500, 550], [500, 650]], T, 220, RED, 60, 12); },
+    cores(c, T) { for (const [x, y] of [[180, 130], [520, 130], [180, 360], [520, 360]]) bx(c, [x, y, 300, 190], 0); bx(c, [180, 650, 640, 200], 1);
+      for (const x of [330, 670]) run(c, [[x, 550], [x, 650]], T + x / 300, 200, RED, 50, 11); wave(c, 180, 820, 100, 40, T, 22); },
+    special(c, T) { bx(c, [100, 120, 250, 180], 0); bx(c, [100, 420, 250, 420], 1); c.fillStyle = bg(.92); c.fillRect(420, 120, 480, 720); c.strokeStyle = ink; c.lineWidth = 2.5; c.strokeRect(420, 120, 480, 720);
+      for (let i = 0; i < 12; i++) for (let j = 0; j < 18; j++) { const on = !reduce() && rnd(mix(i * 18 + j, Math.floor(T * 6))) < .5; c.fillStyle = on ? RED : fg(.2); c.fillRect(438 + i * 38.5, 138 + j * 38.5, 30, 30); }
+      run(c, [[350, 210], [420, 210]], T, 120, RED, 40, 10); run(c, [[225, 420], [225, 300]], T, 120, RED, 40, 10); },
+    chiplets(c, T) { c.setLineDash([12, 9]); c.strokeStyle = fg(.45); c.lineWidth = 2; c.strokeRect(70, 70, 860, 860); c.setLineDash([]); bx(c, [390, 360, 220, 280], 1);
+      const pos8 = [[110, 110], [390, 110], [670, 110], [110, 390], [670, 390], [110, 670], [390, 690], [670, 670]];
+      pos8.forEach(([x, y], i) => { bx(c, [x, y, 220, 190], 0); const cxp = x + 110, cyp = y + 95; run(c, cxp === 500 ? [[cxp, y < 360 ? y + 190 : y], [cxp, y < 360 ? 360 : 640]] : [[x < 390 ? x + 220 : x, cyp], [x < 390 ? 390 : 610, cyp]], T + i * .3, 140, RED, 50, 10); }); }
   };
   const plate = c => { c.fillStyle = paper; c.fillRect(110, 110, 780, 780); };
   function switchView(c, T) { plate(c); const sv = press, a = c.globalAlpha, on = Math.floor(T / 1.6) % 2; press = on; bigT(c, 1000, a, T); press = sv; c.globalAlpha = a;
@@ -551,12 +687,12 @@ export function createHold(host, ctx = {}) {
     for (const [x, y, on] of [[390, 310, !A1], [610, 310, !B1], [500, 520, A1], [500, 680, B1]]) { c.fillStyle = paper; c.fillRect(x - 70, y - 54, 140, 108); glyph(c, x, y, 34, on ? 1 : 0, a, 3.2, 'planar'); }
     c.globalAlpha = a; c.fillStyle = out ? RED : paper; c.strokeStyle = out ? RED : ink; c.lineWidth = 4; c.beginPath(); c.arc(800, 420, 20, 0, 7); c.fill(); c.stroke();
     for (const [y, v] of [[520, A1], [680, B1]]) { c.fillStyle = v ? RED : paper; c.strokeStyle = v ? RED : ink; c.beginPath(); c.arc(300, y, 16, 0, 7); c.fill(); c.stroke(); c.beginPath(); c.moveTo(316, y); c.lineTo(430, y); c.stroke(); } }
-  function blockView(c, T) { c.strokeStyle = 'rgba(239,236,227,.5)'; c.lineWidth = 2; c.beginPath(); for (let i = 0; i < 5; i++) { c.moveTo(140, 200 + i * 150); c.lineTo(860, 200 + i * 150); c.moveTo(200 + i * 150, 140); c.lineTo(200 + i * 150, 860); } c.stroke();
-    for (let i = 0; i < 5; i++) for (let j = 0; j < 5; j++) { const x = 200 + i * 150, y = 200 + j * 150, on = rnd(mix(i * 5 + j, Math.floor(T * 2))) < 0.3 && !reduce(); c.fillStyle = on ? RED : '#0d0c0a'; c.strokeStyle = on ? RED : PAPER; c.lineWidth = 2.5; c.beginPath(); c.moveTo(x - 34, y - 30); c.lineTo(x, y - 30); c.arc(x, y, 30, -Math.PI / 2, Math.PI / 2); c.lineTo(x - 34, y + 30); c.closePath(); c.fill(); c.stroke(); } }
+  function blockView(c, T) { c.strokeStyle = fg(.5); c.lineWidth = 2; c.beginPath(); for (let i = 0; i < 5; i++) { c.moveTo(140, 200 + i * 150); c.lineTo(860, 200 + i * 150); c.moveTo(200 + i * 150, 140); c.lineTo(200 + i * 150, 860); } c.stroke();
+    for (let i = 0; i < 5; i++) for (let j = 0; j < 5; j++) { const x = 200 + i * 150, y = 200 + j * 150, on = rnd(mix(i * 5 + j, Math.floor(T * 2))) < 0.3 && !reduce(); c.fillStyle = on ? RED : BG; c.strokeStyle = on ? RED : ink; c.lineWidth = 2.5; c.beginPath(); c.moveTo(x - 34, y - 30); c.lineTo(x, y - 30); c.arc(x, y, 30, -Math.PI / 2, Math.PI / 2); c.lineTo(x - 34, y + 30); c.closePath(); c.fill(); c.stroke(); } }
   function paintArch(c, T, dt, a) {
-    AR.z += (AR.zTo - AR.z) * Math.min(1, dt * 3.5); AR.f = AR.f.map((v, i) => v + ((i === AR.sel ? 1 : 0) - v) * Math.min(1, dt * 5));
+    AR.z += (AR.zTo - AR.z) * Math.min(1, dt * 3.5); AR.f = AR.f.map((v, i) => v + ((i === AR.sel && AR.era < 0 ? 1 : 0) - v) * Math.min(1, dt * 5)); AR.ef = AR.ef.map((v, i) => v + ((i === AR.era ? 1 : 0) - v) * Math.min(1, dt * 5));
     const lv = (k, fn) => { const q = Math.pow(6, AR.z - k), al = q < 1 ? ss(0.2, 0.62, q) : 1 - ss(2.2, 5.5, q); if (al <= .01) return; c.save(); c.translate(500, 500); c.scale(q, q); c.translate(-500, -500); c.globalAlpha = a * al; fn(); c.restore(); };
-    lv(0, () => { const g = c.globalAlpha; ARR.forEach((r, i) => { if (AR.f[i] > .02) { c.globalAlpha = g * AR.f[i]; ARRDRAW[r[0]](c, T); } }); });
+    lv(0, () => { const g = c.globalAlpha; ARR.forEach((r, i) => { if (AR.f[i] > .02) { c.globalAlpha = g * AR.f[i]; ARRDRAW[r[0]](c, T); } }); ERAS.forEach((r, i) => { if (AR.ef[i] > .02) { c.globalAlpha = g * AR.ef[i]; ERADRAW[r[0]](c, T); } }); });
     lv(1, () => blockView(c, T)); lv(2, () => gateView(c, T)); lv(3, () => switchView(c, T)); c.globalAlpha = 1;
   }
 
@@ -579,7 +715,7 @@ export function createHold(host, ctx = {}) {
 
   function paintScenes(T, dt) {
     const P = die.width, u = P / 1000, c = dc;
-    c.setTransform(1, 0, 0, 1, 0, 0); c.fillStyle = '#0d0c0a'; c.fillRect(0, 0, P, P);
+    c.setTransform(1, 0, 0, 1, 0, 0); c.fillStyle = BG; c.fillRect(0, 0, P, P);
     const fa = A.hero + A.switch + .5 * A.memory + .38 * A.power + .3 * A.cost;
     if (fa > .01) { c.globalAlpha = Math.min(1, fa); c.drawImage(floor, 0, 0); c.globalAlpha = 1; }
     if (A.hero > .01) sparks(c, P, 70, A.hero);
@@ -588,27 +724,26 @@ export function createHold(host, ctx = {}) {
     if (A.memory > .01) { const a = A.memory, m4 = W4.memory; m4.pos += (m4.sel - m4.pos) * Math.min(1, dt * 5);
       const Lr = [540, 560, 380, 340], far = [80, 90, 330, 250], near = [540, 250, 380, 250], k = Math.min(1, m4.pos), k2 = Math.max(0, m4.pos - 1);
       const Mr = [lerp(far[0], near[0], k), lerp(far[1], near[1], k) + k2 * 330, lerp(far[2], near[2], k) - k2 * 40, lerp(far[3], near[3], k) - k2 * 20];
-      c.globalAlpha = a; if (k < .5) { c.setLineDash([8, 8]); c.strokeStyle = 'rgba(239,236,227,.5)'; c.lineWidth = 1.5; c.strokeRect(far[0] - 30, far[1] - 30, far[2] + 60, far[3] + 60); c.setLineDash([]); }
-      c.fillStyle = 'rgba(13,12,10,.82)'; c.fillRect(...Lr); c.strokeStyle = PAPER; c.lineWidth = 2.5; c.strokeRect(...Lr);
-      for (let i = 0; i < 5; i++) for (let j = 0; j < 4; j++) { c.fillStyle = k2 > .5 && (i + j) % 2 ? RED : 'rgba(239,236,227,.16)'; c.fillRect(Lr[0] + 24 + i * 70, Lr[1] + 30 + j * 76, 52, 52); }
-      if (k2 < .9) { c.globalAlpha = a * (1 - k2); c.fillStyle = 'rgba(13,12,10,.82)'; c.fillRect(...Mr); c.strokeStyle = PAPER; c.strokeRect(...Mr); c.fillStyle = 'rgba(239,236,227,.3)'; for (let i = 0; i < 9; i++) for (let j = 0; j < 6; j++) c.fillRect(Mr[0] + 18 + i * (Mr[2] - 36) / 9, Mr[1] + 18 + j * (Mr[3] - 36) / 6, (Mr[2] - 36) / 9 - 6, (Mr[3] - 36) / 6 - 6);
+      c.globalAlpha = a; if (k < .5) { c.setLineDash([8, 8]); c.strokeStyle = fg(.5); c.lineWidth = 1.5; c.strokeRect(far[0] - 30, far[1] - 30, far[2] + 60, far[3] + 60); c.setLineDash([]); }
+      c.fillStyle = bg(.82); c.fillRect(...Lr); c.strokeStyle = ink; c.lineWidth = 2.5; c.strokeRect(...Lr);
+      for (let i = 0; i < 5; i++) for (let j = 0; j < 4; j++) { c.fillStyle = k2 > .5 && (i + j) % 2 ? RED : fg(.16); c.fillRect(Lr[0] + 24 + i * 70, Lr[1] + 30 + j * 76, 52, 52); }
+      if (k2 < .9) { c.globalAlpha = a * (1 - k2); c.fillStyle = bg(.82); c.fillRect(...Mr); c.strokeStyle = ink; c.strokeRect(...Mr); c.fillStyle = fg(.3); for (let i = 0; i < 9; i++) for (let j = 0; j < 6; j++) c.fillRect(Mr[0] + 18 + i * (Mr[2] - 36) / 9, Mr[1] + 18 + j * (Mr[3] - 36) / 6, (Mr[2] - 36) / 9 - 6, (Mr[3] - 36) / 6 - 6);
         /* the trip a number makes, there and back */
         const p0 = [Mr[0] + Mr[2] / 2, Mr[1] + Mr[3]], p2 = [Lr[0] + Lr[2] / 2, Lr[1]], p1 = [p2[0], p0[1]], l1 = Math.abs(p1[0] - p0[0]), l2 = Math.abs(p2[1] - p1[1]), len = l1 + l2;
         if (len > 8) { c.strokeStyle = RED; c.lineWidth = 3; c.beginPath(); c.moveTo(...p0); c.lineTo(...p1); c.lineTo(...p2); c.stroke();
-          const at = s => (s < l1 ? [p0[0] + (p1[0] - p0[0]) * s / (l1 || 1), p0[1]] : [p1[0], p1[1] + (p2[1] - p1[1]) * (s - l1) / (l2 || 1)]); c.fillStyle = '#fff';
+          const at = s => (s < l1 ? [p0[0] + (p1[0] - p0[0]) * s / (l1 || 1), p0[1]] : [p1[0], p1[1] + (p2[1] - p1[1]) * (s - l1) / (l2 || 1)]); c.fillStyle = HI;
           for (let i = 0; i < Math.max(1, Math.round(len / 150)); i++) { const s = ((T * 260 + i * 150) % len), q = at(s); c.fillRect(q[0] - 7, q[1] - 7, 14, 14); } } }
       c.globalAlpha = 1; lab('mem', Mr[0] + 6, Mr[1] - 26, k2 < .5); lab('logic', Lr[0] + 6, Lr[1] + Lr[3] + 10, true); }
     if (A.power > .01) { const a = A.power, p4 = W4.power, sc = v => 940 * Math.sqrt(v / 1250); p4.rv += ((p4.shown ? 1 : 0) - p4.rv) * Math.min(1, dt * 3);
       c.globalAlpha = a; const s0 = sc(485), sg = sc(p4.guess), s9 = sc(950);
       if (p4.rv > .01) { const s = lerp(s0, s9, p4.rv * p4.rv * (3 - 2 * p4.rv)); c.fillStyle = 'rgba(229,64,26,' + (.28 * p4.rv) + ')'; c.fillRect(30, 970 - s, s, s); c.strokeStyle = RED; c.lineWidth = 5; c.strokeRect(30, 970 - s, s, s); }
-      c.fillStyle = PAPER; c.fillRect(30, 970 - s0, s0, s0);
-      c.setLineDash([10, 8]); c.strokeStyle = PAPER; c.lineWidth = 2.5; c.strokeRect(30, 970 - sg, sg, sg); c.setLineDash([]);
+      c.fillStyle = ink; c.fillRect(30, 970 - s0, s0, s0);
+      c.setLineDash([10, 8]); c.strokeStyle = ink; c.lineWidth = 2.5; c.strokeRect(30, 970 - sg, sg, sg); c.setLineDash([]);
       c.globalAlpha = 1; lab('pnow', 44, 970 - s0 + 14, true, 'dk'); lab('pguess', 30 + sg - 6, 970 - sg - 28, !p4.shown, 'right'); lab('p2030', 30 + s9 - 6, 970 - s9 - 28, p4.shown, 'r right'); }
     if (A.cost > .01) { const a = A.cost, c4 = W4.cost; c4.f += (c4.open - c4.f) * Math.min(1, dt * 3.5);
-      if (c4.f < .99) { c.globalAlpha = a * (1 - c4.f); COST.forEach((k, i) => { const s = 940 * Math.sqrt(k[1] / 725), last = i === 5; if (!i) { c.fillStyle = PAPER; c.fillRect(30, 970 - s, s, s); } c.strokeStyle = last ? RED : PAPER; c.lineWidth = last ? 5 : 2; c.strokeRect(30, 970 - s, s, s); }); }
+      if (c4.f < .99) { c.globalAlpha = a * (1 - c4.f); COST.forEach((k, i) => { const s = 940 * Math.sqrt(k[1] / 725), last = i === 5; if (!i) { c.fillStyle = ink; c.fillRect(30, 970 - s, s, s); } c.strokeStyle = last ? RED : ink; c.lineWidth = last ? 5 : 2; c.strokeRect(30, 970 - s, s, s); }); }
       if (c4.f > .01) { c.save(); c.globalAlpha = a * c4.f; c.setTransform(1, 0, 0, 1, 0, 0); c.beginPath(); c.rect(P * .03, P * .03, P * .94 * Math.min(1, c4.f * 1.02), P * .94); c.clip(); c.translate(P * .03, P * .03); c.scale(dots.k, dots.k); c.fillStyle = dots.pat; c.fillRect(0, 0, P * .94 / dots.k, P * .94 / dots.k); c.restore(); c.setTransform(u, 0, 0, u, 0, 0); c.strokeStyle = RED; c.lineWidth = 5; c.globalAlpha = a * c4.f; c.strokeRect(30, 30, 940, 940); }
       c.globalAlpha = 1; lab('c1', 44, 44, c4.f < .5, 'r'); }
-    if (A.curve > .01) paintCurve(c, T, dt, A.curve);
     if (A.next > .01) paintNext(c, T, dt, A.next);
     if (A.arch > .01) paintArch(c, T, dt, A.arch);
     if (A.machine > .01 || A.island > .01) { isleT = scene === 'island' ? Math.min(1, isleT + dt / 1.5) : Math.max(0, isleT - dt * 2);
@@ -620,16 +755,16 @@ export function createHold(host, ctx = {}) {
     const n = needNow(), R = rectsOf(n); let f = formOf;
     if (M.agentT > 0) { M.agentT -= dt; const cand = M.cand[Math.floor(T * 22) % M.cand.length]; f = p => (STOCK.includes(p[1]) ? 'circuit' : cand[p[0]]); if (M.agentT <= 0) { setPlan(M.best); drawMachineUI(); } }
     const miss = missOf(n, f);
-    c.fillStyle = '#0d0c0a'; c.fillRect(0, 0, 1000, 1000); c.setLineDash([12, 9]); c.strokeStyle = e > .5 ? RED : 'rgba(239,236,227,.5)'; c.lineWidth = e > .5 ? 14 : 2; c.strokeRect(22, 22, 956, 956); c.setLineDash([]);
+    c.fillStyle = BG; c.fillRect(0, 0, 1000, 1000); c.setLineDash([12, 9]); c.strokeStyle = e > .5 ? RED : fg(.5); c.lineWidth = e > .5 ? 14 : 2; c.strokeRect(22, 22, 956, 956); c.setLineDash([]);
     /* what flows between the blocks */
-    c.strokeStyle = 'rgba(239,236,227,.4)'; c.lineWidth = 2; const ctr = i => [R[i][0] + R[i][2] / 2, R[i][1] + R[i][3] / 2];
+    c.strokeStyle = fg(.4); c.lineWidth = 2; const ctr = i => [R[i][0] + R[i][2] / 2, R[i][1] + R[i][3] / 2];
     n.wires.forEach(([a, b]) => { const p = ctr(a), q = ctr(b); c.beginPath(); c.moveTo(...p); c.lineTo(...q); c.stroke(); });
     n.parts.forEach((p, i) => { const [x, y, ww, h] = R[i], fm = f(p), stock = STOCK.includes(p[1]), bad = miss.includes(p[0]);
-      c.fillStyle = '#0d0c0a'; c.fillRect(x, y, ww, h);
-      if (stock) { c.strokeStyle = 'rgba(239,236,227,.75)'; c.lineWidth = 2; c.strokeRect(x, y, ww, h); c.save(); c.beginPath(); c.rect(x, y, ww, h); c.clip(); c.strokeStyle = 'rgba(239,236,227,.14)'; c.beginPath(); for (let q = -h; q < ww; q += 16) { c.moveTo(x + q, y + h); c.lineTo(x + q + h, y); } c.stroke(); c.restore(); }
-      else if (fm === 'circuit') { c.fillStyle = PAPER; c.fillRect(x, y, ww, h); for (let q = 18; q < ww - 10; q += 26) { c.fillRect(x + q, y - 12, 10, 12); c.fillRect(x + q, y + h, 10, 12); } c.fillStyle = 'rgba(19,18,16,.14)'; for (let q = 70; q < h - 20; q += 22) c.fillRect(x + 20, y + q, ww - 40, 8); }
-      else if (fm === 'software') { c.setLineDash([9, 7]); c.strokeStyle = PAPER; c.lineWidth = 2.5; c.strokeRect(x, y, ww, h); c.setLineDash([]); c.fillStyle = 'rgba(239,236,227,.55)'; let li = 0; for (let q = 76; q < h - 24; q += 26, li++) { const ind = [0, 1, 2, 1, 1, 0, 1, 2, 2, 1][li % 10] * 26, ln = (ww - 60 - ind) * (.35 + .6 * rnd(mix(li, i * 31 + 5))); c.fillRect(x + 24 + ind, y + q, ln, 7); if (!reduce() && Math.floor(T * 5 + i) % 14 === li % 14) { c.fillStyle = RED; c.fillRect(x + 24 + ind, y + q, ln, 7); c.fillStyle = 'rgba(239,236,227,.55)'; } } }
-      else { c.strokeStyle = PAPER; c.lineWidth = 2.5; c.strokeRect(x, y, ww, h); const g = 34, tick = Math.floor(T * 1.6); for (let yy = y + 70; yy + 20 < y + h - 12; yy += g) for (let xx = x + 20; xx + 20 < x + ww - 12; xx += g) { const on = rnd(mix((xx * 7 + yy) | 0, tick + i)) < .33; c.strokeStyle = on ? RED : 'rgba(239,236,227,.5)'; c.lineWidth = on ? 3.5 : 1.5; c.beginPath(); c.moveTo(xx, yy + 10); c.lineTo(xx + 20, on ? yy + 10 : yy); c.stroke(); c.fillStyle = 'rgba(239,236,227,.7)'; c.fillRect(xx - 2.5, yy + 7.5, 5, 5); } }
+      c.fillStyle = BG; c.fillRect(x, y, ww, h);
+      if (stock) { c.strokeStyle = fg(.75); c.lineWidth = 2; c.strokeRect(x, y, ww, h); c.save(); c.beginPath(); c.rect(x, y, ww, h); c.clip(); c.strokeStyle = fg(.14); c.beginPath(); for (let q = -h; q < ww; q += 16) { c.moveTo(x + q, y + h); c.lineTo(x + q + h, y); } c.stroke(); c.restore(); }
+      else if (fm === 'circuit') { c.fillStyle = ink; c.fillRect(x, y, ww, h); for (let q = 18; q < ww - 10; q += 26) { c.fillRect(x + q, y - 12, 10, 12); c.fillRect(x + q, y + h, 10, 12); } c.fillStyle = bg(.14); for (let q = 70; q < h - 20; q += 22) c.fillRect(x + 20, y + q, ww - 40, 8); }
+      else if (fm === 'software') { c.setLineDash([9, 7]); c.strokeStyle = ink; c.lineWidth = 2.5; c.strokeRect(x, y, ww, h); c.setLineDash([]); c.fillStyle = fg(.55); let li = 0; for (let q = 76; q < h - 24; q += 26, li++) { const ind = [0, 1, 2, 1, 1, 0, 1, 2, 2, 1][li % 10] * 26, ln = (ww - 60 - ind) * (.35 + .6 * rnd(mix(li, i * 31 + 5))); c.fillRect(x + 24 + ind, y + q, ln, 7); if (!reduce() && Math.floor(T * 5 + i) % 14 === li % 14) { c.fillStyle = RED; c.fillRect(x + 24 + ind, y + q, ln, 7); c.fillStyle = fg(.55); } } }
+      else { c.strokeStyle = ink; c.lineWidth = 2.5; c.strokeRect(x, y, ww, h); const g = 34, tick = Math.floor(T * 1.6); for (let yy = y + 70; yy + 20 < y + h - 12; yy += g) for (let xx = x + 20; xx + 20 < x + ww - 12; xx += g) { const on = rnd(mix((xx * 7 + yy) | 0, tick + i)) < .33; c.strokeStyle = on ? RED : fg(.5); c.lineWidth = on ? 3.5 : 1.5; c.beginPath(); c.moveTo(xx, yy + 10); c.lineTo(xx + 20, on ? yy + 10 : yy); c.stroke(); c.fillStyle = fg(.7); c.fillRect(xx - 2.5, yy + 7.5, 5, 5); } }
       if (n.change.includes(p[0])) { c.strokeStyle = RED; c.lineWidth = bad ? 9 + 3 * Math.sin(T * 6) : 4; c.strokeRect(x - 7, y - 7, ww + 14, h + 14); if (bad) { c.beginPath(); c.moveTo(x + ww - 60, y + 22); c.lineTo(x + ww - 22, y + 60); c.moveTo(x + ww - 22, y + 22); c.lineTo(x + ww - 60, y + 60); c.stroke(); } } });
     if (!reduce()) n.wires.forEach(([a, b], wi) => { const p = ctr(a), q = ctr(b), k = (T * .7 + wi * .31) % 1; c.fillStyle = RED; c.fillRect(p[0] + (q[0] - p[0]) * k - 7, p[1] + (q[1] - p[1]) * k - 7, 14, 14); });
   }
@@ -641,13 +776,13 @@ export function createHold(host, ctx = {}) {
     const seg = TRACK.slice(1).map((q, i) => Math.abs(q[0] - TRACK[i][0]) + Math.abs(q[1] - TRACK[i][1])), tot = seg.reduce((s, v) => s + v, 0);
     const part = (s0, s1) => { c.beginPath(); let acc = 0; for (let i = 0; i < seg.length; i++) { const a0 = acc; acc += seg[i]; if (s1 <= a0 || s0 >= acc) continue; const p = TRACK[i], q = TRACK[i + 1], f0 = Math.max(0, (s0 - a0) / seg[i]), f1 = Math.min(1, (s1 - a0) / seg[i]); c.moveTo(p[0] + (q[0] - p[0]) * f0, p[1] + (q[1] - p[1]) * f0); c.lineTo(p[0] + (q[0] - p[0]) * f1, p[1] + (q[1] - p[1]) * f1); } c.stroke(); };
     c.globalAlpha = a; c.lineCap = 'square'; c.lineJoin = 'miter';
-    c.strokeStyle = 'rgba(239,236,227,.1)'; c.lineWidth = 34; part(0, tot * e);
-    c.strokeStyle = PAPER; c.lineWidth = 2.5; part(0, tot * e);
-    if (e >= 1) { c.fillStyle = PAPER; for (const [x, y, r] of [[675, 150, 0], [850, 500, 1], [675, 850, 2], [325, 850, 2], [150, 500, 3], [325, 150, 0]]) { c.save(); c.translate(x, y); c.rotate(r * Math.PI / 2); c.beginPath(); c.moveTo(11, 0); c.lineTo(-7, -9); c.lineTo(-7, 9); c.fill(); c.restore(); }
+    c.strokeStyle = fg(.1); c.lineWidth = 34; part(0, tot * e);
+    c.strokeStyle = ink; c.lineWidth = 2.5; part(0, tot * e);
+    if (e >= 1) { c.fillStyle = ink; for (const [x, y, r] of [[675, 150, 0], [850, 500, 1], [675, 850, 2], [325, 850, 2], [150, 500, 3], [325, 150, 0]]) { c.save(); c.translate(x, y); c.rotate(r * Math.PI / 2); c.beginPath(); c.moveTo(11, 0); c.lineTo(-7, -9); c.lineTo(-7, 9); c.fill(); c.restore(); }
       if (!reduce()) { const s = seg[0] + ((T * 190) % (tot - seg[0])); c.strokeStyle = RED; c.lineWidth = 7; c.lineCap = 'butt'; part(Math.max(seg[0], s - 110), s); } }
     LOOP.forEach((p, i) => { const row = ROWS[i] || [], done = row[5], hot = hotPlace === p[1], s = hot ? 36 : 28, pa = ss(i / 7, i / 7 + .2, e); if (pa <= 0) return;
-      c.globalAlpha = a * pa; c.fillStyle = done ? RED : '#0d0c0a'; c.fillRect(p[2] - s, p[3] - s, 2 * s, 2 * s); c.strokeStyle = done ? RED : PAPER; c.lineWidth = hot ? 5 : 2.5; c.setLineDash(done ? [] : [7, 6]); c.strokeRect(p[2] - s, p[3] - s, 2 * s, 2 * s); c.setLineDash([]);
-      if (done) { c.fillStyle = PAPER; c.fillRect(p[2] - 9, p[3] - 9, 18, 18); } });
+      c.globalAlpha = a * pa; c.fillStyle = done ? RED : BG; c.fillRect(p[2] - s, p[3] - s, 2 * s, 2 * s); c.strokeStyle = done ? RED : ink; c.lineWidth = hot ? 5 : 2.5; c.setLineDash(done ? [] : [7, 6]); c.strokeRect(p[2] - s, p[3] - s, 2 * s, 2 * s); c.setLineDash([]);
+      if (done) { c.fillStyle = ink; c.fillRect(p[2] - 9, p[3] - 9, 18, 18); } });
     c.globalAlpha = 1;
   }
   /* words over the square: placed by the picture, written in the words */
@@ -660,6 +795,8 @@ export function createHold(host, ctx = {}) {
   /* ============ the steps beside it ============ */
   let built = false, specs = [], io = null;
   const nextBtn = (to, what) => '<button type="button" class="h-next h-mono" data-go="' + to + '">' + w('next', { what }) + '</button>';
+  const WT = {};
+  const wallTried = id => { WT[id] = 1; if (WALLS.every(x => WT[x.id])) done('walls'); };
   function buildSteps() {
     if (built) return; built = true;
     const wallW = {
@@ -668,9 +805,7 @@ export function createHold(host, ctx = {}) {
       power: '<input type="range" id="hd-w-pw" min="300" max="1250" step="5" value="485" aria-label="' + esc(w('w.power.q')) + '"><div class="h-ticks h-mono"><span id="hd-w-pwv"></span><button type="button" class="h-btn" id="hd-w-pwb">' + w('w.power.reveal') + '</button></div>',
       cost: '<div class="h-seg" id="hd-w-co">' + ['a', 'b'].map((k, i) => '<button type="button" data-i="' + i + '" class="' + (i ? '' : 'on') + '">' + w('w.cost.' + k) + '</button>').join('') + '</div>'
     };
-    let h = '<section class="h-step" id="hd-s-curve" data-scene="curve"><div class="h-n h-mono"><i></i>' + w('curve.n') + '</div><h2 class="h-anton">' + w('curve.h') + '</h2><p class="h-d">' + w('curve.d') + ' ' + src('transistor-trend', 'chm-x86', 'core2-410m', 'northpole', 'rubin-gpu') + '</p>' +
-      '<div class="h-box"><div class="h-bk h-mono"><i></i>' + w('try.k') + '</div><p class="h-bq">' + w('curve.q') + '</p><div class="h-seg" id="hd-c-sc">' + ['log', 'lin'].map((k, i) => '<button type="button" data-i="' + i + '" class="' + (i ? '' : 'on') + '">' + w('curve.' + k) + '</button>').join('') + '</div><p class="h-out" id="hd-o-curve"></p></div>' +
-      nextBtn('hd-s-switch', w('wall.switch.s')) + '</section>';
+    let h = '';
     h += WALLS.map((wl, i) => '<section class="h-step" id="hd-s-' + wl.id + '" data-scene="' + wl.id + '">' +
       '<div class="h-n h-mono"><i></i>' + w('walls.n', { n: i + 1 }) + '</div><h2 class="h-anton">' + w('wall.' + wl.id + '.t') + '</h2>' +
       '<p class="h-d">' + w('wall.' + wl.id + '.d') + ' ' + (wl.facts.length ? src(...wl.facts) : '<span class="h-src h-phys">' + w('wall.switch.phys') + '</span>') + '</p>' +
@@ -690,6 +825,8 @@ export function createHold(host, ctx = {}) {
       '<input type="range" id="hd-a-z" min="0" max="3" step="0.01" value="0" aria-label="' + esc(w('arch.q1')) + '"><div class="h-ticks h-mono">' + [3, 2, 1, 0].map(k => '<span>' + w('lv.' + k) + '</span>').join('') + '</div>' +
       '<p class="h-bq" style="margin-top:18px">' + w('arch.q2') + '</p><div class="h-seg h-asel" id="hd-a-sel">' + ARR.map((r, i) => '<button type="button" data-i="' + i + '" class="' + (i ? '' : 'on') + '">' + w('arr.' + r[0] + '.b') + '</button>').join('') + '</div>' +
       '<p class="h-out" id="hd-o-arch"></p></div>' +
+      '<div class="h-box"><div class="h-bk h-mono"><i></i>' + w('era.k') + '</div><p class="h-bq">' + w('arch.q3') + '</p><div class="h-seg h-asel" id="hd-a-era">' + ERAS.map((r, i) => '<button type="button" data-i="' + i + '">' + w('era.' + r[0] + '.b') + '<small>' + r[1] + '</small></button>').join('') + '</div>' +
+      '<p class="h-out" id="hd-o-era"></p></div>' +
       '<div class="h-box h-chal"><div class="h-bk h-mono"><i></i>' + w('arch.ch.k') + '</div><p class="h-bq">' + w('arch.ch.q') + '</p><p class="h-out" id="hd-a-ch"></p></div>' +
       '<div class="h-cq" id="hd-a-cq" hidden><span class="h-mono">' + w('q.label') + '</span><p>' + Q('copy') + '</p><a class="h-lnk" href="#/machines">' + w('q.meet') + '</a></div>' +
       nextBtn('hd-s-machine', w('tab.machine')) + '</section>';
@@ -713,17 +850,16 @@ export function createHold(host, ctx = {}) {
     el('foot').innerHTML = '<span>' + w('foot') + '</span>' + src(...FACT_IDS);
     /* the four walls: each answers on the square */
     const out = (id, html) => { el('o-' + id).innerHTML = html; };
-    const sw = () => { const n = +el('w-sw').value; W4.switch.n = n; out('switch', n ? w('w.switch.out', { n: nf(Math.pow(10, n)), mv: n * 60 }) : w('w.switch.out0')); }; el('w-sw').oninput = sw; sw();
+    const sw = (ev) => { const n = +el('w-sw').value; W4.switch.n = n; if (ev) wallTried('switch'); out('switch', n ? w('w.switch.out', { n: nf(Math.pow(10, n)), mv: n * 60 }) : w('w.switch.out0')); }; el('w-sw').oninput = sw; sw();
     const seg = (id, fn) => { el(id).onclick = e => { const b = e.target.closest('button'); if (!b) return; el(id).querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); fn(+b.dataset.i); }; };
-    seg('w-mem', i => { W4.memory.sel = i; out('memory', w('w.memory.o' + 'abc'[i]) + (i < 2 ? ' ' + src('energy-moving-data') : '')); }); out('memory', w('w.memory.oa') + ' ' + src('energy-moving-data'));
-    seg('w-co', i => { W4.cost.open = i; out('cost', w('w.cost.o' + 'ab'[i]) + ' ' + (i ? src('wafer-space-run', 'design-cost-2nm') : src('design-cost-older', 'design-cost-recent', 'design-cost-2nm'))); }); out('cost', w('w.cost.oa') + ' ' + src('design-cost-older', 'design-cost-recent', 'design-cost-2nm'));
+    seg('w-mem', i => { W4.memory.sel = i; wallTried('memory'); out('memory', w('w.memory.o' + 'abc'[i]) + (i < 2 ? ' ' + src('energy-moving-data') : '')); }); out('memory', w('w.memory.oa') + ' ' + src('energy-moving-data'));
+    seg('w-co', i => { W4.cost.open = i; wallTried('cost'); out('cost', w('w.cost.o' + 'ab'[i]) + ' ' + (i ? src('wafer-space-run', 'design-cost-2nm') : src('design-cost-older', 'design-cost-recent', 'design-cost-2nm'))); }); out('cost', w('w.cost.oa') + ' ' + src('design-cost-older', 'design-cost-recent', 'design-cost-2nm'));
     const pw = () => { const v = +el('w-pw').value; W4.power.guess = v; el('w-pwv').textContent = w('w.power.guess', { n: nf(v) }); if (W4.power.shown) out('power', w('w.power.out', { n: nf(v), verdict: w('w.power.' + (v < 855 ? 'low' : v > 1045 ? 'high' : 'near')) }) + ' ' + src('dc-electricity')); else out('power', ''); };
-    el('w-pw').oninput = pw; el('w-pwb').onclick = () => { W4.power.shown = true; pw(); }; pw();
-    el('a-z').oninput = () => { AR.zTo = 3 - +el('a-z').value; archOut(); };
-    el('a-sel').onclick = ev => { const b = ev.target.closest('button'); if (b) { AR.sel = +b.dataset.i; AR.zTo = 0; archOut(); } };
+    el('w-pw').oninput = pw; el('w-pwb').onclick = () => { W4.power.shown = true; wallTried('power'); pw(); }; pw();
+    el('a-z').oninput = () => { AR.zTo = 3 - +el('a-z').value; AR.era = -1; archOut(); };
+    el('a-era').onclick = ev => { const b = ev.target.closest('button'); if (b) { AR.era = +b.dataset.i; AR.zTo = 0; archOut(); } };
+    el('a-sel').onclick = ev => { const b = ev.target.closest('button'); if (b) { AR.sel = +b.dataset.i; AR.zTo = 0; AR.era = -1; archOut(); } };
     archOut();
-    /* the curve: steps of ten, or plain */
-    const curveOut = i => { CV.to = i; out('curve', w('curve.o.' + (i ? 'lin' : 'log'))); }; seg('c-sc', curveOut); curveOut(0);
     /* the second hold */
     el('nbtn').addEventListener('pointerdown', e => { e.preventDefault(); NX.hold = true; });
     el('nbtn').addEventListener('keydown', e => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); NX.hold = true; } });
@@ -732,7 +868,7 @@ export function createHold(host, ctx = {}) {
     el('needs').onclick = e => { const b = e.target.closest('[data-need]'); if (!b) return; M.need = b.dataset.need; M.tried = null; M.kept = false; drawMachineUI(); };
     el('parts').onclick = e => { const b = e.target.closest('[data-part]'); if (!b) return; M.plan[M.need + '.' + b.dataset.part] = b.dataset.form; M.kept = false; drawMachineUI(); };
     el('m-agent').onclick = () => { agent(); M.kept = false; drawMachineUI(); };
-    el('m-keep').onclick = () => { M.kept = true; drawMachineUI(); };
+    el('m-keep').onclick = () => { M.kept = true; done('keep'); drawMachineUI(); };
     drawMachineUI();
     el('trail').addEventListener('pointerover', e => { const a = e.target.closest('a'); hotPlace = a ? a.dataset.place : null; });
     el('trail').addEventListener('pointerleave', () => { hotPlace = null; });
@@ -776,7 +912,7 @@ export function createHold(host, ctx = {}) {
       s.c.setTransform(DPR, 0, 0, DPR, 0, 0); s.c.clearRect(0, 0, ww, ww); SPEC[s.id](s.c, ww, s.T + 3, s.k, s.m); }
   }
   function whichScene() {
-    if (!atWall) return 'hero'; let sc = 'hero'; const line = innerHeight * (phone ? .86 : .6);
+    let sc = 'hero'; const line = innerHeight * (phone ? .86 : .6);
     root.querySelectorAll('.h-step').forEach(s => { if (s.getBoundingClientRect().top < line) sc = s.dataset.scene; }); return sc;
   }
 
@@ -787,18 +923,11 @@ export function createHold(host, ctx = {}) {
   function flip(v) { bits = v === undefined ? !bits : v; egg('bits'); clearTimeout(bitsTm); bitsTm = setTimeout(() => { bits = null; }, 2600); }
   el('num').addEventListener('click', () => { pow = !pow; if (pow) egg('pow'); });
 
-  /* ============ the page's parts, in order: always there on the guide, any of them a tap away ============ */
-  el('tabs').setAttribute('aria-label', w('tabs.aria'));
-  el('tabs').innerHTML = PARTS.map(([k], i) => '<button type="button" data-k="' + k + '" data-i="' + i + '" title="' + esc(w('tab.' + k)) + '">' + w('tab.' + k) + '</button>').join('');
-  const goTo = id => { if (!id) { host.scrollTo({ top: 0, behavior: reduce() ? 'auto' : 'smooth' }); return; } if (!atWall) set(99); steps().then(() => requestAnimationFrame(() => { const e = host.querySelector('#' + id); if (e) e.scrollIntoView({ behavior: reduce() ? 'auto' : 'smooth', block: 'start' }); })); };
-  const placeNav = () => { const W = gcv.clientWidth; el('tabs').querySelectorAll('button').forEach(b => { const i = +b.dataset.i, x = i ? partX(W, i) : 0, x1 = !i ? W * HERO_W : i < PARTS.length - 1 ? partX(W, i + 1) : W; b.style.left = x + 'px'; b.style.width = Math.max(10, x1 - x) + 'px'; }); };
-  el('guide').addEventListener('click', ev => { const b = ev.target.closest('button[data-k]'); if (!b) return; const i = +b.dataset.i;
-    if (i) { goTo(PARTS[i][1]); return; }
-    /* the fifty years: a point on them, or back to the top once the wall is behind */
-    if (atWall || !ev.detail) { goTo(null); return; }
-    const r = gcv.getBoundingClientRect(), W = r.width, v = (ev.clientX - r.left - 8) / (W * HERO_W - 16) * DWALL; if (v >= DWALL - .2) set(99); else set(Math.max(0, v)); });
-  root.addEventListener('click', ev => { const b = ev.target.closest('[data-go]'); if (b) goTo(b.dataset.go); });
-  function tabsNow() { const k = partNow(); el('tabs').querySelectorAll('button[data-k]').forEach(b => b.setAttribute('aria-current', b.dataset.k === k ? 'true' : 'false')); }
+  /* ============ going somewhere on the page: a chapter, a moment, a year ============ */
+  const goTo = id => { if (!id || id === 'hd-years') { goD(id ? Math.min(d, DWALL) : 0); return; } touch(); steps().then(() => requestAnimationFrame(() => { const e = host.querySelector('#' + id); if (e) e.scrollIntoView({ behavior: reduce() ? 'auto' : 'smooth', block: 'start' }); })); };
+  root.addEventListener('click', ev => { const b = ev.target.closest('[data-go],[data-era]'); if (!b || b.closest('#hd-rail [data-d],#hd-rail [data-ch]')) return;
+    if (b.dataset.era !== undefined) { const [eid, ey] = ERAS[+b.dataset.era]; if (eid === 'clock' || eid === 'cores') setSer(eid === 'clock' ? 'hz' : 'cores', true); goD(dAt(ey + .5)); return; }
+    goTo(b.dataset.go); railOpen(false); });
 
   /* the bit the transistor holds, large, beside it */
   const bitEl = document.createElement('span'); bitEl.className = 'h-tl h-bit'; el('dl').appendChild(bitEl);
@@ -811,35 +940,41 @@ export function createHold(host, ctx = {}) {
     const dt = Math.min(0.1, (ts - last) / 1000 || 0); last = ts; now = ts; const T = ts / 1000;
     press += ((holding ? 1 : 0) - press) * Math.min(1, dt * 14); thudT = Math.max(0, thudT - dt * 4);
     advance(dt);
-    const m = atWall ? null : momentAt(d); if (m !== mom) { mom = m; said = ''; cls('moment', !!m); }
-    const sc = whichScene(); if (sc !== scene) { scene = sc; tabsNow(); }
+    d = dOfS(Math.min(pos, YLEN)); atWall = pos >= WALL_S - 1; CV.maxD = Math.max(CV.maxD, d);
+    if (CV.guess && CV.maxD >= DWALL - 1e-6 && !DONE.guess) { done('guess'); CV.msg = 'guess'; }
+    if (!touched && document.documentElement.dataset.preload) { loadFacts(); steps(); }
+    cls('wall', d >= DWALL - 1e-6);
+    const m = momentAt(d); if (m !== mom) { mom = m; said = ''; cls('moment', !!m); }
+    const sc = whichScene(); if (sc !== scene) scene = sc;
+    railNow();
     wrap.dataset.scene = scene === 'hero' ? (d < .2 ? 'gate' : 'hero') : scene;
     for (const k in A) A[k] += ((k === scene ? 1 : 0) - A[k]) * Math.min(1, dt * 6);
     const shake = reduce() || scene !== 'hero' ? 0 : phase() === 'wall' && holding ? push * 5 : Math.max(thudT * 3, phase() === 'pay' && holding ? (1 - vel / VMAX) * 2.2 : 0);
     /* nobody is steering the glass: let it wander, so the parts are seen */
-    if (holding && !atWall && now - lastMoveT > 2500 && !reduce()) focusTo = [.5 + .37 * Math.sin(T * .42), .5 + .35 * Math.sin(T * .58 + 1)];
+    if (holding && now - lastMoveT > 2500 && !reduce()) focusTo = [.5 + .37 * Math.sin(T * .42), .5 + .35 * Math.sin(T * .58 + 1)];
     die.style.transform = shake ? 'translate(' + ((Math.random() - .5) * shake) + 'px,' + ((Math.random() - .5) * shake) + 'px)' : '';
-    if (!atWall) { drawHeroDie(); drawLoupe(ss(7.6, 9.4, d)); }
-    else { paintScenes(T, dt); const dotsOn = scene === 'cost' && W4.cost.f > .6; drawLoupe(Math.max(A.hero, A.switch) > .5 || dotsOn ? 1 : 0, { leak: scene === 'switch' ? W4.switch.n / 5 : 0, dots: dotsOn }); }
-    if (atWall) advanceNext(dt);
-    count(); say(); drawGuide(); drawSpecimens(dt);
+    if (scene === 'hero') { drawHeroDie(); drawLoupe(ss(7.6, 9.4, d)); }
+    else { paintScenes(T, dt); const dotsOn = scene === 'cost' && W4.cost.f > .6; drawLoupe(A.switch > .5 || dotsOn ? 1 : 0, { leak: scene === 'switch' ? W4.switch.n / 5 : 0, dots: dotsOn }); }
+    if (built) advanceNext(dt);
+    count(); say(); chartQ(); if (pos < YLEN + innerHeight) paintChart(dt); drawSpecimens(dt);
     raf = requestAnimationFrame(frame);
   }
 
   /* ============ the finger ============ */
-  const setHold = v => { holding = v; cls('holding', v); if (v) cls('touched', true); };
+  const setHold = v => { holding = v; cls('holding', v); if (v) touch(); };
   const dieXY = e => { const r = wrap.getBoundingClientRect(), k = v => Math.min(1, Math.max(0, v)); return [k((e.clientX - r.left) / r.width), k((e.clientY - r.top) / r.height)]; };
   function down(e) {
     const onDie = e.target.closest('.h-diewrap'), onBtn = e.target.closest('.h-holdbtn');
-    if (!onBtn && e.target.closest('a,button,input,.h-moment,.h-egg,.h-num')) return;
-    if (atWall && scene === 'machine' && onDie) { const [x, y] = dieXY(e), n = needNow(), R = rectsOf(n), i = R.findIndex(r => x * 1000 >= r[0] && x * 1000 <= r[0] + r[2] && y * 1000 >= r[1] && y * 1000 <= r[1] + r[3]);
+    if (!onBtn && e.target.closest('a,button,input,canvas#hd-cv,.h-moment,.h-cq2,.h-egg,.h-num')) return;
+    if (scene === 'machine' && onDie) { const [x, y] = dieXY(e), n = needNow(), R = rectsOf(n), i = R.findIndex(r => x * 1000 >= r[0] && x * 1000 <= r[0] + r[2] && y * 1000 >= r[1] && y * 1000 <= r[1] + r[3]);
       if (i >= 0 && !STOCK.includes(n.parts[i][1])) { const p = n.parts[i]; M.plan[M.need + '.' + p[0]] = FORMS[(FORMS.indexOf(formOf(p)) + 1) % 3]; M.kept = false; drawMachineUI(); } return; }
-    if (atWall && scene === 'next' && onDie) { NX.hold = true; return; }
-    if (atWall && scene === 'arch' && onDie) { if (AR.zTo > .5) AR.zTo = Math.round(AR.zTo) - 1; else AR.sel = (AR.sel + 1) % ARR.length; archOut(); return; }
-    if (atWall && scene === 'island' && onDie) { const [x, y] = dieXY(e), i = LOOP.findIndex(p => Math.abs(x * 1000 - p[2]) < 80 && Math.abs(y * 1000 - p[3]) < 80); if (i >= 0 && ROWS[i]) location.hash = ROWS[i][4]; return; }
+    if (scene === 'next' && onDie) { NX.hold = true; return; }
+    if (scene === 'arch' && onDie) { if (AR.zTo > .5) AR.zTo = Math.round(AR.zTo) - 1; else if (AR.era >= 0) AR.era = (AR.era + 1) % ERAS.length; else AR.sel = (AR.sel + 1) % ARR.length; archOut(); return; }
+    if (scene === 'island' && onDie) { const [x, y] = dieXY(e), i = LOOP.findIndex(p => Math.abs(x * 1000 - p[2]) < 80 && Math.abs(y * 1000 - p[3]) < 80); if (i >= 0 && ROWS[i]) location.hash = ROWS[i][4]; return; }
     if (onDie) { focusTo = dieXY(e); lastMoveT = now; if (now - lastTap < 320 && d > 8) flip(); lastTap = now; }
-    if (atWall && scene !== 'hero') return;
+    if (scene !== 'hero') return;
     if (e.pointerType === 'touch' && !onDie && !onBtn) return;
+    if (pos > YLEN) return;
     setHold(true);
   }
   el('hero').addEventListener('pointerdown', down); wrap.addEventListener('pointerdown', down);
@@ -850,14 +985,14 @@ export function createHold(host, ctx = {}) {
   addEventListener('keydown', e => {
     if (!live || (e.target.closest && e.target.closest('input,textarea,select,[contenteditable]'))) return;
     if ((e.key === '0' || e.key === '1') && d > 8 && !e.ctrlKey && !e.metaKey) { flip(e.key === '1'); return; }
-    if (e.code === 'Space' && host.scrollTop < innerHeight * 0.5 && !(e.target.closest && e.target.closest('a,button:not(.h-holdbtn),[role=dialog]'))) { e.preventDefault(); if (e.repeat) return; setHold(true); } });   // i18n-ok: selectors
+    if (e.code === 'Space' && pos <= YLEN && !(e.target.closest && e.target.closest('a,button:not(.h-holdbtn),[role=dialog]'))) { e.preventDefault(); if (e.repeat) return; setHold(true); } });   // i18n-ok: selectors
   addEventListener('keyup', e => { if (e.code === 'Space') setHold(false); });
-  el('again').addEventListener('click', () => { if (location.hash && location.hash !== '#/') location.hash = '#/'; location.reload(); });
-  el('skip').addEventListener('click', () => set(99));
-  addEventListener('resize', () => { if (live) { sizeDie(); placeNav(); } });
-  /* for checks: set(20) jumps to that many doublings; 99 opens at the wall */
-  function set(v) { d = Math.min(DWALL, v); started = d > 0; loadFacts(); mom = null; cls('moment', false); cls('touched', true); vel = 0; said = ''; if (v >= DWALL) hitWall(); }
-  window.__hold = { set, state: () => ({ d, phase: phase(), moment: mom && mom.id, tried: Object.keys(tried), vel, atWall, scene, found: Object.keys(found), eggs: Object.keys(eggs) }) };
+  el('again').addEventListener('click', () => goD(0));
+  el('skip').addEventListener('click', () => goTo('hd-s-switch'));
+  addEventListener('resize', () => { if (live) { sizeDie(); layoutYears(); host.scrollTop = Math.round(y0 + pos); } });
+  /* for checks: set(20) jumps to that many doublings; 99 to the wall */
+  function set(v) { loadFacts(); touch(); goD(Math.min(DWALL, v), true); d = dOfS(pos); mom = null; cls('moment', false); said = ''; }
+  window.__hold = { set, state: () => ({ d, phase: phase(), moment: mom && mom.id, tried: Object.keys(tried), vel, atWall, scene, found: Object.keys(found), eggs: Object.keys(eggs), done: Object.keys(DONE), chart: { every: CV.every, on: Object.keys(CV.on).filter(k => CV.on[k]), guess: CV.guess, stage: stageNow() } }) };
 
   /* the page's look and its facts, once */
   let ready = null;
@@ -866,7 +1001,7 @@ export function createHold(host, ctx = {}) {
     /* i18n-ok: a selector */ if (document.querySelector('link[data-hold-fonts]')) return res();
     const l = document.createElement('link'); l.rel = 'stylesheet'; l.href = lang() === 'zh' ? FONTS + '&' + FONTS_ZH.split('?')[1] : FONTS; l.dataset.holdFonts = '1'; l.onload = l.onerror = res; document.head.appendChild(l); setTimeout(res, 1500); }));
   return {
-    show() { host.hidden = false; return prepare().then(() => { if (live) return; live = true; sizeDie(); placeNav(); said = ''; tabsNow(); last = 0; raf = requestAnimationFrame(frame); }); },
+    show() { host.hidden = false; host.style.scrollBehavior = 'auto'; return prepare().then(() => { if (live) return; live = true; sizeDie(); layoutYears(); tally(); said = ''; railK = ''; last = 0; raf = requestAnimationFrame(frame); }); },
     hide() { host.hidden = true; live = false; cancelAnimationFrame(raf); setHold(false); }
   };
 }

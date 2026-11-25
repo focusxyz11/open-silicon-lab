@@ -1,10 +1,11 @@
 // Hold, the first page (src/v2/hold.js, src/data/hold.js): every number it shows has a fact, the moments come in order
-// on the way to the wall and slow the hold without stopping it, and every word its plan names exists in every
-// language it is translated into.
+// on the way to the wall and slow the hold without stopping it, the chart of Moore's law beside the count reads true
+// data, its three challenges can be won, and every word its plan names exists in every language it is translated into.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { D71, D95, D2011, DWALL, GEN, COST, MOMENTS, WALLS, ARR, TRIP, NEEDS, STOCK, LIGHTS, PARTS, FACT_IDS, FDIV, yearOf } from '../src/data/hold.js';
+import { D71, D95, D2011, DWALL, GEN, COST, MOMENTS, WALLS, ARR, TRIP, NEEDS, STOCK, LIGHTS, PARTS, FACT_IDS, FDIV, yearOf, yearAt, dAt, NODES, nodeAt,
+  trend, upTo, SERIES, KNEE, ERAS, CHALS, CHIPS, rule } from '../src/data/hold.js';
 import { TRANSLATED } from '../src/core/i18n.js';
 
 const read = p => JSON.parse(readFileSync(new URL('../' + p, import.meta.url), 'utf8'));
@@ -65,4 +66,28 @@ test('the first page says the same things in every language it is translated int
     assert.deepEqual(Object.keys(W).filter(k => !(k in EN)), [], l + ' has words English does not');
     assert.deepEqual(Object.keys(EN).filter(k => !(k in W)), [], l + ' is missing words');
   }
+});
+
+test('Moore\'s law, live: years and counts agree, and the data behind the chart is real and in order', () => {
+  /* a doubling a year before 1971 (Moore, 1965), two after (transistor-trend) */
+  assert.equal(yearAt(D71), 1971); assert.ok(Math.abs(dAt(yearAt(17.3)) - 17.3) < 1e-9); assert.ok(Math.abs(dAt(yearAt(5)) - 5) < 1e-9);
+  assert.ok(yearAt(0) > 1958 && yearAt(0) < 1962, 'one transistor lands around the first chips');
+  for (let i = 1; i < NODES.length; i++) assert.ok(NODES[i][0] > NODES[i - 1][0], 'the generations are in order');
+  assert.equal(nodeAt(1970), '20 µm'); assert.equal(nodeAt(2025), '2 nm');
+  for (const k of ['tr', ...SERIES]) { const t = trend(k); assert.ok(t.length > 60, k + ' has its chips'); assert.ok(t.every(([y, v]) => y > 1970 && y < 2023 && v > 0), k + ' reads as years and values'); }
+  /* the clock stopped climbing: after its knee the best clock rises by less than half; the transistors kept going */
+  assert.ok(upTo('hz', 2021) / upTo('hz', KNEE[1]) < 1.5 && upTo('hz', 2004) / upTo('hz', 1994) > 10, 'the clock stalls after its knee');
+  assert.ok(upTo('tr', 2021) / upTo('tr', 2004) > 30, 'the transistors do not stall');
+  assert.ok(KNEE[0] < 2004 && KNEE[1] > 2004);
+  /* the pace that fits the chips is about two years, and Moore's first guess (every year) does not */
+  const miss = e => Math.max(...CHIPS.map(([y, n]) => Math.abs(Math.log2(rule(y, e) / n))));
+  assert.ok(miss(2) < 3, 'two years keeps every named chip within a few doublings'); assert.ok(miss(1) > 20, 'every year misses by far');
+});
+
+test('every era, challenge and chapter has its words; every era its facts', () => {
+  for (const [id, y, facts, href] of ERAS) { for (const k of ['b', 't', 'd']) assert.ok(EN['hd.era.' + id + '.' + k], 'hd.era.' + id + '.' + k); assert.ok(y >= 1971 && y <= 2026); assert.ok(facts.every(f => FACTS.has(f)), id); assert.match(href, /^#\//); }
+  for (const id of CHALS) assert.ok(EN['hd.ch.' + id], 'hd.ch.' + id);
+  assert.equal(new Set(CHALS).size, CHALS.length);
+  for (const s of SERIES) assert.ok(EN['hd.ser.' + s] && EN['hd.ser.' + s + '.u'], s);
+  for (const m of MOMENTS) assert.ok(EN['hd.rail.' + m.id], 'hd.rail.' + m.id);
 });

@@ -2083,6 +2083,90 @@
    "url": "https://arxiv.org/abs/2407.21783",
    "value": "38–43% of peak while training Llama 3 405B",
    "verified": "2026-11-20"
+  },
+  {
+   "id": "moore-1965",
+   "topic": "reality",
+   "detail": "In April 1965 Gordon Moore projected that the components on one chip would double every year, from about 64 to as many as 65,000 by 1975. In 1975 he revised the rate to a doubling every two years.",
+   "kind": "reported",
+   "label": "Moore's first rule, and his second",
+   "source": "Computer History Museum",
+   "status": "new",
+   "url": "https://www.computerhistory.org/storageengine/moore-s-law-prevails-for-50-years/",
+   "value": "Doubling every year (1965), then every two years (1975)",
+   "verified": "2026-11-24"
+  },
+  {
+   "id": "node-years",
+   "topic": "reality",
+   "detail": "Process nodes by year: 20 µm (1968), 10 µm (1971), 6 µm (1974), 3 µm (1977), 1.5 µm (1981), 1 µm (1984), 800 nm (1987), 600 nm (1990), 350 nm (1993), 250 nm (1996), 180 nm (1999), 130 nm (2001), 90 nm (2003), 65 nm (2005), 45 nm (2007), 32 nm (2009), 28 nm (2010), 22 nm (2012), 14 nm (2014), 10 nm (2016), 7 nm (2018), 5 nm (2020), 3 nm (2022), 2 nm (2025).",
+   "kind": "reported",
+   "label": "The generations of chipmaking, by year",
+   "source": "Wikipedia, Semiconductor device fabrication",
+   "status": "new",
+   "url": "https://en.wikipedia.org/wiki/Semiconductor_device_fabrication",
+   "value": "From 10 µm (1971) to 2 nm (2025)",
+   "verified": "2026-11-24"
+  },
+  {
+   "id": "node-names",
+   "topic": "reality",
+   "detail": "Intel's node names matched the transistor's gate length from 10 µm (1972) to 0.35 µm (1995); since about 1997 a node's name is not the size of anything on the chip. The \"3 nm\" generation has a gate pitch of about 48 nm and a metal pitch of about 24 nm.",
+   "kind": "reported",
+   "label": "What a node's name measures",
+   "source": "Wikipedia, 3 nm process (IRDS 2021)",
+   "status": "new",
+   "url": "https://en.wikipedia.org/wiki/3_nm_process",
+   "value": "\"3 nm\": gate pitch about 48 nm, metal pitch about 24 nm",
+   "verified": "2026-11-24"
+  },
+  {
+   "id": "clock-stall",
+   "topic": "reality",
+   "detail": "By 2004 Intel’s fastest desktop chips reached a clock barrier at 3.8 GHz, set by heat and power (130 W); the industry turned to slower chips with two cores on one die.",
+   "kind": "reported",
+   "label": "When the clock stopped climbing",
+   "source": "Wikipedia, Pentium D",
+   "status": "new",
+   "url": "https://en.wikipedia.org/wiki/Pentium_D",
+   "value": "About 3.8 GHz, 2004",
+   "verified": "2026-11-24"
+  },
+  {
+   "id": "dual-core-2005",
+   "topic": "reality",
+   "detail": "Intel's Pentium D and AMD's Athlon 64 X2, the first dual-core desktop processors, both came out in May 2005, because faster clocks were only adding heat.",
+   "kind": "reported",
+   "label": "The first dual-core desktop chips",
+   "source": "Wikipedia, Athlon 64 X2",
+   "status": "new",
+   "url": "https://en.wikipedia.org/wiki/Athlon_64_X2",
+   "value": "May 2005",
+   "verified": "2026-11-24"
+  },
+  {
+   "id": "alexnet-gpu",
+   "topic": "reality",
+   "detail": "AlexNet, which won the ImageNet challenge in 2012, was trained for five to six days on two NVIDIA GTX 580 graphics chips.",
+   "kind": "reported",
+   "label": "Deep learning on graphics chips",
+   "source": "Krizhevsky, Sutskever and Hinton (Communications of the ACM)",
+   "status": "new",
+   "url": "https://cacm.acm.org/research/imagenet-classification-with-deep-convolutional-neural-networks",
+   "value": "Two GTX 580 GPUs, 2012",
+   "verified": "2026-11-24"
+  },
+  {
+   "id": "epyc-chiplets",
+   "topic": "reality",
+   "detail": "AMD's EPYC Rome (2019) puts eight 7 nm compute chiplets of eight cores each around one 14 nm input/output die: nine pieces of silicon, 64 cores, in one package.",
+   "kind": "reported",
+   "label": "A processor made of chiplets",
+   "source": "The Register",
+   "status": "new",
+   "url": "https://www.theregister.com/2019/08/07/amd_rome_epyc_processor_launch/",
+   "value": "Nine dies, 64 cores (2019)",
+   "verified": "2026-11-24"
   }
  ],
  "changes": [
