@@ -151,6 +151,18 @@ export default async function run() {
     const side = await rp.evaluate(() => Math.max(document.documentElement.scrollWidth - innerWidth, (() => { const p = document.querySelector('#page'); return p ? p.scrollWidth - p.clientWidth : 0; })()));
     if (side > 1) problems.push(tag + ': the page scrolls sideways by ' + side + ' px');
     await rp.close(); }
+  /* the way back leads to the page it names (#368): a reading page opened from its address goes back to the map, and
+     the map, opened from there, back to the first page; the map's way back never names the map */
+  { const tag = 'frame back', bp = await browser.newPage({ viewport: { width: 1280, height: 800 } }); bp.on('pageerror', e => problems.push(tag + ': ' + e.message));
+    await bp.addInitScript(() => { try { localStorage.setItem('osl-quality', 'flat'); localStorage.setItem('osl-hints-v1', JSON.stringify({ seen: {}, off: true })); } catch (e) { /* no storage */ } });
+    await bp.goto(base + 'index.html#/w/fail');
+    const first = await bp.waitForFunction(() => { const a = document.querySelector('#page:not([hidden]) .f2back'); return a && location.hash === '#/w/fail' && a.getAttribute('href') === '#/log' ? a.textContent : null; }, null, { timeout: 60000, polling: 1000 })
+      .then(h => h.jsonValue(), () => { problems.push(tag + ': a reading page opened from its address does not lead back to the map'); return null; });
+    const back = await bp.waitForFunction(() => { const a = document.querySelector('#page:not([hidden]) .f2back'); if (a && location.hash === '#/w/fail') a.click();
+      const b = location.hash === '#/log' && document.querySelector('#page:not([hidden]) .f2back'); return b && b.getAttribute('href') === '#/' ? b.textContent : null; }, null, { timeout: 60000, polling: 1000 })
+      .then(h => h.jsonValue(), () => { problems.push(tag + ': the way back does not lead to the map, or the map\'s way back does not lead to the first page'); return null; });
+    if (first && back && first === back) problems.push(tag + ': the map\'s way back names the map: ' + back);
+    await bp.close(); }
   /* the core questions are met on the picture (#303, docs/FRAME13.md): at a level, at most three marks while you look,
      one for every lens that lives there with Ask open, each beside its part; a mark tapped opens its lens alone and
      Put it down closes it; no row of their names anywhere */

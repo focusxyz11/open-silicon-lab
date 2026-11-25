@@ -149,9 +149,12 @@ export function create() {
       /* one line; the way in is zooming in (docs/INTERACTION.md), the card only says so; the levels as small steps */
       const enter = V.enterOf(id);
       const nx = Way.stageOfPlace(id) ? Way.nextPlace(id) : null;
+      /* a level carried here along the loop (no gate at the Lab): the next in a chip's life is that level at the next stage */
+      const ca = V.alongCarry && V.alongCarry.at === location.hash ? V.alongCarry : null, held = ca && Way.alongStep(Way.carried(Way.whereOf('#/place/' + id), ca), 1);
+      const heldChip = held && held.to && !held.to.startsWith('#/place/') ? '<a class="chipb" data-key="next" href="' + esc(held.to) + '">' + esc(t('around.carry.' + held.stage, { level: t('depth.' + ca.level + '.name') })) + '</a>' : '';
       h += '<p class="line">' + esc(t('map.' + id + '.d')) + '</p>' +
         (enter ? '<div class="zoomhint"><button type="button" class="igo" data-deeper><span class="wia" aria-hidden="true">↓</span><span class="wit"><span class="wik">' + esc(t('frame.in.k')) + '</span><b>' + esc(t('map.' + id + '.t')) + '</b></span></button><span class="small muted">' + esc(t(V.PARTS[id] ? 'zoom.open' : 'zoom.place')) + '</span></div>' : '') +
-        V.aroundHtml(id, nx) +
+        (heldChip ? V.aroundHtml(id, null).replace('<div class="chips">', '<div class="chips">' + heldChip) : V.aroundHtml(id, nx)) +
         /* What if?: the levers that sit on this island, each a way to see the change it makes cross the sea */
         WF_LEVERS.filter(l => l.place === id).map(l => '<a class="look wfgo" href="#/whatif/' + l.id + '"><b>' + esc(t('whatif.ui.go', { lever: t('whatif.lever.' + l.id + '.t') })) + '</b><span class="small">' + esc(t('whatif.lever.' + l.id + '.d')) + '</span></a>').join('') +
         /* where the loop starts there are two ways in: what someone needs, and what has just become possible */

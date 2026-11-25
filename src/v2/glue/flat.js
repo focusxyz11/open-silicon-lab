@@ -211,7 +211,7 @@ export function create() {
     const [ar0, ar1] = V.flatKind === 'dive' ? ['↑ ', '↓ '] : ['← ', '→ '], nm = d => t('depth.' + d + '.name');
     /* along (the line, the studio): the next step is marked data-along, and the frame shows it on the picture too */
     const al = V.flatKind === 'dive' ? '' : ' data-along';
-    const end = { dive: '<a class="chipb" href="#/island">' + esc(t('chipx.back')) + '</a>', line: '<a class="chipb" data-along href="#/place/port">' + esc(t('line.end')) + '</a>', bench: '<a class="chipb" data-along href="#/line/print">' + esc(t('bench.toFab')) + '</a>' }[V.flatKind];
+    const end = { dive: '<a class="chipb" href="#/island">' + esc(t('chipx.back')) + '</a>', line: '<a class="chipb" data-key="next" data-along href="#/place/port">' + esc(t('line.end')) + '</a>', bench: '<a class="chipb" data-key="next" data-along href="#/line/print">' + esc(t('bench.toFab')) + '</a>' }[V.flatKind];
     /* on the line, a station with an inside: the way into it (the machine, or what it makes), on the picture as Go inside */
     const dv = V.flatKind === 'line' && (DiveData.DIVES[id] || [])[0], inName = dv && (dv[1] === 'scanner' ? cap1(t('part.' + DiveData.partWord(id, DiveData.DIVE_PART[id]))) : nm(dv[1])),
       inHtml = dv ? '<a class="chipb" data-in data-inname="' + esc(inName) + '" href="' + esc(lineIn(id)) + '">↓ ' + esc(inName) + '</a>' : '';

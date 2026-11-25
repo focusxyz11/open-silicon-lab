@@ -26,7 +26,7 @@ export function create() {
     const sp = lv ? studioCorner(id).screen.part : null, pw = sp ? t('part.' + VIEW_PARTS.studio[sp]) : '';
     V.swFrame.dock.innerHTML = V.lineHtml(t('room.title') + (lv ? ' · ' + nm(id) : ''), t('room.' + id + '.d'), lv ? stopsAt(id)[0] : null, V.aroundRow(
       lv > 1 ? '<button type="button" class="chipb" data-key="back" data-swgo="' + (lv - 1) + '">← ' + esc(nm(SW.STOPS[lv - 1])) + '</button>' : '',
-      last ? '<a class="chipb" data-along href="#/line/print">' + esc(t('bench.toFab')) + '</a>' : '<button type="button" class="chipb" data-key="next" data-along data-swgo="' + (lv + 1) + '">→ ' + esc(nm(SW.STOPS[lv + 1])) + '</button>',
+      last ? '<a class="chipb" data-key="next" data-along href="#/line/print">' + esc(t('bench.toFab')) + '</a>' : '<button type="button" class="chipb" data-key="next" data-along data-swgo="' + (lv + 1) + '">→ ' + esc(nm(SW.STOPS[lv + 1])) + '</button>',
       lv ? '<a class="chipb" data-in data-swin data-inname="' + esc(pw) + '" href="#/bench/' + id + '">↓ ' + esc(pw) + '</a>' : ''));
     /* what this corner's screen is, from its one home in the atlas */
     if (sp) V.swFrame.dock.querySelector('.nav').insertAdjacentHTML('beforebegin', '<div class="herebox"><p class="kicker">' + esc(t('place.here')) + '</p><ul class="here2"><li><button type="button" data-swin><b>' + esc(pw) + '</b><span>' + esc(t('what.' + VIEW_PARTS.studio[sp])) + '</span></button></li></ul></div>');

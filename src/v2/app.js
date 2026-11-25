@@ -178,7 +178,8 @@ export function start() {
   /* the address of what is in view now: moving inside a view (deeper, along the line) changes it too */
   const liveHash = () => !vui.hidden && V.flatKind !== 'supply' && V.WE && V.diveD >= 0 && diveId() ? (V.flatKind === 'dive' ? '#/dive/' + diveId() + (V.diveWorld !== 'datacentre' ? '/' + V.diveWorld : '') : '#/' + V.flatKind + '/' + diveId())
     : !cui.hidden ? '#/chip/' + V.chipRow + '/build' : !pui.hidden ? '#/place/datacentre/' + V.dcLv : !fui.hidden ? '#/place/phones/' + V.phLv : !kui.hidden ? '#/place/cars/' + V.caLv : !sui.hidden ? '#/place/studio/' + V.swLv : location.hash;
-  const whereNow = () => { const k = partsOf(location.hash)[0], W = Way.whereOf(k === 'ask' || k === 'do' || k === 'supply' ? location.hash : liveHash()); return W.view === 'island' && V.cur && !sheet.hidden ? Way.whereOf('#/place/' + V.cur.place) : W; };
+  /* a level dropped along at a stage where it does not exist (no gate at the Lab) is carried while you stay there (Way.carryOf) */
+  const whereNow = () => { const k = partsOf(location.hash)[0], W0 = Way.whereOf(k === 'ask' || k === 'do' || k === 'supply' ? location.hash : liveHash()), W = W0.view === 'island' && V.cur && !sheet.hidden ? Way.whereOf('#/place/' + V.cur.place) : W0; if (V.alongCarry && V.alongCarry.at !== location.hash) V.alongCarry = null; return Way.carried(W, V.alongCarry); };
   /* the address always says where you are (so it can be shared, and a reload comes back here), and the loop in the
      bar follows: walking the line from the wires to the test house to the port, the stage lit moves with you */
   const here = () => { const h = liveHash(), p = partsOf(location.hash), k = p[0];
@@ -192,7 +193,7 @@ export function start() {
     $('breakbtn').setAttribute('aria-label', t('break.btn')); $('breakbtn').title = t('break.btn');
   }
   function along(stage) {
-    const W = whereNow(), to = Way.alongTo(W, stage); if (!to) return;
+    const W = whereNow(), to = Way.alongTo(W, stage), c = to && Way.carryOf(W, to); if (!to) return; V.alongCarry = c ? { at: to, level: c } : null;
     V.nextMove = 'along'; clearTimeout(V.turnT); V.turnT = setTimeout(() => { V.nextMove = null; }, 400);
     if (!to.startsWith('#/place/')) toast(t('loop.same', { as: t('loop.as.' + stage) }));
     if (location.hash === to) route(); else location.hash = to;
@@ -549,7 +550,7 @@ export function start() {
       const out = host.querySelector('.dock [data-out]'); if (out) { out.click(); e.preventDefault(); return; }
       const up = host.querySelector('.homebtn'); if (up) { location.hash = up.getAttribute('href'); e.preventDefault(); } return; }
     if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
-    if (column) { const i = Way.STAGES.indexOf(W.stage), n = Way.STAGES.length; along(Way.STAGES[(i + (e.key === 'ArrowRight' ? 1 : n - 1)) % n]); e.preventDefault(); return; }
+    if (column || W.carry) { along(Way.alongStep(W, e.key === 'ArrowRight' ? 1 : -1).stage); e.preventDefault(); return; }
     if (host === sheet && e.key === 'ArrowLeft' && V.cur) { const st = Way.stageOfPlace(V.cur.place), prev = st && Object.values(Way.STAGE_PLACE).find(p => Way.nextPlace(p) === Way.STAGE_PLACE[st]); if (prev) { location.hash = '#/place/' + prev; e.preventDefault(); } return; }
     const b = host.querySelector((host === sheet ? '' : '.dock ') + '[data-key="' + (e.key === 'ArrowRight' ? 'next' : 'back') + '"]');
     if (b) { b.click(); e.preventDefault(); }

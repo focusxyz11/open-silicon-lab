@@ -15,8 +15,9 @@
 import { t, needWords, preloadWords, hasWords } from '../core/i18n.js';
 import { CLOCKS, SIDES, LOADS, REUSES, MEMS, GENS, x2 } from '../engines/chip.js';
 import { MISSIONS, MARGINS, PROTECT, normalLife } from '../engines/life.js';
-import { TAPS, turnGate, hasPiece, togglePiece, checkDesign, checkChip, checkLife, chipGoal, starter, ownStarter, aiProposal, spotCase, spotCode, spotAnswer, SPOT, STEPS, next, INSIDE, challengeOf, GAUGES, gauge, world, opensOf, askHref } from './game.js';
+import { TAPS, turnGate, hasPiece, togglePiece, checkDesign, checkChip, checkLife, chipGoal, starter, ownStarter, aiProposal, spotCase, spotCode, spotAnswer, SPOT, next, INSIDE, challengeOf, GAUGES, gauge, world, opensOf, askHref } from './game.js';
 import { runCase } from '../engines/ledger.js';
+import { STAGES, stageOfChallenge } from '../engines/way.js';
 import { projectOf, patterns as testOf } from '../engines/design.js';
 import { signHtml, signOf, keep, refusal, slipHtml, slipClick, draftOf } from './commons.js';
 import { build } from '../engines/design.js';
@@ -77,11 +78,13 @@ export function play(el, ch, ctx) {
   const TC = ch.kind === 'design' && TAPS[ch.id], TAP = !!TC;
   if (TAP) view.B = checkDesign(ch.p, S.codes[ch.p] != null ? S.codes[ch.p] : starter(ch.p));
   const head = () => '<button type="button" class="back" data-back>' + esc(t('game.back')) + '</button>' +
-    '<p class="kicker">' + esc(ch.step ? t('game.stepN', { n: STEPS.indexOf(ch.step) + 1, step: t('game.step.' + ch.step) }) + ' · ' + t('map.' + ch.place + '.t') : t(ch.kind === 'break' ? 'game.break.kicker' : 'game.jobKicker')) + '</p>' +
+    '<p class="kicker">' + esc(ch.step ? stageK() + ' · ' + t('map.' + ch.place + '.t') : t(ch.kind === 'break' ? 'game.break.kicker' : 'game.jobKicker')) + '</p>' +
     where() + '<h3 class="ch-t">' + esc(titleOf(ch)) + '</h3>' +
     /* how true the lab is: one mark, tapped for what it means here (#325, src/data/fidelity.js) */
     '<p class="fidrow">' + fidMark(labFid(ch)) + '</p><p class="goal">' + esc(goalOf(ch)) + '</p>' +
     (ch.kind !== 'break' && (ch.kind !== 'design' || !ch.need) && !(ch.id === 'half' && !view.write) ? '<p class="small muted why">' + esc(t('game.ch.' + ch.id + '.why')) + '</p>' : '');
+  /* the stage it is played at, named as the bar names the stage it lights (the Lab's challenges are at Open) */
+  const stageK = () => { const st = stageOfChallenge(ch) || ch.step; return t('game.stepN', { n: STAGES.indexOf(st), step: t('loop.stage.' + st) }); };
   /* where it happens: the place, and its levels with this one lit */
   const where = () => { const place = ch.need ? 'studio' : ch.place, at = ch.kind === 'break' ? 'check' : ch.need ? 'logic' : ch.at, L = INSIDE[place] || [];
     return L.length > 1 ? '<ol class="levels" aria-label="' + esc(t('map.' + place + '.t')) + '">' + L.map(l => '<li' + (l.depth === at ? ' class="on" aria-current="step"' : '') + '>' + esc(t('depth.' + l.depth + '.name')) + '</li>').join('') + '</ol>' : ''; };

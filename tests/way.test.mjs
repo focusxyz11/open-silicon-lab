@@ -146,3 +146,50 @@ test('the studio walked inside is the same row of steps: outside holds nothing, 
   /* and along from any corner lands in the stage asked */
   for (let i = 0; i <= 6; i++) for (const s of STAGES) { const W = whereOf('#/place/studio/' + i), to = alongTo(W, s); if (to) assert.equal(whereOf(to).stage, s, i + ' → ' + s); }
 });
+
+test('along keeps the level round the loop: dropped at Open, where it does not exist, it is picked up at the next stage that has it', async () => {
+  const { alongStep, carryOf } = await import('../src/engines/way.js');
+  /* the keys' walk: each → from where the last one landed, carrying what it carries */
+  const walk = (h, dir, n) => { let W = whereOf(h); const to = [];
+    for (let i = 0; i < n; i++) { const s = alongStep(W, dir); to.push(s.to); W = Object.assign(whereOf(s.to), s.carry ? { carry: s.carry } : {}); }
+    return to; };
+  /* Use → Open (the Lab: no gate there) → Design: the gate as you designed it */
+  assert.deepEqual(walk('#/dive/gate', 1, 2), ['#/place/lab', '#/bench/gates']);
+  assert.equal(carryOf(whereOf('#/dive/gate'), '#/place/lab'), 'gate');
+  /* and back again: ← from the Lab returns to the gate in use */
+  assert.equal(alongTo(Object.assign(whereOf('#/place/lab'), { carry: 'gate' }), 'use'), '#/dive/gate');
+  /* the gate as printed, past the test house and the port (no gate at either), comes back to the gate in use */
+  assert.deepEqual(walk('#/chip/2/build', 1, 3), ['#/place/test', '#/place/port', '#/dive/gate']);
+  /* every level with a twin goes the whole way round and comes back to itself, held wherever it exists */
+  for (const tw of TWINS) { const round = walk('#/dive/' + tw.used, 1, STAGES.length);
+    assert.equal(round.at(-1), '#/dive/' + tw.used, tw.used + ' round the loop: ' + round.join(' → '));
+    if (tw.designed) assert.ok(round.includes('#/bench/' + tw.designed), tw.used + ' is not met as designed'); }
+  /* a move that lands on a level carries nothing (the address says it), and a step that shows none has nothing to carry */
+  assert.equal(carryOf(whereOf('#/dive/gate'), '#/bench/gates'), null);
+  assert.equal(carryOf(whereOf('#/bench/check'), '#/place/fab'), null);
+  /* without a level carried, the island's places go round the places, as before */
+  assert.equal(alongTo(whereOf('#/place/lab'), 'design'), '#/place/studio');
+});
+
+test('every challenge\'s card names the stage the bar lights while it is played', async () => {
+  const { stageOfChallenge } = await import('../src/engines/way.js'), { readFileSync } = await import('node:fs');
+  for (const c of CHALLENGES) { if (!c.step) continue;
+    const st = stageOfChallenge(c), bar = whereOf('#/do/' + encodeURIComponent(c.id)).stage;
+    assert.ok(STAGES.includes(st), c.id + ' is played at no stage'); assert.equal(st, bar, c.id);
+    /* and it counts in the bar under the same stage; the Lab's challenges, at Open (which has no count), count for Design */
+    if (st === 'open') { assert.equal(c.place, 'lab', c.id); assert.equal(c.step, 'design', c.id); } else assert.equal(c.step, st, c.id + ' counts under ' + c.step + ' but is played at ' + st); }
+  /* the card reads the stage from there, not from the step it counts under */
+  assert.match(readFileSync(new URL('../src/v2/play.js', import.meta.url), 'utf8'), /stageOfChallenge\(ch\)/);
+});
+
+test('the way back from a reading page leads to the page it names, and never names the page you are on', async () => {
+  const { useTexts } = await import('../src/core/i18n.js'); useTexts(readWords());
+  const { backOf, nameOf } = await import('../src/v2/frame2.js');
+  /* opened from the address: a page goes back to the map, the map itself to the first page */
+  assert.equal(backOf('#/w/heat', null, false), '#/log'); assert.equal(nameOf('#/log'), readWords()['frame2.backMap']);
+  for (const h of ['#/log', '#/challenges', '#/questions']) assert.equal(backOf(h, null, false), '#/', h);
+  assert.equal(nameOf('#/'), readWords()['frame2.backFirst']); assert.notEqual(nameOf('#/'), nameOf('#/log'));
+  /* opened from somewhere: back there; opened from the map: back to the map */
+  assert.equal(backOf('#/w/heat', '#/place/fab', false), '#/place/fab'); assert.equal(backOf('#/w/heat', '#/', true), '#/log');
+  assert.equal(backOf('#/log', '#/', false), '#/');
+});

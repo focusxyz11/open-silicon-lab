@@ -1,6 +1,6 @@
 import { S } from './shared.mjs';
 
-export const about = 'the ways on the picture: Go inside on the island, along and in on the line, one way down through a chip (the stack is Make, along from the dive), the phone\'s peek and swipe';
+export const about = 'the ways on the picture: Go inside on the island, along and in on the line, one way down through a chip (the stack is Make, along from the dive), the phone\'s peek and swipe, along round the loop keeping the level, and → at the end of the line and the studio';
 
 export default async function run() {
   const { browser, browser3d, base, problems } = S;
@@ -92,6 +92,25 @@ export default async function run() {
     await sp.waitForFunction(() => location.hash === '#/chip/1/build' && !!document.querySelector('#chipui .rail2 [aria-current][data-rail="block"]') && ((document.querySelector('#loop [aria-current]') || {}).dataset || {}).stage === 'make', null, { timeout: 90000, polling: 1000 })
       .catch(() => problems.push(tag + ': an old address of the stack does not open the block as made, saying Make'));
     await sp.close(); }
+  /* along keeps the level round the loop (#368): → from the dive's gate (Use) wraps round to the Lab (Open), where there
+     is no gate, and says what comes next (the bar underlines Design, the card offers the gate as designed); the next →
+     picks the gate up again in the studio. And → at the end of the line and of the studio goes where Next says */
+  S.at = 'ways round'; { const tag = 'ways round', rp = await browser3d.newPage({ viewport: { width: 1280, height: 800 } }), wait = { timeout: 90000, polling: 2000 };
+    rp.on('pageerror', e => problems.push(tag + ': ' + e.message));
+    await rp.goto(base + 'index.html#/dive/gate');
+    await rp.waitForFunction(() => { if (location.hash === '#/dive/gate' && document.querySelector('#diveui .rail2 [aria-current][data-rail="gate"]')) document.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+      return location.hash === '#/place/lab' && !!document.querySelector('#loop [data-stage="design"].holds') && !!document.querySelector('#sheet:not([hidden]) .around [data-key="next"][href="#/bench/gates"]'); }, null, wait)
+      .catch(() => problems.push(tag + ': → from the dive\'s gate does not wrap round to the Lab with the gate as designed offered next'));
+    await rp.waitForFunction(() => { if (location.hash === '#/place/lab' && document.querySelector('#sheet:not([hidden]) .around [data-key="next"]')) document.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+      return location.hash === '#/bench/gates'; }, null, wait)
+      .catch(() => problems.push(tag + ': → → from the dive\'s gate does not reach the gates as designed (#/bench/gates)'));
+    for (const [from, to] of [['#/line/ship', '#/place/port'], ['#/bench/masks', '#/line/print']]) {
+      await rp.evaluate(h => { location.hash = h; }, from);
+      await rp.waitForFunction(([f, d]) => { const a = document.querySelector('#diveui .dock [data-key="next"]'); if (location.hash === f && a && a.getAttribute('href') === d) document.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+        return location.hash === d; }, [from, to], wait)
+        .catch(() => problems.push(tag + ': → at the end of ' + from + ' does not go where Next says, ' + to));
+    }
+    await rp.close(); }
   /* the dive on a phone: the card rests as a peek, opens when touched and steps aside when the picture is touched; a
      swipe up on the picture goes one level in */
   S.at = 'ways phone'; { const tag = 'ways phone', pp = await browser3d.newPage({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
