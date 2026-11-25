@@ -8,7 +8,7 @@
    not yet, joined by lanes, cables and a plane.
    What you finish grows the island (GROWERS). Drag, pinch or scroll; tap a place.
    World units: 1 = 10 metres. x east, z south, y up. Words: map.<place>.t / .d / .kind. */
-import { THREE, PALETTES, theme, stage, light, mat, metal, glow, glass, box, cyl, group, flat, blob, ribbon, labels, clamp, ease, reduced, rnd } from './kit3d.js';
+import { THREE, PALETTES, theme, stage, light, mat, metal, glow, glass, box, cyl, group, flat, blob, ribbon, labels, clamp, ease, reduced, rnd, shared } from './kit3d.js';
 import { t } from '../core/i18n.js';
 import { STEPS, STATION, GROWTH } from './game.js';
 import { betPowerNow } from '../app/betscene.js';
@@ -683,7 +683,7 @@ export function createMap(canvas, host, on = {}) {
     const poi = 'report:' + r.href; poiMark(b, poi); poiLabel(b, 1.9, '⚑', 'report' + (r.draft ? ' draft' : ''), poi, t('map.reported', { say: t('report.say.' + r.say), words: r.words })); };
   function squares(st) {
     const sig = JSON.stringify([st.square, (st.asks || []).map(a => [a.q, a.work, a.at, a.draft]), (st.wanted || []).length, (st.reports || []).map(r => [r.id, r.draft])]); if (sig === squareSig) return false; squareSig = sig;
-    while (squaresG.children.length) squaresG.remove(squaresG.children[0]); while (stakesG.children.length) stakesG.remove(stakesG.children[0]);
+    const old = takeOut(squaresG, stakesG);
     poiLabels.forEach(lb => { lb.el.remove(); const i = L.list.indexOf(lb); if (i >= 0) L.list.splice(i, 1); }); poiLabels = []; poiPick.length = 0;
     for (let i = pulses.length - 1; i >= 0; i--) if (pulses[i].userData.square) pulses.splice(i, 1);
     Object.entries(SQUARE).forEach(([pl, at]) => {
@@ -702,7 +702,7 @@ export function createMap(canvas, host, on = {}) {
       box(sg, 0.1, 1.6, 0.1, mat(night ? 0x8a7a63 : 0xb59a72), 0, 0, 0, 0.02); box(sg, 0.55, 0.32, 0.03, mat(new THREE.Color().setHSL(w.hue / 360, 0.5, night ? 0.45 : 0.55).getHex(), { roughness: 0.7 }), 0.3, 1.2, 0, 0.01, { cast: false }); });
     if (W.length) { const pts = [[-6, -2.8 - rows * 0.6], [7.4, -2.8 - rows * 0.6], [7.4, -1 + (rows - 1) * 2.4 - rows * 0.6 + 0.8], [-6, -1 + (rows - 1) * 2.4 - rows * 0.6 + 0.8]];
       const line = new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints(pts.map(([x, z]) => new THREE.Vector3(x, 0.55, z))), new THREE.LineBasicMaterial({ color: night ? 0xcfc2a8 : 0x7c6a52 })); stakesG.add(line); }
-    return true;
+    letGo(old); return true;
   }
 
   /* ---- what grows: one builder per growth (src/v2/game.js GROWTH); each starts hidden and grows in. The loop's own are
@@ -863,7 +863,7 @@ export function createMap(canvas, host, on = {}) {
       e.classList.toggle('hush', hit); if (!hit) kept.push(r); } };
 
   /* ---- input ---- */
-  const ptrs = new Map(); let downAt = null, moved = 0, pinch0 = null, hover = null, carrying = null, carriedOnce = false;
+  const ptrs = new Map(); let downAt = null, moved = 0, pinch0 = null, hover = null, carrying = null;
   const ray = new THREE.Raycaster(), ndc = new THREE.Vector2(), groundPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
   const toNdc = e => { const r = canvas.getBoundingClientRect(); ndc.set((e.clientX - r.left) / r.width * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1); };
   const ground = e => { toNdc(e); ray.setFromCamera(ndc, camera); const p = new THREE.Vector3(); return ray.ray.intersectPlane(groundPlane, p) ? p : null; };
@@ -887,9 +887,9 @@ export function createMap(canvas, host, on = {}) {
   const MAXD = innerWidth > 720 ? 1100 : 1400;
   canvas.addEventListener('pointerdown', e => { canvas.setPointerCapture(e.pointerId);
     /* your chip is picked up and carried (docs/INTERACTION.md, "Carry your chip") */
-    { const h0 = ptrs.size ? null : pickAt(e); if (h0 && h0.token) { carrying = { id: e.pointerId, over: null }; fly = null; follow = null; canvas.style.cursor = 'grabbing'; on.interact && on.interact(); return; } } if (follow) { follow = null; on.unfollow && on.unfollow(); } ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY, g: ground(e) }); downAt = { x: e.clientX, y: e.clientY }; moved = 0; fly = null; if (ptrs.size === 2) { const [a, b] = [...ptrs.values()]; pinch0 = { dist: Math.hypot(a.x - b.x, a.y - b.y), d: cam.d }; } on.interact && on.interact(); });
+    { const h0 = ptrs.size ? null : pickAt(e); if (h0 && h0.token) { carrying = { id: e.pointerId, over: null, x: e.clientX, y: e.clientY, moved: 0 }; fly = null; follow = null; canvas.style.cursor = 'grabbing'; on.interact && on.interact(); return; } } if (follow) { follow = null; on.unfollow && on.unfollow(); } ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY, g: ground(e) }); downAt = { x: e.clientX, y: e.clientY }; moved = 0; fly = null; if (ptrs.size === 2) { const [a, b] = [...ptrs.values()]; pinch0 = { dist: Math.hypot(a.x - b.x, a.y - b.y), d: cam.d }; } on.interact && on.interact(); });
   canvas.addEventListener('pointermove', e => {
-    if (carrying && e.pointerId === carrying.id) { const g = ground(e); if (!g) return; tokenGoal.set(g.x, 4, g.z); token.position.x = g.x; token.position.z = g.z;
+    if (carrying && e.pointerId === carrying.id) { carrying.moved += Math.abs(e.clientX - carrying.x) + Math.abs(e.clientY - carrying.y); carrying.x = e.clientX; carrying.y = e.clientY; if (carrying.pin && carrying.moved < 8) return; const g = ground(e); if (!g) return; tokenGoal.set(g.x, 4, g.z); token.position.x = g.x; token.position.z = g.z;
       const over = PLACES.filter(p => !p.far).map(p => [p.id, Math.hypot(p.at[0] - g.x, p.at[1] - g.z)]).filter(([id, d]) => d < (placeAt(id).r || 14)).sort((a, b) => a[1] - b[1])[0];
       const id = over ? over[0] : null; if (id !== carrying.over) { Object.entries(names).forEach(([k, lb]) => lb.el.classList.toggle('drop', k === id)); carrying.over = id; } return; }
     if (!ptrs.size) { const h = pickAt(e), id = h && (h.part ? 'part:' + h.part : h.place || h.q || h.poi || (h.mover && 'mover') || (h.token && 'token')); if (id !== hover) { hover = id; canvas.style.cursor = id === 'token' ? 'grab' : id ? 'pointer' : ''; Object.entries(names).forEach(([k, lb]) => lb.el.classList.toggle('on', k === hover)); Object.entries(toolNames).forEach(([k, lb]) => lb.el.classList.toggle('on', 'part:' + k.split(':')[1] === hover && OPEN[k.split(':')[0]].k > 0.5)); goHover(h); } return; }
@@ -899,10 +899,13 @@ export function createMap(canvas, host, on = {}) {
       if (!pinchDeep && sel && deepAt() && want < deepAt() * 0.8) { pinchDeep = true; deeper(); } return; }
     const g = ground(e); if (g && p.g) { const lim = cam.d > 300 ? 220 : 80; cam.x = clamp(cam.x + p.g.x - g.x, -lim, lim); cam.z = clamp(cam.z + p.g.z - g.z, -lim * 0.7, lim * 0.9); place2(); p.g = ground(e); }
   });
-  const up = e => {
-    if (carrying && e.pointerId === carrying.id) { const id = carrying.over; carrying = null; canvas.style.cursor = ''; Object.values(names).forEach(lb => lb.el.classList.remove('drop'));
-      if (id) { const p = placeAt(id); tokenGoal.set(p.at[0] + 3, 1.2, p.at[1] + 2.4); carriedTo = id; on.carry && on.carry(id); } else tokenGoal.copy(tokenHome); return; }
-    ptrs.delete(e.pointerId); if (ptrs.size < 2) { pinch0 = null; pinchDeep = false; } if (downAt && moved < 8 && !ptrs.size) { const h = pickAt(e); if (h && h.part) on.part && on.part(h.place, h.part); else if (h && h.place) on.place && on.place(h.place); else if (h && h.q) on.question && on.question(h.q); else if (h && h.poi) poiGo(h.poi); else if (h && h.mover) followMover(h.mover); } downAt = null; };
+  /* a release drops your chip where it is over; a cancelled touch (the browser took it) drops nothing and taps nothing;
+     the pin pressed and let go without moving is a plain tap on it, which opens its place */
+  const up = (e, cancel) => {
+    if (carrying && e.pointerId === carrying.id) { const c = carrying, id = cancel ? null : c.over; carrying = null; canvas.style.cursor = ''; Object.values(names).forEach(lb => lb.el.classList.remove('drop'));
+      if (id) { const p = placeAt(id); tokenGoal.set(p.at[0] + 3, 1.2, p.at[1] + 2.4); carriedTo = id; on.carry && on.carry(id); } else tokenGoal.copy(tokenHome);
+      if (!cancel && c.pin && c.moved < 8) on.place && on.place(c.pin); return; }
+    ptrs.delete(e.pointerId); if (ptrs.size < 2) { pinch0 = null; pinchDeep = false; } if (cancel) { downAt = null; return; } if (downAt && moved < 8 && !ptrs.size) { const h = pickAt(e); if (h && h.part) on.part && on.part(h.place, h.part); else if (h && h.place) on.place && on.place(h.place); else if (h && h.q) on.question && on.question(h.q); else if (h && h.poi) poiGo(h.poi); else if (h && h.mover) followMover(h.mover); } downAt = null; };
   /* following something that moves: the camera keeps it in the middle until you take the camera back (a drag, a
      pinch, a scroll) or close its card */
   const followMover = m => { follow = m; fly = null; sel = null; Object.values(OPEN).forEach(O => { O.want = 0; }); on.mover && on.mover(m.call ? { kind: m.ai ? 'agent' : 'person', call: m.call } : { kind: m.kind, lane: m.lane }); };
@@ -912,7 +915,7 @@ export function createMap(canvas, host, on = {}) {
     if (k === 'ch') on.challenge && on.challenge(v); else if (k === 'report') on.report && on.report(v); else if (k === 'ask') on.ask && on.ask(v); else if (k === 'q') on.question && on.question(v); else if (k === 'place') on.place && on.place(v); };
   /* a double tap goes in: into a building (it opens), or deeper into what is already selected */
   canvas.addEventListener('dblclick', e => { const h = pickAt(e); if (!h || !h.place) return; if (sel && sel.place === h.place && (h.part || null) === (sel.part || null) && deepAt()) deeper(); });
-  canvas.addEventListener('pointerup', up); canvas.addEventListener('pointercancel', up);
+  canvas.addEventListener('pointerup', e => up(e, false)); canvas.addEventListener('pointercancel', e => up(e, true));
   canvas.addEventListener('pointerleave', () => { if (ptrs.size) return; hover = null; goHover(null); });
   /* pointing at a place's or a part's name says the same */
   host.addEventListener('pointerover', e => { const b = e.target.closest('[data-place]'); if (b && e.pointerType === 'mouse') goHover({ place: b.dataset.place, part: b.dataset.part || null }); });
@@ -920,14 +923,19 @@ export function createMap(canvas, host, on = {}) {
   canvas.addEventListener('wheel', e => { e.preventDefault(); fly = null; if (follow) follow.near = true;   /* closer or further, still following */ cam.d = clamp(cam.d * Math.exp(e.deltaY * 0.0012), 38, MAXD); on.interact && on.interact();
     /* zooming on into what is selected, past where the camera stops, goes deeper */
     if (e.deltaY < 0 && sel && deepAt() && cam.d <= deepAt() + 0.5) { push += -e.deltaY; if (push > 180) deeper(); } else if (e.deltaY > 0) push = 0; }, { passive: false });
-  /* the name over your chip is a handle too: pressing it picks the chip up */
-  host.addEventListener('pointerdown', e => { if (!e.target.closest('.you')) return; e.preventDefault(); try { canvas.setPointerCapture(e.pointerId); } catch (er) { /* the canvas follows the pointer anyway */ }
-    carrying = { id: e.pointerId, over: null }; carriedOnce = true; fly = null; follow = null; canvas.style.cursor = 'grabbing'; on.interact && on.interact(); });
-  host.addEventListener('click', e => { if (carriedOnce) { carriedOnce = false; return; } const b = e.target.closest('[data-wf],[data-poi],[data-place],[data-q],[data-step],[data-job],[data-entry]'); if (!b) return; if (b.dataset.wf) on.whatif && on.whatif(b.dataset.wf); else if (b.dataset.poi) poiGo(b.dataset.poi); else if (b.dataset.part) on.part && on.part(b.dataset.place, b.dataset.part); else if (b.dataset.entry) on.entry && on.entry(b.dataset.entry); else if (b.dataset.place) on.place && on.place(b.dataset.place); else if (b.dataset.step) on.place && on.place(STATION[b.dataset.step]); else if (b.dataset.job) on.job && on.job(b.dataset.job); else on.question && on.question(b.dataset.q); });
+  /* the pin your chip stands at is a handle too: pressing it picks the chip up (the canvas follows the pointer from
+     there, so its release and a tap on it are read in up(), not as a click here; a key on it is still a click) */
+  host.addEventListener('pointerdown', e => { const pin = e.button === 0 && e.target.closest('.pin3.here'); if (!pin) return; e.preventDefault(); try { canvas.setPointerCapture(e.pointerId); } catch (er) { /* the canvas follows the pointer anyway */ }
+    carrying = { id: e.pointerId, over: null, pin: pin.dataset.place, x: e.clientX, y: e.clientY, moved: 0 }; fly = null; follow = null; canvas.style.cursor = 'grabbing'; on.interact && on.interact(); });
+  host.addEventListener('click', e => { if (e.detail && e.target.closest('.pin3.here')) return; const b = e.target.closest('[data-wf],[data-poi],[data-place],[data-q],[data-step],[data-job],[data-entry]'); if (!b) return; if (b.dataset.wf) on.whatif && on.whatif(b.dataset.wf); else if (b.dataset.poi) poiGo(b.dataset.poi); else if (b.dataset.part) on.part && on.part(b.dataset.place, b.dataset.part); else if (b.dataset.entry) on.entry && on.entry(b.dataset.entry); else if (b.dataset.place) on.place && on.place(b.dataset.place); else if (b.dataset.step) on.place && on.place(STATION[b.dataset.step]); else if (b.dataset.job) on.job && on.job(b.dataset.job); else on.question && on.question(b.dataset.q); });
 
   /* ---- the state: what has grown, the community's pieces, where your chip is ---- */
   const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
   let slotLabels = [], villageSeen = null;
+  /* what is built again (the computer's floors, the village, the squares) lets go of what it was: its shapes and
+     materials leave the graphics card, unless something still standing uses them or kit3d's caches share them */
+  function takeOut(...gs) { const old = new Set(); gs.forEach(g => { g.traverse(o => { if (o === g) return; if (o.geometry) old.add(o.geometry); [].concat(o.material || []).forEach(m => old.add(m)); }); while (g.children.length) g.remove(g.children[0]); }); return old; }
+  function letGo(old) { if (!old.size) return; scene.traverse(o => { if (o.geometry) old.delete(o.geometry); [].concat(o.material || []).forEach(m => old.delete(m)); }); old.forEach(x => { if (!shared(x)) x.dispose(); }); }
   function setState(st, animate) {
     /* your chip's numbers: the columns they move, and the pace of the trucks round the loop (a fuller factory is slower) */
     if (st.chip) { const c = st.chip, fx = { heat: { datacentre: Math.min(1, 0.4 + 0.4 * c.powerBoard) }, fail: { test: Math.min(1, 0.45 + 0.8 * c.late + 1.2 * (1 - c.yield)), fab: Math.min(1, 0.4 + 1.5 * (1 - c.yield)) }, time: { fab: Math.min(1, c.days / 120) } };
@@ -945,7 +953,7 @@ export function createMap(canvas, host, on = {}) {
     const [x, z] = PINS[st.chipAt] || NEED_AT; tokenHome = new THREE.Vector3(x + 3, 1.2, z + 2.4); if (!carriedTo) tokenGoal = tokenHome.clone();
     STOPS6.forEach(s => { const full = !!st.steps[s] && st.steps[s].done === st.steps[s].total; pins[s].el.classList.toggle('full', full); pins[s].el.classList.toggle('here', s === st.chipAt); pins[s].el.innerHTML = (full ? '✓' : '') + (s === st.chipAt ? '<span class="you">' + esc(t('map.yourChip')) + '</span>' : ''); pins[s].el.setAttribute('aria-label', t('loop.at.' + s)); });
     /* the shared computer: a floor for every piece; built, yours (not yet in the plan), open, or waiting for an engine */
-    while (floors.children.length) floors.remove(floors.children[0]);
+    const old = takeOut(floors);
     st.floors.forEach((f, i) => {
       const y = i * 1.6;
       if (f === 'built' || f === 'yours') { box(floors, 9, 1.4, 9, f === 'yours' ? glow(P.accent, night ? 0.9 : 0.5) : mat(P.white), 0, y, 0, 0.15); box(floors, 9.1, 0.3, 9.1, mat(P.slate), 0, y + 1.25, 0, 0.05); for (let k = 0; k < 4; k++) box(floors, 1.6, 0.6, 0.06, winCool, -3 + k * 2, y + 0.4, 4.53, 0.02, { cast: false }); }
@@ -953,7 +961,7 @@ export function createMap(canvas, host, on = {}) {
     });
     names.lab.offset.y = st.floors.length * 1.6 + 4;
     /* the village: a workshop for each community design, a plot for each open job, a sign for each engine wanted */
-    while (slotsG.children.length) slotsG.remove(slotsG.children[0]);
+    takeOut(slotsG).forEach(x => old.add(x));
     slotLabels.forEach(lb => { lb.el.remove(); const i = L.list.indexOf(lb); if (i >= 0) L.list.splice(i, 1); }); slotLabels = [];
     /* a design stands as a workshop: lit while it holds a record, dark once another beats it, its roof grey and a red
        lamp beside it when a case has broken it; one of yours that is not in the ledger yet is only its outline */
@@ -991,7 +999,9 @@ export function createMap(canvas, host, on = {}) {
     });
     villageSeen = seenNow;
     if (squares(st) || grew) pickable();
-    walk(st);
+    const walked = walk(st); letGo(old);
+    /* under a lens, what was built or set out just now drains like the rest */
+    if (lensMats) { if (walked) [W3.body, W3.head].forEach(m => m.instanceColor && lensKeep(m.instanceColor)); lensTake(); lensPaint(lensK); }
   }
   /* ---- the pull, walking (docs/INTERACTION.md, "What calls"): what is open pulls attention, read from the traces
      alone (src/engines/ledger.js, frontier), and the island shows it as figures setting out from the Lab for where the
@@ -1025,7 +1035,7 @@ export function createMap(canvas, host, on = {}) {
   const flightTo = T => { const a = new THREE.Vector3(PORT_AT[0], 3, PORT_AT[1]), b = new THREE.Vector3(T[0], 2.4, T[1]), m = a.clone().lerp(b, 0.5); m.y = 9 + a.distanceTo(b) * 0.06; return new THREE.QuadraticBezierCurve3(a, m, b); };
   function walk(st) {
     const pull = st.pull || [], sig = JSON.stringify([pull.map(f => [f.kind, f.key, f.at, Math.round(f.pull)]), st.aiShare, st.designs.length, st.jobList.length]);
-    if (sig === walkSig) return; walkSig = sig;
+    if (sig === walkSig) return false; walkSig = sig;
     /* where each call stands: a workshop or a plot of the village, or a place's square */
     const vIdx = f => { const D = st.designs.findIndex(d => d.id === f.key); if (f.kind === 'break' && D >= 0) return D; const J = st.jobList.findIndex(j => j.need === f.key); if (J >= 0) return st.designs.length + J; const E = st.engineList.findIndex(e => e.need === f.key); return E >= 0 ? st.designs.length + st.jobList.length + E : -1; };
     const at = f => { if (['break', 'build', 'engine'].includes(f.kind)) { const i = vIdx(f); if (i >= 0 && i < SLOTS.length) { const [sx, sz] = SLOT(i), v = placeAt('village').at; return [v[0] + sx, v[1] + sz + 2.6]; } }
@@ -1044,6 +1054,7 @@ export function createMap(canvas, host, on = {}) {
     walkers.forEach((w, i) => { if (!w.ai) { W3.body.setColorAt(p, C2.setHex(w.col)); W3.head.setColorAt(p, C2.setHex(SKIN[i % 4])); w.slot = p++; } });
     W3.legs.count = W3.body.count = W3.head.count = p; W3.drone.count = W3.eye.count = walkers.filter(w => w.ai).length; let q = 0; walkers.forEach(w => { if (w.ai) w.slot = q++; });
     [W3.body, W3.head].forEach(m => { if (m.instanceColor) m.instanceColor.needsUpdate = true; });
+    return true;
   }
   const WP = new THREE.Vector3(), WT = new THREE.Vector3(), WQ = new THREE.Quaternion(), WS = new THREE.Vector3(1, 1, 1), WM = new THREE.Matrix4(), WUP = new THREE.Vector3(0, 1, 0);
   function walkFrame(dt, tm) {
@@ -1082,19 +1093,29 @@ export function createMap(canvas, host, on = {}) {
   const discG = new THREE.CircleGeometry(1, 40); discG.rotateX(-Math.PI / 2);
   /* your chip's own numbers move the columns where it is made, tested and used (src/engines/chip.js, model) */
   let chipFx = null;
-  let lens = 'look', lensK = 0, colK = 0, lensWant = 0, lensMats = null, lensCols = [], lensArrs = null;
-  const lensSave = () => { if (lensMats) return; const seen = new Set(); lensMats = [];
-    /* colours kept per vertex (the ground) or per copy (the trees) drain too */
-    lensArrs = []; scene.traverse(o => { if (!o.isMesh || o.userData.lens) return; const a = o.isInstancedMesh ? o.instanceColor : o.geometry && o.geometry.attributes.color; if (a && a.array.length > 2) lensArrs.push({ a, c: a.array.slice() }); });
-    scene.traverse(o => { if (!o.isMesh || o.parent === lensG || o.userData.lens) return; (Array.isArray(o.material) ? o.material : [o.material]).forEach(m => { if (!m || seen.has(m) || !m.color) return; seen.add(m); lensMats.push({ m, c: m.color.clone(), e: m.emissiveIntensity }); }); }); };
+  let lens = 'look', lensK = 0, colK = 0, lensWant = 0, lensMats = null, lensCols = [], lensArrs = null, lensBack = 'look';
+  /* what a lens drains, with its own colours kept to come back to: every material, and the colours kept per vertex (the
+     ground) or per copy (the trees, the figures). What appears while a lens is on (a growth, a workshop) is taken as it
+     is when it appears; what has gone is given its colours back (a cached material may be used again) and let go */
+  const lensTake = () => { const ms = new Set(), as = new Set(); if (!lensMats) { lensMats = []; lensArrs = []; }
+    scene.traverse(o => { if (!o.isMesh || o.parent === lensG || o.userData.lens) return; const a = o.isInstancedMesh ? o.instanceColor : o.geometry && o.geometry.attributes.color; if (a && a.array.length > 2) as.add(a);
+      [].concat(o.material || []).forEach(m => { if (m.color) ms.add(m); }); });
+    lensMats = lensMats.filter(x => { if (ms.delete(x.m)) return true; x.m.color.copy(x.c); if (x.e != null) x.m.emissiveIntensity = x.e; return false; }); ms.forEach(m => lensMats.push({ m, c: m.color.clone(), e: m.emissiveIntensity }));
+    lensArrs = lensArrs.filter(x => as.delete(x.a)); as.forEach(a => lensArrs.push({ a, c: a.array.slice() })); };
+  /* colours written again while a lens is on (the figures, when they set out for a new call) are their own colours now */
+  const lensKeep = a => { const x = (lensArrs || []).find(y => y.a === a); if (x) x.c = a.array.slice(); };
+  /* the lens columns' materials are their own: they go with them */
+  const colsClear = () => { lensCols.forEach(c => { lensG.remove(c.mesh, c.disc); c.mesh.material.dispose(); c.disc.material.dispose(); }); lensCols = []; };
   const GREY = new THREE.Color();
   const lensPaint = k => { if (!lensMats) return; lensMats.forEach(({ m, c, e }) => { const l = 0.2126 * c.r + 0.7152 * c.g + 0.0722 * c.b; GREY.setRGB(l * 0.9 + 0.08, l * 0.9 + 0.09, l * 0.9 + 0.1); m.color.copy(c).lerp(GREY, 0.82 * k); if (e != null) m.emissiveIntensity = e * (1 - 0.7 * k); });
     (lensArrs || []).forEach(({ a, c }) => { const A = a.array, w = 0.8 * k; for (let i = 0; i < A.length; i += 3) { const l = (0.2126 * c[i] + 0.7152 * c[i + 1] + 0.0722 * c[i + 2]) * 0.92 + 0.06; A[i] = c[i] + (l - c[i]) * w; A[i + 1] = c[i + 1] + (l - c[i + 1]) * w; A[i + 2] = c[i + 2] + (l + 0.01 - c[i + 2]) * w; } a.needsUpdate = true; });
     lensCols.forEach(c => { const q = Math.min(k, colK); c.mesh.scale.set(c.r, Math.max(0.01, c.h * q), c.r); c.disc.material.opacity = 0.55 * q; c.mesh.material.opacity = 0.42 * q; });
     lanes.forEach(ln => { ln.m.material.opacity = (night ? 0.45 : 0.55) * (1 - k) + (lens === 'flow' ? 1 : 0.2) * k; }); };
   function setLens(name) {
-    lens = name || 'look'; lensWant = lens === 'look' ? 0 : 1; if (lensWant) lensSave();
-    lensCols.forEach(c => { lensG.remove(c.mesh); lensG.remove(c.disc); }); lensCols = [];
+    lens = name || 'look'; lensWant = lens === 'look' ? 0 : 1; if (lensWant && !lensMats) lensTake();
+    /* whoever turned it, the lens bar is told which lens is on (src/v2/glue/island.js) */
+    host.dispatchEvent(new CustomEvent('lens', { detail: lens }));
+    colsClear();
     const V = LENS_VAL[lens] && Object.assign({}, LENS_VAL[lens], (chipFx || {})[lens] || {}); if (!V) return;
     const [lo, hi] = LENS_COL[lens];
     Object.entries(V).forEach(([id, v]) => { const p = placeAt(id); if (!p) return; const col = new THREE.Color(lo).lerp(new THREE.Color(hi), v), r = p.far ? 14 : Math.min(9, (p.r || 9) * 0.55);
@@ -1113,10 +1134,10 @@ export function createMap(canvas, host, on = {}) {
     flashes.push({ m, c: new THREE.QuadraticBezierCurve3(A, M, B), t: -i * 0.25, to: B, color: color || P.accent }); }); }
   function rippleFrame(dt) { for (let i = flashes.length - 1; i >= 0; i--) { const r = flashes[i]; r.t += dt / 1.3;
       if (!r.ring && r.t >= 0) { r.c.getPointAt(Math.min(1, r.t), r.m.position); }
-      if (!r.ring && r.t >= 1) { scene.remove(r.m); r.ring = new THREE.Mesh(ringG, new THREE.MeshBasicMaterial({ color: r.color, transparent: true, opacity: 0.9, depthWrite: false, side: THREE.DoubleSide })); r.ring.position.set(r.to.x, 0.4, r.to.z); r.ring.userData.lens = true; scene.add(r.ring); r.t0 = r.t; }
-      if (r.ring) { const k = (r.t - r.t0) / 0.9; r.ring.scale.setScalar(2 + k * 16); r.ring.material.opacity = 0.9 * (1 - k); if (k >= 1) { scene.remove(r.ring); flashes.splice(i, 1); } } } }
+      if (!r.ring && r.t >= 1) { scene.remove(r.m); r.m.material.dispose(); r.ring = new THREE.Mesh(ringG, new THREE.MeshBasicMaterial({ color: r.color, transparent: true, opacity: 0.9, depthWrite: false, side: THREE.DoubleSide })); r.ring.position.set(r.to.x, 0.4, r.to.z); r.ring.userData.lens = true; scene.add(r.ring); r.t0 = r.t; }
+      if (r.ring) { const k = (r.t - r.t0) / 0.9; r.ring.scale.setScalar(2 + k * 16); r.ring.material.opacity = 0.9 * (1 - k); if (k >= 1) { scene.remove(r.ring); r.ring.material.dispose(); flashes.splice(i, 1); } } } }
   function lensFrame(dt) { rippleFrame(dt); whatifFrame(dt); const k0 = lensK, c0 = colK; lensK += (lensWant - lensK) * Math.min(1, dt * 3); colK += (lensWant - colK) * Math.min(1, dt * 2.2); if (Math.abs(lensK - k0) > 1e-4 || Math.abs(colK - c0) > 1e-4) lensPaint(lensK);
-    if (!lensWant && lensK < 0.002 && lensMats) { lensPaint(0); lensMats = null; lensArrs = null; lensCols.forEach(c => { lensG.remove(c.mesh); lensG.remove(c.disc); }); lensCols = []; } }
+    if (!lensWant && lensK < 0.002 && lensMats) { lensPaint(0); lensMats = null; lensArrs = null; colsClear(); } }
   /* What if? between the islands (src/engines/ripple.js, src/v2/whatif.js): the world goes grey as under a lens, and
      each island the levers reach raises a column, warm where a thing rises and cool where it falls, as tall as the
      change (on a scale of tens); a tag over it says the island's largest change. When a lever moves, a light flies
@@ -1126,8 +1147,9 @@ export function createMap(canvas, host, on = {}) {
     wfTags.forEach(T => { T.el.remove(); const i = L.list.indexOf(T); if (i >= 0) L.list.splice(i, 1); }); wfTags = []; };
   function whatif(state) {
     const on = !!state; host.classList.toggle('whatif', on); wfWant = on ? 1 : 0;
-    if (!on) { wfTags.forEach(T => { T.show = false; T.el.style.opacity = '0'; T.el.style.pointerEvents = 'none'; }); if (lens === 'whatif') setLens('look'); return; }
-    if (lens !== 'whatif') setLens('whatif');
+    if (!on) { wfTags.forEach(T => { T.show = false; T.el.style.opacity = '0'; T.el.style.pointerEvents = 'none'; }); if (lens === 'whatif') setLens(lensBack); return; }
+    /* What if? lends the island its own lens; the one you had comes back when it closes */
+    if (lens !== 'whatif') { lensBack = lens; setLens('whatif'); }
     wfClear();
     state.heads.forEach(h => { const p = placeAt(h.place); if (!p) return; const r = p.far ? 9 : 5.5, col = h.up ? P.warm : P.accent;
       const mesh = new THREE.Mesh(colG, new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: 0, depthWrite: false, side: THREE.DoubleSide, blending: night ? THREE.AdditiveBlending : THREE.NormalBlending }));
@@ -1146,10 +1168,10 @@ export function createMap(canvas, host, on = {}) {
     R0.forEach(({ T, r }) => { let dy = 0; for (let n = 0; n < 6; n++) { const hit = placed.find(q => r.left < q.right + 4 && r.right > q.left - 4 && r.top + dy < q.bottom + 3 && r.bottom + dy > q.top - 3); if (!hit) break; dy = hit.bottom + 3 - r.top; }
       if (dy) T.el.style.marginTop = dy.toFixed(0) + 'px'; placed.push({ left: r.left, right: r.right, top: r.top + dy, bottom: r.bottom + dy }); }); }
   /* sparkles where something grew */
-  const sparks = [];
+  const sparks = [], sparkG = new THREE.OctahedronGeometry(0.35);
   function sparkle(g) {
     const p = new THREE.Vector3(); g.getWorldPosition(p);
-    for (let i = 0; i < 26; i++) { const m = new THREE.Mesh(new THREE.OctahedronGeometry(0.35), glow(i % 2 ? P.warm : P.accent, 1.8, { transparent: true })); m.position.copy(p).add(new THREE.Vector3(0, 2, 0)); m.userData.v = new THREE.Vector3((rnd(i, 3) - 0.5) * 14, 6 + rnd(i, 5) * 10, (rnd(i, 7) - 0.5) * 14); m.userData.t = 0; scene.add(m); sparks.push(m); }
+    for (let i = 0; i < 26; i++) { const m = new THREE.Mesh(sparkG, glow(i % 2 ? P.warm : P.accent, 1.8, { transparent: true })); m.userData.lens = true; m.position.copy(p).add(new THREE.Vector3(0, 2, 0)); m.userData.v = new THREE.Vector3((rnd(i, 3) - 0.5) * 14, 6 + rnd(i, 5) * 10, (rnd(i, 7) - 0.5) * 14); m.userData.t = 0; scene.add(m); sparks.push(m); }
   }
 
   /* ---- the loop ---- */

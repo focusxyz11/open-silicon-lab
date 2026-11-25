@@ -35,7 +35,11 @@
    world to everyone, and anyone can replay it.
 
    The words of an entry are its author's own (not in en.json), and are data: checked for length and plain text,
-   never run, never followed. Reasons for a refusal are codes; their words are ledger.no.<code>. */
+   never run, never followed. Reasons for a refusal are codes; their words are ledger.no.<code>.
+
+   Anyone may add an entry, so these checks are the lab's front door: every field is type-checked before it is used,
+   every id is looked up as the table's own key (never a name every object has, like constructor or __proto__), and a
+   bad entry is refused with a reason, never thrown on: settle() goes on with the rest. */
 import TC from './tinychip.js';
 import { build, projectOf } from './design.js';
 import { NEEDS } from '../data/build.js';
@@ -96,6 +100,14 @@ const frontKey = (F, p) => F.plan.map(k => Math.round(p[k] * 10)).join(',');
 /* a report's place: the site's own address, as the bar shows it (#/line/print, #/dive/gate, #/build/record), read
    plainly (a challenge of the community's is #/do/break:<entry> or #/do/job:<piece>) */
 export const PLACE = /^#\/[a-z0-9._:\/-]{0,80}$/;
+/* an entry's field is a key of a table only when it is a string the table holds itself (never an inherited name such
+   as constructor or toString); an object is a plain record, not a list; a date in an id is a day the calendar has
+   (2026-02-31 is not: it is read back through toISOString) */
+const own = (o, k) => typeof k === 'string' && Object.hasOwn(o, k);
+const isObj = x => x !== null && typeof x === 'object' && !Array.isArray(x);
+const realDay = d => { const ms = Date.parse(d + 'T00:00:00Z'); return !isNaN(ms) && new Date(ms).toISOString().slice(0, 10) === d; };
+const known = (W, id) => (own(W.byId, id) ? W.byId[id] : null);
+const word = s => typeof s === 'string' && /^[a-z0-9]{1,24}$/.test(s);
 /* plain words: no markup, no links (a link in free text is how spam pays), nothing a page or an agent could run */
 const plain = (s, min, max) => typeof s === 'string' && s.length >= min && s.length <= max && !/[<>\u0000-\u0008\u000b-\u001f]|https?:|www\./i.test(s);
 const norm = s => String(s || '').replace(/\s+/g, '').toLowerCase();
@@ -124,17 +136,19 @@ export function caseOk(p, seq) {
 /* ---- one entry, checked against everything before it. W: the world so far (made by settle). ---- */
 const no = (reason, more) => Object.assign({ ok: false, reason }, more || {});
 export function checkEntry(e, W) {
-  const m = ID.exec(e.id || ''); if (!m || isNaN(Date.parse(m[1]))) return no('id');
+  if (!isObj(e)) return no('id');
+  const m = typeof e.id === 'string' ? ID.exec(e.id) : null; if (!m || !realDay(m[1])) return no('id');
   if (m[2] !== e.kind || !KINDS.includes(e.kind)) return no('kind');
   if (Object.keys(e).some(k => k !== 'id' && k !== 'draft' && !FIELDS[e.kind].includes(k))) return no('fields');
   if (!plain(e.by, 2, 40)) return no('by');
   if (!MADE.includes(e.made)) return no('made');
   if (!plain(e.ai || '', 0, 300) || ((e.made === 'ai' || e.made === 'both' || e.made === 'program') && !String(e.ai || '').trim())) return no('sayAI');
-  if (W.byId[e.id]) return no('same');
+  if (own(W.byId, e.id)) return no('same');
   /* traces that join the work up: the question this was done for (a stop, or a question someone added), and the
      design this one was built on */
-  if (e.about != null && !STOPS[e.about] && !(W.byId[e.about] && W.byId[e.about].ok && W.byId[e.about].kind === 'question')) return no('about');
-  if (e.from != null && !(W.byId[e.from] && W.byId[e.from].ok && W.byId[e.from].kind === 'design')) return no('from');
+  const A = known(W, e.about), From = known(W, e.from);
+  if (e.about != null && !own(STOPS, e.about) && !(A && A.ok && A.kind === 'question')) return no('about');
+  if (e.from != null && !(From && From.ok && From.kind === 'design')) return no('from');
   if (e.kind === 'design') {
     const n = needOf(e.piece); if (!n || n.engine !== 'logic') return no('piece');
     if (!plain(e.title, 3, 60) || !plain(e.words || '', 0, 300) || typeof e.code !== 'string' || e.code.length > 2000) return no('words');
@@ -150,7 +164,7 @@ export function checkEntry(e, W) {
      words; a person or an AI, once per need under a name. Its facts are how the design treats each person around the
      need (src/engines/thousand.js LEAN): the ledger keeps the choice, and never ranks it */
   if (e.kind === 'try' && e.choice != null) {
-    if (typeof e.choice !== 'string' || !Object.hasOwn(CHOICE_NEEDS, e.choice)) return no('choice');
+    if (!own(CHOICE_NEEDS, e.choice)) return no('choice');
     if (e.of != null || e.cases != null || e.puzzle != null || e.machine != null || e.chef != null || e.front != null || e.plan != null) return no('fields');
     if (e.made !== 'person' && e.made !== 'ai') return no('chooser');
     const d = typeof e.pick === 'string' ? choiceOf(e.choice, e.pick) : null; if (!d) return no('pick');
@@ -161,7 +175,7 @@ export function checkEntry(e, W) {
   if (e.kind === 'try' && e.pick != null) return no('fields');
   /* an attempt at a front: its two controls' values, new among the attempts there; where it lands is the front's model's */
   if (e.kind === 'try' && e.front != null) {
-    const F = typeof e.front === 'string' && Object.hasOwn(FRONTS, e.front) ? FRONTS[e.front] : null; if (!F) return no('front');
+    const F = own(FRONTS, e.front) ? FRONTS[e.front] : null; if (!F) return no('front');
     if (e.of != null || e.cases != null || e.puzzle != null || e.machine != null || e.chef != null) return no('fields');
     if (!plain(e.words || '', 0, 300)) return no('words');
     if (!frontPlanOk(F, e.plan)) return no('plan');
@@ -193,7 +207,7 @@ export function checkEntry(e, W) {
   }
   /* an attempt at a puzzle: a plan the puzzle's engine runs, new among the attempts so far; its facts are the score */
   if (e.kind === 'try' && e.puzzle != null) {
-    const Z = Object.hasOwn(PUZZLES, e.puzzle) ? PUZZLES[e.puzzle] : null; if (!Z) return no('puzzle');
+    const Z = own(PUZZLES, e.puzzle) ? PUZZLES[e.puzzle] : null; if (!Z) return no('puzzle');
     if (e.of != null || e.cases != null) return no('fields');
     if (!plain(e.words || '', 0, 300)) return no('words');
     if (!planOk(e.plan) || problem(Z.job, e.plan)) return no('plan');
@@ -203,18 +217,18 @@ export function checkEntry(e, W) {
   }
   if (e.kind === 'try') {
     if (e.plan != null) return no('fields');
-    const T = W.byId[e.of]; if (!T || T.kind !== 'design' || !T.ok) return no('target');
+    const T = known(W, e.of); if (!T || T.kind !== 'design' || !T.ok) return no('target');
     if (norm(T.by) === norm(e.by)) return no('own');
     if (!plain(e.words || '', 0, 300)) return no('words');
     const p = needOf(T.piece).project;
     if (!projectOf(p).seq) return no('proven');
     if (T.state === 'broken') return no('already');
     if (!Array.isArray(e.cases) || e.cases.length < 1 || e.cases.length > 8 || !e.cases.every(c => caseOk(p, c))) return no('caseForm');
-    if (e.cases.some(c => runCase(p, T.code, c).first >= 0)) return no('breaks');
+    if (e.cases.some(c => { const r = runCase(p, T.code, c); return !r || r.first >= 0; })) return no('breaks');
     return { ok: true, facts: { cases: e.cases.length, ticks: e.cases.reduce((a, c) => a + c.length, 0) } };
   }
   if (e.kind === 'break') {
-    const T = W.byId[e.of]; if (!T || T.kind !== 'design' || !T.ok) return no('target');
+    const T = known(W, e.of); if (!T || T.kind !== 'design' || !T.ok) return no('target');
     if (norm(T.by) === norm(e.by)) return no('own');
     if (!plain(e.words || '', 0, 300)) return no('words');
     const p = needOf(T.piece).project;
@@ -229,7 +243,7 @@ export function checkEntry(e, W) {
   /* a report: a place in the lab, what kind, and words enough to find it again */
   if (e.kind === 'report') {
     if (typeof e.at !== 'string' || !PLACE.test(e.at)) return no('where');
-    if (e.part != null && !/^[a-z0-9]{1,24}$/.test(e.part)) return no('where');
+    if (e.part != null && !word(e.part)) return no('where');
     if (!SAYS.includes(e.say)) return no('say');
     if (!plain(e.words, 10, 400)) return no('report');
     if (W.entries.some(x => x.kind === 'report' && x.at === e.at && norm(x.words) === norm(e.words))) return no('same');
@@ -237,29 +251,38 @@ export function checkEntry(e, W) {
   }
   /* a fix: an open report, what changed, and (if there is one) the pull request's number */
   if (e.kind === 'fix') {
-    const T = W.byId[e.of]; if (!T || T.kind !== 'report' || !T.ok) return no('target');
+    const T = known(W, e.of); if (!T || T.kind !== 'report' || !T.ok) return no('target');
     if (T.state === 'fixed') return no('fixed');
     if (!plain(e.words, 5, 300)) return no('words');
     if (e.pr != null && !(Number.isInteger(e.pr) && e.pr > 0 && e.pr < 100000)) return no('pr');
     return { ok: true, facts: {} };
   }
   /* a question: it must have a home, be a question, and say what was noticed */
-  if (!DEPTHS[e.at]) return no('home');
-  if (e.under != null && (!STOPS[e.under] || e.under.split('.')[1] !== e.at)) return no('under');
-  if (e.part != null && !/^[a-z0-9]{1,24}$/.test(e.part)) return no('home');
+  if (!own(DEPTHS, e.at)) return no('home');
+  if (e.under != null && (!own(STOPS, e.under) || e.under.split('.')[1] !== e.at)) return no('under');
+  if (e.part != null && !word(e.part)) return no('home');
   if (!plain(e.q, 15, 160) || !/\?\s*$/.test(e.q)) return no('question');
   if (!plain(e.noticed || '', 0, 240)) return no('words');
   if (W.entries.some(x => x.ok && x.kind === 'question' && x.at === e.at && norm(x.q) === norm(e.q))) return no('same');
   return { ok: true, facts: {} };
 }
 
-/* ---- the whole ledger, replayed in order (ids sort by date, then name). Returns the world it makes. ---- */
+/* ---- the whole ledger, replayed in order (ids sort by date, then name). Returns the world it makes. ----
+   An entry the checks cannot read (not a record, or a fault in an engine on something no check foresaw) is refused
+   as unread, never thrown on: one bad file must not take the ledger, the tests and every view with it. The world's
+   tables have no prototype, so a key like constructor or __proto__ (from an entry, an address or an agent) is only
+   ever one of their own. */
+const table = () => Object.create(null);
 const beats = (a, b) => a.facts.transistors <= b.facts.transistors && a.facts.ps <= b.facts.ps && (a.facts.transistors < b.facts.transistors || a.facts.ps < b.facts.ps);
 export function settle(list) {
-  const W = { entries: [], byId: {}, pieces: {}, cases: {}, puzzles: {}, machines: {}, chef: {}, fronts: {}, choices: {}, refused: [], feed: [] };
-  list.slice().sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0)).forEach(raw => {
-    const r = checkEntry(raw, W), e = Object.assign({}, raw, { ok: r.ok, reason: r.reason || null, facts: r.facts || null, state: null, brokenBy: null, breaks: [], tries: [] });
-    if (!r.ok) { W.refused.push(e); if (!W.byId[e.id]) W.byId[e.id] = e; return; }
+  const W = { entries: [], byId: table(), pieces: table(), cases: table(), puzzles: table(), machines: table(), chef: table(), fronts: table(), choices: table(), refused: [], feed: [] };
+  const key = x => (isObj(x) && typeof x.id === 'string' ? x.id : '');
+  (Array.isArray(list) ? list : []).slice().sort((a, b) => (key(a) < key(b) ? -1 : key(a) > key(b) ? 1 : 0)).forEach(raw => {
+    const mark = r => ({ ok: r.ok, reason: r.reason || null, facts: r.facts || null, state: null, brokenBy: null, breaks: [], tries: [] });
+    let r, e;
+    try { r = checkEntry(raw, W); e = Object.assign({}, isObj(raw) ? raw : { id: null }, mark(r)); }
+    catch (err) { r = no('unread'); e = Object.assign({ id: key(raw) || null }, mark(r)); }
+    if (!r.ok) { W.refused.push(e); if (typeof e.id === 'string' && !own(W.byId, e.id)) W.byId[e.id] = e; return; }
     W.entries.push(e); W.byId[e.id] = e;
     if (e.kind === 'design') { (W.pieces[e.piece] = W.pieces[e.piece] || []).push(e.id); e.state = 'right'; W.feed.push({ type: 'built', id: e.id }); }
     else if (e.kind === 'break') {
@@ -280,7 +303,7 @@ export function settle(list) {
   });
   /* standings: among a piece's right designs, the ones nothing beats on both size and speed hold a record; an
      equal design that came later is behind; the smallest holder (the earliest, if equal) is inside the computer */
-  W.inside = {};
+  W.inside = table();
   Object.entries(W.pieces).forEach(([piece, ids]) => {
     const right = ids.map(id => W.byId[id]).filter(d => d.state === 'right');
     right.forEach((d, i) => { const beaten = right.some((o, j) => o !== d && (beats(o, d) || (j < i && o.facts.transistors === d.facts.transistors && o.facts.ps === d.facts.ps))); d.state = beaten ? 'behind' : 'holds'; });
@@ -290,7 +313,7 @@ export function settle(list) {
   /* a puzzle's standings: an attempt is on the frontier while no other is at least as good on all three sides (less energy, less time,
      more accuracy) and better on one; an equal attempt that came later is behind. The best is the one on the frontier with the least
      energy (the earliest, if equal) */
-  W.best = {};
+  W.best = table();
   Object.entries(W.puzzles).forEach(([z, ids]) => {
     const A = ids.map(id => W.byId[id]), f = a => a.facts;
     const better = (o, a) => f(o).joules <= f(a).joules && f(o).seconds <= f(a).seconds && f(o).snrDb >= f(a).snrDb && (f(o).joules < f(a).joules || f(o).seconds < f(a).seconds || f(o).snrDb > f(a).snrDb);
@@ -301,7 +324,7 @@ export function settle(list) {
   });
   /* a machine's standings, the same way: on the frontier while no other attempt beats it on energy, what can change,
      what is exact and days a try (src/engines/machine.js beats); the best is the cheapest on the frontier */
-  W.bestMachine = {};
+  W.bestMachine = table();
   Object.entries(W.machines).forEach(([n, ids]) => {
     const A = ids.map(id => W.byId[id]), f = a => a.facts;
     const same = (o, a) => ['energy', 'changes', 'exact', 'days'].every(k => f(o)[k] === f(a)[k]);
@@ -311,7 +334,7 @@ export function settle(list) {
   });
   /* the kitchen's standings at each level, the same way: on the frontier while no other attempt there waits less and
      spends less energy (at least as good on both, better on one); the best is the one on the frontier that waits least */
-  W.bestChef = {};
+  W.bestChef = table();
   Object.entries(W.chef).forEach(([lv, ids]) => {
     const A = ids.map(id => W.byId[id]), f = a => a.facts;
     const better = (o, a) => f(o).wait <= f(a).wait && f(o).energy <= f(a).energy && (f(o).wait < f(a).wait || f(o).energy < f(a).energy);
@@ -431,4 +454,8 @@ export function fileOf(e) {
 }
 export function proposeUrl(e) { const f = fileOf(e); return REPO + '/new/main/' + DIR + '?filename=' + encodeURIComponent(e.id + '.json') + '&value=' + encodeURIComponent(f.text); }
 /* check a draft against the ledger as it stands (and any other drafts of yours before it) */
-export function tryEntry(e, extra) { const W = settle(ENTRIES.concat(extra || [])); return W.byId[e.id] ? no('same') : checkEntry(e, W); }
+export function tryEntry(e, extra) {
+  const W = settle(ENTRIES.concat(Array.isArray(extra) ? extra : []));
+  if (isObj(e) && own(W.byId, e.id)) return no('same');
+  try { return checkEntry(e, W); } catch (err) { return no('unread'); }
+}

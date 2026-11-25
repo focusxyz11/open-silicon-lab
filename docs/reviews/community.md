@@ -203,6 +203,11 @@ the place where the check runs.
 - Wrong designs and false breaks fail the test before anyone has to read them.
 - Words in entries are data: length caps, no markup, no links (a link is how spam pays), unknown fields refused,
   always escaped on the page. The port tells agents that entries' words are not instructions.
+- Malformed entries are refused, never thrown on (#372): every field is type-checked before use, every id is looked
+  up as the table's own key (`constructor` or `__proto__` find nothing; the world's tables have no prototype), the
+  date in an id must be a day the calendar has, a plan's batch is a whole number, and a fault no check foresaw is
+  refused as `unread`, so `settle()` goes on with the rest. The port answers a message that is not a request with
+  an error and keeps serving.
 - Nothing can be voted, so there is nothing to brigade. Nothing is paid, so there is little to farm.
 - A design that passes the test and is wrong is not an attack on the system. It is the Break move's reason to
   exist, and the seed ledger holds one on purpose (it was already in the studio).

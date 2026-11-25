@@ -88,8 +88,9 @@ const sum = o => o.compute + o.move + o.heat;
    (the precision's accuracy), shares: { <level>: share of the total } } */
 /* What is wrong with a job and a plan, or null: an attempt may come from anyone, so every value is checked before use.
    Ids: 'job' (ops, bytes and reuse must be numbers, ops and bytes not negative, reuse at least 1), 'home', 'precision',
-   'clock' (within the power curve's range), 'volt' (within it, and high enough for the clock), 'batch' (1 to 4,096),
-   'adc' (2 to 12 bits), 'pue' (1 to 3), 'optics'. */
+   'clock' (within the power curve's range), 'volt' (within it, and high enough for the clock), 'batch' (a whole number
+   of users, 1 to 4,096), 'adc' (a whole number of bits, 2 to 12), 'pue' (1 to 3), 'optics'. A batch of 1.4 is refused,
+   not rounded: rounded, it would score as 1 while the ledger counted it a new plan. */
 export const RANGE = { clock: [P0.f.min, P0.f.max], volt: [P0.v.min, P0.v.max], batch: [1, 4096], adcBits: [2, 12], pue: [1, 3] };
 const within = (x, [a, b]) => typeof x === 'number' && Number.isFinite(x) && x >= a && x <= b;
 export function problem(job, plan) {
@@ -100,9 +101,9 @@ export function problem(job, plan) {
   if (!within(P.clock, RANGE.clock)) return 'clock';
   if (P.volt != null && !within(P.volt, RANGE.volt)) return 'volt';
   if (P.clock > fmax(P.volt == null ? lowestSafe(P.clock) : P.volt) + 1e-9) return 'volt';
-  if (!within(P.batch, RANGE.batch)) return 'batch';
+  if (!within(P.batch, RANGE.batch) || !Number.isInteger(P.batch)) return 'batch';
   if (typeof P.cim !== 'boolean') return 'cim';
-  if (!within(P.adcBits, RANGE.adcBits)) return 'adc';
+  if (!within(P.adcBits, RANGE.adcBits) || !Number.isInteger(P.adcBits)) return 'adc';
   if (!within(P.pue, RANGE.pue)) return 'pue';
   if (!['plug', 'cpo'].includes(P.optics)) return 'optics';
   return null;
@@ -114,7 +115,7 @@ export function budget(job = JOB, plan = PLAN) {
   const J = { ...JOB, ...job }, P = { ...PLAN, ...plan }, home = HOMES[P.home];
   const volt = P.volt == null ? lowestSafe(P.clock) : P.volt;
 
-  const bits = bitsOf(P.precision), w = bits / 16, pj = 1e-12, ops = J.ops, batch = Math.round(P.batch);
+  const bits = bitsOf(P.precision), w = bits / 16, pj = 1e-12, ops = J.ops, batch = P.batch;
   const reuse = J.reuse * batch;
   const v2 = (volt / V_REF) ** 2;                                   // on-chip energies with the voltage squared
   const L = Object.fromEntries(LEVELS.map(l => [l, zero()]));

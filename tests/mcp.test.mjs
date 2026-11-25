@@ -11,7 +11,7 @@ function server() {
   const waiting = new Map(); let n = 0;
   createInterface({ input: p.stdout }).on('line', l => { const m = JSON.parse(l); const w = waiting.get(m.id); if (w) { waiting.delete(m.id); w(m); } });
   const call = (method, params) => new Promise(res => { const id = ++n; waiting.set(id, res); p.stdin.write(JSON.stringify({ jsonrpc: '2.0', id, method, params }) + '\n'); });
-  return { call, tool: async (name, args) => (await call('tools/call', { name, arguments: args })).result, stop: () => p.kill() };
+  return { call, tool: async (name, args) => (await call('tools/call', { name, arguments: args })).result, line: l => p.stdin.write(l + '\n'), stop: () => p.kill() };
 }
 
 test('an agent connects, lists the tools, reads the plan and takes a job', async () => {
@@ -122,5 +122,27 @@ test('an agent reads a thousand designs that pass and the people around the need
     assert.equal(yes.ok, true, yes.reason); assert.match(yes.entry.id, /-try-/);
     const f = JSON.parse(yes.entry.file); assert.equal(f.choice, 'phone'); assert.equal(f.pick, 'd0042'); assert.equal(f.made, 'ai'); assert.equal(f.words, 'It never sends what you say to a data centre');
     assert.match(yes.link, /new\/main\/community\/ledger/); assert.equal(yes.picked.id, 'd0042');
+  } finally { S.stop(); }
+});
+
+/* the front door (#372): what an agent sends is refused with a reason, never thrown on, and the port keeps serving */
+test('an agent that sends a bad entry or a bad message gets a refusal, and the port stays up', async () => {
+  const S = server();
+  try {
+    /* messages that are not requests: answered or ignored, never the end of the port */
+    for (const l of ['null', '5', '"x"', '[null, 7]', '{"method": 5}', '{"jsonrpc":"2.0","id":99,"method":"tools/call","params":"x"}']) S.line(l);
+    assert.deepEqual((await S.call('ping', {})).result, {}, 'the port still answers');
+    const refused = async (name, args, why) => { const r = await S.tool(name, args); assert.equal(r.isError, true, why); assert.equal(r.structuredContent.ok, false, why); assert.ok(typeof r.structuredContent.reason === 'string' && r.structuredContent.reason.length > 5, why + ': a reason in words'); };
+    const ask = { at: 'chip', question: 'What would a chip look like if it were designed for one model only?', kind: 'ai', ai: 'asked by an agent' };
+    await refused('propose_question', { ...ask, under: ['think.chip'] }, 'under as a list');
+    await refused('propose_question', { ...ask, at: 'constructor', about: 'toString' }, 'names every object has');
+    for (const need of ['constructor', 'toString', '__proto__', ['phone']]) await refused('choose_design', { need }, 'the need ' + need);
+    await refused('submit_attempt', { plan: { batch: 1.4 }, kind: 'ai', ai: 'an agent' }, 'a batch that is not whole');
+    await refused('propose_break', { design: 'constructor', case: [{ en: 1 }], kind: 'ai', ai: 'an agent' }, 'a break of constructor');
+    await refused('propose_try', { design: '__proto__', cases: [[{ en: 1 }]], kind: 'ai', ai: 'an agent' }, 'a try of __proto__');
+    await refused('propose_report', { at: { toString: 1 }, say: 'wrong', words: 'words long enough here', kind: 'ai', ai: 'an agent' }, 'a place that is no string');
+    await refused('propose_question', { ...ask, ai: { toString: 1 } }, 'how AI was used, not in words');
+    assert.ok((await S.tool('look', { at: { toString: 1 } })).isError, 'a place to look at that is no string');
+    assert.ok((await S.tool('get_job', { job: { toString: 1 } })).structuredContent.error);
   } finally { S.stop(); }
 });

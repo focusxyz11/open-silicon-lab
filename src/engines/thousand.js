@@ -44,18 +44,20 @@ export function leanOf(traits) {
   PEOPLE.forEach(p => { out[p] = clamp(out[p]); });
   return out;
 }
+/* a need by its id: only one of NEEDS' own (never an inherited name such as constructor or __proto__) */
+export const needOf = need => (typeof need === 'string' && Object.hasOwn(NEEDS, need) ? NEEDS[need] : null);
 /* the limits of the need's mission on what a check measures */
 export function limits(need) {
-  const N = NEEDS[need]; if (!N) return null;
+  const N = needOf(need); if (!N) return null;
   const design0 = design({ mission: N.mission, arch: 'sys', node: 'n3', area: 12, dies: 1, sram: 16, fp4: true, mem: 'lp', memN: 2, pkg: 'org', f: 1.2, agents: true });
   return Object.fromEntries(design0.rows.filter(r => r.op !== 'fit').map(r => [r.key, { op: r.op, value: r.limit }]));
 }
 
-const MADE = {};
+const MADE = Object.create(null);
 /* the thousand, made once for each need: [{ id, c (the chip model's choice), m (what a check measures), traits, lean }] */
 export function thousand(need) {
+  const N = needOf(need); if (!N) return [];
   if (MADE[need]) return MADE[need];
-  const N = NEEDS[need]; if (!N) return [];
   const r = rng(N.seed), pick = a => a[Math.floor(r() * a.length)], out = [], seen = new Set();
   for (let tries = 0; out.length < N.n && tries < 200000; tries++) {
     const c = { mission: N.mission, arch: pick(['sys', 'gpu']), node: pick(['n5', 'n3']), area: 8 + Math.floor(r() * 23), dies: 1, sram: pick([4, 8, 12, 16, 24, 32, 48]), fp4: r() < 0.85, mem: 'lp', memN: 1 + Math.floor(r() * 4), pkg: 'org', f: Math.round((0.6 + r() * 1.4) * 20) / 20, agents: true };
