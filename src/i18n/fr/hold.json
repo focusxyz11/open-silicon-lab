@@ -414,5 +414,10 @@
  "hd.d.lede": "Cinquante ans à tenir se sont arrêtés sur un mur. La suite est disposée comme une seule puce, et le carré que vous teniez en est un bloc. Continuez de tenir, ou faites défiler : la caméra va de bloc en bloc. Ou touchez n’importe quel bloc. Quatre d’entre eux échouent à une vérification. Les plots du bord mènent dehors, vers l’île.",
  "hd.m.named": "Depuis 1997 environ, la finesse n’est plus que le nom d’une génération d’usine : plus rien sur la puce ne la mesure, d’où les guillemets.",
  "hd.cq.xof": "{x} de",
- "hd.nx.x": "{x} fois"
+ "hd.nx.x": "{x} fois",
+ "hd.reg.core": "Logique",
+ "hd.reg.ctrl": "Contrôle",
+ "hd.reg.memory": "Mémoire",
+ "hd.reg.io": "Entrées et sorties",
+ "hd.reg.clock": "Horloge"
 }

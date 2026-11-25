@@ -104,6 +104,10 @@ function htree(c, x, y, ww, hh, n, min) {
   c.moveTo(x + ww / 4, y + hh / 2); c.lineTo(x + 3 * ww / 4, y + hh / 2); c.moveTo(x + ww / 4, y + hh / 4); c.lineTo(x + ww / 4, y + 3 * hh / 4); c.moveTo(x + 3 * ww / 4, y + hh / 4); c.lineTo(x + 3 * ww / 4, y + 3 * hh / 4);
   for (const [a, b] of [[0, 0], [1, 0], [0, 1], [1, 1]]) htree(c, x + a * ww / 2, y + b * hh / 2, ww / 2, hh / 2, n - 1, min);
 }
+/* which part of the chip a point (in 1000 units) is in: the same plan the floor is drawn from */
+let leaves = null;
+export const regionAt = (x, y) => { if (!leaves) { leaves = []; walk(9, () => {}, (lx, ly, ww, hh, hash, vert, r, type) => leaves.push([lx, ly, ww, hh, type])); }
+  const f = leaves.find(([lx, ly, ww, hh]) => x >= lx && x < lx + ww && y >= ly && y < ly + hh); return f ? f[4] : 'core'; };
 /* what fifty years of splitting leaves behind: every region its own texture, as on a real die */
 export const floors = {};
 function floorFor(P) {
@@ -170,16 +174,18 @@ function drawNand(c, A, B, a) {
   fet(c, xa, yp, !A, a); fet(c, xb, yp, !B, a); fet(c, xn, ya, A, a); fet(c, xn, yb, B, a);
   bit(c, 300, 170, 1, 'right'); bit(c, 300, 850, 0, 'right'); bit(c, 140, ya, A); bit(c, 140, yb, B); bit(c, 880, 450, out); c.lineCap = 'butt';
 }
-function paintDie(c, T, d) {
+function paintDie(c, T, d, pl) {
   const L = Math.min(Math.floor(d), LMAX), f = d >= LMAX ? 0 : d - Math.floor(d), aF = ss(10, 13, d);
   if (aF < 1) drawField(c, L, f, T, 'planar');
   if (aF > 0) { c.globalAlpha = aF; c.drawImage(floorFor(c.canvas.width), 0, 0, 1000, 1000); c.globalAlpha = 1;
     c.fillStyle = K.red; for (let i = 0; i < 46; i++) { const hh = mix(i * 7919, Math.floor(T * 11)); c.globalAlpha = aF * (.35 + .65 * rnd(hh >>> 2)); const s = 2 + 2.6 * rnd(hh >>> 7); c.fillRect(rnd(hh) * 1000, rnd(hh ^ 0xabc) * 1000, s, s); } c.globalAlpha = 1; }
   const kNot = ss(.85, 1, d) * (1 - ss(1.45, 1.65, d)); if (kNot > .01) { c.globalAlpha = kNot; c.fillStyle = K.plate; c.fillRect(0, 0, 1000, 1000); drawNot(c, Math.floor(T / 1.1) % 2, kNot); c.globalAlpha = 1; }
-  /* the glass: you can no longer see them, so it shows what is there, in the form the years gave the transistor */
-  const aG = ss(14, 16, d); if (aG > .01) { const gx = 705, gy = 300, gr = 148, form = formAt(d); c.save(); c.globalAlpha = aG; c.beginPath(); c.arc(gx, gy, gr, 0, 7); c.fillStyle = K.plate; c.fill(); c.clip();
+  /* the glass: you can no longer see them, so it shows what is there, in the form the years gave the transistor; it
+     follows the pointer (or the finger that holds), and says which part of the chip it is over */
+  const G = pl && pl.gl, gr = 148, aG = Math.max(ss(14, 16, d), G ? G.a * ss(9.5, 11, d) : 0); if (G) G.aG = aG;
+  if (aG > .01) { const gx = G ? G.x : 705, gy = G ? G.y : 300, form = formAt(d), type = G ? G.type : 'core'; c.save(); c.globalAlpha = aG; c.beginPath(); c.arc(gx, gy, gr, 0, 7); c.fillStyle = K.plate; c.fill(); c.clip();
     c.strokeStyle = K.ink; c.lineWidth = 2; c.beginPath(); for (let i = -2; i <= 2; i++) { c.moveTo(gx + i * 74 - 37, gy - gr); c.lineTo(gx + i * 74 - 37, gy + gr); c.moveTo(gx - gr, gy + i * 74 - 37); c.lineTo(gx + gr, gy + i * 74 - 37); } c.stroke();
-    for (let i = -2; i <= 2; i++) for (let j = -2; j <= 2; j++) glyph(c, gx + i * 74, gy + j * 74, 17, isOn(mix(i * 31 + j, 77), T, 'core') ? 1 : 0, aG, 2.6, form);
+    for (let i = -2; i <= 2; i++) for (let j = -2; j <= 2; j++) glyph(c, gx + i * 74, gy + j * 74, 17, isOn(mix(i * 31 + j + Math.round(gx / 37) * 977 + Math.round(gy / 37) * 131, 77), T, type) ? 1 : 0, aG, 2.6, form);
     c.restore(); c.globalAlpha = aG; c.strokeStyle = K.ink; c.lineWidth = 5; c.beginPath(); c.arc(gx, gy, gr, 0, 7); c.stroke(); c.globalAlpha = 1; }
 }
 
@@ -212,13 +218,21 @@ function paintWall(c, T) {
 
 PL.years = {
   frame: () => { const v = viewAt(S.d); return v === 'one' ? [w('pl.one'), S.press > .5 ? w('bit.1') : w('bit.0')] : v === 'die' || v === 'wall' ? [w('die.same'), w('dens', { n: sig(Math.sqrt(Math.pow(2, S.d)), 2) })] : [w('mo.' + v + '.k') + ' · ' + w('mo.try'), '']; },
-  paint(c, T, dt, pl) { const v = viewAt(S.d); if (pl.view !== v) { if (pl.view && !(pl.view === 'one' && v === 'die') && !(pl.view === 'die' && v === 'one')) pl.fade = 1; pl.view = v; }
-    if (v === 'gate') drawNand(c, S.gate.a, S.gate.b, 1); else if (v === 'job') paintJob(c); else if (v === 'bug') paintBug(c, T); else if (v === 'light') paintLight(c, T); else if (v === 'wall') paintWall(c, T); else paintDie(c, T, S.d); },
+  paint(c, T, dt, pl) { const v = viewAt(S.d), G = pl.gl; if (G) { const k = Math.min(1, (dt || .016) * 12); G.x += (G.tx - G.x) * k; G.y += (G.ty - G.y) * k; G.a += ((G.on ? 1 : 0) - G.a) * Math.min(1, (dt || .016) * (G.on ? 8 : 2)); G.type = regionAt(G.x, G.y); }
+    if (pl.view !== v) { if (pl.view && !(pl.view === 'one' && v === 'die') && !(pl.view === 'die' && v === 'one')) pl.fade = 1; pl.view = v; }
+    if (v === 'gate') drawNand(c, S.gate.a, S.gate.b, 1); else if (v === 'job') paintJob(c); else if (v === 'bug') paintBug(c, T); else if (v === 'light') paintLight(c, T); else if (v === 'wall') paintWall(c, T); else paintDie(c, T, S.d, pl); },
   ui(host, pl) {
     const L = {}; for (const v of ['one', 'die', 'gate', 'job', 'bug', 'light', 'wall']) { L[v] = h('div', 'layer'); host.appendChild(L[v]); }
     /* one transistor: its three parts named, and the bit it holds */
     lbl(L.one, w('t.source'), 26.5, 23, 'c'); lbl(L.one, w('t.gate'), 50, 18, 'c'); lbl(L.one, w('t.drain'), 73.5, 23, 'c'); const bitE = big(L.one, 8, 80);
     const glass = lbl(L.die, '', 70.5, 46.5, 'c');
+    /* the glass follows the pointer over the square, or the finger that holds it, and stays where it was left */
+    const G = pl.gl = { x: 705, y: 300, tx: 705, ty: 300, a: 0, on: false, aG: 0, type: regionAt(705, 300) };
+    const aim = e => { const r = pl.el.getBoundingClientRect(); if (!r.width) return; G.tx = clamp((e.clientX - r.left) / r.width * 1000, 156, 844); G.ty = clamp((e.clientY - r.top) / r.height * 1000, 156, 844); G.on = true; };
+    pl.el.addEventListener('pointermove', e => { if (e.pointerType === 'mouse' || e.buttons) aim(e); });
+    pl.el.addEventListener('pointerdown', aim);
+    pl.el.addEventListener('pointerleave', e => { if (e.pointerType === 'mouse') G.on = false; });
+    addEventListener('pointerup', e => { if (e.pointerType !== 'mouse') G.on = false; });
     /* four transistors, a gate: tap the inputs */
     const ta = h('button', 'tap'), tb = h('button', 'tap'); ta.type = tb.type = 'button'; ta.setAttribute('aria-label', w('mo.gate.a')); tb.setAttribute('aria-label', w('mo.gate.b')); at(ta, 14, 58, 12, 12); at(tb, 14, 73, 12, 12); L.gate.append(ta, tb);
     const flip = k => { S.gate[k] ^= 1; S.tried.mgate = 1; ta.classList.add('used'); tb.classList.add('used'); if (S.gate.a && S.gate.b) done('gate'); setOut('m-gate', momOut('gate')); };
@@ -239,7 +253,7 @@ PL.years = {
     btn(L.wall, w('m.wall.go') + ' →', [27, 82, 46], () => S.onWallGo && S.onWallGo());
     pl.sync = () => { const v = viewAt(S.d); for (const k in L) L[k].classList.toggle('on', k === v);
       if (v === 'one') put(bitE, (S.press > .5 ? '1' : '0') + '<small>' + (S.press > .5 ? w('bit.1') : w('bit.0')) + '</small>');
-      else if (v === 'die') { glass.style.opacity = S.d > 15 ? 1 : 0; put(glass, w('form.' + formAt(S.d))); }
+      else if (v === 'die') { const below = G.y + 148 < 840; glass.style.opacity = G.aG; glass.style.left = G.x / 10 + '%'; glass.style.top = (below ? G.y + 165 : G.y - 205) / 10 + '%'; put(glass, '<b>' + w('reg.' + G.type) + '</b> · ' + w('form.' + formAt(S.d))); }
       else if (v === 'job') { put(jb, w('mo.job.' + S.job + '.v')); if (+jr.value !== S.job) jr.value = S.job; }
       else if (v === 'bug') put(bb, S.bug.worst ? w('bug.found') : S.bug.n ? w('mo.bug.wrong0') + '<small>' + w('bug.in', { n: nf(S.bug.n) }) + '</small>' : '');
       else if (v === 'light') { ls(); put(lam, w(LIGHTS[S.light] === 'euv' ? 'light.euv' : 'light.duv')); } };
@@ -483,7 +497,9 @@ export function mkChart(o = {}) {
   const c = cv.getContext('2d'), Y0 = 1957, Y1 = 2030; let W = 0, H = 0, g = { l: 36, r: 10, t: 10, b: 40 }, ph = 1, dpr = 1;
   const mk = (cls, html) => { const s = h('span', cls, html); lab.appendChild(s); return s; };
   const yl = [[1e3, 'k'], [1e6, 'm'], [1e9, 'bn'], [1e12, 'tn']].map(([v, k]) => [v, mk('yl', w('ax.' + k))]), xl = [1960, 1971, 1990, 2010, 2026].map(y => [y, mk('xl', y)]);
-  const eraL = ERAS.map(e => mk('era', w('era.' + e[0] + '.b'))), chip = mk('chip', ''), gsL = mk('gs', w('chart.guess'));
+  const eraL = ERAS.map(e => mk('era', w('era.' + e[0] + '.b'))), chip = mk('chip', ''), gsL = mk('gs', w('chart.guess')), hvL = mk('hv', '');
+  /* under the pointer: the year, and the nearest real chip reached so far */
+  let hov = null;
   /* the series beside the transistors: their switches are their legend, in the corner the data never reaches (early
      years, high counts); nothing is drawn under them */
   const serT = h('div', 'ser-t mono'); SERIES.forEach(s => { const b = h('button', ''); b.type = 'button'; b.dataset.s = s; b.onclick = e => { e.stopPropagation(); S.cq[s] = !S.cq[s]; changed('cq'); }; serT.appendChild(b); }); el.appendChild(serT);
@@ -521,7 +537,12 @@ export function mkChart(o = {}) {
     const cx = X(yNow), cy = Y(Math.pow(2, d)); c.strokeStyle = fg(.28); c.lineWidth = 1; c.beginPath(); c.moveTo(Math.round(cx) + .5, g.t); c.lineTo(Math.round(cx) + .5, g.t + ph); c.stroke();
     c.restore(); gsL.style.display = S.cq.guess ? '' : 'none';
     c.fillStyle = K.red; c.beginPath(); c.arc(cx, cy, (S.holding ? 6.5 + Math.sin(T * 11) : 5.5) * u, 0, 7); c.fill();
-    if (lastC && H >= 84) { put(chip, w('chip.' + lastC[2])); pos(chip, Math.max(X(lastC[0]), g.l + 80 * u), Y(lastC[1])); chip.style.display = ''; } else chip.style.display = 'none';
+    let hc = null; if (hov !== null && H >= 84) { const hy = clamp(hov, Y0, Math.min(Y1, yNow)), hx = Math.round(X(hy)) + .5; CHIPS.forEach(ch => { if (ch[0] <= yNow + .3 && Math.abs(ch[0] - hy) < 2.5 && (!hc || Math.abs(ch[0] - hy) < Math.abs(hc[0] - hy))) hc = ch; });
+      c.strokeStyle = fg(.45); c.lineWidth = 1; c.setLineDash([2, 3]); c.beginPath(); c.moveTo(hx, g.t); c.lineTo(hx, g.t + ph); c.stroke(); c.setLineDash([]);
+      if (hc) { c.strokeStyle = K.red; c.lineWidth = 2 * u; c.beginPath(); c.arc(X(hc[0]), Y(hc[1]), 6.5 * u, 0, 7); c.stroke(); }
+      put(hvL, '<b>' + Math.floor(hc ? hc[0] : hy) + '</b>' + (hc ? ' · ' + w('chip.' + hc[2]) + ' · ' + sig(hc[1], 2) : '')); pos(hvL, hx, g.t); hvL.classList.toggle('l', hx > W * .7); }
+    hvL.style.display = hov !== null && H >= 84 ? '' : 'none';
+    if (lastC && H >= 84 && !hc) { put(chip, w('chip.' + lastC[2])); pos(chip, Math.max(X(lastC[0]), g.l + 80 * u), Y(lastC[1])); chip.style.display = ''; } else chip.style.display = 'none';
     el.classList.toggle('pick', !!S.cq.pick);
   }
   const scrub = x => { const y = clamp(yearOfX(x), 1959.9, 2026), d = y >= 2025.6 ? DWALL : Math.min(DWALL - .02, dAt(y)); if (o.onScrub) o.onScrub(d); else Yr.set(d); };
@@ -529,10 +550,11 @@ export function mkChart(o = {}) {
   el.addEventListener('pointerdown', e => { if (e.target.closest('button,input,.cq')) return; const r = el.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top; e.preventDefault();
     if (S.cq.pick === 'guess') { S.cq.guess = valOfY(y); S.cq.pick = null; changed('cq'); return; }
     down = { x, moved: false }; try { el.setPointerCapture(e.pointerId); } catch (er) { /* no capture */ } if (S.cq.pick !== 'knee') scrub(x); });
-  el.addEventListener('pointermove', e => { if (!down) return; const x = e.clientX - el.getBoundingClientRect().left; if (Math.abs(x - down.x) > 5) down.moved = true; if (S.cq.pick !== 'knee' || down.moved) scrub(x); });
+  el.addEventListener('pointermove', e => { if (e.pointerType === 'mouse' && !e.target.closest('button,input,.cq,.ser-t')) hov = yearOfX(e.clientX - el.getBoundingClientRect().left); if (!down) return; const x = e.clientX - el.getBoundingClientRect().left; if (Math.abs(x - down.x) > 5) down.moved = true; if (S.cq.pick !== 'knee' || down.moved) scrub(x); });
   el.addEventListener('pointerup', e => { if (!down) return; const y = yearOfX(e.clientX - el.getBoundingClientRect().left);
     if (!down.moved && S.cq.pick === 'knee') { if (y >= KNEE[0] && y <= KNEE[1]) { done('knee'); S.cq.msg = 'knee.yes'; S.cq.pick = null; } else S.cq.msg = 'knee.no'; changed('cq'); } down = null; });
   el.addEventListener('pointercancel', () => { down = null; });
+  el.addEventListener('pointerleave', () => { hov = null; });
   if (window.ResizeObserver) new ResizeObserver(() => fit()).observe(el);
   return { el, fit, paint, X: y => X(y), Yv: v => Y(v), geo: () => g };
 }

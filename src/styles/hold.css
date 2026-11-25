@@ -373,3 +373,7 @@ body.firstpage .bar .loop{display:none}
 @media (max-width:760px){.hold .sec.years .card .n{top:6px;right:8px!important}
 /* the frame's words above a picture: no corner marks, tighter, so a long name and its reading both fit */
 .hold .pl-fr{letter-spacing:.04em;gap:8px}.hold .pl-fr span:first-child::before,.hold .pl-fr span:last-child::after{display:none}}
+/* under the pointer on the chart: the year and the nearest chip; the glass's words say which part of the chip it is over */
+.hold .chart .lab .hv{font-size:max(11px,calc(var(--u)*11));color:var(--ink);white-space:nowrap;transform:translate(8px,0);padding:1px 5px;background:var(--paper);box-shadow:0 0 0 1px var(--hair)}
+.hold .chart .lab .hv.l{transform:translate(calc(-100% - 8px),0)}.hold .chart .lab .hv b{color:var(--red);font-weight:700}
+.hold .pl-ui .lb b{font-weight:700}
