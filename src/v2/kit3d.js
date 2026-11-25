@@ -117,11 +117,13 @@ export function light(scene, P, span = 120) {
   return { hemi, sun };
 }
 
-/* materials, cached by their settings */
-const MATS = new Map();
+/* materials, cached by their settings; what a cache holds is shared, and a view that clears a part of its scene leaves
+   it to the cache (shared) */
+const MATS = new Map(), SHARED = new WeakSet();
+export const shared = x => SHARED.has(x);
 export function mat(color, o = {}) {
   const key = color + JSON.stringify(o);
-  if (!MATS.has(key)) MATS.set(key, new THREE.MeshStandardMaterial(Object.assign({ color, roughness: 0.72, metalness: 0.02 }, o)));
+  if (!MATS.has(key)) { const m = new THREE.MeshStandardMaterial(Object.assign({ color, roughness: 0.72, metalness: 0.02 }, o)); SHARED.add(m); MATS.set(key, m); }
   return MATS.get(key);
 }
 export const metal = (color, o = {}) => mat(color, Object.assign({ roughness: 0.32, metalness: 0.75 }, o));
@@ -139,7 +141,7 @@ export const BOARD = night => ({
 /* shapes: a rounded box standing on y = 0 of its own frame, placed at (x, y, z). o.segs: the rounding's segments (2, or
    1 where the rounding is a pixel or two on screen: 108 triangles instead of 300) */
 const GEO = new Map();
-const rbox = (w, h, d, r, n = 2) => { const k = [w, h, d, r, n].join(); if (!GEO.has(k)) GEO.set(k, new RoundedBoxGeometry(w, h, d, n, Math.min(r, w / 2, h / 2, d / 2))); return GEO.get(k); };
+const rbox = (w, h, d, r, n = 2) => { const k = [w, h, d, r, n].join(); if (!GEO.has(k)) { const g = new RoundedBoxGeometry(w, h, d, n, Math.min(r, w / 2, h / 2, d / 2)); SHARED.add(g); GEO.set(k, g); } return GEO.get(k); };
 export function box(parent, w, h, d, material, x = 0, y = 0, z = 0, r = 0.08, o = {}) {
   const m = new THREE.Mesh(r > 0 ? rbox(w, h, d, r, o.segs) : new THREE.BoxGeometry(w, h, d), material);
   m.position.set(x, y + h / 2, z); m.castShadow = o.cast !== false; m.receiveShadow = o.receive !== false;
