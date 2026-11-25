@@ -286,7 +286,9 @@ export function createFrame(host, o) {
     nav.querySelectorAll('[data-step]').forEach((b, k) => { if (k === i) b.setAttribute('aria-current', 'step'); else b.removeAttribute('aria-current'); b.classList.toggle('done', i >= 0 && k < i); });
     nav.style.setProperty('--stf', i >= 0 && S.length > 1 ? (i / (S.length - 1)).toFixed(4) : '0');
     nav.querySelector('.stn').textContent = i >= 0 ? S[i].label : ''; nav.querySelector('.stk').textContent = i >= 0 ? t('frame.steps.of', { n: i + 1, total: S.length }) : '';
-    nav.querySelector('[data-stepgo="-1"]').disabled = i <= 0; nav.querySelector('[data-stepgo="1"]').disabled = i < 0 || i >= S.length - 1; };
+    nav.querySelector('[data-stepgo="-1"]').disabled = i <= 0; nav.querySelector('[data-stepgo="1"]').disabled = i < 0 || i >= S.length - 1;
+    /* at none of them (the studio seen from outside): on a phone the strip, with no step to name, waits (#374) */
+    nav.classList.toggle('stnone', i < 0); };
   const api = {
     dock,
     /* the level in view: Do and Ask follow it, and so does the Turn */
