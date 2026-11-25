@@ -61,7 +61,7 @@ A second picture (a curve beside the main drawing, the tones under a signal) sta
    - Then add the lab to `src/data/labs/index.js`: an import and its name at the end of `LABS`.
 2. **Words:** every visible word goes in `src/i18n/en/labs.json` under the lab's own prefix (a new prefix is added to the `labs` area in `AREAS`, `src/core/i18n.js`), read with `t('key')`.
    - A challenge needs `game.ch.<id>.t`, `.goal` and `.why` (in `core.json`: the bar and Your log name challenges before any view opens), plus `grow.<grow-id>` (in `place.json`).
-   - Engines that still hold their English in a `WORDS` object: copy the texts the view shows into `labs.json`, and do not edit the engine.
+   - An engine holds no English: it returns ids, and the lab names them in its own words. Words for what an engine models and no view shows yet wait in `src/data/waiting-words.json` (in the lab's area), never in the engine.
    - `npm test` fails on a missing or an unused word.
 3. **Filing:** each challenge under its core questions in `src/data/frame.js` (`FILED.challenges`, its home question first).
 4. **The grower, `src/v2/growers/<name>.js`:** `export default { '<grow-id>': { at: [x, z], grow: (g, { P, A, night, pulses }) => { ... } } }`, a small, well-made model built into its group `g` from the island's palette and lists, with the geometry helpers imported from `src/v2/kit3d.js`, and where it stands relative to its place (`at: [x, z]`, or `[x, z, y]`). It appears on the island when the challenge is won.
