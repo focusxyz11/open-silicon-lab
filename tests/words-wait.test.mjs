@@ -11,8 +11,8 @@
      the first page (src/v2/hold.js): hold, and the blueprint's words, which it loads when first touched and fills in
        then (fillWays);
      the views the shell opens itself (the island's map, the blueprint, the station map): what app.js awaits for each;
-     the shell's own modules (loaded with the first page and run for every view): only what every view below the
-       first page waits for.
+     the shell's own modules (loaded with the first page, or with every view beyond it: src/v2/beyond.js, and run for
+       every view): only what every view below the first page waits for.
    A module reached from a view counts whole, even the parts that view never runs: wait for its area, or move the
    word to an area the view has. The browser smoke test checks the same on the page, with Data Saver on
    (scripts/smoke/slow.mjs). */
@@ -73,6 +73,8 @@ const glueWaits = k => [...new Set((WORDS[k] || []).concat(...GLUE[k].map(glueWa
 /* what every view below the first page waits for: the card of any view holds a challenge, a question, a level */
 const EVERY = Object.keys(GLUE).map(glueWaits).reduce((a, b) => a.filter(x => b.includes(x)));
 const BOOT = reach(['src/main2.js'], { dynamic: false });
+/* and what the shell loads with every view beyond the first page (each view's glue, the island and a challenge await it) */
+const SHELL = new Set([...BOOT, ...reach(['src/v2/beyond.js'], { dynamic: false, skip: BOOT })]);
 const HOLD = reach(['src/v2/hold.js'], { dynamic: false });
 
 test('the shell knows its glue and the words each awaits', () => {
@@ -82,16 +84,16 @@ test('the shell knows its glue and the words each awaits', () => {
 });
 
 test('each view\'s glue waits for every area its modules show', () => {
-  const bad = Object.keys(GLUE).flatMap(k => { const out = unwaited(reach(['src/v2/glue/' + k + '.js'], { skip: BOOT }), glueWaits(k)); return out.length ? [tell('glue/' + k, glueWaits(k), out)] : []; });
+  const bad = Object.keys(GLUE).flatMap(k => { const out = unwaited(reach(['src/v2/glue/' + k + '.js'], { skip: SHELL }), glueWaits(k)); return out.length ? [tell('glue/' + k, glueWaits(k), out)] : []; });
   assert.deepEqual(bad, [], 'A view shows words it does not wait for (add the area to WORDS in src/v2/app.js, or move the words to an area it has):\n' + bad.join('\n'));
 });
 
 test('each lab waits for every area it shows, and what it grows draws with the island\'s words', () => {
   const bad = [];
   for (const L of LABS) {
-    const waits = EVERY.concat('labs'), out = unwaited(reach(['src/v2/labs/' + L.name + '.js'], { skip: BOOT }), waits);
+    const waits = EVERY.concat('labs'), out = unwaited(reach(['src/v2/labs/' + L.name + '.js'], { skip: SHELL }), waits);
     if (out.length) bad.push(tell('the lab ' + L.name, waits, out));
-    const grows = unwaited(reach(['src/v2/growers/' + L.name + '.js'], { skip: BOOT }), glueWaits('island'));
+    const grows = unwaited(reach(['src/v2/growers/' + L.name + '.js'], { skip: SHELL }), glueWaits('island'));
     if (grows.length) bad.push(tell('what ' + L.name + ' grows', glueWaits('island'), grows));
   }
   assert.deepEqual(bad, [], 'A lab shows words it does not wait for (move them to the labs area, or to an area every view waits for):\n' + bad.join('\n'));
@@ -106,8 +108,8 @@ test('the first page and the views the shell opens itself wait for the areas the
   awaits(/import\('\.\/stations\.js'\), needWords\('pages'\)/, 'pages before the station map');
   awaits(/import\('\.\/map3d\.js'\), needWords\(\.\.\.WORDS\.island\)/, 'the island\'s words before the island\'s map');
   assert.ok(/needWords\('blueprint', 'shared'\)\.then\(\(\) => \{ fillWays\(\); fillShared\(\)/.test(read(abs('src/v2/hold.js'))), 'Hold loads the blueprint\'s and the shared words when first touched and fills them in');
-  const VIEWS = [['the first page (src/v2/hold.js)', HOLD, ['hold', 'blueprint', 'shared']], ['the blueprint (src/v2/home.js)', reach(['src/v2/home.js'], { skip: BOOT }), ['blueprint', 'shared']],
-    ['the station map (src/v2/stations.js)', reach(['src/v2/stations.js'], { skip: BOOT }), ['pages']], ['the island\'s map (src/v2/map3d.js)', reach(['src/v2/map3d.js'], { skip: BOOT }), glueWaits('island')]];
+  const VIEWS = [['the first page (src/v2/hold.js)', HOLD, ['hold', 'blueprint', 'shared']], ['the blueprint (src/v2/home.js)', reach(['src/v2/home.js'], { skip: SHELL }), ['blueprint', 'shared']],
+    ['the station map (src/v2/stations.js)', reach(['src/v2/stations.js'], { skip: SHELL }), ['pages']], ['the island\'s map (src/v2/map3d.js)', reach(['src/v2/map3d.js'], { skip: SHELL }), glueWaits('island')]];
   const bad = VIEWS.flatMap(([who, mods, waits]) => { const out = unwaited(mods, waits); return out.length ? [tell(who, waits, out)] : []; });
   assert.deepEqual(bad, [], bad.join('\n'));
 });
@@ -115,6 +117,9 @@ test('the first page and the views the shell opens itself wait for the areas the
 test('the shell\'s own modules show only what every view below the first page waits for', () => {
   /* the challenge player shows the labs' words too: the shell awaits labsReady before it plays */
   const PLAYER = abs('src/v2/play.js');
-  const out = unwaited([...BOOT].filter(f => !HOLD.has(f) && f !== PLAYER), EVERY).concat(unwaited([PLAYER], EVERY.concat('labs')));
+  /* and the menu of sections, only with ?menu=1: the shell awaits its words before it draws it */
+  const SHELLF = abs('src/v2/app.js');
+  assert.ok(/if \(SECTIONS_ON\) Promise\.all\(\[needWords\('menu'\), needStyles\('menu'\)\]\)/.test(APP), 'src/v2/app.js no longer awaits the menu\'s words before it draws the menu');
+  const out = unwaited([...SHELL].filter(f => !HOLD.has(f) && f !== PLAYER && f !== SHELLF), EVERY).concat(unwaited([PLAYER], EVERY.concat('labs')), unwaited([SHELLF], EVERY.concat('menu')));
   assert.deepEqual(out, [], tell('the shell', EVERY, out));
 });

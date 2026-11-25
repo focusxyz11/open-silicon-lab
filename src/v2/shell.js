@@ -2,7 +2,7 @@
    app.js keeps the router, the loop in the bar, the frame's modes, Your log's way in, Break it and the island's sheet;
    each view's glue is one module in src/v2/glue/, loaded when its view first opens (docs/ARCHITECTURE.md). */
 import { THREADS } from '../data/weave.js';
-import * as Game from './game.js';
+import * as Game from './loop.js';
 import { WORLD_IDS } from '../data/worlds.js';
 
 /* the shared context: the state the views share (the island, which view is shown, where the dive is, each view's

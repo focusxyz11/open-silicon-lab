@@ -10,7 +10,10 @@
    the Lab rises with every piece of the plan that is built (src/data/build.js), community designs stand as
    workshops in the makers' village, and every open job is an empty plot anyone, person or AI, can take.
    To add content, add data here (a challenge, a door, a growth) or in src/data/build.js; the island and the
-   pages are drawn from it. Words: game.*, look.*, grow.* (src/i18n/en/). */
+   pages are drawn from it. Words: game.*, look.*, grow.* (src/i18n/en/). The loop itself (the steps, the places,
+   the challenges, the levels, and your state as far as the loop reads it) is src/v2/loop.js, which the shell imports on
+   every page; this module adds the engines behind it and re-exports the loop, so a view, a lab or a test imports the
+   whole game from here. It loads when a view that needs it first opens (docs/ARCHITECTURE.md, "What loads when"). */
 import { build, projectOf, solutionOf } from '../engines/design.js';
 import { model, CHALLENGES as CHIP, START, normal, SETTINGS } from '../engines/chip.js';
 import { live, PERFECT, normalLife } from '../engines/life.js';
@@ -20,25 +23,13 @@ import { t, fmtNum } from '../core/i18n.js';
 import { normalJoule } from './joule.js';
 import { normalState as normalChef } from '../engines/bits.js';
 import { NEEDS, AGENT } from '../data/build.js';
-import { DEBATES } from '../data/debates.js';
-import { WAYS } from '../data/ways.js';
-import { STOPS, WORLDS } from '../data/weave.js';
-import { INSIDE, placeOf, SHARED, askAt as levelStops } from '../data/places.js';
-import { fieldOf, fieldAtLevel, fieldAtPlace } from '../data/questions.js';
+import { STOPS } from '../data/weave.js';
 import { QUESTIONS } from '../data/atlas.js';
 import { normalBetOf } from '../engines/bet.js';
 import { normalLevers, PUZZLES } from '../engines/ripple.js';
 import { normalAgent } from '../data/agent.js';
-import { normalLooked } from '../data/seek.js';
-import { LAB_CHALLENGES, challengeOnly } from '../data/labs/index.js';
-
-/* the loop, in order, and the station of each step on the island */
-export const STEPS = ['design', 'make', 'test', 'ship', 'use'];
-export const STATION = { design: 'studio', make: 'fab', test: 'test', ship: 'port', use: 'datacentre' };
-export const STEP_OF = Object.fromEntries(Object.entries(STATION).map(([s, p]) => [p, s]));
-/* places that are not a step: the start of making, the community, and the islands across the sea */
-export const PLACES = ['studio', 'quarry', 'fab', 'test', 'port', 'datacentre', 'lab', 'village', 'phones', 'cars', 'idea', 'tools', 'materials', 'power'];
-export const STEP_PLACE = { quarry: 'make' };
+import { CHALLENGES, challengeOf, isDone, OPENS, FRONT_ASK, KEY, CHECKED, readState } from './loop.js';
+export * from './loop.js';
 
 /* a circuit's starting description: the job's own, or one that is almost right (a fix-it job) */
 const STARTERS = { half: 'sum = a | b;\ncarry = a & b;' };
@@ -82,47 +73,6 @@ const lineOf = (code, n) => code.split('\n')[n] || '';
 export const hasPiece = (code, n, piece) => lineOf(code, n).includes(' ' + piece);
 export const togglePiece = (code, n, piece) => code.split('\n').map((l, i) => i !== n ? l : hasPiece(code, n, piece) ? l.replace(' ' + piece, '') : l.replace(/;?\s*$/, ' ' + piece + ';')).join('\n');
 
-/* Do: the challenges. kind: 'bet' (find a place among two dials where three primitives balance; bet: its question
-   and engine, src/engines/bet.js), 'design' (write a circuit; p: its job), 'chip' (reach a goal of chip.js with
-   your chip's settings; goal: its id), 'life' (ship a chip that lives through a place's life; mission),
-   'spot' (find the broken chip with a few test patterns). Each happens at a place and a level inside it
-   (place, at: a depth of src/data/places.js), on the step of the loop it belongs to. grows: what appears.
-   These are the loop's own, played by the player itself (src/v2/play.js); every other kind is a lab's, and each lab
-   declares its challenges in a file of its own (src/data/labs/), gathered below. */
-const LOOP_CHALLENGES = [
-  { id: 'half', step: 'design', place: 'studio', at: 'logic', kind: 'design', p: 'half', grows: 'masks' },
-  { id: 'vote', step: 'design', place: 'studio', at: 'check', kind: 'design', p: 'vote', grows: 'studio-screen' },
-  { id: 'full', step: 'design', place: 'studio', at: 'check', kind: 'design', p: 'full', grows: 'studio-wing' },
-  { id: 'prove', step: 'design', place: 'studio', at: 'check', kind: 'bet', bet: 'prove', grows: 'studio-proof' },
-  { id: 'months', step: 'make', place: 'fab', at: 'clean', kind: 'chip', goal: 'months', grows: 'fab-trucks' },
-  { id: 'quick', step: 'make', place: 'fab', at: 'deposit', kind: 'chip', goal: 'quick', grows: 'fab-line' },
-  { id: 'cheaper', step: 'make', place: 'fab', at: 'wafer', kind: 'bet', bet: 'cheaper', grows: 'fab-wafers' },
-  { id: 'onebad', step: 'make', place: 'fab', at: 'wafer', kind: 'bet', bet: 'onebad', grows: 'test-dies' },
-  { id: 'spot', step: 'test', place: 'test', at: 'test', kind: 'spot', p: 'full', grows: 'test-probe' },
-  { id: 'cores', step: 'test', place: 'test', at: 'test', kind: 'chip', goal: 'cores', grows: 'test-hall' },
-  { id: 'phone', step: 'use', place: 'phones', at: 'soc', kind: 'life', mission: 'phone', grows: 'island-phones' },
-  { id: 'car', step: 'use', place: 'cars', at: 'mcu', kind: 'life', mission: 'car', grows: 'island-cars' },
-  { id: 'dclife', step: 'ship', place: 'port', at: 'ship', kind: 'life', mission: 'datacentre', grows: 'dc-hall' },
-  { id: 'fed', step: 'use', place: 'datacentre', at: 'board', kind: 'chip', goal: 'fed', grows: 'dc-solar' },
-  { id: 'fast', step: 'use', place: 'datacentre', at: 'chip', kind: 'chip', goal: 'fast', grows: 'clock-tower' },
-  { id: 'oxen', step: 'use', place: 'datacentre', at: 'chip', kind: 'bet', bet: 'oxen', grows: 'dc-cores' },
-  { id: 'jevons', step: 'use', place: 'power', kind: 'bet', bet: 'jevons', grows: 'power-store' },
-  { id: 'batch', step: 'use', place: 'datacentre', at: 'chip', kind: 'bet', bet: 'batch', grows: 'dc-batch' }
-];
-/* every challenge: the loop's own, then each lab's in the order of src/data/labs/index.js, a challenge with an `after`
-   placed right after the challenge it names (the order the next thing to do and the lists by step follow) */
-export const CHALLENGES = (() => {
-  const L = LOOP_CHALLENGES.slice(), later = [];
-  LAB_CHALLENGES.forEach(c => (c.after ? later : L).push(c));
-  later.forEach(c => { const i = L.findIndex(x => x.id === c.after); L.splice(i < 0 ? L.length : i + 1, 0, c); });
-  return L.map(challengeOnly);
-})();
-/* A challenge behind a flag (flag: 'x', as the ear test was behind ?listen=1 until #317) shows only where the address
-   asks for it (?x=1): in a browser without the flag it is dropped from CHALLENGES here, before anything reads the list, so nothing else changes.
-   With no address (the tests, the open port) everything stays. */
-export const flagged = (c, search) => !c.flag || new RegExp('[?&]' + c.flag + '=1(&|$)').test(search);
-{ let q = null; try { q = location.search; } catch (e) { q = null; }
-  if (typeof q === 'string') for (let i = CHALLENGES.length - 1; i >= 0; i--) if (!flagged(CHALLENGES[i], q)) CHALLENGES.splice(i, 1); }
 /* the goal of a chip challenge as gauges: each a value of your chip's model and the bound it must reach
    (ge: at least, le: at most). Together they say the same as the goal's met() in src/engines/chip.js. */
 export const GAUGES = {
@@ -145,91 +95,26 @@ export function yourDesign(s) {
   const c = ['full', 'vote', 'half'].map(challengeOf).find(x => x && isDone(s, x.id)); if (!c) return null;
   const B = checkDesign(c.p, s.codes[c.p] || starter(c.p)); return B.ok ? { p: c.p, B } : null;
 }
-export const challengeOf = id => CHALLENGES.find(c => c.id === id) || null;
 export const chipGoal = id => CHIP.find(c => c.id === id);
-export const placeChallenges = place => CHALLENGES.filter(c => c.place === place);
-/* what grows, and where (the island draws each one: src/v2/map3d.js GROWERS, and each lab's in src/v2/growers/) */
-/* where a growth stands when it is not at its challenge's place; a lab's say so themselves (growAt in src/data/labs/):
-   the other ways to compute grow at the Lab (WAYS_AT), and the clock and the power budget, design decisions, at the studio */
-const GROW_AT = Object.assign({ onebad: 'test', half: 'studio', phone: 'phones', car: 'cars', dclife: 'datacentre', fast: 'lab' },
-  Object.fromEntries(LAB_CHALLENGES.filter(c => c.growAt).map(c => [c.id, c.growAt])));
-export const GROWTH = CHALLENGES.map(c => ({ id: c.grows, by: c.id, at: GROW_AT[c.id] || c.place }));
 
-/* Inside: every place's levels, one inside the next (src/data/places.js). These hold the earlier site's
-   pages: each level opens there until it is redrawn here. The data centre's first levels are flown through
-   (src/v2/dc3d.js; FLOWN: a depth and its level in the flight), and so are a phone's (src/v2/phone3d-flight.js) and a car's
-   (src/v2/car3d-flight.js). */
-export { INSIDE, placeOf, SHARED };
-export const FLOWN = { datacentre: { building: 0, rack: 2, board: 4, chip: 5 }, phones: { phone: 0, phoneboard: 2, soc: 3 }, cars: { car: 0, ecu: 2, mcu: 3 },
-  /* the studio is walked: each step is a corner of the room (src/v2/studio3d.js), whose screen opens into its bench */
-  studio: { need: 1, logic: 2, check: 3, gates: 4, layout: 5, masks: 6 } };
-/* Ask: the questions at each level of a place; the Lab holds the open thread's questions, where the
-   community asks them. BEACON: the one question glowing above a place. */
-export function askAt(place) { return place === 'lab' ? [{ level: null, stops: Object.keys(STOPS).filter(k => k.startsWith('open.')) }] : levelStops(place); }
-export const ASK = Object.fromEntries(PLACES.map(p => [p, askAt(p).flatMap(x => x.stops)]));
-export const BEACON = { studio: 'idea.need', quarry: 'make.crystal', fab: 'make.clean', test: 'fail.test', port: 'divide.ship', datacentre: 'life.building', lab: 'open.need' };
-export const DEBATES_AT = {
-  studio: ['designcost', 'signoff', 'skills'], fab: ['shrink'], test: ['bigdie'], port: ['supply'], datacentre: ['memory', 'power', 'paradigm', 'quantum'],
-  lab: ['open'], cars: ['mature'], phones: [], quarry: [], village: [], idea: [], tools: ['shrink', 'supply'], materials: ['supply'], power: ['power']
-};
-/* the other ways to compute belong where people imagine what comes next: the Lab */
-export const WAYS_AT = { lab: WAYS.map(w => w.id) };
-/* more ways inside, besides the levels. to: a place of the redesign (#/place/<id>), page: a page, or the
-   current site (world, depth, map). Words: look.<id>.t / .d */
-export const LOOK = {
-  port: [{ id: 'supply', page: 'supply' }], tools: [{ id: 'supply', page: 'supply' }], materials: [{ id: 'supply', page: 'supply' }],
-  lab: [{ id: 'plan', page: 'build' }], village: [{ id: 'plan', page: 'build' }]
-};
-/* the world of the current site where a depth is drawn (the first place that holds it) */
-export const worldOfDepth = depth => { for (const L of Object.values(INSIDE)) { const l = L.find(x => x.depth === depth); if (l) return l.world; } return 'journey'; };
-
-/* ---- following a question: a thread's stops as one trail through the chip world ---- */
-/* the order a trail walks: a chip in use from the building down to the atom (the data centre, then what only a
-   phone or a car adds), then designed, then made */
-export const DEPTH_ORDER = (() => { const o = []; WORLDS.forEach(w => w.depths.forEach(d => { if (!o.includes(d)) o.push(d); })); return o; })();
-export const trail = th => DEPTH_ORDER.filter(d => STOPS[th + '.' + d]);
-/* the levels of the flat dive (the earlier site's zoom, in the frame): from the chip down to the atom */
-export const DIVE_LEVELS = ['chip', 'block', 'gate', 'switch', 'atom'];
-/* the worlds the flat dive starts from besides the data centre: a phone, a car, and the made chip (the factory's
-   machine, its wafer and a finished die), each from its own top level down to the atom */
-export const DIVE_WORLD = { phone: 'phone', phoneboard: 'phone', soc: 'phone', car: 'car', ecu: 'car', mcu: 'car', scanner: 'made', wafer: 'made', die: 'made' };
-/* where a level is shown in the chip world: always an address inside it, never the earlier site */
-export function viewOfDepth(d) {
-  if (DIVE_WORLD[d]) return '#/dive/' + d + '/' + DIVE_WORLD[d];
-  if (d === 'board') return '#/board';
-  const f = FLOWN.datacentre[d]; if (f != null) return '#/place/datacentre/' + f;
-  if (DIVE_LEVELS.includes(d)) return '#/dive/' + d;
-  const w = worldOfDepth(d);
-  return w === 'design' ? '#/bench/' + d : '#/line/' + d;
-}
-export const askHref = key => { const [th, d] = key.split('.'); return '#/ask/' + th + '/' + d; };
-
-/* ---- your state: what you have done, and what you were working on ---- */
-export const KEY = 'osl-world-v1';
+/* ---- your state, whole: what the loop reads (readState, src/v2/loop.js) and what the engines check ---- */
 export function fresh() { return { done: {}, codes: {}, chip: Object.assign({}, START), life: {}, seen: false, drafts: [], sent: {}, met: {}, crossed: {}, bets: {}, whatif: { levers: {}, solved: {} }, agent: {}, teardown: {}, fit: {}, evolve: {}, litho: { best: {} }, aibuild: {}, looked: {}, joule: { on: false, plan: {} }, chef: normalChef(null), name: '', bench: normalBench(null) }; }
 export function normalState(s) {
   const f = fresh();
   if (!s || typeof s !== 'object') return f;
-  const done = {}; Object.keys(s.done || {}).forEach(k => { if (challengeOf(k) || k.startsWith('job:') || k.startsWith('break:')) done[k] = true; });
-  /* your entries not yet in the ledger (at most 24), which of them you have sent, the questions you have met
-     (thread: the levels where), and the name you sign with */
+  /* your entries not yet in the ledger (at most 24), and which of them you have sent */
   const drafts = (Array.isArray(s.drafts) ? s.drafts : []).filter(d => d && typeof d.id === 'string' && ENTRY_KINDS.includes(d.kind)).slice(-24);
   const sent = {}; Object.keys(s.sent || {}).forEach(k => { if (drafts.some(d => d.id === k)) sent[k] = true; });
-  const met = {}; Object.entries(s.met || {}).forEach(([k, v]) => { if (Array.isArray(v)) met[k] = v.filter(x => typeof x === 'string').slice(0, 40); });
-  const codes = {}; Object.entries(s.codes || {}).forEach(([k, v]) => { if (typeof v === 'string') codes[k] = v.slice(0, 4000); });
   const lifeC = {}; Object.entries(s.life || {}).forEach(([k, v]) => { lifeC[k] = normalLife(v); });
-  /* the seams you have crossed: their leak is raised once, then waits in Ask */
-  const crossed = {}; Object.keys(s.crossed || {}).forEach(k => { if (fieldOf(k)) crossed[k] = true; });
   /* where you left each bet's dials (src/engines/bet.js) */
   const bets = {}; CHALLENGES.filter(c => c.kind === 'bet').forEach(c => { if (s.bets && s.bets[c.id]) bets[c.id] = normalBetOf(c.bet, s.bets[c.id]); });
   /* What if?: the levers where you left them, and the puzzles you solved (src/engines/ripple.js) */
   const w = s.whatif || {}, whatif = { levers: normalLevers(w.levers), solved: {} }; Object.keys(w.solved || {}).forEach(k => { if (PUZZLES.some(p => p.id === k)) whatif.solved[k] = true; });
-  /* Print the finest lines: the setting that printed each scanner's finest lines (src/v2/labs/litho.js prints them again) */
-  const litho = { best: {} }; Object.entries((s.litho && s.litho.best) || {}).slice(0, 12).forEach(([k, v]) => { if (v && typeof v === 'object' && [v.na, v.v, v.dose].every(Number.isFinite)) litho.best[k] = { na: v.na, v: v.v, dose: v.dose, illum: v.illum === 'dipole' ? 'dipole' : 'conventional', dp: !!v.dp }; });
-  return { done, codes, chip: normal(s.chip || START), life: lifeC, seen: !!s.seen, drafts, sent, met, crossed, bets, whatif, agent: normalAgent(s.agent), teardown: s.teardown && typeof s.teardown === 'object' ? s.teardown : {}, fit: s.fit && typeof s.fit === 'object' ? s.fit : {}, evolve: s.evolve && typeof s.evolve === 'object' ? s.evolve : {}, litho, aibuild: s.aibuild && typeof s.aibuild === 'object' ? s.aibuild : {}, looked: normalLooked(s.looked), joule: normalJoule(s.joule), chef: normalChef(s.chef), name: typeof s.name === 'string' ? s.name.slice(0, 40) : '', bench: normalBench(s.bench) };
+  return Object.assign(readState(s), { drafts, sent, chip: normal(s.chip || START), life: lifeC, bets, whatif, agent: normalAgent(s.agent), joule: normalJoule(s.joule), chef: normalChef(s.chef), bench: normalBench(s.bench) });
 }
 export function load(store) { try { return normalState(JSON.parse(store.getItem(KEY) || 'null')); } catch (e) { return fresh(); } }
-export function save(store, s) { try { store.setItem(KEY, JSON.stringify({ done: s.done, codes: s.codes, chip: s.chip, life: s.life, seen: s.seen, drafts: s.drafts, sent: s.sent, met: s.met, crossed: s.crossed, bets: s.bets, whatif: s.whatif, agent: s.agent, teardown: s.teardown, fit: s.fit, evolve: s.evolve, litho: s.litho, aibuild: s.aibuild, looked: s.looked, joule: s.joule, chef: s.chef, name: s.name, bench: s.bench })); } catch (e) { /* storage unavailable */ } }
+/* the state the shell read before the engines came (readState): what they check, checked now, in place */
+export function complete(s) { const n = normalState(s); CHECKED.forEach(k => { s[k] = n[k]; }); return s; }
 
 /* ---- checks: each challenge asks its engine ---- */
 export function checkDesign(p, code) { return build({ p, code }); }
@@ -263,16 +148,6 @@ export function spotCase(code) {
 /* what a copy answers to a pattern: the broken one answers as spoiled, the others as designed */
 export const spotAnswer = (S, chip, i) => (chip === S.broken ? S.bad[i].o : S.rows[i].e);
 
-/* ---- progress ---- */
-export const isDone = (s, id) => !!s.done[id];
-export const stepChallenges = step => CHALLENGES.filter(c => c.step === step);
-export const stepState = (s, step) => { const L = stepChallenges(step); return { done: L.filter(c => isDone(s, c.id)).length, total: L.length }; };
-/* the next thing to do: the first unfinished challenge along the loop */
-export function next(s) { return CHALLENGES.find(c => !isDone(s, c.id)) || null; }
-/* where your chip stands on the loop: the step of the next challenge, or the last step when all are done */
-export function chipAt(s) { const n = next(s); return n ? n.step : STEPS[STEPS.length - 1]; }
-/* what has grown on the island */
-export function grown(s) { return new Set(GROWTH.filter(g => isDone(s, g.by)).map(g => g.id)); }
 
 /* ---- the community: the ledger replayed (src/engines/ledger.js), with your own entries not yet in it ---- */
 /* the world the ledger makes, with your drafts on top (marked draft: only you see them, until they are merged).
@@ -306,16 +181,6 @@ export function community(s) {
     state: P
   };
 }
-/* ---- challenges and questions are two faces of one thing ---- */
-/* the question a challenge opens once you have won it: a stop, at its own level or the one beside it */
-export const OPENS = Object.assign({ half: 'fail.check', vote: 'idea.check', full: 'make.gates', months: 'make.clean', quick: 'scale.clean', spot: 'fail.test', cores: 'divide.test',
-  phone: 'life.phone', car: 'fail.car', dclife: 'fail.ship', fed: 'divide.board', fast: 'fail.chip' },
-  /* each lab's challenges say what they open (src/data/labs/) */
-  Object.fromEntries(LAB_CHALLENGES.filter(c => c.opens).map(c => [c.id, c.opens])));
-/* and where the open things of the ledger sit: a break under "is the design right?", a piece to build under
-   "could anyone design a chip?", a missing check under "who checks, and with what?" */
-export const FRONT_ASK = { break: 'fail.check', build: 'open.need', engine: 'idea.check' };
-export const opensOf = ch => (ch.kind === 'break' ? 'idea.check' : ch.need ? 'open.layout' : OPENS[ch.id]) || null;
 /* what there is to do about a question: the challenges that open it, and the open things of the ledger that sit there */
 export function doAtStop(key, s) {
   const out = CHALLENGES.filter(c => OPENS[c.id] === key).map(c => ({ ch: c }));
@@ -325,9 +190,6 @@ export function doAtStop(key, s) {
   if (FRONT_ASK.engine === key) C.engines.forEach(e => out.push({ engine: e.need }));
   return out.filter(x => x.engine || x.ch);
 }
-/* the other questions that meet this one: at the same level, about a part they share */
-export const across = key => { const [, d] = key.split('.'), mine = STOPS[key] || []; return levelStops_(d).filter(k => k !== key && STOPS[k].some(p => mine.includes(p))); };
-const levelStops_ = d => Object.keys(STOPS).filter(k => k.split('.')[1] === d);
 /* what people have asked under a question, yours first */
 export const askedAt = (key, s) => { const W = world(s); return questionsAt(W, key.split('.')[1], key).sort((a, b) => !!b.draft - !!a.draft); };
 /* everything people and agents have asked at a level, under whichever question */
@@ -351,10 +213,5 @@ export function breakOf(id, s) { const e = world(s).byId[id]; if (!e || e.kind !
 /* a challenge by its id: one of the loop's, an open job (job:<piece>) or a break (break:<entry>) */
 export const anyChallenge = (id, s) => !id ? null : id.startsWith('break:') ? breakOf(id.slice(6), s) : id.startsWith('job:') ? jobOf(id.slice(4)) : challengeOf(id);
 export const jobOf = need => { const n = needOf(need); return n && n.project ? { id: 'job:' + need, step: null, kind: 'design', p: n.project, need, grows: null } : null; };
-export const debatesAt = place => (DEBATES_AT[place] || []).filter(id => DEBATES.some(d => d.id === id));
-/* the questions from the field asked at a place: its own, then those at its levels, each once */
-export const fieldsAt = place => [...new Set(fieldAtPlace(place).concat(...(INSIDE[place] || []).map(l => fieldAtLevel(l.depth))).map(q => q.id))];
 export const aiProposal = p => AGENT[p] || null;
 export { SETTINGS, START, PERFECT, designsFor };
-/* a question's root may show once two of its stops have been met, or one, after a challenge that opens that question was won */
-export const didOn = (s, th) => CHALLENGES.some(c => isDone(s, c.id) && (OPENS[c.id] || '').startsWith(th + '.')) || (th === 'idea' && Object.keys(s.done).some(k => k.startsWith('break:')));

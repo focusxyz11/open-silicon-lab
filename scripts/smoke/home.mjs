@@ -7,10 +7,11 @@
    languages; the island and the brand lead out and back */
 import { S } from './shared.mjs';
 
-export const about = 'Hold, the first page: one story on one chip — 0 and 1, scrolling and holding through fifty years, four moments, Moore\'s law live with its challenges, the wall without turning dark by day, the pull back to the whole chip and its four walls, every block\'s challenge, the bar\'s small chip and tally, the sources, Chinese and back, the island and back';
+export const about = 'Hold, the first page: what it fetches before its preload (no 3D, no engine but the shell\'s, its JavaScript under its budget); one story on one chip — 0 and 1, scrolling and holding through fifty years, four moments, Moore\'s law live with its challenges, the wall without turning dark by day, the pull back to the whole chip and its four walls, every block\'s challenge, the bar\'s small chip and tally, the sources, Chinese and back, the island and back';
 
 export default async function run() {
   const { browser3d, base, problems } = S;
+  await fetched();
   for (const [w, h, scheme] of [[1280, 800, 'dark'], [390, 844, 'light']]) {
     const tag = 'home ' + w, phone = w < 500, hp = await browser3d.newPage({ viewport: { width: w, height: h }, colorScheme: scheme, reducedMotion: 'reduce', hasTouch: phone });
     hp.on('pageerror', e => problems.push(tag + ': ' + e.message));
@@ -141,4 +142,36 @@ export default async function run() {
     }
     await hp.close();
   }
+}
+
+/* what the first page fetches before its idle preload starts (data-preload, the moment it started; docs/ARCHITECTURE.md,
+   "What loads when"): nothing of three.js or the 3D views, no engine but the shell's own (way.js: the game, the
+   ledger and the engines it replays through load beyond the first page, src/v2/beyond.js), only the core words and
+   its own, and its JavaScript under its budget, everything under the total. It was 3.4 MB with the island's 3D and
+   every word, then 1.2 MB with nearly 1 MB of JavaScript, every engine the ledger replays through among it (#377) */
+const FIRST_PAGE_BYTES = 1.5e6, FIRST_PAGE_JS = 400 * 1024;
+async function fetched() {
+  const { browser3d, base, problems } = S, tag = 'home: what the first page fetches';
+  const fp = await browser3d.newPage({ viewport: { width: 1280, height: 800 }, colorScheme: 'dark', reducedMotion: 'reduce' });
+  fp.on('pageerror', e => problems.push(tag + ': ' + e.message));
+  await fp.goto(base + 'index.html#/');
+  await fp.waitForFunction(() => !!document.documentElement.dataset.preload, null, { timeout: 20000 }).catch(() => problems.push(tag + ': the first page never starts its idle preload'));
+  await fp.waitForLoadState('networkidle').catch(() => { /* measured as it stands */ });
+  const early = await fp.evaluate(origin => { const pre = +document.documentElement.dataset.preload || Infinity;
+    return performance.getEntriesByType('resource').filter(e => e.startTime < pre && e.name.startsWith(origin)).map(e => ({ u: e.name.split('?')[0], b: e.decodedBodySize })); }, new URL(base).origin);
+  const name = e => e.u.split('/').pop(), kb = b => Math.round(b / 1024) + ' KB';
+  const heavy = early.filter(e => /\/(three\.min|three-extras|kit3d|map3d|dc3d|chip3d|level3d)\.js$/.test(e.u)).map(name);
+  if (heavy.length) problems.push(tag + ': it fetches 3D before its preload: ' + heavy.join(', '));
+  const engines = early.filter(e => /\/src\/engines\//.test(e.u) && !/\/way\.js$/.test(e.u)).map(name);
+  if (engines.length) problems.push(tag + ': it fetches engines before its preload: ' + engines.join(', '));
+  if (early.some(e => /\/community\/ledger\.json$/.test(e.u))) problems.push(tag + ': it fetches the ledger before its preload');
+  const bytes = early.reduce((a, e) => a + e.b, 0), js = early.filter(e => /\.m?js$/.test(e.u)).reduce((a, e) => a + e.b, 0);
+  if (!(js < FIRST_PAGE_JS)) problems.push(tag + ': ' + kb(js) + ' of JavaScript before its preload (budget ' + kb(FIRST_PAGE_JS) + ')');
+  if (!(bytes < FIRST_PAGE_BYTES)) problems.push(tag + ': ' + kb(bytes) + ' before its preload (budget ' + kb(FIRST_PAGE_BYTES) + ')');
+  /* of the words, only the core area's and the first page's own; of the styles, only what every screen shares and its own */
+  const words = early.filter(e => /\/src\/i18n\//.test(e.u)).map(e => e.u.split('/src/i18n/')[1]);
+  if (words.sort().join() !== 'en/core.json,en/hold.json') problems.push(tag + ': it fetches words beyond core.json and its own (hold.json): ' + words.join(', '));
+  const sheets = early.filter(e => /\.css$/.test(e.u)).map(name);
+  if (sheets.sort().join() !== 'base.css,hold.css') problems.push(tag + ': it fetches styles beyond base.css and its own (hold.css): ' + sheets.join(', '));
+  await fp.close();
 }
