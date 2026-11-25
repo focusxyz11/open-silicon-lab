@@ -53,6 +53,7 @@ html.frame2 .f2stage .benchinst .bk { aspect-ratio: 1; height: 100%; max-width: 
 .bk-tag.r { transform: translate(-100%, -50%); }
  .bk-tag.o { color: var(--warm); }
 .bk-tag.g, .bk-tag.c { font-size: 10px; color: var(--muted); }
+ .bk-tag.g { text-shadow: 0 0 2px var(--panel-solid), 0 0 4px var(--panel-solid); }
  .bk-tag.l { transform: translate(0, -50%); font-size: 11.5px; color: var(--muted); }
 .bk-note { margin: auto; padding: 14px; text-align: center; font-size: 13px; color: var(--muted); }
  .bk-note.bad { color: var(--bad); }
@@ -65,7 +66,10 @@ html.frame2 .f2stage .benchinst .bk { aspect-ratio: 1; height: 100%; max-width: 
  .bk-cost .warm b { color: var(--warm); }
 .bk .warm { color: var(--warm); }
 /* the job: the community's computer as a tree, your piece lit; the pins and the box */
-.bk-tree { flex: 1; min-height: 0; margin: 0; padding: 0; list-style: none; columns: 2; column-gap: 18px; overflow: auto; }
+/* the tree in two balanced columns, the panel scrolling under its heading where it is taller than the room (a small bench,
+   a challenge's instrument): a tree held to the panel's height would spill into a third column, off its side */
+.bk-plan { overflow-y: auto; }
+.bk-tree { flex: none; margin: 0; padding: 0; list-style: none; columns: 2; column-gap: 18px; }
 .bk-tree li { break-inside: avoid; padding-left: calc(var(--d) * 13px); }
 .bk-node { display: flex; align-items: center; gap: 7px; width: 100%; min-height: 26px; padding: 2px 7px; border: 1px solid transparent; border-radius: 8px; background: none; color: var(--ink); text-align: left; font: 600 12.5px/1.2 var(--sans); }
 button.bk-node { cursor: pointer; }
@@ -145,9 +149,15 @@ button.bk-pin { cursor: pointer; }
 .bk-subs .chipb { padding: 4px 10px; font-size: 12px; }
 .bk-say { margin: 0; font-size: 13px; }
  .bk-why { margin: 0; font-size: 12.5px; color: var(--ink); }
-/* gates: the cells, the values travelling level by level, a cell's transistors */
+/* gates: the cells, the values travelling level by level, a cell's transistors; one card under them all (bk-gback), the
+   inputs and outputs at its edges */
+.bk-gback { left: 0; top: 0; width: 100%; height: 100%; padding: 0; }
+.bk-r.bk-gt { background: none; border-color: transparent; box-shadow: none; }
+.bk-gback > .bk-cost { left: calc(14% + 12px); right: calc(16% + 12px); }
+ .bk-gback > :is(.bk-hint, .bk-cell) { left: calc(14% + 12px); right: calc(16% + 12px); }
 .bk-gpins { padding: 0; }
- .bk-gpins .bk-pin { position: absolute; left: 4px; right: 4px; transform: translateY(-50%); padding: 5px 8px; }
+ .bk-gpins .bk-pin { position: absolute; left: 8px; right: 0; transform: translateY(-50%); padding: 5px 8px; }
+ .bk-gpins.outs .bk-pin { left: 0; right: 8px; }
 .bk-gpins .bk-tick { position: absolute; left: 4px; right: 4px; bottom: 6px; padding: 5px 6px; font-size: 11.5px; }
 .bk-w { fill: none; stroke: color-mix(in srgb, var(--muted) 60%, transparent); stroke-width: 1.4px; transition: stroke .22s, stroke-width .22s; }
 .bk-w.on { stroke: var(--warm); stroke-width: 2.4px; }
@@ -205,7 +215,7 @@ button.bk-pin { cursor: pointer; }
   .bk { font-size: 11.5px; } .bk-r { padding: 7px 8px; border-radius: 12px; }
   .bk-st, .bk-boxt, .bk-cost span:not(:first-child) .bk-hide { display: none; }
   .bk-node { min-height: 0; padding: 1px 4px; gap: 5px; font-size: 11px; } .bk-tree { column-gap: 8px; } .bk-tree li { padding-left: calc(var(--d) * 8px); }
-  .bk-pin { padding: 3px 6px; font-size: 11.5px; gap: 4px; } .bk-q { font-size: 32px; } .bk-big { font-size: 22px; } .bk-big.sm { font-size: 12.5px; }
+  .bk-pin { padding: 3px 5px; font-size: 11.5px; gap: 4px; } .bk-q { font-size: 32px; } .bk-big { font-size: 22px; } .bk-big.sm { font-size: 12.5px; }
   .bk-lamp { width: 40px; height: 40px; } .bk-seg { width: 44px; }
   .bk-hl, .bk-code textarea { font-size: 11.5px; padding-left: 30px; } .bk-ln { min-height: calc(11.5px * 1.75); } .bk-ln i { left: -26px; width: 18px; }
   .bk-tt table { font-size: 10.5px; } .bk-tt td, .bk-tt th { padding: 2px 2px; }
@@ -215,4 +225,6 @@ button.bk-pin { cursor: pointer; }
   .bk-set { font-size: 11px; } .bk-k { font-size: 9.5px; margin-bottom: 4px; }
   .bk-hint { font-size: 10.5px; bottom: 6px; } .bk-cell { font-size: 11px; padding: 6px 8px; } .bk-tr { height: 22px; }
   .bk-gpins .bk-pin { padding: 3px 4px; gap: 3px; font-size: 10.5px; }
+  /* the verdict: a wrong answer's reason takes the place of the test's sizes and the pattern's name (it names it) */
+  .bk-vd { gap: 4px; } .bk-vd:has(.bk-why) :is(.bk-subs, .bk-scrub > span) { display: none; }
 }

@@ -261,7 +261,10 @@ export function create() {
       last = phoneB && !!V.vui.querySelector(':scope > .steps2 [data-stepgo="1"][disabled]'),
       bb = !bench ? b : innerWidth >= 1100 ? b + 62 + (inV ? 62 : 0) : phoneB ? b + (inV || last ? 64 : 8) + (inV && last ? 52 : 0) : b + 56 + (inV ? 56 : 0), tt = (top ? top + 8 : wide ? 122 : 116) + st;
     V.dive.setInset({ l: f2cap ? Math.max(90, Math.round(f2.right - (lens ? 16 : 120))) : wide ? 90 : 8, r: (f2 && !f2cap ? Math.round(f2.width) + 32 : wide ? 20 : 8) + lens, t: tt, b: bb });
-    if (bench) { const f = V.dive.frame, ah = $('diveCanvas').clientHeight - tt - bb; V.Bench.place(Object.assign({}, f, phoneB ? { h: Math.min(ah - 8, f.B * 1.5), top: tt + 4 } : { h: f.B })); }
+    /* on a phone the bench takes the screen's width whatever the room above the card (a challenge's card leaves less
+       than a square), so its words keep their size and its code its lines (#374) */
+    if (bench) { const f = V.dive.frame, cv = $('diveCanvas'), ah = cv.clientHeight - tt - bb, w = cv.clientWidth - 16;
+      V.Bench.place(Object.assign({}, f, phoneB ? { w, cx: 8 + w / 2, h: Math.max(160, Math.min(ah - 8, w * 1.5)), top: tt + 4 } : { h: f.B })); }
     /* a level drawn in 3D takes its square when the zoom moves; it is told now, so it moves with the frame */
     if (V.flatKind === 'dive' && V.WE) levelZoom(V.dive.z); };
   /* the bench: a design challenge played in the dock; the drawings above follow your description */
