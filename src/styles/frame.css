@@ -716,7 +716,7 @@ pre.code { margin: 4px 0; white-space: pre-wrap; overflow-wrap: anywhere; }
 @media (prefers-reduced-motion: reduce) { .seamnote { animation: none; }
 }
 
-/* ---- a bet (src/v2/play.js, kind 'bet'): the wafer as the engine counts it, beside each part's cost at every size ---- */
+/* ---- a bet (src/v2/labs/bets.js, kind 'bet'): the wafer as the engine counts it, beside each part's cost at every size ---- */
 button.opens { width: 100%; text-align: left; border: 0; border-left: 3px solid var(--warm); color: var(--ink); cursor: pointer; font: inherit; }
 .opens .kicker { display: flex; align-items: center; gap: 6px; }
 .races { display: grid; gap: 12px; align-content: start; }

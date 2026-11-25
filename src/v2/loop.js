@@ -25,7 +25,7 @@ export const STEP_PLACE = { quarry: 'make' };
    your chip's settings; goal: its id), 'life' (ship a chip that lives through a place's life; mission),
    'spot' (find the broken chip with a few test patterns). Each happens at a place and a level inside it
    (place, at: a depth of src/data/places.js), on the step of the loop it belongs to. grows: what appears.
-   These are the loop's own, played by the player itself (src/v2/play.js); every other kind is a lab's, and each lab
+   These are the loop's own, played by the player itself (src/v2/play.js; the bets drawn by src/v2/labs/bets.js); every other kind is a lab's, and each lab
    declares its challenges in a file of its own (src/data/labs/), gathered below. */
 const LOOP_CHALLENGES = [
   { id: 'half', step: 'design', place: 'studio', at: 'logic', kind: 'design', p: 'half', grows: 'masks' },

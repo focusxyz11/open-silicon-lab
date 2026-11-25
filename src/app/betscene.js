@@ -17,7 +17,7 @@ export function setChipScene(c) {
 }
 export function followChip(f) { YOURS.follow = f; if (YOURS.chip) f(YOURS.chip); }
 
-/* A bet's wafer, chip or power while its challenge is open (src/v2/play.js, src/engines/bet.js): the 3D levels draw it in
+/* A bet's wafer, chip or power while its challenge is open (src/v2/labs/bets.js, src/engines/bet.js): the 3D levels draw it in
    place of yours, so the scene behind the card answers the dials (src/v2/wafer3d.js, src/v2/relief3d.js; the wafer
    through src/app/scenes.js waferNow). */
 export function setBetScene(wafer, chip, key = '', power = null) { if (key === BET.key) return; BET.wafer = wafer || null; BET.chip = chip || null; BET.power = power || null; BET.key = key; BET.v++; }

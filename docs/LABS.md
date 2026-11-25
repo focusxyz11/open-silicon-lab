@@ -19,9 +19,10 @@ A lab is a few files of its own, all named for it (say `<name>`), and nothing in
 
 and its name in the list of labs, `src/data/labs/index.js` (an import and an entry in `LABS`, both at the end: there is no build step, so a browser cannot list a folder). `tests/labs.test.mjs` checks every lab file is listed and every file a lab names is there. Follow `src/v2/labs/crystal.js` closely; `films.js`, `litho.js`, `implant.js` and `overlay.js` are newer examples.
 
-`export default function lab(L)` returns `{ draw, click(e) -> bool, input(e) -> bool }`.
+`export default function lab(L)` returns `{ draw, click(e) -> bool, input(e) -> bool }`, and `after()` when it needs one.
 - `L` holds `S, view, ch, ctx, el, esc, t, head, reward, doneNote, win, draw, fx, show`; see how `src/v2/play.js` calls it.
 - `draw()` returns the card's HTML. It is patched in place, so sliders keep their drag.
+- `after()`, when there, runs once the HTML is in place: it paints what the HTML cannot say (the bets' wafer on a canvas, the scene behind the card).
 - `click` and `input` return true when they handled the event.
 - Animation runs in `requestAnimationFrame` loops on real elapsed time, capped per frame. A slow screen must not slow the model (see `czLoop` in `crystal.js`), and a loop stops when `el.isConnected` is false. One loop at a time: a second tap or a second Run must not start a second loop (`loop(el, step, end)` in `src/v2/labs/loop.js` guards it, and counts the loops running in the card's `data-loops` for the smoke test).
 - Keep what the player has tried in `view`, and win from that (`metBy` in `src/engines/fabkit.js` for the factory's checks).
@@ -54,7 +55,7 @@ A second picture (a curve beside the main drawing, the tones under a signal) sta
 
 1. **The declaration, `src/data/labs/<name>.js`:** `export default { name: '<name>', css: true, challenges: [...] }` (`css: true` only when the lab has a stylesheet). Each challenge is `{ id, step, place, at: '<level>', kind, grows: '<grow-id>', opens: '<stop key>', exp: '<experiment id>' }`:
    - `step` is the stage of the loop its place stands at (the one the bar lights while it is played, `stageOfChallenge` in `src/engines/way.js`): a challenge at the phones' or the cars' island is `use`; one at the Lab, which stands at Open, counts for `design`. `tests/way.test.mjs` checks it.
-   - `kind` is the lab's own (the player sends every challenge of that kind to `src/v2/labs/<name>.js`); two labs never share a kind, and the player's own kinds (`design`, `bet`, `chip`, `life`, `spot`) are not a lab's.
+   - `kind` is the lab's own (the player sends every challenge of that kind to `src/v2/labs/<name>.js`); two labs never share a kind, and the player's own kinds (`design`, `bet`, `chip`, `life`, `spot`) are not a lab's. (The six bets are the loop's own challenges, declared in `src/v2/loop.js` and opening a question of the field, but drawn by a lab file of their own, `src/v2/labs/bets.js`, which the player loads with the labs.)
    - `opens` is a stop at that level or the one beside it (`src/data/weave.js`), the question the challenge opens once won.
    - `exp` is the one experiment it puts a target on (`src/data/experiments/`), the one whose stops or levels match; the experiment's files are not touched.
    - `growAt` (when its growth stands at another place than the challenge's), `after` (where it stands in the loop's order, when not at the end) and `flag` (shown only with `?<flag>=1`) are there when needed. Each grow id must be unique.

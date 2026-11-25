@@ -1,4 +1,4 @@
-/* The bets, as engines (the questions: src/data/questions.js; the player: src/v2/play.js, kind 'bet').
+/* The bets, as engines (the questions: src/data/questions.js; the player: src/v2/play.js, kind 'bet', drawn by src/v2/labs/bets.js).
    A bet is where three primitives pull at once: push one, and the other two move. Its challenge gives two dials
    and asks for a place among them that no single dial reaches. Each bet here has a guess (asked before you look),
    a starting place, a check, and normalBetOf(id, saved) to read back what you left.

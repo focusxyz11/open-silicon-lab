@@ -35,7 +35,7 @@ src/v2/studio3d.js            the design studio walked inside: its corners are t
 src/v2/furnish.js             desks, screens, chairs, plants and people, shared by the island and the studio inside
 src/data/studio.js            the studio's one plan: its floor, its corners in order and the screen each bench opens on
 src/v2/chip3d.js        inside a chip, layer by layer: the dive's levels as made (Make, along from the dive)
-src/v2/play.js, labs/   the challenge player, and the labs, one file each (docs/LABS.md)
+src/v2/play.js, labs/   the challenge player, and the labs, one file each (docs/LABS.md); the six bets in labs/bets.js, loaded with the labs
 src/v2/kit3d.js         the one 3D stage, light, the two palettes, HTML labels at 3D points
 src/data/atlas.js       one home for every thing: each part, question, challenge and story by place and level (tested)
 src/data/places.js      the places and the levels inside each
