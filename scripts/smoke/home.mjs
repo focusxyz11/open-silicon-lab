@@ -54,15 +54,15 @@ export default async function run() {
     /* past the wall the camera pulls back: the square is one block of a chip, and a check finds four walls on it */
     await play('past the wall the camera does not pull back to the whole chip with its four walls', () => { const e = document.getElementById('home'), y = window.__hold.at('pull'); if (Math.abs(e.scrollTop - y) > 4) e.scrollTop = y; return window.__hold.state().chip && document.querySelectorAll('#hd-root .dblk.found').length === 4; });
     /* the four walls, each tried on its block; each with its question, a way into the lab, and what people are trying (the blueprint's words) */
-    const wall = (id, what, fn) => hp.evaluate(id => window.__hold.go(id), id).then(() => play(what, fn, id));
+    const wall = (id, what, fn, timeout) => hp.evaluate(id => window.__hold.go(id), id).then(() => play(what, fn, id, timeout));
     await wall('leak', 'the leak cannot be tried', () => { const r = window.__p('leak').querySelector('input[type=range]'); if (r && r.value !== '240') { r.value = '240'; r.dispatchEvent(new Event('input', { bubbles: true })); } return !!window.__hold.S.tried.switch; });
     await play('a wall stands without its question, its way into the lab and what people are trying', () => { const s = document.querySelector('#hd-root .sec[data-id="leak"]'); return s.querySelector('.w-q p').textContent.length > 20 && !!s.querySelector('a[href^="#/"]') && !!s.querySelector('.w-ways button[data-way]:not([hidden]) b').textContent; });
     await wall('distance', 'the distance cannot be tried', () => { const b = window.__p('distance').querySelectorAll('.seg button'); if (b[2] && !window.__hold.S.tried.memory) { b[1].click(); b[2].click(); } return !!window.__hold.S.tried.memory; });
     await wall('power', 'the power cannot be tried', () => { const b = window.__p('power').querySelector('.pbtn'); if (b && !window.__hold.S.tried.power) b.click(); return !!window.__hold.S.tried.power; });
     await wall('price', 'the price cannot be tried', () => { const b = window.__p('price').querySelectorAll('.seg button'); if (b[1] && !window.__hold.S.tried.cost) b[1].click(); return !!window.__hold.S.tried.cost; });
     if (!(await hp.evaluate(() => !!window.__hold.S.done.walls))) problems.push(tag + ': the four walls tried do not count as a challenge');
-    /* the next fifty years: hold again, down to the floor */
-    await wall('next', 'the next fifty years cannot be held down to the floor', () => { const b = window.__p('next').querySelector('.holdbtn'); if (b && !window.__hold.S.next.hold) b.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, pointerType: 'mouse' })); return !!window.__hold.S.done.floor; });
+    /* the next fifty years: hold again, down to the floor (it takes its time: about twelve seconds of frames, more on a slow machine) */
+    await wall('next', 'the next fifty years cannot be held down to the floor', () => { const b = window.__p('next').querySelector('.holdbtn'); if (b && !window.__hold.S.next.hold) b.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, pointerType: 'mouse' })); return !!window.__hold.S.done.floor; }, 90000);
     await release();
     /* how the machine grew, every era; the arrangements, where a number never travels; your machine, offered by an agent and kept by you */
     await wall('eras', 'the eras cannot all be seen', () => { window.__p('eras').querySelectorAll('.seg button').forEach(b => b.click()); return !!window.__hold.S.done.eras; });
