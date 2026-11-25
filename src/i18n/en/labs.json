@@ -1390,7 +1390,7 @@
  "aib.note.balanced": "Well balanced: the math and the memory finish each step at about the same time.",
  "aib.note.low-yield": "Only {percent}% of the dies work. Smaller dies (chiplets) or an older, calmer process would cut the cost of each chip.",
  "aib.note.power-close": "The power is close to the limit; cooling will be tight.",
- "aib.note.newest-node": "A16 only entered production in late 2026: the newest process costs more and puts the date at risk.",
+ "aib.note.newest-node": "A16's volume production slipped from late 2026 to 2027: the newest process costs more and puts the date at risk.",
  "aib.note.compiler": "A matrix engine needs a strong compiler team (the people who turn programs into its instructions). Budget for software, as Google does for its TPUs.",
  "aib.note.cpu-math": "CPU cores give far less math per mm² than units built for matrices, which is why AI chips spend their area on matrix math.",
  "aib.note.agents": "The date is missed. AI design agents would pull the schedule in by several months.",
