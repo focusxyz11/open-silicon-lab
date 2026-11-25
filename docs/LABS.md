@@ -23,7 +23,7 @@ and its name in the list of labs, `src/data/labs/index.js` (an import and an ent
 - `L` holds `S, view, ch, ctx, el, esc, t, head, reward, doneNote, win, draw, fx, show`; see how `src/v2/play.js` calls it.
 - `draw()` returns the card's HTML. It is patched in place, so sliders keep their drag.
 - `click` and `input` return true when they handled the event.
-- Animation runs in `requestAnimationFrame` loops on real elapsed time, capped per frame. A slow screen must not slow the model (see `czLoop` in `crystal.js`), and a loop stops when `el.isConnected` is false.
+- Animation runs in `requestAnimationFrame` loops on real elapsed time, capped per frame. A slow screen must not slow the model (see `czLoop` in `crystal.js`), and a loop stops when `el.isConnected` is false. One loop at a time: a second tap or a second Run must not start a second loop (`loop(el, step, end)` in `src/v2/labs/loop.js` guards it, and counts the loops running in the card's `data-loops` for the smoke test).
 - Keep what the player has tried in `view`, and win from that (`metBy` in `src/engines/fabkit.js` for the factory's checks).
 
 ## Layout

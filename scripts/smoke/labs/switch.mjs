@@ -14,4 +14,9 @@ export default async ({ fp, adr, inDo, playLab, problems, tag }) => {
     const set = (k, v) => { const i = document.querySelector(P + '#sw-' + k); if (i && i.value !== String(v)) { i.value = v; i.dispatchEvent(new Event('input', { bubbles: true })); } };
     set('eg', 2.5); set('me', 5);
     return !!document.querySelector(P + '.tswband .me.out') && !!document.querySelector(P + '.tswbandsay.bad') && !!document.querySelector(P + '.tswfig .you.guess'); }, null, { timeout: 30000, polling: 1000 }).catch(() => problems.push(tag + ': an invented material outside the band is not marked a guess'));
+  /* powers of ten in the font of their numbers (#373): raised tspans on the curve's axis and the band's, a sup on an
+     invented material's traps, never Unicode's superscript digits (a fallback font drew them broken) */
+  await fp.waitForFunction(re => { const P = '.player[data-ch="transistor"] ', p = document.querySelector(P); if (!p) return false;
+    return p.querySelectorAll('.tswfig text.ax tspan.exp').length >= 5 && !!p.querySelector('.tswband text.ax tspan.exp') && !!p.querySelector('#sw-dit') && !!p.querySelector('.tswdial output sup.exp') && !new RegExp(re).test(p.textContent); }, '[\\u2070-\\u209f]', { timeout: 30000, polling: 1000 })
+    .catch(() => problems.push(tag + ': the powers of ten are not raised numbers in the figures\' own font'));
 };

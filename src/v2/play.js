@@ -281,7 +281,9 @@ export function play(el, ch, ctx) {
     const p = x => Math.max(2, Math.min(100, 100 * Math.log(x) / Math.log(300)));
     return '<div class="race' + (v >= goal ? ' ok' : '') + '"><span class="rl">' + esc(t('bet.ox.race.' + k)) + '</span><span class="rbar"><span style="width:' + p(v).toFixed(1) + '%"></span><i style="left:' + p(goal).toFixed(1) + '%"></i></span><span class="rv">' + esc(times(v)) + '</span></div>';
   }
-  /* the chip as units: the strong core a dark block, small cores squares, more than the budget past a dashed line */
+  /* the chip as units: the strong core one big block, small cores squares, more than the budget past a dashed line; the
+     caption names them by size, never by colour (the block is drawn in ink, dark by day and light at night), and speaks
+     of the dashed line only when it is drawn (#373) */
   function planSvg(M) {
     const F = Bet.floorplan(M.r, M.m), c = 10, W = F.W * c, H = F.rows * c, over = F.rows > F.budgetRows;
     return '<figure class="oxplan"><svg viewBox="-2 -2 ' + (W + 4) + ' ' + (H + 4) + '" role="img" aria-label="' + esc(t('bet.ox.planAria', { r: M.r, m: M.m, size: M.size })) + '">' +
@@ -290,7 +292,7 @@ export function play(el, ch, ctx) {
       F.hens.map(([x, y]) => '<rect class="hen" x="' + (x * c + 1.2) + '" y="' + (y * c + 1.2) + '" width="' + (c - 2.4) + '" height="' + (c - 2.4) + '" rx="1"/>').join('') +
       '<rect class="edge" x="0" y="0" width="' + W + '" height="' + Math.min(H, F.budgetRows * c) + '"/>' +
       (over ? '<line class="budget" x1="0" x2="' + W + '" y1="' + F.budgetRows * c + '" y2="' + F.budgetRows * c + '"/>' : '') +
-      '</svg><figcaption class="small muted">' + esc(t('bet.ox.plan', { size: M.size })) + '</figcaption></figure>';
+      '</svg><figcaption class="small muted">' + esc(t(F.ox ? 'bet.ox.plan' : 'bet.ox.planHens', { size: M.size }) + ' ' + t(over ? 'bet.ox.planOver' : 'bet.ox.planIn')) + '</figcaption></figure>';
   }
   /* each part's cost at every size on this line (log scale), the cheapest point, your size, your guess, the goal */
   function curveSvg(cur, low, b) {

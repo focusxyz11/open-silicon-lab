@@ -8,6 +8,7 @@
    (its step count, the instruction, a0), and two lanes, the agent's look up to its budget and what really happened.
    A lab of the challenge player (src/v2/play.js): lab(L) -> { draw, click, input }. */
 import * as HL from '../../engines/halt.js';
+import { loop } from './loop.js';
 
 const ANIM_S = 1.6;   /* seconds a run takes to replay on the picture */
 
@@ -171,11 +172,12 @@ export default function lab(L) {
   }
   function bench() { const s = st(); return head() + stages(s) + (s.stage === 1 ? one(s) : two(s)) + doneNote() + reward(); }
 
-  function replay() { const s = st(); if (!el.isConnected || !s.run) return; draw(); if (performance.now() - s.run.t0 < ANIM_S * 1000 + 50) requestAnimationFrame(replay); }
+  /* the replay, one loop at a time: Run pressed again starts the replay over in the loop already running */
+  const replayL = loop(el, now => { const s = st(); if (!s.run) return false; draw(); return now - s.run.t0 < ANIM_S * 1000 + 50; });
   function runIt() {
     const s = st(), r = HL.judge(s.prog, s.budget);
     s.run = Object.assign(r, { t0: performance.now(), every: r.asks ? HL.everyBudget(r.prog) : null });
-    s.tried = HL.after(s.tried, r); check(); draw(); fx(); requestAnimationFrame(replay);
+    s.tried = HL.after(s.tried, r); check(); draw(); fx(); replayL.start();
   }
   return {
     draw: bench,

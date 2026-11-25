@@ -900,7 +900,7 @@
  "game.ch.euv-1000.goal": "Turn the EUV light source up to 1,000 W and reach 275 wafers an hour. Can this scanner get to the 330 an hour that ASML aims for by 2030?",
  "game.ch.euv-1000.why": "EUV light is so weak by the time it reaches the wafer that the machine's speed, and so the price of every chip, depends on how much light the source makes and how little is lost on the way.",
  "game.ch.too-hot.t": "Too hot for silicon",
- "game.ch.too-hot.goal": "Heat pure silicon until its own free electrons reach 10¹⁵ per cm³, as many as lightly doped silicon has. At what temperature does the doping stop deciding how a chip behaves?",
+ "game.ch.too-hot.goal": "Heat pure silicon until its own free electrons are as many as lightly doped silicon has: a million billion in every cm³. At what temperature does the doping stop deciding how a chip behaves?",
  "game.ch.too-hot.why": "A switch works because a few added atoms decide where silicon conducts and where it does not. Heat frees electrons everywhere, whatever was added. Somewhere there is a temperature where the heat wins.",
  "game.ch.transistor.t": "Invent a transistor",
  "game.ch.transistor.goal": "Make a switch that really turns off, one that spends less energy than today's silicon fin, one steeper than 60 mV per tenfold, and a better one a factory could make.",

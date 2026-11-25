@@ -11,4 +11,12 @@ export default async ({ fp, adr, inDo, playLab, problems, tag }) => {
   await fp.waitForFunction(() => { const P = '.player[data-ch="chef"] ', c = q => { const b = document.querySelector(q); if (b) b.click(); }, e = () => { const f = document.querySelector(P + '[data-mb-e]'); return f ? { mbTrip: f.dataset.mbTrip, mbE: f.dataset.mbE } : null; };
     c(P + '[data-mb-tab="trip"]'); c(P + 'button[data-mb-at="near"]'); const a = e(); c(P + 'button[data-mb-at="rack"]'); const b = e();
     return !!(a && b && a.mbTrip === 'near' && b.mbTrip === 'rack' && +b.mbE > 10 * +a.mbE); }, null, { timeout: 30000, polling: 1500 }).catch(() => problems.push(tag + ': moving the memory does not change one bit\'s trip'));
+  /* one loop at a time (#373): places tapped during a trip start the trip again in the loop already running, and the loop
+     stops when the trip ends (the card counts its loops in data-loops) */
+  await fp.waitForFunction(() => { const P = '.player[data-ch="chef"] ', c = q => { const b = document.querySelector(q); if (b) b.click(); }, p = document.querySelector(P), n = () => +(p && p.parentElement.dataset.loops || 0);
+    if (!p) return false; c(P + '[data-mb-tab="trip"]'); c(P + 'button[data-mb-at="near"]'); c(P + 'button[data-mb-at="rack"]'); c(P + 'button[data-mb-at="near"]');
+    const most = n(); window.__mbLoops = Math.max(window.__mbLoops || 0, most); return most <= 1; }, null, { timeout: 30000, polling: 1500 })
+    .catch(() => problems.push(tag + ': tapping places during a trip starts more than one loop'));
+  await fp.waitForFunction(() => { const p = document.querySelector('.player[data-ch="chef"]'); return !!p && +(p.parentElement.dataset.loops || 0) === 0 && (window.__mbLoops || 0) <= 1; }, null, { timeout: 30000, polling: 500 })
+    .catch(() => problems.push(tag + ': the trip\'s loop does not stop, or more than one ran'));
 };

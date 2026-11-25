@@ -44,6 +44,17 @@ export default async function run() {
   await fp.evaluate(() => { for (const [k, v] of [['ox', 6], ['hens', 6]]) { const r = document.querySelector('[data-bet="' + k + '"]'); if (r) { r.value = v; r.dispatchEvent(new Event('input', { bubbles: true })); } } });
   await fp.waitForSelector('.player .won', { timeout: 10000 }).catch(() => problems.push(tag + ': the oxen bet cannot be won with an ox and chickens'));
   await inDo('oxen', 'oxen');
+  /* its caption names the parts by size, never by colour (the block is light at night), and speaks of the dashed line
+     only while it is drawn: within the budget the outline, past it the dashed line (#373) */
+  await fp.evaluate(async () => {
+    const W = await (await fetch(new URL('src/i18n/en/labs.json', location.href))).json(), cap = () => (document.querySelector('.oxplan figcaption') || {}).textContent || '', set = (k, v) => { const r = document.querySelector('[data-bet="' + k + '"]'); if (r && r.value !== String(v)) { r.value = v; r.dispatchEvent(new Event('input', { bubbles: true })); } };
+    const ok = over => !!document.querySelector('.oxplan .budget') === over && cap().includes(W[over ? 'bet.ox.planOver' : 'bet.ox.planIn']) && !cap().includes(W[over ? 'bet.ox.planIn' : 'bet.ox.planOver']) && !/dark/i.test(cap());
+    const until = async (f, ms) => { const end = Date.now() + ms; while (Date.now() < end) { if (f()) return true; await new Promise(r => requestAnimationFrame(r)); } return false; };
+    const within = await until(() => ok(false), 10000);
+    const hens = document.querySelector('[data-bet="hens"]'), past = await until(() => { set('hens', hens ? hens.max : 0); return ok(true); }, 10000);
+    set('hens', 6);
+    return within && past;
+  }).then(r => { if (!r) problems.push(tag + ': Cray\'s caption does not match its picture (the dashed line, or a colour named)'); }).catch(e => problems.push(tag + ': Cray\'s caption could not be checked: ' + e.message));
   /* the pieces' bet: split and untested sinks packages; split and tested wins */
   await fp.goto(adr('#/do/onebad'));
   await fp.waitForSelector('[data-guess-pc]', { timeout: 30000 }).catch(() => problems.push(tag + ': the pieces bet does not ask for a guess first'));
@@ -77,6 +88,9 @@ export default async function run() {
     for (const [k, v] of [['batch', 9], ['format', 2]]) { const r = document.querySelector('[data-bet="' + k + '"]'); if (r && r.value !== String(v)) { r.value = v; r.dispatchEvent(new Event('input', { bubbles: true })); } }
     return !!document.querySelector('.player .won'); }, null, { timeout: 30000, polling: 1000 }).catch(() => problems.push(tag + ': the batch bet cannot be won with many people and fewer bits'));
   await inDo('batch', 'batch');
+  /* its step keeps its three columns (a name, a bar, a figure) on a page where Verify the agent was never opened (#373) */
+  await fp.waitForFunction(() => { const g = document.querySelector('.player[data-ch="batch"] .btstep .agrace'); return !!g && getComputedStyle(g).display === 'grid' && getComputedStyle(g).gridTemplateColumns.split(' ').length === 3; }, null, { timeout: 10000, polling: 500 })
+    .catch(() => problems.push(tag + ': the batch bet\'s step loses its three columns on a fresh page'));
   /* the factory's labs: each is played to its win; a poll does every move again, as the sheet may be drawn anew
      when the flight lands. SET sets a dial the way a person drags it. */
   const SET = "const SET = (q, v) => { const i = document.querySelector(q); if (i) { i.value = v; i.dispatchEvent(new Event('input', { bubbles: true })); } }, CL = q => { const b = document.querySelector(q); if (b) b.click(); };";

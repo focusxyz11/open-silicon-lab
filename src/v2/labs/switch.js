@@ -14,8 +14,13 @@ import { mark as fidMark } from '../fid.js';
 /* your switch, kept for the machines (a convenience of this browser: src/v2/machines.js reads it) */
 import { keptSwitch, keepSwitch as keep } from '../kept.js';
 
-const SUP = '⁰¹²³⁴⁵⁶⁷⁸⁹⁻';
-const sup = n => String(n).replace(/[0-9-]/g, c => SUP[c === '-' ? 10 : +c]);
+/* a power of ten, raised in the same font as its number (#373): Unicode's superscript digits are not in the site's
+   fonts, so they came from a fallback font ('10-1 0'). In a figure a tspan raised by dy (the exponent ends its text, so
+   nothing after it moves), in HTML a sup (src/styles/labs.css); words with a number in them are escaped around it */
+const pow = n => String(n).replace('-', '−');
+const supSvg = n => '<tspan class="exp" dy="-0.42em" font-size="72%">' + pow(n) + '</tspan>';
+const supHtml = n => '<sup class="exp">' + pow(n) + '</sup>';
+const MARK = '\u0001';
 /* the curve's frame: gate volts -0.4 to 0.8 across (below 0 V the switch is held off harder, where a leak shows), current
    10^-14 to 10^-2 A per micrometre up */
 const CW = 360, CH = 240, X0 = 46, X1 = 348, Y0 = 22, Y1 = 200, LO = -14, HI = -2, VLO = -0.4, VMAX = 0.8;
@@ -39,7 +44,8 @@ export default function lab(L) {
   const matName = id => t('sw.mat.' + id);
   /* a material's name inside a sentence */
   const inName = r => (r.own ? t('sw.dev.own') : matName(r.spec.mat).toLowerCase());
-  const sci = v => { const e = Math.floor(Math.log10(v) + 1e-9), m = v / Math.pow(10, e); return t('sw.sci', { m: nf(m, 1), e: sup(e) }); };
+  /* a number as m × 10 to a power, as HTML */
+  const sci = v => { const e = Math.floor(Math.log10(v) + 1e-9), m = v / Math.pow(10, e); return esc(t('sw.sci', { m: nf(m, 1), e: MARK })).replace(MARK, supHtml(e)); };
 
   /* ---- the switching curve ---- */
   function curveFig(r) {
@@ -48,7 +54,7 @@ export default function lab(L) {
     let s = '<svg viewBox="0 0 ' + CW + ' ' + CH + '" role="img" aria-label="' + esc(t('sw.fig.aria', { mv: nf(r.swing), v: r.clean ? nf(r.vmin, 2) : t('sw.never') })) + '">';
     s += '<defs><clipPath id="tswclip"><rect x="' + X0 + '" y="' + Y0 + '" width="' + (X1 - X0) + '" height="' + (Y1 - Y0) + '"/></clipPath></defs>';
     s += '<rect class="plot" x="' + X0 + '" y="' + Y0 + '" width="' + (X1 - X0) + '" height="' + (Y1 - Y0) + '" rx="4"/>';
-    for (let d = LO; d <= HI; d += 2) s += '<line class="gl" x1="' + X0 + '" x2="' + X1 + '" y1="' + f1(cy(d)) + '" y2="' + f1(cy(d)) + '"/><text class="ax" x="' + (X0 - 5) + '" y="' + f1(cy(d) + 3.5) + '" text-anchor="end">10' + sup(d) + '</text>';
+    for (let d = LO; d <= HI; d += 2) s += '<line class="gl" x1="' + X0 + '" x2="' + X1 + '" y1="' + f1(cy(d)) + '" y2="' + f1(cy(d)) + '"/><text class="ax" x="' + (X0 - 5) + '" y="' + f1(cy(d) + 3.5) + '" text-anchor="end">10' + supSvg(d) + '</text>';
     for (let v = VLO; v <= VMAX + 1e-9; v += 0.2) s += '<text class="ax" x="' + f1(cx(v)) + '" y="' + (Y1 + 13) + '" text-anchor="middle">' + (Math.abs(v) < 1e-9 ? '0' : v.toFixed(1).replace('-', '−')) + '</text>';
     /* 0 V on the gate: where the switch should be off */
     s += '<line class="zero" x1="' + f1(cx(0)) + '" x2="' + f1(cx(0)) + '" y1="' + Y0 + '" y2="' + Y1 + '"/>';
@@ -115,7 +121,7 @@ export default function lab(L) {
     let s = '<svg viewBox="0 0 ' + BW + ' ' + BH + '" role="img" aria-label="' + esc(t(B.ok ? 'sw.band.aria.in' : 'sw.band.aria.out')) + '">';
     const edge = k => E.map(p => f1(bx(p.eg)) + ',' + f1(by(Math.log10(p[k])))).join(' ');
     s += '<polygon class="beyond" points="' + f1(bx(0)) + ',' + BT + ' ' + edge('me') + ' ' + f1(bx(W.OWN_RANGE.eg[1])) + ',' + BT + '"/>';
-    for (let p = 0; p <= 5; p++) s += '<line class="gl" x1="' + B0 + '" x2="' + B1 + '" y1="' + f1(by(p)) + '" y2="' + f1(by(p)) + '"/><text class="ax" x="' + (B0 - 4) + '" y="' + f1(by(p) + 3) + '" text-anchor="end">' + (p ? '10' + sup(p) : '1') + '</text>';
+    for (let p = 0; p <= 5; p++) s += '<line class="gl" x1="' + B0 + '" x2="' + B1 + '" y1="' + f1(by(p)) + '" y2="' + f1(by(p)) + '"/><text class="ax" x="' + (B0 - 4) + '" y="' + f1(by(p) + 3) + '" text-anchor="end">' + (p ? '10' + supSvg(p) : '1') + '</text>';
     for (const g of [0, 1, 2, 3]) s += '<text class="ax" x="' + f1(bx(g)) + '" y="' + (BB + 12) + '" text-anchor="middle">' + g + '</text>';
     s += '<polyline class="edge" points="' + edge('me') + '"/><polyline class="edge h" points="' + edge('mh') + '"/>';
     for (const m of W.MATERIALS) s += '<circle class="known" cx="' + f1(bx(m.eg)) + '" cy="' + f1(by(Math.log10(m.me))) + '" r="2.6"><title>' + esc(matName(m.id)) + '</title></circle>';
@@ -162,8 +168,8 @@ export default function lab(L) {
     let h = '<div class="tswset"><p class="kicker">' + esc(t('sw.set.mat')) + '</p><div class="chips">' + W.MATERIAL_IDS.map(id => chip('mat', id, o.mat === id, matName(id))).join('') + chip('mat', 'own', o.mat === 'own', t('sw.mat.own')) + '</div>';
     if (o.mat === 'own') {
       const v = W.ownOf(o.own);
-      h += '<div class="tswown"><p class="small muted">' + esc(t('sw.own.lead')) + '</p>' + DIALS.map(([k, a, b, st]) => { const val = toDial(k, v[k]), shown = k === 'eg' ? t('sw.ev', { v: nf(v.eg, 2) }) : k === 'dit' ? sci(v.dit) : t('sw.mob', { v: mob(v[k]) });
-        return '<div class="tswdial"><label class="lab" for="sw-' + k + '"><b>' + esc(t('sw.own.' + k)) + '</b> <output>' + esc(shown) + '</output></label><input type="range" id="sw-' + k + '" data-sw-own="' + k + '" min="' + a + '" max="' + b + '" step="' + st + '" value="' + val.toFixed(2) + '"><span class="small muted">' + esc(t('sw.own.' + k + '.d')) + '</span></div>'; }).join('') + bandFig(r) +
+      h += '<div class="tswown"><p class="small muted">' + esc(t('sw.own.lead')) + '</p>' + DIALS.map(([k, a, b, st]) => { const val = toDial(k, v[k]), shown = k === 'eg' ? esc(t('sw.ev', { v: nf(v.eg, 2) })) : k === 'dit' ? sci(v.dit) : esc(t('sw.mob', { v: mob(v[k]) }));
+        return '<div class="tswdial"><label class="lab" for="sw-' + k + '"><b>' + esc(t('sw.own.' + k)) + '</b> <output>' + shown + '</output></label><input type="range" id="sw-' + k + '" data-sw-own="' + k + '" min="' + a + '" max="' + b + '" step="' + st + '" value="' + val.toFixed(2) + '"><span class="small muted">' + esc(t('sw.own.' + k + '.d', { p: MARK })).replace(MARK, '10' + supHtml(10)) + '</span></div>'; }).join('') + bandFig(r) +
         '<p class="small tswbandsay ' + (r.inBand ? 'good' : 'bad') + '">' + esc(t(r.inBand ? 'sw.band.in' : 'sw.band.out')) + '</p></div>';
     }
     h += '<p class="kicker">' + esc(t('sw.set.shape')) + '</p><div class="chips">' + W.SHAPE_IDS.map(id => chip('shape', id, o.shape === id, t('sw.shape.' + id), !shapes.includes(id))).join('') + '</div>';
