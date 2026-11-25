@@ -211,3 +211,16 @@ test('every tap challenge starts wrong and has exactly one tap that makes it rig
     (cfg.pieces || []).forEach(pc => { const on = G.togglePiece(start, cfg.line, pc); assert.ok(G.hasPiece(on, cfg.line, pc)); assert.equal(G.togglePiece(on, cfg.line, pc), start, id + ': a piece taken off leaves the line as it was'); });
   }
 });
+
+test('the shell reads your state without the engines, keeps what they check as stored, and the game checks it as load() does', () => {
+  const stored = { done: { half: true, nope: true }, codes: { half: 'sum = a ^ b;' }, chip: { gen: 3, clock: 99 }, life: { car: { margin: 3 } }, drafts: [{ id: 'x', kind: 'nope' }], bets: { oxen: { r: 400 } }, whatif: { levers: { demand: 9 } }, name: 'A tester' };
+  const s = G.readState(stored);
+  assert.deepEqual(s.done, { half: true }, 'what you have done, read by the loop');
+  for (const k of G.CHECKED) assert.equal(s[k], stored[k], k + ' is kept as stored until the engines check it');
+  const store = { v: null, getItem() { return this.v; }, setItem(k, v) { this.v = v; } };
+  G.save(store, s);
+  assert.deepEqual(G.stored(store).chip, stored.chip, 'saved back unchanged');
+  assert.deepEqual(G.complete(s), G.normalState(stored), 'once the engines come, the state is what load() makes of it');
+  /* a new visitor: what load() makes of an empty state (What if?'s levers each at 0, as fresh() leaves them unset) */
+  assert.deepEqual(G.complete(G.readState(null)), G.normalState({}));
+});

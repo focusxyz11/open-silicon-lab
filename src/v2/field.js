@@ -4,7 +4,7 @@
    what is still open, and how to try it here; the asker's own words are one tap away. */
 import { t } from '../core/i18n.js';
 import { fieldOf, fieldHome, QUESTIONS, questionOfField } from '../data/atlas.js';
-import { CHALLENGES } from './game.js';
+import { CHALLENGES } from './loop.js';
 
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 const GLYPH = {

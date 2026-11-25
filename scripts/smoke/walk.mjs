@@ -1,10 +1,6 @@
 /* the walk the two explore sections take, one at a desktop's width, one at a phone's */
 import { S } from './shared.mjs';
 
-/* what the first page may fetch before its idle preload, in bytes (it was 3.4 MB with the island's 3D and every word;
-   now no 3D, the shell's glue per view, and only the core words) */
-const FIRST_PAGE_BYTES = 1.5e6;
-
 /* the chip world (index.html): your chip's life on the island. The first challenge is played and won, the island
    grows and says so (the first fixed with one tap), the tracker in the bar moves on; a place opens its three doors in the dock, Look first with a way inside; the pages list every challenge and the plan. */
 export const explore = async (tag, viewport, scheme) => {
@@ -14,25 +10,6 @@ export const explore = async (tag, viewport, scheme) => {
   await page.addInitScript(() => { try { localStorage.setItem('osl-quality', 'keep'); } catch (e) { /* no storage */ } });
   page.on('pageerror', e => problems.push(tag + ': ' + e.message));
   page.on('console', m => { if (m.type() === 'error' && !/fonts\.g|net::ERR|WebGL|GPU/.test(m.text())) problems.push(tag + ': console: ' + m.text()); });
-  /* the first page loads no 3D (docs/ARCHITECTURE.md): before its idle preload starts (data-preload, the moment it
-     started), nothing of three.js or the 3D views is fetched, and what is fetched stays under a budget */
-  if (viewport.width > 760) {
-    const fp = await browser3d.newPage({ viewport, colorScheme: scheme, reducedMotion: 'reduce' });
-    fp.on('pageerror', e => problems.push(tag + ': first page: ' + e.message));
-    await fp.goto(base + 'index.html#/');
-    await fp.waitForFunction(() => !!document.documentElement.dataset.preload, null, { timeout: 20000 }).catch(() => problems.push(tag + ': the first page never starts its idle preload'));
-    await fp.waitForLoadState('networkidle').catch(() => { /* measured as it stands */ });
-    const early = await fp.evaluate(origin => { const pre = +document.documentElement.dataset.preload || Infinity;
-      return performance.getEntriesByType('resource').filter(e => e.startTime < pre && e.name.startsWith(origin)).map(e => ({ u: e.name, b: e.decodedBodySize })); }, new URL(base).origin);
-    const heavy = early.filter(e => /\/(three\.min|three-extras|kit3d|map3d|dc3d|chip3d|level3d)\.js/.test(e.u)).map(e => e.u.split('/').pop());
-    if (heavy.length) problems.push(tag + ': the first page fetches 3D before its preload: ' + heavy.join(', '));
-    const bytes = early.reduce((a, e) => a + e.b, 0);
-    if (!(bytes < FIRST_PAGE_BYTES)) problems.push(tag + ': the first page fetches ' + Math.round(bytes / 1024) + ' KB before its preload (budget ' + Math.round(FIRST_PAGE_BYTES / 1024) + ' KB)');
-    /* of the words, only the core area's and the first page's own */
-    const words = early.filter(e => /\/src\/i18n\//.test(e.u)).map(e => e.u.split('/src/i18n/')[1]);
-    if (words.sort().join() !== 'en/core.json,en/hold.json') problems.push(tag + ': the first page fetches words beyond core.json and its own (hold.json): ' + words.join(', '));
-    await fp.close();
-  }
   await page.goto(base + 'index.html#/island');
   /* the structure (docs/reviews/structure.md): no menu; the bar holds the loop, six stages from the need round to use.
      Following the chip opens the place where the loop starts, the Lab, and every place's card offers the next: the

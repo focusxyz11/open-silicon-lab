@@ -15,6 +15,7 @@
 import { t, needWords, preloadWords, hasWords } from '../core/i18n.js';
 import { CLOCKS, SIDES, LOADS, REUSES, MEMS, GENS, x2 } from '../engines/chip.js';
 import { MISSIONS, MARGINS, PROTECT, normalLife } from '../engines/life.js';
+import { titleOf, goalOf } from './loop.js';
 import { TAPS, turnGate, hasPiece, togglePiece, checkDesign, checkChip, checkLife, chipGoal, starter, ownStarter, aiProposal, spotCase, spotCode, spotAnswer, SPOT, next, INSIDE, challengeOf, GAUGES, gauge, world, opensOf, askHref } from './game.js';
 import { runCase } from '../engines/ledger.js';
 import { STAGES, stageOfChallenge } from '../engines/way.js';
@@ -43,14 +44,8 @@ const pctShare = v => v >= 0.01 ? t('life.share.pct', { v: (v * 100).toFixed(v >
 const gaugeText = (k, v) => k === 'load' ? t('gauge.pct', { v: Math.round(v * 100) }) : k === 'cost' || k === 'work' ? t('life.times', { v: v.toFixed(k === 'cost' ? 2 : 1) }) : k === 'clock' ? t('life.times', { v: v.toFixed(1) }) : k === 'days' ? t('gauge.days.v', { v: Math.round(v) }) : String(Math.round(v));
 const reqValue = (id, v) => id === 'fail' ? pctShare(v) : id === 'silent' ? (v >= 10 ? Math.round(v) : v.toFixed(1)) : id === 'perf' ? t('life.share.pct', { v: Math.round(v * 100) }) : t('life.times', { v: v.toFixed(2) });
 
-/* the title, goal and reward of a challenge */
-export function titleOf(ch) { return ch.kind === 'break' ? t('game.break.t', { what: ch.title || t('design.proj.' + ch.p + '.t') }) : ch.kind === 'design' ? t('design.proj.' + ch.p + '.t') : t('game.ch.' + ch.id + '.t'); }
-export function goalOf(ch) {
-  if (ch.kind === 'break') return t('game.break.goal');
-  if (ch.kind === 'design') return t(ch.need ? 'game.job.goal' : 'game.ch.' + ch.id + '.goal', { job: t('design.proj.' + ch.p + '.t') });
-  if (ch.kind === 'chip') return t('chal.' + ch.goal + '.goal');
-  return t('game.ch.' + ch.id + '.goal');
-}
+/* the title and goal of a challenge (src/v2/loop.js, where the shell reads them too) */
+export { titleOf, goalOf };
 
 /* the head of a challenge's card: the stage and place it is played at, the place's levels with its own lit, its title,
    how true the lab is, and its goal. It needs only the island's words, so the card can say it at once, while the lab

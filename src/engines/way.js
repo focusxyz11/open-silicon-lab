@@ -13,7 +13,7 @@ import { twinOf, TWINS } from '../data/atlas.js';
 import { WORLDS } from '../data/weave.js';
 import { placeOf } from '../data/places.js';
 import { SEAMS } from '../data/questions.js';
-import { viewOfDepth, challengeOf, DIVE_WORLD, DIVE_LEVELS, PLACES } from '../v2/game.js';
+import { viewOfDepth, challengeOf, DIVE_WORLD, DIVE_LEVELS, PLACES } from '../v2/loop.js';
 
 /* the loop, in order. It starts with what is open, and there are two ways in: something someone needs (pull), or
    something that has just become possible and is still looking for its use (push). Much of chip history ran the

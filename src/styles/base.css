@@ -170,13 +170,6 @@ html[data-move=turn]::view-transition-new(root) { animation-name: vt-turn-in; }
   .langbtn { height: 34px; padding: 0 8px; font-size: 12px; } .langbtn::after { display: none; }
 }
 
-/* the menu of sections, when asked for */
-.sections { position: relative; }
-.sections summary { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 50%; border: 1px solid var(--line); cursor: pointer; list-style: none; }
-.sections summary::-webkit-details-marker { display: none; }
-.sections nav { position: absolute; right: 0; top: 46px; display: grid; min-width: 180px; padding: 6px; border-radius: 14px; background: var(--panel-solid); border: 1px solid var(--line); box-shadow: var(--shadow); }
-.sections nav a { padding: 9px 12px; border-radius: 9px; text-decoration: none; font-weight: 600; }
-.sections nav a:hover { background: color-mix(in srgb, var(--ink) 8%, transparent); }
 /* Break it: the lab itself, broken by anyone, from anywhere (app.js; a report in the ledger). The frame's side panel
    (#271), opened over whatever is open: under the bar at the right, as wide as the panel, solid so nothing shows
    through; on a phone, the width of the screen */
