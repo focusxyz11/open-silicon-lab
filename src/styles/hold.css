@@ -5,7 +5,7 @@
 .home.holdhome { padding-top: 0; background: #efece3; overscroll-behavior: contain; }
 .home.holdhome.hold-night { background: #131210; }
 .hold { --paper: #efece3; --ink: #131210; --red: #e5401a; --mid: #6b675d; --hair: rgba(19,18,16,.16); --soft: rgba(19,18,16,.05);
-  --barH: 72px; --railW: 196px; --H: calc(100svh - var(--barH)); --S: min(calc(var(--H) - 120px), 37vw, 640px);
+  --barH: 72px; --railW: 196px; --H: calc(100svh - var(--barH)); --S: min(calc(var(--H) - 120px), 860px, max(36vw, 100vw - 1180px)); --TW: clamp(520px, 32vw, 760px);
   display: grid; grid-template-columns: var(--railW) minmax(0, 1fr); min-height: 100%; background: var(--paper); color: var(--ink); font-family: 'DM Sans', system-ui, sans-serif; font-size: 16px; line-height: 1.45;
   -webkit-font-smoothing: antialiased; overflow-x: clip; transition: background .7s, color .7s; }
 .hold.is-night { --paper: #131210; --ink: #efece3; --mid: #aca89d; --hair: rgba(239,236,227,.2); --soft: rgba(239,236,227,.06); }
@@ -48,7 +48,8 @@
 
 /* ---- one world: the fifty years at the left (scrolling is time; the panel stays pinned), the same square of silicon
    pinned on the right all the way down ---- */
-.hold .h-world { display: grid; grid-template-columns: minmax(0, 1fr) var(--S); grid-template-rows: auto auto auto; column-gap: 48px; padding: 0 40px 0 8px; min-width: 0; }
+/* the words and the square grow with the screen and stay together; on a very wide screen what is left goes to the edges, never between them */
+.hold .h-world { display: grid; grid-template-columns: minmax(0, var(--TW)) var(--S); justify-content: center; grid-template-rows: auto auto auto; column-gap: clamp(48px, 5vw, 140px); padding: 0 40px 0 8px; min-width: 0; }
 .hold .h-years { grid-column: 1; grid-row: 1; position: relative; min-width: 0; }
 .hold .h-panel { position: sticky; top: var(--barH); height: var(--H); display: flex; flex-direction: column; min-width: 0; padding: 18px 0 16px; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
 .hold .h-countrow { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 14px; }
@@ -200,12 +201,12 @@
 
 /* ---- after the hold stops: the same story goes on ---- */
 .hold .h-steps { grid-column: 1; grid-row: 2; min-width: 0; padding-bottom: 40px; }
-.hold .h-step { min-height: 0; padding: 88px 0 72px; border-top: 1px solid var(--hair); max-width: 640px; scroll-margin-top: var(--barH); }
+.hold .h-step { min-height: 0; padding: 88px 0 72px; border-top: 1px solid var(--hair); scroll-margin-top: var(--barH); }
 .hold .h-n { color: var(--mid); display: flex; gap: 10px; align-items: center; }
 .hold .h-n i { width: 26px; height: 1px; background: var(--mid); display: block; }
 .hold .h-step h2 { font-size: clamp(48px, 6.4vw, 104px); margin: 14px 0 0 -.02em; }
 .hold .h-step h2 em { font-style: normal; color: var(--red); }
-.hold .h-d { font-size: 18px; margin: 20px 0 0; max-width: 32em; }
+.hold .h-d { font-size: clamp(18px, .5vw + 11px, 21px); margin: 20px 0 0; max-width: 40em; }
 .hold .h-box { margin-top: 30px; border: 1px solid var(--hair); padding: 16px 18px 18px; background: var(--soft); }
 .hold .h-bk { color: var(--red); display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
 .hold .h-bk i { width: 8px; height: 8px; background: var(--red); display: block; }

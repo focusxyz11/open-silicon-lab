@@ -767,7 +767,7 @@ export function createHold(host, ctx = {}) {
     const wr = wrap.getBoundingClientRect(), X = u => wr.left + u / 1000 * wr.width, Y = u => wr.top + u / 1000 * wr.height, top = 84, L = wiresOf(), n = L.length;
     wc.lineJoin = 'miter'; wc.lineCap = 'butt';
     L.forEach((q, i) => { if (q.y < top || q.y > H - 8) return;
-      const sx = q.s0.getBoundingClientRect().left + Math.min(q.s0.clientWidth, 640) + 12, ex = wr.left - 16, tx = X(q.t[0]), ty = Math.max(wr.top + 4, Math.min(wr.bottom - 4, Y(q.t[1])));
+      const sx = q.s0.getBoundingClientRect().left + q.s0.clientWidth + 12, ex = wr.left - 16, tx = X(q.t[0]), ty = Math.max(wr.top + 4, Math.min(wr.bottom - 4, Y(q.t[1])));
       if (ex - sx < 16) return;
       const mx = Math.round(sx + (ex - sx) * (n > 1 ? .25 + .5 * i / (n - 1) : .5)) + .5, pts = [[sx, q.y], [mx, q.y], [mx, ty], [ex, ty], [tx, ty]];
       wc.globalAlpha = a * (q.hot ? 1 : .85); wc.strokeStyle = q.col; wc.lineWidth = q.w; wc.setLineDash(q.dash || []); wc.beginPath(); pts.forEach((p, j) => (j ? wc.lineTo(p[0], p[1]) : wc.moveTo(p[0], p[1]))); wc.stroke(); wc.setLineDash([]);
@@ -1026,7 +1026,7 @@ export function createHold(host, ctx = {}) {
     /* nobody is steering the glass: let it wander, so the parts are seen */
     if (holding && now - lastMoveT > 2500 && !reduce()) focusTo = [.5 + .37 * Math.sin(T * .42), .5 + .35 * Math.sin(T * .58 + 1)];
     die.style.transform = shake ? 'translate(' + ((Math.random() - .5) * shake) + 'px,' + ((Math.random() - .5) * shake) + 'px)' : '';
-    if (scene === 'hero') { drawHeroDie(); drawLoupe(ss(7.6, 9.4, d)); }
+    if (scene === 'hero') { drawHeroDie(); drawLoupe(ss(7.6, 9.4, d)); for (const k in VLAB) VLAB[k].classList.remove('on'); }
     else { paintScenes(T, dt); const dotsOn = scene === 'cost' && W4.cost.f > .6; drawLoupe(A.switch > .5 || dotsOn ? 1 : 0, { leak: scene === 'switch' ? W4.switch.n / 5 : 0, dots: dotsOn }); }
     if (built) advanceNext(dt);
     if (scene !== 'hero') statusStrip();
