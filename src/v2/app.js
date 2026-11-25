@@ -185,11 +185,13 @@ export function start() {
   const here = () => { const h = liveHash(), p = partsOf(location.hash), k = p[0];
     if (h !== location.hash && (['dive', 'line', 'chip'].includes(k) || (k === 'bench' && !p[2]) || (k === 'place' && (!pui.hidden || !fui.hidden || !kui.hidden || !sui.hidden)))) { arrive(h, 'replace'); shownAt = h; }
     hud(); };
+  let hudKey = '', logKey = '';   /* the bar is rewritten only when what it says (with the address) changes: each rewrite sets off frame2's watchers (#366) */
   function hud() {
     const W = whereNow(), chipS = Game.chipAt(S);
-    hudEl.innerHTML = '<ol>' + Way.STAGES.map((s, i) => { const st = s === 'open' ? null : Game.stepState(S, s), full = !!st && st.done === st.total, name = t('loop.stage.' + s), held = W.stage !== s && Way.holds(W, s);
+    const loopHtml = '<ol>' + Way.STAGES.map((s, i) => { const st = s === 'open' ? null : Game.stepState(S, s), full = !!st && st.done === st.total, name = t('loop.stage.' + s), held = W.stage !== s && Way.holds(W, s);
       return '<li><button type="button" data-stage="' + s + '"' + (s === W.stage ? ' aria-current="step"' : '') + ' class="' + (full ? 'full' : '') + (s === chipS ? ' chip' : '') + (held ? ' holds' : '') + '" title="' + esc(held ? t('loop.same', { as: t('loop.as.' + s) }) : t('loop.at.' + s)) + '" aria-label="' + esc(st ? t('game.stepAria', { n: i, step: name, done: st.done, total: st.total }) : t('loop.at.open')) + '"><span class="ld">' + (full ? '✓' : '') + '</span><span class="ln">' + esc(name) + '</span></button></li>'; }).join('') + '</ol>';
-    $('logbtn').innerHTML = '<span class="lg"><i class="lgm" aria-hidden="true"></i>' + esc(t('loop.map')) + '</span>'; $('logbtn').title = t('loop.mapK');
+    if (loopHtml + location.hash !== hudKey || !hudEl.querySelector(':scope > ol')) { hudKey = loopHtml + location.hash; hudEl.innerHTML = loopHtml; }
+    const lb = $('logbtn'), logHtml = '<span class="lg"><i class="lgm" aria-hidden="true"></i>' + esc(t('loop.map')) + '</span>', logTitle = t('loop.mapK'); if (logHtml + logTitle !== logKey) { logKey = logHtml + logTitle; lb.innerHTML = logHtml; lb.title = logTitle; }
     $('breakbtn').setAttribute('aria-label', t('break.btn')); $('breakbtn').title = t('break.btn');
   }
   function along(stage) {

@@ -53,9 +53,24 @@ function stepsHtml(st) {
     '<button type="button" class="stgo" data-stepgo="1" aria-label="' + esc(t('frame.steps.next')) + '">→</button></nav>';
 }
 export const FACES = ['designed', 'made', 'used'];
+/* one life per host (#366): a view makes its frame anew in the same host each time it is shown, so whatever the frame,
+   its modes (frame2.js) and the switches on it (listen.js) listen to or watch lives as long as that frame and ends
+   when the next one is made: one set of listeners on a host, however often it is visited. lifeOf(host) is the life of
+   the frame now on it; lifeOf(host, true) ends it and begins the next. A life gives a signal for addEventListener
+   and keeps the observers it is handed (watch), to disconnect them at its end */
+const LIVES = new WeakMap();
+export function lifeOf(host, anew) {
+  let L = LIVES.get(host);
+  if (L && !anew) return L;
+  if (L) L.end();
+  const ac = new AbortController(), obs = [];
+  L = { signal: ac.signal, ended: () => ac.signal.aborted, watch: ob => { obs.push(ob); return ob; }, end: () => { ac.abort(); obs.splice(0).forEach(ob => ob.disconnect()); } };
+  LIVES.set(host, L); return L;
+}
 
 export function createFrame(host, o) {
   let mode = 'look', depth = null, pinned = false, railAt = null, lens = null, down = null, pair = null;
+  const life = lifeOf(host, true), alive = { signal: life.signal }, watch = life.watch;
   const path = o.path.slice(1);
   host.innerHTML =
     '<a class="homebtn" href="' + esc(o.up.href) + '" aria-label="' + esc(o.up.label) + '">↑</a>' +
@@ -94,7 +109,7 @@ export function createFrame(host, o) {
     const r = wayin.getBoundingClientRect(), d = host.querySelector('.dockwrap').getBoundingClientRect(), x = r.left + at.x * r.width, y = r.top + at.y * r.height;
     wayin.classList.toggle('under', x > d.left - 28 && x < d.right + 28 && y > d.top - 28 && y < d.bottom + 28);
   };
-  new MutationObserver(mirror).observe(dock, { childList: true, subtree: true });
+  watch(new MutationObserver(mirror)).observe(dock, { childList: true, subtree: true });
 
   /* how big it is here: each level on the rail carries its rough size (SIZES in the atlas); while the view moves between
      two levels, the card says how many times closer (or farther out) the next one is. At rest the same line says the
@@ -133,7 +148,7 @@ export function createFrame(host, o) {
     go.innerHTML = '<span class="wit"><span class="wik">' + esc(t('frame.along.k')) + '</span><b>' + esc(name) + '</b></span><span class="woa" aria-hidden="true">→</span>';
     wobox.innerHTML = ''; wobox.appendChild(go); wayon.hidden = false;
   };
-  new MutationObserver(mirrorOn).observe(dock, { childList: true, subtree: true });
+  watch(new MutationObserver(mirrorOn)).observe(dock, { childList: true, subtree: true });
 
   /* on a phone the card rests as a peek (the level's name and its question) and steps aside for the picture: a touch
      on it slides it up, a touch on the picture lets it down again. The picture is framed for the peek, so it never
@@ -144,8 +159,8 @@ export function createFrame(host, o) {
   const peek = v => { const on = !!v && phone(); if (on) wrap.scrollTop = 0; wrap.classList.toggle('peek', on); host.classList.toggle('peeked', on); bar.setAttribute('aria-expanded', String(!on)); bar.setAttribute('aria-label', t(on ? 'frame.peek.open' : 'frame.peek.fold')); };
   const busy = () => !!dock.querySelector('.player, .stopx') || dock.classList.contains('benchdock');
   peek(true);
-  new ResizeObserver(() => { const h = wrap.offsetHeight; if (!h) return; host.style.setProperty('--dockh', h + 'px'); if (wrap.classList.contains('peek')) restH = h; }).observe(wrap);
-  new MutationObserver(() => { if (busy() && wrap.classList.contains('peek')) peek(false); }).observe(dock, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] });
+  watch(new ResizeObserver(() => { const h = wrap.offsetHeight; if (!h) return; host.style.setProperty('--dockh', h + 'px'); if (wrap.classList.contains('peek')) restH = h; })).observe(wrap);
+  watch(new MutationObserver(() => { if (busy() && wrap.classList.contains('peek')) peek(false); })).observe(dock, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] });
   /* a touch on the peek opens it: on its name or its question it does nothing else (a control reached under the fold,
      by the keyboard, still acts); the bar folds it again */
   wrap.addEventListener('click', e => {
@@ -153,9 +168,9 @@ export function createFrame(host, o) {
     if (!wrap.classList.contains('peek')) return;
     const act = e.target.closest('button, a, input, select, textarea'); peek(false);   /* i18n-ok */
     if (!act || act.classList.contains('askline')) { e.preventDefault(); e.stopPropagation(); }
-  }, true);
+  }, { capture: true, signal: life.signal });
   /* reached by the keyboard, the card opens */
-  wrap.addEventListener('focusin', e => { if (wrap.classList.contains('peek') && !e.target.closest('.peekbar') && e.target.matches(':focus-visible')) peek(false); });
+  wrap.addEventListener('focusin', e => { if (wrap.classList.contains('peek') && !e.target.closest('.peekbar') && e.target.matches(':focus-visible')) peek(false); }, alive);
   /* a touch on the picture (the canvas or the names on it) lets the card down. One listener per stage, for the frame shown now */
   const stage = host.parentNode;
   if (stage && !stage.dataset.peekOn) { stage.dataset.peekOn = '1';
@@ -185,7 +200,8 @@ export function createFrame(host, o) {
   const shown = el => el.offsetParent && el.style.opacity !== '0' && !el.closest('[hidden]') && (el.parentNode.style || {}).visibility !== 'hidden';
   const clash = (x, y, r) => r && x > r.left - 24 && x < r.right + 24 && y > r.top - 24 && y < r.bottom + 24;
   function trackMarks() {
-    if (!host.isConnected || host.hidden || !host.offsetParent) return;   /* the view stepped aside: the marks wait for it */
+    /* the view stepped aside: the marks wait for it; a frame made anew in the same host ends this one's loop */
+    if (life.ended() || !host.isConnected || host.hidden || !host.offsetParent) return;
     markRaf = requestAnimationFrame(trackMarks);
     const B = marksEl.getBoundingClientRect(), stage = host.parentNode;
     const names = [...stage.querySelectorAll('[data-word]')].filter(el => !el.classList.contains('mark3') && shown(el));
@@ -263,7 +279,7 @@ export function createFrame(host, o) {
     const r = e.target.closest('[data-rail]'); if (r) return o.onRail && o.onRail(r.dataset.rail);
     const st = e.target.closest('[data-step]'); if (st) return o.onStep && o.onStep(st.dataset.step);
     const sg = e.target.closest('[data-stepgo]'); if (sg && o.steps) { const S = o.steps.items, i = S.findIndex(x => x.id === stepAt) + +sg.dataset.stepgo; if (S[i] && o.onStep) o.onStep(S[i].id); }
-  });
+  }, alive);
   /* the row of steps: the one you are at lit, the ones before it marked done, the line filled up to it */
   let stepAt = null;
   const markSteps = at => { if (!o.steps) return; stepAt = at; const S = o.steps.items, i = S.findIndex(x => x.id === at), nav = $('.steps2');
@@ -299,7 +315,7 @@ export function createFrame(host, o) {
     stop(html) { mode = 'ask'; pinned = true; host.querySelectorAll('[data-mode]').forEach(b => b.setAttribute('aria-selected', String(b.dataset.mode === 'ask'))); dock.innerHTML = html; dock.classList.remove('locked'); drawMarks(); }
   };
   /* the frame worn as a caption, a side panel and a stage (src/v2/frame2.js, #271) */
-  frame2(host, api, o, { wrap, items, at: () => railAt, step: () => (o.steps && stepAt ? (o.steps.items.find(x => x.id === stepAt) || {}).label || '' : ''), doList: () => (depth && o.doAt ? o.doAt(depth) : []),
+  frame2(host, api, o, { wrap, items, life, at: () => railAt, step: () => (o.steps && stepAt ? (o.steps.items.find(x => x.id === stepAt) || {}).label || '' : ''), doList: () => (depth && o.doAt ? o.doAt(depth) : []),
     here: () => { const it = items.find(i => i.id === railAt); return it ? { label: it.label, size: it.size ? sizeWords(it.size) : '', fid: o.fidAt ? o.fidAt(it.id) : '' } : null; } });
   return api;
 }
