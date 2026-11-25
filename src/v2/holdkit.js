@@ -136,7 +136,7 @@ export function words(id) {
 }
 
 /* ---- the fifty years: the count, the year, and what is said ---- */
-const NARR = [[0, 'one'], [.9, 'not'], [3.4, 'double'], [DGAR - .7, 'garage'], [D71 + 2.3, 'rule'], [16.5, 'coast'], [20.5, 'invisible'], [D94 + 2.5, 'named'], [D2011, 'pay'], [GEN(5), 'gaa'], [DWALL - .9, 'push']];
+const NARR = [[0, 'one'], [.9, 'not'], [3.4, 'double'], [DGAR - .7, 'garage'], [D71 + 2.3, 'rule'], [16.5, 'coast'], [20.5, 'invisible'], [D94 + 2.5, 'named'], [dAt(2005), 'cores'], [D2011, 'pay'], [GEN(5), 'gaa'], [DWALL - .9, 'push']];
 export const momAt = d => MOMENTS.find(m => d >= m.at && d < m.at + m.span) || null;
 export const viewAt = d => { if (d >= DWALL - 1e-4) return 'wall'; const m = momAt(d); return m ? m.id : d < .5 ? 'one' : 'die'; };
 export function countParts(d) { const n = d >= DWALL - 1e-4 ? 336e9 : Math.pow(2, d);
