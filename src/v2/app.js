@@ -188,7 +188,7 @@ export function start() {
     const W = whereNow(), chipS = Game.chipAt(S);
     hudEl.innerHTML = '<ol>' + Way.STAGES.map((s, i) => { const st = s === 'open' ? null : Game.stepState(S, s), full = !!st && st.done === st.total, name = t('loop.stage.' + s), held = W.stage !== s && Way.holds(W, s);
       return '<li><button type="button" data-stage="' + s + '"' + (s === W.stage ? ' aria-current="step"' : '') + ' class="' + (full ? 'full' : '') + (s === chipS ? ' chip' : '') + (held ? ' holds' : '') + '" title="' + esc(held ? t('loop.same', { as: t('loop.as.' + s) }) : t('loop.at.' + s)) + '" aria-label="' + esc(st ? t('game.stepAria', { n: i, step: name, done: st.done, total: st.total }) : t('loop.at.open')) + '"><span class="ld">' + (full ? '✓' : '') + '</span><span class="ln">' + esc(name) + '</span></button></li>'; }).join('') + '</ol>';
-    $('logbtn').innerHTML = '<span class="lg">' + esc(t('loop.log')) + '</span>';
+    $('logbtn').innerHTML = '<span class="lg"><i class="lgm" aria-hidden="true"></i>' + esc(t('loop.map')) + '</span>'; $('logbtn').title = t('loop.logK');
     $('breakbtn').setAttribute('aria-label', t('break.btn')); $('breakbtn').title = t('break.btn');
   }
   function along(stage) {
@@ -504,6 +504,8 @@ export function start() {
     /* a world is a reading page, opened from a lens or by name; there is no list of them (#305): #/w alone is the map */
     if (/^#\/?w\/?$/.test(location.hash)) history.replaceState(null, '', '#/');
     const parts = partsOf(location.hash), k = parts[0] || 'home';
+    /* where you have been, for the map of the chip world (src/v2/glue/pages.js): the addresses opened, in this browser */
+    try { const B = JSON.parse(localStorage.getItem('osl-been') || '{}'); if (!B[location.hash] && Object.keys(B).length < 400) { B[location.hash] = 1; localStorage.setItem('osl-been', JSON.stringify(B)); } } catch (e) { /* no storage */ }
     document.body.classList.toggle('firstpage', k === 'home');
     document.body.classList.toggle('langpage', k === 'home' || k === 'blueprint');
     if (k !== 'home' && hold) hold.hide();

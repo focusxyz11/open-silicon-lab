@@ -28,16 +28,40 @@ import { WORLD_IDS } from '../../data/worlds.js';
 import { SEEK, foundAt } from '../../data/seek.js';
 import { readHtml } from '../frame2.js';
 import { V, $, esc, qColor, follow, followW } from '../shell.js';
+import { STAGES, stageOfPlace } from '../../engines/way.js';
 
 export function create() {
   Object.assign(V, { showPage, showRead, showMachines, showWorld, showEcosystem, showWhatif, leaveWhatif, askStop });
   /* two reading views, opened on purpose: your log (the questions you met, what you did, what waits: the loop's
      challenges are kept here, never as a menu of their own) and the Lab's record (the commons, at the place where
      the loop starts and comes back) */
+  /* the map of the chip world: everything in the lab on one page. Across, a chip's life round the loop (Open, Design,
+     Make, Test, Ship, Use); down, from each place through its levels; under them the four depths every chip shares.
+     Each cell leads to its view; its dots are the challenges played there (filled once done); a cell you have
+     been to is marked (the addresses you opened, kept in this browser) */
+  const BEEN_KEY = 'osl-been';
+  const beenSet = () => { try { return JSON.parse(localStorage.getItem(BEEN_KEY) || '{}'); } catch (e) { return {}; } };
+  function mapHtml() {
+    const B = beenSet(), ch = Game.CHALLENGES, doneN = L => L.filter(c => Game.isDone(V.S, c.id)).length;
+    const dots = L => L.length ? '<span class="wm-dots" title="' + esc(t('page.map.ch', { n: doneN(L), of: L.length })) + '">' + L.map(c => '<a href="' + esc(V.doHref(c)) + '" class="' + (Game.isDone(V.S, c.id) ? 'on' : '') + '" aria-label="' + esc(titleOf(c)) + '"></a>').join('') + '</span>' : '';
+    const placeOf = c => (c.kind === 'break' ? 'village' : c.need ? 'lab' : c.place);
+    const cols = STAGES.map((st, i) => {
+      const places = Game.PLACES.filter(p => (stageOfPlace(p) || 'open') === st);
+      return '<div class="wm-col" data-stage="' + st + '"><div class="wm-st"><span>0' + (i + 1) + '</span>' + esc(t('loop.stage.' + st)) + '</div>' + places.map(p => {
+        const href = '#/place/' + p, L = (Game.INSIDE[p] || []).filter(l => !Game.SHARED.includes(l.depth)), own = ch.filter(c => placeOf(c) === p && (!c.at || !L.some(l => l.depth === c.at)) && !Game.SHARED.includes(c.at));
+        return '<div class="wm-pl' + (B[href] ? ' been' : '') + '"><a class="wm-pn" href="' + esc(href) + '">' + esc(t('map.' + p + '.t')) + '</a>' + dots(own) +
+          (L.length ? '<ol>' + L.map(l => { const lh = V.levelHref(p, l), at = ch.filter(c => placeOf(c) === p && c.at === l.depth); return '<li class="' + (B[lh] ? 'been' : '') + '"><a href="' + esc(lh) + '">' + esc(t('depth.' + l.depth + '.name')) + '</a>' + dots(at) + '</li>'; }).join('') + '</ol>' : '') + '</div>'; }).join('') + '</div>'; }).join('');
+    const every = Game.SHARED.map(dp => { const lh = V.levelHref('datacentre', { world: 'datacentre', depth: dp }); return '<li class="' + (B[lh] ? 'been' : '') + '"><a href="' + esc(lh) + '">' + esc(t('depth.' + dp + '.name')) + '</a>' + dots(ch.filter(c => c.at === dp)) + '</li>'; }).join('');
+    const all = ch.length, got = doneN(ch);
+    return '<section class="cwmap"><header class="wm-head f2rhead"><p class="kicker">' + esc(t('loop.map')) + '</p><h1>' + esc(t('page.map.k')) + '</h1><p class="lead">' + esc(t('page.map.lead')) + '</p>' +
+      '<p class="wm-key small"><span class="wm-k1"></span>' + esc(t('page.map.keyBeen')) + '<span class="wm-k2"></span>' + esc(t('page.map.keyTodo')) + '<span class="wm-k3"></span>' + esc(t('page.map.keyDone')) + '<b>' + esc(t('page.map.ch', { n: got, of: all })) + '</b></p></header>' +
+      '<p class="wm-axis wm-across small">' + esc(t('page.map.across')) + '</p><div class="wm-grid">' + cols + '</div>' +
+      '<div class="wm-every"><p class="wm-axis small">' + esc(t('page.map.every')) + '</p><ol>' + every + '</ol></div></section>';
+  }
   function showPage(k0) {
     const k = 'log'; V.pageNow = k0;
     /* a reading page (Read, src/v2/frame2.js): the column alone, its way back to where you came from */
-    const head = '<p class="kicker">' + esc(t('loop.logK')) + '</p><h1>' + esc(t('loop.log')) + '</h1><p class="lead">' + esc(t('page.' + k + '.lead')) + '</p>';
+    const head = '<p class="kicker">' + esc(t('loop.logK')) + '</p><h2 class="wm-logh">' + esc(t('loop.log')) + '</h2><p class="lead">' + esc(t('page.' + k + '.lead')) + '</p>';
     let h = '', hc = '';
     const C = Game.community(V.S);
     if (k === 'log') {
@@ -62,7 +86,7 @@ export function create() {
       const asked = C.W.entries.filter(e => e.kind === 'question');
       h += '<section class="stepsec"><h2>' + esc(t('page.questions.asked')) + '</h2>' + (asked.length ? asked.slice().reverse().map(V.askedHtml).join('') : '<p class="small muted">' + esc(t('page.questions.none')) + '</p>') + '</section>' + hc;
     }
-    V.page.innerHTML = '<div class="inner">' + readHtml({ cls: 'logpage', head, text: h + '<p class="small muted">' + esc(t('page.preview')) + '</p>' }) + '</div>'; V.page.hidden = false; V.page.scrollTop = 0;
+    V.page.innerHTML = '<div class="inner">' + mapHtml() + readHtml({ cls: 'logpage', head, text: h + '<p class="small muted">' + esc(t('page.preview')) + '</p>' }) + '</div>'; V.page.hidden = false; V.page.scrollTop = 0;
     if (k0 === 'challenges') { const el = $('log-challenges'); if (el) V.page.scrollTop = el.offsetTop - 96; }
   }
   /* reading: every experiment as a document (src/v2/read.js), over the island; the index is the questions and

@@ -147,6 +147,14 @@
  "page.build.agent": "Run an agent of your own",
  "page.build.agentD": "On your machine, under your name: a search program that attacks designs, or any AI through the open port. The lab runs none.",
  "page.log.lead": "Never a list of everything: these are the questions you have met and what you have done. Each leads on.",
+ "page.map.k": "The chip world",
+ "page.map.lead": "Everything in the lab on one map. Across: a chip’s life, from what is open to where it is used. Down: from each place into its levels. Tap anything to go there.",
+ "page.map.keyBeen": "you have been here",
+ "page.map.keyTodo": "a challenge to play",
+ "page.map.keyDone": "a challenge done",
+ "page.map.ch": "{n} of {of} challenges done",
+ "page.map.across": "A chip’s life →",
+ "page.map.every": "Inside every chip, wherever it is used: the four depths they share ↓",
  "page.build.askK": {
   "one": "A question from {by} · {n} piece of work so far",
   "other": "A question from {by} · {n} pieces of work so far"
