@@ -1,6 +1,6 @@
 /* What design really is, in each studio step's card (Look): under the step's question, what is true there, the real
    practice and its open tools, what the engines say about your design at that step, and what people are trying.
-   The words are in en.json (stop.<key>.*, studio.*); the content behind them is content/design.md; the engines are
+   The words are in src/i18n/en/ (stop.<key>.*, studio.*); the content behind them is content/design.md; the engines are
    src/engines/timing.js (in time?), rules.js (the factory's rules on the tile, and the masks) and verilog.js (the
    lab's lines as Verilog). Returns HTML for the card; draws nothing on the picture. */
 import { t, has, fmtNum } from '../core/i18n.js';

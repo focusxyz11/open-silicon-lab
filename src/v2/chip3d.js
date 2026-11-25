@@ -4,7 +4,7 @@
    along from one of its levels turns to the same row here, as made. One position z (0 = the top row, 4 = the
    bottom row): the rows above you are not made yet, and the row at z is the factory step at work; going up a row,
    it comes down into place as its step runs, so the stack is built bottom up. Words: chipx.* and the depths' own
-   (src/i18n/en.json). */
+   (src/i18n/en/). */
 import { THREE, PALETTES, theme, stage, light, group, labels, clamp, smooth, reduced, rnd } from './kit3d.js';
 import { t } from '../core/i18n.js';
 import { VIEW_PARTS } from '../data/atlas.js';

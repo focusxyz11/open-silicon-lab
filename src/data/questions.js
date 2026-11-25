@@ -9,7 +9,7 @@
    sits on a seam, the line between two cells of the grid (src/engines/way.js): between two levels, crossed going in or
    out, or between two stages of a chip's life, crossed going along. Crossing it raises the question.
    The words are field.<id>.q (the question), .who (who asked it, and when), .opened, .open (what is still open), in
-   src/i18n/en.json; src is where to read it in the asker's own words. A question joins when someone real was stuck on
+   src/i18n/en/; src is where to read it in the asker's own words. A question joins when someone real was stuck on
    it, it opened something, and part of it is still open. */
 
 export const PRIMS = ['matter', 'energy', 'info', 'time', 'chance', 'agents', 'value'];

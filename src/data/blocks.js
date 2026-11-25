@@ -1,5 +1,5 @@
 /* Machines from shared blocks (docs/MACHINES.md): the blocks everyone shares, the grammar that joins them, and the
-   needs a machine is assembled for. Data only, no words: the words are machines.* in src/i18n/en.json. The engine
+   needs a machine is assembled for. Data only, no words: the words are machines.* in src/i18n/en/. The engine
    that checks and scores a machine is src/engines/machine.js.
 
    There is no standard computer here. A machine is a few blocks joined for one need, and each block takes the form

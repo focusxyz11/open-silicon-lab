@@ -1,5 +1,5 @@
 /* The shared layers of the lab (docs/framework/shared.md): what every experiment names, so that experiments meet.
-   Data only; words are layer.<kind>.<id> in src/i18n/en.json (a direction that is one of the ways to compute in
+   Data only; words are layer.<kind>.<id> in src/i18n/en/ (a direction that is one of the ways to compute in
    src/data/ways.js keeps that way's words, way.<id>.*, and has none of its own).
 
    - LENSES: ways of seeing. state: exists (drawn on the site), partly, new. home: the world it is at home in.

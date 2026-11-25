@@ -3,7 +3,7 @@
    cm², FLOPS for speed, a confident date with a made-up source, "fully verified" after half the inputs). You check
    each with the lab's own engines (src/engines/tinychip.js, src/engines/riscv.js, the dated facts), then trust it or
    reject it for the right reason. Brought over from the first version of the site (the branch 'before',
-   src/data/agent-cases.js and topics/agent); the words are agent.* in src/i18n/en.json. Pure data and checks, no DOM:
+   src/data/agent-cases.js and topics/agent); the words are agent.* in src/i18n/en/. Pure data and checks, no DOM:
    tests/agent.test.mjs proves every flaw is real and every sound proposal really works. Played at the Lab, where AI
    joins the community through an open port (src/v2/play.js, kind 'agent'). */
 import TC from '../engines/tinychip.js';

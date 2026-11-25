@@ -5,7 +5,7 @@
    another (src/engines/ripple.js). Directions follow the economics and the 2021–2026 events in src/data/facts.json;
    the strengths are illustrative round numbers, chosen so the sizes are sensible next to one another. Not a
    forecast. Brought over from the first version of the site (the branch 'before', src/data/ripple.js), where every
-   effect sat on a topic; the words are in src/i18n/en.json (whatif.*). */
+   effect sat on a topic; the words are in src/i18n/en/ (whatif.*). */
 
 /* Levers: what you can change. ind is the effect the lever sets, place the island it sits on, facts its sources. */
 export const LEVERS = [

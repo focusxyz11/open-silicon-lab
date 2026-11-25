@@ -34,7 +34,7 @@
    a record, and the smallest of them is the one inside the shared computer. So the same ledger gives the same
    world to everyone, and anyone can replay it.
 
-   The words of an entry are its author's own (not in en.json), and are data: checked for length and plain text,
+   The words of an entry are its author's own (not in src/i18n/), and are data: checked for length and plain text,
    never run, never followed. Reasons for a refusal are codes; their words are ledger.no.<code>.
 
    Anyone may add an entry, so these checks are the lab's front door: every field is type-checked before it is used,

@@ -4,7 +4,7 @@
 
    One file per world. A world is one of the eleven core questions, kept hidden (its id is its thread's id in
    src/data/weave.js); an experiment's home world is the file it is in, and `also` names other worlds it serves.
-   Data only: the words a visitor reads are in src/i18n/en.json.
+   Data only: the words a visitor reads are in src/i18n/en/.
 
    - id        world-name, unique
    - strand    which of the world's strands it belongs to (0..4); worked out ways on prefer the same strand

@@ -154,7 +154,7 @@ What has to be built for that, and when:
 - **One file per experiment, loaded when opened**, in the folder of its home world. The owner decided on this
   shape long ago (each topic its own folder, loaded only when opened). It also lets people with less capable
   tools work on one world without reading the rest.
-- **Words split by world.** `src/i18n/en.json` is one file of about 2,100 texts. At a hundred times that it
+- **Words split by world.** `src/i18n/en.json` was one file of about 2,100 texts (it has since split by area, `src/i18n/en/<area>.json`, loaded with the views that show it). At a hundred times that it
   must be one file per world, loaded with the world. The rule that no visible English lives in code stays.
 - **An index, made by a script,** of every experiment's seven sides, so the ways on can be worked out without
   loading everything. The same index serves Jump and the open port.
@@ -182,7 +182,7 @@ Rules, each with the reason it is a rule.
 
 ## 8. An experiment as data
 
-A sketch of the shape, to be settled in stage 1. Words stay in `en.json` (`exp.<id>.ask`, `.notice.<n>`,
+A sketch of the shape, to be settled in stage 1. Words stay in `src/i18n/en/` (`exp.<id>.ask`, `.notice.<n>`,
 `.open`); nothing a visitor reads is in this file.
 
 ```js

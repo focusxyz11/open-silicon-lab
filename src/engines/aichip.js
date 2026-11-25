@@ -1,4 +1,6 @@
-/* Three small models of an AI chip, as engines (the labs' words: src/i18n/en.json; the views that read them: not yet built).
+/* Three small models of an AI chip, as engines (read by the batch bet, src/engines/bet.js, played at the data centre's
+   chip with its words in src/i18n/en/labs.json, bet.bt.*; by the power budget, src/engines/budget.js; and by the
+   serving lab's engine, src/engines/aiserve.js).
    Brought over from the first version of the site, with the same numbers: topics/accelerators/labs/roofline.js,
    topics/memory/labs/hbm-stack-builder.js and topics/economics/labs/gpu-cost-breakdown.js (the first version's
    checkout, the branch 'before', and its src/data/chips.js). Pure functions, no DOM, no words shown to people: ids only.

@@ -13,7 +13,7 @@
    world.js tells a station whether it is yours (G.mine) and how long you have been standing at it
    (G.run, in seconds; -1 for reduced motion); other stations play the same steps with someone else's
    wafer. world.js also calls drawJourney() over the stations: your pod (or, after packaging, your tray)
-   and the band. No words in this file: they are in src/i18n/en.json (handle.*, proc.*, slice.*). */
+   and the band. No words in this file: they are in src/i18n/en/ (handle.*, proc.*, slice.*). */
 import { t } from '../core/i18n.js';
 import { PLANTS, DIVES, partWord } from '../data/weave.js';
 import { rnd, clamp, poly, faces, closed } from './draw.js';

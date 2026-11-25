@@ -14,8 +14,9 @@ way of seeing. They are data (`src/data/experiments/`, one file per world, with 
 `src/data/layers.js`), and every stop, challenge and try is part of exactly one. What is not written down is worked
 out (`src/engines/experiments.js`): an experiment's state (live, ready, only words, wanted), where it is seen, what
 backs it, and its ways on, from what experiments share. Every experiment is a page at `#/read/<id>`; `#/read` holds
-all the questions and challenges, by what can be done with them now. Until the frame is rebuilt (stage 4), the rest
-of this document describes the views as they stand.
+all the questions and challenges, by what can be done with them now. The frame has since been rebuilt as one frame in
+three modes (§4, #271); the experiments' own frame of the plan's stage 4 (`docs/framework/rebuild.md`) is not built, and
+the rest of this document describes the views as they stand.
 
 ## 0b. The eleven worlds
 
@@ -24,7 +25,7 @@ its document in `content/`, which is the one home of its words. Its visual syste
 engine draws it (the crowd of copies; the tries), a view of the site where one exists (the dive, the line, the map),
 else its sketch. A world is a reading page, not a structure a visitor meets (#305): it opens from a lens whose form at
 a level is one of its stops (*Read more* in the lens's card, at `#/w/<id>/at/<level>`) or by name from *Your log*'s
-jump; nothing lists the eleven, and `#/w` alone opens the map.
+jump; nothing lists the eleven, and `#/w` alone opens the first page.
 
 ## 1. The atlas: one home for every thing
 
@@ -146,7 +147,7 @@ nothing else. A visitor never has to know a view's name.
 | View | For | Where |
 | --- | --- | --- |
 | Map | places and how they connect | the island, the ecosystem |
-| Flight | moving into a place, continuously, in 3D | the data centre (then the phone, the car) |
+| Flight | moving into a place, continuously, in 3D | the data centre, the phone, the car |
 | Dive | the depths inside a chip, as a flat, continuous zoom | block, gate, switch, atom |
 | Stack | a chip's levels as made, the lower half of the Make column | inside a chip, built bottom up; reached along from the dive, never a second way down |
 | Line | the factory, step by step, following a wafer | crystal to package |
@@ -383,11 +384,11 @@ computed from your chip. Something marked checked has its comparison run in the 
 | Piece | State |
 | --- | --- |
 | Atlas (parts, questions, challenges, stories, the twins of a level) | in place, tested |
-| Frame: scene, ornaments, docked story, Look · Do · Ask | `src/v2/frame.js`, worn by the flight, the stack and the board |
+| Frame: scene, ornaments, docked story, Look · Do · Ask | `src/v2/frame.js`, worn by every view below the island, in three modes by `src/v2/frame2.js` |
 | Map | the island |
-| Flight | the data centre |
+| Flight | the data centre (`src/v2/dc3d.js`), a phone (`src/v2/phone3d-flight.js`) and a car (`src/v2/car3d-flight.js`), each with its levels on the rail (`src/v2/glue/flights.js`) |
 | Stack | inside a chip, as made (`#/chip/<row>/build`) |
-| Dive | the earlier site's flat zoom in the frame (`#/dive/<depth>`), chip to atom; the flight goes on into it |
+| Dive | the earlier site's flat zoom in the frame (`#/dive/<depth>`), chip to atom, giving way at a level to its model in 3D where one is drawn (the chips as reliefs, the wafer, the boards, the gate, the switch, the atom; `L3` in `src/v2/glue/flat.js`), the flat drawing the fallback; the flight goes on into it |
 | Line | the earlier site's factory in the frame (`#/line/<step>`): a wafer travelling between the machines, step by step; your design at printing, etching and wiring |
 | Bench | the studio in the frame (`#/bench/<level>[/<challenge>]`): one design of your own, live on a surface laid over the step's square (`src/v2/bench.js`): pick a piece at the job, write it at describe, scrub the waves at check, flip inputs at gates, drag cells at layout, peel the masks; a challenge played there uses the same surface (as its instrument in Do mode); masks lead to the line |
 | Along | `src/engines/way.js`: from the loop in the bar and the ← → keys; holds the level through used, made and designed |
