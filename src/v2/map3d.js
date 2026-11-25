@@ -811,8 +811,8 @@ export function createMap(canvas, host, on = {}) {
     if (h.part) { const T = OPEN[h.place].tools[h.part]; T.getWorldPosition(gv); goRing.position.set(gv.x, 0.3, gv.z); goRing.scale.setScalar((RING_R[h.part] || RING_R[h.place] || 3.6) * 1.2); goAt.position.set(gv.x, (PART_UP[h.part] || (h.place === 'fab' ? 3.8 : 2.6)) + 0.1, gv.z); }
     else { G[h.place].getWorldPosition(gv); goRing.position.set(gv.x, 0.3, gv.z); goRing.scale.setScalar(footOf(h.place)); goAt.position.set(gv.x, HGT[h.place] || 8, gv.z); }
   };
-  /* seen from far out, the island's places fold into one name */
-  L.add(scene, new THREE.Vector3(0, 12, 0), t('map.home'), { cls: 'place3 far home', min: 560 });
+  /* seen from far out, the island's places fold into one name (homeisle, never home: that class is the first page's sheet) */
+  L.add(scene, new THREE.Vector3(0, 12, 0), t('map.home'), { cls: 'place3 far homeisle', min: 560 });
   /* the number pins of the loop, and your chip on it */
   const pins = {};
   STOPS6.forEach(s => { const [x, z] = PINS[s], g = group(scene, x, 0, z); cyl(g, 0.12, 0.12, 3, metal(P.metal), 0, 0, 0, 8); pins[s] = L.add(g, new THREE.Vector3(0, 3.6, 0), '', { cls: 'pin3', button: true, data: { place: STOP_PLACE[s] }, max: 380 }); });

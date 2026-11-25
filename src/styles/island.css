@@ -14,8 +14,10 @@
 /* the island's labels: places with their flags, the loop's numbered stops, your chip, the village */
 .place3.far { font-size: 15px; padding: 8px 14px 8px 12px; }
 .place3.far::before { background: var(--warm); }
-.place3.home { pointer-events: none; font: 700 16px var(--serif); }
-.place3.home::before { background: var(--accent); }
+/* the island's one name from far out: not .home, which is the first page's full-screen sheet (base.css) and once
+   stretched this name over the whole picture */
+.place3.homeisle { pointer-events: none; font: 700 16px var(--serif); }
+.place3.homeisle::before { background: var(--accent); }
 .flag { display: inline-grid; place-items: center; min-width: 18px; height: 18px; margin-left: 7px; padding: 0 5px; border-radius: 9px; background: var(--accent); color: var(--accent-ink); font: 700 11px var(--mono); vertical-align: 1px; }
 .flag.done { background: var(--good); color: #06101f; }
 .flag.job { background: var(--warm); color: #1d1204; }
