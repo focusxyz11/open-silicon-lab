@@ -420,5 +420,9 @@
  "hd.ch.floor": "下到最底层",
  "hd.ch.eras": "看遍机器的每个时代",
  "hd.ch.arr": "找到数字从不移动的排列",
- "hd.ch.keep": "留下一台你自己的机器"
+ "hd.ch.keep": "留下一台你自己的机器",
+ "hd.chk.xy": "X {x} · Y {y}",
+ "hd.chk.found": "检查：已找到 {n} / {of} 堵墙",
+ "hd.chk.signed": "签核：由你",
+ "hd.chk.unsigned": "签核：尚未"
 }

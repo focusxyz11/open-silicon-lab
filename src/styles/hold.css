@@ -200,7 +200,7 @@
 
 /* ---- after the hold stops: the same story goes on ---- */
 .hold .h-steps { grid-column: 1; grid-row: 2; min-width: 0; padding-bottom: 40px; }
-.hold .h-step { min-height: var(--H); padding: 11svh 0 9svh; border-top: 1px solid var(--hair); max-width: 640px; scroll-margin-top: var(--barH); }
+.hold .h-step { min-height: 0; padding: 88px 0 72px; border-top: 1px solid var(--hair); max-width: 640px; scroll-margin-top: var(--barH); }
 .hold .h-n { color: var(--mid); display: flex; gap: 10px; align-items: center; }
 .hold .h-n i { width: 26px; height: 1px; background: var(--mid); display: block; }
 .hold .h-step h2 { font-size: clamp(48px, 6.4vw, 104px); margin: 14px 0 0 -.02em; }
@@ -294,6 +294,9 @@
 .hold .h-enter:hover { transform: translateX(4px); }
 .hold .h-enter::after { content: "→"; }
 .hold .h-doors { display: flex; flex-wrap: wrap; gap: 8px 22px; margin-top: 20px; }
+.hold .h-wires { position: fixed; inset: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 4; }
+.hold .h-dl .h-vio { background: var(--red); color: #fff; padding: 3px 7px 2px; transform: translateY(-100%); white-space: nowrap; }
+.hold .h-dl .h-vio.on { opacity: 1; }
 .hold .h-egg { position: fixed; right: 44px; bottom: 26px; transform: translateY(30px); background: var(--red); color: #fff; padding: 11px 16px 10px; width: var(--S); max-width: calc(100vw - 40px); font-size: 14.5px; line-height: 1.35; opacity: 0; pointer-events: none; transition: opacity .35s, transform .35s; z-index: 9; box-shadow: 0 14px 40px rgba(0,0,0,.35); }
 .hold .h-egg.on { opacity: 1; transform: none; pointer-events: auto; }
 .hold .h-egg .h-mono { display: block; opacity: .85; margin-bottom: 3px; }

@@ -64,7 +64,9 @@ export function createHold(host, ctx = {}) {
     '<div class="h-dl" id="hd-dl"></div>' +
     '<div class="h-loupe" id="hd-loupe"><canvas id="hd-lcv" width="464" height="464"></canvas><div class="h-mag h-mono" id="hd-mag"></div></div>' +
     '<div class="h-dielab h-bot h-mono"><span id="hd-dreg"></span><span id="hd-dfound"></span></div></div>' +
-    '<div class="h-steps" id="hd-steps"></div><footer class="h-foot h-mono" id="hd-foot"></footer></div></div>';
+    '<div class="h-steps" id="hd-steps"></div><footer class="h-foot h-mono" id="hd-foot"></footer></div>' +
+    /* the wires across the middle: from the words to the part of the square they are about */
+    '<canvas class="h-wires" id="hd-wires" aria-hidden="true"></canvas></div>';
   const root = host.querySelector('#hd-root'), el = id => host.querySelector('#hd-' + id);
   const cls = (k, on) => root.classList.toggle('is-' + k, on);
 
@@ -632,7 +634,7 @@ export function createHold(host, ctx = {}) {
       else { c.fillStyle = ink; c.fillRect(440, y - 1.5, 30, 3); }
       c.fillStyle = on ? ink : fg(.8); c.textAlign = 'left'; c.fillText(w('rung.' + id + '.t'), 494, y); });
     /* the bit on its way down */
-    c.globalAlpha = a; c.fillStyle = RED; const s0 = 26 + (NX.hold && !reduce() ? 4 * Math.sin(T * 20) : 0); c.fillRect(385 - s0 / 2, yP - s0 / 2, s0, s0);
+    NXPT = [385, yP]; c.globalAlpha = a; c.fillStyle = RED; const s0 = 26 + (NX.hold && !reduce() ? 4 * Math.sin(T * 20) : 0); c.fillRect(385 - s0 / 2, yP - s0 / 2, s0, s0);
     c.globalAlpha = 1; c.textBaseline = 'alphabetic';
   }
   const W4 = { switch: { n: 0 }, memory: { sel: 0, pos: 0 }, power: { guess: 485, shown: false, rv: 0 }, cost: { open: 0, f: 0 } };
@@ -713,6 +715,72 @@ export function createHold(host, ctx = {}) {
   const ISLE = [['lab', 6, 26], ['studio', -48, -30], ['quarry', -62, -4], ['fab', -8, -16], ['test', 22, -2], ['port', 62, 6], ['datacentre', 36, -36], ['village', -34, 24]];
   let hotPlace = null, isleT = 0;
 
+  /* ============ the checks (after Fable's Tapeout prototype): each wall is a violation that a check finds on the
+     square, a red line sweeping down it the first time you reach that wall; what the check found stays marked where it
+     bites, and the status strip under the square counts them. Nobody can waive one ============ */
+  const VIO = {}, FOUND4 = {}, SCAN = { k: null, y: 2000 }, VLAB = {};
+  let NXPT = [385, 500];
+  function drawChecks(c, dt) {
+    const k = WALLS.some(x => x.id === scene) ? scene : null;
+    if (k && SCAN.k !== k) { SCAN.k = k; if (reduce()) FOUND4[k] = 1; SCAN.y = FOUND4[k] ? 2000 : -40; }
+    if (SCAN.y < 1100) { SCAN.y += dt * 1150; if (SCAN.y >= 1000 && k) FOUND4[k] = 1; }
+    WALLS.forEach((wl, i) => { const a = A[wl.id], r = wl.id === 'switch' ? loupeBox() : VIO[wl.id], on = a > .02 && r && (FOUND4[wl.id] || (SCAN.k === wl.id && SCAN.y > r[1]));
+      vioLabel(wl.id, i, r, on && a > .5);
+      if (!on) return; const [x, y, ww, h] = r, pulse = reduce() ? .12 : .1 + .06 * Math.sin(now / 320 + i);
+      c.globalAlpha = a; c.fillStyle = 'rgba(229,64,26,' + pulse + ')'; c.fillRect(x, y, ww, h);
+      c.save(); c.beginPath(); c.rect(x, y, ww, h); c.clip(); c.strokeStyle = 'rgba(229,64,26,.4)'; c.lineWidth = 2; c.beginPath(); const off = reduce() ? 0 : (now / 110) % 18; for (let q = -h; q < ww + 18; q += 18) { c.moveTo(x + q + off, y + h); c.lineTo(x + q + off + h, y); } c.stroke(); c.restore();
+      c.strokeStyle = RED; c.lineWidth = 4; c.strokeRect(x, y, ww, h); c.fillStyle = RED; for (const [cx, cy] of [[x, y], [x + ww, y], [x, y + h], [x + ww, y + h]]) c.fillRect(cx - 8, cy - 8, 16, 16); c.globalAlpha = 1; });
+    if (SCAN.y > -40 && SCAN.y < 1000 && k) { const g = c.createLinearGradient(0, SCAN.y - 120, 0, SCAN.y); g.addColorStop(0, 'rgba(229,64,26,0)'); g.addColorStop(1, 'rgba(229,64,26,.22)'); c.fillStyle = g; c.fillRect(0, SCAN.y - 120, 1000, 120); c.fillStyle = RED; c.fillRect(0, SCAN.y, 1000, 4); }
+  }
+  /* the leak is in every transistor: the check marks the one in the glass */
+  const loupeBox = () => { const R = loupe.clientWidth / 2 / S * 1000; return R ? [focus[0] * 1000 - R, focus[1] * 1000 - R, R * 2, R * 2] : null; };
+  function vioLabel(id, i, r, on) { let e = VLAB[id]; if (!e) { e = VLAB[id] = document.createElement('span'); e.className = 'h-vio h-mono'; e.textContent = '✕ 0' + (i + 1) + ' ' + w('wall.' + id + '.s'); el('dl').appendChild(e); }   /* i18n-ok: a mark and a number */
+    e.classList.toggle('on', !!on); if (on) { e.style.left = Math.max(0, r[0]) / 10 + '%'; e.style.top = Math.max(0, r[1]) / 10 + '%'; } }
+  /* the status strip under the square: where the pointer is, how many walls the checks found, and who signed off */
+  const pad4 = v => String(Math.max(0, Math.min(1000, Math.round(v * 1000)))).padStart(4, '0');
+  function statusStrip() { setCap(w('chk.xy', { x: pad4(focus[0]), y: pad4(focus[1]) }), w('chk.found', { n: Object.keys(FOUND4).length, of: WALLS.length }) + ' · ' + w(M.kept ? 'chk.signed' : 'chk.unsigned')); }
+  /* the wires across the middle, as on a chip: from what the words are about, straight across and at right angles, to
+     where it is on the square. A wall's own wire is red; what people are trying against it runs as a change order,
+     solid when in products, dashed in a lab, dotted when still a guess; a part of your machine to its block; a place on
+     the island to its pad. On a desktop wide enough, never on a phone */
+  const wcv = el('wires'), wc = wcv.getContext('2d');
+  function wiresOf() {
+    const out = [], st = id => el('s-' + id), mid = r => (r.top + r.bottom) / 2;
+    const wl = WALLS.find(x => x.id === scene);
+    if (wl) { const s0 = st(wl.id), r = wl.id === 'switch' ? loupeBox() : VIO[wl.id]; if (!s0 || !r || !(FOUND4[wl.id] || (SCAN.k === wl.id && SCAN.y > r[1]))) return out;
+      const h2 = s0.querySelector('h2'); out.push({ s0, y: mid(h2.getBoundingClientRect()), t: [r[0], r[1] + Math.min(r[3] / 2, 90)], col: RED, w: 2.4 });
+      s0.querySelectorAll('.h-way').forEach((b, i) => { const cvb = b.querySelector('canvas'), stt = wl.ways[i][1], sp = specs.find(x => x.cv === cvb);
+        out.push({ s0, y: mid(cvb.getBoundingClientRect()), t: [r[0], r[1] + Math.min(r[3] - 20, 140 + i * 60)], col: ink, w: sp && sp.hot ? 2 : 1.3, dash: stt === 'product' ? [] : stt === 'lab' ? [7, 5] : [2, 5], hot: sp && sp.hot }); }); }
+    else if (scene === 'next') { const s0 = st('next'), b = el('nbtn'); if (s0 && b) out.push({ s0, y: mid(b.getBoundingClientRect()), t: NXPT, col: RED, w: 2.2 }); }
+    else if (scene === 'arch') { const s0 = st('arch'), o = el('a-z'); if (s0 && o) out.push({ s0, y: mid(o.getBoundingClientRect()), t: [110, 500], col: ink, w: 1.6 }); }
+    else if (scene === 'machine') { const s0 = st('machine'), n = needNow(), R = rectsOf(n), miss = missOf(n, formOf);
+      el('parts').querySelectorAll('.h-part').forEach((p, i) => out.push({ s0, y: mid(p.getBoundingClientRect()), t: [R[i][0], R[i][1] + R[i][3] / 2], col: miss.includes(n.parts[i][0]) ? RED : ink, w: 1.5 })); }
+    else if (scene === 'island') { const s0 = st('island');
+      el('trail').querySelectorAll('a').forEach((a2, i) => { const p = LOOP[i]; if (p) out.push({ s0, y: mid(a2.getBoundingClientRect()), t: [p[2] - 36, p[3]], col: ROWS[i] && ROWS[i][5] ? RED : ink, w: ROWS[i] && ROWS[i][5] ? 2 : 1.3, hot: hotPlace === p[1] }); }); }
+    return out;
+  }
+  function drawWires() {
+    const on = !phone && innerWidth >= 1100 && scene !== 'hero', W = innerWidth, H = innerHeight;
+    if (wcv.width !== Math.round(W * DPR) || wcv.height !== Math.round(H * DPR)) { wcv.width = Math.round(W * DPR); wcv.height = Math.round(H * DPR); }
+    wc.setTransform(DPR, 0, 0, DPR, 0, 0); wc.clearRect(0, 0, W, H); if (!on) return;
+    const a = A[scene] || 0; if (a < .05) return;
+    const wr = wrap.getBoundingClientRect(), X = u => wr.left + u / 1000 * wr.width, Y = u => wr.top + u / 1000 * wr.height, top = 84, L = wiresOf(), n = L.length;
+    wc.lineJoin = 'miter'; wc.lineCap = 'butt';
+    L.forEach((q, i) => { if (q.y < top || q.y > H - 8) return;
+      const sx = q.s0.getBoundingClientRect().left + Math.min(q.s0.clientWidth, 640) + 12, ex = wr.left - 16, tx = X(q.t[0]), ty = Math.max(wr.top + 4, Math.min(wr.bottom - 4, Y(q.t[1])));
+      if (ex - sx < 16) return;
+      const mx = Math.round(sx + (ex - sx) * (n > 1 ? .25 + .5 * i / (n - 1) : .5)) + .5, pts = [[sx, q.y], [mx, q.y], [mx, ty], [ex, ty], [tx, ty]];
+      wc.globalAlpha = a * (q.hot ? 1 : .85); wc.strokeStyle = q.col; wc.lineWidth = q.w; wc.setLineDash(q.dash || []); wc.beginPath(); pts.forEach((p, j) => (j ? wc.lineTo(p[0], p[1]) : wc.moveTo(p[0], p[1]))); wc.stroke(); wc.setLineDash([]);
+      /* a pad where it leaves the words, one where it enters the chip, a via where it lands */
+      wc.fillStyle = paper; wc.fillRect(sx - 4, q.y - 4, 8, 8); wc.strokeStyle = q.col; wc.lineWidth = 1.5; wc.strokeRect(sx - 4, q.y - 4, 8, 8);
+      wc.fillStyle = paper; wc.fillRect(ex - 5, ty - 5, 10, 10); wc.strokeRect(ex - 5, ty - 5, 10, 10); wc.fillStyle = q.col; wc.fillRect(ex - 2, ty - 2, 4, 4);
+      wc.fillRect(tx - 3.5, ty - 3.5, 7, 7);
+      /* what flows along it */
+      if (!reduce()) { const seg = pts.slice(1).map((p, j) => Math.abs(p[0] - pts[j][0]) + Math.abs(p[1] - pts[j][1])), len = seg.reduce((s2, v) => s2 + v, 0), sp = q.hot ? 220 : 120;
+        for (let k = 0; k < Math.max(1, Math.round(len / 260)); k++) { let d0 = ((now / 1000 * sp + k * 260 + i * 70) % len), j = 0; while (j < seg.length - 1 && d0 > seg[j]) { d0 -= seg[j]; j++; } const p = pts[j], p2 = pts[j + 1], f = d0 / (seg[j] || 1);
+          wc.fillStyle = q.col === RED ? RED : HI; wc.globalAlpha = a; wc.fillRect(p[0] + (p2[0] - p[0]) * f - 3, p[1] + (p2[1] - p[1]) * f - 3, 6, 6); } }
+      wc.globalAlpha = 1; });
+  }
   function paintScenes(T, dt) {
     const P = die.width, u = P / 1000, c = dc;
     c.setTransform(1, 0, 0, 1, 0, 0); c.fillStyle = BG; c.fillRect(0, 0, P, P);
@@ -730,20 +798,25 @@ export function createHold(host, ctx = {}) {
       if (k2 < .9) { c.globalAlpha = a * (1 - k2); c.fillStyle = bg(.82); c.fillRect(...Mr); c.strokeStyle = ink; c.strokeRect(...Mr); c.fillStyle = fg(.3); for (let i = 0; i < 9; i++) for (let j = 0; j < 6; j++) c.fillRect(Mr[0] + 18 + i * (Mr[2] - 36) / 9, Mr[1] + 18 + j * (Mr[3] - 36) / 6, (Mr[2] - 36) / 9 - 6, (Mr[3] - 36) / 6 - 6);
         /* the trip a number makes, there and back */
         const p0 = [Mr[0] + Mr[2] / 2, Mr[1] + Mr[3]], p2 = [Lr[0] + Lr[2] / 2, Lr[1]], p1 = [p2[0], p0[1]], l1 = Math.abs(p1[0] - p0[0]), l2 = Math.abs(p2[1] - p1[1]), len = l1 + l2;
+        VIO.memory = len > 8 && k2 < .5 ? [Math.min(p0[0], p1[0]) - 26, Math.min(p0[1], p2[1]) - 26, Math.abs(p1[0] - p0[0]) + 52, Math.abs(p2[1] - p0[1]) + 52] : null;
         if (len > 8) { c.strokeStyle = RED; c.lineWidth = 3; c.beginPath(); c.moveTo(...p0); c.lineTo(...p1); c.lineTo(...p2); c.stroke();
           const at = s => (s < l1 ? [p0[0] + (p1[0] - p0[0]) * s / (l1 || 1), p0[1]] : [p1[0], p1[1] + (p2[1] - p1[1]) * (s - l1) / (l2 || 1)]); c.fillStyle = HI;
           for (let i = 0; i < Math.max(1, Math.round(len / 150)); i++) { const s = ((T * 260 + i * 150) % len), q = at(s); c.fillRect(q[0] - 7, q[1] - 7, 14, 14); } } }
+      if (k2 >= .9) VIO.memory = null;
       c.globalAlpha = 1; lab('mem', Mr[0] + 6, Mr[1] - 26, k2 < .5); lab('logic', Lr[0] + 6, Lr[1] + Lr[3] + 10, true); }
     if (A.power > .01) { const a = A.power, p4 = W4.power, sc = v => 940 * Math.sqrt(v / 1250); p4.rv += ((p4.shown ? 1 : 0) - p4.rv) * Math.min(1, dt * 3);
       c.globalAlpha = a; const s0 = sc(485), sg = sc(p4.guess), s9 = sc(950);
       if (p4.rv > .01) { const s = lerp(s0, s9, p4.rv * p4.rv * (3 - 2 * p4.rv)); c.fillStyle = 'rgba(229,64,26,' + (.28 * p4.rv) + ')'; c.fillRect(30, 970 - s, s, s); c.strokeStyle = RED; c.lineWidth = 5; c.strokeRect(30, 970 - s, s, s); }
-      c.fillStyle = ink; c.fillRect(30, 970 - s0, s0, s0);
+      c.fillStyle = fg(.16); c.fillRect(30, 970 - s0, s0, s0); c.strokeStyle = ink; c.lineWidth = 3; c.strokeRect(30, 970 - s0, s0, s0);
+      VIO.power = p4.shown ? [30, 970 - s9, s9, s9] : [30, 970 - sg, sg, sg];
       c.setLineDash([10, 8]); c.strokeStyle = ink; c.lineWidth = 2.5; c.strokeRect(30, 970 - sg, sg, sg); c.setLineDash([]);
-      c.globalAlpha = 1; lab('pnow', 44, 970 - s0 + 14, true, 'dk'); lab('pguess', 30 + sg - 6, 970 - sg - 28, !p4.shown, 'right'); lab('p2030', 30 + s9 - 6, 970 - s9 - 28, p4.shown, 'r right'); }
+      c.globalAlpha = 1; lab('pnow', 44, 970 - s0 + 14, true); lab('pguess', 30 + sg - 6, 970 - sg - 28, !p4.shown, 'right'); lab('p2030', 30 + s9 - 6, 970 - s9 - 28, p4.shown, 'r right'); }
     if (A.cost > .01) { const a = A.cost, c4 = W4.cost; c4.f += (c4.open - c4.f) * Math.min(1, dt * 3.5);
       if (c4.f < .99) { c.globalAlpha = a * (1 - c4.f); COST.forEach((k, i) => { const s = 940 * Math.sqrt(k[1] / 725), last = i === 5; if (!i) { c.fillStyle = ink; c.fillRect(30, 970 - s, s, s); } c.strokeStyle = last ? RED : ink; c.lineWidth = last ? 5 : 2; c.strokeRect(30, 970 - s, s, s); }); }
       if (c4.f > .01) { c.save(); c.globalAlpha = a * c4.f; c.setTransform(1, 0, 0, 1, 0, 0); c.beginPath(); c.rect(P * .03, P * .03, P * .94 * Math.min(1, c4.f * 1.02), P * .94); c.clip(); c.translate(P * .03, P * .03); c.scale(dots.k, dots.k); c.fillStyle = dots.pat; c.fillRect(0, 0, P * .94 / dots.k, P * .94 / dots.k); c.restore(); c.setTransform(u, 0, 0, u, 0, 0); c.strokeStyle = RED; c.lineWidth = 5; c.globalAlpha = a * c4.f; c.strokeRect(30, 30, 940, 940); }
+      VIO.cost = [30, 30, 940, 940];
       c.globalAlpha = 1; lab('c1', 44, 44, c4.f < .5, 'r'); }
+    drawChecks(c, dt);
     if (A.next > .01) paintNext(c, T, dt, A.next);
     if (A.arch > .01) paintArch(c, T, dt, A.arch);
     if (A.machine > .01 || A.island > .01) { isleT = scene === 'island' ? Math.min(1, isleT + dt / 1.5) : Math.max(0, isleT - dt * 2);
@@ -956,7 +1029,8 @@ export function createHold(host, ctx = {}) {
     if (scene === 'hero') { drawHeroDie(); drawLoupe(ss(7.6, 9.4, d)); }
     else { paintScenes(T, dt); const dotsOn = scene === 'cost' && W4.cost.f > .6; drawLoupe(A.switch > .5 || dotsOn ? 1 : 0, { leak: scene === 'switch' ? W4.switch.n / 5 : 0, dots: dotsOn }); }
     if (built) advanceNext(dt);
-    count(); say(); chartQ(); if (pos < YLEN + innerHeight) paintChart(dt); drawSpecimens(dt);
+    if (scene !== 'hero') statusStrip();
+    count(); say(); chartQ(); if (pos < YLEN + innerHeight) paintChart(dt); drawSpecimens(dt); drawWires();
     raf = requestAnimationFrame(frame);
   }
 
