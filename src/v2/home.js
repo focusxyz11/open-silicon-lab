@@ -9,10 +9,11 @@
 import { t, fmtNum, lang, LANGS } from '../core/i18n.js';
 import { STAGES, RINGS, STATIONS, FLOWS, ACTORS, WALLS, NEXT, ROLES, TRIAD, CHAPTERS, OPEN_AT, DOORS, WAYS } from '../data/blueprint.js';
 import * as B from '../engines/blueprint.js';
+import { figVars } from './figures.js';
 import { ledger, settled, frontier } from '../engines/ledger.js';
 
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
-const w = (k, o) => t('bp.' + k, o);
+const w = (k, o) => t('bp.' + k, o ? { ...figVars(), ...o } : figVars());
 const QWORD = q => (q === 'perfect' ? 'field.perfect.q' : 'home.q.' + q);
 const byId = Object.fromEntries(STATIONS.map(s => [s.id, s]));
 const STATUS = ['product', 'lab', 'guess'];
@@ -186,7 +187,7 @@ export function createHome(host, ctx) {
     let title = '', meta = '', body = '', href = null, fact = null, extra = '';
     if (kind === 'stage') { title = t('loop.stage.' + id); body = w('stage.' + id + '.d'); extra = '<div class="bp-cardlinks">' + STATIONS.filter(s => s.stage === id).map(s => '<a href="' + s.href + '">' + esc(w('st.' + s.id)) + '</a>').join('') + '</div>'; }
     if (kind === 'actor') { const a = ACTORS.find(x => x.id === id); title = w('actor.' + id + '.t'); meta = t('loop.stage.' + a.stage) + ' · ' + w('side.' + a.side); body = w('actor.' + id + '.d'); fact = a.fact; }
-    if (kind === 'wall') { const x = WALLS.find(v => v.id === id); title = w('wall.' + id + '.t'); body = w('wall.' + id + '.d'); fact = x.fact; href = x.href; extra = '<p class="bp-q"><span>' + esc(w('card.question')) + '</span>' + esc(t(QWORD(x.q))) + '</p>'; }
+    if (kind === 'wall') { const x = WALLS.find(v => v.id === id); title = w('wall.' + id + '.t'); body = t('wall.' + id + '.d', figVars()) + (id === 'power' ? (lang() === 'zh' ? '' : ' ') + t('wall.power.more', figVars()) : ''); fact = x.fact; href = x.href; extra = '<p class="bp-q"><span>' + esc(w('card.question')) + '</span>' + esc(t(QWORD(x.q))) + '</p>'; }
     if (kind === 'next') { const n = NEXT.find(v => v.id === id); title = w('next.' + id + '.t'); meta = '<span class="bp-mark s-' + n.status + '">' + esc(w('status.' + n.status)) + '</span> · ' + esc(w('card.attacks', { wall: w('wall.' + n.attacks + '.t') })); body = w('next.' + id + '.d'); fact = n.fact; href = n.href; }
     el.innerHTML = '<button type="button" class="bp-close" data-close aria-label="' + esc(w('card.close')) + '">×</button><p class="bp-cardmeta">' + (kind === 'next' ? meta : esc(meta)) + '</p><h3>' + esc(title) + '</h3><p>' + esc(body) + '</p>' + extra +
       '<p class="bp-src" data-src></p>' + (href ? '<a class="bp-go" href="' + href + '">' + esc(w('card.go')) + ' →</a>' : '');
