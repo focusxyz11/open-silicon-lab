@@ -1200,5 +1200,11 @@
  "game.ch.dataflow.goal": "Lay a model's layers across a chip's tiles, and find the largest model the chip holds whole: one layer more must not fit.",
  "game.ch.dataflow.why": "Moving a number costs far more energy than computing with it. A processor fetches a model's weights from memory again for every answer; a dataflow chip keeps them in its tiles, where the work happens. It saves the most, until the model no longer fits.",
  "fig.money": "${n}",
- "fig.money.big": "${n}"
+ "fig.money.big": "${n}",
+ "game.ch.archniche.t": "An architecture nobody has built",
+ "game.ch.archniche.goal": "Invent a recipe nobody has built, at least two genes away from today's computer, and grow it until it beats today's computer at one need, within 25 years.",
+ "game.ch.archniche.why": "Every dominant computer began worse than the one it replaced, and won one job first: graphics chips were made for games long before they trained AI. Today's computer has had decades of attempts. What would it take for something new to catch up?",
+ "game.ch.archspread.t": "From one need to three",
+ "game.ch.archspread.goal": "Grow a recipe nobody has built until it beats today's computer at three needs at once, within 40 years.",
+ "game.ch.archspread.why": "A new architecture becomes dominant when it wins one need and the people who join it carry it into the next. Is your recipe broad enough to spread?"
 }

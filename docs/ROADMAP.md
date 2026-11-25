@@ -14,6 +14,7 @@ The highest priority. Its home is *Machines from shared blocks* ([MACHINES.md](M
 - from gates to a computer: your programs run on the core made of your own slice, with its datapath drawn (#321);
 - the four new ways to compute still waiting, as labs and as matter for machines: spiking neurons and light (#322), reversible logic and dataflow (#323);
 - invent a transistor: a switch of your own against silicon and the 60 mV per tenfold line, carried up into machines (#329).
+- grow an architecture that does not exist yet: one recipe of 400, worse than today's computer at first, grown through attempts in many directions until it wins one need, then three (`src/engines/arch.js`); next, its attempts in the ledger and the open port, and the lattice of matter and layers as one map of many.
 
 ## Polishing the core
 

@@ -821,5 +821,7 @@
  "fab.inspect.text.prompt": "One of these three dies has a defect. Click where you think it is.",
  "fab.inspect.text.compared": "Die {die} disagrees with both neighbours: {what}. One defect like this can kill the whole chip.",
  "fab.inspect.text.found": "Found it in die {die}. Now imagine doing this for 10 billion features on hundreds of dies per wafer, at speed.",
- "fab.inspect.text.miss": "Not there. Keep looking, or let the comparison find it."
+ "fab.inspect.text.miss": "Not there. Keep looking, or let the comparison find it.",
+ "grow.lab-grow": "a small new chip on a plinth at the Lab, one of its tiles lit",
+ "grow.lab-spread": "three new chips at the Lab, joined by light"
 }

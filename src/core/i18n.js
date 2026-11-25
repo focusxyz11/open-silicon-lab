@@ -59,6 +59,8 @@ export const AREAS = {
     'sw',
     /* new ways to compute: reversible logic and dataflow (#323) */
     'rev', 'dfl',
+    /* grow an architecture that does not exist yet */
+    'ar',
     /* a gallery of frontier ideas, and which machine fits which job (waiting for a view, src/data/waiting-words.json) */
     'para'],
   blueprint: ['bp'],
