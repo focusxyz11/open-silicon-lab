@@ -15,13 +15,13 @@ export default async function run() {
   await fp.evaluate(() => { location.hash = '#/line/pkg'; });
   await fp.waitForFunction(() => { const s = document.querySelector('.seamnote'); return !!s && !s.hidden && !!s.querySelector('[data-field="package"]'); }, null, { timeout: 30000 }).catch(() => problems.push(tag + ': crossing a seam does not raise its leak'));
   await fp.evaluate(() => { const b = document.querySelector('.seamnote [data-field]'); if (b) b.click(); });
+  await fp.waitForSelector('.fieldx', { timeout: 10000 }).catch(() => problems.push(tag + ': a question from the field does not open its card'));
   /* a move inside a view counts as one by the address (#367): ↓ from the block to the gate with the dock raises the fetch
      leak, and the gate is kept among the places you have been (the Map's marks) */
   await fp.goto(base + 'index.html#/dive/block');
   await fp.waitForFunction(() => { const b = document.querySelector('#diveui .dock [data-key="next"]'); if (b && location.hash === '#/dive/block') b.click(); const s = document.querySelector('.seamnote');
     return location.hash === '#/dive/gate' && !!s && !s.hidden && !!s.querySelector('[data-field="fetch"]'); }, null, { timeout: 60000, polling: 1500 }).catch(() => problems.push(tag + ': ↓ from the block to the gate inside the dive does not raise the fetch leak'));
   if (!(await fp.evaluate(() => { try { return !!JSON.parse(localStorage.getItem('osl-been') || '{}')['#/dive/gate']; } catch (e) { return false; } }))) problems.push(tag + ': a level reached inside the dive is not kept for the Map');
-  await fp.waitForSelector('.fieldx', { timeout: 10000 }).catch(() => problems.push(tag + ': a question from the field does not open its card'));
   /* What if? between the islands: a scenario moves the levers, the change lands on other islands, and one of
      them shows the chain back to the lever */
   await fp.goto(base + 'index.html#/whatif');
