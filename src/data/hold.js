@@ -5,15 +5,21 @@
    Every number here comes from src/data/facts.json (ids below; tests/hold.test.mjs checks they exist), and every word
    from src/i18n/<lang>/hold.json (hd.*). Designed with Claude Fable 5.2 (the Hold prototype, 22 November 2026) and
    brought into the lab with Claude Opus 5.5. */
+import { FIG } from './figures.js';
+import { NEEDS as ALL_NEEDS, BLOCKS, SOFTWARE_COST } from './blocks.js';
+import { LIQUIDS, FALLBACK } from './liquid.js';
 
 /* ---- the count: doublings from one transistor ---- */
 export const D71 = Math.log2(2300);              /* transistor-trend: 2,300 in 1971, doubling about every two years */
 export const DGAR = Math.log2(1200);             /* zeloof-garage: 1,200 transistors, one person, 2021 */
 export const DWALL = Math.log2(336e9);           /* rubin-gpu: 336 billion, 2026 */
-export const D95 = D71 + (1995 - 1971) / 2;      /* fdiv-charge: January 1995 */
+export const D94 = D71 + (1994 - 1971) / 2;      /* fdiv-rate, fdiv-charge: found and recalled in 1994 (the charge came in January 1995) */
 export const D2011 = D71 + (2011 - 1971) / 2;    /* design-cost-older: the series runs from 2011 */
-/* the price of designing one leading chip, $ million, node by node (design-cost-*) */
-export const COST = [['28 nm', 51], ['16 nm', 106], ['7 nm', 257], ['5 nm', 479], ['3 nm', 585], ['2 nm', 725]];
+/* the price of designing one leading chip, $ million, node by node (design-cost-*), and the year each node went into
+   production, so the price beside the count always belongs to the year beside it (the first and last from
+   src/data/figures.js, where the blueprint reads them too) */
+export const COST = [['28 nm', FIG.design28.v / 1e6, 2011], ['16 nm', 106, 2015], ['7 nm', 257, 2018], ['5 nm', 479, 2020], ['3 nm', 585, 2022], ['2 nm', FIG.design.v / 1e6, 2025]];
+export const costAt = y => { let c = null; for (const r of COST) if (r[2] <= y) c = r; return c; };
 export const COSTSRC = ['design-cost-older', 'design-cost-older', 'design-cost-recent', 'design-cost-recent', 'design-cost-recent', 'design-cost-2nm'];
 /* six paid generations from 2011 to the wall */
 export const GEN = i => D2011 + (DWALL - D2011) * i / COST.length;
@@ -28,12 +34,13 @@ export const MOMENTS = [
   /* four transistors: wired up, a gate. What hides behind 0 and 1 */
   { id: 'gate', at: 2, span: 1.3, q: 'nat', facts: [], lab: '#/dive/gate' },
   { id: 'job', at: D71, span: 2.2, q: 'line', facts: ['asic-vs-cpu'], lab: '#/bench/need' },
-  { id: 'bug', at: D95, span: 2.4, q: 'trust', facts: ['fdiv-rate', 'fdiv-charge'], lab: '#/line/test' },
+  { id: 'bug', at: D94, span: 2.4, q: 'trust', facts: ['fdiv-rate', 'fdiv-charge'], lab: '#/line/test' },
   { id: 'light', at: GEN(3), span: 1.05, q: 'dig', facts: ['euv-wavelength', 'high-na-price'], lab: '#/line/print' }
 ];
-/* 1971: from one job to any program, the energy for the same work (asic-vs-cpu: about 500× for video) */
-export const JOB_GAP = 500;
-/* 1995: about one random division in nine billion went wrong (fdiv-rate); the worst case anyone found */
+/* 1971: from one job to any program, the energy for the same work (asic-vs-cpu: about 500× for video; the machines'
+   engine counts software at the same cost, src/data/blocks.js) */
+export const JOB_GAP = SOFTWARE_COST;
+/* 1994: about one random division in nine billion went wrong (fdiv-rate); the worst case anyone found */
 export const FDIV = { rate: 9e9, a: 4195835, b: 3145727, wrong: 4195579 / 3145727 };
 /* the light: three ways to print lines finer than 193 nm light (euv-wavelength, high-na-price) */
 export const LIGHTS = ['one', 'passes', 'euv'];
@@ -42,6 +49,9 @@ export const LIGHTS = ['one', 'passes', 'euv'];
    doubled about every year, as Moore wrote in 1965 (moore-1965); from 1971 about every two years (transistor-trend),
    so one doubling is a year before 1971 and two after, and the year of any count follows ---- */
 export const yearAt = d => (d < D71 ? 1971 - (D71 - d) : yearOf(d));
+/* the year said beside the count: at the wall, the year of the chip that stands there (rubin-gpu, 2026), not the
+   year two-year doubling would give it */
+export const yearShown = d => (d >= DWALL - 1e-4 ? 2026 : Math.round(yearAt(d)));
 export const dAt = y => (y < 1971 ? D71 - (1971 - y) : D71 + (y - 1971) / 2);
 /* Moore's line of 1965: about 64 components in 1965, doubling every year to 65,000 in 1975 (moore-1965) */
 export const MOORE65 = [[1959, 1], [1965, 64], [1975, 65000]];
@@ -111,14 +121,14 @@ export const ARR = [['classic', null, ['energy-moving-data'], '#/dive/block'], [
 /* the arrangement's puzzle: which one makes a number's trip shortest (in the drawings' units, the trip a number makes) */
 export const TRIP = { classic: 3, stack: 1, cim: 0, light: 2, spikes: 0 };
 
-/* ---- the next machine: needs and their parts (src/data/blocks.js: share of the work per answer). Software and a
-   liquid fabric cost what src/engines/machine.js says against a circuit made for the job (asic-vs-cpu, fpga-asic-gap) ---- */
-export const NEEDS = [
-  { id: 'hearing', parts: [['mic', 'sensor', 2], ['filter', 'learner', 40], ['mem', 'memory', 4], ['ctl', 'core', 3]], change: ['filter'], wires: [[0, 1], [1, 2], [2, 3]] },
-  { id: 'wildfire', parts: [['smoke', 'sensor', 2], ['detect', 'learner', 30], ['check', 'parity', 1], ['clock', 'counter', 1], ['ctl', 'core', 4]], change: [], wires: [[0, 1], [1, 2], [1, 4], [3, 4]] },
-  { id: 'rover', parts: [['cam', 'sensor', 2], ['nav', 'learner', 60], ['vote', 'voter', 2], ['clock', 'counter', 1], ['ctl', 'core', 10]], change: ['nav'], wires: [[0, 1], [1, 4], [2, 3], [3, 4]] }
-];
-export const STOCK = ['sensor', 'memory', 'core'], FORMS = ['software', 'circuit', 'liquid'], FCOST = { software: 500, circuit: 1, liquid: 14 };
+/* ---- the next machine: three of the lab's needs, read from src/data/blocks.js (each part: its id, its block, its share
+   of the work per answer; the parts that must stay changeable; the wires between parts, as indexes). Software and a
+   liquid fabric cost what the machines' engine counts against a circuit made for the job (SOFTWARE_COST, asic-vs-cpu;
+   the FPGA's energy in src/data/liquid.js, fpga-asic-gap); their words are machines.need.* (shared.json) ---- */
+export const NEEDS = ['hearing', 'wildfire', 'rover'].map(id => { const n = ALL_NEEDS.find(x => x.id === id), ids = n.parts.map(p => p.id), at = e => ids.indexOf(e.split('.')[0]);
+  return { id, parts: n.parts.map(p => [p.id, p.block, p.work]), change: n.change, wires: n.wires.map(([a, b]) => [at(a), at(b)]).filter(([a, b]) => a >= 0 && b >= 0) }; });
+export const STOCK = BLOCKS.filter(b => b.stock).map(b => b.id), FORMS = ['software', 'circuit', 'liquid'];
+export const FCOST = { software: SOFTWARE_COST, circuit: 1, liquid: LIQUIDS.find(l => l.id === FALLBACK).energy.value };
 
 /* ---- the island: a chip's life round the loop, and where each is played for real ---- */
 export const LOOP = [['open', 'lab', 500, 150], ['design', 'studio', 850, 310], ['make', 'fab', 850, 690], ['test', 'test', 500, 850], ['ship', 'port', 150, 690], ['use', 'datacentre', 150, 310]];
@@ -129,6 +139,6 @@ export const PARTS = [['years', 'hd-years'], ['walls', 'hd-s-switch'], ['next', 
 export const CHALS = ['gate', 'fit', 'job', 'knee', 'bug', 'light', 'guess', 'walls', 'floor', 'eras', 'arr', 'keep'];
 
 /* every fact the page names (tests/hold.test.mjs checks each is in src/data/facts.json) */
-export const FACT_IDS = [...new Set(['transistor-trend', 'zeloof-garage', 'rubin-gpu', 'node-n2', 'tsmc-n2', 'wafer-space-run', 'fpga-asic-gap', 'brain-power',
+export const FACT_IDS = [...new Set(['transistor-trend', 'zeloof-garage', 'rubin-gpu', 'node-n2', 'tsmc-n2', 'wafer-space-run', 'fpga-asic-gap', 'brain-power', 'cerebras-cs4', ...Object.values(FIG).map(f => f.fact),
   'moore-1965', 'node-years', 'node-names', 'clock-stall', ...CHIPS.map(c => c[3]), ...ERAS.flatMap(e => e[2]), ...RUNGS.flatMap(r => r[2]),
   ...COSTSRC, ...MOMENTS.flatMap(m => m.facts), ...WALLS.flatMap(w => [...w.facts, ...w.ways.flatMap(x => x[3])]), ...ARR.flatMap(a => a[2])])];

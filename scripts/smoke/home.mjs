@@ -17,7 +17,19 @@ export default async function run() {
     hp.on('console', m => { if ((m.type() === 'error' || /Missing text/.test(m.text())) && !/fonts\.g|net::ERR|WebGL|GPU/.test(m.text())) problems.push(tag + ': console: ' + m.text()); });
     await hp.addInitScript(() => { try { localStorage.setItem('osl-quality', 'keep'); localStorage.removeItem('osl-lang'); } catch (e) { /* no storage */ }
       /* a block's picture, with its controls */
-      window.__p = id => document.querySelector('#hd-root .dblk .plate[data-id="' + id + '"]'); });
+      window.__p = id => document.querySelector('#hd-root .dblk .plate[data-id="' + id + '"]');
+      /* what on the page is wider than the window, or cut off by its box (the chip under the camera is a picture that
+         pans: only the block the camera is on counts) */
+      window.__over = () => { const W = innerWidth, bad = [];
+        const seen = e => { for (let p = e; p && p.id !== 'hd-root'; p = p.parentElement) { const s = getComputedStyle(p); if (s.display === 'none' || s.visibility === 'hidden' || +s.opacity < .05) return false; } return true; };
+        for (const e of document.querySelectorAll('#hd-root *')) {
+          if (e.closest('.d-world') && !e.closest('.dblk.cur')) continue;
+          if (e.closest('.sheet:not(.on),.srcpop:not(.on),.toast:not(.on)')) continue;
+          const r = e.getBoundingClientRect(); if (!r.width || !r.height || r.bottom < 0 || r.top > innerHeight || !seen(e)) continue;
+          if (r.right > W + 1 || r.left < -1) bad.push('"' + (e.textContent || e.className).trim().slice(0, 30) + '" runs off the window');
+          else if (!e.children.length && /hidden|clip/.test(getComputedStyle(e).overflowX) && e.scrollWidth > e.clientWidth + 1) bad.push('"' + e.textContent.trim().slice(0, 30) + '" is cut off');
+        }
+        return bad.slice(0, 4); }; });
     const play = (what, fn, arg, timeout = 15000) => hp.waitForFunction(fn, arg, { timeout }).catch(() => problems.push(tag + ': ' + what));
     await hp.goto(base + 'index.html');
     await play('the first page does not open as one chip, with its small chip and its twelve challenges in the bar', () => !document.getElementById('home').hidden && !!window.__hold && document.querySelectorAll('#hd-root .dblk .plate').length === 11 &&
@@ -43,10 +55,31 @@ export default async function run() {
     await at('light', 'the new light cannot be chosen', () => { const b = window.__p('years').querySelectorAll('.layer.on .seg button'); if (b[2] && !b[2].classList.contains('on')) b[2].click(); return !!window.__hold.S.done.light; });
     /* Moore's law, live: the pace that fits the chips, the year the clock stopped, and a guess for 2026 */
     const tapChart = (year, f) => { const c = document.querySelector('#hd-root .b-band .chart'), r = c.getBoundingClientRect(), u = parseFloat(getComputedStyle(document.getElementById('hd-root')).getPropertyValue('--u')) || 1;
-      const x = r.left + 34 * u + (year - 1957) / 73 * (r.width - 46 * u), y = r.top + r.height * f; for (const t of ['pointerdown', 'pointerup']) c.dispatchEvent(new PointerEvent(t, { bubbles: true, clientX: x, clientY: y, pointerId: 1 })); };
+      const x = window.__hold.chartX ? window.__hold.chartX(year) : r.left + 34 * u + (year - 1957) / 73 * (r.width - 46 * u), y = r.top + r.height * f; for (const t of ['pointerdown', 'pointerup']) c.dispatchEvent(new PointerEvent(t, { bubbles: true, clientX: x, clientY: y, pointerId: 1 })); };
+    /* the pace's slider can be dragged with the mouse, past two years, without the question being rebuilt under it */
+    await hp.evaluate(() => window.__hold.ch('fit'));
+    let dragged = false;
+    for (let i = 0; i < 3 && !dragged; i++) {
+      const r = await hp.waitForFunction(() => { const e = document.querySelector('#hd-root .cq input[data-a=every]'), b = e && e.getBoundingClientRect(); return b && b.width > 40 && b.top > 0 && b.bottom < innerHeight ? { x: b.left, y: b.top + b.height / 2, w: b.width } : null; }, null, { timeout: 8000 }).then(h => h.jsonValue()).catch(() => null);
+      if (!r) break;
+      await hp.mouse.move(r.x + 4, r.y); await hp.mouse.down();
+      for (let k = 1; k <= 20; k++) await hp.mouse.move(r.x + 4 + (r.w - 6) * k / 20, r.y);
+      await hp.mouse.up();
+      dragged = await hp.waitForFunction(() => window.__hold.S.cq.every > 2, null, { timeout: 3000 }).then(() => true, () => false);
+    }
+    if (!dragged) problems.push(tag + ': the pace\'s slider cannot be dragged past two years with the mouse');
+    /* the question under the chart is whole: none of it is cut off by the band (on a desktop) */
+    if (!phone && !(await hp.evaluate(() => { const q = document.querySelector('#hd-root .b-band .cq'); return q && q.scrollHeight <= q.clientHeight + 1; }))) problems.push(tag + ': the question under the chart is cut off by the band');
     await at('fit', 'the pace that fits the chips cannot be found', () => { const r = document.querySelector('#hd-root .cq input[data-a=every]'); if (r && r.value !== '2') { r.value = '2'; r.dispatchEvent(new Event('input', { bubbles: true })); r.dispatchEvent(new Event('change', { bubbles: true })); } return !!window.__hold.S.done.fit; });
     await at('knee', 'the year the clock stopped cannot be tapped', `(() => { const b = document.querySelector('#hd-root .cq [data-a=hz]'); if (b) b.click(); if (window.__hold.S.cq.pick === 'knee') (${tapChart})(2004.5, .5); return !!window.__hold.S.done.knee; })()`);
     await at('guess', 'a guess for 2026 cannot be made', `(() => { const S = window.__hold.S, b = document.querySelector('#hd-root .cq [data-a=guess]'); if (!S.cq.guess && S.cq.pick !== 'guess' && b) b.click(); if (S.cq.pick === 'guess') (${tapChart})(2020, .2); return !!S.cq.guess; })()`);
+    /* a resize, or a phone turned on its side and back, keeps the year */
+    const [tw, th] = phone ? [844, 390] : [1000, 700];
+    await hp.evaluate(() => window.__hold.set(17.3));
+    for (const [vw, vh2] of [[tw, th], [w, h]]) {
+      await hp.setViewportSize({ width: vw, height: vh2 });
+      await play('at ' + vw + '×' + vh2 + ' the fifty years lose the year', () => Math.abs(window.__hold.state().d - 17.3) < .05);
+    }
     await hp.evaluate(() => window.__hold.set(99));
     await play('the guess for 2026 is not answered at the wall', () => !!window.__hold.S.done.guess);
     /* by day the page stays day, even at the wall */
@@ -70,6 +103,16 @@ export default async function run() {
     await wall('machine', 'your machine cannot be kept', () => { const p = window.__p('machine'), S = window.__hold.S, t = p.querySelector('.mtile:not([disabled])'), a = p.querySelector('.tri .pbtn.ghost'), k = p.querySelector('.tri .pbtn:not(.ghost)');
       if (!S.agent && a) a.click(); else if (k) k.click(); if (t && !S.kept && !S.agent) t.click(); return !!S.done.keep; });
     if (!(await hp.evaluate(() => document.querySelectorAll('.bar .hbar .tally [data-ch].on').length === 12))) problems.push(tag + ': the bar does not count the twelve challenges done');
+    /* past the wall too, a resize or a turn keeps the block you are at */
+    for (const [vw, vh2] of [[tw, th], [w, h]]) {
+      await hp.setViewportSize({ width: vw, height: vh2 });
+      await play('at ' + vw + '×' + vh2 + ' the page loses the block it was at', () => window.__hold.state().cur === 'machine');
+    }
+    /* nothing runs off the window or is cut off, at every moment and on every block */
+    const sweep = async lang => { for (const [k, a] of [['set', 0], ['ch', 'gate'], ['ch', 'job'], ['ch', 'bug'], ['ch', 'light'], ['ch', 'fit'], ['set', 99], ...['leak', 'distance', 'power', 'price', 'next', 'levels', 'eras', 'arr', 'machine', 'island'].map(id => ['go', id])]) {
+      const ok = await hp.waitForFunction(([k, a]) => { window.__hold[k](a); return window.__over().length === 0; }, [k, a], { timeout: 6000 }).then(() => true, () => false);
+      if (!ok) problems.push(tag + ' ' + lang + ': at ' + a + ', ' + (await hp.evaluate(() => window.__over().join('; ')))); } };
+    await sweep('en');
     /* the small chip in the bar flies to a block (on a phone, to the whole chip); the chapters at the left lead to each chapter */
     if (!phone) {
       await play('the small chip in the bar does not fly to its block', () => { if (window.__hold.state().cur !== 'arr') document.querySelector('.bar .hbar .d-map button[data-id="arr"]').click(); return window.__hold.state().cur === 'arr'; });
@@ -91,6 +134,11 @@ export default async function run() {
     await play('the island does not open from the first page', () => document.getElementById('home').hidden && !document.getElementById('mapCanvas').hidden && !document.querySelector('.bar .hbar'), null, 30000);
     await hp.click('.bar .brand').catch(() => problems.push(tag + ': no brand in the bar'));
     await play('the brand does not lead back to the first page', () => !document.getElementById('home').hidden && document.getElementById('mapCanvas').hidden && !!document.querySelector('.bar .hbar'));
+    if (phone) for (const l of ['zh', 'fr', 'es']) {
+      await hp.goto(base + 'index.html?lang=' + l + '#/');
+      await play('the first page does not open in ' + l, l => document.documentElement.lang === l && !!window.__hold && !!window.__p && !!window.__p('island'), l, 20000);
+      await sweep(l);
+    }
     await hp.close();
   }
 }

@@ -170,12 +170,14 @@ function doSheet(sheet) {
 export function attach(host, api, o, x) {
   boot();
   const dock = api.dock, wrap = x.wrap, me = {};
-  /* a view makes its frame anew in the same host each time it is shown: only the newest wears it */
+  /* a view makes its frame anew in the same host each time it is shown: only the newest wears it, and what the one
+     before listened to and watched ends with it (its life, from the frame: #366) */
   host.f2now = me; const now = () => host.f2now === me;
+  const life = x.life || { signal: undefined, watch: ob => ob }, alive = { signal: life.signal };
   let open = false;
   /* where you are, while a lab has the stage: the level on the way down, lit; a tap goes back to Look */
   const where = document.createElement('button'); where.type = 'button'; where.className = 'f2where'; where.hidden = true; host.appendChild(where);
-  where.addEventListener('click', () => { open = false; api.look(); });
+  where.addEventListener('click', () => { open = false; api.look(); }, alive);
   let whereKey = '';
   const drawWhere = () => {
     const h = x.here(), at = x.at(), lv = h ? h.label : levelOf(dock), key = at + '|' + lv; if (key === whereKey) return; whereKey = key;
@@ -246,18 +248,18 @@ export function attach(host, api, o, x) {
     if (vb && vb.width && r.width && r.height) host.style.setProperty('--f2-k', (1 / Math.min(r.width / vb.width, r.height / vb.height)).toFixed(4));
     if (phone()) host.style.setProperty('--f2-sheet', Math.round(i.getBoundingClientRect().bottom + 10) + 'px');
   };
-  const ro = typeof ResizeObserver === 'function' ? new ResizeObserver(measure) : null;
+  const ro = typeof ResizeObserver === 'function' ? life.watch(new ResizeObserver(measure)) : null;
   let watched = [];
-  const fold = sheet(host, wrap, now);
+  const fold = sheet(host, wrap, now, life);
   if (!host.f2notes && typeof MutationObserver === 'function') { host.f2notes = true; new MutationObserver(notices).observe(host, { childList: true }); }
-  new MutationObserver(update).observe(dock, { childList: true, subtree: true, characterData: true });
-  addEventListener('resize', () => { if (!host.hidden) update(); });
+  life.watch(new MutationObserver(update)).observe(dock, { childList: true, subtree: true, characterData: true });
+  addEventListener('resize', () => { if (!host.hidden) update(); }, alive);
   host.addEventListener('click', e => {
     if (!now()) return;
     if (e.target.closest('[data-f2open]')) { open = true; update(); wrap.scrollTop = 0; return; }
     if (e.target.closest('[data-f2close]')) { open = false; update(); return; }
     if (e.target.closest('[data-mode]')) { open = false; update(); }
-  });
+  }, alive);
   update();
 }
 
@@ -268,15 +270,16 @@ export function attach(host, api, o, x) {
    sheet's head (or anywhere on the peek) moves it with the finger and lets it settle at the nearest height, or the
    next one the way it was flicked. A touch on the picture lets it down to the peek, as before. While a challenge is
    played it never folds to the peek; while a lab's instrument has the stage the sheet stays under it, so the
-   instrument is always in sight above the controls. sheet(): one per frame, called by attach. */
+   instrument is always in sight above the controls. sheet(): one per frame, called by attach, living as long as it. */
 const STATES = ['peek', 'half', 'full'];
 const still = () => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
-function sheet(host, wrap, now) {
+function sheet(host, wrap, now, life) {
   const dock = wrap.querySelector('.dock'), handle = wrap.querySelector('.peekbar');
   if (!dock || !handle) return () => {};
+  const alive = { signal: life.signal };
   let at = wrap.classList.contains('peek') ? 'peek' : 'half', drag = null, tm = 0, hold = false, peekTop = null;
   /* where the peek's top was, so a sheet the frame opens glides up from there (by then it is no longer a peek) */
-  if (typeof ResizeObserver === 'function') new ResizeObserver(() => { if (on() && wrap.classList.contains('peek') && !wrap.style.top) peekTop = wrap.offsetTop; }).observe(wrap);
+  if (typeof ResizeObserver === 'function') life.watch(new ResizeObserver(() => { if (on() && wrap.classList.contains('peek') && !wrap.style.top) peekTop = wrap.offsetTop; })).observe(wrap);
   const on = () => now() && phone() && host.classList.contains('f2') && !host.hidden;
   const busy = () => !!dock.querySelector('.player, .stopx') || dock.classList.contains('benchdock');
   const states = () => host.classList.contains('f2stage') ? ['half'] : busy() ? ['half', 'full'] : STATES;
@@ -295,25 +298,25 @@ function sheet(host, wrap, now) {
     tm = setTimeout(settle, 300);
   };
   /* the frame folds or opens the card itself (a touch on the picture, on the peek, a challenge begun): follow it */
-  new MutationObserver(() => {
+  life.watch(new MutationObserver(() => {
     if (!on() || drag) return; const p = wrap.classList.contains('peek');
     if (p && at !== 'peek') { at = 'peek'; classes('peek'); label(); }
     else if (!p && at === 'peek') { if (hold) { hold = false; classes('peek'); label(); } else set('half', peekTop != null ? peekTop : host.clientHeight - 10 - wrap.offsetHeight); }
     else if (!p && !wrap.classList.contains('f2' + at)) classes(at);
-  }).observe(wrap, { attributes: true, attributeFilter: ['class'] });
+  })).observe(wrap, { attributes: true, attributeFilter: ['class'] });
   /* a tap on the handle: up a height, and from the top back down. Heard before the frame's own (two heights) */
   host.addEventListener('click', e => {
     if (!on()) return;
     if (e.target.closest('.dockwrap > .peekbar')) { e.preventDefault(); e.stopPropagation(); const S = states(); return set(S[(S.indexOf(at) + 1) % S.length]); }
     /* closing a notice on the peek leaves it a peek */
     if (at === 'peek' && e.target.closest('.dockwrap > .toast, .dockwrap > .seamnote [data-seamx]')) hold = true;
-  }, true);
+  }, { capture: true, signal: life.signal });
   /* a drag: on the handle, the sheet's head, or anywhere on the peek but its controls */
   const grip = e => e.target === wrap || !!e.target.closest('.peekbar, .f2head, .dock > .kicker:first-child') || (at === 'peek' && !e.target.closest('button, a, input, select, textarea'));   /* i18n-ok: selectors */
   wrap.addEventListener('pointerdown', e => {
     if (!on() || e.button > 0 || !grip(e) || states().length < 2) return;
     drag = { id: e.pointerId, y0: e.clientY, top: wrap.offsetTop, moved: false, last: [[e.clientY, e.timeStamp]] };
-  });
+  }, alive);
   wrap.addEventListener('pointermove', e => {
     if (!drag || e.pointerId !== drag.id) return;
     const dy = e.clientY - drag.y0;
@@ -328,7 +331,7 @@ function sheet(host, wrap, now) {
     const T = drag.tops, lo = Math.min(...Object.values(T)), hi = Math.max(...Object.values(T)) + 24;
     wrap.style.top = Math.min(Math.max(drag.top + dy, lo - 12), hi) + 'px';
     drag.last.push([e.clientY, e.timeStamp]); if (drag.last.length > 5) drag.last.shift();
-  });
+  }, alive);
   const end = e => {
     if (!drag || e.pointerId !== drag.id) return; const d = drag; drag = null; wrap.classList.remove('f2drag');
     if (!d.moved) return;
@@ -342,7 +345,7 @@ function sheet(host, wrap, now) {
     else if (v > 0.5) { const down = S.find(s => d.tops[s] > top + 4); if (down) to = down; }
     set(to, top);
   };
-  wrap.addEventListener('pointerup', end); wrap.addEventListener('pointercancel', end);
+  wrap.addEventListener('pointerup', end, alive); wrap.addEventListener('pointercancel', end, alive);
   return () => { if (!on()) return; if (!states().includes(at)) set(at); else { classes(at); label(); } };
 }
 

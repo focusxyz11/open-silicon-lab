@@ -8,12 +8,13 @@
    - paint(F, base): the picture's SVG, in the plan (1000 by 1000); light(svg, e, V): one event lit on it.
    - createListen(host, o): the switch and its box on a view's frame. o: { where() (as a lens's paint), joule (the other
      lens, closed while this one is open), changed() (the picture keeps clear of the box) }. Returns { level(id),
-     width(), bottom() }. */
+     width(), bottom() }, one per frame (lifeOf, src/v2/frame.js). */
 import { t, fmtNum } from '../core/i18n.js';
 import * as L from '../engines/listen.js';
 import { factsOf } from '../data/partfacts.js';
 import { squareTo } from './lenspaint.js';
 import * as Sound from './sound.js';
+import { lifeOf } from './frame.js';
 
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 
@@ -92,6 +93,8 @@ const KEY = 'osl-listen';
 const kept = () => { try { const o = JSON.parse(localStorage.getItem(KEY) || '{}'); return { open: !!o.open, state: L.STATES.includes(o.state) ? o.state : 'busy', buzz: !!o.buzz }; } catch (e) { return { open: false, state: 'busy', buzz: false }; } };
 const keep = o => { try { localStorage.setItem(KEY, JSON.stringify(o)); } catch (e) { /* no storage: forgotten after the visit */ } };
 export function createListen(host, o) {
+  /* one switch on a frame (#366): a view that shows its frame twice in a row asks twice, and both get the same one */
+  const life = lifeOf(host); if (life.listen) return life.listen;
   const P = kept(); let level = null, playing = false, layer = null, raf = 0, M = null;
   Sound.setBuzz(P.buzz);
   const btn = document.createElement('button'); btn.type = 'button'; btn.className = 'lsnbtn'; btn.hidden = true; btn.setAttribute('aria-pressed', 'false');
@@ -151,9 +154,10 @@ export function createListen(host, o) {
     const m = e.target.closest('[data-lsnsel]'); if (m && L.STATES.includes(m.value)) pick(m.value); });
   /* what the block is doing, picked: the picture's heat and the sound follow at once */
   function pick(state) { P.state = state; keep(P); if (layer) { layer.remove(); layer = null; } if (playing) { const S = L.score(P.state, 30, 1, level); Sound.swap(S); } draw(); }
-  /* the other lens opened: this one steps aside */
-  host.addEventListener('click', e => { if (btn.isConnected && P.open && e.target.closest('.joulebtn')) open(false); });
-  return {
+  /* the other lens opened: this one steps aside. Heard on the host as long as the frame this switch is on (#366): a
+     frame made anew ends it, so a host carries one, however often the dive is visited */
+  host.addEventListener('click', e => { if (btn.isConnected && P.open && e.target.closest('.joulebtn')) open(false); }, { signal: life.signal });
+  return life.listen = {
     level(id) {
       const ok = L.LEVELS.includes(id); if (ok === !!level && id === level) return;
       if (!ok) { level = null; btn.hidden = true; box.hidden = true; stop(); layerOn(false); o.changed && o.changed(); return; }

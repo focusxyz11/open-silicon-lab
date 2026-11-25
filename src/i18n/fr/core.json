@@ -21,6 +21,14 @@
  "loop.at.use": "Usage : le centre de données",
  "loop.log": "Votre journal",
  "loop.map": "Carte",
+ "loop.same": "Le même niveau, {as}",
+ "loop.as.design": "tel qu’il est conçu",
+ "loop.as.make": "tel qu’il est fabriqué",
+ "loop.as.test": "tel qu’il est testé",
+ "loop.as.ship": "tel qu’il est expédié",
+ "loop.as.use": "tel qu’il est utilisé",
+ "game.stepAria": "Étape {n}, {step} : {done} défis réussis sur {total}",
+ "loop.mapK": "Le monde des puces sur une page : chaque lieu et chaque niveau, où vous êtes allé, et votre journal",
  "loop.out": "Dehors : le monde autour de l’île",
  "loop.outShort": "Le monde autour",
  "break.btn": "Cassez-le : quelque chose cloche ici ?",
@@ -36,5 +44,7 @@
  "home.q.copy": "Pour penser aussi efficacement qu’un cerveau, une machine doit-elle renoncer au pouvoir de copier son esprit ?",
  "home.q.nat": "Si presque tout dans la nature peut calculer, que reste-t-il, s’il reste quelque chose, hors du calcul ?",
  "home.q.human": "Quand l’IA rend gratuite la génération d’options et que les outils sont à la portée de tous, qu’est-ce que seuls les humains peuvent apporter, seuls et ensemble ?",
- "home.q.physics": "Faut-il combattre la physique pour garder une logique exacte, ou laisser les lois physiques faire le calcul ?"
+ "home.q.physics": "Faut-il combattre la physique pour garder une logique exacte, ou laisser les lois physiques faire le calcul ?",
+ "fig.money": "{n} dollars",
+ "fig.money.big": "{n} de dollars"
 }
