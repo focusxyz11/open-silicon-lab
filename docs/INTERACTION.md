@@ -97,9 +97,13 @@ Three things replace it on the island, each learned from games rather than from 
 - **Lenses.** The same island seen for one thing at a time: heat, flow, failure, time. The world drains to grey and
   what the lens is about rises out of it, a column of light over each place as tall as that place has of it (relative,
   never a figure without a source). Each lens says in one line what it shows and opens onto the question it belongs
-  to, one at a time; seen through a lens, a place's inspector offers that question where it is asked there.
-- **Carry your chip.** Your chip on the island can be picked up (or its name pressed) and carried to any place. The
-  place reacts: the chip goes in, and the inspector says what that place would do with it, with the way to try it.
+  to, one at a time; seen through a lens, a place's inspector offers that question where it is asked there. What if?
+  lends the island its own lens while it is open and gives yours back when it closes; the lens bar always shows the
+  lens that is on, and what grows while a lens is on drains with the rest.
+- **Carry your chip.** Your chip on the island can be picked up (or the pin with its name pressed, by mouse or by
+  finger) and carried to any place. The place reacts: the chip goes in, and the inspector says what that place would do
+  with it, with the way to try it. The pin tapped without moving opens its place, like any other name; a touch the
+  browser cancels carries nothing.
 
 ## Change it in place
 
