@@ -2,6 +2,8 @@
    challenges and where each is played, and the words that go with each picture. Every picture of the page is a plate,
    one square drawn in 1000 units with its own controls on it (src/v2/holdplates.js). Designed with Claude Fable 5.2
    (prototype D: B's story on A's chip) and brought into the lab with Claude Opus 5.5. */
+import { esc } from '../core/esc.js';
+import { facts } from '../core/facts.js';
 import { t, locale, hasWords } from '../core/i18n.js';
 import { CHALS, COST, COSTSRC, D2011, D71, D94, DGAR, DWALL, FDIV, GEN, LIGHTS, MOMENTS, NAMED_ONLY, WALLS, costAt, dAt, nodeAt, upTo, yearAt, yearShown } from '../data/hold.js';
 import { figVars, money } from './figures.js';
@@ -11,8 +13,6 @@ import { figVars, money } from './figures.js';
 export const w = (k, v) => t('hd.' + k, v ? { ...figVars(), ...v } : figVars()), Q = id => t('home.q.' + id);
 /* "247 million" times: in French and Spanish a number in words takes "de" before what it counts */
 export const xOf = f => (f < 1000 ? nf(f) : f >= 1e6 ? w('cq.xof', { x: sig(f, 2) }) : sig(f, 2));
-const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-
 export const $ = (s, r = ROOT || document) => r.querySelector(s), $$ = (s, r = ROOT || document) => [...r.querySelectorAll(s)];
 export const h = (tag, cls, html) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; };
 export const clamp = (v, a, b) => Math.max(a, Math.min(b, v)), lerp = (a, b, f) => a + (b - a) * f, ss = (a, b, v) => { v = clamp((v - a) / (b - a), 0, 1); return v * v * (3 - 2 * v); };
@@ -47,8 +47,7 @@ export function fitU(...also) { const W = innerWidth, H = innerHeight, u = PHONE
 /* ---- sources: a small mark beside the number; one sheet for all of them, by chapter ---- */
 /* the lab's facts (src/data/facts.json), loaded when the page is first touched; a mark asks for them if it needs them */
 export const FACTS = {};
-let factsP = null;
-export const loadFacts = () => factsP || (factsP = fetch('src/data/facts.json').then(r => r.json()).then(j => { for (const f of (j.facts || j)) FACTS[f.id] = [f.source, f.url, f.value, f.verified]; }, () => { factsP = null; }));
+export const loadFacts = () => facts().then(F => { for (const f of Object.values(F)) FACTS[f.id] = [f.source, f.url, f.value, f.verified]; });
 export const src = (...ids) => ids.map(id => '<button type="button" class="src" data-f="' + id + '" aria-label="' + esc(w('src.k')) + '">↗</button>').join('');
 export const CH_FACTS = { years: ['moore-1965', 'transistor-trend', 'zeloof-garage', 'chm-x86', 'core2-410m', 'northpole', 'rubin-gpu', 'cerebras-cs4', 'node-years', 'node-names', 'clock-stall', 'dual-core-2005', 'asic-vs-cpu', 'fdiv-rate', 'fdiv-charge', 'euv-wavelength', 'high-na-price', 'tsmc-n2', 'node-n2'],
   walls: ['energy-moving-data', 'dc-electricity', 'design-cost-older', 'design-cost-recent', 'design-cost-2nm', 'fab-module-cost', 'wafer-space-run', 'cortical-cl1', 'brain-power', 'minimal-fab'],
@@ -58,7 +57,7 @@ export const CH_FACTS = { years: ['moore-1965', 'transistor-trend', 'zeloof-gara
 export const CHAPS = ['years', 'walls', 'next', 'arch', 'machine', 'island'];
 let pop = null, sheetEl = null, toastEl = null, toastTm = 0;
 const inRoot = el => { ROOT.appendChild(el); return el; };
-export function showPop(b) { b._want = 1;
+function showPop(b) { b._want = 1;
   if (!FACTS[b.dataset.f]) { if (!Object.keys(FACTS).length) loadFacts().then(() => { if (b._want && FACTS[b.dataset.f]) showPop(b); }); return; }
   if (!pop) { pop = inRoot(h('div', 'srcpop')); }
   const f = FACTS[b.dataset.f]; if (!f) return; $$('.src.on').forEach(e => e.classList.remove('on')); b.classList.add('on');
@@ -66,7 +65,7 @@ export function showPop(b) { b._want = 1;
   pop.querySelector('.all').onclick = () => { hidePop(); sheet(true); };
   const r = b.getBoundingClientRect(), pw = Math.min(300, innerWidth - 24); pop.style.left = clamp(r.left - 20, 12, innerWidth - pw - 12) + 'px';
   pop.classList.add('on'); const ph = pop.offsetHeight; pop.style.top = (r.bottom + 8 + ph > innerHeight ? r.top - ph - 8 : r.bottom + 8) + 'px'; }
-export function hidePop() { if (pop) pop.classList.remove('on'); $$('.src.on').forEach(e => e.classList.remove('on')); }
+function hidePop() { if (pop) pop.classList.remove('on'); $$('.src.on').forEach(e => e.classList.remove('on')); }
 export function sheet(on) {
   if (on && !Object.keys(FACTS).length) { loadFacts().then(() => sheet(true)); return; }
   if (!sheetEl && on) { sheetEl = inRoot(h('div', 'sheet')); sheetEl.setAttribute('role', 'dialog'); sheetEl.setAttribute('aria-label', w('sheet.h').replace(/<[^>]+>/g, ''));
@@ -115,7 +114,7 @@ export const PW = {
 };
 /* what people are trying: told once, in the blueprint's words (bp.next.*, loaded when the page is first touched),
    except where this page says it its own way */
-export const wayW = (id, k) => (id === 'switches' || id === 'spikes' ? w('bet.' + id + '.' + k) : t('bp.next.' + id + '.' + k));
+const wayW = (id, k) => (id === 'switches' || id === 'spikes' ? w('bet.' + id + '.' + k) : t('bp.next.' + id + '.' + k));
 /* the words Hold shares with other pages (src/i18n/<lang>/shared.json): '' until they are in, then filled where they show */
 export const sw = (k, v) => (hasWords('shared') ? t(k, v ? { ...figVars(), ...v } : figVars()) : '');
 export function fillShared() { $$('[data-sw]').forEach(e => { e.innerHTML = sw(e.dataset.sw); }); changed('words'); }
@@ -137,13 +136,13 @@ export function words(id) {
 }
 
 /* ---- the fifty years: the count, the year, and what is said ---- */
-export const NARR = [[0, 'one'], [.9, 'not'], [3.4, 'double'], [DGAR - .7, 'garage'], [D71 + 2.3, 'rule'], [16.5, 'coast'], [20.5, 'invisible'], [D94 + 2.5, 'named'], [D2011, 'pay'], [GEN(5), 'gaa'], [DWALL - .9, 'push']];
+const NARR = [[0, 'one'], [.9, 'not'], [3.4, 'double'], [DGAR - .7, 'garage'], [D71 + 2.3, 'rule'], [16.5, 'coast'], [20.5, 'invisible'], [D94 + 2.5, 'named'], [D2011, 'pay'], [GEN(5), 'gaa'], [DWALL - .9, 'push']];
 export const momAt = d => MOMENTS.find(m => d >= m.at && d < m.at + m.span) || null;
 export const viewAt = d => { if (d >= DWALL - 1e-4) return 'wall'; const m = momAt(d); return m ? m.id : d < .5 ? 'one' : 'die'; };
 export function countParts(d) { const n = d >= DWALL - 1e-4 ? 336e9 : Math.pow(2, d);
   if (n < 1e6) return [nf(n), w(Math.round(n) === 1 ? 'unit.one' : 'unit.many'), ''];
   const big = n >= 1e9, v = n / (big ? 1e9 : 1e6); return [v >= 100 ? Math.round(v) : v.toFixed(1), w('unit.many'), w(big ? 'billion' : 'million')]; }
-export function hzW(v) { return v >= 1e9 ? w('st.ghz', { n: (v / 1e9).toFixed(1) }) : v >= 1e6 ? w('st.mhz', { n: Math.round(v / 1e6) }) : w('st.khz', { n: Math.round(v / 1e3) }); }
+function hzW(v) { return v >= 1e9 ? w('st.ghz', { n: (v / 1e9).toFixed(1) }) : v >= 1e6 ? w('st.mhz', { n: Math.round(v / 1e6) }) : w('st.khz', { n: Math.round(v / 1e3) }); }
 export function statsHTML(d) { const y = yearShown(d), n = nodeAt(y), hz = upTo('hz', y), co = upTo('cores', y);
   return '<div><span class="mono">' + w('st.year') + '</span><b>' + y + '</b></div><div><span class="mono">' + w('st.node') + '</span><b>' + (n ? (y >= NAMED_ONLY ? w('st.named', { n }) : n) : '–') + '</b></div><div><span class="mono">' + w('st.clock') + '</span><b>' + (hz ? hzW(hz) : '–') + '</b></div><div><span class="mono">' + w('st.cores') + '</span><b>' + (co || (y >= 1971 ? 1 : '–')) + '</b></div>'; }
 export function momOut(id) {
@@ -166,8 +165,6 @@ export function yearsWordsHTML(d) {
   if (c) { const i = COST.indexOf(c); s += '<div class="cost"><b>' + money(c[1] * 1e6) + '</b><span class="mono dim">' + w('m.cost.at', { node: c[0] }) + '</span>' + src(COSTSRC[i]) + '</div>'; }
   return s;
 }
-/* beside a moment: the core question it belongs to, alone, and where it is played for real */
-export function yearsSideHTML(d) { const m = momAt(d); return m && d < DWALL - 1e-4 ? '<div class="w-q"><span class="mono">' + w('q.label') + '</span><p>' + Q(m.q) + '</p>' + lab(w('mo.' + m.id + '.lab'), m.lab) + '</div>' : ''; }
 /* the hold: how fast the count moves. Quick while a smaller transistor was a cheaper one, slower as each design costs
    more, slow at a moment (let go and it waits), and at the wall it stops */
 export const Yr = { wallPush: 0, lead: 0,

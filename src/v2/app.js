@@ -11,6 +11,7 @@
    #/board (one board, with a story that drives it), #/dive/<depth>[/<world>] (the dive), #/line/<step> (the factory),
    #/bench/<level>[/<challenge>] (the studio), #/do/<challenge>, #/ask/<thread>/<depth>, #/supply, #/log, #/build,
    #/ecosystem. Words are read with t(). */
+import { still, theme } from '../core/ui.js';
 import { t, needWords, needAllWords, lang, langName, LANGS } from '../core/i18n.js';
 import { needStyles } from '../core/styles.js';
 import { THREADS } from '../data/weave.js';
@@ -18,7 +19,7 @@ import { NEEDS } from '../data/build.js';
 import * as Game from './loop.js';
 import { titleOf, goalOf } from './loop.js';
 import * as Way from '../engines/way.js';
-import { PLACES, CHIP_ROWS as ROWS } from '../data/views3d.js';
+import { PLACES, CHIP_ROWS as ROWS, partName, shipOrPkg } from '../data/views3d.js';
 import { stopsAt } from '../data/places.js';
 import { levelAt, sizeOf } from '../data/atlas.js';
 import * as Field from './field.js';
@@ -90,7 +91,6 @@ export function start() {
   /* ---- the frame: one frame, three modes (src/v2/frame2.js, #271) ---- */
   frame2Boot();
   /* ---- the theme ---- */
-  const theme = () => document.documentElement.getAttribute('data-theme') || (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
   const tb = $('theme'), k0 = theme() === 'dark' ? 'ui.toLight' : 'ui.toDark'; tb.setAttribute('aria-label', t(k0)); tb.title = t(k0);
   tb.addEventListener('click', () => { const n = theme() === 'dark' ? 'light' : 'dark'; document.documentElement.setAttribute('data-theme', n); try { localStorage.setItem('osl-theme', n); } catch (e) { /* storage unavailable */ } location.reload(); });
   /* ---- the language: one small menu in the bar on every page. A choice is kept for the whole lab; the pages not
@@ -112,7 +112,7 @@ export function start() {
     const C = B.Game.community(S), leaves = NEEDS.filter(n => !B.childrenOf(n.id).length), order = ['built', 'yours', 'open', 'engine'];
     const floors = leaves.map(n => { const p = C.state[n.id]; return p.state === 'built' ? 'built' : p.state === 'engine' ? 'engine' : p.yours ? 'yours' : 'open'; }).sort((a, b) => order.indexOf(a) - order.indexOf(b));
     const places = Object.fromEntries(Game.PLACES.map(id => { const L = doList(id); return [id, { done: L.filter(c => S.done[c.id]).length, total: L.length }]; }));
-    return { grown: Game.grown(S), steps: Object.fromEntries(Game.STEPS.map(s => [s, Game.stepState(S, s)])), places, chipAt: (V.cur && Way.stageOfPlace(V.cur.place)) || Game.chipAt(S), floors, designs: C.designs, cases: C.cases, asks: C.asks.map(a => Object.assign({}, a, { at: placeOfStop(a.under) })), loud: C.loud, square: squareState(), wanted: wantedNow(), reports: reportsNow(), pull: pullNow(), aiShare: aiShare(), chip: B.chipModel(S.chip), jobList: C.jobs, engineList: C.engines };
+    return { grown: Game.grown(S), steps: Object.fromEntries(Game.STEPS.map(s => [s, Game.stepState(S, s)])), places, chipAt: (V.cur && Way.stageOfPlace(V.cur.place)) || Game.chipAt(S), floors, designs: C.designs, cases: C.cases, asks: C.asks.map(a => Object.assign({}, a, { at: placeOfStop(a.under) })), loud: C.loud, square: squareState(), wanted: wantedNow(), reports: reportsNow(C), pull: pullNow(C), aiShare: aiShare(), chip: B.chipModel(S.chip), jobList: C.jobs, engineList: C.engines };
   }
   /* what calls at each place, for its square on the island: how many questions are asked there, and the challenges
      played there, each with its name and whether it is done; a question added under a stop stands where that stop is */
@@ -124,10 +124,11 @@ export function start() {
      a page of a place's levels is at that place, a page with no place on the island (a world, the record) at the Lab */
   const placeOfAt = at => { const [k, a] = partsOf(at || ''); if (k === 'place' && Game.PLACES.includes(a)) return a; if (k === 'line' || k === 'dive') { const h = levelAt(a); return (h && h.place) || 'lab'; }
     return { bench: 'studio', chip: 'datacentre', board: 'datacentre', supply: 'port', ecosystem: 'port', do: 'lab' }[k] || 'lab'; };
-  const reportsNow = () => { const W = B.Game.world(S); return B.Game.frontierOf(S).filter(f => f.kind === 'report').map(f => { const e = W.byId[f.of]; return { id: e.id, at: placeOfAt(e.at), href: e.at, say: e.say, words: e.words, draft: !!e.draft }; }); };
+  const reportsNow = C => { const W = C.W; return C.frontier.filter(f => f.kind === 'report').map(f => { const e = W.byId[f.of]; return { id: e.id, at: placeOfAt(e.at), href: e.at, say: e.say, words: e.words, draft: !!e.draft }; }); };
   /* what is open and how hard it pulls (the ledger's frontier), each with where it stands; and how much of the record
-     agents made, so the figures the pull sets walking come in the same shares (the lab's own examples left out) */
-  const pullNow = () => { const W = B.Game.world(S); return B.Game.frontierOf(S).map(f => ({ kind: f.kind, key: f.piece && f.kind !== 'break' ? f.piece : f.of || f.q || f.piece || f.puzzle, pull: f.pull,
+     agents made, so the figures the pull sets walking come in the same shares (the lab's own examples left out); the
+     frontier and the world are the community's (C), worked out once for each refresh */
+  const pullNow = C => { const W = C.W; return C.frontier.map(f => ({ kind: f.kind, key: f.piece && f.kind !== 'break' ? f.piece : f.of || f.q || f.piece || f.puzzle, pull: f.pull,
     at: f.kind === 'puzzle' ? 'datacentre' : f.kind === 'ask' ? placeOfStop((W.byId[f.q] || {}).under) : f.kind === 'report' ? placeOfAt((W.byId[f.of] || {}).at) : null })); };
   const aiShare = () => { const E = B.Game.world(S).entries.filter(e => e.made && e.made !== 'example'); if (!E.length) return null; return E.reduce((a, e) => a + (e.made === 'ai' || e.made === 'program' ? 1 : e.made === 'both' ? 0.5 : 0), 0) / E.length; };
   const refresh = animate => { if (V.map) V.map.setState(islandState(), animate); hud(); drawHero(); firstGo(); };
@@ -137,7 +138,6 @@ export function start() {
   /* the spinner shows only when a view takes long to make: a quick view comes in without one */
   let loadT = 0;
   const loading = on => { clearTimeout(loadT); if (on) loadT = setTimeout(() => $('loading').classList.add('on'), 400); else $('loading').classList.remove('on'); };
-  const still = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
   /* the views' code, fetched while the visitor looks at the island, so going inside does not wait for the network */
   const idle = f => (window.requestIdleCallback ? requestIdleCallback(f, { timeout: 2000 }) : setTimeout(f, 1200));
   /* one stage: while the island is shown, the data centre, the chip and the board are made one by one, paused, and
@@ -263,12 +263,11 @@ export function start() {
   const rowOf = d => { const i = ROWS.findIndex(r => r.made.includes(d)); return i < 0 ? null : { row: i }; };
   /* the flat dive's levels (the earlier site's zoom, in the frame): from the chip down to the atom */
   const DIVE_LEVELS = Game.DIVE_LEVELS;
-  const levelHref = (place, l) => { if (place === 'datacentre' && l.depth === 'board') return '#/board'; const f = (Game.FLOWN[place] || {})[l.depth]; if (f != null) return '#/place/' + place + '/' + f;
+  /* a level's address: flown through where its place is (the data centre's board has a view of its own), a shared
+     depth in a phone's or a car's own dive, a layer of the chip as made, or else where its depth is shown (Game.viewOfDepth) */
+  const levelHref = (place, l) => { const f = place === 'datacentre' && l.depth === 'board' ? null : (Game.FLOWN[place] || {})[l.depth]; if (f != null) return '#/place/' + place + '/' + f;
     if (FLAT_WORLDS.includes(l.world)) return '#/dive/' + l.depth + '/' + l.world;
-    if (DIVE_LEVELS.includes(l.depth)) return '#/dive/' + l.depth;
-    if (l.world === 'design') return '#/bench/' + l.depth;
-    if (l.world === 'journey') return '#/line/' + l.depth;
-    const c = rowOf(l.depth); return c ? '#/chip/' + c.row + '/build' : Game.viewOfDepth(l.depth); };
+    const c = !DIVE_LEVELS.includes(l.depth) && l.world !== 'design' && l.world !== 'journey' && rowOf(l.depth); return c ? '#/chip/' + c.row + '/build' : Game.viewOfDepth(l.depth); };
   /* the worlds with a flat dive of their own, besides the data centre's */
   const FLAT_WORLDS = ['phone', 'car', 'made'];
   /* where going inside a place leads: its first level, drawn in the frame */
@@ -277,13 +276,12 @@ export function start() {
   /* the buildings that open where they stand, and their parts, each selected as itself (#/place/fab/etch): what it is
      called, the sentence that says what it does, its questions, and where going closer leads */
   const FAB_PARTS = ['clean', 'deposit', 'print', 'etch', 'implant', 'wires'];
-  const shipOrPkg = p => (['trays', 'boxes'].includes(p) ? 'ship' : 'pkg');
   const PARTS = {
-    fab: { list: FAB_PARTS, name: p => t('depth.' + p + '.name'), see: p => t('depth.' + p + '.see'), qs: p => stopsAt(p), deeper: p => '#/line/' + p },
-    studio: { list: ['need', 'logic', 'check', 'gates', 'layout', 'masks'], name: p => t('depth.' + p + '.name'), see: p => t('depth.' + p + '.see'), qs: p => stopsAt(p), deeper: p => levelHref('studio', { world: 'design', depth: p }) },
-    port: { list: ['saw', 'bumps', 'lid', 'trays', 'boxes'], name: p => { const w = t('part.' + shipOrPkg(p) + '.' + p); return w.charAt(0).toUpperCase() + w.slice(1); }, see: p => t('what.' + shipOrPkg(p) + '.' + p), qs: p => stopsAt(shipOrPkg(p)), deeper: p => '#/line/' + shipOrPkg(p) },
-    datacentre: { list: ['rack', 'board'], name: p => t('depth.' + p + '.name'), see: p => t('depth.' + p + '.see'), qs: p => stopsAt(p), deeper: p => levelHref('datacentre', { world: 'datacentre', depth: p }) },
-    test: { list: ['prober', 'needles', 'map'], name: p => { const w = t('part.test.' + p); return w.charAt(0).toUpperCase() + w.slice(1); }, see: p => t('what.test.' + p), qs: () => stopsAt('test'), deeper: () => '#/line/test' }
+    fab: { list: FAB_PARTS, name: p => partName('fab', p), see: p => t('depth.' + p + '.see'), qs: p => stopsAt(p), deeper: p => '#/line/' + p },
+    studio: { list: ['need', 'logic', 'check', 'gates', 'layout', 'masks'], name: p => partName('studio', p), see: p => t('depth.' + p + '.see'), qs: p => stopsAt(p), deeper: p => levelHref('studio', { world: 'design', depth: p }) },
+    port: { list: ['saw', 'bumps', 'lid', 'trays', 'boxes'], name: p => partName('port', p), see: p => t('what.' + shipOrPkg(p) + '.' + p), qs: p => stopsAt(shipOrPkg(p)), deeper: p => '#/line/' + shipOrPkg(p) },
+    datacentre: { list: ['rack', 'board'], name: p => partName('datacentre', p), see: p => t('depth.' + p + '.see'), qs: p => stopsAt(p), deeper: p => levelHref('datacentre', { world: 'datacentre', depth: p }) },
+    test: { list: ['prober', 'needles', 'map'], name: p => partName('test', p), see: p => t('what.test.' + p), qs: () => stopsAt('test'), deeper: () => '#/line/test' }
   };
   const isPart = (place, p) => !!PARTS[place] && PARTS[place].list.includes(p);
   const deeperOf = (place, p) => (p && PARTS[place] ? PARTS[place].deeper(p) : enterOf(place));
@@ -376,14 +374,16 @@ export function start() {
 
   /* ---- one board, no side panel: words on the parts, a story docked below that drives the camera ---- */
   const bui = $('boardui');
-  /* every view hides the others first */
-  function hideAll() {
+  /* every view hides the others first: the dive, the bench, the board, the chip, the flights and the studio (hideViews);
+     all of them and the island (hideAll, for a view of its own) */
+  function hideViews() {
     $('diveCanvas').hidden = true; vui.hidden = true; V.dive && V.dive.stop(); V.hide3d(); $('flatLabels').hidden = true; if (V.flatWords) V.flatWords.clear(); if (V.Bench) V.Bench.show(false);
-    V.hideBoard(); $('hero').hidden = true; $('outbtn').hidden = true; lensbar.hidden = true; closeSheet(); pui.hidden = true; cui.hidden = true; V.dc && V.dc.pause(); V.map && V.map.pause(); V.chip && V.chip.pause();
-    ['mapCanvas', 'mapLabels', 'placeCanvas', 'placeLabels', 'chipCanvas', 'chipLabels'].forEach(k => { $(k).hidden = true; });
-    V.hidePh(); V.hideCa(); V.hideSw();
-    document.body.classList.remove('immersive'); page.hidden = true; V.hideL3(); showStage(false);
+    V.hideBoard(); document.body.classList.remove('immersive');
+    $('chipCanvas').hidden = $('chipLabels').hidden = true; cui.hidden = true; V.chip && V.chip.pause();
+    $('placeCanvas').hidden = $('placeLabels').hidden = true; pui.hidden = true; V.dc && V.dc.pause(); V.hidePh(); V.hideCa(); V.hideSw();
   }
+  function hideIsland() { $('mapCanvas').hidden = $('mapLabels').hidden = true; $('hero').hidden = true; $('outbtn').hidden = true; lensbar.hidden = true; showStage(false); if (V.map) V.map.pause(); }
+  function hideAll() { hideViews(); hideIsland(); closeSheet(); page.hidden = true; V.hideL3(); }
   /* ---- Hold, the first page (#/, src/v2/hold.js): fifty years of computing under one finger, from one transistor to
      the wall, then the four walls, the arrangement, your machine and the island. Nothing 3D is made or drawn here: the
      island (#/island) is one way out of it, made when it is first visited ---- */
@@ -391,14 +391,7 @@ export function start() {
   let hold = null;
   function showHome() { showHome0(); if (stations) stations.hide(); if (blueprint) blueprint.hide(); const n = V.routeN;
     return needWords('hold').then(() => { if (n !== V.routeN) return; if (!hold) hold = createHold(homeEl, { still }); return Promise.resolve(hold.show()).then(() => afterPaint(preloadHome)); }); }
-  function showHome0() {
-    $('diveCanvas').hidden = true; vui.hidden = true; V.dive && V.dive.stop(); V.hide3d(); $('flatLabels').hidden = true; if (V.flatWords) V.flatWords.clear(); if (V.Bench) V.Bench.show(false);
-    V.hideBoard(); document.body.classList.remove('immersive');
-    $('chipCanvas').hidden = $('chipLabels').hidden = true; cui.hidden = true; V.chip && V.chip.pause();
-    $('placeCanvas').hidden = $('placeLabels').hidden = true; pui.hidden = true; V.dc && V.dc.pause(); V.hidePh(); V.hideCa(); V.hideSw();
-    $('mapCanvas').hidden = $('mapLabels').hidden = true; $('hero').hidden = true; $('outbtn').hidden = true; lensbar.hidden = true; showStage(false); if (V.map) V.map.pause();
-    if (!sheet.hidden) closeSheet(); loading(false);
-  }
+  function showHome0() { hideViews(); hideIsland(); if (!sheet.hidden) closeSheet(); loading(false); }
   /* ---- the blueprint (#/blueprint, src/v2/home.js): the first page before Hold, the whole chip innovation ecosystem as
      one wheel, in four languages; loaded when it is first opened ---- */
   const blueprintEl = $('blueprint');
@@ -420,10 +413,7 @@ export function start() {
     });
   }
   function showMap(from) {
-    $('diveCanvas').hidden = true; vui.hidden = true; V.dive && V.dive.stop(); V.hide3d(); $('flatLabels').hidden = true; if (V.flatWords) V.flatWords.clear(); if (V.Bench) V.Bench.show(false);
-    V.hideBoard(); document.body.classList.remove('immersive');
-    $('chipCanvas').hidden = $('chipLabels').hidden = true; cui.hidden = true; V.chip && V.chip.pause();
-    $('placeCanvas').hidden = $('placeLabels').hidden = true; pui.hidden = true; V.dc && V.dc.pause(); V.hidePh(); V.hideCa(); V.hideSw();
+    hideViews();
     const part = from && ['line', 'bench'].includes(V.flatKind) && V.WE && isPart(V.lastPlace, diveId()) ? diveId() : null;
     /* the island is fetched while its styles load (src/core/styles.js); it shows once they are in, before it is made */
     const n = V.routeN, shown = needStyles('frame', 'island').then(() => { if (n !== V.routeN) return;
@@ -441,12 +431,16 @@ export function start() {
      Going between views is never a cut: deeper zooms in, higher zooms out, the Turn turns, along slides. */
   const partsOf = h => (h.replace(/^#\/?/, '') || '').split('/').filter(Boolean);
   const doPlace = ch => (ch && !ch.need && ch.kind !== 'break' && ch.kind !== 'design' ? Way.doHome(ch) : null);
+  /* the places flown or walked through, entered at one of their levels (#/place/datacentre/2, the studio's third
+     corner #/place/studio/3): the view each is (the place itself opens on the island) */
+  const FLOWN_VIEW = { datacentre: 'dc', phones: 'fly', cars: 'carfly', studio: 'studio' };
+  const flownOf = p => (p[0] === 'place' && /^\d+$/.test(p[2] || '') && FLOWN_VIEW[p[1]]) || null;
   const viewOf = p => { const k = p[0]; if (!k || k === 'home' || k === 'stations' || k === 'blueprint') return ['home', -1]; if (k === 'ask') return viewOf(partsOf(Game.viewOfDepth(p[2] || 'chip')));
     if (k === 'do') { const h = doPlace(chOf(decodeURIComponent(p[1] || ''))); return h ? viewOf(partsOf(h)) : ['map', 0]; }
     if (k === 'dive') { const w = p[2] || Game.DIVE_WORLD[p[1]] || 'datacentre'; if (w === 'datacentre') return ['dive', 4]; const i = Math.max(0, ['phone', 'phoneboard', 'soc', 'car', 'ecu', 'mcu', 'scanner', 'wafer', 'die'].indexOf(p[1]) % 3); return ['dive:' + w, Game.DIVE_WORLD[p[1]] ? 1 + i : 4]; }
     if (k === 'supply') return ['supply', 0];
     return k === 'board' ? ['board', 2] : k === 'line' ? ['line', 1] : k === 'bench' ? ['bench', 1] : k === 'chip' ? ['chip', 3]
-      : k === 'place' && p[1] === 'datacentre' && /^\d+$/.test(p[2] || '') ? ['dc', 1] : k === 'place' && p[1] === 'phones' && /^\d+$/.test(p[2] || '') ? ['fly', 1] : k === 'place' && p[1] === 'cars' && /^\d+$/.test(p[2] || '') ? ['carfly', 1] : k === 'place' && p[1] === 'studio' && /^\d+$/.test(p[2] || '') ? ['studio', 1] : ['map', 0]; };
+      : flownOf(p) ? [flownOf(p), 1] : ['map', 0]; };
   let shownAt = null;   /* the address of the view now made, so a question at the same level only changes the dock */
   let viewNow = null, rankNow = 0, entering = false; V.nextMove = null; V.lastPlace = null; V.enteredFrom = null;
   /* going inside from the island: the camera dives into the place first, then the view zooms in from it */
@@ -483,18 +477,12 @@ export function start() {
       if (home) return show(partsOf(home), from).then(() => { if (live()) { shownAt = '#/' + parts.join('/'); V.openBench(ch); } });
       return showMap(from).then(m => m && openChallenge(ch)); });
     if (k === 'chip') return V.showChip(parts[1] != null ? +parts[1] : null);
-    /* the data centre's flight is entered at one of its levels (#/place/datacentre/2); the place itself opens on the island */
-    if (k === 'place' && parts[1] === 'datacentre' && /^\d+$/.test(parts[2] || '')) return V.showPlace('datacentre', +parts[2]);
-    /* and a phone's, the same way (#/place/phones/2) */
-    if (k === 'place' && parts[1] === 'phones' && /^\d+$/.test(parts[2] || '')) return V.showPhone(+parts[2]);
-    /* and a car's (#/place/cars/2) */
-    if (k === 'place' && parts[1] === 'cars' && /^\d+$/.test(parts[2] || '')) return V.showCar(+parts[2]);
-    /* and the studio, walked inside (#/place/studio/3: the third corner) */
-    if (k === 'place' && parts[1] === 'studio' && /^\d+$/.test(parts[2] || '')) return V.showStudio(+parts[2], from);
+    const fl = flownOf(parts), at = +parts[2];
+    if (fl) return fl === 'dc' ? V.showPlace('datacentre', at) : fl === 'fly' ? V.showPhone(at) : fl === 'carfly' ? V.showCar(at) : V.showStudio(at, from);
     if (k === 'place' && isPart(parts[1], parts[2])) return showMap(from).then(m => m && V.openPlace(parts[1], 'look', null, null, parts[2]));
     if (k === 'place' && Game.PLACES.includes(parts[1])) return showMap(from).then(m => m && V.openPlace(parts[1], parts[2] === 'inside' ? 'look' : null));
     if (k === 'build') return showMap(from).then(m => m && V.openPlace('lab', 'look', parts[1] || 'computer', parts[2]));
-    if (['log', 'challenges', 'questions'].includes(k)) V.showPage(k);
+    if (Way.LOG_PAGES.includes(k)) V.showPage(k);
     if (k === 'read') V.showRead(parts[1] ? decodeURIComponent(parts[1]) : null);
     if (k === 'w') V.showWorld(parts[1], parts[2], parts[3]);
     if (k === 'whatif') { /* over the island, without its welcome card first (#365) */ $('hero').classList.add('away'); return showMap(from).then(m => m && V.showWhatif(parts[1])); }
@@ -518,7 +506,7 @@ export function start() {
     if (!/^#\/do\/(cheaper|onebad|oxen|jevons)$/.test(location.hash)) setBetScene(null, null, '');
     /* What if? holds the world grey with its columns only while it is open */
     if (k !== 'whatif') V.leaveWhatif();
-    page.hidden = true; page.classList.remove('reading'); $('logbtn').setAttribute('aria-current', ['log', 'challenges', 'questions'].includes(k) ? 'page' : 'false'); $('logbtn').classList.remove('glow');
+    page.hidden = true; page.classList.remove('reading'); $('logbtn').setAttribute('aria-current', Way.LOG_PAGES.includes(k) ? 'page' : 'false'); $('logbtn').classList.remove('glow');
     const after = pr => { hud(); return Promise.resolve(pr).then(hud); };
     const [view, rank] = viewOf(parts), from = viewNow, move = V.nextMove || (from === 'bench' && view === 'studio' ? 'out' : rank > rankNow ? 'in' : rank < rankNow ? 'out' : 'along');
     V.nextMove = null; viewNow = view; rankNow = rank;

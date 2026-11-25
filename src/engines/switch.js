@@ -47,17 +47,17 @@ import { heatAfter } from './fabline.js';
 export const K_B = 8.617333e-5;            // eV per kelvin
 export const T_ROOM = 300;
 export const DECADES = 4;                  // a clean switch: ten thousand times less current off than on
-export const SPARE = 0.5;                  // and half a tenfold to spare below the leakage floor
-export const MU_SAT = 2500;                // cm2/Vs: where a short channel stops gaining from mobility
+const SPARE = 0.5;                  // and half a tenfold to spare below the leakage floor
+const MU_SAT = 2500;                // cm2/Vs: where a short channel stops gaining from mobility
 export const PAIR = 0.1;                   // holes at least a tenth of electrons for a CMOS pair
-export const NC_GAIN = 0.25;               // how much a ferroelectric lowers the body factor
+const NC_GAIN = 0.25;               // how much a ferroelectric lowers the body factor
 const COX = 3.9 * 8.854e-14 / 1e-7, Q = 1.602e-19;   // F/cm2 of 1 nm of silicon dioxide; the charge of an electron
 export const STATUS = ['product', 'lab', 'guess'];
 
 /* the 60 mV line: mV of gate voltage per tenfold, at the least, for carriers over a barrier at T kelvin */
 export const swingLimit = (T = T_ROOM) => Math.LN10 * K_B * T * 1000;
 /* the traps' share of the gate's grip: Cit / Cox */
-export const trapLoad = dit => Q * dit / COX;
+const trapLoad = dit => Q * dit / COX;
 
 /* the known materials: band gap (eV), electron and hole mobility (cm2/Vs; null: holes not usable), traps at its
    insulator (per cm2 per eV, the lab's simplification), the form it comes in, the stage of the line it goes in at,
@@ -106,7 +106,7 @@ export function ownOf(o = {}) {
     form: 'bulk', stage: 'front', melt: null, status: 'guess', own: true };
 }
 /* the material of a spec */
-export const matOf = spec => (spec && spec.mat === 'own' ? ownOf(spec.own) : materialOf((spec && spec.mat) || 'si') || materialOf('si'));
+const matOf = spec => (spec && spec.mat === 'own' ? ownOf(spec.own) : materialOf((spec && spec.mat) || 'si') || materialOf('si'));
 /* the shapes a material comes in */
 export const shapesFor = mat => SHAPES.filter(s => s.forms.includes(mat.form)).map(s => s.id);
 /* a spec made whole: a shape the material comes in (else its first), a known way to switch */
@@ -190,7 +190,7 @@ export const SILICON = switchOf(START);
    A switch made of an invented material outside the band counts for none of them. */
 export const GOALS = ['off', 'energy', 'steep', 'factory'];
 export const SLOWEST = 0.5;
-export function goalsOf(r) {
+function goalsOf(r) {
   const ok = r.clean && r.fair;
   return { off: ok, energy: ok && r.energy < 1 - 1e-9, steep: ok && r.swing < swingLimit(r.T), factory: ok && !r.own && r.survives && r.pair && r.energy < 1 - 1e-9 && r.speed >= SLOWEST };
 }

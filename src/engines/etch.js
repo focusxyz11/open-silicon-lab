@@ -17,7 +17,7 @@ export const ETCH_GRID = { w: 100, h: 90, maskTop: 10, filmTop: 16, openFrom: 40
 export const ETCH_DEFAULTS = { ions: 85, chem: 30 };           // directionality 0 to 100 percent, radicals 0 to 90 percent
 export const ETCH_RANGE = { ions: [0, 100], chem: [0, 90] };
 export const ETCH = { perFrame: 350, maxFrames: 1200, maxTraces: 40 };
-export const etchCone = ions => 2 + (100 - ions) / 100 * 38;  // half-angle in degrees
+const etchCone = ions => 2 + (100 - ions) / 100 * 38;  // half-angle in degrees
 
 const { w: GW, h: GH, maskTop: MT, filmTop: MB, openFrom: OL, openTo: OR } = ETCH_GRID;
 const count = (g, v) => { let n = 0; for (let i = 0; i < g.length; i++) if (g[i] === v) n++; return n; };
@@ -64,7 +64,7 @@ function undercutCells(g) {
 }
 
 /* the readings of a state: depthNm, aspect, undercutNm, maskPct (rounded, as shown), status ('ready', 'running', 'straight', 'undercut') */
-export function etchRead(s) {
+function etchRead(s) {
   const depthNm = depthCells(s.g) * ETCH_GRID.cellNm, undercutNm = undercutCells(s.g) * ETCH_GRID.cellNm, mask = count(s.g, 1) / s.mask0;
   const status = !s.done && s.frames > 0 ? 'running' : undercutNm > 8 ? 'undercut' : depthNm > 0 ? 'straight' : 'ready';
   return { ...s, depthNm, aspect: depthNm / 40, undercutNm, maskLeft: mask, maskPct: Math.round(mask * 100), status };
@@ -98,10 +98,3 @@ export const ETCH_CHALLENGES = [
   { id: 'etch', lab: 'etch', groups: [r => r.undercutNm < 5 && r.maskPct >= 70 && r.depthNm > 100] }
 ];
 
-export const ETCH_WORDS = {
-  'fab.etch.status.ready': 'Ready', 'fab.etch.status.running': 'Etching…', 'fab.etch.status.straight': 'Straight walls', 'fab.etch.status.undercut': 'Undercut',
-  'fab.etch.ions': 'Ion directionality (bias power)', 'fab.etch.chem': 'Share of chemical radicals',
-  'fab.ch.etch.t': 'Etch straight down',
-  'fab.ch.etch.goal': 'Etch a hole with less than 5 nm of undercut while keeping at least 70% of the mask.',
-  'fab.ch.etch.done': 'Strong ion directionality with very few radicals etches straight down with about 2 nm of undercut. Radicals etch in every direction, so they widen the hole under the mask. Real etches mix both, because radicals also make the chemistry faster.'
-};

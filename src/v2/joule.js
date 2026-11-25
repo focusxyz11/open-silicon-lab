@@ -10,10 +10,11 @@
    createJoule(host, o): o.S (the state: S.joule { on, plan }), o.save(), o.keep(plan, el) → { ok, e, r }, o.slip(id) → html,
    o.slipClick(ev, done(redraw)) → handled, o.refusal(r), o.signHtml(), o.attempts() → entries of the puzzle (yours too, marked draft), o.changed(on) when the lens opens or closes.
    Returns { level(id), on(v), bottom(), redraw() }. */
+import { phone } from '../core/ui.js';
+import { esc } from '../core/esc.js';
 import { t, fmtNum } from '../core/i18n.js';
 import { budget, LEVELS, PARTS, LEVERS, PLAN, JOB, problem } from '../engines/budget.js';
 
-const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 const n2 = v => fmtNum(+v.toPrecision(2));
 /* joules in words: kJ, J, mJ, µJ, nJ */
 export function joules(j) {
@@ -23,7 +24,7 @@ export function joules(j) {
 /* a share in words: a whole percent, one decimal under ten, and "under 0.1%" below that */
 export const share = s => s >= 0.095 ? t('joule.pct', { v: fmtNum(Math.round(s * 100)) }) : s >= 0.001 ? t('joule.pct', { v: fmtNum(+(s * 100).toFixed(1)) }) : s > 0 ? t('joule.tiny') : t('joule.pct', { v: '0' });
 /* a lever's value in words */
-export function valueWords(id, v) {
+function valueWords(id, v) {
   if (id === 'home' || id === 'optics') return t('joule.v.' + id + '.' + v);
   if (id === 'cim') return t(v ? 'joule.v.on' : 'joule.v.off');
   if (id === 'batch') return t('joule.v.batch', { n: fmtNum(v) });
@@ -128,7 +129,7 @@ export function createJoule(host, o) {
     level(id) { if (LEVELS.includes(id) && id !== at) { at = id; draw(); } },
     on(v) { S.joule.on = !!v; o.save(); draw(); },
     /* where the folded lens ends on a phone (px from the top of the view), for the picture to keep below it; 0 otherwise */
-    bottom() { return S.joule.on && !more && !box.hidden && matchMedia('(max-width: 720px)').matches ? box.offsetTop + box.offsetHeight : 0; },
+    bottom() { return S.joule.on && !more && !box.hidden && phone() ? box.offsetTop + box.offsetHeight : 0; },
     redraw: draw
   };
 }

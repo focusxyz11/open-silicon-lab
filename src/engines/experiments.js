@@ -24,7 +24,7 @@ export const experimentAtStop = key => BY_ID[AT_STOP[key]] || null;
 const unique = a => [...new Set(a)];
 
 /* the tries of its stops: [{ stop, setting }] (src/data/weave.js TRIES, played inside the stop's question) */
-export const triesOf = x => (x.stops || []).filter(s => TRIES[s]).map(s => ({ stop: s, setting: TRIES[s] }));
+const triesOf = x => (x.stops || []).filter(s => TRIES[s]).map(s => ({ stop: s, setting: TRIES[s] }));
 export function stateOf(x) {
   if ((x.ch && x.ch.length) || x.probe || x.go || triesOf(x).length) return 'live';
   if (x.wants) return 'wanted';
@@ -48,7 +48,7 @@ export function playOf(x) {
   const t = triesOf(x)[0]; if (t) { const [th, d] = t.stop.split('.'); return { kind: 'try', id: t.setting, href: '#/ask/' + th + '/' + d }; }
   return null;
 }
-export const worldsOf = x => [x.world].concat(x.also || []);
+const worldsOf = x => [x.world].concat(x.also || []);
 
 /* Ways on: the nearest other experiments, and what joins them. Never a fixed trail: what is near depends on what
    they share (the same strand of a question, the same engine, a given both question, a direction both try, the
@@ -83,5 +83,3 @@ export function waysOn(x, n = 4) {
 
 /* how many are in each state, overall or in one world */
 export const counts = (L = EXPERIMENTS) => Object.fromEntries(STATES.map(st => [st, L.filter(x => stateOf(x) === st).length]));
-/* the experiments a challenge belongs to */
-export const experimentOfChallenge = ch => EXPERIMENTS.find(x => (x.ch || []).includes(ch)) || null;

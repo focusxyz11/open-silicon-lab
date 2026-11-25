@@ -4,11 +4,11 @@
    and every form follows; touch a signal in any form and it lights in all of them: its words in the description,
    its column in the table, the gates that make it, their cells and wires in the layout and on the masks. Under each
    form, one line says who made that step. Words: forms.*, and the studio's own design.*. */
+import { esc } from '../core/esc.js';
 import { t, fmtNum } from '../core/i18n.js';
 import { build, starterOf, solutionOf } from '../engines/design.js';
 import { TWO_WAYS } from './probes.js';
 
-const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
 export const JOBS = ['half', 'vote', 'full'];
 /* the descriptions to start from: the lab's own (with a bug to find), a right one, and another right one */
 const VERSIONS = ['starter', 'right', 'other'];

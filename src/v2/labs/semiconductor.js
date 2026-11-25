@@ -4,6 +4,7 @@
    same charge balance the engine uses for doped silicon. The dial sets the heater; the silicon warms and cools
    through every temperature on the way, on real elapsed time, and each one it passed is kept in the view; the
    engine's challenge decides. A lab of the challenge player (src/v2/play.js): lab(L) -> { draw, click, input }. */
+import { still } from '../../core/ui.js';
 import * as D from '../../engines/dope.js';
 import { met } from '../../engines/fabsteps.js';
 import { rng, clamp } from '../../engines/fabkit.js';
@@ -44,7 +45,6 @@ export default function lab(L) {
     for (let g = Math.ceil(lo / STEP) * STEP; g <= hi; g += STEP) see(g);
     see(b); if (won()) win();
   }
-  const still = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
   /* the heater: the silicon follows the dial on the clock (a slow screen takes bigger steps, not longer) */
   function loop(now) {
     const o = set(); if (!view.semiRun || !el.isConnected) { view.semiRun = false; return; }

@@ -16,7 +16,7 @@ export const BLOCKS = [
 ];
 export const COPIES = [1, 3, 5];
 /* the voter: its own area and its own chance of a wrong answer */
-export const VOTER = { area: 0.5, p: 0.003 };
+const VOTER = { area: 0.5, p: 0.003 };
 /* the goal: the whole chip right at least this often, on no more than this floor */
 export const GOAL = { whole: 0.95, area: 32 };
 
@@ -29,7 +29,7 @@ export function blockOk(p, n) {
   for (let k = Math.ceil((n + 1) / 2); k <= n; k++) ok += choose(n, k) * r ** k * p ** (n - k);
   return ok * (1 - VOTER.p);
 }
-export const blockArea = (a, n) => (n === 1 ? a : n * a + VOTER.area);
+const blockArea = (a, n) => (n === 1 ? a : n * a + VOTER.area);
 
 /* a plan: copies per block id. The whole works only when every block does */
 export function evaluate(plan) {

@@ -5,14 +5,14 @@
    the rule, the colony, or when the short bridge opens; take away a third of the ants and watch the trail hold.
    Below, the same idea in an eye: a camera reads every pixel every frame, eye-like pixels report only what
    changed. The scenes are drawn on canvases; every word is HTML. Words: swm.*. */
+import { still } from '../core/ui.js';
+import { esc } from '../core/esc.js';
 import { t, fmtNum } from '../core/i18n.js';
 import { colony, step, kill, share, verdict, scentOn, COLONIES, FOLLOW, FADE, OPEN_AT, STEPS, SHORT, LONG, SCENES, EYE_W, EYE_H, look, scene } from '../engines/swarm.js';
 
-const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
 const S = { n: 1, follow: 2, fade: 0, late: 0, seed: 7, eye: 1, paused: false };
 let C = null, killedAt = null, E = null;   /* the running colony, when a third was taken, the eyes' running count */
 const RATE = 100;      /* steps a second, whatever the frame rate: a run of 1,500 steps takes 15 seconds */
-const still = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 const pct = v => fmtNum(Math.round(v * 100));
 
 function fresh() { C = colony({ n: COLONIES[S.n], follow: FOLLOW[S.follow], fade: FADE[S.fade], late: !!S.late, seed: S.seed }); killedAt = null; }

@@ -16,7 +16,7 @@ export const GOAL = 'quarter', TARGET = P.PHOTONIC_TARGETS[GOAL];
 export const START = { th: 0, n: 0 };
 export const RANGE = { th: [0, 360, 2.5], n: [0, P.LIGHT_NOISES.length - 1, 1] };
 /* three numbers sent through, as brightness */
-export const PULSES = [0.9, 0.6, 0.3];
+const PULSES = [0.9, 0.6, 0.3];
 /* the guess: where light put into the top comes out when both arms are the same; the answer is the engine's */
 export const GUESSES = ['top', 'bottom', 'half'];
 export function answer() { const p = P.mzi([1, 0], 0, 0).power; return p[0] > 0.9 ? 'top' : p[1] > 0.9 ? 'bottom' : 'half'; }

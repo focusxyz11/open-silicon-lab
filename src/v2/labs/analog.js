@@ -5,6 +5,7 @@
    regulate: the power chip. One challenge, 'reg-jobs': four loads, and the regulator that suits each.
    Labs of the challenge player (src/v2/play.js): lab(L) returns { draw, click, input }. What the player has tried is
    kept in the view; the engine's own CHALLENGES decide the win. */
+import { still } from '../../core/ui.js';
 import * as A from '../../engines/analog.js';
 
 const ENGINE = { 'sig-heart': 'heart', 'sig-bearing': 'bearing', 'reg-jobs': 'regulators' };
@@ -13,7 +14,6 @@ const START = { 'sig-heart': { gain: 100, bits: 12, rate: 1000 }, 'sig-bearing':
 const WIN = { heartbeat: 0.8, vibration: 0.02 }, ESPANS = { heartbeat: 0.05, vibration: 0.2 };                          // the stretch of the signal the picture shows, seconds
 const X0 = 40, X1 = 294, Y0 = 12, Y1 = 118, E0 = 134, E1 = 162;   // the wave's plot, the error strip, and its span
 const SWEEP = 5000;                                                        // one pass of the reading dot, milliseconds
-const still = () => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 const f1 = v => (+v).toFixed(1);
 
 function capture(L) {

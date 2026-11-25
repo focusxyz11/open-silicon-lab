@@ -1,10 +1,10 @@
 /* Chips that touch the real world, as an engine: the path from a physical signal to bits, and the chip that powers it.
-   Pure logic, no DOM, no English (ids only; the words its results are named by are in WORDS, read by its tests; its
-   lab shows its own, in src/i18n/en/labs.json).
+   Pure logic, no DOM, no English (ids only; its lab names them in its own words, ana.* in src/i18n/en/labs.json,
+   which its tests check).
    Brought over from the first version of the site (the branch 'before': src/engines/analog.js, its test, and the lab
    topics/analog/labs/analog-lab.js with its content.html and topic.json) with the same model and the same numbers.
    Added here: ids instead of the missions' and jobs' sentences, hintOf() and hintOfReg() (which hint the lab showed, as
-   an id), CHALLENGES (the three challenges of the topic, as checks) and WORDS.
+   an id) and CHALLENGES (the three challenges of the topic, as checks).
 
    The signal chain: sensor -> amplifier (gain, with input noise) -> converter (ADC: samples per second,
    bits, a fixed input range) -> radio (every bit sent costs energy). The reader chooses gain, bits and
@@ -156,7 +156,7 @@ export function bestReg(job) {
   return ok.filter(r => r.eff >= top - 0.02).sort((a, b) => PARTS[a.type] - PARTS[b.type])[0];
 }
 
-/* Which hint the first version's lab showed for a capture, as an id (the words: WORDS, 'analog.hint.<id>').
+/* Which hint the first version's lab showed for a capture, as an id (the words: ana.hint.<id>).
    set is { gain, bits, rate }; j is judge(m, res). */
 export function hintOf(m, res, j, set) {
   if (!j.alias) return 'alias';
@@ -184,41 +184,3 @@ export const CHALLENGES = {
   regulators: { id: 'regulators', check: picks => JOBS.every(j => { const b = bestReg(j); return !!b && picks && picks[j.id] === b.type; }) }
 };
 
-/* The words this engine's results are named by, kept beside it and read by its tests; the lab (src/v2/labs/analog.js)
-   shows its own, ana.* in src/i18n/en/labs.json. */
-export const WORDS = {
-  'analog.mission.heart': 'Heartbeat patch', 'analog.mission.heart.why': 'a patch that runs a year on a coin cell',
-  'analog.mission.temp': 'Thermostat', 'analog.mission.temp.why': 'a thermostat sensor that runs ten years on two AA cells',
-  'analog.mission.voice': 'Earbuds', 'analog.mission.voice.why': 'earbuds that last all day',
-  'analog.mission.fault': 'Motor sensor', 'analog.mission.fault.why': 'a motor sensor that hears a bearing start to fail',
-  'analog.signal.heartbeat': 'Heartbeat', 'analog.signal.temperature': 'Temperature', 'analog.signal.voice': 'Voice', 'analog.signal.vibration': 'Vibration',
-  'analog.part.amp': 'Amplifier', 'analog.part.adc': 'Converter', 'analog.part.radio': 'Radio',
-  'analog.job.wearable': 'Fitness band', 'analog.job.wearable.why': 'a fitness band, asleep 95% of the time',
-  'analog.job.cpu': 'Phone processor', 'analog.job.cpu.why': 'a phone processor running flat out',
-  'analog.job.adc': 'Precise sensor', 'analog.job.adc.why': 'a precise converter measuring microvolts',
-  'analog.job.nearly': 'Radio, tight supply', 'analog.job.nearly.why': 'a radio fed from a supply only a little higher than it needs',
-  'analog.reg.ldo': 'Linear (LDO)', 'analog.reg.buck': 'Switching (buck)', 'analog.reg.both': 'Buck, then a small LDO',
-  'analog.hint.alias': 'Aliasing: you sample slower than twice the fastest part of the signal, so fast detail turns into a slow wave that is not there.',
-  'analog.hint.clip': 'Clipping: the gain pushes the signal past the converter\'s range, so the peaks are cut off. Lower the gain.',
-  'analog.hint.levels': 'The signal uses only a few of the converter\'s levels. More gain fills the range, so each bit counts.',
-  'analog.hint.quality': 'The copy is not close enough yet: more bits make each step finer, more samples follow fast changes.',
-  'analog.hint.power': 'Good copy, but too hungry. Which part of the bar is biggest?',
-  'analog.hint.done': 'Done. Can you go cheaper still?',
-  'analog.hint.cheapest': 'The cheapest setting that passes. Notice which part of the power it saves on: usually the radio, because every bit you keep has to be sent.',
-  'analog.reghint.dropout': 'The input must be higher than the output by at least the regulator\'s dropout.',
-  'analog.reghint.ripple': 'Too much ripple: the switching leaves more on the output than this load can tolerate.',
-  'analog.reghint.heat': 'Too hot: a lot of heat in one small part. The extra voltage has to go somewhere.',
-  'analog.reghint.best-ldo': 'The best choice here. The input is barely above the output, so a linear regulator wastes almost nothing and needs no coil.',
-  'analog.reghint.best-buck': 'The best choice here. Switching wastes far less power than burning the voltage difference as heat.',
-  'analog.reghint.best-both': 'The best choice here. The buck does the big step efficiently; the small LDO after it removes the ripple.',
-  'analog.reghint.works': 'It works, but another choice is better here. Compare efficiency, heat, ripple and the number of parts.',
-  'analog.ch.heart.t': 'A heartbeat on a coin cell',
-  'analog.ch.heart.goal': 'Catch a clean heartbeat for under 20 µW. Which part of the chain eats the budget?',
-  'analog.ch.heart.done': 'A clean heartbeat under 20 µW. Most of what you saved is radio: every bit you keep has to be sent.',
-  'analog.ch.bearing.t': 'Hear the failing bearing',
-  'analog.ch.bearing.goal': 'Sample a motor\'s vibration too slowly and watch the warning tone vanish; find the slowest rate that keeps it.',
-  'analog.ch.bearing.done': 'The slowest rate that keeps the 1.2 kHz tone: just over twice its frequency.',
-  'analog.ch.regulators.t': 'Four jobs, four regulators',
-  'analog.ch.regulators.goal': 'Find the best power supply for a fitness band, a phone processor, a precise sensor and a radio.',
-  'analog.ch.regulators.done': 'Each job got the regulator that suits it: the best one differs from job to job, for a reason.'
-};

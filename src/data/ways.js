@@ -16,5 +16,3 @@ export const WAYS = [
   { id: 'quantum', stage: 2, saves: 'problems', at: ['atom'] }
 ];
 export const SAVES = ['energy', 'data', 'speed', 'problems'];
-export const wayAt = id => WAYS.find(w => w.at.includes(id)) || null;
-export const wayOf = id => WAYS.find(w => w.id === id) || null;

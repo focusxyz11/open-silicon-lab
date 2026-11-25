@@ -5,6 +5,7 @@
    (src/data/trends.js, CC BY 4.0), five measures on one scale, and for the one you choose, how many years each
    doubling took in each decade, fitted by the Scaling engine (src/engines/scaling.js). Hold a doubling every two
    years against it and see where the line stops matching. Words: clk.*. */
+import { esc } from '../core/esc.js';
 import { t, fmtNum } from '../core/i18n.js';
 import { TRENDS, TRENDS_SOURCE } from '../data/trends.js';
 import { MEASURES, byDecade, fit, doublingLine } from '../engines/scaling.js';
@@ -13,7 +14,6 @@ import { BASE_GHZ } from '../engines/floor.js';
 import { MISSIONS } from '../engines/life.js';
 import { build, solutionOf } from '../engines/design.js';
 
-const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
 const S = { m: 'transistors', ref: false };
 const COL = { transistors: 'var(--qc)', frequency: '#5aa9ff', specint: '#45c08a', watts: '#f0a33a', cores: '#c07ff0' };
 const YEAR = 365.25 * 86400;

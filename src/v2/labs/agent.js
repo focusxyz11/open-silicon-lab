@@ -2,13 +2,14 @@
    A lab of the challenge player (src/v2/play.js): lab(L) gets the player's pieces and returns { draw, click, input };
    draw gives the card's HTML, click and input say whether they handled the event. */
 import * as Agent from '../../data/agent.js';
+import { facts } from '../../core/facts.js';
 
 export default function lab(L) {
   const { S, ch, ctx, el, esc, t, head, reward, doneNote, win, draw, fx, show } = L, view = L.view;
   /* ---- Verify the agent: eight proposals from an AI agent; check each with the lab's own engines, then trust it or
      reject it for its real flaw (src/data/agent.js). The facts come from the lab's dated file when asked for. ---- */
   let FACTS = null;
-  const factsNow = () => FACTS ? Promise.resolve(FACTS) : fetch('src/data/facts.json').then(r => r.json()).then(j => (FACTS = Object.fromEntries((j.facts || []).map(f => [f.id, f]))), () => (FACTS = {}));
+  const factsNow = () => facts().then(F => (FACTS = F));
   const agentOf = () => (S.agent = Agent.normalAgent(S.agent));
   function agentTool(c) {
     const a = c.art, T = view.ag[c.id] || (view.ag[c.id] = {});

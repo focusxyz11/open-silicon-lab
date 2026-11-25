@@ -7,10 +7,10 @@
 
    mark(rec) -> HTML of the mark for a record { f, by?, fact? }; claimFid(claim) -> the record of a machine's claim;
    the tap is wired once, for the whole page, when this module loads. */
+import { esc } from '../core/esc.js';
+import { facts, factsNow } from '../core/facts.js';
 import { t } from '../core/i18n.js';
 import { FIDS, ENGINES, rankOf } from '../data/fidelity.js';
-
-const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 
 /* the glyph: four steps rising, filled up to how true the thing is */
 export function glyph(f) {
@@ -43,11 +43,10 @@ export const statusMark = s => '<button type="button" class="fid mst s-' + s + '
 export const claimList = matter => '<ul class="fidclaims">' + matter.claims.map(cl => '<li class="k-' + cl.kind + '"><span class="fidmarks">' + statusMark(cl.status) + mark(claimFid(cl)) + '</span><span>' + esc(t('invent.claim.' + cl.id)) + '</span></li>').join('') + '</ul>';
 
 /* ---- the tap: one line of what the mark means here, in a small note beside it ---- */
-let FACT = null, asked = null, tip = null, from = null;
-const facts = () => FACT ? Promise.resolve(FACT) : asked || (asked = fetch('src/data/facts.json').then(r => r.json()).then(j => (FACT = Object.fromEntries((j.facts || []).map(x => [x.id, x]))), () => (FACT = {})));
+let tip = null, from = null;
 function lineOf(b) {
   if (b.dataset.fidst) return t('invent.status.' + b.dataset.fidst + '.line');
-  const f = b.dataset.fid, fa = b.dataset.fidfact && FACT && FACT[b.dataset.fidfact];
+  const f = b.dataset.fid, FACT = factsNow(), fa = b.dataset.fidfact && FACT && FACT[b.dataset.fidfact];
   return t('fid.' + f + '.line', { by: b.dataset.fidby ? t('fid.by.' + b.dataset.fidby) : '', source: fa ? fa.source : t('fid.source'), value: fa ? fa.value : t('fid.value') });
 }
 function close() {
@@ -66,7 +65,7 @@ function open(b) {
   tip = document.createElement('div'); tip.className = 'fidtip'; tip.setAttribute('role', 'status');
   const fill = () => { if (!tip || from !== b) return; tip.innerHTML = (b.dataset.fidst ? '' : glyph(b.dataset.fid)) + '<p>' + esc(lineOf(b)) + '</p>'; place(); };
   document.body.appendChild(tip); fill();
-  if (b.dataset.fidfact && !FACT) facts().then(fill);
+  if (b.dataset.fidfact && !factsNow()) facts().then(fill);
 }
 if (typeof document !== 'undefined' && !document.fidWired) {
   document.fidWired = true;

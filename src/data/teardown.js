@@ -106,7 +106,6 @@ export const FIT_JOBS = [
 ];
 
 export const productById = id => PRODUCTS.find(p => p.id === id) || null;
-export const chipById = id => { for (const p of PRODUCTS) { const c = p.chips.find(x => x.id === id); if (c) return c; } return null; };
 export const leadingCount = id => (productById(id) ? productById(id).chips.filter(c => c.leading).length : 0);
 export const totalLeading = () => PRODUCTS.reduce((n, p) => n + leadingCount(p.id), 0);
 
@@ -143,7 +142,7 @@ export const CHALLENGES = [
 ];
 
 /* every key in WORDS that the structures above (and the views' fixed labels) point to */
-export const FIXED_WORDS = ['td.start', 'td.openAll', 'td.askCount', 'td.yourCount', 'td.check', 'td.notYet', 'td.open', 'td.by.label', 'td.by.job', 'td.by.made', 'td.how', 'td.rd.lead', 'td.sum.none', 'td.sum.one', 'td.sum.some', 'td.sum.car', 'td.note', 'td.fit.end.l', 'td.fit.end.r', 'td.fit.pick', 'td.fit.best', 'td.fit.ok', 'td.fit.no', 'td.fit.show', 'td.fit.answer', 'td.fit.score', 'td.fit.togo', 'td.fit.note'];
+const FIXED_WORDS = ['td.start', 'td.openAll', 'td.askCount', 'td.yourCount', 'td.check', 'td.notYet', 'td.open', 'td.by.label', 'td.by.job', 'td.by.made', 'td.how', 'td.rd.lead', 'td.sum.none', 'td.sum.one', 'td.sum.some', 'td.sum.car', 'td.note', 'td.fit.end.l', 'td.fit.end.r', 'td.fit.pick', 'td.fit.best', 'td.fit.ok', 'td.fit.no', 'td.fit.show', 'td.fit.answer', 'td.fit.score', 'td.fit.togo', 'td.fit.note'];
 export function wordKeys() {
   const k = [...FIXED_WORDS];
   JOBS.forEach(j => k.push('td.job.' + j));

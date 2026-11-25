@@ -2,6 +2,13 @@
    data centre's flight levels and their questions, and the chip's layers as made. Kept here, with no three.js, so
    the shell (src/v2/app.js) never imports a 3D module statically: a view's 3D, and three.js with it, loads only
    when that view is first opened (docs/ARCHITECTURE.md). The 3D modules re-export these. */
+import { t } from '../core/i18n.js';
+
+/* what a part of a building that opens is called (#/place/fab/etch), on its card (src/v2/app.js, PARTS) and over it on
+   the island (src/v2/map3d.js): its level's name, or at the test house and the port the part's own word */
+export const shipOrPkg = p => (['trays', 'boxes'].includes(p) ? 'ship' : 'pkg');
+export const partName = (place, p) => { if (place !== 'test' && place !== 'port') return t('depth.' + p + '.name');
+  const w = t('part.' + (place === 'test' ? 'test' : shipOrPkg(p)) + '.' + p); return w.charAt(0).toUpperCase() + w.slice(1); };
 
 /* the island (src/v2/map3d.js): where every place stands, and how close the camera comes */
 export const PLACES = [

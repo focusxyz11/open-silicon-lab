@@ -3,6 +3,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import * as S from '../src/engines/aiserve.js';
+import { readWords } from '../scripts/words.mjs';
 import { readFileSync } from 'node:fs';
 
 const near = (a, b, tol) => assert.ok(Math.abs(a - b) <= tol, `${a} is not within ${tol} of ${b}`);
@@ -12,11 +13,12 @@ test('facts named by the tables exist in facts.json', () => {
   for (const c of [...S.SERVE_CHIPS, ...S.REAL_CHIPS]) for (const f of c.facts) assert.ok(ids.has(f), f);
 });
 
-test('words: every id is namespaced, and the challenges have title, goal and done', () => {
-  for (const k of Object.keys(S.WORDS)) assert.match(k, /^ai\./);
-  for (const id of ['fourBits', 'readFastWriteSlow']) for (const p of ['t', 'goal', 'done']) assert.ok(S.WORDS[`ai.ch.${id}.${p}`]);
-  for (const f of Object.keys(S.QUANT_FORMATS)) assert.ok(S.WORDS[`ai.quant.format.${f}`]);
-  for (const a of S.ARCHITECTURES) assert.ok(S.WORDS[`ai.arch.${a.id}.t`] && S.WORDS[`ai.arch.${a.id}.tag`]);
+test('words: the lab names the formats, the challenges have title, goal and done, and every architecture its words', () => {
+  /* srv.* in src/i18n/en/labs.json (the architectures' wait in src/data/waiting-words.json); the challenges as the lab plays them */
+  const W = readWords();
+  for (const [id, done] of [['quantize', 'srv.q.done'], ['prefill', 'srv.p.done']]) for (const k of ['game.ch.' + id + '.t', 'game.ch.' + id + '.goal', done]) assert.ok(W[k], k);
+  for (const f of Object.keys(S.QUANT_FORMATS)) assert.ok(W[`srv.q.format.${f}`]);
+  for (const a of S.ARCHITECTURES) assert.ok(W[`srv.arch.${a.id}.t`] && W[`srv.arch.${a.id}.tag`]);
 });
 
 test('quantization defaults: FP4, one scale per tensor, 0.5% outliers: most weights collapse to zero', () => {

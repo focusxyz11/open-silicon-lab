@@ -16,8 +16,6 @@ const MONO = '"Martian Mono", ui-monospace, Menlo, monospace'; /* i18n-ok: a fon
 let B = build(START_DESIGN), MINE = [], BY = 'example';
 /* by: who wrote the design shown (the lab's example until someone changes it: src/v2/game.js benchDesign) */
 export const setDesign = (b, by) => { B = b; if (by) BY = by; };
-/* the jobs you have finished here (they show in the plan as yours), and who wrote the description now */
-export const setMine = (list, by) => { MINE = list || []; BY = by || 'example'; };
 export const designNow = () => B;
 /* the band's caption under the drawings; the redesign's bench shows it in its dock instead */
 let CAPTION = true;

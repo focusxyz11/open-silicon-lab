@@ -4,8 +4,11 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync as readEN } from 'node:fs';
 const EN = readWords();
-/* a word: still in an engine's WORDS, or moved into src/i18n/en/ once its view was built (the puller's are cz.*) */
-const has = k => F.WORDS[k] || EN[k] || EN[k.replace('fab.puller.dislocations.', 'cz.disl.').replace('fab.puller.', 'cz.')] || EN[k.replace(/^fab\.ch\.(\w+)\.(t|goal)$/, 'game.ch.$1.$2')];
+/* a word, in src/i18n/en/: the views' own (the puller's are cz.*, the lithography lab's lt.*, the implant lab's imp.*;
+   a challenge's title and goal game.ch.*, its done the lab's), or waiting for a view (src/data/waiting-words.json) */
+const DONE = { 'too-hot': 'semi.done', furnace: 'imp.done.furnace', shallow: 'imp.done.shallow', bottom: 'fl.dep.done', vias: 'ovl.done', etch: 'fl.etch.done', 'litho-finest': 'lt.done', 'euv-1000': 'eu.done' };
+const has = k => EN[k] || EN[k.replace('fab.puller.dislocations.', 'cz.disl.').replace('fab.puller.', 'cz.').replace('fab.litho.', 'lt.').replace('fab.implant.', 'imp.')] ||
+  EN[k.replace(/^fab\.ch\.([\w-]+)\.(t|goal)$/, 'game.ch.$1.$2')] || EN[DONE[(/^fab\.ch\.([\w-]+)\.done$/.exec(k) || [])[1]]];
 import { readFileSync } from 'node:fs';
 import * as F from '../src/engines/fabsteps.js';
 import { readWords } from '../scripts/words.mjs';
@@ -271,14 +274,13 @@ test('EUV scanner: the photons are random, seeded, and the holes spread more at 
 });
 
 /* ---- words and facts ---- */
-test('every challenge has its words, every word is named fab.*, and the fact ids exist', () => {
+test('every challenge has its words, and the fact ids exist', () => {
   assert.equal(F.CHALLENGES.length, 9);
   for (const c of F.CHALLENGES) {
     for (const k of ['t', 'goal', 'done']) assert.ok(has('fab.ch.' + c.id + '.' + k), c.id + ' ' + k);
     assert.ok(c.groups.length && c.groups.every(g => typeof g === 'function'));
     assert.equal(F.met(c.id, []), false, c.id + ' is not met by nothing');
   }
-  for (const [k, v] of Object.entries(F.WORDS)) { assert.ok(k.startsWith('fab.'), k); assert.equal(typeof v, 'string'); assert.ok(v.length > 0); }
   assert.equal(F.met('nope', []), false);
   for (const id of F.PULL_PHASES) assert.ok(has('fab.puller.phase.' + id));
   for (const id of F.LOOP_STEPS) for (const k of ['t', 'text', 'gear']) assert.ok(has('fab.loop.' + id + '.' + k), id);

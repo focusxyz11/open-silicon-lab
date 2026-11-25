@@ -4,10 +4,10 @@
    and lights a patch of what you now know. The picture is the trace. Write a note (a setting and how far you trust
    it, and words), hand it to a search program, and see how far it carries, on this box and on its twin. The box is
    the Tune engine (src/engines/tune.js), a model of learning by trying, not of any real machine. Words: tune.*. */
+import { esc } from '../core/esc.js';
 import { t, fmtNum } from '../core/i18n.js';
 import { machine, run, truth, rng, handover, GOOD, BUDGET, RANGE, RUNS } from '../engines/tune.js';
 
-const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
 const TRUSTS = [0.5, 1.5, 3];
 const S = { tries: [], z: 5, R: rng(2026), trust: 1, note: null, words: '', hand: null, open: false };
 const M = machine(false);

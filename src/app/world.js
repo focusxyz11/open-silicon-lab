@@ -4,6 +4,7 @@
    ground with no frame, its words are HTML over it (src/v2/overlay.js) and the questions' marks show under Ask
    (docs/reviews/art-direction.md). The active question lights up the parts it is about. The maths is in
    src/engines/weave.js. */
+import { still as reduced, theme } from '../core/ui.js';
 import { t } from '../core/i18n.js';
 import { DEPTHS, THREADS, partWord } from '../data/weave.js';
 import { N, IDS, WORLD, worldOf, clampZ, frames, lineFrames, isLine, stop } from '../engines/weave.js';
@@ -15,12 +16,7 @@ import { wrap } from './draw.js';
 /* a line drawn flat, without the factory's 3D: the design studio */
 const flat = () => !!(worldOf(WORLD) || {}).flat;
 
-export const reduced = () => !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
-export const theme = () => {
-  const a = document.documentElement.getAttribute('data-theme');
-  if (a === 'dark' || a === 'light') return a;
-  return window.matchMedia && matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
-};
+export { reduced, theme };
 export const threadColor = id => { const th = THREADS.find(x => x.id === id); if (!th) return theme() === 'dark' ? '#e8edf6' : '#131c26'; return theme() === 'dark' ? 'hsl(' + th.hue + ' 88% 68%)' : 'hsl(' + th.hue + ' 72% 36%)'; };
 const MONO = '"Martian Mono", ui-monospace, Menlo, monospace'; /* i18n-ok: a font name */
 const SANS = '"Atkinson Hyperlegible Next", system-ui, sans-serif'; /* i18n-ok: a font name */

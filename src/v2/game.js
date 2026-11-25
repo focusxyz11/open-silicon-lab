@@ -65,7 +65,7 @@ export const TAPS = {
   vote: { line: 0, pieces: ['| (a | c)', '| (a & c)', '& (a ^ c)'] },
   full: { line: 0, pieces: ['& cin', '| cin', '^ cin'] }
 };
-export const GATE_TURN = { '&': '|', '|': '^', '^': '&' };
+const GATE_TURN = { '&': '|', '|': '^', '^': '&' };
 /* turn the k-th gate of a description into the next kind */
 export const turnGate = (code, k) => { let i = -1; return code.replace(/[&|^]/g, m => (++i === k ? GATE_TURN[m] : m)); };
 /* a piece on a line, added before its ';' or taken off */
@@ -165,7 +165,7 @@ export function community(s) {
   const W = world(s), P = plan(mine, W), pr = progress(P), F = frontier(W);
   const leaves = NEEDS.filter(n => !childrenOf(n.id).length);
   return {
-    built: pr.built, total: pr.total, W,
+    built: pr.built, total: pr.total, W, frontier: F,
     /* jobs anyone can take: pieces a design can fill, still without one */
     jobs: leaves.filter(n => P[n.id].state === 'open' && n.engine === 'logic').map(n => ({ need: n.id, p: n.project, ai: !!AGENT[n.project] })),
     /* pieces no engine can check yet: the job is to write the engine */
@@ -208,7 +208,7 @@ export function entryWords(e, s) { const W = world(s), T = W.byId[e.of];
     : e.kind === 'report' ? t('ledger.rec.report', { say: t('report.say.' + e.say), at: e.at, words: e.words }) : e.kind === 'fix' ? t('ledger.rec.fix', { words: e.words }) : e.q; }
 /* break a design: a challenge made by the ledger itself, for every clocked design that stands, and kept for the
    broken ones, so anyone can find the case again */
-export function breakOf(id, s) { const e = world(s).byId[id]; if (!e || e.kind !== 'design' || !e.ok) return null; const n = needOf(e.piece);
+function breakOf(id, s) { const e = world(s).byId[id]; if (!e || e.kind !== 'design' || !e.ok) return null; const n = needOf(e.piece);
   return projectOf(n.project).seq ? { id: 'break:' + id, step: null, kind: 'break', of: id, p: n.project, need: e.piece, title: e.title, place: 'village', at: 'check', grows: null } : null; }
 /* a challenge by its id: one of the loop's, an open job (job:<piece>) or a break (break:<entry>) */
 export const anyChallenge = (id, s) => !id ? null : id.startsWith('break:') ? breakOf(id.slice(6), s) : id.startsWith('job:') ? jobOf(id.slice(4)) : challengeOf(id);

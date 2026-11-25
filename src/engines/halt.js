@@ -28,7 +28,7 @@ export const MEDIA = ['domino', 'water', 'light'];
    (either is enough); and the output: it follows what gets through, or it is on unless something gets through */
 export const JOINS = ['series', 'parallel'];
 export const OUTS = ['follow', 'invert'];
-export const INPUTS = [[0, 0], [0, 1], [1, 0], [1, 1]];
+const INPUTS = [[0, 0], [0, 1], [1, 0], [1, 1]];
 export const gate = (join, out) => (a, b) => { const through = join === 'series' ? a & b : a | b; return out === 'invert' ? 1 - through : through; };
 export const nand = (a, b) => 1 - (a & b);
 /* the four rows of a build: the inputs, what it gives, what a NAND gives */
@@ -71,7 +71,7 @@ export function normal(prog) {
 }
 
 /* the program as RISC-V assembly for the core, with the block each line belongs to (lines[i] = block index) */
-export function toAsm(prog) {
+function toAsm(prog) {
   const out = [], lines = [];
   const put = (k, s) => { out.push(s); lines.push(k); };
   normal(prog).forEach((x, k) => {

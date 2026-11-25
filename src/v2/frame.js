@@ -26,6 +26,8 @@
    the card is below the picture, the ring alone, unless the card would cover it); o.scroll says the view also flies in
    when scrolled. How big it is here: the rail says each level's rough size, and while the view moves (rail's pos, the
    place along the items, between two of them) the card says how many times closer the next level is. */
+import { phone } from '../core/ui.js';
+import { esc } from '../core/esc.js';
 import { t, fmtNum } from '../core/i18n.js';
 import { TWINS } from '../data/atlas.js';
 import { fieldLine } from './field.js';
@@ -37,13 +39,12 @@ export function sizeWords(m) {
   return t('frame.size.' + u, { v: fmtNum(+(m * k).toPrecision(2)) });
 }
 /* how many times closer (from bigger to smaller) or farther, rounded: below ten to a whole number, above to one figure */
-export function timesWords(from, to) {
+function timesWords(from, to) {
   const r = from / to, x = r >= 1 ? r : 1 / r; if (x < 1.5) return '';
   const p = Math.pow(10, Math.floor(Math.log10(x))), n = x < 10 ? Math.round(x) : Math.round(x / p) * p;
   return t(r >= 1 ? 'frame.zoom.in' : 'frame.zoom.out', { n: fmtNum(n) });
 }
-const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
-export const MODES = ['look', 'do', 'ask'];
+const MODES = ['look', 'do', 'ask'];
 /* the row of steps: one component in every row of steps. On a wide screen every step is named, left to right, joined
    by one line; on a phone only the step you are at shows, between ← and →, with how far along it is */
 function stepsHtml(st) {
@@ -52,7 +53,6 @@ function stepsHtml(st) {
     '<span class="stc" aria-hidden="true"><b class="stn"></b><span class="stk"></span></span>' +
     '<button type="button" class="stgo" data-stepgo="1" aria-label="' + esc(t('frame.steps.next')) + '">→</button></nav>';
 }
-export const FACES = ['designed', 'made', 'used'];
 /* one life per host (#366): a view makes its frame anew in the same host each time it is shown, so whatever the frame,
    its modes (frame2.js) and the switches on it (listen.js) listen to or watch lives as long as that frame and ends
    when the next one is made: one set of listeners on a host, however often it is visited. lifeOf(host) is the life of
@@ -154,7 +154,7 @@ export function createFrame(host, o) {
      on it slides it up, a touch on the picture lets it down again. The picture is framed for the peek, so it never
      jumps when the card opens over it (restH). A challenge or a question being followed keeps it open. Not on a
      desktop or a tablet: there the card is as it was */
-  const wrap = $('.dockwrap'), bar = $('.peekbar'), phone = () => matchMedia('(max-width: 720px)').matches;
+  const wrap = $('.dockwrap'), bar = $('.peekbar');
   let restH = 0;
   const peek = v => { const on = !!v && phone(); if (on) wrap.scrollTop = 0; wrap.classList.toggle('peek', on); host.classList.toggle('peeked', on); bar.setAttribute('aria-expanded', String(!on)); bar.setAttribute('aria-label', t(on ? 'frame.peek.open' : 'frame.peek.fold')); };
   const busy = () => !!dock.querySelector('.player, .stopx') || dock.classList.contains('benchdock');

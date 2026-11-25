@@ -15,6 +15,7 @@
    The design engine decides everything (src/engines/design.js, src/engines/bench.js); this file draws and listens.
    The same drawing serves a challenge played at the bench, as its instrument in the card (data-f2="instrument"),
    so in Do mode it takes the stage. Words: bench.*, design.*. */
+import { esc } from '../core/esc.js';
 import { t } from '../core/i18n.js';
 import * as G from './game.js';
 import * as X from '../engines/bench.js';
@@ -25,7 +26,6 @@ import { NEEDS } from '../data/build.js';
 import { DESIGN_SCENES } from '../app/design.js';
 import { patch } from './patch.js';
 
-const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 const STEPS = ['need', 'logic', 'check', 'gates', 'layout', 'masks'];
 /* a part's region of the 1000 x 1000 square, as a box on the surface. A small bench (a phone, NARROW) is as wide as the
    screen and as tall as the room above the card: there the check's verdict gets more of the height, so its controls and

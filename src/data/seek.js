@@ -40,7 +40,7 @@ export const SEEK = {
   switch: { view: 'dive', ask: 'think.switch', parts: ['gate', 'channel', 'oxide', 'source', 'drain'], leads: 'gate', at: '#/dive/switch' },
   atom: { view: 'dive', ask: 'think.atom', parts: ['lattice', 'dopant', 'electrons', 'boundary'], leads: 'electrons', at: '#/dive/atom' }
 };
-export const SEEK_LEVELS = Object.keys(SEEK);
+const SEEK_LEVELS = Object.keys(SEEK);
 /* the level a search is at, in its own view */
 export const seekLevel = k => SEEK[k].level || k;
 /* the search at a level of a view, if it has one: its key (the phone's flight also has the dive's levels it flies through) */

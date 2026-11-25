@@ -5,7 +5,7 @@ import { FIG } from '../data/figures.js';
 
 /* money: "$7,000", "$725 million"; a range shares its unit once: "$25–35 billion", "250–350亿美元" */
 export const money = v => t(v >= 1e6 ? 'fig.money.big' : 'fig.money', { n: fmtWords(v) });
-export function moneySpan(a, b) {
+function moneySpan(a, b) {
   const x = fmtWords(a), y = fmtWords(b); let i = 0;
   while (i < x.length && i < y.length && x[x.length - 1 - i] === y[y.length - 1 - i]) i++;
   let suf = y.slice(y.length - i); while (/^[\d.,]/.test(suf)) suf = suf.slice(1);

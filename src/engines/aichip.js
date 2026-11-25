@@ -25,7 +25,7 @@ export const chipOf = id => CHIPS.find(c => c.id === id);
 
 /* Number formats: bytes per weight, and peak speed against FP4 (FP8 is half as fast, FP16 a quarter) */
 export const FORMATS = { fp16: { bytes: 2, speed: 0.25 }, fp8: { bytes: 1, speed: 0.5 }, fp4: { bytes: 0.5, speed: 1 } };
-export const FILL = 0.8;                         // the share of a chip's memory that may hold weights
+const FILL = 0.8;                         // the share of a chip's memory that may hold weights
 
 export const ROOFLINE_DEFAULTS = { chipId: 'rubin', paramsB: 70.5, format: 'fp4', batch: 1 };
 /* the first version's sliders: 0..1000 to billions of parameters (1 to about 2,000) and to users (1 to 1,024) */
@@ -64,16 +64,16 @@ export function pocketAssistant(s) {
 }
 
 /* HBM: [id, bus width in bits, default Gb/s per pin, highest announced pin speed, die Gb, height limit in um, allowed dies per stack] */
-export const HBM_GENERATIONS = [
+const HBM_GENERATIONS = [
   { id: 'hbm3e', bits: 1024, pin: 9.6, maxPin: 9.8, dieGb: 24, limitUm: 720, heights: [8, 12, 16] },
   { id: 'hbm4', bits: 2048, pin: 10.7, maxPin: 12, dieGb: 24, limitUm: 775, heights: [8, 12, 16] },
   { id: 'hbm4e', estimate: true, bits: 2048, pin: 12, maxPin: 14, dieGb: 32, limitUm: 775, heights: [12, 16, 20] }
 ];
-export const HBM_BASE_UM = 110, HBM_LID_UM = 60;           // the logic die under the stack, and the top layer
-export const HBM_GAP_UM = { bump: 14, hybrid: 1 };         // between dies: micro-bumps, or fused copper pads
+const HBM_BASE_UM = 110, HBM_LID_UM = 60;           // the logic die under the stack, and the top layer
+const HBM_GAP_UM = { bump: 14, hybrid: 1 };         // between dies: micro-bumps, or fused copper pads
 export const HBM_DEFAULTS = { gen: 'hbm4', dies: 12, bonding: 'bump', pin: 10.7, stacks: 8 };
 /* a die thinner than this cannot be made, and under this it is hard (yields fall) */
-export const DIE_IMPOSSIBLE_UM = 12, DIE_THIN_UM = 30;
+const DIE_IMPOSSIBLE_UM = 12, DIE_THIN_UM = 30;
 
 /* Returns { gb (per GPU), tbs (per GPU), gbPerStack, tbsPerStack, dieUm (thickness each die must be ground to), gapUm,
    wires (data wires to the GPU), fits (dieUm at least 12), thin (under 30), pinAboveAnnounced, heatWarning (16 or more high),

@@ -4,6 +4,7 @@
    Glue of the shell (src/v2/app.js): create() runs once, when the view first opens; what it shares with the shell and
    the other views is on V (src/v2/shell.js). */
 import { t, has, fmtDate } from '../../core/i18n.js';
+import { facts as loadFacts } from '../../core/facts.js';
 import { REPO, THREADS } from '../../data/weave.js';
 import * as Game from '../game.js';
 import { titleOf } from '../play.js';
@@ -188,7 +189,7 @@ export function create() {
   /* ---- following a question: one stop of a thread's trail, in the dock of the view that shows its level ---- */
   /* the figures behind a stop, each with its source, kind and the date it was checked (src/data/facts.json) */
   let FACT = null;
-  const facts = () => FACT ? Promise.resolve(FACT) : fetch('src/data/facts.json').then(r => r.json()).then(j => (FACT = Object.fromEntries((j.facts || []).map(f => [f.id, f]))), () => (FACT = {}));
+  const facts = () => loadFacts().then(F => (FACT = F));
   const ext = (href, html) => '<a href="' + esc(href) + '" target="_blank" rel="noopener">' + html + '</a>';
   const figuresHtml = key => { const fs = (FIGURES[key] || []).map(id => FACT && FACT[id]).filter(Boolean); if (!fs.length) return '';
     return '<p class="kicker">' + esc(t('trail.figures')) + '</p><ul class="figs2">' + fs.map(f => '<li><b>' + esc(f.value) + '</b> ' + esc(f.label) + '<span class="small muted"> · ' + ext(f.url, esc(f.source)) + ' · ' + esc(t('trail.checked', { kind: t('fact.' + f.kind), date: fmtDate(f.verified) })) + '</span></li>').join('') + '</ul>'; };

@@ -10,11 +10,12 @@
    World units: 1 = 10 metres. x east, z south, y up. Words: map.<place>.t / .d / .kind. */
 import { THREE, PALETTES, theme, stage, light, mat, metal, glow, glass, box, cyl, group, flat, blob, ribbon, labels, clamp, ease, reduced, rnd, shared } from './kit3d.js';
 import { t } from '../core/i18n.js';
+import { esc } from '../core/esc.js';
 import { STEPS, STATION, GROWTH } from './game.js';
 import { betPowerNow } from '../app/betscene.js';
 import { furnisher, lump } from './furnish.js';
 import { CORNERS, HOUSE } from '../data/studio.js';
-import { PLACES } from '../data/views3d.js';
+import { PLACES, partName } from '../data/views3d.js';
 import { LABS } from '../data/labs/index.js';
 
 /* what each lab grows, from its own file (src/v2/growers/<lab>.js): { <growth>: { at, grow } }, fetched beside the island;
@@ -48,14 +49,15 @@ const ARCH = {
   dark: { roof: 0x2f3845, trim: 0x232a35, crane: 0x7a6846, hull: 0x3a2f2f, truck: 0x8f98a3, tile: 0x5a4039, box: [0x3c4d5a, 0x5c3c35, 0x4a4d43, 0x675b47, 0x3a434e] }
 };
 /* a slow value noise, smooth, from 0 to 1 */
-const hash2 = (x, y) => { const s = Math.sin(x * 127.1 + y * 311.7) * 43758.5453; return s - Math.floor(s); };
 const smooth = t => t * t * (3 - 2 * t);
 /* lump (a tree crown with an outline) is shared with the studio's furnishing (src/v2/furnish.js) */
-export function noise2(x, y) {
+function noise2(x, y) {
   const xi = Math.floor(x), yi = Math.floor(y), u = smooth(x - xi), v = smooth(y - yi);
-  const a = hash2(xi, yi), b = hash2(xi + 1, yi), c = hash2(xi, yi + 1), d = hash2(xi + 1, yi + 1);
+  const a = rnd(xi, yi), b = rnd(xi + 1, yi), c = rnd(xi, yi + 1), d = rnd(xi + 1, yi + 1);
   return a + (b - a) * u + (c - a) * v + (a - b - c + d) * u * v;
 }
+/* whether a point is inside a polygon (the coast): a ray to the right crosses its edges an odd number of times */
+const inPoly = (pts, x, z) => { let c = false; for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) { const [xi, zi] = pts[i], [xj, zj] = pts[j]; if ((zi > z) !== (zj > z) && x < (xj - xi) * (z - zi) / (zj - zi) + xi) c = !c; } return c; };
 const fbm = (x, y) => 0.55 * noise2(x, y) + 0.3 * noise2(x * 2.1 + 5, y * 2.1 + 9) + 0.15 * noise2(x * 4.3 + 11, y * 4.3 + 3);
 /* the ground's top: a fine grid inside the coast whose colour wanders between lush, dry and dark, and settles to
    the plain ground colour near the coast, so the grid's edge never shows */
@@ -65,10 +67,9 @@ function terrain(coast, T) {
   const pos = g.attributes.position, col = new Float32Array(pos.count * 3), base = new THREE.Color(T.ground), c = new THREE.Color();
   const lush = new THREE.Color(T.lush), dry = new THREE.Color(T.dry), dark = new THREE.Color(T.dark);
   const segD = (x, z) => { let m = 1e9; for (let i = 0, j = coast.length - 1; i < coast.length; j = i++) { const [ax, az] = coast[j], [bx, bz] = coast[i], dx = bx - ax, dz = bz - az, t = Math.max(0, Math.min(1, ((x - ax) * dx + (z - az) * dz) / (dx * dx + dz * dz || 1e-9))); m = Math.min(m, Math.hypot(x - ax - t * dx, z - az - t * dz)); } return m; };
-  const inside = (x, z) => { let k = false; for (let i = 0, j = coast.length - 1; i < coast.length; j = i++) { const [xi, zi] = coast[i], [xj, zj] = coast[j]; if ((zi > z) !== (zj > z) && x < (xj - xi) * (z - zi) / (zj - zi) + xi) k = !k; } return k; };
   const keep = new Uint8Array(pos.count);
   for (let i = 0; i < pos.count; i++) {
-    const x = pos.getX(i), z = pos.getZ(i), d = inside(x, z) ? segD(x, z) : 0; keep[i] = d > 2.5 ? 1 : 0;
+    const x = pos.getX(i), z = pos.getZ(i), d = inPoly(coast, x, z) ? segD(x, z) : 0; keep[i] = d > 2.5 ? 1 : 0;
     const n = fbm(x / 26, z / 26), m = fbm(x / 9 + 40, z / 9 + 40), f = Math.min(1, Math.max(0, (d - 3) / 9));
     c.copy(base).lerp(n > 0.5 ? dry : lush, Math.min(1, Math.abs(n - 0.5) * 3.4)).lerp(dark, Math.min(0.7, Math.max(0, m - 0.56) * 2.4));
     c.lerp(base, 1 - f); col.set([c.r, c.g, c.b], i * 3);
@@ -130,7 +131,7 @@ export function createMap(canvas, host, on = {}) {
   scene.add(terrain(coast, T));
   /* the shore: a line of foam where the water meets the wet sand, and rocks here and there along it */
   const foamM = new THREE.MeshBasicMaterial({ color: night ? 0x8fb0d0 : 0xffffff, transparent: true, opacity: night ? 0.45 : 0.75, depthWrite: false, side: THREE.DoubleSide });
-  const foamR = ribbon(scene, grow(coast, 0.05).filter((_, i) => i % 2 === 0), 1.1, foamM, -0.46, true);
+  ribbon(scene, grow(coast, 0.05).filter((_, i) => i % 2 === 0), 1.1, foamM, -0.46, true);
   const rockM = mat(night ? 0x3b4048 : 0x8d8f8c, { roughness: 0.9, flatShading: true }), rockG = new THREE.DodecahedronGeometry(1, 0);
   grow(coast, 0.028).forEach(([x, z], i) => { if (rnd(i, 31) > 0.16) return; for (let k = 0; k < 1 + Math.floor(rnd(i, 32) * 3); k++) { const r = new THREE.Mesh(rockG, rockM), sc = 0.5 + rnd(i * 3 + k, 33) * 0.9;
     r.scale.set(sc * 1.3, sc * 0.7, sc); r.position.set(x + (rnd(i + k, 34) - 0.5) * 2, -0.45 + sc * 0.2, z + (rnd(i + k, 35) - 0.5) * 2); r.rotation.set(rnd(i, 36) * 3, rnd(i, 37) * 6, 0); r.castShadow = true; r.receiveShadow = true; scene.add(r); } });
@@ -174,7 +175,6 @@ export function createMap(canvas, host, on = {}) {
       box(c, 1.9, 0.55, 3.9, col, 0, 0.18, 0, 0.18); box(c, 1.6, 0.48, 2.0, mat(night ? 0x2a3442 : 0x33404f, { roughness: 0.15, metalness: 0.4 }), 0, 0.72, -0.15, 0.16);
       [[-0.85, -1.25], [0.85, -1.25], [-0.85, 1.25], [0.85, 1.25]].forEach(([wx, wz]) => { const w = cyl(c, 0.32, 0.32, 0.22, mat(0x15181d, { roughness: 0.8 }), wx, 0.3, wz, 12); w.rotation.z = Math.PI / 2; w.position.y = 0.32; }); } });
   const inLot = (x, z) => LOTS.some(([cx, cz, along, n]) => { const hx = (along === 'x' ? n * 2.7 + 0.6 : 5.4) / 2 + 1.5, hz = (along === 'x' ? 5.4 : n * 2.7 + 0.6) / 2 + 1.5; return Math.abs(x - cx) < hx && Math.abs(z - cz) < hz; });
-  const inPoly = (pts, x, z) => { let c = false; for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) { const [xi, zi] = pts[i], [xj, zj] = pts[j]; if ((zi > z) !== (zj > z) && x < (xj - xi) * (z - zi) / (zj - zi) + xi) c = !c; } return c; };
   /* where each place's square stands (what calls there, see squares() below); no tree grows on one */
   const SQUARE = { studio: [-50.3, -17.8], quarry: [-48, 3.2], fab: [-3, -4.2], test: [20, 5], port: [57.4, 22.6], datacentre: [50, -27], lab: [-5.5, 30] };
   const free = (x, z) => inPoly(coast, x, z) && !Object.values(SQUARE).some(([a, b]) => Math.hypot(a - x, (b - z) * (z > b ? 0.7 : 1)) < 6) && !PLACES.some(p => Math.hypot(p.at[0] - x, p.at[1] - z) < (p.r || 16)) && !loopPts.some(([a, b]) => Math.hypot(a - x, b - z) < 5) && !SPOKES.flat().some(([a, b]) => Math.hypot(a - x, b - z) < 4) && !PATHS.some(([a, b]) => segD2(x, z, a, b) < 2.2) && !inLot(x, z);
@@ -206,8 +206,10 @@ export function createMap(canvas, host, on = {}) {
   const carModel = color => { const c = new THREE.Group(); box(c, 4.2, 1, 1.9, mat(color, { roughness: 0.35, metalness: 0.3 }), 0, 0.35, 0, 0.35); box(c, 2.4, 0.8, 1.7, glass(P.dark, { opacity: 0.85 }), -0.2, 1.3, 0, 0.3);
     [[-1.3, -0.95], [1.3, -0.95], [-1.3, 0.95], [1.3, 0.95]].forEach(([x, z]) => { const w = cyl(c, 0.42, 0.42, 0.3, mat(0x1d1f24), x, 0, z, 14); w.rotation.x = Math.PI / 2; w.position.y = 0.42; }); return c; };
   const truck = color => { const tr = new THREE.Group(); box(tr, 1.6, 1.4, 1.5, mat(P.white), 1.6, 0.3, 0, 0.15); box(tr, 3.2, 1.8, 1.6, mat(color), -0.9, 0.3, 0, 0.12); return tr; };
-  const ship = len => { const s = new THREE.Group(); box(s, len, 1.6, 3.4, mat(A.hull), 0, -1, 0, 0.4); box(s, len * 0.96, 0.3, 3.2, mat(P.dark), 0, 0.6, 0, 0.1);
-    for (let i = 0; i < Math.floor(len / 1.5) - 2; i++) box(s, 1.2, 1, 2.6, mat(cols[(i * 3) % 5]), -len / 2 + 1.6 + i * 1.3, 0.9, 0, 0.04); box(s, 1.8, 2.4, 2.6, mat(P.white), len / 2 - 1.4, 0.9, 0, 0.1); return s; };
+  /* a ship's hull, deck and bridge (cab: the bridge's height); a container ship carries a row of boxes */
+  const hull = (s, len, w = 3.4, cab = 2.6) => { box(s, len, 1.6, w, mat(A.hull), 0, -1, 0, 0.4); box(s, len * 0.96, 0.3, w - 0.2, mat(P.dark), 0, 0.6, 0, 0.1); box(s, 1.8, cab, w - 0.8, mat(P.white), len / 2 - 1.4, 0.9, 0, 0.1); };
+  const ship = len => { const s = new THREE.Group(); hull(s, len, 3.4, 2.4);
+    for (let i = 0; i < Math.floor(len / 1.5) - 2; i++) box(s, 1.2, 1, 2.6, mat(cols[(i * 3) % 5]), -len / 2 + 1.6 + i * 1.3, 0.9, 0, 0.04); return s; };
   const onLoop = (obj, u, speed, lane) => { scene.add(obj); tagMover(obj, { kind: 'truck' }); moving.push({ obj, curve: loop.curve, u, speed, lane, car: true }); };
   const route = pts => new THREE.CatmullRomCurve3(pts.map(([x, z]) => new THREE.Vector3(x, 0, z)));
 
@@ -248,10 +250,6 @@ export function createMap(canvas, host, on = {}) {
   const panelM = () => mat(night ? 0x8d97a5 : 0xd9dbd8, { roughness: 0.55 });
   const ghosts = (O, ...walls) => walls.forEach(w => { w.userData.ghost = true; O.near.push(w); });
   const tagParts = (O, id, g) => { O.tools[id] = g; g.traverse(o => { if (o.isMesh) o.userData.part = id; }); };
-  /* a screen: dark glass with a lit face (code, a waveform, gates, a layout) */
-  const screen = (g, w, h, color, x, y, z, ry = 0) => { const m = box(g, w, h, 0.06, mat(color, { emissive: color, emissiveIntensity: night ? 0.9 : 0.45, roughness: 0.3 }), x, y, z, 0.02, { cast: false }); m.rotation.y = ry; return m; };
-  const desk = (g, x, z, ry, face) => { const d = group(g, x, 0, z, ry); box(d, 1.8, 0.08, 0.9, mat(night ? 0x8f8270 : 0xcdb99a, { roughness: 0.6 }), 0, 0.74, 0, 0.02); [[-0.8, -0.35], [0.8, -0.35], [-0.8, 0.35], [0.8, 0.35]].forEach(([a, b]) => box(d, 0.06, 0.74, 0.06, metal(P.slate), a, 0, b, 0.01, { cast: false }));
-    box(d, 0.08, 0.35, 0.08, metal(P.slate), 0, 0.82, -0.25, 0.01, { cast: false }); screen(d, 1.1, 0.62, face, 0, 1.12, -0.25); cyl(d, 0.26, 0.26, 0.5, mat(P.dark, { roughness: 0.6 }), 0, 0, 0.75, 12); return d; };
 
   /* 1 design: the studio, a campus at the start of the loop. Its ground floor opens: where a job is written down,
      described, checked, turned into gates and laid out. On the road, the mask house, where a finished design leaves
@@ -524,7 +522,6 @@ export function createMap(canvas, host, on = {}) {
     return q; };
   const crateM = mat(night ? 0x5d5446 : 0xc4ae88, { roughness: 0.85 }), wrapM = mat(night ? 0x8a929c : 0xe9ecef, { roughness: 0.45 });
   /* ships that are not all the same: a heavy-lift ship with a machine in crates, a gas carrier, a car carrier */
-  const hull = (s, len, w = 3.4) => { box(s, len, 1.6, w, mat(A.hull), 0, -1, 0, 0.4); box(s, len * 0.96, 0.3, w - 0.2, mat(P.dark), 0, 0.6, 0, 0.1); box(s, 1.8, 2.6, w - 0.8, mat(P.white), len / 2 - 1.4, 0.9, 0, 0.1); };
   const liftShip = () => { const s = new THREE.Group(); hull(s, 12); box(s, 3, 2.2, 2.6, wrapM, -3, 0.9, 0, 0.08); box(s, 2.4, 1.8, 2.4, crateM, 0.4, 0.9, 0, 0.06); box(s, 0.3, 5.4, 0.3, craneM, 3.1, 0.9, 1.3, 0.03); return s; };
   const domeG = new THREE.SphereGeometry(1.15, 18, 9, 0, Math.PI * 2, 0, Math.PI / 2);
   const gasShip = () => { const s = new THREE.Group(); hull(s, 13); for (let i = 0; i < 4; i++) { const d = new THREE.Mesh(domeG, paleM); d.position.set(-4.6 + i * 2.35, 0.9, 0); d.castShadow = true; s.add(d); } box(s, 9.6, 0.12, 0.16, metal(P.metal), -1.2, 2.1, 0, 0.02, { cast: false }); return s; };
@@ -759,7 +756,7 @@ export function createMap(canvas, host, on = {}) {
   PLACES.forEach(p => { names[p.id] = L.add(G[p.id], new THREE.Vector3(0, HGT[p.id], 0), '', { cls: 'place3' + (p.far ? ' far' : ''), button: true, data: { place: p.id }, html: '', max: p.far ? Infinity : 520 }); });
   /* the factory's tools, drawn as the line draws them: on the first opening, each simple tool is replaced by the
      line's own machine (src/app/journey3d.js machineModel), so diving in shows the same machine, closer */
-  const detailed = {}, IDLE = { s: { k: '' }, p: null }, LABEL_NUDGE = { needles: [-1.9, 1.3], lid: [1.1, 0.3], bumps: [-0.7, 0] };
+  const detailed = {}, LABEL_NUDGE = { needles: [-1.9, 1.3], lid: [1.1, 0.3], bumps: [-0.7, 0] };
   const lineCol = () => ({ lit: true, dark: night, warm: P.warm, cool: P.accent, grn: P.good, red: P.bad });
   const shade = g => g.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
   /* a part of a machine is picked by an unseen box round it, and stands where its box stands */
@@ -792,9 +789,9 @@ export function createMap(canvas, host, on = {}) {
   const ring = new THREE.Mesh(new THREE.RingGeometry(0.92, 1, 48), new THREE.MeshBasicMaterial({ color: P.accent, transparent: true, opacity: 0.85, depthWrite: false }));
   ring.rotation.x = -Math.PI / 2; ring.visible = false; scene.add(ring);
   /* inside an open building, every part's name over it (shown only while the inside is) */
-  const cap = w => w.charAt(0).toUpperCase() + w.slice(1), PART_WORD = { test: id => cap(t('part.test.' + id)), port: id => cap(t('part.' + (['trays', 'boxes'].includes(id) ? 'ship' : 'pkg') + '.' + id)) }, PART_UP = { print: 4.2, masks: 5.4, need: 3.2, check: 3, prober: 2.4, needles: 3, map: 3.2, rack: 3.2, board: 1.8 };
+  const PART_UP = { print: 4.2, masks: 5.4, need: 3.2, check: 3, prober: 2.4, needles: 3, map: 3.2, rack: 3.2, board: 1.8 };
   const RING_R = { studio: 2.6, test: 1.9, masks: 5.4, port: 1.5, rack: 2.4, board: 1.6 };
-  const toolNames = {}; Object.entries(OPEN).forEach(([pl, O]) => Object.entries(O.tools).forEach(([id, g]) => { toolNames[pl + ':' + id] = L.add(g, new THREE.Vector3(0, PART_UP[id] || (pl === 'fab' ? 3.8 : 2.6), 0), (PART_WORD[pl] || (x => t('depth.' + x + '.name')))(id), { cls: 'tool3', button: true, data: { place: pl, part: id }, need: O.inside, max: 340 }); }));
+  const toolNames = {}; Object.entries(OPEN).forEach(([pl, O]) => Object.entries(O.tools).forEach(([id, g]) => { toolNames[pl + ':' + id] = L.add(g, new THREE.Vector3(0, PART_UP[id] || (pl === 'fab' ? 3.8 : 2.6), 0), partName(pl, id), { cls: 'tool3', button: true, data: { place: pl, part: id }, need: O.inside, max: 340 }); }));
   /* a building with an inside (or a machine in an open one) says so when the mouse points at it: a ring of light round
      it on the ground, and Go inside over it, like the parts' names. A click still selects it, a double click goes in;
      a phone has the card's button */
@@ -842,7 +839,7 @@ export function createMap(canvas, host, on = {}) {
   /* ---- the minimap (docs/INTERACTION.md: an overview kept in step with the view): the island, its road, every
      place, and what the camera sees now; a place on it is picked as on the island, anywhere else flies there ---- */
   const mini = document.createElement('div'); mini.className = 'mini3'; mini.setAttribute('aria-label', t('mini.aria')); host.appendChild(mini);
-  { const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]), M0 = { x0: -90, z0: -60, w: 180, h: 112 }, pt = ([x, z]) => (x - M0.x0).toFixed(1) + ',' + (z - M0.z0).toFixed(1);
+  { const M0 = { x0: -90, z0: -60, w: 180, h: 112 }, pt = ([x, z]) => (x - M0.x0).toFixed(1) + ',' + (z - M0.z0).toFixed(1);
     let h = '<svg viewBox="0 0 ' + M0.w + ' ' + M0.h + '" role="img" aria-hidden="true"><polygon class="isle" points="' + coast.filter((_, i) => i % 4 === 0).map(pt).join(' ') + '"/>';
     h += '<polyline class="road" points="' + loopPts.filter((_, i) => i % 3 === 0).concat([loopPts[0]]).map(pt).join(' ') + '"/><polygon class="view" points=""/></svg>';
     h += PLACES.filter(p => !p.far).map(p => '<button type="button" class="mdot" data-place="' + p.id + '" style="left:' + ((p.at[0] - M0.x0) / M0.w * 100).toFixed(1) + '%;top:' + ((p.at[1] - M0.z0) / M0.h * 100).toFixed(1) + '%" title="' + esc(t('map.' + p.id + '.t')) + '" aria-label="' + esc(t('map.' + p.id + '.t')) + '"></button>').join('');
@@ -930,7 +927,6 @@ export function createMap(canvas, host, on = {}) {
   host.addEventListener('click', e => { if (e.detail && e.target.closest('.pin3.here')) return; const b = e.target.closest('[data-wf],[data-poi],[data-place],[data-q],[data-step],[data-job],[data-entry]'); if (!b) return; if (b.dataset.wf) on.whatif && on.whatif(b.dataset.wf); else if (b.dataset.poi) poiGo(b.dataset.poi); else if (b.dataset.part) on.part && on.part(b.dataset.place, b.dataset.part); else if (b.dataset.entry) on.entry && on.entry(b.dataset.entry); else if (b.dataset.place) on.place && on.place(b.dataset.place); else if (b.dataset.step) on.place && on.place(STATION[b.dataset.step]); else if (b.dataset.job) on.job && on.job(b.dataset.job); else on.question && on.question(b.dataset.q); });
 
   /* ---- the state: what has grown, the community's pieces, where your chip is ---- */
-  const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
   let slotLabels = [], villageSeen = null;
   /* what is built again (the computer's floors, the village, the squares) lets go of what it was: its shapes and
      materials leave the graphics card, unless something still standing uses them or kit3d's caches share them */
