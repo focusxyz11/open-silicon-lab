@@ -8,7 +8,7 @@
  "machines.need.hearing.d": "Minuscule, toute la journée sur une petite pile",
  "machines.need.hearing.why": "Son filtre doit être réglé sur l’audition de chacun, donc il doit encore pouvoir changer après la fabrication.",
  "machines.need.wildfire.t": "Capteur de feux de forêt",
- "machines.need.wildfire.d": "Dix ans en forêt, sans réseau",
+ "machines.need.wildfire.d": "Dix ans en forêt, sans personne pour changer la pile",
  "machines.need.wildfire.why": "Rien ne doit changer une fois sur place : ce qui compte le plus, c’est la pile.",
  "machines.need.rover.t": "Rover martien",
  "machines.need.rover.d": "Loin, froid, frappé par les radiations",

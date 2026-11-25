@@ -123,7 +123,7 @@ export function create() {
     /* the address says where you are: a place picked on the island, or in the world around it, or from the Lab's record,
        is written into it (without going anywhere), and counts as arriving there (src/v2/app.js, arrive) */
     const at = '#/place/' + id + (part ? '/' + part : '');
-    if (!step && /^#\/(place|explore|island|ecosystem|build)(\/|$)/.test(location.hash) && location.hash !== at && !location.hash.startsWith(at + '/')) V.arrive(at, 'push');
+    if (!step && /^#\/(place|island|ecosystem|build)(\/|$)/.test(location.hash) && location.hash !== at && !location.hash.startsWith(at + '/')) V.arrive(at, 'push');
     else { const to = Way.whereOf('#/place/' + id); V.crossed(V.seamFrom, to); V.seamFrom = to; }
     $('hero').classList.add('away'); drawPlace(); if (quick) drawInsp(); V.hud(); if (V.map) V.map.setState(V.islandState(), false);
   }

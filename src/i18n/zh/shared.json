@@ -8,7 +8,7 @@
  "machines.need.hearing.d": "极小，一颗小电池用一整天",
  "machines.need.hearing.why": "它的滤波器要按每个人的听力来调，所以机器造好之后还必须能改。",
  "machines.need.wildfire.t": "野火传感器",
- "machines.need.wildfire.d": "在森林里待十年，无人维护",
+ "machines.need.wildfire.d": "在森林里待十年，没人来换电池",
  "machines.need.wildfire.why": "放出去之后什么都不用改：最要紧的是电池。",
  "machines.need.rover.t": "火星车",
  "machines.need.rover.d": "遥远、寒冷、受辐射轰击",

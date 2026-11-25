@@ -32,9 +32,6 @@ import { t, has } from '../core/i18n.js';
 import { whereOf, LOG_PAGES } from '../engines/way.js';
 import { challengeOf } from './loop.js';
 
-/* the choice an earlier visit kept (?frame=1 or 2, when the two frames were compared) means nothing now */
-try { localStorage.removeItem('osl-frame'); } catch (e) { /* no storage */ }
-
 let booted = false;
 export function boot() {
   if (booted) return; booted = true;
