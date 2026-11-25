@@ -32,4 +32,16 @@ export default async function run() {
       await page.waitForFunction(() => location.hash === '#/line/print' && !document.getElementById('breakp').hidden, null, { timeout: 15000 }).catch(() => problems.push(tag + ': a report on the island does not lead back to where it was seen')); }
     await page.close();
   }
+  /* a report from an encoded address is filed at that address, read plainly; Escape on a button in the panel closes the
+     panel only, never the view behind it (#369) */
+  { const tag = 'break it, encoded'; S.at = tag; const ep = await browser.newPage({ viewport: { width: 1280, height: 800 } });
+    ep.on('pageerror', e => problems.push(tag + ': ' + e.message));
+    await ep.addInitScript(() => { localStorage.setItem('osl-quality', 'flat'); localStorage.setItem('osl-hints-v1', JSON.stringify({ seen: {}, off: true })); });
+    await ep.goto(base + 'index.html#/do/job%3Acore');
+    await ep.waitForFunction(() => { const p = document.getElementById('breakp'); if (p && p.hidden) document.getElementById('breakbtn').click(); return !!p && !p.hidden && (p.querySelector('.mono') || {}).textContent === '#/do/job:core'; }, null, { timeout: 30000, polling: 1000 })
+      .catch(async () => problems.push(tag + ': the report is filed at ' + await ep.evaluate(() => (document.querySelector('#breakp .mono') || {}).textContent).catch(() => '?')));
+    await ep.waitForFunction(() => { const p = document.getElementById('breakp'), b = p.querySelector('[data-say]'); if (!p.hidden && b) { b.focus(); b.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true })); } return p.hidden; }, null, { timeout: 20000, polling: 1000 })
+      .catch(() => problems.push(tag + ': Escape does not close the panel'));
+    if (await ep.evaluate(() => location.hash) !== '#/do/job%3Acore') problems.push(tag + ': Escape in the panel also moved the view');
+    await ep.close(); }
 }

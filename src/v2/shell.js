@@ -24,3 +24,7 @@ export const follow = key => Game.askHref(key);
    place, with what is tried and asked there, then the world it belongs to. Its marks inside a picture still open it
    in the picture (follow). */
 export const followW = key => { const [th, d] = key.split('.'); return WORLD_IDS.includes(th) ? '#/w/' + th + '/at/' + d : Game.askHref(key); };
+/* where you have been, for the Map (src/v2/glue/pages.js): the addresses arrived at in this browser (src/v2/app.js,
+   arrive), the newest 400; an address under a place (#/place/datacentre/3) marks the place too */
+export const been = h => { try { const B = JSON.parse(localStorage.getItem('osl-been') || '{}'), add = x => { delete B[x]; B[x] = 1; }, pl = /^#\/place\/[a-z]+(?=\/)/.exec(h);
+  if (pl) add(pl[0]); add(h); const K = Object.keys(B); K.slice(0, Math.max(0, K.length - 400)).forEach(x => { delete B[x]; }); localStorage.setItem('osl-been', JSON.stringify(B)); } catch (e) { /* no storage */ } };

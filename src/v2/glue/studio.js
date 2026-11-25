@@ -34,14 +34,15 @@ export function create() {
   /* the handoff: the camera settles on the screen until it fills the picture, and the bench opens from there */
   function swIn() {
     if (swGoing || V.sui.hidden || !sw) return; const lv = Math.round(sw.z); if (lv < 1) return; swGoing = true; V.sui.dataset.handoff = SW.STOPS[lv];
-    sw.handoff().then(p => { swGoing = false; delete V.sui.dataset.handoff; if (V.sui.hidden) return; V.portalAt(p); V.nextMove = 'in'; location.hash = '#/bench/' + SW.STOPS[lv]; });
+    const rn = V.routeN; sw.handoff().then(p => { swGoing = false; delete V.sui.dataset.handoff; if (V.sui.hidden || rn !== V.routeN) return; V.portalAt(p); V.nextMove = 'in'; location.hash = '#/bench/' + SW.STOPS[lv]; });
   }
   function showStudio(lv, from) {
     V.hideAll();
     $('studioCanvas').hidden = $('studioLabels').hidden = false; V.sui.hidden = false; showStage(true); document.body.classList.add('immersive');
     V.loading(true); V.lastPlace = 'studio';
-    const fromIsland = V.arriving; V.arriving = false;
-    return Promise.all([V.withFrame(), ensureSw()]).then(([, d]) => {
+    const fromIsland = V.arriving, rn = V.routeN; V.arriving = false;
+    /* made while the visitor moved on (#365): left paused, and its frame not drawn */
+    return Promise.all([V.withFrame(), ensureSw()]).then(([, d]) => { if (rn !== V.routeN) { if (V.sui.hidden) d.pause(); return; }
       const n = Math.max(0, Math.min(SW.STOPS.length - 1, lv || 0));
       V.swFrame = V.frameOf(V.sui, { up: { href: '#/place/studio', label: t('place.back') }, path: [{ href: '#/island', label: t('place.back') }, { href: '#/place/studio', label: t('map.studio.t') }, { label: t('room.title') }],
         rail: { label: t('frame.levels.bench'), optional: true, items: Way.levelsOfSteps('bench').map(k => ({ id: k, label: t('depth.' + k + '.name'), size: sizeOf(k) })) },

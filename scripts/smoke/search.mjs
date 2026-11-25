@@ -36,4 +36,13 @@ export default async function run() {
       document.querySelectorAll('#page .cwmap .wm-dots a[href^="#/"]').length >= 40 && document.querySelectorAll('#page .cwmap .been').length >= 1 && document.querySelectorAll('#page .cwmap .wm-every li').length === 4, null, { timeout: 15000, polling: 500 })
       .catch(() => problems.push(tag + ': the map of the chip world does not show every stage, place and challenge, or where you have been'));
     await sp.close(); }
+  /* / opens the jump box on first use, waiting for the log's page to come (#369). Pressed once: a second press would hide
+     a first one that missed */
+  { const tag = 'jump key', jp = await browser.newPage({ viewport: { width: 1280, height: 800 } }); jp.on('pageerror', e => problems.push(tag + ': ' + e.message));
+    await jp.addInitScript(() => { try { localStorage.setItem('osl-quality', 'flat'); localStorage.setItem('osl-hints-v1', JSON.stringify({ seen: {}, off: true })); } catch (e) { /* no storage */ } });
+    await jp.goto(base + 'index.html#/line/print');
+    await jp.waitForFunction(() => !document.getElementById('diveui').hidden && !!document.querySelector('#diveui .dock'), null, { timeout: 60000 }).catch(() => problems.push(tag + ': the line did not open'));
+    await jp.keyboard.press('/');
+    await jp.waitForFunction(() => location.hash === '#/log' && !!document.activeElement && document.activeElement.matches('[data-jump]'), null, { timeout: 20000 }).catch(() => problems.push(tag + ': / does not open the jump box on first use'));
+    await jp.close(); }
 }
