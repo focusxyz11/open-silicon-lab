@@ -53,6 +53,7 @@ A second picture (a curve beside the main drawing, the tones under a signal) sta
 ## Wiring a challenge
 
 1. **The declaration, `src/data/labs/<name>.js`:** `export default { name: '<name>', css: true, challenges: [...] }` (`css: true` only when the lab has a stylesheet). Each challenge is `{ id, step, place, at: '<level>', kind, grows: '<grow-id>', opens: '<stop key>', exp: '<experiment id>' }`:
+   - `step` is the stage of the loop its place stands at (the one the bar lights while it is played, `stageOfChallenge` in `src/engines/way.js`): a challenge at the phones' or the cars' island is `use`; one at the Lab, which stands at Open, counts for `design`. `tests/way.test.mjs` checks it.
    - `kind` is the lab's own (the player sends every challenge of that kind to `src/v2/labs/<name>.js`); two labs never share a kind, and the player's own kinds (`design`, `bet`, `chip`, `life`, `spot`) are not a lab's.
    - `opens` is a stop at that level or the one beside it (`src/data/weave.js`), the question the challenge opens once won.
    - `exp` is the one experiment it puts a target on (`src/data/experiments/`), the one whose stops or levels match; the experiment's files are not touched.
