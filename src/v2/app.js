@@ -463,9 +463,9 @@ export function start() {
   const portalAt = p => { const r = document.documentElement.style; if (p && p.x > 0 && p.x < 1 && p.y > 0 && p.y < 1) { r.setProperty('--vx', (p.x * 100).toFixed(1) + '%'); r.setProperty('--vy', (p.y * 100).toFixed(1) + '%'); } else { r.removeProperty('--vx'); r.removeProperty('--vy'); } };
   sheet.addEventListener('click', e => { const a = e.target.closest('a[href^="#/"]'); if (!a || viewOf(partsOf(a.getAttribute('href')))[0] === 'map') return; e.preventDefault(); e.stopPropagation(); enter(a.getAttribute('href')); }, true);
   function show(parts, from) {
-    const k = parts[0] || 'home';
+    const k = parts[0] || 'home', live = (n => () => n === V.routeN)(V.routeN);   /* what follows a view is done only while its route is the one now */
     /* a question at a level already in view: no need to make the view again, only the dock changes */
-    if (k === 'ask' && parts[1] && parts[2]) { const at = Game.viewOfDepth(parts[2]); if (at === shownAt && !from) { V.askStop(parts[1], parts[2]); return Promise.resolve(); } return show(partsOf(at), from).then(() => V.askStop(parts[1], parts[2])); }
+    if (k === 'ask' && parts[1] && parts[2]) { const at = Game.viewOfDepth(parts[2]); if (at === shownAt && !from) { V.askStop(parts[1], parts[2]); return Promise.resolve(); } return show(partsOf(at), from).then(() => live() && V.askStop(parts[1], parts[2])); }
     shownAt = '#/' + parts.join('/');
     if (k === 'home') return showHome();
     if (k === 'stations') return showStations();
@@ -479,7 +479,7 @@ export function start() {
        the shared computer or a break is met at the Lab and the village, on the island */
     /* #/do/<challenge>/<job>: a challenge opened for a job, such as a machine's core on that machine's work (#321) */
     if (k === 'do' && parts[1]) { const c0 = chOf(decodeURIComponent(parts[1])), ch = c0 && parts[2] ? Object.assign({}, c0, { job: decodeURIComponent(parts[2]) }) : c0, home = doPlace(ch);
-      if (home) return show(partsOf(home), from).then(() => { shownAt = '#/' + parts.join('/'); V.openBench(ch); });
+      if (home) return show(partsOf(home), from).then(() => { if (live()) { shownAt = '#/' + parts.join('/'); V.openBench(ch); } });
       return showMap(from).then(m => m && openChallenge(ch)); }
     if (k === 'chip') return V.showChip(parts[1] != null ? +parts[1] : null);
     /* the data centre's flight is entered at one of its levels (#/place/datacentre/2); the place itself opens on the island */

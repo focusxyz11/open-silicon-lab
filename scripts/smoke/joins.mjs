@@ -41,8 +41,9 @@ export default async function run() {
     await lp.goto(base + 'index.html#/island');
     await lp.waitForFunction(() => !document.getElementById('mapCanvas').hidden, null, { timeout: 60000 }).catch(() => problems.push(tag + ': the island did not open'));
     await lp.evaluate(() => { location.hash = '#/place/datacentre/0'; setTimeout(() => { location.hash = '#/island'; }, 150); });
-    /* the data centre's code in, and the island alone in view for six polls in a row after that */
-    await lp.waitForFunction(() => { const got = performance.getEntriesByType('resource').some(r => /\/v2\/dc3d\.js/.test(r.name)), island = location.hash === '#/island' && !document.getElementById('mapCanvas').hidden && document.getElementById('placeui').hidden && document.getElementById('placeCanvas').hidden;
+    /* the place's code in (its glue, and the data centre itself if it was asked for), and the island alone in view for
+       six polls in a row after that */
+    await lp.waitForFunction(() => { const R = performance.getEntriesByType('resource'), got = R.some(r => /\/glue\/flights\.js/.test(r.name)), island = location.hash === '#/island' && !document.getElementById('mapCanvas').hidden && document.getElementById('placeui').hidden && document.getElementById('placeCanvas').hidden;
       window.__lateOk = got && island ? (window.__lateOk || 0) + 1 : 0; return window.__lateOk >= 6; }, null, { timeout: 90000, polling: 500 })
       .catch(async () => problems.push(tag + ': leaving a place before it loaded still opened it ' + await lp.evaluate(() => JSON.stringify({ hash: location.hash, place: !document.getElementById('placeui').hidden, island: !document.getElementById('mapCanvas').hidden })).catch(e => e.message)));
     await lp.close(); }
