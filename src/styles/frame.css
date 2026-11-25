@@ -1518,6 +1518,9 @@ html.frame2 .f2try:hover, html.frame2 .f2try:focus-visible { background: color-m
   html.frame2 .bar.f2logmark .logbtn { padding: 8px 10px; }
   html.frame2 .bar.f2logmark .logbtn .lg { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
   html.frame2 .bar.f2logmark .logbtn::before { content: ''; width: 16px; height: 13px; background: linear-gradient(currentColor 0 0) 0 0 / 100% 2px no-repeat, linear-gradient(currentColor 0 0) 0 50% / 100% 2px no-repeat, linear-gradient(currentColor 0 0) 0 100% / 62% 2px no-repeat; }
+  /* and on a narrower phone, with Break it in the bar too, Reading is its mark alone (its word kept for a screen reader) */
+  html.frame2 .bar.f2tight .loop .f2rk { padding: 7px 9px; gap: 0; font-size: 0; }
+  html.frame2 .bar.f2reading.f2tight .loop .f2ri { display: block; }
 }
 
 /* ---- the seam note in the card in sight, at its top, on every screen (src/v2/frame2.js, notices); in the caption

@@ -370,10 +370,12 @@ export function notices() {
     else if (n.parentNode !== to) to.appendChild(n);
   }
 }
-/* the bar on a phone: Your log never covers the loop's dots; where there is no room for its words it is a mark */
+/* the bar on a phone: Your log never covers the loop's dots; where there is no room for its words it is a mark, and
+   where there is still none, Reading is a mark too */
 export function fitBar() {
   const b = document.querySelector('.bar'), log = document.getElementById('logbtn'), loop = document.getElementById('loop'); if (!b || !log || !loop) return;
-  b.classList.remove('f2logmark'); if (!phone()) return;
-  const ol = loop.querySelector('ol'), L = (ol || loop).getBoundingClientRect(), G = log.getBoundingClientRect();
-  if (L.right > G.left - 2 || loop.scrollWidth > loop.clientWidth + 1) b.classList.add('f2logmark');
+  b.classList.remove('f2logmark', 'f2tight'); if (!phone()) return;
+  const ol = loop.querySelector('ol'), full = () => (ol || loop).getBoundingClientRect().right > log.getBoundingClientRect().left - 2 || loop.scrollWidth > loop.clientWidth + 1;
+  if (full()) b.classList.add('f2logmark');
+  if (full()) b.classList.add('f2tight');
 }
