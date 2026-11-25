@@ -55,7 +55,8 @@ export function wiresOf(s) {
   else if (f === 'B') W.push(['A', 1], ['B', 1]);
   else if (f === 'U') W.push(['immd', 1], ['immB', 1]);
   if (s.mem) W.push(['addr', 3]);
-  if (f === 'B' || f === 'J' || op === 'jalr') { if (s.taken) W.push(['br', 2]); }
+  /* the jump back to the program is the last thing written (the program counter), so it is lit in the light's last phase */
+  if (f === 'B' || f === 'J' || op === 'jalr') { if (s.taken) W.push(['br', 4]); }
   if (s.rd != null && s.rd !== 0 && f !== 'S' && f !== 'B') { if (s.mem === 'r') W.push(['wbM', 4], ['wb', 4]); else W.push(['wbA', 4], ['wbS', 4]); }
   return W;
 }
@@ -70,7 +71,8 @@ function routeOf(G, s, fetch) {
   if (W.addr) R.push([3, G.w.addr, G.mem ? [[G.mem[0] + G.mem[2] / 2, G.Y]] : []]);
   if (W.wbM) R.push([4, G.w.wbM.concat(G.w.wb.slice(1))]);
   else if (W.wbA) R.push([4, G.w.wbA.concat(G.w.wbS.slice(1))]);
-  else if (W.br) R.push([4, G.w.br]);
+  /* a jump that also keeps its return address (jal ra) writes it back, then the light goes back to the program */
+  if (W.br) R.push([4, G.w.br]);
   return R.map(([ph, a, b]) => [ph, b ? a.concat(b) : a]);
 }
 const pts = a => a.map(p => p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' ');

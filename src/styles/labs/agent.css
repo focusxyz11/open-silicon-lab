@@ -6,7 +6,6 @@
 .agtt th, .agtt td { padding: 2px 6px; text-align: center; border-bottom: 1px solid var(--line); }
 .agtt tr.bad td { background: color-mix(in srgb, var(--bad) 18%, transparent); }
 .agtt tr.tried td:last-child { color: var(--accent); }
-.agrace { display: grid; grid-template-columns: auto 1fr auto; gap: 6px 10px; align-items: center; margin: 8px 0; }
 .agfact { display: grid; gap: 3px; margin: 6px 0; }
 .agreasons { display: grid; gap: 6px; margin: 4px 0 10px; }
 .agr { all: unset; cursor: pointer; padding: 8px 12px; border-radius: 12px; border: 1px solid var(--line); font-size: 14px; }

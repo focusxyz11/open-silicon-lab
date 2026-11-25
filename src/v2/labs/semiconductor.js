@@ -8,8 +8,16 @@ import * as D from '../../engines/dope.js';
 import { met } from '../../engines/fabsteps.js';
 import { rng, clamp } from '../../engines/fabkit.js';
 
+/* a power of ten, raised in the same font as its number (#373): Unicode's superscript digits are not in the site's
+   fonts, so they came from a fallback font ('10-1 0'). In a figure a tspan raised by dy (the exponent ends its text, so
+   nothing after it moves), in HTML a sup (src/styles/labs.css); words with a number in them are escaped around it */
+const pow = n => String(n).replace('-', '−');
+const supSvg = n => '<tspan class="exp" dy="-0.42em" font-size="72%">' + pow(n) + '</tspan>';
+const supHtml = n => '<sup class="exp">' + pow(n) + '</sup>';
+const MARK = '\u0001';
+/* the same, as plain text for a screen reader's label */
 const SUP = '⁰¹²³⁴⁵⁶⁷⁸⁹⁻';
-const sup = n => String(n).replace(/[0-9-]/g, c => SUP[c === '-' ? 10 : +c]);
+const supText = n => String(n).replace(/[0-9-]/g, c => SUP[c === '-' ? 10 : +c]);
 const LOGN = 15, N = Math.pow(10, LOGN);                              // light doping, dopants per cm3
 const [T0, T1] = D.SEMI_RANGE.T, STEP = 10;                             // the heater's range and its dial's step, kelvin
 const ROOM = 300, LIMIT = 398;                                         // room temperature, and 125 °C
@@ -52,7 +60,12 @@ export default function lab(L) {
     return true;
   }
 
-  const sci = v => { const e = Math.floor(Math.log10(v)), m = v / Math.pow(10, e); return m.toFixed(1) === '10.0' ? t('semi.sci', { m: '1.0', e: sup(e + 1) }) : t('semi.sci', { m: m.toFixed(1), e: sup(e) }); };
+  /* a number as m × 10 to a power: as HTML (sci), or as plain text for a label (sciText) */
+  const mE = v => { const e = Math.floor(Math.log10(v)), m = v / Math.pow(10, e); return m.toFixed(1) === '10.0' ? ['1.0', e + 1] : [m.toFixed(1), e]; };
+  const sci = v => { const [m, e] = mE(v); return esc(t('semi.sci', { m, e: MARK })).replace(MARK, supHtml(e)); };
+  const sciText = v => { const [m, e] = mE(v); return t('semi.sci', { m, e: supText(e) }); };
+  /* words with one number as HTML in them */
+  const withH = (key, o, k, html) => esc(t(key, Object.assign({}, o, { [k]: MARK }))).replace(MARK, html);
   const num = v => v >= 100 ? (+v.toPrecision(2)).toLocaleString('en-US') : v >= 10 ? v.toFixed(0) : v.toFixed(1);
   const lead = n => n < N ? t('semi.lead.dope', { v: num(N / n) }) : t('semi.lead.heat', { v: num(n / N) });
   const kc = T => t('semi.kc', { k: Math.round(T), c: String(Math.round(T - 273.15)).replace('-', '−') });
@@ -63,9 +76,9 @@ export default function lab(L) {
     const px = v => X0 + (X1 - X0) * (v - T0) / (T1 - T0), py = c => Y1 - (Y1 - Y0) * (clamp(Math.log10(c), LO, HI) - LO) / (HI - LO);
     const xs = Array.from({ length: 101 }, (_, i) => T0 + (T1 - T0) * i / 100), line = f => xs.map(v => px(v).toFixed(1) + ',' + py(f(v)).toFixed(1)).join(' ');
     const x = px(T).toFixed(1), yN = py(N), ok = won(), cx = px(CROSS);
-    let s = '<svg viewBox="0 0 300 186" role="img" aria-label="' + esc(t('semi.aria', { k: Math.round(T), n: sci(r.n) })) + '">';
+    let s = '<svg viewBox="0 0 300 186" role="img" aria-label="' + esc(t('semi.aria', { k: Math.round(T), n: sciText(r.n) })) + '">';
     if (ok) s += '<rect class="hot" x="' + cx.toFixed(1) + '" y="' + Y0 + '" width="' + (X1 - cx).toFixed(1) + '" height="' + (Y1 - Y0) + '"/>';
-    for (const p of [0, 5, 10, 15]) s += '<line class="gl" x1="' + X0 + '" x2="' + X1 + '" y1="' + py(Math.pow(10, p)).toFixed(1) + '" y2="' + py(Math.pow(10, p)).toFixed(1) + '"/><text class="ax" x="' + (X0 - 4) + '" y="' + (py(Math.pow(10, p)) + 3.5).toFixed(1) + '" text-anchor="end">' + (p ? '10' + sup(p) : '1') + '</text>';
+    for (const p of [0, 5, 10, 15]) s += '<line class="gl" x1="' + X0 + '" x2="' + X1 + '" y1="' + py(Math.pow(10, p)).toFixed(1) + '" y2="' + py(Math.pow(10, p)).toFixed(1) + '"/><text class="ax" x="' + (X0 - 4) + '" y="' + (py(Math.pow(10, p)) + 3.5).toFixed(1) + '" text-anchor="end">' + (p ? '10' + supSvg(p) : '1') + '</text>';
     for (const v of [200, 300, 400, 500, 600]) s += '<line class="tk" x1="' + px(v).toFixed(1) + '" x2="' + px(v).toFixed(1) + '" y1="' + Y1 + '" y2="' + (Y1 + 3) + '"/><text class="ax" x="' + px(v).toFixed(1) + '" y="' + (Y1 + 13) + '" text-anchor="middle">' + v + '</text>';
     /* two temperatures a learner knows: a room, and the hottest a chip is meant to run */
     for (const [v, k] of [[ROOM, 'room'], [LIMIT, 'limit']]) s += '<line class="mk" x1="' + px(v).toFixed(1) + '" x2="' + px(v).toFixed(1) + '" y1="' + Y0 + '" y2="' + Y1 + '"/><text class="ax" x="' + (px(v) + 4).toFixed(1) + '" y="' + (Y1 - 5) + '">' + esc(t('semi.at.' + k)) + '</text>';
@@ -91,11 +104,11 @@ export default function lab(L) {
   }
   function goalbox(r) {
     const ok = won(), base = Math.log10(D.ni(ROOM)), f = clamp((Math.log10(r.n) - base) / (LOGN - base), 0, 1);   // from a room's count to the doping's, in powers of ten
-    return '<div class="goalbox' + (ok ? ' ok' : '') + '"><p class="kicker">' + esc(t(ok ? 'game.reached' : 'game.goalNow')) + '</p><div class="gauge' + (r.n >= N ? ' ok' : '') + '"><span class="gl">' + esc(t('semi.g.own')) + '</span><span class="gv">' + esc(sci(r.n)) + ' <span class="muted">' + esc(t('semi.g.of', { v: '10' + sup(LOGN) })) + '</span></span><span class="gbar"><span style="width:' + (f * 100).toFixed(0) + '%"></span></span></div></div>';
+    return '<div class="goalbox' + (ok ? ' ok' : '') + '"><p class="kicker">' + esc(t(ok ? 'game.reached' : 'game.goalNow')) + '</p><div class="gauge' + (r.n >= N ? ' ok' : '') + '"><span class="gl">' + esc(t('semi.g.own')) + '</span><span class="gv">' + sci(r.n) + ' <span class="muted">' + withH('semi.g.of', {}, 'v', '10' + supHtml(LOGN)) + '</span></span><span class="gbar"><span style="width:' + (f * 100).toFixed(0) + '%"></span></span></div></div>';
   }
   /* what is happening, in one line: which of the two decides how the silicon conducts */
   const say = (T, r) => { const k = r.n >= N ? (T > 615 ? 'over' : 'cross') : T < 250 ? 'cold' : T < 340 ? 'room' : T <= LIMIT + 2 ? 'chip' : 'hot';
-    return t('semi.say.' + k, { v: num(r.n < N ? N / r.n : r.n / N), b: sci(r.bondsPerCarrier) }); };
+    return esc(t('semi.say.' + k, { v: num(r.n < N ? N / r.n : r.n / N), b: MARK })).replace(MARK, sci(r.bondsPerCarrier)); };
 
   function bench() {
     const o = set(), T = o.T, r = D.siliconPure(T), ok = won();
@@ -103,10 +116,10 @@ export default function lab(L) {
     /* the dial sits between the two pictures, so that both move under the hand */
     h += '<div class="semidial"><label class="lab" for="semi-T"><b>' + esc(t('semi.set.T')) + '</b> <output>' + esc(kc(o.goal)) + '</output>' + (Math.round(T) !== o.goal ? ' <span class="small muted">' + esc(t('semi.now', { v: kc(T) })) + '</span>' : '') + '</label>' +
       '<div class="semistep"><button type="button" class="chipb" data-semi-nudge="-1" aria-label="' + esc(t('semi.cooler')) + '">−</button><input type="range" id="semi-T" data-semi="T" min="' + T0 + '" max="' + T1 + '" step="' + STEP + '" value="' + o.goal + '"><button type="button" class="chipb" data-semi-nudge="1" aria-label="' + esc(t('semi.hotter')) + '">+</button></div></div>';
-    h += cubes(T, r) + '<div class="semiread">' + [['pure', sci(r.n)], ['doped', sci(doped(T))], ['lead', lead(r.n)], ['bonds', t('semi.oneIn', { n: sci(r.bondsPerCarrier) })]].map(([k, v]) => '<span><span class="small muted">' + esc(t('semi.r.' + k)) + '</span><b class="mono">' + esc(v) + '</b></span>').join('') + '</div>';
-    h += '<p class="small semisay">' + esc(say(T, r)) + '</p>';
+    h += cubes(T, r) + '<div class="semiread">' + [['pure', sci(r.n)], ['doped', sci(doped(T))], ['lead', esc(lead(r.n))], ['bonds', withH('semi.oneIn', {}, 'n', sci(r.bondsPerCarrier))]].map(([k, v]) => '<span><span class="small muted">' + esc(t('semi.r.' + k)) + '</span><b class="mono">' + v + '</b></span>').join('') + '</div>';
+    h += '<p class="small semisay">' + say(T, r) + '</p>';
     if (!ok) h += view.hint ? '<p class="small hint">' + esc(t('semi.hint')) + '</p>' : '<button type="button" class="link" data-hint>' + esc(t('game.hint')) + '</button>';
-    else if (S.done[ch.id]) h += '<p class="small good">' + esc(t('semi.done')) + '</p>';
+    else if (S.done[ch.id]) h += '<p class="small good">' + withH('semi.done', {}, 'p', '10' + supHtml(LOGN)) + '</p>';
     return h + doneNote() + reward();
   }
   return {

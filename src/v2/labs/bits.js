@@ -18,6 +18,7 @@ import { chefCurve } from '../../engines/ledger.js';
 import { world } from '../game.js';
 import { signHtml, signOf, keep, refusal, slipHtml, slipClick, draftOf } from '../commons.js';
 import { fmtNum } from '../../core/i18n.js';
+import { loop } from './loop.js';
 
 /* the levers a phone shows first at each level: the ones its question turns on */
 const PHONE = { wire: ['closer', 'wider', 'shelf'], chip: ['wider', 'shelf', 'stack'], stacked: ['shelf', 'stack', 'cim'], light: ['shelf', 'stack', 'light'],
@@ -102,15 +103,14 @@ export default function lab(L) {
     h += '<p class="small mbsay">' + esc(t('mb.trip.wires', { n: fmtNum(Tr.meters.space) })) + ' · ' + esc(t('mb.trip.wireShare', { v: pct(Tr.wireShare) })) + '</p>';
     return h + '<p class="small muted">' + esc(t('mb.trip.note')) + '</p>' + doneNote() + reward();
   }
-  let sendT = null;
-  const sendLoop = now => {
-    if (!view.sending || !el.isConnected) { view.sending = false; return; }
-    const dt = Math.min(1000, now - (sendT || now)); sendT = now;
+  /* the trip, one loop at a time: a place tapped during a trip starts the trip again in the loop already running */
+  const sendL = loop(el, (now, dt) => {
+    if (!view.sending) return false;
     view.tp = Math.min(1, (view.tp || 0) + dt / SEND_MS);
     if (view.tp >= 1) view.sending = false;
-    draw(); if (view.sending) requestAnimationFrame(sendLoop);
-  };
-  function send() { if (still()) { view.tp = 1; return draw(); } view.tp = 0; view.sending = true; sendT = null; draw(); requestAnimationFrame(sendLoop); }
+    draw(); return view.sending;
+  }, () => { view.sending = false; });
+  function send() { if (still()) { view.tp = 1; return draw(); } view.tp = 0; view.sending = true; draw(); sendL.start(); }
 
   /* ================= keep the chef busy ================= */
   const lv = () => MB.levelOf(C.at);
@@ -217,24 +217,22 @@ export default function lab(L) {
     if (served && !view.serving) h += view.slip && draftOf(S, view.slip) ? slipHtml(S, view.slip) : '<div class="keep mbkeep"><p class="small muted">' + esc(t('mb.keep.lead')) + '</p>' + signHtml(S) + (view.no ? '<p class="small bad">' + esc(view.no) + '</p>' : '') + '<button type="button" class="btn" data-mb-keep>' + esc(t('mb.keep')) + '</button></div>';
     return h + '<p class="small muted">' + esc(t('mb.k.note')) + '</p>' + doneNote() + reward();
   }
-  let serveT = null;
   function finish() {
     const Lv = lv(), K = MB.kitchen(Lv.id, planOf(Lv.id));
     view.serving = false; view.kr = MB.ROUNDS - 1; view.kf = null; view.served = view.served || {}; view.served[Lv.id] = true; view.slip = null; view.no = null;
     if (K.cleared && !C.cleared[Lv.id]) { C.cleared[Lv.id] = 1; save(); }
     if (MB.won(C.cleared)) win();
   }
-  const serveLoop = now => {
-    if (!view.serving || !el.isConnected) { view.serving = false; return; }
-    const dt = Math.min(1000, now - (serveT || now)); serveT = now;
+  const serveL = loop(el, (now, dt) => {
+    if (!view.serving) return false;
     view.kt = (view.kt || 0) + dt / SERVE_MS;
     const pos = view.kt * MB.ROUNDS; view.kr = Math.min(MB.ROUNDS - 1, Math.floor(pos)); view.kf = pos % 1;
     if (view.kt >= 1) finish();
-    draw(); fx(); if (view.serving) requestAnimationFrame(serveLoop);
-  };
+    draw(); fx(); return view.serving;
+  }, () => { view.serving = false; });
   function serve() {
     if (still()) { finish(); draw(); fx(); return show('.mbsay'); }
-    view.serving = true; view.kt = 0; view.kr = 0; serveT = null; draw(); requestAnimationFrame(serveLoop);
+    view.serving = true; view.kt = 0; view.kr = 0; draw(); serveL.start();
   }
   /* a lever pulled or a level changed: the kitchen answers at once, and asks to be served again */
   const changed = () => { view.served = view.served || {}; delete view.served[C.at]; view.kr = null; view.kf = null; view.slip = null; view.no = null; save(); draw(); fx(); };

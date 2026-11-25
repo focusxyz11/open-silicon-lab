@@ -139,6 +139,9 @@
 .agcode { display: block; width: 100%; box-sizing: border-box; margin: 8px 0 6px; padding: 8px 10px; border-radius: 10px; border: 1px solid var(--line); background: color-mix(in srgb, var(--ink) 5%, transparent); color: var(--ink); font-size: 12.5px; line-height: 1.5; white-space: pre; overflow-x: auto; resize: vertical; }
 .agab { display: flex; flex-wrap: wrap; gap: 10px; align-items: end; margin: 6px 0; font-size: 13px; }
 .agab input { width: 90px; margin-left: 4px; padding: 5px 8px; border-radius: 8px; border: 1px solid var(--line); background: transparent; color: var(--ink); font: 13px var(--mono); }
+/* a race of bars, a name, a bar and a figure in each row: Verify the agent's tool and the batch bet's step (#373: shared,
+   so the batch bet keeps its rows on a page where the agent lab was never opened) */
+.agrace { display: grid; grid-template-columns: auto 1fr auto; gap: 6px 10px; align-items: center; margin: 8px 0; }
 .agbar { display: block; height: 8px; border-radius: 4px; background: var(--line); overflow: hidden; }
 .agbar > span { display: block; height: 100%; background: var(--accent); }
 .agbar.hot > span { background: var(--warm); }
@@ -286,3 +289,6 @@ html.frame2 .f2stage .betview[data-f2="instrument"] > .turbines > svg { flex: no
  .fidclaims .t-guess circle { fill: none; stroke: var(--muted); stroke-dasharray: 2.4 1.8; }
 @container (max-width: 420px) { .fidclaims li { grid-template-columns: 1fr; gap: 4px; } .fidclaims .fidmarks { display: flex; flex-wrap: wrap; } }
 @media (max-width: 520px) { .fidclaims li { grid-template-columns: 1fr; gap: 4px; } .fidclaims .fidmarks { display: flex; flex-wrap: wrap; } }
+
+/* a power of ten written as a raised number in the same font (src/v2/labs/switch.js, semiconductor.js; #373) */
+sup.exp { font-size: 72%; line-height: 0; vertical-align: .45em; }
