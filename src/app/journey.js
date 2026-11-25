@@ -20,9 +20,10 @@ import { rnd, clamp, poly, faces, closed } from './draw.js';
 import { kit, tones, mix } from './solid.js';
 
 /* your chip (src/engines/chip.js), set by scenes.js */
-let M = { layers: 62 }, HITS = [], DIES = [];
-export const setJourneyChip = (m, h, d) => { M = m; HITS = h; DIES = d; };
-export const chipNow = () => ({ M, HITS, DIES });
+let M = { layers: 62 }, HITS = [], DIES = [], V = 0;
+export const setJourneyChip = (m, h, d) => { M = m; HITS = h; DIES = d; V++; };
+/* v: moves each time your chip is set, so a station built once (the test's wafer map, journey3d.js) builds it again */
+export const chipNow = () => ({ M, HITS, DIES, v: V });
 
 const MONO = '"Martian Mono", ui-monospace, Menlo, monospace'; /* i18n-ok: a font name */
 const SANS = '"Atkinson Hyperlegible Next", system-ui, sans-serif'; /* i18n-ok: a font name */

@@ -28,7 +28,7 @@ import * as Exp from '../engines/experiments.js';
 import * as Chip from '../engines/chip.js';
 import { levelAt, sizeOf } from '../data/atlas.js';
 import * as Field from './field.js';
-import { setBetScene } from '../app/betscene.js';
+import { setBetScene, setChipScene } from '../app/betscene.js';
 import { createHold } from './hold.js';
 import { sizeWords } from './frame.js';
 import { boot as frame2Boot, reading as frame2Reading } from './frame2.js';
@@ -67,8 +67,8 @@ export function start() {
   Object.assign(V, { hideSeam, crossed, arrive, islandState, hud, foldHero, chCard, designCard, kept, won, toast, hideAll, enter });
   V.quickNext = false; V.carryNote = null; V.inspRaf = 0; V.lensNow = null; V.turnT = 0; V.dcFrame = null; V.dcLv = 0; V.phFrame = null; V.phLv = 0; V.caFrame = null; V.caLv = 0; V.swFrame = null; V.swLv = 0; V.chipRow = 0; V.chipFrame = null; V.diveWorld = 'datacentre'; V.Joule = null; V.flatKind = 'dive'; V.diveFrame = null; V.diveD = -1; V.diveThread = null; V.benchCh = null; V.WE = null; V.DS = null; V.Bench = null; V.flatWords = null; V.boardFrame = null; V.wf = null;
   let mapReady = null; V.map = null; V.dc = null; V.chip = null; V.board = null; V.dive = null;
-  const S = Game.load(localStorage);
-  const save = () => Game.save(localStorage, S);
+  const S = Game.load(localStorage); setChipScene(S.chip);   /* your chip reaches the pictures (src/app/betscene.js): as saved, then each change */
+  const save = () => { Game.save(localStorage, S); setChipScene(S.chip); };
   /* a leak raised when you cross its seam (src/data/questions.js), shown beside the view until you follow or close it */
   const seamEl = document.createElement('aside'); seamEl.className = 'seamnote'; seamEl.hidden = true; seamEl.setAttribute('aria-live', 'polite'); document.body.appendChild(seamEl);
   let seamTimer = null; V.seamFrom = null;
