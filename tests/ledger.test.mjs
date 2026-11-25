@@ -289,3 +289,57 @@ test('an attempt at a machine is a try with a plan the machine engine checks; th
   const H = labCurve(settled(), 'hearing');
   assert.ok(H.points.length >= 3 && H.slope < 0);
 });
+
+/* the front door (#372): anyone may add an entry or run an agent through the port, so a bad entry of any kind is refused
+   with a reason and never thrown on, and the ledger settles the rest as if it were not there */
+test('a bad entry of any kind is refused with a reason, never thrown on, and the ledger settles the rest', () => {
+  const day = '2026-11-20', q = (o = {}) => draft(Object.assign({ kind: 'question', at: 'chip', q: 'What would a chip look like if it were designed for one model only?', by: 'Ada', made: 'person' }, o), 'ada one model', day);
+  const no = (e, reason, why) => { let r; assert.doesNotThrow(() => { r = tryEntry(e); }, why || reason); assert.equal(r.ok, false, why || reason); assert.equal(r.reason, reason, why || reason); };
+  assert.equal(tryEntry(q()).ok, true);
+  /* LE1: a question whose under is a list (it used to pass the lookup as its string, then throw on split) */
+  no(q({ under: ['think.chip'] }), 'under', 'under as a list');
+  no(q({ under: { 'think.chip': 1 } }), 'under', 'under as a record');
+  no(q({ part: ['gate'] }), 'home', 'part as a list');
+  /* LE2: names every object has are no table's own: no level, no stop, no entry, no puzzle, front, need or level of the kitchen */
+  for (const k of ['constructor', 'toString', '__proto__', 'hasOwnProperty', 'valueOf']) {
+    no(q({ at: k }), 'home', 'at ' + k);
+    no(q({ about: k }), 'about', 'about ' + k);
+    no(q({ under: k }), 'under', 'under ' + k);
+    no(brk({ of: k }), 'target', 'a break of ' + k);
+    no(draft({ kind: 'try', of: k, by: 'Ada', made: 'person', cases: [CASE] }, 'try', day), 'target', 'a try of ' + k);
+    no(draft({ kind: 'fix', of: k, words: 'fixed it now', by: 'Ada', made: 'person' }, 'fix', day), 'target', 'a fix of ' + k);
+    no(draft({ kind: 'design', piece: 'half', title: 'Half adder', by: 'Ada', made: 'person', code: 'sum = a ^ b;\ncarry = a & b;', from: k }, 'half', day), 'from', 'built on ' + k);
+    no(draft({ kind: 'design', piece: k, title: 'Half adder', by: 'Ada', made: 'person', code: 'sum = a ^ b;' }, 'half', day), 'piece', 'a design for ' + k);
+    no(draft({ kind: 'try', puzzle: k, plan: {}, by: 'Ada', made: 'person' }, 'p', day), 'puzzle', 'the puzzle ' + k);
+    no(draft({ kind: 'try', front: k, plan: { p: 0.5, n: 0.5 }, by: 'Ada', made: 'person' }, 'f', day), 'front', 'the front ' + k);
+    no(draft({ kind: 'try', choice: k, pick: 'd0001', words: 'a reason long enough', by: 'Ada', made: 'person' }, 'c', day), 'choice', 'the need ' + k);
+    no(draft({ kind: 'try', chef: k, plan: {}, by: 'Ada', made: 'person' }, 'k', day), 'chef', 'the kitchen level ' + k);
+    no(draft({ kind: 'try', machine: k, plan: {}, by: 'Ada', made: 'person' }, 'm', day), 'machine', 'the machine need ' + k);
+  }
+  no(draft({ kind: 'try', puzzle: ['energy'], plan: {}, by: 'Ada', made: 'person' }, 'p', day), 'puzzle', 'a puzzle as a list');
+  no(draft({ kind: 'try', puzzle: 'energy', plan: JSON.parse('{"__proto__":{"batch":4}}'), by: 'Ada', made: 'person' }, 'p', day), 'plan', 'a plan with __proto__ as a key');
+  /* LE4: a batch of 1.4 would score as 1 and count as a new plan: it is refused, like any value the engine cannot run */
+  no(draft({ kind: 'try', puzzle: 'energy', plan: { batch: 1.4 }, by: 'Ada', made: 'person' }, 'p', day), 'plan', 'a batch that is not whole');
+  no(draft({ kind: 'try', puzzle: 'energy', plan: { adcBits: 6.5 }, by: 'Ada', made: 'person' }, 'p', day), 'plan', 'converter bits that are not whole');
+  /* LE5: a day the calendar does not have, read back through toISOString */
+  for (const d of ['2026-02-31', '2026-02-29', '2026-13-01', '2026-00-10', '2026-04-31']) no(Object.assign(q(), { id: d + '-question-ada-x' }), 'id', d);
+  assert.equal(tryEntry(Object.assign(q(), { id: '2028-02-29-question-ada-leap' })).ok, true, 'a leap day is a day');
+  /* not a record at all, or a name that is not a string */
+  for (const e of [null, 5, 'x', [], [q()]]) no(e, 'id', JSON.stringify(e));
+  no(Object.assign(q(), { id: ['2026-11-20-question-x'] }), 'id', 'an id as a list');
+  /* the whole ledger with the bad ones in it: no throw, every bad one refused with a reason, the rest as before */
+  const bad = [q({ under: ['think.chip'] }), q({ at: 'constructor', about: 'toString' }), Object.assign(q(), { id: '2026-02-31-question-ada-x' }), null, 7, [], { id: { toString: 1 } }, { id: '__proto__', kind: 'question' }, { id: 'constructor' }];
+  /* a fault no check foresaw (here a field that throws when read) is refused as unread, never thrown on */
+  const trap = q({ q: 'Does a field that throws when read stop the whole ledger from settling?' }); Object.defineProperty(trap, 'noticed', { enumerable: true, get() { throw new Error('a trap'); } });
+  const good = q(), base = settled();
+  let W; assert.doesNotThrow(() => { W = settle(ledger().concat(bad, [trap], good)); });
+  assert.equal(W.refused.length, bad.length + 1);
+  assert.ok(W.refused.every(e => typeof e.reason === 'string' && EN['ledger.no.' + e.reason]), 'every refusal has a reason with words');
+  assert.equal(W.byId[trap.id].reason, 'unread');
+  assert.equal(W.byId[good.id].ok, true, 'a good entry after the bad ones is kept');
+  assert.deepEqual(W.entries.filter(e => e.id !== good.id).map(e => [e.id, e.state]), base.entries.map(e => [e.id, e.state]), 'the rest settle as if the bad ones were not there');
+  assert.equal(tryEntry(trap).reason, 'unread');
+  /* the world's tables are no object's: an inherited name finds nothing, from an entry, an address or an agent */
+  assert.equal(base.byId.constructor, undefined); assert.equal(base.byId.__proto__, undefined);
+  assert.deepEqual(standing(base, 'constructor'), []); assert.deepEqual(machineAttemptsAt(base, 'toString'), []);
+});

@@ -23,7 +23,12 @@ import { TESTS, START_PROGRAM } from './core.js';
 import { live, MISSION_IDS, PERFECT } from './life.js';
 
 const KINDS = ['person', 'ai', 'both', 'program'];
-const jobOf = id => { const n = needOf(id); if (n && n.project) return n.project; return PROJECTS.includes(id) ? id : null; };
+/* an agent's argument as words for an entry's file name: a string, or nothing (an object or a list is never turned
+   into a string here: its form is the ledger's to refuse, with a reason) */
+const txt = s => (typeof s === 'string' ? s : '');
+const jobOf = id => { if (typeof id !== 'string') return null; const n = needOf(id); if (n && n.project) return n.project; return PROJECTS.includes(id) ? id : null; };
+/* a design of the ledger by its id (the world's tables have no prototype, so only an entry's own id finds one) */
+const entryOf = id => (typeof id === 'string' ? settled().byId[id] || null : null);
 
 /* the community's plan: every piece, its state, and who built it */
 export function listPlan() {
@@ -38,7 +43,7 @@ export function listPlan() {
 
 /* one job: what it must do, its pins, the rules of its description, and where to start */
 export function getJob(id) {
-  const p = jobOf(id); if (!p) return { error: t('api.noJob', { id, jobs: PROJECTS.join(', ') }) };
+  const p = jobOf(id); if (!p) return { error: t('api.noJob', { id: txt(id), jobs: PROJECTS.join(', ') }) };
   const proj = projectOf(p), n = needForProject(p);
   const out = { job: p, need: n ? n.id : null, name: t('design.proj.' + p + '.t'), what: t('design.proj.' + p + '.d'), inputs: proj.ins, outputs: proj.outs, clocked: !!proj.seq, starter: starterOf(p) };
   if (p === 'core') Object.assign(out, { language: t('api.langCore'), tests: TESTS.map(T => ({ id: T.id, name: t('core.test.' + T.id + '.t'), program: T.src })), example: START_PROGRAM, needs: t('api.coreNeeds') });
@@ -48,7 +53,7 @@ export function getJob(id) {
 
 /* check a design: does it read, is it right, and what it becomes (gates, layout, test coverage, masks) */
 export function checkDesign({ job, code, slice, regbit, select }) {
-  const p = jobOf(job); if (!p) return { error: t('api.noJob', { id: job, jobs: PROJECTS.join(', ') }) };
+  const p = jobOf(job); if (!p) return { error: t('api.noJob', { id: txt(job), jobs: PROJECTS.join(', ') }) };
   const B = build({ p, code: typeof code === 'string' ? code : undefined, slice, regs: { bit: regbit || null, select: select || null } });
   const out = { job: p, reads: !B.errs.length, errors: B.errs.map(e => ({ line: e.l, message: t('design.err.' + e.k, { l: e.l, n: e.n || '' }) })) };
   if (p === 'core') {
@@ -69,7 +74,7 @@ export function checkDesign({ job, code, slice, regbit, select }) {
 
 /* make a copy at the factory: one wire left stuck. What goes wrong, and would the Test station catch it? */
 export function atFactory({ job, code, slice, seed }) {
-  const p = jobOf(job); if (!p) return { error: t('api.noJob', { id: job, jobs: PROJECTS.join(', ') }) };
+  const p = jobOf(job); if (!p) return { error: t('api.noJob', { id: txt(job), jobs: PROJECTS.join(', ') }) };
   const s = Number.isInteger(seed) ? seed : 1, B = build({ p, code: typeof code === 'string' ? code : undefined, slice, defect: s });
   if (B.errs.length) return { job: p, reads: false };
   if (p === 'core') { const C = B.core; return { job: p, stuckInSlice: C.defect ? C.defect.bit : null, testsStillRight: C.passed, tests: C.total }; }
@@ -81,8 +86,8 @@ export function atFactory({ job, code, slice, seed }) {
    factory decide (margin, grid, protect; hot, burn). Year by year, which causes fail it, and whether the place's
    needs are met. */
 export function lifeOf({ job, code, slice, where, choices }) {
-  const p = jobOf(job); if (!p) return { error: t('api.noJob', { id: job, jobs: PROJECTS.join(', ') }) };
-  if (!MISSION_IDS.includes(where)) return { error: t('api.noPlace', { where, places: MISSION_IDS.join(', ') }) };
+  const p = jobOf(job); if (!p) return { error: t('api.noJob', { id: txt(job), jobs: PROJECTS.join(', ') }) };
+  if (!MISSION_IDS.includes(where)) return { error: t('api.noPlace', { where: txt(where), places: MISSION_IDS.join(', ') }) };
   const B = build({ p, code: typeof code === 'string' ? code : undefined, slice });
   const L = live(where, Object.assign({}, PERFECT, choices || {}), { coverage: B.M ? B.coverage : undefined, mhz: B.st ? B.st.fmax : undefined });
   return {
@@ -103,7 +108,7 @@ function entryOut(e, extra) {
   const f = fileOf(e);
   return Object.assign({ ok: true, entry: { id: e.id, path: f.path, file: f.text }, link: proposeUrl(e), facts: r.facts, note: t('api.person') }, extra || {});
 }
-const whoOk = (kind, ai) => !KINDS.includes(kind) ? t('api.kind') : (kind !== 'person') && !(ai && String(ai).trim()) ? t('api.sayAI') : null;
+const whoOk = (kind, ai) => !KINDS.includes(kind) ? t('api.kind') : (ai != null && typeof ai !== 'string') || ((kind !== 'person') && !txt(ai).trim()) ? t('api.sayAI') : null;
 /* ---- look: the lab as a visitor sees it, for an agent. The same grid (src/engines/way.js): a place or a level, what
    is there (its parts, the questions that stop there, what people asked, what there is to do), and where each move
    leads: in and out for scale, along for the chip's life. With nothing, the island and its loop. ---- */
@@ -112,6 +117,7 @@ const fieldOut = qs => qs.map(q => ({ id: q.id, shape: q.shape, meets: q.prims, 
 const levelOut = (d, extra) => Object.assign({ level: d, name: t('depth.' + d + '.name') }, extra);
 export function look({ at } = {}) {
   const moves = t('api.look.moves');
+  if (at != null && typeof at !== 'string') return { ok: false, reason: t('api.look.none') };
   if (!at) return { where: 'island', what: t('loop.lead'), moves,
     loop: STAGES.map(s => ({ stage: s, place: STAGE_PLACE[s], name: t('map.' + STAGE_PLACE[s] + '.t'), what: t('loop.at.' + s) })),
     places: PLACES.filter(p => stageOfPlace(p)).map(p => ({ place: p, name: t('map.' + p + '.t'), stage: stageOfPlace(p), levels: (INSIDE[p] || []).map(l => l.depth) })) };
@@ -152,18 +158,18 @@ export function listLedger() {
 /* propose a design for a piece of the plan: checked by the ledger first (it must read, do the job, pass every case a
    break has added, and not be there already) */
 export function proposeDesign({ need, code, title, author, kind, ai, words, from, about }) {
-  const n = needOf(need); if (!n || !n.project || n.engine !== 'logic') return { ok: false, reason: t('api.noNeed', { need }) };
+  const n = needOf(need); if (!n || !n.project || n.engine !== 'logic') return { ok: false, reason: t('api.noNeed', { need: txt(need) }) };
   const bad = whoOk(kind, ai); if (bad) return { ok: false, reason: bad };
   const c = checkDesign({ job: n.project, code });
   if (!c.right) return { ok: false, reason: t('api.notRight'), check: c };
   const name = title || t('design.proj.' + n.project + '.t');
-  return entryOut(draft({ kind: 'design', piece: need, title: name, by: author || t('api.anon'), made: kind, ai: ai || '', words: words || '', code, from: from || null, about: about || null }, (author || '') + ' ' + name), { check: c });
+  return entryOut(draft({ kind: 'design', piece: need, title: name, by: author || t('api.anon'), made: kind, ai: ai || '', words: words || '', code, from: from || null, about: about || null }, txt(author) + ' ' + txt(name)), { check: c });
 }
 /* propose a break: a case, tick by tick, that makes a design of the ledger answer wrong */
 export function proposeBreak({ design, case: seq, author, kind, ai, words }) {
   const bad = whoOk(kind, ai); if (bad) return { ok: false, reason: bad };
-  const T = settled().byId[design];
-  const e = draft({ kind: 'break', of: design, by: author || t('api.anon'), made: kind, ai: ai || '', words: words || '', case: seq }, (author || '') + ' ' + (T && T.title || 'break'));
+  const T = entryOf(design);
+  const e = draft({ kind: 'break', of: design, by: author || t('api.anon'), made: kind, ai: ai || '', words: words || '', case: seq }, txt(author) + ' ' + (T && T.title || 'break'));
   const out = entryOut(e);
   if (T && T.kind === 'design' && T.ok && caseOk(needOf(T.piece).project, seq)) { const r = runCase(needOf(T.piece).project, T.code, seq); if (r) out.ticks = r.rows.map((x, i) => ({ tick: i + 1, inputs: x.v, should: x.e, does: x.o, wrong: x.mis.length > 0 })); }
   return out;
@@ -171,18 +177,18 @@ export function proposeBreak({ design, case: seq, author, kind, ai, words }) {
 /* propose a try: cases meant to break a design that did not. It records what the design has survived. */
 export function proposeTry({ design, cases, author, kind, ai, words, about }) {
   const bad = whoOk(kind, ai); if (bad) return { ok: false, reason: bad };
-  const T = settled().byId[design];
-  return entryOut(draft({ kind: 'try', of: design, by: author || t('api.anon'), made: kind, ai: ai || '', words: words || '', cases, about: about || null }, (author || '') + ' ' + (T && T.title || 'try')));
+  const T = entryOf(design);
+  return entryOut(draft({ kind: 'try', of: design, by: author || t('api.anon'), made: kind, ai: ai || '', words: words || '', cases, about: about || null }, txt(author) + ' ' + (T && T.title || 'try')));
 }
 /* propose a question: it needs a home (a level, perhaps the question it sits under) and what was noticed */
 /* report something wrong with the lab itself, at a place given by its address: checked by the ledger first */
 export function proposeReport({ at, part, say, words, author, kind, ai }) {
   const bad = whoOk(kind, ai); if (bad) return { ok: false, reason: bad };
-  return entryOut(draft({ kind: 'report', at, part: part || null, say, words, by: author || t('api.anon'), made: kind, ai: ai || '' }, (author || '') + ' ' + String(at || '').replace(/[#/]+/g, ' ')));
+  return entryOut(draft({ kind: 'report', at, part: part || null, say, words, by: author || t('api.anon'), made: kind, ai: ai || '' }, txt(author) + ' ' + txt(at).replace(/[#/]+/g, ' ')));
 }
 export function proposeQuestion({ at, under, part, question, noticed, author, kind, ai, about }) {
   const bad = whoOk(kind, ai); if (bad) return { ok: false, reason: bad };
-  return entryOut(draft({ kind: 'question', at, part: part || null, under: under || null, q: question, noticed: noticed || '', by: author || t('api.anon'), made: kind, ai: ai || '', about: about || null }, (author || '') + ' ' + String(question || '').split(/\s+/).slice(0, 5).join(' ')));
+  return entryOut(draft({ kind: 'question', at, part: part || null, under: under || null, q: question, noticed: noticed || '', by: author || t('api.anon'), made: kind, ai: ai || '', about: about || null }, txt(author) + ' ' + txt(question).split(/\s+/).slice(0, 5).join(' ')));
 }
 
 /* ---- the energy puzzle (content/puzzles/energy.md): where does the energy of one answer go? ---- */
@@ -210,7 +216,7 @@ export function submitAttempt({ plan, words, author, kind, ai, about }) {
   const P = plan && typeof plan === 'object' && !Array.isArray(plan) ? plan : null;
   if (!P) return { ok: false, reason: t('ledger.no.plan') };
   const b = budget(JOB, P);
-  return entryOut(draft({ kind: 'try', puzzle: 'energy', plan: P, by: author || t('api.anon'), made: kind, ai: ai || '', words: words || '', about: about || null }, (author || '') + ' energy'), b.ok ? { joules: sig(b.total), wattHours: sig(b.total / 3600), secondsPerAnswer: sig(b.seconds), accuracyDb: sig(b.snrDb) } : {});
+  return entryOut(draft({ kind: 'try', puzzle: 'energy', plan: P, by: author || t('api.anon'), made: kind, ai: ai || '', words: words || '', about: about || null }, txt(author) + ' energy'), b.ok ? { joules: sig(b.total), wattHours: sig(b.total / 3600), secondsPerAnswer: sig(b.seconds), accuracyDb: sig(b.snrDb) } : {});
 }
 
 /* ---- the block's front (#315, #326): where Geometry and Efficiency fuels use meet. Two controls (where the logic sits,
@@ -235,7 +241,7 @@ export function submitFront({ plan, words, author, kind, ai, about }) {
   const bad = whoOk(kind, ai); if (bad) return { ok: false, reason: bad };
   const P = plan && typeof plan === 'object' && !Array.isArray(plan) ? plan : null; if (!P) return { ok: false, reason: t('ledger.no.plan') };
   const E = geoEffFront(), placed = [P.p, P.n].every(v => typeof v === 'number' && v >= 0 && v <= 1) ? pointOut(E.at(P.p, P.n)) : null;
-  return entryOut(draft({ kind: 'try', front: FRONT, plan: P, by: author || t('api.anon'), made: kind, ai: ai || '', words: words || '', about: about || null }, (author || '') + ' front'), placed ? { placed } : {});
+  return entryOut(draft({ kind: 'try', front: FRONT, plan: P, by: author || t('api.anon'), made: kind, ai: ai || '', words: words || '', about: about || null }, txt(author) + ' front'), placed ? { placed } : {});
 }
 
 /* ---- A thousand that pass (src/engines/thousand.js): a program's thousand designs for a need, all passing every check;
@@ -243,7 +249,7 @@ export function submitFront({ plan, words, author, kind, ai, about }) {
    to send. People's choices and agents' come back apart, never mixed, read from the entries alone ---- */
 const r3 = x => +x.toPrecision(3);
 export function chooseDesign({ need, pick, reason, author, kind, ai, about } = {}) {
-  const id = need || 'phone', N = Thousand.NEEDS[id];
+  const id = need || 'phone', N = Thousand.needOf(id);
   if (!N) return { ok: false, reason: t('ledger.no.choice'), needs: Object.keys(Thousand.NEEDS) };
   const D = Thousand.thousand(id), L = Thousand.limits(id), C = choicesAt(settled(), id);
   const group = list => list.map(e => ({ id: e.id, by: e.by, pick: e.pick, reason: e.words }));
@@ -259,7 +265,7 @@ export function chooseDesign({ need, pick, reason, author, kind, ai, about } = {
   if (pick == null && reason == null) return out;
   const bad = whoOk(kind, ai); if (bad) return Object.assign(out, { ok: false, reason: bad });
   if (kind !== 'person' && kind !== 'ai') return Object.assign(out, { ok: false, reason: t('ledger.no.chooser') });
-  const e = draft({ kind: 'try', choice: id, pick, words: typeof reason === 'string' ? reason.trim() : reason, by: author || t('api.anon'), made: kind, ai: ai || '', about: about || null }, (author || '') + ' choice ' + id);
+  const e = draft({ kind: 'try', choice: id, pick, words: typeof reason === 'string' ? reason.trim() : reason, by: author || t('api.anon'), made: kind, ai: ai || '', about: about || null }, txt(author) + ' choice ' + id);
   const res = entryOut(e);
   delete out.designs; delete out.columns;
   return Object.assign(out, res, res.ok ? { picked: Thousand.designOf(id, pick) } : {});

@@ -140,7 +140,9 @@ test('a plan from anyone is checked before it is run', () => {
   const bad = [[{}, { home: 'cloud' }, 'home'], [{}, { precision: 'fp2' }, 'precision'], [{}, { clock: 9 }, 'clock'], [{}, { clock: 4, volt: 0.6 }, 'volt'],
     [{}, { volt: 2 }, 'volt'], [{}, { batch: 0 }, 'batch'], [{}, { batch: '64' }, 'batch'], [{}, { cim: 'yes' }, 'cim'], [{}, { adcBits: 40 }, 'adc'],
     [{}, { pue: 0.5 }, 'pue'], [{}, { optics: 'telepathy' }, 'optics'], [{ ops: -1 }, {}, 'job'], [{ reuse: 0 }, {}, 'job'], [{ bytes: NaN }, {}, 'job'],
-    [{}, { home: '__proto__' }, 'home'], [{}, { precision: 'toString' }, 'precision']];
+    [{}, { home: '__proto__' }, 'home'], [{}, { precision: 'toString' }, 'precision'],
+    /* a batch is a whole number of users and a converter a whole number of bits: 1.4 would run as 1 and count as a new plan (#372) */
+    [{}, { batch: 1.4 }, 'batch'], [{}, { adcBits: 6.5 }, 'adc']];
   for (const [job, plan, why] of bad) {
     const b = B.budget(job, plan);
     assert.equal(b.ok, false, JSON.stringify(plan)); assert.equal(b.why, why, JSON.stringify([job, plan]));
