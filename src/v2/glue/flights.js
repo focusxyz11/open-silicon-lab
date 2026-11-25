@@ -94,7 +94,7 @@ export function create() {
     V.loading(true); V.lastPlace = 'phones'; const rn = V.routeN;
     return Promise.all([V.withFrame(), ensurePh()]).then(([, d]) => { if (rn !== V.routeN) { if (V.fui.hidden) d.pause(); return; }
       V.phFrame = V.frameOf(V.fui, { up: { href: '#/island', label: t('place.back') }, path: [{ href: '#/island', label: t('place.back') }, { label: t('map.phones.t') }],
-        rail: { label: t('place.levels'), items: PH.LEVELS.map(k => ({ id: k, label: t('place.phone.' + k + '.t'), size: sizeOf(PH.DEPTH[k] === 'phone' ? 'handset' : PH.DEPTH[k]) })) }, onRail: k => d.go(PH.LEVELS.indexOf(k)), onLook: drawPh, scroll: true, caption: true });
+        rail: { label: t('place.levels'), items: PH.LEVELS.map(k => ({ id: k, label: t('place.phone.' + k + '.t'), size: sizeOf(PH.SIZE[k]) })) }, onRail: k => d.go(PH.LEVELS.indexOf(k)), onLook: drawPh, scroll: true, caption: true });
       V.fui.onclick = e => { const b = e.target.closest('[data-lvgo]'); if (b) d.go(+b.dataset.lvgo); const sk = e.target.closest('[data-seek]'); if (sk) return phSeek(sk.dataset.seek); const h = e.target.closest('[data-hl]'); if (h) d.mark(h.dataset.hl); };
       V.fui.onpointerover = e => { const h = e.target.closest('[data-hl]'); d.mark(h ? h.dataset.hl : phHold()); };
       $('flyLabels').onclick = e => { const h = e.target.closest('[data-hl]'); if (h) phSeek(h.dataset.hl); };

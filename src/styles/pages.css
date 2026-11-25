@@ -233,9 +233,11 @@ textarea.fcode { width: 100%; min-height: 110px; resize: vertical; box-sizing: b
 .clt { position: relative; height: 14px; border-radius: 7px; background: linear-gradient(var(--line), var(--line)) 0 50% / 100% 2px no-repeat; }
 .clt i { position: absolute; top: 2px; bottom: 2px; width: 1px; background: var(--line); }
 .clt b { position: absolute; top: 50%; width: 12px; height: 12px; margin: -6px 0 0 -6px; border-radius: 50%; background: var(--qc); box-shadow: 0 0 0 3px color-mix(in srgb, var(--qc) 25%, transparent); }
-.cla .clt { background: none; height: 16px; }
+.cla .clt { background: none; height: 30px; }
 .clt em { position: absolute; top: 0; transform: translateX(-50%); font: 600 10.5px var(--mono); font-style: normal; color: var(--muted); white-space: nowrap; }
-@media (max-width: 560px) { .clr { grid-template-columns: 1fr; gap: 3px; } .cla .cll { display: none; } .clt em { font-size: 9.5px; } .clt em:nth-child(2) { display: none; }
+/* a second, an hour and a year sit close on a scale of tenfold steps: the middle one drops a line so none runs into the next */
+.clt em:nth-child(2) { top: 14px; }
+@media (max-width: 560px) { .clr { grid-template-columns: 1fr; gap: 3px; } .cla .cll { display: none; } .cla .clt { height: 16px; } .clt em { font-size: 9.5px; } .clt em:nth-child(2) { display: none; }
 }
 
 .clkc { background: var(--panel-solid); border-radius: 12px; }

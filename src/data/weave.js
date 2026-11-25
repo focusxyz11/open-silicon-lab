@@ -32,7 +32,8 @@ export const DEPTHS = {
   board: { m: 0.3, portal: [425, 425, 150] },
   chip: { m: 0.02, portal: [190, 190, 70] },
   /* a phone */
-  phone: { m: 0.26, portal: [196, 331, 210] },
+  /* a phone is about fifteen centimetres long: one size for the level wherever it is shown, the flight's too (#380) */
+  phone: { m: 0.15, portal: [196, 331, 210] },
   phoneboard: { m: 0.05, portal: [410, 360, 240] },
   soc: { m: 0.012, portal: [200, 490, 56] },
   /* a car */

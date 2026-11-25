@@ -252,6 +252,9 @@ button.opens { width: 100%; text-align: left; border: 0; border-left: 3px solid 
    panel begins. Below 1100 px the card is below the picture (on a phone, the sheet). --bench is the room the panel
    takes from the right edge, for the things on the picture that keep clear of it. */
 @media (min-width: 1100px) {
+  /* where the island's canvas ends at the panel, the sea fades out over its last stretch instead of stopping at a hard
+     edge (#380) */
+  .stage:has(> .sheet:not([hidden])):has(> #mapCanvas:not([hidden]))::after { content: ''; position: absolute; top: 0; bottom: 0; right: var(--bench); width: 72px; background: linear-gradient(to right, transparent, var(--bg)); pointer-events: none; }
   .sheet:has(.ticks), .sheet.inside, .sheet.whatif, .sheet.part { left: auto; right: 16px; top: 84px; bottom: 16px; transform: none; width: var(--f2-pw); max-height: none; overflow: auto; animation: benchin .35s ease; }
   @keyframes benchin { from { opacity: 0; translate: 18px 0; } }
   .sheet .grid { grid-template-columns: 1fr; }

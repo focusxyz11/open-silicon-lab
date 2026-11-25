@@ -80,7 +80,7 @@
 .bp-ring.rim { stroke-width: 3; }
 .bp-spoke { stroke: var(--line); stroke-width: 1.5; stroke-dasharray: 3 9; }
 .bp-stagename { font: 600 32px var(--sans); fill: var(--ink); letter-spacing: .02em; }
-.bp-ringname { font: 17px var(--mono); fill: var(--muted); }
+.bp-ringname { font: 17px var(--mono); fill: var(--muted); transition: opacity .6s; }
 .bp-loop { fill: none; stroke: var(--bp-loop); stroke-width: 4; opacity: .6; }
 .bp-loopdir { fill: var(--bp-loop); }
 .bp-pulse { fill: var(--bp-loop); }
@@ -102,7 +102,9 @@
 .bp[data-mode="next"] .g-walls { opacity: .45; }
 .bp[data-mode="people"] .g-flows, .bp[data-mode="people"] .g-stations { opacity: .08; }
 .bp[data-mode="people"] .bp-ring, .bp[data-mode="people"] .bp-ringname { opacity: .2; }
-/* where walls and the ways past them carry their own names, the rings' names step back */
+/* where walls and the ways past them carry their own names, the rings' names step back; the world's people stand at the
+   rim where the scale is written, so it gives way to them */
+.bp[data-mode="world"] .bp-ringname { opacity: 0; }
 .bp[data-mode="walls"] .bp-ringname, .bp[data-mode="next"] .bp-ringname { opacity: .3; }
 .bp[data-mode="world"] .g-flows, .bp[data-mode="walls"] .g-flows, .bp[data-mode="you"] .g-flows { opacity: .35; }
 

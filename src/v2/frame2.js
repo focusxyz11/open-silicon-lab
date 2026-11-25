@@ -56,6 +56,9 @@ export function boot() {
   const log = document.getElementById('logbtn'), fit = () => fitBar();
   if (typeof MutationObserver === 'function') [loop, log].forEach(n => { if (n) new MutationObserver(fit).observe(n, { childList: true, subtree: true, attributes: true }); });
   addEventListener('resize', () => { fit(); notices(); }); fit();
+  /* a sheet or a font that arrives later changes how wide the loop is: the bar is fitted again (#380) */
+  document.addEventListener('load', e => { if (e.target && e.target.tagName === 'LINK') fit(); }, true);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(fit);
   /* Do: a challenge played in the island's sheet gets the stage too (doSheet, below) */
   const sheet = document.getElementById('sheet');
   if (sheet && typeof MutationObserver === 'function') { const go = () => doSheet(sheet); new MutationObserver(go).observe(sheet, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ['hidden'] }); addEventListener('resize', go); }
