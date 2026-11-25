@@ -659,8 +659,10 @@ pre.code { margin: 4px 0; white-space: pre-wrap; overflow-wrap: anywhere; }
 .lensbar .lb { display: flex; flex-direction: column; gap: 6px; padding: 6px; background: var(--panel); border: 1px solid var(--line); border-radius: 18px; backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); box-shadow: var(--shadow); pointer-events: auto; }
 .lensbar button { display: flex; align-items: center; gap: 8px; height: 38px; min-width: 38px; padding: 0 10px; border: 0; border-radius: 12px; background: transparent; color: var(--ink); font: 500 13px var(--sans); cursor: pointer; }
 .lensbar button .g { width: 18px; text-align: center; font-size: 17px; }
-.lensbar button .nm { display: none; }
-.lensbar button:hover .nm, .lensbar button[aria-pressed="true"] .nm { display: inline; }
+/* the lenses carry their names (#381): a heading says what the column is, each button its lens; on a phone a short name under each mark */
+.lensbar .lk { margin: 4px 10px 2px; font: 600 10.5px var(--sans); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); white-space: nowrap; }
+.lensbar button .nm { white-space: nowrap; }
+.lensbar button:not([aria-pressed="true"]):hover { background: color-mix(in srgb, var(--ink) 8%, transparent); }
 .lensbar button[aria-pressed="true"] { background: var(--ink); color: var(--panel-solid); }
 .lensbar .lensnote { max-width: 300px; padding: 12px 14px; background: var(--panel); border: 1px solid var(--line); border-radius: 14px; backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); box-shadow: var(--shadow); pointer-events: auto; animation: inspin .3s ease; }
 .lensbar .lensnote p { margin: 0 0 8px; font: 400 15px/1.45 var(--serif); }
@@ -675,7 +677,11 @@ pre.code { margin: 4px 0; white-space: pre-wrap; overflow-wrap: anywhere; }
  .insp .ilens .askline { margin: 0; }
 @media (max-width: 720px) {
   .lensbar { left: 10px; right: 10px; top: auto; bottom: 92px; transform: none; flex-direction: column-reverse; align-items: stretch; }
-  .lensbar .lb { flex-direction: row; justify-content: space-between; align-self: flex-start; }
+  .lensbar .lb { flex-direction: row; justify-content: space-between; align-self: stretch; gap: 2px; padding: 4px; }
+  .lensbar .lk { display: none; }
+  .lensbar button { flex: 1 1 0; flex-direction: column; justify-content: center; gap: 1px; height: 48px; min-width: 0; padding: 4px 2px; }
+  .lensbar button .g { width: auto; font-size: 16px; line-height: 1; }
+  .lensbar button .nm { font-size: 11px; line-height: 1.2; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
   .lensbar .lensnote { max-width: none; }
   .stage:has(.insp:not([hidden])) .lensbar { display: none; }
 }

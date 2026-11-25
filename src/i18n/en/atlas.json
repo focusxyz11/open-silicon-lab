@@ -849,6 +849,7 @@
  "part.masks.lighttable": "The light table",
  "what.masks.lighttable": "A mask lit from below: one layer's pattern in chrome on clear quartz. Light shone through it prints that layer on every chip.",
  "lens.follow": "Follow this",
+ "lens.k": "See it as",
  "lens.look.t": "As it is",
  "lens.heat.t": "Heat",
  "lens.flow.t": "Flow",

@@ -56,7 +56,7 @@ export function create() {
   /* ---- lenses: the same island seen for one thing at a time; each opens onto the question it belongs to, one at a
      time, never as a list ---- */
   const LENSES = [['look', '○'], ['heat', '≋'], ['flow', '⇄'], ['fail', '✕'], ['time', '◷']], LENS_WORLD = { heat: 'limit', fail: 'fail', time: 'make', flow: 'open' };
-  const drawLens = k => { V.lensbar.innerHTML = '<div class="lb">' + LENSES.map(([id, g]) => '<button type="button" data-lens="' + id + '" aria-pressed="' + (id === k) + '" title="' + esc(t('lens.' + id + '.t')) + '"><span class="g" aria-hidden="true">' + g + '</span><span class="nm">' + esc(t('lens.' + id + '.t')) + '</span></button>').join('') + '</div>' +
+  const drawLens = k => { V.lensbar.innerHTML = '<div class="lb"><p class="lk" aria-hidden="true">' + esc(t('lens.k')) + '</p>' + LENSES.map(([id, g]) => '<button type="button" data-lens="' + id + '" aria-pressed="' + (id === k) + '"><span class="g" aria-hidden="true">' + g + '</span><span class="nm">' + esc(t('lens.' + id + '.t')) + '</span></button>').join('') + '</div>' +
     (LENS_WORLD[k] ? '<div class="lensnote"><p>' + esc(t('lens.' + k + '.d')) + '</p><a href="#/w/' + LENS_WORLD[k] + '">' + esc(t('lens.follow')) + ' →</a></div>' : ''); };
   drawLens('look');
   /* the bar shows the lens the island has on, whoever turned it (a button here, a dial, What if? lending its own and
