@@ -11,11 +11,8 @@
    A lab of the challenge player (src/v2/play.js): lab(L) -> { draw, click, input }. */
 import * as W from '../../engines/switch.js';
 import { mark as fidMark } from '../fid.js';
-
 /* your switch, kept for the machines (a convenience of this browser: src/v2/machines.js reads it) */
-export const KEEP_KEY = 'osl-switch-v1';
-export const keptSwitch = () => { try { const o = JSON.parse(localStorage.getItem(KEEP_KEY) || 'null'); return o && typeof o.sw === 'string' ? o.sw : null; } catch (e) { return null; } };
-const keep = sw => { try { localStorage.setItem(KEEP_KEY, JSON.stringify({ sw })); return true; } catch (e) { return false; } };
+import { keptSwitch, keepSwitch as keep } from '../kept.js';
 
 const SUP = '⁰¹²³⁴⁵⁶⁷⁸⁹⁻';
 const sup = n => String(n).replace(/[0-9-]/g, c => SUP[c === '-' ? 10 : +c]);

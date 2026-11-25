@@ -159,7 +159,7 @@ export const FIGURES = {
   'life.building': ['dc-electricity', 'brain-power'], 'limit.rack': ['turing-1936'], 'make.chip': ['euv-wavelength'],
   'fail.building': ['sdc-rate'], 'divide.block': ['energy-moving-data'], 'life.block': ['clock-power-share'], 'make.switch': ['fab-steps', 'transistor-trend'],
   'idea.soc': ['riscv-rva23'], 'fail.car': ['car-life'], 'divide.car': ['chips-per-car'], 'know.car': ['car-shortage-2021'],
-  'fail.ecu': ['car-ppm'], 'scale.mcu': ['legacy-auto'], 'scale.switch': ['node-n2', 'wafer-price'], 'make.mcu': ['chip-units'],
+  'fail.ecu': ['car-ppm'], 'scale.mcu': ['legacy-auto'], 'scale.switch': ['node-n2', 'wafer-price'], 'scale.atom': ['si-lattice'], 'make.mcu': ['chip-units'],
   'make.clean': ['fab-build-time'], 'scale.clean': ['fab-module-cost'], 'open.clean': ['wafer-space-run'], 'know.etch': ['workforce'], 'divide.wires': ['fab-cycle-time'],
   'make.wires': ['fab-cycle-time'], 'make.scanner': ['euv-wavelength', 'euv-source'], 'scale.scanner': ['high-na-hvm', 'high-na-price'], 'idea.die': ['design-cost-2nm'],
   /* the studio's steps (content/design.md) */
@@ -169,7 +169,8 @@ export const FIGURES = {
 
 /* Your chip (src/engines/chip.js): a few settings that every "Try it" changes and every depth shows.
    TRIES: the stops where a setting can be changed, inside that stop's question.
-   SHOWS: what each depth shows of your chip, and which settings it depends on (words: chip.show.<depth>).
+   SHOWS: what each depth shows of your chip, and which settings it depends on (words: chip.show.<depth>). Nothing on
+   the site shows it yet: it waits with its words for a view (src/data/waiting-words.json).
    "build" is a try of its own: it scrubs through how a switch is made, and changes no setting. */
 export const TRIES = { 'think.board': 'reuse', 'divide.block': 'reuse', 'divide.pkg': 'mem', 'divide.wires': 'load', 'fail.chip': 'clock', 'life.phone': 'clock', 'scale.switch': 'gen', 'scale.soc': 'gen', 'scale.mcu': 'gen', 'fail.wafer': 'size', 'divide.test': 'size', 'make.switch': 'build' };
 const ALL = ['clock', 'gen', 'size'], WALL = ['reuse', 'mem'];

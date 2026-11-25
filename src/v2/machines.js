@@ -33,7 +33,7 @@ import { labCurve } from '../engines/ledger.js';
 import { frontFigure } from './front.js';
 import { mark as fidMark, claimFid, glyph as fidGlyph, TRUTH, statusMark } from './fid.js';
 import { FRONTS } from '../data/fidelity.js';
-import { keptSwitch } from './labs/switch.js';
+import { keptSwitch } from './kept.js';
 
 const REPO = 'https://github.com/focusxyz11/open-silicon-lab/blob/main/';
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
@@ -207,7 +207,7 @@ export function machines(el, ctx) {
   /* the address is where you are: a mode, a layer, or the machine as it flows */
   if (ctx.sub === 'do') view.mode = 'do'; else { view.mode = 'look'; view.layer = LAYERS.includes(ctx.sub) ? ctx.sub : 'flow'; }
   if (!view.sel) view.sel = (need.change && need.change[0]) || (need.parts.find(p => M.formsOf(p.block).length > 1) || need.parts[0]).id;
-  /* your switch, kept at the switch level (src/v2/labs/switch.js): a block of new matter of the kind 'switch' is made
+  /* your switch, kept at the switch level (src/v2/labs/switch.js, src/v2/kept.js): a block of new matter of the kind 'switch' is made
      of it, and the plan carries it so the score, the agent and an attempt kept all count the same switch */
   const SWK = keptSwitch(), withSwitch = p => { if (SWK) p.sw = SWK; else delete p.sw; return p; };
   withSwitch(view.plan);
