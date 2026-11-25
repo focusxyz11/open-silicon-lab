@@ -42,10 +42,12 @@ export const AREAS = {
     /* how true is each thing, one mark everywhere (#325, src/v2/fid.js) */
     'fid'],
   place: ['place', 'game', 'grow', 'look', 'dial', 'insp', 'carry', 'door', 'around', 'follow', 'room', 'studio',
-    'board', 'story', 'chipx', 'lab', 'society', 'fab', 'whatif'],
+    'board', 'story', 'chipx', 'lab', 'society', 'fab', 'whatif',
+    /* your chip's settings and the life it lives at a place: dials on the island, the challenges and the reading pages */
+    'chip', 'life'],
   design: ['design', 'bench', 'build', 'ledger', 'api', 'core'],
   labs: ['td', 'bet', 'aib', 'agent', 'srv', 'ana', 'ckp', 'rv', 'er', 'cim', 'grv', 'semi', 'imp', 'ovl', 'eu',
-    'lt', 'cz', 'fl', 'mo', 'rd', 'evolve', 'clk', 'floor', 'xray', 'xr', 'chip', 'life', 'gauge', 'carch',
+    'lt', 'cz', 'fl', 'mo', 'rd', 'evolve', 'xray', 'xr', 'gauge', 'carch',
     'pb', 'th', 'srch', 'halt',
     /* spiking neurons and light (#322) */
     'spk', 'lgt',
@@ -59,7 +61,9 @@ export const AREAS = {
   /* Hold, the first page (src/v2/hold.js) */
   hold: ['hd'],
   pages: ['machines', 'mb', 'invent', 'liquid', 'read', 'page', 'site', 'tune', 'swm', 'side', 'walls',
-    'forms', 'copies', 'probe', 'plan']
+    'forms', 'copies', 'probe', 'plan',
+    /* the clock's toy and the energy floor on the reading pages */
+    'clk', 'floor']
 };
 const AREA_OF = Object.fromEntries(Object.entries(AREAS).flatMap(([a, ps]) => ps.map(p => [p, a])));
 /* the area a text is in, by its name */

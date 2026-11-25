@@ -183,10 +183,11 @@ export function createHold(host, ctx = {}) {
   });
 
   /* the first touch (a scroll, a hold, a tap; or an idle moment once the page's own preload has started): the facts
-     behind the marks, and the blueprint's words for what people are trying */
+     behind the marks, and the blueprint's words for what people are trying. Where the preload never starts (off: a
+     connection that saves data), only a touch fetches them */
   let touched = false;
   function touch() { if (touched || !document.documentElement.dataset.preload) return; touched = true; loadFacts(); needWords('blueprint').then(fillWays, () => { touched = false; }); }
-  const idleTouch = () => { if (touched || !LIVE.on) return; if (document.documentElement.dataset.preload) (window.requestIdleCallback ? requestIdleCallback(touch, { timeout: 1500 }) : setTimeout(touch, 1500)); else setTimeout(idleTouch, 600); };
+  const idleTouch = () => { if (touched || !LIVE.on || document.documentElement.dataset.preload === 'off') return; if (document.documentElement.dataset.preload) (window.requestIdleCallback ? requestIdleCallback(touch, { timeout: 1500 }) : setTimeout(touch, 1500)); else setTimeout(idleTouch, 600); };
 
   /* for checks */
   window.__hold = { set: v => goPlate('years', v === 99 ? DWALL : v, false, false), go: (id, d) => goPlate(id, d === 99 ? DWALL : d, true), ch: goChallenge, at: id => (id === 'pull' ? p0 + vh : secs[id].offsetTop),

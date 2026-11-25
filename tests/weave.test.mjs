@@ -178,7 +178,11 @@ test('no list of the core questions: the words never gather them in one place', 
   }
 });
 
-test('every figure has a source, a date it was checked and a kind; a number in a question or note comes with one', () => {
+/* the numbers written in some words: 1,000 and 0.5 read as 1000 and 0.5; {names} and tags are not words */
+const numbersIn = v => [...String(Array.isArray(v) ? v.join(' ') : v).replace(/<[^>]+>|\{\w+\}/g, ' ').matchAll(/\d[\d,.]*\d|\d/g)].map(m => m[0].replace(/,(?=\d{3})/g, ''));
+const numbersOf = f => new Set(numbersIn([f.value, f.label, f.detail].join(' ')));
+
+test('every figure has a source, a date it was checked and a kind; a number in a question, a note or what is tried comes with one that holds it', () => {
   for (const [key, ids] of Object.entries(FIGURES)) {
     assert.ok(STOPS[key], key + ': figures for a stop that does not exist');
     for (const id of ids) {
@@ -189,9 +193,24 @@ test('every figure has a source, a date it was checked and a kind; a number in a
     }
   }
   for (const key of Object.keys(STOPS)) {
-    const words = EN['stop.' + key + '.q'] + ' ' + EN['stop.' + key + '.note'];
+    const words = [EN['stop.' + key + '.q'], EN['stop.' + key + '.note']].concat(EN['stop.' + key + '.tried'] || []).join(' ');
     if (/\d/.test(words)) assert.ok(FIGURES[key] && FIGURES[key].length, key + ' has a number but no figure with a source behind it');
+    /* and the figures it names hold each number it says */
+    const held = new Set((FIGURES[key] || []).flatMap(id => [...numbersOf(FACT[id])]));
+    for (const n of numbersIn(words)) assert.ok(held.has(n), key + ' says ' + n + ', which none of its figures (' + (FIGURES[key] || []).join(', ') + ') holds');
   }
+});
+
+test('a number in the first page\'s, the blueprint\'s or What if?\'s words is a figure some fact holds', () => {
+  /* the numbers that are not figures: a name, or a figure worked out from others, said where */
+  const NOT_A_FIGURE = {
+    'hd.chip.4004': ['4004'],   /* the chip's name */
+    'hd.next.d': ['146']        /* 146 million: from 2,300 transistors (transistor-trend) to 336 billion (rubin-gpu) */
+  };
+  const held = new Set(FACTS.facts.flatMap(f => [...numbersOf(f)]));
+  const bad = Object.entries(EN).filter(([k]) => /^(hd|bp|whatif)\./.test(k)).flatMap(([k, v]) => numbersIn(typeof v === 'object' && !Array.isArray(v) ? Object.values(v) : v)
+    .filter(n => !held.has(n) && !(NOT_A_FIGURE[k] || []).includes(n)).map(n => k + ': ' + n));
+  assert.deepEqual(bad, [], 'These words say a number that no fact in src/data/facts.json holds; add the fact with its source (or, for a name, say so here):\n' + bad.join('\n'));
 });
 
 test('every real case shows at a stop, with its words, its source and the figures it names', () => {

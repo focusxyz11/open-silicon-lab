@@ -13,8 +13,24 @@ const root = new URL('..', import.meta.url);
 const read = p => readFileSync(new URL(p, root), 'utf8');
 const EN = readWords();
 /* The code that draws something for a reader. */
-const SHELL = ['src/main2.js'].concat(...['src/app/', 'src/core/', 'src/v2/', 'src/v2/labs/', 'src/v2/glue/'].map(d => readdirSync(new URL(d, root)).filter(f => f.endsWith('.js')).map(f => d + f)));
+const SHELL = ['src/main2.js'].concat(...['src/app/', 'src/core/', 'src/v2/', 'src/v2/labs/', 'src/v2/glue/', 'src/v2/growers/'].map(d => readdirSync(new URL(d, root)).filter(f => f.endsWith('.js')).map(f => d + f)));
+/* the data, which names texts too (a lens's words, a world's link) */
+const DATA = readdirSync(new URL('src/data/', root), { recursive: true }).filter(f => f.endsWith('.js')).map(f => 'src/data/' + f.split('\\').join('/'));
 const LANGS = readdirSync(new URL('src/i18n/', root), { withFileTypes: true }).filter(d => d.isDirectory()).map(d => d.name);
+/* the end of a name built in code, read from just after its first '+': the rest of t()'s first argument, and its last
+   part if that is one written string with nothing else written in quotes before it ('' when it is not) */
+function endOf(code, i) {
+  let depth = 0, j = i;
+  for (; j < code.length; j++) {
+    const c = code[j];
+    if (c === "'" || c === '"' || c === '`') { const q = c; for (j++; j < code.length && code[j] !== q; j++) if (code[j] === '\\') j++; continue; }
+    if (c === '(' || c === '[' || c === '{') depth++;
+    else if (c === ')' || c === ']' || c === '}') { if (!depth) break; depth--; }
+    else if (c === ',' && !depth) break;
+  }
+  const arg = code.slice(i, j), m = /\+\s*'([\w.-]*)'\s*$/.exec(arg);
+  return m && !/['"`]/.test(arg.slice(0, m.index)) ? m[1] : '';
+}
 
 test('the shell has no visible English in its code (put it in src/i18n/en/)', () => {
   const hits = SHELL.flatMap(f => englishIn(read(f)).map(([n, s]) => f + ':' + n + '  ' + s));
@@ -23,9 +39,13 @@ test('the shell has no visible English in its code (put it in src/i18n/en/)', ()
 
 test('every text the code names exists, and every text is used', () => {
   /* the open port (src/engines/api.js and its MCP server) gives agents the same words */
-  const code = SHELL.map(read).join('\n') + read('index.html') + read('src/engines/api.js') + read('scripts/mcp.mjs');
+  const code = SHELL.concat(DATA).map(read).join('\n') + read('index.html') + read('src/engines/api.js') + read('scripts/mcp.mjs');
   const literals = new Set([...code.matchAll(/'([\w.-]+)'|"([\w.-]+)"/g)].map(m => m[1] || m[2]));
-  const prefixes = [...code.matchAll(/\bt[x]?\(\s*'([\w.-]+[.\w-]*)'\s*\+/g)].map(m => m[1]);
+  /* a name built in code: t('chip.' + k + '.label') (or 'chip.' + k + '.label' anywhere but as what another function
+     is given first, such as Hold's own w('chip.' + …)) can be any text that starts 'chip.' and ends '.label', and only
+     those; where its end is not one written string (t('x.' + k), or a choice of strings), any text with that start */
+  const built = [...code.matchAll(/(?:\b([\w$]+)\(\s*)?'([\w-]+(?:\.[\w-]+)*\.?)'\s*\+/g)]
+    .filter(m => (m[1] ? /^(t|tx|has)$/.test(m[1]) : m[2].endsWith('.'))).map(m => [m[2], endOf(code, m.index + m[0].length)]);
   const named = [...code.matchAll(/\bt[x]?\(\s*'([\w.-]+)'\s*[,)]/g)].map(m => m[1]).concat([...code.matchAll(/data-i18n="([\w.-]+)"/g)].map(m => m[1]), [...code.matchAll(/data-i18n-attr="([^"]+)"/g)].flatMap(m => m[1].split(';').map(p => p.split(':')[1])));
   const missing = [...new Set(named)].filter(k => !(k in EN));
   assert.deepEqual(missing, [], 'The code asks for texts that src/i18n/en/ does not have:\n' + missing.join('\n'));
@@ -33,7 +53,7 @@ test('every text the code names exists, and every text is used', () => {
   /* words from the earlier site waiting for a view in the chip world (src/data/waiting-words.json): kept, not yet shown */
   const WAITING = new Set(JSON.parse(readFileSync(new URL('src/data/waiting-words.json', root), 'utf8')).keys);
   [...WAITING].forEach(k => assert.ok(k in EN, 'src/data/waiting-words.json names ' + k + ', which src/i18n/en/ does not have'));
-  const unused = Object.keys(EN).filter(k => !literals.has(k) && !prefixes.some(p => k.startsWith(p)) && !WAITING.has(k));
+  const unused = Object.keys(EN).filter(k => !literals.has(k) && !built.some(([p, e]) => k.startsWith(p) && k.endsWith(e) && k.length >= p.length + e.length) && !WAITING.has(k));
   assert.deepEqual(unused, [], 'These texts in src/i18n/en/ are not used anywhere; remove them or use them:\n' + unused.join('\n'));
 });
 

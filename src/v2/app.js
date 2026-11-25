@@ -40,7 +40,7 @@ export function start() {
      and hiding a view that never opened does nothing. Once a view has opened, the other areas' words load in an idle
      moment */
   const GLUE = {'island': [], 'frame': [], 'flights': ['frame'], 'studio': ['frame'], 'chip': ['frame'], 'flat': ['frame'], 'supply': ['flat'], 'board': ['frame'], 'pages': ['frame']}, glueP = {};
-  const WORDS = { island: ['atlas', 'place', 'design'], frame: ['atlas', 'place', 'design'], pages: ['pages'] };
+  const WORDS = { island: ['atlas', 'place', 'design', 'pages'], frame: ['atlas', 'place', 'design', 'pages'], pages: ['pages'] };
   /* and the styles of its view (src/core/styles.js): the frame's with the frame, each view's own with its glue */
   const STYLES = { island: ['frame', 'island'], frame: ['frame'], studio: ['studio'], flat: ['flat'], supply: ['supply'], pages: ['pages'] };
   const glue = k => glueP[k] || (glueP[k] = Promise.all(GLUE[k].map(glue).concat(needWords(...(WORDS[k] || [])), needStyles(...(STYLES[k] || [])))).then(() => import('./glue/' + k + '.js')).then(m => { m.create(); afterPaint(() => { if (preloadOk()) needAllWords(); }); }));
@@ -145,15 +145,16 @@ export function start() {
   const prewarm = () => [ready(V.ensureDc, 'dc'), ready(V.ensureChip, 'chip'), ready(V.ensureBoard, 'board')].reduce((p, f) => p.then(() => new Promise(r => idle(() => { f(); r(); }))), Promise.resolve());
   /* the idle preload: never on a connection that asks to save data or is slow (2g, 3g), and never before the page has
      painted (a frame, then an idle moment). The page is marked with the moment it starts (data-preload, in ms since
-     the page opened), so the smoke test can tell what was fetched before it */
+     the page opened), so the smoke test can tell what was fetched before it, or with off where it never starts: the
+     first page then fetches what it shows later when it is first touched */
   const preloadOk = () => { const c = navigator.connection; return !(c && (c.saveData || /2g|3g/.test(c.effectiveType || ''))); };
   const afterPaint = f => requestAnimationFrame(() => idle(f));
   const preloadMark = () => { const h = document.documentElement; if (!h.dataset.preload) h.dataset.preload = String(Math.floor(performance.now())); };
   /* on the first page: only the labs, so a challenge chosen there opens at once */
   let homeLoaded = false;
-  const preloadHome = () => { if (homeLoaded || !preloadOk()) return; homeLoaded = true; preloadMark(); labsReady(null, false).catch(() => { /* fetched again when a challenge is played */ }); };
+  const preloadHome = () => { if (homeLoaded) return; homeLoaded = true; if (!preloadOk()) { document.documentElement.dataset.preload = 'off'; return; } preloadMark(); labsReady(null, false).catch(() => { /* fetched again when a challenge is played */ }); };
   const preload = () => { if (!preloadOk()) return; preloadMark(); prewarm(); ['./frame.js', './board3d.js', './story.js', './stories.js', '../engines/weave.js', '../app/world.js', '../data/weave.js', '../app/design.js', '../app/journey.js', './level3d.js', './relief3d.js', './wafer3d.js', './pcb3d.js', './phone3d.js', './gate3d.js', './switch3d.js', './atom3d.js', './overlay.js'].forEach(u => import(u).catch(() => { /* fetched again when needed */ })); };
-  const ensureMap = () => mapReady || (mapReady = Promise.all([import('./map3d.js'), needStyles('frame', 'island')]).then(([m]) => {
+  const ensureMap = () => mapReady || (mapReady = Promise.all([import('./map3d.js'), needWords(...WORDS.island), needStyles('frame', 'island')]).then(([m]) => {
     /* tap selects, zoom goes in and out (docs/INTERACTION.md): a second tap on the same place selects it again, it
        does not go in */
     V.map = m.createMap($('mapCanvas'), $('mapLabels'), { whatif: id => V.wf && V.wf.pick(id), place: id => { if (V.wf) return V.wf.pick(id); if (V.cur && V.cur.place === id && !V.cur.part && (!sheet.hidden || !insp.hidden)) return; V.quickNext = true; V.openPlace(id); }, part: (place, part) => { V.quickNext = true; location.hash = '#/place/' + place + '/' + part; },
@@ -411,7 +412,7 @@ export function start() {
   let stations = null;
   function showStations() {
     showHome0(); if (hold) hold.hide(); if (blueprint) blueprint.hide();
-    return Promise.all([import('./stations.js'), needStyles('stations')]).then(([m]) => {
+    return Promise.all([import('./stations.js'), needWords('pages'), needStyles('stations')]).then(([m]) => {
       if (!stations) stations = m.createStations(stationsEl, { challenges: Game.CHALLENGES, chOf, titleOf, doHref, doHome: Way.doHome, sizeOf, sizeWords, still,
         done: () => S.done, exps: Exp.EXPERIMENTS.map(x => ({ id: x.id, world: x.world, ask: Read.askOf(x) })) });
       stations.show();

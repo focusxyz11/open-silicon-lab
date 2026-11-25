@@ -2167,6 +2167,18 @@
    "url": "https://www.theregister.com/2019/08/07/amd_rome_epyc_processor_launch/",
    "value": "Nine dies, 64 cores (2019)",
    "verified": "2026-11-24"
+  },
+  {
+   "id": "si-lattice",
+   "topic": "transistor",
+   "detail": "The lattice parameter of an ideal crystal of pure, naturally occurring silicon in vacuum at 22.5 °C: 5.431 020 511 × 10⁻¹⁰ m. The crystal's cube of atoms repeats at this spacing.",
+   "kind": "reported",
+   "label": "Silicon's crystal repeats",
+   "source": "NIST, CODATA 2018 X-ray constants",
+   "status": "current",
+   "url": "https://pml.nist.gov/cuu/pdf/xray_2018.pdf",
+   "value": "The silicon crystal repeats every 0.543 nm (5.431 × 10⁻¹⁰ m)",
+   "verified": "2026-11-25"
   }
  ],
  "changes": [
