@@ -11,6 +11,7 @@ import * as THREE from '../vendor/three.min.js';
 import { mat, box, glass, BOARD } from './kit3d.js';
 import { createLevel3D } from './level3d.js';
 import { chipNow } from '../app/scenes.js';
+import { sceneVersion } from '../app/betscene.js';
 import { smooth, JOIN } from '../engines/join.js';
 
 /* the phone's size in units: across, thick, long */
@@ -77,6 +78,8 @@ export function create(canvas, host, on = {}) {
     let t = 0;
     return {
       level: 'phone', parts: ['battery', 'board', 'camera', 'antenna'],
+      /* the battery is your chip's: draw again when it changes, even when still */
+      version: () => sceneVersion(),
       anchors: { battery: [-0.3, 0.3, 1.6], board: [0.5, 0.25, -2.0], camera: [-0.95 + GAP, 0.3, -2.75], antenna: [-PW / 2, 0.35, PL / 2 - 0.7] },
       /* a hero object: seen from above at an angle, turned like the stack; as you arrive, it comes apart */
       view: { tilt: 0.75, turn: -0.42, r: 6.4, at: [0, 0.2, 0.3], arrive: { tilt: 0.5, turn: -0.7, ms: 2200 },

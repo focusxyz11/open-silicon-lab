@@ -506,13 +506,21 @@ BUILD.test = (b, plant, first) => {
   /* the wafer map, on a screen beside it */
   b.box(380, 80, 0, 10, 10, 120, M.base); b.box(345, 72, 120, 80, 6, 80, M.body); b.box(349, 70, 124, 72, 2, 72, M.screen, false);
   b.part('map', 345, 66, 120, 80, 10, 80);
-  const { DIES: dies, HITS: hits } = chip3();
-  const n = dies.length, mapM = new THREE.InstancedMesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ color: 0xffffff }), Math.max(1, n)), mm = new THREE.Matrix4(), c = new THREE.Color();
-  dies.forEach((d, i) => { const s = Math.max(0.004, (d[2] / 1000) * 0.68); mm.makeScale(s, s, 1).setPosition(3.53 + (d[0] / 1000) * 0.68 + s / 2, 1.96 - (d[1] / 1000) * 0.68 - s / 2, -0.689); mapM.setMatrixAt(i, mm); mapM.setColorAt(i, c.set(M.dark.color)); });
-  b.dyn.add(mapM);
+  /* your wafer's chips on the map, built again when your chip changes (a bigger chip: fewer of them, more lost) */
+  const mapGeo = new THREE.PlaneGeometry(1, 1), mapMat = new THREE.MeshBasicMaterial({ color: 0xffffff }), mm = new THREE.Matrix4(), c = new THREE.Color();
+  let dies = [], hits = [], n = 0, mapM = null, mapV = -1;
+  const buildMap = () => {
+    const J = chip3(); mapV = J.v; dies = J.DIES; hits = J.HITS; n = dies.length;
+    if (mapM) { b.dyn.remove(mapM); mapM.dispose(); }
+    mapM = new THREE.InstancedMesh(mapGeo, mapMat, Math.max(1, n)); mapM.count = n;
+    dies.forEach((d, i) => { const s = Math.max(0.004, (d[2] / 1000) * 0.68); mm.makeScale(s, s, 1).setPosition(3.53 + (d[0] / 1000) * 0.68 + s / 2, 1.96 - (d[1] / 1000) * 0.68 - s / 2, -0.689); mapM.setMatrixAt(i, mm); mapM.setColorAt(i, c.set(M.dark.color)); });
+    b.dyn.add(mapM);
+  };
+  buildMap();
   return { close: 1.2, at: { pod: [0, 30, 110], efem: [0, 105, 120], lock: [40, 185, 104], probe: [230, 265, 104] },
     robots: [CLUSTER_ROBOTS[0], { id: 'B', b: [120, 230, 0], h: 108, L: 72, rest: [130, 210], zone: ['lock', 'probe'] }],
     update(f, mine, t) {
+      if (chip3().v !== mapV) buildMap();
       const testing = (mine && f.s.k === 'proc.test') || !mine, upto = mine ? (f.s.k === 'proc.test' ? f.pu : f.i > 3 ? 1 : 0) : 1, k = Math.floor(n * upto);
       const st = Math.floor(t * 4), ox = testing ? ((st % 5) - 2) * 4 : 0, od = testing ? ((Math.floor(st / 5) % 5) - 2) * 4 : 0;
       chuck.position.copy(V(230 + ox, 265 + od, 96 + (testing && (t * 4) % 1 < 0.5 ? 2 : 0)));
