@@ -221,7 +221,9 @@ export function machines(el, ctx) {
     return '<header class="f2rhead mhead"><p class="kicker">' + esc(t('machines.ui.kicker')) + '</p><h1>' + esc(t('machines.ui.title')) + '</h1>' +
       '<div class="mmodes" role="tablist" aria-label="' + esc(t('machines.ui.modes')) + '">' + ['look', 'do'].map(m => '<button type="button" role="tab" data-mmode="' + m + '" aria-selected="' + (view.mode === m) + '">' + esc(t('machines.ui.' + m)) + '</button>').join('') + '</div>' +
       '<div class="mneeds" role="tablist" aria-label="' + esc(t('machines.ui.needs')) + '">' + NEEDS.map(n => '<button type="button" role="tab" data-mneed="' + n.id + '" aria-selected="' + (n.id === id) + '"><b>' + esc(t('machines.need.' + n.id + '.t')) + '</b><span class="small">' + esc(t('machines.need.' + n.id + '.d')) + '</span>' + ((GOALS[n.id] || []).every(g => WON[n.id + '.' + g.id]) ? '<span class="mwonmark" title="' + esc(t('machines.do.allWon')) + '">✓</span>' : '') + '</button>').join('') + '</div>' +
-      '<p class="small mwhy">' + esc(t('machines.need.' + id + '.why')) + '</p></header>';
+      '<p class="small mwhy">' + esc(t('machines.need.' + id + '.why')) + '</p>' +
+      /* one scale up: not a machine for one need but the architecture itself, a recipe nobody has built (src/v2/labs/arch.js) */
+      '<a class="mcoreway march" href="#/do/archniche"><span aria-hidden="true">↗</span> ' + esc(t('machines.ui.arch')) + '</a></header>';
   }
 
   /* ---- the stage: the machine, its layer, and in Do the goal across the top ---- */

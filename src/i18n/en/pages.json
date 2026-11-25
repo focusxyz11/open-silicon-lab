@@ -1035,5 +1035,6 @@
  "floor.speedTitle": "Light's speed",
  "floor.speed": "At your clock ({ghz} billion ticks a second in this model), light in glass travels about {cm} cm in one tick. Your chip is {mm} mm corner to corner: at least {ticks} of a tick to cross. Real wires are many times slower than light, so the slowest signal must cross far less.",
  "floor.aim": "Ways that aim at the floor:",
- "floor.model": "From the earlier site's physics floor: first principles, with your chip's energy from the 45 nm table it already uses. The count of bits a multiply-add erases is an estimate of its order of magnitude."
+ "floor.model": "From the earlier site's physics floor: first principles, with your chip's energy from the 45 nm table it already uses. The count of bits a multiply-add erases is an estimate of its order of magnitude.",
+ "machines.ui.arch": "One scale up: invent the architecture itself, a recipe nobody has built, and grow it until it wins"
 }

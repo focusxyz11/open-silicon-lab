@@ -147,6 +147,8 @@ export const FILED = {
   'corearch': ['line', 'eff', 'geo'],
   /* Invent a transistor, at the switch (#329) */
   'transistor': ['physics', 'moore', 'nat'],
+  /* grow an architecture that does not exist yet: win one need, then spread to three */
+  'archniche': ['line', 'sutton', 'moore'], 'archspread': ['moore', 'human', 'line'],
   /* new ways to compute: reversible logic at the switch, dataflow at the chip (#323) */
   'reversible': ['physics', 'nat'], 'dataflow': ['geo', 'eff'],
   /* spiking neurons and light, new ways to compute (#322) */

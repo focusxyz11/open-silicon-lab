@@ -76,7 +76,10 @@ export const LABS = {
   transistor: C('switch'),
   /* new ways to compute (#323): an adder of Toffoli gates ramped slowly, a model's layers laid across tiles */
   reversible: C('paradigms'), dataflow: C('paradigms'),
-  spikes: C('paradigms'), light: C('paradigms')
+  spikes: C('paradigms'), light: C('paradigms'),
+  /* grow an architecture: a toy model of how architectures win, whose lesson is a shape (worse at first, one need, then
+     more); its numbers are its own choices, so it is an idea drawn even though an engine runs it (src/engines/arch.js) */
+  archniche: IDEA, archspread: IDEA
 };
 /* the challenges the ledger makes: a design someone kept, to be broken */
 export const KINDS = { break: C('design'), design: C('design') };
