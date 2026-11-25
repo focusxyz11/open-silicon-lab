@@ -19,7 +19,6 @@ import { rng, gauss, clamp } from './fabkit.js';
 /* ---- the loop ---- */
 export const LOOP_STEPS = ['clean', 'deposit', 'coat', 'expose', 'develop', 'etch', 'strip', 'fill', 'polish', 'inspect'];
 export const LOOP_START = 5;              // the first version opened on the etch
-export const LOOP_LAYERS = 70;            // "repeat for each of 70+ mask layers"
 /* every value is a fraction 0..1 (the first version drew the film 46, the resist 26 and the metal overburden 14 units tall):
    film, resist (thickness), expo (how exposed), open (how open the resist still is over the trenches), depth (of the
    trench etched), fill (copper in the trenches), over (copper above the film, to be polished away) */
@@ -39,7 +38,7 @@ export function layerAt(step, p = 1) {
 /* ---- the cleanroom ---- */
 export const CLEAN_CLASSES = [{ id: 'iso1', n: 1 }, { id: 'iso3', n: 3 }, { id: 'iso5', n: 5 }, { id: 'iso7', n: 7 }, { id: 'room', n: 9 }];
 export const CLEAN_DEFAULT = 2;           // ISO 5, a typical semiconductor cleanroom
-export const CLEAN_SCALE = { particleNm: 100, gatePitchNm: 48, smallParticleNm: 20, hairTimes: 800, shownMax: 2500 };
+const CLEAN_SCALE = { particleNm: 100, gatePitchNm: 48, smallParticleNm: 20, hairTimes: 800, shownMax: 2500 };
 export const isoLimit = (n, dUm = 0.1) => Math.pow(10, n) * Math.pow(0.1 / dUm, 2.08);
 export function cleanroom(index = CLEAN_DEFAULT) {
   const c = CLEAN_CLASSES[clamp(index | 0, 0, CLEAN_CLASSES.length - 1)], perM3 = isoLimit(c.n), perL = perM3 / 1000;
@@ -53,7 +52,7 @@ export function airParticles(index = CLEAN_DEFAULT) {
 
 /* ---- CVD against ALD ---- */
 export const TRENCH = { widthNm: 40, topNm: 24, sides: 60, ald: 0.1, cvd: 0.2, aldSec: 2, cvdSec: 0.2 };
-export const DEPO_DEFAULTS = { mode: 'cvd', ar: 6 };
+const DEPO_DEFAULTS = { mode: 'cvd', ar: 6 };
 export const DEPO_RANGE = { ar: [1, 12] };
 export function depoStart({ mode, ar } = DEPO_DEFAULTS) {
   return depoRead({ mode: mode || 'cvd', ar: ar ?? 6, top: 0, side: new Float32Array(TRENCH.sides), bot: 0, closed: false, time: 0, cycles: 0, phase: 0, done: false });
@@ -75,7 +74,7 @@ export function depoStep(s) {
   return depoRead({ ...s, top: done ? TRENCH.topNm : top, side, bot, closed, time, cycles, phase, done });
 }
 /* readings: coverage (bottom over top, 0..1; 1 before anything is deposited), coveragePct (rounded, or null before), voided, status */
-export function depoRead(s) {
+function depoRead(s) {
   const NS = TRENCH.sides, W0 = TRENCH.widthNm;
   const coverage = s.top > 0 ? Math.min(1, Math.max(s.bot, s.side[NS - 1]) / s.top) : 1;
   const voided = s.mode === 'cvd' && s.closed && 2 * s.side[NS - 1] < W0 - 1;
@@ -143,43 +142,10 @@ export function inspectCompare(w, k) {
    second (dope.js, the anneal 'spike'). The back end builds the wiring above the transistors and must stay below
    400 °C (facts.json beol-heat), so a channel put in there (a sheet or tubes laid on a finished chip) meets only that.
    heatAfter(stage) -> the hottest step, in °C, from that stage on. Read by the switch engine (src/engines/switch.js). */
-export const LINE_STAGES = ['front', 'back'];
+const LINE_STAGES = ['front', 'back'];
 export const LINE_HEAT = [{ id: 'activate', stage: 'front', c: 1050 }, { id: 'wires', stage: 'back', c: 400 }];
 export const heatAfter = stage => Math.max(...LINE_HEAT.filter(s => LINE_STAGES.indexOf(s.stage) >= Math.max(0, LINE_STAGES.indexOf(stage))).map(s => s.c));
 
-export const FABLINE_WORDS = {
-  'fab.loop.clean.t': 'Clean', 'fab.loop.clean.text': 'Wet chemistry and scrubbing remove particles and residue. One stray particle can kill a die, so the air in a fab is thousands of times cleaner than a hospital operating room.', 'fab.loop.clean.gear': 'Wet benches and scrubbers (SCREEN, Lam Research)',
-  'fab.loop.deposit.t': 'Deposit film', 'fab.loop.deposit.text': 'Grow or deposit an insulating film. Atomic layer deposition (ALD) can build it one atomic layer at a time.', 'fab.loop.deposit.gear': 'CVD and ALD tools (Applied Materials, Lam Research, Tokyo Electron, ASM)',
-  'fab.loop.coat.t': 'Coat resist', 'fab.loop.coat.text': 'Spin a light-sensitive photoresist onto the wafer, a film only tens of nanometers thick.', 'fab.loop.coat.gear': 'Coater/developer tracks (Tokyo Electron)',
-  'fab.loop.expose.t': 'Expose', 'fab.loop.expose.text': 'The scanner shines EUV light through the mask and shrinks the image 4x onto the resist, stepping across the wafer exposure by exposure.', 'fab.loop.expose.gear': 'EUV scanners (ASML, sole supplier)',
-  'fab.loop.develop.t': 'Develop', 'fab.loop.develop.text': 'A developer liquid dissolves the resist that was hit by light, uncovering the film underneath.', 'fab.loop.develop.gear': 'Coater/developer tracks',
-  'fab.loop.etch.t': 'Etch', 'fab.loop.etch.text': 'A plasma of reactive ions carves straight down into the film wherever the resist is open.', 'fab.loop.etch.gear': 'Plasma etch (Lam Research, Tokyo Electron, Applied Materials)',
-  'fab.loop.strip.t': 'Strip resist', 'fab.loop.strip.text': 'Remove the leftover resist. The pattern now lives in the film itself.', 'fab.loop.strip.gear': 'Ashers and wet strip',
-  'fab.loop.fill.t': 'Fill metal', 'fab.loop.fill.text': 'Coat the trenches with a thin barrier and fill them with copper. Newer nodes are testing ruthenium for the narrowest wires.', 'fab.loop.fill.gear': 'Deposition and electroplating (Applied Materials, Lam Research)',
-  'fab.loop.polish.t': 'Polish (CMP)', 'fab.loop.polish.text': 'Chemical-mechanical polishing grinds the top perfectly flat, leaving metal only inside the trenches, so the next layer starts on a level surface.', 'fab.loop.polish.gear': 'CMP tools (Applied Materials, Ebara)',
-  'fab.loop.inspect.t': 'Inspect', 'fab.loop.inspect.text': 'Optical and electron-beam tools scan for defects and measure dimensions to fractions of a nanometer. Data flows back to tune earlier steps.', 'fab.loop.inspect.gear': 'Inspection and metrology (KLA, Applied Materials, Hitachi High-Tech)',
-  'fab.clean.iso1': 'Inside tool mini-environments and sealed wafer pods', 'fab.clean.iso3': 'A very clean fab bay', 'fab.clean.iso5': 'A typical semiconductor cleanroom', 'fab.clean.iso7': 'Roughly a hospital operating room', 'fab.clean.room': 'An ordinary office (extrapolated from ISO 9)',
-  'fab.clean.name.iso1': 'ISO 1', 'fab.clean.name.iso3': 'ISO 3', 'fab.clean.name.iso5': 'ISO 5', 'fab.clean.name.iso7': 'ISO 7', 'fab.clean.name.room': 'Room air',
-  'fab.depo.status.cvd': 'CVD: fast, uneven', 'fab.depo.status.ald': 'ALD: about 0.1 nm per cycle', 'fab.depo.status.void': 'Void trapped', 'fab.depo.status.filled': 'Filled cleanly',
-  'fab.depo.mode.cvd': 'CVD', 'fab.depo.mode.ald': 'ALD',
-  'fab.overlay.verdict.fail': 'Chips fail', 'fab.overlay.verdict.marginal': 'Marginal', 'fab.overlay.verdict.ok': 'Within budget',
-  'fab.overlay.text.fail': 'Nearly every chip would have broken connections, so yield would be close to zero. Total overlay error must stay within a couple of nanometers.',
-  'fab.overlay.text.marginal': 'Several percent of chips would fail from overlay alone. Still too risky.',
-  'fab.overlay.text.ok': 'Fewer than 1 chip in 20 affected. This is the level of control a leading fab needs.',
-  'fab.inspect.defect.bridge': 'an extra metal bridge between two wires, which shorts two signals together',
-  'fab.inspect.defect.open': 'a break in a wire, which cuts a signal',
-  'fab.inspect.defect.particle': 'a particle lying across the pattern, which can short or block several features',
-  'fab.inspect.text.prompt': 'One of these three dies has a defect. Click where you think it is.',
-  'fab.inspect.text.compared': 'Die {die} disagrees with both neighbours: {what}. One defect like this can kill the whole chip.',
-  'fab.inspect.text.found': 'Found it in die {die}. Now imagine doing this for 10 billion features on hundreds of dies per wafer, at speed.',
-  'fab.inspect.text.miss': 'Not there. Keep looking, or let the comparison find it.',
-  'fab.ch.bottom.t': 'The bare bottom',
-  'fab.ch.bottom.goal': 'Deepen the trench until CVD leaves its bottom with less than 5% of the film on top, then coat it evenly with ALD. What does an even coat cost in time?',
-  'fab.ch.bottom.done': 'At 2:1, CVD leaves only about 4% of the film at the bottom, because the gas reacts near the top before it can reach down. ALD builds the film one atomic layer at a time and coats every surface evenly, but it takes about 20 times longer.',
-  'fab.ch.vias.t': 'Ten billion vias',
-  'fab.ch.vias.goal': 'With no shift, find the largest random error that leaves at most one failed via per chip. Then see what a 2 nm shift does.',
-  'fab.ch.vias.done': 'The random error can be about 0.65 nm before one via in ten billion misses, a fraction of a nanometer. A 2 nm shift alone produces tens of thousands of failures, which is why overlay is measured on every wafer and why fabs use self-aligned vias.'
-};
 
 export const FABLINE_CHALLENGES = [
   { id: 'bottom', lab: 'deposition', groups: [r => r.mode === 'cvd' && r.coveragePct !== null && r.coveragePct < 5, r => r.mode === 'ald' && r.coveragePct !== null && r.coveragePct >= 99 && r.ar >= 2] },

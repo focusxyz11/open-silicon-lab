@@ -137,18 +137,3 @@ export const LITHO_CHALLENGES = [
   { id: 'euv-1000', lab: 'euv', groups: [r => r.power >= 1000 && r.wphRounded >= 275] }
 ];
 
-export const LITHO_WORDS = {
-  'fab.litho.src.iline': 'i-line', 'fab.litho.src.krf': 'KrF', 'fab.litho.src.arf-dry': 'ArF dry', 'fab.litho.src.arf-imm': 'ArF immersion',
-  'fab.litho.src.euv': 'EUV', 'fab.litho.src.high-na': 'High-NA EUV', 'fab.litho.src.hyper-na': 'Hyper-NA (research)',
-  'fab.litho.era.iline': '1990s', 'fab.litho.era.krf': 'late 1990s', 'fab.litho.era.arf-dry': '2000s', 'fab.litho.era.arf-imm': '2007 →', 'fab.litho.era.euv': '2019 →', 'fab.litho.era.high-na': '2026 →', 'fab.litho.era.hyper-na': '2030s?',
-  'fab.litho.illum.conventional': 'Conventional', 'fab.litho.illum.dipole': 'Off-axis dipole', 'fab.litho.illum.dp': 'Double patterning (split onto two masks)',
-  'fab.litho.status.ok': 'Prints', 'fab.litho.status.marginal': 'Marginal', 'fab.litho.status.bad': 'Fails: pattern lost',
-  'fab.litho.masks.1': '1', 'fab.litho.masks.2': '2 (cost x2)',
-  'fab.euv.holes': 'Holes out of spec',
-  'fab.ch.litho-finest.t': 'Print the finest lines',
-  'fab.ch.litho-finest.goal': 'Find the smallest pitch each scanner can still print.',
-  'fab.ch.litho-finest.done': 'Every scanner printed lines near the finest its light and lens allow: half pitch = k1 x wavelength / NA, with a shorter wavelength or a bigger lens (or cleverer light) giving finer lines.',
-  'fab.ch.euv-1000.t': 'The 1,000-watt source',
-  'fab.ch.euv-1000.goal': 'Turn the light source up to 1,000 W and try every other setting. Can this scanner reach the 330 wafers per hour ASML aims for by 2030? If not, what is left that would have to change?',
-  'fab.ch.euv-1000.done': 'In this model it cannot: even the best settings reach about 280 wafers per hour, because each wafer also spends 12.6 s on stage moves, alignment and exchange. Reaching 330 needs faster stages too, not only more light.'
-};

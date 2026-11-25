@@ -13,6 +13,7 @@
    createHold(host, ctx) → { show(), hide() }; ctx: still() (reduced motion). For checks: window.__hold.set(v) goes to
    v doublings (99: the wall), .go(id) to a block, .ch(id) to where a challenge is played, .state(). */
 import { lang, needWords } from '../core/i18n.js';
+import { still, theme } from '../core/ui.js';
 import { w, $, $$, h, clamp, ss, PHONE, S, LIVE, setRoot, fitU, CHAPS, mkTop, CH_AT, ORDER, WALL_OF, WID, PW, lab, words, fillWays, loadFacts,
   momAt, viewAt, countParts, statsHTML, momOut, yearsWordsHTML, Yr, movesEl, TICK, loop, bindHold, setHolding, onChange, Q, src, sheet, fitHead, fillShared } from './holdkit.js';
 import { mkPlate, put, out, LIT, mkChart, mkCQ, initOuts } from './holdplates.js';
@@ -22,9 +23,9 @@ const FONTS = 'https://fonts.googleapis.com/css2?family=Anonymous+Pro:wght@400;7
 const FONTS_ZH = 'https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;900&family=Noto+Serif+SC:wght@500&display=swap';
 
 export function createHold(host, ctx = {}) {
-  const reduce = () => (ctx.still ? ctx.still() : matchMedia('(prefers-reduced-motion:reduce)').matches);
+  const reduce = ctx.still || still;
   /* day or night, as the lab is set (◐ in the bar reloads the page), all the way down */
-  S.night = (document.documentElement.getAttribute('data-theme') || (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark')) === 'dark';
+  S.night = theme() === 'dark';
   host.classList.add('holdhome'); host.classList.toggle('hold-night', S.night);
   const root = h('div', 'hold' + (S.night ? ' night' : '')); root.id = 'hd-root'; host.replaceChildren(root); setRoot(root); initOuts();
   /* the page's part of the lab's bar (in the loop's place, which waits on the first page): the small chip, the chapter,

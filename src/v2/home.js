@@ -6,13 +6,14 @@
    its language picker sets the reader's language for the whole lab, where the rest falls back to English.
    Data: src/data/blueprint.js; geometry: src/engines/blueprint.js. The station map that was the first page before is
    src/v2/stations.js (#/stations). */
+import { esc } from '../core/esc.js';
+import { facts as loadFacts } from '../core/facts.js';
 import { t, fmtNum, lang, LANGS } from '../core/i18n.js';
 import { STAGES, RINGS, SCALE_AT, STATIONS, FLOWS, ACTORS, WALLS, NEXT, ROLES, TRIAD, CHAPTERS, OPEN_AT, DOORS, WAYS } from '../data/blueprint.js';
 import * as B from '../engines/blueprint.js';
 import { figVars } from './figures.js';
 import { ledger, settled, frontier } from '../engines/ledger.js';
 
-const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 const w = (k, o) => t('bp.' + k, o ? { ...figVars(), ...o } : figVars());
 const QWORD = q => (q === 'perfect' ? 'field.perfect.q' : 'home.q.' + q);
 const byId = Object.fromEntries(STATIONS.map(s => [s.id, s]));
@@ -21,7 +22,7 @@ const STATUS = ['product', 'lab', 'guess'];
 /* ctx: still() (reduced motion) */
 export function createHome(host, ctx) {
   const S = { mode: 'whole', side: 'giant', step: 0, show: { product: true, lab: true, guess: true }, sel: null, stage: null };
-  let facts = null, io = null, drawn = false;
+  let io = null, drawn = false;
   const reduced = () => (ctx && ctx.still ? ctx.still() : false);
   const pos = Object.fromEntries(STATIONS.map(s => [s.id, B.placeOf(s)]));
 
@@ -178,8 +179,7 @@ export function createHome(host, ctx) {
   /* ---- the card: what one thing on the wheel is, its source and where it leads ---- */
   function factOf(id) {
     if (!id) return Promise.resolve(null);
-    const get = facts ? Promise.resolve(facts) : fetch('src/data/facts.json').then(r => r.json()).then(j => (facts = j.facts)).catch(() => (facts = []));
-    return get.then(L => L.find(f => f.id === id) || null);
+    return loadFacts().then(F => F[id] || null);
   }
   function card(kind, id) {
     const el = host.querySelector('[data-card]'); if (!el) return;

@@ -28,7 +28,7 @@ const round = (v, d = 2) => Number(v.toPrecision(d));
 
 /* ---- Geometry: distance and heat. Control: where the logic sits, from spread out (0) to packed beside the memory
    (1). Packing shortens every trip to memory and crowds the same work into less room: the same heat in less area. */
-export const PACK_SQUEEZE = 0.6;   /* packed, the logic keeps 40% of its room: it is the same cells, closer together */
+const PACK_SQUEEZE = 0.6;   /* packed, the logic keeps 40% of its room: it is the same cells, closer together */
 export function geometry(F, pack = 0) {
   const mem = rectsOf(F, 'memory')[0], logic = parts(F, 'logic').filter(p => p.by === 'program').flatMap(p => p.rects);
   const right = mem[0] - 36, keep = 1 - PACK_SQUEEZE * pack;
@@ -44,7 +44,7 @@ export function geometry(F, pack = 0) {
 /* ---- Efficiency fuels use: an AI answer's energy (the budget engine's, for today's chip), each answer made cheaper
    again, step by step (Jevons' bet's steps), and the world asking more as the price falls (its rebound). Control:
    how many times each answer has been made cheaper (0 to 5 halvings). */
-export const EFF_STEPS = EFF.length - 1;
+const EFF_STEPS = EFF.length - 1;
 export function efficiency(F, step = 0) {
   const J = jevons(Math.max(0, Math.min(EFF_STEPS, step)), CAP.length - 1), base = budget(JOB, PLAN);
   /* where today's answer goes at this level: moving numbers against computing with them */
@@ -56,7 +56,7 @@ export function efficiency(F, step = 0) {
 
 /* ---- Brain or copy: where memory lives. Control: the share of the network's numbers kept inside the logic as analog
    cells (learned there, on this chip), against bits in the memory array; then the block copied to a new chip. */
-export const COPY_SHARES = SHARES;
+const COPY_SHARES = SHARES;
 export function brainCopy(F, share = 0) {
   const o = { share, learn: 'chip', calibrate: false }, r = evaluate(o), R = mrng(7);
   return { share, fleet: fleet(o, 24, R), measures: { energy: round(r.energy, 2), own: r.own, copied: r.copied } };
@@ -136,7 +136,7 @@ export const MODELS = {
    p: where the logic sits (0 spread out, 1 packed beside the memory); n: an innovation, the memory moved into the rows
    of logic in slices (0 today, 1 all of it), so a fetch goes to the slice beside it. line(n) is today's best
    compromises for that n, at(p, n) your design. */
-export const SLICES = 4;   /* slices of memory in each row of logic, when it moves in */
+const SLICES = 4;   /* slices of memory in each row of logic, when it moves in */
 export function geoEffFront(F = defaultFacts()) {
   const base = budget(JOB, PLAN), blk = base.levels.block || { move: 0, compute: 1 }, m = blk.move / Math.max(1e-30, blk.move + blk.compute), here = blk.move + blk.compute;
   const mem = rectsOf(F, 'memory')[0], area = r => r[2] * r[3], logic0 = parts(F, 'logic').filter(p => p.by === 'program').flatMap(p => p.rects).reduce((s, r) => s + area(r), 0);
@@ -167,7 +167,7 @@ export function memoryFork(F = defaultFacts(), celsius = 25) {
    kept for 64 correct one). A bigger swing on the wire buys margin, at the square of its voltage in energy. Controls:
    how hot it runs, and the swing against today's. Each step lights once it is past its threshold. */
 export const SWING = [1, 1.25, 1.5, 1.75, 2];
-export const CHAIN_LIT = { heat: 25, shake: 0.05, misread: 1e-15, kept: 1e-12 };
+const CHAIN_LIT = { heat: 25, shake: 0.05, misread: 1e-15, kept: 1e-12 };
 export function cleanOne(F = defaultFacts(), celsius = 25, swing = 1) {
   const T = celsius + 273.15, noise = CIM_ERR * Math.sqrt(ni(T) / ni(298.15)) / swing;
   const misread = 0.5 * erfc(0.5 / (noise * Math.SQRT2)), q = 1 - misread;

@@ -15,7 +15,7 @@ export const $ = id => document.getElementById(id);
    and the pages. Found by its class, so the shell never imports the 3D kit: before any 3D view has opened there is
    no canvas, and nothing to hide */
 export const showStage = on => { const c = document.querySelector('canvas.stage3d'); if (c) c.hidden = !on; };
-export const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+export { esc } from '../core/esc.js';
 export const hue = th => (THREADS.find(x => x.id === th) || { hue: 200 }).hue;
 export const qColor = key => 'hsl(' + hue(key.split('.')[0]) + ' 70% 55%)';
 /* following a question stays in the chip world: its trail walks from view to view (Game.askHref) */

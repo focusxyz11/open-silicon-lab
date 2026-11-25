@@ -49,7 +49,7 @@ function tick(regs, before, field, en, d) {
   return x;
 }
 /* a register file from your designs (codes: { bit, select }, either may be missing: then the lab's model) */
-export function registerFile(codes) {
+function registerFile(codes) {
   const bit = codes && codes.bit ? tableOf('regbit', codes.bit) : null, sel = codes && codes.select ? tableOf('select', codes.select) : null;
   const regs = { bit: bit && bit.ok ? bit.T : RIGHT.bit.T, sel: sel && sel.ok ? sel.T : RIGHT.sel.T };
   const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);

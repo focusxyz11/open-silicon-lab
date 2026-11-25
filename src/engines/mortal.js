@@ -10,14 +10,14 @@
    the analog side "mortal computation": knowledge that dies with its hardware. A model with round numbers. */
 
 /* energy of one answer, all-digital = 1: analog cells compute for about a twelfth, and need converters at the edges */
-export const ENERGY = { digital: 1, analog: 0.08, convert: 0.05 };
+const ENERGY = { digital: 1, analog: 0.08, convert: 0.05 };
 /* how far each analog cell sits from what was meant (its spread), and the accuracy of the network kept exactly */
 export const SPREAD = 0.1, EXACT = 98;
 /* how hard noise of a given size hurts: written from software (blind to the chip), learned on the chip (it learns
    around the quirks it has, so only what is left over hurts), and moved to another chip (two chips' quirks apart) */
 const HURT = { written: 1000, learned: 120, moved: 2000, calibrated: 180 };
 /* minutes of relearning per chip, for the whole network analog */
-export const CALIBRATE_MIN = 12;
+const CALIBRATE_MIN = 12;
 export const GOAL = { energy: 0.3, own: 95, copied: 90 };
 export const SHARES = [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1];
 

@@ -6,7 +6,7 @@ A static site: plain ES modules, one stylesheet and one folder of words, split b
 index.html              the site: the chip world (src/main2.js, src/v2/)
 classic.html            the earlier site's address, now leading to the chip world (the earlier site: branch claude/before-retire-2026-11)
 src/v2/app.js           the shell: routes in the address, the bar with the loop, the frame's modes, the island's sheet, Your log's way in, Break it; each view's glue loads when it opens
-src/v2/shell.js         what the shell and its glue share: V (the shared state, and the functions one part lends another), $, esc, follow
+src/v2/shell.js         what the shell and its glue share: V (the shared state, and the functions one part lends another), $, esc (from src/core/esc.js), follow
 src/v2/glue/            one module per view's glue, each create()d once when its view first opens, after the glue it builds on (GLUE in app.js):
   island.js             the island's cards: the inspector, the lenses over the island, the dials, a place's card and its inside, the Lab's inside
   frame.js              what every framed view shares: the frame made for a view, the thirteen as lenses under Ask, the search at a level
@@ -70,8 +70,11 @@ src/data/ways.js        other ways to compute, each at the depth where the probl
 src/data/debates.js     where informed people disagree: the earlier site's debates, each placed at the depths and stations it is about
 src/data/build.js       the build: the community's goal as a plan of needs, the designs people and AI proposed, AI agents' proposals
 src/data/world.js       the map: places, and each kind of chip's trip through them, joined to the line's stations
-src/data/facts.json     sourced figures, loaded when a question's stop first shows (src/v2/glue/pages.js); FIGURES and CASES in weave.js point to them
+src/data/facts.json     sourced figures, loaded once when a view first names one (src/core/facts.js); FIGURES and CASES in weave.js point to them
 src/core/i18n.js        words: t('name'), plurals, numbers, dates
+src/core/esc.js         esc: text put into HTML, the one for every view (no imports, safe for the first page)
+src/core/ui.js          still, phone and theme: less motion asked for, a phone's width, day or night (no imports)
+src/core/facts.js       facts(): src/data/facts.json fetched once for every view that names a figure (no imports)
 src/i18n/en/            every word on screen, one file per area (AREAS in src/core/i18n.js): core.json for the bar, hold.json for the first page, blueprint.json for the blueprint, shared.json for what more than one page says (the four walls, the needs a machine is made for; the first page loads it when first touched), the others loaded with the views that show them
 src/i18n/<lang>/        the same, translated area by area (TRANSLATED in src/core/i18n.js): zh, fr and es have core (the bar), hold (the first page), blueprint and shared
 scripts/words.mjs       every word of a language in one set, for node (the tests, the open port)

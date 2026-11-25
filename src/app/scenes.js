@@ -38,10 +38,8 @@ setJourneyChip(M, HITS, DIES);
 followChip(setChip);
 /* for checks (the smoke test): what your wafer holds as the pictures draw it, and your chip's model */
 if (typeof window !== 'undefined') window.__chip = { wafer: () => { const W = waferNow(); return { dies: W.dies.length, good: W.dies.filter((_, i) => !W.hits[i]).length, side: W.follow[2] }; }, model: () => M };
-/* "Build it": how far the switch has been made (null: finished) */
-let BUILD = null;
-export const BUILD_STEPS = 8;
-export const setBuild = n => { BUILD = n == null || n >= BUILD_STEPS - 1 ? null : n; };
+/* "Build it": how far the switch has been made, in steps; the dive shows it finished */
+const BUILD_STEPS = 8;
 const heat = G => Math.max(0, Math.min(1, (M.power - 0.6) / 3));   /* 0 cool .. 1 very hot */
 
 /* ---- the next depth, inside this one ---- */
@@ -65,7 +63,6 @@ function fadeEnds(G, y0, y1, round) {
    grid, logic fine noise, repeated cores copies of one tile, hand-drawn circuits a few large shapes. ---- */
 let XRAY = false;
 export const setXray = on => { XRAY = !!on; };
-export const xrayOn = () => XRAY;
 const PADS = [[56, 56, 888, 24], [56, 920, 888, 24], [56, 80, 24, 840], [920, 80, 24, 840]].map(r => ({ type: 'io', r }));
 const X = (type, list) => list.map(k => ({ type, r: k.r || k }));
 /* the blocks of each chip, in the same places as its districts in the scene above */
@@ -408,7 +405,7 @@ const skins = [400, 520, 640].map(y => ({ r: [390, y - 8, 220, 66] }));
 const swtch = {
   parts: { gate: [{ r: [390, 300, 220, 500] }], channel: sheets, oxide: skins, source: [{ r: [110, 340, 235, 460] }], drain: [{ r: [655, 340, 235, 460] }] },
   draw(G) {
-    const c = G.col, b = BUILD == null ? BUILD_STEPS - 1 : BUILD;
+    const c = G.col, b = BUILD_STEPS - 1;
     G.bg(c.lo);
     /* 0: the silicon underneath */
     G.r(0, 800, 1000, 200, c.mid, null);

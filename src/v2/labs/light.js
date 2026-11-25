@@ -16,7 +16,7 @@ export const GOAL = 'quarter', TARGET = P.PHOTONIC_TARGETS[GOAL];
 export const START = { th: 0, n: 0 };
 export const RANGE = { th: [0, 360, 2.5], n: [0, P.LIGHT_NOISES.length - 1, 1] };
 /* three numbers sent through, as brightness */
-export const PULSES = [0.9, 0.6, 0.3];
+const PULSES = [0.9, 0.6, 0.3];
 /* the guess: where light put into the top comes out when both arms are the same; the answer is the engine's */
 export const GUESSES = ['top', 'bottom', 'half'];
 export function answer() { const p = P.mzi([1, 0], 0, 0).power; return p[0] > 0.9 ? 'top' : p[1] > 0.9 ? 'bottom' : 'half'; }
@@ -59,7 +59,8 @@ export default function lab(L) {
       '<text class="ax lv' + (shown ? '' : ' hid') + '" x="' + (Wd - 4) + '" y="30" text-anchor="end">' + esc(t('lgt.fig.top', { v: shown ? pct(p[0]) : '?' })) + '</text>' +
       '<text class="ax lv' + (shown ? '' : ' hid') + '" x="' + (Wd - 4) + '" y="108" text-anchor="end">' + esc(t('lgt.fig.bottom', { v: shown ? pct(p[1]) : '?' })) + '</text>';
     /* the multiply: three numbers as brightness in, each times the weight out of the top */
-    const ym = 146, xi = i => 40 + i * 32, xo = i => 276 + i * 32;
+    /* three numbers in and three out, far enough apart that their figures never touch at a phone's size (#374) */
+    const ym = 146, xi = i => 34 + i * 38, xo = i => 268 + i * 38;
     s += '<text class="ax" x="' + xi(1) + '" y="' + (ym - 17) + '" text-anchor="middle">' + esc(t('lgt.fig.mulIn')) + '</text><text class="ax" x="' + xo(1) + '" y="' + (ym - 17) + '" text-anchor="middle">' + esc(t('lgt.fig.mulOut')) + '</text>';
     PULSES.forEach((x, i) => { const out = x * p[0];
       s += '<circle class="pulse" cx="' + xi(i) + '" cy="' + ym + '" r="' + (2 + 7 * Math.sqrt(x)).toFixed(1) + '" opacity="' + (0.3 + 0.7 * x).toFixed(2) + '"/><text class="num" x="' + xi(i) + '" y="' + (ym + 22) + '" text-anchor="middle">' + x.toFixed(2) + '</text>';

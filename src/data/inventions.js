@@ -58,6 +58,5 @@ export const MATTERS = [
   { id: 'switch', on: ['learner', 'adder', 'counter', 'voter', 'parity'], changes: false, exact: true, floor: 'op', claims: [
     { id: 'switchYours', status: 'product', fid: 'computed', kind: 'gain', energy: 'switch', engine: 'src/engines/switch.js' }] }
 ];
-export const MATTER_IDS = MATTERS.map(m => m.id);
 export const matterOf = id => MATTERS.find(m => m.id === id) || null;
 export const mattersFor = blockId => MATTERS.filter(m => m.on.includes(blockId));

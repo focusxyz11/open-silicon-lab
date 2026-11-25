@@ -58,7 +58,9 @@ export const AREAS = {
     /* Invent a transistor, at the switch (#329) */
     'sw',
     /* new ways to compute: reversible logic and dataflow (#323) */
-    'rev', 'dfl'],
+    'rev', 'dfl',
+    /* a gallery of frontier ideas, and which machine fits which job (waiting for a view, src/data/waiting-words.json) */
+    'para'],
   blueprint: ['bp'],
   /* Hold, the first page (src/v2/hold.js) */
   hold: ['hd'],

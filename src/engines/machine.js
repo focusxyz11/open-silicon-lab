@@ -52,7 +52,7 @@ import { forMachines, specOf } from './switch.js';
 
 export { SOFTWARE_COST };                                           // facts.json asic-vs-cpu, said in src/data/blocks.js
 const CIM = cimEnergy(CIM_ARRAY, CIM_ARRAY, CIM_ADC);
-export const MATTER_COST = CIM.analog / CIM.digital;                 // compute in memory against a digital array
+const MATTER_COST = CIM.analog / CIM.digital;                 // compute in memory against a digital array
 /* the floor against a circuit: kT ln 2 for each bit erased, over a 16-bit multiply-add (E16 is in pJ) */
 const OP_PJ = E16.add + E16.mul, BIT_PJ = landauer(T_ROOM) * 1e12;
 export const floorOf = m => (m.floor === 'op' ? bitsErased(16) : m.floor) * BIT_PJ / OP_PJ;
@@ -132,7 +132,7 @@ export function tryDays(need, plan) {
   const d = daysOf(plan.fab || START_FAB);
   return { low: Math.max(TRY_DAYS, d.low), high: Math.max(TRY_DAYS, d.high) };
 }
-export const triesAYear = days => (isFinite(days) ? YEAR / days : 0);
+const triesAYear = days => (isFinite(days) ? YEAR / days : 0);
 
 const partOf = (need, id) => need.parts.find(p => p.id === id) || null;
 /* 'mic.in0' → { part, dir: 'in', i: 0 } */

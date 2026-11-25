@@ -7,7 +7,7 @@
    draw({ labels: [{ key, text, x, y, align, on }], note: { key, title, text, x, y } | null,
           marks: [{ part, x, y, threads: [{ id, color }] }], avoid: [[x, y, w, h]] (names drawn by someone else),
           door: [x, y, side] | null, doorWord, moving }) */
-const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+import { esc } from '../core/esc.js';
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
 export function createOverlay(host, on) {

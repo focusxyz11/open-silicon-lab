@@ -4,9 +4,8 @@
    answer at once. A step may ask for a prediction before the number can be moved.
    A story is data: { text(key, vars), steps: [{ id, scene(state) -> what the scene shows, live, predict, ask, end }], state };
    end: [{ href, words, in }], in: the name of the level the first way leads into (the frame mirrors it onto the picture). */
+import { esc } from '../core/esc.js';
 import { t } from '../core/i18n.js';
-
-const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 
 /* the step's words, with its parts and live numbers made touchable */
 export function markup(text, live) {

@@ -121,4 +121,3 @@ export function drawMap(G, o) {
   ctx.restore();
   return hits;
 }
-export const resetMapView = () => { view = null; };

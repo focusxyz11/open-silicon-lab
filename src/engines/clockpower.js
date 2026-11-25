@@ -1,13 +1,13 @@
 /* The clock and the power, as an engine: timing and pipeline stages, the voltage-and-clock power curve, a five-stage
    pipeline with its stalls, and the gate-level clock lab (a bit of memory, a flip-flop, a counter that fails when the
-   clock outruns its slowest path). Pure logic, no DOM, no English (ids only; the words its results are named by are
-   in WORDS, read by its tests; its lab shows its own, in src/i18n/en/labs.json).
+   clock outruns its slowest path). Pure logic, no DOM, no English (ids only; the words are ckp.* in
+   src/i18n/en/labs.json, those the lab does not show yet waiting in src/data/waiting-words.json; its tests check them).
    Brought over from the first version of the site (the branch 'before'): the labs topics/design/labs/timing.js and
    power.js, topics/architecture/labs/pipeline.js and topics/clock/labs/clock-lab.js (with each topic's content.html
    and topic.json), and the gate simulator that the clock lab calls, src/engines/seq.js with its tests (it was not
    in the list of labs, but the lab is nothing without it, so it comes here whole). Same formulas and same numbers.
    Added here: timing() and fewestCuts() around the lab's stages() and balance(), power() around its formulas, the
-   pipeline as schedule(), ids for hints and stall reasons, CHALLENGES and WORDS.
+   pipeline as schedule(), ids for hints and stall reasons, and CHALLENGES.
 
    Skipped, because they hold nothing to compute: every canvas drawing (waves, latch, budget bar, timing bars, power
    curve), the slow-motion loop of the latch lab (its RATE of 400 ps of chip time per second on screen) and the
@@ -95,7 +95,7 @@ export function frontier(a, step = 0.02) {
 
 /* ================= pipeline: five stages, stalls, forwarding, reordering ================= */
 /* The program: code (as an assembler would print it), d: the register it writes (0: none), s: registers it reads, ld: a load. */
-export const PROGRAM = [
+const PROGRAM = [
   { t: 'lw   x1, 0(x10)', d: 1, s: [10], ld: 1 }, { t: 'add  x2, x1, x3', d: 2, s: [1, 3] }, { t: 'sub  x4, x2, x5', d: 4, s: [2, 5] },
   { t: 'addi x6, x6, 1', d: 6, s: [6] }, { t: 'and  x7, x4, x6', d: 7, s: [4, 6] }, { t: 'sw   x7, 8(x10)', d: 0, s: [7, 10] }
 ];
@@ -128,7 +128,7 @@ export function schedule({ forwarding = false, reorder = false } = {}) {
    that much later, and wires may feed back into themselves, which is what lets a pair of gates hold a bit. Values are
    0, 1 or 'x' (unknown, as at power-on). Gate delays come from the tiny-chip studio's cell library and process
    (src/engines/tinychip.js), so a counter here is as fast as the same gates there. */
-export class Circ {
+class Circ {
   constructor() { this.gates = []; this.ins = []; this.fan = {}; }
   input(...names) { names.forEach(n => { if (!this.ins.includes(n)) this.ins.push(n); }); return this; }
   /* type: NOT, BUF, AND, OR, NAND, NOR, XOR; d: delay in ps */
@@ -201,7 +201,6 @@ function dffIn(C, D, d, clk, p) {
   const m = dLatchIn(C, D, d, p + 'ck', p + 'm');
   return dLatchIn(C, D, m, clk, p + 'l');
 }
-export function dLatch(node = '130') { const D = delays(node), C = new Circ().input('D', 'E'); dLatchIn(C, D, 'D', 'E', 'a'); return C; }
 /* Both side by side on the same D and clock, so they can be compared: latch Q is 'aq', flip-flop Q is 'flq'. */
 export function latchAndFlop(node = '130') {
   const D = delays(node), C = new Circ().input('D', 'CLK');
@@ -277,7 +276,7 @@ export function latchHint(hist, now) {
 
 /* The flip-flop lab: 16 slots of 600 ps, D on or off in each; the clock rises every 4 slots (slot 2, 6, 10, 14) and stays
    up for two slots. Returns the simulation, how often each Q changed, and the goals the lab offered. */
-export const FLOP = { slot: 600, slots: 16, per: 4 };
+const FLOP = { slot: 600, slots: 16, per: 4 };
 export function flopRun(D) {
   const { slot: SLOT, slots: N, per: PER } = FLOP, C = latchAndFlop(), init = zeroState(C);
   const edges = Array.from({ length: N / PER }, (_, k) => (k * PER + 2) * SLOT);
@@ -334,59 +333,3 @@ export const CHALLENGES = {
   speedLimit: { id: 'speedLimit', check: runs => new Set(runs.filter(r => counterStatus(r.node, r.hz).top).map(r => r.node)).size >= 2 }
 };
 
-/* The words this engine's results are named by, kept beside it and read by its tests; the lab (src/v2/labs/clockpower.js)
-   shows its own, ckp.* in src/i18n/en/labs.json. */
-export const WORDS = {
-  'clock.corner.fast': 'Fast: cold, high V', 'clock.corner.typical': 'Typical', 'clock.corner.slow': 'Slow: hot, low V',
-  'clock.timing.meets': 'Meets timing', 'clock.timing.fails': 'Fails timing',
-  'clock.power.runs': 'Runs, up to {f} GHz at {v} V', 'clock.power.fails': 'Fails timing: needs {v} V', 'clock.power.beyond': 'Beyond this chip\'s limit',
-  'clock.stall.load': '{ins} needs x{reg} from {from}: {cycles} stall cycle(s). A load\'s data only exists after the memory stage, so even forwarding must wait one cycle.',
-  'clock.stall.forward': '{ins} needs x{reg} from {from}: {cycles} stall cycle(s).',
-  'clock.stall.nofwd': '{ins} needs x{reg} from {from}: {cycles} stall cycle(s). Without forwarding it must wait for write-back.',
-  'clock.stall.none': 'No stalls. Every instruction gets its inputs just in time.',
-  'clock.hint.latch.oscillate': 'Both released at the same instant: each gate keeps flipping the other, forever in this model. A real latch settles after a while, at random. That is why designs never set and reset at once.',
-  'clock.hint.latch.both': 'Both on: Q and not-Q are both 0, which a latch should never be. Now turn both off at once.',
-  'clock.hint.latch.setting': 'S is on, so Q becomes 1. Now turn S off and see whether Q stays.',
-  'clock.hint.latch.resetting': 'R is on, so Q becomes 0. Turn R off: does it stay 0?',
-  'clock.hint.latch.unknown': 'At power-on Q is unknown: nothing has set it yet. Turn S on.',
-  'clock.hint.latch.memory': 'Both off, and Q holds whatever was written last. Two gates, one bit of memory: a processor\'s registers are built from loops like this.',
-  'clock.hint.latch.holds1': 'S is off, but Q is still 1: the loop keeps it alive. That is one bit of memory. Now try R.',
-  'clock.hint.latch.holds0': 'Q is 0 and stays 0. Turn S on to store a 1.',
-  'clock.hint.flop.none': 'Switch D to 1 in one slot. The dashed lines are the ticks.',
-  'clock.hint.flop.many': 'Use only one slot at 1.',
-  'clock.hint.flop.one-done': 'D was steady for 600 ps before the tick, longer than the setup time, so the first latch had settled when the clock rose.',
-  'clock.hint.flop.late': 'D rose exactly at the tick: too late. The first latch closes as the clock rises, so D must be there a little before.',
-  'clock.hint.flop.before': 'The flip-flop looks at D only as the clock rises. Put the 1 in the slot just before a tick.',
-  'clock.hint.flop.differ-done': 'The latch let a late change through while the clock was 1; the flip-flop had already taken its value at the tick.',
-  'clock.hint.flop.differ': 'Hint: the latch is open the whole time the clock is 1. What if D changes in the second half of the last cycle?',
-  'clock.hint.flop.free': 'Count the changes: the latch passes every wiggle while the clock is 1; the flip-flop changes at most once per tick.',
-  'clock.hint.counter.errors': 'Too fast: the clock ticked before the carry finished rippling through the adders, so the register stored half-finished sums.',
-  'clock.hint.counter.top': 'That is the top safe speed: the slowest path just fits in one tick. Try another process: faster gates, faster clock.',
-  'clock.hint.counter.top3': 'That is the top safe speed: the slowest path just fits in one tick. Real 3 nm processors run far slower than this tiny counter, because their slowest paths are much longer and power limits them.',
-  'clock.hint.counter.above': 'Still counting right above the predicted limit: the prediction adds up the worst case of every gate, and real designs keep that margin. Push further.',
-  'clock.hint.counter.counting': 'It counts right. Push the clock faster: where does it break?',
-  'clock.goal.one': 'One slot is enough', 'clock.goal.one.why': 'Make the flip-flop store a 1 with D at 1 for only one slot.',
-  'clock.goal.differ': 'Different endings', 'clock.goal.differ.why': 'Make the latch and the flip-flop end with different values.',
-  'clock.goal.free': 'Free play', 'clock.goal.free.why': 'Draw any pattern on D and compare the latch with the flip-flop.',
-  'clock.ch.slowCorner.t': 'Pass the slow corner',
-  'clock.ch.slowCorner.goal': 'At a 4 GHz clock, add the fewest pipeline registers that still pass sign-off on a hot, low-voltage chip. What does it cost in latency?',
-  'clock.ch.slowCorner.done': 'Two registers pass at the slow corner, at the cost of 3 cycles of latency instead of 2. Sign-off must pass at the slow corner, because some chips will run hot at low voltage.',
-  'clock.ch.halfPower.t': 'Half the power',
-  'clock.ch.halfPower.goal': 'Start at 3 GHz and 0.75 V, about 51 W. Find the fastest clock that runs safely on less than half that power.',
-  'clock.ch.halfPower.done': 'About 2.25 GHz runs on 25 W: half the power for a quarter less speed. Power grows with voltage squared, and a slower clock lets the chip run at a lower voltage.',
-  'clock.ch.zeroStalls.t': 'Zero stalls',
-  'clock.ch.zeroStalls.goal': 'Get the program through the 5-stage pipeline with no stall cycles at all. Which two fixes does it take?',
-  'clock.ch.zeroStalls.done': 'It takes both forwarding and reordering. Forwarding hands a result on before it is written back; reordering moves an independent instruction into the gap a load leaves.',
-  'clock.ch.latch.t': 'One bit of memory',
-  'clock.ch.latch.goal': 'Store a 1 in two NOR gates, let go, and watch it stay. Then set and reset at once.',
-  'clock.ch.latch.done': 'Two gates held a bit; set and reset together, they oscillate. Designs never do that.',
-  'clock.ch.oneSlot.t': 'One slot is enough',
-  'clock.ch.oneSlot.goal': 'Make a flip-flop store a 1 with its input at 1 for only one time slot.',
-  'clock.ch.oneSlot.done': 'The flip-flop took the 1 at the tick, because D was steady for longer than the setup time.',
-  'clock.ch.differ.t': 'Different endings',
-  'clock.ch.differ.goal': 'Make the latch and the flip-flop end with different values.',
-  'clock.ch.differ.done': 'The latch let a late change through while the clock was 1; the flip-flop had already taken its value.',
-  'clock.ch.speedLimit.t': 'Find the speed limit',
-  'clock.ch.speedLimit.goal': 'Run the counter as fast as it can go without a wrong count, at two different processes.',
-  'clock.ch.speedLimit.done': 'Top speed with no wrong count, at two processes: the slowest path sets the clock.'
-};

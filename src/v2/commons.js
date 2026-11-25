@@ -4,10 +4,10 @@
    An entry of yours is first a draft, kept in your browser (S.drafts) and drawn on the island as yours. The slip
    says what the check found and gives the one link that opens it on GitHub as a new file in a pull request: no
    account with the lab, no server. Until it is merged only you see it, and the slip says so. */
+import { esc } from '../core/esc.js';
 import { t } from '../core/i18n.js';
 import { draft, tryEntry, fileOf, proposeUrl, ledger } from '../engines/ledger.js';
 
-const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 const MADE = ['person', 'ai', 'both'], USE = { person: 'you', ai: 'ai', both: 'both' };
 
 /* who signs: a name, and who made it. How AI was used starts as one of three plain sentences (the file can say more). */
@@ -48,6 +48,4 @@ export function slipClick(ev, S, changed) {
   return false;
 }
 
-/* who made an entry, as a small mark and words */
-export const madeHtml = e => '<span class="made ' + esc(e.made) + '" title="' + esc(t('build.kind.' + e.made)) + '"></span>';
 export const byLine = e => esc(e.by) + ' · ' + esc(t('build.kind.' + e.made));

@@ -25,10 +25,9 @@ export const PUZZLES = [
   { id: 'fib', start: '# a0 = the a1-th Fibonacci number: 0, 1, 1, 2, 3, 5 ...\n', cases: [{ a1: 1 }, { a1: 2 }, { a1: 10 }, { a1: 20 }], want: c => { let a = 0, b = 1; for (let i = 0; i < c.a1; i++) [a, b] = [b, a + b]; return a; } },
   { id: 'fast', start: 'li a0, 0\nli t2, 1\nloop:\n  add a0, a0, t2\n  addi t2, t2, 1\n  ble t2, a1, loop', cases: [{ a1: 100 }, { a1: 1000 }, { a1: 7 }], maxCycles: 12, ext: { M: true }, want: c => (c.a1 * (c.a1 + 1)) / 2 }
 ];
-export const PUZZLE_IDS = PUZZLES.map(p => p.id);
 /* the jobs of a machine's core (src/data/blocks.js NEEDS, by the need's id): a program that already works, watched on
    your core. a3 and the words of memory from address 4096 (mem) are inputs too. Words: rv.job.<id>.t, .d */
-export const MEM0 = 4096;
+const MEM0 = 4096;
 export const JOBS = [
   { id: 'hearing', start: '# the louder of two microphones\nmv a0, a1\nbge a1, a2, done\nmv a0, a2\ndone:', cases: [{ a1: 310, a2: 870 }, { a1: 650, a2: 120 }], want: c => Math.max(c.a1, c.a2) },
   { id: 'wildfire', start: '# count the readings over the alarm level a2\nli t0, 4096\nli t1, 6\nli a0, 0\nloop:\n  lw t2, 0(t0)\n  ble t2, a2, skip\n  addi a0, a0, 1\nskip:\n  addi t0, t0, 4\n  addi t1, t1, -1\n  bne t1, x0, loop',

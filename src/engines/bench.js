@@ -42,7 +42,7 @@ const widthOf = (M, i) => TC.LIB[M.cells[i].type][1];
 const fits = (M, row, W) => row.reduce((s, i) => s + widthOf(M, i), 0) <= W;
 /* a placement from rows: each row's cells spread evenly across it, as the tiny-chip placer packs them; the same
    tile (its width, height and pins) as the placer's own (base), so the router sees the same tile */
-export function placeRows(M, rows, base) {
+function placeRows(M, rows, base) {
   const W = base.W, TR = base.TR, pos = {};
   rows.forEach((L, k) => {
     const used = L.reduce((s, i) => s + widthOf(M, i), 0), gap = (W - used) / (L.length + 1); let x = gap;
@@ -78,7 +78,7 @@ export function moveCell(M, rows, a, r, W) {
   return fits(M, R[r], W) ? R : null;
 }
 /* a placement as it might come before anyone thinks about it: the cells dealt into the rows in a fixed shuffle */
-export function scramble(M, base, seed) {
+function scramble(M, base, seed) {
   let s = (seed | 0) || 3; const rnd = () => { s = (s * 1103515245 + 12345) & 0x7fffffff; return s / 0x7fffffff; };
   const ids = M.cells.map((_, i) => i); for (let i = ids.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [ids[i], ids[j]] = [ids[j], ids[i]]; }
   const rows = Array.from({ length: base.rows }, () => []); let r = 0;

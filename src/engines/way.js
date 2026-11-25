@@ -32,6 +32,8 @@ export const nextPlace = place => {
 };
 
 /* the data centre is flown through: each stop of the flight shows one level */
+/* the pages of Your log (#/log, #/challenges, #/questions), behind the bar's log button */
+export const LOG_PAGES = ['log', 'challenges', 'questions'];
 const FLIGHT = ['building', 'building', 'rack', 'rack', 'board', 'chip'];
 /* and so is a phone (src/v2/phone3d-flight.js DEPTH) */
 const PHONE_FLIGHT = ['phone', 'phone', 'phoneboard', 'soc'];
@@ -75,7 +77,7 @@ export function whereOf(hash) {
   if (k === 'place' && p[1] === 'phones' && /^\d+$/.test(p[2] || '')) return cell('flight', 'phones', PHONE_FLIGHT[+p[2]] || 'phone');
   if (k === 'place' && p[1] === 'cars' && /^\d+$/.test(p[2] || '')) return cell('flight', 'cars', CAR_FLIGHT[+p[2]] || 'car');
   if (k === 'place' && PLACES.includes(p[1])) return cell('island', p[1]);
-  return cell(k === 'ecosystem' || k === 'whatif' ? 'out' : ['log', 'challenges', 'questions', 'read', 'w', 'machines'].includes(k) ? 'log' : 'island');
+  return cell(k === 'ecosystem' || k === 'whatif' ? 'out' : [...LOG_PAGES, 'read', 'w', 'machines'].includes(k) ? 'log' : 'island');
 }
 
 /* Steps and levels (docs/SYSTEM.md, "Steps and levels"). Inside the studio and on the factory's line the things follow

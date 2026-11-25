@@ -20,13 +20,13 @@
    The numbers shown to a reader come from summary(). Here your chip's layers (src/engines/chip.js) set
    how many times a wafer goes round, and how full you run the fab sets how long it waits. */
 
-export const LOT = 25;   /* wafers per lot (one FOUP) */
+const LOT = 25;   /* wafers per lot (one FOUP) */
 
 /* Tool groups, in the order a lot meets them on each layer. hours: raw time per lot per visit;
    tools: how many in the starting line; avail: share of time a tool is up (the rest is maintenance);
    share: the share of layers that visit the group. Implant and anneal shape the transistors, so only
    the first quarter of the layers (front end) needs them; the rest are wiring (back end). */
-export const GROUPS = [
+const GROUPS = [
   { id: 'depo', hours: 2.4, tools: 4, avail: 0.9, share: 1 },      /* deposit a film */
   { id: 'litho', hours: 2.0, tools: 3, avail: 0.88, share: 1 },    /* coat, expose in the scanner, develop */
   { id: 'etch', hours: 2.0, tools: 4, avail: 0.9, share: 1 },      /* cut the pattern into the film */
@@ -37,7 +37,7 @@ export const GROUPS = [
   { id: 'metro', hours: 1.0, tools: 2, avail: 0.95, share: 1 }     /* measure and inspect */
 ];
 /* Does layer i (0-based) of n visit group g? Front-end groups take the first layers. */
-export const visits = (g, i, n) => g.share >= 1 || i < Math.round(g.share * n);
+const visits = (g, i, n) => g.share >= 1 || i < Math.round(g.share * n);
 
 /* Products: layers sets how many times a lot goes round. Layer counts follow ECIA's figures by node. */
 export const PRODUCTS = {
@@ -57,19 +57,18 @@ const VAR_AI = { ca2: 1.0, cs2: 1.0 };
    print and etch again: double patterning); standard EUV prints most layers in one pass, but the very
    finest layers of the newest chips still need two; High-NA EUV prints those in one. extra: the share
    of layers that need the second pass, by chip; hours: scanner time per visit. Illustrative values. */
-export const PRINT = {
+const PRINT = {
   duv: { hours: 1.5, extra: { mature: 0, phone: 0.3, ai: 0.6 } },
   euv: { hours: 2.0, extra: { mature: 0, phone: 0, ai: 0.15 } },
   highna: { hours: 2.0, extra: { mature: 0, phone: 0, ai: 0 } }
 };
 const kindOf = layers => layers >= 95 ? 'ai' : layers >= 70 ? 'phone' : 'mature';
 /* Layers that need a second pass: the finest ones, at the bottom of the stack. */
-export const extraLayers = (L, layers) => Math.round(PRINT[L.print || 'euv'].extra[kindOf(layers)] * layers);
-export const isCritical = (L, i, layers) => i < extraLayers(L, layers);
+const extraLayers = (L, layers) => Math.round(PRINT[L.print || 'euv'].extra[kindOf(layers)] * layers);
 const REPEAT = ['depo', 'litho', 'etch'];   /* what a second pattern repeats */
 /* Hours per layer that are neither waiting at a tool nor processing: moving between bays, holds,
    waiting for a measurement result. */
-export const MOVE = 1.0;
+const MOVE = 1.0;
 
 /* A line: its tool groups, how it prints (opts.print: duv, euv or highna) and whether AI runs it. */
 export function line(tools = {}, opts = {}) {
@@ -79,7 +78,7 @@ export function line(tools = {}, opts = {}) {
   return L;
 }
 /* Visits a lot makes to group g over the whole chip. */
-export const visitsOf = (L, g, layers) => Math.round(g.share * layers) + (REPEAT.includes(g.id) ? extraLayers(L, layers) : 0);
+const visitsOf = (L, g, layers) => Math.round(g.share * layers) + (REPEAT.includes(g.id) ? extraLayers(L, layers) : 0);
 
 /* Lots one group could finish per day, counting every visit a lot makes to it. */
 const groupCapacity = (L, g, layers) => g.tools * g.avail * 24 / (g.hours * Math.max(1, visitsOf(L, g, layers)));

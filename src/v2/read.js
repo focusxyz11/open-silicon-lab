@@ -7,6 +7,7 @@
 
    The index (#/read) is the questions and challenges the lab has, by what can be done with them now. The eleven
    core questions are never listed: one appears under an experiment only once it has been earned (rootShown). */
+import { esc } from '../core/esc.js';
 import { t, has, fmtDate, fmtNum, fmtWords } from '../core/i18n.js';
 import { THREADS, CASES } from '../data/weave.js';
 import { DEBATES } from '../data/debates.js';
@@ -20,7 +21,6 @@ import { DEPTHS } from '../data/weave.js';
 import { STAGES, stageOfPlace } from '../engines/way.js';
 import { readHtml, tryHtml } from './frame2.js';
 
-const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 const ext = (href, html) => '<a href="' + esc(href) + '" target="_blank" rel="noopener">' + html + '</a>';
 const hue = w => (THREADS.find(x => x.id === w) || { hue: 0 }).hue;
 export const colorOf = x => 'hsl(' + hue(x.world) + ' 70% 55%)';
@@ -200,8 +200,3 @@ export function filterIndex(root, q) {
   root.querySelectorAll('.f2qmap .f2dot[data-q]').forEach(d => d.classList.toggle('f2off', !!q && !d.dataset.q.includes(q)));
 }
 
-/* the first page: a few questions to start with, changing day by day, all of them things you can do now */
-export function starters(n = 3, day = Math.floor(Date.now() / 864e5)) {
-  const L = mixed(X.EXPERIMENTS.filter(x => X.stateOf(x) === 'live' && !(x.ch || []).length));
-  return Array.from({ length: Math.min(n, L.length) }, (_, i) => L[(day * n + i) % L.length]);
-}

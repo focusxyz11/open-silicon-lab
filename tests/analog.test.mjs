@@ -3,6 +3,10 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import * as A from '../src/engines/analog.js';
+import { readWords } from '../scripts/words.mjs';
+/* the words: the lab's own, ana.* in src/i18n/en/labs.json (the missions it does not play yet wait in
+   src/data/waiting-words.json), and the challenges' in core.json */
+const W = readWords();
 
 const BEST = {};   // best() searches every setting; do it once per mission
 const bestOf = m => (BEST[m.id] ??= A.best(m));
@@ -65,10 +69,11 @@ test('the hints name what is wrong, and the words are all there', () => {
   assert.equal(A.hintOfReg(cpu, 'ldo', A.runJob(cpu, 'ldo')), 'heat');
   assert.equal(A.hintOfReg(cpu, 'buck', A.runJob(cpu, 'buck')), 'best-buck');
   assert.equal(A.hintOfReg(A.JOBS.find(j => j.id === 'adc'), 'buck', A.runJob(A.JOBS.find(j => j.id === 'adc'), 'buck')), 'ripple');
-  const W = A.WORDS;
-  for (const m of A.MISSIONS) assert.ok(W['analog.mission.' + m.id] && W['analog.mission.' + m.id + '.why']);
-  for (const j of A.JOBS) assert.ok(W['analog.job.' + j.id] && W['analog.job.' + j.id + '.why']);
-  for (const t of A.TYPES) assert.ok(W['analog.reg.' + t] && W['analog.reghint.best-' + t]);
-  for (const k of ['alias', 'clip', 'levels', 'quality', 'power', 'done']) assert.ok(W['analog.hint.' + k]);
-  for (const id of Object.keys(A.CHALLENGES)) for (const p of ['t', 'goal', 'done']) assert.ok(W['analog.ch.' + id + '.' + p]);
+  for (const m of A.MISSIONS) assert.ok(W['ana.mission.' + m.id] && W['ana.mission.' + m.id + '.why']);
+  for (const j of A.JOBS) assert.ok(W['ana.job.' + j.id] && W['ana.job.' + j.id + '.why']);
+  for (const t of A.TYPES) assert.ok(W['ana.reg.' + t] && W['ana.rh.best-' + t]);
+  for (const k of ['alias', 'clip', 'levels', 'quality', 'power', 'done']) assert.ok(W['ana.hint.' + k]);
+  /* the engine's challenges, as the lab plays them */
+  const LAB = { heart: 'sig-heart', bearing: 'sig-bearing', regulators: 'reg-jobs' };
+  for (const id of Object.keys(A.CHALLENGES)) for (const k of ['game.ch.' + LAB[id] + '.t', 'game.ch.' + LAB[id] + '.goal', 'ana.done.' + LAB[id]]) assert.ok(W[k], k);
 });

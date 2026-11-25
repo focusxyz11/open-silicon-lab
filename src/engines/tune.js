@@ -21,7 +21,7 @@ const clamp = v => Math.max(0, Math.min(10, v));
 
 export const RANGE = 10;          /* every dial turns from 0 to 10 */
 export const NOISE = 3;           /* one run's result wanders by about this much, on a scale of 100 */
-export const DRIFT = 0.015;       /* how far the best setting moves for each run of the machine */
+const DRIFT = 0.015;       /* how far the best setting moves for each run of the machine */
 export const GOOD = 85;           /* a setting this good counts as found */
 export const BUDGET = 60;         /* tries a search may make */
 

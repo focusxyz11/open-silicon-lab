@@ -20,8 +20,8 @@ export const SIZES = [1, 2, 4, 8, 16, 32, 64, 128, 256]; // parts on one chip, i
 export const CLEAN = [1, 0.5, 0.25, 0.1, 0.05];      // specks per square centimetre, from a dusty line to a clean one
 const AREA_FIXED = 10, AREA_PER = 2;                   // mm² for the pads and edges of a chip, and per million parts
 /* what a wafer costs on each line, against the dustiest: cleaner air, filters and checks cost money */
-export const waferCost = d => (0.6 + 0.08 / d) / (0.6 + 0.08 / CLEAN[0]);
-export const chipSide = n => Math.sqrt(AREA_FIXED + AREA_PER * n);
+const waferCost = d => (0.6 + 0.08 / d) / (0.6 + 0.08 / CLEAN[0]);
+const chipSide = n => Math.sqrt(AREA_FIXED + AREA_PER * n);
 
 /* the specks: one fixed scatter, the dustiest line's; a cleaner line keeps the first ones only */
 function rng(seed) { let s = seed >>> 0; return () => { s = (s * 1664525 + 1013904223) >>> 0; return s / 4294967296; }; }
@@ -35,7 +35,7 @@ export const specksOf = d => SPECKS.slice(0, Math.round(d * WAFER_CM2));
 
 /* the chips of one size on the wafer: grid cells [i, j] whose four corners lie inside the usable disc */
 export const layout = n => layoutSide(chipSide(n));
-export function layoutSide(s) {
+function layoutSide(s) {
   const lim = WAFER.r - WAFER.edge, k = Math.ceil(WAFER.r / s) + 1, cells = [];
   for (let i = -k; i < k; i++) for (let j = -k; j < k; j++) {
     const far = Math.max(Math.hypot(i * s, j * s), Math.hypot((i + 1) * s, j * s), Math.hypot(i * s, (j + 1) * s), Math.hypot((i + 1) * s, (j + 1) * s));
@@ -86,7 +86,7 @@ export const HENS = [0, 32, 64, 96, 128, 160, 192, 224, 256]; // small cores bes
 export const JOBS = { app: 0.5, ai: 0.999 };                  // the share of each job that can be split
 export const BUDGET = 256;                                    // units a chip may spend
 export const GUESSES = ['ox', 'hens', 'both'];
-export const oxSpeed = (f, r, m) => 1 / ((1 - f) / Math.sqrt(r) + f / (Math.sqrt(r) + m));
+const oxSpeed = (f, r, m) => 1 / ((1 - f) / Math.sqrt(r) + f / (Math.sqrt(r) + m));
 export function oxen(ox, hens) {
   const r = OX[ox], m = HENS[hens];
   return { r, m, size: r + m, app: oxSpeed(JOBS.app, r, m), ai: oxSpeed(JOBS.ai, r, m) };
@@ -97,7 +97,7 @@ export function checkOxen(b) {
   const M = oxen(b.ox, b.hens), app = M.app >= OX_GOAL.app, ai = M.ai >= OX_GOAL.ai, size = M.size <= OX_GOAL.size;
   return { M, app, ai, size, ok: app && ai && size };
 }
-export function normalOxen(b) {
+function normalOxen(b) {
   const o = Object.assign({}, OX_START, b || {}), i = (v, L) => Number.isInteger(v) && v >= 0 && v < L.length;
   return { ox: i(o.ox, OX) ? o.ox : OX_START.ox, hens: i(o.hens, HENS) ? o.hens : OX_START.hens, guess: i(o.guess, GUESSES) ? o.guess : null };
 }
@@ -125,8 +125,8 @@ export const LOGIC = 600;                              // mm² of logic in the w
 export const LINK = 6;                                 // mm² each piece spends on links to the others
 export const PIECES = [1, 2, 4, 8, 16];
 export const TESTS = ['none', 'quick', 'careful', 'thorough'];
-export const CATCH = [0, 0.9, 0.99, 0.999];            // the share of bad pieces each test catches
-export const TEST_COST = [0, 0.03, 0.08, 0.3];         // what testing one piece costs
+const CATCH = [0, 0.9, 0.99, 0.999];            // the share of bad pieces each test catches
+const TEST_COST = [0, 0.03, 0.08, 0.3];         // what testing one piece costs
 export const JOIN = 0.99;                              // the chance one more piece joins well
 export const assembly = k => 0.15 + 0.1 * k;           // what putting k pieces in one package costs
 const PIECE_LINE = 2;                                  // the line the pieces are made on: CLEAN[2]
@@ -150,9 +150,9 @@ export function pieces(ki, ti) {
   PCACHE.set(key, R); return R;
 }
 /* against one big piece, untested: what everyone starts from */
-export const piecesRel = (ki, ti) => pieces(ki, ti).cost / pieces(0, 0).cost;
+const piecesRel = (ki, ti) => pieces(ki, ti).cost / pieces(0, 0).cost;
 export const PIECES_GOAL = { maxRel: 0.5, minShare: 0.9 };
-export const PIECES_START = { k: 0, test: 0, guess: null };
+const PIECES_START = { k: 0, test: 0, guess: null };
 export const PIECE_GUESSES = ['cheaper', 'same', 'dearer'];
 /* the guess: four pieces, untested, against one; what the wafer says */
 export function piecesAnswer() { const r = piecesRel(2, 0); return r < 0.7 ? 'cheaper' : r <= 1.3 ? 'same' : 'dearer'; }
@@ -160,7 +160,7 @@ export function checkPieces(b) {
   const P = pieces(b.k, b.test), rel = P.cost / pieces(0, 0).cost, cheap = rel <= PIECES_GOAL.maxRel, works = P.share >= PIECES_GOAL.minShare;
   return { P, rel, cheap, works, ok: cheap && works };
 }
-export function normalPieces(b) {
+function normalPieces(b) {
   const o = Object.assign({}, PIECES_START, b || {}), i = (v, L) => Number.isInteger(v) && v >= 0 && v < L.length;
   return { k: i(o.k, PIECES) ? o.k : PIECES_START.k, test: i(o.test, TESTS) ? o.test : PIECES_START.test, guess: i(o.guess, PIECE_GUESSES) ? o.guess : null };
 }
@@ -179,7 +179,7 @@ export const PBLOCKS = [
 export const PTESTS = [1e3, 1e4, 1e5, 1e6, 1e7, 1e8, 1e9, 1e10];
 export const testCost = T => T / 1e8;                       // in the same units as a proof
 export const PROVE_GOAL = { maxEscape: 0.01, maxCost: 20 };
-export const PROVE_START = { tests: 3, proved: 0, guess: null };
+const PROVE_START = { tests: 3, proved: 0, guess: null };
 export const PROVE_GUESSES = ['tests', 'proof', 'either'];
 export const PROVE_ANSWER = 'proof';                         // a billion tests against a bug of one in ten billion
 export const isProved = (b, i) => ((b.proved >> i) & 1) === 1;
@@ -194,7 +194,7 @@ export function checkProve(b) {
   const R = proofs(b), safe = R.escape <= PROVE_GOAL.maxEscape, cheap = R.cost <= PROVE_GOAL.maxCost;
   return { R, safe, cheap, ok: safe && cheap };
 }
-export function normalProve(b) {
+function normalProve(b) {
   const o = Object.assign({}, PROVE_START, b || {});
   return { tests: Number.isInteger(o.tests) && o.tests >= 0 && o.tests < PTESTS.length ? o.tests : PROVE_START.tests,
     proved: Number.isInteger(o.proved) && o.proved >= 0 && o.proved < 1 << PBLOCKS.length ? o.proved : 0,
@@ -228,7 +228,7 @@ export function checkJevons(b) {
   const J = jevons(b.eff, b.cap), many = J.answers >= J_GOAL.minAnswers, held = J.energy <= J_GOAL.maxEnergy;
   return { J, many, held, ok: many && held };
 }
-export function normalJevons(b) {
+function normalJevons(b) {
   const o = Object.assign({}, J_START, b || {}), i = (v, L) => Number.isInteger(v) && v >= 0 && v < L.length;
   return { eff: i(o.eff, EFF) ? o.eff : J_START.eff, cap: i(o.cap, CAP) ? o.cap : J_START.cap, guess: i(o.guess, J_GUESSES) ? o.guess : null };
 }
@@ -244,7 +244,7 @@ export function normalJevons(b) {
    limits how many fit at once. ---- */
 export const BATCH = [1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096]; // people served at once
 export const BFORMATS = ['fp16', 'fp8', 'fp4'];                                       // bits per number: 16, 8, 4
-export const BATCH_MODEL = { chip: 'rubin', params: 70 };
+const BATCH_MODEL = { chip: 'rubin', params: 70 };
 export const BATCH_GOAL = { minSpeed: 200, minBusy: 0.8 };
 export const BATCH_START = { batch: 0, format: 0, guess: null };
 export const BATCH_GUESSES = ['most', 'some', 'tiny'];
@@ -255,7 +255,7 @@ export function checkBatch(b) {
   const R = batched(b.batch, b.format), fast = R.tokPerUser >= BATCH_GOAL.minSpeed, busy = R.utilization >= BATCH_GOAL.minBusy;
   return { R, fast, busy, ok: fast && busy };
 }
-export function normalBatch(b) {
+function normalBatch(b) {
   const o = Object.assign({}, BATCH_START, b || {}), i = (v, L) => Number.isInteger(v) && v >= 0 && v < L.length;
   return { batch: i(o.batch, BATCH) ? o.batch : BATCH_START.batch, format: i(o.format, BFORMATS) ? o.format : BATCH_START.format, guess: i(o.guess, BATCH_GUESSES) ? o.guess : null };
 }

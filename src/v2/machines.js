@@ -22,6 +22,8 @@
    machines(el, ctx) draws into el; each need keeps its state for the visit. ctx: { need, sub ('do' or a layer), go(need,
    sub), FACT (facts.json by id, optional), and, to keep attempts (optional): world() (the ledger with your drafts),
    keep(need, plan, el), slip(id), slipClick(ev, done), refusal(r), signHtml() }. */
+import { still, phone as narrow } from '../core/ui.js';
+import { esc } from '../core/esc.js';
 import { t, fmtNum } from '../core/i18n.js';
 import { BLOCKS, NEEDS, FORMS, GOALS, blockOf, needOf } from '../data/blocks.js';
 import { mattersFor, STATUS } from '../data/inventions.js';
@@ -36,9 +38,6 @@ import { FRONTS } from '../data/fidelity.js';
 import { keptSwitch } from './kept.js';
 
 const REPO = 'https://github.com/focusxyz11/open-silicon-lab/blob/main/';
-const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
-const still = () => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
-const narrow = () => typeof matchMedia === 'function' && matchMedia('(max-width: 720px)').matches;
 /* the layers of the picture, each opened from the machine */
 export const LAYERS = ['flow', 'made', 'reshape', 'claims', 'tries', 'blocks'];
 /* a block's way into a view of its own, from its row beside the machine: { blockId: '#/address' }, its words

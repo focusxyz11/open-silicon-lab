@@ -3,12 +3,12 @@
    scale in the middle, and one of the thirteen questions at a time drawn as a thread through the stations it touches.
    Every station opens its own view of the chip world; the island is one way in (#/island). Data: src/data/home.js;
    logic: src/engines/home.js. Words are read with t(); the map's own are home.* */
+import { esc } from '../core/esc.js';
 import { t, fmtNum, fmtWords } from '../core/i18n.js';
 import { MAP, STATIONS, LINES, ARROWS, LOOP_PATH, SCALE_PATH, THREADS, WAYS, STARTS, TOYS, SCALE, PATHS, NEW, INDEX } from '../data/home.js';
 import { FILED } from '../data/frame.js';
 import * as H from '../engines/home.js';
 
-const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 const w = (k, o) => t('home.' + k, o);
 const ARROW = { down: '▼', up: '▲', left: '◀', right: '▶' };
 /* the kind of thing a challenge is, for its tag */

@@ -7,6 +7,8 @@
    serves a flat scene and a 3D level alike, and each lens's layer can be drawn beside another's. Words are never in
    the paint: only shapes, colours and motion; what they mean is said in the card.
    Motion only where it carries meaning (energy travelling, currents adding), and none with reduced motion. */
+import { still } from '../core/ui.js';
+import { esc } from '../core/esc.js';
 import { t, fmtNum, fmtWords } from '../core/i18n.js';
 import { factsOf } from '../data/partfacts.js';
 import { MODELS, geometry, efficiency, brainCopy, physics as physicsModel, digital, geoEffFront, memoryFork, cleanOne, HOT, SWING } from '../engines/lens.js';
@@ -15,13 +17,11 @@ import { frontFigure } from './front.js';
 import { mark as fidMark } from './fid.js';
 import { LENSES, PAIRS } from '../data/fidelity.js';
 
-const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
-const still = () => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 const R = r => 'x="' + r[0] + '" y="' + r[1] + '" width="' + r[2] + '" height="' + r[3] + '"';
 const path = p => 'M' + p.map(q => q[0].toFixed(1) + ' ' + q[1].toFixed(1)).join('L');
 /* a colour along short (cool) to long or hot (warm), for 0..1 */
-/* a fixed spread of 0..1, the same on every visit (each copy keeps its own speed) */
-const spread = i => { const x = Math.sin(i * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+/* a fixed spread of 0..1, the same on every visit (each copy keeps its own speed; Listen's too, src/v2/listen.js) */
+export const spread = i => { const x = Math.sin(i * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
 const ramp = f => 'hsl(' + Math.round(205 - 185 * Math.max(0, Math.min(1, f))) + ' 85% 56%)';
 
 /* ---- the paints, one per core question: (facts, model) -> SVG in the plan ---- */
@@ -104,7 +104,9 @@ const unit = { trip: v => t('lp.um', { v: fmtNum(v) }), heat: v => t('lp.times',
   answers: v => t('lp.times', { v: fmtNum(v) }), power: v => t('lp.times', { v: fmtNum(v) }), own: v => t('lp.pct', { v: fmtNum(v) }), copied: v => t('lp.pct', { v: fmtNum(v) }),
   wrong: v => (v < 1e-9 ? t('lp.none') : t('lp.oneIn', { v: fmtWords(Math.round(1 / v)) })), fight: v => t('lp.pj', { v: fmtNum(v) }), use: v => t('lp.pj', { v: fmtNum(v) }),
   off: v => t('lp.pct', { v: fmtNum(Math.round(v * 100)) }), late: v => t('lp.pct', { v: fmtNum(Math.round(v * 100)) }), drawn: v => fmtNum(v), pass: v => fmtNum(v), shortest: v => t('lp.tracks', { v: fmtNum(v) }), longest: v => t('lp.tracks', { v: fmtNum(v) }) };
-const measuresHtml = (q, m) => MODELS[q].measures.map(id => '<div class="lpm"><span class="lpml">' + esc(t('lp.' + q + '.m.' + id)) + '</span><b data-lpm="' + id + '">' + esc(unit[id](m.measures[id], q)) + '</b></div>').join('');
+/* one measure, its name and its value (id: the measure it shows, kept in step as the instrument moves) */
+const meter = (label, value, id) => '<div class="lpm"><span class="lpml">' + esc(label) + '</span><b' + (id ? ' data-lpm="' + id + '"' : '') + '>' + esc(value) + '</b></div>';
+const measuresHtml = (q, m) => MODELS[q].measures.map(id => meter(t('lp.' + q + '.m.' + id), unit[id](m.measures[id], q), id)).join('');
 /* where a control stands, in words (a share as a percentage) */
 const atText = (q, v) => t('lp.' + q + '.at', { v: fmtNum(['geo', 'copy', 'dig'].includes(q) ? Math.round(v * 100) : v) });
 /* the control: a slider over its values, its two ends said; Only humans' is a button that draws one more layout */
@@ -139,7 +141,7 @@ const KEYS = {
   perfect: [['<rect x="2" y="4" width="11" height="8" rx="2" fill="' + ramp(0) + '" fill-opacity=".6"/><rect x="15" y="4" width="11" height="8" rx="2" fill="' + ramp(0.6) + '" fill-opacity=".6"/>', 'speed'], ['<rect x="8" y="4" width="12" height="8" rx="2" fill="var(--bad)" fill-opacity=".85"/>', 'late']],
   human: [['<rect x="2" y="3" width="24" height="10" rx="3" fill="var(--accent)" fill-opacity=".25" stroke="var(--accent)" stroke-width="1.5"/>', 'program'], ['<rect x="2" y="3" width="24" height="10" rx="3" fill="var(--warm)" fill-opacity=".45" stroke="var(--warm)" stroke-width="1.5"/>', 'person'], ['<rect x="2" y="3" width="24" height="10" rx="3" fill="none" stroke="var(--muted)" stroke-width="1.5" stroke-dasharray="4 3"/>', 'open']]
 };
-export const keyHtml = q => KEYS[q] ? '<ul class="lpkeys" aria-label="' + esc(t('lp.key')) + '">' + KEYS[q].map(([g, id]) => '<li>' + sw(g) + '<span>' + esc(t('lp.' + q + '.key.' + id)) + '</span></li>').join('') + '</ul>' : '';
+const keyHtml = q => KEYS[q] ? '<ul class="lpkeys" aria-label="' + esc(t('lp.key')) + '">' + KEYS[q].map(([g, id]) => '<li>' + sw(g) + '<span>' + esc(t('lp.' + q + '.key.' + id)) + '</span></li>').join('') + '</ul>' : '';
 
 const run = (q, level) => MODELS[q].run(factsOf(level), valueOf(q));
 /* the instrument a lens puts in its card at a level: its control, then its measures (and the scope, the layouts) */
@@ -272,7 +274,6 @@ export function createLensPaint(where) {
 }
 
 /* ---- the pair's instrument in its card ---- */
-const meter = (label, value) => '<div class="lpm"><span class="lpml">' + esc(label) + '</span><b>' + esc(value) + '</b></div>';
 const range = (key, prop, values, at, lo, hi, label, text) => '<label class="lpc"><span class="lpcl">' + esc(label) + '</span><input type="range" min="0" max="' + (values.length - 1) + '" step="1" value="' + at + '" data-lppc="' + key + ':' + prop + '" aria-valuetext="' + esc(text) + '">' +
   '<span class="lpends" aria-hidden="true"><span>' + esc(lo) + '</span><span>' + esc(hi) + '</span></span></label>';
 /* the front's two controls go in tenths: an attempt kept in the ledger is one of these points (FRONTS in

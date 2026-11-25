@@ -5,10 +5,10 @@
    picture; on a phone the map stays a picture and the bench lists where the change lands, since tags over far
    islands would crowd a small screen (CLAUDE.md, desktop first where it is richer).
    whatif(sheet, ctx) draws into the sheet; ctx: { S, save(), map, name(place), close() }. Returns { pick(place) }. */
+import { esc } from '../core/esc.js';
 import { t } from '../core/i18n.js';
 import * as R from '../engines/ripple.js';
 
-const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 const wide = () => innerWidth > 720;
 
 export function whatif(sheet, ctx) {

@@ -3,15 +3,15 @@
    The words are in src/i18n/en/ (stop.<key>.*, studio.*); the content behind them is content/design.md; the engines are
    src/engines/timing.js (in time?), rules.js (the factory's rules on the tile, and the masks) and verilog.js (the
    lab's lines as Verilog). Returns HTML for the card; draws nothing on the picture. */
+import { esc } from '../core/esc.js';
 import { t, has, fmtNum } from '../core/i18n.js';
 import { timeDesign, chained, periodOf, overhead } from '../engines/timing.js';
 import { rulesOf, maskSet } from '../engines/rules.js';
 import { verilogOf } from '../engines/verilog.js';
 
-const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const ps = n => fmtNum(Math.round(n));
 /* the clock the card times against: the fastest a Tiny Tapeout chip's pins carry (facts: tt-clock) */
-export const CLOCK_MHZ = 66;
+const CLOCK_MHZ = 66;
 export const STEPS = ['need', 'logic', 'check', 'gates', 'layout', 'masks'];
 
 const kick = w => '<p class="kicker">' + esc(w) + '</p>';

@@ -7,6 +7,7 @@
    them (the state they visited most). Two challenges: 'noise' factors 15, 'noise-big' factors 143, where trying every
    pair costs four times as much and the p-bits hardly more. The goal is the engine's own check (factorGoal).
    A lab of the challenge player (src/v2/play.js): lab(L) -> { draw, click, input }. */
+import { still } from '../../core/ui.js';
 import * as P from '../../engines/paradigms.js';
 
 export const START = { b: 1, w: 2, seed: 3 };
@@ -15,7 +16,7 @@ const SIZES = { noise: 'small', 'noise-big': 'large' };
 const GOALS = {}, LEAST = {};
 export const goalOf = (size, b, w) => { const k = size + ':' + b + ':' + w; return GOALS[k] || (GOALS[k] = P.factorGoal(size, { beta: P.BETAS[b], wait: P.WAITS[w] })); };
 /* the least wait that is right 90% of the time at a cold, for a problem, and the energy of one read then (null: none) */
-export function leastAt(size, b) {
+function leastAt(size, b) {
   const k = size + ':' + b; if (k in LEAST) return LEAST[k];
   const F = P.FACTOR[size]; let out = null;
   for (const w of P.WAITS) { const st = P.factorStats({ N: F.N, bits: F.bits, beta: P.BETAS[b], wait: w }); if (st.right >= P.PBIT_RIGHT) { out = { wait: w, energy: st.energy }; break; } }
@@ -26,7 +27,6 @@ export default function lab(L) {
   const { S, ch, el, esc, t, head, reward, doneNote, win, draw, fx } = L, view = L.view;
   const size = SIZES[ch.id] || 'small', F = P.FACTOR[size], bits = F.bits, side = 1 << bits, n = 2 * bits, X = P.exactSearch(F.N, bits);
   const set = () => view.pb || (view.pb = Object.assign({}, START));
-  const still = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
   const pj = v => t('pb.pj', { v: v >= 100 ? Math.round(v) : v >= 10 ? v.toFixed(0) : v.toFixed(1) });
   const pct = v => t('pb.pct', { v: Math.round(v * 100) });
 

@@ -9,14 +9,13 @@
    - createListen(host, o): the switch and its box on a view's frame. o: { where() (as a lens's paint), joule (the other
      lens, closed while this one is open), changed() (the picture keeps clear of the box) }. Returns { level(id),
      width(), bottom() }, one per frame (lifeOf, src/v2/frame.js). */
+import { esc } from '../core/esc.js';
 import { t, fmtNum } from '../core/i18n.js';
 import * as L from '../engines/listen.js';
 import { factsOf } from '../data/partfacts.js';
-import { squareTo } from './lenspaint.js';
+import { squareTo, spread } from './lenspaint.js';
 import * as Sound from './sound.js';
 import { lifeOf } from './frame.js';
-
-const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 
 /* ---- the picture: the block's parts in its plan, each with what lights in time ---- */
 const R = r => 'x="' + r[0] + '" y="' + r[1] + '" width="' + r[2] + '" height="' + r[3] + '"';
@@ -25,8 +24,6 @@ const rowsOf = F => F.parts.filter(p => p.kind === 'logic' && p.by === 'program'
 const memOf = F => F.parts.find(p => p.kind === 'memory').rects[0];
 const wiresOf = F => F.parts.filter(p => p.kind === 'wire').flatMap(p => p.paths);
 const midOf = p => { const a = p[Math.floor((p.length - 1) / 2)], b = p[Math.floor((p.length - 1) / 2) + 1] || a; return [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2]; };
-/* a fixed spread of 0..1, the same every time (the widths of the cells in a row) */
-const spread = i => { const x = Math.sin(i * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
 /* the block as the ear test draws it, under the lit layer: rows of cells of different widths, the memory array, the
    other circuits, the copper wires over them */
 function baseSvg(F) {
@@ -54,7 +51,7 @@ export function paint(F, base) {
   return h;
 }
 /* the heat over the logic, from the block's temperature (25 to 115 °C) */
-export const heatOf = V => Math.max(0, Math.min(1, (V.hum.celsius - L.ROOM_C) / 90));
+const heatOf = V => Math.max(0, Math.min(1, (V.hum.celsius - L.ROOM_C) / 90));
 /* one event lit on a picture (an SVG drawn by paint()), for as long as it lasts in the sound */
 export function light(svg, e, V) {
   if (!svg || !svg.isConnected) return;
@@ -73,7 +70,7 @@ export const svgOf = (level, state, base, attrs = '') => { const V = L.voices(st
 /* ---- what is heard, written: one line at a time, never faster than a reader can follow (1.3 s), and what matters
    most held longest: a wrong bit over a wait, a wait over a fetch, a fetch over the work going on (2.6 s) ---- */
 const RANK = { work: 0, fetch: 1, wait: 2, wrong: 3 };
-export function captioner(el) {
+function captioner(el) {
   let cur = null, since = 0, pend = null, tm = 0;
   const age = () => Date.now() - since;
   const ok = id => !cur || (age() >= 1300 && (RANK[id] >= RANK[cur] || age() >= 2600));

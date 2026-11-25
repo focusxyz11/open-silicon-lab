@@ -12,6 +12,8 @@
    the kitchen keeps one picture and the levers the level needs most; the rest wait behind More levers.
    lab(L) gets the player's pieces and returns { draw, click, input }. What the player tried is kept in the view and in
    S.chef (the game's state). */
+import { still } from '../../core/ui.js';
+import { facts as loadFacts } from '../../core/facts.js';
 import * as MB from '../../engines/bits.js';
 import { QUESTIONS } from '../../data/atlas.js';
 import { chefCurve } from '../../engines/ledger.js';
@@ -31,7 +33,7 @@ const LADDER = QUESTIONS.bits.ladder;
 
 /* facts.json, for the sources of the walls (fetched once, drawn again when it arrives) */
 let FACT = null, factsAsked = false;
-const facts = redraw => { if (FACT || factsAsked) return; factsAsked = true; fetch('src/data/facts.json').then(r => r.json()).then(j => { FACT = Object.fromEntries((j.facts || []).map(f => [f.id, f])); redraw(); }, () => { FACT = {}; }); };
+const facts = redraw => { if (FACT || factsAsked) return; factsAsked = true; loadFacts().then(F => { FACT = F; redraw(); }); };
 
 export default function lab(L) {
   const { S, ch, el, esc, t, head, reward, doneNote, win, draw, fx, show } = L, view = L.view;
@@ -47,7 +49,6 @@ export default function lab(L) {
   const pct = x => t('mb.pct', { v: fmtNum(x >= 0.1 || x === 0 ? Math.round(x * 100) : +(x * 100).toFixed(1)) });
   const errW = p => p < 1e-15 ? t('mb.u.errNone') : t('mb.u.err', { v: fmtNum(Math.round(1 / p), { notation: 'compact' }) });
   const src = id => { const f = FACT && FACT[id]; return f && f.url ? ' <a class="mbsrc" href="' + esc(f.url) + '" target="_blank" rel="noopener">' + esc(t('mb.source')) + '</a>' : ''; };
-  const still = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
   const gauges = (ok, gs, cls) => '<div class="goalbox mbgoal' + (cls ? ' ' + cls : '') + (ok ? ' ok' : '') + '" data-f2="goal"><p class="kicker">' + esc(t(ok ? 'game.reached' : cls ? 'mb.trip.meters' : 'game.goalNow')) + '</p>' +
     gs.map(g => '<div class="gauge' + (g.ok ? ' ok' : '') + (g.bad ? ' bad' : '') + (g.c ? ' ' + g.c : '') + '"><span class="gl">' + esc(g.l) + '</span><span class="gv">' + esc(g.v) + (g.target ? ' <span class="muted">' + esc(g.target) + '</span>' : '') + '</span><span class="gbar"><span style="width:' + (Math.max(0, Math.min(1, g.f)) * 100).toFixed(0) + '%"></span></span></div>').join('') + '</div>';
 

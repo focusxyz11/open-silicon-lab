@@ -5,6 +5,7 @@
    does here, real cases, and the other worlds it really meets. The page shows this one core question on its own;
    the eleven are never listed together (#305): a world is opened from a lens whose form at a level is one of its
    stops (Read more, src/v2/glue/frame.js) or by name from Your log. #/w/<id>/q<n> opens it at a question inside. */
+import { esc } from '../core/esc.js';
 import { t } from '../core/i18n.js';
 import { THREADS } from '../data/weave.js';
 import { WORLDS, challengeName } from '../data/worlds.js';
@@ -21,7 +22,6 @@ import { probeHtml } from './read.js';
 import { experimentOf } from '../engines/experiments.js';
 import { readHtml, tryHtml } from './frame2.js';
 
-const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 const hue = id => (THREADS.find(x => x.id === id) || { hue: 200 }).hue;
 export const colorOf = id => 'hsl(' + hue(id) + ' 70% 55%)';
 /* links inside a document: another world's document becomes its page; a picture is found in the content folder */
@@ -52,7 +52,6 @@ function lensHtml(id, P, chip) {
   return h + '</section>';
 }
 
-export const WORLD_OF = id => WORLDS[id];
 export function worldHtml(id, P, ctx = {}) {
   const W = WORLDS[id] || { play: {} }, S = P.sections;
   const head = '<p class="kicker">' + esc(t('world.k')) + '</p><h1 class="wq">' + esc(P.title) + '</h1>' + (P.behind ? '<p class="wbehind">' + il(P.behind) + '</p>' : '');

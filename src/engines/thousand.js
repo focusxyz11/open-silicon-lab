@@ -32,7 +32,6 @@ export const LEAN = {
 };
 /* what a check can measure, and the two the field is drawn on (lower is better on both; the need's limits bound them) */
 export const MEASURES = ['power', 'cost', 'tps', 'area'];
-export const AXES = ['power', 'cost'];
 export const REASON = [8, 140];
 
 function rng(seed) { let s = seed >>> 0 || 1; return () => { s ^= s << 13; s >>>= 0; s ^= s >>> 17; s ^= s << 5; s >>>= 0; return s / 4294967296; }; }
