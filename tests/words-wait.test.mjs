@@ -98,15 +98,15 @@ test('each lab waits for every area it shows, and what it grows draws with the i
 });
 
 test('the first page and the views the shell opens itself wait for the areas they show', () => {
-  /* what app.js awaits before each draws: Hold its own words (and the blueprint's when first touched), the blueprint
-     its own, the station map the pages', the island's map the island's */
+  /* what app.js awaits before each draws: Hold its own words (and the blueprint's and the shared ones when first
+     touched), the blueprint its own and the shared ones, the station map the pages', the island's map the island's */
   const awaits = (re, what) => assert.ok(re.test(APP), 'src/v2/app.js no longer awaits ' + what);
-  awaits(/needWords\('hold'\)\.then\(\(\) => \{ if \(!hold\) hold = createHold/, 'hold before Hold');
-  awaits(/import\('\.\/home\.js'\), needWords\('blueprint'\)/, 'blueprint before the blueprint');
+  awaits(/needWords\('hold'\)\.then\(\(\) => \{ (?:if \(n !== V\.routeN\) return; )?if \(!hold\) hold = createHold/, 'hold before Hold');
+  awaits(/import\('\.\/home\.js'\), needWords\('blueprint', 'shared'\)/, 'blueprint before the blueprint');
   awaits(/import\('\.\/stations\.js'\), needWords\('pages'\)/, 'pages before the station map');
   awaits(/import\('\.\/map3d\.js'\), needWords\(\.\.\.WORDS\.island\)/, 'the island\'s words before the island\'s map');
-  assert.ok(/needWords\('blueprint'\)\.then\(fillWays/.test(read(abs('src/v2/hold.js'))), 'Hold loads the blueprint\'s words when first touched and fills them in');
-  const VIEWS = [['the first page (src/v2/hold.js)', HOLD, ['hold', 'blueprint']], ['the blueprint (src/v2/home.js)', reach(['src/v2/home.js'], { skip: BOOT }), ['blueprint']],
+  assert.ok(/needWords\('blueprint', 'shared'\)\.then\(\(\) => \{ fillWays\(\); fillShared\(\)/.test(read(abs('src/v2/hold.js'))), 'Hold loads the blueprint\'s and the shared words when first touched and fills them in');
+  const VIEWS = [['the first page (src/v2/hold.js)', HOLD, ['hold', 'blueprint', 'shared']], ['the blueprint (src/v2/home.js)', reach(['src/v2/home.js'], { skip: BOOT }), ['blueprint', 'shared']],
     ['the station map (src/v2/stations.js)', reach(['src/v2/stations.js'], { skip: BOOT }), ['pages']], ['the island\'s map (src/v2/map3d.js)', reach(['src/v2/map3d.js'], { skip: BOOT }), glueWaits('island')]];
   const bad = VIEWS.flatMap(([who, mods, waits]) => { const out = unwaited(mods, waits); return out.length ? [tell(who, waits, out)] : []; });
   assert.deepEqual(bad, [], bad.join('\n'));

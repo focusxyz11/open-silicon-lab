@@ -40,7 +40,7 @@ export function start() {
      and hiding a view that never opened does nothing. Once a view has opened, the other areas' words load in an idle
      moment */
   const GLUE = {'island': [], 'frame': [], 'flights': ['frame'], 'studio': ['frame'], 'chip': ['frame'], 'flat': ['frame'], 'supply': ['flat'], 'board': ['frame'], 'pages': ['frame']}, glueP = {};
-  const WORDS = { island: ['atlas', 'place', 'design', 'pages'], frame: ['atlas', 'place', 'design', 'pages'], pages: ['pages', 'shared'] };
+  const WORDS = { island: ['atlas', 'place', 'design', 'pages', 'shared'], frame: ['atlas', 'place', 'design', 'pages', 'shared'], pages: ['pages'] };
   /* and the styles of its view (src/core/styles.js): the frame's with the frame, each view's own with its glue */
   const STYLES = { island: ['frame', 'island'], frame: ['frame'], studio: ['studio'], flat: ['flat'], supply: ['supply'], pages: ['pages'] };
   const glue = k => glueP[k] || (glueP[k] = Promise.all(GLUE[k].map(glue).concat(needWords(...(WORDS[k] || [])), needStyles(...(STYLES[k] || [])))).then(() => import('./glue/' + k + '.js')).then(m => { m.create(); afterPaint(() => { if (preloadOk()) needAllWords(); }); }));
