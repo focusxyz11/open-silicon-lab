@@ -27,9 +27,14 @@ import { DESIGN_SCENES } from '../app/design.js';
 import { patch } from './patch.js';
 
 const STEPS = ['need', 'logic', 'check', 'gates', 'layout', 'masks'];
-/* a part's region of the 1000 x 1000 square, as a box on the surface */
-const reg = (step, part) => { const r = DESIGN_SCENES[step].parts[part][0].r; return r; };
-/* a region's size for drawing in it: on a phone the bench is taller than it is wide (asp), and a drawing keeps its shapes */
+/* a part's region of the 1000 x 1000 square, as a box on the surface. A small bench (a phone, NARROW) is as wide as the
+   screen and as tall as the room above the card: there the check's verdict gets more of the height, so its controls and
+   its sentence stay inside their box */
+const SMALL = { check: { waves: [0, 0, 1000, 540], verdict: [0, 560, 1000, 440] } };
+let NARROW = false;
+const reg = (step, part) => (NARROW && SMALL[step] && SMALL[step][part]) || DESIGN_SCENES[step].parts[part][0].r;
+/* a region's size for drawing in it: on a phone the bench need not be square (ASP, its height over its width), and a
+   drawing keeps its shapes */
 let ASP = 1;
 const dim = (step, part) => { const r = reg(step, part); return [r[2], r[3] * ASP]; };
 const box = (step, part, cls, inner, attrs) => { const [x, y, w, h] = reg(step, part);
@@ -56,6 +61,7 @@ export function createBench(o) {
   const S = o.state;
   const el = document.createElement('div'); el.className = 'bsurf'; el.hidden = true; el.setAttribute('role', 'group');
   if (o.before) o.before.before(el);
+  const fit = { top: 90, bot: 80 };
   let step = 'need', CH = null, on = false, k0 = 0, scrub = 0, sub = 0, why = null, gate = null, pin = { a: 1, d: 1, x0: 1, s0: 1, en: 1 }, tick = {}, sel = null, peel = 0.6, plate = null, undo = [], live = true, timer = 0, flash = null;
   const listeners = new Set();
   const changed = () => { listeners.forEach(f => f()); };
@@ -149,7 +155,8 @@ export function createBench(o) {
     const B = D.B;
     if (B.errs.length || !B.rows) return box('check', 'waves', 'bk-wv', '<p class="bk-note bad">' + esc(t('bench.cap.unread')) + '</p>') + box('check', 'verdict', 'bk-vd', '');
     const [W, H] = dim('check', 'waves'), rows = B.rows, n = rows.length, win = Math.min(n, 16), k = Math.max(0, Math.min(n - 1, scrub)), off = Math.max(0, Math.min(n - win, k - Math.floor(win / 2)));
-    const sig = B.ins.concat(B.outs), x0 = 120, cw = (W - x0 - 10) / win, sh = Math.min(110, (H - 30) / sig.length);
+    /* the names stand left of the waves, in a column as wide as the longest of them (mono type: 0.62 of its size a letter) */
+    const sig = B.ins.concat(B.outs), x0 = Math.max(120, Math.ceil((Math.max(...sig.map(n => n.length)) * 0.62 * (NARROW ? 10.5 : 12) + 12) * 1000 / o.px()) + 14), cw = (W - x0 - 10) / win, sh = Math.min(110, (H - 30) / sig.length);
     let g = '', tags = '';
     g += '<rect class="bk-cur" x="' + (x0 + (k - off) * cw) + '" y="0" width="' + cw + '" height="' + H + '"/>';
     sig.forEach((nm, i) => {
@@ -186,7 +193,9 @@ export function createBench(o) {
     const M = B.M, Lv = B.levels, [W, H] = dim('gates', 'cells'), cols = Math.max(1, ...Lv) + (M.cells.some(c => c.type === 'DFF') ? 1 : 0), byCol = {};
     M.cells.forEach((c, i) => { const col = c.type === 'DFF' ? cols : Lv[i]; (byCol[col] = byCol[col] || []).push(i); });
     const most = Math.max(B.ins.length, B.outs.length, ...Object.values(byCol).map(a => a.length));
-    const top = 90, span = H - top - 20, gw = Math.min(84, (W - 80) / (cols + 1) * 0.5), gh = Math.min(64, span / most * 0.62), pos = {};
+    /* the drawing keeps clear of the counts above it and the hint (or a cell's card) under it, as tall as they were
+       measured after the last drawing (fit, in the drawing's units) */
+    const top = fit.top, span = H - top - fit.bot, gw = Math.min(84, (W - 80) / (cols + 1) * 0.5), gh = Math.min(64, span / most * 0.62), pos = {};
     Object.entries(byCol).forEach(([col, list]) => list.forEach((i, j) => { pos[i] = [40 + (+col - 0.5) * ((W - 80 - gw) / Math.max(1, cols - 0.5)) + 10, top + span * (j + 0.5) / list.length - gh / 2]; }));
     /* the values: the pattern you set (and the flip-flops' state after your ticks) */
     const v = {}; B.ins.forEach(n => { v[n] = pin[n] | 0; });
@@ -208,7 +217,9 @@ export function createBench(o) {
     const card = c ? '<div class="bk-cell"><b>' + esc(c.type) + '</b><span>' + esc(t('bench.gates.cell', { n: L[0], w: L[1], ps: L[2] })) + '</span>' + transistors(L[0]) + '</div>' : '<p class="bk-hint">' + esc(t(B.seq ? 'bench.gates.tapSeq' : 'bench.gates.tap')) + '</p>';
     const ins = M.inputs.map((p, i) => '<button type="button" class="bk-pin' + (val(p.net) ? ' hi' : '') + '" data-bk-flip="' + esc(p.name) + '" style="top:' + pct(inY(i), H) + '"><b>' + esc(p.name) + '</b><span class="bk-v">' + (val(p.net) | 0) + '</span></button>').join('') + (B.seq ? '<button type="button" class="chipb bk-tick" data-bk-tick>' + esc(t('bench.gates.tick')) + '</button>' : '');
     const outs = M.outs.map((p, i) => '<span class="bk-pin out' + (val(p.net) ? ' hi' : '') + '" style="top:' + pct(outY(i), H) + '"><span class="bk-v">' + (val(p.net) | 0) + '</span><b>' + esc(p.name) + '</b></span>').join('');
-    return box('gates', 'pins', 'bk-gpins', ins) + box('gates', 'cells', 'bk-gt', cost + svgOf(W, H, wires + cells, 'bk-svg') + tags + card) + box('gates', 'outs', 'bk-gpins outs', outs);
+    /* one card under the whole circuit, its inputs and outputs at its edges, the counts across its top and the hint (or a
+       cell's card) across its foot */
+    return '<div class="bk-r bk-gback">' + cost + card + '</div>' + box('gates', 'pins', 'bk-gpins', ins) + box('gates', 'cells', 'bk-gt', svgOf(W, H, wires + cells, 'bk-svg') + tags) + box('gates', 'outs', 'bk-gpins outs', outs);
   }
   /* a cell's transistors: half pull up (p-type), half pull down (n-type), drawn as small switches */
   const transistors = n => { const half = Math.ceil(n / 2), cols = Math.min(12, half), w = cols * 16 + 8;
@@ -304,14 +315,25 @@ export function createBench(o) {
   function html(st, opt) {
     const D = now(), id = st || step, f = { need, logic, check, gates: gatesView, layout: layoutView, masks: masksView }[id];
     if (!f) return '';
-    return '<div class="bk bk-' + id + (D.ro ? ' ro' : '') + (opt && opt.inst ? ' inst' : '') + '" data-bk-step="' + id + '" data-bk-p="' + D.p + '">' + f(D, opt && opt.inst) + '</div>';
+    /* a challenge's instrument is square (flat.css), whatever the surface's shape */
+    const inst = !!(opt && opt.inst), asp = ASP; if (inst) ASP = 1;
+    try { return '<div class="bk bk-' + id + (D.ro ? ' ro' : '') + (inst ? ' inst' : '') + '" data-bk-step="' + id + '" data-bk-p="' + D.p + '">' + f(D, inst) + '</div>'; } finally { ASP = asp; }
   }
   function render() {
     if (!on) return;
     const h = html(step), old = el.firstElementChild;
     if (!old || old.dataset.bkStep !== step) el.innerHTML = h;
     else { const tp = document.createElement('template'); tp.innerHTML = h; patch(old, tp.content.firstElementChild); }
-    syncScroll();
+    syncScroll(); refit();
+  }
+  /* the gates' drawing between the words over and under it: measured, and drawn again once if they moved (a phone's
+     narrow bench wraps the counts onto two lines) */
+  function refit() {
+    const g = step === 'gates' && el.querySelector('.bk-gt'); if (!g || !api.px) return;
+    const G = g.getBoundingClientRect(), c = el.querySelector('.bk-gback > .bk-cost'), f = el.querySelector('.bk-gback > .bk-hint, .bk-gback > .bk-cell'), u = 1000 / api.px;
+    if (!G.height) return;
+    const top = c ? Math.round((c.getBoundingClientRect().bottom - G.top + 8) * u) : 40, bot = f ? Math.round((G.bottom - f.getBoundingClientRect().top + 6) * u) : 20;
+    if (Math.abs(top - fit.top) > 3 || Math.abs(bot - fit.bot) > 3) { fit.top = top; fit.bot = bot; render(); }
   }
   /* the text box and its coloured copy scroll together */
   const syncScroll = () => { const ta = el.querySelector('[data-bk-code]'), pre = el.querySelector('.bk-hl'); if (ta && pre) { pre.scrollTop = ta.scrollTop; pre.scrollLeft = ta.scrollLeft; } };
@@ -381,8 +403,10 @@ export function createBench(o) {
     step(id) { if (!STEPS.includes(id) || id === step) return; step = id; why = null; plate = null; sel = null; gate = null; render(); },
     get stepNow() { return step; },
     /* the square the step is drawn in (the flat world's frame): the surface takes it, exactly */
-    place(f) { if (!f || !f.B) return; const s = el.style, B = Math.round(f.B), h = Math.round(Math.max(B, f.h || B)); s.width = B + 'px'; s.height = h + 'px'; s.left = Math.round(f.cx - B / 2) + 'px'; s.top = Math.round(f.top != null ? f.top : f.cy - h / 2) + 'px';
-      if (api.px !== B || api.ph !== h) { api.px = B; api.ph = h; ASP = h / B; render(); } },
+    /* w: on a phone the bench is as wide as the screen, and h as tall as the room left (wider than tall while the card
+       under it holds a challenge) */
+    place(f) { if (!f || !f.B) return; const s = el.style, B = Math.round(f.w || f.B), h = Math.round(f.w ? f.h : Math.max(B, f.h || B)); s.width = B + 'px'; s.height = h + 'px'; s.left = Math.round(f.cx - B / 2) + 'px'; s.top = Math.round(f.top != null ? f.top : f.cy - h / 2) + 'px';
+      if (api.px !== B || api.ph !== h) { api.px = B; api.ph = h; ASP = h / B; NARROW = B < 480; render(); } },
     ph: 0,
     px: 0,
     /* while the step line moves, the surface slides with it and fades between two steps */

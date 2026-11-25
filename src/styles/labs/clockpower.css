@@ -73,6 +73,8 @@
  .ckpc .num.bad { fill: var(--bad); }
  .ckpc .num.want { fill: var(--muted); font-weight: 400; }
 @media (max-width: 720px) { .ckpread { grid-template-columns: 1fr 1fr; } .ckprow { grid-template-columns: 134px 1fr 58px; gap: 8px; }
+  /* the twenty counts under the waves, in their zigzag (src/v2/labs/clockpower.js) */
+  html.frame2 .f2stage .ckpc svg text.num { font-size: calc(11px * var(--f2-k, .9)); }
 }
 
 .jmap .jdot.front { stroke: var(--panel-solid); stroke-width: 1.5; fill-opacity: 1; }

@@ -107,7 +107,10 @@ export default function lab(L) {
   const clear = o => { o.running = false; o.T = null; };
 
   function cfigure(o, R) {
-    const W = 320, H = 204, TM = R.timing, run = R.run, sim = run.sim, per = run.per, P = TM.period, T = o.T, on = T != null, end = on && !o.running;
+    /* on a phone the words keep a readable size: the names left of the waves get a wider column, and the twenty counts
+       stand in a zigzag, every other one a little lower, so two figures never run into each other (#374) */
+    const narrow = typeof matchMedia === 'function' && matchMedia('(max-width: 720px)').matches, zig = k => narrow && k % 2 ? 10 : 0, gap = narrow ? 22 : 12;
+    const W = 320, H = narrow ? 226 : 204, TM = R.timing, run = R.run, sim = run.sim, per = run.per, P = TM.period, T = o.T, on = T != null, end = on && !o.running;
     const TX = 46, K = 266 / (1.6 * P), ty = 26, th = 22, xe = TX + P * K, far = per > 1.6 * P, xt = TX + Math.min(per, 1.6 * P) * K;
     let s = '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="' + esc(t('ckp.c.aria', { per: n0(per), path: n0(P), n: end ? run.errors : 0 })) + '">';
     /* ---- the race: the flip-flops, the gates between them, and the next tick ---- */
@@ -139,7 +142,7 @@ export default function lab(L) {
     s += '<line class="tick' + (lost ? ' bad' : '') + (far ? ' far' : '') + '" x1="' + xt.toFixed(1) + '" x2="' + xt.toFixed(1) + '" y1="13" y2="70"/>' +
       '<text class="ax tt' + (lost ? ' bad' : '') + '" x="' + (xt > 230 ? xt - 4 : xt + 4).toFixed(1) + '" y="10" text-anchor="' + (xt > 230 ? 'end' : 'start') + '">' + esc(t(far ? 'ckp.c.tickFar' : 'ckp.c.tick', { v: n0(per) })) + '</text>';
     /* ---- twenty ticks: the clock, the four bits, and the count read at each tick ---- */
-    const WX0 = 46, WX1 = 314, WY = 88, RH = 15, wx = tt => WX0 + (WX1 - WX0) * tt / sim.tEnd, upto = on ? Math.min(T, sim.tEnd) : 0;
+    const WX0 = narrow ? 58 : 46, WX1 = 314, WY = 88, RH = 15, wx = tt => WX0 + (WX1 - WX0) * tt / sim.tEnd, upto = on ? Math.min(T, sim.tEnd) : 0;
     const wave = (w, lim, row) => { const lo = WY + row * RH + 12, hi = lo - 9, y = v => v === 1 ? hi : v === 0 ? lo : (lo + hi) / 2; let d = 'M' + WX0 + ' ' + y(w[0][1]);
       for (let i = 1; i < w.length && w[i][0] <= lim; i++) { d += 'H' + wx(w[i][0]).toFixed(1) + 'V' + y(w[i][1]); }
       return d + 'H' + wx(lim).toFixed(1); };
@@ -148,13 +151,14 @@ export default function lab(L) {
     run.edges.forEach((e, k) => { s += '<line class="edge' + (on && e <= upto && run.wrong[k] ? ' bad' : '') + '" x1="' + wx(e).toFixed(1) + '" x2="' + wx(e).toFixed(1) + '" y1="' + (WY + 2) + '" y2="' + (WY + 5 * RH) + '"/>'; });
     s += '<path class="wv clk" d="' + wave(sim.waves.CLK, sim.tEnd, 0) + '"/>';
     if (on) for (let i = 0; i < 4; i++) s += '<path class="wv" d="' + wave(sim.waves[CP.qOf(i)], upto, i + 1) + '"/>';
-    if (on && !end) s += '<line class="cur" x1="' + wx(upto).toFixed(1) + '" x2="' + wx(upto).toFixed(1) + '" y1="' + WY + '" y2="' + (WY + 5 * RH + 30) + '"/>';
+    if (on && !end) s += '<line class="cur" x1="' + wx(upto).toFixed(1) + '" x2="' + wx(upto).toFixed(1) + '" y1="' + WY + '" y2="' + (WY + 5 * RH + 18 + gap + (narrow ? 10 : 0)) + '"/>';
     /* the count each tick stored, under the count it should be */
     const cy0 = WY + 5 * RH + 14;
-    s += '<text class="ax" x="' + (WX0 - 5) + '" y="' + cy0 + '" text-anchor="end">' + esc(t('ckp.c.count')) + '</text><text class="ax" x="' + (WX0 - 5) + '" y="' + (cy0 + 12) + '" text-anchor="end">' + esc(t('ckp.c.right')) + '</text>';
+    const ly = narrow ? 5 : 0;
+    s += '<text class="ax" x="' + (WX0 - 5) + '" y="' + (cy0 + ly) + '" text-anchor="end">' + esc(t('ckp.c.count')) + '</text><text class="ax" x="' + (WX0 - 5) + '" y="' + (cy0 + gap + ly) + '" text-anchor="end">' + esc(t('ckp.c.right')) + '</text>';
     run.edges.forEach((e, k) => { const cx = wx(e + per / 2).toFixed(1), shown = on && upto >= Math.min(sim.tEnd, e + per * 0.9);
-      if (shown) s += '<text class="num' + (run.wrong[k] ? ' bad' : '') + '" x="' + cx + '" y="' + cy0 + '" text-anchor="middle">' + (run.values[k] == null ? '?' : run.values[k]) + '</text>';
-      s += '<text class="num want" x="' + cx + '" y="' + (cy0 + 12) + '" text-anchor="middle">' + run.expected[k] + '</text>'; });
+      if (shown) s += '<text class="num' + (run.wrong[k] ? ' bad' : '') + '" x="' + cx + '" y="' + (cy0 + zig(k)) + '" text-anchor="middle">' + (run.values[k] == null ? '?' : run.values[k]) + '</text>';
+      s += '<text class="num want" x="' + cx + '" y="' + (cy0 + gap + zig(k)) + '" text-anchor="middle">' + run.expected[k] + '</text>'; });
     return '<figure class="ckpfig ckpc" data-f2="instrument">' + s + '</svg><figcaption class="small muted">' + esc(t('ckp.c.legend')) + '</figcaption></figure>';
   }
   function cbench() {
