@@ -19,12 +19,12 @@ import { clamp, metBy } from './fabkit.js';
 export const PULL_DEFAULTS = { pull: 3.8, temp: 18, rot: 12 };          // mm/min, degrees above freezing, rpm: the first version's start
 export const PULL_RANGE = { pull: [0.2, 4], temp: [0, 20], rot: [2, 25] };
 export const PULL = { melt: 400, neckAt: 80, neckMax: 6, bodyFrom: 290, lag: 25, dtMax: 2, endMelt: 8, tailMelt: 40, shock: 120, waferMm: 0.975 };
-export const PULL_TARGET = { min: 300, max: 312 };                       // the band, in mm, that counts as usable
+const PULL_TARGET = { min: 300, max: 312 };                       // the band, in mm, that counts as usable
 export const PULL_PHASES = ['dip', 'neck', 'shoulder', 'body', 'tail'];
 export const PULL_TIMESCALE = { dip: 7, neck: 7, shoulder: 24, body: 80, tail: 30 };  // minutes of crystal time per second on screen, as the first version ran it
 
 export const pullTarget = (pull, temp) => clamp(300 * Math.exp(-0.8 * (pull - 1) - 0.19 * (temp - 8)), 2, 460);
-export const pullSettings = s => ({ ...PULL_DEFAULTS, ...s });
+const pullSettings = s => ({ ...PULL_DEFAULTS, ...s });
 
 /* what rotation does (and nothing else): 'slow', 'ok' or 'fast' */
 export const pullRotation = rot => rot < 5 ? 'slow' : rot > 22 ? 'fast' : 'ok';

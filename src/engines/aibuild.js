@@ -76,7 +76,7 @@ export const PKG = {
 /* The choices that are not a pick from a table, and their limits (the lab's sliders). */
 export const DIES = [1, 2, 4];
 export const LIMITS = { area: [5, 800], sram: [0, 511], memN: [0, 12], f: [0.6, 2.6], reticle: 858, maxVolt: 1.05 };
-export const FILL_EXTRA = 1.15;                  // weights plus 15% must fit in memory
+const FILL_EXTRA = 1.15;                  // weights plus 15% must fit in memory
 
 /* The starting points, one per mission. A choice is { mission, arch, node, area (mm2 of compute per die), dies,
    sram (MB per die), fp4, mem, memN (devices), pkg, f (GHz), agents (AI design agents) }. None meets its mission,

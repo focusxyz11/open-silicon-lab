@@ -11,7 +11,7 @@
    proj({ ox, oy, s, cx }) makes a projector: P(x, y, z) -> [X, Y] in the scene's 1000 x 1000 space. */
 import { clamp } from './draw.js';
 
-export const KX = 0.42, KY = 0.5;
+const KX = 0.42, KY = 0.5;
 export function proj(o) {
   const s = o.s || 1, ox = o.ox || 0, oy = o.oy || 800, cx = o.cx || 0, ky = o.ky || KY;
   return (x, y, z) => [cx + ox + s * (x + KX * y - cx), oy - s * ((z || 0) + ky * y)];

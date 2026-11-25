@@ -50,23 +50,23 @@ export const LASTING = ['timing', 'wear', 'defect'];
 /* ---- the numbers of the model, each with its source or said to be a choice ---- */
 export const ALPHA_SHARE = 0.5;          // at sea level, alpha and neutrons flip about as many bits each (facts.json alpha-share)
 export const LOW_ALPHA_LEFT = 0.1;       // ultra-low-alpha materials: ten or more times fewer alphas (facts.json low-alpha)
-export const HARDENED_LEFT = 0.1;        // hardened cells (bigger, or with a second node that restores the first): a choice
-export const MULTI = 0.02;               // share of memory flips that hit two bits of one word: a choice (interleaving keeps it small)
-export const PERMANENT_HOURS = 1000;     // a copy that is wrong for good gives a wrong answer once in this many hours: a choice
+const HARDENED_LEFT = 0.1;        // hardened cells (bigger, or with a second node that restores the first): a choice
+const MULTI = 0.02;               // share of memory flips that hit two bits of one word: a choice (interleaving keeps it small)
+const PERMANENT_HOURS = 1000;     // a copy that is wrong for good gives a wrong answer once in this many hours: a choice
 export const COMMON = 0.01;              // lasting faults that hit every copy alike: 1% (facts.json asil-d, 99% of single faults caught)
-export const SELFTEST_COVER = 0.9;       // self-test finds 90% of copies wrong for good (facts.json asil-d, latent faults)
-export const HUNT_COVER = 0.9;           // a fleet's tests find 90% of them: a choice
+const SELFTEST_COVER = 0.9;       // self-test finds 90% of copies wrong for good (facts.json asil-d, latent faults)
+const HUNT_COVER = 0.9;           // a fleet's tests find 90% of them: a choice
 export const AI_MATTERS = 0.05;          // an AI's answer changes for about 5% of wrong values (facts.json dnn-bitflip: 0.4% to 7%)
-export const RANGE_LEFT = 0.2;           // clipping values to their range leaves a fifth of those (only high bits matter): a choice
-export const ABFT_COVER = 0.99;          // checksums on matrix arithmetic find 99% of wrong logic in it: a choice
+const RANGE_LEFT = 0.2;           // clipping values to their range leaves a fifth of those (only high bits matter): a choice
+const ABFT_COVER = 0.99;          // checksums on matrix arithmetic find 99% of wrong logic in it: a choice
 /* one megabit flips FIT_PER_MBIT times per 10⁹ hours at sea level; a satellite's memory flipped 4.04 × 10⁻⁷ times per bit
    per day in low Earth orbit (facts.json space-upsets), so neutrons and protons there are SPACE_FLUX times sea level's */
-export const SPACE_PER_BIT_DAY = 4.04e-7;
+const SPACE_PER_BIT_DAY = 4.04e-7;
 const GROUND_PER_BIT_DAY = FIT_PER_MBIT / BILLION / 1e6 * 24;
 export const SPACE_FLUX = (SPACE_PER_BIT_DAY / GROUND_PER_BIT_DAY - ALPHA_SHARE) / (1 - ALPHA_SHARE);
 /* the data centre's machines stop 419 times in 54 days on 16,384 GPUs (facts.json llama3-interruptions) */
-export const LLAMA = { stops: 419, days: 54, gpus: 16384 };
-export const CRASH_PER_HOUR = LLAMA.stops / (LLAMA.days * 24 * LLAMA.gpus);
+const LLAMA = { stops: 419, days: 54, gpus: 16384 };
+const CRASH_PER_HOUR = LLAMA.stops / (LLAMA.days * 24 * LLAMA.gpus);
 /* copies wrong for good: one device in a thousand in a server fleet (facts.json sdc-rate), one chip in a million in a
    car (car-ppm); a phone's chips are taken as a server's, a satellite's as a car's (choices) */
 export const DEFECT = { server: 1e-3, car: 1e-6 };

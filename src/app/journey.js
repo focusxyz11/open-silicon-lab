@@ -85,7 +85,7 @@ const cylHull = (x, y, z, r, h) => { const pts = []; for (let i = 0; i < 24; i++
 /* the overhead track runs through every station at the same place; the pod hangs from it, above the
    machine's door (the load port), and is lowered onto it */
 const PODX = 245, PODY = 60, PORT_Z = 95, HANG_Z = 452;
-export const TRACK = obP(PODX, PODY, 520);
+const TRACK = obP(PODX, PODY, 520);
 
 /* the sealed box a wafer travels in (with others: it has slots for a stack of them) */
 function pod(G, x, y, z, mine, open) {

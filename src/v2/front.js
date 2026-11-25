@@ -14,7 +14,7 @@ const f1 = v => (+v).toFixed(1);
 
 /* the corner cut off by the front: from the corner, along one edge to the line's first end, along the line, and back
    along the other edge from its last end; the line kept inside the plot */
-export function nobodyPath(box, corner, pts) {
+function nobodyPath(box, corner, pts) {
   const [x0, y0, x1, y1] = box; if (!pts.length) return '';
   const cy = corner === 'tl' ? y0 : y1, inY = y => Math.max(y0, Math.min(y1, y)), A = pts[0], B = pts[pts.length - 1];
   const line = pts.map(p => f1(Math.max(x0, Math.min(x1, p[0]))) + ' ' + f1(inY(p[1]))).join('L');

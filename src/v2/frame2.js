@@ -29,7 +29,7 @@
 import { still, phone } from '../core/ui.js';
 import { esc } from '../core/esc.js';
 import { t, has } from '../core/i18n.js';
-import { whereOf } from '../engines/way.js';
+import { whereOf, LOG_PAGES } from '../engines/way.js';
 import { challengeOf } from './loop.js';
 
 /* the choice an earlier visit kept (?frame=1 or 2, when the two frames were compared) means nothing now */
@@ -64,7 +64,7 @@ export function boot() {
 }
 
 /* ---- Read ---- */
-const LOGS = ['log', 'challenges', 'questions'], READING = ['read', 'w', 'machines', ...LOGS];
+const LOGS = LOG_PAGES, READING = ['read', 'w', 'machines', ...LOGS];
 /* pages that are places of their own: read as a page (the whole screen, the way back), named in the bar by their place */
 const PLACE_PAGES = { machines: 'map.lab.t' };
 const routeOf = h => String(h || '').replace(/^#\/?/, '').split('/')[0] || '';
@@ -104,7 +104,7 @@ function lightMark(m, on) {
   cap.innerHTML = say ? esc(say) : cap.dataset.rest; cap.classList.toggle('f2said', !!say);
 }
 /* the page made a reading page: the way back to where you came from, and the frame's class on the page */
-export function readPage(page) {
+function readPage(page) {
   if (!reading()) { page.classList.remove('f2rd'); return; }
   page.classList.add('f2rd');
   const inner = page.querySelector(':scope > .inner'); if (!inner) return;
@@ -160,11 +160,18 @@ function doSheet(sheet) {
   if (where.dataset.at !== name) { where.dataset.at = name;
     where.innerHTML = '<span class="f2wa" aria-hidden="true">↑</span><span class="f2wt"><span class="f2wk">' + esc(t('frame2.where')) + '</span><b>' + esc(name) + '</b></span>';
     where.setAttribute('aria-label', t('frame2.do.island', { place: name })); }
-  const g = player.querySelector('[data-f2="goal"]'), i = player.querySelector('[data-f2="instrument"]');
-  sheet.style.setProperty('--f2-goalh', (g ? Math.round(g.getBoundingClientRect().height) : 0) + 'px');
-  const sv = i && i.querySelector('svg[viewBox]'), vb = sv && sv.viewBox.baseVal, r = sv && sv.getBoundingClientRect();
-  if (vb && vb.width && r.width && r.height) sheet.style.setProperty('--f2-k', (1 / Math.min(r.width / vb.width, r.height / vb.height)).toFixed(4));
-  if (phone() && i) sheet.style.setProperty('--f2-sheet', Math.round(i.getBoundingClientRect().bottom + 10) + 'px');
+  stageVars(sheet, player.querySelector('[data-f2="goal"]'), player.querySelector('[data-f2="instrument"]'));
+}
+/* the stage's measures, on el: the goal's height (returned); with an instrument, how much a drawing made for the card
+   is scaled to the stage (its words keep their size on the screen), and on a phone where the sheet begins, under it */
+function stageVars(el, g, i) {
+  const gh = g ? Math.round(g.getBoundingClientRect().height) : 0;
+  el.style.setProperty('--f2-goalh', gh + 'px');
+  if (!i) return gh;
+  const sv = i.querySelector('svg[viewBox]'), vb = sv && sv.viewBox.baseVal, r = sv && sv.getBoundingClientRect();
+  if (vb && vb.width && r.width && r.height) el.style.setProperty('--f2-k', (1 / Math.min(r.width / vb.width, r.height / vb.height)).toFixed(4));
+  if (phone()) el.style.setProperty('--f2-sheet', Math.round(i.getBoundingClientRect().bottom + 10) + 'px');
+  return gh;
 }
 
 export function attach(host, api, o, x) {
@@ -239,14 +246,8 @@ export function attach(host, api, o, x) {
     if (!now()) return;
     tight();
     const player = dock.querySelector('.player'), g = player && player.querySelector('[data-f2="goal"]'), i = player && player.querySelector('[data-f2="instrument"]'); if (!i && !host.classList.contains('f2place')) return;
-    const gh = g ? Math.round(g.getBoundingClientRect().height) : 0;
-    host.style.setProperty('--f2-goalh', gh + 'px');
+    const gh = stageVars(host, g, i);
     const bg = (i ? 0 : gh) + 'px', st = host.parentNode; if (st && st.style.getPropertyValue('--f2-bgoal') !== bg) st.style.setProperty('--f2-bgoal', bg);
-    if (!i) return;
-    /* a drawing made for the card, now the size of the stage: its words keep their size on the screen */
-    const sv = i.querySelector('svg[viewBox]'), vb = sv && sv.viewBox.baseVal, r = sv && sv.getBoundingClientRect();
-    if (vb && vb.width && r.width && r.height) host.style.setProperty('--f2-k', (1 / Math.min(r.width / vb.width, r.height / vb.height)).toFixed(4));
-    if (phone()) host.style.setProperty('--f2-sheet', Math.round(i.getBoundingClientRect().bottom + 10) + 'px');
   };
   const ro = typeof ResizeObserver === 'function' ? life.watch(new ResizeObserver(measure)) : null;
   let watched = [];
@@ -367,7 +368,7 @@ export function notices() {
   }
 }
 /* the bar on a phone: Your log never covers the loop's dots; where there is no room for its words it is a mark */
-export function fitBar() {
+function fitBar() {
   const b = document.querySelector('.bar'), log = document.getElementById('logbtn'), loop = document.getElementById('loop'); if (!b || !log || !loop) return;
   b.classList.remove('f2logmark'); if (!phone()) return;
   const ol = loop.querySelector('ol'), L = (ol || loop).getBoundingClientRect(), G = log.getBoundingClientRect();

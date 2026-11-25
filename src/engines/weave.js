@@ -75,7 +75,7 @@ export function sizeParts(m) {
 
 /* ---- threads ---- */
 export const threadOf = id => THREADS.find(t => t.id === id) || null;
-export const stopKey = (th, depthIndex) => th + '.' + IDS[depthIndex];
+const stopKey = (th, depthIndex) => th + '.' + IDS[depthIndex];
 export const stop = (th, depthIndex) => STOPS[stopKey(th, depthIndex)] || null;
 /* The depths (as indexes) where a thread has a form, top to bottom. */
 export const threadDepths = th => IDS.map((_, d) => d).filter(d => stop(th, d));

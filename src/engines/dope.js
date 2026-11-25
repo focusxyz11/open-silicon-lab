@@ -18,8 +18,8 @@ import { switchOf } from './switch.js';
 /* ---- silicon ---- */
 const K_B = 8.617e-5, EG = 1.12, Q = 1.602e-19, N_SI = 5e22, VT = 0.02585;
 export const ni = Tk => 1e10 * Math.pow(Tk / 300, 1.5) * Math.exp(-EG / (2 * K_B) * (1 / Tk - 1 / 300));
-export const mobilityN = N => 68.5 + 1345 / (1 + Math.pow(N / 9.2e16, 0.711));
-export const mobilityP = N => 44.9 + 425 / (1 + Math.pow(N / 2.23e17, 0.719));
+const mobilityN = N => 68.5 + 1345 / (1 + Math.pow(N / 9.2e16, 0.711));
+const mobilityP = N => 44.9 + 425 / (1 + Math.pow(N / 2.23e17, 0.719));
 export const SEMI_DEFAULTS = { T: 300, type: 'n', logN: 16, logNa: 17, logNd: 17, V: 0, Vg: 0.2, Vd: 0.5 };
 export const SEMI_RANGE = { T: [150, 650], logN: [13, 20], logNa: [14, 19], logNd: [14, 19], V: [-3, 0.8], Vg: [0, 1.2], Vd: [0, 1] };
 
@@ -56,7 +56,7 @@ export function mosfet(Vg = SEMI_DEFAULTS.Vg, Vd = SEMI_DEFAULTS.Vd) {
 }
 
 /* ---- implant and anneal ---- */
-export const IONS = {
+const IONS = {
   B: { type: 'p', rp: [3.9, 0.96], spread: [4.6, 0.59], amorphous: 1e17, solubility: 2e20, diffusion: [1.5e-15, 6e-14, 1e-12] },
   P: { type: 'n', rp: [1.8, 0.92], spread: [1.08, 0.81], amorphous: 5e14, solubility: 1e21, diffusion: [2e-15, 8e-14, 1e-12] },
   As: { type: 'n', rp: [1.74, 0.76], spread: [0.8, 0.7], amorphous: 2e14, solubility: 2e21, diffusion: [2e-16, 1e-14, 3e-13] }

@@ -35,7 +35,7 @@ export const LEVELS = ['building', 'rack', 'board', 'chip', 'block', 'gate', 'sw
 export const PARTS = ['compute', 'move', 'heat'];
 
 /* numbers of 16 bits are the table's unit; bits per number for each precision (aichip's FORMATS: bytes per weight) */
-export const PRECISIONS = Object.keys(FORMATS);                  // fp16, fp8, fp4
+const PRECISIONS = Object.keys(FORMATS);                  // fp16, fp8, fp4
 export const bitsOf = p => FORMATS[p].bytes * 8;
 /* the quantization lab's format for each precision, to say what it costs in accuracy */
 const QUANT_OF = { fp16: 'fp16', fp8: 'e4m3', fp4: 'fp4' };
@@ -47,9 +47,9 @@ export const HOMES = {
   hbm: { pj16: E16.dram * HBM.e, level: 'board', bw: 1 },                         // stacks beside the chip, in its package
   sram: { pj16: E16.sram32k, level: 'chip', bw: 8 }                                // all of it on chips, wafer-scale or many chips
 };
-export const HOME_IDS = Object.keys(HOMES);
+const HOME_IDS = Object.keys(HOMES);
 /* the block keeps a number it read from on-chip memory for this many products before reading another */
-export const LOCAL_REUSE = 16;
+const LOCAL_REUSE = 16;
 /* compute in memory: the size of one array, and its converters' bits by default */
 export const CIM_ARRAY = 256, CIM_ADC = 6;
 /* the power curve's starting point (3 GHz at 0.75 V, activity 0.15) is where the table's energies are taken */

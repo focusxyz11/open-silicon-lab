@@ -94,7 +94,7 @@ export const LOOK = {
   lab: [{ id: 'plan', page: 'build' }], village: [{ id: 'plan', page: 'build' }]
 };
 /* the world of the current site where a depth is drawn (the first place that holds it) */
-export const worldOfDepth = depth => { for (const L of Object.values(INSIDE)) { const l = L.find(x => x.depth === depth); if (l) return l.world; } return 'journey'; };
+const worldOfDepth = depth => { for (const L of Object.values(INSIDE)) { const l = L.find(x => x.depth === depth); if (l) return l.world; } return 'journey'; };
 
 /* ---- following a question: a thread's stops as one trail through the chip world ---- */
 /* the order a trail walks: a chip in use from the building down to the atom (the data centre, then what only a

@@ -33,14 +33,14 @@ export const btn = (host, html, pos, fn, cls) => { const b = h('button', 'pbtn '
 export const big = (host, l, tp) => { const e = h('div', 'big'); at(e, l, tp); host.appendChild(e); return e; };
 export const put = (e, html) => { if (e._h !== html) { e._h = html; e.innerHTML = html; } };
 export const path = (c, pts, col, lw, dash) => { c.strokeStyle = col; c.lineWidth = lw; c.setLineDash(dash || []); c.beginPath(); pts.forEach((q, i) => (i ? c.lineTo(q[0], q[1]) : c.moveTo(q[0], q[1]))); c.stroke(); c.setLineDash([]); };
-export const hatch = (c, x, y, ww, hh, step, col, lw) => { c.save(); c.beginPath(); c.rect(x, y, ww, hh); c.clip(); c.strokeStyle = col; c.lineWidth = lw || 1.5; c.beginPath(); for (let q = -hh; q < ww; q += step) { c.moveTo(x + q, y + hh); c.lineTo(x + q + hh, y); } c.stroke(); c.restore(); };
+const hatch = (c, x, y, ww, hh, step, col, lw) => { c.save(); c.beginPath(); c.rect(x, y, ww, hh); c.clip(); c.strokeStyle = col; c.lineWidth = lw || 1.5; c.beginPath(); for (let q = -hh; q < ww; q += step) { c.moveTo(x + q, y + hh); c.lineTo(x + q + hh, y); } c.stroke(); c.restore(); };
 /* a point a given way along a line of points */
 export function along(pts, f) { let tot = 0; const L = []; for (let i = 1; i < pts.length; i++) { const l = Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]); L.push(l); tot += l; }
   let u = ((f % 1) + 1) % 1 * tot; for (let i = 0; i < L.length; i++) { if (u <= L[i]) return [lerp(pts[i][0], pts[i + 1][0], u / L[i]), lerp(pts[i][1], pts[i + 1][1], u / L[i])]; u -= L[i]; } return pts[pts.length - 1]; }
 export const train = (c, pts, T, n, speed, s) => { c.fillStyle = K.red; for (let i = 0; i < n; i++) { const p = along(pts, T * speed + i / n); c.fillRect(p[0] - s / 2, p[1] - s / 2, s, s); } };
 
 /* ---------------- the transistor, seen from the side: no current is 0, current is 1 ---------------- */
-export function bigT(c, a, T, on, o = {}) {
+function bigT(c, a, T, on, o = {}) {
   if (a <= .01) return;
   const cx = 500, cy = 560, ww = 640, x0 = cx - ww / 2, bh = 190, wl = ww * .27, wh = 78, gw = ww * .38, gh = 115, ox = 13, top = cy - 270, lw = 4.2, sx = x0 + ww * .15, dx = x0 + ww * .85;
   c.save(); c.globalAlpha = a; c.lineJoin = 'round'; c.lineCap = 'round';
@@ -99,14 +99,14 @@ export function walk(L, onSplit, onLeaf) {
     else { rec(x, y, ww, hh * r, mix(hash, 1), depth + 1, type, i1); rec(x, y + hh * r, ww, hh * (1 - r), mix(hash, 2), depth + 1, type, i2); }
   })(0, 0, 1000, 1000, 0x51ab5, 0, null, 0);
 }
-export function htree(c, x, y, ww, hh, n, min) {
+function htree(c, x, y, ww, hh, n, min) {
   if (n <= 0 || Math.min(ww, hh) < min) return;
   c.moveTo(x + ww / 4, y + hh / 2); c.lineTo(x + 3 * ww / 4, y + hh / 2); c.moveTo(x + ww / 4, y + hh / 4); c.lineTo(x + ww / 4, y + 3 * hh / 4); c.moveTo(x + 3 * ww / 4, y + hh / 4); c.lineTo(x + 3 * ww / 4, y + 3 * hh / 4);
   for (const [a, b] of [[0, 0], [1, 0], [0, 1], [1, 1]]) htree(c, x + a * ww / 2, y + b * hh / 2, ww / 2, hh / 2, n - 1, min);
 }
 /* what fifty years of splitting leaves behind: every region its own texture, as on a real die */
 export const floors = {};
-export function floorFor(P) {
+function floorFor(P) {
   const key = P + (S.night ? 'n' : 'd'); if (floors[key]) return floors[key];
   const f = document.createElement('canvas'); f.width = f.height = P; const c = f.getContext('2d'), u = 1000 / P; c.setTransform(P / 1000, 0, 0, P / 1000, 0, 0);
   c.fillStyle = S.night ? '#100f0d' : '#e2ddd0'; c.fillRect(0, 0, 1000, 1000);
@@ -121,8 +121,8 @@ export function floorFor(P) {
   for (const [L, a, lw] of [[3, .55, 2.5], [5, .2, 1.6]]) { c.strokeStyle = fg(a); c.lineWidth = lw; c.beginPath(); walk(L, (x, y, ww, hh, vert, r) => { if (vert) { c.moveTo(x + ww * r, y); c.lineTo(x + ww * r, y + hh); } else { c.moveTo(x, y + hh * r); c.lineTo(x + ww, y + hh * r); } }, () => {}); c.stroke(); }
   floors[key] = f; return f;
 }
-export const isOn = (hash, T, type) => (type === 'memory' ? rnd(hash ^ 0x77aa) < .5 : rnd(mix(hash, Math.floor(T * (.5 + rnd(hash >>> 5)) + rnd(hash >>> 9) * 9))) < .34);
-export function drawField(c, L, f, T, form) {
+const isOn = (hash, T, type) => (type === 'memory' ? rnd(hash ^ 0x77aa) < .5 : rnd(mix(hash, Math.floor(T * (.5 + rnd(hash >>> 5)) + rnd(hash >>> 9) * 9))) < .34);
+function drawField(c, L, f, T, form) {
   const thin = new Path2D(), thick = new Path2D(), fresh = new Path2D(), tree = new Path2D(), leaves = [], lw = 2.2;
   walk(L, (x, y, ww, hh, vert, r, depth, type) => { const p = depth < 3 || depth < L - 9 ? thick : thin;
     if (vert) { p.moveTo(x + ww * r, y); p.lineTo(x + ww * r, y + hh); } else { p.moveTo(x, y + hh * r); p.lineTo(x + ww, y + hh * r); }
@@ -146,10 +146,10 @@ export function drawField(c, L, f, T, form) {
 }
 /* ---- what hides behind 0 and 1: two transistors, a NOT gate; four, a NAND gate. Every wire red while it carries 1 ---- */
 export const wire = (c, pts, v, lw) => { c.strokeStyle = v ? K.red : K.ink; c.lineWidth = lw * (v ? 1.6 : 1); c.beginPath(); pts.forEach((q, i) => (i ? c.lineTo(q[0], q[1]) : c.moveTo(q[0], q[1]))); c.stroke(); };
-export const fet = (c, x, y, on, a) => { c.save(); c.translate(x, y); c.rotate(-Math.PI / 2); glyph(c, 0, 0, 46, on ? 1 : 0, a, 4, 'planar'); c.restore(); c.globalAlpha = a; };
+const fet = (c, x, y, on, a) => { c.save(); c.translate(x, y); c.rotate(-Math.PI / 2); glyph(c, 0, 0, 46, on ? 1 : 0, a, 4, 'planar'); c.restore(); c.globalAlpha = a; };
 /* i18n-ok: styles */ export const bit = (c, x, y, v, al, sz) => { c.fillStyle = v ? K.red : K.ink; c.font = '400 ' + (sz || 92) + 'px Anton, Impact, sans-serif'; c.textAlign = al || 'center'; c.textBaseline = 'middle'; c.fillText(v ? '1' : '0', x, y); };
 export const GT = 46 * 1.5, GX = 46 * .83, GD = 46 * .45;
-export function drawNot(c, A, a) {
+function drawNot(c, A, a) {
   const x = 520, yp = 330, yn = 670, out = A ? 0 : 1; c.globalAlpha = a; c.lineCap = 'square';
   wire(c, [[380, 180], [660, 180]], 1, 4); wire(c, [[380, 820], [660, 820]], 0, 4);
   wire(c, [[x + GD, 180], [x + GD, yp - GT]], 1, 4); wire(c, [[x + GD, yp + GT], [x + GD, yn - GT]], out, 4); wire(c, [[x + GD, 500], [810, 500]], out, 4); wire(c, [[x + GD, yn + GT], [x + GD, 820]], 0, 4);
@@ -157,7 +157,7 @@ export function drawNot(c, A, a) {
   fet(c, x, yp, !A, a); fet(c, x, yn, A, a);
   bit(c, 340, 180, 1, 'right'); bit(c, 340, 820, 0, 'right'); bit(c, 150, 500, A); bit(c, 860, 500, out); c.lineCap = 'butt';
 }
-export function drawNand(c, A, B, a) {
+function drawNand(c, A, B, a) {
   const xa = 400, xb = 640, yp = 320, xn = 560, ya = 580, yb = 730, out = A && B ? 0 : 1; c.globalAlpha = a; c.lineCap = 'square';
   wire(c, [[330, 170], [770, 170]], 1, 4); wire(c, [[330, 850], [770, 850]], 0, 4);
   wire(c, [[xa + GD, 170], [xa + GD, yp - GT]], 1, 4); wire(c, [[xb + GD, 170], [xb + GD, yp - GT]], 1, 4);
@@ -170,7 +170,7 @@ export function drawNand(c, A, B, a) {
   fet(c, xa, yp, !A, a); fet(c, xb, yp, !B, a); fet(c, xn, ya, A, a); fet(c, xn, yb, B, a);
   bit(c, 300, 170, 1, 'right'); bit(c, 300, 850, 0, 'right'); bit(c, 140, ya, A); bit(c, 140, yb, B); bit(c, 880, 450, out); c.lineCap = 'butt';
 }
-export function paintDie(c, T, d) {
+function paintDie(c, T, d) {
   const L = Math.min(Math.floor(d), LMAX), f = d >= LMAX ? 0 : d - Math.floor(d), aF = ss(10, 13, d);
   if (aF < 1) drawField(c, L, f, T, 'planar');
   if (aF > 0) { c.globalAlpha = aF; c.drawImage(floorFor(c.canvas.width), 0, 0, 1000, 1000); c.globalAlpha = 1;
@@ -184,16 +184,16 @@ export function paintDie(c, T, d) {
 }
 
 /* ---------------- the moments on the way ---------------- */
-export function paintJob(c) { const n = S.jobK ?? 500, cw = 31.2, x0 = 110, y0 = 300;
+function paintJob(c) { const n = S.jobK ?? 500, cw = 31.2, x0 = 110, y0 = 300;
   for (let i = 0; i < 500; i++) { const cx = x0 + (i % 25) * cw, cy = y0 + Math.floor(i / 25) * cw; if (i < Math.round(n)) { c.fillStyle = K.red; c.fillRect(cx + 2, cy + 2, cw - 4, cw - 4); } else { c.strokeStyle = fg(.22); c.lineWidth = 1.5; c.strokeRect(cx + 2.5, cy + 2.5, cw - 5, cw - 5); } } }
-export const BUGCOLS = [8, 15, 22, 29, 36];
-export function paintBug(c, T) { const cw = 20, x0 = 90, y0 = 250, b = S.bug;
+const BUGCOLS = [8, 15, 22, 29, 36];
+function paintBug(c, T) { const cw = 20, x0 = 90, y0 = 250, b = S.bug;
   for (let i = 0; i < 41; i++) { const mid = 2.5 + i * .42; for (let j = 0; j < 22; j++) { const k = Math.round(j - mid), x = x0 + i * cw, y = y0 + j * cw;
     if (Math.abs(k) > 2) { c.fillStyle = fg(.1); c.fillRect(x + 8, y + 8, 4, 4); continue; }
     if (k === -2 && BUGCOLS.includes(i)) { if (b.worst) { c.fillStyle = rd(.25 + .2 * Math.sin(T * 5)); c.fillRect(x + 1, y + 1, cw - 2, cw - 2); c.strokeStyle = K.red; c.lineWidth = 3; c.strokeRect(x - 4, y - 4, cw + 8, cw + 8); } continue; }
     c.fillStyle = fg([.66, .4, .17, .4, .66][k + 2]); c.fillRect(x + 1.5, y + 1.5, cw - 3, cw - 3); } }
   if (b.run > 0) { c.strokeStyle = K.ink; c.lineWidth = 2.5; c.beginPath(); for (let i = 0; i < 70; i++) { const hh = mix(i, Math.floor(T * 40)), x = x0 + rnd(hh) * 820, y = y0 + rnd(hh >>> 3) * 440; c.moveTo(x - 7, y); c.lineTo(x + 7, y); c.moveTo(x, y - 7); c.lineTo(x, y + 7); } c.stroke(); } }
-export function paintLight(c, T) { const l = LIGHTS[S.light], lam = l === 'euv' ? 23 : 328, y0 = 255;
+function paintLight(c, T) { const l = LIGHTS[S.light], lam = l === 'euv' ? 23 : 328, y0 = 255;
   c.strokeStyle = K.red; c.lineWidth = 4; c.beginPath(); for (let x = 100; x <= 900; x += 2) { const y = y0 + 52 * Math.sin((x - T * (l === 'euv' ? 40 : 90)) / lam * 6.283); if (x === 100) c.moveTo(x, y); else c.lineTo(x, y); } c.stroke();
   c.strokeStyle = K.ink; c.lineWidth = 2; c.beginPath(); c.moveTo(100, y0 + 86); c.lineTo(100 + lam, y0 + 86); c.moveTo(100, y0 + 78); c.lineTo(100, y0 + 94); c.moveTo(100 + lam, y0 + 78); c.lineTo(100 + lam, y0 + 94); c.stroke();
   const gx = 100, gy = 430, gh = 400, pitch = 50;
@@ -201,7 +201,7 @@ export function paintLight(c, T) { const l = LIGHTS[S.light], lam = l === 'euv' 
   else for (let i = 0; i < 16; i++) { const x = gx + i * pitch, p = i % 3;
     if (l === 'euv' || p === 0) { c.fillStyle = K.ink; c.fillRect(x, gy, 25, gh); } else if (p === 1) { c.fillStyle = fg(.55); c.fillRect(x + 2.5, gy, 25, gh); } else { hatch(c, x - 2, gy, 25, gh, 9, K.ink, 2.4); c.strokeStyle = K.ink; c.lineWidth = 2; c.strokeRect(x - 2, gy, 25, gh); } }
   c.strokeStyle = K.ink; c.lineWidth = 2; c.strokeRect(gx - 14, gy - 14, 828, gh + 28); }
-export function paintWall(c, T) {
+function paintWall(c, T) {
   const j = Yr.wallPush * 5 * Math.sin(T * 60); c.save(); c.translate(j, 0);
   c.drawImage(floorFor(c.canvas.width), 0, 0, 1000, 1000);
   c.fillStyle = K.plate; c.globalAlpha = .9; c.fillRect(250, 260, 500, 500); c.globalAlpha = 1;
@@ -247,7 +247,7 @@ PL.years = {
 };
 
 /* ---------------- the four walls ---------------- */
-export const leakX = () => Math.pow(10, S.leak / 60);
+const leakX = () => Math.pow(10, S.leak / 60);
 export const OUTS = {
   leak: () => (S.leak ? w('w.switch.out', { n: nf(leakX()), mv: S.leak }) : w('w.switch.out0')),
   distance: () => w('w.memory.o' + 'abc'[S.dist]) + ' ' + src('energy-moving-data'),
@@ -273,10 +273,10 @@ PL.leak = {
     lbl(host, w('w.switch.lo'), 9, 12); lbl(host, w('w.switch.hi'), 91, 12, 'r'); lbl(host, w('t.gate'), 50, 17.5, 'c'); lbl(host, w('leak.row'), 6, 93.5);
     const b = big(host, 9, 18.5); pl.sync = () => { put(b, '×' + (S.leak ? nf(leakX()) : '1') + '<small>' + w('leak.unit') + '</small>'); if (+r.value !== S.leak) r.value = S.leak; }; }
 };
-export function memBlock(c, x, y, ww, hh, n, a) { c.fillStyle = K.plate; c.fillRect(x, y, ww, hh); c.strokeStyle = K.ink; c.lineWidth = 3.5; c.strokeRect(x, y, ww, hh);
+function memBlock(c, x, y, ww, hh, n, a) { c.fillStyle = K.plate; c.fillRect(x, y, ww, hh); c.strokeStyle = K.ink; c.lineWidth = 3.5; c.strokeRect(x, y, ww, hh);
   const m = ww * .07, cw = (ww - 2 * m) / n, rows = Math.max(1, Math.round((hh - 2 * m) / cw)), ch = (hh - 2 * m) / rows; c.fillStyle = fg(.45 * (a || 1));
   for (let i = 0; i < n; i++) for (let j = 0; j < rows; j++) c.fillRect(x + m + i * cw + cw * .14, y + m + j * ch + ch * .14, cw * .72, ch * .72); }
-export function logicBlock(c, x, y, ww, hh, n) { c.fillStyle = K.plate; c.fillRect(x, y, ww, hh); c.strokeStyle = K.ink; c.lineWidth = 3.5; c.strokeRect(x, y, ww, hh);
+function logicBlock(c, x, y, ww, hh, n) { c.fillStyle = K.plate; c.fillRect(x, y, ww, hh); c.strokeStyle = K.ink; c.lineWidth = 3.5; c.strokeRect(x, y, ww, hh);
   const m = ww * .08, cw = (ww - 2 * m) / n, rows = Math.max(1, Math.round((hh - 2 * m) / cw)), ch = (hh - 2 * m) / rows;
   for (let i = 0; i < n; i++) for (let j = 0; j < rows; j++) { const k = rnd(i * 17 + j * 5 + n); c.fillStyle = fg(.16 + .3 * k); c.fillRect(x + m + i * cw + cw * .1, y + m + j * ch + ch * .1, cw * (.5 + .3 * k), ch * .8); } }
 PL.distance = {
@@ -339,7 +339,7 @@ PL.price = {
 
 /* ---------------- the next fifty years: down the ladder of energy per bit, to the floor ---------------- */
 export const NX0 = Math.log10(RUNGS[0][1]), NX1 = Math.log10(RUNGS[RUNGS.length - 1][1]), RP = RUNGS.map(r => (NX0 - Math.log10(r[1])) / (NX0 - NX1));
-export const fmtE = j => { const u = [['pJ', 1e-12], ['fJ', 1e-15], ['aJ', 1e-18], ['zJ', 1e-21]].find(q => j >= q[1] * .99) || ['zJ', 1e-21]; const v = j / u[1]; return (v >= 10 ? Math.round(v) : v.toFixed(1)) + ' ' + u[0]; };
+const fmtE = j => { const u = [['pJ', 1e-12], ['fJ', 1e-15], ['aJ', 1e-18], ['zJ', 1e-21]].find(q => j >= q[1] * .99) || ['zJ', 1e-21]; const v = j / u[1]; return (v >= 10 ? Math.round(v) : v.toFixed(1)) + ' ' + u[0]; };
 PL.next = {
   frame: () => [w('pl.next'), fmtE(Math.pow(10, lerp(NX0, NX1, S.next.pos))) + ' ' + w('next.abit')],
   paint(c, T) { const y0 = 240, hh = 640, Y = p => y0 + p * hh, ax = 470, pos = S.next.pos;
@@ -362,10 +362,10 @@ PL.next = {
 };
 
 /* ---------------- how a computer is arranged ---------------- */
-export function blockView(c, T) { c.strokeStyle = fg(.5); c.lineWidth = 2.5; c.beginPath(); for (let i = 0; i < 5; i++) { c.moveTo(140, 215 + i * 142); c.lineTo(860, 215 + i * 142); c.moveTo(215 + i * 142, 140); c.lineTo(215 + i * 142, 860); } c.stroke();
+function blockView(c, T) { c.strokeStyle = fg(.5); c.lineWidth = 2.5; c.beginPath(); for (let i = 0; i < 5; i++) { c.moveTo(140, 215 + i * 142); c.lineTo(860, 215 + i * 142); c.moveTo(215 + i * 142, 140); c.lineTo(215 + i * 142, 860); } c.stroke();
   for (let i = 0; i < 4; i++) for (let j = 0; j < 4; j++) { const x = 250 + i * 142, y = 250 + j * 142, on = rnd(mix(i * 4 + j, Math.floor(T * 1.6 + i * .3))) < .4; c.fillStyle = on ? K.red : K.plate; c.strokeStyle = on ? K.red : K.ink; c.lineWidth = 3.5; c.beginPath(); c.moveTo(x, y); c.lineTo(x + 36, y); c.arc(x + 36, y + 36, 36, -Math.PI / 2, Math.PI / 2); c.lineTo(x, y + 72); c.closePath(); c.fill(); c.stroke();
     path(c, [[x - 35, y + 20], [x, y + 20]], K.ink, 2.5); path(c, [[x - 35, y + 52], [x, y + 52]], K.ink, 2.5); path(c, [[x + 72, y + 36], [x + 107, y + 36]], on ? K.red : K.ink, on ? 4 : 2.5); } }
-export function arrView(c, T, id) {
+function arrView(c, T, id) {
   if (id === 'classic') { const p = [[270, 610], [270, 760], [730, 760], [730, 610]]; c.strokeStyle = fg(.5); c.lineWidth = 2; c.setLineDash([9, 8]); c.strokeRect(80, 230, 380, 430); c.strokeRect(540, 230, 380, 430); c.setLineDash([]); path(c, p, K.ink, 3.5); logicBlock(c, 110, 260, 320, 350, 4); memBlock(c, 570, 260, 320, 350, 8); train(c, p, T, 6, .3, 14); }
   else if (id === 'stack') { c.strokeStyle = K.ink; c.lineWidth = 2.5; c.setLineDash([9, 8]); c.strokeRect(150, 230, 700, 520); c.setLineDash([]); logicBlock(c, 200, 310, 330, 360, 4); for (let i = 4; i >= 0; i--) memBlock(c, 600 + i * 16, 300 + i * 16 - 30, 170, 330, 5, i ? .4 : 1); const p = [[530, 490], [600, 490]]; path(c, p, K.ink, 3.5); train(c, p, T, 2, 1.6, 14); }
   else if (id === 'cim') { c.strokeStyle = K.ink; c.lineWidth = 2.5; c.setLineDash([9, 8]); c.strokeRect(150, 230, 700, 520); c.setLineDash([]); for (let i = 0; i < 4; i++) for (let j = 0; j < 3; j++) { const x = 185 + i * 162, y = 265 + j * 158; memBlock(c, x, y, 144, 100, 5); c.fillStyle = fg(.3); c.fillRect(x, y + 106, 144, 26); c.strokeStyle = K.ink; c.lineWidth = 3; c.strokeRect(x, y + 106, 144, 26); if (rnd(mix(i * 3 + j, Math.floor(T * 3))) < .45) { c.fillStyle = K.red; c.fillRect(x + 12 + 100 * rnd(i * 7 + j + Math.floor(T * 3)), y + 112, 14, 14); } } }
@@ -409,14 +409,14 @@ PL.arr = {
 };
 
 /* ---------------- your machine: pick a need, set each block's form; an agent generates, engines check, you decide ---------------- */
-export const formOf = (need, part) => (STOCK.includes(part[1]) ? 'stock' : S.forms[need.id + '.' + part[0]] || 'software');
-export function machEnergy(need, get) { let e = 0, tot = 0; for (const p of need.parts) { const f = get(p); e += p[2] * (f === 'stock' ? 1 : FCOST[f]); tot += p[2]; } return e / tot; }
-export function machNow() { const need = NEEDS[S.need], bad = need.change.find(id => formOf(need, need.parts.find(p => p[0] === id)) === 'circuit'); return { need, e: machEnergy(need, p => formOf(need, p)), ok: !bad, bad }; }
+const formOf = (need, part) => (STOCK.includes(part[1]) ? 'stock' : S.forms[need.id + '.' + part[0]] || 'software');
+function machEnergy(need, get) { let e = 0, tot = 0; for (const p of need.parts) { const f = get(p); e += p[2] * (f === 'stock' ? 1 : FCOST[f]); tot += p[2]; } return e / tot; }
+function machNow() { const need = NEEDS[S.need], bad = need.change.find(id => formOf(need, need.parts.find(p => p[0] === id)) === 'circuit'); return { need, e: machEnergy(need, p => formOf(need, p)), ok: !bad, bad }; }
 export function agent() { const need = NEEDS[S.need], free = need.parts.filter(p => !STOCK.includes(p[1])); let n = 0, ok = 0, best = null;
   (function rec(i, pick) { if (i === free.length) { n++; const good = !need.change.some(id => pick[id] === 'circuit'); if (!good) return; ok++; const e = machEnergy(need, p => (STOCK.includes(p[1]) ? 'stock' : pick[p[0]])); if (!best || e < best.e) best = { e, pick: { ...pick } }; return; }
     for (const f of FORMS) { pick[free[i][0]] = f; rec(i + 1, pick); } })(0, {});
   for (const id in best.pick) S.forms[need.id + '.' + id] = best.pick[id]; S.agent = { n, ok }; }
-export const tilePos = (need, i) => { const n = need.parts.length, sp = n > 4 ? 172 : 205, x0 = 500 - (n - 1) * sp / 2; return [x0 + i * sp, 400 + (i % 2 ? 62 : -62)]; };
+const tilePos = (need, i) => { const n = need.parts.length, sp = n > 4 ? 172 : 205, x0 = 500 - (n - 1) * sp / 2; return [x0 + i * sp, 400 + (i % 2 ? 62 : -62)]; };
 PL.machine = {
   frame: () => [w('s.yours'), sw('machines.need.' + NEEDS[S.need].id + '.t')],
   paint(c, T) { const need = NEEDS[S.need], ts = need.parts.length > 4 ? 138 : 158;
@@ -537,8 +537,8 @@ export function mkChart(o = {}) {
   return { el, fit, paint, X: y => X(y), Yv: v => Y(v), geo: () => g };
 }
 /* the chart's questions, one at a time: the first not yet answered, and what the last answer gave */
-export const cqStage = () => (S.cq.stage && !S.done[S.cq.stage] ? S.cq.stage : ['fit', 'knee', 'guess'].find(id => !S.done[id]) || 'done');
-export function guessOut(q = S.cq) { const real = 336e9, gv = q.guess || 1, f = gv > real ? gv / real : real / gv, xx = xOf(f), hi = f > 10 && gv > real;
+const cqStage = () => (S.cq.stage && !S.done[S.cq.stage] ? S.cq.stage : ['fit', 'knee', 'guess'].find(id => !S.done[id]) || 'done');
+function guessOut(q = S.cq) { const real = 336e9, gv = q.guess || 1, f = gv > real ? gv / real : real / gv, xx = xOf(f), hi = f > 10 && gv > real;
   return { n: sig(gv, 2), x: xx, verdict: w(f <= 2 ? 'cq.guess.v1' : f <= 10 ? 'cq.guess.v2' : hi ? 'cq.guess.v4' : 'cq.guess.v3', { x: xx }) + (hi ? ' ' + src('cerebras-cs4') : '') }; }
 const everyW = e => (e === 1 ? w('cq.every1') : w('cq.every', { n: e }));
 const fitO = e => { const miss = rule(2026, e) / 336e9, far = miss >= 1 ? miss : 1 / miss; return Math.abs(e - 2) < .2 ? '' : w(miss >= 1 ? 'cq.fit.over' : 'cq.fit.under', { x: xOf(far) }); };

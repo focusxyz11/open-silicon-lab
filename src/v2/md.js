@@ -14,7 +14,7 @@ export function inline(s, o = {}) {
 /* the cells of a table row: | a | b | */
 export const cells = row => row.slice(1, row.lastIndexOf('|')).split('|').map(c => c.trim());
 /* a table's rows (header and the line under it dropped) */
-export const tableRows = text => { const L = text.split('\n').filter(l => l.startsWith('|')); return L.slice(2).map(cells); };
+const tableRows = text => { const L = text.split('\n').filter(l => l.startsWith('|')); return L.slice(2).map(cells); };
 
 /* blocks of Markdown into HTML */
 export function render(md, o = {}) {

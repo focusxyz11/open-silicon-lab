@@ -57,7 +57,7 @@ export const CH_FACTS = { years: ['moore-1965', 'transistor-trend', 'zeloof-gara
 export const CHAPS = ['years', 'walls', 'next', 'arch', 'machine', 'island'];
 let pop = null, sheetEl = null, toastEl = null, toastTm = 0;
 const inRoot = el => { ROOT.appendChild(el); return el; };
-export function showPop(b) { b._want = 1;
+function showPop(b) { b._want = 1;
   if (!FACTS[b.dataset.f]) { if (!Object.keys(FACTS).length) loadFacts().then(() => { if (b._want && FACTS[b.dataset.f]) showPop(b); }); return; }
   if (!pop) { pop = inRoot(h('div', 'srcpop')); }
   const f = FACTS[b.dataset.f]; if (!f) return; $$('.src.on').forEach(e => e.classList.remove('on')); b.classList.add('on');
@@ -65,7 +65,7 @@ export function showPop(b) { b._want = 1;
   pop.querySelector('.all').onclick = () => { hidePop(); sheet(true); };
   const r = b.getBoundingClientRect(), pw = Math.min(300, innerWidth - 24); pop.style.left = clamp(r.left - 20, 12, innerWidth - pw - 12) + 'px';
   pop.classList.add('on'); const ph = pop.offsetHeight; pop.style.top = (r.bottom + 8 + ph > innerHeight ? r.top - ph - 8 : r.bottom + 8) + 'px'; }
-export function hidePop() { if (pop) pop.classList.remove('on'); $$('.src.on').forEach(e => e.classList.remove('on')); }
+function hidePop() { if (pop) pop.classList.remove('on'); $$('.src.on').forEach(e => e.classList.remove('on')); }
 export function sheet(on) {
   if (on && !Object.keys(FACTS).length) { loadFacts().then(() => sheet(true)); return; }
   if (!sheetEl && on) { sheetEl = inRoot(h('div', 'sheet')); sheetEl.setAttribute('role', 'dialog'); sheetEl.setAttribute('aria-label', w('sheet.h').replace(/<[^>]+>/g, ''));
@@ -114,7 +114,7 @@ export const PW = {
 };
 /* what people are trying: told once, in the blueprint's words (bp.next.*, loaded when the page is first touched),
    except where this page says it its own way */
-export const wayW = (id, k) => (id === 'switches' || id === 'spikes' ? w('bet.' + id + '.' + k) : t('bp.next.' + id + '.' + k));
+const wayW = (id, k) => (id === 'switches' || id === 'spikes' ? w('bet.' + id + '.' + k) : t('bp.next.' + id + '.' + k));
 /* the words Hold shares with other pages (src/i18n/<lang>/shared.json): '' until they are in, then filled where they show */
 export const sw = (k, v) => (hasWords('shared') ? t(k, v ? { ...figVars(), ...v } : figVars()) : '');
 export function fillShared() { $$('[data-sw]').forEach(e => { e.innerHTML = sw(e.dataset.sw); }); changed('words'); }
@@ -136,13 +136,13 @@ export function words(id) {
 }
 
 /* ---- the fifty years: the count, the year, and what is said ---- */
-export const NARR = [[0, 'one'], [.9, 'not'], [3.4, 'double'], [DGAR - .7, 'garage'], [D71 + 2.3, 'rule'], [16.5, 'coast'], [20.5, 'invisible'], [D94 + 2.5, 'named'], [D2011, 'pay'], [GEN(5), 'gaa'], [DWALL - .9, 'push']];
+const NARR = [[0, 'one'], [.9, 'not'], [3.4, 'double'], [DGAR - .7, 'garage'], [D71 + 2.3, 'rule'], [16.5, 'coast'], [20.5, 'invisible'], [D94 + 2.5, 'named'], [D2011, 'pay'], [GEN(5), 'gaa'], [DWALL - .9, 'push']];
 export const momAt = d => MOMENTS.find(m => d >= m.at && d < m.at + m.span) || null;
 export const viewAt = d => { if (d >= DWALL - 1e-4) return 'wall'; const m = momAt(d); return m ? m.id : d < .5 ? 'one' : 'die'; };
 export function countParts(d) { const n = d >= DWALL - 1e-4 ? 336e9 : Math.pow(2, d);
   if (n < 1e6) return [nf(n), w(Math.round(n) === 1 ? 'unit.one' : 'unit.many'), ''];
   const big = n >= 1e9, v = n / (big ? 1e9 : 1e6); return [v >= 100 ? Math.round(v) : v.toFixed(1), w('unit.many'), w(big ? 'billion' : 'million')]; }
-export function hzW(v) { return v >= 1e9 ? w('st.ghz', { n: (v / 1e9).toFixed(1) }) : v >= 1e6 ? w('st.mhz', { n: Math.round(v / 1e6) }) : w('st.khz', { n: Math.round(v / 1e3) }); }
+function hzW(v) { return v >= 1e9 ? w('st.ghz', { n: (v / 1e9).toFixed(1) }) : v >= 1e6 ? w('st.mhz', { n: Math.round(v / 1e6) }) : w('st.khz', { n: Math.round(v / 1e3) }); }
 export function statsHTML(d) { const y = yearShown(d), n = nodeAt(y), hz = upTo('hz', y), co = upTo('cores', y);
   return '<div><span class="mono">' + w('st.year') + '</span><b>' + y + '</b></div><div><span class="mono">' + w('st.node') + '</span><b>' + (n ? (y >= NAMED_ONLY ? w('st.named', { n }) : n) : '–') + '</b></div><div><span class="mono">' + w('st.clock') + '</span><b>' + (hz ? hzW(hz) : '–') + '</b></div><div><span class="mono">' + w('st.cores') + '</span><b>' + (co || (y >= 1971 ? 1 : '–')) + '</b></div>'; }
 export function momOut(id) {

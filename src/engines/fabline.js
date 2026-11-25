@@ -38,7 +38,7 @@ export function layerAt(step, p = 1) {
 /* ---- the cleanroom ---- */
 export const CLEAN_CLASSES = [{ id: 'iso1', n: 1 }, { id: 'iso3', n: 3 }, { id: 'iso5', n: 5 }, { id: 'iso7', n: 7 }, { id: 'room', n: 9 }];
 export const CLEAN_DEFAULT = 2;           // ISO 5, a typical semiconductor cleanroom
-export const CLEAN_SCALE = { particleNm: 100, gatePitchNm: 48, smallParticleNm: 20, hairTimes: 800, shownMax: 2500 };
+const CLEAN_SCALE = { particleNm: 100, gatePitchNm: 48, smallParticleNm: 20, hairTimes: 800, shownMax: 2500 };
 export const isoLimit = (n, dUm = 0.1) => Math.pow(10, n) * Math.pow(0.1 / dUm, 2.08);
 export function cleanroom(index = CLEAN_DEFAULT) {
   const c = CLEAN_CLASSES[clamp(index | 0, 0, CLEAN_CLASSES.length - 1)], perM3 = isoLimit(c.n), perL = perM3 / 1000;
@@ -52,7 +52,7 @@ export function airParticles(index = CLEAN_DEFAULT) {
 
 /* ---- CVD against ALD ---- */
 export const TRENCH = { widthNm: 40, topNm: 24, sides: 60, ald: 0.1, cvd: 0.2, aldSec: 2, cvdSec: 0.2 };
-export const DEPO_DEFAULTS = { mode: 'cvd', ar: 6 };
+const DEPO_DEFAULTS = { mode: 'cvd', ar: 6 };
 export const DEPO_RANGE = { ar: [1, 12] };
 export function depoStart({ mode, ar } = DEPO_DEFAULTS) {
   return depoRead({ mode: mode || 'cvd', ar: ar ?? 6, top: 0, side: new Float32Array(TRENCH.sides), bot: 0, closed: false, time: 0, cycles: 0, phase: 0, done: false });
@@ -74,7 +74,7 @@ export function depoStep(s) {
   return depoRead({ ...s, top: done ? TRENCH.topNm : top, side, bot, closed, time, cycles, phase, done });
 }
 /* readings: coverage (bottom over top, 0..1; 1 before anything is deposited), coveragePct (rounded, or null before), voided, status */
-export function depoRead(s) {
+function depoRead(s) {
   const NS = TRENCH.sides, W0 = TRENCH.widthNm;
   const coverage = s.top > 0 ? Math.min(1, Math.max(s.bot, s.side[NS - 1]) / s.top) : 1;
   const voided = s.mode === 'cvd' && s.closed && 2 * s.side[NS - 1] < W0 - 1;
@@ -142,7 +142,7 @@ export function inspectCompare(w, k) {
    second (dope.js, the anneal 'spike'). The back end builds the wiring above the transistors and must stay below
    400 °C (facts.json beol-heat), so a channel put in there (a sheet or tubes laid on a finished chip) meets only that.
    heatAfter(stage) -> the hottest step, in °C, from that stage on. Read by the switch engine (src/engines/switch.js). */
-export const LINE_STAGES = ['front', 'back'];
+const LINE_STAGES = ['front', 'back'];
 export const LINE_HEAT = [{ id: 'activate', stage: 'front', c: 1050 }, { id: 'wires', stage: 'back', c: 400 }];
 export const heatAfter = stage => Math.max(...LINE_HEAT.filter(s => LINE_STAGES.indexOf(s.stage) >= Math.max(0, LINE_STAGES.indexOf(stage))).map(s => s.c));
 

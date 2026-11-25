@@ -232,6 +232,8 @@ export function play(el, ch, ctx) {
      size you choose, specked by the line you choose; each part's cost is counted from what works ---- */
   const betOf = () => (S.bets[ch.id] = Bet.normalBetOf(ch.bet, S.bets[ch.id]));
   const million = i => t('bet.sizeV', { n: Bet.SIZES[i] });
+  /* the bets' guesses: [the bet's attribute, what the answer is shown beside] */
+  const GUESSES = [['bt', '.betview'], ['jv', '.betview'], ['pv', '.pblocks'], ['pc', '.betview'], ['ox', '.betview'], ['size', '.betview']];
   const times = v => isFinite(v) ? t('bet.times', { v: v >= 10 ? Math.round(v) : v.toFixed(2) }) : t('bet.none');
   function bet() { return ch.bet === 'oxen' ? betOxen() : ch.bet === 'onebad' ? betPieces() : ch.bet === 'prove' ? betProve() : ch.bet === 'jevons' ? betJevons() : ch.bet === 'batch' ? betBatch() : betMoore(); }
   function betMoore() {
@@ -390,7 +392,6 @@ export function play(el, ch, ctx) {
   }
   /* ---- Jevons' bet: a better chip makes each answer cheaper; the world asks more; does the island hold? ---- */
   const frac = v => v >= 1 ? String(v) : '1/' + Math.round(1 / v);
-  const xTimes = v => t('bet.times', { v: v >= 10 ? Math.round(v) : v.toFixed(2) });
   function betJevons() {
     const b = betOf(), G = Bet.J_GUESSES, right = Bet.jevonsAnswer();
     let h = head();
@@ -400,8 +401,8 @@ export function play(el, ch, ctx) {
       return h + reward();
     }
     const C = Bet.checkJevons(b), J = C.J, X = Bet.J_GOAL;
-    const gs = [{ k: 'answers', ok: C.many, v: xTimes(J.answers), target: t('bet.jv.gAnswers', { v: X.minAnswers }), f: Math.min(1, J.answers / X.minAnswers) },
-      { k: 'energy', ok: C.held, v: xTimes(J.energy), target: t('bet.jv.gEnergy', { v: Math.round(X.maxEnergy * 100) }), f: C.held ? 1 : X.maxEnergy / J.energy }];
+    const gs = [{ k: 'answers', ok: C.many, v: times(J.answers), target: t('bet.jv.gAnswers', { v: X.minAnswers }), f: Math.min(1, J.answers / X.minAnswers) },
+      { k: 'energy', ok: C.held, v: times(J.energy), target: t('bet.jv.gEnergy', { v: Math.round(X.maxEnergy * 100) }), f: C.held ? 1 : X.maxEnergy / J.energy }];
     h += '<div class="goalbox' + (C.ok ? ' ok' : '') + '"><p class="kicker">' + esc(t(C.ok ? 'game.reached' : 'game.goalNow')) + '</p>' + gs.map(g => '<div class="gauge' + (g.ok ? ' ok' : '') + '"><span class="gl">' + esc(t('bet.jv.g.' + g.k)) + '</span><span class="gv">' + esc(g.v) + ' <span class="muted">' + esc(g.target) + '</span></span><span class="gbar"><span style="width:' + (g.f * 100).toFixed(0) + '%"></span></span></div>').join('') + '</div>';
     h += '<div class="betview" data-f2="instrument">' + turbinesSvg(J) + pathSvg(b) + '</div>';
     h += '<label class="lab" for="bet-eff"><b>' + esc(t('bet.jv.eff')) + '</b> <output>' + esc(t(b.eff ? 'bet.jv.effV' : 'bet.jv.eff0', { v: frac(J.e) })) + '</output></label><input type="range" id="bet-eff" data-bet="eff" min="0" max="' + (Bet.EFF.length - 1) + '" step="1" value="' + b.eff + '">';
@@ -605,13 +606,9 @@ export function play(el, ch, ctx) {
     const pt = q('[data-pat]'); if (pt) { view.tests.push(+pt.dataset.pat); view.wrong = null; return draw(); }
     const gs = q('[data-guess]'); if (gs) { const k = +gs.dataset.guess; if (k === spotCase(spotCode(S)).broken) { view.guess = k; win(); } else view.wrong = k; draw(); fx(); if (view.wrong === k) anim(el.querySelector('p.bad'), [{ transform: 'translateX(-6px)' }, { transform: 'translateX(5px)' }, { transform: 'translateX(0)' }], { duration: 300 }); return show('.won, .verdict, p.bad'); }
     if (q('[data-again]')) { view.tests = []; view.wrong = null; view.guess = null; return draw(); }
-    const gbt = q('[data-guess-bt]'); if (gbt) { betOf().guess = +gbt.dataset.guessBt; ctx.save(); draw(); fx(); return show('.betview'); }
-    const gj = q('[data-guess-jv]'); if (gj) { betOf().guess = +gj.dataset.guessJv; ctx.save(); draw(); fx(); return show('.betview'); }
-    const gv = q('[data-guess-pv]'); if (gv) { betOf().guess = +gv.dataset.guessPv; ctx.save(); draw(); fx(); return show('.pblocks'); }
+    /* a bet's guess (data-guess-<bet>), then the answer it is shown beside */
+    const gb = q(GUESSES.map(([k]) => '[data-guess-' + k + ']').join(',')); if (gb) { const [k, sel] = GUESSES.find(([g]) => gb.hasAttribute('data-guess-' + g)); betOf().guess = +gb.getAttribute('data-guess-' + k); ctx.save(); draw(); fx(); return show(sel); }
     const pb = q('[data-prove]'); if (pb) { const b = betOf(); b.proved ^= 1 << +pb.dataset.prove; ctx.save(); draw(); fx(); return; }
-    const gp = q('[data-guess-pc]'); if (gp) { betOf().guess = +gp.dataset.guessPc; ctx.save(); draw(); fx(); return show('.betview'); }
-    const go = q('[data-guess-ox]'); if (go) { betOf().guess = +go.dataset.guessOx; ctx.save(); draw(); fx(); return show('.betview'); }
-    const gz = q('[data-guess-size]'); if (gz) { const b = betOf(); b.guess = +gz.dataset.guessSize; ctx.save(); draw(); fx(); return show('.betview'); }
     if (q('[data-reguess]')) { betOf().guess = null; ctx.save(); return draw(); }
   };
   el.oninput = e => {

@@ -30,7 +30,7 @@ export const FACTS = ['landauer-1991', 'light-per-tick', 'shannon-1948', 'landau
 /* ---------------- the walls ---------------- */
 /* light in one tick of a clock (metres), and in glass (light in fibre is slower by its index, about 1.47) */
 export const lightPerTick = ghz => C / (ghz * 1e9);
-export const GLASS = 1.47;
+const GLASS = 1.47;
 /* Shannon's limit: the most bits a second one channel of this width (Hz) carries at this signal-to-noise (dB) */
 export const shannon = (hz, snrDb) => hz * Math.log2(1 + Math.pow(10, snrDb / 10));
 /* Landauer's floor: joules to write (erase) one bit at room temperature, about 3 zJ */
@@ -89,7 +89,7 @@ export const METERS = ['energy', 'time', 'capacity', 'space', 'errors', 'money']
 
 /* a path's costs: energy (J a bit), time (s), the slowest wire's rate and its Shannon limit (bits a second), and the
    chance of an error; every boundary between two media is an edge crossed */
-export function pathCost(path, cell) {
+function pathCost(path, cell) {
   const C0 = CELLS[cell];
   let pj = C0.pj, s = C0.s, err = 0, mm = 0, prev = null;
   /* the door is set by the longest stretch that is not the chip's own wiring (the chip's wires are many and short) */
@@ -152,7 +152,7 @@ export const LEVELS = [
 export const LEVEL_IDS = LEVELS.map(l => l.id);
 export const levelOf = id => LEVELS.find(l => l.id === id) || null;
 /* the chef's speed at the first round (ops a second), from the level's balance */
-export function chefOf(L) {
+function chefOf(L) {
   const P = pathCost(L.path, L.cell);
   const fetch = L.job.bits / (L.wires * P.rate) + L.job.ops / 4096 * P.s;
   return L.job.ops / (fetch * L.balance);
@@ -182,7 +182,7 @@ export const START = Object.fromEntries(LEVERS.map(l => [l.id, l.values[0]]));
 /* the catches, and the prices as shares of what a level can spend (the model's own): room on the chip for a pantry or
    a shelf at 1.5 a whole chip, the stack and the light at their share each */
 export const STACK_SLOW = 0.7, STACK_WIRES = 8, SHELF_ROOM = 0.1, CIM_ERR = 0.02, CIM_OP = 0.25, CIM_SPEED = 2;
-export const PRICE = { room: 1.5, stack: 0.45, light: 0.5 };
+const PRICE = { room: 1.5, stack: 0.45, light: 0.5 };
 
 /* what is wrong with a plan, or null: an attempt may come from anyone, so every value is checked against the levers */
 export function problem(plan) {

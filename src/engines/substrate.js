@@ -13,8 +13,8 @@
 
 /* how much noise each step adds, at most, as a share of the full signal: a little, some, a lot */
 export const NOISES = [0.05, 0.15, 0.3];
-export const LOSS = 0.1;          /* a part with no gain hands on nine tenths of what it gets */
-export const STEEP = 12;          /* how sharp a restoring part's threshold is */
+const LOSS = 0.1;          /* a part with no gain hands on nine tenths of what it gets */
+const STEEP = 12;          /* how sharp a restoring part's threshold is */
 /* what a level reads as: a clear 1 above HIGH, a clear 0 below LOW, and in between nobody can say */
 export const HIGH = 0.7, LOW = 0.3;
 
@@ -46,8 +46,8 @@ export const COOLING = [1, 400, 10000];
 
 /* a domino falling into the next, worked out from a named example: the energy is what standing it up stored
    (its centre of mass raised by half its height), the time is its spacing at the speed of a domino wave */
-export const DOMINO = { kg: 0.01, m: 0.05, gap: 0.02 };   /* an example domino: 10 g, 5 cm tall, 2 cm apart */
-export const WAVE = 0.75;                                  /* m/s, between Stronge's 0.65 and 0.86 */
+const DOMINO = { kg: 0.01, m: 0.05, gap: 0.02 };   /* an example domino: 10 g, 5 cm tall, 2 cm apart */
+const WAVE = 0.75;                                  /* m/s, between Stronge's 0.65 and 0.86 */
 export const G = 9.81;
 export const dominoStep = (d = DOMINO, v = WAVE) => ({ e: d.kg * G * d.m / 2, t: d.gap / v });
 

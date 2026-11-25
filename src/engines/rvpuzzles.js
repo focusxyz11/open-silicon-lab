@@ -27,7 +27,7 @@ export const PUZZLES = [
 ];
 /* the jobs of a machine's core (src/data/blocks.js NEEDS, by the need's id): a program that already works, watched on
    your core. a3 and the words of memory from address 4096 (mem) are inputs too. Words: rv.job.<id>.t, .d */
-export const MEM0 = 4096;
+const MEM0 = 4096;
 export const JOBS = [
   { id: 'hearing', start: '# the louder of two microphones\nmv a0, a1\nbge a1, a2, done\nmv a0, a2\ndone:', cases: [{ a1: 310, a2: 870 }, { a1: 650, a2: 120 }], want: c => Math.max(c.a1, c.a2) },
   { id: 'wildfire', start: '# count the readings over the alarm level a2\nli t0, 4096\nli t1, 6\nli a0, 0\nloop:\n  lw t2, 0(t0)\n  ble t2, a2, skip\n  addi a0, a0, 1\nskip:\n  addi t0, t0, 4\n  addi t1, t1, -1\n  bne t1, x0, loop',

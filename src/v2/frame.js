@@ -39,12 +39,12 @@ export function sizeWords(m) {
   return t('frame.size.' + u, { v: fmtNum(+(m * k).toPrecision(2)) });
 }
 /* how many times closer (from bigger to smaller) or farther, rounded: below ten to a whole number, above to one figure */
-export function timesWords(from, to) {
+function timesWords(from, to) {
   const r = from / to, x = r >= 1 ? r : 1 / r; if (x < 1.5) return '';
   const p = Math.pow(10, Math.floor(Math.log10(x))), n = x < 10 ? Math.round(x) : Math.round(x / p) * p;
   return t(r >= 1 ? 'frame.zoom.in' : 'frame.zoom.out', { n: fmtNum(n) });
 }
-export const MODES = ['look', 'do', 'ask'];
+const MODES = ['look', 'do', 'ask'];
 /* the row of steps: one component in every row of steps. On a wide screen every step is named, left to right, joined
    by one line; on a phone only the step you are at shows, between ← and →, with how far along it is */
 function stepsHtml(st) {

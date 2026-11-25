@@ -15,7 +15,7 @@ const GLYPH = {
 export const glyph = shape => '<svg class="fglyph" viewBox="0 0 16 16" aria-hidden="true" fill="currentColor">' + (GLYPH[shape] || '') + '</svg>';
 
 /* where a question sits, in words: its seam for a leak, its home otherwise */
-export function whereWords(q) {
+function whereWords(q) {
   const s = q.seam;
   if (s && s.a) return t('field.ui.inout', { a: t('depth.' + s.a + '.name'), b: t('depth.' + s.b + '.name') });
   if (s && s.along) return t('field.ui.along', { a: t('loop.stage.' + s.along[0]), b: t('loop.stage.' + s.along[1]) });
@@ -45,7 +45,7 @@ export function fieldHtml(id) {
 }
 
 /* the questions of the field the energy puzzle runs through, and the level of the dive where its lens opens */
-export const JOULE_AT = { fetch: 'block', wait: 'chip', dark: 'chip', brain: 'gate', heat: 'switch' };
+const JOULE_AT = { fetch: 'block', wait: 'chip', dark: 'chip', brain: 'gate', heat: 'switch' };
 const jouleOffer = id => '<p class="small jofferd">' + esc(t('joule.offer.d')) + '</p><button type="button" class="btn" data-joule="' + esc(JOULE_AT[id]) + '">' + esc(t('joule.offer')) + '</button>';
 /* a question to build that this question of the field leads to (QUESTIONS in the atlas): its game, one tap away */
 function buildOffer(id, long) {

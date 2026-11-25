@@ -59,7 +59,7 @@ export function area(c) {
 }
 
 /* ---- what it buys: cycles, timed again from the instructions a run went through ---- */
-export const MUL_CYC = { none: 0, slow: 32, fast: 1 };
+const MUL_CYC = { none: 0, slow: 32, fast: 1 };
 const isMul = op => op === 'mul' || op === 'mulh';
 const isMem = op => /^(lw|lh|lb|lhu|lbu|sw|sh|sb)$/.test(op);
 const isJump = e => e.f === 'B' || e.f === 'J' || e.op === 'jalr';

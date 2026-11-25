@@ -44,7 +44,7 @@ const delay = (V, Vt) => V / Math.pow(V - Vt, ALPHA);
 const heat = T => 1 + 0.0008 * (T - 25);
 /* Ageing (bias temperature instability): the threshold voltage creeps up with time under voltage and
    heat, roughly as the fifth root of time; 25 mV after ten years at 105 °C. */
-export function dVt(years, T) { if (years <= 0) return 0; return 0.025 * Math.pow(years / 10, 0.2) * Math.exp(0.15 / k * (1 / K(105) - 1 / K(T))); }
+function dVt(years, T) { if (years <= 0) return 0; return 0.025 * Math.pow(years / 10, 0.2) * Math.exp(0.15 / k * (1 / K(105) - 1 / K(T))); }
 const D0 = delay(V0, VT0);                          // the signed-off delay of the perfect design
 
 /* ---- where the chip will live: the three dives ---- */

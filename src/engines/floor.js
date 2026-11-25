@@ -17,7 +17,7 @@
 export const K_B = 1.380649e-23;        /* Boltzmann's constant, J/K */
 export const T_ROOM = 300;
 export const C = 299792458;             /* light in vacuum, m/s */
-export const EPS_GLASS = 3.9;           /* relative permittivity of silicon dioxide */
+const EPS_GLASS = 3.9;           /* relative permittivity of silicon dioxide */
 /* the starting chip's clock, an assumption of this model: 2 billion ticks a second */
 export const BASE_GHZ = 2;
 

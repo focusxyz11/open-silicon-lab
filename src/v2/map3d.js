@@ -51,7 +51,7 @@ const ARCH = {
 /* a slow value noise, smooth, from 0 to 1 */
 const smooth = t => t * t * (3 - 2 * t);
 /* lump (a tree crown with an outline) is shared with the studio's furnishing (src/v2/furnish.js) */
-export function noise2(x, y) {
+function noise2(x, y) {
   const xi = Math.floor(x), yi = Math.floor(y), u = smooth(x - xi), v = smooth(y - yi);
   const a = rnd(xi, yi), b = rnd(xi + 1, yi), c = rnd(xi, yi + 1), d = rnd(xi + 1, yi + 1);
   return a + (b - a) * u + (c - a) * v + (a - b - c + d) * u * v;

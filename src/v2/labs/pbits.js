@@ -16,7 +16,7 @@ const SIZES = { noise: 'small', 'noise-big': 'large' };
 const GOALS = {}, LEAST = {};
 export const goalOf = (size, b, w) => { const k = size + ':' + b + ':' + w; return GOALS[k] || (GOALS[k] = P.factorGoal(size, { beta: P.BETAS[b], wait: P.WAITS[w] })); };
 /* the least wait that is right 90% of the time at a cold, for a problem, and the energy of one read then (null: none) */
-export function leastAt(size, b) {
+function leastAt(size, b) {
   const k = size + ':' + b; if (k in LEAST) return LEAST[k];
   const F = P.FACTOR[size]; let out = null;
   for (const w of P.WAITS) { const st = P.factorStats({ N: F.N, bits: F.bits, beta: P.BETAS[b], wait: w }); if (st.right >= P.PBIT_RIGHT) { out = { wait: w, energy: st.energy }; break; } }

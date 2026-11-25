@@ -11,7 +11,7 @@ import { verilogOf } from '../engines/verilog.js';
 
 const ps = n => fmtNum(Math.round(n));
 /* the clock the card times against: the fastest a Tiny Tapeout chip's pins carry (facts: tt-clock) */
-export const CLOCK_MHZ = 66;
+const CLOCK_MHZ = 66;
 export const STEPS = ['need', 'logic', 'check', 'gates', 'layout', 'masks'];
 
 const kick = w => '<p class="kicker">' + esc(w) + '</p>';

@@ -102,7 +102,7 @@ export const SERVE_CHIPS = [
 ];
 export const serveChipOf = id => SERVE_CHIPS.find(c => c.id === id);
 export const PREFILL_MODELS = [8, 70, 405];          // billions of parameters
-export const PREFILL_USE = 0.5;                      // the share of peak FP8 a prefill pass reaches
+const PREFILL_USE = 0.5;                      // the share of peak FP8 a prefill pass reaches
 export const PREFILL_DEFAULTS = { chipId: 'rubin', paramsB: 70, promptSlider: 600, answerSlider: 550 };
 /* the first version's sliders, 0..1000: prompt 100 to 128,000 tokens, answer 10 to 4,000 */
 export const promptOfSlider = v => Math.round(100 * Math.pow(1280, v / 1000));
@@ -131,7 +131,7 @@ export function readFastWriteSlow(s) {
 
 /* ---------- energy per token ---------- */
 export const ENERGY_DEFAULTS = { watts: 2300, tokExp: 3.9, overhead: 35, pue: 1.2 };   // tokens a second = 10^tokExp; overhead in percent
-export const PHONE_WH = 15, US_HOME_KWH = 10500;
+const PHONE_WH = 15, US_HOME_KWH = 10500;
 /* Returns { tokPerS, facilityW (per accelerator, all in), parts: [accelerator, rest of server and network, cooling] in watts,
    shares (of the three), joulesPerToken, whPerAnswer (1,000 tokens), phoneShare (of a 15 Wh battery), acceleratorsPerGW,
    tokensPerDayPerGW, gwYearTWh (8.76), homesK (thousands of US homes, 10,500 kWh a year) } */
@@ -147,8 +147,8 @@ export function energyPerToken(s = ENERGY_DEFAULTS) {
 
 /* ---------- cluster network ---------- */
 export const NET_RADIX = 64, NET_SWITCH_W = 1500, NET_OPT_W = { plug: 60, cpo: 9 + 30 }, NET_HEADROOM = 1.25;   // per link, in watts
-export const NET_DOMAINS = [8, 72, 576];             // GPUs on one copper scale-up fabric: server, rack, multi-rack (2027)
-export const NET_GPU_W = [1000, 2300];               // Blackwell, Rubin
+const NET_DOMAINS = [8, 72, 576];             // GPUs on one copper scale-up fabric: server, rack, multi-rack (2027)
+const NET_GPU_W = [1000, 2300];               // Blackwell, Rubin
 export const NET_DEFAULTS = { exp: 13, domain: 72, optics: 'plug', gpuW: 2300 };   // GPUs = 2^exp, exp 3 to 17
 /* Returns { gpus, tiers (0: all in one domain), switches, transceivers, linkW, switchW, netW, gpuW (with headroom), share (of
    cluster power), domains } */
@@ -187,7 +187,7 @@ export const REAL_CHIPS = [
 ];
 export const realChipOf = id => REAL_CHIPS.find(c => c.id === id);
 /* the comparison's bars are on a log scale: PFLOPS 1 to 1,000, GB 0.1 to 1,000, TB/s 1 to 100,000; returns 0..1, or null */
-export const COMPARE_DOMAIN = { top: [1, 1000], gb: [0.1, 1000], bw: [1, 100000] };
+const COMPARE_DOMAIN = { top: [1, 1000], gb: [0.1, 1000], bw: [1, 100000] };
 export function compareBar(chipId, key) {
   const c = realChipOf(chipId), v = key === 'top' ? c.top && c.top[0] : c[key];
   if (!v) return null;

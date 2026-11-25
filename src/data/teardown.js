@@ -142,7 +142,7 @@ export const CHALLENGES = [
 ];
 
 /* every key in WORDS that the structures above (and the views' fixed labels) point to */
-export const FIXED_WORDS = ['td.start', 'td.openAll', 'td.askCount', 'td.yourCount', 'td.check', 'td.notYet', 'td.open', 'td.by.label', 'td.by.job', 'td.by.made', 'td.how', 'td.rd.lead', 'td.sum.none', 'td.sum.one', 'td.sum.some', 'td.sum.car', 'td.note', 'td.fit.end.l', 'td.fit.end.r', 'td.fit.pick', 'td.fit.best', 'td.fit.ok', 'td.fit.no', 'td.fit.show', 'td.fit.answer', 'td.fit.score', 'td.fit.togo', 'td.fit.note'];
+const FIXED_WORDS = ['td.start', 'td.openAll', 'td.askCount', 'td.yourCount', 'td.check', 'td.notYet', 'td.open', 'td.by.label', 'td.by.job', 'td.by.made', 'td.how', 'td.rd.lead', 'td.sum.none', 'td.sum.one', 'td.sum.some', 'td.sum.car', 'td.note', 'td.fit.end.l', 'td.fit.end.r', 'td.fit.pick', 'td.fit.best', 'td.fit.ok', 'td.fit.no', 'td.fit.show', 'td.fit.answer', 'td.fit.score', 'td.fit.togo', 'td.fit.note'];
 export function wordKeys() {
   const k = [...FIXED_WORDS];
   JOBS.forEach(j => k.push('td.job.' + j));

@@ -8,8 +8,8 @@
    and the first slice gets cin = 1. */
 import TC from './tinychip.js';
 
-export const ALU_INS = ['a', 'b', 'cin', 'sub', 'op1', 'op0'];
-export const ALU_OUTS = ['y', 'cout'];
+const ALU_INS = ['a', 'b', 'cin', 'sub', 'op1', 'op0'];
+const ALU_OUTS = ['y', 'cout'];
 /* op1, op0, sub for each operation the CPU asks for. */
 export const OPS = { and: [0, 0, 0], or: [0, 1, 0], xor: [1, 0, 0], add: [1, 1, 0], sub: [1, 1, 1] };
 

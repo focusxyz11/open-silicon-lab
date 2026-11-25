@@ -8,7 +8,7 @@ const RAD = Math.PI / 180;
 export const SPAN = 360 / STAGES.length;
 /* the centre angle of a stage's sector (Open at the top, -90 degrees) */
 export const angleOf = stage => -90 + SPAN * STAGES.indexOf(stage);
-export const radiusOf = ring => RINGS.find(r => r.id === ring).r;
+const radiusOf = ring => RINGS.find(r => r.id === ring).r;
 export const pol = (r, deg) => [+(r * Math.cos(deg * RAD)).toFixed(2), +(r * Math.sin(deg * RAD)).toFixed(2)];
 
 /* where a thing sits: its stage's angle moved by off (a share of half the sector, -1 to 1), at its ring's radius moved by dr */
@@ -52,7 +52,7 @@ export function onWall(wall, p) {
 
 /* the people and AI band: how much of each stage's work AI generates at a step of the slider (0 today, 1, 2) and how much
    is left to people; never less than the floor, what only people can bring (data: ROLES[stage].ai, a share per step) */
-export const PEOPLE_FLOOR = 0.2;
+const PEOPLE_FLOOR = 0.2;
 export function shares(role, step) {
   const ai = Math.min(1 - PEOPLE_FLOOR, role.ai[Math.max(0, Math.min(role.ai.length - 1, step))]);
   return { ai, people: 1 - ai };

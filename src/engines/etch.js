@@ -17,7 +17,7 @@ export const ETCH_GRID = { w: 100, h: 90, maskTop: 10, filmTop: 16, openFrom: 40
 export const ETCH_DEFAULTS = { ions: 85, chem: 30 };           // directionality 0 to 100 percent, radicals 0 to 90 percent
 export const ETCH_RANGE = { ions: [0, 100], chem: [0, 90] };
 export const ETCH = { perFrame: 350, maxFrames: 1200, maxTraces: 40 };
-export const etchCone = ions => 2 + (100 - ions) / 100 * 38;  // half-angle in degrees
+const etchCone = ions => 2 + (100 - ions) / 100 * 38;  // half-angle in degrees
 
 const { w: GW, h: GH, maskTop: MT, filmTop: MB, openFrom: OL, openTo: OR } = ETCH_GRID;
 const count = (g, v) => { let n = 0; for (let i = 0; i < g.length; i++) if (g[i] === v) n++; return n; };
@@ -64,7 +64,7 @@ function undercutCells(g) {
 }
 
 /* the readings of a state: depthNm, aspect, undercutNm, maskPct (rounded, as shown), status ('ready', 'running', 'straight', 'undercut') */
-export function etchRead(s) {
+function etchRead(s) {
   const depthNm = depthCells(s.g) * ETCH_GRID.cellNm, undercutNm = undercutCells(s.g) * ETCH_GRID.cellNm, mask = count(s.g, 1) / s.mask0;
   const status = !s.done && s.frames > 0 ? 'running' : undercutNm > 8 ? 'undercut' : depthNm > 0 ? 'straight' : 'ready';
   return { ...s, depthNm, aspect: depthNm / 40, undercutNm, maskLeft: mask, maskPct: Math.round(mask * 100), status };

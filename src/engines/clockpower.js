@@ -95,7 +95,7 @@ export function frontier(a, step = 0.02) {
 
 /* ================= pipeline: five stages, stalls, forwarding, reordering ================= */
 /* The program: code (as an assembler would print it), d: the register it writes (0: none), s: registers it reads, ld: a load. */
-export const PROGRAM = [
+const PROGRAM = [
   { t: 'lw   x1, 0(x10)', d: 1, s: [10], ld: 1 }, { t: 'add  x2, x1, x3', d: 2, s: [1, 3] }, { t: 'sub  x4, x2, x5', d: 4, s: [2, 5] },
   { t: 'addi x6, x6, 1', d: 6, s: [6] }, { t: 'and  x7, x4, x6', d: 7, s: [4, 6] }, { t: 'sw   x7, 8(x10)', d: 0, s: [7, 10] }
 ];
@@ -128,7 +128,7 @@ export function schedule({ forwarding = false, reorder = false } = {}) {
    that much later, and wires may feed back into themselves, which is what lets a pair of gates hold a bit. Values are
    0, 1 or 'x' (unknown, as at power-on). Gate delays come from the tiny-chip studio's cell library and process
    (src/engines/tinychip.js), so a counter here is as fast as the same gates there. */
-export class Circ {
+class Circ {
   constructor() { this.gates = []; this.ins = []; this.fan = {}; }
   input(...names) { names.forEach(n => { if (!this.ins.includes(n)) this.ins.push(n); }); return this; }
   /* type: NOT, BUF, AND, OR, NAND, NOR, XOR; d: delay in ps */
@@ -276,7 +276,7 @@ export function latchHint(hist, now) {
 
 /* The flip-flop lab: 16 slots of 600 ps, D on or off in each; the clock rises every 4 slots (slot 2, 6, 10, 14) and stays
    up for two slots. Returns the simulation, how often each Q changed, and the goals the lab offered. */
-export const FLOP = { slot: 600, slots: 16, per: 4 };
+const FLOP = { slot: 600, slots: 16, per: 4 };
 export function flopRun(D) {
   const { slot: SLOT, slots: N, per: PER } = FLOP, C = latchAndFlop(), init = zeroState(C);
   const edges = Array.from({ length: N / PER }, (_, k) => (k * PER + 2) * SLOT);

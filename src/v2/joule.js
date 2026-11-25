@@ -24,7 +24,7 @@ export function joules(j) {
 /* a share in words: a whole percent, one decimal under ten, and "under 0.1%" below that */
 export const share = s => s >= 0.095 ? t('joule.pct', { v: fmtNum(Math.round(s * 100)) }) : s >= 0.001 ? t('joule.pct', { v: fmtNum(+(s * 100).toFixed(1)) }) : s > 0 ? t('joule.tiny') : t('joule.pct', { v: '0' });
 /* a lever's value in words */
-export function valueWords(id, v) {
+function valueWords(id, v) {
   if (id === 'home' || id === 'optics') return t('joule.v.' + id + '.' + v);
   if (id === 'cim') return t(v ? 'joule.v.on' : 'joule.v.off');
   if (id === 'batch') return t('joule.v.batch', { n: fmtNum(v) });
