@@ -12,6 +12,7 @@ import * as THREE from '../vendor/three.min.js';
 import { mat, box, BOARD } from './kit3d.js';
 import { createLevel3D } from './level3d.js';
 import { chipNow } from '../app/scenes.js';
+import { sceneVersion } from '../app/betscene.js';
 import { DEPTHS } from '../data/weave.js';
 
 const X = x => (x - 500) / 100, Z = y => (y - 500) / 100;
@@ -108,6 +109,8 @@ export const create = level => (canvas, host, on = {}) => createLevel3D(canvas, 
   let t = 0;
   return {
     level, parts: Object.keys(NAMES), anchors,
+    /* the heat is your chip's: draw again when it changes, even when still */
+    version: () => sceneVersion(),
     /* a hero object: seen at an angle, turned like the stack, turnable and swaying; the control unit opens on arrival */
     view: { tilt: 0.62, turn: -0.62, r: 5.2, at: [0, 0, 0.1], arrive: level === 'ecu' ? { tilt: 0.8, turn: -0.45, ms: 1600 } : null,
       /* door: the chip inside the package, the flat level's portal, on the substrate's top (the phone's) or in the

@@ -22,7 +22,7 @@ import { PLACES, CHIP_ROWS as ROWS } from '../data/views3d.js';
 import { stopsAt } from '../data/places.js';
 import { levelAt, sizeOf } from '../data/atlas.js';
 import * as Field from './field.js';
-import { setBetScene } from '../app/betscene.js';
+import { setBetScene, setChipScene } from '../app/betscene.js';
 import { createHold } from './hold.js';
 import { boot as frame2Boot, reading as frame2Reading } from './frame2.js';
 import { V, $, showStage, esc, hue, qColor, follow, followW, been } from './shell.js';
@@ -62,14 +62,14 @@ export function start() {
   let mapReady = null; V.map = null; V.dc = null; V.chip = null; V.board = null; V.dive = null;
   /* your state, as far as the loop reads it (src/v2/loop.js); the rest is checked when the game's engines come (beyond) */
   const S = Game.readState(Game.stored(localStorage));
-  const save = () => Game.save(localStorage, S);
+  const save = () => { Game.save(localStorage, S); setChipScene(S.chip); };   /* your chip reaches the pictures (src/app/betscene.js) */
   /* beyond the first page (src/v2/beyond.js): the game's checks, the community's standings and the challenge player,
      with the ledger's entries (one list, made from community/ledger/ by the server and at deploy; without it nothing is
      built yet). Loaded when a view that shows them first opens (each view's glue, the island, a challenge, Break it),
      or once the first page has painted; never with it */
   let B = null, beyondP = null;
   const entries = () => fetch('community/ledger.json').then(r => (r.ok ? r.json() : [])).catch(() => []);
-  function beyond() { return beyondP || (beyondP = Promise.all([import('./beyond.js'), entries()]).then(([m, list]) => { m.useLedger(list); m.Game.complete(S); B = m; return m; }, e => { beyondP = null; throw e; })); }
+  function beyond() { return beyondP || (beyondP = Promise.all([import('./beyond.js'), entries()]).then(([m, list]) => { m.useLedger(list); m.Game.complete(S); setChipScene(S.chip); B = m; return m; }, e => { beyondP = null; throw e; })); }
   /* a leak raised when you cross its seam (src/data/questions.js), shown beside the view until you follow or close it */
   const seamEl = document.createElement('aside'); seamEl.className = 'seamnote'; seamEl.hidden = true; seamEl.setAttribute('aria-live', 'polite'); document.body.appendChild(seamEl);
   let seamTimer = null; V.seamFrom = null;

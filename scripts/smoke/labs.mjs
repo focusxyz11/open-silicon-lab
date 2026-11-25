@@ -134,6 +134,36 @@ export default async function run() {
   }
   await fp.close(); }
 
+  /* your chip reaches the pictures (#376): a bigger chip set in a challenge is the chip the wafer draws, fewer of them
+     good; it stays after a reload (what was saved), and "Reset your chip" brings the starting wafer back. Read through
+     the scenes' hook (window.__chip, src/app/scenes.js), what the flat wafer and the 3D one both draw */
+  { const tag = 'labs your chip', fp = await browser.newPage({ viewport: { width: 1280, height: 800 } });
+    fp.on('pageerror', e => problems.push(tag + ': ' + e.message));
+    await fp.addInitScript(() => { localStorage.setItem('osl-quality', 'flat'); localStorage.setItem('osl-hints-v1', JSON.stringify({ seen: {}, off: true })); });
+    S.at = tag;
+    const good = () => fp.waitForFunction(() => { if (!/^#\/dive\/wafer/.test(location.hash)) location.hash = '#/dive/wafer';
+      const W = window.__chip && window.__chip.wafer(); return W && W.dies > 0 ? W.good : false; }, null, { timeout: 60000, polling: 1000 }).then(h => h.jsonValue()).catch(() => null);
+    const dial = (v, reset) => fp.waitForFunction(([v, reset]) => { if (location.hash !== '#/do/cores') location.hash = '#/do/cores';
+      const P = '.player[data-ch="cores"] ', i = document.querySelector(P + 'input[data-set="size"]'); if (!i) return false;
+      if (reset) { const b = document.querySelector(P + '[data-reset]'); if (b && i.value !== String(v)) b.click(); }
+      else if (i.value !== String(v)) { i.value = v; i.dispatchEvent(new Event('input', { bubbles: true })); }
+      return i.value === String(v); }, [v, reset], { timeout: 60000, polling: 1000 }).then(() => true).catch(() => false);
+    await fp.goto(base + 'index.html#/dive/wafer');
+    const g0 = await good();
+    if (g0 == null) problems.push(tag + ': the wafer does not say how many of your chips are good');
+    else {
+      if (!(await dial(4, false))) problems.push(tag + ': the chip\'s size cannot be set in "More cores, still cheap"');
+      const g1 = await good();
+      if (!(g1 != null && g1 < g0)) problems.push(tag + ': a bigger chip does not reach the wafer (' + g0 + ' good with the starting chip, then ' + g1 + ')');
+      await fp.reload();
+      const g2 = await good();
+      if (g2 !== g1) problems.push(tag + ': after a reload the wafer does not draw your saved chip (' + g1 + ' good, then ' + g2 + ')');
+      if (!(await dial(2, true))) problems.push(tag + ': "Reset your chip" does not bring the starting chip back');
+      const g3 = await good();
+      if (g3 !== g0) problems.push(tag + ': after "Reset your chip" the wafer does not draw the starting chip (' + g0 + ' good, then ' + g3 + ')');
+    }
+    await fp.close(); }
+
   /* how true each lab is (#325, src/data/fidelity.js): every challenge card shows its mark under its title, the same
      pill whatever the mark; tapped, it says in one line what it means here, and Escape puts the note away; the RISC-V
      datapath on the stage carries the lab's mark too */
