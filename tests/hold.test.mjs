@@ -4,13 +4,14 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { D71, D95, D2011, DWALL, GEN, COST, MOMENTS, WALLS, ARR, TRIP, NEEDS, STOCK, LIGHTS, PARTS, FACT_IDS, FDIV, yearOf, yearAt, dAt, NODES, nodeAt,
+import { D71, D94, D2011, DWALL, GEN, COST, MOMENTS, WALLS, ARR, TRIP, NEEDS, STOCK, LIGHTS, PARTS, FACT_IDS, FDIV, yearOf, yearAt, dAt, NODES, nodeAt,
   trend, upTo, SERIES, KNEE, ERAS, CHALS, CHIPS, rule } from '../src/data/hold.js';
 import { TRANSLATED } from '../src/core/i18n.js';
+import { FIG } from '../src/data/figures.js';
 
 const read = p => JSON.parse(readFileSync(new URL('../' + p, import.meta.url), 'utf8'));
 const FACTS = new Set(read('src/data/facts.json').facts.map(f => f.id));
-const EN = read('src/i18n/en/hold.json'), CORE = read('src/i18n/en/core.json'), BP = read('src/i18n/en/blueprint.json');
+const EN = read('src/i18n/en/hold.json'), CORE = read('src/i18n/en/core.json'), BP = read('src/i18n/en/blueprint.json'), SH = read('src/i18n/en/shared.json');
 const LANGS = Object.keys(TRANSLATED).filter(l => TRANSLATED[l].includes('hold'));
 
 test('every fact the first page names is in src/data/facts.json', () => {
@@ -18,9 +19,9 @@ test('every fact the first page names is in src/data/facts.json', () => {
   assert.deepEqual(missing, [], 'facts missing: ' + missing.join(', '));
 });
 
-test('the count runs from one transistor in order: 1971, 1995, the paid years, the wall', () => {
-  assert.ok(D71 < D95 && D95 < D2011 && D2011 < DWALL);
-  assert.equal(Math.round(yearOf(D95)), 1995);
+test('the count runs from one transistor in order: 1971, 1994, the paid years, the wall', () => {
+  assert.ok(D71 < D94 && D94 < D2011 && D2011 < DWALL);
+  assert.equal(Math.round(yearOf(D94)), 1994);
   assert.equal(Math.round(2 ** DWALL / 1e9), 336);
   assert.equal(COST.length, 6);
   for (let i = 0; i < COST.length; i++) assert.ok(GEN(i) < GEN(i + 1));
@@ -45,7 +46,8 @@ test('the moments come in order before the wall, and each is gone before the nex
 
 test('every wall, arrangement, need and part has its words, and its question is a core one', () => {
   for (const w of WALLS) {
-    for (const k of ['t', 's', 'd']) assert.ok(EN['hd.wall.' + w.id + '.' + k], 'hd.wall.' + w.id + '.' + k);
+    for (const k of ['t', 's']) assert.ok(EN['hd.wall.' + w.id + '.' + k], 'hd.wall.' + w.id + '.' + k);
+    assert.ok(SH['wall.' + w.id + '.d'], 'wall.' + w.id + '.d (shared.json)');
     for (const k of ['q', 'lab']) assert.ok(EN['hd.w.' + w.id + '.' + k], 'hd.w.' + w.id + '.' + k);
     assert.ok(CORE['home.q.' + w.q], w.id + ': ' + w.q);
     for (const [id] of w.ways) assert.ok(EN['hd.bet.' + id + '.t'] || BP['bp.next.' + id + '.t'], 'the way ' + id + ' has no words');
@@ -53,7 +55,7 @@ test('every wall, arrangement, need and part has its words, and its question is 
   for (const [id] of ARR) { assert.ok(EN['hd.arr.' + id + '.b'], id); assert.ok(EN['hd.trip.' + TRIP[id]], id + ': its trip'); if (id !== 'classic') assert.ok(EN['hd.bet.' + id + '.t'] || BP['bp.next.' + id + '.t'], id); }
   assert.ok(Object.values(TRIP).filter(v => !v).length >= 1, 'the arrangement challenge needs an arrangement with no trip');
   for (const n of NEEDS) {
-    for (const k of ['t', 'd', 'why']) assert.ok(EN['hd.need.' + n.id + '.' + k], n.id + '.' + k);
+    for (const k of ['t', 'd', 'why']) assert.ok(SH['machines.need.' + n.id + '.' + k], n.id + '.' + k);
     for (const [p] of n.parts) assert.ok(EN['hd.piece.' + p], p);
     assert.ok(n.parts.some(p => !STOCK.includes(p[1])), n.id + ' has nothing to choose');
   }
@@ -62,9 +64,11 @@ test('every wall, arrangement, need and part has its words, and its question is 
 
 test('the first page says the same things in every language it is translated into', () => {
   for (const l of LANGS) {
-    const W = read('src/i18n/' + l + '/hold.json');
-    assert.deepEqual(Object.keys(W).filter(k => !(k in EN)), [], l + ' has words English does not');
-    assert.deepEqual(Object.keys(EN).filter(k => !(k in W)), [], l + ' is missing words');
+    for (const [f, E] of [['hold', EN], ['shared', SH]]) {
+      const W = read('src/i18n/' + l + '/' + f + '.json');
+      assert.deepEqual(Object.keys(W).filter(k => !(k in E)), [], l + '/' + f + ' has words English does not');
+      assert.deepEqual(Object.keys(E).filter(k => !(k in W)), [], l + '/' + f + ' is missing words');
+    }
   }
 });
 
@@ -98,4 +102,23 @@ test('every word the page asks for by name exists, and every source it marks is 
   const marked = [...code.matchAll(/\bsrc\(([^)]*)\)/g)].flatMap(m => [...m[1].matchAll(/'([a-z0-9-]+)'/g)].map(q => q[1]));
   const listed = [...code.matchAll(/CH_FACTS = \{([\s\S]*?)\};/g)].flatMap(m => [...m[1].matchAll(/'([a-z0-9-]+)'/g)].map(q => q[1]));
   assert.deepEqual([...new Set([...marked, ...listed])].filter(id => !FACTS.has(id)), [], 'sources the page marks that src/data/facts.json does not have');
+});
+
+test('a figure Hold and the blueprint both name has one home, and its fact says the same number', () => {
+  const F = Object.fromEntries(read('src/data/facts.json').facts.map(f => [f.id, f.value]));
+  /* each figure, as its fact writes it (485 → "485", 725e6 → "725", 25e9–35e9 → "25–35", 7000 → "7,000") */
+  const said = v => (v >= 1e9 ? String(v / 1e9) : v >= 1e6 ? String(v / 1e6) : v >= 1e4 ? String(v) : v.toLocaleString('en-GB'));
+  for (const [id, f] of Object.entries(FIG)) {
+    assert.ok(FACTS.has(f.fact), id + ': its fact ' + f.fact + ' is not in facts.json');
+    const want = Array.isArray(f.v) ? f.v.map(said).join('–') : said(f.v);
+    assert.ok(F[f.fact].replace(/[−-]/g, '–').includes(want), id + ': ' + f.fact + ' does not say ' + want + ' (it says: ' + F[f.fact] + ')');
+  }
+  /* and no page's words type one of them out again: in every language, Hold, the blueprint and their shared words carry
+     a placeholder instead ({dc}, {design}, …, src/v2/figures.js) */
+  const typed = { dc: /\b485\b/, dc2030: /\b950\b/, design: /\b725\b|7[.,]25\s?亿/, module: /\b25\s?(–|-|à|a|亿至)\s?35\b|250\s?亿/, euv: /\b400\s?(million|millions|millones)|4\s?亿美元/, run: /\b7[ ,.\u00a0\u202f]?000\s?(\$|dollars|dólares|美元)|\$7,000/ };
+  for (const l of ['en', ...LANGS]) for (const f of ['hold', 'blueprint', 'shared']) {
+    const W = read('src/i18n/' + l + '/' + f + '.json');
+    for (const [k, v] of Object.entries(W)) for (const [id, re] of Object.entries(typed))
+      assert.ok(!re.test(String(v)), l + '/' + f + '.json ' + k + ' types out the figure ' + id + ' (src/data/figures.js): use {' + id + '}');
+  }
 });

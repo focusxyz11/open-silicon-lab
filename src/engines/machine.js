@@ -41,7 +41,7 @@
    never turns off cleanly, or a known material the line melts or that has no holes for a pair, cannot be made, so the
    fab's rule breaks (claimsOf, yours). */
 
-import { BLOCKS, NEEDS, FORMS, PORTS, blockOf, needOf } from '../data/blocks.js';
+import { BLOCKS, NEEDS, FORMS, PORTS, SOFTWARE_COST, blockOf, needOf } from '../data/blocks.js';
 import { MATTERS, ACTIVITY, matterOf, mattersFor } from '../data/inventions.js';
 import { cimEnergy, E16 } from './paradigms.js';
 import { CIM_ARRAY, CIM_ADC } from './budget.js';
@@ -50,7 +50,7 @@ import { FABS, TRY_DAYS, YEAR, fabOf } from '../data/fabs.js';
 import { LIQUIDS, RESHAPE, FALLBACK, liquidOf, liquidsFor } from '../data/liquid.js';
 import { forMachines, specOf } from './switch.js';
 
-export const SOFTWARE_COST = 500;                                   // facts.json asic-vs-cpu
+export { SOFTWARE_COST };                                           // facts.json asic-vs-cpu, said in src/data/blocks.js
 const CIM = cimEnergy(CIM_ARRAY, CIM_ARRAY, CIM_ADC);
 export const MATTER_COST = CIM.analog / CIM.digital;                 // compute in memory against a digital array
 /* the floor against a circuit: kT ln 2 for each bit erased, over a 16-bit multiply-add (E16 is in pJ) */

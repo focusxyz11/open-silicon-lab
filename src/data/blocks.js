@@ -26,6 +26,10 @@
 export const PORTS = ['signal', 'word', 'bit'];
 export const FORMS = ['software', 'circuit', 'matter', 'liquid'];   /* the families; new matter is matter:<kind>, a liquid fabric liquid:<kind> */
 
+/* a block run as software, against the same block made as a circuit for the job: about 500 times the energy
+   (facts.json asic-vs-cpu); the machines' engine (src/engines/machine.js) and Hold's machine read it from here */
+export const SOFTWARE_COST = 500;
+
 export const BLOCKS = [
   { id: 'sensor', in: ['signal'], out: ['word'], forms: ['circuit'], lab: 'analog', stock: true },
   { id: 'learner', in: ['word'], out: ['word'], forms: ['software', 'circuit'], lab: 'cim' },

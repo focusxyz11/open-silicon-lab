@@ -689,6 +689,7 @@
  "loop.log": "Your log",
  "loop.map": "Map",
  "loop.logK": "What you met, what you did, what waits",
+ "loop.mapK": "The chip world on one page: every place and level, where you have been, and your log",
  "loop.next": "Next: {place}",
  "loop.out": "Out: the world around the island",
  "loop.outShort": "The world around",
@@ -1200,5 +1201,7 @@
  "game.ch.reversible.why": "Ordinary logic throws bits away at every gate, and physics charges heat for every bit erased. Logic that can run backwards erases nothing, so in principle it can compute for almost no energy, if it is willing to go slowly. As switches near their limits, some people are building chips this way.",
  "game.ch.dataflow.t": "Keep the numbers on the chip",
  "game.ch.dataflow.goal": "Lay a model's layers across a chip's tiles, and find the largest model the chip holds whole: one layer more must not fit.",
- "game.ch.dataflow.why": "Moving a number costs far more energy than computing with it. A processor fetches a model's weights from memory again for every answer; a dataflow chip keeps them in its tiles, where the work happens. It saves the most, until the model no longer fits."
+ "game.ch.dataflow.why": "Moving a number costs far more energy than computing with it. A processor fetches a model's weights from memory again for every answer; a dataflow chip keeps them in its tiles, where the work happens. It saves the most, until the model no longer fits.",
+ "fig.money": "${n}",
+ "fig.money.big": "${n}"
 }
