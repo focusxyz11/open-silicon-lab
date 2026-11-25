@@ -132,7 +132,7 @@ it has now.
 
 ## How to add something
 
-All of it is data in `src/v2/game.js`, drawn by the island and the pages; words in `src/i18n/en.json`.
+All of it is data in `src/v2/game.js`, drawn by the island and the pages; words in `src/i18n/en/`.
 
 - **A challenge:** add it to `CHALLENGES` with its step, its place and level, its kind (`design`, `chip`, `life`, `spot`), what it
   checks (`p`, `goal` or `mission`) and what it grows. Give the growth a grower in `GROWERS` and a spot in

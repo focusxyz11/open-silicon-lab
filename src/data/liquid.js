@@ -1,6 +1,6 @@
 /* Liquid hardware: fabrics that can be rewired after they are made, so a block can be exact like a circuit and still
    change like software (docs/MACHINES.md, "Liquid hardware"). Data only, no words: the words are liquid.* in
-   src/i18n/en.json; the engine is src/engines/machine.js.
+   src/i18n/en/; the engine is src/engines/machine.js.
 
    A liquid fabric is bought ready-made and configured, never made in a fab for one design (src/data/fabs.js): a try is
    a new configuration, not a new chip. What it costs is the switches and wires that make it flexible, and the time it

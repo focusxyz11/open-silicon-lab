@@ -4,7 +4,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync as readEN } from 'node:fs';
 const EN = readWords();
-/* a word: still in an engine's WORDS, or moved into en.json once its view was built (the puller's are cz.*) */
+/* a word: still in an engine's WORDS, or moved into src/i18n/en/ once its view was built (the puller's are cz.*) */
 const has = k => F.WORDS[k] || EN[k] || EN[k.replace('fab.puller.dislocations.', 'cz.disl.').replace('fab.puller.', 'cz.')] || EN[k.replace(/^fab\.ch\.(\w+)\.(t|goal)$/, 'game.ch.$1.$2')];
 import { readFileSync } from 'node:fs';
 import * as F from '../src/engines/fabsteps.js';

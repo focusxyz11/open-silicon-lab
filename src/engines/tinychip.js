@@ -1,5 +1,5 @@
 /* Tiny chip engine: parse, simulate, synthesize, place, route and fault-test small logic designs.
-   From the earlier site's tiny-chip studio. Pure logic, no DOM. The projects' words are in en.json
+   From the earlier site's tiny-chip studio. Pure logic, no DOM. The projects' words are in src/i18n/en/
    (design.proj.<id>.*); errors carry a key (k) and a name (n) for their words (design.err.<k>), the
    English m is only for tests and tools. */
 /* ---- tiny chip engine: parse, simulate, synthesize, place, route, fault-test ---- */

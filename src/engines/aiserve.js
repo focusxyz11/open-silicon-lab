@@ -1,6 +1,7 @@
-/* Serving a language model, four small models and two data tables, as engines (the labs' words: WORDS below, to move into
-   src/i18n/en.json by whoever builds the views; the views that read them: not yet built). Brought over from the first
-   version of the site, with the same numbers (the branch 'before'): topics/accelerators/labs/quantization-lab.js,
+/* Serving a language model, four small models and two data tables, as engines (the words its results are named
+   by: WORDS below, read by its tests; the lab that plays them, src/v2/labs/serve.js, shows its own, srv.* in
+   src/i18n/en/labs.json). Brought over from the first version of the site, with the same numbers (the branch
+   'before'): topics/accelerators/labs/quantization-lab.js,
    prefill-vs-decode.js, architecture-explorer.js, real-chip-comparison.js and topics/datacenter/labs/energy-per-token.js,
    cluster-network.js, with the challenges in the topics' topic.json. Pure functions, no DOM, ids only; the same style
    as src/engines/aichip.js, which holds the roofline, the HBM stack and the GPU cost.

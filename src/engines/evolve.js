@@ -1,5 +1,5 @@
 /* Evolve a circuit (the evolve engine): let blind search find a small logic circuit for a job, instead of designing it.
-   Pure logic, no DOM, no English (ids only; the words are evolve.* in src/i18n/en.json).
+   Pure logic, no DOM, no English (ids only; the words are evolve.* in src/i18n/en/).
    Ported from the earlier site (/src/engines/evolve.js, kept on claude/before-retire-2026-11) with the same search
    and the same tests; added here: JOBS, GATE_SETS, ROOM, CHALLENGES and a seeded start(job, options) with
    step(state, n) for a player. Built on the tiny-chip engine (tinychip.js): jobs are its projects, and an evolved

@@ -1,4 +1,4 @@
-/* The weave: one world of chips, entered by diving. Data only; every word a visitor reads is in src/i18n/en.json.
+/* The weave: one world of chips, entered by diving. Data only; every word a visitor reads is in src/i18n/en/.
 
    - worlds: where a dive starts. Each kind of chip has its own way down (a data centre, a phone, a car), and
      every way down meets the others in the lower depths, because every chip is built from the same kinds of

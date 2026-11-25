@@ -3,8 +3,9 @@
    engines in src/engines/paradigms.js and src/engines/grover.js. Data only: ids and numbers. Every visible word
    (machine names, job names, reasons, stages, gallery text, challenge goals) lives in WORDS below, keyed
    para.machine.<id>.t / .how, para.job.<id> / .d, para.fit.<job>.<machine>, para.stage.<i>, para.saves.<id>,
-   para.gallery.<id>.t / .d / .signal / .catch, para.ch.<id>.t / .goal / .done. The owner merges WORDS into
-   src/i18n/en.json later; nothing here is read by the pages yet.
+   para.gallery.<id>.t / .d / .signal / .catch, para.ch.<id>.t / .goal / .done. WORDS is read by its tests;
+   the labs that play these machines (src/v2/labs/, through src/engines/paradigms.js) show their own words, in
+   src/i18n/en/labs.json.
 
    Fit scores and maturity are an editorial synthesis of the sources in src/data/facts.json,
    made to compare paradigms with one another. They are judgments, not measurements. */
@@ -60,7 +61,7 @@ export const GALLERY = [
 /* every challenge id the engines can check (src/engines/paradigms.js CHECKS, src/engines/grover.js CHECKS) */
 export const CHALLENGES = ["jobs", "cim-bits", "neuro-spot", "photonic-steer", "pbits-backwards", "reversible-limit", "spatial-fit", "qubit-one", "qubit-back", "qubit-bell", "qubit-odd", "search-found", "search-step", "search-million", "search-corrected"];
 
-/* All visible words of this file and of the challenges, to be merged into src/i18n/en.json. */
+/* All visible words of this file and of the challenges, read by its tests (the labs show their own, in src/i18n/en/labs.json). */
 export const WORDS = {
   "para.stage.0": "Idea",
   "para.stage.1": "Lab demos",

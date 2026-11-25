@@ -2,7 +2,7 @@
    space by draw(G), where G is the drawing helper from src/app/world.js. parts: the named shapes a
    question can light up ({ r: [x, y, w, h] } | { c: [x, y, r] } | { p: [[x, y], ...] }, with closed: true
    for an outline such as a box drawn in 2.5D). Labels are text
-   names: part.<depth>.<key> in src/i18n/en.json. No words in this file.
+   names: part.<depth>.<key> in src/i18n/en/. No words in this file.
    A data centre: building, rack, board, chip. A phone: phone, phoneboard, soc. A car: car, ecu, mcu.
    The journey's stations (crystal .. ship) are drawn in src/app/journey.js; inside the factory, a dive from
    the machine that prints with light: scanner, wafer, die.

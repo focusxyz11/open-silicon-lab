@@ -7,7 +7,7 @@
    which returns what to show: `says` (texts with their numbers), and at most one of `bars` (amounts on a scale
    that grows tenfold at each step, so a floor and a chip a hundred thousand times above it fit one picture),
    `line` (a level step by step) and `table` (rows the engine filled). Numbers are given raw and formatted by the
-   page; a { s } is a length of time in seconds. Words: the texts named here, in src/i18n/en.json. */
+   page; a { s } is a length of time in seconds. Words: the texts named here, in src/i18n/en/. */
 import { model } from '../engines/chip.js';
 import { perOp, cold, landauer, TEMPS, exhaust, WIDTHS, RATES } from '../engines/floor.js';
 import { build } from '../engines/design.js';
