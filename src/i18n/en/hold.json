@@ -420,5 +420,9 @@
  "hd.ch.floor": "Go down to the floor",
  "hd.ch.eras": "See every era of the machine",
  "hd.ch.arr": "Find where a number never travels",
- "hd.ch.keep": "Keep a machine of your own"
+ "hd.ch.keep": "Keep a machine of your own",
+ "hd.chk.xy": "X {x} · Y {y}",
+ "hd.chk.found": "checks: {n} of {of} walls found",
+ "hd.chk.signed": "signed off: by you",
+ "hd.chk.unsigned": "signed off: not yet"
 }

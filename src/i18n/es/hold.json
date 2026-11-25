@@ -420,5 +420,9 @@
  "hd.ch.floor": "Baja hasta el suelo",
  "hd.ch.eras": "Mira cada época de la máquina",
  "hd.ch.arr": "Encuentra dónde un número nunca viaja",
- "hd.ch.keep": "Guarda una máquina tuya"
+ "hd.ch.keep": "Guarda una máquina tuya",
+ "hd.chk.xy": "X {x} · Y {y}",
+ "hd.chk.found": "comprobaciones: {n} de {of} muros encontrados",
+ "hd.chk.signed": "aprobado: por ti",
+ "hd.chk.unsigned": "aprobado: todavía no"
 }
