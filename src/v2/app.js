@@ -79,7 +79,6 @@ export function start() {
     S.crossed[id] = true; save();
     seamEl.innerHTML = Field.seamNote(id); seamEl.hidden = false; clearTimeout(seamTimer); seamTimer = setTimeout(hideSeam, 14000);
   }
-
   /* ---- a menu of sections, only if asked for: ?menu=1 turns it on for this browser, ?menu=0 off. Whether the lab
      needs one is not decided (docs/reviews/structure.md, "The menu"); this keeps the choice one line to reverse ---- */
   const SECTIONS_ON = (() => { try { const q = new URLSearchParams(location.search).get('menu'); if (q === '1' || q === '0') localStorage.setItem('osl-menu', q === '1' ? 'on' : 'off'); return localStorage.getItem('osl-menu') === 'on'; } catch (e) { return false; } })();
