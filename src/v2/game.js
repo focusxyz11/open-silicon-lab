@@ -29,6 +29,7 @@ import { normalBetOf } from '../engines/bet.js';
 import { normalLevers, PUZZLES } from '../engines/ripple.js';
 import { normalAgent } from '../data/agent.js';
 import { CHALLENGES, challengeOf, isDone, OPENS, FRONT_ASK, KEY, CHECKED, readState } from './loop.js';
+import { CHALS as FIRST_CHALS, HOLD_KEY, heldDone } from '../data/hold.js';
 export * from './loop.js';
 
 /* a circuit's starting description: the job's own, or one that is almost right (a fix-it job) */
@@ -112,6 +113,10 @@ export function normalState(s) {
   const w = s.whatif || {}, whatif = { levers: normalLevers(w.levers), solved: {} }; Object.keys(w.solved || {}).forEach(k => { if (PUZZLES.some(p => p.id === k)) whatif.solved[k] = true; });
   return Object.assign(readState(s), { drafts, sent, chip: normal(s.chip || START), life: lifeC, bets, whatif, agent: normalAgent(s.agent), joule: normalJoule(s.joule), chef: normalChef(s.chef), bench: normalBench(s.bench) });
 }
+/* the first page (src/v2/hold.js): its twelve challenges, played there and kept in this browser (src/v2/holdkit.js),
+   each with its address and whether it is done; the Map and your log count them with the lab's */
+export function firstPage(store) { let o = null; try { o = JSON.parse(store.getItem(HOLD_KEY) || 'null'); } catch (e) { o = null; }
+  const d = heldDone(o); return FIRST_CHALS.map(id => ({ id, href: '#/hold/' + id, done: !!d[id] })); }
 export function load(store) { try { return normalState(JSON.parse(store.getItem(KEY) || 'null')); } catch (e) { return fresh(); } }
 /* the state the shell read before the engines came (readState): what they check, checked now, in place */
 export function complete(s) { const n = normalState(s); CHECKED.forEach(k => { s[k] = n[k]; }); return s; }

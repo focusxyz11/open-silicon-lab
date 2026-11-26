@@ -13,7 +13,7 @@ import { AHEAD, ARR, BEHIND, CHIPS, COST, DWALL, ERAS, FCOST, FDIV, FORMS, KNEE,
    the thing you try is on the picture, never beside it. Words on a picture are HTML labels over it. */
 export const PL = {};
 export function mkPlate(id, o = {}) {
-  const def = PL[id], el = h('div', 'plate'), cv = h('canvas'), c = cv.getContext('2d'); el.dataset.id = id; el.appendChild(cv);
+  const def = PL[id], el = h('div', 'plate'), cv = h('canvas'), c = cv.getContext('2d'); el.dataset.id = id; el.appendChild(cv); if (!o.mini) cv.setAttribute('role', 'img');
   const pl = { id, el, cv, c, P: 0, mini: !!o.mini, fade: 0, key: '', view: '' };
   if (!o.mini) { pl.ui = h('div', 'pl-ui'); el.appendChild(pl.ui); pl.fr = h('div', 'pl-fr mono', '<span></span><span></span>'); el.appendChild(pl.fr); if (def.ui) def.ui(pl.ui, pl); }
   pl.fit = () => { const s = el.clientWidth; if (!s) return; const dpr = o.dpr ? o.dpr : o.mini ? Math.min(2, (devicePixelRatio || 1) * 1.5) : Math.min(2, devicePixelRatio || 1), P = Math.round(s * dpr); if (cv.width !== P) cv.width = cv.height = P; pl.P = P; el.style.setProperty('--p', s / 1000 + 'px'); };
@@ -22,7 +22,9 @@ export function mkPlate(id, o = {}) {
     def.paint(c, T, dt || 0, pl); c.globalAlpha = 1; c.setLineDash([]);
     if (pl.fade > 0) { c.globalAlpha = pl.fade; c.fillStyle = K.plate; c.fillRect(0, 0, 1000, 1000); c.globalAlpha = 1; pl.fade = Math.max(0, pl.fade - (dt || .016) * 3.2); }
     if (pl.sync) pl.sync();
-    if (pl.fr) { const f = def.frame ? def.frame() : [w('pl.' + id), '']; if (pl.key !== f[0] + '|' + f[1]) { pl.key = f[0] + '|' + f[1]; pl.fr.children[0].textContent = f[0]; pl.fr.children[1].textContent = f[1]; } } };
+    if (pl.fr) { const f = def.frame ? def.frame() : [w('pl.' + id), '']; if (pl.key !== f[0] + '|' + f[1]) { pl.key = f[0] + '|' + f[1]; pl.fr.children[0].textContent = f[0]; pl.fr.children[1].textContent = f[1]; }
+      /* the picture's text alternative follows what it shows: its name, what its frame says, and (o.more) its readout */
+      const alt = (o.name ? o.name() + ': ' : '') + f.filter(Boolean).join(', ') + (o.more ? '. ' + o.more() : ''); if (pl.alt !== alt) { pl.alt = alt; cv.setAttribute('aria-label', alt); } } };
   return pl;
 }
 export const at = (e, l, tp, wd, ht) => { e.style.left = l + '%'; e.style.top = tp + '%'; if (wd != null) e.style.width = wd + '%'; if (ht != null) e.style.height = ht + '%'; return e; };

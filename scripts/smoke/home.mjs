@@ -162,6 +162,68 @@ export default async function run() {
   }
   await fitted();
   await apart();
+  await kept();
+}
+
+/* the address says where the camera is, and what you did is kept (#418, #419): a block and a year are written into the
+   address in place, as the camera settles, and a reload, day or night, or a new language lands there again; a challenge
+   done is still counted after a reload, and the Map shows it with the lab's; #/ alone opens at the start. Readable
+   without seeing it, playable without a mouse (#420): one heading, every picture named, one polite voice, and from the
+   top of the page "skip to the story" first, then the story */
+async function kept() {
+  const { browser3d, base, problems } = S, tag = 'home kept';
+  const kp = await browser3d.newPage({ viewport: { width: 1280, height: 800 }, colorScheme: 'dark', reducedMotion: 'reduce' });
+  kp.on('pageerror', e => problems.push(tag + ': ' + e.message));
+  await kp.addInitScript(() => { try { localStorage.setItem('osl-quality', 'keep'); localStorage.removeItem('osl-lang'); } catch (e) { /* no storage */ } });
+  const play = (what, fn, arg, timeout = 15000) => kp.waitForFunction(fn, arg, { timeout }).then(() => true, () => { problems.push(tag + ': ' + what); return false; });
+  const open = () => kp.waitForFunction(() => !!window.__hold && document.querySelectorAll('.bar .hbar .tally [data-ch]').length === 12, null, { timeout: 20000 });
+  await kp.goto(base + 'index.html#/'); await open();
+  /* from the top of the page: "skip to the story" is the first stop, and the stop after it is inside the story */
+  await kp.keyboard.press('Tab');
+  if (!(await kp.evaluate(() => document.activeElement && document.activeElement.classList.contains('hskip')))) problems.push(tag + ': the first Tab stop is not "skip to the story"');
+  await kp.keyboard.press('Enter'); await kp.keyboard.press('Tab');
+  if (!(await kp.evaluate(() => !!document.activeElement.closest('#hd-root') && document.getElementById('home').scrollTop < 5))) problems.push(tag + ': the third Tab stop is not inside the story, or skipping moved the camera');
+  /* the small chip and the tally are one stop each, the arrows inside */
+  if (await kp.evaluate(() => ['.d-map', '.tally .sq'].some(s => [...document.querySelectorAll('.bar .hbar ' + s + ' button')].filter(b => b.tabIndex >= 0).length !== 1))) problems.push(tag + ': the small chip or the tally is more than one stop of the keyboard');
+  /* one heading, every picture named, one polite voice that speaks while you hold */
+  if (await kp.evaluate(() => [...document.querySelectorAll('h1')].filter(e => !e.closest('[hidden]')).length) !== 1) problems.push(tag + ': the first page has not one main heading');
+  if (await kp.evaluate(() => [...document.querySelectorAll('#hd-root .dblk .plate canvas')].some(c => c.getAttribute('role') !== 'img' || !(c.getAttribute('aria-label') || '').trim()))) problems.push(tag + ': a picture has no text alternative');
+  if (await kp.evaluate(() => parseFloat(getComputedStyle(document.querySelector('#hd-root .src'), '::after').width)) < 23.5) problems.push(tag + ': a source mark is under 24 px to the touch');
+  await play('the voice does not say the count while you hold', () => { const b = document.querySelector('#hd-root .b-hold .holdbtn'); if (!window.__hold.state().holding) b.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, pointerType: 'mouse' }));
+    const v = document.querySelectorAll('#hd-root [aria-live="polite"]'); return v.length === 1 && /\d/.test(v[0].textContent); });
+  await kp.evaluate(() => window.dispatchEvent(new PointerEvent('pointerup', { bubbles: true })));
+  await play('the voice does not say the wall as it comes', () => { if (window.__hold.state().d < 38) window.__hold.set(99); const v = document.querySelector('#hd-root [aria-live="polite"]'), h = document.querySelector('#hd-root .card.wall .w-h').textContent.trim(); return !!v && !!h && v.textContent.startsWith(h.slice(0, 8)); });
+  /* the sheet counts the sources it lists */
+  await play('the sources\' sheet does not count what it lists', () => { const b = document.querySelector('#hd-root .b-end .bbtn'); if (!document.querySelector('#hd-root .sheet.on')) b.click(); const s = document.querySelector('#hd-root .sheet.on'), n = s && s.querySelectorAll('.f').length;
+    return n > 10 && new RegExp('\\b' + n + '\\b').test(s.querySelector('header .dim').textContent); });
+  await kp.keyboard.press('Escape');
+  /* a block, then a year, written into the address in place */
+  const h0 = await kp.evaluate(() => history.length);
+  await play('settling on a block does not write its address', () => { if (window.__hold.state().cur !== 'price') window.__hold.go('price'); return location.hash === '#/hold/price'; });
+  await play('settling in the fifty years does not write the year', () => { if (Math.abs(window.__hold.state().d - 22.17) > .05) window.__hold.set(22.17); return location.hash === '#/hold/years/1993'; });
+  if (await kp.evaluate(() => history.length) !== h0) problems.push(tag + ': the address adds to the history as the camera moves');
+  /* a reload lands on the same year, and on the same block */
+  await kp.reload(); await open();
+  await play('a reload does not land on the same year', () => location.hash === '#/hold/years/1993' && Math.round(window.__hold.S.d) === 22 && !window.__hold.state().chip);
+  await play('settling on the eras does not write its address', () => { if (window.__hold.state().cur !== 'eras') window.__hold.go('eras'); return location.hash === '#/hold/eras'; });
+  /* a challenge done there is kept */
+  await play('the eras cannot all be seen', () => { window.__p = id => document.querySelector('#hd-root .dblk .plate[data-id="' + id + '"]'); window.__p('eras').querySelectorAll('.seg button').forEach(b => b.click()); return !!window.__hold.S.done.eras; });
+  await kp.waitForFunction(() => { try { return !!JSON.parse(localStorage.getItem('osl-hold')).done.eras; } catch (e) { return false; } }, null, { timeout: 5000 }).catch(() => problems.push(tag + ': a challenge done is not kept in this browser'));
+  /* day or night (it reloads the page) keeps the block and the challenge */
+  await Promise.all([kp.waitForEvent('load'), kp.click('#theme')]); await open();
+  const where = () => kp.evaluate(() => JSON.stringify([location.hash, window.__hold.state().cur, document.getElementById('home').scrollTop, Object.keys(window.__hold.S.done)]));
+  if (!(await play('day or night does not keep the block, or the challenge done', () => location.hash === '#/hold/eras' && window.__hold.state().cur === 'eras' && !!window.__hold.S.done.eras && !!document.querySelector('.bar .hbar .tally [data-ch="eras"].on')))) problems.push(tag + ': it was at ' + (await where()));
+  /* a new language keeps the block */
+  await kp.goto(base + 'index.html?lang=fr#/hold/machine'); await open();
+  if (!(await play('a new language, or opening a block\'s address, does not land on the block', () => document.documentElement.lang === 'fr' && window.__hold.state().cur === 'machine' && location.hash === '#/hold/machine', null, 20000))) problems.push(tag + ': it was at ' + (await where()));
+  /* the Map shows the first page's twelve challenges, the one done, counted with the lab's; its log lists them */
+  await kp.evaluate(() => { location.hash = '#/log'; });
+  await play('the Map does not show the first page\'s challenges, with the one done', () => document.querySelectorAll('#page:not([hidden]) .wm-first .wm-dots a').length === 12 && document.querySelectorAll('#page .wm-first .wm-dots a.on[href="#/hold/eras"]').length === 1 &&
+    document.querySelectorAll('#page [data-first] .dochip').length === 12 && document.querySelectorAll('#page [data-first] .dochip.done').length === 1, null, 60000);
+  /* #/ alone opens at the start */
+  await kp.goto(base + 'index.html?lang=en#/'); await open();
+  await play('#/ does not open at the start', () => window.__hold.state().d < .1 && !window.__hold.state().chip && document.getElementById('home').scrollTop < 5 && location.hash === '#/');
+  await kp.close();
 }
 
 /* the page's part of the bar fits between the phone and the desktop: at every width from 761 px, in each language,
@@ -238,7 +300,9 @@ async function fitted() {
     /* a turn, and back, keeps the place: in the fifty years and on a block */
     for (const [k, a, ok] of [['set', 17.3, 'Math.abs(window.__hold.state().d - 17.3) < .05'], ['go', 'machine', "window.__hold.state().cur === 'machine'"]]) {
       await fp.evaluate(([k, a]) => window.__hold[k](a), [k, a]);
-      for (const [vw, vh] of [[fh, fw], [fw, fh]]) { await fp.setViewportSize({ width: vw, height: vh }); await play('turned to ' + vw + '×' + vh + ' at ' + a + ', the page loses its place', ok); }
+      for (const [vw, vh] of [[fh, fw], [fw, fh]]) { await fp.setViewportSize({ width: vw, height: vh });
+        /* where it was instead, said with the problem */
+        await fp.waitForFunction(ok, null, { timeout: 15000 }).catch(async () => problems.push(tag + ': turned to ' + vw + '×' + vh + ' at ' + a + ', the page loses its place (' + (await fp.evaluate(() => JSON.stringify([location.hash, window.__hold.state().cur, +window.__hold.state().d.toFixed(2), document.getElementById('home').scrollTop]))) + ')')); }
     }
     const side = await fp.evaluate(() => { const p = document.getElementById('home'); return p.scrollWidth - p.clientWidth; });
     if (side > 1) problems.push(tag + ': the first page scrolls sideways by ' + side + ' px');

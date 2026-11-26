@@ -7,7 +7,7 @@
    and Ask (its questions, and what people and agents have asked). There is no menu: the commons is the need, the
    place where the loop starts and comes back (the Lab, and its record, #/build); what you met and did is your log
    (#/log); the world around the island is the way out from it (#/ecosystem).
-   Routes: #/ (Hold, the first page: src/v2/hold.js), #/blueprint (the blueprint: src/v2/home.js), #/stations (the station map: src/v2/stations.js), #/island (the island), #/place/<id>, #/place/datacentre/<level>, #/chip/<row>/build (inside a chip, layer by layer: the dive's levels as made),
+   Routes: #/ (Hold, the first page: src/v2/hold.js; #/hold/<block> and #/hold/years/<year> where its camera is), #/blueprint (the blueprint: src/v2/home.js), #/stations (the station map: src/v2/stations.js), #/island (the island), #/place/<id>, #/place/datacentre/<level>, #/chip/<row>/build (inside a chip, layer by layer: the dive's levels as made),
    #/board (one board, with a story that drives it), #/dive/<depth>[/<world>] (the dive), #/line/<step> (the factory),
    #/bench/<level>[/<challenge>] (the studio), #/do/<challenge>, #/ask/<thread>/<depth>, #/supply, #/log, #/build,
    #/ecosystem. Words are read with t(). */
@@ -34,7 +34,7 @@ export function start() {
      and hiding a view that never opened does nothing. Once a view has opened, the other areas' words load in an idle
      moment */
   const GLUE = {'island': [], 'frame': [], 'flights': ['frame'], 'studio': ['frame'], 'chip': ['frame'], 'flat': ['frame'], 'supply': ['flat'], 'board': ['frame'], 'pages': ['frame']}, glueP = {};
-  const WORDS = { island: ['atlas', 'place', 'design', 'pages', 'shared'], frame: ['atlas', 'place', 'design', 'pages', 'shared'], pages: ['pages'] };
+  const WORDS = { island: ['atlas', 'place', 'design', 'pages', 'shared'], frame: ['atlas', 'place', 'design', 'pages', 'shared'], pages: ['pages', 'hold'] };
   /* and the styles of its view (src/core/styles.js): the frame's with the frame, each view's own with its glue */
   const STYLES = { island: ['frame', 'island'], frame: ['frame'], studio: ['studio'], flat: ['flat'], supply: ['supply'], pages: ['pages'] };
   const glue = k => glueP[k] || (glueP[k] = Promise.all(GLUE[k].map(glue).concat(needWords(...(WORDS[k] || [])), needStyles(...(STYLES[k] || [])), beyond())).then(() => import('./glue/' + k + '.js')).then(m => { m.create(); afterPaint(() => { if (preloadOk()) needAllWords(); }); }));
@@ -435,7 +435,7 @@ export function start() {
      corner #/place/studio/3): the view each is (the place itself opens on the island) */
   const FLOWN_VIEW = { datacentre: 'dc', phones: 'fly', cars: 'carfly', studio: 'studio' };
   const flownOf = p => (p[0] === 'place' && /^\d+$/.test(p[2] || '') && FLOWN_VIEW[p[1]]) || null;
-  const viewOf = p => { const k = p[0]; if (!k || k === 'home' || k === 'stations' || k === 'blueprint') return ['home', -1]; if (k === 'ask') return viewOf(partsOf(Game.viewOfDepth(p[2] || 'chip')));
+  const viewOf = p => { const k = p[0]; if (!k || k === 'home' || k === 'hold' || k === 'stations' || k === 'blueprint') return ['home', -1]; if (k === 'ask') return viewOf(partsOf(Game.viewOfDepth(p[2] || 'chip')));
     if (k === 'do') { const h = doPlace(chOf(decodeURIComponent(p[1] || ''))); return h ? viewOf(partsOf(h)) : ['map', 0]; }
     if (k === 'dive') { const w = p[2] || Game.DIVE_WORLD[p[1]] || 'datacentre'; if (w === 'datacentre') return ['dive', 4]; const i = Math.max(0, ['phone', 'phoneboard', 'soc', 'car', 'ecu', 'mcu', 'scanner', 'wafer', 'die'].indexOf(p[1]) % 3); return ['dive:' + w, Game.DIVE_WORLD[p[1]] ? 1 + i : 4]; }
     if (k === 'supply') return ['supply', 0];
@@ -458,7 +458,7 @@ export function start() {
   const portalAt = p => { const r = document.documentElement.style; if (p && p.x > 0 && p.x < 1 && p.y > 0 && p.y < 1) { r.setProperty('--vx', (p.x * 100).toFixed(1) + '%'); r.setProperty('--vy', (p.y * 100).toFixed(1) + '%'); } else { r.removeProperty('--vx'); r.removeProperty('--vy'); } };
   sheet.addEventListener('click', e => { const a = e.target.closest('a[href^="#/"]'); if (!a || viewOf(partsOf(a.getAttribute('href')))[0] === 'map') return; e.preventDefault(); e.stopPropagation(); enter(a.getAttribute('href')); }, true);
   function show(parts, from) {
-    const k = parts[0] || 'home', live = (n => () => n === V.routeN)(V.routeN);   /* what follows a view is done only while its route is the one now */
+    const k = homeOf(parts), live = (n => () => n === V.routeN)(V.routeN);   /* what follows a view is done only while its route is the one now */
     /* a question at a level already in view: no need to make the view again, only the dock changes */
     if (k === 'ask' && parts[1] && parts[2]) { const at = Game.viewOfDepth(parts[2]); if (at === shownAt && !from) { V.askStop(parts[1], parts[2]); return Promise.resolve(); } return show(partsOf(at), from).then(() => live() && V.askStop(parts[1], parts[2])); }
     shownAt = '#/' + parts.join('/');
@@ -493,10 +493,13 @@ export function start() {
   }
   /* an arrival (by address, a move in a view, a place picked; #367): the address says it, the Map marks it, a seam raises its leak */
   function arrive(h, how) { if (how === 'push') history.pushState(null, '', h); else if (how) history.replaceState(null, '', h); been(h); const to = Way.whereOf(h); crossed(V.seamFrom, to); V.seamFrom = to; }
+  /* the first page's own addresses (#/hold/<block>, #/hold/years/<year>: src/v2/hold.js writes them as its camera
+     settles) are the first page */
+  const homeOf = p => (!p[0] || p[0] === 'hold' ? 'home' : p[0]);
   function route() {
     /* a world is a reading page, opened from a lens or by name; there is no list of them (#305): #/w alone is the map */
     if (/^#\/?w\/?$/.test(location.hash)) history.replaceState(null, '', '#/');
-    const parts = partsOf(location.hash), k = parts[0] || 'home', n = ++V.routeN;
+    const parts = partsOf(location.hash), k = homeOf(parts), n = ++V.routeN;
     document.body.classList.toggle('firstpage', k === 'home');
     document.body.classList.toggle('langpage', k === 'home' || k === 'blueprint');
     if (k !== 'home' && hold) hold.hide();
