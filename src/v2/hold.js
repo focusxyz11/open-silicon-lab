@@ -9,17 +9,25 @@
    machine, the island), and short cards pass over the picture with numbered marks that also sit on the part they are
    about. The chip is also the map: tap a block, the small chip in the bar or a chapter at the left, and the camera
    flies there. Nothing is swapped, faded in or cut. Designed with Claude Fable 5.2 (prototype D: B's story on A's
-   chip) and brought into the lab with Claude Opus 5.5. Nothing 3D: the island (#/island) is one way out of it.
-   createHold(host, ctx) → { show(), hide() }; ctx: still() (reduced motion). For checks: window.__hold.set(v) goes to
+   chip) and brought into the lab with Claude Opus 5.5.
+   Its pace: it opens on the square, the count and the hold button alone; Moore's law rises along the bottom once the
+   count has begun to double. After the wall a block arrives with its name and its thing to try together, its question
+   after. The last block is the island's own plan from straight above: the camera goes down to it, and pushing on goes
+   inside through the lab's portal, the island opening from above (ctx.enter). Nothing 3D is drawn here.
+   createHold(host, ctx) → { show(), hide() }; ctx: still(), enter(point, at). For checks: window.__hold.set(v) goes to
    v doublings (99: the wall), .go(id) to a block, .ch(id) to where a challenge is played, .state(). */
 import { hasWords, lang, needWords } from '../core/i18n.js';
 import { still, theme } from '../core/ui.js';
 import { w, $, $$, h, clamp, ss, PHONE, LAND, S, LIVE, setRoot, fitU, CHAPS, mkTop, CH_AT, ORDER, WALL_OF, WID, PW, lab, words, fillWays, loadFacts,
-  momAt, viewAt, countParts, countSay, statsHTML, momOut, yearsWordsHTML, Yr, movesEl, TICK, loop, bindHold, setHolding, onChange, Q, src, sheet, fitHead, fillShared, restore as kept, rove } from './holdkit.js';
-import { mkPlate, put, out, LIT, mkChart, mkCQ, initOuts } from './holdplates.js';
+  momAt, viewAt, countParts, countSay, statsHTML, momOut, yearsWordsHTML, Yr, TICK, lerp, loop, bindHold, setHolding, onChange, Q, src, sheet, fitHead, fillShared, restore as kept, rove } from './holdkit.js';
+import { mkPlate, put, out, LIT, mkChart, mkCQ, initOuts, PL } from './holdplates.js';
 import { D2011, DWALL, LOOP, MOMENTS, WALLS, dAt, yearShown } from '../data/hold.js';
 
-const FONTS = 'https://fonts.googleapis.com/css2?family=Anonymous+Pro:wght@400;700&family=Anton&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=Gelasio:ital,wght@1,400;1,500&display=swap';
+/* Moore's law rises along the bottom once the count has passed the first gates and begun to double */
+const RISE = 3.4;
+
+/* the page's one face of its own, for the headlines and the count; every other word is in the lab's type (index.html) */
+const FONTS = 'https://fonts.googleapis.com/css2?family=Anton&display=swap';
 const FONTS_ZH = 'https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;900&family=Noto+Serif+SC:wght@500&display=swap';
 
 export function createHold(host, ctx = {}) {
@@ -33,7 +41,7 @@ export function createHold(host, ctx = {}) {
   /* the page's part of the lab's bar (in the loop's place, which waits on the first page): the small chip, the chapter,
      the twelve challenges and the sources */
   const chapL = h('div', 'b-chap mono'), map = h('div', 'd-map'), mid = h('div', 'd-mid'); mid.append(map, chapL);
-  const top = mkTop(mid, goChallenge);
+  const top = mkTop(mid, goChallenge, () => goOver());
   /* it fits the room the bar leaves it: as the room runs out, the chapter's name goes, then the tally's words, then the
      sources (they are at the end of the story too), then the squares shrink, and last the chapter; a phone has its own */
   function fitBar() { const n = innerWidth > 760 ? 6 : 1; for (let k = 0; k < n; k++) { for (let i = 1; i < 6; i++) top.classList.toggle('f' + i, i <= k); if (top.scrollWidth <= top.clientWidth + 1) break; } }
@@ -61,11 +69,11 @@ export function createHold(host, ctx = {}) {
   const rvMap = rove(map, bs => bs.find(b => b.classList.contains('on')));
   const mks = [1, 2].map(n => { const e = h('span', 'b-mk mono', n); slot.appendChild(e); return e; });
   hud.innerHTML = '<div class="w-k mono" aria-hidden="true">' + w('hero.k') + '</div><div class="count"></div><div class="stats"></div><div class="say"></div>';
-  const chart = mkChart({ onScrub: d => { touch(); host.scrollTo({ top: secs.years.offsetTop + yOfD(d) }); } }), cq = mkCQ(), mv = movesEl(); band.append(cq, mv, chart.el);
+  const chart = mkChart({ onScrub: d => { touch(); host.scrollTo({ top: secs.years.offsetTop + yOfD(d) }); } }), cq = mkCQ(), start = h('div', 'b-start mono', w('hint.start.t')); band.append(cq, chart.el, start);
   const hb = h('button', 'holdbtn', w('btn')), hint = h('div', 'hint mono'); hb.type = 'button'; holdBox.append(hb, hint);
   const holdOn = () => { touch(); setHolding(true); }, holdOff = () => setHolding(false);
-  bindHold(hb, holdOn, holdOff); bindHold(plates.years.el, holdOn, holdOff);
-  let cur = 'years', vh = 800, VW = 1280, S1 = 500, Sy = 500, u = 1, WW = 1, WH = 1, F = {}, O = null, KF = [], p0 = 0, flying = 0, C = null, yrs = true, fr = 0, top1 = 0, sized = false, BH = 150;
+  bindHold(hb, holdOn, holdOff); bindHold(plates.years.el, holdOn, holdOff); bindHold(plates.island.el, holdOn, holdOff);
+  let cur = 'years', vh = 800, VW = 1280, S1 = 500, Sy = 500, u = 1, WW = 1, WH = 1, F = {}, O = null, KF = [], p0 = 0, flying = 0, C = null, yrs = true, fr = 0, top1 = 0, topY = 0, sized = false, BH = 150, rv = 0, yct = 0, Lnd = null;
 
   /* ---- scroll and time: a doubling is a length of page, three times longer inside a moment ---- */
   const BR = [0]; MOMENTS.forEach(m => BR.push(m.at, m.at + m.span)); BR.push(DWALL);
@@ -77,7 +85,7 @@ export function createHold(host, ctx = {}) {
   /* where each card's number sits on its block: on the drawing it names ([x, y] in per cent), or beside the control it
      asks you to use ([a selector in the plate, the side]: l, in the margin left of it, level with its first row; t, just
      above its left end; r, just right of its top), never on a word */
-  const secs = {}, AT = { leak: [[50, 47], [50, 8.5]], distance: [[58, 47], ['.seg', 'l']], power: [[25.5, 58], [50, 50]], price: [[60, 24.5], ['.seg', 'l']], next: [[86, 88], ['.holdbtn', 'r']], levels: [[50, 45], ['.seg', 'l']], eras: [[50, 50], ['.seg', 'l']], arr: [[50, 55], ['.seg', 't']], machine: [[50, 40], ['.seg', 'l']], island: [[50, 47], [57.5, 13]] },
+  const secs = {}, AT = { leak: [[50, 47], [50, 8.5]], distance: [[58, 47], ['.seg', 'l']], power: [[25.5, 58], [50, 50]], price: [[60, 24.5], ['.seg', 'l']], next: [[86, 88], ['.holdbtn', 'r']], levels: [[50, 45], ['.seg', 'l']], eras: [[50, 50], ['.seg', 'l']], arr: [[50, 55], ['.seg', 't']], machine: [[50, 40], ['.seg', 'l']], island: [[35, 31], [51.5, 24.8]] },
     MAT = { gate: [14, 58], job: [50, 20.5], bug: ['.layer.on .pbtn', 'l'], light: ['.layer.on .seg', 'l'] };
   const pin = (c, [x, y]) => { if (typeof x === 'string') { c.dataset.sel = x; c.dataset.side = y; } else { c.dataset.x = x; c.dataset.y = y; } };
   const card = (side, n, cls) => { const c = h('div', 'card ' + side + (cls ? ' ' + cls : '')); if (n) c.appendChild(h('span', 'n mono', n)); return c; };
@@ -94,62 +102,76 @@ export function createHold(host, ctx = {}) {
   const pull = h('section', 'sec pull'), pc = card('l', 0, 'pullc'); pc.innerHTML = '<h2 class="w-h anton">' + w('a.title') + '</h2><p class="w-d">' + w('d.lede') + '</p>'; pull.appendChild(pc); story.appendChild(pull);
   ORDER.slice(1).forEach(id => { const sec = h('section', 'sec'), W = words(id); sec.dataset.id = id; secs[id] = sec; story.appendChild(sec);
     const a = card('l', 1), b = card('r', 2), c = W.q ? card('l', 0, 'q') : null, gap = () => h('div', 'gap'); a.append(W.head, W.cap); b.append(W.try); if (W.ways) b.append(W.ways); if (c) c.append(W.q);
-    pin(a, AT[id][0]); pin(b, AT[id][1]); sec.append(a, gap(), b); if (c) sec.append(gap(), c); sec.appendChild(h('div', 'tail')); sec._c = [a, b, c]; });
-  const end = h('div', 'b-end mono', '<span>' + w('b.end') + '</span><button type="button" class="bbtn mono">' + w('sources') + '</button>'); story.appendChild(end); end.querySelector('button').onclick = () => sheet(true);
+    pin(a, AT[id][0]); pin(b, AT[id][1]); const g1 = gap(); g1.classList.add('g1'); sec.append(a, g1, b); if (c) sec.append(gap(), c); sec.appendChild(h('div', 'tail')); sec._c = [a, b, c]; });
+  const end = h('div', 'b-end mono', '<span>' + w('b.end') + '</span><span class="push">' + w('isle.push') + '</span><button type="button" class="bbtn mono">' + w('sources') + '</button>'); story.appendChild(end); end.querySelector('button').onclick = () => sheet(true);
   CHAPS.forEach(ch => { const b = h('button', '', '<i></i><span>' + w('tab.' + ch) + '</span>'); b.type = 'button'; b.dataset.ch = ch; b.onclick = () => goPlate(ORDER.find(id => PW[id].ch === ch), null, false, true); rail.appendChild(b); });
 
   /* ---- sizes, the chip's plan, and the camera's path ---- */
   const inert = (e, v) => { if (e.inert !== v) e.inert = v; };
   const px = (e, x, y, ww, hh) => { e.style.left = x + 'px'; e.style.top = y + 'px'; if (ww != null) { e.style.width = ww + 'px'; e.style.height = hh + 'px'; } };
+  /* the fifty years' geometry, from how the page opens (rv 0: the square alone, as large as a block) to how it runs once
+     Moore's law has risen under it (rv 1: a little smaller, above the band); a phone's picture keeps one size */
+  const rvWant = () => (S.cq.maxD >= RISE || host.scrollTop > secs.years.offsetTop + yOfD(RISE) ? 1 : 0);
+  function layYears() { const ph = PHONE(), Sx = lerp(S1, Sy, rv), tx = lerp(top1, topY, rv), yc = ph ? yct : tx;
+    F.years = { x: POS.years[0] + S1 / 2, y: POS.years[1] + S1 / 2, k: Sx / S1, sx: F.leak.sx, sy: tx + Sx / 2 };
+    for (const e of [hud, band, secs.years]) { e.style.setProperty('--S', Sx + 'px'); e.style.setProperty('--top', tx + 'px'); }
+    secs.years.style.setProperty('--ctop', yc + 'px');
+    MOMENTS.forEach(m => { m._box.style.top = yOfD(m.at) + yc - (ph ? 20 : 0) + 'px'; m._box.style.height = yOfD(m.at + m.span) - yOfD(m.at) + (ph ? 0 : vh * .7) + 'px'; });
+    const wb = secs.years._wall; wb.style.top = yOfD(DWALL) + yc - (ph ? 20 : 0) + 'px'; wb.style.height = vh * .75 + 'px';
+    slot._s = 0; if (KF.length) { KF[0][1] = KF[1][1] = F.years; } }
   function fit() {
     if (!host.clientHeight) return;
     /* where the visitor is, before the new layout: kept through a resize or a phone turned sideways */
     const keep = sized && !flying ? here.a : null;
     u = fitU(); vh = host.clientHeight; VW = host.clientWidth; const W = VW, R = root.style, ph = PHONE(), land = ph && LAND(), small = W <= 760 || land;
     /* the bar: on a wide screen its small chip and squares grow a little with the page (a phone's bar, and one on its side, is lower) */
-    const ub = ph || u <= 1 ? 1 : Math.min(1.3, 1 + (u - 1) * .5), barH = small ? 62 : Math.round(42 + 30 * ub); let rw = 0, topY, bandH, cxs, SH, yct;
+    const ub = ph || u <= 1 ? 1 : Math.min(1.3, 1 + (u - 1) * .5), barH = small ? 62 : Math.round(42 + 30 * ub); let rw = 0, bandH, cxs, SH, SHc = 0;
     top.style.setProperty('--u', ub + 'px'); R.setProperty('--barH', barH + 'px');
     /* the phone's layout: the picture above and the story under it, the cards as wide as a phone or, on a tablet held
        upright, a readable column under a square sized from the window; on a phone on its side, the picture at the left
        as tall as the window, and the count, the curve, the hold button and the story at the right (yct: where the
        fifty years' cards stand) */
-    if (ph) { let cw, cl; CMAX = 1e9; bandH = land ? 64 : 84;
+    if (ph) { let cw, cl; CMAX = 1e9; bandH = land || vh < 720 ? 64 : 84;
       if (land) { S1 = Sy = vh - barH - 30; top1 = topY = 22; SH = vh - barH; cl = S1 + 28; cxs = cl / 2; cw = W - cl - 14; yct = barH + 4 + 34 + bandH + 8; R.setProperty('--stageW', cl + 'px'); }
-      else { S1 = Sy = W <= 760 ? W - 28 : Math.min(W - 28, Math.round(vh * .48)); top1 = topY = 66; SH = 44 + S1 + bandH + 12; cxs = W / 2; cw = W <= 760 ? W - 28 : Math.min(W - 28, Math.max(S1, 600)); cl = (W - cw) / 2; yct = barH + SH + 10; }
-      R.setProperty('--stageH', SH + 'px'); R.setProperty('--ctop', (land ? barH + 8 : yct) + 'px'); R.setProperty('--cw', cw + 'px'); R.setProperty('--cl', cl + 'px'); R.setProperty('--ov', '0px');
+      else { /* a phone's picture is sized from the window's height too, so the words under it keep their room */ S1 = Sy = Math.min(W - 28, Math.round(vh * (W <= 760 ? .45 : .48))); top1 = topY = 66; SH = 44 + S1 + bandH + 12; cxs = W / 2; cw = W <= 760 ? W - 28 : Math.min(W - 28, Math.max(S1, 600)); cl = (W - cw) / 2; yct = barH + SH + 10; SHc = SH - bandH; }
+      R.setProperty('--stageH', SH + 'px'); R.setProperty('--stageH2', (SHc || SH) + 'px'); R.setProperty('--ctop', (land ? barH + 8 : yct) + 'px'); R.setProperty('--cw', cw + 'px'); R.setProperty('--cl', cl + 'px'); R.setProperty('--ov', '0px');
       /* the narration ends above the hold button wherever the button would lie over it */
-      ycard.style.setProperty('--ctop', yct + 'px'); ycard.style.setProperty('--yb', (!land && cl + cw > W - 96 ? 92 : 8) + 'px');
+      /* the narration ends above the hold button where the button would lie over it, or, where the room under the picture
+         is short, stands at its left */
+      { const over = !land && cl + cw > W - 96, tight = over && vh - yct < 330; ycard.style.setProperty('--ctop', yct + 'px'); ycard.style.setProperty('--yw', (tight ? cw - 84 : cw) + 'px'); ycard.style.setProperty('--yb', (over && !tight ? 92 : 8) + 'px'); }
+      /* after the wall the curve is gone, so the picture's stage is lower and the words under it have its room */
+      { const c2 = land || !SHc ? '' : barH + SHc + 10 + 'px'; for (const e of story.children) if (e !== secs.years) { if (c2) e.style.setProperty('--ctop', c2); else e.style.removeProperty('--ctop'); } }
       if (cq.parentNode !== ycard) ycard.appendChild(cq); }
     else { /* the chapters keep a strip of their own at the left, so they never sit over the chip: wide enough for their
         names on a wide screen, for their marks on any other */
       const wide = W >= 1600; rw = (wide ? 170 : 44) * u; const Wc = W - rw; S1 = Math.floor(Math.min(vh - barH - 84 * u, Wc * .44));
       const cw = Math.min((Wc - S1) / 2 - (wide ? 56 : 70) * u, 400 * u), cqw = cw + S1 * .32; R.setProperty('--cw', cw + 'px'); R.setProperty('--cqw', cqw + 'px'); R.setProperty('--ov', S1 * .05 + 'px'); R.setProperty('--ctop', vh * .2 + 'px'); rail.classList.toggle('wide', wide);
-      if (cq.parentNode !== band) band.insertBefore(cq, band.firstChild);
+      if (cq.parentNode !== band) band.insertBefore(cq, band.firstChild); for (const e of story.children) e.style.removeProperty('--ctop');
       /* the band under the fifty years: its question wider than the column above it, and the band as tall as the longest
          of its questions needs, so none is ever cut off (on a very short window, a phone on its side, it scrolls) */
       bandH = Math.min(Math.max(150 * u, vh * .2, cq.need(cqw) + 24 * u), Math.max(150 * u, vh * .36));
       Sy = Math.floor(Math.min(vh - barH - bandH - 64 * u, Wc * .44)); top1 = barH + (vh - barH - S1) / 2 + 8 * u; topY = barH + (vh - barH - bandH - Sy) / 2 + 8 * u; SH = vh; cxs = W / 2 + rw / 2;
       /* the fifty years' cards stand level with the square and end above the hold button, so it never lies over them */
       yct = topY; CMAX = vh - bandH - 110 * u - yct; secs.years.style.setProperty('--cmax', CMAX + 'px'); }
-    secs.years.style.setProperty('--ctop', yct + 'px');
     BH = ph ? 0 : bandH;
     R.setProperty('--rw', rw + 'px'); R.setProperty('--S', S1 + 'px'); R.setProperty('--top', top1 + 'px'); R.setProperty('--band', bandH + 'px');
     R.setProperty('--hbB', Math.max(10, (vh - top1 - S1) / 2 - 27 * u) + 'px');
-    for (const e of [hud, band, secs.years]) { e.style.setProperty('--S', Sy + 'px'); e.style.setProperty('--top', topY + 'px'); }
     /* the plan: every plate the size it is seen at (so it is sharp, and its controls are real, when the camera is on it).
        The grid follows the window: 6 by 2 on a wide screen, 4 by 3 on most, 3 by 4 on a phone; the path through it is a
        snake, and the channels between blocks widen (a little) until the chip has the window's shape */
-    const ot = ph ? 6 : barH + 4 * u, ob = ph ? 6 : 14 * u, uw = (land ? S1 + 28 : W - rw) - (ph ? 12 : 40 * u), uh = SH - ot - ob, asp = uw / uh, cols = ph && asp < .9 ? 3 : asp >= 1.8 ? 6 : 4, rows = 12 / cols, M = S1 * .3;
+    const ot = ph ? 6 : barH + 4 * u, ob = ph ? 6 : 14 * u, uw = (land ? S1 + 28 : W - rw) - (ph ? 12 : 40 * u), uh = (SHc || SH) - ot - ob, asp = uw / uh, cols = ph && asp < .9 ? 3 : asp >= 1.8 ? 6 : 4, rows = 12 / cols, M = S1 * .3;
     let pX = S1 * 1.17, pY = S1 * 1.3; const a0 = (2 * M + cols * pX) / (2 * M + rows * pY); if (asp > a0) pX = Math.min(pX * 1.35, ((2 * M + rows * pY) * asp - 2 * M) / cols); else pY = Math.min(pY * 1.35, ((2 * M + cols * pX) / asp - 2 * M) / rows);
     CELLS.forEach((c, i) => { const r = Math.floor(i / cols), k = i % cols; c[1] = r % 2 ? cols - 1 - k : k; c[2] = r; map.children[i].style.order = r * cols + c[1]; }); map.style.gridTemplateColumns = 'repeat(' + cols + ',' + (small ? '8px' : 14 * Math.min(u, ub) + 'px') + ')';
     WW = 2 * M + cols * pX; WH = 2 * M + rows * pY; px(world, 0, 0, WW, WH); px(edge, M * .42, M * .42, WW - M * .84, WH - M * .84);
     CELLS.forEach(([id, c, r]) => { const x = M + c * pX + (pX - S1) / 2, y = M + r * pY + S1 * .225; POS[id] = [x, y]; if (id === 'title') px(title, x, y - S1 * .1, S1, S1 * 1.1); else { px(blks[id], x, y, S1, S1); plates[id].fit(); } });
     { const xs = ['leak', 'distance', 'power', 'price'].map(k => POS[k][0]), ys = ['leak', 'distance', 'power', 'price'].map(k => POS[k][1]), x0 = Math.min(...xs), y0 = Math.min(...ys); px(reg, x0 - S1 * .06, y0 - S1 * .2, Math.max(...xs) - x0 + S1 * 1.12, Math.max(...ys) - y0 + S1 * 1.25); reg.style.display = ph ? 'none' : ''; }
     const pm = M * .21, PP = { lab: [WW / 2, pm], studio: [WW - pm, WH * .3], fab: [WW - pm, WH * .7], test: [WW / 2, WH - pm], port: [pm, WH * .7], datacentre: [pm, WH * .3] }; for (const p in pads) px(pads[p], ...PP[p]);
-    F = {}; ORDER.forEach(id => { F[id] = { x: POS[id][0] + S1 / 2, y: POS[id][1] + S1 / 2, k: 1, sx: cxs, sy: top1 + S1 / 2 }; }); F.years = { ...F.years, k: Sy / S1, sy: topY + Sy / 2 };
+    F = {}; ORDER.forEach(id => { F[id] = { x: POS[id][0] + S1 / 2, y: POS[id][1] + S1 / 2, k: 1, sx: cxs, sy: top1 + S1 / 2 }; });
+    /* the landing: the island's block as large as the window allows with its way in still inside it (a phone keeps it as it is) */
+    Lnd = { ...F.island, k: ph ? 1 : clamp((vh - barH - 26 * u) / (S1 * 1.06), 1, 1.5), sy: ph ? F.island.sy : barH + (vh - barH) / 2 + S1 * .02 };
+    R.setProperty('--LS', S1 * Lnd.k + 'px'); R.setProperty('--LB', Math.max(10, vh - Lnd.sy - S1 * Lnd.k / 2) + 'px');
     O = { x: WW / 2, y: WH / 2, k: Math.min(uw / WW, uh / WH), sx: cxs, sy: ot + uh / 2 };
-    const sy = secs.years; sy.style.height = yOfD(DWALL) + vh * 1.25 + 'px'; MOMENTS.forEach(m => { m._box.style.top = yOfD(m.at) + yct - (ph ? 20 : 0) + 'px'; m._box.style.height = yOfD(m.at + m.span) - yOfD(m.at) + 'px'; });
-    sy._wall.style.top = yOfD(DWALL) + yct - (ph ? 20 : 0) + 'px'; sy._wall.style.height = vh * .75 + 'px';
+    secs.years.style.height = yOfD(DWALL) + vh * 1.25 + 'px'; rv = rvWant(); layYears();
     /* a headline as large as its card allows, never wider than it ("L’électricité" is longer than "The power") */
     $$('.card .w-h', story).forEach(e => { e.style.fontSize = ''; fitHead(e, parseFloat(getComputedStyle(e).fontSize), 1e9); });
     $$('.card', secs.years).forEach(c => { c.classList.remove('sc'); tall(c); });
@@ -174,9 +196,12 @@ export function createHold(host, ctx = {}) {
      [where on the page, what the camera frames there, whether it pulls back a little on the way in] */
   function plan() {
     if (!sized) return; const ph = PHONE();
-    ORDER.slice(1).forEach(id => { const [a, , c] = secs[id]._c; if (c) c.style.top = ph ? '' : vh * .17 + a.offsetHeight + 14 * u + 'px'; });
-    const T = vh * .75; p0 = pull.offsetTop - vh * .2; KF = [[0, F.years, 0], [p0, F.years, 0], [p0 + vh * .85, O, 0], [p0 + vh * 1.15, O, 0]];
-    ORDER.slice(1).forEach(id => { const s = secs[id]; s._out = s.offsetTop + s.offsetHeight - T; KF.push([s.offsetTop, F[id], id === 'leak' ? 0 : 1], [s._out, F[id], 0]); }); KF.push([end.offsetTop, O, 0], [1e9, O, 0]);
+    /* a block's name and its thing to try arrive together, one each side (on a phone, in turn); its question after */
+    ORDER.slice(1).forEach(id => { const [a, b, c] = secs[id]._c; b.style.marginTop = ph ? '' : vh * .04 - a.offsetHeight + 'px'; if (c) c.style.top = ph ? '' : vh * .17 + a.offsetHeight + 14 * u + 'px'; });
+    const T = vh * .75; p0 = pull.offsetTop - vh * .2; KF = [[0, F.years, 0], [p0, F.years, 0], [p0 + vh * .85, O, 0], [p0 + vh * 1.4, O, 0]];
+    ORDER.slice(1).forEach(id => { const s = secs[id]; s._out = s.offsetTop + s.offsetHeight - T; KF.push([s.offsetTop, F[id], id === 'leak' ? 0 : 1], [s._out, F[id], 0]); });
+    /* the end is a landing: from the island's block the camera goes down to it, and stays */
+    KF.push([end.offsetTop + vh * .5, Lnd, 0], [1e9, Lnd, 0]);
     if (here.a && performance.now() < here.until && Math.abs(host.scrollTop - here.y) < 2) { const y = Math.round(yOf(here.a)); if (Math.abs(y - here.y) > 1) { here.y = y; host.scrollTo({ top: y, behavior: 'instant' }); } }
     /* later, the story above the part you are at may still grow (a font that arrives late, words filled in): the camera
        stays on that part, unless you have moved since */
@@ -194,9 +219,9 @@ export function createHold(host, ctx = {}) {
   function goPlate(id, d, full, smooth) { touch(); const sec = secs[id], ph = PHONE(); let top = sec.offsetTop + 2;
     if (id === 'years') top = sec.offsetTop + yOfD(d || 0);
     else if (ph) top = full ? sec.offsetTop + sec._c[1].offsetTop - parseFloat(getComputedStyle(sec._c[1]).top) + 6 : top;
-    else if (full) { const c = sec._c[2] || sec._c[1], st = parseFloat(getComputedStyle(c).top) || 0; c.style.position = 'static'; const nat = c.offsetTop; c.style.position = ''; top = sec.offsetTop + nat - st + 40; }
+    else if (full) { const c = sec._c[2] || sec._c[1], st = parseFloat(getComputedStyle(c).top) || 0; c.style.position = 'static'; const nat = c.offsetTop; c.style.position = ''; top = Math.max(top, sec.offsetTop + nat - st + 40); }
     fly(top, smooth && id !== 'years'); }
-  const goOver = () => { touch(); fly(p0 + vh, true); };
+  const goOver = () => { touch(); fly(p0 + vh * 1.1, true); };
   function goChallenge(id) { const [pid, d] = CH_AT[id]; goPlate(pid, d, false, true); }
   S.onWallGo = goOver;
 
@@ -212,7 +237,7 @@ export function createHold(host, ctx = {}) {
   function goAddr(r) { const p = r.replace(/^#\/?/, '').split('/'), id = p[1] || ''; said = r;
     if (p[0] !== 'hold' || !id) { host.scrollTo({ top: 0, behavior: 'instant' }); onScroll(); }
     else if (id === 'years') goPlate('years', clamp(dAt(+p[2] || 0), 0, DWALL), false, false);
-    else if (id === 'chip') fly(p0 + vh, false); else if (id === 'end') fly(end.offsetTop, false);
+    else if (id === 'chip') fly(p0 + vh * 1.1, false); else if (id === 'end') fly(host.scrollHeight, false);
     else if (secs[id] || CH_AT[id]) goPlate(...(secs[id] ? [id, null] : CH_AT[id]), false, false); }
   const fromAddr = () => { const r = location.hash || '#/'; if (r === said || !ours(r)) return; if (sized) goAddr(r); else pend = r; };
   function settle() { if (!LIVE.on || flying || !sized || !ours(location.hash)) return; const a = addrOf(), b = /^#\/hold\/([a-z]+)$/.exec(a); said = a;
@@ -226,7 +251,7 @@ export function createHold(host, ctx = {}) {
     if (host.clientHeight === vh && host.clientWidth === VW && !flying && !(here.a && performance.now() < here.until && Math.abs(y - here.y) < 2) && (!here.a || Math.abs(y - here.y) >= 1)) { here.a = anchor(); here.y = y; here.until = 0; } for (const k of ORDER) if (secs[k].offsetTop <= y + 1) id = k;
     if (y > 40) touch();
     if (y < pull.offsetTop) { if (!flying) { const yy = y - secs.years.offsetTop; Yr.set(yy >= yOfD(DWALL) - 2 ? DWALL : dOfY(yy)); } } else if (!flying && S.d < DWALL) Yr.set(DWALL);
-    if (id !== cur) { cur = id; setHolding(false); }
+    if (id !== cur) { cur = id; setHolding(false); } if (id !== 'years') more();
     const was = yrs; yrs = y < p0; C = camAt(y); const over = C.a === O || C.b === O, kf = C.b === O || C.a === F.years ? (C.a === F.years ? F.years.k : 1) : 1, dim = yrs ? 1 : clamp((C.k / kf - .6) / .3, 0, 1);
     /* the rest of the chip: there all along, faint around the square in the later years, and whole as the camera pulls back */
     const revx = ss(p0, p0 + vh * .3, y), rev = Math.max(revx, yrs ? .55 * ss(9, 14, S.d) : 0);
@@ -240,10 +265,13 @@ export function createHold(host, ctx = {}) {
     /* the keyboard and a screen reader find only what the camera is on: the block's controls, or with the whole chip in
        view each block's way in and the pads */
     for (const p in pads) inert(pads[p], !over);
-    ORDER.forEach(k => { const b = blks[k], f = F[k], main = f === C.a || f === C.b || (k === 'years' && yrs); inert(b, !main && !over); inert(plates[k].ui, !main); b.classList.toggle('cur', main); b.classList.toggle('live', settled && C.a === f); if (k in WALL_OF) { b.classList.toggle('found', y >= secs.leak.offsetTop || sxw > POS[k][0] + S1 / 2); b.classList.toggle('tried', !!S.tried[WID[WALL_OF[k]]]); } });
+    ORDER.forEach(k => { const b = blks[k], f = F[k], isF = q => q === f || (k === 'island' && q === Lnd), main = isF(C.a) || isF(C.b) || (k === 'years' && yrs); inert(b, !main && !over); inert(plates[k].ui, !main); b.classList.toggle('cur', main); b.classList.toggle('live', (settled && isF(C.a)) || (k === 'island' && isF(C.a) && isF(C.b))); if (k in WALL_OF) { b.classList.toggle('found', y >= secs.leak.offsetTop || sxw > POS[k][0] + S1 / 2); b.classList.toggle('tried', !!S.tried[WID[WALL_OF[k]]]); } });
     ORDER.slice(1).forEach(k => { const s = secs[k], o = 1 - ss(0, .3, (y - s._out) / (vh * .75)); s.style.opacity = o; s.style.pointerEvents = o < .5 ? 'none' : ''; s.style.visibility = o < .01 ? 'hidden' : ''; });
-    if (was !== yrs || !slot._s) { slot._s = 1; slot.style.setProperty('--S', (yrs ? Sy : S1) + 'px'); slot.style.setProperty('--top', (yrs ? F.years.sy - Sy / 2 : F.leak.sy - S1 / 2) + 'px'); holdBox.style.setProperty('--S', (yrs ? Sy : S1) + 'px'); holdBox.style.setProperty('--hb', (yrs && !PHONE() ? BH : 0) + (PHONE() ? 14 : 22 * u) + 'px'); }
-    hud.classList.toggle('off', !yrs); band.classList.toggle('off', !yrs); holdBox.classList.toggle('chip', !yrs); holdBox.classList.toggle('off', !yrs && over);
+    if (was !== yrs || !slot._s) { slot._s = 1; const Sx = yrs ? lerp(S1, Sy, rv) : S1; slot.style.setProperty('--S', Sx + 'px'); slot.style.setProperty('--top', (yrs ? F.years.sy - Sx / 2 : F.leak.sy - S1 / 2) + 'px'); holdBox.style.setProperty('--S', Sx + 'px');
+      holdBox.style.setProperty('--hb', (PHONE() ? 14 : !yrs ? 22 * u : lerp(Math.max(22 * u, vh - top1 - S1), BH + 22 * u, rv)) + 'px'); }
+    root.classList.toggle('chipm', !yrs); hud.classList.toggle('off', !yrs); band.classList.toggle('off', !yrs); band.classList.toggle('wait', yrs && rvWant() < 1); holdBox.classList.toggle('chip', !yrs); holdBox.classList.toggle('off', !yrs && over);
+    /* the landing: past the island's cards the block is alone with its way in */
+    const ending = y > secs.island.offsetTop && y >= host.scrollHeight - vh - vh * .3; root.classList.toggle('landing', ending);
     const inChip = !yrs && over, ch = PW[cur].ch, n = CHAPS.indexOf(ch) + 1, chW = chapL._h; put(chapL, inChip ? '<b>' + w('a.chip') + '</b>' : w('b.chap', { n }) + '<b>' + w('tab.' + ch) + '</b>'); if (chapL._h !== chW) fitBar();
     [...rail.children].forEach(b => b.classList.toggle('on', !inChip && b.dataset.ch === ch)); [...map.children].forEach(b => b.classList.toggle('on', inChip ? b.dataset.id === 'title' : b.dataset.id === cur));
     const on = [null, null]; if (settled) $$('.card[data-x],.card[data-sel]', story).forEach(c => { const r = c.getBoundingClientRect(), m = r.top + Math.min(r.height, 200) / 2; if (m > vh * .16 && m < vh * .8) { const n = +($('.n', c) || {}).textContent - 1; if (n >= 0 && (!c.dataset.mom || c.dataset.mom === viewAt(S.d))) on[n] = c; } });
@@ -278,14 +306,20 @@ export function createHold(host, ctx = {}) {
       if (host.scrollTop < max) host.scrollBy(0, Math.max(1, v * dt)); }
     else Yr.wallPush *= Math.pow(.02, dt);
     S.press += ((S.holding && S.d < .6 ? 1 : 0) - S.press) * Math.min(1, dt * 12);
+    /* Moore's law rises, and the square eases back to make room */
+    { const to = rvWant(); if (rv !== to) { rv = reduce() || Math.abs(to - rv) < .004 ? to : rv + (to - rv) * Math.min(1, dt * 4.5); layYears(); onScroll(); } }
+    /* the hold button's ring: how far the hold has come (at the landing it is the push, src/v2/holdisle.js) */
+    if (yrs || !root.classList.contains('landing')) holdBox.style.setProperty('--pr', (yrs ? S.d / DWALL : 0).toFixed(4));
+    root.classList.toggle('at0', yrs && S.d < .5 && S.press < .5); root.classList.toggle('fresh', S.cq.maxD < .9);
     if (!C) return; const far = !yrs || S.d > 9;
-    ORDER.forEach((id, i) => { const f = F[id], main = f === C.a || f === C.b; if (main || (far && fr % 4 === i % 4 && seen(id))) plates[id].paint(T, main ? dt : dt * 4); });
+    ORDER.forEach((id, i) => { const f = F[id], main = f === C.a || f === C.b || (id === 'island' && C.b === Lnd); if (main || (far && fr % 4 === i % 4 && seen(id))) plates[id].paint(T, main ? dt : dt * 4); });
     const d = S.d, mom = momAt(d), wall = d >= DWALL - 1e-4;
     if (yrs) { MOMENTS.forEach(m => { m._box.firstChild.style.opacity = PHONE() ? (d >= m.at - .05 && d < m.at + m.span ? 1 : 0) : ss(m.at - 1.1, m.at - .4, d) * (1 - ss(m.at + m.span - .05, m.at + m.span + .5, d)); const on = d >= m.at - .4 && d < m.at + m.span + .3; m._box.firstChild.style.pointerEvents = on ? '' : 'none'; inert(m._box, !on); });
       chart.paint(T); const cp = countParts(d), say = mom || wall ? '' : yearsWordsHTML(d); put($('.count', hud), cp[0] + '<small>' + (cp[2] ? '<em>' + cp[2] + '</em> ' : '') + cp[1] + '</small>'); put($('.stats', hud), statsHTML(d)); put($('.say', hud), say); put($('.say', ycard), say);
-      const early = S.cq.maxD < 3.4; cq.style.display = early ? 'none' : ''; mv.style.display = early ? '' : 'none'; }
+      /* the questions on the curve wait for the curve */
+      const early = S.cq.maxD < RISE; if (cq._e !== early) { cq._e = early; cq.style.display = early ? 'none' : ''; } }
     ycard.classList.toggle('off', !yrs || !!mom || wall); holdBox.classList.toggle('quiet', yrs && (!!mom || wall));
-    const hk = hintKey(d); put(hint, hk === 'x' ? '<b>' + w('b.scroll') + '</b>' : w('hint.' + hk));
+    const hk = hintKey(d); put(hint, hk === 'x' ? '<b>' + (root.classList.contains('landing') ? w('isle.push') : w('b.scroll')) + '</b>' : w('hint.' + hk));
     /* said aloud: a moment or the wall as it comes; while you hold, the count and the year, at most once a second */
     const ev = !yrs ? '' : wall ? 'wall' : mom ? mom.id : '';
     if (ev !== heard) { heard = ev; if (ev) { say(ev === 'wall' ? w('m.wall.h') + '. ' + w('m.wall.p') : w('mo.' + ev + '.k') + '. ' + w('mo.' + ev + '.q')); sayAt = T + 2.5; } }
@@ -297,15 +331,19 @@ export function createHold(host, ctx = {}) {
      behind the marks, the blueprint's words for what people are trying, and the words Hold shares with other pages (the
      walls, the needs: shared.json). Where the preload never starts (off: a connection that saves data), only a touch
      fetches them */
+  /* the island's plan and the way in, the page's last picture (src/v2/holdisle.js): asked for with the first touch, or
+     as soon as the camera is past the wall */
+  let moreP = null;
+  const more = () => moreP || (moreP = import('./holdisle.js').then(m => { const pl = plates.island; Object.assign(PL.island, m.ISLAND); PL.island.ui(pl.ui, pl); pl.paint(S.T, 0); m.landing(host, root, pl, ctx); onScroll(); }, () => { moreP = null; }));
   let touched = false;
-  function touch() { if (touched || !document.documentElement.dataset.preload) return; touched = true; loadFacts();
+  function touch() { if (touched || !document.documentElement.dataset.preload) return; touched = true; loadFacts(); more();
     /* words that did not come (the page was left, the connection dropped) are asked for again at the next touch; once
        in, the story above may grow, and the camera stays where it was (plan) */
     needWords('blueprint', 'shared').then(() => { fillWays(); fillShared(); out('machine'); if (!hasWords('blueprint') || !hasWords('shared')) touched = false; }, () => { touched = false; }); }
   const idleTouch = () => { if (touched || !LIVE.on || document.documentElement.dataset.preload === 'off') return; if (document.documentElement.dataset.preload) (window.requestIdleCallback ? requestIdleCallback(touch, { timeout: 1500 }) : setTimeout(touch, 1500)); else setTimeout(idleTouch, 600); };
 
   /* for checks */
-  window.__hold = { set: v => goPlate('years', v === 99 ? DWALL : v, false, false), go: (id, d) => goPlate(id, d === 99 ? DWALL : d, true), ch: goChallenge, at: id => (id === 'pull' ? p0 + vh : secs[id].offsetTop), chartX: y => chart.el.getBoundingClientRect().left + chart.X(y),
+  window.__hold = { set: v => goPlate('years', v === 99 ? DWALL : v, false, false), go: (id, d) => goPlate(id, d === 99 ? DWALL : d, true), ch: goChallenge, at: id => (id === 'pull' ? p0 + vh * 1.1 : secs[id].offsetTop), chartX: y => chart.el.getBoundingClientRect().left + chart.X(y),
     state: () => ({ d: S.d, cur, chip: !yrs, holding: S.holding, done: Object.keys(S.done), tried: Object.keys(S.tried), place: S.place, kept: S.kept, ways: !!$('.w-ways button[data-way]:not([hidden])', story) }), S };
 
   /* the page's type, once */

@@ -8,7 +8,9 @@ It is for people new to chips who know a little about hardware, and for engineer
 
 ## What you find there
 
-**One island, one chip's life.** The first page is a chip world: an island whose places sit round the loop every chip goes round.
+**Fifty years under one finger.** The first page is *Hold*: one transistor, 0 until you press and 1 while you do. Keep holding (or scroll) and it doubles through fifty years of computing, with things to try on the way, until holding stops working. Then the same square is one block of a chip: the four walls, what comes next, how a computer is arranged, a machine of your own. Its last block is the plan of an island; hold on, and you go inside.
+
+**One island, one chip's life.** The lab itself is a chip world: an island whose places sit round the loop every chip goes round.
 
 **Open → Design → Make → Test → Ship → Use**, and what is learned in use opens the next.
 

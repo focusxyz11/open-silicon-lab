@@ -115,15 +115,16 @@ export const floors = {};
 function floorFor(P) {
   const key = P + (S.night ? 'n' : 'd'); if (floors[key]) return floors[key];
   const f = document.createElement('canvas'); f.width = f.height = P; const c = f.getContext('2d'), u = 1000 / P; c.setTransform(P / 1000, 0, 0, P / 1000, 0, 0);
-  c.fillStyle = S.night ? '#100f0d' : '#e2ddd0'; c.fillRect(0, 0, 1000, 1000);
+  c.fillStyle = S.night ? '#0a1220' : '#dde5ee'; c.fillRect(0, 0, 1000, 1000);
   const TONE = { core: 30, ctrl: 20, memory: 50, io: 15, clock: 11 };
   walk(P < 260 ? 7 : 9, () => {}, (x, y, ww, hh, hash, vert, r, type) => {
     const k = rnd(hash), g = Math.round(type === 'memory' ? 44 + 12 * ((Math.round(x / 15.6) + Math.round(y / 15.6)) % 2) : TONE[type] * (.45 + k * k * 1.35));
-    c.fillStyle = S.night ? 'rgb(' + (g + 4) + ',' + (g + 2) + ',' + Math.max(0, g - 2) + ')' : 'rgb(' + (240 - g * 1.25) + ',' + (237 - g * 1.25) + ',' + (228 - g * 1.25) + ')'; c.fillRect(x, y, ww + u, hh + u);
+    /* the tones of the lab's night and day: silicon as the dive draws it, never a warm grey */
+    c.fillStyle = S.night ? 'rgb(' + Math.round(g * .78 + 8) + ',' + Math.round(g * .95 + 14) + ',' + Math.round(g * 1.3 + 26) + ')' : 'rgb(' + Math.round(236 - g * 1.3) + ',' + Math.round(241 - g * 1.2) + ',' + Math.round(247 - g * 1.05) + ')'; c.fillRect(x, y, ww + u, hh + u);
     if (type === 'memory') { c.fillStyle = fg(.1); for (let i = 0; i < hh; i += 4 * u) c.fillRect(x, y + i, ww, u); }
     else if (type === 'io') { const m = 8; c.strokeStyle = fg(.55); c.lineWidth = 1.6; c.strokeRect(x + m, y + m, ww - 2 * m, hh - 2 * m); c.fillStyle = fg(.12); c.fillRect(x + m * 2.2, y + m * 2.2, ww - m * 4.4, hh - m * 4.4); }
     else if (type === 'clock') { c.strokeStyle = fg(.5); c.lineWidth = 1.6; c.beginPath(); htree(c, x, y, ww, hh, 5, 5); c.stroke(); }
-    else if (rnd(hash >>> 3) > .8) { c.fillStyle = S.night ? 'rgba(0,0,0,.35)' : 'rgba(19,18,16,.1)'; c.fillRect(x, y, ww + u, hh + u); } });
+    else if (rnd(hash >>> 3) > .8) { c.fillStyle = S.night ? 'rgba(2,6,14,.4)' : 'rgba(22,32,46,.1)'; c.fillRect(x, y, ww + u, hh + u); } });
   for (const [L, a, lw] of [[3, .55, 2.5], [5, .2, 1.6]]) { c.strokeStyle = fg(a); c.lineWidth = lw; c.beginPath(); walk(L, (x, y, ww, hh, vert, r) => { if (vert) { c.moveTo(x + ww * r, y); c.lineTo(x + ww * r, y + hh); } else { c.moveTo(x, y + hh * r); c.lineTo(x + ww, y + hh * r); } }, () => {}); c.stroke(); }
   floors[key] = f; return f;
 }
@@ -479,21 +480,9 @@ PL.machine = {
 
 /* ---------------- the island: a chip's life round the loop ---------------- */
 export const LIT = { lab: () => S.kept, studio: () => !!S.done.job, fab: () => !!(S.done.light || S.tried.cost), test: () => !!S.done.bug, port: () => false, datacentre: () => !!(S.tried.switch || S.tried.memory || S.tried.power) };
-PL.island = {
-  frame: () => [w('pl.island'), w('isle.lit', { n: LOOP.filter(l => LIT[l[1]]()).length })],
-  paint(c, T) { const pts = LOOP.map(l => [l[2], l[3] * .9 + 20]); pts.push(pts[0]);
-    c.strokeStyle = fg(.14); c.lineWidth = 2; for (let r = 90; r < 520; r += 62) { c.beginPath(); c.ellipse(500, 470, r * 1.12, r * .92, 0, 0, 7); c.stroke(); }
-    path(c, pts, K.ink, 4); train(c, pts, T, 1, .07, 22);
-    c.fillStyle = K.plate; c.fillRect(425, 395, 150, 150); c.strokeStyle = S.kept ? K.red : K.ink; c.lineWidth = 4; c.strokeRect(425, 395, 150, 150); c.fillStyle = S.kept ? K.red : fg(.3); for (let i = 0; i < 3; i++) for (let j = 0; j < 3; j++) c.fillRect(443 + i * 40, 413 + j * 40, 34, 34);
-    LOOP.forEach((l, i) => { const [x, y] = pts[i], lit = LIT[l[1]](), sel = S.place === l[1]; c.fillStyle = lit ? K.red : K.plate; c.fillRect(x - 36, y - 36, 72, 72); c.strokeStyle = lit ? K.red : K.ink; c.lineWidth = sel ? 8 : 4; c.strokeRect(x - 36, y - 36, 72, 72); if (sel) { c.strokeStyle = K.ink; c.lineWidth = 2.5; c.strokeRect(x - 50, y - 50, 100, 100); } }); },
-  ui(host, pl) { LOOP.forEach((l, i) => { const x = l[2] / 10, y = (l[3] * .9 + 20) / 10, b = h('button'); b.type = 'button'; at(b, x - 13, y - 5, 26, i === 0 || i === 3 ? 13.5 : 13.5);
-      /* a place at a side has its words from its square's outer edge inwards: clear of the plate's edge and of the card
-         over it and of the middle square, in any language; and every place's words start under its square */
-      /* i18n-ok: styles */ b.style.cssText += ';display:flex;flex-direction:column;justify-content:flex-start;' + (x < 40 ? 'align-items:flex-start;text-align:left;padding-left:9.4%' : x > 60 ? 'align-items:flex-end;text-align:right;padding-right:9.4%' : 'align-items:center;text-align:center'); b.innerHTML = '<span style="height:74%;flex:none"></span><span class="lb" style="position:static' + (x < 40 || x > 60 ? ';white-space:normal;width:max-content;max-width:calc(var(--p)*286)' : '') + '">' + w('stage.' + l[0]) + '<b>' + w('place.' + l[1]) + '</b></span>';
-      b.onclick = () => { S.place = l[1]; out('island'); }; host.appendChild(b); });
-    lbl(host, w('s.yours'), 50, 56.5, 'c').style.transform = 'translate(-50%,0)';
-    const go = h('a', 'pbtn'); go.href = '#/island'; go.dataset.go = 'island'; go.style.textDecoration = 'none'; at(go, 27, 91.5, 46); host.appendChild(go); pl.sync = () => put(go, (S.kept ? w('isle.go') : w('isle.go0')) + ' →'); }
-};
+/* the island's block is its plan, drawn by src/v2/holdisle.js: the last picture of the page, so it is fetched once the
+   page has drawn (src/v2/hold.js more()), and until then the block is an empty plate */
+PL.island = { frame: () => [w('pl.island'), w('isle.lit', { n: LOOP.filter(l => LIT[l[1]]()).length })], paint() {}, ui() {} };
 
 /* ---- what moves by itself, once a frame ---- */
 TICK.push((T, dt) => {
@@ -533,9 +522,12 @@ export function mkChart(o = {}) {
     g = { l: Math.max(34 * u, yw + 10 * u), r: 12 * u, t: 10 * u, b: (low ? 30 : 40) * u, u, low }; ph = H - g.t - g.b;
     cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
     yl.forEach(([v, e]) => { pos(e, g.l - 6 * u, Y(v)); e.style.display = H < 84 ? 'none' : ''; }); xl.forEach(([y, e]) => { pos(e, X(y), g.t + ph + 5 * u); e.style.display = W < 300 && y !== 1971 && y !== 2026 ? 'none' : ''; });
-    ERAS.forEach(([id, y0], i) => { pos(eraL[i], X(y0) + 3, g.t + ph + 17 * u); eraL[i].style.display = low || W < 420 ? 'none' : ''; eraL[i]._fits = eraL[i].offsetWidth < X(i < ERAS.length - 1 ? ERAS[i + 1][1] : 2026) - X(y0) - 4; }); serT.style.left = g.l + 8 * u + 'px'; serT.style.top = g.t + 3 * u + 'px'; serK = null; serSync(); }
+    ERAS.forEach(([id, y0], i) => { pos(eraL[i], X(y0) + 3, g.t + ph + 17 * u); eraL[i].style.display = low || W < 420 ? 'none' : ''; eraL[i]._fits = eraL[i].offsetWidth < X(i < ERAS.length - 1 ? ERAS[i + 1][1] : 2026) - X(y0) - 4; }); serT.style.left = g.l + 8 * u + 'px'; serT.style.top = g.t + 3 * u + 'px'; serK = null; serSync();
+    /* a canvas given a new size is blank: drawn again at once, so the curve never blinks while its band moves */
+    if (lastT != null) paint(lastT); }
+  let lastT = null;
   function paint(T) {
-    if (!W) fit(); if (!W) return; const d = Math.min(S.d, DWALL), yNow = yearAt(d), u = g.u;
+    if (!W) fit(); if (!W) return; lastT = T; const d = Math.min(S.d, DWALL), yNow = yearAt(d), u = g.u;
     c.setTransform(dpr, 0, 0, dpr, 0, 0); c.clearRect(0, 0, W, H); c.lineWidth = 1;
     for (const v of [1, 1e3, 1e6, 1e9, 1e12]) { const y = Math.round(Y(v)) + .5; c.strokeStyle = fg(.12); c.beginPath(); c.moveTo(g.l, y); c.lineTo(W - g.r, y); c.stroke(); }
     c.strokeStyle = fg(.5); c.beginPath(); c.moveTo(g.l, g.t + ph + .5); c.lineTo(W - g.r, g.t + ph + .5); c.stroke();

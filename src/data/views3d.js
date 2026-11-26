@@ -10,14 +10,9 @@ export const shipOrPkg = p => (['trays', 'boxes'].includes(p) ? 'ship' : 'pkg');
 export const partName = (place, p) => { if (place !== 'test' && place !== 'port') return t('depth.' + p + '.name');
   const w = t('part.' + (place === 'test' ? 'test' : shipOrPkg(p)) + '.' + p); return w.charAt(0).toUpperCase() + w.slice(1); };
 
-/* the island (src/v2/map3d.js): where every place stands, and how close the camera comes */
-export const PLACES = [
-  { id: 'studio', at: [-48, -30], d: 76, r: 26 }, { id: 'quarry', at: [-62, -4], d: 56 }, { id: 'fab', at: [-8, -16], d: 72 },
-  { id: 'test', at: [22, -2], d: 54 }, { id: 'port', at: [62, 6], d: 66 }, { id: 'datacentre', at: [36, -36], d: 64 },
-  { id: 'lab', at: [6, 26], d: 62 }, { id: 'village', at: [-34, 24], d: 60 },
-  { id: 'phones', at: [-62, -196], d: 110, far: true }, { id: 'cars', at: [228, -40], d: 110, far: true }, { id: 'idea', at: [180, -116], d: 90, far: true },
-  { id: 'tools', at: [-160, -138], d: 100, far: true }, { id: 'materials', at: [-232, -46], d: 100, far: true }, { id: 'power', at: [92, -178], d: 100, far: true }
-];
+/* the island's plan (where every place stands, its coast, its loop road) is plain data with no words: src/data/isle.js,
+   which the first page reads too */
+export { PLACES, ISLE_COAST, ISLE_ROAD, ISLE_YAW, isleFlat } from './isle.js';
 
 /* the data centre's flight (src/v2/dc3d.js): its levels, and the question asked at each (a stop of one thread, stop.<key>.q) */
 export const DC_LEVELS = ['campus', 'hall', 'rack', 'server', 'board', 'chip'];

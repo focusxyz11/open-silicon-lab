@@ -1,22 +1,24 @@
-/* Hold, the first page (src/v2/hold.js, its pictures src/v2/holdplates.js). Its own paper, ink and one red, and its own
-   type (Anton, DM Sans, Anonymous Pro, Gelasio; loaded when the page opens), as designed with Claude Fable 5.2
-   (prototype D: B's story on A's chip); day or night as the lab is set, all the way down. Everything is scoped to .hold;
-   the page's part of the lab's bar (the small chip, the chapter, the challenges, the sources) to .hbar. The picture is
-   pinned to the window (.b-stage, the chip under a camera: .d-world); the story scrolls over it (.b-story, its cards). */
-.home.holdhome{padding-top:0;background:#efece3;overscroll-behavior:contain;overflow-anchor:none;scrollbar-width:none}
+/* Hold, the first page (src/v2/hold.js, its pictures src/v2/holdplates.js; designed with Claude Fable 5.2). One world
+   with the island it lands on: the lab's ground and ink, night or day (base.css), the lab's type for the words, the
+   labels (--mono, narrow) and the questions (--serif), and the lab's glass card for every word over the picture. Its
+   own: the drawings (square, drafted), one display face (Anton) and one red. Red is the signal (a 1, a wall, now);
+   the lab's blue (--go) is a way in. Scoped to .hold, and its part of the bar to .hbar. The picture is pinned
+   (.b-stage, the chip under a camera: .d-world); the story scrolls over it (.b-story, its cards). */
+.home.holdhome{padding-top:0;background:var(--bg);overscroll-behavior:contain;overflow-anchor:none;scrollbar-width:none}
 .home.holdhome::-webkit-scrollbar{display:none}
-.home.holdhome.hold-night{background:#131210}
 body.firstpage .bar .loop{display:none}
 .hbar{--u:1px;--mid:var(--muted);--hair:var(--line);--red:#e5401a;--paper:var(--bg);flex:1;min-width:0;display:flex;align-items:center;gap:18px;padding:0 6px 0 10px}
 .hbar button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
-.hold{--paper:#efece3;--ink:#131210;--red:#e5401a;--mid:#6b675d;--hair:rgba(19,18,16,.16);--soft:rgba(19,18,16,.05);--plate:#e8e4d8;--card:rgba(239,236,227,.94);--u:1px;--barH:calc(var(--u)*52)}
-.hold.night{--paper:#131210;--ink:#efece3;--mid:#aca89d;--hair:rgba(239,236,227,.2);--soft:rgba(239,236,227,.06);--plate:#1a1917;--card:rgba(19,18,16,.94)}
+.hold{--paper:var(--bg);--red:#d63a14;--mid:var(--muted);--hair:rgba(40,60,90,.2);--soft:rgba(22,32,46,.05);--plate:#ecf1f7;--card:rgba(244,247,251,.86);--go:var(--accent);--u:1px;--barH:calc(var(--u)*52)}
+.hold.night{--red:#e5401a;--hair:rgba(160,180,210,.24);--soft:rgba(238,242,248,.06);--plate:#101a2d;--card:rgba(15,23,40,.8)}
 .hold *,.hold *::before,.hold *::after{box-sizing:border-box}
-.hold{background:var(--paper);color:var(--ink);font-family:'DM Sans',system-ui,sans-serif;font-size:calc(var(--u)*15.5);line-height:1.42;-webkit-font-smoothing:antialiased;transition:background .5s,color .5s;overflow-x:clip}
+/* the labels' face is narrow (the other faces have one width) */
+.hold,.hbar{font-stretch:75%}
+.hold{background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:calc(var(--u)*15.5);line-height:1.42;-webkit-font-smoothing:antialiased;transition:background .5s,color .5s;overflow-x:clip}
 .hold button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer;text-align:inherit}
 .hold a{color:inherit}
 .hold p{margin:0}
-.hold .mono,.hbar .mono{font-family:'Anonymous Pro',ui-monospace,Menlo,monospace;font-size:calc(var(--u)*11.5);letter-spacing:.1em;text-transform:uppercase}
+.hold .mono,.hbar .mono{font-family:var(--mono);font-size:max(11px,calc(var(--u)*10.5));letter-spacing:.07em;text-transform:uppercase}
 .hold .anton{font-family:Anton,'Archivo Black',Impact,sans-serif;text-transform:uppercase;font-weight:400;line-height:.92;letter-spacing:.005em}
 .hold .anton em,.hold .red{color:var(--red);font-style:normal}
 .hold .dim{color:var(--mid)}
@@ -27,35 +29,16 @@ body.firstpage .bar .loop{display:none}
 .hbar .tally .sq button{height:calc(var(--u)*11);border:1.5px solid var(--mid);transition:background .25s,border-color .25s,transform .2s;position:relative}
 .hbar .tally .sq button:hover{border-color:var(--ink);transform:scale(1.25)}
 .hbar .tally .sq button.on{background:var(--red);border-color:var(--red)}
-.hbar .tally .sq button::after{content:attr(data-tip);position:absolute;top:calc(100% + 8px);right:-6px;white-space:nowrap;background:var(--ink);color:var(--paper);padding:5px 8px 4px;font-family:'Anonymous Pro',monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;opacity:0;pointer-events:none;transition:opacity .15s;z-index:5}
+.hbar .tally .sq button::after{content:attr(data-tip);position:absolute;top:calc(100% + 8px);right:-6px;white-space:nowrap;background:var(--ink);color:var(--paper);padding:5px 8px 4px;font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;opacity:0;pointer-events:none;transition:opacity .15s;z-index:5}
 .hbar .tally .sq button:hover::after{opacity:1}
 .hold .bbtn,.hbar .bbtn{height:calc(var(--u)*30);padding:0 calc(var(--u)*11);border:1px solid var(--hair);display:inline-flex;align-items:center;gap:6px;color:var(--mid);transition:color .2s,border-color .2s;background:var(--paper)}
 .hold .bbtn:hover,.hbar .bbtn:hover{color:var(--ink);border-color:var(--ink)}
 .hold .bbtn.round,.hbar .bbtn.round{width:calc(var(--u)*30);padding:0;justify-content:center;border-radius:50%}
-.hold .src{position:relative;display:inline-block;font-family:'Anonymous Pro',monospace;font-size:.72em;line-height:1;color:var(--mid);vertical-align:.25em;margin-left:.2em;width:1.25em;height:1.25em;border:1px solid var(--hair);border-radius:50%;text-align:center;transition:color .15s,border-color .15s,background .15s}
+.hold .src{position:relative;display:inline-block;font-family:var(--mono);font-size:.72em;line-height:1;color:var(--mid);vertical-align:.25em;margin-left:.2em;width:1.25em;height:1.25em;border:1px solid var(--hair);border-radius:50%;text-align:center;transition:color .15s,border-color .15s,background .15s}
 .hold .src:hover,.hold .src.on{color:var(--paper);background:var(--red);border-color:var(--red)}
-/* a source mark is small to see and 24 px to the touch; the page's heading and voice are for a screen reader; skip to the story leads past the bar */
+/* a source mark: small to see, 24 px to the touch; the heading and the voice are for a screen reader */
 .hold .src::after{content:'';position:absolute;inset:calc(50% - 12px)}.hold .vh{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;opacity:0}
-.hskip{position:absolute;left:8px;top:-90px;z-index:9;padding:8px 14px;border:0;border-radius:6px;background:#e5401a;color:#fff;font:600 14px 'DM Sans',sans-serif}.hskip:focus{top:8px}
-.hold .srcpop{position:fixed;z-index:60;width:min(300px,calc(100vw - 24px));background:var(--ink);color:var(--paper);padding:13px 15px 12px;font-size:13.5px;line-height:1.38;opacity:0;pointer-events:none;transform:translateY(4px);transition:opacity .15s,transform .15s}
-.hold .srcpop.on{opacity:1;pointer-events:auto;transform:none}
-.hold .srcpop .mono{font-size:10.5px;opacity:.6;display:block;margin-bottom:5px}
-.hold .srcpop a{display:inline-block;margin-top:8px;color:var(--paper);font-weight:600;text-decoration:none;border-bottom:1.5px solid var(--red)}
-.hold .sheet{position:fixed;inset:0;z-index:70;background:var(--paper);overflow:auto;padding:calc(var(--u)*30) calc(var(--u)*40) calc(var(--u)*50);opacity:0;pointer-events:none;transform:translateY(16px);transition:opacity .25s,transform .25s}
-.hold .sheet.on{opacity:1;pointer-events:auto;transform:none}
-.hold .sheet header{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;border-bottom:2px solid var(--ink);padding-bottom:calc(var(--u)*14);margin-bottom:calc(var(--u)*22)}
-.hold .sheet h2{margin:0;font-size:calc(var(--u)*54)}
-.hold .sheet header p{color:var(--mid);max-width:34em;font-size:calc(var(--u)*14)}
-.hold .sheet .cols{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:calc(var(--u)*28)}
-.hold .sheet .col h3{margin:0 0 calc(var(--u)*10);font-size:calc(var(--u)*22);display:flex;align-items:baseline;gap:8px}
-.hold .sheet .col h3 span{color:var(--mid);font-family:'Anonymous Pro',monospace;font-size:11px;letter-spacing:.1em}
-.hold .sheet .f{display:block;padding:calc(var(--u)*8) 0;border-top:1px solid var(--hair);text-decoration:none;font-size:calc(var(--u)*13)}
-.hold .sheet .f b{display:block;font-weight:500}
-.hold .sheet .f span{color:var(--mid);font-family:'Anonymous Pro',monospace;font-size:calc(var(--u)*10.5);letter-spacing:.07em;text-transform:uppercase}
-.hold .sheet .f:hover span{color:var(--red)}
-.hold .toast{position:fixed;left:50%;bottom:calc(var(--u)*26);z-index:65;transform:translate(-50%,20px);background:var(--ink);color:var(--paper);padding:10px 16px 9px;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;white-space:nowrap;max-width:calc(100vw - 20px);overflow:hidden;text-overflow:ellipsis}
-.hold .toast.on{opacity:1;transform:translate(-50%,0)}
-.hold .toast i{display:inline-block;width:9px;height:9px;background:var(--red);margin-right:9px}
+.hskip{position:absolute;left:8px;top:-90px;z-index:9;padding:8px 14px;border:0;border-radius:6px;background:#e5401a;color:#fff;font:700 14px var(--sans)}.hskip:focus{top:8px}
 .hold .plate{position:relative;aspect-ratio:1;background:var(--plate);box-shadow:0 0 0 1.5px var(--ink);--p:.6px;user-select:none;-webkit-user-select:none;touch-action:pan-y}
 .hold .plate>canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
 .hold .pl-ui{position:absolute;inset:0;font-size:max(11px,calc(var(--p)*23))}
@@ -68,10 +51,10 @@ body.firstpage .bar .loop{display:none}
 .hold .pl-fr span{overflow:hidden;text-overflow:ellipsis}
 .hold .pl-fr span:first-child::before{content:"+";margin-right:.8em;color:var(--ink)}
 .hold .pl-fr span:last-child::after{content:"+";margin-left:.8em;color:var(--ink)}
-.hold .lb{font-family:'Anonymous Pro',monospace;font-size:max(11px,calc(var(--p)*19));letter-spacing:.08em;text-transform:uppercase;white-space:nowrap;line-height:1.15;pointer-events:none}
+.hold .lb{font-family:var(--mono);font-size:max(11px,calc(var(--p)*19));letter-spacing:.025em;text-transform:uppercase;white-space:nowrap;line-height:1.15;pointer-events:none}
 .hold .lb.c{transform:translate(-50%,-50%);text-align:center}
 .hold .lb.r{transform:translate(-100%,0);text-align:right}
-.hold .lb b{font-family:'DM Sans',sans-serif;font-weight:600;text-transform:none;letter-spacing:0;font-size:1.18em;display:block}
+.hold .lb b{font-family:var(--sans);font-weight:600;text-transform:none;letter-spacing:0;font-size:1.18em;display:block}
 .hold .lb.hot{color:var(--red)}
 .hold .lb.col{white-space:normal;width:23%}
 .hold .lb.wrap{white-space:normal;max-width:44%}
@@ -80,9 +63,9 @@ body.firstpage .bar .loop{display:none}
 .hold .lb.r.up{transform:translate(-100%,-100%)}
 .hold .pl-ui .pbtn{white-space:normal;line-height:1.15}
 .hold .big{font-family:Anton,Impact,sans-serif;color:var(--red);font-size:calc(var(--p)*92);line-height:.95;white-space:nowrap;text-transform:uppercase;pointer-events:none}
-.hold .big small{display:block;font-family:'Anonymous Pro',monospace;font-size:max(11px,calc(var(--p)*19));letter-spacing:.08em;color:var(--mid);margin-top:.35em;white-space:normal;line-height:1.2}
+.hold .big small{display:block;font-family:var(--mono);font-size:max(11px,calc(var(--p)*19));letter-spacing:.025em;color:var(--mid);margin-top:.35em;white-space:normal;line-height:1.2}
 .hold .seg{display:flex;border:1.5px solid var(--ink);background:var(--plate)}
-.hold .seg button{flex:1 1 0;padding:.5em .45em .45em;text-align:center;line-height:1.12;border-left:1.5px solid var(--ink);font-weight:500;transition:background .15s,color .15s;min-width:0}
+.hold .seg button{flex:1 1 0;padding:.5em .3em .45em;text-align:center;line-height:1.12;border-left:1.5px solid var(--ink);font-weight:500;transition:background .15s,color .15s;min-width:0}
 .hold .seg button:first-child{border-left:0}
 .hold .seg button:hover{background:var(--soft)}
 .hold .seg button.on{background:var(--ink);color:var(--paper)}
@@ -101,7 +84,10 @@ body.firstpage .bar .loop{display:none}
 .hold .tap{border:1.5px dashed var(--red);border-radius:50%;transform:translate(-50%,-50%);animation:h-tap 1.6s infinite}
 .hold .tap.used{animation:none;border-color:transparent}
 @keyframes h-tap{0%,100%{box-shadow:0 0 0 0 rgba(229,64,26,.35)}50%{box-shadow:0 0 0 8px rgba(229,64,26,0)}}
-.hold .holdbtn{width:calc(var(--u)*78);height:calc(var(--u)*78);border-radius:50%;background:var(--ink);color:var(--paper);display:grid;place-items:center;font-family:Anton,sans-serif;font-size:calc(var(--u)*19);letter-spacing:.06em;text-transform:uppercase;box-shadow:0 0 0 calc(var(--u)*5) var(--paper),0 0 0 calc(var(--u)*6.5) var(--red);transition:transform .15s,background .15s;touch-action:none;user-select:none;-webkit-user-select:none;flex:none}
+.hold .holdbtn{width:calc(var(--u)*78);height:calc(var(--u)*78);border-radius:50%;background:var(--ink);color:var(--paper);display:grid;place-items:center;font-family:Anton,sans-serif;font-size:calc(var(--u)*19);letter-spacing:.06em;text-transform:uppercase;box-shadow:0 0 0 calc(var(--u)*5) var(--paper);position:relative;transition:transform .15s,background .15s;touch-action:none;user-select:none;-webkit-user-select:none;flex:none}
+/* its ring: how far the hold has come (the fifty years; at the landing, how near to going inside) */
+.hold .holdbtn::before{content:"";position:absolute;inset:calc(var(--u)*-7.5);border-radius:50%;background:conic-gradient(var(--red) calc(var(--pr,0)*1turn),var(--hair) 0);-webkit-mask:radial-gradient(closest-side,transparent calc(100% - var(--u)*2.5),#000 calc(100% - var(--u)*2));mask:radial-gradient(closest-side,transparent calc(100% - var(--u)*2.5),#000 calc(100% - var(--u)*2));pointer-events:none}
+.hold .pl-ui .holdbtn::before{display:none}
 .hold .holdbtn:hover{transform:scale(1.05)}
 .hold .holdbtn.down,.hold.holding .holdbtn{background:var(--red);transform:scale(.94)}
 .hold .pl-ui .holdbtn{width:calc(var(--p)*150);height:calc(var(--p)*150);min-width:58px;min-height:58px;font-size:max(14px,calc(var(--p)*36));box-shadow:0 0 0 calc(var(--p)*8) var(--plate),0 0 0 calc(var(--p)*11) var(--red)}
@@ -116,18 +102,17 @@ body.firstpage .bar .loop{display:none}
 .hold .w-try .w-p{font-weight:600;font-size:calc(var(--u)*16.5);margin:.35em 0 .5em;line-height:1.3}
 .hold .w-out{min-height:2.8em;font-size:calc(var(--u)*14.5);line-height:1.4}
 .hold .w-out>b:first-child,.hold .w-out .v{font-family:Anton,sans-serif;font-weight:400;color:var(--red);font-size:1.75em;letter-spacing:.02em;margin-right:.3em;text-transform:uppercase;line-height:1}
-.hold .w-out .calc{display:grid;gap:1px;margin:.3em 0;font-family:'Anonymous Pro',monospace;font-size:.95em}
+.hold .w-out .calc{display:grid;gap:1px;margin:.3em 0;font-family:var(--mono);font-size:.86em}
 .hold .w-out .ok{color:var(--red);font-weight:600}
-.hold .lnk{font-weight:600;text-decoration:none;border-bottom:1.5px solid var(--red);padding-bottom:1px;display:inline-block;margin-top:.7em;font-size:calc(var(--u)*14)}
-.hold .lnk::after{content:" →";color:var(--red)}
-.hold .lnk:hover{color:var(--red)}
-.hold .w-q{border-left:2px solid var(--red);padding-left:calc(var(--u)*16)}
+.hold .lnk{font-weight:700;text-decoration:none;border-bottom:1.5px solid var(--go);padding-bottom:1px;display:inline-block;margin-top:.7em;font-size:calc(var(--u)*14)}
+.hold .lnk::after{content:" →";color:var(--go)}
+.hold .lnk:hover{color:var(--go)}
 .hold .w-q .mono{color:var(--mid);display:block;margin-bottom:.6em}
-.hold .w-q p{font-family:Gelasio,Georgia,serif;font-style:italic;font-size:calc(var(--u)*23);line-height:1.2}
+.hold .w-q p{font-family:var(--serif);font-style:italic;font-size:calc(var(--u)*22);line-height:1.2}
 .hold .w-ways .mono{color:var(--mid);display:block;margin-bottom:.5em}
 .hold .w-ways button{display:block;width:100%;border-top:1px solid var(--hair);padding:.55em 0 .5em}
 .hold .w-ways button b{font-weight:600}
-.hold .w-ways button small{font-family:'Anonymous Pro',monospace;font-size:calc(var(--u)*10.5);letter-spacing:.08em;text-transform:uppercase;color:var(--mid);float:right;margin-top:.25em}
+.hold .w-ways button small{font-family:var(--mono);font-size:calc(var(--u)*10.5);letter-spacing:.03em;text-transform:uppercase;color:var(--mid);float:right;margin-top:.25em}
 .hold .w-ways button small.product{color:var(--red)}
 .hold .w-ways button span{display:none;color:var(--mid);font-size:calc(var(--u)*13.5);padding-top:.25em;line-height:1.35}
 .hold .w-ways button.open span{display:block}
@@ -138,26 +123,17 @@ body.firstpage .bar .loop{display:none}
 .hold .stats{display:grid;grid-template-columns:repeat(4,auto);justify-content:space-between;gap:calc(var(--u)*14);border-top:1px solid var(--hair);padding:calc(var(--u)*9) 0 calc(var(--u)*8)}
 .hold .stats div{min-width:0}
 .hold .stats span{display:block;color:var(--mid);font-size:calc(var(--u)*10)}
-.hold .stats b{font-family:'Anonymous Pro',monospace;font-weight:700;font-size:calc(var(--u)*14.5);white-space:nowrap}
-.hold .yw .say{font-size:calc(var(--u)*17);line-height:1.38}
-.hold .yw .say b{font-weight:600}
-.hold .yw .cost{display:flex;align-items:baseline;gap:.5em;margin-top:.5em}
-.hold .yw .cost b{font-family:Anton,sans-serif;font-weight:400;font-size:calc(var(--u)*40);color:var(--red);line-height:1}
-.hold .yw .mq{font-family:Gelasio,Georgia,serif;font-style:italic;font-size:calc(var(--u)*18.5);line-height:1.22;margin-top:.8em;color:var(--mid)}
-.hold .moves{border-top:1.5px solid var(--ink);padding-top:calc(var(--u)*10);font-size:calc(var(--u)*13.5);line-height:1.35}
-.hold .moves .mono{color:var(--mid);display:block;margin-bottom:.5em}
-.hold .moves p{padding:.32em 0;border-bottom:1px solid var(--hair);color:var(--mid)}
-.hold .moves p b{color:var(--ink);font-weight:600}
+.hold .stats b{font-family:var(--mono);font-weight:600;font-size:calc(var(--u)*13.5);white-space:nowrap}
 .hold .chart{position:relative;min-height:0;touch-action:none;cursor:ew-resize}
 .hold .chart canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
 .hold .chart.pick{cursor:crosshair}
 .hold .chart .lab{position:absolute;inset:0;pointer-events:none}
-.hold .chart .lab span{position:absolute;white-space:nowrap;font-family:'Anonymous Pro',monospace;font-size:max(11px,calc(var(--u)*10.5));letter-spacing:.06em;color:var(--mid);line-height:1}
+.hold .chart .lab span{position:absolute;white-space:nowrap;font-family:var(--mono);font-size:max(11px,calc(var(--u)*10.5));letter-spacing:.01em;color:var(--mid);line-height:1}
 .hold .chart .lab .yl{transform:translate(-100%,-50%)}
 .hold .chart .lab .xl{transform:translate(-50%,0)}
 .hold .chart .lab .era{text-transform:uppercase}
 .hold .chart .lab .era.on{color:var(--red)}
-.hold .chart .lab .chip{font-family:'DM Sans',sans-serif;font-weight:600;font-size:max(11px,calc(var(--u)*12.5));color:var(--ink);letter-spacing:0;transform:translate(-100%,-150%);padding-right:8px;text-shadow:0 0 3px var(--paper),0 0 3px var(--paper),0 0 2px var(--paper)}
+.hold .chart .lab .chip{font-family:var(--sans);font-weight:600;font-size:max(11px,calc(var(--u)*12.5));color:var(--ink);letter-spacing:0;transform:translate(-100%,-150%);padding-right:8px;text-shadow:0 0 3px var(--paper),0 0 3px var(--paper),0 0 2px var(--paper)}
 .hold .chart .lab .gs{color:var(--red);text-transform:uppercase;transform:translate(-100%,-50%);padding-right:12px}
 .hold .chart .ser-t{position:absolute;display:flex;flex-wrap:wrap;align-items:center;gap:3px 5px;max-width:52%;z-index:2}
 .hold .chart .ser-t button{border:1px solid var(--hair);padding:3px 7px 2px;color:var(--mid);background:var(--paper);display:flex;align-items:center;gap:6px;white-space:nowrap;line-height:1.1}
@@ -176,22 +152,19 @@ body.firstpage .bar .loop{display:none}
 .hold .cq .res b{font-family:Anton,sans-serif;font-weight:400;color:var(--red);text-transform:uppercase;letter-spacing:.02em;margin-right:4px;font-size:1.2em}
 .hold .cq .row{display:flex;align-items:center;gap:12px;margin-top:.45em}
 .hold .cq .row input{flex:1 1 0;min-width:38%;--p:.5px}
-.hold .cq .row b{font-family:'Anonymous Pro',monospace;font-size:.95em;color:var(--red);flex:0 1 auto;max-width:60%;text-align:right;line-height:1.2}
+.hold .cq .row b{font-family:var(--mono);font-size:.88em;color:var(--red);flex:0 1 auto;max-width:60%;text-align:right;line-height:1.2}
 .hold .cq .o{color:var(--mid);min-height:1.3em}
 .hold .cq .pbtn{margin-top:.5em;font-size:.95em}
-.hold .cq .cqq{font-family:Gelasio,serif;font-style:italic;font-size:1.25em;line-height:1.2;margin-top:.4em}
+.hold .cq .cqq{font-family:var(--serif);font-style:italic;font-size:1.25em;line-height:1.2;margin-top:.4em}
 @media (prefers-reduced-motion:reduce){.hold *{animation:none!important}
 }
 .hbar .b-chap{color:var(--mid);white-space:nowrap}
 .hbar .b-chap b{color:var(--ink);font-weight:700;margin-left:.7em}
 .hold .b-stage{position:fixed;inset:0;z-index:1;overflow:hidden}
-.hold .b-ground{position:absolute;inset:0;width:100%;height:100%;transition:opacity .6s}
-.hold .b-slot{position:absolute;left:calc(50% + var(--rw)/2);top:var(--top);width:var(--S);height:var(--S);margin-left:calc(var(--S)/-2);transition:width .6s cubic-bezier(.6,0,.2,1),height .6s cubic-bezier(.6,0,.2,1),top .6s cubic-bezier(.6,0,.2,1),margin .6s cubic-bezier(.6,0,.2,1)}
-.hold .b-slot .plate{position:absolute;inset:0;opacity:0;pointer-events:none;transition:opacity .45s}
-.hold .b-slot .plate.on{opacity:1;pointer-events:auto}
+.hold .b-slot{position:absolute;left:calc(50% + var(--rw)/2);top:var(--top);width:var(--S);height:var(--S);margin-left:calc(var(--S)/-2);pointer-events:none;z-index:4}
 .hold .b-mk{position:absolute;z-index:4;width:calc(var(--u)*22);height:calc(var(--u)*22);border-radius:50%;background:var(--red);color:#fff;display:grid;place-items:center;transform:translate(-50%,-50%) scale(0);transition:transform .3s,left .4s,top .4s;font-weight:700;letter-spacing:0;pointer-events:none;box-shadow:0 0 0 3px var(--plate)}
 .hold .b-mk.on{transform:translate(-50%,-50%) scale(1)}
-.hold .b-hud{position:absolute;right:calc(50% - var(--rw)/2 + var(--S)/2 + var(--u)*30);top:var(--top);width:var(--cw);height:var(--S);display:flex;flex-direction:column;gap:calc(var(--u)*12);transition:opacity .4s,top .6s,right .6s,height .6s;container-type:inline-size}
+.hold .b-hud{position:absolute;right:calc(50% - var(--rw)/2 + var(--S)/2 + var(--u)*30);top:var(--top);width:var(--cw);height:var(--S);display:flex;flex-direction:column;gap:calc(var(--u)*12);transition:opacity .4s;container-type:inline-size}
 .hold .b-hud.off{opacity:0;pointer-events:none}
 .hold .b-hud .count{font-size:min(calc(var(--u)*112),37cqw)}
 .hold .b-hud .stats{grid-template-columns:1fr 1fr;row-gap:calc(var(--u)*7)}
@@ -199,16 +172,16 @@ body.firstpage .bar .loop{display:none}
 .hold .b-hud .say b{font-weight:600}
 .hold .b-hud .cost{display:flex;align-items:baseline;gap:.5em;margin-top:.5em}
 .hold .b-hud .cost b{font-family:Anton,sans-serif;font-weight:400;font-size:calc(var(--u)*40);color:var(--red);line-height:1}
-.hold .b-hold{position:fixed;z-index:6;left:calc(50% + var(--rw)/2 + var(--S)/2 + var(--u)*30);width:var(--cw);bottom:var(--hb);display:flex;align-items:center;gap:calc(var(--u)*16);padding-left:calc(var(--u)*7);transition:bottom .6s,left .6s;pointer-events:none}
+.hold .b-hold{position:fixed;z-index:6;left:calc(50% + var(--rw)/2 + var(--S)/2 + var(--u)*30);width:var(--cw);bottom:var(--hb);display:flex;align-items:center;gap:calc(var(--u)*16);padding-left:calc(var(--u)*7);pointer-events:none}
 .hold .b-hold>*{pointer-events:auto}
 .hold .hint{color:var(--mid);font-size:calc(var(--u)*10.5);line-height:1.5}
 .hold .hint b{display:block;color:var(--ink)}
 .hold .b-band{position:fixed;left:0;right:0;bottom:0;height:var(--band);display:grid;grid-template-columns:var(--cqw,var(--cw)) minmax(0,1fr);gap:calc(var(--u)*30);padding:calc(var(--u)*10) calc(var(--u)*30) 0 calc(50% + var(--rw)/2 - var(--S)/2 - var(--u)*30 - var(--cw));background:var(--paper);border-top:1.5px solid var(--ink);transition:transform .6s cubic-bezier(.6,0,.2,1),padding .6s;z-index:5}
-.hold .b-band.off{transform:translateY(102%)}
+.hold .b-band.off,.hold .b-band.wait{transform:translateY(102%)}
+.hold .b-start{display:none}
+.hold .b-hud .stats{transition:opacity .5s,max-height .5s,padding .5s;max-height:9em;overflow:hidden}.hold.at0 .b-hud .stats{opacity:0;max-height:0;padding-block:0}
 .hold .b-band .chart{height:100%}
 .hold .b-band .cq{padding-top:calc(var(--u)*2);transition:opacity .4s;overflow:hidden auto;scrollbar-width:thin}
-.hold .b-band .moves{border-top:0;padding-top:0;font-size:calc(var(--u)*12.5)}
-.hold .b-band .moves p{padding:.2em 0}
 .hold .b-railbg{position:fixed;z-index:4;left:0;top:0;bottom:0;width:var(--rw);background:var(--paper);border-right:1px solid var(--hair);pointer-events:none}
 .hold .b-rail.wide button span{white-space:normal;max-width:calc(var(--rw) - var(--u)*52);line-height:1.05}
 .hold .b-rail{position:fixed;z-index:8;left:calc(var(--u)*16);top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:calc(var(--u)*13)}
@@ -222,9 +195,11 @@ body.firstpage .bar .loop{display:none}
 .hold .b-rail button.on i{background:var(--red);border-color:var(--red);transform:scale(1.2)}
 .hold .b-story{position:relative;z-index:3;pointer-events:none}
 .hold .sec{position:relative}
-.hold .sec .gap{height:46vh}
-.hold .sec .tail{height:88vh}
-.hold .card{position:sticky;top:var(--ctop);width:var(--cw);pointer-events:auto;background:var(--card);box-shadow:0 0 0 1.5px var(--ink);padding:calc(var(--u)*18) calc(var(--u)*20) calc(var(--u)*17);display:flex;flex-direction:column;gap:calc(var(--u)*11);container-type:inline-size}
+.hold .sec .gap{height:58vh}
+.hold .sec .gap.g1{display:none}
+.hold .sec .tail{height:52vh}
+.hold .card{position:sticky;top:var(--ctop);width:var(--cw);pointer-events:auto;background:var(--card);border:1px solid var(--hair);border-radius:calc(var(--u)*14);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);box-shadow:0 14px 40px rgba(0,0,0,.22);padding:calc(var(--u)*18) calc(var(--u)*20) calc(var(--u)*17);display:flex;flex-direction:column;gap:calc(var(--u)*11);container-type:inline-size}
+.hold:not(.night) .card{box-shadow:0 14px 40px rgba(30,50,80,.14)}
 .hold .sec:not(.years) .card.l{top:17vh}
 .hold .sec:not(.years) .card.r{top:21vh}
 .hold .card.l{margin-left:calc(50% + var(--rw)/2 - var(--S)/2 - var(--cw) + var(--ov))}
@@ -234,38 +209,27 @@ body.firstpage .bar .loop{display:none}
 .hold .card.r .n{left:calc(var(--u)*-11)}
 .hold .card .w-h{font-size:min(calc(var(--u)*70),22cqw)}
 .hold .card .w-d{font-size:calc(var(--u)*15.5)}
-.hold .card .w-q{border-left:0;padding-left:0}
-.hold .card .w-q p{font-size:calc(var(--u)*22)}
-.hold .card.q{background:var(--ink);color:var(--paper);box-shadow:none}
+.hold .card.q{background:var(--ink);color:var(--paper);border-color:transparent;-webkit-backdrop-filter:none;backdrop-filter:none}
+.hold .card.q .lnk{border-bottom-color:currentColor}.hold .card.q .lnk::after{color:inherit}.hold .card.q .lnk:hover{color:inherit;opacity:.75}
 .hold .card.q .w-q .mono{color:var(--red)}
-.hold .card .w-ways{border-top:1.5px solid var(--ink);padding-top:calc(var(--u)*10)}
+.hold .card .w-ways{border-top:1px solid var(--hair);padding-top:calc(var(--u)*10)}
 .hold .card.q .lnk{color:var(--paper)}
-.hold .card .mq{font-family:Gelasio,Georgia,serif;font-style:italic;font-size:calc(var(--u)*18);line-height:1.22;color:var(--mid);border-top:1px solid var(--hair);padding-top:calc(var(--u)*10)}
-.hold .card.wall .w-h{font-size:min(calc(var(--u)*56),17cqw)}
-.hold .card.wall{top:43vh}
+.hold .card .mq{font-family:var(--serif);font-style:italic;font-size:calc(var(--u)*18);line-height:1.22;color:var(--mid);border-top:1px solid var(--hair);padding-top:calc(var(--u)*10)}
+.hold .card.wall .w-h{font-size:min(calc(var(--u)*56),17cqw)}.hold .card.wall{top:var(--ctop)}
 .hold .sec.years .mom{position:absolute;left:0;right:0}
-.hold .b-end{height:70vh;display:grid;place-items:end center;padding-bottom:calc(var(--u)*40);color:var(--mid)}
 /* a card of the fifty years taller than the room above the hold button scrolls (hold.js marks it) */
 .hold .sec.years .card.sc{max-height:var(--cmax);overflow-y:auto}.hold .card.sc .n{top:6px;left:auto;right:8px}
 /* the page's part of the bar, fitted to its room (fitBar in hold.js) */
 .hbar>*{flex:none}.hbar .tl-n{white-space:nowrap}.hbar.f1 .b-chap b,.hbar.f2 .tl-n,.hbar.f3>.bbtn,.hbar.f5 .b-chap{display:none}
 .hbar.f4 .tally .sq{grid-template-columns:repeat(12,9px);gap:3px}.hbar.f4 .tally .sq button{height:9px}
-@media (max-width:760px){.hbar .tally .tl-n,.hbar .b-chap{display:none}
-.hbar .tally .sq{grid-template-columns:repeat(12,9px);gap:3px}
-.hbar .tally .sq button{height:9px}
-.hbar .tally .sq button::after{display:none}
-}
 /* the phone's layout: on a phone, a tablet held upright and a phone on its side (PHONE in src/v2/holdkit.js) */
-@media (max-width:760px),(max-width:1099px) and (max-aspect-ratio:23/20),(max-width:1099px) and (max-height:519px){.hold .b-stage{z-index:4;inset:var(--barH) 0 auto 0;height:var(--stageH);background:var(--paper);border-bottom:1.5px solid var(--ink);overflow:visible}
-.hold .b-ground{display:none}
-.hold .b-slot{transition:none}
+@media (max-width:760px),(max-width:1099px) and (max-aspect-ratio:23/20),(max-width:1099px) and (max-height:519px){.hold .b-stage{z-index:4;inset:var(--barH) 0 auto 0;height:var(--stageH);background:var(--paper);border-bottom:1.5px solid var(--ink)}
 .hold .b-hud{position:absolute;left:calc(50% - var(--S)/2);right:calc(50% - var(--S)/2);top:6px;width:auto;height:34px;flex-direction:row;align-items:baseline;gap:10px}
 .hold .b-hud .w-k,.hold .b-hud .stats,.hold .b-hud .say{display:none}
 .hold .b-hud .count{font-size:30px;display:flex;align-items:baseline;gap:8px}
 .hold .b-hud .count small{font-size:13px;margin:0}
 .hold .b-hold{left:auto;right:14px;width:auto;bottom:14px}
 .hold .card{background:var(--paper)}
-.hold .card.wall{top:var(--ctop)}
 .hold .sec:not(.years){display:flex;flex-direction:column}
 .hold .sec:not(.years)>:nth-child(1){order:1}
 .hold .sec:not(.years)>:nth-child(2){order:2}
@@ -281,7 +245,7 @@ body.firstpage .bar .loop{display:none}
 .hold .holdbtn{width:62px;height:62px;font-size:15px}
 .hold .b-hold .hint{display:none}
 .hold .b-band{position:fixed;top:calc(var(--barH) + var(--stageH) - var(--band) - 4px);bottom:auto;height:var(--band);padding:4px calc(50% - var(--S)/2 - 4px) 0;grid-template-columns:1fr;border-top:0;background:none;z-index:5}
-.hold .b-band .cq,.hold .b-band .moves{display:none!important}
+.hold .b-band .cq{display:none!important}
 .hold .b-band.off{transform:none;display:none}
 .hold .b-rail,.hold .b-railbg{display:none}
 .hold .b-story{z-index:2}
@@ -290,10 +254,6 @@ body.firstpage .bar .loop{display:none}
 .hold .card .w-h{font-size:46px}
 .hold .card .w-q p{font-size:20px}
 .hold .b-mk{width:18px;height:18px;font-size:11px;opacity:.92}
-.hold .sheet{padding:18px 16px 40px}
-.hold .sheet .cols{grid-template-columns:1fr}
-.hold .sheet header{flex-wrap:wrap}
-.hold .sheet h2{font-size:34px}
 }
 .hbar .d-mid{display:flex;align-items:center;gap:calc(var(--u)*14)}
 .hbar .d-map{display:grid;grid-template-columns:repeat(4,calc(var(--u)*14));grid-auto-rows:calc(var(--u)*10);gap:2px;padding:3px;border:1px solid var(--hair);background:var(--paper)}
@@ -302,8 +262,6 @@ body.firstpage .bar .loop{display:none}
 .hbar .d-map button.t{box-shadow:none;background:var(--hair)}
 .hbar .d-map button:hover{background:var(--ink)}
 .hbar .d-map button.on{background:var(--red);box-shadow:none}
-.hold .b-stage{overflow:hidden}
-.hold .b-slot{pointer-events:none;z-index:4;transition:none}
 .hold .b-hud{z-index:3}
 .hold .d-world{position:absolute;left:0;top:0;transform-origin:0 0;--rev:0;--dim:1;--words:0}
 .hold .dx{opacity:calc(var(--revx,0)*(1 - .8*var(--dim)))}
@@ -318,7 +276,7 @@ body.firstpage .bar .loop{display:none}
 .hold .dblk:not(.cur) .pl-ui,.hold .dblk:not(.cur) .pl-fr{opacity:var(--words)}
 /* the cards beside a block overlap its edges (--ov): its frame's words start and end clear of them and of their numbers */
 .hold .dblk .pl-fr{left:var(--ov);right:var(--ov)}
-.hold .dk b{font-family:'Anonymous Pro',monospace;font-weight:400;font-size:.4em;letter-spacing:.1em;color:var(--mid);margin-right:.8em;vertical-align:.5em}
+.hold .dk b{font-family:var(--mono);font-weight:400;font-size:.4em;letter-spacing:.1em;color:var(--mid);margin-right:.8em;vertical-align:.5em}
 .hold .dblk.viol.found .dk b{color:var(--red)}
 .hold .dv{position:absolute;inset:0;background:repeating-linear-gradient(-45deg,rgba(229,64,26,.34) 0 calc(var(--S)*.006),transparent calc(var(--S)*.006) calc(var(--S)*.03));box-shadow:inset 0 0 0 calc(var(--S)*.009) var(--red);opacity:0;pointer-events:none;transition:opacity .25s}
 .hold .dblk.found .dv{opacity:calc(1 - var(--dim))}
@@ -346,15 +304,12 @@ body.firstpage .bar .loop{display:none}
 .hold .d-world:not(.far) .d-pad{pointer-events:none}
 .hold .d-scan{position:absolute;top:0;bottom:0;left:0;width:calc(var(--S)*.008);background:var(--red);opacity:0;pointer-events:none}
 .hold .d-ycard,.hold .pullc{display:none}
-.hold .sec.pull{height:190vh}
-.hold .sec .tail{height:100vh}
-.hold .b-end{height:130vh;place-items:center;align-content:end}
-.hold .b-end span{background:var(--paper);padding:6px 12px;pointer-events:none}
+.hold .sec.pull{height:215vh}
 @media (max-width:760px),(max-width:1099px) and (max-height:519px){.hbar .d-mid{gap:6px}
 .hbar .d-map{grid-template-columns:repeat(4,8px);grid-auto-rows:6px;gap:1px;padding:2px}
 }
 @media (max-width:760px),(max-width:1099px) and (max-aspect-ratio:23/20),(max-width:1099px) and (max-height:519px){.hold .sec .tail{height:100vh}
-.hold .d-ycard{display:block;position:fixed;z-index:3;left:var(--cl);width:var(--cw);top:var(--ctop);background:var(--paper);box-shadow:0 0 0 1.5px var(--ink);padding:10px 14px;max-height:calc(100vh - var(--ctop) - var(--yb,8px));overflow-y:auto}
+.hold .d-ycard{display:block;position:fixed;z-index:3;left:var(--cl);width:var(--yw,var(--cw));top:var(--ctop);background:var(--card);border:1px solid var(--hair);border-radius:14px;-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);padding:10px 14px;max-height:calc(100vh - var(--ctop) - var(--yb,8px));overflow-y:auto}
 .hold .d-ycard.off{display:none}
 .hold .d-ycard .say{line-height:1.38}
 .hold .d-ycard .say:empty{display:none}
@@ -371,21 +326,15 @@ body.firstpage .bar .loop{display:none}
 .hold .b-hold.off{opacity:0;pointer-events:none}.hold .b-hold.off>*{pointer-events:none}
 /* the hold button past the wall: small, under the block the camera is on, out of the cards' way; on a phone, scrolling */
 .hold .b-hold.chip{left:calc(50% + var(--rw)/2 - var(--u)*27);width:auto;bottom:var(--hbB)}
-.hold .b-hold.chip .holdbtn{width:calc(var(--u)*54);height:calc(var(--u)*54);font-size:calc(var(--u)*14);box-shadow:0 0 0 calc(var(--u)*4) var(--paper),0 0 0 calc(var(--u)*5.5) var(--red)}
-.hold .sheet{padding-top:calc(var(--barH) + var(--u)*24)}
+.hold .b-hold.chip .holdbtn{width:calc(var(--u)*54);height:calc(var(--u)*54);font-size:calc(var(--u)*14);box-shadow:0 0 0 calc(var(--u)*4) var(--paper)}
+.hold .b-hold.chip .holdbtn::before{inset:calc(var(--u)*-6.5)}
 .hold .card.wall{top:var(--ctop)}
 /* the sources: from any mark's note, and at the end of the story */
-.hold .srcpop .all{display:block;margin-top:10px;color:var(--paper);opacity:.7;font-size:10.5px}
-.hold .srcpop .all:hover{opacity:1}
-.hold .b-end{gap:14px}.hold .b-end .bbtn{pointer-events:auto}
 .hold .d-cover{display:none}
 /* on a phone: the bar keeps the small chip and the challenges; the sources are at the end; nothing scrolls above the picture */
 @media (max-width:760px),(max-width:1099px) and (max-aspect-ratio:23/20),(max-width:1099px) and (max-height:519px){.hold .d-cover{display:block;position:fixed;z-index:4;left:0;right:0;top:0;height:var(--barH);background:var(--paper)}
 .hold .b-hold.chip,.hold .b-hold.quiet{display:none}
 .hold .sec.years .card{max-height:calc(100svh - var(--ctop) - 10px);overflow-y:auto;overscroll-behavior:contain}
-}
-@media (max-width:760px){.hbar{gap:6px;padding:0 2px 0 4px}.hbar .bbtn{display:none}
-.hbar .tally .sq{grid-template-columns:repeat(12,7px);gap:2px}.hbar .tally .sq button{height:7px;border-width:1px}
 }
 @media (max-width:760px),(max-width:1099px) and (max-aspect-ratio:23/20),(max-width:1099px) and (max-height:519px){.hold .sec.years .card .n{top:6px;right:8px!important}
 /* the frame's words above a picture: no corner marks, tighter, so a long name and its reading both fit */
@@ -404,3 +353,50 @@ body.firstpage .bar .loop{display:none}
 .hold .chart .lab .hv{font-size:max(11px,calc(var(--u)*11));color:var(--ink);white-space:nowrap;transform:translate(8px,0);padding:1px 5px;background:var(--paper);box-shadow:0 0 0 1px var(--hair)}
 .hold .chart .lab .hv.l{transform:translate(calc(-100% - 8px),0)}.hold .chart .lab .hv b{color:var(--red);font-weight:700}
 .hold .pl-ui .lb b{font-weight:700}
+/* the words' small furniture has the lab's round corners; the drawings and their controls stay square */
+.hold .bbtn{border-radius:999px;background:transparent}
+/* the way in, as the lab draws it (.wigo, frame.css); at the landing it fills as you push on (--land) */
+.hold .goin{position:absolute;transform:translate(-50%,-50%);display:inline-flex;align-items:center;gap:.6em;padding:.36em 1em .36em .36em;border-radius:999px;background:var(--go);color:var(--accent-ink);text-decoration:none;white-space:nowrap;font-size:max(13px,calc(var(--p)*25));line-height:1.1;box-shadow:0 10px 30px color-mix(in srgb,var(--go) 35%,transparent);overflow:hidden;transition:transform .15s}
+.hold .goin:hover{transform:translate(-50%,calc(-50% + 1px))}
+.hold .goin:focus-visible{outline:3px solid var(--ink);outline-offset:3px}
+.hold .goin b{font-weight:700;position:relative}
+.hold .goin .wia{display:grid;place-items:center;width:2em;height:2em;border-radius:50%;background:color-mix(in srgb,var(--accent-ink) 16%,transparent);font-weight:700;position:relative;flex:none}
+.hold .goin::before{content:"";position:absolute;inset:0;background:color-mix(in srgb,var(--accent-ink) 26%,transparent);transform-origin:0 50%;transform:scaleX(var(--land,0))}
+@media (prefers-reduced-motion:no-preference){.hold .goin .wia{animation:h-in 2.4s ease-in-out infinite}}
+@keyframes h-in{0%,100%{transform:translateY(0)}50%{transform:translateY(3px)}}
+/* a place on the island's plan: its square (drawn) and its words under it, over it, or at its right */
+.hold .isl-p{display:flex;flex-direction:column;align-items:center;gap:calc(var(--p)*10)}
+.hold .isl-p i{display:block;flex:none;width:calc(var(--p)*90);height:calc(var(--p)*90)}
+.hold .isl-p.a{flex-direction:column-reverse;transform:translateY(-100%)}
+.hold .isl-p.r{flex-direction:row;text-align:left}
+.hold .isl-p .lb{position:static;text-align:center;background:var(--plate);padding:1px 5px;white-space:normal;max-width:calc(var(--p)*250)}
+.hold .isl-p.r .lb{text-align:left}
+.hold .isl-p:hover .lb b{color:var(--red)}
+/* the landing: the island's block alone with its way in, the hold button at its right */
+.hold.landing .b-hold.chip{left:calc(50% + var(--rw)/2 + var(--LS)/2 + var(--u)*22);right:calc(var(--u)*14);bottom:var(--LB);width:auto}
+.hold.landing .b-hold .hint b{color:var(--go)}
+.hold.landing .holdbtn::before{background:conic-gradient(var(--go) calc(var(--pr,0)*1turn),var(--hair) 0)}
+/* the last words: left of the landing; the push is said by the hold button (on a phone, here) */
+.hold .b-end{height:150vh;display:grid;place-items:end start;align-content:end;gap:14px;padding:0 0 calc(var(--u)*40) calc(var(--rw) + var(--u)*28);color:var(--mid);text-align:left}
+.hold .b-end span{max-width:calc(50% - var(--rw)/2 - var(--LS)/2 - var(--u)*44);line-height:1.5;pointer-events:none}.hold .b-end .bbtn{pointer-events:auto}
+.hold .b-end .push{display:none}
+/* the count of challenges on a phone, in the bar */
+.hbar .tally .tl-c{display:none}
+@media (max-width:760px){.hbar{gap:6px;padding:0 2px 0 4px}.hbar .tally .sq,.hbar .tally .tl-n,.hbar .b-chap,.hbar .bbtn{display:none}
+.hbar .tally .tl-c{display:inline-flex;align-items:center;height:38px;padding:0 11px;border:1px solid var(--line);border-radius:999px;font-family:var(--mono);font-size:12px;letter-spacing:.04em;color:var(--mid)}
+.hbar .tally .tl-c b{color:var(--ink);margin-right:1px}
+.hbar .d-map{grid-template-columns:repeat(4,9px);grid-auto-rows:7px;gap:1px;padding:3px;border-radius:4px}}
+/* on a phone: a block's name, then its thing to try; before Moore's law rises, its place says how to move */
+@media (max-width:760px),(max-width:1099px) and (max-aspect-ratio:23/20),(max-width:1099px) and (max-height:519px){.hold .sec .gap.g1{display:block}
+.hold .b-band.wait{transform:none}.hold .b-band.wait .chart{visibility:hidden}
+.hold.fresh .b-band.wait .b-start{display:block;position:absolute;inset:0;padding:16px 2px 0;text-align:center;color:var(--mid);line-height:1.5;text-transform:none;letter-spacing:.02em;font-size:12px}
+.hold.chipm .b-stage{height:var(--stageH2)}.hold .b-stage{transition:height .45s cubic-bezier(.6,0,.2,1)}
+.hold .isl-p .lb b{white-space:nowrap}
+.hold .b-start b{display:block;color:var(--ink);font-weight:500}
+.hold .goin{font-size:13px}
+.hold .b-end{place-items:center;justify-items:center;align-content:start;margin-left:var(--cl);width:var(--cw);padding:22px 0 0;text-align:center;height:calc(100svh - var(--ctop))}
+.hold .b-end span{max-width:none}.hold .b-end .push{display:block;color:var(--ink)}}
+/* a short phone (most, with the browser's bars): shorter words under the picture */
+@media (max-width:760px) and (max-height:780px){.hold .card .w-h{font-size:36px}.hold .card.wall .w-h{font-size:32px}
+.hold .sec.years .card .mq{display:none}.hold .card{padding:13px 15px 12px;gap:8px}.hold .w-try .w-p{font-size:15.5px;margin:.25em 0 .35em}
+.hold .card .w-d{font-size:15px}.hold .d-ycard .say{font-size:14px}}
