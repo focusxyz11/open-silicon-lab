@@ -131,3 +131,75 @@ test('both goals can be met by a recipe nobody has built, the second far more ra
   const won = play(niche[0], 'archniche');
   assert.ok(won.year <= A.GOALS.archniche.years);
 });
+
+/* ---- stepping stones (#408): each direction improved in the lab that teaches it ---- */
+const ALL = A.broughtOf(Object.values(A.STONES).flat());
+
+test('a challenge won in a direction\'s lab is a stepping stone for that direction, the first of its list', () => {
+  assert.deepEqual(A.broughtOf({}), {});
+  assert.deepEqual(A.broughtOf({ flaky: true, dataflow: true, 'nobody-knows': true }), { errors: 'flaky', memory: 'dataflow' });
+  assert.deepEqual(A.broughtOf(['cim', 'dataflow', A.KEPT_SWITCH]), { memory: 'cim', device: A.KEPT_SWITCH });
+  assert.deepEqual(Object.keys(A.STONES).sort(), [...A.DIRS, 'people'].sort(), 'the six directions, no more');
+  assert.deepEqual(Object.keys(ALL).sort(), Object.keys(A.STONES).sort());
+  /* a stone named for another direction counts for nothing */
+  const s = A.start({ where: 'in', carrier: 'light', told: 'graph', shape: 'grid' }, { device: 'flaky' });
+  assert.deepEqual(s.stones, {});
+});
+
+test('a stone raises its direction\'s start once, whatever the recipe, and keeps it through a fork', () => {
+  const g = { where: 'in', carrier: 'spikes', told: 'graph', shape: 'grid' }, plain = A.start(g), st = A.start(g, { device: 'transistor', people: A.LEDGER_ENTRY });
+  assert.ok(Math.abs(st.start.device - Math.min(1, plain.start.device * A.STONE)) < 1e-12);
+  for (const d of A.DIRS) if (d !== 'device') assert.equal(st.start[d], plain.start[d], d);
+  assert.equal(st.people, A.PEOPLE_START * A.STONE_PEOPLE);
+  /* brought back in the middle of a game: once */
+  let s = A.year(A.start(g), ['memory']);
+  const b1 = A.bring(s, { device: 'transistor' }), b2 = A.bring(b1, { device: 'transistor' });
+  assert.ok(Math.abs(b1.start.device - s.start.device * A.STONE) < 1e-12);
+  assert.deepEqual(b2.start, b1.start);
+  /* a fork that loses the devices starts them again, with the stone */
+  for (let y = 0; y < 4; y++) s = A.year(A.bring(s, { device: 'transistor' }), ['device']);
+  const f = A.forkOf(s, 'carrier', 'light');
+  assert.equal(f.tries.device, 0);
+  assert.ok(Math.abs(f.start.device - A.startOf(f.g, f.stones).device) < 1e-12 && f.start.device > A.startOf(f.g).device);
+  assert.deepEqual(A.choose(A.start(A.TODAY, ALL), 'carrier', 'light').stones, ALL, 'a new recipe chosen before the first year keeps them');
+});
+
+test('the stones help, but no recipe meets a goal from stones alone: it still has to be grown', () => {
+  for (const g of fresh()) {
+    let s = A.start(g, ALL);
+    for (const n of A.NEEDS) assert.ok(A.scoreOf(s)[n].now < 1, A.keyOf(g) + ' ' + n + ' wins on day one');
+    for (let y = 0; y < A.GOALS.archniche.years; y++) { s = A.year(s, []); assert.equal(A.goalOf(s, 'archniche').met, false, A.keyOf(g) + ' wins with no attempts'); }
+  }
+  const R = fresh().filter((g, i) => i % 3 === 0);
+  const playWith = (g, stones) => { let s = A.start(g, stones); for (let y = 0; y < A.GOALS.archniche.years; y++) { s = A.year(s, y < 10 ? ['people', A.suggest(s, 'archniche').dirs[0]] : A.suggest(s, 'archniche').dirs); if (A.goalOf(s, 'archniche').met) return y + 1; } return null; };
+  const without = R.map(g => playWith(g, {})), withAll = R.map(g => playWith(g, ALL));
+  assert.ok(withAll.filter(Boolean).length > without.filter(Boolean).length, 'more recipes win a need with the stones');
+  assert.ok(R.every((g, i) => !without[i] || (withAll[i] && withAll[i] <= without[i])), 'and none later');
+});
+
+/* ---- the family tree (#409) ---- */
+test('the family tree keeps every start and fork as plain data, and the line the current recipe grew along', () => {
+  const a = { where: 'in', carrier: 'charge', told: 'graph', shape: 'stack' }, b = Object.assign({}, a, { shape: 'grid' });
+  let T = A.treeOf(A.TODAY);
+  /* choosing before the first year changes the start in place */
+  T = A.treeStart(T, a);
+  assert.equal(T.nodes.length, 1); assert.equal(T.nodes[0].g, A.keyOf(a));
+  T = A.treeYear(A.treeYear(T, []), ['wildfire']);
+  T = A.treeFork(T, b, 2);
+  assert.deepEqual(T.nodes.map(n => [n.id, n.from, n.how, n.at]), [[0, null, 'start', 0], [1, 0, 'fork', 2]]);
+  assert.deepEqual(T.nodes[0].won, ['wildfire']); assert.equal(T.nodes[0].grown, 2);
+  T = A.treeYear(T, ['wildfire', 'hearing']);
+  assert.deepEqual(A.lineOf(T).map(n => n.id), [0, 1]);
+  /* back to the first: a new start from it */
+  T = A.treeStart(T, A.recipeOf(T.nodes[0].g), 0);
+  assert.deepEqual(T.nodes.map(n => [n.id, n.from, n.how]), [[0, null, 'start'], [1, 0, 'fork'], [2, 0, 'back']]);
+  assert.deepEqual(A.lineOf(T).map(n => n.id), [2]);
+  assert.deepEqual(A.recipeOf(A.keyOf(b)), b);
+  /* nothing grown on it yet: a start from the map takes its place */
+  T = A.treeStart(T, b);
+  assert.equal(T.nodes.length, 3); assert.equal(T.nodes[2].g, A.keyOf(b)); assert.equal(T.nodes[2].from, 0);
+  assert.deepEqual(JSON.parse(JSON.stringify(T)), T, 'plain data');
+  /* every year's line says the best need's score after it */
+  const s = A.year(A.start(a), ['device']);
+  assert.equal(s.log[0].best, Math.max(...A.NEEDS.map(n => A.scoreOf(s)[n].now)));
+});
