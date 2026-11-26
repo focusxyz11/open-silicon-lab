@@ -20,7 +20,12 @@
                and, in its words, the reason, one line no check could give. Only a person or an AI chooses (not both
                at once, so the two can be told apart), and once per need under a name;
                or an attempt at a front where two lenses meet (#326, FRONTS below): the values of the front's two
-               controls, a point the front's model places on its chart; new among the attempts there.
+               controls, a point the front's model places on its chart; new among the attempts there;
+               or an attempt at an architecture nobody has built (#410, src/engines/arch.js): its history (the recipe
+               it started from, the focus of each year, the forks and stones in order) and the needs it claims its
+               recipe wins at the end. The ledger grows it again with the same engine: a claimed win the replay does
+               not reach is refused with a reason. The first attempt to win a need nobody had won with a new
+               recipe counts most, and the first to win with a recipe marks its square on the map.
      question  a question with a home: a level, perhaps a part of it and the question it sits under.
      report    the lab itself broken, by anyone, at any time: where (the site's address, perhaps a part), what kind
                (wrong, confusing, does not work, could be better) and the words. Feedback is not a stage of a plan:
@@ -49,6 +54,7 @@ import { machine as runMachine, beats as machineBeats } from './machine.js';
 import { needOf as machineNeed } from '../data/blocks.js';
 import { NEEDS as CHOICE_NEEDS, designOf as choiceOf, reasonOk } from './thousand.js';
 import { kitchen, levelOf as chefLevel, problem as chefProblem, normalPlan as chefPlan, LEVER_IDS as CHEF_LEVERS } from './bits.js';
+import * as Arch from './arch.js';
 
 export const KINDS = ['design', 'break', 'try', 'question', 'report', 'fix'];
 /* what a report says about the lab */
@@ -62,7 +68,7 @@ const FIELDS = {
   break: ['kind', 'of', 'by', 'made', 'ai', 'words', 'case', 'about'],
   /* a try: cases that were meant to break a design and did not. The trace of an attack that failed: what a
      design has survived is why it can be trusted, and where the next attacker need not look */
-  try: ['kind', 'of', 'by', 'made', 'ai', 'words', 'cases', 'puzzle', 'machine', 'chef', 'front', 'plan', 'choice', 'pick', 'about'],
+  try: ['kind', 'of', 'by', 'made', 'ai', 'words', 'cases', 'puzzle', 'machine', 'chef', 'front', 'plan', 'choice', 'pick', 'arch', 'about'],
   question: ['kind', 'at', 'part', 'under', 'q', 'noticed', 'by', 'made', 'ai', 'about'],
   report: ['kind', 'at', 'part', 'say', 'words', 'by', 'made', 'ai'],
   fix: ['kind', 'of', 'words', 'pr', 'by', 'made', 'ai']
@@ -165,7 +171,7 @@ export function checkEntry(e, W) {
      need (src/engines/thousand.js LEAN): the ledger keeps the choice, and never ranks it */
   if (e.kind === 'try' && e.choice != null) {
     if (!own(CHOICE_NEEDS, e.choice)) return no('choice');
-    if (e.of != null || e.cases != null || e.puzzle != null || e.machine != null || e.chef != null || e.front != null || e.plan != null) return no('fields');
+    if (e.of != null || e.cases != null || e.puzzle != null || e.machine != null || e.chef != null || e.front != null || e.plan != null || e.arch != null) return no('fields');
     if (e.made !== 'person' && e.made !== 'ai') return no('chooser');
     const d = typeof e.pick === 'string' ? choiceOf(e.choice, e.pick) : null; if (!d) return no('pick');
     if (!plain(e.words, 0, 300) || !reasonOk(e.words)) return no('reason');
@@ -173,6 +179,19 @@ export function checkEntry(e, W) {
     return { ok: true, facts: { lean: d.lean } };
   }
   if (e.kind === 'try' && e.pick != null) return no('fields');
+  /* an attempt at an architecture: a history the engine can grow, new among the attempts, grown again here; every need it
+     claims must be won by its recipe at the end of the replay. Its facts are the replay's */
+  if (e.kind === 'try' && e.arch != null) {
+    if (e.of != null || e.cases != null || e.puzzle != null || e.machine != null || e.chef != null || e.front != null || e.plan != null) return no('fields');
+    if (!plain(e.words || '', 0, 300)) return no('words');
+    if (!Arch.histOk(e.arch)) return no('arch');
+    if ((W.arch || []).some(id => Arch.histKey(W.byId[id].arch) === Arch.histKey(e.arch))) return no('same');
+    const R = Arch.replay(e.arch), miss = e.arch.wins.filter(n => !R.wins.includes(n));
+    if (miss.length) return no('archWin', { need: miss[0], reached: R.wins });
+    const kn = Arch.knownOf(R.st.g);
+    return { ok: true, facts: { g: Arch.keyOf(R.st.g), wins: Arch.NEEDS.filter(n => e.arch.wins.includes(n)), reached: R.wins, years: R.st.year, forks: (e.arch.changes || []).filter(c => c.gene != null).length,
+      attempts: Math.round(R.st.log.reduce((a, x) => a + x.attempts, 0)), novelty: Arch.novelty(R.st.g), built: kn ? kn.id : null } };
+  }
   /* an attempt at a front: its two controls' values, new among the attempts there; where it lands is the front's model's */
   if (e.kind === 'try' && e.front != null) {
     const F = own(FRONTS, e.front) ? FRONTS[e.front] : null; if (!F) return no('front');
@@ -275,7 +294,7 @@ export function checkEntry(e, W) {
 const table = () => Object.create(null);
 const beats = (a, b) => a.facts.transistors <= b.facts.transistors && a.facts.ps <= b.facts.ps && (a.facts.transistors < b.facts.transistors || a.facts.ps < b.facts.ps);
 export function settle(list) {
-  const W = { entries: [], byId: table(), pieces: table(), cases: table(), puzzles: table(), machines: table(), chef: table(), fronts: table(), choices: table(), refused: [], feed: [] };
+  const W = { entries: [], byId: table(), pieces: table(), cases: table(), puzzles: table(), machines: table(), chef: table(), fronts: table(), choices: table(), arch: [], refused: [], feed: [] };
   const key = x => (isObj(x) && typeof x.id === 'string' ? x.id : '');
   (Array.isArray(list) ? list : []).slice().sort((a, b) => (key(a) < key(b) ? -1 : key(a) > key(b) ? 1 : 0)).forEach(raw => {
     const mark = r => ({ ok: r.ok, reason: r.reason || null, facts: r.facts || null, state: null, brokenBy: null, breaks: [], tries: [] });
@@ -292,6 +311,7 @@ export function settle(list) {
       W.pieces[T.piece].map(id => W.byId[id]).filter(d => d.state === 'right').forEach(d => { const x = runCase(p, d.code, e.case); if (x && x.first >= 0) { d.state = 'broken'; d.brokenBy = e.id; e.breaks.push(d.id); } });
       e.state = 'stands'; W.feed.push({ type: 'broke', id: e.id });
     } else if (e.kind === 'try' && e.choice != null) { (W.choices[e.choice] = W.choices[e.choice] || []).push(e.id); e.state = 'stands'; W.feed.push({ type: 'chose', id: e.id }); }
+    else if (e.kind === 'try' && e.arch != null) { W.arch.push(e.id); e.state = 'tried'; W.feed.push({ type: 'attempted', id: e.id }); }
     else if (e.kind === 'try' && e.front != null) { (W.fronts[e.front] = W.fronts[e.front] || []).push(e.id); e.state = 'stands'; W.feed.push({ type: 'attempted', id: e.id }); }
     else if (e.kind === 'try' && e.chef != null) { (W.chef[e.chef] = W.chef[e.chef] || []).push(e.id); e.state = 'front'; W.feed.push({ type: 'attempted', id: e.id }); }
     else if (e.kind === 'try' && e.machine != null) { (W.machines[e.machine] = W.machines[e.machine] || []).push(e.id); e.state = 'front'; W.feed.push({ type: 'attempted', id: e.id }); }
@@ -343,6 +363,16 @@ export function settle(list) {
     const H = A.filter(a => a.state === 'front').sort((a, b) => f(a).wait - f(b).wait || f(a).energy - f(b).energy);
     if (H.length) W.bestChef[lv] = H[0].id;
   });
+  /* the architectures' standings, in the order kept: the first attempt to win a need with a recipe nobody has built, at
+     least two genes from today's (the goals' rule), is first in that niche, and counts most; the first to win any need
+     with a recipe marks its square. An attempt that wins after them stands; one that wins nothing is an attempt, kept */
+  W.archFirst = table(); W.archSquare = table();
+  W.arch.forEach(id => { const e = W.byId[id], F = e.facts, counts = !F.built && F.novelty >= 2;
+    e.firstIn = counts ? F.wins.filter(n => !W.archFirst[n]) : [];
+    e.firstIn.forEach(n => { W.archFirst[n] = id; });
+    e.marks = counts && F.wins.length > 0 && !W.archSquare[F.g];
+    if (e.marks) W.archSquare[F.g] = id;
+    e.state = e.firstIn.length ? 'first' : e.marks ? 'marks' : F.wins.length ? 'won' : 'tried'; });
   /* who checks whom: for every break, who made the design and who made the break */
   W.cross = {}; W.entries.filter(e => (e.kind === 'break' || e.kind === 'try') && e.of).forEach(e => { const k = W.byId[e.of].made + '>' + e.made; W.cross[k] = (W.cross[k] || 0) + 1; });
   /* who makes what: entries by kind and by maker */
@@ -430,6 +460,14 @@ export function frontAttemptsAt(W, key, score) {
 export function choicesAt(W, need) {
   const all = ((W.choices || {})[need] || []).map(id => W.byId[id]);
   return { people: all.filter(e => e.made === 'person'), agents: all.filter(e => e.made === 'ai') };
+}
+/* the attempts at an architecture, in the order kept, as two groups never mixed: people's (a person, a person with AI,
+   and the lab's examples, played by hand) and agents' (an AI, or a program that searches); with the first to win each
+   need (need -> id) and the first to win with each recipe (key -> id). Read from the entries alone: nobody votes */
+export const ARCH_AGENTS = ['ai', 'program'];
+export function archAttempts(W) {
+  const all = (W.arch || []).map(id => W.byId[id]);
+  return { all, people: all.filter(e => !ARCH_AGENTS.includes(e.made)), agents: all.filter(e => ARCH_AGENTS.includes(e.made)), first: W.archFirst || table(), square: W.archSquare || table() };
 }
 /* the attempts at a puzzle, the best first, then those on the frontier, then the newest */
 export const attemptsAt = (W, z) => (W.puzzles[z] || []).map(id => W.byId[id]).sort((a, b) => (W.best[z] === b.id) - (W.best[z] === a.id) || (a.state === 'front' ? 0 : 1) - (b.state === 'front' ? 0 : 1) || (a.id < b.id ? 1 : -1));

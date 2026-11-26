@@ -32,9 +32,6 @@ import { t, has } from '../core/i18n.js';
 import { whereOf, LOG_PAGES } from '../engines/way.js';
 import { challengeOf } from './loop.js';
 
-/* the choice an earlier visit kept (?frame=1 or 2, when the two frames were compared) means nothing now */
-try { localStorage.removeItem('osl-frame'); } catch (e) { /* no storage */ }
-
 let booted = false;
 export function boot() {
   if (booted) return; booted = true;
@@ -78,7 +75,7 @@ export const reading = (h = location.hash) => READING.includes(routeOf(h));
    opened from it or from the address, and the first page for the map itself, so it never names the page you are on */
 export const backOf = (h, from, fromLog) => (fromLog ? '#/log' : from || (LOGS.includes(routeOf(h)) ? '#/' : '#/log'));
 /* the name of where an address is: its level, else its place, else the map */
-export const nameOf = h => { const k = routeOf(h); if (!k || k === 'home') return t('frame2.backFirst'); if (k === 'log') return t('frame2.backMap');
+export const nameOf = h => { const k = routeOf(h); if (!k || k === 'home' || k === 'hold') return t('frame2.backFirst'); if (k === 'log') return t('frame2.backMap');
   let W = null; try { W = whereOf(h); } catch (e) { W = null; }
   return W && W.level && has('depth.' + W.level + '.name') ? t('depth.' + W.level + '.name') : W && W.place && has('map.' + W.place + '.t') ? t('map.' + W.place + '.t') : k === 'island' ? t('map.home') : k === 'log' ? t('loop.log') : t('frame2.backMap'); };
 /* a reading page: its head (kicker, title, the line under it), its picture and its words. Without a picture the

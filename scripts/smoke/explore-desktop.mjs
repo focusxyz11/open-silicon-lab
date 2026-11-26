@@ -45,6 +45,10 @@ async function handles() {
   await page.evaluate(() => { const b = document.querySelector('.lensbar [data-lens="heat"]'); if (b) b.click(); });
   await page.waitForFunction(() => !!document.querySelector('.lensbar [data-lens="look"][aria-pressed="true"]'), null, { timeout: 10000 })
     .catch(() => problems.push(tag + ': after What if?, tapping the lens the bar shows pressed does not turn it off'));
+  /* every lens says its name without a hover (#381) */
+  await page.mouse.move(640, 760);
+  await page.waitForFunction(() => { const n = [...document.querySelectorAll('.lensbar [data-lens] .nm')]; return n.length === 5 && n.every(e => e.getBoundingClientRect().width > 0 && e.textContent.trim()); }, null, { timeout: 10000 })
+    .catch(() => problems.push(tag + ': the lens buttons do not all show their names'));
   /* zoomed out, the island's places fold into one name, and it stays a name: it once took the first page's .home and
      covered the whole picture */
   const far = await page.waitForFunction(() => {

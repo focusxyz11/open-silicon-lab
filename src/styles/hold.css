@@ -3,7 +3,7 @@
    (prototype D: B's story on A's chip); day or night as the lab is set, all the way down. Everything is scoped to .hold;
    the page's part of the lab's bar (the small chip, the chapter, the challenges, the sources) to .hbar. The picture is
    pinned to the window (.b-stage, the chip under a camera: .d-world); the story scrolls over it (.b-story, its cards). */
-.home.holdhome{padding-top:0;background:#efece3;overscroll-behavior:contain;scrollbar-width:none}
+.home.holdhome{padding-top:0;background:#efece3;overscroll-behavior:contain;overflow-anchor:none;scrollbar-width:none}
 .home.holdhome::-webkit-scrollbar{display:none}
 .home.holdhome.hold-night{background:#131210}
 body.firstpage .bar .loop{display:none}
@@ -32,8 +32,11 @@ body.firstpage .bar .loop{display:none}
 .hold .bbtn,.hbar .bbtn{height:calc(var(--u)*30);padding:0 calc(var(--u)*11);border:1px solid var(--hair);display:inline-flex;align-items:center;gap:6px;color:var(--mid);transition:color .2s,border-color .2s;background:var(--paper)}
 .hold .bbtn:hover,.hbar .bbtn:hover{color:var(--ink);border-color:var(--ink)}
 .hold .bbtn.round,.hbar .bbtn.round{width:calc(var(--u)*30);padding:0;justify-content:center;border-radius:50%}
-.hold .src{display:inline-block;font-family:'Anonymous Pro',monospace;font-size:.72em;line-height:1;color:var(--mid);vertical-align:.25em;margin-left:.2em;width:1.25em;height:1.25em;border:1px solid var(--hair);border-radius:50%;text-align:center;transition:color .15s,border-color .15s,background .15s}
+.hold .src{position:relative;display:inline-block;font-family:'Anonymous Pro',monospace;font-size:.72em;line-height:1;color:var(--mid);vertical-align:.25em;margin-left:.2em;width:1.25em;height:1.25em;border:1px solid var(--hair);border-radius:50%;text-align:center;transition:color .15s,border-color .15s,background .15s}
 .hold .src:hover,.hold .src.on{color:var(--paper);background:var(--red);border-color:var(--red)}
+/* a source mark is small to see and 24 px to the touch; the page's heading and voice are for a screen reader; skip to the story leads past the bar */
+.hold .src::after{content:'';position:absolute;inset:calc(50% - 12px)}.hold .vh{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;opacity:0}
+.hskip{position:absolute;left:8px;top:-90px;z-index:9;padding:8px 14px;border:0;border-radius:6px;background:#e5401a;color:#fff;font:600 14px 'DM Sans',sans-serif}.hskip:focus{top:8px}
 .hold .srcpop{position:fixed;z-index:60;width:min(300px,calc(100vw - 24px));background:var(--ink);color:var(--paper);padding:13px 15px 12px;font-size:13.5px;line-height:1.38;opacity:0;pointer-events:none;transform:translateY(4px);transition:opacity .15s,transform .15s}
 .hold .srcpop.on{opacity:1;pointer-events:auto;transform:none}
 .hold .srcpop .mono{font-size:10.5px;opacity:.6;display:block;margin-bottom:5px}
@@ -72,7 +75,7 @@ body.firstpage .bar .loop{display:none}
 .hold .lb.hot{color:var(--red)}
 .hold .lb.col{white-space:normal;width:23%}
 .hold .lb.wrap{white-space:normal;max-width:44%}
-.hold .lb.wrap.side{max-width:17%}
+.hold .lb.wrap.side{max-width:min(17%,calc(18.2% - var(--ov,0px) - 6px))} /* the next fifty's "behind", ending at 18.2%: clear of the card over the block's edge */
 .hold .lb.up{transform:translate(0,-100%)}
 .hold .lb.r.up{transform:translate(-100%,-100%)}
 .hold .pl-ui .pbtn{white-space:normal;line-height:1.15}
@@ -108,6 +111,7 @@ body.firstpage .bar .loop{display:none}
 .hold .w-h{margin:0;font-size:calc(var(--u)*72)}
 .hold .w-d{font-size:calc(var(--u)*16.5);line-height:1.4}
 .hold .w-note{color:var(--mid);margin-top:.7em;font-size:calc(var(--u)*10.5)}
+.hold .w-note i,.hold .w-note em{text-transform:none;letter-spacing:.02em}.hold .w-note em{font-style:normal}
 .hold .w-try .w-k{color:var(--red)}
 .hold .w-try .w-p{font-weight:600;font-size:calc(var(--u)*16.5);margin:.35em 0 .5em;line-height:1.3}
 .hold .w-out{min-height:2.8em;font-size:calc(var(--u)*14.5);line-height:1.4}
@@ -241,14 +245,21 @@ body.firstpage .bar .loop{display:none}
 .hold .card.wall{top:43vh}
 .hold .sec.years .mom{position:absolute;left:0;right:0}
 .hold .b-end{height:70vh;display:grid;place-items:end center;padding-bottom:calc(var(--u)*40);color:var(--mid)}
+/* a card of the fifty years taller than the room above the hold button scrolls (hold.js marks it) */
+.hold .sec.years .card.sc{max-height:var(--cmax);overflow-y:auto}.hold .card.sc .n{top:6px;left:auto;right:8px}
+/* the page's part of the bar, fitted to its room (fitBar in hold.js) */
+.hbar>*{flex:none}.hbar .tl-n{white-space:nowrap}.hbar.f1 .b-chap b,.hbar.f2 .tl-n,.hbar.f3>.bbtn,.hbar.f5 .b-chap{display:none}
+.hbar.f4 .tally .sq{grid-template-columns:repeat(12,9px);gap:3px}.hbar.f4 .tally .sq button{height:9px}
 @media (max-width:760px){.hbar .tally .tl-n,.hbar .b-chap{display:none}
 .hbar .tally .sq{grid-template-columns:repeat(12,9px);gap:3px}
 .hbar .tally .sq button{height:9px}
 .hbar .tally .sq button::after{display:none}
-.hold .b-stage{z-index:4;inset:var(--barH) 0 auto 0;height:var(--stageH);background:var(--paper);border-bottom:1.5px solid var(--ink);overflow:visible}
+}
+/* the phone's layout: on a phone, a tablet held upright and a phone on its side (PHONE in src/v2/holdkit.js) */
+@media (max-width:760px),(max-width:1099px) and (max-aspect-ratio:23/20),(max-width:1099px) and (max-height:519px){.hold .b-stage{z-index:4;inset:var(--barH) 0 auto 0;height:var(--stageH);background:var(--paper);border-bottom:1.5px solid var(--ink);overflow:visible}
 .hold .b-ground{display:none}
 .hold .b-slot{transition:none}
-.hold .b-hud{position:absolute;left:14px;right:14px;top:6px;width:auto;height:34px;flex-direction:row;align-items:baseline;gap:10px}
+.hold .b-hud{position:absolute;left:calc(50% - var(--S)/2);right:calc(50% - var(--S)/2);top:6px;width:auto;height:34px;flex-direction:row;align-items:baseline;gap:10px}
 .hold .b-hud .w-k,.hold .b-hud .stats,.hold .b-hud .say{display:none}
 .hold .b-hud .count{font-size:30px;display:flex;align-items:baseline;gap:8px}
 .hold .b-hud .count small{font-size:13px;margin:0}
@@ -269,16 +280,16 @@ body.firstpage .bar .loop{display:none}
 .hold .sec .tail{height:70vh}
 .hold .holdbtn{width:62px;height:62px;font-size:15px}
 .hold .b-hold .hint{display:none}
-.hold .b-band{position:fixed;top:calc(var(--barH) + var(--stageH) - var(--band) - 4px);bottom:auto;height:var(--band);padding:4px 10px 0;grid-template-columns:1fr;border-top:0;background:none;z-index:5}
+.hold .b-band{position:fixed;top:calc(var(--barH) + var(--stageH) - var(--band) - 4px);bottom:auto;height:var(--band);padding:4px calc(50% - var(--S)/2 - 4px) 0;grid-template-columns:1fr;border-top:0;background:none;z-index:5}
 .hold .b-band .cq,.hold .b-band .moves{display:none!important}
 .hold .b-band.off{transform:none;display:none}
 .hold .b-rail,.hold .b-railbg{display:none}
 .hold .b-story{z-index:2}
-.hold .card,.hold .card.l,.hold .card.r{margin-left:14px;width:calc(100vw - 28px)}
+.hold .card,.hold .card.l,.hold .card.r{margin-left:var(--cl);width:var(--cw)}
 .hold .card .n{left:auto!important;right:14px!important}
 .hold .card .w-h{font-size:46px}
 .hold .card .w-q p{font-size:20px}
-.hold .b-mk{width:18px;height:18px;font-size:10px;opacity:.92;margin-top:-14px}
+.hold .b-mk{width:18px;height:18px;font-size:11px;opacity:.92}
 .hold .sheet{padding:18px 16px 40px}
 .hold .sheet .cols{grid-template-columns:1fr}
 .hold .sheet header{flex-wrap:wrap}
@@ -294,14 +305,19 @@ body.firstpage .bar .loop{display:none}
 .hold .b-stage{overflow:hidden}
 .hold .b-slot{pointer-events:none;z-index:4;transition:none}
 .hold .b-hud{z-index:3}
-.hold .d-world{position:absolute;left:0;top:0;transform-origin:0 0;--rev:0;--dim:1}
+.hold .d-world{position:absolute;left:0;top:0;transform-origin:0 0;--rev:0;--dim:1;--words:0}
 .hold .dx{opacity:calc(var(--revx,0)*(1 - .8*var(--dim)))}
 .hold .d-edge{position:absolute;border:calc(var(--S)*.005) solid var(--ink);pointer-events:none}
 .hold .dblk{position:absolute;opacity:calc(var(--rev)*(1 - .74*var(--dim)))}
 .hold .dblk.cur{opacity:1}
 .hold .dblk .plate{position:absolute;inset:0;pointer-events:none}
 .hold .dblk.live .plate{pointer-events:auto}
-.hold .dk{position:absolute;left:0;bottom:calc(100% + var(--u)*26);font-size:calc(var(--S)*.074);white-space:nowrap;line-height:1;opacity:calc(var(--rev)*(1 - var(--dim)))}
+.hold .dk{position:absolute;left:0;bottom:calc(100% + var(--u)*26);font-size:calc(var(--S)*.074);white-space:nowrap;line-height:1;opacity:var(--words)}
+/* around the block the camera is on, the rest of the chip is drawings: the other blocks' words, the pads and the chip's
+   title show only while the camera sees the whole chip (--words, from the camera's zoom) */
+.hold .dblk:not(.cur) .pl-ui,.hold .dblk:not(.cur) .pl-fr{opacity:var(--words)}
+/* the cards beside a block overlap its edges (--ov): its frame's words start and end clear of them and of their numbers */
+.hold .dblk .pl-fr{left:var(--ov);right:var(--ov)}
 .hold .dk b{font-family:'Anonymous Pro',monospace;font-weight:400;font-size:.4em;letter-spacing:.1em;color:var(--mid);margin-right:.8em;vertical-align:.5em}
 .hold .dblk.viol.found .dk b{color:var(--red)}
 .hold .dv{position:absolute;inset:0;background:repeating-linear-gradient(-45deg,rgba(229,64,26,.34) 0 calc(var(--S)*.006),transparent calc(var(--S)*.006) calc(var(--S)*.03));box-shadow:inset 0 0 0 calc(var(--S)*.009) var(--red);opacity:0;pointer-events:none;transition:opacity .25s}
@@ -321,6 +337,7 @@ body.firstpage .bar .loop{display:none}
 .hold .d-title .st{color:var(--mid);font-size:calc(var(--S)*.027);border-top:1px solid var(--hair);padding-top:.7em;margin-top:1em;line-height:1.5}
 .hold .d-title .st b{color:var(--red);font-weight:400}
 .hold .d-reg{position:absolute;border:calc(var(--S)*.004) dashed var(--red);pointer-events:none}
+.hold .d-pad.dx,.hold .d-title.dx{opacity:calc(var(--revx,0)*var(--words))}
 .hold .d-pad{position:absolute;transform:translate(-50%,-50%);display:flex;align-items:center;gap:.7em;font-size:calc(var(--S)*.05);white-space:nowrap;color:var(--mid)}
 .hold .d-pad i{width:1.5em;height:1.5em;background:var(--ink);display:block;flex:none;transition:background .2s}
 .hold .d-pad.lit i,.hold .d-pad:hover i{background:var(--red)}
@@ -333,17 +350,17 @@ body.firstpage .bar .loop{display:none}
 .hold .sec .tail{height:100vh}
 .hold .b-end{height:130vh;place-items:center;align-content:end}
 .hold .b-end span{background:var(--paper);padding:6px 12px;pointer-events:none}
-@media (max-width:760px){.hbar .d-mid{gap:6px}
+@media (max-width:760px),(max-width:1099px) and (max-height:519px){.hbar .d-mid{gap:6px}
 .hbar .d-map{grid-template-columns:repeat(4,8px);grid-auto-rows:6px;gap:1px;padding:2px}
-.hold .b-stage{overflow:hidden}
-.hold .sec .tail{height:100vh}
-.hold .d-ycard{display:block;position:fixed;z-index:3;left:14px;right:14px;top:var(--ctop);background:var(--paper);box-shadow:0 0 0 1.5px var(--ink);padding:10px 14px;max-height:calc(100vh - var(--ctop) - 8px);overflow-y:auto}
+}
+@media (max-width:760px),(max-width:1099px) and (max-aspect-ratio:23/20),(max-width:1099px) and (max-height:519px){.hold .sec .tail{height:100vh}
+.hold .d-ycard{display:block;position:fixed;z-index:3;left:var(--cl);width:var(--cw);top:var(--ctop);background:var(--paper);box-shadow:0 0 0 1.5px var(--ink);padding:10px 14px;max-height:calc(100vh - var(--ctop) - var(--yb,8px));overflow-y:auto}
 .hold .d-ycard.off{display:none}
-.hold .d-ycard .say{font-size:15px;line-height:1.38}
+.hold .d-ycard .say{line-height:1.38}
 .hold .d-ycard .say:empty{display:none}
 .hold .d-ycard .cost{display:flex;align-items:baseline;gap:.5em;margin-top:.3em}
 .hold .d-ycard .cost b{font-family:Anton,sans-serif;font-weight:400;font-size:28px;color:var(--red)}
-.hold .d-ycard .cq{margin-top:8px;padding:8px 70px 0 0;border-top:1px solid var(--hair);font-size:13px}
+.hold .d-ycard .cq{margin-top:8px;padding:8px 0 0;border-top:1px solid var(--hair);font-size:13px}
 .hold .d-ycard .say{font-size:14px}
 .hold .b-band .chart .ser-t button:not(.on){display:none}
 .hold .pullc{display:flex}
@@ -362,14 +379,28 @@ body.firstpage .bar .loop{display:none}
 .hold .srcpop .all:hover{opacity:1}
 .hold .b-end{gap:14px}.hold .b-end .bbtn{pointer-events:auto}
 .hold .d-cover{display:none}
-@media (max-width:760px){
 /* on a phone: the bar keeps the small chip and the challenges; the sources are at the end; nothing scrolls above the picture */
-.hold .d-cover{display:block;position:fixed;z-index:4;left:0;right:0;top:0;height:var(--barH);background:var(--paper)}
+@media (max-width:760px),(max-width:1099px) and (max-aspect-ratio:23/20),(max-width:1099px) and (max-height:519px){.hold .d-cover{display:block;position:fixed;z-index:4;left:0;right:0;top:0;height:var(--barH);background:var(--paper)}
 .hold .b-hold.chip,.hold .b-hold.quiet{display:none}
 .hold .sec.years .card{max-height:calc(100svh - var(--ctop) - 10px);overflow-y:auto;overscroll-behavior:contain}
-.hbar{gap:6px;padding:0 2px 0 4px}.hbar .bbtn{display:none}
+}
+@media (max-width:760px){.hbar{gap:6px;padding:0 2px 0 4px}.hbar .bbtn{display:none}
 .hbar .tally .sq{grid-template-columns:repeat(12,7px);gap:2px}.hbar .tally .sq button{height:7px;border-width:1px}
 }
-@media (max-width:760px){.hold .sec.years .card .n{top:6px;right:8px!important}
+@media (max-width:760px),(max-width:1099px) and (max-aspect-ratio:23/20),(max-width:1099px) and (max-height:519px){.hold .sec.years .card .n{top:6px;right:8px!important}
 /* the frame's words above a picture: no corner marks, tighter, so a long name and its reading both fit */
 .hold .pl-fr{letter-spacing:.04em;gap:8px}.hold .pl-fr span:first-child::before,.hold .pl-fr span:last-child::after{display:none}}
+/* a phone on its side: the picture at the left, as tall as the window; the count, the curve and the hold button at the
+   right, above the story */
+@media (min-width:761px) and (max-width:1099px) and (max-height:519px){body.firstpage .bar{top:8px;padding:6px 6px 6px 10px}body.firstpage .bar .round,body.firstpage .langbtn{height:34px}body.firstpage .bar .round{width:34px}
+.hold .b-stage{right:auto;width:var(--stageW);height:auto;bottom:0;border-bottom:0;border-right:1.5px solid var(--ink)}
+.hold .b-hud,.hold .b-band{position:fixed;left:var(--cl);right:auto;width:calc(var(--cw) - 78px)}
+.hold .b-hud{top:calc(var(--barH) + 4px)}.hold .b-band{top:calc(var(--barH) + 38px);padding:0}
+.hold .b-hold{right:auto;left:calc(var(--cl) + var(--cw) - 62px);bottom:auto;top:calc(var(--barH) + 22px)}}
+@media (min-width:761px) and (max-width:1099px){.hold .b-mk{font-size:11px}.hold .mtile b{font-size:max(11px,.92em)!important}}
+/* on a tablet held upright and a phone on its side, a card that stays while you read ends inside the window */
+@media (min-width:761px) and (max-width:1099px) and (max-aspect-ratio:23/20),(min-width:761px) and (max-width:1099px) and (max-height:519px){.hold .sec:not(.years) .card.r{max-height:calc(100svh - var(--ctop) - 10px);overflow-y:auto}.hold .sec .card.r .n{top:6px}}
+/* under the pointer on the chart: the year and the nearest chip; the glass's words say which part of the chip it is over */
+.hold .chart .lab .hv{font-size:max(11px,calc(var(--u)*11));color:var(--ink);white-space:nowrap;transform:translate(8px,0);padding:1px 5px;background:var(--paper);box-shadow:0 0 0 1px var(--hair)}
+.hold .chart .lab .hv.l{transform:translate(calc(-100% - 8px),0)}.hold .chart .lab .hv b{color:var(--red);font-weight:700}
+.hold .pl-ui .lb b{font-weight:700}

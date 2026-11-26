@@ -30,6 +30,8 @@ import { SEEK, foundAt } from '../../data/seek.js';
 import { readHtml } from '../frame2.js';
 import { V, $, esc, qColor, follow, followW } from '../shell.js';
 import { STAGES, stageOfPlace } from '../../engines/way.js';
+import { latticeHtml, drawWires } from '../lattice.js';
+import { pathOf } from '../../data/lattice.js';
 
 export function create() {
   Object.assign(V, { showPage, showRead, showMachines, showWorld, showEcosystem, showWhatif, leaveWhatif, askStop });
@@ -42,6 +44,26 @@ export function create() {
      been to is marked (the addresses you opened, kept in this browser) */
   const BEEN_KEY = 'osl-been';
   const beenSet = () => { try { return JSON.parse(localStorage.getItem(BEEN_KEY) || '{}'); } catch (e) { return {}; } };
+  /* the Map has two arrangements (#411): by a chip's life (#/log), and by matter and layers, the lattice
+     (#/log/lattice[/<path>], src/v2/lattice.js). A path lit and the matter shown on a phone change the page in place,
+     and the address with them */
+  let latOn = false, latPath = null, latMatter = 'silicon';
+  const latAddr = () => '#/log/lattice' + (latPath ? '/' + latPath : '');
+  const latticeOf = B => latticeHtml({ path: latPath, matter: latMatter, FACT, been: B, chOf: id => Game.challengeOf(id), titleOf, doHref: V.doHref, isDone: id => Game.isDone(V.S, id),
+    levelHref: (p, d) => { const l = (Game.INSIDE[p] || []).find(x => x.depth === d); return l ? V.levelHref(p, l) : null; } });
+  const latDraw = () => { const el = V.page.querySelector('[data-lat]'); if (!el) return; el.outerHTML = latticeOf(beenSet()); requestAnimationFrame(() => drawWires(V.page)); };
+  V.page.addEventListener('click', e => {
+    const pb = e.target.closest('[data-lat] [data-latpath]'), mb = e.target.closest('[data-lat] [data-latm]');   /* i18n-ok: selectors */
+    if (!pb && !mb) return;
+    if (pb) { latPath = latPath === pb.dataset.latpath ? null : pb.dataset.latpath;
+      /* on a phone, the path's first matter comes into view */
+      const P = pathOf(latPath); if (P && !P.strands.flat().some(c => c.startsWith(latMatter + '.'))) latMatter = P.strands[0][0].split('.')[0]; }
+    if (mb) latMatter = mb.dataset.latm;
+    history.replaceState(null, '', latAddr()); latDraw();
+    /* led on along the path into another matter: its step comes into view */
+    if (mb && mb.classList.contains('lat-to')) { const c = V.page.querySelector('.lat-c.lit[data-m="' + latMatter + '"]'); if (c) c.scrollIntoView({ block: 'center' }); }
+  });
+  addEventListener('resize', () => { if (latOn && !V.page.hidden) drawWires(V.page); });
   function mapHtml() {
     const B = beenSet(), ch = Game.CHALLENGES, doneN = L => L.filter(c => Game.isDone(V.S, c.id)).length;
     const dots = L => L.length ? '<span class="wm-dots" title="' + esc(t('page.map.ch', { n: doneN(L), of: L.length })) + '">' + L.map(c => '<a href="' + esc(V.doHref(c)) + '" class="' + (Game.isDone(V.S, c.id) ? 'on' : '') + '" aria-label="' + esc(titleOf(c)) + '"></a>').join('') + '</span>' : '';
@@ -53,14 +75,22 @@ export function create() {
         return '<div class="wm-pl' + (B[href] ? ' been' : '') + '"><a class="wm-pn" href="' + esc(href) + '">' + esc(t('map.' + p + '.t')) + '</a>' + dots(own) +
           (L.length ? '<ol>' + L.map(l => { const lh = V.levelHref(p, l), at = ch.filter(c => placeOf(c) === p && c.at === l.depth); return '<li class="' + (B[lh] ? 'been' : '') + '"><a href="' + esc(lh) + '">' + esc(t('depth.' + l.depth + '.name')) + '</a>' + dots(at) + '</li>'; }).join('') + '</ol>' : '') + '</div>'; }).join('') + '</div>'; }).join('');
     const every = Game.SHARED.map(dp => { const lh = V.levelHref('datacentre', { world: 'datacentre', depth: dp }); return '<li class="' + (B[lh] ? 'been' : '') + '"><a href="' + esc(lh) + '">' + esc(t('depth.' + dp + '.name')) + '</a>' + dots(ch.filter(c => c.at === dp)) + '</li>'; }).join('');
-    const all = ch.length, got = doneN(ch);
-    return '<section class="cwmap"><header class="wm-head f2rhead"><p class="kicker">' + esc(t('loop.map')) + '</p><h1>' + esc(t('page.map.k')) + '</h1><p class="lead">' + esc(t('page.map.lead')) + '</p>' +
+    /* the first page's twelve challenges, played there (src/v2/hold.js) and counted with the lab's */
+    const F = Game.firstPage(localStorage), fN = F.filter(c => c.done).length, all = ch.length + F.length, got = doneN(ch) + fN;
+    const first = '<div class="wm-first"><p class="wm-axis small">' + esc(t('page.map.hold')) + '</p><p class="wm-fl' + (Object.keys(B).some(k => k === '#/' || k.startsWith('#/hold')) ? ' been' : '') + '"><a href="#/">' + esc(t('hd.hero.k')) + '</a><span class="wm-dots" title="' + esc(t('page.map.ch', { n: fN, of: F.length })) + '">' +
+      F.map(c => '<a href="' + c.href + '" class="' + (c.done ? 'on' : '') + '" aria-label="' + esc(t('hd.ch.' + c.id)) + '"></a>').join('') + '</span></p></div>';
+    const arr = '<p class="wm-arr small" role="group" aria-label="' + esc(t('page.map.arrange')) + '"><span>' + esc(t('page.map.arrange')) + '</span>' +
+      '<a href="#/log"' + (latOn ? '' : ' aria-current="true"') + '>' + esc(t('page.map.byLife')) + '</a><a href="#/log/lattice"' + (latOn ? ' aria-current="true"' : '') + '>' + esc(t('page.map.byMatter')) + '</a></p>';
+    return '<section class="cwmap' + (latOn ? ' lattice' : '') + '"><header class="wm-head f2rhead"><p class="kicker">' + esc(t('loop.map')) + '</p><h1>' + esc(t('page.map.k')) + '</h1>' + arr + '<p class="lead">' + esc(t(latOn ? 'page.lat.lead' : 'page.map.lead')) + '</p>' +
       '<p class="wm-key small"><span class="wm-k1"></span>' + esc(t('page.map.keyBeen')) + '<span class="wm-k2"></span>' + esc(t('page.map.keyTodo')) + '<span class="wm-k3"></span>' + esc(t('page.map.keyDone')) + '<b>' + esc(t('page.map.ch', { n: got, of: all })) + '</b></p></header>' +
-      '<p class="wm-axis wm-across small">' + esc(t('page.map.across')) + '</p><div class="wm-grid">' + cols + '</div>' +
-      '<div class="wm-every"><p class="wm-axis small">' + esc(t('page.map.every')) + '</p><ol>' + every + '</ol></div></section>';
+      (latOn ? latticeOf(B) : '<p class="wm-axis wm-across small">' + esc(t('page.map.across')) + '</p><div class="wm-grid">' + cols + '</div>' +
+      '<div class="wm-every"><p class="wm-axis small">' + esc(t('page.map.every')) + '</p><ol>' + every + '</ol></div>' + first) + '</section>';
   }
   function showPage(k0) {
     const k = 'log'; V.pageNow = k0;
+    /* the arrangement and the path lit are in the address */
+    const parts = V.partsOf(location.hash); latOn = k0 === 'log' && parts[1] === 'lattice'; latPath = latOn && pathOf(parts[2]) ? parts[2] : null;
+    if (latOn && !FACT) facts().then(() => { if (latOn && V.partsOf(location.hash)[0] === 'log') latDraw(); });
     /* a reading page (Read, src/v2/frame2.js): the column alone, its way back to where you came from */
     const head = '<p class="kicker">' + esc(t('loop.logK')) + '</p><h2 class="wm-logh">' + esc(t('loop.log')) + '</h2><p class="lead">' + esc(t('page.' + k + '.lead')) + '</p>';
     let h = '', hc = '';
@@ -69,6 +99,10 @@ export function create() {
       const nx = Game.next(V.S);
       h += '<div class="jump"><input type="search" data-jump autocomplete="off" placeholder="' + esc(t('jump.ph')) + '" aria-label="' + esc(t('jump.ph')) + '"><div class="jumpres" data-jumpres></div></div>';
       if (nx) h += '<section class="stepsec"><h2>' + esc(t('loop.nextUp')) + '</h2><div class="grid">' + V.chCard(nx) + '</div></section>';
+      const F = Game.firstPage(localStorage);
+      /* the first page's twelve, met before the loop's own (src/v2/hold.js) */
+      hc += '<section class="stepsec" data-first><h2><span class="num">0</span>' + esc(t('page.log.hold')) + ' <span class="small muted">' + F.filter(c => c.done).length + '/' + F.length + '</span></h2><div class="stopdo">' +
+        F.map(c => '<a class="dochip' + (c.done ? ' done' : '') + '" href="' + c.href + '"><span class="kicker">' + esc(t(c.done ? 'trail.did' : 'trail.do')) + '</span><b>' + esc(t('hd.ch.' + c.id)) + '</b></a>').join('') + '</div></section>';
       hc += '<h2 id="log-challenges">' + esc(t('nav.challenges')) + '</h2><p class="small muted">' + esc(t(nx ? 'page.challenges.lead' : 'game.allDone')) + '</p>' + Game.STEPS.map((s, i) => { const st = Game.stepState(V.S, s); return '<section class="stepsec"><h2><span class="num">' + (i + 1) + '</span>' + esc(t('game.step.' + s)) + ' <span class="small muted">' + esc(t('map.' + Game.STATION[s] + '.t')) + ' · ' + st.done + '/' + st.total + '</span></h2><div class="grid">' + Game.stepChallenges(s).map(V.chCard).join('') + '</div></section>'; }).join('');
       hc += '<section class="stepsec"><h2><span class="num">⚙</span>' + esc(t('game.jobs')) + ' <span class="small muted">' + esc(t('game.jobsD')) + '</span></h2><div class="grid">' + C.breaks.map(b => V.chCard(V.chOf('break:' + b.of))).join('') + C.jobs.map(V.jobCard).join('') + '</div></section>';
       /* never a list of every question: the ones you have met, as strands you can pick up again, one way to meet
@@ -88,6 +122,7 @@ export function create() {
       h += '<section class="stepsec"><h2>' + esc(t('page.questions.asked')) + '</h2>' + (asked.length ? asked.slice().reverse().map(V.askedHtml).join('') : '<p class="small muted">' + esc(t('page.questions.none')) + '</p>') + '</section>' + hc;
     }
     V.page.innerHTML = '<div class="inner">' + mapHtml() + readHtml({ cls: 'logpage', head, text: h + '<p class="small muted">' + esc(t('page.preview')) + '</p>' }) + '</div>'; V.page.hidden = false; V.page.scrollTop = 0;
+    if (latOn) requestAnimationFrame(() => drawWires(V.page));
     if (k0 === 'challenges') { const el = $('log-challenges'); if (el) V.page.scrollTop = el.offsetTop - 96; }
   }
   /* reading: every experiment as a document (src/v2/read.js), over the island; the index is the questions and
@@ -153,6 +188,7 @@ export function create() {
   const jumpIndex = () => Game.PLACES.map(p => ({ name: t('map.' + p + '.t'), kind: V.kickerOf(p), href: '#/place/' + p }))
     .concat(Object.entries(Game.INSIDE).flatMap(([p, L]) => L.filter(l => p === 'datacentre' || !Game.SHARED.includes(l.depth)).map(l => ({ name: t('depth.' + l.depth + '.name'), kind: t('map.' + p + '.t'), href: V.levelHref(p, l) }))),
       Game.CHALLENGES.map(c => ({ name: titleOf(c), kind: V.whereOf(c), href: V.doHref(c) })),
+      Game.firstPage(localStorage).map(c => ({ name: t('hd.ch.' + c.id), kind: t('page.log.hold'), href: c.href })),
       /* each world, a reading page, by its question (#305) */
       WORLD_IDS.map(id => ({ name: t('thread.' + id + '.root'), kind: t('jump.world'), href: '#/w/' + id })),
       [{ name: t('look.plan.t'), kind: t('map.lab.t'), href: '#/build' }, { name: t('nav.challenges'), kind: t('loop.log'), href: '#/challenges' }, { name: t('loop.outShort'), kind: t('nav.ecosystem'), href: '#/ecosystem' }]);

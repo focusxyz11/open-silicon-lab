@@ -1,0 +1,59 @@
+{
+  "kind": "try",
+  "by": "Open Silicon Lab",
+  "made": "example",
+  "ai": "Written by Claude while building #410, with the moves a person plays in the lab: people first for ten years, then the engine's suggestion each year.",
+  "words": "An example of an attempt played by hand: memory beside each part, acting on events, a swarm of small parts. People first for ten years, then what the engine suggested; the rover was won in the eleventh year.",
+  "arch": {
+    "start": "near/charge/events/swarm",
+    "years": [
+      [
+        "people",
+        "errors"
+      ],
+      [
+        "people",
+        "device"
+      ],
+      [
+        "people",
+        "errors"
+      ],
+      [
+        "people",
+        "tools"
+      ],
+      [
+        "people",
+        "memory"
+      ],
+      [
+        "people",
+        "making"
+      ],
+      [
+        "people",
+        "errors"
+      ],
+      [
+        "people",
+        "errors"
+      ],
+      [
+        "people",
+        "tools"
+      ],
+      [
+        "people",
+        "errors"
+      ],
+      [
+        "memory",
+        "making"
+      ]
+    ],
+    "wins": [
+      "rover"
+    ]
+  }
+}

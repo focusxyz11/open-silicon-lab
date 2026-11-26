@@ -96,6 +96,9 @@ test('each lab waits for every area it shows, and what it grows draws with the i
     const grows = unwaited(reach(['src/v2/growers/' + L.name + '.js'], { skip: SHELL }), glueWaits('island'));
     if (grows.length) bad.push(tell('what ' + L.name + ' grows', glueWaits('island'), grows));
   }
+  /* and the bets, the loop's own challenges, which the player loads with the labs (src/v2/labs/bets.js) */
+  const bets = unwaited(reach(['src/v2/labs/bets.js'], { skip: SHELL }), EVERY.concat('labs'));
+  if (bets.length) bad.push(tell('the bets', EVERY.concat('labs'), bets));
   assert.deepEqual(bad, [], 'A lab shows words it does not wait for (move them to the labs area, or to an area every view waits for):\n' + bad.join('\n'));
 });
 

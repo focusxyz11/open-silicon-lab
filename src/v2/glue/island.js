@@ -56,7 +56,7 @@ export function create() {
   /* ---- lenses: the same island seen for one thing at a time; each opens onto the question it belongs to, one at a
      time, never as a list ---- */
   const LENSES = [['look', '○'], ['heat', '≋'], ['flow', '⇄'], ['fail', '✕'], ['time', '◷']], LENS_WORLD = { heat: 'limit', fail: 'fail', time: 'make', flow: 'open' };
-  const drawLens = k => { V.lensbar.innerHTML = '<div class="lb">' + LENSES.map(([id, g]) => '<button type="button" data-lens="' + id + '" aria-pressed="' + (id === k) + '" title="' + esc(t('lens.' + id + '.t')) + '"><span class="g" aria-hidden="true">' + g + '</span><span class="nm">' + esc(t('lens.' + id + '.t')) + '</span></button>').join('') + '</div>' +
+  const drawLens = k => { V.lensbar.innerHTML = '<div class="lb"><p class="lk" aria-hidden="true">' + esc(t('lens.k')) + '</p>' + LENSES.map(([id, g]) => '<button type="button" data-lens="' + id + '" aria-pressed="' + (id === k) + '"><span class="g" aria-hidden="true">' + g + '</span><span class="nm">' + esc(t('lens.' + id + '.t')) + '</span></button>').join('') + '</div>' +
     (LENS_WORLD[k] ? '<div class="lensnote"><p>' + esc(t('lens.' + k + '.d')) + '</p><a href="#/w/' + LENS_WORLD[k] + '">' + esc(t('lens.follow')) + ' →</a></div>' : ''); };
   drawLens('look');
   /* the bar shows the lens the island has on, whoever turned it (a button here, a dial, What if? lending its own and
@@ -123,7 +123,7 @@ export function create() {
     /* the address says where you are: a place picked on the island, or in the world around it, or from the Lab's record,
        is written into it (without going anywhere), and counts as arriving there (src/v2/app.js, arrive) */
     const at = '#/place/' + id + (part ? '/' + part : '');
-    if (!step && /^#\/(place|explore|island|ecosystem|build)(\/|$)/.test(location.hash) && location.hash !== at && !location.hash.startsWith(at + '/')) V.arrive(at, 'push');
+    if (!step && /^#\/(place|island|ecosystem|build)(\/|$)/.test(location.hash) && location.hash !== at && !location.hash.startsWith(at + '/')) V.arrive(at, 'push');
     else { const to = Way.whereOf('#/place/' + id); V.crossed(V.seamFrom, to); V.seamFrom = to; }
     $('hero').classList.add('away'); drawPlace(); if (quick) drawInsp(); V.hud(); if (V.map) V.map.setState(V.islandState(), false);
   }
@@ -199,7 +199,7 @@ export function create() {
       const reps = Game.frontierOf(V.S).filter(f => f.kind === 'report');
       if (reps.length) P.open += '<h2>' + esc(t('lab.reports')) + '</h2><p class="small muted">' + esc(t('lab.reportsD')) + '</p><div class="grid">' + reps.map(f => { const e = W.byId[f.of]; return '<a class="chcard report' + (e.draft ? ' draft' : '') + '" href="' + esc(e.at) + '"><span class="st">⚑</span><span><span class="kicker">' + esc(t('report.say.' + e.say)) + ' · ' + esc(e.at) + '</span><b>' + esc(e.words) + '</b><span class="small muted">' + byLine(e) + '</span></span></a>'; }).join('') + '</div>';
       /* the record: every entry, the newest first, each with who made it and where it stands now */
-      const line = e => { const T = e.kind === 'break' ? W.byId[e.of] : null, T2 = e.kind === 'try' && !e.puzzle && !e.machine && !e.chef ? W.byId[e.of] : null, what = e.kind === 'design' ? t('ledger.rec.design', { title: e.title, piece: t('build.need.' + e.piece + '.t') }) : e.kind === 'break' ? t('ledger.rec.break', { title: T.title }) : T2 ? t('ledger.rec.try', { title: T2.title, n: e.facts.cases }) : e.kind === 'report' || e.kind === 'fix' || e.puzzle || e.machine || e.chef ? Game.entryWords(e, V.S) : e.q,
+      const line = e => { const T = e.kind === 'break' ? W.byId[e.of] : null, T2 = e.kind === 'try' && !e.puzzle && !e.machine && !e.chef && !e.arch ? W.byId[e.of] : null, what = e.kind === 'design' ? t('ledger.rec.design', { title: e.title, piece: t('build.need.' + e.piece + '.t') }) : e.kind === 'break' ? t('ledger.rec.break', { title: T.title }) : T2 ? t('ledger.rec.try', { title: T2.title, n: e.facts.cases }) : e.kind === 'report' || e.kind === 'fix' || e.puzzle || e.machine || e.chef || e.arch ? Game.entryWords(e, V.S) : e.q,
           links = (e.from ? ' · ' + esc(t('ledger.rec.from', { who: W.byId[e.from].by })) + ' ' + esc(W.byId[e.from].title) : '') + (e.tries && e.tries.length ? ' · ' + esc(t('ledger.tries', { n: e.tries.length })) : '') + (e.about ? ' · ' + esc(t('ledger.rec.about', { q: Game.aboutWords(e.about, W) })) : '');
         return '<li class="rec ' + e.kind + (e.draft ? ' draft' : '') + ' ' + e.state + '"><span class="made ' + esc(e.made) + '"></span><span><b>' + esc(what) + '</b><span class="small muted"> · ' + byLine(e) + ' · ' + esc(e.id.slice(0, 10)) + ' · ' + esc(t('ledger.state.' + (e.draft ? 'draft' : e.state))) + (e.brokenBy ? ' · ' + esc(t('ledger.brokenBy', { who: W.byId[e.brokenBy].by })) : '') + links + '</span>' + (e.draft ? slipHtml(V.S, e.id) : '') + '</span></li>'; };
       P.record = '<h2>' + esc(t('page.build.record')) + '</h2><p class="small muted">' + esc(t('page.build.recordD')) + '</p><ol class="record">' + W.entries.slice().reverse().map(line).join('') + '</ol>';

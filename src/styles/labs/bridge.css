@@ -1,0 +1,86 @@
+/* The lab bridge's own styles (src/data/labs/bridge.js, css: true), loaded when one of its challenges is played (src/core/styles.js). */
+/* one spec, two matters (src/v2/labs/bridge.js): silicon beside the test tube, the tube's curves against the reporter's
+   two lines, the dials of each kind of gate; and the tube that sorts shapes, its memories, shapes and race */
+.brintro { margin: 4px 0 10px; }
+.brspecs { margin: 8px 0 4px; }
+.brfig { margin: 8px 0; }
+ .brfig svg { display: block; width: 100%; height: auto; }
+.brfig .hd { font: 600 11px var(--sans); fill: var(--ink); letter-spacing: .02em; }
+.brfig .split { stroke: var(--line); stroke-width: 1; }
+.brfig .ax { font: 9.5px var(--mono); fill: var(--muted); }
+ .brfig .ax.q { fill: color-mix(in srgb, var(--muted) 70%, transparent); }
+.brfig .axl { stroke: var(--line); stroke-width: 1; }
+.brfig .sub { font: 600 10px var(--mono); fill: var(--muted); }
+
+/* silicon: the cells and their wires, lit where they carry a 1 */
+.brfig .g { fill: var(--panel-solid); stroke: var(--ink); stroke-width: 1.5; stroke-linejoin: round; }
+.brfig .sw { fill: none; stroke: var(--line); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+ .brfig .sw.on { stroke: var(--accent); stroke-width: 2.6; }
+.brfig .dot { fill: var(--line); }
+ .brfig .dot.on { fill: var(--accent); }
+.brfig .pn { font: italic 600 11px var(--sans); fill: var(--ink); }
+.brfig .bit { fill: var(--panel-solid); stroke: var(--line); stroke-width: 1; }
+ .brfig .bit.on { fill: var(--accent); stroke: var(--accent); }
+.brfig .bv { font: 600 9.5px var(--mono); fill: var(--ink); }
+ .brfig .bv.on { fill: var(--panel-solid); }
+
+/* the tube: the band too dim to call, the two lines, the deadline, a curve for each input */
+.brfig .blur { fill: color-mix(in srgb, var(--muted) 12%, transparent); }
+.brfig .ln { stroke: var(--muted); stroke-width: .8; stroke-dasharray: 3 3; }
+.brfig .dl { stroke: var(--warm); stroke-width: 1.2; stroke-dasharray: 4 3; }
+.brfig .dlt { font: 600 9px var(--sans); fill: var(--warm); }
+.brfig .cv { fill: none; stroke-width: 1.4; stroke-linejoin: round; opacity: .55; }
+ .brfig .cv.w1 { stroke: var(--accent); }
+ .brfig .cv.w0 { stroke: var(--muted); }
+ .brfig .cv.bad { stroke: var(--bad); opacity: .85; }
+ .brfig .cv.sel { stroke-width: 2.8; opacity: 1; }
+.brfig .end { fill: var(--ink); stroke: var(--panel-solid); stroke-width: 1.2; }
+ .brfig .end.bad { fill: var(--bad); }
+.brfig .cur { stroke: var(--ink); stroke-width: 1; opacity: .55; }
+.brfig .clk { font: 600 9.5px var(--mono); fill: var(--muted); }
+
+/* winner takes all: each memory its own tone, in its grid and its light */
+.brfig .m0 { --m: var(--accent); }
+.brfig .m1 { --m: var(--warm); }
+.brfig .m2 { --m: var(--good); }
+.brfig .px { fill: color-mix(in srgb, var(--ink) 7%, transparent); }
+ .brfig .pg.m0 .px.on, .brfig .pg.m1 .px.on, .brfig .pg.m2 .px.on { fill: var(--m); }
+ .brfig .pg .px.on { fill: var(--ink); }
+ .brfig .pg .px.on.extra { fill: var(--bad); }
+.brfig .mn { font: 600 10px var(--sans); fill: var(--m); }
+.brfig .pat .pick { fill: none; stroke: var(--accent); stroke-width: 1.6; }
+.brfig .pat .pk { font: 600 9px var(--sans); fill: var(--good); }
+ .brfig .pat.bad .pk { fill: var(--bad); }
+.brfig .pat .hit { fill: transparent; cursor: pointer; }
+ .brfig .pat .hit:hover { fill: color-mix(in srgb, var(--accent) 10%, transparent); }
+.brfig .cv.m0, .brfig .cv.m1, .brfig .cv.m2 { stroke: var(--m); stroke-width: 2.2; opacity: 1; }
+.brfig .end.m0, .brfig .end.m1, .brfig .end.m2 { fill: var(--m); }
+.brtt .sw { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: 6px; vertical-align: -1px; }
+ .brtt .sw.m0 { background: var(--accent); }
+ .brtt .sw.m1 { background: var(--warm); }
+ .brtt .sw.m2 { background: var(--good); }
+
+/* the dials, a column for each kind of gate; the OR's dimmed while only the AND is shown */
+.brdials { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 16px; margin: 8px 0; }
+ .brdials.one { grid-template-columns: 1fr; }
+.brgate.idle { opacity: .6; }
+.brgate .kicker { margin: 0 0 2px; }
+.brdial { margin: 4px 0; }
+ .brdial .lab { display: flex; justify-content: space-between; gap: 8px; }
+ .brdial input { width: 100%; }
+.brrun { margin: 6px 0 10px; }
+.brtt table { font-size: 12.5px; }
+ .brtt tbody tr[data-br-row] { cursor: pointer; }
+ .brtt tbody tr.on td { background: color-mix(in srgb, var(--accent) 16%, transparent); }
+ .brtt tbody tr.bad td:last-child { color: var(--bad); }
+.brmsg { margin: 10px 0; }
+ .brmsg.good { color: var(--good); }
+ .brmsg.bad { color: var(--bad); }
+.brcmp { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 10px 0 6px; }
+ .brcmp > div { border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; display: flex; flex-direction: column; gap: 3px; }
+.brsrc { margin: 6px 0; }
+html.frame2 .f2stage .brfig svg text { font-size: calc(13px * var(--f2-k, .6)); }
+@media (max-width: 720px) {
+  .brdials, .brcmp { grid-template-columns: 1fr; }
+  html.frame2 .f2stage .brfig svg text { font-size: calc(10.5px * var(--f2-k, .9)); }
+}

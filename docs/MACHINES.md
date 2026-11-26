@@ -118,6 +118,31 @@ machine's energy falls with it. A switch that never turns off, or a known materi
 1,050 °C anneal) or that has no holes for a pair, cannot be made: the fab's rule breaks. An invented material is a guess
 to a machine, whatever its band: its gain counts only if the guesses hold.
 
+**The architecture (the third scale).** *Grow an architecture that does not exist yet* (`#/do/archniche`, then
+`#/do/archspread`, at the Lab; `src/engines/arch.js`, `src/v2/labs/arch.js`; reached from Machines by *One scale up*). Today's
+computer is one recipe of four genes out of 400: where it computes (memory far, near, in the memory, values flowing
+through a mesh), what carries a value (charge, light, spikes, reversible charge, living cells), how it is told what to do (a
+program, a graph laid out once, events, learning, one job) and its shape (a few big cores, a grid, stacked layers, a swarm).
+Ten recipes have been built (each resting on an entry of `facts.json`: the graphics chip, a custom chip, a tensor chip, a
+wafer-scale chip, a photonic processor, a neuromorphic system, a compute-in-memory chip, a living-neuron computer, a
+reversible test chip); the map in the lab shows them among the 390 nobody has tried. The lesson is a shape, so the lab is
+marked an idea drawn: a new recipe starts far behind (its directions of improvement start low where its genes differ from
+today's), and grows only with attempts, each doubling multiplying a direction by the same factor (Wright's law's shape,
+`facts.json wright-law`); attempts come from people, people come from investing in them and from winning (others join a
+winner); today's computer keeps improving a little each year. Six needs judge it (Machines' four, any program, a large
+model), each weighing five traits the genes change. The engine suggests where this year's attempts would help most;
+agents propose forks after your first year (think first), each one gene changed and scored by the engine, and a fork loses
+what was learned in the directions that gene leads; the person decides. Goals: a recipe nobody has built, at least two genes
+from today's, beats today's computer at one need within 25 years, then at three at once within 40.
+
+An attempt is kept in the ledger (#410): *Keep this attempt* writes a `try` entry with `arch`, its history (the recipe it
+started from, the focus of each year, the forks and stepping stones between years in order) and the needs its recipe wins
+at the end. `src/engines/ledger.js` grows it again with the same engine (`replay` in `src/engines/arch.js`) and refuses a
+claimed win the replay does not reach. The map shows the recipes the ledger holds, people's and agents' apart; the first
+attempt to win with a recipe rings its square, and the first to win a need with a recipe nobody has built holds that niche
+(first in an empty niche counts most), from the entries alone. Agents join through the open port (`grow_architecture`,
+`architecture_forks`, `submit_architecture`, `docs/MCP.md`); the lab runs none.
+
 **Next in Invent:** the machine (a new machine and its code invented together, against the hardware lottery). Anyone can raise a claim with a source or lower it with a break; machine attempts are kept in the ledger now
 (see Moore's law for ideas), claims are next.
 

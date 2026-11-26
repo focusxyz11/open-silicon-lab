@@ -29,6 +29,7 @@ import { normalBetOf } from '../engines/bet.js';
 import { normalLevers, PUZZLES } from '../engines/ripple.js';
 import { normalAgent } from '../data/agent.js';
 import { CHALLENGES, challengeOf, isDone, OPENS, FRONT_ASK, KEY, CHECKED, readState } from './loop.js';
+import { CHALS as FIRST_CHALS, HOLD_KEY, heldDone } from '../data/hold.js';
 export * from './loop.js';
 
 /* a circuit's starting description: the job's own, or one that is almost right (a fix-it job) */
@@ -112,6 +113,10 @@ export function normalState(s) {
   const w = s.whatif || {}, whatif = { levers: normalLevers(w.levers), solved: {} }; Object.keys(w.solved || {}).forEach(k => { if (PUZZLES.some(p => p.id === k)) whatif.solved[k] = true; });
   return Object.assign(readState(s), { drafts, sent, chip: normal(s.chip || START), life: lifeC, bets, whatif, agent: normalAgent(s.agent), joule: normalJoule(s.joule), chef: normalChef(s.chef), bench: normalBench(s.bench) });
 }
+/* the first page (src/v2/hold.js): its twelve challenges, played there and kept in this browser (src/v2/holdkit.js),
+   each with its address and whether it is done; the Map and your log count them with the lab's */
+export function firstPage(store) { let o = null; try { o = JSON.parse(store.getItem(HOLD_KEY) || 'null'); } catch (e) { o = null; }
+  const d = heldDone(o); return FIRST_CHALS.map(id => ({ id, href: '#/hold/' + id, done: !!d[id] })); }
 export function load(store) { try { return normalState(JSON.parse(store.getItem(KEY) || 'null')); } catch (e) { return fresh(); } }
 /* the state the shell read before the engines came (readState): what they check, checked now, in place */
 export function complete(s) { const n = normalState(s); CHECKED.forEach(k => { s[k] = n[k]; }); return s; }
@@ -200,9 +205,13 @@ export const workAt = (key, s) => workFor(world(s), key);
 export const aboutWords = (about, W) => (STOPS[about] ? t('stop.' + about + '.q') : (W.byId[about] || {}).q || about);
 /* what is open now, loudest first, read from the ledger and your drafts */
 export const frontierOf = s => frontier(world(s));
+/* an attempt at an architecture in a few words: how many genes it ended from today's computer, its years and the needs it
+   won (ar.need is in the ledger's area, so the record names them wherever it is drawn) */
+const archWords = e => t(e.facts.wins.length ? 'ledger.rec.arch' : 'ledger.rec.archNone', { genes: fmtNum(e.facts.novelty), years: fmtNum(e.facts.years), needs: e.facts.wins.map(n => t('ar.need.' + n)).join(', ') });
 export function entryWords(e, s) { const W = world(s), T = W.byId[e.of];
   return e.kind === 'design' ? t('ledger.rec.design', { title: e.title, piece: t('build.need.' + e.piece + '.t') }) : e.kind === 'break' ? t('ledger.rec.break', { title: T.title }) : e.kind === 'try' && e.puzzle ? t('ledger.rec.attempt', { wh: fmtNum(+(e.facts.joules / 3600).toPrecision(2)) })
     : e.kind === 'try' && e.chef ? t('ledger.rec.chef', { level: t('mb.lv.' + e.chef + '.t'), wait: fmtNum(Math.round(e.facts.wait * 100)), e: fmtNum(+e.facts.energy.toPrecision(2)) })
+    : e.kind === 'try' && e.arch ? archWords(e)
     : e.kind === 'try' && e.machine ? t('ledger.rec.machine', { need: t('machines.need.' + e.machine + '.t'), x: fmtNum(+e.facts.energy.toPrecision(2)), days: isFinite(e.facts.days) ? fmtNum(e.facts.days) : '?', n: isFinite(e.facts.days) ? e.facts.days : 2 })
     : e.kind === 'try' ? t('ledger.rec.try', { title: T.title, n: e.facts.cases })
     : e.kind === 'report' ? t('ledger.rec.report', { say: t('report.say.' + e.say), at: e.at, words: e.words }) : e.kind === 'fix' ? t('ledger.rec.fix', { words: e.words }) : e.q; }

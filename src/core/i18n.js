@@ -47,7 +47,8 @@ export const AREAS = {
     'board', 'story', 'chipx', 'lab', 'society', 'fab', 'whatif',
     /* your chip's settings and the life it lives at a place: dials on the island, the challenges and the reading pages */
     'chip', 'life'],
-  design: ['design', 'bench', 'build', 'ledger', 'api', 'core'],
+  /* the needs an architecture is grown for (ar.need) go with the ledger, whose record names them */
+  design: ['design', 'bench', 'build', 'ledger', 'api', 'core', 'ar.need'],
   labs: ['td', 'bet', 'aib', 'agent', 'srv', 'ana', 'ckp', 'rv', 'er', 'cim', 'grv', 'semi', 'imp', 'ovl', 'eu',
     'lt', 'cz', 'fl', 'mo', 'rd', 'evolve', 'xray', 'xr', 'gauge', 'carch',
     'pb', 'th', 'srch', 'halt',
@@ -59,6 +60,10 @@ export const AREAS = {
     'sw',
     /* new ways to compute: reversible logic and dataflow (#323) */
     'rev', 'dfl',
+    /* grow an architecture that does not exist yet */
+    'ar',
+    /* one spec, two matters: logic in silicon and in DNA strands, and a tube that sorts shapes (#412) */
+    'br', 'bw',
     /* a gallery of frontier ideas, and which machine fits which job (waiting for a view, src/data/waiting-words.json) */
     'para'],
   blueprint: ['bp'],

@@ -13,7 +13,7 @@ import { AHEAD, ARR, BEHIND, CHIPS, COST, DWALL, ERAS, FCOST, FDIV, FORMS, KNEE,
    the thing you try is on the picture, never beside it. Words on a picture are HTML labels over it. */
 export const PL = {};
 export function mkPlate(id, o = {}) {
-  const def = PL[id], el = h('div', 'plate'), cv = h('canvas'), c = cv.getContext('2d'); el.dataset.id = id; el.appendChild(cv);
+  const def = PL[id], el = h('div', 'plate'), cv = h('canvas'), c = cv.getContext('2d'); el.dataset.id = id; el.appendChild(cv); if (!o.mini) cv.setAttribute('role', 'img');
   const pl = { id, el, cv, c, P: 0, mini: !!o.mini, fade: 0, key: '', view: '' };
   if (!o.mini) { pl.ui = h('div', 'pl-ui'); el.appendChild(pl.ui); pl.fr = h('div', 'pl-fr mono', '<span></span><span></span>'); el.appendChild(pl.fr); if (def.ui) def.ui(pl.ui, pl); }
   pl.fit = () => { const s = el.clientWidth; if (!s) return; const dpr = o.dpr ? o.dpr : o.mini ? Math.min(2, (devicePixelRatio || 1) * 1.5) : Math.min(2, devicePixelRatio || 1), P = Math.round(s * dpr); if (cv.width !== P) cv.width = cv.height = P; pl.P = P; el.style.setProperty('--p', s / 1000 + 'px'); };
@@ -22,7 +22,9 @@ export function mkPlate(id, o = {}) {
     def.paint(c, T, dt || 0, pl); c.globalAlpha = 1; c.setLineDash([]);
     if (pl.fade > 0) { c.globalAlpha = pl.fade; c.fillStyle = K.plate; c.fillRect(0, 0, 1000, 1000); c.globalAlpha = 1; pl.fade = Math.max(0, pl.fade - (dt || .016) * 3.2); }
     if (pl.sync) pl.sync();
-    if (pl.fr) { const f = def.frame ? def.frame() : [w('pl.' + id), '']; if (pl.key !== f[0] + '|' + f[1]) { pl.key = f[0] + '|' + f[1]; pl.fr.children[0].textContent = f[0]; pl.fr.children[1].textContent = f[1]; } } };
+    if (pl.fr) { const f = def.frame ? def.frame() : [w('pl.' + id), '']; if (pl.key !== f[0] + '|' + f[1]) { pl.key = f[0] + '|' + f[1]; pl.fr.children[0].textContent = f[0]; pl.fr.children[1].textContent = f[1]; }
+      /* the picture's text alternative follows what it shows: its name, what its frame says, and (o.more) its readout */
+      const alt = (o.name ? o.name() + ': ' : '') + f.filter(Boolean).join(', ') + (o.more ? '. ' + o.more() : ''); if (pl.alt !== alt) { pl.alt = alt; cv.setAttribute('aria-label', alt); } } };
   return pl;
 }
 export const at = (e, l, tp, wd, ht) => { e.style.left = l + '%'; e.style.top = tp + '%'; if (wd != null) e.style.width = wd + '%'; if (ht != null) e.style.height = ht + '%'; return e; };
@@ -104,6 +106,10 @@ function htree(c, x, y, ww, hh, n, min) {
   c.moveTo(x + ww / 4, y + hh / 2); c.lineTo(x + 3 * ww / 4, y + hh / 2); c.moveTo(x + ww / 4, y + hh / 4); c.lineTo(x + ww / 4, y + 3 * hh / 4); c.moveTo(x + 3 * ww / 4, y + hh / 4); c.lineTo(x + 3 * ww / 4, y + 3 * hh / 4);
   for (const [a, b] of [[0, 0], [1, 0], [0, 1], [1, 1]]) htree(c, x + a * ww / 2, y + b * hh / 2, ww / 2, hh / 2, n - 1, min);
 }
+/* which part of the chip a point (in 1000 units) is in: the same plan the floor is drawn from */
+let leaves = null;
+export const regionAt = (x, y) => { if (!leaves) { leaves = []; walk(9, () => {}, (lx, ly, ww, hh, hash, vert, r, type) => leaves.push([lx, ly, ww, hh, type])); }
+  const f = leaves.find(([lx, ly, ww, hh]) => x >= lx && x < lx + ww && y >= ly && y < ly + hh); return f ? f[4] : 'core'; };
 /* what fifty years of splitting leaves behind: every region its own texture, as on a real die */
 export const floors = {};
 function floorFor(P) {
@@ -170,21 +176,23 @@ function drawNand(c, A, B, a) {
   fet(c, xa, yp, !A, a); fet(c, xb, yp, !B, a); fet(c, xn, ya, A, a); fet(c, xn, yb, B, a);
   bit(c, 300, 170, 1, 'right'); bit(c, 300, 850, 0, 'right'); bit(c, 140, ya, A); bit(c, 140, yb, B); bit(c, 880, 450, out); c.lineCap = 'butt';
 }
-function paintDie(c, T, d) {
+function paintDie(c, T, d, pl) {
   const L = Math.min(Math.floor(d), LMAX), f = d >= LMAX ? 0 : d - Math.floor(d), aF = ss(10, 13, d);
   if (aF < 1) drawField(c, L, f, T, 'planar');
   if (aF > 0) { c.globalAlpha = aF; c.drawImage(floorFor(c.canvas.width), 0, 0, 1000, 1000); c.globalAlpha = 1;
     c.fillStyle = K.red; for (let i = 0; i < 46; i++) { const hh = mix(i * 7919, Math.floor(T * 11)); c.globalAlpha = aF * (.35 + .65 * rnd(hh >>> 2)); const s = 2 + 2.6 * rnd(hh >>> 7); c.fillRect(rnd(hh) * 1000, rnd(hh ^ 0xabc) * 1000, s, s); } c.globalAlpha = 1; }
   const kNot = ss(.85, 1, d) * (1 - ss(1.45, 1.65, d)); if (kNot > .01) { c.globalAlpha = kNot; c.fillStyle = K.plate; c.fillRect(0, 0, 1000, 1000); drawNot(c, Math.floor(T / 1.1) % 2, kNot); c.globalAlpha = 1; }
-  /* the glass: you can no longer see them, so it shows what is there, in the form the years gave the transistor */
-  const aG = ss(14, 16, d); if (aG > .01) { const gx = 705, gy = 300, gr = 148, form = formAt(d); c.save(); c.globalAlpha = aG; c.beginPath(); c.arc(gx, gy, gr, 0, 7); c.fillStyle = K.plate; c.fill(); c.clip();
+  /* the glass: you can no longer see them, so it shows what is there, in the form the years gave the transistor; it
+     follows the pointer (or the finger that holds), and says which part of the chip it is over */
+  const G = pl && pl.gl, gr = 148, aG = Math.max(ss(14, 16, d), G ? G.a * ss(9.5, 11, d) : 0); if (G) G.aG = aG;
+  if (aG > .01) { const gx = G ? G.x : 705, gy = G ? G.y : 300, form = formAt(d), type = G ? G.type : 'core'; c.save(); c.globalAlpha = aG; c.beginPath(); c.arc(gx, gy, gr, 0, 7); c.fillStyle = K.plate; c.fill(); c.clip();
     c.strokeStyle = K.ink; c.lineWidth = 2; c.beginPath(); for (let i = -2; i <= 2; i++) { c.moveTo(gx + i * 74 - 37, gy - gr); c.lineTo(gx + i * 74 - 37, gy + gr); c.moveTo(gx - gr, gy + i * 74 - 37); c.lineTo(gx + gr, gy + i * 74 - 37); } c.stroke();
-    for (let i = -2; i <= 2; i++) for (let j = -2; j <= 2; j++) glyph(c, gx + i * 74, gy + j * 74, 17, isOn(mix(i * 31 + j, 77), T, 'core') ? 1 : 0, aG, 2.6, form);
+    for (let i = -2; i <= 2; i++) for (let j = -2; j <= 2; j++) glyph(c, gx + i * 74, gy + j * 74, 17, isOn(mix(i * 31 + j + Math.round(gx / 37) * 977 + Math.round(gy / 37) * 131, 77), T, type) ? 1 : 0, aG, 2.6, form);
     c.restore(); c.globalAlpha = aG; c.strokeStyle = K.ink; c.lineWidth = 5; c.beginPath(); c.arc(gx, gy, gr, 0, 7); c.stroke(); c.globalAlpha = 1; }
 }
 
 /* ---------------- the moments on the way ---------------- */
-function paintJob(c) { const n = S.jobK ?? 500, cw = 31.2, x0 = 110, y0 = 300;
+function paintJob(c) { const n = S.jobK ?? 500, cw = 31.2, x0 = 110, y0 = 318;
   for (let i = 0; i < 500; i++) { const cx = x0 + (i % 25) * cw, cy = y0 + Math.floor(i / 25) * cw; if (i < Math.round(n)) { c.fillStyle = K.red; c.fillRect(cx + 2, cy + 2, cw - 4, cw - 4); } else { c.strokeStyle = fg(.22); c.lineWidth = 1.5; c.strokeRect(cx + 2.5, cy + 2.5, cw - 5, cw - 5); } } }
 const BUGCOLS = [8, 15, 22, 29, 36];
 function paintBug(c, T) { const cw = 20, x0 = 90, y0 = 250, b = S.bug;
@@ -212,13 +220,21 @@ function paintWall(c, T) {
 
 PL.years = {
   frame: () => { const v = viewAt(S.d); return v === 'one' ? [w('pl.one'), S.press > .5 ? w('bit.1') : w('bit.0')] : v === 'die' || v === 'wall' ? [w('die.same'), w('dens', { n: sig(Math.sqrt(Math.pow(2, S.d)), 2) })] : [w('mo.' + v + '.k') + ' · ' + w('mo.try'), '']; },
-  paint(c, T, dt, pl) { const v = viewAt(S.d); if (pl.view !== v) { if (pl.view && !(pl.view === 'one' && v === 'die') && !(pl.view === 'die' && v === 'one')) pl.fade = 1; pl.view = v; }
-    if (v === 'gate') drawNand(c, S.gate.a, S.gate.b, 1); else if (v === 'job') paintJob(c); else if (v === 'bug') paintBug(c, T); else if (v === 'light') paintLight(c, T); else if (v === 'wall') paintWall(c, T); else paintDie(c, T, S.d); },
+  paint(c, T, dt, pl) { const v = viewAt(S.d), G = pl.gl; if (G) { const k = Math.min(1, (dt || .016) * 12); G.x += (G.tx - G.x) * k; G.y += (G.ty - G.y) * k; G.a += ((G.on ? 1 : 0) - G.a) * Math.min(1, (dt || .016) * (G.on ? 8 : 2)); G.type = regionAt(G.x, G.y); }
+    if (pl.view !== v) { if (pl.view && !(pl.view === 'one' && v === 'die') && !(pl.view === 'die' && v === 'one')) pl.fade = 1; pl.view = v; }
+    if (v === 'gate') drawNand(c, S.gate.a, S.gate.b, 1); else if (v === 'job') paintJob(c); else if (v === 'bug') paintBug(c, T); else if (v === 'light') paintLight(c, T); else if (v === 'wall') paintWall(c, T); else paintDie(c, T, S.d, pl); },
   ui(host, pl) {
     const L = {}; for (const v of ['one', 'die', 'gate', 'job', 'bug', 'light', 'wall']) { L[v] = h('div', 'layer'); host.appendChild(L[v]); }
     /* one transistor: its three parts named, and the bit it holds */
     lbl(L.one, w('t.source'), 26.5, 23, 'c'); lbl(L.one, w('t.gate'), 50, 18, 'c'); lbl(L.one, w('t.drain'), 73.5, 23, 'c'); const bitE = big(L.one, 8, 80);
     const glass = lbl(L.die, '', 70.5, 46.5, 'c');
+    /* the glass follows the pointer over the square, or the finger that holds it, and stays where it was left */
+    const G = pl.gl = { x: 705, y: 300, tx: 705, ty: 300, a: 0, on: false, aG: 0, type: regionAt(705, 300) };
+    const aim = e => { const r = pl.el.getBoundingClientRect(); if (!r.width) return; G.tx = clamp((e.clientX - r.left) / r.width * 1000, 156, 844); G.ty = clamp((e.clientY - r.top) / r.height * 1000, 156, 844); G.on = true; };
+    pl.el.addEventListener('pointermove', e => { if (e.pointerType === 'mouse' || e.buttons) aim(e); });
+    pl.el.addEventListener('pointerdown', aim);
+    pl.el.addEventListener('pointerleave', e => { if (e.pointerType === 'mouse') G.on = false; });
+    addEventListener('pointerup', e => { if (e.pointerType !== 'mouse') G.on = false; });
     /* four transistors, a gate: tap the inputs */
     const ta = h('button', 'tap'), tb = h('button', 'tap'); ta.type = tb.type = 'button'; ta.setAttribute('aria-label', w('mo.gate.a')); tb.setAttribute('aria-label', w('mo.gate.b')); at(ta, 14, 58, 12, 12); at(tb, 14, 73, 12, 12); L.gate.append(ta, tb);
     const flip = k => { S.gate[k] ^= 1; S.tried.mgate = 1; ta.classList.add('used'); tb.classList.add('used'); if (S.gate.a && S.gate.b) done('gate'); setOut('m-gate', momOut('gate')); };
@@ -226,7 +242,8 @@ PL.years = {
     /* 1971: one job, or any program */
     const jb = big(L.job, 11, 4.5), jr = h('input', 'rng'); jr.type = 'range'; jr.min = 0; jr.max = 2; jr.step = 1; jr.value = S.job; jr.setAttribute('aria-label', w('mo.job.aria')); at(jr, 11, 17.5, 78); L.job.appendChild(jr);
     jr.oninput = () => { S.job = +jr.value; done('job'); setOut('m-job', momOut('job')); };
-    lbl(L.job, w('mo.job.l'), 11, 24.5); lbl(L.job, w('mo.job.m'), 50, 25.8, 'c'); lbl(L.job, w('mo.job.r'), 89, 24.5, 'r');
+    /* the slider's ends wrap before they reach its middle's word (Spanish and French on a phone) */
+    /* i18n-ok: styles */ for (const e of [lbl(L.job, w('mo.job.l'), 11, 24.5, 'wrap'), lbl(L.job, w('mo.job.r'), 89, 24.5, 'r wrap')]) e.style.maxWidth = '30%'; lbl(L.job, w('mo.job.m'), 50, 25.8, 'c');
     /* 1995: test it yourself */
     const bb = big(L.bug, 9, 5);
     btn(L.bug, w('mo.bug.run'), [9, 76, 44], () => { if (S.bug.run <= 0) S.bug.run = 1.2; }); btn(L.bug, w('mo.bug.worst', { a: nf(FDIV.a), b: nf(FDIV.b) }), [55, 76, 36], () => { S.bug.worst = true; done('bug'); setOut('m-bug', momOut('bug')); }, 'ghost');
@@ -239,7 +256,7 @@ PL.years = {
     btn(L.wall, w('m.wall.go') + ' →', [27, 82, 46], () => S.onWallGo && S.onWallGo());
     pl.sync = () => { const v = viewAt(S.d); for (const k in L) L[k].classList.toggle('on', k === v);
       if (v === 'one') put(bitE, (S.press > .5 ? '1' : '0') + '<small>' + (S.press > .5 ? w('bit.1') : w('bit.0')) + '</small>');
-      else if (v === 'die') { glass.style.opacity = S.d > 15 ? 1 : 0; put(glass, w('form.' + formAt(S.d))); }
+      else if (v === 'die') { const below = G.y + 148 < 840; glass.style.opacity = G.aG; glass.style.left = G.x / 10 + '%'; glass.style.top = (below ? G.y + 165 : G.y - 205) / 10 + '%'; put(glass, '<b>' + w('reg.' + G.type) + '</b> · ' + w('form.' + formAt(S.d))); }
       else if (v === 'job') { put(jb, w('mo.job.' + S.job + '.v')); if (+jr.value !== S.job) jr.value = S.job; }
       else if (v === 'bug') put(bb, S.bug.worst ? w('bug.found') : S.bug.n ? w('mo.bug.wrong0') + '<small>' + w('bug.in', { n: nf(S.bug.n) }) + '</small>' : '');
       else if (v === 'light') { ls(); put(lam, w(LIGHTS[S.light] === 'euv' ? 'light.euv' : 'light.duv')); } };
@@ -297,7 +314,8 @@ PL.distance = {
     c.fillStyle = K.ink; for (const q of [.18, 9.5, 640]) c.fillRect(X(q) - 1.5, yb - 14, 3, 36); },
   ui(host, pl) { const s = seg(host, ['a', 'b', 'c'].map(k => w('w.memory.' + k)), () => S.dist, i => { S.dist = i; tried('memory'); out('distance'); }, [6, 4, 88]);
     const m = lbl(host, w('s.mem'), 9, 13.5), g = lbl(host, w('s.logic'), 91, 13.5, 'r'); const X = v => 10 + (Math.log10(v) + 1) / 4 * 80;
-    lbl(host, w('pj.sum'), X(.18) - .4, 90.5); lbl(host, '8–11 pJ', X(9.5), 90.5, 'c').style.transform = 'translate(-50%,0)'; lbl(host, '640 pJ', X(640), 90.5, 'r');
+    /* the sum's own reading above the bar, the trips' below it: side by side they ran into each other */
+    lbl(host, w('pj.sum'), X(.18) - .4, 84, 'up'); lbl(host, '8–11 pJ', X(9.5), 90.5, 'c').style.transform = 'translate(-50%,0)'; lbl(host, '640 pJ', X(640), 90.5, 'r');
     pl.sync = () => { s(); m.style.opacity = g.style.opacity = S.dist === 2 ? 0 : 1; }; }
 };
 PL.power = {
@@ -354,11 +372,19 @@ PL.next = {
     /* each bar's name ends just above its bar, however many lines it takes */
     lbl(host, w('nx.behind') + '<b>×' + sig(BEHIND, 3) + '</b>', 18.2, 35.5, 'r up wrap side'); const ah = lbl(host, '', 21.5, 23, 'up wrap');
     /* its own hold button: beside the ladder on a wide plate; on a phone, in the empty corner above the bars */
-    const b = big(host, 53, 3.5); const hb = h('button', 'holdbtn', w('btn')); hb.type = 'button'; host.appendChild(hb); let hbAt = '';
+    const b = big(host, 53, 3.5); const hb = h('button', 'holdbtn', w('btn')); hb.type = 'button'; host.appendChild(hb); let hbAt = '', uk = '';
+    /* each rung's words start at its rung; where a long name takes more lines than the gap to the next rung (Spanish
+       or French on a phone), the next rung's words move down just enough, and the floor's stay on the floor, the ones
+       above moving up to make room */
+    const unstack = () => { const H = host.clientHeight, k = H + '|' + (document.fonts ? document.fonts.status : ''); if (!H || k === uk) return; uk = k;
+      const want = RUNGS.map((r, i) => (Y(RP[i]) - (i === 4 ? 6.6 : 1.6)) / 100 * H), hs = ls.map(e => e.offsetHeight), top = want.slice(), g = 3;
+      for (let i = 1; i < ls.length - 1; i++) top[i] = Math.max(want[i], top[i - 1] + hs[i - 1] + g);
+      top[4] = Math.max(want[4], Y(1) / 100 * H - hs[4] - 2); for (let i = 3; i > 0; i--) top[i] = Math.min(top[i], top[i + 1] - hs[i] - g);
+      ls.forEach((e, i) => { e.style.top = top[i] / H * 100 + '%'; }); };
     bindHold(host, () => { S.next.hold = true; }, () => { S.next.hold = false; });
     pl.sync = () => { const x = Math.pow(10, (NX0 - NX1) * S.next.pos), ph = innerWidth <= 760 ? 'p' : 'd'; if (hbAt !== ph) { hbAt = ph; at(hb, ...(ph === 'p' ? [3, 2] : [77, 49])); }
       put(b, (x < 1.5 ? '×1' : w('nx.x', { x: x < 1e4 ? nf(x) : xOf(x) })) + '<small>' + w('nx.unit') + '</small>'); put(ah, w('nx.ahead') + '<b>×' + sig(AHEAD, 2) + '</b>');
-      ls.forEach((e, i) => e.classList.toggle('hot', S.next.at === i)); hb.style.opacity = S.next.pos >= 1 ? .25 : 1; hb.classList.toggle('down', !!S.next.hold); }; }
+      ls.forEach((e, i) => e.classList.toggle('hot', S.next.at === i)); unstack(); hb.style.opacity = S.next.pos >= 1 ? .25 : 1; hb.classList.toggle('down', !!S.next.hold); }; }
 };
 
 /* ---------------- how a computer is arranged ---------------- */
@@ -433,17 +459,20 @@ PL.machine = {
     const sub = lbl(host, '', 6, 12.5), tiles = h('div', 'layer on'); host.appendChild(tiles); let tb = [];
     const build = () => { tiles.innerHTML = ''; tb = []; const need = NEEDS[S.need], ts = need.parts.length > 4 ? 13.8 : 15.8;
       /* i18n-ok: styles */ need.parts.forEach((p, i) => { const [cx, cy] = tilePos(need, i), b = h('button', 'mtile'); b.type = 'button'; at(b, cx / 10 - ts / 2 - 3, cy / 10 - ts / 2, ts + 6, ts + 6.4); b.style.cssText += ';display:flex;flex-direction:column;justify-content:flex-end;align-items:center;text-align:center;line-height:1.1';
-        b.innerHTML = '<b style="font-weight:600;font-size:.92em;white-space:nowrap"></b><span class="lb" style="position:static;font-size:max(11px,calc(var(--p)*16))"></span>'; if (STOCK.includes(p[1])) b.disabled = true;
+        b.innerHTML = '<b style="font-weight:600;font-size:max(11px,.92em);white-space:nowrap"></b><span class="lb" style="position:static;font-size:max(11px,calc(var(--p)*16))"></span>'; if (STOCK.includes(p[1])) b.disabled = true;
         b.onclick = () => { const k = need.id + '.' + p[0], f = S.forms[k] || 'software'; S.forms[k] = FORMS[(FORMS.indexOf(f) + 1) % FORMS.length]; S.kept = false; out('machine'); }; tiles.appendChild(b); tb.push([b, p]); }); };
     build();
     /* i18n-ok: styles */ const tri = h('div', 'tri'); at(tri, 6, 70.5, 88, 25); tri.style.cssText += ';display:grid;grid-template-columns:1fr 1.15fr 1fr;border:1.5px solid var(--ink);background:var(--plate)'; host.appendChild(tri);
-    /* i18n-ok: styles */ const cell = (k, who) => { const d = h('div'); d.style.cssText = 'padding:5% 6% 4%;border-left:1.5px solid var(--ink);display:flex;flex-direction:column;justify-content:space-between;gap:4px;min-width:0'; d.innerHTML = '<span class="lb" style="position:static">' + w('tri.' + k) + ' · <span class="red">' + w('tri.' + k + '.who') + '</span></span>'; tri.appendChild(d); return d; };
+    /* i18n-ok: styles */ const cell = (k, who) => { const d = h('div'); d.style.cssText = 'padding:5% 6% 4%;border-left:1.5px solid var(--ink);display:flex;flex-direction:column;justify-content:space-between;gap:4px;min-width:0'; d.innerHTML = '<span class="lb" style="position:static;white-space:normal">' + w('tri.' + k) + ' · <span class="red">' + w('tri.' + k + '.who') + '</span></span>'; tri.appendChild(d); return d; };
     const g = cell('gen'), ck = cell('chk'), dc = cell('dec'); g.style.borderLeft = '0';
     const gb = h('button', 'pbtn ghost', w('tri.gen.b')); gb.type = 'button'; gb.style.position = 'static'; gb.onclick = () => { agent(); out('machine'); }; g.appendChild(gb);
     /* i18n-ok: styles */ const en = h('div', 'big'); en.style.cssText = 'position:static;font-size:calc(var(--p)*76)'; ck.appendChild(en);
     /* i18n-ok: styles */ const kb = h('button', 'pbtn', w('tri.dec.b')); kb.type = 'button'; kb.style.cssText = 'position:static;white-space:normal'; kb.onclick = () => { S.kept = true; done('keep'); out('machine'); out('island'); }; dc.appendChild(kb);
     const sg = host.querySelector('.seg');
-    pl.sync = () => { s(); const m = machNow(); put(sub, sw('machines.need.' + m.need.id + '.d')); [...sg.children].forEach((b, i) => put(b, sw('machines.need.' + NEEDS[i].id + '.t'))); if (tb.length !== m.need.parts.length || tb[0][1] !== m.need.parts[0]) build();
+    /* i18n-ok: styles */ sub.style.cssText += ';white-space:normal;width:88%';
+    pl.sync = () => { s(); const m = machNow(); put(sub, sw('machines.need.' + m.need.id + '.d'));
+      /* the need's words just under its row of needs, however many lines the row takes */
+      if (host.clientHeight) at(sub, 6, (sg.offsetTop + sg.offsetHeight) / host.clientHeight * 100 + 3); [...sg.children].forEach((b, i) => put(b, sw('machines.need.' + NEEDS[i].id + '.t'))); if (tb.length !== m.need.parts.length || tb[0][1] !== m.need.parts[0]) build();
       tb.forEach(([b, p]) => { const f = formOf(m.need, p); put(b.children[0], w('piece.' + p[0])); put(b.children[1], f === 'stock' ? w('form.stock') : w('form.' + f)); b.children[1].classList.toggle('hot', m.bad === p[0]); });
       put(en, '×' + (m.e >= 10 ? Math.round(m.e) : m.e.toFixed(1)) + '<small style="font-size:max(11px,calc(var(--p)*15.5))">' + (m.ok ? w('mach.ok') : w('mach.no')) + '</small>'); en.style.color = m.ok ? '' : 'var(--mid)'; kb.disabled = !m.ok || S.kept; put(kb, S.kept ? w('tri.dec.done') : w('tri.dec.b')); }; }
 };
@@ -458,10 +487,12 @@ PL.island = {
     c.fillStyle = K.plate; c.fillRect(425, 395, 150, 150); c.strokeStyle = S.kept ? K.red : K.ink; c.lineWidth = 4; c.strokeRect(425, 395, 150, 150); c.fillStyle = S.kept ? K.red : fg(.3); for (let i = 0; i < 3; i++) for (let j = 0; j < 3; j++) c.fillRect(443 + i * 40, 413 + j * 40, 34, 34);
     LOOP.forEach((l, i) => { const [x, y] = pts[i], lit = LIT[l[1]](), sel = S.place === l[1]; c.fillStyle = lit ? K.red : K.plate; c.fillRect(x - 36, y - 36, 72, 72); c.strokeStyle = lit ? K.red : K.ink; c.lineWidth = sel ? 8 : 4; c.strokeRect(x - 36, y - 36, 72, 72); if (sel) { c.strokeStyle = K.ink; c.lineWidth = 2.5; c.strokeRect(x - 50, y - 50, 100, 100); } }); },
   ui(host, pl) { LOOP.forEach((l, i) => { const x = l[2] / 10, y = (l[3] * .9 + 20) / 10, b = h('button'); b.type = 'button'; at(b, x - 13, y - 5, 26, i === 0 || i === 3 ? 13.5 : 13.5);
-      /* i18n-ok: styles */ b.style.cssText += ';display:flex;flex-direction:column;align-items:center;justify-content:flex-end;text-align:center'; b.innerHTML = '<span style="height:55%"></span><span class="lb" style="position:static">' + w('stage.' + l[0]) + '<b>' + w('place.' + l[1]) + '</b></span>';
+      /* a place at a side has its words from its square's outer edge inwards: clear of the plate's edge and of the card
+         over it and of the middle square, in any language; and every place's words start under its square */
+      /* i18n-ok: styles */ b.style.cssText += ';display:flex;flex-direction:column;justify-content:flex-start;' + (x < 40 ? 'align-items:flex-start;text-align:left;padding-left:9.4%' : x > 60 ? 'align-items:flex-end;text-align:right;padding-right:9.4%' : 'align-items:center;text-align:center'); b.innerHTML = '<span style="height:74%;flex:none"></span><span class="lb" style="position:static' + (x < 40 || x > 60 ? ';white-space:normal;width:max-content;max-width:calc(var(--p)*286)' : '') + '">' + w('stage.' + l[0]) + '<b>' + w('place.' + l[1]) + '</b></span>';
       b.onclick = () => { S.place = l[1]; out('island'); }; host.appendChild(b); });
     lbl(host, w('s.yours'), 50, 56.5, 'c').style.transform = 'translate(-50%,0)';
-    const go = h('a', 'pbtn'); go.href = '#/island'; go.dataset.go = 'island'; go.style.textDecoration = 'none'; at(go, 27, 89.5, 46); host.appendChild(go); pl.sync = () => put(go, (S.kept ? w('isle.go') : w('isle.go0')) + ' →'); }
+    const go = h('a', 'pbtn'); go.href = '#/island'; go.dataset.go = 'island'; go.style.textDecoration = 'none'; at(go, 27, 91.5, 46); host.appendChild(go); pl.sync = () => put(go, (S.kept ? w('isle.go') : w('isle.go0')) + ' →'); }
 };
 
 /* ---- what moves by itself, once a frame ---- */
@@ -483,7 +514,9 @@ export function mkChart(o = {}) {
   const c = cv.getContext('2d'), Y0 = 1957, Y1 = 2030; let W = 0, H = 0, g = { l: 36, r: 10, t: 10, b: 40 }, ph = 1, dpr = 1;
   const mk = (cls, html) => { const s = h('span', cls, html); lab.appendChild(s); return s; };
   const yl = [[1e3, 'k'], [1e6, 'm'], [1e9, 'bn'], [1e12, 'tn']].map(([v, k]) => [v, mk('yl', w('ax.' + k))]), xl = [1960, 1971, 1990, 2010, 2026].map(y => [y, mk('xl', y)]);
-  const eraL = ERAS.map(e => mk('era', w('era.' + e[0] + '.b'))), chip = mk('chip', ''), gsL = mk('gs', w('chart.guess'));
+  const eraL = ERAS.map(e => mk('era', w('era.' + e[0] + '.b'))), chip = mk('chip', ''), gsL = mk('gs', w('chart.guess')), hvL = mk('hv', '');
+  /* under the pointer: the year, and the nearest real chip reached so far */
+  let hov = null;
   /* the series beside the transistors: their switches are their legend, in the corner the data never reaches (early
      years, high counts); nothing is drawn under them */
   const serT = h('div', 'ser-t mono'); SERIES.forEach(s => { const b = h('button', ''); b.type = 'button'; b.dataset.s = s; b.onclick = e => { e.stopPropagation(); S.cq[s] = !S.cq[s]; changed('cq'); }; serT.appendChild(b); }); el.appendChild(serT);
@@ -521,7 +554,12 @@ export function mkChart(o = {}) {
     const cx = X(yNow), cy = Y(Math.pow(2, d)); c.strokeStyle = fg(.28); c.lineWidth = 1; c.beginPath(); c.moveTo(Math.round(cx) + .5, g.t); c.lineTo(Math.round(cx) + .5, g.t + ph); c.stroke();
     c.restore(); gsL.style.display = S.cq.guess ? '' : 'none';
     c.fillStyle = K.red; c.beginPath(); c.arc(cx, cy, (S.holding ? 6.5 + Math.sin(T * 11) : 5.5) * u, 0, 7); c.fill();
-    if (lastC && H >= 84) { put(chip, w('chip.' + lastC[2])); pos(chip, Math.max(X(lastC[0]), g.l + 80 * u), Y(lastC[1])); chip.style.display = ''; } else chip.style.display = 'none';
+    let hc = null; if (hov !== null && H >= 84) { const hy = clamp(hov, Y0, Math.min(Y1, yNow)), hx = Math.round(X(hy)) + .5; CHIPS.forEach(ch => { if (ch[0] <= yNow + .3 && Math.abs(ch[0] - hy) < 2.5 && (!hc || Math.abs(ch[0] - hy) < Math.abs(hc[0] - hy))) hc = ch; });
+      c.strokeStyle = fg(.45); c.lineWidth = 1; c.setLineDash([2, 3]); c.beginPath(); c.moveTo(hx, g.t); c.lineTo(hx, g.t + ph); c.stroke(); c.setLineDash([]);
+      if (hc) { c.strokeStyle = K.red; c.lineWidth = 2 * u; c.beginPath(); c.arc(X(hc[0]), Y(hc[1]), 6.5 * u, 0, 7); c.stroke(); }
+      put(hvL, '<b>' + Math.floor(hc ? hc[0] : hy) + '</b>' + (hc ? ' · ' + w('chip.' + hc[2]) + ' · ' + sig(hc[1], 2) : '')); pos(hvL, hx, g.t); hvL.classList.toggle('l', hx > W * .7); }
+    hvL.style.display = hov !== null && H >= 84 ? '' : 'none';
+    if (lastC && H >= 84 && !hc) { put(chip, w('chip.' + lastC[2])); pos(chip, Math.max(X(lastC[0]), g.l + 80 * u), Y(lastC[1])); chip.style.display = ''; } else chip.style.display = 'none';
     el.classList.toggle('pick', !!S.cq.pick);
   }
   const scrub = x => { const y = clamp(yearOfX(x), 1959.9, 2026), d = y >= 2025.6 ? DWALL : Math.min(DWALL - .02, dAt(y)); if (o.onScrub) o.onScrub(d); else Yr.set(d); };
@@ -529,10 +567,11 @@ export function mkChart(o = {}) {
   el.addEventListener('pointerdown', e => { if (e.target.closest('button,input,.cq')) return; const r = el.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top; e.preventDefault();
     if (S.cq.pick === 'guess') { S.cq.guess = valOfY(y); S.cq.pick = null; changed('cq'); return; }
     down = { x, moved: false }; try { el.setPointerCapture(e.pointerId); } catch (er) { /* no capture */ } if (S.cq.pick !== 'knee') scrub(x); });
-  el.addEventListener('pointermove', e => { if (!down) return; const x = e.clientX - el.getBoundingClientRect().left; if (Math.abs(x - down.x) > 5) down.moved = true; if (S.cq.pick !== 'knee' || down.moved) scrub(x); });
+  el.addEventListener('pointermove', e => { if (e.pointerType === 'mouse' && !e.target.closest('button,input,.cq,.ser-t')) hov = yearOfX(e.clientX - el.getBoundingClientRect().left); if (!down) return; const x = e.clientX - el.getBoundingClientRect().left; if (Math.abs(x - down.x) > 5) down.moved = true; if (S.cq.pick !== 'knee' || down.moved) scrub(x); });
   el.addEventListener('pointerup', e => { if (!down) return; const y = yearOfX(e.clientX - el.getBoundingClientRect().left);
     if (!down.moved && S.cq.pick === 'knee') { if (y >= KNEE[0] && y <= KNEE[1]) { done('knee'); S.cq.msg = 'knee.yes'; S.cq.pick = null; } else S.cq.msg = 'knee.no'; changed('cq'); } down = null; });
   el.addEventListener('pointercancel', () => { down = null; });
+  el.addEventListener('pointerleave', () => { hov = null; });
   if (window.ResizeObserver) new ResizeObserver(() => fit()).observe(el);
   return { el, fit, paint, X: y => X(y), Yv: v => Y(v), geo: () => g };
 }

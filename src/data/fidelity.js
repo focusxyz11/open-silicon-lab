@@ -39,7 +39,7 @@ export const ENGINES = {
   halt: 'src/engines/halt.js', thousand: 'src/engines/thousand.js', search: 'src/engines/search.js', listen: 'src/engines/listen.js',
   corearch: 'src/engines/corearch.js', machine: 'src/engines/machine.js', budget: 'src/engines/budget.js', plan: 'src/data/partfacts.js',
   noise: 'src/engines/lens.js', lens: 'src/engines/lens.js',
-  switch: 'src/engines/switch.js'
+  switch: 'src/engines/switch.js', strands: 'src/engines/strands.js'
 };
 
 const C = by => ({ f: 'computed', by });
@@ -76,7 +76,13 @@ export const LABS = {
   transistor: C('switch'),
   /* new ways to compute (#323): an adder of Toffoli gates ramped slowly, a model's layers laid across tiles */
   reversible: C('paradigms'), dataflow: C('paradigms'),
-  spikes: C('paradigms'), light: C('paradigms')
+  spikes: C('paradigms'), light: C('paradigms'),
+  /* grow an architecture: a toy model of how architectures win, whose lesson is a shape (worse at first, one need, then
+     more); its numbers are its own choices, so it is an idea drawn even though an engine runs it (src/engines/arch.js) */
+  archniche: IDEA, archspread: IDEA,
+  /* one spec, two matters: silicon from the bench's cell library, the tube from a kinetic model of seesaw gates and a
+     winner-take-all network with honest trends, not a chemistry simulator (src/engines/strands.js) */
+  bridge: C('strands'), dnawta: C('strands')
 };
 /* the challenges the ledger makes: a design someone kept, to be broken */
 export const KINDS = { break: C('design'), design: C('design') };
