@@ -49,5 +49,15 @@ async function handles() {
   await page.mouse.move(640, 760);
   await page.waitForFunction(() => { const n = [...document.querySelectorAll('.lensbar [data-lens] .nm')]; return n.length === 5 && n.every(e => e.getBoundingClientRect().width > 0 && e.textContent.trim()); }, null, { timeout: 10000 })
     .catch(() => problems.push(tag + ': the lens buttons do not all show their names'));
+  /* zoomed out, the island's places fold into one name, and it stays a name: it once took the first page's .home and
+     covered the whole picture */
+  const far = await page.waitForFunction(() => {
+    const cv = document.getElementById('mapCanvas');
+    if (cv) cv.dispatchEvent(new WheelEvent('wheel', { deltaY: 400, clientX: innerWidth * 0.8, clientY: innerHeight * 0.6, bubbles: true, cancelable: true }));
+    const n = document.querySelector('#mapLabels .place3.homeisle'), b = n && n.getBoundingClientRect();
+    return n && n.style.opacity !== '0' && b.width > 0 ? { w: b.width, h: b.height } : false;
+  }, null, { timeout: 30000, polling: 300 }).then(h => h.jsonValue(), () => null);
+  if (!far) problems.push(tag + ': zoomed out, the island\'s one name does not show');
+  else if (far.w > 400 || far.h > 80) problems.push(tag + ': zoomed out, the island\'s one name covers the picture (' + Math.round(far.w) + ' x ' + Math.round(far.h) + ' px)');
   await page.close();
 }
