@@ -70,7 +70,7 @@
   "bp.actor.boards.t": "Cartes bon marché",
   "bp.actor.boards.d": "Un microcontrôleur RISC-V 32 bits coûte désormais moins de 10 centimes.",
   "bp.actor.cloud.t": "Centres de données",
-  "bp.actor.cloud.d": "Ils ont consommé environ {dc} TWh d’électricité, et en consommeront environ {dc2030} TWh d’ici 2030.",
+  "bp.actor.cloud.d": "Ils ont consommé environ {dc} TWh d’électricité en 2025, et en consommeront environ {dc2030} TWh d’ici 2030.",
   "bp.actor.everyone.t": "Tout le monde",
   "bp.actor.everyone.d": "L’informatique et les télécommunications utilisent 57 % des puces ; puis les voitures, les usines et les foyers.",
   "bp.wall.switch.t": "Le mur des 60 mV",

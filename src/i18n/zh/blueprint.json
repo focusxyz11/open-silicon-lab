@@ -70,7 +70,7 @@
   "bp.actor.boards.t": "廉价开发板",
   "bp.actor.boards.d": "一颗 32 位 RISC-V 微控制器如今不到 10 美分。",
   "bp.actor.cloud.t": "数据中心",
-  "bp.actor.cloud.d": "它们用电约 {dc} 太瓦时，到 2030 年将达到约 {dc2030} 太瓦时。",
+  "bp.actor.cloud.d": "2025 年它们用电约 {dc} 太瓦时，到 2030 年将达到约 {dc2030} 太瓦时。",
   "bp.actor.everyone.t": "每个人",
   "bp.actor.everyone.d": "计算和通信用掉 57% 的芯片；其次是汽车、工厂和家庭。",
   "bp.wall.switch.t": "60 毫伏之墙",

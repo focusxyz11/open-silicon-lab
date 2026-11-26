@@ -70,7 +70,7 @@
   "bp.actor.boards.t": "Placas baratas",
   "bp.actor.boards.d": "Un microcontrolador RISC-V de 32 bits cuesta ya menos de 10 céntimos.",
   "bp.actor.cloud.t": "Centros de datos",
-  "bp.actor.cloud.d": "Consumieron unos {dc} TWh de electricidad, camino de unos {dc2030} TWh en 2030.",
+  "bp.actor.cloud.d": "Consumieron unos {dc} TWh de electricidad en 2025, camino de unos {dc2030} TWh en 2030.",
   "bp.actor.everyone.t": "Todo el mundo",
   "bp.actor.everyone.d": "La informática y las comunicaciones usan el 57 % de los chips; después, coches, fábricas y hogares.",
   "bp.wall.switch.t": "El muro de los 60 mV",

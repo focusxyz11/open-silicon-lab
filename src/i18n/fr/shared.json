@@ -1,7 +1,7 @@
 {
  "wall.switch.d": "Un transistor ne s’éteint jamais proprement : même à 0, un peu de courant fuit. À température ambiante, il faut environ 60 millivolts de plus sur sa grille pour laisser passer dix fois plus de courant ; abaisser de 60 millivolts le point où il s’allume laisse donc fuir dix fois plus. Voilà pourquoi les tensions des puces ont cessé de baisser.",
  "wall.memory.d": "L’essentiel de l’énergie sert à déplacer les nombres, pas à calculer avec. Aller chercher 16 bits dans la mémoire d’une autre puce coûte environ 3 500 fois l’énergie d’une addition de deux nombres de 16 bits.",
- "wall.power.d": "Chaque réponse coûte de moins en moins à calculer. Les centres de données ont consommé environ {dc} TWh (térawattheures) d’électricité.",
+ "wall.power.d": "Chaque réponse coûte de moins en moins à calculer. Les centres de données ont consommé environ {dc} TWh (térawattheures) d’électricité en 2025.",
  "wall.power.more": "Ils se dirigent vers environ {dc2030} TWh en 2030 : chaque réponse coûte moins cher, et le monde en demande bien plus.",
  "wall.cost.d": "Concevoir une puce de pointe est passé d’environ {design28} en 28 nm à environ {design} en 2 nm, et un module d’usine pour la fabriquer coûte environ {module}. De moins en moins de monde peut s’offrir un essai.",
  "machines.need.hearing.t": "Aide auditive",
