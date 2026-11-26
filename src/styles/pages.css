@@ -841,3 +841,97 @@ html.frame2 .hero .btn { font-size: 15px; }
 .logpage .wm-logh { margin: 0 0 8px; font: 700 30px/1.15 var(--serif, Georgia, serif); }
 @media (max-width: 980px) { .wm-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); row-gap: 18px; } }
 @media (max-width: 560px) { .wm-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .wm-every ol { grid-template-columns: repeat(2, minmax(0, 1fr)); } .wm-pl { padding: 8px; } }
+/* the two arrangements of the Map: a chip's life, or matter and layers (#411) */
+.wm-arr { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 4px; margin: 0 0 12px; padding: 3px; border: 1px solid var(--line); border-radius: 999px; background: var(--panel); }
+.wm-arr span { color: var(--muted); padding: 0 6px 0 10px; }
+.wm-arr a { padding: 5px 12px; border-radius: 999px; color: var(--ink); text-decoration: none; font-weight: 600; }
+.wm-arr a:hover { color: var(--accent); }
+.wm-arr a[aria-current] { background: var(--ink); color: var(--bg); }
+
+/* ---- the lattice (#/log/lattice, src/v2/lattice.js): across, kinds of matter; up, layers from physics to intelligence.
+   A cell holds what the lab has (challenges as dots and names, levels, pages), what is real elsewhere with its source,
+   or the question that keeps it open; a matter that climbs past a layer leaves it hatched. A path lit numbers its
+   cells, lights the things it passes and runs a wire through the gutters; the rest dims. On a narrow screen, one matter
+   at a time ---- */
+.lat { --lat-hot: var(--accent); --lat-real: var(--good); position: relative; }
+.lat-paths { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 4px 0 6px; }
+.lat-paths .kicker { margin-right: 6px; }
+.lat-pb { font: 600 13px var(--sans); color: var(--ink); background: var(--panel); border: 1px solid var(--line); border-radius: 999px; padding: 6px 12px; cursor: pointer; }
+.lat-pb:hover { border-color: var(--lat-hot); }
+.lat-pb[aria-pressed="true"] { background: var(--lat-hot); border-color: var(--lat-hot); color: var(--accent-ink); }
+.lat-pd { margin: 0 0 8px; color: var(--muted); max-width: 62em; min-height: 2.9em; }
+.lat.pathon .lat-pd { color: var(--ink); }
+.lat-tabs { display: none; }
+.lat-grid { position: relative; display: grid; grid-template-columns: 8.2rem minmax(0, 1fr) minmax(0, 1.55fr) repeat(5, minmax(0, 1fr)); column-gap: 14px; row-gap: 12px; align-items: stretch; }
+.lat-corner { align-self: end; color: var(--muted); padding-bottom: 6px; }
+.lat-mh { display: flex; flex-direction: column; gap: 2px; padding: 6px 2px; border-bottom: 2px solid var(--ink); min-width: 0; }
+.lat-mh b { font: 700 15px/1.2 var(--sans); }
+.lat-mh span { color: var(--muted); line-height: 1.25; }
+.lat-mh a { color: var(--accent); text-decoration: none; margin-top: 2px; }
+.lat-mh[data-m="yours"] { border-bottom-style: dashed; }
+.lat-lh { display: flex; flex-direction: column; justify-content: center; gap: 2px; padding-right: 4px; border-right: 2px solid var(--ink); min-width: 0; }
+.lat-lh b { font: 700 14px/1.2 var(--sans); }
+.lat-lh span { color: var(--muted); line-height: 1.25; }
+.lat-c { position: relative; z-index: 1; min-width: 0; padding: 8px 9px 9px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel-solid); font-size: 12.5px; line-height: 1.3; transition: opacity .25s, box-shadow .25s; }
+.lat-c.k-real { background: var(--panel); }
+.lat-c.k-open { background: transparent; border-style: dashed; }
+.lat-c.k-past { background: repeating-linear-gradient(135deg, transparent 0 6px, var(--line) 6px 7px); border-color: transparent; color: var(--muted); }
+.lat-c[data-m="yours"] { background: transparent; border-style: dashed; }
+.lat-ck { display: none; }
+.lat-ch { list-style: none; margin: 0; padding: 0; display: grid; gap: 3px; }
+.lat-ch li a { display: flex; gap: 6px; align-items: baseline; color: var(--ink); text-decoration: none; }
+.lat-ch li a:hover { color: var(--accent); }
+.lat-ch li i { flex: none; width: 8px; height: 8px; border-radius: 50%; border: 1.5px solid var(--muted); transform: translateY(1px); }
+.lat-ch li.done i { background: var(--warm); border-color: var(--warm); }
+.lat-more { margin-top: 3px; }
+.lat-more summary { cursor: pointer; color: var(--muted); font-size: 12px; }
+.lat-more[open] summary { margin-bottom: 3px; }
+.lat-lv { margin: 6px 0 0; display: flex; flex-wrap: wrap; gap: 2px 8px; align-items: baseline; }
+.lat-lv span { color: var(--muted); font-size: 11px; letter-spacing: .03em; text-transform: uppercase; }
+.lat-lv a { color: var(--ink); text-decoration: none; border-bottom: 1px solid var(--line); }
+.lat-lv a.been { border-bottom: 2px solid var(--warm); }
+.lat-lv a:hover { color: var(--accent); }
+.lat-go { display: block; margin-top: 6px; color: var(--accent); text-decoration: none; font-weight: 600; }
+.lat-c > .lat-go:first-of-type { margin-top: 0; }
+.lat-ch + .lat-real, .lat-lv + .lat-real, .lat-go + .lat-real, .lat-more + .lat-real { margin-top: 7px; padding-top: 6px; border-top: 1px solid var(--line); }
+.lat-tag { display: block; font: 700 10.5px var(--sans); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin-bottom: 3px; }
+.lat-real .lat-tag { color: var(--lat-real); }
+.lat-fact { margin: 0 0 5px; color: var(--muted); }
+.lat-fact:last-child { margin-bottom: 0; }
+.lat-fact b { color: var(--ink); font-weight: 650; }
+.lat-fact a { color: var(--accent); text-decoration: none; overflow-wrap: anywhere; }
+.lat-open, .lat-past { margin: 0; }
+.lat-open { color: var(--ink); font-style: italic; font-family: var(--serif); font-size: 13px; }
+.lat-open .lat-tag { font: 700 10.5px var(--sans); font-style: normal; }
+.lat-past { font-size: 12px; }
+/* a path lit: its cells raised and numbered, the things it passes marked, the rest dimmed */
+.lat.pathon .lat-c:not(.lit) { opacity: .38; }
+.lat.pathon .lat-c:not(.lit):hover { opacity: 1; }
+.lat-c.lit { border-color: var(--lat-hot); border-style: solid; box-shadow: 0 0 0 1.5px var(--lat-hot), 0 8px 24px rgba(0, 0, 0, .18); }
+.lat-n { position: absolute; top: -9px; right: -7px; z-index: 2; min-width: 20px; height: 20px; padding: 0 5px; border-radius: 10px; background: var(--lat-hot); color: var(--accent-ink); font: 700 11.5px/20px var(--sans); text-align: center; }
+.lat-ch li.mk a { font-weight: 700; color: var(--lat-hot); }
+.lat-lv a.mk { color: var(--lat-hot); border-bottom: 2px solid var(--lat-hot); font-weight: 700; }
+.lat-go.mk { text-decoration: underline; }
+.lat-wire { position: absolute; left: 0; top: 0; z-index: 2; pointer-events: none; overflow: visible; }
+.lat-wire path { fill: none; stroke: var(--lat-hot); stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+.lat-wire .lat-tip { fill: var(--lat-hot); stroke: none; }
+/* one matter at a time where seven columns would not fit */
+@media (max-width: 900px) {
+  .lat-tabs { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 10px; }
+  .lat-tabs button { font: 600 13px var(--sans); color: var(--ink); background: transparent; border: 1px solid var(--line); border-radius: 999px; padding: 6px 11px; cursor: pointer; }
+  .lat-tabs button.onpath { border-color: var(--lat-hot); box-shadow: inset 0 -2px 0 var(--lat-hot); }
+  .lat-tabs button[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+  .lat-grid { grid-template-columns: 6.6rem minmax(0, 1fr); column-gap: 12px; }
+  .lat-corner, .lat-mh.mo, .lat-c.mo { display: none; }
+  .lat-mh { grid-column: 2; }
+  .lat-c { font-size: 13.5px; }
+  .lat .wm-across { display: none; }
+}
+@media (max-width: 420px) { .lat-grid { grid-template-columns: 5.4rem minmax(0, 1fr); column-gap: 10px; } .lat-lh b { font-size: 13px; } .lat-lh span { font-size: 11.5px; } }
+.lat-nav { display: none; }
+@media (max-width: 900px) {
+  .lat-nav { display: flex; justify-content: space-between; gap: 8px; margin: 8px 0 0; padding-top: 6px; border-top: 1px solid var(--line); }
+  .lat-to { font: 600 12.5px var(--sans); color: var(--lat-hot); background: none; border: 0; padding: 4px 0; cursor: pointer; }
+  .lat-to.next { margin-left: auto; }
+}
+.lat-lv a small { color: var(--muted); font-size: 10.5px; }
