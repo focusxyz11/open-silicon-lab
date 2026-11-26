@@ -9,7 +9,10 @@ export const explore = async (tag, viewport, scheme) => {
   /* the software renderer here is slow: pin the quality, so the 3D levels are tested as 3D (the fallback has its own page) */
   await page.addInitScript(() => { try { localStorage.setItem('osl-quality', 'keep'); } catch (e) { /* no storage */ } });
   page.on('pageerror', e => problems.push(tag + ': ' + e.message));
-  page.on('console', m => { if (m.type() === 'error' && !/fonts\.g|net::ERR|WebGL|GPU/.test(m.text())) problems.push(tag + ': console: ' + m.text()); });
+  /* a console error says where the walk was, and for an SVG of negative size, which one it was */
+  page.on('console', m => { if (m.type() !== 'error' || /fonts\.g|net::ERR|WebGL|GPU/.test(m.text())) return; const at = S.at && S.at !== tag ? ' (at ' + S.at.slice(tag.length).trim() + ', ' + page.url().split('#')[1] + ')' : ' (at #' + page.url().split('#')[1] + ')';
+    const which = /negative value/.test(m.text()) ? page.evaluate(() => [...document.querySelectorAll('svg[viewBox], rect[height^="-"]')].filter(e => e.tagName === 'rect' || +(e.getAttribute('viewBox') || '').split(/[\s,]+/)[3] < 0).slice(0, 2).map(e => { const o = e.closest('svg'), q = o && o.parentElement; return (o && o.getAttribute('class') || 'svg') + ' in ' + (q ? q.tagName.toLowerCase() + '.' + String(q.className).split(' ').join('.') : '?'); }).join('; ')).catch(() => '') : Promise.resolve('');
+    which.then(w => problems.push(tag + ': console' + at + ': ' + m.text() + (w ? ' [' + w + ']' : ''))); });
   await page.goto(base + 'index.html#/island');
   /* the structure (docs/reviews/structure.md): no menu; the bar holds the loop, six stages from the need round to use.
      Following the chip opens the place where the loop starts, the Lab, and every place's card offers the next: the
