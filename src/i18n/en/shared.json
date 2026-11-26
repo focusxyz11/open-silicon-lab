@@ -8,7 +8,7 @@
  "machines.need.hearing.d": "Tiny, all day on one small battery",
  "machines.need.hearing.why": "Its filter has to be tuned to each person's hearing, so it must still change after the machine is made.",
  "machines.need.wildfire.t": "Wildfire sensor",
- "machines.need.wildfire.d": "Ten years in a forest, no service",
+ "machines.need.wildfire.d": "Ten years in a forest, nobody to change its battery",
  "machines.need.wildfire.why": "Nothing has to change once it is out there: what matters most is the battery.",
  "machines.need.rover.t": "Mars rover",
  "machines.need.rover.d": "Far away, cold, hit by radiation",

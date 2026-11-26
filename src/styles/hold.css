@@ -111,6 +111,7 @@ body.firstpage .bar .loop{display:none}
 .hold .w-h{margin:0;font-size:calc(var(--u)*72)}
 .hold .w-d{font-size:calc(var(--u)*16.5);line-height:1.4}
 .hold .w-note{color:var(--mid);margin-top:.7em;font-size:calc(var(--u)*10.5)}
+.hold .w-note i,.hold .w-note em{text-transform:none;letter-spacing:.02em}.hold .w-note em{font-style:normal}
 .hold .w-try .w-k{color:var(--red)}
 .hold .w-try .w-p{font-weight:600;font-size:calc(var(--u)*16.5);margin:.35em 0 .5em;line-height:1.3}
 .hold .w-out{min-height:2.8em;font-size:calc(var(--u)*14.5);line-height:1.4}

@@ -489,7 +489,7 @@ export function start() {
     if (k === 'machines') V.showMachines(parts[1], parts[2]);
     /* a reading page stands on its own: the island waits behind it, paused (src/v2/frame2.js, Read) */
     if (frame2Reading()) return showMap(from).then(m => { if (m && frame2Reading()) m.pause(); });
-    return showMap(from).then(m => { if (!m) return; if (k === 'ecosystem') V.showEcosystem(); else if ((k === 'island' || k === 'explore') && V.cur && !sheet.hidden) { closeSheet(); V.map && V.map.overview(); } });
+    return showMap(from).then(m => { if (!m) return; if (k === 'ecosystem') V.showEcosystem(); else if (k === 'island' && V.cur && !sheet.hidden) { closeSheet(); V.map && V.map.overview(); } });
   }
   /* an arrival (by address, a move in a view, a place picked; #367): the address says it, the Map marks it, a seam raises its leak */
   function arrive(h, how) { if (how === 'push') history.pushState(null, '', h); else if (how) history.replaceState(null, '', h); been(h); const to = Way.whereOf(h); crossed(V.seamFrom, to); V.seamFrom = to; }
@@ -497,7 +497,7 @@ export function start() {
      settles) are the first page */
   const homeOf = p => (!p[0] || p[0] === 'hold' ? 'home' : p[0]);
   function route() {
-    /* a world is a reading page, opened from a lens or by name; there is no list of them (#305): #/w alone is the map */
+    /* a world is a reading page, opened from a lens or by name; there is no list of them (#305): #/w alone is the first page */
     if (/^#\/?w\/?$/.test(location.hash)) history.replaceState(null, '', '#/');
     const parts = partsOf(location.hash), k = homeOf(parts), n = ++V.routeN;
     document.body.classList.toggle('firstpage', k === 'home');

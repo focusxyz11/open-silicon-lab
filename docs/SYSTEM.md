@@ -122,7 +122,7 @@ sits on a **seam** of the grid: between two levels (crossed going in or out) or 
 along). The two moves are how you meet them: the first time you cross a seam, its leak rises beside the view
 (`seamOf` in `src/engines/way.js`), then waits under Ask. A question joins when someone real was stuck on it, it
 opened something, and part of it is still open; its words are `field.<id>.*`, with who asked it and where to read it
-in their words. A bet becomes a challenge (kind `bet`, its engine in `src/engines/bet.js`): first a guess, then two dials and a picture
+in their words. A bet becomes a challenge (kind `bet`, its engine in `src/engines/bet.js`, drawn by `src/v2/labs/bets.js`): first a guess, then two dials and a picture
 the engine counts from, until the three primitives balance; Moore's bet and the pieces' bet (one bad piece in a package, the known good die) at the wafer, Cray's (oxen or chickens, after Hill and Marty's model) at the data centre's chip, the proof's bet (test it, or prove it?) at the design's check, played at the bench, and Jevons' bet (does a better chip save energy? a better chip and a limit on the island's power) on the power island, a place with no levels, where the challenge is met at the place itself. While a bet is open, the 3D scene behind its card answers the dials (`src/app/betscene.js`): the wafer is the bet's wafer, the chip shows the bet's cores, and the power island's turbines turn or stand still for the answers asked, with the turbines it would need beyond its own rising from the sea. Every place now holds at least one; the tools and the phones and cars hold fewest.
 
 ### What if? between the islands

@@ -176,11 +176,11 @@ Each is an issue labelled `task`. #229 (the chip you land on is the chip you saw
 ## Ideas still to bring over
 
 - From the first version of the site (the branch `before`, which has more content as documents): the economics of a chip, the memory wall at Use, die photos at the dives' own chips (the words `xray.title` and `xray.read.*` wait), and the energy floor. The X-ray came over as *Read the die* at the test house (`src/engines/dies.js`, `src/v2/labs/dies.js`): five kinds of die photo, each named from where its area goes, every kind of block found by its texture. The words already brought over wait in `src/data/waiting-words.json`.
-- From the brainstorm ([IDEAS.md](IDEAS.md)), ideas in the bank and not yet built, for example Invent a transistor, Attack your own chip, Read a real open chip, Root cause across the stack, Number sense, and This month, playable.
+- From the brainstorm ([IDEAS.md](IDEAS.md)), ideas in the bank and not yet built, for example Attack your own chip, Read a real open chip, Root cause across the stack, Number sense, and This month, playable.
 
 ## Know before you start
 
 - The smoke test plays every lab to its win (`playLab` in `scripts/smoke/labs.mjs`, each lab's own moves in `scripts/smoke/labs/<lab>.mjs`): it polls with `evaluate`, because `waitForFunction` does not wait for an async predicate, and it reads the challenge's own card (`.player[data-ch="<id>"]`).
-- Run `npm test` before every push. CI also runs the browser smoke test (`npm run test:browser`) on desktop and phone with a software renderer. It is slow (about 7 minutes on CI, longer on a small machine), so its checks poll instead of waiting fixed times.
+- Run `npm test` before every push. CI also runs the browser smoke test (`npm run test:browser`) on desktop and phone with a software renderer. It is slow (on CI it runs as four groups side by side, about 4 to 9 minutes each; one run alone takes far longer on a small machine), so its checks poll instead of waiting fixed times.
 - Locally, install Playwright with `npm install --no-save playwright` (never commit `node_modules`). `localStorage['osl-quality']` set to `'flat'` skips 3D for speed; `'keep'` forces it.
 - Several sessions in parallel work when their tasks touch different files. Since #312 most work has files of its own; where sessions still meet (the labs' list `src/data/labs/index.js`, `src/data/frame.js`, the word files and `AREAS`, the shared sheets) is in [WORKFLOW.md](WORKFLOW.md). Merge one pull request at a time and update the others' branches.

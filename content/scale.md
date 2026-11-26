@@ -37,7 +37,7 @@ a silicon crystal repeats about every half a nanometre; a switch's channel is a 
 **6. The switch keeps changing shape.** Flat, then fins standing up, then stacked sheets with the gate wrapped all
 around. Each new shape gave the gate a firmer grip on the channel so the switch could shrink again. Next on the
 research roadmaps: switches stacked on switches, then channels made of materials only a few atoms thick, projected
-around 2033 and 2043 ([imec via TrendForce](https://www.trendforce.com/news/2026/07/09/news-imec-roadmap-extends-to-a3-by-2038-chip-density-gains-shift-beyond-traditional-transistor-scaling/),
+around 2034 and 2043 ([imec via TrendForce](https://www.trendforce.com/news/2026/07/09/news-imec-roadmap-extends-to-a3-by-2038-chip-density-gains-shift-beyond-traditional-transistor-scaling/),
 [imec via Wccftech](https://wccftech.com/sub-1nm-process-node-technology-wont-arrive-till-2034-logic-roadmap-2dfets-sub-0-2nm-2046/),
 projections).
 
