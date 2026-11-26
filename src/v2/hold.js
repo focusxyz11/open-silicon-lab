@@ -297,7 +297,7 @@ export function createHold(host, ctx = {}) {
   function touch() { if (touched || !document.documentElement.dataset.preload) return; touched = true; loadFacts();
     /* words that did not come (the page was left, the connection dropped) are asked for again at the next touch; once
        in, the story above may have grown, so the camera stays where it was */
-    needWords('blueprint', 'shared').then(() => { if (!hasWords('blueprint') || !hasWords('shared')) { touched = false; return; } const a = sized && !flying ? here.a : null; fillWays(); fillShared(); out('machine'); if (a && LIVE.on) restore(a); }, () => { touched = false; }); }
+    needWords('blueprint', 'shared').then(() => { fillWays(); fillShared(); out('machine'); if (!hasWords('blueprint') || !hasWords('shared')) touched = false; else if (here.a && sized && !flying && LIVE.on) restore(here.a); }, () => { touched = false; }); }
   const idleTouch = () => { if (touched || !LIVE.on || document.documentElement.dataset.preload === 'off') return; if (document.documentElement.dataset.preload) (window.requestIdleCallback ? requestIdleCallback(touch, { timeout: 1500 }) : setTimeout(touch, 1500)); else setTimeout(idleTouch, 600); };
 
   /* for checks */

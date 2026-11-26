@@ -151,8 +151,8 @@ export const PW = {
 const wayW = (id, k) => (id === 'switches' || id === 'spikes' ? w('bet.' + id + '.' + k) : t('bp.next.' + id + '.' + k));
 /* the words Hold shares with other pages (src/i18n/<lang>/shared.json): '' until they are in, then filled where they show */
 export const sw = (k, v) => (hasWords('shared') ? t(k, v ? { ...figVars(), ...v } : figVars()) : '');
-export function fillShared() { $$('[data-sw]').forEach(e => { e.innerHTML = sw(e.dataset.sw); }); changed('words'); }
-export function fillWays() { $$('.w-ways button[data-way]').forEach(b => { b.querySelector('b').innerHTML = wayW(b.dataset.way, 't'); b.querySelector('span').innerHTML = wayW(b.dataset.way, 'd'); b.hidden = false; }); }
+export function fillShared() { if (!hasWords('shared')) return; $$('[data-sw]').forEach(e => { e.innerHTML = sw(e.dataset.sw); }); changed('words'); }
+export function fillWays() { if (!hasWords('blueprint')) return; $$('.w-ways button[data-way]').forEach(b => { b.querySelector('b').innerHTML = wayW(b.dataset.way, 't'); b.querySelector('span').innerHTML = wayW(b.dataset.way, 'd'); b.hidden = false; }); }
 /* a way into the lab: the place where it is played for real */
 export const lab = (key, href, cls) => '<a class="' + (cls || 'lnk') + '" href="' + href + '">' + key + '</a>';
 /* the words of a plate, as pieces a shell can place: head (kicker and headline), cap, try (the question to try, what
