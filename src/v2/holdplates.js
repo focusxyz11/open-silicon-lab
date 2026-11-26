@@ -190,7 +190,7 @@ function paintDie(c, T, d, pl) {
 }
 
 /* ---------------- the moments on the way ---------------- */
-function paintJob(c) { const n = S.jobK ?? 500, cw = 31.2, x0 = 110, y0 = 300;
+function paintJob(c) { const n = S.jobK ?? 500, cw = 31.2, x0 = 110, y0 = 318;
   for (let i = 0; i < 500; i++) { const cx = x0 + (i % 25) * cw, cy = y0 + Math.floor(i / 25) * cw; if (i < Math.round(n)) { c.fillStyle = K.red; c.fillRect(cx + 2, cy + 2, cw - 4, cw - 4); } else { c.strokeStyle = fg(.22); c.lineWidth = 1.5; c.strokeRect(cx + 2.5, cy + 2.5, cw - 5, cw - 5); } } }
 const BUGCOLS = [8, 15, 22, 29, 36];
 function paintBug(c, T) { const cw = 20, x0 = 90, y0 = 250, b = S.bug;
@@ -240,7 +240,8 @@ PL.years = {
     /* 1971: one job, or any program */
     const jb = big(L.job, 11, 4.5), jr = h('input', 'rng'); jr.type = 'range'; jr.min = 0; jr.max = 2; jr.step = 1; jr.value = S.job; jr.setAttribute('aria-label', w('mo.job.aria')); at(jr, 11, 17.5, 78); L.job.appendChild(jr);
     jr.oninput = () => { S.job = +jr.value; done('job'); setOut('m-job', momOut('job')); };
-    lbl(L.job, w('mo.job.l'), 11, 24.5); lbl(L.job, w('mo.job.m'), 50, 25.8, 'c'); lbl(L.job, w('mo.job.r'), 89, 24.5, 'r');
+    /* the slider's ends wrap before they reach its middle's word (Spanish and French on a phone) */
+    /* i18n-ok: styles */ for (const e of [lbl(L.job, w('mo.job.l'), 11, 24.5, 'wrap'), lbl(L.job, w('mo.job.r'), 89, 24.5, 'r wrap')]) e.style.maxWidth = '30%'; lbl(L.job, w('mo.job.m'), 50, 25.8, 'c');
     /* 1995: test it yourself */
     const bb = big(L.bug, 9, 5);
     btn(L.bug, w('mo.bug.run'), [9, 76, 44], () => { if (S.bug.run <= 0) S.bug.run = 1.2; }); btn(L.bug, w('mo.bug.worst', { a: nf(FDIV.a), b: nf(FDIV.b) }), [55, 76, 36], () => { S.bug.worst = true; done('bug'); setOut('m-bug', momOut('bug')); }, 'ghost');
@@ -311,7 +312,8 @@ PL.distance = {
     c.fillStyle = K.ink; for (const q of [.18, 9.5, 640]) c.fillRect(X(q) - 1.5, yb - 14, 3, 36); },
   ui(host, pl) { const s = seg(host, ['a', 'b', 'c'].map(k => w('w.memory.' + k)), () => S.dist, i => { S.dist = i; tried('memory'); out('distance'); }, [6, 4, 88]);
     const m = lbl(host, w('s.mem'), 9, 13.5), g = lbl(host, w('s.logic'), 91, 13.5, 'r'); const X = v => 10 + (Math.log10(v) + 1) / 4 * 80;
-    lbl(host, w('pj.sum'), X(.18) - .4, 90.5); lbl(host, '8–11 pJ', X(9.5), 90.5, 'c').style.transform = 'translate(-50%,0)'; lbl(host, '640 pJ', X(640), 90.5, 'r');
+    /* the sum's own reading above the bar, the trips' below it: side by side they ran into each other */
+    lbl(host, w('pj.sum'), X(.18) - .4, 84, 'up'); lbl(host, '8–11 pJ', X(9.5), 90.5, 'c').style.transform = 'translate(-50%,0)'; lbl(host, '640 pJ', X(640), 90.5, 'r');
     pl.sync = () => { s(); m.style.opacity = g.style.opacity = S.dist === 2 ? 0 : 1; }; }
 };
 PL.power = {
@@ -368,11 +370,19 @@ PL.next = {
     /* each bar's name ends just above its bar, however many lines it takes */
     lbl(host, w('nx.behind') + '<b>×' + sig(BEHIND, 3) + '</b>', 18.2, 35.5, 'r up wrap side'); const ah = lbl(host, '', 21.5, 23, 'up wrap');
     /* its own hold button: beside the ladder on a wide plate; on a phone, in the empty corner above the bars */
-    const b = big(host, 53, 3.5); const hb = h('button', 'holdbtn', w('btn')); hb.type = 'button'; host.appendChild(hb); let hbAt = '';
+    const b = big(host, 53, 3.5); const hb = h('button', 'holdbtn', w('btn')); hb.type = 'button'; host.appendChild(hb); let hbAt = '', uk = '';
+    /* each rung's words start at its rung; where a long name takes more lines than the gap to the next rung (Spanish
+       or French on a phone), the next rung's words move down just enough, and the floor's stay on the floor, the ones
+       above moving up to make room */
+    const unstack = () => { const H = host.clientHeight, k = H + '|' + (document.fonts ? document.fonts.status : ''); if (!H || k === uk) return; uk = k;
+      const want = RUNGS.map((r, i) => (Y(RP[i]) - (i === 4 ? 6.6 : 1.6)) / 100 * H), hs = ls.map(e => e.offsetHeight), top = want.slice(), g = 3;
+      for (let i = 1; i < ls.length - 1; i++) top[i] = Math.max(want[i], top[i - 1] + hs[i - 1] + g);
+      top[4] = Math.max(want[4], Y(1) / 100 * H - hs[4] - 2); for (let i = 3; i > 0; i--) top[i] = Math.min(top[i], top[i + 1] - hs[i] - g);
+      ls.forEach((e, i) => { e.style.top = top[i] / H * 100 + '%'; }); };
     bindHold(host, () => { S.next.hold = true; }, () => { S.next.hold = false; });
     pl.sync = () => { const x = Math.pow(10, (NX0 - NX1) * S.next.pos), ph = innerWidth <= 760 ? 'p' : 'd'; if (hbAt !== ph) { hbAt = ph; at(hb, ...(ph === 'p' ? [3, 2] : [77, 49])); }
       put(b, (x < 1.5 ? '×1' : w('nx.x', { x: x < 1e4 ? nf(x) : xOf(x) })) + '<small>' + w('nx.unit') + '</small>'); put(ah, w('nx.ahead') + '<b>×' + sig(AHEAD, 2) + '</b>');
-      ls.forEach((e, i) => e.classList.toggle('hot', S.next.at === i)); hb.style.opacity = S.next.pos >= 1 ? .25 : 1; hb.classList.toggle('down', !!S.next.hold); }; }
+      ls.forEach((e, i) => e.classList.toggle('hot', S.next.at === i)); unstack(); hb.style.opacity = S.next.pos >= 1 ? .25 : 1; hb.classList.toggle('down', !!S.next.hold); }; }
 };
 
 /* ---------------- how a computer is arranged ---------------- */
@@ -447,17 +457,20 @@ PL.machine = {
     const sub = lbl(host, '', 6, 12.5), tiles = h('div', 'layer on'); host.appendChild(tiles); let tb = [];
     const build = () => { tiles.innerHTML = ''; tb = []; const need = NEEDS[S.need], ts = need.parts.length > 4 ? 13.8 : 15.8;
       /* i18n-ok: styles */ need.parts.forEach((p, i) => { const [cx, cy] = tilePos(need, i), b = h('button', 'mtile'); b.type = 'button'; at(b, cx / 10 - ts / 2 - 3, cy / 10 - ts / 2, ts + 6, ts + 6.4); b.style.cssText += ';display:flex;flex-direction:column;justify-content:flex-end;align-items:center;text-align:center;line-height:1.1';
-        b.innerHTML = '<b style="font-weight:600;font-size:.92em;white-space:nowrap"></b><span class="lb" style="position:static;font-size:max(11px,calc(var(--p)*16))"></span>'; if (STOCK.includes(p[1])) b.disabled = true;
+        b.innerHTML = '<b style="font-weight:600;font-size:max(11px,.92em);white-space:nowrap"></b><span class="lb" style="position:static;font-size:max(11px,calc(var(--p)*16))"></span>'; if (STOCK.includes(p[1])) b.disabled = true;
         b.onclick = () => { const k = need.id + '.' + p[0], f = S.forms[k] || 'software'; S.forms[k] = FORMS[(FORMS.indexOf(f) + 1) % FORMS.length]; S.kept = false; out('machine'); }; tiles.appendChild(b); tb.push([b, p]); }); };
     build();
     /* i18n-ok: styles */ const tri = h('div', 'tri'); at(tri, 6, 70.5, 88, 25); tri.style.cssText += ';display:grid;grid-template-columns:1fr 1.15fr 1fr;border:1.5px solid var(--ink);background:var(--plate)'; host.appendChild(tri);
-    /* i18n-ok: styles */ const cell = (k, who) => { const d = h('div'); d.style.cssText = 'padding:5% 6% 4%;border-left:1.5px solid var(--ink);display:flex;flex-direction:column;justify-content:space-between;gap:4px;min-width:0'; d.innerHTML = '<span class="lb" style="position:static">' + w('tri.' + k) + ' · <span class="red">' + w('tri.' + k + '.who') + '</span></span>'; tri.appendChild(d); return d; };
+    /* i18n-ok: styles */ const cell = (k, who) => { const d = h('div'); d.style.cssText = 'padding:5% 6% 4%;border-left:1.5px solid var(--ink);display:flex;flex-direction:column;justify-content:space-between;gap:4px;min-width:0'; d.innerHTML = '<span class="lb" style="position:static;white-space:normal">' + w('tri.' + k) + ' · <span class="red">' + w('tri.' + k + '.who') + '</span></span>'; tri.appendChild(d); return d; };
     const g = cell('gen'), ck = cell('chk'), dc = cell('dec'); g.style.borderLeft = '0';
     const gb = h('button', 'pbtn ghost', w('tri.gen.b')); gb.type = 'button'; gb.style.position = 'static'; gb.onclick = () => { agent(); out('machine'); }; g.appendChild(gb);
     /* i18n-ok: styles */ const en = h('div', 'big'); en.style.cssText = 'position:static;font-size:calc(var(--p)*76)'; ck.appendChild(en);
     /* i18n-ok: styles */ const kb = h('button', 'pbtn', w('tri.dec.b')); kb.type = 'button'; kb.style.cssText = 'position:static;white-space:normal'; kb.onclick = () => { S.kept = true; done('keep'); out('machine'); out('island'); }; dc.appendChild(kb);
     const sg = host.querySelector('.seg');
-    pl.sync = () => { s(); const m = machNow(); put(sub, sw('machines.need.' + m.need.id + '.d')); [...sg.children].forEach((b, i) => put(b, sw('machines.need.' + NEEDS[i].id + '.t'))); if (tb.length !== m.need.parts.length || tb[0][1] !== m.need.parts[0]) build();
+    /* i18n-ok: styles */ sub.style.cssText += ';white-space:normal;width:88%';
+    pl.sync = () => { s(); const m = machNow(); put(sub, sw('machines.need.' + m.need.id + '.d'));
+      /* the need's words just under its row of needs, however many lines the row takes */
+      if (host.clientHeight) at(sub, 6, (sg.offsetTop + sg.offsetHeight) / host.clientHeight * 100 + 3); [...sg.children].forEach((b, i) => put(b, sw('machines.need.' + NEEDS[i].id + '.t'))); if (tb.length !== m.need.parts.length || tb[0][1] !== m.need.parts[0]) build();
       tb.forEach(([b, p]) => { const f = formOf(m.need, p); put(b.children[0], w('piece.' + p[0])); put(b.children[1], f === 'stock' ? w('form.stock') : w('form.' + f)); b.children[1].classList.toggle('hot', m.bad === p[0]); });
       put(en, '×' + (m.e >= 10 ? Math.round(m.e) : m.e.toFixed(1)) + '<small style="font-size:max(11px,calc(var(--p)*15.5))">' + (m.ok ? w('mach.ok') : w('mach.no')) + '</small>'); en.style.color = m.ok ? '' : 'var(--mid)'; kb.disabled = !m.ok || S.kept; put(kb, S.kept ? w('tri.dec.done') : w('tri.dec.b')); }; }
 };
@@ -472,10 +485,12 @@ PL.island = {
     c.fillStyle = K.plate; c.fillRect(425, 395, 150, 150); c.strokeStyle = S.kept ? K.red : K.ink; c.lineWidth = 4; c.strokeRect(425, 395, 150, 150); c.fillStyle = S.kept ? K.red : fg(.3); for (let i = 0; i < 3; i++) for (let j = 0; j < 3; j++) c.fillRect(443 + i * 40, 413 + j * 40, 34, 34);
     LOOP.forEach((l, i) => { const [x, y] = pts[i], lit = LIT[l[1]](), sel = S.place === l[1]; c.fillStyle = lit ? K.red : K.plate; c.fillRect(x - 36, y - 36, 72, 72); c.strokeStyle = lit ? K.red : K.ink; c.lineWidth = sel ? 8 : 4; c.strokeRect(x - 36, y - 36, 72, 72); if (sel) { c.strokeStyle = K.ink; c.lineWidth = 2.5; c.strokeRect(x - 50, y - 50, 100, 100); } }); },
   ui(host, pl) { LOOP.forEach((l, i) => { const x = l[2] / 10, y = (l[3] * .9 + 20) / 10, b = h('button'); b.type = 'button'; at(b, x - 13, y - 5, 26, i === 0 || i === 3 ? 13.5 : 13.5);
-      /* i18n-ok: styles */ b.style.cssText += ';display:flex;flex-direction:column;align-items:center;justify-content:flex-end;text-align:center'; b.innerHTML = '<span style="height:55%"></span><span class="lb" style="position:static">' + w('stage.' + l[0]) + '<b>' + w('place.' + l[1]) + '</b></span>';
+      /* a place at a side has its words from its square's outer edge inwards: clear of the plate's edge and of the card
+         over it and of the middle square, in any language; and every place's words start under its square */
+      /* i18n-ok: styles */ b.style.cssText += ';display:flex;flex-direction:column;justify-content:flex-start;' + (x < 40 ? 'align-items:flex-start;text-align:left;padding-left:9.4%' : x > 60 ? 'align-items:flex-end;text-align:right;padding-right:9.4%' : 'align-items:center;text-align:center'); b.innerHTML = '<span style="height:74%;flex:none"></span><span class="lb" style="position:static' + (x < 40 || x > 60 ? ';white-space:normal;width:max-content;max-width:calc(var(--p)*286)' : '') + '">' + w('stage.' + l[0]) + '<b>' + w('place.' + l[1]) + '</b></span>';
       b.onclick = () => { S.place = l[1]; out('island'); }; host.appendChild(b); });
     lbl(host, w('s.yours'), 50, 56.5, 'c').style.transform = 'translate(-50%,0)';
-    const go = h('a', 'pbtn'); go.href = '#/island'; go.dataset.go = 'island'; go.style.textDecoration = 'none'; at(go, 27, 89.5, 46); host.appendChild(go); pl.sync = () => put(go, (S.kept ? w('isle.go') : w('isle.go0')) + ' →'); }
+    const go = h('a', 'pbtn'); go.href = '#/island'; go.dataset.go = 'island'; go.style.textDecoration = 'none'; at(go, 27, 91.5, 46); host.appendChild(go); pl.sync = () => put(go, (S.kept ? w('isle.go') : w('isle.go0')) + ' →'); }
 };
 
 /* ---- what moves by itself, once a frame ---- */
