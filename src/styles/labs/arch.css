@@ -190,3 +190,26 @@
   html.frame2 .f2stage .arfig .arrace .cant { font-size: calc(10px * var(--f2-k, 1)); }
   html.frame2 .f2stage .arfig .arrace .ax { font-size: calc(9.5px * var(--f2-k, 1)); }
 }
+/* the community's ledger on the map (#410): a dot for people's attempts (ink, as the record draws a person) at the left
+   of a square, one for agents' (warm, as an AI) at the right; a ring where the first attempt to win with that recipe
+   stands, thicker when it was first in a niche nobody had won; under the map, the first to win each need */
+.armarks { pointer-events: none; }
+.armarks .ld { stroke: var(--panel-solid); stroke-width: .7; }
+.armarks .ld.p { fill: var(--ink); }
+.armarks .ld.a { fill: var(--warm); }
+.armarks .fw { fill: none; stroke: var(--good); stroke-width: 1.1; }
+.armarks .fw.fn { stroke-width: 1.9; }
+.arkg { white-space: nowrap; }
+.arkey .k.lp, .arkey .k.la { width: 7px; height: 7px; border-radius: 50%; background: var(--ink); }
+.arkey .k.la { background: var(--warm); }
+.arkey .k.fw { width: 9px; height: 9px; border-radius: 2px; border: 2px solid var(--good); }
+.arfirsts .kicker { margin: 14px 0 4px; }
+.arfirsts p { margin: 0 0 6px; }
+.arfirsts ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.arfirsts li { display: grid; grid-template-columns: minmax(7.5em, auto) 1fr; gap: 2px 10px; align-items: baseline; padding: 5px 0; border-top: 1px solid var(--line); font-size: 13px; }
+.arfirsts li b { font-weight: 600; }
+.arfirsts li.arwon b { color: var(--good); }
+.arfirsts li .link { text-align: left; padding: 0; font: inherit; overflow-wrap: anywhere; }
+.arfirsts li .made { width: 8px; height: 8px; margin-right: 6px; vertical-align: baseline; }
+.arkeep .kicker, .arkept .kicker { margin: 0; }
+@media (max-width: 520px) { .arfirsts li { grid-template-columns: 1fr; } }

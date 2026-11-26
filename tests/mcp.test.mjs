@@ -21,7 +21,7 @@ test('an agent connects, lists the tools, reads the plan and takes a job', async
     assert.equal(init.result.serverInfo.name, 'open-silicon-lab');
     assert.ok(init.result.capabilities.tools && init.result.instructions);
     const tools = (await S.call('tools/list', {})).result.tools.map(t => t.name);
-    assert.deepEqual(tools, ['look', 'list_plan', 'get_job', 'check_design', 'at_factory', 'life_of', 'propose_design', 'list_ledger', 'propose_break', 'propose_try', 'propose_report', 'energy_budget', 'submit_attempt', 'block_front', 'submit_front', 'propose_question', 'choose_design']);
+    assert.deepEqual(tools, ['look', 'list_plan', 'get_job', 'check_design', 'at_factory', 'life_of', 'propose_design', 'list_ledger', 'propose_break', 'propose_try', 'propose_report', 'energy_budget', 'submit_attempt', 'block_front', 'submit_front', 'propose_question', 'choose_design', 'grow_architecture', 'architecture_forks', 'submit_architecture']);
     const plan = (await S.tool('list_plan', {})).structuredContent;
     assert.ok(plan.pieces.some(p => p.id === 'core' && p.engine === 'riscv'));
     const job = (await S.tool('get_job', { job: 'vote' })).structuredContent;
@@ -122,6 +122,35 @@ test('an agent reads a thousand designs that pass and the people around the need
     assert.equal(yes.ok, true, yes.reason); assert.match(yes.entry.id, /-try-/);
     const f = JSON.parse(yes.entry.file); assert.equal(f.choice, 'phone'); assert.equal(f.pick, 'd0042'); assert.equal(f.made, 'ai'); assert.equal(f.words, 'It never sends what you say to a data centre');
     assert.match(yes.link, /new\/main\/community\/ledger/); assert.equal(yes.picked.id, 'd0042');
+  } finally { S.stop(); }
+});
+
+/* Grow an architecture through the port (#410): score a recipe and a history, ask the agents' forks, take one, and
+   submit the attempt; the ledger grows it again and refuses a claimed win it does not reach */
+test('an agent grows an architecture through the port: scores a history, takes a fork, and submits only a win the replay reaches', async () => {
+  const S = server();
+  try {
+    const G0 = (await S.tool('grow_architecture', { start: { where: 'near', carrier: 'spikes', told: 'events', shape: 'grid' } })).structuredContent;
+    assert.equal(G0.recipe.key, 'near/spikes/events/grid'); assert.equal(G0.year, 0); assert.ok(G0.built && G0.how && G0.note);
+    assert.equal(G0.needs.length, 6); assert.ok(G0.needs.every(n => typeof n.now === 'number' && n.name));
+    /* the ledger's attempts, people's and agents' apart, and the first to win each need */
+    assert.ok(G0.ledger.people >= 1 && G0.ledger.agents >= 1 && Object.keys(G0.ledger.firstToWin).length === 6);
+    assert.equal((await S.tool('architecture_forks', { start: G0.recipe.key, years: [] })).structuredContent.forks.length, 0, 'the agents wait for the first year');
+    let h = { start: G0.recipe.key, years: [['people'], ['people'], ['people']], changes: [] };
+    const F = (await S.tool('architecture_forks', h)).structuredContent;
+    assert.equal(F.year, 3); assert.ok(F.forks.length >= 1 && F.forks.every(f => f.name && f.then.changes.length === 1 && f.then.changes[0].at === 3));
+    h = F.forks[0].then;
+    /* grow on by the engine's suggestion until the recipe wins a need */
+    let G = null;
+    for (let i = 0; i < 25; i++) { G = (await S.tool('grow_architecture', h)).structuredContent; if (G.wins.length) break; h = Object.assign({}, h, { years: h.years.concat([G.suggest.dirs]) }); }
+    assert.ok(G.wins.length >= 1, 'the forked recipe wins a need'); assert.deepEqual(G.history.wins, G.wins);
+    const lie = (await S.tool('submit_architecture', { ...h, wins: ['any'], author: 'An agent', kind: 'ai', ai: 'Grown by an AI agent through the open port.' })).structuredContent;
+    assert.equal(lie.ok, false, 'a win the replay does not reach'); assert.ok(lie.reason.length > 10);
+    const yes = (await S.tool('submit_architecture', { ...h, author: 'An agent', kind: 'ai', ai: 'Grown by an AI agent through the open port.', words: 'A fork of the neuromorphic chip.' })).structuredContent;
+    assert.equal(yes.ok, true, yes.reason); assert.match(yes.entry.id, /-try-/); assert.deepEqual(yes.reached, G.wins);
+    const f = JSON.parse(yes.entry.file); assert.equal(f.made, 'ai'); assert.deepEqual(f.arch.wins, G.wins); assert.equal(f.arch.changes[0].gene, F.forks[0].gene);
+    assert.ok((await S.tool('submit_architecture', { start: 'far/charge/magic/few', years: [['people']], kind: 'person' })).isError, 'a recipe the engine does not have');
+    assert.ok((await S.tool('grow_architecture', { start: 'in/charge/graph/stack', years: [['luck']] })).isError, 'a direction the engine does not have');
   } finally { S.stop(); }
 });
 

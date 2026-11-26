@@ -15,6 +15,11 @@
    visit stays as a family tree you can go back through, and a curve draws your best need against the attempts so far,
    both on powers of ten, Wright's law's shape (#409). What you grew is kept for the visit (KEEP), so you can go to a
    lab, win there and come back to the same architecture.
+   An attempt can be kept in the community's ledger (#410), the same draft and slip as Machines' Keep this attempt
+   (src/v2/commons.js): its history (A.histOf: the recipe it started from, the focus of each year, the forks and stones
+   in order) and the needs its recipe wins, grown again by the ledger before it counts. The map shows the recipes the
+   ledger holds, people's and agents' apart, and rings the square of the first attempt to win with each recipe; under it,
+   the first to win each need (first in an empty niche counts most), read from the entries alone.
    A lab of the challenge player (src/v2/play.js): lab(L) -> { draw, click, input }. */
 import * as A from '../../engines/arch.js';
 import { mark as fidMark, TRUTH } from '../fid.js';
@@ -22,6 +27,10 @@ import { still } from '../../core/ui.js';
 /* your switch, kept at the switch level (src/v2/labs/switch.js): a stepping stone for the devices when it spends less */
 import { keptSwitch } from '../kept.js';
 import { forMachines, specOf } from '../../engines/switch.js';
+/* the community's ledger: attempts kept as entries, people's and agents' apart (src/engines/ledger.js archAttempts) */
+import { archAttempts } from '../../engines/ledger.js';
+import { world } from '../game.js';
+import { signHtml, signOf, keep, refusal, slipHtml, slipClick, draftOf } from '../commons.js';
 
 /* the picture's frame: the architecture above, the race against today's computer below */
 const VW = 360, VH = 332;
@@ -39,9 +48,11 @@ const UNITS = {
 /* the swarm's links, by unit */
 const SWARM_LINKS = [[0, 1], [1, 2], [2, 3], [0, 4], [4, 5], [5, 6], [3, 6], [4, 7], [5, 8], [7, 8], [1, 5], [2, 6]];
 const ORDER = [...A.DIRS, 'people'];
+/* is an attempt of the ledger an agent's (an AI, or a program that searches) */
+const ARCH_AGENT = (LG, id) => LG.agents.some(e => e.id === id);
 /* what you grew, by challenge, for the visit: going into a lab and coming back finds it where you left it */
 const KEEP = {};
-const KEPT_KEYS = ['ar', 'arFocus', 'arTried', 'arTree', 'arSay', 'arForks'];
+const KEPT_KEYS = ['ar', 'arFocus', 'arTried', 'arTree', 'arSay', 'arForks', 'arHist', 'arSlip', 'arSlipKey', 'arNo'];
 /* the card hosts the map's keys once (each host one listener, which only turns keys into clicks the player routes) */
 const KEYED = new WeakSet();
 /* the way into the lab where a stone is won (a challenge's address; your switch is kept at the switch's lab, your
@@ -60,7 +71,8 @@ function keys(e) {
 }
 
 export default function lab(L) {
-  const { S, ch, el, esc, t, head, reward, doneNote, win, draw, fx } = L, view = L.view;
+  const { S, ch, el, esc, t, head, reward, doneNote, win, draw, fx, show } = L, view = L.view;
+  const save = () => L.ctx && L.ctx.save && L.ctx.save();
   const goalId = A.GOALS[ch.id] ? ch.id : 'archniche';
   Object.assign(view, KEEP[ch.id] || {});
   if (el && !KEYED.has(el)) { KEYED.add(el); el.addEventListener('keydown', keys); }
@@ -74,6 +86,13 @@ export default function lab(L) {
   const begin = g => A.start(g, brought());
   const st = () => view.ar || (view.ar = begin(A.TODAY));
   const tree = () => view.arTree || (view.arTree = A.treeOf(st().g));
+  /* the history of the line being grown, for the ledger: begun again at every start (year 0), a year's focus at every
+     year, a fork or a stone at the years grown before it (A.histOf; replayed by the ledger, src/engines/ledger.js) */
+  const hist = () => view.arHist || (view.arHist = st().year ? null : A.histOf(st()));
+  const restart = () => { view.arHist = A.histOf(view.ar); };
+  const change = c => { const h = hist(); if (h) h.changes.push(c); };
+  /* the attempt a slip is for: the same start, years and forks (a stone your entry brings back changes nothing kept) */
+  const slipKey = h => JSON.stringify([h.start, h.years.length, h.changes.filter(c => c.gene != null)]);
   const stoneName = id => (id === A.KEPT_SWITCH ? t('ar.stone.kept') : id === A.LEDGER_ENTRY ? t('ar.stone.entry') : t('game.ch.' + id + '.t'));
   const gname = g => (A.novelty(g) ? A.GENES.filter(k => g[k] !== A.TODAY[k]).map(k => opt(k, g[k])).join(' · ') : t('ar.tree.today'));
   const focus = () => view.arFocus || (view.arFocus = []);
@@ -221,18 +240,44 @@ export default function lab(L) {
   /* ---- the map of every recipe: the few built, the many nobody has tried ---- */
   function mapFig(s0) {
     const X0 = 58, Y0 = 18, P = 10, G = 4 * P + 4, me = A.keyOf(s0.g), T = tried();
-    let s = '<svg viewBox="0 0 ' + (X0 + 5 * G) + ' ' + (Y0 + 5 * G + 2) + '" role="group" aria-label="' + esc(t('ar.map.aria', { built: A.KNOWN.length, of: A.RECIPES })) + '">';
+    /* the ledger's attempts, by the recipe each ended on: people's and agents' apart, never mixed (yours, still drafts, among
+       people's), the first to win with each recipe and the first to win each need (src/engines/ledger.js) */
+    const LG = archAttempts(world(S)), at = {}, pioneers = new Set(Object.values(LG.first));
+    LG.all.forEach(e => { (at[e.facts.g] = at[e.facts.g] || []).push(e); });
+    const needs = list => list.map(n => t('ar.need.' + n)).join(t('ar.and'));
+    const entryLine = e => e.by + ' · ' + t('build.kind.' + e.made) + (e.facts.wins.length ? ' · ' + t('ar.map.wins', { needs: needs(e.facts.wins) }) : '') + ((e.firstIn || []).length ? ' · ' + t('ar.map.firstIn', { needs: needs(e.firstIn) }) : '');
+    let s = '<svg viewBox="0 0 ' + (X0 + 5 * G) + ' ' + (Y0 + 5 * G + 2) + '" role="group" aria-label="' + esc(t('ar.map.aria', { built: A.KNOWN.length, of: A.RECIPES })) + '">', marks = '';
     A.OPTIONS.carrier.forEach((c, i) => { s += '<text class="ax" x="' + (X0 + i * G + 2 * P - 2) + '" y="' + (Y0 - 6) + '" text-anchor="middle">' + esc(opt('carrier', c)) + '</text>'; });
     A.OPTIONS.told.forEach((o, j) => { s += '<text class="ax" x="' + (X0 - 4) + '" y="' + (Y0 + j * G + 2 * P + 2) + '" text-anchor="end">' + esc(opt('told', o)) + '</text>'; });
     for (const g of A.allRecipes()) {
       /* its column and row among all 400 (the arrows move by them), one square in the tab order: the current one */
       const c0 = A.OPTIONS.carrier.indexOf(g.carrier) * 4 + A.OPTIONS.where.indexOf(g.where), r0 = A.OPTIONS.told.indexOf(g.told) * 4 + A.OPTIONS.shape.indexOf(g.shape);
       const x = X0 + A.OPTIONS.carrier.indexOf(g.carrier) * G + A.OPTIONS.where.indexOf(g.where) * P, y = Y0 + A.OPTIONS.told.indexOf(g.told) * G + A.OPTIONS.shape.indexOf(g.shape) * P;
-      const k = A.keyOf(g), kn = A.knownOf(g), c = 'sq' + (kn ? ' k-' + kn.status : '') + (T.includes(k) ? ' tried' : '') + (k === me ? ' cur' : '');
-      s += '<rect class="' + c + '" data-ar-pick="' + k + '" data-ar-c="' + c0 + '" data-ar-r="' + r0 + '" tabindex="' + (k === me ? 0 : -1) + '" role="button" x="' + x + '" y="' + y + '" width="8.4" height="8.4" rx="1.6"><title>' + esc(recipeLine(g) + (kn ? ' · ' + t('ar.known.' + kn.id) : '')) + '</title></rect>';
+      const k = A.keyOf(g), kn = A.knownOf(g), here = at[k] || [], c = 'sq' + (kn ? ' k-' + kn.status : '') + (T.includes(k) ? ' tried' : '') + (k === me ? ' cur' : '');
+      s += '<rect class="' + c + '" data-ar-pick="' + k + '" data-ar-c="' + c0 + '" data-ar-r="' + r0 + '"' + (here.length ? ' data-ar-lg="' + here.length + '"' : '') + ' tabindex="' + (k === me ? 0 : -1) + '" role="button" x="' + x + '" y="' + y + '" width="8.4" height="8.4" rx="1.6"><title>' +
+        esc(recipeLine(g) + (kn ? ' · ' + t('ar.known.' + kn.id) : '') + here.map(e => '\n' + entryLine(e)).join('')) + '</title></rect>';
+      if (!here.length) continue;
+      /* a ring where the first attempt to win with this recipe stands (thicker when it was first in a niche nobody had won);
+         a dot for people's attempts at the left, one for agents' at the right */
+      const first = LG.square[k];
+      if (first) marks += '<rect class="fw' + (pioneers.has(first) ? ' fn' : '') + (ARCH_AGENT(LG, first) ? ' a' : ' p') + '" data-ar-first="' + k + '" x="' + f1(x - 1.3) + '" y="' + f1(y - 1.3) + '" width="11" height="11" rx="2.6"/>';
+      if (here.some(e => LG.people.includes(e))) marks += '<circle class="ld p" cx="' + f1(x + 2.5) + '" cy="' + f1(y + 5.9) + '" r="1.8"/>';
+      if (here.some(e => LG.agents.includes(e))) marks += '<circle class="ld a" cx="' + f1(x + 5.9) + '" cy="' + f1(y + 5.9) + '" r="1.8"/>';
     }
-    return '<div class="armap"><p class="kicker">' + esc(t('ar.map.kicker', { of: A.RECIPES })) + '</p><figure>' + s + '</svg><figcaption class="small muted arkey"><span class="k built"></span>' + esc(t('ar.map.built')) + ' <span class="k lab"></span>' + esc(t('ar.map.lab')) + ' <span class="k tried"></span>' + esc(t('ar.map.tried')) + ' <span class="k cur"></span>' + esc(t('ar.map.now')) + '</figcaption></figure>' +
-      '<p class="small muted">' + esc(t('ar.map.lead', { built: A.KNOWN.length, open: A.RECIPES - A.KNOWN.length })) + '</p><p class="small muted armapkeys">' + esc(t('ar.map.keys')) + '</p></div>';
+    s += '<g class="armarks" aria-hidden="true">' + marks + '</g>';
+    return '<div class="armap"><p class="kicker">' + esc(t('ar.map.kicker', { of: A.RECIPES })) + '</p><figure>' + s + '</svg><figcaption class="small muted arkey"><span class="k built"></span>' + esc(t('ar.map.built')) + ' <span class="k lab"></span>' + esc(t('ar.map.lab')) + ' <span class="k tried"></span>' + esc(t('ar.map.tried')) + ' <span class="k cur"></span>' + esc(t('ar.map.now')) +
+      ' <span class="arkg"><span class="k lp"></span>' + esc(t('ar.map.people')) + '</span> <span class="arkg"><span class="k la"></span>' + esc(t('ar.map.agents')) + '</span> <span class="arkg"><span class="k fw"></span>' + esc(t('ar.map.first')) + '</span></figcaption></figure>' +
+      '<p class="small muted">' + esc(t('ar.map.lead', { built: A.KNOWN.length, open: A.RECIPES - A.KNOWN.length })) + '</p><p class="small muted armapkeys">' + esc(t('ar.map.keys')) + '</p>' + firsts(LG) + '</div>';
+  }
+  /* the first to win each need, read from the ledger: who, people or agent, and the recipe (tap it to start from there) */
+  function firsts(LG) {
+    const W = world(S);
+    return '<div class="arfirsts"><p class="kicker">' + esc(t('ar.lg.kicker')) + '</p><p class="small muted">' + esc(t('ar.lg.lead', { p: LG.people.length, a: LG.agents.length })) + '</p><ul>' + A.NEEDS.map(n => {
+      const e = LG.first[n] ? W.byId[LG.first[n]] : null;
+      if (!e) return '<li data-ar-need-first="' + n + '"><b>' + esc(t('ar.need.' + n)) + '</b><span class="small muted">' + esc(t('ar.lg.none')) + '</span></li>';
+      return '<li data-ar-need-first="' + n + '" class="arwon ' + (LG.agents.includes(e) ? 'a' : 'p') + '"><b>' + esc(t('ar.need.' + n)) + '</b><button type="button" class="link" data-ar-pick="' + esc(e.facts.g) + '"><span class="made ' + esc(e.made) + '"></span>' +
+        esc(e.by + ' · ' + t('build.kind.' + e.made) + ' · ' + gname(A.recipeOf(e.facts.g)) + ' · ' + t('ar.lg.years', { y: e.facts.years }) + (e.draft ? ' · ' + t('ledger.state.draft') : '')) + '</button></li>';
+    }).join('') + '</ul></div>';
   }
 
   /* ---- the curve of attempts: your best need against the attempts so far, both on powers of ten ----
@@ -258,6 +303,17 @@ export default function lab(L) {
     g += '<text class="ay" x="' + L0 + '" y="10">' + esc(t('ar.curve.y')) + '</text><text class="ay" x="' + f1((L0 + W - R0) / 2) + '" y="' + (H - 3) + '" text-anchor="middle">' + esc(t('ar.curve.x')) + '</text>';
     return h + '<figure><svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="' + esc(t('ar.curve.aria', { n: Math.round(sum), v: pct(pts[pts.length - 1].v) })) + '">' + g + '</svg></figure>' +
       '<p class="small muted">' + esc(t('ar.curve.lead', { x: (+Math.pow(2, A.GROWTH).toFixed(2)).toString() })) + ' ' + fidMark({ f: 'figures', fact: A.GROWTH_FACT }) + '</p></div>';
+  }
+
+  /* ---- keep this attempt in the ledger: once a recipe nobody has grown is grown a year; the slip of the draft while
+     the attempt is the one kept, the form again once it has grown on ---- */
+  function keepBox(s0) {
+    const h = hist(); if (!A.novelty(s0.g) || !s0.year || !h) return '';
+    const kept = view.arSlip && draftOf(S, view.arSlip) && view.arSlipKey === slipKey(h), wins = A.winsOf(s0);
+    if (kept) return '<div class="arkept">' + slipHtml(S, view.arSlip) + '</div>';
+    const lead = wins.length ? t('ar.keep.lead', { needs: wins.map(n => t('ar.need.' + n)).join(t('ar.and')), y: s0.year }) : t('ar.keep.leadNone', { y: s0.year });
+    return '<div class="keep arkeep"><p class="kicker">' + esc(t('ar.keep.kicker')) + '</p><p class="small muted">' + esc(lead) + '</p>' + signHtml(S) +
+      (view.arNo ? '<p class="small bad">' + esc(view.arNo) + '</p>' : '') + '<button type="button" class="btn" data-ar-keep>' + esc(t('ar.keep')) + '</button></div>';
   }
 
   /* ---- the family tree: every start and fork of the visit; tap one to start again from it ----
@@ -304,13 +360,14 @@ export default function lab(L) {
   function bench() {
     /* a stepping stone won since this architecture began (in a lab its card led to) comes back with you */
     const was = st(), br = brought(), fresh = Object.keys(br).filter(d => !(was.stones || {})[d]);
-    if (fresh.length) { view.ar = A.bring(was, br); say('stone', { what: stoneName(br[fresh[0]]), dir: t('ar.dir.' + fresh[0]) }); }
+    if (fresh.length) { view.ar = A.bring(was, br); say('stone', { what: stoneName(br[fresh[0]]), dir: t('ar.dir.' + fresh[0]) });
+      if (!was.year) restart(); else fresh.forEach(d => change({ at: was.year, stone: br[d] })); }
     tree();
     KEEP[ch.id] = Object.fromEntries(KEPT_KEYS.map(k => [k, view[k]]));
     const s0 = st(), sc = A.scoreOf(s0), G = A.goalOf(s0, goalId);
     let h = head() + '<p class="small arintro">' + esc(t('ar.intro')) + '</p>' + goalbox(s0) + figure(s0, sc);
     h += '<p class="small arsay" data-ar-yearnow="' + s0.year + '">' + esc(sayLine()) + '</p>';
-    h += recipe(s0) + traits(s0.g) + dirs(s0) + curve(s0) + agents(s0) + treeFig(s0);
+    h += recipe(s0) + traits(s0.g) + dirs(s0) + curve(s0) + keepBox(s0) + agents(s0) + treeFig(s0);
     if (!G.met) h += view.hint ? '<p class="small hint">' + esc(t('ar.hint.' + goalId)) + '</p>' : '<button type="button" class="link" data-hint>' + esc(t('game.hint')) + '</button>';
     else if (S.done[ch.id]) h += '<p class="small good">' + esc(t('ar.done.' + goalId)) + '</p>';
     h += mapFig(s0) + truth() + '<p class="small muted arnote">' + esc(t('ar.note')) + '</p>';
@@ -336,7 +393,7 @@ export default function lab(L) {
     let s0 = st(); const G = A.GOALS[goalId];
     if (s0.year >= G.years && !A.goalOf(s0, goalId).met) { say('late'); return after(); }
     const F = focus().slice();
-    for (let i = 0; i < n && s0.year < G.years; i++) { s0 = A.year(s0, F); view.arTree = A.treeYear(tree(), A.winsOf(s0)); if (A.goalOf(s0, goalId).met) break; }
+    for (let i = 0; i < n && s0.year < G.years; i++) { const h = hist(); s0 = A.year(s0, F); if (h) h.years.push(F.slice()); view.arTree = A.treeYear(tree(), A.winsOf(s0)); if (A.goalOf(s0, goalId).met) break; }
     view.ar = s0; view.arForks = null;
     const sc = A.scoreOf(s0), lastFresh = s0.log.slice(-n).flatMap(e => e.fresh), wins = A.winsOf(s0);
     const n0 = wins.length ? wins.reduce((m, x) => (sc[x].now > sc[m].now ? x : m), wins[0]) : bestNeed(sc, 'now');
@@ -356,7 +413,9 @@ export default function lab(L) {
       if (gb) {
         const s0 = st(), k = gb.dataset.arGene, o = gb.dataset.arOpt; if (s0.g[k] === o) return true;
         const lost = s0.year ? A.LINK[k].filter(d => s0.tries[d] > 0) : [];
+        if (s0.year) hist();
         view.ar = A.choose(s0, k, o); view.arForks = null;
+        if (s0.year) change({ at: s0.year, gene: k, option: o }); else restart();
         view.arTree = s0.year ? A.treeFork(tree(), view.ar.g, s0.year) : A.treeStart(tree(), view.ar.g);
         if (s0.year) say(lost.length ? 'fork' : 'forkFree', { gene: t('ar.gene.' + k), option: opt(k, o), dirs: lost.map(d => t('ar.dir.' + d)).join(t('ar.and')) }); else sayStart();
         return after();
@@ -364,15 +423,23 @@ export default function lab(L) {
       const d = q('[data-ar-dir]');
       if (d) { const F = focus(), id = d.dataset.arDir, i = F.indexOf(id); if (i >= 0) F.splice(i, 1); else { F.push(id); while (F.length > A.FOCUS_MAX) F.shift(); } draw(); return true; }
       const y = q('[data-ar-year]'); if (y) return years(+y.dataset.arYear || 1);
-      if (q('[data-ar-reset]')) { view.ar = begin(st().g); view.arForks = null; view.arTree = A.treeStart(tree(), view.ar.g, tree().cur); sayStart(); return after(); }
+      if (q('[data-ar-reset]')) { view.ar = begin(st().g); view.arForks = null; restart(); view.arTree = A.treeStart(tree(), view.ar.g, tree().cur); sayStart(); return after(); }
       if (q('[data-ar-ask]')) { view.arForks = A.agentForks(st()); draw(); return true; }
       const f = q('[data-ar-fork]');
-      if (f) { const [k, o] = f.dataset.arFork.split(':'), s0 = st(), lost = A.LINK[k].filter(x => s0.tries[x] > 0); view.ar = A.forkOf(s0, k, o); view.arForks = null; view.arTree = A.treeFork(tree(), view.ar.g, s0.year); say(lost.length ? 'fork' : 'forkFree', { gene: t('ar.gene.' + k), option: opt(k, o), dirs: lost.map(x => t('ar.dir.' + x)).join(t('ar.and')) }); return after(); }
+      if (f) { const [k, o] = f.dataset.arFork.split(':'), s0 = st(), lost = A.LINK[k].filter(x => s0.tries[x] > 0); hist(); view.ar = A.forkOf(s0, k, o); change({ at: s0.year, gene: k, option: o }); view.arForks = null; view.arTree = A.treeFork(tree(), view.ar.g, s0.year); say(lost.length ? 'fork' : 'forkFree', { gene: t('ar.gene.' + k), option: opt(k, o), dirs: lost.map(x => t('ar.dir.' + x)).join(t('ar.and')) }); return after(); }
+      /* keep this attempt: signed, checked against the ledger (grown again there), kept as your draft with its slip */
+      if (q('[data-ar-keep]')) {
+        const h = hist(), s0 = st(); if (!h) return true;
+        const k = keep(S, { kind: 'try', arch: A.histClaim(h, A.winsOf(s0)), words: '' }, 'arch ' + A.keyOf(s0.g).split('/').join(' '), signOf(el.querySelector('.arkeep') || el));
+        view.arNo = k.ok ? null : refusal(k.r); if (k.ok) { view.arSlip = k.e.id; view.arSlipKey = slipKey(h); save(); if (L.ctx && L.ctx.kept) L.ctx.kept(k.e); }
+        draw(); if (show) show('.arkept .slip, .arkeep'); return true;
+      }
+      if (slipClick(e, S, redraw => { save(); if (redraw) { view.arSlip = null; draw(); } })) return true;
       const p = q('[data-ar-pick]');
-      if (p) { view.ar = begin(A.recipeOf(p.dataset.arPick)); view.arForks = null; view.arTree = A.treeStart(tree(), view.ar.g); sayStart(); return after(); }
+      if (p) { view.ar = begin(A.recipeOf(p.dataset.arPick)); view.arForks = null; restart(); view.arTree = A.treeStart(tree(), view.ar.g); sayStart(); return after(); }
       /* a node of the family tree: a new start from that recipe, a branch of the tree from it */
       const nd = q('[data-ar-node]');
-      if (nd) { const n = A.nodeOf(tree(), +nd.dataset.arNode); if (!n) return true; view.ar = begin(A.recipeOf(n.g)); view.arForks = null; view.arTree = A.treeStart(tree(), view.ar.g, n.id); say('back', { name: gname(view.ar.g) }); return after(); }
+      if (nd) { const n = A.nodeOf(tree(), +nd.dataset.arNode); if (!n) return true; view.ar = begin(A.recipeOf(n.g)); view.arForks = null; restart(); view.arTree = A.treeStart(tree(), view.ar.g, n.id); say('back', { name: gname(view.ar.g) }); return after(); }
       return false;
     },
     input() { return false; }

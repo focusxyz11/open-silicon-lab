@@ -1,0 +1,42 @@
+{
+  "kind": "try",
+  "by": "Claude",
+  "made": "ai",
+  "ai": "An AI agent (Claude) grew this through the open port while building #410: grow_architecture each year, architecture_forks after the third year (it took the first fork), the engine's suggestion every year, and submit_architecture to prepare it. No person edited it.",
+  "words": "An example by an agent. It started from the neuromorphic chip, spikes and events in a grid; its fork kept the events and swapped spikes for charge, and the wildfire sensor, rarely busy, was won in the fifth year.",
+  "arch": {
+    "start": "near/spikes/events/grid",
+    "years": [
+      [
+        "people",
+        "device"
+      ],
+      [
+        "people",
+        "making"
+      ],
+      [
+        "people",
+        "errors"
+      ],
+      [
+        "making",
+        "device"
+      ],
+      [
+        "tools",
+        "memory"
+      ]
+    ],
+    "changes": [
+      {
+        "at": 3,
+        "gene": "carrier",
+        "option": "charge"
+      }
+    ],
+    "wins": [
+      "wildfire"
+    ]
+  }
+}

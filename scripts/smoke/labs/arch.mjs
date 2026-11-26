@@ -19,6 +19,17 @@ export default async ({ fp, adr, inDo, playLab, problems, tag }) => {
   /* the map holds all 400 recipes, the built ones marked */
   await fp.waitForFunction(() => { const P = '.player[data-ch="archspread"] '; return document.querySelectorAll(P + '.armap [data-ar-pick]').length === 400 && document.querySelectorAll(P + '.armap .sq.k-product').length >= 5; }, null, { timeout: 30000, polling: 1000 })
     .catch(() => problems.push(tag + ': the map of recipes is not whole'));
+  /* an attempt kept in the community's ledger (#410): signed, it is checked by the ledger (grown again there, so the
+     history the lab records must replay to the same wins, stepping stones and all) and becomes your draft with its slip;
+     the map shows the ledger's attempts, people's and agents' apart, and the first to win each need */
+  await fp.waitForFunction(() => { const P = '.player[data-ch="archspread"] ', q = s => document.querySelector(P + s); if (!document.querySelector(P)) return false;
+    if (q('.arkept .slip')) return true;
+    const n = q('.arkeep [data-sign]'); if (n && !n.value) n.value = 'Smoke';
+    const b = q('[data-ar-keep]'); if (b) b.click(); return false; }, null, { timeout: 30000, polling: 1000 })
+    .catch(async () => problems.push(tag + ': an attempt cannot be kept in the ledger: ' + await fp.evaluate(() => (document.querySelector('.player[data-ch="archspread"] .arkeep .bad') || {}).textContent || 'no keep')));
+  await fp.waitForFunction(() => { const P = '.player[data-ch="archspread"] ';
+    return document.querySelectorAll(P + '.armap [data-ar-lg]').length >= 3 && document.querySelectorAll(P + '.armap .armarks [data-ar-first]').length >= 2 && document.querySelectorAll(P + '.armap .armarks .ld.a').length >= 1 && document.querySelectorAll(P + '.arfirsts .arwon').length >= 2; }, null, { timeout: 30000, polling: 1000 })
+    .catch(() => problems.push(tag + ': the map does not show the ledger\'s attempts and the first to win each need'));
   /* each direction leads into the lab where it is improved, and a challenge won there comes back as a stepping stone,
      shown on its card (#408): Six flaky parts won, the errors' card says what it brought */
   { await fp.evaluate(() => { const k = 'osl-world-v1', s = JSON.parse(localStorage.getItem(k) || '{}'); s.done = Object.assign(s.done || {}, { flaky: true }); s.seen = true; localStorage.setItem(k, JSON.stringify(s)); });

@@ -135,8 +135,15 @@ agents propose forks after your first year (think first), each one gene changed 
 what was learned in the directions that gene leads; the person decides. Goals: a recipe nobody has built, at least two genes
 from today's, beats today's computer at one need within 25 years, then at three at once within 40.
 
-**Next in Invent:** the machine (a new machine and its code invented together, against the hardware lottery); an
-architecture attempt kept in the ledger and scored by the open port, so the map shows the community's tries. Anyone can raise a claim with a source or lower it with a break; machine attempts are kept in the ledger now
+An attempt is kept in the ledger (#410): *Keep this attempt* writes a `try` entry with `arch`, its history (the recipe it
+started from, the focus of each year, the forks and stepping stones between years in order) and the needs its recipe wins
+at the end. `src/engines/ledger.js` grows it again with the same engine (`replay` in `src/engines/arch.js`) and refuses a
+claimed win the replay does not reach. The map shows the recipes the ledger holds, people's and agents' apart; the first
+attempt to win with a recipe rings its square, and the first to win a need with a recipe nobody has built holds that niche
+(first in an empty niche counts most), from the entries alone. Agents join through the open port (`grow_architecture`,
+`architecture_forks`, `submit_architecture`, `docs/MCP.md`); the lab runs none.
+
+**Next in Invent:** the machine (a new machine and its code invented together, against the hardware lottery). Anyone can raise a claim with a source or lower it with a break; machine attempts are kept in the ledger now
 (see Moore's law for ideas), claims are next.
 
 ## Liquid hardware

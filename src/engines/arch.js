@@ -43,7 +43,10 @@
 
    The family tree (treeOf, treeStart, treeFork, treeYear, #409): every start and fork of a visit as plain data, each
    node a recipe (its key), where it came from, the year it was made and the needs it won, the history a later ledger
-   entry can carry. */
+   entry can carry.
+
+   An attempt in the ledger (histOf, histOk, replay, #410): one line of the tree as a history, the start, the focus of
+   each year, the forks and stones in order and the needs it claims, grown again here so a false claim is refused. */
 
 import { NEEDS as MACHINE_NEEDS } from '../data/blocks.js';
 import { ACTIVITY } from '../data/inventions.js';
@@ -352,5 +355,54 @@ export function lineOf(T) {
   while (n) { out.unshift(n); if (n.how !== 'fork') break; n = nodeOf(T, n.from); }
   return out;
 }
+
+/* ---- an attempt as a history, for the ledger (#410) ----
+   What a visit did along one line of the tree, enough to grow it again: the recipe it started from (start, a key), the
+   stepping stones it began with (stones: { direction: id }), the focus of each year in order (years: a list a year, at
+   most FOCUS_MAX directions or 'people'), the changes between years in the order they were made (changes: a fork
+   { at, gene, option } or a stone brought back { at, stone }, at the years grown before it), and the needs its recipe
+   wins at the end (wins: the claim). replay grows it again with this engine, so anyone can check a claim; the ledger
+   (src/engines/ledger.js) refuses a claimed win the replay does not reach. Plain data, no words */
+export const HIST_YEARS = Math.max(...Object.values(GOALS).map(G => G.years)), HIST_CHANGES = 40;
+const HIST_KEYS = ['start', 'stones', 'years', 'changes', 'wins'];
+const rec = x => x !== null && typeof x === 'object' && !Array.isArray(x);
+const keysIn = (o, list) => Object.keys(o).every(k => list.includes(k));
+export const isKey = k => typeof k === 'string' && k.split('/').length === GENES.length && GENES.every((g, i) => OPTIONS[g].includes(k.split('/')[i]));
+export const stoneDirOf = id => Object.keys(STONES).find(d => STONES[d].includes(id)) || null;
+/* a new history from a game's state at its start (year 0: everything before the first year is the start) */
+export const histOf = st => ({ start: keyOf(st.g), stones: Object.assign({}, st.stones || {}), years: [], changes: [] });
+/* is it a history the engine can grow: every field in its form, nothing else (a claim of wins included, maybe empty) */
+export function histOk(h, needWins = true) {
+  if (!rec(h) || !keysIn(h, HIST_KEYS) || !isKey(h.start)) return false;
+  const S = h.stones == null ? {} : h.stones;
+  if (!rec(S) || !Object.entries(S).every(([d, id]) => Object.hasOwn(STONES, d) && STONES[d].includes(id))) return false;
+  if (!Array.isArray(h.years) || h.years.length < 1 || h.years.length > HIST_YEARS) return false;
+  if (!h.years.every(f => Array.isArray(f) && f.length <= FOCUS_MAX && new Set(f).size === f.length && f.every(d => DIRS.includes(d) || d === 'people'))) return false;
+  const C = h.changes == null ? [] : h.changes;
+  if (!Array.isArray(C) || C.length > HIST_CHANGES) return false;
+  let at = 1;
+  for (const c of C) {
+    if (!rec(c) || !Number.isInteger(c.at) || c.at < at || c.at > h.years.length) return false;
+    at = c.at;
+    if (c.stone != null ? !(keysIn(c, ['at', 'stone']) && stoneDirOf(c.stone)) : !(keysIn(c, ['at', 'gene', 'option']) && GENES.includes(c.gene) && OPTIONS[c.gene].includes(c.option))) return false;
+  }
+  if (h.wins == null) return !needWins;
+  return Array.isArray(h.wins) && h.wins.length <= NEEDS.length && new Set(h.wins).size === h.wins.length && h.wins.every(n => NEEDS.includes(n));
+}
+/* grow a history again: the state it ends in, and the needs its recipe wins then. Only for a history histOk accepts */
+export function replay(h) {
+  let s = start(recipeOf(h.start), h.stones || {}), i = 0;
+  const C = h.changes || [];
+  for (let y = 0; y <= h.years.length; y++) {
+    for (; i < C.length && C[i].at === y; i++) { const c = C[i]; s = c.stone != null ? bring(s, { [stoneDirOf(c.stone)]: c.stone }) : forkOf(s, c.gene, c.option); }
+    if (y < h.years.length) s = year(s, h.years[y]);
+  }
+  return { st: s, wins: winsOf(s) };
+}
+/* the history as a ledger entry carries it, with the needs it claims: empty stones and changes left out */
+export const histClaim = (h, wins) => Object.assign({ start: h.start }, Object.keys(h.stones || {}).length ? { stones: Object.assign({}, h.stones) } : {}, { years: h.years.map(f => f.slice()) },
+  (h.changes || []).length ? { changes: h.changes.map(c => Object.assign({}, c)) } : {}, { wins: NEEDS.filter(n => (wins || []).includes(n)) });
+/* the same attempt written twice is one: the start, the stones, each year's focus in any order, the changes */
+export const histKey = h => JSON.stringify([h.start, Object.entries(h.stones || {}).sort(), h.years.map(f => f.slice().sort()), (h.changes || []).map(c => c.stone != null ? [c.at, c.stone] : [c.at, c.gene, c.option])]);
 
 function clone(st) { return { g: Object.assign({}, st.g), start: Object.assign({}, st.start), tries: Object.assign({}, st.tries), year: st.year, people: st.people, won: st.won.slice(), best: Object.assign({}, st.best), log: st.log.slice(), stones: Object.assign({}, st.stones || {}) }; }

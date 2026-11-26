@@ -14,7 +14,8 @@ import { STAGES, STAGE_PLACE, stageOfPlace, nextPlace, whereOf, alongTo } from '
 import { viewOfDepth, CHALLENGES, PLACES } from '../v2/game.js';
 import { NEEDS, GOAL } from '../data/build.js';
 import { plan, progress, needOf, needForProject, childrenOf } from './build.js';
-import { settled, frontier, draft, tryEntry, fileOf, proposeUrl, runCase, caseOk, attemptsAt, choicesAt, frontAttemptsAt } from './ledger.js';
+import { settled, frontier, draft, tryEntry, fileOf, proposeUrl, runCase, caseOk, attemptsAt, choicesAt, frontAttemptsAt, archAttempts, ARCH_AGENTS } from './ledger.js';
+import * as Arch from './arch.js';
 import { geoEffFront } from './lens.js';
 import * as Thousand from './thousand.js';
 import { budget, where as whereEnergy, LEVELS as ENERGY_LEVELS, LEVERS, PLAN, JOB } from './budget.js';
@@ -146,6 +147,7 @@ export function listLedger() {
       : e.kind === 'try' && e.chef ? { chef: e.chef, plan: e.plan, waiting: sig(e.facts.wait), joulesPerAnswer: sig(e.facts.energy), cleared: e.facts.cleared, best: (W.bestChef || {})[e.chef] === e.id }
       : e.kind === 'try' && e.front ? { front: e.front, plan: e.plan, words: e.words || '' }
       : e.kind === 'try' && e.choice ? { choice: e.choice, pick: e.pick, reason: e.words }
+      : e.kind === 'try' && e.arch ? { arch: e.arch, recipe: e.facts.g, wins: e.facts.wins, years: e.facts.years, firstToWin: e.firstIn, marksItsSquare: e.marks }
       : e.kind === 'try' && e.machine ? { machine: e.machine, plan: e.plan, ...e.facts, best: (W.bestMachine || {})[e.machine] === e.id }
       : e.kind === 'try' ? { of: e.of, casesItHeldOn: e.facts.cases }
       : e.kind === 'report' ? { at: e.at, part: e.part || null, says: e.say, words: e.words, fixedBy: e.fixedBy || null } : e.kind === 'fix' ? { of: e.of, words: e.words, pullRequest: e.pr || null }
@@ -269,4 +271,52 @@ export function chooseDesign({ need, pick, reason, author, kind, ai, about } = {
   const res = entryOut(e);
   delete out.designs; delete out.columns;
   return Object.assign(out, res, res.ok ? { picked: Thousand.designOf(id, pick) } : {});
+}
+
+/* ---- Grow an architecture nobody has built (src/engines/arch.js, #407, #410): score a recipe and a history, the agents'
+   forks for the state it reaches, and an attempt prepared as a try entry. A history is plain data (Arch.histOf): the
+   recipe it starts from (a key, where/carrier/told/shape, or the four as an object), the stepping stones it starts with,
+   the focus of each year, and the forks and stones between years in order. The ledger grows it again the same way ---- */
+const archRecipeKey = x => (typeof x === 'string' ? x : x && typeof x === 'object' && !Array.isArray(x) ? Arch.GENES.map(k => x[k]).join('/') : '');
+function archRead(a) {
+  const h = { start: archRecipeKey(a.start == null ? Arch.TODAY : a.start), stones: a.stones == null ? {} : a.stones, years: a.years == null ? [] : a.years, changes: a.changes == null ? [] : a.changes };
+  const empty = Array.isArray(h.years) && !h.years.length;
+  if (!Arch.histOk(Object.assign({}, h, { years: empty ? [[]] : h.years }), false) || (empty && !(Array.isArray(h.changes) && !h.changes.length))) return null;
+  return { h, st: empty ? Arch.start(Arch.recipeOf(h.start), h.stones) : Arch.replay(h).st };
+}
+const archNo = () => ({ ok: false, reason: t('ledger.no.arch'), how: t('api.arch.how') });
+const recipeOut = g => ({ key: Arch.keyOf(g), ...g, words: t('ar.recipe', { where: t('ar.opt.where.' + g.where), carrier: t('ar.opt.carrier.' + g.carrier), told: t('ar.opt.told.' + g.told), shape: t('ar.opt.shape.' + g.shape) }) });
+const archBy = e => ({ id: e.id, by: e.by, made: e.made, group: ARCH_AGENTS.includes(e.made) ? 'agents' : 'people', recipe: e.facts.g, wins: e.facts.wins, years: e.facts.years, state: e.state });
+export function growArchitecture(a = {}) {
+  const R = archRead(a || {}); if (!R) return archNo();
+  const { h, st } = R, sc = Arch.scoreOf(st), M = Arch.maturityOf(st), kn = Arch.knownOf(st.g), L = archAttempts(settled()), key = Arch.keyOf(st.g);
+  return {
+    recipe: recipeOut(st.g), built: kn ? { name: t('ar.known.' + kn.id), status: t('ar.st.' + kn.status) } : null, genesFromToday: Arch.novelty(st.g), year: st.year, people: Math.round(st.people), attemptsAYear: Math.round(st.people * Arch.ATTEMPTS),
+    needs: Arch.NEEDS.map(n => ({ need: n, name: t('ar.need.' + n), now: sig(sc[n].now), could: sig(sc[n].could), can: sc[n].can, wins: sc[n].wins, lacks: Arch.missesOf(st.g, n) })),
+    wins: Arch.winsOf(st), polish: Object.fromEntries(Arch.DIRS.map(d => [d, sig(M[d])])), suggest: Arch.novelty(st.g) ? Arch.suggest(st, 'archniche') : null,
+    goals: Object.fromEntries(Object.keys(Arch.GOALS).map(id => [id, Arch.goalOf(st, id)])),
+    history: Arch.histClaim(h, Arch.winsOf(st)),
+    ledger: { here: L.all.filter(e => e.facts.g === key).map(archBy), firstToWin: Object.fromEntries(Arch.NEEDS.map(n => [n, L.first[n] ? archBy(settled().byId[L.first[n]]) : null])), people: L.people.length, agents: L.agents.length },
+    how: t('api.arch.how'), note: t('api.untrusted')
+  };
+}
+/* the agents' forks for the state a history reaches (after its first year, as in the lab): each one gene changed,
+   worked out by the engine, with the history that takes it. They propose; whoever runs them decides */
+export function archForks(a = {}) {
+  const R = archRead(a || {}); if (!R) return archNo();
+  const { h, st } = R;
+  if (!st.year) return { year: 0, forks: [], note: t('ar.ag.first') };
+  return { year: st.year, recipe: recipeOut(st.g), how: t('ar.ag.how'),
+    forks: Arch.agentForks(st).map(c => ({ gene: c.gene, option: c.option, name: t('ar.gene.' + c.gene) + ': ' + t('ar.opt.' + c.gene + '.' + c.option), couldWin: c.could, bestNow: sig(c.now), loses: c.lost, opens: c.gain,
+      then: { start: h.start, stones: h.stones, years: h.years, changes: h.changes.concat({ at: st.year, gene: c.gene, option: c.option }) } })) };
+}
+/* submit an attempt: a history and the needs it claims (left out: the needs its recipe wins at the end), grown again by
+   the ledger, which refuses a claimed win it does not reach. Comes back as the entry's file and the link */
+export function submitArchitecture(a = {}) {
+  const { words, author, kind, ai, about } = a || {};
+  const bad = whoOk(kind, ai); if (bad) return { ok: false, reason: bad };
+  const R = archRead(a || {}); if (!R || !R.h.years.length) return archNo();
+  /* a claim that is not a list goes to the ledger as it is, to be refused there with a reason */
+  const arch = Object.assign(Arch.histClaim(R.h, []), { wins: a.wins == null ? Arch.winsOf(R.st) : a.wins });
+  return entryOut(draft({ kind: 'try', arch, by: author || t('api.anon'), made: kind, ai: ai || '', words: words || '', about: about || null }, txt(author) + ' arch ' + R.h.start.split('/').join(' ')), { recipe: recipeOut(R.st.g), reached: Arch.winsOf(R.st) });
 }
