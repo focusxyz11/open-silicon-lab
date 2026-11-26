@@ -14,7 +14,7 @@
    v doublings (99: the wall), .go(id) to a block, .ch(id) to where a challenge is played, .state(). */
 import { lang, needWords } from '../core/i18n.js';
 import { still, theme } from '../core/ui.js';
-import { w, $, $$, h, clamp, ss, PHONE, S, LIVE, setRoot, fitU, CHAPS, mkTop, CH_AT, ORDER, WALL_OF, WID, PW, lab, words, fillWays, loadFacts,
+import { w, $, $$, h, clamp, ss, PHONE, LAND, S, LIVE, setRoot, fitU, CHAPS, mkTop, CH_AT, ORDER, WALL_OF, WID, PW, lab, words, fillWays, loadFacts,
   momAt, viewAt, countParts, statsHTML, momOut, yearsWordsHTML, Yr, movesEl, TICK, loop, bindHold, setHolding, onChange, Q, src, sheet, fitHead, fillShared } from './holdkit.js';
 import { mkPlate, put, out, LIT, mkChart, mkCQ, initOuts } from './holdplates.js';
 import { D2011, DWALL, LOOP, MOMENTS, WALLS, yearShown } from '../data/hold.js';
@@ -32,6 +32,9 @@ export function createHold(host, ctx = {}) {
      the twelve challenges and the sources */
   const chapL = h('div', 'b-chap mono'), map = h('div', 'd-map'), mid = h('div', 'd-mid'); mid.append(map, chapL);
   const top = mkTop(mid, goChallenge);
+  /* it fits the room the bar leaves it: as the room runs out, the chapter's name goes, then the tally's words, then the
+     sources (they are at the end of the story too), then the squares shrink, and last the chapter; a phone has its own */
+  function fitBar() { const n = innerWidth > 760 ? 6 : 1; for (let k = 0; k < n; k++) { for (let i = 1; i < 6; i++) top.classList.toggle('f' + i, i <= k); if (top.scrollWidth <= top.clientWidth + 1) break; } }
   const stage = h('div', 'b-stage'), world = h('div', 'd-world'), slot = h('div', 'b-slot'), hud = h('div', 'b-hud'), band = h('div', 'b-band'), story = h('div', 'b-story'), rail = h('nav', 'b-rail'), holdBox = h('div', 'b-hold'), ycard = h('div', 'd-ycard', '<div class="say"></div>');
   rail.setAttribute('aria-label', w('rail.open'));
   stage.append(world, slot, hud); root.append(stage, h('div', 'd-cover'), story, band, h('div', 'b-railbg'), rail, holdBox, ycard);
@@ -75,6 +78,9 @@ export function createHold(host, ctx = {}) {
       box.appendChild(c); sec.appendChild(box); m._box = box; });
     /* the wall: on the right, where the moments were, so the count stays readable beside it */
     const wc = card('r', 0, 'wall'); wc.innerHTML = '<div class="w-k mono viol">' + yearShown(DWALL) + ' · ' + w('rail.wall') + '</div><h2 class="w-h anton">' + w('m.wall.h') + '</h2><p class="w-d">' + w('m.wall.p') + ' ' + src('node-n2', 'design-cost-2nm') + '</p>'; const wb = h('div', 'mom'); wb.appendChild(wc); sec.appendChild(wb); sec._wall = wb; }
+  /* on a desktop, a card of the fifty years taller than the room above the hold button scrolls (.sc), as its words grow */
+  let CMAX = 1e9; const tall = c => c.classList.toggle('sc', (c.classList.contains('sc') ? c.scrollHeight : c.offsetHeight) > CMAX + 1), scRO = new ResizeObserver(es => es.forEach(e => tall(e.target)));
+  $$('.card', secs.years).forEach(c => scRO.observe(c));
   /* the pull back: no card on a desktop (the chip says it itself, in its first cell); on a phone, one */
   const pull = h('section', 'sec pull'), pc = card('l', 0, 'pullc'); pc.innerHTML = '<h2 class="w-h anton">' + w('a.title') + '</h2><p class="w-d">' + w('d.lede') + '</p>'; pull.appendChild(pc); story.appendChild(pull);
   ORDER.slice(1).forEach(id => { const sec = h('section', 'sec'), W = words(id); sec.dataset.id = id; secs[id] = sec; story.appendChild(sec);
@@ -89,9 +95,20 @@ export function createHold(host, ctx = {}) {
     if (!host.clientHeight) return;
     /* where the visitor is, before the new layout: kept through a resize or a phone turned sideways */
     const keep = sized && !flying ? here.a : null;
-    u = fitU(); vh = host.clientHeight; VW = host.clientWidth; const W = VW, R = root.style, ph = PHONE(), barH = ph ? 62 : 72; let rw = 0, topY, bandH, cxs, SH;
-    R.setProperty('--barH', barH + 'px');
-    if (ph) { S1 = Sy = W - 28; bandH = 84; top1 = topY = 66; SH = 44 + S1 + bandH + 12; cxs = W / 2; R.setProperty('--stageH', SH + 'px'); R.setProperty('--ctop', barH + SH + 10 + 'px'); R.setProperty('--cw', W - 28 + 'px'); R.setProperty('--ov', '0px');
+    u = fitU(); vh = host.clientHeight; VW = host.clientWidth; const W = VW, R = root.style, ph = PHONE(), land = ph && LAND(), small = W <= 760 || land;
+    /* the bar: on a wide screen its small chip and squares grow a little with the page (a phone's bar, and one on its side, is lower) */
+    const ub = ph || u <= 1 ? 1 : Math.min(1.3, 1 + (u - 1) * .5), barH = small ? 62 : Math.round(42 + 30 * ub); let rw = 0, topY, bandH, cxs, SH, yct;
+    top.style.setProperty('--u', ub + 'px'); R.setProperty('--barH', barH + 'px');
+    /* the phone's layout: the picture above and the story under it, the cards as wide as a phone or, on a tablet held
+       upright, a readable column under a square sized from the window; on a phone on its side, the picture at the left
+       as tall as the window, and the count, the curve, the hold button and the story at the right (yct: where the
+       fifty years' cards stand) */
+    if (ph) { let cw, cl; CMAX = 1e9; bandH = land ? 64 : 84;
+      if (land) { S1 = Sy = vh - barH - 30; top1 = topY = 22; SH = vh - barH; cl = S1 + 28; cxs = cl / 2; cw = W - cl - 14; yct = barH + 4 + 34 + bandH + 8; R.setProperty('--stageW', cl + 'px'); }
+      else { S1 = Sy = W <= 760 ? W - 28 : Math.min(W - 28, Math.round(vh * .48)); top1 = topY = 66; SH = 44 + S1 + bandH + 12; cxs = W / 2; cw = W <= 760 ? W - 28 : Math.min(W - 28, Math.max(S1, 600)); cl = (W - cw) / 2; yct = barH + SH + 10; }
+      R.setProperty('--stageH', SH + 'px'); R.setProperty('--ctop', (land ? barH + 8 : yct) + 'px'); R.setProperty('--cw', cw + 'px'); R.setProperty('--cl', cl + 'px'); R.setProperty('--ov', '0px');
+      /* the narration ends above the hold button wherever the button would lie over it */
+      ycard.style.setProperty('--ctop', yct + 'px'); ycard.style.setProperty('--yb', (!land && cl + cw > W - 96 ? 92 : 8) + 'px');
       if (cq.parentNode !== ycard) ycard.appendChild(cq); }
     else { /* the chapters keep a strip of their own at the left, so they never sit over the chip: wide enough for their
         names on a wide screen, for their marks on any other */
@@ -101,7 +118,10 @@ export function createHold(host, ctx = {}) {
       /* the band under the fifty years: its question wider than the column above it, and the band as tall as the longest
          of its questions needs, so none is ever cut off (on a very short window, a phone on its side, it scrolls) */
       bandH = Math.min(Math.max(150 * u, vh * .2, cq.need(cqw) + 24 * u), Math.max(150 * u, vh * .36));
-      Sy = Math.floor(Math.min(vh - barH - bandH - 64 * u, Wc * .44)); top1 = barH + (vh - barH - S1) / 2 + 8 * u; topY = barH + (vh - barH - bandH - Sy) / 2 + 8 * u; SH = vh; cxs = W / 2 + rw / 2; }
+      Sy = Math.floor(Math.min(vh - barH - bandH - 64 * u, Wc * .44)); top1 = barH + (vh - barH - S1) / 2 + 8 * u; topY = barH + (vh - barH - bandH - Sy) / 2 + 8 * u; SH = vh; cxs = W / 2 + rw / 2;
+      /* the fifty years' cards stand level with the square and end above the hold button, so it never lies over them */
+      yct = topY; CMAX = vh - bandH - 110 * u - yct; secs.years.style.setProperty('--cmax', CMAX + 'px'); }
+    secs.years.style.setProperty('--ctop', yct + 'px');
     BH = ph ? 0 : bandH;
     R.setProperty('--rw', rw + 'px'); R.setProperty('--S', S1 + 'px'); R.setProperty('--top', top1 + 'px'); R.setProperty('--band', bandH + 'px');
     R.setProperty('--hbB', Math.max(10, (vh - top1 - S1) / 2 - 27 * u) + 'px');
@@ -109,20 +129,21 @@ export function createHold(host, ctx = {}) {
     /* the plan: every plate the size it is seen at (so it is sharp, and its controls are real, when the camera is on it).
        The grid follows the window: 6 by 2 on a wide screen, 4 by 3 on most, 3 by 4 on a phone; the path through it is a
        snake, and the channels between blocks widen (a little) until the chip has the window's shape */
-    const ot = ph ? 6 : barH + 4 * u, ob = ph ? 6 : 14 * u, uw = W - rw - (ph ? 12 : 40 * u), uh = SH - ot - ob, asp = uw / uh, cols = ph ? 3 : asp >= 1.8 ? 6 : 4, rows = 12 / cols, M = S1 * .3;
+    const ot = ph ? 6 : barH + 4 * u, ob = ph ? 6 : 14 * u, uw = (land ? S1 + 28 : W - rw) - (ph ? 12 : 40 * u), uh = SH - ot - ob, asp = uw / uh, cols = ph && asp < .9 ? 3 : asp >= 1.8 ? 6 : 4, rows = 12 / cols, M = S1 * .3;
     let pX = S1 * 1.17, pY = S1 * 1.3; const a0 = (2 * M + cols * pX) / (2 * M + rows * pY); if (asp > a0) pX = Math.min(pX * 1.35, ((2 * M + rows * pY) * asp - 2 * M) / cols); else pY = Math.min(pY * 1.35, ((2 * M + cols * pX) / asp - 2 * M) / rows);
-    CELLS.forEach((c, i) => { const r = Math.floor(i / cols), k = i % cols; c[1] = r % 2 ? cols - 1 - k : k; c[2] = r; map.children[i].style.order = r * cols + c[1]; }); map.style.gridTemplateColumns = 'repeat(' + cols + ',' + (ph ? '8px' : 14 * u + 'px') + ')';
+    CELLS.forEach((c, i) => { const r = Math.floor(i / cols), k = i % cols; c[1] = r % 2 ? cols - 1 - k : k; c[2] = r; map.children[i].style.order = r * cols + c[1]; }); map.style.gridTemplateColumns = 'repeat(' + cols + ',' + (small ? '8px' : 14 * Math.min(u, ub) + 'px') + ')';
     WW = 2 * M + cols * pX; WH = 2 * M + rows * pY; px(world, 0, 0, WW, WH); px(edge, M * .42, M * .42, WW - M * .84, WH - M * .84);
     CELLS.forEach(([id, c, r]) => { const x = M + c * pX + (pX - S1) / 2, y = M + r * pY + S1 * .225; POS[id] = [x, y]; if (id === 'title') px(title, x, y - S1 * .1, S1, S1 * 1.1); else { px(blks[id], x, y, S1, S1); plates[id].fit(); } });
     { const xs = ['leak', 'distance', 'power', 'price'].map(k => POS[k][0]), ys = ['leak', 'distance', 'power', 'price'].map(k => POS[k][1]), x0 = Math.min(...xs), y0 = Math.min(...ys); px(reg, x0 - S1 * .06, y0 - S1 * .2, Math.max(...xs) - x0 + S1 * 1.12, Math.max(...ys) - y0 + S1 * 1.25); reg.style.display = ph ? 'none' : ''; }
     const pm = M * .21, PP = { lab: [WW / 2, pm], studio: [WW - pm, WH * .3], fab: [WW - pm, WH * .7], test: [WW / 2, WH - pm], port: [pm, WH * .7], datacentre: [pm, WH * .3] }; for (const p in pads) px(pads[p], ...PP[p]);
     F = {}; ORDER.forEach(id => { F[id] = { x: POS[id][0] + S1 / 2, y: POS[id][1] + S1 / 2, k: 1, sx: cxs, sy: top1 + S1 / 2 }; }); F.years = { ...F.years, k: Sy / S1, sy: topY + Sy / 2 };
     O = { x: WW / 2, y: WH / 2, k: Math.min(uw / WW, uh / WH), sx: cxs, sy: ot + uh / 2 };
-    const sy = secs.years; sy.style.height = yOfD(DWALL) + vh * 1.25 + 'px'; MOMENTS.forEach(m => { m._box.style.top = yOfD(m.at) + (ph ? 48 + SH + 4 : vh * .2) + 'px'; m._box.style.height = yOfD(m.at + m.span) - yOfD(m.at) + 'px'; });
-    sy._wall.style.top = yOfD(DWALL) + (ph ? 48 + SH + 4 : vh * .2) + 'px'; sy._wall.style.height = vh * .75 + 'px';
+    const sy = secs.years; sy.style.height = yOfD(DWALL) + vh * 1.25 + 'px'; MOMENTS.forEach(m => { m._box.style.top = yOfD(m.at) + yct - (ph ? 20 : 0) + 'px'; m._box.style.height = yOfD(m.at + m.span) - yOfD(m.at) + 'px'; });
+    sy._wall.style.top = yOfD(DWALL) + yct - (ph ? 20 : 0) + 'px'; sy._wall.style.height = vh * .75 + 'px';
     /* a headline as large as its card allows, never wider than it ("L’électricité" is longer than "The power") */
     $$('.card .w-h', story).forEach(e => { e.style.fontSize = ''; fitHead(e, parseFloat(getComputedStyle(e).fontSize), 1e9); });
-    sized = true; slot._s = 0; plan(); chart.fit(); for (const id in plates) plates[id].paint(S.T, 0);
+    $$('.card', secs.years).forEach(c => { c.classList.remove('sc'); tall(c); });
+    sized = true; slot._s = 0; plan(); chart.fit(); fitBar(); for (const id in plates) plates[id].paint(S.T, 0);
     if (keep) restore(keep);
   }
   /* where the visitor is, said so that any layout can find it again: in the fifty years, the count (so the year); after
@@ -187,7 +208,7 @@ export function createHold(host, ctx = {}) {
     ORDER.slice(1).forEach(k => { const s = secs[k], o = 1 - ss(0, .3, (y - s._out) / (vh * .75)); s.style.opacity = o; s.style.pointerEvents = o < .5 ? 'none' : ''; s.style.visibility = o < .01 ? 'hidden' : ''; });
     if (was !== yrs || !slot._s) { slot._s = 1; slot.style.setProperty('--S', (yrs ? Sy : S1) + 'px'); slot.style.setProperty('--top', (yrs ? F.years.sy - Sy / 2 : F.leak.sy - S1 / 2) + 'px'); holdBox.style.setProperty('--S', (yrs ? Sy : S1) + 'px'); holdBox.style.setProperty('--hb', (yrs && !PHONE() ? BH : 0) + (PHONE() ? 14 : 22 * u) + 'px'); }
     hud.classList.toggle('off', !yrs); band.classList.toggle('off', !yrs); holdBox.classList.toggle('chip', !yrs); holdBox.classList.toggle('off', !yrs && over);
-    const inChip = !yrs && over, ch = PW[cur].ch, n = CHAPS.indexOf(ch) + 1; put(chapL, inChip ? '<b>' + w('a.chip') + '</b>' : w('b.chap', { n }) + '<b>' + w('tab.' + ch) + '</b>');
+    const inChip = !yrs && over, ch = PW[cur].ch, n = CHAPS.indexOf(ch) + 1, chW = chapL._h; put(chapL, inChip ? '<b>' + w('a.chip') + '</b>' : w('b.chap', { n }) + '<b>' + w('tab.' + ch) + '</b>'); if (chapL._h !== chW) fitBar();
     [...rail.children].forEach(b => b.classList.toggle('on', !inChip && b.dataset.ch === ch)); [...map.children].forEach(b => b.classList.toggle('on', inChip ? b.dataset.id === 'title' : b.dataset.id === cur));
     const on = [null, null]; if (settled) $$('.card[data-x],.card[data-sel]', story).forEach(c => { const r = c.getBoundingClientRect(), m = r.top + Math.min(r.height, 200) / 2; if (m > vh * .16 && m < vh * .8) { const n = +($('.n', c) || {}).textContent - 1; if (n >= 0 && (!c.dataset.mom || c.dataset.mom === viewAt(S.d))) on[n] = c; } });
     mks.forEach((e, i) => { const c = on[i]; e.classList.toggle('on', !!c); if (c) { const [x, y] = markAt(c, e); e.style.left = x + '%'; e.style.top = y + '%'; } });
@@ -207,7 +228,7 @@ export function createHold(host, ctx = {}) {
   function chipState() { const n = WALLS.filter(v => S.tried[v.id]).length; put($('.st', title), w('a.status', { cells: ORDER.length, n, of: 4, sign: S.kept ? '<b>' + w('a.sign.yes') + '</b>' : w('a.sign.no') })); for (const p in pads) pads[p].classList.toggle('lit', !!LIT[p]()); }
   host.addEventListener('scroll', onScroll, { passive: true });
   addEventListener('resize', () => { if (LIVE.on) fit(); });
-  onChange(() => { chipState(); onScroll(); });
+  onChange(() => { chipState(); onScroll(); fitBar(); });
   /* the space bar holds, as the button does; not while typing, or in the lab's bar or its dialogs */
   /* i18n-ok: selectors */ const away = e => !LIVE.on || (e.target.closest && e.target.closest('input,textarea,select,[contenteditable],.bar,.breakp,[role=dialog]'));
   addEventListener('keydown', e => { if (away(e)) return; if (e.key === ' ' && !e.repeat) { e.preventDefault(); touch(); if (cur === 'next' && C && C.a === C.b && S.next.pos < 1) S.next.hold = true; else setHolding(true); } });

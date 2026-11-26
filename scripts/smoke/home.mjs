@@ -12,6 +12,7 @@ export const about = 'Hold, the first page: what it fetches before its preload (
 export default async function run() {
   const { browser3d, base, problems } = S;
   await fetched();
+  await barFits();
   for (const [w, h, scheme] of [[1280, 800, 'dark'], [390, 844, 'light']]) {
     const tag = 'home ' + w, phone = w < 500, hp = await browser3d.newPage({ viewport: { width: w, height: h }, colorScheme: scheme, reducedMotion: 'reduce', hasTouch: phone });
     hp.on('pageerror', e => problems.push(tag + ': ' + e.message));
@@ -54,6 +55,15 @@ export default async function run() {
     await at('job', 'the right chip for one job cannot be chosen', () => { const r = window.__p('years').querySelector('.layer.on input[type=range]'); if (r && r.value !== '0') { r.value = '0'; r.dispatchEvent(new Event('input', { bubbles: true })); } return !!window.__hold.S.done.job; });
     await at('bug', 'the divider\'s wrong answer cannot be found', () => { const S = window.__hold.S, b = window.__p('years').querySelectorAll('.layer.on .pbtn'); if (b.length > 1) (S.bug.n ? b[1] : b[0]).click(); return !!S.done.bug; });
     await at('light', 'the new light cannot be chosen', () => { const b = window.__p('years').querySelectorAll('.layer.on .seg button'); if (b[2] && !b[2].classList.contains('on')) b[2].click(); return !!window.__hold.S.done.light; });
+    /* the hold button never lies over a card or the narration: at the gate and the job, and at two counts in between */
+    for (const [k, a] of [['ch', 'gate'], ['ch', 'job'], ['set', 6], ['set', 16]]) {
+      const under = await hp.waitForFunction(([k, a]) => { window.__hold[k](a);
+        const seen = e => { for (let p = e; p && p.id !== 'hd-root'; p = p.parentElement) { const s = getComputedStyle(p); if (s.display === 'none' || s.visibility === 'hidden' || +s.opacity < .05) return false; } return true; };
+        const b = document.querySelector('#hd-root .b-hold .holdbtn'); if (!seen(b)) return 'ok';
+        const r = b.getBoundingClientRect(), hit = [...document.querySelectorAll('#hd-root .card, #hd-root .d-ycard')].filter(c => { const q = c.getBoundingClientRect(); return seen(c) && q.width && q.left < r.right + 4 && r.left - 4 < q.right && q.top < r.bottom + 4 && r.top - 4 < q.bottom; });
+        return hit.length ? null : 'ok'; }, [k, a], { timeout: 6000 }).then(() => null, () => hp.evaluate(() => [...document.querySelectorAll('#hd-root .card, #hd-root .d-ycard')].map(c => c.textContent.trim().slice(0, 30)).join(' | ')));
+      if (under) problems.push(tag + ': at ' + a + ' the hold button lies over a card');
+    }
     /* the glass follows the pointer (or the finger that holds) and names the part of the chip it is over; the chart names the year under the pointer */
     await hp.evaluate(() => window.__hold.set(20));
     await play('the glass does not follow the pointer over the square', () => { const p = window.__p('years'), r = p.getBoundingClientRect(), g = p.querySelector('.layer.on .lb.c');
@@ -150,7 +160,90 @@ export default async function run() {
     }
     await hp.close();
   }
+  await fitted();
   await apart();
+}
+
+/* the page's part of the bar fits between the phone and the desktop: at every width from 761 px, in each language,
+   no two of the bar's buttons overlap and none breaks onto two lines (the chapter's name, the tally's words and the
+   sources give way first, src/v2/hold.js fitBar) */
+async function barFits() {
+  const { browser3d, base, problems } = S, tag = 'home: the bar';
+  const bp = await browser3d.newPage({ viewport: { width: 1280, height: 800 }, colorScheme: 'dark', reducedMotion: 'reduce' });
+  bp.on('pageerror', e => problems.push(tag + ': ' + e.message));
+  for (const l of ['en', 'zh', 'fr', 'es']) {
+    await bp.goto(base + 'index.html?lang=' + l + '#/');
+    if (!(await bp.waitForFunction(() => !!window.__hold && document.querySelectorAll('.bar .hbar .tally [data-ch]').length === 12, null, { timeout: 20000 }).then(() => true, () => false))) { problems.push(tag + ': the first page does not open in ' + l); continue; }
+    for (const bw of [761, 800, 900, 1024, 1180, 1280]) {
+      await bp.setViewportSize({ width: bw, height: 800 });
+      const bad = await bp.waitForFunction(bw => { if (innerWidth !== bw) return null;
+        const els = [...document.querySelectorAll('.bar .brand, .bar .hbar .d-map, .bar .hbar .b-chap, .bar .hbar .tally .tl-n, .bar .hbar .tally .sq, .bar .hbar > .bbtn, #breakbtn, #logbtn, #langbtn, #theme')].filter(e => getComputedStyle(e).display !== 'none' && e.getBoundingClientRect().width > 0);
+        const R = els.map(e => [e.id || e.className, e.getBoundingClientRect()]), out = [];
+        for (let i = 0; i < R.length; i++) for (let j = i + 1; j < R.length; j++) { const a = R[i][1], c = R[j][1]; if (a.left < c.right - 1 && c.left < a.right - 1 && a.top < c.bottom - 1 && c.top < a.bottom - 1) out.push(R[i][0] + ' over ' + R[j][0]); }
+        for (const [n, e] of R) if (e.right > innerWidth) out.push(n + ' off the window');
+        const two = e => { const rg = document.createRange(); rg.selectNodeContents(e); const t = [...rg.getClientRects()].filter(r => r.width).map(r => r.top); return t.length > 1 && Math.max(...t) - Math.min(...t) > parseFloat(getComputedStyle(e).fontSize) * .8; };
+        for (const e of document.querySelectorAll('.bar .hbar .b-chap, .bar .hbar .tally .tl-n, #logbtn, .bar .hbar > .bbtn')) if (getComputedStyle(e).display !== 'none' && two(e)) out.push((e.id || e.className) + ' breaks onto two lines');
+        return out.length ? null : 'ok'; }, bw, { timeout: 5000 }).then(() => null, () => bp.evaluate(() => [...document.querySelectorAll('.bar .hbar > *, #breakbtn, #logbtn, #langbtn, #theme')].map(e => (e.id || e.className) + ':' + Math.round(e.getBoundingClientRect().left) + '-' + Math.round(e.getBoundingClientRect().right)).join(' ')));
+      if (bad) problems.push(tag + ' at ' + bw + ' px in ' + l + ': its buttons overlap or wrap (' + bad + ')');
+    }
+  }
+  await bp.close();
+}
+
+/* a tablet held upright and a phone on its side: the phone's layout, sized from the window (the picture above, or at
+   the left), every word at least 11 px, no card over the square or the hold button, the whole chip in the window,
+   a moment and a wall played, and a turn keeps the place */
+async function fitted() {
+  const { browser3d, base, problems } = S;
+  for (const [fw, fh, scheme] of [[768, 1024, 'light'], [844, 390, 'dark']]) {
+    const tag = 'home ' + fw + '×' + fh, fp = await browser3d.newPage({ viewport: { width: fw, height: fh }, colorScheme: scheme, reducedMotion: 'reduce', hasTouch: true });
+    fp.on('pageerror', e => problems.push(tag + ': ' + e.message));
+    await fp.addInitScript(() => { try { localStorage.setItem('osl-quality', 'keep'); localStorage.removeItem('osl-lang'); } catch (e) { /* no storage */ }
+      /* what is wrong where the visitor looks: a word under 11 px, a card over the square or the hold button, anything off the window */
+      window.__fit = () => { const bad = [], W = innerWidth, H = innerHeight;
+        const seen = e => { for (let p = e; p && p !== document.body; p = p.parentElement) { const s = getComputedStyle(p); if (s.display === 'none' || s.visibility === 'hidden' || +s.opacity < .05) return false; } return true; };
+        for (const e of document.querySelectorAll('#hd-root *, .bar *')) {
+          if ((e.closest('.d-world') && !e.closest('.dblk.cur')) || e.closest('.sheet:not(.on),.srcpop:not(.on),.toast:not(.on),.src')) continue;
+          if (![...e.childNodes].some(n => n.nodeType === 3 && n.textContent.trim())) continue;
+          const r = e.getBoundingClientRect(); if (!r.width || r.bottom < 0 || r.top > H || r.right < 0 || r.left > W || !seen(e)) continue;
+          if (parseFloat(getComputedStyle(e).fontSize) < 10.95) bad.push('"' + e.textContent.trim().slice(0, 24) + '" is under 11 px');
+          if (e.closest('#hd-root') && (r.right > W + 1 || r.left < -1)) bad.push('"' + e.textContent.trim().slice(0, 24) + '" runs off the window');
+        }
+        const chip = window.__hold.state().chip, sq = document.querySelector(chip ? '#hd-root .dblk.live .plate' : '#hd-root .dblk .plate[data-id="years"]'), hb = document.querySelector('#hd-root .b-hold .holdbtn');
+        for (const c of document.querySelectorAll('#hd-root .card, #hd-root .d-ycard')) { if (!seen(c)) continue; const q = c.getBoundingClientRect(); if (!q.width || q.bottom < 0 || q.top > H) continue;
+          for (const [o, what] of [[sq, 'the square'], [hb, 'the hold button']]) { if (!o || !seen(o)) continue; const r = o.getBoundingClientRect();
+            if (!(q.left < r.right - 1 && r.left < q.right - 1 && q.top < r.bottom - 1 && r.top < q.bottom - 1)) continue;
+            const t = document.elementFromPoint((Math.max(q.left, r.left) + Math.min(q.right, r.right)) / 2, (Math.max(q.top, r.top) + Math.min(q.bottom, r.bottom)) / 2);
+            if (t && c.contains(t)) bad.push('a card ("' + c.textContent.trim().slice(0, 24) + '") lies over ' + what); } }
+        return bad.slice(0, 4); }; });
+    const play = (what, fn, arg, timeout = 15000) => fp.waitForFunction(fn, arg, { timeout }).catch(() => problems.push(tag + ': ' + what));
+    await fp.goto(base + 'index.html');
+    await play('the first page does not open', () => !!window.__hold && document.querySelectorAll('#hd-root .dblk .plate').length === 11, null, 20000);
+    /* the phone's layout: the picture pinned above the story (upright) or at its left (on its side), and a big square */
+    await play('the picture is not pinned ' + (fw > fh ? 'at the left of' : 'above') + ' the story, or its square is small', fw => { const s = document.querySelector('#hd-root .b-stage').getBoundingClientRect(), p = document.querySelector('#hd-root .dblk .plate[data-id="years"]').getBoundingClientRect(), c = document.querySelector('#hd-root .d-ycard').getBoundingClientRect();
+      return innerWidth > innerHeight ? s.right < innerWidth * .5 && c.left >= p.right && p.height > (innerHeight - 62) * .85 : s.bottom <= c.top && p.width > innerWidth * .6; }, fw);
+    /* what the visitor sees, at counts, moments, the wall and blocks after it */
+    for (const [k, a] of [['set', 0], ['set', 6], ['ch', 'gate'], ['ch', 'job'], ['ch', 'fit'], ['set', 16], ['set', 99], ['go', 'leak'], ['go', 'distance'], ['go', 'machine']]) {
+      const ok = await fp.waitForFunction(([k, a]) => { window.__hold[k](a); return window.__fit().length === 0; }, [k, a], { timeout: 8000 }).then(() => true, () => false);
+      if (!ok) problems.push(tag + ': at ' + a + ', ' + (await fp.evaluate(() => window.__fit().join('; '))));
+    }
+    /* a moment and a wall, played */
+    await fp.evaluate(() => window.__hold.ch('gate'));
+    await play('the gate cannot be played', () => { const S = window.__hold.S, t = document.querySelectorAll('#hd-root .dblk .plate[data-id="years"] .layer.on .tap'); if (t.length === 2) { if (!S.gate.a) t[0].click(); if (!S.gate.b) t[1].click(); } return !!S.done.gate; });
+    await fp.evaluate(() => window.__hold.go('leak'));
+    await play('the leak cannot be tried', () => { const r = document.querySelector('#hd-root .dblk .plate[data-id="leak"] input[type=range]'); if (r && r.value !== '240') { r.value = '240'; r.dispatchEvent(new Event('input', { bubbles: true })); } return !!window.__hold.S.tried.switch; });
+    /* the whole chip fits the window */
+    await play('the whole chip does not fit the window', () => { const e = document.getElementById('home'), y = window.__hold.at('pull'); if (Math.abs(e.scrollTop - y) > 4) e.scrollTop = y;
+      const bs = [...document.querySelectorAll('#hd-root .dblk')].map(b => b.getBoundingClientRect()); return window.__hold.state().chip && Math.min(...bs.map(r => r.left)) >= 0 && Math.min(...bs.map(r => r.top)) >= 0 && Math.max(...bs.map(r => r.right)) <= innerWidth && Math.max(...bs.map(r => r.bottom)) <= innerHeight; });
+    /* a turn, and back, keeps the place: in the fifty years and on a block */
+    for (const [k, a, ok] of [['set', 17.3, 'Math.abs(window.__hold.state().d - 17.3) < .05'], ['go', 'machine', "window.__hold.state().cur === 'machine'"]]) {
+      await fp.evaluate(([k, a]) => window.__hold[k](a), [k, a]);
+      for (const [vw, vh] of [[fh, fw], [fw, fh]]) { await fp.setViewportSize({ width: vw, height: vh }); await play('turned to ' + vw + '×' + vh + ' at ' + a + ', the page loses its place', ok); }
+    }
+    const side = await fp.evaluate(() => { const p = document.getElementById('home'); return p.scrollWidth - p.clientWidth; });
+    if (side > 1) problems.push(tag + ': the first page scrolls sideways by ' + side + ' px');
+    await fp.close();
+  }
 }
 
 /* nothing on a block lies on another word (#416, #417): no card's number, on the block or on its card, lies on a word
