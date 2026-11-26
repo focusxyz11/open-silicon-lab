@@ -2179,6 +2179,42 @@
    "url": "https://pml.nist.gov/cuu/pdf/xray_2018.pdf",
    "value": "The silicon crystal repeats every 0.543 nm (5.431 × 10⁻¹⁰ m)",
    "verified": "2026-11-25"
+  },
+  {
+   "id": "dna-cello",
+   "topic": "beyond",
+   "detail": "Nielsen et al., Genetic circuit design automation, Science 352 (2016), aac7341. Cello turns a circuit written in Verilog into a DNA sequence for E. coli, with gates made of repressors (NOT and NOR). Of 60 circuits designed, 45 worked correctly in every output state, and 92% of 412 output states worked as predicted; building them took 880,000 base pairs of DNA.",
+   "kind": "reported",
+   "label": "Verilog compiled into DNA for living cells (Cello)",
+   "source": "Science (Nielsen et al., 2016)",
+   "status": "current",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/27034378/",
+   "value": "60 circuits designed, 45 correct in every output state, 92% of 412 output states as predicted",
+   "verified": "2026-11-26"
+  },
+  {
+   "id": "dna-seesaw",
+   "topic": "beyond",
+   "detail": "Qian and Winfree, Scaling up digital circuit computation with DNA strand displacement cascades, Science 332 (2011), 1196. Every gate has a threshold and catalysis (fuel) to restore the signal; the largest circuit computes the square root of a four-bit number.",
+   "kind": "reported",
+   "label": "Logic circuits of DNA strands in a test tube (seesaw gates)",
+   "source": "Science (Qian and Winfree, 2011)",
+   "status": "current",
+   "url": "https://doi.org/10.1126/science.1200520",
+   "value": "a four-bit square-root circuit of 130 DNA strands",
+   "verified": "2026-11-26"
+  },
+  {
+   "id": "dna-wta",
+   "topic": "beyond",
+   "detail": "Cherry and Qian, Scaling up molecular pattern recognition with DNA-based winner-take-all neural networks, Nature 559 (2018), 370. Each pattern is 20 DNA molecules chosen from 100 that stand for the bits of a 10 x 10 picture of a handwritten digit; test patterns had up to 30 of the 100 bits flipped.",
+   "kind": "reported",
+   "label": "A DNA neural network that sorts patterns into nine kinds",
+   "source": "Nature (Cherry and Qian, 2018)",
+   "status": "current",
+   "url": "https://authors.library.caltech.edu/records/wms8v-hsw21",
+   "value": "up to nine categories, 10 x 10 patterns, up to 30 of 100 bits flipped",
+   "verified": "2026-11-26"
   }
  ],
  "changes": [

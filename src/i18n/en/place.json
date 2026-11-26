@@ -823,5 +823,7 @@
  "fab.inspect.text.found": "Found it in die {die}. Now imagine doing this for 10 billion features on hundreds of dies per wafer, at speed.",
  "fab.inspect.text.miss": "Not there. Keep looking, or let the comparison find it.",
  "grow.lab-grow": "a small new chip on a plinth at the Lab, one of its tiles lit",
- "grow.lab-spread": "three new chips at the Lab, joined by light"
+ "grow.lab-spread": "three new chips at the Lab, joined by light",
+ "grow.way-bridge": "a stand of glowing test tubes beside a chip at the Lab",
+ "grow.way-dnawta": "three tubes at the Lab, one lit brighter than the others"
 }
