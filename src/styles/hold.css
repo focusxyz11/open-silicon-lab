@@ -3,7 +3,7 @@
    (prototype D: B's story on A's chip); day or night as the lab is set, all the way down. Everything is scoped to .hold;
    the page's part of the lab's bar (the small chip, the chapter, the challenges, the sources) to .hbar. The picture is
    pinned to the window (.b-stage, the chip under a camera: .d-world); the story scrolls over it (.b-story, its cards). */
-.home.holdhome{padding-top:0;background:#efece3;overscroll-behavior:contain;scrollbar-width:none}
+.home.holdhome{padding-top:0;background:#efece3;overscroll-behavior:contain;overflow-anchor:none;scrollbar-width:none}
 .home.holdhome::-webkit-scrollbar{display:none}
 .home.holdhome.hold-night{background:#131210}
 body.firstpage .bar .loop{display:none}
