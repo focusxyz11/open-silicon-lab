@@ -75,8 +75,8 @@ test('a car is flown through like the data centre and the phone: every level has
 
 test('there is no menu: the bar holds the loop, six stages each with its words, and the shell says so', async () => {
   const { STAGES, STAGE_PLACE } = await import('../src/engines/way.js');
-  /* a menu of sections is off unless a visitor asks for it (?menu=1): the choice is the owner's, and easy to reverse */
-  assert.match(src('app.js'), /SECTIONS_ON/);
+  /* the menu of sections that ?menu=1 switched on to compare was retired by the owner (#384): nothing of it is left */
+  assert.doesNotMatch(src('app.js'), /SECTIONS_ON|osl-menu|needWords\('menu'\)/);
   assert.deepEqual(STAGES, ['open', 'design', 'make', 'test', 'ship', 'use']);
   for (const s of STAGES) { assert.ok(EN['loop.stage.' + s] && EN['loop.at.' + s], s); assert.ok(EN['map.' + STAGE_PLACE[s] + '.t'], s); if (s !== 'open') assert.ok(EN['loop.as.' + s], s); }
   /* the reading views that remain, each opened on purpose: your log, and the Lab's record */

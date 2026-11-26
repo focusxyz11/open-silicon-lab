@@ -52,6 +52,7 @@
    "label": "AI inside the fab",
    "source": "Let's Data Science",
    "status": "current",
+   "unchecked": "Not re-checked on 2026-11-25: the source's site blocks automated reads (a bot challenge). It needs a person with a browser, or a newer source (#378).",
    "url": "https://letsdatascience.com/news/tsmc-adopts-nvidia-accelerated-computing-for-fab-automation-29d5ad01",
    "value": "TSMC adopting NVIDIA AI for lithography, inspection and fab digital twins",
    "verified": "2026-10-27"
@@ -136,6 +137,7 @@
    "label": "The 2021 car-chip shortage",
    "source": "CNBC (AlixPartners)",
    "status": "current",
+   "unchecked": "Not re-checked on 2026-11-25: the source's site blocks automated reads (a bot challenge). It needs a person with a browser, or a newer source (#378).",
    "url": "https://www.cnbc.com/2021/09/23/chip-shortage-expected-to-cost-auto-industry-210-billion-in-2021.html",
    "value": "About $210 billion of lost revenue and 7.7 million vehicles not built in 2021",
    "verified": "2026-10-29"
@@ -160,6 +162,7 @@
    "label": "Cerebras CS-4 (WSE-3 Turbo)",
    "source": "Gear Live",
    "status": "current",
+   "unchecked": "Not re-checked on 2026-11-25: the source's site blocks automated reads (a bot challenge). It needs a person with a browser, or a newer source (#378).",
    "url": "https://www.gearlive.com/news/article/cerebras-cs-4-wafer-scale-memory-wall",
    "value": "4 trillion transistors, 44 GB on-wafer SRAM, 43.2 PB/s memory bandwidth",
    "verified": "2026-10-27"
@@ -304,6 +307,7 @@
    "label": "Co-packaged optics in production",
    "source": "XenoSpectrum (TrendForce)",
    "status": "current",
+   "unchecked": "Not re-checked on 2026-11-25: the source's site blocks automated reads (a bot challenge). It needs a person with a browser, or a newer source (#378).",
    "url": "https://xenospectrum.com/en/nvidia-broadcom-cpo-volume-ramp/",
    "value": "NVIDIA Spectrum-X Photonics announced in production, May 2026",
    "verified": "2026-10-27"
@@ -316,6 +320,7 @@
    "label": "Data-center electricity use",
    "source": "IEA via Enlit",
    "status": "current",
+   "unchecked": "Not re-checked on 2026-11-25: the source's site blocks automated reads (a bot challenge). It needs a person with a browser, or a newer source (#378).",
    "url": "https://www.enlit.world/library/ai-and-data-centre-electricity-use-continue-to-surge-iea-finds",
    "value": "About 485 TWh, rising to about 950 TWh by 2030",
    "verified": "2026-10-27"
@@ -328,6 +333,7 @@
    "label": "Cost to design a 2 nm chip",
    "source": "CSIS",
    "status": "current",
+   "unchecked": "Not re-checked on 2026-11-25: the source's site blocks automated reads (a bot challenge). It needs a person with a browser, or a newer source (#378).",
    "url": "https://www.csis.org/analysis/billion-dollar-chip-who-can-afford-design-future",
    "value": "About $725 million",
    "verified": "2026-10-27"
@@ -376,6 +382,7 @@
    "label": "EnCharge EN100 analog in-memory chip",
    "source": "DCD",
    "status": "current",
+   "unchecked": "Not re-checked on 2026-11-25: the source's site blocks automated reads (a bot challenge). It needs a person with a browser, or a newer source (#378).",
    "url": "https://www.datacenterdynamics.com/en/news/encharge-ai-launches-its-analog-in-memory-en100-ai-accelerator/",
    "value": "Over 200 TOPS in an M.2 card; up to about 20× better performance per watt than rivals",
    "verified": "2026-10-29"
@@ -448,6 +455,7 @@
    "label": "Time to build a fab",
    "source": "New Electronics",
    "status": "current",
+   "unchecked": "Not re-checked on 2026-11-25: the source's site blocks automated reads (a bot challenge). It needs a person with a browser, or a newer source (#378).",
    "url": "https://www.newelectronics.co.uk/content/news/tsmc-looks-to-compress-arizona-fab-construction-into-just-two-years",
    "value": "TSMC aims for about two years per Arizona fab",
    "verified": "2026-10-27"
@@ -472,6 +480,7 @@
    "label": "GPT-Synopsys",
    "source": "Ecosistema Startup",
    "status": "current",
+   "unchecked": "Not re-checked on 2026-11-25: the source's site blocks automated reads (a bot challenge). It needs a person with a browser, or a newer source (#378).",
    "url": "https://ecosistemastartup.com/?p=113390",
    "value": "Multi-year OpenAI and Synopsys deal for a model that operates EDA tools",
    "verified": "2026-10-27"
@@ -508,9 +517,9 @@
    "label": "Intel Hala Point",
    "source": "Intel",
    "status": "current",
-   "url": "https://newsroom.intel.com/artificial-intelligence/intel-builds-worlds-largest-neuromorphic-system-to",
+   "url": "https://www.intc.com/news-events/press-releases/detail/1691/intel-builds-worlds-largest-neuromorphic-system-to",
    "value": "1,152 Loihi 2 chips, 1.15 billion neurons, 2,600 W maximum",
-   "verified": "2026-10-29"
+   "verified": "2026-11-26"
   },
   {
    "id": "hbm4",
@@ -532,6 +541,7 @@
    "label": "High-NA EUV in volume production",
    "source": "ASML",
    "status": "current",
+   "unchecked": "Not re-checked on 2026-11-25: the source's site blocks automated reads (a bot challenge). It needs a person with a browser, or a newer source (#378).",
    "url": "https://www.asml.com/news/press-releases/2026/high-na-euv-reaches-new-readiness-milestone",
    "value": "Select Intel 18A layers on some Panther Lake chips, since July 2026",
    "verified": "2026-10-27"
@@ -604,6 +614,7 @@
    "label": "IBM Starling",
    "source": "DCD",
    "status": "current",
+   "unchecked": "Not re-checked on 2026-11-25: the source's site blocks automated reads (a bot challenge). It needs a person with a browser, or a newer source (#378).",
    "url": "https://www.datacenterdynamics.com/en/news/ibm-updates-quantum-computing-roadmap-to-deliver-starling-system-by-2029/",
    "value": "Planned for 2029: 200 logical qubits running 100 million operations",
    "verified": "2026-10-29"
@@ -664,6 +675,7 @@
    "label": "NVIDIA and Intel partnership",
    "source": "TweakTown",
    "status": "current",
+   "unchecked": "Not re-checked on 2026-11-25: the source's site blocks automated reads (a bot challenge). It needs a person with a browser, or a newer source (#378).",
    "url": "https://tweaktown.com/news/111546/intel-ceo-confirms-ongoing-collaboration-with-nvidia-on-new-products/index.html",
    "value": "$5B NVIDIA investment; custom x86 CPUs with NVLink and x86 PC chips with RTX chiplets",
    "verified": "2026-10-27"
@@ -676,6 +688,7 @@
    "label": "Mature-process chips in cars",
    "source": "CSIS",
    "status": "current",
+   "unchecked": "Not re-checked on 2026-11-25: the source's site blocks automated reads (a bot challenge). It needs a person with a browser, or a newer source (#378).",
    "url": "https://www.csis.org/analysis/strategic-importance-legacy-chips",
    "value": "95% of the chips used in US cars are 28 nm or larger",
    "verified": "2026-10-29"
@@ -700,6 +713,7 @@
    "label": "Microsoft Maia 200",
    "source": "DatacenterDynamics",
    "status": "current",
+   "unchecked": "Not re-checked on 2026-11-25: the source's site blocks automated reads (a bot challenge). It needs a person with a browser, or a newer source (#378).",
    "url": "https://www.datacenterdynamics.com/en/news/microsoft-unveils-maia-200-inferencing-chip",
    "value": "TSMC 3 nm, about 10 PFLOPS FP4, 216 GB HBM3E, 272 MB SRAM, 750 W",
    "verified": "2026-10-27"
@@ -760,6 +774,7 @@
    "label": "NVIDIA quarterly results",
    "source": "NVIDIA",
    "status": "current",
+   "unchecked": "Not re-checked on 2026-11-25: the source's site blocks automated reads (a bot challenge). It needs a person with a browser, or a newer source (#378).",
    "url": "https://investor.nvidia.com/news/press-release-details/2026/NVIDIA-Announces-Financial-Results-for-Second-Quarter-Fiscal-2027/",
    "value": "$96.2B revenue, 75.0% gross margin (quarter to July 2026)",
    "verified": "2026-10-27"
@@ -772,6 +787,7 @@
    "label": "The open-source chip flow",
    "source": "Chartered Semi",
    "status": "current",
+   "unchecked": "Not re-checked on 2026-11-25: the source's site blocks automated reads (a bot challenge). It needs a person with a browser, or a newer source (#378).",
    "url": "https://www.charteredsemi.com/tiny-tapeout-program-explained/",
    "value": "Yosys for synthesis; LibreLane with OpenROAD for place and route, checks and GDS export",
    "verified": "2026-10-29"
@@ -796,6 +812,7 @@
    "label": "Photonic processors in supercomputing centers",
    "source": "EE Times",
    "status": "current",
+   "unchecked": "Not re-checked on 2026-11-25: the source's site timed out on every try. It needs a person with a browser, or a newer source (#378).",
    "url": "https://www.eetimes.com/q-ant-hits-full-production-capacity-for-photonic-ai-processors/",
    "value": "Q.ANT thin-film lithium niobate processors installed at LRZ and Jülich; about 30 W per chip",
    "verified": "2026-10-29"
@@ -815,14 +832,14 @@
   {
    "id": "quantum-chips-act",
    "topic": "future",
-   "detail": "Includes $1 billion for an IBM quantum foundry subsidiary.",
+   "detail": "Letters of intent signed on 21 May 2026, not final awards; includes $1 billion for an IBM quantum foundry and $375 million for GlobalFoundries.",
    "kind": "reported",
    "label": "US quantum incentives",
-   "source": "Tech Insider",
+   "source": "US Department of Commerce (NIST)",
    "status": "current",
-   "url": "https://tech-insider.org/quantum-computing-in-2026-from-laboratory-curiosity-to-practical-utility/",
-   "value": "$2.013 billion of CHIPS Act awards to nine companies (May 2026)",
-   "verified": "2026-10-27"
+   "url": "https://www.nist.gov/news-events/news/2026/05/department-commerce-announces-letters-intent-9-companies-2-billion",
+   "value": "$2.013 billion of proposed CHIPS Act awards to nine companies (May 2026)",
+   "verified": "2026-11-26"
   },
   {
    "id": "riscv-rva23",
@@ -856,6 +873,7 @@
    "label": "NVIDIA Rubin Ultra",
    "source": "DatacenterDynamics",
    "status": "current",
+   "unchecked": "Not re-checked on 2026-11-25: the source's site blocks automated reads (a bot challenge). It needs a person with a browser, or a newer source (#378).",
    "url": "https://datacenterdynamics.com/en/news/nvidia-announces-vera-rubin-superchip-for-late-2026",
    "value": "Planned for 2H 2027",
    "verified": "2026-10-27"
@@ -880,6 +898,7 @@
    "label": "Superconducting computing for AI",
    "source": "EurekAlert! (Jefferson Lab)",
    "status": "current",
+   "unchecked": "Not re-checked on 2026-11-25: the source's site blocks automated reads (a bot challenge). It needs a person with a browser, or a newer source (#378).",
    "url": "https://www.eurekalert.org/news-releases/1011158",
    "value": "Target: about 100× better energy efficiency, including cooling",
    "verified": "2026-10-29"
@@ -892,6 +911,7 @@
    "label": "Google TPU v7 Ironwood",
    "source": "Ecosistema Startup",
    "status": "current",
+   "unchecked": "Not re-checked on 2026-11-25: the source's site blocks automated reads (a bot challenge). It needs a person with a browser, or a newer source (#378).",
    "url": "https://ecosistemastartup.com/google-tpu-ironwood-4-6-petaflops-y-nueva-arquitectura-8t-8i/",
    "value": "4.6 PFLOPS FP8, 192 GB HBM, 7.4 TB/s, about 600 W",
    "verified": "2026-10-27"
@@ -904,6 +924,7 @@
    "label": "Google TPU 8t and 8i",
    "source": "Ecosistema Startup",
    "status": "current",
+   "unchecked": "Not re-checked on 2026-11-25: the source's site blocks automated reads (a bot challenge). It needs a person with a browser, or a newer source (#378).",
    "url": "https://ecosistemastartup.com/google-tpu-ironwood-4-6-petaflops-y-nueva-arquitectura-8t-8i/",
    "value": "Separate training and inference TPUs on TSMC 2 nm, expected around end of 2027",
    "verified": "2026-10-27"
@@ -916,6 +937,7 @@
    "label": "AWS Trainium3",
    "source": "Introl",
    "status": "current",
+   "unchecked": "Not re-checked on 2026-11-25: the source's site blocks automated reads (a bot challenge). It needs a person with a browser, or a newer source (#378).",
    "url": "https://introl.com/blog/amazon-trainium3-aws-nvidia-ai-chip-competition-2025",
    "value": "TSMC 3 nm, 2.52 PFLOPS FP8, 144 GB HBM3E, 4.9 TB/s",
    "verified": "2026-10-27"
@@ -928,6 +950,7 @@
    "label": "AWS Trainium4",
    "source": "Introl",
    "status": "current",
+   "unchecked": "Not re-checked on 2026-11-25: the source's site blocks automated reads (a bot challenge). It needs a person with a browser, or a newer source (#378).",
    "url": "https://introl.com/blog/amazon-trainium3-aws-nvidia-ai-chip-competition-2025",
    "value": "Targeted for late 2026 to early 2027 with native FP4 and about 288 GB",
    "verified": "2026-10-27"
@@ -988,6 +1011,7 @@
    "label": "TSMC profitability",
    "source": "TSMC",
    "status": "current",
+   "unchecked": "Not re-checked on 2026-11-25: the source's site blocks automated reads (a bot challenge). It needs a person with a browser, or a newer source (#378).",
    "url": "https://pr.tsmc.com/english/news/3346",
    "value": "66.4% gross margin, 58.7% operating margin in Q3 2026",
    "verified": "2026-10-27"
@@ -1060,6 +1084,7 @@
    "label": "Vaire Ice River test chip",
    "source": "EE Times",
    "status": "current",
+   "unchecked": "Not re-checked on 2026-11-25: the source's site timed out on every try. It needs a person with a browser, or a newer source (#378).",
    "url": "https://www.eetimes.com/vaire-demos-energy-recovery-with-reversible-computing-test-chip/",
    "value": "22 nm, 500 MHz: energy recovered by a factor of 1.77 in a capacitor array, 1.41 in a shift register",
    "verified": "2026-10-29"
@@ -1084,6 +1109,7 @@
    "label": "Vera Rubin NVL72 rack",
    "source": "Let's Data Science",
    "status": "current",
+   "unchecked": "Not re-checked on 2026-11-25: the source's site blocks automated reads (a bot challenge). It needs a person with a browser, or a newer source (#378).",
    "url": "https://letsdatascience.com/blog/nvidia-just-shipped-the-most-powerful-ai-chip-ever-made",
    "value": "3.6 exaflops FP4, 20.7 TB HBM4, 260 TB/s NVLink",
    "verified": "2026-10-27"
@@ -1276,6 +1302,7 @@
    "label": "Lifetime expected of car electronics",
    "source": "Monolithic Power Systems",
    "status": "new",
+   "unchecked": "Not re-checked on 2026-11-25: the source's site blocks automated reads (a bot challenge). It needs a person with a browser, or a newer source (#378).",
    "url": "https://www.monolithicpower.com/jp/learning/resources/automotive-electronics-reliability-testing-starts-and-ends-with-the-mission-profile",
    "value": "15 years or more",
    "verified": "2026-10-30"
@@ -1348,6 +1375,7 @@
    "label": "A RISC-V chip for under 10 cents",
    "source": "Hackster.io",
    "status": "current",
+   "unchecked": "Not re-checked on 2026-11-25: the source's site blocks automated reads (a bot challenge). It needs a person with a browser, or a newer source (#378).",
    "url": "https://www.hackster.io/news/wch-launches-a-sub-10-risc-v-microcontroller-while-a-6-90-dev-board-gets-you-started-90b1ffd7490a",
    "value": "WCH CH32V003: a 32-bit RISC-V microcontroller for less than 10 cents",
    "verified": "2026-10-31"

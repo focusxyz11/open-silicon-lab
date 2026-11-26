@@ -208,7 +208,7 @@ One type scale: titles and the question in Besley, everything read in Atkinson H
   on their parts. Do and Ask are filled from the atlas, so a view gets them by saying which level it shows.
 
 **The bar.** It never hides: the lab's mark (home), the loop, *Your log*, the theme. There is no menu of sections
-by default; `?menu=1` adds one for that browser, to compare (not decided: `docs/reviews/structure.md`, Status).
+(the comparison behind `?menu=1` was retired on 26 November 2026, #384).
 One reading page is opened on purpose: **your log** (`#/log`: a jump to any place, level or challenge by name,
 also on the `/` key; what is next for your chip; the questions you met; the challenges by step). The commons has no page: **the Lab's inside**
 (`#/build[/<step>[/<piece>]]`) is in the Lab's own card, with the island behind it: the computer, then a piece of it,
