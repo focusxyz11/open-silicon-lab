@@ -12,7 +12,7 @@
    chip) and brought into the lab with Claude Opus 5.5. Nothing 3D: the island (#/island) is one way out of it.
    createHold(host, ctx) → { show(), hide() }; ctx: still() (reduced motion). For checks: window.__hold.set(v) goes to
    v doublings (99: the wall), .go(id) to a block, .ch(id) to where a challenge is played, .state(). */
-import { lang, needWords } from '../core/i18n.js';
+import { hasWords, lang, needWords } from '../core/i18n.js';
 import { still, theme } from '../core/ui.js';
 import { w, $, $$, h, clamp, ss, PHONE, LAND, S, LIVE, setRoot, fitU, CHAPS, mkTop, CH_AT, ORDER, WALL_OF, WID, PW, lab, words, fillWays, loadFacts,
   momAt, viewAt, countParts, countSay, statsHTML, momOut, yearsWordsHTML, Yr, movesEl, TICK, loop, bindHold, setHolding, onChange, Q, src, sheet, fitHead, fillShared, restore as kept, rove } from './holdkit.js';
@@ -294,7 +294,10 @@ export function createHold(host, ctx = {}) {
      walls, the needs: shared.json). Where the preload never starts (off: a connection that saves data), only a touch
      fetches them */
   let touched = false;
-  function touch() { if (touched || !document.documentElement.dataset.preload) return; touched = true; loadFacts(); needWords('blueprint', 'shared').then(() => { fillWays(); fillShared(); out('machine'); }, () => { touched = false; }); }
+  function touch() { if (touched || !document.documentElement.dataset.preload) return; touched = true; loadFacts();
+    /* words that did not come (the page was left, the connection dropped) are asked for again at the next touch; once
+       in, the story above may have grown, so the camera stays where it was */
+    needWords('blueprint', 'shared').then(() => { if (!hasWords('blueprint') || !hasWords('shared')) { touched = false; return; } const a = sized && !flying ? here.a : null; fillWays(); fillShared(); out('machine'); if (a && LIVE.on) restore(a); }, () => { touched = false; }); }
   const idleTouch = () => { if (touched || !LIVE.on || document.documentElement.dataset.preload === 'off') return; if (document.documentElement.dataset.preload) (window.requestIdleCallback ? requestIdleCallback(touch, { timeout: 1500 }) : setTimeout(touch, 1500)); else setTimeout(idleTouch, 600); };
 
   /* for checks */

@@ -211,10 +211,11 @@ async function kept() {
   await kp.waitForFunction(() => { try { return !!JSON.parse(localStorage.getItem('osl-hold')).done.eras; } catch (e) { return false; } }, null, { timeout: 5000 }).catch(() => problems.push(tag + ': a challenge done is not kept in this browser'));
   /* day or night (it reloads the page) keeps the block and the challenge */
   await Promise.all([kp.waitForEvent('load'), kp.click('#theme')]); await open();
-  await play('day or night does not keep the block, or the challenge done', () => location.hash === '#/hold/eras' && window.__hold.state().cur === 'eras' && !!window.__hold.S.done.eras && !!document.querySelector('.bar .hbar .tally [data-ch="eras"].on'));
+  const where = () => kp.evaluate(() => JSON.stringify([location.hash, window.__hold.state().cur, document.getElementById('home').scrollTop, Object.keys(window.__hold.S.done)]));
+  if (!(await play('day or night does not keep the block, or the challenge done', () => location.hash === '#/hold/eras' && window.__hold.state().cur === 'eras' && !!window.__hold.S.done.eras && !!document.querySelector('.bar .hbar .tally [data-ch="eras"].on')))) problems.push(tag + ': it was at ' + (await where()));
   /* a new language keeps the block */
   await kp.goto(base + 'index.html?lang=fr#/hold/machine'); await open();
-  await play('a new language, or opening a block\'s address, does not land on the block', () => document.documentElement.lang === 'fr' && window.__hold.state().cur === 'machine' && location.hash === '#/hold/machine', null, 20000);
+  if (!(await play('a new language, or opening a block\'s address, does not land on the block', () => document.documentElement.lang === 'fr' && window.__hold.state().cur === 'machine' && location.hash === '#/hold/machine', null, 20000))) problems.push(tag + ': it was at ' + (await where()));
   /* the Map shows the first page's twelve challenges, the one done, counted with the lab's; its log lists them */
   await kp.evaluate(() => { location.hash = '#/log'; });
   await play('the Map does not show the first page\'s challenges, with the one done', () => document.querySelectorAll('#page:not([hidden]) .wm-first .wm-dots a').length === 12 && document.querySelectorAll('#page .wm-first .wm-dots a.on[href="#/hold/eras"]').length === 1 &&
@@ -299,7 +300,9 @@ async function fitted() {
     /* a turn, and back, keeps the place: in the fifty years and on a block */
     for (const [k, a, ok] of [['set', 17.3, 'Math.abs(window.__hold.state().d - 17.3) < .05'], ['go', 'machine', "window.__hold.state().cur === 'machine'"]]) {
       await fp.evaluate(([k, a]) => window.__hold[k](a), [k, a]);
-      for (const [vw, vh] of [[fh, fw], [fw, fh]]) { await fp.setViewportSize({ width: vw, height: vh }); await play('turned to ' + vw + '×' + vh + ' at ' + a + ', the page loses its place', ok); }
+      for (const [vw, vh] of [[fh, fw], [fw, fh]]) { await fp.setViewportSize({ width: vw, height: vh });
+        /* where it was instead, said with the problem */
+        await fp.waitForFunction(ok, null, { timeout: 15000 }).catch(async () => problems.push(tag + ': turned to ' + vw + '×' + vh + ' at ' + a + ', the page loses its place (' + (await fp.evaluate(() => JSON.stringify([location.hash, window.__hold.state().cur, +window.__hold.state().d.toFixed(2), document.getElementById('home').scrollTop]))) + ')')); }
     }
     const side = await fp.evaluate(() => { const p = document.getElementById('home'); return p.scrollWidth - p.clientWidth; });
     if (side > 1) problems.push(tag + ': the first page scrolls sideways by ' + side + ' px');
