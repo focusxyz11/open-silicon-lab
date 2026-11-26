@@ -19,4 +19,35 @@ export default async ({ fp, adr, inDo, playLab, problems, tag }) => {
   /* the map holds all 400 recipes, the built ones marked */
   await fp.waitForFunction(() => { const P = '.player[data-ch="archspread"] '; return document.querySelectorAll(P + '.armap [data-ar-pick]').length === 400 && document.querySelectorAll(P + '.armap .sq.k-product').length >= 5; }, null, { timeout: 30000, polling: 1000 })
     .catch(() => problems.push(tag + ': the map of recipes is not whole'));
+  /* each direction leads into the lab where it is improved, and a challenge won there comes back as a stepping stone,
+     shown on its card (#408): Six flaky parts won, the errors' card says what it brought */
+  { await fp.evaluate(() => { const k = 'osl-world-v1', s = JSON.parse(localStorage.getItem(k) || '{}'); s.done = Object.assign(s.done || {}, { flaky: true }); s.seen = true; localStorage.setItem(k, JSON.stringify(s)); });
+    await fp.goto(adr('#/do/archniche')); await fp.reload();
+    await fp.waitForFunction(() => { const P = '.player[data-ch="archniche"] ';
+      return document.querySelectorAll(P + '[data-ar-card] a[href^="#/do/"], ' + P + '[data-ar-card] a[href="#/build"]').length === 6 && !!document.querySelector(P + '[data-ar-card="errors"] [data-ar-stone="flaky"]'); }, null, { timeout: 60000, polling: 1000 })
+      .catch(() => problems.push(tag + ': a direction card does not lead into its lab, or a won stepping stone does not show on its card')); }
+  /* the family tree (#409): a new recipe grown a year and forked twice is three nodes, the curve draws its attempts,
+     and a node tapped starts again from it, a fourth node */
+  { const ok = await fp.waitForFunction(() => { const P = '.player[data-ch="archniche"] ', q = s => document.querySelector(P + s), CL = s => { const b = q(s); if (b) b.click(); };
+      const n = () => document.querySelectorAll(P + '.artfig [data-ar-node]').length;
+      if (n() >= 3) return true;
+      const pick = (k, v) => { const b = q('[data-ar-gene="' + k + '"][data-ar-opt="' + v + '"]'); if (b && b.getAttribute('aria-pressed') !== 'true') b.click(); };
+      if (!n() || q('[data-ar-yearnow="0"]')) { pick('where', 'in'); pick('told', 'graph'); pick('shape', 'stack'); const d = q('[data-ar-dir="people"]'); if (d && d.getAttribute('aria-pressed') !== 'true') d.click(); CL('[data-ar-year="1"]'); return false; }
+      if (n() === 1) pick('shape', 'grid'); else pick('carrier', 'light');
+      return n() >= 3; }, null, { timeout: 30000, polling: 1000 }).then(() => true, () => false);
+    if (!ok) problems.push(tag + ': two forks do not make a family tree of three');
+    await fp.waitForFunction(() => !!document.querySelector('.player[data-ch="archniche"] .arcurve svg .cv'), null, { timeout: 20000, polling: 1000 })
+      .catch(() => problems.push(tag + ': the curve of attempts is not drawn after a year'));
+    await fp.waitForFunction(() => { const P = '.player[data-ch="archniche"] ', nodes = document.querySelectorAll(P + '.artfig [data-ar-node]');
+      if (nodes.length >= 4) return !!document.querySelector(P + '.artfig [data-ar-node="3"].cur');
+      const n0 = document.querySelector(P + '.artfig [data-ar-node="0"]'); if (n0) n0.dispatchEvent(new MouseEvent('click', { bubbles: true })); return false; }, null, { timeout: 20000, polling: 1000 })
+      .catch(() => problems.push(tag + ': a node of the family tree does not start again from it')); }
+  /* the map by keyboard alone (#409): the current square is in the tab order, an arrow moves to the next, Enter starts there */
+  await fp.waitForFunction(() => { const P = '.player[data-ch="archniche"] ', cur = document.querySelector(P + '.armap .sq.cur'); if (!cur) return false;
+    if (cur.getAttribute('tabindex') !== '0') return false;
+    if (!window.__arWant) { const c = +cur.dataset.arC + (+cur.dataset.arC < 19 ? 1 : -1), r = cur.dataset.arR, to = document.querySelector(P + '.armap [data-ar-c="' + c + '"][data-ar-r="' + r + '"]'); window.__arWant = to && to.dataset.arPick; window.__arKey = +cur.dataset.arC < 19 ? 'ArrowRight' : 'ArrowLeft'; }
+    if (cur.dataset.arPick === window.__arWant) return true;
+    cur.focus(); cur.dispatchEvent(new KeyboardEvent('keydown', { key: window.__arKey, bubbles: true, cancelable: true }));
+    const f = document.activeElement; if (f && f.dataset && f.dataset.arPick === window.__arWant) f.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }));
+    return false; }, null, { timeout: 20000, polling: 1000 }).catch(() => problems.push(tag + ': the map of recipes cannot be used with the keyboard'));
 };

@@ -35,7 +35,15 @@
    Against today's computer (scoreOf): potential times maturity, over today's computer's own gain, which keeps growing
    a little each year (TODAY_GAIN) from its millions of people. Above 1, the new architecture wins that need. Changing a
    gene after the first year is a fork: the directions it leads lose what was learned (forkOf). Agents propose forks
-   (agentForks), worked out by the engine; the person decides. */
+   (agentForks), worked out by the engine; the person decides.
+
+   Stepping stones (STONES, broughtOf, #408): each direction is improved by doing it, in the lab that teaches it. A
+   challenge won there raises that direction's start once (STONE; people: STONE_PEOPLE), whatever recipe is grown and
+   through every fork. It never wins alone: a recipe still has to be grown (tests/arch.test.mjs).
+
+   The family tree (treeOf, treeStart, treeFork, treeYear, #409): every start and fork of a visit as plain data, each
+   node a recipe (its key), where it came from, the year it was made and the needs it won, the history a later ledger
+   entry can carry. */
 
 import { NEEDS as MACHINE_NEEDS } from '../data/blocks.js';
 import { ACTIVITY } from '../data/inventions.js';
@@ -151,6 +159,30 @@ export function allRecipes() {
   return out;
 }
 
+/* ---- stepping stones: a challenge won in the lab where a direction is improved raises its start once ----
+   Each direction's challenges, the first the one its card leads into; two are not challenges: your switch kept at the
+   switch level when it spends less than silicon (KEPT_SWITCH, src/v2/kept.js), and an entry of yours in the
+   community's record (LEDGER_ENTRY). Ids only: the lab names them */
+export const KEPT_SWITCH = 'kept-switch', LEDGER_ENTRY = 'ledger-entry';
+export const STONES = {
+  device: ['transistor', KEPT_SWITCH],
+  memory: ['cim', 'dataflow'],
+  tools: ['rvrun', 'corearch'],
+  errors: ['flaky'],
+  making: ['litho-finest', 'etch', 'euv-1000', 'bottom', 'furnace', 'shallow', 'vias'],
+  people: [LEDGER_ENTRY]
+};
+/* a direction's start times STONE (up to today's level); people at the start times STONE_PEOPLE */
+export const STONE = 1.4, STONE_PEOPLE = 1.25;
+/* the stones brought, from the challenges won (an object of ids, as the player's S.done, or a list): { direction: id },
+   the first won of each direction's list */
+export function broughtOf(done) {
+  const has = Array.isArray(done) ? id => done.includes(id) : id => !!(done && done[id]), out = {};
+  for (const d of Object.keys(STONES)) { const id = STONES[d].find(has); if (id) out[d] = id; }
+  return out;
+}
+const stoneOf = (stones, d) => (stones && stones[d] && STONES[d] && STONES[d].includes(stones[d]) ? STONE : 1);
+
 /* ---- what a recipe could become ---- */
 export function traitsOf(g, need) {
   const T = Object.fromEntries(TRAITS.map(k => [k, 1])), idle = need ? Math.pow(ACTIVITY.steady / activityOf(need), IDLE) : 1;
@@ -171,12 +203,12 @@ export function potentialOf(g, need) {
 }
 
 /* ---- how polished it is ---- */
-export function startOf(g) {
+export function startOf(g, stones) {
   const s = Object.fromEntries(DIRS.map(d => [d, 1])), kn = knownOf(g), boost = kn && novelty(g) ? BUILT_BOOST[kn.status] : 1;
   for (const k of GENES) if (g[k] !== TODAY[k]) { s[LINK[k][0]] *= START_MAIN; s[LINK[k][1]] *= START_SIDE; }
   if (!kn && novelty(g)) for (const d of DIRS) s[d] *= UNBUILT;
   if (g.carrier === 'living') s.making *= GROWN;
-  for (const d of DIRS) s[d] = Math.min(1, s[d] * boost);
+  for (const d of DIRS) s[d] = Math.min(1, s[d] * boost * stoneOf(stones, d));
   return s;
 }
 export const grow = (start, attempts) => Math.min(1, start * Math.pow(1 + attempts / A0, GROWTH));
@@ -194,9 +226,20 @@ export function scoreOf(st) {
 export const winsOf = st => NEEDS.filter(n => scoreOf(st)[n].wins);
 
 /* ---- a game ---- */
-export function start(g) {
-  const gg = normal(g);
-  return { g: gg, start: startOf(gg), tries: Object.fromEntries(DIRS.map(d => [d, 0])), year: 0, people: PEOPLE_START, won: [], best: {}, log: [] };
+export function start(g, stones) {
+  const gg = normal(g), kept = {};
+  for (const d of Object.keys(stones || {})) if (stoneOf(stones, d) > 1) kept[d] = stones[d];
+  return { g: gg, start: startOf(gg, kept), tries: Object.fromEntries(DIRS.map(d => [d, 0])), year: 0, people: PEOPLE_START * (kept.people ? STONE_PEOPLE : 1), won: [], best: {}, log: [], stones: kept };
+}
+/* stones brought back in the middle of a game (a challenge won since): each new one raises its direction once */
+export function bring(st, stones) {
+  const s = clone(st);
+  for (const d of Object.keys(stones || {})) {
+    if (s.stones[d] || stoneOf(stones, d) === 1) continue;
+    s.stones[d] = stones[d];
+    if (d === 'people') s.people *= STONE_PEOPLE; else s.start[d] = Math.min(1, s.start[d] * STONE);
+  }
+  return s;
 }
 /* one year: this year's attempts split between the focused directions ('people' among them); then those who join a win */
 export function year(st, focus) {
@@ -208,13 +251,14 @@ export function year(st, focus) {
   if (fresh.length) s.people *= Math.pow(1 + JOIN, fresh.length);
   for (const n of after) if (!s.won.includes(n)) s.won.push(n);
   const sc = scoreOf(s); for (const n of NEEDS) s.best[n] = Math.max(s.best[n] || 0, sc[n].now);
-  s.log.push({ year: s.year, focus: f, fresh, attempts: Math.round(total) });
+  /* the year's line: where its attempts went, the needs won for the first time, and the best need's score after it */
+  s.log.push({ year: s.year, focus: f, fresh, attempts: Math.round(total), best: Math.max(...NEEDS.map(n => sc[n].now)) });
   return s;
 }
 /* a fork: one gene changed; the directions it leads lose what was learned in them, the rest is kept */
 export function forkOf(st, gene, option) {
   if (!GENES.includes(gene) || !OPTIONS[gene].includes(option)) return clone(st);
-  const s = clone(st), g = Object.assign({}, s.g, { [gene]: option }), fresh = startOf(g);
+  const s = clone(st), g = Object.assign({}, s.g, { [gene]: option }), fresh = startOf(g, s.stones);
   const lost = new Set();
   for (const k of GENES) if (g[k] !== st.g[k]) LINK[k].forEach(d => lost.add(d));
   s.g = g;
@@ -222,7 +266,7 @@ export function forkOf(st, gene, option) {
   return s;
 }
 /* before the first year a gene is chosen freely: a new start */
-export const choose = (st, gene, option) => (st.year ? forkOf(st, gene, option) : start(Object.assign({}, st.g, { [gene]: option })));
+export const choose = (st, gene, option) => (st.year ? forkOf(st, gene, option) : start(Object.assign({}, st.g, { [gene]: option }), st.stones));
 /* the agents' forks: every one-gene change that keeps the recipe one nobody has built, at least two genes from today's
    (the goals' rule), scored by how many needs it could win once polished, then by where it stands now; the three
    best, each changing a different gene where it can. They propose; the person decides */
@@ -269,4 +313,44 @@ export function suggest(st, id) {
   return { need, dirs: d1 === d2 ? [d1] : [d1, d2] };
 }
 
-function clone(st) { return { g: Object.assign({}, st.g), start: Object.assign({}, st.start), tries: Object.assign({}, st.tries), year: st.year, people: st.people, won: st.won.slice(), best: Object.assign({}, st.best), log: st.log.slice() }; }
+/* ---- the family tree: every start and fork of a visit ----
+   { nodes, cur }: a node is { id, from, how, g, at, grown, won }: from is the node it came from (null for a start from
+   nothing: the map, or the recipe chosen before the first year), how is 'start', 'fork' (a gene changed while
+   growing) or 'back' (a new start from a node of the tree), g is the recipe's key (keyOf), at the year it was made,
+   grown the years grown on it, won the needs it won. Plain data, no words: what a ledger entry could carry */
+export const treeOf = g => ({ nodes: [{ id: 0, from: null, how: 'start', g: keyOf(normal(g)), at: 0, grown: 0, won: [] }], cur: 0 });
+const treeCopy = T => ({ nodes: T.nodes.map(n => Object.assign({}, n, { won: n.won.slice() })), cur: T.cur });
+export const nodeOf = (T, id) => T.nodes.find(n => n.id === id) || null;
+export const recipeOf = key => { const [where, carrier, told, shape] = String(key).split('/'); return normal({ where, carrier, told, shape }); };
+/* a new start: from nothing (from null) or from a node (a way back). A start nothing has grown yet, with nothing
+   branched from it, is only being chosen: it takes the new recipe in place */
+export function treeStart(T, g, from = null) {
+  const R = treeCopy(T), cur = nodeOf(R, R.cur), key = keyOf(normal(g));
+  if (cur && !cur.grown && cur.how !== 'fork' && !R.nodes.some(n => n.from === cur.id)) {
+    cur.g = key; if (from != null && from !== cur.id && nodeOf(R, from)) { cur.from = from; cur.how = 'back'; }
+    return R;
+  }
+  const id = R.nodes.length ? Math.max(...R.nodes.map(n => n.id)) + 1 : 0, back = from != null && nodeOf(R, from);
+  R.nodes.push({ id, from: back ? from : null, how: back ? 'back' : 'start', g: key, at: 0, grown: 0, won: [] }); R.cur = id;
+  return R;
+}
+/* a fork from the current node, in the year it was made */
+export function treeFork(T, g, at) {
+  const R = treeCopy(T), id = Math.max(...R.nodes.map(n => n.id)) + 1;
+  R.nodes.push({ id, from: R.cur, how: 'fork', g: keyOf(normal(g)), at, grown: 0, won: [] }); R.cur = id;
+  return R;
+}
+/* a year grown on the current node, and the needs it wins after it */
+export function treeYear(T, wins) {
+  const R = treeCopy(T), n = nodeOf(R, R.cur);
+  if (n) { n.grown += 1; for (const w of wins || []) if (!n.won.includes(w)) n.won.push(w); }
+  return R;
+}
+/* the line the current node grew along: it and the forks it came from, back to its start (oldest first) */
+export function lineOf(T) {
+  const out = []; let n = nodeOf(T, T.cur);
+  while (n) { out.unshift(n); if (n.how !== 'fork') break; n = nodeOf(T, n.from); }
+  return out;
+}
+
+function clone(st) { return { g: Object.assign({}, st.g), start: Object.assign({}, st.start), tries: Object.assign({}, st.tries), year: st.year, people: st.people, won: st.won.slice(), best: Object.assign({}, st.best), log: st.log.slice(), stones: Object.assign({}, st.stones || {}) }; }
