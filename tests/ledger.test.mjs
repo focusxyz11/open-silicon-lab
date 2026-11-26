@@ -7,7 +7,8 @@ import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
 import './ledger.setup.mjs';
 import { collect, FOLDER } from '../scripts/ledger.mjs';
-import { ledger, settle, settled, checkEntry, tryEntry, draft, fileOf, proposeUrl, frontier, runCase, standing, questionsAt, reportsAt, labCurve, machineAttemptsAt, KINDS, MADE, DIR } from '../src/engines/ledger.js';
+import { ledger, settle, settled, checkEntry, tryEntry, draft, fileOf, proposeUrl, frontier, runCase, standing, questionsAt, reportsAt, labCurve, machineAttemptsAt, archAttempts, KINDS, MADE, DIR } from '../src/engines/ledger.js';
+import * as Arch from '../src/engines/arch.js';
 import { machine } from '../src/engines/machine.js';
 import { plan } from '../src/engines/build.js';
 import * as Game from '../src/v2/game.js';
@@ -342,4 +343,62 @@ test('a bad entry of any kind is refused with a reason, never thrown on, and the
   /* the world's tables are no object's: an inherited name finds nothing, from an entry, an address or an agent */
   assert.equal(base.byId.constructor, undefined); assert.equal(base.byId.__proto__, undefined);
   assert.deepEqual(standing(base, 'constructor'), []); assert.deepEqual(machineAttemptsAt(base, 'toString'), []);
+});
+
+/* an attempt at an architecture (#410): its history is grown again by the architecture engine, so a true claim is kept and
+   a false one refused with a reason; standings come from the entries alone */
+test('an attempt at an architecture is a try with its history: the replay keeps a true claim, refuses a false one, and marks the first to win', async () => {
+  const day = '2026-11-26', hist = { start: 'in/charge/graph/stack', years: [] };
+  /* grown the way a person plays: people first for ten years, then the engine's suggestion, until a need is won */
+  let s = Arch.start(Arch.recipeOf(hist.start));
+  while (!Arch.winsOf(s).length && s.year < 25) { const F = s.year < 10 ? ['people', Arch.suggest(s, 'archniche').dirs[0]] : Arch.suggest(s, 'archniche').dirs; hist.years.push(F); s = Arch.year(s, F); }
+  const won = Arch.winsOf(s); assert.ok(won.length >= 1, 'the recipe wins a need');
+  const at = (arch, name, o = {}) => draft(Object.assign({ kind: 'try', arch, by: 'Ada', made: 'person', words: '' }, o), name, day);
+  const a = at(Arch.histClaim(hist, won), 'ada true');
+  assert.deepEqual(tryEntry(a).ok, true);
+  /* the same replay the lab runs: the state it ends in is the one the game reached */
+  assert.equal(Arch.replay(a.arch).st.year, s.year); assert.deepEqual(Arch.replay(a.arch).wins, won);
+  /* a claimed win the replay does not reach is refused with a reason, never thrown on */
+  const lie = at(Object.assign(Arch.histClaim(hist, won), { wins: ['any'] }), 'ada lie');
+  assert.doesNotThrow(() => tryEntry(lie)); assert.equal(tryEntry(lie).reason, 'archWin');
+  /* one year fewer: not yet won */
+  const early = at(Object.assign(Arch.histClaim(hist, won), { years: hist.years.slice(0, -1) }), 'ada early');
+  assert.equal(tryEntry(early).reason, 'archWin');
+  /* a history the engine cannot grow, in any field */
+  for (const bad of [{ start: 'far/charge/program' }, { start: 'far/charge/magic/few' }, { years: [] }, { years: [['people', 'memory', 'tools']] }, { years: [['people', 'people']] }, { years: [['luck']] },
+    { stones: { errors: 'transistor' } }, { stones: { constructor: 'x' } }, { changes: [{ at: 0, gene: 'shape', option: 'grid' }] }, { changes: [{ at: 99, gene: 'shape', option: 'grid' }] },
+    { changes: [{ at: 2, gene: 'shape', option: 'grid' }, { at: 1, gene: 'told', option: 'events' }] }, { changes: [{ at: 1, gene: 'shape', option: 'blob' }] }, { changes: [{ at: 1, stone: 'nothing' }] },
+    { wins: ['hearing', 'hearing'] }, { wins: 'hearing' }, { wins: ['toString'] }, { extra: 1 }])
+    assert.equal(tryEntry(at(Object.assign(Arch.histClaim(hist, won), bad), 'bad')).reason, 'arch', JSON.stringify(bad));
+  assert.equal(tryEntry(at(null, 'x', { arch: 'in/charge/graph/stack' })).reason, 'arch');
+  assert.equal(tryEntry(at(Arch.histClaim(hist, won), 'mixed', { machine: 'rover' })).reason, 'fields');
+  assert.equal(tryEntry(draft({ kind: 'try', choice: 'phone', pick: 'd0001', words: 'a reason long enough', arch: a.arch, by: 'Ada', made: 'person' }, 'c', day)).reason, 'fields');
+  /* the same attempt again (each year's focus in any order) is the same; a fork makes it new */
+  const again = at(Object.assign(Arch.histClaim(hist, won), { years: hist.years.map(f => f.slice().reverse()) }), 'bo again', { by: 'Bo' });
+  assert.equal(tryEntry(again, [a]).reason, 'same');
+  /* standings: the first to win a need nobody had won with a new recipe counts most; later winners stand; nobody votes */
+  const later = at(Object.assign(Arch.histClaim(hist, won), { years: hist.years.concat([['tools']]) }), 'bo later', { by: 'Bo', made: 'ai', ai: 'An agent grew it a year longer.' });
+  const known = { start: 'flow/charge/graph/grid', years: [['people']] }, kn = at(Arch.histClaim(known, Arch.replay(Object.assign({ wins: [] }, known)).wins), 'cy built', { by: 'Cy' });
+  const W = settle(ledger().concat([a, later, kn]));
+  assert.deepEqual(W.refused.map(e => e.id + ' ' + e.reason), []);
+  const base = archAttempts(settled()), first = n => (base.first[n] ? base.first[n] : null);
+  for (const n of won) assert.equal(W.archFirst[n], first(n) || a.id, 'the first to win ' + n);
+  if (!won.some(n => first(n))) { assert.equal(W.byId[a.id].state, 'first'); assert.deepEqual(W.byId[a.id].firstIn, won); }
+  assert.ok(['won', 'tried'].includes(W.byId[later.id].state), 'a later win of the same need with the same recipe stands');
+  assert.equal(W.archSquare['in/charge/graph/stack'], base.square['in/charge/graph/stack'] || a.id, 'the first to win with the recipe marks its square');
+  /* a recipe someone has built (the TPU) never takes a first, whatever it wins */
+  assert.equal(W.byId[kn.id].facts.built, 'tpu'); assert.deepEqual(W.byId[kn.id].firstIn, []);
+  /* people's and agents' attempts apart */
+  const G = archAttempts(W);
+  assert.ok(G.people.some(e => e.id === a.id) && G.agents.some(e => e.id === later.id));
+  assert.ok(!G.people.some(e => e.made === 'ai' || e.made === 'program') && !G.agents.some(e => e.made === 'person'));
+  for (const e of [a, later, kn]) assert.ok(EN['ledger.state.' + W.byId[e.id].state], W.byId[e.id].state);
+  /* the record has words for it, and its file is the form the port writes */
+  const { useTexts } = await import('../src/core/i18n.js'); useTexts(EN, 'en');
+  assert.match(Game.entryWords(W.byId[a.id], Game.fresh()), new RegExp(EN['ar.need.' + won[0]]));
+  assert.ok(fileOf(a).text.includes('"arch": {'));
+  /* the examples in the ledger: one by the lab, played by hand, one by an agent through the port; each first in a niche */
+  const E = archAttempts(settled());
+  assert.ok(E.people.length >= 1 && E.agents.length >= 1, 'the map is not empty: people\'s and agents\' attempts');
+  assert.ok(Object.keys(E.first).length >= 2 && Object.values(E.first).every(id => settled().byId[id].state === 'first'));
 });
