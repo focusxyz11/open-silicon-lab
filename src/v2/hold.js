@@ -163,13 +163,13 @@ export function createHold(host, ctx = {}) {
     const y = host.scrollTop, sy = secs.years, wy = yOfD(DWALL);
     if (y < pull.offsetTop) { const yy = y - sy.offsetTop; return yy <= wy ? { d: dOfY(Math.max(0, yy)) } : { el: sy, past: (yy - wy) / Math.max(1, sy.offsetHeight - wy) }; }
     let el = pull; for (const k of ORDER.slice(1)) if (secs[k].offsetTop <= y + 1) el = secs[k]; if (end.offsetTop <= y + 1) el = end;
-    return { el, f: (y - el.offsetTop) / Math.max(1, el.offsetHeight) };
+    return { el, f: (y - el.offsetTop) / Math.max(1, el.offsetHeight), top: el.offsetTop };
   }
   function yOf(a) { const sy = secs.years, wy = yOfD(DWALL);
     if (a.d != null) return sy.offsetTop + yOfD(a.d);
     if (a.past != null) return sy.offsetTop + wy + a.past * (sy.offsetHeight - wy);
     return a.el.offsetTop + Math.min(a.el.offsetHeight - 2, Math.max(2, a.f * a.el.offsetHeight)); }
-  function restore(a) { const y = Math.round(yOf(a)); here.a = a; here.y = y; here.until = performance.now() + 1200; host.scrollTo({ top: y, behavior: 'instant' }); onScroll(); }
+  function restore(a) { const y = Math.round(yOf(a)); here.a = a; if (a.el) a.top = a.el.offsetTop; here.y = y; here.until = performance.now() + 1200; host.scrollTo({ top: y, behavior: 'instant' }); onScroll(); }
   /* the camera's path, from where the story's sections are now (again whenever a card grows or shrinks):
      [where on the page, what the camera frames there, whether it pulls back a little on the way in] */
   function plan() {
@@ -178,6 +178,9 @@ export function createHold(host, ctx = {}) {
     const T = vh * .75; p0 = pull.offsetTop - vh * .2; KF = [[0, F.years, 0], [p0, F.years, 0], [p0 + vh * .85, O, 0], [p0 + vh * 1.15, O, 0]];
     ORDER.slice(1).forEach(id => { const s = secs[id]; s._out = s.offsetTop + s.offsetHeight - T; KF.push([s.offsetTop, F[id], id === 'leak' ? 0 : 1], [s._out, F[id], 0]); }); KF.push([end.offsetTop, O, 0], [1e9, O, 0]);
     if (here.a && performance.now() < here.until && Math.abs(host.scrollTop - here.y) < 2) { const y = Math.round(yOf(here.a)); if (Math.abs(y - here.y) > 1) { here.y = y; host.scrollTo({ top: y, behavior: 'instant' }); } }
+    /* later, the story above the part you are at may still grow (a font that arrives late, words filled in): the camera
+       stays on that part, unless you have moved since */
+    else if (here.a && here.a.top != null && !flying && Math.abs(host.scrollTop - here.y) < 2 && Math.abs(here.a.el.offsetTop - here.a.top) > 1) { const y = Math.round(host.scrollTop + here.a.el.offsetTop - here.a.top); here.a.top = here.a.el.offsetTop; here.y = y; host.scrollTo({ top: y, behavior: 'instant' }); }
     onScroll();
   }
   let planF = 0; new ResizeObserver(() => { if (!planF) planF = requestAnimationFrame(() => { planF = 0; if (LIVE.on) plan(); }); }).observe(story);
@@ -219,7 +222,8 @@ export function createHold(host, ctx = {}) {
   function onScroll() {
     if (!sized) return;
     const y = host.scrollTop; let id = 'years';
-    if (host.clientHeight === vh && host.clientWidth === VW && !flying && !(here.a && performance.now() < here.until && Math.abs(y - here.y) < 2)) { here.a = anchor(); here.y = y; here.until = 0; } for (const k of ORDER) if (secs[k].offsetTop <= y + 1) id = k;
+    /* where you are changes only as the page scrolls: a call with nothing scrolled (a word filled in, a card grown) keeps it */
+    if (host.clientHeight === vh && host.clientWidth === VW && !flying && !(here.a && performance.now() < here.until && Math.abs(y - here.y) < 2) && (!here.a || Math.abs(y - here.y) >= 1)) { here.a = anchor(); here.y = y; here.until = 0; } for (const k of ORDER) if (secs[k].offsetTop <= y + 1) id = k;
     if (y > 40) touch();
     if (y < pull.offsetTop) { if (!flying) { const yy = y - secs.years.offsetTop; Yr.set(yy >= yOfD(DWALL) - 2 ? DWALL : dOfY(yy)); } } else if (!flying && S.d < DWALL) Yr.set(DWALL);
     if (id !== cur) { cur = id; setHolding(false); }
@@ -296,8 +300,8 @@ export function createHold(host, ctx = {}) {
   let touched = false;
   function touch() { if (touched || !document.documentElement.dataset.preload) return; touched = true; loadFacts();
     /* words that did not come (the page was left, the connection dropped) are asked for again at the next touch; once
-       in, the story above may have grown, so the camera stays where it was */
-    needWords('blueprint', 'shared').then(() => { fillWays(); fillShared(); out('machine'); if (!hasWords('blueprint') || !hasWords('shared')) touched = false; else if (here.a && sized && !flying && LIVE.on) restore(here.a); }, () => { touched = false; }); }
+       in, the story above may grow, and the camera stays where it was (plan) */
+    needWords('blueprint', 'shared').then(() => { fillWays(); fillShared(); out('machine'); if (!hasWords('blueprint') || !hasWords('shared')) touched = false; }, () => { touched = false; }); }
   const idleTouch = () => { if (touched || !LIVE.on || document.documentElement.dataset.preload === 'off') return; if (document.documentElement.dataset.preload) (window.requestIdleCallback ? requestIdleCallback(touch, { timeout: 1500 }) : setTimeout(touch, 1500)); else setTimeout(idleTouch, 600); };
 
   /* for checks */
