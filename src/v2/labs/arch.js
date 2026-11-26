@@ -247,9 +247,9 @@ export default function lab(L) {
     const vs = pts.map(p => p.v), vl = Math.min(-1, Math.floor(Math.log10(Math.min(...vs)))), vh = Math.max(1, Math.ceil(Math.log10(Math.max(...vs)) + 1e-9));
     const X = n => L0 + (W - L0 - R0) * (Math.log10(n) - nl) / (nh - nl), Y = v => T0 + (H - T0 - B0) * (1 - (Math.log10(v) - vl) / (vh - vl));
     let g = '';
-    for (let e = nl; e <= nh; e++) g += '<line class="gl" x1="' + f1(X(10 ** e)) + '" x2="' + f1(X(10 ** e)) + '" y1="' + T0 + '" y2="' + (H - B0) + '"/><text class="ax" x="' + f1(X(10 ** e)) + '" y="' + (H - B0 + 13) + '" text-anchor="' + (e === nh ? 'end' : 'middle') + '">' + esc((10 ** e).toLocaleString()) + '</text>';
+    for (let e = nl; e <= nh; e++) g += '<line class="gl" x1="' + f1(X(10 ** e)) + '" x2="' + f1(X(10 ** e)) + '" y1="' + T0 + '" y2="' + (H - B0) + '"/><text class="ax" x="' + f1(X(10 ** e)) + '" y="' + (H - B0 + 13) + '" text-anchor="middle">10<tspan class="exp" dy="-0.42em" font-size="72%">' + e + '</tspan></text>';
     for (let e = vl; e <= vh; e++) g += '<line class="gl" x1="' + L0 + '" x2="' + (W - R0) + '" y1="' + f1(Y(10 ** e)) + '" y2="' + f1(Y(10 ** e)) + '"/><text class="ax" x="' + (L0 - 5) + '" y="' + f1(Y(10 ** e) + 3) + '" text-anchor="end">×' + (e < 0 ? (10 ** e).toFixed(-e) : String(10 ** e)) + '</text>';
-    g += '<line class="today" x1="' + L0 + '" x2="' + (W - R0) + '" y1="' + f1(Y(1)) + '" y2="' + f1(Y(1)) + '"/><text class="tl" x="' + (W - R0) + '" y="' + f1(Y(1) - 4) + '" text-anchor="end">' + esc(t('ar.race.today')) + '</text>';
+    g += '<line class="today" x1="' + L0 + '" x2="' + (W - R0) + '" y1="' + f1(Y(1)) + '" y2="' + f1(Y(1)) + '"/><text class="tl" x="' + (L0 + 4) + '" y="' + f1(Y(1) - 4) + '">' + esc(t('ar.race.today')) + '</text>';
     /* the forks on the line this recipe grew along: where the attempts stood when it was made */
     A.lineOf(tree()).filter(n => n.how === 'fork' && n.at > 0 && n.at <= pts.length).forEach(n => { const x = X(pts[n.at - 1].n);
       g += '<line class="fk" x1="' + f1(x) + '" x2="' + f1(x) + '" y1="' + T0 + '" y2="' + (H - B0) + '"/><text class="fkl" x="' + f1(x + 3) + '" y="' + (T0 + 8) + '">' + esc(t('ar.curve.fork')) + '</text>'; });

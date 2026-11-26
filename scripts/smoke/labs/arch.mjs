@@ -50,4 +50,10 @@ export default async ({ fp, adr, inDo, playLab, problems, tag }) => {
     cur.focus(); cur.dispatchEvent(new KeyboardEvent('keydown', { key: window.__arKey, bubbles: true, cancelable: true }));
     const f = document.activeElement; if (f && f.dataset && f.dataset.arPick === window.__arWant) f.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }));
     return false; }, null, { timeout: 20000, polling: 1000 }).catch(() => problems.push(tag + ': the map of recipes cannot be used with the keyboard'));
+  /* the race's bars move to where a new recipe stands, and stand still under reduced motion (#409) */
+  { const dur = () => fp.waitForFunction(() => { const b = document.querySelector('.player[data-ch="archniche"] .arrace .bar'); return b ? { d: parseFloat(getComputedStyle(b).transitionDuration) } : false; }, null, { timeout: 10000, polling: 500 }).then(h => h.jsonValue(), () => ({ d: null })).then(r => r.d);
+    if (!(await dur() > 0)) problems.push(tag + ': the race\'s bars do not move to a new recipe');
+    await fp.emulateMedia({ reducedMotion: 'reduce' });
+    if (await dur() !== 0) problems.push(tag + ': the race\'s bars still move under reduced motion');
+    await fp.emulateMedia({ reducedMotion: null }); }
 };
