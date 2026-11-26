@@ -61,7 +61,7 @@ export const PLACED = [
   /* light */
   ['go:side', 'light', 'physics'], ['ch:light', 'light', 'sums'],
   /* molecules: DNA */
-  ['go:side', 'molecules', 'physics'],
+  ['go:side', 'molecules', 'physics'], ['ch:bridge', 'molecules', 'logic'], ['ch:dnawta', 'molecules', 'intelligence'],
   /* neurons, living or copied in silicon */
   ['go:side', 'neurons', 'physics'], ['ch:spikes', 'neurons', 'machine'], ['go:machines', 'neurons', 'intelligence']
 ];
@@ -105,8 +105,8 @@ export const PATHS = [
   { id: 'nand', strands: [['silicon.logic', 'silicon.sums', 'silicon.processor', 'silicon.machine']], marks: ['lv:studio/gates', 'ch:half', 'ch:full', 'ch:rvrun', 'ch:piece'] },
   { id: 'riscv', strands: [['silicon.logic', 'silicon.sums', 'silicon.processor', 'silicon.machine', 'silicon.intelligence']], marks: ['ch:vote', 'ch:full', 'ch:rvrun', 'ch:corearch', 'ch:ai-chip', 'ch:quantize'] },
   { id: 'physics', strands: [['silicon.physics', 'silicon.switch', 'silicon.logic', 'silicon.sums', 'silicon.processor']], marks: ['ch:crystal', 'lv:datacentre/atom', 'ch:transistor', 'lv:datacentre/switch', 'lv:datacentre/gate', 'lv:datacentre/block', 'lv:datacentre/chip'] },
-  { id: 'things', strands: [['neurons.physics', 'neurons.machine', 'neurons.intelligence'], ['molecules.physics', 'molecules.intelligence'], ['silicon.switch', 'silicon.intelligence']], marks: ['ch:spikes', 'ch:noise', 'ch:mortal'] },
-  { id: 'living', strands: [['molecules.physics', 'molecules.logic', 'cells.switch', 'cells.logic', 'cells.sums']], marks: [] },
+  { id: 'things', strands: [['neurons.physics', 'neurons.machine', 'neurons.intelligence'], ['molecules.physics', 'molecules.intelligence'], ['silicon.switch', 'silicon.intelligence']], marks: ['ch:spikes', 'ch:noise', 'ch:mortal', 'ch:dnawta'] },
+  { id: 'living', strands: [['molecules.physics', 'molecules.logic', 'cells.switch', 'cells.logic', 'cells.sums']], marks: ['ch:bridge'] },
   { id: 'spec', strands: [['everyday.sums', 'silicon.sums', 'light.sums', 'molecules.sums', 'cells.sums', 'yours.sums']], marks: ['ch:half', 'ch:full', 'ch:light'] }
 ];
 

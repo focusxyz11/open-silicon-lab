@@ -61,6 +61,8 @@ export const AREAS = {
     'rev', 'dfl',
     /* grow an architecture that does not exist yet */
     'ar',
+    /* one spec, two matters: logic in silicon and in DNA strands, and a tube that sorts shapes (#412) */
+    'br', 'bw',
     /* a gallery of frontier ideas, and which machine fits which job (waiting for a view, src/data/waiting-words.json) */
     'para'],
   blueprint: ['bp'],

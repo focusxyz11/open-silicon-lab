@@ -1206,5 +1206,11 @@
  "game.ch.archniche.why": "Every dominant computer began worse than the one it replaced, and won one job first: graphics chips were made for games long before they trained AI. Today's computer has had decades of attempts. What would it take for something new to catch up?",
  "game.ch.archspread.t": "From one need to three",
  "game.ch.archspread.goal": "Grow a recipe nobody has built until it beats today's computer at three needs at once, within 40 years.",
- "game.ch.archspread.why": "A new architecture becomes dominant when it wins one need and the people who join it carry it into the next. Is your recipe broad enough to spread?"
+ "game.ch.archspread.why": "A new architecture becomes dominant when it wins one need and the people who join it carry it into the next. Is your recipe broad enough to spread?",
+ "game.ch.bridge.t": "One spec, two matters",
+ "game.ch.bridge.goal": "Run the same AND, then the same choice, in silicon and in a test tube of DNA strands: set each kind of gate's threshold and fuel so the tube answers right on every input within 45 minutes.",
+ "game.ch.bridge.why": "Logic is not made of silicon. The same truth table can run as strands of DNA that push each other off their partners: slowly, but with no factory, in a drop of liquid where a chip cannot go. What is each matter good at?",
+ "game.ch.dnawta.t": "A tube that recognizes shapes",
+ "game.ch.dnawta.goal": "Sort six blurred shapes into plus, cross and square with a winner-take-all network of strands: each must light the one memory it is, and only that one.",
+ "game.ch.dnawta.why": "Strands of DNA in a test tube have sorted pictures of handwritten digits into nine kinds. When no threshold alone can tell the shapes apart, how does the tube pick a winner?"
 }
