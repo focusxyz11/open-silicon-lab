@@ -405,7 +405,10 @@ export function createBench(o) {
     /* the square the step is drawn in (the flat world's frame): the surface takes it, exactly */
     /* w: on a phone the bench is as wide as the screen, and h as tall as the room left (wider than tall while the card
        under it holds a challenge) */
-    place(f) { if (!f || !f.B) return; const s = el.style, B = Math.round(f.w || f.B), h = Math.round(f.w ? f.h : Math.max(B, f.h || B)); s.width = B + 'px'; s.height = h + 'px'; s.left = Math.round(f.cx - B / 2) + 'px'; s.top = Math.round(f.top != null ? f.top : f.cy - h / 2) + 'px';
+    /* a frame with no size yet (the canvas not laid out: on a phone its width less the margins is then below 0) is
+       ignored, never drawn upside down; the next layout places the bench */
+    place(f) { if (!f || !f.B) return; const B = Math.round(f.w || f.B), h = Math.round(f.w ? f.h : Math.max(B, f.h || B)); if (!(B > 0 && h > 0)) return;
+      const s = el.style; s.width = B + 'px'; s.height = h + 'px'; s.left = Math.round(f.cx - B / 2) + 'px'; s.top = Math.round(f.top != null ? f.top : f.cy - h / 2) + 'px';
       if (api.px !== B || api.ph !== h) { api.px = B; api.ph = h; ASP = h / B; NARROW = B < 480; render(); } },
     ph: 0,
     px: 0,
