@@ -1,8 +1,0 @@
-/* The menu of sections, only when asked for (?menu=1, src/v2/app.js): whether the lab needs one is not decided
-   (docs/reviews/structure.md, "The menu"), so its styles load with it and never with the first page */
-.sections { position: relative; }
-.sections summary { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 50%; border: 1px solid var(--line); cursor: pointer; list-style: none; }
-.sections summary::-webkit-details-marker { display: none; }
-.sections nav { position: absolute; right: 0; top: 46px; display: grid; min-width: 180px; padding: 6px; border-radius: 14px; background: var(--panel-solid); border: 1px solid var(--line); box-shadow: var(--shadow); }
-.sections nav a { padding: 9px 12px; border-radius: 9px; text-decoration: none; font-weight: 600; }
-.sections nav a:hover { background: color-mix(in srgb, var(--ink) 8%, transparent); }
