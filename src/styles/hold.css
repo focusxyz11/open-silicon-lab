@@ -241,14 +241,21 @@ body.firstpage .bar .loop{display:none}
 .hold .card.wall{top:43vh}
 .hold .sec.years .mom{position:absolute;left:0;right:0}
 .hold .b-end{height:70vh;display:grid;place-items:end center;padding-bottom:calc(var(--u)*40);color:var(--mid)}
+/* a card of the fifty years taller than the room above the hold button scrolls (hold.js marks it) */
+.hold .sec.years .card.sc{max-height:var(--cmax);overflow-y:auto}.hold .card.sc .n{top:6px;left:auto;right:8px}
+/* the page's part of the bar, fitted to its room (fitBar in hold.js) */
+.hbar>*{flex:none}.hbar .tl-n{white-space:nowrap}.hbar.f1 .b-chap b,.hbar.f2 .tl-n,.hbar.f3>.bbtn,.hbar.f5 .b-chap{display:none}
+.hbar.f4 .tally .sq{grid-template-columns:repeat(12,9px);gap:3px}.hbar.f4 .tally .sq button{height:9px}
 @media (max-width:760px){.hbar .tally .tl-n,.hbar .b-chap{display:none}
 .hbar .tally .sq{grid-template-columns:repeat(12,9px);gap:3px}
 .hbar .tally .sq button{height:9px}
 .hbar .tally .sq button::after{display:none}
-.hold .b-stage{z-index:4;inset:var(--barH) 0 auto 0;height:var(--stageH);background:var(--paper);border-bottom:1.5px solid var(--ink);overflow:visible}
+}
+/* the phone's layout: on a phone, a tablet held upright and a phone on its side (PHONE in src/v2/holdkit.js) */
+@media (max-width:760px),(max-width:1099px) and (max-aspect-ratio:23/20),(max-width:1099px) and (max-height:519px){.hold .b-stage{z-index:4;inset:var(--barH) 0 auto 0;height:var(--stageH);background:var(--paper);border-bottom:1.5px solid var(--ink);overflow:visible}
 .hold .b-ground{display:none}
 .hold .b-slot{transition:none}
-.hold .b-hud{position:absolute;left:14px;right:14px;top:6px;width:auto;height:34px;flex-direction:row;align-items:baseline;gap:10px}
+.hold .b-hud{position:absolute;left:calc(50% - var(--S)/2);right:calc(50% - var(--S)/2);top:6px;width:auto;height:34px;flex-direction:row;align-items:baseline;gap:10px}
 .hold .b-hud .w-k,.hold .b-hud .stats,.hold .b-hud .say{display:none}
 .hold .b-hud .count{font-size:30px;display:flex;align-items:baseline;gap:8px}
 .hold .b-hud .count small{font-size:13px;margin:0}
@@ -269,12 +276,12 @@ body.firstpage .bar .loop{display:none}
 .hold .sec .tail{height:70vh}
 .hold .holdbtn{width:62px;height:62px;font-size:15px}
 .hold .b-hold .hint{display:none}
-.hold .b-band{position:fixed;top:calc(var(--barH) + var(--stageH) - var(--band) - 4px);bottom:auto;height:var(--band);padding:4px 10px 0;grid-template-columns:1fr;border-top:0;background:none;z-index:5}
+.hold .b-band{position:fixed;top:calc(var(--barH) + var(--stageH) - var(--band) - 4px);bottom:auto;height:var(--band);padding:4px calc(50% - var(--S)/2 - 4px) 0;grid-template-columns:1fr;border-top:0;background:none;z-index:5}
 .hold .b-band .cq,.hold .b-band .moves{display:none!important}
 .hold .b-band.off{transform:none;display:none}
 .hold .b-rail,.hold .b-railbg{display:none}
 .hold .b-story{z-index:2}
-.hold .card,.hold .card.l,.hold .card.r{margin-left:14px;width:calc(100vw - 28px)}
+.hold .card,.hold .card.l,.hold .card.r{margin-left:var(--cl);width:var(--cw)}
 .hold .card .n{left:auto!important;right:14px!important}
 .hold .card .w-h{font-size:46px}
 .hold .card .w-q p{font-size:20px}
@@ -333,17 +340,17 @@ body.firstpage .bar .loop{display:none}
 .hold .sec .tail{height:100vh}
 .hold .b-end{height:130vh;place-items:center;align-content:end}
 .hold .b-end span{background:var(--paper);padding:6px 12px;pointer-events:none}
-@media (max-width:760px){.hbar .d-mid{gap:6px}
+@media (max-width:760px),(max-width:1099px) and (max-height:519px){.hbar .d-mid{gap:6px}
 .hbar .d-map{grid-template-columns:repeat(4,8px);grid-auto-rows:6px;gap:1px;padding:2px}
-.hold .b-stage{overflow:hidden}
-.hold .sec .tail{height:100vh}
-.hold .d-ycard{display:block;position:fixed;z-index:3;left:14px;right:14px;top:var(--ctop);background:var(--paper);box-shadow:0 0 0 1.5px var(--ink);padding:10px 14px;max-height:calc(100vh - var(--ctop) - 8px);overflow-y:auto}
+}
+@media (max-width:760px),(max-width:1099px) and (max-aspect-ratio:23/20),(max-width:1099px) and (max-height:519px){.hold .sec .tail{height:100vh}
+.hold .d-ycard{display:block;position:fixed;z-index:3;left:var(--cl);width:var(--cw);top:var(--ctop);background:var(--paper);box-shadow:0 0 0 1.5px var(--ink);padding:10px 14px;max-height:calc(100vh - var(--ctop) - var(--yb,8px));overflow-y:auto}
 .hold .d-ycard.off{display:none}
-.hold .d-ycard .say{font-size:15px;line-height:1.38}
+.hold .d-ycard .say{line-height:1.38}
 .hold .d-ycard .say:empty{display:none}
 .hold .d-ycard .cost{display:flex;align-items:baseline;gap:.5em;margin-top:.3em}
 .hold .d-ycard .cost b{font-family:Anton,sans-serif;font-weight:400;font-size:28px;color:var(--red)}
-.hold .d-ycard .cq{margin-top:8px;padding:8px 70px 0 0;border-top:1px solid var(--hair);font-size:13px}
+.hold .d-ycard .cq{margin-top:8px;padding:8px 0 0;border-top:1px solid var(--hair);font-size:13px}
 .hold .d-ycard .say{font-size:14px}
 .hold .b-band .chart .ser-t button:not(.on){display:none}
 .hold .pullc{display:flex}
@@ -362,17 +369,27 @@ body.firstpage .bar .loop{display:none}
 .hold .srcpop .all:hover{opacity:1}
 .hold .b-end{gap:14px}.hold .b-end .bbtn{pointer-events:auto}
 .hold .d-cover{display:none}
-@media (max-width:760px){
 /* on a phone: the bar keeps the small chip and the challenges; the sources are at the end; nothing scrolls above the picture */
-.hold .d-cover{display:block;position:fixed;z-index:4;left:0;right:0;top:0;height:var(--barH);background:var(--paper)}
+@media (max-width:760px),(max-width:1099px) and (max-aspect-ratio:23/20),(max-width:1099px) and (max-height:519px){.hold .d-cover{display:block;position:fixed;z-index:4;left:0;right:0;top:0;height:var(--barH);background:var(--paper)}
 .hold .b-hold.chip,.hold .b-hold.quiet{display:none}
 .hold .sec.years .card{max-height:calc(100svh - var(--ctop) - 10px);overflow-y:auto;overscroll-behavior:contain}
-.hbar{gap:6px;padding:0 2px 0 4px}.hbar .bbtn{display:none}
+}
+@media (max-width:760px){.hbar{gap:6px;padding:0 2px 0 4px}.hbar .bbtn{display:none}
 .hbar .tally .sq{grid-template-columns:repeat(12,7px);gap:2px}.hbar .tally .sq button{height:7px;border-width:1px}
 }
-@media (max-width:760px){.hold .sec.years .card .n{top:6px;right:8px!important}
+@media (max-width:760px),(max-width:1099px) and (max-aspect-ratio:23/20),(max-width:1099px) and (max-height:519px){.hold .sec.years .card .n{top:6px;right:8px!important}
 /* the frame's words above a picture: no corner marks, tighter, so a long name and its reading both fit */
 .hold .pl-fr{letter-spacing:.04em;gap:8px}.hold .pl-fr span:first-child::before,.hold .pl-fr span:last-child::after{display:none}}
+/* a phone on its side: the picture at the left, as tall as the window; the count, the curve and the hold button at the
+   right, above the story */
+@media (min-width:761px) and (max-width:1099px) and (max-height:519px){body.firstpage .bar{top:8px;padding:6px 6px 6px 10px}body.firstpage .bar .round,body.firstpage .langbtn{height:34px}body.firstpage .bar .round{width:34px}
+.hold .b-stage{right:auto;width:var(--stageW);height:auto;bottom:0;border-bottom:0;border-right:1.5px solid var(--ink)}
+.hold .b-hud,.hold .b-band{position:fixed;left:var(--cl);right:auto;width:calc(var(--cw) - 78px)}
+.hold .b-hud{top:calc(var(--barH) + 4px)}.hold .b-band{top:calc(var(--barH) + 38px);padding:0}
+.hold .b-hold{right:auto;left:calc(var(--cl) + var(--cw) - 62px);bottom:auto;top:calc(var(--barH) + 22px)}}
+@media (min-width:761px) and (max-width:1099px){.hold .b-mk{font-size:11px}.hold .mtile b{font-size:max(11px,.92em)!important}}
+/* on a tablet held upright and a phone on its side, a card that stays while you read ends inside the window */
+@media (min-width:761px) and (max-width:1099px) and (max-aspect-ratio:23/20),(min-width:761px) and (max-width:1099px) and (max-height:519px){.hold .sec:not(.years) .card.r{max-height:calc(100svh - var(--ctop) - 10px);overflow-y:auto}.hold .sec .card.r .n{top:6px}}
 /* under the pointer on the chart: the year and the nearest chip; the glass's words say which part of the chip it is over */
 .hold .chart .lab .hv{font-size:max(11px,calc(var(--u)*11));color:var(--ink);white-space:nowrap;transform:translate(8px,0);padding:1px 5px;background:var(--paper);box-shadow:0 0 0 1px var(--hair)}
 .hold .chart .lab .hv.l{transform:translate(calc(-100% - 8px),0)}.hold .chart .lab .hv b{color:var(--red);font-weight:700}
