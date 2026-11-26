@@ -70,7 +70,7 @@
   "bp.actor.boards.t": "Cheap boards",
   "bp.actor.boards.d": "A 32-bit RISC-V microcontroller now costs less than 10 cents.",
   "bp.actor.cloud.t": "Data centres",
-  "bp.actor.cloud.d": "They used about {dc} TWh of electricity, heading for about {dc2030} TWh by 2030.",
+  "bp.actor.cloud.d": "They used about {dc} TWh of electricity in 2025, heading for about {dc2030} TWh by 2030.",
   "bp.actor.everyone.t": "Everyone",
   "bp.actor.everyone.d": "Computing and communications use 57% of chips; then cars, factories and homes.",
   "bp.wall.switch.t": "The 60 mV wall",

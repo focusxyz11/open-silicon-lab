@@ -311,7 +311,7 @@
   {
    "id": "dc-electricity",
    "topic": "datacenter",
-   "detail": "IEA, April 2026; AI-focused demand rose 50% in 2025 and is projected to triple.",
+   "detail": "IEA, April 2026, for the year 2025 (the IEA's own headline: data centre electricity use surged in 2025); AI-focused demand rose 50% in 2025 and is projected to triple.",
    "kind": "projection",
    "label": "Data-center electricity use",
    "source": "IEA via Enlit",
