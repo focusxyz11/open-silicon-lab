@@ -267,7 +267,7 @@ export default function lab(L) {
     s += '<g class="armarks" aria-hidden="true">' + marks + '</g>';
     return '<div class="armap"><p class="kicker">' + esc(t('ar.map.kicker', { of: A.RECIPES })) + '</p><figure>' + s + '</svg><figcaption class="small muted arkey"><span class="k built"></span>' + esc(t('ar.map.built')) + ' <span class="k lab"></span>' + esc(t('ar.map.lab')) + ' <span class="k tried"></span>' + esc(t('ar.map.tried')) + ' <span class="k cur"></span>' + esc(t('ar.map.now')) +
       ' <span class="arkg"><span class="k lp"></span>' + esc(t('ar.map.people')) + '</span> <span class="arkg"><span class="k la"></span>' + esc(t('ar.map.agents')) + '</span> <span class="arkg"><span class="k fw"></span>' + esc(t('ar.map.first')) + '</span></figcaption></figure>' +
-      '<p class="small muted">' + esc(t('ar.map.lead', { built: A.KNOWN.length, open: A.RECIPES - A.KNOWN.length })) + '</p><p class="small muted armapkeys">' + esc(t('ar.map.keys')) + '</p>' + firsts(LG) + '</div>';
+      '<p class="small muted">' + esc(t('ar.map.lead', { built: A.KNOWN.length, open: A.RECIPES - A.KNOWN.length })) + '</p><p class="small muted armapkeys">' + esc(t('ar.map.keys')) + '</p></div>' + firsts(LG);
   }
   /* the first to win each need, read from the ledger: who, people or agent, and the recipe (tap it to start from there) */
   function firsts(LG) {
