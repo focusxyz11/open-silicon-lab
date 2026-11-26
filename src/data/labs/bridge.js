@@ -3,7 +3,7 @@
 export default {
   name: 'bridge', css: true,
   challenges: [
-    { id: 'bridge', step: 'use', place: 'datacentre', at: 'gate', kind: 'bridge', grows: 'way-bridge', opens: 'strange.gate', growAt: 'lab', exp: 'strange-chain' },
-    { id: 'dnawta', step: 'use', place: 'datacentre', at: 'gate', kind: 'bridge', grows: 'way-dnawta', opens: 'think.gate', growAt: 'lab', exp: 'strange-domino' }
+    { id: 'bridge', step: 'use', place: 'datacentre', at: 'gate', kind: 'bridge', grows: 'way-bridge', opens: 'strange.gate', growAt: 'lab', exp: 'strange-domino' },
+    { id: 'dnawta', step: 'use', place: 'datacentre', at: 'gate', kind: 'bridge', grows: 'way-dnawta', opens: 'think.gate', growAt: 'lab', exp: 'strange-gate' }
   ]
 };
