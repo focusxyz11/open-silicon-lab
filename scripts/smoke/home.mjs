@@ -150,6 +150,62 @@ export default async function run() {
     }
     await hp.close();
   }
+  await apart();
+}
+
+/* nothing on a block lies on another word (#416, #417): no card's number, on the block or on its card, lies on a word
+   of the block; no two of its words overlap, nor a card over them; on a phone every word on it is at least 11 px; and
+   around the block the camera is on the rest of the chip shows as drawings, none of its words in the window (the other
+   blocks', the pads', the chip's title). On every block and at every moment, in four languages on a desktop and a
+   phone, and in English on a wide screen */
+async function apart() {
+  const { browser3d, base, problems } = S;
+  const stops = [['set', 0], ['ch', 'gate'], ['ch', 'job'], ['ch', 'bug'], ['ch', 'light'], ['set', 99], ...['leak', 'distance', 'power', 'price', 'next', 'levels', 'eras', 'arr', 'machine', 'island'].map(id => ['go', id])];
+  for (const [w, h, scheme, langs] of [[1280, 800, 'dark', ['en', 'zh', 'fr', 'es']], [390, 844, 'light', ['en', 'zh', 'fr', 'es']], [1920, 1080, 'dark', ['en']]]) {
+    const hp = await browser3d.newPage({ viewport: { width: w, height: h }, colorScheme: scheme, reducedMotion: 'reduce', hasTouch: w < 500 });
+    hp.on('pageerror', e => problems.push('home apart ' + w + ': ' + e.message));
+    await hp.addInitScript(() => { try { localStorage.setItem('osl-quality', 'keep'); localStorage.removeItem('osl-lang'); } catch (e) { /* no storage */ }
+      /* how visible an element is (its own opacity times its parents'), and the words under a root, each line as a box
+         as tall as its type (a tight line height does not make two lines touch) */
+      const eff = e => { let o = 1; for (let p = e; p && p.id !== 'hd-root'; p = p.parentElement) { const s = getComputedStyle(p); if (s.display === 'none' || s.visibility === 'hidden') return 0; o *= +s.opacity; } return o; };
+      const texts = (root, min) => { const out = [], tw = document.createTreeWalker(root, NodeFilter.SHOW_TEXT); let n;
+        while ((n = tw.nextNode())) { if (!n.textContent.trim() || eff(n.parentElement) < min) continue; const fs = parseFloat(getComputedStyle(n.parentElement).fontSize), r = document.createRange(); r.selectNodeContents(n);
+          for (const q of r.getClientRects()) if (q.width > 1 && q.height > 1) { const hh = Math.min(q.height, fs), m = (q.top + q.bottom) / 2; out.push({ el: n.parentElement, r: { left: q.left, right: q.right, top: m - hh / 2, bottom: m + hh / 2 } }); } }
+        return out; };
+      /* one label: what sits directly on the plate, in a layer, a row of buttons or a cell */
+      const grp = el => { let e = el; while (e.parentElement && !e.parentElement.matches('.pl-ui, .pl-ui .layer, .seg, .tri > div, .pl-fr, .plate')) e = e.parentElement; return e; };
+      const hit = (a, b) => a.left < b.right - .5 && b.left < a.right - .5 && a.top < b.bottom - .5 && b.top < a.bottom - .5;
+      const say = e => '"' + (e.textContent || '').trim().replace(/\s+/g, ' ').slice(0, 30) + '"';
+      window.__apart = () => { const live = document.querySelector('#hd-root .dblk.live'), bad = []; if (!live) return ['no block under the camera'];
+        const pl = live.querySelector('.plate'), T = texts(pl, .05).map(t => ({ ...t, g: grp(t.el) }));
+        for (let i = 0; i < T.length; i++) for (let j = i + 1; j < T.length; j++) { const a = T[i].g, b = T[j].g; if (a !== b && !a.contains(b) && !b.contains(a) && hit(T[i].r, T[j].r)) bad.push(say(a) + ' touches ' + say(b)); }
+        /* the numbers: on the block (settled where they go), and on the cards (where nothing covers them) */
+        const mks = [...document.querySelectorAll('#hd-root .b-mk.on')].filter(m => eff(m) > .5);
+        for (const m of mks) { const r = m.getBoundingClientRect(), cs = getComputedStyle(m), P = m.parentElement.getBoundingClientRect();
+          if (r.width < m.offsetWidth * .95 || Math.abs(parseFloat(cs.left) - parseFloat(m.style.left) / 100 * P.width) > 1 || Math.abs(parseFloat(cs.top) - parseFloat(m.style.top) / 100 * P.height) > 1) return ['a number is still on its way']; }
+        const ns = [...document.querySelectorAll('#hd-root .card .n')].filter(m => { if (eff(m) < .5) return false; const r = m.getBoundingClientRect(), e = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2); return !!e && m.contains(e); });
+        for (const m of mks) { const r = m.getBoundingClientRect(), e = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2); if (e && e.closest('.card')) bad.push('the number ' + m.textContent + ' on the block is under a card'); }
+        for (const m of mks.concat(ns)) { const r = m.getBoundingClientRect(), t = T.find(t => hit(r, t.r)); if (t) bad.push('the number ' + m.textContent + (m.classList.contains('n') ? ' on its card' : '') + ' lies on ' + say(t.g)); }
+        /* a card (or the bar, the band, the hold button) over a word of the block */
+        for (const t of T) { const y = (t.r.top + t.r.bottom) / 2; for (const x of [t.r.left + 2, (t.r.left + t.r.right) / 2, t.r.right - 2]) { if (x < 0 || x > innerWidth || y < 0 || y > innerHeight) continue;
+          const e = document.elementFromPoint(x, y); if (e && !pl.contains(e) && e.closest('.card, .b-hold, .b-band, .bar, .b-rail, .d-ycard, .d-cover')) { bad.push(say(t.g) + ' is under ' + (e.closest('.card') ? 'a card' : 'the ' + e.className)); break; } } }
+        if (innerWidth < 500) for (const t of T) { const fs = parseFloat(getComputedStyle(t.el).fontSize) * (pl.getBoundingClientRect().width / pl.clientWidth); if (fs < 10.95) bad.push(say(t.el) + ' is ' + fs.toFixed(1) + ' px'); }
+        /* the rest of the chip: drawings only */
+        for (const t of texts(document.querySelector('#hd-root .d-world'), .02)) { const r = t.r; if (live.contains(t.el) || r.right < 0 || r.left > innerWidth || r.bottom < 0 || r.top > innerHeight) continue;
+          const o = t.el.closest('.dblk'); bad.push(say(t.el) + (o ? ' of another block' : t.el.closest('.d-pad') ? ' of a pad' : ' of the chip') + ' shows beside the block'); }
+        return [...new Set(bad)].slice(0, 5); }; });
+    for (const l of langs) {
+      const tag = 'home ' + w + ' ' + l;
+      await hp.goto(base + 'index.html?lang=' + l + '#/');
+      const up = await hp.waitForFunction(l => document.documentElement.lang === l && !!window.__hold && document.querySelectorAll('#hd-root .dblk .plate').length === 11, l, { timeout: 20000 }).then(() => true, () => false);
+      if (!up) { problems.push(tag + ': the first page does not open'); continue; }
+      for (const [k, a] of stops) {
+        const ok = await hp.waitForFunction(([k, a]) => { window.__hold[k](a); return window.__apart().length === 0; }, [k, a], { timeout: 8000 }).then(() => true, () => false);
+        if (!ok) problems.push(tag + ': at ' + a + ', ' + (await hp.evaluate(() => window.__apart().join('; '))));
+      }
+    }
+    await hp.close();
+  }
 }
 
 /* what the first page fetches before its idle preload starts (data-preload, the moment it started; docs/ARCHITECTURE.md,

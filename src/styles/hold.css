@@ -72,7 +72,7 @@ body.firstpage .bar .loop{display:none}
 .hold .lb.hot{color:var(--red)}
 .hold .lb.col{white-space:normal;width:23%}
 .hold .lb.wrap{white-space:normal;max-width:44%}
-.hold .lb.wrap.side{max-width:17%}
+.hold .lb.wrap.side{max-width:min(17%,calc(18.2% - var(--ov,0px) - 6px))} /* the next fifty's "behind", ending at 18.2%: clear of the card over the block's edge */
 .hold .lb.up{transform:translate(0,-100%)}
 .hold .lb.r.up{transform:translate(-100%,-100%)}
 .hold .pl-ui .pbtn{white-space:normal;line-height:1.15}
@@ -278,7 +278,7 @@ body.firstpage .bar .loop{display:none}
 .hold .card .n{left:auto!important;right:14px!important}
 .hold .card .w-h{font-size:46px}
 .hold .card .w-q p{font-size:20px}
-.hold .b-mk{width:18px;height:18px;font-size:10px;opacity:.92;margin-top:-14px}
+.hold .b-mk{width:18px;height:18px;font-size:11px;opacity:.92}
 .hold .sheet{padding:18px 16px 40px}
 .hold .sheet .cols{grid-template-columns:1fr}
 .hold .sheet header{flex-wrap:wrap}
@@ -294,14 +294,19 @@ body.firstpage .bar .loop{display:none}
 .hold .b-stage{overflow:hidden}
 .hold .b-slot{pointer-events:none;z-index:4;transition:none}
 .hold .b-hud{z-index:3}
-.hold .d-world{position:absolute;left:0;top:0;transform-origin:0 0;--rev:0;--dim:1}
+.hold .d-world{position:absolute;left:0;top:0;transform-origin:0 0;--rev:0;--dim:1;--words:0}
 .hold .dx{opacity:calc(var(--revx,0)*(1 - .8*var(--dim)))}
 .hold .d-edge{position:absolute;border:calc(var(--S)*.005) solid var(--ink);pointer-events:none}
 .hold .dblk{position:absolute;opacity:calc(var(--rev)*(1 - .74*var(--dim)))}
 .hold .dblk.cur{opacity:1}
 .hold .dblk .plate{position:absolute;inset:0;pointer-events:none}
 .hold .dblk.live .plate{pointer-events:auto}
-.hold .dk{position:absolute;left:0;bottom:calc(100% + var(--u)*26);font-size:calc(var(--S)*.074);white-space:nowrap;line-height:1;opacity:calc(var(--rev)*(1 - var(--dim)))}
+.hold .dk{position:absolute;left:0;bottom:calc(100% + var(--u)*26);font-size:calc(var(--S)*.074);white-space:nowrap;line-height:1;opacity:var(--words)}
+/* around the block the camera is on, the rest of the chip is drawings: the other blocks' words, the pads and the chip's
+   title show only while the camera sees the whole chip (--words, from the camera's zoom) */
+.hold .dblk:not(.cur) .pl-ui,.hold .dblk:not(.cur) .pl-fr{opacity:var(--words)}
+/* the cards beside a block overlap its edges (--ov): its frame's words start and end clear of them and of their numbers */
+.hold .dblk .pl-fr{left:var(--ov);right:var(--ov)}
 .hold .dk b{font-family:'Anonymous Pro',monospace;font-weight:400;font-size:.4em;letter-spacing:.1em;color:var(--mid);margin-right:.8em;vertical-align:.5em}
 .hold .dblk.viol.found .dk b{color:var(--red)}
 .hold .dv{position:absolute;inset:0;background:repeating-linear-gradient(-45deg,rgba(229,64,26,.34) 0 calc(var(--S)*.006),transparent calc(var(--S)*.006) calc(var(--S)*.03));box-shadow:inset 0 0 0 calc(var(--S)*.009) var(--red);opacity:0;pointer-events:none;transition:opacity .25s}
@@ -321,6 +326,7 @@ body.firstpage .bar .loop{display:none}
 .hold .d-title .st{color:var(--mid);font-size:calc(var(--S)*.027);border-top:1px solid var(--hair);padding-top:.7em;margin-top:1em;line-height:1.5}
 .hold .d-title .st b{color:var(--red);font-weight:400}
 .hold .d-reg{position:absolute;border:calc(var(--S)*.004) dashed var(--red);pointer-events:none}
+.hold .d-pad.dx,.hold .d-title.dx{opacity:calc(var(--revx,0)*var(--words))}
 .hold .d-pad{position:absolute;transform:translate(-50%,-50%);display:flex;align-items:center;gap:.7em;font-size:calc(var(--S)*.05);white-space:nowrap;color:var(--mid)}
 .hold .d-pad i{width:1.5em;height:1.5em;background:var(--ink);display:block;flex:none;transition:background .2s}
 .hold .d-pad.lit i,.hold .d-pad:hover i{background:var(--red)}

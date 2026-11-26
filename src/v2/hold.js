@@ -62,11 +62,15 @@ export function createHold(host, ctx = {}) {
   function dOfY(y) { let d = 0; for (let i = 0; i < BR.length - 1; i++) { const len = (BR[i + 1] - BR[i]) * wt(i) * base(); if (y <= len) return d + y / (wt(i) * base()); y -= len; d = BR[i + 1]; } return DWALL; }
 
   /* ---- the cards: short words passing over the picture, each beside the part it is about, with its number on it ---- */
-  const secs = {}, AT = { leak: [[50, 47], [50, 8.5]], distance: [[58, 47], [50, 7.5]], power: [[25.5, 58], [50, 50]], price: [[60, 24.5], [50, 7.5]], next: [[62, 88], [93, 47]], levels: [[50, 45], [50, 92.5]], eras: [[50, 50], [50, 92.5]], arr: [[50, 55], [50, 90]], machine: [[50, 40], [50, 83]], island: [[50, 47], [50, 16]] },
-    MAT = { gate: [14, 58], job: [50, 20.5], bug: [30, 79.5], light: [50, 7.5] };
+  /* where each card's number sits on its block: on the drawing it names ([x, y] in per cent), or beside the control it
+     asks you to use ([a selector in the plate, the side]: l, in the margin left of it, level with its first row; t, just
+     above its left end; r, just right of its top), never on a word */
+  const secs = {}, AT = { leak: [[50, 47], [50, 8.5]], distance: [[58, 47], ['.seg', 'l']], power: [[25.5, 58], [50, 50]], price: [[60, 24.5], ['.seg', 'l']], next: [[86, 88], ['.holdbtn', 'r']], levels: [[50, 45], ['.seg', 'l']], eras: [[50, 50], ['.seg', 'l']], arr: [[50, 55], ['.seg', 't']], machine: [[50, 40], ['.seg', 'l']], island: [[50, 47], [57.5, 13]] },
+    MAT = { gate: [14, 58], job: [50, 20.5], bug: ['.layer.on .pbtn', 'l'], light: ['.layer.on .seg', 'l'] };
+  const pin = (c, [x, y]) => { if (typeof x === 'string') { c.dataset.sel = x; c.dataset.side = y; } else { c.dataset.x = x; c.dataset.y = y; } };
   const card = (side, n, cls) => { const c = h('div', 'card ' + side + (cls ? ' ' + cls : '')); if (n) c.appendChild(h('span', 'n mono', n)); return c; };
   { const sec = h('section', 'sec years'); sec.dataset.id = 'years'; secs.years = sec; story.appendChild(sec);
-    MOMENTS.forEach(m => { const box = h('div', 'mom'), c = card('r', 1); c.dataset.x = MAT[m.id][0]; c.dataset.y = MAT[m.id][1]; c.dataset.mom = m.id;
+    MOMENTS.forEach(m => { const box = h('div', 'mom'), c = card('r', 1); pin(c, MAT[m.id]); c.dataset.mom = m.id;
       c.innerHTML += '<div class="w-try"><div class="w-k mono"><i></i>' + w('mo.' + m.id + '.k') + ' · ' + w('mo.try') + '</div><p class="w-p">' + w('mo.' + m.id + '.q') + '</p><div class="w-out" data-out="m-' + m.id + '">' + momOut(m.id) + '</div></div><p class="mq">' + Q(m.q) + '</p>' + lab(w('mo.' + m.id + '.lab'), m.lab);
       box.appendChild(c); sec.appendChild(box); m._box = box; });
     /* the wall: on the right, where the moments were, so the count stays readable beside it */
@@ -75,7 +79,7 @@ export function createHold(host, ctx = {}) {
   const pull = h('section', 'sec pull'), pc = card('l', 0, 'pullc'); pc.innerHTML = '<h2 class="w-h anton">' + w('a.title') + '</h2><p class="w-d">' + w('d.lede') + '</p>'; pull.appendChild(pc); story.appendChild(pull);
   ORDER.slice(1).forEach(id => { const sec = h('section', 'sec'), W = words(id); sec.dataset.id = id; secs[id] = sec; story.appendChild(sec);
     const a = card('l', 1), b = card('r', 2), c = W.q ? card('l', 0, 'q') : null, gap = () => h('div', 'gap'); a.append(W.head, W.cap); b.append(W.try); if (W.ways) b.append(W.ways); if (c) c.append(W.q);
-    a.dataset.x = AT[id][0][0]; a.dataset.y = AT[id][0][1]; b.dataset.x = AT[id][1][0]; b.dataset.y = AT[id][1][1]; sec.append(a, gap(), b); if (c) sec.append(gap(), c); sec.appendChild(h('div', 'tail')); sec._c = [a, b, c]; });
+    pin(a, AT[id][0]); pin(b, AT[id][1]); sec.append(a, gap(), b); if (c) sec.append(gap(), c); sec.appendChild(h('div', 'tail')); sec._c = [a, b, c]; });
   const end = h('div', 'b-end mono', '<span>' + w('b.end') + '</span><button type="button" class="bbtn mono">' + w('sources') + '</button>'); story.appendChild(end); end.querySelector('button').onclick = () => sheet(true);
   CHAPS.forEach(ch => { const b = h('button', '', '<i></i><span>' + w('tab.' + ch) + '</span>'); b.type = 'button'; b.dataset.ch = ch; b.onclick = () => goPlate(ORDER.find(id => PW[id].ch === ch), null, false, true); rail.appendChild(b); });
 
@@ -172,7 +176,10 @@ export function createHold(host, ctx = {}) {
     const was = yrs; yrs = y < p0; C = camAt(y); const over = C.a === O || C.b === O, kf = C.b === O || C.a === F.years ? (C.a === F.years ? F.years.k : 1) : 1, dim = yrs ? 1 : clamp((C.k / kf - .6) / .3, 0, 1);
     /* the rest of the chip: there all along, faint around the square in the later years, and whole as the camera pulls back */
     const revx = ss(p0, p0 + vh * .3, y), rev = Math.max(revx, yrs ? .55 * ss(9, 14, S.d) : 0);
-    world.style.transform = 'translate(' + (C.sx - C.k * C.x) + 'px,' + (C.sy - C.k * C.y) + 'px) scale(' + C.k + ')'; world.style.setProperty('--rev', rev); world.style.setProperty('--revx', revx); world.style.setProperty('--dim', dim); world.classList.toggle('far', C.k < .62 * (PHONE() ? .6 : 1) && rev > .5);
+    /* its words (the other blocks' labels, the pads', the chip's title) only where the camera sees the whole chip: around
+       the block you are on, and on the way between blocks, the neighbours are drawings, never words cut by the window */
+    const wds = yrs ? 0 : revx * (1 - ss(O.k * 1.2, O.k * 1.7, C.k));
+    world.style.transform = 'translate(' + (C.sx - C.k * C.x) + 'px,' + (C.sy - C.k * C.y) + 'px) scale(' + C.k + ')'; world.style.setProperty('--rev', rev); world.style.setProperty('--revx', revx); world.style.setProperty('--dim', dim); world.style.setProperty('--words', wds); world.classList.toggle('far', C.k < .62 * (PHONE() ? .6 : 1) && rev > .5);
     /* the check: a line across the chip as it comes into view; the four it passes fail */
     const sp = ss(.3, .95, (y - p0) / (vh * .85)), sxw = sp * WW; scan.style.transform = 'translateX(' + sxw + 'px)'; scan.style.opacity = sp > 0 && sp < 1 ? 1 : 0;
     const settled = C.a === C.b;
@@ -182,9 +189,21 @@ export function createHold(host, ctx = {}) {
     hud.classList.toggle('off', !yrs); band.classList.toggle('off', !yrs); holdBox.classList.toggle('chip', !yrs); holdBox.classList.toggle('off', !yrs && over);
     const inChip = !yrs && over, ch = PW[cur].ch, n = CHAPS.indexOf(ch) + 1; put(chapL, inChip ? '<b>' + w('a.chip') + '</b>' : w('b.chap', { n }) + '<b>' + w('tab.' + ch) + '</b>');
     [...rail.children].forEach(b => b.classList.toggle('on', !inChip && b.dataset.ch === ch)); [...map.children].forEach(b => b.classList.toggle('on', inChip ? b.dataset.id === 'title' : b.dataset.id === cur));
-    const on = [null, null]; if (settled) $$('.card[data-x]', story).forEach(c => { const r = c.getBoundingClientRect(), m = r.top + Math.min(r.height, 200) / 2; if (m > vh * .16 && m < vh * .8) { const n = +($('.n', c) || {}).textContent - 1; if (n >= 0 && (!c.dataset.mom || c.dataset.mom === viewAt(S.d))) on[n] = c; } });
-    mks.forEach((e, i) => { const c = on[i]; e.classList.toggle('on', !!c); if (c) { e.style.left = c.dataset.x + '%'; e.style.top = c.dataset.y + '%'; } });
+    const on = [null, null]; if (settled) $$('.card[data-x],.card[data-sel]', story).forEach(c => { const r = c.getBoundingClientRect(), m = r.top + Math.min(r.height, 200) / 2; if (m > vh * .16 && m < vh * .8) { const n = +($('.n', c) || {}).textContent - 1; if (n >= 0 && (!c.dataset.mom || c.dataset.mom === viewAt(S.d))) on[n] = c; } });
+    mks.forEach((e, i) => { const c = on[i]; e.classList.toggle('on', !!c); if (c) { const [x, y] = markAt(c, e); e.style.left = x + '%'; e.style.top = y + '%'; } });
   }
+  /* a number beside its control, found where the control is now (its rows wrap differently in every language and
+     size): on the side asked for, or else the first side where no word of the block and no card is over it (beside a
+     phone's picture the cards pass under it; on a wider screen they overlap the block's edges) */
+  function markAt(c, mk) { const pl = plates[cur], e = c.dataset.sel && pl && pl.ui.querySelector(c.dataset.sel), W = pl && pl.el.clientWidth;
+    if (!e || !W || !e.offsetWidth) return [c.dataset.x || 50, c.dataset.y || 50];
+    const pr = pl.el.getBoundingClientRect(), k = pr.width / W || 1, R = mk.offsetWidth / 2, r = R / k, g = 3, row = (e.firstElementChild || e).offsetHeight;
+    const o = { l: [e.offsetLeft / 2, e.offsetTop + row / 2], r: [e.offsetLeft + e.offsetWidth + r + g, e.offsetTop + r], t: [e.offsetLeft + r, e.offsetTop - r - g], b: [e.offsetLeft + r, e.offsetTop + e.offsetHeight + r + g] };
+    const boxes = [...pl.ui.querySelectorAll('.lb,.big,.seg,button,input'), ...pl.fr.children].filter(q => q.offsetWidth && !(q.closest('.layer') && !q.closest('.layer.on'))).map(q => q.getBoundingClientRect())
+      .concat(PHONE() ? [] : $$('.card', story).filter(q => +getComputedStyle(q.closest('.sec')).opacity > .3 && +getComputedStyle(q).opacity > .3).map(q => q.getBoundingClientRect()));
+    const free = ([x, y]) => { const X = pr.left + x * k, Y = pr.top + y * k; return x > 0 && x < W && y > 0 && y < W && !boxes.some(b => X + R + 1 > b.left && X - R - 1 < b.right && Y + R + 1 > b.top && Y - R - 1 < b.bottom); };
+    const side = [c.dataset.side, 'l', 'r', 't', 'b'].find(sd => free(o[sd])) || c.dataset.side;
+    return o[side].map(v => v / W * 100); }
   function chipState() { const n = WALLS.filter(v => S.tried[v.id]).length; put($('.st', title), w('a.status', { cells: ORDER.length, n, of: 4, sign: S.kept ? '<b>' + w('a.sign.yes') + '</b>' : w('a.sign.no') })); for (const p in pads) pads[p].classList.toggle('lit', !!LIT[p]()); }
   host.addEventListener('scroll', onScroll, { passive: true });
   addEventListener('resize', () => { if (LIVE.on) fit(); });
