@@ -141,3 +141,12 @@ test('the first page\'s addresses lead back where they were written, and what a 
   assert.equal(firstPage(store('{not json')).filter(c => c.done).length, 0);
   assert.equal(firstPage({ getItem: () => { throw new Error('no storage'); } }).length, CHALS.length);
 });
+
+test('the first page\'s three files load: every name they use at the top is imported', async () => {
+  /* a merge once used dAt in holdkit.js without importing it, and the first page threw before it drew (fixed with
+     this test); the files need only a window's addEventListener to load in node */
+  const had = 'addEventListener' in globalThis;
+  if (!had) globalThis.addEventListener = () => {};
+  try { for (const f of ['../src/v2/holdkit.js', '../src/v2/holdplates.js', '../src/v2/hold.js']) await import(f); }
+  finally { if (!had) delete globalThis.addEventListener; }
+});

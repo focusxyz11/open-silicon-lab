@@ -5,7 +5,7 @@
 import { esc } from '../core/esc.js';
 import { facts } from '../core/facts.js';
 import { t, locale, hasWords } from '../core/i18n.js';
-import { ARR, CHALS, CH_AT, COST, COSTSRC, D2011, D71, D94, DGAR, DWALL, ERAS, FDIV, FORMS, GEN, HOLD_KEY, LIGHTS, LOOP, MOMENTS, NAMED_ONLY, NEEDS, WALLS, costAt, heldDone, nodeAt, upTo, yearShown } from '../data/hold.js';
+import { ARR, CHALS, CH_AT, COST, COSTSRC, D2011, D71, D94, DGAR, DWALL, ERAS, FDIV, FORMS, GEN, HOLD_KEY, LIGHTS, LOOP, MOMENTS, NAMED_ONLY, NEEDS, WALLS, costAt, dAt, heldDone, nodeAt, upTo, yearShown } from '../data/hold.js';
 import { figVars, money } from './figures.js';
 
 /* the page's words (hd.*, src/i18n/<lang>/hold.json, with the figures it shares with the blueprint, src/v2/figures.js)
