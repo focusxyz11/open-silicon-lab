@@ -20,7 +20,11 @@ export const mix = (a, b) => { let v = (a ^ Math.imul(b + 1, 0x9e3779b1)) >>> 0;
 export const rnd = v => (mix(v, 0x1234567) & 0xffffff) / 0x1000000;
 export const nf = n => Math.round(n).toLocaleString(locale());
 export const sig = (n, d = 2) => new Intl.NumberFormat(locale(), { notation: 'compact', compactDisplay: 'long', maximumSignificantDigits: d }).format(n);
-export const PHONE = () => innerWidth <= 760;
+/* the phone's layout (the picture above, the story under it): on a phone, on a tablet held upright (any window under
+   1,100 px not much wider than tall), and, with the picture at the left, on a phone turned sideways (under 520 px tall,
+   LAND); hold.css asks the same of @media */
+const MQ = q => matchMedia(q).matches;
+export const PHONE = () => MQ('(max-width:760px),(max-width:1099px) and (max-aspect-ratio:23/20),(max-width:1099px) and (max-height:519px)'), LAND = () => innerWidth > 760 && innerHeight < 520 && PHONE();
 /* the page's root (every popover, sheet and toast is drawn inside it) and whether it is on screen */
 export let ROOT = null;
 export const LIVE = { on: false };
@@ -41,8 +45,9 @@ export const K = { get ink() { return S.night ? '#efece3' : '#131210'; }, get pa
 export const fg = a => (S.night ? 'rgba(239,236,227,' + a + ')' : 'rgba(19,18,16,' + a + ')');
 export const rd = a => 'rgba(229,64,26,' + a + ')';
 
-/* ---- one unit for every size, from the window: the page is composed once and grows with the screen ---- */
-export function fitU(...also) { const W = innerWidth, H = innerHeight, u = PHONE() ? 1 : clamp(Math.min(W / 1280, H / 790), .86, 2.2); for (const e of [ROOT, ...also]) if (e) e.style.setProperty('--u', u + 'px'); return u; }
+/* ---- one unit for every size, from the window: the page is composed once and grows with the screen (on a tablet
+   held upright too, so no word is under 11 px) ---- */
+export function fitU(...also) { const W = innerWidth, H = innerHeight, u = PHONE() ? (W <= 760 ? 1 : clamp(W / 700, 1.05, LAND() ? 1.05 : 1.3)) : clamp(Math.min(W / 1280, H / 790), .86, 2.2); for (const e of [ROOT, ...also]) if (e) e.style.setProperty('--u', u + 'px'); return u; }
 
 /* ---- sources: a small mark beside the number; one sheet for all of them, by chapter ---- */
 /* the lab's facts (src/data/facts.json), loaded when the page is first touched; a mark asks for them if it needs them */
