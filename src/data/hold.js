@@ -133,6 +133,12 @@ export const LOOP = [['open', 'lab', 500, 150], ['design', 'studio', 850, 310], 
 export const PARTS = [['years', 'hd-years'], ['walls', 'hd-s-switch'], ['next', 'hd-s-next'], ['arch', 'hd-s-arch'], ['machine', 'hd-s-machine'], ['island', 'hd-s-island']];
 /* ---- the challenges on this page, in the order they are met: each counted on the rail once it is done ---- */
 export const CHALS = ['gate', 'fit', 'job', 'knee', 'bug', 'light', 'guess', 'walls', 'floor', 'eras', 'arr', 'keep'];
+/* where each is played: a block, and for the fifty years the count it waits at; its address is #/hold/<id> */
+export const CH_AT = { gate: ['years', 2.4], fit: ['years', 6], job: ['years', D71 + .6], knee: ['years', dAt(2006)], bug: ['years', D94 + .6], light: ['years', GEN(3) + .3], guess: ['years', dAt(2012)], walls: ['leak'], floor: ['next'], eras: ['eras'], arr: ['arr'], keep: ['machine'] };
+/* what a visitor does on the page is kept in this browser under this key (src/v2/holdkit.js); the lab reads only the
+   challenges done from it (src/v2/game.js firstPage) */
+export const HOLD_KEY = 'osl-hold';
+export const heldDone = o => Object.fromEntries(CHALS.filter(id => !!(o && o.done && typeof o.done === 'object' && o.done[id])).map(id => [id, 1]));
 
 /* every fact the page names (tests/hold.test.mjs checks each is in src/data/facts.json) */
 export const FACT_IDS = [...new Set(['transistor-trend', 'zeloof-garage', 'rubin-gpu', 'node-n2', 'tsmc-n2', 'wafer-space-run', 'fpga-asic-gap', 'brain-power', 'cerebras-cs4', ...Object.values(FIG).map(f => f.fact),

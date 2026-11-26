@@ -32,8 +32,11 @@ body.firstpage .bar .loop{display:none}
 .hold .bbtn,.hbar .bbtn{height:calc(var(--u)*30);padding:0 calc(var(--u)*11);border:1px solid var(--hair);display:inline-flex;align-items:center;gap:6px;color:var(--mid);transition:color .2s,border-color .2s;background:var(--paper)}
 .hold .bbtn:hover,.hbar .bbtn:hover{color:var(--ink);border-color:var(--ink)}
 .hold .bbtn.round,.hbar .bbtn.round{width:calc(var(--u)*30);padding:0;justify-content:center;border-radius:50%}
-.hold .src{display:inline-block;font-family:'Anonymous Pro',monospace;font-size:.72em;line-height:1;color:var(--mid);vertical-align:.25em;margin-left:.2em;width:1.25em;height:1.25em;border:1px solid var(--hair);border-radius:50%;text-align:center;transition:color .15s,border-color .15s,background .15s}
+.hold .src{position:relative;display:inline-block;font-family:'Anonymous Pro',monospace;font-size:.72em;line-height:1;color:var(--mid);vertical-align:.25em;margin-left:.2em;width:1.25em;height:1.25em;border:1px solid var(--hair);border-radius:50%;text-align:center;transition:color .15s,border-color .15s,background .15s}
 .hold .src:hover,.hold .src.on{color:var(--paper);background:var(--red);border-color:var(--red)}
+/* a source mark is small to see and 24 px to the touch; the page's heading and voice are for a screen reader; skip to the story leads past the bar */
+.hold .src::after{content:'';position:absolute;inset:calc(50% - 12px)}.hold .vh{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;opacity:0}
+.hskip{position:absolute;left:8px;top:-90px;z-index:9;padding:8px 14px;border:0;border-radius:6px;background:#e5401a;color:#fff;font:600 14px 'DM Sans',sans-serif}.hskip:focus{top:8px}
 .hold .srcpop{position:fixed;z-index:60;width:min(300px,calc(100vw - 24px));background:var(--ink);color:var(--paper);padding:13px 15px 12px;font-size:13.5px;line-height:1.38;opacity:0;pointer-events:none;transform:translateY(4px);transition:opacity .15s,transform .15s}
 .hold .srcpop.on{opacity:1;pointer-events:auto;transform:none}
 .hold .srcpop .mono{font-size:10.5px;opacity:.6;display:block;margin-bottom:5px}

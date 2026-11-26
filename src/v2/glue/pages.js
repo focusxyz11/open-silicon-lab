@@ -75,13 +75,16 @@ export function create() {
         return '<div class="wm-pl' + (B[href] ? ' been' : '') + '"><a class="wm-pn" href="' + esc(href) + '">' + esc(t('map.' + p + '.t')) + '</a>' + dots(own) +
           (L.length ? '<ol>' + L.map(l => { const lh = V.levelHref(p, l), at = ch.filter(c => placeOf(c) === p && c.at === l.depth); return '<li class="' + (B[lh] ? 'been' : '') + '"><a href="' + esc(lh) + '">' + esc(t('depth.' + l.depth + '.name')) + '</a>' + dots(at) + '</li>'; }).join('') + '</ol>' : '') + '</div>'; }).join('') + '</div>'; }).join('');
     const every = Game.SHARED.map(dp => { const lh = V.levelHref('datacentre', { world: 'datacentre', depth: dp }); return '<li class="' + (B[lh] ? 'been' : '') + '"><a href="' + esc(lh) + '">' + esc(t('depth.' + dp + '.name')) + '</a>' + dots(ch.filter(c => c.at === dp)) + '</li>'; }).join('');
-    const all = ch.length, got = doneN(ch);
+    /* the first page's twelve challenges, played there (src/v2/hold.js) and counted with the lab's */
+    const F = Game.firstPage(localStorage), fN = F.filter(c => c.done).length, all = ch.length + F.length, got = doneN(ch) + fN;
+    const first = '<div class="wm-first"><p class="wm-axis small">' + esc(t('page.map.hold')) + '</p><p class="wm-fl' + (Object.keys(B).some(k => k === '#/' || k.startsWith('#/hold')) ? ' been' : '') + '"><a href="#/">' + esc(t('hd.hero.k')) + '</a><span class="wm-dots" title="' + esc(t('page.map.ch', { n: fN, of: F.length })) + '">' +
+      F.map(c => '<a href="' + c.href + '" class="' + (c.done ? 'on' : '') + '" aria-label="' + esc(t('hd.ch.' + c.id)) + '"></a>').join('') + '</span></p></div>';
     const arr = '<p class="wm-arr small" role="group" aria-label="' + esc(t('page.map.arrange')) + '"><span>' + esc(t('page.map.arrange')) + '</span>' +
       '<a href="#/log"' + (latOn ? '' : ' aria-current="true"') + '>' + esc(t('page.map.byLife')) + '</a><a href="#/log/lattice"' + (latOn ? ' aria-current="true"' : '') + '>' + esc(t('page.map.byMatter')) + '</a></p>';
     return '<section class="cwmap' + (latOn ? ' lattice' : '') + '"><header class="wm-head f2rhead"><p class="kicker">' + esc(t('loop.map')) + '</p><h1>' + esc(t('page.map.k')) + '</h1>' + arr + '<p class="lead">' + esc(t(latOn ? 'page.lat.lead' : 'page.map.lead')) + '</p>' +
       '<p class="wm-key small"><span class="wm-k1"></span>' + esc(t('page.map.keyBeen')) + '<span class="wm-k2"></span>' + esc(t('page.map.keyTodo')) + '<span class="wm-k3"></span>' + esc(t('page.map.keyDone')) + '<b>' + esc(t('page.map.ch', { n: got, of: all })) + '</b></p></header>' +
       (latOn ? latticeOf(B) : '<p class="wm-axis wm-across small">' + esc(t('page.map.across')) + '</p><div class="wm-grid">' + cols + '</div>' +
-      '<div class="wm-every"><p class="wm-axis small">' + esc(t('page.map.every')) + '</p><ol>' + every + '</ol></div>') + '</section>';
+      '<div class="wm-every"><p class="wm-axis small">' + esc(t('page.map.every')) + '</p><ol>' + every + '</ol></div>' + first) + '</section>';
   }
   function showPage(k0) {
     const k = 'log'; V.pageNow = k0;
@@ -96,7 +99,10 @@ export function create() {
       const nx = Game.next(V.S);
       h += '<div class="jump"><input type="search" data-jump autocomplete="off" placeholder="' + esc(t('jump.ph')) + '" aria-label="' + esc(t('jump.ph')) + '"><div class="jumpres" data-jumpres></div></div>';
       if (nx) h += '<section class="stepsec"><h2>' + esc(t('loop.nextUp')) + '</h2><div class="grid">' + V.chCard(nx) + '</div></section>';
-      hc += '<h2 id="log-challenges">' + esc(t('nav.challenges')) + '</h2><p class="small muted">' + esc(t(nx ? 'page.challenges.lead' : 'game.allDone')) + '</p>' + Game.STEPS.map((s, i) => { const st = Game.stepState(V.S, s); return '<section class="stepsec"><h2><span class="num">' + (i + 1) + '</span>' + esc(t('game.step.' + s)) + ' <span class="small muted">' + esc(t('map.' + Game.STATION[s] + '.t')) + ' · ' + st.done + '/' + st.total + '</span></h2><div class="grid">' + Game.stepChallenges(s).map(V.chCard).join('') + '</div></section>'; }).join('');
+      const F = Game.firstPage(localStorage);
+      hc += '<h2 id="log-challenges">' + esc(t('nav.challenges')) + '</h2><p class="small muted">' + esc(t(nx ? 'page.challenges.lead' : 'game.allDone')) + '</p>' +
+        '<section class="stepsec" data-first><h2><span class="num">0</span>' + esc(t('page.log.hold')) + ' <span class="small muted">' + F.filter(c => c.done).length + '/' + F.length + '</span></h2><div class="stopdo">' +
+        F.map(c => '<a class="dochip' + (c.done ? ' done' : '') + '" href="' + c.href + '"><span class="kicker">' + esc(t(c.done ? 'trail.did' : 'trail.do')) + '</span><b>' + esc(t('hd.ch.' + c.id)) + '</b></a>').join('') + '</div></section>' + Game.STEPS.map((s, i) => { const st = Game.stepState(V.S, s); return '<section class="stepsec"><h2><span class="num">' + (i + 1) + '</span>' + esc(t('game.step.' + s)) + ' <span class="small muted">' + esc(t('map.' + Game.STATION[s] + '.t')) + ' · ' + st.done + '/' + st.total + '</span></h2><div class="grid">' + Game.stepChallenges(s).map(V.chCard).join('') + '</div></section>'; }).join('');
       hc += '<section class="stepsec"><h2><span class="num">⚙</span>' + esc(t('game.jobs')) + ' <span class="small muted">' + esc(t('game.jobsD')) + '</span></h2><div class="grid">' + C.breaks.map(b => V.chCard(V.chOf('break:' + b.of))).join('') + C.jobs.map(V.jobCard).join('') + '</div></section>';
       /* never a list of every question: the ones you have met, as strands you can pick up again, one way to meet
          the next, and the ones you asked yourself. Only the strand you followed last shows what lies underneath. */
@@ -181,6 +187,7 @@ export function create() {
   const jumpIndex = () => Game.PLACES.map(p => ({ name: t('map.' + p + '.t'), kind: V.kickerOf(p), href: '#/place/' + p }))
     .concat(Object.entries(Game.INSIDE).flatMap(([p, L]) => L.filter(l => p === 'datacentre' || !Game.SHARED.includes(l.depth)).map(l => ({ name: t('depth.' + l.depth + '.name'), kind: t('map.' + p + '.t'), href: V.levelHref(p, l) }))),
       Game.CHALLENGES.map(c => ({ name: titleOf(c), kind: V.whereOf(c), href: V.doHref(c) })),
+      Game.firstPage(localStorage).map(c => ({ name: t('hd.ch.' + c.id), kind: t('page.log.hold'), href: c.href })),
       /* each world, a reading page, by its question (#305) */
       WORLD_IDS.map(id => ({ name: t('thread.' + id + '.root'), kind: t('jump.world'), href: '#/w/' + id })),
       [{ name: t('look.plan.t'), kind: t('map.lab.t'), href: '#/build' }, { name: t('nav.challenges'), kind: t('loop.log'), href: '#/challenges' }, { name: t('loop.outShort'), kind: t('nav.ecosystem'), href: '#/ecosystem' }]);

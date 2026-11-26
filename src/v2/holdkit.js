@@ -5,7 +5,7 @@
 import { esc } from '../core/esc.js';
 import { facts } from '../core/facts.js';
 import { t, locale, hasWords } from '../core/i18n.js';
-import { CHALS, COST, COSTSRC, D2011, D71, D94, DGAR, DWALL, FDIV, GEN, LIGHTS, MOMENTS, NAMED_ONLY, WALLS, costAt, dAt, nodeAt, upTo, yearAt, yearShown } from '../data/hold.js';
+import { ARR, CHALS, CH_AT, COST, COSTSRC, D2011, D71, D94, DGAR, DWALL, ERAS, FDIV, FORMS, GEN, HOLD_KEY, LIGHTS, LOOP, MOMENTS, NAMED_ONLY, NEEDS, WALLS, costAt, heldDone, nodeAt, upTo, yearShown } from '../data/hold.js';
 import { figVars, money } from './figures.js';
 
 /* the page's words (hd.*, src/i18n/<lang>/hold.json, with the figures it shares with the blueprint, src/v2/figures.js)
@@ -35,10 +35,29 @@ export const S = { night: false, d: 0, press: 0, holding: false, done: {}, tried
   leak: 0, dist: 0, distK: 0, power: { g: 600, shown: 0 }, price: 0, next: { pos: 0, at: -1, wait: 0 },
   lv: 0, lvK: 0, era: 0, eraSeen: {}, arr: 0, arrSeen: {}, need: 0, forms: {}, kept: false, agent: null, place: null,
   cq: { every: 1, hz: false, cores: false, w: false, pick: null, guess: null, msg: '', stage: null, maxD: 0 } };
-const subs = []; export const onChange = f => subs.push(f); export const changed = what => subs.forEach(f => f(what));
+const subs = []; export const onChange = f => subs.push(f); export const changed = what => { subs.forEach(f => f(what)); keepSoon(); };
+/* what the visitor has done and set is kept in this browser (osl-hold) and read back when the page opens, so a reload,
+   day or night, or a new language keeps it; the lab counts the challenges done from it (src/v2/game.js firstPage) */
+const num = (v, a, b, d) => (typeof v === 'number' && v >= a && v <= b ? v : d), obj = v => (v && typeof v === 'object' ? v : {});
+let keepTm = 0;
+export function keep() { clearTimeout(keepTm); keepTm = 0; const q = S.cq;
+  try { localStorage.setItem(HOLD_KEY, JSON.stringify({ done: S.done, tried: S.tried, kept: S.kept, place: S.place, need: S.need, forms: S.forms, agent: S.agent, eraSeen: S.eraSeen, arrSeen: S.arrSeen,
+    gate: S.gate, job: S.job, light: S.light, leak: S.leak, dist: S.dist, price: S.price, power: S.power, cq: { every: q.every, guess: q.guess, hz: q.hz, cores: q.cores, w: q.w } })); } catch (e) { /* no storage */ } }
+const keepSoon = () => { clearTimeout(keepTm); keepTm = setTimeout(keep, 300); };
+addEventListener('pagehide', () => { if (keepTm) keep(); });
+export function restore() { let o = null; try { o = JSON.parse(localStorage.getItem(HOLD_KEY) || 'null'); } catch (e) { o = null; } if (!o || typeof o !== 'object') return;
+  const pick = (v, ok) => Object.fromEntries(Object.keys(obj(v)).filter(ok).map(k => [k, 1]));
+  S.done = heldDone(o); S.tried = pick(o.tried, k => ['switch', 'memory', 'power', 'cost', 'mgate'].includes(k));
+  S.eraSeen = pick(o.eraSeen, k => +k >= 0 && +k < ERAS.length); S.arrSeen = pick(o.arrSeen, k => ARR.some(a => a[0] === k));
+  S.need = Math.round(num(o.need, 0, NEEDS.length - 1, 0)); S.forms = Object.fromEntries(Object.entries(obj(o.forms)).filter(([k, v]) => k.length < 40 && FORMS.includes(v)));
+  S.place = LOOP.some(l => l[1] === o.place) ? o.place : null; S.kept = o.kept === true; S.agent = o.agent && Number.isFinite(o.agent.n) ? { n: o.agent.n, ok: !!o.agent.ok } : null;
+  const g = obj(o.gate), p = obj(o.power), q = obj(o.cq); S.gate = { a: g.a ? 1 : 0, b: g.b ? 1 : 0 };
+  S.job = Math.round(num(o.job, 0, 2, 2)); S.light = Math.round(num(o.light, 0, LIGHTS.length - 1, 0)); S.leak = num(o.leak, 0, 330, 0); S.dist = Math.round(num(o.dist, 0, 2, 0)); S.price = o.price === 1 ? 1 : 0;
+  S.power = { g: num(p.g, 100, 1550, 600), shown: p.shown ? 1 : 0 };
+  Object.assign(S.cq, { every: num(q.every, .5, 4, 1), guess: num(q.guess, 1, 1e16, null), hz: q.hz === true, cores: q.cores === true, w: q.w === true }); }
 export function done(id) { if (S.done[id]) return; S.done[id] = 1; changed('done'); toast('<i></i>' + w('toast.done', { n: Object.keys(S.done).length, of: CHALS.length }) + ' · ' + w('ch.' + id)); }
 export function tried(id) { if (S.tried[id]) return; S.tried[id] = 1; if (WALLS.every(v => S.tried[v.id])) done('walls'); changed('tried'); }
-export function setOut(id, html) { if (S.out[id] === html) return; S.out[id] = html; $$('[data-out="' + id + '"]').forEach(e => { e.innerHTML = html; }); }
+export function setOut(id, html) { if (S.out[id] === html) return; S.out[id] = html; keepSoon(); $$('[data-out="' + id + '"]').forEach(e => { e.innerHTML = html; }); }
 
 /* ---- day or night: as the lab is set (◐ in the bar), all the way down; the page never changes it by itself ---- */
 export const K = { get ink() { return S.night ? '#efece3' : '#131210'; }, get paper() { return S.night ? '#131210' : '#efece3'; }, get plate() { return S.night ? '#1a1917' : '#e8e4d8'; }, red: '#e5401a', get mid() { return S.night ? '#aca89d' : '#6b675d'; } };
@@ -74,8 +93,10 @@ function hidePop() { if (pop) pop.classList.remove('on'); $$('.src.on').forEach(
 export function sheet(on) {
   if (on && !Object.keys(FACTS).length) { loadFacts().then(() => sheet(true)); return; }
   if (!sheetEl && on) { sheetEl = inRoot(h('div', 'sheet')); sheetEl.setAttribute('role', 'dialog'); sheetEl.setAttribute('aria-label', w('sheet.h').replace(/<[^>]+>/g, ''));
-    sheetEl.innerHTML = '<header><div><span class="mono dim">' + w('sheet.k', { n: Object.keys(FACTS).length }) + '</span><h2 class="anton">' + w('sheet.h') + '</h2></div><p>' + w('sheet.p') + '</p><button type="button" class="bbtn mono" data-x="1">' + w('close') + ' ✕</button></header><div class="cols">' +
-      Object.entries(CH_FACTS).map(([ch, ids], i) => '<div class="col"><h3 class="anton"><span>0' + (i + 1) + '</span>' + w('tab.' + ch) + '</h3>' + ids.filter(id => FACTS[id]).map(id => '<a class="f" href="' + esc(FACTS[id][1]) + '" target="_blank" rel="noopener"><b>' + esc(FACTS[id][2]) + '</b><span>' + esc(FACTS[id][0]) + ' ↗ · ' + esc(FACTS[id][3]) + '</span></a>').join('') + '</div>').join('') + '</div>';
+    /* each source once, in the first chapter that names it, and counted as listed */
+    const seen = new Set(), by = Object.entries(CH_FACTS).map(([ch, ids]) => [ch, ids.filter(id => FACTS[id] && !seen.has(id) && seen.add(id))]);
+    sheetEl.innerHTML = '<header><div><span class="mono dim">' + w('sheet.k', { n: seen.size }) + '</span><h2 class="anton">' + w('sheet.h') + '</h2></div><p>' + w('sheet.p') + '</p><button type="button" class="bbtn mono" data-x="1">' + w('close') + ' ✕</button></header><div class="cols">' +
+      by.map(([ch, ids], i) => '<div class="col"><h3 class="anton"><span>0' + (i + 1) + '</span>' + w('tab.' + ch) + '</h3>' + ids.map(id => '<a class="f" href="' + esc(FACTS[id][1]) + '" target="_blank" rel="noopener"><b>' + esc(FACTS[id][2]) + '</b><span>' + esc(FACTS[id][0]) + ' ↗ · ' + esc(FACTS[id][3]) + '</span></a>').join('') + '</div>').join('') + '</div>';
     $('[data-x]', sheetEl).onclick = () => sheet(false); }
   if (sheetEl) sheetEl.classList.toggle('on', on); }
 export function toast(html) { if (!toastEl) { toastEl = inRoot(h('div', 'toast mono')); toastEl.setAttribute('role', 'status'); } toastEl.innerHTML = html; toastEl.classList.add('on'); clearTimeout(toastTm); toastTm = setTimeout(() => toastEl.classList.remove('on'), 2600); }
@@ -91,15 +112,23 @@ export function mkTop(mid, goChallenge) {
   const bar = h('div', 'hbar');
   if (mid) bar.appendChild(mid);
   bar.appendChild(h('span', 'sp'));
-  const tl = h('div', 'tally mono'); tl.innerHTML = '<span class="tl-n"></span><div class="sq">' + CHALS.map(id => '<button type="button" data-ch="' + id + '" data-tip="' + esc(w('ch.' + id)) + '" aria-label="' + esc(w('ch.' + id)) + '"></button>').join('') + '</div>';
+  const tl = h('div', 'tally mono'); tl.setAttribute('role', 'group'); tl.innerHTML = '<span class="tl-n"></span><div class="sq">' + CHALS.map(id => '<button type="button" data-ch="' + id + '" data-tip="' + esc(w('ch.' + id)) + '" aria-label="' + esc(w('ch.' + id)) + '"></button>').join('') + '</div>';
   tl.onclick = e => { const b = e.target.closest('[data-ch]'); if (b) goChallenge(b.dataset.ch); };
-  const paintTally = () => { $('.tl-n', tl).innerHTML = w('rail.chals', { n: Object.keys(S.done).length, of: CHALS.length }); $$('[data-ch]', tl).forEach(b => b.classList.toggle('on', !!S.done[b.dataset.ch])); };
+  const rv = rove($('.sq', tl)), paintTally = () => { const s = w('rail.chals', { n: Object.keys(S.done).length, of: CHALS.length }); $('.tl-n', tl).innerHTML = s; tl.setAttribute('aria-label', s.replace(/<[^>]+>/g, ''));
+    $$('[data-ch]', tl).forEach(b => { b.classList.toggle('on', !!S.done[b.dataset.ch]); b.setAttribute('aria-pressed', S.done[b.dataset.ch] ? 'true' : 'false'); }); rv(); };
   onChange(paintTally); paintTally(); bar.appendChild(tl);
   const sb = h('button', 'bbtn mono', '<span>' + w('sources') + '</span>'); sb.type = 'button'; sb.setAttribute('aria-label', w('sources')); sb.onclick = () => sheet(true); bar.appendChild(sb);
   return bar;
 }
-/* where each challenge is played: a plate, and for the fifty years the count it waits at */
-export const CH_AT = { gate: ['years', 2.4], fit: ['years', 6], job: ['years', D71 + .6], knee: ['years', dAt(2006)], bug: ['years', D94 + .6], light: ['years', GEN(3) + .3], guess: ['years', dAt(2012)], walls: ['leak'], floor: ['next'], eras: ['eras'], arr: ['arr'], keep: ['machine'] };
+/* a row of buttons as one stop of the keyboard: Tab comes to the one lit (pick), or to the last one used, and the
+   arrows (Home, End) move along it */
+export function rove(el, pick) { const L = () => [...el.querySelectorAll('button')]; let last = null;
+  const set = () => { const bs = L(); if (bs.includes(document.activeElement)) return; const on = (pick && pick(bs)) || (bs.includes(last) ? last : bs[0]); bs.forEach(b => { const v = b === on ? 0 : -1; if (b.tabIndex !== v) b.tabIndex = v; }); };
+  el.addEventListener('keydown', e => { const bs = L(), i = bs.indexOf(document.activeElement); if (i < 0) return; const j = { ArrowRight: i + 1, ArrowDown: i + 1, ArrowLeft: i - 1, ArrowUp: i - 1, Home: 0, End: bs.length - 1 }[e.key]; if (j == null) return;
+    e.preventDefault(); last = bs[(j + bs.length) % bs.length]; bs.forEach(b => { b.tabIndex = b === last ? 0 : -1; }); last.focus(); });
+  el.addEventListener('focusout', () => setTimeout(set)); set(); return set; }
+/* where each challenge is played: a plate, and for the fifty years the count it waits at (src/data/hold.js) */
+export { CH_AT };
 
 /* ---- the plates after the wall, in order, and the words that go with each ---- */
 export const ORDER = ['years', 'leak', 'distance', 'power', 'price', 'next', 'levels', 'eras', 'arr', 'machine', 'island'];
@@ -147,6 +176,8 @@ export const viewAt = d => { if (d >= DWALL - 1e-4) return 'wall'; const m = mom
 export function countParts(d) { const n = d >= DWALL - 1e-4 ? 336e9 : Math.pow(2, d);
   if (n < 1e6) return [nf(n), w(Math.round(n) === 1 ? 'unit.one' : 'unit.many'), ''];
   const big = n >= 1e9, v = n / (big ? 1e9 : 1e6); return [v >= 100 ? Math.round(v) : v.toFixed(1), w('unit.many'), w(big ? 'billion' : 'million')]; }
+/* the count and the year in words, as the square says them to a screen reader */
+export const countSay = d => { const c = countParts(d); return c[0] + ' ' + (c[2] ? c[2] + ' ' : '') + c[1] + ', ' + w('st.year') + ' ' + yearShown(d); };
 function hzW(v) { return v >= 1e9 ? w('st.ghz', { n: (v / 1e9).toFixed(1) }) : v >= 1e6 ? w('st.mhz', { n: Math.round(v / 1e6) }) : w('st.khz', { n: Math.round(v / 1e3) }); }
 export function statsHTML(d) { const y = yearShown(d), n = nodeAt(y), hz = upTo('hz', y), co = upTo('cores', y);
   return '<div><span class="mono">' + w('st.year') + '</span><b>' + y + '</b></div><div><span class="mono">' + w('st.node') + '</span><b>' + (n ? (y >= NAMED_ONLY ? w('st.named', { n }) : n) : '–') + '</b></div><div><span class="mono">' + w('st.clock') + '</span><b>' + (hz ? hzW(hz) : '–') + '</b></div><div><span class="mono">' + w('st.cores') + '</span><b>' + (co || (y >= 1971 ? 1 : '–')) + '</b></div>'; }

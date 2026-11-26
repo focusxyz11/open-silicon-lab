@@ -122,3 +122,22 @@ test('a figure Hold and the blueprint both name has one home, and its fact says 
       assert.ok(!re.test(String(v)), l + '/' + f + '.json ' + k + ' types out the figure ' + id + ' (src/data/figures.js): use {' + id + '}');
   }
 });
+
+test('the first page\'s addresses lead back where they were written, and what a visitor did there counts in the lab', async () => {
+  const { CH_AT, HOLD_KEY, heldDone, yearShown } = await import('../src/data/hold.js');
+  const { firstPage } = await import('../src/v2/game.js');
+  /* a moment's address (#/hold/<moment>) opens at a count inside that moment, so the address written there is the same */
+  for (const m of MOMENTS) { const [b, d] = CH_AT[m.id]; assert.equal(b, 'years'); assert.ok(d >= m.at && d < m.at + m.span, m.id + ' opens outside its moment'); }
+  for (const id of CHALS) assert.ok(CH_AT[id], id + ' has no place on the page');
+  /* a year's address (#/hold/years/<year>) opens at that year, the wall's included */
+  for (let y = 1961; y <= 2026; y++) assert.equal(yearShown(Math.min(DWALL, dAt(y))), y, y + ' opens at another year');
+  /* only the page's own challenges are read back, and the lab reads them with their addresses */
+  assert.deepEqual(heldDone({ done: { gate: 1, keep: 1, half: 1 } }), { gate: 1, keep: 1 });
+  assert.deepEqual(heldDone(null), {});
+  const store = v => ({ getItem: k => (k === HOLD_KEY ? v : null) });
+  const F = firstPage(store(JSON.stringify({ done: { gate: 1, walls: 1, nope: 1 } })));
+  assert.equal(F.length, CHALS.length); assert.deepEqual(F.filter(c => c.done).map(c => c.id), ['gate', 'walls']);
+  assert.ok(F.every(c => c.href === '#/hold/' + c.id));
+  assert.equal(firstPage(store('{not json')).filter(c => c.done).length, 0);
+  assert.equal(firstPage({ getItem: () => { throw new Error('no storage'); } }).length, CHALS.length);
+});
