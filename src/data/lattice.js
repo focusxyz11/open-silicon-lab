@@ -107,7 +107,7 @@ export const PATHS = [
   { id: 'physics', strands: [['silicon.physics', 'silicon.switch', 'silicon.logic', 'silicon.sums', 'silicon.processor']], marks: ['ch:crystal', 'lv:datacentre/atom', 'ch:transistor', 'lv:datacentre/switch', 'lv:datacentre/gate', 'lv:datacentre/block', 'lv:datacentre/chip'] },
   { id: 'things', strands: [['neurons.physics', 'neurons.machine', 'neurons.intelligence'], ['molecules.physics', 'molecules.intelligence'], ['silicon.switch', 'silicon.intelligence']], marks: ['ch:spikes', 'ch:noise', 'ch:mortal', 'ch:dnawta'] },
   { id: 'living', strands: [['molecules.physics', 'molecules.logic', 'cells.switch', 'cells.logic', 'cells.sums']], marks: ['ch:bridge'] },
-  { id: 'spec', strands: [['everyday.sums', 'silicon.sums', 'light.sums', 'molecules.sums', 'cells.sums', 'yours.sums'], ['silicon.logic', 'molecules.logic']], marks: ['ch:half', 'ch:full', 'ch:light', 'ch:bridge'] }
+  { id: 'spec', strands: [['everyday.sums', 'silicon.sums', 'light.sums', 'molecules.sums', 'cells.sums', 'yours.sums']], marks: ['ch:half', 'ch:full', 'ch:light'] }
 ];
 
 /* a cell's key, and what the lab has there, in the order written */
