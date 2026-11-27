@@ -261,9 +261,9 @@
  .rvcases .bad { color: var(--bad); }
  .rvcases .mono { color: var(--ink); }
 /* Jevons' bet: the island's turbines as a strip over the path the world takes */
-.f2stage .betview[data-f2="instrument"]:has(> .turbines) { flex-direction: column; }
-.f2stage .betview[data-f2="instrument"] > .turbines { flex: none; }
-.f2stage .betview[data-f2="instrument"] > .turbines > svg { flex: none; height: auto; max-height: 140px; }
+main.stage .f2stage .betview[data-f2="instrument"]:has(> .turbines) { flex-direction: column; }
+main.stage .f2stage .betview[data-f2="instrument"] > .turbines { flex: none; }
+main.stage .f2stage .betview[data-f2="instrument"] > .turbines > svg { flex: none; height: auto; max-height: 140px; }
 .lsnbtn.on { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 16%, var(--panel)); }
 .lsnwave i { display: block; width: 3px; border-radius: 2px; background: var(--accent); height: 6px; }
 .lsnwave i:nth-child(2) { height: 13px; }

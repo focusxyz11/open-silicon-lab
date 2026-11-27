@@ -747,12 +747,12 @@ main.stage .f2pic :is(.small, .chipb, .btn, button, label, figcaption) { font-si
 main.stage .f2qst b { font: var(--f2-label); }
 .f2qst .f2fig { font: 500 15px var(--mono); color: var(--muted); }
 .f2qdots { display: flex; flex-wrap: wrap; align-content: start; gap: calc(var(--d) * .42); padding-top: 3px; }
-.f2dot { position: relative; display: inline-block; flex: none; width: var(--d, 14px); height: var(--d, 14px); box-sizing: border-box; border-radius: 50%; border: 2px solid var(--qc, var(--muted)); background: transparent; transition: transform .15s ease, opacity .2s ease; }
-.f2dot.f2live { background: var(--qc, var(--muted)); }
-main.stage a.f2dot:hover, .f2dot.f2on { z-index: 1; transform: scale(1.55); box-shadow: 0 0 0 3px color-mix(in srgb, var(--qc) 40%, transparent); }
-.f2dot.f2me { box-shadow: 0 0 0 3px var(--panel-solid), 0 0 0 5px var(--ink); }
-.f2dot.f2way { box-shadow: 0 0 0 2px var(--panel-solid), 0 0 0 4px color-mix(in srgb, var(--ink) 45%, transparent); }
-.f2dot.f2off { opacity: .14; }
+main.stage .f2dot { position: relative; display: inline-block; flex: none; width: var(--d, 14px); height: var(--d, 14px); box-sizing: border-box; border-radius: 50%; border: 2px solid var(--qc, var(--muted)); background: transparent; transition: transform .15s ease, opacity .2s ease; }
+main.stage .f2dot.f2live { background: var(--qc, var(--muted)); }
+main.stage a.f2dot:hover, main.stage .f2dot.f2on { z-index: 1; transform: scale(1.55); box-shadow: 0 0 0 3px color-mix(in srgb, var(--qc) 40%, transparent); }
+main.stage .f2dot.f2me { box-shadow: 0 0 0 3px var(--panel-solid), 0 0 0 5px var(--ink); }
+main.stage .f2dot.f2way { box-shadow: 0 0 0 2px var(--panel-solid), 0 0 0 4px color-mix(in srgb, var(--ink) 45%, transparent); }
+main.stage .f2dot.f2off { opacity: .14; }
 .f2qkey { display: flex; flex-wrap: wrap; gap: 6px 18px; margin: 4px 0 0; padding-top: 12px; border-top: 1px solid var(--line); color: var(--muted); }
 main.stage .f2qkey i.f2dot { --d: 13px; --qc: var(--muted); margin-right: 7px; vertical-align: -1px; }
 .f2qsay { min-height: 4.2em; margin: 14px 0 0; font: var(--f2-q); font-size: 19px; color: var(--muted); }
@@ -761,7 +761,7 @@ main.stage .f2qkey i.f2dot { --d: 13px; --qc: var(--muted); margin-right: 7px; v
 .page.f2rd .world .f2col .wsec { margin: 34px 0; }
 .page.f2rd .world .f2col > .wopen { margin-top: 18px; }
 .page.f2rd .world .f2col .truths li { margin-bottom: 10px; }
-.page.f2rd .world .f2col .wch .f2try { margin-top: 6px; }
+main.stage .page.f2rd .world .f2col .wch .f2try { margin-top: 6px; }
 .page.f2rd .world .f2col .wmore > summary h2 { display: inline; }
 /* an experiment's page: its try, or where it sits among the others */
 .page.f2rd .f2rhead .rstate { padding: 3px 12px; font: 600 15px var(--sans); }

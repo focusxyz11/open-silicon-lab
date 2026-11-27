@@ -1190,7 +1190,7 @@ main.stage .f2side .dock .chipb, main.stage .f2side .dock .btn, .f2side .dock .b
 .f2side .dock .lab { font-size: 15px; }
  .f2side .dock .lab output { font: 500 16px var(--mono); }
 main.stage .f2side .dock .player h3 { margin: 2px 0 8px; font: var(--f2-title); }
-.f2side .dock .player .goal { font: 700 17.5px/1.5 var(--sans); }
+main.stage .f2side .dock .player .goal { font: 700 17.5px/1.5 var(--sans); }
 main.stage .f2side .dock .player p { line-height: 1.5; }
 .f2side .dock .askline:not(.dock > .askline) { font: 600 17.5px/1.4 var(--serif); }
 .f2side .f2k { min-height: 0; padding-right: 0; }
@@ -1205,39 +1205,39 @@ main.stage .f2side .dock .here2 b, main.stage .f2side .dock .here2 span { font-s
    its top, the controls in the panel, the place hidden behind; where the address was, where you are ---- */
 /* the place behind is covered, not hidden: a 3D place that is not drawn on the screen while it still moves (a flight to
    the next level) holds a slow screen's frames back for seconds; a cover under the panel lets it draw unseen */
-section.f2stage:not(.f2place)::before { content: ""; position: fixed; inset: 0; z-index: 1; background: var(--bg); pointer-events: auto; }
+main.stage section.f2stage:not(.f2place)::before { content: ""; position: fixed; inset: 0; z-index: 1; background: var(--bg); pointer-events: auto; }
 main.stage .f2stage > .dockwrap { z-index: 2; }
-.f2stage > :is(.wayin, .wayon, .rail2, .crumbs2, .homebtn, .scale2, .joulebtn, .joule) { display: none !important; }
+main.stage .f2stage > :is(.wayin, .wayon, .rail2, .crumbs2, .homebtn, .scale2, .joulebtn, .joule) { display: none !important; }
 /* nothing in the panel may hold the stage's fixed boxes inside it (a transform, a filter or a backdrop would) */
 main.stage .f2stage > .dockwrap { backdrop-filter: none; -webkit-backdrop-filter: none; background: var(--panel-solid); view-transition-name: none; animation: none; }
-.f2stage .player { display: flex; flex-direction: column; }
-.f2stage .player > * { flex: none; }
+main.stage .f2stage .player { display: flex; flex-direction: column; }
+main.stage .f2stage .player > * { flex: none; }
 main.stage .f2stage .player :is(.levels, .back) { display: none; }
-.f2stage [data-f2="instrument"] {
+main.stage .f2stage [data-f2="instrument"] {
   position: fixed; z-index: 2; left: 24px; right: var(--f2-sr); top: calc(var(--f2-top) + var(--f2-goalh, 0px) + 14px); bottom: 24px; margin: 0;
   padding: 18px 22px; border-radius: 20px; background: var(--panel); border: 1px solid var(--line); box-shadow: var(--shadow); overflow: auto;
 }
-.f2stage [data-f2="goal"] {
+main.stage .f2stage [data-f2="goal"] {
   position: fixed; z-index: 3; left: 24px; right: var(--f2-sr); top: var(--f2-top); margin: 0; padding: 0; border: 0; background: none; box-shadow: none;
   display: flex; flex-wrap: wrap; gap: 12px; align-items: stretch;
 }
 main.stage .f2stage [data-f2="goal"] > .kicker { display: none; }
-.f2stage [data-f2="goal"] > :not(.gauge, .kicker) { flex: 1 1 100%; margin: 0; padding: 8px 16px; border-radius: 14px; background: var(--panel); border: 1px solid var(--line); font: var(--f2-small); }
+main.stage .f2stage [data-f2="goal"] > :not(.gauge, .kicker) { flex: 1 1 100%; margin: 0; padding: 8px 16px; border-radius: 14px; background: var(--panel); border: 1px solid var(--line); font: var(--f2-small); }
 main.stage .f2stage [data-f2="goal"] .gauge { flex: 1 1 190px; min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-content: start; gap: 4px 12px; padding: 12px 16px 14px; border-radius: 16px; background: var(--panel); border: 1px solid var(--line); box-shadow: var(--shadow); }
 main.stage .f2stage [data-f2="goal"] .gauge.ok { border-color: color-mix(in srgb, var(--good) 55%, var(--line)); }
-.f2stage [data-f2="goal"] .gl { font: var(--f2-label); color: var(--ink); }
+main.stage .f2stage [data-f2="goal"] .gl { font: var(--f2-label); color: var(--ink); }
 main.stage .f2stage [data-f2="goal"] .gl .muted { display: block; font: var(--f2-small); }
 main.stage .f2stage [data-f2="goal"] .gv { font: 600 21px/1.2 var(--mono); text-align: right; font-variant-numeric: tabular-nums; }
 main.stage .f2stage [data-f2="goal"] .gv .muted { display: block; margin-top: 2px; font: var(--f2-small); white-space: nowrap; }
-.f2stage [data-f2="goal"] .gbar { grid-column: 1 / -1; height: 8px; margin-top: 6px; border-radius: 4px; }
+main.stage .f2stage [data-f2="goal"] .gbar { grid-column: 1 / -1; height: 8px; margin-top: 6px; border-radius: 4px; }
 @media (min-width: 721px) { main.stage .f2stage [data-f2="goal"] .gauge.ckpwide { display: grid; }
 }
 
 /* four meters or more: each a tile, its figure over its name */
-.f2stage [data-f2="goal"]:has(> .gauge ~ .gauge ~ .gauge ~ .gauge) { gap: 10px; }
-.f2stage [data-f2="goal"]:has(> .gauge ~ .gauge ~ .gauge ~ .gauge) .gauge { flex-basis: 124px; grid-template-columns: minmax(0, 1fr); padding: 10px 14px 12px; }
-.f2stage [data-f2="goal"]:has(> .gauge ~ .gauge ~ .gauge ~ .gauge) .gl { order: 0; }
-.f2stage [data-f2="goal"]:has(> .gauge ~ .gauge ~ .gauge ~ .gauge) .gv { order: -1; text-align: left; font-size: 20px; }
+main.stage .f2stage [data-f2="goal"]:has(> .gauge ~ .gauge ~ .gauge ~ .gauge) { gap: 10px; }
+main.stage .f2stage [data-f2="goal"]:has(> .gauge ~ .gauge ~ .gauge ~ .gauge) .gauge { flex-basis: 124px; grid-template-columns: minmax(0, 1fr); padding: 10px 14px 12px; }
+main.stage .f2stage [data-f2="goal"]:has(> .gauge ~ .gauge ~ .gauge ~ .gauge) .gl { order: 0; }
+main.stage .f2stage [data-f2="goal"]:has(> .gauge ~ .gauge ~ .gauge ~ .gauge) .gv { order: -1; text-align: left; font-size: 20px; }
 /* where you are: the level on the way down, lit; a tap goes back to the picture */
 .f2where { position: absolute; z-index: 4; top: 84px; left: 16px; display: inline-flex; align-items: center; gap: 12px; padding: 5px 16px 5px 5px; border-radius: 999px;
   border: 1px solid var(--line); background: var(--panel); color: var(--ink); box-shadow: var(--shadow); cursor: pointer; font: var(--f2-small); text-align: left; }
@@ -1251,35 +1251,35 @@ main.stage .f2where[hidden] { display: none; }
 main.stage .f2where .f2wl i { width: 9px; height: 9px; border-radius: 50%; border: 2px solid var(--line); }
 main.stage .f2where .f2wl i.on { background: var(--accent); border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 30%, transparent); }
 /* the instruments of the three labs, each drawn to fill the stage */
-.f2stage .ckpfig[data-f2] { display: flex; flex-direction: column; gap: 8px; }
-.f2stage .ckpfig[data-f2] svg { flex: 1 1 0; min-height: 0; width: 100%; height: 100%; }
+main.stage .f2stage .ckpfig[data-f2] { display: flex; flex-direction: column; gap: 8px; }
+main.stage .f2stage .ckpfig[data-f2] svg { flex: 1 1 0; min-height: 0; width: 100%; height: 100%; }
 main.stage .f2stage :is(.ckpfig, .btcurve) svg text { font-size: calc(16px * var(--f2-k, .6)); }
-.f2stage :is(.ckpfig, .btcurve) svg :is(line, polyline, path, polygon) { vector-effect: non-scaling-stroke; }
-.f2stage :is(.ckpfig, .btcurve) svg .fr { stroke-width: 3; }
- .f2stage :is(.ckpfig, .btcurve) svg :is(.me, .line) { stroke-width: 2.5; }
-.f2stage :is(.ckpfig, .betview, .aibL)[data-f2] figcaption, main.stage .f2stage .aibL[data-f2] .small { font: var(--f2-small); }
-.f2stage .player > :is(.ckpsay, .won, .opens) { order: 1; }
- .f2stage .player > .ckptick { order: 2; }
- .f2stage .player > :is(.ckpread, .link, .hint, .grows) { order: 3; }
-.f2stage .player > :is(.ckpintro, .why, .ckpsay ~ .small.muted:not(.ckpsub)) { order: 4; }
-.f2stage .betview[data-f2] { align-items: stretch; display: grid; grid-template-rows: auto minmax(0, 1fr); grid-template-columns: minmax(0, 1fr); gap: 14px; }
-.f2stage .betview[data-f2] .btcurve { display: flex; flex-direction: column; min-height: 0; }
-.f2stage .betview[data-f2] .btcurve svg { flex: 1 1 0; min-height: 0; width: 100%; height: 100%; }
-.f2stage .betview[data-f2] .agrace { font-size: 15px; }
-.f2stage .aib { display: block; }
-.f2stage .aib > .aibR { display: block; margin-top: 14px; }
-.f2stage .aibstrip { display: none !important; }
-.f2stage .aibL[data-f2] { display: grid !important; grid-template-columns: min(55%, 540px) minmax(0, 1fr); gap: 12px 20px; align-content: start; }
-.f2stage .aibL[data-f2] > * { grid-column: 1 / -1; min-width: 0; }
-.f2stage .aibL[data-f2] > .aibfig { grid-column: 1; grid-row: 1 / span 4; margin: 0; align-self: start; }
-.f2stage .aibL[data-f2] > .aibgo { grid-column: 2; grid-row: 1; margin: 0; }
-.f2stage .aibL[data-f2] > .aibverdict { grid-column: 2; grid-row: 2; margin: 0; }
-.f2stage .aibL[data-f2] > .aibread { grid-column: 2; grid-row: 3; margin: 0; }
-.f2stage .aibL[data-f2] > .aibbal { grid-column: 2; grid-row: 4; margin: 0; align-self: start; }
-.f2stage .aibL[data-f2] > .aibread { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+main.stage .f2stage :is(.ckpfig, .btcurve) svg :is(line, polyline, path, polygon) { vector-effect: non-scaling-stroke; }
+main.stage .f2stage :is(.ckpfig, .btcurve) svg .fr { stroke-width: 3; }
+ main.stage .f2stage :is(.ckpfig, .btcurve) svg :is(.me, .line) { stroke-width: 2.5; }
+main.stage .f2stage :is(.ckpfig, .betview, .aibL)[data-f2] figcaption, main.stage .f2stage .aibL[data-f2] .small { font: var(--f2-small); }
+main.stage .f2stage .player > :is(.ckpsay, .won, .opens) { order: 1; }
+ main.stage .f2stage .player > .ckptick { order: 2; }
+ main.stage .f2stage .player > :is(.ckpread, .link, .hint, .grows) { order: 3; }
+main.stage .f2stage .player > :is(.ckpintro, .why, .ckpsay ~ .small.muted:not(.ckpsub)) { order: 4; }
+main.stage .f2stage .betview[data-f2] { align-items: stretch; display: grid; grid-template-rows: auto minmax(0, 1fr); grid-template-columns: minmax(0, 1fr); gap: 14px; }
+main.stage .f2stage .betview[data-f2] .btcurve { display: flex; flex-direction: column; min-height: 0; }
+main.stage .f2stage .betview[data-f2] .btcurve svg { flex: 1 1 0; min-height: 0; width: 100%; height: 100%; }
+main.stage .f2stage .betview[data-f2] .agrace { font-size: 15px; }
+main.stage .f2stage .aib { display: block; }
+main.stage .f2stage .aib > .aibR { display: block; margin-top: 14px; }
+main.stage .f2stage .aibstrip { display: none !important; }
+main.stage .f2stage .aibL[data-f2] { display: grid !important; grid-template-columns: min(55%, 540px) minmax(0, 1fr); gap: 12px 20px; align-content: start; }
+main.stage .f2stage .aibL[data-f2] > * { grid-column: 1 / -1; min-width: 0; }
+main.stage .f2stage .aibL[data-f2] > .aibfig { grid-column: 1; grid-row: 1 / span 4; margin: 0; align-self: start; }
+main.stage .f2stage .aibL[data-f2] > .aibgo { grid-column: 2; grid-row: 1; margin: 0; }
+main.stage .f2stage .aibL[data-f2] > .aibverdict { grid-column: 2; grid-row: 2; margin: 0; }
+main.stage .f2stage .aibL[data-f2] > .aibread { grid-column: 2; grid-row: 3; margin: 0; }
+main.stage .f2stage .aibL[data-f2] > .aibbal { grid-column: 2; grid-row: 4; margin: 0; align-self: start; }
+main.stage .f2stage .aibL[data-f2] > .aibread { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 main.stage .f2stage .aibfig .ax { font-size: 8px; }
 /* a word that something grew: at the foot of the stage, not over the goal */
-main.stage .stage:has(> section.f2stage:not([hidden])) > .toast { top: auto; bottom: 40px; left: calc((100% - var(--f2-sr)) / 2 + 12px); max-width: calc(100% - var(--f2-sr) - 48px); }
+main.stage:has(> section.f2stage:not([hidden])) > .toast { top: auto; bottom: 40px; left: calc((100% - var(--f2-sr)) / 2 + 12px); max-width: calc(100% - var(--f2-sr) - 48px); }
 @keyframes f2in { from { opacity: 0; } }
 /* ---- a phone: the caption is the sheet, at rest the level's name and the whole question; in Do the instrument is
    on top, full width, the controls in the sheet under it ---- */
@@ -1288,10 +1288,10 @@ main.stage .stage:has(> section.f2stage:not([hidden])) > .toast { top: auto; bot
   .f2 .scale2:not(.moving) { display: none; }
   main.stage .f2cap .dockwrap:not(.peek) .dock :is(.kicker, .seekk) { font: var(--f2-label); letter-spacing: 0; text-transform: none; color: var(--muted); }
   main.stage .f2cap .dockwrap:not(.peek) .dock :is(.chipb, .small) { font-size: 15px; }
-  .f2stage > .dockwrap > .modes3 { display: none; }
+  main.stage .f2stage > .dockwrap > .modes3 { display: none; }
   main.stage .f2stage .dock .player h3 { font: 700 23px/1.15 var(--serif); }
-  .f2stage .dock .player .goal { font: 700 15px/1.45 var(--sans); }
-  .f2stage [data-f2="instrument"] figcaption { display: none; }
+  main.stage .f2stage .dock .player .goal { font: 700 15px/1.45 var(--sans); }
+  main.stage .f2stage [data-f2="instrument"] figcaption { display: none; }
   main.stage .f2stage :is(.ckpfig, .btcurve) svg text { font-size: calc(13px * var(--f2-k, .9)); }
   .f2cap > .dockwrap > .modes3 { position: static; order: 3; margin-top: 14px; }
   main.stage .f2cap > .dockwrap.peek { max-height: none; overflow: hidden; -webkit-mask-image: none; mask-image: none; }
@@ -1315,24 +1315,24 @@ main.stage .stage:has(> section.f2stage:not([hidden])) > .toast { top: auto; bot
   .f2where .f2wl { margin-left: auto; }
   .f2where .f2wk { display: none; }
   .f2where .f2wt { white-space: nowrap; }
-  .f2stage { --f2-top: 112px; --f2-sr: 10px; }
-  .f2stage [data-f2="goal"], .f2stage [data-f2="goal"]:has(> .gauge ~ .gauge ~ .gauge ~ .gauge) { left: 10px; gap: 6px; }
-  main.stage .f2stage [data-f2="goal"] .gauge, .f2stage [data-f2="goal"]:has(> .gauge ~ .gauge ~ .gauge ~ .gauge) .gauge { flex-basis: 100px; }
-  .f2stage [data-f2="goal"]:has(> .gauge ~ .gauge ~ .gauge ~ .gauge) .gl { font-size: 14px; }
-  .f2stage [data-f2="goal"]:has(> .gauge ~ .gauge ~ .gauge ~ .gauge) .gv { font-size: 15px; }
+  main.stage .f2stage { --f2-top: 112px; --f2-sr: 10px; }
+  main.stage .f2stage [data-f2="goal"], main.stage .f2stage [data-f2="goal"]:has(> .gauge ~ .gauge ~ .gauge ~ .gauge) { left: 10px; gap: 6px; }
+  main.stage .f2stage [data-f2="goal"] .gauge, main.stage .f2stage [data-f2="goal"]:has(> .gauge ~ .gauge ~ .gauge ~ .gauge) .gauge { flex-basis: 100px; }
+  main.stage .f2stage [data-f2="goal"]:has(> .gauge ~ .gauge ~ .gauge ~ .gauge) .gl { font-size: 14px; }
+  main.stage .f2stage [data-f2="goal"]:has(> .gauge ~ .gauge ~ .gauge ~ .gauge) .gv { font-size: 15px; }
   main.stage .f2stage [data-f2="goal"] .gauge { grid-template-columns: minmax(0, 1fr); padding: 8px 10px 10px; gap: 2px; box-shadow: none; }
   main.stage .f2stage [data-f2="goal"] .gl .muted, main.stage .f2stage [data-f2="goal"] .gv .muted { display: none; }
   main.stage .f2stage [data-f2="goal"] .gv { text-align: left; font-size: 16px; }
-  .f2stage [data-f2="goal"] > :not(.gauge, .kicker) { display: none; }
-  .f2stage [data-f2="instrument"] { left: 10px; bottom: auto; height: min(36vh, 300px); padding: 10px 12px; }
-  .f2stage .aibL[data-f2] { grid-template-columns: minmax(0, 1fr); }
-  .f2stage .aibL[data-f2] > :is(*, .aibfig, .aibgo, .aibverdict, .aibread, .aibbal) { grid-column: 1; grid-row: auto; }
-  .f2stage .aibL[data-f2] { height: auto; max-height: 46vh; }
-  .f2stage .aibL[data-f2] > :not(.aibfig, .goalbox, .aibgo, .aibverdict, .won) { display: none; }
-  .f2stage .aibL[data-f2] .aibkey { display: none; }
+  main.stage .f2stage [data-f2="goal"] > :not(.gauge, .kicker) { display: none; }
+  main.stage .f2stage [data-f2="instrument"] { left: 10px; bottom: auto; height: min(36vh, 300px); padding: 10px 12px; }
+  main.stage .f2stage .aibL[data-f2] { grid-template-columns: minmax(0, 1fr); }
+  main.stage .f2stage .aibL[data-f2] > :is(*, .aibfig, .aibgo, .aibverdict, .aibread, .aibbal) { grid-column: 1; grid-row: auto; }
+  main.stage .f2stage .aibL[data-f2] { height: auto; max-height: 46vh; }
+  main.stage .f2stage .aibL[data-f2] > :not(.aibfig, .goalbox, .aibgo, .aibverdict, .won) { display: none; }
+  main.stage .f2stage .aibL[data-f2] .aibkey { display: none; }
   main.stage .f2stage .aibfig .ax { font-size: 9px; }
-  .f2stage .betview[data-f2] .btstep { display: none; }
-  .f2stage .betview[data-f2] { grid-template-rows: minmax(0, 1fr); }
+  main.stage .f2stage .betview[data-f2] .btstep { display: none; }
+  main.stage .f2stage .betview[data-f2] { grid-template-rows: minmax(0, 1fr); }
 }
 
 
@@ -1388,9 +1388,9 @@ main.stage .f2pic .kicker { margin: 0 0 8px; font: var(--f2-label); letter-spaci
 main.stage .f2pic :is(.small, .chipb, .btn, button, label, figcaption) { font-size: 15px; }
 main.stage .f2pic svg { max-height: calc(100vh - 300px); }
 /* the words try the picture */
-.f2try { display: inline-flex; align-items: center; gap: 8px; padding: 9px 16px; border-radius: 999px; border-color: color-mix(in srgb, var(--qc, var(--accent)) 60%, var(--line)); font: 700 15px var(--sans); color: var(--ink); }
-.f2try .f2ta::before { content: '←'; }
-.f2try:hover, .f2try:focus-visible { background: color-mix(in srgb, var(--qc, var(--accent)) 16%, transparent); }
+main.stage .f2try { display: inline-flex; align-items: center; gap: 8px; padding: 9px 16px; border-radius: 999px; border-color: color-mix(in srgb, var(--qc, var(--accent)) 60%, var(--line)); font: 700 15px var(--sans); color: var(--ink); }
+main.stage .f2try .f2ta::before { content: '←'; }
+main.stage .f2try:hover, main.stage .f2try:focus-visible { background: color-mix(in srgb, var(--qc, var(--accent)) 16%, transparent); }
 /* machines from shared blocks is a place of its own (#320): its stage and its side are in this sheet (.mach) */
 
 /* a phone: the title, then the picture, then the words; the picture is not pinned */
@@ -1403,7 +1403,7 @@ main.stage .f2pic svg { max-height: calc(100vh - 300px); }
   main.stage .f2pic svg { max-height: 60vh; }
   .page.f2rd .f2rhead h1 { font-size: 28px; }
   .page.f2rd .f2rhead .lead { font-size: 18px; margin-bottom: 18px; }
-  .f2try .f2ta::before { content: '↑'; }
+  main.stage .f2try .f2ta::before { content: '↑'; }
   /* the bar: Reading takes the place of the stages' names */
   header.bar.f2reading .loop { gap: 4px; }
   .bar.f2reading .loop .f2rk { padding: 6px 11px; font-size: 13px; }
@@ -1463,7 +1463,7 @@ main.stage .f2 > .dockwrap > .seamnote .btn { padding: 7px 14px; font-size: 15px
 .f2cap > .dockwrap:has(> .seamnote:not([hidden])) > .modes3 { position: static; margin-top: 6px; }
 main.stage .seamnote .kicker { font: var(--f2-label); letter-spacing: 0; text-transform: none; color: var(--muted); }
 .seamnote .sq { font: italic 400 18px/1.4 var(--serif); }
-@media (min-width: 1100px) { body:has(#sheet:not([hidden])) > .seamnote { right: calc(var(--bench) + 4px); }
+@media (min-width: 1100px) { main.stage body:has(#sheet:not([hidden])) > .seamnote { right: calc(var(--bench) + 4px); }
 }
 
 
@@ -1475,83 +1475,83 @@ main.stage .seamnote .kicker { font: var(--f2-label); letter-spacing: 0; text-tr
    across the top; a challenge met in the island's sheet is worn the same way. Kept apart from the rules above. ---- */
 /* the place as the picture (.f2stage.f2place): the stage keeps it, lit and moving, with its names (the stage's rule
    above that hides the place leaves it be); the ways off it wait until Look */
-.f2stage > :is(.steps2, .corner) { display: none !important; }
+main.stage .f2stage > :is(.steps2, .corner) { display: none !important; }
 /* the bench as the place (a design, an evolving circuit): it keeps its square, moved down clear of the goal into the
    room the steps leave (they wait until Look) */
-.stage:has(> section.f2stage.f2place:not([hidden])) .bsurf { visibility: visible; translate: 0 max(0px, calc(var(--f2-bgoal, 0px) - 44px)); }
+main.stage:has(> section.f2stage.f2place:not([hidden])) .bsurf { visibility: visible; translate: 0 max(0px, calc(var(--f2-bgoal, 0px) - 44px)); }
 /* an instrument that is a drawing fills the stage, its words at a steady size */
-.f2stage figure[data-f2="instrument"] { display: flex; flex-direction: column; gap: 10px; }
-.f2stage figure[data-f2="instrument"] > svg { flex: 1 1 0; min-height: 0; width: 100%; height: 100%; max-height: none; }
-.f2stage [data-f2="instrument"] figcaption { font: var(--f2-small); }
-.f2stage .betview[data-f2="instrument"] { display: flex; flex-direction: row; align-items: stretch; gap: 18px; }
-.f2stage .betview[data-f2="instrument"] > * { flex: 1 1 0; min-width: 0; min-height: 0; margin: 0; display: flex; flex-direction: column; justify-content: center; }
-.f2stage .betview[data-f2="instrument"] > figure > :is(svg, canvas) { flex: 1 1 0; min-height: 0; width: 100%; height: 100%; max-height: none; object-fit: contain; }
+main.stage .f2stage figure[data-f2="instrument"] { display: flex; flex-direction: column; gap: 10px; }
+main.stage .f2stage figure[data-f2="instrument"] > svg { flex: 1 1 0; min-height: 0; width: 100%; height: 100%; max-height: none; }
+main.stage .f2stage [data-f2="instrument"] figcaption { font: var(--f2-small); }
+main.stage .f2stage .betview[data-f2="instrument"] { display: flex; flex-direction: row; align-items: stretch; gap: 18px; }
+main.stage .f2stage .betview[data-f2="instrument"] > * { flex: 1 1 0; min-width: 0; min-height: 0; margin: 0; display: flex; flex-direction: column; justify-content: center; }
+main.stage .f2stage .betview[data-f2="instrument"] > figure > :is(svg, canvas) { flex: 1 1 0; min-height: 0; width: 100%; height: 100%; max-height: none; object-fit: contain; }
 /* the goal across the top: a list of what must hold, a row of cases, readouts, each a tile like a meter */
-.f2stage [data-f2="goal"] .reqs { display: flex; flex-wrap: wrap; gap: 10px; flex: 1 1 100%; margin: 0; padding: 0; list-style: none; background: none; border: 0; }
-.f2stage [data-f2="goal"] > .reqs { padding: 0; }
-.f2stage [data-f2="goal"] .reqs li { flex: 1 1 200px; margin: 0; padding: 10px 14px; border-radius: 16px; background: var(--panel); border: 1px solid var(--line); box-shadow: var(--shadow); font: var(--f2-small); }
-.f2stage [data-f2="goal"] .reqs li.good { border-color: color-mix(in srgb, var(--good) 55%, var(--line)); }
+main.stage .f2stage [data-f2="goal"] .reqs { display: flex; flex-wrap: wrap; gap: 10px; flex: 1 1 100%; margin: 0; padding: 0; list-style: none; background: none; border: 0; }
+main.stage .f2stage [data-f2="goal"] > .reqs { padding: 0; }
+main.stage .f2stage [data-f2="goal"] .reqs li { flex: 1 1 200px; margin: 0; padding: 10px 14px; border-radius: 16px; background: var(--panel); border: 1px solid var(--line); box-shadow: var(--shadow); font: var(--f2-small); }
+main.stage .f2stage [data-f2="goal"] .reqs li.good { border-color: color-mix(in srgb, var(--good) 55%, var(--line)); }
 /* the goal as a row of tiles: the agent's cases, the jobs to fit (by number: the job itself is in the panel), the
    readouts of an evolving circuit */
-.f2stage [data-f2="goal"]:is(.agprog, .fitjobs, .evread) { display: grid; gap: 8px; }
-.f2stage .agprog[data-f2="goal"] > .agcases { margin: 0; gap: 8px; }
+main.stage .f2stage [data-f2="goal"]:is(.agprog, .fitjobs, .evread) { display: grid; gap: 8px; }
+main.stage .f2stage .agprog[data-f2="goal"] > .agcases { margin: 0; gap: 8px; }
 main.stage .f2stage .agprog[data-f2="goal"] > .kicker { display: none; }
-.f2stage [data-f2="goal"] .agcase, main.stage .f2stage .evread[data-f2="goal"] > span { margin: 0; padding: 8px 12px; border-radius: 14px; background: var(--panel); border: 1px solid var(--line); box-shadow: var(--shadow); font: var(--f2-small); }
+main.stage .f2stage [data-f2="goal"] .agcase, main.stage .f2stage .evread[data-f2="goal"] > span { margin: 0; padding: 8px 12px; border-radius: 14px; background: var(--panel); border: 1px solid var(--line); box-shadow: var(--shadow); font: var(--f2-small); }
 main.stage .f2stage [data-f2="goal"] .agcase .small { font-size: 15px; line-height: 1.3; }
 main.stage .f2stage [data-f2="goal"] .agcase.on { border-color: var(--ink); }
-.f2stage .fitjobs[data-f2="goal"] { grid-template-columns: repeat(8, minmax(0, 1fr)); }
-.f2stage .fitjobs[data-f2="goal"] .agcase { min-height: 0; place-items: center; font: var(--f2-fig); }
-.f2stage .fitjobs[data-f2="goal"] .agcase .small { display: none; }
-.f2stage .evread[data-f2="goal"] { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+main.stage .f2stage .fitjobs[data-f2="goal"] { grid-template-columns: repeat(8, minmax(0, 1fr)); }
+main.stage .f2stage .fitjobs[data-f2="goal"] .agcase { min-height: 0; place-items: center; font: var(--f2-fig); }
+main.stage .f2stage .fitjobs[data-f2="goal"] .agcase .small { display: none; }
+main.stage .f2stage .evread[data-f2="goal"] { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 main.stage .f2stage .evread[data-f2="goal"] > span { flex: none; display: grid; gap: 2px; }
 main.stage .f2stage .evread[data-f2="goal"] b { font: var(--f2-fig); }
 /* the regulators' four jobs and the converters' three meters: tiles, the figure over its name */
-.f2stage .anagoal[data-f2] > .anajobs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; padding: 0; background: none; border: 0; }
+main.stage .f2stage .anagoal[data-f2] > .anajobs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; padding: 0; background: none; border: 0; }
 main.stage .f2stage .anagoal[data-f2] .gauge { grid-template-columns: minmax(0, 1fr); padding: 10px 14px 12px; }
 main.stage .f2stage .anagoal[data-f2] .gv { order: -1; text-align: left; font-size: 19px; overflow-wrap: anywhere; }
 /* instruments that are not drawings: the copies' answers, the board's chips, the agent's tool, the line of chips */
-.f2stage .spotinst[data-f2] { display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 14px; }
-.f2stage .spotinst[data-f2] table { width: min(100%, 620px); font: 500 22px/1.3 var(--mono); }
-.f2stage .spotinst[data-f2] :is(th, td) { padding: 10px 14px; text-align: center; border-bottom: 1px solid var(--line); }
-.f2stage .spotinst[data-f2] th { font: var(--f2-label); color: var(--muted); }
-.f2stage .spotinst[data-f2] th:nth-child(n+3) { font: 700 26px/1.2 var(--serif); color: var(--ink); }
-.f2stage .spotinst[data-f2] .spotwait td { color: var(--muted); }
+main.stage .f2stage .spotinst[data-f2] { display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 14px; }
+main.stage .f2stage .spotinst[data-f2] table { width: min(100%, 620px); font: 500 22px/1.3 var(--mono); }
+main.stage .f2stage .spotinst[data-f2] :is(th, td) { padding: 10px 14px; text-align: center; border-bottom: 1px solid var(--line); }
+main.stage .f2stage .spotinst[data-f2] th { font: var(--f2-label); color: var(--muted); }
+main.stage .f2stage .spotinst[data-f2] th:nth-child(n+3) { font: 700 26px/1.2 var(--serif); color: var(--ink); }
+main.stage .f2stage .spotinst[data-f2] .spotwait td { color: var(--muted); }
 main.stage .f2stage .spotinst[data-f2] p { margin: 0; font: var(--f2-small); }
-.f2stage .tdboard[data-f2] { grid-auto-rows: minmax(54px, 1fr); align-content: stretch; gap: 10px; padding: 16px; background: color-mix(in srgb, #1f4a37 70%, var(--panel-solid)); }
-.f2stage .tdboard[data-f2] .tdchip { font-size: 15px; }
-.f2stage .agtool[data-f2] { bottom: auto; max-height: calc(100% - var(--f2-top) - var(--f2-goalh, 0px) - 38px); }
-.f2stage .agtool[data-f2] .agtt { font-size: 15px; }
-.f2stage .fitline[data-f2] { bottom: auto; height: 250px; }
-.f2stage .fitline[data-f2] .fitk { bottom: 70px; padding: 10px 16px; font: 600 16px var(--sans); }
-.f2stage .fitline[data-f2] .fitk:nth-of-type(even) { bottom: 136px; }
-.f2stage .fitline[data-f2] .end { bottom: 20px; left: 22px; font: var(--f2-small); }
+main.stage .f2stage .tdboard[data-f2] { grid-auto-rows: minmax(54px, 1fr); align-content: stretch; gap: 10px; padding: 16px; background: color-mix(in srgb, #1f4a37 70%, var(--panel-solid)); }
+main.stage .f2stage .tdboard[data-f2] .tdchip { font-size: 15px; }
+main.stage .f2stage .agtool[data-f2] { bottom: auto; max-height: calc(100% - var(--f2-top) - var(--f2-goalh, 0px) - 38px); }
+main.stage .f2stage .agtool[data-f2] .agtt { font-size: 15px; }
+main.stage .f2stage .fitline[data-f2] { bottom: auto; height: 250px; }
+main.stage .f2stage .fitline[data-f2] .fitk { bottom: 70px; padding: 10px 16px; font: 600 16px var(--sans); }
+main.stage .f2stage .fitline[data-f2] .fitk:nth-of-type(even) { bottom: 136px; }
+main.stage .f2stage .fitline[data-f2] .end { bottom: 20px; left: 22px; font: var(--f2-small); }
 main.stage .f2stage .fitline[data-f2] .end.r { left: auto; right: 22px; }
-.f2stage .fitline[data-f2]::after { content: ""; position: absolute; left: 22px; right: 22px; bottom: 56px; height: 2px; background: var(--line); }
+main.stage .f2stage .fitline[data-f2]::after { content: ""; position: absolute; left: 22px; right: 22px; bottom: 56px; height: 2px; background: var(--line); }
 /* the island's sheet in Do: the side panel, the instrument on the stage beside it, the island hidden behind it */
-#sheet.f2do { left: auto; right: 16px; top: 84px; bottom: 16px; transform: none; translate: none; width: var(--f2-pw); max-height: none; overflow: auto;
+main.stage #sheet.f2do { left: auto; right: 16px; top: 84px; bottom: 16px; transform: none; translate: none; width: var(--f2-pw); max-height: none; overflow: auto;
   padding: 18px 26px 22px; border-radius: 22px; background: var(--panel-solid); backdrop-filter: none; -webkit-backdrop-filter: none; view-transition-name: none; animation: none; font: var(--f2-small); }
 .f2cover { position: absolute; inset: 0; z-index: 9; background: var(--bg); }
 main.stage .f2cover[hidden] { display: none; }
 .f2where.f2isle { z-index: 11; }
-.stage:has(> #sheet.f2do:not([hidden])) > :is(.hero, .homebtn) { display: none; }
-#sheet.f2do .player h3 { margin: 2px 0 8px; font: var(--f2-title); }
-#sheet.f2do .player .goal { font: 700 17.5px/1.5 var(--sans); }
-#sheet.f2do .player p { line-height: 1.5; }
-#sheet.f2do :is(.kicker, .small, .chipb, .btn, .lab) { font-size: 15px; }
-#sheet.f2do .kicker { font: var(--f2-label); letter-spacing: 0; text-transform: none; color: var(--muted); }
-.stage:has(> #sheet.f2do:not([hidden])) > .toast { top: auto; bottom: 40px; left: calc((100% - var(--f2-sr)) / 2 + 12px); max-width: calc(100% - var(--f2-sr) - 48px); }
+main.stage:has(> #sheet.f2do:not([hidden])) > :is(.hero, .homebtn) { display: none; }
+main.stage #sheet.f2do .player h3 { margin: 2px 0 8px; font: var(--f2-title); }
+main.stage #sheet.f2do .player .goal { font: 700 17.5px/1.5 var(--sans); }
+main.stage #sheet.f2do .player p { line-height: 1.5; }
+main.stage #sheet.f2do :is(.kicker, .small, .chipb, .btn, .lab) { font-size: 15px; }
+main.stage #sheet.f2do .kicker { font: var(--f2-label); letter-spacing: 0; text-transform: none; color: var(--muted); }
+main.stage:has(> #sheet.f2do:not([hidden])) > .toast { top: auto; bottom: 40px; left: calc((100% - var(--f2-sr)) / 2 + 12px); max-width: calc(100% - var(--f2-sr) - 48px); }
 
 /* ---- the island (#276): its sheet (a place's card, What if?, the Lab's record) is the side panel, in the frame's type
    (where it stands: the side panel on a desktop, src/styles/frame.css); the first card over it speaks in the caption's
    type, at the foot of the picture, clear of the lenses at the left and the small map at the right ---- */
-#sheet { padding: 18px 26px 22px; border-radius: 22px; font: var(--f2-small); }
-#sheet h2 { margin: 2px 0 8px; font: var(--f2-title); text-wrap: balance; }
-#sheet .line { font: var(--f2-read); }
-#sheet :is(.kicker, .seekk) { font: var(--f2-label); letter-spacing: 0; text-transform: none; color: var(--muted); }
-#sheet :is(.small, .chipb, .btn, .lab, .doors button) { font-size: 15px; }
-#sheet .ask .q, #sheet .askline .q { font: italic 400 19px/1.4 var(--serif); }
-#sheet .doors { margin-right: 48px; }
-#sheet > .x { top: 16px; right: 18px; width: 36px; height: 36px; }
+main.stage #sheet { padding: 18px 26px 22px; border-radius: 22px; font: var(--f2-small); }
+main.stage #sheet h2 { margin: 2px 0 8px; font: var(--f2-title); text-wrap: balance; }
+main.stage #sheet .line { font: var(--f2-read); }
+main.stage #sheet :is(.kicker, .seekk) { font: var(--f2-label); letter-spacing: 0; text-transform: none; color: var(--muted); }
+main.stage #sheet :is(.small, .chipb, .btn, .lab, .doors button) { font-size: 15px; }
+main.stage #sheet .ask .q, main.stage #sheet .askline .q { font: italic 400 19px/1.4 var(--serif); }
+main.stage #sheet .doors { margin-right: 48px; }
+main.stage #sheet > .x { top: 16px; right: 18px; width: 36px; height: 36px; }
 main.stage .hero { border-radius: 22px; padding: 20px 24px 18px; }
 main.stage .hero .kicker { font: var(--f2-label); letter-spacing: 0; text-transform: none; color: var(--muted); }
 main.stage .hero h1 { margin: 2px 0 12px; font: var(--f2-title); }
@@ -1597,7 +1597,7 @@ main.stage .f2 .goal2 :is(.gl, .gv) { font-size: 15px; }
 .lsnlayer { position: absolute; left: 0; top: 0; width: 1000px; height: 1000px; transform-origin: 0 0; pointer-events: none; }
 .lsnlayer[hidden] { display: none; }
 .lsnlayer svg { display: block; width: 1000px; height: 1000px; overflow: visible; }
-.f2stage > :is(.lsnbtn, .lsnbox), .f2side > .lsnbox { display: none !important; }
+main.stage .f2stage > :is(.lsnbtn, .lsnbox), .f2side > .lsnbox { display: none !important; }
 /* a phone gets the simpler box: what the block is doing as one menu beside the button, the scale in short, the caption */
 @media (max-width: 720px) {
   .lsnbtn { top: 116px; padding: 6px 12px 6px 9px; }
@@ -1645,20 +1645,20 @@ main.stage .f2 .goal2 :is(.gl, .gv) { font-size: 15px; }
 
  .f2cap > .dockwrap > .scale2:not(.moving) { display: none; }
 
- main.stage .stage:has(> section.f2stage:not([hidden])) > .toast { left: 50%; bottom: 24px; max-width: calc(100% - 28px); }
+ main.stage:has(> section.f2stage:not([hidden])) > .toast { left: 50%; bottom: 24px; max-width: calc(100% - 28px); }
 
   .f2 > .dockwrap > .seamnote .sq { font-size: 17px; }
   /* on a phone the notice offers the one way on, and the way to close it; the other offers wait where the question is */
   .f2 > .dockwrap > .seamnote .acts > :not(.primary, .seamx) { display: none; }
 
-  #sheet.f2do { left: 10px; right: 10px; top: var(--f2-sheet, 60%); bottom: 10px; width: auto; padding: 12px 16px 16px; }
-  #sheet.f2do .player h3 { font: 700 23px/1.15 var(--serif); }
-  #sheet.f2do .player .goal { font: 700 15px/1.45 var(--sans); }
-  .f2stage .betview[data-f2="instrument"] > figure > figcaption { display: none; }
+  main.stage #sheet.f2do { left: 10px; right: 10px; top: var(--f2-sheet, 60%); bottom: 10px; width: auto; padding: 12px 16px 16px; }
+  main.stage #sheet.f2do .player h3 { font: 700 23px/1.15 var(--serif); }
+  main.stage #sheet.f2do .player .goal { font: 700 15px/1.45 var(--sans); }
+  main.stage .f2stage .betview[data-f2="instrument"] > figure > figcaption { display: none; }
 
-  #sheet { padding: 12px 16px 16px; }
-  #sheet h2, main.stage .hero h1 { font: 700 23px/1.15 var(--serif); }
-  #sheet .line { font-size: 16px; }
+  main.stage #sheet { padding: 12px 16px 16px; }
+  main.stage #sheet h2, main.stage .hero h1 { font: 700 23px/1.15 var(--serif); }
+  main.stage #sheet .line { font-size: 16px; }
   main.stage .hero { padding: 14px 16px; }
   main.stage .hero .heroq { font-size: 15px; }
 

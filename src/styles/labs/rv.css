@@ -94,7 +94,7 @@
 .rvtap .op.just { border-color: var(--warm); background: color-mix(in srgb, var(--warm) 22%, transparent); }
 .rvjob { border-color: var(--warm); }
 /* your core's datapath (src/v2/labs/datapath.js): its head a line over the drawing, in the frame's type */
-.f2stage :is(.dpfig, .cafig)[data-f2] .dphead { flex: none; margin: 0; font: var(--f2-small); }
-.f2stage :is(.dpfig, .cafig)[data-f2] .dpwho { font: var(--f2-label); }
-@media (max-width: 720px) { .f2stage .dpfig[data-f2] .dphead > .small { display: none; }
+main.stage .f2stage :is(.dpfig, .cafig)[data-f2] .dphead { flex: none; margin: 0; font: var(--f2-small); }
+main.stage .f2stage :is(.dpfig, .cafig)[data-f2] .dpwho { font: var(--f2-label); }
+@media (max-width: 720px) { main.stage .f2stage .dpfig[data-f2] .dphead > .small { display: none; }
 }

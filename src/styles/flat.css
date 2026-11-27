@@ -36,8 +36,8 @@ body.immersive .toast { top: 136px; bottom: auto; left: 50%; }
   --bk-cu: #d88b4c; --bk-cu2: #f0bf8c; --bk-via: #cdd5e1; --bk-lit: linear-gradient(180deg, rgba(255, 255, 255, .05), rgba(255, 255, 255, 0) 45%); }
 :root[data-theme=light] .bsurf, :root[data-theme=light] .benchinst { --bk-cu: #b5642a; --bk-cu2: #d6955c; --bk-via: #6c7a8f; --bk-lit: linear-gradient(180deg, rgba(255, 255, 255, .6), rgba(255, 255, 255, 0) 45%); }
 .benchinst { container-type: inline-size; --bk-cu: #d88b4c; --bk-cu2: #f0bf8c; --bk-via: #cdd5e1; }
-.stage:has(> section.f2stage:not([hidden])) .bsurf { visibility: hidden; }
-.f2stage .benchinst .bk { aspect-ratio: 1; height: 100%; max-width: 100%; margin: 0 auto; }
+main.stage:has(> section.f2stage:not([hidden])) .bsurf { visibility: hidden; }
+main.stage .f2stage .benchinst .bk { aspect-ratio: 1; height: 100%; max-width: 100%; margin: 0 auto; }
 .bk { position: relative; width: 100%; height: 100%; font: 13px/1.35 var(--sans); color: var(--ink); }
 .bk-r { position: absolute; display: flex; flex-direction: column; min-width: 0; min-height: 0; padding: 10px 12px; border-radius: 16px; border: 1px solid var(--line);
   background: var(--bk-lit), var(--panel); box-shadow: 0 10px 28px rgba(0, 0, 0, .18); }

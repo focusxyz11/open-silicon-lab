@@ -28,7 +28,7 @@
 main.stage .f2stage .spkfig svg text { font-size: calc(13px * var(--f2-k, .6)); }
 /* a phone: the instrument a little taller, its words smaller, the patterns one short row */
 @media (max-width: 720px) {
-  .f2stage .spkfig[data-f2="instrument"] { height: min(40vh, 330px); gap: 6px; }
+  main.stage .f2stage .spkfig[data-f2="instrument"] { height: min(40vh, 330px); gap: 6px; }
   main.stage .f2stage .spkfig svg text { font-size: calc(10px * var(--f2-k, 1)); }
   .spktabs { gap: 4px; margin-bottom: 4px; }
   .spktabs .chipb { padding: 4px 7px; }

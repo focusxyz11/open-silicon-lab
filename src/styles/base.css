@@ -222,7 +222,8 @@ html[data-move=turn]::view-transition-new(root) { animation-name: vt-turn-in; }
 /* The frame (#271): one frame, three modes, and the thing you are working on always gets the stage. The site's only
    frame since #276 (the one before it is kept on the branch claude/before-frame2-2026-11); src/core/styles.js loads
    frame.css with the first view that wears it (src/v2/frame2.js wears the elements). Its rules hang from no prefix any more (#432);
-   the few that must outweigh an older view's rule are scoped to the stage, main.stage, which weighs what the old prefix did.
+   those that must outweigh an older view's or a lab's own rule are scoped to the stage, main.stage, which weighs what the
+   old prefix did.
    Three components on the frame's own elements: the caption (Look: the card on the picture, bottom left), the side
    panel (Do, Ask, Read more, a card that is not a level's: full height at the right, growing with the screen; the
    island's sheet and Break it are the same panel) and, on a phone, the sheet; the stage (Do: a lab's instrument

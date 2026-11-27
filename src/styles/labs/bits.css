@@ -97,14 +97,14 @@
 }
 
 /* in the new frame (Do mode): the kitchen or the trip fills the stage and keeps its words at a steady size */
-.f2stage .mbfig[data-f2] { display: flex; flex-direction: column; gap: 8px; }
-.f2stage .mbfig[data-f2] svg { flex: 1 1 0; min-height: 0; width: 100%; height: 100%; }
+main.stage .f2stage .mbfig[data-f2] { display: flex; flex-direction: column; gap: 8px; }
+main.stage .f2stage .mbfig[data-f2] svg { flex: 1 1 0; min-height: 0; width: 100%; height: 100%; }
 main.stage .f2stage .mbfig svg text { font-size: calc(15px * var(--f2-k, .6)); }
-.f2stage .mbfig svg :is(line, path, rect) { vector-effect: non-scaling-stroke; }
-.f2stage .mbfig .mbq { font: var(--f2-label, 600 18px/1.3 var(--sans)); }
-.f2stage .mbfig figcaption { font: var(--f2-small); }
- .f2stage .mbfig .mblook { font: var(--f2-label, 600 17px/1.3 var(--sans)); }
-.f2stage [data-f2="goal"].mbsix:has(> .gauge ~ .gauge ~ .gauge ~ .gauge) .gauge { flex-basis: 96px; }
+main.stage .f2stage .mbfig svg :is(line, path, rect) { vector-effect: non-scaling-stroke; }
+main.stage .f2stage .mbfig .mbq { font: var(--f2-label, 600 18px/1.3 var(--sans)); }
+main.stage .f2stage .mbfig figcaption { font: var(--f2-small); }
+ main.stage .f2stage .mbfig .mblook { font: var(--f2-label, 600 17px/1.3 var(--sans)); }
+main.stage .f2stage [data-f2="goal"].mbsix:has(> .gauge ~ .gauge ~ .gauge ~ .gauge) .gauge { flex-basis: 96px; }
 main.stage .f2stage [data-f2="goal"].mbsix .gv { font-size: 17px; }
 @media (prefers-reduced-motion: reduce) { .mbfig .core { transition: none; }
 }
@@ -132,30 +132,30 @@ main.stage .f2stage [data-f2="goal"].mbsix .gv { font-size: 17px; }
 }
 
 /* the instruments of the three labs, each drawn to fill the stage */
-.f2stage .ckpfig[data-f2] { display: flex; flex-direction: column; gap: 8px; }
-.f2stage .ckpfig[data-f2] svg { flex: 1 1 0; min-height: 0; width: 100%; height: 100%; }
+main.stage .f2stage .ckpfig[data-f2] { display: flex; flex-direction: column; gap: 8px; }
+main.stage .f2stage .ckpfig[data-f2] svg { flex: 1 1 0; min-height: 0; width: 100%; height: 100%; }
 main.stage .f2stage :is(.ckpfig, .btcurve) svg text { font-size: calc(16px * var(--f2-k, .6)); }
-.f2stage .betview[data-f2] { align-items: stretch; display: grid; grid-template-rows: auto minmax(0, 1fr); grid-template-columns: minmax(0, 1fr); gap: 14px; }
-.f2stage .aibL[data-f2] { display: grid !important; grid-template-columns: min(55%, 540px) minmax(0, 1fr); gap: 12px 20px; align-content: start; }
+main.stage .f2stage .betview[data-f2] { align-items: stretch; display: grid; grid-template-rows: auto minmax(0, 1fr); grid-template-columns: minmax(0, 1fr); gap: 14px; }
+main.stage .f2stage .aibL[data-f2] { display: grid !important; grid-template-columns: min(55%, 540px) minmax(0, 1fr); gap: 12px 20px; align-content: start; }
 /* ---- a phone: the caption is the sheet, at rest the level's name and the whole question; in Do the instrument is
    on top, full width, the controls in the sheet under it ---- */
 @media (max-width: 720px) {
   main.stage .f2stage :is(.ckpfig, .btcurve) svg text { font-size: calc(13px * var(--f2-k, .9)); }
-  .f2stage .aibL[data-f2] { grid-template-columns: minmax(0, 1fr); }
-  .f2stage .betview[data-f2] { grid-template-rows: minmax(0, 1fr); }
+  main.stage .f2stage .aibL[data-f2] { grid-template-columns: minmax(0, 1fr); }
+  main.stage .f2stage .betview[data-f2] { grid-template-rows: minmax(0, 1fr); }
 }
 
-.f2stage [data-f2="instrument"] figcaption { font: var(--f2-small); }
-.f2stage .betview[data-f2="instrument"] { display: flex; flex-direction: row; align-items: stretch; gap: 18px; }
+main.stage .f2stage [data-f2="instrument"] figcaption { font: var(--f2-small); }
+main.stage .f2stage .betview[data-f2="instrument"] { display: flex; flex-direction: row; align-items: stretch; gap: 18px; }
 /* the goal as a row of tiles: the agent's cases, the jobs to fit (by number: the job itself is in the panel), the
    readouts of an evolving circuit */
-.f2stage [data-f2="goal"]:is(.agprog, .fitjobs, .evread) { display: grid; gap: 8px; }
-.f2stage .fitjobs[data-f2="goal"] { grid-template-columns: repeat(8, minmax(0, 1fr)); }
-.f2stage .evread[data-f2="goal"] { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+main.stage .f2stage [data-f2="goal"]:is(.agprog, .fitjobs, .evread) { display: grid; gap: 8px; }
+main.stage .f2stage .fitjobs[data-f2="goal"] { grid-template-columns: repeat(8, minmax(0, 1fr)); }
+main.stage .f2stage .evread[data-f2="goal"] { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 main.stage .f2stage .anagoal[data-f2] .gv { order: -1; text-align: left; font-size: 19px; overflow-wrap: anywhere; }
 /* instruments that are not drawings: the copies' answers, the board's chips, the agent's tool, the line of chips */
-.f2stage .spotinst[data-f2] { display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 14px; }
-.f2stage .tdboard[data-f2] { grid-auto-rows: minmax(54px, 1fr); align-content: stretch; gap: 10px; padding: 16px; background: color-mix(in srgb, #1f4a37 70%, var(--panel-solid)); }
+main.stage .f2stage .spotinst[data-f2] { display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 14px; }
+main.stage .f2stage .tdboard[data-f2] { grid-auto-rows: minmax(54px, 1fr); align-content: stretch; gap: 10px; padding: 16px; background: color-mix(in srgb, #1f4a37 70%, var(--panel-solid)); }
 /* a phone gets the simpler box: what the block is doing as one menu beside the button, the scale in short, the caption */
 @media (max-width: 720px) {
   .lsnbox :is(.lsnhead .kicker, .lsnscale, .lsnstates, .lsnloud, .lsntest) { display: none; }
