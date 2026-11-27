@@ -192,3 +192,18 @@ Recorded in the repository on the day (the first version of this file); kept wor
   a station, not a replacement for the line. Why: the line is the factory's process view, and the isolation the owner
   sees comes from cuts between separate views, not from the line itself. No separate prototype round: the line's
   scenes already exist, so it is built as tasks in the real code.
+- **Moving data and heat join the carry at every rung** (`docs/PATH.md`): each rung hands up the share of its energy
+  spent moving bits and its heat per area, beside energy, delay and errors; the *where* and *shape* genes change them.
+  Why: the frontier research of this day (the doc *Frontier research and open issues for the next iteration*) found
+  that the year's gains came mostly from moving data less (SRAM decode chips, a model wired into ROM, memory on logic,
+  co-packaged optics) and from handling heat, while the carry counted moving data only from machine to mind.
+- **Several landmarks may stand on one recipe** on the field (`KNOWN`, `knownOf` in `src/engines/arch.js`). Why: Groq's
+  LPU and Cerebras's wafer make the same four choices; showing that the genes are coarse and the fine settings decide
+  is honest and teaches something.
+- **Noise as a carrier (p-bits, thermodynamic sampling) enters through the open genome**, as a ledger `gene` entry
+  marked a guess, not as an option the lab writes in. Why: it is now in silicon (Extropic's X0 shipped, Z1 taped out,
+  its energy figures still projections), and it tests the ledger's floor (#484) with a real case.
+- **Landmarks carry the evidence behind their numbers** (a maker's claim, an independent test, peer-reviewed), read
+  from `kind` in `src/data/facts.json` and drawn as the landmark's outline, not as a new legend or a fourth truth mark.
+  Why: many of the frontier's numbers are makers' claims that differ from independent tests (17,000 tokens a second
+  claimed, 15,000 to 16,000 seen).
