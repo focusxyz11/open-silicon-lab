@@ -41,7 +41,7 @@ export const OWNERS = [
   ['scripts/smoke/old.mjs', ['old']],
 
   /* Hold's pieces fetched on a tap (the rest of the first page, its sheet and its island, opens in many sections: core) */
-  ['src/v2/holdboard.js', ['home']],
+  ['src/v2/holdchals.js', ['home']],
   ['src/v2/holdnotes.js', ['home']],
   ['src/styles/holdnotes.css', ['home']],
   ['scripts/smoke/home.mjs', ['home']],

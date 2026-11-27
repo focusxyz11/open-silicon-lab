@@ -94,13 +94,12 @@ export function setRoot(r) { ROOT = r; readInk();
   addEventListener('keydown', e => { if (LIVE.on && e.key === 'Escape' && ROOT.querySelector('.sheet.on,.srcpop.on')) { sheet(false); hidePop(); } }); }
 
 /* ---- the page's part of the lab's bar: the small chip (its map), the chapter, and the twelve challenges as one count
-   with a tick for each, lit once done; it opens their board (src/v2/holdboard.js). The sources are at the foot of the
-   page, and one tap from any number's mark ---- */
-export function mkTop(mid, openBoard) {
+   with a tick for each, lit once done; a tap flies to the whole chip, where they are (src/v2/holdchals.js) ---- */
+export function mkTop(mid, onTap) {
   const bar = h('div', 'hbar');
   if (mid) bar.appendChild(mid);
   bar.appendChild(h('span', 'sp'));
-  const tl = h('div', 'tally mono'), c = h('button', 'tl-c', '<span class="tl-n"></span><span class="tl-x"></span><span class="sq">' + CHALS.map(id => '<i data-ch="' + id + '"></i>').join('') + '</span>'); c.type = 'button'; c.setAttribute('aria-haspopup', 'dialog'); c.onclick = openBoard; tl.appendChild(c);
+  const tl = h('div', 'tally mono'), c = h('button', 'tl-c', '<span class="tl-n"></span><span class="tl-x"></span><span class="sq">' + CHALS.map(id => '<i data-ch="' + id + '"></i>').join('') + '</span>'); c.type = 'button'; c.onclick = onTap; tl.appendChild(c);
   const paintTally = () => { const n = Object.keys(S.done).length, s = w('rail.chals', { n, of: CHALS.length }); $('.tl-n', tl).innerHTML = s; $('.tl-x', tl).innerHTML = '<b>' + n + '</b>/' + CHALS.length; c.setAttribute('aria-label', s.replace(/<[^>]+>/g, ''));
     $$('[data-ch]', tl).forEach(b => b.classList.toggle('on', !!S.done[b.dataset.ch])); };
   onChange(paintTally); paintTally(); bar.appendChild(tl);

@@ -16,7 +16,7 @@ globalThis.document = {
   createElement: () => ({ style: {}, setAttribute: noop, appendChild: noop }),
 };
 
-for (const f of ['holdkit', 'holdplates', 'hold', 'holdisle', 'holdnotes', 'holdboard']) {
+for (const f of ['holdkit', 'holdplates', 'hold', 'holdisle', 'holdnotes', 'holdchals']) {
   test('src/v2/' + f + '.js loads: every name its top level uses is defined', async () => {
     const m = await import('../src/v2/' + f + '.js');
     assert.ok(Object.keys(m).length > 0);

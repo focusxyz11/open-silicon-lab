@@ -1,73 +1,84 @@
-/* The island's block on the first page's chip (src/v2/hold.js): the island's plan, seen from straight above at the turn
-   the island's own camera looks from (src/data/isle.js: the same coast, the same loop road, every place where it
-   stands), so going inside is one move: the island opens on this picture and tilts down to itself (src/v2/map3d.js
-   land). With it, the way in: the lab's blue button on the plan, and pushing on at the landing (landing). It is the last
-   picture of the page, so it is fetched once the page has drawn, not with it. */
-import { w, h, S, K, fg, TICK, setHolding, lab } from './holdkit.js';
-import { path, train, at, put, out, LIT } from './holdplates.js';
-import { LOOP } from '../data/hold.js';
-import { ISLE_COAST, ISLE_ROAD, ISLE_YAW, PLACES as ISLE_PLACES, isleFlat } from '../data/isle.js';
+/* The last block of the first page's chip (src/v2/hold.js): the lab as one ladder, your stack (docs/PATH.md). Seven
+   rungs from the atom up to the mind, each made of the one below, drawn in the page's own language (squares, straight
+   lines, one red), the same ladder the page has just gone down: one transistor held into billions, a gate switched, a
+   machine kept. A rung the page met says where; one the visitor tried here is red. Every rung is a way in to it in the
+   stack (#/stack/<rung>), the lab's blue button the way into the whole (#/stack); the island and the Map are quieter
+   ways on. The rungs are read from src/data/path.js, the stack's own list, here and never in the first page's closure:
+   this is the page's last picture, so it is fetched once the page has drawn, not with it. */
+import { w, h, S, K, fg, onChange, lab } from './holdkit.js';
+import { at, put, out, glyph } from './holdplates.js';
+import { RUNGS } from '../data/path.js';
 
-/* PLAN: plate units to one unit of the island, the point of the island at the plan's middle (as isleFlat gives it), and
-   how far down the plate that middle is */
-export const PLAN = { s: 5, c: [-.6, -3.2], y: .47 };
-const planPt = p => { const [r, d] = isleFlat(p); return [500 + (r - PLAN.c[0]) * PLAN.s, 1000 * PLAN.y + (d - PLAN.c[1]) * PLAN.s]; };
-/* a smooth closed line through points (Catmull-Rom, centripetal, as the island's own coast and road are made) */
-function closedCurve(P, per = 10) { const n = P.length, out = [], tj = (ti, a, b) => ti + Math.pow(Math.hypot(b[0] - a[0], b[1] - a[1]), .5);
-  for (let i = 0; i < n; i++) { const p0 = P[(i + n - 1) % n], p1 = P[i], p2 = P[(i + 1) % n], p3 = P[(i + 2) % n], t0 = 0, t1 = tj(t0, p0, p1), t2 = tj(t1, p1, p2), t3 = tj(t2, p2, p3);
-    for (let k = 0; k < per; k++) { const t = t1 + (t2 - t1) * k / per, L = (a, b, ta, tb) => [0, 1].map(q => (tb - t) / (tb - ta) * a[q] + (t - ta) / (tb - ta) * b[q]);
-      const A1 = L(p0, p1, t0, t1), A2 = L(p1, p2, t1, t2), A3 = L(p2, p3, t2, t3), B1 = L(A1, A2, t0, t2), B2 = L(A2, A3, t1, t3); out.push(L(B1, B2, t1, t2)); } }
-  return out; }
-const COAST = closedCurve(ISLE_COAST.map(planPt), 8), ROAD = closedCurve(ISLE_ROAD.map(planPt), 8); ROAD.push(ROAD[0]);
-const HERE = Object.fromEntries(ISLE_PLACES.filter(p => !p.far).map(p => [p.id, planPt(p.at)]));
-/* where each place's words stand: under its square, over it, or at its right, clear of the road and of each other */
-const SIDE = { lab: 'b', studio: 'b', fab: 'a', test: 'b', port: 'b', datacentre: 'r' }, SQ = 62;
-const outline = (c, pts, k) => { c.beginPath(); pts.forEach(([x, y], i) => { const X = 500 + (x - 500) * k, Y = 470 + (y - 470) * k * (1 + (k - 1) * .5); if (i) c.lineTo(X, Y); else c.moveTo(X, Y); }); c.closePath(); };
-export const ISLAND = {
-  frame: () => [w('pl.island'), w('isle.lit', { n: LOOP.filter(l => LIT[l[1]]()).length })],
-  paint(c, T) {
-    /* the sea: the coast's own line, repeated outward and fading, as depths are drawn on a chart */
-    c.lineWidth = 2; [1.3, 1.2, 1.11, 1.045].forEach((k, i) => { c.strokeStyle = fg(.05 + i * .035); outline(c, COAST, k); c.stroke(); });
-    /* the land, hatched like silicon in every other picture of the page */
-    outline(c, COAST, 1); c.fillStyle = K.plate; c.fill(); c.save(); c.clip(); c.strokeStyle = fg(.09); c.lineWidth = 1.5; c.beginPath(); for (let q = -1000; q < 1000; q += 16) { c.moveTo(q, 0); c.lineTo(q + 1000, 1000); } c.stroke(); c.restore();
-    c.strokeStyle = K.ink; c.lineWidth = 4; outline(c, COAST, 1); c.stroke();
-    /* the loop road, and what travels round it */
-    path(c, ROAD, fg(.75), 3); train(c, ROAD, T, 1, .05, 18);
-    for (const id of ['quarry', 'village']) { const [x, y] = HERE[id]; c.fillStyle = K.plate; c.fillRect(x - 13, y - 13, 26, 26); c.strokeStyle = fg(.45); c.lineWidth = 2.5; c.strokeRect(x - 13, y - 13, 26, 26); }
-    LOOP.forEach(l => { const [x, y] = HERE[l[1]], lit = LIT[l[1]](), sel = S.place === l[1], h2 = SQ / 2; c.fillStyle = lit ? K.red : K.plate; c.fillRect(x - h2, y - h2, SQ, SQ); c.strokeStyle = lit ? K.red : K.ink; c.lineWidth = sel ? 7 : 4; c.strokeRect(x - h2, y - h2, SQ, SQ);
-      if (sel) { c.strokeStyle = K.ink; c.lineWidth = 2.5; c.strokeRect(x - h2 - 13, y - h2 - 13, SQ + 26, SQ + 26); } }); },
-  ui(host, pl) { LOOP.forEach(l => { const [x, y] = HERE[l[1]].map(v => v / 10), sd = SIDE[l[1]], b = h('button', 'isl-p ' + sd), g = SQ / 20 + 1.4; b.type = 'button';
-      if (sd === 'r') at(b, x - g, y - g); else at(b, x - 13, sd === 'a' ? y + g : y - g, 26);
-      b.innerHTML = '<i></i><span class="lb">' + w('stage.' + l[0]) + '<b>' + w('place.' + l[1]) + '</b></span>';
-      b.onclick = () => { S.place = l[1]; out('island'); }; host.appendChild(b); });
-    /* the way in, as the lab draws it everywhere: it fills as you push on at the landing (--land, src/v2/hold.js) */
-    const go = h('a', 'goin'); go.href = '#/island'; go.dataset.go = 'island'; at(go, 50, 91); host.appendChild(go);
-    pl.sync = () => put(go, '<span class="wia" aria-hidden="true">↓</span><b>' + (S.kept ? w('isle.go') : w('isle.go0')) + '</b>'); }
+/* where on this page each rung was met, and what the visitor did there that makes it theirs (the atom and the mind are
+   not on this page: they are new) */
+const TRIED = { switch: () => !!S.tried.switch, gate: () => !!S.done.gate, block: () => !!S.done.arr, chip: () => !!(S.done.job || S.done.bug), machine: () => !!S.kept };
+const met = r => r in TRIED, mine = r => met(r) && TRIED[r]();
+/* the ladder in plate units: the mind at the top, the atom at the bottom; a rung's slab, its drawing at the left */
+const N = RUNGS.length, X0 = 60, X1 = 940, GX = 128;
+/* a desktop's ladder fills the plate; a phone's is shorter, its rungs one line each, so the way in and the quieter ways
+   on stay above the picture's foot */
+const GEO = { d: { y0: 30, p: 112, h: 86, go: 86, more: 94 }, p: { y0: 18, p: 100, h: 80, go: 77, more: 87 } };
+let G = GEO.d, H = G.h;
+const top = r => G.y0 + (N - 1 - RUNGS.indexOf(r)) * G.p;
+let hov = null;
+
+/* each rung's drawing, in a box about 70 units across centred on (x, y) */
+const DRAW = {
+  atom(c, x, y, T, lit) { c.strokeStyle = fg(.5); c.lineWidth = 2; c.beginPath(); for (let i = -1; i <= 1; i++) { c.moveTo(x - 30, y + i * 22); c.lineTo(x + 30, y + i * 22); c.moveTo(x + i * 22, y - 30); c.lineTo(x + i * 22, y + 30); } c.stroke();
+    for (let i = -1; i <= 1; i++) for (let j = -1; j <= 1; j++) { c.fillStyle = K.plate; c.strokeStyle = K.ink; c.lineWidth = 2.5; c.beginPath(); c.arc(x + i * 22, y + j * 22, 6.5, 0, 7); c.fill(); c.stroke(); }
+    const f = (T * .35) % 1, e = [x - 22 + 44 * f, y + 11]; c.fillStyle = lit ? K.red : K.ink; c.fillRect(e[0] - 4, e[1] - 4, 8, 8); },
+  switch(c, x, y, T, lit) { glyph(c, x, y + 4, 21, lit && Math.floor(T / 1.6) % 2 ? 1 : 0, 1, 3, 'planar'); c.globalAlpha = 1; },
+  gate(c, x, y, T, lit) { const o = lit ? K.red : K.ink; c.strokeStyle = K.ink; c.lineWidth = 3; c.beginPath(); c.moveTo(x - 36, y - 12); c.lineTo(x - 16, y - 12); c.moveTo(x - 36, y + 12); c.lineTo(x - 16, y + 12); c.stroke();
+    c.fillStyle = K.plate; c.beginPath(); c.moveTo(x - 16, y - 24); c.lineTo(x + 4, y - 24); c.arc(x + 4, y, 24, -Math.PI / 2, Math.PI / 2); c.lineTo(x - 16, y + 24); c.closePath(); c.fill(); c.stroke();
+    c.strokeStyle = o; c.beginPath(); c.arc(x + 33, y, 5, 0, 7); c.stroke(); c.beginPath(); c.moveTo(x + 38, y); c.lineTo(x + 44, y); c.stroke(); },
+  block(c, x, y, T, lit) { c.strokeStyle = K.ink; c.lineWidth = 2.5; c.strokeRect(x - 36, y - 26, 72, 52); c.beginPath(); c.moveTo(x + 2, y - 26); c.lineTo(x + 2, y + 26); c.stroke();
+    for (let i = 0; i < 3; i++) for (let j = 0; j < 4; j++) { c.fillStyle = fg(.55); c.fillRect(x - 30 + i * 11, y - 19 + j * 11, 6, 6); }
+    c.fillStyle = lit ? K.red : fg(.5); for (let j = 0; j < 3; j++) c.fillRect(x + 10, y - 16 + j * 13, 18 - (j % 2) * 6, 6); },
+  chip(c, x, y, T, lit) { c.strokeStyle = K.ink; c.lineWidth = 2; c.beginPath(); for (let i = -2; i <= 2; i++) { const q = i * 11; c.moveTo(x + q, y - 36); c.lineTo(x + q, y - 28); c.moveTo(x + q, y + 28); c.lineTo(x + q, y + 36); c.moveTo(x - 36, y + q); c.lineTo(x - 28, y + q); c.moveTo(x + 28, y + q); c.lineTo(x + 36, y + q); } c.stroke();
+    c.fillStyle = K.plate; c.fillRect(x - 28, y - 28, 56, 56); c.lineWidth = 3; c.strokeRect(x - 28, y - 28, 56, 56);
+    for (let i = 0; i < 2; i++) for (let j = 0; j < 2; j++) { const on = lit && (Math.floor(T * 1.2) % 4) === i * 2 + j; c.fillStyle = on ? K.red : fg(.32); c.fillRect(x - 19 + i * 20, y - 19 + j * 20, 17, 17); } },
+  machine(c, x, y, T, lit) { c.strokeStyle = K.ink; c.lineWidth = 2.5; c.beginPath(); c.moveTo(x - 26, y - 14); c.lineTo(x + 26, y - 14); c.moveTo(x, y - 14); c.lineTo(x, y + 14); c.stroke();
+    for (const [px, py] of [[x - 26, y - 14], [x + 26, y - 14]]) { c.fillStyle = K.plate; c.fillRect(px - 13, py - 13, 26, 26); c.strokeRect(px - 13, py - 13, 26, 26); }
+    c.fillStyle = K.plate; c.fillRect(x - 24, y + 14, 48, 18); c.strokeRect(x - 24, y + 14, 48, 18); c.fillStyle = fg(.5); for (let i = 0; i < 5; i++) c.fillRect(x - 19 + i * 9, y + 20, 5, 6);
+    if (lit) { const f = (T * .6) % 1, px = x - 26 + 52 * f; c.fillStyle = K.red; c.fillRect(px - 4, y - 18, 8, 8); } },
+  mind(c, x, y, T, lit) { const L = [[-30, [-16, 16]], [0, [-24, 0, 24]], [30, [0]]], P2 = L.map(([dx, ys]) => ys.map(dy => [x + dx, y + dy]));
+    c.strokeStyle = fg(.45); c.lineWidth = 1.8; c.beginPath(); for (let k = 0; k < 2; k++) for (const a of P2[k]) for (const b of P2[k + 1]) { c.moveTo(a[0], a[1]); c.lineTo(b[0], b[1]); } c.stroke();
+    const hot = Math.floor(T * 1.5) % 6; P2.flat().forEach((p, i) => { const on = lit && i === hot; c.fillStyle = on ? K.red : K.plate; c.strokeStyle = on ? K.red : K.ink; c.lineWidth = 2.5; c.beginPath(); c.arc(p[0], p[1], 7.5, 0, 7); c.fill(); c.stroke(); }); }
 };
 
-/* The way in (src/v2/hold.js calls this once, when the plan is in, and keeps what it returns for its own Next). At the
-   landing (.landing on the page's root: the camera has come down to the plan, alone with its way in) scrolling on is
-   pushing on: the wheel, or a finger still dragging up, and the button fills (--land). Then, or at a tap on the button:
-   the portal opens where the plan is on the window, and the island's camera starts on the same plan from straight
-   above, as large as it was drawn (ctx.enter(point, at); without it, the address alone) */
+export const ISLAND = {
+  frame: () => [w('pl.island'), w('isle.lit', { n: RUNGS.filter(mine).length, of: N })],
+  paint(c, T) {
+    /* the carry: each rung hands up to the one above, a mark climbing the gaps one rung at a time */
+    const up = Math.floor(T * 1.4) % (N - 1);
+    for (let i = 0; i < N - 1; i++) { const y = top(RUNGS[i]) - (G.p - H) / 2, on = i === up; c.strokeStyle = on ? K.red : fg(.4); c.lineWidth = on ? 3.5 : 2.5;
+      c.beginPath(); c.moveTo(GX, y + 9); c.lineTo(GX, y - 9); c.moveTo(GX - 7, y - 2); c.lineTo(GX, y - 9); c.lineTo(GX + 7, y - 2); c.stroke(); }
+    RUNGS.forEach(r => { const y = top(r), m = met(r), lit = mine(r), hv = hov === r;
+      c.fillStyle = K.plate; c.fillRect(X0, y, X1 - X0, H);
+      c.strokeStyle = hv ? K.go : m ? K.ink : fg(.38); c.lineWidth = hv ? 4.5 : m ? 3.5 : 2.5; c.setLineDash(m || hv ? [] : [10, 8]); c.strokeRect(X0, y, X1 - X0, H); c.setLineDash([]);
+      if (lit) { c.fillStyle = K.red; c.fillRect(X0, y, 12, H); }
+      c.save(); c.translate(GX, y + H / 2); c.scale(.92, .92); c.translate(-GX, -(y + H / 2)); DRAW[r](c, GX, y + H / 2, T, lit); c.restore(); c.globalAlpha = 1; }); },
+  ui(host, pl) {
+    const rows = RUNGS.map(r => { const a = h('a', 'sk-r' + (met(r) ? ' met' : '')); a.href = '#/stack/' + r; a.dataset.rung = r;
+      a.innerHTML = '<span class="nm"><b>' + w('sk.' + r + '.t') + '</b><span class="tg mono"></span><small>' + w('sk.' + r + '.d') + '</small></span><i class="ar" aria-hidden="true">→</i>';
+      a.onpointerenter = () => { hov = r; }; a.onpointerleave = () => { if (hov === r) hov = null; }; a.onfocus = a.onpointerenter; a.onblur = a.onpointerleave; host.appendChild(a); return a; });
+    /* the way in, as the lab draws it everywhere; and quieter, the island and the Map */
+    const go = h('a', 'goin'); go.href = '#/stack'; go.dataset.go = 'stack'; go.innerHTML = '<span class="wia" aria-hidden="true">↑</span><b>' + w('isle.go') + '</b>'; host.appendChild(go);
+    const more = h('div', 'sk-more mono', '<a href="#/island">' + w('isle.walk') + '</a><a href="#/log">' + w('isle.map') + '</a>'); at(more, 50, 96); host.appendChild(more); let geo = '';
+    const lay = () => { const k = innerWidth <= 760 ? 'p' : 'd'; if (k === geo) return; geo = k; G = GEO[k]; H = G.h; rows.forEach(a => at(a, X0 / 10, top(a.dataset.rung) / 10, (X1 - X0) / 10, H / 10)); at(go, 50, G.go); at(more, 50, G.more); };
+    pl.sync = () => { lay(); rows.forEach(a => { const r = a.dataset.rung, lit = mine(r); a.classList.toggle('lit', lit); put(a.querySelector('.tg'), met(r) ? '<i></i>' + w('sk.' + r + '.m') : ''); }); };
+    onChange(() => out('island')); },
+  /* what the card says: how many rungs are already the visitor's, and the question to take inside */
+  out: () => w('sk.out', { n: RUNGS.filter(mine).length, of: N })
+};
+
+/* the foot of the page: the less important things, one line (the sources, the lab's home, how to join, the licence).
+   It returns the page's last step, the way in: plain navigation to your stack */
 const REPO = 'https://github.com/focusxyz11/open-silicon-lab';
-export function landing(host, root, pl, ctx = {}, end, sources) {
-  let push = 0, went = false;
-  /* the less important things, at the foot of the page: the sources, the lab's home, how to join, the licence */
+export function landing(end, sources) {
   if (end) { const f = h('footer', '', '<button type="button" class="bbtn mono">' + w('sources') + '</button><a href="' + REPO + '" target="_blank" rel="noopener">GitHub ↗</a><a href="' + REPO + '/blob/main/CONTRIBUTING.md" target="_blank" rel="noopener">' + w('foot.join') + ' ↗</a><a href="' + REPO + '/blob/main/LICENSE" target="_blank" rel="noopener">' + w('foot.mit') + '</a>');   // i18n-ok: GitHub is a name
     f.firstChild.onclick = sources; end.appendChild(f); }
-  const at = () => root.classList.contains('landing') && host.scrollTop >= host.scrollHeight - host.clientHeight - 3;
-  function enter() { if (went) return; went = true; setHolding(false); push = 0; setTimeout(() => { went = false; }, 1500);
-    const r = pl.el.getBoundingClientRect(), px = PLAN.s * r.width / 1000 || 3, cx = r.left + r.width / 2, cy = r.top + r.height * PLAN.y;
-    const R = (innerWidth / 2 - cx) / px + PLAN.c[0], D = (innerHeight / 2 - cy) / px + PLAN.c[1], cs = Math.cos(ISLE_YAW), sn = Math.sin(ISLE_YAW);
-    if (ctx.enter) ctx.enter({ x: cx / innerWidth, y: cy / innerHeight }, { px, x: R * cs + D * sn, z: -R * sn + D * cs }); else location.hash = '#/island'; }
-  const add = v => { if (at()) { push = Math.min(1, push + v); if (push >= 1) enter(); } };
-  root.addEventListener('click', e => { if (e.target.closest('a[data-go=island]')) { e.preventDefault(); enter(); } });
-  host.addEventListener('wheel', e => { if (e.deltaY > 0) add(e.deltaY / 520); }, { passive: true });
-  let ty = null; host.addEventListener('touchstart', e => { ty = e.touches.length === 1 ? e.touches[0].clientY : null; }, { passive: true });
-  host.addEventListener('touchmove', e => { if (ty == null || !e.touches.length) return; const y = e.touches[0].clientY, dy = ty - y; ty = y; if (dy > 0) add(dy / 260); }, { passive: true });
-  TICK.push((T, dt) => { if (!push) return; push = root.classList.contains('landing') ? Math.max(0, push - dt * .5) : 0; root.style.setProperty('--land', push.toFixed(3)); });
-  return enter;
+  return () => { location.hash = '#/stack'; };
 }
 
 /* the field of every attempt at an architecture in one line, on the arrangements block (#480): how many of the recipes
@@ -75,5 +86,9 @@ export function landing(host, root, pl, ctx = {}, end, sources) {
    engine (ctx.field in src/v2/hold.js). It comes with the shell's idle preload, never with the first page's own load */
 export function fillField(sum) {
   if (!sum || !Number.isFinite(sum.tried)) return;
-  document.querySelectorAll('#hd-root [data-field]').forEach(e => { e.innerHTML = w('field.line', { tried: sum.tried, of: sum.of, beat: sum.beat }) + ' ' + lab(w('field.go'), '#/stack/field'); e.hidden = false; });
+  /* it comes late: where it appears above what you are reading, the page keeps your place (nothing jumps) */
+  const box = document.getElementById('home');
+  document.querySelectorAll('#hd-root [data-field]').forEach(e => { const above = box && e.getBoundingClientRect().top < box.getBoundingClientRect().top, h0 = box ? box.scrollHeight : 0;
+    e.innerHTML = w('field.line', { tried: sum.tried, of: sum.of, beat: sum.beat }) + ' ' + lab(w('field.go'), '#/stack/field'); e.hidden = false;
+    if (above) box.scrollTop += box.scrollHeight - h0; });
 }

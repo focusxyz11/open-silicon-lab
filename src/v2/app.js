@@ -382,7 +382,7 @@ export function start() {
       /* going inside the island from the first page's last block, its plan: the portal opens where the plan is, and the
          island's camera starts on it from straight above (src/v2/map3d.js land) */
       enter: (p, at) => { portalAt(p); V.landAt = at; location.hash = '#/island'; },
-      /* the field in one line, once the preload has brought the ledger (#480) */
+      /* the field in one line (#480) */
       field: () => beyond().then(b => b.fieldSummary()) }); /* once it has drawn: the styles of what a tap opens there (its sources), then the idle preload */
       return Promise.resolve(hold.show()).then(() => afterPaint(() => { preloadHome(); needStyles('holdnotes'); })); }); }
   function showHome0() { hideViews(); hideIsland(); if (!sheet.hidden) closeSheet(); loading(false); }
