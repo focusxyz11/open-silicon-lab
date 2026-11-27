@@ -4,10 +4,13 @@
    (graphene, or the voltage taken down) breaks what is above, a gene changed rebuilds the anatomy, time grows it, the
    agents propose forks, the camera reaches the niche and every attempt and comes back, the field's points come from the
    ledger with each niche's champion and the line of what changed since your last visit, agents explore through the open
-   port (the lab runs none), the DOM mirror carries the keyboard, and leaving hides it. Desktop at night, phone by day */
+   port (the lab runs none), the DOM mirror carries the keyboard, and leaving hides it. The questions and the card (#447):
+   at most three marks, each living at its rung, one opened alone in the card's Ask; Look a caption with its question
+   leading to #/read; a rung's controls the card's Do face; the wreck brings Perfect fails up at the gate. Desktop at
+   night, phone by day */
 import { S } from './shared.mjs';
 
-export const about = 'Your stack (#/stack): seven plates from the atom to the mind, a rung by its address, the wreck, a gene, growth, the agents, the field from the ledger and since your last visit, and back, the keyboard mirror, desktop and phone';
+export const about = 'Your stack (#/stack): seven plates from the atom to the mind, the questions\' marks and the card (Look, Do, Ask, Read), a rung by its address, the wreck and Perfect fails at the gate, a gene, growth, the agents, the field from the ledger and since your last visit, and back, the keyboard mirror, desktop and phone';
 
 export default async function run() {
   const { browser3d, base, problems } = S;
@@ -24,10 +27,40 @@ export default async function run() {
     if (!(await sp.evaluate(() => document.querySelectorAll('#stackv .sk-sr [data-rung]').length === 7 && document.querySelectorAll('#stackv .sk-sr [data-pop]').length === 5 && !!document.querySelector('#stackv .sk-sr .sk-plot'))))
       problems.push(tag + ': the DOM mirror does not hold every rung, every gene and the need, and the plots of the field');
     if (await sp.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1)) problems.push(tag + ': the stack scrolls sideways');
+    /* the questions (#447): at most three marks while you look, each a question that lives at its rung (lensesAt, weighed by
+       the carry); a mark tapped opens its question alone in the card's Ask, its rung lit; never a row of their names */
+    {
+      const marks = await sp.waitForFunction(() => { const v = window.__stack, M = v.marks(), B = [...document.querySelectorAll('#stackv .sk-marks button')];
+        return !v.busy() && M.length >= 1 && M.length <= 3 && new Set(M.map(m => m.id)).size === M.length && M.every(m => m.level && m.rung) && B.length === M.length ? M.map(m => m.id) : null; }, null, { timeout: 20000 }).then(h => h.jsonValue(), () => null);
+      if (!marks) problems.push(tag + ': your stack does not carry one to three marks of the questions that live at its rungs');
+      else {
+        const opened = await sp.waitForFunction(id => { const v = window.__stack, fr = document.querySelector('#stackv .skframe');
+          if (!(v.lens() && v.lens().id === id)) { const b = document.querySelector('#stackv .sk-marks button[data-mark="0"]'); if (b) b.click(); return false; }
+          const k = fr.querySelector('.dock .qlk'), ask = fr.querySelector('.modes3 [data-mode="ask"]');
+          return !!k && ask.getAttribute('aria-selected') === 'true' && (innerWidth < 760 || fr.classList.contains('f2side')) && fr.querySelectorAll('.dock .qlk').length === 1; }, marks[0], { timeout: 20000, polling: 500 }).then(() => true, () => false);
+        if (!opened) problems.push(tag + ': a mark tapped does not open its question alone in the card\'s Ask, its rung lit');
+        await sp.evaluate(() => { const b = document.querySelector('#stackv .skframe .dock [data-lensoff]'); if (b) b.click(); const l = document.querySelector('#stackv .skframe .modes3 [data-mode="look"]'); if (l) l.click(); });
+      }
+      /* Look is the stack: its caption at the bottom left (the sheet on a phone), with its question opening a reading page (Read) */
+      const look = await sp.waitForFunction(() => { const fr = document.querySelector('#stackv .skframe'), w = fr && fr.querySelector('.dockwrap'), r = w && w.getBoundingClientRect(), read = fr && fr.querySelector('.dock .askline[href^="#/read"]');
+        return !!read && fr.classList.contains('f2cap') && (innerWidth < 760 ? r.bottom > innerHeight - 30 : r.left < 40 && r.bottom > innerHeight - 40 && r.right < innerWidth / 2 + 40); }, null, { timeout: 20000 }).then(() => true, () => false);
+      if (!look) problems.push(tag + ': Look at the stack is not the caption at the bottom left (the sheet on a phone) with its question leading to #/read');
+    }
     /* a rung by its address, the controls under it */
     await sp.evaluate(() => { location.hash = '#/stack/switch'; });
     await sp.waitForFunction(() => { const v = window.__stack; return v.view.level === 'rung' && v.view.i === 1 && !!document.querySelector('#stackv .sk-ctl:not([hidden]) [data-k="mat"], #stackv .sk-ctl:not([hidden]) #sk-volt'); }, null, { timeout: 20000 })
       .catch(() => problems.push(tag + ': #/stack/switch does not open the switch with its controls'));
+    /* Do is the rung's challenge on its plate, its controls the card's Do face (the side panel on a desktop); Look and back */
+    {
+      const doFace = await sp.waitForFunction(() => { const fr = document.querySelector('#stackv .skframe');
+        return !!fr.querySelector('.dock .sk-do h3') && !!fr.querySelector('.dock .sk-ctl:not([hidden]) #sk-volt') && fr.querySelector('.modes3 [data-mode="do"]').getAttribute('aria-selected') === 'true' && (innerWidth < 760 || fr.classList.contains('f2side')); }, null, { timeout: 20000 }).then(() => true, () => false);
+      if (!doFace) problems.push(tag + ': the switch opened is not played in the card\'s Do face with its controls');
+      const again = await sp.waitForFunction(() => { const fr = document.querySelector('#stackv .skframe'), D = fr.querySelector('.dock .sk-do');
+        if (!window.__skLook) { if (D) { const b = fr.querySelector('.dock [data-mode="look"]'); if (b) b.click(); return false; } window.__skLook = fr.classList.contains('f2cap') && !!fr.querySelector('.dock .f2head'); return false; }
+        if (!D) { const d = fr.querySelector('.f2acts .f2do'); if (d) d.click(); return false; }
+        return !!fr.querySelector('.dock .sk-ctl #sk-volt'); }, null, { timeout: 20000, polling: 500 }).then(() => true, () => false);
+      if (!again) problems.push(tag + ': Back to Look and Do again do not bring the switch\'s controls back to the card');
+    }
     /* the wreck: graphene never turns off, so nothing above the switch can be built */
     await sp.waitForFunction(() => { const v = window.__stack; if (v.view.i !== 0) { const b = document.querySelector('#stackv .sk-sr [data-rung="0"]'); if (b) b.click(); return false; }
       const g = document.querySelector('#stackv .sk-ctl [data-k="mat"][data-v="graphene"]'); if (g && g.getAttribute('aria-pressed') !== 'true') g.click();
@@ -35,6 +68,16 @@ export default async function run() {
       .catch(() => problems.push(tag + ': graphene on the atom does not break every rung above the switch'));
     if (!(await sp.evaluate(() => /cannot be built/.test((document.querySelector('#stackv .sk-sr [data-rung="6"]') || {}).getAttribute?.('aria-label') || ''))))
       problems.push(tag + ': the mirror does not say the mind cannot be built after the wreck');
+    /* the wreck brings Perfect fails up at the gate: the strongest question on the stack, marked on the gate */
+    {
+      const up = await sp.waitForFunction(() => { const v = window.__stack, T = v.top(); if (!v.carry().R.broken) return false;
+        if (v.view.level !== 'stack') { if (!v.busy()) location.hash = '#/stack'; return false; }
+        const M = v.marks(), b = document.querySelector('#stackv .sk-marks button[data-mark="0"]');
+        return T[0] && T[0].id === 'perfect' && T[0].rung === 'gate' && M[0] && M[0].id === 'perfect' && M[0].rung === 'gate' && !!b && /Perfect fails/.test(b.textContent); }, null, { timeout: 20000, polling: 500 }).then(() => true, () => false);
+      if (!up) problems.push(tag + ': the wreck does not bring Perfect fails up at the gate');
+      await sp.evaluate(() => { location.hash = '#/stack/atom'; });
+      await sp.waitForFunction(() => window.__stack.view.level === 'rung' && window.__stack.view.i === 0 && !!document.querySelector('#stackv .skframe .dock .sk-ctl [data-k="mat"]'), null, { timeout: 20000 }).catch(() => problems.push(tag + ': #/stack/atom does not reopen the atom\'s controls'));
+    }
     /* mended, then the voltage taken down: copies go wrong at the gate and the mind forgets */
     await sp.waitForFunction(() => { const v = window.__stack, si = document.querySelector('#stackv .sk-ctl [data-k="mat"][data-v="si"]'); if (si && si.getAttribute('aria-pressed') !== 'true') si.click();
       if (!v.carry().R.broken && v.carry().R.fine.V > 0.26) v.setFine('V', 0.25); const R = v.carry().R; return !R.broken && R.rungs.gate.hands.fail > 1e-6 && R.rungs.mind.hands.right < 0.5; }, null, { timeout: 20000, polling: 500 })

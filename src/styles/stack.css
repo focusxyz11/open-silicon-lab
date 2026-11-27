@@ -75,7 +75,7 @@
 .stackv .mtr { display: inline-block; flex: none; width: 12px; height: 12px; overflow: visible; }
 .stackv .t-guess circle { fill: none; stroke: currentColor; stroke-width: 1.6; stroke-dasharray: 2.4 1.8; }
 
-/* the questions, where they bite: at most three marks, one opened alone */
+/* the questions, where they bite: at most three marks while you look, one opened alone in the card */
 .sk-marks { position: absolute; inset: 0; z-index: 9; pointer-events: none; opacity: 0; transition: opacity .25s; }
 .sk-marks.on { opacity: 1; }
 .sk-marks button { position: absolute; transform: translate(-13px, -50%); pointer-events: none; display: inline-flex; align-items: center; gap: 0; border: 0; border-radius: 999px; background: none; color: var(--warm); padding: 4px; font: 500 12.5px/1 var(--sans); min-height: 26px; white-space: nowrap; }
@@ -85,12 +85,11 @@
 .sk-marks button:hover, .sk-marks button:focus-visible, .sk-marks button[aria-pressed=true] { background: color-mix(in srgb, var(--bg) 90%, transparent); box-shadow: inset 0 0 0 1px var(--warm); z-index: 2; }
 .sk-marks button:hover span, .sk-marks button:focus-visible span, .sk-marks button[aria-pressed=true] span { max-width: 220px; opacity: 1; padding: 0 9px 0 7px; }
 .sk-marks button.dim { opacity: .3; }
+/* near the right edge (or the card's panel) a mark's name opens to its left */
+.sk-marks button.left { flex-direction: row-reverse; transform: translate(calc(-100% + 13px), -50%); }
+.sk-marks button.left span { padding: 0; }
+.sk-marks button.left:is(:hover, :focus-visible, [aria-pressed=true]) span { padding: 0 7px 0 9px; }
 @keyframes sk-pulse { 50% { box-shadow: 0 0 0 7px transparent; } }
-.sk-lens { position: absolute; z-index: 30; width: min(440px, calc(100% - 28px)); background: var(--panel); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border: 1px solid var(--warm); border-radius: 14px; padding: 16px 20px 16px; }
-.sk-lens .kicker { color: var(--warm); margin-bottom: 6px; }
-.sk-lens q { display: block; quotes: none; font: italic 400 21px/1.34 var(--serif); text-wrap: pretty; }
-.sk-lens p:not(.kicker) { margin: 10px 0 14px; font-size: 15px; line-height: 1.45; color: var(--ink); }
-.sk-lens .btn { min-height: 36px; }
 
 /* the opened rung's controls, under its plate */
 .sk-ctl { position: absolute; z-index: 10; opacity: 0; transition: opacity .25s; pointer-events: none; display: flex; flex-wrap: wrap; gap: 10px 26px; align-items: center; justify-content: center; padding: 12px 16px; background: var(--panel); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border: 1px solid var(--line); border-radius: 12px; overflow: auto; }
@@ -224,10 +223,50 @@
   .sk-stones { justify-content: flex-start; }
   .sk-seg button { min-height: 40px; padding: 0 10px; font-size: 13px; }
   .sk-ctl .sk-done { display: block; margin-left: auto; }
-  .sk-lens { left: 8px; right: 8px; bottom: 8px; width: auto; z-index: 35; }
-  .sk-lens q { font-size: 18px; }
   .sk-sr { top: 132px; }
   .stackv::before { height: 150px; background: linear-gradient(var(--bg) 78%, transparent); }
   .stackv::after { height: 170px; }
+}
+/* the card (#447): the lab's one frame and card, worn over the stack the same way every view wears it (src/v2/stack/card.js,
+   src/styles/frame.css): the caption at the bottom left, Do and Ask in the side panel at the right, the sheet at the foot
+   on a phone. Its way out names the place, so the view's own title steps aside; the dock stands beside the caption, left
+   of the panel, on the sheet */
+.stackv .skframe { z-index: 24; }
+.stackv.skcard .sk-ttl { visibility: hidden; }
+.stackv.skcard .sk-foot { left: var(--sk-fl, 12px); right: var(--sk-fr, 12px); bottom: var(--sk-fb, 12px); width: auto; transform: none; }
+.stackv.skcard .sk-dock { grid-template-columns: minmax(0, 1fr) auto auto; }
+.stackv.skcard .sk-dirs { grid-column: 1 / -1; grid-row: 2; }
+.stackv.skcard .sk-say:empty { display: none; }
+/* close plates: each gene's name beside its choice, not above it */
+.sk-genes.tight .sk-gene { flex-direction: row; align-items: center; gap: 10px; }
+.sk-genes.tight .sk-gene span { max-width: 110px; }
+/* Do: the rung's challenge, its controls under it, as a lab's are in its card */
+.skframe .sk-do h3 { text-wrap: balance; }
+.skframe .sk-ctl { position: static; opacity: 1; pointer-events: auto; display: grid; gap: 16px; justify-content: stretch; padding: 4px 0 8px; margin: 0; background: none; backdrop-filter: none; -webkit-backdrop-filter: none; border: 0; border-radius: 0; overflow: visible; max-height: none; }
+.skframe .sk-ctl .sk-row { display: grid; gap: 7px; justify-items: start; }
+.skframe .sk-ctl .sk-lbl { font: 600 14px/1.3 var(--sans); color: var(--muted); }
+.skframe .sk-seg button { min-height: 40px; font-size: 14.5px; }
+.skframe .sk-ctl input[type=range] { width: min(100%, 360px); }
+.skframe .sk-ctl .warn, .skframe .sk-ctl .quiet { text-align: left; font-size: 15px; }
+.skframe .sk-stones { justify-content: flex-start; display: flex !important; flex-wrap: wrap; }
+.skframe .sk-stones .sk-lbl { text-align: left; }
+.skframe .sk-stones a { font-size: 14px; padding: 8px 10px; }
+.skframe .sk-ctl .sk-done { display: none; }
+/* Look at a rung: what it hands up, and how true the picture is */
+.skframe .sk-figs { display: grid; grid-template-columns: auto 1fr; gap: 4px 16px; margin: 4px 0 14px; font-size: 15px; }
+.skframe .sk-figs dt { color: var(--muted); }
+.skframe .sk-figs dd { margin: 0; font: 500 15px var(--mono); font-stretch: 85%; }
+.skframe .sk-figs dd.bad { color: var(--bad); }
+.skframe .sk-rungs { display: grid; gap: 6px; justify-items: start; margin: 0 0 12px; }
+.skframe .sk-rungs .chipb span { color: var(--muted); font-weight: 400; }
+/* Ask: what the question is on your stack, before the lab's card of it */
+.skframe .sk-here { margin: 0 0 14px; padding: 2px 0 2px 12px; border-left: 3px solid var(--warm); font: 400 16px/1.45 var(--sans); }
+@media (max-width: 759px) {
+  .stackv.skcard .sk-ttl { display: none; }
+  .stackv.skcard .sk-head { top: 68px; padding-left: 58px; }
+  .skframe .crumbs2 { display: none; }
+  .stackv.skcard .sk-foot { gap: 4px; }
+  .stackv.skcard[data-level=rung]:not(.sketch) .sk-foot { display: none; }
+  .skframe .sk-ctl { gap: 12px; }
 }
 @media (prefers-reduced-motion: reduce) { .stackv *, .stackv *::before { animation: none !important; transition: none !important; } }

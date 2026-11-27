@@ -177,5 +177,8 @@ export function create() {
   /* ---- a question's world: where it leads, what you can do about it, what people have asked under it ---- */
   /* a question someone added under a stop: its words, who asked, and (for yours) the slip that leads into the ledger */
   const askedHtml = e => '<div class="asked1' + (e.draft ? ' draft' : '') + '"><p class="q">' + esc(e.q) + '</p>' + (e.noticed ? '<p class="small">' + esc(e.noticed) + '</p>' : '') + '<p class="small muted">' + byLine(e) + (e.under ? ' · ' + esc(t('depth.' + e.at + '.name')) : '') + '</p>' + (Game.workAt(e.id, V.S).length ? '<p class="kicker">' + esc(t('trail.work', { n: Game.workAt(e.id, V.S).length })) + '</p>' + Game.workAt(e.id, V.S).map(w => '<p class="small"><span class="made ' + esc(w.made) + '"></span> ' + esc(Game.entryWords(w, V.S)) + ' <span class="muted">· ' + byLine(w) + '</span></p>').join('') : '') + (e.draft ? slipHtml(V.S, e.id) : '<p class="small muted">' + esc(t('ask.workOn')) + ' <span class="mono">' + esc(e.id) + '</span></p>') + '</div>';
-  Object.assign(V, { frameOf, LENS_AT, withFrame, aroundRow, lineHtml, seekWhere, seekLit, frameInset, DIVES, askedHtml });
+  /* the lenses for a view that draws its own marks (the stack, src/v2/glue/stack.js): which live at a level, and the card
+     of one there */
+  const lensIds = d => Lenses.lensesAt(LENS_AT[d] || d);
+  Object.assign(V, { frameOf, LENS_AT, withFrame, aroundRow, lineHtml, seekWhere, seekLit, frameInset, DIVES, askedHtml, lensIds, lensCard, pairCard });
 }
