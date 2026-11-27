@@ -137,7 +137,7 @@ export function createHold(host, ctx = {}) {
        fifty years' cards stand) */
     if (ph) { let cw, cl; CMAX = 1e9; bandH = land || vh < 720 ? 64 : 84;
       if (land) { S1 = Sy = vh - barH - 30; top1 = topY = 22; SH = vh - barH; cl = S1 + 28; cxs = cl / 2; cw = W - cl - 14; yct = barH + 4 + 34 + bandH + 8; R.setProperty('--stageW', cl + 'px'); }
-      else { /* a phone's picture is sized from the window's height too, so the words under it keep their room */ S1 = Sy = Math.min(W - 28, Math.round(vh * (W <= 760 ? .45 : .48))); top1 = topY = 66; SH = 44 + S1 + bandH + 12; cxs = W / 2; cw = W <= 760 ? W - 28 : Math.min(W - 28, Math.max(S1, 600)); cl = (W - cw) / 2; yct = barH + SH + 10; SHc = SH - bandH; }
+      else { /* a phone's picture is sized from the window's height too, so the words under it keep their room */ S1 = Sy = Math.min(W - 28, Math.round(vh * (W <= 760 ? .45 : .48))); top1 = topY = 66; SH = 44 + S1 + bandH + 12; cxs = W / 2; cw = W <= 760 ? W - 28 : Math.min(W - 28, Math.max(S1, 600)); cl = (W - cw) / 2; SHc = top1 + S1 + 12; yct = barH + Math.max(SH, SHc) + 10; }
       R.setProperty('--stageH', SH + 'px'); R.setProperty('--stageH2', (SHc || SH) + 'px'); R.setProperty('--ctop', (land ? barH + 8 : yct) + 'px'); R.setProperty('--cw', cw + 'px'); R.setProperty('--cl', cl + 'px'); R.setProperty('--ov', '0px');
       /* the narration ends above the hold button wherever the button would lie over it */
       /* the narration ends above the hold button where the button would lie over it, or, where the room under the picture
@@ -199,7 +199,9 @@ export function createHold(host, ctx = {}) {
   function plan() {
     if (!sized) return; const ph = PHONE();
     /* a block's name and its thing to try arrive together, one each side (on a phone, in turn); its question after */
-    ORDER.slice(1).forEach(id => { const [a, b, c] = secs[id]._c; b.style.marginTop = ph ? '' : vh * .04 - a.offsetHeight + 'px'; if (c) c.style.top = ph ? '' : vh * .17 + a.offsetHeight + 14 * u + 'px'; });
+    ORDER.slice(1).forEach(id => { const [a, b, c] = secs[id]._c; b.style.marginTop = ph ? '' : vh * .04 - a.offsetHeight + 'px'; if (c) c.style.top = ph ? '' : vh * .17 + a.offsetHeight + 14 * u + 'px';
+      /* a long question is set smaller, never cut by the window */
+      const q = c && c.querySelector('.w-q p'); if (q) { q.style.fontSize = ''; const over = ph ? 0 : parseFloat(c.style.top) + c.offsetHeight - (vh - 10); if (over > 0) q.style.fontSize = parseFloat(getComputedStyle(q).fontSize) * Math.max(.66, 1 - over / q.offsetHeight) + 'px'; } });
     const T = vh * .75; p0 = pull.offsetTop - vh * .2; KF = [[0, F.years, 0], [p0, F.years, 0], [p0 + vh * .85, O, 0], [p0 + vh * 1.4, O, 0]];
     ORDER.slice(1).forEach(id => { const s = secs[id]; s._out = s.offsetTop + s.offsetHeight - T; KF.push([s.offsetTop, F[id], id === 'leak' ? 0 : 1], [s._out, F[id], 0]); });
     /* the end: the camera stays on the last block, your stack, with its ways in */
@@ -212,6 +214,8 @@ export function createHold(host, ctx = {}) {
     onScroll();
   }
   let planF = 0; new ResizeObserver(() => { if (!planF) planF = requestAnimationFrame(() => { planF = 0; if (LIVE.on) plan(); }); }).observe(story);
+  const flyCam = A => { const { c0: a, c1: b, e, dip } = A, L = (p, q) => p + (q - p) * e;
+    return { x: L(a.x, b.x), y: L(a.y, b.y), k: Math.exp(L(Math.log(a.k), Math.log(b.k))) * (1 - dip * Math.sin(Math.PI * e)), sx: L(a.sx, b.sx), sy: L(a.sy, b.sy), a: e < .5 ? a.a : b.b, b: b.b, t: e }; };
   function camAt(y) { let i = 0; while (i < KF.length - 2 && KF[i + 1][0] <= y) i++; const [y0, a] = KF[i], [y1, b, dip] = KF[i + 1]; if (a === b) return { ...a, a, b, t: 0 };
     const t = clamp((y - y0) / (y1 - y0), 0, 1), e = t * t * (3 - 2 * t), L = (p, q) => p + (q - p) * e;
     return { x: L(a.x, b.x), y: L(a.y, b.y), k: Math.exp(L(Math.log(a.k), Math.log(b.k))) * (1 - (dip ? .34 : 0) * Math.sin(Math.PI * t)), sx: L(a.sx, b.sx), sy: L(a.sy, b.sy), a, b, t }; }
@@ -223,9 +227,11 @@ export function createHold(host, ctx = {}) {
   function fly(top, smooth) { /* a move you make is where you are from then on, whatever the page was keeping */
     here.a = null; const y0 = host.scrollTop, y1 = clamp(top, 0, host.scrollHeight - vh), far = Math.abs(y1 - y0) / vh;
     if (!smooth || reduce() || far < .02) { land0(); host.scrollTo({ top, behavior: 'instant' }); onScroll(); return; }
-    flying = 1; anim = { y0, y1, t0: performance.now(), ms: clamp(1100 + far * 650, 1400, 4200) }; root.classList.toggle('fly', far > .6); }
+    flying = 1; anim = { y0, y1, t0: performance.now(), ms: clamp(1100 + far * 650, 1400, 4200), e: 0 };
+    /* on the chip, one straight move rising a little, not a pan past every block between */
+    if (Math.min(y0, y1) >= p0 + vh * .85) { const c0 = camAt(y0), c1 = camAt(y1), dd = Math.hypot(c1.x - c0.x, c1.y - c0.y) / S1; anim.c0 = c0; anim.c1 = c1; anim.dip = clamp(dd * .16, 0, .42); anim.ms = clamp(1300 + dd * 520, 1400, 3600); } root.classList.toggle('fly', far > .6); }
   const land0 = () => { if (anim) { anim = null; flying = 0; root.classList.remove('fly'); } };
-  TICK.push(() => { if (!anim) return; const k = clamp((performance.now() - anim.t0) / anim.ms, 0, 1), e = (1 - Math.cos(Math.PI * k)) / 2;
+  TICK.push(() => { if (!anim) return; const k = clamp((performance.now() - anim.t0) / anim.ms, 0, 1), e = (1 - Math.cos(Math.PI * k)) / 2; anim.e = e;
     host.scrollTop = anim.y0 + (anim.y1 - anim.y0) * e; if (k >= 1) { land0(); onScroll(); } });
   for (const ev of ['wheel', 'touchstart', 'pointerdown']) host.addEventListener(ev, () => { if (anim) { land0(); onScroll(); } }, { passive: true });
   /* the steps after the wall: the whole chip, then each block as it arrives and its question; after the last, inside */
@@ -272,7 +278,7 @@ export function createHold(host, ctx = {}) {
     if (y > 40) touch();
     if (y < pull.offsetTop) { if (!flying) { const yy = y - secs.years.offsetTop; Yr.set(yy >= yOfD(DWALL) - 2 ? DWALL : dOfY(yy)); } } else if (!flying && S.d < DWALL) Yr.set(DWALL);
     if (id !== cur) { cur = id; setHolding(false); } if (id !== 'years') more();
-    const was = yrs; yrs = y < p0; C = camAt(y); const over = C.a === O || C.b === O, kf = C.b === O || C.a === F.years ? (C.a === F.years ? F.years.k : 1) : 1, dim = yrs ? 1 : clamp((C.k / kf - .6) / .3, 0, 1);
+    const was = yrs; yrs = y < p0; C = anim && anim.c1 ? flyCam(anim) : camAt(y); const over = C.a === O || C.b === O, kf = C.b === O || C.a === F.years ? (C.a === F.years ? F.years.k : 1) : 1, dim = yrs ? 1 : clamp((C.k / kf - .6) / .3, 0, 1);
     /* the rest of the chip: there all along, faint around the square in the later years, and whole as the camera pulls back */
     const revx = ss(p0, p0 + vh * .3, y), rev = Math.max(revx, yrs ? .55 * ss(9, 14, S.d) : 0);
     /* its words (the other blocks' labels, the pads', the chip's title) only where the camera sees the whole chip: around
