@@ -3,7 +3,7 @@
    stands), so going inside is one move: the island opens on this picture and tilts down to itself (src/v2/map3d.js
    land). With it, the way in: the lab's blue button on the plan, and pushing on at the landing (landing). It is the last
    picture of the page, so it is fetched once the page has drawn, not with it. */
-import { w, h, S, K, fg, clamp, TICK, setHolding } from './holdkit.js';
+import { w, h, S, K, fg, TICK, setHolding } from './holdkit.js';
 import { path, train, at, put, out, LIT } from './holdplates.js';
 import { LOOP } from '../data/hold.js';
 import { ISLE_COAST, ISLE_ROAD, ISLE_YAW, PLACES as ISLE_PLACES, isleFlat } from '../data/isle.js';
@@ -45,13 +45,17 @@ export const ISLAND = {
     pl.sync = () => put(go, '<span class="wia" aria-hidden="true">↓</span><b>' + (S.kept ? w('isle.go') : w('isle.go0')) + '</b>'); }
 };
 
-/* The way in (src/v2/hold.js calls this once, when the plan is in). At the landing (.landing on the page's root: the
-   camera has come down to the plan, alone with its way in) pushing on goes inside: keep holding, or keep scrolling (the
-   wheel, a finger still dragging up), and the button fills (--land; the hold button's ring too). Then, or at a tap on
-   the button: the portal opens where the plan is on the window, and the island's camera starts on the same plan from
-   straight above, as large as it was drawn (ctx.enter(point, at); without it, the address alone) */
-export function landing(host, root, pl, ctx = {}) {
-  let push = 0, went = false; const box = root.querySelector('.b-hold');
+/* The way in (src/v2/hold.js calls this once, when the plan is in, and keeps what it returns for its own Next). At the
+   landing (.landing on the page's root: the camera has come down to the plan, alone with its way in) scrolling on is
+   pushing on: the wheel, or a finger still dragging up, and the button fills (--land). Then, or at a tap on the button:
+   the portal opens where the plan is on the window, and the island's camera starts on the same plan from straight
+   above, as large as it was drawn (ctx.enter(point, at); without it, the address alone) */
+const REPO = 'https://github.com/focusxyz11/open-silicon-lab';
+export function landing(host, root, pl, ctx = {}, end, sources) {
+  let push = 0, went = false;
+  /* the less important things, at the foot of the page: the sources, the lab's home, how to join, the licence */
+  if (end) { const f = h('footer', '', '<button type="button" class="bbtn mono">' + w('sources') + '</button><a href="' + REPO + '" target="_blank" rel="noopener">GitHub ↗</a><a href="' + REPO + '/blob/main/CONTRIBUTING.md" target="_blank" rel="noopener">' + w('foot.join') + ' ↗</a><a href="' + REPO + '/blob/main/LICENSE" target="_blank" rel="noopener">' + w('foot.mit') + '</a>');   // i18n-ok: GitHub is a name
+    f.firstChild.onclick = sources; end.appendChild(f); }
   const at = () => root.classList.contains('landing') && host.scrollTop >= host.scrollHeight - host.clientHeight - 3;
   function enter() { if (went) return; went = true; setHolding(false); push = 0; setTimeout(() => { went = false; }, 1500);
     const r = pl.el.getBoundingClientRect(), px = PLAN.s * r.width / 1000 || 3, cx = r.left + r.width / 2, cy = r.top + r.height * PLAN.y;
@@ -62,6 +66,6 @@ export function landing(host, root, pl, ctx = {}) {
   host.addEventListener('wheel', e => { if (e.deltaY > 0) add(e.deltaY / 520); }, { passive: true });
   let ty = null; host.addEventListener('touchstart', e => { ty = e.touches.length === 1 ? e.touches[0].clientY : null; }, { passive: true });
   host.addEventListener('touchmove', e => { if (ty == null || !e.touches.length) return; const y = e.touches[0].clientY, dy = ty - y; ty = y; if (dy > 0) add(dy / 260); }, { passive: true });
-  TICK.push((T, dt) => { const on = root.classList.contains('landing'); if (!on && !push) return;
-    push = on ? clamp(push + (S.holding && at() ? dt * 1.15 : -dt * .5), 0, 1) : 0; root.style.setProperty('--land', push.toFixed(3)); if (on && box) box.style.setProperty('--pr', push.toFixed(3)); if (push >= 1) enter(); });
+  TICK.push((T, dt) => { if (!push) return; push = root.classList.contains('landing') ? Math.max(0, push - dt * .5) : 0; root.style.setProperty('--land', push.toFixed(3)); });
+  return enter;
 }

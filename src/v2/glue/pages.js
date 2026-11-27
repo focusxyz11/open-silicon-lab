@@ -74,18 +74,25 @@ export function create() {
         const href = '#/place/' + p, L = (Game.INSIDE[p] || []).filter(l => !Game.SHARED.includes(l.depth)), own = ch.filter(c => placeOf(c) === p && (!c.at || !L.some(l => l.depth === c.at)) && !Game.SHARED.includes(c.at));
         return '<div class="wm-pl' + (B[href] ? ' been' : '') + '"><a class="wm-pn" href="' + esc(href) + '">' + esc(t('map.' + p + '.t')) + '</a>' + dots(own) +
           (L.length ? '<ol>' + L.map(l => { const lh = V.levelHref(p, l), at = ch.filter(c => placeOf(c) === p && c.at === l.depth); return '<li class="' + (B[lh] ? 'been' : '') + '"><a href="' + esc(lh) + '">' + esc(t('depth.' + l.depth + '.name')) + '</a>' + dots(at) + '</li>'; }).join('') + '</ol>' : '') + '</div>'; }).join('') + '</div>'; }).join('');
-    const every = Game.SHARED.map(dp => { const lh = V.levelHref('datacentre', { world: 'datacentre', depth: dp }); return '<li class="' + (B[lh] ? 'been' : '') + '"><a href="' + esc(lh) + '">' + esc(t('depth.' + dp + '.name')) + '</a>' + dots(ch.filter(c => c.at === dp)) + '</li>'; }).join('');
-    /* the first page's twelve challenges, played there (src/v2/hold.js) and counted with the lab's */
+    const every = Game.SHARED.map((dp, i) => { const lh = V.levelHref('datacentre', { world: 'datacentre', depth: dp }); return '<li class="s' + i + (B[lh] ? ' been' : '') + '"><a href="' + esc(lh) + '">' + esc(t('depth.' + dp + '.name')) + '</a>' + dots(ch.filter(c => c.at === dp)) + '</li>'; }).join('');
+    /* the first page's twelve challenges, played there (src/v2/hold.js) and counted with the lab's: the way in, above the loop */
     const F = Game.firstPage(localStorage), fN = F.filter(c => c.done).length, all = ch.length + F.length, got = doneN(ch) + fN;
-    const first = '<div class="wm-first"><p class="wm-axis small">' + esc(t('page.map.hold')) + '</p><p class="wm-fl' + (Object.keys(B).some(k => k === '#/' || k.startsWith('#/hold')) ? ' been' : '') + '"><a href="#/">' + esc(t('hd.hero.k')) + '</a><span class="wm-dots" title="' + esc(t('page.map.ch', { n: fN, of: F.length })) + '">' +
-      F.map(c => '<a href="' + c.href + '" class="' + (c.done ? 'on' : '') + '" aria-label="' + esc(t('hd.ch.' + c.id)) + '"></a>').join('') + '</span></p></div>';
+    const first = '<div class="wm-first"><p class="wm-fl' + (Object.keys(B).some(k => k === '#/' || k.startsWith('#/hold')) ? ' been' : '') + '"><span class="wm-axis small">' + esc(t('page.map.hold')) + '</span><a href="#/">' + esc(t('hd.hero.k')) + '</a><span class="wm-dots" title="' + esc(t('page.map.ch', { n: fN, of: F.length })) + '">' +
+      F.map(c => '<a href="' + c.href + '" class="' + (c.done ? 'on' : '') + '" aria-label="' + esc(t('hd.ch.' + c.id)) + '"></a>').join('') + '</span><span class="wm-n small">' + fN + '/' + F.length + '</span></p></div>';
     const arr = '<p class="wm-arr small" role="group" aria-label="' + esc(t('page.map.arrange')) + '"><span>' + esc(t('page.map.arrange')) + '</span>' +
       '<a href="#/log"' + (latOn ? '' : ' aria-current="true"') + '>' + esc(t('page.map.byLife')) + '</a><a href="#/log/lattice"' + (latOn ? ' aria-current="true"' : '') + '>' + esc(t('page.map.byMatter')) + '</a></p>';
+    /* a cross-section of the chip world: the loop is the line along the top, every place hangs from its stage and goes
+       down into its levels, and under them all lie the four depths every chip shares, each a finer grain */
     return '<section class="cwmap' + (latOn ? ' lattice' : '') + '"><header class="wm-head f2rhead"><p class="kicker">' + esc(t('loop.map')) + '</p><h1>' + esc(t('page.map.k')) + '</h1>' + arr + '<p class="lead">' + esc(t(latOn ? 'page.lat.lead' : 'page.map.lead')) + '</p>' +
-      '<p class="wm-key small"><span class="wm-k1"></span>' + esc(t('page.map.keyBeen')) + '<span class="wm-k2"></span>' + esc(t('page.map.keyTodo')) + '<span class="wm-k3"></span>' + esc(t('page.map.keyDone')) + '<b>' + esc(t('page.map.ch', { n: got, of: all })) + '</b></p></header>' +
-      (latOn ? latticeOf(B) : '<p class="wm-axis wm-across small">' + esc(t('page.map.across')) + '</p><div class="wm-grid">' + cols + '</div>' +
-      '<div class="wm-every"><p class="wm-axis small">' + esc(t('page.map.every')) + '</p><ol>' + every + '</ol></div>' + first) + '</section>';
+      '<p class="wm-key small"><span class="wm-k0"></span>' + esc(t('page.map.keyHere')) + '<span class="wm-k1"></span>' + esc(t('page.map.keyBeen')) + '<span class="wm-k2"></span>' + esc(t('page.map.keyTodo')) + '<span class="wm-k3"></span>' + esc(t('page.map.keyDone')) + '<b>' + esc(t('page.map.ch', { n: got, of: all })) + '</b></p></header>' +
+      (latOn ? latticeOf(B) : '<div class="wm-x">' + first + '<p class="wm-axis wm-across small"><span>' + esc(t('page.map.across')) + '</span><span>' + esc(t('page.map.turn')) + '</span></p><div class="wm-grid">' + cols + '</div>' +
+      '<div class="wm-every"><p class="wm-axis small">' + esc(t('page.map.every')) + '</p><ol>' + every + '</ol></div></div>') + '</section>';
   }
+  /* the less important things, at the foot of the Map: the lab's home, how to join, the licence */
+  const footHtml = () => '<footer class="wm-foot small"><a href="' + REPO + '" target="_blank" rel="noopener">GitHub ↗</a><a href="' + REPO + '/blob/main/CONTRIBUTING.md" target="_blank" rel="noopener">' + esc(t('page.foot.join')) + ' ↗</a><a href="' + REPO + '/blob/main/LICENSE" target="_blank" rel="noopener">' + esc(t('page.foot.mit')) + '</a></footer>';   // i18n-ok: GitHub is a name
+  /* where you came from, marked on the Map (the reading page's way back names it, src/v2/frame2.js) */
+  function markHere() { const bk = V.page.querySelector('.f2back'), to = bk && bk.getAttribute('href'); if (!to || latOn) return;
+    for (const a of V.page.querySelectorAll('.cwmap .wm-pn, .cwmap li > a, .cwmap .wm-fl > a')) if (a.getAttribute('href') === to) { a.parentNode.classList.add('here'); break; } }
   function showPage(k0) {
     const k = 'log'; V.pageNow = k0;
     /* the arrangement and the path lit are in the address */
@@ -121,8 +128,8 @@ export function create() {
       const asked = C.W.entries.filter(e => e.kind === 'question');
       h += '<section class="stepsec"><h2>' + esc(t('page.questions.asked')) + '</h2>' + (asked.length ? asked.slice().reverse().map(V.askedHtml).join('') : '<p class="small muted">' + esc(t('page.questions.none')) + '</p>') + '</section>' + hc;
     }
-    V.page.innerHTML = '<div class="inner">' + mapHtml() + readHtml({ cls: 'logpage', head, text: h + '<p class="small muted">' + esc(t('page.preview')) + '</p>' }) + '</div>'; V.page.hidden = false; V.page.scrollTop = 0;
-    if (latOn) requestAnimationFrame(() => drawWires(V.page));
+    V.page.innerHTML = '<div class="inner">' + mapHtml() + readHtml({ cls: 'logpage', head, text: h + '<p class="small muted">' + esc(t('page.preview')) + '</p>' }) + footHtml() + '</div>'; V.page.hidden = false; V.page.scrollTop = 0;
+    requestAnimationFrame(() => { if (latOn) drawWires(V.page); else markHere(); });
     if (k0 === 'challenges') { const el = $('log-challenges'); if (el) V.page.scrollTop = el.offsetTop - 96; }
   }
   /* reading: every experiment as a document (src/v2/read.js), over the island; the index is the questions and

@@ -41,7 +41,7 @@ export function createHold(host, ctx = {}) {
   /* the page's part of the lab's bar (in the loop's place, which waits on the first page): the small chip, the chapter,
      the twelve challenges and the sources */
   const chapL = h('div', 'b-chap mono'), map = h('div', 'd-map'), mid = h('div', 'd-mid'); mid.append(map, chapL);
-  const top = mkTop(mid, goChallenge, () => goOver());
+  let asking = 0; const top = mkTop(mid, () => { if (!asking) asking = late().then(m => { asking = 0; m.board(root, goChallenge, () => ({ d: S.d, cur, yrs })); }, () => { asking = 0; }); });
   /* it fits the room the bar leaves it: as the room runs out, the chapter's name goes, then the tally's words, then the
      sources (they are at the end of the story too), then the squares shrink, and last the chapter; a phone has its own */
   function fitBar() { const n = innerWidth > 760 ? 6 : 1; for (let k = 0; k < n; k++) { for (let i = 1; i < 6; i++) top.classList.toggle('f' + i, i <= k); if (top.scrollWidth <= top.clientWidth + 1) break; } }
@@ -70,10 +70,13 @@ export function createHold(host, ctx = {}) {
   const mks = [1, 2].map(n => { const e = h('span', 'b-mk mono', n); slot.appendChild(e); return e; });
   hud.innerHTML = '<div class="w-k mono" aria-hidden="true">' + w('hero.k') + '</div><div class="count"></div><div class="stats"></div><div class="say"></div>';
   const chart = mkChart({ onScrub: d => { touch(); host.scrollTo({ top: secs.years.offsetTop + yOfD(d) }); } }), cq = mkCQ(), start = h('div', 'b-start mono', w('hint.start.t')); band.append(cq, chart.el, start);
-  const hb = h('button', 'holdbtn', w('btn')), hint = h('div', 'hint mono'); hb.type = 'button'; holdBox.append(hb, hint);
+  const hb = h('button', 'holdbtn', w('btn')), hint = h('div', 'hint mono'); hb.type = 'button';
+  /* after the wall, moving on is a step, not a hold: back, and on to what comes next, said by name */
+  const stp = h('div', 'b-step', '<button type="button" class="sp" aria-label="' + w('step.back') + '">←</button><button type="button" class="sn"><span></span><i>→</i></button>'), stN = stp.lastChild.firstChild;
+  stp.firstChild.onclick = () => step(-1); stp.lastChild.onclick = () => step(1); holdBox.append(hb, hint, stp);
   const holdOn = () => { touch(); setHolding(true); }, holdOff = () => setHolding(false);
-  bindHold(hb, holdOn, holdOff); bindHold(plates.years.el, holdOn, holdOff); bindHold(plates.island.el, holdOn, holdOff);
-  let cur = 'years', vh = 800, VW = 1280, S1 = 500, Sy = 500, u = 1, WW = 1, WH = 1, F = {}, O = null, KF = [], p0 = 0, flying = 0, C = null, yrs = true, fr = 0, top1 = 0, topY = 0, sized = false, BH = 150, rv = 0, yct = 0, Lnd = null;
+  bindHold(hb, holdOn, holdOff); bindHold(plates.years.el, holdOn, holdOff);
+  let cur = 'years', vh = 800, VW = 1280, S1 = 500, Sy = 500, u = 1, WW = 1, WH = 1, F = {}, O = null, KF = [], p0 = 0, flying = 0, C = null, yrs = true, fr = 0, top1 = 0, topY = 0, sized = false, BH = 150, rv = 0, yct = 0, Lnd = null, BEATS = [], anim = null, goIn = null;
 
   /* ---- scroll and time: a doubling is a length of page, three times longer inside a moment ---- */
   const BR = [0]; MOMENTS.forEach(m => BR.push(m.at, m.at + m.span)); BR.push(DWALL);
@@ -85,7 +88,7 @@ export function createHold(host, ctx = {}) {
   /* where each card's number sits on its block: on the drawing it names ([x, y] in per cent), or beside the control it
      asks you to use ([a selector in the plate, the side]: l, in the margin left of it, level with its first row; t, just
      above its left end; r, just right of its top), never on a word */
-  const secs = {}, AT = { leak: [[50, 47], [50, 8.5]], distance: [[58, 47], ['.seg', 'l']], power: [[25.5, 58], [50, 50]], price: [[60, 24.5], ['.seg', 'l']], next: [[86, 88], ['.holdbtn', 'r']], levels: [[50, 45], ['.seg', 'l']], eras: [[50, 50], ['.seg', 'l']], arr: [[50, 55], ['.seg', 't']], machine: [[50, 40], ['.seg', 'l']], island: [[35, 31], [51.5, 24.8]] },
+  const secs = {}, AT = { leak: [[50, 47], [50, 8.5]], distance: [[58, 47], ['.seg', 'l']], power: [[25.5, 58], [50, 50]], price: [[60, 24.5], ['.seg', 'l']], next: [[86, 88], ['.pbtn', 'r']], levels: [[50, 45], ['.seg', 'l']], eras: [[50, 50], ['.seg', 'l']], arr: [[50, 55], ['.seg', 't']], machine: [[50, 40], ['.seg', 'l']], island: [[35, 31], [51.5, 24.8]] },
     MAT = { gate: [14, 58], job: [50, 20.5], bug: ['.layer.on .pbtn', 'l'], light: ['.layer.on .seg', 'l'] };
   const pin = (c, [x, y]) => { if (typeof x === 'string') { c.dataset.sel = x; c.dataset.side = y; } else { c.dataset.x = x; c.dataset.y = y; } };
   const card = (side, n, cls) => { const c = h('div', 'card ' + side + (cls ? ' ' + cls : '')); if (n) c.appendChild(h('span', 'n mono', n)); return c; };
@@ -103,7 +106,7 @@ export function createHold(host, ctx = {}) {
   ORDER.slice(1).forEach(id => { const sec = h('section', 'sec'), W = words(id); sec.dataset.id = id; secs[id] = sec; story.appendChild(sec);
     const a = card('l', 1), b = card('r', 2), c = W.q ? card('l', 0, 'q') : null, gap = () => h('div', 'gap'); a.append(W.head, W.cap); b.append(W.try); if (W.ways) b.append(W.ways); if (c) c.append(W.q);
     pin(a, AT[id][0]); pin(b, AT[id][1]); const g1 = gap(); g1.classList.add('g1'); sec.append(a, g1, b); if (c) sec.append(gap(), c); sec.appendChild(h('div', 'tail')); sec._c = [a, b, c]; });
-  const end = h('div', 'b-end mono', '<span>' + w('b.end') + '</span><span class="push">' + w('isle.push') + '</span><button type="button" class="bbtn mono">' + w('sources') + '</button>'); story.appendChild(end); end.querySelector('button').onclick = () => sheet(true);
+  const end = h('div', 'b-end mono', '<span>' + w('b.end') + '</span><span class="push">' + w('isle.push') + '</span>'); story.appendChild(end);
   CHAPS.forEach(ch => { const b = h('button', '', '<i></i><span>' + w('tab.' + ch) + '</span>'); b.type = 'button'; b.dataset.ch = ch; b.onclick = () => goPlate(ORDER.find(id => PW[id].ch === ch), null, false, true); rail.appendChild(b); });
 
   /* ---- sizes, the chip's plan, and the camera's path ---- */
@@ -159,7 +162,7 @@ export function createHold(host, ctx = {}) {
     /* the plan: every plate the size it is seen at (so it is sharp, and its controls are real, when the camera is on it).
        The grid follows the window: 6 by 2 on a wide screen, 4 by 3 on most, 3 by 4 on a phone; the path through it is a
        snake, and the channels between blocks widen (a little) until the chip has the window's shape */
-    const ot = ph ? 6 : barH + 4 * u, ob = ph ? 6 : 14 * u, uw = (land ? S1 + 28 : W - rw) - (ph ? 12 : 40 * u), uh = (SHc || SH) - ot - ob, asp = uw / uh, cols = ph && asp < .9 ? 3 : asp >= 1.8 ? 6 : 4, rows = 12 / cols, M = S1 * .3;
+    const ot = ph ? 6 : barH + 4 * u, ob = ph ? 6 : 62 * u /* room for the steps under the whole chip */, uw = (land ? S1 + 28 : W - rw) - (ph ? 12 : 40 * u), uh = (SHc || SH) - ot - ob, asp = uw / uh, cols = ph && asp < .9 ? 3 : asp >= 1.8 ? 6 : 4, rows = 12 / cols, M = S1 * .3;
     let pX = S1 * 1.17, pY = S1 * 1.3; const a0 = (2 * M + cols * pX) / (2 * M + rows * pY); if (asp > a0) pX = Math.min(pX * 1.35, ((2 * M + rows * pY) * asp - 2 * M) / cols); else pY = Math.min(pY * 1.35, ((2 * M + cols * pX) / asp - 2 * M) / rows);
     CELLS.forEach((c, i) => { const r = Math.floor(i / cols), k = i % cols; c[1] = r % 2 ? cols - 1 - k : k; c[2] = r; map.children[i].style.order = r * cols + c[1]; }); map.style.gridTemplateColumns = 'repeat(' + cols + ',' + (small ? '8px' : 14 * Math.min(u, ub) + 'px') + ')';
     WW = 2 * M + cols * pX; WH = 2 * M + rows * pY; px(world, 0, 0, WW, WH); px(edge, M * .42, M * .42, WW - M * .84, WH - M * .84);
@@ -167,8 +170,8 @@ export function createHold(host, ctx = {}) {
     { const xs = ['leak', 'distance', 'power', 'price'].map(k => POS[k][0]), ys = ['leak', 'distance', 'power', 'price'].map(k => POS[k][1]), x0 = Math.min(...xs), y0 = Math.min(...ys); px(reg, x0 - S1 * .06, y0 - S1 * .2, Math.max(...xs) - x0 + S1 * 1.12, Math.max(...ys) - y0 + S1 * 1.25); reg.style.display = ph ? 'none' : ''; }
     const pm = M * .21, PP = { lab: [WW / 2, pm], studio: [WW - pm, WH * .3], fab: [WW - pm, WH * .7], test: [WW / 2, WH - pm], port: [pm, WH * .7], datacentre: [pm, WH * .3] }; for (const p in pads) px(pads[p], ...PP[p]);
     F = {}; ORDER.forEach(id => { F[id] = { x: POS[id][0] + S1 / 2, y: POS[id][1] + S1 / 2, k: 1, sx: cxs, sy: top1 + S1 / 2 }; });
-    /* the landing: the island's block as large as the window allows with its way in still inside it (a phone keeps it as it is) */
-    Lnd = { ...F.island, k: ph ? 1 : clamp((vh - barH - 26 * u) / (S1 * 1.06), 1, 1.5), sy: ph ? F.island.sy : barH + (vh - barH) / 2 + S1 * .02 };
+    /* the landing: the island's block as large as the window allows above the footer's line (a phone keeps it as it is) */
+    Lnd = { ...F.island, k: ph ? 1 : clamp((vh - barH - 58 * u) / (S1 * 1.06), 1, 1.5), sy: ph ? F.island.sy : barH + (vh - barH - 32 * u) / 2 + S1 * .02 };
     R.setProperty('--LS', S1 * Lnd.k + 'px'); R.setProperty('--LB', Math.max(10, vh - Lnd.sy - S1 * Lnd.k / 2) + 'px');
     O = { x: WW / 2, y: WH / 2, k: Math.min(uw / WW, uh / WH), sx: cxs, sy: ot + uh / 2 };
     secs.years.style.height = yOfD(DWALL) + vh * 1.25 + 'px'; rv = rvWant(); layYears();
@@ -203,6 +206,9 @@ export function createHold(host, ctx = {}) {
     ORDER.slice(1).forEach(id => { const s = secs[id]; s._out = s.offsetTop + s.offsetHeight - T; KF.push([s.offsetTop, F[id], id === 'leak' ? 0 : 1], [s._out, F[id], 0]); });
     /* the end is a landing: from the island's block the camera goes down to it, and stays */
     KF.push([end.offsetTop + vh * .5, Lnd, 0], [1e9, Lnd, 0]);
+    BEATS = [[p0 + vh * 1.1, w('a.chip')]]; if (!ph) ORDER.slice(1).forEach(id => { const s = secs[id]; BEATS.push([s.offsetTop + 2, PW[id].name()]); if (s._c[2]) BEATS.push([fullY(s), w('q.label')]); });
+    /* the last step is the landing: the camera comes down to the island's plan; from there the way is in */
+    if (!ph) BEATS.push([host.scrollHeight - vh, w('step.land')]);
     if (here.a && performance.now() < here.until && Math.abs(host.scrollTop - here.y) < 2) { const y = Math.round(yOf(here.a)); if (Math.abs(y - here.y) > 1) { here.y = y; host.scrollTo({ top: y, behavior: 'instant' }); } }
     /* later, the story above the part you are at may still grow (a font that arrives late, words filled in): the camera
        stays on that part, unless you have moved since */
@@ -215,14 +221,28 @@ export function createHold(host, ctx = {}) {
     return { x: L(a.x, b.x), y: L(a.y, b.y), k: Math.exp(L(Math.log(a.k), Math.log(b.k))) * (1 - (dip ? .34 : 0) * Math.sin(Math.PI * t)), sx: L(a.sx, b.sx), sy: L(a.sy, b.sy), a, b, t }; }
 
   /* ---- going somewhere: the camera flies (the page scrolls smoothly), it never jumps ---- */
-  function fly(top, smooth) { smooth = smooth && !reduce(); if (smooth) { flying = 1; clearTimeout(fly.tm); fly.tm = setTimeout(() => { flying = 0; onScroll(); }, 1600); } /* a move you make is where you are from then on, whatever the page was keeping */
-    here.a = null; host.scrollTo({ top, behavior: smooth ? 'smooth' : 'instant' }); onScroll(); }
-  host.addEventListener('scrollend', () => { if (flying) { flying = 0; clearTimeout(fly.tm); onScroll(); } });
+  /* a flight is the page's own: eased in and out, about a second between neighbours and up to two across the chip (the
+     browser's smooth scroll was over too soon), and over a long way the cards wait until the camera is there. Any move
+     of the visitor's own takes it over */
+  function fly(top, smooth) { /* a move you make is where you are from then on, whatever the page was keeping */
+    here.a = null; const y0 = host.scrollTop, y1 = clamp(top, 0, host.scrollHeight - vh), far = Math.abs(y1 - y0) / vh;
+    if (!smooth || reduce() || far < .02) { land0(); host.scrollTo({ top, behavior: 'instant' }); onScroll(); return; }
+    flying = 1; anim = { y0, y1, t0: performance.now(), ms: clamp(700 + far * 320, 950, 2100) }; root.classList.toggle('fly', far > 1.6); }
+  const land0 = () => { if (anim) { anim = null; flying = 0; root.classList.remove('fly'); } };
+  TICK.push(() => { if (!anim) return; const k = clamp((performance.now() - anim.t0) / anim.ms, 0, 1), e = k < .5 ? 4 * k * k * k : 1 - Math.pow(2 - 2 * k, 3) / 2;
+    host.scrollTop = anim.y0 + (anim.y1 - anim.y0) * e; if (k >= 1) { land0(); onScroll(); } });
+  for (const ev of ['wheel', 'touchstart', 'pointerdown']) host.addEventListener(ev, () => { if (anim) { land0(); onScroll(); } }, { passive: true });
+  /* the steps after the wall: the whole chip, then each block as it arrives and its question; after the last, inside */
+  function step(dir) { touch(); const y = anim ? anim.y1 : host.scrollTop;
+    if (dir > 0) { const b = BEATS.find(b => b[0] > y + 12); if (b) fly(b[0], true); else if (goIn) goIn(); }
+    else { const b = BEATS.filter(b => b[0] < y - 12).pop(); fly(b ? b[0] : secs.years.offsetTop + yOfD(DWALL), true); } }
   function goPlate(id, d, full, smooth) { touch(); const sec = secs[id], ph = PHONE(); let top = sec.offsetTop + 2;
     if (id === 'years') top = sec.offsetTop + yOfD(d || 0);
     else if (ph) top = full ? sec.offsetTop + sec._c[1].offsetTop - parseFloat(getComputedStyle(sec._c[1]).top) + 6 : top;
-    else if (full) { const c = sec._c[2] || sec._c[1], st = parseFloat(getComputedStyle(c).top) || 0; c.style.position = 'static'; const nat = c.offsetTop; c.style.position = ''; top = Math.max(top, sec.offsetTop + nat - st + 40); }
+    else if (full) top = fullY(sec);
     fly(top, smooth && id !== 'years'); }
+  /* where a block's last card (its question, or else its thing to try) has come to rest */
+  function fullY(sec) { const c = sec._c[2] || sec._c[1], st = parseFloat(getComputedStyle(c).top) || 0; c.style.position = 'static'; const nat = c.offsetTop; c.style.position = ''; return Math.max(sec.offsetTop + 2, sec.offsetTop + nat - st + 40); }
   const goOver = () => { touch(); fly(p0 + vh * 1.1, true); };
   function goChallenge(id) { const [pid, d] = CH_AT[id]; goPlate(pid, d, false, true); }
   S.onWallGo = goOver;
@@ -273,9 +293,10 @@ export function createHold(host, ctx = {}) {
     ORDER.slice(1).forEach(k => { const s = secs[k], o = 1 - ss(0, .3, (y - s._out) / (vh * .75)); s.style.opacity = o; s.style.pointerEvents = o < .5 ? 'none' : ''; s.style.visibility = o < .01 ? 'hidden' : ''; });
     if (was !== yrs || !slot._s) { slot._s = 1; const Sx = yrs ? lerp(S1, Sy, rv) : S1; slot.style.setProperty('--S', Sx + 'px'); slot.style.setProperty('--top', (yrs ? F.years.sy - Sx / 2 : F.leak.sy - S1 / 2) + 'px'); holdBox.style.setProperty('--S', Sx + 'px');
       holdBox.style.setProperty('--hb', (PHONE() ? 14 : !yrs ? 22 * u : lerp(Math.max(22 * u, vh - top1 - S1), BH + 22 * u, rv)) + 'px'); }
-    root.classList.toggle('chipm', !yrs); hud.classList.toggle('off', !yrs); band.classList.toggle('off', !yrs); band.classList.toggle('wait', yrs && rvWant() < 1); holdBox.classList.toggle('chip', !yrs); holdBox.classList.toggle('off', !yrs && over);
+    root.classList.toggle('chipm', !yrs); hud.classList.toggle('off', !yrs); band.classList.toggle('off', !yrs); band.classList.toggle('wait', yrs && rvWant() < 1); holdBox.classList.toggle('chip', !yrs); holdBox.classList.toggle('over', !yrs && over);
     /* the landing: past the island's cards the block is alone with its way in */
     const ending = y > secs.island.offsetTop && y >= host.scrollHeight - vh - vh * .3; root.classList.toggle('landing', ending);
+    if (!yrs) { const nb = BEATS.find(b => b[0] > (anim ? anim.y1 : y) + 12); put(stN, nb ? nb[1] : S.kept ? w('isle.go') : w('isle.go0')); stp.lastChild.classList.toggle('in', !nb); }
     const inChip = !yrs && over, ch = PW[cur].ch, n = CHAPS.indexOf(ch) + 1, chW = chapL._h; put(chapL, inChip ? '<b>' + w('a.chip') + '</b>' : w('b.chap', { n }) + '<b>' + w('tab.' + ch) + '</b>'); if (chapL._h !== chW) fitBar();
     [...rail.children].forEach(b => b.classList.toggle('on', !inChip && b.dataset.ch === ch)); [...map.children].forEach(b => b.classList.toggle('on', inChip ? b.dataset.id === 'title' : b.dataset.id === cur));
     const on = [null, null]; if (settled) $$('.card[data-x],.card[data-sel]', story).forEach(c => { const r = c.getBoundingClientRect(), m = r.top + Math.min(r.height, 200) / 2; if (m > vh * .16 && m < vh * .8) { const n = +($('.n', c) || {}).textContent - 1; if (n >= 0 && (!c.dataset.mom || c.dataset.mom === viewAt(S.d))) on[n] = c; } });
@@ -300,20 +321,22 @@ export function createHold(host, ctx = {}) {
   onChange(() => { chipState(); onScroll(); fitBar(); });
   /* the space bar holds, as the button does; not while typing, or in the lab's bar or its dialogs */
   /* i18n-ok: selectors */ const away = e => !LIVE.on || (e.target.closest && e.target.closest('input,textarea,select,[contenteditable],.bar,.breakp,[role=dialog]'));
-  addEventListener('keydown', e => { if (away(e)) return; if (e.key === ' ' && !e.repeat) { e.preventDefault(); touch(); if (cur === 'next' && C && C.a === C.b && S.next.pos < 1) S.next.hold = true; else setHolding(true); } });
-  addEventListener('keyup', e => { if (e.key === ' ') { setHolding(false); S.next.hold = false; } });
+  addEventListener('keydown', e => { if (away(e)) return; const past = host.scrollTop >= p0 + vh;
+    if (e.key === ' ' && !e.repeat) { e.preventDefault(); touch(); if (past) step(1); else setHolding(true); }
+    else if (past && (e.key === 'ArrowRight' || e.key === 'ArrowLeft') && !e.target.closest('input,.seg,.d-map,.sq')) { e.preventDefault(); step(e.key === 'ArrowRight' ? 1 : -1); } });
+  addEventListener('keyup', e => { if (e.key === ' ') setHolding(false); });
   const hintKey = d => (!yrs ? 'x' : d < .01 ? 'gate' : d >= DWALL - 1e-4 ? 'wall' : momAt(d) ? 'moment' : d > D2011 ? 'pay' : d > 16.5 && d < 20.5 ? 'coast' : 'run');
   const seen = id => { const [x, y] = POS[id], l = C.sx + C.k * (x - C.x), tp = C.sy + C.k * (y - C.y), s = C.k * S1; return l < VW && l + s > 0 && tp < vh && tp + s > 0; };
   TICK.push((T, dt) => { fr++;
-    if (S.holding) { const max = host.scrollHeight - vh; let v = vh * .3;
-      if (yrs && host.scrollTop < pull.offsetTop) { const d = S.d, m = momAt(d), dv = m ? .32 : d < 2 ? .7 : d > D2011 ? 1.0 - .55 * ss(D2011, DWALL, d) : 1.9; v = d >= DWALL - 1e-4 ? (Yr.wallPush = Math.min(1, Yr.wallPush + dt * 2.5), Yr.wallPush >= 1 ? vh * .3 : 0) : dv * base() * (m ? 3 : 1); }
+    if (S.holding && host.scrollTop < p0 + vh * 1.1) { const max = host.scrollHeight - vh; let v = vh * .8;
+      if (yrs && host.scrollTop < pull.offsetTop) { const d = S.d, m = momAt(d), dv = m ? .44 : d < 2 ? .8 : d > D2011 ? 1.15 - .62 * ss(D2011, DWALL, d) : 2.2; v = d >= DWALL - 1e-4 ? (Yr.wallPush = Math.min(1, Yr.wallPush + dt * 2.5), Yr.wallPush >= 1 ? vh * .5 : 0) : dv * base() * (m ? 3 : 1); }
       if (host.scrollTop < max) host.scrollBy(0, Math.max(1, v * dt)); }
     else Yr.wallPush *= Math.pow(.02, dt);
     S.press += ((S.holding && S.d < .6 ? 1 : 0) - S.press) * Math.min(1, dt * 12);
     /* Moore's law rises, and the square eases back to make room */
     { const to = rvWant(); if (rv !== to) { rv = reduce() || Math.abs(to - rv) < .004 ? to : rv + (to - rv) * Math.min(1, dt * 4.5); layYears(); onScroll(); } }
-    /* the hold button's ring: how far the hold has come (at the landing it is the push, src/v2/holdisle.js) */
-    if (yrs || !root.classList.contains('landing')) holdBox.style.setProperty('--pr', (yrs ? S.d / DWALL : 0).toFixed(4));
+    /* the hold button's ring: how far through the fifty years the hold has come */
+    if (yrs) holdBox.style.setProperty('--pr', (S.d / DWALL).toFixed(4));
     root.classList.toggle('at0', yrs && S.d < .5 && S.press < .5); root.classList.toggle('fresh', S.cq.maxD < .9);
     if (!C) return; const far = !yrs || S.d > 9;
     ORDER.forEach((id, i) => { const f = F[id], main = f === C.a || f === C.b || (id === 'island' && C.b === Lnd); if (main || (far && fr % 4 === i % 4 && seen(id))) plates[id].paint(T, main ? dt : dt * 4); });
@@ -323,7 +346,7 @@ export function createHold(host, ctx = {}) {
       /* the questions on the curve wait for the curve */
       const early = S.cq.maxD < RISE; if (cq._e !== early) { cq._e = early; cq.style.display = early ? 'none' : ''; } }
     ycard.classList.toggle('off', !yrs || !!mom || wall); holdBox.classList.toggle('quiet', yrs && (!!mom || wall));
-    const hk = hintKey(d); put(hint, hk === 'x' ? '<b>' + (root.classList.contains('landing') ? w('isle.push') : w('b.scroll')) + '</b>' : w('hint.' + hk));
+    const hk = hintKey(d); if (hk !== 'x') put(hint, w('hint.' + hk));
     /* said aloud: a moment or the wall as it comes; while you hold, the count and the year, at most once a second */
     const ev = !yrs ? '' : wall ? 'wall' : mom ? mom.id : '';
     if (ev !== heard) { heard = ev; if (ev) { say(ev === 'wall' ? w('m.wall.h') + '. ' + w('m.wall.p') : w('mo.' + ev + '.k') + '. ' + w('mo.' + ev + '.q')); sayAt = T + 2.5; } }
@@ -338,7 +361,8 @@ export function createHold(host, ctx = {}) {
   /* the island's plan and the way in, the page's last picture (src/v2/holdisle.js): asked for with the first touch, or
      as soon as the camera is past the wall */
   let moreP = null;
-  const more = () => moreP || (moreP = import('./holdisle.js').then(m => { const pl = plates.island; Object.assign(PL.island, m.ISLAND); PL.island.ui(pl.ui, pl); pl.paint(S.T, 0); m.landing(host, root, pl, ctx); onScroll(); }, () => { moreP = null; }));
+  const more = () => moreP || (moreP = import('./holdisle.js').then(m => { const pl = plates.island; Object.assign(PL.island, m.ISLAND); PL.island.ui(pl.ui, pl); pl.paint(S.T, 0); goIn = m.landing(host, root, pl, ctx, end, () => sheet(true)); onScroll(); }, () => { moreP = null; }));
+  const late = () => import('./holdboard.js');
   let touched = false;
   function touch() { if (touched || !document.documentElement.dataset.preload) return; touched = true; loadFacts(); more();
     /* words that did not come (the page was left, the connection dropped) are asked for again at the next touch; once
@@ -348,7 +372,7 @@ export function createHold(host, ctx = {}) {
 
   /* for checks */
   window.__hold = { set: v => goPlate('years', v === 99 ? DWALL : v, false, false), go: (id, d) => goPlate(id, d === 99 ? DWALL : d, true), ch: goChallenge, at: id => (id === 'pull' ? p0 + vh * 1.1 : secs[id].offsetTop), chartX: y => chart.el.getBoundingClientRect().left + chart.X(y),
-    state: () => ({ d: S.d, cur, chip: !yrs, holding: S.holding, done: Object.keys(S.done), tried: Object.keys(S.tried), place: S.place, kept: S.kept, ways: !!$('.w-ways button[data-way]:not([hidden])', story) }), S };
+    state: () => ({ d: S.d, cur, chip: !yrs, fly: !!anim, holding: S.holding, done: Object.keys(S.done), tried: Object.keys(S.tried), place: S.place, kept: S.kept, ways: !!$('.w-ways button[data-way]:not([hidden])', story) }), S };
 
   /* the page's type, once */
   let ready = null;
