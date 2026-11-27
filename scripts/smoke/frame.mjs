@@ -133,6 +133,25 @@ export default async function run() {
       const L = ol.getBoundingClientRect(), G = log.getBoundingClientRect(), loop = bar.querySelector('.loop'); return L.right <= G.left && loop.scrollWidth <= loop.clientWidth + 1; }, null, { timeout: 30000, polling: 1000 })
       .catch(() => problems.push(tag + ': on a reading page, Your log covers the loop\'s dots'));
     await np.close(); }
+  /* the gate on a phone (#436): framed closer, so it spans most of the width, and its names stand above and below it,
+     never on it. Each name's point is on its part at the plan's edge (gate3d.js narrow.anchors), so the points span the
+     plan: no name lies between the highest point and the lowest, and the points reach across more than half the width */
+  { const tag = 'frame phone gate', gp = await browser3d.newPage({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true }); gp.on('pageerror', e => problems.push(tag + ': ' + e.message));
+    await gp.addInitScript(() => { try { localStorage.setItem('osl-quality', 'keep'); localStorage.setItem('osl-hints-v1', JSON.stringify({ seen: {}, off: true })); } catch (e) { /* no storage */ } });
+    await gp.goto(base + 'index.html#/dive/gate');
+    const got = await gp.waitForFunction(() => { if (location.hash !== '#/dive/gate') location.hash = '#/dive/gate';
+      const host = document.getElementById('l3-gate'); if (!host || host.hidden || document.documentElement.dataset.join || document.documentElement.dataset.arrive) return false;
+      const N = [...host.querySelectorAll('.lbl3.part3')].filter(e => e.f2L && e.f2L.on && e.style.opacity !== '0');
+      if (N.length < 5) return false;
+      const hr = host.getBoundingClientRect(), py = N.map(e => e.f2L.py), px = N.map(e => e.f2L.px), top = Math.min(...py), bottom = Math.max(...py);
+      const on = N.filter(e => { const r = e.getBoundingClientRect(); return r.bottom - hr.top > top + 1 && r.top - hr.top < bottom - 1; }).map(e => e.textContent);
+      return { on, span: (Math.max(...px) - Math.min(...px)) / hr.width }; }, null, { timeout: 90000, polling: 1000 }).then(h => h.jsonValue()).catch(() => null);
+    if (!got) problems.push(tag + ': on a phone, the gate never showed its five names');
+    else {
+      if (got.on.length) problems.push(tag + ': on a phone, names lie on the gate: ' + got.on.join(', '));
+      if (got.span < 0.55) problems.push(tag + ': on a phone, the gate spans only ' + Math.round(got.span * 100) + '% of the width');
+    }
+    await gp.close(); }
   /* Read (#273): a question's page is a reading page in the frame, a column of about 70 characters at 18 to 18.5 px
      with its picture pinned beside it (first on a phone, under the title); the bar says Reading and lights no stage;
      the way back leads to where you came from (here, your log) */

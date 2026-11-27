@@ -9,12 +9,13 @@
    createLevel3D(canvas, host, on, model) -> { show(k, depthOffset, frame), select(key, note), hit(x, y), active(),
      warm(), dispose(), failed }   (failed: too slow even at low settings; the shell then keeps the flat drawing)
    model(scene, root, P, night) -> { level, parts: [key], anchors: { key: [x, y, z] }, view: { tilt, turn, r, at: [x, y, z], fixed,
-     arrive: { tilt, turn, ms, span, fit, at }, door, foot, enter }, update(dt, k, dist, arrived, picked, leave), has(key) }   (r: the object's radius, so it fills the square; at:
+     arrive: { tilt, turn, ms, span, fit, at }, door, foot, enter, narrow: { zoom, out, anchors } }, update(dt, k, dist, arrived, picked, leave), has(key) }   (r: the object's radius, so it fills the square; at:
      where the camera looks; dist: the camera's distance from it, which changes with the screen and the zoom; arrive:
      coming down from the level above, the camera starts at that angle and rises to the level's own, once, and
      arrived (0..1) says how far, for the model's own part of the move; 1 when there is none; picked: the part picked;
      has: optional, whether a part is there to name now; in a join (joinFrame) the child's arrived runs over its
-     view.enter, the parent's leave (0 at rest) says how far the child has come into its view.door)
+     view.enter, the parent's leave (0 at rest) says how far the child has come into its view.door; narrow, optional, on
+     a phone's width: framed zoom times closer, the names kept off the plan (out) at points of their own (anchors))
    on.part(key), on.marks() -> [{ part, threads }] under Ask, else null, on.mark(threadId), on.askMany([threadId]),
    on.failed(). */
 import { still } from '../core/ui.js';
@@ -30,6 +31,8 @@ export { still };
 /* joins, for the visit: off once joined frames have come too slowly (or osl-quality = slow) */
 export const JOINS = { off: false };
 const V_rise = V => !!V.fixed && !V.enter;
+/* a narrow screen: the frame's phone layout (src/styles/frame.css, max-width 720px) */
+const NARROW = 721;
 const JP = { skip: 4, times: [], done: false };
 export function createLevel3D(canvas, host, on, model) {
   const P = PALETTES[theme()], night = P.emissive > 0;
@@ -59,8 +62,27 @@ export function createLevel3D(canvas, host, on, model) {
   const sway = now => (still() || V.fixed ? 0 : Math.sin(now / 14000 * Math.PI * 2) * 0.052);
   /* the picture's size, and the square of the flat level it fills */
   const size = () => { const r = canvas.getBoundingClientRect(); W = r.width || 1; H = r.height || 1; return frame || { B: Math.min(W, H) * 0.8, cx: W / 2, cy: H / 2 }; };
-  /* the distance at which the object fills that square */
-  const fitOf = f => (V.r / Math.tan(camera.fov * Math.PI / 360)) * (H / Math.min(f.B * 1.05, W * 0.74));
+  /* on a narrow screen a plan may keep its names off itself (V.narrow.out): the box it covers on the picture, from
+     each piece shown (one box round the whole would take in the empty corners a view at an angle adds) */
+  const corner = new THREE.Vector3();
+  const outBox = () => {
+    if (!(V.narrow && V.narrow.out && W < NARROW)) return null;
+    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+    root.traverseVisible(o => {
+      if (!o.isMesh) return;
+      const g = o.geometry; if (!g.boundingBox) g.computeBoundingBox(); const b = g.boundingBox;
+      for (let i = 0; i < 8; i++) {
+        corner.set(i & 1 ? b.max.x : b.min.x, i & 2 ? b.max.y : b.min.y, i & 4 ? b.max.z : b.min.z).applyMatrix4(o.matrixWorld).project(camera);
+        const x = (corner.x + 1) / 2 * W, y = (1 - corner.y) / 2 * H;
+        if (x < x0) x0 = x; if (y < y0) y0 = y; if (x > x1) x1 = x; if (y > y1) y1 = y;
+      }
+    });
+    return x0 < x1 ? [x0, y0, x1, y1] : null;
+  };
+  /* the distance at which the object fills that square; on a narrow screen a level may be framed closer (V.narrow.zoom:
+     a plan whose radius is mostly margin, the gate), which a join carries over its move (join.js pose, zr) */
+  const zoomOf = () => (V.narrow && W < NARROW ? V.narrow.zoom || 1 : 1);
+  const fitOf = f => (V.r / Math.tan(camera.fov * Math.PI / 360)) * (H / Math.min(f.B * 1.05, W * 0.74)) / zoomOf();
   /* the camera from a pose { at, tilt, turn, dist } (src/engines/join.js eye); near and far follow the distance, which
      in a join can be hundreds of the level's own units */
   function aim(p, f) {
@@ -96,7 +118,7 @@ export function createLevel3D(canvas, host, on, model) {
     const guest = !!link.guest, Pl = guest ? api : link.host, Cl = guest ? link.guest : api, P = Pl.rig, C = Cl.rig;
     const door = typeof P.V.door === 'function' ? P.V.door() : P.V.door, foot = C.V.foot, f = guest ? off : 1 + off;
     const fr = size(); P.size(); C.size();
-    const p = pose(f, P.V, C.V, door, foot, P.fitOf(fr)), cp = childPose(p, door, foot);
+    const p = pose(f, P.V, C.V, door, foot, P.fitOf(fr), undefined, C.zoomOf() / P.zoomOf()), cp = childPose(p, door, foot);
     const quiet = still() || QUALITY.low, step = v => (quiet ? (f >= JOIN.lead ? 1 : 0) : v), win = C.V.enter || [JOIN.child, 0.8];
     /* a child with a move of its own (enter) starts as exactly what the parent shows in its door, so it is drawn only
        once that move has begun: until then the parent's door is the parent's (drawn over it, the child's flat form
@@ -150,7 +172,7 @@ export function createLevel3D(canvas, host, on, model) {
     perf.times.push(QUALITY.test === 'slow' ? 99 : ms);
     if (perf.times.length < 20) return;
     const mid = perf.times.slice().sort((a, b) => a - b)[10]; perf.times = [];
-    if (mid <= 40 || QUALITY.test === 'keep') { perf.done = true; return; }
+    if (mid <= 40 || QUALITY.test === 'keep' || QUALITY.test === 'low') { perf.done = true; return; }
     if (!QUALITY.low) { lowQuality(); perf.skip = 4; return; }
     perf.done = true; api.failed = true; on.failed && on.failed();
   }
@@ -192,14 +214,17 @@ export function createLevel3D(canvas, host, on, model) {
     yaw += (yawGoal - yaw) * Math.min(1, dt * 6);
     place(now);
     const quiet = still() || QUALITY.low, ms = on.marks ? on.marks() : null;
-    const key = [k.toFixed(3), off.toFixed(3), yaw.toFixed(4), arrived.toFixed(3), W, H, picked, frame ? frame.B + ',' + frame.cx + ',' + frame.cy : '', ms ? ms.length : 0, M.version ? M.version() : ''].join('|');
+    /* arrived is in the key as a step, not only rounded: its last frames (0.9996, then 1) round alike, and the names
+       wait for exactly 1, so on low settings they never showed */
+    const key = [k.toFixed(3), off.toFixed(3), yaw.toFixed(4), arrived >= 1 ? 'at' : arrived.toFixed(3), W, H, picked, frame ? frame.B + ',' + frame.cx + ',' + frame.cy : '', ms ? ms.length : 0, M.version ? M.version() : ''].join('|');
     if (!quiet || key !== shown) {
       shown = key;
       M.update(quiet ? 0 : dt, k, camera.position.distanceTo(at), arrived, picked, 0);
       /* names hide while the camera moves in (the arrival) and show once it rests */
       /* a name follows its part when the part moves with your chip (the gate's tick, the wafer's chips): anchors read each draw */
-      names.forEach(n => { n.show = k > 0.85 && arrived >= 1 && (!M.has || M.has(n.key)); n.el.classList.toggle('on', n.key === picked); const a = M.anchors[n.key]; if (a) n.offset.set(a[0], a[1], a[2]); });
-      L.update(camera, W, H);
+      const na = V.narrow && W < NARROW ? V.narrow.anchors : null;
+      names.forEach(n => { n.show = k > 0.85 && arrived >= 1 && (!M.has || M.has(n.key)); n.el.classList.toggle('on', n.key === picked); const a = (na && na[n.key]) || M.anchors[n.key]; if (a) n.offset.set(a[0], a[1], a[2]); });
+      L.update(camera, W, H, outBox());
       if (picked && k > 0.85 && arrived >= 1) placeCard(); else card.hidden = true;
       placeMarks();
       st.draw(scene, camera);
@@ -217,7 +242,7 @@ export function createLevel3D(canvas, host, on, model) {
   const api = {
     failed: false,
     /* what a join needs of this level: its scene and camera, its model and view, and how to aim and fit */
-    rig: { scene, camera, root, M, V, size, fitOf, aim },
+    rig: { scene, camera, root, M, V, size, fitOf, zoomOf, aim },
     get door() { return V.door || null; }, get foot() { return V.foot || null; },
     /* how present the level is (0..1), how far the zoom is from it (negative: still above), and the square to fill;
        the shell fades the flat picture and shows the stage */

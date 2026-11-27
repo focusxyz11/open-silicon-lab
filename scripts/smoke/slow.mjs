@@ -13,6 +13,17 @@ export default async function run() {
     await page.waitForFunction(() => { const h = document.getElementById('l3-atom'); return h && h.hidden && +getComputedStyle(document.getElementById('diveCanvas')).opacity > 0.9; }, null, { timeout: 30000 }).catch(() => problems.push('slow device: a level too slow in 3D did not fall back to its flat drawing'));
     await page.close();
   }
+  /* on low settings (a software renderer starts there) a level in 3D still names its parts once it has arrived: its
+     last frames of the arrival rounded alike, so the names, which wait for the arrival's end, never showed (#435) */
+  for (const [lv, hash, n] of [['phone', '#/dive/phone/phone', 4], ['ecu', '#/dive/ecu/car', 3]]) {
+    S.at = 'low settings: ' + lv; const page = await browser3d.newPage({ viewport: { width: 1280, height: 800 } });
+    page.on('pageerror', e => problems.push(S.at + ': ' + e.message));
+    await page.addInitScript(() => { localStorage.setItem('osl-quality', 'low'); localStorage.setItem('osl-hints-v1', JSON.stringify({ seen: {}, off: true })); });
+    await page.goto(base + 'index.html' + hash);
+    await page.waitForFunction(([id, count]) => { const h = document.getElementById('l3-' + id); return !!h && !h.hidden && [...h.querySelectorAll('.part3')].filter(e => e.f2L && e.f2L.on && e.style.opacity !== '0' && e.getBoundingClientRect().width > 0).length >= count; }, [lv, n], { timeout: 30000 })
+      .catch(() => problems.push(S.at + ': ' + hash + ' in 3D on low settings never showed its parts\' names'));
+    await page.close();
+  }
   /* a connection that saves data (Data Saver, or 2g/3g) gets no idle preload of the words: each view, opened cold, waits
      for every area it shows (src/core/i18n.js, needWords), so none shows a text's name. A name shown warns "Missing
      text", which fails the run (scripts/smoke.mjs); each view is waited for until it has drawn what it shows */

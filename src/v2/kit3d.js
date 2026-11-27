@@ -41,13 +41,14 @@ function one() {
   ONE = { renderer, env, cv };
   /* a software renderer (the browser drawing without a graphics chip) starts low */
   try { const gl = renderer.getContext(), ext = gl.getExtension('WEBGL_debug_renderer_info'), name = String(gl.getParameter(ext ? ext.UNMASKED_RENDERER_WEBGL : gl.RENDERER) || ''); QUALITY.soft = /swiftshader|llvmpipe|software/i.test(name); } catch (e) { /* the name stays unknown */ }
-  if (QUALITY.soft) lowQuality();
+  if (QUALITY.soft || QUALITY.test === 'low') lowQuality();
   return ONE;
 }
 /* how much this device can draw (docs/reviews/art-direction.md §4). low: pixel ratio 1, no shadows, nothing live
    moving (the levels hold their live things still, as with reduced motion). A software renderer starts low; a level
    whose frames come too slowly asks for it (level3d.js), and if that is still too slow it is drawn flat instead.
-   For the tests: localStorage osl-quality = 'keep' never drops anything, 'slow' makes every level count as too slow. */
+   For the tests: localStorage osl-quality = 'keep' never drops anything, 'slow' makes every level count as too slow,
+   'low' starts low (as a software renderer does) and never counts a level as too slow. */
 export const QUALITY = { soft: false, low: false, test: (() => { try { return localStorage.getItem('osl-quality') || ''; } catch (e) { return ''; } })() };
 export function lowQuality() {
   if (QUALITY.low || QUALITY.test === 'keep') return;
@@ -196,7 +197,9 @@ export function labels(host) {
       el.f2L = L; if (ro) ro.observe(el);
       list.push(L); return L;
     },
-    update(camera, w, h) {
+    /* out: optional, a box on the picture [x0, y0, x1, y1] the names keep off (a plan on a narrow screen, level3d.js):
+       they stand in rows above or below it, each with its stem to its part */
+    update(camera, w, h, out) {
       for (const L of list) {
         L.obj.updateWorldMatrix(true, false);
         v.copy(L.offset).applyMatrix4(L.obj.matrixWorld);
@@ -205,7 +208,7 @@ export function labels(host) {
         const on = L.show && (!L.need || L.need.visible) && v.z < 1 && v.z > -1 && Math.abs(v.x) < 1.1 && Math.abs(v.y) < 1.1 && dist >= L.min && dist <= L.max;
         L.on = on; L.px = (v.x + 1) / 2 * w; L.py = (1 - v.y) / 2 * h; L.dx = 0; L.dy = 0;
       }
-      { const t = performance.now(); if (!keep || t - keepAt > 300) { keep = keepOut(host); keepAt = t; } apart(list, w, keep); }
+      { const t = performance.now(); if (!keep || t - keepAt > 300) { keep = keepOut(host); keepAt = t; } apart(list, w, keep, out); }
       for (const L of list) {
         const on = L.on && !L.folded;
         L.el.style.opacity = on ? '' : '0'; L.el.style.pointerEvents = on ? '' : 'none';
@@ -235,8 +238,9 @@ function keepOut(host) {
   }
   return out;
 }
-function apart(list, W, keep) {
+function apart(list, W, keep, out) {
   const names = [], placed = keep ? keep.slice() : [];
+  if (out) placed.push(out);
   for (const L of list) {
     L.folded = false; const el = L.el;
     if (!L.on || !el.classList.contains('part3')) { if (L.moved) unmove(L); continue; }
@@ -252,8 +256,15 @@ function apart(list, W, keep) {
     /* the box at a shift, kept inside the picture's sides */
     const boxAt = (dx, dy) => { let x = L.px + dx; x = Math.min(Math.max(x, EDGE + w / 2), W - EDGE - w / 2); return [x - w / 2, L.py + dy - h, x + w / 2, L.py + dy, x - L.px]; };
     const tries = [], seen = new Set(), add = (dx, dy) => { const k = Math.round(dx) + ',' + Math.round(dy); if (!seen.has(k)) { seen.add(k); tries.push([dx, dy]); } };
-    if (L.was) add(L.was[0], L.was[1]);
-    for (const dy of [0, -row, -2 * row, h + 2 * STEM]) {
+    /* (kept off a box, the rows follow the box, which moves as the plan lifts and settles: no place kept) */
+    if (L.was && !out) add(L.was[0], L.was[1]);
+    const rows = [0, -row, -2 * row, h + 2 * STEM];
+    /* kept off a box: in a row above it or below it, the side nearer its point first, so its stem stays short */
+    if (out) {
+      const up = [0, 1, 2].map(r => out[1] - GAP - r * row - L.py), down = [0, 1, 2].map(r => out[3] + GAP + h + r * row - L.py);
+      rows.push(...(L.py > (out[1] + out[3]) / 2 ? down.concat(up) : up.concat(down)));
+    }
+    for (const dy of rows) {
       add(0, dy);
       const b = boxAt(0, dy); for (const p of hits(b)) { add(b[4] + p[2] + GAP + 1 - b[0], dy); add(b[4] + p[0] - GAP - 1 - b[2], dy); }
     }
