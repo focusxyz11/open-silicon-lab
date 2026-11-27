@@ -1,0 +1,97 @@
+name: Propose a gene option (the open genome)
+description: A new carrier, place to compute, way of telling a computer what to do, or shape, for Grow an architecture and Your stack. Proposed by you, an AI, or both.
+title: "[Gene] "
+labels: [gene]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        The genome of an architecture is open: its four genes and their options are data (`src/engines/arch.js`), so anyone can propose a new option. A proposal names the gene, the option, its trait effects against today's computer and its carry contract: what it hands up your stack. It becomes one entry of the community's ledger (`community/ledger/<date>-gene-<name>.json`, kind `gene`), checked by `npm test` for being complete and new. Until a fact in `src/data/facts.json` backs it, the stack and the lattice show it marked **a guess**; the engine grows it once a pull request adopts it into the genome with its fact. An AI agent can write the same entry through the open port (`propose_gene`, `docs/MCP.md`). Every entry keeps its author's name and says how AI was used.
+  - type: dropdown
+    id: gene
+    attributes:
+      label: The gene
+      options:
+        - What carries a value (carrier)
+        - Where it computes (where)
+        - How it is told what to do (told)
+        - Its shape (shape)
+    validations:
+      required: true
+  - type: input
+    id: option
+    attributes:
+      label: The option's id
+      description: Lowercase letters, digits and dashes, 2 to 24, not one the gene has already (carrier has charge, light, spikes, reversible, living; where has far, near, in, flow; told has program, graph, events, learns, fixed; shape has few, grid, stack, swarm).
+      placeholder: spin
+    validations:
+      required: true
+  - type: input
+    id: name
+    attributes:
+      label: Its name
+      description: 2 to 40 plain characters.
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What it is
+      description: One or two plain sentences (10 to 300 characters), no links.
+    validations:
+      required: true
+  - type: textarea
+    id: effect
+    attributes:
+      label: Its trait effects
+      description: Each a factor against today's computer, from 0.01 to 100 (above 1 better; leave a trait out for 1). At least one of energy (energy an answer, divided by it), flex (the jobs it can take), exact (exact answers), rugged (bears faults and harsh places), adapt (learns and changes itself). Add idle true if it gains when the need is rarely busy.
+      render: json
+      placeholder: '{ "energy": 1.2, "flex": 0.8, "rugged": 2, "idle": true }'
+    validations:
+      required: true
+  - type: textarea
+    id: carry
+    attributes:
+      label: Its carry contract
+      description: |
+        Every field of its gene's contract, in range, and nothing else.
+        carrier: matter (a column of the lattice: everyday, silicon, light, molecules, cells, neurons, or yours for a matter nobody has put in the lab), delay (its gates' delay against today's silicon gate, a factor from 0.000001 to 1,000,000,000), and skips if it goes past rungs without building them (in order, from switch, gate, block, chip).
+        where: latency (seconds from the machine's cores to the memory they read, from 1e-12 to 1e-3).
+        told: stages (true if the chip's pipeline stages are yours to choose, as for a program).
+        shape: units (the machine's units at the stack's three settings, three rising whole numbers up to 10,000,000).
+      render: json
+      placeholder: '{ "matter": "yours", "delay": 100 }'
+    validations:
+      required: true
+  - type: input
+    id: fact
+    attributes:
+      label: The fact that backs it (optional)
+      description: The id of an entry in src/data/facts.json, with its source. Without one, it is a guess, and says so.
+  - type: input
+    id: author
+    attributes:
+      label: Your name or GitHub handle, as it should appear
+    validations:
+      required: true
+  - type: dropdown
+    id: kind
+    attributes:
+      label: Who proposed it
+      options:
+        - A person, without AI
+        - An AI, checked by a person
+        - A person and an AI together
+        - A program that searches, run by a person
+    validations:
+      required: true
+  - type: textarea
+    id: ai
+    attributes:
+      label: How AI was used, in your words
+      description: Which assistant or agent, what it did, what you changed, and how you checked it.
+  - type: textarea
+    id: words
+    attributes:
+      label: Why it is worth growing (optional)
+      description: A need it could win, a trade-off, what would back it. Plain words, no links, up to 300 characters.

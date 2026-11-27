@@ -6,7 +6,8 @@ This is the plan for the lab's spine. Status: agreed with the owner on 26 Novemb
 data and engine (`src/data/path.js`, `src/engines/path.js`, steps 1 and 2 below: each gene option's carry contract in
 `arch.js`, one figure against today's computer), the three faces as data (`FACE_OF`, `alongTo`), the line's care
 handing its spread and yield up the carry (`CARE`, `lineOf`, `carry().fab`), and the view at `#/stack` (step 4:
-`src/v2/stack/`, loaded only when it opens) with the challenges as stepping stones (step 9). Its working
+`src/v2/stack/`, loaded only when it opens) with the challenges as stepping stones (step 9), its questions' marks and
+the lab's card (step 5). Its working
 prototype, *Your stack*, designed and built by Claude Fable 5.2 with a first version by Claude Opus, is in
 `docs/prototypes/stack/` (open `index.html`; sources in `src/`, built by `build.mjs`).
 
@@ -176,16 +177,31 @@ Each line is meant to become one task issue, in order.
    in `src/i18n/en/`; a DOM mirror of the canvas for the keyboard and screen readers; `#/stack`. (Built: `#/stack`, `#/stack/<rung>`,
    `#/stack/field`; the block plate holds the sums and the memory side by side, the chip its core; the field's
    attempts are the built recipes, the ledger's, the agents' run in your browser, and yours.)
-5. **Marks and the card through the frame:** `lensesAt` and `MARKS` for the seven levels; Look, Do, Read.
+5. **Marks and the card through the frame:** `lensesAt` and `MARKS` for the seven levels; Look, Do, Read. (Built, #447:
+   each rung carries the lenses of its levels, `RUNG_LENS` in `src/data/frame.js`, the mind those of the data centre's
+   building until something is filed at mind; the carry conditions, `RISES`, raise a question where what you built makes
+   it real, weighed by `stackLenses` in `src/engines/frame.js`; a row may only raise a question that lives at its rung,
+   so *Whole beats parts* rises at the gate when the block votes and *Compute beats cleverness* at the chip for a
+   lookahead adder, and *Only humans*, which lives at none of the seven, waits. The marks stand on the plates as the
+   plates' own pictures place them, rather than beside named parts as `MARKS` does. The stack wears the frame's card,
+   `src/v2/stack/card.js`: Look the caption at the bottom left with its question leading to `#/read`, Do a rung's
+   challenge with its controls in the side panel, Ask one question opened alone.)
 6. **The field from the ledger:** champions per niche, attempts as points, credit for first attempts, what changed
-   since your last visit.
+   since your last visit. (Built, #448: every attempt on `#/stack/field` is an entry of the ledger grown again by the
+   engine, beside the built recipes as landmarks (`src/engines/population.js`); each niche's champion carries a flag and
+   its holder's name; the ledger credits the first attempt at a recipe nobody has built (`firstTry`); a line says what
+   changed since your last visit, kept in this browser. The browser's own agents are gone: agents sweep from their
+   own machines, through the port (`architecture_field`, `submit_architecture`) or `scripts/agent.mjs --arch`.)
 7. **Lenses repaint the stack**, one at a time, starting with *Perfect fails*; then two lenses as a chain, fork, front.
 8. **The ways in:** from the Lab, Hold's last block and the dive's chip; the lattice as an arrangement of the ladder;
    *Grow an architecture*'s race and map retired into the stack.
 9. **Challenges as stepping stones** on their rungs, inking the plate's edge. (Built: a challenge's rung is the rung of the layer the lattice places
    it in, `rungOfChallenge`; a won one inks a square under its plate and shows in the rung's card.)
 10. **The open genome's form** (after the first forks carry): a GitHub form and port tool to propose a gene option
-    with its trait effects and carry contract, checked by tests.
+    with its trait effects and carry contract, checked by tests. (Built, #452: a ledger entry of kind `gene`, complete
+    by `proposalWhy` and `CONTRACT` in `arch.js`; the form `.github/ISSUE_TEMPLATE/gene.yml`; the port's
+    `propose_gene`; `tests/genome.test.mjs`. A proposal shows under its gene in the stack and in the lattice's open
+    column, marked a guess until it names a fact; the engine grows it once a pull request adopts it into `OPTIONS`.)
 
 **Risks:** the first page's budget (load everything lazily); the fork figures are guesses and their mark must stay
 visible; a canvas world needs its DOM mirror; the field must stay readable at full scale (untried plots faint, ink for

@@ -49,7 +49,7 @@ export function create() {
      and the address with them */
   let latOn = false, latPath = null, latMatter = 'silicon';
   const latAddr = () => '#/log/lattice' + (latPath ? '/' + latPath : '');
-  const latticeOf = B => latticeHtml({ path: latPath, matter: latMatter, FACT, been: B, chOf: id => Game.challengeOf(id), titleOf, doHref: V.doHref, isDone: id => Game.isDone(V.S, id),
+  const latticeOf = B => latticeHtml({ path: latPath, matter: latMatter, FACT, been: B, chOf: id => Game.challengeOf(id), titleOf, doHref: V.doHref, isDone: id => Game.isDone(V.S, id), proposals: Game.genomeOf(V.S),
     levelHref: (p, d) => { const l = (Game.INSIDE[p] || []).find(x => x.depth === d); return l ? V.levelHref(p, l) : null; } });
   const latDraw = () => { const el = V.page.querySelector('[data-lat]'); if (!el) return; el.outerHTML = latticeOf(beenSet()); requestAnimationFrame(() => drawWires(V.page)); };
   V.page.addEventListener('click', e => {

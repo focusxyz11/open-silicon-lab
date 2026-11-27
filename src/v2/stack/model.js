@@ -3,17 +3,19 @@
    the carry is the lab's path engine (src/engines/path.js carry, stackOf), the growth, the needs, the agents' forks and
    the family tree the architecture engine (src/engines/arch.js), the switch the switch engine. Here only:
    - see(R): what each rung shows of the carry, as words and figures ([label, value, bad]), its way, its mark;
-   - marksOf(R): where the core questions bite on your stack, weighed (at most three shown: topMarks), by their lab ids
-     (src/data/frame.js QUESTIONS);
+   - marksOf(R, lensesAt): where the core questions bite on your stack: the lenses that live at each rung, weighed by the
+     carry (src/engines/frame.js stackLenses; at most three shown: stackMarks), with what each says there;
    - the sheet of every recipe (RECIPES, BLOCK, POT), the population (the built recipes, the attempts kept in the
-     community's ledger, grown again by the engine, the agents' attempts run in this browser, and yours) and its census.
+     community's ledger, grown again by the engine, and yours: src/engines/population.js) and its census on the sheet.
    No words are written here: every one is t('…'), in src/i18n/en/stack.json (sk.*) or an area the lab already has. */
 import * as A from '../../engines/arch.js';
 import * as SW from '../../engines/switch.js';
 import * as P from '../../engines/path.js';
+import * as F from '../../engines/population.js';
+import { stackLenses, stackMarks } from '../../engines/frame.js';
 import { RUNGS, EXAMPLE } from '../../data/path.js';
 import { t, fmtNum } from '../../core/i18n.js';
-export { A, SW, P };
+export { A, SW, P, F };
 
 export const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 /* the rung's name: the dive's own word for its level (depth.<id>.name); the machine, two levels of the dive, its own */
@@ -88,38 +90,29 @@ export function see(R) {
 /* a switch that spends less than silicon and could be made: a stepping stone for the devices (arch.js KEPT_SWITCH) */
 export function stoneOf(F, g) { if (A.isFork('carrier', g.carrier)) return false; const fm = SW.forMachines({ mat: F.mat, shape: F.shape, mech: F.mech, own: F.own }); return fm.makeable && fm.energy < 1 - 1e-9; }
 
-/* ---------- where the core questions bite: weighed, at most three shown, one a question ----------
-   { rung, id, w, here, at }: id a question of src/data/frame.js, here what it is at this rung of your stack (words), at
-   where its mark stands on the plate's plan (900 across, 200 deep) */
-export function marksOf(R) {
-  const m = [], g = R.recipe, F = R.fine, r = R.rungs, add = (rung, id, w, here, at) => m.push({ rung, id, w, here, at }), charge = !A.isFork('carrier', g.carrier);
-  if (charge) add('atom', 'dig', 0.5, t('sk.here.dig', { eg: r.atom.hands.gap.toFixed(2) }), [820, 150]);
-  else { add('atom', 'dig', 1.2, t('sk.here.digFork', { what: optName('carrier', g.carrier).toLowerCase() }), [560, 150]); add('gate', 'physics', 3.2, t('sk.here.physicsFork'), [640, 150]); }
-  if (R.broken) { add('switch', 'perfect', 9, t('sk.here.perfectOff'), [760, 150]); return m.sort((a, b) => b.w - a.w); }
-  if (charge) {
-    const s = r.switch.hands, G = r.gate.hands;
-    if (F.mech !== 'therm' || F.V < s.vmin + 0.1) add('switch', 'physics', F.mech !== 'therm' ? 4 : 3, F.mech !== 'therm' ? t('sk.here.physicsNew') : t('sk.here.physicsLow', { v: s.vmin.toFixed(2) }), [690, 150]);
-    if (F.mat !== 'si' || F.shape !== 'fin') add('switch', 'moore', 3, t('sk.here.moore'), [300, 150]);
-    if (G.fail > 1e-12) add('gate', 'perfect', 8 + Math.log10(G.fail + 1e-30) / 4, t('sk.here.perfect', { v: F.V.toFixed(2), p: oneIn(G.fail) }), [520, 150]);
-  }
-  const B = r.block.hands, K = r.chip, Mh = r.machine.hands, Mi = r.mind;
-  if (B) {
-    if (F.vote || B.aluWrong > 1e-9) add('block', 'vn', F.vote ? 5 : 4, F.vote ? t('sk.here.vnVote') : t('sk.here.vn', { p: oneIn(B.aluWrong) }), [700, 160]);
-    if (F.adder === 'look') add('block', 'sutton', 2.5, t('sk.here.sutton'), [820, 160]);
-    if (B.wireShare > 0.12) add('block', 'geo', 2 + B.wireShare * 10, t('sk.here.geoMem', { n: F.regs, p: Math.round(100 * B.wireShare) }), [300, 150]);
-  }
-  if (K.hands.gates > 12000 && !K.passed) add('chip', 'trust', 2, t('sk.here.trust', { n: Math.round(K.hands.gates / 1000) }), [560, 160]);
-  if (g.told === 'fixed') add('chip', 'line', 3.4, t('sk.here.lineFixed'), [700, 160]);
-  else if (g.told === 'learns') add('chip', 'line', 3.4, t('sk.here.lineLearns'), [700, 160]);
-  else if (K.more.core && K.more.core.stages === 5) add('chip', 'line', 2, t('sk.here.line5'), [700, 160]);
-  if (Mh.moveShare > 0.5) add('machine', 'geo', 3 + Mh.moveShare * 2, t('sk.here.geo', { p: Math.round(100 * Mh.moveShare) }), [680, 150]);
-  if (Mi.hands.energy < X0.rungs.mind.hands.energy * 0.5) add('machine', 'eff', 3.5, t('sk.here.eff', { x: fmtX(X0.rungs.mind.hands.energy / Mi.hands.energy) }), [330, 160]);
-  if (g.carrier === 'living') add('mind', 'copy', 6.5, t('sk.here.copyLive'), [420, 160]);
-  else if (F.bits <= 2 || Mi.more.lam > 0.5) add('mind', 'copy', Mi.more.lam > 0.5 ? 6 : 3, Mi.more.lam > 0.5 ? t('sk.here.copyErr') : t('sk.here.copyBits'), [420, 160]);
-  add('mind', 'human', 1.5, t('sk.here.human', { a: (Mi.hands.right * 100).toFixed(1), e: fmtE(Mi.hands.energy) }), [600, 160]);
-  return m.sort((a, b) => b.w - a.w);
+/* ---------- where the core questions bite ----------
+   The questions met on your stack are the lenses that live at each rung, weighed by what you built there
+   (src/engines/frame.js stackLenses, from src/data/frame.js RUNG_LENS and RISES); marksOf(R, lensesAt) gives every rung's,
+   strongest first, each { id, rung, w, say, level, here, at }: here what it says at this rung of your stack (words, when
+   a carry condition raised it, else null), at where its mark stands on the plate's plan (900 across, 200 deep). */
+const AT = { dig: [820, 150], digFork: [560, 150], physicsFork: [640, 150], perfectOff: [760, 150], physicsNew: [690, 150], physicsLow: [690, 150], moore: [300, 150], perfect: [520, 150], vnVote: [700, 160], vn: [700, 160],
+  sutton: [820, 160], geoMem: [300, 150], trust: [560, 160], lineFixed: [700, 160], lineLearns: [700, 160], line5: [700, 160], geo: [680, 150], eff: [330, 160], copyLive: [420, 160], copyErr: [420, 160], copyBits: [420, 160] };
+/* a question that lives at a rung but has not risen stands along the plate's back, in the order it lives there */
+const SPOT = [400, 610, 820, 250, 700, 520];
+function hereOf(say, R) {
+  if (!say) return null;
+  const g = R.recipe, F = R.fine, r = R.rungs, h = k => (r[k] && r[k].hands) || {};
+  const args = { dig: () => ({ eg: h('atom').gap.toFixed(2) }), digFork: () => ({ what: optName('carrier', g.carrier).toLowerCase() }), physicsLow: () => ({ v: h('switch').vmin.toFixed(2) }),
+    perfect: () => ({ v: F.V.toFixed(2), p: oneIn(h('gate').fail) }), vn: () => ({ p: oneIn(h('block').aluWrong) }), geoMem: () => ({ n: F.regs, p: Math.round(100 * h('block').wireShare) }),
+    trust: () => ({ n: Math.round(h('chip').gates / 1000) }), geo: () => ({ p: Math.round(100 * h('machine').moveShare) }), eff: () => ({ x: fmtX(X0.rungs.mind.hands.energy / h('mind').energy) }) }[say];
+  return t('sk.here.' + say, args ? args() : {});
 }
-export const topMarks = (ms, n = 3) => { const seen = new Set(), out = []; for (const x of ms) { if (seen.has(x.id)) continue; seen.add(x.id); out.push(x); if (out.length === n) break; } return out; };
+export function marksOf(R, lensesAt) {
+  const by = stackLenses(lensesAt, R, X0);
+  for (const r of RUNGS) by[r].forEach((m, k) => { m.here = hereOf(m.say, R); m.at = AT[m.say] || [SPOT[k % SPOT.length], 150]; });
+  return by;
+}
+export { stackMarks };
 
 /* ---------- every recipe, and where it stands on the sheet: needs across, genes away from today up ---------- */
 const mask = g => A.GENES.reduce((s, k, i) => s + (g[k] !== A.TODAY[k] ? 1 << i : 0), 0), ord = g => A.GENES.map(k => A.OPTIONS[k].indexOf(g[k])).join('');
@@ -137,50 +130,15 @@ export const fxOf = (k, o) => { const e = A.EFFECT[k][o] || {}; return ['energy'
 export const bestNeed = g => { let b = 0, bi = -1; NEEDS.forEach((n, i) => { const p = A.potentialOf(g, n); if (p > b) { b = p; bi = i; } }); return bi; };
 export function recipeName(g) { const k = A.knownOf(g); if (k) return t('ar.known.' + k.id); return A.GENES.filter(x => g[x] !== A.TODAY[x]).map(x => optName(x, g[x])).join(' · ') || t('sk.recipe.today'); }
 
-/* ---------- the population ---------- */
-export const SWEEP_YEARS = 25;
-export function population(arch) {
-  const POP = [];
-  for (const k of A.KNOWN) POP.push({ key: A.keyOf(k.g), g: k.g, st: A.start(k.g), by: k.status, id: k.id });
-  /* the attempts kept in the community's ledger (src/engines/ledger.js), grown again by the same engine */
-  for (const h of arch || []) if (A.histOk(h)) { const r = A.replay(h); if (!POP.some(a => a.key === A.keyOf(r.st.g))) POP.push({ key: A.keyOf(r.st.g), g: r.st.g, st: r.st, by: 'ledger' }); }
-  return POP;
-}
-let seed = 20261127;
-const rnd = () => { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967296; };
-/* agents explore: recipes nobody has tried, at least two genes from today's, that could win some need once polished;
-   each grown as the ledger's own example plays it: people first for ten years, then the engine's suggestion. Run in
-   this browser by the visitor, never by the lab (docs/PATH.md: agents' sweeps come through the port) */
-export function explore(POP, n, mineKey) {
-  const tried = new Set(POP.map(a => a.key)); if (mineKey) tried.add(mineKey);
-  const cands = RECIPES.filter(r => r.d >= 2 && !tried.has(r.key) && NEEDS.some((nd, i) => POT[i][r.i] >= 1)), out = [];
-  for (let k = 0; k < n && cands.length; k++) out.push(agentGrow(POP, cands.splice(Math.floor(rnd() * cands.length), 1)[0]));
-  return out;
-}
-function agentGrow(POP, r) {
-  let st = A.start(r.g);
-  for (let y = 0; y < SWEEP_YEARS; y++) { const s = A.suggest(st, 'archniche').dirs; st = A.year(st, y < 10 ? ['people', s[0]] : s); }
-  const a = { key: r.key, g: r.g, st, by: 'agent', years: SWEEP_YEARS }; POP.push(a); return a;
-}
-/* the agents' attempts of an earlier visit, grown again: the same recipe and the same play give the same result */
-export function regrow(POP, keys) { for (const k of keys || []) if (RIDX.has(k) && !POP.some(a => a.key === k)) agentGrow(POP, RECIPES[RIDX.get(k)]); }
-/* the census: every plot of the sheet (need x recipe), who stands on it and how it scores, and each niche's champion */
+/* ---------- the population: the population engine's (src/engines/population.js), on the sheet's order ----------
+   the built recipes, every attempt kept in the community's ledger (grown again by the engine) and yours. The lab runs no
+   agent: agents' sweeps arrive as ledger entries through the open port */
+export const population = entries => F.population(entries);
+/* the census on the sheet: P[need][recipe index] is who stands on that plot, champ[need][genes away] its niche's champion */
 export function census(POP, mine) {
-  const atts = POP.slice(); if (mine) atts.push(mine);
-  const Pl = NEEDS.map(() => new Array(RECIPES.length).fill(null)), champ = NEEDS.map(() => [null, null, null, null, null]);
-  let wins = 0; const triedKeys = new Set();
-  for (const a of atts) {
-    const ri = RIDX.get(a.key), sc = A.scoreOf(a.st), d = RECIPES[ri].d; a.sc = sc; triedKeys.add(a.key);
-    let won = false;
-    NEEDS.forEach((n, ni) => {
-      if (!sc[n].can) return;
-      const cur = Pl[ni][ri];
-      if (!cur || a.mine || (!cur.a.mine && sc[n].now > cur.now)) Pl[ni][ri] = { a, now: sc[n].now, could: sc[n].could };
-      if (sc[n].wins && d > 0) won = true;
-    });
-    if (won) wins++;
-  }
-  NEEDS.forEach((n, ni) => Pl[ni].forEach((e, ri) => { if (!e) return; const d = RECIPES[ri].d, c = champ[ni][d]; if (!c || e.now > c.now) champ[ni][d] = { ri, now: e.now }; }));
-  return { P: Pl, champ, tried: triedKeys.size, wins };
+  const c = F.census(mine ? POP.concat([mine]) : POP), P = NEEDS.map(() => new Array(RECIPES.length).fill(null));
+  c.at.forEach((m, ni) => m.forEach((e, key) => { P[ni][RIDX.get(key)] = e; }));
+  const champ = c.champ.map(row => row.map(x => (x ? Object.assign({ ri: RIDX.get(x.key) }, x) : null)));
+  return { P, champ, tried: c.tried, wins: c.wins };
 }
 export { EXAMPLE, RUNGS };

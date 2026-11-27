@@ -75,8 +75,17 @@
 .sk-pop .fx { font: 400 11px/1.4 var(--mono); font-stretch: 80%; color: var(--ink); }
 .sk-pop em { grid-row: 1; grid-column: 2; font: 400 11px/1.6 var(--mono); font-stretch: 80%; font-style: normal; color: var(--muted); text-align: right; }
 .sk-pop button:disabled { opacity: .5; }
+/* the open genome (#452): options proposed for this gene, under its own, each marked a guess until a fact backs it */
+.sk-pop .sk-gk { margin: 8px 10px 2px; padding-top: 9px; border-top: 1px dashed var(--line); font: 600 11.5px/1.35 var(--sans); color: var(--muted); }
+.sk-gprop { display: grid; gap: 2px; margin: 2px 0; padding: 8px 10px; border: 1px dashed var(--line); border-radius: 6px; }
+.sk-pop .sk-gprop em { grid-row: auto; grid-column: 1 / -1; display: flex; align-items: center; gap: 8px; text-align: left; margin-top: 3px; }
+.sk-pop .sk-gprop button.fid { display: inline-flex; grid-template-columns: none; gap: 5px; padding: 2px 8px 2px 6px; border: 1px solid var(--line); border-radius: 999px; background: color-mix(in srgb, var(--ink) 5%, var(--panel-solid)); font: 600 11.5px/1.2 var(--sans); color: var(--muted); }
+.sk-pop .sk-gprop button.fid span { grid-column: auto; font-size: 11.5px; }
+/* the lab's mark of whether anyone has built it (src/v2/fid.js TRUTH), sized in the stack */
+.stackv .mtr { display: inline-block; flex: none; width: 12px; height: 12px; overflow: visible; }
+.stackv .t-guess circle { fill: none; stroke: currentColor; stroke-width: 1.6; stroke-dasharray: 2.4 1.8; }
 
-/* the questions, where they bite: at most three marks, one opened alone */
+/* the questions, where they bite: at most three marks while you look, one opened alone in the card */
 .sk-marks { position: absolute; inset: 0; z-index: 9; pointer-events: none; opacity: 0; transition: opacity .25s; }
 .sk-marks.on { opacity: 1; }
 .sk-marks button { position: absolute; transform: translate(-13px, -50%); pointer-events: none; display: inline-flex; align-items: center; gap: 0; border: 0; border-radius: 999px; background: none; color: var(--warm); padding: 4px; font: 500 12.5px/1 var(--sans); min-height: 26px; white-space: nowrap; }
@@ -86,12 +95,11 @@
 .sk-marks button:hover, .sk-marks button:focus-visible, .sk-marks button[aria-pressed=true] { background: color-mix(in srgb, var(--bg) 90%, transparent); box-shadow: inset 0 0 0 1px var(--warm); z-index: 2; }
 .sk-marks button:hover span, .sk-marks button:focus-visible span, .sk-marks button[aria-pressed=true] span { max-width: 220px; opacity: 1; padding: 0 9px 0 7px; }
 .sk-marks button.dim { opacity: .3; }
+/* near the right edge (or the card's panel) a mark's name opens to its left */
+.sk-marks button.left { flex-direction: row-reverse; transform: translate(calc(-100% + 13px), -50%); }
+.sk-marks button.left span { padding: 0; }
+.sk-marks button.left:is(:hover, :focus-visible, [aria-pressed=true]) span { padding: 0 7px 0 9px; }
 @keyframes sk-pulse { 50% { box-shadow: 0 0 0 7px transparent; } }
-.sk-lens { position: absolute; z-index: 30; width: min(440px, calc(100% - 28px)); background: var(--panel); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border: 1px solid var(--warm); border-radius: 14px; padding: 16px 20px 16px; }
-.sk-lens .kicker { color: var(--warm); margin-bottom: 6px; }
-.sk-lens q { display: block; quotes: none; font: italic 400 21px/1.34 var(--serif); text-wrap: pretty; }
-.sk-lens p:not(.kicker) { margin: 10px 0 14px; font-size: 15px; line-height: 1.45; color: var(--ink); }
-.sk-lens .btn { min-height: 36px; }
 
 /* the opened rung's controls, under its plate */
 .sk-ctl { position: absolute; z-index: 10; opacity: 0; transition: opacity .25s; pointer-events: none; display: flex; flex-wrap: wrap; gap: 10px 26px; align-items: center; justify-content: center; padding: 12px 16px; background: var(--panel); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border: 1px solid var(--line); border-radius: 12px; overflow: auto; }
@@ -129,6 +137,18 @@
 .sk-say { margin: 0; max-width: min(900px, 100%); min-height: 22px; text-align: center; font: 400 15px/1.4 var(--sans); color: var(--ink); text-wrap: balance; pointer-events: none; text-shadow: 0 0 12px var(--bg), 0 0 4px var(--bg); }
 .sk-say.in { animation: sk-say .5s ease-out; }
 @keyframes sk-say { from { opacity: 0; transform: translateY(6px); } }
+
+/* the field: what changed since your last visit (#448), one quiet line over the rest */
+.sk-since { margin: 0; max-width: min(900px, 100%); display: flex; align-items: baseline; gap: 8px; font: 400 13px/1.4 var(--sans); color: var(--muted); text-align: left; text-wrap: pretty; text-shadow: 0 0 12px var(--bg), 0 0 4px var(--bg); }
+.sk-since::before { content: ""; flex: none; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); transform: translateY(-1px); }
+.sk-since[hidden] { display: none; }
+/* how agents explore: through the open port, never from the lab */
+.sk-port { background: var(--panel); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border: 1px solid var(--line); border-radius: 12px; padding: 12px 16px; display: grid; gap: 6px; justify-items: start; max-width: min(640px, 100%); animation: sk-say .35s ease-out backwards; }
+.sk-cards .sk-port p { text-align: left; text-shadow: none; font-size: 14px; line-height: 1.45; }
+.sk-port .n { color: var(--muted); }
+.sk-port a { color: var(--accent); }
+.sk-port code { font: 500 12.5px/1 var(--mono); padding: 3px 6px; border: 1px solid var(--line); border-radius: 4px; white-space: nowrap; }
+.sk-port .btn { justify-self: end; min-height: 32px; }
 
 /* the agents' forks: a hand of cards over the dock */
 .sk-cards { display: grid; gap: 8px; justify-items: center; max-width: 100%; }
@@ -199,6 +219,9 @@
   .sk-cards { width: 100%; }
   .sk-hand { flex-direction: column; width: 100%; }
   .sk-cards p { font-size: 13px; }
+  .sk-since { font-size: 12.5px; }
+  .sk-port { padding: 10px 12px; }
+  .sk-cards .sk-port p { font-size: 13px; }
   .sk-prop { width: auto; grid-template-columns: 1fr auto; padding: 9px 12px; }
   .sk-prop .btn { grid-row: 1 / 4; grid-column: 2; margin: 0; align-self: center; }
   .sk-prop .k { display: none; }
@@ -212,10 +235,50 @@
   .sk-stones { justify-content: flex-start; }
   .sk-seg button { min-height: 40px; padding: 0 10px; font-size: 13px; }
   .sk-ctl .sk-done { display: block; margin-left: auto; }
-  .sk-lens { left: 8px; right: 8px; bottom: 8px; width: auto; z-index: 35; }
-  .sk-lens q { font-size: 18px; }
   .sk-sr { top: 132px; }
   .stackv::before { height: 196px; background: linear-gradient(var(--bg) 84%, transparent); }
   .stackv::after { height: 170px; }
+}
+/* the card (#447): the lab's one frame and card, worn over the stack the same way every view wears it (src/v2/stack/card.js,
+   src/styles/frame.css): the caption at the bottom left, Do and Ask in the side panel at the right, the sheet at the foot
+   on a phone. Its way out names the place, so the view's own title steps aside; the dock stands beside the caption, left
+   of the panel, on the sheet */
+.stackv .skframe { z-index: 24; }
+.stackv.skcard .sk-ttl { visibility: hidden; }
+.stackv.skcard .sk-foot { left: var(--sk-fl, 12px); right: var(--sk-fr, 12px); bottom: var(--sk-fb, 12px); width: auto; transform: none; }
+.stackv.skcard .sk-dock { grid-template-columns: minmax(0, 1fr) auto auto; }
+.stackv.skcard .sk-dirs { grid-column: 1 / -1; grid-row: 2; }
+.stackv.skcard .sk-say:empty { display: none; }
+/* close plates: each gene's name beside its choice, not above it */
+.sk-genes.tight .sk-gene { flex-direction: row; align-items: center; gap: 10px; }
+.sk-genes.tight .sk-gene span { max-width: 110px; }
+/* Do: the rung's challenge, its controls under it, as a lab's are in its card */
+.skframe .sk-do h3 { text-wrap: balance; }
+.skframe .sk-ctl { position: static; opacity: 1; pointer-events: auto; display: grid; gap: 16px; justify-content: stretch; padding: 4px 0 8px; margin: 0; background: none; backdrop-filter: none; -webkit-backdrop-filter: none; border: 0; border-radius: 0; overflow: visible; max-height: none; }
+.skframe .sk-ctl .sk-row { display: grid; gap: 7px; justify-items: start; }
+.skframe .sk-ctl .sk-lbl { font: 600 14px/1.3 var(--sans); color: var(--muted); }
+.skframe .sk-seg button { min-height: 40px; font-size: 14.5px; }
+.skframe .sk-ctl input[type=range] { width: min(100%, 360px); }
+.skframe .sk-ctl .warn, .skframe .sk-ctl .quiet { text-align: left; font-size: 15px; }
+.skframe .sk-stones { justify-content: flex-start; display: flex !important; flex-wrap: wrap; }
+.skframe .sk-stones .sk-lbl { text-align: left; }
+.skframe .sk-stones a { font-size: 14px; padding: 8px 10px; }
+.skframe .sk-ctl .sk-done { display: none; }
+/* Look at a rung: what it hands up, and how true the picture is */
+.skframe .sk-figs { display: grid; grid-template-columns: auto 1fr; gap: 4px 16px; margin: 4px 0 14px; font-size: 15px; }
+.skframe .sk-figs dt { color: var(--muted); }
+.skframe .sk-figs dd { margin: 0; font: 500 15px var(--mono); font-stretch: 85%; }
+.skframe .sk-figs dd.bad { color: var(--bad); }
+.skframe .sk-rungs { display: grid; gap: 6px; justify-items: start; margin: 0 0 12px; }
+.skframe .sk-rungs .chipb span { color: var(--muted); font-weight: 400; }
+/* Ask: what the question is on your stack, before the lab's card of it */
+.skframe .sk-here { margin: 0 0 14px; padding: 2px 0 2px 12px; border-left: 3px solid var(--warm); font: 400 16px/1.45 var(--sans); }
+@media (max-width: 759px) {
+  .stackv.skcard .sk-ttl { display: none; }
+  .stackv.skcard .sk-head { top: 68px; padding-left: 58px; }
+  .skframe .crumbs2 { display: none; }
+  .stackv.skcard .sk-foot { gap: 4px; }
+  .stackv.skcard[data-level=rung]:not(.sketch) .sk-foot { display: none; }
+  .skframe .sk-ctl { gap: 12px; }
 }
 @media (prefers-reduced-motion: reduce) { .stackv *, .stackv *::before { animation: none !important; transition: none !important; } }

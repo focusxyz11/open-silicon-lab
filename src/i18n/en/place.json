@@ -335,6 +335,10 @@
   "one": "fixed {n}",
   "other": "fixed {n}"
  },
+ "society.does.gene": {
+  "one": "proposed {n} gene option",
+  "other": "proposed {n} gene options"
+ },
  "lab.reports": "Reported in the lab",
  "lab.reportsD": "The lab broken by the people using it: each calls for a fix until someone makes one.",
  "follow.k": "Following",
