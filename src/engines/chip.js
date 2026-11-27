@@ -59,6 +59,8 @@ export const WAFER = { mm: 300, R: 440 };
 const MM = WAFER.R / (WAFER.mm / 2);
 /* defects per square centimetre: newer processes start with more */
 const D0 = gen => 0.1 * Math.pow(1.25, gen - START.gen);
+/* the same, read by others (the path's carry, src/engines/path.js): a generation's defects per cm² */
+export const defectsOf = gen => D0(step(gen, GENS, START.gen));
 /* the chips on the wafer: a grid of squares, one centred on the middle, kept wholly inside the disc */
 export function dies(size) {
   const side = SIDES[step(size, SIDES.length, START.size)] * MM, gap = 2, pitch = side + gap, out = [];
@@ -110,6 +112,20 @@ export const GROUPS_AT = { clean: ['clean'], deposit: ['depo'], print: ['litho']
 const GROUP_STATION = { depo: 'deposit', litho: 'print', etch: 'etch', clean: 'clean', implant: 'implant', anneal: 'implant', cmp: 'wires', metro: 'wires' };
 /* a fab's costs are mostly fixed: a wafer made in a fuller fab carries less of them (illustrative: 60% fixed) */
 const FIXED = 0.6;
+
+/* A die of any size, for the path's carry (src/engines/path.js, #455): what the line hands up the stack.
+   area: cm²; defects: specks per cm²; pace: wafers the line puts through against the starting chip's line (a slower
+   line carries its fixed costs over fewer wafers, as load does above).
+   - dies: how many fit on the wafer, by the usual count for squares on a disc (its area over the die's, less those the
+     round edge cuts: pi d / sqrt(2 A));
+   - yield: the share of them no speck lands on, the specks falling at random (Poisson: what hits() counts, on average);
+   - wafer: what a wafer costs against the starting chip's (FIXED of it shared over the wafers the line puts through);
+   - cost: what a good die costs, in starting wafers. */
+export function dieOf(area, defects, pace = 1) {
+  const A = Math.max(area, 1e-9), d = WAFER.mm / 10, dies = Math.max(0, Math.PI * d * d / 4 / A - Math.PI * d / Math.sqrt(2 * A));
+  const Y = Math.exp(-Math.max(0, defects) * A), wafer = 1 - FIXED + FIXED / Math.max(pace, 1e-9);
+  return { area: A, defects, dies, yield: Y, wafer, cost: dies * Y > 0 ? wafer / (dies * Y) : Infinity };
+}
 
 export function model(c) {
   const { clock, gen, size, load: li, reuse: ri, mem: mi } = normal(c);

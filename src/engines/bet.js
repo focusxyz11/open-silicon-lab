@@ -18,7 +18,7 @@ import { roofline } from './aichip.js';
 export const WAFER = { r: 150, edge: 3 };            // mm: a 300 mm wafer, and the ring at its edge no chip uses
 export const SIZES = [1, 2, 4, 8, 16, 32, 64, 128, 256]; // parts on one chip, in millions
 export const CLEAN = [1, 0.5, 0.25, 0.1, 0.05];      // specks per square centimetre, from a dusty line to a clean one
-const AREA_FIXED = 10, AREA_PER = 2;                   // mm² for the pads and edges of a chip, and per million parts
+export const AREA_FIXED = 10, AREA_PER = 2;            // mm² for the pads and edges of a chip, and per million parts
 /* what a wafer costs on each line, against the dustiest: cleaner air, filters and checks cost money */
 const waferCost = d => (0.6 + 0.08 / d) / (0.6 + 0.08 / CLEAN[0]);
 const chipSide = n => Math.sqrt(AREA_FIXED + AREA_PER * n);
