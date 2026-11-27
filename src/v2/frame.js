@@ -6,7 +6,7 @@
    there; in Do and Ask the frame fills it itself from the atlas, with the challenges and the questions that live at
    the level in view and what the community has left there, so every view has them for free.
 
-   createFrame(host, o): o.up { href, label }, o.path [{ href, label }], o.rail { label, items: [{ id, label, size }], optional } (size: metres across, sizeOf in the atlas;
+   createFrame(host, o): o.up { href, label }, o.path [{ href, label }], o.rail { label, items: [{ id, label, size }], optional } (size: metres across, sizeOf in the atlas, or false for a level that is not a size, which says so;
    optional: the rail is absent while the view is at none of its items),
    o.steps { label, items: [{ id, label }] } with o.onStep(id): a row of steps, walked along (the studio, the factory's line),
    drawn as one line from left to right across the top of the picture (on a phone, a strip: the step, ← → and a count),
@@ -33,12 +33,16 @@ import { TWINS } from '../data/atlas.js';
 import { fieldLine } from './field.js';
 import { attach as frame2 } from './frame2.js';
 
-/* a size in metres, in words: 500 m, 80 cm, 1 mm, 1 µm, 50 nm, 0.5 nm */
+/* a size in metres, in words: 500 m, 80 cm, 1 mm, 1 µm, 50 nm, 0.5 nm; false for a level that is not a size (mind, what
+   the machine does: NOT_A_SIZE in the atlas), which says so */
 export function sizeWords(m) {
+  if (m === false) return t('frame.size.not');
   const [u, k] = m >= 1 ? ['m', 1] : m >= 0.01 ? ['cm', 100] : m >= 1e-3 ? ['mm', 1e3] : m >= 1e-6 ? ['um', 1e6] : ['nm', 1e9];
   return t('frame.size.' + u, { v: fmtNum(+(m * k).toPrecision(2)) });
 }
 /* how many times closer (from bigger to smaller) or farther, rounded: below ten to a whole number, above to one figure */
+/* whether a level's size is said: metres across, or false for a level that is not a size (null: a step, none) */
+const sized = s => !!s || s === false;
 function timesWords(from, to) {
   const r = from / to, x = r >= 1 ? r : 1 / r; if (x < 1.5) return '';
   const p = Math.pow(10, Math.floor(Math.log10(x))), n = x < 10 ? Math.round(x) : Math.round(x / p) * p;
@@ -75,7 +79,7 @@ export function createFrame(host, o) {
   host.innerHTML =
     '<a class="homebtn" href="' + esc(o.up.href) + '" aria-label="' + esc(o.up.label) + '">↑</a>' +
     '<nav class="crumbs2">' + path.map((p, i) => (i ? '<span aria-hidden="true">›</span>' : '') + (p.href ? '<a href="' + esc(p.href) + '">' + esc(p.label) + '</a>' : '<b>' + esc(p.label) + '</b>')).join('') + '</nav>' +
-    (o.rail ? '<ol class="rail2" aria-label="' + esc(o.rail.label) + '"><span class="rfill"></span>' + o.rail.items.map(x => '<li><button type="button" data-rail="' + esc(x.id) + '"><span class="dot"></span><span class="nm">' + esc(x.label) + (x.size ? '<span class="sz">' + esc(sizeWords(x.size)) + '</span>' : '') + '</span></button></li>').join('') + '</ol>' : '') +
+    (o.rail ? '<ol class="rail2" aria-label="' + esc(o.rail.label) + '"><span class="rfill"></span>' + o.rail.items.map(x => '<li><button type="button" data-rail="' + esc(x.id) + '"><span class="dot"></span><span class="nm">' + esc(x.label) + (sized(x.size) ? '<span class="sz">' + esc(sizeWords(x.size)) + '</span>' : '') + '</span></button></li>').join('') + '</ol>' : '') +
     (o.steps ? stepsHtml(o.steps) : '') +
     '<div class="corner"><aside class="goal2" hidden></aside></div>' +
     '<div class="wayin" hidden><span class="wiring" aria-hidden="true"></span><div class="wibox"></div></div>' +
@@ -118,7 +122,7 @@ export function createFrame(host, o) {
   let lastPos = null, heading = 0, lineKey = '';
   const scale = (at, pos) => {
     const here = items.find(x => x.id === at);
-    if (pos == null || !here || !here.size) { line.hidden = true; lineKey = ''; return; }
+    if (pos == null || !here || !sized(here.size)) { line.hidden = true; lineKey = ''; return; }
     if (lastPos != null && Math.abs(pos - lastPos) > 1e-4) heading = pos > lastPos ? 1 : -1;
     lastPos = pos;
     const i = Math.floor(pos + 1e-6), frac = pos - i, moving = frac > 0.03 && frac < 0.97 && heading !== 0;
@@ -128,7 +132,7 @@ export function createFrame(host, o) {
       if (!w) { line.hidden = true; lineKey = ''; return; }
       key = 'm' + a.id + b.id;
       html = '<span class="za" aria-hidden="true">' + (a.size > b.size ? '↓' : '↑') + '</span><b>' + esc(w) + '</b><span class="zt">' + esc(t('frame.size.at', { level: b.label, size: sizeWords(b.size) })) + '</span>';
-    } else { key = 'r' + here.id; html = '<span class="zt">' + esc(t('frame.size.at', { level: here.label, size: sizeWords(here.size) })) + '</span>'; }
+    } else { key = 'r' + here.id; html = '<span class="zt">' + esc(here.size === false ? t('frame.size.notAt', { level: here.label }) : t('frame.size.at', { level: here.label, size: sizeWords(here.size) })) + '</span>'; }
     line.classList.toggle('moving', moving);
     if (key !== lineKey) { lineKey = key; line.innerHTML = html; }
     line.hidden = false;
@@ -320,7 +324,7 @@ export function createFrame(host, o) {
   };
   /* the frame worn as a caption, a side panel and a stage (src/v2/frame2.js, #271) */
   frame2(host, api, o, { wrap, items, life, at: () => railAt, step: () => (o.steps && stepAt ? (o.steps.items.find(x => x.id === stepAt) || {}).label || '' : ''), doList: () => (depth && o.doAt ? o.doAt(depth) : []),
-    here: () => { const it = items.find(i => i.id === railAt); return it ? { label: it.label, size: it.size ? sizeWords(it.size) : '', fid: o.fidAt ? o.fidAt(it.id) : '' } : null; } });
+    here: () => { const it = items.find(i => i.id === railAt); return it ? { label: it.label, size: sized(it.size) ? sizeWords(it.size) : '', across: it.size !== false, fid: o.fidAt ? o.fidAt(it.id) : '' } : null; } });
   return api;
 }
 export { TWINS };

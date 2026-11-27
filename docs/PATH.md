@@ -162,6 +162,8 @@ Each line is meant to become one task issue, in order.
 2. **One model for stack and recipe:** `recipeOf` and `stackOf`; each gene option's carry contract moves into
    `arch.js` beside its trait effects; one "against today" number, so the carry's and the engine's never drift apart.
 3. **Mind as a level:** a home for it in the atlas and `places.js`, above the machine, without pretending it is a size.
+   (Built, #445: a level of the data centre above its zoom, `ABOVE` in `src/data/places.js`, size `false` with its own
+   readout; kept out of `INSIDE` and `DEPTHS`, so no view moves until step 4.)
 4. **The stack view:** `src/v2/stack/` (camera, plates, pictures, the field) as modules loaded only when opened; words
    in `src/i18n/en/`; a DOM mirror of the canvas for the keyboard and screen readers; `#/stack`.
 5. **Marks and the card through the frame:** `lensesAt` and `MARKS` for the seven levels; Look, Do, Read.

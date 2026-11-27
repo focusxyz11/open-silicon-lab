@@ -25,9 +25,14 @@ export const INSIDE = {
 };
 export { SHARED };
 
+/* above the zoom, not a size: mind (docs/SYSTEM.md §1) */
+export const ABOVE = { datacentre: [{ world: 'datacentre', depth: 'mind' }] };
+export const levelsOf = place => (ABOVE[place] || []).concat(INSIDE[place] || []);
+export const aboveOf = depth => Object.keys(ABOVE).find(p => ABOVE[p].some(l => l.depth === depth)) || null;
+
 /* the place of a page of the earlier site */
 export function placeOf(world, depth) {
-  for (const [p, L] of Object.entries(INSIDE)) if (L.some(l => l.world === world && l.depth === depth)) return p;
+  for (const p of Object.keys(INSIDE)) if (levelsOf(p).some(l => l.world === world && l.depth === depth)) return p;
   return world === 'made' ? 'fab' : world === 'design' ? 'studio' : world === 'journey' ? 'fab' : null;
 }
 
