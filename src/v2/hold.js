@@ -124,8 +124,8 @@ export function createHold(host, ctx = {}) {
     slot._s = 0; if (KF.length) { KF[0][1] = KF[1][1] = F.years; } }
   function fit() {
     if (!host.clientHeight) return;
-    /* where the visitor is: kept through a resize or a turn; the window unchanged (the type came), where they are now */
-    const same = host.clientHeight === vh && host.clientWidth === VW, keep = sized && !flying ? (same && Math.abs(host.scrollTop - here.y) >= 2 ? anchor() : here.a) : null;
+    /* where the visitor is, before the new layout: kept through a resize or a phone turned sideways */
+    const keep = sized && !flying ? here.a : null, same = host.clientHeight === vh && host.clientWidth === VW;
     u = fitU(); vh = host.clientHeight; VW = host.clientWidth; const W = VW, R = root.style, ph = PHONE(), land = ph && LAND(), small = W <= 760 || land;
     /* the bar: on a wide screen its small chip and squares grow a little with the page (a phone's bar, and one on its side, is lower) */
     const ub = ph || u <= 1 ? 1 : Math.min(1.3, 1 + (u - 1) * .5), barH = small ? 62 : Math.round(42 + 30 * ub); let rw = 0, bandH, cxs, SH, SHc = 0;
@@ -180,6 +180,7 @@ export function createHold(host, ctx = {}) {
     $$('.card', secs.years).forEach(c => { c.classList.remove('sc'); tall(c); });
     sized = true; slot._s = 0; plan(); chart.fit(); fitBar(); for (const id in plates) plates[id].paint(S.T, 0);
     if (pend) { const r = pend; pend = null; goAddr(r); } else if (keep) restore(keep);
+    /* only a window that changed shape scrolls by itself (onScroll): the type arriving, or the page shown again, does not */
     if (!same) fitAt = performance.now();
   }
   /* where the visitor is, said so that any layout can find it again: in the fifty years, the count (so the year); after
@@ -228,7 +229,7 @@ export function createHold(host, ctx = {}) {
      of the visitor's own takes it over */
   function fly(top, smooth) { /* a move you make is where you are from then on, whatever the page was keeping */
     here.a = null; const y0 = host.scrollTop, y1 = clamp(top, 0, host.scrollHeight - vh), far = Math.abs(y1 - y0) / vh;
-    if (!smooth || reduce() || far < .02) { land0(); host.scrollTo({ top, behavior: 'instant' }); if (sized) { here.a = anchor(); here.y = host.scrollTop; here.until = 0; } onScroll(); return; }
+    if (!smooth || reduce() || far < .02) { land0(); host.scrollTo({ top, behavior: 'instant' }); onScroll(); return; }
     flying = 1; anim = { y0, y1, t0: performance.now(), ms: clamp(700 + far * 320, 950, 2100) }; root.classList.toggle('fly', far > 1.6); }
   const land0 = () => { if (anim) { anim = null; flying = 0; root.classList.remove('fly'); } };
   TICK.push(() => { if (!anim) return; const k = clamp((performance.now() - anim.t0) / anim.ms, 0, 1), e = k < .5 ? 4 * k * k * k : 1 - Math.pow(2 - 2 * k, 3) / 2;
