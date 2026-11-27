@@ -2363,6 +2363,66 @@
    "url": "https://news.mit.edu/2016/programming-language-living-cells-bacteria-0331",
    "value": "Cello: 60 circuits written in a chip designer’s language, 45 worked in E. coli on the first test; the largest had seven logic gates (2016)",
    "verified": "2026-11-26"
+  },
+  {
+   "id": "junction-limit",
+   "topic": "package",
+   "detail": "AMD said Radeon RX 5700-series chips running at up to 110 °C junction (the hottest spot on the die) during typical gaming are expected and within spec; RDNA4 cards list the same 110 °C hotspot limit.",
+   "kind": "reported",
+   "label": "How hot a chip may run",
+   "source": "Tom's Hardware (AMD)",
+   "status": "new",
+   "url": "https://www.tomshardware.com/news/amd-rx-5700-graphics-card-thermal-management,40144.html",
+   "value": "Up to 110 °C at the hottest spot of the die, within spec",
+   "verified": "2026-11-27"
+  },
+  {
+   "id": "soic-pitch",
+   "topic": "package",
+   "detail": "TSMC's SoIC hybrid bonding joins stacked dies copper to copper: a 9 µm pitch in 2023 (enough for AMD's Instinct MI300), 6 µm in 2025, and 4.5 µm planned by 2029.",
+   "kind": "reported",
+   "label": "The pitch of stacked dies' bonds",
+   "source": "Tom's Hardware",
+   "status": "new",
+   "url": "https://www.tomshardware.com/uk/tech-industry/semiconductors/hybrid-bonding-roadmap-examined",
+   "value": "9 µm in 2023, 6 µm in 2025, 4.5 µm planned for 2029",
+   "verified": "2026-11-27"
+  },
+  {
+   "id": "ucie-pjbit",
+   "topic": "package",
+   "detail": "Measured UCIe chiplet links in 3 nm FinFET: 0.29 pJ/bit at 5.27 Tb/s/mm on a CoWoS interposer (advanced package), 0.52 pJ/bit at 0.448 Tb/s/mm on an organic substrate (standard package).",
+   "kind": "reported",
+   "label": "Energy of a link between chiplets",
+   "source": "IEEE Solid-State Circuits Society",
+   "status": "new",
+   "url": "https://sscs.ieee.org/tag/packaging/",
+   "value": "0.29 pJ per bit on an interposer, 0.52 pJ per bit on a substrate",
+   "verified": "2026-11-27"
+  },
+  {
+   "id": "hybrid-bond-pjbit",
+   "topic": "package",
+   "detail": "Arm Research's 3D stacked test chip (Project Trishul, 12 nm) joined two dies with hybrid wafer bonds at a 5.76 µm pitch and measured 0.02 pJ per bit across them.",
+   "kind": "reported",
+   "label": "Energy of a bond between stacked dies",
+   "source": "Arm Research",
+   "status": "new",
+   "url": "https://developer.arm.com/community/arm-research/b/articles/posts/3d-stacking-for-next-generation-high-performance-energy-efficient-systems",
+   "value": "0.02 pJ per bit across a 5.76 µm hybrid bond",
+   "verified": "2026-11-27"
+  },
+  {
+   "id": "hbm-pjbit",
+   "topic": "memory",
+   "detail": "High-bandwidth memory beside the processor spends about 7 pJ per bit moved, against about 25 pJ for DDR memory on the board (Salami et al., ETH Zurich, 2021, as reported). Newer generations claim tens of percent less, without absolute figures.",
+   "kind": "estimate",
+   "label": "Energy of memory beside the chip",
+   "source": "Wevolver (Salami et al.)",
+   "status": "new",
+   "url": "https://www.wevolver.com/article/high-bandwidth-memory",
+   "value": "About 7 pJ per bit for HBM, about 25 for DDR",
+   "verified": "2026-11-27"
   }
  ],
  "changes": [

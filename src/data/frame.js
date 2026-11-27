@@ -153,6 +153,8 @@ export const FILED = {
   'bridge': ['physics', 'dig', 'nat'], 'dnawta': ['physics', 'dig'],
   /* new ways to compute: reversible logic at the switch, dataflow at the chip (#323) */
   'reversible': ['physics', 'nat'], 'dataflow': ['geo', 'eff'],
+  /* build up, not out: tiers stacked until the heat stops you, chiplets against the dust (#482) */
+  'tiers': ['geo', 'physics', 'eff'],
   /* spiking neurons and light, new ways to compute (#322) */
   'spikes': ['physics', 'copy'], 'light': ['physics', 'geo']
   }
