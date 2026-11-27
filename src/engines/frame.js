@@ -8,7 +8,7 @@
    createLenses({ experiments, stops, challenges, doHome }) → { lensesAt(depth), lensAt(q, depth, levels), questionsOfStop(key) }
    Pure: the shell passes the lab's data in, so the tests can build it the same way; the field questions are plain
    data (src/data/questions.js). */
-import { QUESTIONS, FILED, MEETS } from '../data/frame.js';
+import { QUESTIONS, FILED, MEETS, RUNG_LENS, RISES } from '../data/frame.js';
 import { FIELD } from '../data/questions.js';
 
 export const IDS = QUESTIONS.map(q => q.id);
@@ -80,4 +80,55 @@ export function createLenses({ experiments, stops, challenges, doHome }) {
     return { q, field, stops: st, experiments: xs, challenges: chs, meets, meet: meets ? meetOf(q, meets) : null, next };
   }
   return { lensesAt, lensAt, questionsOfStop };
+}
+
+/* Your stack (docs/PATH.md, "The thirteen questions in the stack"): the questions that live at each rung, weighed by
+   what you built there (RUNG_LENS and RISES in src/data/frame.js).
+   whenOf(c, R, X0): does a carry condition hold on a carry R (src/engines/path.js carry()), X0 today's carry.
+   stackLenses(lensesAt, R, X0) -> { rung: [{ id, rung, w, say, level }] }: at every rung, every question that lives
+   there (lensesAt over its levels; a little weight for how much at home it is: 1 for the first, 0.1 less for each
+   after), raised by the strongest carry condition that holds (say: the words it says there, else null), strongest
+   first; level is the level of the lab it lives at, for its lens. On a wrecked stack the rungs above the one over the
+   wreck carry none.
+   stackMarks(byRung, n, rungs) -> the n strongest across the rungs (all of them, or the ones named), each question once:
+   the marks on the stack. Pure, like createLenses. */
+const pick = (o, path) => path.split('.').reduce((v, k) => (v == null ? v : v[k]), o);
+export function whenOf(c, R, X0) {
+  if (!c) return false;
+  if (c.all) return c.all.every(x => whenOf(x, R, X0));
+  if (c.any) return c.any.some(x => whenOf(x, R, X0));
+  if (c.broken) return !!R.broken;
+  const cmp = v => v != null && ('is' in c ? v === c.is : 'not' in c ? v !== c.not : 'max' in c ? v <= c.max : 'over' in c ? v > c.over : 'under' in c ? v < c.under : false);
+  if (c.gene) return cmp(R.recipe[c.gene]);
+  if (c.fine) return cmp(R.fine[c.fine]);
+  if (c.hand) { const [r, f] = c.hand.split('.'), v = pick(R, 'rungs.' + r + '.hands.' + f);
+    if ('below' in c) { const t0 = pick(X0, 'rungs.' + r + '.hands.' + f); return v != null && t0 != null && v < t0 * c.below; }
+    return cmp(v); }
+  if (c.more) { const [r, ...p] = c.more.split('.'); return cmp(pick(R, ['rungs', r, 'more'].concat(p).join('.'))); }
+  if (c.passed) return cmp(!!pick(R, 'rungs.' + c.passed + '.passed'));
+  if (c.margin != null) { const s = pick(R, 'rungs.switch.hands'); return !!s && R.fine.V < s.vmin + c.margin; }
+  return false;
+}
+const RUNG_IDS = Object.keys(RUNG_LENS);
+const byWeight = (a, b) => b.w - a.w || RUNG_IDS.indexOf(a.rung) - RUNG_IDS.indexOf(b.rung) || IDS.indexOf(a.id) - IDS.indexOf(b.id);
+export function stackLenses(lensesAt, R, X0) {
+  /* a wrecked stack: nothing above the rung over the wreck is built, so no question lives there */
+  const at = {}, top = R.broken ? RUNG_IDS.indexOf(R.broken) + 1 : RUNG_IDS.length;
+  for (const rung of RUNG_IDS) { const here = at[rung] = {}; if (RUNG_IDS.indexOf(rung) > top) continue;
+    RUNG_LENS[rung].forEach(lv => lensesAt(lv).forEach((q, k) => { const w = 1 - 0.1 * k; if (!here[q] || here[q].base < w) here[q] = { id: q, rung, w, base: w, say: null, level: lv }; })); }
+  for (const x of RISES) {
+    /* a question that does not live at a rung never rises there (a test keeps the table so) */
+    const m = at[x.rung] && at[x.rung][x.q]; if (!m) continue;
+    /* a wrecked stack: only the matter and the wreck speak */
+    if (R.broken && x.rung !== 'atom' && !(x.when && x.when.broken)) continue;
+    if (!whenOf(x.when, R, X0)) continue;
+    const v = x.up ? pick(R, 'rungs.' + x.up.hand.replace('.', '.hands.')) : null, up = v == null ? 0 : x.up.log ? x.up.log * Math.log10(v + 1e-30) : x.up.x * v, w = m.base + x.w + up;
+    if (!m.say || w > m.w) Object.assign(m, { w, say: x.say });
+  }
+  return Object.fromEntries(RUNG_IDS.map(r => [r, Object.values(at[r]).sort(byWeight)]));
+}
+export function stackMarks(byRung, n = 3, rungs) {
+  const all = (rungs || RUNG_IDS).flatMap(r => byRung[r] || []).sort(byWeight), seen = new Set(), out = [];
+  for (const m of all) { if (seen.has(m.id)) continue; seen.add(m.id); out.push(m); if (out.length === n) break; }
+  return out;
 }

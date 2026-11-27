@@ -17,7 +17,8 @@
    that live at the level, by short name only), o.lensCard(id, depth) → html of the one chosen (the question alone, its
    form here, what to play here, the question it meets, the way on), o.onLens(id | null, depth) → the view lights on
    its picture what the lens is about. Without lenses at a level, Ask lists the level's questions as before.
-   Returns { dock, level(depth), rail(at, fill, pos), steps(at), goal(html), mode(), look(), stop(html), inwardAt(p) }: stop() pins a
+   o.levelName(depth) → a level's name, where the view's levels are not the dive's (the stack's rungs).
+   Returns { dock, level(depth), rail(at, fill, pos), steps(at), goal(html), mode(), look(), ask(q), stop(html), inwardAt(p) }: ask() opens one lens, as its mark does; stop() pins a
    question you are following in the card, under Ask, until you choose a face again.
    The way in is on the picture, never only in the card: whatever way deeper the view writes in its card (an element
    with data-in) is shown again as one large button over the scene, by the frame, in every view the same. A view that
@@ -182,6 +183,8 @@ export function createFrame(host, o) {
       if (f && f.peekDown && e.target.closest('canvas, .labels') && !e.target.closest('button, a')) f.peekDown(); }, true); }   /* i18n-ok */
   host.peekDown = () => { if (!busy()) peek(true); };
 
+  /* a level's name: the dive's word for it, or the view's own (o.levelName: the stack's rungs) */
+  const levelName = d => (o.levelName ? o.levelName(d) : t('depth.' + d + '.name'));
   /* Do and Ask, from the atlas, for the level in view */
   const fields = () => (depth && o.fieldAt ? o.fieldAt(depth) : []);
   const lenses = () => (depth && o.lensesAt ? o.lensesAt(depth) : []);
@@ -248,7 +251,7 @@ export function createFrame(host, o) {
     drawMarks();
     if (mode !== 'ask' && o.onLens) o.onLens(null, depth);
     if (mode === 'look') return o.onLook && o.onLook();
-    let h = '<p class="kicker">' + esc(t('frame.' + mode + 'At', { level: depth ? t('depth.' + depth + '.name') : '' })) + '</p>';
+    let h = '<p class="kicker">' + esc(t('frame.' + mode + 'At', { level: depth ? levelName(depth) : '' })) + '</p>';
     if (mode === 'ask') { const ks = depth ? o.askAt(depth) : [], fs = fields(), L = lenses();
       /* the core questions that live here are met on the picture, by their marks (docs/FRAME13.md): never a row of their
          names. A lens opened from its mark is shown alone, with the way to put it down */
@@ -256,7 +259,7 @@ export function createFrame(host, o) {
       if (lens && !L.some(l => l.id === lens)) { down = { q: lens, at: depth }; lens = pair && L.some(l => l.id === pair) ? pair : null; pair = null; }
       if (pair && !L.some(l => l.id === pair)) { down = { q: pair, at: depth }; pair = null; }
       host.classList.toggle('lensing', !!lens);
-      if (down && down.at === depth && !lens) h += '<p class="qldown">' + esc(t('frame.lens.down', { q: t('frame.q.' + down.q), level: t('depth.' + depth + '.name') })) + '</p>';
+      if (down && down.at === depth && !lens) h += '<p class="qldown">' + esc(t('frame.lens.down', { q: t('frame.q.' + down.q), level: levelName(depth) })) + '</p>';
       if (L.length) {
         const l = lens && L.find(x => x.id === lens), l2 = pair && L.find(x => x.id === pair);
         /* two held: where they meet, in its own card, with the way to put either down (#315) */
@@ -315,6 +318,8 @@ export function createFrame(host, o) {
     /* the lens chosen under Ask, or null */
     lens() { return mode === 'ask' ? lens : null; },
     look() { mode = 'look'; pinned = false; fill(); },
+    /* one lens opened alone under Ask, as a tap on its mark does (a view that draws its own marks: the stack) */
+    ask(q) { lens = q; pair = null; mode = 'ask'; pinned = false; fill(); },
     /* a challenge being played in the card: its face is Do, and it stays while the level changes beneath it */
     /* the height of the card at rest (on a phone, the peek): what the picture is framed above */
     restH() { return phone() && restH ? restH : wrap.offsetHeight; },

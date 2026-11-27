@@ -7,8 +7,11 @@ import { readFileSync } from 'node:fs';
 import * as FrameData from '../src/data/frame.js';
 import { FIELD } from '../src/data/questions.js';
 import { partsOf } from '../src/app/scenes.js';
-const { QUESTIONS, FILED, MEETS, MARKS } = FrameData;
-import { IDS, MAX_AT, createLenses, meetOf, pairOf, questionOf } from '../src/engines/frame.js';
+const { QUESTIONS, FILED, MEETS, MARKS, RUNG_LENS, RISES } = FrameData;
+import { IDS, MAX_AT, createLenses, meetOf, pairOf, questionOf, stackLenses, stackMarks, whenOf } from '../src/engines/frame.js';
+import * as Path from '../src/engines/path.js';
+import { RUNGS, LEVELS, EXAMPLE } from '../src/data/path.js';
+import { TODAY } from '../src/engines/arch.js';
 import * as LensEngine from '../src/engines/lens.js';
 import { EXPERIMENTS } from '../src/engines/experiments.js';
 import { STOPS, THREADS } from '../src/data/weave.js';
@@ -169,4 +172,44 @@ test('every world opens from a lens, and nothing lists the eleven', async () => 
   assert.ok(!links.includes('#/w'), 'the map still lists the worlds');
   const app = readFileSync(new URL('../src/v2/app.js', import.meta.url), 'utf8');
   assert.ok(!/href="#\/w"/.test(app), 'the first card still links to a list of the worlds');
+});
+
+/* Your stack (docs/PATH.md, "The thirteen questions in the stack"): its marks come from lensesAt, weighed by the carry */
+const stackOf = (F, g) => Path.carry(Path.stackOf(Object.assign({}, TODAY, g || {}), Object.assign({}, EXAMPLE, F || {}), 'any'));
+const marksOn = (F, g) => stackMarks(stackLenses(L.lensesAt, stackOf(F, g), Path.X0));
+
+test('every rung of the stack carries lenses, from its own levels', () => {
+  assert.deepEqual(Object.keys(RUNG_LENS), RUNGS);
+  for (const r of RUNGS) {
+    for (const lv of LEVELS[r]) assert.ok(RUNG_LENS[r].includes(lv), r + ': its level ' + lv + ' carries no lenses');
+    assert.ok(RUNG_LENS[r].some(lv => L.lensesAt(lv).length), r + ': no question lives at any of its levels');
+  }
+});
+
+test('a carry condition only raises a question that lives at its rung, and says something there', () => {
+  for (const x of RISES) {
+    assert.ok(RUNGS.includes(x.rung), x.rung);
+    assert.ok(RUNG_LENS[x.rung].some(lv => L.lensesAt(lv).includes(x.q)), x.q + ' rises at ' + x.rung + ', where it does not live');
+    assert.ok(('sk.here.' + x.say) in EN, 'sk.here.' + x.say);
+    assert.equal(typeof whenOf(x.when, stackOf(), Path.X0), 'boolean');
+  }
+});
+
+test('the stack marks at most three questions, each once, each where it lives', () => {
+  for (const [F, g] of [[{}], [{ mat: 'graphene' }], [{ V: 0.25 }], [{ vote: 1, adder: 'look' }], [{ bits: 1 }], [{}, { carrier: 'light' }], [{}, { told: 'learns', shape: 'swarm' }]]) {
+    const M = marksOn(F, g);
+    assert.ok(M.length > 0 && M.length <= 3, JSON.stringify(F));
+    assert.equal(new Set(M.map(m => m.id)).size, M.length, 'a question marked twice');
+    for (const m of M) assert.ok(L.lensesAt(m.level).includes(m.id) && RUNG_LENS[m.rung].includes(m.level), m.id + ' at ' + m.rung);
+  }
+});
+
+test('what you built makes a question rise: the wreck brings Perfect fails up at the gate', () => {
+  const wreck = marksOn({ mat: 'graphene' });
+  assert.equal(wreck[0].id, 'perfect'); assert.equal(wreck[0].rung, 'gate'); assert.equal(wreck[0].say, 'perfectOff');
+  assert.ok(!marksOn({}).some(m => m.id === 'perfect'), 'today\'s stack does not fail');
+  const low = marksOn({ V: 0.25 });
+  assert.ok(low.some(m => m.id === 'perfect' && m.rung === 'gate' && m.say === 'perfect'), 'a low voltage makes the gate\'s copies fail');
+  assert.ok(marksOn({ vote: 1 }).some(m => m.id === 'vn' && m.say === 'vnVote'), 'a vote raises Whole beats parts');
+  assert.ok(marksOn({}, { carrier: 'light' }).some(m => m.id === 'physics' && m.rung === 'gate'), 'light lets physics do the sum at the gate');
 });
