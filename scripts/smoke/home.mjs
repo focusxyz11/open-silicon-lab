@@ -4,7 +4,9 @@
    then the camera pulls back to the whole chip, a check finds four walls, and it flies block to block (the walls, the
    next fifty years, how the machine grew, the arrangements, your machine, the island), each block a tap away on the
    small chip in the bar or the chapters at the left, with the twelve challenges counted in the bar; the sources; four
-   languages; the island and the brand lead out and back */
+   languages. It opens on the square alone, Moore's law rising once the count has begun to double; its last block is
+   the island's own plan, and the end of the page a landing on it: a tap, or holding on, goes inside the island, and
+   the brand leads back */
 import { S } from './shared.mjs';
 
 export const about = 'Hold, the first page: what it fetches before its preload (no 3D, no engine but the shell\'s, its JavaScript under its budget); one story on one chip — 0 and 1, scrolling and holding through fifty years, four moments, Moore\'s law live with its challenges, the wall without turning dark by day, the pull back to the whole chip and its four walls, every block\'s challenge, the bar\'s small chip and tally, the sources, Chinese and back, the island and back';
@@ -38,6 +40,10 @@ export default async function run() {
       document.querySelectorAll('.bar .hbar .d-map button').length === 12 && document.querySelectorAll('.bar .hbar .tally [data-ch]').length === 12, null, 20000);
     if (await hp.evaluate(() => !document.getElementById('mapCanvas').hidden)) problems.push(tag + ': the island is drawn behind the first page');
     if (!(await hp.evaluate(() => document.body.classList.contains('firstpage') && getComputedStyle(document.getElementById('loop')).display === 'none'))) problems.push(tag + ': the loop shows on the first page');
+    /* it opens quietly, on the square, the count and the hold button: Moore's law waits under the window (on a phone its
+       place says how to move), and the readouts wait for the first press */
+    await play('the first page does not open on the square alone, without the curve', () => { const b = document.querySelector('#hd-root .b-band'), r = b.getBoundingClientRect(), s = b.querySelector('.b-start'), st = document.querySelector('#hd-root .b-hud .stats');
+      return b.classList.contains('wait') && (innerWidth > 1099 ? r.top >= innerHeight - 2 && +getComputedStyle(st).opacity < .05 : !!s && s.getBoundingClientRect().height > 10 && s.textContent.length > 20); });
     /* the transistor reads 0, and 1 while it is held */
     if (!(await hp.evaluate(() => /0\s*$/.test(window.__p('years').querySelector('.pl-fr span:last-child').textContent)))) problems.push(tag + ': the transistor does not read 0 at rest');
     const press = () => { const b = document.querySelector('#hd-root .b-hold .holdbtn'); if (!window.__hold.state().holding) b.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, pointerType: 'mouse' })); };
@@ -46,6 +52,9 @@ export default async function run() {
     await release();
     /* scrolling is time: scroll down and the count follows, with nothing held */
     await play('scrolling does not move the fifty years', () => { const e = document.getElementById('home'); if (e.scrollTop < 900) e.scrollTop = 1000; return window.__hold.state().d > 3; });
+    /* once the count has begun to double, Moore's law rises along the bottom, drawn */
+    await play('Moore\'s law does not rise once the count has begun to double', () => { if (window.__hold.state().d < 5) window.__hold.set(5); const b = document.querySelector('#hd-root .b-band'), r = b.getBoundingClientRect(), c = b.querySelector('.chart canvas');
+      return !b.classList.contains('wait') && r.top < innerHeight - 40 && c.width > 100 && c.getBoundingClientRect().height > 20; });
     await hp.evaluate(() => window.__hold.set(0));
     await play('holding does not double the count', `(${press})(), window.__hold.state().d > 1`, null, 20000);
     await release();
@@ -136,7 +145,11 @@ export default async function run() {
     if (!phone) {
       await play('the small chip in the bar does not fly to its block', () => { if (window.__hold.state().cur !== 'arr') document.querySelector('.bar .hbar .d-map button[data-id="arr"]').click(); return window.__hold.state().cur === 'arr'; });
       await play('the chapters at the left do not lead to a chapter', () => { if (window.__hold.state().cur !== 'next') document.querySelector('#hd-root .b-rail button[data-ch="next"]').click(); return window.__hold.state().cur === 'next'; });
-    } else await play('the small chip in the bar does not open the whole chip', () => { document.querySelector('.bar .hbar .d-map button[data-id="arr"]').click(); return window.__hold.state().chip && document.querySelector('#hd-root .d-world').classList.contains('far'); });
+    } else { await play('the small chip in the bar does not open the whole chip', () => { document.querySelector('.bar .hbar .d-map button[data-id="arr"]').click(); return window.__hold.state().chip && document.querySelector('#hd-root .d-world').classList.contains('far'); });
+      /* on a phone the twelve squares are one count, large enough to tap, and it opens the whole chip too */
+      await hp.evaluate(() => window.__hold.set(5));
+      await play('the count of challenges in the bar is not a button that opens the whole chip', () => { const c = document.querySelector('.bar .hbar .tally .tl-c'), r = c.getBoundingClientRect(), far = window.__hold.state().chip && document.querySelector('#hd-root .d-world').classList.contains('far');
+        if (!far) c.click(); return far && r.height >= 36 && r.width >= 36 && /\d+\s*\/\s*12/.test(c.textContent) && getComputedStyle(document.querySelector('.bar .hbar .tally .sq')).display === 'none'; }); }
     /* every number's source, on one sheet */
     await play('the sources do not open on one sheet', () => { const b = document.querySelector('#hd-root .b-end .bbtn'); if (!document.querySelector('#hd-root .sheet.on')) b.click(); return document.querySelectorAll('#hd-root .sheet.on .f').length > 10; });
     await hp.keyboard.press('Escape');
@@ -147,12 +160,21 @@ export default async function run() {
     await play('the first page does not show in Chinese', () => document.documentElement.lang === 'zh' && /晶体管/.test((document.querySelector('#hd-root .b-hud .count') || {}).textContent || ''), null, 20000);
     await hp.click('#langbtn').then(() => hp.waitForFunction(() => !document.getElementById('langmenu').hidden && document.querySelectorAll('#langmenu [data-lang]').length === 4, null, { timeout: 5000 })).then(() => hp.click('#langmenu [data-lang="en"]')).catch(() => problems.push(tag + ': the language menu does not open on the first page'));
     await play('the first page does not come back to English', () => document.documentElement.lang === 'en' && /transistor/i.test((document.querySelector('#hd-root .b-hud .count') || {}).textContent || ''), null, 20000);
-    /* the island is one tap away on the last block, and the brand comes back */
+    /* the last block is the island's own plan, each place of the loop where the island has it, with the lab's way in;
+       the island is one tap away on it, and the brand comes back */
     await play('the first page does not open again after a language change', () => !!window.__hold && !!window.__p && !!window.__p('island'), null, 20000);
+    await play('the island\'s plan is not on the last block', () => { if (window.__hold.state().cur !== 'island') window.__hold.go('island'); const p = window.__p('island'); return p.querySelectorAll('.isl-p').length === 6 && !!p.querySelector('a.goin[href="#/island"]') && p.querySelector('a.goin').textContent.trim().length > 4; }, null, 20000);
     await play('the first page offers no way to the island', () => { window.__hold.go('island'); const a = window.__p('island').querySelector('a[href="#/island"]'); if (a && location.hash !== '#/island') a.click(); return location.hash === '#/island'; }, null, 20000);
     await play('the island does not open from the first page', () => document.getElementById('home').hidden && !document.getElementById('mapCanvas').hidden && !document.querySelector('.bar .hbar'), null, 30000);
     await hp.click('.bar .brand').catch(() => problems.push(tag + ': no brand in the bar'));
     await play('the brand does not lead back to the first page', () => !document.getElementById('home').hidden && document.getElementById('mapCanvas').hidden && !!document.querySelector('.bar .hbar'));
+    /* the end of the page is a landing: the camera has come down to the plan, alone with its way in, and holding on
+       there (the plan itself, pressed) goes inside the island */
+    await play('the end of the page is not a landing on the island\'s plan', () => { const e = document.getElementById('home'); if (e.scrollTop < e.scrollHeight - e.clientHeight - 2) e.scrollTop = e.scrollHeight; return document.getElementById('hd-root').classList.contains('landing') && window.__hold.state().cur === 'island' && !!window.__p('island').querySelector('a.goin'); }, null, 20000);
+    await play('holding on at the landing does not go inside the island', () => { if (location.hash === '#/island') return true; const e = document.getElementById('home'); if (e.scrollTop < e.scrollHeight - e.clientHeight - 2) e.scrollTop = e.scrollHeight;
+      if (!window.__hold.state().holding) window.__p('island').dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, pointerType: 'mouse' })); return false; }, null, 20000);
+    await release();
+    await play('the island does not open from the landing', () => document.getElementById('home').hidden && !document.getElementById('mapCanvas').hidden && !document.querySelector('.bar .hbar'), null, 30000);
     if (phone) for (const l of ['zh', 'fr', 'es']) {
       await hp.goto(base + 'index.html?lang=' + l + '#/');
       await play('the first page does not open in ' + l, l => document.documentElement.lang === l && !!window.__hold && !!window.__p && !!window.__p('island'), l, 20000);

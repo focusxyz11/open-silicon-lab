@@ -60,9 +60,16 @@ export function tried(id) { if (S.tried[id]) return; S.tried[id] = 1; if (WALLS.
 export function setOut(id, html) { if (S.out[id] === html) return; S.out[id] = html; keepSoon(); $$('[data-out="' + id + '"]').forEach(e => { e.innerHTML = html; }); }
 
 /* ---- day or night: as the lab is set (◐ in the bar), all the way down; the page never changes it by itself ---- */
-export const K = { get ink() { return S.night ? '#efece3' : '#131210'; }, get paper() { return S.night ? '#131210' : '#efece3'; }, get plate() { return S.night ? '#1a1917' : '#e8e4d8'; }, red: '#e5401a', get mid() { return S.night ? '#aca89d' : '#6b675d'; } };
-export const fg = a => (S.night ? 'rgba(239,236,227,' + a + ')' : 'rgba(19,18,16,' + a + ')');
-export const rd = a => 'rgba(229,64,26,' + a + ')';
+/* the drawings take their colours from the page's own (src/styles/hold.css: the lab's ground and ink, the page's plate
+   and red), read once when the page is made (setRoot) */
+export const K = { ink: '#eef2f8', paper: '#0b1120', plate: '#101a2d', red: '#e5401a', mid: '#9aa8bd', go: '#5aa9ff' };
+const RGB = { ink: '238,242,248', red: '229,64,26' };
+const rgbOf = v => { const c = document.createElement('canvas').getContext('2d'); c.fillStyle = v; const m = /^#(..)(..)(..)$/.exec(c.fillStyle); return m ? m.slice(1).map(x => parseInt(x, 16)).join(',') : null; };
+function readInk() { const cs = getComputedStyle(ROOT), v = k => cs.getPropertyValue(k).trim();
+  for (const [k, p] of [['ink', '--ink'], ['paper', '--paper'], ['plate', '--plate'], ['red', '--red'], ['mid', '--mid'], ['go', '--go']]) if (v(p)) K[k] = v(p);
+  RGB.ink = rgbOf(K.ink) || RGB.ink; RGB.red = rgbOf(K.red) || RGB.red; }
+export const fg = a => 'rgba(' + RGB.ink + ',' + a + ')';
+export const rd = a => 'rgba(' + RGB.red + ',' + a + ')';
 
 /* ---- one unit for every size, from the window: the page is composed once and grows with the screen (on a tablet
    held upright too, so no word is under 11 px) ---- */
@@ -73,48 +80,29 @@ export function fitU(...also) { const W = innerWidth, H = innerHeight, u = PHONE
 export const FACTS = {};
 export const loadFacts = () => facts().then(F => { for (const f of Object.values(F)) FACTS[f.id] = [f.source, f.url, f.value, f.verified]; });
 export const src = (...ids) => ids.map(id => '<button type="button" class="src" data-f="' + id + '" aria-label="' + esc(w('src.k')) + '">↗</button>').join('');
-export const CH_FACTS = { years: ['moore-1965', 'transistor-trend', 'zeloof-garage', 'chm-x86', 'core2-410m', 'northpole', 'rubin-gpu', 'cerebras-cs4', 'node-years', 'node-names', 'clock-stall', 'dual-core-2005', 'asic-vs-cpu', 'fdiv-rate', 'fdiv-charge', 'euv-wavelength', 'high-na-price', 'tsmc-n2', 'node-n2'],
-  walls: ['energy-moving-data', 'dc-electricity', 'design-cost-older', 'design-cost-recent', 'design-cost-2nm', 'fab-module-cost', 'wafer-space-run', 'cortical-cl1', 'brain-power', 'minimal-fab'],
-  next: ['energy-moving-data', 'hbm4', 'encharge-en100', 'landauer-measured'],
-  arch: ['alexnet-gpu', 'epyc-chiplets', 'hbm4', 'encharge-en100', 'cpo-production', 'hala-point'],
-  machine: ['asic-vs-cpu', 'fpga-asic-gap'] };
 export const CHAPS = ['years', 'walls', 'next', 'arch', 'machine', 'island'];
-let pop = null, sheetEl = null, toastEl = null, toastTm = 0;
-const inRoot = el => { ROOT.appendChild(el); return el; };
-function showPop(b) { b._want = 1;
-  if (!FACTS[b.dataset.f]) { if (!Object.keys(FACTS).length) loadFacts().then(() => { if (b._want && FACTS[b.dataset.f]) showPop(b); }); return; }
-  if (!pop) { pop = inRoot(h('div', 'srcpop')); }
-  const f = FACTS[b.dataset.f]; if (!f) return; $$('.src.on').forEach(e => e.classList.remove('on')); b.classList.add('on');
-  pop.innerHTML = '<span class="mono">' + w('src.k') + ' · ' + w('src.verified', { d: esc(f[3]) }) + '</span>' + esc(f[2]) + '<br><a href="' + esc(f[1]) + '" target="_blank" rel="noopener">' + esc(f[0]) + ' ↗</a><button type="button" class="all mono">' + w('sources') + '</button>';
-  pop.querySelector('.all').onclick = () => { hidePop(); sheet(true); };
-  const r = b.getBoundingClientRect(), pw = Math.min(300, innerWidth - 24); pop.style.left = clamp(r.left - 20, 12, innerWidth - pw - 12) + 'px';
-  pop.classList.add('on'); const ph = pop.offsetHeight; pop.style.top = (r.bottom + 8 + ph > innerHeight ? r.top - ph - 8 : r.bottom + 8) + 'px'; }
-function hidePop() { if (pop) pop.classList.remove('on'); $$('.src.on').forEach(e => e.classList.remove('on')); }
-export function sheet(on) {
-  if (on && !Object.keys(FACTS).length) { loadFacts().then(() => sheet(true)); return; }
-  if (!sheetEl && on) { sheetEl = inRoot(h('div', 'sheet')); sheetEl.setAttribute('role', 'dialog'); sheetEl.setAttribute('aria-label', w('sheet.h').replace(/<[^>]+>/g, ''));
-    /* each source once, in the first chapter that names it, and counted as listed */
-    const seen = new Set(), by = Object.entries(CH_FACTS).map(([ch, ids]) => [ch, ids.filter(id => FACTS[id] && !seen.has(id) && seen.add(id))]);
-    sheetEl.innerHTML = '<header><div><span class="mono dim">' + w('sheet.k', { n: seen.size }) + '</span><h2 class="anton">' + w('sheet.h') + '</h2></div><p>' + w('sheet.p') + '</p><button type="button" class="bbtn mono" data-x="1">' + w('close') + ' ✕</button></header><div class="cols">' +
-      by.map(([ch, ids], i) => '<div class="col"><h3 class="anton"><span>0' + (i + 1) + '</span>' + w('tab.' + ch) + '</h3>' + ids.map(id => '<a class="f" href="' + esc(FACTS[id][1]) + '" target="_blank" rel="noopener"><b>' + esc(FACTS[id][2]) + '</b><span>' + esc(FACTS[id][0]) + ' ↗ · ' + esc(FACTS[id][3]) + '</span></a>').join('') + '</div>').join('') + '</div>';
-    $('[data-x]', sheetEl).onclick = () => sheet(false); }
-  if (sheetEl) sheetEl.classList.toggle('on', on); }
-export function toast(html) { if (!toastEl) { toastEl = inRoot(h('div', 'toast mono')); toastEl.setAttribute('role', 'status'); } toastEl.innerHTML = html; toastEl.classList.add('on'); clearTimeout(toastTm); toastTm = setTimeout(() => toastEl.classList.remove('on'), 2600); }
+/* what a tap opens (a number's source in a small note, every source on one sheet, the word that a challenge is done)
+   is drawn by src/v2/holdnotes.js, fetched when it is first needed; its styles are src/styles/holdnotes.css */
+const notes = () => import('./holdnotes.js');
+export const sheet = on => notes().then(m => m.sheet(on)), toast = html => notes().then(m => m.toast(html));
+const showPop = b => { b._want = 1; notes().then(m => { if (b._want) m.showPop(b); }); }, hidePop = () => { if (ROOT.querySelector('.srcpop.on')) notes().then(m => m.hidePop()); };
 /* the page's root: sources open on a tap (or under the pointer), Esc closes them */
-export function setRoot(r) { ROOT = r;
+export function setRoot(r) { ROOT = r; readInk();
   r.addEventListener('click', e => { const b = e.target.closest('.src'); if (b) { e.stopPropagation(); e.preventDefault(); if (b.classList.contains('on')) hidePop(); else showPop(b); return; } if (!e.target.closest('.srcpop')) hidePop(); });
   r.addEventListener('mouseover', e => { const b = e.target.closest('.src'); if (b) showPop(b); });
-  r.addEventListener('mouseout', e => { const b = e.target.closest('.src'); if (b) b._want = 0; if (b && !(e.relatedTarget && e.relatedTarget.closest && e.relatedTarget.closest('.srcpop'))) setTimeout(() => { if (pop && !pop.matches(':hover')) hidePop(); }, 220); });
-  addEventListener('keydown', e => { if (LIVE.on && e.key === 'Escape') { sheet(false); hidePop(); } }); }
+  r.addEventListener('mouseout', e => { const b = e.target.closest('.src'); if (b) b._want = 0; if (b && !(e.relatedTarget && e.relatedTarget.closest && e.relatedTarget.closest('.srcpop'))) setTimeout(() => { const p = ROOT.querySelector('.srcpop'); if (p && !p.matches(':hover')) hidePop(); }, 220); });
+  addEventListener('keydown', e => { if (LIVE.on && e.key === 'Escape' && ROOT.querySelector('.sheet.on,.srcpop.on')) { sheet(false); hidePop(); } }); }
 
 /* ---- the page's part of the lab's bar: the small chip (its map), the chapter, the twelve challenges, the sources ---- */
-export function mkTop(mid, goChallenge) {
+export function mkTop(mid, goChallenge, goOver) {
   const bar = h('div', 'hbar');
   if (mid) bar.appendChild(mid);
   bar.appendChild(h('span', 'sp'));
-  const tl = h('div', 'tally mono'); tl.setAttribute('role', 'group'); tl.innerHTML = '<span class="tl-n"></span><div class="sq">' + CHALS.map(id => '<button type="button" data-ch="' + id + '" data-tip="' + esc(w('ch.' + id)) + '" aria-label="' + esc(w('ch.' + id)) + '"></button>').join('') + '</div>';
-  tl.onclick = e => { const b = e.target.closest('[data-ch]'); if (b) goChallenge(b.dataset.ch); };
+  const tl = h('div', 'tally mono'); tl.setAttribute('role', 'group'); tl.innerHTML = '<span class="tl-n"></span><button type="button" class="tl-c"></button><div class="sq">' + CHALS.map(id => '<button type="button" data-ch="' + id + '" data-tip="' + esc(w('ch.' + id)) + '" aria-label="' + esc(w('ch.' + id)) + '"></button>').join('') + '</div>';
+  tl.onclick = e => { const b = e.target.closest('[data-ch]'); if (b) goChallenge(b.dataset.ch); else if (e.target.closest('.tl-c') && goOver) goOver(); };
   const rv = rove($('.sq', tl)), paintTally = () => { const s = w('rail.chals', { n: Object.keys(S.done).length, of: CHALS.length }); $('.tl-n', tl).innerHTML = s; tl.setAttribute('aria-label', s.replace(/<[^>]+>/g, ''));
+    /* on a phone the twelve squares are too small to tap: one count stands for them, and opens the whole chip */
+    { const c = $('.tl-c', tl); c.innerHTML = '<b>' + Object.keys(S.done).length + '</b>/' + CHALS.length; c.setAttribute('aria-label', s.replace(/<[^>]+>/g, '')); }
     $$('[data-ch]', tl).forEach(b => { b.classList.toggle('on', !!S.done[b.dataset.ch]); b.setAttribute('aria-pressed', S.done[b.dataset.ch] ? 'true' : 'false'); }); rv(); };
   onChange(paintTally); paintTally(); bar.appendChild(tl);
   const sb = h('button', 'bbtn mono', '<span>' + w('sources') + '</span>'); sb.type = 'button'; sb.setAttribute('aria-label', w('sources')); sb.onclick = () => sheet(true); bar.appendChild(sb);
@@ -212,8 +200,6 @@ export const Yr = { wallPush: 0, lead: 0,
     const m = momAt(S.d), v = m ? .32 : S.d < 2 ? .7 : S.d > D2011 ? 1.0 - .55 * ss(D2011, DWALL, S.d) : 1.9;
     this.set(S.d + v * dt); } };
 
-/* the ways to move through the fifty years, said once, before the first question on the curve takes their place */
-export function movesEl() { return h('div', 'moves', '<span class="mono">' + w('moves.k') + '</span>' + ['hold', 'scroll', 'drag', 'tap'].map(k => '<p>' + w('moves.' + k) + '</p>').join('')); }
 /* a headline as large as its cell allows: no word cut, and no taller than its share of the cell */
 export function fitHead(el, max, maxH) { if (!el || !el.clientWidth) return; let fs = max, n = 0; el.style.fontSize = fs + 'px'; while ((el.scrollWidth > el.clientWidth + 1 || el.offsetHeight > maxH) && fs > 24 && n++ < 60) { fs *= .96; el.style.fontSize = fs + 'px'; } }
 /* ---- one loop for everything that moves ---- */

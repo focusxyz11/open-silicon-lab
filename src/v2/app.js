@@ -383,7 +383,11 @@ export function start() {
   const homeEl = $('home');
   let hold = null;
   function showHome() { showHome0(); if (stations) stations.hide(); if (blueprint) blueprint.hide(); const n = V.routeN;
-    return needWords('hold').then(() => { if (n !== V.routeN) return; if (!hold) hold = createHold(homeEl, { still }); return Promise.resolve(hold.show()).then(() => afterPaint(preloadHome)); }); }
+    return needWords('hold').then(() => { if (n !== V.routeN) return; if (!hold) hold = createHold(homeEl, { still,
+      /* going inside the island from the first page's last block, its plan: the portal opens where the plan is, and the
+         island's camera starts on it from straight above (src/v2/map3d.js land) */
+      enter: (p, at) => { portalAt(p); V.landAt = at; location.hash = '#/island'; } }); /* once it has drawn: the styles of what a tap opens there (its sources), then the idle preload */
+      return Promise.resolve(hold.show()).then(() => afterPaint(() => { preloadHome(); needStyles('holdnotes'); })); }); }
   function showHome0() { hideViews(); hideIsland(); if (!sheet.hidden) closeSheet(); loading(false); }
   /* ---- the blueprint (#/blueprint, src/v2/home.js): the first page before Hold, the whole chip innovation ecosystem as
      one wheel, in four languages; loaded when it is first opened ---- */
@@ -482,7 +486,9 @@ export function start() {
     if (k === 'machines') V.showMachines(parts[1], parts[2]);
     /* a reading page stands on its own: the island waits behind it, paused (src/v2/frame2.js, Read) */
     if (frame2Reading()) return showMap(from).then(m => { if (m && frame2Reading()) m.pause(); });
-    return showMap(from).then(m => { if (!m) return; if (k === 'ecosystem') V.showEcosystem(); else if (k === 'island' && V.cur && !sheet.hidden) { closeSheet(); V.map && V.map.overview(); } });
+    return showMap(from).then(m => { const at = V.landAt; V.landAt = null; if (!m) return; if (k === 'ecosystem') V.showEcosystem(); else if (k === 'island' && V.cur && !sheet.hidden) { closeSheet(); V.map && V.map.overview(); }
+      /* arriving from the first page: the camera comes down from its plan, and the welcome rises after it */
+      if (k === 'island' && from === 'home' && at && m.land(at)) $('hero').classList.add('intro'); });
   }
   /* an arrival (by address, a move in a view, a place picked; #367): the address says it, the Map marks it, a seam raises its leak */
   function arrive(h, how) { if (how === 'push') history.pushState(null, '', h); else if (how) history.replaceState(null, '', h); been(h); const to = Way.whereOf(h); crossed(V.seamFrom, to); V.seamFrom = to; }

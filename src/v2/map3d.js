@@ -15,7 +15,7 @@ import { STEPS, STATION, GROWTH } from './game.js';
 import { betPowerNow } from '../app/betscene.js';
 import { furnisher, lump } from './furnish.js';
 import { CORNERS, HOUSE } from '../data/studio.js';
-import { PLACES, partName } from '../data/views3d.js';
+import { PLACES, partName, ISLE_COAST, ISLE_ROAD, ISLE_YAW } from '../data/views3d.js';
 import { LABS } from '../data/labs/index.js';
 
 /* what each lab grows, from its own file (src/v2/growers/<lab>.js): { <growth>: { at, grow } }, fetched beside the island;
@@ -27,14 +27,14 @@ const labGrowers = Promise.all(LABS.map(l => import('./growers/' + l.name + '.js
 export { PLACES };
 /* the loop road, closed, and the number pins along it (one per step) */
 /* the ring road passes the Lab's square: the loop starts and comes back where the community stands */
-const LOOP = [[-28, -14], [-12, 0], [-3, 9], [6, 15], [16, 13], [28, 10], [46, 12], [53, -6], [44, -20], [24, -22], [12, -32], [-8, -38], [-26, -38], [-29, -26]];
+const LOOP = ISLE_ROAD;   /* kept with the coast in src/data/isle.js: the first page draws the same plan */
 /* six stops, one for each stage of the loop, with no numbers: a loop has no first and no last */
 const PINS = { open: [6, 16], design: [-29, -22], make: [-12, 1], test: [24, 11.5], ship: [48, 11], use: [36, -21] };
 const STOPS6 = ['open'].concat(STEPS), STOP_PLACE = Object.assign({ open: 'lab' }, STATION);
 /* where your chip stands when you are at the need: at the end of the Lab's road, off the loop */
 const NEED_AT = PINS.open;
 const SPOKES = [[[-60, 2], [-40, -2], [-22, -5]], [[6, 15], [6, 19]], [[-12, 0], [-24, 12], [-30, 17]], [[53, -6], [60, 2]]];
-const ISLAND = [[-82, -16], [-66, -46], [-34, -56], [2, -54], [40, -56], [72, -38], [82, -6], [78, 22], [54, 44], [16, 48], [-24, 48], [-60, 40], [-82, 14]];
+const ISLAND = ISLE_COAST;
 const ISLE = (cx, cz, r, k = 9) => Array.from({ length: k }, (_, i) => { const a = i / k * Math.PI * 2, rr = r * (0.82 + rnd(i, cx) * 0.36); return [cx + Math.cos(a) * rr, cz + Math.sin(a) * rr * 0.8]; });
 
 /* the island's own ground, sea and trees, muted (the shared palette stays as it is for every other scene) */
@@ -826,7 +826,7 @@ export function createMap(canvas, host, on = {}) {
   /* ---- the camera: a target on the ground, a distance, a fixed tilt and turn ---- */
   /* on wide screens the island sits right of centre: the hero takes the lower left */
   const home = () => (innerWidth > 900 ? { x: -32, z: -8, d: 230 } : { x: -8, z: 4, d: 300 });
-  const cam = Object.assign({ yaw: -0.42, pitch: 0.92 }, home());
+  const cam = Object.assign({ yaw: ISLE_YAW, pitch: 0.92 }, home());
   let fly = null;
   const place2 = () => {
     const { x, z, d, yaw, pitch } = cam;
@@ -1262,7 +1262,13 @@ export function createMap(canvas, host, on = {}) {
     },
     /* the first visit opens on a wide shot of the sea and comes down to the island, turning toward it */
     intro() { if (reduced()) return; const h = home(); Object.assign(cam, { x: h.x + 70, z: h.z + 120, d: MAXD * 0.8, yaw: cam.yaw - 0.8, pitch: 1.08 }); place2();
-      fly = { from: { ...cam }, to: { x: h.x, z: h.z, d: h.d, yaw: -0.42, pitch: 0.92 }, t0: performance.now(), ms: 2800 }; },
+      fly = { from: { ...cam }, to: { x: h.x, z: h.z, d: h.d, yaw: ISLE_YAW, pitch: 0.92 }, t0: performance.now(), ms: 2800 }; },
+    /* arriving from the first page, whose last block is this island's plan seen from straight above: the camera starts
+       there (o: the point of the island at the middle of the window, and how many pixels one unit of it was drawn at),
+       then tilts and comes down to the island as it stands, one move with no cut. Returns false where nothing moves */
+    land(o = {}) { if (reduced()) return false; const h = home(), vh = canvas.clientHeight || innerHeight, d = clamp(vh / (2 * Math.tan(camera.fov * Math.PI / 360) * (o.px || 3)), 120, MAXD * 0.6);
+      follow = null; Object.assign(cam, { x: o.x == null ? 0 : o.x, z: o.z == null ? -4 : o.z, d, yaw: ISLE_YAW, pitch: 1.5 }); place2();
+      fly = { from: { ...cam }, to: { x: h.x, z: h.z, d: h.d, yaw: ISLE_YAW, pitch: 0.92 }, t0: performance.now(), ms: 2200 }; return true; },
     /* a win lands: the camera leans in and settles back */
     punch() { if (reduced() || fly) return; const d0 = cam.d; cam.d *= 0.9; place2(); flyTo(cam.x, cam.z, d0, 700); },
     /* the hand-offs with the views below: dive close into a place before going inside, and start close to the
