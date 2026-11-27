@@ -336,7 +336,7 @@ export function create() {
         V.Listen = m.createListen(V.vui, { where: lensWhere, joule: () => { if (V.Joule && V.S.joule.on) V.Joule.on(false); }, changed: () => requestAnimationFrame(diveInset) }); V.Listen.level(V.diveId()); });
       V.vui.onclick = e => { const b = e.target.closest('[data-divego]'); if (b) w.flyTo(+b.dataset.divego); const sk = e.target.closest('[data-seek]'); if (sk) return pickPart(sk.dataset.seek); const pk = e.target.closest('[data-pick]'); if (pk) { pickPart(pk.dataset.pick === divePart ? null : pk.dataset.pick); V.vui.querySelectorAll('[data-pick]').forEach(x => x.classList.toggle('on', x.dataset.pick === divePart)); } };
       const d = V.WE.IDS.indexOf(L.includes(depth) ? depth : L[0]);
-      V.loading(false); w.start(); w.setZ(d); if (!ringRaf) ringRaf = requestAnimationFrame(diveRing); if (V.arriving && kind === 'line') w.arrive(); V.arriving = false; V.diveD = -1; diveAt(d); $('diveCanvas').focus({ preventScroll: true });
+      V.loading(false); w.start(); w.setZ(d); if (!ringRaf) ringRaf = requestAnimationFrame(diveRing); if (V.arriving && kind === 'line') w.arrive(V.lineArrive && V.lineArrive.id === V.WE.IDS[d] ? V.lineArrive : null); V.arriving = false; V.lineArrive = null; V.diveD = -1; diveAt(d); $('diveCanvas').focus({ preventScroll: true });
       lineRing();
       const ch = chId && Game.challengeOf(chId); if (ch) openBench(ch);
     });

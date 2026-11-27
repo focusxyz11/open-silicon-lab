@@ -105,6 +105,11 @@ html[data-move=out]::view-transition-old(root) { animation-name: vt-portal-out; 
 html[data-move=out]::view-transition-new(root) { animation-name: vt-from-near; transform-origin: var(--vx, 50%) var(--vy, 40%); }
 @keyframes vt-portal-in { from { clip-path: circle(0% at var(--vx, 50%) var(--vy, 46%)); } to { clip-path: circle(150% at var(--vx, 50%) var(--vy, 46%)); } }
 @keyframes vt-portal-out { from { clip-path: circle(150% at var(--vx, 50%) var(--vy, 40%)); } to { clip-path: circle(0% at var(--vx, 50%) var(--vy, 40%)); opacity: .6; } }
+/* between the island and the line one camera carries you: both pictures are the same machine from the same eye, so the
+   old one only dissolves into the new, on top of it, with no zoom between them (src/v2/app.js, data-hand) */
+html[data-move][data-hand]::view-transition-old(root) { animation-name: vt-hand; animation-duration: .5s; animation-timing-function: cubic-bezier(.6, 0, .9, .6); z-index: 2; }
+html[data-move][data-hand]::view-transition-new(root) { animation: none; }
+@keyframes vt-hand { to { opacity: 0; } }
 html[data-move=along]::view-transition-old(root) { animation-name: vt-left; }
 html[data-move=along]::view-transition-new(root) { animation-name: vt-from-right; }
 html[data-move=turn]::view-transition-old(root) { animation-name: vt-turn-out; }
