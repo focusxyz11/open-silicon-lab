@@ -11,6 +11,8 @@ How we work on Open Silicon Lab. One idea moves from talk to a picture to code, 
 7. **Keep what came before.** A version that is replaced is kept on a named branch first (for example `claude/before-dive-2026-11`).
 8. **Update [STATUS.md](STATUS.md)** when a task lands, so the next session starts from where things are.
 
+**`main` is protected by a ruleset** (since 26 November 2026, [DECISIONS.md](DECISIONS.md)): every change arrives by pull request (no approvals needed), the `test` check must be green, the branch must be up to date with `main` before it merges, and nobody can bypass it, the owner and the nightly build included. A direct push to `main` is refused.
+
 Sessions can run side by side when their tasks touch different files. Merge one pull request at a time, then update the other branches. Most work now has files of its own: a lab is its declaration, its lab, its engine, its growers, its stylesheet and its smoke check, each a file named for it ([LABS.md](LABS.md)); a view's styles are its own sheet (`src/styles/<view>.css`, loaded with it by `src/core/styles.js`); a smoke check goes in its section's file (`scripts/smoke/<section>.mjs`). What is still shared, and where sessions meet:
 
 - **Words:** `src/i18n/en/<area>.json`, appended by area (a lab's in `labs.json`, its challenges' names in `core.json`, what it grows in `place.json`), and `AREAS` in `src/core/i18n.js` for a new prefix. Keep both sides' keys.

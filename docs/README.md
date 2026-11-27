@@ -8,7 +8,7 @@ Each document has one job. Plans live only in the roadmap; the others link to it
 | --- | --- |
 | [STATUS.md](STATUS.md) | Where the lab stands, the decisions to keep, and the tasks ready to build |
 | [ROADMAP.md](ROADMAP.md) | What is happening now and next: the thirteen as the spine, then the core visual systems |
-| [DECISIONS.md](DECISIONS.md) | Every decision of the owner's, dated, with its reason (from 26 November 2026) |
+| [DECISIONS.md](DECISIONS.md) | Every decision of the owner's, dated, with its reason, from before the 9 November 2026 restart |
 | [IDEAS.md](IDEAS.md) | Ideas not yet picked (many were written for the earlier site) |
 
 ## How the lab is shaped
