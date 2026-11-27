@@ -41,3 +41,8 @@ decisions are recorded in those documents, their dated notes and the history of 
   fab separately would make separate systems again; the stack's visual language now exists to extend.
 - **One Fable round for both, as a guiding prototype only** (`docs/prototypes/faces/`), not a complete build, to save
   tokens; the nightly build builds from it.
+- **The factory keeps its 3D line** (one wafer through its stations) as its own place, redesigned for continuity: island,
+  line, station, machine and your rung as made in one camera, with no cut; the stack's *as made* face is the inside of
+  a station, not a replacement for the line. Why: the line is the factory's process view, and the isolation the owner
+  sees comes from cuts between separate views, not from the line itself. No separate prototype round: the line's
+  scenes already exist, so it is built as tasks in the real code.

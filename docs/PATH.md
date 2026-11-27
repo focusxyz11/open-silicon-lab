@@ -134,8 +134,13 @@ with the line's steps as the control, each step showing what it does to your des
 stack does not move: along turns every plate at once (owner, 27 November 2026; guiding prototype
 `docs/prototypes/faces/`).
 
-- The studio and the factory on the island become doors onto the stack at Design and Make; the studio's walk-through
-  room and its wall panels go (kept on a `before-` branch first).
+- The studio on the island becomes a door onto the stack at Design; its walk-through room and its wall panels go (kept
+  on a `before-` branch first).
+- **The factory keeps its 3D line** as its own place, the process view: one wafer through its stations (owner, 27
+  November 2026). It is redesigned for continuity, one camera with no cut: from the island into the line; the wafer on
+  the line is your design, printed at Print; a station's *Go inside* zooms into its machine at work and on into your
+  rung as made (deposit and etch the switch, Print the gate, Wires the block, Package the chip); what the line does
+  comes back up the stack as the spread of the copies and yield.
 - Arrange at the chip as designed *is* the recipe's `shape` and `where` genes; the community computer's plan is the chip
   rung as designed, your slice a tile in its block.
 - The fab hands real things up the carry: the line's care sets the spread of the copies (from the litho and etch
