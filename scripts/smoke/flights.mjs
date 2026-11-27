@@ -24,6 +24,30 @@ export default async function run() {
   await page.waitForFunction(() => !document.documentElement.dataset.arrive && !!document.querySelector('#l3-chip [data-part3="hbm"]'), null, { timeout: 60000, polling: 500 })
     .catch(() => problems.push(tag + ': the dive\'s chip does not come to rest with the memory beside it'));
     await page.close(); }
+  /* the factory and its line, one camera (#465): going inside the factory on the island flies the camera to the line's
+     own eye over its first station's machine, and the line starts there (the page's zoom is then only a dissolve of the
+     same picture: data-hand); its way up comes back out the same way, the island starting where the line's camera was.
+     Every zoom the page makes is kept with whether it was such a hand-off. A page of its own */
+  { const page = await browser3d.newPage({ viewport: { width: 1280, height: 800 } }), tg = 'factory line';
+    page.on('pageerror', e => problems.push(tg + ': ' + e.message));
+    await page.addInitScript(() => { localStorage.setItem('osl-hints-v1', JSON.stringify({ seen: {}, off: true })); window.ZOOMS = []; const o = document.startViewTransition && document.startViewTransition.bind(document); if (!o) return;
+      document.startViewTransition = f => { const d = document.documentElement.dataset; window.ZOOMS.push(d.move + ('hand' in d ? '+hand' : '')); return o(f); }; });
+    await page.goto(base + 'index.html#/place/fab');
+    await page.waitForFunction(() => document.querySelectorAll('#mapLabels .tool3[data-place="fab"]').length === 6 && !!document.querySelector('#sheet:not([hidden]) [data-deeper]'), null, { timeout: 90000, polling: 500 })
+      .catch(() => problems.push(tg + ': the open factory does not name its tools and offer the way in'));
+    await page.waitForFunction(() => { const b = document.querySelector('#sheet:not([hidden]) [data-deeper]'); if (b && location.hash === '#/place/fab') b.click(); return location.hash === '#/line/clean'; }, null, { timeout: 90000, polling: 2000 })
+      .catch(() => problems.push(tg + ': going inside the factory does not land on the line\'s first station'));
+    await page.waitForFunction(() => !document.getElementById('diveui').hidden && !!document.querySelector('#diveui .homebtn') && !!document.querySelector('#diveui .dock .line') && !document.documentElement.dataset.move, null, { timeout: 90000, polling: 500 })
+      .catch(() => problems.push(tg + ': the line never finished opening from the island'));
+    const zin = await page.evaluate(() => window.ZOOMS.slice());
+    if (zin[zin.length - 1] !== 'in+hand') problems.push(tg + ': going inside the factory was not one camera into the line (' + zin.join() + ')');
+    await page.waitForFunction(() => { const a = document.querySelector('#diveui .homebtn'); if (a && location.hash === '#/line/clean') a.click(); return location.hash === '#/place/fab'; }, null, { timeout: 90000, polling: 2000 })
+      .catch(() => problems.push(tg + ': the line\'s way up does not come back to the factory'));
+    await page.waitForFunction(() => !document.documentElement.dataset.move && !document.getElementById('mapCanvas').hidden && !!document.querySelector('#sheet:not([hidden]) [data-deeper]'), null, { timeout: 90000, polling: 500 })
+      .catch(() => problems.push(tg + ': back from the line, the factory does not open on the island'));
+    const zout = await page.evaluate(() => window.ZOOMS.slice());
+    if (zout[zout.length - 1] !== 'out+hand') problems.push(tg + ': coming back out of the line was not one camera onto the island (' + zout.join() + ')');
+    await page.close(); }
   /* a link to a level lands on it (#375): opened fresh at the chip, the flight starts there, and the address says the
      chip from the start, never a level passed on the way (each address the page takes is kept, so none is missed
      between two polls); the chip's own names come up on the picture */

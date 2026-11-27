@@ -389,7 +389,7 @@ textarea.fcode { width: 100%; min-height: 110px; resize: vertical; box-sizing: b
   display: grid; grid-template-columns: minmax(0, 1fr) clamp(380px, 31vw, 520px); grid-template-rows: auto 1fr; grid-template-areas: "stage head" "stage side"; column-gap: clamp(24px, 2.6vw, 48px); align-items: start; }
 :root[data-theme=light] .mach { --matter: #7a5fd6; --fab: #1f8292; --liquid: #178a52; }
 .mach .mhead { grid-area: head; min-width: 0; }
-html.frame2 .page.f2rd .mach .mhead h1 { margin: 0 0 14px; font: 700 clamp(21px, calc(.6vw + 14px), 26px)/1.25 var(--serif); }
+.page.f2rd .mach .mhead h1 { margin: 0 0 14px; font: 700 clamp(21px, calc(.6vw + 14px), 26px)/1.25 var(--serif); }
 .mach .mhead .kicker { margin: 0 0 6px; }
 .mach .mmodes { display: inline-flex; gap: 2px; margin: 0 0 12px; padding: 3px; border-radius: 999px; background: color-mix(in srgb, var(--ink) 8%, transparent); }
 .mach .mmodes button { padding: 6px 20px; border: 0; border-radius: 999px; background: none; color: var(--ink); font: 700 14px var(--sans); cursor: pointer; }
@@ -678,7 +678,7 @@ html.frame2 .page.f2rd .mach .mhead h1 { margin: 0 0 14px; font: 700 clamp(21px,
 /* a phone: the head, the machine top to bottom, its layers; then one part at a time, and the rest */
 @media (max-width: 720px) {
   .mach { grid-template-columns: minmax(0, 1fr); grid-template-rows: none; grid-template-areas: "head" "stage" "side"; }
-  html.frame2 .page.f2rd .mach .mhead h1 { font-size: 20px; }
+  .page.f2rd .mach .mhead h1 { font-size: 20px; }
   .mach .mneeds button { padding: 8px 10px; }
   .mach .mneeds button b { font-size: 14px; }
   .mach .mwhy { margin-bottom: 12px; }
@@ -727,60 +727,60 @@ html.frame2 .page.f2rd .mach .mhead h1 { margin: 0 0 14px; font: 700 clamp(21px,
 /* the way from a machine's core block into the core at work (src/v2/machines.js, #321) */
 .mcoreway { display: inline-flex; align-items: center; gap: 6px; margin: 6px 0 0; font-size: 13px; font-weight: 600; color: var(--accent); text-decoration: none; }
 .mcoreway:hover, .mcoreway:focus-visible { text-decoration: underline; }
-html.frame2 .page.f2rd :is(.world, .readx) .f2rhead .kicker { color: var(--qc, var(--muted)); }
-html.frame2 .page.f2rd .f2rhead :is(.wq, .readq) { margin: 4px 0 10px; padding-left: 16px; border-left: 4px solid var(--qc); }
-html.frame2 .page.f2rd .f2rhead .wbehind { margin: 0 0 6px; font: var(--f2-q); font-size: 20px; color: var(--muted); }
-html.frame2 .page.f2rd .f2col .qgrid { grid-template-columns: repeat(auto-fill, minmax(min(250px, 100%), 1fr)); }
-html.frame2 .page.f2rd .f2col .qcard .q { font: 600 18px/1.35 var(--serif); }
-html.frame2 .page.f2rd .f2col .qcard .small { font-size: 15px; }
-html.frame2 .page.f2rd .f2col .qcard.f2on { transform: translateY(-3px); border-color: var(--qc); box-shadow: 0 0 0 2px color-mix(in srgb, var(--qc) 45%, transparent); }
-html.frame2 .f2pic > :is(.wlens, .probe) { margin: 0; padding: 0; border: 0; border-radius: 0; background: none; }
-html.frame2 .f2pic .wlays { font: var(--f2-small); margin: 0 0 14px; color: var(--muted); }
-html.frame2 .f2pic .wlays b { color: var(--ink); }
-html.frame2 .f2pic :is(.small, .chipb, .btn, button, label, figcaption) { font-size: 15px; }
-html.frame2 .f2pic .wsketch { max-height: calc(100vh - 300px); }
-html.frame2 .f2pic .wsketch { width: 100%; object-fit: contain; }
+main.stage .page.f2rd :is(.world, .readx) .f2rhead .kicker { color: var(--qc, var(--muted)); }
+.page.f2rd .f2rhead :is(.wq, .readq) { margin: 4px 0 10px; padding-left: 16px; border-left: 4px solid var(--qc); }
+.page.f2rd .f2rhead .wbehind { margin: 0 0 6px; font: var(--f2-q); font-size: 20px; color: var(--muted); }
+.page.f2rd .f2col .qgrid { grid-template-columns: repeat(auto-fill, minmax(min(250px, 100%), 1fr)); }
+main.stage .page.f2rd .f2col .qcard .q { font: 600 18px/1.35 var(--serif); }
+main.stage .page.f2rd .f2col .qcard .small { font-size: 15px; }
+.page.f2rd .f2col .qcard.f2on { transform: translateY(-3px); border-color: var(--qc); box-shadow: 0 0 0 2px color-mix(in srgb, var(--qc) 45%, transparent); }
+.f2pic > :is(.wlens, .probe) { margin: 0; padding: 0; border: 0; border-radius: 0; background: none; }
+.f2pic .wlays { font: var(--f2-small); margin: 0 0 14px; color: var(--muted); }
+main.stage .f2pic .wlays b { color: var(--ink); }
+main.stage .f2pic :is(.small, .chipb, .btn, button, label, figcaption) { font-size: 15px; }
+.f2pic .wsketch { max-height: calc(100vh - 300px); }
+.f2pic .wsketch { width: 100%; object-fit: contain; }
 /* the questions as one picture: a dot each, in the row of the stage where it is met */
-html.frame2 .f2qmap { --d: clamp(14px, calc(.55vw + 7px), 19px); }
-html.frame2 .f2qrow { display: grid; grid-template-columns: 6.6em minmax(0, 1fr); gap: 4px 14px; padding: 12px 0; border-top: 1px solid var(--line); }
-html.frame2 .f2qst { display: flex; flex-direction: column; gap: 2px; margin: 0; }
-html.frame2 .f2qst b { font: var(--f2-label); }
-html.frame2 .f2qst .f2fig { font: 500 15px var(--mono); color: var(--muted); }
-html.frame2 .f2qdots { display: flex; flex-wrap: wrap; align-content: start; gap: calc(var(--d) * .42); padding-top: 3px; }
-html.frame2 .f2dot { position: relative; display: inline-block; flex: none; width: var(--d, 14px); height: var(--d, 14px); box-sizing: border-box; border-radius: 50%; border: 2px solid var(--qc, var(--muted)); background: transparent; transition: transform .15s ease, opacity .2s ease; }
-html.frame2 .f2dot.f2live { background: var(--qc, var(--muted)); }
-html.frame2 a.f2dot:hover, html.frame2 .f2dot.f2on { z-index: 1; transform: scale(1.55); box-shadow: 0 0 0 3px color-mix(in srgb, var(--qc) 40%, transparent); }
-html.frame2 .f2dot.f2me { box-shadow: 0 0 0 3px var(--panel-solid), 0 0 0 5px var(--ink); }
-html.frame2 .f2dot.f2way { box-shadow: 0 0 0 2px var(--panel-solid), 0 0 0 4px color-mix(in srgb, var(--ink) 45%, transparent); }
-html.frame2 .f2dot.f2off { opacity: .14; }
-html.frame2 .f2qkey { display: flex; flex-wrap: wrap; gap: 6px 18px; margin: 4px 0 0; padding-top: 12px; border-top: 1px solid var(--line); color: var(--muted); }
-html.frame2 .f2qkey i.f2dot { --d: 13px; --qc: var(--muted); margin-right: 7px; vertical-align: -1px; }
-html.frame2 .f2qsay { min-height: 4.2em; margin: 14px 0 0; font: var(--f2-q); font-size: 19px; color: var(--muted); }
-html.frame2 .f2qsay.f2said { color: var(--ink); }
+.f2qmap { --d: clamp(14px, calc(.55vw + 7px), 19px); }
+.f2qrow { display: grid; grid-template-columns: 6.6em minmax(0, 1fr); gap: 4px 14px; padding: 12px 0; border-top: 1px solid var(--line); }
+.f2qst { display: flex; flex-direction: column; gap: 2px; margin: 0; }
+main.stage .f2qst b { font: var(--f2-label); }
+.f2qst .f2fig { font: 500 15px var(--mono); color: var(--muted); }
+.f2qdots { display: flex; flex-wrap: wrap; align-content: start; gap: calc(var(--d) * .42); padding-top: 3px; }
+main.stage .f2dot { position: relative; display: inline-block; flex: none; width: var(--d, 14px); height: var(--d, 14px); box-sizing: border-box; border-radius: 50%; border: 2px solid var(--qc, var(--muted)); background: transparent; transition: transform .15s ease, opacity .2s ease; }
+main.stage .f2dot.f2live { background: var(--qc, var(--muted)); }
+main.stage a.f2dot:hover, main.stage .f2dot.f2on { z-index: 1; transform: scale(1.55); box-shadow: 0 0 0 3px color-mix(in srgb, var(--qc) 40%, transparent); }
+main.stage .f2dot.f2me { box-shadow: 0 0 0 3px var(--panel-solid), 0 0 0 5px var(--ink); }
+main.stage .f2dot.f2way { box-shadow: 0 0 0 2px var(--panel-solid), 0 0 0 4px color-mix(in srgb, var(--ink) 45%, transparent); }
+main.stage .f2dot.f2off { opacity: .14; }
+.f2qkey { display: flex; flex-wrap: wrap; gap: 6px 18px; margin: 4px 0 0; padding-top: 12px; border-top: 1px solid var(--line); color: var(--muted); }
+main.stage .f2qkey i.f2dot { --d: 13px; --qc: var(--muted); margin-right: 7px; vertical-align: -1px; }
+.f2qsay { min-height: 4.2em; margin: 14px 0 0; font: var(--f2-q); font-size: 19px; color: var(--muted); }
+.f2qsay.f2said { color: var(--ink); }
 /* a question's page: its visual system is the picture */
-html.frame2 .page.f2rd .world .f2col .wsec { margin: 34px 0; }
-html.frame2 .page.f2rd .world .f2col > .wopen { margin-top: 18px; }
-html.frame2 .page.f2rd .world .f2col .truths li { margin-bottom: 10px; }
-html.frame2 .page.f2rd .world .f2col .wch .f2try { margin-top: 6px; }
-html.frame2 .page.f2rd .world .f2col .wmore > summary h2 { display: inline; }
+.page.f2rd .world .f2col .wsec { margin: 34px 0; }
+.page.f2rd .world .f2col > .wopen { margin-top: 18px; }
+.page.f2rd .world .f2col .truths li { margin-bottom: 10px; }
+main.stage .page.f2rd .world .f2col .wch .f2try { margin-top: 6px; }
+.page.f2rd .world .f2col .wmore > summary h2 { display: inline; }
 /* an experiment's page: its try, or where it sits among the others */
-html.frame2 .page.f2rd .f2rhead .rstate { padding: 3px 12px; font: 600 15px var(--sans); }
-html.frame2 .f2pic .pbar { font-size: 15px; }
-html.frame2 .f2pic .pbar .pv { font-size: 15px; }
-html.frame2 .f2pic .probe .plead { font: 600 19px/1.4 var(--serif); }
-html.frame2 .page.f2rd .readx .f2col > .readplay { margin: 0 0 8px; }
+.page.f2rd .f2rhead .rstate { padding: 3px 12px; font: 600 15px var(--sans); }
+.f2pic .pbar { font-size: 15px; }
+.f2pic .pbar .pv { font-size: 15px; }
+.f2pic .probe .plead { font: 600 19px/1.4 var(--serif); }
+.page.f2rd .readx .f2col > .readplay { margin: 0 0 8px; }
 /* machines from shared blocks is a place of its own (#320): its stage and its side are in this sheet (.mach) */
 
 /* a phone: the title, then the picture, then the words; the picture is not pinned */
 @media (max-width: 720px) {
-  html.frame2 .f2pic .wsketch { max-height: 60vh; }
-  html.frame2 .page.f2rd .f2rhead .wbehind { font-size: 18px; margin-bottom: 18px; }
-  html.frame2 .f2qrow { grid-template-columns: minmax(0, 1fr); }
-  html.frame2 .f2qst { flex-direction: row; gap: 10px; align-items: baseline; }
-  html.frame2 .f2qsay { min-height: 0; font-size: 17px; }
+  .f2pic .wsketch { max-height: 60vh; }
+  .page.f2rd .f2rhead .wbehind { font-size: 18px; margin-bottom: 18px; }
+  .f2qrow { grid-template-columns: minmax(0, 1fr); }
+  .f2qst { flex-direction: row; gap: 10px; align-items: baseline; }
+  .f2qsay { min-height: 0; font-size: 17px; }
 }
 
-html.frame2 .hero .btn { font-size: 15px; }
+main.stage .hero .btn { font-size: 15px; }
 .lsnbtn.on { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 16%, var(--panel)); }
 .lsnwave i:nth-child(2) { height: 13px; }
  .lsnwave i:nth-child(3) { height: 9px; }

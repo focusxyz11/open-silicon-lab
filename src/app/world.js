@@ -203,6 +203,12 @@ export function createWorld(cv, on) {
     j3state = 'loading';
     import('./journey3d.js').then(m => { J3 = m.createJourney3D(cv.parentNode, cv, CHROME.stage ? CHROME.stage() : null); j3state = J3 ? 'ready' : 'off'; if (J3) cv.classList.add('over3d'); }).catch(() => { j3state = 'off'; });
   };
+  /* a camera handed between views is said in the window's pixels (f: its focal length, c: where its centre is), so a
+     canvas of another size or place takes it as the same picture; the line's camera works in this canvas's (fov, c) */
+  function canvasPose(q) { const r = cv.getBoundingClientRect(), h = r.height || H; if (!q.f || !q.c) return q;
+    return Object.assign({}, q, { fov: 2 * Math.atan(h / 2 / q.f) * 180 / Math.PI, c: [q.c[0] - r.left, q.c[1] - r.top] }); }
+  function windowPose(q) { const r = cv.getBoundingClientRect(), h = r.height || H, c = q.c || [W / 2, H / 2];
+    return Object.assign({}, q, { f: h / 2 / Math.tan(q.fov * Math.PI / 360), c: [c[0] + r.left, c[1] + r.top] }); }
   function renderLine3(tm, b) {
     const near = Math.round(Z), dist = Math.abs(Z - near);
     if (!fly && !drag && dist < 0.02) { if (stay.i !== near) { stay = { i: near, t: tm }; paused = false; } else if (paused) stay.t += tm - lastTm; } else if (dist > 0.05 || fly) stay.i = -1;
@@ -225,7 +231,8 @@ export function createWorld(cv, on) {
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     const y = top + 12, gap = Math.min(18, (b.B - 40) / N);
     for (let i = 0; i < (CHROME.dots ? N : 0); i++) { const x = b.cx + (i - (N - 1) / 2) * gap; ctx.globalAlpha = i === near ? 1 : 0.5; ctx.fillStyle = i === near ? col.warm : col.line; ctx.beginPath(); ctx.arc(x, y, i === near ? 4 : 2.5, 0, 6.2832); ctx.fill(); }
-    ctx.globalAlpha = 0.3; ctx.fillStyle = col.bg; const L = b.cx - b.B / 2, Rr = b.cx + b.B / 2;
+    /* the sides fade back once the camera has landed (while it still wears the island's picture, they are the island's) */
+    ctx.globalAlpha = 0.3 * (1 - (r3 && r3.arrive || 0)); ctx.fillStyle = col.bg; const L = b.cx - b.B / 2, Rr = b.cx + b.B / 2;
     ctx.fillRect(0, 0, L, H); ctx.fillRect(Rr, 0, W - Rr, H); ctx.globalAlpha = 1;
     return { pi: near, ptr: { tx: left, ty: top, s: k } };
   }
@@ -596,8 +603,11 @@ export function createWorld(cv, on) {
     setLead(keys) { lead = Array.isArray(keys) ? keys : []; },
     /* a 3D level covers the picture whole (the shell, src/v2/app.js): stop drawing it until it shows again */
     setCovered(on) { covered = !!on; },
-    /* the next frame of the line starts from high above, coming down (arriving from the island) */
-    arrive() { arriving = true; },
+    /* the next frame of the line starts where the island's camera left off (pose: src/app/journey3d.js render, arrive),
+       or without one from high above, coming down (arriving from the island) */
+    arrive(pose) { arriving = pose ? canvasPose(pose) : true; },
+    /* where the line's camera is now, for the island to start from going back out (null on the flat drawing) */
+    pose3d() { const q = J3 && !flat() ? J3.pose() : null; return q && windowPose(q); },
     /* the map: o (see map.js) to open or update it, null to close it */
     setMap(o) { mapO = o; if (o) mapLast = o; },
     get mapOpen() { return !!mapO; },

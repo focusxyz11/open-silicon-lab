@@ -12,6 +12,7 @@ import { MARGINS, PROTECT } from '../src/engines/life.js';
 import { NEEDS } from '../src/data/build.js';
 import { DEBATES } from '../src/data/debates.js';
 import { WORLDS, STOPS } from '../src/data/weave.js';
+import { levelsOf } from '../src/data/places.js';
 import { PLACES as MAP_PLACES } from '../src/data/views3d.js';
 import { readWords } from '../scripts/words.mjs';
 import { LABS } from '../src/data/labs/index.js';
@@ -108,7 +109,8 @@ test('every page of the earlier site has an address: a place and a level, and ev
 test('every challenge happens at a place, at one of its levels (a place without levels, the power island, at the place itself)', () => {
   for (const c of G.CHALLENGES) {
     assert.ok(G.PLACES.includes(c.place), c.id);
-    const L = G.INSIDE[c.place] || [];
+    /* a place's levels, the ones above its zoom included (mind, src/data/places.js ABOVE) */
+    const L = levelsOf(c.place);
     if (!L.length) { assert.equal(c.at, undefined, c.id + ': ' + c.place + ' has no levels'); continue; }
     assert.ok(L.some(l => l.depth === c.at), c.id + ': ' + c.at + ' is not a level of ' + c.place);
   }

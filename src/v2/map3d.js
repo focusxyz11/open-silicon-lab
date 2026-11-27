@@ -15,7 +15,7 @@ import { STEPS, STATION, GROWTH } from './game.js';
 import { betPowerNow } from '../app/betscene.js';
 import { furnisher, lump } from './furnish.js';
 import { CORNERS, HOUSE } from '../data/studio.js';
-import { PLACES, partName, ISLE_COAST, ISLE_ROAD, ISLE_YAW } from '../data/views3d.js';
+import { PLACES, partName, ISLE_COAST, ISLE_ROAD, ISLE_YAW, LINE_EYE } from '../data/views3d.js';
 import { LABS } from '../data/labs/index.js';
 
 /* what each lab grows, from its own file (src/v2/growers/<lab>.js): { <growth>: { at, grow } }, fetched beside the island;
@@ -773,7 +773,7 @@ export function createMap(canvas, host, on = {}) {
   function station(m, place, id, s, [cx, cz], partOf) {
     const O = OPEN[place], mm = m.machineModel(id, lineCol()); if (!O || !mm) return;
     const g = mm.group; g.scale.setScalar(s); const B = new THREE.Box3().setFromObject(g), c = new THREE.Vector3(); B.getCenter(c);
-    g.position.set(cx - c.x, 0.1, cz - c.z); O.inside.add(g); shade(g); g.traverse(o => { o.userData.nopick = true; });
+    g.position.set(cx - c.x, 0.1, cz - c.z); O.inside.add(g); shade(g); g.traverse(o => { o.userData.nopick = true; }); STATIONS[id] = { place, at: g };
     Object.entries(partOf).forEach(([part, key]) => { const tg = O.tools[part], PB = mm.parts[key]; if (!tg || !PB) return;
       while (tg.children.length) tg.remove(tg.children[0]);
       const W = PB.clone().applyMatrix4(new THREE.Matrix4().makeScale(s, s, s)); W.translate(g.position); const wc = new THREE.Vector3(); W.getCenter(wc);
@@ -784,6 +784,22 @@ export function createMap(canvas, host, on = {}) {
   }
   /* the ring of light under the part selected (placed again once a building's machines have arrived) */
   const placeRing = (place, part) => { const T = OPEN[place] && OPEN[place].tools[part]; if (!T) return; const v = new THREE.Vector3(); T.getWorldPosition(v); ring.position.set(v.x, 0.25, v.z); ring.scale.setScalar(RING_R[part] || RING_R[place] || 3.6); };
+  /* ---- the line's stations, where they stand on the island (one camera, no cut: docs/INTERACTION.md) ----
+     Each machine of the factory is the line's own station in the same metres (src/app/journey3d.js machineModel), so
+     a point of a station on the line is a point here too. The factory's six tools stand at a known place in their bays
+     (0.12 up, 3.1 toward the aisle in each tool's own turn); the test house and the port hold a whole station, scaled,
+     once they have been opened (STATIONS). A station's matrix takes its metres to the island's */
+  const STATIONS = {};
+  const stationAt = id => { let M = null, place = null;
+    if (STATIONS[id]) { const S0 = STATIONS[id]; S0.at.updateWorldMatrix(true, false); M = S0.at.matrixWorld.clone(); place = S0.place; }
+    else if (FAB.tools[id] && FAB_TOOLS.some(x => x[0] === id)) { const tg = FAB.tools[id]; tg.updateWorldMatrix(true, false); M = tg.matrixWorld.clone().multiply(new THREE.Matrix4().makeTranslation(0, 0, 3.1)); place = 'fab'; }
+    return M ? { M, place } : null; };
+  /* the camera's ground point, distance, turn and tilt for an eye and a point it looks at (null when it does not look down) */
+  const orbitOf = (eye, look) => { const dx = look.x - eye.x, dy = look.y - eye.y, dz = look.z - eye.z; if (dy > -1e-4 || eye.y <= 0) return null;
+    const k = eye.y / -dy, x = eye.x + dx * k, z = eye.z + dz * k, d = Math.hypot(eye.x - x, eye.y, eye.z - z);
+    return { x, z, d, yaw: Math.atan2(eye.x - x, eye.z - z), pitch: Math.asin(eye.y / d) }; };
+  /* a turn reached the short way round */
+  const yawNear = (from, to) => from + Math.atan2(Math.sin(to - from), Math.cos(to - from));
   const detail = place => { if (detailed[place] || !DRESS[place]) return; detailed[place] = import('../app/journey3d.js').then(m => { if (m.machineModel) { DRESS[place](m); pickable(); if (sel && sel.place === place && sel.part) placeRing(place, sel.part); } }).catch(() => { /* the simple ones stay */ }); };
   /* the tool selected stands on a ring of light */
   const ring = new THREE.Mesh(new THREE.RingGeometry(0.92, 1, 48), new THREE.MeshBasicMaterial({ color: P.accent, transparent: true, opacity: 0.85, depthWrite: false }));
@@ -827,14 +843,18 @@ export function createMap(canvas, host, on = {}) {
   /* on wide screens the island sits right of centre: the hero takes the lower left */
   const home = () => (innerWidth > 900 ? { x: -32, z: -8, d: 230 } : { x: -8, z: 4, d: 300 });
   const cam = Object.assign({ yaw: ISLE_YAW, pitch: 0.92 }, home());
-  let fly = null;
+  let fly = null, pinned = false, shot = null, diving = null;
+  /* the island's own field of view; coming back from the line it starts with the line's, and its centre moved where
+     the line's was, and eases back to these while it rises (shot) */
+  const FOV = 32;
   const place2 = () => {
     const { x, z, d, yaw, pitch } = cam;
     camera.position.set(x + Math.sin(yaw) * Math.cos(pitch) * d, Math.sin(pitch) * d, z + Math.cos(yaw) * Math.cos(pitch) * d);
     camera.lookAt(x, 0, z);
     scene.fog.near = Math.max(200, d * 1.05); scene.fog.far = Math.max(540, d * 2.6);
   };
-  const flyTo = (x, z, d, ms = 1100) => { fly = { from: { ...cam }, to: { x, z, d, yaw: cam.yaw, pitch: d < 90 ? 0.8 : d > 400 ? 1.0 : 0.92 }, t0: performance.now(), ms: reduced() ? 1 : ms }; };
+  /* the island is always seen at its own turn: a flight from a turn the line lent it turns back on the way */
+  const flyTo = (x, z, d, ms = 1100) => { pinned = false; fly = { from: { ...cam }, to: { x, z, d, yaw: yawNear(cam.yaw, ISLE_YAW), pitch: d < 90 ? 0.8 : d > 400 ? 1.0 : 0.92 }, t0: performance.now(), ms: reduced() ? 1 : ms }; };
 
   /* ---- the minimap (docs/INTERACTION.md: an overview kept in step with the view): the island, its road, every
      place, and what the camera sees now; a place on it is picked as on the island, anywhere else flies there ---- */
@@ -1172,14 +1192,23 @@ export function createMap(canvas, host, on = {}) {
 
   /* ---- the loop ---- */
   let raf = 0, last = performance.now(), W = 1, H = 1, running = true, frameN = 0, declutAt = 0;
-  const resize = () => { const r = canvas.getBoundingClientRect(); if (!r.width || !r.height) return; W = r.width; H = r.height; st.size(W, H); camera.aspect = W / Math.max(1, H); camera.updateProjectionMatrix(); };
+  let CL = 0, CT = 0;
+  const resize = () => { const r = canvas.getBoundingClientRect(); if (!r.width || !r.height) return; W = r.width; H = r.height; CL = r.left; CT = r.top; st.size(W, H); camera.aspect = W / Math.max(1, H); camera.updateProjectionMatrix(); };
+  /* the camera handed back by the line (shot): its field of view and centre at k = 0, the island's own at 1 */
+  const lens0 = k => { if (!shot) return; const fov = 2 * Math.atan(H / 2 / shot.f) * 180 / Math.PI;
+    camera.fov = fov + (FOV - fov) * k; if (k >= 1) { camera.clearViewOffset(); camera.fov = FOV; shot = null; } else camera.setViewOffset(W, H, (W / 2 - (shot.c[0] - CL)) * (1 - k), (H / 2 - (shot.c[1] - CT)) * (1 - k), W, H);
+    camera.updateProjectionMatrix(); };
   new ResizeObserver(resize).observe(canvas); resize();
   const easeBack = k => { const c1 = 1.70158, c3 = c1 + 1; return 1 + c3 * Math.pow(k - 1, 3) + c1 * Math.pow(k - 1, 2); };
   const frame = now => {
     if (!running) return; raf = requestAnimationFrame(frame);
     const dt = Math.min(0.05, Math.max(0, now - last) / 1000), tm = now / 1000; last = now;
-    if (fly) { const k = ease(clamp((now - fly.t0) / fly.ms)); ['x', 'z', 'd', 'yaw', 'pitch'].forEach(q => { cam[q] = fly.from[q] + (fly.to[q] - fly.from[q]) * k; }); if (k >= 1) fly = null; }
-    else { const want = cam.d > 400 ? 1.0 : cam.d > 90 ? 0.92 : 0.8; cam.pitch += (want - cam.pitch) * 0.08; }
+    if (fly) { const k = ease(clamp((now - fly.t0) / fly.ms)); ['x', 'z', 'd', 'yaw', 'pitch'].forEach(q => { cam[q] = fly.from[q] + (fly.to[q] - fly.from[q]) * k; }); if (k >= 1) { pinned = !!fly.pin; fly = null; } }
+    /* a camera that has landed on a station's eye stays there, closer than a wheel can bring it (the line takes over) */
+    else if (!(pinned && cam.d < 38)) { const want = cam.d > 400 ? 1.0 : cam.d > 90 ? 0.92 : 0.8; cam.pitch += (want - cam.pitch) * 0.08; }
+    /* a dive into the line ends when its flight does, or when a touch or a turn of the wheel stops it */
+    if (diving && fly !== diving.f) { const dv = diving; diving = null; requestAnimationFrame(dv.end); }
+    if (shot) lens0(ease(clamp((now - shot.t0) / shot.ms)));
     { const fp = followAt(); if (fp && !fly) { const k = Math.min(1, dt * 2.5), want = follow.kind === 'plane' ? 140 : follow.kind === 'ship' ? 70 : 34; cam.x += (fp.x - cam.x) * k; cam.z += (fp.z - cam.z) * k; if (!follow.near) { cam.d += (want - cam.d) * k; if (Math.abs(cam.d - want) < 1) follow.near = true; } } }
     place2();
     /* the sun's shadows follow what is in view */
@@ -1274,8 +1303,32 @@ export function createMap(canvas, host, on = {}) {
     /* the hand-offs with the views below: dive close into a place before going inside, and start close to the
        place you come back from, then rise (no cut: the camera carries you in and out) */
     dive(id, part) { const p = placeAt(id); if (!p) return Promise.resolve(); const ms = reduced() ? 1 : 650, v = new THREE.Vector3(p.at[0], 0, p.at[1]); if (part && OPEN[id] && OPEN[id].tools[part]) OPEN[id].tools[part].getWorldPosition(v); flyTo(v.x, v.z, part ? 30 : Math.max(38, p.d * 0.55), ms); return new Promise(r => setTimeout(r, ms)); },
-    from(id, part) { const p = placeAt(id); if (!p) return; fly = null; const v = new THREE.Vector3(p.at[0], 0, p.at[1]); if (OPEN[id]) { OPEN[id].want = OPEN[id].k = 1; if (part && OPEN[id].tools[part]) OPEN[id].tools[part].getWorldPosition(v); }
-      Object.assign(cam, { x: v.x, z: v.z, d: part ? 32 : Math.max(38, p.d * 0.55), pitch: 0.8 }); place2(); },
+    from(id, part, pose) { const p = placeAt(id); if (!p) return; fly = null; pinned = false; const v = new THREE.Vector3(p.at[0], 0, p.at[1]); if (OPEN[id]) { OPEN[id].want = OPEN[id].k = 1; if (part && OPEN[id].tools[part]) OPEN[id].tools[part].getWorldPosition(v); }
+      /* back from the line: the camera starts where the line's was, over the same machine, with its field of view and
+         centre, and rises from there (the flight that frames the place follows) */
+      const S0 = pose && pose.f && stationAt(pose.id), o = S0 && orbitOf(new THREE.Vector3(...pose.eye).applyMatrix4(S0.M), new THREE.Vector3(...pose.look).applyMatrix4(S0.M));
+      if (o && !reduced()) { if (OPEN[S0.place]) OPEN[S0.place].want = OPEN[S0.place].k = 1; Object.assign(cam, o); resize();
+        /* the line's picture, said in the window's pixels (src/app/world.js windowPose), taken on this canvas however it
+           is resized meanwhile (the card opening beside it) */
+        shot = { f: pose.f, c: pose.c, t0: performance.now(), ms: 1300 }; lens0(0); place2(); return true; }
+      Object.assign(cam, { x: v.x, z: v.z, d: part ? 32 : Math.max(38, p.d * 0.55), pitch: 0.8 }); place2(); return false; },
+    /* going into the line from the island: the camera flies to the line's eye over the station's own machine (the
+       line's camera stands there: src/data/views3d.js LINE_EYE) and stays; resolves with where it is in the station's
+       metres, for the line to start from (src/app/journey3d.js), or null where the island does not stand that station */
+    diveLine(id) { const S0 = stationAt(id); if (!S0) return Promise.resolve(null);
+      const o = orbitOf(new THREE.Vector3(...LINE_EYE.eye).applyMatrix4(S0.M), new THREE.Vector3(...LINE_EYE.look).applyMatrix4(S0.M)); if (!o) return Promise.resolve(null);
+      follow = null; if (OPEN[S0.place]) OPEN[S0.place].want = 1; shot = null; camera.clearViewOffset(); camera.fov = FOV; camera.updateProjectionMatrix();
+      const far = Math.hypot(o.x - cam.x, o.z - cam.z) + Math.abs(o.d - cam.d) * 0.5, ms = reduced() ? 1 : Math.round(clamp(900 + far * 6, 900, 1600));
+      /* it resolves once the camera is there (on a slow device later than planned), or where a touch stopped it, with
+         the camera as drawn (a loop that has stopped drawing resolves after a while where the camera is), said in the
+         window's pixels (f: its focal length, c: its centre) so the line's canvas, of another size, takes it as the
+         same picture (src/app/world.js canvasPose) */
+      return new Promise(r => { let out = false; const end = () => { if (out) return; out = true; place2(); const inv = S0.M.clone().invert(), e = camera.position.clone().applyMatrix4(inv), l = new THREE.Vector3(cam.x, 0, cam.z).applyMatrix4(inv), cr = canvas.getBoundingClientRect();
+        r({ id, eye: [e.x, e.y, e.z], look: [l.x, l.y, l.z], f: H / 2 / Math.tan(camera.fov * Math.PI / 360), c: [cr.left + W / 2, cr.top + H / 2] }); };
+        fly = { from: { ...cam }, to: Object.assign({}, o, { yaw: yawNear(cam.yaw, o.yaw) }), t0: performance.now(), ms, pin: true }; diving = { f: fly, end };
+        setTimeout(end, ms + 8000); }); },
+    /* the place on the island that stands this station of the line, or null (going in and out of it can then be one camera) */
+    stationPlace: id => { const S0 = stationAt(id); return S0 ? S0.place : null; },
     /* What if?: every island in view, and on a desktop the world set to the right of the bench at the left */
     whatifView() { const xs = PLACES.map(p => p.at[0]), zs = PLACES.map(p => p.at[1]), cx = (Math.min(...xs) + Math.max(...xs)) / 2, cz = (Math.min(...zs) + Math.max(...zs)) / 2, wide = innerWidth > 720;
       const d = wide ? 640 : 1250, k = wide && innerWidth < 1100 ? d * 0.22 * (420 / innerWidth) * 2.2 : 0; flyTo(cx - Math.cos(cam.yaw) * k, cz + Math.sin(cam.yaw) * k + (wide ? 0 : 60), d, 1400); },

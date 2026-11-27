@@ -29,19 +29,18 @@ import { boot as frame2Boot, reading as frame2Reading } from './frame2.js';
 import { V, $, showStage, esc, hue, qColor, follow, followW, been } from './shell.js';
 
 export function start() {
-  /* each view's glue (src/v2/glue/) loads when its view first opens, after the glue it builds on and with the words of its
-     areas (src/core/i18n.js: the first page needs only core); until then its moves wait for it (they load it, then run),
-     and hiding a view that never opened does nothing. Once a view has opened, the other areas' words load in an idle
-     moment */
-  const GLUE = {'island': [], 'frame': [], 'flights': ['frame'], 'studio': ['frame'], 'chip': ['frame'], 'flat': ['frame'], 'supply': ['flat'], 'board': ['frame'], 'pages': ['frame']}, glueP = {};
-  const WORDS = { island: ['atlas', 'place', 'design', 'pages', 'shared'], frame: ['atlas', 'place', 'design', 'pages', 'shared'], pages: ['pages', 'hold'] };
+  /* each view's glue (src/v2/glue/) loads when its view first opens, after the glue it builds on, with its areas' words
+     (src/core/i18n.js; the first page needs only core); its moves load it, then run; hiding a view never opened does
+     nothing. Then the other areas' words load when idle */
+  const GLUE = {'island': [], 'frame': [], 'flights': ['frame'], 'studio': ['frame'], 'chip': ['frame'], 'flat': ['frame'], 'supply': ['flat'], 'board': ['frame'], 'pages': ['frame'], 'stack': ['frame']}, glueP = {};
+  const WORDS = { island: ['atlas', 'place', 'design', 'pages', 'shared'], frame: ['atlas', 'place', 'design', 'pages', 'shared'], pages: ['pages', 'hold'], stack: ['stack', 'labs'] };
   /* and the styles of its view (src/core/styles.js): the frame's with the frame, each view's own with its glue */
-  const STYLES = { island: ['frame', 'island'], frame: ['frame'], studio: ['studio'], flat: ['flat'], supply: ['supply'], pages: ['pages'] };
+  const STYLES = { island: ['frame', 'island'], frame: ['frame'], studio: ['studio'], flat: ['flat'], supply: ['supply'], pages: ['pages'], stack: ['stack'] };
   const glue = k => glueP[k] || (glueP[k] = Promise.all(GLUE[k].map(glue).concat(needWords(...(WORDS[k] || [])), needStyles(...(STYLES[k] || [])), beyond())).then(() => import('./glue/' + k + '.js')).then(m => { m.create(); afterPaint(() => { if (preloadOk()) needAllWords(); }); }));
   /* every route has a number (route): a view's move or tail that waited for its code stands aside if it changed (#365) */
   V.routeN = 0; const waits = (k, names, view) => names.forEach(n => { V[n] = (...a) => { const r = V.routeN; return glue(k).then(() => (view && r !== V.routeN ? null : V[n](...a))); }; });
-  /* a question from the field, the joule's way in and the ways out of a question are offered on every view and on the
-     seam's note, and answered by the reading pages' glue: the first such click loads it, then is made again */
+  /* a question from the field, the joule's way in and a question's ways out, on every view and the seam's note, are
+     answered by the reading pages' glue: the first such click loads it, then is made again */
   document.addEventListener('click', e => { const el = !glueP.pages && e.target.closest('[data-field],[data-fieldleave],[data-joule],[data-leave],[data-seamx]'); if (!el) return;
     e.preventDefault(); e.stopPropagation(); glue('pages').then(() => el.click()); }, true);
   waits('flights', ['ensureDc']); waits('flights', ['showPlace', 'showPhone', 'showCar'], true);
@@ -56,6 +55,7 @@ export function start() {
   waits('supply', ['supplySite', 'supplyStep', 'watchDock']); waits('supply', ['showSupply', 'showDive'], true);
   waits('board', ['ensureBoard']); waits('board', ['showBoard'], true);
   V.hideBoard = () => {};
+  waits('stack', ['showStack'], true);
   waits('pages', ['showPage', 'showRead', 'showMachines', 'showWorld', 'showEcosystem', 'showWhatif', 'askStop'], true);
   V.leaveWhatif = () => {};
   Object.assign(V, { hideSeam, crossed, arrive, islandState, hud, foldHero, chCard, designCard, kept, won, toast, hideAll, enter });
@@ -64,10 +64,9 @@ export function start() {
   /* your state, as far as the loop reads it (src/v2/loop.js); the rest is checked when the game's engines come (beyond) */
   const S = Game.readState(Game.stored(localStorage));
   const save = () => { Game.save(localStorage, S); setChipScene(S.chip); };   /* your chip reaches the pictures (src/app/betscene.js) */
-  /* beyond the first page (src/v2/beyond.js): the game's checks, the community's standings and the challenge player,
-     with the ledger's entries (one list, made from community/ledger/ by the server and at deploy; without it nothing is
-     built yet). Loaded when a view that shows them first opens (each view's glue, the island, a challenge, Break it),
-     or once the first page has painted; never with it */
+  /* beyond the first page (src/v2/beyond.js): the game's checks, the standings and the challenge player, with the
+     ledger's entries (one list made from community/ledger/ by the server and at deploy). Loaded when a view showing them
+     first opens (any glue, the island, a challenge, Break it), or once the first page has painted; never with it */
   let B = null, beyondP = null;
   const entries = () => fetch('community/ledger.json').then(r => (r.ok ? r.json() : [])).catch(() => []);
   function beyond() { return beyondP || (beyondP = Promise.all([import('./beyond.js'), entries()]).then(([m, list]) => { m.useLedger(list); m.Game.complete(S); setChipScene(S.chip); B = m; return m; }, e => { beyondP = null; throw e; })); }
@@ -411,12 +410,12 @@ export function start() {
   }
   function showMap(from) {
     hideViews();
-    const part = from && ['line', 'bench'].includes(V.flatKind) && V.WE && isPart(V.lastPlace, diveId()) ? diveId() : null;
+    const part = from && ['line', 'bench'].includes(V.flatKind) && V.WE && isPart(V.lastPlace, diveId()) ? diveId() : null, pose = V.lineLeave; V.lineLeave = null;
     /* the island is fetched while its styles load (src/core/styles.js); it shows once they are in, before it is made */
     const n = V.routeN, shown = needStyles('frame', 'island').then(() => { if (n !== V.routeN) return;
       $('mapCanvas').hidden = $('mapLabels').hidden = false; $('hero').hidden = false; $('outbtn').hidden = false; lensbar.hidden = false; showStage(true);
       loading(!V.map); });
-    return Promise.all([ensureMap(), glue('island'), shown]).then(([m]) => { if (n !== V.routeN) { if (viewNow !== 'map') m.pause(); return null; } if (from && V.lastPlace) { m.from(V.lastPlace, part); if (!part) m.focus(V.lastPlace); } m.resume(); return m; });
+    return Promise.all([ensureMap(), glue('island'), shown]).then(([m]) => { if (n !== V.routeN) { if (viewNow !== 'map') m.pause(); return null; } if (from && V.lastPlace) { const met = m.from(V.lastPlace, part, pose); if (!part && !met) m.focus(V.lastPlace); } m.resume(); return m; });
   }
 
   /* ---- the pages ---- */
@@ -447,7 +446,11 @@ export function start() {
     /* the camera dives at what is selected, and the view inside opens from that point on the screen, as through a
        portal (docs/INTERACTION.md) */
     /* a move made while the camera dives wins: the dive does not then take you inside (#365) */
-    const n = V.routeN, at = location.hash; V.enteredFrom = lastFocus(); entering = true; V.map.dive(lastFocus(), V.cur && V.cur.part).then(() => { entering = false; if (n !== V.routeN || location.hash !== at) return; portalAt(V.map.screenOf(lastFocus(), V.cur && V.cur.part)); V.arriving = true; location.hash = href; });
+    /* a station of the line that the island stands: the camera flies to the line's own eye over that machine, and the
+       line starts from there, one camera (src/v2/map3d.js diveLine); anything else, the dive and the portal */
+    const n = V.routeN, at = location.hash, st = (href.match(/^#\/line\/([a-z]+)$/) || [])[1], line = st && V.map.stationPlace(st) === lastFocus(); V.enteredFrom = lastFocus(); entering = true;
+    (line ? V.map.diveLine(st) : V.map.dive(lastFocus(), V.cur && V.cur.part)).then(pose => { entering = false; if (n !== V.routeN || location.hash !== at) return; portalAt(V.map.screenOf(lastFocus(), V.cur && V.cur.part)); V.arriving = true;
+      V.lineArrive = line && pose ? pose : null; V.handNext = !!V.lineArrive; location.hash = href; });
   }
   const lastFocus = () => (V.cur && V.cur.place) || null;
   V.arriving = false;   /* the next view was entered from the island: it starts from above, coming down */
@@ -462,6 +465,7 @@ export function start() {
     if (k === 'home') return showHome();
     if (k === 'stations') return showStations();
     if (k === 'blueprint') return showBlueprint();
+    if (k === 'stack') return V.showStack(parts[1]);
     if (k === 'board') return V.showBoard();
     if (k === 'dive') return V.showDive(parts[1], parts[2]);
     if (k === 'supply') return V.showSupply(parts[1]);
@@ -512,14 +516,16 @@ export function start() {
     const after = pr => { hud(); return Promise.resolve(pr).then(hud); };
     const [view, rank] = viewOf(parts), from = viewNow, move = V.nextMove || (from === 'bench' && view === 'studio' ? 'out' : rank > rankNow ? 'in' : rank < rankNow ? 'out' : 'along');
     V.nextMove = null; viewNow = view; rankNow = rank;
+    /* between the island and the line, one camera: both pictures the same machine from the same eye (src/v2/glue/island.js handOf) */
+    const hand = !!V.handOf && V.handOf(from, view, parts);
     if (!from || from === view || still() || !document.startViewTransition) return after(show(parts, from && from !== view ? from : null));
     /* the old picture holds while the new view is made (at most a moment), then one zooms into the other (not if moved on) */
-    const root = document.documentElement; root.dataset.move = move; if (move !== 'in') portalAt(null);
+    const root = document.documentElement; root.dataset.move = move; if (move !== 'in') portalAt(null); if (hand) root.dataset.hand = ''; else delete root.dataset.hand;
     const tr = document.startViewTransition(() => (n !== V.routeN ? null : Promise.race([after(show(parts, from)), new Promise(r => setTimeout(r, 1500))])));
     /* a transition the browser skips (a newer one began, or the view took too long) rejects its promises: the view still
        changes, plainly, so the rejections are expected and caught here */
     const quiet = () => {}; tr.ready.catch(quiet); tr.updateCallbackDone.catch(quiet);
-    tr.finished.catch(quiet).finally(() => { if (root.dataset.move === move) delete root.dataset.move; });
+    tr.finished.catch(quiet).finally(() => { if (root.dataset.move === move) { delete root.dataset.move; delete root.dataset.hand; } });
   }
   /* one set of keys in every view, one pair for each move: ↑ ↓ are out and in (scale), ← → are along. Where the
      view is a column of levels (the flight, the dive, the stack), along is the loop: the stage before or after,

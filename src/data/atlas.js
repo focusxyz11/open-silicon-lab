@@ -10,13 +10,13 @@
    - Challenges carry their place and level (src/v2/game.js); stories carry theirs (STORIES).
    - TWINS is the Turn: each level of a chip seen three ways, designed in the studio, made at the factory, used in
      the dive. */
-import { INSIDE, placeOf, stopsAt, SHARED } from './places.js';
+import { INSIDE, levelsOf, placeOf, stopsAt, SHARED } from './places.js';
 import { MADE, WORLDS, DEPTHS, partWord } from './weave.js';
 import { FIELD, fieldOf, fieldAtLevel, fieldAtPlace } from './questions.js';
 
 /* the world where a depth is drawn first (a place's own level before a shared one) */
 export const worldOf = depth => {
-  for (const L of Object.values(INSIDE)) { const l = L.find(x => x.depth === depth && !SHARED.includes(x.depth)); if (l) return l.world; }
+  for (const p of Object.keys(INSIDE)) { const l = levelsOf(p).find(x => x.depth === depth && !SHARED.includes(x.depth)); if (l) return l.world; }
   if (SHARED.includes(depth)) return 'datacentre';
   const w = WORLDS.find(x => x.depths.includes(depth)); return w ? w.id : null;
 };
@@ -62,7 +62,9 @@ export const diveWord = (level, key) => VIEW_PARTS.dive[level + '.' + key] || pa
 /* cabin: the car cut away round its footwell. A level the dive has too (the phone, the car) has its one size there, so
    a flight and the dive never give it two (a test checks it) */
 const FLIGHT_SIZES = { campus: 500, hall: 100, server: 0.8, cabin: 2 };
-export const sizeOf = level => (DEPTHS[level] && DEPTHS[level].m) || FLIGHT_SIZES[level] || null;
+/* false: not a size (a step: null) */
+export const NOT_A_SIZE = ['mind'];
+export const sizeOf = level => (NOT_A_SIZE.includes(level) ? false : (DEPTHS[level] && DEPTHS[level].m) || FLIGHT_SIZES[level] || null);
 /* how much a level is slowed when it is heard (Listen, #316, src/engines/listen.js): the seconds of the chip in one
    second of sound. At the block one second of sound is one nanosecond of the chip, so a 3 GHz clock ticks three times
    a second. Every level that shows the Listen switch has its line here (a test checks it) */

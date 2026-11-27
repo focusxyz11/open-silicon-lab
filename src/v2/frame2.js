@@ -35,7 +35,6 @@ import { challengeOf } from './loop.js';
 let booted = false;
 export function boot() {
   if (booted) return; booted = true;
-  document.documentElement.classList.add('frame2');
   /* the address you were at before you began reading: the way back; a page opened from your log leads back to it.
      Heard before the shell's own route */
   addEventListener('hashchange', e => { const was = '#' + ((e.oldURL || '').split('#')[1] || '/'), r = routeOf(location.hash), w = routeOf(was);
@@ -202,7 +201,7 @@ export function attach(host, api, o, x) {
     const line = dock.querySelector(':scope > .line'), k = dock.firstElementChild, plain = o.caption === 'plain' || !line || !k; dock.classList.toggle('f2plain', plain); if (plain) return;
     const h = x.here(), st = x.step ? x.step() : '', place = o.path && o.path[1] ? o.path[1].label : '';
     const head = document.createElement('div'); head.className = 'f2head';
-    const size = h && h.size ? esc(t('frame2.across', { size: '\u0001' })).replace('\u0001', '<span class="f2fig">' + esc(h.size) + '</span>') : '';
+    const fig = h && h.size ? '<span class="f2fig">' + esc(h.size) + '</span>' : '', size = fig && h.across !== false ? esc(t('frame2.across', { size: '\u0001' })).replace('\u0001', fig) : fig;
     /* how true the picture is, one mark beside the level's name (#325): not on a step of a row of steps, which is not a
        level's picture */
     head.innerHTML = '<p class="f2k"><span>' + esc(place) + (size ? ' · ' + size : '') + '</span></p><h2 class="f2t">' + esc(st || (h ? h.label : k.textContent)) + (h && h.fid && !st ? h.fid : '') + '</h2>';

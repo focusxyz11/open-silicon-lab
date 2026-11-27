@@ -22,12 +22,12 @@
 .lgtfig .exact { font: 600 9.5px var(--mono); }
  .lgtfig .exact.good { fill: var(--good); }
  .lgtfig .exact.bad { fill: var(--bad); }
-html.frame2 .f2stage .lgtfig svg text { font-size: calc(13px * var(--f2-k, .6)); }
- html.frame2 .f2stage .lgtfig svg text.times { font-size: calc(17px * var(--f2-k, .6)); }
+main.stage .f2stage .lgtfig svg text { font-size: calc(13px * var(--f2-k, .6)); }
+ main.stage .f2stage .lgtfig svg text.times { font-size: calc(17px * var(--f2-k, .6)); }
 /* a phone: its words smaller */
 @media (max-width: 720px) {
-  html.frame2 .f2stage .lgtfig svg text { font-size: calc(10px * var(--f2-k, 1)); }
-  html.frame2 .f2stage .lgtfig svg text.times { font-size: calc(13px * var(--f2-k, 1)); }
+  main.stage .f2stage .lgtfig svg text { font-size: calc(10px * var(--f2-k, 1)); }
+  main.stage .f2stage .lgtfig svg text.times { font-size: calc(13px * var(--f2-k, 1)); }
 }
 .lgtguess { margin: 10px 0; padding: 10px 12px; border-radius: 12px; border: 1px dashed var(--warm); background: color-mix(in srgb, var(--warm) 7%, transparent); }
  .lgtguess .kicker { margin-top: 0; }

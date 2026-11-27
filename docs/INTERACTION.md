@@ -29,7 +29,11 @@ should look like a cartoon. Consistency comes before any single feature.
    ("zoom in to go inside"), with a small ↓ for keyboards and for anyone who prefers to press.
 3. **No cuts.** A level that is not yet built into the island's scene is entered by the camera diving into the
    place first, and left by starting close to the place and pulling back. Each new level is built into the scene
-   it belongs to, one at a time; the factory is first.
+   it belongs to, one at a time; the factory is first. Where the island stands a view's own things, the two share one
+   camera: the factory's tools are the line's machines in the same metres, so going in flies the island's camera to the
+   line's own eye over the station's machine and the line starts from exactly there, and coming out the island starts
+   where the line's camera was and rises (`diveLine` and `from` in `src/v2/map3d.js`, `LINE_EYE` in
+   `src/data/views3d.js`); the page's zoom between them is only a dissolve of the same picture (`data-hand`, #465).
 4. **The address always says where you are**: `#/place/fab` is the factory, open; `#/place/fab/etch` is its etch
    tool, selected; `#/line/etch` is inside the etch tool.
 5. **Words are on things.** Inside an open building, every machine has its name over it, in HTML over the scene

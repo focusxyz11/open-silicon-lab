@@ -124,12 +124,26 @@ export default async function run() {
     { const y = await pp.evaluate(() => Math.min(300, Math.round(document.querySelector('#diveui .dockwrap').getBoundingClientRect().top) - 60)), c = await pp.context().newCDPSession(pp);
       await c.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: 200, y }] }); await c.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] }); await c.detach(); }
     await pp.waitForSelector('#diveui .dockwrap.peek', { timeout: 15000 }).catch(() => problems.push(tag + ': touching the picture does not let the card down'));
+    /* a flick is a swipe done within 450 ms (src/app/world.js): the touch and its moves go 20 ms apart, each sent without
+       waiting for the last one's answer (on a busy machine those answers took the swipe past 450 ms, a slow drag that
+       went nowhere), and the finger lifts once the moves are in (all at once, the lift could come before any move and
+       read as a tap). Two moves are enough (the flick reads the first that moves and where the finger lifts), so a
+       page that handles a touch only between its frames still has them all in time */
     const swipe = async () => { const c = await pp.context().newCDPSession(pp);
-      await c.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: 200, y: 420 }] });
-      for (let i = 1; i <= 5; i++) await c.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: 200, y: 420 - i * 30 }] });
-      await c.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] }); await c.detach(); };
+      const sent = [c.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: 200, y: 420 }] })];
+      for (const y of [345, 270]) { await new Promise(r => setTimeout(r, 20)); sent.push(c.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: 200, y }] })); }
+      await Promise.all(sent); await c.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] }); await c.detach(); };
+    /* the card is let down with a slide (and rises for a moment as it starts): until it has settled, a touch at the
+       finger's place lands on it, not on the picture (it then drags the card, and the next touches fall on its
+       question). Each swipe waits for the card at rest, still for 400 ms, and the picture under the finger */
+    const onPicture = () => pp.waitForFunction(() => {
+      const w = document.querySelector('#diveui .dockwrap'), top = w ? Math.round(w.getBoundingClientRect().top) : -1, now = performance.now(), k = window.__peekRest;
+      if (!k || k.top !== top) { window.__peekRest = { top, since: now }; return false; }
+      return w.classList.contains('peek') && now - k.since >= 400 && document.elementFromPoint(200, 420) === document.getElementById('diveCanvas'); }, null, { timeout: 15000, polling: 100 }).then(() => true, () => false);
+    /* what the swipes met, said if they fail: each touch's start, end or cancel, with what it landed on, and the address */
+    await pp.evaluate(() => { window.__swipes = []; const t0 = performance.now(); for (const k of ['pointerdown', 'pointerup', 'pointercancel']) addEventListener(k, e => window.__swipes.push(k.slice(7) + ' ' + Math.round(performance.now() - t0) + 'ms on ' + (e.target.id || String(e.target.className).split(' ')[0]) + ' y' + Math.round(e.clientY)), true); addEventListener('hashchange', () => window.__swipes.push(location.hash)); });
     let deeper = false;
-    for (let i = 0; i < 4 && !deeper; i++) { await swipe(); deeper = await pp.waitForFunction(() => location.hash === '#/dive/block', null, { timeout: 15000, polling: 500 }).then(() => true, () => false); }
-    if (!deeper) problems.push(tag + ': a swipe up on the picture does not go a level in');
+    for (let i = 0; i < 4 && !deeper; i++) { if (!await onPicture()) continue; await swipe(); deeper = await pp.waitForFunction(() => location.hash === '#/dive/block', null, { timeout: 15000, polling: 500 }).then(() => true, () => false); }
+    if (!deeper) problems.push(tag + ': a swipe up on the picture does not go a level in (' + await pp.evaluate(() => (window.__swipes || []).join(', ') + '; at ' + location.hash).catch(() => '?') + ')');
     await pp.close(); }
 }

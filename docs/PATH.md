@@ -4,8 +4,9 @@ One promise, in one sentence: **build a thinking machine from physics up, and in
 
 This is the plan for the lab's spine. Status: agreed with the owner on 26 November 2026. Built so far: the carry as
 data and engine (`src/data/path.js`, `src/engines/path.js`, steps 1 and 2 below: each gene option's carry contract in
-`arch.js`, one figure against today's computer), the three faces as data (`FACE_OF`, `alongTo`) and the line's care
-handing its spread and yield up the carry (`CARE`, `lineOf`, `carry().fab`); no view yet. Its working
+`arch.js`, one figure against today's computer), the three faces as data (`FACE_OF`, `alongTo`), the line's care
+handing its spread and yield up the carry (`CARE`, `lineOf`, `carry().fab`), and the view at `#/stack` (step 4:
+`src/v2/stack/`, loaded only when it opens) with the challenges as stepping stones (step 9). Its working
 prototype, *Your stack*, designed and built by Claude Fable 5.2 with a first version by Claude Opus, is in
 `docs/prototypes/stack/` (open `index.html`; sources in `src/`, built by `build.mjs`).
 
@@ -169,15 +170,20 @@ Each line is meant to become one task issue, in order.
 2. **One model for stack and recipe:** `recipeOf` and `stackOf`; each gene option's carry contract moves into
    `arch.js` beside its trait effects; one "against today" number, so the carry's and the engine's never drift apart.
 3. **Mind as a level:** a home for it in the atlas and `places.js`, above the machine, without pretending it is a size.
+   (Built, #445: a level of the data centre above its zoom, `ABOVE` in `src/data/places.js`, size `false` with its own
+   readout; kept out of `INSIDE` and `DEPTHS`, so no view moves until step 4.)
 4. **The stack view:** `src/v2/stack/` (camera, plates, pictures, the field) as modules loaded only when opened; words
-   in `src/i18n/en/`; a DOM mirror of the canvas for the keyboard and screen readers; `#/stack`.
+   in `src/i18n/en/`; a DOM mirror of the canvas for the keyboard and screen readers; `#/stack`. (Built: `#/stack`, `#/stack/<rung>`,
+   `#/stack/field`; the block plate holds the sums and the memory side by side, the chip its core; the field's
+   attempts are the built recipes, the ledger's, the agents' run in your browser, and yours.)
 5. **Marks and the card through the frame:** `lensesAt` and `MARKS` for the seven levels; Look, Do, Read.
 6. **The field from the ledger:** champions per niche, attempts as points, credit for first attempts, what changed
    since your last visit.
 7. **Lenses repaint the stack**, one at a time, starting with *Perfect fails*; then two lenses as a chain, fork, front.
 8. **The ways in:** from the Lab, Hold's last block and the dive's chip; the lattice as an arrangement of the ladder;
    *Grow an architecture*'s race and map retired into the stack.
-9. **Challenges as stepping stones** on their rungs, inking the plate's edge.
+9. **Challenges as stepping stones** on their rungs, inking the plate's edge. (Built: a challenge's rung is the rung of the layer the lattice places
+   it in, `rungOfChallenge`; a won one inks a square under its plate and shows in the rung's card.)
 10. **The open genome's form** (after the first forks carry): a GitHub form and port tool to propose a gene option
     with its trait effects and carry contract, checked by tests.
 

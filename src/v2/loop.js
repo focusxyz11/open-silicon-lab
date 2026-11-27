@@ -6,7 +6,7 @@
    or after the first page has painted (docs/ARCHITECTURE.md, "What loads when"). Tests in tests/game.test.mjs. */
 import { t } from '../core/i18n.js';
 import { STOPS, WORLDS } from '../data/weave.js';
-import { INSIDE, placeOf, SHARED, askAt as levelStops } from '../data/places.js';
+import { INSIDE, placeOf, aboveOf, SHARED, askAt as levelStops } from '../data/places.js';
 import { fieldOf, fieldAtLevel, fieldAtPlace } from '../data/questions.js';
 import { DEBATES } from '../data/debates.js';
 import { normalLooked } from '../data/seek.js';
@@ -108,6 +108,7 @@ export const DIVE_LEVELS = ['chip', 'block', 'gate', 'switch', 'atom'];
 export const DIVE_WORLD = { phone: 'phone', phoneboard: 'phone', soc: 'phone', car: 'car', ecu: 'car', mcu: 'car', scanner: 'made', wafer: 'made', die: 'made' };
 /* where a level is shown in the chip world: always an address inside it, never the earlier site */
 export function viewOfDepth(d) {
+  const up = aboveOf(d); if (up) return '#/place/' + up;
   if (DIVE_WORLD[d]) return '#/dive/' + d + '/' + DIVE_WORLD[d];
   if (d === 'board') return '#/board';
   const f = FLOWN.datacentre[d]; if (f != null) return '#/place/datacentre/' + f;
