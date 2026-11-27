@@ -28,3 +28,9 @@ export const CHIP_ROWS = [
 ];
 /* the question at each row, about how it is made (stops: stop.<key>.q); the dive asks its own */
 export const CHIP_ASK = ['make.pkg', 'make.wires', 'scale.print', 'make.etch', 'make.implant'];
+
+/* where the line's camera stands at a station (src/app/journey3d.js), in the station's own metres ([along, up, toward
+   the aisle], three.js axes): its eye and the point it looks at. The island's factory stands the same machines
+   (src/v2/map3d.js), so going in, the island's camera flies to this eye over the machine it stands, and the line starts
+   from where that flight ended; coming out, the island starts where the line's camera was (one camera, no cut) */
+export const LINE_EYE = { eye: [1.0, 11.8, 6.4], look: [0.2, 0.2, -2.7] };

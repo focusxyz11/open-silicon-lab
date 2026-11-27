@@ -16,6 +16,7 @@ import { PLANTS } from '../data/weave.js';
 import { JOURNEY, flow, chipNow } from './journey.js';
 import { GROUPS_AT } from '../engines/chip.js';
 import { createLens, LENS } from './lens3d.js';
+import { LINE_EYE } from '../data/views3d.js';
 const chip3 = () => chipNow();
 
 const S = 900;                                   /* centimetres between stations */
@@ -647,8 +648,11 @@ export function createJourney3D(host, before, shared) {
   const work = new THREE.PointLight(0xfff1dc, 0, 9, 0);
   scene.add(hemi, sun, sun.target, work);
   let M = null, theme = '', ids = [], built = new Map(), pod = null, lastT = 0, lens = null;
-  /* the camera is kept relative to where you are on the line, so travelling never leaves it behind */
-  const cam = { p: new THREE.Vector3(), t: new THREE.Vector3(), init: false };
+  /* the camera is kept relative to where you are on the line, so travelling never leaves it behind. a: how much of
+     the island's camera it still wears after a hand-off (1 at the hand-off: the island's field of view and centre;
+     0 once landed: the line's own), fov0 that field of view and c0 that centre on this canvas */
+  const cam = { p: new THREE.Vector3(), t: new THREE.Vector3(), init: false, a: 0, fov0: 30, c0: null };
+  let lastZ = 0;
   const ambientPods = [];
 
   function reset(col) {
@@ -740,8 +744,8 @@ export function createJourney3D(host, before, shared) {
       pod.veh.position.y = 3.1; pod.belt.geometry.attributes.position.array.set([-0.12, 2.89, 0, -0.12, h / 100 + 0.36, 0, 0.12, 2.89, 0, 0.12, h / 100 + 0.36, 0]); pod.belt.geometry.attributes.position.needsUpdate = true;
     }
     /* the camera: along the line; when you stop, it follows your wafer, and moves in while a machine works on it */
-    const x0 = o.Z * S / 100, base = new THREE.Vector3(x0, 0, 0);
-    const P = new THREE.Vector3(x0 + 1.0, 11.8, 6.4), T = new THREE.Vector3(x0 + 0.2, 0.2, -2.7);
+    const x0 = o.Z * S / 100, base = new THREE.Vector3(x0, 0, 0); lastZ = o.Z;
+    const P = new THREE.Vector3(...LINE_EYE.eye).add(base), T = new THREE.Vector3(...LINE_EYE.look).add(base);
     if (focus) {
       const { s, f } = focus, here = s.cfg.at[f.s.to], chW = here ? V(here[0], here[1], here[2]).add(s.group.position) : null;
       if (f.p) { const w = V(f.p[0], f.p[1], f.p[2]).add(s.group.position); T.lerp(w, 0.18); }
@@ -751,20 +755,27 @@ export function createJourney3D(host, before, shared) {
     cam.k = lerp(cam.k || 0, closeK, 1 - Math.exp(-dt * 3)); M.rail.opacity = 1 - 0.85 * cam.k; M.rail.depthWrite = cam.k < 0.2;
     P.sub(base); T.sub(base);
     if (!cam.init) { cam.p.copy(P); cam.t.copy(T); cam.init = true; }
-    /* arriving from the island (docs/INTERACTION.md): the camera starts high above the machine, where the dive left
-       it, and comes down to the line */
-    if (o.arrive) { cam.p.copy(P).add(new THREE.Vector3(-2.2, 14, 9)); cam.t.copy(T); }
-    const k = 1 - Math.exp(-dt * 2.6); cam.p.lerp(P, k); cam.t.lerp(T, k);
+    /* arriving from the island (docs/INTERACTION.md): the camera starts where the island's left it, over the same
+       machine (o.arrive: its eye and the point it looked at in this station's metres, and its field of view), and
+       settles onto the line: one camera, no cut. Without a pose (the island could not fly there) it starts high above
+       the machine and comes down */
+    const A = o.arrive && o.arrive.eye ? o.arrive : null;
+    if (A) { cam.p.set(...A.eye); cam.t.set(...A.look); cam.a = 1; cam.fov0 = A.fov || 32; cam.c0 = A.c || null; }
+    else if (o.arrive) { cam.p.copy(P).add(new THREE.Vector3(-2.2, 14, 9)); cam.t.copy(T); cam.a = 0; }
+    /* the frame of the hand-off is the island's own picture: nothing moves in it yet */
+    const k = A ? 0 : 1 - Math.exp(-dt * 2.6); cam.p.lerp(P, k); cam.t.lerp(T, k); cam.a = cam.a < 0.002 ? 0 : cam.a * (1 - k);
     camera.position.copy(cam.p).add(base); const look = cam.t.clone().add(base); camera.lookAt(look);
     sun.position.set(look.x - 4, 12, look.z + 6); sun.target.position.copy(look);
     /* fit: the station fills the dive's box; the rest of the canvas shows its surroundings */
     const { W, H, dpr, box } = o;
     const pr = Math.min(dpr, perf.low ? 1 : 1.5); if (!shared && renderer.getPixelRatio() !== pr) renderer.setPixelRatio(pr);
     const sz = renderer.getSize(new THREE.Vector2()); if (sz.x !== W || sz.y !== H) renderer.setSize(W, H, false);
-    camera.fov = (2 * Math.atan(Math.tan((30 * Math.PI) / 360) * (H / box.B)) * 180) / Math.PI; camera.aspect = W / H;
-    /* the band covers the bottom of the box on a wide screen: aim a little above the middle */
-    const cy = box.below ? box.cy : box.cy - box.B * 0.07;
-    camera.setViewOffset(W, H, W / 2 - box.cx, H / 2 - cy, W, H); camera.updateProjectionMatrix();
+    const fit = (2 * Math.atan(Math.tan((30 * Math.PI) / 360) * (H / box.B)) * 180) / Math.PI; camera.aspect = W / H;
+    camera.fov = fit + (cam.fov0 - fit) * cam.a;
+    /* the band covers the bottom of the box on a wide screen: aim a little above the middle (after a hand-off, the
+       picture moves there from the middle of the screen, where the island had it) */
+    const cy = box.below ? box.cy : box.cy - box.B * 0.07, c0 = cam.c0 || [W / 2, H / 2];
+    camera.setViewOffset(W, H, W / 2 - (box.cx + (c0[0] - box.cx) * cam.a), H / 2 - (cy + (c0[1] - cy) * cam.a), W, H); camera.updateProjectionMatrix();
     /* drawn as on its own renderer: no tone mapping (a lent renderer gets its own back after the frame) */
     const tone = renderer.toneMapping; renderer.toneMapping = THREE.NoToneMapping;
     renderer.render(scene, camera);
@@ -779,7 +790,15 @@ export function createJourney3D(host, before, shared) {
       lens.on = !!seen;
     }
     renderer.toneMapping = tone; if (shared && shared.shown) shared.shown();
-    return { lens: seen, mode: lens.mode };
+    return { lens: seen, mode: lens.mode, arrive: cam.a };
+  }
+  /* where the camera is now, for the island to start from when you go back out: the station nearest, the eye and the
+     point it looks at in that station's metres, the field of view, and where the picture's centre is on this canvas */
+  function pose() {
+    if (!cam.init || !ids.length) return null;
+    const i = Math.max(0, Math.min(ids.length - 1, Math.round(lastZ))), dx = (lastZ - i) * S / 100, v = camera.view && camera.view.enabled ? camera.view : null;
+    return { id: ids[i], eye: [cam.p.x + dx, cam.p.y, cam.p.z], look: [cam.t.x + dx, cam.t.y, cam.t.z], fov: camera.fov,
+      c: v ? [v.fullWidth / 2 - v.offsetX, v.fullHeight / 2 - v.offsetY] : null };
   }
   /* where a station's parts are on screen, in the dive box's 1000 x 1000 space */
   function parts(id, box, W, H) {
@@ -789,7 +808,7 @@ export function createJourney3D(host, before, shared) {
     for (const k in st.parts) out[k] = st.parts[k].map(list => hull(list.map(p => { v.copy(p).project(camera); return [((v.x + 1) / 2 * W - left) / box.B * 1000, ((1 - v.y) / 2 * H - top) / box.B * 1000]; })));
     return out;
   }
-  return { render, parts, canvas: cv, dispose() { if (!shared) { renderer.dispose(); cv.remove(); } } };
+  return { render, parts, pose, canvas: cv, dispose() { if (!shared) { renderer.dispose(); cv.remove(); } } };
 }
 function hull(q) {
   q = q.slice().sort((a, b) => a[0] - b[0] || a[1] - b[1]);

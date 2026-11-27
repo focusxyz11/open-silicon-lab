@@ -411,12 +411,12 @@ export function start() {
   }
   function showMap(from) {
     hideViews();
-    const part = from && ['line', 'bench'].includes(V.flatKind) && V.WE && isPart(V.lastPlace, diveId()) ? diveId() : null;
+    const part = from && ['line', 'bench'].includes(V.flatKind) && V.WE && isPart(V.lastPlace, diveId()) ? diveId() : null, pose = V.lineLeave; V.lineLeave = null;
     /* the island is fetched while its styles load (src/core/styles.js); it shows once they are in, before it is made */
     const n = V.routeN, shown = needStyles('frame', 'island').then(() => { if (n !== V.routeN) return;
       $('mapCanvas').hidden = $('mapLabels').hidden = false; $('hero').hidden = false; $('outbtn').hidden = false; lensbar.hidden = false; showStage(true);
       loading(!V.map); });
-    return Promise.all([ensureMap(), glue('island'), shown]).then(([m]) => { if (n !== V.routeN) { if (viewNow !== 'map') m.pause(); return null; } if (from && V.lastPlace) { m.from(V.lastPlace, part); if (!part) m.focus(V.lastPlace); } m.resume(); return m; });
+    return Promise.all([ensureMap(), glue('island'), shown]).then(([m]) => { if (n !== V.routeN) { if (viewNow !== 'map') m.pause(); return null; } if (from && V.lastPlace) { const met = m.from(V.lastPlace, part, pose); if (!part && !met) m.focus(V.lastPlace); } m.resume(); return m; });
   }
 
   /* ---- the pages ---- */
@@ -447,7 +447,11 @@ export function start() {
     /* the camera dives at what is selected, and the view inside opens from that point on the screen, as through a
        portal (docs/INTERACTION.md) */
     /* a move made while the camera dives wins: the dive does not then take you inside (#365) */
-    const n = V.routeN, at = location.hash; V.enteredFrom = lastFocus(); entering = true; V.map.dive(lastFocus(), V.cur && V.cur.part).then(() => { entering = false; if (n !== V.routeN || location.hash !== at) return; portalAt(V.map.screenOf(lastFocus(), V.cur && V.cur.part)); V.arriving = true; location.hash = href; });
+    /* a station of the line that the island stands: the camera flies to the line's own eye over that machine, and the
+       line starts from there, one camera (src/v2/map3d.js diveLine); anything else, the dive and the portal */
+    const n = V.routeN, at = location.hash, st = (href.match(/^#\/line\/([a-z]+)$/) || [])[1], line = st && V.map.stationPlace(st) === lastFocus(); V.enteredFrom = lastFocus(); entering = true;
+    (line ? V.map.diveLine(st) : V.map.dive(lastFocus(), V.cur && V.cur.part)).then(pose => { entering = false; if (n !== V.routeN || location.hash !== at) return; portalAt(V.map.screenOf(lastFocus(), V.cur && V.cur.part)); V.arriving = true;
+      V.lineArrive = line && pose ? pose : null; V.handNext = !!V.lineArrive; location.hash = href; });
   }
   const lastFocus = () => (V.cur && V.cur.place) || null;
   V.arriving = false;   /* the next view was entered from the island: it starts from above, coming down */
@@ -512,14 +516,16 @@ export function start() {
     const after = pr => { hud(); return Promise.resolve(pr).then(hud); };
     const [view, rank] = viewOf(parts), from = viewNow, move = V.nextMove || (from === 'bench' && view === 'studio' ? 'out' : rank > rankNow ? 'in' : rank < rankNow ? 'out' : 'along');
     V.nextMove = null; viewNow = view; rankNow = rank;
+    /* between the island and the line, one camera: both pictures the same machine from the same eye (src/v2/glue/island.js handOf) */
+    const hand = !!V.handOf && V.handOf(from, view, parts);
     if (!from || from === view || still() || !document.startViewTransition) return after(show(parts, from && from !== view ? from : null));
     /* the old picture holds while the new view is made (at most a moment), then one zooms into the other (not if moved on) */
-    const root = document.documentElement; root.dataset.move = move; if (move !== 'in') portalAt(null);
+    const root = document.documentElement; root.dataset.move = move; if (move !== 'in') portalAt(null); if (hand) root.dataset.hand = ''; else delete root.dataset.hand;
     const tr = document.startViewTransition(() => (n !== V.routeN ? null : Promise.race([after(show(parts, from)), new Promise(r => setTimeout(r, 1500))])));
     /* a transition the browser skips (a newer one began, or the view took too long) rejects its promises: the view still
        changes, plainly, so the rejections are expected and caught here */
     const quiet = () => {}; tr.ready.catch(quiet); tr.updateCallbackDone.catch(quiet);
-    tr.finished.catch(quiet).finally(() => { if (root.dataset.move === move) delete root.dataset.move; });
+    tr.finished.catch(quiet).finally(() => { if (root.dataset.move === move) { delete root.dataset.move; delete root.dataset.hand; } });
   }
   /* one set of keys in every view, one pair for each move: ↑ ↓ are out and in (scale), ← → are along. Where the
      view is a column of levels (the flight, the dive, the stack), along is the loop: the stage before or after,
