@@ -1,0 +1,161 @@
+# The path: from matter to mind
+
+One promise, in one sentence: **build a thinking machine from physics up, and invent your own along the way.**
+
+This is the plan for the lab's spine. Status: agreed with the owner on 26 November 2026, not built yet. Its working
+prototype, *Your stack*, designed and built by Claude Fable 5.2 with a first version by Claude Opus, is in
+`docs/prototypes/stack/` (open `index.html`; sources in `src/`, built by `build.mjs`).
+
+## What it is
+
+*Your stack* is the lab's **second core visual system, and its spine**. The first is the dive: a continuous zoom from
+a data centre to silicon atoms, how a real chip *is*. The stack shows *the one you made*: your computer, rung by rung,
+from matter to mind, each rung made of the one below. Change the switch and watch the mind at the top change; choose
+light instead of charge and the rungs rebuild themselves.
+
+It is the spine, not a ninth place: it uses the dive's own levels, the atlas's homes, the frame and its card. Other
+parts of the lab hang on it instead of standing beside it.
+
+## Seven rungs, one ladder
+
+The stack's rungs are the dive's levels, and the lattice's layers. One ladder, three ways of seeing it.
+
+| Rung | The dive's level | The lattice's layer | What you make there |
+| --- | --- | --- | --- |
+| Mind | (new: what the machine does) | intelligence | a small network running on your machine: answers a second, energy an answer, how often right |
+| Machine | board, rack | machine | your chips joined, with memory near or far; its shape (few big cores, a grid of tiles, a stack, a swarm) |
+| Chip | chip | processor | your cores on a die: clock, cycles an instruction, how it is told what to do |
+| Block | block | sums | your adders and your memory: an ALU slice copied 32 times, a register file from your gates |
+| Gate | gate | logic | gates made of your switch: delay, energy, the chance a copy fails |
+| Switch | switch | switch | a transistor: material, shape, way of switching, its voltage (the lab's switch engine) |
+| Atom | atom | physics | the matter: gap, electrons, holes, or another carrier (light, spikes, living cells) |
+
+Sums and memory are not rungs a newcomer feels; *block* is, and it is the dive's word, so they are two parts of the
+block. A core lives inside a chip, so cores are part of the chip. Mind is the one new level: not a size but what the
+machine does, so it sits above the machine in the stack; how it shows in the data centre's column is step 3 below.
+
+Some matter skips rungs: neurons and DNA learn without gates (the lattice marks those cells *past*). A fork may jump
+rungs; the stack draws the rungs it skips as passed by, never forced.
+
+## The carry
+
+Each rung hands up a contract, and the rung above is made of it. This is what Nand to Tetris teaches: you use what you
+built.
+
+| From | Hands up |
+| --- | --- |
+| Atom → switch | the material: gap, electron and hole mobility, traps |
+| Switch → gate | lowest clean voltage, threshold, swing, spread of the copies, on-current, both carriers or not, survives the line |
+| Gate → block | delay and energy per gate at your voltage, the chance a copy fails, switches per gate |
+| Block → chip | ALU delay, energy an operation, wrong operations; register read delay, energy, wire share |
+| Chip → machine | clock, cycles an instruction, energy an instruction, wrong instructions |
+| Machine → mind | instructions a second, energy an instruction with memory, power, share spent moving data |
+
+Every rung opens on the lab's example and becomes *yours* when changed. Any rung can be entered: a spine, not a
+corridor. Every figure carries the lab's mark of how true it is (`src/data/fidelity.js`): the switch is computed by its
+engine; the rungs above are an idea drawn; forks are guesses until evidence.
+
+## Architectures: the frontier of the path
+
+The next generation of computer architecture, the lab's highest priority, is the path seen from above. *Grow an
+architecture* (`src/engines/arch.js`) describes a computer as a recipe of four genes. **A recipe is a set of forks in
+your stack:**
+
+| Gene | Options today | Rungs it chooses |
+| --- | --- | --- |
+| What carries a value | charge, light, spikes, reversible charge, living cells | atom, switch, gate |
+| Where it computes | far from memory, near it, in it, flowing through a mesh | block (memory), machine |
+| How it is told what to do | a program, a graph, events, learning, wired for one job | chip |
+| Its shape | a few big cores, a grid of tiles, layers stacked, a swarm | machine |
+
+4 × 5 × 5 × 4 = 400 recipes; 10 are built (`KNOWN`), almost all the rest never tried, most of them three or four
+genes from today's computer. **What it is for**, the need (any program, a large model, a hearing aid, a wildfire
+sensor, a Mars rover, a radio), sits at the top of the stack, starts on *Any program*, and is never a forced first step.
+
+**Four views of one architecture, in one world:**
+
+- **Anatomy:** your stack, rung by rung.
+- **Recipe:** its genes, beside the rungs they choose.
+- **Growth:** fifty years of polish against today's computer, in five directions (devices, moving data, tools, errors,
+  making) plus people; worse at first, improved by attempts as Wright's law describes; agents propose forks, you decide.
+- **Population:** zoom out to its niche, then to every attempt: needs across, distance from today up, each niche's
+  champion, attempts from the ledger as points, the untried regions open, your stack one point among them.
+
+**What keeps it diverse:** the best per niche, never one leaderboard (quality-diversity, as in MAP-Elites); an open
+genome (genes and options are data, so a new carrier, way of telling or shape can be proposed with its trait effects
+and carry contract, a guess until evidence); "worse at first" drawn as missing polish, not as a bad idea; credit for the
+first attempt at an untried recipe, not only for wins; agents explore, people choose.
+
+## The thirteen questions in the stack
+
+The questions stay what `docs/FRAME13.md` says: lenses, met as marks on the picture, at most three while you look, one
+opened alone, never listed together. The stack uses the same machinery: `lensesAt(level)` for its seven levels, with a
+table of carry conditions that weighs them (a question rises when what you built makes it real).
+
+**A lens repaints the whole stack.** This is what the stack adds: a question becomes a vertical story.
+
+- *Perfect fails:* every plate shows its failing copies; one wrong copy in 10¹⁴ at the gate becomes one in 10¹¹ at the
+  chip.
+- *Geometry:* every plate shows the share of its time and energy spent on wires.
+- *Fixed or fluid:* fixed rungs solid, rungs that can rewire themselves outlined.
+- *Only humans:* each rung tinted by who chose it: you, the lab's example, or an agent.
+- The others where they bite: *Fight or use physics* and *The next Moore's law* at the switch, *Whole beats parts*
+  and *Compute beats cleverness* at the block, *Trust without inspection* at the chip, *Efficiency fuels use* at the
+  machine, *Brain or copy* at the mind, *Digital meets physical* at the atom, *Beyond computation* through the chip's
+  forks.
+
+**Two lenses held together** keep FRAME13's three shapes: a *chain* is the carry itself (*Fight or use physics* ×
+*Digital meets physical* climbing switch, gate, block); a *fork* is a gene, the same rung built two ways split by a
+line you drag; a *front* is the field of attempts for two needs. On the field itself only *Efficiency fuels use*, *Only
+humans* and *The next Moore's law* live, marked on a niche, never in a legend.
+
+## How it joins the lab
+
+| Part of the lab | Becomes |
+| --- | --- |
+| The dive | the same levels: from a rung, *in* lands on that dive level; from the dive's chip, *out and up* reaches machine and mind |
+| The island | the stack stands at **the Lab** (Open); zooming out of the Lab is the field of every attempt; a plate's way along leads to the studio, the factory, the quarry |
+| Hold | its last block, your machine, lands on your stack, then the island |
+| The lattice | not a separate picture: an arrangement of the same ladder, silicon the spine, other matter the forks, each cell opening its rung |
+| *Grow an architecture* | its own race and map of 400 retire: the growth bar and the field do both; its two challenges, family tree, curve and keeping in the ledger stay, played in the stack's Do |
+| Machines from shared blocks | the machine rung, opened: a machine of shared blocks for one need, never only "more cores" |
+| The frame and the card | Look is the stack; Do is a rung's challenge played on its plate, with its controls as the card's Do face; Read is `#/read` |
+| Challenges | each lab's challenge is a **stepping stone** on its rung (`STONES` in `arch.js`); a challenge won inks that plate's edge |
+| The ledger and the port | a stack is one entry (its recipe, fine settings and history); every point on the field comes from the ledger; agents' sweeps arrive through the port, never run by the lab |
+| The atlas | the rungs are levels with homes; the stack's parts are named by their home ids; words in `src/i18n/` |
+
+## Building it
+
+Each line is meant to become one task issue, in order.
+
+1. **The contract as data and engine:** `src/data/path.js` (the seven rungs on the dive's level ids, contract fields,
+   gene-to-rung table, fine settings) and `src/engines/path.js` (`carry`), ported from the prototype's `model.js`,
+   with tests.
+2. **One model for stack and recipe:** `recipeOf` and `stackOf`; each gene option's carry contract moves into
+   `arch.js` beside its trait effects; one "against today" number, so the carry's and the engine's never drift apart.
+3. **Mind as a level:** a home for it in the atlas and `places.js`, above the machine, without pretending it is a size.
+4. **The stack view:** `src/v2/stack/` (camera, plates, pictures, the field) as modules loaded only when opened; words
+   in `src/i18n/en/`; a DOM mirror of the canvas for the keyboard and screen readers; `#/stack`.
+5. **Marks and the card through the frame:** `lensesAt` and `MARKS` for the seven levels; Look, Do, Read.
+6. **The field from the ledger:** champions per niche, attempts as points, credit for first attempts, what changed
+   since your last visit.
+7. **Lenses repaint the stack**, one at a time, starting with *Perfect fails*; then two lenses as a chain, fork, front.
+8. **The ways in:** from the Lab, Hold's last block and the dive's chip; the lattice as an arrangement of the ladder;
+   *Grow an architecture*'s race and map retired into the stack.
+9. **Challenges as stepping stones** on their rungs, inking the plate's edge.
+10. **The open genome's form** (after the first forks carry): a GitHub form and port tool to propose a gene option
+    with its trait effects and carry contract, checked by tests.
+
+**Risks:** the first page's budget (load everything lazily); the fork figures are guesses and their mark must stay
+visible; a canvas world needs its DOM mirror; the field must stay readable at full scale (untried plots faint, ink for
+tried ones, few names).
+
+**The first thing to nudge a visitor to try is the wreck:** graphene, or the voltage taken down until the mind forgets.
+The stack teaches when something breaks.
+
+## Open
+
+- The niche field's design at full scale (a candidate for one more creative round), and glyphs that tell recipes apart.
+- A software rung (your instructions, an assembler, one program) now or later.
+- Where the need sits in the end: it depends on how the framework settles.
+- The rungs' names in the four languages.
