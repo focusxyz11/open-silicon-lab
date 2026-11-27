@@ -25,8 +25,6 @@
 /* Where visitors propose questions: the repository's issue form (.github/ISSUE_TEMPLATE/question.yml). */
 export const REPO = 'https://github.com/focusxyz11/open-silicon-lab';
 
-/* Mind, the stack's top rung, is no depth here: it is not a size and has no portal, so the zoom cannot reach it. Its
-   home is above the data centre's levels (ABOVE in src/data/places.js, docs/PATH.md). */
 export const DEPTHS = {
   /* a data centre */
   building: { m: 29, portal: [355.01, 626.49, 69.5] },

@@ -108,7 +108,6 @@ export const DIVE_LEVELS = ['chip', 'block', 'gate', 'switch', 'atom'];
 export const DIVE_WORLD = { phone: 'phone', phoneboard: 'phone', soc: 'phone', car: 'car', ecu: 'car', mcu: 'car', scanner: 'made', wafer: 'made', die: 'made' };
 /* where a level is shown in the chip world: always an address inside it, never the earlier site */
 export function viewOfDepth(d) {
-  /* a level above a place's zoom (mind, ABOVE in src/data/places.js) has no view yet: its way in is its place */
   const up = aboveOf(d); if (up) return '#/place/' + up;
   if (DIVE_WORLD[d]) return '#/dive/' + d + '/' + DIVE_WORLD[d];
   if (d === 'board') return '#/board';
