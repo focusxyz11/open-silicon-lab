@@ -15,10 +15,9 @@ import { placeOf } from '../data/places.js';
 import { SEAMS } from '../data/questions.js';
 import { viewOfDepth, challengeOf, DIVE_WORLD, DIVE_LEVELS, PLACES } from '../v2/loop.js';
 
-/* the loop, in order. It starts with what is open, and there are two ways in: something someone needs (pull), or
-   something that has just become possible and is still looking for its use (push). Much of chip history ran the
-   second way, so the first stage is not called a need. What is learned in use opens the next thing: the loop
-   comes back here, and here is where the community stands. */
+/* the loop, in order. It starts with what is open, two ways in: something someone needs (pull), or something just
+   possible and still looking for its use (push; much of chip history ran this way, so the first stage is not called a
+   need). What is learned in use opens the next: the loop comes back here, where the community stands. */
 export const STAGES = ['open', 'design', 'make', 'test', 'ship', 'use'];
 /* the place that stands for each stage on the island */
 export const STAGE_PLACE = { open: 'lab', design: 'studio', make: 'fab', test: 'test', ship: 'port', use: 'datacentre' };
@@ -31,9 +30,9 @@ export const nextPlace = place => {
   const s = stageOfPlace(place); return STAGE_PLACE[STAGES[(STAGES.indexOf(s) + 1) % STAGES.length]];
 };
 
-/* the data centre is flown through: each stop of the flight shows one level */
-/* the pages of Your log (#/log, #/challenges, #/questions), behind the bar's log button */
+/* the pages of Your log, behind the bar's log button */
 export const LOG_PAGES = ['log', 'challenges', 'questions'];
+/* the data centre is flown through: each stop of the flight shows one level */
 const FLIGHT = ['building', 'building', 'rack', 'rack', 'board', 'chip'];
 /* and so is a phone (src/v2/phone3d-flight.js DEPTH) */
 const PHONE_FLIGHT = ['phone', 'phone', 'phoneboard', 'soc'];
@@ -50,13 +49,15 @@ export function doHome(ch) {
   if (ch.kind === 'design' || ch.kind === 'break') return ch.need || ch.kind === 'break' ? null : '#/bench/' + ch.at;
   if (DIVE_LEVELS.includes(ch.at)) return '#/dive/' + ch.at;
   const h = viewOfDepth(ch.at);
-  /* a challenge at a level of the design that is not a design to write (the proof's bet at the check, the right chip
-     for the job at the need) is played at the bench, beside the design */
+  /* a challenge at a level of the design but not a design to write (the proof's bet at the check, the right chip for
+     the job at the need) is played at the bench */
   if (/^#\/bench\//.test(h)) return h;
   return /^#\/(dive|line)\//.test(h) ? h : null;
 }
 
-/* the cell an address shows: its view, place, level and stage of the loop */
+/* the cell an address shows: its view, place, level and stage of the loop. Your stack's rungs turn their faces along
+   (#/stack/<face>/<rung>, as used if none is said) */
+const FACE = /^(design|make|use)$/;
 export function whereOf(hash) {
   const p = parts(hash), k = p[0] || 'island';
   if (k === 'ask') return Object.assign(whereOf(viewOfDepth(p[2] || 'chip')), { ask: p[1] || null });
@@ -68,6 +69,7 @@ export function whereOf(hash) {
      made (the block as wired, the gate as printed). An old address without /build is the same place */
   if (k === 'chip') { const row = Math.min(DIVE_LEVELS.length - 1, Math.max(0, +p[1] || 0)), level = DIVE_LEVELS[row], made = twinOf(level).made;
     return cell('chip', 'fab', level, 'make', { row, build: true, step: made[made.length - 1] }); }
+  if (k === 'stack') { const s = p[1] === 'field' ? null : FACE.test(p[1]) ? p[1] : 'use'; return cell('stack', null, s && p[p[1] === s ? 2 : 1], s); }
   if (k === 'board') return cell('board', 'datacentre', 'board');
   if (k === 'supply') return cell('supply', 'port', 'ship');
   if (k === 'build') return cell('page', 'lab');
@@ -80,12 +82,11 @@ export function whereOf(hash) {
   return cell(k === 'ecosystem' || k === 'whatif' ? 'out' : [...LOG_PAGES, 'read', 'w', 'machines'].includes(k) ? 'log' : 'island');
 }
 
-/* Steps and levels (docs/SYSTEM.md, "Steps and levels"). Inside the studio and on the factory's line the things follow
-   each other in time: they are steps, walked along (← →, Next →) and drawn as a line from left to right. A step may
-   show a level of the chip (the job is the whole chip, layout its blocks, gates its gates; the line prints the gates,
-   etches the switches, wires the blocks, packs the chip), and only those are levels, drawn on the rail at the side
-   and moved through in · out (↑ ↓). Describe, check and masks, and the line's slicing, cleaning, depositing, testing
-   and shipping, show no level: there the rail is absent and in · out leads nowhere inside the view. */
+/* Steps and levels (docs/SYSTEM.md). In the studio and on the factory's line things follow each other in time: steps,
+   walked along (← →, Next →) left to right. A step may show a level of the chip (the job the whole chip, layout its
+   blocks, gates its gates; the line prints the gates, etches the switches, wires the blocks, packs the chip): only
+   those are levels, on the rail at the side, moved through in · out (↑ ↓). Describe, check, masks, and the line's
+   slicing, cleaning, depositing, testing and shipping show none: no rail, and in · out leads nowhere in the view. */
 const STEP_WORLD = { bench: 'design', line: 'journey' };
 const DESIGN_STAGE = { bench: 'designed', line: 'made' };
 /* the steps of a view, in order (the depths of its world in the weave), or [] for a view that is not a row of steps */
@@ -113,8 +114,8 @@ export function inOutOfStep(view, step, dir) {
 }
 
 /* along: the address of another stage of the loop, from where you are. The depth is held where the level has a
-   twin there (the atlas's Turn), the factory's line is walked where you are already on it, and otherwise the move
-   lands at that stage's place on the island. Null when you are already at that stage, inside a place.
+   twin there (the atlas's Turn), the line is walked where you are on it, your stack's rungs turn their faces, and
+   otherwise the move lands at that stage's place on the island. Null when already at that stage, inside a place.
    Inside a chip there is one way down, the dive (Use); a level of it seen as made is the same row of the stack
    (Make), so along turns between the two at the level you are at, and in · out moves through the levels of
    whichever you are in. */
@@ -123,6 +124,7 @@ export function alongTo(where, stage) {
   const W = where || cell('island'), home = '#/place/' + STAGE_PLACE[stage];
   if (W.stage === stage && W.view !== 'island' && W.view !== 'page') return null;
   if (stage === 'open') return home;
+  if (W.view === 'stack' && FACE.test(stage)) return '#/stack' + (stage === 'use' ? '' : '/' + stage) + (W.level ? '/' + W.level : '');
   if (W.view === 'line' && (stage === 'make' || stage === 'test' || stage === 'ship')) return '#/line/' + ({ make: 'wires', test: 'test', ship: 'pkg' })[stage];
   /* in a row of steps, only the level the step shows is held: describe, check and masks hold none. On the island, a
      level carried past a stage where it does not exist (below, carryOf) is picked up again at the next stage that has it */
@@ -137,10 +139,9 @@ export function alongTo(where, stage) {
   }
   return home;
 }
-/* the seam a move crosses, and the leak that sits on it (src/data/questions.js). Going in or out crosses the line
-   between two levels at one stage; going along crosses the line between two stages. A leak's seam is the pair of
-   levels or the pair of stages, either way round; where one pair of stages holds two, one is met on the island
-   (place to place) and the other inside a view. Null when the move crosses no seam with a leak on it. */
+/* the seam a move crosses, and the leak on it (src/data/questions.js). In or out crosses the line between two levels
+   at one stage, along the line between two stages; a leak's seam is that pair, either way round. Where one pair of
+   stages holds two, one is met on the island (place to place), the other inside a view. Else null. */
 export function seamOf(from, to) {
   if (!from || !to) return null;
   const pair = (x, y, a, b) => (x === a && y === b) || (x === b && y === a);
@@ -161,16 +162,15 @@ const sizeOfCell = W => (ROWS.includes(W.view) ? W.size : W.level === 'die' ? 'c
 export const holds = (where, stage) => { const h = alongTo(where, stage); if (!h || h.startsWith('#/place/')) return false;
   if (!where || !ROWS.includes(where.view)) return true;
   return !!where.size && sizeOfCell(whereOf(h)) === where.size; };
-/* the level an along move carries. A move that drops the level you were at, landing at a stage's place on the island
-   because the level does not exist there (a gate at the Lab, where what is open is decided), carries it: from that place,
-   along picks it up again at the next stage that has it (a cell with carry set, alongTo above). Null when the move lands
-   on a level (the address says it), or there was none to carry. */
+/* the level an along move carries. A move that drops your level, landing at a stage's place on the island because it
+   does not exist there (a gate at the Lab, where what is open is decided), carries it: along picks it up again at the
+   next stage that has it (a cell with carry set, alongTo above). Null when it lands on a level, or none was carried. */
 export function carryOf(from, to) {
   if (!from || !to || !/^#\/place\//.test(to)) return null;
   const lv = ROWS.includes(from.view) ? from.size : from.view === 'island' ? from.carry : from.level === 'die' ? 'chip' : from.level;
   const tw = lv ? twinOf(lv) : null; return tw ? tw.used : null;
 }
-/* a cell with the level an along move carried there (the shell keeps it while you stay where the move landed) */
+/* a cell with the level an along move carried there (kept while you stay where the move landed) */
 export const carried = (W, c) => (c && c.level && W && W.view === 'island' ? Object.assign(W, { carry: c.level }) : W);
 /* along one stage on (dir 1) or back (dir -1) round the loop, as the keys take it: the stage, the address, and the
    level carried (Use → Open wraps round to what is open, and the next → picks the level up again) */
@@ -178,5 +178,5 @@ export function alongStep(where, dir) {
   const W = where || cell('island'), n = STAGES.length, i = STAGES.indexOf(W.stage), stage = STAGES[(i + (dir > 0 ? 1 : n - 1) + n) % n];
   const to = alongTo(W, stage); return { stage, to, carry: carryOf(W, to) };
 }
-/* the stage a challenge is played at: the one the bar lights while you play it (its card names the same) */
+/* the stage a challenge is played at: the one the bar (and its card) names while you play it */
 export const stageOfChallenge = ch => (ch ? whereOf('#/do/' + encodeURIComponent(ch.id)).stage : null);

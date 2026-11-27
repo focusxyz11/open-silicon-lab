@@ -193,3 +193,22 @@ test('the way back from a reading page leads to the page it names, and never nam
   assert.equal(backOf('#/w/heat', '#/place/fab', false), '#/place/fab'); assert.equal(backOf('#/w/heat', '#/', true), '#/log');
   assert.equal(backOf('#/log', '#/', false), '#/');
 });
+
+test('your stack turns along its faces: the address says the stage, along keeps the rung, and as used is the stack as before (#456)', async () => {
+  const { FACES, FACE_STAGE, RUNGS } = await import('../src/data/path.js');
+  /* the address: no face is as used, the field stands at no stage */
+  assert.deepEqual([whereOf('#/stack').stage, whereOf('#/stack').level], ['use', null]);
+  assert.deepEqual([whereOf('#/stack/gate').stage, whereOf('#/stack/gate').level], ['use', 'gate']);
+  assert.equal(whereOf('#/stack/field').stage, null);
+  for (const f of FACES) for (const r of RUNGS) {
+    const W = whereOf('#/stack/' + f + '/' + r);
+    assert.deepEqual([W.view, W.stage, W.level], ['stack', FACE_STAGE[f], r], f + ' ' + r);
+    /* along to each face keeps the rung and stays in the stack; as used says no face, as the stack always has */
+    for (const g of FACES) if (g !== f) { const to = alongTo(W, FACE_STAGE[g]); assert.equal(to, g === 'use' ? '#/stack/' + r : '#/stack/' + g + '/' + r); assert.ok(holds(W, FACE_STAGE[g]), f + ' → ' + g + ' holds ' + r); }
+    assert.equal(alongTo(W, FACE_STAGE[f]), null, 'already there');
+    /* a stage with no face leaves for its place on the island, as everywhere */
+    assert.equal(alongTo(W, 'open'), '#/place/lab');
+  }
+  assert.equal(alongTo(whereOf('#/stack/field'), 'design'), '#/stack/design');
+  assert.equal(alongTo(whereOf('#/stack/design'), 'use'), '#/stack');
+});

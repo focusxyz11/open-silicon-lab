@@ -9,7 +9,9 @@
 
    wear(V, host, view, { stones }) -> card: makes the frame in a section of the view's host and returns what the view
    asks of it ({ level(key), mode(), inset(), mark(m), putDown(), changed() }, see src/v2/stack/view.js). key is where
-   you are: 'field', 'stack' (your stack, whole) or a rung id. */
+   you are: 'field', 'stack' (your stack, whole) or a rung id. Along turns the plates to a face (#456): the caption then
+   says the rung as designed or made (view.seen), and Do is that face's controls, the studio's or the line's steps,
+   kept by the view in the same .sk-ctl (turned()). */
 import { t } from '../../core/i18n.js';
 import { esc } from '../../core/esc.js';
 import { phone } from '../../core/ui.js';
@@ -22,6 +24,9 @@ import { RUNGS, rungName } from './model.js';
 
 const isRung = k => RUNGS.includes(k);
 const nameOf = k => (isRung(k) ? rungName(k) : k === 'field' ? t('sk.rail.field') : t('sk.title'));
+/* the face the plates are turned to, said after the name; as used, nothing (the stack as before) */
+const faceOf = view => (view.face ? view.face() : 'use'), asFace = view => (faceOf(view) === 'use' ? '' : ' · ' + t('sk.face.' + faceOf(view)));
+const seenOf = (view, sh, r) => (view.seen ? view.seen(r) : { way: sh.Y.V.way[r], figs: sh.Y.V.fig[r] || [], fid: sh.Y.V.fid[r], dead: RUNGS.indexOf(r) > sh.Y.V.dead });
 /* a rung's reading page: the first experiment that runs through its levels (#/read/<id>); the stack's, every one */
 const readOf = k => { const x = isRung(k) ? EXPERIMENTS.find(e => levelsOf(e).some(l => RUNG_LENS[k].includes(l))) : null; return x ? { href: '#/read/' + x.id, q: askOf(x) } : { href: '#/read', q: t('sk.card.read') }; };
 
@@ -42,13 +47,13 @@ export function wear(V, host, view, o = {}) {
      Do; under Read more the rest (the figures, how true, the rungs) */
   function look() {
     const sh = view.shown(), k = key || 'stack', R = read(k);
-    let h = '<p class="kicker">' + esc(nameOf(k)) + '</p>';
+    let h = '<p class="kicker">' + esc(nameOf(k) + (k === 'field' ? '' : asFace(view))) + '</p>';
     if (!isRung(k)) {
       h += '<p class="line">' + esc(view.rest() + (k === 'stack' ? ' ' + t('sk.card.stack') : '')) + '</p>' + R;
-      if (k === 'stack' && sh) h += '<p class="kicker">' + esc(t('sk.card.rungs')) + '</p><div class="sk-rungs">' + RUNGS.map((r, i) => ({ r, i })).reverse().map(({ r, i }) => '<button type="button" class="chipb" data-rung="' + i + '"><b>' + esc(rungName(r)) + '</b> <span>' + esc(sh.Y.V.way[r] || t('sk.tag.cannot')) + '</span></button>').join('') + '</div>';
+      if (k === 'stack' && sh) h += '<p class="kicker">' + esc(t('sk.card.rungs')) + '</p><div class="sk-rungs">' + RUNGS.map((r, i) => ({ r, i })).reverse().map(({ r, i }) => '<button type="button" class="chipb" data-rung="' + i + '"><b>' + esc(rungName(r)) + '</b> <span>' + esc(seenOf(view, sh, r).way || t('sk.tag.cannot')) + '</span></button>').join('') + '</div>';
     } else {
-      const V0 = sh.Y.V, figs = V0.fig[k] || [], dead = RUNGS.indexOf(k) > V0.dead, f = V0.fid[k];
-      const line = dead ? t('sk.card.dead') : t(k === 'mind' ? 'sk.card.mind' : 'sk.card.rung', { way: V0.way[k] || rungName(k), up: k === 'mind' ? '' : rungName(RUNGS[RUNGS.indexOf(k) + 1]).toLowerCase(), figs: figs.slice(0, 2).map(x => (x[1] ? x[1] + ' ' : '') + x[0]).join(', ') });
+      const S0 = seenOf(view, sh, k), figs = S0.figs, dead = S0.dead, f = S0.fid;
+      const line = dead ? t('sk.card.dead') : S0.why ? S0.why : t(k === 'mind' ? 'sk.card.mind' : 'sk.card.rung', { way: S0.way || rungName(k), up: k === 'mind' ? '' : rungName(RUNGS[RUNGS.indexOf(k) + 1]).toLowerCase(), figs: figs.slice(0, 2).map(x => (x[1] ? x[1] + ' ' : '') + x[0]).join(', ') });
       h += '<p class="line">' + esc(line) + '</p>' + R;
       if (figs.length) h += '<dl class="sk-figs">' + figs.map(x => '<dt>' + esc(x[0]) + '</dt><dd' + (x[2] ? ' class="bad"' : '') + '>' + esc(x[1]) + '</dd>').join('') + '</dl>';
       if (f && !dead) h += '<p class="small sk-fidl">' + (f.status === 'guess' ? statusMark('guess') : fidMark(f)) + '</p>';
@@ -62,7 +67,7 @@ export function wear(V, host, view, o = {}) {
     if (!isRung(key) || !view.mine()) return false;
     fr.doing();
     const d = fr.dock;
-    d.innerHTML = '<div class="player sk-do"><p class="kicker">' + esc(t('frame.doAt', { level: rungName(key) })) + '</p><h3>' + esc(t('sk.do.' + key)) + '</h3></div>';
+    d.innerHTML = '<div class="player sk-do"><p class="kicker">' + esc(t('frame.doAt', { level: rungName(key) })) + '</p><h3>' + esc(faceOf(view) === 'use' ? t('sk.do.' + key) : (s0 => (s0.why ? t('sk.face.' + faceOf(view)) + ': ' + s0.way : t('sk.face.do.' + faceOf(view))))(view.seen(key))) + '</h3></div>';
     d.firstChild.appendChild(view.ctl);
     d.firstChild.insertAdjacentHTML('beforeend', '<div class="nav"><button type="button" class="btn ghost" data-mode="look">' + esc(t('frame.backToLook')) + '</button></div>');
     return true;
@@ -120,6 +125,8 @@ export function wear(V, host, view, o = {}) {
     /* a mark tapped: its lens opened alone (tapped again, put down) */
     mark(m) { if (fr.lens() === m.id) fr.look(); else fr.ask(m.id); },
     putDown() { if (fr.mode() === 'ask') fr.look(); },
+    /* the plates turned to another face: Do holds that face's controls, the caption says it */
+    turned() { if (fr.mode() === 'do' && isRung(key)) doFace(); else if (fr.mode() === 'look') fr.look(); },
     /* what you built changed: the question opened says what it is now */
     changed() { if (fr.mode() === 'ask') fr.level(key); else if (fr.mode() === 'look') fr.look(); },
     hide() { el.hidden = true; key = null; }

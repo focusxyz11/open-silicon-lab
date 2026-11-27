@@ -18,16 +18,20 @@
    the marks on the stack are those, weighed by the carry (model.js marksOf), at most three while you look, every one of
    a rung with Ask open, none in Do. The stack wears the lab's one frame and card (src/v2/stack/card.js): card is
    { level(key), mode(), inset(), mark(m), putDown() }, told where you are ('stack', a rung, or null on the field) and
-   asked how much of the picture the card takes; the rung's controls (.sk-ctl) are its Do face. */
+   asked how much of the picture the card takes; the rung's controls (.sk-ctl) are its Do face.
+   moved(): called when the address changes under the view, so the loop in the bar follows. show(at, face): along turns
+   every plate to a face, as designed, made or used (#456, src/v2/stack/faces.js); the address says it
+   (#/stack/<face>/<rung>, used if none). A face's controls are the rung's Do face like any other. */
 import { t, fmtNum } from '../../core/i18n.js';
 import { esc } from '../../core/esc.js';
 import { theme } from '../../core/ui.js';
 import { mark, statusMark } from '../fid.js';
-import { FINE_OF, CHOICES, V_RANGE } from '../../data/path.js';
+import { FINE_OF, CHOICES, V_RANGE, ARRANGE } from '../../data/path.js';
 import { A, SW, RUNGS, EXAMPLE, GENE_AT, GENE_OF, RUNG_DIR, clamp, carry, see, stoneOf, marksOf, stackMarks, rungName, RECIPES, RIDX, BLOCK, NEEDS, POT, CAN, CELLCAN, fxOf, bestNeed, recipeName, population, census, times, pct } from './model.js';
 import { holder, credit, plotCard, sinceVisit, sinceLine, portCard, champWords } from './field.js';
 import { proposedHtml, openWords } from './genome.js';
 import { PIC, passedPic, makePen, glyph } from './pics.js';
+import * as FX from './faces.js';
 
 const NR = RUNGS.length, KEY = 'osl-stack';
 const lerp = (a, b, u) => a + (b - a) * u, ease = u => (u < 0.5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2), smooth = u => { u = clamp(u, 0, 1); return u * u * (3 - 2 * u); };
@@ -57,7 +61,7 @@ function plotAt(x, y) {
 export function createStack(host, opts = {}) {
   const still = () => !!(opts.still && opts.still());
   host.innerHTML = '<canvas class="sk-world" role="img"></canvas>' +
-    '<header class="sk-head"><h1 class="sk-ttl"></h1><nav class="sk-rail"></nav><div class="sk-tools"><span class="sk-fid"></span><button type="button" class="sk-reset lnk"></button></div></header>' +
+    '<header class="sk-head"><h1 class="sk-ttl"></h1><nav class="sk-rail"></nav><div class="sk-faces" role="group"></div><div class="sk-tools"><span class="sk-fid"></span><button type="button" class="sk-reset lnk"></button></div></header>' +
     '<nav class="sk-sr"></nav><div class="sk-genes"></div><div class="sk-marks"></div><section class="sk-ctl" hidden></section><div class="sk-pop" hidden></div>' +
     '<footer class="sk-foot"><p class="sk-since" hidden></p><p class="sk-say" role="status" aria-live="polite"></p><div class="sk-cards" hidden></div><div class="sk-card" hidden></div><div class="sk-dock"></div></footer>';
   const root = host, $ = s => root.querySelector(s), $$ = s => [...root.querySelectorAll(s)];
@@ -93,6 +97,11 @@ export function createStack(host, opts = {}) {
   const cam = { x: WID / 2, y: TOP / 2, z: 0, s: 3, T: 0, G: 0.9, ex: 0, ox: 0, oy: 0, cosT: 1, sinT: 0, kx: 0 };
   const view = { level: 'field', n: aimN(), r: mineRi(), i: -1 };
   let anim = null, stackAt = null;
+  /* the face every plate is turned to along a chip's life, and the step each face of each rung stands at */
+  let face = 'use'; const fstep = {};
+  const stepAt = r => { const k = face + r; if (fstep[k] == null) fstep[k] = FX.faceAt(R(), r, face).home; return fstep[k]; };
+  function setFace(f, quiet) { if (!FX.FACES.includes(f) || f === face) return; face = f; if (!quiet) say(t('sk.face.say.' + f)); dirty = true; ui(); if (card().turned) card().turned(); }
+  const turn = d => { if (view.level !== 'field') setFace(FX.FACES[(FX.FACES.indexOf(face) + d + 3) % 3]); };
   const trig = () => { cam.cosT = Math.cos(cam.T); cam.sinT = Math.sin(cam.T); cam.kx = 0.2 * cam.sinT; };
   function proj(x, y, z = 0) { const dy = y - cam.y; return [vw / 2 + cam.ox + (x - cam.x + dy * cam.kx) * cam.s, vh / 2 + cam.oy - (dy * cam.cosT + (z - cam.z) * cam.sinT) * cam.s]; }
   function unproj(X, Y0, z = 0) { const dy = (-(Y0 - vh / 2 - cam.oy) / cam.s - (z - cam.z) * cam.sinT) / cam.cosT; return [cam.x + (X - vw / 2 - cam.ox) / cam.s - dy * cam.kx, cam.y + dy]; }
@@ -151,7 +160,7 @@ export function createStack(host, opts = {}) {
     if (u >= 1) { const d = anim.done; anim = null; stackAt = null; if (d) d(); ui(); }
   }
   /* the address says where you are: the field (and a niche on it), your stack, or one rung */
-  function address() { if (!on) return; const h = view.level === 'field' ? '#/stack/field' : view.level === 'rung' ? '#/stack/' + RUNGS[view.i] : '#/stack'; if (location.hash !== h) history.replaceState(null, '', h); }
+  function address() { if (!on) return; const fp = face === 'use' ? '' : '/' + face, h = view.level === 'field' ? '#/stack/field' : view.level === 'rung' ? '#/stack' + fp + '/' + RUNGS[view.i] : '#/stack' + fp; if (location.hash !== h) { history.replaceState(null, '', h); if (opts.moved) opts.moved(); } }
   /* the moves */
   function goField() { view.level = 'field'; view.i = -1; closeAll(); fly(poseField(), 1100); ui(); }
   function goNear(n, ri) { view.level = 'field'; view.i = -1; view.n = n; view.r = ri; closeAll(); fly(poseNear(n, ri), 900); ui(); }
@@ -195,6 +204,8 @@ export function createStack(host, opts = {}) {
     recount(); save(); dirty = true; ui(); if (card().changed) card().changed();
   }
   const sayOnce = {};
+  /* a face's step on the opened rung: what it does to your design, said as it is taken */
+  function setStep(k) { if (view.level !== 'rung') return; const r = RUNGS[view.i], f = FX.faceAt(R(), r, face); if (!f.steps[k]) return; fstep[face + r] = k; say(FX.stepName(f.steps[k]) + ': ' + FX.stepWhat(f.steps[k])); dirty = true; ui(); }
   function setFine(k, v) {
     const was = !!R().broken; S.F[k] = v;
     if (k === 'mat') S.F.shape = SW.normal({ mat: S.F.mat, shape: S.F.shape, mech: S.F.mech }).shape;
@@ -363,7 +374,8 @@ export function createStack(host, opts = {}) {
     const race = NEEDS.map(n => ({ can: sc[n].can, now: sc[n].now, could: sc[n].could, wins: sc[n].wins && nov > 0, aim: n === sh.need }));
     const bi = Rn.broken ? RUNGS.indexOf(Rn.broken) : 9, wl = wave && sh.mine ? wave.k + (now - wave.t0) / 95 : 99; if (wave && wl > NR + 1.5) wave = null;
     const skew = PD * cam.kx * cam.s, wpx = PW * cam.s, dpx = PD * cam.s * cam.cosT, focus = view.level === 'rung' ? view.i : -1, th = clamp(cam.s * 0.045, 3, 7), grew = clamp(1 - (now - grewAt) / 900, 0, 1);
-    ctx.font = fMono(12.5 * U, 500); const vwid = Math.max(...RUNGS.map(r => Math.max(...(Vn.fig[r] || []).map(f => ctx.measureText(f[1]).width), 30))) + 12;
+    const figsAt = r => (face !== 'use' ? FX.figsOf(Rn, r, face, stepAt(r)) : Vn.fig[r]) || [];
+    ctx.font = fMono(12.5 * U, 500); const vwid = Math.max(...RUNGS.map(r => Math.max(...figsAt(r).map(f => ctx.measureText(f[1]).width), 30))) + 12;
     const words = fade > 0.75, stones = Object.fromEntries(RUNGS.map(r => [r, stonesOf(r)]));
     for (let i = 0; i < NR; i++) {
       const z = i * cam.G * ex, a = proj(rc.x, rc.y, z), rung = RUNGS[i], dead = i > bi, dir = RUNG_DIR[rung], passed = !!Rn.rungs[rung].passed;
@@ -384,35 +396,38 @@ export function createStack(host, opts = {}) {
       }
       /* the plate */
       const p = new Path2D(); para(p, a[0], a[1], wpx, dpx, skew);
-      ctx.fillStyle = C.panel((C.dark ? 0.9 : 0.93) * fade * (passed ? 0.55 : 1)); ctx.fill(p);
-      const flash = wave && Math.abs(wl - i) < 0.7 ? 1 : 0, edge = dead ? C.bad(0.6 * fade) : focus === i || hoverRung === i || flash ? C.acc(0.95 * fade) : C.ink((passed ? 0.2 : 0.36) * fade * dim);
-      ctx.strokeStyle = edge; ctx.lineWidth = focus === i || flash ? 1.8 : 1; if (dead || passed) ctx.setLineDash([5, 4]); ctx.stroke(p); ctx.setLineDash([]);
+      /* as designed, a plate is drafted: a lighter sheet with a dashed blue edge; as made and used, solid */
+      const drafted = face === 'design' && !dead;
+      ctx.fillStyle = C.panel((drafted ? 0.55 : C.dark ? 0.9 : 0.93) * fade * (passed ? 0.55 : 1)); ctx.fill(p);
+      const flash = wave && Math.abs(wl - i) < 0.7 ? 1 : 0, edge = dead ? C.bad(0.6 * fade) : focus === i || hoverRung === i || flash ? C.acc(0.95 * fade) : drafted ? C.acc(0.7 * fade * dim) : C.ink((passed ? 0.2 : 0.36) * fade * dim);
+      ctx.strokeStyle = edge; ctx.lineWidth = focus === i || flash ? 1.8 : 1; if (dead || passed) ctx.setLineDash([5, 4]); else if (drafted) ctx.setLineDash([7, 5]); ctx.stroke(p); ctx.setLineDash([]);
       /* its front edge is inked as far as its direction is polished */
       ctx.fillStyle = C.ink(0.12 * fade * dim); ctx.fillRect(a[0], a[1], wpx, th);
       if (!dead) { ctx.fillStyle = inFocus ? C.acc((0.85 + 0.15 * grew) * fade) : C.ink(0.72 * fade * dim); ctx.fillRect(a[0], a[1], wpx * Math.max(0.012, bar), th); if (inFocus && grew > 0) { ctx.fillStyle = C.acc(0.5 * grew); ctx.fillRect(a[0], a[1] - 2, wpx * bar, th + 4); } }
       /* its stepping stones, under the front edge at the right: one square each, inked when won */
       if (sh.mine && fade > 0.5 && !ph) { const st = stones[rung] || [], q = clamp(cam.s * 0.07, 4, 7), gap = q * 0.7; st.forEach((x, k) => { const sx = a[0] + wpx - (st.length - k) * (q + gap), sy = a[1] + th + 3; if (x.won) { ctx.fillStyle = C.acc(0.95 * fade); ctx.fillRect(sx, sy, q, q); } else { ctx.strokeStyle = C.ink(0.35 * fade * dim); ctx.lineWidth = 1; ctx.strokeRect(sx + 0.5, sy + 0.5, q - 1, q - 1); } }); }
-      if (!dead && dpx > 20) { const pen = makePen(ctx, proj, cam, rc.x, rc.y, z, i < NR - 1 ? cam.G * ex : 1.5); pen.dash = pm < 0.5 ? [5, 3] : []; ctx.globalAlpha = fade * dim; ctx.lineJoin = 'round'; if (passed) passedPic(pen, C, tm, 1); else PIC[rung](pen, C, Rn, sh.Y.D, tm, 0.5 + 0.5 * pm, rung === 'mind' ? race : null); ctx.globalAlpha = 1; }
+      if (!dead && dpx > 20) { const pen = makePen(ctx, proj, cam, rc.x, rc.y, z, i < NR - 1 ? cam.G * ex : 1.5); pen.dash = pm < 0.5 ? [5, 3] : []; ctx.globalAlpha = fade * dim; ctx.lineJoin = 'round'; if (passed) passedPic(pen, C, tm, 1); else if (face !== 'use') FX.drawFace(face, rung, pen, C, Rn, sh.Y.D, tm, 0.5 + 0.5 * pm, stepAt(rung)); else PIC[rung](pen, C, Rn, sh.Y.D, tm, 0.5 + 0.5 * pm, rung === 'mind' ? race : null); ctx.globalAlpha = 1; }
       if (!words) continue;
       /* words on the plate: its name at the front left, what it hands up at the right */
       const al = fade * dim, lx = h => a[0] + 15 + skew * (h / dpx), zone = wpx * 0.185, pxN = clamp(dpx * 0.26, 15, 27), three = dpx >= 74, two = dpx >= 46;
       const yT = a[1] - 9, yW = three ? yT - 15 * U : yT, yN = two ? yW - 14 - pxN * 0.2 : yT - 2;
       label(lx(a[1] - yN), yN, rungName(rung), fSerif(pxN, 700), pxN, dead ? C.mut(al) : C.ink(al), { pri: 90 - i, force: true });
       if (sh.mine && yoursAt(rung) && !three) { ctx.fillStyle = C.acc(al); ctx.fillRect(lx(a[1] - yN) - 9, yN - pxN * 0.62, 4, pxN * 0.62); }
-      const way = dead ? t('sk.tag.cannot') : Vn.way[rung] || '';
+      const way = dead ? t('sk.tag.cannot') : passed ? Vn.way[rung] || '' : face !== 'use' ? FX.wayOf(Rn, rung, face, stepAt(rung)) : Vn.way[rung] || '';
       if (two) label(lx(a[1] - yW), yW, way, fMono(10.5 * U), 10.5 * U, dead ? C.bad(al) : C.mut(al), { pri: 70, max: zone + (three ? 30 : 10) });
       if (three) { const mineY = sh.mine && yoursAt(rung); label(lx(a[1] - yT), yT, sh.mine ? (mineY ? t('sk.tag.yours') : t('sk.tag.lab')) : t('sk.tag.sketch'), fMono(10.5 * U, mineY ? 600 : 400), 10.5 * U, mineY ? C.acc(al) : C.mut(0.8 * al), { pri: 60, max: zone + 20 }); }
-      const figs = (wave && sh.mine && i > wave.k && wl < i ? Yprev.V.fig[rung] : Vn.fig[rung]) || [];
+      const figs = face !== 'use' ? figsAt(rung) : (wave && sh.mine && i > wave.k && wl < i ? Yprev.V.fig[rung] : Vn.fig[rung]) || [];
       if (anim && ex < 0.985) continue;
       if (ph) { const f0 = figs[0]; if (f0) { ctx.font = fMono(11, 500); const vx = a[0] + wpx + skew - 2, w = ctx.measureText(f0[1]).width; label(vx, a[1] - dpx - 6, f0[1], fMono(11, 500), 11, f0[2] ? C.bad(al) : C.ink(al), { align: 'right', pri: 50 }); label(vx - w - 14, a[1] - dpx - 6, f0[0], fSans(11), 11, f0[2] && !f0[1] ? C.bad(al) : C.mut(al), { align: 'right', pri: 49 }); } continue; }
-      const X = a[0] + wpx + Math.max(skew, 0) + 20, big = focus === i, top = rung === 'mind' ? 2 : 0, n = figs.length, rowH = Math.min(17 * U, (cam.G * cam.sinT * cam.s - 9) / (n + 1)), y0 = a[1] - dpx / 2 - ((n + 1) * rowH) / 2 + 11 - top * rowH - (top ? 6 : 0);
-      if (rung === 'mind' && !dead) { const s = sc[sh.need], ms = A.missesOf(sh.g, sh.need)[0], head = !nov ? t('sk.race.level') : s.can ? t('sk.race.times', { x: times(s.now) }) : t('sk.race.cannot', { what: ms ? t('ar.cant.' + ms) : '' });
+      const X = a[0] + wpx + Math.max(skew, 0) + 20, big = focus === i, top = rung === 'mind' && face === 'use' ? 2 : 0, n = figs.length, rowH = Math.min(17 * U, (cam.G * cam.sinT * cam.s - 9) / (n + 1)), y0 = a[1] - dpx / 2 - ((n + 1) * rowH) / 2 + 11 - top * rowH - (top ? 6 : 0);
+      if (rung === 'mind' && !dead && face === 'use') { const s = sc[sh.need], ms = A.missesOf(sh.g, sh.need)[0], head = !nov ? t('sk.race.level') : s.can ? t('sk.race.times', { x: times(s.now) }) : t('sk.race.cannot', { what: ms ? t('ar.cant.' + ms) : '' });
         label(X, y0, head, fSerif(15.5 * U, 600), 15.5 * U, s.can || !nov ? C.ink(al) : C.bad(al), { pri: 86, force: true });
         label(X, y0 + rowH, asNeed(sh.need) + (nov && s.can ? ' · ' + t('sk.field.could', { x: times(s.could) }) : ''), fSans(12 * U), 12 * U, C.mut(al), { pri: 85 }); }
       figs.forEach((f, k) => { const y = y0 + (k + top) * rowH; label(X, y, f[1], fMono(12.5 * U, 500), 12.5 * U, f[2] ? C.bad(al) : C.ink(al), { pri: 80 - k }); label(X + (f[1] ? vwid : 0), y, f[0], fSans(12 * U), 12 * U, f[2] && !f[1] ? C.bad(al) : C.mut(al), { pri: 78 - k }); });
-      if (!dead) { const y = y0 + (n + top) * rowH + 1, f = Vn.fid[rung]; fidGlyph(X, y, fidN(f), a2 => C.mut(a2 * al)); label(X + 19, y, fidWord(f) + (nov && big ? ' · ' + t('sk.tag.polish', { p: pct(m) }) : ''), fMono(10.5 * U), 10.5 * U, C.mut(al), { pri: 40 }); }
-      if (i === 0 && !dead && rowH >= 16.5) { const y = y0 - rowH - 2; ctx.beginPath(); ctx.moveTo(X + 1, y); ctx.lineTo(X + 5, y - 7); ctx.lineTo(X + 9, y); ctx.strokeStyle = C.acc(al); ctx.lineWidth = 1.3; ctx.stroke(); label(X + 15, y, t('sk.hands'), fSans(11.5 * U), 11.5 * U, C.acc(al), { pri: 39 }); }
-      if (big) { const pen = makePen(ctx, proj, cam, rc.x, rc.y, z, i < NR - 1 ? cam.G * ex : 1.5); for (const [nx, ny, nh, txt] of notesOf(rung, sh, pen)) { const q = pen.q(nx, ny, nh); label(q[0], q[1] - 5, txt, fSans(12.5), 12.5, C.ink(1), { pri: 95, bg: true, align: 'center' }); } }
+      const fc = face !== 'use' && !passed ? FX.faceAt(Rn, rung, face) : null;
+      if (!dead && !(fc && (fc.none || fc.fork))) { const y = y0 + (n + top) * rowH + 1, f = fc ? FX.fidOf(Rn, rung, face) : Vn.fid[rung]; fidGlyph(X, y, fidN(f), a2 => C.mut(a2 * al)); label(X + 19, y, fidWord(f) + (nov && big ? ' · ' + t('sk.tag.polish', { p: pct(m) }) : ''), fMono(10.5 * U), 10.5 * U, C.mut(al), { pri: 40 }); }
+      if (i === 0 && !dead && !(fc && (fc.none || fc.fork)) && rowH >= 16.5) { const y = y0 - rowH - 2; ctx.beginPath(); ctx.moveTo(X + 1, y); ctx.lineTo(X + 5, y - 7); ctx.lineTo(X + 9, y); ctx.strokeStyle = C.acc(al); ctx.lineWidth = 1.3; ctx.stroke(); label(X + 15, y, t('sk.hands'), fSans(11.5 * U), 11.5 * U, C.acc(al), { pri: 39 }); }
+      if (big && face === 'use') { const pen = makePen(ctx, proj, cam, rc.x, rc.y, z, i < NR - 1 ? cam.G * ex : 1.5); for (const [nx, ny, nh, txt] of notesOf(rung, sh, pen)) { const q = pen.q(nx, ny, nh); label(q[0], q[1] - 5, txt, fSans(12.5), 12.5, C.ink(1), { pri: 95, bg: true, align: 'center' }); } }
     }
     /* the gene that chooses each fork: a bracket beside the rungs it rules */
     if (!ph && words && PL[NR - 1] && focus < 0) for (const k of A.GENES) { const [lo, hi] = GENE_AT[k], x = PL[lo].x - 12, y0 = PL[lo].y + 2, y1 = PL[hi].y - PL[hi].d * 0.7; ctx.beginPath(); ctx.moveTo(x + 6, y0); ctx.lineTo(x, y0); ctx.lineTo(x, y1); ctx.lineTo(x + 6, y1); ctx.strokeStyle = C.acc(0.75 * fade); ctx.lineWidth = 1.3; ctx.stroke(); }
@@ -430,6 +445,7 @@ export function createStack(host, opts = {}) {
     $('.sk-ttl').textContent = t('sk.title');
     const rail = $('.sk-rail'); rail.setAttribute('aria-label', t('sk.rail.aria'));
     rail.innerHTML = ['field', 'niche', 'stack'].map(k => '<button type="button" data-go="' + k + '">' + esc(t('sk.rail.' + k)) + '</button>').join('') + '<i class="sk-pin"></i>';
+    const fc = $('.sk-faces'); fc.setAttribute('aria-label', t('sk.face.aria')); fc.innerHTML = FX.FACES.map(f => '<button type="button" data-face="' + f + '" aria-keyshortcuts="ArrowLeft ArrowRight" aria-pressed="false">' + esc(t('sk.face.' + f)) + '</button>').join('');
     $('.sk-reset').textContent = t('sk.reset'); $('.sk-reset').setAttribute('aria-label', t('sk.resetAria'));
     $('.sk-sr').setAttribute('aria-label', t('sk.aria.mirror'));
     $('.sk-genes').innerHTML = [...A.GENES, 'aim'].map(k => '<div class="sk-gene" data-gene="' + k + '"><span>' + esc(geneWord(k)) + '</span><button type="button" class="sk-way" data-pop="' + k + '" aria-haspopup="true"></button></div>').join('');
@@ -445,6 +461,7 @@ export function createStack(host, opts = {}) {
   function ctlHTML(i) {
     const r = RUNGS[i], F = S.F, charge = S.g.carrier === 'charge', Rn = R(), D = Y.D, c = k => t('sk.ctl.' + k); let h = '';
     if (GENE_OF[r]) h += geneRow(GENE_OF[r]);
+    if (face !== 'use') return h + (Rn.broken && i > 1 ? '<p class="warn">' + esc(t('sk.say.broken')) + '</p>' : faceCtl(r)) + stonesRow(r) + doneBtn();
     if (Rn.broken && i > 1) return h + '<p class="warn">' + esc(t('sk.say.broken')) + '</p>' + doneBtn();
     if (r === 'atom' && charge) h += row(c('mat'), seg('mat', SW.MATERIALS.map(m => [m.id, t('sw.mat.' + m.id)]), F.mat));
     if (r === 'switch' && charge) { const ok = SW.shapesFor(D.M), sw = D.sw;
@@ -458,9 +475,28 @@ export function createStack(host, opts = {}) {
     if (r === 'chip' && A.CARRY.told[S.g.told].stages && !Rn.rungs.chip.passed) h += row(c('stages'), seg('stages', CHOICES.stages.map(v => [v, t('sk.stages.' + v)]), F.stages));
     if (r === 'machine') h += row(c('units'), seg('ui', CHOICES.ui.map(k => [k, t('sk.unit.' + S.g.shape, { n: fmtNum(A.CARRY.shape[S.g.shape].units[k]) })]), F.ui));
     if (r === 'mind') h += row(c('aim'), seg('aim', NEEDS.map(n => [n, need(n)]), S.aim, NEEDS.filter(n => !A.potentialOf(S.g, n)))) + row(c('bits'), seg('bits', CHOICES.bits.map(v => [v, String(v)]), F.bits));
+    return h + stonesRow(r) + doneBtn();
+  }
+  /* a face's controls: its steps (the studio's or the line's), with what the step does to your design; the design
+     choices the studio makes there; and, as made, the line's care */
+  function faceCtl(r) {
+    const f = FX.faceAt(R(), r, face), F = S.F, charge = S.g.carrier === 'charge', c = k => t('sk.ctl.' + k); let h = '';
+    if (f.none || f.fork) return '<p class="quiet">' + esc(f.none ? t('sk.face.why.' + f.none) : t('sk.face.fork')) + '</p>';
+    const k = stepAt(r);
+    if (f.steps.length > 1) h += row(t('sk.face.steps.' + face), seg('fstep', f.steps.map((x, j) => [j, FX.stepName(x)]), k));
+    h += '<p class="quiet sk-stepd">' + esc((f.steps.length > 1 ? '' : FX.stepName(f.steps[k]) + ': ') + FX.stepWhat(f.steps[k])) + '</p>';
+    if (face === 'design') {
+      if (r === 'switch' && charge) { const ok = SW.shapesFor(Y.D.M); h += row(c('shape'), seg('shape', SW.SHAPES.map(s => [s.id, t('sw.shape.' + s.id)]), Y.D.spec.shape, SW.SHAPES.map(s => s.id).filter(x => !ok.includes(x)))); }
+      if (r === 'gate' && charge) h += row(c('lib'), seg('lib', CHOICES.lib.map(v => [v, t('sk.lib.' + v)]), F.lib));
+      if (r === 'block' && !R().rungs.block.passed) h += row(c('adder'), seg('adder', CHOICES.adder.map(v => [v, t('sk.adder.' + v)]), F.adder));
+      if (r === 'chip' && f.steps[k] === 'arrange') h += ARRANGE.map(geneRow).join('');
+    } else if (charge || r === 'chip' || r === 'block') h += row(t('sk.face.care'), seg('care', CHOICES.care.map(v => [v, t('sk.care.' + v)]), F.care));
+    return h;
+  }
+  function stonesRow(r) {
     /* the rung's stepping stones: every challenge on it, the won ones inked, each a way to play it */
-    const st = stonesOf(r); if (st.length) h += '<div class="sk-row sk-stones"><span class="sk-lbl">' + esc(t('sk.ctl.stones', { n: st.filter(x => x.won).length, of: st.length })) + '</span>' + st.map(x => '<a href="' + esc(x.href) + '" class="' + (x.won ? 'won' : '') + '"' + (x.won ? ' aria-label="' + esc(t('sk.stone.won', { title: x.title })) + '"' : '') + '>' + esc(x.title) + '</a>').join('') + '</div>';
-    return h + doneBtn();
+    let h = ''; const st = stonesOf(r); if (st.length) h += '<div class="sk-row sk-stones"><span class="sk-lbl">' + esc(t('sk.ctl.stones', { n: st.filter(x => x.won).length, of: st.length })) + '</span>' + st.map(x => '<a href="' + esc(x.href) + '" class="' + (x.won ? 'won' : '') + '"' + (x.won ? ' aria-label="' + esc(t('sk.stone.won', { title: x.title })) + '"' : '') + '>' + esc(x.title) + '</a>').join('') + '</div>';
+    return h;
   }
   const stonesOf = r => (opts.stones ? opts.stones(r) : []), wonOn = r => stonesOf(r).filter(x => x.won).length;
   const doneBtn = () => '<button type="button" class="btn sk-done" data-out="1">' + esc(t('sk.ctl.done')) + '</button>';
@@ -482,8 +518,9 @@ export function createStack(host, opts = {}) {
      one at a time under the arrows; hidden until focused, read by a screen reader */
   let plotCur = null;
   function mirror(sh) {
-    const el = $('.sk-sr'), V0 = (sh || { Y }).Y.V, cur = plotCur || { n: aimN(), ri: mineRi() };
-    const rungs = RUNGS.map((r, i) => ({ i, r })).reverse().map(({ i, r }) => '<button type="button" data-rung="' + i + '"' + (view.level === 'rung' && view.i === i ? ' aria-current="true"' : '') + ' aria-label="' + esc(rungName(r) + ': ' + (V0.way[r] || '') + '. ' + (V0.fig[r] || []).map(f => f[0] + ' ' + f[1]).join(', ') + '. ' + t('sk.ctl.stones', { n: wonOn(r), of: stonesOf(r).length })) + '">' + esc(t('sk.tag.open', { rung: rungName(r) })) + '</button>').join('');
+    const el = $('.sk-sr'), Y0 = (sh || { Y }).Y, V0 = Y0.V, cur = plotCur || { n: aimN(), ri: mineRi() }, use = face === 'use' || view.level === 'field';
+    const wayAt = r => (use || V0.dead < RUNGS.indexOf(r) ? V0.way[r] || '' : t('sk.face.' + face) + ', ' + FX.wayOf(Y0.R, r, face, stepAt(r))), figAt = r => (use ? V0.fig[r] || [] : FX.figsOf(Y0.R, r, face, stepAt(r)));
+    const rungs = RUNGS.map((r, i) => ({ i, r })).reverse().map(({ i, r }) => '<button type="button" data-rung="' + i + '"' + (view.level === 'rung' && view.i === i ? ' aria-current="true"' : '') + ' aria-label="' + esc(rungName(r) + ': ' + wayAt(r) + '. ' + figAt(r).map(f => f[0] + ' ' + f[1]).join(', ') + '. ' + t('sk.ctl.stones', { n: wonOn(r), of: stonesOf(r).length })) + '">' + esc(t('sk.tag.open', { rung: rungName(r) })) + '</button>').join('');
     const genes = [...A.GENES, 'aim'].map(k => '<button type="button" data-pop="' + k + '" aria-haspopup="true">' + esc(geneWord(k) + ': ' + (k === 'aim' ? need(S.aim) : optName(k, S.g[k]))) + '</button>').join('');
     const html = rungs + genes + '<button type="button" class="sk-plot" data-plot="1" aria-keyshortcuts="ArrowLeft ArrowRight ArrowUp ArrowDown Enter" aria-label="' + esc(t('sk.aria.plot', { need: need(NEEDS[cur.n]), recipe: recipeName(RECIPES[cur.ri].g), away: awayWords(RECIPES[cur.ri].d), what: plotLine(cur) })) + '">' + esc(t('sk.aria.plots')) + '</button>';
     if (el.dataset.html !== html) { const act = document.activeElement, sel = act && el.contains(act) ? (act.dataset.rung != null ? '[data-rung="' + act.dataset.rung + '"]' : act.dataset.pop ? '[data-pop="' + act.dataset.pop + '"]' : act.dataset.plot ? '[data-plot]' : null) : null;
@@ -501,7 +538,8 @@ export function createStack(host, opts = {}) {
   }
   function ui() {
     const nov = A.novelty(S.g), today = !nov, broken = !!R().broken, lvl = view.level, sh = lvl !== 'field' ? shown() : null, mine = !sh || sh.mine;
-    root.dataset.level = lvl; root.classList.toggle('sketch', !mine);
+    root.dataset.level = lvl; root.dataset.face = face; root.classList.toggle('sketch', !mine);
+    $$('.sk-faces button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.face === face)));
     const rl = railAt(); lastRl = rl;
     $$('.sk-rail button').forEach(b => { const o = b.dataset.go === rl; b.classList.toggle('on', o); b.setAttribute('aria-current', o ? 'true' : 'false'); if (b.dataset.go === 'stack') b.textContent = mine ? t('sk.rail.stack') : t('sk.rail.other'); });
     $('.sk-pin').style.left = { field: '16.6%', niche: '50%', stack: '83.3%' }[rl];
@@ -517,7 +555,7 @@ export function createStack(host, opts = {}) {
     /* the forks beside the stack */
     if (sh) $$('.sk-gene').forEach(el => { const k = el.dataset.gene, b = el.querySelector('button'); b.textContent = k === 'aim' ? need(sh.need) : optName(k, sh.g[k]); b.disabled = !sh.mine; b.classList.toggle('forked', k !== 'aim' && sh.g[k] !== A.TODAY[k]); });
     /* the opened rung's controls */
-    const ctl = CTL, key = lvl === 'rung' && mine ? view.i + '|' + JSON.stringify(S.F) + mineKey() + S.aim : '';
+    const ctl = CTL, key = lvl === 'rung' && mine ? face + stepAt(RUNGS[view.i]) + view.i + '|' + JSON.stringify(S.F) + mineKey() + S.aim : '';
     if (ctl.dataset.key !== key) { const act = document.activeElement, sel = act && ctl.contains(act) && act.dataset.k ? '[data-k="' + act.dataset.k + '"][data-v="' + act.dataset.v + '"]' : null, slide = act && act.id === 'sk-volt';
       if (!(slide && key)) { ctl.innerHTML = key ? ctlHTML(view.i) : ''; if (sel) { const b = ctl.querySelector(sel); if (b) b.focus({ preventScroll: true }); } } else ctl.querySelector('.sk-vout').textContent = S.F.V.toFixed(2) + ' V';
       ctl.dataset.key = key; ctl.hidden = !key; ctl.setAttribute('aria-label', key ? rungName(RUNGS[view.i]) : ''); }
@@ -525,9 +563,10 @@ export function createStack(host, opts = {}) {
     const sketch = $('.sk-card');
     if (sh && !sh.mine) { const kn = A.knownOf(sh.g), a = sh.att; sketch.innerHTML = '<span>' + esc(kn ? t('sk.plot.built', { name: t('ar.known.' + kn.id), status: t('ar.st.' + kn.status) }) + ' ' + t('sk.plot.sketch') : a && a.by === 'ledger' ? plotCard(a) : t('sk.plot.sketch')) + '</span><button type="button" class="btn primary sk-take">' + esc(t('sk.plot.take')) + '</button><button type="button" class="btn sk-tomine">' + esc(t('sk.plot.mine')) + '</button>'; sketch.hidden = false; } else sketch.hidden = true;
     /* the questions that bite here, by their short names: at most three while you look (on a rung opened, its own), every
-       one of the level with Ask open, none in Do; one opened alone, in the card */
+       one of the level with Ask open, none in Do; one opened alone, in the card. Only as used: the marks stand on the
+       parts of the as-used pictures (#456) */
     const md = mode(), at = keyOf();
-    marks = !sh || !sh.mine || md === 'do' ? [] : stackMarks(QB, md === 'ask' ? 6 : 3, lvl === 'rung' ? [RUNGS[view.i]] : null);
+    marks = !sh || !sh.mine || md === 'do' || face !== 'use' ? [] : stackMarks(QB, md === 'ask' ? 6 : 3, lvl === 'rung' ? [RUNGS[view.i]] : null);
     const mk2 = $('.sk-marks'), mkey = marks.map(m => m.rung + m.id).join() + '|' + (lens ? lens.rung + lens.id : '');
     if (mk2.dataset.k !== mkey) { mk2.dataset.k = mkey; mk2.innerHTML = marks.map((m, k) => '<button type="button" data-mark="' + k + '" aria-pressed="' + !!(lens && lens.rung === m.rung && lens.id === m.id) + '" class="' + (lens && !(lens.rung === m.rung && lens.id === m.id) ? 'dim' : '') + '" aria-label="' + esc(t('frame.mark.aria', { q: t('frame.q.' + m.id) })) + '"><i></i><span>' + esc(t('frame.q.' + m.id)) + '</span></button>').join(''); }
     /* the agents' forks: they propose, you decide */
@@ -538,7 +577,7 @@ export function createStack(host, opts = {}) {
     const si = $('.sk-since'); si.hidden = lvl !== 'field' || cards; if (si.textContent !== SINCE) si.textContent = SINCE; if (!si.hidden) sinceH = si.getBoundingClientRect().height + 8;
     if (cards !== lastCards) { lastCards = cards; const wasAll = lastRl === 'field'; requestAnimationFrame(() => { measure(); if (anim) return; if (view.level === 'stack') fly(poseStack(view.n, view.r), 450); else if (view.level === 'rung') fly(poseRung(view.n, view.r, view.i), 450); else if (wasAll) fly(poseField(), 450); }); }
     /* how true: the field is the architecture engine's idea drawn; a rung its own mark */
-    const fb = $('.sk-fid'), fr = lvl === 'field' ? { f: 'idea', by: 'arch' } : lvl === 'rung' ? sh.Y.V.fid[RUNGS[view.i]] : null, fk = fr ? JSON.stringify(fr) : '';
+    const fb = $('.sk-fid'), fr = lvl === 'field' ? { f: 'idea', by: 'arch' } : lvl === 'rung' ? (face === 'use' ? sh.Y.V.fid[RUNGS[view.i]] : (fx => (fx.none || fx.fork ? null : FX.fidOf(sh.Y.R, RUNGS[view.i], face)))(FX.faceAt(sh.Y.R, RUNGS[view.i], face))) : null, fk = fr ? JSON.stringify(fr) : '';
     if (fb.dataset.k !== fk) { fb.dataset.k = fk; fb.innerHTML = !fr ? '' : fr.status === 'guess' ? statusMark('guess') : mark(fr); }
     /* the line at the foot says what just happened; what you are looking at is the card's caption */
     const was = rest; rest = restLine(rl === 'stack' ? sh : null); if (!saying) $('.sk-say').textContent = opts.card ? '' : rest;
@@ -612,17 +651,19 @@ export function createStack(host, opts = {}) {
     if (e.key === 'Escape') { if (goOut()) e.preventDefault(); return; }
     if (e.target.closest && e.target.closest('input,textarea,select,.sk-pop,.sk-ctl,.sk-dock,.dockwrap,.bar,.breakp')) return;
     if (e.key === '-' || e.key === '_') goOut(); else if (e.key === '+' || e.key === '=') { if (view.level === 'field') goStack(view.n, view.r); else if (view.level === 'stack') goRung(1); }
+    else if ((e.key === 'ArrowLeft' || e.key === 'ArrowRight') && view.level !== 'field') { e.preventDefault(); turn(e.key === 'ArrowRight' ? 1 : -1); }
     else if ((e.key === 'ArrowUp' || e.key === 'ArrowDown') && view.level !== 'field') { e.preventDefault(); goRung(clamp((view.i < 0 ? (e.key === 'ArrowUp' ? -1 : NR) : view.i) + (e.key === 'ArrowUp' ? 1 : -1), 0, NR - 1)); }
   };
   document.addEventListener('keydown', onKey);
   root.addEventListener('click', e => {
     const b = e.target.closest('button,a'); if (!b) { if (!e.target.closest('.sk-pop')) pop(); return; }
     const d = b.dataset;
-    if (d.go) { if (d.go === 'field') goField(); else if (d.go === 'niche') goNear(view.level === 'field' ? aimN() : view.n, view.level === 'field' ? mineRi() : view.r); else goStack(aimN(), mineRi()); }
+    if (d.face) setFace(d.face);
+    else if (d.go) { if (d.go === 'field') goField(); else if (d.go === 'niche') goNear(view.level === 'field' ? aimN() : view.n, view.level === 'field' ? mineRi() : view.r); else goStack(aimN(), mineRi()); }
     else if (d.rung) { if (view.level === 'field') { goStack(aimN(), mineRi(), 600); } goRung(+d.rung); }
     else if (d.pop) openPop(d.pop, b);
     else if (d.opt) { const k = $('.sk-pop').dataset.for; pop(); if (k === 'aim') setAim(d.opt); else setGene(k, d.opt); }
-    else if (d.k) { const k = d.k, v = d.v; if (k.startsWith('g:')) setGene(k.slice(2), v); else if (k === 'aim') setAim(v); else setFine(k, ['vote', 'regs', 'stages', 'ui', 'bits'].includes(k) ? +v : v); }
+    else if (d.k) { const k = d.k, v = d.v; if (k === 'fstep') setStep(+v); else if (k.startsWith('g:')) setGene(k.slice(2), v); else if (k === 'aim') setAim(v); else setFine(k, ['vote', 'regs', 'stages', 'ui', 'bits', 'care'].includes(k) ? +v : v); }
     else if (d.out) goOut();
     else if (d.dir) { const x = d.dir, i = S.focus.indexOf(x); if (i >= 0) S.focus.splice(i, 1); else { S.focus.push(x); if (S.focus.length > A.FOCUS_MAX) S.focus.shift(); } save(); ui(); }
     else if (d.mark) { const m = marks[+d.mark]; if (m && card().mark) card().mark(m); }
@@ -680,7 +721,7 @@ export function createStack(host, opts = {}) {
   let first = true;
   const setPose = p => { Object.assign(cam, { x: p.x, y: p.y, z: p.z, s: p.s, T: p.T, G: p.G, ex: p.ex, ox: p.ox, oy: p.oy }); trig(); };
   /* for the lab's own checks (scripts/smoke/stack.mjs) */
-  const api = { S, view, cam, A, goField, goNear, goStack, goRung, goOut, setGene, setFine, setAim, grow, port, field: () => ({ POP, CEN, since: SINCE }), ask: () => { proposals = A.agentForks(S.A); ui(); }, busy: () => !!anim, mine: () => [aimN(), mineRi()], at: (n, ri) => { const rc = plotRect(n, ri), b = root.getBoundingClientRect(), a = proj(rc.x + PW / 2, rc.y + PD / 2); return [a[0] + b.left, a[1] + b.top]; }, plates: () => PL, carry: () => Y, marks: () => marks, top: () => stackMarks(QB, 3), lens: () => lens, RECIPES, RIDX };
+  const api = { S, view, cam, A, face: () => face, setFace, setStep, step: r => stepAt(r), goField, goNear, goStack, goRung, goOut, setGene, setFine, setAim, grow, port, field: () => ({ POP, CEN, since: SINCE }), ask: () => { proposals = A.agentForks(S.A); ui(); }, busy: () => !!anim, mine: () => [aimN(), mineRi()], at: (n, ri) => { const rc = plotRect(n, ri), b = root.getBoundingClientRect(), a = proj(rc.x + PW / 2, rc.y + PD / 2); return [a[0] + b.left, a[1] + b.top]; }, plates: () => PL, carry: () => Y, marks: () => marks, top: () => stackMarks(QB, 3), lens: () => lens, RECIPES, RIDX };
   /* the questions on the stack, for the card: the strongest at a rung (or across the stack), the one marked at a rung */
   const marksAt = (key, n = 6) => (view.level === 'field' || !onMine() ? [] : stackMarks(QB, n, RUNGS.includes(key) ? [key] : null));
   return {
@@ -691,8 +732,17 @@ export function createStack(host, opts = {}) {
     setLens(l) { const k = l ? l.rung + l.id : ''; if (k === (lens ? lens.rung + lens.id : '')) return; lens = l; dirty = true; ui(); },
     /* what you are looking at: the line the foot said before the card, and the opened recipe's figures */
     rest: () => rest, shown: () => (view.level === 'field' ? null : shown()),
-    show(at) {
+    /* the face every plate is turned to (#456), and what a rung shows on it: its way, figures and mark, or why it has none */
+    face: () => face,
+    seen(r) {
+      const sh = shown(), V0 = sh.Y.V, dead = RUNGS.indexOf(r) > V0.dead;
+      if (face === 'use' || dead || sh.Y.R.rungs[r].passed) return { way: V0.way[r], figs: V0.fig[r] || [], fid: V0.fid[r], dead };
+      const f = FX.faceAt(sh.Y.R, r, face), k = stepAt(r);
+      return { way: FX.wayOf(sh.Y.R, r, face, k), figs: FX.figsOf(sh.Y.R, r, face, k), fid: f.none || f.fork ? null : FX.fidOf(sh.Y.R, r, face), dead, why: f.none ? t('sk.face.why.' + f.none) : f.fork ? t('sk.face.fork') : null };
+    },
+    show(at, f) {
       const wasOn = on; on = true; host.hidden = false; resize();
+      if (at !== 'field' && FX.FACES.includes(f) && f !== face) { if (first) face = f; else setFace(f); }
       const ri = RUNGS.indexOf(at);
       if (!wasOn && first) {
         first = false; setPose(poseField());
