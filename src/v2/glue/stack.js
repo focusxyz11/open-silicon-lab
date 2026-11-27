@@ -2,11 +2,12 @@
    opens, with its words (the stack area, and the frame's) and its styles (src/styles/stack.css). It makes the view
    (src/v2/stack/view.js, fetched here) over the stage, hides the other views while it shows, and hides it again when
    the address leaves it. The population it draws comes from the community's ledger (the attempts at an architecture
-   kept there, grown again by the engine); the stepping stones from the challenges you have won. */
+   kept there, grown again by the engine); each rung's stepping stones are the challenges on it (src/engines/path.js
+   rungOfChallenge), the ones you have won inked. */
 import { V, $ } from '../shell.js';
 import * as Game from '../game.js';
 import { still } from '../../core/ui.js';
-import { INVENT } from '../../data/path.js';
+import { rungOfChallenge } from '../../engines/path.js';
 
 const here = () => /^#\/stack(\/|$)/.test(location.hash);
 export function create() {
@@ -17,11 +18,12 @@ export function create() {
     V.hideAll(); V.loading(false);
     if (!el) { el = document.createElement('section'); el.className = 'stackv'; el.id = 'stackv'; $('stage').appendChild(el); }
     if (!view) {
-      const W = () => Game.world(V.S);
+      const W = () => Game.world(V.S), ON = {};
+      Game.CHALLENGES.forEach(c => { const r = rungOfChallenge(c.id); if (r) (ON[r] = ON[r] || []).push(c); });
       view = m.createStack(el, { still,
         arch: () => (W().arch || []).map(id => W().byId[id].arch),
         done: () => V.S.done || {},
-        inv: rung => (INVENT[rung] || []).map(Game.challengeOf).filter(Boolean).map(c => ['#/do/' + c.id, Game.titleOf(c)]) });
+        stones: rung => (ON[rung] || []).map(c => ({ id: c.id, href: '#/do/' + c.id, title: Game.titleOf(c), won: Game.isDone(V.S, c.id) })) });
     }
     view.show(at);
   });

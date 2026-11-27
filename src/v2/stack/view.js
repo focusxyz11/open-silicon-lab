@@ -8,9 +8,10 @@
    true (src/v2/fid.js) and core questions (src/data/frame.js), and a DOM mirror of the canvas for the keyboard and
    screen readers (every rung, gene and plot). Loaded only when #/stack opens (src/v2/glue/stack.js).
 
-   createStack(host, { still, arch, done, inv }) -> { show(at), hide() }: at is a rung id, 'field', or nothing (your
-   stack). arch: the attempts kept in the ledger (histories); done: the challenges won (stepping stones, arch.js
-   broughtOf); inv: the challenges each rung's own way of inventing leads to, as [href, title]. */
+   createStack(host, { still, arch, done, stones }) -> { show(at), hide() }: at is a rung id, 'field', or nothing (your
+   stack). arch: the attempts kept in the ledger (histories); done: the challenges won (they raise their directions once,
+   arch.js broughtOf); stones(rung): the challenges on a rung, [{ id, href, title, won }], drawn as squares under its
+   plate's front edge, inked when won, and offered in its controls as ways to play (#451). */
 import { t, fmtNum } from '../../core/i18n.js';
 import { esc } from '../../core/esc.js';
 import { theme } from '../../core/ui.js';
@@ -102,8 +103,10 @@ export function createStack(host, opts = {}) {
   function poseRung(n, ri, i) {
     const st = poseStack(n, ri), ph = phone(), c = chrome();
     if (ph) return Object.assign(st, { z: clamp(i, 1, NR - 2) * st.G, oy: st.oy - (vh * 0.2) });
-    const s = Math.min((vw - 540) / PW, st.s * 1.14), cos = 0.58, T = Math.acos(cos), depth = PD * s * cos, G = (depth + 190) / (s * Math.sin(T));
-    return { x: st.x, y: st.y, z: i * G, s, T, G, ex: 1, ox: -8, oy: (c.top - c.bot) / 2 - 40 };
+    const s = Math.min((vw - 540) / PW, st.s * 1.14), cos = 0.58, T = Math.acos(cos), depth = PD * s * cos, G = (depth + 250) / (s * Math.sin(T));
+    /* the opened plate high, its back clear of the head, so its controls have the room under it */
+    const yf = Math.min(vh / 2 + (c.top - c.bot) / 2 - 40, c.top + 56 + depth);
+    return { x: st.x, y: st.y, z: i * G, s, T, G, ex: 1, ox: -8, oy: yf - vh / 2 - PD / 2 * cos * s };
   }
   function poseNear(n, ri) { const rc = plotRect(n, ri), f = poseField(), st = poseStack(n, ri); return { x: rc.x + PW / 2, y: rc.y + PD / 2, z: 0, s: Math.max(f.s * 1.6, st.s * 0.2), T: 0, G: st.G, ex: 0, ox: 0, oy: f.oy }; }
   function fly(to, ms = 900, done) {
@@ -339,7 +342,7 @@ export function createStack(host, opts = {}) {
     const bi = Rn.broken ? RUNGS.indexOf(Rn.broken) : 9, wl = wave && sh.mine ? wave.k + (now - wave.t0) / 95 : 99; if (wave && wl > NR + 1.5) wave = null;
     const skew = PD * cam.kx * cam.s, wpx = PW * cam.s, dpx = PD * cam.s * cam.cosT, focus = view.level === 'rung' ? view.i : -1, th = clamp(cam.s * 0.045, 3, 7), grew = clamp(1 - (now - grewAt) / 900, 0, 1);
     ctx.font = fMono(12.5 * U, 500); const vwid = Math.max(...RUNGS.map(r => Math.max(...(Vn.fig[r] || []).map(f => ctx.measureText(f[1]).width), 30))) + 12;
-    const words = fade > 0.75;
+    const words = fade > 0.75, stones = Object.fromEntries(RUNGS.map(r => [r, stonesOf(r)]));
     for (let i = 0; i < NR; i++) {
       const z = i * cam.G * ex, a = proj(rc.x, rc.y, z), rung = RUNGS[i], dead = i > bi, dir = RUNG_DIR[rung], passed = !!Rn.rungs[rung].passed;
       const dim = (focus >= 0 && focus !== i ? 0.42 : 1) * (lens && lens.rung !== rung ? 0.5 : 1);
@@ -365,6 +368,8 @@ export function createStack(host, opts = {}) {
       /* its front edge is inked as far as its direction is polished */
       ctx.fillStyle = C.ink(0.12 * fade * dim); ctx.fillRect(a[0], a[1], wpx, th);
       if (!dead) { ctx.fillStyle = inFocus ? C.acc((0.85 + 0.15 * grew) * fade) : C.ink(0.72 * fade * dim); ctx.fillRect(a[0], a[1], wpx * Math.max(0.012, bar), th); if (inFocus && grew > 0) { ctx.fillStyle = C.acc(0.5 * grew); ctx.fillRect(a[0], a[1] - 2, wpx * bar, th + 4); } }
+      /* its stepping stones, under the front edge at the right: one square each, inked when won */
+      if (sh.mine && fade > 0.5 && !ph) { const st = stones[rung] || [], q = clamp(cam.s * 0.07, 4, 7), gap = q * 0.7; st.forEach((x, k) => { const sx = a[0] + wpx - (st.length - k) * (q + gap), sy = a[1] + th + 3; if (x.won) { ctx.fillStyle = C.acc(0.95 * fade); ctx.fillRect(sx, sy, q, q); } else { ctx.strokeStyle = C.ink(0.35 * fade * dim); ctx.lineWidth = 1; ctx.strokeRect(sx + 0.5, sy + 0.5, q - 1, q - 1); } }); }
       if (!dead && dpx > 20) { const pen = makePen(ctx, proj, cam, rc.x, rc.y, z, i < NR - 1 ? cam.G * ex : 1.5); pen.dash = pm < 0.5 ? [5, 3] : []; ctx.globalAlpha = fade * dim; ctx.lineJoin = 'round'; if (passed) passedPic(pen, C, tm, 1); else PIC[rung](pen, C, Rn, sh.Y.D, tm, 0.5 + 0.5 * pm, rung === 'mind' ? race : null); ctx.globalAlpha = 1; }
       if (!words) continue;
       /* words on the plate: its name at the front left, what it hands up at the right */
@@ -431,9 +436,11 @@ export function createStack(host, opts = {}) {
     if (r === 'chip' && A.CARRY.told[S.g.told].stages && !Rn.rungs.chip.passed) h += row(c('stages'), seg('stages', CHOICES.stages.map(v => [v, t('sk.stages.' + v)]), F.stages));
     if (r === 'machine') h += row(c('units'), seg('ui', CHOICES.ui.map(k => [k, t('sk.unit.' + S.g.shape, { n: fmtNum(A.CARRY.shape[S.g.shape].units[k]) })]), F.ui));
     if (r === 'mind') h += row(c('aim'), seg('aim', NEEDS.map(n => [n, need(n)]), S.aim, NEEDS.filter(n => !A.potentialOf(S.g, n)))) + row(c('bits'), seg('bits', CHOICES.bits.map(v => [v, String(v)]), F.bits));
-    const fk = opts.inv ? opts.inv(r) : []; if (fk.length) h += '<div class="sk-row sk-forks"><span class="sk-lbl">' + esc(c('forks')) + '</span>' + fk.map(([href, tx]) => '<a href="' + esc(href) + '">' + esc(tx) + '</a>').join('') + '</div>';
+    /* the rung's stepping stones: every challenge on it, the won ones inked, each a way to play it */
+    const st = stonesOf(r); if (st.length) h += '<div class="sk-row sk-stones"><span class="sk-lbl">' + esc(t('sk.ctl.stones', { n: st.filter(x => x.won).length, of: st.length })) + '</span>' + st.map(x => '<a href="' + esc(x.href) + '" class="' + (x.won ? 'won' : '') + '"' + (x.won ? ' aria-label="' + esc(t('sk.stone.won', { title: x.title })) + '"' : '') + '>' + esc(x.title) + '</a>').join('') + '</div>';
     return h + doneBtn();
   }
+  const stonesOf = r => (opts.stones ? opts.stones(r) : []), wonOn = r => stonesOf(r).filter(x => x.won).length;
   const doneBtn = () => '<button type="button" class="btn sk-done" data-out="1">' + esc(t('sk.ctl.done')) + '</button>';
   let popKey = null;
   const pop = () => { if (!popKey) return false; popKey = null; $('.sk-pop').hidden = true; return true; };
@@ -454,7 +461,7 @@ export function createStack(host, opts = {}) {
   let plotCur = null;
   function mirror(sh) {
     const el = $('.sk-sr'), V0 = (sh || { Y }).Y.V, cur = plotCur || { n: aimN(), ri: mineRi() };
-    const rungs = RUNGS.map((r, i) => ({ i, r })).reverse().map(({ i, r }) => '<button type="button" data-rung="' + i + '"' + (view.level === 'rung' && view.i === i ? ' aria-current="true"' : '') + ' aria-label="' + esc(rungName(r) + ': ' + (V0.way[r] || '') + '. ' + (V0.fig[r] || []).map(f => f[0] + ' ' + f[1]).join(', ')) + '">' + esc(t('sk.tag.open', { rung: rungName(r) })) + '</button>').join('');
+    const rungs = RUNGS.map((r, i) => ({ i, r })).reverse().map(({ i, r }) => '<button type="button" data-rung="' + i + '"' + (view.level === 'rung' && view.i === i ? ' aria-current="true"' : '') + ' aria-label="' + esc(rungName(r) + ': ' + (V0.way[r] || '') + '. ' + (V0.fig[r] || []).map(f => f[0] + ' ' + f[1]).join(', ') + '. ' + t('sk.ctl.stones', { n: wonOn(r), of: stonesOf(r).length })) + '">' + esc(t('sk.tag.open', { rung: rungName(r) })) + '</button>').join('');
     const genes = [...A.GENES, 'aim'].map(k => '<button type="button" data-pop="' + k + '" aria-haspopup="true">' + esc(geneWord(k) + ': ' + (k === 'aim' ? need(S.aim) : optName(k, S.g[k]))) + '</button>').join('');
     const html = rungs + genes + '<button type="button" class="sk-plot" data-plot="1" aria-keyshortcuts="ArrowLeft ArrowRight ArrowUp ArrowDown Enter" aria-label="' + esc(t('sk.aria.plot', { need: need(NEEDS[cur.n]), recipe: recipeName(RECIPES[cur.ri].g), away: awayWords(RECIPES[cur.ri].d), what: plotLine(cur) })) + '">' + esc(t('sk.aria.plots')) + '</button>';
     if (el.dataset.html !== html) { const act = document.activeElement, sel = act && el.contains(act) ? (act.dataset.rung != null ? '[data-rung="' + act.dataset.rung + '"]' : act.dataset.pop ? '[data-pop="' + act.dataset.pop + '"]' : act.dataset.plot ? '[data-plot]' : null) : null;
@@ -527,8 +534,8 @@ export function createStack(host, opts = {}) {
     const M = $('.sk-marks'); M.classList.toggle('on', !!(ok && lvl !== 'field'));
     if (ok) $$('.sk-marks button').forEach(b => { const m = marks[+b.dataset.mark]; if (!m) return; const i = RUNGS.indexOf(m.rung), q = proj(rc.x + m.at[0] / 100, rc.y + m.at[1] / 100, PL[i].z); b.style.left = q[0] + 'px'; b.style.top = q[1] + 'px'; b.hidden = q[1] < chrome().top - 8 || q[1] > vh - 110; if (lens && lens.rung === m.rung && lens.id === m.id && !ph) { const ln = $('.sk-lens'), w = ln.offsetWidth, h = ln.offsetHeight; ln.style.left = clamp(q[0] - w / 2, 14, vw - w - 14) + 'px'; ln.style.top = clamp(q[1] + 24 + h > vh - 130 ? q[1] - h - 26 : q[1] + 24, chrome().top, vh - h - 20) + 'px'; } });
     const ctl = $('.sk-ctl'); ctl.classList.toggle('on', !!(ok && lvl === 'rung'));
-    if (ok && lvl === 'rung' && !ph && PL[view.i]) { const p = PL[view.i], w = Math.min(980, vw - 48); ctl.style.width = w + 'px'; ctl.style.left = clamp(p.x + p.w / 2 - w / 2, 16, vw - w - 16) + 'px'; ctl.style.top = Math.min(p.y + 30, vh - ctl.offsetHeight - 14) + 'px'; }
-    else if (ph) { ctl.style.width = ''; ctl.style.left = ''; ctl.style.top = ''; }
+    if (ok && lvl === 'rung' && !ph && PL[view.i]) { const p = PL[view.i], w = Math.min(980, vw - 48); ctl.style.width = w + 'px'; ctl.style.left = clamp(p.x + p.w / 2 - w / 2, 16, vw - w - 16) + 'px'; const top = p.y + 26; ctl.style.top = top + 'px'; ctl.style.maxHeight = Math.max(160, vh - chrome().bot + 24 - top) + 'px'; }
+    else if (ph) { ctl.style.width = ''; ctl.style.left = ''; ctl.style.top = ''; ctl.style.maxHeight = ''; }
   }
 
   /* ---------- hands: wheel, drag, pinch, tap, keys ---------- */

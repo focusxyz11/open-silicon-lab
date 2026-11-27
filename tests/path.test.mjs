@@ -260,3 +260,26 @@ test('along keeps the rung across Design, Make and Use', () => {
   assert.equal(P.alongTo('cloud', 'use'), null);
   assert.equal(P.faceOf('gate', 'nowhere'), null);
 });
+
+/* ---- the path 9: challenges as stepping stones on their rungs (#451) ---- */
+test('every challenge sits on one rung, read from where the lattice places it', async () => {
+  const { CHALLENGES } = await import('../src/v2/loop.js');
+  const left = CHALLENGES.filter(c => !D.RUNGS.includes(P.rungOfChallenge(c.id))).map(c => c.id);
+  assert.deepEqual(left, [], 'challenges without a rung (place them in src/data/lattice.js PLACED)');
+  /* the challenges that raise a direction once (arch.js STONES) are challenges, each on a rung */
+  for (const ids of Object.values(A.STONES)) for (const id of ids) if (id !== A.KEPT_SWITCH && id !== A.LEDGER_ENTRY) assert.ok(CHALLENGES.some(c => c.id === id) && P.rungOfChallenge(id), id);
+  assert.equal(P.rungOfChallenge('no-such-challenge'), null);
+});
+
+test('stepping stones never win a need alone', () => {
+  /* every stone brought, on every recipe nobody has built: each direction raised once, no further than today's level,
+     and no need won before a single year is grown; brought in the middle of a start, the same */
+  const all = Object.fromEntries(Object.entries(A.STONES).map(([d, ids]) => [d, ids[0]]));
+  for (const g of A.allRecipes()) {
+    if (!A.novelty(g) || A.knownOf(g)) continue;
+    const bare = A.start(g), st = A.start(g, all), later = A.bring(bare, all);
+    assert.deepEqual(A.winsOf(st), [], A.keyOf(g) + ' wins with stones alone');
+    assert.deepEqual(A.winsOf(later), [], A.keyOf(g) + ' wins with stones brought later');
+    for (const d of A.DIRS) { assert.ok(st.start[d] <= 1 && st.start[d] <= bare.start[d] * A.STONE + 1e-12, d); close(A.bring(later, all).start[d], later.start[d], 'a stone raises its direction once'); }
+  }
+});

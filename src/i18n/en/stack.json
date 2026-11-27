@@ -79,7 +79,6 @@
  "sk.ctl.units": "How many",
  "sk.ctl.bits": "Bits a weight",
  "sk.ctl.aim": "What it is for",
- "sk.ctl.forks": "Invent your own in the lab",
  "sk.ctl.done": "Done",
  "sk.ctl.noEngine": "The lab has no engine for this fork yet. Its figures are a guess.",
  "sk.ctl.passed": "This carrier passes this rung by: there is nothing here to set.",
@@ -204,5 +203,7 @@
  "sk.note.regs": "each bit is ten of your gates",
  "sk.note.prog": "the program",
  "sk.note.seven": "it reads a 7",
- "sk.note.todayLine": "today's computer"
+ "sk.note.todayLine": "today's computer",
+ "sk.ctl.stones": "Stepping stones on this rung: {n} of {of} won",
+ "sk.stone.won": "{title}, won: play it again"
 }

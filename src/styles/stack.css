@@ -84,7 +84,7 @@
 .sk-lens .btn { min-height: 36px; }
 
 /* the opened rung's controls, under its plate */
-.sk-ctl { position: absolute; z-index: 10; opacity: 0; transition: opacity .25s; pointer-events: none; display: flex; flex-wrap: wrap; gap: 10px 26px; align-items: center; justify-content: center; padding: 4px 0; }
+.sk-ctl { position: absolute; z-index: 10; opacity: 0; transition: opacity .25s; pointer-events: none; display: flex; flex-wrap: wrap; gap: 10px 26px; align-items: center; justify-content: center; padding: 12px 16px; background: var(--panel); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border: 1px solid var(--line); border-radius: 12px; overflow: auto; }
 .sk-ctl.on { opacity: 1; pointer-events: auto; }
 .sk-row { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; }
 .sk-lbl { font: 400 12.5px/1.2 var(--sans); color: var(--muted); }
@@ -99,7 +99,13 @@
 .sk-ctl output { font: 500 13.5px/1 var(--mono); font-stretch: 80%; min-width: 54px; }
 .sk-ctl .warn, .sk-ctl .quiet { flex-basis: 100%; text-align: center; margin: 0; font-size: 13.5px; color: var(--bad); }
 .sk-ctl .quiet { color: var(--muted); }
-.sk-forks a { font: 500 13px/1 var(--sans); color: var(--accent); text-underline-offset: 3px; text-decoration-color: color-mix(in srgb, var(--accent) 40%, transparent); padding: 6px 0; }
+.sk-stones { gap: 6px; justify-content: center; }
+.sk-stones .sk-lbl { flex-basis: 100%; text-align: center; }
+.sk-stones a { display: inline-flex; align-items: center; gap: 6px; font: 500 12.5px/1 var(--sans); color: var(--accent); text-decoration: none; border: 1px solid color-mix(in srgb, var(--accent) 45%, var(--line)); border-radius: 4px; padding: 6px 9px; background: color-mix(in srgb, var(--bg) 88%, transparent); }
+.sk-stones a::before { content: ""; width: 7px; height: 7px; border: 1px solid currentColor; flex: none; }
+.sk-stones a.won { color: var(--ink); border-color: var(--accent); }
+.sk-stones a.won::before { background: var(--accent); border-color: var(--accent); }
+.sk-stones a:hover { border-color: var(--accent); }
 .sk-ctl .sk-done { display: none; }
 
 /* another recipe's sketch */
@@ -190,6 +196,8 @@
   .sk-ctl { left: 8px; right: 8px; bottom: 8px; top: auto; justify-content: flex-start; background: var(--panel); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border: 1px solid var(--line); border-radius: 12px; padding: 12px; max-height: 46%; overflow: auto; gap: 10px; }
   .sk-ctl .sk-row { flex-basis: 100%; }
   .sk-ctl .sk-lbl { flex-basis: 100%; }
+  .sk-stones .sk-lbl { text-align: left; }
+  .sk-stones { justify-content: flex-start; }
   .sk-seg button { min-height: 40px; padding: 0 10px; font-size: 13px; }
   .sk-ctl .sk-done { display: block; margin-left: auto; }
   .sk-lens { left: 8px; right: 8px; bottom: 8px; width: auto; z-index: 35; }
