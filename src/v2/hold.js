@@ -228,7 +228,7 @@ export function createHold(host, ctx = {}) {
      of the visitor's own takes it over */
   function fly(top, smooth) { /* a move you make is where you are from then on, whatever the page was keeping */
     here.a = null; const y0 = host.scrollTop, y1 = clamp(top, 0, host.scrollHeight - vh), far = Math.abs(y1 - y0) / vh;
-    if (!smooth || reduce() || far < .02) { land0(); host.scrollTo({ top, behavior: 'instant' }); onScroll(); return; }
+    if (!smooth || reduce() || far < .02) { land0(); host.scrollTo({ top, behavior: 'instant' }); if (sized) { here.a = anchor(); here.y = host.scrollTop; here.until = 0; } onScroll(); return; }
     flying = 1; anim = { y0, y1, t0: performance.now(), ms: clamp(700 + far * 320, 950, 2100) }; root.classList.toggle('fly', far > 1.6); }
   const land0 = () => { if (anim) { anim = null; flying = 0; root.classList.remove('fly'); } };
   TICK.push(() => { if (!anim) return; const k = clamp((performance.now() - anim.t0) / anim.ms, 0, 1), e = k < .5 ? 4 * k * k * k : 1 - Math.pow(2 - 2 * k, 3) / 2;
