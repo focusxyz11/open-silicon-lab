@@ -31,3 +31,13 @@ decisions are recorded in those documents, their dated notes and the history of 
 - **Fable's prototype is the reference to port in small steps** (`docs/PATH.md`, "Building it"), as task issues for
   the nightly build. Why: the design is decided in the prototype; the port follows the lab's rules (the atlas, words,
   styles, loading).
+
+## 27 November 2026
+
+- **The studio and the fab are faces of the stack's rungs:** as designed (the studio, chip to switch) and as made (the
+  fab, atom to chip), beside as used (the dive); along turns every plate at once, and the island's studio and factory
+  become doors onto the stack. The studio follows direction A from the studio review ("the studio is the dive as
+  designed"); B (one drafting table) and C (the plan at room scale) are not pursued. Why: designing the studio and the
+  fab separately would make separate systems again; the stack's visual language now exists to extend.
+- **One Fable round for both, as a guiding prototype only** (`docs/prototypes/faces/`), not a complete build, to save
+  tokens; the nightly build builds from it.

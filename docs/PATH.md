@@ -124,6 +124,27 @@ humans* and *The next Moore's law* live, marked on a niche, never in a legend.
 | The ledger and the port | a stack is one entry (its recipe, fine settings and history); every point on the field comes from the ledger; agents' sweeps arrive through the port, never run by the lab |
 | The atlas | the rungs are levels with homes; the stack's parts are named by their home ids; words in `src/i18n/` |
 
+## Three faces: the studio and the fab
+
+Each rung has three faces along the chip's life (the grid's rule: along keeps the level, a gate as used, as made, as
+designed). **As designed** is the design studio, chip to switch: drafted outlines, with the studio's steps as the
+plate's control (the job and Arrange at the chip, describe, check, place and route at the block, gates, timing and
+rules at the gate, one cell and its masks at the switch). **As made** is the fab, atom to chip: the same plates solid,
+with the line's steps as the control, each step showing what it does to your design. **As used** is the dive. The
+stack does not move: along turns every plate at once (owner, 27 November 2026; guiding prototype
+`docs/prototypes/faces/`).
+
+- The studio and the factory on the island become doors onto the stack at Design and Make; the studio's walk-through
+  room and its wall panels go (kept on a `before-` branch first).
+- Arrange at the chip as designed *is* the recipe's `shape` and `where` genes; the community computer's plan is the chip
+  rung as designed, your slice a tile in its block.
+- The fab hands real things up the carry: the line's care sets the spread of the copies (from the litho and etch
+  engines) and the defects that give yield and the cost of a good chip (`chip.js`). *Perfect fails* made real.
+- Questions on the faces: *Perfect fails* at the switch and gate as made and the block as designed (a late path);
+  *Geometry* at the chip as designed; *Compute beats cleverness* at place and route; *Trust without inspection* at the
+  gate's rules and checks; *Fight or use physics* at Print; *The next Moore's law* in the line's care; *Only humans* in
+  Arrange; *Efficiency fuels use* in yield and cost.
+
 ## Building it
 
 Each line is meant to become one task issue, in order.
