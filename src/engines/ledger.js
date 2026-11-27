@@ -32,6 +32,11 @@
                people stand outside it and break the design, the words and the way through, and the record keeps it.
      fix       a report answered: the report it closes, what changed, and the pull request that changed it. A fix
                that did not fix is answered by a new report at the same place.
+     gene      a new option proposed for a gene of an architecture (the open genome, #452, src/engines/arch.js
+               proposalWhy): the gene, the option's id, its name and what it is, its trait effects and its carry
+               contract, complete; new among the options and the proposals. It is a guess until it names a fact
+               (src/data/facts.json; the tests check the fact exists), and the engine grows it only once a pull
+               request adopts it into the genome.
    Two more kinds are designed and not built yet: check (a new engine) and show (a source, a figure, a real case).
 
    Nothing here is voted on and nobody gives points. settle() derives every standing from the entries alone:
@@ -55,14 +60,15 @@ import { needOf as machineNeed } from '../data/blocks.js';
 import { NEEDS as CHOICE_NEEDS, designOf as choiceOf, reasonOk } from './thousand.js';
 import { kitchen, levelOf as chefLevel, problem as chefProblem, normalPlan as chefPlan, LEVER_IDS as CHEF_LEVERS } from './bits.js';
 import * as Arch from './arch.js';
+import { ARCH_AGENTS } from './population.js';
 
-export const KINDS = ['design', 'break', 'try', 'question', 'report', 'fix'];
+export const KINDS = ['design', 'break', 'try', 'question', 'report', 'fix', 'gene'];
 /* what a report says about the lab */
 export const SAYS = ['wrong', 'confusing', 'broken', 'better'];
 /* who made it: a person, an AI agent, both, a program that searches (no language model), or the lab as an example */
 export const MADE = ['person', 'ai', 'both', 'program', 'example'];
 export const DIR = 'community/ledger';
-const ID = /^(\d{4}-\d{2}-\d{2})-(design|break|try|question|report|fix)-[a-z0-9]+(?:-[a-z0-9]+)*$/;
+const ID = /^(\d{4}-\d{2}-\d{2})-(design|break|try|question|report|fix|gene)-[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const FIELDS = {
   design: ['kind', 'piece', 'title', 'by', 'made', 'ai', 'words', 'code', 'from', 'about'],
   break: ['kind', 'of', 'by', 'made', 'ai', 'words', 'case', 'about'],
@@ -71,7 +77,8 @@ const FIELDS = {
   try: ['kind', 'of', 'by', 'made', 'ai', 'words', 'cases', 'puzzle', 'machine', 'chef', 'front', 'plan', 'choice', 'pick', 'arch', 'about'],
   question: ['kind', 'at', 'part', 'under', 'q', 'noticed', 'by', 'made', 'ai', 'about'],
   report: ['kind', 'at', 'part', 'say', 'words', 'by', 'made', 'ai'],
-  fix: ['kind', 'of', 'words', 'pr', 'by', 'made', 'ai']
+  fix: ['kind', 'of', 'words', 'pr', 'by', 'made', 'ai'],
+  gene: ['kind', 'gene', 'option', 'name', 'what', 'effect', 'carry', 'fact', 'by', 'made', 'ai', 'words']
 };
 /* the puzzles (content/puzzles/): problems that run through every level, each scored by one engine. An attempt at one is
    a try with a plan instead of a design and its cases: a plan the engine can run, for the puzzle's job. Its score is
@@ -259,6 +266,14 @@ export function checkEntry(e, W) {
     const row = r.rows[r.first];
     return { ok: true, facts: { tick: r.first + 1, ticks: e.case.length, want: row.e, got: row.o } };
   }
+  /* a proposed option for a gene: complete (the gene, the option, its traits and its carry contract), new, in plain words */
+  if (e.kind === 'gene') {
+    const why = Arch.proposalWhy(e); if (why) return no(why);   /* gene, option, effect or carry */
+    if (!plain(e.name, 2, 40) || !plain(e.what, 10, 300) || !plain(e.words || '', 0, 300)) return no('words');
+    if (e.fact != null && !(typeof e.fact === 'string' && /^[a-z0-9][a-z0-9-]{1,60}$/.test(e.fact))) return no('fact');
+    if (W.entries.some(x => x.ok && x.kind === 'gene' && x.gene === e.gene && x.option === e.option)) return no('same');
+    return { ok: true, facts: { gene: e.gene, option: e.option, backed: e.fact != null } };
+  }
   /* a report: a place in the lab, what kind, and words enough to find it again */
   if (e.kind === 'report') {
     if (typeof e.at !== 'string' || !PLACE.test(e.at)) return no('where');
@@ -294,7 +309,7 @@ export function checkEntry(e, W) {
 const table = () => Object.create(null);
 const beats = (a, b) => a.facts.transistors <= b.facts.transistors && a.facts.ps <= b.facts.ps && (a.facts.transistors < b.facts.transistors || a.facts.ps < b.facts.ps);
 export function settle(list) {
-  const W = { entries: [], byId: table(), pieces: table(), cases: table(), puzzles: table(), machines: table(), chef: table(), fronts: table(), choices: table(), arch: [], refused: [], feed: [] };
+  const W = { entries: [], byId: table(), pieces: table(), cases: table(), puzzles: table(), machines: table(), chef: table(), fronts: table(), choices: table(), arch: [], genome: [], refused: [], feed: [] };
   const key = x => (isObj(x) && typeof x.id === 'string' ? x.id : '');
   (Array.isArray(list) ? list : []).slice().sort((a, b) => (key(a) < key(b) ? -1 : key(a) > key(b) ? 1 : 0)).forEach(raw => {
     const mark = r => ({ ok: r.ok, reason: r.reason || null, facts: r.facts || null, state: null, brokenBy: null, breaks: [], tries: [] });
@@ -318,6 +333,7 @@ export function settle(list) {
     else if (e.kind === 'try' && e.puzzle != null) { (W.puzzles[e.puzzle] = W.puzzles[e.puzzle] || []).push(e.id); e.state = 'front'; W.feed.push({ type: 'attempted', id: e.id }); }
     else if (e.kind === 'try') { W.byId[e.of].tries.push(e.id); e.state = 'stands'; W.feed.push({ type: 'tried', id: e.id }); }
     else if (e.kind === 'report') { e.state = 'open'; W.feed.push({ type: 'reported', id: e.id }); }
+    else if (e.kind === 'gene') { W.genome.push(e.id); e.state = e.fact != null ? 'backed' : 'guess'; W.feed.push({ type: 'proposed', id: e.id }); }
     else if (e.kind === 'fix') { const T = W.byId[e.of]; T.state = 'fixed'; T.fixedBy = e.id; e.state = 'stands'; W.feed.push({ type: 'fixed', id: e.id }); }
     else { e.state = 'stands'; W.feed.push({ type: 'asked', id: e.id }); }
   });
@@ -365,9 +381,12 @@ export function settle(list) {
   });
   /* the architectures' standings, in the order kept: the first attempt to win a need with a recipe nobody has built, at
      least two genes from today's (the goals' rule), is first in that niche, and counts most; the first to win any need
-     with a recipe marks its square. An attempt that wins after them stands; one that wins nothing is an attempt, kept */
-  W.archFirst = table(); W.archSquare = table();
+     with a recipe marks its square. An attempt that wins after them stands; one that wins nothing is an attempt, kept.
+     Credit for trying, not only for winning (#448): the first attempt at a recipe nobody has built is its first try */
+  W.archFirst = table(); W.archSquare = table(); W.archTried = table();
   W.arch.forEach(id => { const e = W.byId[id], F = e.facts, counts = !F.built && F.novelty >= 2;
+    e.firstTry = !F.built && F.novelty > 0 && !W.archTried[F.g];
+    if (e.firstTry) W.archTried[F.g] = id;
     e.firstIn = counts ? F.wins.filter(n => !W.archFirst[n]) : [];
     e.firstIn.forEach(n => { W.archFirst[n] = id; });
     e.marks = counts && F.wins.length > 0 && !W.archSquare[F.g];
@@ -463,12 +482,15 @@ export function choicesAt(W, need) {
 }
 /* the attempts at an architecture, in the order kept, as two groups never mixed: people's (a person, a person with AI,
    and the lab's examples, played by hand) and agents' (an AI, or a program that searches); with the first to win each
-   need (need -> id) and the first to win with each recipe (key -> id). Read from the entries alone: nobody votes */
-export const ARCH_AGENTS = ['ai', 'program'];
+   need (need -> id), the first to win with each recipe (key -> id) and the first to try each (key -> id). Read from the
+   entries alone: nobody votes */
+export { ARCH_AGENTS };
 export function archAttempts(W) {
   const all = (W.arch || []).map(id => W.byId[id]);
-  return { all, people: all.filter(e => !ARCH_AGENTS.includes(e.made)), agents: all.filter(e => ARCH_AGENTS.includes(e.made)), first: W.archFirst || table(), square: W.archSquare || table() };
+  return { all, people: all.filter(e => !ARCH_AGENTS.includes(e.made)), agents: all.filter(e => ARCH_AGENTS.includes(e.made)), first: W.archFirst || table(), square: W.archSquare || table(), tried: W.archTried || table() };
 }
+/* the open genome's proposals, in the order kept: each a guess until a fact backs it (state guess or backed) */
+export const proposals = W => (W.genome || []).map(id => W.byId[id]);
 /* the attempts at a puzzle, the best first, then those on the frontier, then the newest */
 export const attemptsAt = (W, z) => (W.puzzles[z] || []).map(id => W.byId[id]).sort((a, b) => (W.best[z] === b.id) - (W.best[z] === a.id) || (a.state === 'front' ? 0 : 1) - (b.state === 'front' ? 0 : 1) || (a.id < b.id ? 1 : -1));
 /* the reports at a place in the lab (its address), open first, then the newest */

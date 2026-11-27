@@ -1,0 +1,21 @@
+{
+  "kind": "gene",
+  "gene": "carrier",
+  "option": "spin",
+  "name": "Spin",
+  "what": "A value carried by the direction of a tiny magnet, an electron's spin: it keeps its value with the power off, so a machine of them can sleep without losing anything, but writing one is slower than switching a gate.",
+  "effect": {
+    "energy": 1.2,
+    "flex": 0.8,
+    "rugged": 2,
+    "idle": true
+  },
+  "carry": {
+    "matter": "yours",
+    "delay": 100
+  },
+  "by": "Open Silicon Lab",
+  "made": "example",
+  "ai": "Written by Claude while building #452, to show the form. The traits and the contract are guesses: no fact backs them yet.",
+  "words": "An example of a proposal. Magnets that keep their value could let a rarely busy sensor sleep for free; nobody has grown a whole machine of them in the lab."
+}

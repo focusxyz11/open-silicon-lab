@@ -209,6 +209,8 @@
  "page.lat.step": "step {n} of the path",
  "page.lat.stepTo": "step {n} of the path: {where}",
  "page.lat.propose": "Propose one",
+ "page.lat.proposed": "Proposed for the open genome",
+ "page.lat.by": "by {who}",
  "page.lat.path.nand.t": "Nand to Tetris",
  "page.lat.path.nand.d": "Build a whole computer from one kind of gate: gates, then adders and memory, then a processor, then a machine that runs a game. Here it climbs in silicon, through the lab’s own steps.",
  "page.lat.path.riscv.t": "Logic to RISC-V to intelligence",

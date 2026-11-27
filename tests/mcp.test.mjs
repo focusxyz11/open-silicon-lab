@@ -21,7 +21,7 @@ test('an agent connects, lists the tools, reads the plan and takes a job', async
     assert.equal(init.result.serverInfo.name, 'open-silicon-lab');
     assert.ok(init.result.capabilities.tools && init.result.instructions);
     const tools = (await S.call('tools/list', {})).result.tools.map(t => t.name);
-    assert.deepEqual(tools, ['look', 'list_plan', 'get_job', 'check_design', 'at_factory', 'life_of', 'propose_design', 'list_ledger', 'propose_break', 'propose_try', 'propose_report', 'energy_budget', 'submit_attempt', 'block_front', 'submit_front', 'propose_question', 'choose_design', 'grow_architecture', 'architecture_forks', 'submit_architecture']);
+    assert.deepEqual(tools, ['look', 'list_plan', 'get_job', 'check_design', 'at_factory', 'life_of', 'propose_design', 'list_ledger', 'propose_break', 'propose_try', 'propose_report', 'energy_budget', 'submit_attempt', 'block_front', 'submit_front', 'propose_question', 'choose_design', 'grow_architecture', 'architecture_forks', 'architecture_field', 'submit_architecture', 'propose_gene']);
     const plan = (await S.tool('list_plan', {})).structuredContent;
     assert.ok(plan.pieces.some(p => p.id === 'core' && p.engine === 'riscv'));
     const job = (await S.tool('get_job', { job: 'vote' })).structuredContent;
@@ -150,6 +150,19 @@ test('an agent grows an architecture through the port: scores a history, takes a
     assert.equal(yes.ok, true, yes.reason); assert.match(yes.entry.id, /-try-/); assert.deepEqual(yes.reached, G.wins);
     const f = JSON.parse(yes.entry.file); assert.equal(f.made, 'ai'); assert.deepEqual(f.arch.wins, G.wins); assert.equal(f.arch.changes[0].gene, F.forks[0].gene);
     assert.ok((await S.tool('submit_architecture', { start: 'far/charge/magic/few', years: [['people']], kind: 'person' })).isError, 'a recipe the engine does not have');
+    /* the field of every attempt, read from the ledger alone (#448): every niche with its champion and its untried recipes,
+       every attempt with its credit; the agent chooses where to sweep, and its attempt comes back as an entry */
+    const Fd = (await S.tool('architecture_field', {})).structuredContent;
+    assert.equal(Fd.niches.length, 6 * 4);
+    assert.ok(Fd.niches.some(n => n.champion && n.champion.id) && Fd.niches.some(n => n.champion && n.champion.built), 'champions held by the ledger\'s attempts and by built recipes');
+    assert.ok(Fd.niches.every(n => Number.isInteger(n.untried) && n.untried >= 0) && Fd.niches.some(n => n.untried > 0));
+    assert.ok(Fd.attempts.length >= 2 && Fd.attempts.every(a => a.id && a.recipe && typeof a.firstToTry === 'boolean' && ['people', 'agents'].includes(a.group)));
+    assert.ok(Fd.attempts.some(a => a.firstToTry), 'the first attempt at an untried recipe is credited');
+    /* the open genome (#452): a complete proposal comes back as an entry marked a guess; one that is not says what the contract asks */
+    const G1 = (await S.tool('propose_gene', { gene: 'shape', option: 'ring', name: 'A ring', what: 'Units joined in a ring, each passing its result to the next.', effect: { energy: 1.2 }, carry: { units: [4, 16, 64] }, author: 'An agent', kind: 'ai', ai: 'Proposed by an AI agent through the open port.' })).structuredContent;
+    assert.ok(G1.ok && /-gene-/.test(G1.entry.id) && G1.entry.file.includes('"carry"') && /guess/.test(G1.status), JSON.stringify(G1));
+    const G2 = (await S.tool('propose_gene', { gene: 'shape', option: 'ring', name: 'A ring', what: 'Units joined in a ring, each passing its result to the next.', effect: { energy: 1.2 }, carry: {}, kind: 'person' })).structuredContent;
+    assert.ok(G2.ok === false && G2.how && G2.genes.find(g => g.gene === 'shape').contract.units, 'an incomplete proposal is refused with the contract');
     assert.ok((await S.tool('grow_architecture', { start: 'in/charge/graph/stack', years: [['luck']] })).isError, 'a direction the engine does not have');
   } finally { S.stop(); }
 });

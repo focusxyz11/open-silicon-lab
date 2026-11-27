@@ -5,6 +5,9 @@ An entry is a design for a piece of the shared computer, a break (a case that ma
 answer wrong), a try (cases that failed to break one, or an attempt at a puzzle: a plan its engine scores, as for
 `content/puzzles/energy.md`, or a choice among a thousand designs that all pass, with its reason in one line, or an
 attempt at an architecture nobody has built: its history, grown again by the engine, and the needs it claims),
+a proposed option for a gene of an architecture (the open genome: a new carrier, place to compute, way of telling
+it what to do, or shape, with its trait effects and its carry contract, a guess until a fact backs it; the form is
+*Propose a gene option* among the issue forms, and the port's `propose_gene` writes the same file),
 a question with a place, a report (the lab itself
 broken: something untrue, confusing, not working, or that could be better, at a place given by its address)
 or a fix (a report answered). The file's name is the entry's id: `<date>-<kind>-<name>.json`.

@@ -65,6 +65,15 @@
 .sk-pop .fx { font: 400 11px/1.4 var(--mono); font-stretch: 80%; color: var(--ink); }
 .sk-pop em { grid-row: 1; grid-column: 2; font: 400 11px/1.6 var(--mono); font-stretch: 80%; font-style: normal; color: var(--muted); text-align: right; }
 .sk-pop button:disabled { opacity: .5; }
+/* the open genome (#452): options proposed for this gene, under its own, each marked a guess until a fact backs it */
+.sk-pop .sk-gk { margin: 8px 10px 2px; padding-top: 9px; border-top: 1px dashed var(--line); font: 600 11.5px/1.35 var(--sans); color: var(--muted); }
+.sk-gprop { display: grid; gap: 2px; margin: 2px 0; padding: 8px 10px; border: 1px dashed var(--line); border-radius: 6px; }
+.sk-pop .sk-gprop em { grid-row: auto; grid-column: 1 / -1; display: flex; align-items: center; gap: 8px; text-align: left; margin-top: 3px; }
+.sk-pop .sk-gprop button.fid { display: inline-flex; grid-template-columns: none; gap: 5px; padding: 2px 8px 2px 6px; border: 1px solid var(--line); border-radius: 999px; background: color-mix(in srgb, var(--ink) 5%, var(--panel-solid)); font: 600 11.5px/1.2 var(--sans); color: var(--muted); }
+.sk-pop .sk-gprop button.fid span { grid-column: auto; font-size: 11.5px; }
+/* the lab's mark of whether anyone has built it (src/v2/fid.js TRUTH), sized in the stack */
+.stackv .mtr { display: inline-block; flex: none; width: 12px; height: 12px; overflow: visible; }
+.stackv .t-guess circle { fill: none; stroke: currentColor; stroke-width: 1.6; stroke-dasharray: 2.4 1.8; }
 
 /* the questions, where they bite: at most three marks while you look, one opened alone in the card */
 .sk-marks { position: absolute; inset: 0; z-index: 9; pointer-events: none; opacity: 0; transition: opacity .25s; }
@@ -118,6 +127,18 @@
 .sk-say { margin: 0; max-width: min(900px, 100%); min-height: 22px; text-align: center; font: 400 15px/1.4 var(--sans); color: var(--ink); text-wrap: balance; pointer-events: none; text-shadow: 0 0 12px var(--bg), 0 0 4px var(--bg); }
 .sk-say.in { animation: sk-say .5s ease-out; }
 @keyframes sk-say { from { opacity: 0; transform: translateY(6px); } }
+
+/* the field: what changed since your last visit (#448), one quiet line over the rest */
+.sk-since { margin: 0; max-width: min(900px, 100%); display: flex; align-items: baseline; gap: 8px; font: 400 13px/1.4 var(--sans); color: var(--muted); text-align: left; text-wrap: pretty; text-shadow: 0 0 12px var(--bg), 0 0 4px var(--bg); }
+.sk-since::before { content: ""; flex: none; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); transform: translateY(-1px); }
+.sk-since[hidden] { display: none; }
+/* how agents explore: through the open port, never from the lab */
+.sk-port { background: var(--panel); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border: 1px solid var(--line); border-radius: 12px; padding: 12px 16px; display: grid; gap: 6px; justify-items: start; max-width: min(640px, 100%); animation: sk-say .35s ease-out backwards; }
+.sk-cards .sk-port p { text-align: left; text-shadow: none; font-size: 14px; line-height: 1.45; }
+.sk-port .n { color: var(--muted); }
+.sk-port a { color: var(--accent); }
+.sk-port code { font: 500 12.5px/1 var(--mono); padding: 3px 6px; border: 1px solid var(--line); border-radius: 4px; white-space: nowrap; }
+.sk-port .btn { justify-self: end; min-height: 32px; }
 
 /* the agents' forks: a hand of cards over the dock */
 .sk-cards { display: grid; gap: 8px; justify-items: center; max-width: 100%; }
@@ -186,6 +207,9 @@
   .sk-cards { width: 100%; }
   .sk-hand { flex-direction: column; width: 100%; }
   .sk-cards p { font-size: 13px; }
+  .sk-since { font-size: 12.5px; }
+  .sk-port { padding: 10px 12px; }
+  .sk-cards .sk-port p { font-size: 13px; }
   .sk-prop { width: auto; grid-template-columns: 1fr auto; padding: 9px 12px; }
   .sk-prop .btn { grid-row: 1 / 4; grid-column: 2; margin: 0; align-self: center; }
   .sk-prop .k { display: none; }

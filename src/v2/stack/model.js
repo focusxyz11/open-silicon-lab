@@ -6,15 +6,16 @@
    - marksOf(R, lensesAt): where the core questions bite on your stack: the lenses that live at each rung, weighed by the
      carry (src/engines/frame.js stackLenses; at most three shown: stackMarks), with what each says there;
    - the sheet of every recipe (RECIPES, BLOCK, POT), the population (the built recipes, the attempts kept in the
-     community's ledger, grown again by the engine, the agents' attempts run in this browser, and yours) and its census.
+     community's ledger, grown again by the engine, and yours: src/engines/population.js) and its census on the sheet.
    No words are written here: every one is t('…'), in src/i18n/en/stack.json (sk.*) or an area the lab already has. */
 import * as A from '../../engines/arch.js';
 import * as SW from '../../engines/switch.js';
 import * as P from '../../engines/path.js';
+import * as F from '../../engines/population.js';
 import { stackLenses, stackMarks } from '../../engines/frame.js';
 import { RUNGS, EXAMPLE } from '../../data/path.js';
 import { t, fmtNum } from '../../core/i18n.js';
-export { A, SW, P };
+export { A, SW, P, F };
 
 export const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 /* the rung's name: the dive's own word for its level (depth.<id>.name); the machine, two levels of the dive, its own */
@@ -129,50 +130,15 @@ export const fxOf = (k, o) => { const e = A.EFFECT[k][o] || {}; return ['energy'
 export const bestNeed = g => { let b = 0, bi = -1; NEEDS.forEach((n, i) => { const p = A.potentialOf(g, n); if (p > b) { b = p; bi = i; } }); return bi; };
 export function recipeName(g) { const k = A.knownOf(g); if (k) return t('ar.known.' + k.id); return A.GENES.filter(x => g[x] !== A.TODAY[x]).map(x => optName(x, g[x])).join(' · ') || t('sk.recipe.today'); }
 
-/* ---------- the population ---------- */
-export const SWEEP_YEARS = 25;
-export function population(arch) {
-  const POP = [];
-  for (const k of A.KNOWN) POP.push({ key: A.keyOf(k.g), g: k.g, st: A.start(k.g), by: k.status, id: k.id });
-  /* the attempts kept in the community's ledger (src/engines/ledger.js), grown again by the same engine */
-  for (const h of arch || []) if (A.histOk(h)) { const r = A.replay(h); if (!POP.some(a => a.key === A.keyOf(r.st.g))) POP.push({ key: A.keyOf(r.st.g), g: r.st.g, st: r.st, by: 'ledger' }); }
-  return POP;
-}
-let seed = 20261127;
-const rnd = () => { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967296; };
-/* agents explore: recipes nobody has tried, at least two genes from today's, that could win some need once polished;
-   each grown as the ledger's own example plays it: people first for ten years, then the engine's suggestion. Run in
-   this browser by the visitor, never by the lab (docs/PATH.md: agents' sweeps come through the port) */
-export function explore(POP, n, mineKey) {
-  const tried = new Set(POP.map(a => a.key)); if (mineKey) tried.add(mineKey);
-  const cands = RECIPES.filter(r => r.d >= 2 && !tried.has(r.key) && NEEDS.some((nd, i) => POT[i][r.i] >= 1)), out = [];
-  for (let k = 0; k < n && cands.length; k++) out.push(agentGrow(POP, cands.splice(Math.floor(rnd() * cands.length), 1)[0]));
-  return out;
-}
-function agentGrow(POP, r) {
-  let st = A.start(r.g);
-  for (let y = 0; y < SWEEP_YEARS; y++) { const s = A.suggest(st, 'archniche').dirs; st = A.year(st, y < 10 ? ['people', s[0]] : s); }
-  const a = { key: r.key, g: r.g, st, by: 'agent', years: SWEEP_YEARS }; POP.push(a); return a;
-}
-/* the agents' attempts of an earlier visit, grown again: the same recipe and the same play give the same result */
-export function regrow(POP, keys) { for (const k of keys || []) if (RIDX.has(k) && !POP.some(a => a.key === k)) agentGrow(POP, RECIPES[RIDX.get(k)]); }
-/* the census: every plot of the sheet (need x recipe), who stands on it and how it scores, and each niche's champion */
+/* ---------- the population: the population engine's (src/engines/population.js), on the sheet's order ----------
+   the built recipes, every attempt kept in the community's ledger (grown again by the engine) and yours. The lab runs no
+   agent: agents' sweeps arrive as ledger entries through the open port */
+export const population = entries => F.population(entries);
+/* the census on the sheet: P[need][recipe index] is who stands on that plot, champ[need][genes away] its niche's champion */
 export function census(POP, mine) {
-  const atts = POP.slice(); if (mine) atts.push(mine);
-  const Pl = NEEDS.map(() => new Array(RECIPES.length).fill(null)), champ = NEEDS.map(() => [null, null, null, null, null]);
-  let wins = 0; const triedKeys = new Set();
-  for (const a of atts) {
-    const ri = RIDX.get(a.key), sc = A.scoreOf(a.st), d = RECIPES[ri].d; a.sc = sc; triedKeys.add(a.key);
-    let won = false;
-    NEEDS.forEach((n, ni) => {
-      if (!sc[n].can) return;
-      const cur = Pl[ni][ri];
-      if (!cur || a.mine || (!cur.a.mine && sc[n].now > cur.now)) Pl[ni][ri] = { a, now: sc[n].now, could: sc[n].could };
-      if (sc[n].wins && d > 0) won = true;
-    });
-    if (won) wins++;
-  }
-  NEEDS.forEach((n, ni) => Pl[ni].forEach((e, ri) => { if (!e) return; const d = RECIPES[ri].d, c = champ[ni][d]; if (!c || e.now > c.now) champ[ni][d] = { ri, now: e.now }; }));
-  return { P: Pl, champ, tried: triedKeys.size, wins };
+  const c = F.census(mine ? POP.concat([mine]) : POP), P = NEEDS.map(() => new Array(RECIPES.length).fill(null));
+  c.at.forEach((m, ni) => m.forEach((e, key) => { P[ni][RIDX.get(key)] = e; }));
+  const champ = c.champ.map(row => row.map(x => (x ? Object.assign({ ri: RIDX.get(x.key) }, x) : null)));
+  return { P, champ, tried: c.tried, wins: c.wins };
 }
 export { EXAMPLE, RUNGS };
