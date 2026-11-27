@@ -30,26 +30,31 @@
 .hold .sheet h2{font-size:34px}
 }
 
-/* ---- what comes after the first paint: the steps after the wall, the island's plan and the way in, the landing and
-   the page's footer, the board of the twelve challenges ---- */
-/* the way in, as the lab draws it (.wigo, frame.css); at the landing it fills as you push on (--land) */
-.hold .goin{position:absolute;transform:translate(-50%,-50%);display:inline-flex;align-items:center;gap:.6em;padding:.36em 1em .36em .36em;border-radius:999px;background:var(--go);color:var(--accent-ink);text-decoration:none;white-space:nowrap;font-size:max(13px,calc(var(--p)*25));line-height:1.1;box-shadow:0 10px 30px color-mix(in srgb,var(--go) 35%,transparent);overflow:hidden;transition:transform .15s}
+/* ---- what comes after the first paint: the steps after the wall, your stack and the ways in, the page's footer,
+   the twelve challenges on the whole chip ---- */
+/* the way in, as the lab draws it (.wigo, frame.css) */
+.hold .goin{position:absolute;transform:translate(-50%,-50%);display:inline-flex;align-items:center;gap:.6em;padding:.36em 1em .36em .36em;border-radius:999px;background:var(--go);color:var(--accent-ink);text-decoration:none;white-space:nowrap;font-size:max(13px,calc(var(--p)*25));line-height:1.1;box-shadow:0 10px 30px color-mix(in srgb,var(--go) 35%,transparent);transition:transform .15s}
 .hold .goin:hover{transform:translate(-50%,calc(-50% + 1px))}
-.hold .goin:focus-visible{outline:3px solid var(--ink);outline-offset:3px}
-.hold .goin b{font-weight:700;position:relative}
-.hold .goin .wia{display:grid;place-items:center;width:2em;height:2em;border-radius:50%;background:color-mix(in srgb,var(--accent-ink) 16%,transparent);font-weight:700;position:relative;flex:none}
-.hold .goin::before{content:"";position:absolute;inset:0;background:color-mix(in srgb,var(--accent-ink) 26%,transparent);transform-origin:0 50%;transform:scaleX(var(--land,0))}
+.hold .goin:focus-visible,.hold .sk-r:focus-visible,.hold .sk-more a:focus-visible{outline:3px solid var(--ink);outline-offset:3px}
+.hold .goin b{font-weight:700}
+.hold .goin .wia{display:grid;place-items:center;width:2em;height:2em;border-radius:50%;background:color-mix(in srgb,var(--accent-ink) 16%,transparent);font-weight:700;flex:none}
 @media (prefers-reduced-motion:no-preference){.hold .goin .wia{animation:h-in 2.4s ease-in-out infinite}}
-@keyframes h-in{0%,100%{transform:translateY(0)}50%{transform:translateY(3px)}}
-/* a place on the island's plan: its square (drawn) and its words under it, over it, or at its right */
-.hold .isl-p{display:flex;flex-direction:column;align-items:center;gap:calc(var(--p)*10)}
-.hold .isl-p i{display:block;flex:none;width:calc(var(--p)*90);height:calc(var(--p)*90)}
-.hold .isl-p.a{flex-direction:column-reverse;transform:translateY(-100%)}
-.hold .isl-p.r{flex-direction:row;text-align:left}
-.hold .isl-p .lb{position:static;text-align:center;background:var(--plate);padding:1px 5px;white-space:normal;max-width:calc(var(--p)*250)}
-.hold .isl-p.r .lb{text-align:left}
-.hold .isl-p:hover .lb b{color:var(--red)}
-.hold .isl-p .lb b{white-space:nowrap}
+@keyframes h-in{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+/* your stack: a rung is a way in; its drawing is on the canvas at the left, its words over the slab */
+.hold .sk-r{display:flex;align-items:center;gap:calc(var(--p)*16);padding:0 calc(var(--p)*22) 0 calc(var(--p)*150);color:var(--ink);text-decoration:none;min-width:0}
+.hold .sk-r .nm{flex:1;min-width:0;display:flex;flex-wrap:wrap;align-items:baseline;column-gap:calc(var(--p)*16);row-gap:calc(var(--p)*3);line-height:1.15}
+.hold .sk-r .nm b{font-weight:700;font-size:max(12px,calc(var(--p)*27))}
+.hold .sk-r .nm small{flex-basis:100%;color:var(--mid);font-size:max(11px,calc(var(--p)*19.5));white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hold .sk-r .tg{display:inline-flex;align-items:center;gap:.55em;color:var(--mid);font-size:max(11px,calc(var(--p)*16.5));letter-spacing:.06em;text-transform:uppercase;white-space:nowrap}
+.hold .sk-r .tg:empty{display:none}
+.hold .sk-r .tg i{width:.8em;height:.8em;border:1.5px solid currentColor;flex:none}
+.hold .sk-r.lit .tg{color:var(--red)}.hold .sk-r.lit .tg i{background:var(--red);border-color:var(--red)}
+.hold .sk-r .ar{display:grid;place-items:center;flex:none;width:max(22px,calc(var(--p)*46));height:max(22px,calc(var(--p)*46));border-radius:50%;border:1.5px solid var(--go);color:var(--go);font-style:normal;font-weight:700;font-size:max(12px,calc(var(--p)*22));transition:background .15s,color .15s}
+.hold .sk-r:hover .ar,.hold .sk-r:focus-visible .ar{background:var(--go);color:var(--accent-ink)}
+.hold .sk-r:not(.met) .nm b{font-weight:600}
+.hold .sk-more{transform:translate(-50%,-50%);display:flex;gap:calc(var(--p)*34);white-space:nowrap;font-size:max(11px,calc(var(--p)*17));letter-spacing:.06em;text-transform:uppercase}
+.hold .sk-more a{color:var(--mid);text-decoration:none;border-bottom:1px solid var(--hair);padding-bottom:2px}
+.hold .sk-more a:hover{color:var(--ink);border-color:var(--ink)}
 /* after the wall the hold button gives way to steps: back, and on to what comes next, said by name (src/v2/hold.js
    step). Holding is the fifty years' own gesture; here a press is enough */
 .hold .b-hold.chip{left:calc(50% + var(--rw)/2);transform:translateX(-50%);width:auto;bottom:var(--hbB);padding:0}
@@ -63,59 +68,50 @@
 .hold .b-step .sn.in{background:var(--go);color:var(--accent-ink);border-color:transparent;box-shadow:0 10px 30px color-mix(in srgb,var(--go) 35%,transparent)}
 .hold .b-step .sn.in i{background:color-mix(in srgb,var(--accent-ink) 16%,transparent);color:inherit}
 /* over a long flight the cards wait until the camera is there */
-.hold .b-story{transition:opacity .3s}.hold.fly .b-story{opacity:0;transition-duration:.15s}
-/* at the landing the island's block is alone with its way in; under the whole chip the steps stand at the foot */
-.hold.landing .b-hold.chip{display:none}
+.hold .b-story{transition:opacity .5s}.hold.fly .b-story{opacity:0;transition-duration:.2s}
+/* under the whole chip the steps stand at the foot */
+/* at the last block the way in is on the picture, so the step on is not shown twice (the keys still take it) */
+.hold .b-step .sn.in{display:none}
 .hold .b-hold.chip.over{bottom:calc(var(--u)*12)}
 /* the last words and the footer, one line across the foot of the page: the sources, the repository, how to join */
 .hold .b-end{align-items:flex-end;justify-content:space-between;gap:calc(var(--u)*24);padding:0 calc(var(--u)*24) calc(var(--u)*13) calc(var(--rw) + var(--u)*24);color:var(--mid)}
-.hold .b-end span{pointer-events:none}.hold .b-end .push{display:none}
+.hold .b-end span{pointer-events:none}
 .hold .b-end footer{display:flex;flex-wrap:wrap;align-items:center;gap:6px calc(var(--u)*20);pointer-events:auto}
 .hold .b-end footer a,.hold .b-end .bbtn{color:var(--mid);text-decoration:none;border:0;padding:0;height:auto;background:none;text-transform:uppercase;letter-spacing:inherit}
 .hold .b-end footer a:hover,.hold .b-end .bbtn:hover{color:var(--ink)}
-/* the board of the twelve challenges: one path in the story's order, one challenge open at a time */
-.hold .h-board{position:fixed;inset:0;z-index:58;background:color-mix(in srgb,var(--paper) 55%,transparent);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);animation:hb-in .25s both}
-@keyframes hb-in{from{opacity:0}}
-.hold .hb-pane{position:absolute;left:50%;top:calc(var(--barH) + 10px);transform:translateX(-50%);width:min(1120px,calc(100% - 28px));max-height:calc(100% - var(--barH) - 24px);overflow:auto;background:var(--panel-solid);border:1px solid var(--hair);border-radius:18px;box-shadow:var(--shadow);padding:calc(var(--u)*22) calc(var(--u)*26) calc(var(--u)*24);animation:hb-pane .3s cubic-bezier(.2,.8,.2,1) both}
-@keyframes hb-pane{from{transform:translate(-50%,-14px);opacity:0}}
-.hold .hb-pane header{display:flex;justify-content:space-between;align-items:flex-start;gap:20px}
-.hold .hb-pane h2{margin:0;font-size:calc(var(--u)*40)}
-.hold .hb-pane header p{color:var(--mid);max-width:38em;margin-top:.5em;font-size:calc(var(--u)*14.5)}
-.hold .hb-top{display:flex;align-items:center;gap:14px;color:var(--mid);white-space:nowrap}.hold .hb-top b{color:var(--ink)}
-.hold .hb-path{margin-top:calc(var(--u)*22)}
-.hold .hb-zones{display:grid;grid-template-columns:calc(var(--ny)*100%/var(--n)) 1fr;color:var(--mid)}
-.hold .hb-zones{margin-bottom:calc(var(--u)*30)}.hold .hb-zones span{border-left:1px solid var(--hair);padding:0 0 calc(var(--u)*4) 8px}
-.hold .hb-line{position:relative;display:grid;grid-template-columns:repeat(var(--n),1fr);align-items:start}
-.hold .hb-line::before{content:"";position:absolute;left:0;right:0;top:calc(var(--u)*19);height:1.5px;background:var(--ink);opacity:.5}
-.hold .hb-n{position:relative;display:grid;justify-items:center;gap:calc(var(--u)*8);padding:0 2px;color:var(--mid)}
-.hold .hb-n i{position:relative;display:grid;place-items:center;width:calc(var(--u)*38);height:calc(var(--u)*38);border:1.5px solid var(--ink);background:var(--panel-solid);color:var(--ink);font:400 calc(var(--u)*17)/1 Anton,sans-serif;font-style:normal;transition:transform .15s,background .15s}
-.hold .hb-n.cv i{border-radius:50%}
-.hold .hb-n.on i{background:var(--red);border-color:var(--red);color:#fff}
-.hold .hb-n:hover i{transform:translateY(-2px)}
-.hold .hb-n.sel i{box-shadow:0 0 0 3px var(--panel-solid),0 0 0 5px var(--ink)}.hold .hb-n.sel{color:var(--ink)}
-.hold .hb-n small{font-size:max(11px,calc(var(--u)*10.5));text-align:center;line-height:1.2}
-.hold .hb-here.end{transform:translateX(-100%);border-left:0;border-right:1.5px dashed var(--red);padding:0 5px 0 0}
-.hold .hb-here{position:absolute;top:calc(var(--u)*-22);height:calc(var(--u)*72);border-left:1.5px dashed var(--red);color:var(--red);padding-left:5px;font-size:max(11px,calc(var(--u)*10));line-height:1;white-space:nowrap;pointer-events:none;z-index:1;transform:translateX(-1px)}
-.hold .hb-key{display:flex;flex-wrap:wrap;gap:6px 22px;margin-top:calc(var(--u)*16);color:var(--mid)}
-.hold .hb-key span{display:flex;align-items:center;gap:8px}
-.hold .hb-key i{width:11px;height:11px;border:1.5px solid var(--mid);flex:none}.hold .hb-key i.cv{border-radius:50%}.hold .hb-key i.on{background:var(--red);border-color:var(--red)}
-.hold .hb-d{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:calc(var(--u)*34);margin-top:calc(var(--u)*20);padding-top:calc(var(--u)*20);border-top:1px solid var(--hair)}
-.hold .hb-d h3{margin:.25em 0 .35em;font-size:calc(var(--u)*34)}
-.hold .hb-what p{font-size:calc(var(--u)*16);line-height:1.42;max-width:34em}
-.hold .hb-go{display:inline-flex;align-items:center;gap:.6em;margin-top:calc(var(--u)*16);padding:.4em 1.1em .4em .4em;border-radius:999px;background:var(--ink);color:var(--paper);font-size:calc(var(--u)*15)}
-.hold .hb-go .wia{display:grid;place-items:center;width:2em;height:2em;border-radius:50%;background:color-mix(in srgb,var(--paper) 18%,transparent)}
-.hold .hb-go:hover{background:var(--red);color:#fff}
-.hold .hb-ties{display:grid;gap:calc(var(--u)*14);align-content:start}
-.hold .hb-q span{color:var(--mid);display:block;margin-bottom:.5em}
-.hold .hb-q p{font-family:var(--serif);font-style:italic;font-size:calc(var(--u)*21);line-height:1.22}
-.hold .hb-ties .lnk{margin-top:0;justify-self:start}
-.hold .hb-lit{display:flex;align-items:center;gap:10px;color:var(--mid);font-size:calc(var(--u)*14.5)}.hold .hb-lit b{color:var(--ink)}
-.hold .hb-lit i{width:14px;height:14px;background:var(--red);flex:none}
+@media (max-width:760px){.hold .sk-r .nm small{display:none}.hold .sk-r .nm{flex-wrap:nowrap;overflow:hidden}.hold .sk-r .tg{min-width:0;overflow:hidden;text-overflow:ellipsis;display:block;letter-spacing:.03em}.hold .sk-r .tg i{display:inline-block;margin-right:.5em;vertical-align:-1px}.hold .sk-r{padding-left:calc(var(--p)*165)}.hold .sk-more{letter-spacing:.02em;gap:16px}}
 @media (max-width:760px),(max-width:1099px) and (max-aspect-ratio:23/20),(max-width:1099px) and (max-height:519px){.hold .goin{font-size:13px}
 .hold .b-end{flex-direction:column;align-items:center;justify-content:flex-start;gap:14px;margin-left:var(--cl);width:var(--cw);padding:22px 0 0;text-align:center}
-.hold .b-end .push{display:block;color:var(--ink)}.hold .b-end footer{justify-content:center}
-.hold .hb-pane{top:calc(var(--barH) + 6px);padding:16px 14px 18px;border-radius:14px}.hold .hb-pane h2{font-size:28px}.hold .hb-pane header p{font-size:13.5px}
-.hold .hb-top .bbtn{height:32px}
-.hold .hb-line::before{top:11px}.hold .hb-n{padding:0}.hold .hb-n i{width:23px;height:23px;font-size:12px;border-width:1px}.hold .hb-n.sel i{box-shadow:0 0 0 2px var(--panel-solid),0 0 0 3.5px var(--ink)}.hold .hb-n small{display:none}.hold .hb-here{top:-18px;height:50px}
-.hold .hb-zones{margin-bottom:24px}
-.hold .hb-d{grid-template-columns:1fr;gap:16px}.hold .hb-d h3{font-size:26px}.hold .hb-what p{font-size:15px}.hold .hb-q p{font-size:19px}}
+.hold .b-end footer{justify-content:center}
+}
+/* the twelve challenges, on the whole chip (src/v2/holdchals.js): each block wears its own on its lower edge, a tick for
+   each (square: on the picture; round: on Moore's law), filled once done, the next ringed; sized for the screen, not
+   the chip (--ok, the camera's zoom on the whole chip), and only there */
+.hold .h-chm{position:absolute;left:50%;top:100%;z-index:2;transform:translate(-50%,-24%);display:flex;align-items:center;gap:.5em;max-width:calc(var(--S)*.94);width:max-content;padding:.4em .85em .4em .5em;font:500 calc(12px / var(--ok,1))/1.2 var(--sans);background:var(--card);border:.09em solid var(--hair);border-radius:1.4em;box-shadow:0 .3em 1.2em rgba(0,0,0,.18);opacity:var(--words)}
+.hold .d-world:not(.far) .h-chm{visibility:hidden}
+.hold .hc-t{display:flex;align-items:center;gap:.55em;padding:0;border:0;background:none;color:var(--ink);font:inherit;text-align:left;cursor:pointer}
+.hold .hc-t i{flex:none;width:1.15em;height:1.15em;border:.13em solid var(--ink);background:var(--paper);transition:background .2s,border-color .2s,transform .15s}
+.hold .hc-t.cv i{border-radius:50%}
+.hold .hc-t.on i{background:var(--red);border-color:var(--red)}
+.hold .hc-t.nx i{box-shadow:0 0 0 .18em var(--card),0 0 0 .32em var(--red);animation:hc-p 2.2s ease-in-out infinite}
+@keyframes hc-p{50%{box-shadow:0 0 0 .18em var(--card),0 0 0 .32em color-mix(in srgb,var(--red) 45%,transparent)}}
+.hold .hc-t:hover i{transform:scale(1.15)}.hold .hc-t:hover span{text-decoration:underline;text-underline-offset:.2em}
+.hold .hc-t:focus-visible{outline:none}.hold .hc-t:focus-visible i{outline:.16em solid var(--go);outline-offset:.2em}
+/* the fifty years carry seven: their ticks in a row, and one name under them (the next there, or the one pointed at) */
+.hold .h-chm.many{transform:translate(-50%,-62%);display:grid;grid-template-columns:repeat(7,auto);justify-content:center;gap:.55em .6em;padding:.6em .9em .55em;border-radius:.9em}
+.hold .h-chm.many .hc-t{display:contents}.hold .hc-n{display:none;font-weight:400}
+.hold .h-chm.many .hc-t i{width:1.35em;height:1.35em}
+.hold .h-chm.many .hc-t span{display:none;grid-row:2;grid-column:1/-1;text-align:center;white-space:nowrap}
+.hold .h-chm.many .hc-t.bn span,.hold .h-chm.many .hc-t:hover span,.hold .h-chm.many .hc-t:focus-visible span{display:block}
+.hold .h-chm.many:has(.hc-t:hover,.hc-t:focus-visible) .hc-t.bn:not(:hover):not(:focus-visible) span{display:none}
+/* and each chapter at the left, its ticks beside its name */
+.hold .b-rail .hc-r{display:inline-flex;gap:3px;margin-left:.7em;vertical-align:.12em;font-style:normal}
+.hold .b-rail.wide .hc-r{display:flex;margin:.4em 0 0}
+.hold .hc-r i{width:7px;height:7px;border:1px solid var(--mid);background:none;transform:none}.hold .hc-r i.cv{border-radius:50%}
+.hold .hc-r i.on{background:var(--red);border-color:var(--red)}.hold .hc-r i.nx{border-color:var(--red)}
+@media (prefers-reduced-motion:reduce){.hold .hc-t.nx i{animation:none}}
+/* a phone: the ticks alone, large enough to tap (their names are on the blocks' cards) */
+@media (max-width:760px),(max-width:1099px) and (max-aspect-ratio:23/20),(max-width:1099px) and (max-height:519px){
+.hold .h-chm{padding:.45em;font-size:calc(9px / var(--ok,1))}.hold .h-chm.many{display:flex;padding:.45em .8em .45em .45em}.hold .h-chm.many .hc-t:not(.bn){display:none}.hold .h-chm.many .hc-t.bn{display:flex}.hold .hc-n{display:block;color:var(--mid);font-size:1.15em}.hold .hc-t span,.hold .h-chm.many .hc-t span{display:none!important}
+.hold .hc-t i,.hold .h-chm.many .hc-t i{width:1.5em;height:1.5em}
+}

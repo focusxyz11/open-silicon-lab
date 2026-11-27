@@ -3,10 +3,10 @@
    Moore's law, live, along the bottom of the fifty years (mkChart, mkCQ). Designed with Claude Fable 5.2 and brought
    into the lab with Claude Opus 5.5. */
 import { t } from '../core/i18n.js';
-import { w, sw, Q, $, h, clamp, lerp, ss, mix, rnd, nf, sig, xOf, S, done, tried, setOut, K, fg, rd, src, lab, viewAt, momOut, Yr, ROOT, TICK, changed, onChange } from './holdkit.js';
+import { w, sw, Q, $, h, clamp, lerp, ss, mix, rnd, nf, sig, xOf, S, done, tried, setOut, K, fg, rd, src, viewAt, momOut, Yr, ROOT, TICK, changed, onChange } from './holdkit.js';
 import { money } from './figures.js';
 import { FIG } from '../data/figures.js';
-import { AHEAD, ARR, BEHIND, CHIPS, COST, DWALL, ERAS, FCOST, FDIV, FORMS, KNEE, LIGHTS, LOOP, MOORE65, NEEDS, RUNGS, SERIES, STOCK, TRIP, dAt, formAt, rule, trend, yearAt } from '../data/hold.js';
+import { AHEAD, ARR, BEHIND, CHIPS, COST, DWALL, ERAS, FCOST, FDIV, FORMS, KNEE, LIGHTS, MOORE65, NEEDS, RUNGS, SERIES, STOCK, TRIP, dAt, formAt, rule, trend, yearAt } from '../data/hold.js';
 
 /* ================= the plates =================
    Each plate is drawn in a square of 1000 units and carries its own controls (HTML over it, placed in per cent), so
@@ -257,7 +257,7 @@ PL.years = {
     btn(L.wall, w('m.wall.go') + ' →', [27, 82, 46], () => S.onWallGo && S.onWallGo());
     pl.sync = () => { const v = viewAt(S.d); for (const k in L) L[k].classList.toggle('on', k === v);
       if (v === 'one') put(bitE, (S.press > .5 ? '1' : '0') + '<small>' + (S.press > .5 ? w('bit.1') : w('bit.0')) + '</small>');
-      else if (v === 'die') { const below = G.y + 148 < 840; glass.style.opacity = G.aG; glass.style.left = G.x / 10 + '%'; glass.style.top = (below ? G.y + 165 : G.y - 205) / 10 + '%'; put(glass, '<b>' + w('reg.' + G.type) + '</b> · ' + w('form.' + formAt(S.d))); }
+      else if (v === 'die') { const below = G.y + 148 < 840; glass.style.opacity = G.aG; glass.style.left = G.x / 10 + '%'; glass.style.top = (below ? G.y + 148 + 16 : G.y - 148 - 16) / 10 + '%'; glass.style.transform = below ? 'translate(-50%,0)' : 'translate(-50%,-100%)'; glass.style.whiteSpace = 'nowrap'; put(glass, '<b>' + w('reg.' + G.type) + '</b> · ' + w('form.' + formAt(S.d))); }
       else if (v === 'job') { put(jb, w('mo.job.' + S.job + '.v')); if (+jr.value !== S.job) jr.value = S.job; }
       else if (v === 'bug') put(bb, S.bug.worst ? w('bug.found') : S.bug.n ? w('mo.bug.wrong0') + '<small>' + w('bug.in', { n: nf(S.bug.n) }) + '</small>' : '');
       else if (v === 'light') { ls(); put(lam, w(LIGHTS[S.light] === 'euv' ? 'light.euv' : 'light.duv')); } };
@@ -271,14 +271,14 @@ export const OUTS = {
   distance: () => w('w.memory.o' + 'abc'[S.dist]) + ' ' + src('energy-moving-data'),
   power: () => { const g = S.power.g; return S.power.shown ? w('w.power.out', { n: g, verdict: w(g < 800 ? 'w.power.low' : g > 1100 ? 'w.power.high' : 'w.power.near') }) + ' ' + src('dc-electricity') : w('w.power.guess', { n: g }); },
   price: () => w('w.cost.o' + 'ab'[S.price]) + ' ' + (S.price ? src('wafer-space-run', 'design-cost-2nm') : src('design-cost-older', 'design-cost-recent', 'design-cost-2nm')),
-  next: () => { const r = RUNGS[S.next.at]; return '<b>' + w('rung.' + r[0] + '.t') + '</b> ' + w('rung.' + r[0] + '.d') + ' ' + src(...r[2]); },
+  next: () => { const r = RUNGS[S.next.at]; return '<b class="blk">' + w('rung.' + r[0] + '.t') + '</b> ' + w('rung.' + r[0] + '.d') + ' ' + src(...r[2]); },
   levels: () => (S.lv === 3 ? '<b>' + w('arr.classic.t') + '</b> ' + w('arr.classic.d') : w('lv.' + (3 - S.lv) + '.d')),
   eras: () => { const e = ERAS[S.era]; return '<b>' + w('era.' + e[0] + '.t') + '</b> ' + w('era.' + e[0] + '.d') + ' ' + src(...e[2]); },
   arr: () => { const a = ARR[S.arr], id = a[0], n = ['cim', 'spikes'].filter(k => S.arrSeen[k]).length;
     return '<b>' + (id === 'classic' ? w('arr.classic.t') : t('bp.next.' + id + '.t')) + '</b> ' + (id === 'classic' ? w('arr.classic.d') : t('bp.next.' + id + '.d')) + ' ' + src(...a[2]) + '<br><span class="mono dim">' + w('arr.trip') + '</span> ' + w('trip.' + TRIP[id]) + (a[1] ? ' · <span class="mono dim">' + w('status.' + a[1]) + '</span>' : '') +
       '<br><span class="ok">' + (n >= 2 ? w('arch.ch.done') + ' ' + w('arch.ch.why') : w('arr.found', { n, of: 2 })) + '</span>'; },
   machine: () => { const m = machNow(); return sw('machines.need.' + m.need.id + '.why') + (m.ok ? '' : '<br><span class="ok">' + w('mach.bad', { part: w('piece.' + m.bad).toLowerCase() }) + '</span>') + (S.agent ? '<br>' + w('tri.gen.done', S.agent) : '') + (S.kept ? ' <b class="ok">' + w('tri.dec.done') + '</b>' : ''); },
-  island: () => { const p = S.place; if (!p) return w('isle.out0'); const lit = LIT[p](); return '<b>' + w('place.' + p) + '</b> ' + w('tr.' + p + (lit || p === 'port' ? '' : '.0')) + '<br>' + lab(w('tr.' + p + '.go'), '#/place/' + p); }
+  island: () => (PL.island.out ? PL.island.out() : '')
 };
 export const out = id => setOut(id, OUTS[id]());
 
@@ -379,7 +379,7 @@ PL.next = {
        or French on a phone), the next rung's words move down just enough, and the floor's stay on the floor, the ones
        above moving up to make room */
     const unstack = () => { const H = host.clientHeight, k = H + '|' + (document.fonts ? document.fonts.status : ''); if (!H || k === uk) return; uk = k;
-      const want = RUNGS.map((r, i) => (Y(RP[i]) - (i === 4 ? 6.6 : 1.6)) / 100 * H), hs = ls.map(e => e.offsetHeight), top = want.slice(), g = 3;
+      const hs = ls.map(e => e.offsetHeight), want = RUNGS.map((r, i) => i === 4 ? Y(RP[i]) / 100 * H - hs[i] - 4 : (Y(RP[i]) - 1.6) / 100 * H), top = want.slice(), g = 3;
       for (let i = 1; i < ls.length - 1; i++) top[i] = Math.max(want[i], top[i - 1] + hs[i - 1] + g);
       top[4] = Math.max(want[4], Y(1) / 100 * H - hs[4] - 2); for (let i = 3; i > 0; i--) top[i] = Math.min(top[i], top[i + 1] - hs[i] - g);
       ls.forEach((e, i) => { e.style.top = top[i] / H * 100 + '%'; }); };
@@ -443,11 +443,12 @@ export function agent() { const need = NEEDS[S.need], free = need.parts.filter(p
   (function rec(i, pick) { if (i === free.length) { n++; const good = !need.change.some(id => pick[id] === 'circuit'); if (!good) return; ok++; const e = machEnergy(need, p => (STOCK.includes(p[1]) ? 'stock' : pick[p[0]])); if (!best || e < best.e) best = { e, pick: { ...pick } }; return; }
     for (const f of FORMS) { pick[free[i][0]] = f; rec(i + 1, pick); } })(0, {});
   for (const id in best.pick) S.forms[need.id + '.' + id] = best.pick[id]; S.agent = { n, ok }; }
-const tilePos = (need, i) => { const n = need.parts.length, sp = n > 4 ? 172 : 205, x0 = 500 - (n - 1) * sp / 2; return [x0 + i * sp, 400 + (i % 2 ? 62 : -62)]; };
+/* a phone: the blocks in one row, each name under its block */
+const narrow = () => innerWidth <= 760, tilePos = (need, i) => { const n = need.parts.length, sp = n > 4 ? 172 : 205, x0 = 500 - (n - 1) * sp / 2; return [x0 + i * sp, narrow() ? 360 : 400 + (i % 2 ? 62 : -62)]; };
 PL.machine = {
   frame: () => [w('s.yours'), sw('machines.need.' + NEEDS[S.need].id + '.t')],
   paint(c, T) { const need = NEEDS[S.need], ts = need.parts.length > 4 ? 138 : 158;
-    for (const [a, b] of need.wires) { const p = tilePos(need, a), q = tilePos(need, b), pp = [p, [q[0], p[1]], q]; path(c, pp, K.ink, 3.5); c.fillStyle = K.red; const pt = along(pp, (T * .5 + a * .3) % 1); c.fillRect(pt[0] - 7, pt[1] - 7, 14, 14); }
+    for (const [a, b] of need.wires) { const p = tilePos(need, a), q = tilePos(need, b), pp = p[1] <= q[1] ? [p, [q[0], p[1]], q] : [p, [p[0], q[1]], q]; path(c, pp, K.ink, 3.5); c.fillStyle = K.red; const pt = along(pp, (T * .5 + a * .3) % 1); c.fillRect(pt[0] - 7, pt[1] - 7, 14, 14); }
     need.parts.forEach((p, i) => { const [cx, cy] = tilePos(need, i), x = cx - ts / 2, y = cy - ts / 2, f = formOf(need, p), bad = need.change.includes(p[0]) && f === 'circuit';
       c.fillStyle = K.plate; c.fillRect(x, y, ts, ts);
       if (f === 'stock') hatch(c, x, y, ts, ts, 18, fg(.22), 2);
@@ -457,13 +458,13 @@ PL.machine = {
       c.strokeStyle = bad ? K.red : K.ink; c.lineWidth = bad ? 6 : 3.5; c.strokeRect(x, y, ts, ts);
       if (need.change.includes(p[0])) { c.fillStyle = K.red; c.beginPath(); c.moveTo(x + ts, y); c.lineTo(x + ts - 34, y); c.lineTo(x + ts, y + 34); c.fill(); } }); },
   ui(host, pl) { const s = seg(host, NEEDS.map(n => sw('machines.need.' + n.id + '.t')), () => S.need, i => { S.need = i; S.agent = null; S.kept = false; pl.fade = 1; out('machine'); build(); }, [6, 4, 88]);
-    const sub = lbl(host, '', 6, 12.5), tiles = h('div', 'layer on'); host.appendChild(tiles); let tb = [];
+    const sub = lbl(host, '', 6, 12.5), tiles = h('div', 'layer on'); host.appendChild(tiles); let tb = [], nw = narrow();
     const build = () => { tiles.innerHTML = ''; tb = []; const need = NEEDS[S.need], ts = need.parts.length > 4 ? 13.8 : 15.8;
-      /* i18n-ok: styles */ need.parts.forEach((p, i) => { const [cx, cy] = tilePos(need, i), b = h('button', 'mtile'); b.type = 'button'; at(b, cx / 10 - ts / 2 - 3, cy / 10 - ts / 2, ts + 6, ts + 6.4); b.style.cssText += ';display:flex;flex-direction:column;justify-content:flex-end;align-items:center;text-align:center;line-height:1.1';
+      /* i18n-ok: styles */ need.parts.forEach((p, i) => { const [cx, cy] = tilePos(need, i), b = h('button', nw ? 'mtile nw' : 'mtile'), bw = nw ? (need.parts.length > 4 ? 17.2 : 20.5) - 1.6 : ts + 6; b.type = 'button'; at(b, cx / 10 - bw / 2, cy / 10 - ts / 2, bw, nw ? ts + 22 : ts + 6.4); b.style.cssText += ';display:flex;flex-direction:column;justify-content:flex-end;align-items:center;text-align:center;line-height:1.1'; if (nw) b.style.paddingTop = ts + 1.2 + '%';
         b.innerHTML = '<b style="font-weight:600;font-size:max(11px,.92em);white-space:nowrap"></b><span class="lb" style="position:static;font-size:max(11px,calc(var(--p)*16))"></span>'; if (STOCK.includes(p[1])) b.disabled = true;
         b.onclick = () => { const k = need.id + '.' + p[0], f = S.forms[k] || 'software'; S.forms[k] = FORMS[(FORMS.indexOf(f) + 1) % FORMS.length]; S.kept = false; out('machine'); }; tiles.appendChild(b); tb.push([b, p]); }); };
     build();
-    /* i18n-ok: styles */ const tri = h('div', 'tri'); at(tri, 6, 70.5, 88, 25); tri.style.cssText += ';display:grid;grid-template-columns:1fr 1.15fr 1fr;border:1.5px solid var(--ink);background:var(--plate)'; host.appendChild(tri);
+    /* i18n-ok: styles */ const tri = h('div', 'tri'); const triAt = () => at(tri, 6, nw ? 63 : 70.5, 88, nw ? 33 : 25); triAt(); tri.style.cssText += ';display:grid;grid-template-columns:1fr 1.15fr 1fr;border:1.5px solid var(--ink);background:var(--plate)'; host.appendChild(tri);
     /* i18n-ok: styles */ const cell = (k, who) => { const d = h('div'); d.style.cssText = 'padding:5% 6% 4%;border-left:1.5px solid var(--ink);display:flex;flex-direction:column;justify-content:space-between;gap:4px;min-width:0'; d.innerHTML = '<span class="lb" style="position:static;white-space:normal">' + w('tri.' + k) + ' · <span class="red">' + w('tri.' + k + '.who') + '</span></span>'; tri.appendChild(d); return d; };
     const g = cell('gen'), ck = cell('chk'), dc = cell('dec'); g.style.borderLeft = '0';
     const gb = h('button', 'pbtn ghost', w('tri.gen.b')); gb.type = 'button'; gb.style.position = 'static'; gb.onclick = () => { agent(); out('machine'); }; g.appendChild(gb);
@@ -473,16 +474,16 @@ PL.machine = {
     /* i18n-ok: styles */ sub.style.cssText += ';white-space:normal;width:88%';
     pl.sync = () => { s(); const m = machNow(); put(sub, sw('machines.need.' + m.need.id + '.d'));
       /* the need's words just under its row of needs, however many lines the row takes */
-      if (host.clientHeight) at(sub, 6, (sg.offsetTop + sg.offsetHeight) / host.clientHeight * 100 + 3); [...sg.children].forEach((b, i) => put(b, sw('machines.need.' + NEEDS[i].id + '.t'))); if (tb.length !== m.need.parts.length || tb[0][1] !== m.need.parts[0]) build();
+      if (host.clientHeight) at(sub, 6, (sg.offsetTop + sg.offsetHeight) / host.clientHeight * 100 + 3); [...sg.children].forEach((b, i) => put(b, sw('machines.need.' + NEEDS[i].id + '.t'))); if (nw !== narrow()) { nw = narrow(); build(); triAt(); } if (tb.length !== m.need.parts.length || tb[0][1] !== m.need.parts[0]) build();
       tb.forEach(([b, p]) => { const f = formOf(m.need, p); put(b.children[0], w('piece.' + p[0])); put(b.children[1], f === 'stock' ? w('form.stock') : w('form.' + f)); b.children[1].classList.toggle('hot', m.bad === p[0]); });
       put(en, '×' + (m.e >= 10 ? Math.round(m.e) : m.e.toFixed(1)) + '<small style="font-size:max(11px,calc(var(--p)*15.5))">' + (m.ok ? w('mach.ok') : w('mach.no')) + '</small>'); en.style.color = m.ok ? '' : 'var(--mid)'; kb.disabled = !m.ok || S.kept; put(kb, S.kept ? w('tri.dec.done') : w('tri.dec.b')); }; }
 };
 
-/* ---------------- the island: a chip's life round the loop ---------------- */
+/* ---------------- the loop round the chip: the places a visitor's work here lights (the pads, the board) ---------------- */
 export const LIT = { lab: () => S.kept, studio: () => !!S.done.job, fab: () => !!(S.done.light || S.tried.cost), test: () => !!S.done.bug, port: () => false, datacentre: () => !!(S.tried.switch || S.tried.memory || S.tried.power) };
-/* the island's block is its plan, drawn by src/v2/holdisle.js: the last picture of the page, so it is fetched once the
+/* the last block is your stack, drawn by src/v2/holdisle.js: the last picture of the page, so it is fetched once the
    page has drawn (src/v2/hold.js more()), and until then the block is an empty plate */
-PL.island = { frame: () => [w('pl.island'), w('isle.lit', { n: LOOP.filter(l => LIT[l[1]]()).length })], paint() {}, ui() {} };
+PL.island = { frame: () => [w('pl.island'), ''], paint() {}, ui() {} };
 
 /* ---- what moves by itself, once a frame ---- */
 TICK.push((T, dt) => {

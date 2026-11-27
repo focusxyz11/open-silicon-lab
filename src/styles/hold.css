@@ -23,7 +23,7 @@ body.firstpage .bar .loop{display:none}
 .hold .anton em,.hold .red{color:var(--red);font-style:normal}
 .hold .dim{color:var(--mid)}
 .hbar .sp{flex:1}
-/* the twelve challenges in the bar: one count, a tick for each, lit once done; it opens their board */
+/* the twelve challenges in the bar: one count, a tick for each, lit once done; a tap goes to the whole chip */
 .hbar .tally .tl-c{display:inline-flex;align-items:center;gap:calc(var(--u)*10);height:32px;padding:0 13px;border:1px solid var(--line);border-radius:999px;color:var(--mid);font:inherit;letter-spacing:inherit;text-transform:inherit;transition:color .2s,border-color .2s}
 .hbar .tally .tl-c:hover{color:var(--ink);border-color:var(--ink)}.hbar .tally b{color:var(--ink);font-weight:700}
 .hbar .tally .sq{display:grid;grid-template-columns:repeat(12,calc(var(--u)*6));gap:calc(var(--u)*3)}
@@ -90,7 +90,7 @@ body.firstpage .bar .loop{display:none}
 .hold .holdbtn:hover{transform:scale(1.05)}
 .hold .holdbtn.down,.hold.holding .holdbtn{background:var(--red);transform:scale(.94)}
 .hold .pl-ui .holdbtn{width:calc(var(--p)*150);height:calc(var(--p)*150);min-width:58px;min-height:58px;font-size:max(14px,calc(var(--p)*36));box-shadow:0 0 0 calc(var(--p)*8) var(--plate),0 0 0 calc(var(--p)*11) var(--red)}
-.hold .w-k{color:var(--mid);display:flex;align-items:center;gap:.8em}
+.hold .w-k{color:var(--mid);display:flex;align-items:center;gap:.8em;text-wrap:balance}
 .hold .w-k.viol{color:var(--red)}
 .hold .w-k i{width:.75em;height:.75em;background:var(--red);display:inline-block}
 .hold .w-h{margin:0;font-size:calc(var(--u)*72)}
@@ -103,6 +103,8 @@ body.firstpage .bar .loop{display:none}
 .hold .w-out>b:first-child,.hold .w-out .v{font-family:Anton,sans-serif;font-weight:400;color:var(--red);font-size:1.75em;letter-spacing:.02em;margin-right:.3em;text-transform:uppercase;line-height:1}
 .hold .w-out .calc{display:grid;gap:1px;margin:.3em 0;font-family:var(--mono);font-size:.86em}
 .hold .w-out .ok{color:var(--red);font-weight:600}
+.hold .w-out>b.blk{display:block;margin:0 0 .2em}
+.hold .mtile.nw{justify-content:flex-start!important}.hold .mtile.nw b,.hold .mtile.nw .lb{white-space:normal!important;line-height:1.15}.hold .mtile.nw .lb{font:500 11px/1.15 var(--sans)!important;text-transform:none;letter-spacing:0}
 .hold .lnk{font-weight:700;text-decoration:none;border-bottom:1.5px solid var(--go);padding-bottom:1px;display:inline-block;margin-top:.7em;font-size:calc(var(--u)*14)}
 .hold .lnk::after{content:" →";color:var(--go)}
 .hold .lnk:hover{color:var(--go)}
@@ -173,7 +175,7 @@ body.firstpage .bar .loop{display:none}
 .hold .b-hud .cost b{font-family:Anton,sans-serif;font-weight:400;font-size:calc(var(--u)*40);color:var(--red);line-height:1}
 .hold .b-hold{position:fixed;z-index:6;left:calc(50% + var(--rw)/2 + var(--S)/2 + var(--u)*30);width:var(--cw);bottom:var(--hb);display:flex;align-items:center;gap:calc(var(--u)*16);padding-left:calc(var(--u)*7);pointer-events:none}
 .hold .b-hold>*{pointer-events:auto}
-.hold .hint{color:var(--mid);font-size:calc(var(--u)*10.5);line-height:1.5}
+.hold .hint{color:var(--mid);font-size:calc(var(--u)*10.5);line-height:1.5;background:color-mix(in srgb,var(--paper) 90%,transparent);padding:.35em .6em;border-radius:6px}
 .hold .hint b{display:block;color:var(--ink)}
 .hold .b-band{position:fixed;left:0;right:0;bottom:0;height:var(--band);display:grid;grid-template-columns:var(--cqw,var(--cw)) minmax(0,1fr);gap:calc(var(--u)*30);padding:calc(var(--u)*10) calc(var(--u)*30) 0 calc(50% + var(--rw)/2 - var(--S)/2 - var(--u)*30 - var(--cw));background:var(--paper);border-top:1.5px solid var(--ink);transition:transform .6s cubic-bezier(.6,0,.2,1),padding .6s;z-index:5}
 .hold .b-band.off,.hold .b-band.wait{transform:translateY(102%)}

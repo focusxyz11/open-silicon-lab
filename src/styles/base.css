@@ -35,9 +35,9 @@ button { font: inherit; color: inherit; }
 .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; white-space: nowrap; }
 .brand b { font: 700 16px var(--serif); letter-spacing: .01em; }
 .mark { width: 24px; height: 24px; flex: none; display: block; overflow: visible; }
-/* the logo: Hold's square of silicon, split again and again, one cell lit */
-.mark .mk-fr { fill: none; stroke: #e5401a; stroke-width: 5; }
-.mark .mk-cut { fill: none; stroke: var(--ink); stroke-width: 4; }
+/* the logo: a square of silicon left open, and the one cell you hold, lit. The line, the cell and the
+   open inside double each time (10, 20, 40 of a whole of 60), and the opening is one quarter of the square */
+.mark .mk-fr { fill: none; stroke: var(--ink); stroke-width: 10; }
 .mark .mk-cell { fill: #e5401a; }
 .brand:hover .mark .mk-cell { animation: mk-blink 1s steps(2) 2; }
 @keyframes mk-blink { 50% { fill: transparent; } }

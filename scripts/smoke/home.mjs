@@ -2,15 +2,16 @@
    you press and 1 while you do; scrolling is time and holding scrolls for you through fifty years, with four moments
    played on the square and Moore's law live along the bottom with its three challenges; the wall, day staying day;
    then the camera pulls back to the whole chip, a check finds four walls, and it flies block to block (the walls, the
-   next fifty years, how the machine grew, the arrangements, your machine, the island), each block a tap away on the
+   next fifty years, how the machine grew, the arrangements, your machine, your stack), each block a tap away on the
    small chip in the bar or the chapters at the left, with the twelve challenges counted in the bar; the sources; four
    languages. It opens on the square alone, Moore's law rising once the count has begun to double; its last block is
-   the island's own plan, and the end of the page a landing on it, the sources and the lab's home at its foot: a tap, or pushing on, goes inside
-   the island; past the wall the page steps at a tap, and the count in the bar opens the board of the twelve; and
+   your stack, seven rungs each a way in, the island and the Map quieter ways on, the sources and the lab's home at the
+   page's foot: a tap, or the last step, goes inside your stack; past the wall the page steps at a tap, and the count in the bar flies to the whole chip, where each block wears its
+   challenges; and
    the brand leads back */
 import { S } from './shared.mjs';
 
-export const about = 'Hold, the first page: what it fetches before its preload (no 3D, no engine but the shell\'s, its JavaScript under its budget); one story on one chip — 0 and 1, scrolling and holding through fifty years, four moments, Moore\'s law live with its challenges, the wall without turning dark by day, the pull back to the whole chip and its four walls, every block\'s challenge, the bar\'s small chip and tally, the sources, Chinese and back, the island and back';
+export const about = 'Hold, the first page: what it fetches before its preload (no 3D, no engine but the shell\'s, its JavaScript under its budget); one story on one chip — 0 and 1, scrolling and holding through fifty years, four moments, Moore\'s law live with its challenges, the wall without turning dark by day, the pull back to the whole chip and its four walls, every block\'s challenge, the bar\'s small chip and tally, the sources, Chinese and back, your stack and back';
 
 export default async function run() {
   const { browser3d, base, problems } = S;
@@ -149,14 +150,16 @@ export default async function run() {
     } else { await play('the small chip in the bar does not open the whole chip', () => { document.querySelector('.bar .hbar .d-map button[data-id="arr"]').click(); return window.__hold.state().chip && document.querySelector('#hd-root .d-world').classList.contains('far'); });
       /* on a phone the twelve squares are one count, large enough to tap */
       if (!(await hp.evaluate(() => { const c = document.querySelector('.bar .hbar .tally .tl-c'), r = c.getBoundingClientRect(); return r.height >= 36 && r.width >= 36 && /\d+\s*\/\s*12/.test(c.textContent) && getComputedStyle(c.querySelector('.sq')).display === 'none'; }))) problems.push(tag + ': the count of challenges in the bar is not one count, large enough to tap'); }
-    /* the count in the bar opens the board of the twelve: one line in the order the story meets them, where you are on
-       it, and the one picked with what it asks, its question and a way there; the board takes you to it */
+    /* the count in the bar flies to the whole chip, where every block wears its challenges as marks (all twelve, lit
+       once done, each chapter's ticks in the rail at the left on a desktop); a mark takes you to its challenge. No
+       window of their own */
     await hp.evaluate(() => window.__hold.set(5));
-    await play('the count of challenges in the bar does not open their board', () => { const c = document.querySelector('.bar .hbar .tally .tl-c'), bd = document.querySelector('#hd-root .h-board'); if (!bd) { c.click(); return false; }
-      return bd.querySelectorAll('.hb-n').length === 12 && bd.querySelectorAll('.hb-here').length === 1 && bd.querySelectorAll('.hb-n.sel').length === 1 && bd.querySelector('.hb-d h3').textContent.length > 3 && !!bd.querySelector('.hb-d .hb-go') && bd.getBoundingClientRect().width <= innerWidth; });
-    await play('a challenge picked on the board does not show its question', () => { const bd = document.querySelector('#hd-root .h-board'), n = bd && bd.querySelector('.hb-n[data-ch="floor"]'); if (!n) return false; if (!n.classList.contains('sel')) n.click();
-      const q = bd.querySelector('.hb-d .hb-q p'); return n.classList.contains('sel') && !!q && q.textContent.length > 20 && bd.querySelector('.hb-d .hb-go').dataset.go === 'floor'; });
-    await play('the board does not lead to the challenge picked', () => { const bd = document.querySelector('#hd-root .h-board'), g = bd && bd.querySelector('.hb-go[data-go="floor"]'); if (g) g.click(); return !document.querySelector('#hd-root .h-board') && window.__hold.state().cur === 'next'; }, null, 20000);
+    await play('the count of challenges in the bar does not fly to the whole chip and its marks', () => { const st = window.__hold.state(), c = document.querySelector('.bar .hbar .tally .tl-c'); if (!st.chip && !st.fly) c.click();
+      const m = document.querySelector('#hd-root .d-world .h-chm[data-blk="next"]'), r = m && m.getBoundingClientRect();
+      return st.chip && !st.fly && document.querySelector('#hd-root .d-world').classList.contains('far') && document.querySelectorAll('#hd-root .d-world .h-chm .hc-t').length === 12 && document.querySelectorAll('#hd-root .d-world .h-chm .hc-t.on').length === 12
+        && !!r && r.width > 10 && r.left >= 0 && r.right <= innerWidth && getComputedStyle(m).visibility === 'visible' && !document.querySelector('#hd-root [role=dialog]'); });
+    if (!phone && !(await hp.evaluate(() => document.querySelectorAll('#hd-root .b-rail button[data-ch="years"] .hc-r i').length === 7 && document.querySelectorAll('#hd-root .b-rail .hc-r i.on').length === 12))) problems.push(tag + ': the chapters at the left do not carry their challenges\' ticks');
+    await play('the mark of a challenge on the whole chip does not lead to it', () => { const st = window.__hold.state(); if (st.cur === 'next') return !st.fly; const m = document.querySelector('#hd-root .d-world.far .h-chm .hc-t[data-ch="floor"]'); if (!st.fly && m) m.click(); return false; }, null, 20000);
     if (!phone) { /* past the wall the page steps: one control under the picture, the next part named on it, at a tap */
       await hp.evaluate(() => window.__hold.go('leak'));
       await play('past the wall the page does not step on to the next part at a tap', () => { const st = window.__hold.state(); if (st.cur === 'distance') return !st.fly; const n = document.querySelector('#hd-root .b-hold.chip .b-step .sn');
@@ -172,22 +175,22 @@ export default async function run() {
     await play('the first page does not show in Chinese', () => document.documentElement.lang === 'zh' && /晶体管/.test((document.querySelector('#hd-root .b-hud .count') || {}).textContent || ''), null, 20000);
     await hp.click('#langbtn').then(() => hp.waitForFunction(() => !document.getElementById('langmenu').hidden && document.querySelectorAll('#langmenu [data-lang]').length === 4, null, { timeout: 5000 })).then(() => hp.click('#langmenu [data-lang="en"]')).catch(() => problems.push(tag + ': the language menu does not open on the first page'));
     await play('the first page does not come back to English', () => document.documentElement.lang === 'en' && /transistor/i.test((document.querySelector('#hd-root .b-hud .count') || {}).textContent || ''), null, 20000);
-    /* the last block is the island's own plan, each place of the loop where the island has it, with the lab's way in;
-       the island is one tap away on it, and the brand comes back */
+    /* the last block is your stack: seven rungs from the atom to the mind, each a way into its rung, the lab's way into
+       the whole, and quieter, the island and the Map; the stack is one tap away on it, and the brand comes back */
     await play('the first page does not open again after a language change', () => !!window.__hold && !!window.__p && !!window.__p('island'), null, 20000);
-    await play('the island\'s plan is not on the last block', () => { if (window.__hold.state().cur !== 'island') window.__hold.go('island'); const p = window.__p('island'); return p.querySelectorAll('.isl-p').length === 6 && !!p.querySelector('a.goin[href="#/island"]') && p.querySelector('a.goin').textContent.trim().length > 4; }, null, 20000);
-    await play('the first page offers no way to the island', () => { window.__hold.go('island'); const a = window.__p('island').querySelector('a[href="#/island"]'); if (a && location.hash !== '#/island') a.click(); return location.hash === '#/island'; }, null, 20000);
-    await play('the island does not open from the first page', () => document.getElementById('home').hidden && !document.getElementById('mapCanvas').hidden && !document.querySelector('.bar .hbar'), null, 30000);
+    await play('your stack is not on the last block', () => { if (window.__hold.state().cur !== 'island') window.__hold.go('island'); const p = window.__p('island'), R = [...p.querySelectorAll('a.sk-r')];
+      return R.length === 7 && R.every(a => a.getAttribute('href') === '#/stack/' + a.dataset.rung && a.textContent.trim().length > 2) && !!p.querySelector('a.goin[href="#/stack"]') && p.querySelector('a.goin').textContent.trim().length > 4 && !!p.querySelector('.sk-more a[href="#/island"]') && !!p.querySelector('.sk-more a[href="#/log"]'); }, null, 20000);
+    await play('the first page offers no way into your stack', () => { window.__hold.go('island'); const a = window.__p('island').querySelector('a.goin[href="#/stack"]'); if (a && location.hash !== '#/stack') a.click(); return location.hash === '#/stack'; }, null, 20000);
+    await play('your stack does not open from the first page', () => { const v = document.getElementById('stackv'); return document.getElementById('home').hidden && !!v && !v.hidden && !document.querySelector('.bar .hbar'); }, null, 30000);
     await hp.click('.bar .brand').catch(() => problems.push(tag + ': no brand in the bar'));
     await play('the brand does not lead back to the first page', () => !document.getElementById('home').hidden && document.getElementById('mapCanvas').hidden && !!document.querySelector('.bar .hbar'));
-    /* the end of the page is a landing: the camera has come down to the plan, alone with its way in, and at its foot
-       the less important things (the sources, the lab's home, how to join, the licence); pushing on there goes inside
-       the island */
-    await play('the end of the page is not a landing on the island\'s plan', () => { const e = document.getElementById('home'); if (e.scrollTop < e.scrollHeight - e.clientHeight - 2) e.scrollTop = e.scrollHeight; return document.getElementById('hd-root').classList.contains('landing') && window.__hold.state().cur === 'island' && !!window.__p('island').querySelector('a.goin'); }, null, 20000);
+    /* the end of the page: the camera stays on your stack, and at its foot the less important things (the sources, the
+       lab's home, how to join, the licence); the last step goes inside your stack, plain navigation */
+    await play('the end of the page does not stay on your stack', () => { const e = document.getElementById('home'); if (e.scrollTop < e.scrollHeight - e.clientHeight - 2) e.scrollTop = e.scrollHeight; return window.__hold.state().cur === 'island' && !!window.__p('island').querySelector('a.goin') && !document.getElementById('hd-root').classList.contains('landing'); }, null, 20000);
     await play('the foot of the first page does not hold the sources, the lab\'s home and its licence', () => { const f = document.querySelector('#hd-root .b-end footer'); return !!f && !!f.querySelector('button.bbtn') && f.querySelectorAll('a[href^="https://github.com/focusxyz11/open-silicon-lab"][target="_blank"]').length === 3 && f.getBoundingClientRect().bottom <= innerHeight + 1 && !document.querySelector('.bar .hbar > .bbtn'); }, null, 20000);
-    await play('pushing on at the landing does not go inside the island', () => { if (location.hash === '#/island') return true; const e = document.getElementById('home'); if (e.scrollTop < e.scrollHeight - e.clientHeight - 2) e.scrollTop = e.scrollHeight;
-      else e.dispatchEvent(new WheelEvent('wheel', { deltaY: 300, bubbles: true })); return false; }, null, 20000);
-    await play('the island does not open from the landing', () => document.getElementById('home').hidden && !document.getElementById('mapCanvas').hidden && !document.querySelector('.bar .hbar'), null, 30000);
+    await play('the last step does not go inside your stack', () => { if (location.hash === '#/stack') return true; const e = document.getElementById('home'); if (e.scrollTop < e.scrollHeight - e.clientHeight - 2) { e.scrollTop = e.scrollHeight; return false; }
+      const b = document.querySelector('#hd-root .b-step .sn'); if (b && !window.__hold.state().fly) b.click(); return false; }, null, 20000);
+    await play('your stack does not open from the last step', () => { const v = document.getElementById('stackv'); return document.getElementById('home').hidden && !!v && !v.hidden && !document.querySelector('.bar .hbar'); }, null, 30000);
     if (phone) for (const l of ['zh', 'fr', 'es']) {
       await hp.goto(base + 'index.html?lang=' + l + '#/');
       await play('the first page does not open in ' + l, l => document.documentElement.lang === l && !!window.__hold && !!window.__p && !!window.__p('island'), l, 20000);

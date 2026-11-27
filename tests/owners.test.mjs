@@ -73,7 +73,7 @@ test('a file given to a view is imported only by files of the same views', () =>
 test('the plan: words alone, one lab, the shell, a file nobody owns, and ci:full', () => {
   assert.equal(plan(['docs/WORKFLOW.md', 'content/fail.md', 'src/i18n/fr/hold.json']).lane, 'words');
   assert.deepEqual(plan(['src/v2/labs/litho.js', 'src/styles/labs/litho.css', 'scripts/smoke/labs/litho.mjs', 'docs/LABS.md']), { lane: 'view', sections: ['labs'], why: 'only the files of labs' });
-  assert.deepEqual(plan(['src/v2/labs/litho.js', 'src/v2/holdboard.js']).sections, ['home', 'labs']);
+  assert.deepEqual(plan(['src/v2/labs/litho.js', 'src/v2/holdchals.js']).sections, ['home', 'labs']);
   assert.equal(plan(['src/v2/stack/view.js']).lane, 'core');
   assert.equal(plan(['src/v2/labs/litho.js', 'src/v2/app.js']).lane, 'core');
   assert.equal(plan(['src/v2/map3d.js']).lane, 'core');

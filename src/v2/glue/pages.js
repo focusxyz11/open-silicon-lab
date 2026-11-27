@@ -32,6 +32,7 @@ import { V, $, esc, qColor, follow, followW } from '../shell.js';
 import { STAGES, stageOfPlace } from '../../engines/way.js';
 import { latticeHtml, drawWires } from '../lattice.js';
 import { pathOf } from '../../data/lattice.js';
+import { RUNGS } from '../../data/path.js';
 
 export function create() {
   Object.assign(V, { showPage, showRead, showMachines, showWorld, showEcosystem, showWhatif, leaveWhatif, askStop });
@@ -66,33 +67,54 @@ export function create() {
   addEventListener('resize', () => { if (latOn && !V.page.hidden) drawWires(V.page); });
   function mapHtml() {
     const B = beenSet(), ch = Game.CHALLENGES, doneN = L => L.filter(c => Game.isDone(V.S, c.id)).length;
-    const dots = L => L.length ? '<span class="wm-dots" title="' + esc(t('page.map.ch', { n: doneN(L), of: L.length })) + '">' + L.map(c => '<a href="' + esc(V.doHref(c)) + '" class="' + (Game.isDone(V.S, c.id) ? 'on' : '') + '" aria-label="' + esc(titleOf(c)) + '"></a>').join('') + '</span>' : '';
+    /* a challenge is a dot: its name on hover and focus, filled once done */
+    const dot = (href, name, on) => '<a href="' + esc(href) + '" class="' + (on ? 'on' : '') + '" title="' + esc(name + (on ? ' · ' + t('page.map.done') : '')) + '" aria-label="' + esc(name + (on ? ' · ' + t('page.map.done') : '')) + '"></a>';
+    const dots = L => L.length ? '<span class="wm-dots">' + L.map(c => dot(V.doHref(c), titleOf(c), Game.isDone(V.S, c.id))).join('') + '</span>' : '';
     const placeOf = c => (c.kind === 'break' ? 'village' : c.need ? 'lab' : c.place);
+    /* the cut: every place stands on the ground (the loop) in a track of its own; a place with levels digs a shaft as deep
+       as it has levels, and a place with a chip inside (its levels go on into the four depths) digs on through them */
+    const shared = p => (Game.INSIDE[p] || []).filter(l => Game.SHARED.includes(l.depth));
+    const W = { shaft: 1, pin: 0.7 }, tracks = [], down = [];
+    STAGES.forEach(st => Game.PLACES.filter(p => (stageOfPlace(p) || 'open') === st).forEach(p => tracks.push({ p, w: (Game.INSIDE[p] || []).some(l => !Game.SHARED.includes(l.depth)) ? W.shaft : W.pin })));
+    const sum = tracks.reduce((s, x) => s + x.w, 0);
+    let at = 0; for (const x of tracks) { x.x = (100 * at / sum).toFixed(3) + '%'; at += x.w; if (shared(x.p).length) down.push(x); }
     const cols = STAGES.map((st, i) => {
       const places = Game.PLACES.filter(p => (stageOfPlace(p) || 'open') === st);
-      return '<div class="wm-col" data-stage="' + st + '"><div class="wm-st"><span>0' + (i + 1) + '</span>' + esc(t('loop.stage.' + st)) + '</div>' + places.map(p => {
-        const href = '#/place/' + p, L = (Game.INSIDE[p] || []).filter(l => !Game.SHARED.includes(l.depth)), own = ch.filter(c => placeOf(c) === p && (!c.at || !L.some(l => l.depth === c.at)) && !Game.SHARED.includes(c.at));
-        return '<div class="wm-pl' + (B[href] ? ' been' : '') + '"><a class="wm-pn" href="' + esc(href) + '">' + esc(t('map.' + p + '.t')) + '</a>' + dots(own) +
-          (L.length ? '<ol>' + L.map(l => { const lh = V.levelHref(p, l), at = ch.filter(c => placeOf(c) === p && c.at === l.depth); return '<li class="' + (B[lh] ? 'been' : '') + '"><a href="' + esc(lh) + '">' + esc(t('depth.' + l.depth + '.name')) + '</a>' + dots(at) + '</li>'; }).join('') + '</ol>' : '') + '</div>'; }).join('') + '</div>'; }).join('');
-    const every = Game.SHARED.map((dp, i) => { const lh = V.levelHref('datacentre', { world: 'datacentre', depth: dp }); return '<li class="s' + i + (B[lh] ? ' been' : '') + '"><a href="' + esc(lh) + '">' + esc(t('depth.' + dp + '.name')) + '</a>' + dots(ch.filter(c => c.at === dp)) + '</li>'; }).join('');
+      return '<div class="wm-col" data-stage="' + st + '" style="grid-column: span ' + places.length + '"><div class="wm-st"><span>0' + (i + 1) + '</span>' + esc(t('loop.stage.' + st)) + '</div>' + places.map(p => {
+        const href = '#/place/' + p, L = (Game.INSIDE[p] || []).filter(l => !Game.SHARED.includes(l.depth)), S = shared(p), own = ch.filter(c => placeOf(c) === p && (!c.at || !L.some(l => l.depth === c.at)) && !Game.SHARED.includes(c.at));
+        const lv = l => { const lh = V.levelHref(p, l); return [lh, B[lh] ? ' been' : '']; };
+        return '<div class="wm-pl ' + (L.length ? 'shaft' : 'pin') + (S.length ? ' chip' : '') + (B[href] ? ' been' : '') + '"><div class="wm-ph"><a class="wm-pn" href="' + esc(href) + '">' + esc(t('map.' + p + '.t')) + '</a>' + dots(own) + '</div><div class="wm-sh">' +
+          (L.length ? '<ol>' + L.map(l => { const [lh, bn] = lv(l), atL = ch.filter(c => placeOf(c) === p && c.at === l.depth); return '<li class="' + bn + '"><a href="' + esc(lh) + '">' + esc(t('depth.' + l.depth + '.name')) + '</a>' + dots(atL) + '</li>'; }).join('') + '</ol>' : '') +
+          /* on a narrow window the shaft cannot be drawn on through the ground: its way on into the four depths is beside it */
+          (S.length ? '<p class="wm-tail">' + S.map(l => { const [lh, bn] = lv(l); return '<a class="' + bn.trim() + '" href="' + esc(lh) + '">' + esc(t('depth.' + l.depth + '.name')) + '</a>'; }).join('') + '</p>' : '') + '</div></div>'; }).join('') + '</div>'; }).join('');
+    /* the ground: the four depths, each a rung of your stack (src/data/path.js), crossed by the shafts that reach them */
+    const every = Game.SHARED.map((dp, i) => { const lh = V.levelHref('datacentre', { world: 'datacentre', depth: dp }), r = RUNGS.indexOf(dp);
+      const cross = down.map(x => { const l = shared(x.p).find(y => y.depth === dp); if (!l) return ''; const h = V.levelHref(x.p, l), nm = t('map.' + x.p + '.t') + ' · ' + t('depth.' + dp + '.name');
+        return '<a class="wm-cr' + (B[h] ? ' been' : '') + '" href="' + esc(h) + '" style="--x:' + x.x + '" title="' + esc(nm) + '" aria-label="' + esc(nm) + '"></a>'; }).join('');
+      return '<li class="s' + i + (B[lh] ? ' been' : '') + '"><span class="wm-sn"><a href="' + esc(lh) + '">' + esc(t('depth.' + dp + '.name')) + '</a>' + dots(ch.filter(c => c.at === dp)) + '</span>' +
+        (r >= 0 ? '<a class="wm-rung small" href="#/stack/' + dp + '">' + esc(t('page.map.rung', { n: r + 1 })) + '</a>' : '') + cross + '</li>'; }).join('');
+    const tails = down.map(x => '<i class="wm-tl' + (B['#/place/' + x.p] ? ' been' : '') + '" style="--x:' + x.x + '"></i>').join('');
     /* the first page's twelve challenges, played there (src/v2/hold.js) and counted with the lab's: the way in, above the loop */
     const F = Game.firstPage(localStorage), fN = F.filter(c => c.done).length, all = ch.length + F.length, got = doneN(ch) + fN;
-    const first = '<div class="wm-first"><p class="wm-fl' + (Object.keys(B).some(k => k === '#/' || k.startsWith('#/hold')) ? ' been' : '') + '"><span class="wm-axis small">' + esc(t('page.map.hold')) + '</span><a href="#/">' + esc(t('hd.hero.k')) + '</a><span class="wm-dots" title="' + esc(t('page.map.ch', { n: fN, of: F.length })) + '">' +
-      F.map(c => '<a href="' + c.href + '" class="' + (c.done ? 'on' : '') + '" aria-label="' + esc(t('hd.ch.' + c.id)) + '"></a>').join('') + '</span><span class="wm-n small">' + fN + '/' + F.length + '</span></p></div>';
+    const first = '<div class="wm-first"><p class="wm-fl' + (Object.keys(B).some(k => k === '#/' || k.startsWith('#/hold')) ? ' been' : '') + '"><span class="wm-axis small">' + esc(t('page.map.hold')) + '</span><a href="#/">' + esc(t('hd.hero.k')) + '</a><span class="wm-dots">' +
+      F.map(c => dot(c.href, t('hd.ch.' + c.id), c.done)).join('') + '</span><span class="wm-n small">' + fN + '/' + F.length + '</span></p></div>';
     const arr = '<p class="wm-arr small" role="group" aria-label="' + esc(t('page.map.arrange')) + '"><span>' + esc(t('page.map.arrange')) + '</span>' +
       '<a href="#/log"' + (latOn ? '' : ' aria-current="true"') + '>' + esc(t('page.map.byLife')) + '</a><a href="#/log/lattice"' + (latOn ? ' aria-current="true"' : '') + '>' + esc(t('page.map.byMatter')) + '</a></p>';
-    /* a cross-section of the chip world: the loop is the line along the top, every place hangs from its stage and goes
-       down into its levels, and under them all lie the four depths every chip shares, each a finer grain */
+    const beenN = Game.PLACES.filter(p => B['#/place/' + p]).length;
+    /* the key, right over the picture it reads */
+    const key = '<p class="wm-key small">' + [[1, 'keyBeen'], [0, 'keyHere'], [2, 'keyTodo'], [3, 'keyDone']].map(([k, w]) => '<span class="wm-ki k' + k + '"><span class="wm-k' + k + '"></span>' + esc(t('page.map.' + w)) + '</span>').join('') + '</p>';
+    /* a cross-section of the chip world: the loop is the ground line, every place stands on it and digs down into its
+       levels, and under them all lie the four depths every chip shares, each a finer grain */
     return '<section class="cwmap' + (latOn ? ' lattice' : '') + '"><header class="wm-head f2rhead"><p class="kicker">' + esc(t('loop.map')) + '</p><h1>' + esc(t('page.map.k')) + '</h1>' + arr + '<p class="lead">' + esc(t(latOn ? 'page.lat.lead' : 'page.map.lead')) + '</p>' +
-      '<p class="wm-key small"><span class="wm-k0"></span>' + esc(t('page.map.keyHere')) + '<span class="wm-k1"></span>' + esc(t('page.map.keyBeen')) + '<span class="wm-k2"></span>' + esc(t('page.map.keyTodo')) + '<span class="wm-k3"></span>' + esc(t('page.map.keyDone')) + '<b>' + esc(t('page.map.ch', { n: got, of: all })) + '</b></p></header>' +
-      (latOn ? latticeOf(B) : '<div class="wm-x">' + first + '<p class="wm-axis wm-across small"><span>' + esc(t('page.map.across')) + '</span><span>' + esc(t('page.map.turn')) + '</span></p><div class="wm-grid">' + cols + '</div>' +
-      '<div class="wm-every"><p class="wm-axis small">' + esc(t('page.map.every')) + '</p><ol>' + every + '</ol></div></div>') + '</section>';
+      (latOn ? key : '') + '<p class="wm-cnt small"><b>' + esc(t('page.map.ch', { n: got, of: all })) + '</b><b class="wm-bn">' + esc(beenN ? t('page.map.been', { n: beenN, of: Game.PLACES.length }) : t('page.map.start')) + '</b></p></header>' +
+      (latOn ? latticeOf(B) : '<div class="wm-x">' + first + '<div class="wm-axis wm-across small"><span>' + esc(t('page.map.across')) + '</span>' + key + '<span>' + esc(t('page.map.turn')) + '</span></div><div class="wm-grid" style="grid-template-columns:' + tracks.map(x => 'minmax(0,' + x.w + 'fr)').join(' ') + '">' + cols + '</div>' +
+      '<div class="wm-every">' + tails + '<p class="wm-axis small"><span>' + esc(t('page.map.every')) + '</span><a href="#/stack">' + esc(t('page.map.stack')) + '</a></p><ol>' + every + '</ol></div></div>') + '</section>';
   }
   /* the less important things, at the foot of the Map: the lab's home, how to join, the licence */
   const footHtml = () => '<footer class="wm-foot small"><a href="' + REPO + '" target="_blank" rel="noopener">GitHub ↗</a><a href="' + REPO + '/blob/main/CONTRIBUTING.md" target="_blank" rel="noopener">' + esc(t('page.foot.join')) + ' ↗</a><a href="' + REPO + '/blob/main/LICENSE" target="_blank" rel="noopener">' + esc(t('page.foot.mit')) + '</a></footer>';   // i18n-ok: GitHub is a name
   /* where you came from, marked on the Map (the reading page's way back names it, src/v2/frame2.js) */
   function markHere() { const bk = V.page.querySelector('.f2back'), to = bk && bk.getAttribute('href'); if (!to || latOn) return;
-    for (const a of V.page.querySelectorAll('.cwmap .wm-pn, .cwmap li > a, .cwmap .wm-fl > a')) if (a.getAttribute('href') === to) { a.parentNode.classList.add('here'); break; } }
+    for (const a of V.page.querySelectorAll('.cwmap .wm-pn, .cwmap li > a, .cwmap .wm-sn > a, .cwmap .wm-fl > a, .cwmap .wm-cr, .cwmap .wm-tail a')) if (a.getAttribute('href') === to) (a.matches('.wm-cr, .wm-tail a') ? a : a.closest('li, .wm-pl, .wm-fl')).classList.add('here'); }   /* i18n-ok: selectors */
   function showPage(k0) {
     const k = 'log'; V.pageNow = k0;
     /* the arrangement and the path lit are in the address */
