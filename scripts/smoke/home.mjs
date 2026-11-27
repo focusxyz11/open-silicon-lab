@@ -6,7 +6,8 @@
    small chip in the bar or the chapters at the left, with the twelve challenges counted in the bar; the sources; four
    languages. It opens on the square alone, Moore's law rising once the count has begun to double; its last block is
    the island's own plan, and the end of the page a landing on it, the sources and the lab's home at its foot: a tap, or pushing on, goes inside
-   the island; past the wall the page steps at a tap, and the count in the bar opens the board of the twelve; and
+   the island; past the wall the page steps at a tap, and the count in the bar flies to the whole chip, where each block wears its
+   challenges; and
    the brand leads back */
 import { S } from './shared.mjs';
 
@@ -149,14 +150,16 @@ export default async function run() {
     } else { await play('the small chip in the bar does not open the whole chip', () => { document.querySelector('.bar .hbar .d-map button[data-id="arr"]').click(); return window.__hold.state().chip && document.querySelector('#hd-root .d-world').classList.contains('far'); });
       /* on a phone the twelve squares are one count, large enough to tap */
       if (!(await hp.evaluate(() => { const c = document.querySelector('.bar .hbar .tally .tl-c'), r = c.getBoundingClientRect(); return r.height >= 36 && r.width >= 36 && /\d+\s*\/\s*12/.test(c.textContent) && getComputedStyle(c.querySelector('.sq')).display === 'none'; }))) problems.push(tag + ': the count of challenges in the bar is not one count, large enough to tap'); }
-    /* the count in the bar opens the board of the twelve: one line in the order the story meets them, where you are on
-       it, and the one picked with what it asks, its question and a way there; the board takes you to it */
+    /* the count in the bar flies to the whole chip, where every block wears its challenges as marks (all twelve, lit
+       once done, each chapter's ticks in the rail at the left on a desktop); a mark takes you to its challenge. No
+       window of their own */
     await hp.evaluate(() => window.__hold.set(5));
-    await play('the count of challenges in the bar does not open their board', () => { const c = document.querySelector('.bar .hbar .tally .tl-c'), bd = document.querySelector('#hd-root .h-board'); if (!bd) { c.click(); return false; }
-      return bd.querySelectorAll('.hb-n').length === 12 && bd.querySelectorAll('.hb-here').length === 1 && bd.querySelectorAll('.hb-n.sel').length === 1 && bd.querySelector('.hb-d h3').textContent.length > 3 && !!bd.querySelector('.hb-d .hb-go') && bd.getBoundingClientRect().width <= innerWidth; });
-    await play('a challenge picked on the board does not show its question', () => { const bd = document.querySelector('#hd-root .h-board'), n = bd && bd.querySelector('.hb-n[data-ch="floor"]'); if (!n) return false; if (!n.classList.contains('sel')) n.click();
-      const q = bd.querySelector('.hb-d .hb-q p'); return n.classList.contains('sel') && !!q && q.textContent.length > 20 && bd.querySelector('.hb-d .hb-go').dataset.go === 'floor'; });
-    await play('the board does not lead to the challenge picked', () => { const bd = document.querySelector('#hd-root .h-board'), g = bd && bd.querySelector('.hb-go[data-go="floor"]'); if (g) g.click(); return !document.querySelector('#hd-root .h-board') && window.__hold.state().cur === 'next'; }, null, 20000);
+    await play('the count of challenges in the bar does not fly to the whole chip and its marks', () => { const st = window.__hold.state(), c = document.querySelector('.bar .hbar .tally .tl-c'); if (!st.chip && !st.fly) c.click();
+      const m = document.querySelector('#hd-root .d-world .h-chm[data-blk="next"]'), r = m && m.getBoundingClientRect();
+      return st.chip && !st.fly && document.querySelector('#hd-root .d-world').classList.contains('far') && document.querySelectorAll('#hd-root .d-world .h-chm .hc-t').length === 12 && document.querySelectorAll('#hd-root .d-world .h-chm .hc-t.on').length === 12
+        && !!r && r.width > 10 && r.left >= 0 && r.right <= innerWidth && getComputedStyle(m).visibility === 'visible' && !document.querySelector('#hd-root [role=dialog]'); });
+    if (!phone && !(await hp.evaluate(() => document.querySelectorAll('#hd-root .b-rail button[data-ch="years"] .hc-r i').length === 7 && document.querySelectorAll('#hd-root .b-rail .hc-r i.on').length === 12))) problems.push(tag + ': the chapters at the left do not carry their challenges\' ticks');
+    await play('the mark of a challenge on the whole chip does not lead to it', () => { const st = window.__hold.state(); if (st.cur === 'next') return !st.fly; const m = document.querySelector('#hd-root .d-world.far .h-chm .hc-t[data-ch="floor"]'); if (!st.fly && m) m.click(); return false; }, null, 20000);
     if (!phone) { /* past the wall the page steps: one control under the picture, the next part named on it, at a tap */
       await hp.evaluate(() => window.__hold.go('leak'));
       await play('past the wall the page does not step on to the next part at a tap', () => { const st = window.__hold.state(); if (st.cur === 'distance') return !st.fly; const n = document.querySelector('#hd-root .b-hold.chip .b-step .sn');

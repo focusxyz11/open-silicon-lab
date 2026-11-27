@@ -23,7 +23,7 @@ body.firstpage .bar .loop{display:none}
 .hold .anton em,.hold .red{color:var(--red);font-style:normal}
 .hold .dim{color:var(--mid)}
 .hbar .sp{flex:1}
-/* the twelve challenges in the bar: one count, a tick for each, lit once done; it opens their board */
+/* the twelve challenges in the bar: one count, a tick for each, lit once done; a tap goes to the whole chip */
 .hbar .tally .tl-c{display:inline-flex;align-items:center;gap:calc(var(--u)*10);height:32px;padding:0 13px;border:1px solid var(--line);border-radius:999px;color:var(--mid);font:inherit;letter-spacing:inherit;text-transform:inherit;transition:color .2s,border-color .2s}
 .hbar .tally .tl-c:hover{color:var(--ink);border-color:var(--ink)}.hbar .tally b{color:var(--ink);font-weight:700}
 .hbar .tally .sq{display:grid;grid-template-columns:repeat(12,calc(var(--u)*6));gap:calc(var(--u)*3)}
