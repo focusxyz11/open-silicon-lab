@@ -25,9 +25,23 @@ export const INSIDE = {
 };
 export { SHARED };
 
-/* the place of a page of the earlier site */
+/* Above a place's levels: a level that is not a size (docs/PATH.md, #445). Mind, the stack's top rung, is what the
+   machine does (a small network running on it: answers a second, the energy an answer costs, how often it is right),
+   so it sits above the machine (the data centre's rack and board), not inside anything. It is a level of the data
+   centre with a home in the atlas, so its parts, questions and challenges can live there; it is kept out of INSIDE,
+   which the views read and the dive zooms through: the zoom runs on sizes and portals (DEPTHS in src/data/weave.js),
+   and mind has neither, so putting it there would give the dive a level it cannot zoom to. Until the stack shows it
+   (docs/PATH.md, "Building it", step 4), no view lists it and its way in is its place on the island (viewOfDepth,
+   src/v2/loop.js). */
+export const ABOVE = { datacentre: [{ world: 'datacentre', depth: 'mind' }] };
+/* every level of a place, the ones above its zoom first: where a thing may have its home (src/data/atlas.js) */
+export const levelsOf = place => (ABOVE[place] || []).concat(INSIDE[place] || []);
+/* the place a level above the zoom belongs to, or null */
+export const aboveOf = depth => Object.keys(ABOVE).find(p => ABOVE[p].some(l => l.depth === depth)) || null;
+
+/* the place of a page of the earlier site (or of a level above a place's zoom) */
 export function placeOf(world, depth) {
-  for (const [p, L] of Object.entries(INSIDE)) if (L.some(l => l.world === world && l.depth === depth)) return p;
+  for (const p of Object.keys(INSIDE)) if (levelsOf(p).some(l => l.world === world && l.depth === depth)) return p;
   return world === 'made' ? 'fab' : world === 'design' ? 'studio' : world === 'journey' ? 'fab' : null;
 }
 

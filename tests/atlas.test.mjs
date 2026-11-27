@@ -5,12 +5,13 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { partHome, stopHome, VIEW_PARTS, STORIES, TWINS, twinOf, levelAt } from '../src/data/atlas.js';
-import { INSIDE } from '../src/data/places.js';
+import { INSIDE, ABOVE, levelsOf } from '../src/data/places.js';
 import { STOPS, MADE, WORLDS } from '../src/data/weave.js';
 import { readWords } from '../scripts/words.mjs';
 
 const EN = readWords();
-const inside = (place, depth) => (INSIDE[place] || []).some(l => l.depth === depth);
+/* a level of a place: one of its levels in the zoom (INSIDE), or above it (ABOVE: mind) */
+const inside = (place, depth) => levelsOf(place).some(l => l.depth === depth);
 
 test('every part has one home, a place and a level, and explains itself', () => {
   const parts = Object.keys(EN).filter(k => k.startsWith('part.')).map(k => k.slice(5));
@@ -74,4 +75,40 @@ test('a level shared by a flight and the dive has one size: the phone is one pho
   for (const lv of DC_LEVELS) if (DEPTHS[lv]) assert.equal(sizeOf(lv), DEPTHS[lv].m, 'the data centre\'s ' + lv + ' has two sizes');
   /* a phone is about fifteen centimetres long */
   assert.ok(DEPTHS.phone.m >= 0.12 && DEPTHS.phone.m <= 0.18, 'a phone is about 15 cm, not ' + DEPTHS.phone.m * 100 + ' cm');
+});
+
+test('mind is a level above the machine, with a home in the atlas, and not a size (#445, docs/PATH.md)', async () => {
+  const { sizeOf, NOT_A_SIZE } = await import('../src/data/atlas.js');
+  /* one home: a level of the data centre, its own (not a shared depth), above the machine (the rack and the board) */
+  assert.deepEqual(levelAt('mind'), { place: 'datacentre', world: 'datacentre', level: 'mind' });
+  const L = levelsOf('datacentre').map(l => l.depth);
+  assert.ok(L.indexOf('mind') >= 0 && L.indexOf('mind') < L.indexOf('rack') && L.indexOf('mind') < L.indexOf('board'), 'mind is above the machine: ' + L.join(', '));
+  /* it explains itself, like every level */
+  assert.ok(EN['depth.mind.name'] && EN['depth.mind.see'], 'mind has no words');
+  /* not a size: its size is false (a step's is null), and the readout says so */
+  assert.deepEqual(NOT_A_SIZE, ['mind']);
+  assert.equal(sizeOf('mind'), false);
+  for (const lv of Object.values(ABOVE).flat().map(l => l.depth)) assert.ok(NOT_A_SIZE.includes(lv), lv + ' is above a place\'s zoom, so it is not a size');
+  assert.ok(EN['frame.size.not'] && EN['frame.size.notAt'], 'the readout has no words for a level that is not a size');
+});
+
+test('mind stays out of the zoom: nothing on the dive changes for a visitor (#445)', async () => {
+  const { DEPTHS } = await import('../src/data/weave.js');
+  const { DIVE_LEVELS, FLOWN, viewOfDepth } = await import('../src/v2/loop.js');
+  const { doHome } = await import('../src/engines/way.js');
+  for (const lv of Object.values(ABOVE).flat().map(l => l.depth)) {
+    /* the zoom runs on sizes and portals: mind has neither, so no depth, no world's way down, no flight holds it */
+    assert.ok(!(lv in DEPTHS), lv + ' is a depth of the zoom');
+    for (const w of WORLDS) assert.ok(!w.depths.includes(lv), lv + ' is on the way down of ' + w.id);
+    assert.ok(!DIVE_LEVELS.includes(lv), lv + ' is a level of the dive');
+    for (const F of Object.values(FLOWN)) assert.ok(!(lv in F), lv + ' is flown through');
+    /* the views list a place's levels from INSIDE: mind is not there until a view shows it (the stack) */
+    for (const [p, I] of Object.entries(INSIDE)) assert.ok(!I.some(l => l.depth === lv), lv + ' is listed among the levels of ' + p);
+    /* its way in is its place on the island, and a challenge there is played at that place */
+    const place = levelAt(lv).place;
+    assert.equal(viewOfDepth(lv), '#/place/' + place);
+    /* so the lab's AI challenges that belong there (quantization, serving, Learn on one chip) can name it as their level */
+    assert.ok(inside(place, lv));
+    assert.equal(doHome({ id: 'x', place, at: lv, kind: 'quantize' }), null);
+  }
 });
