@@ -1461,9 +1461,9 @@ main.stage .f2 > .dockwrap > .seamnote .kicker { font: var(--f2-label); letter-s
 .f2 > .dockwrap > .seamnote .sq { font: italic 400 18px/1.4 var(--serif); }
 main.stage .f2 > .dockwrap > .seamnote .btn { padding: 7px 14px; font-size: 15px; }
 .f2cap > .dockwrap:has(> .seamnote:not([hidden])) > .modes3 { position: static; margin-top: 6px; }
-main.stage .seamnote .kicker { font: var(--f2-label); letter-spacing: 0; text-transform: none; color: var(--muted); }
+body > .seamnote:not([hidden]) .kicker { font: var(--f2-label); letter-spacing: 0; text-transform: none; color: var(--muted); }
 .seamnote .sq { font: italic 400 18px/1.4 var(--serif); }
-@media (min-width: 1100px) { main.stage body:has(#sheet:not([hidden])) > .seamnote { right: calc(var(--bench) + 4px); }
+@media (min-width: 1100px) { body:has(#sheet:not([hidden])) > .seamnote { right: calc(var(--bench) + 4px); }
 }
 
 
