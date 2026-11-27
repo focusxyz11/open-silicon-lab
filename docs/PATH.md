@@ -2,7 +2,9 @@
 
 One promise, in one sentence: **build a thinking machine from physics up, and invent your own along the way.**
 
-This is the plan for the lab's spine. Status: agreed with the owner on 26 November 2026, not built yet. Its working
+This is the plan for the lab's spine. Status: agreed with the owner on 26 November 2026. Built so far: the carry as
+data and engine (`src/data/path.js`, `src/engines/path.js`, steps 1 and 2 below: each gene option's carry contract in
+`arch.js`, one figure against today's computer) and the three faces as data (`FACE_OF`, `alongTo`); no view yet. Its working
 prototype, *Your stack*, designed and built by Claude Fable 5.2 with a first version by Claude Opus, is in
 `docs/prototypes/stack/` (open `index.html`; sources in `src/`, built by `build.mjs`).
 
@@ -182,6 +184,11 @@ tried ones, few names).
 The stack teaches when something breaks.
 
 ## Open
+
+- The atlas's Turn (`TWINS` in `src/data/atlas.js`, which the router reads) and the faces (`FACE_OF` in
+  `src/data/path.js`) agree on every level's home step (a test keeps them so), but the faces say more: the switch as
+  designed (one cell and its masks), deposit as making the switch, and test with the package at the chip. When the
+  stack's faces are drawn, the Turn should be read from the faces so it is written once.
 
 - The niche field's design at full scale (a candidate for one more creative round), and glyphs that tell recipes apart.
 - A software rung (your instructions, an assembler, one program) now or later.

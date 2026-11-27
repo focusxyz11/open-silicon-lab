@@ -203,3 +203,31 @@ test('the family tree keeps every start and fork as plain data, and the line the
   const s = A.year(A.start(a), ['device']);
   assert.equal(s.log[0].best, Math.max(...A.NEEDS.map(n => A.scoreOf(s)[n].now)));
 });
+
+/* a recipe is a set of forks in your stack (#444, src/engines/path.js): each option's carry contract beside its traits */
+test('every option has a carry contract beside its traits, its energy only in EFFECT, a guess until a fact backs it', async () => {
+  const { CHOICES, LAYER, RUNGS } = await import('../src/data/path.js');
+  const { MATTERS, cellOf } = await import('../src/data/lattice.js');
+  for (const k of A.GENES) {
+    assert.deepEqual(Object.keys(A.CARRY[k]).sort(), A.OPTIONS[k].slice().sort(), k + ': a contract for every option');
+    for (const o of A.OPTIONS[k]) {
+      const c = A.CARRY[k][o];
+      assert.ok(!('energy' in c), k + ' ' + o + ': its energy is EFFECT\'s, never written twice');
+      if (A.isFork(k, o)) { assert.ok('fact' in c, k + ' ' + o + ': a fork says what backs it'); if (c.fact) assert.ok(factOf(c.fact), k + ' ' + o + ': ' + c.fact); assert.equal(A.forkFact(k, o), c.fact || null); }
+      else assert.ok(!('fact' in c) && A.forkFact(k, o) === null, k + ' ' + o + ' is today\'s option, not a fork');
+      assert.equal(A.forkEnergy(k, o), A.traitsOf(Object.assign({}, A.TODAY, { [k]: o })).energy, k + ' ' + o + ': the option alone');
+    }
+  }
+  for (const o of A.OPTIONS.where) assert.ok(A.CARRY.where[o].latency > 0 && A.CARRY.where[o].latency <= A.CARRY.where.far.latency, o + ': memory no further than far');
+  for (const o of A.OPTIONS.shape) assert.equal(A.CARRY.shape[o].units.length, CHOICES.ui.length, o + ': units at each of the stack\'s settings');
+  assert.equal(A.CARRY.told.program.stages, true);
+  for (const o of A.OPTIONS.carrier) {
+    const c = A.CARRY.carrier[o];
+    assert.ok(MATTERS.includes(c.matter), o + ': made of a matter of the lattice');
+    assert.ok(o === 'charge' || c.delay > 0, o + ': a delay');
+    /* the rungs it skips are the cells the lattice marks passed by for its matter */
+    const past = RUNGS.filter(r => cellOf(c.matter, LAYER[r]).past);
+    assert.deepEqual(c.skips || [], past, o + ' (' + c.matter + ') skips the cells the lattice passes by');
+  }
+  assert.ok(A.CARRY.carrier.living.skips.length, 'living cells learn without gates');
+});
