@@ -1429,6 +1429,18 @@
    "verified": "2026-11-14"
   },
   {
+   "id": "logic-density-n5",
+   "topic": "transistor",
+   "detail": "WikiChip's own estimate from the cell's likely dimensions (a 48 nm gate pitch, 30 nm metal pitch); TSMC has not published the figure. Logic only: memory and analog are less dense. Used for the area of your die in the path's carry (src/engines/path.js, src/data/path.js DENSITY).",
+   "kind": "estimate",
+   "label": "Logic density of a 5 nm line (TSMC N5)",
+   "source": "WikiChip Fuse",
+   "status": "current",
+   "url": "https://fuse.wikichip.org/?p=3398",
+   "value": "About 171.3 million transistors per mm²",
+   "verified": "2026-11-27"
+  },
+  {
    "id": "mat-si",
    "topic": "transistor",
    "detail": "Ioffe Institute, New Semiconductor Materials archive, silicon at 300 K: band gap 1.12 eV; electron mobility up to 1,400 and hole mobility up to 450 cm²/V·s; melts at 1,412 °C.",

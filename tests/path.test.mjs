@@ -1,6 +1,7 @@
 /* The path (docs/PATH.md; src/data/path.js, src/engines/path.js): seven rungs from the atom to the mind, each made of
    the contract the rung below hands up (#443); a recipe of the architecture engine as a set of forks in the stack, with
-   one figure against today's computer (#444); the three faces of every rung, as designed, as made and as used (#454). */
+   one figure against today's computer (#444); the three faces of every rung, as designed, as made and as used (#454);
+   the fab handing its spread and yield up the carry (#455). */
 import './ledger.setup.mjs';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -14,11 +15,15 @@ import { LAYERS } from '../src/data/lattice.js';
 import { WORLDS, DEPTHS } from '../src/data/weave.js';
 import { TWINS } from '../src/data/atlas.js';
 import { STAGES } from '../src/engines/way.js';
+import * as LI from '../src/engines/litho.js';
+import * as FL from '../src/engines/fabline.js';
+import * as CH from '../src/engines/chip.js';
+import { AREA_FIXED } from '../src/engines/bet.js';
 
 const FACTS = new Set(JSON.parse(readFileSync(new URL('../src/data/facts.json', import.meta.url), 'utf8')).facts.map(f => f.id));
 const depthsOf = id => WORLDS.find(w => w.id === id).depths;
 const close = (a, b, why) => assert.ok(Math.abs(a - b) <= 1e-12 * Math.max(Math.abs(a), Math.abs(b)), why + ': ' + a + ' against ' + b);
-const UNITS = ['eV', 'cm2/Vs', 'per cm2 eV', 'V', 'mV', 'x', 'yes', 's', 'J', 'p', 'n', 'share', 'Hz', 'per s', 'W'];
+const UNITS = ['eV', 'cm2/Vs', 'per cm2 eV', 'V', 'mV', 'x', 'yes', 's', 'J', 'p', 'n', 'share', 'Hz', 'per s', 'W', 'cm2'];
 const ex = (f, g = A.TODAY, aim) => P.carry(P.stackOf(g, f, aim));
 const H = (R, r) => R.rungs[r].hands;
 
@@ -96,7 +101,7 @@ test('below the lowest clean voltage, wrong answers rise at the gate, the block,
 });
 
 test('each rung is made of the rungs below: a rung\'s fine setting changes nothing beneath it', () => {
-  const other = { mat: 'ge', shape: 'gaa', mech: 'nc', V: 0.55, lib: 'rich', adder: 'look', vote: 1, regs: 8, stages: 5, ui: 2, bits: 2 };
+  const other = { mat: 'ge', shape: 'gaa', mech: 'nc', V: 0.55, care: 0, lib: 'rich', adder: 'look', vote: 1, regs: 8, stages: 5, ui: 2, bits: 2 };
   for (const r of D.RUNGS) for (const k of D.FINE_OF[r]) {
     const R = ex({ [k]: other[k] });
     for (const below of D.RUNGS.slice(0, D.RUNGS.indexOf(r))) assert.deepEqual(H(R, below), H(P.X0, below), k + ' (at ' + r + ') changed ' + below);
@@ -259,6 +264,93 @@ test('along keeps the rung across Design, Make and Use', () => {
   assert.equal(P.alongTo('mind', 'make').none, 'trained');
   assert.equal(P.alongTo('cloud', 'use'), null);
   assert.equal(P.faceOf('gate', 'nowhere'), null);
+});
+
+/* ---- faces 2: the fab hands its spread and yield up the carry (#455) ---- */
+const atCare = (care, f = {}) => ex(Object.assign({}, f, { care }));
+test('the line\'s care is a setting of the fab\'s engines, today\'s care their own defaults', () => {
+  assert.deepEqual(D.CHOICES.care, [0, 1, 2]);
+  assert.ok(D.FINE_OF.switch.includes('care'), 'the line\'s care is held at the switch, where the line makes the copies');
+  assert.equal(D.CARE.dose[D.EXAMPLE.care], LI.EUV_DEFAULTS.dose, 'today\'s dose is the scanner\'s own');
+  assert.equal(D.CARE.clean[D.EXAMPLE.care], FL.CLEAN_CLASSES[FL.CLEAN_DEFAULT].n, 'today\'s air is the typical cleanroom');
+  for (const d of D.CARE.dose) assert.ok(d >= LI.EUV_RANGE.dose[0] && d <= LI.EUV_RANGE.dose[1], 'a dose the scanner can be set to: ' + d);
+  assert.ok(FACTS.has(D.DENSITY.fact), 'the density of the die has a source');
+  assert.equal(P.normalFine({ care: 7 }).care, D.EXAMPLE.care, 'an unknown care is today\'s');
+  /* every number of the line names the engine behind it, or its figure, with its mark */
+  for (const c of D.CHOICES.care) {
+    const L = P.lineOf(c);
+    for (const [k, rec] of Object.entries(L.fid)) {
+      assert.ok(FIDS.includes(rec.f), c + ' ' + k + ': a mark');
+      if (rec.by) assert.ok(ENGINES[rec.by], c + ' ' + k + ': engine ' + rec.by);
+      if (rec.f === 'figures' || rec.f === 'checked') assert.ok(FACTS.has(rec.fact), c + ' ' + k + ': a figure with a source');
+    }
+    for (const k of ['spread', 'pace', 'defects']) assert.ok(Number.isFinite(L[k]) && L[k] > 0, c + ' ' + k);
+  }
+});
+
+test('the line\'s spread comes from the print, its specks from the air, its dies from the chip engine', () => {
+  const L0 = P.lineOf(D.EXAMPLE.care);
+  assert.equal(L0.spread, 1); assert.equal(L0.pace, 1);
+  assert.equal(L0.defects, CH.defectsOf(CH.START.gen), 'today\'s line has the chip engine\'s defects for today\'s process');
+  for (const c of D.CHOICES.care) {
+    const L = P.lineOf(c), print = LI.euv({ dose: D.CARE.dose[c] });
+    close(L.spread, print.noisePct / LI.euv({ dose: LI.EUV_DEFAULTS.dose }).noisePct, c + ': the spread is the print\'s photon noise');
+    close(L.pace, print.wph / LI.euv({ dose: LI.EUV_DEFAULTS.dose }).wph, c + ': the pace is the scanner\'s wafers an hour');
+    close(L.defects, CH.defectsOf(CH.START.gen) * FL.isoLimit(D.CARE.clean[c]) / FL.isoLimit(5), c + ': the specks go as the air\'s');
+    const R = atCare(c), K = H(R, 'chip'), die = CH.dieOf(P.areaOf(K.gates, H(R, 'gate').switches), L.defects, L.pace);
+    assert.deepEqual(R.fab, L, c + ': the carry carries its line');
+    close(K.area, die.area, c + ': the die is its gates and its pads');
+    assert.ok(K.area > AREA_FIXED / 100, 'every die has its pads and edges');
+    close(K.yield, die.yield, c + ': the yield is the chip engine\'s');
+    close(K.cost, die.cost / X0die().cost, c + ': the cost of a good die against the lab\'s example');
+  }
+  assert.equal(H(P.X0, 'chip').cost, 1, 'the example\'s good die is the measure');
+  /* the chip engine's die: Poisson, fewer whole dies as specks or area grow, dearer as the line slows */
+  const a = CH.dieOf(1, 0.1), b = CH.dieOf(1, 0.5), c = CH.dieOf(2, 0.1), d = CH.dieOf(1, 0.1, 0.5);
+  close(a.yield, Math.exp(-0.1), 'one speck in ten square centimetres');
+  assert.ok(b.yield < a.yield && c.yield < a.yield && c.dies < a.dies, 'more specks or a bigger die, fewer whole dies');
+  assert.ok(d.cost > a.cost && d.yield === a.yield, 'a slower line, a dearer wafer');
+});
+const X0die = () => P.X0.rungs.chip.more.die;
+
+test('the line\'s care changes the copies wrong at the gate, and yield and cost at the chip', () => {
+  const [hurried, today, careful] = D.CHOICES.care.map(c => atCare(c));
+  assert.deepEqual(today.rungs, P.X0.rungs, 'today\'s care is the example');
+  /* the switch as made: a wider spread, a higher lowest clean voltage, the threshold where the design put it */
+  assert.ok(H(hurried, 'switch').sigma > H(today, 'switch').sigma && H(today, 'switch').sigma > H(careful, 'switch').sigma, 'the copies spread less with care');
+  assert.ok(H(hurried, 'switch').vmin > H(today, 'switch').vmin && H(today, 'switch').vmin > H(careful, 'switch').vmin, 'a wider spread needs more voltage');
+  for (const R of [hurried, careful]) {
+    assert.equal(H(R, 'switch').vt, H(today, 'switch').vt);
+    assert.deepEqual(H(R, 'atom'), H(today, 'atom'), 'the line changes nothing in the matter');
+    assert.equal(R.rungs.switch.more.designed.sigma, H(today, 'switch').sigma, 'the switch as designed is the same');
+  }
+  for (const V of [0.33, 0.34, 0.35, 0.7]) {
+    const [h, t, c] = D.CHOICES.care.map(k => atCare(k, { V }));
+    assert.ok(H(h, 'gate').fail > H(t, 'gate').fail && H(t, 'gate').fail >= H(c, 'gate').fail, V + ' V: more copies of a gate go wrong on a hurried line');
+    assert.ok(H(h, 'chip').wrong >= H(t, 'chip').wrong && H(t, 'chip').wrong >= H(c, 'chip').wrong, V + ' V: the chip');
+    assert.ok(H(h, 'mind').right <= H(t, 'mind').right && H(t, 'mind').right <= H(c, 'mind').right, V + ' V: the mind');
+  }
+  const lo = D.CHOICES.care.map(k => atCare(k, { V: 0.33 }));
+  assert.ok(H(lo[0], 'mind').right < 0.9 && H(lo[2], 'mind').right > 0.95, 'at a low voltage a hurried line\'s mind forgets, a careful one\'s holds: ' + lo.map(R => H(R, 'mind').right));
+  assert.ok(H(lo[0], 'gate').fail > 100 * H(lo[2], 'gate').fail, 'a hundred times more wrong copies');
+  /* the chip: fewer whole dies on a hurried line; care costs scanner time, so a small die is cheapest at today's care */
+  assert.ok(H(hurried, 'chip').yield < H(today, 'chip').yield && H(today, 'chip').yield < H(careful, 'chip').yield, 'yield rises with care');
+  assert.ok(H(hurried, 'chip').cost > 1 && H(careful, 'chip').cost > 1, 'a hurried line loses dies, a careful one wafers an hour: ' + [H(hurried, 'chip').cost, H(careful, 'chip').cost]);
+  assert.equal(H(hurried, 'chip').area, H(today, 'chip').area, 'the die is the same design');
+  /* a bigger design (three copies voting, a look-ahead adder) is a bigger die, so fewer of it come out whole */
+  const big = atCare(0, { vote: 1, adder: 'look' });
+  assert.ok(H(big, 'chip').area > H(hurried, 'chip').area && H(big, 'chip').yield < H(hurried, 'chip').yield);
+});
+
+test('the line\'s numbers stay whole under every recipe', () => {
+  for (const g of A.allRecipes()) for (const care of D.CHOICES.care) {
+    const R = ex({ care }, g), K = R.rungs.chip;
+    assert.equal(R.fab.care, care);
+    if (!K.hands) continue;
+    for (const k of ['area', 'yield', 'cost']) assert.ok(Number.isFinite(K.hands[k]) && K.hands[k] > 0, A.keyOf(g) + ' ' + care + ' ' + k);
+    assert.ok(K.hands.yield <= 1);
+  }
+  assert.equal(ex({ mat: 'graphene', care: 0 }).rungs.chip.hands, null, 'a broken switch makes no die');
 });
 
 /* ---- the path 9: challenges as stepping stones on their rungs (#451) ---- */
