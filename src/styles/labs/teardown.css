@@ -35,13 +35,13 @@
 @media (max-width: 720px) { .fitjobs { grid-template-columns: repeat(4, 1fr); } .fitjobs .agcase .small { display: none; } .fitjobs .agcase { min-height: 0; place-items: center; } .tdboard { grid-template-columns: repeat(3, 1fr); }
   /* on a phone the line of chips is too short for six names side by side: the same order read in rows of two, under
      its two ends and the line between them (#374) */
-  .fitline, html.frame2 .f2stage .fitline[data-f2] { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-content: start; gap: 8px; height: auto; border-bottom: 0; }
+  .fitline, main.stage .f2stage .fitline[data-f2] { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-content: start; gap: 8px; height: auto; border-bottom: 0; }
   .fitline { position: relative; margin: 4px 0 10px; }
-  .fitline .end, html.frame2 .f2stage .fitline[data-f2] .end { position: static; grid-row: 1; margin-bottom: 8px; font-size: 13px; }
-  .fitline .end.r, html.frame2 .f2stage .fitline[data-f2] .end.r { text-align: right; }
+  .fitline .end, main.stage .f2stage .fitline[data-f2] .end { position: static; grid-row: 1; margin-bottom: 8px; font-size: 13px; }
+  .fitline .end.r, main.stage .f2stage .fitline[data-f2] .end.r { text-align: right; }
   .fitline::after { content: ""; position: absolute; left: 0; right: 0; top: 24px; height: 2px; background: var(--line); }
-  html.frame2 .f2stage .fitline[data-f2]::after { left: 12px; right: 12px; top: 34px; bottom: auto; }
-  .fitline .fitk, html.frame2 .f2stage .fitline[data-f2] .fitk { position: static; transform: none !important; min-width: 0; padding: 8px 10px; white-space: normal; text-align: center; font: 600 14px/1.2 var(--sans); }
+  main.stage .f2stage .fitline[data-f2]::after { left: 12px; right: 12px; top: 34px; bottom: auto; }
+  .fitline .fitk, main.stage .f2stage .fitline[data-f2] .fitk { position: static; transform: none !important; min-width: 0; padding: 8px 10px; white-space: normal; text-align: center; font: 600 14px/1.2 var(--sans); }
 }
 
 .seekp.on { background: color-mix(in srgb, var(--qc) 18%, var(--panel-solid)); border-color: var(--qc); }

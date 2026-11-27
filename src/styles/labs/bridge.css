@@ -79,8 +79,8 @@
 .brcmp { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 10px 0 6px; }
  .brcmp > div { border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; display: flex; flex-direction: column; gap: 3px; }
 .brsrc { margin: 6px 0; }
-html.frame2 .f2stage .brfig svg text { font-size: calc(13px * var(--f2-k, .6)); }
+main.stage .f2stage .brfig svg text { font-size: calc(13px * var(--f2-k, .6)); }
 @media (max-width: 720px) {
   .brdials, .brcmp { grid-template-columns: 1fr; }
-  html.frame2 .f2stage .brfig svg text { font-size: calc(10.5px * var(--f2-k, .9)); }
+  main.stage .f2stage .brfig svg text { font-size: calc(10.5px * var(--f2-k, .9)); }
 }

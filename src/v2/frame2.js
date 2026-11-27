@@ -35,7 +35,6 @@ import { challengeOf } from './loop.js';
 let booted = false;
 export function boot() {
   if (booted) return; booted = true;
-  document.documentElement.classList.add('frame2');
   /* the address you were at before you began reading: the way back; a page opened from your log leads back to it.
      Heard before the shell's own route */
   addEventListener('hashchange', e => { const was = '#' + ((e.oldURL || '').split('#')[1] || '/'), r = routeOf(location.hash), w = routeOf(was);

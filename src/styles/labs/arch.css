@@ -184,11 +184,11 @@
   .artlist { display: block; }
   .armapkeys { display: none; }
   /* on the stage: the race as wide as the screen, its words at a readable size on it */
-  html.frame2 .f2stage .arfig[data-f2] { height: min(48vh, 352px); }
-  html.frame2 .f2stage .arfig .arrace :is(.nl, .rt) { font-size: calc(12.5px * var(--f2-k, 1)); }
-  html.frame2 .f2stage .arfig .arrace .tl { font-size: calc(11px * var(--f2-k, 1)); }
-  html.frame2 .f2stage .arfig .arrace .cant { font-size: calc(10px * var(--f2-k, 1)); }
-  html.frame2 .f2stage .arfig .arrace .ax { font-size: calc(9.5px * var(--f2-k, 1)); }
+  main.stage .f2stage .arfig[data-f2] { height: min(48vh, 352px); }
+  main.stage .f2stage .arfig .arrace :is(.nl, .rt) { font-size: calc(12.5px * var(--f2-k, 1)); }
+  main.stage .f2stage .arfig .arrace .tl { font-size: calc(11px * var(--f2-k, 1)); }
+  main.stage .f2stage .arfig .arrace .cant { font-size: calc(10px * var(--f2-k, 1)); }
+  main.stage .f2stage .arfig .arrace .ax { font-size: calc(9.5px * var(--f2-k, 1)); }
 }
 /* the community's ledger on the map (#410): a dot for people's attempts (ink, as the record draws a person) at the left
    of a square, one for agents' (warm, as an AI) at the right; a ring where the first attempt to win with that recipe
