@@ -3,7 +3,7 @@
    stands), so going inside is one move: the island opens on this picture and tilts down to itself (src/v2/map3d.js
    land). With it, the way in: the lab's blue button on the plan, and pushing on at the landing (landing). It is the last
    picture of the page, so it is fetched once the page has drawn, not with it. */
-import { w, h, S, K, fg, TICK, setHolding } from './holdkit.js';
+import { w, h, S, K, fg, TICK, setHolding, lab } from './holdkit.js';
 import { path, train, at, put, out, LIT } from './holdplates.js';
 import { LOOP } from '../data/hold.js';
 import { ISLE_COAST, ISLE_ROAD, ISLE_YAW, PLACES as ISLE_PLACES, isleFlat } from '../data/isle.js';
@@ -68,4 +68,12 @@ export function landing(host, root, pl, ctx = {}, end, sources) {
   host.addEventListener('touchmove', e => { if (ty == null || !e.touches.length) return; const y = e.touches[0].clientY, dy = ty - y; ty = y; if (dy > 0) add(dy / 260); }, { passive: true });
   TICK.push((T, dt) => { if (!push) return; push = root.classList.contains('landing') ? Math.max(0, push - dt * .5) : 0; root.style.setProperty('--land', push.toFixed(3)); });
   return enter;
+}
+
+/* the field of every attempt at an architecture in one line, on the arrangements block (#480): how many of the recipes
+   have been tried and how many beat today's computer somewhere, read from the community's ledger by the population
+   engine (ctx.field in src/v2/hold.js). It comes with the shell's idle preload, never with the first page's own load */
+export function fillField(sum) {
+  if (!sum || !Number.isFinite(sum.tried)) return;
+  document.querySelectorAll('#hd-root [data-field]').forEach(e => { e.innerHTML = w('field.line', { tried: sum.tried, of: sum.of, beat: sum.beat }) + ' ' + lab(w('field.go'), '#/stack/field'); e.hidden = false; });
 }

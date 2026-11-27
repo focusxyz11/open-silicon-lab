@@ -28,7 +28,7 @@ import { theme } from '../../core/ui.js';
 import { mark, statusMark } from '../fid.js';
 import { FINE_OF, CHOICES, V_RANGE, ARRANGE } from '../../data/path.js';
 import { A, SW, RUNGS, EXAMPLE, GENE_AT, GENE_OF, RUNG_DIR, clamp, carry, see, stoneOf, marksOf, stackMarks, rungName, RECIPES, RIDX, BLOCK, NEEDS, POT, CAN, CELLCAN, fxOf, bestNeed, recipeName, population, census, times, pct } from './model.js';
-import { holder, credit, plotCard, sinceVisit, sinceLine, portCard, champWords } from './field.js';
+import { holder, credit, plotCard, sinceVisit, sinceLine, seasonLine, portCard, champWords } from './field.js';
 import { proposedHtml, openWords } from './genome.js';
 import { PIC, passedPic, makePen, glyph } from './pics.js';
 import * as FX from './faces.js';
@@ -89,7 +89,7 @@ export function createStack(host, opts = {}) {
   const mineAtt = () => ({ key: mineKey(), g: S.g, st: S.A, by: 'you', mine: true });
   const recount = () => { CEN = census(POP, mineAtt()); };
   /* what changed on the field since your last visit (the census without yours), kept in this browser */
-  const SINCE = (() => { const c0 = census(POP); return sinceLine(sinceVisit(POP, { champ: c0.champ }, new Date().toISOString().slice(0, 10)), POP, { champ: c0.champ }); })();
+  const SINCE = (() => { const c0 = census(POP); return [sinceLine(sinceVisit(POP, { champ: c0.champ }, new Date().toISOString().slice(0, 10)), POP, { champ: c0.champ }), seasonLine(opts.over ? opts.over() : 0)].filter(Boolean).join(' '); })();
   const yoursAt = r => FINE_OF[r].some(k => String(S.F[k]) !== String(EXAMPLE[k])) || !!R().rungs[r].fork;
 
   /* ---------- the camera ---------- */
@@ -339,7 +339,7 @@ export function createStack(host, opts = {}) {
       label(a[0], a[1] + px * 0.35, need(nd), fSerif(px), px, C.ink(la), { align: 'center', pri: 60 }); if (s * COLW > 150) label(a[0], a[1] + px * 0.35 + 17, t('sk.field.can', { n: CAN[n] }), fMono(10.5), 10.5, C.mut(la), { align: 'center', pri: 30 }); });
     for (let d = 0; d < 5; d++) { const a = proj(-3.5, (BY[d].y0 + BY[d].y1) / 2), stick = a[0] < 104, o = { align: stick ? 'left' : 'right', pri: 55, bg: stick, force: stick }, x = stick ? 8 : a[0], y = a[1]; if (y < chrome().top + 34 || y > vh - chrome().bot - 6) continue;
       label(x, y + (d ? -1 : 4), awayWords(d), fMono(11, 500), 11, C.ink(la), o); if (d && s * (BY[d].y1 - BY[d].y0) > 30) label(x, y + 14, t('sk.field.recipes', { n: BLOCK[d].length }), fMono(10.5), 10.5, C.mut(la), Object.assign({}, o, { pri: 25 })); }
-    { const a = proj(0, SHEET.y1), px = clamp(s * 5.4, 16, 32); label(a[0], a[1] + px + 8, t('sk.field.caption'), fSerif(px, 700), px, C.ink(la), { pri: 58 }); label(a[0], a[1] + px + 27, t('sk.field.sub', { tried: CEN.tried, wins: CEN.wins }), fMono(11), 11, C.mut(la), { pri: 40 });
+    { const a = proj(0, SHEET.y1), px = clamp(s * 5.4, 16, 32); label(a[0], a[1] + px + 8, t('sk.field.caption'), fSerif(px, 700), px, C.ink(la), { pri: 58 }); label(a[0], a[1] + px + 27, t('sk.field.sub', { tried: CEN.tried, wins: CEN.wins, season: A.VERSION }), fMono(11), 11, C.mut(la), { pri: 40 });
       const b = proj(WID / 2, TOP + 3.4); label(b[0], b[1], openWords(GENOME), fSerif(clamp(s * 2.6, 11, 15), 400, true), 13, C.mut(la), { align: 'center', pri: 22, max: WID * s - 20 }); }
     if (s * COLW > 170) { const a = proj(COLW / 2, (BY[4].y0 + BY[4].y1) / 2); label(a[0], a[1], t('sk.field.cannot'), fSerif(12.5, 400, true), 12.5, C.mut(la), { align: 'center', pri: 18, max: COLW * s }); const b = proj(2 * CSTEP + COLW / 2, BY[4].y0 + 11.2 * (PD + GY) - 0.6); label(b[0], b[1], t('sk.field.nobody'), fSerif(12.5, 400, true), 12.5, C.ink(la), { align: 'center', pri: 18, bg: true }); }
     if (hover && flat) { const rc = plotRect(hover.n, hover.ri), a = proj(rc.x, rc.y);

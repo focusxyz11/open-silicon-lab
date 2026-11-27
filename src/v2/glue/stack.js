@@ -23,7 +23,7 @@ export function create() {
     if (!el) { el = document.createElement('section'); el.className = 'stackv'; el.id = 'stackv'; $('stage').appendChild(el); }
     if (!view) {
       const W = () => Game.world(V.S), ON = {}, o = { still, lensesAt: V.lensIds,
-        entries: () => (W().arch || []).map(id => W().byId[id]),
+        entries: () => (W().arch || []).map(id => W().byId[id]), over: () => (W().archOver || []).length,
         genome: () => Game.genomeOf(V.S),
         done: () => V.S.done || {},
         moved: () => V.hud(),

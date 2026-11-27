@@ -231,3 +231,17 @@ test('every option has a carry contract beside its traits, its energy only in EF
   }
   assert.ok(A.CARRY.carrier.living.skips.length, 'living cells learn without gates');
 });
+
+/* seasons (#480): a season's print is kept here once its season is open. Changing the engine's tables changes the
+   print: raise VERSION, add the new season to SEASONS with its print (after closing the old one with
+   scripts/season.mjs), and add its print here. A past season's print never changes */
+const PRINTS = ['6fff8cb7'];
+test('the engine\'s tables are fingerprinted: changing them without raising VERSION fails here', () => {
+  assert.equal(A.VERSION, A.SEASONS.length);
+  A.SEASONS.forEach((s, i) => { assert.equal(s.v, i + 1); assert.equal(s.print, PRINTS[i], 'season ' + s.v + '\'s print never changes'); assert.match(s.from, /^\d{4}-\d{2}-\d{2}$/); });
+  assert.equal(PRINTS.length, A.VERSION, 'every season\'s print is kept here');
+  assert.equal(A.tablesPrint(), A.SEASONS[A.VERSION - 1].print, 'the engine\'s tables changed: raise VERSION (src/engines/arch.js SEASONS), closing season ' + A.VERSION + ' first with scripts/season.mjs');
+  /* the print notices a change in any table, and not the order keys were written in */
+  const was = A.WANT.model.w.energy; A.WANT.model.w.energy = was + 0.01; const changed = A.tablesPrint(); A.WANT.model.w.energy = was;
+  assert.notEqual(changed, A.tablesPrint()); assert.equal(A.tablesPrint(), PRINTS[A.VERSION - 1]);
+});

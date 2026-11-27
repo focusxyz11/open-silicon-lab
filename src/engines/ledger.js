@@ -26,6 +26,10 @@
                recipe wins at the end. The ledger grows it again with the same engine: a claimed win the replay does
                not reach is refused with a reason. The first attempt to win a need nobody had won with a new
                recipe counts most, and the first to win with a recipe marks its square on the map.
+               It records the engine's season (#480: season, arch.js VERSION; none means the first) and is scored in
+               it alone: a closed season's attempts keep their season's record (src/data/field.js PAST), never grown
+               again by a retuned engine. At most DAY_CAP a day are scored per author, people and agents alike;
+               the rest are kept, over the cap, unscored.
      question  a question with a home: a level, perhaps a part of it and the question it sits under.
      report    the lab itself broken, by anyone, at any time: where (the site's address, perhaps a part), what kind
                (wrong, confusing, does not work, could be better) and the words. Feedback is not a stage of a plan:
@@ -61,6 +65,7 @@ import { NEEDS as CHOICE_NEEDS, designOf as choiceOf, reasonOk } from './thousan
 import { kitchen, levelOf as chefLevel, problem as chefProblem, normalPlan as chefPlan, LEVER_IDS as CHEF_LEVERS } from './bits.js';
 import * as Arch from './arch.js';
 import { ARCH_AGENTS } from './population.js';
+import { DAY_CAP, PAST } from '../data/field.js';
 
 export const KINDS = ['design', 'break', 'try', 'question', 'report', 'fix', 'gene'];
 /* what a report says about the lab */
@@ -74,7 +79,7 @@ const FIELDS = {
   break: ['kind', 'of', 'by', 'made', 'ai', 'words', 'case', 'about'],
   /* a try: cases that were meant to break a design and did not. The trace of an attack that failed: what a
      design has survived is why it can be trusted, and where the next attacker need not look */
-  try: ['kind', 'of', 'by', 'made', 'ai', 'words', 'cases', 'puzzle', 'machine', 'chef', 'front', 'plan', 'choice', 'pick', 'arch', 'about'],
+  try: ['kind', 'of', 'by', 'made', 'ai', 'words', 'cases', 'puzzle', 'machine', 'chef', 'front', 'plan', 'choice', 'pick', 'arch', 'season', 'about'],
   question: ['kind', 'at', 'part', 'under', 'q', 'noticed', 'by', 'made', 'ai', 'about'],
   report: ['kind', 'at', 'part', 'say', 'words', 'by', 'made', 'ai'],
   fix: ['kind', 'of', 'words', 'pr', 'by', 'made', 'ai'],
@@ -188,11 +193,18 @@ export function checkEntry(e, W) {
   if (e.kind === 'try' && e.pick != null) return no('fields');
   /* an attempt at an architecture: a history the engine can grow, new among the attempts, grown again here; every need it
      claims must be won by its recipe at the end of the replay. Its facts are the replay's */
+  if (e.kind === 'try' && e.arch == null && e.season != null) return no('fields');
   if (e.kind === 'try' && e.arch != null) {
     if (e.of != null || e.cases != null || e.puzzle != null || e.machine != null || e.chef != null || e.front != null || e.plan != null) return no('fields');
     if (!plain(e.words || '', 0, 300)) return no('words');
+    /* the season it was grown in (#480): one the engine has had, the first if it says none */
+    if (e.season != null && !(Number.isInteger(e.season) && e.season >= 1 && e.season <= W.version)) return no('season');
     if (!Arch.histOk(e.arch)) return no('arch');
-    if ((W.arch || []).some(id => Arch.histKey(W.byId[id].arch) === Arch.histKey(e.arch))) return no('same');
+    const sv = Arch.seasonOf(e), sameIn = ids => (ids || []).some(id => Arch.seasonOf(W.byId[id]) === sv && Arch.histKey(W.byId[id].arch) === Arch.histKey(e.arch));
+    if (sameIn(W.arch) || sameIn(W.archPast) || sameIn(W.archOver)) return no('same');
+    /* a closed season's attempt is not grown again by today's engine: its facts are the season's record, as they stood
+       when it closed (src/data/field.js PAST); one the record does not hold is kept, unscored */
+    if (sv < W.version) { const P = W.past, rec = own(P, String(sv)) && isObj(P[sv]) && isObj(P[sv].facts) && own(P[sv].facts, e.id) ? P[sv].facts[e.id] : null; return { ok: true, facts: rec, past: true }; }
     const R = Arch.replay(e.arch), miss = e.arch.wins.filter(n => !R.wins.includes(n));
     if (miss.length) return no('archWin', { need: miss[0], reached: R.wins });
     const kn = Arch.knownOf(R.st.g);
@@ -308,8 +320,10 @@ export function checkEntry(e, W) {
    ever one of their own. */
 const table = () => Object.create(null);
 const beats = (a, b) => a.facts.transistors <= b.facts.transistors && a.facts.ps <= b.facts.ps && (a.facts.transistors < b.facts.transistors || a.facts.ps < b.facts.ps);
-export function settle(list) {
-  const W = { entries: [], byId: table(), pieces: table(), cases: table(), puzzles: table(), machines: table(), chef: table(), fronts: table(), choices: table(), arch: [], genome: [], refused: [], feed: [] };
+/* opts (for the tests): the engine's season and the closed seasons' record, as they would stand after a season closes */
+export function settle(list, opts = {}) {
+  const W = { version: Number.isInteger(opts.version) ? opts.version : Arch.VERSION, past: isObj(opts.past) ? opts.past : PAST, entries: [], byId: table(), pieces: table(), cases: table(), puzzles: table(), machines: table(), chef: table(), fronts: table(), choices: table(), arch: [], archPast: [], archOver: [], genome: [], refused: [], feed: [] };
+  const daily = table();
   const key = x => (isObj(x) && typeof x.id === 'string' ? x.id : '');
   (Array.isArray(list) ? list : []).slice().sort((a, b) => (key(a) < key(b) ? -1 : key(a) > key(b) ? 1 : 0)).forEach(raw => {
     const mark = r => ({ ok: r.ok, reason: r.reason || null, facts: r.facts || null, state: null, brokenBy: null, breaks: [], tries: [] });
@@ -326,7 +340,17 @@ export function settle(list) {
       W.pieces[T.piece].map(id => W.byId[id]).filter(d => d.state === 'right').forEach(d => { const x = runCase(p, d.code, e.case); if (x && x.first >= 0) { d.state = 'broken'; d.brokenBy = e.id; e.breaks.push(d.id); } });
       e.state = 'stands'; W.feed.push({ type: 'broke', id: e.id });
     } else if (e.kind === 'try' && e.choice != null) { (W.choices[e.choice] = W.choices[e.choice] || []).push(e.id); e.state = 'stands'; W.feed.push({ type: 'chose', id: e.id }); }
-    else if (e.kind === 'try' && e.arch != null) { W.arch.push(e.id); e.state = 'tried'; W.feed.push({ type: 'attempted', id: e.id }); }
+    else if (e.kind === 'try' && e.arch != null) {
+      /* a closed season's attempt: its record's standing, history */
+      if (r.past) { W.archPast.push(e.id); e.past = true; const F = e.facts || {}; e.state = F.state || 'past'; e.firstTry = !!F.firstTry; e.firstIn = Array.isArray(F.firstIn) ? F.firstIn : []; W.feed.push({ type: 'attempted', id: e.id }); }
+      else {
+        /* the fair cap: at most DAY_CAP scored a day per author, people and agents alike; the rest kept, unscored */
+        const dk = norm(e.by) + '|' + (ID.exec(e.id) || [])[1], n = (daily[dk] || 0) + 1; daily[dk] = n;
+        if (n > DAY_CAP) { W.archOver.push(e.id); e.over = true; e.state = 'over'; e.firstTry = false; e.firstIn = []; }
+        else { W.arch.push(e.id); e.state = 'tried'; }
+        W.feed.push({ type: 'attempted', id: e.id });
+      }
+    }
     else if (e.kind === 'try' && e.front != null) { (W.fronts[e.front] = W.fronts[e.front] || []).push(e.id); e.state = 'stands'; W.feed.push({ type: 'attempted', id: e.id }); }
     else if (e.kind === 'try' && e.chef != null) { (W.chef[e.chef] = W.chef[e.chef] || []).push(e.id); e.state = 'front'; W.feed.push({ type: 'attempted', id: e.id }); }
     else if (e.kind === 'try' && e.machine != null) { (W.machines[e.machine] = W.machines[e.machine] || []).push(e.id); e.state = 'front'; W.feed.push({ type: 'attempted', id: e.id }); }
@@ -487,7 +511,8 @@ export function choicesAt(W, need) {
 export { ARCH_AGENTS };
 export function archAttempts(W) {
   const all = (W.arch || []).map(id => W.byId[id]);
-  return { all, people: all.filter(e => !ARCH_AGENTS.includes(e.made)), agents: all.filter(e => ARCH_AGENTS.includes(e.made)), first: W.archFirst || table(), square: W.archSquare || table(), tried: W.archTried || table() };
+  return { all, people: all.filter(e => !ARCH_AGENTS.includes(e.made)), agents: all.filter(e => ARCH_AGENTS.includes(e.made)), first: W.archFirst || table(), square: W.archSquare || table(), tried: W.archTried || table(),
+    past: (W.archPast || []).map(id => W.byId[id]), over: (W.archOver || []).map(id => W.byId[id]) };
 }
 /* the open genome's proposals, in the order kept: each a guess until a fact backs it (state guess or backed) */
 export const proposals = W => (W.genome || []).map(id => W.byId[id]);

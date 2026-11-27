@@ -241,6 +241,31 @@ export const KNOWN = [
   { id: 'living', g: { where: 'near', carrier: 'living', told: 'learns', shape: 'swarm' }, status: 'product', fact: 'cortical-cl1' },
   { id: 'reversible', g: { where: 'far', carrier: 'reversible', told: 'fixed', shape: 'few' }, status: 'lab', fact: 'vaire-ice-river' }
 ];
+/* ---- seasons (#480) ----
+   Every attempt in the ledger is grown again by this engine, so retuning it (a trait's effect, a need's weights, a
+   growth constant) would silently score every old attempt again and move champions without anyone doing anything. So
+   the engine has a season: VERSION, raised whenever its tables change, and every attempt records the season it was
+   grown in (the ledger's field season; an attempt kept before seasons existed was grown in the first). The ledger
+   scores each attempt in its own season (src/engines/ledger.js settle): the field shows the current one, and a closed
+   season's standings stay as history (src/data/field.js PAST), never deleted.
+   tablesPrint is a fingerprint of every table the scores read; SEASONS keeps each season's print and the day it
+   opened. tests/arch.test.mjs fails when the tables change while VERSION stays: raise it, add the season here with the
+   new print, close the old one (scripts/season.mjs) and say so in the pull request. A past season's print never
+   changes. */
+export const SEASONS = [{ v: 1, print: '6fff8cb7', from: '2026-11-26' }];
+export const VERSION = SEASONS.length;
+/* the tables the scores read, by name: changing any of them changes the print */
+export const tables = () => ({ OPTIONS, TODAY, TRAITS, EFFECT, CARRY, IDLE, FIXED_CAP, NEEDS, WANT, DIRS, NEED_DIRS, LINK, START_MAIN, START_SIDE, UNBUILT, GROWN, GROWTH, A0,
+  BUILT_BOOST, ATTEMPTS, PEOPLE_START, PER_PERSON, JOIN, TODAY_GAIN, GOALS, FOCUS_MAX, KNOWN: KNOWN.map(k => [k.id, keyOf(k.g), k.status]), STONES, STONE, STONE_PEOPLE,
+  ACTIVITY, MACHINE: MACHINE_NEEDS.map(n => [n.id, n.activity || 'steady']) });
+/* a plain value written the same way whatever order its keys were added in */
+const canon = x => (Array.isArray(x) ? '[' + x.map(canon).join(',') + ']' : x !== null && typeof x === 'object' ? '{' + Object.keys(x).sort().map(k => JSON.stringify(k) + ':' + canon(x[k])).join(',') + '}' : JSON.stringify(x));
+/* FNV-1a, 32 bits, as eight hex digits: enough to notice a change, not a seal */
+export function tablesPrint() { const s = canon(tables()); let h = 0x811c9dc5; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; } return h.toString(16).padStart(8, '0'); }
+/* the season an entry was grown in: its own field, or the first for an attempt kept before seasons existed */
+export const seasonOf = e => (e && Number.isInteger(e.season) ? e.season : 1);
+export const seasonOk = v => v == null || (Number.isInteger(v) && v >= 1 && v <= VERSION);
+
 export const keyOf = g => GENES.map(k => g[k]).join('/');
 export const knownOf = g => KNOWN.find(k => keyOf(k.g) === keyOf(g)) || null;
 export const RECIPES = OPTIONS.where.length * OPTIONS.carrier.length * OPTIONS.told.length * OPTIONS.shape.length;

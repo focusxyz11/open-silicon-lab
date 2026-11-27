@@ -367,6 +367,7 @@ export function createHold(host, ctx = {}) {
   function touch() { if (touched || !document.documentElement.dataset.preload) return; touched = true; loadFacts(); more();
     /* words that did not come (the page was left, the connection dropped) are asked for again at the next touch; once
        in, the story above may grow, and the camera stays where it was (plan) */
+    if (ctx.field) Promise.all([ctx.field(), more()]).then(([s]) => import('./holdisle.js').then(m => m.fillField(s)), () => { /* no ledger: hidden */ });
     needWords('blueprint', 'shared').then(() => { fillWays(); fillShared(); out('machine'); if (!hasWords('blueprint') || !hasWords('shared')) touched = false; }, () => { touched = false; }); }
   const idleTouch = () => { if (touched || !LIVE.on || document.documentElement.dataset.preload === 'off') return; if (document.documentElement.dataset.preload) (window.requestIdleCallback ? requestIdleCallback(touch, { timeout: 1500 }) : setTimeout(touch, 1500)); else setTimeout(idleTouch, 600); };
 

@@ -17,6 +17,7 @@ import { plan, progress, needOf, needForProject, childrenOf } from './build.js';
 import { settled, frontier, draft, tryEntry, fileOf, proposeUrl, runCase, caseOk, attemptsAt, choicesAt, frontAttemptsAt, archAttempts, ARCH_AGENTS } from './ledger.js';
 import * as Arch from './arch.js';
 import * as Pop from './population.js';
+import { DAY_CAP } from '../data/field.js';
 import { geoEffFront } from './lens.js';
 import * as Thousand from './thousand.js';
 import { budget, where as whereEnergy, LEVELS as ENERGY_LEVELS, LEVERS, PLAN, JOB } from './budget.js';
@@ -325,7 +326,12 @@ export function architectureField() {
     needs: Arch.NEEDS.map(n => ({ need: n, name: t('ar.need.' + n) })),
     niches: Arch.NEEDS.flatMap((n, ni) => [1, 2, 3, 4].map(d => { const c = cen.champ[ni][d]; return { need: n, genesFromToday: d, champion: c ? Object.assign({ recipe: c.key, now: sig(c.now) }, who(c.a)) : null, untried: open[ni][d] }; })),
     attempts: atts.filter(a => a.by === 'ledger').map(a => Object.assign(who(a), { recipe: a.key, genesFromToday: Arch.novelty(a.g), years: a.years, wins: Arch.winsOf(a.st), firstToTry: a.first, firstToWin: a.firstIn })),
-    tried: cen.tried, aheadOfToday: cen.wins, how: t('api.field.how'), note: t('api.untrusted')
+    tried: cen.tried, aheadOfToday: cen.wins,
+    /* the seasons and the fair cap (#480): the engine's season, the attempts each author may have scored a day, how many
+       were kept over it, and the closed seasons' champions, kept as history */
+    season: Arch.VERSION, scoredPerAuthorPerDay: DAY_CAP, overTheCap: (W.archOver || []).length,
+    pastChampions: Pop.pastChampions().map(c => ({ season: c.season, need: c.need, genesFromToday: c.d, id: c.id, by: c.built ? t('ar.known.' + c.id) : c.who })),
+    how: t('api.field.how'), note: t('api.untrusted')
   };
 }
 /* the agents' forks for the state a history reaches (after its first year, as in the lab): each one gene changed,
@@ -346,5 +352,5 @@ export function submitArchitecture(a = {}) {
   const R = archRead(a || {}); if (!R || !R.h.years.length) return archNo();
   /* a claim that is not a list goes to the ledger as it is, to be refused there with a reason */
   const arch = Object.assign(Arch.histClaim(R.h, []), { wins: a.wins == null ? Arch.winsOf(R.st) : a.wins });
-  return entryOut(draft({ kind: 'try', arch, by: author || t('api.anon'), made: kind, ai: ai || '', words: words || '', about: about || null }, txt(author) + ' arch ' + R.h.start.split('/').join(' ')), { recipe: recipeOut(R.st.g), reached: Arch.winsOf(R.st) });
+  return entryOut(draft({ kind: 'try', arch, season: Arch.VERSION, by: author || t('api.anon'), made: kind, ai: ai || '', words: words || '', about: about || null }, txt(author) + ' arch ' + R.h.start.split('/').join(' ')), { recipe: recipeOut(R.st.g), reached: Arch.winsOf(R.st) });
 }
