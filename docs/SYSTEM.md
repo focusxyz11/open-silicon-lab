@@ -40,6 +40,12 @@ inside it (`src/data/places.js`, `src/data/atlas.js`).
 | Story | `STORIES` in the atlas | its own keys |
 | Figure | `src/data/facts.json`, shown on the part it is about | — |
 
+One level is not a size: **mind**, the stack's top rung (`docs/PATH.md`), what the machine does. It is a level of the
+data centre above its machine (`ABOVE` in `src/data/places.js`), so things can have their home there, but it stays out
+of the zoom: the dive runs on sizes and portals (`DEPTHS`), and mind has neither. No view lists it until the stack
+shows it; its way in is the data centre on the island, and the size readout says it is not a size (`NOT_A_SIZE` in the
+atlas).
+
 Views never own content. They read it from the atlas by address and show it their own way, so a thing is written
 once and appears wherever its place and level are shown. A view that draws a part names it by its home id
 (`VIEW_PARTS`), never with words of its own. `tests/atlas.test.mjs` checks that every thing has a home, that no view

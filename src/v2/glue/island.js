@@ -20,7 +20,17 @@ import { LEVERS as WF_LEVERS } from '../../engines/ripple.js';
 import { V, $, esc, qColor, follow, followW } from '../shell.js';
 
 export function create() {
-  Object.assign(V, { openMover, openPlace, drawPlace, openQuestion });
+  Object.assign(V, { openMover, openPlace, drawPlace, openQuestion, handOf });
+  /* between the island and the line, where the island stands the station (src/v2/map3d.js stationPlace): one camera.
+     Going in, the island has flown to the line's eye (src/v2/app.js enter, V.handNext); coming out to the place that
+     stands it, the island starts where the line's camera is (V.lineLeave, taken by the island's from). Both pictures
+     are then the same machine from the same eye, so the old one only dissolves into the new (data-hand on the page,
+     src/styles/base.css), with no zoom of the page between them */
+  function handOf(from, view, parts) {
+    const pose = from === 'line' && view === 'map' && parts[0] === 'place' && V.map && V.dive && V.dive.pose3d ? V.dive.pose3d() : null;
+    V.lineLeave = pose && V.map.stationPlace(pose.id) === parts[1] ? pose : null;
+    const hand = (from === 'map' && view === 'line' && !!V.handNext) || !!V.lineLeave; V.handNext = false; return hand;
+  }
   
   function drawInsp() {
     if (!V.cur) return V.hideInsp(); const id = V.cur.place, P = V.cur.part && V.PARTS[id], C = Game.community(V.S), dos = V.doList(id);
