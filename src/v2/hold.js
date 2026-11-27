@@ -6,15 +6,16 @@
    inside a moment), holding scrolls for you, and Moore's law runs live along the bottom. Past the wall the same scroll
    (or the same hold) pulls the camera back until that square is one block among twelve; a check sweeps across and four
    blocks fail it (the four walls). Then it flies from block to block (what comes next, how a computer works, your
-   machine, the island), and short cards pass over the picture with numbered marks that also sit on the part they are
+   machine, your stack), and short cards pass over the picture with numbered marks that also sit on the part they are
    about. The chip is also the map: tap a block, the small chip in the bar or a chapter at the left, and the camera
    flies there. Nothing is swapped, faded in or cut. Designed with Claude Fable 5.2 (prototype D: B's story on A's
    chip) and brought into the lab with Claude Opus 5.5.
    Its pace: it opens on the square, the count and the hold button alone; Moore's law rises along the bottom once the
    count has begun to double. After the wall a block arrives with its name and its thing to try together, its question
-   after. The last block is the island's own plan from straight above: the camera goes down to it, and pushing on goes
-   inside through the lab's portal, the island opening from above (ctx.enter). Nothing 3D is drawn here.
-   createHold(host, ctx) → { show(), hide() }; ctx: still(), enter(point, at). For checks: window.__hold.set(v) goes to
+   after. The last block is your stack, the lab's spine (docs/PATH.md): seven rungs from the atom up to the mind, each a
+   way in, and the last step goes inside it (#/stack), plain navigation; the island is a quieter way on. Nothing 3D is
+   drawn here.
+   createHold(host, ctx) → { show(), hide() }; ctx: still(). For checks: window.__hold.set(v) goes to
    v doublings (99: the wall), .go(id) to a block, .ch(id) to where a challenge is played, .state(). */
 import { hasWords, lang, needWords } from '../core/i18n.js';
 import { still, theme } from '../core/ui.js';
@@ -63,7 +64,7 @@ export function createHold(host, ctx = {}) {
   ORDER.forEach(id => { const p = PW[id], b = h('div', 'dblk' + (p.viol ? ' viol' : '')), pl = mkPlate(id, { dpr: id === 'years' ? DPR : Math.min(1.5, DPR), name: p.name, more: id === 'years' ? () => countSay(S.d) : null }); plates[id] = pl; blks[id] = b;
     const k = h('div', 'dk anton', '<b>' + (p.viol ? '✕ 0' + p.viol : NUM[p.ch]) + '</b>' + (id === 'years' ? w('tab.years') : p.name())), go = h('button', 'dgo'); go.type = 'button'; go.setAttribute('aria-label', p.name()); go.onclick = () => goPlate(id, null, false, true);
     b.append(k, pl.el, h('div', 'dv'), go); world.appendChild(b); });
-  LOOP.forEach(([stg, place], i) => { const b = h('button', 'd-pad dx mono' + (i === 0 || i === 3 ? '' : ' v'), '<i></i><span>' + w('stage.' + stg) + ' · <b>' + w('place.' + place) + '</b></span>'); b.type = 'button'; b.onclick = () => { S.place = place; out('island'); goPlate('island', null, false, true); }; world.appendChild(b); pads[place] = b; });
+  LOOP.forEach(([stg, place], i) => { const b = h('button', 'd-pad dx mono' + (i === 0 || i === 3 ? '' : ' v'), '<i></i><span>' + w('stage.' + stg) + ' · <b>' + w('place.' + place) + '</b></span>'); b.type = 'button'; b.onclick = () => goPlate('island', null, false, true); world.appendChild(b); pads[place] = b; });
   world.appendChild(scan);
   CELLS.forEach(([id]) => { const b = h('button', id === 'title' ? 't' : PW[id].viol ? 'viol' : ''); b.type = 'button'; b.dataset.id = id; b.title = id === 'title' ? w('a.chip') : PW[id].name(); b.setAttribute('aria-label', b.title); b.onclick = () => (PHONE() || id === 'title' ? goOver() : goPlate(id, null, false, true)); map.appendChild(b); });
   const rvMap = rove(map, bs => bs.find(b => b.classList.contains('on')));
@@ -76,7 +77,7 @@ export function createHold(host, ctx = {}) {
   stp.firstChild.onclick = () => step(-1); stp.lastChild.onclick = () => step(1); holdBox.append(hb, hint, stp);
   const holdOn = () => { touch(); setHolding(true); }, holdOff = () => setHolding(false);
   bindHold(hb, holdOn, holdOff); bindHold(plates.years.el, holdOn, holdOff);
-  let cur = 'years', vh = 800, VW = 1280, S1 = 500, Sy = 500, u = 1, WW = 1, WH = 1, F = {}, O = null, KF = [], p0 = 0, flying = 0, C = null, yrs = true, fr = 0, top1 = 0, topY = 0, sized = false, BH = 150, rv = 0, yct = 0, Lnd = null, BEATS = [], anim = null, goIn = null;
+  let cur = 'years', vh = 800, VW = 1280, S1 = 500, Sy = 500, u = 1, WW = 1, WH = 1, F = {}, O = null, KF = [], p0 = 0, flying = 0, C = null, yrs = true, fr = 0, top1 = 0, topY = 0, sized = false, BH = 150, rv = 0, yct = 0, BEATS = [], anim = null, goIn = null;
 
   /* ---- scroll and time: a doubling is a length of page, three times longer inside a moment ---- */
   const BR = [0]; MOMENTS.forEach(m => BR.push(m.at, m.at + m.span)); BR.push(DWALL);
@@ -88,7 +89,7 @@ export function createHold(host, ctx = {}) {
   /* where each card's number sits on its block: on the drawing it names ([x, y] in per cent), or beside the control it
      asks you to use ([a selector in the plate, the side]: l, in the margin left of it, level with its first row; t, just
      above its left end; r, just right of its top), never on a word */
-  const secs = {}, AT = { leak: [[50, 47], [50, 8.5]], distance: [[58, 47], ['.seg', 'l']], power: [[25.5, 58], [50, 50]], price: [[60, 24.5], ['.seg', 'l']], next: [[86, 88], ['.pbtn', 'r']], levels: [[50, 45], ['.seg', 'l']], eras: [[50, 50], ['.seg', 'l']], arr: [[50, 55], ['.seg', 't']], machine: [[50, 40], ['.seg', 'l']], island: [[35, 31], [51.5, 24.8]] },
+  const secs = {}, AT = { leak: [[50, 47], [50, 8.5]], distance: [[58, 47], ['.seg', 'l']], power: [[25.5, 58], [50, 50]], price: [[60, 24.5], ['.seg', 'l']], next: [[86, 88], ['.pbtn', 'r']], levels: [[50, 45], ['.seg', 'l']], eras: [[50, 50], ['.seg', 'l']], arr: [[50, 55], ['.seg', 't']], machine: [[50, 40], ['.seg', 'l']], island: [['.sk-r[data-rung=atom]', 't'], ['.goin', 'l']] },
     MAT = { gate: [14, 58], job: [50, 20.5], bug: ['.layer.on .pbtn', 'l'], light: ['.layer.on .seg', 'l'] };
   const pin = (c, [x, y]) => { if (typeof x === 'string') { c.dataset.sel = x; c.dataset.side = y; } else { c.dataset.x = x; c.dataset.y = y; } };
   const card = (side, n, cls) => { const c = h('div', 'card ' + side + (cls ? ' ' + cls : '')); if (n) c.appendChild(h('span', 'n mono', n)); return c; };
@@ -106,7 +107,7 @@ export function createHold(host, ctx = {}) {
   ORDER.slice(1).forEach(id => { const sec = h('section', 'sec'), W = words(id); sec.dataset.id = id; secs[id] = sec; story.appendChild(sec);
     const a = card('l', 1), b = card('r', 2), c = W.q ? card('l', 0, 'q') : null, gap = () => h('div', 'gap'); a.append(W.head, W.cap); b.append(W.try); if (W.ways) b.append(W.ways); if (c) c.append(W.q);
     pin(a, AT[id][0]); pin(b, AT[id][1]); const g1 = gap(); g1.classList.add('g1'); sec.append(a, g1, b); if (c) sec.append(gap(), c); sec.appendChild(h('div', 'tail')); sec._c = [a, b, c]; });
-  const end = h('div', 'b-end mono', '<span>' + w('b.end') + '</span><span class="push">' + w('isle.push') + '</span>'); story.appendChild(end);
+  const end = h('div', 'b-end mono', '<span>' + w('b.end') + '</span>'); story.appendChild(end);
   CHAPS.forEach(ch => { const b = h('button', '', '<i></i><span>' + w('tab.' + ch) + '</span>'); b.type = 'button'; b.dataset.ch = ch; b.onclick = () => goPlate(ORDER.find(id => PW[id].ch === ch), null, false, true); rail.appendChild(b); });
 
   /* ---- sizes, the chip's plan, and the camera's path ---- */
@@ -170,9 +171,6 @@ export function createHold(host, ctx = {}) {
     { const xs = ['leak', 'distance', 'power', 'price'].map(k => POS[k][0]), ys = ['leak', 'distance', 'power', 'price'].map(k => POS[k][1]), x0 = Math.min(...xs), y0 = Math.min(...ys); px(reg, x0 - S1 * .06, y0 - S1 * .2, Math.max(...xs) - x0 + S1 * 1.12, Math.max(...ys) - y0 + S1 * 1.25); reg.style.display = ph ? 'none' : ''; }
     const pm = M * .21, PP = { lab: [WW / 2, pm], studio: [WW - pm, WH * .3], fab: [WW - pm, WH * .7], test: [WW / 2, WH - pm], port: [pm, WH * .7], datacentre: [pm, WH * .3] }; for (const p in pads) px(pads[p], ...PP[p]);
     F = {}; ORDER.forEach(id => { F[id] = { x: POS[id][0] + S1 / 2, y: POS[id][1] + S1 / 2, k: 1, sx: cxs, sy: top1 + S1 / 2 }; });
-    /* the landing: the island's block as large as the window allows above the footer's line (a phone keeps it as it is) */
-    Lnd = { ...F.island, k: ph ? 1 : clamp((vh - barH - 58 * u) / (S1 * 1.06), 1, 1.5), sy: ph ? F.island.sy : barH + (vh - barH - 32 * u) / 2 + S1 * .02 };
-    R.setProperty('--LS', S1 * Lnd.k + 'px'); R.setProperty('--LB', Math.max(10, vh - Lnd.sy - S1 * Lnd.k / 2) + 'px');
     O = { x: WW / 2, y: WH / 2, k: Math.min(uw / WW, uh / WH), sx: cxs, sy: ot + uh / 2 };
     secs.years.style.height = yOfD(DWALL) + vh * 1.25 + 'px'; rv = rvWant(); layYears();
     /* a headline as large as its card allows, never wider than it ("L’électricité" is longer than "The power") */
@@ -204,11 +202,9 @@ export function createHold(host, ctx = {}) {
     ORDER.slice(1).forEach(id => { const [a, b, c] = secs[id]._c; b.style.marginTop = ph ? '' : vh * .04 - a.offsetHeight + 'px'; if (c) c.style.top = ph ? '' : vh * .17 + a.offsetHeight + 14 * u + 'px'; });
     const T = vh * .75; p0 = pull.offsetTop - vh * .2; KF = [[0, F.years, 0], [p0, F.years, 0], [p0 + vh * .85, O, 0], [p0 + vh * 1.4, O, 0]];
     ORDER.slice(1).forEach(id => { const s = secs[id]; s._out = s.offsetTop + s.offsetHeight - T; KF.push([s.offsetTop, F[id], id === 'leak' ? 0 : 1], [s._out, F[id], 0]); });
-    /* the end is a landing: from the island's block the camera goes down to it, and stays */
-    KF.push([end.offsetTop + vh * .5, Lnd, 0], [1e9, Lnd, 0]);
+    /* the end: the camera stays on the last block, your stack, with its ways in */
+    KF.push([1e9, F.island, 0]);
     BEATS = [[p0 + vh * 1.1, w('a.chip')]]; if (!ph) ORDER.slice(1).forEach(id => { const s = secs[id]; BEATS.push([s.offsetTop + 2, PW[id].name()]); if (s._c[2]) BEATS.push([fullY(s), w('q.label')]); });
-    /* the last step is the landing: the camera comes down to the island's plan; from there the way is in */
-    if (!ph) BEATS.push([host.scrollHeight - vh, w('step.land')]);
     if (here.a && performance.now() < here.until && Math.abs(host.scrollTop - here.y) < 2) { const y = Math.round(yOf(here.a)); if (Math.abs(y - here.y) > 1) { here.y = y; host.scrollTo({ top: y, behavior: 'instant' }); } }
     /* later, the story above the part you are at may still grow (a font that arrives late, words filled in): the camera
        stays on that part, unless you have moved since */
@@ -289,14 +285,12 @@ export function createHold(host, ctx = {}) {
     /* the keyboard and a screen reader find only what the camera is on: the block's controls, or with the whole chip in
        view each block's way in and the pads */
     for (const p in pads) inert(pads[p], !over);
-    ORDER.forEach(k => { const b = blks[k], f = F[k], isF = q => q === f || (k === 'island' && q === Lnd), main = isF(C.a) || isF(C.b) || (k === 'years' && yrs); inert(b, !main && !over); inert(plates[k].ui, !main); b.classList.toggle('cur', main); b.classList.toggle('live', (settled && isF(C.a)) || (k === 'island' && isF(C.a) && isF(C.b))); if (k in WALL_OF) { b.classList.toggle('found', y >= secs.leak.offsetTop || sxw > POS[k][0] + S1 / 2); b.classList.toggle('tried', !!S.tried[WID[WALL_OF[k]]]); } });
+    ORDER.forEach(k => { const b = blks[k], f = F[k], isF = q => q === f, main = isF(C.a) || isF(C.b) || (k === 'years' && yrs); inert(b, !main && !over); inert(plates[k].ui, !main); b.classList.toggle('cur', main); b.classList.toggle('live', settled && isF(C.a)); if (k in WALL_OF) { b.classList.toggle('found', y >= secs.leak.offsetTop || sxw > POS[k][0] + S1 / 2); b.classList.toggle('tried', !!S.tried[WID[WALL_OF[k]]]); } });
     ORDER.slice(1).forEach(k => { const s = secs[k], o = 1 - ss(0, .3, (y - s._out) / (vh * .75)); s.style.opacity = o; s.style.pointerEvents = o < .5 ? 'none' : ''; s.style.visibility = o < .01 ? 'hidden' : ''; });
     if (was !== yrs || !slot._s) { slot._s = 1; const Sx = yrs ? lerp(S1, Sy, rv) : S1; slot.style.setProperty('--S', Sx + 'px'); slot.style.setProperty('--top', (yrs ? F.years.sy - Sx / 2 : F.leak.sy - S1 / 2) + 'px'); holdBox.style.setProperty('--S', Sx + 'px');
       holdBox.style.setProperty('--hb', (PHONE() ? 14 : !yrs ? 22 * u : lerp(Math.max(22 * u, vh - top1 - S1), BH + 22 * u, rv)) + 'px'); }
     root.classList.toggle('chipm', !yrs); hud.classList.toggle('off', !yrs); band.classList.toggle('off', !yrs); band.classList.toggle('wait', yrs && rvWant() < 1); holdBox.classList.toggle('chip', !yrs); holdBox.classList.toggle('over', !yrs && over);
-    /* the landing: past the island's cards the block is alone with its way in */
-    const ending = y > secs.island.offsetTop && y >= host.scrollHeight - vh - vh * .3; root.classList.toggle('landing', ending);
-    if (!yrs) { const nb = BEATS.find(b => b[0] > (anim ? anim.y1 : y) + 12); put(stN, nb ? nb[1] : S.kept ? w('isle.go') : w('isle.go0')); stp.lastChild.classList.toggle('in', !nb); }
+    if (!yrs) { const nb = BEATS.find(b => b[0] > (anim ? anim.y1 : y) + 12); put(stN, nb ? nb[1] : w('step.in')); stp.lastChild.classList.toggle('in', !nb); }
     const inChip = !yrs && over, ch = PW[cur].ch, n = CHAPS.indexOf(ch) + 1, chW = chapL._h; put(chapL, inChip ? '<b>' + w('a.chip') + '</b>' : w('b.chap', { n }) + '<b>' + w('tab.' + ch) + '</b>'); if (chapL._h !== chW) fitBar();
     [...rail.children].forEach(b => b.classList.toggle('on', !inChip && b.dataset.ch === ch)); [...map.children].forEach(b => b.classList.toggle('on', inChip ? b.dataset.id === 'title' : b.dataset.id === cur));
     const on = [null, null]; if (settled) $$('.card[data-x],.card[data-sel]', story).forEach(c => { const r = c.getBoundingClientRect(), m = r.top + Math.min(r.height, 200) / 2; if (m > vh * .16 && m < vh * .8) { const n = +($('.n', c) || {}).textContent - 1; if (n >= 0 && (!c.dataset.mom || c.dataset.mom === viewAt(S.d))) on[n] = c; } });
@@ -339,7 +333,7 @@ export function createHold(host, ctx = {}) {
     if (yrs) holdBox.style.setProperty('--pr', (S.d / DWALL).toFixed(4));
     root.classList.toggle('at0', yrs && S.d < .5 && S.press < .5); root.classList.toggle('fresh', S.cq.maxD < .9);
     if (!C) return; const far = !yrs || S.d > 9;
-    ORDER.forEach((id, i) => { const f = F[id], main = f === C.a || f === C.b || (id === 'island' && C.b === Lnd); if (main || (far && fr % 4 === i % 4 && seen(id))) plates[id].paint(T, main ? dt : dt * 4); });
+    ORDER.forEach((id, i) => { const f = F[id], main = f === C.a || f === C.b; if (main || (far && fr % 4 === i % 4 && seen(id))) plates[id].paint(T, main ? dt : dt * 4); });
     const d = S.d, mom = momAt(d), wall = d >= DWALL - 1e-4;
     if (yrs) { MOMENTS.forEach(m => { m._box.firstChild.style.opacity = PHONE() ? (d >= m.at - .05 && d < m.at + m.span ? 1 : 0) : ss(m.at - 1.1, m.at - .4, d) * (1 - ss(m.at + m.span - .05, m.at + m.span + .5, d)); const on = d >= m.at - .4 && d < m.at + m.span + .3; m._box.firstChild.style.pointerEvents = on ? '' : 'none'; inert(m._box, !on); });
       chart.paint(T); const cp = countParts(d), say = mom || wall ? '' : yearsWordsHTML(d); put($('.count', hud), cp[0] + '<small>' + (cp[2] ? '<em>' + cp[2] + '</em> ' : '') + cp[1] + '</small>'); put($('.stats', hud), statsHTML(d)); put($('.say', hud), say); put($('.say', ycard), say);
@@ -358,10 +352,10 @@ export function createHold(host, ctx = {}) {
      behind the marks, the blueprint's words for what people are trying, and the words Hold shares with other pages (the
      walls, the needs: shared.json). Where the preload never starts (off: a connection that saves data), only a touch
      fetches them */
-  /* the island's plan and the way in, the page's last picture (src/v2/holdisle.js): asked for with the first touch, or
+  /* your stack and the ways in, the page's last picture (src/v2/holdisle.js): asked for with the first touch, or
      as soon as the camera is past the wall */
   let moreP = null;
-  const more = () => moreP || (moreP = import('./holdisle.js').then(m => { const pl = plates.island; Object.assign(PL.island, m.ISLAND); PL.island.ui(pl.ui, pl); pl.paint(S.T, 0); goIn = m.landing(host, root, pl, ctx, end, () => sheet(true)); onScroll(); }, () => { moreP = null; }));
+  const more = () => moreP || (moreP = import('./holdisle.js').then(m => { const pl = plates.island; Object.assign(PL.island, m.ISLAND); PL.island.ui(pl.ui, pl); pl.paint(S.T, 0); goIn = m.landing(end, () => sheet(true)); out('island'); onScroll(); }, () => { moreP = null; }));
   const late = () => import('./holdboard.js');
   let touched = false;
   function touch() { if (touched || !document.documentElement.dataset.preload) return; touched = true; loadFacts(); more();

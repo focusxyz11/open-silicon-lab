@@ -3,10 +3,10 @@
    Moore's law, live, along the bottom of the fifty years (mkChart, mkCQ). Designed with Claude Fable 5.2 and brought
    into the lab with Claude Opus 5.5. */
 import { t } from '../core/i18n.js';
-import { w, sw, Q, $, h, clamp, lerp, ss, mix, rnd, nf, sig, xOf, S, done, tried, setOut, K, fg, rd, src, lab, viewAt, momOut, Yr, ROOT, TICK, changed, onChange } from './holdkit.js';
+import { w, sw, Q, $, h, clamp, lerp, ss, mix, rnd, nf, sig, xOf, S, done, tried, setOut, K, fg, rd, src, viewAt, momOut, Yr, ROOT, TICK, changed, onChange } from './holdkit.js';
 import { money } from './figures.js';
 import { FIG } from '../data/figures.js';
-import { AHEAD, ARR, BEHIND, CHIPS, COST, DWALL, ERAS, FCOST, FDIV, FORMS, KNEE, LIGHTS, LOOP, MOORE65, NEEDS, RUNGS, SERIES, STOCK, TRIP, dAt, formAt, rule, trend, yearAt } from '../data/hold.js';
+import { AHEAD, ARR, BEHIND, CHIPS, COST, DWALL, ERAS, FCOST, FDIV, FORMS, KNEE, LIGHTS, MOORE65, NEEDS, RUNGS, SERIES, STOCK, TRIP, dAt, formAt, rule, trend, yearAt } from '../data/hold.js';
 
 /* ================= the plates =================
    Each plate is drawn in a square of 1000 units and carries its own controls (HTML over it, placed in per cent), so
@@ -278,7 +278,7 @@ export const OUTS = {
     return '<b>' + (id === 'classic' ? w('arr.classic.t') : t('bp.next.' + id + '.t')) + '</b> ' + (id === 'classic' ? w('arr.classic.d') : t('bp.next.' + id + '.d')) + ' ' + src(...a[2]) + '<br><span class="mono dim">' + w('arr.trip') + '</span> ' + w('trip.' + TRIP[id]) + (a[1] ? ' · <span class="mono dim">' + w('status.' + a[1]) + '</span>' : '') +
       '<br><span class="ok">' + (n >= 2 ? w('arch.ch.done') + ' ' + w('arch.ch.why') : w('arr.found', { n, of: 2 })) + '</span>'; },
   machine: () => { const m = machNow(); return sw('machines.need.' + m.need.id + '.why') + (m.ok ? '' : '<br><span class="ok">' + w('mach.bad', { part: w('piece.' + m.bad).toLowerCase() }) + '</span>') + (S.agent ? '<br>' + w('tri.gen.done', S.agent) : '') + (S.kept ? ' <b class="ok">' + w('tri.dec.done') + '</b>' : ''); },
-  island: () => { const p = S.place; if (!p) return w('isle.out0'); const lit = LIT[p](); return '<b>' + w('place.' + p) + '</b> ' + w('tr.' + p + (lit || p === 'port' ? '' : '.0')) + '<br>' + lab(w('tr.' + p + '.go'), '#/place/' + p); }
+  island: () => (PL.island.out ? PL.island.out() : '')
 };
 export const out = id => setOut(id, OUTS[id]());
 
@@ -478,11 +478,11 @@ PL.machine = {
       put(en, '×' + (m.e >= 10 ? Math.round(m.e) : m.e.toFixed(1)) + '<small style="font-size:max(11px,calc(var(--p)*15.5))">' + (m.ok ? w('mach.ok') : w('mach.no')) + '</small>'); en.style.color = m.ok ? '' : 'var(--mid)'; kb.disabled = !m.ok || S.kept; put(kb, S.kept ? w('tri.dec.done') : w('tri.dec.b')); }; }
 };
 
-/* ---------------- the island: a chip's life round the loop ---------------- */
+/* ---------------- the loop round the chip: the places a visitor's work here lights (the pads, the board) ---------------- */
 export const LIT = { lab: () => S.kept, studio: () => !!S.done.job, fab: () => !!(S.done.light || S.tried.cost), test: () => !!S.done.bug, port: () => false, datacentre: () => !!(S.tried.switch || S.tried.memory || S.tried.power) };
-/* the island's block is its plan, drawn by src/v2/holdisle.js: the last picture of the page, so it is fetched once the
+/* the last block is your stack, drawn by src/v2/holdisle.js: the last picture of the page, so it is fetched once the
    page has drawn (src/v2/hold.js more()), and until then the block is an empty plate */
-PL.island = { frame: () => [w('pl.island'), w('isle.lit', { n: LOOP.filter(l => LIT[l[1]]()).length })], paint() {}, ui() {} };
+PL.island = { frame: () => [w('pl.island'), ''], paint() {}, ui() {} };
 
 /* ---- what moves by itself, once a frame ---- */
 TICK.push((T, dt) => {
