@@ -32,7 +32,7 @@ export const LIVE = { on: false };
 /* ---- what the visitor has set and done ---- */
 export const S = { night: false, d: 0, press: 0, holding: false, done: {}, tried: {}, out: {}, T: 0,
   gate: { a: 0, b: 0 }, job: 2, bug: { n: 0, worst: false, run: 0 }, light: 0,
-  leak: 0, dist: 0, distK: 0, power: { g: 600, shown: 0 }, price: 0, next: { pos: 0, at: -1, wait: 0 },
+  leak: 0, dist: 0, distK: 0, power: { g: 600, shown: 0 }, price: 0, next: { pos: 0, at: 0, goal: 0 },
   lv: 0, lvK: 0, era: 0, eraSeen: {}, arr: 0, arrSeen: {}, need: 0, forms: {}, kept: false, agent: null, place: null,
   cq: { every: 1, hz: false, cores: false, w: false, pick: null, guess: null, msg: '', stage: null, maxD: 0 } };
 const subs = []; export const onChange = f => subs.push(f); export const changed = what => { subs.forEach(f => f(what)); keepSoon(); };
@@ -93,19 +93,17 @@ export function setRoot(r) { ROOT = r; readInk();
   r.addEventListener('mouseout', e => { const b = e.target.closest('.src'); if (b) b._want = 0; if (b && !(e.relatedTarget && e.relatedTarget.closest && e.relatedTarget.closest('.srcpop'))) setTimeout(() => { const p = ROOT.querySelector('.srcpop'); if (p && !p.matches(':hover')) hidePop(); }, 220); });
   addEventListener('keydown', e => { if (LIVE.on && e.key === 'Escape' && ROOT.querySelector('.sheet.on,.srcpop.on')) { sheet(false); hidePop(); } }); }
 
-/* ---- the page's part of the lab's bar: the small chip (its map), the chapter, the twelve challenges, the sources ---- */
-export function mkTop(mid, goChallenge, goOver) {
+/* ---- the page's part of the lab's bar: the small chip (its map), the chapter, and the twelve challenges as one count
+   with a tick for each, lit once done; it opens their board (src/v2/holdboard.js). The sources are at the foot of the
+   page, and one tap from any number's mark ---- */
+export function mkTop(mid, openBoard) {
   const bar = h('div', 'hbar');
   if (mid) bar.appendChild(mid);
   bar.appendChild(h('span', 'sp'));
-  const tl = h('div', 'tally mono'); tl.setAttribute('role', 'group'); tl.innerHTML = '<span class="tl-n"></span><button type="button" class="tl-c"></button><div class="sq">' + CHALS.map(id => '<button type="button" data-ch="' + id + '" data-tip="' + esc(w('ch.' + id)) + '" aria-label="' + esc(w('ch.' + id)) + '"></button>').join('') + '</div>';
-  tl.onclick = e => { const b = e.target.closest('[data-ch]'); if (b) goChallenge(b.dataset.ch); else if (e.target.closest('.tl-c') && goOver) goOver(); };
-  const rv = rove($('.sq', tl)), paintTally = () => { const s = w('rail.chals', { n: Object.keys(S.done).length, of: CHALS.length }); $('.tl-n', tl).innerHTML = s; tl.setAttribute('aria-label', s.replace(/<[^>]+>/g, ''));
-    /* on a phone the twelve squares are too small to tap: one count stands for them, and opens the whole chip */
-    { const c = $('.tl-c', tl); c.innerHTML = '<b>' + Object.keys(S.done).length + '</b>/' + CHALS.length; c.setAttribute('aria-label', s.replace(/<[^>]+>/g, '')); }
-    $$('[data-ch]', tl).forEach(b => { b.classList.toggle('on', !!S.done[b.dataset.ch]); b.setAttribute('aria-pressed', S.done[b.dataset.ch] ? 'true' : 'false'); }); rv(); };
+  const tl = h('div', 'tally mono'), c = h('button', 'tl-c', '<span class="tl-n"></span><span class="tl-x"></span><span class="sq">' + CHALS.map(id => '<i data-ch="' + id + '"></i>').join('') + '</span>'); c.type = 'button'; c.setAttribute('aria-haspopup', 'dialog'); c.onclick = openBoard; tl.appendChild(c);
+  const paintTally = () => { const n = Object.keys(S.done).length, s = w('rail.chals', { n, of: CHALS.length }); $('.tl-n', tl).innerHTML = s; $('.tl-x', tl).innerHTML = '<b>' + n + '</b>/' + CHALS.length; c.setAttribute('aria-label', s.replace(/<[^>]+>/g, ''));
+    $$('[data-ch]', tl).forEach(b => b.classList.toggle('on', !!S.done[b.dataset.ch])); };
   onChange(paintTally); paintTally(); bar.appendChild(tl);
-  const sb = h('button', 'bbtn mono', '<span>' + w('sources') + '</span>'); sb.type = 'button'; sb.setAttribute('aria-label', w('sources')); sb.onclick = () => sheet(true); bar.appendChild(sb);
   return bar;
 }
 /* a row of buttons as one stop of the keyboard: Tab comes to the one lit (pick), or to the last one used, and the

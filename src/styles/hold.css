@@ -23,14 +23,12 @@ body.firstpage .bar .loop{display:none}
 .hold .anton em,.hold .red{color:var(--red);font-style:normal}
 .hold .dim{color:var(--mid)}
 .hbar .sp{flex:1}
-.hbar .tally{display:flex;align-items:center;gap:calc(var(--u)*10);color:var(--mid)}
-.hbar .tally b{color:var(--ink);font-weight:700}
-.hbar .tally .sq{display:grid;grid-template-columns:repeat(12,calc(var(--u)*11));gap:calc(var(--u)*4)}
-.hbar .tally .sq button{height:calc(var(--u)*11);border:1.5px solid var(--mid);transition:background .25s,border-color .25s,transform .2s;position:relative}
-.hbar .tally .sq button:hover{border-color:var(--ink);transform:scale(1.25)}
-.hbar .tally .sq button.on{background:var(--red);border-color:var(--red)}
-.hbar .tally .sq button::after{content:attr(data-tip);position:absolute;top:calc(100% + 8px);right:-6px;white-space:nowrap;background:var(--ink);color:var(--paper);padding:5px 8px 4px;font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;opacity:0;pointer-events:none;transition:opacity .15s;z-index:5}
-.hbar .tally .sq button:hover::after{opacity:1}
+/* the twelve challenges in the bar: one count, a tick for each, lit once done; it opens their board */
+.hbar .tally .tl-c{display:inline-flex;align-items:center;gap:calc(var(--u)*10);height:32px;padding:0 13px;border:1px solid var(--line);border-radius:999px;color:var(--mid);font:inherit;letter-spacing:inherit;text-transform:inherit;transition:color .2s,border-color .2s}
+.hbar .tally .tl-c:hover{color:var(--ink);border-color:var(--ink)}.hbar .tally b{color:var(--ink);font-weight:700}
+.hbar .tally .sq{display:grid;grid-template-columns:repeat(12,calc(var(--u)*6));gap:calc(var(--u)*3)}
+.hbar .tally .sq i{height:calc(var(--u)*11);background:var(--line)}.hbar .tally .sq i.on{background:var(--red)}
+.hbar .tally .tl-x{display:none}
 .hold .bbtn,.hbar .bbtn{height:calc(var(--u)*30);padding:0 calc(var(--u)*11);border:1px solid var(--hair);display:inline-flex;align-items:center;gap:6px;color:var(--mid);transition:color .2s,border-color .2s;background:var(--paper)}
 .hold .bbtn:hover,.hbar .bbtn:hover{color:var(--ink);border-color:var(--ink)}
 .hold .bbtn.round,.hbar .bbtn.round{width:calc(var(--u)*30);padding:0;justify-content:center;border-radius:50%}
@@ -220,8 +218,7 @@ body.firstpage .bar .loop{display:none}
 /* a card of the fifty years taller than the room above the hold button scrolls (hold.js marks it) */
 .hold .sec.years .card.sc{max-height:var(--cmax);overflow-y:auto}.hold .card.sc .n{top:6px;left:auto;right:8px}
 /* the page's part of the bar, fitted to its room (fitBar in hold.js) */
-.hbar>*{flex:none}.hbar .tl-n{white-space:nowrap}.hbar.f1 .b-chap b,.hbar.f2 .tl-n,.hbar.f3>.bbtn,.hbar.f5 .b-chap{display:none}
-.hbar.f4 .tally .sq{grid-template-columns:repeat(12,9px);gap:3px}.hbar.f4 .tally .sq button{height:9px}
+.hbar>*{flex:none}.hbar .tl-n{white-space:nowrap}.hbar.f1 .b-chap b,.hbar.f2 .tl-n,.hbar.f3 .sq,.hbar.f5 .b-chap{display:none}.hbar.f3 .tl-x{display:inline}
 /* the phone's layout: on a phone, a tablet held upright and a phone on its side (PHONE in src/v2/holdkit.js) */
 @media (max-width:760px),(max-width:1099px) and (max-aspect-ratio:23/20),(max-width:1099px) and (max-height:519px){.hold .b-stage{z-index:4;inset:var(--barH) 0 auto 0;height:var(--stageH);background:var(--paper);border-bottom:1.5px solid var(--ink)}
 .hold .b-hud{position:absolute;left:calc(50% - var(--S)/2);right:calc(50% - var(--S)/2);top:6px;width:auto;height:34px;flex-direction:row;align-items:baseline;gap:10px}
@@ -322,12 +319,10 @@ body.firstpage .bar .loop{display:none}
 .hold .sec.pull .card.l{position:sticky;top:var(--ctop)!important;margin-top:var(--ctop)}
 .hold .pullc .w-h{font-size:34px!important}
 }
-.hbar .bbtn{border-radius:999px;height:32px;padding:0 13px;background:transparent}
+.hold .b-step{display:none}
+/* the end of the page (its words and footer are styled by the late sheet, holdnotes.css) */
+.hold .b-end{height:150vh;display:flex}
 .hold .b-hold.off{opacity:0;pointer-events:none}.hold .b-hold.off>*{pointer-events:none}
-/* the hold button past the wall: small, under the block the camera is on, out of the cards' way; on a phone, scrolling */
-.hold .b-hold.chip{left:calc(50% + var(--rw)/2 - var(--u)*27);width:auto;bottom:var(--hbB)}
-.hold .b-hold.chip .holdbtn{width:calc(var(--u)*54);height:calc(var(--u)*54);font-size:calc(var(--u)*14);box-shadow:0 0 0 calc(var(--u)*4) var(--paper)}
-.hold .b-hold.chip .holdbtn::before{inset:calc(var(--u)*-6.5)}
 .hold .card.wall{top:var(--ctop)}
 /* the sources: from any mark's note, and at the end of the story */
 .hold .d-cover{display:none}
@@ -355,47 +350,16 @@ body.firstpage .bar .loop{display:none}
 .hold .pl-ui .lb b{font-weight:700}
 /* the words' small furniture has the lab's round corners; the drawings and their controls stay square */
 .hold .bbtn{border-radius:999px;background:transparent}
-/* the way in, as the lab draws it (.wigo, frame.css); at the landing it fills as you push on (--land) */
-.hold .goin{position:absolute;transform:translate(-50%,-50%);display:inline-flex;align-items:center;gap:.6em;padding:.36em 1em .36em .36em;border-radius:999px;background:var(--go);color:var(--accent-ink);text-decoration:none;white-space:nowrap;font-size:max(13px,calc(var(--p)*25));line-height:1.1;box-shadow:0 10px 30px color-mix(in srgb,var(--go) 35%,transparent);overflow:hidden;transition:transform .15s}
-.hold .goin:hover{transform:translate(-50%,calc(-50% + 1px))}
-.hold .goin:focus-visible{outline:3px solid var(--ink);outline-offset:3px}
-.hold .goin b{font-weight:700;position:relative}
-.hold .goin .wia{display:grid;place-items:center;width:2em;height:2em;border-radius:50%;background:color-mix(in srgb,var(--accent-ink) 16%,transparent);font-weight:700;position:relative;flex:none}
-.hold .goin::before{content:"";position:absolute;inset:0;background:color-mix(in srgb,var(--accent-ink) 26%,transparent);transform-origin:0 50%;transform:scaleX(var(--land,0))}
-@media (prefers-reduced-motion:no-preference){.hold .goin .wia{animation:h-in 2.4s ease-in-out infinite}}
-@keyframes h-in{0%,100%{transform:translateY(0)}50%{transform:translateY(3px)}}
-/* a place on the island's plan: its square (drawn) and its words under it, over it, or at its right */
-.hold .isl-p{display:flex;flex-direction:column;align-items:center;gap:calc(var(--p)*10)}
-.hold .isl-p i{display:block;flex:none;width:calc(var(--p)*90);height:calc(var(--p)*90)}
-.hold .isl-p.a{flex-direction:column-reverse;transform:translateY(-100%)}
-.hold .isl-p.r{flex-direction:row;text-align:left}
-.hold .isl-p .lb{position:static;text-align:center;background:var(--plate);padding:1px 5px;white-space:normal;max-width:calc(var(--p)*250)}
-.hold .isl-p.r .lb{text-align:left}
-.hold .isl-p:hover .lb b{color:var(--red)}
-/* the landing: the island's block alone with its way in, the hold button at its right */
-.hold.landing .b-hold.chip{left:calc(50% + var(--rw)/2 + var(--LS)/2 + var(--u)*22);right:calc(var(--u)*14);bottom:var(--LB);width:auto}
-.hold.landing .b-hold .hint b{color:var(--go)}
-.hold.landing .holdbtn::before{background:conic-gradient(var(--go) calc(var(--pr,0)*1turn),var(--hair) 0)}
-/* the last words: left of the landing; the push is said by the hold button (on a phone, here) */
-.hold .b-end{height:150vh;display:grid;place-items:end start;align-content:end;gap:14px;padding:0 0 calc(var(--u)*40) calc(var(--rw) + var(--u)*28);color:var(--mid);text-align:left}
-.hold .b-end span{max-width:calc(50% - var(--rw)/2 - var(--LS)/2 - var(--u)*44);line-height:1.5;pointer-events:none}.hold .b-end .bbtn{pointer-events:auto}
-.hold .b-end .push{display:none}
 /* the count of challenges on a phone, in the bar */
-.hbar .tally .tl-c{display:none}
-@media (max-width:760px){.hbar{gap:6px;padding:0 2px 0 4px}.hbar .tally .sq,.hbar .tally .tl-n,.hbar .b-chap,.hbar .bbtn{display:none}
-.hbar .tally .tl-c{display:inline-flex;align-items:center;height:38px;padding:0 11px;border:1px solid var(--line);border-radius:999px;font-family:var(--mono);font-size:12px;letter-spacing:.04em;color:var(--mid)}
-.hbar .tally .tl-c b{color:var(--ink);margin-right:1px}
+@media (max-width:760px){.hbar{gap:6px;padding:0 2px 0 4px}.hbar .tally .sq,.hbar .tally .tl-n,.hbar .b-chap{display:none}.hbar .tally .tl-x{display:inline}.hbar .tally .tl-c{height:38px;padding:0 11px;font-size:12px}
 .hbar .d-map{grid-template-columns:repeat(4,9px);grid-auto-rows:7px;gap:1px;padding:3px;border-radius:4px}}
 /* on a phone: a block's name, then its thing to try; before Moore's law rises, its place says how to move */
 @media (max-width:760px),(max-width:1099px) and (max-aspect-ratio:23/20),(max-width:1099px) and (max-height:519px){.hold .sec .gap.g1{display:block}
 .hold .b-band.wait{transform:none}.hold .b-band.wait .chart{visibility:hidden}
 .hold.fresh .b-band.wait .b-start{display:block;position:absolute;inset:0;padding:16px 2px 0;text-align:center;color:var(--mid);line-height:1.5;text-transform:none;letter-spacing:.02em;font-size:12px}
+.hold .b-end{height:calc(100svh - var(--ctop))}
 .hold.chipm .b-stage{height:var(--stageH2)}.hold .b-stage{transition:height .45s cubic-bezier(.6,0,.2,1)}
-.hold .isl-p .lb b{white-space:nowrap}
-.hold .b-start b{display:block;color:var(--ink);font-weight:500}
-.hold .goin{font-size:13px}
-.hold .b-end{place-items:center;justify-items:center;align-content:start;margin-left:var(--cl);width:var(--cw);padding:22px 0 0;text-align:center;height:calc(100svh - var(--ctop))}
-.hold .b-end span{max-width:none}.hold .b-end .push{display:block;color:var(--ink)}}
+.hold .b-start b{display:block;color:var(--ink);font-weight:500}}
 /* a short phone (most, with the browser's bars): shorter words under the picture */
 @media (max-width:760px) and (max-height:780px){.hold .card .w-h{font-size:36px}.hold .card.wall .w-h{font-size:32px}
 .hold .sec.years .card .mq{display:none}.hold .card{padding:13px 15px 12px;gap:8px}.hold .w-try .w-p{font-size:15.5px;margin:.25em 0 .35em}

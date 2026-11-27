@@ -5,7 +5,8 @@
    next fifty years, how the machine grew, the arrangements, your machine, the island), each block a tap away on the
    small chip in the bar or the chapters at the left, with the twelve challenges counted in the bar; the sources; four
    languages. It opens on the square alone, Moore's law rising once the count has begun to double; its last block is
-   the island's own plan, and the end of the page a landing on it: a tap, or holding on, goes inside the island, and
+   the island's own plan, and the end of the page a landing on it, the sources and the lab's home at its foot: a tap, or pushing on, goes inside
+   the island; past the wall the page steps at a tap, and the count in the bar opens the board of the twelve; and
    the brand leads back */
 import { S } from './shared.mjs';
 
@@ -122,8 +123,8 @@ export default async function run() {
     await wall('power', 'the power cannot be tried', () => { const b = window.__p('power').querySelector('.pbtn'); if (b && !window.__hold.S.tried.power) b.click(); return !!window.__hold.S.tried.power; });
     await wall('price', 'the price cannot be tried', () => { const b = window.__p('price').querySelectorAll('.seg button'); if (b[1] && !window.__hold.S.tried.cost) b[1].click(); return !!window.__hold.S.tried.cost; });
     if (!(await hp.evaluate(() => !!window.__hold.S.done.walls))) problems.push(tag + ': the four walls tried do not count as a challenge');
-    /* the next fifty years: hold again, down to the floor (it takes its time: about twelve seconds of frames, more on a slow machine) */
-    await wall('next', 'the next fifty years cannot be held down to the floor', () => { const b = window.__p('next').querySelector('.holdbtn'); if (b && !window.__hold.S.next.hold) b.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, pointerType: 'mouse' })); return !!window.__hold.S.done.floor; }, 90000);
+    /* the next fifty years: down the ladder a rung at a tap, to the floor (the page holds only through its fifty years) */
+    await wall('next', 'the next fifty years cannot be stepped down to the floor', () => { const p = window.__p('next'), b = p.querySelector('.pbtn'); if (p.querySelector('.holdbtn')) return false; if (b && !b.disabled && !window.__hold.S.done.floor) b.click(); return !!window.__hold.S.done.floor; }, 30000);
     await release();
     /* how the machine grew, every era; the arrangements, where a number never travels; your machine, offered by an agent and kept by you */
     await wall('eras', 'the eras cannot all be seen', () => { window.__p('eras').querySelectorAll('.seg button').forEach(b => b.click()); return !!window.__hold.S.done.eras; });
@@ -146,12 +147,23 @@ export default async function run() {
       await play('the small chip in the bar does not fly to its block', () => { if (window.__hold.state().cur !== 'arr') document.querySelector('.bar .hbar .d-map button[data-id="arr"]').click(); return window.__hold.state().cur === 'arr'; });
       await play('the chapters at the left do not lead to a chapter', () => { if (window.__hold.state().cur !== 'next') document.querySelector('#hd-root .b-rail button[data-ch="next"]').click(); return window.__hold.state().cur === 'next'; });
     } else { await play('the small chip in the bar does not open the whole chip', () => { document.querySelector('.bar .hbar .d-map button[data-id="arr"]').click(); return window.__hold.state().chip && document.querySelector('#hd-root .d-world').classList.contains('far'); });
-      /* on a phone the twelve squares are one count, large enough to tap, and it opens the whole chip too */
-      await hp.evaluate(() => window.__hold.set(5));
-      await play('the count of challenges in the bar is not a button that opens the whole chip', () => { const c = document.querySelector('.bar .hbar .tally .tl-c'), r = c.getBoundingClientRect(), far = window.__hold.state().chip && document.querySelector('#hd-root .d-world').classList.contains('far');
-        if (!far) c.click(); return far && r.height >= 36 && r.width >= 36 && /\d+\s*\/\s*12/.test(c.textContent) && getComputedStyle(document.querySelector('.bar .hbar .tally .sq')).display === 'none'; }); }
+      /* on a phone the twelve squares are one count, large enough to tap */
+      if (!(await hp.evaluate(() => { const c = document.querySelector('.bar .hbar .tally .tl-c'), r = c.getBoundingClientRect(); return r.height >= 36 && r.width >= 36 && /\d+\s*\/\s*12/.test(c.textContent) && getComputedStyle(c.querySelector('.sq')).display === 'none'; }))) problems.push(tag + ': the count of challenges in the bar is not one count, large enough to tap'); }
+    /* the count in the bar opens the board of the twelve: one line in the order the story meets them, where you are on
+       it, and the one picked with what it asks, its question and a way there; the board takes you to it */
+    await hp.evaluate(() => window.__hold.set(5));
+    await play('the count of challenges in the bar does not open their board', () => { const c = document.querySelector('.bar .hbar .tally .tl-c'), bd = document.querySelector('#hd-root .h-board'); if (!bd) { c.click(); return false; }
+      return bd.querySelectorAll('.hb-n').length === 12 && bd.querySelectorAll('.hb-here').length === 1 && bd.querySelectorAll('.hb-n.sel').length === 1 && bd.querySelector('.hb-d h3').textContent.length > 3 && !!bd.querySelector('.hb-d .hb-go') && bd.getBoundingClientRect().width <= innerWidth; });
+    await play('a challenge picked on the board does not show its question', () => { const bd = document.querySelector('#hd-root .h-board'), n = bd && bd.querySelector('.hb-n[data-ch="floor"]'); if (!n) return false; if (!n.classList.contains('sel')) n.click();
+      const q = bd.querySelector('.hb-d .hb-q p'); return n.classList.contains('sel') && !!q && q.textContent.length > 20 && bd.querySelector('.hb-d .hb-go').dataset.go === 'floor'; });
+    await play('the board does not lead to the challenge picked', () => { const bd = document.querySelector('#hd-root .h-board'), g = bd && bd.querySelector('.hb-go[data-go="floor"]'); if (g) g.click(); return !document.querySelector('#hd-root .h-board') && window.__hold.state().cur === 'next'; }, null, 20000);
+    if (!phone) { /* past the wall the page steps: one control under the picture, the next part named on it, at a tap */
+      await hp.evaluate(() => window.__hold.go('leak'));
+      await play('past the wall the page does not step on to the next part at a tap', () => { const st = window.__hold.state(); if (st.cur === 'distance') return !st.fly; const n = document.querySelector('#hd-root .b-hold.chip .b-step .sn');
+        if (!st.fly && !st.holding && n && n.getBoundingClientRect().width > 40 && n.textContent.trim().length > 3) n.click(); return false; }, null, 30000);
+      await play('the step back does not lead back', () => { const st = window.__hold.state(); if (st.cur === 'leak') return !st.fly; if (!st.fly) document.querySelector('#hd-root .b-step .sp').click(); return false; }, null, 30000); }
     /* every number's source, on one sheet */
-    await play('the sources do not open on one sheet', () => { const b = document.querySelector('#hd-root .b-end .bbtn'); if (!document.querySelector('#hd-root .sheet.on')) b.click(); return document.querySelectorAll('#hd-root .sheet.on .f').length > 10; });
+    await play('the sources do not open on one sheet', () => { const b = document.querySelector('#hd-root .b-end .bbtn'); if (!b) return false; if (!document.querySelector('#hd-root .sheet.on')) b.click(); return document.querySelectorAll('#hd-root .sheet.on .f').length > 10; });
     await hp.keyboard.press('Escape');
     const side = await hp.evaluate(() => { const p = document.getElementById('home'); return p.scrollWidth - p.clientWidth; });
     if (side > 1) problems.push(tag + ': the first page scrolls sideways by ' + side + ' px');
@@ -168,12 +180,13 @@ export default async function run() {
     await play('the island does not open from the first page', () => document.getElementById('home').hidden && !document.getElementById('mapCanvas').hidden && !document.querySelector('.bar .hbar'), null, 30000);
     await hp.click('.bar .brand').catch(() => problems.push(tag + ': no brand in the bar'));
     await play('the brand does not lead back to the first page', () => !document.getElementById('home').hidden && document.getElementById('mapCanvas').hidden && !!document.querySelector('.bar .hbar'));
-    /* the end of the page is a landing: the camera has come down to the plan, alone with its way in, and holding on
-       there (the plan itself, pressed) goes inside the island */
+    /* the end of the page is a landing: the camera has come down to the plan, alone with its way in, and at its foot
+       the less important things (the sources, the lab's home, how to join, the licence); pushing on there goes inside
+       the island */
     await play('the end of the page is not a landing on the island\'s plan', () => { const e = document.getElementById('home'); if (e.scrollTop < e.scrollHeight - e.clientHeight - 2) e.scrollTop = e.scrollHeight; return document.getElementById('hd-root').classList.contains('landing') && window.__hold.state().cur === 'island' && !!window.__p('island').querySelector('a.goin'); }, null, 20000);
-    await play('holding on at the landing does not go inside the island', () => { if (location.hash === '#/island') return true; const e = document.getElementById('home'); if (e.scrollTop < e.scrollHeight - e.clientHeight - 2) e.scrollTop = e.scrollHeight;
-      if (!window.__hold.state().holding) window.__p('island').dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, pointerType: 'mouse' })); return false; }, null, 20000);
-    await release();
+    await play('the foot of the first page does not hold the sources, the lab\'s home and its licence', () => { const f = document.querySelector('#hd-root .b-end footer'); return !!f && !!f.querySelector('button.bbtn') && f.querySelectorAll('a[href^="https://github.com/focusxyz11/open-silicon-lab"][target="_blank"]').length === 3 && f.getBoundingClientRect().bottom <= innerHeight + 1 && !document.querySelector('.bar .hbar > .bbtn'); }, null, 20000);
+    await play('pushing on at the landing does not go inside the island', () => { if (location.hash === '#/island') return true; const e = document.getElementById('home'); if (e.scrollTop < e.scrollHeight - e.clientHeight - 2) e.scrollTop = e.scrollHeight;
+      else e.dispatchEvent(new WheelEvent('wheel', { deltaY: 300, bubbles: true })); return false; }, null, 20000);
     await play('the island does not open from the landing', () => document.getElementById('home').hidden && !document.getElementById('mapCanvas').hidden && !document.querySelector('.bar .hbar'), null, 30000);
     if (phone) for (const l of ['zh', 'fr', 'es']) {
       await hp.goto(base + 'index.html?lang=' + l + '#/');
@@ -205,8 +218,8 @@ async function kept() {
   if (!(await kp.evaluate(() => document.activeElement && document.activeElement.classList.contains('hskip')))) problems.push(tag + ': the first Tab stop is not "skip to the story"');
   await kp.keyboard.press('Enter'); await kp.keyboard.press('Tab');
   if (!(await kp.evaluate(() => !!document.activeElement.closest('#hd-root') && document.getElementById('home').scrollTop < 5))) problems.push(tag + ': the third Tab stop is not inside the story, or skipping moved the camera');
-  /* the small chip and the tally are one stop each, the arrows inside */
-  if (await kp.evaluate(() => ['.d-map', '.tally .sq'].some(s => [...document.querySelectorAll('.bar .hbar ' + s + ' button')].filter(b => b.tabIndex >= 0).length !== 1))) problems.push(tag + ': the small chip or the tally is more than one stop of the keyboard');
+  /* the small chip is one stop, the arrows inside; the tally is one button */
+  if (await kp.evaluate(() => ['.d-map', '.tally'].some(s => [...document.querySelectorAll('.bar .hbar ' + s + ' button')].filter(b => b.tabIndex >= 0).length !== 1))) problems.push(tag + ': the small chip or the tally is more than one stop of the keyboard');
   /* one heading, every picture named, one polite voice that speaks while you hold */
   if (await kp.evaluate(() => [...document.querySelectorAll('h1')].filter(e => !e.closest('[hidden]')).length) !== 1) problems.push(tag + ': the first page has not one main heading');
   if (await kp.evaluate(() => [...document.querySelectorAll('#hd-root .dblk .plate canvas')].some(c => c.getAttribute('role') !== 'img' || !(c.getAttribute('aria-label') || '').trim()))) problems.push(tag + ': a picture has no text alternative');
@@ -216,7 +229,7 @@ async function kept() {
   await kp.evaluate(() => window.dispatchEvent(new PointerEvent('pointerup', { bubbles: true })));
   await play('the voice does not say the wall as it comes', () => { if (window.__hold.state().d < 38) window.__hold.set(99); const v = document.querySelector('#hd-root [aria-live="polite"]'), h = document.querySelector('#hd-root .card.wall .w-h').textContent.trim(); return !!v && !!h && v.textContent.startsWith(h.slice(0, 8)); });
   /* the sheet counts the sources it lists */
-  await play('the sources\' sheet does not count what it lists', () => { const b = document.querySelector('#hd-root .b-end .bbtn'); if (!document.querySelector('#hd-root .sheet.on')) b.click(); const s = document.querySelector('#hd-root .sheet.on'), n = s && s.querySelectorAll('.f').length;
+  await play('the sources\' sheet does not count what it lists', () => { const b = document.querySelector('#hd-root .b-end .bbtn'); if (!b) return false; if (!document.querySelector('#hd-root .sheet.on')) b.click(); const s = document.querySelector('#hd-root .sheet.on'), n = s && s.querySelectorAll('.f').length;
     return n > 10 && new RegExp('\\b' + n + '\\b').test(s.querySelector('header .dim').textContent); });
   await kp.keyboard.press('Escape');
   /* a block, then a year, written into the address in place */
@@ -261,12 +274,12 @@ async function barFits() {
     for (const bw of [761, 800, 900, 1024, 1180, 1280]) {
       await bp.setViewportSize({ width: bw, height: 800 });
       const bad = await bp.waitForFunction(bw => { if (innerWidth !== bw) return null;
-        const els = [...document.querySelectorAll('.bar .brand, .bar .hbar .d-map, .bar .hbar .b-chap, .bar .hbar .tally .tl-n, .bar .hbar .tally .sq, .bar .hbar > .bbtn, #breakbtn, #logbtn, #langbtn, #theme')].filter(e => getComputedStyle(e).display !== 'none' && e.getBoundingClientRect().width > 0);
+        const els = [...document.querySelectorAll('.bar .brand, .bar .hbar .d-map, .bar .hbar .b-chap, .bar .hbar .tally .tl-c, #breakbtn, #logbtn, #langbtn, #theme')].filter(e => getComputedStyle(e).display !== 'none' && e.getBoundingClientRect().width > 0);
         const R = els.map(e => [e.id || e.className, e.getBoundingClientRect()]), out = [];
         for (let i = 0; i < R.length; i++) for (let j = i + 1; j < R.length; j++) { const a = R[i][1], c = R[j][1]; if (a.left < c.right - 1 && c.left < a.right - 1 && a.top < c.bottom - 1 && c.top < a.bottom - 1) out.push(R[i][0] + ' over ' + R[j][0]); }
         for (const [n, e] of R) if (e.right > innerWidth) out.push(n + ' off the window');
         const two = e => { const rg = document.createRange(); rg.selectNodeContents(e); const t = [...rg.getClientRects()].filter(r => r.width).map(r => r.top); return t.length > 1 && Math.max(...t) - Math.min(...t) > parseFloat(getComputedStyle(e).fontSize) * .8; };
-        for (const e of document.querySelectorAll('.bar .hbar .b-chap, .bar .hbar .tally .tl-n, #logbtn, .bar .hbar > .bbtn')) if (getComputedStyle(e).display !== 'none' && two(e)) out.push((e.id || e.className) + ' breaks onto two lines');
+        for (const e of document.querySelectorAll('.bar .hbar .b-chap, .bar .hbar .tally .tl-n, #logbtn')) if (getComputedStyle(e).display !== 'none' && two(e)) out.push((e.id || e.className) + ' breaks onto two lines');
         return out.length ? null : 'ok'; }, bw, { timeout: 5000 }).then(() => null, () => bp.evaluate(() => [...document.querySelectorAll('.bar .hbar > *, #breakbtn, #logbtn, #langbtn, #theme')].map(e => (e.id || e.className) + ':' + Math.round(e.getBoundingClientRect().left) + '-' + Math.round(e.getBoundingClientRect().right)).join(' ')));
       if (bad) problems.push(tag + ' at ' + bw + ' px in ' + l + ': its buttons overlap or wrap (' + bad + ')');
     }
