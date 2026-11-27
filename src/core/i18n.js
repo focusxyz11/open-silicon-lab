@@ -69,6 +69,7 @@ export const AREAS = {
   blueprint: ['bp'],
   /* Hold, the first page (src/v2/hold.js) */
   hold: ['hd'],
+  stack: ['sk'],
   /* what more than one page says, written once: the four walls (Hold and the blueprint) and the needs a machine is made
      for (Hold and the machines page); the first page loads it when it is first touched, as it does the blueprint's */
   shared: ['wall', 'machines.need'],
