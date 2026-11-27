@@ -16,11 +16,13 @@ export function toChild(p, door, foot, s) { const q = rotY([(p[0] - door.at[0]) 
 /* the camera at fraction f of the way from parent P to child C, in the parent's units. fitP: the parent's rest
    distance (what place() computes); the child's is fitP * C.r / P.r on the same screen. The distance falls
    geometrically, as the flat zoom does, and the look-at follows the same law as cam() in weave.js, so the door is
-   the zoom's fixed point; the angles turn within the window win, so the first fifth of the move is straight in */
-export function pose(f, P, C, door, foot, fitP, win = [0.2, 0.9]) {
+   the zoom's fixed point; the angles turn within the window win, so the first fifth of the move is straight in.
+   zr: the child's zoom over the parent's (a level may be framed closer on a narrow screen, level3d.js zoomOf); the
+   distance carries it over the move, so the join ends where the child rests */
+export function pose(f, P, C, door, foot, fitP, win = [0.2, 0.9], zr = 1) {
   const s = scaleOf(door, C), rho = s * C.r / P.r, k = Math.pow(rho, f), u = (1 - k) / (1 - rho), e = smooth(win[0], win[1], f);
   const a1 = toParent(C.at, door, foot, s), at = P.at.map((v, i) => v + (a1[i] - v) * u);
-  return { at, tilt: P.tilt + (C.tilt - P.tilt) * e, turn: P.turn + (C.turn + (door.yaw || 0) - P.turn) * e, dist: fitP * k, s };
+  return { at, tilt: P.tilt + (C.tilt - P.tilt) * e, turn: P.turn + (C.turn + (door.yaw || 0) - P.turn) * e, dist: fitP * k / Math.pow(zr, f), s };
 }
 /* the same camera in the child's units */
 export const childPose = (p, door, foot) => ({ at: toChild(p.at, door, foot, p.s), tilt: p.tilt, turn: p.turn - (door.yaw || 0), dist: p.dist / p.s });

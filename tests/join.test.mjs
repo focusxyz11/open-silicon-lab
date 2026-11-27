@@ -22,6 +22,19 @@ test('the join starts at the parent at rest and ends at the child at rest', () =
   }
 });
 
+test('a level framed closer on a narrow screen (zr) is still reached without a jump, at either end', () => {
+  /* the parent's rest (fitP) already holds its own zoom; zr is the child's zoom over the parent's (level3d.js zoomOf) */
+  for (const [name, P, C, { door, foot }] of PAIRS) for (const zr of [1.5, 1 / 1.5]) {
+    const fit = 20;
+    assert.ok(near(pose(0, P, C, door, foot, fit, undefined, zr).dist, fit), name + ': the start moved with zr ' + zr);
+    const c1 = childPose(pose(1, P, C, door, foot, fit, undefined, zr), door, foot);
+    assert.ok(near(c1.dist, fit * C.r / P.r / zr), name + ': not the child at rest, closer by zr ' + zr);
+    /* and the distance falls steadily between: no step */
+    let last = Infinity;
+    for (let i = 0; i <= 50; i++) { const d = pose(i / 50, P, C, door, foot, fit, undefined, zr).dist; assert.ok(d <= last + 1e-9, name + ': the distance rose'); last = d; }
+  }
+});
+
 test('a point goes to the child and back unchanged, with and without a turn', () => {
   for (const [, , C, { door, foot }] of PAIRS) {
     const s = scaleOf(door, C);

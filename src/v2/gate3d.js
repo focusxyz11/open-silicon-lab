@@ -86,6 +86,13 @@ export function create(canvas, host, on = {}) {
       version: () => sceneVersion(),
       /* looking down 65° (the review's 70° hides every side), never turned: the plan's across is the screen's across */
       view: { tilt: 1.13, turn: 0, r: 5.9, at: [0, 0.3, 0.35], fixed: true,
+        /* on a phone the plan is framed closer (its radius is mostly margin) and its names stand above and below it,
+           never on it (#436) */
+        narrow: { zoom: 1.5, out: true,
+          /* there, each name's point is where its part reaches the edge it is named from: the copper's and the gate
+             strips' at the top, the silicon's at the bottom left, so the names spread along the rows and their stems
+             stay short */
+          anchors: { metal: [X(800), TOPY, Z(118)], gates: [X(410), H.si + H.gate, Z(165)], diff: [X(215), H.si, Z(705)] } },
         door: DOOR,
         /* foot: it stands in the block's lighter cell by the middle of its plan, on the plane its tiles stand on */
         foot: [0, 0, 0] },
