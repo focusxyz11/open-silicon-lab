@@ -96,7 +96,7 @@ test('every era, challenge and chapter has its words; every era its facts', () =
 });
 
 test('every word the page asks for by name exists, and every source it marks is a fact', () => {
-  const code = ['src/v2/hold.js', 'src/v2/holdkit.js', 'src/v2/holdplates.js', 'src/v2/holdisle.js', 'src/v2/holdnotes.js'].map(f => readFileSync(new URL('../' + f, import.meta.url), 'utf8')).join('\n');
+  const code = ['src/v2/hold.js', 'src/v2/holdkit.js', 'src/v2/holdplates.js', 'src/v2/holdisle.js', 'src/v2/holdnotes.js', 'src/v2/holdboard.js'].map(f => readFileSync(new URL('../' + f, import.meta.url), 'utf8')).join('\n');
   const named = [...code.matchAll(/\bw\(\s*'([\w.-]+)'\s*[,)]/g)].map(m => 'hd.' + m[1]);
   assert.deepEqual([...new Set(named)].filter(k => !(k in EN)), [], 'words missing from src/i18n/en/hold.json');
   const marked = [...code.matchAll(/\bsrc\(([^)]*)\)/g)].flatMap(m => [...m[1].matchAll(/'([a-z0-9-]+)'/g)].map(q => q[1]));
@@ -147,7 +147,7 @@ test('the first page\'s files load: every name they use at the top is imported',
      this test); the files need only a window's addEventListener to load in node */
   const had = 'addEventListener' in globalThis;
   if (!had) globalThis.addEventListener = () => {};
-  try { for (const f of ['../src/v2/holdkit.js', '../src/v2/holdplates.js', '../src/v2/hold.js', '../src/v2/holdisle.js', '../src/v2/holdnotes.js']) await import(f); }
+  try { for (const f of ['../src/v2/holdkit.js', '../src/v2/holdplates.js', '../src/v2/hold.js', '../src/v2/holdisle.js', '../src/v2/holdnotes.js', '../src/v2/holdboard.js']) await import(f); }
   finally { if (!had) delete globalThis.addEventListener; }
 });
 

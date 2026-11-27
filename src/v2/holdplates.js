@@ -3,7 +3,7 @@
    Moore's law, live, along the bottom of the fifty years (mkChart, mkCQ). Designed with Claude Fable 5.2 and brought
    into the lab with Claude Opus 5.5. */
 import { t } from '../core/i18n.js';
-import { w, sw, Q, $, h, clamp, lerp, ss, mix, rnd, nf, sig, xOf, S, done, tried, setOut, K, fg, rd, src, lab, viewAt, momOut, Yr, bindHold, ROOT, TICK, changed, onChange } from './holdkit.js';
+import { w, sw, Q, $, h, clamp, lerp, ss, mix, rnd, nf, sig, xOf, S, done, tried, setOut, K, fg, rd, src, lab, viewAt, momOut, Yr, ROOT, TICK, changed, onChange } from './holdkit.js';
 import { money } from './figures.js';
 import { FIG } from '../data/figures.js';
 import { AHEAD, ARR, BEHIND, CHIPS, COST, DWALL, ERAS, FCOST, FDIV, FORMS, KNEE, LIGHTS, LOOP, MOORE65, NEEDS, RUNGS, SERIES, STOCK, TRIP, dAt, formAt, rule, trend, yearAt } from '../data/hold.js';
@@ -271,7 +271,7 @@ export const OUTS = {
   distance: () => w('w.memory.o' + 'abc'[S.dist]) + ' ' + src('energy-moving-data'),
   power: () => { const g = S.power.g; return S.power.shown ? w('w.power.out', { n: g, verdict: w(g < 800 ? 'w.power.low' : g > 1100 ? 'w.power.high' : 'w.power.near') }) + ' ' + src('dc-electricity') : w('w.power.guess', { n: g }); },
   price: () => w('w.cost.o' + 'ab'[S.price]) + ' ' + (S.price ? src('wafer-space-run', 'design-cost-2nm') : src('design-cost-older', 'design-cost-recent', 'design-cost-2nm')),
-  next: () => { const i = S.next.at; if (i < 0) return w('next.out0'); const r = RUNGS[i]; return '<b>' + w('rung.' + r[0] + '.t') + '</b> ' + w('rung.' + r[0] + '.d') + ' ' + src(...r[2]); },
+  next: () => { const r = RUNGS[S.next.at]; return '<b>' + w('rung.' + r[0] + '.t') + '</b> ' + w('rung.' + r[0] + '.d') + ' ' + src(...r[2]); },
   levels: () => (S.lv === 3 ? '<b>' + w('arr.classic.t') + '</b> ' + w('arr.classic.d') : w('lv.' + (3 - S.lv) + '.d')),
   eras: () => { const e = ERAS[S.era]; return '<b>' + w('era.' + e[0] + '.t') + '</b> ' + w('era.' + e[0] + '.d') + ' ' + src(...e[2]); },
   arr: () => { const a = ARR[S.arr], id = a[0], n = ['cim', 'spikes'].filter(k => S.arrSeen[k]).length;
@@ -367,13 +367,14 @@ PL.next = {
     c.strokeStyle = K.ink; c.lineWidth = 3; c.strokeRect(215, y0, 70, hh); c.fillStyle = K.red; c.fillRect(215, y0, 70, hh * pos);
     path(c, [[ax, y0], [ax, Y(1)]], K.ink, 3); hatch(c, ax - 26, Y(RP[2]) + 24, 52, Y(1) - Y(RP[2]) - 48, 12, fg(.5), 2);
     RUNGS.forEach((r, i) => { if (i === 3) return; const y = Y(RP[i]), hit = S.next.at >= i; c.fillStyle = i === 4 ? K.red : hit ? K.red : K.ink; c.fillRect(ax - 34, y - (i === 4 ? 5 : 2.5), i === 4 ? 440 : 68, i === 4 ? 10 : 5); });
-    const my = Y(pos); c.fillStyle = K.red; c.fillRect(ax - 17, my - 17, 34, 34); if (S.next.hold && pos < 1) { c.globalAlpha = .4; c.fillRect(ax - 3, my - 60, 6, 44); c.globalAlpha = 1; } },
+    const my = Y(pos); c.fillStyle = K.red; c.fillRect(ax - 17, my - 17, 34, 34); if (S.next.goal > S.next.at) { c.globalAlpha = .4; c.fillRect(ax - 3, my - 60, 6, 44); c.globalAlpha = 1; } },
   ui(host, pl) { const Y = p => 24 + p * 64;
     const ls = RUNGS.map((r, i) => lbl(host, '<b>' + w('rung.' + r[0] + '.t') + '</b>' + (i === 3 ? w('nx.zone') : fmtE(r[1]) + ' ' + w('next.abit')), 53, Y(RP[i]) - (i === 4 ? 6.6 : 1.6), 'wrap'));
     /* each bar's name ends just above its bar, however many lines it takes */
     lbl(host, w('nx.behind') + '<b>×' + sig(BEHIND, 3) + '</b>', 18.2, 35.5, 'r up wrap side'); const ah = lbl(host, '', 21.5, 23, 'up wrap');
-    /* its own hold button: beside the ladder on a wide plate; on a phone, in the empty corner above the bars */
-    const b = big(host, 53, 3.5); const hb = h('button', 'holdbtn', w('btn')); hb.type = 'button'; host.appendChild(hb); let hbAt = '', uk = '';
+    /* down the ladder a rung at a tap (the page holds only through its fifty years): the button stands beside the ladder
+       on a wide plate; on a phone, in the empty corner above the bars */
+    const b = big(host, 53, 3.5); const hb = btn(host, '↓ ' + w('nx.down'), [73, 53.5, 23], () => { const N = S.next; if (N.goal <= N.at) N.goal = Math.min(RUNGS.length - 1, N.at + 1); }); let hbAt = '', uk = '';
     /* each rung's words start at its rung; where a long name takes more lines than the gap to the next rung (Spanish
        or French on a phone), the next rung's words move down just enough, and the floor's stay on the floor, the ones
        above moving up to make room */
@@ -382,10 +383,9 @@ PL.next = {
       for (let i = 1; i < ls.length - 1; i++) top[i] = Math.max(want[i], top[i - 1] + hs[i - 1] + g);
       top[4] = Math.max(want[4], Y(1) / 100 * H - hs[4] - 2); for (let i = 3; i > 0; i--) top[i] = Math.min(top[i], top[i + 1] - hs[i] - g);
       ls.forEach((e, i) => { e.style.top = top[i] / H * 100 + '%'; }); };
-    bindHold(host, () => { S.next.hold = true; }, () => { S.next.hold = false; });
-    pl.sync = () => { const x = Math.pow(10, (NX0 - NX1) * S.next.pos), ph = innerWidth <= 760 ? 'p' : 'd'; if (hbAt !== ph) { hbAt = ph; at(hb, ...(ph === 'p' ? [3, 2] : [77, 49])); }
+    pl.sync = () => { const x = Math.pow(10, (NX0 - NX1) * S.next.pos), ph = innerWidth <= 760 ? 'p' : 'd'; if (hbAt !== ph) { hbAt = ph; at(hb, ...(ph === 'p' ? [3, 2, 34] : [73, 53.5, 23])); }
       put(b, (x < 1.5 ? '×1' : w('nx.x', { x: x < 1e4 ? nf(x) : xOf(x) })) + '<small>' + w('nx.unit') + '</small>'); put(ah, w('nx.ahead') + '<b>×' + sig(AHEAD, 2) + '</b>');
-      ls.forEach((e, i) => e.classList.toggle('hot', S.next.at === i)); unstack(); hb.style.opacity = S.next.pos >= 1 ? .25 : 1; hb.classList.toggle('down', !!S.next.hold); }; }
+      ls.forEach((e, i) => e.classList.toggle('hot', S.next.at === i)); unstack(); hb.disabled = S.next.at >= RUNGS.length - 1; }; }
 };
 
 /* ---------------- how a computer is arranged ---------------- */
@@ -489,7 +489,8 @@ TICK.push((T, dt) => {
   S.distK += (S.dist - S.distK) * Math.min(1, dt * 5); S.lvK += (S.lv - S.lvK) * Math.min(1, dt * 4.5); S.jobK = (S.jobK ?? 500) + ([1, 3, 500][S.job] - (S.jobK ?? 500)) * Math.min(1, dt * 6);
   S.power.k = (S.power.k || 0) + ((S.power.shown ? 1 : 0) - (S.power.k || 0)) * Math.min(1, dt * 3);
   if (S.bug.run > 0) { const st = Math.min(S.bug.run, dt); S.bug.n += Math.round(1e6 * st / 1.2); S.bug.run -= st; if (S.bug.run <= 0) S.bug.n = Math.round(S.bug.n / 1e6) * 1e6; setOut('m-bug', momOut('bug')); }
-  const N = S.next; if (N.hold && N.pos < 1) { if (N.wait > 0) N.wait -= dt; else { const p0 = N.pos, p1 = Math.min(1, p0 + dt * .13), i = RP.findIndex((r, k) => k > N.at && r <= p1 + 1e-6 && k !== 3); if (i >= 0) { N.pos = RP[i]; N.at = i; N.wait = .6; out('next'); if (i === RUNGS.length - 1) done('floor'); } else { N.pos = p1; if (N.at < 3 && p1 > RP[3] - .12) { N.at = 3; out('next'); } } } }
+  /* the ladder: the marker goes down to the rung asked for, and that rung says what is being tried there */
+  const N = S.next; if (N.goal > N.at) { const to = RP[N.goal]; N.pos = Math.min(to, N.pos + dt * .45); if (N.pos >= to - 1e-6) { N.pos = to; N.at = N.goal; out('next'); if (N.at === RUNGS.length - 1) done('floor'); } }
 });
 /* what each plate says it found, before anything is tried (once the words are in) */
 export const initOuts = () => { for (const id in OUTS) S.out[id] = OUTS[id](); };

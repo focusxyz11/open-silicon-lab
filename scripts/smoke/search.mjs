@@ -33,7 +33,8 @@ export default async function run() {
     /* the bar's Map: the chip world on one page, six stages across, every place and level a link, challenges as dots, the
        places you have been marked */
     await sp.waitForFunction(() => document.querySelectorAll('#page .cwmap .wm-col').length === 6 && document.querySelectorAll('#page .cwmap .wm-pl a.wm-pn[href^="#/place/"]').length >= 10 &&
-      document.querySelectorAll('#page .cwmap .wm-dots a[href^="#/"]').length >= 40 && document.querySelectorAll('#page .cwmap .been').length >= 1 && document.querySelectorAll('#page .cwmap .wm-every li').length === 4, null, { timeout: 15000, polling: 500 })
+      document.querySelectorAll('#page .cwmap .wm-dots a[href^="#/"]').length >= 40 && document.querySelectorAll('#page .cwmap .been').length >= 1 && document.querySelectorAll('#page .cwmap .wm-every li').length === 4 && document.querySelectorAll('#page .wm-foot a[href^="https://github.com/focusxyz11/open-silicon-lab"]').length === 3 &&
+      document.querySelector('#page .cwmap').scrollWidth <= innerWidth, null, { timeout: 15000, polling: 500 })
       .catch(() => problems.push(tag + ': the map of the chip world does not show every stage, place and challenge, or where you have been'));
     await sp.close(); }
   /* the Map's second arrangement, the lattice (#411): kinds of matter across, layers up, every cell something; what the
