@@ -244,3 +244,47 @@ export const MEETS = [
   { a: 'copy', b: 'vn', shape: 'fork' },
   { a: 'copy', b: 'nat', shape: 'fork' }
 ];
+
+/* Your stack (docs/PATH.md, "The thirteen questions in the stack"; src/v2/stack/): the questions are met there as they
+   are everywhere, by marks on the picture, at most three while you look, one opened alone, never listed.
+   - RUNG_LENS: the levels whose lenses each rung carries (src/engines/frame.js lensesAt): its levels as used (LEVELS in
+     src/data/path.js), and for the mind, where nothing is filed yet, also the data centre's building it stands above.
+   - RISES: the carry conditions. A question that lives at a rung rises there when what you built makes it real: each
+     row is the rung, the question, the weight it gains, when (read from the carry, src/engines/path.js carry()), and
+     the words it says there (sk.here.<say>, src/i18n/en/stack.json). A test checks every row's question lives at its
+     rung. On a wrecked stack only the matter and the wreck speak: rows above the atom count only when they ask for the
+     wreck. A condition is one of:
+       { gene, is | not }        the recipe's gene (src/engines/arch.js GENES)
+       { fine, is | not | max }  a fine setting (FINE_OF in src/data/path.js); max: at most
+       { hand, over | under }    a figure a rung hands up, 'rung.field' (HANDS in src/data/path.js)
+       { hand, below }           that figure under this share of today's (the lab's example, X0)
+       { more, over | is }       a figure kept beside the hands, 'rung.path.to.it'
+       { passed, is }            whether the rung is passed by (a fork that skips it)
+       { margin }                the voltage within this many volts of the switch's lowest clean voltage
+       { broken: true }          the stack is wrecked
+       { any: [...] } { all: [...] }
+     up: the weight grows with a figure: { hand, log } adds log × log10 of it, { hand, x } adds x times it. */
+export const RUNG_LENS = { atom: ['atom'], switch: ['switch'], gate: ['gate'], block: ['block'], chip: ['chip'], machine: ['board', 'rack'], mind: ['mind', 'building'] };
+export const RISES = [
+  { rung: 'atom', q: 'dig', w: 0.5, when: { gene: 'carrier', is: 'charge' }, say: 'dig' },
+  { rung: 'atom', q: 'dig', w: 1.2, when: { gene: 'carrier', not: 'charge' }, say: 'digFork' },
+  { rung: 'gate', q: 'physics', w: 3.2, when: { gene: 'carrier', not: 'charge' }, say: 'physicsFork' },
+  { rung: 'gate', q: 'perfect', w: 9, when: { broken: true }, say: 'perfectOff' },
+  { rung: 'switch', q: 'physics', w: 4, when: { all: [{ gene: 'carrier', is: 'charge' }, { fine: 'mech', not: 'therm' }] }, say: 'physicsNew' },
+  { rung: 'switch', q: 'physics', w: 3, when: { all: [{ gene: 'carrier', is: 'charge' }, { fine: 'mech', is: 'therm' }, { margin: 0.1 }] }, say: 'physicsLow' },
+  { rung: 'switch', q: 'moore', w: 3, when: { all: [{ gene: 'carrier', is: 'charge' }, { any: [{ fine: 'mat', not: 'si' }, { fine: 'shape', not: 'fin' }] }] }, say: 'moore' },
+  { rung: 'gate', q: 'perfect', w: 8, up: { hand: 'gate.fail', log: 0.25 }, when: { all: [{ gene: 'carrier', is: 'charge' }, { hand: 'gate.fail', over: 1e-12 }] }, say: 'perfect' },
+  { rung: 'gate', q: 'vn', w: 5, when: { fine: 'vote', is: 1 }, say: 'vnVote' },
+  { rung: 'block', q: 'perfect', w: 4, when: { all: [{ fine: 'vote', is: 0 }, { hand: 'block.aluWrong', over: 1e-9 }] }, say: 'vn' },
+  { rung: 'chip', q: 'sutton', w: 2.5, when: { fine: 'adder', is: 'look' }, say: 'sutton' },
+  { rung: 'block', q: 'geo', w: 2, up: { hand: 'block.wireShare', x: 10 }, when: { hand: 'block.wireShare', over: 0.12 }, say: 'geoMem' },
+  { rung: 'chip', q: 'trust', w: 2, when: { all: [{ hand: 'chip.gates', over: 12000 }, { passed: 'chip', is: false }] }, say: 'trust' },
+  { rung: 'chip', q: 'line', w: 3.4, when: { gene: 'told', is: 'fixed' }, say: 'lineFixed' },
+  { rung: 'chip', q: 'line', w: 3.4, when: { gene: 'told', is: 'learns' }, say: 'lineLearns' },
+  { rung: 'chip', q: 'line', w: 2, when: { more: 'chip.core.stages', is: 5 }, say: 'line5' },
+  { rung: 'machine', q: 'geo', w: 3, up: { hand: 'machine.moveShare', x: 2 }, when: { hand: 'machine.moveShare', over: 0.5 }, say: 'geo' },
+  { rung: 'machine', q: 'eff', w: 3.5, when: { hand: 'mind.energy', below: 0.5 }, say: 'eff' },
+  { rung: 'mind', q: 'copy', w: 6.5, when: { gene: 'carrier', is: 'living' }, say: 'copyLive' },
+  { rung: 'mind', q: 'copy', w: 6, when: { more: 'mind.lam', over: 0.5 }, say: 'copyErr' },
+  { rung: 'mind', q: 'copy', w: 3, when: { fine: 'bits', max: 2 }, say: 'copyBits' }
+];
