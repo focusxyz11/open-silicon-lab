@@ -217,6 +217,7 @@ export function entryWords(e, s) { const W = world(s), T = W.byId[e.of];
     : e.kind === 'try' && e.machine ? t('ledger.rec.machine', { need: t('machines.need.' + e.machine + '.t'), x: fmtNum(+e.facts.energy.toPrecision(2)), days: isFinite(e.facts.days) ? fmtNum(e.facts.days) : '?', n: isFinite(e.facts.days) ? e.facts.days : 2 })
     : e.kind === 'try' ? t('ledger.rec.try', { title: T.title, n: e.facts.cases })
     : e.kind === 'gene' ? t('ledger.rec.gene', { name: e.name })
+    : e.kind === 'purpose' ? t('ledger.rec.purpose', { name: e.name })
     : e.kind === 'report' ? t('ledger.rec.report', { say: t('report.say.' + e.say), at: e.at, words: e.words }) : e.kind === 'fix' ? t('ledger.rec.fix', { words: e.words }) : e.q; }
 /* break a design: a challenge made by the ledger itself, for every clocked design that stands, and kept for the
    broken ones, so anyone can find the case again */

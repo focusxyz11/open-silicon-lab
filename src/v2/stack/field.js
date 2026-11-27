@@ -21,7 +21,9 @@ export function holder(a) {
 /* the credit a point carries, for the line under a plot: first to try its recipe, or kept on a day */
 export function credit(a) {
   if (!a || a.by !== 'ledger') return '';
-  return a.first ? t('sk.field.firstBy', { who: holder(a), date: fmtDate(a.day) }) : t('sk.field.by', { who: holder(a) });
+  const c = a.first ? t('sk.field.firstBy', { who: holder(a), date: fmtDate(a.day) }) : t('sk.field.by', { who: holder(a) });
+  /* the first to win a proposed purpose shares the credit with its proposer (#481) */
+  return (a.firstFor || []).length ? c + ' · ' + t('sk.field.firstFor', { needs: fmtList(a.firstFor) }) : c;
 }
 /* the card under another recipe's stack: where it came from */
 export function plotCard(a) {

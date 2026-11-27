@@ -14,7 +14,7 @@ import { STAGES, STAGE_PLACE, stageOfPlace, nextPlace, whereOf, alongTo } from '
 import { viewOfDepth, CHALLENGES, PLACES } from '../v2/game.js';
 import { NEEDS, GOAL } from '../data/build.js';
 import { plan, progress, needOf, needForProject, childrenOf } from './build.js';
-import { settled, frontier, draft, tryEntry, fileOf, proposeUrl, runCase, caseOk, attemptsAt, choicesAt, frontAttemptsAt, archAttempts, ARCH_AGENTS } from './ledger.js';
+import { settled, frontier, draft, tryEntry, fileOf, proposeUrl, runCase, caseOk, attemptsAt, choicesAt, frontAttemptsAt, archAttempts, purposesOf, ARCH_AGENTS } from './ledger.js';
 import * as Arch from './arch.js';
 import * as Pop from './population.js';
 import { DAY_CAP } from '../data/field.js';
@@ -149,9 +149,10 @@ export function listLedger() {
       : e.kind === 'try' && e.chef ? { chef: e.chef, plan: e.plan, waiting: sig(e.facts.wait), joulesPerAnswer: sig(e.facts.energy), cleared: e.facts.cleared, best: (W.bestChef || {})[e.chef] === e.id }
       : e.kind === 'try' && e.front ? { front: e.front, plan: e.plan, words: e.words || '' }
       : e.kind === 'try' && e.choice ? { choice: e.choice, pick: e.pick, reason: e.words }
-      : e.kind === 'try' && e.arch ? { arch: e.arch, recipe: e.facts.g, wins: e.facts.wins, years: e.facts.years, firstToWin: e.firstIn, marksItsSquare: e.marks }
+      : e.kind === 'try' && e.arch ? { arch: e.arch, season: Arch.seasonOf(e), recipe: e.facts ? e.facts.g : null, wins: e.facts ? e.facts.wins : [], years: e.facts ? e.facts.years : null, firstToWin: e.firstIn || [], firstForPurposes: e.firstFor || [], marksItsSquare: !!e.marks, overTheDaysCap: !!e.over }
       : e.kind === 'try' && e.machine ? { machine: e.machine, plan: e.plan, ...e.facts, best: (W.bestMachine || {})[e.machine] === e.id }
       : e.kind === 'try' ? { of: e.of, casesItHeldOn: e.facts.cases }
+      : e.kind === 'purpose' ? { purpose: e.purpose, name: e.name, what: e.what, w: e.w, must: e.must || {}, season: Arch.seasonOf(e), wonBy: e.wonBy || null, words: e.words || '' }
       : e.kind === 'gene' ? { gene: e.gene, option: e.option, name: e.name, what: e.what, effect: e.effect, carry: e.carry, fact: e.fact || null, words: e.words || '' }
       : e.kind === 'report' ? { at: e.at, part: e.part || null, says: e.say, words: e.words, fixedBy: e.fixedBy || null } : e.kind === 'fix' ? { of: e.of, words: e.words, pullRequest: e.pr || null }
       : { at: e.at, under: e.under || null, question: e.q, noticed: e.noticed || '' })),
@@ -205,6 +206,17 @@ export function proposeGene({ gene, option, name, what, effect, carry, fact, wor
   const out = entryOut(draft({ kind: 'gene', gene, option, name, what, effect, carry, fact: fact || null, by: author || t('api.anon'), made: kind, ai: ai || '', words: words || '' }, txt(author) + ' ' + txt(gene) + ' ' + txt(option)));
   return out.ok ? Object.assign(out, { status: fact ? t('ledger.state.backed') : t('ledger.state.guess') })
     : Object.assign(out, { how: t('api.gene.how'), genes: Arch.GENES.map(k => ({ gene: k, name: t('ar.gene.' + k), options: Arch.OPTIONS[k], contract: Arch.CONTRACT[k] })), traits: Arch.TRAITS, traitRange: Arch.TRAIT_RANGE });
+}
+
+/* propose a purpose for the field of architectures (#481): its id, name and what it is for, the power each trait is raised
+   to (w) and what it must have (must), in WANT's form. The ledger checks it is complete, new, not too easy (no recipe
+   built and no attempt kept beats today's computer at it yet) and not too hard (some recipe of the 400 could, once
+   polished); a refusal says why in words a proposer can act on, with today's needs as examples of the form */
+export function proposePurpose({ purpose, name, what, w, must, words, author, kind, ai } = {}) {
+  const bad = whoOk(kind, ai); if (bad) return { ok: false, reason: bad };
+  const out = entryOut(draft({ kind: 'purpose', purpose, name, what, w, must: must || {}, season: Arch.VERSION, by: author || t('api.anon'), made: kind, ai: ai || '', words: words || '' }, txt(author) + ' ' + txt(purpose)));
+  return out.ok ? Object.assign(out, { status: t('ledger.state.proposed') })
+    : Object.assign(out, { how: t('api.purpose.how'), traits: Arch.TRAITS, weightRange: Arch.PURPOSE_W, mustRange: Arch.PURPOSE_MUST, needs: Arch.NEEDS.map(n => ({ need: n, name: t('ar.need.' + n), w: Arch.WANT[n].w, must: Arch.WANT[n].must })) });
 }
 
 /* ---- the energy puzzle (content/puzzles/energy.md): where does the energy of one answer go? ---- */
@@ -329,6 +341,7 @@ export function architectureField() {
     tried: cen.tried, aheadOfToday: cen.wins,
     /* the seasons and the fair cap (#480): the engine's season, the attempts each author may have scored a day, how many
        were kept over it, and the closed seasons' champions, kept as history */
+    purposes: purposesOf(W).all.map(e => ({ purpose: e.purpose, name: e.name, by: e.by, made: e.made, w: e.w, must: e.must || {}, closest: sig(e.closest || 0), wonBy: e.wonBy ? { id: e.wonBy, by: W.byId[e.wonBy].by } : null, openNeedNow: purposesOf(W).open === e.id })),
     season: Arch.VERSION, scoredPerAuthorPerDay: DAY_CAP, overTheCap: (W.archOver || []).length,
     pastChampions: Pop.pastChampions().map(c => ({ season: c.season, need: c.need, genesFromToday: c.d, id: c.id, by: c.built ? t('ar.known.' + c.id) : c.who })),
     how: t('api.field.how'), note: t('api.untrusted')

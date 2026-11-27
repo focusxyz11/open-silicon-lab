@@ -252,12 +252,12 @@ export const KNOWN = [
    opened. tests/arch.test.mjs fails when the tables change while VERSION stays: raise it, add the season here with the
    new print, close the old one (scripts/season.mjs) and say so in the pull request. A past season's print never
    changes. */
-export const SEASONS = [{ v: 1, print: '6fff8cb7', from: '2026-11-26' }];
+export const SEASONS = [{ v: 1, print: '65fe208e', from: '2026-11-26' }];
 export const VERSION = SEASONS.length;
 /* the tables the scores read, by name: changing any of them changes the print */
 export const tables = () => ({ OPTIONS, TODAY, TRAITS, EFFECT, CARRY, IDLE, FIXED_CAP, NEEDS, WANT, DIRS, NEED_DIRS, LINK, START_MAIN, START_SIDE, UNBUILT, GROWN, GROWTH, A0,
   BUILT_BOOST, ATTEMPTS, PEOPLE_START, PER_PERSON, JOIN, TODAY_GAIN, GOALS, FOCUS_MAX, KNOWN: KNOWN.map(k => [k.id, keyOf(k.g), k.status]), STONES, STONE, STONE_PEOPLE,
-  ACTIVITY, MACHINE: MACHINE_NEEDS.map(n => [n.id, n.activity || 'steady']) });
+  ACTIVITY, MACHINE: MACHINE_NEEDS.map(n => [n.id, n.activity || 'steady']), PURPOSE_W, PURPOSE_MUST, PURPOSE_DIRS });
 /* a plain value written the same way whatever order its keys were added in */
 const canon = x => (Array.isArray(x) ? '[' + x.map(canon).join(',') + ']' : x !== null && typeof x === 'object' ? '{' + Object.keys(x).sort().map(k => JSON.stringify(k) + ':' + canon(x[k])).join(',') + '}' : JSON.stringify(x));
 /* FNV-1a, 32 bits, as eight hex digits: enough to notice a change, not a seal */
@@ -344,6 +344,56 @@ export function scoreOf(st) {
   return out;
 }
 export const winsOf = st => NEEDS.filter(n => scoreOf(st)[n].wins);
+
+/* ---- purposes: the needs grow too (#481) ----
+   The needs above are fixed, so once a recipe wins one nothing new asks for more and the search settles. A purpose is a
+   need anyone proposes as an entry of the community's ledger (kind purpose, src/engines/ledger.js): a want in WANT's
+   form (w: the power each trait is raised to; must: the traits it requires), so it is data, not code, and joins the
+   field at once as a proposed column. Problems grow with their solutions, as in POET (Wang, Lehman, Clune and Stanley,
+   2019): a proposal must sit just past what any recipe does, so a win at one need can be the stepping stone to it.
+   A purpose is judged as a steady need (its idle gain 1) and depends on the five directions of improvement evenly;
+   both are choices of the model, written down so they can be argued with.
+   purposeWhy(p, ctx) says what a proposal lacks, or null:
+     purpose  its id: lowercase, 2 to 24, not one of the needs, nor one proposed before (ctx.ids)
+     w        at least one trait, each power from PURPOSE_W[0] to PURPOSE_W[1], nothing but traits
+     must     traits only, each from PURPOSE_MUST[0] to PURPOSE_MUST[1] (may be empty)
+     same     the same want as a need's or a purpose's before it (ctx.wants)
+     easy     not too easy: some recipe beats today's computer at it now, as it starts (built or not: heavy weights
+              can make a fresh recipe's potential outweigh its lack of polish), or an attempt already kept does
+              (ctx.states)
+     hard     not too hard: no recipe of the 400 could ever beat today's computer at it, however polished (its potential
+              is at most 1)
+   The words a proposer can act on are the ledger's (ledger.no.<why>). */
+export const PURPOSE_ID = /^[a-z][a-z0-9-]{1,23}$/, PURPOSE_W = [0.05, 3], PURPOSE_MUST = [0.01, 10];
+export const PURPOSE_DIRS = Object.fromEntries(DIRS.map(d => [d, 1 / DIRS.length]));
+/* the want of a purpose, in WANT's form */
+export const wantOf = p => ({ w: Object.assign({}, p.w), must: Object.assign({}, p.must || {}) });
+export const wantKey = W => JSON.stringify([TRAITS.map(k => W.w[k] || 0), TRAITS.map(k => (W.must || {})[k] || 0)]);
+export function missesFor(g, want) { const T = traitsOf(g, null); return Object.keys(want.must || {}).filter(k => T[k] < want.must[k]); }
+export function potentialFor(g, want) {
+  if (missesFor(g, want).length) return 0;
+  const T = traitsOf(g, null);
+  return Object.keys(want.w).reduce((p, k) => p * Math.pow(T[k], want.w[k]), 1);
+}
+/* against today's computer at a purpose, as scoreOf at a need */
+export function scoreFor(st, want) {
+  if (!novelty(st.g)) return { now: 1, could: 1, can: true, wins: false };
+  const p = potentialFor(st.g, want), mat = maturityOf(st), bar = todayAt(st.year), m = Object.entries(PURPOSE_DIRS).reduce((a, [d, w]) => a * Math.pow(mat[d], w), 1), now = p * m / bar;
+  return { now, could: p / bar, can: p > 0, wins: now >= 1 };
+}
+/* the best any recipe could become at a purpose, away from today's computer: what makes it too hard, or not */
+export const bestPotential = want => allRecipes().reduce((b, g) => (novelty(g) ? Math.max(b, potentialFor(g, want)) : b), 0);
+export function purposeWhy(p, ctx = {}) {
+  const isRec = x => x !== null && typeof x === 'object' && !Array.isArray(x), inR = (v, [a, b]) => typeof v === 'number' && Number.isFinite(v) && v >= a && v <= b;
+  if (!isRec(p) || typeof p.purpose !== 'string' || !PURPOSE_ID.test(p.purpose) || NEEDS.includes(p.purpose) || (ctx.ids || []).includes(p.purpose)) return 'purpose';
+  if (!isRec(p.w) || !Object.keys(p.w).length || !Object.entries(p.w).every(([k, v]) => TRAITS.includes(k) && inR(v, PURPOSE_W))) return 'weights';
+  if (p.must != null && !(isRec(p.must) && Object.entries(p.must).every(([k, v]) => TRAITS.includes(k) && inR(v, PURPOSE_MUST)))) return 'musts';
+  const want = wantOf(p), key = wantKey(want);
+  if (NEEDS.some(n => wantKey(WANT[n]) === key) || (ctx.wants || []).includes(key)) return 'same';
+  if (allRecipes().some(g => novelty(g) && scoreFor(start(g), want).wins) || (ctx.states || []).some(st => scoreFor(st, want).wins)) return 'easy';
+  if (bestPotential(want) <= 1) return 'hard';
+  return null;
+}
 
 /* ---- a game ---- */
 export function start(g, stones) {

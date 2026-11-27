@@ -40,7 +40,7 @@ export function ledgerAttempts(entries) {
     if (!e || typeof e !== 'object' || typeof e.id !== 'string' || !A.histOk(e.arch) || e.over || e.past || (e.ok == null && A.seasonOf(e) !== A.VERSION)) continue;
     const R = A.replay(e.arch);
     out.push({ key: A.keyOf(R.st.g), g: R.st.g, st: R.st, by: 'ledger', id: e.id, who: typeof e.by === 'string' ? e.by : '', made: e.made, agent: ARCH_AGENTS.includes(e.made),
-      day: (DAY.exec(e.id) || [])[1] || null, first: !!e.firstTry, firstIn: Array.isArray(e.firstIn) ? e.firstIn : [], draft: !!e.draft, years: R.st.year });
+      day: (DAY.exec(e.id) || [])[1] || null, first: !!e.firstTry, firstIn: Array.isArray(e.firstIn) ? e.firstIn : [], firstFor: Array.isArray(e.firstFor) ? e.firstFor : [], draft: !!e.draft, years: R.st.year });
   }
   return out;
 }

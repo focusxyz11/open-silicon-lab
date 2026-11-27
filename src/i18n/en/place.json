@@ -339,6 +339,10 @@
   "one": "proposed {n} gene option",
   "other": "proposed {n} gene options"
  },
+ "society.does.purpose": {
+  "one": "proposed {n} purpose for the field",
+  "other": "proposed {n} purposes for the field"
+ },
  "lab.reports": "Reported in the lab",
  "lab.reportsD": "The lab broken by the people using it: each calls for a fix until someone makes one.",
  "follow.k": "Following",

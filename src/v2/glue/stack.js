@@ -12,6 +12,9 @@ import { V, $ } from '../shell.js';
 import * as Game from '../game.js';
 import { still } from '../../core/ui.js';
 import { rungOfChallenge } from '../../engines/path.js';
+import { purposesOf } from '../../engines/ledger.js';
+import * as Arch from '../../engines/arch.js';
+import { keep, signHtml, signOf, slipHtml, slipClick, refusal } from '../commons.js';
 
 const here = () => /^#\/stack(\/|$)/.test(location.hash);
 export function create() {
@@ -25,6 +28,13 @@ export function create() {
       const W = () => Game.world(V.S), ON = {}, o = { still, lensesAt: V.lensIds,
         entries: () => (W().arch || []).map(id => W().byId[id]), over: () => (W().archOver || []).length,
         genome: () => Game.genomeOf(V.S),
+        /* purposes (#481): the proposed ones (yours among them, as drafts), what the engine checks a new one against, and
+           the way to keep one as your draft and send it */
+        purposes: () => purposesOf(W()),
+        purposeCtx: () => { const w = W(), P = purposesOf(w); return { ids: P.all.concat(P.past).map(e => e.purpose), wants: P.all.map(e => Arch.wantKey(Arch.wantOf(e))), states: (w.arch || []).map(id => w.archState[id]).filter(Boolean) }; },
+        signHtml: () => signHtml(V.S),
+        keepPurpose: (fields, box) => { const r = keep(V.S, fields, 'purpose ' + fields.purpose, signOf(box)); if (r.ok) V.save(); return { ok: r.ok, why: r.ok ? '' : refusal(r.r), slip: r.ok ? slipHtml(V.S, r.e.id) : '' }; },
+        slipClick: (ev, done) => slipClick(ev, V.S, redraw => { V.save(); done(redraw); }),
         done: () => V.S.done || {},
         moved: () => V.hud(),
         stones: rung => (ON[rung] || []).map(c => ({ id: c.id, href: '#/do/' + c.id, title: Game.titleOf(c), won: Game.isDone(V.S, c.id) })) };

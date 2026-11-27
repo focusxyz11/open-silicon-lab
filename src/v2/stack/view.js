@@ -30,6 +30,7 @@ import { FINE_OF, CHOICES, V_RANGE, ARRANGE } from '../../data/path.js';
 import { A, SW, RUNGS, EXAMPLE, GENE_AT, GENE_OF, RUNG_DIR, clamp, carry, see, stoneOf, marksOf, stackMarks, rungName, RECIPES, RIDX, BLOCK, NEEDS, POT, CAN, CELLCAN, fxOf, bestNeed, recipeName, population, census, times, pct } from './model.js';
 import { holder, credit, plotCard, sinceVisit, sinceLine, seasonLine, portCard, champWords } from './field.js';
 import { proposedHtml, openWords } from './genome.js';
+import * as PU from './purpose.js';
 import { PIC, passedPic, makePen, glyph } from './pics.js';
 import * as FX from './faces.js';
 
@@ -76,6 +77,11 @@ export function createStack(host, opts = {}) {
 
   /* ---------- your stack: what you have made, kept in this browser ---------- */
   const POP = population(opts.entries ? opts.entries() : []), GENOME = opts.genome ? opts.genome() : [];
+  /* the proposed column (#481): the purpose the field shows past the six needs, the open need now if there is one; the
+     sheet widens by a column while any is proposed */
+  let COL = null;
+  const recol = () => { COL = PU.columnOf(opts.purposes ? opts.purposes() : null, POP); SHEET.x1 = WID + 5 + (COL ? CSTEP : 0); };
+  recol();
   const brought = () => A.broughtOf(opts.done ? opts.done() : {});
   const fresh = () => ({ F: Object.assign({}, EXAMPLE), g: Object.assign({}, A.TODAY), aim: 'any', A: A.start(A.TODAY, brought()), T: A.treeOf(A.TODAY), focus: [], stones: brought(), first: {} });
   const S = fresh();
@@ -83,7 +89,7 @@ export function createStack(host, opts = {}) {
   const save = () => { try { localStorage.setItem(KEY, JSON.stringify({ F: S.F, aim: S.aim, A: S.A, T: S.T, focus: S.focus, stones: S.stones, first: S.first })); } catch (e) { /* not kept */ } };
   const extra = (F, g) => { const spec = SW.normal({ mat: F.mat, shape: F.shape, mech: F.mech, own: F.own }); return { F, g, spec, sw: SW.switchOf(spec), M: SW.MATERIALS.find(m => m.id === spec.mat) }; };
   const make = (F, g, aim) => { const R = carry(F, g, aim); return { R, V: see(R), D: extra(R.fine, R.recipe) }; };
-  let Y = make(S.F, S.g, S.aim), Yprev = Y, marks = [], QB = {}, lens = null, CEN = null, proposals = null, portOn = false, wave = null, pings = [], grewAt = -1e9;
+  let Y = make(S.F, S.g, S.aim), Yprev = Y, marks = [], QB = {}, lens = null, CEN = null, proposals = null, portOn = false, purposeOn = false, PFORM = PU.loadForm(), PSLIP = '', wave = null, pings = [], grewAt = -1e9;
   const R = () => Y.R;
   const mineKey = () => A.keyOf(S.g), mineRi = () => RIDX.get(mineKey()), aimN = () => NEEDS.indexOf(S.aim);
   const mineAtt = () => ({ key: mineKey(), g: S.g, st: S.A, by: 'you', mine: true });
@@ -251,9 +257,15 @@ export function createStack(host, opts = {}) {
     S.aim = POT[view.n][view.r] > 0 ? NEEDS[view.n] : S.aim; fixAim(); S.focus = A.novelty(S.g) ? A.suggest(S.A, 'archniche').dirs.slice() : []; SK = null;
     refresh(0); say(t('sk.say.taken', { y: S.A.year })); view.n = aimN(); view.r = mineRi(); ui();
   }
+  /* propose what it is for (#481): the card with the dials, over the field */
+  function propose() {
+    const run = () => { purposeOn = true; portOn = false; proposals = null; ui(); };
+    if (purposeOn) { purposeOn = false; ui(); return; }
+    if (view.level !== 'field' || cam.s > poseField().s * 1.3) { view.level = 'field'; view.i = -1; closeAll(); fly(poseField(), 1100, run); ui(); } else run();
+  }
   /* agents explore from their own machines, through the open port: the lab runs none (#448). The dock's button shows how */
   function port() {
-    const run = () => { portOn = true; proposals = null; ui(); };
+    const run = () => { portOn = true; purposeOn = false; proposals = null; ui(); };
     if (portOn) { portOn = false; ui(); return; }
     if (view.level !== 'field' || cam.s > poseField().s * 1.3) { view.level = 'field'; view.i = -1; closeAll(); fly(poseField(), 1100, run); ui(); } else run();
   }
@@ -287,7 +299,7 @@ export function createStack(host, opts = {}) {
     /* the sheet's frame, the band of today's computer, the open edge of the genome */
     const f0 = proj(SHEET.x0, SHEET.y0), f1 = proj(SHEET.x1, SHEET.y1);
     if (la > 0.02) { ctx.strokeStyle = C.ink(0.2 * la); ctx.lineWidth = 1; ctx.strokeRect(snap(f0[0]), snap(f1[1]), f1[0] - f0[0], f0[1] - f1[1]);
-      ctx.beginPath(); for (let n = 0; n <= 6; n++) { const x = n * CSTEP - COLGAP / 2, a = proj(x, SHEET.y0); ctx.moveTo(snap(a[0]), a[1]); ctx.lineTo(snap(a[0]), a[1] - 6); const b = proj(x, SHEET.y1); ctx.moveTo(snap(b[0]), b[1]); ctx.lineTo(snap(b[0]), b[1] + 6); } ctx.stroke(); }
+      ctx.beginPath(); for (let n = 0; n <= (COL ? 7 : 6); n++) { const x = n * CSTEP - COLGAP / 2, a = proj(x, SHEET.y0); ctx.moveTo(snap(a[0]), a[1]); ctx.lineTo(snap(a[0]), a[1] - 6); const b = proj(x, SHEET.y1); ctx.moveTo(snap(b[0]), b[1]); ctx.lineTo(snap(b[0]), b[1] + 6); } ctx.stroke(); }
     { const a = proj(-1.2, -0.7), p = new Path2D(); para(p, a[0], a[1], (WID + 2.4) * cam.s, (PD + 1.4) * cam.s * cam.cosT, (PD + 1.4) * cam.kx * cam.s); ctx.fillStyle = C.ink(0.07 * gf); ctx.fill(p); ctx.strokeStyle = C.ink(0.5 * gf); ctx.lineWidth = 1; ctx.stroke(p); }
     { const a = proj(0, TOP + 2.2), p = new Path2D(); para(p, a[0], a[1], WID * cam.s, 3.6 * cam.s * cam.cosT, 3.6 * cam.kx * cam.s); ctx.setLineDash([6, 5]); ctx.strokeStyle = C.ink(0.3 * gf); ctx.stroke(p); ctx.setLineDash([]); }
     /* every plot: untried ones faint, an edge where it could beat today's computer once polished */
@@ -327,6 +339,19 @@ export function createStack(host, opts = {}) {
         else if (d > 0 && !mine && wpx > 12 && (ch || (home && (win || e.a.built)))) label(a0 + wpx + 6, a1 - Math.max(0, (hpx - 9) / 2), ch || e.a.by === 'ledger' ? champWords(e) : (e.a.built ? t('ar.known.' + e.a.id) : name) + '  ' + times(e.now), fSans(11, win || ch ? 700 : 400), 11, C.ink(win || ch ? 1 : 0.8), { pri: (e.a.by === 'ledger' ? 16 : e.a.built ? 12 : 4) + e.now + (ch ? 3 : 0), bg: true, max: 240 });
       }
     }
+    /* the proposed column (#481): marked as proposed by a dashed frame; every recipe that could serve it faint, an edge
+       where it could beat today's computer once polished, the best attempt at each recipe filled as far as it has come */
+    if (COL) { const n = 6, x0 = n * CSTEP - 1, c0 = proj(x0, -1.6), fp = new Path2D(); para(fp, c0[0], c0[1], (COLW + 2) * cam.s, (TOP + 3.2) * cam.s * cam.cosT, (TOP + 3.2) * cam.kx * cam.s);
+      ctx.setLineDash([4, 4]); ctx.strokeStyle = C.ink(0.35 * gf); ctx.lineWidth = 1; ctx.stroke(fp); ctx.setLineDash([]);
+      const po = new Path2D(), pc = new Path2D();
+      for (let ri = 0; ri < RECIPES.length; ri++) {
+        const r = RECIPES[ri]; if (!r.d) continue; const pot = A.potentialFor(r.g, COL.want), b = COL.best.get(r.key); if (!pot && !b) continue;
+        const rc = plotRect(n, ri), a = proj(rc.x, rc.y); if (a[0] > vw + 20 || a[0] + wpx + skew < -20 || a[1] < -20 || a[1] - hpx > vh + 20) continue;
+        const a0 = snap(a[0]), a1 = snap(a[1]);
+        if (b) { const p = new Path2D(), q = new Path2D(), win = b.now >= 1; para(p, a0, a1, wpx, hpx, skew); ctx.fillStyle = C.bg(0.9 * gf); ctx.fill(p); para(q, a0, a1, wpx * frac(b.now), hpx, skew); ctx.fillStyle = C.warm((win ? 0.95 : 0.55) * gf); ctx.fill(q); ctx.strokeStyle = C.warm(0.85 * gf); ctx.stroke(p); continue; }
+        para(po, a0, a1, wpx, hpx, skew); if (pot >= 1 && wpx > 10) { pc.moveTo(a0 + wpx + skew, a1 - hpx); pc.lineTo(a0 + wpx, a1); }
+      }
+      ctx.fillStyle = C.warm(0.07 * gf); ctx.fill(po); ctx.lineWidth = wpx < 30 ? 1.2 : 2; ctx.strokeStyle = C.warm(0.45 * gf); ctx.stroke(pc); ctx.lineWidth = 1; }
     /* your line through the sheet: every start and fork, in the need you aim at */
     if (S.T.nodes.length > 1) { ctx.beginPath(); for (const nd of S.T.nodes) { if (nd.from == null) continue; const pa = A.nodeOf(S.T, nd.from); if (!pa || !RIDX.has(pa.g) || !RIDX.has(nd.g)) continue; const r0 = plotRect(an, RIDX.get(pa.g)), r1 = plotRect(an, RIDX.get(nd.g)), a = proj(r0.x + PW / 2, r0.y + PD / 2), b = proj(r1.x + PW / 2, r1.y + PD / 2); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); } ctx.strokeStyle = C.acc(0.55 * Math.max(gf, 0.3)); ctx.lineWidth = 1.2; ctx.setLineDash([2, 4]); ctx.stroke(); ctx.setLineDash([]); }
     /* agents landing */
@@ -339,6 +364,13 @@ export function createStack(host, opts = {}) {
       label(a[0], a[1] + px * 0.35, need(nd), fSerif(px), px, C.ink(la), { align: 'center', pri: 60 }); if (s * COLW > 150) label(a[0], a[1] + px * 0.35 + 17, t('sk.field.can', { n: CAN[n] }), fMono(10.5), 10.5, C.mut(la), { align: 'center', pri: 30 }); });
     for (let d = 0; d < 5; d++) { const a = proj(-3.5, (BY[d].y0 + BY[d].y1) / 2), stick = a[0] < 104, o = { align: stick ? 'left' : 'right', pri: 55, bg: stick, force: stick }, x = stick ? 8 : a[0], y = a[1]; if (y < chrome().top + 34 || y > vh - chrome().bot - 6) continue;
       label(x, y + (d ? -1 : 4), awayWords(d), fMono(11, 500), 11, C.ink(la), o); if (d && s * (BY[d].y1 - BY[d].y0) > 30) label(x, y + 14, t('sk.field.recipes', { n: BLOCK[d].length }), fMono(10.5), 10.5, C.mut(la), Object.assign({}, o, { pri: 25 })); }
+    if (COL) { const W = PU.columnWords(COL, id => { const a = POP.find(x => x.id === id); return a ? holder(a) : ''; }), a = proj(6 * CSTEP + COLW / 2, -5.6), px = clamp(s * 3, 12, 18);
+      const y0 = a[1] + px * 0.35, mx = COLW * s + 120;
+      label(a[0], y0, W.kick, fMono(10.5), 10.5, C.warm(la), { align: 'center', pri: 59 });
+      label(a[0], y0 + px + 2, W.head, fSerif(px, 400, true), px, C.ink(la), { align: 'center', pri: 58, max: mx });
+      /* over the column: who proposed it, whether it is won or the open need now, and how many more are proposed */
+      const tp = proj(6 * CSTEP + COLW / 2, TOP + 1.6);
+      if (s * COLW > 90) [[W.open, C.warm, 32], [W.sub, C.mut, 31], [W.more, C.mut, 29]].filter(x => x[0]).forEach(([w, c, pri], i) => label(tp[0], tp[1] - 10 + i * 14, w, fMono(10.5), 10.5, c(la), { align: 'center', pri, max: mx + 60, bg: true })); }
     { const a = proj(0, SHEET.y1), px = clamp(s * 5.4, 16, 32); label(a[0], a[1] + px + 8, t('sk.field.caption'), fSerif(px, 700), px, C.ink(la), { pri: 58 }); label(a[0], a[1] + px + 27, t('sk.field.sub', { tried: CEN.tried, wins: CEN.wins, season: A.VERSION }), fMono(11), 11, C.mut(la), { pri: 40 });
       const b = proj(WID / 2, TOP + 3.4); label(b[0], b[1], openWords(GENOME), fSerif(clamp(s * 2.6, 11, 15), 400, true), 13, C.mut(la), { align: 'center', pri: 22, max: WID * s - 20 }); }
     if (s * COLW > 170) { const a = proj(COLW / 2, (BY[4].y0 + BY[4].y1) / 2); label(a[0], a[1], t('sk.field.cannot'), fSerif(12.5, 400, true), 12.5, C.mut(la), { align: 'center', pri: 18, max: COLW * s }); const b = proj(2 * CSTEP + COLW / 2, BY[4].y0 + 11.2 * (PD + GY) - 0.6); label(b[0], b[1], t('sk.field.nobody'), fSerif(12.5, 400, true), 12.5, C.ink(la), { align: 'center', pri: 18, bg: true }); }
@@ -452,7 +484,7 @@ export function createStack(host, opts = {}) {
     $('.sk-dock').innerHTML = '<div class="sk-clock"><b class="sk-yr"></b><span class="sk-ppl"></span><button type="button" class="sk-again lnk" hidden>' + esc(t('sk.dock.again')) + '</button></div>' +
       '<div class="sk-dirs" role="group" aria-label="' + esc(t('ar.dirs.kicker')) + '">' + [...A.DIRS, 'people'].map(d => '<button type="button" data-dir="' + d + '" aria-pressed="false"><span class="nm">' + esc(t('ar.dir.' + d)) + '</span><span class="sk-bar"><i></i></span><span class="v"></span></button>').join('') + '</div>' +
       '<div class="sk-go"><button type="button" class="btn primary sk-grow1">' + esc(t('sk.dock.grow')) + '</button><button type="button" class="btn sk-grow5">' + esc(t('ar.act.five')) + '</button><button type="button" class="btn sk-more" aria-expanded="false">' + esc(t('sk.dock.more')) + '</button></div>' +
-      '<div class="sk-ag"><button type="button" class="btn sk-ask">' + esc(t('ar.ag.ask')) + '</button><button type="button" class="btn sk-explore">' + esc(t('sk.dock.explore')) + '</button></div>';
+      '<div class="sk-ag"><button type="button" class="btn sk-ask">' + esc(t('ar.ag.ask')) + '</button><button type="button" class="btn sk-explore">' + esc(t('sk.dock.explore')) + '</button><button type="button" class="btn sk-propose">' + esc(t('sk.dock.purpose')) + '</button></div>';
   }
   const geneWord = k => (k === 'aim' ? t('sk.ctl.aim') : t('ar.gene.' + k));
   const seg = (key, opts, cur, dis = []) => '<span class="sk-seg" role="group">' + opts.map(([v, tx, sub]) => '<button type="button" data-k="' + key + '" data-v="' + esc(v) + '" aria-pressed="' + (String(cur) === String(v)) + '"' + (dis.includes(v) ? ' disabled' : '') + (sub ? ' title="' + esc(sub) + '"' : '') + '>' + esc(tx) + '</button>').join('') + '</span>';
@@ -502,7 +534,7 @@ export function createStack(host, opts = {}) {
   const doneBtn = () => '<button type="button" class="btn sk-done" data-out="1">' + esc(t('sk.ctl.done')) + '</button>';
   let popKey = null;
   const pop = () => { if (!popKey) return false; popKey = null; $('.sk-pop').hidden = true; return true; };
-  function closeAll() { pop(); proposals = null; portOn = false; }
+  function closeAll() { pop(); proposals = null; portOn = false; purposeOn = false; }
   function openPop(k, anchor) {
     if (popKey === k) { pop(); return; }
     popKey = k; const el = $('.sk-pop'), yr = S.A.year; let h = '';
@@ -571,11 +603,12 @@ export function createStack(host, opts = {}) {
     if (mk2.dataset.k !== mkey) { mk2.dataset.k = mkey; mk2.innerHTML = marks.map((m, k) => '<button type="button" data-mark="' + k + '" aria-pressed="' + !!(lens && lens.rung === m.rung && lens.id === m.id) + '" class="' + (lens && !(lens.rung === m.rung && lens.id === m.id) ? 'dim' : '') + '" aria-label="' + esc(t('frame.mark.aria', { q: t('frame.q.' + m.id) })) + '"><i></i><span>' + esc(t('frame.q.' + m.id)) + '</span></button>').join(''); }
     /* the agents' forks: they propose, you decide */
     const cs = $('.sk-cards');
-    if (portOn && !proposals) cs.innerHTML = portCard(POP);
-    else if (proposals) cs.innerHTML = proposals.length ? '<p>' + esc(t('ar.ag.how')) + ' <button type="button" class="lnk" data-fork="x">' + esc(t('sk.agent.dismiss')) + '</button></p><div class="sk-hand">' + proposals.map((p, k) => '<div class="sk-prop"><span class="k">' + esc(t('sk.agent.proposes')) + '</span><b>' + esc(optName(p.gene, p.option)) + '</b><span>' + esc(t('ar.gene.' + p.gene).toLowerCase()) + '</span><span class="n">' + esc(t('ar.ag.could', { n: p.could })) + '</span><span class="' + (p.lost.length ? 'lose' : '') + '">' + esc(p.lost.length ? t('ar.ag.lost', { dirs: dirList(p.lost) }) : t('ar.ag.keeps')) + '</span><button type="button" class="btn primary" data-fork="' + k + '">' + esc(t('ar.ag.take')) + '</button></div>').join('') + '</div>' : '<div class="sk-prop none"><span>' + esc(t('ar.ag.none')) + '</span><button type="button" class="btn" data-fork="x">' + esc(t('sk.agent.dismiss')) + '</button></div>';
-    const cards = !!proposals || portOn; cs.hidden = !cards; root.classList.toggle('cards', cards);
+    if (purposeOn && !proposals) { const k = 'purpose|' + PSLIP; if (cs.dataset.k !== k) { cs.dataset.k = k; cs.innerHTML = PU.cardHtml(PFORM, opts.purposeCtx ? opts.purposeCtx() : {}, opts.signHtml ? opts.signHtml() : '', PSLIP); } }
+    else if (portOn && !proposals) { cs.dataset.k = ''; cs.innerHTML = portCard(POP); }
+    else if (proposals) (cs.dataset.k = '', cs.innerHTML = proposals.length ? '<p>' + esc(t('ar.ag.how')) + ' <button type="button" class="lnk" data-fork="x">' + esc(t('sk.agent.dismiss')) + '</button></p><div class="sk-hand">' + proposals.map((p, k) => '<div class="sk-prop"><span class="k">' + esc(t('sk.agent.proposes')) + '</span><b>' + esc(optName(p.gene, p.option)) + '</b><span>' + esc(t('ar.gene.' + p.gene).toLowerCase()) + '</span><span class="n">' + esc(t('ar.ag.could', { n: p.could })) + '</span><span class="' + (p.lost.length ? 'lose' : '') + '">' + esc(p.lost.length ? t('ar.ag.lost', { dirs: dirList(p.lost) }) : t('ar.ag.keeps')) + '</span><button type="button" class="btn primary" data-fork="' + k + '">' + esc(t('ar.ag.take')) + '</button></div>').join('') + '</div>' : '<div class="sk-prop none"><span>' + esc(t('ar.ag.none')) + '</span><button type="button" class="btn" data-fork="x">' + esc(t('sk.agent.dismiss')) + '</button></div>');
+    const cards = !!proposals || portOn || purposeOn; cs.hidden = !cards; root.classList.toggle('cards', cards); root.classList.toggle('proposing', purposeOn && !proposals);
     const si = $('.sk-since'); si.hidden = lvl !== 'field' || cards; if (si.textContent !== SINCE) si.textContent = SINCE; if (!si.hidden) sinceH = si.getBoundingClientRect().height + 8;
-    if (cards !== lastCards) { lastCards = cards; const wasAll = lastRl === 'field'; requestAnimationFrame(() => { measure(); if (anim) return; if (view.level === 'stack') fly(poseStack(view.n, view.r), 450); else if (view.level === 'rung') fly(poseRung(view.n, view.r, view.i), 450); else if (wasAll) fly(poseField(), 450); }); }
+    const ck = cards + '|' + purposeOn; if (ck !== lastCards) { lastCards = ck; const wasAll = lastRl === 'field'; requestAnimationFrame(() => { measure(); if (anim) return; if (view.level === 'stack') fly(poseStack(view.n, view.r), 450); else if (view.level === 'rung') fly(poseRung(view.n, view.r, view.i), 450); else if (wasAll) fly(poseField(), 450); }); }
     /* how true: the field is the architecture engine's idea drawn; a rung its own mark */
     const fb = $('.sk-fid'), fr = lvl === 'field' ? { f: 'idea', by: 'arch' } : lvl === 'rung' ? (face === 'use' ? sh.Y.V.fid[RUNGS[view.i]] : (fx => (fx.none || fx.fork ? null : FX.fidOf(sh.Y.R, RUNGS[view.i], face)))(FX.faceAt(sh.Y.R, RUNGS[view.i], face))) : null, fk = fr ? JSON.stringify(fr) : '';
     if (fb.dataset.k !== fk) { fb.dataset.k = fk; fb.innerHTML = !fr ? '' : fr.status === 'guess' ? statusMark('guess') : mark(fr); }
@@ -656,6 +689,14 @@ export function createStack(host, opts = {}) {
   };
   document.addEventListener('keydown', onKey);
   root.addEventListener('click', e => {
+    if (purposeOn && e.target.closest('.sk-purpose')) {
+      if (e.target.closest('[data-pclose]')) { purposeOn = false; ui(); return; }
+      if (e.target.closest('[data-pkeep]')) { const r = opts.keepPurpose ? opts.keepPurpose(PU.fieldsOf(PFORM), $('.sk-purpose')) : null;
+        if (r && r.ok) { PSLIP = r.slip; PU.clearForm(); PFORM = PU.blank(); recol(); say(t('sk.purpose.kept')); } else if (r) $('.sk-pv').textContent = r.why;
+        ui(); return; }
+      if (opts.slipClick && opts.slipClick(e, redraw => { if (redraw) { PSLIP = ''; recol(); } ui(); })) return;
+      return;
+    }
     const b = e.target.closest('button,a'); if (!b) { if (!e.target.closest('.sk-pop')) pop(); return; }
     const d = b.dataset;
     if (d.face) setFace(d.face);
@@ -671,13 +712,17 @@ export function createStack(host, opts = {}) {
     else if (b.classList.contains('sk-grow1')) grow(1); else if (b.classList.contains('sk-grow5')) grow(5);
     else if (b.classList.contains('sk-ask')) { proposals = A.agentForks(S.A); ui(); }
     else if (b.classList.contains('sk-explore')) port();
+    else if (b.classList.contains('sk-propose')) propose();
     else if (d.port) { portOn = false; ui(); }
     else if (b.classList.contains('sk-again')) restart();
     else if (b.classList.contains('sk-more')) { const o = root.classList.toggle('more'); b.setAttribute('aria-expanded', String(o)); measure(); if (view.level === 'stack' && !anim) fly(poseStack(view.n, view.r), 400); }
     else if (b.classList.contains('sk-reset')) resetAll();
     else if (b.classList.contains('sk-take')) takeOver(); else if (b.classList.contains('sk-tomine')) goStack(aimN(), mineRi());
   });
-  root.addEventListener('input', e => { if (e.target.id === 'sk-volt') setFine('V', +e.target.value); });
+  root.addEventListener('input', e => { if (e.target.id === 'sk-volt') setFine('V', +e.target.value);
+    /* a dial or a field of the purpose: checked by the engine as it moves, kept in this browser until kept as a draft */
+    if (e.target.closest && e.target.closest('.sk-purpose')) { PU.readInput(PFORM, e.target); PU.saveForm(PFORM); const v = PU.verdict(PFORM, opts.purposeCtx ? opts.purposeCtx() : {}), pv = $('.sk-pv'), kb = $('[data-pkeep]');
+      if (pv) { pv.textContent = v.words; pv.classList.toggle('ok', v.ok); } if (kb) kb.disabled = !v.ok; } });
   root.addEventListener('focusin', e => { const b = e.target.closest && e.target.closest('.sk-sr [data-rung]'); hoverRung = b ? +b.dataset.rung : -1; if (e.target.closest && e.target.closest('.sk-plot')) { hover = plotCur || { n: view.n, ri: view.r }; } dirty = true; });
   root.addEventListener('focusout', e => { if (e.target.closest && e.target.closest('.sk-plot')) { hover = null; dirty = true; } });
   $('.sk-dock').addEventListener('pointerover', e => { const b = e.target.closest('[data-dir]'); hoverDir = b ? b.dataset.dir : null; dirty = true; });
@@ -721,7 +766,7 @@ export function createStack(host, opts = {}) {
   let first = true;
   const setPose = p => { Object.assign(cam, { x: p.x, y: p.y, z: p.z, s: p.s, T: p.T, G: p.G, ex: p.ex, ox: p.ox, oy: p.oy }); trig(); };
   /* for the lab's own checks (scripts/smoke/stack.mjs) */
-  const api = { S, view, cam, A, face: () => face, setFace, setStep, step: r => stepAt(r), goField, goNear, goStack, goRung, goOut, setGene, setFine, setAim, grow, port, field: () => ({ POP, CEN, since: SINCE }), ask: () => { proposals = A.agentForks(S.A); ui(); }, busy: () => !!anim, mine: () => [aimN(), mineRi()], at: (n, ri) => { const rc = plotRect(n, ri), b = root.getBoundingClientRect(), a = proj(rc.x + PW / 2, rc.y + PD / 2); return [a[0] + b.left, a[1] + b.top]; }, plates: () => PL, carry: () => Y, marks: () => marks, top: () => stackMarks(QB, 3), lens: () => lens, RECIPES, RIDX };
+  const api = { S, view, cam, A, face: () => face, setFace, setStep, step: r => stepAt(r), goField, goNear, goStack, goRung, goOut, setGene, setFine, setAim, grow, port, propose, purpose: () => ({ col: COL, form: PFORM, on: purposeOn }), field: () => ({ POP, CEN, since: SINCE }), ask: () => { proposals = A.agentForks(S.A); ui(); }, busy: () => !!anim, mine: () => [aimN(), mineRi()], at: (n, ri) => { const rc = plotRect(n, ri), b = root.getBoundingClientRect(), a = proj(rc.x + PW / 2, rc.y + PD / 2); return [a[0] + b.left, a[1] + b.top]; }, plates: () => PL, carry: () => Y, marks: () => marks, top: () => stackMarks(QB, 3), lens: () => lens, RECIPES, RIDX };
   /* the questions on the stack, for the card: the strongest at a rung (or across the stack), the one marked at a rung */
   const marksAt = (key, n = 6) => (view.level === 'field' || !onMine() ? [] : stackMarks(QB, n, RUNGS.includes(key) ? [key] : null));
   return {

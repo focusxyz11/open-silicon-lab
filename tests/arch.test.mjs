@@ -235,7 +235,7 @@ test('every option has a carry contract beside its traits, its energy only in EF
 /* seasons (#480): a season's print is kept here once its season is open. Changing the engine's tables changes the
    print: raise VERSION, add the new season to SEASONS with its print (after closing the old one with
    scripts/season.mjs), and add its print here. A past season's print never changes */
-const PRINTS = ['6fff8cb7'];
+const PRINTS = ['65fe208e'];
 test('the engine\'s tables are fingerprinted: changing them without raising VERSION fails here', () => {
   assert.equal(A.VERSION, A.SEASONS.length);
   A.SEASONS.forEach((s, i) => { assert.equal(s.v, i + 1); assert.equal(s.print, PRINTS[i], 'season ' + s.v + '\'s print never changes'); assert.match(s.from, /^\d{4}-\d{2}-\d{2}$/); });

@@ -143,6 +143,22 @@ export default async function run() {
       .catch(() => problems.push(tag + ': How agents explore does not show the open port'));
     await sp.waitForFunction(() => { const x = document.querySelector('#stackv .sk-cards:not([hidden]) [data-port]'); if (x) x.click(); return document.querySelector('#stackv .sk-cards').hidden; }, null, { timeout: 20000, polling: 500 })
       .catch(() => problems.push(tag + ': the open port\'s card does not close'));
+    /* the needs grow too (#481): a proposed purpose stands as a column past the six needs; Propose what it is for opens
+       its dials, the engine's word on it follows them, and a purpose just past what any recipe does can be kept */
+    if (!(await sp.evaluate(() => { const c = window.__stack.purpose().col; return !!c && !!c.e && c.e.kind === 'purpose' && c.best instanceof Map; })))
+      problems.push(tag + ': no proposed purpose stands as a column on the field');
+    await sp.waitForFunction(() => { const v = window.__stack, c = document.querySelector('#stackv .sk-cards:not([hidden]) .sk-purpose'); if (!c) { const b = document.querySelector('#stackv .sk-propose'); if (innerWidth < 760 && !document.getElementById('stackv').classList.contains('more')) document.querySelector('#stackv .sk-more').click(); if (b && !v.busy()) b.click(); return false; } return c.querySelectorAll('input[type="range"]').length === 10; }, null, { timeout: 30000, polling: 1000 })
+      .catch(() => problems.push(tag + ': Propose what it is for does not open its dials'));
+    await sp.waitForFunction(() => { const set = (sel, v) => { const el = document.querySelector('#stackv ' + sel); if (el && el.value !== v) { el.value = v; el.dispatchEvent(new Event('input', { bubbles: true })); } };
+      set('[data-pf="purpose"]', 'glacier'); set('[data-pf="name"]', 'A glacier logger'); set('[data-pf="what"]', 'A logger frozen into the ice for twenty years, reading exactly.');
+      set('[data-pd="w:rugged"]', '1.5'); set('[data-pd="w:energy"]', '0.5'); set('[data-pd="must:rugged"]', '3'); set('[data-pd="must:exact"]', '0.9');
+      const pv = document.querySelector('#stackv .sk-pv'), k = document.querySelector('#stackv [data-pkeep]'); return !!pv && pv.classList.contains('ok') && !!k && !k.disabled; }, null, { timeout: 20000, polling: 500 })
+      .catch(() => problems.push(tag + ': the engine does not find a purpose just past what any recipe does ready to keep'));
+    await sp.waitForFunction(() => { const el = document.querySelector('#stackv [data-pd="w:energy"]'); if (el && el.value !== '3') { el.value = '3'; el.dispatchEvent(new Event('input', { bubbles: true })); }
+      const pv = document.querySelector('#stackv .sk-pv'), k = document.querySelector('#stackv [data-pkeep]'); return !!pv && !pv.classList.contains('ok') && /easy/i.test(pv.textContent) && k.disabled; }, null, { timeout: 20000, polling: 500 })
+      .catch(() => problems.push(tag + ': a purpose made too easy is not refused with the reason as the dial moves'));
+    await sp.waitForFunction(() => { const x = document.querySelector('#stackv .sk-cards:not([hidden]) [data-pclose]'); if (x) x.click(); return document.querySelector('#stackv .sk-cards').hidden; }, null, { timeout: 20000, polling: 500 })
+      .catch(() => problems.push(tag + ': the purpose\'s card does not close'));
     await sp.waitForFunction(() => { const v = window.__stack; if (!v.busy() && v.view.level === 'field') { const b = document.querySelector('#stackv .sk-rail [data-go="niche"]'); if (b && !b.classList.contains('on')) b.click(); } return document.querySelector('#stackv .sk-rail [data-go="niche"]').classList.contains('on'); }, null, { timeout: 20000, polling: 500 })
       .catch(() => problems.push(tag + ': the rail does not reach your niche'));
     await sp.waitForFunction(() => { const v = window.__stack; if (!v.busy() && v.view.level !== 'stack') { const b = document.querySelector('#stackv .sk-rail [data-go="stack"]'); if (b) b.click(); } return v.view.level === 'stack' && !v.busy() && location.hash === '#/stack'; }, null, { timeout: 20000, polling: 500 })
