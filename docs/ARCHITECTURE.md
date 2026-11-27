@@ -22,7 +22,7 @@ src/v2/holdkit.js       its words, what the visitor has set and done, its colour
 src/v2/holdplates.js    its pictures: every block of the chip a square drawn in 1000 units with its controls on it, and Moore's law live along the bottom
 src/v2/holdisle.js      its last picture, fetched once the page has drawn: the island's plan from straight above (src/data/isle.js, the island's own coast, road and places), where going inside starts
 src/v2/holdnotes.js     what a tap opens there, fetched when first needed: a number's source, every source on one sheet, the word that a challenge is done (styles: holdnotes.css)
-src/v2/holdboard.js     the board of the twelve challenges, fetched when the count in the bar is first tapped (styles: holdnotes.css)
+src/v2/holdchals.js     the twelve challenges as marks on the whole chip and in the rail, fetched past the wall, at the first touch or when the count in the bar is tapped (styles: holdnotes.css)
 src/v2/frame.js         the one frame on every view below the island: the rails, the levels, the card's Look · Do · Ask
 src/v2/frame2.js        the frame's three modes (#271): the card worn as a caption (Look), a side panel with a stage (Do) or a phone sheet; reading pages (Read); styles in src/styles/frame.css
 src/v2/loop.js          the loop as the shell knows it on every page: the steps, the places, the challenges, the levels inside each, your state as far as the loop reads it; no engine (tested)

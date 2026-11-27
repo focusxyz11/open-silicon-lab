@@ -41,7 +41,7 @@ export function createHold(host, ctx = {}) {
   /* the page's part of the lab's bar (in the loop's place, which waits on the first page): the small chip, the chapter,
      the twelve challenges and the sources */
   const chapL = h('div', 'b-chap mono'), map = h('div', 'd-map'), mid = h('div', 'd-mid'); mid.append(map, chapL);
-  let asking = 0; const top = mkTop(mid, () => { if (!asking) asking = late().then(m => { asking = 0; m.board(root, goChallenge, () => ({ d: S.d, cur, yrs })); }, () => { asking = 0; }); });
+  const top = mkTop(mid, () => { goOver(); chm(); });
   /* it fits the room the bar leaves it: as the room runs out, the chapter's name goes, then the tally's words, then the
      sources (they are at the end of the story too), then the squares shrink, and last the chapter; a phone has its own */
   function fitBar() { const n = innerWidth > 760 ? 6 : 1; for (let k = 0; k < n; k++) { for (let i = 1; i < 6; i++) top.classList.toggle('f' + i, i <= k); if (top.scrollWidth <= top.clientWidth + 1) break; } }
@@ -173,7 +173,7 @@ export function createHold(host, ctx = {}) {
     /* the landing: the island's block as large as the window allows above the footer's line (a phone keeps it as it is) */
     Lnd = { ...F.island, k: ph ? 1 : clamp((vh - barH - 58 * u) / (S1 * 1.06), 1, 1.5), sy: ph ? F.island.sy : barH + (vh - barH - 32 * u) / 2 + S1 * .02 };
     R.setProperty('--LS', S1 * Lnd.k + 'px'); R.setProperty('--LB', Math.max(10, vh - Lnd.sy - S1 * Lnd.k / 2) + 'px');
-    O = { x: WW / 2, y: WH / 2, k: Math.min(uw / WW, uh / WH), sx: cxs, sy: ot + uh / 2 };
+    O = { x: WW / 2, y: WH / 2, k: Math.min(uw / WW, uh / WH), sx: cxs, sy: ot + uh / 2 }; world.style.setProperty('--ok', O.k);
     secs.years.style.height = yOfD(DWALL) + vh * 1.25 + 'px'; rv = rvWant(); layYears();
     /* a headline as large as its card allows, never wider than it ("L’électricité" is longer than "The power") */
     $$('.card .w-h', story).forEach(e => { e.style.fontSize = ''; fitHead(e, parseFloat(getComputedStyle(e).fontSize), 1e9); });
@@ -293,7 +293,7 @@ export function createHold(host, ctx = {}) {
     ORDER.slice(1).forEach(k => { const s = secs[k], o = 1 - ss(0, .3, (y - s._out) / (vh * .75)); s.style.opacity = o; s.style.pointerEvents = o < .5 ? 'none' : ''; s.style.visibility = o < .01 ? 'hidden' : ''; });
     if (was !== yrs || !slot._s) { slot._s = 1; const Sx = yrs ? lerp(S1, Sy, rv) : S1; slot.style.setProperty('--S', Sx + 'px'); slot.style.setProperty('--top', (yrs ? F.years.sy - Sx / 2 : F.leak.sy - S1 / 2) + 'px'); holdBox.style.setProperty('--S', Sx + 'px');
       holdBox.style.setProperty('--hb', (PHONE() ? 14 : !yrs ? 22 * u : lerp(Math.max(22 * u, vh - top1 - S1), BH + 22 * u, rv)) + 'px'); }
-    root.classList.toggle('chipm', !yrs); hud.classList.toggle('off', !yrs); band.classList.toggle('off', !yrs); band.classList.toggle('wait', yrs && rvWant() < 1); holdBox.classList.toggle('chip', !yrs); holdBox.classList.toggle('over', !yrs && over);
+    if (!yrs) chm(); root.classList.toggle('chipm', !yrs); hud.classList.toggle('off', !yrs); band.classList.toggle('off', !yrs); band.classList.toggle('wait', yrs && rvWant() < 1); holdBox.classList.toggle('chip', !yrs); holdBox.classList.toggle('over', !yrs && over);
     /* the landing: past the island's cards the block is alone with its way in */
     const ending = y > secs.island.offsetTop && y >= host.scrollHeight - vh - vh * .3; root.classList.toggle('landing', ending);
     if (!yrs) { const nb = BEATS.find(b => b[0] > (anim ? anim.y1 : y) + 12); put(stN, nb ? nb[1] : S.kept ? w('isle.go') : w('isle.go0')); stp.lastChild.classList.toggle('in', !nb); }
@@ -362,9 +362,10 @@ export function createHold(host, ctx = {}) {
      as soon as the camera is past the wall */
   let moreP = null;
   const more = () => moreP || (moreP = import('./holdisle.js').then(m => { const pl = plates.island; Object.assign(PL.island, m.ISLAND); PL.island.ui(pl.ui, pl); pl.paint(S.T, 0); goIn = m.landing(host, root, pl, ctx, end, () => sheet(true)); onScroll(); }, () => { moreP = null; }));
-  const late = () => import('./holdboard.js');
+  /* the twelve challenges as marks on the whole chip and in the rail (src/v2/holdchals.js) */
+  let chmP = null; const chm = () => chmP || (chmP = import('./holdchals.js').then(m => m.marks({ blks, rail, go: goChallenge }), () => { chmP = null; }));
   let touched = false;
-  function touch() { if (touched || !document.documentElement.dataset.preload) return; touched = true; loadFacts(); more();
+  function touch() { if (touched || !document.documentElement.dataset.preload) return; touched = true; loadFacts(); more(); chm();
     /* words that did not come (the page was left, the connection dropped) are asked for again at the next touch; once
        in, the story above may grow, and the camera stays where it was (plan) */
     needWords('blueprint', 'shared').then(() => { fillWays(); fillShared(); out('machine'); if (!hasWords('blueprint') || !hasWords('shared')) touched = false; }, () => { touched = false; }); }
