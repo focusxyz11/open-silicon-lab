@@ -44,5 +44,5 @@
 .cabars figcaption i.k { display: inline-block; width: 12px; height: 8px; margin: 0 5px 0 8px; border-radius: 2px; vertical-align: middle; }
  .cabars i.k.plain { background: color-mix(in srgb, var(--ink) 26%, transparent); }
  .cabars i.k.you { background: var(--accent); }
-@media (max-width: 720px) { html.frame2 .f2stage .cafig[data-f2] .dphead { display: none; }
+@media (max-width: 720px) { .f2stage .cafig[data-f2] .dphead { display: none; }
 }
