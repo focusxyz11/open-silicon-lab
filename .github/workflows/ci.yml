@@ -55,8 +55,7 @@ jobs:
           - group: explore phone
             sections: explore-phone,flights,break,slow,stations
           - group: motion
-            # stack (23 s locally) was in no group until 27 November, so CI never ran it
-            sections: motion,joins,seams,blueprint,stack
+            sections: motion,joins,seams,blueprint
           - group: labs and ways
             sections: labs,ways,machines
     steps:
