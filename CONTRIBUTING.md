@@ -24,7 +24,7 @@ Thanks for helping. You do not need to be a chip expert: a good question and a s
 
 **Build with your AI agent.** Connect any agent to the lab's open port (`npm run mcp`, see [docs/MCP.md](docs/MCP.md)): it can read the plan, check designs and prepare a proposal for you to submit. Say how it was used.
 
-**Fix a fact.** Edit `src/data/facts.json`: update `value`, `source`, `url` and `verified`, and move the old value into `previous`.
+**Fix a fact.** Edit `src/data/facts.json`: update `value`, `source`, `url` and `verified`, and move the old value into `previous`. A fact whose source can't be read again keeps its last `verified` date and gets an `unchecked` line saying why; whoever re-checks it removes that line.
 
 **Translate.** Area by area: make `src/i18n/<lang>/`, copy any file of `src/i18n/en/` into it and translate the values, never the names; add the language to `LANGS` in `src/core/i18n.js`. An area not yet translated shows in English. `core.json` is the first page, so it is a good first file.
 

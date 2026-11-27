@@ -120,9 +120,6 @@ test('the first page and the views the shell opens itself wait for the areas the
 test('the shell\'s own modules show only what every view below the first page waits for', () => {
   /* the challenge player shows the labs' words too: the shell awaits labsReady before it plays */
   const PLAYER = abs('src/v2/play.js');
-  /* and the menu of sections, only with ?menu=1: the shell awaits its words before it draws it */
-  const SHELLF = abs('src/v2/app.js');
-  assert.ok(/if \(SECTIONS_ON\) Promise\.all\(\[needWords\('menu'\), needStyles\('menu'\)\]\)/.test(APP), 'src/v2/app.js no longer awaits the menu\'s words before it draws the menu');
-  const out = unwaited([...SHELL].filter(f => !HOLD.has(f) && f !== PLAYER && f !== SHELLF), EVERY).concat(unwaited([PLAYER], EVERY.concat('labs')), unwaited([SHELLF], EVERY.concat('menu')));
+  const out = unwaited([...SHELL].filter(f => !HOLD.has(f) && f !== PLAYER), EVERY).concat(unwaited([PLAYER], EVERY.concat('labs')));
   assert.deepEqual(out, [], tell('the shell', EVERY, out));
 });
