@@ -2,11 +2,12 @@
    on the dive's levels, each made of the one below (the lab's carry, src/engines/path.js), standing on its plot in the
    field of every recipe. Its checks for the lab: it opens on the lab's example, a rung opens by its address, the wreck
    (graphene, or the voltage taken down) breaks what is above, a gene changed rebuilds the anatomy, time grows it, the
-   agents propose forks and sweep the field, the camera reaches the niche and every attempt and comes back, the DOM
-   mirror carries the keyboard, and leaving hides it. Desktop at night, phone by day */
+   agents propose forks, the camera reaches the niche and every attempt and comes back, the field's points come from the
+   ledger with each niche's champion and the line of what changed since your last visit, agents explore through the open
+   port (the lab runs none), the DOM mirror carries the keyboard, and leaving hides it. Desktop at night, phone by day */
 import { S } from './shared.mjs';
 
-export const about = 'Your stack (#/stack): seven plates from the atom to the mind, a rung by its address, the wreck, a gene, growth, the agents, the field and back, the keyboard mirror, desktop and phone';
+export const about = 'Your stack (#/stack): seven plates from the atom to the mind, a rung by its address, the wreck, a gene, growth, the agents, the field from the ledger and since your last visit, and back, the keyboard mirror, desktop and phone';
 
 export default async function run() {
   const { browser3d, base, problems } = S;
@@ -14,7 +15,7 @@ export default async function run() {
     const tag = 'stack ' + w, sp = await browser3d.newPage({ viewport: { width: w, height: h }, colorScheme: scheme, reducedMotion: 'reduce' });
     sp.on('pageerror', e => problems.push(tag + ': ' + e.message));
     sp.on('console', m => { if (m.type() === 'error' && !/fonts\.g|net::ERR|WebGL|GPU/.test(m.text())) problems.push(tag + ': console: ' + m.text()); });
-    await sp.addInitScript(() => { try { localStorage.setItem('osl-quality', 'keep'); localStorage.setItem('osl-hints-v1', JSON.stringify({ seen: {}, off: true })); localStorage.removeItem('osl-stack'); localStorage.removeItem('osl-lang'); } catch (e) { /* no storage */ } });
+    await sp.addInitScript(() => { try { localStorage.setItem('osl-quality', 'keep'); localStorage.setItem('osl-hints-v1', JSON.stringify({ seen: {}, off: true })); localStorage.removeItem('osl-stack'); localStorage.removeItem('osl-stack-seen'); localStorage.removeItem('osl-lang'); } catch (e) { /* no storage */ } });
     await sp.goto(base + 'index.html#/stack');
     /* it opens on the lab's example: today's computer, seven plates, the island not drawn behind it */
     const opened = await sp.waitForFunction(() => { const v = window.__stack, el = document.getElementById('stackv'); return !!v && !!el && !el.hidden && v.view.level === 'stack' && !v.busy() && v.plates().length === 7 && v.carry().R.recipe.carrier === 'charge'; }, null, { timeout: 60000 }).then(() => true, () => false);
@@ -55,11 +56,20 @@ export default async function run() {
     const before = await sp.evaluate(() => JSON.stringify(window.__stack.carry().R.recipe));
     await sp.waitForFunction(b => { const p = document.querySelector('#stackv .sk-cards:not([hidden]) [data-fork="0"]'); if (p) p.click(); return JSON.stringify(window.__stack.carry().R.recipe) !== b; }, before, { timeout: 20000, polling: 500 })
       .catch(() => problems.push(tag + ': an agent\'s fork taken does not change the recipe'));
-    /* the field: out to its niche and every attempt, the agents' sweep, the address, then back */
+    /* the field: out to its niche and every attempt, from the ledger, the address, then back */
     await sp.waitForFunction(() => { const v = window.__stack; if (!v.busy() && v.view.level !== 'field') { const b = document.querySelector('#stackv .sk-rail [data-go="field"]'); if (b) b.click(); } return v.view.level === 'field' && !v.busy() && location.hash === '#/stack/field' && document.querySelector('#stackv .sk-rail [data-go="field"]').classList.contains('on'); }, null, { timeout: 20000, polling: 500 })
       .catch(() => problems.push(tag + ': zooming out does not reach every attempt (#/stack/field)'));
-    await sp.waitForFunction(() => { const v = window.__stack, el = document.querySelector('#stackv .sk-say'); if (!/Agents grew/.test(el.textContent)) { const b = document.querySelector('#stackv .sk-explore'); if (innerWidth < 760 && !document.getElementById('stackv').classList.contains('more')) document.querySelector('#stackv .sk-more').click(); if (b && !v.busy()) b.click(); return false; } return true; }, null, { timeout: 30000, polling: 1000 })
-      .catch(() => problems.push(tag + ': sending agents exploring does not sweep the field'));
+    /* every point is a built recipe or an attempt the ledger keeps (the lab runs no agent); each niche has its champion;
+       a first visit says where the points come from */
+    if (!(await sp.evaluate(() => { const F = window.__stack.field(), L = F.POP.filter(a => a.by === 'ledger'); return L.length >= 2 && F.POP.every(a => a.built || a.by === 'ledger') && L.some(a => a.first && a.who) && F.CEN.champ.flat().filter(c => c && c.d > 0).some(c => c.a.by === 'ledger'); })))
+      problems.push(tag + ': the field\'s points do not all come from the ledger, credited, with its attempts holding niches');
+    await sp.waitForFunction(() => { const el = document.querySelector('#stackv .sk-since'); return !!el && !el.hidden && /community's ledger/.test(el.textContent); }, null, { timeout: 20000, polling: 500 })
+      .catch(() => problems.push(tag + ': the field does not say what changed since your last visit (or, the first time, where its points come from)'));
+    /* agents explore through the open port, never from the lab */
+    await sp.waitForFunction(() => { const v = window.__stack, c = document.querySelector('#stackv .sk-cards:not([hidden]) .sk-port'); if (!c) { const b = document.querySelector('#stackv .sk-explore'); if (innerWidth < 760 && !document.getElementById('stackv').classList.contains('more')) document.querySelector('#stackv .sk-more').click(); if (b && !v.busy()) b.click(); return false; } return /open port/.test(c.textContent) && !!c.querySelector('a[href$="docs/MCP.md"]'); }, null, { timeout: 30000, polling: 1000 })
+      .catch(() => problems.push(tag + ': How agents explore does not show the open port'));
+    await sp.waitForFunction(() => { const x = document.querySelector('#stackv .sk-cards:not([hidden]) [data-port]'); if (x) x.click(); return document.querySelector('#stackv .sk-cards').hidden; }, null, { timeout: 20000, polling: 500 })
+      .catch(() => problems.push(tag + ': the open port\'s card does not close'));
     await sp.waitForFunction(() => { const v = window.__stack; if (!v.busy() && v.view.level === 'field') { const b = document.querySelector('#stackv .sk-rail [data-go="niche"]'); if (b && !b.classList.contains('on')) b.click(); } return document.querySelector('#stackv .sk-rail [data-go="niche"]').classList.contains('on'); }, null, { timeout: 20000, polling: 500 })
       .catch(() => problems.push(tag + ': the rail does not reach your niche'));
     await sp.waitForFunction(() => { const v = window.__stack; if (!v.busy() && v.view.level !== 'stack') { const b = document.querySelector('#stackv .sk-rail [data-go="stack"]'); if (b) b.click(); } return v.view.level === 'stack' && !v.busy() && location.hash === '#/stack'; }, null, { timeout: 20000, polling: 500 })
@@ -79,5 +89,15 @@ export default async function run() {
     await sp.waitForFunction(() => document.getElementById('stackv').hidden && !document.getElementById('mapCanvas').hidden, null, { timeout: 60000 })
       .catch(() => problems.push(tag + ': leaving for the island does not hide the stack'));
     await sp.close();
+    /* a later visit: what this browser kept then (no attempts seen, every niche someone else's) against the ledger now */
+    const lp = await browser3d.newPage({ viewport: { width: w, height: h }, colorScheme: scheme, reducedMotion: 'reduce' });
+    lp.on('pageerror', e => problems.push(tag + ' (later visit): ' + e.message));
+    await lp.addInitScript(() => { try { localStorage.setItem('osl-quality', 'keep'); localStorage.setItem('osl-hints-v1', JSON.stringify({ seen: {}, off: true })); localStorage.removeItem('osl-stack'); localStorage.removeItem('osl-lang');
+      const champ = {}; for (const n of ['any', 'model', 'hearing', 'wildfire', 'rover', 'radio']) for (const d of [1, 2, 3, 4]) champ[n + '.' + d] = 'nobody-before';
+      localStorage.setItem('osl-stack-seen', JSON.stringify({ at: '2026-11-20', ids: [], champ })); } catch (e) { /* no storage */ } });
+    await lp.goto(base + 'index.html#/stack/field');
+    await lp.waitForFunction(() => { const el = document.querySelector('#stackv .sk-since'); return !!window.__stack && !!el && !el.hidden && /since your last visit/i.test(el.textContent) && /new attempts/.test(el.textContent) && /deposed/.test(el.textContent); }, null, { timeout: 60000, polling: 500 })
+      .catch(() => problems.push(tag + ': a later visit does not say the attempts kept and the champions deposed since'));
+    await lp.close();
   }
 }

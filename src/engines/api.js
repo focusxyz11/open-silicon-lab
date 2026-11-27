@@ -16,6 +16,7 @@ import { NEEDS, GOAL } from '../data/build.js';
 import { plan, progress, needOf, needForProject, childrenOf } from './build.js';
 import { settled, frontier, draft, tryEntry, fileOf, proposeUrl, runCase, caseOk, attemptsAt, choicesAt, frontAttemptsAt, archAttempts, ARCH_AGENTS } from './ledger.js';
 import * as Arch from './arch.js';
+import * as Pop from './population.js';
 import { geoEffFront } from './lens.js';
 import * as Thousand from './thousand.js';
 import { budget, where as whereEnergy, LEVELS as ENERGY_LEVELS, LEVERS, PLAN, JOB } from './budget.js';
@@ -298,6 +299,21 @@ export function growArchitecture(a = {}) {
     history: Arch.histClaim(h, Arch.winsOf(st)),
     ledger: { here: L.all.filter(e => e.facts.g === key).map(archBy), firstToWin: Object.fromEntries(Arch.NEEDS.map(n => [n, L.first[n] ? archBy(settled().byId[L.first[n]]) : null])), people: L.people.length, agents: L.agents.length },
     how: t('api.arch.how'), note: t('api.untrusted')
+  };
+}
+/* the field of every attempt (#448, src/engines/population.js): every niche (a need, at a distance from today's computer) with
+   its champion and how many recipes there could serve it and nobody has tried; every attempt the ledger keeps with its
+   credit. Read from the entries alone, so an agent can choose where to sweep; its attempts come back as entries */
+export function architectureField() {
+  const W = settled(), atts = Pop.population((W.arch || []).map(id => W.byId[id])), cen = Pop.census(atts), tried = new Set(atts.map(a => a.key));
+  const who = a => (a.built ? { built: a.id, name: t('ar.known.' + a.id), status: t('ar.st.' + a.by) } : { id: a.id, by: a.who, made: a.made, group: a.agent ? 'agents' : 'people' });
+  const open = Arch.NEEDS.map(n => [0, 0, 0, 0, 0]);
+  Arch.allRecipes().forEach(g => { if (tried.has(Arch.keyOf(g))) return; Arch.NEEDS.forEach((n, ni) => { if (Arch.potentialOf(g, n) > 0) open[ni][Arch.novelty(g)]++; }); });
+  return {
+    needs: Arch.NEEDS.map(n => ({ need: n, name: t('ar.need.' + n) })),
+    niches: Arch.NEEDS.flatMap((n, ni) => [1, 2, 3, 4].map(d => { const c = cen.champ[ni][d]; return { need: n, genesFromToday: d, champion: c ? Object.assign({ recipe: c.key, now: sig(c.now) }, who(c.a)) : null, untried: open[ni][d] }; })),
+    attempts: atts.filter(a => a.by === 'ledger').map(a => Object.assign(who(a), { recipe: a.key, genesFromToday: Arch.novelty(a.g), years: a.years, wins: Arch.winsOf(a.st), firstToTry: a.first, firstToWin: a.firstIn })),
+    tried: cen.tried, aheadOfToday: cen.wins, how: t('api.field.how'), note: t('api.untrusted')
   };
 }
 /* the agents' forks for the state a history reaches (after its first year, as in the lab): each one gene changed,

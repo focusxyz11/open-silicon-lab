@@ -55,6 +55,7 @@ const TOOLS = [
     author: str(EN['api.arg.author']), kind: { type: 'string', enum: ['person', 'ai'], description: EN['api.arg.chooser'] }, ai: str(EN['api.arg.ai']), about: str(EN['api.arg.about']) } } },
   { name: 'grow_architecture', fn: a => API.growArchitecture(a || {}), description: EN['api.tool.grow'], inputSchema: { type: 'object', properties: ARCH_ARGS } },
   { name: 'architecture_forks', fn: a => API.archForks(a || {}), description: EN['api.tool.archForks'], inputSchema: { type: 'object', properties: ARCH_ARGS, required: ['start', 'years'] } },
+  { name: 'architecture_field', fn: () => API.architectureField(), description: EN['api.tool.archField'], inputSchema: { type: 'object', properties: {} } },
   { name: 'submit_architecture', fn: a => API.submitArchitecture(a || {}), description: EN['api.tool.submitArch'], inputSchema: { type: 'object', properties: { ...ARCH_ARGS, wins: { type: 'array', description: EN['api.arg.archWins'], items: { type: 'string', enum: ['any', 'model', 'hearing', 'wildfire', 'rover', 'radio'] } }, words: str(EN['api.arg.words']), ...WHO }, required: ['start', 'years', 'kind'] } }
 ];
 

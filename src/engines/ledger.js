@@ -55,6 +55,7 @@ import { needOf as machineNeed } from '../data/blocks.js';
 import { NEEDS as CHOICE_NEEDS, designOf as choiceOf, reasonOk } from './thousand.js';
 import { kitchen, levelOf as chefLevel, problem as chefProblem, normalPlan as chefPlan, LEVER_IDS as CHEF_LEVERS } from './bits.js';
 import * as Arch from './arch.js';
+import { ARCH_AGENTS } from './population.js';
 
 export const KINDS = ['design', 'break', 'try', 'question', 'report', 'fix'];
 /* what a report says about the lab */
@@ -365,9 +366,12 @@ export function settle(list) {
   });
   /* the architectures' standings, in the order kept: the first attempt to win a need with a recipe nobody has built, at
      least two genes from today's (the goals' rule), is first in that niche, and counts most; the first to win any need
-     with a recipe marks its square. An attempt that wins after them stands; one that wins nothing is an attempt, kept */
-  W.archFirst = table(); W.archSquare = table();
+     with a recipe marks its square. An attempt that wins after them stands; one that wins nothing is an attempt, kept.
+     Credit for trying, not only for winning (#448): the first attempt at a recipe nobody has built is its first try */
+  W.archFirst = table(); W.archSquare = table(); W.archTried = table();
   W.arch.forEach(id => { const e = W.byId[id], F = e.facts, counts = !F.built && F.novelty >= 2;
+    e.firstTry = !F.built && F.novelty > 0 && !W.archTried[F.g];
+    if (e.firstTry) W.archTried[F.g] = id;
     e.firstIn = counts ? F.wins.filter(n => !W.archFirst[n]) : [];
     e.firstIn.forEach(n => { W.archFirst[n] = id; });
     e.marks = counts && F.wins.length > 0 && !W.archSquare[F.g];
@@ -463,11 +467,12 @@ export function choicesAt(W, need) {
 }
 /* the attempts at an architecture, in the order kept, as two groups never mixed: people's (a person, a person with AI,
    and the lab's examples, played by hand) and agents' (an AI, or a program that searches); with the first to win each
-   need (need -> id) and the first to win with each recipe (key -> id). Read from the entries alone: nobody votes */
-export const ARCH_AGENTS = ['ai', 'program'];
+   need (need -> id), the first to win with each recipe (key -> id) and the first to try each (key -> id). Read from the
+   entries alone: nobody votes */
+export { ARCH_AGENTS };
 export function archAttempts(W) {
   const all = (W.arch || []).map(id => W.byId[id]);
-  return { all, people: all.filter(e => !ARCH_AGENTS.includes(e.made)), agents: all.filter(e => ARCH_AGENTS.includes(e.made)), first: W.archFirst || table(), square: W.archSquare || table() };
+  return { all, people: all.filter(e => !ARCH_AGENTS.includes(e.made)), agents: all.filter(e => ARCH_AGENTS.includes(e.made)), first: W.archFirst || table(), square: W.archSquare || table(), tried: W.archTried || table() };
 }
 /* the attempts at a puzzle, the best first, then those on the frontier, then the newest */
 export const attemptsAt = (W, z) => (W.puzzles[z] || []).map(id => W.byId[id]).sort((a, b) => (W.best[z] === b.id) - (W.best[z] === a.id) || (a.state === 'front' ? 0 : 1) - (b.state === 'front' ? 0 : 1) || (a.id < b.id ? 1 : -1));
