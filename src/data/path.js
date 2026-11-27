@@ -17,6 +17,10 @@
    FINE_OF   the fine settings each rung holds (the switch engine's ids for the material, its shape and way of
              switching; CHOICES for the rest; V_RANGE for the voltage), and EXAMPLE, the lab's example every rung opens
              on, which becomes yours when changed.
+   CARE      the line's care (#455), a fine setting of the switch: what the fab does to every copy of your design, as
+             settings of the fab's engines. The print's dose sets the spread of the copies (src/engines/litho.js), the
+             cleanroom's class the specks that kill dies (src/engines/fabline.js), and the chip engine counts the dies
+             that come out whole and what a good one costs (src/engines/chip.js); computed by src/engines/path.js.
    FACES     the three faces of every rung along a chip's life (#454): as designed (the studio, chip to switch), as made
              (the fab, atom to chip), as used (the dive). A face is { home, steps }: home is the level it lives at in the
              atlas (a depth of the studio's row, of the line or of the dive), steps are the steps that are its control,
@@ -31,14 +35,16 @@ export const LEVELS = { atom: ['atom'], switch: ['switch'], gate: ['gate'], bloc
 /* the parts of a rung that a newcomer does not feel as rungs of their own */
 export const PARTS = { block: ['sums', 'memory'], chip: ['core'] };
 
-/* what each rung hands up: [field, unit]. Units: eV; cm2/Vs; per cm2 per eV; V; mV; x (against today's silicon fin);
-   yes (true or false); s; J; p (a chance, 0 to 1); n (a count); share (0 to 1); Hz; per s; W */
+/* what each rung hands up: [field, unit]. Units: eV; cm2/Vs; per cm2 per eV; V; mV; x (against today's silicon fin, or
+   for a cost against the lab's example); yes (true or false); s; J; p (a chance, 0 to 1); n (a count); share (0 to 1);
+   Hz; per s; W; cm2. The switch's spread and lowest clean voltage are as made, on your line; the chip's area, yield
+   and cost are its die's, cut from the wafer (#455). */
 export const HANDS = {
   atom: [['gap', 'eV'], ['electrons', 'cm2/Vs'], ['holes', 'cm2/Vs'], ['traps', 'per cm2 eV']],
   switch: [['vmin', 'V'], ['vt', 'V'], ['swing', 'mV'], ['sigma', 'mV'], ['ion', 'x'], ['pair', 'yes'], ['survives', 'yes']],
   gate: [['delay', 's'], ['energy', 'J'], ['fail', 'p'], ['switches', 'n']],
   block: [['aluDelay', 's'], ['aluEnergy', 'J'], ['aluWrong', 'p'], ['readDelay', 's'], ['readEnergy', 'J'], ['readWrong', 'p'], ['wireShare', 'share'], ['gates', 'n']],
-  chip: [['clock', 'Hz'], ['cpi', 'n'], ['energy', 'J'], ['wrong', 'p'], ['gates', 'n']],
+  chip: [['clock', 'Hz'], ['cpi', 'n'], ['energy', 'J'], ['wrong', 'p'], ['gates', 'n'], ['area', 'cm2'], ['yield', 'share'], ['cost', 'x']],
   machine: [['ips', 'per s'], ['energy', 'J'], ['power', 'W'], ['moveShare', 'share'], ['fetch', 'J'], ['wrong', 'p']],
   mind: [['aps', 'per s'], ['energy', 'J'], ['right', 'share']]
 };
@@ -54,14 +60,23 @@ export const FORK_BY = 'arch';
 export const GENE_RUNGS = { carrier: ['atom', 'switch', 'gate'], where: ['block', 'machine'], told: ['chip'], shape: ['machine'] };
 
 /* the fine settings, rung by rung: what you change on a rung without changing the recipe */
-export const FINE_OF = { atom: ['mat'], switch: ['shape', 'mech', 'V'], gate: ['lib'], block: ['adder', 'vote', 'regs'], chip: ['stages'], machine: ['ui'], mind: ['bits'] };
+export const FINE_OF = { atom: ['mat'], switch: ['shape', 'mech', 'V', 'care'], gate: ['lib'], block: ['adder', 'vote', 'regs'], chip: ['stages'], machine: ['ui'], mind: ['bits'] };
 /* the choices of each fine setting but the switch engine's three (mat, shape, mech: its MATERIALS, SHAPES and MECHS) */
-export const CHOICES = { lib: ['nand', 'rich'], adder: ['ripple', 'look'], vote: [0, 1], regs: [8, 16, 32], stages: [1, 3, 5], ui: [0, 1, 2], bits: [1, 2, 4, 8] };
+export const CHOICES = { care: [0, 1, 2], lib: ['nand', 'rich'], adder: ['ripple', 'look'], vote: [0, 1], regs: [8, 16, 32], stages: [1, 3, 5], ui: [0, 1, 2], bits: [1, 2, 4, 8] };
 /* the supply voltage, volts: least and most */
 export const V_RANGE = [0.15, 1];
-/* the lab's example: today's silicon fin at 0.70 V, a library of NAND gates, a ripple adder with no vote, 32 registers,
-   one stage, the middle number of units, eight-bit weights */
-export const EXAMPLE = { mat: 'si', shape: 'fin', mech: 'therm', V: 0.70, lib: 'nand', adder: 'ripple', vote: 0, regs: 32, stages: 1, ui: 1, bits: 8 };
+/* the lab's example: today's silicon fin at 0.70 V on a line run with today's care, a library of NAND gates, a ripple
+   adder with no vote, 32 registers, one stage, the middle number of units, eight-bit weights */
+export const EXAMPLE = { mat: 'si', shape: 'fin', mech: 'therm', V: 0.70, care: 1, lib: 'nand', adder: 'ripple', vote: 0, regs: 32, stages: 1, ui: 1, bits: 8 };
+/* the line's care: 0 hurried, 1 today's (the example), 2 careful. Each is a setting of the fab's engines:
+     dose   the EUV print's dose, mJ/cm² (litho.js euv: the example is its default). Fewer photons, a noisier print, so
+            wider-spread copies; more photons, a slower scanner, so dearer wafers.
+     clean  the cleanroom's ISO class (fabline.js isoLimit: the example is its typical class, ISO 5). Dirtier air, more
+            specks on the wafer, fewer whole dies.
+   DENSITY is the switches a mm² the dies are drawn at (a 5 nm line's logic, a fact of facts.json); every die also has
+   its pads and edges (bet.js AREA_FIXED). */
+export const CARE = { dose: [30, 50, 80], clean: [6, 5, 4] };
+export const DENSITY = { perMm2: 171.3e6, fact: 'logic-density-n5' };
 /* the need at the top of the stack starts on any program, never a forced first step (arch.js NEEDS) */
 export const AIM = 'any';
 

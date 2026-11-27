@@ -4,7 +4,8 @@ One promise, in one sentence: **build a thinking machine from physics up, and in
 
 This is the plan for the lab's spine. Status: agreed with the owner on 26 November 2026. Built so far: the carry as
 data and engine (`src/data/path.js`, `src/engines/path.js`, steps 1 and 2 below: each gene option's carry contract in
-`arch.js`, one figure against today's computer) and the three faces as data (`FACE_OF`, `alongTo`); no view yet. Its working
+`arch.js`, one figure against today's computer), the three faces as data (`FACE_OF`, `alongTo`) and the line's care
+handing its spread and yield up the carry (`CARE`, `lineOf`, `carry().fab`); no view yet. Its working
 prototype, *Your stack*, designed and built by Claude Fable 5.2 with a first version by Claude Opus, is in
 `docs/prototypes/stack/` (open `index.html`; sources in `src/`, built by `build.mjs`).
 
@@ -145,8 +146,14 @@ stack does not move: along turns every plate at once (owner, 27 November 2026; g
   comes back up the stack as the spread of the copies and yield.
 - Arrange at the chip as designed *is* the recipe's `shape` and `where` genes; the community computer's plan is the chip
   rung as designed, your slice a tile in its block.
-- The fab hands real things up the carry: the line's care sets the spread of the copies (from the litho and etch
-  engines) and the defects that give yield and the cost of a good chip (`chip.js`). *Perfect fails* made real.
+- The fab hands real things up the carry: the line's care sets the spread of the copies and the defects that give
+  yield and the cost of a good chip (`chip.js`). *Perfect fails* made real. Built (#455): the care is a fine setting of
+  the switch, three settings of the fab's engines (`CARE` in `src/data/path.js`). The print's dose sets the spread as
+  its photon noise (`litho.js` `euv`), and a wider spread raises the lowest clean voltage, so more copies of a gate go
+  wrong; the cleanroom's class sets the specks (`fabline.js` `isoLimit`, from `chip.js`'s defects for today's
+  process); `chip.js` `dieOf` counts the whole dies and what a good one costs, a slower scanner making every wafer
+  dearer. The etch engine is a Monte Carlo of one trench, too slow to run on every carry and a mean undercut rather
+  than a spread, so it is not read yet.
 - Questions on the faces: *Perfect fails* at the switch and gate as made and the block as designed (a late path);
   *Geometry* at the chip as designed; *Compute beats cleverness* at place and route; *Trust without inspection* at the
   gate's rules and checks; *Fight or use physics* at Print; *The next Moore's law* in the line's care; *Only humans* in

@@ -13,6 +13,17 @@
    computer for its need (against). The simplifications, written down so they can be argued with:
    - The atom is a material of the switch engine's table (src/engines/switch.js MATERIALS, each with its source), and the
      switch is that engine's switchOf, unchanged: its numbers are the switch rung's.
+   - The line (#455): the line's care (CARE) is a setting of the fab's engines, and what it does comes up the stack.
+     The spread of the copies is the switch engine's on today's line, scaled as the print's photon noise (litho.js
+     euv: the noise goes as one over the root of the photons a feature catches, so as one over the root of the dose);
+     the threshold stays where the design put it, so a wider spread raises the lowest clean voltage (three spreads
+     above it, as the switch engine sets it) and more copies of a gate fail at your voltage. Specks on the wafer go as
+     the specks in the air (fabline.js isoLimit, against the typical cleanroom), from the chip engine's defects for
+     today's process (chip.js defectsOf). A die is its gates' switches at a 5 nm line's density (DENSITY) plus the
+     pads and edges every chip has (bet.js AREA_FIXED); the chip engine counts the dies a wafer holds, the share no
+     speck lands on (yield) and what a good one costs (chip.js dieOf), against the lab's example (cost). The scanner
+     sets the line's pace: a higher dose, fewer wafers an hour (litho.js euv), and the fab's fixed costs shared over
+     fewer of them. The line's numbers and their marks are carry().fab.
    - The gate: today's silicon gate is T0 ps and EG0 fJ at VREF (0.70 V), an idea drawn. At a voltage V, its delay goes
      as V over the switch's current there (a smooth turn-on at the switch's swing above its threshold), its energy as
      V squared, four times more without both carriers (no CMOS pair: current flows while it holds a 0). Its copies'
@@ -53,7 +64,11 @@
 import * as A from './arch.js';
 import * as SW from './switch.js';
 import { E16 } from './paradigms.js';
-import { RUNGS, HANDS, BY, FID, FORK_BY, GENE_RUNGS, FINE_OF, CHOICES, V_RANGE, EXAMPLE, AIM, FACES, FACE_OF, FACE_STAGE } from '../data/path.js';
+import { euv } from './litho.js';
+import { isoLimit } from './fabline.js';
+import { defectsOf, dieOf, START as CHIP_START } from './chip.js';
+import { AREA_FIXED } from './bet.js';
+import { RUNGS, HANDS, BY, FID, FORK_BY, GENE_RUNGS, FINE_OF, CHOICES, V_RANGE, EXAMPLE, AIM, FACES, FACE_OF, FACE_STAGE, CARE, DENSITY } from '../data/path.js';
 
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 
@@ -112,6 +127,23 @@ function baseAcc(b) {
   return ACC[ACC.length - 1][1];
 }
 
+/* ---- the line: what the fab hands up (#455) ---- */
+/* the line run with a care (CARE): the spread of the copies against today's line (from the print's photon noise), its
+   pace against today's (the scanner's wafers an hour), the specks a cm² (from the cleanroom's air), each with the
+   engine behind it and its mark */
+const LINE0 = { print: euv({ dose: CARE.dose[EXAMPLE.care] }), air: isoLimit(CARE.clean[EXAMPLE.care]) };
+export function lineOf(care) {
+  const c = CHOICES.care.includes(care) ? care : EXAMPLE.care, print = euv({ dose: CARE.dose[c] }), air = isoLimit(CARE.clean[c]);
+  return {
+    care: c, dose: print.dose, noise: print.noisePct, spread: print.noisePct / LINE0.print.noisePct, wph: print.wph, pace: print.wph / LINE0.print.wph,
+    iso: CARE.clean[c], air, defects: defectsOf(CHIP_START.gen) * air / LINE0.air,
+    fid: { spread: { f: 'computed', by: 'litho' }, pace: { f: 'computed', by: 'litho' }, defects: { f: 'computed', by: 'fabline' },
+      density: { f: 'figures', fact: DENSITY.fact }, area: { f: 'idea', by: 'bet' }, yield: { f: 'computed', by: 'chip' }, cost: { f: 'computed', by: 'chip' } }
+  };
+}
+/* the area of a die of n gates of s switches each, cm²: its switches at the line's density, and its pads and edges */
+export const areaOf = (n, s) => (n * s / DENSITY.perMm2 + AREA_FIXED) / 100;
+
 /* ---- the carry ---- */
 /* a forked rung's contract: today's example rung, its energy divided by factor, its time multiplied by slow, failing
    never (a fork's inexactness counts at the mind, through the recipe's exact trait) */
@@ -123,8 +155,8 @@ function forkHands(rung, factor, slow) {
   }
   return out;
 }
-function carryOf(g, F, aim) {
-  const R = { recipe: g, fine: F, aim, broken: null, traits: A.traitsOf(g, aim), rungs: {} };
+function carryOf(g, F, aim, ref) {
+  const line = lineOf(F.care), R = { recipe: g, fine: F, aim, broken: null, traits: A.traitsOf(g, aim), rungs: {}, fab: line };
   const e = k => A.forkEnergy(k, g[k], aim), eC = e('carrier'), eW = e('where'), eT = e('told'), eS = e('shape');
   const C = A.CARRY.carrier[g.carrier], charge = !A.isFork('carrier', g.carrier), skips = C.skips || [];
   let guessed = false;
@@ -143,8 +175,11 @@ function carryOf(g, F, aim) {
     const spec = SW.normal({ mat: F.mat, shape: F.shape, mech: F.mech, own: F.own }), sw = SW.switchOf(spec), M = sw.mat;
     put('atom', { gap: M.eg, electrons: M.me, holes: M.mh, traps: M.dit }, { mat: M.id },
       { fid: M.own ? { f: 'idea', by: 'switch', status: 'guess' } : { f: 'figures', by: 'switch', fact: M.fact } });
-    const S = put('switch', { vmin: sw.vmin, vt: sw.vt, swing: sw.swing, sigma: sw.sigma, ion: sw.ion, pair: sw.pair, survives: sw.survives },
-      { spec: SW.specKey(spec), clean: sw.clean, status: sw.status }, { fid: sw.own ? { f: 'idea', by: 'switch', status: 'guess' } : { f: 'computed', by: 'switch' } });
+    /* the switch as made on your line: its copies spread as the print's noise, its lowest clean voltage three spreads
+       above the threshold the design set (today's line: the switch engine's own numbers) */
+    const sigma = sw.sigma * line.spread, vmin = line.spread === 1 ? sw.vmin : sw.clean ? sw.vt + 3 * sigma / 1000 : NaN;
+    const S = put('switch', { vmin, vt: sw.vt, swing: sw.swing, sigma, ion: sw.ion, pair: sw.pair, survives: sw.survives },
+      { spec: SW.specKey(spec), clean: sw.clean, status: sw.status, designed: { sigma: sw.sigma, vmin: sw.vmin }, care: line.care }, { fid: sw.own ? { f: 'idea', by: 'switch', status: 'guess' } : { f: 'computed', by: 'switch' } });
     if (sw.own) guessed = true;
     if (!sw.clean) { R.broken = 'switch'; cannot('switch'); R.against = againstOf(g, aim); return R; }
     /* the gate, made of the switch's contract at your voltage */
@@ -182,7 +217,10 @@ function carryOf(g, F, aim) {
     const pipeG = SG > 1 ? SG * 128 * 10 : 0, coreG = aluG + fileG + CTRL + pipeG;
     const Ei = (aluE + 3 * readE + CTRL * 0.1 * Eg + pipeG * 0.25 * Eg + 2000 * 0.05 * Eg * (SG > 1 ? 1 : 0.6)) / eT;
     const q = Math.min(1, 1 - (1 - Pw) * Math.pow(1 - Pr, 2) * (1 - fails(p, CTRL * 0.1)));
-    K = put('chip', { clock: 1e12 / period, cpi: CPI[SG], energy: Ei * 1e-15, wrong: q, gates: coreG }, { core: { stages: SG, period: period * 1e-12 } });
+    /* its die, cut from a wafer of your line: how many come out whole, and what a good one costs */
+    const die = dieOf(areaOf(coreG, G.switches), line.defects, line.pace);
+    K = put('chip', { clock: 1e12 / period, cpi: CPI[SG], energy: Ei * 1e-15, wrong: q, gates: coreG, area: die.area, yield: die.yield, cost: die.cost / (ref || die.cost) },
+      { core: { stages: SG, period: period * 1e-12 }, die });
   } else K = R.rungs.chip.hands;
 
   /* the machine: units of that chip, and memory near or far */
@@ -198,9 +236,11 @@ function carryOf(g, F, aim) {
   R.against = againstOf(g, aim);
   return R;
 }
-/* today's computer, the lab's example, carried: the contract every fork replaces */
-export const X0 = carryOf(A.TODAY, normalFine(EXAMPLE), AIM);
-export const carry = stack => carryOf(recipeOf(stack), fineOf(stack), aimOf(stack));
+/* today's computer, the lab's example, carried: the contract every fork replaces, and the good die every chip's cost
+   is set against */
+const REF_COST = carryOf(A.TODAY, normalFine(EXAMPLE), AIM, null).rungs.chip.more.die.cost;
+export const X0 = carryOf(A.TODAY, normalFine(EXAMPLE), AIM, REF_COST);
+export const carry = stack => carryOf(recipeOf(stack), fineOf(stack), aimOf(stack), REF_COST);
 
 /* ---- against today's computer: one number, the architecture engine's ---- */
 function againstOf(g, need, st) {
