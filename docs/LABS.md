@@ -85,4 +85,5 @@ A second picture (a curve beside the main drawing, the tones under a signal) sta
   - Select controls by data attributes, never by words.
   - The fab labs' player sits outside `#sheet`, so use plain `.player`.
 - CI runs the smoke on a slow software renderer (about 1.5 s a frame), so be patient: poll, never fixed waits.
+- A pull request that changes only a lab's files runs only the `labs` section (CI's lanes, `docs/WORKFLOW.md`). If another section plays the lab too (its challenge's address `#/do/<id>` in that section's check), name that section in `LAB_ALSO` in `scripts/smoke/owners.mjs`; `npm test` says when it is missing. A new engine of the lab's own goes in `LAB_ENGINES` there, or a change to it runs the whole suite.
 - The PR shows the desktop and phone screenshots.
