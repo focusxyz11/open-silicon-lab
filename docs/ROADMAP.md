@@ -16,6 +16,10 @@ The highest priority. Its home is *Machines from shared blocks* ([MACHINES.md](M
 - invent a transistor: a switch of your own against silicon and the 60 mV per tenfold line, carried up into machines (#329).
 - grow an architecture that does not exist yet: one recipe of 400, worse than today's computer at first, grown through attempts in many directions until it wins one need, then three (`src/engines/arch.js`); next, its attempts in the ledger and the open port, and the lattice of matter and layers as one map of many.
 
+## With it: the path, the lab's spine
+
+Decided on 26 November 2026 ([PATH.md](PATH.md)): build a thinking machine from physics up, and invent your own along the way. *Your stack* is the second core visual system after the dive, on seven rungs shared with the dive and the lattice (atom, switch, gate, block, chip, machine, mind); a recipe of *Grow an architecture* is a set of forks in it, so the next generation of architecture is the path seen from above. The prototype is `docs/prototypes/stack/`; the port, in small steps, is PATH.md's "Building it", as task issues.
+
 ## Polishing the core
 
 One finished slice, so there is one great room to invite people into: is it true (an audit of every claim at the block and in Machines, #324), how true is each thing (one mark for an idea drawn, real numbers, computed, checked against real chips, #325), and the block level taken to the lab's standard, with the bar written down (#326).

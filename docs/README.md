@@ -8,6 +8,7 @@ Each document has one job. Plans live only in the roadmap; the others link to it
 | --- | --- |
 | [STATUS.md](STATUS.md) | Where the lab stands, the decisions to keep, and the tasks ready to build |
 | [ROADMAP.md](ROADMAP.md) | What is happening now and next: the thirteen as the spine, then the core visual systems |
+| [DECISIONS.md](DECISIONS.md) | Every decision of the owner's, dated, with its reason (from 26 November 2026) |
 | [IDEAS.md](IDEAS.md) | Ideas not yet picked (many were written for the earlier site) |
 
 ## How the lab is shaped
@@ -15,6 +16,7 @@ Each document has one job. Plans live only in the roadmap; the others link to it
 | Read this | When you want |
 | --- | --- |
 | [SYSTEM.md](SYSTEM.md) | The grid, the atlas, the six kinds of view, the frame and the two moves: how every view shows content |
+| [PATH.md](PATH.md) | The spine: from matter to mind, seven rungs shared with the dive and the lattice, *Your stack* as the second core visual system, architectures as forks ([prototype](prototypes/stack/)); the studio and the fab as its faces ([prototype](prototypes/faces/)) |
 | [FRAME13.md](FRAME13.md) | The thirteen core questions, the hidden framework: everything is filed under them, and under Ask they are lenses, one at a time |
 | [WORLD.md](WORLD.md) | The chip world: a chip's life round the loop, every place's inside, the card's three faces, the island that grows |
 | [INTERACTION.md](INTERACTION.md) | What moving through the lab feels like: one world, one camera, one card |
