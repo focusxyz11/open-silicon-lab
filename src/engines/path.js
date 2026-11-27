@@ -53,7 +53,8 @@
 import * as A from './arch.js';
 import * as SW from './switch.js';
 import { E16 } from './paradigms.js';
-import { RUNGS, HANDS, BY, FID, FORK_BY, GENE_RUNGS, FINE_OF, CHOICES, V_RANGE, EXAMPLE, AIM, FACES, FACE_OF, FACE_STAGE } from '../data/path.js';
+import { RUNGS, HANDS, BY, FID, FORK_BY, GENE_RUNGS, FINE_OF, CHOICES, V_RANGE, EXAMPLE, AIM, FACES, FACE_OF, FACE_STAGE, LAYER } from '../data/path.js';
+import { PLACED } from '../data/lattice.js';
 
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 
@@ -223,3 +224,10 @@ export function alongTo(rung, stage) {
   const F = faceOf(rung, face);
   return F.none ? { rung, stage, face, none: F.none } : { rung, stage, face, home: F.home, steps: F.steps ? F.steps.map(s => s.id) : [] };
 }
+
+/* ---- the challenges as stepping stones on their rungs (#451) ----
+   Each challenge sits on one rung: the rung of the layer the lattice places it in (src/data/lattice.js PLACED,
+   'ch:<id>'; the rungs and layers are one ladder, LAYER), so where a challenge stands is written once. A challenge won
+   inks its plate's edge; one of arch.js STONES also raises its direction once (broughtOf), never winning a need alone */
+const RUNG_OF_LAYER = Object.fromEntries(Object.entries(LAYER).map(([r, l]) => [l, r]));
+export const rungOfChallenge = id => { const p = PLACED.find(x => x[0] === 'ch:' + id); return (p && RUNG_OF_LAYER[p[2]]) || null; };
