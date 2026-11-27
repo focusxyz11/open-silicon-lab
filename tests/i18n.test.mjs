@@ -13,7 +13,7 @@ const root = new URL('..', import.meta.url);
 const read = p => readFileSync(new URL(p, root), 'utf8');
 const EN = readWords();
 /* The code that draws something for a reader. */
-const SHELL = ['src/main2.js'].concat(...['src/app/', 'src/core/', 'src/v2/', 'src/v2/labs/', 'src/v2/glue/', 'src/v2/growers/'].map(d => readdirSync(new URL(d, root)).filter(f => f.endsWith('.js')).map(f => d + f)));
+const SHELL = ['src/main2.js'].concat(...['src/app/', 'src/core/', 'src/v2/', 'src/v2/labs/', 'src/v2/glue/', 'src/v2/growers/', 'src/v2/stack/'].map(d => readdirSync(new URL(d, root)).filter(f => f.endsWith('.js')).map(f => d + f)));
 /* the data, which names texts too (a lens's words, a world's link) */
 const DATA = readdirSync(new URL('src/data/', root), { recursive: true }).filter(f => f.endsWith('.js')).map(f => 'src/data/' + f.split('\\').join('/'));
 const LANGS = readdirSync(new URL('src/i18n/', root), { withFileTypes: true }).filter(d => d.isDirectory()).map(d => d.name);

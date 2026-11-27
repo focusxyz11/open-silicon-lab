@@ -116,3 +116,7 @@ export const FACE_OF = {
 };
 /* Arrange at the chip as designed is the recipe's own shape and where genes (docs/PATH.md) */
 export const ARRANGE = ['shape', 'where'];
+
+/* the challenges where you invent a fork of a rung yourself, each played in its own lab: offered in the rung's controls,
+   by challenge id (src/v2/loop.js CHALLENGES) */
+export const INVENT = { atom: [], switch: ['transistor', 'noise', 'reversible'], gate: ['bridge'], block: ['light', 'cim'], chip: ['dataflow', 'corearch'], machine: ['spikes', 'archniche'], mind: ['dnawta', 'mortal'] };

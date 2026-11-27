@@ -19,7 +19,7 @@ const { chromium } = require('playwright');
    labs section plays each lab's own check from scripts/smoke/labs/<lab>.mjs. A new check goes in its section's file. */
 import { S } from './smoke/shared.mjs';
 const NAMES = ['old', 'home', 'blueprint', 'stations', 'explore-desktop', 'explore-phone', 'joins', 'break', 'slow', 'motion', 'seams', 'labs', 'search',
-  'ways', 'frame', 'flights', 'machines'];
+  'ways', 'frame', 'flights', 'machines', 'stack'];
 const RUN = Object.fromEntries(await Promise.all(NAMES.map(n => import('./smoke/' + n + '.mjs').then(m => [n, m]))));
 const SECTIONS = NAMES.map(n => [n, RUN[n].about]);
 const argv = process.argv.slice(2);
