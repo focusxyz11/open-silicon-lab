@@ -375,3 +375,26 @@ test('stepping stones never win a need alone', () => {
     for (const d of A.DIRS) { assert.ok(st.start[d] <= 1 && st.start[d] <= bare.start[d] * A.STONE + 1e-12, d); close(A.bring(later, all).start[d], later.start[d], 'a stone raises its direction once'); }
   }
 });
+
+test('every face the stack turns to is drawn, says its steps, and hands up whole figures (#456)', async () => {
+  const { readWords } = await import('../scripts/words.mjs'), W = readWords();
+  const { useTexts } = await import('../src/core/i18n.js'); useTexts(W);
+  const FX = await import('../src/v2/stack/faces.js');
+  const ctx = new Proxy({}, { get: () => () => {} }), C = new Proxy({}, { get: () => () => 'rgba(0,0,0,1)' });
+  const pen = { ctx, lo: false, dash: [], fit: () => 1, q: () => [0, 0], M() {}, L() {}, seg() {}, quad() {}, wall() {}, dot() {}, begin() {}, stroke() {}, fill() {} };
+  for (const g of [A.TODAY, Object.assign({}, A.TODAY, { carrier: 'light' })]) for (const care of D.CHOICES.care) {
+    const R = P.carry(P.stackOf(g, { care }, 'any')), sw = SW.switchOf(SW.normal({ mat: 'si', shape: 'fin', mech: 'therm' }));
+    const Dd = { F: R.fine, g, sw, spec: SW.normal({ mat: 'si', shape: 'fin', mech: 'therm' }), M: SW.MATERIALS.find(m => m.id === 'si') };
+    for (const r of D.RUNGS) for (const f of ['design', 'make']) {
+      const fa = FX.faceAt(R, r, f), word = FX.wayOf(R, r, f, fa.home);
+      assert.ok(word && !/^sk\.|undefined/.test(word), r + ' ' + f + ' says what it is: ' + word);
+      if (fa.none) { assert.ok(W['sk.face.why.' + fa.none] && W['sk.face.none.' + fa.none], 'why ' + fa.none); continue; }
+      for (const [k, s] of fa.steps.entries()) {
+        assert.ok(W['sk.step.' + s + '.d'], 'what ' + s + ' does'); assert.ok(!/^(sk|depth)\./.test(FX.stepName(s)), 'the name of ' + s);
+        /* a charge rung's face is drawn and hands up figures that are whole */
+        assert.equal(FX.drawFace(f, r, pen, C, R, Dd, 0, 1, k), !fa.fork, r + ' ' + f + ' ' + s + ' is drawn');
+        for (const x of FX.figsOf(R, r, f, k)) assert.ok(x[0] && x[1] && !/NaN|undefined|Infinity/.test(x[1]), r + ' ' + f + ' ' + s + ': ' + x.join(' '));
+      }
+    }
+  }
+});

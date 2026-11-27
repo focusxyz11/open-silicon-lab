@@ -3,10 +3,12 @@
    field of every recipe. Its checks for the lab: it opens on the lab's example, a rung opens by its address, the wreck
    (graphene, or the voltage taken down) breaks what is above, a gene changed rebuilds the anatomy, time grows it, the
    agents propose forks and sweep the field, the camera reaches the niche and every attempt and comes back, the DOM
-   mirror carries the keyboard, and leaving hides it. Desktop at night, phone by day */
+   mirror carries the keyboard, and leaving hides it. Along (← →, the switch under the rail, the loop in the bar) turns
+   every plate between as designed, as made and as used, the address and the loop saying the stage (#456). Desktop at
+   night, phone by day */
 import { S } from './shared.mjs';
 
-export const about = 'Your stack (#/stack): seven plates from the atom to the mind, a rung by its address, the wreck, a gene, growth, the agents, the field and back, the keyboard mirror, desktop and phone';
+export const about = 'Your stack (#/stack): seven plates from the atom to the mind, a rung by its address, along its faces (as designed, made, used), the wreck, a gene, growth, the agents, the field and back, the keyboard mirror, desktop and phone';
 
 export default async function run() {
   const { browser3d, base, problems } = S;
@@ -23,6 +25,33 @@ export default async function run() {
     if (!(await sp.evaluate(() => document.querySelectorAll('#stackv .sk-sr [data-rung]').length === 7 && document.querySelectorAll('#stackv .sk-sr [data-pop]').length === 5 && !!document.querySelector('#stackv .sk-sr .sk-plot'))))
       problems.push(tag + ': the DOM mirror does not hold every rung, every gene and the need, and the plots of the field');
     if (await sp.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1)) problems.push(tag + ': the stack scrolls sideways');
+    /* along: ← turns every plate to as made, the camera and the stack staying put; the address and the loop say Make */
+    const plates0 = await sp.evaluate(() => JSON.stringify(window.__stack.plates().map(p => [Math.round(p.x), Math.round(p.y)])));
+    await sp.waitForFunction(() => { const v = window.__stack; if (v.face() !== 'make') document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft', bubbles: true }));
+      const cur = document.querySelector('#loop [aria-current="step"]'), sw = document.querySelector('#stackv .sk-sr [data-rung="1"]');
+      return v.face() === 'make' && location.hash === '#/stack/make' && !!cur && cur.dataset.stage === 'make' && /As made/.test(sw.getAttribute('aria-label')) && document.querySelector('#stackv .sk-faces [data-face="make"]').getAttribute('aria-pressed') === 'true'; }, null, { timeout: 20000, polling: 500 })
+      .catch(() => problems.push(tag + ': ← does not turn the plates to as made, with #/stack/make and Make lit in the loop'));
+    if (await sp.evaluate(p0 => JSON.stringify(window.__stack.plates().map(p => [Math.round(p.x), Math.round(p.y)])) !== p0 || window.__stack.view.level !== 'stack', plates0)) problems.push(tag + ': turning the faces moved the camera or the stack');
+    /* → turns them on round to as used, and the switch under the rail to as designed */
+    await sp.waitForFunction(() => { const v = window.__stack; if (v.face() !== 'use') document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+      return v.face() === 'use' && location.hash === '#/stack' && document.querySelector('#loop [aria-current="step"]')?.dataset.stage === 'use'; }, null, { timeout: 20000, polling: 500 })
+      .catch(() => problems.push(tag + ': → does not turn the plates on to as used (#/stack, Use lit in the loop)'));
+    await sp.waitForFunction(() => { const v = window.__stack; if (v.face() !== 'design') document.querySelector('#stackv .sk-faces [data-face="design"]').click();
+      return v.face() === 'design' && location.hash === '#/stack/design' && document.querySelector('#loop [aria-current="step"]')?.dataset.stage === 'design'; }, null, { timeout: 20000, polling: 500 })
+      .catch(() => problems.push(tag + ': the switch under the rail does not turn the plates to as designed (#/stack/design, Design lit)'));
+    /* a rung as made by its address: the line's steps and its care as its controls, and the care reaches the copies */
+    await sp.evaluate(() => { location.hash = '#/stack/make/switch'; });
+    await sp.waitForFunction(() => { const v = window.__stack; if (v.view.level !== 'rung' || v.face() !== 'make' || v.view.i !== 1) return false;
+      const c = document.querySelector('#stackv .sk-ctl:not([hidden]) [data-k="care"][data-v="0"]'); if (c && c.getAttribute('aria-pressed') !== 'true') c.click();
+      return !!document.querySelector('#stackv .sk-ctl [data-k="fstep"]') && v.carry().R.fab.care === 0 && v.carry().R.fab.spread > 1 && location.hash === '#/stack/make/switch'; }, null, { timeout: 20000, polling: 500 })
+      .catch(() => problems.push(tag + ': #/stack/make/switch does not open the switch as made, its steps and the line\'s care spreading the copies'));
+    await sp.evaluate(() => window.__stack.setFine('care', 1));
+    /* the loop in the bar turns them too: Use brings the stack back as before, at the same rung */
+    await sp.waitForFunction(() => { const v = window.__stack; if (v.face() !== 'use') { const b = document.querySelector('#loop [data-stage="use"]'); if (b) b.click(); }
+      return v.face() === 'use' && location.hash === '#/stack/switch' && v.view.level === 'rung' && v.view.i === 1; }, null, { timeout: 20000, polling: 500 })
+      .catch(() => problems.push(tag + ': Use in the loop does not turn the switch back to as used (#/stack/switch)'));
+    await sp.evaluate(() => { location.hash = '#/stack'; });
+    await sp.waitForFunction(() => window.__stack.view.level === 'stack' && !window.__stack.busy(), null, { timeout: 20000 }).catch(() => {});
     /* a rung by its address, the controls under it */
     await sp.evaluate(() => { location.hash = '#/stack/switch'; });
     await sp.waitForFunction(() => { const v = window.__stack; return v.view.level === 'rung' && v.view.i === 1 && !!document.querySelector('#stackv .sk-ctl:not([hidden]) [data-k="mat"], #stackv .sk-ctl:not([hidden]) #sk-volt'); }, null, { timeout: 20000 })
