@@ -1,11 +1,11 @@
 ---
 name: nightly
-description: Runs the night's build of Open Silicon Lab - clears as many open task issues as possible by grouping them, building every group in parallel with helpers, merging the green pull requests one by one, and leaving main green.
+description: Runs the night's build of Open Silicon Lab - clears as many open task issues as possible by grouping them, building every group in parallel with helpers, merging the green pull requests together on one train, and leaving main green.
 ---
 
 # The nightly build
 
-Each night clear as many open task issues as possible: group them, build every group in parallel with helpers, merge the green PRs one by one, leave `main` green.
+Each night clear as many open task issues as possible: group them, build every group in parallel with helpers, merge the green PRs together on one train, leave `main` green.
 
 ## Working here
 - GitHub goes through the GitHub MCP tools (`mcp__github__*`, loaded with ToolSearch): the `gh` CLI is not authenticated in the cloud session. `git push` over https works. Helpers use the same tools.
@@ -32,19 +32,21 @@ Per group, a worktree from `origin/main` and one background helper (Agent tool) 
 - do not edit `docs/STATUS.md`;
 - screenshots pushed with git to the orphan branch `pr-shots` (folder `task-<group>/`) and shown in the PR;
 - the PR: a plain title, what a learner can now do issue by issue, what was checked, what is unsure, one `Closes #<n>` per finished issue;
-- open the PR ready for review, not as a draft (CI does not test drafts; mark a draft ready to start it), then wait for CI (the check named `test`), fix up to three times;
+- open the PR ready for review, not as a draft (CI does not test drafts; mark a draft ready to start it), then wait for CI (the check named `test`, which tests the PR by its lane: only the checks its files need, `docs/WORKFLOW.md`, "CI's lanes"; never add the label `ci:full`), fix up to three times;
 - helpers never merge.
 
-## Phase 3: merge one by one
-Take the PRs in order of lowest issue number. For each:
-1. Merge `origin/main` into the branch, keeping both sides. A lab, a view's styles and a smoke check are files of their own now (`docs/LABS.md`, `docs/WORKFLOW.md`), so branches meet only in the shared files: the words (`src/i18n/en/<area>.json`, and `AREAS` in `src/core/i18n.js`), `src/data/frame.js` (`FILED`, `MARKS`), the labs' list `src/data/labs/index.js` (an import and a name per lab: keep both), the shared sheets `src/styles/base.css` and `src/styles/frame.css`, and the shell (`src/v2/app.js`, `src/v2/game.js`); rarely `src/core/styles.js` (`ORDER`) and `scripts/smoke.mjs` (`NAMES`, a new section). Keep each smoke check in its section's file (`scripts/smoke/<section>.mjs`, a lab's in `scripts/smoke/labs/<lab>.mjs`).
+## Phase 3: the train
+The night's green PRs go into `main` together, tested once with the whole suite, instead of one by one (each merge used to make every other PR re-test from the start, since `main`'s ruleset wants a branch up to date). Each PR has already passed `test` by its lane.
+1. Make the train: `git checkout -B claude/train-<date> origin/main` (`<date>` as `2026-11-28`; a second wave's train `claude/train-<date>-2`). Merge each green PR's branch into it in order of lowest issue number (`git merge --no-ff origin/claude/task-<group>`). A lab, a view's styles and a smoke check are files of their own now (`docs/LABS.md`, `docs/WORKFLOW.md`), so branches meet only in the shared files: the words (`src/i18n/en/<area>.json`, and `AREAS` in `src/core/i18n.js`), `src/data/frame.js` (`FILED`, `MARKS`), the labs' list `src/data/labs/index.js` (an import and a name per lab: keep both), the shared sheets `src/styles/base.css` and `src/styles/frame.css`, and the shell (`src/v2/app.js`, `src/v2/game.js`); rarely `src/core/styles.js` (`ORDER`), `scripts/smoke.mjs` (`NAMES`, a new section) and `scripts/smoke/owners.mjs` (a new section's or lab's files). Keep each smoke check in its section's file (`scripts/smoke/<section>.mjs`, a lab's in `scripts/smoke/labs/<lab>.mjs`).
    Resolve a conflict hunk by hunk. Never take one side of a whole file (`git checkout --ours` or `--theirs`): that drops the other side's changes that merged cleanly too (on 23 November it dropped two labs' smoke checks, put back the same night). After resolving, read `git diff origin/main` on every file that conflicted and see both sides' additions there; and check that two island growths do not stand on the same spot (`src/v2/growers/`).
-2. `npm test`, `node --check` on the changed files, and `npm run test:browser -- --only <the sections it touches>`.
-3. Push, wait for CI, squash-merge when `test` is green.
-4. After three failed tries, make it a draft with a comment saying what fails, and go on.
+2. `npm test`, `node --check` on the changed files, and `npm run test:browser -- --only <the sections the conflicts touched>`.
+3. Push the train and open one PR from it, ready for review: title `Train <date>`, its body a line for each PR it carries (`focusxyz11/open-silicon-lab#<n>`: its title) and every `Closes #<n>` from those PRs, each on a line of its own. Add the label `ci:full` at once (the run that starts with the label runs the whole suite; its `plan` says lane core). Wait for that `test`.
+4. Green: squash-merge the train. Then close each PR it carried (not merged: its commits are in the train), with a comment linking the train PR. The train's `Closes` lines close the issues.
+5. Red: find the PR that breaks it by halving. Make a train of the first half of the PRs from `origin/main` (`claude/train-<date>-a`, and so on), with its own PR and `ci:full` as above. If it is green, merge it, and make a train of the other half from the new `origin/main`; if it is red, halve it again. A train of one PR that is red has found it: fix it up to three times on its own branch; after that, close that train, make the PR a draft with a comment saying what fails, and go on with the rest. Merge every train that passes.
+6. If `main` moves while a train is testing (the owner merged something), merge `origin/main` into the train and wait for `test` again.
 
 ## Phase 3b: the second wave
-After Phase 3, read the issues again: merging closed some, so others are ready now. Build the newly ready groups as Phase 2 and merge them as Phase 3, at most 3 groups, `priority` groups first, then lowest issue numbers first. No third wave.
+After Phase 3, read the issues again: merging closed some, so others are ready now. Build the newly ready groups as Phase 2 and merge them on a second train as Phase 3, at most 3 groups, `priority` groups first, then lowest issue numbers first. No third wave.
 
 ## Phase 4: close the night
 - One small PR updating `docs/STATUS.md`, merged when green.
