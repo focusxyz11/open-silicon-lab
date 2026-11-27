@@ -151,15 +151,13 @@ test('the first page\'s files load: every name they use at the top is imported',
   finally { if (!had) delete globalThis.addEventListener; }
 });
 
-test('the first page\'s last block is the island\'s own plan: every place of the loop stands on the island', async () => {
-  /* the plan is drawn from src/data/isle.js, the island's own coast, road and places (never a second copy of them) */
-  const { PLACES, ISLE_COAST, ISLE_ROAD, ISLE_YAW, isleFlat } = await import('../src/data/isle.js');
-  const { LOOP } = await import('../src/data/hold.js');
-  for (const [, place] of LOOP) assert.ok(PLACES.some(p => p.id === place && !p.far), place + ' is not a place on the island');
-  assert.ok(ISLE_COAST.length > 8 && ISLE_ROAD.length > 8);
-  /* seen from above at the camera's turn: a turn, so distances stay as they are */
-  const [a, b] = [isleFlat([10, 0]), isleFlat([0, 10])]; assert.ok(Math.abs(Math.hypot(...a) - 10) < 1e-9 && Math.abs(a[0] * b[0] + a[1] * b[1]) < 1e-9);
-  assert.deepEqual(isleFlat([3, 4], 0), [3, 4]); assert.ok(ISLE_YAW < 0);
-  const map = readFileSync(new URL('../src/v2/map3d.js', import.meta.url), 'utf8');
-  assert.ok(/ISLE_COAST/.test(map) && /ISLE_ROAD/.test(map) && !/const ISLAND = \[\[/.test(map), 'the island reads its coast and road from src/data/isle.js');
+test('the first page\'s last block is your stack: every rung of the path, each a way in, named in every language', async () => {
+  /* the rungs are the stack's own list (src/data/path.js), read by the lazy last picture and never by the first page */
+  const { RUNGS } = await import('../src/data/path.js');
+  const isle = readFileSync(new URL('../src/v2/holdisle.js', import.meta.url), 'utf8');
+  assert.ok(/from '\.\.\/data\/path\.js'/.test(isle) && /'#\/stack\/' \+ r/.test(isle) && /href = '#\/stack'/.test(isle), 'each rung opens #/stack/<rung>, the button #/stack');
+  for (const f of ['hold.js', 'holdkit.js', 'holdplates.js']) assert.ok(!/data\/path\.js|\/stack\//.test(readFileSync(new URL('../src/v2/' + f, import.meta.url), 'utf8')), f + ' does not reach the stack\'s code');
+  for (const l of ['en', 'zh', 'fr', 'es']) { const W = JSON.parse(readFileSync(new URL('../src/i18n/' + l + '/hold.json', import.meta.url), 'utf8'));
+    for (const r of RUNGS) assert.ok(W['hd.sk.' + r + '.t'] && W['hd.sk.' + r + '.d'], l + ': ' + r);
+    for (const k of ['isle.go', 'isle.walk', 'isle.map', 'sk.out', 'pl.island', 'isle.lit']) assert.ok(W['hd.' + k], l + ': ' + k); }
 });
