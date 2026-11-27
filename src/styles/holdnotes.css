@@ -63,7 +63,7 @@
 .hold .b-step .sn.in{background:var(--go);color:var(--accent-ink);border-color:transparent;box-shadow:0 10px 30px color-mix(in srgb,var(--go) 35%,transparent)}
 .hold .b-step .sn.in i{background:color-mix(in srgb,var(--accent-ink) 16%,transparent);color:inherit}
 /* over a long flight the cards wait until the camera is there */
-.hold .b-story{transition:opacity .3s}.hold.fly .b-story{opacity:0;transition-duration:.15s}
+.hold .b-story{transition:opacity .5s}.hold.fly .b-story{opacity:0;transition-duration:.2s}
 /* at the landing the island's block is alone with its way in; under the whole chip the steps stand at the foot */
 .hold.landing .b-hold.chip{display:none}
 .hold .b-hold.chip.over{bottom:calc(var(--u)*12)}

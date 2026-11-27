@@ -227,9 +227,9 @@ export function createHold(host, ctx = {}) {
   function fly(top, smooth) { /* a move you make is where you are from then on, whatever the page was keeping */
     here.a = null; const y0 = host.scrollTop, y1 = clamp(top, 0, host.scrollHeight - vh), far = Math.abs(y1 - y0) / vh;
     if (!smooth || reduce() || far < .02) { land0(); host.scrollTo({ top, behavior: 'instant' }); onScroll(); return; }
-    flying = 1; anim = { y0, y1, t0: performance.now(), ms: clamp(700 + far * 320, 950, 2100) }; root.classList.toggle('fly', far > 1.6); }
+    flying = 1; anim = { y0, y1, t0: performance.now(), ms: clamp(1100 + far * 650, 1400, 4200) }; root.classList.toggle('fly', far > .6); }
   const land0 = () => { if (anim) { anim = null; flying = 0; root.classList.remove('fly'); } };
-  TICK.push(() => { if (!anim) return; const k = clamp((performance.now() - anim.t0) / anim.ms, 0, 1), e = k < .5 ? 4 * k * k * k : 1 - Math.pow(2 - 2 * k, 3) / 2;
+  TICK.push(() => { if (!anim) return; const k = clamp((performance.now() - anim.t0) / anim.ms, 0, 1), e = (1 - Math.cos(Math.PI * k)) / 2;
     host.scrollTop = anim.y0 + (anim.y1 - anim.y0) * e; if (k >= 1) { land0(); onScroll(); } });
   for (const ev of ['wheel', 'touchstart', 'pointerdown']) host.addEventListener(ev, () => { if (anim) { land0(); onScroll(); } }, { passive: true });
   /* the steps after the wall: the whole chip, then each block as it arrives and its question; after the last, inside */
