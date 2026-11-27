@@ -177,10 +177,11 @@ export function createHold(host, ctx = {}) {
     $$('.card', secs.years).forEach(c => { c.classList.remove('sc'); tall(c); });
     sized = true; slot._s = 0; plan(); chart.fit(); fitBar(); for (const id in plates) plates[id].paint(S.T, 0);
     if (pend) { const r = pend; pend = null; goAddr(r); } else if (keep) restore(keep);
+    fitAt = performance.now();
   }
   /* where the visitor is, said so that any layout can find it again: in the fifty years, the count (so the year); after
      them, the part of the story (the pull back, a block's section, the end) and how far through it */
-  const here = { a: null, y: -1, until: 0 };
+  const here = { a: null, y: -1, until: 0 }; let fitAt = -1e9;
   function anchor() {
     const y = host.scrollTop, sy = secs.years, wy = yOfD(DWALL);
     if (y < pull.offsetTop) { const yy = y - sy.offsetTop; return yy <= wy ? { d: dOfY(Math.max(0, yy)) } : { el: sy, past: (yy - wy) / Math.max(1, sy.offsetHeight - wy) }; }
@@ -214,7 +215,8 @@ export function createHold(host, ctx = {}) {
     return { x: L(a.x, b.x), y: L(a.y, b.y), k: Math.exp(L(Math.log(a.k), Math.log(b.k))) * (1 - (dip ? .34 : 0) * Math.sin(Math.PI * t)), sx: L(a.sx, b.sx), sy: L(a.sy, b.sy), a, b, t }; }
 
   /* ---- going somewhere: the camera flies (the page scrolls smoothly), it never jumps ---- */
-  function fly(top, smooth) { smooth = smooth && !reduce(); if (smooth) { flying = 1; clearTimeout(fly.tm); fly.tm = setTimeout(() => { flying = 0; onScroll(); }, 1600); } host.scrollTo({ top, behavior: smooth ? 'smooth' : 'instant' }); onScroll(); }
+  function fly(top, smooth) { smooth = smooth && !reduce(); if (smooth) { flying = 1; clearTimeout(fly.tm); fly.tm = setTimeout(() => { flying = 0; onScroll(); }, 1600); } /* a move you make is where you are from then on, whatever the page was keeping */
+    here.a = null; host.scrollTo({ top, behavior: smooth ? 'smooth' : 'instant' }); onScroll(); }
   host.addEventListener('scrollend', () => { if (flying) { flying = 0; clearTimeout(fly.tm); onScroll(); } });
   function goPlate(id, d, full, smooth) { touch(); const sec = secs[id], ph = PHONE(); let top = sec.offsetTop + 2;
     if (id === 'years') top = sec.offsetTop + yOfD(d || 0);
@@ -247,8 +249,10 @@ export function createHold(host, ctx = {}) {
   function onScroll() {
     if (!sized) return;
     const y = host.scrollTop; let id = 'years';
-    /* where you are changes only as the page scrolls: a call with nothing scrolled (a word filled in, a card grown) keeps it */
-    if (host.clientHeight === vh && host.clientWidth === VW && !flying && !(here.a && performance.now() < here.until && Math.abs(y - here.y) < 2) && (!here.a || Math.abs(y - here.y) >= 1)) { here.a = anchor(); here.y = y; here.until = 0; } for (const k of ORDER) if (secs[k].offsetTop <= y + 1) id = k;
+    /* where you are changes only as the page scrolls: a call with nothing scrolled (a word filled in, a card grown) keeps
+       it, and so does a scroll the browser makes itself as the window changes shape (for half a second after a new
+       layout, the place the layout was given stands) */
+    if (host.clientHeight === vh && host.clientWidth === VW && !flying && !(here.a && performance.now() < here.until && Math.abs(y - here.y) < 2) && (!here.a || (Math.abs(y - here.y) >= 1 && performance.now() - fitAt > 500))) { here.a = anchor(); here.y = y; here.until = 0; } for (const k of ORDER) if (secs[k].offsetTop <= y + 1) id = k;
     if (y > 40) touch();
     if (y < pull.offsetTop) { if (!flying) { const yy = y - secs.years.offsetTop; Yr.set(yy >= yOfD(DWALL) - 2 ? DWALL : dOfY(yy)); } } else if (!flying && S.d < DWALL) Yr.set(DWALL);
     if (id !== cur) { cur = id; setHolding(false); } if (id !== 'years') more();
