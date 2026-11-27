@@ -46,7 +46,12 @@
    entry can carry.
 
    An attempt in the ledger (histOf, histOk, replay, #410): one line of the tree as a history, the start, the focus of
-   each year, the forks and stones in order and the needs it claims, grown again here so a false claim is refused. */
+   each year, the forks and stones in order and the needs it claims, grown again here so a false claim is refused.
+
+   A recipe is a set of forks in your stack (docs/PATH.md, #444): each option's carry contract (CARRY) sits beside its
+   traits, and src/engines/path.js builds the recipe's anatomy rung by rung from it. A forked rung's energy is divided
+   by the option's own energy factor (forkEnergy), and the stack's figure against today's computer is this engine's
+   scoreOf: one number, never two. */
 
 import { NEEDS as MACHINE_NEEDS } from '../data/blocks.js';
 import { ACTIVITY } from '../data/inventions.js';
@@ -90,6 +95,56 @@ export const EFFECT = {
     swarm: { energy: 0.9, flex: 0.9, rugged: 3, adapt: 1.4 }
   }
 };
+/* each option's carry contract (docs/PATH.md, "Architectures: the frontier of the path"; #444): a recipe is a set of
+   forks in your stack (src/engines/path.js), and a forked rung hands up the same fields as the rung it replaces. What
+   an option changes in that contract is written here, beside its traits; its energy never is: a forked rung's energy
+   is the replaced rung's divided by the option's own energy factor (forkEnergy, from EFFECT), so the stack and this
+   engine share one factor and cannot drift apart.
+     carrier  matter: the lattice's column it is made of (src/data/lattice.js MATTERS); delay: its gates' delay against
+              today's silicon gate (as today's, the prototype's guess; living neurons fire in milliseconds where a gate
+              switches in picoseconds, about a million times slower); skips: the rungs it goes past without building them (neurons learn without gates:
+              the lattice marks those cells past), its contract handed up at the last of them
+     where    latency: seconds from the machine's cores to the memory they read (far: across the board; else beside it)
+     told     stages: whether the chip's pipeline stages are yours to choose (a program, one instruction after another);
+              otherwise it runs in one stage, laid out or wired once
+     shape    units: the machine's units at each of the stack's three settings (path.js CHOICES.ui)
+   fact: the facts.json entry that backs a fork's contract. None does yet: every fork's contract is a guess (forkFact),
+   until a fact backs it. Today's options are not forks: charge is the switch engine's, the rest an idea drawn. */
+export const CARRY = {
+  where: {
+    far: { latency: 80e-9 },
+    near: { latency: 3e-9, fact: null },
+    in: { latency: 3e-9, fact: null },
+    flow: { latency: 3e-9, fact: null }
+  },
+  carrier: {
+    charge: { matter: 'silicon' },
+    light: { matter: 'light', delay: 1, fact: null },
+    spikes: { matter: 'silicon', delay: 1, fact: null },
+    reversible: { matter: 'silicon', delay: 1, fact: null },
+    living: { matter: 'neurons', delay: 1e6, skips: ['switch', 'gate', 'block', 'chip'], fact: null }
+  },
+  told: {
+    program: { stages: true },
+    graph: { stages: false, fact: null },
+    events: { stages: false, fact: null },
+    learns: { stages: false, fact: null },
+    fixed: { stages: false, fact: null }
+  },
+  shape: {
+    few: { units: [1, 4, 8] },
+    grid: { units: [16, 64, 256], fact: null },
+    stack: { units: [8, 16, 32], fact: null },
+    swarm: { units: [100, 1000, 10000], fact: null }
+  }
+};
+/* is this option a fork from today's computer, and is its contract still a guess (no fact backs it) */
+export const isFork = (gene, option) => TODAY[gene] !== option;
+export const forkFact = (gene, option) => (isFork(gene, option) && CARRY[gene] && CARRY[gene][option] ? CARRY[gene][option].fact || null : null);
+/* the energy factor a fork divides its rung's energy by: the option alone against today's computer, for a need (the
+   idle gain of spikes and events counts where a need is rarely busy) */
+export const forkEnergy = (gene, option, need) => traitsOf(Object.assign({}, TODAY, { [gene]: option }), need).energy;
+
 /* the custom circuit's cap, against the one study's figure (facts.json asic-vs-cpu) */
 export const FIXED_CAP = 6, FIXED_FACT = 'asic-vs-cpu';
 /* how much more an idle-spending option gains where a need is rarely busy: (steady / its activity)^IDLE */
