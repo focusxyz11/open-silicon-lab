@@ -56,6 +56,7 @@ body.firstpage .bar .loop{display:none}
 .hold .lb.hot{color:var(--red)}
 .hold .lb.col{white-space:normal;width:23%}
 .hold .lb.wrap{white-space:normal;max-width:44%}
+.hold .lb.wide{white-space:normal;max-width:82%} /* the arrangements' trip and its cost, across the plate */
 .hold .lb.wrap.side{max-width:min(17%,calc(18.2% - var(--ov,0px) - 6px))} /* the next fifty's "behind", ending at 18.2%: clear of the card over the block's edge */
 .hold .lb.up{transform:translate(0,-100%)}
 .hold .lb.r.up{transform:translate(-100%,-100%)}

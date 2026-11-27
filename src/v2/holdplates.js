@@ -429,10 +429,10 @@ PL.eras = {
 };
 PL.arr = {
   pts: { trip: [50, 76] },
-  frame: () => [w('pl.arr'), w('trip.' + TRIP[ARR[S.arr][0]]).split(',')[0]],
+  frame: () => [w('pl.arr'), w('trip.' + TRIP[ARR[S.arr][0]]).split(/[,，]/)[0]],
   paint(c, T) { arrView(c, T, ARR[S.arr][0]); },
   ui(host, pl) { const sg = h('div', 'seg wrap'); ARR.forEach((a, i) => { const b = h('button', '', w('arr.' + a[0] + '.b')); b.type = 'button'; b.onclick = () => { S.arr = i; S.arrSeen[a[0]] = 1; if (S.arrSeen.cim && S.arrSeen.spikes) done('arr'); pl.fade = 1; out('arr'); }; sg.appendChild(b); }); at(sg, 4, 86, 92); host.appendChild(sg);
-    const tr = lbl(host, '', 9, 6); pl.sync = () => { [...sg.children].forEach((b, i) => { b.classList.toggle('on', S.arr === i); }); put(tr, w('arr.trip') + '<b>' + w('trip.' + TRIP[ARR[S.arr][0]]) + '</b>'); }; }
+    const tr = lbl(host, '', 9, 6, 'wide'); pl.sync = () => { [...sg.children].forEach((b, i) => { b.classList.toggle('on', S.arr === i); }); put(tr, w('arr.trip') + '<b>' + w('trip.' + TRIP[ARR[S.arr][0]]) + '</b>'); }; }
 };
 
 /* ---------------- your machine: pick a need, set each block's form; an agent generates, engines check, you decide ---------------- */
