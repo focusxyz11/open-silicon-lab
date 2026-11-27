@@ -44,7 +44,7 @@ export default async function run() {
       ['Keep the chef busy', '#/do/chef', () => !!document.querySelector('.mbgoal')],
       ['Ask on the bench', '#/bench/check', () => { const b = document.querySelector('#diveui [data-mode="ask"]'); if (b && b.getAttribute('aria-selected') !== 'true') b.click(); return !!b && b.getAttribute('aria-selected') === 'true'; }],
       ['the station map', '#/stations', () => { const s = document.getElementById('stations'); return !!s && !s.hidden && s.children.length > 0; }],
-      ['the studio\'s dials on the island', '#/island', () => { const d = document.querySelector('.insp:not([hidden]) .dial'); if (!d) { const b = document.querySelector('#mapLabels .place3[data-place="studio"]'); if (b) b.click(); } return !!d; }]
+      ['the studio\'s dials on the island', '#/island', () => { const d = document.querySelector('#sheet:not([hidden]) .dial'); if (!d) { const b = document.querySelector('#mapLabels .place3[data-place="studio"]'); if (b) b.click(); } return !!d; }]
     ];
     for (const [what, hash, drawn] of VIEWS) {
       S.at = 'saving data: ' + what; const page = await browser3d.newPage({ viewport: { width: 1280, height: 800 }, reducedMotion: 'reduce' });

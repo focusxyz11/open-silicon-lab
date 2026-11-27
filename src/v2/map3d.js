@@ -1255,6 +1255,10 @@ export function createMap(canvas, host, on = {}) {
   raf = requestAnimationFrame(frame);
   place2();
 
+  /* with the card as the caption at the left (o.side, a wide screen), the place stands in the middle of the room right of
+     it: the camera's aim moves left by half the caption's width, at the distance it will be seen from */
+  const sideOf = (o, d) => { if (!o.side || innerWidth < 1100) return 0; const cw = Math.min(660, Math.max(520, 400 + innerWidth / 8)) + 24, W = canvas.clientWidth || innerWidth;
+    return (cw / W) * d * Math.tan(camera.fov * Math.PI / 360) * camera.aspect; };
   return {
     focus(id, o = {}) {
       const p = placeAt(id); if (!p) return; follow = null;
@@ -1265,7 +1269,8 @@ export function createMap(canvas, host, on = {}) {
       const wide = innerWidth > 720, near = { fab: 1.3, studio: 1.15, test: 1.05, port: 1.05, datacentre: 1.2 }[id], nearP = { fab: 1.3, studio: 1.0, test: 1.0, port: 0.85, datacentre: 1.15 }[id];
       /* on a wide screen the card is a bench at the right and the picture keeps the place in its middle */
       const d = p.d * (wide ? near || 1.6 : nearP || 2), upv = innerWidth >= 1100 ? 0 : o.center ? (wide ? -d * 0.03 : d * 0.16) : d * (wide ? 0.14 : id === 'village' ? 0.08 : nearP ? 0.17 : 0.24);
-      flyTo(p.at[0] + off[0] + Math.sin(cam.yaw) * upv, p.at[1] + off[1] + Math.cos(cam.yaw) * upv, d);
+      const sd = sideOf(o, d);
+      flyTo(p.at[0] + off[0] + Math.sin(cam.yaw) * upv - Math.cos(cam.yaw) * sd, p.at[1] + off[1] + Math.cos(cam.yaw) * upv + Math.sin(cam.yaw) * sd, d);
     },
     overview() { follow = null; const h = home(); flyTo(h.x, h.z, h.d); },
     unfollow() { follow = null; },
@@ -1282,12 +1287,12 @@ export function createMap(canvas, host, on = {}) {
     /* where a place, or a part inside it, is on the screen now: the point a portal opens from (0 to 1 across, down) */
     screenOf(place, part) { const p = placeAt(place); if (!p) return null; const v = new THREE.Vector3(p.at[0], 2, p.at[1]); const T = part && OPEN[place] && OPEN[place].tools[part]; if (T) { T.getWorldPosition(v); v.y += 1; } v.project(camera); return { x: (v.x + 1) / 2, y: (1 - v.y) / 2 }; },
     /* select a place, and inside an open one a part; the factory opens while it is selected */
-    select(place, part) {
+    select(place, part, o = {}) {
       sel = place ? { place, part: part || null } : null; push = 0; Object.entries(OPEN).forEach(([id, O]) => { O.want = id === place ? 1 : 0; });
       const T = place && part && OPEN[place] && OPEN[place].tools[part];
       Object.entries(toolNames).forEach(([k, lb]) => lb.el.classList.toggle('sel', !!T && k === place + ':' + part));
       if (T) { const v = new THREE.Vector3(), wide = innerWidth > 720; placeRing(place, part); T.getWorldPosition(v);
-        const d = wide ? 48 : 64, upv = innerWidth >= 1100 ? 0 : d * (wide ? 0.12 : 0.18); flyTo(v.x + Math.sin(cam.yaw) * upv, v.z + Math.cos(cam.yaw) * upv, d); }
+        const d = wide ? 48 : 64, upv = innerWidth >= 1100 ? 0 : d * (wide ? 0.12 : 0.18), sd = sideOf(o, d); flyTo(v.x + Math.sin(cam.yaw) * upv - Math.cos(cam.yaw) * sd, v.z + Math.cos(cam.yaw) * upv + Math.sin(cam.yaw) * sd, d); }
     },
     /* the first visit opens on a wide shot of the sea and comes down to the island, turning toward it */
     intro() { if (reduced()) return; const h = home(); Object.assign(cam, { x: h.x + 70, z: h.z + 120, d: MAXD * 0.8, yaw: cam.yaw - 0.8, pitch: 1.08 }); place2();

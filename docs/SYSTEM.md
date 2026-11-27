@@ -176,7 +176,7 @@ window of text:
 - **The caption** (Look): the card on the picture, bottom left: the place and the size, the level's name (in a row of
   steps, the step's), one sentence, its whole question, the level's search, *Read more* and *Do*. A story told step by
   step (the board's) is the caption as it is. The rest of a level's card waits under *Read more*.
-- **The side panel** (Do, Ask, Read more, and a card that is not a level's: the supply map, the island's sheet, Break
+- **The side panel** (Do, Ask, Read more, and a card that is not a level's: the supply map, the Lab's inside, Break
   it): at the right, full height, its width growing with the screen (about 460 px at 1280, 600 at 1920), never a box
   scrolling inside a box. In Do, a lab that declares its instrument (`data-f2="instrument"`, `docs/LABS.md`) puts it on
   the stage, the picture area, with its goal as meters across the top, and keeps its controls in the panel beside it; a
@@ -201,7 +201,10 @@ One type scale: titles and the question in Besley, everything read in Atkinson H
   on it, in every view that knows where that is (the flight, the dive's next square or a 3D level's door, the chip's
   next layer, the board's chip). A 3D view frames its picture in the part the frame leaves free (`inset`).
 - **One card**, the same on the island and in every view (`src/v2/frame.js`; the island's is drawn by `drawPlace` in
-  `src/v2/glue/island.js`), worn as the caption, the side panel or the phone sheet. Its three faces are at its top, with how
+  `src/v2/glue/island.js`), worn as the caption, the side panel or the phone sheet, one home per mode whatever the way
+  in (#433): a place tapped on the island, reached along or opened by its address shows its card as the caption at the
+  bottom left in Look (with your chip's dials where they are decided, the way in, Read more, Do and the places around),
+  and in the side panel under Read more, Do and Ask; on a phone, the sheet at the foot. Its three faces are at its top, with how
   much waits behind each:
   **Look** is what this is, one step at a time (steps, not scrolling), with the moves from here: on the island,
   *Go inside* and *Next* round the loop. Each step of a story moves the camera and lights a part; its words are
@@ -328,7 +331,8 @@ explanation) goes into a reading view, opened on purpose, at a reading width.
 
 On a desktop the picture takes the whole screen: in Look the caption stands on it at the bottom left and each view
 frames its picture right of it; in Do and Ask the side panel stands at the right and the picture is framed left of it
-(`inset`), and a lab's instrument takes the stage there. The island's canvas ends where its sheet begins. On a phone
+(`inset`), and a lab's instrument takes the stage there. On the island the caption stands on the picture too, the
+camera framing the place right of it (`focus` with `side`), and the island's canvas ends where its side panel begins. On a phone
 the card is the sheet under the picture (CLAUDE.md, desktop first where it is richer).
 
 ## 4b. How true: one mark for how far a picture goes

@@ -103,7 +103,7 @@ export default async function run() {
   { const page = await browser3d.newPage({ viewport: { width: 1280, height: 800 } });
     page.on('pageerror', e => problems.push(tag + ' (phone flight): ' + e.message));
     await page.goto(base + 'index.html#/place/phones');
-    await page.waitForFunction(() => { if (location.hash === '#/place/phones') { const b = document.querySelector('.insp:not([hidden]) [data-iact="deeper"]') || document.querySelector('#sheet:not([hidden]) a[href="#/place/phones/0"]'); if (b) b.click(); }
+    await page.waitForFunction(() => { if (location.hash === '#/place/phones') { const b = document.querySelector('#sheet:not([hidden]) [data-deeper]') || document.querySelector('#sheet:not([hidden]) a[href="#/place/phones/0"]'); if (b) b.click(); }
       return location.hash === '#/place/phones/0' && !document.getElementById('flyui').hidden; }, null, { timeout: 150000, polling: 3000 }).catch(() => problems.push(tag + ': going inside the phone island does not open its flight'));
     await page.waitForFunction(() => { const b = document.querySelector('#flyui .wayin:not([hidden]) .wigo'); if (b && location.hash === '#/place/phones/0') b.click(); return location.hash === '#/place/phones/1'; }, null, { timeout: 90000, polling: 3000 }).catch(() => problems.push(tag + ': the way in on the picture does not go deeper in the phone'));
     await page.waitForFunction(() => !!document.querySelector('#flyui .seek [data-seek="battery"][data-hl="battery"]'), null, { timeout: 90000, polling: 1000 }).catch(() => problems.push(tag + ': inside the phone, the card does not name the battery among the parts to look at'));
@@ -117,7 +117,7 @@ export default async function run() {
   { const page = await browser3d.newPage({ viewport: { width: 1280, height: 800 } });
     page.on('pageerror', e => problems.push(tag + ' (car flight): ' + e.message));
     await page.goto(base + 'index.html#/place/cars');
-    await page.waitForFunction(() => { if (location.hash === '#/place/cars') { const b = document.querySelector('.insp:not([hidden]) [data-iact="deeper"]') || document.querySelector('#sheet:not([hidden]) a[href="#/place/cars/0"]'); if (b) b.click(); }
+    await page.waitForFunction(() => { if (location.hash === '#/place/cars') { const b = document.querySelector('#sheet:not([hidden]) [data-deeper]') || document.querySelector('#sheet:not([hidden]) a[href="#/place/cars/0"]'); if (b) b.click(); }
       return location.hash === '#/place/cars/0' && !document.getElementById('carui').hidden; }, null, { timeout: 150000, polling: 3000 }).catch(() => problems.push(tag + ': going inside the car island does not open its flight'));
     await page.waitForFunction(() => { const b = document.querySelector('#carui .wayin:not([hidden]) .wigo'); if (b && location.hash === '#/place/cars/0') b.click(); return location.hash === '#/place/cars/1'; }, null, { timeout: 90000, polling: 3000 }).catch(() => problems.push(tag + ': the way in on the picture does not go deeper in the car'));
     await page.waitForFunction(() => !!document.querySelector('#carui .here2 [data-hl="battery"]'), null, { timeout: 90000, polling: 1000 }).catch(() => problems.push(tag + ': inside the car, the card does not name the battery'));

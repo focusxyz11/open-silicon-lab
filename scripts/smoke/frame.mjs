@@ -1,6 +1,6 @@
 import { S } from './shared.mjs';
 
-export const about = 'the frame (#271): the size at every level and the ring on the way in, desktop and phone; the caption at a dive level with its question in full, desktop and phone; on a phone the sheet at three heights, the seam note in it, the names at the gate apart and Your log clear of the loop; Half the power won in Do mode, its instrument on the stage beside the panel that holds its controls; a chip\'s settings played on the line, Jevons\' bet in the island\'s sheet; a question\'s page in Read mode, its column, its picture and the bar; one set of listeners on the dive\'s host, however often its views are visited';
+export const about = 'the frame (#271): the size at every level and the ring on the way in, desktop and phone; the caption at a dive level with its question in full, desktop and phone; on a phone the sheet at three heights, the seam note in it, the names at the gate apart and Your log clear of the loop; Half the power won in Do mode, its instrument on the stage beside the panel that holds its controls; a chip\'s settings played on the line, Jevons\' bet in the island\'s sheet; a question\'s page in Read mode, its column, its picture and the bar; one set of listeners on the dive\'s host, however often its views are visited; one card, one home per mode: a place tapped on the island and reached along shows the same caption in the same spot, and Read more moves it to the side panel (#433)';
 
 export default async function run() {
   const { browser, browser3d, base, problems } = S;
@@ -343,6 +343,41 @@ export default async function run() {
       return !!f.querySelector('.dock .lpinst[data-lpinst="geo"] .fidrow .fid[data-fid="computed"]'); }, null, { timeout: 120000, polling: 1000 })
       .catch(() => problems.push(tag + ': the block\'s caption or its lens\'s measures do not carry their marks'));
     await fp.close(); }
+  /* one card, one home per mode (#433): a place opened by a tap on the island and the same place reached along (→ from
+     the place before it round the loop) show the same card, the caption, in the same spot, holding the same things;
+     on a desktop the caption stands at the bottom left and Read more moves the card to the side panel at the right; on
+     a phone it is the sheet at the foot either way */
+  for (const [vt, viewport, scheme] of [['desktop', { width: 1280, height: 800 }, 'dark'], ['phone', { width: 390, height: 844 }, 'light']]) {
+    const tag = 'frame one card (' + vt + ')', cp = await browser3d.newPage({ viewport, colorScheme: scheme }); cp.on('pageerror', e => problems.push(tag + ': ' + e.message));
+    await cp.addInitScript(() => { try { localStorage.setItem('osl-quality', 'keep'); localStorage.setItem('osl-hints-v1', JSON.stringify({ seen: {}, off: true })); } catch (e) { /* no storage */ } });
+    /* the card as it stands: where it is, and what it holds */
+    const cardOf = () => { const s = document.getElementById('sheet'); if (!s || s.hidden || !s.classList.contains('cap')) return null; const r = s.getBoundingClientRect(), h = s.querySelector('h2');
+      return { title: h ? h.textContent.trim() : '', left: Math.round(r.left), right: Math.round(r.right), bottom: Math.round(r.bottom), width: Math.round(r.width),
+        holds: ['[data-door="do"]', '[data-door="ask"]', '[data-deeper]', '[data-more="1"]', '.dials [data-dial]', '.around [data-key="next"]'].filter(q => s.querySelector(q)).join(' ') }; };
+    const settled = (hash, f) => cp.waitForFunction(([hash, f]) => { const c = new Function('return (' + f + ')()')(); if (location.hash !== hash || !c) return false;
+      const k = JSON.stringify(c); if (window.oslCard !== k) { window.oslCard = k; return false; } return k; }, [hash, f], { timeout: 90000, polling: 1000 }).then(r => r.jsonValue()).then(JSON.parse);
+    let tapped = null, along = null;
+    try {
+      await cp.goto(base + 'index.html#/island');
+      await cp.waitForFunction(() => { if (location.hash !== '#/place/fab') { const b = document.querySelector('#mapLabels .place3[data-place="fab"]'); if (b) b.click(); } return location.hash === '#/place/fab'; }, null, { timeout: 120000, polling: 1500 });
+      tapped = await settled('#/place/fab', cardOf.toString());
+      await cp.evaluate(() => { location.hash = '#/place/studio'; });
+      await cp.waitForFunction(() => { const s = document.getElementById('sheet'); if (location.hash === '#/place/studio' && s && !s.hidden && s.querySelector('[data-key="next"][data-place="fab"]')) document.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+        return location.hash === '#/place/fab'; }, null, { timeout: 60000, polling: 1500 });
+      along = await settled('#/place/fab', cardOf.toString());
+    } catch (e) { problems.push(tag + ': the factory\'s card did not open by a tap and by along (' + e.message.split('\n')[0] + ')'); }
+    if (tapped && along) {
+      const same = ['title', 'left', 'right', 'bottom', 'width', 'holds'].filter(k => typeof tapped[k] === 'number' ? Math.abs(tapped[k] - along[k]) > 2 : tapped[k] !== along[k]);
+      if (same.length) problems.push(tag + ': the factory\'s card differs by the way in (' + same.map(k => k + ' ' + tapped[k] + ' tapped, ' + along[k] + ' along').join('; ') + ')');
+      if (!/data-deeper/.test(tapped.holds) || !/data-more/.test(tapped.holds) || !/dials/.test(tapped.holds)) problems.push(tag + ': the factory\'s card lacks the way in, Read more or your chip\'s dials (' + tapped.holds + ')');
+      if (vt === 'desktop' && !(tapped.left < 60 && tapped.right < viewport.width / 2 + 60 && tapped.bottom > viewport.height - 60)) problems.push(tag + ': the caption is not at the bottom left (' + JSON.stringify(tapped) + ')');
+      if (vt === 'phone' && !(tapped.left < 20 && tapped.right > viewport.width - 20 && tapped.bottom > viewport.height - 30)) problems.push(tag + ': the card is not the sheet at the foot (' + JSON.stringify(tapped) + ')');
+    }
+    /* Read more: the whole card, at the right on a desktop */
+    if (vt === 'desktop' && tapped) await cp.waitForFunction(w => { const s = document.getElementById('sheet'), b = s && s.querySelector('[data-more="1"]'); if (b) b.click();
+      if (!s || s.hidden || s.classList.contains('cap') || !s.querySelector('[data-more="0"]')) return false; const r = s.getBoundingClientRect(); return r.left > w / 2 && r.right > w - 40; }, viewport.width, { timeout: 20000, polling: 1000 })
+      .catch(() => problems.push(tag + ': Read more does not move the factory\'s card to the side panel'));
+    await cp.close(); }
   /* one set of listeners on a host (#366): the dive, the line, the bench and the supply map are shown in one host
      (#diveui), and each time a view opens there its frame is made anew. What the frame, its modes and the Listen switch
      listen to ends with the frame before, so after the line, the dive, the bench, the supply map and the dive again the

@@ -1,4 +1,4 @@
-/* The island's cards: the inspector beside what you tap, the lenses over the island, your chip's dials where they are
+/* The island's cards: a place's card (the caption in Look, the side panel in Do and Ask), the lenses over the island, your chip's dials where they are
    decided, a place's card with its three doors and its inside, the Lab's inside (the commons as levels), a question
    and a thing that moves, followed.
    Glue of the shell (src/v2/app.js): create() runs once, when the view first opens; what it shares with the shell and
@@ -18,6 +18,7 @@ import * as Chip from '../../engines/chip.js';
 import * as Field from '../field.js';
 import { LEVERS as WF_LEVERS } from '../../engines/ripple.js';
 import { V, $, esc, qColor, follow, followW } from '../shell.js';
+import { firstSentence } from '../frame2.js';
 
 export function create() {
   Object.assign(V, { openMover, openPlace, drawPlace, openQuestion, handOf });
@@ -32,37 +33,17 @@ export function create() {
     const hand = (from === 'map' && view === 'line' && !!V.handNext) || !!V.lineLeave; V.handNext = false; return hand;
   }
   
-  function drawInsp() {
-    if (!V.cur) return V.hideInsp(); const id = V.cur.place, P = V.cur.part && V.PARTS[id], C = Game.community(V.S), dos = V.doList(id);
-    const nDo = id === 'lab' ? C.jobs.length + C.engines.length : id === 'village' ? C.jobs.length : dos.filter(c => !V.S.done[c.id]).length, nAsk = (Game.ASK[id] || []).length + Game.debatesAt(id).length + Game.fieldsAt(id).length;
-    const deep = P ? P.deeper(V.cur.part) : V.enterOf(id), cn = V.carryNote && V.carryNote.place === id ? V.carryNote : null;
-    V.insp.innerHTML = '<button type="button" class="ix" data-iact="close" aria-label="' + esc(t('sheet.close')) + '">×</button><p class="kicker">' + esc(P ? t('map.' + id + '.t') : V.kickerOf(id)) + '</p><h3>' + esc(P ? P.name(V.cur.part) : t('map.' + id + '.t')) + '</h3>' +
-      '<p class="il">' + esc(P ? P.see(V.cur.part) : t('map.' + id + '.d')) + '</p>' +
-      /* seen through a lens, a place offers the question that lens belongs to, where it is asked here */
-      (lensQ(id) ? '<div class="ilens">' + V.askLink(lensQ(id)) + '</div>' : '') +
-      (DIALS[id] && !P ? '<div class="dials"><p class="kicker">' + esc(t('dial.k')) + '</p>' + dialsHtml(id) + '</div>' : '') +
-      (cn ? '<div class="icarry"><span>' + esc(cn.text) + '</span>' + (cn.ch ? '<button type="button" class="chipb" data-iact="play">' + esc(t('carry.go')) + '</button>' : '') + '</div>' : '') +
-      /* the way in comes first, large, with the gestures that do the same said once beside it */
-      (deep ? '<button type="button" class="igo" data-iact="deeper"><span class="wia" aria-hidden="true">↓</span><span class="wit"><span class="wik">' + esc(t('frame.in.k')) + '</span><b>' + esc(P ? P.name(V.cur.part) : t('map.' + id + '.t')) + '</b></span></button><p class="small muted ihint">' + esc(t('insp.inHint')) + '</p>' : '') +
-      '<div class="iacts">' +
-      '<button type="button" class="chipb" data-iact="do">' + esc(t('door.do')) + (nDo ? ' <span class="n">' + nDo + '</span>' : '') + '</button>' +
-      '<button type="button" class="chipb" data-iact="ask">' + esc(t('door.ask')) + (nAsk ? ' <span class="n">' + nAsk + '</span>' : '') + '</button>' +
-      '<button type="button" class="chipb" data-iact="more">' + esc(t('insp.more')) + '</button></div>';
-    V.insp.hidden = false; V.sheet.hidden = true; cancelAnimationFrame(V.inspRaf); inspTrack();
-  }
-  /* it stays beside what it is about, above it where there is room, below where there is not (a phone keeps it at the foot) */
-  function inspTrack() { V.inspRaf = requestAnimationFrame(inspTrack); if (V.insp.hidden || !V.map || !V.cur) return; if (innerWidth <= 720) { V.insp.style.transform = ''; return; }
-    const p = V.map.screenOf(V.cur.place, V.cur.part), r = $('stage').getBoundingClientRect(); if (!p) return; const w = V.insp.offsetWidth, h = V.insp.offsetHeight;
-    /* beside it: to the right where there is room, else to the left, its middle level with the thing */
-    const px = p.x * r.width, py = p.y * r.height, off = V.cur.part ? 70 : 150; let x = px + off; if (x + w > r.width - 12) x = px - off - w; let y = py - h / 2;
-    x = Math.max(12, Math.min(r.width - w - 12, x)); y = Math.max(84, Math.min(r.height - h - 12, y));
-    V.insp.style.transform = 'translate(' + Math.round(x) + 'px,' + Math.round(y) + 'px)'; }
-  V.insp.addEventListener('click', e => { const dl = e.target.closest('[data-dial]'); if (dl && V.cur) { turnDial(dl.dataset.dial, +dl.dataset.d); return; }
-    const b = e.target.closest('[data-iact]'); if (!b || !V.cur) return; const a = b.dataset.iact;
-    if (a === 'close') { V.closeSheet(); V.map && V.map.select(null); return; }
-    if (a === 'deeper') { const to = V.deeperOf(V.cur.place, V.cur.part); if (to) V.enter(to); return; }
-    if (a === 'play') { const ch = V.chOf(V.carryNote && V.carryNote.ch); V.carryNote = null; if (ch) location.hash = V.doHref(ch); return; }
-    V.cur.tab = a === 'more' ? 'look' : a; drawPlace(); });
+  /* the card's own controls: your chip's dials, the play a carry offers, Read more and back to the picture (the
+     shell's own listener on the sheet answers the faces, the way in and the places) */
+  V.sheet.addEventListener('click', e => { if (!V.cur || e.target.closest('.player')) return;
+    const dl = e.target.closest('[data-dial]'); if (dl) { turnDial(dl.dataset.dial, +dl.dataset.d); return; }
+    if (e.target.closest('[data-cplay]')) { const ch = V.chOf(V.carryNote && V.carryNote.ch); V.carryNote = null; if (ch) location.hash = V.doHref(ch); return; }
+    const m = e.target.closest('[data-more]'); if (m) { V.cur.more = m.dataset.more === '1'; drawPlace(); if (V.map && !V.cur.part) V.map.focus(V.cur.place, { side: !V.cur.more }); } });
+  /* one card, one home per mode (#433): a place's card in Look is the caption, bottom left on the picture, as in every
+     view, whatever the way in (a tap on the island, along, the address); Do, Ask and Read more are the side panel. The
+     sheet says which it is by its class, read from what it holds, so a challenge or a question drawn in it is never a
+     caption (src/styles/island.css) */
+  new MutationObserver(() => V.sheet.classList.toggle('cap', !!V.sheet.querySelector(':scope > [data-cap]'))).observe(V.sheet, { childList: true });
   /* ---- lenses: the same island seen for one thing at a time; each opens onto the question it belongs to, one at a
      time, never as a list ---- */
   const LENSES = [['look', '○'], ['heat', '≋'], ['flow', '⇄'], ['fail', '✕'], ['time', '◷']], LENS_WORLD = { heat: 'limit', fail: 'fail', time: 'make', flow: 'open' };
@@ -74,7 +55,7 @@ export function create() {
   $('mapLabels').addEventListener('lens', e => drawLens(e.detail));
   V.lensbar.addEventListener('click', e => { const b = e.target.closest('[data-lens]'); if (!b || !V.map) return; const k = V.map.lens() === b.dataset.lens ? 'look' : b.dataset.lens; V.map.setLens(k); V.foldHero(); });
   const lensQ = id => { const k = V.map && V.map.lens(), w = k && LENS_WORLD[k]; if (!w) return null; const P = V.cur && V.cur.part && V.PARTS[id], L = P ? P.qs(V.cur.part) : (Game.ASK[id] || []); return L.find(q => q.startsWith(w + '.')) || null; };
-  V.lensbar.addEventListener('click', () => { if (!V.insp.hidden) drawInsp(); });
+  V.lensbar.addEventListener('click', () => { if (V.cur && V.sheet.classList.contains('cap')) drawPlace(); });
   /* ---- change it where it is decided (docs/INTERACTION.md, "Change it in place"): your chip's settings are dials
      at the places that decide them, and what a change does is seen arriving where it shows: a light travels to those
      places, the lens that shows it comes on, and the numbers that moved are said in one line (src/engines/chip.js) ---- */
@@ -91,7 +72,7 @@ export function create() {
   const dialsHtml = id => (DIALS[id] || []).map(k => '<div class="dial"><span class="dl">' + esc(t('chip.' + k + '.label')) + '</span><span class="dv"><button type="button" class="db" data-dial="' + k + '" data-d="-1"' + (dialIdx(k) <= 0 ? ' disabled' : '') + ' aria-label="−">−</button><output>' + esc(dialText(k)) + '</output><button type="button" class="db" data-dial="' + k + '" data-d="1"' + (dialIdx(k) >= dialMax[k] ? ' disabled' : '') + ' aria-label="+">+</button></span></div>' +
     (dialLast === k ? '<p class="dread">' + esc(dialRead(k)) + '</p>' : '')).join('');
   function turnDial(k, d) { const i = Math.max(0, Math.min(dialMax[k], dialIdx(k) + d)); V.S.chip[k] = k === 'clock' ? Chip.CLOCKS[i] : i; V.S.chip = Chip.normal(V.S.chip); V.save(); dialLast = k;
-    const [to, lk] = DIAL_FX[k]; if (V.map) { V.map.frame([V.cur.place].concat(to)); V.map.ripple(V.cur.place, to); if (V.map.lens() !== lk) V.map.setLens(lk); V.map.setState(V.islandState(), false); } drawInsp(); }
+    const [to, lk] = DIAL_FX[k]; if (V.map) { V.map.frame([V.cur.place].concat(to)); V.map.ripple(V.cur.place, to); if (V.map.lens() !== lk) V.map.setLens(lk); V.map.setState(V.islandState(), false); } drawPlace(); }
   function insideHtml(id) {
     /* where a place has no levels, its first other way in is what Go inside opens: it is not offered twice */
     const L = Game.INSIDE[id] || [], extra = (Game.LOOK[id] || []).slice(L.length ? 0 : 1);
@@ -129,22 +110,33 @@ export function create() {
   function openPlace(id, tab, step, piece, part) {
     V.sheet.classList.remove('mover'); dialLast = null; const quick = V.quickNext; V.quickNext = false; if (!V.carryNote || V.carryNote.place !== id) V.carryNote = null;
     V.cur = { place: id, tab: tab || 'look', step: step || null, piece: piece || null, part: part || null };
-    if (V.map) { if (!part) V.map.focus(id, { center: quick }); V.map.select(id, part); }
+    /* in Look the card is the caption at the left: the camera frames the place in the room right of it */
+    const side = V.cur.tab === 'look' && !step;
+    if (V.map) { if (!part) V.map.focus(id, { center: quick, side }); V.map.select(id, part, { side }); }
     /* the address says where you are: a place picked on the island, or in the world around it, or from the Lab's record,
        is written into it (without going anywhere), and counts as arriving there (src/v2/app.js, arrive) */
     const at = '#/place/' + id + (part ? '/' + part : '');
     if (!step && /^#\/(place|island|ecosystem|build)(\/|$)/.test(location.hash) && location.hash !== at && !location.hash.startsWith(at + '/')) V.arrive(at, 'push');
     else { const to = Way.whereOf('#/place/' + id); V.crossed(V.seamFrom, to); V.seamFrom = to; }
-    $('hero').classList.add('away'); drawPlace(); if (quick) drawInsp(); V.hud(); if (V.map) V.map.setState(V.islandState(), false);
+    $('hero').classList.add('away'); drawPlace(); V.hud(); if (V.map) V.map.setState(V.islandState(), false);
   }
   function drawPlace() {
     const id = V.cur.place, C = Game.community(V.S), asks = Game.ASK[id] || [], debates = Game.debatesAt(id), dos = V.doList(id), fields = Game.fieldsAt(id);
     const nDo = id === 'lab' ? C.jobs.length + C.engines.length : id === 'village' ? C.jobs.length : dos.filter(c => !V.S.done[c.id]).length, nAsk = asks.length + debates.length + fields.length;
+    /* Look at rest is the caption (a part's too); Read more, Do and Ask are the side panel */
+    if (V.cur.tab !== 'look') V.cur.more = false;
+    const cap = V.cur.tab === 'look' && !V.cur.step && (!!V.cur.part || !V.cur.more), door = '<div class="door"' + (cap ? ' data-cap' : '') + '>';
     let h = '<button type="button" class="x" data-close aria-label="' + esc(t('sheet.close')) + '">×</button>';
     h += '<div class="doors" role="tablist">' + ['look', 'do', 'ask'].map(k => '<button type="button" role="tab" data-door="' + k + '" aria-selected="' + (V.cur.tab === k) + '" title="' + esc(t('door.' + k + '.d')) + '"><b>' + esc(t('door.' + k)) + (k === 'do' && nDo ? ' <span class="n">' + nDo + '</span>' : k === 'ask' && nAsk ? ' <span class="n">' + nAsk + '</span>' : '') + '</b></button>').join('') + '</div>';
     const PP = V.cur.part && V.PARTS[id];
-    h += PP && V.cur.tab === 'look' ? '<p class="kicker">' + esc(t('map.' + id + '.t')) + '</p><h2 class="cap">' + esc(PP.name(V.cur.part)) + '</h2><div class="door">'
-      : '<p class="kicker">' + esc(V.kickerOf(id)) + '</p><h2>' + esc(t('map.' + id + '.t')) + '</h2><div class="door">';
+    h += PP && V.cur.tab === 'look' ? '<p class="kicker">' + esc(t('map.' + id + '.t')) + '</p><h2 class="cap">' + esc(PP.name(V.cur.part)) + '</h2>' + door
+      : '<p class="kicker">' + esc(V.kickerOf(id)) + '</p><h2>' + esc(t('map.' + id + '.t')) + '</h2>' + door;
+    /* what only this place's card holds, wherever you came from: the question of the lens the island is seen through,
+       your chip's dials where they are decided, and what a carried chip would do here */
+    const lq = lensQ(id), cn = V.carryNote && V.carryNote.place === id ? V.carryNote : null;
+    const mine = (lq ? '<div class="ilens">' + V.askLink(lq) + '</div>' : '') +
+      (DIALS[id] && !PP ? '<div class="dials"><p class="kicker">' + esc(t('dial.k')) + '</p>' + dialsHtml(id) + '</div>' : '') +
+      (cn && !PP ? '<div class="icarry"><span>' + esc(cn.text) + '</span>' + (cn.ch ? '<button type="button" class="chipb" data-cplay>' + esc(t('carry.go')) + '</button>' : '') + '</div>' : '');
     if (V.cur.tab === 'do') {
       if (id === 'lab') h += '<p class="small">' + esc(t('game.lab.do', { built: C.built, total: C.total })) + '</p>' + '<a class="chcard" href="#/machines"><span class="st">◇</span><span><b>' + esc(t('machines.ui.kicker')) + '</b><span class="small">' + esc(t('machines.ui.go')) + '</span></span></a>' + C.breaks.map(b => V.chCard(V.chOf('break:' + b.of))).join('') + C.jobs.map(V.jobCard).join('') + C.engines.map(e => '<a class="chcard engine" target="_blank" rel="noopener" href="' + esc(REPO + '/issues/new?' + new URLSearchParams({ template: 'need.yml', title: t('game.engineFor', { piece: t('build.need.' + e.need + '.t') }) })) + '"><span class="st">⚙</span><span><b>' + esc(t('build.need.' + e.need + '.t')) + '</b><span class="small">' + esc(t('game.engineWanted')) + '</span></span></a>').join('') + '<a class="link" href="#/build">' + esc(t('game.seePlan')) + '</a>';
       else if (id === 'village') h += '<p class="small">' + esc(t('game.village.do')) + '</p>' + C.designs.map(V.designCard).join('') + C.jobs.map(V.jobCard).join('');
@@ -156,7 +148,7 @@ export function create() {
     } else if (V.cur.tab === 'look' && V.cur.part) {
       /* a part of an open building: what it does, its question, and how to go closer (zoom in) */
       const P = V.cur.part, PP2 = V.PARTS[id], qs = PP2.qs(P);
-      h += '<p class="line">' + esc(PP2.see(P)) + '</p>' +
+      h += '<p class="line">' + esc(PP2.see(P)) + '</p>' + mine +
         '<div class="zoomhint"><button type="button" class="igo" data-deeper><span class="wia" aria-hidden="true">↓</span><span class="wit"><span class="wik">' + esc(t('frame.in.k')) + '</span><b>' + esc(PP2.name(P)) + '</b></span></button><span class="small muted">' + esc(t('zoom.tool.' + id)) + '</span></div>' + qs.slice(0, 1).map(V.askLink).join('') +
         '<ol class="lvchips steps" aria-label="' + esc(t('zoom.tools')) + '">' + PP2.list.map((s2, i) => '<li><button type="button" data-part="' + s2 + '"' + (s2 === P ? ' aria-current="true"' : '') + '>' + esc(PP2.name(s2)) + '</button></li>').join('') + '</ol>';
     } else if (V.cur.tab === 'look') {
@@ -166,9 +158,19 @@ export function create() {
       /* a level carried here along the loop (no gate at the Lab): the next in a chip's life is that level at the next stage */
       const ca = V.alongCarry && V.alongCarry.at === location.hash ? V.alongCarry : null, held = ca && Way.alongStep(Way.carried(Way.whereOf('#/place/' + id), ca), 1);
       const heldChip = held && held.to && !held.to.startsWith('#/place/') ? '<a class="chipb" data-key="next" href="' + esc(held.to) + '">' + esc(t('around.carry.' + held.stage, { level: t('depth.' + ca.level + '.name') })) + '</a>' : '';
-      h += '<p class="line">' + esc(t('map.' + id + '.d')) + '</p>' +
-        (enter ? '<div class="zoomhint"><button type="button" class="igo" data-deeper><span class="wia" aria-hidden="true">↓</span><span class="wit"><span class="wik">' + esc(t('frame.in.k')) + '</span><b>' + esc(t('map.' + id + '.t')) + '</b></span></button><span class="small muted">' + esc(t(V.PARTS[id] ? 'zoom.open' : 'zoom.place')) + '</span></div>' : '') +
-        (heldChip ? V.aroundHtml(id, null).replace('<div class="chips">', '<div class="chips">' + heldChip) : V.aroundHtml(id, nx)) +
+      const words = t('map.' + id + '.d'), [one] = firstSentence(words), name = esc(t('map.' + id + '.t'));
+      const goIn = enter ? '<button type="button" class="igo" data-deeper><span class="wia" aria-hidden="true">↓</span><span class="wit"><span class="wik">' + esc(t('frame.in.k')) + '</span><b>' + name + '</b></span></button>' : '';
+      const around = heldChip ? V.aroundHtml(id, null).replace('<div class="chips">', '<div class="chips">' + heldChip) : V.aroundHtml(id, nx);
+      if (cap) {
+        /* the caption: its first sentence, what only it holds, the way in beside Read more and Do, and the places around
+           (the next round the loop first) */
+        const one1 = id !== 'lab' && id !== 'village' && id !== 'idea' && dos.length === 1 ? dos[0] : null;
+        const doB = one1 ? '<a class="btn f2do" href="' + esc(V.doHref(one1)) + '">' + esc(t('frame2.doOne', { what: titleOf(one1) })) + '</a>' : nDo ? '<button type="button" class="btn f2do" data-door="do">' + esc(t('frame2.doN', { n: nDo })) + '</button>' : '';
+        h += '<p class="line">' + esc(one) + '</p>' + mine + '<div class="f2acts">' + goIn + '<button type="button" class="btn" data-more="1">' + esc(t('frame2.more')) + '</button>' + doB + '</div>' + around;
+        V.sheet.innerHTML = h + '</div>'; V.sheet.hidden = false; V.sheet.scrollTop = 0; V.sheet.classList.remove('inside', 'part'); return;
+      }
+      h += '<p class="line">' + esc(words) + '</p><div class="f2acts"><button type="button" class="btn" data-more="0">' + esc(t('frame2.less')) + '</button></div>' + mine +
+        (goIn ? '<div class="zoomhint">' + goIn + '<span class="small muted">' + esc(t(V.PARTS[id] ? 'zoom.open' : 'zoom.place')) + '</span></div>' : '') + around +
         /* What if?: the levers that sit on this island, each a way to see the change it makes cross the sea */
         WF_LEVERS.filter(l => l.place === id).map(l => '<a class="look wfgo" href="#/whatif/' + l.id + '"><b>' + esc(t('whatif.ui.go', { lever: t('whatif.lever.' + l.id + '.t') })) + '</b><span class="small">' + esc(t('whatif.lever.' + l.id + '.d')) + '</span></a>').join('') +
         /* where the loop starts there are two ways in: what someone needs, and what has just become possible */
@@ -183,7 +185,7 @@ export function create() {
       if (debates.length) h += '<p class="kicker">' + esc(t('game.debates')) + '</p>' + debates.map(d => '<div class="debate2"><b>' + esc(t('debate.' + d + '.t')) + '</b><span class="small">' + esc(t('debate.' + d + '.q')) + '</span></div>').join('');
       if (!nAsk && id !== 'lab') h += '<p class="small muted">' + esc(t('game.noAsk')) + '</p>';
     }
-    V.sheet.innerHTML = h + '</div>'; V.sheet.hidden = false; V.hideInsp(); V.sheet.scrollTop = 0; V.sheet.classList.toggle('inside', id === 'lab' && !!V.cur.step && V.cur.tab === 'look'); V.sheet.classList.toggle('part', !!V.cur.part);
+    V.sheet.innerHTML = h + '</div>'; V.sheet.hidden = false; V.sheet.scrollTop = 0; V.sheet.classList.toggle('inside', id === 'lab' && !!V.cur.step && V.cur.tab === 'look'); V.sheet.classList.toggle('part', !!V.cur.part);
   }
   function openQuestion(key) {
     const pid = Object.keys(Game.BEACON).find(k => Game.BEACON[k] === key) || Object.keys(Game.ASK).find(k => Game.ASK[k].includes(key));

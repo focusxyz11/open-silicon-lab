@@ -8,7 +8,7 @@ classic.html            the earlier site's address, now leading to the chip worl
 src/v2/app.js           the shell: routes in the address, the bar with the loop, the frame's modes, the island's sheet, Your log's way in, Break it; each view's glue loads when it opens
 src/v2/shell.js         what the shell and its glue share: V (the shared state, and the functions one part lends another), $, esc (from src/core/esc.js), follow
 src/v2/glue/            one module per view's glue, each create()d once when its view first opens, after the glue it builds on (GLUE in app.js):
-  island.js             the island's cards: the inspector, the lenses over the island, the dials, a place's card and its inside, the Lab's inside
+  island.js             the island's cards: a place's card (the caption in Look, the side panel in Do, Ask and Read more) with its dials and its inside, the lenses over the island, the Lab's inside
   frame.js              what every framed view shares: the frame made for a view, the thirteen as lenses under Ask, the search at a level
   flights.js            the data centre's, the phone's and the car's flights
   studio.js             the studio, walked inside

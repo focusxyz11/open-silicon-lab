@@ -43,7 +43,7 @@ export const AREAS = {
     'hear',
     /* how true is each thing, one mark everywhere (#325, src/v2/fid.js) */
     'fid'],
-  place: ['place', 'game', 'grow', 'look', 'dial', 'insp', 'carry', 'door', 'around', 'follow', 'room', 'studio',
+  place: ['place', 'game', 'grow', 'look', 'dial', 'carry', 'door', 'around', 'follow', 'room', 'studio',
     'board', 'story', 'chipx', 'lab', 'society', 'fab', 'whatif',
     /* your chip's settings and the life it lives at a place: dials on the island, the challenges and the reading pages */
     'chip', 'life'],

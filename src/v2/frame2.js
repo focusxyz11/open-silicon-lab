@@ -127,7 +127,7 @@ export function bar(loop) {
 }
 
 /* the first sentence of a card's words, and the rest */
-const firstSentence = s => { const m = /^([\s\S]+?[.?!])\s+(?=[A-Z0-9“‘\x22\x27(])/.exec(s); return m ? [m[1], s.slice(m[0].length)] : [s, '']; };
+export const firstSentence = s => { const m = /^([\s\S]+?[.?!])\s+(?=[A-Z0-9“‘\x22\x27(])/.exec(s); return m ? [m[1], s.slice(m[0].length)] : [s, '']; };
 
 /* ---- Do (#274): every challenge in Do mode ----
    The player (src/v2/play.js) says what the stage shows: a lab's instrument (data-f2="instrument") takes the picture

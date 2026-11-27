@@ -181,8 +181,6 @@ button.node:hover { border-color: var(--accent); }
 
 .poi3.report { width: 22px; height: 22px; padding: 0; text-align: center; border: 2px solid var(--bad); background: color-mix(in srgb, var(--bad) 18%, var(--panel-solid)); color: var(--bad); font-weight: 700; }
 .poi3.report.draft { border-style: dashed; }
-.insp h3 { margin: 0 22px 6px 0; font: 600 19px/1.25 var(--serif); }
-.insp .chipb.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
 /* ---- a bet (src/v2/play.js, kind 'bet'): the wafer as the engine counts it, beside each part's cost at every size ---- */
 button.opens { width: 100%; text-align: left; border: 0; border-left: 3px solid var(--warm); color: var(--ink); cursor: pointer; font: inherit; }
 /* the pieces' bet: packages, each with its pieces; one bad piece sinks it */
@@ -254,7 +252,7 @@ button.opens { width: 100%; text-align: left; border: 0; border-left: 3px solid 
 @media (min-width: 1100px) {
   /* where the island's canvas ends at the panel, the sea fades out over its last stretch instead of stopping at a hard
      edge (#380) */
-  .stage:has(> .sheet:not([hidden])):has(> #mapCanvas:not([hidden]))::after { content: ''; position: absolute; top: 0; bottom: 0; right: var(--bench); width: 72px; background: linear-gradient(to right, transparent, var(--bg)); pointer-events: none; }
+  .stage:has(> .sheet:not([hidden], .cap)):has(> #mapCanvas:not([hidden]))::after { content: ''; position: absolute; top: 0; bottom: 0; right: var(--bench); width: 72px; background: linear-gradient(to right, transparent, var(--bg)); pointer-events: none; }
   .sheet:has(.ticks), .sheet.inside, .sheet.whatif, .sheet.part { left: auto; right: 16px; top: 84px; bottom: 16px; transform: none; width: var(--f2-pw); max-height: none; overflow: auto; animation: benchin .35s ease; }
   @keyframes benchin { from { opacity: 0; translate: 18px 0; } }
   .sheet .grid { grid-template-columns: 1fr; }
@@ -267,7 +265,6 @@ button.opens { width: 100%; text-align: left; border: 0; border-left: 3px solid 
 .igo { margin: 4px 0 2px; padding: 7px 16px 7px 7px; }
  .igo .wia { width: 30px; height: 30px; font-size: 16px; }
  .igo .wit b { font-size: 14px; }
-.insp .ihint { margin: 4px 0 8px; font-size: 12px; }
  .zoomhint:has(.igo) { display: grid; justify-items: start; gap: 4px; }
 .seekn i.on { background: var(--qc); border-color: var(--qc); }
 /* the island: pointing at a building with an inside says so (src/v2/map3d.js): a ring round it, Go inside over it */
@@ -301,3 +298,28 @@ button.opens { width: 100%; text-align: left; border: 0; border-left: 3px solid 
 
 .lsnstates .chipb[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); }
 .lsnlayer svg { display: block; width: 1000px; height: 1000px; overflow: visible; }
+
+/* ---- one card, one home per mode (#433): a place's card in Look is the caption, bottom left on the picture, as a
+   level's is in every view (src/styles/frame.css, the caption), whatever the way in: a tap on the island, along, the
+   address. The island runs the whole width under it and the camera frames the place right of it (map3d focus, side).
+   Read more, Do and Ask are the side panel at the right, as in the views. On a phone it is the same sheet at the foot,
+   whatever the way in. The sheet is .cap while it holds a caption (src/v2/glue/island.js) ---- */
+@media (min-width: 721px) {
+  main.stage > #sheet.cap { left: 24px; right: auto; top: auto; bottom: 24px; transform: none; translate: none; width: min(var(--f2-cw), calc(100% - 48px)); max-height: calc(100% - 240px); overflow: auto; padding: 18px 24px 20px; animation: f2in .3s ease; }
+  main.stage > #sheet.cap > .doors { position: absolute; top: 16px; right: 64px; margin: 0; }
+  main.stage > #sheet.cap > .kicker { display: flex; align-items: center; min-height: 38px; margin: 0; padding-right: 250px; }
+  /* the lenses step up to a row under the way out, clear of the caption, so the island can still be seen through one */
+  .stage.sheeted:has(> #sheet.cap) .lensbar { opacity: 1; top: 134px; transform: none; }
+  .stage.sheeted:has(> #sheet.cap) .lensbar .lb { flex-direction: row; align-items: center; }
+  .stage.sheeted:has(> #sheet.cap) .lensbar .lk { margin: 0 4px 0 10px; }
+}
+#sheet.cap > .door > .line { margin-bottom: 14px; }
+#sheet .f2acts { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 0 0 14px; }
+#sheet .f2acts:last-child { margin-bottom: 0; }
+#sheet .f2acts .igo { margin: 0; }
+main.stage #sheet .f2acts .btn { padding: 10px 18px; border-radius: 999px; font: 700 15px var(--sans); color: var(--ink); }
+#sheet.cap .around { margin: 16px 0 0; padding-top: 12px; border-top: 1px solid var(--line); }
+@media (max-width: 720px) {
+  #sheet .dials .dl { flex: 1; min-width: 0; }
+  #sheet .dials output { min-width: 0; }
+}

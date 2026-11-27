@@ -222,7 +222,7 @@ export function create() {
   /* What if? between the islands: the levers in the sheet (a bench at the side on a desktop), the world answering */
   
   function showWhatif(lever) {
-    V.map && V.map.whatifView(); $('outbtn').hidden = true; $('hero').classList.add('away'); V.hideInsp();
+    V.map && V.map.whatifView(); $('outbtn').hidden = true; $('hero').classList.add('away');
     V.sheet.classList.remove('inside', 'part'); V.sheet.classList.add('whatif'); V.sheet.innerHTML = ''; V.sheet.hidden = false; V.cur = null;
     V.wf = whatifView(V.sheet, { S: V.S, save: V.save, map: V.map, name: id => t('map.' + id + '.t'), close: () => { location.hash = '#/ecosystem'; } });
     if (lever) V.wf.lever(lever);
