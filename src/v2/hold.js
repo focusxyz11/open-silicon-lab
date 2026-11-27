@@ -124,8 +124,8 @@ export function createHold(host, ctx = {}) {
     slot._s = 0; if (KF.length) { KF[0][1] = KF[1][1] = F.years; } }
   function fit() {
     if (!host.clientHeight) return;
-    /* where the visitor is, before the new layout: kept through a resize or a phone turned sideways */
-    const keep = sized && !flying ? here.a : null;
+    /* where the visitor is: kept through a resize or a turn; the window unchanged (the type came), where they are now */
+    const same = host.clientHeight === vh && host.clientWidth === VW, keep = sized && !flying ? (same && Math.abs(host.scrollTop - here.y) >= 2 ? anchor() : here.a) : null;
     u = fitU(); vh = host.clientHeight; VW = host.clientWidth; const W = VW, R = root.style, ph = PHONE(), land = ph && LAND(), small = W <= 760 || land;
     /* the bar: on a wide screen its small chip and squares grow a little with the page (a phone's bar, and one on its side, is lower) */
     const ub = ph || u <= 1 ? 1 : Math.min(1.3, 1 + (u - 1) * .5), barH = small ? 62 : Math.round(42 + 30 * ub); let rw = 0, bandH, cxs, SH, SHc = 0;
@@ -180,7 +180,7 @@ export function createHold(host, ctx = {}) {
     $$('.card', secs.years).forEach(c => { c.classList.remove('sc'); tall(c); });
     sized = true; slot._s = 0; plan(); chart.fit(); fitBar(); for (const id in plates) plates[id].paint(S.T, 0);
     if (pend) { const r = pend; pend = null; goAddr(r); } else if (keep) restore(keep);
-    fitAt = performance.now();
+    if (!same) fitAt = performance.now();
   }
   /* where the visitor is, said so that any layout can find it again: in the fifty years, the count (so the year); after
      them, the part of the story (the pull back, a block's section, the end) and how far through it */
@@ -189,9 +189,11 @@ export function createHold(host, ctx = {}) {
     const y = host.scrollTop, sy = secs.years, wy = yOfD(DWALL);
     if (y < pull.offsetTop) { const yy = y - sy.offsetTop; return yy <= wy ? { d: dOfY(Math.max(0, yy)) } : { el: sy, past: (yy - wy) / Math.max(1, sy.offsetHeight - wy) }; }
     let el = pull; for (const k of ORDER.slice(1)) if (secs[k].offsetTop <= y + 1) el = secs[k]; if (end.offsetTop <= y + 1) el = end;
-    return { el, f: (y - el.offsetTop) / Math.max(1, el.offsetHeight), top: el.offsetTop };
+    /* at the very end, the end itself (what arrives later keeps you landed) */
+    return { el, f: (y - el.offsetTop) / Math.max(1, el.offsetHeight), top: el.offsetTop, last: y >= host.scrollHeight - vh - 2 };
   }
   function yOf(a) { const sy = secs.years, wy = yOfD(DWALL);
+    if (a.last) return host.scrollHeight - vh;
     if (a.d != null) return sy.offsetTop + yOfD(a.d);
     if (a.past != null) return sy.offsetTop + wy + a.past * (sy.offsetHeight - wy);
     return a.el.offsetTop + Math.min(a.el.offsetHeight - 2, Math.max(2, a.f * a.el.offsetHeight)); }
@@ -212,7 +214,7 @@ export function createHold(host, ctx = {}) {
     if (here.a && performance.now() < here.until && Math.abs(host.scrollTop - here.y) < 2) { const y = Math.round(yOf(here.a)); if (Math.abs(y - here.y) > 1) { here.y = y; host.scrollTo({ top: y, behavior: 'instant' }); } }
     /* later, the story above the part you are at may still grow (a font that arrives late, words filled in): the camera
        stays on that part, unless you have moved since */
-    else if (here.a && here.a.top != null && !flying && Math.abs(host.scrollTop - here.y) < 2 && Math.abs(here.a.el.offsetTop - here.a.top) > 1) { const y = Math.round(host.scrollTop + here.a.el.offsetTop - here.a.top); here.a.top = here.a.el.offsetTop; here.y = y; host.scrollTo({ top: y, behavior: 'instant' }); }
+    else if (here.a && here.a.top != null && !flying && Math.abs(host.scrollTop - here.y) < 2) { const y = Math.round(here.a.last ? yOf(here.a) : host.scrollTop + here.a.el.offsetTop - here.a.top); here.a.top = here.a.el.offsetTop; if (Math.abs(y - here.y) > 1) { here.y = y; host.scrollTo({ top: y, behavior: 'instant' }); } }
     onScroll();
   }
   let planF = 0; new ResizeObserver(() => { if (!planF) planF = requestAnimationFrame(() => { planF = 0; if (LIVE.on) plan(); }); }).observe(story);
