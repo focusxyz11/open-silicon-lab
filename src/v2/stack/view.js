@@ -622,7 +622,7 @@ export function createStack(host, opts = {}) {
   const mq = matchMedia('(prefers-color-scheme: light)'); mq.addEventListener('change', setTheme);
 
   /* ---------- the loop ---------- */
-  function measure() { const cs = $('.sk-cards'), hd = $('.sk-head').getBoundingClientRect(), rb = root.getBoundingClientRect(); headH = Math.max(90, hd.bottom - rb.top); footH = Math.max($('.sk-dock').getBoundingClientRect().height, $('.sk-card').getBoundingClientRect().height) + (cs.hidden ? 0 : cs.getBoundingClientRect().height + 8) + (vw < 760 ? 52 : 34); }
+  function measure() { const cs = $('.sk-cards'), hd = $('.sk-head').getBoundingClientRect(), rb = root.getBoundingClientRect(); headH = Math.max(90, hd.bottom - rb.top); footH = Math.max($('.sk-dock').getBoundingClientRect().height, $('.sk-card').getBoundingClientRect().height) + (cs.hidden || (vw < 760 && view.level === 'field') ? 0 : cs.getBoundingClientRect().height + 8) + (vw < 760 ? 52 : 34); }
   function resize() {
     const r = root.getBoundingClientRect(); if (!r.width || !r.height) return;
     vw = r.width; vh = r.height; U = clamp(vw / 1750, 1, 1.4); measure(); dpr = Math.min(devicePixelRatio || 1, Math.sqrt(7e6 / (vw * vh)), 2.5);
