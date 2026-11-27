@@ -57,7 +57,10 @@ export const explore = async (tag, viewport, scheme) => {
   for (const door of ['look', 'ask', 'do']) { await page.click('#sheet [data-door="' + door + '"]').catch(() => problems.push(tag + ': no door ' + door)); }
   if (!(await page.$$('#sheet .chcard')).length) problems.push(tag + ': the studio has nothing to do');
   await page.click('#sheet [data-door="look"]');
-  if (!(await page.$('#sheet .lvchips a')) || !(await page.$('#sheet .zoomhint'))) problems.push(tag + ': Look shows no way inside the studio');
+  /* Look is the caption, with the way in; Read more shows the levels inside, and the way in again (#433) */
+  if (!(await page.$('#sheet.cap [data-deeper]'))) problems.push(tag + ': Look shows no way inside the studio');
+  await page.click('#sheet [data-more="1"]').catch(() => problems.push(tag + ': Look has no Read more'));
+  if (!(await page.$('#sheet .lvchips a')) || !(await page.$('#sheet .zoomhint'))) problems.push(tag + ': Read more shows no way inside the studio');
   /* every experiment reads as a page: its question, what is true and open, and ways on to others */
   await page.evaluate(() => { location.hash = '#/read/fail-ontime'; });
   await page.waitForSelector('#page:not([hidden]) .readq', { timeout: 10000 }).catch(() => problems.push(tag + ': a question does not open as a page'));
@@ -194,7 +197,8 @@ export const explore = async (tag, viewport, scheme) => {
   await page.waitForFunction(() => { const p = document.querySelector('#diveui .dock [data-site]'); if (p && p.offsetParent) return true; const w = document.querySelector('#diveui .dockwrap'); if (p && w && w.classList.contains('peek')) w.click(); return false; }, null, { timeout: 20000, polling: 500 })
     .catch(() => problems.push(tag + ': the supply map did not open with its places'));
   await page.evaluate(() => { location.hash = '#/place/fab'; });
-  await page.waitForSelector('#sheet .lvchips a', { timeout: 15000 }).catch(() => {});
+  /* the levels are under Read more (#433) */
+  await page.waitForFunction(() => { const b = location.hash === '#/place/fab' && document.querySelector('#sheet.cap [data-more="1"]'); if (b) b.click(); return !!document.querySelector('#sheet .lvchips a'); }, null, { timeout: 15000, polling: 500 }).catch(() => {});
   if (await page.$('#sheet .lvchips a.old, #sheet a[href*="classic"]')) problems.push(tag + ': a level of the factory still leads to the earlier site');
   /* the commons (docs/reviews/community.md): the ledger offers a design that passed its test; one paused tick breaks it;
      the case is kept as yours, with the one link that adds it to the ledger as a new file; the island shows the design

@@ -94,18 +94,22 @@ follows what they make across the world map, and going out of it comes back to t
 The card beside the picture was the problem: words in a window, a few questions in a list, the picture to look at.
 Three things replace it on the island, each learned from games rather than from documents.
 
-- **An inspector beside what you tap.** A place or a part tapped on the island is answered next to it, in a small
-  panel that stays with it as the camera moves: what it is in one line, the way closer, what there is to do and to
-  ask (with how many), and More for the full card. The full card is one tap further and never covers the world first.
-  A link or an address still opens the full card, since that is what it was asked for.
+- **One card, one home per mode (#433).** A place or a part tapped on the island opens the same card as along or an
+  address does, in the same spot: in Look the caption at the bottom left of the picture, as a level's is in every view
+  (what it is in one line, your chip's dials where they are decided, the way closer, Read more, what there is to do
+  with how many, the places around with the next round the loop first), with the camera framing the place in the room
+  right of it. Read more, Do and Ask move the card to the side panel at the right. On a phone it is the sheet at the
+  foot, whatever the way in. (Until 27 November 2026 a tap was answered by a small inspector beside the place, and
+  along by the full card at the right.)
 - **Lenses.** The same island seen for one thing at a time: heat, flow, failure, time. The world drains to grey and
   what the lens is about rises out of it, a column of light over each place as tall as that place has of it (relative,
   never a figure without a source). Each lens says in one line what it shows and opens onto the question it belongs
-  to, one at a time; seen through a lens, a place's inspector offers that question where it is asked there. What if?
+  to, one at a time; seen through a lens, a place's card offers that question where it is asked there; while the card is a
+  caption the lens bar stands as a row under the way out, clear of it. What if?
   lends the island its own lens while it is open and gives yours back when it closes; the lens bar always shows the
   lens that is on, and what grows while a lens is on drains with the rest.
 - **Carry your chip.** Your chip on the island can be picked up (or the pin with its name pressed, by mouse or by
-  finger) and carried to any place. The place reacts: the chip goes in, and the inspector says what that place would do
+  finger) and carried to any place. The place reacts: the chip goes in, and its card says what that place would do
   with it, with the way to try it. The pin tapped without moving opens its place, like any other name; a touch the
   browser cancels carries nothing.
 

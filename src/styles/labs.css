@@ -54,7 +54,6 @@
 }
 
 .isles .isle b { font: 600 14px var(--sans); }
-.insp .kicker { margin: 0 0 2px; }
 .seamnote .kicker { display: flex; align-items: center; gap: 6px; margin: 0; }
 .opens .kicker { display: flex; align-items: center; gap: 6px; }
 .betview { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin: 12px 0 6px; align-items: start; }

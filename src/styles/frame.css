@@ -632,18 +632,9 @@ pre.code { margin: 4px 0; white-space: pre-wrap; overflow-wrap: anywhere; }
 .dock .nav > .chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .dock .nav .chipb.else { border-style: dashed; }
 .chipb.else, a.chipb { text-decoration: none; }
-/* ---- the world is the interface: the inspector beside what you tapped, lenses, your chip carried ---- */
-.insp { position: absolute; z-index: 11; left: 0; top: 0; width: 320px; padding: 14px 16px 12px; background: var(--panel); border: 1px solid var(--line); border-radius: 16px; backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); box-shadow: var(--shadow); transition: transform .12s linear; animation: inspin .22s ease; }
+/* ---- the world is the interface: lenses, your chip carried (in the place's card) ---- */
 @keyframes inspin { from { opacity: 0; } }
-.insp .kicker { margin: 0 0 2px; }
-.insp h3 { margin: 0 22px 6px 0; font: 600 19px/1.25 var(--serif); }
-.insp .il { margin: 0 0 10px; font-size: 13.5px; line-height: 1.45; color: var(--ink-2, var(--ink)); }
-.insp .ix { position: absolute; right: 8px; top: 8px; width: 28px; height: 28px; border: 0; border-radius: 50%; background: transparent; color: var(--muted); font-size: 18px; cursor: pointer; }
-.insp .ix:hover { background: color-mix(in srgb, var(--ink) 8%, transparent); }
-.insp .iacts { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
-.insp .chipb.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
-.insp .n { display: inline-block; min-width: 18px; padding: 0 5px; margin-left: 2px; border-radius: 9px; background: var(--accent); color: #fff; font-size: 11px; text-align: center; }
-.insp .icarry { display: flex; gap: 8px; align-items: center; justify-content: space-between; margin: 0 0 10px; padding: 8px 10px; border-radius: 10px; background: color-mix(in srgb, var(--accent) 12%, transparent); font-size: 13px; }
+.sheet .icarry { display: flex; gap: 10px; align-items: center; justify-content: space-between; margin: 0 0 14px; padding: 10px 14px; border-radius: 14px; background: color-mix(in srgb, var(--accent) 12%, transparent); font-size: 15px; }
 
 .lensbar { position: absolute; z-index: 6; left: 16px; top: 50%; transform: translateY(-50%); display: flex; align-items: flex-start; gap: 10px; pointer-events: none; }
 .lensbar .lb { display: flex; flex-direction: column; gap: 6px; padding: 6px; background: var(--panel); border: 1px solid var(--line); border-radius: 18px; backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); box-shadow: var(--shadow); pointer-events: auto; }
@@ -660,9 +651,9 @@ pre.code { margin: 4px 0; white-space: pre-wrap; overflow-wrap: anywhere; }
 
 .stage.sheeted .lensbar { opacity: 0; pointer-events: none; }
 .place3.drop { outline: 2px solid var(--accent); transform-origin: center; }
-.insp .icarry .chipb { white-space: nowrap; }
-.insp .ilens { margin: 0 0 10px; }
- .insp .ilens .askline { margin: 0; }
+.sheet .icarry .chipb { white-space: nowrap; }
+.sheet .ilens { margin: 0 0 10px; }
+ .sheet .ilens .askline { margin: 0; }
 @media (max-width: 720px) {
   .lensbar { left: 10px; right: 10px; top: auto; bottom: 92px; transform: none; flex-direction: column-reverse; align-items: stretch; }
   .lensbar .lb { flex-direction: row; justify-content: space-between; align-self: stretch; gap: 2px; padding: 4px; }
@@ -671,20 +662,19 @@ pre.code { margin: 4px 0; white-space: pre-wrap; overflow-wrap: anywhere; }
   .lensbar button .g { width: auto; font-size: 16px; line-height: 1; }
   .lensbar button .nm { font-size: 11px; line-height: 1.2; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
   .lensbar .lensnote { max-width: none; }
-  .stage:has(.insp:not([hidden])) .lensbar { display: none; }
 }
 
-/* dials: your chip's settings, turned at the place that decides them */
-.insp .dials { margin: 0 0 10px; padding: 8px 10px; border-radius: 12px; background: color-mix(in srgb, var(--ink) 5%, transparent); }
-.insp .dials .kicker { margin: 0 0 6px; }
-.insp .dial { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 4px 0; font-size: 13px; }
-.insp .dial .dl { color: var(--muted); }
-.insp .dial .dv { display: flex; align-items: center; gap: 6px; }
-.insp .dial output { min-width: 96px; text-align: center; font-weight: 600; font-size: 12.5px; }
-.insp .db { width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--line); background: var(--panel-solid); color: var(--ink); font: 600 16px/1 var(--sans); cursor: pointer; }
-.insp .db:hover:not([disabled]) { border-color: var(--accent); color: var(--accent); }
-.insp .db[disabled] { opacity: .35; cursor: default; }
-.insp .dread { margin: 4px 0 8px; padding: 6px 8px; border-left: 3px solid var(--accent); border-radius: 0; font-size: 12.5px; animation: inspin .3s ease; }
+/* dials: your chip's settings, turned at the place that decides them (in the place's card, #433) */
+.sheet .dials { margin: 0 0 14px; padding: 10px 14px; border-radius: 14px; background: color-mix(in srgb, var(--ink) 6%, transparent); }
+.sheet .dials .kicker { margin: 0 0 6px; }
+.sheet .dials .dial { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 6px 0; font-size: 15px; }
+.sheet .dials .dl { color: var(--muted); }
+.sheet .dials .dv { display: flex; align-items: center; gap: 8px; }
+.sheet .dials output { min-width: 150px; text-align: center; font-weight: 700; font-size: 15px; }
+.sheet .dials .db { width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--line); background: var(--panel-solid); color: var(--ink); font: 600 17px/1 var(--sans); cursor: pointer; }
+.sheet .dials .db:hover:not([disabled]) { border-color: var(--accent); color: var(--accent); }
+.sheet .dials .db[disabled] { opacity: .35; cursor: default; }
+.sheet .dials .dread { margin: 6px 0 4px; padding: 6px 10px; border-left: 3px solid var(--accent); border-radius: 0; font-size: 15px; animation: inspin .3s ease; }
 /* ---- the questions from the field (src/v2/field.js): each wears its shape, a point for a limit, a diamond on its
    seam for a leak, a triangle for a bet; a crossed seam raises its leak in a note below the bar ---- */
 .fglyph { width: 14px; height: 14px; flex: none; }
@@ -735,8 +725,8 @@ button.opens { width: 100%; text-align: left; border: 0; border-left: 3px solid 
 /* ---- The side panel on a desktop (CLAUDE.md, desktop first where it is richer; #271, one frame, three modes) ----
    On a wide screen a card that is not a caption on the picture stands as the side panel at the right, full height,
    its width growing with the screen (--f2-pw, src/styles/frame.css): a view's card in Do, Ask and Read more, and the
-   island's sheet. A view frames its picture left of it (its canvas runs under it); the island's canvas ends where the
-   panel begins. Below 1100 px the card is below the picture (on a phone, the sheet). --bench is the room the panel
+   island's sheet but for its caption (.cap, src/styles/island.css). A view frames its picture left of it (its canvas
+   runs under it); the island's canvas ends where the panel begins. Below 1100 px the card is below the picture (on a phone, the sheet). --bench is the room the panel
    takes from the right edge, for the things on the picture that keep clear of it. */
 @media (min-width: 1100px) {
   /* the goal scrolls with the lab, so it never covers the picture being watched */
@@ -744,7 +734,7 @@ button.opens { width: 100%; text-align: left; border: 0; border-left: 3px solid 
   .dockwrap .dock, .dockwrap .dock.benchdock, .dockwrap .dock.supdock, .dockwrap .dock:has(.stopx) { width: auto; max-height: none; overflow: visible; }
   .sheet, .sheet:has(.ticks), .sheet.inside, .sheet.whatif, .sheet.part { left: auto; right: 16px; top: 84px; bottom: 16px; transform: none; width: var(--f2-pw); max-height: none; overflow: auto; animation: benchin .35s ease; }
   @keyframes benchin { from { opacity: 0; translate: 18px 0; } }
-  .stage:has(> .sheet:not([hidden])) :is(.c3, .stage3d, .labels) { right: var(--bench); width: calc(100% - var(--bench)); }
+  .stage:has(> .sheet:not([hidden], .cap)) :is(.c3, .stage3d, .labels) { right: var(--bench); width: calc(100% - var(--bench)); }
   .sheet .grid { grid-template-columns: 1fr; }
 }
 
@@ -1463,7 +1453,7 @@ main.stage .f2 > .dockwrap > .seamnote .btn { padding: 7px 14px; font-size: 15px
 .f2cap > .dockwrap:has(> .seamnote:not([hidden])) > .modes3 { position: static; margin-top: 6px; }
 body > .seamnote:not([hidden]) .kicker { font: var(--f2-label); letter-spacing: 0; text-transform: none; color: var(--muted); }
 .seamnote .sq { font: italic 400 18px/1.4 var(--serif); }
-@media (min-width: 1100px) { body:has(#sheet:not([hidden])) > .seamnote { right: calc(var(--bench) + 4px); }
+@media (min-width: 1100px) { body:has(#sheet:not([hidden], .cap)) > .seamnote { right: calc(var(--bench) + 4px); }
 }
 
 
@@ -1618,7 +1608,6 @@ main.stage .f2stage > :is(.lsnbtn, .lsnbox), .f2side > .lsnbox { display: none !
 
  .sheet:has(.ticks) { max-height: 62vh; }
 
- .insp { left: 10px; right: 10px; top: auto; bottom: 12px; width: auto; transform: none !important; }
 
  .lensbar .lensnote { font-size: 13px; } .lensbar .lensnote p { font-size: 13px; }
 

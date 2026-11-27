@@ -386,8 +386,6 @@
  "room.layout.d": "Layout: a table that is a screen, where the cells are placed and wired as they will lie on the silicon.",
  "room.masks.d": "The masks: a plate of glass for each layer, its pattern in chrome. From this bay they go by road to the factory.",
  "place.here": "What you see here",
- "insp.inHint": "or double-click it, or scroll in",
- "insp.more": "More",
  "carry.play": "Your chip is here. What this place does with it: {what}",
  "carry.go": "Try it",
  "carry.done": "Your chip has been through everything here.",

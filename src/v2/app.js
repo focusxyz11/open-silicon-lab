@@ -59,7 +59,7 @@ export function start() {
   waits('pages', ['showPage', 'showRead', 'showMachines', 'showWorld', 'showEcosystem', 'showWhatif', 'askStop'], true);
   V.leaveWhatif = () => {};
   Object.assign(V, { hideSeam, crossed, arrive, islandState, hud, foldHero, chCard, designCard, kept, won, toast, hideAll, enter });
-  V.quickNext = false; V.carryNote = null; V.inspRaf = 0; V.lensNow = null; V.turnT = 0; V.dcFrame = null; V.dcLv = 0; V.phFrame = null; V.phLv = 0; V.caFrame = null; V.caLv = 0; V.swFrame = null; V.swLv = 0; V.chipRow = 0; V.chipFrame = null; V.diveWorld = 'datacentre'; V.Joule = null; V.flatKind = 'dive'; V.diveFrame = null; V.diveD = -1; V.diveThread = null; V.benchCh = null; V.WE = null; V.DS = null; V.Bench = null; V.flatWords = null; V.boardFrame = null; V.wf = null;
+  V.quickNext = false; V.carryNote = null; V.lensNow = null; V.turnT = 0; V.dcFrame = null; V.dcLv = 0; V.phFrame = null; V.phLv = 0; V.caFrame = null; V.caLv = 0; V.swFrame = null; V.swLv = 0; V.chipRow = 0; V.chipFrame = null; V.diveWorld = 'datacentre'; V.Joule = null; V.flatKind = 'dive'; V.diveFrame = null; V.diveD = -1; V.diveThread = null; V.benchCh = null; V.WE = null; V.DS = null; V.Bench = null; V.flatWords = null; V.boardFrame = null; V.wf = null;
   let mapReady = null; V.map = null; V.dc = null; V.chip = null; V.board = null; V.dive = null;
   /* your state, as far as the loop reads it (src/v2/loop.js); the rest is checked when the game's engines come (beyond) */
   const S = Game.readState(Game.stored(localStorage));
@@ -150,7 +150,7 @@ export function start() {
   const ensureMap = () => mapReady || (mapReady = Promise.all([import('./map3d.js'), needWords(...WORDS.island), needStyles('frame', 'island'), glue('island')]).then(([m]) => {   /* made once its glue is in, so its card is ready with it */
     /* tap selects, zoom goes in and out (docs/INTERACTION.md): a second tap on the same place selects it again, it
        does not go in */
-    V.map = m.createMap($('mapCanvas'), $('mapLabels'), { whatif: id => V.wf && V.wf.pick(id), place: id => { if (V.wf) return V.wf.pick(id); if (V.cur && V.cur.place === id && !V.cur.part && (!sheet.hidden || !insp.hidden)) return; V.quickNext = true; V.openPlace(id); }, part: (place, part) => { V.quickNext = true; location.hash = '#/place/' + place + '/' + part; },
+    V.map = m.createMap($('mapCanvas'), $('mapLabels'), { whatif: id => V.wf && V.wf.pick(id), place: id => { if (V.wf) return V.wf.pick(id); if (V.cur && V.cur.place === id && !V.cur.part && !sheet.hidden) return; V.quickNext = true; V.openPlace(id); }, part: (place, part) => { V.quickNext = true; location.hash = '#/place/' + place + '/' + part; },
       carry: id => { V.carryNote = carryAt(id); V.quickNext = true; V.openPlace(id); },
       deeper: (place, part) => { const to = deeperOf(place, part); if (to) enter(to); },
       inside: (place, part) => !!deeperOf(place, part),
@@ -218,15 +218,11 @@ export function start() {
   /* the stage knows when a sheet is open (phones fold the HUD's next button away) */
   new MutationObserver(() => $('stage').classList.toggle('sheeted', !sheet.hidden)).observe(sheet, { attributes: true, attributeFilter: ['hidden'] });
   V.cur = null;   /* { place, tab } */
-  /* ---- the world is the interface (docs/INTERACTION.md): what you tap on the island is answered beside it, by a
-     small inspector that stays with it as the camera moves; the full card is one tap further, never in the way ---- */
-  const insp = document.createElement('div'); insp.className = 'insp'; insp.hidden = true; insp.setAttribute('role', 'dialog'); $('stage').appendChild(insp);
-  const hideInsp = () => { insp.hidden = true; cancelAnimationFrame(V.inspRaf); };
   const lensbar = document.createElement('nav'); lensbar.className = 'lensbar'; lensbar.hidden = true; lensbar.setAttribute('aria-label', t('lens.aria')); $('stage').appendChild(lensbar);
   /* your chip carried to a place: what that place would do with it, there and then */
   const carryAt = id => { const L = doList(id), open = L.filter(c => !S.done[c.id]); if (open.length) return { place: id, text: t('carry.play', { what: titleOf(open[0]) }), ch: open[0].id };
     return { place: id, text: t(L.length ? 'carry.done' : 'carry.none') }; };
-  const closeSheet = () => { const was = V.cur; sheet.hidden = true; V.cur = null; hideInsp(); if (V.carryNote) { V.carryNote = null; V.map && V.map.chipHome(); } if (sheet.classList.contains('mover')) { sheet.classList.remove('mover'); V.map && V.map.unfollow(); } if (was) { $('hero').classList.remove('away'); $('hero').classList.add('folded'); hud(); if (V.map) V.map.select(null); if (V.map && !$('mapCanvas').hidden) V.map.setState(islandState(), false); } };
+  const closeSheet = () => { const was = V.cur; sheet.hidden = true; V.cur = null; if (V.carryNote) { V.carryNote = null; V.map && V.map.chipHome(); } if (sheet.classList.contains('mover')) { sheet.classList.remove('mover'); V.map && V.map.unfollow(); } if (was) { $('hero').classList.remove('away'); $('hero').classList.add('folded'); hud(); if (V.map) V.map.select(null); if (V.map && !$('mapCanvas').hidden) V.map.setState(islandState(), false); } };
   const kickerOf = id => { const step = Game.STEP_OF[id] || Game.STEP_PLACE[id]; return Way.stageOfPlace(id) === 'open' ? t('loop.open.k') : step ? t('game.stepN', { n: Game.STEPS.indexOf(step) + 1, step: t('game.step.' + step) }) : t('map.' + id + '.kind'); };
   /* what to do at a place: its own challenges, and at a step's station the step's challenges played elsewhere */
   const doList = id => { const step = Game.STEP_OF[id] || Game.STEP_PLACE[id], here = Game.placeChallenges(id);
@@ -590,5 +586,5 @@ export function start() {
   window.addEventListener('hashchange', route);
   hud(); drawHero(); firstGo();
   route();
-  Object.assign(V, { S, save, refresh, loading, here, sheet, insp, hideInsp, lensbar, closeSheet, kickerOf, doList, whereOf, chOf, doHref, jobCard, askLink, DIVE_LEVELS, levelHref, enterOf, PARTS, isPart, deeperOf, aroundHtml, withLabs, pui, fui, kui, sui, cui, vui, diveId, bui, page, partsOf, portalAt });
+  Object.assign(V, { S, save, refresh, loading, here, sheet, lensbar, closeSheet, kickerOf, doList, whereOf, chOf, doHref, jobCard, askLink, DIVE_LEVELS, levelHref, enterOf, PARTS, isPart, deeperOf, aroundHtml, withLabs, pui, fui, kui, sui, cui, vui, diveId, bui, page, partsOf, portalAt });
 }

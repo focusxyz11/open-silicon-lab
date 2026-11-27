@@ -102,11 +102,11 @@ async function carryByTouch() {
   if (!(await at()).pin || await page.evaluate(() => getComputedStyle(document.querySelector('#mapLabels .pin3.here')).touchAction !== 'none')) problems.push(tag + ': the pin your chip stands at lets the browser take a touch on it');
   /* a cancelled touch over the factory: nothing is carried, nothing opens */
   { const p = await at(); if (p.pin && p.fab) await drag(p, 'touchCancel'); }
-  if (await page.evaluate(() => location.hash !== '#/island' || !!document.querySelector('.insp:not([hidden]) .icarry'))) problems.push(tag + ': a cancelled touch carried your chip somewhere');
+  if (await page.evaluate(() => location.hash !== '#/island' || !!document.querySelector('#sheet:not([hidden]) .icarry'))) problems.push(tag + ': a cancelled touch carried your chip somewhere');
   /* a touch let go over the factory: the chip is set down there and the factory says what it does with it */
   let carried = false;
   for (let i = 0; i < 5 && !carried; i++) { const p = await at(); if (!p.pin || !p.fab) continue; await drag(p, 'touchEnd');
-    carried = await page.waitForFunction(() => location.hash === '#/place/fab' && !!document.querySelector('.insp:not([hidden]) .icarry'), null, { timeout: 8000 }).then(() => true, () => false); }
+    carried = await page.waitForFunction(() => location.hash === '#/place/fab' && !!document.querySelector('#sheet:not([hidden]) .icarry'), null, { timeout: 8000 }).then(() => true, () => false); }
   if (!carried) problems.push(tag + ': your chip cannot be carried by touch from its pin to a place');
   await page.close();
 }
