@@ -145,9 +145,11 @@ export default async function run() {
       if (N.length < 5) return false;
       const hr = host.getBoundingClientRect(), py = N.map(e => e.f2L.py), px = N.map(e => e.f2L.px), top = Math.min(...py), bottom = Math.max(...py);
       const on = N.filter(e => { const r = e.getBoundingClientRect(); return r.bottom - hr.top > top + 1 && r.top - hr.top < bottom - 1; }).map(e => e.textContent);
-      return { on, span: (Math.max(...px) - Math.min(...px)) / hr.width }; }, null, { timeout: 90000, polling: 1000 }).then(h => h.jsonValue()).catch(() => null);
-    if (!got) problems.push(tag + ': on a phone, the gate never showed its five names');
-    else {
+      /* the names follow the plan as it lifts on arrival and settles: kept until they are clear of it, the last seen said */
+      window.__gateSeen = { on, span: (Math.max(...px) - Math.min(...px)) / hr.width };
+      return !on.length && window.__gateSeen.span >= 0.55; }, null, { timeout: 90000, polling: 1000 }).then(() => null, () => gp.evaluate(() => window.__gateSeen || null).then(s => s || 'none'));
+    if (got === 'none') problems.push(tag + ': on a phone, the gate never showed its five names');
+    else if (got) {
       if (got.on.length) problems.push(tag + ': on a phone, names lie on the gate: ' + got.on.join(', '));
       if (got.span < 0.55) problems.push(tag + ': on a phone, the gate spans only ' + Math.round(got.span * 100) + '% of the width');
     }

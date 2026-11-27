@@ -213,10 +213,12 @@ export function createFrame(host, o) {
       const el = names.find(n => n.dataset.word === b.dataset.mword) || names.find(n => !by.has(n));
       if (!el) { lone.push(b); continue; }
       by.set(el, (by.get(el) || 0) + 1);
-      /* around the name: before it, after it, above, below, then a step further out; the first spot clear of the frame,
-         the picture's edge and the other marks */
+      /* around the name: before it, after it, above, below, then a step further out, then above and below to either
+         side (a name carrying two or three marks, or names close in a row); the first spot clear of the frame, the
+         picture's edge and the other marks */
       const r = el.getBoundingClientRect(), cx = (r.left + r.right) / 2, cy = (r.top + r.bottom) / 2;
-      const spots = [[r.left - 22, cy], [r.right + 22, cy], [cx, r.top - 22], [cx, r.bottom + 22], [r.left - 62, cy], [r.right + 62, cy]],
+      const spots = [[r.left - 22, cy], [r.right + 22, cy], [cx, r.top - 22], [cx, r.bottom + 22], [r.left - 62, cy], [r.right + 62, cy],
+        [cx - 40, r.top - 22], [cx + 40, r.top - 22], [cx - 40, r.bottom + 22], [cx + 40, r.bottom + 22]],
         free = ([x, y]) => x > B.left + 18 && x < B.right - 18 && y > B.top + 18 && y < B.bottom - 18 && !busy.some(R => clash(x, y, R)) && !placed.some(([px, py]) => Math.abs(px - x) < 38 && Math.abs(py - y) < 38);
       /* clear of every name on the picture too where it can be (#326: a mark sat on the end of a name), else as before */
       const spot = spots.find(p => free(p) && !onName(p)) || spots.find(free);
