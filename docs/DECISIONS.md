@@ -207,3 +207,11 @@ Recorded in the repository on the day (the first version of this file); kept wor
   from `kind` in `src/data/facts.json` and drawn as the landmark's outline, not as a new legend or a fourth truth mark.
   Why: many of the frontier's numbers are makers' claims that differ from independent tests (17,000 tokens a second
   claimed, 15,000 to 16,000 seen).
+- **The studio and the fab, designed (Claude Fable 5.2's prototype `docs/prototypes/studio-fab/`):** the studio is the
+  drafted die, as drawn; the fab stays the 3D line, with the prototype's station frames inside its stations and *along
+  keeps your depth* there; the prototype's flat plan of stations is a design guide, not a second view. Why: one line,
+  not two, is what removes the isolation the owner sees.
+- **One record of your chip coordinates the studio, the line and its machines, the simulations and the calculations**
+  (`docs/CHIP.md`): every machine is a function from the chip so far to the chip after it, calculations live only in
+  engines, views only draw. Then one more Fable round polishes the inside of a 3D station on real data. Why: the owner
+  sees coordinating all of these as the hardest challenge; parts polished separately would disagree.
