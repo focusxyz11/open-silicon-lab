@@ -70,6 +70,8 @@
 /* over a long flight the cards wait until the camera is there */
 .hold .b-story{transition:opacity .5s}.hold.fly .b-story{opacity:0;transition-duration:.2s}
 /* under the whole chip the steps stand at the foot */
+/* at the last block the way in is on the picture, so the step on is not shown twice (the keys still take it) */
+.hold .b-step .sn.in{display:none}
 .hold .b-hold.chip.over{bottom:calc(var(--u)*12)}
 /* the last words and the footer, one line across the foot of the page: the sources, the repository, how to join */
 .hold .b-end{align-items:flex-end;justify-content:space-between;gap:calc(var(--u)*24);padding:0 calc(var(--u)*24) calc(var(--u)*13) calc(var(--rw) + var(--u)*24);color:var(--mid)}
@@ -85,7 +87,7 @@
 /* the twelve challenges, on the whole chip (src/v2/holdchals.js): each block wears its own on its lower edge, a tick for
    each (square: on the picture; round: on Moore's law), filled once done, the next ringed; sized for the screen, not
    the chip (--ok, the camera's zoom on the whole chip), and only there */
-.hold .h-chm{position:absolute;left:50%;top:100%;z-index:2;transform:translate(-50%,-50%);display:flex;align-items:center;gap:.5em;max-width:calc(var(--S)*.94);width:max-content;padding:.4em .85em .4em .5em;font:500 calc(12px / var(--ok,1))/1.2 var(--sans);background:var(--card);border:.09em solid var(--hair);border-radius:1.4em;box-shadow:0 .3em 1.2em rgba(0,0,0,.18);opacity:var(--words)}
+.hold .h-chm{position:absolute;left:50%;top:100%;z-index:2;transform:translate(-50%,-24%);display:flex;align-items:center;gap:.5em;max-width:calc(var(--S)*.94);width:max-content;padding:.4em .85em .4em .5em;font:500 calc(12px / var(--ok,1))/1.2 var(--sans);background:var(--card);border:.09em solid var(--hair);border-radius:1.4em;box-shadow:0 .3em 1.2em rgba(0,0,0,.18);opacity:var(--words)}
 .hold .d-world:not(.far) .h-chm{visibility:hidden}
 .hold .hc-t{display:flex;align-items:center;gap:.55em;padding:0;border:0;background:none;color:var(--ink);font:inherit;text-align:left;cursor:pointer}
 .hold .hc-t i{flex:none;width:1.15em;height:1.15em;border:.13em solid var(--ink);background:var(--paper);transition:background .2s,border-color .2s,transform .15s}
@@ -96,7 +98,7 @@
 .hold .hc-t:hover i{transform:scale(1.15)}.hold .hc-t:hover span{text-decoration:underline;text-underline-offset:.2em}
 .hold .hc-t:focus-visible{outline:none}.hold .hc-t:focus-visible i{outline:.16em solid var(--go);outline-offset:.2em}
 /* the fifty years carry seven: their ticks in a row, and one name under them (the next there, or the one pointed at) */
-.hold .h-chm.many{display:grid;grid-template-columns:repeat(7,auto);justify-content:center;gap:.55em .6em;padding:.6em .9em .55em;border-radius:.9em}
+.hold .h-chm.many{transform:translate(-50%,-62%);display:grid;grid-template-columns:repeat(7,auto);justify-content:center;gap:.55em .6em;padding:.6em .9em .55em;border-radius:.9em}
 .hold .h-chm.many .hc-t{display:contents}.hold .hc-n{display:none;font-weight:400}
 .hold .h-chm.many .hc-t i{width:1.35em;height:1.35em}
 .hold .h-chm.many .hc-t span{display:none;grid-row:2;grid-column:1/-1;text-align:center;white-space:nowrap}
@@ -111,5 +113,5 @@
 /* a phone: the ticks alone, large enough to tap (their names are on the blocks' cards) */
 @media (max-width:760px),(max-width:1099px) and (max-aspect-ratio:23/20),(max-width:1099px) and (max-height:519px){
 .hold .h-chm{padding:.45em;font-size:calc(9px / var(--ok,1))}.hold .h-chm.many{display:flex;padding:.45em .8em .45em .45em}.hold .h-chm.many .hc-t:not(.bn){display:none}.hold .h-chm.many .hc-t.bn{display:flex}.hold .hc-n{display:block;color:var(--mid);font-size:1.15em}.hold .hc-t span,.hold .h-chm.many .hc-t span{display:none!important}
-.hold .hc-t i,.hold .h-chm.many .hc-t i{width:1.9em;height:1.9em}
+.hold .hc-t i,.hold .h-chm.many .hc-t i{width:1.5em;height:1.5em}
 }
