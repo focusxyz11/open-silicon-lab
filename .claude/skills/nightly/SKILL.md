@@ -32,7 +32,7 @@ Per group, a worktree from `origin/main` and one background helper (Agent tool) 
 - do not edit `docs/STATUS.md`;
 - screenshots pushed with git to the orphan branch `pr-shots` (folder `task-<group>/`) and shown in the PR;
 - the PR: a plain title, what a learner can now do issue by issue, what was checked, what is unsure, one `Closes #<n>` per finished issue;
-- wait for CI (the check named `test`), fix up to three times;
+- open the PR ready for review, not as a draft (CI does not test drafts; mark a draft ready to start it), then wait for CI (the check named `test`), fix up to three times;
 - helpers never merge.
 
 ## Phase 3: merge one by one

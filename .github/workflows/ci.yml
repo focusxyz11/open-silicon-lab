@@ -1,22 +1,32 @@
 name: Test and deploy
 
+# A pull request runs the whole suite once it is ready for review (a draft waits). A push to main does not test again:
+# the ruleset lets a branch in only when it is up to date with main and its `test` is green, so the commit on main is
+# the one that was tested; it goes straight to the site. The full suite still runs on main every night (schedule) and
+# whenever it is started by hand (workflow_dispatch), as a safety net.
 on:
   push:
     branches: [main]
   pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
   workflow_dispatch:
+  schedule:
+    - cron: '41 3 * * *'
 
 permissions:
   contents: read
 
-# a newer push to the same pull request replaces the run still going for the older one; runs on main always finish
+# a newer push to the same pull request replaces the run still going for the older one; runs on main always finish, and
+# the nightly safety run has a queue of its own, so it never holds up or replaces a deploy
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.ref }}${{ github.event_name == 'schedule' && '-nightly' || '' }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   logic:
     name: logic and words
+    # tested on pull requests ready for review, by hand and every night; not on a push to main, not on drafts
+    if: github.event_name != 'push' && !(github.event_name == 'pull_request' && github.event.pull_request.draft)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -31,6 +41,8 @@ jobs:
   # section takes here (every run prints "Section <name>: <s> s").
   browser:
     name: browser (${{ matrix.group }})
+    # tested on pull requests ready for review, by hand and every night; not on a push to main, not on drafts
+    if: github.event_name != 'push' && !(github.event_name == 'pull_request' && github.event.pull_request.draft)
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -43,7 +55,8 @@ jobs:
           - group: explore phone
             sections: explore-phone,flights,break,slow,stations
           - group: motion
-            sections: motion,joins,seams,blueprint
+            # stack (23 s locally) was in no group until 27 November, so CI never ran it
+            sections: motion,joins,seams,blueprint,stack
           - group: labs and ways
             sections: labs,ways,machines
     steps:
@@ -51,9 +64,20 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+      # the browser and npm's downloads are kept between runs; Playwright's version is pinned here and in the key
+      - name: Keep the browser
+        id: browser-cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/ms-playwright
+            ~/.npm
+          key: playwright-1.48.2-chromium-${{ runner.os }}
       - name: Install Playwright
+        run: npm install --no-save playwright@1.48.2
+      - name: Install the browser
+        if: steps.browser-cache.outputs.cache-hit != 'true'
         run: |
-          npm install --no-save playwright@1.48.2
           # The runner image already has most system libraries; if Ubuntu's package servers cannot be
           # reached, install only the browser (from Playwright's own servers) and go on.
           npx playwright install --with-deps chromium || npx playwright install chromium
@@ -66,24 +90,32 @@ jobs:
           echo "::warning title=Smoke test (${{ matrix.group }}) passed only on a second run::A browser check failed once. Read the first run's problems above and make that check steady."
           npm run test:browser -- --only "${{ matrix.sections }}"
 
-  # the one check pull requests and the nightly build look for: green only when every part above is green
+  # the one check pull requests and the nightly build look for: green only when every part above is green. On a draft
+  # it is skipped (a draft cannot merge; marking it ready for review starts a full run). On a push to main it passes at
+  # once: that commit was tested in its pull request.
   test:
     name: test
-    if: always()
+    if: always() && !(github.event_name == 'pull_request' && github.event.pull_request.draft)
     needs: [logic, browser]
     runs-on: ubuntu-latest
     steps:
       - name: Every part passed
         run: |
           echo "logic and words: ${{ needs.logic.result }}, browser: ${{ needs.browser.result }}"
+          if [ "${{ github.event_name }}" = push ]; then
+            echo "A push to main: this commit was tested in its pull request (up to date and green before merging)."
+            exit 0
+          fi
           test "${{ needs.logic.result }}" = success && test "${{ needs.browser.result }}" = success
 
   # the site is collected and uploaded in one job and deployed in the next: deploy-pages run in the same job, a
   # moment after the upload, finds no artifact (actions/deploy-pages#451; every deploy failed so from 23 November)
   # if deploying still finds nothing, it waits 30 s and tries once more
+  # deployed on a push to main or by hand, never from the nightly safety run; !cancelled() because the jobs before test
+  # are skipped on a push, which would otherwise skip this job too
   site:
-    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
-    needs: [logic, browser, test]
+    if: ${{ !cancelled() && needs.test.result == 'success' && github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') }}
+    needs: [test]
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -100,7 +132,7 @@ jobs:
           path: _site
 
   deploy:
-    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    if: ${{ !cancelled() && needs.site.result == 'success' }}
     needs: site
     runs-on: ubuntu-latest
     permissions:
