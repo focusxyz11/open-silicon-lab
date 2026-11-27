@@ -56,7 +56,10 @@ const TOOLS = [
   { name: 'grow_architecture', fn: a => API.growArchitecture(a || {}), description: EN['api.tool.grow'], inputSchema: { type: 'object', properties: ARCH_ARGS } },
   { name: 'architecture_forks', fn: a => API.archForks(a || {}), description: EN['api.tool.archForks'], inputSchema: { type: 'object', properties: ARCH_ARGS, required: ['start', 'years'] } },
   { name: 'architecture_field', fn: () => API.architectureField(), description: EN['api.tool.archField'], inputSchema: { type: 'object', properties: {} } },
-  { name: 'submit_architecture', fn: a => API.submitArchitecture(a || {}), description: EN['api.tool.submitArch'], inputSchema: { type: 'object', properties: { ...ARCH_ARGS, wins: { type: 'array', description: EN['api.arg.archWins'], items: { type: 'string', enum: ['any', 'model', 'hearing', 'wildfire', 'rover', 'radio'] } }, words: str(EN['api.arg.words']), ...WHO }, required: ['start', 'years', 'kind'] } }
+  { name: 'submit_architecture', fn: a => API.submitArchitecture(a || {}), description: EN['api.tool.submitArch'], inputSchema: { type: 'object', properties: { ...ARCH_ARGS, wins: { type: 'array', description: EN['api.arg.archWins'], items: { type: 'string', enum: ['any', 'model', 'hearing', 'wildfire', 'rover', 'radio'] } }, words: str(EN['api.arg.words']), ...WHO }, required: ['start', 'years', 'kind'] } },
+  { name: 'propose_gene', fn: a => API.proposeGene(a || {}), description: EN['api.tool.gene'], inputSchema: { type: 'object', properties: { gene: { type: 'string', enum: ['where', 'carrier', 'told', 'shape'], description: EN['api.arg.gene'] }, option: str(EN['api.arg.option']), name: str(EN['api.arg.optName']), what: str(EN['api.arg.optWhat']),
+    effect: { type: 'object', description: EN['api.arg.effect'], properties: { energy: { type: 'number' }, flex: { type: 'number' }, exact: { type: 'number' }, rugged: { type: 'number' }, adapt: { type: 'number' }, idle: { type: 'boolean' } } },
+    carry: { type: 'object', description: EN['api.arg.carry'] }, fact: str(EN['api.arg.fact']), words: str(EN['api.arg.words']), ...WHO }, required: ['gene', 'option', 'name', 'what', 'effect', 'carry', 'kind'] } }
 ];
 
 const send = m => process.stdout.write(JSON.stringify(m) + '\n');

@@ -22,6 +22,7 @@ export function create() {
       Game.CHALLENGES.forEach(c => { const r = rungOfChallenge(c.id); if (r) (ON[r] = ON[r] || []).push(c); });
       view = m.createStack(el, { still,
         entries: () => (W().arch || []).map(id => W().byId[id]),
+        genome: () => Game.genomeOf(V.S),
         done: () => V.S.done || {},
         stones: rung => (ON[rung] || []).map(c => ({ id: c.id, href: '#/do/' + c.id, title: Game.titleOf(c), won: Game.isDone(V.S, c.id) })) });
     }

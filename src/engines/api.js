@@ -151,6 +151,7 @@ export function listLedger() {
       : e.kind === 'try' && e.arch ? { arch: e.arch, recipe: e.facts.g, wins: e.facts.wins, years: e.facts.years, firstToWin: e.firstIn, marksItsSquare: e.marks }
       : e.kind === 'try' && e.machine ? { machine: e.machine, plan: e.plan, ...e.facts, best: (W.bestMachine || {})[e.machine] === e.id }
       : e.kind === 'try' ? { of: e.of, casesItHeldOn: e.facts.cases }
+      : e.kind === 'gene' ? { gene: e.gene, option: e.option, name: e.name, what: e.what, effect: e.effect, carry: e.carry, fact: e.fact || null, words: e.words || '' }
       : e.kind === 'report' ? { at: e.at, part: e.part || null, says: e.say, words: e.words, fixedBy: e.fixedBy || null } : e.kind === 'fix' ? { of: e.of, words: e.words, pullRequest: e.pr || null }
       : { at: e.at, under: e.under || null, question: e.q, noticed: e.noticed || '' })),
     open: F.map(f => f.kind === 'puzzle' ? { do: 'attempt a puzzle', puzzle: f.puzzle, attempts: f.attempts, best: f.best, pull: +f.pull.toFixed(2), what: t('api.open.puzzle'), tools: ['energy_budget', 'submit_attempt'] } : f.kind === 'report' ? { do: 'fix', report: f.of, at: f.at, says: f.say, words: W.byId[f.of].words, pull: +f.pull.toFixed(2), what: t('api.open.report') } : f.kind === 'build' ? { do: 'build', piece: f.piece, job: f.p, what: t('build.need.' + f.piece + '.d') }
@@ -192,6 +193,17 @@ export function proposeReport({ at, part, say, words, author, kind, ai }) {
 export function proposeQuestion({ at, under, part, question, noticed, author, kind, ai, about }) {
   const bad = whoOk(kind, ai); if (bad) return { ok: false, reason: bad };
   return entryOut(draft({ kind: 'question', at, part: part || null, under: under || null, q: question, noticed: noticed || '', by: author || t('api.anon'), made: kind, ai: ai || '', about: about || null }, txt(author) + ' ' + txt(question).split(/\s+/).slice(0, 5).join(' ')));
+}
+
+/* propose a new option for a gene of an architecture (the open genome, #452): the gene, the option's id, its name and what
+   it is, its trait effects and its carry contract, complete (src/engines/arch.js proposalWhy), perhaps the fact that backs
+   it. A guess until a fact does; the engine grows it only once a pull request adopts it. A refusal says what the
+   contract asks for */
+export function proposeGene({ gene, option, name, what, effect, carry, fact, words, author, kind, ai } = {}) {
+  const bad = whoOk(kind, ai); if (bad) return { ok: false, reason: bad };
+  const out = entryOut(draft({ kind: 'gene', gene, option, name, what, effect, carry, fact: fact || null, by: author || t('api.anon'), made: kind, ai: ai || '', words: words || '' }, txt(author) + ' ' + txt(gene) + ' ' + txt(option)));
+  return out.ok ? Object.assign(out, { status: fact ? t('ledger.state.backed') : t('ledger.state.guess') })
+    : Object.assign(out, { how: t('api.gene.how'), genes: Arch.GENES.map(k => ({ gene: k, name: t('ar.gene.' + k), options: Arch.OPTIONS[k], contract: Arch.CONTRACT[k] })), traits: Arch.TRAITS, traitRange: Arch.TRAIT_RANGE });
 }
 
 /* ---- the energy puzzle (content/puzzles/energy.md): where does the energy of one answer go? ---- */

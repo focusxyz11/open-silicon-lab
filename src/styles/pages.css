@@ -972,6 +972,16 @@ main.stage .hero .btn { font-size: 15px; }
 .lat-open { color: var(--ink); font-style: italic; font-family: var(--serif); font-size: 13px; }
 .lat-open .lat-tag { font: 700 10.5px var(--sans); font-style: normal; }
 .lat-past { font-size: 12px; }
+/* the open column: the options proposed for the open genome (#452), each marked a guess until a fact backs it */
+.lat-prop { margin: 0 0 7px; padding-bottom: 6px; border-bottom: 1px dashed var(--line); }
+.lat-prop .lat-tag { color: var(--accent); }
+.lat-prop ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 5px; }
+.lat-prop li { line-height: 1.35; }
+.lat-prop li b { font-weight: 650; }
+.lat-prop li .small { display: block; color: var(--muted); }
+.lat-prop .fid { margin-top: 3px; padding: 2px 8px 2px 6px; gap: 5px; font-size: 11.5px; color: var(--muted); }
+.lat-prop .mtr { display: inline-block; flex: none; width: 12px; height: 12px; overflow: visible; }
+.lat-prop .t-guess circle { fill: none; stroke: currentColor; stroke-width: 1.6; stroke-dasharray: 2.4 1.8; }
 /* a path lit: its cells raised and numbered, the things it passes marked, the rest dimmed */
 .lat.pathon .lat-c:not(.lit) { opacity: .38; }
 .lat.pathon .lat-c:not(.lit):hover { opacity: 1; }

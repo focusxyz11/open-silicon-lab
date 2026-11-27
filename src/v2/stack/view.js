@@ -8,9 +8,10 @@
    true (src/v2/fid.js) and core questions (src/data/frame.js), and a DOM mirror of the canvas for the keyboard and
    screen readers (every rung, gene and plot). Loaded only when #/stack opens (src/v2/glue/stack.js).
 
-   createStack(host, { still, entries, done, stones }) -> { show(at), hide() }: at is a rung id, 'field', or nothing (your
+   createStack(host, { still, entries, genome, done, stones }) -> { show(at), hide() }: at is a rung id, 'field', or nothing (your
    stack). entries: the attempts at an architecture kept in the ledger (settled entries, src/engines/population.js; #448: every
-   point on the field comes from them, and the lab runs no agent); done: the challenges won (they raise their directions once,
+   point on the field comes from them, and the lab runs no agent); genome: the options proposed for a gene (#452), shown
+   under the gene's own, marked a guess; done: the challenges won (they raise their directions once,
    arch.js broughtOf); stones(rung): the challenges on a rung, [{ id, href, title, won }], drawn as squares under its
    plate's front edge, inked when won, and offered in its controls as ways to play (#451). */
 import { t, fmtNum } from '../../core/i18n.js';
@@ -21,6 +22,7 @@ import { QUESTIONS } from '../../data/frame.js';
 import { FINE_OF, CHOICES, V_RANGE } from '../../data/path.js';
 import { A, SW, RUNGS, EXAMPLE, GENE_AT, GENE_OF, RUNG_DIR, clamp, carry, see, stoneOf, marksOf, topMarks, rungName, RECIPES, RIDX, BLOCK, NEEDS, POT, CAN, CELLCAN, fxOf, bestNeed, recipeName, population, census, times, pct } from './model.js';
 import { holder, credit, plotCard, sinceVisit, sinceLine, portCard, champWords } from './field.js';
+import { proposedHtml, openWords } from './genome.js';
 import { PIC, passedPic, makePen, glyph } from './pics.js';
 
 const NR = RUNGS.length, KEY = 'osl-stack';
@@ -63,7 +65,7 @@ export function createStack(host, opts = {}) {
   function setTheme() { const th = theme() === 'light' ? 'light' : 'dark'; C = {}; for (const k in THEMES[th]) C[k] = mk(THEMES[th][k]); C.dark = th === 'dark'; dirty = true; }
 
   /* ---------- your stack: what you have made, kept in this browser ---------- */
-  const POP = population(opts.entries ? opts.entries() : []);
+  const POP = population(opts.entries ? opts.entries() : []), GENOME = opts.genome ? opts.genome() : [];
   const brought = () => A.broughtOf(opts.done ? opts.done() : {});
   const fresh = () => ({ F: Object.assign({}, EXAMPLE), g: Object.assign({}, A.TODAY), aim: 'any', A: A.start(A.TODAY, brought()), T: A.treeOf(A.TODAY), focus: [], stones: brought(), first: {} });
   const S = fresh();
@@ -312,7 +314,7 @@ export function createStack(host, opts = {}) {
     for (let d = 0; d < 5; d++) { const a = proj(-3.5, (BY[d].y0 + BY[d].y1) / 2), stick = a[0] < 104, o = { align: stick ? 'left' : 'right', pri: 55, bg: stick, force: stick }, x = stick ? 8 : a[0], y = a[1]; if (y < chrome().top + 34 || y > vh - chrome().bot - 6) continue;
       label(x, y + (d ? -1 : 4), awayWords(d), fMono(11, 500), 11, C.ink(la), o); if (d && s * (BY[d].y1 - BY[d].y0) > 30) label(x, y + 14, t('sk.field.recipes', { n: BLOCK[d].length }), fMono(10.5), 10.5, C.mut(la), Object.assign({}, o, { pri: 25 })); }
     { const a = proj(0, SHEET.y1), px = clamp(s * 5.4, 16, 32); label(a[0], a[1] + px + 8, t('sk.field.caption'), fSerif(px, 700), px, C.ink(la), { pri: 58 }); label(a[0], a[1] + px + 27, t('sk.field.sub', { tried: CEN.tried, wins: CEN.wins }), fMono(11), 11, C.mut(la), { pri: 40 });
-      const b = proj(WID / 2, TOP + 3.4); label(b[0], b[1], t('sk.field.open'), fSerif(clamp(s * 2.6, 11, 15), 400, true), 13, C.mut(la), { align: 'center', pri: 22, max: WID * s - 20 }); }
+      const b = proj(WID / 2, TOP + 3.4); label(b[0], b[1], openWords(GENOME), fSerif(clamp(s * 2.6, 11, 15), 400, true), 13, C.mut(la), { align: 'center', pri: 22, max: WID * s - 20 }); }
     if (s * COLW > 170) { const a = proj(COLW / 2, (BY[4].y0 + BY[4].y1) / 2); label(a[0], a[1], t('sk.field.cannot'), fSerif(12.5, 400, true), 12.5, C.mut(la), { align: 'center', pri: 18, max: COLW * s }); const b = proj(2 * CSTEP + COLW / 2, BY[4].y0 + 11.2 * (PD + GY) - 0.6); label(b[0], b[1], t('sk.field.nobody'), fSerif(12.5, 400, true), 12.5, C.ink(la), { align: 'center', pri: 18, bg: true }); }
     if (hover && flat) { const rc = plotRect(hover.n, hover.ri), a = proj(rc.x, rc.y);
       ctx.strokeStyle = C.acc(1); ctx.lineWidth = 1.5; ctx.strokeRect(a[0] - 1.5, a[1] - hpx - 1.5, wpx + 3, hpx + 3);
@@ -455,7 +457,7 @@ export function createStack(host, opts = {}) {
     popKey = k; const el = $('.sk-pop'), yr = S.A.year; let h = '';
     if (k === 'aim') { const sc = A.scoreOf(S.A); h = NEEDS.map(n => { const s = sc[n], cant = !s.can, ms = A.missesOf(S.g, n)[0]; return '<button type="button" data-opt="' + n + '" aria-pressed="' + (n === S.aim) + '"' + (cant ? ' disabled' : '') + '><b>' + esc(need(n)) + '</b><span>' + esc(cant ? t('sk.field.cant', { what: ms ? t('ar.cant.' + ms) : '' }) : A.novelty(S.g) ? t('sk.field.now', { x: times(s.now) }) + ' · ' + t('sk.field.could', { x: times(s.could) }) : t('sk.race.level')) + '</span></button>'; }).join(''); }
     else h = (yr ? '<p>' + esc(t('ar.ag.lost', { dirs: dirList(A.LINK[k]) })) + '</p>' : '') + A.OPTIONS[k].map(o => { const g2 = Object.assign({}, S.g, { [k]: o }), kn = A.knownOf(g2), d = A.novelty(g2), fx = fxOf(k, o);
-      return '<button type="button" data-opt="' + o + '" aria-pressed="' + (S.g[k] === o) + '"><b>' + esc(optName(k, o)) + '</b><span>' + esc(optSub(k, o)) + '</span>' + (fx ? '<span class="fx">' + esc(fx) + '</span>' : '') + '<em>' + esc(!d ? t('sk.recipe.today') : kn ? t('ar.known.' + kn.id) + ', ' + t('ar.st.' + kn.status) : t('sk.recipe.newOne')) + '</em></button>'; }).join('');
+      return '<button type="button" data-opt="' + o + '" aria-pressed="' + (S.g[k] === o) + '"><b>' + esc(optName(k, o)) + '</b><span>' + esc(optSub(k, o)) + '</span>' + (fx ? '<span class="fx">' + esc(fx) + '</span>' : '') + '<em>' + esc(!d ? t('sk.recipe.today') : kn ? t('ar.known.' + kn.id) + ', ' + t('ar.st.' + kn.status) : t('sk.recipe.newOne')) + '</em></button>'; }).join('') + proposedHtml(GENOME, k);
     el.innerHTML = h; el.hidden = false; el.dataset.for = k; el.setAttribute('aria-label', geneWord(k));
     const rb = root.getBoundingClientRect(), b = anchor.getBoundingClientRect(), w = Math.min(340, vw - 24); el.style.width = w + 'px'; el.style.left = clamp(b.left - rb.left, 12, vw - w - 12) + 'px';
     const hh = el.offsetHeight, bt = b.top - rb.top, bb = b.bottom - rb.top; el.style.top = clamp(bb + 8 + hh > vh - 12 ? bt - hh - 8 : bb + 8, 12, Math.max(12, vh - hh - 12)) + 'px';

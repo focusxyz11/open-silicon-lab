@@ -55,6 +55,7 @@
 
 import { NEEDS as MACHINE_NEEDS } from '../data/blocks.js';
 import { ACTIVITY } from '../data/inventions.js';
+import { MATTERS } from '../data/lattice.js';
 
 export const GENES = ['where', 'carrier', 'told', 'shape'];
 export const OPTIONS = {
@@ -138,6 +139,42 @@ export const CARRY = {
     swarm: { units: [100, 1000, 10000], fact: null }
   }
 };
+/* the open genome (docs/PATH.md, "Architectures: the frontier of the path"; #452): genes and options are data, so
+   anyone, a person or an agent, can propose a new option for a gene (a carrier, a way of telling, a shape, a place to
+   compute) with its trait effects, in EFFECT's form, and its carry contract, in CARRY's form, as an entry of the
+   community's ledger (kind gene, src/engines/ledger.js). It is a guess until a fact (src/data/facts.json, named by the
+   proposal and checked by the tests) backs it, and the engine grows it only once a pull request adopts it into OPTIONS
+   with that fact. CONTRACT: what each gene's contract gives, the range each field is read in, and which can be left out
+     matter  a column of the lattice (src/data/lattice.js MATTERS; yours, for matter nobody has put in the lab yet)
+     rungs   the rungs a carrier goes past, in order, without building them */
+export const CONTRACT = {
+  carrier: { matter: { matter: true }, delay: { min: 1e-6, max: 1e9 }, skips: { rungs: ['switch', 'gate', 'block', 'chip'], optional: true } },
+  where: { latency: { min: 1e-12, max: 1e-3 } },
+  told: { stages: { bool: true } },
+  shape: { units: { units: 3, min: 1, max: 1e7 } }
+};
+export const OPTION_ID = /^[a-z][a-z0-9-]{1,23}$/, TRAIT_RANGE = [0.01, 100];
+const num = (x, a, b) => typeof x === 'number' && Number.isFinite(x) && x >= a && x <= b;
+function fieldOk(spec, v) {
+  if (spec.matter) return typeof v === 'string' && MATTERS.includes(v);
+  if (spec.bool) return typeof v === 'boolean';
+  if (spec.rungs) return Array.isArray(v) && v.length >= 1 && v.every((r, i) => spec.rungs.includes(r) && (!i || spec.rungs.indexOf(r) > spec.rungs.indexOf(v[i - 1])));
+  if (spec.units) return Array.isArray(v) && v.length === spec.units && v.every((u, i) => Number.isInteger(u) && num(u, spec.min, spec.max) && (!i || u > v[i - 1]));
+  return num(v, spec.min, spec.max);
+}
+/* what a proposal lacks, or null when it is complete: the gene, a new option's id, its trait effects (at least one trait,
+   each a factor against today's computer; idle for a gain when the need is rarely busy) and its carry contract (every
+   field its gene's contract gives, none other) */
+export function proposalWhy(p) {
+  const isRec = x => x !== null && typeof x === 'object' && !Array.isArray(x);
+  if (!isRec(p) || typeof p.gene !== 'string' || !Object.hasOwn(CONTRACT, p.gene)) return 'gene';
+  if (typeof p.option !== 'string' || !OPTION_ID.test(p.option) || OPTIONS[p.gene].includes(p.option)) return 'option';
+  const e = p.effect;
+  if (!isRec(e) || !Object.keys(e).length || !Object.keys(e).some(k => TRAITS.includes(k)) || !Object.entries(e).every(([k, v]) => (TRAITS.includes(k) && num(v, TRAIT_RANGE[0], TRAIT_RANGE[1])) || (k === 'idle' && v === true))) return 'effect';
+  const C = CONTRACT[p.gene], c = p.carry;
+  if (!isRec(c) || Object.keys(c).some(k => !Object.hasOwn(C, k)) || !Object.entries(C).every(([k, spec]) => (c[k] == null && spec.optional) || fieldOk(spec, c[k]))) return 'carry';
+  return null;
+}
 /* is this option a fork from today's computer, and is its contract still a guess (no fact backs it) */
 export const isFork = (gene, option) => TODAY[gene] !== option;
 export const forkFact = (gene, option) => (isFork(gene, option) && CARRY[gene] && CARRY[gene][option] ? CARRY[gene][option].fact || null : null);

@@ -8,11 +8,16 @@ import { t, has } from '../core/i18n.js';
 import { esc } from '../core/esc.js';
 import { REPO } from '../data/weave.js';
 import { MATTERS, LAYERS, PAGES, PATHS, cellOf, cellKey, pathOf, itemOf } from '../data/lattice.js';
+import { GENE_RUNGS, LAYER } from '../data/path.js';
+import { statusMark, mark } from './fid.js';
 
 const SHOW = 3;   /* the challenges a cell shows before the rest fold away */
 const SVGNS = 'http://www.w3.org/2000/svg';
 
-/* o: { path, matter, FACT, been, chOf, titleOf, doHref, isDone, levelHref(place, depth) } */
+/* o: { path, matter, FACT, been, chOf, titleOf, doHref, isDone, levelHref(place, depth), proposals }. proposals: the open
+   genome's (#452), the ledger's gene entries, each shown in the open column (yours) at the layer of the first rung its
+   gene chooses (src/data/path.js GENE_RUNGS, LAYER), marked a guess until a fact backs it */
+export const layerOfGene = g => (GENE_RUNGS[g] ? LAYER[GENE_RUNGS[g][0]] : null);
 export function latticeHtml(o) {
   const P = pathOf(o.path), marks = new Set(P ? P.marks : []), step = new Map();
   if (P) P.strands.flat().forEach(c => { if (!step.has(c)) step.set(c, step.size + 1); });
@@ -45,6 +50,8 @@ export function latticeHtml(o) {
     if (lvs.length) h += '<p class="lat-lv"><span>' + esc(t('page.lat.levels')) + '</span> ' + lvs.join(' ') + '</p>';
     h += gos.join('');
     if (c.real.length) h += '<div class="lat-real"><span class="lat-tag">' + esc(t('page.lat.real')) + '</span>' + c.real.map(factHtml).join('') + '</div>';
+    const props = m === 'yours' ? (o.proposals || []).filter(p => layerOfGene(p.gene) === l) : [];
+    if (props.length) h += '<div class="lat-prop"><span class="lat-tag">' + esc(t('page.lat.proposed')) + '</span><ul>' + props.map(p => '<li><b>' + esc(p.name) + '</b> <span class="small">' + esc(t('ar.gene.' + p.gene)) + ' · ' + esc(t('page.lat.by', { who: p.by })) + '</span> ' + (p.fact ? mark({ f: 'figures', fact: p.fact }) : statusMark('guess')) + '</li>').join('') + '</ul></div>';
     if (c.open) h += '<p class="lat-open"><span class="lat-tag">' + esc(t('page.lat.open')) + '</span> ' + esc(t(has('page.lat.q.' + key) ? 'page.lat.q.' + key : 'page.lat.q.' + m)) + '</p>';
     if (c.past) h += '<p class="lat-past"><span class="lat-tag">' + esc(t('page.lat.past')) + '</span> ' + esc(t('page.lat.pastD')) + '</p>';
     /* on a phone, where one matter shows at a time, a lit cell leads on to the path's step in another matter */
@@ -59,7 +66,7 @@ export function latticeHtml(o) {
     '<p class="lat-pd small" aria-live="polite">' + esc(t(P ? 'page.lat.path.' + P.id + '.d' : 'page.lat.pathHint')) + '</p>';
   const tabs = '<div class="lat-tabs" role="group" aria-label="' + esc(t('page.lat.tabs')) + '">' + MATTERS.map(m => '<button type="button" data-latm="' + m + '" aria-pressed="' + (m === m0) + '"' + (inPath.has(m) ? ' class="onpath"' : '') + '>' + esc(name(m)) + '</button>').join('') + '</div>';
   const heads = '<div class="lat-corner small">' + esc(t('page.lat.up')) + '</div>' + MATTERS.map(m => '<div class="lat-mh' + (m !== m0 ? ' mo' : '') + '" data-m="' + m + '"><b>' + esc(name(m)) + '</b><span class="small">' + esc(t('page.lat.m.' + m + '.d')) + '</span>' +
-    (m === 'yours' ? '<a class="small" href="' + esc(REPO + '/issues/new?template=idea.yml') + '" target="_blank" rel="noopener">' + esc(t('page.lat.propose')) + ' ↗</a>' : '') + '</div>').join('');
+    (m === 'yours' ? '<a class="small" href="' + esc(REPO + '/issues/new?template=gene.yml') + '" target="_blank" rel="noopener">' + esc(t('page.lat.propose')) + ' ↗</a>' : '') + '</div>').join('');
   const rows = LAYERS.slice().reverse().map(l => '<div class="lat-lh" data-l="' + l + '"><b>' + esc(lname(l)) + '</b><span class="small">' + esc(t('page.lat.l.' + l + '.d')) + '</span></div>' + MATTERS.map(m => cellHtml(m, l)).join('')).join('');
   return '<div class="lat' + (P ? ' pathon' : '') + '" data-lat data-path="' + (P ? P.id : '') + '" data-matter="' + m0 + '">' + paths + tabs +
     '<p class="wm-axis wm-across small">' + esc(t('page.lat.across')) + '</p><div class="lat-grid">' + heads + rows + '<svg class="lat-wire" aria-hidden="true"></svg></div></div>';

@@ -18,7 +18,7 @@ import { build, projectOf, solutionOf } from '../engines/design.js';
 import { model, CHALLENGES as CHIP, START, normal, SETTINGS } from '../engines/chip.js';
 import { live, PERFECT, normalLife } from '../engines/life.js';
 import { plan, progress, needOf, childrenOf, designsFor, allDesigns } from '../engines/build.js';
-import { ledger, settle, frontier, questionsAt, society, workFor, KINDS as ENTRY_KINDS } from '../engines/ledger.js';
+import { ledger, settle, frontier, questionsAt, society, workFor, proposals, KINDS as ENTRY_KINDS } from '../engines/ledger.js';
 import { t, fmtNum } from '../core/i18n.js';
 import { normalJoule } from './joule.js';
 import { normalState as normalChef } from '../engines/bits.js';
@@ -203,6 +203,8 @@ export const askedAtLevel = (d, s) => questionsAt(world(s), d, null).sort((a, b)
 export const societyOf = W => society(W);
 export const workAt = (key, s) => workFor(world(s), key);
 export const aboutWords = (about, W) => (STOPS[about] ? t('stop.' + about + '.q') : (W.byId[about] || {}).q || about);
+/* the open genome (#452): the options proposed for a gene, from the ledger and your drafts, each a guess until a fact backs it */
+export const genomeOf = s => proposals(world(s));
 /* what is open now, loudest first, read from the ledger and your drafts */
 export const frontierOf = s => frontier(world(s));
 /* an attempt at an architecture in a few words: how many genes it ended from today's computer, its years and the needs it
@@ -214,6 +216,7 @@ export function entryWords(e, s) { const W = world(s), T = W.byId[e.of];
     : e.kind === 'try' && e.arch ? archWords(e)
     : e.kind === 'try' && e.machine ? t('ledger.rec.machine', { need: t('machines.need.' + e.machine + '.t'), x: fmtNum(+e.facts.energy.toPrecision(2)), days: isFinite(e.facts.days) ? fmtNum(e.facts.days) : '?', n: isFinite(e.facts.days) ? e.facts.days : 2 })
     : e.kind === 'try' ? t('ledger.rec.try', { title: T.title, n: e.facts.cases })
+    : e.kind === 'gene' ? t('ledger.rec.gene', { name: e.name })
     : e.kind === 'report' ? t('ledger.rec.report', { say: t('report.say.' + e.say), at: e.at, words: e.words }) : e.kind === 'fix' ? t('ledger.rec.fix', { words: e.words }) : e.q; }
 /* break a design: a challenge made by the ledger itself, for every clocked design that stands, and kept for the
    broken ones, so anyone can find the case again */

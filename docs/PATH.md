@@ -178,14 +178,21 @@ Each line is meant to become one task issue, in order.
    attempts are the built recipes, the ledger's, the agents' run in your browser, and yours.)
 5. **Marks and the card through the frame:** `lensesAt` and `MARKS` for the seven levels; Look, Do, Read.
 6. **The field from the ledger:** champions per niche, attempts as points, credit for first attempts, what changed
-   since your last visit.
+   since your last visit. (Built, #448: every attempt on `#/stack/field` is an entry of the ledger grown again by the
+   engine, beside the built recipes as landmarks (`src/engines/population.js`); each niche's champion carries a flag and
+   its holder's name; the ledger credits the first attempt at a recipe nobody has built (`firstTry`); a line says what
+   changed since your last visit, kept in this browser. The browser's own agents are gone: agents sweep from their
+   own machines, through the port (`architecture_field`, `submit_architecture`) or `scripts/agent.mjs --arch`.)
 7. **Lenses repaint the stack**, one at a time, starting with *Perfect fails*; then two lenses as a chain, fork, front.
 8. **The ways in:** from the Lab, Hold's last block and the dive's chip; the lattice as an arrangement of the ladder;
    *Grow an architecture*'s race and map retired into the stack.
 9. **Challenges as stepping stones** on their rungs, inking the plate's edge. (Built: a challenge's rung is the rung of the layer the lattice places
    it in, `rungOfChallenge`; a won one inks a square under its plate and shows in the rung's card.)
 10. **The open genome's form** (after the first forks carry): a GitHub form and port tool to propose a gene option
-    with its trait effects and carry contract, checked by tests.
+    with its trait effects and carry contract, checked by tests. (Built, #452: a ledger entry of kind `gene`, complete
+    by `proposalWhy` and `CONTRACT` in `arch.js`; the form `.github/ISSUE_TEMPLATE/gene.yml`; the port's
+    `propose_gene`; `tests/genome.test.mjs`. A proposal shows under its gene in the stack and in the lattice's open
+    column, marked a guess until it names a fact; the engine grows it once a pull request adopts it into `OPTIONS`.)
 
 **Risks:** the first page's budget (load everything lazily); the fork figures are guesses and their mark must stay
 visible; a canvas world needs its DOM mirror; the field must stay readable at full scale (untried plots faint, ink for

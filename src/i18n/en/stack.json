@@ -147,6 +147,10 @@
  "sk.field.away": "{d} genes away",
  "sk.field.recipes": "{n} recipes",
  "sk.field.open": "the genome is open: a carrier, a shape or a way of telling nobody has listed yet",
+ "sk.field.openN": {
+  "one": "the genome is open: {n} option proposed, a guess until a fact backs it",
+  "other": "the genome is open: {n} options proposed, each a guess until a fact backs it"
+ },
  "sk.field.can": "{n} of 400 can serve it",
  "sk.field.yours": "yours",
  "sk.field.nobody": "open: nobody has tried",
@@ -226,5 +230,7 @@
  "sk.note.seven": "it reads a 7",
  "sk.note.todayLine": "today's computer",
  "sk.ctl.stones": "Stepping stones on this rung: {n} of {of} won",
- "sk.stone.won": "{title}, won: play it again"
+ "sk.stone.won": "{title}, won: play it again",
+ "sk.genome.head": "Proposed for the open genome: not grown by the engine until a fact backs it and the lab adopts it",
+ "sk.genome.by": "proposed by {who}"
 }
