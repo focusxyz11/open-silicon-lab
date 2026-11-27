@@ -226,14 +226,16 @@ html[data-move=turn]::view-transition-new(root) { animation-name: vt-turn-in; }
 }
 /* The frame (#271): one frame, three modes, and the thing you are working on always gets the stage. The site's only
    frame since #276 (the one before it is kept on the branch claude/before-frame2-2026-11); src/core/styles.js loads
-   frame.css with the first view that wears it; index.html sets html.frame2, from which every rule hangs (src/v2/frame2.js wears the elements).
+   frame.css with the first view that wears it (src/v2/frame2.js wears the elements). Its rules hang from no prefix any more (#432);
+   those that must outweigh an older view's or a lab's own rule are scoped to the stage, main.stage, which weighs what the
+   old prefix did.
    Three components on the frame's own elements: the caption (Look: the card on the picture, bottom left), the side
    panel (Do, Ask, Read more, a card that is not a level's: full height at the right, growing with the screen; the
    island's sheet and Break it are the same panel) and, on a phone, the sheet; the stage (Do: a lab's instrument
    takes the picture area, its goal as meters across the top); and Read, a reading page in the frame. One type
    scale: titles and the question in Besley, everything read in Atkinson Hyperlegible Next and never below 15 px,
    names on the picture 14 px, figures in Martian Mono. The palette is the site's (src/styles/base.css). */
-html.frame2 {
+:root {
   --f2-title: 700 30px/1.12 var(--serif);
   --f2-q: italic 400 20px/1.4 var(--serif);
   --f2-read: 400 17.5px/1.5 var(--sans);
@@ -265,7 +267,7 @@ svg.fidg, .fid > svg.fidg { display: inline-block; width: 16px; height: 14px; ma
 .fidtip > svg.fidg { width: 20px; height: 18px; margin-top: 2px; color: var(--accent); }
 @media (prefers-reduced-motion: reduce) { .fidtip { animation: none; } }
 /* in the caption, beside the level's name */
-html.frame2 .f2 .f2t .fid { margin-left: 12px; vertical-align: .32em; }
+.f2 .f2t .fid { margin-left: 12px; vertical-align: .32em; }
 /* a lens's instrument, two lenses held */
 .lppairb { display: grid; gap: 10px; }
 .lpside .fidrow { margin: 0 0 6px; }

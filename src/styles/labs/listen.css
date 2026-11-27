@@ -29,5 +29,5 @@
  .earrun rect.no { fill: var(--bad); }
 .earrun line.goal { stroke: var(--muted); stroke-width: 1; stroke-dasharray: 4 4; }
 /* in Do mode the hidden block takes the stage: square, as large as the stage allows */
-html.frame2 .f2stage .earfig[data-f2="instrument"] { display: grid; place-items: center; background: none; }
-html.frame2 .f2stage .earfig[data-f2="instrument"] svg { width: auto; height: 100%; max-width: 100%; aspect-ratio: 1; }
+main.stage .f2stage .earfig[data-f2="instrument"] { display: grid; place-items: center; background: none; }
+main.stage .f2stage .earfig[data-f2="instrument"] svg { width: auto; height: 100%; max-width: 100%; aspect-ratio: 1; }

@@ -50,5 +50,5 @@
 .revchart .lbl { font: 600 9.5px var(--sans); fill: var(--muted); }
  .revchart .lbl.fl { fill: var(--bad); }
 .revsum { margin: 4px 0; }
-html.frame2 .f2stage .revfig svg text { font-size: calc(13px * var(--f2-k, .6)); }
-@media (max-width: 720px) { html.frame2 .f2stage .revfig svg text { font-size: calc(10.5px * var(--f2-k, .9)); } }
+main.stage .f2stage .revfig svg text { font-size: calc(13px * var(--f2-k, .6)); }
+@media (max-width: 720px) { main.stage .f2stage .revfig svg text { font-size: calc(10.5px * var(--f2-k, .9)); } }

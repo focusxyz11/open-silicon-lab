@@ -39,8 +39,8 @@
  .dflen .off { background: var(--warm); }
 .dflkey { display: flex; flex-wrap: wrap; gap: 2px 12px; }
  .dflkey i { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 5px; }
-html.frame2 .f2stage .dflfig svg text { font-size: calc(12px * var(--f2-k, .6)); }
- html.frame2 .f2stage .dflfig svg text.ln { font-size: calc(10px * var(--f2-k, .6)); }
+main.stage .f2stage .dflfig svg text { font-size: calc(12px * var(--f2-k, .6)); }
+ main.stage .f2stage .dflfig svg text.ln { font-size: calc(10px * var(--f2-k, .6)); }
 @media (max-width: 720px) { .dflrow { grid-template-columns: 104px 1fr 58px; gap: 8px; }
-  html.frame2 .f2stage .dflfig svg text { font-size: calc(10px * var(--f2-k, .9)); } html.frame2 .f2stage .dflfig svg text.ln { font-size: calc(8px * var(--f2-k, .9)); }
+  main.stage .f2stage .dflfig svg text { font-size: calc(10px * var(--f2-k, .9)); } main.stage .f2stage .dflfig svg text.ln { font-size: calc(8px * var(--f2-k, .9)); }
 }
