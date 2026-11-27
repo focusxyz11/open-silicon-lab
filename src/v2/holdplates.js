@@ -379,7 +379,7 @@ PL.next = {
        or French on a phone), the next rung's words move down just enough, and the floor's stay on the floor, the ones
        above moving up to make room */
     const unstack = () => { const H = host.clientHeight, k = H + '|' + (document.fonts ? document.fonts.status : ''); if (!H || k === uk) return; uk = k;
-      const want = RUNGS.map((r, i) => (Y(RP[i]) - (i === 4 ? 6.6 : 1.6)) / 100 * H), hs = ls.map(e => e.offsetHeight), top = want.slice(), g = 3;
+      const hs = ls.map(e => e.offsetHeight), want = RUNGS.map((r, i) => i === 4 ? Y(RP[i]) / 100 * H - hs[i] - 4 : (Y(RP[i]) - 1.6) / 100 * H), top = want.slice(), g = 3;
       for (let i = 1; i < ls.length - 1; i++) top[i] = Math.max(want[i], top[i - 1] + hs[i - 1] + g);
       top[4] = Math.max(want[4], Y(1) / 100 * H - hs[4] - 2); for (let i = 3; i > 0; i--) top[i] = Math.min(top[i], top[i + 1] - hs[i] - g);
       ls.forEach((e, i) => { e.style.top = top[i] / H * 100 + '%'; }); };
