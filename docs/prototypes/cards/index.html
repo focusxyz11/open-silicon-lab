@@ -1,0 +1,1001 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Core question cards</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@400;500;700&family=Besley:ital,wght@0,400;0,700;1,400&family=Martian+Mono:wdth,wght@75..112.5,400..600&display=swap" rel="stylesheet">
+<style>
+/* Core question cards: a prototype for Open Silicon Lab.
+   Layout idea: one card at a time. Left, the question alone with one picture you can move. Right, the same question in the lab.
+   The lab's own tokens (src/styles/base.css): day is the bare :root, night under the dark blocks. */
+:root {
+  --bg: #dfe8f2; --panel: rgba(255, 255, 255, .82); --solid: #ffffff; --line: rgba(40, 60, 90, .16); --ink: #16202e; --muted: #56657b;
+  --accent: #2f7de1; --warm: #c0720a; --bad: #d2433a; --good: #1c9460;
+  --sans: "Atkinson Hyperlegible Next", system-ui, sans-serif; --serif: "Besley", Georgia, serif; --mono: "Martian Mono", ui-monospace, monospace;
+  --shadow: 0 18px 50px rgba(30, 50, 80, .16); --r: 18px;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0b1120; --panel: rgba(16, 23, 38, .78); --solid: #111a2b; --line: rgba(160, 180, 210, .2); --ink: #eef2f8; --muted: #9aa8bd;
+    --accent: #5aa9ff; --warm: #ffb347; --bad: #ff6b62; --good: #45d08a; --shadow: 0 18px 50px rgba(0, 0, 0, .45); color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0b1120; --panel: rgba(16, 23, 38, .78); --solid: #111a2b; --line: rgba(160, 180, 210, .2); --ink: #eef2f8; --muted: #9aa8bd;
+  --accent: #5aa9ff; --warm: #ffb347; --bad: #ff6b62; --good: #45d08a; --shadow: 0 18px 50px rgba(0, 0, 0, .45); color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--bg); color: var(--ink); font: 400 16px/1.5 var(--sans); -webkit-font-smoothing: antialiased; }
+button { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.wrap { max-width: 1240px; margin: 0 auto; padding: 14px 20px 48px; display: flex; flex-direction: column; gap: 14px; }
+
+/* the bar */
+.bar { display: flex; align-items: center; gap: 12px; min-height: 40px; }
+.logo { width: 22px; height: 22px; border: 2px solid var(--ink); border-right-color: transparent; position: relative; flex: none; }
+.logo::after { content: ""; position: absolute; right: -2px; top: 6px; width: 6px; height: 6px; background: var(--bad); }
+.bar b { font: 700 15px/1.2 var(--sans); }
+.bar .sub { font: 400 11px/1.2 var(--mono); font-stretch: 85%; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); }
+.bar .sp { flex: 1; }
+.tbtn { border: 1px solid var(--line); background: var(--panel); border-radius: 999px; padding: 6px 12px; font: 500 13px/1 var(--sans); cursor: pointer; }
+.tbtn:hover { border-color: var(--muted); }
+
+/* the card */
+.card { display: grid; grid-template-columns: minmax(0, 1fr) 344px; grid-template-areas: 'alone inlab' 'text text'; background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); box-shadow: var(--shadow); overflow: hidden; }
+.alone { grid-area: alone; min-width: 0; display: flex; flex-direction: column; padding-bottom: 22px; }
+.text { grid-area: text; border-top: 1px solid var(--line); }
+.head { padding: 24px 30px 4px; display: flex; flex-direction: column; gap: 10px; }
+.kick { margin: 0; display: flex; align-items: center; gap: 9px; font: 500 11px/1.2 var(--mono); font-stretch: 85%; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.ring { width: 30px; height: 30px; border-radius: 50%; border: 1.5px solid var(--warm); display: grid; place-items: center; flex: none; background: var(--solid); }
+.ring svg, .mk svg { width: 17px; height: 17px; fill: none; stroke: var(--warm); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.q { margin: 0; font: italic 400 clamp(23px, 2.5vw, 33px)/1.2 var(--serif); text-wrap: balance; max-width: 28em; }
+.stand { margin: 0; font: 400 18px/1.45 var(--sans); max-width: 38em; text-wrap: pretty; }
+.fig { margin: 14px 18px 0; }
+.pic { position: relative; height: clamp(300px, 46vh, 440px); border-radius: 12px; overflow: hidden; background: var(--solid); border: 1px solid var(--line); touch-action: pan-y; cursor: ew-resize; transition: opacity .2s; }
+.pic.two { cursor: move; touch-action: none; }
+.pic.swap { opacity: 0; }
+.pic canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.lbl { position: absolute; left: 0; top: 0; font: 500 12px/1.25 var(--sans); color: var(--muted); white-space: nowrap; pointer-events: none; }
+.lbl.ink { color: var(--ink); }
+.lbl.bad { color: var(--bad); }
+.lbl.warm { color: var(--warm); }
+figcaption { margin: 8px 12px 0; font: 400 14.5px/1.45 var(--sans); color: var(--muted); max-width: 46em; text-wrap: pretty; }
+.band { display: grid; grid-template-columns: minmax(220px, 300px) minmax(0, 1fr); gap: 28px; align-items: start; margin: 16px 30px 0; padding: 16px 0 0; border-top: 1px solid var(--line); }
+.ctl { display: flex; flex-direction: column; gap: 12px; }
+.hint { margin: 0; font: 500 10.5px/1.3 var(--mono); font-stretch: 85%; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.hs { display: flex; flex-direction: column; gap: 2px; }
+.hs[hidden] { display: none; }
+.hs label { display: flex; gap: 7px; font: 700 14px/1.3 var(--sans); }
+.hs .ar { color: var(--accent); font-weight: 400; }
+.hs input { width: 100%; accent-color: var(--accent); cursor: ew-resize; margin: 4px 0 2px; }
+.hs .ends { display: flex; justify-content: space-between; gap: 10px; font: 400 12.5px/1.2 var(--sans); color: var(--muted); }
+.reads { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px 22px; min-width: 0; }
+.read { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.read b { font: 500 20px/1.15 var(--mono); font-stretch: 85%; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.read b.bad { color: var(--bad); } .read b.good { color: var(--good); }
+.read span { font: 400 13.5px/1.35 var(--sans); color: var(--muted); }
+.why { padding: 24px 30px 0; }
+.why h2, .say b { display: block; margin: 0 0 10px; font: 500 10.5px/1.3 var(--mono); font-stretch: 85%; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.why .cols { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 34px; }
+.why h3 { margin: 0 0 5px; font: 700 15px/1.3 var(--sans); }
+.why p { margin: 0; font: 400 16px/1.55 var(--sans); text-wrap: pretty; }
+.say { display: grid; grid-template-columns: 1fr 1fr; gap: 34px; margin: 24px 30px 0; padding: 20px 0 30px; border-top: 1px solid var(--line); }
+.say p { margin: 0; font: 400 16px/1.55 var(--sans); text-wrap: pretty; max-width: 34em; }
+.say b { margin-bottom: 6px; }
+.say i { font: italic 400 18px/1.4 var(--serif); }
+.src { display: block; margin-top: 8px; font-size: 13.5px; color: var(--muted); }
+.src a { color: var(--accent); text-underline-offset: 2px; }
+.kind { display: inline-block; font: 500 10px/1 var(--mono); font-stretch: 85%; letter-spacing: .04em; text-transform: uppercase; border: 1px solid var(--line); border-radius: 4px; padding: 2px 5px; margin-left: 5px; color: var(--muted); vertical-align: 1px; }
+
+/* the same question, in the lab */
+.inlab { grid-area: inlab; border-left: 1px solid var(--line); padding: 24px 20px 22px 22px; display: flex; flex-direction: column; gap: 22px; background: color-mix(in srgb, var(--bg) 45%, transparent); min-width: 0; }
+.inlab h2 { margin: 0 0 8px; font: 500 10.5px/1.3 var(--mono); font-stretch: 85%; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.foot svg { display: block; width: 100%; height: auto; overflow: visible; }
+.foot .c { fill: none; stroke: var(--line); stroke-width: 1; }
+.foot .c.on { fill: var(--warm); stroke: var(--warm); cursor: pointer; }
+.foot .c.on:hover, .foot .c.sel { stroke: var(--ink); stroke-width: 1.6; }
+.foot .g { stroke: var(--ink); stroke-width: 1.4; }
+.foot .sh { stroke: var(--line); stroke-width: 1; }
+.foot text { font: 400 9.2px var(--mono); font-stretch: 80%; fill: var(--muted); }
+.foot text.st { fill: var(--ink); font-weight: 500; }
+.where { margin: 8px 0 0; font: 400 14px/1.45 var(--sans); color: var(--muted); min-height: 2.9em; }
+.where b { color: var(--ink); font-weight: 700; }
+.mks { display: flex; flex-wrap: wrap; gap: 8px; }
+.mk { width: 36px; height: 36px; border-radius: 50%; border: 1.5px solid var(--warm); background: var(--solid); display: grid; place-items: center; cursor: pointer; padding: 0; transition: transform .15s; }
+.mk:hover { transform: translateY(-1px); }
+.mk[aria-pressed="true"] { background: var(--warm); }
+.mk[aria-pressed="true"] svg { stroke: var(--solid); }
+.join { margin: 10px 0 0; font: 400 14.5px/1.45 var(--sans); }
+.join i { display: block; font: italic 400 16px/1.4 var(--serif); margin: 6px 0 10px; }
+.go { border: 0; background: none; padding: 0; color: var(--accent); font: 700 14px/1.3 var(--sans); cursor: pointer; text-align: left; }
+.go:hover { text-decoration: underline; text-underline-offset: 3px; }
+.asks { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 8px; }
+.asks li { font: italic 400 15.5px/1.38 var(--serif); }
+.asks small { display: block; margin-top: 2px; font: 400 13px/1.3 var(--sans); font-style: normal; color: var(--muted); }
+.counts { margin: 12px 0 0; display: flex; flex-wrap: wrap; gap: 4px 14px; font: 400 13.5px/1.3 var(--sans); color: var(--muted); }
+.counts b { font: 500 13px var(--mono); font-stretch: 85%; color: var(--ink); }
+
+/* for the people reviewing the prototype */
+.review { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; padding: 12px 16px; border: 1px dashed var(--line); border-radius: 14px; }
+.review p { margin: 0; font: 400 13px/1.4 var(--sans); color: var(--muted); flex: 1 1 280px; }
+.review p b { color: var(--ink); }
+.ticks { display: flex; gap: 5px; flex-wrap: wrap; }
+.tick { width: 30px; height: 30px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel); cursor: pointer; display: grid; place-items: center; padding: 0; }
+.tick svg { width: 15px; height: 15px; fill: none; stroke: var(--muted); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.tick[aria-current="true"] { border-color: var(--warm); }
+.tick[aria-current="true"] svg { stroke: var(--warm); }
+.note { margin: 0; padding: 0 4px; font: 400 13px/1.5 var(--sans); color: var(--muted); max-width: 75em; }
+.note b { color: var(--ink); }
+.note code { font: 400 12px var(--mono); font-stretch: 85%; }
+
+@media (max-width: 1080px) {
+  .card { grid-template-columns: minmax(0, 1fr); grid-template-areas: 'alone' 'text' 'inlab'; }
+  .inlab { border-left: 0; border-top: 1px solid var(--line); display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; }
+}
+@media (max-width: 760px) {
+  .why .cols { grid-template-columns: 1fr; gap: 16px; }
+  .band { grid-template-columns: 1fr; gap: 18px; }
+}
+@media (max-width: 640px) {
+  .wrap { padding: 10px 12px 36px; }
+  .head { padding: 18px 16px 2px; }
+  .stand { font-size: 16.5px; }
+  .fig { margin: 12px 8px 0; }
+  .pic { height: 280px; }
+  .band { margin: 14px 16px 0; }
+  .reads { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .why { padding: 18px 16px 0; }
+  .say { grid-template-columns: 1fr; gap: 16px; margin: 18px 16px 0; padding-bottom: 20px; }
+  .inlab { padding: 16px; }
+  .bar .sub { display: none; }
+}
+@media (prefers-reduced-motion: reduce) { .pic, .mk { transition: none; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="bar">
+    <span class="logo" aria-hidden="true"></span><b>Open Silicon Lab</b><span class="sub">Core question cards · prototype</span><span class="sp"></span>
+    <button type="button" class="tbtn" id="theme">Day / night</button>
+  </header>
+  <main>
+    <article class="card" aria-live="off">
+      <div class="alone">
+        <div class="head"><p class="kick" id="kick"></p><h1 class="q" id="q"></h1><p class="stand" id="stand"></p></div>
+        <figure class="fig">
+          <div class="pic" id="pic">
+            <canvas id="cv" role="img" aria-label="The question's picture. Its controls are the sliders under it."></canvas>
+            <div id="labels" aria-hidden="true"></div>
+          </div>
+          <figcaption id="cap"></figcaption>
+        </figure>
+        <div class="band">
+          <div class="ctl">
+            <p class="hint">Drag on the picture, or here</p>
+            <div class="hs"><label for="hu"><span class="ar" aria-hidden="true">↔</span><span id="hname"></span></label><input type="range" id="hu" min="0" max="1000" value="500"><div class="ends"><span id="hl"></span><span id="hr"></span></div></div>
+            <div class="hs" id="vwrap" hidden><label for="vv"><span class="ar" aria-hidden="true">↕</span><span id="vname"></span></label><input type="range" id="vv" min="0" max="1000" value="500"><div class="ends"><span id="vl"></span><span id="vr"></span></div></div>
+          </div>
+          <div class="reads" id="reads" aria-live="polite"></div>
+        </div>
+      </div>
+      <aside class="inlab" aria-label="The same question, in the lab">
+        <section class="foot"><h2>Where it lives</h2><div id="foot"></div><p class="where" id="where"></p></section>
+        <section><h2>It meets</h2><div class="mks" id="mks"></div><p class="join" id="join"></p></section>
+        <section><h2>It also asks</h2><ul class="asks" id="asks"></ul><p class="counts" id="counts"></p></section>
+      </aside>
+      <div class="text">
+        <section class="why" aria-labelledby="whyh"><h2 id="whyh">Why it matters</h2><div class="cols" id="why"></div></section>
+        <div class="say"><p id="true"></p><p id="open"></p></div>
+      </div>
+    </article>
+  </main>
+  <nav class="review" aria-label="For review">
+    <p><b>For review only.</b> The lab never shows the thirteen side by side: a visitor reaches a card from the picture it lives on, or from a question it meets. Use these, or the arrow keys, to see all thirteen.</p>
+    <div class="ticks" id="ticks"></div>
+  </nav>
+  <p class="note" id="note"></p>
+</div>
+<script>
+const DATA = {"stages":["open","design","make","test","ship","use"],"questions":[{"id":"perfect","q":"Why does a perfect design fail in the real world?","name":"Perfect fails","hint":"copies that differ, and the ones that fail","icon":"M5 8l0 0M9 15l0 0M13 6l0 0M17 12l0 0M7 19l0 0M15 18l0 0M19 6l0 0","foot":[{"p":"studio","name":"Design studio","stage":"design","levels":[{"d":"need","n":"The job","on":false},{"d":"logic","n":"Describe","on":false},{"d":"check","n":"Check","on":false},{"d":"gates","n":"Gates","on":true},{"d":"layout","n":"Layout","on":true},{"d":"masks","n":"Masks","on":true}]},{"p":"quarry","name":"Sand to crystal","stage":"make","levels":[{"d":"crystal","n":"Crystal","on":true},{"d":"slice","n":"Wafers","on":true}]},{"p":"fab","name":"The factory","stage":"make","levels":[{"d":"clean","n":"Clean","on":false},{"d":"deposit","n":"Deposit","on":true},{"d":"print","n":"Print","on":true},{"d":"etch","n":"Etch","on":true},{"d":"implant","n":"Implant","on":true},{"d":"wires","n":"Wires","on":false},{"d":"scanner","n":"Machine","on":false},{"d":"wafer","n":"Wafer","on":true},{"d":"die","n":"Chip","on":true}]},{"p":"test","name":"Test house","stage":"test","levels":[{"d":"test","n":"Test","on":true}]},{"p":"port","name":"The port","stage":"ship","levels":[{"d":"pkg","n":"Package","on":true},{"d":"ship","n":"Out","on":true}]},{"p":"datacentre","name":"Data centre","stage":"use","levels":[{"d":"mind","n":"Mind","on":false},{"d":"building","n":"Building","on":false},{"d":"rack","n":"Rack","on":false},{"d":"board","n":"Board","on":true},{"d":"chip","n":"Chip","on":true},{"d":"block","n":"Block","on":true},{"d":"gate","n":"Gate","on":true},{"d":"switch","n":"Switch","on":false},{"d":"atom","n":"Atom","on":true}]},{"p":"phones","name":"Phone island","stage":"use","levels":[{"d":"phone","n":"Phone","on":false},{"d":"phoneboard","n":"Board","on":true},{"d":"soc","n":"Chip","on":true},{"d":"block","n":"Block","on":true},{"d":"gate","n":"Gate","on":true},{"d":"switch","n":"Switch","on":false},{"d":"atom","n":"Atom","on":true}]},{"p":"cars","name":"Car island","stage":"use","levels":[{"d":"car","n":"Car","on":true},{"d":"ecu","n":"Control unit","on":true},{"d":"mcu","n":"Chip","on":true},{"d":"block","n":"Block","on":true},{"d":"gate","n":"Gate","on":true},{"d":"switch","n":"Switch","on":false},{"d":"atom","n":"Atom","on":true}]}],"meets":[{"id":"moore","shape":"chain","join":"variation grows as switches shrink","q":"As every switch shrinks toward a few atoms, can copies stay alike enough to be called the same design?"},{"id":"vn","shape":"fork","join":"margins, spares and votes","q":"Is it better to make each part good enough, or to make many poor parts that outvote each other?"},{"id":"geo","shape":"chain","join":"heat makes copies fail","q":"When packing parts closer heats them, how much of the difference between copies is heat?"},{"id":"trust","shape":"chain","join":"what tests cannot catch","q":"If every copy differs a little, what can a test of a few copies say about the rest?"},{"id":"physics","shape":"chain","join":"atoms out of place","q":"When a few atoms out of place change how a switch behaves, can any two switches be the same?"}],"field":[{"id":"wear","q":"Why does a chip that never moves wear out?","who":"James Black, 1969","at":"block","shape":"limit"},{"id":"lid","q":"Why did a chip's own package flip its bits?","who":"Timothy May and Murray Woods, 1978","at":"pkg","shape":"leak"},{"id":"perfect","q":"Why does a perfect design fail in the real world?","who":"Since Carver Mead and Lynn Conway, 1979","at":"masks","shape":"leak"},{"id":"later","q":"Why does a chip that passed every test compute wrong years later?","who":"Peter Hochschild and others, 2021","at":"chip","shape":"leak"},{"id":"purity","q":"Why must silicon be purer than almost anything people make?","who":"Siemens and Wacker, the 1950s","at":"quarry","shape":"limit"},{"id":"onebad","q":"Why can one bad piece throw away four good ones?","who":"Makers of chips in several pieces, since the 1990s","at":"die","shape":"bet"}],"n":{"field":7,"stops":26,"exp":23,"ch":16,"chHome":10,"levels":30},"rises":["gate","block"]},{"id":"dig","q":"Where does the digital world end and the physical begin?","name":"Digital meets physical","hint":"how a clean 1 is made from a messy world","icon":"M2 16h4V8h6v8h6V8h4","foot":[{"p":"studio","name":"Design studio","stage":"design","levels":[{"d":"need","n":"The job","on":false},{"d":"logic","n":"Describe","on":true},{"d":"check","n":"Check","on":true},{"d":"gates","n":"Gates","on":true},{"d":"layout","n":"Layout","on":false},{"d":"masks","n":"Masks","on":true}]},{"p":"quarry","name":"Sand to crystal","stage":"make","levels":[{"d":"crystal","n":"Crystal","on":false},{"d":"slice","n":"Wafers","on":false}]},{"p":"fab","name":"The factory","stage":"make","levels":[{"d":"clean","n":"Clean","on":false},{"d":"deposit","n":"Deposit","on":false},{"d":"print","n":"Print","on":false},{"d":"etch","n":"Etch","on":false},{"d":"implant","n":"Implant","on":false},{"d":"wires","n":"Wires","on":false},{"d":"scanner","n":"Machine","on":false},{"d":"wafer","n":"Wafer","on":false},{"d":"die","n":"Chip","on":false}]},{"p":"test","name":"Test house","stage":"test","levels":[{"d":"test","n":"Test","on":false}]},{"p":"port","name":"The port","stage":"ship","levels":[{"d":"pkg","n":"Package","on":false},{"d":"ship","n":"Out","on":false}]},{"p":"datacentre","name":"Data centre","stage":"use","levels":[{"d":"mind","n":"Mind","on":false},{"d":"building","n":"Building","on":false},{"d":"rack","n":"Rack","on":true},{"d":"board","n":"Board","on":true},{"d":"chip","n":"Chip","on":false},{"d":"block","n":"Block","on":true},{"d":"gate","n":"Gate","on":true},{"d":"switch","n":"Switch","on":true},{"d":"atom","n":"Atom","on":true}]},{"p":"phones","name":"Phone island","stage":"use","levels":[{"d":"phone","n":"Phone","on":false},{"d":"phoneboard","n":"Board","on":true},{"d":"soc","n":"Chip","on":true},{"d":"block","n":"Block","on":true},{"d":"gate","n":"Gate","on":true},{"d":"switch","n":"Switch","on":true},{"d":"atom","n":"Atom","on":true}]},{"p":"cars","name":"Car island","stage":"use","levels":[{"d":"car","n":"Car","on":false},{"d":"ecu","n":"Control unit","on":true},{"d":"mcu","n":"Chip","on":true},{"d":"block","n":"Block","on":true},{"d":"gate","n":"Gate","on":true},{"d":"switch","n":"Switch","on":true},{"d":"atom","n":"Atom","on":true}]}],"meets":[{"id":"line","shape":"fork","join":"logic is how you wire it","q":"If the same switches wired differently make different logic, where does the meaning of a circuit live?"},{"id":"physics","shape":"chain","join":"making a clean 1","q":"How much noise could a computer live with if it stopped insisting on a clean 1?"},{"id":"copy","shape":"fork","join":"remembering is a loop","q":"If remembering is a loop that holds a value, is memory just logic that never lets go?"},{"id":"vn","shape":"fork","join":"noise against the clean 1","q":"Is a clean 1 better made by a bigger swing on one wire, or by several noisy wires voting?"}],"field":[],"n":{"field":2,"stops":15,"exp":18,"ch":11,"chHome":5,"levels":22},"rises":["atom"]},{"id":"vn","q":"How can a whole be more reliable than its parts?","name":"Whole beats parts","hint":"spares, votes and codes that keep it right","icon":"M5 6l0 0M12 6l0 0M19 6l0 0M5 15l4 4 10-10","foot":[{"p":"studio","name":"Design studio","stage":"design","levels":[{"d":"need","n":"The job","on":false},{"d":"logic","n":"Describe","on":false},{"d":"check","n":"Check","on":true},{"d":"gates","n":"Gates","on":true},{"d":"layout","n":"Layout","on":false},{"d":"masks","n":"Masks","on":false}]},{"p":"quarry","name":"Sand to crystal","stage":"make","levels":[{"d":"crystal","n":"Crystal","on":false},{"d":"slice","n":"Wafers","on":false}]},{"p":"fab","name":"The factory","stage":"make","levels":[{"d":"clean","n":"Clean","on":false},{"d":"deposit","n":"Deposit","on":false},{"d":"print","n":"Print","on":false},{"d":"etch","n":"Etch","on":false},{"d":"implant","n":"Implant","on":false},{"d":"wires","n":"Wires","on":false},{"d":"scanner","n":"Machine","on":false},{"d":"wafer","n":"Wafer","on":false},{"d":"die","n":"Chip","on":false}]},{"p":"test","name":"Test house","stage":"test","levels":[{"d":"test","n":"Test","on":true}]},{"p":"port","name":"The port","stage":"ship","levels":[{"d":"pkg","n":"Package","on":false},{"d":"ship","n":"Out","on":true}]},{"p":"datacentre","name":"Data centre","stage":"use","levels":[{"d":"mind","n":"Mind","on":false},{"d":"building","n":"Building","on":true},{"d":"rack","n":"Rack","on":false},{"d":"board","n":"Board","on":false},{"d":"chip","n":"Chip","on":false},{"d":"block","n":"Block","on":false},{"d":"gate","n":"Gate","on":true},{"d":"switch","n":"Switch","on":false},{"d":"atom","n":"Atom","on":false}]},{"p":"phones","name":"Phone island","stage":"use","levels":[{"d":"phone","n":"Phone","on":false},{"d":"phoneboard","n":"Board","on":false},{"d":"soc","n":"Chip","on":true},{"d":"block","n":"Block","on":false},{"d":"gate","n":"Gate","on":true},{"d":"switch","n":"Switch","on":false},{"d":"atom","n":"Atom","on":false}]},{"p":"cars","name":"Car island","stage":"use","levels":[{"d":"car","n":"Car","on":false},{"d":"ecu","n":"Control unit","on":true},{"d":"mcu","n":"Chip","on":true},{"d":"block","n":"Block","on":false},{"d":"gate","n":"Gate","on":true},{"d":"switch","n":"Switch","on":false},{"d":"atom","n":"Atom","on":false}]}],"meets":[{"id":"perfect","shape":"fork","join":"margins, spares and votes","q":"Is it better to make each part good enough, or to make many poor parts that outvote each other?"},{"id":"trust","shape":"fork","join":"proof or redundancy","q":"Should you prove a design right once, or build it so a fault does not matter?"},{"id":"dig","shape":"fork","join":"noise against the clean 1","q":"Is a clean 1 better made by a bigger swing on one wire, or by several noisy wires voting?"},{"id":"copy","shape":"fork","join":"damage and graceful failure","q":"Should a damaged chip stop, or keep going and get a little worse, as a brain does?"}],"field":[{"id":"spare","q":"Can the whole be more reliable than every one of its parts?","who":"John von Neumann, 1956","at":"gate","shape":"limit"}],"n":{"field":2,"stops":4,"exp":6,"ch":8,"chHome":3,"levels":11},"rises":["gate"]},{"id":"sutton","q":"Why does more computing keep beating cleverer ideas of human design, and will it always?","name":"Compute beats cleverness","hint":"search and learning against clever design","icon":"M3 20c6 0 9-4 11-9s4-7 7-7M3 20h18","foot":[{"p":"studio","name":"Design studio","stage":"design","levels":[{"d":"need","n":"The job","on":true},{"d":"logic","n":"Describe","on":false},{"d":"check","n":"Check","on":true},{"d":"gates","n":"Gates","on":true},{"d":"layout","n":"Layout","on":false},{"d":"masks","n":"Masks","on":false}]},{"p":"quarry","name":"Sand to crystal","stage":"make","levels":[{"d":"crystal","n":"Crystal","on":true},{"d":"slice","n":"Wafers","on":false}]},{"p":"fab","name":"The factory","stage":"make","levels":[{"d":"clean","n":"Clean","on":false},{"d":"deposit","n":"Deposit","on":false},{"d":"print","n":"Print","on":false},{"d":"etch","n":"Etch","on":true},{"d":"implant","n":"Implant","on":false},{"d":"wires","n":"Wires","on":false},{"d":"scanner","n":"Machine","on":false},{"d":"wafer","n":"Wafer","on":false},{"d":"die","n":"Chip","on":false}]},{"p":"test","name":"Test house","stage":"test","levels":[{"d":"test","n":"Test","on":false}]},{"p":"port","name":"The port","stage":"ship","levels":[{"d":"pkg","n":"Package","on":false},{"d":"ship","n":"Out","on":false}]},{"p":"datacentre","name":"Data centre","stage":"use","levels":[{"d":"mind","n":"Mind","on":false},{"d":"building","n":"Building","on":true},{"d":"rack","n":"Rack","on":false},{"d":"board","n":"Board","on":false},{"d":"chip","n":"Chip","on":true},{"d":"block","n":"Block","on":false},{"d":"gate","n":"Gate","on":false},{"d":"switch","n":"Switch","on":true},{"d":"atom","n":"Atom","on":false}]},{"p":"phones","name":"Phone island","stage":"use","levels":[{"d":"phone","n":"Phone","on":false},{"d":"phoneboard","n":"Board","on":false},{"d":"soc","n":"Chip","on":true},{"d":"block","n":"Block","on":false},{"d":"gate","n":"Gate","on":false},{"d":"switch","n":"Switch","on":true},{"d":"atom","n":"Atom","on":false}]},{"p":"cars","name":"Car island","stage":"use","levels":[{"d":"car","n":"Car","on":true},{"d":"ecu","n":"Control unit","on":false},{"d":"mcu","n":"Chip","on":false},{"d":"block","n":"Block","on":false},{"d":"gate","n":"Gate","on":false},{"d":"switch","n":"Switch","on":true},{"d":"atom","n":"Atom","on":false}]}],"meets":[{"id":"human","shape":"fork","join":"who designs when AI designs","q":"When a search designs a part no person could follow, who is its designer?"},{"id":"nat","shape":"fork","join":"hard problems and search","q":"For a problem whose work doubles with every item, is searching harder ever enough?"},{"id":"trust","shape":"chain","join":"checking a designer you cannot follow","q":"How do you check a designer whose reasons you cannot follow?"},{"id":"line","shape":"fork","join":"general compute or clever special","q":"Does a general chip that runs every new idea beat a clever one built for today's?"},{"id":"eff","shape":"chain","join":"bigger models, more energy","q":"If bigger models keep winning, is their energy the price of being clever?"}],"field":[{"id":"oxen","q":"Two strong oxen or a thousand chickens?","who":"Seymour Cray","at":"chip","shape":"bet"},{"id":"lottery","q":"Did the best idea win, or the one that fit the chips?","who":"Sara Hooker, 2020","at":"lab","shape":"bet"},{"id":"scale","q":"Why does more computing keep beating clever ideas?","who":"Rich Sutton, 2019","at":"building","shape":"bet"}],"n":{"field":4,"stops":11,"exp":15,"ch":9,"chHome":2,"levels":12},"rises":["chip"]},{"id":"moore","q":"What will be the next Moore's law?","name":"The next Moore's law","hint":"smaller and cheaper, and what stops it","icon":"M4 20V5M9 20v-9M14 20v-5M19 20v-2","foot":[{"p":"studio","name":"Design studio","stage":"design","levels":[{"d":"need","n":"The job","on":true},{"d":"logic","n":"Describe","on":false},{"d":"check","n":"Check","on":false},{"d":"gates","n":"Gates","on":false},{"d":"layout","n":"Layout","on":true},{"d":"masks","n":"Masks","on":true}]},{"p":"quarry","name":"Sand to crystal","stage":"make","levels":[{"d":"crystal","n":"Crystal","on":true},{"d":"slice","n":"Wafers","on":true}]},{"p":"fab","name":"The factory","stage":"make","levels":[{"d":"clean","n":"Clean","on":true},{"d":"deposit","n":"Deposit","on":true},{"d":"print","n":"Print","on":true},{"d":"etch","n":"Etch","on":true},{"d":"implant","n":"Implant","on":true},{"d":"wires","n":"Wires","on":true},{"d":"scanner","n":"Machine","on":true},{"d":"wafer","n":"Wafer","on":true},{"d":"die","n":"Chip","on":true}]},{"p":"test","name":"Test house","stage":"test","levels":[{"d":"test","n":"Test","on":false}]},{"p":"port","name":"The port","stage":"ship","levels":[{"d":"pkg","n":"Package","on":true},{"d":"ship","n":"Out","on":true}]},{"p":"datacentre","name":"Data centre","stage":"use","levels":[{"d":"mind","n":"Mind","on":false},{"d":"building","n":"Building","on":false},{"d":"rack","n":"Rack","on":false},{"d":"board","n":"Board","on":false},{"d":"chip","n":"Chip","on":false},{"d":"block","n":"Block","on":false},{"d":"gate","n":"Gate","on":false},{"d":"switch","n":"Switch","on":true},{"d":"atom","n":"Atom","on":true}]},{"p":"phones","name":"Phone island","stage":"use","levels":[{"d":"phone","n":"Phone","on":false},{"d":"phoneboard","n":"Board","on":true},{"d":"soc","n":"Chip","on":true},{"d":"block","n":"Block","on":false},{"d":"gate","n":"Gate","on":false},{"d":"switch","n":"Switch","on":true},{"d":"atom","n":"Atom","on":true}]},{"p":"cars","name":"Car island","stage":"use","levels":[{"d":"car","n":"Car","on":false},{"d":"ecu","n":"Control unit","on":false},{"d":"mcu","n":"Chip","on":true},{"d":"block","n":"Block","on":false},{"d":"gate","n":"Gate","on":false},{"d":"switch","n":"Switch","on":true},{"d":"atom","n":"Atom","on":true}]}],"meets":[{"id":"perfect","shape":"chain","join":"variation grows as switches shrink","q":"As every switch shrinks toward a few atoms, can copies stay alike enough to be called the same design?"},{"id":"physics","shape":"chain","join":"the limits of shrinking","q":"When a part is a few dozen atoms long, does shrinking it further still make it better?"},{"id":"human","shape":"chain","join":"who can afford to make chips","q":"If every new generation costs more to make, how many people will still be able to make chips at all?"},{"id":"geo","shape":"fork","join":"up when you cannot go smaller","q":"When parts cannot get smaller, is stacking them upward the same kind of progress?"},{"id":"line","shape":"fork","join":"when shrinking slows, specialise","q":"When shrinking slows, is building special chips the new way to get faster?"},{"id":"eff","shape":"chain","join":"cheaper switches, more switches","q":"If each switch keeps getting cheaper to run, why does the world use more energy on them?"}],"field":[{"id":"pinhead","q":"What stops us writing a whole library on a pinhead?","who":"Richard Feynman, 1959","at":"atom","shape":"limit"},{"id":"oxide","q":"Why did the insulator that served for forty years stop insulating?","who":"Mark Bohr and Intel, 2007","at":"materials","shape":"leak"},{"id":"cheaper","q":"Why does putting more on a chip make each part cheaper, until it doesn't?","who":"Gordon Moore, 1965","at":"wafer","shape":"bet"},{"id":"top","q":"When there's no room left at the bottom, where is it?","who":"Charles Leiserson and others, 2020","at":"lab","shape":"bet"}],"n":{"field":6,"stops":40,"exp":41,"ch":16,"chHome":8,"levels":25},"rises":["switch"]},{"id":"line","q":"Where should the line fall between fixed structure and fluid adaptation?","name":"Fixed or fluid","hint":"what is fixed, and what can change","icon":"M4 4h16v16H4zM12 4v16M15 8h2M15 12h2M15 16h2","foot":[{"p":"studio","name":"Design studio","stage":"design","levels":[{"d":"need","n":"The job","on":true},{"d":"logic","n":"Describe","on":true},{"d":"check","n":"Check","on":true},{"d":"gates","n":"Gates","on":true},{"d":"layout","n":"Layout","on":true},{"d":"masks","n":"Masks","on":true}]},{"p":"quarry","name":"Sand to crystal","stage":"make","levels":[{"d":"crystal","n":"Crystal","on":false},{"d":"slice","n":"Wafers","on":false}]},{"p":"fab","name":"The factory","stage":"make","levels":[{"d":"clean","n":"Clean","on":false},{"d":"deposit","n":"Deposit","on":true},{"d":"print","n":"Print","on":false},{"d":"etch","n":"Etch","on":false},{"d":"implant","n":"Implant","on":false},{"d":"wires","n":"Wires","on":true},{"d":"scanner","n":"Machine","on":false},{"d":"wafer","n":"Wafer","on":false},{"d":"die","n":"Chip","on":true}]},{"p":"test","name":"Test house","stage":"test","levels":[{"d":"test","n":"Test","on":true}]},{"p":"port","name":"The port","stage":"ship","levels":[{"d":"pkg","n":"Package","on":false},{"d":"ship","n":"Out","on":true}]},{"p":"datacentre","name":"Data centre","stage":"use","levels":[{"d":"mind","n":"Mind","on":false},{"d":"building","n":"Building","on":true},{"d":"rack","n":"Rack","on":true},{"d":"board","n":"Board","on":true},{"d":"chip","n":"Chip","on":true},{"d":"block","n":"Block","on":false},{"d":"gate","n":"Gate","on":false},{"d":"switch","n":"Switch","on":false},{"d":"atom","n":"Atom","on":false}]},{"p":"phones","name":"Phone island","stage":"use","levels":[{"d":"phone","n":"Phone","on":false},{"d":"phoneboard","n":"Board","on":false},{"d":"soc","n":"Chip","on":true},{"d":"block","n":"Block","on":false},{"d":"gate","n":"Gate","on":false},{"d":"switch","n":"Switch","on":false},{"d":"atom","n":"Atom","on":false}]},{"p":"cars","name":"Car island","stage":"use","levels":[{"d":"car","n":"Car","on":true},{"d":"ecu","n":"Control unit","on":true},{"d":"mcu","n":"Chip","on":true},{"d":"block","n":"Block","on":false},{"d":"gate","n":"Gate","on":false},{"d":"switch","n":"Switch","on":false},{"d":"atom","n":"Atom","on":false}]}],"meets":[{"id":"geo","shape":"fork","join":"where the work sits","q":"Should a job sit where its data is, even if that means building a part only that job can use?"},{"id":"dig","shape":"fork","join":"logic is how you wire it","q":"If the same switches wired differently make different logic, where does the meaning of a circuit live?"},{"id":"human","shape":"fork","join":"who decides what a chip is for","q":"Who decides what a chip is for, and what happens when the job changes after it is made?"},{"id":"eff","shape":"fork","join":"special is cheaper","q":"A part built for one job wastes less energy on it. Is that worth losing every other job?"},{"id":"moore","shape":"fork","join":"when shrinking slows, specialise","q":"When shrinking slows, is building special chips the new way to get faster?"},{"id":"sutton","shape":"fork","join":"general compute or clever special","q":"Does a general chip that runs every new idea beat a clever one built for today's?"}],"field":[{"id":"general","q":"One chip for everything, or one chip for each job?","who":"Ted Hoff, 1969; John Hennessy and David Patterson, 2018","at":"need","shape":"bet"},{"id":"dollar","q":"Why can a car wait months for a chip that costs a dollar?","who":"Car makers, 2021","at":"car","shape":"bet"}],"n":{"field":6,"stops":27,"exp":33,"ch":16,"chHome":7,"levels":19},"rises":["chip"]},{"id":"trust","q":"What can trust rest on when a system is too complex to inspect or test?","name":"Trust without inspection","hint":"what is checked, and what nobody can check","icon":"M12 3l8 3v6c0 5-4 8-8 9-4-1-8-4-8-9V6zM8 12l3 3 5-6","foot":[{"p":"studio","name":"Design studio","stage":"design","levels":[{"d":"need","n":"The job","on":false},{"d":"logic","n":"Describe","on":true},{"d":"check","n":"Check","on":true},{"d":"gates","n":"Gates","on":true},{"d":"layout","n":"Layout","on":false},{"d":"masks","n":"Masks","on":false}]},{"p":"quarry","name":"Sand to crystal","stage":"make","levels":[{"d":"crystal","n":"Crystal","on":false},{"d":"slice","n":"Wafers","on":false}]},{"p":"fab","name":"The factory","stage":"make","levels":[{"d":"clean","n":"Clean","on":false},{"d":"deposit","n":"Deposit","on":false},{"d":"print","n":"Print","on":false},{"d":"etch","n":"Etch","on":true},{"d":"implant","n":"Implant","on":false},{"d":"wires","n":"Wires","on":false},{"d":"scanner","n":"Machine","on":true},{"d":"wafer","n":"Wafer","on":false},{"d":"die","n":"Chip","on":false}]},{"p":"test","name":"Test house","stage":"test","levels":[{"d":"test","n":"Test","on":true}]},{"p":"port","name":"The port","stage":"ship","levels":[{"d":"pkg","n":"Package","on":false},{"d":"ship","n":"Out","on":true}]},{"p":"datacentre","name":"Data centre","stage":"use","levels":[{"d":"mind","n":"Mind","on":false},{"d":"building","n":"Building","on":false},{"d":"rack","n":"Rack","on":false},{"d":"board","n":"Board","on":false},{"d":"chip","n":"Chip","on":true},{"d":"block","n":"Block","on":false},{"d":"gate","n":"Gate","on":true},{"d":"switch","n":"Switch","on":false},{"d":"atom","n":"Atom","on":false}]},{"p":"phones","name":"Phone island","stage":"use","levels":[{"d":"phone","n":"Phone","on":false},{"d":"phoneboard","n":"Board","on":false},{"d":"soc","n":"Chip","on":false},{"d":"block","n":"Block","on":false},{"d":"gate","n":"Gate","on":true},{"d":"switch","n":"Switch","on":false},{"d":"atom","n":"Atom","on":false}]},{"p":"cars","name":"Car island","stage":"use","levels":[{"d":"car","n":"Car","on":false},{"d":"ecu","n":"Control unit","on":true},{"d":"mcu","n":"Chip","on":false},{"d":"block","n":"Block","on":false},{"d":"gate","n":"Gate","on":true},{"d":"switch","n":"Switch","on":false},{"d":"atom","n":"Atom","on":false}]}],"meets":[{"id":"human","shape":"fork","join":"open records","q":"Would open records of how a chip was designed and made be enough to trust it?"},{"id":"sutton","shape":"chain","join":"checking a designer you cannot follow","q":"How do you check a designer whose reasons you cannot follow?"},{"id":"perfect","shape":"chain","join":"what tests cannot catch","q":"If every copy differs a little, what can a test of a few copies say about the rest?"},{"id":"vn","shape":"fork","join":"proof or redundancy","q":"Should you prove a design right once, or build it so a fault does not matter?"}],"field":[{"id":"life","q":"How sure must a chip be when a life depends on it?","who":"ISO 26262, the standard for car safety, 2011","at":"ecu","shape":"limit"},{"id":"secret","q":"How can a chip that does exactly what it should still give away secrets?","who":"Paul Kocher and others, 2018","at":"chip","shape":"leak"},{"id":"copy","q":"Why copy even what nobody understands?","who":"Intel's Copy Exactly, from the 1980s","at":"fab","shape":"leak"},{"id":"pins","q":"How do you check billions of parts through a few hundred pins?","who":"Edward Eichelberger and Thomas Williams, 1977","at":"test","shape":"leak"},{"id":"trust","q":"Can you trust a chip you didn't make, even after checking every line?","who":"Ken Thompson, 1984","at":"port","shape":"leak"},{"id":"prove","q":"Test it, or prove it?","who":"After Thomas Nicely found a division bug in the Pentium, 1994","at":"check","shape":"bet"}],"n":{"field":10,"stops":9,"exp":16,"ch":8,"chHome":4,"levels":12},"rises":["chip"]},{"id":"physics","q":"Should we fight physics to keep logic exact, or let physical law do the computing?","name":"Fight or use physics","hint":"noise, heat and atoms: an enemy or a tool","icon":"M2 12c2-5 4-5 6 0s4 5 6 0 4-5 6 0","foot":[{"p":"studio","name":"Design studio","stage":"design","levels":[{"d":"need","n":"The job","on":false},{"d":"logic","n":"Describe","on":false},{"d":"check","n":"Check","on":false},{"d":"gates","n":"Gates","on":false},{"d":"layout","n":"Layout","on":false},{"d":"masks","n":"Masks","on":false}]},{"p":"quarry","name":"Sand to crystal","stage":"make","levels":[{"d":"crystal","n":"Crystal","on":true},{"d":"slice","n":"Wafers","on":false}]},{"p":"fab","name":"The factory","stage":"make","levels":[{"d":"clean","n":"Clean","on":false},{"d":"deposit","n":"Deposit","on":true},{"d":"print","n":"Print","on":true},{"d":"etch","n":"Etch","on":false},{"d":"implant","n":"Implant","on":true},{"d":"wires","n":"Wires","on":false},{"d":"scanner","n":"Machine","on":true},{"d":"wafer","n":"Wafer","on":false},{"d":"die","n":"Chip","on":false}]},{"p":"test","name":"Test house","stage":"test","levels":[{"d":"test","n":"Test","on":false}]},{"p":"port","name":"The port","stage":"ship","levels":[{"d":"pkg","n":"Package","on":true},{"d":"ship","n":"Out","on":false}]},{"p":"datacentre","name":"Data centre","stage":"use","levels":[{"d":"mind","n":"Mind","on":false},{"d":"building","n":"Building","on":false},{"d":"rack","n":"Rack","on":false},{"d":"board","n":"Board","on":false},{"d":"chip","n":"Chip","on":false},{"d":"block","n":"Block","on":true},{"d":"gate","n":"Gate","on":true},{"d":"switch","n":"Switch","on":true},{"d":"atom","n":"Atom","on":true}]},{"p":"phones","name":"Phone island","stage":"use","levels":[{"d":"phone","n":"Phone","on":false},{"d":"phoneboard","n":"Board","on":false},{"d":"soc","n":"Chip","on":false},{"d":"block","n":"Block","on":true},{"d":"gate","n":"Gate","on":true},{"d":"switch","n":"Switch","on":true},{"d":"atom","n":"Atom","on":true}]},{"p":"cars","name":"Car island","stage":"use","levels":[{"d":"car","n":"Car","on":true},{"d":"ecu","n":"Control unit","on":false},{"d":"mcu","n":"Chip","on":false},{"d":"block","n":"Block","on":true},{"d":"gate","n":"Gate","on":true},{"d":"switch","n":"Switch","on":true},{"d":"atom","n":"Atom","on":true}]}],"meets":[{"id":"moore","shape":"chain","join":"the limits of shrinking","q":"When a part is a few dozen atoms long, does shrinking it further still make it better?"},{"id":"dig","shape":"chain","join":"making a clean 1","q":"How much noise could a computer live with if it stopped insisting on a clean 1?"},{"id":"nat","shape":"fork","join":"computing with physical law","q":"If physical law can compute some answers by itself, which answers still need logic?"},{"id":"copy","shape":"fork","join":"memory that computes","q":"If the memory itself does the computing, what is left to copy: the program, or the chip?"},{"id":"eff","shape":"fork","join":"lower voltage, slower clock","q":"Running slower at a lower voltage saves energy. When is waiting worth it?"},{"id":"perfect","shape":"chain","join":"atoms out of place","q":"When a few atoms out of place change how a switch behaves, can any two switches be the same?"}],"field":[{"id":"heat","q":"Must thinking make heat at all?","who":"Rolf Landauer, 1961","at":"switch","shape":"limit"},{"id":"mask","q":"Why does a mask look nothing like the chip it prints?","who":"Lithographers, since lines became smaller than the light that prints them","at":"tools","shape":"leak"}],"n":{"field":8,"stops":20,"exp":21,"ch":21,"chHome":10,"levels":19},"rises":["gate","switch"]},{"id":"eff","q":"Why does efficiency fuel consumption?","name":"Efficiency fuels use","hint":"where the energy goes, and what saving it does","icon":"M13 2L5 14h6l-1 8 8-12h-6z","foot":[{"p":"studio","name":"Design studio","stage":"design","levels":[{"d":"need","n":"The job","on":false},{"d":"logic","n":"Describe","on":false},{"d":"check","n":"Check","on":false},{"d":"gates","n":"Gates","on":false},{"d":"layout","n":"Layout","on":false},{"d":"masks","n":"Masks","on":false}]},{"p":"quarry","name":"Sand to crystal","stage":"make","levels":[{"d":"crystal","n":"Crystal","on":false},{"d":"slice","n":"Wafers","on":false}]},{"p":"fab","name":"The factory","stage":"make","levels":[{"d":"clean","n":"Clean","on":false},{"d":"deposit","n":"Deposit","on":false},{"d":"print","n":"Print","on":true},{"d":"etch","n":"Etch","on":false},{"d":"implant","n":"Implant","on":false},{"d":"wires","n":"Wires","on":false},{"d":"scanner","n":"Machine","on":false},{"d":"wafer","n":"Wafer","on":false},{"d":"die","n":"Chip","on":false}]},{"p":"test","name":"Test house","stage":"test","levels":[{"d":"test","n":"Test","on":false}]},{"p":"port","name":"The port","stage":"ship","levels":[{"d":"pkg","n":"Package","on":true},{"d":"ship","n":"Out","on":false}]},{"p":"datacentre","name":"Data centre","stage":"use","levels":[{"d":"mind","n":"Mind","on":false},{"d":"building","n":"Building","on":true},{"d":"rack","n":"Rack","on":true},{"d":"board","n":"Board","on":true},{"d":"chip","n":"Chip","on":true},{"d":"block","n":"Block","on":true},{"d":"gate","n":"Gate","on":false},{"d":"switch","n":"Switch","on":false},{"d":"atom","n":"Atom","on":true}]},{"p":"phones","name":"Phone island","stage":"use","levels":[{"d":"phone","n":"Phone","on":true},{"d":"phoneboard","n":"Board","on":true},{"d":"soc","n":"Chip","on":false},{"d":"block","n":"Block","on":true},{"d":"gate","n":"Gate","on":false},{"d":"switch","n":"Switch","on":false},{"d":"atom","n":"Atom","on":true}]},{"p":"cars","name":"Car island","stage":"use","levels":[{"d":"car","n":"Car","on":false},{"d":"ecu","n":"Control unit","on":false},{"d":"mcu","n":"Chip","on":false},{"d":"block","n":"Block","on":true},{"d":"gate","n":"Gate","on":false},{"d":"switch","n":"Switch","on":false},{"d":"atom","n":"Atom","on":true}]}],"meets":[{"id":"geo","shape":"front","join":"moving data costs the energy","q":"If fetching a number costs more than using it, should the work move to the data, instead of the data to the work?"},{"id":"line","shape":"fork","join":"special is cheaper","q":"A part built for one job wastes less energy on it. Is that worth losing every other job?"},{"id":"moore","shape":"chain","join":"cheaper switches, more switches","q":"If each switch keeps getting cheaper to run, why does the world use more energy on them?"},{"id":"physics","shape":"fork","join":"lower voltage, slower clock","q":"Running slower at a lower voltage saves energy. When is waiting worth it?"},{"id":"sutton","shape":"chain","join":"bigger models, more energy","q":"If bigger models keep winning, is their energy the price of being clever?"},{"id":"copy","shape":"fork","join":"twenty watts and a power plant","q":"A brain runs on about the power of a light bulb. What does it do that a chip does not?"}],"field":[{"id":"batch","q":"Fast for one person, or busy for many?","who":"Woosuk Kwon and colleagues, vLLM, 2023","at":"chip","shape":"bet"},{"id":"station","q":"Why does a building full of chips now need a power station of its own?","who":"The International Energy Agency, 2025","at":"power","shape":"bet"},{"id":"jevons","q":"When each answer takes less energy, why does the world use more?","who":"William Stanley Jevons, 1865; asked again about AI","at":"power","shape":"bet"}],"n":{"field":7,"stops":17,"exp":15,"ch":14,"chHome":5,"levels":14},"rises":["machine"]},{"id":"nat","q":"If almost anything in nature can compute, what if anything remains beyond computation?","name":"Beyond computation","hint":"what nature computes, and what nothing can","icon":"M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM3 12h18M12 3c3 3 3 15 0 18","foot":[{"p":"studio","name":"Design studio","stage":"design","levels":[{"d":"need","n":"The job","on":false},{"d":"logic","n":"Describe","on":false},{"d":"check","n":"Check","on":false},{"d":"gates","n":"Gates","on":false},{"d":"layout","n":"Layout","on":false},{"d":"masks","n":"Masks","on":false}]},{"p":"quarry","name":"Sand to crystal","stage":"make","levels":[{"d":"crystal","n":"Crystal","on":false},{"d":"slice","n":"Wafers","on":false}]},{"p":"fab","name":"The factory","stage":"make","levels":[{"d":"clean","n":"Clean","on":false},{"d":"deposit","n":"Deposit","on":false},{"d":"print","n":"Print","on":false},{"d":"etch","n":"Etch","on":false},{"d":"implant","n":"Implant","on":false},{"d":"wires","n":"Wires","on":false},{"d":"scanner","n":"Machine","on":true},{"d":"wafer","n":"Wafer","on":false},{"d":"die","n":"Chip","on":false}]},{"p":"test","name":"Test house","stage":"test","levels":[{"d":"test","n":"Test","on":false}]},{"p":"port","name":"The port","stage":"ship","levels":[{"d":"pkg","n":"Package","on":false},{"d":"ship","n":"Out","on":false}]},{"p":"datacentre","name":"Data centre","stage":"use","levels":[{"d":"mind","n":"Mind","on":false},{"d":"building","n":"Building","on":false},{"d":"rack","n":"Rack","on":true},{"d":"board","n":"Board","on":false},{"d":"chip","n":"Chip","on":false},{"d":"block","n":"Block","on":false},{"d":"gate","n":"Gate","on":false},{"d":"switch","n":"Switch","on":true},{"d":"atom","n":"Atom","on":true}]},{"p":"phones","name":"Phone island","stage":"use","levels":[{"d":"phone","n":"Phone","on":false},{"d":"phoneboard","n":"Board","on":false},{"d":"soc","n":"Chip","on":false},{"d":"block","n":"Block","on":false},{"d":"gate","n":"Gate","on":false},{"d":"switch","n":"Switch","on":true},{"d":"atom","n":"Atom","on":true}]},{"p":"cars","name":"Car island","stage":"use","levels":[{"d":"car","n":"Car","on":false},{"d":"ecu","n":"Control unit","on":false},{"d":"mcu","n":"Chip","on":false},{"d":"block","n":"Block","on":false},{"d":"gate","n":"Gate","on":false},{"d":"switch","n":"Switch","on":true},{"d":"atom","n":"Atom","on":true}]}],"meets":[{"id":"physics","shape":"fork","join":"computing with physical law","q":"If physical law can compute some answers by itself, which answers still need logic?"},{"id":"sutton","shape":"fork","join":"hard problems and search","q":"For a problem whose work doubles with every item, is searching harder ever enough?"},{"id":"copy","shape":"fork","join":"living computers","q":"Could living cells compute, and could their answers be copied?"}],"field":[{"id":"nature","q":"Can a computer copy nature exactly?","who":"Richard Feynman, 1981","at":"idea","shape":"limit"}],"n":{"field":1,"stops":8,"exp":14,"ch":8,"chHome":2,"levels":8},"rises":[]},{"id":"geo","q":"Is the ceiling of intelligence fundamentally a geometry problem: packing parts close to communicate, while spreading them apart to stay cool?","name":"Geometry","hint":"distance and heat","icon":"M4 4h16v16H4zM9 9h6v6H9z","foot":[{"p":"studio","name":"Design studio","stage":"design","levels":[{"d":"need","n":"The job","on":false},{"d":"logic","n":"Describe","on":false},{"d":"check","n":"Check","on":false},{"d":"gates","n":"Gates","on":false},{"d":"layout","n":"Layout","on":true},{"d":"masks","n":"Masks","on":false}]},{"p":"quarry","name":"Sand to crystal","stage":"make","levels":[{"d":"crystal","n":"Crystal","on":false},{"d":"slice","n":"Wafers","on":false}]},{"p":"fab","name":"The factory","stage":"make","levels":[{"d":"clean","n":"Clean","on":false},{"d":"deposit","n":"Deposit","on":false},{"d":"print","n":"Print","on":false},{"d":"etch","n":"Etch","on":false},{"d":"implant","n":"Implant","on":false},{"d":"wires","n":"Wires","on":true},{"d":"scanner","n":"Machine","on":false},{"d":"wafer","n":"Wafer","on":true},{"d":"die","n":"Chip","on":true}]},{"p":"test","name":"Test house","stage":"test","levels":[{"d":"test","n":"Test","on":true}]},{"p":"port","name":"The port","stage":"ship","levels":[{"d":"pkg","n":"Package","on":true},{"d":"ship","n":"Out","on":false}]},{"p":"datacentre","name":"Data centre","stage":"use","levels":[{"d":"mind","n":"Mind","on":false},{"d":"building","n":"Building","on":true},{"d":"rack","n":"Rack","on":true},{"d":"board","n":"Board","on":true},{"d":"chip","n":"Chip","on":true},{"d":"block","n":"Block","on":true},{"d":"gate","n":"Gate","on":false},{"d":"switch","n":"Switch","on":false},{"d":"atom","n":"Atom","on":false}]},{"p":"phones","name":"Phone island","stage":"use","levels":[{"d":"phone","n":"Phone","on":true},{"d":"phoneboard","n":"Board","on":true},{"d":"soc","n":"Chip","on":false},{"d":"block","n":"Block","on":true},{"d":"gate","n":"Gate","on":false},{"d":"switch","n":"Switch","on":false},{"d":"atom","n":"Atom","on":false}]},{"p":"cars","name":"Car island","stage":"use","levels":[{"d":"car","n":"Car","on":false},{"d":"ecu","n":"Control unit","on":false},{"d":"mcu","n":"Chip","on":false},{"d":"block","n":"Block","on":true},{"d":"gate","n":"Gate","on":false},{"d":"switch","n":"Switch","on":false},{"d":"atom","n":"Atom","on":false}]}],"meets":[{"id":"eff","shape":"front","join":"moving data costs the energy","q":"If fetching a number costs more than using it, should the work move to the data, instead of the data to the work?"},{"id":"line","shape":"fork","join":"where the work sits","q":"Should a job sit where its data is, even if that means building a part only that job can use?"},{"id":"moore","shape":"fork","join":"up when you cannot go smaller","q":"When parts cannot get smaller, is stacking them upward the same kind of progress?"},{"id":"perfect","shape":"chain","join":"heat makes copies fail","q":"When packing parts closer heats them, how much of the difference between copies is heat?"},{"id":"copy","shape":"fork","join":"the memory wall","q":"If memory sits far from the logic and the logic keeps waiting, should memory move inside it?"}],"field":[{"id":"dark","q":"Why must most of a chip go dark?","who":"Hadi Esmaeilzadeh and others, 2011","at":"chip","shape":"limit"},{"id":"wires","q":"How do you join a million parts without a million wires?","who":"Jack Morton, 1958","at":"wires","shape":"limit"},{"id":"palm","q":"Why does your phone slow down while you hold it?","who":"Phone chip makers such as Qualcomm, 2013","at":"phone","shape":"limit"},{"id":"fetch","q":"Why does fetching a number cost far more than using it?","who":"Mark Horowitz, 2014, after John Backus, 1977","at":"block","shape":"leak"},{"id":"wait","q":"If the chip gets faster, why does it spend more time waiting?","who":"William Wulf and Sally McKee, 1995","at":"board","shape":"leak"},{"id":"package","q":"Why were AI chips short when there were enough chips?","who":"Mark Liu, chairman of TSMC, 2023","at":"pkg","shape":"leak"}],"n":{"field":9,"stops":22,"exp":20,"ch":13,"chHome":6,"levels":15},"rises":["block","machine"]},{"id":"copy","q":"To think efficiently as a brain, must a machine give up the power to copy its mind?","name":"Brain or copy","hint":"where memory sits, and what can be copied","icon":"M8 8h12v12H8zM4 16V4h12","foot":[{"p":"studio","name":"Design studio","stage":"design","levels":[{"d":"need","n":"The job","on":false},{"d":"logic","n":"Describe","on":false},{"d":"check","n":"Check","on":false},{"d":"gates","n":"Gates","on":false},{"d":"layout","n":"Layout","on":false},{"d":"masks","n":"Masks","on":false}]},{"p":"quarry","name":"Sand to crystal","stage":"make","levels":[{"d":"crystal","n":"Crystal","on":false},{"d":"slice","n":"Wafers","on":false}]},{"p":"fab","name":"The factory","stage":"make","levels":[{"d":"clean","n":"Clean","on":false},{"d":"deposit","n":"Deposit","on":false},{"d":"print","n":"Print","on":false},{"d":"etch","n":"Etch","on":false},{"d":"implant","n":"Implant","on":false},{"d":"wires","n":"Wires","on":false},{"d":"scanner","n":"Machine","on":false},{"d":"wafer","n":"Wafer","on":false},{"d":"die","n":"Chip","on":false}]},{"p":"test","name":"Test house","stage":"test","levels":[{"d":"test","n":"Test","on":false}]},{"p":"port","name":"The port","stage":"ship","levels":[{"d":"pkg","n":"Package","on":true},{"d":"ship","n":"Out","on":false}]},{"p":"datacentre","name":"Data centre","stage":"use","levels":[{"d":"mind","n":"Mind","on":false},{"d":"building","n":"Building","on":true},{"d":"rack","n":"Rack","on":false},{"d":"board","n":"Board","on":true},{"d":"chip","n":"Chip","on":false},{"d":"block","n":"Block","on":true},{"d":"gate","n":"Gate","on":true},{"d":"switch","n":"Switch","on":true},{"d":"atom","n":"Atom","on":false}]},{"p":"phones","name":"Phone island","stage":"use","levels":[{"d":"phone","n":"Phone","on":true},{"d":"phoneboard","n":"Board","on":false},{"d":"soc","n":"Chip","on":false},{"d":"block","n":"Block","on":true},{"d":"gate","n":"Gate","on":true},{"d":"switch","n":"Switch","on":true},{"d":"atom","n":"Atom","on":false}]},{"p":"cars","name":"Car island","stage":"use","levels":[{"d":"car","n":"Car","on":true},{"d":"ecu","n":"Control unit","on":false},{"d":"mcu","n":"Chip","on":false},{"d":"block","n":"Block","on":true},{"d":"gate","n":"Gate","on":true},{"d":"switch","n":"Switch","on":true},{"d":"atom","n":"Atom","on":false}]}],"meets":[{"id":"physics","shape":"fork","join":"memory that computes","q":"If the memory itself does the computing, what is left to copy: the program, or the chip?"},{"id":"geo","shape":"fork","join":"the memory wall","q":"If memory sits far from the logic and the logic keeps waiting, should memory move inside it?"},{"id":"dig","shape":"fork","join":"remembering is a loop","q":"If remembering is a loop that holds a value, is memory just logic that never lets go?"},{"id":"eff","shape":"fork","join":"twenty watts and a power plant","q":"A brain runs on about the power of a light bulb. What does it do that a chip does not?"},{"id":"vn","shape":"fork","join":"damage and graceful failure","q":"Should a damaged chip stop, or keep going and get a little worse, as a brain does?"},{"id":"nat","shape":"fork","join":"living computers","q":"Could living cells compute, and could their answers be copied?"}],"field":[{"id":"brain","q":"How does a brain think so well with slow, sloppy parts?","who":"Carver Mead, 1990","at":"gate","shape":"limit"}],"n":{"field":3,"stops":10,"exp":10,"ch":3,"chHome":2,"levels":14},"rises":["mind"]},{"id":"human","q":"When AI makes generating options free and tools spread to everyone, what can only humans bring, alone and together?","name":"Only humans","hint":"who makes and decides","icon":"M7 11V6a1.5 1.5 0 0 1 3 0v5M10 10V4a1.5 1.5 0 0 1 3 0v6M13 10V5a1.5 1.5 0 0 1 3 0v8c0 4-3 7-6.5 7S5 17 5 14v-2a1.5 1.5 0 0 1 3 0","foot":[{"p":"studio","name":"Design studio","stage":"design","levels":[{"d":"need","n":"The job","on":true},{"d":"logic","n":"Describe","on":true},{"d":"check","n":"Check","on":true},{"d":"gates","n":"Gates","on":false},{"d":"layout","n":"Layout","on":true},{"d":"masks","n":"Masks","on":false}]},{"p":"quarry","name":"Sand to crystal","stage":"make","levels":[{"d":"crystal","n":"Crystal","on":true},{"d":"slice","n":"Wafers","on":false}]},{"p":"fab","name":"The factory","stage":"make","levels":[{"d":"clean","n":"Clean","on":true},{"d":"deposit","n":"Deposit","on":true},{"d":"print","n":"Print","on":false},{"d":"etch","n":"Etch","on":true},{"d":"implant","n":"Implant","on":false},{"d":"wires","n":"Wires","on":false},{"d":"scanner","n":"Machine","on":true},{"d":"wafer","n":"Wafer","on":false},{"d":"die","n":"Chip","on":true}]},{"p":"test","name":"Test house","stage":"test","levels":[{"d":"test","n":"Test","on":false}]},{"p":"port","name":"The port","stage":"ship","levels":[{"d":"pkg","n":"Package","on":false},{"d":"ship","n":"Out","on":true}]},{"p":"datacentre","name":"Data centre","stage":"use","levels":[{"d":"mind","n":"Mind","on":false},{"d":"building","n":"Building","on":false},{"d":"rack","n":"Rack","on":false},{"d":"board","n":"Board","on":false},{"d":"chip","n":"Chip","on":false},{"d":"block","n":"Block","on":false},{"d":"gate","n":"Gate","on":false},{"d":"switch","n":"Switch","on":false},{"d":"atom","n":"Atom","on":false}]},{"p":"phones","name":"Phone island","stage":"use","levels":[{"d":"phone","n":"Phone","on":true},{"d":"phoneboard","n":"Board","on":true},{"d":"soc","n":"Chip","on":false},{"d":"block","n":"Block","on":false},{"d":"gate","n":"Gate","on":false},{"d":"switch","n":"Switch","on":false},{"d":"atom","n":"Atom","on":false}]},{"p":"cars","name":"Car island","stage":"use","levels":[{"d":"car","n":"Car","on":true},{"d":"ecu","n":"Control unit","on":true},{"d":"mcu","n":"Chip","on":true},{"d":"block","n":"Block","on":false},{"d":"gate","n":"Gate","on":false},{"d":"switch","n":"Switch","on":false},{"d":"atom","n":"Atom","on":false}]}],"meets":[{"id":"sutton","shape":"fork","join":"who designs when AI designs","q":"When a search designs a part no person could follow, who is its designer?"},{"id":"moore","shape":"chain","join":"who can afford to make chips","q":"If every new generation costs more to make, how many people will still be able to make chips at all?"},{"id":"line","shape":"fork","join":"who decides what a chip is for","q":"Who decides what a chip is for, and what happens when the job changes after it is made?"},{"id":"trust","shape":"fork","join":"open records","q":"Would open records of how a chip was designed and made be enough to trust it?"}],"field":[{"id":"fabless","q":"Does a chip company need its own factory?","who":"Morris Chang, 1987","at":"fab","shape":"bet"},{"id":"printer","q":"Should the whole world rely on one maker of the printing machine?","who":"Since the first EUV machines shipped, 2017","at":"scanner","shape":"bet"},{"id":"anyone","q":"Can someone who never enters a factory design a chip?","who":"Carver Mead and Lynn Conway, 1979","at":"studio","shape":"bet"},{"id":"quartz","q":"Why do the world's chips depend on one small town's rock?","who":"Ed Conway, after Hurricane Helene, 2024","at":"quarry","shape":"bet"},{"id":"neon","q":"Why can a war far away stop the gas a chip printer's laser needs?","who":"Chipmakers, when Ingas and Cryoin stopped, 2022","at":"materials","shape":"bet"}],"n":{"field":7,"stops":25,"exp":35,"ch":12,"chHome":3,"levels":16},"rises":[]}]};
+/* The words of each card. cap: what the picture is. h, v: the two controls [one end, its name, the other end].
+   true: one thing that is true, with where it comes from (src: text, url, the kind of source as in the lab's facts.json).
+   open: what nobody knows. eng: for the build, the engine behind the picture. */
+const CARDS = {
+  perfect: {
+    cap: "144 copies of one drawing. Each bar shows how close that copy’s slowest signal comes to the clock’s tick: a full bar is only just in time. Red: it arrives after the tick, so the copy fails.",
+    stand: "A design is an idea and a chip is a thing. What goes wrong lives in the gap between the two.",
+    why: ["A design is checked as if every copy were the same. The factory makes billions of copies that each differ a little, heat up and age. Margins, tests and spares all exist to cover that gap.", "A design written by AI is right only as far as its checks go. And the largest AI machines use so many chips that rare faults turn up every day.", "Bridges, medicines, laws and software meet the same gap: a plan that is right on paper, in a world that never matches the paper."],
+    h: ['slower', 'The clock you ask for', 'faster'],
+    true: 'Meta’s engineers report silent wrong answers from about one in a thousand of their chips: chips made from a correct design, which had passed their tests.',
+    src: [{ t: 'Meta, arXiv 2203.08989', u: 'https://arxiv.org/abs/2203.08989', k: 'reported' }],
+    open: 'How small can a part be made and still come out as a copy, rather than as a one-off?',
+    eng: 'The picture is the lens’s own language (every copy its own speed, the late ones red) with no level under it. In the lab the numbers come from <code>perfect()</code> in <code>src/engines/lens.js</code>, your chip’s model; here the copies’ spread is a stand-in with round numbers.'
+  },
+  dig: {
+    cap: "One wire carrying sixteen bits. Above the dashed line the machine reads a 1, below it a 0. Ringed in red: a bit the noise carried across the line.",
+    stand: "A 0 and a 1 are an agreement about a messy, continuous world. Everything digital rests on how well that agreement holds.",
+    why: ["No wire carries a 1. It carries a voltage, shaken by heat, that a circuit agrees to call a 1. Keeping that agreement costs energy at every switch, billions of times a second.", "AI’s arithmetic can live with small errors. So designers now ask how clean a bit has to be: fewer bits for each number, lower voltages, even analog signals.", "Wherever something continuous is turned into a yes or a no, the same line is drawn: a medical test, a vote count, a pass mark. Where the line sits decides what is lost."],
+    h: ['small swing', 'How far apart a 0 and a 1 are kept', 'big swing'],
+    true: 'A 1 is only a voltage above a line. Heat shakes every wire, and a bigger swing keeps the 1 clean at a price: the energy grows with the square of the voltage.',
+    src: [{ t: 'the lab’s clean-1 chain, src/engines/lens.js', u: '', k: 'model' }],
+    open: 'Which answers could be a little wrong without anyone being harmed?',
+    ask: 'How can a chip that does exactly what it should still give away secrets?',
+    eng: 'Built from <code>digital()</code> and <code>cleanOne()</code> in <code>src/engines/lens.js</code>: the share of bits read wrong is the tail of the noise past the line, and the energy goes with the square of the swing. The same formulas run here.'
+  },
+  vn: {
+    cap: "Ten runs, one in each row. The small squares are the parts’ answers; the large square is what their vote gives. Red: wrong.",
+    stand: "Nothing reliable is made of reliable parts. It is made reliable by how unreliable parts are put together.",
+    why: ["Memory corrects its own flipped bits. A data centre keeps running while machines in it fail every day. A car doubles the circuits a life depends on.", "A language model is a part that is sometimes wrong, and people now build systems out of many of them. Quantum computers will work only if error correction does.", "Cells die and the body lives. People make mistakes and an institution can still decide well, or badly. How the parts are joined makes the difference."],
+    h: ['1 part', 'Copies that vote', '9 parts'], v: ['good parts', 'How often one part is wrong', 'bad parts'],
+    true: 'In 1956 John von Neumann showed that parts which sometimes fail can be built into a whole that fails less often than any of them. The voter is a part too.',
+    src: [{ t: 'von Neumann, Probabilistic Logics, 1956', u: 'https://static.ias.edu/pitp/archive/2012files/Probabilistic_Logics.pdf', k: 'paper' }],
+    open: 'When the parts are AI agents that are each sometimes wrong, does their vote give a whole you can rely on, or do they fail together?',
+    eng: 'The vote is <code>blockOk()</code> of <code>src/engines/redundancy.js</code>, voter included (it fails 3 times in a thousand). The same formula runs here. Push the parts past wrong half the time and the vote makes things worse.'
+  },
+  sutton: {
+    cap: "Left: a full adder made the plain way, 13 gates. Right: the best circuit a blind search has found so far. The lamps are its 16 answers; a red one is wrong.",
+    stand: "In seventy years of AI, the method that could use more computing ended up ahead of the one built on what experts knew. Chips are what made that true.",
+    why: ["Chips are both the cause and the next case. Cheaper computing let search and learning win; now search and learning are starting to place, wire and check the chips themselves.", "The bet behind today’s AI is that scale goes on working. It holds only while computing keeps getting cheaper and more plentiful, which is a question about chips, energy and money.", "If searching beats understanding, what is expertise for? The question reaches science, medicine and design, wherever a result can be checked faster than it can be explained."],
+    h: ['1 circuit tried', 'Computing given to the search', '1,000,000 tried'],
+    true: 'In 2019 Rich Sutton looked back on seventy years of AI and found one pattern: methods that used more computing kept overtaking methods built on what people knew.',
+    src: [{ t: 'Sutton, The Bitter Lesson, 2019', u: 'http://www.incompleteideas.net/IncIdeas/BitterLesson.html', k: 'essay' }],
+    open: 'The search never learns why its circuit works. What happens when computing stops getting cheaper?',
+    eng: 'A real search runs in your browser: it changes a circuit of NAND gates at random and keeps what scores no worse, four tries a round, as <code>src/engines/search.js</code> does with the evolve engine. Nine gates is the classic best for a full adder. In the lab this card would call that engine and its jobs.'
+  },
+  moore: {
+    cap: "One dot is one microprocessor. Past 2021 there is no data: the dashed line is yours to set.",
+    stand: "For fifty years one steady doubling let everyone plan on a better machine arriving on time. That promise is ending, and nothing has yet taken its place.",
+    why: ["Moore’s law was never physics. It was a shared plan: toolmakers, factories and designers all aimed at the same next step. The clock stopped speeding up around 2004, and each new generation costs more to design.", "AI’s progress has leaned on more computing every year. The next gains have to come from somewhere: stacked chips, new kinds of switch, special designs, or better ideas for each watt.", "A shared belief that things get better on schedule is rare and powerful. It shaped an industry for fifty years. What happens to plans and ambition when a schedule like that ends?"],
+    h: ['1971', 'The year', '2040'], v: ['never doubles', 'Your line past 2021', 'doubles every year'],
+    true: 'From 2,300 transistors on a chip in 1971 to tens of billions in 2021: a doubling about every two years. The clock stopped near 3.8 GHz in 2004.',
+    src: [{ t: 'Karl Rupp, microprocessor trend data, CC BY 4.0', u: 'https://github.com/karlrupp/microprocessor-trend-data', k: 'reported' }, { t: 'Pentium D', u: 'https://en.wikipedia.org/wiki/Pentium_D', k: 'reported' }],
+    open: 'Each law that ended made room for another kind of progress. What is being doubled next, and who decides what counts?',
+    eng: 'The dots are the first page’s own series (<code>trend()</code> in <code>src/data/hold.js</code>, Karl Rupp’s data). The line past 2021 is the visitor’s: a guess the lab could keep, as it keeps the guess for 2026 on the first page.'
+  },
+  line: {
+    cap: "A chip of sixty places, and sixty jobs. Squares are the kinds of job it was built for; circles are new kinds. The warm disc under a job is the energy it took. Red: turned away.",
+    stand: "What is fixed is fast and cheap. What can change survives the next surprise. Every machine is a decision about how much of each.",
+    why: ["A chip built for one job can use far less energy for it than a general one, and is useless when the job changes. Hardware, instruction sets and software are layers of this one choice.", "AI’s methods change in months and a chip takes years. Build for today’s model and it may be out of date on arrival; stay general and pay in energy. A model’s own weights raise the same choice: frozen, or still learning.", "Instinct and learning. Law and judgement. A skeleton and a muscle. Living things and societies settle the same line, and move it when the world changes."],
+    h: ['all fluid', 'Where the line falls', 'all fixed'], v: ['as designed', 'How far the work has moved on since the chip was designed', 'mostly new kinds'],
+    true: 'For HD video encoding, a general-purpose chip used about 500 times the energy of a chip built only for that job. One study, one job: for other jobs the gap is often smaller.',
+    src: [{ t: 'Hameed et al., ISCA 2010, in CACM', u: 'https://cacm.acm.org/research/understanding-sources-of-ineffciency-in-general-purpose-chips', k: 'reported' }],
+    open: 'A chip takes years to make and the work changes in months. Could hardware reshape itself as fast as the ideas it runs?',
+    eng: '<b>New, small engine needed.</b> Here: the fixed part does a job it was built for at a fiftieth of the energy, each part takes work in proportion to its share of the chip, and the second control is how far the mix of jobs has moved on. Round numbers. The lens’s own plan (FRAME13.md) names <code>machine.js</code>.'
+  },
+  trust: {
+    cap: "The square is every pair of numbers an adder could be given. Lit: what one day of testing covers, at a billion cases a second.",
+    stand: "Every day we rely on machines that nobody can fully check. The question is what that reliance stands on.",
+    why: ["A modern chip has billions of parts and far more cases than could ever be tried. It is designed with tools, made in factories and sold by companies its user never sees.", "Now AI writes designs and AI checks them, and AI systems are themselves too large to inspect. Trust has to rest on something other than looking inside.", "Almost nobody can inspect a medicine, a bank or an aircraft. Trust rests on proof, tests, open records, reputation, and someone who answers for it. Each of these can fail."],
+    h: ['4-bit numbers', 'How wide the numbers are', '64-bit numbers'],
+    true: 'A Pentium shipped in 1994 with five entries missing from a table in its divider. It had passed its tests: the fault showed in about 1 of 9 billion random divisions.',
+    src: [{ t: 'Pentium FDIV bug', u: 'https://en.wikipedia.org/wiki/Pentium_FDIV_bug', k: 'estimate' }],
+    open: 'Proof, open records, spares, reputation: each carries part of the weight. What do they rest on when an AI wrote the design and another AI checked it?',
+    eng: 'The arithmetic is exact, from <code>exhaust()</code> in <code>src/engines/floor.js</code>: two numbers of b bits make 2 to the power 2b cases. The lit square is drawn to true scale until it is too small to see.'
+  },
+  physics: {
+    cap: "Ninety sums, each done two ways. A dot is one answer; the line is the right one. Red: a bit flipped.",
+    stand: "A digital computer forces matter to behave like exact logic, and pays for it in energy. Matter can also settle a sum by itself, cheaply, and a little differently each time.",
+    why: ["Every margin, every refresh and every error check is energy spent holding physics back. As switches shrink toward atoms and voltages fall, holding it back costs more.", "AI’s sums can be a little wrong and still be useful. That reopens old ideas: analog circuits, light, noise used on purpose, memory that computes where it sits.", "Evolution never built exact logic. Brains and cells compute with whatever their chemistry does. Which answers really need to be exact?"],
+    h: ['cool', 'Heat, as noise on every signal', 'hot'],
+    true: 'Erasing one bit must give off a little heat: about 3 zeptojoules at room temperature, measured in 2012. Today’s logic spends far more than that to keep every bit exact.',
+    src: [{ t: 'Bérut et al., Nature, 2012', u: 'https://www.nature.com/articles/nature10872', k: 'reported' }],
+    open: 'Which answers need exact logic, and which could a piece of matter settle by itself, a little differently each time?',
+    eng: 'Exact logic: each bit of the answer flips when the noise crosses half its swing, so it is right until it is suddenly very wrong. Physics: currents add on one wire and the answer drifts with the noise. Energy per sum, 1 against 0.13, is the round figure of <code>src/engines/mortal.js</code>; the lab’s lens uses <code>paradigms.js</code>.'
+  },
+  eff: {
+    cap: "Each dot is an answer; its size is the energy it takes. The dashed ring is all the energy spent today.",
+    stand: "Each answer from a machine takes less energy every year, and the world’s computing uses more energy every year. Both are true at once.",
+    why: ["A more efficient chip makes each task cheaper, so people find more tasks. The saving on each task and the growth in tasks pull against each other, and so far the growth has won.", "AI data centres are now planned around the power they can get. Whether better chips shrink that demand or feed it decides energy plans, prices and where things are built.", "Jevons saw it with coal and steam engines in 1865. It comes back with roads, lighting and every tool that makes something cheaper to do."],
+    h: ['asks a little more', 'How eagerly the world asks as answers get cheaper', 'asks far more'], v: ['today’s cost', 'What each answer costs', '8× cheaper'],
+    true: 'Data centres used about 485 TWh of electricity in 2025, and the IEA projects about 950 TWh by 2030, while each answer keeps getting cheaper.',
+    src: [{ t: 'IEA, April 2026, via Enlit', u: 'https://www.enlit.world/library/ai-and-data-centre-electricity-use-continue-to-surge-iea-finds', k: 'projection' }],
+    open: 'Nobody knows how eagerly the world will go on asking as answers get cheaper. Jevons’ effect needs it to stay above one for one.',
+    eng: 'The lab’s bet, <code>jevons()</code> in <code>src/engines/bet.js</code>: answers asked grow as the price falls, by an elasticity the bet fixes at 1.5. <b>New:</b> the card makes that elasticity the second control, since it is the part nobody knows.'
+  },
+  nat: {
+    cap: "One row of cells, redrawn below itself by one rule, row after row. The eight tiles are the whole rule. Try 30, 90 and 110.",
+    stand: "Computing is not a property of silicon. Dominoes, water, DNA and light can all do it. So what, if anything, can it not do?",
+    why: ["A chip is one way to make matter compute, chosen because it is small and fast and can be copied. What any computer can and cannot do sets what a better chip could ever buy.", "The claim that a machine can think rests on thinking being a kind of computing. Turing showed in 1936 that some questions no program can answer. Where minds stand between the two is open.", "The question reaches biology and physics: whether a cell, a brain or the universe does anything that a simple rule, followed long enough, could not."],
+    h: ['rule 0', 'The rule: eight bits', 'rule 255'],
+    true: 'Rule 110 fits in eight bits, and in 2004 it was proved able to compute anything a computer can. So for some of its patterns, the only way to learn what happens is to run it.',
+    src: [{ t: 'Cook, Complex Systems 15, 2004', u: 'https://www.complex-systems.com/abstracts/v15_i01_a01/', k: 'paper' }],
+    open: 'A seashell, a tube of DNA and a chip can all follow rules like these. Can nature do anything that no such rule can?',
+    eng: '<b>New, small engine needed</b> (an elementary cellular automaton: 256 rules, a ring of cells). The lab’s own way into this question is <code>src/engines/halt.js</code>: one gate from dominoes, water or light, then the program nobody can judge. The card links to both.'
+  },
+  geo: {
+    cap: "A flat sheet of parts, cooled from its face, each wired to a few others. Red glow: heat. Blue: a few of the trips a message makes.",
+    stand: "To think together, parts must be close. To stay cool, they must be apart. Every thinking machine, built or grown, has to settle that conflict.",
+    why: ["Moving a number across a chip costs far more energy than computing with it, so designers pack memory and logic closer and stack them. Packed parts trap heat, and heat sets the limit.", "AI machines are held back less by their switches than by moving data and removing heat: memory stacked beside the processor, racks cooled by liquid, whole buildings laid out around both.", "A brain is a folded sheet with its wiring inside. A city balances the same pull between closeness and crowding. Shape may bound how much any system can think."],
+    h: ['packed', 'How far apart the parts sit', 'spread'], v: ['fewer parts', 'How many parts', 'more parts'],
+    true: 'Reading 16 bits from memory far from the logic costs 640 pJ. Adding two 16-bit numbers costs 0.18 pJ: about 3,500 times less.',
+    src: [{ t: 'Pedram et al., table I (45 nm)', u: 'https://arxiv.org/pdf/1602.04183', k: 'reported' }],
+    open: 'Stacking chips upward shortens the trips and traps the heat. Is there a shape that escapes the trade, or does every shape only move it?',
+    eng: 'A toy sheet: the average trip grows with spacing and with the square root of the number of parts; the hottest spot grows with that root and falls with spacing. So in this model trip times heat depends only on how many parts there are. In the lab: <code>geometry()</code> and <code>geoEffFront()</code> in <code>src/engines/lens.js</code>.'
+  },
+  copy: {
+    cap: "Left: one mind on its own chip. Squares are numbers kept as bits; discs are kept in the matter itself. Right: the same mind on four other chips. Red: where a copy differs.",
+    stand: "A brain is cheap to run and cannot be copied. A digital mind copies perfectly and costs a great deal to run. Nobody knows whether one machine can have both.",
+    why: ["Numbers kept as exact bits can be copied anywhere, and every use of them is a costly trip to memory. Numbers kept in the matter of the chip are far cheaper to use, and belong to that one chip.", "Copying is what lets one trained model serve millions of people, and be backed up, checked and improved. A machine built like a brain might have to give that up.", "What one person learns dies with them unless it is taught. A mind that can be copied has no such limit. That changes what learning, and losing, mean."],
+    h: ['kept as bits', 'Where the mind is kept', 'kept in the matter'],
+    true: 'A brain runs on about 20 watts, and what it has learned is the physical state of its own cells. Geoffrey Hinton calls computing whose knowledge dies with its hardware mortal.',
+    src: [{ t: 'The Physics Factbook', u: 'https://hypertextbook.com/facts/2001/JacquelineLing.shtml', k: 'estimate' }],
+    open: 'No chip yet learns on a brain’s power. If one did, would each be a one-off, as each of us is?',
+    eng: 'Exactly <code>evaluate({ share, learn: "chip", calibrate: false })</code> of <code>src/engines/mortal.js</code>: energy, right answers on this chip, and on a copy. The four copies’ differences are drawn from seeded noise of the engine’s spread.'
+  },
+  human: {
+    cap: "Every shape is a design that passes every check. Its five points lean toward five things no check measures. Tap one to keep it.",
+    stand: "When a machine can make a thousand good options in a minute, and anyone can use the machine, making options stops being the scarce thing.",
+    why: ["Design tools now generate layouts, circuits and whole blocks. Open tools and shared factory runs let far more people try. What is left is deciding what to build, for whom, and what it must never do.", "This is the question AI puts to every craft. The checks can say that a design passes. They cannot say it is the one worth making.", "Choosing among good options, answering for the choice, and choosing together: these may be what people bring. Or they may be next. Nobody knows yet."],
+    h: ['1 design', 'Designs the machine makes', '1,000 designs'],
+    true: 'In July 2026 the three largest makers of chip-design tools each announced AI agents that carry out design work by themselves over long runs.',
+    src: [{ t: 'Futurum, on DAC 2026', u: 'https://futurumgroup.com/insights/synopsys-cadence-and-siemens-take-agentic-chip-design-autonomous-at-dac/', k: 'reported' }],
+    open: 'When a thousand designs all pass, the checks have nothing more to say. What do you choose by, and would many people choose better than one?',
+    eng: 'A stand-in for the lab’s <code>src/engines/thousand.js</code>, which makes a real thousand from the AI chip model and keeps a choice in the ledger with its reason. Here the designs and their leanings are seeded numbers; the five sides are that engine’s people: who uses it, who repairs it, who pays, the planet, and what it must never do.'
+  }
+};
+
+/* The pictures, one per question. Each: u0 (and v0 when it has a second control), setup(S), frame(g, S) → { reads, cap? }.
+   g: c (the canvas), W, H, box (the room the picture has), t, dt, u, v, P (the palette), lab(x, y, words, class, align). */
+const INST = {};
+const disc = (c, x, y, r) => { c.beginPath(); c.arc(x, y, r, 0, TAU); };
+
+/* ---- Perfect fails: one drawing, many copies, each its own speed ---- */
+INST.perfect = {
+  u0: 0.615,
+  setup(S) {
+    const r = rng(7); S.cols = 18; S.rows = 8; S.d = [];
+    for (let j = 0; j < S.rows; j++) for (let i = 0; i < S.cols; i++) {
+      const x = (i + .5) / S.cols * 2 - 1, y = (j + .5) / S.rows * 2 - 1;
+      S.d.push(0.86 + 0.05 * gauss(r) + 0.045 * (0.7 * x * x + 0.3 * y * y));   /* a little slower toward the wafer's edge */
+    }
+  },
+  frame(g, S) {
+    const { c, P, box: B } = g, T = lerp(1.32, 0.8, g.u);
+    const s = Math.min(B.w / S.cols, B.h / S.rows), x0 = B.x + (B.w - s * S.cols) / 2, y0 = B.y + (B.h - s * S.rows) / 2;
+    let late = 0;
+    S.d.forEach((d, k) => {
+      const x = x0 + (k % S.cols) * s + s * .1, y = y0 + ((k / S.cols) | 0) * s + s * .1, w = s * .8, fail = d > T, p = clamp((d / T - .55) / .45, .04, 1);
+      if (fail) late++;
+      c.globalAlpha = 1; c.strokeStyle = fail ? P.red : P.line; c.lineWidth = fail ? 1.5 : 1; c.strokeRect(x + .5, y + .5, w - 1, w - 1);
+      c.fillStyle = fail ? P.red : P.ink; c.globalAlpha = fail ? 0.85 : 0.55;
+      c.fillRect(x + 3, y + 3, Math.max(0, (w - 6) * p), w - 6);
+    });
+    c.globalAlpha = 1;
+    return { reads: [
+      { v: late + ' of ' + S.d.length, k: 'copies that fail at this clock', tone: late ? 'bad' : 'good' },
+      { v: times(1 / T), k: 'the clock, against the one the design was signed for' }] };
+  }
+};
+
+/* ---- Digital meets physical: one wire, a line, and what is read ---- */
+INST.dig = {
+  u0: 0.42,
+  setup(S) { const r = rng(21); S.bits = Array.from({ length: 400 }, () => (r() < .5 ? 1 : 0)); S.nz = Array.from({ length: 4000 }, () => gauss(r)); },
+  frame(g, S) {
+    const { c, W, P, box: B } = g, s = lerp(0.28, 1.5, g.u), sig = 0.13, bp = 54, NS = 7;
+    const bandH = B.h * 0.7, mid = B.y + bandH / 2, sc = (bandH / 2 - 6) / (0.75 + 2.6 * sig), off = g.t * 34, sqY = B.y + bandH + (B.h - bandH) / 2;
+    const m = (i, n) => ((i % n) + n) % n;
+    const nz = xa => { const f = xa / NS, i = Math.floor(f), a = f - i, A = S.nz[m(i, 4000)], Bn = S.nz[m(i + 1, 4000)]; return (A + (Bn - A) * a) * sig; };
+    const lvl = xa => { const f = xa / bp, i = Math.floor(f), a = f - i, b = S.bits[m(i, 400)], pb = S.bits[m(i - 1, 400)]; return (pb + (b - pb) * (1 - Math.exp(-a * 9)) - .5) * s; };
+    /* the line where a 1 begins */
+    c.strokeStyle = P.muted; c.lineWidth = 1; c.setLineDash([5, 5]); c.beginPath(); c.moveTo(0, mid + .5); c.lineTo(W, mid + .5); c.stroke(); c.setLineDash([]);
+    c.strokeStyle = P.ink; c.lineWidth = 1.6; c.lineJoin = 'round'; c.beginPath();
+    for (let x = 0; x <= W; x += 2) { const y = mid - (lvl(x + off) + nz(x + off)) * sc; x ? c.lineTo(x, y) : c.moveTo(x, y); }
+    c.stroke();
+    for (let i = Math.floor(off / bp) - 1; ; i++) {
+      const cx = (i + .66) * bp - off; if (cx > W + bp) break; if (cx < -bp) continue;
+      const val = lvl(cx + off) + nz(cx + off), read = val > 0 ? 1 : 0, sent = S.bits[m(i, 400)], bad = read !== sent, q = 15;
+      c.fillStyle = bad ? P.red : P.warm; disc(c, cx, mid - val * sc, 3.2); c.fill();
+      c.strokeStyle = P.ink; c.lineWidth = 1.4; c.fillStyle = P.ink;
+      if (read) c.fillRect(cx - q / 2, sqY - q / 2, q, q); else c.strokeRect(cx - q / 2 + .5, sqY - q / 2 + .5, q - 1, q - 1);
+      if (bad) { c.strokeStyle = P.red; c.lineWidth = 2; disc(c, cx, sqY, q * .95); c.stroke(); }
+    }
+    g.lab(12, B.y, 'above the line: read as a 1'); g.lab(12, B.y + bandH - 12, 'below it: read as a 0');
+    g.lab(W - 12, B.y, 'the wire, as it is', '', 'r'); g.lab(W - 12, sqY - 26, 'the bits, as read', '', 'r');
+    const wrong = 0.5 * erfc((s / 2) / (sig * Math.SQRT2));
+    return { reads: [
+      { v: oneIn(wrong), k: 'bits read wrong', tone: wrong > 1e-3 ? 'bad' : '' },
+      { v: times(s * s), k: 'energy to send one bit' }] };
+  }
+};
+
+/* ---- Whole beats parts: copies that vote (von Neumann 1956; blockOk of src/engines/redundancy.js) ---- */
+const VOTER_P = 0.003;
+const choose = (n, k) => { let x = 1; for (let i = 1; i <= k; i++) x = x * (n - k + i) / i; return x; };
+function blockOk(p, n) { const r = 1 - p; if (n === 1) return r; let ok = 0; for (let k = Math.ceil((n + 1) / 2); k <= n; k++) ok += choose(n, k) * r ** k * p ** (n - k); return ok * (1 - VOTER_P); }
+INST.vn = {
+  u0: 0.25, v0: 0.5, hstep: 4,
+  frame(g, S) {
+    const { c, P, box: B } = g, n = [1, 3, 5, 7, 9][Math.round(g.u * 4)], p = 0.01 * Math.pow(60, g.v);
+    const R = 10, rowH = Math.min(30, (B.h - 22) / R), q = rowH * .6, step = 0.6, k0 = Math.floor(g.t / step), fr = g.still ? 0 : (g.t / step) % 1;
+    const wParts = n * rowH, gap = Math.min(70, B.w * .12), total = wParts + gap * 2 + rowH * 1.3, x0 = B.x + (B.w - total) / 2, xv = x0 + wParts + gap, xw = xv + gap;
+    for (let r = 0; r <= R; r++) {
+      const k = k0 - r, y = B.y + 24 + (r - 1 + fr) * rowH + rowH / 2, a = r === 0 ? fr : r === R ? 1 - fr : 1; if (a <= 0.01) continue;
+      const rr = rng((k + 1000) * 7919 + 17); let bad = 0;
+      for (let i = 0; i < 9; i++) { const w = rr() < p; if (i >= n) continue; if (w) bad++;
+        c.globalAlpha = a * (w ? .95 : .4); c.fillStyle = w ? P.red : P.ink; c.fillRect(x0 + i * rowH + (rowH - q) / 2, y - q / 2, q, q); }
+      const wrong = n === 1 ? bad > 0 : bad > n / 2 || rr() < VOTER_P;
+      c.globalAlpha = a * .5; c.strokeStyle = P.muted; c.lineWidth = 1; c.beginPath(); c.moveTo(x0 + wParts + 4, y); c.lineTo(xw - 4, y); c.stroke();
+      if (n > 1) { c.globalAlpha = a; c.fillStyle = P.solid; disc(c, xv, y, 5); c.fill(); c.strokeStyle = P.muted; c.stroke(); }
+      c.globalAlpha = a; c.fillStyle = wrong ? P.red : P.ink; const Q2 = rowH * .8; c.fillRect(xw, y - Q2 / 2, Q2, Q2);
+    }
+    c.globalAlpha = 1;
+    g.lab(x0 + wParts / 2, B.y, n === 1 ? 'one part' : n + ' parts', '', 'c'); if (n > 1 && gap > 58) g.lab(xv, B.y, 'the vote', '', 'c'); g.lab(xw + rowH * .4, B.y, 'the whole', 'ink', 'c');
+    const whole = 1 - blockOk(p, n);
+    return { reads: [
+      { v: oneIn(whole), k: 'runs the whole gets wrong', tone: whole < p * 0.999 ? 'good' : n > 1 ? 'bad' : '' },
+      { v: oneIn(p), k: 'runs one part gets wrong' },
+      { v: '×' + n, k: 'parts paid for' }] };
+  }
+};
+
+/* ---- Trust without inspection: every case, and what testing covers (exhaust of src/engines/floor.js) ---- */
+function howLong(sec) {
+  if (sec < 1e-3) return (sec * 1e6).toPrecision(2) + ' millionths of a second';
+  if (sec < 1) return (sec * 1e3).toPrecision(2) + ' thousandths of a second';
+  if (sec < 90) return sec.toPrecision(2) + ' seconds'; if (sec < 5400) return (sec / 60).toPrecision(2) + ' minutes';
+  if (sec < 172800) return (sec / 3600).toPrecision(2) + ' hours'; if (sec < 3.156e7) return (sec / 86400).toPrecision(2) + ' days';
+  return big(sec / 3.15576e7) + ' years';
+}
+INST.trust = {
+  u0: 22 / 60, hstep: 60,
+  frame(g) {
+    const { c, P, box: B } = g, b = 4 + Math.round(g.u * 60), cases = Math.pow(2, 2 * b), day = 8.64e13, share = Math.min(1, day / cases);
+    const Sd = Math.min(B.w, B.h), x0 = B.x + (B.w - Sd) / 2, y0 = B.y + (B.h - Sd) / 2, side = Sd * Math.sqrt(share);
+    /* every case: a field too fine to draw past a few bits */
+    c.fillStyle = P.ink; c.globalAlpha = .06; c.fillRect(x0, y0, Sd, Sd);
+    c.globalAlpha = .16; for (let yy = y0 + 5; yy < y0 + Sd; yy += 9) for (let xx = x0 + 5; xx < x0 + Sd; xx += 9) c.fillRect(xx, yy, 1.2, 1.2);
+    c.globalAlpha = 1;
+    c.strokeStyle = P.line; c.lineWidth = 1; c.strokeRect(x0 + .5, y0 + .5, Sd - 1, Sd - 1);
+    c.fillStyle = P.warm; c.globalAlpha = .9;
+    if (side >= 3) c.fillRect(x0, y0 + Sd - side, side, side);
+    c.globalAlpha = 1;
+    if (b <= 6) { const n = Math.pow(2, b), st = Sd / n; c.strokeStyle = P.solid; c.lineWidth = n > 32 ? .5 : 1; c.beginPath(); for (let i = 1; i < n; i++) { c.moveTo(x0 + i * st, y0); c.lineTo(x0 + i * st, y0 + Sd); c.moveTo(x0, y0 + i * st); c.lineTo(x0 + Sd, y0 + i * st); } c.stroke(); }
+    if (side >= 3 && !g.still) { const yy = y0 + Sd - ((g.t * 60) % side); c.fillStyle = P.solid; c.globalAlpha = .55; c.fillRect(x0, yy, side, 2); c.globalAlpha = 1; }
+    if (side < 3) { c.fillStyle = P.warm; c.fillRect(x0, y0 + Sd - 3, 3, 3); c.strokeStyle = P.warm; c.lineWidth = 1.2; disc(c, x0 + 1.5, y0 + Sd - 1.5, 12); c.stroke();
+      g.lab(x0 + 20, y0 + Sd - 20, 'a day of testing, drawn ' + big(9 / (Sd * Sd * share)) + ' times too large', 'warm'); }
+    else if (share < 1) g.lab(x0 + side + 8, y0 + Sd - Math.min(side, 20), 'tested', 'warm');
+    if (share < 1) g.lab(x0 + Sd - 8, y0 + 8, 'never tried', '', 'r');
+    return { reads: [
+      { v: big(cases), k: 'cases: every pair of ' + b + '-bit numbers' },
+      { v: howLong(cases / 1e9), k: 'to try them all, a billion a second' },
+      { v: share >= 1 ? 'all of them' : share > 0.001 ? pct(share, 1) : oneIn(share), k: 'tried after one day', tone: share >= 1 ? 'good' : 'bad' }] };
+  }
+};
+
+/* ---- Efficiency fuels use: cheaper answers, more of them (jevons of src/engines/bet.js, its elasticity freed) ---- */
+INST.eff = {
+  u0: 0.8, v0: 0.34,
+  frame(g) {
+    const { c, P, box: B } = g, a = lerp(0.5, 1.75, g.u), e = Math.pow(8, -g.v), asked = Math.pow(e, -a), total = asked * e;
+    const R0 = Math.min(B.w, B.h) * 0.225, cx = B.x + B.w / 2, cy = B.y + B.h / 2, N = Math.min(1700, Math.round(40 * asked)), cc = R0 / Math.sqrt(40) * Math.sqrt(e), rd = Math.max(0.9, cc * 0.46), rot = g.t * 0.04, fl = Math.floor(g.t * 4);
+    c.fillStyle = P.ink;
+    for (let k = 0; k < N; k++) {
+      const r = cc * Math.sqrt(k + .5), th = k * 2.399963 + rot, x = cx + r * Math.cos(th), y = cy + r * Math.sin(th);
+      const spark = !g.still && ((k * 2654435761 + fl * 40503) >>> 0) % 37 === 0;
+      c.fillStyle = spark ? P.warm : P.ink; c.globalAlpha = spark ? 1 : .62; disc(c, x, y, spark ? rd * 1.25 : rd); c.fill();
+    }
+    c.globalAlpha = 1; c.strokeStyle = P.muted; c.lineWidth = 1.2; c.setLineDash([5, 5]); disc(c, cx, cy, R0); c.stroke(); c.setLineDash([]);
+    g.lab(cx + R0 * 0.72 + 6, cy - R0 * 0.72 - 16, 'today');
+    const f = x => (x >= 1 ? times(x) : '÷' + (1 / x >= 10 ? (1 / x).toFixed(1) : (1 / x).toFixed(2)));
+    return { reads: [
+      { v: f(e), k: 'energy for one answer' },
+      { v: f(asked), k: 'answers asked' },
+      { v: f(total), k: 'all the energy', tone: total > 1.02 ? 'bad' : total < 0.98 ? 'good' : '' }] };
+  }
+};
+
+/* ---- Compute beats cleverness: a blind search against a person's design (Sutton 2019; src/engines/search.js) ---- */
+const SRCH = (() => {
+  const A = 0xF0, B = 0xCC, C = 0xAA, OUTS = [A ^ B ^ C, (A & B) | (B & C) | (A & C)], N = 16, FULL = 16;
+  const pop = x => { let n = 0; while (x) { n += x & 1; x >>= 1; } return n; };
+  /* a circuit: N NAND gates, each fed by two earlier things (0, 1, 2 are the inputs a, b, c), then which two are the outputs */
+  function evalG(g) {
+    const v = [A, B, C]; for (let i = 0; i < N; i++) v.push(~(v[g[2 * i]] & v[g[2 * i + 1]]) & 255);
+    let right = 0; const used = new Set(), stack = [];
+    for (let o = 0; o < 2; o++) { const k = g[2 * N + o]; right += 8 - pop(v[k] ^ OUTS[o]); stack.push(k); }
+    while (stack.length) { const k = stack.pop(); if (k < 3 || used.has(k)) continue; used.add(k); stack.push(g[2 * (k - 3)], g[2 * (k - 3) + 1]); }
+    return { right, gates: used.size, used, v };
+  }
+  function make(seed) {
+    const r = rng(seed), g = []; for (let i = 0; i < N; i++) g.push(Math.floor(r() * (3 + i)), Math.floor(r() * (3 + i))); for (let o = 0; o < 2; o++) g.push(Math.floor(r() * (3 + N)));
+    const f = evalG(g); return { r, best: g, fb: f, tried: 1, marks: [{ tried: 1, right: f.right, gates: f.gates, g }], first: null };
+  }
+  /* four changed copies a round; keep the best of them when it scores no worse (once right: no more gates) */
+  function step(s, until) {
+    const r = s.r;
+    while (s.tried < until) {
+      let ch = null, fc = null;
+      for (let k = 0; k < 4; k++) { const h = s.best.slice(), m = 1 + Math.floor(r() * 3);
+        for (let j = 0; j < m; j++) { const i = Math.floor(r() * h.length); h[i] = i < 2 * N ? Math.floor(r() * (3 + (i >> 1))) : Math.floor(r() * (3 + N)); }
+        const f = evalG(h); s.tried++; if (!fc || f.right > fc.right || (f.right === fc.right && f.gates <= fc.gates)) { ch = h; fc = f; } }
+      const fb = s.fb;
+      if (fc.right > fb.right || (fc.right === fb.right && (fb.right < FULL || fc.gates <= fb.gates))) {
+        if (fc.right > fb.right || (fc.right === FULL && fc.gates < fb.gates)) { s.marks.push({ tried: s.tried, right: fc.right, gates: fc.gates, g: ch }); if (fc.right === FULL && !s.first) s.first = s.tried; }
+        s.best = ch; s.fb = fc; }
+    }
+  }
+  /* the plain way: two half adders and an OR, written out in NAND gates (13) */
+  const PLAIN = [0, 1, 0, 3, 1, 3, 4, 5, 3, 3, 6, 2, 6, 8, 2, 8, 9, 10, 8, 8, 7, 7, 12, 12, 13, 14, 0, 0, 0, 0, 0, 0, 11, 15];
+  return { evalG, make, step, PLAIN, OUTS, N, FULL, MAX: 1e6 };
+})();
+function drawCircuit(g, G, x, y, w, h, names) {
+  const { c, P } = g, E = SRCH.evalG(G), N = SRCH.N, lv = [0, 0, 0], ids = [...E.used].sort((a, b) => a - b), pos = {};
+  for (let k = 3; k < 3 + N; k++) lv[k] = E.used.has(k) ? 1 + Math.max(lv[G[2 * (k - 3)]], lv[G[2 * (k - 3) + 1]]) : 0;
+  const maxL = Math.max(1, ...ids.map(k => lv[k]));
+  [0, 1, 2].forEach(i => { pos[i] = [x + 6, y + h * (i + .5) / 3]; });
+  for (let L = 1; L <= maxL; L++) {
+    const at = ids.filter(k => lv[k] === L).map(k => ({ k, m: (pos[G[2 * (k - 3)]][1] + pos[G[2 * (k - 3) + 1]][1]) / 2 })).sort((a, b) => a.m - b.m);
+    at.forEach((n, i) => { pos[n.k] = [x + 22 + (L - .4) / maxL * (w - 52), y + h * (i + .5) / at.length]; });
+  }
+  c.lineWidth = 1; c.strokeStyle = P.muted; c.globalAlpha = .75;
+  for (const k of ids) [0, 1].forEach(j => { const s = pos[G[2 * (k - 3) + j]], d = pos[k], x1 = s[0] + (G[2 * (k - 3) + j] < 3 ? 4 : 11), x2 = d[0] - 8, y2 = d[1] + (j ? 3.5 : -3.5), mx = (x1 + x2) / 2;
+    c.beginPath(); c.moveTo(x1, s[1]); c.bezierCurveTo(mx, s[1], mx, y2, x2, y2); c.stroke(); });
+  [0, 1].forEach(o => { const k = G[2 * N + o], s = pos[k], yo = y + h * (o ? .72 : .28), x1 = s[0] + (k < 3 ? 4 : 11), x2 = x + w - 4, mx = (x1 + x2) / 2;
+    c.beginPath(); c.moveTo(x1, s[1]); c.bezierCurveTo(mx, s[1], mx, yo, x2, yo); c.stroke(); });
+  c.globalAlpha = 1;
+  [0, 1, 2].forEach(i => { c.fillStyle = P.ink; disc(c, pos[i][0], pos[i][1], 3); c.fill(); });
+  c.strokeStyle = P.ink; c.fillStyle = P.solid; c.lineWidth = 1.3;
+  for (const k of ids) { const [X, Y] = pos[k]; c.beginPath(); c.moveTo(X - 7, Y - 6.5); c.lineTo(X, Y - 6.5); c.arc(X, Y, 6.5, -Math.PI / 2, Math.PI / 2); c.lineTo(X - 7, Y + 6.5); c.closePath(); c.fill(); c.stroke(); disc(c, X + 8.7, Y, 2); c.fill(); c.stroke(); }
+  if (names) { g.lab(x - 8, pos[0][1] - 7, 'a', '', 'r'); g.lab(x - 8, pos[1][1] - 7, 'b', '', 'r'); g.lab(x - 8, pos[2][1] - 7, 'c', '', 'r'); }
+  return E;
+}
+INST.sutton = {
+  u0: 0.62,
+  setup(S) { S.main = SRCH.make(8 * 7919); S.others = [1, 2, 3, 4, 5, 6, 7, 9, 10].map(s => SRCH.make(s * 7919)); S.oi = 0; },
+  frame(g, S) {
+    const { c, P, box: B } = g;
+    /* the search itself, a slice each frame: the shown run first, then nine more runs for their luck */
+    if (S.main.tried < SRCH.MAX) SRCH.step(S.main, Math.min(SRCH.MAX, S.main.tried + 60000));
+    else if (S.oi < S.others.length) { const o = S.others[S.oi]; SRCH.step(o, Math.min(SRCH.MAX, o.tried + 120000)); if (o.tried >= SRCH.MAX) S.oi++; }
+    if (S.main.tried < SRCH.MAX || S.oi < S.others.length) g.again();
+    const budget = Math.min(Math.pow(10, 6 * g.u), S.main.tried); let m = S.main.marks[0]; for (const k of S.main.marks) if (k.tried <= budget) m = k;
+    const wide = B.w > 560, axY = B.y + B.h - 22, top = B.y + 14, h = axY - top - 26, lampW = 46;
+    const xs = wide ? B.x + B.w * .36 : B.x + 16, ws = B.x + B.w - lampW - xs - 8;
+    if (wide) { drawCircuit(g, SRCH.PLAIN, B.x + 16, top, B.w * .3, h, true); g.lab(B.x + 16 + B.w * .15, B.y - 18, 'a person’s plain design', '', 'c');
+      c.strokeStyle = P.line; c.lineWidth = 1; c.beginPath(); c.moveTo(B.x + B.w * .335, top); c.lineTo(B.x + B.w * .335, top + h); c.stroke(); }
+    const E = drawCircuit(g, m.g, xs + 14, top, ws - 14, h, !wide);
+    g.lab(xs + ws / 2, B.y - 18, 'the search’s best so far', 'ink', 'c');
+    /* its sixteen answers: the sum and the carry for each of the eight inputs */
+    const lx = B.x + B.w - lampW, q = Math.min(11, (h - 8) / 8 - 3);
+    [0, 1].forEach(o => { const out = E.v[m.g[2 * SRCH.N + o]];
+      for (let r = 0; r < 8; r++) { const ok = ((out >> (7 - r)) & 1) === ((SRCH.OUTS[o] >> (7 - r)) & 1), X = lx + 8 + o * (q + 8), Y = top + 4 + r * (q + 3);
+        if (ok) { c.fillStyle = P.ink; c.fillRect(X, Y, q, q); } else { c.strokeStyle = P.red; c.lineWidth = 1.6; c.strokeRect(X + 1, Y + 1, q - 2, q - 2); } } });
+    g.lab(lx + 8 + q, B.y - 18, 'answers', '', 'c');
+    /* the computing spent, on powers of ten */
+    const X = t => B.x + 10 + (B.w - 20) * Math.log10(Math.max(1, t)) / 6;
+    c.strokeStyle = P.line; c.lineWidth = 1; c.beginPath(); c.moveTo(X(1), axY); c.lineTo(X(1e6), axY); c.stroke();
+    c.strokeStyle = P.blue; c.lineWidth = 3; c.beginPath(); c.moveTo(X(1), axY); c.lineTo(X(budget), axY); c.stroke();
+    for (let e = 0; e <= 6; e++) { c.strokeStyle = P.muted; c.lineWidth = 1; c.beginPath(); c.moveTo(X(10 ** e), axY - 4); c.lineTo(X(10 ** e), axY + 4); c.stroke(); }
+    g.lab(X(1), axY + 6, '1 tried'); g.lab(X(1e3), axY + 6, 'a thousand', '', 'c'); g.lab(X(1e6), axY + 6, 'a million', '', 'r');
+    for (const k of S.main.marks) { c.fillStyle = k.right === SRCH.FULL ? P.ink : P.muted; c.globalAlpha = k.tried <= budget ? 1 : .35; c.fillRect(X(k.tried) - 1, axY - 13, 2, 8); }
+    c.globalAlpha = 1; c.strokeStyle = P.muted; c.lineWidth = 1;
+    for (const o of S.others) if (o.first) { const x = X(o.first), y = axY; c.beginPath(); c.moveTo(x, y - 3.5); c.lineTo(x + 3.5, y); c.lineTo(x, y + 3.5); c.lineTo(x - 3.5, y); c.closePath(); c.stroke(); }
+    c.fillStyle = P.blue; disc(c, X(budget), axY, 4.5); c.fill();
+    const lucky = S.others.filter(o => o.first).length;
+    return { reads: [
+      { v: big(budget), k: S.main.tried < SRCH.MAX ? 'circuits tried (the search is running)' : 'circuits tried' },
+      { v: m.right + ' of 16', k: 'answers it gets right', tone: m.right === 16 ? 'good' : 'bad' },
+      { v: m.right === 16 ? m.gates + ' gates' : 'not right yet', k: 'against 13 the plain way, 9 the classic best' }],
+      cap: wide ? (lucky ? CARDS.sutton.cap + ' Diamonds: when ' + lucky + ' other runs first got it right.' : CARDS.sutton.cap) : 'The best full adder a blind search has found so far, and its 16 answers. A person’s plain design uses 13 gates.' };
+  }
+};
+
+/* ---- The next Moore's law: fifty years of chips, and the years nobody has made yet (trend of src/data/hold.js) ---- */
+const TREND = (() => {
+  const P = s => s.split(' ').map(e => { const [y, v] = e.split(':'); return [1970 + y / 10, +v]; });
+  const tr = P('19:2.3e3 23:3.6e3 43:6.1e3 96:2.9e4 123:1.4e5 159:2.7e5 163:1.1e5 187:1.2e5 195:1.2e6 206:1.2e6 224:1.2e6 227:3.1e6 227:1.1e6 230:1.7e6 234:3.1e6 234:9.2e5 247:1.9e6 247:2.8e6 254:9.6e6 257:3.1e6 262:5.5e6 263:6.8e6 263:3.7e6 264:4.3e6 268:9.6e6 274:5.5e6 275:3.6e6 275:8.9e6 276:7.6e6 289:1.5e7 291:9.4e6 292:7e6 295:9.4e6 295:2.2e7 302:2.2e7 307:2.8e7 307:3.7e7 311:2.9e7 312:4.3e7 317:2.5e7 318:3.7e7 324:5.6e7 328:3.8e7 329:2.2e8 334:1.5e8 335:5.4e7 337:1.1e8 348:1.3e8 348:1.1e8 348:2.7e8 357:2.3e8 358:1.1e8 360:3.1e8 361:1.2e8 369:3.8e8 369:1.6e8 369:2.5e8 370:3e8 370:5.8e8 371:1.5e8 376:5.8e8 377:2.3e8 378:8.1e8 378:1.2e8 380:5.1e8 382:4.5e8 385:4.1e8 392:4.6e8 393:7.8e8 397:2.3e9 397:1.9e9 402:4.1e8 404:1.3e9 412:1.2e9 413:2.6e9 419:1.2e9 424:2.4e9 424:2.3e9 427:2.1e9 429:1.2e9 434:5e9 438:4.3e9 442:4.3e9 445:4.2e9 448:2.6e9 448:3.8e9 448:5.7e9 463:7.2e9 467:8e9 475:1.9e10 484:8e9 485:2.1e10 493:8e9 498:4e10 501:3e10 509:1.6e10 518:5.7e10 519:5.8e10 519:5.5e10');
+  const hz = P('19:7e5 23:5.1e5 43:2e6 96:5e6 123:6.1e6 159:1.6e7 163:1.6e7 187:4e7 195:2.5e7 206:3.3e7 224:6.6e7 227:6e7 227:1e8 230:2e8 234:6.7e7 234:4e7 247:1.5e8 247:3e8 254:3e8 257:9.1e7 261:2e8 263:2e8 264:9.1e7 268:5.1e8 274:2.5e8 275:5.4e8 275:2.3e8 276:3e8 288:5e8 291:3e8 292:4e8 295:4.6e8 295:5.1e8 302:7.4e8 307:1e9 311:9e8 312:2e9 317:8.1e8 318:1.4e9 324:2.2e9 328:1.8e9 329:1e9 334:1.2e9 335:2.2e9 336:1.8e9 348:2.6e9 348:1.9e9 349:3.7e9 357:3.2e9 359:2.8e9 360:1.2e9 360:2.2e9 369:3.7e9 369:2.6e9 370:2.7e9 371:2.3e9 376:2.9e9 377:4.7e9 377:4.1e9 378:2e9 380:1.4e9 382:2e9 382:2.3e9 385:3e9 392:2.5e9 393:3.3e9 394:2.6e9 397:2.6e9 397:3.3e9 402:2.3e9 412:3.5e9 413:2.4e9 419:3e9 424:3.1e9 424:2.9e9 427:3.7e9 429:2.5e9 434:1.2e9 438:2.7e9 442:2.8e9 445:3.7e9 448:3.2e9 448:2.6e9 448:2.3e9 463:2.2e9 465:1.5e9 467:4e9 475:2.2e9 476:2.1e9 476:2.5e9 484:3.4e9 485:1.2e9 493:2.7e9 498:2.3e9 501:2.9e9 502:2.7e9 509:3.2e9 513:2.3e9 518:3.2e9 519:1e9 519:2.6e9');
+  const upTo = (a, y) => { let m = 0; for (const [yy, v] of a) if (yy <= y + .05 && v > m) m = v; return m; };
+  return { tr, hz, upTo, END: 2021.9, LAST: 5.8e10 };
+})();
+INST.moore = {
+  u0: (2011 - 1971) / 69, v0: 0.5,
+  frame(g) {
+    const { c, P, box: B } = g, x0 = B.x + 4, x1 = B.x + B.w - 4, X = y => x0 + (x1 - x0) * (y - 1970) / 71, Y = v => B.y + B.h - 14 - (B.h - 22) * (Math.log10(v) - 2) / 13;
+    const year = lerp(1971, 2040, g.u), fut = year > TREND.END;
+    c.fillStyle = P.ink; c.globalAlpha = .045; c.fillRect(X(TREND.END), B.y, x1 - X(TREND.END), B.h); c.globalAlpha = 1;
+    c.strokeStyle = P.line; c.lineWidth = 1;
+    [3, 6, 9, 12].forEach(e => { c.beginPath(); c.moveTo(x0, Y(10 ** e) + .5); c.lineTo(x1, Y(10 ** e) + .5); c.stroke(); });
+    g.lab(x1 - 4, Y(1e3) - 14, 'a thousand', '', 'r'); g.lab(x1 - 4, Y(1e6) - 14, 'a million', '', 'r'); g.lab(x1 - 4, Y(1e9) - 14, 'a billion', '', 'r'); g.lab(x1 - 4, Y(1e12) - 14, 'a trillion', '', 'r');
+    [1980, 2000, 2020, 2040].forEach(y => { c.beginPath(); c.moveTo(X(y) + .5, B.y + B.h - 14); c.lineTo(X(y) + .5, B.y + B.h - 8); c.stroke(); g.lab(X(y), B.y + B.h - 8, String(y), '', y === 2040 ? 'r' : 'c'); });
+    c.strokeStyle = P.muted; c.lineWidth = 1; for (const [y, v] of TREND.hz) { disc(c, X(y), Y(v), 2.3); c.stroke(); }
+    c.fillStyle = P.ink; for (const [y, v] of TREND.tr) { disc(c, X(y), Y(v), 2.4); c.fill(); }
+    g.lab(X(1972), Y(2e9), '● transistors on one chip', 'ink'); g.lab(X(2001), Y(2.5e6), '○ the clock, ticks a second');
+    /* your line, past the data */
+    const D = g.v < 0.03 ? Infinity : 1 / g.v, at = y => TREND.LAST * Math.pow(2, (y - TREND.END) / D);
+    c.save(); c.beginPath(); c.rect(x0, B.y, x1 - x0, B.h); c.clip();
+    c.strokeStyle = P.warm; c.lineWidth = 1.8; c.setLineDash([6, 5]); c.beginPath(); c.moveTo(X(TREND.END), Y(TREND.LAST)); c.lineTo(X(2041), Y(at(2041))); c.stroke(); c.setLineDash([]); c.restore();
+    g.lab(X(2031), B.y + 2, 'not made yet', '', 'c');
+    const best = fut ? at(year) : TREND.upTo(TREND.tr, year), xc = X(year);
+    c.strokeStyle = P.blue; c.lineWidth = 1.2; c.beginPath(); c.moveTo(xc + .5, B.y); c.lineTo(xc + .5, B.y + B.h - 14); c.stroke();
+    if (best > 0 && Y(best) > B.y) { c.fillStyle = fut ? P.warm : P.blue; disc(c, xc, Y(best), 5); c.fill(); c.strokeStyle = P.solid; c.lineWidth = 1.5; c.stroke(); }
+    const yr = Math.floor(year), every = d => (isFinite(d) ? 'every ' + (d < 10 ? d.toFixed(1) : Math.round(d)) + ' years' : 'never');
+    if (fut) return { reads: [
+      { v: big(best), k: 'transistors on one chip in ' + yr + ', on your line' },
+      { v: every(D), k: 'how often your line doubles' },
+      { v: 'nothing yet', k: 'what was really made' }] };
+    const span = Math.min(10, year - 1971.9), prev = TREND.upTo(TREND.tr, year - span), r = prev ? best / prev : 1, hz = TREND.upTo(TREND.hz, year), hzp = TREND.upTo(TREND.hz, year - span), rh = hzp ? hz / hzp : 1;
+    const dbl = x => (span >= 3 && x > 1.2 ? every(span / Math.log2(x)) : span < 3 ? 'too early to say' : 'stopped');
+    return { reads: [
+      { v: big(best), k: 'transistors on the biggest chip by ' + yr },
+      { v: dbl(r), k: 'how often that count doubled, in the ten years before' },
+      { v: dbl(rh), k: 'how often the clock doubled', tone: span >= 3 && rh <= 1.2 ? 'bad' : '' }] };
+  }
+};
+
+/* ---- Fixed or fluid: a line you drag across a machine, and how far the work has moved on ---- */
+INST.line = {
+  u0: 7 / 12, v0: 0.3, hstep: 12,
+  setup(S) { const r = rng(99); S.ord = Array.from({ length: 60 }, (_, i) => i); for (let i = 59; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [S.ord[i], S.ord[j]] = [S.ord[j], S.ord[i]]; } },
+  frame(g, S) {
+    const { c, P, box: B } = g, N = 60, cols = 12, rows = 5, G = 50, f = g.u, k = lerp(1, 0.2, g.v);
+    /* sixty places, sixty jobs: the fixed places take the kinds they were built for, the fluid ones take anything */
+    const F = Math.round(f * cols) * rows, L = N - F, known = Math.round(k * N), fDone = Math.min(F, known), lDone = Math.min(L, N - fDone), away = N - fDone - lDone, idle = F - fDone;
+    const lKnown = Math.min(lDone, known - fDone), energy = (fDone / G + lDone) / Math.max(1, fDone + lDone);
+    const qw = Math.min(B.w * .2, 150), cx = B.x + qw + 14, cw = B.w - qw - 18, cy = B.y + 22, ch = B.h - 26, pw = cw / cols, ph = ch / rows, q = Math.min(pw, ph) * .2, lx = cx + cw * F / N;
+    c.fillStyle = P.ink; c.globalAlpha = .07; c.fillRect(cx, cy, lx - cx, ch); c.globalAlpha = 1;
+    c.strokeStyle = P.line; c.lineWidth = 1; c.strokeRect(cx + .5, cy + .5, cw - 1, ch - 1);
+    const job = (x, y, sq, st) => { c.lineWidth = 1.6; c.strokeStyle = st === 'away' ? P.red : P.ink; c.fillStyle = P.ink; c.globalAlpha = st === 'idle' ? .28 : 1;
+      if (sq) c.strokeRect(x - q, y - q, 2 * q, 2 * q); else { disc(c, x, y, q * 1.12); c.stroke(); } c.globalAlpha = 1; };
+    for (let n = 0; n < N; n++) { const col = (n / rows) | 0, row = n % rows, x = cx + (col + .5) * pw, y = cy + (row + .5) * ph, fixed = n < F;
+      const done = fixed ? n < fDone : n - F < lDone;
+      if (done) { c.fillStyle = P.warm; c.globalAlpha = fixed ? .9 : .32; disc(c, x, y, fixed ? Math.min(pw, ph) * .46 / Math.sqrt(G) : Math.min(pw, ph) * .46); c.fill(); c.globalAlpha = 1; }
+      if (fixed) job(x, y, true, done ? 'done' : 'idle'); else if (done) job(x, y, n - F < lKnown, 'done'); else { c.setLineDash([3, 3]); c.strokeStyle = P.line; c.strokeRect(x - q, y - q, 2 * q, 2 * q); c.setLineDash([]); } }
+    /* the jobs it had no place for */
+    const ac = Math.max(1, Math.floor(qw / (2.9 * q)));
+    for (let n = 0; n < away; n++) job(B.x + q * 1.6 + (n % ac) * 2.9 * q, cy + q * 1.6 + ((n / ac) | 0) * 2.9 * q, n < Math.max(0, known - fDone - lKnown), 'away');
+    c.strokeStyle = P.blue; c.lineWidth = 2.5; c.beginPath(); c.moveTo(lx, cy - 6); c.lineTo(lx, cy + ch + 6); c.stroke(); c.fillStyle = P.blue; c.fillRect(lx - 5, cy + ch / 2 - 16, 10, 32);
+    if (lx - cx > 60) g.lab((cx + lx) / 2, B.y, 'fixed: ' + F + ' places', 'ink', 'c'); if (cx + cw - lx > 60) g.lab((lx + cx + cw) / 2, B.y, 'fluid: ' + L + ' places', 'ink', 'c');
+    g.lab(B.x, B.y, away ? 'turned away: ' + away : 'none turned away', away ? 'bad' : '');
+    return { reads: [
+      { v: times(energy), k: 'energy for one job, against a chip that is all fluid', tone: energy < .5 ? 'good' : '' },
+      { v: pct(away / N), k: 'of the work turned away', tone: away ? 'bad' : '' },
+      { v: pct(F ? idle / F : 0), k: 'of the fixed part standing idle', tone: idle > F * .25 ? 'bad' : '' }] };
+  }
+};
+
+/* ---- Fight or use physics: the same sum kept exact, or left to physical law ---- */
+INST.physics = {
+  u0: 0.34,
+  setup(S) { const r = rng(5); S.sm = Array.from({ length: 90 }, () => ({ tv: Math.round(r() * 255), u: Array.from({ length: 8 }, () => r()), z: gauss(r) })); },
+  frame(g, S) {
+    const { c, P, box: B } = g, sig = lerp(0.02, 0.5, g.u), pf = 0.5 * erfc(0.5 / (sig * Math.SQRT2));
+    /* exact logic: a bit flips when the noise crosses half its swing. Physics: the whole answer drifts with the noise */
+    const sm = S.sm.map(s => { let dv = s.tv, flips = 0; s.u.forEach((u, k) => { if (u < pf) { dv ^= 1 << k; flips |= 1 << k; } }); return { tv: s.tv, dv, flips, d: (dv - s.tv) / 255, a: sig * s.z }; });
+    const gw = Math.min(150, B.w * .26), sx = B.x + gw + 14, sw = B.w - gw - 18, rowH = B.h / 2, cur = sm[sm.length - 1], stepX = sw / 89;
+    [0, 1].forEach(row => {
+      const y0 = B.y + row * rowH, mid = y0 + rowH / 2 + 8, amp = rowH / 2 - 26;
+      c.strokeStyle = P.line; c.lineWidth = 1; c.beginPath(); c.moveTo(sx, mid + .5); c.lineTo(sx + sw, mid + .5); c.stroke();
+      sm.forEach((s, i) => { const e = row ? s.a : s.d, cl = clamp(e, -.5, .5), bad = !row && s.flips;
+        c.globalAlpha = .85; c.fillStyle = bad ? P.red : P.ink; disc(c, sx + i * stepX, mid - cl / .5 * amp, bad ? 3.6 : 2.6); c.fill(); });
+      c.globalAlpha = 1;
+    });
+    const q = Math.min(13, (gw - 8) / 8 - 3), by = B.y + rowH / 2 + 8 - q / 2;
+    for (let k = 7; k >= 0; k--) { const x = B.x + 2 + (7 - k) * (q + 3), on = (cur.dv >> k) & 1, fl = (cur.flips >> k) & 1;
+      c.strokeStyle = fl ? P.red : P.ink; c.fillStyle = fl ? P.red : P.ink; c.lineWidth = 1.3; on ? c.fillRect(x, by, q, q) : c.strokeRect(x + .5, by + .5, q - 1, q - 1); }
+    const my = B.y + rowH * 1.5 + 8, jx = B.x + gw * .62, val = clamp(cur.tv / 255 + cur.a, .04, 1.2);
+    c.strokeStyle = P.ink; c.globalAlpha = .55; c.lineWidth = 1.2;
+    for (let i = 0; i < 8; i++) { const yy = my + (i - 3.5) * Math.min(9, (rowH - 30) / 8); c.beginPath(); c.moveTo(B.x + 2, yy); c.bezierCurveTo(B.x + gw * .35, yy, B.x + gw * .4, my, jx, my); c.stroke(); }
+    c.globalAlpha = 1; c.lineWidth = 2 + val * 9; c.lineCap = 'round'; c.beginPath(); c.moveTo(jx, my); c.lineTo(B.x + gw - 4, my); c.stroke(); c.lineCap = 'butt';
+    g.lab(B.x, B.y - 18, 'kept exact: eight bits', 'ink'); g.lab(B.x, B.y + rowH - 18, 'left to physics: currents joining', 'ink');
+    g.lab(sx + sw, B.y - 18, 'ninety answers, against the right one', '', 'r');
+    const eD = pf, eA = sig * Math.sqrt(2 / Math.PI);
+    return { reads: [
+      { v: eD < 1e-7 ? 'exactly right' : 'off by ' + (eD < .001 ? pct(eD, 3) : pct(eD, 1)), k: 'exact logic, on average, for 1 unit of energy', tone: eD < 1e-7 ? 'good' : '' },
+      { v: 'off by ' + pct(eA, 1), k: 'physics, on average, for 0.13 of that energy' }] };
+  }
+};
+
+/* ---- Beyond computation: one row, one rule of eight bits ---- */
+INST.nat = {
+  u0: 110 / 255, hstep: 255,
+  setup(S) { S.rule = -1; },
+  frame(g, S) {
+    const { c, P, box: B } = g, rule = Math.round(g.u * 255), cs = B.w < 480 ? 4 : 5, cols = Math.floor(B.w / cs), topH = 34, vis = Math.floor((B.h - topH) / cs), LIMIT = 3000;
+    if (rule !== S.rule || cols !== S.cols || vis !== S.vis) { const r = rng(3); S.rule = rule; S.cols = cols; S.vis = vis; S.cur = Uint8Array.from({ length: cols }, () => (r() < .5 ? 1 : 0)); S.rows = [S.cur]; S.seen = new Map(); S.gen = 0; S.verdict = null; }
+    const next = () => { const a = S.cur, b = new Uint8Array(cols); let all = 1;
+      for (let i = 0; i < cols; i++) { b[i] = (rule >> ((a[(i + cols - 1) % cols] << 2) | (a[i] << 1) | a[(i + 1) % cols])) & 1; if (b[i] !== b[0]) all = 0; }
+      S.cur = b; if (S.rows.length < vis) S.rows.push(b); S.gen++;
+      if (!S.verdict) { const key = String.fromCharCode.apply(null, b), was = S.seen.get(key); if (was != null) S.verdict = { from: was, period: S.gen - was, all }; else S.seen.set(key, S.gen); } };
+    /* the picture is the first rows; the rule runs on, unseen, to learn whether it ever repeats */
+    let n = 0; while ((S.rows.length < vis || (!S.verdict && S.gen < LIMIT)) && n++ < 500) next();
+    if (!S.verdict && S.gen < LIMIT) g.again();
+    c.fillStyle = P.ink; c.globalAlpha = .88;
+    S.rows.forEach((a, j) => { const y = B.y + topH + j * cs; let s = -1;
+      for (let i = 0; i <= cols; i++) { if (i < cols && a[i]) { if (s < 0) s = i; } else if (s >= 0) { c.fillRect(B.x + s * cs, y, (i - s) * cs - .6, cs - .6); s = -1; } } });
+    c.globalAlpha = 1;
+    const q = 6.5, tw = 3 * q + 9;
+    for (let m = 7; m >= 0; m--) { const x = B.x + 2 + (7 - m) * tw, on = (rule >> m) & 1;
+      for (let k = 0; k < 3; k++) { const b = (m >> (2 - k)) & 1; c.strokeStyle = P.muted; c.lineWidth = 1; c.fillStyle = P.muted; b ? c.fillRect(x + k * q, B.y, q - 1, q - 1) : c.strokeRect(x + k * q + .5, B.y + .5, q - 2, q - 2); }
+      c.strokeStyle = P.warm; c.fillStyle = P.warm; c.lineWidth = 1.4; on ? c.fillRect(x + q - .5, B.y + q + 3, q, q) : c.strokeRect(x + q, B.y + q + 3.5, q - 1, q - 1); }
+    const v = S.verdict, say = v ? (v.period === 1 ? (v.all ? 'one colour from row ' + comma(v.from) : 'stands still from row ' + comma(v.from)) : 'repeats every ' + comma(v.period) + ' rows') : 'no repeat in ' + comma(S.gen) + ' rows';
+    return { reads: [
+      { v: 'rule ' + rule, k: 'the rule you chose, of 256' },
+      { v: say, k: v ? 'what it does from this start' : 'what it does from this start, as far as it was run', tone: v ? '' : 'bad' }] };
+  }
+};
+
+/* ---- Geometry: close to talk, apart to stay cool ---- */
+INST.geo = {
+  u0: 0.4, v0: 0.4,
+  setup(S) { const r = rng(12); S.lf = Array.from({ length: 600 }, () => r()); S.msg = Array.from({ length: 34 }, () => ({ k: Math.floor(r() * 300) * 2, p: r() })); },
+  frame(g, S) {
+    const { c, P, box: B } = g, N = Math.round(lerp(150, 600, g.v)), s = lerp(0.7, 1.4, g.u), N0 = 330, s0 = 0.98;
+    const Rm = Math.min(B.w, B.h) / 2 - 4, R = Rm * (s / 1.4) * Math.sqrt(N / 600), cx = B.x + B.w / 2, cy = B.y + B.h / 2;
+    const trip = s * Math.sqrt(N) / (s0 * Math.sqrt(N0)), heat = Math.sqrt(N) / s / (Math.sqrt(N0) / s0);
+    const pt = k => { const rr = R * Math.sqrt((k + .5) / N), th = k * 2.399963; return [cx + rr * Math.cos(th), cy + rr * Math.sin(th), rr]; };
+    const hot = clamp((heat - .55) / 1.9); if (hot > 0) { const G = c.createRadialGradient(cx, cy, 0, cx, cy, R * 1.25); G.addColorStop(0, P.red); G.addColorStop(1, 'transparent'); c.globalAlpha = hot * .75; c.fillStyle = G; disc(c, cx, cy, R * 1.25); c.fill(); c.globalAlpha = 1; }
+    c.strokeStyle = P.ink; c.lineWidth = 1; c.globalAlpha = .1; c.beginPath();
+    for (let k = 0; k < N; k += 2) { const a = pt(k), b = pt(Math.floor(S.lf[k] * N)); c.moveTo(a[0], a[1]); c.lineTo(b[0], b[1]); } c.stroke();
+    const rd = clamp(R / Math.sqrt(N) * .5, 1.1, 4.2);
+    for (let k = 0; k < N; k++) { const p = pt(k), T = heat * (1 - .55 * (p[2] / R) ** 2); c.globalAlpha = .8; c.fillStyle = P.ink; disc(c, p[0], p[1], rd); c.fill(); const o = clamp((T - .9) / 1.3); if (o > 0) { c.globalAlpha = o; c.fillStyle = P.red; c.fill(); } }
+    /* a few of the trips a message makes */
+    c.globalAlpha = .9; c.fillStyle = P.blue; c.strokeStyle = P.blue; c.lineWidth = 1.4;
+    for (let j = 0; j < 12; j++) { const k = (j * 46) % N - ((j * 46) % N) % 2, a = pt(k), b = pt(Math.floor(S.lf[k] * N)); c.beginPath(); c.moveTo(a[0], a[1]); c.lineTo(b[0], b[1]); c.stroke(); disc(c, a[0], a[1], 2.6); c.fill(); disc(c, b[0], b[1], 2.6); c.fill(); }
+    c.globalAlpha = 1;
+    return { reads: [
+      { v: times(trip), k: 'the average trip between parts', tone: trip > 1.25 ? 'bad' : '' },
+      { v: times(heat), k: 'the hottest spot', tone: heat > 1.25 ? 'bad' : '' },
+      { v: comma(N), k: 'parts' }] };
+  }
+};
+
+/* ---- Brain or copy: where a mind is kept (evaluate of src/engines/mortal.js: learned on the chip, no relearning) ---- */
+INST.copy = {
+  u0: 0.35,
+  setup(S) { const r = rng(31), G = 10; S.G = G; S.w = []; for (let j = 0; j < G; j++) for (let i = 0; i < G; i++) S.w.push(clamp(.5 + .42 * Math.sin(i * .8 + 1) * Math.cos(j * .65 + .4) + .12 * (r() - .5), .06, 1));
+    S.order = S.w.map((_, i) => i); for (let i = S.order.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [S.order[i], S.order[j]] = [S.order[j], S.order[i]]; }
+    S.rank = []; S.order.forEach((k, i) => { S.rank[k] = i; }); S.q = [0, 1, 2, 3].map(() => S.w.map(() => gauss(r))); },
+  frame(g, S) {
+    const { c, P, box: B } = g, f = g.u, G = S.G, nA = Math.round(f * G * G);
+    const acc = l => Math.max(50, Math.round((98 - l) * 10) / 10), n2 = (f * .1) ** 2, energy = 1 - f + f * .13, own = acc(120 * n2), copied = acc(2000 * n2);
+    const L = Math.min(B.h - 34, B.w * .44), x0 = B.x + 4, y0 = B.y + 20, gap = Math.max(18, B.w * .07), M = (L - 16) / 2, x1 = x0 + L + gap + Math.max(0, (B.w - L - gap - 2 * M - 16 - 8) / 2);
+    const grid = (x, y, sz, q) => { const cs = sz / G;
+      for (let k = 0; k < G * G; k++) { const cx = x + (k % G + .5) * cs, cy = y + ((k / G | 0) + .5) * cs, an = S.rank[k] < nA; let w = S.w[k], d = 0;
+        if (an && q) { d = .1 * Math.SQRT2 * q[k] * 1.5; w = clamp(w + d, 0, 1); } else if (an && !g.still) w = clamp(w + .035 * Math.sin(g.t * 2.2 + k), 0, 1);
+        c.globalAlpha = .1 + .82 * w; c.fillStyle = P.ink;
+        if (an) { disc(c, cx, cy, cs * .43); c.fill(); if (q) { c.globalAlpha = clamp(Math.abs(d) * 3.2); c.fillStyle = P.red; c.fill(); } } else c.fillRect(cx - cs * .4, cy - cs * .4, cs * .8, cs * .8); }
+      c.globalAlpha = 1; };
+    grid(x0, y0, L, null);
+    [0, 1, 2, 3].forEach(i => grid(x1 + (i % 2) * (M + 16), y0 + (i >> 1) * (M + 16), M, S.q[i]));
+    g.lab(x0, B.y - 18, 'this chip', 'ink'); g.lab(x1, B.y - 18, 'the same mind, copied to four other chips', 'ink');
+    return { reads: [
+      { v: times(energy), k: 'energy for one answer, against all bits', tone: energy < .5 ? 'good' : '' },
+      { v: own.toFixed(1) + '%', k: 'right answers on this chip' },
+      { v: copied.toFixed(1) + '%', k: 'right answers on a copy', tone: copied < 90 ? 'bad' : '' }] };
+  }
+};
+
+/* ---- Only humans: a thousand designs that all pass (stand-in for src/engines/thousand.js) ---- */
+const SIDES = ['its users', 'the people who repair it', 'the people who pay for it', 'the planet', 'the limits it must keep'];
+INST.human = {
+  u0: 0.55,
+  setup(S) { const r = rng(2026); S.d = Array.from({ length: 1000 }, () => ({ L: [r(), r(), r(), r(), r()], s: 100 - Math.abs(gauss(r)) * 1.1 })); S.keep = -1; S.hov = -1; S.lay = null; },
+  at(x, y, S) { const l = S.lay; if (!l || x < l.x0 || y < l.y0) return -1; const i = Math.floor((x - l.x0) / l.cell), j = Math.floor((y - l.y0) / l.cell), k = j * l.cols + i; return i < l.cols && k < l.N ? k : -1; },
+  hover(x, y, S) { S.hov = this.at(x, y, S); },
+  tap(x, y, S) { const k = this.at(x, y, S); if (k >= 0) S.keep = S.keep === k ? -1 : k; },
+  frame(g, S) {
+    const { c, P, box: B } = g, N = Math.max(1, Math.round(Math.pow(10, 3 * g.u))), cols = Math.ceil(Math.sqrt(N * B.w / B.h)), rows = Math.ceil(N / cols), cell = Math.min(B.w / cols, B.h / rows, 190);
+    const x0 = B.x + (B.w - cell * cols) / 2, y0 = B.y + (B.h - cell * rows) / 2; S.lay = { x0, y0, cell, cols, N };
+    let best = 0; for (let k = 0; k < N; k++) best = Math.max(best, S.d[k].s); let near = 0;
+    for (let k = 0; k < N; k++) { const d = S.d[k], cx = x0 + (k % cols + .5) * cell, cy = y0 + ((k / cols | 0) + .5) * cell, R = cell * .44, kept = k === S.keep, hov = k === S.hov; if (d.s >= best - 1) near++;
+      c.beginPath(); for (let j = 0; j < 5; j++) { const a = -Math.PI / 2 + j * TAU / 5, rr = R * (.28 + .72 * d.L[j]); j ? c.lineTo(cx + rr * Math.cos(a), cy + rr * Math.sin(a)) : c.moveTo(cx + rr * Math.cos(a), cy + rr * Math.sin(a)); } c.closePath();
+      c.globalAlpha = kept ? .4 : .08; c.fillStyle = kept ? P.warm : P.ink; c.fill();
+      c.globalAlpha = kept || hov ? 1 : cell < 14 ? .5 : .7; c.strokeStyle = kept ? P.warm : hov ? P.blue : P.ink; c.lineWidth = kept || hov ? 2 : cell < 14 ? .7 : 1.1; c.stroke(); }
+    c.globalAlpha = 1;
+    const lean = k => { const L = S.d[k].L; let hi = 0, lo = 0; L.forEach((v, j) => { if (v > L[hi]) hi = j; if (v < L[lo]) lo = j; }); return 'It gives most to ' + SIDES[hi] + ' and least to ' + SIDES[lo] + '.'; };
+    const kept = S.keep >= 0 && S.keep < N, show = S.hov >= 0 && S.hov < N ? S.hov : -1;
+    return { reads: [
+      { v: comma(N), k: N === 1 ? 'design that passes every check' : 'designs that pass every check' },
+      { v: comma(near), k: 'of them score within 1% of the best' },
+      { v: kept ? 'design ' + (S.keep + 1) : 'none yet', k: 'kept by you', tone: kept ? 'good' : '' }],
+      cap: kept ? 'You kept design ' + (S.keep + 1) + '. ' + lean(S.keep) + ' No check can say why this one. In the lab your reason is kept with it.'
+        : show >= 0 ? 'Design ' + (show + 1) + ' scores ' + S.d[show].s.toFixed(1) + '. ' + lean(show) + ' Tap to keep it.' : CARDS.human.cap };
+  }
+};
+
+/* The shell: one card at a time, its picture, its two controls, and the same question in the lab. */
+const $ = (s, el = document) => el.querySelector(s);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const clamp = (x, a = 0, b = 1) => Math.max(a, Math.min(b, x));
+const lerp = (a, b, t) => a + (b - a) * t;
+const TAU = Math.PI * 2;
+function rng(seed) { let s = seed >>> 0 || 1; return () => { s ^= s << 13; s >>>= 0; s ^= s >> 17; s ^= s << 5; s >>>= 0; return s / 4294967296; }; }
+function gauss(r) { let u = 0; while (u < 1e-9) u = r(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(TAU * r()); }
+function erfc(x) { const z = Math.abs(x), t = 1 / (1 + 0.5 * z); const y = t * Math.exp(-z * z - 1.26551223 + t * (1.00002368 + t * (0.37409196 + t * (0.09678418 + t * (-0.18628806 + t * (0.27886807 + t * (-1.13520398 + t * (1.48851587 + t * (-0.82215223 + t * 0.17087277))))))))); return x >= 0 ? y : 2 - y; }
+const SUP = '⁰¹²³⁴⁵⁶⁷⁸⁹';
+const sup = n => String(n).split('').map(d => SUP[+d]).join('');
+const comma = n => Math.round(n).toLocaleString('en-US');
+/* a count in plain words up to trillions, then powers of ten */
+function big(n) {
+  if (!isFinite(n)) return 'without end';
+  if (n < 1e4) return comma(n);
+  if (n < 1e6) return comma(Math.round(n / 100) * 100);
+  const U = [[1e6, 'million'], [1e9, 'billion'], [1e12, 'trillion']];
+  if (n < 1e15) { let u = U[0]; for (const x of U) if (n >= x[0]) u = x; const v = n / u[0]; return (v < 10 ? v.toFixed(1) : comma(v)) + ' ' + u[1]; }
+  const e = Math.floor(Math.log10(n)), m = n / Math.pow(10, e); return m.toFixed(1) + ' × 10' + sup(e);
+}
+const times = x => '×' + (x >= 100 ? comma(x) : x >= 10 ? x.toFixed(1) : x.toFixed(2));
+const pct = (x, d = 0) => (x * 100).toFixed(d) + '%';
+/* one in how many */
+function oneIn(p) { if (p <= 0 || p < 1e-15) return 'none in a million billion'; if (p >= 0.095) return pct(p); return '1 in ' + big(1 / p); }
+
+const Q = Object.fromEntries(DATA.questions.map(q => [q.id, q]));
+const IDS = DATA.questions.map(q => q.id);
+const icon = q => '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="' + esc(Q[q].icon) + '"/></svg>';
+const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+const el = { pic: $('#pic'), cv: $('#cv'), labels: $('#labels'), cap: $('#cap'), reads: $('#reads'), hu: $('#hu'), vv: $('#vv'), vw: $('#vwrap') };
+const ctx = el.cv.getContext('2d');
+let cur = null, inst = null, st = { u: 0.5, v: 0.5 }, P = {}, size = { W: 0, H: 0 }, dirty = true;
+
+function palette() {
+  const s = getComputedStyle(document.documentElement), g = k => s.getPropertyValue(k).trim();
+  P = { bg: g('--bg'), solid: g('--solid'), line: g('--line'), ink: g('--ink'), muted: g('--muted'), blue: g('--accent'), warm: g('--warm'), red: g('--bad'), green: g('--good') };
+  dirty = true;
+}
+function resize() {
+  const r = el.pic.getBoundingClientRect(), d = Math.min(2, window.devicePixelRatio || 1);
+  size = { W: Math.round(r.width), H: Math.round(r.height) };
+  el.cv.width = Math.round(size.W * d); el.cv.height = Math.round(size.H * d); ctx.setTransform(d, 0, 0, d, 0, 0); dirty = true;
+}
+/* words over the picture are HTML, never drawn into it (the lab's rule) */
+let pool = [], want = [];
+function syncLabels() {
+  while (pool.length < want.length) { const s = document.createElement('span'); s.className = 'lbl'; el.labels.appendChild(s); pool.push({ s, t: '', c: '', x: NaN, y: NaN, a: '' }); }
+  pool.forEach((p, i) => { const w = want[i];
+    if (!w) { if (p.t !== '') { p.s.textContent = ''; p.t = ''; } return; }
+    if (p.t !== w.t) { p.s.textContent = w.t; p.t = w.t; }
+    if (p.c !== w.c) { p.s.className = 'lbl ' + w.c; p.c = w.c; }
+    if (p.x !== w.x || p.y !== w.y || p.a !== w.a) { p.s.style.transform = 'translate(' + w.x + 'px,' + w.y + 'px)' + (w.a === 'r' ? ' translateX(-100%)' : w.a === 'c' ? ' translateX(-50%)' : ''); p.x = w.x; p.y = w.y; p.a = w.a; } });
+}
+let readsKey = '';
+function syncReads(R) {
+  const key = R.map(r => r.k).join('|');
+  if (key !== readsKey) { el.reads.innerHTML = R.map(r => '<div class="read"><b></b><span>' + esc(r.k) + '</span></div>').join(''); readsKey = key; }
+  [...el.reads.children].forEach((d, i) => { const b = d.firstChild, r = R[i]; if (b.textContent !== r.v) b.textContent = r.v; const c = r.tone || ''; if (b.className !== c) b.className = c; });
+}
+let capNow = '';
+/* nothing moves by itself: the picture is drawn again only when a control changes it (or while a search is still working) */
+function frame() {
+  requestAnimationFrame(frame);
+  if (!inst || !dirty) return;
+  dirty = false; want = [];
+  const g = { c: ctx, W: size.W, H: size.H, box: { x: 14, y: 30, w: size.W - 28, h: size.H - 44 }, t: 0, dt: 0, u: st.u, v: st.v, P, still: true,
+    again: () => { dirty = true; }, lab: (x, y, text, c = '', a = '') => want.push({ x: Math.round(x), y: Math.round(y), t: text, c, a }) };
+  ctx.clearRect(0, 0, size.W, size.H);
+  const out = inst.frame(g, st) || {};
+  syncLabels(); syncReads(out.reads || []);
+  const cap = out.cap || CARDS[cur].cap; if (cap !== capNow) { el.cap.textContent = cap; capNow = cap; }
+}
+
+/* the two controls: drag across the picture, or the sliders */
+function setUV(u, v, from) {
+  st.u = clamp(u); if (inst.v0 != null) st.v = clamp(v);
+  if (from !== 'hu') el.hu.value = Math.round(st.u * +el.hu.max);
+  if (from !== 'vv') el.vv.value = Math.round(st.v * +el.vv.max);
+  el.hu.setAttribute('aria-valuetext', CARDS[cur].h[1]); dirty = true;
+}
+let drag = null;
+el.pic.addEventListener('pointerdown', e => { const r = el.pic.getBoundingClientRect(); drag = { x: e.clientX, y: e.clientY, u: st.u, v: st.v, moved: false, px: e.clientX - r.left, py: e.clientY - r.top }; el.pic.setPointerCapture(e.pointerId); });
+el.pic.addEventListener('pointermove', e => {
+  const r = el.pic.getBoundingClientRect();
+  if (!drag) { if (inst && inst.hover) { inst.hover(e.clientX - r.left, e.clientY - r.top, st); dirty = true; } return; }
+  const dx = e.clientX - drag.x, dy = e.clientY - drag.y; if (Math.abs(dx) + Math.abs(dy) > 5) drag.moved = true;
+  if (drag.moved) setUV(drag.u + dx / (size.W * 0.8), drag.v - dy / (size.H * 0.8));
+});
+const endDrag = e => { if (!drag) return; if (!drag.moved && inst.tap) { inst.tap(drag.px, drag.py, st); dirty = true; } drag = null; };
+el.pic.addEventListener('pointerup', endDrag); el.pic.addEventListener('pointercancel', () => { drag = null; });
+el.pic.addEventListener('pointerleave', () => { if (inst && inst.hover) { inst.hover(-1, -1, st); dirty = true; } });
+el.hu.addEventListener('input', () => setUV(el.hu.value / el.hu.max, st.v, 'hu'));
+el.vv.addEventListener('input', () => setUV(st.u, el.vv.value / el.vv.max, 'vv'));
+
+/* where it lives: the lab's Map in small, a cut through the ground. The loop is the ground line, every place digs a
+   shaft of its levels, the places that hold a chip run on through the four shared depths, and your stack stands at the Lab */
+const SHARED = ['block', 'gate', 'switch', 'atom'], RUNGS = [['atom', 'Atom'], ['switch', 'Switch'], ['gate', 'Gate'], ['block', 'Block'], ['chip', 'Chip'], ['machine', 'Machine'], ['mind', 'Mind']];
+const STAGE_NAME = { open: 'Open', design: 'Design', make: 'Make', test: 'Test', ship: 'Ship', use: 'Use' };
+function footSVG(q) {
+  const CW = 31, C0 = 40, CS = 13, GP = 3, X0 = 5, gy = 86, top = gy + 18, colL = i => (i ? X0 + C0 + (i - 1) * CW : X0), colX = i => colL(i) + (CW - CS) / 2, FW = X0 * 2 + C0 + 8 * CW;
+  let h = '', n = 0;
+  const cell = (x, y, w, on, name, place, hh = CS) => { h += '<rect class="c' + (on ? ' on' : '') + '" x="' + x + '" y="' + y + '" width="' + w + '" height="' + hh + '" rx="2"' + (on ? ' tabindex="0" role="button" aria-label="' + esc(name + ', ' + place) + '" data-n="' + esc(name) + '" data-p="' + esc(place) + '"' : '') + '/>'; if (on) n++; };
+  /* your stack, standing at the Lab: seven rungs, the ones where this question rises lit */
+  RUNGS.forEach(([id, name], i) => cell(X0 + 4, gy - 5 - (i + 1) * 11, C0 - 12, q.rises.includes(id), name, 'a rung of your stack, where it rises when what you built makes it real', 9));
+  h += '<text x="' + (X0 + C0 - 2) + '" y="' + (gy - 66) + '">your stack</text>';
+  h += '<line class="g" x1="0" y1="' + gy + '" x2="' + FW + '" y2="' + gy + '"/>';
+  /* the loop's stages, written on the ground */
+  const span = { open: [0, 0], design: [1, 1], make: [2, 3], test: [4, 4], ship: [5, 5], use: [6, 8] };
+  for (const s of DATA.stages) { const [a, b] = span[s]; h += '<text class="st" text-anchor="middle" x="' + ((colL(a) + colL(b) + (b ? CW : C0)) / 2) + '" y="' + (gy + 11) + '">' + STAGE_NAME[s] + '</text>'; }
+  q.foot.forEach((p, i) => {
+    const x = colX(i + 1), own = p.levels.filter(l => !SHARED.includes(l.d) && l.d !== 'mind'), mind = p.levels.find(l => l.d === 'mind');
+    if (mind) cell(x, gy - 5 - CS, CS, mind.on, mind.n, 'above the ' + p.name.toLowerCase());
+    own.forEach((l, k) => cell(x, top + k * (CS + GP), CS, l.on, l.n, p.name));
+    if (p.stage === 'use' && own.length < 4) h += '<line class="sh" x1="' + (x + CS / 2) + '" y1="' + (top + own.length * (CS + GP) - GP + 1) + '" x2="' + (x + CS / 2) + '" y2="' + (top + 4 * (CS + GP) - 1) + '"/>';
+  });
+  /* the four depths every chip shares, under the three places that hold one */
+  const dc = q.foot.find(p => p.p === 'datacentre');
+  dc.levels.filter(l => SHARED.includes(l.d)).forEach((l, k) => cell(colX(6), top + (4 + k) * (CS + GP), 2 * CW + CS, l.on, l.n, 'inside every chip'));
+  const H = top + 9 * (CS + GP) + 2;
+  return { svg: '<svg viewBox="0 0 ' + FW + ' ' + H + '" role="group" aria-label="Where this question lives in the lab">' + h + '</svg>', n };
+}
+
+function show(id, quick) {
+  if (!Q[id]) id = IDS[0];
+  if (id === cur) return;
+  const q = Q[id], C = CARDS[id];
+  const swap = () => {
+    cur = id; inst = INST[id]; st = { u: inst.u0, v: inst.v0 == null ? 0.5 : inst.v0 }; if (inst.setup) inst.setup(st);
+    readsKey = ''; capNow = '';
+    $('#kick').innerHTML = '<span class="ring">' + icon(id) + '</span><span>' + esc(q.name) + '</span>';
+    $('#q').textContent = q.q;
+    el.hu.max = inst.hstep || 1000; el.vv.max = inst.vstep || 1000;
+    $('#hname').textContent = C.h[1]; $('#hl').textContent = C.h[0]; $('#hr').textContent = C.h[2];
+    el.pic.classList.toggle('two', inst.v0 != null); el.vw.hidden = inst.v0 == null;
+    if (C.v) { $('#vname').textContent = C.v[1]; $('#vl').textContent = C.v[0]; $('#vr').textContent = C.v[2]; }
+    $('#stand').textContent = C.stand;
+    $('#why').innerHTML = ['In a chip', 'In the age of AI', 'Beyond chips'].map((h, i) => '<div><h3>' + h + '</h3><p>' + esc(C.why[i]) + '</p></div>').join('');
+    setUV(st.u, st.v);
+    $('#true').innerHTML = '<b>True</b>' + esc(C.true) + '<span class="src">' + C.src.map(s => (s.u ? '<a href="' + esc(s.u) + '" target="_blank" rel="noopener">' + esc(s.t) + '</a>' : esc(s.t)) + (s.k ? '<span class="kind" title="how sure: the kind of source">' + esc(s.k) + '</span>' : '')).join(' · ') + '</span>';
+    $('#open').innerHTML = '<b>Still open</b><i>' + esc(C.open) + '</i>';
+    const F = footSVG(q); $('#foot').innerHTML = F.svg;
+    const lv = new Set(q.foot.flatMap(p => p.levels.filter(l => l.on).map(l => l.d))).size;
+    const base = 'Lit: where this question lives. ' + lv + ' levels across the lab' + (q.rises.length ? ', and ' + q.rises.length + (q.rises.length > 1 ? ' rungs' : ' rung') + ' of your stack' : '') + '.';
+    $('#where').textContent = base; $('#where').dataset.base = base;
+    $('#mks').innerHTML = q.meets.map((m, i) => '<button type="button" class="mk" data-m="' + m.id + '" aria-pressed="' + (i === 0) + '" aria-label="It meets: ' + esc(Q[m.id].name) + '" title="' + esc(Q[m.id].name) + '">' + icon(m.id) + '</button>').join('');
+    meet(q.meets[0].id);
+    $('#asks').innerHTML = q.field.slice(0, 3).map(f => '<li>' + esc(f.q) + '<small>' + esc(f.who || '') + '</small></li>').join('') || '<li>' + esc(C.ask || '') + '</li>';
+    const pl = (n, w) => '<span><b>' + n + '</b> ' + w + (n === 1 ? '' : 's') + '</span>';
+    $('#counts').innerHTML = pl(q.n.ch, 'challenge') + pl(q.n.exp, 'experiment') + '<span><b>' + q.n.field + '</b> question' + (q.n.field === 1 ? '' : 's') + ' from the field</span>';
+    $('#note').innerHTML = '<b>For the build.</b> ' + C.eng + ' Its address in the lab would be <code>#/q/' + id + '</code>.';
+    document.querySelectorAll('.tick').forEach(b => b.setAttribute('aria-current', b.dataset.q === id));
+    document.title = q.name + ' · core question cards';
+    try { if (location.hash.slice(1) !== id) history.replaceState(null, '', '#' + id); } catch (e) { /* the frame may refuse it */ }
+    resize(); el.pic.classList.remove('swap');
+  };
+  if (quick || reduced || !cur) swap(); else { el.pic.classList.add('swap'); setTimeout(swap, 200); }
+}
+function meet(mid) {
+  const m = Q[cur].meets.find(x => x.id === mid); if (!m) return;
+  document.querySelectorAll('.mk').forEach(b => b.setAttribute('aria-pressed', b.dataset.m === mid));
+  $('#join').innerHTML = '<b>' + esc(Q[mid].name) + '</b><br>What joins them: ' + esc(m.join) + '.<i>' + esc(m.q) + '</i><button type="button" class="go" data-go="' + mid + '">Turn to that question →</button>';
+}
+document.addEventListener('click', e => {
+  const mk = e.target.closest('.mk'); if (mk) return meet(mk.dataset.m);
+  const go = e.target.closest('[data-go]'); if (go) { show(go.dataset.go); window.scrollTo({ top: 0, behavior: reduced ? 'auto' : 'smooth' }); return; }
+  const tk = e.target.closest('.tick'); if (tk) return show(tk.dataset.q);
+  const c = e.target.closest('.foot .c.on'); if (c) pick(c, true);
+});
+function pick(c, keep) {
+  const w = $('#where');
+  if (!c) { if (!w.dataset.kept) w.textContent = w.dataset.base; return; }
+  w.innerHTML = '<b>' + esc(c.dataset.n) + '</b>, ' + esc(c.dataset.p) + '.' + (keep ? ' In the lab a tap lands there with this lens on.' : '');
+  if (keep) { document.querySelectorAll('.foot .sel').forEach(x => x.classList.remove('sel')); c.classList.add('sel'); w.dataset.kept = '1'; }
+}
+$('#foot').addEventListener('pointerover', e => { const c = e.target.closest('.c.on'); if (c) { delete $('#where').dataset.kept; pick(c); } });
+$('#foot').addEventListener('focusin', e => { const c = e.target.closest('.c.on'); if (c) pick(c); });
+$('#foot').addEventListener('keydown', e => { if ((e.key === 'Enter' || e.key === ' ') && e.target.closest('.c.on')) { e.preventDefault(); pick(e.target, true); } });
+document.addEventListener('keydown', e => {
+  if (e.target.closest('input, button, [tabindex]')) return;
+  if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') show(IDS[(IDS.indexOf(cur) + (e.key === 'ArrowRight' ? 1 : IDS.length - 1)) % IDS.length]);
+});
+$('#ticks').innerHTML = IDS.map((id, i) => '<button type="button" class="tick" data-q="' + id + '" title="' + (i + 1) + '. ' + esc(Q[id].name) + '" aria-label="' + esc(Q[id].name) + '">' + icon(id) + '</button>').join('');
+$('#theme').addEventListener('click', () => {
+  const r = document.documentElement, dark = r.dataset.theme ? r.dataset.theme === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+  r.dataset.theme = dark ? 'light' : 'dark'; palette();
+});
+new MutationObserver(palette).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', palette);
+new ResizeObserver(resize).observe(el.pic);
+addEventListener('hashchange', () => show(location.hash.slice(1)));
+palette(); show(location.hash.slice(1) || 'perfect', true); requestAnimationFrame(frame);
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { dirty = true; });
+window.__cards = { show, set: (u, v) => setUV(u, v == null ? st.v : v), state: () => ({ cur, u: st.u, v: st.v }) };
+
+</script>
+</body>
+</html>
