@@ -3,7 +3,7 @@
 import './ledger.setup.mjs';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { STAGES, STAGE_PLACE, stageOfPlace, nextPlace, whereOf, alongTo, holds, doHome } from '../src/engines/way.js';
+import { STAGES, STAGE_PLACE, stageOfPlace, nextPlace, whereOf, alongTo, holds, doHome, riseOf } from '../src/engines/way.js';
 import { PLACES, CHALLENGES, DEPTH_ORDER, viewOfDepth, INSIDE } from '../src/v2/game.js';
 import { TWINS } from '../src/data/atlas.js';
 import { readWords } from '../scripts/words.mjs';
@@ -211,4 +211,17 @@ test('your stack turns along its faces: the address says the stage, along keeps 
   }
   assert.equal(alongTo(whereOf('#/stack/field'), 'design'), '#/stack/design');
   assert.equal(alongTo(whereOf('#/stack/design'), 'use'), '#/stack');
+});
+
+test('out and up from the dive\'s chip reaches your stack\'s machine, then its mind (#450, docs/PATH.md)', async () => {
+  const { RUNGS } = await import('../src/data/path.js');
+  /* the chip in use, in every world it is dived from, rises to the machine; the stack's own way up goes on to the mind */
+  for (const h of ['#/dive/chip', '#/dive/chip/datacentre', '#/dive/chip/phone', '#/dive/chip/car']) assert.equal(riseOf(whereOf(h)), '#/stack/machine', h);
+  const M = whereOf(riseOf(whereOf('#/dive/chip')));
+  assert.deepEqual([M.view, M.level, M.stage], ['stack', 'machine', 'use'], 'it lands on the machine, as used: the stage the dive was at');
+  assert.equal(RUNGS[RUNGS.indexOf('machine') + 1], 'mind', 'the next rung up is the mind');
+  assert.equal(RUNGS[RUNGS.indexOf('machine') - 1], 'chip', 'the rung it rises from is the chip it left');
+  /* nowhere else: below the chip, the chip as made, the stack itself, the island */
+  for (const h of ['#/dive/block', '#/dive/atom', '#/dive/die/made', '#/dive/chip/made', '#/stack/chip', '#/place/datacentre', '#/']) assert.equal(riseOf(whereOf(h)), null, h);
+  assert.equal(riseOf(null), null);
 });

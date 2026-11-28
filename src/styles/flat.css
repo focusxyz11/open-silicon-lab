@@ -227,3 +227,22 @@ button.bk-pin { cursor: pointer; }
   /* the verdict: a wrong answer's reason takes the place of the test's sizes and the pattern's name (it names it) */
   .bk-vd { gap: 4px; } .bk-vd:has(.bk-why) :is(.bk-subs, .bk-scrub > span) { display: none; }
 }
+/* out and up from the dive's chip onto your stack (#450, src/v2/glue/flat.js riseHtml): a quiet sibling of the way in,
+   its mark three of the stack's drafted plates, the lowest lit (the chip you are on), the two above it the machine and
+   the mind */
+.riseup { position: absolute; top: 92px; right: 24px; z-index: 4; display: inline-flex; align-items: center; gap: 12px; padding: 8px 18px 8px 10px;
+  border-radius: 999px; border: 1px solid color-mix(in srgb, var(--accent) 55%, var(--line)); background: var(--panel); color: var(--ink);
+  text-decoration: none; box-shadow: var(--shadow); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+.riseup[hidden] { display: none; }
+.riseup:hover { transform: translateY(-1px); border-color: var(--accent); }
+.riseup:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
+.ru-ic { display: grid; gap: 3px; width: 30px; padding: 2px 0; }
+.ru-ic i { display: block; height: 7px; border: 1.5px solid var(--accent); transform: skewX(-24deg); border-radius: 1px; }
+.ru-ic i:nth-child(1) { border-style: dashed; opacity: .7; }
+.ru-ic i:nth-child(3) { background: var(--accent); }
+.ru-w { display: grid; line-height: 1.15; }
+.ru-w b { font-size: 15px; }
+.ru-k { font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--accent); }
+@media (prefers-reduced-motion: no-preference) { .riseup { transition: transform .2s, border-color .2s; } .riseup:hover .ru-ic i:nth-child(-n+2) { opacity: 1; } }
+@media (max-width: 1099px) { .riseup { top: 140px; right: 16px; } }
+@media (max-width: 720px) { .riseup { top: 168px; right: auto; left: 10px; padding: 5px 12px 5px 8px; gap: 8px; box-shadow: none; } .ru-ic { width: 22px; } .ru-ic i { height: 5px; } .ru-w b { font-size: 13px; } .ru-k { font-size: 10px; } }

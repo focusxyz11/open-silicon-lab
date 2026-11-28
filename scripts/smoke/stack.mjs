@@ -279,5 +279,30 @@ export default async function run() {
         .catch(() => problems.push(tag + ': a node of the stack\'s family tree does not start again from it'));
       await gp.close();
     }
+    /* out and up from the dive's chip (#450, docs/PATH.md "How it joins the lab"): the dive's chip at rest offers the way up
+       your stack; taken, the stack opens on its chip's rung and rises to the machine, as used, its card on Look with the
+       rung's controls out of the picture; the stack's own way up then reaches the mind */
+    {
+      const rp = await browser3d.newPage({ viewport: { width: w, height: h }, colorScheme: scheme, reducedMotion: 'reduce' });
+      rp.on('pageerror', e => problems.push(tag + ' (rise): ' + e.message));
+      await rp.addInitScript(() => { try { localStorage.setItem('osl-quality', 'keep'); localStorage.setItem('osl-hints-v1', JSON.stringify({ seen: {}, off: true })); localStorage.removeItem('osl-stack'); localStorage.removeItem('osl-lang'); } catch (e) { /* no storage */ } });
+      await rp.goto(base + 'index.html#/dive/chip');
+      const up = await rp.waitForFunction(() => { const a = document.querySelector('#diveui > .riseup'); return !!a && !a.hidden && a.getAttribute('href') === '#/stack/machine' && a.getBoundingClientRect().width > 0; }, null, { timeout: 60000, polling: 500 }).then(() => true, () => false);
+      if (!up) problems.push(tag + ': the dive\'s chip does not offer the way out and up your stack');
+      else {
+        await rp.waitForFunction(() => { const v = window.__stack;
+          if (/^#\/dive\//.test(location.hash)) { const a = document.querySelector('#diveui > .riseup:not([hidden])'); if (a) a.click(); return false; }
+          const ctl = document.querySelector('#stackv .sk-ctl');
+          return !!v && location.hash === '#/stack/machine' && v.view.level === 'rung' && v.view.i === 5 && !v.busy() && !document.getElementById('stackv').hidden &&
+            !!document.querySelector('#stackv .skframe .modes3 [data-mode="look"][aria-selected="true"]') && (!ctl || !!ctl.closest('.dockwrap')); }, null, { timeout: 60000, polling: 1000 })
+          .catch(async () => problems.push(tag + ': out and up from the dive\'s chip does not land on your stack\'s machine with its card on Look: ' + await rp.evaluate(() => location.hash + ' ' + JSON.stringify(window.__stack && window.__stack.view))));
+        await rp.waitForFunction(() => { const v = window.__stack; if (!v) return false;
+          if (location.hash === '#/stack/mind' && v.view.i === 6) return true;
+          if (!v.busy() && v.view.i === 5) document.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowUp', bubbles: true, cancelable: true }));
+          return false; }, null, { timeout: 30000, polling: 1000 })
+          .catch(() => problems.push(tag + ': from the machine the dive rose to, the way up does not reach the mind'));
+      }
+      await rp.close();
+    }
   }
 }

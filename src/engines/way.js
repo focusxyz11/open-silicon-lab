@@ -178,5 +178,7 @@ export function alongStep(where, dir) {
   const W = where || cell('island'), n = STAGES.length, i = STAGES.indexOf(W.stage), stage = STAGES[(i + (dir > 0 ? 1 : n - 1) + n) % n];
   const to = alongTo(W, stage); return { stage, to, carry: carryOf(W, to) };
 }
+/* out and up from the dive's chip, onto your stack: its machine (then its mind, docs/PATH.md) */
+export const riseOf = W => (W && W.view === 'dive' && W.level === 'chip' && W.stage === 'use' ? '#/stack/machine' : null);
 /* the stage a challenge is played at: the one the bar (and its card) names while you play it */
 export const stageOfChallenge = ch => (ch ? whereOf('#/do/' + encodeURIComponent(ch.id)).stage : null);
