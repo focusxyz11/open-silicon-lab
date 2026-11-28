@@ -291,3 +291,15 @@ main.stage .f2stage .betview[data-f2="instrument"] > .turbines > svg { flex: non
 
 /* a power of ten written as a raised number in the same font (src/v2/labs/switch.js, semiconductor.js; #373) */
 sup.exp { font-size: 72%; line-height: 0; vertical-align: .45em; }
+
+/* Jevons' bet, this year's numbers (#501): what training asks for against what a dollar of chips buys */
+.jvworld { margin: 10px 0; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; }
+.jvfig { margin: 6px 0; }
+ .jvfig svg { display: block; width: 100%; height: auto; }
+ .jvfig .ax { font: 9px var(--sans); fill: var(--muted); }
+ .jvfig .ax.ask { fill: var(--warm); font-weight: 600; }
+ .jvfig .ax.buy { fill: var(--accent); font-weight: 600; }
+ .jvfig .gl { stroke: var(--line); stroke-width: 1; }
+ .jvfig polyline.ask { fill: none; stroke: var(--warm); stroke-width: 2.2; }
+ .jvfig polyline.buy { fill: none; stroke: var(--accent); stroke-width: 2.2; }
+ .jvfig .gap { fill: color-mix(in srgb, var(--warm) 14%, transparent); stroke: none; }

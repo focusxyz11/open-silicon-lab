@@ -42,7 +42,7 @@ export const PARTS = { block: ['sums', 'memory'], chip: ['core'] };
 export const HANDS = {
   atom: [['gap', 'eV'], ['electrons', 'cm2/Vs'], ['holes', 'cm2/Vs'], ['traps', 'per cm2 eV']],
   switch: [['vmin', 'V'], ['vt', 'V'], ['swing', 'mV'], ['sigma', 'mV'], ['ion', 'x'], ['pair', 'yes'], ['survives', 'yes']],
-  gate: [['delay', 's'], ['energy', 'J'], ['fail', 'p'], ['switches', 'n']],
+  gate: [['delay', 's'], ['energy', 'J'], ['fail', 'p'], ['switches', 'n'], ['area', 'x']],
   block: [['aluDelay', 's'], ['aluEnergy', 'J'], ['aluWrong', 'p'], ['readDelay', 's'], ['readEnergy', 'J'], ['readWrong', 'p'], ['wireShare', 'share'], ['gates', 'n']],
   chip: [['clock', 'Hz'], ['cpi', 'n'], ['energy', 'J'], ['wrong', 'p'], ['gates', 'n'], ['area', 'cm2'], ['yield', 'share'], ['cost', 'x']],
   machine: [['ips', 'per s'], ['energy', 'J'], ['power', 'W'], ['moveShare', 'share'], ['fetch', 'J'], ['wrong', 'p']],

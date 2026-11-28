@@ -43,7 +43,7 @@ if (A.includes('--arch')) {
     const g = cands.splice(Math.floor(rnd() * cands.length), 1)[0], h = { start: Arch.keyOf(g), years: [] };
     let st = Arch.start(g);
     for (let y = 0; y < YEARS; y++) { const s = Arch.suggest(st, 'archniche').dirs, f = y < 10 ? ['people', s[0]] : s.slice(); h.years.push(f); st = Arch.year(st, f); }
-    const wins = Arch.winsOf(st), e = draft({ kind: 'try', arch: Arch.histClaim(h, wins), by: name, made: 'program', ai: 'A search program, not a language model (scripts/agent.mjs --arch), run by ' + by + ': it picked recipes nobody had tried, at least two genes from today\'s computer, and grew each for ' + YEARS + ' years, people first for ten years, then the engine\'s suggestion each year.',
+    const wins = Arch.winsOf(st), e = draft({ kind: 'try', arch: Arch.histClaim(h, wins), season: Arch.VERSION, by: name, made: 'program', ai: 'A search program, not a language model (scripts/agent.mjs --arch), run by ' + by + ': it picked recipes nobody had tried, at least two genes from today\'s computer, and grew each for ' + YEARS + ' years, people first for ten years, then the engine\'s suggestion each year.',
       words: wins.length ? 'A sweep of the open field: grown ' + YEARS + ' years, it beats today\'s computer at ' + wins.length + (wins.length === 1 ? ' need.' : ' needs.') : 'A sweep of the open field: grown ' + YEARS + ' years, it does not beat today\'s computer yet. Kept as an attempt.' }, name + ' arch ' + h.start.split('/').join(' '));
     const r = tryEntry(e), file = fileOf(e);
     console.log(h.start + ' (' + Arch.novelty(g) + ' genes away) wins ' + (wins.join(', ') || 'nothing') + ' → ' + (r.ok ? file.path : 'refused: ' + r.reason));
