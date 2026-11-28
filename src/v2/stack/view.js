@@ -149,7 +149,7 @@ export function createStack(host, opts = {}) {
   }
   function poseStack(n, ri) {
     /* beside the card's side panel the genes step aside, and the figures keep their column left of it */
-    const c = chrome(), ph = phone(), rc = plotRect(n, ri), uh = vh - c.top - c.bot, side = ph ? 0 : ins().r, mL = ph ? 12 : side ? 28 : clamp(vw * 0.18, 215, 380), mR = ph ? 12 : side ? side + 300 : clamp(vw * 0.21, 265, 380), head = ph ? 30 : 64, K = 1.36, NP = NR - 1;
+    const c = chrome(), ph = phone(), rc = plotRect(n, ri), uh = Math.max(150, vh - c.top - c.bot), side = ph ? 0 : ins().r, mL = ph ? 12 : side ? 28 : clamp(vw * 0.18, 215, 380), mR = ph ? 12 : side ? side + 300 : clamp(vw * 0.21, 265, 380), head = ph ? 30 : 64, K = 1.36, NP = NR - 1;
     let s = (vw - mL - mR) / PW, cos = 0.3, depth = PD * s * cos, pitch = depth * K;
     if (NP * pitch + depth + head > uh) { s = (uh - head) / ((NP * K + 1) * PD * cos); depth = PD * s * cos; pitch = depth * K; }
     else { pitch = Math.min((uh - head) / (NP + 1 / K), PD * s * 0.66 * 1.9); cos = clamp(pitch / K / (PD * s), 0.3, 0.66); depth = PD * s * cos; }
@@ -879,7 +879,7 @@ export function createStack(host, opts = {}) {
   function measure() {
     /* where the card is (src/v2/stack/card.js): the dock stands on its sheet on a phone, right of its caption or left of its
        side panel on a desktop */
-    const I = ins(), ph = vw < 760; footB = ph ? I.b || 0 : 0; capH = ph ? 0 : I.capH || 0;
+    const I = ins(), ph = vw < 760; footB = ph ? Math.min(I.b || 0, vh * 0.6) : 0; capH = ph ? 0 : I.capH || 0;
     root.style.setProperty('--sk-fl', (ph ? 8 : I.capW ? I.capW + 16 : 12) + 'px'); root.style.setProperty('--sk-fr', (ph ? 8 : I.r ? I.r + 16 : 12) + 'px'); root.style.setProperty('--sk-fb', (ph ? footB + 8 : 12) + 'px');
     root.classList.toggle('skcard', !!opts.card);
     const cs = $('.sk-cards'), hd = $('.sk-head').getBoundingClientRect(), rb = root.getBoundingClientRect(); headH = Math.max(90, hd.bottom - rb.top); footH = Math.max($('.sk-dock').getBoundingClientRect().height, $('.sk-card').getBoundingClientRect().height) + (cs.hidden || (ph && view.level === 'field') ? 0 : cs.getBoundingClientRect().height + 8) + (vw < 760 ? 52 : 34); }
