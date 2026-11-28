@@ -19,7 +19,9 @@
      LENSES   each lens's measure (src/engines/lens.js MODELS), and PAIRS for two lenses held whose instrument is one
               model of its own (a front, a chain, the fork of memory that computes); any other pair shows its two
               lenses' marks side by side;
-     FRONTS   a front drawn beside a machine (src/v2/machines.js).
+     FRONTS   a front drawn beside a machine (src/v2/machines.js);
+     GUESSES  figures a model leans on that no fact backs yet, each by its engine and where it is set: a guess until a
+              fact in src/data/facts.json replaces it.
    A machine's claims carry their mark beside their status (src/data/inventions.js, liquid.js, fabs.js): fid says how
    the lab knows, status whether anyone has built it, and a guess is never more than an idea drawn (STATUS_MAX). */
 
@@ -114,3 +116,15 @@ export const PAIRS = { 'eff.geo': C('lens'), 'dig.physics': C('lens'), 'copy.phy
 
 /* a front beside a machine: the machine engine scores every offer and yours, both measures from one model */
 export const FRONTS = { machines: C('machine') };
+
+/* figures a model leans on that no fact backs yet (#494: the carry's moving bits and heat, src/engines/path.js) */
+const GUESS = (by, at) => ({ f: 'idea', status: 'guess', by, at });
+export const GUESSES = {
+  /* the share of today's gate's energy that charges the wire to the next gates (path.js GATE_WIRE) */
+  'gate-wire': GUESS('path', 'GATE_WIRE'),
+  /* the share of a register read spent on the wires between the memory and the sums, by where it computes (path.js TRIP) */
+  'block-trip': GUESS('path', 'TRIP'),
+  /* about what a cold plate takes off a chip, W a cm² (path.js HEAT_LIMIT); coolant in the silicon, up to three times as
+     much, is a maker's claim (facts.json in-chip-cooling) */
+  'heat-limit': GUESS('path', 'HEAT_LIMIT')
+};

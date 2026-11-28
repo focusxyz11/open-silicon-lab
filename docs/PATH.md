@@ -55,6 +55,30 @@ built.
 | Block → chip | ALU delay, energy an operation, wrong operations; register read delay, energy, wire share |
 | Chip → machine | clock, cycles an instruction, energy an instruction, wrong instructions |
 | Machine → mind | instructions a second, energy an instruction with memory, power, share spent moving data |
+| Every rung | **moving**, the share of its energy spent moving bits, and **heat**, its power over its own area (W a cm², #494) |
+
+**Moving bits and heat** (#494, decided 27 November 2026). What each rung means by them (`carry` in
+`src/engines/path.js`):
+
+| Rung | Moving | Heat |
+| --- | --- | --- |
+| Atom, switch | nothing: a switch makes a bit and moves none (0) | nothing switches yet (0) |
+| Gate | the wire to the next gates: a guessed share of today's gate (`GATE_WIRE`), longer as the gate takes more room | at full speed, a quarter of its switches every twelve of its delays, over its switches at the line's density: always more than a chip can shed, which is why most of a chip waits |
+| Block | its gates' wires, and the trip between the memory and the sums: a guessed share of a register read (`TRIP`), shorter as *where* moves memory near, almost none computing in it | at its own pace, over its gates |
+| Chip | the same split over an instruction's energy | at its clock, over its logic's area |
+| Machine | memory far or near (the carry's fetches) on top of its chips' own | through one footprint: its chips busy as much as memory lets them, as many tiers on one another as its *shape* stacks (four for *layers stacked*, the tiers lab's, `src/engines/tiers.js`) |
+| Mind | its thinking's share as the chip's, and its weights fetched | the machine's |
+
+So the *where* gene changes moving (far to near shrinks it at the block, the chip and the machine) and the *shape* gene
+changes heat (a stack of tiers runs about three times hotter than a few big cores, past what a cold plate takes);
+`tests/path.test.mjs` pins both. The energies on and off the chip are those the carry already uses (the 45 nm table of
+`energy-moving-data`, with `hbm2-energy` and `optics-power` beside them in `src/engines/bits.js`), so absolute shares of
+moving data run high and directions hold. The gate's wire share, the block's trip and the heat a cold plate takes
+(`HEAT_LIMIT`, 150 W a cm²) are guesses (`GUESSES` in `src/data/fidelity.js`); coolant inside the silicon takes up to
+three times as much (`in-chip-cooling`, a maker's claim). Memory built on the logic (`memory-on-logic`, bonds a few
+microns apart, `hybrid-bond-pitch`) is the *near* option's direction; its own heat on the logic is not counted yet. The
+tiers lab's own season-2 wiring into the architecture engine's scores (#482) is the owner's decision, so the scored tables
+do not move. *Geometry* repaints the stack from these numbers.
 
 Every rung opens on the lab's example and becomes *yours* when changed. Any rung can be entered: a spine, not a
 corridor. Every figure carries the lab's mark of how true it is (`src/data/fidelity.js`): the switch is computed by its
@@ -197,6 +221,16 @@ Each line is meant to become one task issue, in order.
    changed since your last visit, kept in this browser. The browser's own agents are gone: agents sweep from their
    own machines, through the port (`architecture_field`, `submit_architecture`) or `scripts/agent.mjs --arch`.)
 7. **Lenses repaint the stack**, one at a time, starting with *Perfect fails*; then two lenses as a chain, fork, front.
+   (Built, #449: *Perfect fails*, *Geometry*, *Fixed or fluid* and *Only humans* repaint every plate from the carry,
+   `src/engines/stacklens.js`. Two held: a *chain* numbers the rungs the pair's measure climbs and lights each step
+   past its line, the carry's wires between lit steps lit too (*Fight or use physics* × *Digital meets physical*: copies
+   going wrong, lit from the switch up as the voltage falls); a *fork* splits every plate by a line you drag, your stack
+   left of it and the same stack with the pair's gene forked right of it, each side drawn from its own carry (the option
+   chosen in the card); a *front* is the field for two needs, drawn in the card: every attempt by its figure for your
+   need across and a second up, the best compromises as a line, the corner nobody has reached shaded, your stack a dot.
+   A pair climbs or splits by one measure: a lens of the pair that repaints, else heat for *The next Moore's law*,
+   *Efficiency fuels use* and *Fight or use physics*, copies going wrong for *Digital meets physical*, *Whole beats parts*,
+   *Trust without inspection* and *Compute beats cleverness*.)
 8. **The ways in:** from the Lab, Hold's last block and the dive's chip; the lattice as an arrangement of the ladder;
    *Grow an architecture*'s race and map retired into the stack.
 9. **Challenges as stepping stones** on their rungs, inking the plate's edge. (Built: a challenge's rung is the rung of the layer the lattice places
