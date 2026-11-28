@@ -94,16 +94,16 @@ export default async function run() {
     await sp.close(); }
   /* along keeps the level round the loop (#368): → from the dive's gate (Use) wraps round to the Lab (Open), where there
      is no gate, and says what comes next (the bar underlines Design, the card offers the gate as designed); the next →
-     picks the gate up again in the studio. And → at the end of the line and of the studio goes where Next says */
+     picks the gate up again in the studio, on the die as designed (#506). And → at the end of the line and of the studio goes where Next says */
   S.at = 'ways round'; { const tag = 'ways round', rp = await browser3d.newPage({ viewport: { width: 1280, height: 800 } }), wait = { timeout: 90000, polling: 2000 };
     rp.on('pageerror', e => problems.push(tag + ': ' + e.message));
     await rp.goto(base + 'index.html#/dive/gate');
     await rp.waitForFunction(() => { if (location.hash === '#/dive/gate' && document.querySelector('#diveui .rail2 [aria-current][data-rail="gate"]')) document.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
-      return location.hash === '#/place/lab' && !!document.querySelector('#loop [data-stage="design"].holds') && !!document.querySelector('#sheet:not([hidden]) .around [data-key="next"][href="#/bench/gates"]'); }, null, wait)
+      return location.hash === '#/place/lab' && !!document.querySelector('#loop [data-stage="design"].holds') && !!document.querySelector('#sheet:not([hidden]) .around [data-key="next"][href="#/studio/gate"]'); }, null, wait)
       .catch(() => problems.push(tag + ': → from the dive\'s gate does not wrap round to the Lab with the gate as designed offered next'));
     await rp.waitForFunction(() => { if (location.hash === '#/place/lab' && document.querySelector('#sheet:not([hidden]) .around [data-key="next"]')) document.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
-      return location.hash === '#/bench/gates'; }, null, wait)
-      .catch(() => problems.push(tag + ': → → from the dive\'s gate does not reach the gates as designed (#/bench/gates)'));
+      return location.hash === '#/studio/gate'; }, null, wait)
+      .catch(() => problems.push(tag + ': → → from the dive\'s gate does not reach the gate as designed (#/studio/gate)'));
     for (const [from, to] of [['#/line/ship', '#/place/port'], ['#/bench/masks', '#/line/print']]) {
       await rp.goto('about:blank'); await rp.goto(base + 'index.html' + from);
       await rp.waitForFunction(([f, d]) => { const a = document.querySelector('#diveui .dock [data-key="next"]'); if (location.hash === f && a && a.getAttribute('href') === d) document.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
