@@ -10,6 +10,7 @@ import * as Bet from '../../engines/bet.js';
 import { setBetScene } from '../../app/betscene.js';
 import { WAFER as SCENE_WAFER } from '../../engines/chip.js';
 import { glyph } from '../field.js';
+import { mark } from '../fid.js';
 
 export default function lab(L) {
   const { S, view, ch, ctx, el, esc, t, head, reward, doneNote, win, draw, fx, show } = L;
@@ -195,8 +196,25 @@ export default function lab(L) {
     h += '<p class="small ' + (G[b.guess] === right ? 'good' : 'hint') + '">' + esc(t(G[b.guess] === right ? 'bet.jv.right' : 'bet.jv.off', { g: t('bet.jv.g.' + G[b.guess]), a: Math.round(J8.answers), e: J8.energy.toFixed(1) })) + '</p>';
     if (!C.ok) h += view.hint ? '<p class="small hint">' + esc(t('bet.jv.hint')) + '</p>' : '<button type="button" class="link" data-hint>' + esc(t('game.hint')) + '</button>';
     h += '<button type="button" class="link" data-reguess>' + esc(t('bet.again')) + '</button>';
+    h += worldHtml();
     if (C.ok) { win(); h += '<p class="small">' + esc(t('bet.jv.why')) + '</p>'; }
     return h + doneNote() + reward();
+  }
+  /* this year's numbers, after the guess (#501): what training asks for against what a dollar of chips buys, on a scale of
+     tens from 2023, and the data centres' electricity in 2025 and by 2030, each with the mark of its source */
+  function worldHtml() {
+    const W = Bet.jWorld(2023, 2026), Wd = Bet.J_WORLD, X0 = 34, X1 = 290, Y0 = 14, Y1 = 118, yrs = [2023, 2024, 2025, 2026], top = Math.log10(W.ask);
+    const px = y => X0 + (X1 - X0) * (y - 2023) / 3, py = v => Y1 - (Y1 - Y0) * Math.log10(v) / top, line = (k, f) => yrs.map(y => px(y).toFixed(1) + ',' + py(Math.pow(f, y - 2023)).toFixed(1)).join(' ');
+    let s = '<svg viewBox="0 0 300 140" role="img" aria-label="' + esc(t('bet.jv.world.aria', { a: Math.round(W.ask), b: W.buy.toFixed(1) })) + '">';
+    for (const v of [1, 10, 100]) s += '<line class="gl" x1="' + X0 + '" x2="' + X1 + '" y1="' + py(v).toFixed(1) + '" y2="' + py(v).toFixed(1) + '"/><text class="ax" x="' + (X0 - 4) + '" y="' + (py(v) + 3).toFixed(1) + '" text-anchor="end">×' + v + '</text>';
+    yrs.forEach(y => { s += '<text class="ax" x="' + px(y).toFixed(1) + '" y="' + (Y1 + 14) + '" text-anchor="middle">' + y + '</text>'; });
+    s += '<polygon class="gap" points="' + line('a', Wd.compute.perYear) + ' ' + yrs.slice().reverse().map(y => px(y).toFixed(1) + ',' + py(Math.pow(Wd.perDollar.perYear, y - 2023)).toFixed(1)).join(' ') + '"/>';
+    s += '<polyline class="ask" points="' + line('a', Wd.compute.perYear) + '"/><polyline class="buy" points="' + line('b', Wd.perDollar.perYear) + '"/>';
+    s += '<text class="ax ask" x="' + (px(2026) - 4) + '" y="' + (py(W.ask) + 12) + '" text-anchor="end">' + esc(t('bet.jv.world.ask', { v: Math.round(W.ask) })) + '</text><text class="ax buy" x="' + (px(2026) - 4) + '" y="' + (py(W.buy) - 6) + '" text-anchor="end">' + esc(t('bet.jv.world.buy', { v: W.buy.toFixed(1) })) + '</text></svg>';
+    const src = f => mark({ f: 'figures', fact: f });
+    return '<div class="jvworld"><p class="kicker">' + esc(t('bet.jv.world.k')) + '</p><figure class="jvfig">' + s + '</figure>' +
+      '<p class="small">' + esc(t('bet.jv.world.curves', { a: Wd.compute.perYear, b: Math.round((Wd.perDollar.perYear - 1) * 100), r: Math.round(W.rest) })) + ' ' + src(Wd.compute.fact) + '</p>' +
+      '<p class="small">' + esc(t('bet.jv.world.power', { a: Wd.power[0].twh, y0: Wd.power[0].year, b: Wd.power[1].twh.toLocaleString('en'), y1: Wd.power[1].year })) + ' ' + src(Wd.power[0].fact) + ' ' + src(Wd.power[1].fact) + '</p></div>';
   }
   /* the turbines the answers draw: the island's own (turning, or standing idle), the ones it would need beyond them,
      and, past the island's limit, the asking it turns away (drawn as outlines) */
