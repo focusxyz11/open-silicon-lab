@@ -192,10 +192,18 @@ export function create() {
     ringRaf = 0; if (V.vui.hidden || !V.dive || !V.diveFrame) return;
     ringRaf = requestAnimationFrame(diveRing);
     if (V.flatKind !== 'dive') return;   /* the line rings its own machine (lineRing) */
+    if (riseEl) { const on = !!riseTo() && !dip && !V.benchCh && V.diveFrame.mode() === 'look' && Math.abs(V.dive.z - V.WE.IDS.indexOf('chip')) < 0.04; if (riseEl.hidden === on) riseEl.hidden = !on; }
     if (dip) return V.diveFrame.inwardAt(null);
     const a = l3Active(), p = a ? a.obj.portal() : undefined;   /* undefined: the level has no door of its own */
     V.diveFrame.inwardAt(p === undefined ? V.dive.portal : p);
   }
+  /* out and up from the dive's chip onto your stack (#450, docs/PATH.md): the machine the chip is part of, then the mind
+     it runs. On the picture while the chip is at rest, and in the card; the stack opens on its chip's rung and rises to
+     the machine (src/v2/stack/view.js, osl-stack-rise), so the ladder goes on where the dive's rail stops */
+  let riseEl = null;
+  const riseTo = () => V.flatKind === 'dive' && Way.riseOf({ view: 'dive', level: V.diveId(), stage: V.DIVES[V.diveWorld].face === 'made' ? 'make' : 'use' });
+  const riseHtml = () => '<a class="riseup" data-rise hidden href="' + esc(Way.riseOf({ view: 'dive', level: 'chip', stage: 'use' })) + '" aria-label="' + esc(t('dive.rise.aria')) + '"><span class="ru-ic" aria-hidden="true"><i></i><i></i><i></i></span><span class="ru-w"><span class="ru-k">' + esc(t('dive.rise.k')) + '</span><b>' + esc(t('dive.rise.t')) + '</b></span></a>';
+  const rose = () => { try { sessionStorage.setItem('osl-stack-rise', 'chip'); } catch (e) { /* the stack opens on the machine all the same */ } V.nextMove = 'out'; };
   function drawDive() {
     const F = FL(V.flatKind), L = levelsOf(V.flatKind), id = V.diveId(), i = L.indexOf(id), last = i === L.length - 1;
     const key = V.diveThread && DiveData.STOPS[V.diveThread + '.' + id] ? V.diveThread + '.' + id : stopsAt(id)[0];
@@ -221,7 +229,7 @@ export function create() {
     const hereHtml = sk ? V.seekHtml(sk, divePart) : pk.length ? '<div class="herebox"><p class="kicker">' + esc(t('place.here')) + '</p><ul class="here2">' + pk.map(k => { const w = DiveData.partWord(id, k); return '<li><button type="button" data-pick="' + esc(k) + '"' + (k === divePart ? ' class="on"' : '') + '><b>' + esc(t('part.' + w)) + '</b><span>' + esc(t('what.' + w)) + '</span></button></li>'; }).join('') + '</ul></div>' : '';
     V.diveFrame.dock.innerHTML = V.lineHtml(t('around.view.' + V.flatKind) + ' · ' + t('depth.' + id + '.name'), t('depth.' + id + '.see'), key, V.aroundRow(
       i ? '<button type="button" class="chipb" data-key="back" data-divego="' + (V.diveD - 1) + '">' + ar0 + esc(nm(L[i - 1])) + '</button>' : V.flatKind === 'dive' && V.diveWorld === 'datacentre' ? '<button type="button" class="chipb" data-key="back" data-divego="' + (V.diveD - 1) + '">' + esc(t('dive.up')) + '</button>' : '',
-      last ? end : '<button type="button" class="chipb" data-key="next"' + (V.flatKind === 'dive' ? ' data-in' : al) + ' data-divego="' + (V.diveD + 1) + '">' + ar1 + esc(nm(L[i + 1])) + '</button>', inHtml || benchIn(id, 1), benchIn(id, -1)));
+      last ? end : '<button type="button" class="chipb" data-key="next"' + (V.flatKind === 'dive' ? ' data-in' : al) + ' data-divego="' + (V.diveD + 1) + '">' + ar1 + esc(nm(L[i + 1])) + '</button>', inHtml || benchIn(id, 1), benchIn(id, -1), riseTo() ? '<a class="chipb" data-rise href="' + esc(riseTo()) + '">↑ ' + esc(t('dive.rise.chip')) + '</a>' : ''));
     /* the studio's step: what is true, the practice and its open tools, what the engines say of your design, what people try */
     const studioHtml = V.flatKind === 'bench' && V.DS ? studioLook(id, V.DS.designNow(), key) : '';
     V.diveFrame.dock.innerHTML = (sk ? V.seekLit(V.diveFrame.dock.innerHTML, sk) : V.diveFrame.dock.innerHTML).replace('<div class="nav">', studioHtml + yours + (hereHtml.startsWith('<div class="seek') ? '' : '<p class="small muted hintline">' + esc(V.flatKind === 'bench' ? t('bench.do.' + id) : t(F.hint)) + '</p>') + hereHtml + '<div class="nav">');
@@ -334,7 +342,8 @@ export function create() {
       V.Listen = null; const fr = V.diveFrame;
       if (kind === 'dive') import('../listen.js').then(m => { if (V.flatKind !== 'dive' || V.vui.hidden || V.diveFrame !== fr || rn !== V.routeN) return;
         V.Listen = m.createListen(V.vui, { where: lensWhere, joule: () => { if (V.Joule && V.S.joule.on) V.Joule.on(false); }, changed: () => requestAnimationFrame(diveInset) }); V.Listen.level(V.diveId()); });
-      V.vui.onclick = e => { const b = e.target.closest('[data-divego]'); if (b) w.flyTo(+b.dataset.divego); const sk = e.target.closest('[data-seek]'); if (sk) return pickPart(sk.dataset.seek); const pk = e.target.closest('[data-pick]'); if (pk) { pickPart(pk.dataset.pick === divePart ? null : pk.dataset.pick); V.vui.querySelectorAll('[data-pick]').forEach(x => x.classList.toggle('on', x.dataset.pick === divePart)); } };
+      riseEl = null; if (kind === 'dive') { V.vui.insertAdjacentHTML('beforeend', riseHtml()); riseEl = V.vui.querySelector(':scope > .riseup'); }
+      V.vui.onclick = e => { if (e.target.closest('[data-rise]')) rose(); const b = e.target.closest('[data-divego]'); if (b) w.flyTo(+b.dataset.divego); const sk = e.target.closest('[data-seek]'); if (sk) return pickPart(sk.dataset.seek); const pk = e.target.closest('[data-pick]'); if (pk) { pickPart(pk.dataset.pick === divePart ? null : pk.dataset.pick); V.vui.querySelectorAll('[data-pick]').forEach(x => x.classList.toggle('on', x.dataset.pick === divePart)); } };
       const d = V.WE.IDS.indexOf(L.includes(depth) ? depth : L[0]);
       V.loading(false); w.start(); w.setZ(d); if (!ringRaf) ringRaf = requestAnimationFrame(diveRing); if (V.arriving && kind === 'line') w.arrive(V.lineArrive && V.lineArrive.id === V.WE.IDS[d] ? V.lineArrive : null); V.arriving = false; V.lineArrive = null; V.diveD = -1; diveAt(d); $('diveCanvas').focus({ preventScroll: true });
       lineRing();

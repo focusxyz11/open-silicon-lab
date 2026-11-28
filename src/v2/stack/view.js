@@ -203,7 +203,7 @@ export function createStack(host, opts = {}) {
     fly(poseStack(n, ri), ms); if (moved) { anim.sFrom = from; anim.sTo = plotRect(n, ri); stackAt = from; }
     ui();
   }
-  function goRung(i) { if (view.level === 'field') return; view.level = 'rung'; view.i = i; fly(poseRung(view.n, view.r, i), 700); ui(); }
+  function goRung(i, ms = 700) { if (view.level === 'field') return; view.level = 'rung'; view.i = i; fly(poseRung(view.n, view.r, i), ms); ui(); }
   function goOut() { if (pop()) return true; if (mode() === 'ask' && card().putDown) { card().putDown(); return true; } if (view.level === 'rung') { view.level = 'stack'; view.i = -1; fly(poseStack(view.n, view.r), 700); ui(); } else if (view.level === 'stack') goNear(view.n, view.r); else if (cam.s > poseField().s * 1.3) goField(); else return false; return true; }
   const onMine = () => view.r === mineRi();
 
@@ -920,12 +920,15 @@ export function createStack(host, opts = {}) {
   function setSplit(v) { split = clamp(v, 0.05, 0.95); const r = $('.sk-splitr'); if (r && document.activeElement !== r) r.value = Math.round(split * 100); dirty = true; place(); }
   function setForkOpt(gene, o) { if (!A.OPTIONS[gene] || !A.OPTIONS[gene].includes(o)) return; forkAsk[gene] = o; PS = null; dirty = true; ui(); if (mode() === 'ask' && card().changed) card().changed(); }
   function setNeedB(n) { if (!NEEDS.includes(n)) return; needB = n; if (mode() === 'ask' && card().changed) card().changed(); }
+  /* reached out and up from the dive (src/v2/glue/flat.js): the rung it left, read once; the card opens on Look there */
+  let rose = false;
+  const risen = () => { try { const r = sessionStorage.getItem('osl-stack-rise'); sessionStorage.removeItem('osl-stack-rise'); return r; } catch (e) { return null; } };
   const api = { S, view, cam, A, setLens, outlines: () => Object.assign({}, OUTL), landmarks: () => POP.filter(a => a.built).map(a => ({ key: a.key, ids: a.landmarks.map(k => k.id), ev: pointEv(a), waits: !!a.waits })), card: () => $('.sk-card').hidden ? '' : $('.sk-card').textContent, plotOf: key => ({ n: aimN(), ri: RIDX.get(key) }), paintNow: () => (lens && SL.REPAINT.includes(lens.id) ? SL.paint(R(), lens.id, whoAt) : null), pair: () => { const P = pairNow(shown()); return P && { shape: P.shape, measure: P.measure, gene: P.gene || null, option: P.option || null, chain: P.chain || null, left: P.left, right: P.right || null, split, front: P.shape === 'front' ? frontNow() : null }; }, setSplit, setForkOpt, setNeedB, grown: () => ({ st: S.A, tree: S.T, hist: S.H, slip: S.slip }), backTo, face: () => face, setFace, setStep, step: r => stepAt(r), goField, goNear, goStack, goRung, goOut, setGene, setFine, setAim, grow, port, propose, purpose: () => ({ col: COL, form: PFORM, on: purposeOn }), field: () => ({ POP, CEN, since: SINCE }), ask: () => { proposals = A.agentForks(S.A); ui(); }, busy: () => !!anim, mine: () => [aimN(), mineRi()], at: (n, ri) => { const rc = plotRect(n, ri), b = root.getBoundingClientRect(), a = proj(rc.x + PW / 2, rc.y + PD / 2); return [a[0] + b.left, a[1] + b.top]; }, plates: () => PL, carry: () => Y, marks: () => marks, top: () => stackMarks(QB, 3), lens: () => lens, RECIPES, RIDX };
   /* the questions on the stack, for the card: the strongest at a rung (or across the stack), the one marked at a rung */
   const marksAt = (key, n = 6) => (view.level === 'field' || !onMine() ? [] : stackMarks(QB, n, RUNGS.includes(key) ? [key] : null));
   return {
     /* for the card (src/v2/stack/card.js) */
-    ctl: CTL, view, reframe, marksAt, mine: onMine,
+    ctl: CTL, view, reframe, marksAt, mine: onMine, rose: () => { const r = rose; rose = false; return r; },
     markOf: (rung, q) => (QB[rung] || []).find(m => m.id === q) || null,
     /* the lens open in the card: its rung lit, the others dimmed; with a second held, the pair's shape (#449) */
     setLens, pairHtml, growHtml,
@@ -942,8 +945,10 @@ export function createStack(host, opts = {}) {
     show(at, f) {
       const wasOn = on; on = true; host.hidden = false; resize();
       if (at !== 'field' && FX.FACES.includes(f) && f !== face) { if (first) face = f; else setFace(f); }
-      const ri = RUNGS.indexOf(at);
-      if (!wasOn && first) {
+      const ri = RUNGS.indexOf(at), r0 = ri >= 0 ? RUNGS.indexOf(risen()) : -1;
+      /* out and up from the dive's chip (#450): the camera starts on your stack's chip, where the dive was, and rises */
+      if (r0 >= 0 && r0 !== ri) { first = false; rose = true; view.level = 'rung'; view.n = aimN(); view.r = mineRi(); view.i = r0; setPose(poseRung(view.n, view.r, r0)); goRung(ri, 1400); }
+      else if (!wasOn && first) {
         first = false; setPose(poseField());
         if (!A.novelty(S.g) && !RUNGS.some(yoursAt)) say(t('sk.say.hello'));
         if (at === 'field') ui();

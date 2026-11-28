@@ -4,8 +4,10 @@
    matter climbs past the layer. One of six paths can be lit at a time: its cells numbered, the things of the lab it
    passes lit, and a wire drawn from cell to cell in the gutters between them. On a narrow screen it is one column of
    matter at a time. The data is src/data/lattice.js; the Map (src/v2/glue/pages.js) draws it and keeps its state.
-   One ladder (#450, docs/PATH.md "How it joins the lab"): the lattice's layers are Your stack's rungs, so every layer
-   opens its rung of the stack, and silicon, the stack's spine, opens it from each of its cells (#/stack/<rung>). */
+   One ladder (#450, docs/PATH.md "How it joins the lab"): not a picture of its own but an arrangement of Your stack's
+   ladder. The layers are its rungs, drawn as its plates up a spine at the left, each opening its rung (#/stack/<rung>);
+   silicon, the stack's own matter, stands next to them as the spine, each of its cells joined to its rung; the other
+   matters are forks of it (the carrier gene, src/engines/arch.js CARRY); and every cell opens its rung too. */
 import { t, has } from '../core/i18n.js';
 import { esc } from '../core/esc.js';
 import { REPO } from '../data/weave.js';
@@ -29,6 +31,9 @@ export function latticeHtml(o) {
   const inPath = new Set(P ? P.strands.flat().map(c => c.split('.')[0]) : []);
   const m0 = MATTERS.includes(o.matter) ? o.matter : 'silicon', B = o.been || {};
   const name = m => t('page.lat.m.' + m + '.t'), lname = l => t('page.lat.l.' + l + '.t');
+  /* a rung's name: the dive's word for its level, as on the stack's plates; the machine, two levels of the dive, its own */
+  const rname = r => t(r === 'machine' ? 'page.lat.machine' : 'depth.' + r + '.name');
+  const rungLink = (l, cls, inner, at = '') => '<a class="' + cls + '"' + at + ' href="' + rungHref(l) + '" ' + (cls === 'lat-rt' ? 'aria-label' : 'title') + '="' + esc(t('page.lat.rungOpen', { rung: rname(RUNG_OF[l]) })) + '">' + inner + '</a>';
 
   const itemHtml = (s, dup) => {
     const [k, id] = itemOf(s), mk = marks.has(s) ? ' mk' : '';
@@ -49,12 +54,12 @@ export function latticeHtml(o) {
     const names = c.has.filter(x => x.startsWith('lv:')).map(x => t('depth.' + x.split('/')[1] + '.name')), dup = nm => names.filter(x => x === nm).length > 1;
     const items = c.has.slice().sort((a, b) => marks.has(b) - marks.has(a)).map(x => itemHtml(x, dup)).filter(Boolean);
     const chs = items.filter(x => x.k === 'ch').map(x => x.html), lvs = items.filter(x => x.k === 'lv').map(x => x.html), gos = items.filter(x => x.k === 'go').map(x => x.html);
-    let h = '<span class="lat-ck">' + esc(lname(l)) + '</span>';
+    /* the cell's rung, in its corner: a plate drawn solid on the spine, dashed on a fork */
+    let h = '<span class="lat-ck">' + esc(lname(l)) + '</span>' + rungLink(l, 'lat-rt', '<i aria-hidden="true"></i>' + esc(rname(RUNG_OF[l])));
     if (chs.length) h += '<ul class="lat-ch">' + chs.slice(0, SHOW).join('') + '</ul>' +
       (chs.length > SHOW ? '<details class="lat-more"><summary>' + esc(t('page.lat.more', { n: chs.length - SHOW })) + '</summary><ul class="lat-ch">' + chs.slice(SHOW).join('') + '</ul></details>' : '');
     if (lvs.length) h += '<p class="lat-lv"><span>' + esc(t('page.lat.levels')) + '</span> ' + lvs.join(' ') + '</p>';
     h += gos.join('');
-    if (m === 'silicon' && rungHref(l)) h += '<a class="lat-go lat-rung" href="' + rungHref(l) + '">' + esc(t('page.lat.inStack')) + ' →</a>';
     if (c.real.length) h += '<div class="lat-real"><span class="lat-tag">' + esc(t('page.lat.real')) + '</span>' + c.real.map(factHtml).join('') + '</div>';
     const props = m === 'yours' ? (o.proposals || []).filter(p => layerOfGene(p.gene) === l) : [];
     if (props.length) h += '<div class="lat-prop"><span class="lat-tag">' + esc(t('page.lat.proposed')) + '</span><ul>' + props.map(p => '<li><b>' + esc(p.name) + '</b> <span class="small">' + esc(t('ar.gene.' + p.gene)) + ' · ' + esc(t('page.lat.by', { who: p.by })) + '</span> ' + (p.fact ? mark({ f: 'figures', fact: p.fact }) : statusMark('guess')) + '</li>').join('') + '</ul></div>';
@@ -71,9 +76,10 @@ export function latticeHtml(o) {
     PATHS.map(p => '<button type="button" class="lat-pb" data-latpath="' + p.id + '" aria-pressed="' + (P && P.id === p.id) + '">' + esc(t('page.lat.path.' + p.id + '.t')) + '</button>').join('') + '</div>' +
     '<p class="lat-pd small" aria-live="polite">' + esc(t(P ? 'page.lat.path.' + P.id + '.d' : 'page.lat.pathHint')) + '</p>';
   const tabs = '<div class="lat-tabs" role="group" aria-label="' + esc(t('page.lat.tabs')) + '">' + MATTERS.map(m => '<button type="button" data-latm="' + m + '" aria-pressed="' + (m === m0) + '"' + (inPath.has(m) ? ' class="onpath"' : '') + '>' + esc(name(m)) + '</button>').join('') + '</div>';
-  const heads = '<div class="lat-corner small">' + esc(t('page.lat.up')) + '</div>' + MATTERS.map(m => '<div class="lat-mh' + (m !== m0 ? ' mo' : '') + '" data-m="' + m + '"><b>' + esc(name(m)) + '</b><span class="small">' + esc(t('page.lat.m.' + m + '.d')) + '</span>' +
+  const heads = '<div class="lat-corner small">' + esc(t('page.lat.up')) + '</div>' + MATTERS.map(m => '<div class="lat-mh' + (m !== m0 ? ' mo' : '') + '" data-m="' + m + '"><span class="lat-sp">' + esc(t(m === 'silicon' ? 'page.lat.spine' : 'page.lat.fork')) + '</span><b>' + esc(name(m)) + '</b><span class="small">' + esc(t('page.lat.m.' + m + '.d')) + '</span>' +
     (m === 'yours' ? '<a class="small" href="' + esc(REPO + '/issues/new?template=gene.yml') + '" target="_blank" rel="noopener">' + esc(t('page.lat.propose')) + ' ↗</a>' : '') + '</div>').join('');
-  const rows = LAYERS.slice().reverse().map(l => '<div class="lat-lh" data-l="' + l + '"><b>' + esc(lname(l)) + '</b><span class="small">' + esc(t('page.lat.l.' + l + '.d')) + '</span>' + (rungHref(l) ? '<a class="small lat-rung" href="' + rungHref(l) + '">' + esc(t('page.lat.rung')) + '</a>' : '') + '</div>' + MATTERS.map(m => cellHtml(m, l)).join('')).join('');
+  /* the ladder: each layer one of the stack's plates, its rung's name on it and the layer's under it, up one spine */
+  const rows = LAYERS.slice().reverse().map(l => rungLink(l, 'lat-lh', '<span class="lat-plate"><b>' + esc(rname(RUNG_OF[l])) + '</b></span><span class="lat-lw"><b>' + esc(lname(l)) + '</b><span class="small">' + esc(t('page.lat.l.' + l + '.d')) + '</span></span>', ' data-l="' + l + '" data-rung="' + RUNG_OF[l] + '"') + MATTERS.map(m => cellHtml(m, l)).join('')).join('');
   return '<div class="lat' + (P ? ' pathon' : '') + '" data-lat data-path="' + (P ? P.id : '') + '" data-matter="' + m0 + '">' + paths + tabs +
     '<p class="wm-axis wm-across small">' + esc(t('page.lat.across')) + '</p><div class="lat-grid">' + heads + rows + '<svg class="lat-wire" aria-hidden="true"></svg></div></div>';
 }

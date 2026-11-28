@@ -239,8 +239,12 @@ Each line is meant to become one task issue, in order.
    challenge, and the challenge's own page is a door showing its goal as it stands on your stack and leading into that
    Do (`src/v2/labs/arch.js`); its smoke checks moved to `scripts/smoke/stack.mjs`. The island's Lab offers *Your stack*
    beside *Go inside*; Hold's last block lands on the ladder (#524); every layer of the lattice opens its rung, and
-   silicon, the spine, opens it from each of its cells. Still to build: the dive's chip *out and up* to the machine and
-   the mind, and the lattice drawn as the ladder itself rather than a grid of its own.)
+   silicon, the spine, opens it from each of its cells. Then the rest of #450: the dive's chip, at rest, offers *Up your
+   stack: machine, then mind* (on the picture beside the way in, and in the card; `riseOf` in `src/engines/way.js`), and
+   the stack opens framed on its chip's rung, where the dive was, and rises to the machine with its card on Look; its
+   own way up reaches the mind. The lattice is drawn as the ladder itself: its layers are the stack's plates up one
+   spine at the left, each a way onto its rung; silicon stands beside them as the spine, each cell joined to its rung,
+   the other matters its forks; every cell opens the rung of its row (`src/v2/lattice.js`).)
 9. **Challenges as stepping stones** on their rungs, inking the plate's edge. (Built: a challenge's rung is the rung of the layer the lattice places
    it in, `rungOfChallenge`; a won one inks a square under its plate and shows in the rung's card.)
 10. **The open genome's form** (after the first forks carry): a GitHub form and port tool to propose a gene option

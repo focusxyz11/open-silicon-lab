@@ -4,7 +4,8 @@
    only, no words: the words are page.lat.* in src/i18n/en/pages.json; the view is src/v2/lattice.js, drawn by the
    Map (src/v2/glue/pages.js); tests in tests/lattice.test.mjs.
 
-   MATTERS: the columns, left to right; the last is open, for a matter nobody has put in the lab yet.
+   MATTERS: the columns, left to right: silicon first, the spine of Your stack beside its rungs, then the other matters,
+     its forks; the last is open, for a matter nobody has put in the lab yet.
    LAYERS: the rows, from the bottom up.
    PLACED: what the lab already has, one line per thing: [what, matter, layer]. What is 'ch:<challenge>' (src/v2/loop.js
      CHALLENGES), 'lv:<place>/<depth>' (a level, src/data/places.js INSIDE) or 'go:<page>' (PAGES below). Nothing is
@@ -18,7 +19,7 @@
    PATHS: the six ways through it from the owner's discussion, lit one at a time: strands of cells in order (a path
      may climb in more than one matter at once), and marks, the things of the lab it passes, lit in their cells. */
 
-export const MATTERS = ['everyday', 'silicon', 'light', 'molecules', 'cells', 'neurons', 'yours'];
+export const MATTERS = ['silicon', 'everyday', 'light', 'molecules', 'cells', 'neurons', 'yours'];
 export const LAYERS = ['physics', 'switch', 'logic', 'sums', 'processor', 'machine', 'intelligence'];
 
 export const PAGES = {
