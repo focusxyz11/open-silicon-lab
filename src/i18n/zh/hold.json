@@ -89,6 +89,8 @@
  "hd.walls.n": "第 {n} 堵墙，共 4 堵",
  "hd.try.k": "试一试",
  "hd.play": "动手玩真的",
+ "hd.field.line": "计算机的 {of} 种配方中，已有 {tried} 种被尝试过，其中 {beat} 种在某件事上胜过今天的计算机。",
+ "hd.field.go": "查看每一次尝试",
  "hd.q.label": "它背后的问题",
  "hd.q.meet": "到它所在的地方看看",
  "hd.ways.k": "人们正在尝试的办法",

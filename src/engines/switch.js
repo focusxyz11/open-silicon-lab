@@ -72,13 +72,21 @@ export const MATERIALS = [
   { id: 'graphene', eg: 0, me: 10000, mh: 10000, dit: 1e12, form: 'sheet', stage: 'back', melt: null, status: 'lab', fact: 'graphene-off' }
 ];
 export const MATERIAL_IDS = MATERIALS.map(m => m.id);
-/* the shapes: the body factor m, the spread of the copies' thresholds (mV), the forms of material each holds, and how
-   ready it is (gate all around is in volume production: facts.json tsmc-n2) */
+/* the shapes: the body factor m, the spread of the copies' thresholds (mV), the forms of material each holds, how
+   ready it is (gate all around is in volume production: facts.json tsmc-n2), and the area a gate of it takes against a
+   gate of fins side by side (area).
+   The stacked pair (cfet, #499): the electron switch built on top of the hole switch, each wrapped all around, so a gate
+   stands on about half the ground (facts.json intel-cfet-2026, Intel's projection at full scaling; shown at a 45 nm gate
+   pitch). Shown in labs, not in products. Its price: the top switch is harder to reach, so its copies spread a little
+   more (the lab's simplification), and the same heat stands on half the area (density, the heat a square of it makes
+   against fins: what the carry's heat will read, #494). Every other shape takes a fin gate's area, by assumption: the
+   lab changes area only where a source says how much. */
 export const SHAPES = [
-  { id: 'planar', m: 1.26, sigma: 20, forms: ['bulk', 'tube'], status: 'product' },
-  { id: 'fin', m: 1.12, sigma: 12, forms: ['bulk'], status: 'product' },
-  { id: 'gaa', m: 1.05, sigma: 10, forms: ['bulk', 'tube', 'sheet'], status: 'product', fact: 'tsmc-n2' },
-  { id: 'sheet', m: 1.03, sigma: 12, forms: ['sheet'], status: 'lab' }
+  { id: 'planar', m: 1.26, sigma: 20, forms: ['bulk', 'tube'], status: 'product', area: 1 },
+  { id: 'fin', m: 1.12, sigma: 12, forms: ['bulk'], status: 'product', area: 1 },
+  { id: 'gaa', m: 1.05, sigma: 10, forms: ['bulk', 'tube', 'sheet'], status: 'product', fact: 'tsmc-n2', area: 1 },
+  { id: 'sheet', m: 1.03, sigma: 12, forms: ['sheet'], status: 'lab', area: 1 },
+  { id: 'cfet', m: 1.05, sigma: 11, forms: ['bulk'], status: 'lab', fact: 'intel-cfet-2026', area: 0.5 }
 ];
 export const SHAPE_IDS = SHAPES.map(s => s.id);
 const FORM_SIGMA = { bulk: 0, sheet: 2, tube: 6 };   // tubes' diameters vary, and so do their thresholds
@@ -167,7 +175,7 @@ function raw(spec, T) {
   const heat = heatAfter(M.stage), survives = !M.own && (M.melt == null ? M.stage === 'back' : M.melt > heat);
   const status = weakest([M.status, S.status, X.status]);
   return { spec: s, mat: M, T, swing, m, cit, sigma, floor, clean, vt, vmin, ion, share, pair, inBand: B.ok, fair: !M.own || B.ok,
-    heat, survives, status, own: !!M.own };
+    heat, survives, status, own: !!M.own, area: S.area };
 }
 const REF = raw(START, T_ROOM);
 /* the switch: its raw model, against today's silicon fin (energy and speed as factors, 1 is silicon), and the goals */
@@ -176,6 +184,8 @@ export function switchOf(spec, T = T_ROOM) {
   r.energy = r.clean ? Math.pow(r.vmin / REF.vmin, 2) : NaN;
   r.speed = r.clean ? (r.ion / REF.ion) / (r.vmin / REF.vmin) : NaN;
   r.steep = r.swing < swingLimit(T);
+  /* the heat a square of these switches makes against fins: the energy of a switch over the area it stands on */
+  r.density = r.clean ? r.energy / r.area : NaN;
   r.goals = goalsOf(r);
   return r;
 }

@@ -105,6 +105,7 @@ body.firstpage .bar .loop{display:none}
 .hold .w-out .ok{color:var(--red);font-weight:600}
 .hold .w-out>b.blk{display:block;margin:0 0 .2em}
 .hold .mtile.nw{justify-content:flex-start!important}.hold .mtile.nw b,.hold .mtile.nw .lb{white-space:normal!important;line-height:1.15}.hold .mtile.nw .lb{font:500 11px/1.15 var(--sans)!important;text-transform:none;letter-spacing:0}
+.hold .w-field{margin:.6em 0 0;font-size:calc(var(--u)*13);line-height:1.4;color:var(--mid)}
 .hold .lnk{font-weight:700;text-decoration:none;border-bottom:1.5px solid var(--go);padding-bottom:1px;display:inline-block;margin-top:.7em;font-size:calc(var(--u)*14)}
 .hold .lnk::after{content:" →";color:var(--go)}
 .hold .lnk:hover{color:var(--go)}
