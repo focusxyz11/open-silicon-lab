@@ -77,6 +77,7 @@ export function whereOf(hash) {
   if (k === 'build') return cell('page', 'lab');
   if (k === 'place' && p[1] === 'datacentre' && p[2] != null && p[2] !== 'inside') return cell('flight', 'datacentre', FLIGHT[+p[2]] || 'building');
   if (k === 'studio') return cell('studio', 'studio', STUDIO_LEVELS.includes(p[1]) ? p[1] : 'chip', 'design');
+  if (k === 'fab') return cell('fab', 'fab', STUDIO_LEVELS.includes(p[2]) ? p[2] : null, 'make', { step: p[1] || 'print' });
   if (k === 'place' && p[1] === 'phones' && /^\d+$/.test(p[2] || '')) return cell('flight', 'phones', PHONE_FLIGHT[+p[2]] || 'phone');
   if (k === 'place' && p[1] === 'cars' && /^\d+$/.test(p[2] || '')) return cell('flight', 'cars', CAR_FLIGHT[+p[2]] || 'car');
   if (k === 'place' && PLACES.includes(p[1])) return cell('island', p[1]);

@@ -235,7 +235,9 @@ export function create() {
     return '<button type="button" class="chipb" ' + (dir > 0 ? 'data-in data-inname="' + esc(t('depth.' + lv + '.name') + ' · ' + name) + '"' : 'data-out') + ' data-divego="' + V.WE.IDS.indexOf(to) + '">' + (dir > 0 ? '↓ ' : '↑ ') + esc(name) + '</button>'; };
   /* the way into a station of the line (src/data/weave.js DIVES): the machine that prints with light, or what the step makes */
   const cap1 = w => w.charAt(0).toUpperCase() + w.slice(1);
-  const lineIn = id => { const dv = DiveData && (DiveData.DIVES[id] || [])[0]; return dv ? '#/dive/' + dv[1] + '/' + dv[0] : null; };
+  /* a station of your chip's line goes inside its machine, to your wafer and down to a switch (#512); others to their dive */
+  const FAB = ['crystal', 'deposit', 'print', 'etch', 'implant', 'wires', 'test'];
+  const lineIn = id => { if (FAB.includes(id)) return '#/fab/' + id; const dv = DiveData && (DiveData.DIVES[id] || [])[0]; return dv ? '#/dive/' + dv[1] + '/' + dv[0] : null; };
   /* while the line is shown, the frame rings the machine the way in starts from, wherever the camera has it now */
   let lineRingT = 0;
   const lineRing = () => {

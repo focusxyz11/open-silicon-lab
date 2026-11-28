@@ -7,6 +7,7 @@ import { DIE } from './plan.js';
 
 import { paletteOf, alpha } from './kit.js';
 import { madeDie } from './made.js';
+import { madeView } from './station.js';
 export { paletteOf, alpha };
 
 /* thresholds, in screen pixels (the guide's) */
@@ -17,6 +18,7 @@ export const SHOW = { outline: 34, units: 200, block: 130, cells: 150, layout: 4
    { x, y, text, kind ('name', 'aside', 'figure'), part, bad } in screen pixels, the label's top left */
 export function drawDie(ctx, P, cam, o) {
   if (o.made) return madeDie(ctx, P, cam, o);
+  if (P.station) return madeView(ctx, P, cam, o);
   const { W, H, C, words } = o, s = cam.s, X = x => cam.ox + x * s, Y = y => cam.oy + y * s, labels = [];
   const on = r => X(r.x + r.w) > -40 && X(r.x) < W + 40 && Y(r.y + r.h) > -40 && Y(r.y) < H + 40;
   const rect = r => ctx.rect(X(r.x), Y(r.y), r.w * s, r.h * s);

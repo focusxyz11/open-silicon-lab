@@ -75,3 +75,18 @@ test('the masks the studio draws are the record\'s, the ones Print reads; rule b
   /* a design changed draws other masks */
   assert.notDeepEqual(planOf(recordOf(stackOf(), ok('half'))).masks.cells, P.masks.cells);
 });
+
+test('inside a station: one more level above the chip, the wafer around your die, the machine at its left (#512)', async () => {
+  const { whereOf, alongTo } = await import('../src/engines/way.js');
+  const r = recordOf(stackOf(), ok('alu')), P = planOf(r, 'etch');
+  assert.deepEqual(P.levels, ['station', 'chip', 'block', 'gate', 'switch']);
+  assert.ok(P.targets.station.w > P.targets.chip.w * 2, 'the station frames the machine and the wafer');
+  assert.ok(P.station.machine.x + P.station.machine.w < P.station.wafer.cx - P.station.wafer.r, 'the machine stands at the wafer\'s left');
+  assert.equal(P.station.chip, r.made.find(m => m.step === 'etch').chip, 'the die drawn is the record\'s, as made after Etch');
+  assert.equal(planOf(r).station, null, 'the studio has no station level');
+  /* the address says the station and the level; along leads to the same level as designed and as used */
+  const W = whereOf('#/fab/etch/gate');
+  assert.equal(W.view, 'fab'); assert.equal(W.stage, 'make'); assert.equal(W.level, 'gate'); assert.equal(W.step, 'etch');
+  assert.equal(alongTo(W, 'design'), '#/studio/gate'); assert.equal(alongTo(W, 'use'), '#/dive/gate');
+  assert.equal(whereOf('#/fab/print').level, null, 'the station itself is no level of the chip');
+});

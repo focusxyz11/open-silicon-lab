@@ -16,8 +16,15 @@ import { floorplanOf, DIE } from '../../engines/floorplan.js';
 export { DIE };
 export const PADS = 10, PAD = 26;
 export const LEVELS = ['chip', 'block', 'gate', 'switch'];
+const LEVELS0 = LEVELS;
 
-export function planOf(record) {
+/* the wafer's dies: rows of 3, 5, 5, 5, 3 (the guide's 21), the centre one yours; their index is the Test station's */
+export const DIES = (() => { const rows = [3, 5, 5, 5, 3], out = []; rows.forEach((n, j) => { for (let i = 0; i < n; i++) out.push([i - (n - 1) / 2, j - 2]); }); return out; })();
+export const MADE_LEVELS = ['station', 'chip', 'block', 'gate', 'switch'];
+const MADE_STEPS = ['crystal', 'deposit', 'print', 'etch', 'implant', 'wires', 'test'];
+/* made: a step of the line (#512): the plan of your die as made after it, inside its station: the wafer around your die
+   (the centre die), the machine cut open at the wafer's left, and one more level above the chip, the station */
+export function planOf(record, made) {
   const D = record && record.designed, g = (D && D.recipe) || A.TODAY, F = (D && D.fine) || {};
   /* the floorplan is the record's, laid out by its engine (src/engines/floorplan.js, #507) */
   const fp = (D && D.floorplan) || floorplanOf(g, F), units = fp.units, mem = fp.mem, shape = fp.shape, where = fp.where, n = fp.n, M = { kind: fp.memKind };
@@ -79,14 +86,22 @@ export function planOf(record) {
   const T = D && D.timing, onPath = new Set(T ? T.path : []);
   wires.forEach(w => { w.path = !!T && onPath.has(w.to) && (w.from == null ? T.path[0] === w.to : onPath.has(w.from) && T.path.indexOf(w.from) === T.path.indexOf(w.to) - 1); });
   const ruleCells = {}; ((D && D.rules) || []).forEach(r => { if (!r.ok) r.cells.forEach(id => { (ruleCells[id] = ruleCells[id] || []).push(r.id); }); });
-  return { sheets, road, shuttle, masks: (D && D.masks) || null, rules: (D && D.rules) || [], ruleCells, shape, where, n, layers: fp.layers, heat: (D && D.heat) || null, timing: T || null, late: !!(D && D.late), wire: (D && D.wire) || null, fid: (D && D.fid) || {}, units, mem, memKind: M.kind, block, regs, ctl, cells, wires, pins, trips, pads: padsAt, targets, empty: !cells.length, broken: (D && D.broken) || null };
+  let station = null;
+  if (made && MADE_STEPS.includes(made) && record) {
+    const m = record.made.find(x => x.step === made), pitch = DIE / 0.86, r = pitch * 2.75, cx = DIE / 2, cy = DIE / 2;
+    const machine = { x: cx - r - 3600, y: cy - r * 0.95, w: 3000, h: r * 1.9 };
+    station = { step: made, f: MADE_STEPS.indexOf(made), chip: m ? m.chip : null, report: m ? m.report : null, wafer: { cx, cy, r, pitch }, machine };
+    targets.station = { x: machine.x - 200, y: cy - r - 300, w: cx + r + 300 - (machine.x - 200), h: 2 * r + 600 };
+  }
+  return { station, levels: station ? MADE_LEVELS : LEVELS, sheets, road, shuttle, masks: (D && D.masks) || null, rules: (D && D.rules) || [], ruleCells, shape, where, n, layers: fp.layers, heat: (D && D.heat) || null, timing: T || null, late: !!(D && D.late), wire: (D && D.wire) || null, fid: (D && D.fid) || {}, units, mem, memKind: M.kind, block, regs, ctl, cells, wires, pins, trips, pads: padsAt, targets, empty: !cells.length, broken: (D && D.broken) || null };
 }
 
 /* the level a scale stands at, and how far along the levels it is (0 = chip, 3 = switch), continuously: from the scale
    that frames each level's target (fit: a function of the level, or a view's width, the target framed across it) */
 export function levelAt(plan, scale, fit) {
+  const LEVELS = plan.levels || LEVELS0;
   const s = LEVELS.map(l => Math.log(typeof fit === 'function' ? fit(l) : fit / plan.targets[l].w)), v = Math.log(scale);
-  if (v <= s[0]) return { level: 'chip', pos: 0 };
+  if (v <= s[0]) return { level: LEVELS[0], pos: 0 };
   for (let i = 1; i < s.length; i++) if (v <= s[i]) { const f = (v - s[i - 1]) / (s[i] - s[i - 1]); return { level: LEVELS[f < 0.5 ? i - 1 : i], pos: i - 1 + f }; }
-  return { level: 'switch', pos: LEVELS.length - 1 };
+  return { level: LEVELS[LEVELS.length - 1], pos: LEVELS.length - 1 };
 }

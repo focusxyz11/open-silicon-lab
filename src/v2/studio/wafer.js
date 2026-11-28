@@ -2,14 +2,13 @@
    step, read from the record's made part (src/engines/chiprecord.js madeAt) and drawn by the studio's own drawing code
    (made.js), the centre die the one the camera goes into. Drawn on a canvas for the 3D line to lay on your
    wafer (src/app/journey3d.js); no words on it (CLAUDE.md: words are HTML over a scene). Computes nothing. */
-import { planOf } from './plan.js';
+import { planOf, DIES } from './plan.js';
+
+export { DIES };
 import { madeDie, MADE_STEPS } from './made.js';
 import { alpha } from './kit.js';
 import { DIE } from '../../engines/floorplan.js';
 
-/* the dies of the disc: rows of 3, 5, 5, 5, 3 (the guide's 21), the centre one yours to follow; their index is the
-   Test station's die index */
-export const DIES = (() => { const rows = [3, 5, 5, 5, 3], out = []; rows.forEach((n, j) => { for (let i = 0; i < n; i++) out.push([i - (n - 1) / 2, j - 2]); }); return out; })();
 export const CENTRE = DIES.findIndex(d => d[0] === 0 && d[1] === 0);
 /* the made step a station of the journey shows: before Deposit the crystal's, after Test the tested die */
 const STEP_OF = { crystal: 'crystal', slice: 'crystal', clean: 'crystal', deposit: 'deposit', print: 'print', etch: 'etch', implant: 'implant', wires: 'wires', test: 'test', pkg: 'test', ship: 'test' };
