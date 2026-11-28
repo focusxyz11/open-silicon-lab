@@ -24,6 +24,10 @@
      speck lands on (yield) and what a good one costs (chip.js dieOf), against the lab's example (cost). The scanner
      sets the line's pace: a higher dose, fewer wafers an hour (litho.js euv), and the fab's fixed costs shared over
      fewer of them. The line's numbers and their marks are carry().fab.
+     The line is the record's (#505, docs/CHIP.md): the stations of src/engines/stations.js, every machine a function,
+     run in order. The carry reads what they made (fabOf: the print's spread and pace, the air's specks, the die Test
+     found): carryWith(stack, made) reads a record's made part (src/engines/chiprecord.js); carry(stack), with no
+     record, runs the line itself and asks the Test station for its die (dieAt).
    - The gate: today's silicon gate is T0 ps and EG0 fJ at VREF (0.70 V), an idea drawn. At a voltage V, its delay goes
      as V over the switch's current there (a smooth turn-on at the switch's swing above its threshold), its energy as
      V squared, four times more without both carriers (no CMOS pair: current flows while it holds a 0). Its copies'
@@ -64,9 +68,7 @@
 import * as A from './arch.js';
 import * as SW from './switch.js';
 import { E16 } from './paradigms.js';
-import { euv } from './litho.js';
-import { isoLimit } from './fabline.js';
-import { defectsOf, dieOf, START as CHIP_START } from './chip.js';
+import { runLine, bareChip, fabOf, dieAt } from './stations.js';
 import { AREA_FIXED } from './bet.js';
 import { RUNGS, HANDS, BY, FID, FORK_BY, GENE_RUNGS, FINE_OF, CHOICES, V_RANGE, EXAMPLE, AIM, FACES, FACE_OF, FACE_STAGE, CARE, DENSITY, LAYER } from '../data/path.js';
 import { PLACED } from '../data/lattice.js';
@@ -132,18 +134,15 @@ function baseAcc(b) {
 /* the line run with a care (CARE): the spread of the copies against today's line (from the print's photon noise), its
    pace against today's (the scanner's wafers an hour), the specks a cm² (from the cleanroom's air), each with the
    engine behind it and its mark */
-const LINE0 = { print: euv({ dose: CARE.dose[EXAMPLE.care] }), air: isoLimit(CARE.clean[EXAMPLE.care]) };
+const LINES = new Map();
 export function lineOf(care) {
-  const c = CHOICES.care.includes(care) ? care : EXAMPLE.care, print = euv({ dose: CARE.dose[c] }), air = isoLimit(CARE.clean[c]);
-  return {
-    care: c, dose: print.dose, noise: print.noisePct, spread: print.noisePct / LINE0.print.noisePct, wph: print.wph, pace: print.wph / LINE0.print.wph,
-    iso: CARE.clean[c], air, defects: defectsOf(CHIP_START.gen) * air / LINE0.air,
-    fid: { spread: { f: 'computed', by: 'litho' }, pace: { f: 'computed', by: 'litho' }, defects: { f: 'computed', by: 'fabline' },
-      density: { f: 'figures', fact: DENSITY.fact }, area: { f: 'idea', by: 'bet' }, yield: { f: 'computed', by: 'chip' }, cost: { f: 'computed', by: 'chip' } }
-  };
+  const c = CHOICES.care.includes(care) ? care : EXAMPLE.care;
+  if (!LINES.has(c)) LINES.set(c, fabOf(runLine(bareChip(), c, 'wires'), c).fab);
+  return LINES.get(c);
 }
-/* the area of a die of n gates of s switches each, cm²: its switches at the line's density, and its pads and edges */
-export const areaOf = (n, s) => (n * s / DENSITY.perMm2 + AREA_FIXED) / 100;
+/* the area of a die of n gates of s switches each, cm²: its switches at the line's density, each gate taking k of a fin
+   gate's area (the switch's shape: a stacked pair about half, #499), and its pads and edges */
+export const areaOf = (n, s, k = 1) => (n * s * k / DENSITY.perMm2 + AREA_FIXED) / 100;
 
 /* ---- the carry ---- */
 /* a forked rung's contract: today's example rung, its energy divided by factor, its time multiplied by slow, failing
@@ -156,8 +155,8 @@ function forkHands(rung, factor, slow) {
   }
   return out;
 }
-function carryOf(g, F, aim, ref) {
-  const line = lineOf(F.care), R = { recipe: g, fine: F, aim, broken: null, traits: A.traitsOf(g, aim), rungs: {}, fab: line };
+function carryOf(g, F, aim, ref, made) {
+  const L = made ? fabOf(made, F.care) : { fab: lineOf(F.care), die: null }, line = L.fab, R = { recipe: g, fine: F, aim, broken: null, traits: A.traitsOf(g, aim), rungs: {}, fab: line };
   const e = k => A.forkEnergy(k, g[k], aim), eC = e('carrier'), eW = e('where'), eT = e('told'), eS = e('shape');
   const C = A.CARRY.carrier[g.carrier], charge = !A.isFork('carrier', g.carrier), skips = C.skips || [];
   let guessed = false;
@@ -186,7 +185,7 @@ function carryOf(g, F, aim, ref) {
     /* the gate, made of the switch's contract at your voltage */
     const V = F.V, L = LIB[F.lib], vtb = S.vt - 3 * S.sigma / 1000, z = 6 * (V - vtb) / (S.vmin - vtb);
     const p = V <= vtb ? 0.5 : Math.min(0.5, Q(z)), d = (V / VREF) * IREF / Math.max(Irel(S, V), 1e-30), en = Math.pow(V / VREF, 2);
-    G = put('gate', { delay: T0 * d * L.delay * 1e-12, energy: EG0 * en * (S.pair ? 1 : 4) * L.energy * 1e-15, fail: p, switches: L.switches }, { lib: F.lib, V });
+    G = put('gate', { delay: T0 * d * L.delay * 1e-12, energy: EG0 * en * (S.pair ? 1 : 4) * L.energy * 1e-15, fail: p, switches: L.switches, area: sw.area }, { lib: F.lib, V });
   } else {
     put('atom', null, { matter: C.matter });
     if (!skips.length) { put('switch', null, { matter: C.matter }); G = put('gate', forkHands('gate', eC, C.delay), { matter: C.matter }); }
@@ -217,9 +216,12 @@ function carryOf(g, F, aim, ref) {
     const SG = A.CARRY.told[g.told].stages ? F.stages : 1, path = readD + 6 * tg + aluD + 2 * tg, period = Math.max(SG === 1 ? path : path / SG + 6 * tg, 12 * tg);
     const pipeG = SG > 1 ? SG * 128 * 10 : 0, coreG = aluG + fileG + CTRL + pipeG;
     const Ei = (aluE + 3 * readE + CTRL * 0.1 * Eg + pipeG * 0.25 * Eg + 2000 * 0.05 * Eg * (SG > 1 ? 1 : 0.6)) / eT;
-    const q = Math.min(1, 1 - (1 - Pw) * Math.pow(1 - Pr, 2) * (1 - fails(p, CTRL * 0.1)));
+    /* the chance an instruction goes wrong: the same product as 1 - (1 - Pw)(1 - Pr)^2(1 - control's), kept exact when it is
+       tiny (log1p and expm1, so one wrong copy in 10^40 does not round to never: Perfect fails reads it, #449) */
+    const q = Math.min(1, -Math.expm1(Math.log1p(-Math.min(Pw, 1 - 1e-16)) + 2 * Math.log1p(-Math.min(Pr, 1 - 1e-16)) + Math.log1p(-Math.min(fails(p, CTRL * 0.1), 1 - 1e-16))));
     /* its die, cut from a wafer of your line: how many come out whole, and what a good one costs */
-    const die = dieOf(areaOf(coreG, G.switches), line.defects, line.pace);
+    const area = areaOf(coreG, G.switches, G.area), T = L.die && Math.abs(L.die.area - area) <= 1e-12 * area ? L.die : null;
+    const die = T ? { area: T.area, defects: line.defects, dies: T.dies, yield: T.yield, wafer: T.wafer, cost: T.cost } : dieAt(area, line.defects, line.pace);
     K = put('chip', { clock: 1e12 / period, cpi: CPI[SG], energy: Ei * 1e-15, wrong: q, gates: coreG, area: die.area, yield: die.yield, cost: die.cost / (ref || die.cost) },
       { core: { stages: SG, period: period * 1e-12 }, die });
   } else K = R.rungs.chip.hands;
@@ -241,7 +243,8 @@ function carryOf(g, F, aim, ref) {
    is set against */
 const REF_COST = carryOf(A.TODAY, normalFine(EXAMPLE), AIM, null).rungs.chip.more.die.cost;
 export const X0 = carryOf(A.TODAY, normalFine(EXAMPLE), AIM, REF_COST);
-export const carry = stack => carryOf(recipeOf(stack), fineOf(stack), aimOf(stack), REF_COST);
+export const carryWith = (stack, made) => carryOf(recipeOf(stack), fineOf(stack), aimOf(stack), REF_COST, made || null);
+export const carry = stack => carryWith(stack, null);
 
 /* ---- against today's computer: one number, the architecture engine's ---- */
 function againstOf(g, need, st) {

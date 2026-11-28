@@ -339,6 +339,10 @@
   "one": "proposed {n} gene option",
   "other": "proposed {n} gene options"
  },
+ "society.does.purpose": {
+  "one": "proposed {n} purpose for the field",
+  "other": "proposed {n} purposes for the field"
+ },
  "lab.reports": "Reported in the lab",
  "lab.reportsD": "The lab broken by the people using it: each calls for a fix until someone makes one.",
  "follow.k": "Following",
@@ -640,6 +644,8 @@
  "whatif.ui.go": "What if? {lever}",
  "grow.way-reversible": "four rails on a low slab at the Lab, crossed by gates whose rings glow slowly",
  "grow.way-dataflow": "a flat chip at the Lab, its tiles lit in pairs like the layers of a model, a block of memory idle beside it",
+ "grow.lab-tiers": "a small stack at the Lab, tiers of silicon one on another under a cold plate, each a little warmer than the one above",
+ "grow.lab-trigger": "a small inspection bench at the Lab, an adder under a lamp, one gate on it lit red",
  "chip.yours": "Your chip",
  "chip.try": "Try it",
  "chip.reset": "Back to the starting chip",

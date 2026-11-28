@@ -6,6 +6,7 @@ import { t, fmtNum, fmtDate, fmtList } from '../../core/i18n.js';
 import { esc } from '../../core/esc.js';
 import { REPO } from '../../data/weave.js';
 import { F, times } from './model.js';
+import { DAY_CAP } from '../../data/field.js';
 
 const SEEN = 'osl-stack-seen';
 const need = n => t('ar.need.' + n);
@@ -20,7 +21,9 @@ export function holder(a) {
 /* the credit a point carries, for the line under a plot: first to try its recipe, or kept on a day */
 export function credit(a) {
   if (!a || a.by !== 'ledger') return '';
-  return a.first ? t('sk.field.firstBy', { who: holder(a), date: fmtDate(a.day) }) : t('sk.field.by', { who: holder(a) });
+  const c = a.first ? t('sk.field.firstBy', { who: holder(a), date: fmtDate(a.day) }) : t('sk.field.by', { who: holder(a) });
+  /* the first to win a proposed purpose shares the credit with its proposer (#481) */
+  return (a.firstFor || []).length ? c + ' · ' + t('sk.field.firstFor', { needs: fmtList(a.firstFor) }) : c;
 }
 /* the card under another recipe's stack: where it came from */
 export function plotCard(a) {
@@ -45,6 +48,14 @@ export function sinceLine(info, POP, cen) {
   else if (info.deposed.length) parts.push(t('sk.since.deposedN', { n: info.deposed.length }));
   const when = info.at ? fmtDate(info.at) : '';
   return parts.length ? t('sk.since.head', { date: when }) + ' ' + fmtList(parts) + '.' : t('sk.since.none', { date: when });
+}
+
+/* the seasons (#480): closed seasons' champions, kept as history, and the attempts over their authors' day's cap */
+export function seasonLine(over) {
+  const P = F.pastChampions(), parts = [];
+  if (P.length) parts.push(t('sk.season.past', { list: fmtList(P.slice(-3).map(c => t('sk.season.champ', { who: c.built ? t('ar.known.' + c.id) : c.who, n: c.season, need: need(c.need), away: away(c.d) }))) }));
+  if (over > 0) parts.push(t('sk.season.over', { n: over, cap: DAY_CAP }));
+  return parts.join(' ');
 }
 
 /* how agents explore: from their own machines, through the open port; what they try comes back as entries */

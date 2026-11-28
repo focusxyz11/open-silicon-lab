@@ -29,10 +29,11 @@ export const LAB_ALSO = {
   light: ['explore-phone', 'machines'], reversible: ['machines'], rv: ['machines'], switch: ['machines'],
   teardown: ['explore-phone']
 };
-/* the labs' own engines, imported by these labs alone */
-const LAB_ENGINES = { analog: ['analog'], corearch: ['corearch'], crystal: ['crystal'], dies: ['dies'], etch: ['films'],
+/* the labs' own engines, imported by these labs alone (the crystal and the etch are stations of your chip's record,
+   src/engines/stations.js, #505: core) */
+const LAB_ENGINES = { analog: ['analog'], corearch: ['corearch'], dies: ['dies'],
   evolve: ['evolve'], fabsteps: ['overlay', 'implant', 'semiconductor'], grover: ['grover'], halt: ['halt'],
-  redundancy: ['vote'], rvpuzzles: ['rv'], search: ['search'], strands: ['bridge'] };
+  redundancy: ['vote'], rvpuzzles: ['rv'], search: ['search'], strands: ['bridge'], tiers: ['tiers'], trigger: ['trigger'] };
 const labSections = labs => ['labs', ...new Set(labs.flatMap(l => LAB_ALSO[l] || []))];
 
 /* a view's or a lab's files → the sections that open them */

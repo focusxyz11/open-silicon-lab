@@ -57,6 +57,12 @@ chip**, which every part reads and writes and none keeps a copy of.
 ## Building it
 
 The first task builds the record and turns the existing engines into station functions, with no view changing
-(`[Task] The chip's record`). The studio and the line then draw it (the tasks named *Studio* and *Fab*). They follow
+(`[Task] The chip's record`, #505). It is built: the record's fields and the line's stations in order are fixed in
+`src/data/chiprecord.js`; the stations, every machine a function, are `src/engines/stations.js` (`STATION_FNS`,
+`runLine`, `fabOf`: what the line hands up); the record is `src/engines/chiprecord.js` (`recordOf(stack, design,
+care)`, `designedOf`, `madeAt(record, step)`, `keepOf` and `fromKept` for `osl-chip`), and the carry reads the made
+part (`carryWith(stack, made)` in `src/engines/path.js`; `carry(stack)` runs the same line when there is no record).
+Every cell's copy strays by a seed of its id (`hashOf`), the same at every station. Package keeps its place as the
+eighth station with no function until #500; the design's timing (the guide's Late state) is not read yet. The studio and the line then draw it (the tasks named *Studio* and *Fab*). They follow
 the design guide `docs/prototypes/studio-fab/GUIDE.md`, written by Claude Fable 5.2 as the last design round for the
 studio and the fab: no further Fable round is planned.

@@ -216,6 +216,13 @@ Recorded in the repository on the day (the first version of this file); kept wor
   engines, views only draw. Then one more Fable round polishes the inside of a 3D station on real data. Why: the owner
   sees coordinating all of these as the hardest challenge; parts polished separately would disagree.
 
+- **The ledger's floor is designed; the ways in are left to the community** (#484): one file per entry, the checks every
+  entry must pass, nobody votes, and three guards in CI (one new entry per pull request and never an edit; the date in
+  its name is the day the pull request was opened; its `github` field is the pull request's author, an example only
+  from the owner). How people and agents find their way in is left to the community to find as it grows. Merging stays
+  by hand for now: merging by itself is a method, left until the community's traffic shows what it needs. Why: the
+  floor is what must hold before more people and agents arrive; everything above it should grow from use.
+
 ## 28 November 2026
 
 - **The last Fable round for the studio and the fab happened now, not after the record:** Claude Fable 5.2 improved the
