@@ -305,3 +305,24 @@
   .skframe .sk-ctl { gap: 12px; }
 }
 @media (prefers-reduced-motion: reduce) { .stackv *, .stackv *::before { animation: none !important; transition: none !important; } }
+/* two lenses held (#449): the fork's line handle over the top plate; the pair's part of the card (a chain's words, a
+   fork's other option and line, the front of two needs) */
+.sk-split { position: absolute; z-index: 9; transform: translate(-50%, -50%); width: 30px; height: 30px; border-radius: 50%; border: 2px solid var(--accent); background: var(--bg); padding: 0; cursor: ew-resize; touch-action: none; display: grid; place-items: center; }
+.stackv button.sk-split { cursor: ew-resize; }
+.sk-split i { width: 12px; height: 12px; border-left: 2px solid var(--accent); border-right: 2px solid var(--accent); }
+.skframe .sk-pair { margin: 0 0 16px; padding: 2px 0 2px 12px; border-left: 3px solid var(--accent); }
+.skframe .sk-pair p { margin: 4px 0 10px; font: 400 15px/1.45 var(--sans); }
+.skframe .sk-pair .sk-seg { margin: 4px 0 8px; }
+.skframe .sk-pair .sk-seg button { min-height: 32px; padding: 0 9px; font-size: 12.5px; }
+.skframe .sk-pair .sk-row { display: flex; align-items: center; gap: 10px; }
+.skframe .sk-pair input[type=range] { flex: 1; accent-color: var(--accent); height: 28px; min-width: 0; }
+.sk-front { display: block; width: 100%; max-width: 340px; height: auto; margin: 2px 0 8px; }
+.sk-front .ax { stroke: var(--line); stroke-width: 1; }
+.sk-front .one { stroke: var(--muted); stroke-width: 1; stroke-dasharray: 3 4; }
+.sk-front .nob { fill: color-mix(in srgb, var(--warm) 9%, transparent); }
+.sk-front .fr { fill: none; stroke: var(--accent); stroke-width: 2; }
+.sk-front circle.b { fill: var(--ink); }
+.sk-front circle.l { fill: none; stroke: var(--muted); stroke-width: 1.2; }
+.sk-front circle.me { fill: var(--accent); stroke: var(--bg); stroke-width: 2; }
+.sk-front text { font: 500 11px var(--sans); fill: var(--muted); }
+.sk-front text.sm { font-size: 10px; }

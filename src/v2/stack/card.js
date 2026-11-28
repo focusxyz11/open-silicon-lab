@@ -46,7 +46,15 @@ export function wear(V, host, view, o = {}) {
   /* the lens open, at a rung: from the stack whole, the rung its mark stands on */
   const rungOf = (q, k) => (isRung(k) ? k : ((view.marksAt('stack').find(m => m.id === q) || {}).rung || null));
   const markOf = (q, k) => { const r = rungOf(q, k); return r ? view.markOf(r, q) : null; };
-  const lensesAt = k => (k === 'field' ? [] : view.marksAt(k, 6).map(m => ({ id: m.id, label: t('frame.q.' + m.id), hint: t('frame.q.' + m.id + '.hint'), icon: questionOf(m.id).icon })));
+  /* the questions that live here: the marks on the plates; with one opened, also those its card offers to hold with it
+     (the lenses of the lab's level it is read at), so two can be held (#449) */
+  const lensOf = id => ({ id, label: t('frame.q.' + id), hint: t('frame.q.' + id + '.hint'), icon: questionOf(id).icon });
+  const lensesAt = k => {
+    if (k === 'field') return [];
+    const ids = view.marksAt(k, 6).map(m => m.id), open = fr && fr.lens ? fr.lens() : null;
+    if (open && ids.includes(open) && V.lensIds) { const m = markOf(open, k), lv = m ? m.level : labLevel(rungOf(open, k)); if (lv) V.lensIds(lv).forEach(x => { if (!ids.includes(x)) ids.push(x); }); }
+    return ids.map(lensOf);
+  };
   /* each rung's challenge, played on its plate; then the lab's challenges on it, its stepping stones */
   const goalOf = r => ({ id: 'rung-' + r, title: t('sk.do.' + r), where: rungName(r), href: '#/stack/' + r });
   const doAt = k => (k === 'stack' ? RUNGS.slice().reverse().map(goalOf) : isRung(k) && view.mine() ? [goalOf(k)].concat(o.stones(k).map(x => ({ id: x.id, title: x.title, where: rungName(k), href: x.href }))) : []);
@@ -94,8 +102,10 @@ export function wear(V, host, view, o = {}) {
   fr = V.frameOf(el, Object.assign(opts, {
     caption: true, levelName: nameOf,
     marksAt: () => [], lensesAt, lensCard,
-    pairCard: (a, b, k) => { const m = markOf(a, k); return V.pairCard(a, b, m ? m.level : labLevel(rungOf(a, k)) || 'chip'); },
-    onLens: (q, k) => { const r = q ? rungOf(q, k) : null; view.setLens(r ? { rung: r, id: q } : null); },
+    /* two lenses held (#449): the pair's shape on your stack first (a chain, a fork with its line, the front of two
+       needs: view.pairHtml), then the lab's card of the pair */
+    pairCard: (a, b, k) => { const m = markOf(a, k); return (view.pairHtml ? view.pairHtml(a, b) : '') + V.pairCard(a, b, m ? m.level : labLevel(rungOf(a, k)) || 'chip'); },
+    onLens: (q, k, p) => { const r = q ? rungOf(q, k) : null; view.setLens(r ? { rung: r, id: q, pair: p || null } : null); },
     onLook: look,
     doAt,
     askAt: () => [], fieldAt: () => [], askedAt: () => ''

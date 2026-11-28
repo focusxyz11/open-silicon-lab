@@ -174,6 +174,20 @@ export default async function run() {
       .catch(() => problems.push(tag + ': Perfect fails does not repaint every plate from the carry'));
     await sp.waitForFunction(() => { const v = window.__stack; v.setLens(null); return v.paintNow() === null; }, null, { timeout: 20000, polling: 500 })
       .catch(() => problems.push(tag + ': closing the lens does not leave the stack plain'));
+    /* two lenses held (#449): a chain numbers the rungs it climbs; a fork splits the plates by a line with its handle,
+       the other side its own carry; the front is the field for two needs in the card. Then put down */
+    await sp.waitForFunction(() => { const v = window.__stack; if (v.busy()) return false; v.setLens({ rung: 'gate', id: 'dig', pair: 'physics' }); const P = v.pair();
+      return !!P && P.shape === 'chain' && P.chain.steps.length >= 5 && P.chain.steps.every((s, i) => s.k === i + 1); }, null, { timeout: 20000, polling: 500 })
+      .catch(() => problems.push(tag + ': two lenses held as a chain do not number the rungs they climb'));
+    await sp.waitForFunction(() => { const v = window.__stack; if (v.busy()) return false; v.setLens({ rung: 'block', id: 'geo', pair: 'line' }); const P = v.pair(), h = document.querySelector('#stackv .sk-split');
+      if (!P || P.shape !== 'fork' || !h || h.hidden) return false; v.setSplit(0.3); return P.gene === 'where' && P.option !== v.S.g.where && P.right.block.v !== P.left.block.v && h.getAttribute('aria-valuenow') === '30'; }, null, { timeout: 20000, polling: 500 })
+      .catch(() => problems.push(tag + ': a fork held does not split the plates by a line with its handle, each side its own carry'));
+    await sp.waitForFunction(() => { const v = window.__stack; v.setForkOpt('where', 'in'); const P = v.pair(); return !!P && P.option === 'in'; }, null, { timeout: 20000, polling: 500 })
+      .catch(() => problems.push(tag + ': the fork\'s other option cannot be chosen'));
+    await sp.waitForFunction(() => { const v = window.__stack; v.setLens({ rung: 'machine', id: 'geo', pair: 'eff' }); const P = v.pair(); return !!P && P.shape === 'front' && P.front.front.length >= 1 && P.front.na !== P.front.nb; }, null, { timeout: 20000, polling: 500 })
+      .catch(() => problems.push(tag + ': a front held is not the field for two needs'));
+    await sp.waitForFunction(() => { const v = window.__stack; v.setLens(null); return v.pair() === null && document.querySelector('#stackv .sk-split').hidden; }, null, { timeout: 20000, polling: 500 })
+      .catch(() => problems.push(tag + ': putting two lenses down does not leave the stack plain'));
     /* the keyboard: the mirror's plots move under the arrows and Enter opens one */
     await sp.evaluate(() => { window.__stack.goField(); });
     await sp.waitForFunction(() => !window.__stack.busy() && window.__stack.view.level === 'field', null, { timeout: 20000 }).catch(() => {});
