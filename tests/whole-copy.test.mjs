@@ -50,3 +50,25 @@ test('a fleet of copies spreads round the copied accuracy', () => {
   const o = { share: 1, learn: 'chip', calibrate: false }, F = M.fleet(o, 400, M.rng(5)), mean = F.reduce((s, v) => s + v, 0) / F.length;
   assert.ok(Math.abs(mean - M.evaluate(o).copied) < 1.5 && Math.min(...F) < Math.max(...F));
 });
+
+test('below threshold (#498): copies help until the part is too unreliable, then hurt; the threshold computed, not typed', async () => {
+  const R = await import('../src/engines/redundancy.js'), { readFileSync } = await import('node:fs');
+  const c = R.voterShare(2);
+  const t3 = R.threshold(3, c), t5 = R.threshold(5, c);
+  /* pinned for three and five copies with the voter's own error (a quarter of the adder's: its area over the adder's) */
+  assert.ok(Math.abs(t3 - 0.3625) < 1e-3, 'three copies: ' + t3); assert.ok(Math.abs(t5 - 0.4193) < 1e-3, 'five copies: ' + t5);
+  for (const [n, th] of [[3, t3], [5, t5]]) {
+    assert.ok(1 - R.blockOkWith(th * 0.9, n, c) < th * 0.9, n + ' copies help just below their threshold');
+    assert.ok(1 - R.blockOkWith(Math.min(0.49, th * 1.1), n, c) > Math.min(0.49, th * 1.1), n + ' copies hurt just above it');
+  }
+  /* a bigger voter against its block lowers the threshold; with a voter that never fails, copies help up to a half */
+  assert.ok(R.threshold(3, R.voterShare(1)) < t3); assert.ok(R.threshold(3, 0) > 0.49);
+  /* well below threshold, five copies beat three, which beat one */
+  const at = n => 1 - R.blockOkWith(0.05, n, c); assert.ok(at(5) < at(3) && at(3) < at(1));
+  /* the quantum points: each with its fact, the logical error below the physical one (below threshold) */
+  const facts = JSON.parse(readFileSync(new URL('../src/data/facts.json', import.meta.url), 'utf8')).facts;
+  for (const q of R.QUANTUM) { const f = facts.find(x => x.id === q.fact); assert.ok(f && f.url && f.verified, q.fact); assert.ok(q.logical < q.phys); assert.match(f.value, new RegExp(String(q.qubits))); }
+  assert.ok(R.QUANTUM[1].logical < R.QUANTUM[0].logical && R.QUANTUM[1].qubits > R.QUANTUM[0].qubits, 'the larger code, further below');
+  const words = JSON.parse(readFileSync(new URL('../src/i18n/en/labs.json', import.meta.url), 'utf8'));
+  assert.match(words['rd.th.quantum'], /not a majority vote, only the same idea/);
+});
