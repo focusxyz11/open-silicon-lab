@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The ways in: three structures</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@400;500;700&family=Besley:ital,wght@0,400;0,700;1,400&family=Martian+Mono:wdth,wght@75..112.5,400..600&display=swap" rel="stylesheet">
+<style>
+/* The ways in (#524): three options for the structure, each at 1440 px and 390 px, day and night. A prototype to choose
+   from, not part of the site (it does not follow the lab's rules for words or loading). The lab's own tokens
+   (src/styles/base.css); the pictures are the lab's pieces in small: the Map's cut (src/v2/glue/pages.js), the stack's
+   ladder (src/data/path.js), the island's plan (src/data/isle.js). Drawn by Claude Opus 5.5, 28 November 2026. */
+:root { --bg: #dfe8f2; --panel: rgba(255,255,255,.86); --solid: #fff; --line: rgba(40,60,90,.16); --ink: #16202e; --muted: #5b6a80; --accent: #2f7de1; --warm: #b86f0c; --bad: #d2433a;
+  --sans: "Atkinson Hyperlegible Next", system-ui, sans-serif; --serif: "Besley", Georgia, serif; --mono: "Martian Mono", ui-monospace, monospace; color-scheme: light; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg: #0b1120; --panel: rgba(16,23,38,.86); --solid: #111a2b; --line: rgba(160,180,210,.2); --ink: #eef2f8; --muted: #9aa8bd; --accent: #5aa9ff; --warm: #ffb347; --bad: #ff6b62; color-scheme: dark; } }
+:root[data-theme="dark"] { --bg: #0b1120; --panel: rgba(16,23,38,.86); --solid: #111a2b; --line: rgba(160,180,210,.2); --ink: #eef2f8; --muted: #9aa8bd; --accent: #5aa9ff; --warm: #ffb347; --bad: #ff6b62; color-scheme: dark; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 400 16px/1.5 var(--sans); -webkit-font-smoothing: antialiased; }
+.wrap { max-width: 1480px; margin: 0 auto; padding: 20px 20px 60px; }
+header.top { display: flex; align-items: baseline; gap: 16px; flex-wrap: wrap; }
+header.top h1 { margin: 0; font: 700 28px/1.2 var(--serif); }
+header.top p { margin: 0; color: var(--muted); max-width: 60em; }
+.tbtn { margin-left: auto; border: 1px solid var(--line); background: var(--panel); color: var(--ink); border-radius: 999px; padding: 6px 14px; font: 500 13px/1 var(--sans); cursor: pointer; }
+.why { margin: 14px 0 22px; padding: 14px 16px; border: 1px dashed var(--line); border-radius: 14px; color: var(--muted); font-size: 14.5px; }
+.why b { color: var(--ink); }
+section.opt { margin: 0 0 34px; }
+.opt h2 { margin: 0 0 4px; font: 700 21px/1.25 var(--serif); }
+.opt .trade { margin: 0 0 12px; max-width: 70em; }
+.opt .trade b { font-weight: 700; }
+.pair { display: flex; gap: 22px; align-items: flex-start; flex-wrap: wrap; }
+.dev { display: flex; flex-direction: column; gap: 6px; }
+.dev small { font: 500 11px/1.2 var(--mono); font-stretch: 85%; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+/* a screen drawn at its own size and scaled: 1440 x 900 at .62, 390 x 844 at .62 */
+.scr { position: relative; overflow: hidden; border: 1px solid var(--line); border-radius: 12px; background: var(--bg); box-shadow: 0 12px 40px rgba(0,0,0,.18); }
+.d { width: calc(1440px * .62); height: calc(900px * .62); }
+.p { width: calc(390px * .62); height: calc(844px * .62); border-radius: 22px; }
+.in { position: absolute; left: 0; top: 0; transform-origin: 0 0; transform: scale(.62); }
+.d .in { width: 1440px; height: 900px; }
+.p .in { width: 390px; height: 844px; }
+/* the lab's bar */
+.bar { position: absolute; left: 16px; right: 16px; top: 14px; height: 56px; display: flex; align-items: center; gap: 14px; padding: 0 16px; border: 1px solid var(--line); border-radius: 18px; background: var(--panel); }
+.p .bar { left: 8px; right: 8px; top: 8px; height: 48px; gap: 8px; padding: 0 10px; }
+.logo { width: 24px; height: 24px; border: 3px solid var(--ink); border-right-color: transparent; position: relative; flex: none; }
+.logo::after { content: ""; position: absolute; right: -3px; top: -3px; width: 8px; height: 8px; background: var(--bad); }
+.bar .name { font: 700 16px/1 var(--serif); white-space: nowrap; }
+.sp { flex: 1; }
+.pill { border: 1px solid var(--line); border-radius: 999px; padding: 7px 12px; font: 600 14px/1 var(--sans); white-space: nowrap; }
+.round { width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--line); display: grid; place-items: center; font-size: 14px; flex: none; }
+.seg { display: flex; border: 1px solid var(--line); border-radius: 999px; overflow: hidden; }
+.seg span { padding: 8px 14px; font: 600 14px/1 var(--sans); }
+.seg span.on { background: var(--accent); color: var(--solid); }
+.p .seg span { padding: 7px 9px; font-size: 12.5px; }
+.loop { display: flex; gap: 6px; align-items: center; font: 600 14px/1 var(--sans); white-space: nowrap; }
+.loop i { width: 9px; height: 9px; border-radius: 50%; border: 1.5px solid var(--muted); display: inline-block; margin-right: 5px; }
+.loop span.on i { background: var(--accent); border-color: var(--accent); }
+.loop em { width: 18px; border-top: 1px solid var(--line); }
+.p .loop { gap: 4px; } .p .loop em { width: 6px; }
+/* where you are, one quiet line under the bar */
+.here { position: absolute; left: 34px; top: 84px; font: 500 14px/1.2 var(--sans); color: var(--muted); }
+.here b { color: var(--ink); }
+.p .here { left: 14px; top: 64px; font-size: 12.5px; }
+/* the Map's cut in small: the loop is the ground line, each place a shaft of its levels */
+.map { position: absolute; left: 34px; right: 34px; top: 120px; bottom: 30px; }
+.p .map { left: 10px; right: 10px; top: 90px; bottom: 80px; }
+.map svg { width: 100%; height: 100%; display: block; }
+.map .g { stroke: var(--ink); stroke-width: 2; }
+.map .c { fill: none; stroke: var(--line); stroke-width: 1.4; }
+.map .c.you { fill: var(--accent); stroke: var(--accent); }
+.map .c.col { stroke: var(--warm); }
+.map .shared { fill: none; stroke: var(--line); stroke-width: 1.4; }
+.map text { font: 600 15px var(--sans); fill: var(--ink); }
+.map text.m { font: 400 12px var(--mono); fill: var(--muted); }
+.map .colband { fill: var(--warm); opacity: .1; }
+/* the next move along, shown before you take it */
+.next { position: absolute; right: 34px; bottom: 30px; border: 1px solid var(--line); background: var(--panel); border-radius: 14px; padding: 10px 14px; font: 500 14px/1.35 var(--sans); max-width: 300px; }
+.next b { display: block; font: 500 11px/1.2 var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin-bottom: 3px; }
+.p .next { left: 10px; right: 10px; bottom: 12px; max-width: none; font-size: 13px; }
+.card { position: absolute; left: 34px; bottom: 30px; width: 420px; border: 1px solid var(--line); background: var(--panel); border-radius: 16px; padding: 14px 18px; }
+.card h3 { margin: 0 0 4px; font: 700 22px/1.2 var(--serif); }
+.card p { margin: 0; font-size: 15px; color: var(--muted); }
+.p .card { left: 10px; right: 10px; width: auto; bottom: 12px; padding: 10px 12px; }
+.p .card h3 { font-size: 17px; }
+.p .card p { font-size: 13px; }
+.legend { font: 400 13px/1.4 var(--sans); color: var(--muted); margin-top: 6px; max-width: 880px; }
+@media (max-width: 700px) { .d { width: calc(1440px * .24); height: calc(900px * .24); } .d .in { transform: scale(.24); } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <h1>The ways in: three structures</h1>
+    <p>For #524. Each option drawn at 1440 px and 390 px; the button switches day and night. What is lit blue is where you are; the warm column is the stage you would go to.</p>
+    <button type="button" class="tbtn" id="theme">Day / night</button>
+  </header>
+  <div class="why"><b>What is wrong now</b> (docs/WAYS-IN.md): a stage of the loop has no fixed destination. <code>alongTo</code> turns a stack face, walks a line step, opens the bench or the dive at the level you hold, or lands on that stage's place on the island: the same button goes to five kinds of place, and the whole (the loop across, scale down, the stack as spine) is never shown before you are inside one part of it.</div>
+
+  <section class="opt" id="a">
+    <h2>A. Three whole views in the bar; the Map is the home; the loop a lens inside each view</h2>
+    <p class="trade"><b>Trades:</b> the same button always opens the same view, centred on where you are, and the Map shows the whole first; but the loop stops being a row in the bar, so a chip's life is read inside a view (the Map's columns, the island's road, the stack's faces) rather than stepped from anywhere.</p>
+    <div class="pair">
+      <div class="dev"><small>1440 · Map, you at the gate in use</small><div class="scr d"><div class="in" data-draw="a"></div></div></div>
+      <div class="dev"><small>390</small><div class="scr p"><div class="in" data-draw="a"></div></div></div>
+    </div>
+  </section>
+
+  <section class="opt" id="b">
+    <h2>B. Keep the loop in the bar, with one fixed destination per stage: its column on the Map</h2>
+    <p class="trade"><b>Trades:</b> the smallest change, and the loop keeps its place as the main thread; every stage now does one thing (it opens the Map on its column, your level marked there), so nothing jumps into a place. But each step along costs a tap more to get back into a picture, and the island and the stack stay a step away from the bar.</p>
+    <div class="pair">
+      <div class="dev"><small>1440 · Test tapped: the Map on its column</small><div class="scr d"><div class="in" data-draw="b"></div></div></div>
+      <div class="dev"><small>390</small><div class="scr p"><div class="in" data-draw="b"></div></div></div>
+    </div>
+  </section>
+
+  <section class="opt" id="c">
+    <h2>C. The three views in the bar, and the loop as a quiet line under it, the next move shown before you take it</h2>
+    <p class="trade"><b>Trades:</b> both the whole and the thread stay in sight: the switch says which whole you look through, the line says where you stand along a chip's life, and ← → names where it will land first. It is the busiest bar of the three, and on a phone the line shrinks to the stage alone.</p>
+    <div class="pair">
+      <div class="dev"><small>1440 · Island, at the factory's print</small><div class="scr d"><div class="in" data-draw="c"></div></div></div>
+      <div class="dev"><small>390</small><div class="scr p"><div class="in" data-draw="c"></div></div></div>
+    </div>
+  </section>
+  <p class="legend">The pictures are the lab's pieces in small: the Map's cut (the loop as the ground line, each place a shaft of its levels, the four depths every chip shares under the places that hold one), the stack's seven rungs, the island's road. Nothing here is built: the owner chooses, and the full build (the bar, the Map as home, the loop's role) follows as its own task.</p>
+</div>
+<script>
+/* the lab's places in the loop's order and how many levels each digs (src/data/places.js), and the four shared depths */
+const STAGES = ['Open', 'Design', 'Make', 'Test', 'Ship', 'Use'];
+const COLS = [['Lab', 0, 0], ['Studio', 1, 6], ['Quarry', 2, 2], ['Factory', 2, 9], ['Test house', 3, 1], ['Port', 4, 2], ['Data centre', 5, 4], ['Phones', 5, 3], ['Cars', 5, 3]];
+const RUNGS = ['Mind', 'Machine', 'Chip', 'Block', 'Gate', 'Switch', 'Atom'];
+function cut(W, H, o) {
+  const n = COLS.length, cw = (W - 80) / n, gy = 70, cs = Math.min(26, cw * .5), gp = 6, x0 = 80;
+  let s = '<svg viewBox="0 0 ' + W + ' ' + H + '" aria-hidden="true">';
+  if (o.col != null) { const xs = COLS.map((c, i) => [c, i]).filter(([c]) => c[1] === o.col); const a = x0 + xs[0][1] * cw, b = x0 + (xs[xs.length - 1][1] + 1) * cw; s += '<rect class="colband" x="' + a + '" y="0" width="' + (b - a) + '" height="' + H + '" rx="10"/>'; }
+  /* your stack, standing at the Lab */
+  RUNGS.forEach((r, i) => { s += '<rect class="c' + (o.rung === r ? ' you' : '') + '" x="10" y="' + (gy - 10 - (i + 1) * 9 * (H > 400 ? 1 : .8)) + '" width="52" height="' + (H > 400 ? 6 : 5) + '" rx="1"/>'; });
+  s += '<line class="g" x1="0" y1="' + gy + '" x2="' + W + '" y2="' + gy + '"/>';
+  STAGES.forEach((st, k) => { const xs = COLS.map((c, i) => [c, i]).filter(([c]) => c[1] === k); const cx = x0 + ((xs[0][1] + xs[xs.length - 1][1] + 1) / 2) * cw; s += '<text text-anchor="middle" x="' + cx + '" y="' + (gy - 12) + '">' + (o.narrow ? st[0] : st) + '</text>'; });
+  COLS.forEach(([name, st, lv], i) => { const x = x0 + i * cw + (cw - cs) / 2; const own = name === 'Data centre' || name === 'Phones' || name === 'Cars' ? Math.min(lv, 4) : lv;
+    for (let k = 0; k < own; k++) s += '<rect class="c' + (o.you && o.you[0] === i && o.you[1] === k ? ' you' : '') + (o.col === st ? ' col' : '') + '" x="' + x + '" y="' + (gy + 14 + k * (cs + gp)) + '" width="' + cs + '" height="' + cs + '" rx="3"/>';
+    if (!o.narrow) s += '<text class="m" text-anchor="middle" x="' + (x + cs / 2) + '" y="' + (H - 6) + '">' + name + '</text>'; });
+  /* the four depths every chip shares, under the three places that hold one */
+  const a = x0 + 6 * cw + (cw - cs) / 2, b = x0 + 9 * cw - (cw - cs) / 2;
+  for (let k = 0; k < 4; k++) s += '<rect class="shared' + (o.you && o.you[0] === 'shared' && o.you[1] === k ? ' c you' : '') + (o.col === 5 ? ' col' : '') + '" x="' + a + '" y="' + (gy + 14 + (4 + k) * (cs + gp)) + '" width="' + (b - a) + '" height="' + cs + '" rx="3"/>';
+  return s + '</svg>';
+}
+const bar = (kind, narrow) => {
+  const brand = '<span class="logo"></span>' + (narrow ? '' : '<span class="name">Open Silicon Lab</span>');
+  const views = on => '<span class="seg">' + ['Map', 'Island', 'Stack'].map(v => '<span' + (v === on ? ' class="on"' : '') + '>' + v + '</span>').join('') + '</span>';
+  const loop = on => '<span class="loop">' + STAGES.map((s, i) => (i ? '<em></em>' : '') + '<span' + (s === on ? ' class="on"' : '') + '><i></i>' + (narrow ? '' : s) + '</span>').join('') + '</span>';
+  const tail = '<span class="sp"></span>' + (narrow ? '' : '<span class="round">⚑</span><span class="pill">EN ▾</span>') + '<span class="round">◐</span>';
+  if (kind === 'a') return '<div class="bar">' + brand + '<span class="sp"></span>' + views('Map') + tail + '</div>';
+  if (kind === 'b') return '<div class="bar">' + brand + '<span class="sp"></span>' + loop('Test') + (narrow ? '' : '<span class="pill">▦ Map</span>') + tail + '</div>';
+  return '<div class="bar">' + brand + '<span class="sp"></span>' + views('Island') + tail + '</div>';
+};
+function draw(el, kind) {
+  const narrow = el.closest('.p') !== null, W = narrow ? 370 : 1372, H = narrow ? 560 : 640;
+  let h = bar(kind, narrow);
+  if (kind === 'a') {
+    h += '<p class="here">Where you are: <b>Data centre › Gate</b>, in use</p>';
+    h += '<div class="map">' + cut(W, H, { you: ['shared', 1], rung: 'Gate', narrow }) + '</div>';
+    h += '<div class="next"><b>← → along a chip’s life</b>Design: the gate as designed, at the studio’s bench</div>';
+  } else if (kind === 'b') {
+    h += '<p class="here">Test: <b>its column on the Map</b>. Your level, the chip, is marked where it exists here</p>';
+    h += '<div class="map">' + cut(W, H, { col: 3, you: [4, 0], narrow }) + '</div>';
+    h += '<div class="card"><h3>The test house</h3><p>Probe every die before it is cut. Tap a level in the column to go in.</p></div>';
+  } else {
+    h += '<p class="here">' + (narrow ? '<b>Make</b> · Factory › Print' : 'Open · Design · <b>Make</b> · Test · Ship · Use &nbsp;&nbsp; <b>The factory › Print</b>') + '</p>';
+    h += '<div class="map">' + isle(W, H, narrow) + '</div>';
+    h += '<div class="next"><b>→ next along</b>Test: the test house, the same chip probed as a die</div>';
+  }
+  el.innerHTML = h;
+}
+/* the island's plan in small: the coast and the road, the places on it (src/data/isle.js) */
+function isle(W, H, narrow) {
+  const coast = [[-82, -16], [-66, -46], [-34, -56], [2, -54], [40, -56], [72, -38], [82, -6], [78, 22], [54, 44], [16, 48], [-24, 48], [-60, 40], [-82, 14]];
+  const road = [[-28, -14], [-12, 0], [-3, 9], [6, 15], [16, 13], [28, 10], [46, 12], [53, -6], [44, -20], [24, -22], [12, -32], [-8, -38], [-26, -38], [-29, -26]];
+  const k = Math.min(W / 180, H / 120) * .95, P = ([x, z]) => [W / 2 + x * k, H / 2 + z * k];
+  const path = pts => pts.map((p, i) => (i ? 'L' : 'M') + P(p).map(v => v.toFixed(1)).join(' ')).join(' ');
+  const stops = [[road[0], 'Lab'], [road[2], 'Studio'], [road[5], 'Factory'], [road[7], 'Test house'], [road[9], 'Port'], [road[12], 'Data centre']];
+  let s = '<svg viewBox="0 0 ' + W + ' ' + H + '" aria-hidden="true"><path d="' + path(coast) + 'Z" fill="none" stroke="var(--line)" stroke-width="2"/><path d="' + path(road) + 'Z" fill="none" stroke="var(--muted)" stroke-width="3" stroke-dasharray="8 6"/>';
+  stops.forEach(([p, n], i) => { const [x, y] = P(p), on = n === 'Factory', nx = n === 'Test house'; s += '<circle cx="' + x + '" cy="' + y + '" r="' + (on ? 10 : 7) + '" fill="' + (on ? 'var(--accent)' : nx ? 'var(--warm)' : 'var(--solid)') + '" stroke="var(--ink)" stroke-width="1.5"/>' + (narrow && !on && !nx ? '' : '<text x="' + (x + 14) + '" y="' + (y + 5) + '">' + n + '</text>'); });
+  return s + '</svg>';
+}
+document.querySelectorAll('[data-draw]').forEach(el => draw(el, el.dataset.draw));
+document.getElementById('theme').addEventListener('click', () => { const r = document.documentElement, dark = r.dataset.theme ? r.dataset.theme === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches; r.dataset.theme = dark ? 'light' : 'dark'; });
+</script>
+</body>
+</html>

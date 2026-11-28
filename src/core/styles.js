@@ -8,7 +8,7 @@
    ORDER is the order the sheets stand in the document, whatever order they load in, so the cascade is the same on every
    path through the site: a sheet is put before the first one already in that comes after it. A lab's own sheet
    (labs/<name>, src/data/labs/) stands with the labs'. A new view's sheet gets its place here first. */
-export const ORDER = ['base', 'frame', 'island', 'studio', 'flat', 'supply', 'pages', 'stations', 'stack', 'labs', 'blueprint', 'holdnotes', 'hold'];
+export const ORDER = ['base', 'frame', 'island', 'studio', 'flat', 'supply', 'pages', 'stations', 'stack', 'labs', 'blueprint', 'qcard', 'holdnotes', 'hold'];
 const rank = name => { const i = ORDER.indexOf(name.startsWith('labs/') ? 'labs' : name); return i < 0 ? ORDER.length : i + (name.startsWith('labs/') ? 0.5 : 0); };
 const asked = {};
 export const href = name => 'src/styles/' + name + '.css';

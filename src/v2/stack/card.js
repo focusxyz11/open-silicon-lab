@@ -30,9 +30,19 @@ const seenOf = (view, sh, r) => (view.seen ? view.seen(r) : { way: sh.Y.V.way[r]
 /* a rung's reading page: the first experiment that runs through its levels (#/read/<id>); the stack's, every one */
 const readOf = k => { const x = isRung(k) ? EXPERIMENTS.find(e => levelsOf(e).some(l => RUNG_LENS[k].includes(l))) : null; return x ? { href: '#/read/' + x.id, q: askOf(x) } : { href: '#/read', q: t('sk.card.read') }; };
 
+/* reached from the first page (#524): Hold's last block marks the way in (src/v2/holdisle.js, osl-stack-from), read once
+   when the stack opens. The stack is then not filed as one place of the island: its way up and its path lead back to
+   the first page, the loop in the bar lights no stage, and it opens on the ladder alone (the genes, fifty years of
+   polish and the agents one step away) */
+const FROM = 'osl-stack-from';
+const fromFirst = () => { try { const f = sessionStorage.getItem(FROM) === 'first'; sessionStorage.removeItem(FROM); return f; } catch (e) { return false; } };
+
 export function wear(V, host, view, o = {}) {
   const el = document.createElement('section'); el.className = 'placeui skframe'; host.appendChild(el);
-  let key = null, fr = null;
+  let key = null, fr = null, first = false, ladder = false;
+  const LAB = { up: { href: '#/place/lab', label: t('map.lab.t') }, path: [{ href: '#/island', label: t('place.back') }, { href: '#/place/lab', label: t('map.lab.t') }, { label: t('sk.title') }] };
+  const FIRST = { up: { href: '#/', label: t('frame2.backFirst') }, path: [{ href: '#/', label: t('frame2.backFirst') }, { href: '#/', label: t('frame2.backFirst') }, { label: t('sk.title') }] };
+  const opts = { up: LAB.up, path: LAB.path.slice() };
   /* the lens open, at a rung: from the stack whole, the rung its mark stands on */
   const rungOf = (q, k) => (isRung(k) ? k : ((view.marksAt('stack').find(m => m.id === q) || {}).rung || null));
   const markOf = (q, k) => { const r = rungOf(q, k); return r ? view.markOf(r, q) : null; };
@@ -50,6 +60,7 @@ export function wear(V, host, view, o = {}) {
     let h = '<p class="kicker">' + esc(nameOf(k) + (k === 'field' ? '' : asFace(view))) + '</p>';
     if (!isRung(k)) {
       h += '<p class="line">' + esc(view.rest() + (k === 'stack' ? ' ' + t('sk.card.stack') : '')) + '</p>' + R;
+      if (k === 'stack' && ladder) h += '<button type="button" class="chipb sk-whole" data-skwhole>' + esc(t('sk.dock.today')) + ' →</button>';
       if (k === 'stack' && sh) h += '<p class="kicker">' + esc(t('sk.card.rungs')) + '</p><div class="sk-rungs">' + RUNGS.map((r, i) => ({ r, i })).reverse().map(({ r, i }) => '<button type="button" class="chipb" data-rung="' + i + '"><b>' + esc(rungName(r)) + '</b> <span>' + esc(seenOf(view, sh, r).way || t('sk.tag.cannot')) + '</span></button>').join('') + '</div>';
     } else {
       const S0 = seenOf(view, sh, k), figs = S0.figs, dead = S0.dead, f = S0.fid;
@@ -80,9 +91,7 @@ export function wear(V, host, view, o = {}) {
     return (m && m.here ? '<p class="sk-here"><b>' + esc(t('sk.card.here', { rung: rungName(m.rung) })) + '</b> ' + esc(m.here) + '</p>' : '') + V.lensCard(q, lv);
   }
 
-  fr = V.frameOf(el, {
-    up: { href: '#/place/lab', label: t('map.lab.t') },
-    path: [{ href: '#/island', label: t('place.back') }, { href: '#/place/lab', label: t('map.lab.t') }, { label: t('sk.title') }],
+  fr = V.frameOf(el, Object.assign(opts, {
     caption: true, levelName: nameOf,
     marksAt: () => [], lensesAt, lensCard,
     pairCard: (a, b, k) => { const m = markOf(a, k); return V.pairCard(a, b, m ? m.level : labLevel(rungOf(a, k)) || 'chip'); },
@@ -90,7 +99,25 @@ export function wear(V, host, view, o = {}) {
     onLook: look,
     doAt,
     askAt: () => [], fieldAt: () => [], askedAt: () => ''
-  });
+  }));
+  /* filed where it was reached from: the way up, the path and the caption's place (the frame reads opts.path[1]) */
+  function file() {
+    const F = first ? FIRST : LAB, up = el.querySelector('.homebtn'), crumbs = el.querySelector('.crumbs2');
+    opts.up = F.up; opts.path.splice(0, opts.path.length, ...F.path);
+    if (up) { up.setAttribute('href', F.up.href); up.setAttribute('aria-label', F.up.label); }
+    if (crumbs) crumbs.innerHTML = F.path.slice(first ? 2 : 1).map((p, i) => (i ? '<span aria-hidden="true">›</span>' : '') + (p.href ? '<a href="' + esc(p.href) + '">' + esc(p.label) + '</a>' : '<b>' + esc(p.label) + '</b>')).join('');
+    if (first && crumbs) crumbs.insertAdjacentHTML('afterbegin', '<a href="#/">' + esc(t('frame2.backFirst')) + '</a><span aria-hidden="true">›</span>');
+    unlit();
+  }
+  /* the loop in the bar lights no stage while the stack is reached from the first page: it is not the Lab's Use */
+  const loop = document.getElementById('loop');
+  const unlit = () => { if (first && !el.hidden && loop) loop.querySelectorAll('[data-stage][aria-current]').forEach(b => b.removeAttribute('aria-current')); };   /* i18n-ok: a selector */
+  if (loop && typeof MutationObserver === 'function') new MutationObserver(unlit).observe(loop, { childList: true, subtree: true });
+  /* the ladder alone: the genes and the dock (fifty years of polish, the agents) wait one step away */
+  const parts = () => [host.querySelector('.sk-genes'), host.querySelector('.sk-dock')].filter(Boolean);
+  const showWhole = on => { parts().forEach(p => { p.style.display = on ? '' : 'none'; }); again(); };
+  el.addEventListener('click', e => { if (!e.target.closest('[data-skwhole]')) return; ladder = false; showWhole(true); look(); });
+  window.addEventListener('hashchange', () => { if (/^#\/stack(\/|$)/.test(location.hash)) return; if (first || ladder) { first = false; ladder = false; showWhole(true); file(); } });
   /* Do at a rung is its controls, whichever way it is asked for: the tab, the caption's Do, a goal of the stack's */
   el.addEventListener('click', e => {
     const d = e.target.closest('.modes3 [data-mode="do"], .f2acts .f2do'); if (!d || !isRung(key)) return;
@@ -103,6 +130,10 @@ export function wear(V, host, view, o = {}) {
 
   return {
     level(k) {
+      const came = fromFirst(); if (came) { first = true; ladder = true; }
+      /* the camera comes in over the field to the stack: the ladder holds until a rung is opened */
+      if (isRung(k) && ladder) { ladder = false; showWhole(true); }
+      if (came || first) { showWhole(!ladder); file(); }
       if (k === key) return;
       const was = key; key = k; el.hidden = false;
       fr.level(k);

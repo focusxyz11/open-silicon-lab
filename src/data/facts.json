@@ -2711,6 +2711,42 @@
    "url": "https://www.tinytapeout.com/runs",
    "value": "Three roads after Efabless: SkyWater 130 (ChipFoundry), IHP SG13G2, GF180 (wafer.space)",
    "verified": "2026-11-28"
+  },
+  {
+   "id": "vn-1956",
+   "topic": "reality",
+   "detail": "John von Neumann, Probabilistic logics and the synthesis of reliable organisms from unreliable components, in Automata Studies (Shannon and McCarthy, eds.), Princeton University Press, 1956, pp. 43-98.",
+   "kind": "reported",
+   "label": "Reliable wholes from unreliable parts",
+   "source": "von Neumann, Automata Studies (1956)",
+   "status": "new",
+   "url": "https://static.ias.edu/pitp/archive/2012files/Probabilistic_Logics.pdf",
+   "value": "Parts that sometimes fail, built into a whole that fails less often than any of them (1956)",
+   "verified": "2026-11-28"
+  },
+  {
+   "id": "sutton-2019",
+   "topic": "design",
+   "detail": "Rich Sutton, The Bitter Lesson, an essay on his website incompleteideas.net, March 2019: over seventy years of AI research, general methods that use more computing (search and learning) kept overtaking methods built on human knowledge.",
+   "kind": "reported",
+   "label": "The Bitter Lesson",
+   "source": "Wikipedia, on Sutton’s essay (2019)",
+   "status": "new",
+   "url": "https://en.wikipedia.org/wiki/Bitter_lesson",
+   "value": "Methods that use more computing kept overtaking methods built on what people knew (2019)",
+   "verified": "2026-11-28"
+  },
+  {
+   "id": "rule110-cook",
+   "topic": "future",
+   "detail": "Matthew Cook, Universality in Elementary Cellular Automata, Complex Systems 15(1), 2004: rule 110, one of the 256 elementary rules, can compute anything a computer can.",
+   "kind": "reported",
+   "label": "Rule 110 is universal",
+   "source": "Cook, Complex Systems 15 (2004)",
+   "status": "new",
+   "url": "https://www.complex-systems.com/abstracts/v15_i01_a01/",
+   "value": "Rule 110, eight bits, proved able to compute anything a computer can (2004)",
+   "verified": "2026-11-28"
   }
  ],
  "changes": [
