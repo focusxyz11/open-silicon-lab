@@ -52,10 +52,12 @@ import light from './light.js';
 import switchLab from './switch.js';
 import arch from './arch.js';
 import bridge from './bridge.js';
+import tiers from './tiers.js';
+import trigger from './trigger.js';
 
 export const LABS = [agent, teardown, analog, bench, evolve, crystal, implant, overlay, films, litho, cim, grover, semiconductor,
   aibuild, clockpower, serve, bits, vote, mortal, dies, errors, rv, pbits, thousand, search, halt, listen, corearch, spikes, light,
-  reversible, dataflow, switchLab, arch, bridge];
+  reversible, dataflow, switchLab, arch, bridge, tiers, trigger];
 
 /* a challenge as the loop reads it (src/v2/game.js CHALLENGES): the rest of a lab's challenge is gathered from it
    (OPENS, GROW_AT, the experiments' challenges, the order) */

@@ -16,7 +16,7 @@ export const BLOCKS = [
 ];
 export const COPIES = [1, 3, 5];
 /* the voter: its own area and its own chance of a wrong answer */
-const VOTER = { area: 0.5, p: 0.003 };
+export const VOTER = { area: 0.5, p: 0.003 };
 /* the goal: the whole chip right at least this often, on no more than this floor */
 export const GOAL = { whole: 0.95, area: 32 };
 
@@ -52,3 +52,36 @@ export function trial(plan, rnd) {
 }
 /* a small seeded random source, so runs can be replayed */
 export function rng(seed) { let s = seed >>> 0 || 1; return () => { s ^= s << 13; s >>>= 0; s ^= s >> 17; s ^= s << 5; s >>>= 0; return s / 4294967296; }; }
+
+/* ---- below threshold (#498): whole beats parts as one curve ----
+   The voter is made of the same kind of parts, so its own chance of a wrong answer grows with the parts': a share c of
+   it, the voter's area over the block's (c = VOTER.area / area, as big blocks fail more often in BLOCKS). Swept over the
+   part's chance p, n copies and their voter are wrong with 1 - blockOkWith(p, n, c): for small p a majority is wrong far
+   less often than one copy (p^2 for three, p^3 for five), so copies help; as p grows the copies' gain shrinks while
+   the voter's own error grows, and past the threshold adding copies makes the block worse than one copy alone. That is
+   von Neumann's 1956 result, and the same idea behind quantum error correction (a quantum code is not a majority vote,
+   only the same idea: below threshold, more redundancy helps; above it, it hurts). */
+export const voterShare = area => VOTER.area / area;
+export function blockOkWith(p, n, c) {
+  if (n === 1) return 1 - p;
+  const r = 1 - p; let ok = 0;
+  for (let k = Math.ceil((n + 1) / 2); k <= n; k++) ok += choose(n, k) * r ** k * p ** (n - k);
+  return ok * (1 - Math.min(1, c * p));
+}
+/* the threshold for n copies: the part's chance of a wrong answer above which n copies and their voter are wrong more
+   often than one copy alone (found by bisection where the two cross, between 10^-9 and 1/2) */
+export function threshold(n, c) {
+  const g = p => (1 - blockOkWith(p, n, c)) - p;   /* negative: the copies help */
+  let a = 1e-9, b = 0.5;
+  if (g(a) >= 0) return 0;
+  if (g(b) < 0) return 0.5;
+  for (let i = 0; i < 80; i++) { const m = (a + b) / 2; if (g(m) < 0) a = m; else b = m; }
+  return (a + b) / 2;
+}
+/* the curve: the block's chance of a wrong answer for each part's chance, n copies, voter share c */
+export const sweep = (n, c, ps) => ps.map(p => ({ p, wrong: 1 - blockOkWith(p, n, c) }));
+/* error-corrected qubits on the same axes: a physical error rate and the logical one a code reached, each with its fact */
+export const QUANTUM = [
+  { id: 'helix', phys: 1.2e-3, logical: 2.8e-4, qubits: 10, fact: 'quantinuum-helix' },
+  { id: 'color', phys: 9.5e-4, logical: 7e-5, qubits: 37, fact: 'quantinuum-color' }
+];

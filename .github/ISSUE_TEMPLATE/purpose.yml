@@ -1,0 +1,75 @@
+name: Propose a purpose (a new need for the field)
+description: A need nobody has listed for the field of architectures, just past what any recipe does today. Proposed by you, an AI, or both.
+title: "[Purpose] "
+labels: [purpose]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        The needs of the field of every attempt grow too. Today it has six (any program, a large model, a hearing aid, a wildfire sensor, a Mars rover, a radio: `NEEDS` and `WANT` in `src/engines/arch.js`); once a recipe wins one, nothing new asks for more. A purpose is a new need: its weights and what it must have, in the same form as today's needs. It becomes one entry of the community's ledger (`community/ledger/<date>-purpose-<name>.json`, kind `purpose`), checked by `npm test`: complete, new, **not too easy** (no recipe built and no attempt kept beats today's computer at it yet) and **not too hard** (some recipe of the 400 could, once polished). It joins the field at once as a proposed column; when an attempt first wins it, the field credits both the winner and you. You can also propose one on the field itself (`#/stack/field`, *Propose what it is for*), where the engine checks it as you set it, or through the open port (`propose_purpose`, `docs/MCP.md`). Every entry keeps its author's name and says how AI was used.
+  - type: input
+    id: purpose
+    attributes:
+      label: Its id
+      description: Lowercase letters, digits and dashes, 2 to 24, not one of the six needs (any, model, hearing, wildfire, rover, radio) and not one proposed before.
+      placeholder: deep-sea
+    validations:
+      required: true
+  - type: input
+    id: name
+    attributes:
+      label: Its name
+      description: 2 to 40 plain characters.
+      placeholder: A deep-sea probe
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What it is for
+      description: One or two plain sentences (10 to 300 characters), no links.
+    validations:
+      required: true
+  - type: textarea
+    id: w
+    attributes:
+      label: Its weights
+      description: The power each trait is raised to when a recipe is judged for it, each from 0.05 to 3, at least one. The traits are energy (energy an answer, divided by it), flex (the jobs it can take), exact (exact answers), rugged (bears faults and harsh places), adapt (learns and changes itself). A large model is { "energy": 1, "flex": 0.4, "adapt": 0.2 }.
+      render: json
+      placeholder: '{ "rugged": 2, "energy": 1 }'
+    validations:
+      required: true
+  - type: textarea
+    id: must
+    attributes:
+      label: What it must have (optional)
+      description: The traits it requires, each a level from 0.01 to 10 against today's computer (1). A Mars rover must have { "exact": 0.9, "rugged": 0.7 }. Leave it empty for none.
+      render: json
+      placeholder: '{ "rugged": 3, "exact": 0.9 }'
+  - type: input
+    id: author
+    attributes:
+      label: Your name or GitHub handle, as it should appear
+    validations:
+      required: true
+  - type: dropdown
+    id: kind
+    attributes:
+      label: Who proposed it
+      options:
+        - A person, without AI
+        - An AI, checked by a person
+        - A person and an AI together
+        - A program that searches, run by a person
+    validations:
+      required: true
+  - type: textarea
+    id: ai
+    attributes:
+      label: How AI was used, in your words
+      description: Which assistant or agent, what it did, what you changed, and how you checked it.
+  - type: textarea
+    id: words
+    attributes:
+      label: Why it is worth asking for (optional)
+      description: Who needs it, which need it grows from. Plain words, no links, up to 300 characters.
