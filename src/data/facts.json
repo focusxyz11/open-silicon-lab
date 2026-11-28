@@ -2470,6 +2470,9 @@
    "status": "new",
    "url": "https://www.intel.com/content/www/us/en/newsroom/news/corporate/intel-foundry-details-process-milestones-future-innovation-at-vlsi-symposium.html",
    "value": "A stacked-pair inverter at 45 nm gate pitch; about half the area of a side-by-side one at full scaling (projected)",
+   "verified": "2026-11-28"
+  },
+  {
    "id": "quantinuum-helix",
    "topic": "quantum",
    "detail": "Quantinuum's Helix code on Helios (October 2026), about 10 physical qubits per logical one: two-qubit randomized benchmarking across its two logical qubits gave a logical Clifford error of 2.8 × 10^-4 per gate, against 1.2 × 10^-3 for the same gates on unencoded physical qubits.",
@@ -2491,6 +2494,9 @@
    "status": "new",
    "url": "https://postquantum.com/industry-news/quantinuum-color-code-helios/",
    "value": "Logical error 7 × 10^-5 per gate at distance 5 against 9.5 × 10^-4 physical, with up to 37 physical qubits per logical one",
+   "verified": "2026-11-28"
+  },
+  {
    "id": "taalas-hc1",
    "topic": "accelerators",
    "detail": "Taalas HC1 (February 2026) wires Llama 3.1 8B into the chip as mask ROM: about 17,000 tokens a second per user claimed, 15,000 to 16,000 seen in live tests of its public demo, against about 230 on an Nvidia H200 by Nvidia's own baseline. It runs that one model only (fine-tuned through low-rank adapters); a new model takes about two months.",
@@ -2692,6 +2698,9 @@
    "status": "new",
    "url": "https://www.livescience.com/technology/electronics/new-lighttok-chip-converts-light-directly-into-tokens-for-ai-slashing-energy-use-in-drones-and-other-autonomous-machines",
    "value": "A 32 × 32 sensor that turns light into AI tokens on the chip",
+   "verified": "2026-11-28"
+  },
+  {
    "id": "tt-roads",
    "topic": "tiny",
    "detail": "After Efabless closed (efabless-close), Tiny Tapeout runs on several foundries: SkyWater 130 through ChipFoundry (TTSKY26b on the CI2605 shuttle, started by Efabless's founders), IHP's SG13G2 (TTIHP26b: 123 designs, closed 21 September 2026) and GlobalFoundries' GF180MCU through wafer.space (its first GF180 tapeout confirmed functional). Its plan for 2026 is quarterly shuttles on whichever foundry is ready.",
