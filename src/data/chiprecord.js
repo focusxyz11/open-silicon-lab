@@ -8,7 +8,9 @@
                  'switch'), errs, cells ([{ id, type, ins, out, slot }]: the netlist, placed), vias (the routing's),
                  coverage, transistors, area (µm², the design's cells), masks (maskSet), die ({ gates, switches,
                  area }: the core your stack makes, cm²), floorplan (floorplanOf: the units and the memory on the
-                 die's sheet), heat (heatOf: the grid, the hot spot in degrees, the trip to memory in mm), fid },
+                 die's sheet), heat (heatOf: the grid, the hot spot in degrees, the trip to memory in mm), rules ([{ id, kind,
+                 ok, n, cells }]: the design rules on the routed tile, each break by the cells it stands by), place,
+                 wire, clock, timing, late (#508), fid },
      made: [{ step, chip, report }] (one per station, in the line's order),
      used: the carry, rung by rung (carry in src/engines/path.js), reading the made part }
 
