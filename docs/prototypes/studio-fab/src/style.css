@@ -6,7 +6,8 @@ button{font:inherit;color:inherit;cursor:pointer}:focus-visible{outline:2px soli
 body::before{content:"";position:fixed;left:0;right:0;top:0;height:92px;z-index:2;pointer-events:none;background:linear-gradient(var(--bg) 45%,transparent)}
 #bar{position:fixed;z-index:5;top:0;left:0;right:0;height:52px;display:flex;align-items:center;gap:12px;padding:0 18px}
 .brand{display:flex;align-items:center;gap:8px;font:500 13px var(--sans);color:var(--muted)}.logo{width:22px;height:22px}.logo .fr{fill:none;stroke:#e5401a;stroke-width:5}.logo .cut{fill:none;stroke:var(--ink);stroke-width:4}.logo .cell{fill:#e5401a}
-#ttl{margin:0 auto 0 8px;font:700 clamp(18px,1.7vw,26px)/1 var(--serif)}
+#ttl{margin:0 auto 0 8px;font:700 clamp(18px,1.7vw,26px)/1 var(--serif);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+body::after{content:"";position:fixed;left:0;top:0;bottom:0;width:230px;z-index:3;pointer-events:none;background:linear-gradient(90deg,var(--bg) 62%,transparent)}
 .round{width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:none;display:grid;place-items:center}
 /* along: the stages of a chip's life, the one you stand at lit */
 #along{position:fixed;z-index:5;top:50px;left:50%;transform:translateX(-50%);display:flex;align-items:center;max-width:calc(100vw - 16px);overflow-x:auto;border-bottom:1px solid var(--line)}
@@ -29,7 +30,7 @@ body::before{content:"";position:fixed;left:0;right:0;top:0;height:92px;z-index:
 #prop{display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:center;background:var(--panel);backdrop-filter:blur(12px);border:1px solid var(--accent);border-radius:12px;padding:10px 14px;max-width:820px}#prop span{font-size:14px}
 #lens{position:fixed;z-index:6;right:22px;top:108px;width:min(400px,calc(100vw - 24px));background:var(--panel);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid var(--warm);border-radius:14px;padding:16px 18px}
 #lens q{display:block;quotes:none;font:italic 400 19px/1.35 var(--serif)}#lens p{margin:9px 0 12px;font-size:14.5px}
-@media (max-width:759px){.brand span{display:none}#ttl{font-size:17px}#along{left:0;transform:none;top:48px}#along button,#along a{padding:7px 9px 9px;font-size:12.5px}
+@media (max-width:759px){body::after{display:none}.brand span{display:none}#ttl{font-size:15.5px}#along{left:0;transform:none;top:48px}#along button,#along a{padding:7px 9px 9px;font-size:12.5px}
  #spine{left:6px;top:92px;transform:none;display:flex;gap:0;width:calc(100vw - 12px);overflow-x:auto}#spine button{border-left:0;border-top:2px solid var(--line);padding:5px 8px 0 0;min-width:70px}#spine button.on{border-top:4px solid var(--accent);padding-left:0}#spine span{display:none}#spine b{font-size:13px}
  #say{font-size:13px}#tools{gap:8px;padding:8px}.seg button{padding:0 8px;font-size:12.5px}#lens{left:8px;right:8px;top:auto;bottom:8px;width:auto}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}

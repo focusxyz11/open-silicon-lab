@@ -30,7 +30,7 @@ const fSerif = (px, w = 600, it) => (it ? 'italic ' : '') + w + ' ' + px + 'px "
 const S = { g: Object.assign({}, A.TODAY), care: 1, period: 300, cover: false };
 let R, die, line;
 function recompute() { R = P.carry(P.stackOf(S.g, Object.assign({}, EXAMPLE, { care: S.care }), 'any')); die = R.rungs.chip.more.die; line = R.fab; heatOf(); dirty = true; }
-const STAGES = ['design', 'crystal', 'deposit', 'print', 'etch', 'implant', 'wires', 'test'], LEVELS = ['line', 'chip', 'block', 'gate', 'switch'];
+const STAGES = ['design', 'crystal', 'deposit', 'print', 'etch', 'implant', 'wires', 'test', 'package'], LEVELS = ['line', 'chip', 'block', 'gate', 'switch'];
 
 /* the floorplan, from the recipe's own genes: its shape, and where it computes */
 function plan(g) {
@@ -77,29 +77,34 @@ function runTests(all) { if (!BUG) findBug(); S.cover = true; let n = all ? 512 
 
 /* ---------- the sheet: frames across (a chip's life), the same die in each ---------- */
 const FW = 1400;
-const dieT = f => (f ? { ox: f * FW + 630, oy: 530, k: 0.14 } : { ox: 200, oy: 100, k: 1 });
+const dieT = f => (f ? { ox: f * FW + 630, oy: 530, k: 0.14 } : { ox: 100, oy: 120, k: 3.8 });
+/* the sheet's layout: the drawing large at the left; the stations in three rows of three to its right, read like a page,
+   the ninth tile the way on to Use. A station is drawn in its own (legacy) coordinates and shifted to its place */
+const GX0 = 4450, CW = 2050, CH = 1400; let SHX = 0, SHY = 0;
+const SH = f => (f ? [GX0 + ((f - 1) % 3) * CW - (f * FW - 640), ((f - 1) / 3 | 0) * CH + 20] : [0, 0]);
+const shift = f => { [SHX, SHY] = SH(f); };
 const cellRect = s => { const a = PL.alu, [c, r] = slotXY(s), cw = a[2] * 0.86 / COLS, ch = a[3] * 0.84 / ROWS; return [a[0] + a[2] * 0.12 + c * cw, a[1] + a[3] * 0.13 + r * ch, cw * 0.62, ch * 0.56]; };
 const pinPt = p => { const a = PL.alu, [c, r] = pinXY(p), cw = a[2] * 0.86 / COLS, ch = a[3] * 0.84 / ROWS; return [a[0] + a[2] * 0.12 + (c + 0.5) * cw, a[1] + a[3] * 0.13 + (r + 0.28) * ch]; };
 function rectOf(f, l) {
-  const T = dieT(f), d = r => [T.ox + r[0] * T.k, T.oy + r[1] * T.k, r[2] * T.k, r[3] * T.k];
-  if (l <= 0) return f ? [f * FW + 40, -90, 1320, 1360] : [60, -330, 1900, 1560];
+  const T = dieT(f), sh = SH(f), d = r => [T.ox + r[0] * T.k + sh[0], T.oy + r[1] * T.k + sh[1], r[2] * T.k, r[3] * T.k];
+  if (l <= 0) return f ? [f * FW - 680 + sh[0], -60 + sh[1], 2030, 1320] : [-80, -60, 4160, 4200];
   if (l === 1) return d([-60, -60, 1120, 1120]);
   if (l === 2) return d([PL.alu[0] - PL.alu[2] * 0.06, PL.alu[1] - PL.alu[3] * 0.1, PL.alu[2] * 1.12, PL.alu[3] * 1.2]);
   const c0 = cellRect(pos[0]);
   if (l === 3) return d([c0[0] - c0[2] * 0.9, c0[1] - c0[3] * 0.9, c0[2] * 5.4, c0[3] * 4.4]);
-  return d([c0[0] - c0[2] * 0.5, c0[1] - c0[3] * 0.42, c0[2] * 2, c0[3] * 2.2]);
+  return d([c0[0] - c0[2] * 1.95, c0[1] - c0[3] * 0.5, c0[2] * 3.2, c0[3] * 2]);
 }
-const HOME = [-80, -420, 8 * FW + 160, 1900];
+const HOME = [-100, -820, GX0 + 3 * CW + 120, 5060];
 const cv = $('#world'), ctx = cv.getContext('2d'); let vw = 0, vh = 0, dpr = 1;
 const cam = { x: 0, y: 0, s: 0.1 }, view = { f: 0, l: -1 }; let anim = null;
-const phone = () => vw < 760, pad = () => (phone() ? { l: 10, r: 10, t: 100, b: 150 } : { l: 190, r: 30, t: 96, b: 190 });
+const phone = () => vw < 760, pad = () => (phone() ? { l: 10, r: 10, t: 100, b: 150 } : { l: 200, r: 30, t: 96, b: 150 });
 function fit(r) { const p = pad(), s = Math.min((vw - p.l - p.r) / r[2], (vh - p.t - p.b) / r[3]); return { s, x: r[0] + r[2] / 2 - ((p.l - p.r) / 2) / s, y: r[1] + r[3] / 2 - ((p.t - p.b) / 2) / s }; }
 function fly(to, ms = 900) { const from = { x: cam.x, y: cam.y, s: cam.s }, far = Math.hypot(to.x - from.x, to.y - from.y) * Math.min(from.s, to.s), hop = far > vw ? clamp(1 - vw / far, 0, 0.8) : 0; anim = { from, to, t0: performance.now(), dur: REDUCED ? 0 : ms * (1 + hop * 0.5), hop }; dirty = true; }
 function stepAnim(now) { if (!anim) return; const u = anim.dur ? clamp((now - anim.t0) / anim.dur, 0, 1) : 1, e = ease(u), a = anim.from, b = anim.to; cam.s = Math.exp(lerp(Math.log(a.s), Math.log(b.s), e)) * (1 - anim.hop * Math.sin(Math.PI * u));
   if (b.s >= a.s) { const k = Math.min(1.5, a.s / cam.s) * (1 - e); cam.x = b.x + (a.x - b.x) * k; cam.y = b.y + (a.y - b.y) * k; } else { const k = Math.min(1.5, b.s / cam.s) * e; cam.x = a.x + (b.x - a.x) * k; cam.y = a.y + (b.y - a.y) * k; }
   dirty = true; if (u >= 1) { anim = null; ui(); } }
-function go(f, l, ms) { view.f = clamp(f, 0, 7); view.l = clamp(l, -1, 4); lens = null; fly(fit(view.l < 0 ? HOME : rectOf(view.f, view.l)), ms); ui(); }
-const X = x => (x - cam.x) * cam.s + vw / 2, Y = y => (y - cam.y) * cam.s + vh / 2;
+function go(f, l, ms) { view.f = clamp(f, 0, 8); view.l = clamp(l, -1, 4); lens = null; fly(fit(view.l < 0 ? HOME : rectOf(view.f, view.l)), ms); ui(); }
+const X = x => (x + SHX - cam.x) * cam.s + vw / 2, Y = y => (y + SHY - cam.y) * cam.s + vh / 2;
 
 /* ---------- drawing ---------- */
 let LBL = [], MARKS = [];
@@ -164,7 +169,7 @@ function drawDie(f, lite, bad) {
     if (i === 0 && cpx > 110) {
       if (!made) { label(dx(sx), dy(sy) - 8, STR.d.cell, fSans(13, 700), 13, C.ink(1), { pri: 48, bg: true, fid: 'idea' }); label(dx(sx), dy(sy + h) + 20, STR.d.drafted, fSerif(13, 400, true), 13, C.mut(1), { pri: 30 }); }
       else { /* cut through one switch: what this station has added */
-        const y0 = sy + h * 1.42, bx = sx + w * 0.1, bw = w * 0.8, u = h * 0.07; ctx.fillStyle = C.bg(1); ctx.fillRect(dx(sx - w * 0.2), dy(sy + h * 1.06), w * 1.4 * k, h * 0.8 * k); ctx.fillStyle = C.ink(0.14); ctx.fillRect(dx(bx), dy(y0), bw * k, u * 3 * k); ctx.strokeStyle = C.ink(0.7); ctx.lineWidth = 1; ctx.strokeRect(dx(bx), dy(y0), bw * k, u * 3 * k);
+        const y0 = sy + h * 0.62, bx = sx - w * 1.7, bw = w * 1.3, u = h * 0.1; ctx.beginPath(); ctx.moveTo(dx(sx), dy(sy + h * 0.5)); ctx.lineTo(dx(bx + bw), dy(y0 - u)); ctx.strokeStyle = C.ink(0.4); ctx.lineWidth = 1; ctx.setLineDash([2, 4]); ctx.stroke(); ctx.setLineDash([]); ctx.fillStyle = C.ink(0.14); ctx.fillRect(dx(bx), dy(y0), bw * k, u * 3 * k); ctx.strokeStyle = C.ink(0.7); ctx.lineWidth = 1; ctx.strokeRect(dx(bx), dy(y0), bw * k, u * 3 * k);
         if (f === 2 || f === 3) { ctx.fillStyle = C.ink(0.45); ctx.fillRect(dx(bx), dy(y0 - u), bw * k, u * k); }
         if (f === 3) { ctx.fillStyle = C.acc(0.6); ctx.fillRect(dx(bx + bw * 0.42), dy(y0 - u * 2.4), bw * 0.16 * k, u * 1.4 * k); }
         if (f >= 4) { ctx.fillStyle = C.ink(0.9); ctx.fillRect(dx(bx + bw * 0.42 - bw * 0.03 * jit), dy(y0 - u * 1.6), bw * 0.16 * (1 + jit * 0.5) * k, u * 1.6 * k); }
@@ -180,44 +185,91 @@ function drawDie(f, lite, bad) {
   if (made && f >= 4 && apx > 240 && view.f === f) mark(dx(a[0] + a[2]) + 4, dy(a[1] + a[3] * 0.2), 'perfect');
 }
 
+const poly = (pts, col, lw = 1.2, dash) => { ctx.beginPath(); pts.forEach((p, i) => (i ? ctx.lineTo(X(p[0]), Y(p[1])) : ctx.moveTo(X(p[0]), Y(p[1])))); ctx.strokeStyle = col; ctx.lineWidth = lw; ctx.setLineDash(dash || []); ctx.stroke(); ctx.setLineDash([]); };
+const box = (x, y, w, h, fill, stroke, lw = 1.2) => { ctx.beginPath(); rr(x, y, w, h); if (fill) { ctx.fillStyle = fill; ctx.fill(); } if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = lw; ctx.stroke(); } };
+/* the machine at work, cut open and seen from the side, beside its wafer seen from above. In the 3D line this is the
+   station's own model with its near wall cut away (GUIDE.md, "Inside a station"); Print and Etch are drawn in full */
+function drawMachine(f, x0, tm) {
+  const mx = x => x0 - 600 + x, s = cam.s, words = s * 640 > 210 && s < 1.6, M = STR.mach, note = (x, y, w, o) => { if (words) label(X(mx(x)), Y(y), w, fSans(12), 12, C.ink(1), Object.assign({ pri: 26, bg: true }, o)); };
+  const di = Math.floor(tm * 0.8) % 5 - 2, wy = f === 4 || f === 2 ? 820 : 900, wafer = (dx = 0) => { poly([[mx(90 + dx), wy], [mx(550 + dx), wy]], C.ink(0.95), 3.5); box(mx(70 + dx), wy + 12, 500, 34, C.panel(1), C.ink(0.6)); poly([[mx(298 + dx), wy], [mx(342 + dx), wy]], C.acc(1), 4); };
+  if (f === 3) {
+    const sw = di * 34, pts = [[mx(60), 790], [mx(60), 430], [mx(205), 300], [mx(330), 212], [mx(455), 340], [mx(300), 520], [mx(470), 665], [mx(320), 896]];
+    box(mx(15), 790, 90, 90, C.panel(1), C.ink(0.7)); ctx.beginPath(); ctx.arc(X(mx(60)), Y(835), (10 + 8 * Math.abs(Math.sin(tm * 6))) * s, 0, 7); ctx.fillStyle = C.acc(0.8); ctx.fill();
+    for (const k of [1, 2, 4, 5, 6]) { const p = pts[k], a = pts[k - 1], b = pts[k + 1], nx = (a[0] - p[0]) / Math.hypot(a[0] - p[0], a[1] - p[1]) + (b[0] - p[0]) / Math.hypot(b[0] - p[0], b[1] - p[1]), ny = (a[1] - p[1]) / Math.hypot(a[0] - p[0], a[1] - p[1]) + (b[1] - p[1]) / Math.hypot(b[0] - p[0], b[1] - p[1]), n = Math.hypot(nx, ny) || 1; poly([[p[0] + ny / n * 44, p[1] - nx / n * 44], [p[0] - ny / n * 44, p[1] + nx / n * 44]], C.ink(0.95), 4); }
+    box(mx(245), 186, 170, 20, C.bg(1), C.acc(1), 1.6); ctx.beginPath(); for (let i = 0; i < 12; i++) rr(mx(252 + i * 13.5), 206, 6, 7); ctx.fillStyle = C.acc(0.9); ctx.fill();
+    poly(pts, C.acc(0.75), 2); for (let i = 0; i < 4; i++) { const u = ((tm * 0.35 + i / 4) % 1) * 7, k = Math.min(6, u | 0), q = u - k; ctx.beginPath(); ctx.arc(X(lerp(pts[k][0], pts[k + 1][0], q)), Y(lerp(pts[k][1], pts[k + 1][1], q)), 3.2, 0, 7); ctx.fillStyle = C.acc(1); ctx.fill(); }
+    wafer(-sw); note(425, 180, M.mask, { pri: 40 }); note(120, 800, M.light); note(480, 500, M.mirrors, { pri: 20 }); note(90, 985, M.steps, { pri: 30 });
+  } else if (f === 4) {
+    ctx.beginPath(); ctx.roundRect(X(mx(60)), Y(220), 520 * s, 660 * s, 18 * s); ctx.fillStyle = C.panel(0.6); ctx.fill(); ctx.strokeStyle = C.ink(0.7); ctx.lineWidth = 1.3; ctx.stroke();
+    poly([[mx(110), 275], [mx(530), 275]], C.ink(0.95), 4); poly([[mx(320), 150], [mx(320), 275]], C.ink(0.6), 1.2, [3, 3]);
+    ctx.beginPath(); ctx.ellipse(X(mx(320)), Y(420), 205 * s, (88 + 6 * Math.sin(tm * 7)) * s, 0, 0, 7); ctx.fillStyle = C.bad(0.2); ctx.fill(); ctx.strokeStyle = C.bad(0.7); ctx.lineWidth = 1.2; ctx.stroke();
+    ctx.beginPath(); for (let i = 0; i < 14; i++) { const y = 520 + ((tm * 240 + i * 53) % 270); ctx.moveTo(X(mx(130 + i * 29)), Y(y)); ctx.lineTo(X(mx(130 + i * 29)), Y(y + 26)); } ctx.strokeStyle = C.acc(1); ctx.lineWidth = 1.6; ctx.stroke();
+    wafer(); poly([[mx(520), 880], [mx(520), 960], [mx(610), 960]], C.ink(0.6), 1.2, [3, 3]);
+    /* under the glass: three lines of your gates, cut straight down where the resist is open, each as wide as its copy came out */
+    const cx = mx(560), cy = 640, r = 108; poly([[mx(330), wy], [cx - 80, cy + 70]], C.ink(0.5), 1); ctx.save(); ctx.beginPath(); ctx.arc(X(cx), Y(cy), r * s, 0, 7); ctx.fillStyle = C.bg(1); ctx.fill(); ctx.clip();
+    box(cx - r, cy + 40, 2 * r, r, C.ink(0.16)); box(cx - r, cy, 2 * r, 40, C.ink(0.6)); const dep = clamp(((tm * 0.25) % 1) * 1.4, 0, 1) * 40;
+    for (let i = 0; i < 3; i++) { const jit = (H(i + 3) - 0.5) * line.spread, w = 30 * (1 + jit * 0.8), x = cx - 78 + i * 62; box(x, cy - 26, 62 - w, 26, C.acc(0.75)); box(x + 62 - w, cy, w, dep, C.bg(1)); }
+    ctx.restore(); ctx.beginPath(); ctx.arc(X(cx), Y(cy), r * s, 0, 7); ctx.strokeStyle = C.ink(0.8); ctx.lineWidth = 1.3; ctx.stroke();
+    note(250, 345, M.plasma, { pri: 30 }); note(110, 600, M.ions, { pri: 40 }); note(390, 790, M.cut, { pri: 35 });
+  } else {
+    /* the pattern only: one cut-open machine, its working part moving, the wafer and your die under it */
+    if (f === 1) { poly([[mx(180), 520], [mx(180), 860], [mx(460), 860], [mx(460), 520]], C.ink(0.8), 2); box(mx(182), 700, 276, 158, C.ink(0.2)); poly([[mx(320), 150], [mx(320), 330]], C.ink(0.7), 1.2); ctx.beginPath(); ctx.roundRect(X(mx(285)), Y(330), 70 * s, 370 * s, 30 * s); ctx.fillStyle = C.panel(1); ctx.fill(); ctx.strokeStyle = C.ink(0.9); ctx.lineWidth = 1.4; ctx.stroke(); ctx.beginPath(); for (let i = 0; i < 5; i++) { const y = 380 + ((tm * 20 + i * 64) % 300); ctx.moveTo(X(mx(290)), Y(y)); ctx.lineTo(X(mx(350)), Y(y + 10)); } ctx.strokeStyle = C.ink(0.4); ctx.stroke(); note(200, 900, M.boule); }
+    if (f === 2) { ctx.beginPath(); ctx.roundRect(X(mx(60)), Y(220), 520 * s, 660 * s, 18 * s); ctx.strokeStyle = C.ink(0.7); ctx.lineWidth = 1.3; ctx.stroke(); poly([[mx(110), 300], [mx(530), 300]], C.ink(0.95), 4); ctx.beginPath(); for (let i = 0; i < 40; i++) { const y = 320 + ((tm * 90 + H(i) * 480) % 480); ctx.rect(X(mx(120 + H(i + 50) * 400)), Y(y), 2.2, 2.2); } ctx.fillStyle = C.ink(0.7); ctx.fill(); wafer(); poly([[mx(90), wy - 5], [mx(550), wy - 5]], C.ink(0.5), 5); note(240, 270, M.gas); note(200, 790, M.film); }
+    if (f === 5) { box(mx(30), 250, 110, 80, C.panel(1), C.ink(0.7)); ctx.beginPath(); ctx.moveTo(X(mx(140)), Y(290)); ctx.lineTo(X(mx(250)), Y(290)); ctx.arc(X(mx(250)), Y(360), 70 * s, -Math.PI / 2, 0); ctx.lineTo(X(mx(320 + di * 40)), Y(896)); ctx.strokeStyle = C.acc(0.9); ctx.lineWidth = 2; ctx.stroke(); ctx.beginPath(); ctx.arc(X(mx(250)), Y(360), 110 * s, -Math.PI / 2, 0); ctx.arc(X(mx(250)), Y(360), 34 * s, 0, -Math.PI / 2, true); ctx.closePath(); ctx.strokeStyle = C.ink(0.8); ctx.lineWidth = 1.3; ctx.stroke(); wafer(); note(160, 230, M.beam); }
+    if (f === 6) { wafer(); for (let k = 0; k < 4; k++) poly([[mx(120), 880 - k * 16], [mx(120 + 400 * clamp(((tm * 0.2) % 1) * 4 - k, 0, 1)), 880 - k * 16]], C.ink(0.85), 5); ctx.beginPath(); ctx.ellipse(X(mx(320)), Y(520), 190 * s, 40 * s, 0, 0, 7); ctx.strokeStyle = C.ink(0.8); ctx.lineWidth = 1.3; ctx.stroke(); poly([[mx(320), 300], [mx(320), 520]], C.ink(0.8), 3); poly([[mx(320 + 180 * Math.cos(tm * 2)), 520 + 38 * Math.sin(tm * 2)], [mx(320), 520]], C.ink(0.5), 1); note(190, 440, M.polish); }
+    if (f === 7) { wafer(-di * 34); const dn = 40 * Math.abs(Math.sin(tm * 2.5)); box(mx(180), 640 + dn, 280, 40, C.panel(1), C.ink(0.8)); ctx.beginPath(); for (let i = 0; i < 9; i++) { ctx.moveTo(X(mx(290 + i * 7.5)), Y(680 + dn)); ctx.lineTo(X(mx(300 + i * 5)), Y(856 + dn)); } ctx.strokeStyle = C.ink(0.9); ctx.lineWidth = 1; ctx.stroke(); note(180, 620, M.probes); }
+    if (words) label(X(mx(40)), Y(160), STR.sketched, fSerif(12.5, 400, true), 12.5, C.mut(1), { pri: 8 });
+  }
+}
 function drawSheet(now) {
-  const tm = REDUCED ? 0 : now / 1000, s = cam.s;
-  /* the masks: drawn at the left, carried down the road to Print (and, by the side road, onto a shared shuttle) */
-  const ry = -170, px0 = 3 * FW + 700; ctx.beginPath(); ctx.moveTo(X(1200), Y(330)); ctx.lineTo(X(1330), Y(330)); ctx.lineTo(X(1330), Y(ry)); ctx.lineTo(X(px0), Y(ry)); ctx.lineTo(X(px0), Y(40)); ctx.moveTo(X(1330), Y(ry)); ctx.lineTo(X(1330), Y(-300)); ctx.lineTo(X(1520), Y(-300));
-  ctx.strokeStyle = C.acc(0.7); ctx.lineWidth = 1.2; ctx.setLineDash([2, 5]); ctx.stroke(); ctx.setLineDash([]);
-  STR.d.mask.forEach((nm, i) => { const x = 1560 + i * 560 + (REDUCED ? 0 : (tm * 30) % 560 * 0), y = ry - 60, z = 120; ctx.beginPath(); rr(x, y, z, z); ctx.fillStyle = C.bg(1); ctx.fill(); ctx.strokeStyle = C.acc(0.9); ctx.lineWidth = 1.2; ctx.stroke();
-    if (z * s > 26) { ctx.beginPath(); for (let j = 0; j < 5; j++) for (let q = 0; q < 5; q++) { const cx = x + 14 + q * 20, cy = y + 14 + j * 20; if (i === 0) { rr(cx, cy + 2, 14, 4); rr(cx, cy + 9, 14, 4); } else if (i === 1) { rr(cx + 3, cy, 2, 15); rr(cx + 9, cy, 2, 15); } else if (i === 2) { rr(cx + 1, cy + 3, 2, 2); rr(cx + 11, cy + 10, 2, 2); } else { rr(cx, cy, 14, 2); rr(cx, cy + 13, 14, 2); } } ctx.strokeStyle = [C.acc, C.bad, C.ink, C.ink][i](0.9); ctx.lineWidth = 1; ctx.stroke(); }
-    if (s > 0.2) label(X(x + z / 2), Y(y) - 6, nm, fMono(10.5), 10.5, C.mut(1), { align: 'center', pri: 14 }); });
-  if (s > 0.16) { label(X(1560), Y(ry + 92) + 4, STR.d.masks + ', ' + STR.d.road, fSerif(clamp(s * 60, 12, 17), 400, true), 14, C.ink(1), { pri: 35 }); ctx.beginPath(); for (let j = 0; j < 4; j++) for (let i = 0; i < 6; i++) rr(1530 + i * 30, -350 + j * 24, 26, 20); ctx.strokeStyle = C.mut(0.8); ctx.lineWidth = 1; ctx.stroke(); ctx.beginPath(); rr(1590, -326, 26, 20); ctx.fillStyle = C.acc(0.8); ctx.fill(); label(X(1720), Y(-300) + 4, STR.d.shuttle, fSerif(13, 400, true), 13, C.mut(1), { pri: 12 }); }
+  const tm = REDUCED ? 0 : now / 1000, s = cam.s; shift(0);
+  /* the masks: drawn at the left, carried down the road into Print's machine, where they are its mask; a side road
+     leads to a shared shuttle */
+  const p3 = SH(3), mk = [3 * FW - 270 + p3[0], 186 + p3[1]], ry = -400;
+  poly([[3900, 500], [4200, 500], [4200, ry], [mk[0], ry], mk], C.acc(0.75), 1.3, [2, 5]); poly([[4200, ry], [4200, -700], [4420, -700]], C.acc(0.75), 1.3, [2, 5]);
+  if (!REDUCED) { const u = (tm * 0.12) % 1, x = lerp(4200, mk[0], u); box(x - 16, ry - 16, 32, 32, C.acc(0.9)); }
+  STR.d.mask.forEach((nm, i) => { const x = 4560 + i * 660, y = ry - 110, z = 220; box(x, y, z, z, C.bg(1), C.acc(0.9));
+    if (z * s > 22) { ctx.beginPath(); for (let j = 0; j < 5; j++) for (let q = 0; q < 5; q++) { const cx = x + 22 + q * 38, cy = y + 22 + j * 38; if (i === 0) { rr(cx, cy + 4, 26, 8); rr(cx, cy + 18, 26, 8); } else if (i === 1) { rr(cx + 6, cy, 4, 30); rr(cx + 17, cy, 4, 30); } else if (i === 2) { rr(cx + 2, cy + 6, 4, 4); rr(cx + 20, cy + 20, 4, 4); } else { rr(cx, cy, 26, 3); rr(cx, cy + 25, 26, 3); } } ctx.strokeStyle = [C.acc, C.bad, C.ink, C.ink][i](0.9); ctx.lineWidth = 1; ctx.stroke(); }
+    if (s > 0.2) label(X(x + z + 14), Y(y + z / 2) + 4, nm, fMono(10.5), 10.5, C.mut(1), { pri: 14 }); });
+  label(X(4560), Y(ry + 110) + 24, STR.d.masks + ', ' + STR.d.road, fSerif(clamp(s * 150, 12, 17), 400, true), 14, C.ink(1), { pri: 35 });
+  ctx.beginPath(); for (let j = 0; j < 3; j++) for (let i = 0; i < 6; i++) rr(4440 + i * 52, -770 + j * 46, 44, 38); ctx.strokeStyle = C.mut(0.8); ctx.lineWidth = 1; ctx.stroke(); box(4544, -724, 44, 38, C.acc(0.85)); label(X(4780), Y(-700) + 4, STR.d.shuttle, fSerif(13, 400, true), 13, C.mut(1), { pri: 12 });
   drawDie(0, false);
-  /* the line: one machine a frame, the wafer inside it seen from above, your design on every die */
-  for (let f = 1; f < 8; f++) {
-    const x0 = f * FW, cx = x0 + 700, cy = 600, wr = 520; if (X(x0 + FW) < -40 || X(x0) > vw + 40) continue;
-    ctx.beginPath(); ctx.roundRect(X(x0 + 90), Y(-20), 1220 * s, 1240 * s, 26 * s); ctx.fillStyle = C.panel(0.5); ctx.fill(); ctx.strokeStyle = C.ink(view.f === f && view.l >= 0 ? 0.7 : 0.3); ctx.lineWidth = 1.2; ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(X(x0 - 90), Y(cy)); ctx.lineTo(X(x0 + 90), Y(cy)); ctx.strokeStyle = C.ink(0.4); ctx.setLineDash([1, 6]); ctx.lineWidth = 2; ctx.stroke(); ctx.setLineDash([]);
+  /* the way the wafer goes: along each row, then down to the next */
+  for (let f = 1; f < 9; f++) { const a = SH(f), b = SH(f + 1), ax = f * FW + 1310 + a[0], ay = 600 + a[1], bx = (f + 1) * FW - 640 + b[0], by = 600 + b[1]; poly(f % 3 ? [[ax, ay], [bx, by]] : [[ax - 300, ay + 620], [ax - 300, ay + 700], [bx + 300, ay + 700], [bx + 300, by - 620]], C.ink(0.45), 2, [1, 6]); }
+  /* the line: one station a tile; its machine cut open at the left, its wafer from above at the right */
+  for (let f = 1; f < 9; f++) {
+    shift(f); const x0 = f * FW, cx = x0 + 700, cy = 600, wr = 520; if (X(x0 + 1310) < -40 || X(x0 - 640) > vw + 40 || Y(1220) < -40 || Y(-20) > vh + 40) continue;
+    ctx.beginPath(); ctx.roundRect(X(x0 - 640), Y(-20), 1950 * s, 1240 * s, 26 * s); ctx.fillStyle = C.panel(0.5); ctx.fill(); ctx.strokeStyle = C.ink(view.f === f && view.l >= 0 ? 0.7 : 0.3); ctx.lineWidth = 1.2; ctx.stroke();
+    const nmPx = clamp(s * 120, 13, 30); label(X(x0 - 600), Y(-20) + nmPx + 10, STR.stage[STAGES[f]], fSerif(nmPx, 700), nmPx, C.ink(1), { pri: 58 });
+    if (f === 8) { /* Package (#500), the pattern only: your die bonded on its board, cooled from above */
+      box(x0 - 420, 820, 1500, 60, C.panel(1), C.ink(0.8)); ctx.beginPath(); for (let i = 0; i < 24; i++) ctx.rect(X(x0 - 380 + i * 62), Y(884), 30 * s, 22 * s); ctx.fillStyle = C.ink(0.6); ctx.fill(); box(x0 - 120, 730, 900, 60, C.ink(0.2), C.ink(0.9)); box(x0 + 60, 660, 540, 56, C.acc(0.25), C.acc(1)); poly([[x0 - 220, 815], [x0 - 220, 600], [x0 + 880, 600], [x0 + 880, 815]], C.ink(0.8), 2); ctx.beginPath(); for (let i = 0; i < 12; i++) { ctx.moveTo(X(x0 - 160 + i * 90), Y(600)); ctx.lineTo(X(x0 - 160 + i * 90), Y(470 - 16 * Math.sin(tm * 2 + i))); } ctx.strokeStyle = C.ink(0.6); ctx.lineWidth = 2; ctx.stroke();
+      if (s * 1950 > 300) { label(X(x0 - 600), Y(1220) - 70, STR.mach.bond, fSans(13.5, 700), 13.5, C.ink(1), { pri: 52 }); label(X(x0 - 600), Y(1220) - 44, STR.sketched, fSerif(12.5, 400, true), 12.5, C.mut(1), { pri: 8 }); } continue; }
     ctx.beginPath(); ctx.arc(X(cx), Y(cy), wr * s, 0.06 - Math.PI / 2, -0.06 + 1.5 * Math.PI); ctx.closePath(); ctx.fillStyle = C.bg(0.9); ctx.fill(); if (f === 2) { ctx.fillStyle = C.ink(0.1); ctx.fill(); } ctx.strokeStyle = C.ink(0.8); ctx.lineWidth = 1.4; ctx.stroke();
-    const nmPx = clamp(s * 90, 13, 30); label(X(x0 + 130), Y(-20) + nmPx + 12, STR.stage[STAGES[f]], fSerif(nmPx, 700), nmPx, C.ink(1), { pri: 58 });
     if (f === 1) { ctx.beginPath(); for (let j = -9; j <= 9; j++) for (let i = -9; i <= 9; i++) if (i * i + j * j < 82 && 50 * s > 5) ctx.rect(X(cx + i * 54) - 1, Y(cy + j * 54) - 1, 2, 2); ctx.fillStyle = C.mut(0.7); ctx.fill(); }
     let good = 0, all = 0;
-    for (let j = -3; j <= 3; j++) for (let i = -3; i <= 3; i++) { if (Math.hypot(Math.abs(i) * 150 + 70, Math.abs(j) * 150 + 70) > wr) continue; all++; const bad = f === 7 && (i || j) && H(i * 7 + j * 13 + 40 + S.care) > die.yield * 0.999; if (!bad) good++; if (!(i || j)) continue;
-      const Ts = dieT(f); Ts.ox += i * 150; Ts.oy += j * 150; const sv = dieT; drawDieAt(f, Ts, bad); }
+    for (let j = -3; j <= 3; j++) for (let i = -3; i <= 3; i++) { if (Math.hypot(Math.abs(i) * 150 + 70, Math.abs(j) * 150 + 70) > wr) continue; all++; const bad = f === 7 && (i || j) && H(i * 7 + j * 13 + 40 + S.care) > die.yield * 0.999; if (!bad) good++; if (!(i || j)) continue; const Ts = dieT(f); Ts.ox += i * 150; Ts.oy += j * 150; drawDieAt(f, Ts, bad); }
     drawDie(f, false);
-    /* the machine at work, over the wafer */
-    const sw = (tm * 0.25) % 1;
-    if (f === 1) { ctx.beginPath(); ctx.arc(X(cx), Y(cy), wr * s * (0.3 + 0.7 * ((tm * 0.1) % 1)), 0, 7); ctx.strokeStyle = C.acc(0.5); ctx.stroke(); }
-    if (f === 2) { ctx.beginPath(); ctx.arc(X(cx), Y(cy), wr * s * sw, 0, 7); ctx.strokeStyle = C.ink(0.5); ctx.lineWidth = 2; ctx.stroke(); }
-    if (f === 3) { const di = Math.floor(tm * 0.8) % 5 - 2, yy = cy - 70 + ((tm * 0.8) % 1) * 140; ctx.fillStyle = C.acc(0.5); ctx.fillRect(X(cx - 70 + di * 150), Y(yy), 140 * s, 10 * s); ctx.beginPath(); rr(cx - 76 + di * 150, cy - 76, 152, 152); ctx.strokeStyle = C.acc(1); ctx.lineWidth = 1.6; ctx.stroke(); }
-    if (f === 4) { ctx.beginPath(); ctx.arc(X(cx), Y(cy), (wr + 24 + 6 * Math.sin(tm * 9)) * s, 0, 7); ctx.strokeStyle = C.bad(0.5); ctx.lineWidth = 3; ctx.stroke(); }
-    if (f === 5) { const yy = cy - wr + ((tm * 0.3) % 1) * 2 * wr, hw = Math.sqrt(Math.max(0, wr * wr - (yy - cy) * (yy - cy))); ctx.beginPath(); ctx.moveTo(X(cx - hw), Y(yy)); ctx.lineTo(X(cx + hw), Y(yy)); ctx.strokeStyle = C.acc(0.9); ctx.lineWidth = 2; ctx.stroke(); }
-    if (f === 6) { ctx.beginPath(); ctx.arc(X(cx), Y(cy), wr * s * 0.98, tm, tm + 1.2); ctx.strokeStyle = C.ink(0.8); ctx.lineWidth = 4; ctx.stroke(); }
-    if (f === 7) { const di = Math.floor(tm * 1.5) % 5 - 2; ctx.beginPath(); rr(cx - 76 + di * 150, cy - 76, 152, 152); ctx.strokeStyle = C.ink(1); ctx.lineWidth = 1.6; ctx.stroke(); }
-    if (s * 1220 > 260 && s < 2.2) { const yb = Y(1220) - 34, xl = X(x0 + 130), big = 12.5, note = [0, STR.m.seed, STR.m.film, STR.m.slit, STR.m.etched, STR.m.doped, STR.m.wired, t(STR.m.tested, { g: good, n: all })][f];
-      label(xl, yb - 34, note, fSans(13.5, 700), 13.5, C.ink(1), { pri: 52 });
-      if (f === 1 || f === 2) label(xl, yb, STR.m.waits, fSerif(13, 400, true), 13, C.mut(1), { pri: 30 });
-      if (f === 3 || f === 4) { label(xl, yb - 12, t(STR.m.spread, { x: line.spread.toFixed(2) }), fMono(big, 500), big, line.spread > 1.2 ? C.bad(1) : C.ink(1), { pri: 51, fid: 'computed', by: 'litho' }); mark(X(x0 + 1240), Y(120), f === 3 ? 'moore' : 'perfect'); }
-      if (f === 5 || f === 6) label(xl, yb - 12, t(STR.m.dust, { x: line.defects.toFixed(2) }), fMono(big, 500), big, line.defects > 0.5 ? C.bad(1) : C.ink(1), { pri: 51, fid: 'computed', by: 'fabline' });
-      if (f === 7) { label(xl, yb - 12, t(STR.m.yield, { x: (die.yield * 100).toFixed(0) }) + '   ' + t(STR.m.cost, { x: R.rungs.chip.hands.cost.toFixed(2) }), fMono(big, 500), big, die.yield < 0.7 ? C.bad(1) : C.ink(1), { pri: 51, fid: 'computed', by: 'chip' }); mark(X(x0 + 1240), Y(120), 'eff'); } }
+    if (s * 640 > 60 && s < 1.6) drawMachine(f, x0, tm);
+    /* the same work, seen on the wafer */
+    const di = Math.floor(tm * 0.8) % 5 - 2;
+    if (f === 2) { ctx.beginPath(); ctx.arc(X(cx), Y(cy), wr * s * ((tm * 0.25) % 1), 0, 7); ctx.strokeStyle = C.ink(0.5); ctx.lineWidth = 2; ctx.stroke(); }
+    if (f === 3) { const yy = cy - 70 + ((tm * 0.8) % 1) * 140; ctx.fillStyle = C.acc(0.5); ctx.fillRect(X(cx - 70 + di * 150), Y(yy), 140 * s, 10 * s); box(cx - 76 + di * 150, cy - 76, 152, 152, null, C.acc(1), 1.6); }
+    if (f === 4) { ctx.beginPath(); ctx.arc(X(cx), Y(cy), (wr + 22 + 6 * Math.sin(tm * 7)) * s, 0, 7); ctx.strokeStyle = C.bad(0.5); ctx.lineWidth = 3; ctx.stroke(); }
+    if (f === 5) { const xx = cx + di * 150; poly([[xx, cy - Math.sqrt(wr * wr - (xx - cx) ** 2)], [xx, cy + Math.sqrt(wr * wr - (xx - cx) ** 2)]], C.acc(0.9), 2); }
+    if (f === 6) { ctx.beginPath(); ctx.arc(X(cx), Y(cy), wr * s * 0.98, tm * 2, tm * 2 + 1.2); ctx.strokeStyle = C.ink(0.8); ctx.lineWidth = 4; ctx.stroke(); }
+    if (f === 7) box(cx - 76 + di * 150, cy - 76, 152, 152, null, C.ink(1), 1.6);
+    if (s * 640 > 210 && s < 1.6) { const yb = Y(1220), xl = X(x0 - 600), big = 12.5, note = [0, STR.m.seed, STR.m.film, STR.m.slit, STR.m.etched, STR.m.doped, STR.m.wired, t(STR.m.tested, { g: good, n: all })][f], num = (k, tx, red, by) => label(xl, yb - 62 + k * 30, tx, fMono(big, 500), big, red ? C.bad(1) : C.ink(1), { pri: 51 - k, fid: 'computed', by });
+      label(xl, yb - 88, note, fSans(13.5, 700), 13.5, C.ink(1), { pri: 52 });
+      if (f === 1 || f === 2) label(xl, yb - 62, STR.m.waits, fSerif(13, 400, true), 13, C.mut(1), { pri: 30 });
+      if (f === 3 || f === 4) { num(0, t(STR.m.spread, { x: line.spread.toFixed(2) }), line.spread > 1.2, 'litho'); mark(X(x0 + 1250), Y(60), f === 3 ? 'moore' : 'perfect'); }
+      if (f === 5 || f === 6) num(0, t(STR.m.dust, { x: line.defects.toFixed(2) }), line.defects > 0.5, 'fabline');
+      if (f === 7) { num(0, t(STR.m.yield, { x: (die.yield * 100).toFixed(0) }), die.yield < 0.7, 'chip'); num(1, t(STR.m.cost, { x: R.rungs.chip.hands.cost.toFixed(2) }), die.yield < 0.7, 'chip'); mark(X(x0 + 1250), Y(60), 'eff'); } }
   }
+  /* the ninth tile: the way on, to the chip as used */
+  shift(9); { const x0 = 9 * FW; ctx.beginPath(); ctx.roundRect(X(x0 - 640), Y(-20), 1950 * s, 1240 * s, 26 * s); ctx.strokeStyle = C.acc(0.8); ctx.lineWidth = 1.2; ctx.setLineDash([6, 5]); ctx.stroke(); ctx.setLineDash([]);
+    for (let i = 0; i < 7; i++) { const y = 980 - i * 120, z = i * 22; poly([[x0 - 100 + z, y], [x0 + 800 + z, y], [x0 + 860 + z, y - 70], [x0 - 40 + z, y - 70], [x0 - 100 + z, y]], C.acc(0.9), 1.3); }
+    const px = clamp(s * 120, 13, 28); label(X(x0 - 600), Y(-20) + px + 10, STR.useTile, fSerif(px, 700), px, C.acc(1), { pri: 58 }); }
+  shift(0);
 }
 function drawDieAt(f, T, bad) { const k = T.k * cam.s, x = X(T.ox), y = Y(T.oy), z = 1000 * k; if (x > vw || y > vh || x + z < 0 || y + z < 0) return; ctx.beginPath(); ctx.rect(x, y, z, z); if (bad) { ctx.fillStyle = C.bad(0.8); ctx.fill(); } else if (f >= 2) { ctx.fillStyle = C.ink(f === 2 ? 0.1 : 0.05); ctx.fill(); } ctx.strokeStyle = C.ink(f < 3 ? 0.25 : 0.5); ctx.lineWidth = 1; ctx.setLineDash(f < 3 ? [3, 3] : []); ctx.stroke(); ctx.setLineDash([]);
   if (f >= 3 && !bad && z > 30) { ctx.beginPath(); for (const u of PL.U) ctx.rect(x + u[0] * k, y + u[1] * k, u[2] * k, u[3] * k); for (const m of PL.M) ctx.rect(x + m[0] * k, y + m[1] * k, m[2] * k, m[3] * k); ctx.strokeStyle = (f === 3 ? C.acc : C.ink)(0.7); ctx.stroke(); } }
@@ -254,7 +306,8 @@ function ui() {
   $$('#along button').forEach(b => b.setAttribute('aria-current', l >= 0 && +b.dataset.f === f));
   const fig = { mind: t(sp.right, { x: (h.mind.hands.right * 100).toFixed(1) }), machine: t(sp.ips, { x: (h.machine.hands.ips / 1e9).toFixed(1) }), chip: t(sp.yield, { x: (h.chip.hands.yield * 100).toFixed(0), c: h.chip.hands.cost.toFixed(2) }), block: t(sp.alu, { x: (h.block.hands.aluDelay * 1e9).toFixed(2) }), gate: t(sp.delay, { x: (h.gate.hands.delay * 1e12).toFixed(0) }), switch: t(sp.spread, { x: h.switch.hands.sigma.toFixed(1) }), atom: t(sp.gap, { x: h.atom.hands.gap.toFixed(2) }) };
   $('#spine').innerHTML = ['mind', 'machine', 'chip', 'block', 'gate', 'switch', 'atom'].map(r => '<button type="button" data-rung="' + r + '" class="' + (span.includes(r) ? 'in' : '') + (r === cur ? ' on' : '') + '"' + (span.includes(r) && LEVELS.includes(r) ? '' : ' disabled') + '><b>' + esc(STR.rung[r]) + '</b><span>' + esc(fig[r]) + '</span></button>').join('');
-  $('#say').textContent = l < 0 ? STR.rest.home : made ? t(STR.rest.make, { s: STR.stage[STAGES[f]] }) : STR.rest.design;
+  const sfig = f === 3 || f === 4 ? t(STR.m.spread, { x: line.spread.toFixed(2) }) : f === 5 || f === 6 ? t(STR.m.dust, { x: line.defects.toFixed(2) }) : f === 7 ? t(STR.m.yield, { x: (die.yield * 100).toFixed(0) }) + ', ' + t(STR.m.cost, { x: h.chip.hands.cost.toFixed(2) }) : '';
+  $('#say').textContent = l < 0 ? STR.rest.home : made ? (phone() && sfig ? STR.stage[STAGES[f]] + ': ' + sfig + '.' : t(STR.rest.make, { s: STR.stage[STAGES[f]] })) : STR.rest.design;
   const ln = $('#lens'); ln.hidden = !lens; if (lens) ln.innerHTML = '<q>' + esc(STR.q[lens][1]) + '</q><p>' + esc(STR.q[lens][2]) + '</p><button type="button" class="btn" id="down">' + esc(STR.q.down) + '</button>';
   tools(); dirty = true;
 }
@@ -273,11 +326,11 @@ document.addEventListener('click', e => { const b = e.target.closest('button'); 
   else if (b.id === 'theme') { document.documentElement.dataset.theme = C.th === 'dark' ? 'light' : 'dark'; setTheme(); } else if (b.id === 'home') go(0, -1);
 });
 /* hands */
-const frameAt = x => clamp(Math.floor(x / FW), 0, 7), wx = Xp => (Xp - vw / 2) / cam.s + cam.x, wy = Yp => (Yp - vh / 2) / cam.s + cam.y;
+const frameAt = (x, y) => (x < GX0 - 60 ? 0 : Math.min(8, 1 + clamp(Math.floor(y / CH), 0, 2) * 3 + clamp(Math.floor((x - GX0) / CW), 0, 2))), wx = Xp => (Xp - vw / 2) / cam.s + cam.x, wy = Yp => (Yp - vh / 2) / cam.s + cam.y;
 function cellAt(Xp, Yp) { if (view.f !== 0 || cellRect(0)[2] * cam.s < 22) return -1; const T = dieT(0), x = (wx(Xp) - T.ox) / T.k, y = (wy(Yp) - T.oy) / T.k; return NET.findIndex((_, i) => { const c = cellRect(pos[i]); return x >= c[0] && x <= c[0] + c[2] && y >= c[1] && y <= c[1] + c[3]; }); }
 function slotAt(Xp, Yp) { const T = dieT(0), x = (wx(Xp) - T.ox) / T.k, y = (wy(Yp) - T.oy) / T.k; for (let s = 0; s < 45; s++) { const c = cellRect(s); if (x >= c[0] - c[2] * 0.3 && x <= c[0] + c[2] * 1.3 && y >= c[1] - c[3] * 0.4 && y <= c[1] + c[3] * 1.4) return s; } return -1; }
-function levelNow() { const f = frameAt(cam.x); if (cam.s < fit(rectOf(f, 0)).s * 0.6) return [f, -1]; let bl = 0, bd = 9; for (let l = 0; l < 5; l++) { const d = Math.abs(Math.log(cam.s / fit(rectOf(f, l)).s)); if (d < bd) { bd = d; bl = l; } } return [f, bl]; }
-cv.addEventListener('wheel', e => { e.preventDefault(); if (anim) return; const k = Math.exp(-e.deltaY * 0.0016), x = wx(e.clientX), y = wy(e.clientY), ns = clamp(cam.s * k, fit(HOME).s * 0.8, fit(rectOf(frameAt(x), 4)).s * 1.5); cam.s = ns; cam.x = x - (e.clientX - vw / 2) / ns; cam.y = y - (e.clientY - vh / 2) / ns; const [f, l] = levelNow(); if (f !== view.f || l !== view.l) { view.f = f; view.l = l; ui(); } dirty = true; }, { passive: false });
+function levelNow() { const f = frameAt(cam.x, cam.y); if (cam.s < fit(rectOf(f, 0)).s * 0.6) return [f, -1]; let bl = 0, bd = 9; for (let l = 0; l < 5; l++) { const d = Math.abs(Math.log(cam.s / fit(rectOf(f, l)).s)); if (d < bd) { bd = d; bl = l; } } return [f, bl]; }
+cv.addEventListener('wheel', e => { e.preventDefault(); if (anim) return; const k = Math.exp(-e.deltaY * 0.0016), x = wx(e.clientX), y = wy(e.clientY), ns = clamp(cam.s * k, fit(HOME).s * 0.8, fit(rectOf(frameAt(x, y), 4)).s * 1.5); cam.s = ns; cam.x = x - (e.clientX - vw / 2) / ns; cam.y = y - (e.clientY - vh / 2) / ns; const [f, l] = levelNow(); if (f !== view.f || l !== view.l) { view.f = f; view.l = l; ui(); } dirty = true; }, { passive: false });
 const ptr = new Map(); let pan = null, pinch = null;
 cv.addEventListener('pointerdown', e => { cv.setPointerCapture(e.pointerId); ptr.set(e.pointerId, [e.clientX, e.clientY]); if (ptr.size === 2) { const [a, b] = [...ptr.values()]; pinch = { d: Math.hypot(a[0] - b[0], a[1] - b[1]), s: cam.s }; pan = null; return; } const c = cellAt(e.clientX, e.clientY); if (c >= 0) { drag = { cell: c, moved: 0, x: e.clientX, y: e.clientY }; anneal = null; } else pan = { x: e.clientX, y: e.clientY, cx: cam.x, cy: cam.y, moved: 0 }; });
 cv.addEventListener('pointermove', e => { if (ptr.has(e.pointerId)) ptr.set(e.pointerId, [e.clientX, e.clientY]);
@@ -289,13 +342,14 @@ const up = e => { const p = pan, d = drag; ptr.delete(e.pointerId); pinch = null
   if (d && d.moved < 5) { go(0, Math.min(4, Math.max(view.l, 2) + 1)); return; } if (d) { dirty = true; return; } if (!p) return;
   if (p.moved >= 5) { const [f, l] = levelNow(); view.f = f; view.l = l; ui(); return; }
   const m = MARKS.find(q => Math.hypot(q.x - e.clientX, q.y - e.clientY) < 18); if (m) { lens = lens === m.id ? null : m.id; ui(); return; }
-  const f = frameAt(wx(e.clientX)); if (view.l < 0 || f !== view.f) go(f, Math.max(0, view.l)); else if (view.l < 4) go(f, view.l + 1); };
+  { const u = SH(9), ux = wx(e.clientX) - u[0] - 9 * FW, uy = wy(e.clientY) - u[1]; if (ux > -640 && ux < 1310 && uy > -20 && uy < 1220) { location.href = STR.site; return; } }
+  const f = frameAt(wx(e.clientX), wy(e.clientY)); if (view.l < 0 || f !== view.f) go(f, Math.max(0, view.l)); else if (view.l < 4) go(f, view.l + 1); };
 cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up);
 addEventListener('keydown', e => { if (e.target.closest && e.target.closest('input')) return; const l = view.l;
-  if (e.key === 'ArrowRight') go(Math.min(7, view.f + 1), Math.max(0, l)); else if (e.key === 'ArrowLeft') go(Math.max(0, view.f - 1), Math.max(0, l)); else if (e.key === 'ArrowDown' || e.key === '+' || e.key === '=') go(view.f, Math.min(4, l + 1)); else if (e.key === 'ArrowUp' || e.key === 'Escape' || e.key === '-') { if (lens) { lens = null; ui(); } else go(view.f, l - 1); } else return; e.preventDefault(); });
+  if (e.key === 'ArrowRight') go(Math.min(8, view.f + 1), Math.max(0, l)); else if (e.key === 'ArrowLeft') go(Math.max(0, view.f - 1), Math.max(0, l)); else if (e.key === 'ArrowDown' || e.key === '+' || e.key === '=') go(view.f, Math.min(4, l + 1)); else if (e.key === 'ArrowUp' || e.key === 'Escape' || e.key === '-') { if (lens) { lens = null; ui(); } else go(view.f, l - 1); } else return; e.preventDefault(); });
 function resize() { vw = innerWidth; vh = innerHeight; dpr = Math.min(devicePixelRatio || 1, Math.sqrt(7e6 / (vw * vh)), 2.5); cv.width = Math.round(vw * dpr); cv.height = Math.round(vh * dpr); if (!anim) Object.assign(cam, fit(view.l < 0 ? HOME : rectOf(view.f, view.l))); dirty = true; }
 function loop(now) { stepAnim(now); stepAnneal(); if (dirty || !REDUCED) { dirty = false; draw(now); } requestAnimationFrame(loop); }
 setTheme(); recompute(); build(); W0 = timing(HAND).worst; PERIODS = [1.6, 1.12, 0.95, 0.8].map(x => Math.round(W0 * x / 10) * 10); S.period = PERIODS[1]; matchMedia('(prefers-color-scheme: light)').addEventListener('change', setTheme); addEventListener('resize', resize);
-resize(); ui(); if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { dirty = true; });
+if (innerWidth < 760) view.l = 0; resize(); ui(); if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { dirty = true; });
 requestAnimationFrame(loop);
 window.OSLW = { go, S, view, cam, busy: () => !!anim || !!anneal, settle, runTests, askAgent, set: (k, v) => { if (k === 'care') S.care = v; else if (k === 'period') S.period = v; else S.g[k] = v; recompute(); ui(); }, scramble: () => $('#scramble') && $('#scramble').click() };
