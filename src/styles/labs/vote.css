@@ -23,3 +23,19 @@
  .rdseg .chipb { padding: 4px 9px; font-size: 12px; }
 .rdmsg.good { color: var(--good); }
  .rdmsg.bad { color: var(--bad); }
+
+/* below threshold (#498): one copy, three and five against how often a part is wrong; quantum codes as diamonds */
+.rdthbox { margin: 10px 0; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; }
+.rdthfig { margin: 6px 0; }
+ .rdthfig svg { display: block; width: 100%; height: auto; }
+ .rdthfig .ax { font: 8.5px var(--sans); fill: var(--muted); }
+ .rdthfig .gl { stroke: var(--line); stroke-width: 1; }
+ .rdthfig polyline.rdth { fill: none; stroke-width: 2; }
+ .rdthfig polyline.rdth.n1 { stroke: var(--muted); stroke-dasharray: 4 3; }
+ .rdthfig polyline.rdth.n3 { stroke: var(--accent); }
+ .rdthfig polyline.rdth.n5 { stroke: var(--good); }
+ .rdthfig .rdthv { stroke-width: 1; stroke-dasharray: 2 3; }
+ .rdthfig .rdthv.n3 { stroke: var(--accent); } .rdthfig .rdthv.n5 { stroke: var(--good); }
+ .rdthfig .rdthl.n3 { fill: var(--accent); font-weight: 600; } .rdthfig .rdthl.n5 { fill: var(--good); font-weight: 600; }
+ .rdthfig .rdq { fill: var(--warm); stroke: var(--panel-solid); stroke-width: 1; }
+ .rdthfig .rdql { fill: var(--warm); font-weight: 600; }

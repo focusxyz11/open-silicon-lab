@@ -2470,6 +2470,27 @@
    "status": "new",
    "url": "https://www.intel.com/content/www/us/en/newsroom/news/corporate/intel-foundry-details-process-milestones-future-innovation-at-vlsi-symposium.html",
    "value": "A stacked-pair inverter at 45 nm gate pitch; about half the area of a side-by-side one at full scaling (projected)",
+   "id": "quantinuum-helix",
+   "topic": "quantum",
+   "detail": "Quantinuum's Helix code on Helios (October 2026), about 10 physical qubits per logical one: two-qubit randomized benchmarking across its two logical qubits gave a logical Clifford error of 2.8 × 10^-4 per gate, against 1.2 × 10^-3 for the same gates on unencoded physical qubits.",
+   "kind": "claim",
+   "label": "A compact quantum code below threshold",
+   "source": "Quantum Computing Report",
+   "status": "new",
+   "url": "https://quantumcomputingreport.com/quantinuum-demonstrates-helix-quantum-error-correction-architecture-on-helios-hardware/",
+   "value": "Logical error 2.8 × 10^-4 per gate against 1.2 × 10^-3 physical, with about 10 physical qubits per logical one",
+   "verified": "2026-11-28"
+  },
+  {
+   "id": "quantinuum-color",
+   "topic": "quantum",
+   "detail": "Quantinuum's color code on Helios (October 2026), up to 37 physical qubits per logical one: an error per logical two-qubit Clifford gate of 7 × 10^-5 at distance 5 (7 × 10^-4 at distance 3), against 9.5 × 10^-4 for the same circuits on unencoded physical qubits; its memory reached 99.9995% (quantinuum-2026).",
+   "kind": "claim",
+   "label": "A larger quantum code, further below threshold",
+   "source": "PostQuantum",
+   "status": "new",
+   "url": "https://postquantum.com/industry-news/quantinuum-color-code-helios/",
+   "value": "Logical error 7 × 10^-5 per gate at distance 5 against 9.5 × 10^-4 physical, with up to 37 physical qubits per logical one",
    "verified": "2026-11-28"
   }
  ],
