@@ -662,6 +662,8 @@
  "game.ch.maskof.why": "The factory never sees your description, only the masks: one stencil per layer, each shape on exactly one of them.",
  "map.capital": "The making of new machines stops at {step}. The fabs go on with the machines they have, without new parts or service, and cannot grow.",
  "ledger.sign.name": "Sign it",
+ "ledger.sign.gh": "Your GitHub account (optional)",
+ "ledger.sign.ghPh": "the account that will send it",
  "ledger.sign.ph": "Your name or handle",
  "map.house.holds": "By {by}: it holds a record",
  "map.house.behind": "By {by}: right, but another design beats it",

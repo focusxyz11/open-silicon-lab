@@ -70,15 +70,15 @@ export const MADE = ['person', 'ai', 'both', 'program', 'example'];
 export const DIR = 'community/ledger';
 const ID = /^(\d{4}-\d{2}-\d{2})-(design|break|try|question|report|fix|gene)-[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const FIELDS = {
-  design: ['kind', 'piece', 'title', 'by', 'made', 'ai', 'words', 'code', 'from', 'about'],
-  break: ['kind', 'of', 'by', 'made', 'ai', 'words', 'case', 'about'],
+  design: ['kind', 'piece', 'title', 'by', 'github', 'made', 'ai', 'words', 'code', 'from', 'about'],
+  break: ['kind', 'of', 'by', 'github', 'made', 'ai', 'words', 'case', 'about'],
   /* a try: cases that were meant to break a design and did not. The trace of an attack that failed: what a
      design has survived is why it can be trusted, and where the next attacker need not look */
-  try: ['kind', 'of', 'by', 'made', 'ai', 'words', 'cases', 'puzzle', 'machine', 'chef', 'front', 'plan', 'choice', 'pick', 'arch', 'about'],
-  question: ['kind', 'at', 'part', 'under', 'q', 'noticed', 'by', 'made', 'ai', 'about'],
-  report: ['kind', 'at', 'part', 'say', 'words', 'by', 'made', 'ai'],
-  fix: ['kind', 'of', 'words', 'pr', 'by', 'made', 'ai'],
-  gene: ['kind', 'gene', 'option', 'name', 'what', 'effect', 'carry', 'fact', 'by', 'made', 'ai', 'words']
+  try: ['kind', 'of', 'by', 'github', 'made', 'ai', 'words', 'cases', 'puzzle', 'machine', 'chef', 'front', 'plan', 'choice', 'pick', 'arch', 'about'],
+  question: ['kind', 'at', 'part', 'under', 'q', 'noticed', 'by', 'github', 'made', 'ai', 'about'],
+  report: ['kind', 'at', 'part', 'say', 'words', 'by', 'github', 'made', 'ai'],
+  fix: ['kind', 'of', 'words', 'pr', 'by', 'github', 'made', 'ai'],
+  gene: ['kind', 'gene', 'option', 'name', 'what', 'effect', 'carry', 'fact', 'by', 'github', 'made', 'ai', 'words']
 };
 /* the puzzles (content/puzzles/): problems that run through every level, each scored by one engine. An attempt at one is
    a try with a plan instead of a design and its cases: a plan the engine can run, for the puzzle's job. Its score is
@@ -153,6 +153,8 @@ export function checkEntry(e, W) {
   const m = typeof e.id === 'string' ? ID.exec(e.id) : null; if (!m || !realDay(m[1])) return no('id');
   if (m[2] !== e.kind || !KINDS.includes(e.kind)) return no('kind');
   if (Object.keys(e).some(k => k !== 'id' && k !== 'draft' && !FIELDS[e.kind].includes(k))) return no('fields');
+  /* the sender's GitHub account, when the entry names it (#484: CI compares it with the pull request's author) */
+  if (e.github != null && !(typeof e.github === 'string' && /^[A-Za-z0-9](?:[A-Za-z0-9-]{0,38})$/.test(e.github))) return no('github');
   if (!plain(e.by, 2, 40)) return no('by');
   if (!MADE.includes(e.made)) return no('made');
   if (!plain(e.ai || '', 0, 300) || ((e.made === 'ai' || e.made === 'both' || e.made === 'program') && !String(e.ai || '').trim())) return no('sayAI');
