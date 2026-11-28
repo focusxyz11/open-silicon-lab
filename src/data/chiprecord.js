@@ -7,7 +7,8 @@
      designed: { recipe, fine, aim, design (the studio's input: p, code, slice), ok, broken (null, 'design' or
                  'switch'), errs, cells ([{ id, type, ins, out, slot }]: the netlist, placed), vias (the routing's),
                  coverage, transistors, area (µm², the design's cells), masks (maskSet), die ({ gates, switches,
-                 area }: the core your stack makes, cm²), fid },
+                 area }: the core your stack makes, cm²), floorplan (floorplanOf: the units and the memory on the
+                 die's sheet), heat (heatOf: the grid, the hot spot in degrees, the trip to memory in mm), fid },
      made: [{ step, chip, report }] (one per station, in the line's order),
      used: the carry, rung by rung (carry in src/engines/path.js), reading the made part }
 

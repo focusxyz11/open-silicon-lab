@@ -40,7 +40,8 @@ export const ENGINES = {
   corearch: 'src/engines/corearch.js', machine: 'src/engines/machine.js', budget: 'src/engines/budget.js', plan: 'src/data/partfacts.js',
   noise: 'src/engines/lens.js', lens: 'src/engines/lens.js',
   switch: 'src/engines/switch.js', strands: 'src/engines/strands.js',
-  timing: 'src/engines/timing.js', rules: 'src/engines/rules.js', arch: 'src/engines/arch.js', path: 'src/engines/path.js'
+  timing: 'src/engines/timing.js', rules: 'src/engines/rules.js', arch: 'src/engines/arch.js', path: 'src/engines/path.js',
+  floorplan: 'src/engines/floorplan.js'
 };
 
 const C = by => ({ f: 'computed', by });

@@ -14,6 +14,7 @@
    - keepOf(record) and fromKept(kept): the record kept as its inputs and made again from them. */
 import { build, normalDesign } from './design.js';
 import { maskSet } from './rules.js';
+import { floorplanOf, heatOf } from './floorplan.js';
 import { stackOf, recipeOf, fineOf, aimOf, carry, carryWith, areaOf } from './path.js';
 import { STATION_FNS, runLine, bareChip, careOf } from './stations.js';
 import { KIND, VERSION, STEPS } from '../data/chiprecord.js';
@@ -51,11 +52,13 @@ export function designedOf(stack, design) {
   const M = built ? maskSet(B) : null;
   const masks = M ? { total: M.total, drawn: M.drawn, cells: M.cells, groups: M.groups.map(g => ({ id: g.id, masks: g.masks.slice(), n: g.n, drawn: g.drawn.slice() })) } : null;
   const broken = R.broken === 'switch' ? 'switch' : !B ? 'empty' : !B.ok ? 'design' : null;
+  /* the floorplan your recipe lays out, and its heat and trips (src/engines/floorplan.js, #507) */
+  const fp = floorplanOf(recipeOf(st), fineOf(st)), heat = heatOf(fp);
   return {
     recipe: recipeOf(st), fine: fineOf(st), aim: aimOf(st), design: d, ok: !broken, broken, errs: B ? B.errs.slice() : [],
     cells, vias: built && B.RT ? B.RT.vias : 0, coverage: built && Number.isFinite(B.coverage) ? B.coverage : null,
-    transistors: built && Number.isFinite(B.transistors) ? B.transistors : null, area: built ? B.area : null, masks, die,
-    fid: { cells: C('design'), vias: C('design'), coverage: C('design'), transistors: C('design'), area: C('design'), masks: C('rules'), die: { f: 'idea', by: 'bet' } }
+    transistors: built && Number.isFinite(B.transistors) ? B.transistors : null, area: built ? B.area : null, masks, die, floorplan: fp, heat,
+    fid: { cells: C('design'), vias: C('design'), coverage: C('design'), transistors: C('design'), area: C('design'), masks: C('rules'), die: { f: 'idea', by: 'bet' }, hottest: heat.fid.hottest, trip: heat.fid.trip }
   };
 }
 

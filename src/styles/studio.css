@@ -13,3 +13,16 @@
   #studioLabels .sdl { font-size: 12px; }
   #studioLabels .sdl.title { font-size: 16px; }
 }
+/* the figures under the die, each with its mark (#507) */
+#studioLabels .sdl.figure { transform: none; font: 500 12.5px/1.3 var(--mono); }
+#studioLabels .sdl .fid { pointer-events: auto; margin-left: 4px; vertical-align: middle; }
+/* the controls of the level in view: one glass strip at the bottom centre, clear of the caption at the left and the ways
+   in and along at the right (GUIDE.md §4, §5); on a phone, above the card's peek, wrapping to two rows */
+#studioui .sdctl { position: fixed; left: 50%; transform: translateX(-50%); bottom: 18px; z-index: 6; max-width: min(1180px, calc(100vw - 32px)); padding: 10px 14px;
+  border: 1px solid var(--line); border-radius: 14px; background: var(--panel); backdrop-filter: blur(14px); box-shadow: var(--shadow); }
+#studioui .sdctl[hidden] { display: none; }
+#studioui .sdarr { display: flex; flex-wrap: wrap; gap: 10px 22px; }
+#studioui .sdopts { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+#studioui .sdopts .chipb.on { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+
+@media (max-width: 720px) { #studioui .sdctl { bottom: calc(var(--dockh, 120px) + 12px); padding: 8px 10px; } #studioui .sdopts .chipb { padding: 5px 9px; font-size: 13px; } }
