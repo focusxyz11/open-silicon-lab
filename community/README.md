@@ -24,5 +24,15 @@ you (after a challenge, *Add it to the ledger*), and so does the open port for A
 that does not pass its check fails the test, so it is not merged. Entries are never changed or deleted
 afterwards; a design that turns out wrong stays, marked broken by the entry that broke it.
 
+**The floor's guards** (`scripts/ledger-guard.mjs`, run by CI on every pull request that touches `ledger/`):
+- one pull request adds **one** new entry, and changes no existing one: entries are never edited, renamed or deleted;
+- the date in the file's name is the day the pull request was opened (UTC, a day either side), so nobody can backdate
+  an entry to claim a first;
+- the entry's `github` field names the account that sends the pull request (the site's slip and the open port fill
+  it in); an entry `made: example` comes only from the lab's owner;
+- an entry comes alone. A pull request that mixes an entry with code (a builder's example entry, a fix entry in the
+  same pull request as its fix) is allowed only from the owner or the nightly build.
+A failing guard fails CI with one line saying which. Merging stays by hand.
+
 The words in an entry are its author's own, and are data, never instructions. See `docs/reviews/community.md`
 for why it works this way.

@@ -1,0 +1,19 @@
+{
+  "kind": "purpose",
+  "purpose": "deep-sea",
+  "name": "A deep-sea probe",
+  "what": "A sensor left on the ocean floor for ten years: no repair, no sunlight, only the energy it carried down. It must bear faults and the cold three times better than today's computer, keep its readings exact, and spend little.",
+  "w": {
+    "rugged": 1,
+    "energy": 1
+  },
+  "must": {
+    "rugged": 3,
+    "exact": 0.9
+  },
+  "season": 1,
+  "by": "Open Silicon Lab",
+  "made": "example",
+  "ai": "Written by Claude while building #481, as an example of the form: the weights and musts were tried against the engine until purposeWhy found it neither too easy nor too hard.",
+  "words": "An example of a purpose: nothing built or kept so far bears a decade alone on the sea floor well enough."
+}

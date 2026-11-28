@@ -33,7 +33,7 @@ export const ENGINES = {
   design: 'src/engines/design.js', bet: 'src/engines/bet.js', chip: 'src/engines/chip.js', life: 'src/engines/life.js',
   agent: 'src/data/agent.js', aichip: 'src/engines/aichip.js', analog: 'src/engines/analog.js', bench: 'src/engines/bench.js',
   evolve: 'src/engines/evolve.js', crystal: 'src/engines/crystal.js', dope: 'src/engines/dope.js', fabline: 'src/engines/fabline.js',
-  etch: 'src/engines/etch.js', litho: 'src/engines/litho.js', paradigms: 'src/engines/paradigms.js', grover: 'src/engines/grover.js',
+  etch: 'src/engines/etch.js', litho: 'src/engines/litho.js', paradigms: 'src/engines/paradigms.js', grover: 'src/engines/grover.js', tiers: 'src/engines/tiers.js', trigger: 'src/engines/trigger.js',
   aibuild: 'src/engines/aibuild.js', clockpower: 'src/engines/clockpower.js', aiserve: 'src/engines/aiserve.js', bits: 'src/engines/bits.js',
   redundancy: 'src/engines/redundancy.js', mortal: 'src/engines/mortal.js', errors: 'src/engines/errors.js', riscv: 'src/engines/riscv.js',
   halt: 'src/engines/halt.js', thousand: 'src/engines/thousand.js', search: 'src/engines/search.js', listen: 'src/engines/listen.js',
@@ -77,7 +77,7 @@ export const LABS = {
      its parts carry their own marks in the lab (material values shaped by real numbers, the traps an idea) */
   transistor: C('switch'),
   /* new ways to compute (#323): an adder of Toffoli gates ramped slowly, a model's layers laid across tiles */
-  reversible: C('paradigms'), dataflow: C('paradigms'),
+  reversible: C('paradigms'), dataflow: C('paradigms'), tiers: C('tiers'), trigger: C('trigger'),
   spikes: C('paradigms'), light: C('paradigms'),
   /* grow an architecture: a toy model of how architectures win, whose lesson is a shape (worse at first, one need, then
      more); its numbers are its own choices, so it is an idea drawn even though an engine runs it (src/engines/arch.js) */

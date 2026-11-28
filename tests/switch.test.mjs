@@ -145,3 +145,25 @@ test('your switch up the scales: a machine\'s block made of it, its energy movin
   /* the least a need's goal can be follows your switch */
   assert.ok(M.bestFor('wildfire', MGOALS.wildfire[0], W.specKey({ mat: 'si', shape: 'gaa', mech: 'nc' })).energy <= M.bestFor('wildfire', MGOALS.wildfire[0]).energy);
 });
+
+test('the stacked pair (#499): a gate on half the ground, the same heat on it, shown in labs and not in products', async () => {
+  const P = await import('../src/engines/path.js'), A = await import('../src/engines/arch.js'), { EXAMPLE } = await import('../src/data/path.js');
+  const facts = JSON.parse(readFileSync(new URL('../src/data/facts.json', import.meta.url), 'utf8')).facts;
+  const cf = W.shapeOf('cfet'), fact = facts.find(f => f.id === cf.fact);
+  assert.equal(cf.status, 'lab', 'demonstrated in labs, not in products');
+  assert.ok(fact && fact.url && fact.verified && /half/.test(fact.value), 'its area rests on a fact with its source and date');
+  assert.equal(cf.area, 0.5);
+  assert.ok(W.SHAPES.filter(s => s.id !== 'cfet').every(s => s.area === 1), 'no other shape changes the area without a source');
+  /* the switch: as clean as gate all around, its copies a little more spread, its heat on half the area */
+  const gaa = W.switchOf({ mat: 'si', shape: 'gaa' }), st = W.switchOf({ mat: 'si', shape: 'cfet' }), fin = W.SILICON;
+  assert.ok(st.clean && st.sigma > gaa.sigma && st.vmin >= gaa.vmin, 'the top switch is harder to reach');
+  assert.equal(st.area, 0.5); assert.equal(fin.area, 1);
+  assert.ok(st.density > 1.5 * st.energy && st.density > fin.density, 'the same energy on half the ground: hotter per square');
+  assert.deepEqual(W.shapesFor(W.materialOf('si')).includes('cfet'), true); assert.ok(!W.shapesFor(W.materialOf('mos2')).includes('cfet'), 'stacked ribbons of a crystal, not of sheets');
+  /* the carry: the gate rung hands up half the area, and the chip's die shrinks with it; back to fins, it grows again */
+  const carry = shape => P.carry(P.stackOf(A.TODAY, Object.assign({}, EXAMPLE, { shape })));
+  const a = carry('fin'), b = carry('cfet'), c = carry('gaa');
+  assert.equal(a.rungs.gate.hands.area, 1); assert.equal(b.rungs.gate.hands.area, 0.5);
+  assert.ok(b.rungs.chip.hands.area < a.rungs.chip.hands.area && b.rungs.chip.hands.area < c.rungs.chip.hands.area, 'a smaller die');
+  assert.ok(b.rungs.chip.hands.yield >= a.rungs.chip.hands.yield, 'a smaller die catches no more dust');
+});

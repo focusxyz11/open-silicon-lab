@@ -48,7 +48,15 @@ The lab as a community building one open goal (`src/data/build.js`), people and 
 
 - **Learners become contributors:** questions, challenges and designs from the community, reviewed by people who know chips. Started with the build: needs and designs through GitHub forms, checked by the tests.
 - **A self-organizing build:** AI agents as contributors that propose designs, needs and engines through the same forms and checks, with people reviewing. Started: the open port (`npm run mcp`); next, a hosted port.
-- **A real shared chip:** when the plan is far enough, submit it to an open shuttle run.
+- **A real shared chip:** when the plan is far enough, submit it to an open shuttle run. There is no longer one road:
+  Efabless closed in March 2025 (fact `efabless-close`), and Tiny Tapeout now runs on SkyWater 130 through ChipFoundry,
+  IHP's SG13G2 and GlobalFoundries' GF180 through wafer.space (`tt-roads`; the next GF180 shuttles close on 7 December
+  2026, `tt-next-shuttle`; on wafer.space, $7,000 buys 1,000 finished chips, `wafer-space-run`). Which road, and when,
+  is a maintainer's decision at the time, read from the facts as they then stand.
+- **A community machine of chiplets?** An open question, not a plan: IHP's open assembly design kit is the first with a
+  real route to fabrication for 2.5D chiplets (`ihp-open-adk`, a preview), and imec plans an open-access silicon
+  interposer kit for early 2027 (`imec-interposer-kit`). The community's computer could one day be several small chips
+  on one interposer instead of one die; whether that is wise, and when, stays open.
 - **Plug in real hardware,** as a bonus, never a gate.
 
 ## Waiting for a view (from the earlier site)

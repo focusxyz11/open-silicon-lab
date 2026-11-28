@@ -13,18 +13,19 @@ const MADE = ['person', 'ai', 'both'], USE = { person: 'you', ai: 'ai', both: 'b
 /* who signs: a name, and who made it. How AI was used starts as one of three plain sentences (the file can say more). */
 export function signHtml(S, made) {
   return '<div class="sign"><label><span class="kicker">' + esc(t('ledger.sign.name')) + '</span><input type="text" data-sign maxlength="40" autocomplete="nickname" value="' + esc(S.name || '') + '" placeholder="' + esc(t('ledger.sign.ph')) + '"></label>' +
+    '<label><span class="kicker">' + esc(t('ledger.sign.gh')) + '</span><input type="text" data-gh maxlength="39" autocomplete="username" spellcheck="false" value="' + esc(S.github || '') + '" placeholder="' + esc(t('ledger.sign.ghPh')) + '"></label>' +
     '<label><span class="kicker">' + esc(t('ledger.sign.made')) + '</span><select data-made>' + MADE.map(k => '<option value="' + k + '"' + (k === (made || 'person') ? ' selected' : '') + '>' + esc(t('build.aiUse.' + USE[k])) + '</option>').join('') + '</select></label></div>';
 }
-export const signOf = el => { const n = el.querySelector('[data-sign]'), m = el.querySelector('[data-made]'); return { by: n ? n.value.trim() : '', made: m ? m.value : 'person' }; };
+export const signOf = el => { const n = el.querySelector('[data-sign]'), m = el.querySelector('[data-made]'), gh = el.querySelector('[data-gh]'); return { by: n ? n.value.trim() : '', made: m ? m.value : 'person', github: gh ? gh.value.trim().replace(/^@/, '') : '' }; };
 
 /* make a draft from what was done, check it against the ledger and your other drafts, and keep it if it passes */
 export function keep(S, fields, name, sign) {
   const made = MADE.includes(sign.made) ? sign.made : 'person';
-  const e = draft(Object.assign({}, fields, { by: sign.by, made, ai: made === 'person' ? '' : t('build.aiUse.' + USE[made]) }), sign.by + ' ' + name);
+  const e = draft(Object.assign({}, fields, { by: sign.by, made, ai: made === 'person' ? '' : t('build.aiUse.' + USE[made]) }, sign.github ? { github: sign.github } : {}), sign.by + ' ' + name);
   Object.keys(e).forEach(k => { if (e[k] == null) delete e[k]; });
   const mine = (S.drafts || []).filter(d => !ledger().some(x => x.id === d.id));
   const r = tryEntry(e, mine);
-  if (r.ok) { S.name = sign.by; S.drafts = mine.concat(e); }
+  if (r.ok) { S.name = sign.by; if (sign.github) S.github = sign.github; S.drafts = mine.concat(e); }
   return { ok: r.ok, e, r };
 }
 export const refusal = r => t('ledger.no.' + r.reason, { n: r.wrong || 0, of: r.of || 0 });
